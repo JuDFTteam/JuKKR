@@ -90,10 +90,6 @@ implicit none
     integer :: lmmaxd
     logical :: xccpl
 
-#define COMPUTE_tref_LOCALLY
-
-    double complex, allocatable :: Tref_local(:,:,:)  !< local tref-matrices
-    double complex, allocatable :: dTref_local(:,:,:) !< local deriv. tref-matrices
     double complex, allocatable :: tmatLL(:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: dtmatLL(:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
@@ -114,10 +110,6 @@ implicit none
     
     allocate(tmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for t-matrices
     allocate(dtmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for derivative of t-matrices, LLY
-#ifndef COMPUTE_tref_LOCALLY       
-    allocate(Tref_local(lmmaxd,lmmaxd,num_local_atoms)) ! allocate buffers for reference t-matrices
-    allocate(dTref_local(lmmaxd,lmmaxd,num_local_atoms))
-#endif    
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms))
     allocate(DGrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms)) ! LLY
@@ -174,47 +166,18 @@ implicit none
 
         WRITELOG(2, *) "Working on energy point ", IE
 
-        ! if we had rMTref given for all atoms inside the reference cluster radius
-        !   we could compute the Tref on the fly
-#ifndef COMPUTE_tref_LOCALLY       
-         Tref_local = ZERO
-        dTref_local = ZERO
   !------------------------------------------------------------------------------
-        !$omp parallel do private(ila, atomdata)
-        do ila = 1, num_local_atoms
-          atomdata => getAtomData(calc, ila)
-
-          call tref(emesh%EZ(IE), params%vref, dims%lmaxd, atomdata%rMTref, &
-                    Tref_local(:,:,ila), dTref_local(:,:,ila), derive=(dims%Lly > 0)) ! ToDo: combine Tref and dTref in one array
-
-        enddo  ! ila
-        !$omp endparallel do
-  !------------------------------------------------------------------------------
-
-        ! Note: ref. system has to be recalculated at each iteration since energy mesh changes
-        ! Note: TrefLL is diagonal - however, a full block matrix is stored
-        ! Note: gref is calculated in real space - usually only a few shells
-
-        ! Exchange the reference t-matrices within the reference clusters
-        ! ToDo: discuss if we can compute them once we know rMTref of all atoms in the reference cluster
-        do ila = 1, num_local_atoms
-          call gatherTrefMatrices_com( Tref_local,  kkr(ila)%TrefLL, calc%ref_cluster_a(ila), mp%mySEComm) ! ToDo: combine Tref and dTref in one array
-          call gatherTrefMatrices_com(dTref_local, kkr(ila)%dTrefLL, calc%ref_cluster_a(ila), mp%mySEComm)
-        enddo ! ila
-#else
+        ! if we have rMTref given for all atoms inside the reference cluster radius we can compute the Tref on the fly
+        
         !$omp parallel do private(ila, iacls)
         do ila = 1, num_local_atoms
+
           do iacls = 1, kkr(ila)%naclsd
             ! this calls tref several times with the same parameters if the local atoms are close to each other
             call tref(emesh%EZ(IE), params%vref, dims%lmaxd, kkr(ila)%rMTref(iacls), &
                       kkr(ila)%Tref_ell(:,iacls), kkr(ila)%dTref_ell(:,iacls), derive=(dims%Lly > 0))
           enddo ! iacls
-        enddo ! ila
-#endif
-  !------------------------------------------------------------------------------
-        !$omp parallel do private(ila)
-        do ila = 1, num_local_atoms
-          
+        
           call gref(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
                     calc%gaunts%CLEB, calc%ref_cluster_a(ila)%RCLS, calc%gaunts%ICLEB, &
                     calc%gaunts%LOFLM, calc%ref_cluster_a(ila)%NACLS, &
@@ -553,34 +516,6 @@ implicit none
     enddo ! lm2
     
   endsubroutine ! rescale
-
-  !------------------------------------------------------------------------------
-  !> Gather all tref-matrices of reference cluster.
-  !> @param Tref_local   all locally calculated tref-matrices
-  !> @param TrefLL       on exit all tref-matrices in ref_cluster
-  subroutine gatherTrefMatrices_com(Tref_local, TrefLL, ref_cluster, communicator)
-    use RefCluster_mod, only: RefCluster
-    use one_sided_commZ_mod, only: copyFromZ_com
-
-    double complex, intent(inout) :: Tref_local(:,:,:)
-    double complex, intent(inout) :: TrefLL(:,:,:)
-    type(RefCluster), intent(in) :: ref_cluster
-    integer, intent(in) :: communicator
-
-    integer :: chunk_size, num_local_atoms
-
-    chunk_size = size(Tref_local, 1)*size(Tref_local, 2)
-    num_local_atoms = size(Tref_local, 3)
-
-    ASSERT (size(Tref_local, 1) == size(TrefLL, 1))
-    ASSERT (size(Tref_local, 2) == size(TrefLL, 2))
-    ASSERT (size(TrefLL, 3) >= ref_cluster%nacls)
-
-    TrefLL = dcmplx(0.d0, 0.d0)
-
-    call copyFromZ_com(TrefLL, Tref_local, ref_cluster%atom, chunk_size, num_local_atoms, communicator)
-
-  endsubroutine ! gather
 
   !------------------------------------------------------------------------------
   !> Gather all t-matrices for 'ispin'-channel (from truncation zone only).

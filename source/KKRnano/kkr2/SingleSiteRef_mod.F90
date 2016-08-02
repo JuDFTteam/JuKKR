@@ -134,7 +134,7 @@ module SingleSiteRef_mod
     double complex, intent(out) :: dgrefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd), grefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
 
     integer :: ig, ig1, lm1, lm2, lmmaxd
-    double complex :: ginp(naclsd*(lmaxd+1)**2,(lmaxd+1)**2,0:1)
+    double complex :: ginp((lmaxd+1)**2*naclsd,(lmaxd+1)**2,0:1)
     
     call gll95(e, cleb(1,2), icleb, loflm, iend, tref_ell, dtref_ell, rcls, nacls, alatc, ginp(:,:,0), ginp(:,:,1), Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
 
@@ -144,6 +144,7 @@ module SingleSiteRef_mod
       do lm1 = 1, lmmaxd
         do lm2 = 1, lmmaxd
           ig1 = (ig - 1)*lmmaxd + lm2
+          ! ginp has dim(lmmaxd*naclsd,lmmaxd,0:1) but logically dim(lmmaxd,naclsd,lmmaxd,0:1), so we interchange the 2nd and 3rd dim here
            grefn(lm2,lm1,ig) = ginp(ig1,lm1,0) ! value
           dgrefn(lm2,lm1,ig) = ginp(ig1,lm1,1) ! derivative
         enddo ! lm2
@@ -317,8 +318,8 @@ module SingleSiteRef_mod
 
     lmaxd = lmmaxtolmax(lmmaxd)
     
-    assert(size(greenfree, 1) >= nacls*lmmaxd)
-    assert(size(greenfree, 2) >= nacls*lmmaxd)
+    assert(size(greenfree, 1) >= lmmaxd*nacls)
+    assert(size(greenfree, 2) >= lmmaxd*nacls)
     
     !
     ! ---> construct free green's function
@@ -435,8 +436,7 @@ module SingleSiteRef_mod
   endsubroutine ! grefsy
   
   
-  
-  subroutine gfree(rdiff, e, gmll, cleb, icleb, loflm, iend, lmax, ncleb, derive)
+  subroutine gfree(rdiff, e, gmLL, cleb, icleb, loflm, iend, lmax, ncleb, derive)
     use Constants_mod, only: Pi
     use SingleSiteHelpers_mod, only: beshan
     use Harmonics_mod, only: ymy
@@ -444,7 +444,7 @@ module SingleSiteRef_mod
     double precision, intent(in) :: rdiff(3)
     integer, intent(in) :: lmax, ncleb, iend
     double complex, intent(in) :: e
-    double complex, intent(inout) :: gmll((lmax+1)**2,(lmax+1)**2)
+    double complex, intent(inout) :: gmLL((lmax+1)**2,(lmax+1)**2)
     double precision, intent(in) :: cleb(ncleb)
     integer, intent(in) :: icleb(ncleb,3), loflm(*)
     logical, intent(in) :: derive
@@ -492,7 +492,7 @@ module SingleSiteRef_mod
       do lp1 = 2, 2*lmax + 1
         dhl(lp1) = 0.5d0*(rabs*hl(lp1-1)-(lp1-1)*hl(lp1)/sqE)
       enddo ! lp1
-      
+
       do lm1 = 1, lmx2sq
         hyl(lm1) = -fpi*ci*yl(lm1)*dhl(loflm(lm1)+1)
       enddo ! lm1
@@ -506,9 +506,9 @@ module SingleSiteRef_mod
     endif ! derive
     
     do lm1 = 1, lmgf0d
-      gmll(lm1,lm1) = hyl(1)/rfpi
+      gmLL(lm1,lm1) = hyl(1)/rfpi
       do lm2 = 1, lm1-1
-        gmll(lm1,lm2) = zero
+        gmLL(lm1,lm2) = zero
       enddo ! lm2
     enddo ! lm1
 
@@ -516,16 +516,16 @@ module SingleSiteRef_mod
       lm1 = icleb(j,1)
       lm2 = icleb(j,2)
       lm3 = icleb(j,3)
-      gmll(lm1,lm2) = gmll(lm1,lm2) + cleb(j)*hyl(lm3)
+      gmLL(lm1,lm2) = gmLL(lm1,lm2) + cleb(j)*hyl(lm3)
     enddo ! j
 
     do lm1 = 1, lmgf0d
       do lm2 = 1, lm1 - 1
         ifac = (-1)**(loflm(lm1) + loflm(lm2))
-        gmll(lm2,lm1) = ifac*gmll(lm1,lm2)
+        gmLL(lm2,lm1) = ifac*gmLL(lm1,lm2)
       enddo ! lm2
     enddo ! lm1
     
-  endsubroutine !  gfree
+  endsubroutine ! gfree
 
 endmodule ! SingleSiteRef_mod
