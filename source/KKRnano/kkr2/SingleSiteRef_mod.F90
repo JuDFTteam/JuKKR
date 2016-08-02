@@ -131,8 +131,8 @@ module SingleSiteRef_mod
     double complex, intent(out) :: Lly_g0tr
 !     double complex, intent(in)  :: trefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd), dtrefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
     double complex, intent(in)  :: tref_ell(0:lmaxd,naclsd), dtref_ell(0:lmaxd,naclsd)
-    double complex, intent(out) :: dgrefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd),   grefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
-    
+    double complex, intent(out) :: dgrefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd), grefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
+
     integer :: ig, ig1, lm1, lm2, lmmaxd
     double complex :: ginp(naclsd*(lmaxd+1)**2,(lmaxd+1)**2,0:1)
     
@@ -163,7 +163,7 @@ module SingleSiteRef_mod
 !> @param trefLL reference t-matrix
 !> @param dtrefLL derivative of reference t-matrix
 !> @param ratom real space positions of atoms in ref. cluster
-!> @param natom number of atoms in reference cluster
+!> @param nacls number of atoms in reference cluster
 !> @param alat length of unit vector in bohr
 !> @param gref0 todo
 !> @param dgref0 ??? energy derivative of green's function
@@ -172,7 +172,7 @@ module SingleSiteRef_mod
 !> @param naclsd dimension array: maximal number of atoms in reference clusters
 !> @param ncleb number of gaunt coefficients in cleb
 !> @param Lly do lloyd's formula calculations 1=yes/0=no
-  subroutine gll95(e, cleb, icleb, loflm, iend, tref_ell, dtref_ell, ratom, natom, alat, gref0, dgref0, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
+  subroutine gll95(e, cleb, icleb, loflm, iend, tref_ell, dtref_ell, ratom, nacls, alat, gref0, dgref0, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
   ! **********************************************************************
   !
   !     solution of the dyson equation for a cluster of potentials
@@ -183,7 +183,7 @@ module SingleSiteRef_mod
     double complex, intent(in) :: e
     double complex, intent(out) :: Lly_g0tr
     double precision, intent(in) :: alat
-    integer, intent(in) :: natom
+    integer, intent(in) :: nacls
     double complex, intent(out) :: gref0((lmaxd+1)**2*naclsd,(lmaxd+1)**2) !> dim(ngd,lmmaxd)
     double complex, intent(out) :: dgref0(Lly*((lmaxd+1)**2*naclsd-1)+1,(lmaxd+1)**2)
     double complex, intent(in) :: tref_ell(0:,1:) ! (0:lmaxd,naclsd) ! trefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
@@ -202,8 +202,8 @@ module SingleSiteRef_mod
   !     the following arrays can be very large (> 60 mb in typical cases)
   !     therefore they are allocated on the heap
   ! ---------------------------------------------------------------------
-    double complex, allocatable :: gref(:,:), gtref(:,:), dgtde(:,:)
-    double complex, allocatable :: dgtde0(:,:), dgde(:,:)
+    double complex, allocatable :: gref(:,:,:), gtref(:,:), dgtde(:,:)
+    double complex, allocatable :: dgtde0(:,:)
     double complex, allocatable :: trefLL(:,:), dtrefLL(:,:)
     integer :: lmgf0d, lmmaxd, ngd
 
@@ -212,50 +212,50 @@ module SingleSiteRef_mod
     ngd = lmmaxd*naclsd
 
     !     allocate arrays
-    allocate(gref(ngd,ngd), gtref(ngd,lmmaxd), dgtde(Lly*(lmmaxd*naclsd-1)+1,lmmaxd), trefLL(lmmaxd,lmmaxd), stat=ist)
+    allocate(gref(ngd,ngd,0:Lly), gtref(ngd,lmmaxd), dgtde(Lly*(lmmaxd*naclsd-1)+1,lmmaxd), trefLL(lmmaxd,lmmaxd), stat=ist)
     if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")   
 
     if (Lly == 1) then
-      allocate(dgtde0(ngd,ngd), dgde(ngd,ngd), dtrefLL(lmmaxd,lmmaxd), stat=ist)
+      allocate(dgtde0(ngd,ngd), dtrefLL(lmmaxd,lmmaxd), stat=ist)
       if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")   
     endif
 
-    ndim = lmmaxd*natom ! ndim can be smaller than ngd=lmmaxd*naclsd
-    call calcFreeGreens(gref, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.false.)
+    ndim = lmmaxd*nacls ! ndim can be smaller than ngd=lmmaxd*naclsd
+    call calcFreeGreens(gref(:,:,0), e, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.false.)
 
     if (Lly == 1) &
-    call calcFreeGreens(dgde, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.true.)
+    call calcFreeGreens(gref(:,:,1), e, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.true.)
 
   ! construct right hand side of linear equation system for grefsy
   ! the first lmmaxd columns of gref are copied into gref0
   ! gref0 then contains g0^{(1)n'}_{ll'}, the free space structural
   ! green's function for the central cluster atom (e.r.)
   ! --------------------------------------------------------------
-    call zcopy(ngd*lmmaxd,gref,1,gref0,1) ! should be equivalent to gref0(:,:) = gref(:,1:lmmaxd)
+    gref0(:,:) = gref(:,1:lmmaxd,0) ! should be equivalent to call zcopy(ngd*lmmaxd,gref,1,gref0,1)
   ! --------------------------------------------------------------
 
     if (Lly == 1) then
-      do n2 = 1, natom
+      do n2 = 1, nacls
         site_lm_index2 = (n2 - 1)*lmmaxd + 1
         
         ! -dg_0/de * \delta t_ref    -- stored in gtref
         trefLL(:,:) = unfold_m_deg_diag_rep(lmaxd, tref_ell(0:,n2))
-        call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,dgde(1,site_lm_index2),ngd, trefLL, lmmaxd,zero,gtref,ngd)
+        call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2,1),ngd, trefLL, lmmaxd,zero,gtref,ngd)
         !   - g_0 * d(\delta t_ref)/de + gtref  -- stored again in gtref
         ! = -dg_0/de * \delta t_ref - g_0 * d(\delta t_ref)/de
         dtrefLL(:,:) = unfold_m_deg_diag_rep(lmaxd, dtref_ell(0:,n2))
-        call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2),ngd, dtrefLL, lmmaxd,cone,gtref,ngd)
+        call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2,0),ngd, dtrefLL, lmmaxd,cone,gtref,ngd)
         ! copy gtref to dgtde0 - gtref is reused
         call zcopy(ngd*lmmaxd,gtref,1,dgtde0(1,site_lm_index2),1) ! dgtde0(:,(n2-1)*lmmaxd +1:lmmaxd +(n2-1)*lmmaxd) = gtref(:,:)
       enddo ! n2
     endif ! (Lly==1)
 
-    do n2 = 1, natom
+    do n2 = 1, nacls
       site_lm_index2 = (n2 - 1)*lmmaxd + 1
       ! -g_ref * \delta t_ref  -- stored in gtref
       trefLL(:,:) = unfold_m_deg_diag_rep(lmaxd, tref_ell(0:,n2))
-      call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2),ngd, trefLL, lmmaxd,zero,gtref,ngd)
-      call zcopy(ngd*lmmaxd,gtref,1,gref(1,site_lm_index2),1) ! gref(:,(n2-1)*lmmaxd +1:lmmaxd +(n2-1)*lmmaxd) = gtref(:,:)
+      call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2,0),ngd, trefLL, lmmaxd,zero,gtref,ngd)
+      call zcopy(ngd*lmmaxd,gtref,1,gref(1,site_lm_index2,0),1) ! gref(:,(n2-1)*lmmaxd +1:lmmaxd +(n2-1)*lmmaxd) = gtref(:,:)
     enddo ! n2
 
     if (Lly == 1) dgtde(:ngd,:lmmaxd) = dgtde0(:ngd,:lmmaxd) ! copy
@@ -263,15 +263,15 @@ module SingleSiteRef_mod
     ! solve Dyson-equation for the reference system
     ! solves (1 - g0 \delta t) g_ref = g0 for g_ref.
     Lly_g0tr = zero
-    call grefsy(gref, gref0, ipvt, ndim, dgtde, Lly_g0tr, naclsd, lmmaxd, Lly)
+    call grefsy(gref(:,:,0), gref0, ipvt, ndim, dgtde, Lly_g0tr, naclsd, lmmaxd, Lly)
 
     if (Lly == 1) then
-      call zgemm('n','n',ndim,lmmaxd,ndim,cmone,dgtde0,ngd,gref0,ngd,cone,dgde,ngd)
-      call zgetrs('n',ndim,lmmaxd,gref,ngd,ipvt,dgde,ngd,info)
-      dgref0(:ngd,:lmmaxd) = dgde(:ngd,:lmmaxd) ! copy
+      call zgemm('n','n',ndim,lmmaxd,ndim,cmone,dgtde0,ngd,gref0,ngd,cone,gref(1,1,1),ngd)
+      call zgetrs('n',ndim,lmmaxd,gref(1,1,0),ngd,ipvt,gref(1,1,1),ngd,info)
+      dgref0(:ngd,:lmmaxd) = gref(:ngd,:lmmaxd,1) ! copy
     endif ! Lly == 1
 
-    deallocate(gref, gtref, dgtde, dgtde0, dgde, trefLL, dtrefLL, stat=ist) ! ignore status
+    deallocate(gref, gtref, dgtde, dgtde0, trefLL, dtrefLL, stat=ist) ! ignore status
   endsubroutine ! gll95
 
   
@@ -293,10 +293,10 @@ module SingleSiteRef_mod
   
  !> calculates the free-space green-function or the derivative of the free-space green-function
  !> @param[out] greenfree   the free space green-function
- !> @param      natom       number of atoms in reference cluster
+ !> @param      nacls       number of atoms in reference cluster
  !> @param[in]  derivative  .false. = calculate free-space-greens function
  !>                         .true.  = calculate derivative of free-space-greens function
-  subroutine calcFreeGreens(greenfree, e, lmmaxd, natom, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive)
+  subroutine calcFreeGreens(greenfree, e, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive)
     use kkr_helpers_mod, only: lmmaxtolmax
     double complex, intent(out) :: greenfree(:,:)
     integer, intent(in) :: ncleb
@@ -306,7 +306,7 @@ module SingleSiteRef_mod
     integer, intent(in) :: icleb(ncleb,3)
     integer, intent(in) :: lmmaxd
     integer, intent(in) :: loflm(:)
-    integer, intent(in) :: natom, iend
+    integer, intent(in) :: nacls, iend
     double precision, intent(in) :: ratom(3,*)
     logical, intent(in) :: derive
 
@@ -317,8 +317,8 @@ module SingleSiteRef_mod
 
     lmaxd = lmmaxtolmax(lmmaxd)
     
-    assert(size(greenfree, 1) >= natom*lmmaxd)
-    assert(size(greenfree, 2) >= natom*lmmaxd)
+    assert(size(greenfree, 1) >= nacls*lmmaxd)
+    assert(size(greenfree, 2) >= nacls*lmmaxd)
     
     !
     ! ---> construct free green's function
@@ -330,8 +330,8 @@ module SingleSiteRef_mod
     ! the blocks n /= n' contain g0,
     ! the other n=n' blocks are set to zero (green's function is not defined for r=r')
     ! (e.r.)
-    do n1 = 1, natom
-      do n2 = 1, natom
+    do n1 = 1, nacls
+      do n2 = 1, nacls
       
         if (n1 /= n2) then
           rdiff(1:3) = (ratom(1:3,n2) - ratom(1:3,n1))*alat ! difference vector

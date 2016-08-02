@@ -31,7 +31,8 @@ program KKRnano
   use InputParams_mod, only: InputParams, load
   use Main2Arrays_mod, only: Main2Arrays, create, load, destroy
 
-  use ScatteringCalculation_mod, only: energyloop
+  use ScatteringCalculation_mod, only: energyLoop
+  use ScatteringCalculation_mod, only: gatherrMTref_com
   use ProcessKKRresults_mod, only: processKKRresults, output_forces
 
   use CalculationData_mod, only: CalculationData, create, prepareMadelung, destroy
@@ -349,34 +350,6 @@ program KKRnano
   
   
   contains
-  
-    !------------------------------------------------------------------------------
-    !> Gather all rMTref values of the reference cluster.
-    !> @param rMTref_local all locally determined rMTref value
-    !> @param rMTref       on exit all rMTref value in ref_cluster
-    subroutine gatherrMTref_com(rMTref_local, rMTref, ref_cluster, communicator)
-      use RefCluster_mod, only: RefCluster
-      use one_sided_commD_mod, only: copyFromD_com
-
-      double precision, intent(in) :: rMTref_local(:) ! (num_local_atoms)
-      double precision, intent(out) :: rMTref(:) ! (ref_cluster%nacls)
-      type(RefCluster), intent(in) :: ref_cluster
-      integer, intent(in) :: communicator
-      
-      double precision, allocatable :: rMTref_all(:,:,:), rMTref_loc(:,:,:)
-
-      allocate(rMTref_all(1,1,size(rMTref, 1)), rMTref_loc(1,1,size(rMTref_local, 1)))
-      
-      rMTref_all = 0.d0
-      
-      rMTref_loc(1,1,:) = rMTref_local(:) ! in
-      
-      call copyFromD_com(rMTref_all, rMTref_loc, ref_cluster%atom, 1, size(rMTref_local, 1), communicator)
-      
-      rMTref(:) = rMTref_all(1,1,:) ! out
-
-      deallocate(rMTref_all, rMTref_loc)
-    endsubroutine ! gather
 
     integer function theta(condition) result(oneiftrue)
       logical, intent(in) :: condition
