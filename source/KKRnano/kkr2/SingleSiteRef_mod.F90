@@ -278,7 +278,7 @@ module SingleSiteRef_mod
   
   function unfold_m_deg_diag_rep(lmax, tref_ell) result(tref)
     integer, intent(in) :: lmax
-    double complex, intent(in) :: tref_ell(0:lmax)
+    double complex, intent(in) :: tref_ell(0:) ! dim(0:lmax) if we passed an assumed shape array, an array temporary would be created at runtime 
     double complex :: tref((lmax+1)**2,(lmax+1)**2) ! result
     integer :: l, m, lm
     tref = zero
