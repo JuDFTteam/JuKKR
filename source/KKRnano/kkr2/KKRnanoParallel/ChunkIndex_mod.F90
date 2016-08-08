@@ -48,37 +48,13 @@ module ChunkIndex_mod
   function getRankAndLocalIndex(ind, num, nranks) result(rank_loc)
     integer, intent(in) :: ind, num, nranks
     integer(kind=4) :: rank_loc(2) ! result
-    rank_loc(1) = getOwner(ind, num, nranks)
-    rank_loc(2) = getLocalInd(ind, num, nranks)
-  endfunction ! get
-  
-  !------------------------------------------------------------------------------
-  !> Returns number of rank that owns atom/matrix/chunk with index 'ind'.
-  !> @param num Total number of chunks/atoms/matrices
-  !> @param nranks total number of ranks
-  integer function getOwner(ind, num, nranks)
-    integer, intent(in) :: ind, num, nranks
 
     integer :: atoms_per_proc  
-
     atoms_per_proc = num / nranks  
-    getOwner = (ind - 1) / atoms_per_proc
-    ! 0 ... nranks-1  
-  endfunction ! get
 
-  !------------------------------------------------------------------------------
-  !> Returns local index (on owning rank) of atom/matrix/chunk with index 'ind'.
-  !> @param num Total number of chunks/atoms/matrices
-  integer function getLocalInd(ind, num, nranks)
-    integer, intent(in) :: ind, num, nranks
-
-    integer :: atoms_per_proc  
-
-    atoms_per_proc = num / nranks
-    getLocalInd = mod((ind - 1), atoms_per_proc) + 1
-
-    ! 1 ... atoms_per_proc
-    
+    rank_loc(1) = (ind - 1) / atoms_per_proc ! owner rank
+    rank_loc(2) = ind - rank_loc(1)*atoms_per_proc
+!   rank_loc(2) = mod(ind - 1, atoms_per_proc) + 1 ! same with mod
   endfunction ! get
 
 endmodule ! ChunkIndex_mod

@@ -74,7 +74,9 @@ module ClusterInfo_mod
     integer(kind=2) :: ezoa, ind ! local atom index
     integer(kind=4) :: atom_id, atom, indn0 ! global atom ids
     integer(kind=4), allocatable :: send_buf(:,:), recv_buf(:,:) ! global atom ids, require more than 16bit
-
+#ifdef DEBUG
+    integer(kind=4), allocatable :: global_target_atom_id(:) !!! DEBUG
+#endif
     num_local_atoms = size(ref_clusters)
 
     nacls = maxval(ref_clusters(:)%nacls) ! find maximum for locally stored clusters
@@ -86,17 +88,6 @@ module ClusterInfo_mod
 
     naez_trc = trunc_zone%naez_trc
     self%naez_trc = naez_trc
-
-    ALLOCATECHECK(self%nacls_trc(naez_trc))
-    ALLOCATECHECK(self%numn0_trc(naez_trc))
-    ALLOCATECHECK(self%indn0_trc(naclsd,naez_trc))
-    ALLOCATECHECK(self%atom_trc(naclsd,naez_trc))
-    ALLOCATECHECK(self%ezoa_trc(naclsd,naez_trc))
-    self%nacls_trc = 0
-    self%numn0_trc = 0
-    self%indn0_trc = -1
-    self%atom_trc = 0
-    self%ezoa_trc = -1
 
     OFFSET_INDN = 0*naclsd + 3
     OFFSET_ATOM = 1*naclsd + 3
@@ -125,6 +116,19 @@ module ClusterInfo_mod
     call copyFromI_com(recv_buf, send_buf, trunc_zone%global_atom_id, blocksize, num_local_atoms, communicator)
 
     DEALLOCATECHECK(send_buf)
+#ifdef DEBUG
+    ALLOCATECHECK(global_target_atom_id(naclsd)) !!! DEBUG
+#endif
+    ALLOCATECHECK(self%nacls_trc(naez_trc))
+    ALLOCATECHECK(self%numn0_trc(naez_trc))
+    ALLOCATECHECK(self%indn0_trc(naclsd,naez_trc))
+    ALLOCATECHECK(self%atom_trc(naclsd,naez_trc))
+    ALLOCATECHECK(self%ezoa_trc(naclsd,naez_trc))
+    self%nacls_trc = 0
+    self%numn0_trc = 0
+    self%indn0_trc = -1
+    self%atom_trc = -1
+    self%ezoa_trc = -1
 
     do ii = 1, naez_trc
       atom_id = recv_buf(1,ii)
@@ -143,39 +147,55 @@ module ClusterInfo_mod
           cnt = cnt + 1
           self%indn0_trc(cnt,ii) = ind ! indn0 translated into local indices of the trunc_zone
           ! if trunc_zone%global_atom_id(:) is in ascending order (strictly monotonous), also indn0_trc will get that property
+#ifdef DEBUG
+          global_target_atom_id(cnt) = indn0 !!! DEBUG
+#endif         
         endif ! ind > 0
       enddo ! jj
 
       CHECKASSERT( 0 < cnt .and. cnt <= numn0 )
       self%numn0_trc(ii) = cnt
+#ifdef DEBUG
+      write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' numn0_trc=',cnt,' indn0= ',(global_target_atom_id(jj),' ', jj=1,cnt) !!! DEBUG
+#endif
 
       nacls = recv_buf(2,ii)
       cnt = 0
       do jj = 1, nacls
 
         atom = recv_buf(OFFSET_ATOM + jj,ii) ! atom received
-        ! ezoa = recv_buf(OFFSET_EZOA + jj,ii) ! ezoa received (proposed new code)
+        ezoa = recv_buf(OFFSET_EZOA + jj,ii) ! ezoa received (proposed new code)
 ! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',atom
         ind = trunc_zone%local_atom_idx(atom)
 
         if (ind > 0) then ! ind == -1 means that this atom is outside of truncation zone
           cnt = cnt + 1
           self%atom_trc(cnt,ii) = ind ! atom translated into local indices of the trunc_zone
-          ! self%ezoa_trc(cnt,ii) = ezoa ! does not need translation (proposed new code)
+          self%ezoa_trc(cnt,ii) = ezoa ! does not need translation (proposed new code)
+#ifdef DEBUG
+          global_target_atom_id(cnt) = atom !!! DEBUG
+#endif          
         endif ! ind > 0
       enddo ! jj
 
       CHECKASSERT( 0 < cnt .and. cnt <= nacls )
       self%nacls_trc(ii) = cnt
-
+#ifdef DEBUG
+      write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' nacls_trc=',cnt,' atom@ezoa= ',(global_target_atom_id(jj),'@',self%ezoa_trc(jj,ii),' ', jj=1,cnt) !!! DEBUG
+#endif
 ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' naclsd=',naclsd
 
 !!    ! ToDo: discuss if we have to treat ezoa_trc in sync with atom_trc concerning the (ind == -1) case
-      self%ezoa_trc(1:nacls,ii) = recv_buf(OFFSET_EZOA + 1:nacls + OFFSET_EZOA,ii) ! (old code)
-
+!!    self%ezoa_trc(1:nacls,ii) = recv_buf(OFFSET_EZOA + 1:nacls + OFFSET_EZOA,ii) ! (old code)
+#ifdef DEBUG
+      write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' old nacls=',cnt,' atom@ezoa= ',(global_target_atom_id(jj),'@',recv_buf(OFFSET_EZOA+jj,ii),' ', jj=1,cnt) !!! DEBUG
+#endif
       CHECKASSERT( recv_buf(blocksize,ii) == MAGIC ) ! check if the end of send_buf seems correct
     enddo ! ii
-
+    
+#ifdef DEBUG
+    DEALLOCATECHECK(global_target_atom_id) !!! DEBUG
+#endif    
     DEALLOCATECHECK(recv_buf)
   endsubroutine ! create
   

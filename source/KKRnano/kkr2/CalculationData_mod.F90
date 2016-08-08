@@ -393,7 +393,7 @@ module CalculationData_mod
     type(KKRnanoParallel), intent(in) :: mp
     integer, intent(in) :: voronano
     
-    integer :: ila, atom_id, ist, ii
+    integer :: ila, atom_id, ist
     type(BasisAtom), allocatable      :: old_atom_a(:)
     type(RadialMeshData), allocatable :: old_mesh_a(:)
     double precision, allocatable     :: new_MT_radii(:)

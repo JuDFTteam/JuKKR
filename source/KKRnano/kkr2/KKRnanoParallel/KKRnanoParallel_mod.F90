@@ -53,7 +53,6 @@ implicit none
     integer :: myAtomId
     integer :: mySEId
 
-    integer :: procsPerComm
     integer :: numComms
     integer :: numWorldRanks      !< Total number of ranks in MPI_COMM_WORLD
     integer :: numAtomRanks
@@ -87,35 +86,33 @@ implicit none
 
     integer :: n, ierr, color, key, active_rank, active
  
-!   call MPI_Init(ierr) ! must have been call earlier
+!   call MPI_Init(ierr) ! must have been called earlier
     call MPI_Comm_size(MPI_COMM_WORLD, self%numWorldRanks, ierr)
-    call MPI_Comm_rank(MPI_COMM_WORLD, self%myWorldRank,  ierr)
+    call MPI_Comm_rank(MPI_COMM_WORLD, self%myWorldRank, ierr)
     self%isMasterRank = (self%myWorldRank == 0)
  
-    self%numSpinRanks   = max(1, numSpinRanks)
+    self%numSpinRanks = max(1, numSpinRanks)
     self%numEnergyRanks = max(1, numEnergyRanks)
     self%numComms = self%numSpinRanks * self%numEnergyRanks
      
     if (numAtomRanks < 1) then
-      ! the number of atomic ranks is chosen atomatically
+      ! the number of atomic ranks is chosen automatically
       self%numAtomRanks = self%numWorldRanks / self%numComms
-      ! todo: warn if the numbers are not divisible
       if (self%numAtomRanks * self%numComms /= self%numWorldRanks) &
         warn(6, "Number of all MPI ranks ="+self%numWorldRanks+"is not divisible by"+self%numComms)
     else
       self%numAtomRanks = numAtomRanks ! controlled via the input file
     endif
-    self%procsPerComm = self%numAtomRanks
 
-    n = self%numComms * self%procsPerComm ! abbrev.
+    n = self%numComms * self%numAtomRanks ! abbrev.
     if (self%numWorldRanks < n) & ! Check if there are enough ranks
-      die_here("found only "+self%numWorldRanks+"MPI ranks, but requires"+self%numComms+"*"+self%procsPerComm+"="+n+"ranks!")
+      die_here("found only "+self%numWorldRanks+"MPI ranks, but requires"+self%numComms+"*"+self%numAtomRanks+"="+n+"ranks!")
     
-    color = self%myWorldRank / self%procsPerComm
-    key = self%myWorldRank - (color * self%procsPerComm)
+    color = self%myWorldRank / self%numAtomRanks
+    key = self%myWorldRank - (color * self%numAtomRanks)
     
-    !---------- Define ids ---------------
-    ! Note: ids start with 1
+    !---------- Define Ids ---------------
+    ! Note: Ids start with 1
     ! TODO
     self%myAtomId = key + 1
     self%mySEId = color + 1
@@ -136,13 +133,13 @@ implicit none
     
     key = self%myWorldRank
     self%isActiveRank = (self%myWorldRank < self%numAtomRanks*self%numSpinRanks*self%numEnergyRanks) ! define active and inactive ranks
-    active = 0 ; if( self%isActiveRank ) active = 1 ! convert logical to integer
-    
+    active = 0 ; if (self%isActiveRank) active = 1 ! convert logical to integer
+ 
     call MPI_Comm_split(MPI_COMM_WORLD, active, key, self%myActiveComm, ierr)
-    
+ 
     call MPI_Comm_rank(self%myActiveComm, active_rank, ierr)
 
-    ! Assertion: check if ids are correct
+    ! Assertion: check if Ids are correct
     if (self%myWorldRank /= mapToWorldRank(self, self%myAtomId, self%mySpinId, self%myEnergyId)) &
       die_here("Inconsistency in KKRnano process ids!")
 
@@ -166,75 +163,6 @@ implicit none
     call MPI_Finalize(ierr)
   endsubroutine ! destroy
 
-  !================== Getter routines =======================
-
-  !--------------------------------------------------------------
-  !> Returns rank of process in MPI_COMM_WORLD.
-!   integer function getMyWorldRank(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getMyWorldRank = self%myWorldRank
-!   endfunction
-  
-  !--------------------------------------------------------------
-  !> Returns rank of process in (Spin,Energy)-communicator.
-  !> Equals (getMyAtomId() - 1)
-!   integer function getMyAtomRank(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getMyAtomRank = self%myAtomRank
-!   endfunction
-  
-  ! ----------------- Id getters --------------------------------
-  
-  !--------------------------------------------------------------
-  !> Returns atom id.
-!   integer function getMyAtomId(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getMyAtomId = self%myAtomId
-!   endfunction
-  
-  !--------------------------------------------------------------
-  !> Returns spin id.
-!   integer function getMySpinId(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getMySpinId = self%mySpinId
-!   endfunction
-  
-  !--------------------------------------------------------------
-  !> Returns energy id.
-!   integer function getMyEnergyId(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getMyEnergyId = self%myEnergyId
-!   endfunction
-  
-  !--------------------------------------------------------------
-  !> Returns (spin,energy) id.
-!   integer function getMySEId(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getMySEId = self%mySEId
-!   endfunction
-  
-  ! ----------- Number of ranks getters -------------------------
-  
-  !--------------------------------------------------------------
-  !> Returns number of atom ranks.
-!   integer function getNumAtomRanks(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getNumAtomRanks = self%numAtomRanks
-!   endfunction
-  
-  !--------------------------------------------------------------
-  !> Returns number of spin ranks.
-!   integer function getNumSpinRanks(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getNumSpinRanks = self%numSpinRanks
-!   endfunction
-  
-  !--------------------------------------------------------------
-  !> Returns number of energy ranks.
-!   integer function getNumEnergyRanks(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getNumEnergyRanks = self%numEnergyRanks
-!   endfunction
   
   !--------------------------------------------------------------
   !> Returns number of (Spin,Energy)-ranks/groups.
@@ -242,53 +170,6 @@ implicit none
     type(KKRnanoParallel), intent(in) :: self
     getNumSERanks = self%numEnergyRanks * self%numSpinRanks
   endfunction
-  
-  !--------------------------------------------------------------
-  !> Returns number ranks in MPI_COMM_WORLD.
-!   integer function getNumWorldRanks(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getNumWorldRanks = self%numWorldRanks
-!   endfunction
-
-  !--------------------------------------------------------------
-  !> Returns .true. if rank is the master rank.
-!   logical function isMasterRank(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     isMasterRank = (self%myWorldRank == 0)
-!   endfunction
-  
-  !------------ Other -------------------------------------------
-  
-  !--------------------------------------------------------------
-  !> Returns .true. if rank is in the master group.
-  !> means that SE-Id is 1
-!   logical function isInMasterGroup(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     isInMasterGroup = (self%mySEId == 1)
-!   endfunction
-  
-  !--------------------------------------------------------------
-  !> Returns (Spin,Energy)-communicator handle of the communicator
-  !> the process belongs to
-!   integer function getMySEcommunicator(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getMySEcommunicator = self%mySEComm
-!   endfunction
-  
-  !--------------------------------------------------------------
-  !> Returns communicator handle of active/inactive ranks,
-  !> according to the group the calling process belongs to
-!   integer function getMyActiveCommunicator(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     getMyActiveCommunicator = self%myActiveComm
-!   endfunction
-  
-  !--------------------------------------------------------------
-  !> Returns .true. if rank is an active rank
-!   logical function isActiveRank(self)
-!     type(KKRnanoParallel), intent(in) :: self
-!     isActiveRank = (self%active == 1)
-!   endfunction
 
   !--------------------------------------------------------------
   !> Given the spin index, determine which Spin-Id is responsible

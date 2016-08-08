@@ -146,7 +146,7 @@ module SingleSiteRef_mod
           ig1 = (ig - 1)*lmmaxd + lm2
           ! ginp has dim(lmmaxd*naclsd,lmmaxd,0:1) but logically dim(lmmaxd,naclsd,lmmaxd,0:1), so we interchange the 2nd and 3rd dim here
            grefn(lm2,lm1,ig) = ginp(ig1,lm1,0) ! value
-          dgrefn(lm2,lm1,ig) = ginp(ig1,lm1,1) ! derivative
+          dgrefn(lm2,lm1,ig) = ginp(ig1,lm1,1) ! energy derivative
         enddo ! lm2
       enddo ! lm1
     enddo ! ig
