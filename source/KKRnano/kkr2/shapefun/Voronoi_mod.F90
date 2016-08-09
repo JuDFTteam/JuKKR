@@ -5,13 +5,8 @@ module Voronoi_mod
   implicit none
   private
   public :: Voronoi_construction
-
-!   interface normal_plane
-!     module procedure normal_plane0f, normal_planef
-!   endinterface
   
   contains
-  
   
   !***********************************************************************
   ! Given a cluster of atomic positions at RVEC(3,NVEC), this subroutine

@@ -129,24 +129,32 @@ module SingleSiteRef_mod
     double precision, intent(in) :: cleb(ncleb,2)
     integer, intent(in) :: icleb(ncleb,3)
     integer, intent(in) :: loflm((2*lmax+1)**2)
-    double complex, intent(out) :: Lly_g0tr
     double complex, intent(in)  :: tref_ell(0:lmax,nacls), dtref_ell(0:lmax,nacls)
-    double complex, intent(out) :: dgrefn((lmax+1)**2,(lmax+1)**2,nacls), grefn((lmax+1)**2,(lmax+1)**2,nacls)
+    double complex, intent(out) ::  grefn((lmax+1)**2,(lmax+1)**2,nacls)
+    double complex, intent(out) :: dgrefn((lmax+1)**2,(lmax+1)**2,nacls)
+    double complex, intent(out) :: Lly_g0tr
 
-    integer :: iacls, lm, lmmaxd
-    double complex :: ginp((lmax+1)**2,nacls,(lmax+1)**2,0:1)
+    integer :: iacls, lm, lmmaxd, ist
+    double complex, allocatable :: ginp(:,:,:,:)
+    
+    lmmaxd = (lmax + 1)**2
+    
+    assert(all(shape( grefn) == [lmmaxd, lmmaxd, nacls]))
+    assert(all(shape(dgrefn) == [lmmaxd, lmmaxd, nacls]))
+    
+    allocate(ginp(lmmaxd,nacls,lmmaxd,0:1))
     
     call gll95(e, ncleb, cleb(:,2), icleb, loflm, iend, tref_ell, dtref_ell, rcls, nacls, alat, ginp, Lly_g0tr, lmax, Lly)
 
-    lmmaxd = (lmax + 1)**2
-
     do iacls = 1, nacls
       do lm = 1, lmmaxd
-          ! ginp has dim(lmmaxd*nacls,lmmaxd,0:1) but logically dim(lmmaxd,nacls,lmmaxd,0:1), so we interchange the 2nd and 3rd dim here
+       ! ginp has dim(lmmaxd,nacls,lmmaxd,0:1), so we interchange the 2nd and 3rd dim here
         grefn(:,lm,iacls) = ginp(:,iacls,lm,0) ! value
        dgrefn(:,lm,iacls) = ginp(:,iacls,lm,1) ! energy derivative
       enddo ! lm
     enddo ! iacls
+    
+    deallocate(ginp, stat=ist)
 
   endsubroutine ! gref
   
@@ -188,77 +196,78 @@ module SingleSiteRef_mod
     integer, intent(in) :: iend
     double precision, intent(in) :: ratom(3,*) ! first dim: 3
     double complex, intent(out) :: Lly_g0tr
-    double complex, intent(out) :: gref0((lmax+1)**2*nacls,(lmax+1)**2,0:Lly) !> dim(ngd,lmmaxd,0:Lly)
+    double complex, intent(out) :: gref0((lmax+1)**2,nacls,(lmax+1)**2,0:Lly) !> dim(lmmaxd,nacls,lmmaxd,0:Lly)
 
     external :: zcopy, zgemm, zgetrs ! from BLAS
-    integer :: info, ist
-    integer :: iacls, site_lm_index2
-    double complex, allocatable :: gref(:,:,:), gtref(:,:), trefLL(:,:)
-    double complex, allocatable :: dgtde0(:,:), dgtde(:,:)
+    double complex, allocatable :: gref(:,:,:,:,:), gtref(:,:,:), trefLL(:,:)
+    double complex, allocatable :: dgtde0(:,:,:,:), dgtde(:,:,:) ! Lly
     integer, allocatable :: ipvt(:)
-    integer :: lmmaxd, ngd
+    integer :: lmmaxd, ngd, iacls, info, ist
 
     lmmaxd = (lmax + 1)**2
-    ngd = lmmaxd*nacls
-
-    allocate(gref(ngd,ngd,0:Lly), gtref(ngd,lmmaxd), trefLL(lmmaxd,lmmaxd), ipvt(ngd), stat=ist)
+    
+    assert(all(shape(gref0) == [lmmaxd, nacls, lmmaxd, 1+Lly]))
+    
+    allocate(gref(lmmaxd,nacls,lmmaxd,nacls,0:Lly), gtref(lmmaxd,nacls,lmmaxd), trefLL(lmmaxd,lmmaxd), ipvt(lmmaxd*nacls), stat=ist)
     if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")   
 
     if (Lly > 0) then
-      allocate(dgtde0(ngd,ngd), dgtde(ngd,lmmaxd), stat=ist)
-      if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")   
+      allocate(dgtde0(lmmaxd,nacls,lmmaxd,nacls), dgtde(lmmaxd,nacls,lmmaxd), stat=ist)
+      if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")
+    else
+      allocate(dgtde(1,1,1), stat=ist)
     endif
 
-    call calcFreeGreens(gref(:,:,0), e, lmax, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.false.)
+    call calcFreeGreens(gref(:,:,:,:,0), e, lmax, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.false.)
 
+    ngd = lmmaxd*nacls ! combine the 1st and 2nd dimension to the assumed leading dimension for BLAS and LAPACK calls
+    
     ! construct right hand side of linear equation system for grefsy
     ! the first lmmaxd columns of gref are copied into gref0
     ! gref0 then contains g0^{(1)n'}_{ll'}, the free space structural
     ! green's function for the central cluster atom (e.r.)
     ! --------------------------------------------------------------
-    gref0(:,:,0) = gref(:,1:lmmaxd,0) ! should be equivalent to call zcopy(ngd*lmmaxd,gref,1,gref0,1)
-    ! --------------------------------------------------------------
-
+    
     if (Lly > 0) then
 
-      call calcFreeGreens(gref(:,:,1), e, lmax, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.true.)
+      call calcFreeGreens(gref(:,:,:,:,Lly), e, lmax, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.true.)
       
       do iacls = 1, nacls
-        site_lm_index2 = (iacls - 1)*lmmaxd + 1
         
-        ! -dg_0/de * \delta t_ref    -- stored in gtref
         trefLL(:,:) = unfold_m_deg_diag_rep(lmax, tref_ell(0:,iacls))
-        call zgemm('n','n',ngd,lmmaxd,lmmaxd,cmone, gref(1,site_lm_index2,1),ngd, trefLL,lmmaxd, zero, gtref,ngd)
-        !   - g_0 * d(\delta t_ref)/de + gtref  -- stored again in gtref
-        ! = -dg_0/de * \delta t_ref - g_0 * d(\delta t_ref)/de
-#define dtrefLL trefLL     
+        ! gtref = dg_0/de * \delta t_ref
+        call zgemm('n','n',ngd,lmmaxd,lmmaxd,cone, gref(1,1,1,iacls,Lly),ngd, trefLL,lmmaxd, zero, gtref,ngd)
+        ! gtref = gtref + g_0 * d(\delta t_ref)/de
+        !       = dg_0/de * \delta t_ref + g_0 * d(\delta t_ref)/de
+#define dtrefLL trefLL
         dtrefLL(:,:) = unfold_m_deg_diag_rep(lmax, dtref_ell(0:,iacls))
-        call zgemm('n','n',ngd,lmmaxd,lmmaxd,cmone, gref(1,site_lm_index2,0),ngd, dtrefLL,lmmaxd, cone, gtref,ngd)
+        call zgemm('n','n',ngd,lmmaxd,lmmaxd,cone, gref(1,1,1,iacls,0),ngd, dtrefLL,lmmaxd, cone, gtref,ngd)
 #undef  dtrefLL
-        ! copy gtref to dgtde0 - gtref is reused
-        call zcopy(ngd*lmmaxd,gtref,1,dgtde0(1,site_lm_index2),1) ! dgtde0(:,(iacls-1)*lmmaxd +1:lmmaxd +(iacls-1)*lmmaxd) = gtref(:,:)
+
+        dgtde0(:,:,:,iacls) = -gtref(:,:,:) ! store slice in dgtde0, here, the minus sign comes in
+        
+        if (iacls == 1) dgtde(:,:,:) = dgtde0(:,:,:,1) ! copy slice #1
       enddo ! iacls
-      
-      dgtde(:,:) = dgtde0(:,:lmmaxd) ! copy
-      
+
     endif ! Lly > 0
 
+    gref0(:,:,:,0) = gref(:,:,:,1,0) ! should be equivalent to call zcopy(ngd*lmmaxd,gref,1,gref0,1)
+
     do iacls = 1, nacls
-      site_lm_index2 = (iacls - 1)*lmmaxd + 1
       ! -g_ref * \delta t_ref  -- stored in gtref
       trefLL(:,:) = unfold_m_deg_diag_rep(lmax, tref_ell(0:,iacls))
-      call zgemm('n','n',ngd,lmmaxd,lmmaxd,cmone, gref(1,site_lm_index2,0),ngd, trefLL,lmmaxd, zero, gtref,ngd)
-      call zcopy(ngd*lmmaxd,gtref,1,gref(1,site_lm_index2,0),1) ! gref(:,(iacls-1)*lmmaxd +1:lmmaxd +(iacls-1)*lmmaxd) = gtref(:,:)
+      call zgemm('n','n',ngd,lmmaxd,lmmaxd,cone, gref(1,1,1,iacls,0),ngd, trefLL,lmmaxd, zero, gtref,ngd)
+      gref(:,:,:,iacls,0) = -gtref(:,:,:) ! copy slice back into gref, here, the minus sign comes in
     enddo ! iacls
 
     ! solve Dyson-equation for the reference system
     ! solves (1 - g0 \delta t) g_ref = g0 for g_ref.
-    call grefsy(gref(:,:,0), gref0(:,:,0), ipvt, dgtde, Lly_g0tr, nacls, lmmaxd, Lly)
+    call grefsy(gref(:,:,:,:,0), gref0(:,:,:,0), ipvt, dgtde, Lly_g0tr, nacls, lmmaxd, Lly)
 
     if (Lly > 0) then
-      call zgemm('n','n',ngd,lmmaxd,ngd,cmone, dgtde0,ngd, gref0(1,1,0),ngd, cone, gref(1,1,1),ngd)
-      call zgetrs('n',ngd,lmmaxd, gref(1,1,0),ngd, ipvt, gref(1,1,1),ngd, info)
-      gref0(:ngd,:lmmaxd,1) = gref(:ngd,:lmmaxd,1) ! copy
+      call zgemm('n','n',ngd,lmmaxd,ngd,cmone, dgtde0,ngd, gref0(1,1,1,0),ngd, cone, gref(1,1,1,1,Lly),ngd)
+      call zgetrs('n',ngd,lmmaxd, gref(1,1,1,1,0),ngd, ipvt, gref(1,1,1,1,Lly),ngd, info)
+      gref0(:,:,:,Lly) = gref(:,:,:,1,Lly) ! copy slice #1
     endif ! Lly > 0
 
     deallocate(gref, gtref, dgtde, dgtde0, trefLL, stat=ist) ! ignore status
@@ -287,27 +296,25 @@ module SingleSiteRef_mod
  !> @param[in]  derivative  .false. = calculate free-space-greens function
  !>                         .true.  = calculate derivative of free-space-greens function
   subroutine calcFreeGreens(greenfree, e, lmax, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive)
-!     double complex, intent(out) :: greenfree(:,:)
-    double complex, intent(out) :: greenfree(lmmaxd,nacls,lmmaxd,nacls) ! assumed shape array
-    integer, intent(in) :: ncleb
+    double complex, intent(out) :: greenfree(:,:,:,:) !> dim(lmmaxd,nacls,lmmaxd,nacls)
     double precision, intent(in) :: alat
-    double precision, intent(in) :: cleb(:)
     double complex, intent(in) :: e
+    integer, intent(in) :: ncleb
     integer, intent(in) :: icleb(ncleb,3)
+    double precision, intent(in) :: cleb(:)
+    integer, intent(in) :: iend
     integer, intent(in) :: lmax
-    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: lmmaxd, nacls
     integer, intent(in) :: loflm(:)
-    integer, intent(in) :: nacls, iend
     double precision, intent(in) :: ratom(3,*)
     logical, intent(in) :: derive
 
     ! local
     double precision :: rdiff(3)
-    integer :: lm1, lm2, n1, n2, site_lm_index1, site_lm_index2
+    integer :: iacls, jacls
     double complex :: gll(lmmaxd,lmmaxd) ! automatic array
     
-!     assert(size(greenfree, 1) == lmmaxd*nacls)
-!     assert(size(greenfree, 2) == lmmaxd*nacls)
+    assert(all(shape(greenfree) == [lmmaxd, nacls, lmmaxd, nacls]))
     
     !
     ! ---> construct free green's function
@@ -320,33 +327,23 @@ module SingleSiteRef_mod
     ! the other n=n' blocks are set to zero (green's function is not defined for r=r')
     ! (e.r.)
     
-    greenfree = zero ! init
-    
-      do n2 = 1, nacls
-    do n1 = 1, nacls
+    do iacls = 1, nacls
+      do jacls = 1, nacls
       
-        if (n1 /= n2) then
-          rdiff(1:3) = (ratom(1:3,n2) - ratom(1:3,n1))*alat ! difference vector
+        if (jacls /= iacls) then
+          rdiff(1:3) = (ratom(1:3,iacls) - ratom(1:3,jacls))*alat ! difference vector
 
           call gfree(rdiff, e, gll, cleb, icleb, loflm, iend, lmax, ncleb, derive) ! fills gll with the Green function or the derivative of the Green function 
-          greenfree(:,n1,:,n2) = gll(:,:)
+          greenfree(:,jacls,:,iacls) = gll(:,:)
 
-!         else  ! n1 /= n2
+        else  ! jacls /= iacls
         
-!           gll(:,:) = zero
+          greenfree(:,jacls,:,iacls) = zero
         
-        endif ! n1 /= n2
+        endif ! jacls /= iacls
 
-!         do lm2 = 1, lmmaxd   ; site_lm_index2 = (n2 - 1)*lmmaxd + lm2
-!           do lm1 = 1, lmmaxd ; site_lm_index1 = (n1 - 1)*lmmaxd + lm1
-            
-!             greenfree(site_lm_index1,site_lm_index2) = gll(lm1,lm2)
-            
-!           enddo ! lm1
-!         enddo ! lm2
-
-    enddo ! n1
-      enddo ! n2
+      enddo ! jacls
+    enddo ! iacls
     
   endsubroutine ! calcFreeGreens
 
@@ -382,47 +379,50 @@ module SingleSiteRef_mod
 !>    @author: ???, commented by E. Rabel, Nov 2011
 
   subroutine grefsy(gtmat, gmat, ipvt, dgtde, Lly_g0tr, nacls, lmmaxd, Lly)
-!
-!---> solve the dyson equation to get reference green function
-!
+  !
+  !---> solve the Dyson equation to get reference green function
+  !
     integer, intent(in) :: nacls, lmmaxd, Lly ! lloyd's formula switch 0 (inactive)/ 1 (active)
-    double complex, intent(inout) :: gtmat(lmmaxd,nacls,lmmaxd,nacls)
+    double complex, intent(inout) :: gtmat(:,:,:,:) ! (lmmaxd,nacls,lmmaxd,nacls) !> contains - g0 * \delta t on entry
+    double complex, intent(inout) :: gmat(:,:,:) ! (lmmaxd,nacls,lmmaxd)
+    double complex, intent(inout) :: dgtde(:,:,:) ! (lmmaxd,nacls,lmmaxd)
+    integer,        intent(out) :: ipvt(:) ! (lmmaxd*nacls)
     double complex, intent(out) :: Lly_g0tr
-    double complex, intent(out) :: gmat(lmmaxd,nacls,lmmaxd)
-    double complex, intent(out) :: dgtde(lmmaxd,nacls,lmmaxd)
-    integer,        intent(out) :: ipvt(lmmaxd*nacls)
 
-    external :: zgetrf, zgetrs ! from BLAS: L-U-factorisation and linear system solver
+    external :: zgetrf, zgetrs ! from LAPACK: L-U-factorisation and linear system solver
     integer :: info, ngd, lm, iacls
 
-    ngd = lmmaxd*nacls ! combine the first two dims of the arrays
+    assert(all(shape(gtmat) == [lmmaxd, nacls, lmmaxd, nacls]))
+    assert(all(shape(gmat)  == [lmmaxd, nacls, lmmaxd]))
 
     do iacls = 1, nacls
       do lm = 1, lmmaxd
-        gtmat(lm,iacls,lm,iacls) = gtmat(lm,iacls,lm,iacls) + cone ! gtmat= 1 - g0 * \delta t
+        gtmat(lm,iacls,lm,iacls) = gtmat(lm,iacls,lm,iacls) + cone ! add unity matrix
       enddo ! lm
     enddo ! iacls
-!
-!---> solve the system of linear equations
-!
+    ! now gtmat == 1 - g0 * \delta t
+    
+    ngd = lmmaxd*nacls ! combine the first two dims of the arrays
+
     call zgetrf(ngd,ngd, gtmat,ngd, ipvt, info) ! L-U-factorisation
-    call zgetrs('n',ngd,lmmaxd, gtmat,ngd, ipvt, gmat,ngd, info)
+    
+    call zgetrs('n',ngd,lmmaxd, gtmat,ngd, ipvt, gmat,ngd, info) ! solve linear system
 
-! ..  lloyd
     Lly_g0tr = zero
-    if (Lly > 0) then
+    if (Lly > 0) then ! Lloyd
 
-      call zgetrs('n',ngd,lmmaxd, gtmat,ngd, ipvt, dgtde,ngd, info)
+      assert(all(shape(dgtde) == [lmmaxd, nacls, lmmaxd]))
+
+      call zgetrs('n',ngd,lmmaxd, gtmat,ngd, ipvt, dgtde,ngd, info) ! solve linear system
 
       do lm = 1, lmmaxd
         Lly_g0tr = Lly_g0tr - dgtde(lm,1,lm)
       enddo ! lm
 
-    endif ! Lly > 0
-! .. lloyd
+    endif ! Lly > 0 ! Lloyd
 
   endsubroutine ! grefsy
-  
+
   
   subroutine gfree(rdiff, e, gmLL, cleb, icleb, loflm, iend, lmax, ncleb, derive)
     use Constants_mod, only: Pi
