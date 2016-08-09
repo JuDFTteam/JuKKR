@@ -172,7 +172,7 @@ implicit none
         !$omp parallel do private(ila, iacls)
         do ila = 1, num_local_atoms
 
-          do iacls = 1, kkr(ila)%naclsd
+          do iacls = 1, calc%ref_cluster_a(ila)%nacls
             ! this calls tref several times with the same parameters if the local atoms are close to each other
             call tref(emesh%EZ(IE), params%vref, dims%lmaxd, kkr(ila)%rMTref(iacls), &
                       kkr(ila)%Tref_ell(:,iacls), kkr(ila)%dTref_ell(:,iacls), derive=(dims%Lly > 0))
@@ -180,11 +180,10 @@ implicit none
         
           call gref(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
                     calc%gaunts%CLEB, calc%ref_cluster_a(ila)%RCLS, calc%gaunts%ICLEB, &
-                    calc%gaunts%LOFLM, calc%ref_cluster_a(ila)%NACLS, &
+                    calc%gaunts%LOFLM, calc%ref_cluster_a(ila)%nacls, &
                     kkr(ila)%Tref_ell, kkr(ila)%dTref_ell, GrefN_buffer(:,:,:,ila), &
                     DGrefN_buffer(:,:,:,ila), kkr(ila)%Lly_G0Tr(IE), &
-                    dims%lmaxd, kkr(ila)%naclsd, calc%gaunts%ncleb, &
-                    dims%Lly)
+                    dims%lmaxd, calc%gaunts%ncleb, dims%Lly)
 
         enddo  ! ila
         !$omp endparallel do

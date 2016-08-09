@@ -119,32 +119,31 @@ module SingleSiteRef_mod
 
 
 !------------------------------------------------------------------------------
-  subroutine gref(e, alatc, iend, cleb, rcls, icleb, loflm, nacls, tref_ell, dtref_ell, grefn, dgrefn, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
-    integer, intent(in) :: lmaxd, naclsd, ncleb, Lly
+  subroutine gref(e, alatc, iend, cleb, rcls, icleb, loflm, nacls, tref_ell, dtref_ell, grefn, dgrefn, Lly_g0tr, lmaxd, ncleb, Lly)
+    integer, intent(in) :: lmaxd, nacls, ncleb, Lly
     double complex, intent(in) :: e
     double precision, intent(in) :: alatc
     integer, intent(in) :: iend
-    double precision, intent(in) :: cleb(ncleb,2), rcls(3,naclsd)
+    double precision, intent(in) :: cleb(ncleb,2), rcls(3,nacls)
     integer, intent(in) :: icleb(ncleb,3)
     integer, intent(in) :: loflm((2*lmaxd+1)**2)
-    integer, intent(in) :: nacls
     double complex, intent(out) :: Lly_g0tr
-!     double complex, intent(in)  :: trefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd), dtrefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
-    double complex, intent(in)  :: tref_ell(0:lmaxd,naclsd), dtref_ell(0:lmaxd,naclsd)
-    double complex, intent(out) :: dgrefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd), grefn((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
+!     double complex, intent(in)  :: trefLL((lmaxd+1)**2,(lmaxd+1)**2,nacls), dtrefLL((lmaxd+1)**2,(lmaxd+1)**2,nacls)
+    double complex, intent(in)  :: tref_ell(0:lmaxd,nacls), dtref_ell(0:lmaxd,nacls)
+    double complex, intent(out) :: dgrefn((lmaxd+1)**2,(lmaxd+1)**2,nacls), grefn((lmaxd+1)**2,(lmaxd+1)**2,nacls)
 
     integer :: ig, ig1, lm1, lm2, lmmaxd
-    double complex :: ginp((lmaxd+1)**2*naclsd,(lmaxd+1)**2,0:1)
+    double complex :: ginp((lmaxd+1)**2*nacls,(lmaxd+1)**2,0:1)
     
-    call gll95(e, cleb(1,2), icleb, loflm, iend, tref_ell, dtref_ell, rcls, nacls, alatc, ginp(:,:,0), ginp(:,:,1), Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
+    call gll95(e, cleb(1,2), icleb, loflm, iend, tref_ell, dtref_ell, rcls, nacls, alatc, ginp(:,:,0), ginp(:,:,1), Lly_g0tr, lmaxd, ncleb, Lly)
 
     lmmaxd = (lmaxd+1)**2
 
-    do ig = 1, naclsd
+    do ig = 1, nacls
       do lm1 = 1, lmmaxd
         do lm2 = 1, lmmaxd
           ig1 = (ig - 1)*lmmaxd + lm2
-          ! ginp has dim(lmmaxd*naclsd,lmmaxd,0:1) but logically dim(lmmaxd,naclsd,lmmaxd,0:1), so we interchange the 2nd and 3rd dim here
+          ! ginp has dim(lmmaxd*nacls,lmmaxd,0:1) but logically dim(lmmaxd,nacls,lmmaxd,0:1), so we interchange the 2nd and 3rd dim here
            grefn(lm2,lm1,ig) = ginp(ig1,lm1,0) ! value
           dgrefn(lm2,lm1,ig) = ginp(ig1,lm1,1) ! energy derivative
         enddo ! lm2
@@ -170,25 +169,23 @@ module SingleSiteRef_mod
 !> @param dgref0 ??? energy derivative of green's function
 !> @param Lly_g0tr trace(m^-1 dm/de) with m = (1 - g0 \delta t_ref)
 !> @param lmaxd angular momentum cutoff (it would be better to rewrite routine to pass lmmaxd)
-!> @param naclsd dimension array: maximal number of atoms in reference clusters
 !> @param ncleb number of gaunt coefficients in cleb
 !> @param Lly do lloyd's formula calculations 1=yes/0=no
-  subroutine gll95(e, cleb, icleb, loflm, iend, tref_ell, dtref_ell, ratom, nacls, alat, gref0, dgref0, Lly_g0tr, lmaxd, naclsd, ncleb, Lly)
+  subroutine gll95(e, cleb, icleb, loflm, iend, tref_ell, dtref_ell, ratom, nacls, alat, gref0, dgref0, Lly_g0tr, lmaxd, ncleb, Lly)
   ! **********************************************************************
   !
   !     solution of the dyson equation for a cluster of potentials
   !     (trefLL) centered at positions ratom in free space,
   !
   ! ----------------------------------------------------------------------
-    integer, intent(in) :: lmaxd, naclsd, ncleb, Lly
+    integer, intent(in) :: lmaxd, nacls, ncleb, Lly
     double complex, intent(in) :: e
     double complex, intent(out) :: Lly_g0tr
     double precision, intent(in) :: alat
-    integer, intent(in) :: nacls
-    double complex, intent(out) :: gref0((lmaxd+1)**2*naclsd,(lmaxd+1)**2) !> dim(ngd,lmmaxd)
-    double complex, intent(out) :: dgref0(Lly*((lmaxd+1)**2*naclsd-1)+1,(lmaxd+1)**2)
-    double complex, intent(in) :: tref_ell(0:,1:) ! (0:lmaxd,naclsd) ! trefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
-    double complex, intent(in) :: dtref_ell(0:,1:) ! dtrefLL((lmaxd+1)**2,(lmaxd+1)**2,naclsd)
+    double complex, intent(out) :: gref0((lmaxd+1)**2*nacls,(lmaxd+1)**2) !> dim(ngd,lmmaxd)
+    double complex, intent(out) :: dgref0(Lly*((lmaxd+1)**2*nacls-1)+1,(lmaxd+1)**2)
+    double complex, intent(in) :: tref_ell(0:,1:) ! (0:lmaxd,nacls) ! trefLL((lmaxd+1)**2,(lmaxd+1)**2,nacls)
+    double complex, intent(in) :: dtref_ell(0:,1:) ! dtrefLL((lmaxd+1)**2,(lmaxd+1)**2,nacls)
     double precision, intent(in) :: cleb(ncleb)
     integer, intent(in) :: icleb(ncleb,3)
     integer, intent(in) :: loflm(:)
@@ -197,8 +194,8 @@ module SingleSiteRef_mod
 
     external :: zcopy, zgemm, zgetrs ! from BLAS
     integer :: info, ist
-    integer :: ipvt((lmaxd+1)**2*naclsd)
-    integer :: n2, ndim, site_lm_index2
+    integer :: ipvt((lmaxd+1)**2*nacls)
+    integer :: n2, site_lm_index2
   ! ---------------------------------------------------------------------
   !     the following arrays can be very large (> 60 mb in typical cases)
   !     therefore they are allocated on the heap
@@ -210,10 +207,10 @@ module SingleSiteRef_mod
 
     lmmaxd = (lmaxd+1)**2
     lmgf0d = lmmaxd
-    ngd = lmmaxd*naclsd
+    ngd = lmmaxd*nacls
 
     !     allocate arrays
-    allocate(gref(ngd,ngd,0:Lly), gtref(ngd,lmmaxd), dgtde(Lly*(lmmaxd*naclsd-1)+1,lmmaxd), trefLL(lmmaxd,lmmaxd), stat=ist)
+    allocate(gref(ngd,ngd,0:Lly), gtref(ngd,lmmaxd), dgtde(Lly*(lmmaxd*nacls-1)+1,lmmaxd), trefLL(lmmaxd,lmmaxd), stat=ist)
     if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")   
 
     if (Lly == 1) then
@@ -221,7 +218,6 @@ module SingleSiteRef_mod
       if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")   
     endif
 
-    ndim = lmmaxd*nacls ! ndim can be smaller than ngd=lmmaxd*naclsd
     call calcFreeGreens(gref(:,:,0), e, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.false.)
 
     if (Lly == 1) &
@@ -241,11 +237,11 @@ module SingleSiteRef_mod
         
         ! -dg_0/de * \delta t_ref    -- stored in gtref
         trefLL(:,:) = unfold_m_deg_diag_rep(lmaxd, tref_ell(0:,n2))
-        call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2,1),ngd, trefLL, lmmaxd,zero,gtref,ngd)
+        call zgemm('n','n',ngd,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2,1),ngd, trefLL, lmmaxd,zero,gtref,ngd)
         !   - g_0 * d(\delta t_ref)/de + gtref  -- stored again in gtref
         ! = -dg_0/de * \delta t_ref - g_0 * d(\delta t_ref)/de
         dtrefLL(:,:) = unfold_m_deg_diag_rep(lmaxd, dtref_ell(0:,n2))
-        call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2,0),ngd, dtrefLL, lmmaxd,cone,gtref,ngd)
+        call zgemm('n','n',ngd,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2,0),ngd, dtrefLL, lmmaxd,cone,gtref,ngd)
         ! copy gtref to dgtde0 - gtref is reused
         call zcopy(ngd*lmmaxd,gtref,1,dgtde0(1,site_lm_index2),1) ! dgtde0(:,(n2-1)*lmmaxd +1:lmmaxd +(n2-1)*lmmaxd) = gtref(:,:)
       enddo ! n2
@@ -255,7 +251,7 @@ module SingleSiteRef_mod
       site_lm_index2 = (n2 - 1)*lmmaxd + 1
       ! -g_ref * \delta t_ref  -- stored in gtref
       trefLL(:,:) = unfold_m_deg_diag_rep(lmaxd, tref_ell(0:,n2))
-      call zgemm('n','n',ndim,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2,0),ngd, trefLL, lmmaxd,zero,gtref,ngd)
+      call zgemm('n','n',ngd,lmmaxd,lmmaxd,cmone,gref(1,site_lm_index2,0),ngd, trefLL, lmmaxd,zero,gtref,ngd)
       call zcopy(ngd*lmmaxd,gtref,1,gref(1,site_lm_index2,0),1) ! gref(:,(n2-1)*lmmaxd +1:lmmaxd +(n2-1)*lmmaxd) = gtref(:,:)
     enddo ! n2
 
@@ -264,11 +260,11 @@ module SingleSiteRef_mod
     ! solve Dyson-equation for the reference system
     ! solves (1 - g0 \delta t) g_ref = g0 for g_ref.
     Lly_g0tr = zero
-    call grefsy(gref(:,:,0), gref0, ipvt, ndim, dgtde, Lly_g0tr, naclsd, lmmaxd, Lly)
+    call grefsy(gref(:,:,0), gref0, ipvt, dgtde, Lly_g0tr, nacls, lmmaxd, Lly)
 
     if (Lly == 1) then
-      call zgemm('n','n',ndim,lmmaxd,ndim,cmone,dgtde0,ngd,gref0,ngd,cone,gref(1,1,1),ngd)
-      call zgetrs('n',ndim,lmmaxd,gref(1,1,0),ngd,ipvt,gref(1,1,1),ngd,info)
+      call zgemm('n','n',ngd,lmmaxd,ngd,cmone,dgtde0,ngd,gref0,ngd,cone,gref(1,1,1),ngd)
+      call zgetrs('n',ngd,lmmaxd,gref(1,1,0),ngd,ipvt,gref(1,1,1),ngd,info)
       dgref0(:ngd,:lmmaxd) = gref(:ngd,:lmmaxd,1) ! copy
     endif ! Lly == 1
 
@@ -389,46 +385,40 @@ module SingleSiteRef_mod
 !>
 !>    @author: ???, commented by E. Rabel, Nov 2011
 
-  subroutine grefsy(gtmat, gmat, ipvt, ndim, dgtde, Lly_g0tr, naclsd, lmmaxd, Lly)
+  subroutine grefsy(gtmat, gmat, ipvt, dgtde, Lly_g0tr, nacls, lmmaxd, Lly)
 !
 !---> solve the dyson equation to get reference green function
 !
-    integer, intent(in) :: ndim, naclsd, lmmaxd, Lly ! lloyd's formula switch 0 (inactive)/ 1 (active)
+    integer, intent(in) :: nacls, lmmaxd, Lly ! lloyd's formula switch 0 (inactive)/ 1 (active)
     double complex, intent(out) :: Lly_g0tr
-    double complex, intent(inout) :: gmat(lmmaxd*naclsd,lmmaxd)
-    double complex, intent(inout) :: gtmat(lmmaxd*naclsd,lmmaxd*naclsd)
-    double complex, intent(inout) :: dgtde(Lly*(lmmaxd*naclsd-1)+1,lmmaxd)
+    double complex, intent(inout) :: gmat(lmmaxd*nacls,lmmaxd)
+    double complex, intent(inout) :: gtmat(lmmaxd*nacls,lmmaxd*nacls)
+    double complex, intent(inout) :: dgtde(Lly*(lmmaxd*nacls-1)+1,lmmaxd)
+    integer, intent(out) :: ipvt(lmmaxd*nacls)
     
     external :: zgetrf, zgetrs ! from BLAS
-    integer :: ipvt(lmmaxd*naclsd)
-    integer :: i, info, lmgf0d, ngd
+    integer :: i, info, ngd
 
-    lmgf0d = lmmaxd
-    ngd = lmmaxd*naclsd
+    ngd = lmmaxd*nacls
 
-    do i = 1, ndim
+    do i = 1, ngd
       gtmat(i,i) = cone + gtmat(i,i) ! gtmat= 1 - g0 * \delta t
     enddo ! i
 !
 !---> solve the system of linear equations
 !
-    call zgetrf(ndim,ndim,gtmat,ngd,ipvt,info) ! L-U-factorisation
-    call zgetrs('n',ndim,lmgf0d,gtmat,ngd,ipvt,gmat,ngd,info)
+    call zgetrf(ngd,ngd, gtmat,ngd, ipvt, info) ! L-U-factorisation
+    call zgetrs('n',ngd,lmmaxd, gtmat,ngd, ipvt, gmat,ngd, info)
 
 ! ..  lloyd
+    Lly_g0tr = zero
     if (Lly == 1) then
 
-      call zgetrs('n',ndim,lmgf0d,gtmat,ngd,ipvt,dgtde,ngd,info)
+      call zgetrs('n',ngd,lmmaxd, gtmat,ngd, ipvt, dgtde,ngd, info)
 
-      Lly_g0tr = zero
-
-      do i = 1, lmgf0d
+      do i = 1, lmmaxd
         Lly_g0tr = Lly_g0tr - dgtde(i,i)
       enddo ! i
-
-    else  ! Lly == 1
-
-      Lly_g0tr = zero
 
     endif ! Lly == 1
 ! .. lloyd
@@ -482,7 +472,7 @@ module SingleSiteRef_mod
 !
 !     which for x = sqrt(e)*r leads to
 !
-!      d                       r           rl
+!     d                       r           rl
 !     --- ( sqrt(e) h (x) ) = - h   (x) - -- h (x) )
 !     de             l        2  l-1      2x  l
 !
@@ -490,7 +480,7 @@ module SingleSiteRef_mod
     
       dhl(1) = 0.5d0*ci*rabs*hl(1) ! start recursion here
       do lp1 = 2, 2*lmax + 1
-        dhl(lp1) = 0.5d0*(rabs*hl(lp1-1)-(lp1-1)*hl(lp1)/sqE)
+        dhl(lp1) = 0.5d0*(rabs*hl(lp1-1) - (lp1-1)*hl(lp1)/sqE)
       enddo ! lp1
 
       do lm1 = 1, lmx2sq
