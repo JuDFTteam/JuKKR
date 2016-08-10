@@ -208,15 +208,8 @@ module SingleSiteRef_mod
     
     assert(all(shape(gref0) == [lmmaxd, nacls, lmmaxd, 1+Lly]))
     
-    allocate(gref(lmmaxd,nacls,lmmaxd,nacls,0:Lly), gtref(lmmaxd,nacls,lmmaxd), trefLL(lmmaxd,lmmaxd), ipvt(lmmaxd*nacls), stat=ist)
+    allocate(gref(lmmaxd,nacls,lmmaxd,nacls,0:Lly), trefLL(lmmaxd,lmmaxd), stat=ist)
     if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")   
-
-    if (Lly > 0) then
-      allocate(dgtde0(lmmaxd,nacls,lmmaxd,nacls), dgtde(lmmaxd,nacls,lmmaxd), stat=ist)
-      if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")
-    else
-      allocate(dgtde(1,1,1), stat=ist)
-    endif
 
     call calcFreeGreens(gref(:,:,:,:,0), e, lmax, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.false.)
 
@@ -227,50 +220,59 @@ module SingleSiteRef_mod
     ! gref0 then contains g0^{(1)n'}_{ll'}, the free space structural
     ! green's function for the central cluster atom (e.r.)
     ! --------------------------------------------------------------
-    
+
     if (Lly > 0) then
 
       call calcFreeGreens(gref(:,:,:,:,Lly), e, lmax, lmmaxd, nacls, ratom, alat, cleb, icleb, ncleb, iend, loflm, derive=.true.)
       
+      allocate(dgtde0(lmmaxd,nacls,lmmaxd,nacls), dgtde(lmmaxd,nacls,lmmaxd), stat=ist)
+      if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")
+
+      ! independent iacls, private(trefLL)
       do iacls = 1, nacls
         
         trefLL(:,:) = unfold_m_deg_diag_rep(lmax, tref_ell(0:,iacls))
-        ! gtref = dg_0/de * \delta t_ref
-        call zgemm('n','n',ngd,lmmaxd,lmmaxd,cone, gref(1,1,1,iacls,Lly),ngd, trefLL,lmmaxd, zero, gtref,ngd)
-        ! gtref = gtref + g_0 * d(\delta t_ref)/de
-        !       = dg_0/de * \delta t_ref + g_0 * d(\delta t_ref)/de
+        ! dgtde0(:,: , :,iacls) = - dg_0/de * \delta t_ref
+        call zgemm('n','n',ngd,lmmaxd,lmmaxd,cmone, gref(1,1,1,iacls,Lly),ngd, trefLL,lmmaxd, zero, dgtde0(1,1,1,iacls),ngd)
+        ! dgtde0(:,: , :,iacls) =  dgtde0(:,: , :,iacls)  - g_0 * d(\delta t_ref)/de
+        !                       = -dg_0/de * \delta t_ref - g_0 * d(\delta t_ref)/de
 #define dtrefLL trefLL
         dtrefLL(:,:) = unfold_m_deg_diag_rep(lmax, dtref_ell(0:,iacls))
-        call zgemm('n','n',ngd,lmmaxd,lmmaxd,cone, gref(1,1,1,iacls,0),ngd, dtrefLL,lmmaxd, cone, gtref,ngd)
+        call zgemm('n','n',ngd,lmmaxd,lmmaxd,cmone, gref(1,1,1,iacls,0),ngd, dtrefLL,lmmaxd, cone, dgtde0(1,1,1,iacls),ngd)
 #undef  dtrefLL
 
-        dgtde0(:,:,:,iacls) = -gtref(:,:,:) ! store slice in dgtde0, here, the minus sign comes in
-        
         if (iacls == 1) dgtde(:,:,:) = dgtde0(:,:,:,1) ! copy slice #1
       enddo ! iacls
 
+    else
+      allocate(dgtde(1,1,1), stat=ist)
     endif ! Lly > 0
 
     gref0(:,:,:,0) = gref(:,:,:,1,0) ! should be equivalent to call zcopy(ngd*lmmaxd,gref,1,gref0,1)
 
+    allocate(gtref(lmmaxd,nacls,lmmaxd), ipvt(lmmaxd*nacls), stat=ist)
+    if (ist /= 0) die_here("gll95: fatal error, failure to allocate memory, probably out of memory.")   
     do iacls = 1, nacls
       ! -g_ref * \delta t_ref  -- stored in gtref
       trefLL(:,:) = unfold_m_deg_diag_rep(lmax, tref_ell(0:,iacls))
-      call zgemm('n','n',ngd,lmmaxd,lmmaxd,cone, gref(1,1,1,iacls,0),ngd, trefLL,lmmaxd, zero, gtref,ngd)
-      gref(:,:,:,iacls,0) = -gtref(:,:,:) ! copy slice back into gref, here, the minus sign comes in
+      call zgemm('n','n',ngd,lmmaxd,lmmaxd,cmone, gref(1,1,1,iacls,0),ngd, trefLL,lmmaxd, zero, gtref,ngd)
+      gref(:,:,:,iacls,0) = gtref(:,:,:) ! copy slice back into gref, here, the minus sign comes in
     enddo ! iacls
+    deallocate(gtref, stat=ist)
 
     ! solve Dyson-equation for the reference system
     ! solves (1 - g0 \delta t) g_ref = g0 for g_ref.
     call grefsy(gref(:,:,:,:,0), gref0(:,:,:,0), ipvt, dgtde, Lly_g0tr, nacls, lmmaxd, Lly)
 
     if (Lly > 0) then
+    
       call zgemm('n','n',ngd,lmmaxd,ngd,cmone, dgtde0,ngd, gref0(1,1,1,0),ngd, cone, gref(1,1,1,1,Lly),ngd)
       call zgetrs('n',ngd,lmmaxd, gref(1,1,1,1,0),ngd, ipvt, gref(1,1,1,1,Lly),ngd, info)
       gref0(:,:,:,Lly) = gref(:,:,:,1,Lly) ! copy slice #1
+      
     endif ! Lly > 0
 
-    deallocate(gref, gtref, dgtde, dgtde0, trefLL, stat=ist) ! ignore status
+    deallocate(gref, dgtde, dgtde0, trefLL, stat=ist) ! ignore status
   endsubroutine ! gll95
 
   
