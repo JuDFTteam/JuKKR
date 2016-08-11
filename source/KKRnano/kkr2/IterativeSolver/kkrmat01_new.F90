@@ -758,6 +758,7 @@ module kkrmat_mod
   subroutine referenceFourier_mpi(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
                 indn0, rr, ezoa, Ginp, global_atom_id, comm)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
+    use ChunkIndex_mod, only: getRankAndLocalIndex
     double complex, intent(out) :: GLLh(:)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
@@ -773,6 +774,7 @@ module kkrmat_mod
     integer, intent(in) :: comm
 
     ! locals
+    integer(kind=4) :: chunk_inds(2,1)
     integer :: site_index, naez, naclsd, lmmaxd, ist
     integer :: num_local_atoms, atom_requested
     double complex, allocatable :: Gref_buffer(:,:,:,:), eikrm(:), eikrp(:) ! dim: naclsd
@@ -811,11 +813,14 @@ module kkrmat_mod
     do site_index = 1, naez
       atom_requested = global_atom_id(site_index) ! get the global atom id
 
-      rank = (atom_requested - 1)/num_local_atoms ! block distribution of atoms to ranks
+!     rank = (atom_requested - 1)/num_local_atoms ! block distribution of atoms to ranks
+      chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, num_local_atoms*nranks, nranks)
+      rank = chunk_inds(1,1)
+      assert( chunk_inds(2,1) == 1 ) ! since there may only be one local atom, its local index must be one
 
       if (rank /= myrank) then
 
-        tag  = modulo(myrank, TAGMOD)
+        tag = modulo(myrank, TAGMOD)
         call MPI_Isend(Ginp(:,:,:,1),                 ncount, MPI_DOUBLE_COMPLEX, rank, tag, comm, reqs(1,site_index), ierr)
 
         tag = modulo(atom_requested - 1, TAGMOD)
@@ -860,6 +865,7 @@ module kkrmat_mod
 #ifdef SPLIT_REFERENCE_FOURIER_COM
 
   subroutine referenceFourier_mpi_part1(Gref_buffer, naez, Ginp, global_atom_id, comm)
+    use ChunkIndex_mod, only: getRankAndLocalIndex
     double complex, intent(out) :: Gref_buffer(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,naez)
     integer, intent(in) :: naez
     double complex, intent(in) :: Ginp(:,:,:,:)
@@ -867,6 +873,7 @@ module kkrmat_mod
     integer, intent(in) :: comm
 
     ! locals
+    integer(kind=4) :: chunk_inds(2,1)
     integer :: site_index, naclsd, lmmaxd, ist
     integer :: num_local_atoms, atom_requested
     integer :: rank, tag, myrank, nranks, ierr, ncount
@@ -901,7 +908,10 @@ module kkrmat_mod
     do site_index = 1, naez
       atom_requested = global_atom_id(site_index) ! get the global atom id
 
-      rank = (atom_requested - 1)/num_local_atoms ! block distribution of atoms to ranks
+!     rank = (atom_requested - 1)/num_local_atoms ! block distribution of atoms to ranks
+      chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, num_local_atoms*nranks, nranks)
+      rank = chunk_inds(1,1)
+      assert( chunk_inds(2,1) == 1 ) ! since there may only be one local atom, its local index must be one
 
       if (rank /= myrank) then
 
