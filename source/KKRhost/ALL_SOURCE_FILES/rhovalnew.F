@@ -9,25 +9,27 @@
        use omp_lib
 #endif
 #ifdef CPP_MPI
-      use mpi
+       use mpi
 #endif
 #ifdef CPP_TIMING
-      use mod_timing
+       use mod_timing
 #endif
 
       
-      use mod_types, only: t_tgmat, t_inc
+       use mod_types, only: t_tgmat, t_inc
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_gref,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
      &                      get_ntot_pT_ioff_pT_2D 
 #endif
-      use mod_mympi, only: myrank, nranks, master
+       use mod_mympi, only: myrank, nranks, master
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks,
      &                     mympi_main1c_comm_newsosol
-#endif
+#endif      
+       use mod_save_wavefun, only: t_wavefunctions, read_wavefunc
+
        IMPLICIT NONE
        include 'inc.p'
        INTEGER NSPIN,NSRA,LMAX,IEND,IPOT,IELAST,NPAN_TOT,NCHEB,
@@ -120,6 +122,8 @@
 #endif
        integer :: ie_start,ie_end, ie_num
        double precision :: angles_new(2)
+       ! read in wavefunctions
+       logical :: wavefunction_was_read_in
 C      ..
        LOGICAL TEST,OPT
        EXTERNAL TEST,OPT
@@ -331,6 +335,12 @@ c energy loop
 !$omp end critical
 #endif
 
+        if(t_wavefunctions%Nwfsavemax>0) then ! read wavefunctions?
+         ! read in wavefunction from memory
+         call read_wavefunc(t_wavefunctions,rll, rllleft, sll, sllleft, 
+     &                      i1, ie, wavefunction_was_read_in)
+        end if
+     
 c recalculate wavefuntions, also include left solution
 c contruct the spin-orbit coupling hamiltonian and add to potential
         CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,
@@ -344,120 +354,126 @@ cc extend matrix for the SRA treatment
         IF (NSRA.EQ.2) THEN
          IF (USE_SRATRICK.EQ.0) THEN
           CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
-     +               LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
+     +              LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
          ELSEIF (USE_SRATRICK.EQ.1) THEN
           CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
-     +            LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+     +           LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
          ENDIF
         ELSE
          VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
         ENDIF
 
+        if( (t_wavefunctions%Nwfsavemax>0 .and. 
+     &       .not. wavefunction_was_read_in ) 
+     &      .or. (t_wavefunctions%Nwfsavemax==0)) then ! read/recalc wavefunctions
+        
 cc calculate the source terms in the Lippmann-Schwinger equation
 cc these are spherical hankel and bessel functions
-        HLK(:,:,ith)=CZERO
-        JLK(:,:,ith)=CZERO
-        HLK2(:,:,ith)=CZERO
-        JLK2(:,:,ith)=CZERO
-        GMATPREFACTOR=CZERO
-        JLK_INDEX=0
-        CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
+         HLK(:,:,ith)=CZERO
+         JLK(:,:,ith)=CZERO
+         HLK2(:,:,ith)=CZERO
+         JLK2(:,:,ith)=CZERO
+         GMATPREFACTOR=CZERO
+         JLK_INDEX=0
+         CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
      +                         LMMAXSO,1,JLK_INDEX,HLK(:,:,ith),
      +                         JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),
      +                         GMATPREFACTOR)
 
 c using spherical potential as reference
-        IF (USE_SRATRICK.EQ.1) THEN
-         CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
+         IF (USE_SRATRICK.EQ.1) THEN
+          CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
      +           LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,
      +                JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),
      +                JLK2(:,:,ith),GMATPREFACTOR,TMATSPH(:,ith),
      +                ALPHASPH,USE_SRATRICK)
-        ENDIF
+         ENDIF
 
 cc calculate the tmat and wavefunctions
-        RLL(:,:,:,ith)=CZERO
-        SLL(:,:,:,ith)=CZERO
+         RLL(:,:,:,ith)=CZERO
+         SLL(:,:,:,ith)=CZERO
 
 cc right solutions
-        TMATLL=CZERO
-        CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+         TMATLL=CZERO
+         CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLL(:,:,:,ith),SLL(:,:,:,ith),TMATLL,
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
      +          IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
      +              HLK2(:,:,ith),JLK2(:,:,ith),
      +              GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
-        IF (NSRA.EQ.2) THEN
-         RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+         IF (NSRA.EQ.2) THEN
+          RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-         SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+          SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-        ENDIF
-
+         ENDIF
+         
 c left solutions
 c contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
-        CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,
+         CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,
      +                     CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,THETA,PHI,
      +                     IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,
      +                     IRMDNEW,NRMAXD,VNSPLL0,VNSPLL1(:,:,:,ith),
      +                     'transpose')
 
 cc extend matrix for the SRA treatment
-        VNSPLL(:,:,:,ith)=CZERO
-        IF (NSRA.EQ.2) THEN
-         IF (USE_SRATRICK.EQ.0) THEN
-          CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
-     +               LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
-         ELSEIF (USE_SRATRICK.EQ.1) THEN
-          CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
-     +            LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+         VNSPLL(:,:,:,ith)=CZERO
+         IF (NSRA.EQ.2) THEN
+          IF (USE_SRATRICK.EQ.0) THEN
+           CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
+     +              LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
+          ELSEIF (USE_SRATRICK.EQ.1) THEN
+           CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
+     +           LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+          ENDIF
+         ELSE
+          VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
          ENDIF
-        ELSE
-         VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
-        ENDIF
 
 cc calculate the source terms in the Lippmann-Schwinger equation
 cc these are spherical hankel and bessel functions
-        HLK(:,:,ith)=CZERO
-        JLK(:,:,ith)=CZERO
-        HLK2(:,:,ith)=CZERO
-        JLK2(:,:,ith)=CZERO
-        GMATPREFACTOR=CZERO
-        JLK_INDEX=0
-        CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
+         HLK(:,:,ith)=CZERO
+         JLK(:,:,ith)=CZERO
+         HLK2(:,:,ith)=CZERO
+         JLK2(:,:,ith)=CZERO
+         GMATPREFACTOR=CZERO
+         JLK_INDEX=0
+         CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
      +                         LMMAXSO,1,JLK_INDEX,HLK(:,:,ith),
      +                         JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),
      +                         GMATPREFACTOR)
 
 cc using spherical potential as reference
 c notice that exchange the order of left and right hankel/bessel functions
-        IF (USE_SRATRICK.EQ.1) THEN
-         CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
+         IF (USE_SRATRICK.EQ.1) THEN
+          CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
      +           LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,
      +                JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
      +                HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,
      +                ALPHASPH,TMATSPH(:,ith),USE_SRATRICK)
-        ENDIF
+         ENDIF
 
 cc calculate the tmat and wavefunctions
-        RLLLEFT(:,:,:,ith)=CZERO
-        SLLLEFT(:,:,:,ith)=CZERO
+         RLLLEFT(:,:,:,ith)=CZERO
+         SLLLEFT(:,:,:,ith)=CZERO
 
 cc left solutions
 c notice that exchange the order of left and right hankel/bessel functions
-        TMATTEMP=CZERO
-        CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+         TMATTEMP=CZERO
+         CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),TMATTEMP,
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
      +        IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
      +              HLK(:,:,ith),JLK(:,:,ith),
      +              GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
-        IF (NSRA.EQ.2) THEN
-         RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+         IF (NSRA.EQ.2) THEN
+          RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-         SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+          SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-        ENDIF
+         ENDIF
+         
+        end if ! read/recalc wavefunctions
 
         DO 200 IQ = 1,NQDOS                                       ! qdos
 c read in gf

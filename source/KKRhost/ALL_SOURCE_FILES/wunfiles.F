@@ -238,7 +238,7 @@ C     ..
 C     ..
 C     .. Local scalars
       INTEGER I1,I2
-      integer ic, naclsmax, nqdos  !variables for t_inc filling
+      integer ic, naclsmax, nqdos, irmdnew  !variables for t_inc filling
       double precision phi(natyp),theta(natyp)
 C     ..
 C     .. External Functions ..
@@ -251,6 +251,16 @@ C
       ! put information about scf steps into t_inc
       t_inc%i_iteration = ITSCF
       t_inc%N_iteration = SCFSTEPS
+      ! put information for save_wavefun also in:
+      t_inc%NSRA =NSRA
+      t_inc%LMMAXSO = 2*(LMAXD+1)**2
+      irmdnew = 0
+      do i1=1,natypd
+        if (npan_tot(i1)*(ncheb+1)>irmdnew) then
+           irmdnew = npan_tot(i1)*(ncheb+1)
+        end if
+      end do
+      t_inc%IRMDNEW = irmdnew
 
 C ------------------------------------------------------------- itermdir
 C

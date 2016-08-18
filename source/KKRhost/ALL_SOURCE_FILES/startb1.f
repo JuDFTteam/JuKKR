@@ -198,7 +198,8 @@ c
 c---  >read muffin-tin radius , lattice constant and new muffin radius
 c      (new mt radius is adapted to the given radial mesh)
 c
-            READ (IFILE,FMT=9030) RMT(IH),ALAT,RMTNEW(IH)
+            READ (IFILE,FMT=*) RMT(IH),ALAT,RMTNEW(IH)
+            !READ (IFILE,FMT=9030) RMT(IH),ALAT,RMTNEW(IH)
 c
 c---> read nuclear charge , lmax of the core states ,
 c     wigner seitz radius , fermi energy and energy difference
@@ -227,7 +228,10 @@ c     mesh  needed for shape functions, the constants a and b
 c     for the radial exponential mesh : r(i) = b*(exp(a*(i-1))-1)
 c     the no. of different core states and some other stuff
 c
-            READ (IFILE,FMT=9050) IRWS(IH),A(IH),B(IH),NCORE(I),INEW
+            !READ (IFILE,FMT=9050) IRWS(IH),A(IH),B(IH),NCORE(I),INEW
+            READ (IFILE,FMT=*) IRWS(IH)
+            READ (IFILE,FMT=*) A(IH),B(IH)
+            READ (IFILE,FMT=*) NCORE(I),INEW
 c
             NR = IRWS(IH)
 

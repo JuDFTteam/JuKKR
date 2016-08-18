@@ -14,6 +14,10 @@ program kkrcode
   use mod_mympi, only: mympi_init, myrank, nranks, master
 #endif
 
+#ifdef CPP_MPI
+  use mod_save_wavefun, only: t_wavefunctions, bcast_params_savewf
+#endif
+
   
 #ifdef CPP_MPI
   use mpi
@@ -130,7 +134,12 @@ program kkrcode
        if(t_inc%i_write>0) open(1337, file='output.'//trim(ctemp)//'.txt')
     endif
     if(t_inc%i_write>0 .and. myrank.ne.master) open(1337, file='output.'//trim(ctemp)//'.txt')
-
+    
+    
+#ifdef CPP_MPI
+  ! communicate parameters for save_wavefunctions
+  call bcast_params_savewf(t_wavefunctions)
+#endif
 
   
   ! Now start scf iterations and do all steps of the KKR formalism until convergence

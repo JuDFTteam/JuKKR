@@ -44,7 +44,7 @@ implicit none
 
    type :: type_inc
    
-      integer :: Nparams = 18   ! number of parameters in type_inc, excluding allocatable array KMESH
+      integer :: Nparams = 21   ! number of parameters in type_inc, excluding allocatable array KMESH
       integer :: LMMAXD  = -1
       integer :: NSPIN   = -1
       integer :: IELAST  = -1
@@ -62,7 +62,12 @@ implicit none
       logical :: deci_out = .false.  ! use deci_out case
       integer :: i_write = 0 ! switch to control if things are written out or not (verbosity levels 0,1,2)
       integer :: i_time  = 1 ! switch to control if timing files are written (verbosity levels 0,1,2)
-      integer, allocatable :: KMESH(:)
+      ! parameters needed for wavefunctions
+      integer :: NSRA    = -1
+      integer :: LMMAXSO = -1
+      integer :: IRMDNEW = -1
+      
+      integer, allocatable :: KMESH(:), KMESH_ie(:)
          
    end type type_inc
    
@@ -341,12 +346,15 @@ contains
     call MPI_Get_address(t_inc%deci_out,     disp1(16), ierr)
     call MPI_Get_address(t_inc%i_write,      disp1(17), ierr)
     call MPI_Get_address(t_inc%i_time,       disp1(18), ierr)
+    call MPI_Get_address(t_inc%NSRA,         disp1(19), ierr)
+    call MPI_Get_address(t_inc%LMMAXSO,      disp1(20), ierr)
+    call MPI_Get_address(t_inc%IRMDNEW,      disp1(21), ierr)
     base  = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:18)=1
+    blocklen1(1:21)=1
 
-    etype1(1:18) = MPI_INTEGER
+    etype1(1:21) = MPI_INTEGER
     etype1(15:16) = MPI_LOGICAL
 
     call MPI_Type_create_struct(t_inc%Nparams, blocklen1, disp1, etype1, myMPItype1, ierr)
@@ -361,7 +369,9 @@ contains
     call MPI_Type_free(myMPItype1, ierr)
     
     !broadcast allocatable array kmesh(nkmesh)
+    if(.not. allocated(t_inc%kmesh_ie)) allocate(t_inc%kmesh_ie(t_inc%ielast))
     if(.not. allocated(t_inc%kmesh)) allocate(t_inc%kmesh(t_inc%nkmesh))
+    call MPI_Bcast(t_inc%KMESH_ie, t_inc%ielast, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
     call MPI_Bcast(t_inc%KMESH, t_inc%nkmesh, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
     if(ierr/=MPI_SUCCESS) stop 'error brodcasting t_inc%kmesh'
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

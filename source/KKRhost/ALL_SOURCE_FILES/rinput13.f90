@@ -25,6 +25,7 @@
      &           TOLRDIF,LLY,DELTAE,&
      &           LCARTESIAN,BRAVAIS,RMAX,GMAX)
       use mod_wunfiles, only: t_params
+      use mod_save_wavefun, only: t_wavefunctions
       IMPLICIT NONE
 !     ..
 !     .. Parameters
@@ -2029,6 +2030,29 @@
 ! ============================================================= CTL-MAN
       END IF
 ! ================================================================ LDA+U
+
+! ============================================================= WF_SAVE
+      CALL IOInput('MEMWFSAVE       ',UIO,0,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_number
+         WRITE(1337,*) '< MEMWFSAVE >', t_wavefunctions%maxmem_number
+         WRITE(111,*) 'MEMWFSAVE=',t_wavefunctions%maxmem_number
+      ELSE
+         t_wavefunctions%maxmem_number = 0
+         WRITE(1337,*) '< MEMWFSAVE >, use default:', t_wavefunctions%maxmem_number
+         WRITE(111,*) 'Default MEMWFSAVE= ',t_wavefunctions%maxmem_number
+      END IF
+      CALL IOInput('UNITMEMWFSAVE   ',UIO,0,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_units
+         WRITE(1337,*) '< UNITMEMWFSAVE (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE) >', t_wavefunctions%maxmem_units
+         WRITE(111,*) 'UNITMEMWFSAVE=',t_wavefunctions%maxmem_number
+      ELSE
+         t_wavefunctions%maxmem_units = 2
+         WRITE(1337,*) '< UNITMEMWFSAVE (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE) >, use default:', t_wavefunctions%maxmem_units, '(MB)'
+         WRITE(111,*) 'Default UNITMEMWFSAVE= ',t_wavefunctions%maxmem_number, '(MB)'
+      END IF
+! ============================================================= WF_SAVE
 
 
 

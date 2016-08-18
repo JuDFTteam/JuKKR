@@ -14,10 +14,12 @@
 #ifdef CPP_MPI
      &                      ,distribute_linear_on_tasks
 #endif
-      use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
+       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
      &                     t_lloyd,init_tlloyd, type_dtmatJijDij,
      &                     init_t_dtmatJij_at
-      use mod_jijhelp, only: calc_dtmatJij
+       use mod_jijhelp, only: calc_dtmatJij
+       use mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun,
+     &                             save_wavefunc
 
        IMPLICIT NONE
        include 'inc.p'
@@ -81,6 +83,9 @@
 #endif
       integer :: ie_end, ie_num, ie_start
       character(len=80) :: filename
+      ! test option
+      logical :: test
+      external :: test
 
 #ifdef CPP_OMP
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
@@ -159,7 +164,7 @@ c energy loop
 #ifdef CPP_MPI
        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
      &           t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), ! print this info only for first atom at master
-     &                  master,IELAST,ntot_pT,ioff_pT,.true.)
+     &                  master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
      
        ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
        ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
@@ -215,6 +220,15 @@ c energy loop
        DO ie_num=1,ie_end
        
          IE = ie_start+ie_num
+         
+         !initialize wfsave
+         if( (I1-t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie))==1 
+     &       .and. (ie_num==1) ) then
+            call find_isave_wavefun(t_wavefunctions)
+            ! reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
+            ! to prevent storing of wavefunctions
+            if(test('STOP1B  ')) t_wavefunctions%Nwfsavemax = 0
+         endif
 
          ! get current thread
          if (nth>=1) then
@@ -326,7 +340,6 @@ cc right solutions
      +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
         ENDIF
 
-
 c add spherical contribution of tmatrix
          IF (USE_SRATRICK.EQ.1) THEN
           DO LM1=1,LMMAXSO
@@ -390,10 +403,11 @@ c add spherical contribution of tmatrix
 
 
 ! Calculate additional t-matrices for Jij-tensor calculation
-        if(t_dtmatJij_at%calculate) then
-c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-c       LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-c       contruct the spin-orbit coupling hamiltonian and add to potential
+        if(t_dtmatJij_at%calculate .or.
+     &     t_wavefunctions%Nwfsavemax>0) then
+c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        contruct the spin-orbit coupling hamiltonian and add to potential
          CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,
      +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,
      +                     THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,
@@ -459,36 +473,48 @@ c        notice that exchange the order of left and right hankel/bessel function
           SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
          ENDIF
-c       LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 
-!       write(filename,'(A,I0,A)') 'callinglist_rank=',myrank,'.txt'
-!       open(65161,file=trim(filename),action='write',form='formatted')
-!       write(65161,'(3I8)') LMAXD,LMMAXD,LMMAXSO,
-!    +                       LMPOTD,NTOTD,NRMAXD,
-!    +                       NSRA,IRMDNEW,NSPIN,
-!    +                       NPAN_TOT,NCHEB,IEND,
-!    +                       NCLEB
-!       write(65161,'(A)')         'VINS -next' 
-!       write(65161,'(10ES25.16)')  VINS
-!       write(65161,'(A)')         'RLLLEFT -next' 
-!       write(65161,'(10ES25.16)')  RLLLEFT(:,:,:,ith)
-!       write(65161,'(A)')         'RLL -next' 
-!       write(65161,'(10ES25.16)')  RLL(:,:,:,ith)
-!       write(65161,'(A)')         'RPAN_INTERVALL -next' 
-!       write(65161,'(10ES25.16)')  RPAN_INTERVALL
-!       write(65161,'(A)')         'IPAN_INTERVALL -next' 
-!       write(65161,'(10I8)')       IPAN_INTERVALL
-!       write(65161,'(A)')         'ICLEB -next' 
-!       write(65161,'(10I8)')       ICLEB
-!       write(65161,'(A)')         'RNEW -next' 
-!       write(65161,'(10ES25.16)')  RNEW
-!       close(65161)
+!        write(filename,'(A,I0,A)') 'callinglist_rank=',myrank,'.txt'
+!        open(65161,file=trim(filename),action='write',form='formatted')
+!        write(65161,'(3I8)') LMAXD,LMMAXD,LMMAXSO,
+!    +                        LMPOTD,NTOTD,NRMAXD,
+!    +                        NSRA,IRMDNEW,NSPIN,
+!    +                        NPAN_TOT,NCHEB,IEND,
+!    +                        NCLEB
+!        write(65161,'(A)')         'VINS -next' 
+!        write(65161,'(10ES25.16)')  VINS
+!        write(65161,'(A)')         'RLLLEFT -next' 
+!        write(65161,'(10ES25.16)')  RLLLEFT(:,:,:,ith)
+!        write(65161,'(A)')         'RLL -next' 
+!        write(65161,'(10ES25.16)')  RLL(:,:,:,ith)
+!        write(65161,'(A)')         'RPAN_INTERVALL -next' 
+!        write(65161,'(10ES25.16)')  RPAN_INTERVALL
+!        write(65161,'(A)')         'IPAN_INTERVALL -next' 
+!        write(65161,'(10I8)')       IPAN_INTERVALL
+!        write(65161,'(A)')         'ICLEB -next' 
+!        write(65161,'(10I8)')       ICLEB
+!        write(65161,'(A)')         'RNEW -next' 
+!        write(65161,'(10ES25.16)')  RNEW
+!        close(65161)
 
-!       write(*,*) allocated(t_dtmatJij_at%dtmat_xyz),
-!    +             shape(t_dtmatJij_at%dtmat_xyz)
+!        write(*,*) allocated(t_dtmatJij_at%dtmat_xyz),
+!    +              shape(t_dtmatJij_at%dtmat_xyz)
 
-        call calc_dtmatJij(LMAXD,LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,
+
+         ! save_wavefuncions 
+         if(t_wavefunctions%Nwfsavemax>0) then
+            call save_wavefunc(t_wavefunctions, rll, rllleft, 
+     &                         sll, sllleft, i1, ie)
+         end if
+         
+        end if!t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
+        
+        if(t_dtmatJij_at%calculate) then
+         call calc_dtmatJij(LMAXD,LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,
      +        NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT(:,:,:,ith),RLL(:,:,:,ith),
      +        RPAN_INTERVALL,
      +        IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,

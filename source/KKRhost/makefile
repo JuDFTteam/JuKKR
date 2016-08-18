@@ -78,6 +78,8 @@ $(OBJ)/mod_types.o  : $(COM)/mod_types.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_types.F90 -c -o $@
 $(OBJ)/mod_timing.o  : $(COM)/mod_timing.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_timing.F90 -c -o $@
+$(OBJ)/mod_save_wavefun.o  : $(COM)/mod_save_wavefun.F90                 ; \
+                        $(FC) $(FFLAGS) $(CPP) $(COM)/mod_save_wavefun.F90 -c -o $@
 
 FILENAME0 = kkr.x
 include makefile0
@@ -175,7 +177,7 @@ jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 # Compiler flags                                   #
 ####################################################
 # Default:
-FFLAGS       =  -O2 -r8 -traceback -module $(OBJ) 
+FFLAGS       =  -O2 -r8 -traceback -module $(OBJ)
 
 # Change to if flag is matched:
 openmp:   FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
@@ -252,8 +254,8 @@ clean:
 clear:
 	rm -rf *.mod *.o OBJ/ *__genmod.*
 
-compile:  mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
-	  $(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+compile:  mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+	  $(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
 serial:   compile
 debug:    compile
