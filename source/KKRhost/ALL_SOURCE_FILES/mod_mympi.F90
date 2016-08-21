@@ -4,7 +4,7 @@ module mod_mympi
 implicit none
 
   private
-  public :: myrank, nranks, master, mympi_init
+  public :: myrank, nranks, master, mympi_init, MPIatom
 #ifdef CPP_MPI
   public :: distribute_linear_on_tasks, find_dims_2d, create_newcomms_group_ie, mympi_main1c_comm, mympi_main1c_comm_newsosol, mympi_main1c_comm_newsosol2
 #endif
@@ -12,6 +12,7 @@ implicit none
   integer, save :: myrank = -1
   integer, save :: nranks = -1
   integer, save :: master = -1
+  logical, save :: MPIatom = .false.
 
 contains
 
@@ -90,7 +91,7 @@ contains
 
 
 #ifdef CPP_MPI
-  subroutine find_dims_2d(nranks,ntot1,ntot2,dims)
+  subroutine find_dims_2d(nranks,ntot1,ntot2,dims,MPIatom)
     !find dimensions to create cartesian communicator
     !input:  nranks, ntot1 is N_atom, ntot2 is N_E
     !output: dims(2), dims(1) is N_atomranks, dims(2) is N_Eranks
@@ -98,26 +99,33 @@ contains
 
     implicit none
     integer, intent(in)  :: nranks,ntot1,ntot2
+    logical, intent(in)  :: MPIatom
     integer, intent(out) :: dims(2)
     integer ierr
     
-    if(nranks.le.ntot2) then
-       dims(1) = 1
-       dims(2) = nranks
+    if(.not. MPIatom) then
+       if(nranks.le.ntot2) then
+          dims(1) = 1
+          dims(2) = nranks
+       else
+          dims(1) = nranks/ntot2
+          dims(2) = ntot2
+       end if
     else
-       ! rest not implemented!!!
-!        stop 'ERROR: only parallelisation with maximally the number of energy points can be used!'
-       dims(1) = nranks/ntot2
-       dims(2) = ntot2
-       ! for test purposes, now consider only cartesian grid!
-!        if(nranks.ne.(dims(1)*dims(2))) stop 'ERROR in find_dims_2d: no regular grid'
+       if(nranks.le.ntot1) then
+          dims(2) = 1
+          dims(1) = nranks
+       else
+          dims(2) = nranks/ntot1
+          dims(1) = ntot1
+       end if
     end if
     
     if(nranks>(ntot1*(ntot2+1)-1)) then
        if(myrank==master) write(*,'(A,I3,A,I3,A,I5)') 'Error for',ntot1,'atoms and',ntot2,'energy points you use too many processors. Nranks=',nranks
        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+       call MPI_Finalize(ierr)
        stop 'Error: too many ranks'
-       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
     endif
         
   end subroutine find_dims_2d
@@ -494,42 +502,48 @@ contains
 
       !double complex arrays
      IDIM = IRMDNEW*LMPOTD*4
-     allocate(workc(IRMDNEW,LMPOTD,4,1))
+     allocate(workc(IRMDNEW,LMPOTD,4,1), stat=ierr)
+     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, r2nefc'
      workc = (0.d0, 0.d0)
      CALL MPI_ALLREDUCE(r2nefc,workc(:,:,:,1),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,R2NEFC,1)
      deallocate(workc)
 
      IDIM = IRMDNEW*LMPOTD*4
-     allocate(workc(IRMDNEW,LMPOTD,4,1))
+     allocate(workc(IRMDNEW,LMPOTD,4,1), stat=ierr)
+     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, rho2nsc'
      workc = (0.d0, 0.d0)
      CALL MPI_ALLREDUCE(RHO2NSC,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,RHO2NSC,1)
      deallocate(workc)
 
      IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
-     allocate(workc(0:LMAXD1,IEMXD,2,NQDOS))
+     allocate(workc(0:LMAXD1,IEMXD,2,NQDOS), stat=ierr)
+     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, den'
      workc = (0.d0, 0.d0)
      CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,DEN,1)
      deallocate(workc)
 
      IDIM = LMMAXD*IEMXD*2*NQDOS
-     allocate(workc(LMMAXD,IEMXD,2,NQDOS))
+     allocate(workc(LMMAXD,IEMXD,2,NQDOS), stat=ierr)
+     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, denlm'
      workc = (0.d0, 0.d0)
      CALL MPI_ALLREDUCE(DENLM,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,DENLM,1)
      deallocate(workc)
 
      IDIM = 4
-     allocate(workc(4,1,1,1))
+     allocate(workc(4,1,1,1), stat=ierr)
+     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, rho2int'
      workc = (0.d0, 0.d0)
      CALL MPI_ALLREDUCE(RHO2INT,workc(:,1,1,1),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,RHO2INT,1)
      deallocate(workc)
 
      IDIM = LMMAXSO*LMMAXSO*IELAST*NQDOS
-     allocate(workc(LMMAXSO,LMMAXSO,IELAST,NQDOS))
+     allocate(workc(LMMAXSO,LMMAXSO,IELAST,NQDOS), stat=ierr)
+     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, gflle'
      workc = (0.d0, 0.d0)
      CALL MPI_ALLREDUCE(GFLLE,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
      CALL ZCOPY(IDIM,WORKC,1,GFLLE,1)

@@ -338,7 +338,8 @@ c energy loop
         if(t_wavefunctions%Nwfsavemax>0) then ! read wavefunctions?
          ! read in wavefunction from memory
          call read_wavefunc(t_wavefunctions,rll, rllleft, sll, sllleft, 
-     &                      i1, ie, wavefunction_was_read_in)
+     &                      i1, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth,
+     &                      wavefunction_was_read_in)
         end if
      
 c recalculate wavefuntions, also include left solution

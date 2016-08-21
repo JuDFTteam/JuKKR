@@ -404,9 +404,12 @@ c add spherical contribution of tmatrix
 
 ! Calculate additional t-matrices for Jij-tensor calculation
         if(t_dtmatJij_at%calculate .or.
-     &     t_wavefunctions%Nwfsavemax>0) then
+     &     t_wavefunctions%isave_wavefun(i1, ie)>0) then
+!      &     t_wavefunctions%Nwfsavemax>0) then
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        this needs to be done for the calculation of t-matrices for Jij tensor or if wavefunctions should be saved
+c
 c        contruct the spin-orbit coupling hamiltonian and add to potential
          CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,
      +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,
@@ -505,10 +508,11 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 !    +              shape(t_dtmatJij_at%dtmat_xyz)
 
 
-         ! save_wavefuncions 
+         ! save_wavefuncions         
          if(t_wavefunctions%Nwfsavemax>0) then
+            ! here all four (left, right, regular and irregular) are stored, the memory demand cound be reduced by a factor 2 if only the right solution would be computed here and saved and the left solution would be calculated later in main1c
             call save_wavefunc(t_wavefunctions, rll, rllleft, 
-     &                         sll, sllleft, i1, ie)
+     &          sll, sllleft, i1, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth)
          end if
          
         end if!t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0

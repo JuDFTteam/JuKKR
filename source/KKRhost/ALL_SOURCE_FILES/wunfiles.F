@@ -150,6 +150,7 @@ C *                                                                    *
 C **********************************************************************
 
       use mod_types, only: t_inc, t_tgmat, t_lloyd, t_cpa
+      use mod_mympi, only: MPIatom
 
       IMPLICIT NONE
 C     ..
@@ -350,6 +351,9 @@ C                                  meant for simpler passing of basic parameter 
       t_inc%i_time = 1  !default: only timings from master, all iterations
       if(TEST('timings0')) t_inc%i_time = 0  !only timings from master, only the last iteration
       if(TEST('timings2')) t_inc%i_time = 2  !all timing files, all iterations
+      
+      !set switch for MPIatom test option (see mod_types and mod_mympi)
+      if(test('MPIatom ')) MPIatom = .true.
       
       
       ! all parameters are stored in t_params fomr mod_wunfiles

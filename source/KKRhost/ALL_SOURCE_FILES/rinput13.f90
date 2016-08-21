@@ -2045,12 +2045,12 @@
       CALL IOInput('UNITMEMWFSAVE   ',UIO,0,7,IER)
       IF (IER.EQ.0) THEN
          READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_units
-         WRITE(1337,*) '< UNITMEMWFSAVE (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE) >', t_wavefunctions%maxmem_units
-         WRITE(111,*) 'UNITMEMWFSAVE=',t_wavefunctions%maxmem_number
+         WRITE(1337,*) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
+         WRITE(111,*) 'UNITMEMWFSAVE=',t_wavefunctions%maxmem_units
       ELSE
          t_wavefunctions%maxmem_units = 2
-         WRITE(1337,*) '< UNITMEMWFSAVE (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE) >, use default:', t_wavefunctions%maxmem_units, '(MB)'
-         WRITE(111,*) 'Default UNITMEMWFSAVE= ',t_wavefunctions%maxmem_number, '(MB)'
+         WRITE(1337,*) '< UNITMEMWFSAVE >, use default:', t_wavefunctions%maxmem_units, '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
+         WRITE(111,*) 'Default UNITMEMWFSAVE= ',t_wavefunctions%maxmem_units, '(MB)'
       END IF
 ! ============================================================= WF_SAVE
 

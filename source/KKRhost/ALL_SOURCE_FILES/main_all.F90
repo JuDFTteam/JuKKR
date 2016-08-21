@@ -9,9 +9,9 @@ program kkrcode
   use mod_timing
 
 #ifdef CPP_MPI
-  use mod_mympi, only: mympi_init, myrank, nranks, master,find_dims_2d, distribute_linear_on_tasks, create_newcomms_group_ie 
+  use mod_mympi, only: mympi_init, myrank, nranks, master,find_dims_2d, distribute_linear_on_tasks, create_newcomms_group_ie, MPIatom 
 #else
-  use mod_mympi, only: mympi_init, myrank, nranks, master
+  use mod_mympi, only: mympi_init, myrank, nranks, master, MPIatom
 #endif
 
 #ifdef CPP_MPI
@@ -101,8 +101,11 @@ program kkrcode
   ! create 2d matrix for processors so that more processors than energy points can be used. 
   ! strategy here is to first parallelize the energy points ideally and then give all processors that are left to atom or k-point loop parallelization
   
+  ! communicate logical MPIatom
+  call MPI_Bcast(MPIatom, 1, MPI_LOGICAL, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=MPI_SUCCESS) stop 'error broadcasting MPIatom in main_all'
   ! create_subcomms_2d: first find maximal dimensions
-  call find_dims_2d(nranks,t_inc%NATYP,t_inc%IELAST,dims)
+  call find_dims_2d(nranks,t_inc%NATYP,t_inc%IELAST,dims,MPIatom)
   !save in dims
   t_mpi_c_grid%dims = dims
 
