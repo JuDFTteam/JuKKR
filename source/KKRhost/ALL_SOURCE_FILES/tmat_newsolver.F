@@ -533,7 +533,7 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
             WRITE(69,REC=IREC) TMATLL(:,:)
-!             WRITE(696969,*) TMATLL(:,:)
+!             WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
          else
 #ifdef CPP_MPI
             irec = ie_num +

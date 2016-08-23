@@ -739,20 +739,20 @@ c    write qdos.nn.s.dat                                                  ! qdos
        ! reset NQDOS to avoid endless communication
        NQDOS=1
        ! set these arrays to zero to avoid double counting in cases where extra ranks are used
-       if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
-     &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
-         den = 0.d0
-         denlm = 0.d0
-         gflle = 0.d0
-         muorb = 0.d0
-         espv = 0.d0
-         r2nefc = 0.d0
-         rho2nsc = 0.d0
-         rho2int = 0.d0
-         denorbmom = 0.d0
-         denorbmomsp = 0.d0
-         denorbmomlm = 0.d0
-         denorbmomns = 0.d0
+       if ( t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1) ) then
+!          write(*,*) myrank, t_mpi_c_grid%myrank_ie, t_mpi_c_grid%dims
+         den = CZERO
+         denlm = CZERO
+         gflle = CZERO
+         r2nefc = CZERO
+         rho2nsc = CZERO
+         rho2int = CZERO
+         muorb = 0.0d0
+         espv = 0.0d0
+         denorbmom = 0.0d0
+         denorbmomsp = 0.0d0
+         denorbmomlm = 0.0d0
+         denorbmomns = 0.0d0
       endif
        call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
      &                            LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,

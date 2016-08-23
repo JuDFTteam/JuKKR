@@ -585,7 +585,6 @@ contains
    subroutine get_ntot_pT_ioff_pT_2D(t_mpi_c_grid,ntot_all,ioff_all)
    
    use mpi
-!    use mod_mympi, only: myrank, nranks, master
    implicit none
    type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
    integer, intent(out) :: ntot_all(t_mpi_c_grid%nranks_ie*t_mpi_c_grid%nranks_at), ioff_all(t_mpi_c_grid%nranks_ie*t_mpi_c_grid%nranks_at)

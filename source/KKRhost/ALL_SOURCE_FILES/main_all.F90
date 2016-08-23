@@ -95,7 +95,7 @@ program kkrcode
   call bcast_t_params_arrays(t_params)
   
   ! in case of deci-out run everything only serially to write decifile correctly. This will be fixed in a later version when we get rid of the decifile
-  if(t_inc%deci_out .and. nranks>1) stop 'deci-out option chosen. Please run code serially!'
+  if(t_inc%deci_out .and. t_mpi_c_grid%nranks_at>1) stop 'deci-out option chosen. Please run code serially in energy dimension!'
   
 
   ! create 2d matrix for processors so that more processors than energy points can be used. 
@@ -156,10 +156,10 @@ program kkrcode
 
     ! reset files for t_inc%i_write<2
     ! first copy lat output to output.2.txt so that all information of the precious iteration can be accessed while the next iteration runs
-    if (t_inc%i_write<2 .and. t_inc%i_write>0 .and. myrank==master) call SYSTEM('cp output.000.txt output.2.txt')
+    if (t_inc%i_write<2 .and. t_inc%i_write>0 .and. myrank==master .and. t_inc%i_iteration>1) call SYSTEM('cp output.000.txt output.2.txt')
     ! rewind output.xxx.txt
     if (t_inc%i_write<2 .and. t_inc%i_write>0) rewind(1337)
-    ! rewind timing files if t_inc%i_time<2
+    ! rewind timing files if t_inc%i_time<2 (see mod_timing)
     if (t_inc%i_time<2 .and. t_inc%i_time>0) rewind(43234059) 
   
     call timing_start('Time in Iteration')
@@ -205,6 +205,14 @@ program kkrcode
     if (myrank==master) call print_time_and_date('Iteration finished')
     
   end do ! scf-iteration
+  
+  
+  ! deallocate arrays from t_params
+  deallocate(t_params%EZ, t_params%WEZ, t_params%DROTQ, t_params%DSYMLL, t_params%LEFTTINVLL, t_params%RIGHTTINVLL, t_params%CREL, t_params%RC, t_params%RREL, t_params%SRREL, t_params%PHILDAU, t_params%VINS, t_params%VISP, t_params%VBC, t_params%VTREL, t_params%BTREL, t_params%SOCSCALE, t_params%DRDIREL, t_params%R2DRDIREL, t_params%RMREL, t_params%CMOMHOST       , t_params%ECORE, t_params%QMTET, t_params%QMPHI, t_params%QMPHITAB, t_params%QMTETTAB, t_params%QMGAMTAB, t_params%ZAT, t_params%R, t_params%DRDI, t_params%RMTREF, t_params%VREF, t_params%CLEB, t_params%RCLS, t_params%SOCSCL, t_params%CSCL, t_params%RBASIS, t_params%RR, t_params%CONC, t_params%RROT, t_params%RATOM, t_params%A, t_params%B, t_params%THETAS, t_params%RMT, t_params%RMTNEW, t_params%RWS, t_params%GSH, t_params%EREFLDAU, t_params%UEFF, t_params%JEFF, t_params%ULDAU, t_params%WLDAU, t_params%RPAN_INTERVALL, t_params%RNEW, t_params%MVEVI, t_params%MVEVIEF, t_params%THETASNEW, t_params%RHO2NS, t_params%R2NEF, t_params%RHOC, t_params%DENEFAT, t_params%ESPV, t_params%EDC, t_params%EU, t_params%RHOORB, t_params%ECOREREL, t_params%RCLSIMP, t_params%LOPT, t_params%ITLDAU , t_params%IRSHIFT, t_params%JWSREL , t_params%ZREL, t_params%LCORE, t_params%NCORE, t_params%IPAN , t_params%IRCUT, t_params%JEND , t_params%ICLEB, t_params%ATOM, t_params%CLS , t_params%NACLS, t_params%LOFLM, t_params%EZOA , t_params%KAOEZ, t_params%IQAT, t_params%ICPA, t_params%NOQ , t_params%KMESH , t_params%NSHELL, t_params%NSH1, t_params%NSH2, t_params%IJTABCALC, t_params%IJTABCALC_I, t_params%IJTABSYM, t_params%IJTABSH, t_params%ISH, t_params%JSH, t_params%IQCALC, t_params%ICHECK, t_params%ATOMIMP, t_params%REFPOT, t_params%IRREL, t_params%NRREL, t_params%IFUNM1, t_params%ITITLE, t_params%LMSP1, t_params%NTCELL, t_params%IXIPOL, t_params%IRNS  , t_params%IFUNM , t_params%LLMSP , t_params%LMSP, t_params%IMT , t_params%IRC , t_params%IRMIN, t_params%IRWS , t_params%NFU  , t_params%HOSTIMP, t_params%ILM    , t_params%IMAXSH , t_params%NPAN_LOG, t_params%NPAN_EQ , t_params%NPAN_TOT, t_params%IPAN_INTERVALL, t_params%NKCORE , t_params%KAPCORE, t_params%SYMUNITARY, t_params%VACFLAG, t_params%TXC, t_params%TESTC, t_params%OPTC, t_params%BZKP, t_params%VOLCUB, t_params%VOLBZ, t_params%NOFKS, t_params%THETA, t_params%PHI, stat=ierr)
+  if(ierr/=0) stop '[main_all] Error deallocating arrays from t_params'
+  ! deallocate arrays from t_wavefunctions
+  deallocate(t_wavefunctions%isave_wavefun, t_wavefunctions%rll, t_wavefunctions%rllleft, t_wavefunctions%sll, t_wavefunctions%sllleft, stat=ierr)
+  if(ierr/=0) stop '[main_all] Error deallocating arrays from t_wavefunctions'
   
   
 #ifdef CPP_MPI

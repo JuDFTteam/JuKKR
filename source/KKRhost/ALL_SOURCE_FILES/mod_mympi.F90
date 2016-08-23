@@ -157,7 +157,11 @@ contains
 
   if((ne*nat)<nranks .and. (ne>1)) then ! .and. nat>1)) then
   
-    if(nkmesh<=1) stop 'no load imbalance, please use regular grid'
+    if(nkmesh<=1) then
+       if(myrank==master) write(*,'(A,2I7)') 'no load imbalance found (all energy points have the same k-mesh), please use regular grid to not waste any resources. #E, #atoms = ', ne, nat
+       call MPI_Finalize(ierr)
+       stop
+    end if
   
     rest = nranks-int(nranks/(ne*nat))*ne*nat
     if(myrank==0) write(1337,*) 'rest:',rest,ne,nat,nranks
@@ -253,8 +257,8 @@ contains
      endif
     enddo
 
-    if(myrank==0) write(1337,*) 'groups:',groups(1:ne,1)
-    if(myrank==0) write(1337,*) 'groups:',groups(1:ne,2)
+    if(myrank==0) write(1337,*) 'groups(1:Ne), number of ranks:',groups(1:ne,1)
+    if(myrank==0) write(1337,*) 'groups(1:Ne), ie offset:',groups(1:ne,2)
    
     !find my group
     myg = -1

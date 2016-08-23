@@ -183,6 +183,14 @@ C
 
 #ifdef CPP_MPI
          if(t_mpi_c_grid%nranks_ie>1) then
+           if(t_mpi_c_grid%myrank_ie>0) then
+              ! set these to zero to avoid double counting in communication below
+              GINP = (0.0d0, 0.0d0)
+              if(LLY.ne.0) then
+                 DGINP = (0.0d0, 0.0d0)
+                 LLY_G0TR(IE,:) = (0.0d0, 0.0d0)
+              end if
+           end if
            !gather results of ginp, dginp and lly_g0tr from above parallel loop
            IDIM = NACLSMAX*LMGF0D*LMGF0D*NCLS
            allocate(work(NACLSMAX*LMGF0D,LMGF0D,NCLS))
@@ -220,7 +228,7 @@ C ----------------------------------------------------------------------
            if(t_mpi_c_grid%myrank_ie==0) then
 #endif
             WRITE (68,REC=IE) GINP                 ! Gref
-!             write(686868,*) ginp
+!             write(686868,'(i9,200000F15.7)') ie, ginp
 #ifdef CPP_MPI
            end if !if(t_mpi_c_grid%myrank_ie==0) then
 #endif

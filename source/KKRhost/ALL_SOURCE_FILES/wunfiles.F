@@ -332,9 +332,10 @@ C                                  meant for simpler passing of basic parameter 
       if(OPT('qdos    '))  t_tgmat%gmat_to_file = .true.  ! for qdos write gmat to file since it scales with NQDOS and can become huge
       
       !set logical switches in t_lloyd which control if files are written to files or stored in memory
-      if(TEST('tmatfile').or.TEST('llyfiles')) 
+!       if(TEST('tmatfile').or.TEST('llyfiles')) 
+      if(TEST('wrtdtmat').or.TEST('llyfiles')) 
      &                    t_lloyd%dtmat_to_file = .true.
-      if(TEST('wrtdtmat').or.TEST('llyfiles'))
+      if(TEST('wrttral ').or.TEST('llyfiles'))
      &                    t_lloyd%tralpha_to_file = .true.
       if(TEST('wrtcdos ').or.TEST('llyfiles')) 
      &                    t_lloyd%cdos_diff_lly_to_file = .true.
@@ -419,6 +420,7 @@ C ======================================================================
       implicit none
       
       type(type_params), intent(inout) :: t_params
+      integer :: ierr
       
       ALLOCATE(t_params%EZ(t_params%IEMXD),   !DOUBLE COMPLEX
      &t_params%WEZ(t_params%IEMXD),
@@ -432,7 +434,8 @@ C ======================================================================
      &t_params%RC(t_params%LMMAXD,t_params%LMMAXD),
      &t_params%RREL(t_params%LMMAXD,t_params%LMMAXD),
      &t_params%SRREL(2,2,t_params%LMMAXD),
-     &t_params%PHILDAU(t_params%IRMD,t_params%NATYPD)) !DOUBLE COMPLEX
+     &t_params%PHILDAU(t_params%IRMD,t_params%NATYPD), stat=ierr) !DOUBLE COMPLEX
+      if(ierr/=0) stop '[init_t_params] Error allocating complexs'
      
       ALLOCATE(t_params%VINS(t_params%IRMIND:t_params%IRMD,
      &             t_params%LMPOTD,t_params%NSPOTD), !DOUBLE PRECISION
@@ -498,7 +501,8 @@ C ======================================================================
      &                t_params%NATYPD),
      &t_params%ECOREREL(t_params%KREL*20+(1-t_params%KREL),
      &                  t_params%NPOTD),
-     &t_params%RCLSIMP(3,t_params%NATOMIMPD))    !DOUBLE PRECISION
+     &t_params%RCLSIMP(3,t_params%NATOMIMPD), stat=ierr)    !DOUBLE PRECISION
+      if(ierr/=0) stop '[init_t_params] Error allocating doubles'
      
       ALLOCATE(t_params%LOPT(t_params%NATYPD),
      &t_params%ITLDAU(t_params%NATYPD),
@@ -558,27 +562,33 @@ C ======================================================================
      &t_params%NPAN_TOT(t_params%NATYPD),
      &t_params%IPAN_INTERVALL(0:t_params%NTOTD,t_params%NATYPD),
      &t_params%NKCORE(20,t_params%NATYPD),
-     &t_params%KAPCORE(20,t_params%NPOTD)) !INTEGER
+     &t_params%KAPCORE(20,t_params%NPOTD), stat=ierr) !INTEGER
+      if(ierr/=0) stop '[init_t_params] Error allocating integers'
      
       ALLOCATE(t_params%SYMUNITARY(t_params%NSYMAXD), !LOGICALS
-     &         t_params%VACFLAG(2))
+     &         t_params%VACFLAG(2), stat=ierr)
+      if(ierr/=0) stop '[init_t_params] Error allocating logicals'
      
-      ALLOCATE(t_params%TXC(5)) !CHARACTER*24
+      ALLOCATE(t_params%TXC(5), stat=ierr) !CHARACTER*24
+      if(ierr/=0) stop '[init_t_params] Error allocating txc'
       
       if(.not.allocated(t_params%TESTC)) then
-        ALLOCATE(t_params%TESTC(32),t_params%OPTC(32)) !CHARACTER*8
+        ALLOCATE(t_params%TESTC(32),t_params%OPTC(32), stat=ierr) !CHARACTER*8
+        if(ierr/=0) stop '[init_t_params] Error allocating testc'
       end if
       
       if (.not.allocated(t_params%nofks)) then
         allocate(t_params%BZKP(3,t_params%KPOIBZ,t_params%MAXMESH), ! double precision
      &           t_params%VOLCUB(t_params%KPOIBZ,t_params%MAXMESH), ! double precision
      &           t_params%VOLBZ(t_params%MAXMESH), ! double precision
-     &           t_params%NOFKS(t_params%MAXMESH)) ! integer
+     &           t_params%NOFKS(t_params%MAXMESH), stat=ierr) ! integer
+        if(ierr/=0) stop '[init_t_params] Error allocating kpts arrays'
       end if
       
       if (.not.allocated(t_params%theta)) then
         allocate(t_params%THETA(t_params%natyp),    !double precision
-     &           t_params%PHI(t_params%natyp))      !double precision
+     &           t_params%PHI(t_params%natyp), stat=ierr)      !double precision
+        if(ierr/=0) stop '[init_t_params] Error allocating theta/phi'
       end if
       
       end subroutine init_t_params

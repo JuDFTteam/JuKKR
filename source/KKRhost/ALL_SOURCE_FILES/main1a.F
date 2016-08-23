@@ -114,7 +114,6 @@ C LDA+U
       INTEGER IDOLDAU,ITRUNLDAU,NTLDAU,OLD
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
-C      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
@@ -175,8 +174,6 @@ C
 C
       IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
       
-C      if(IDOLDAU==1) ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
-
 C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
@@ -373,10 +370,10 @@ C
       if(lly/=0 .and. t_mpi_c_grid%nranks_ie>1) then
       
          !take care of cases when nranks_ie>natyp (set tralpha and dtmat to zero so that sum over ranks is correct)
-         if(t_mpi_c_grid%nranks_ie>natyp .and. 
-     &      t_mpi_c_grid%myrank_ie>=natyp ) t_lloyd%dtmat = 0
-         if(t_mpi_c_grid%nranks_ie>natyp .and. 
-     &      t_mpi_c_grid%myrank_ie>=natyp ) t_lloyd%tralpha = 0
+         if(t_mpi_c_grid%myrank_ie>=t_mpi_c_grid%dims(1)) then
+            t_lloyd%dtmat = (0.0d0, 0.0d0)
+            t_lloyd%tralpha = (0.0d0, 0.0d0)
+         end if
       
          !communicate dtmatll
          IWORK = product(shape(t_lloyd%dtmat)) !LMMAXD*LMMAXD*t_mpi_c_grid%ntot2*nspin*NATYP
@@ -387,7 +384,8 @@ C
      &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
      &                      t_mpi_c_grid%mympi_comm_ie,IERR)
          CALL ZCOPY(IWORK,WORK_lly,1,t_lloyd%dtmat,1)
-         deallocate(work_lly)
+         deallocate(work_lly, stat=ierr)
+         if(ierr/=0) stop '[main1a] Error deallocating work_lly'
                
          !communicate tralpha
          IWORK = product(shape(t_lloyd%tralpha))
@@ -398,7 +396,8 @@ C
      &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
      &                      t_mpi_c_grid%mympi_comm_ie,IERR)
          CALL ZCOPY(IWORK,WORK_lly,1,t_lloyd%tralpha,1)
-         deallocate(work_lly)
+         deallocate(work_lly, stat=ierr)
+         if(ierr/=0) stop '[main1a] Error deallocating work_lly'
       endif
                
       !for calculation of Jij-tensor
@@ -421,7 +420,8 @@ C
      &                         t_mpi_c_grid%mympi_comm_ie,IERR)
             if(ierr/=MPI_SUCCESS) stop 'error communicating t_dtmatJij'
             CALL ZCOPY(iwork,work_jij,1,t_dtmatJij(I1)%dtmat_xyz,1)
-            deallocate(work_jij)
+            deallocate(work_jij, stat=ierr)
+         if(ierr/=0) stop '[main1a] Error deallocating work_jij'
           end if!t_dtmatJij(I1)%calculate
 
         END DO!I1=1,t_inc%NATYP
@@ -470,9 +470,8 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
       if(t_inc%i_write>0)
      &  WRITE (1337,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
 
-
-C      if(IDOLDAU==1) DEALLOCATE( ULDAU )
-      deallocate(vins, vinsnew)
+      deallocate(vins, vinsnew, stat=ierr)
+      if(ierr/=0) stop '[main1a] Error deallocating vins, vinsnew'
 
 
       END SUBROUTINE !main1a

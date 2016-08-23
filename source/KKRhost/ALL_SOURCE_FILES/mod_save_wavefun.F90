@@ -80,7 +80,7 @@ contains
       ! avoid unnessesary large allocations of arrays
       if( t_wavefunctions%Nwfsavemax > nat_myrank*ne_myrank ) then
          t_wavefunctions%Nwfsavemax = nat_myrank*ne_myrank
-         write(1337,'(A,I5,A,I9)') '  rank',myrank,'reset Nwfsavemax to maximal needed number for this thread:',t_wavefunctions%Nwfsavemax
+         if(t_inc%i_write>0) write(1337,'(A,I5,A,I9)') '  rank',myrank,' reset Nwfsavemax to maximal needed number for this thread:',t_wavefunctions%Nwfsavemax
       end if
 
       
@@ -122,7 +122,6 @@ contains
             kmesh_priority(maxpos(1)) = i
             ! update mask to exclude previously found position
             mask(maxpos(1)) = .false.
-!             write(*,*) i, maxpos, kmesh_priority(i), mask
          end do ! i=1,ne_myrank
 
          if(any(kmesh_priority==-1)) then
@@ -176,7 +175,6 @@ contains
       isave = t_wavefunctions%isave_wavefun(iat, ie)
       
       if(isave>0) then
-!          write(*,*) myrank, 'save wavefunc', isave,iat,ie,nsra,lmmaxso,irmdnew,ith
          t_wavefunctions%rll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
          t_wavefunctions%rllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
          t_wavefunctions%sll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
@@ -202,7 +200,6 @@ contains
       isave = t_wavefunctions%isave_wavefun(iat, ie)
       
       if(isave>0) then
-!          write(*,*) myrank, 'read_in wavefunc', isave,iat,ie,nsra,lmmaxso,irmdnew,ith
          rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%rll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
          rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%rllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
          sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%sll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)

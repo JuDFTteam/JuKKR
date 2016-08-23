@@ -223,17 +223,19 @@ c New variables for fixed Fermi energy calculations; noted as fxf
 C     ..
 ! for SIMULASA:
       INTEGER*4 IPOS,ILMP,IAS
+! allocatable arrays
+      integer :: ierr
 C     ..
 
-      allocate(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VONS(IRMD,LMPOTD,NPOTD))
-      allocate(VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD))
-      allocate(R2NEF(IRMD,LMPOTD,NATYPD,2),
-     &         RHO2NS(IRMD,LMPOTD,NATYPD,2),
-     &         RHO2NSNM(IRMD,LMPOTD,NATYPD,2))
-
-
 ! allocations:
-      allocate(THETAS(IRID,NFUND,NCELLD), THESME(IRID,NFUND,NCELLD))
+      allocate(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VONS(IRMD,LMPOTD,NPOTD),
+     &         VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD),
+     &         R2NEF(IRMD,LMPOTD,NATYPD,2),
+     &         RHO2NS(IRMD,LMPOTD,NATYPD,2),
+     &         RHO2NSNM(IRMD,LMPOTD,NATYPD,2),
+     &         THETAS(IRID,NFUND,NCELLD), 
+     &         THESME(IRID,NFUND,NCELLD), stat=ierr)
+      if(ierr/=0) stop '[main2] Error allocating arrays'
 
 C     ..................................................................
 Consistency check
@@ -1038,10 +1040,10 @@ C ======================================================================
  1080       FORMAT('CMOMC',2I6)
  1090       FORMAT(4D22.14)
  
-      deallocate(thetas, thesme)
-      deallocate(vins, vons)
-      deallocate(vxcm, vxcnm)
-      deallocate(R2NEF,RHO2NS,RHO2NSNM)
+      deallocate(thetas, thesme, vins, vons, vxcm, vxcnm, stat=ierr)
+      if(ierr/=0) stop '[main2] Error deallocating thetas etc.'
+      deallocate(R2NEF, RHO2NS, RHO2NSNM, stat=ierr)
+      if(ierr/=0) stop '[main2] Error deallocating r2nef etc.'
  
  
       END SUBROUTINE !main2

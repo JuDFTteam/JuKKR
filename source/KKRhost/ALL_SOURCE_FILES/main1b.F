@@ -165,10 +165,10 @@ C     ..
       INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)
       CHARACTER*35 INVALG(0:2)
 #ifdef CPP_MPI
-      integer :: ie_start, mytot, ierr
+      integer :: ie_start, mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
-      integer :: ie_num, ie_end
+      integer :: ie_num, ie_end, ierr
 C     ..
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C     for conductivity calculation
@@ -193,8 +193,9 @@ C
       if(t_inc%i_write>0) IPRINT=1
 
       allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-     &         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
-      allocate(BZKP(3,KPOIBZ,MAXMSHD))
+     &         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
+     &         BZKP(3,KPOIBZ,MAXMSHD), stat=ierr)
+      if(ierr/=0) stop '[main1b] Error allocating leftinvll etc.'
 
 Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
@@ -372,8 +373,10 @@ C Value of NQDOS changes to a read-in value if option qdos is applied, otherwise
 C        Read BZ path for qdos calculation:
          OPEN(67,FILE='qvec.dat')                       ! qdos ruess
          READ(67,*) NQDOS                               ! qdos ruess
-         DEALLOCATE(QVEC)                               ! qdos ruess: deallocate in first run allocated array to change it
-         ALLOCATE(QVEC(3,NQDOS))                        ! qdos ruess
+         DEALLOCATE(QVEC, stat=ierr)                    ! qdos ruess: deallocate in first run allocated array to change it
+         if(ierr/=0) stop '[main1b] Error deallocating qvec' 
+         ALLOCATE(QVEC(3,NQDOS), stat=ierr)             ! qdos ruess
+         if(ierr/=0) stop '[main1b] Error reallocating qvec'
          DO IQ = 1,NQDOS                                ! qdos ruess
             READ(67,*) (QVEC(IX,IQ),IX=1,3)             ! qdos ruess
          ENDDO                                          ! qdos ruess
@@ -388,7 +391,8 @@ C calling list or the contents of kloopz1.
          NSYMAT = 1
       ELSEIF (OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) THEN ! qdos ruess
 C Call the k loop just once with one k point to write out the tmat.qdos file
-         ALLOCATE(QVEC(3,NQDOS))                        ! qdos ruess
+         ALLOCATE(QVEC(3,NQDOS), stat=ierr)             ! qdos ruess
+         if(ierr/=0) stop '[main1b] Error allocating qvec'
          QVEC(1:3,1) = 0.D0                             ! qdos ruess
          KMESH(1:IELAST) = 1                            ! qdos ruess
          NOFKS(1) = 1                                   ! qdos ruess
@@ -911,7 +915,7 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                   IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST * (I1-1) ! qdos ruess
                   if (t_tgmat%gmat_to_file) then
                      WRITE (70,REC=IREC) GMAT0
-!                      write(707070,*) gmat0
+!                      write(707070,'(i9,200000F15.7)') irec, gmat0
 
                   else
                      IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
@@ -1173,7 +1177,12 @@ C
       endif
 
 
-      deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP)
+      deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP, stat=ierr)
+      if(ierr/=0) stop '[main1b] Error deallocating leftinvll etc.'
+      if(opt('qdos    ')) then
+        deallocate(qvec, stat=ierr)
+        if(ierr/=0) stop '[main1b] Error deallocating qvec after main1b'
+      end if
 
 
       END SUBROUTINE !main1b

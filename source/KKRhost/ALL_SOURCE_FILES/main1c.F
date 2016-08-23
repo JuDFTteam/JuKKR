@@ -218,11 +218,12 @@ C     .. Data statements ..
       
       
       !allocations
-      allocate(THETASNEW(NRMAXD,NFUND,NCELLD),THETAS(IRID,NFUND,NCELLD))
-      allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD), 
-     +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
-      allocate(RHO2N1(IRMD,LMPOTD,NPOTD),RHO2NS(IRMD,LMPOTD,NATYPD,2),
-     +         RHO2N2(IRMD,LMPOTD,NPOTD),R2NEF(IRMD,LMPOTD,NATYPD,2))
+      allocate(THETASNEW(NRMAXD,NFUND,NCELLD),THETAS(IRID,NFUND,NCELLD),
+     & VINSNEW(NRMAXD,LMPOTD,NSPOTD), 
+     & VINS(IRMIND:IRMD,LMPOTD,NSPOTD),
+     & RHO2N1(IRMD,LMPOTD,NPOTD),RHO2NS(IRMD,LMPOTD,NATYPD,2),
+     & RHO2N2(IRMD,LMPOTD,NPOTD),R2NEF(IRMD,LMPOTD,NATYPD,2),stat=ierr)
+      if(ierr/=0) stop '[main1c] Error allocating arrays'
 
 
       !initialze to zero
@@ -391,15 +392,17 @@ c calculate contribution from free space
                   CDOS_LLY(IE,ISPIN) = t_lloyd%cdos(ie_num,ispin)             ! LLY Lloyd
                ENDDO  !ie_num                                                 ! LLY Lloyd
             ENDDO    !ispin     
-#ifdef CPP_MPI            
+#ifdef CPP_MPI
             ! MPI gather cdos_lly on all processors
             ihelp      = IELAST*NSPIN  !IELAST*NSPIN
-            allocate(work(ielast,nspin))
+            allocate(work(ielast,nspin), stat=ierr)
+            if(ierr/=0) stop '[main1c] Error allocating work'
             work = (0.d0, 0.d0)
             CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
      &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
             call zcopy(ihelp,work,1,cdos_lly,1)
-            deallocate(work)
+            deallocate(work, stat=ierr)
+            if(ierr/=0) stop '[main1c] Error deallocating work'
 #endif
          end if   !(t_lloyd%cdos_diff_lly_to_file)
                                                                            ! LLY Lloyd
@@ -454,15 +457,17 @@ c calculate contribution from free space
                IE = ie_start+ie_num
                CDOS_LLY(IE,1) = t_lloyd%cdos(ie_num,1)
             ENDDO
-#ifdef CPP_MPI            
+#ifdef CPP_MPI
             ! MPI gather cdos_lly on all processors
             ihelp      = IEMXD*NSPIND  !IELAST*NSPIN
-            allocate(work(iemxd,nspind))
+            allocate(work(iemxd,nspind), stat=ierr)
+            if(ierr/=0) stop '[main1c] Error allocating work'
             work = (0.d0, 0.d0)
             CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
      &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
             call zcopy(ihelp,work,1,cdos_lly,1)
-            deallocate(work)
+            deallocate(work, stat=ierr)
+            if(ierr/=0) stop '[main1c] Error deallocating work'
 #endif
           end if  !(t_lloyd%cdos_diff_lly_to_file)
           
@@ -634,11 +639,6 @@ C ================================================================ NATYP
        allocate(workc(0:LMAXD1,IEMXD,NQDOS,NPOTD))
        workc = (0.d0, 0.d0)
        
-!        if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
-!      &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
-!          den = 0.d0
-!        endif
-       
        CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,
      &                    MPI_COMM_WORLD,IERR)
        CALL ZCOPY(IDIM,WORKC,1,DEN,1)
@@ -707,7 +707,7 @@ C ================================================================ NATYP
 !     lmdos writeout
       if(myrank==master) then                                            ! lm-dos
 c        IF (.not.OPT('qdos    ')) THEN                                   ! lm-dos
-        IF (OPT('lmdos    ')) THEN                                   ! lm-dos
+        IF (OPT('lmdos    ')) THEN                                       ! lm-dos
           DO I1=1,NATYP                                                  ! lm-dos
             DO ISPIN = 1,NSPIN                                           ! lm-dos
               IPOT = (I1-1) * NSPINPOT + ISPIN                           ! lm-dos
@@ -817,6 +817,7 @@ c interpolate potential
      &           angles_new(:,i1),
      &           IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),   ! LDAU
      &           DENMATN(1,1,1,1,I1))                              ! LDAU
+     
 #ifdef CPP_TIMING
         call timing_pause('main1c - rhovalnew')
 #endif
@@ -881,7 +882,7 @@ c interpolate potential
       
       
       if(myrank==master) then
-c rewrite new theta and phi to nonco_angle_out.dat, noncao_angle.dat is the input
+c rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
         IF (.NOT.TEST('FIXMOM  ')) THEN
           OPEN(UNIT=13,file='nonco_angle_out.dat',form='formatted')
           DO I1=1,NATYP
@@ -916,11 +917,11 @@ c rewrite new theta and phi to nonco_angle_out.dat, noncao_angle.dat is the inpu
       IF (LLY.GT.0) THEN                                                 ! LLY Lloyd
          LMAXP1 = LMAX                                                   ! LLY Lloyd
          IF (INS.NE.0) LMAXP1 = LMAX + 1                                 ! LLY Lloyd
+         
          CALL RENORM_LLY(
      &     CDOS_LLY,IELAST,NSPIN,NATYP,DEN,LMAXP1,CONC,
      &     1,IELAST,WEZ,IRCUT,IPAN,EZ,ZAT,
      &     RHO2NS,CDOS1,CDOS2,R2NEF,DENEF,DENEFAT,ESPV)
-
 
       ENDIF                                                              ! LLY Lloyd
 
@@ -1141,11 +1142,10 @@ C
       end if !myrank==master
 #endif
       
-      deallocate(den,denlm)
-      
-      deallocate(thetasnew, thetas)
-      deallocate(vins, vinsnew)
-      deallocate(RHO2N1,RHO2NS,RHO2N2,R2NEF)
+      deallocate(den,denlm, thetasnew, thetas, vins, vinsnew,stat=ierr)
+      if(ierr/=0) stop '[main1b] Error deallocating vins, vinsnew etc.'
+      deallocate(RHO2N1,RHO2NS,RHO2N2,R2NEF,stat=ierr)
+      if(ierr/=0) stop '[main1b] Error deallocating rho2n1 etc.'
       
       
       END SUBROUTINE !MAIN1c

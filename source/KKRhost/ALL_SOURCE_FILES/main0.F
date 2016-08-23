@@ -404,7 +404,6 @@ C     ..
 C     .. distinguish between spin-dependent and spin-independent
 C     .. quantities
        DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
-!      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD) ! Spin-Dependent
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C LDA+U LDA+U LDA+U
@@ -419,6 +418,7 @@ C ruess: IVSHIFT test option
       
       !allocations:
       double precision, allocatable :: THETAS(:,:,:), THETASNEW(:,:,:)
+      integer :: ierr
       
 #ifdef CPP_OMP
 !     .. OMP ..
@@ -443,9 +443,11 @@ C     ..
 
       allocate(THETAS(IRID,NFUND,NCELLD),THESME(IRID,NFUND,NCELLD),
      +         THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD),
-     +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
+     +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD), stat=ierr)
+      if(ierr/=0) stop '[main0] Error allocating thetas etc.'
       allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-     +         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
+     +    RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), stat=ierr)
+      if(ierr/=0) stop '[main0] Error allocating lefttinvll etc.'
 
       
 !Write version info:
@@ -489,7 +491,8 @@ C
       IDOLDAU = 0
       NOFGIJ = 0
       ! allocate and initialize testc and optc in t_params for run and test options
-      ALLOCATE(t_params%TESTC(32),t_params%OPTC(32)) !CHARACTER*8
+      ALLOCATE(t_params%TESTC(32),t_params%OPTC(32), stat=ierr) !CHARACTER*8
+      if(ierr/=0) stop '[main0] Error allocating testc etc.'
       t_params%OPTC(1:32) =  '        '
       t_params%TESTC(1:32) = '        '
 C
@@ -967,9 +970,7 @@ C
 C ======================================================================
 C LDA+U -- initialise 
 C
-C      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
       IF (OPT('LDA+U   ')) then
-           !ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
            CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
      &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,IRWS,
      &                    NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
@@ -1063,7 +1064,6 @@ C
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
  
  
-c      if(allocated(ULDAU)      ) deallocate(ULDAU)
       if(allocated(thetas)     ) deallocate(thetas)
       if(allocated(thetasnew)  ) deallocate(thetasnew)
       if(allocated(thesme)     ) deallocate(thesme)

@@ -593,7 +593,6 @@ c            DEALLOCATE(GLLKE0)
           CALL MPI_ALLREDUCE(LLY_GRTR,WORK,IWORK,
      +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
      +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-!      +                       t_mpi_c_grid%mympi_comm_at,IERR)
           CALL ZCOPY(IWORK,WORK,1,LLY_GRTR,1)
           endif
           
@@ -602,7 +601,6 @@ c            DEALLOCATE(GLLKE0)
           CALL MPI_ALLREDUCE(TRACET,WORK,IWORK,
      +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
      +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-!      +                       t_mpi_c_grid%mympi_comm_at,IERR)
           CALL ZCOPY(IWORK,WORK,1,TRACET,1)
           endif
 #endif
