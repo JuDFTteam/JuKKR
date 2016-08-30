@@ -1,5 +1,5 @@
       SUBROUTINE SCALEVECIMP(
-     >        NUMIMP,NKILLATOM,BRAVAIS,LINTERFACE,
+     >        NUMIMP,NKILLATOM,BRAVAIS,LINTERFACE,LCARTESIMP,
      X        RIMPURITY,RKILL,DXIMP,DYIMP,DZIMP)
       implicit none
 C     Changes the impurity-atom coordinates from "internal"
@@ -12,20 +12,14 @@ c Input:
 c I/O:
       REAL*8 RIMPURITY(3,*),RKILL(3,*),DXIMP(*),DYIMP(*),DZIMP(*)
 c Local:
-      LOGICAL LCARTESIAN
+      LOGICAL LCARTESIMP
       INTEGER IX,NX,IAT,IER
       REAL*8 RAUX(3)
-      CHARACTER*200 UIO
+      CHARACTER*256 UIO
 
 
-      LCARTESIAN= .FALSE.  ! default is false, internal coordinates used
-      CALL IoInput('CARTESIAN ',UIO,1,7,IER)
-      IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) LCARTESIAN
-      CALL IoInput('CARTESIMP ',UIO,1,7,IER)
-      IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) LCARTESIAN
-      WRITE(*,*) 'SCALEVECIMP: CARTESIAN=',LCARTESIAN
 
-      IF (LCARTESIAN) RETURN  ! Do nothing if coordinates are already cartesian
+      IF (LCARTESIMP) RETURN  ! Do nothing if coordinates are already cartesian
 
 c Transform imp. positions to cartesian coordinates.
 

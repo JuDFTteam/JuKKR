@@ -2,7 +2,7 @@ dir      = .
 #FC =g77
 FC =ifort
 #FFLAGS= -O0 
-FFLAGS=-v -O -r8 -heap-arrays -mcmodel=large
+FFLAGS=-O2 -r8 -traceback -i8 #-heap-arrays -mcmodel=large
 # For debugging, checking array bounds, etc (makes code slower):
 # FFLAGS=-v -O0 -r8 -CB -check all -traceback -g -heap-arrays -mcmodel=large
 #LD=g77
@@ -40,3 +40,5 @@ ${newme}:	inc.geometry
 
 
 
+clean:
+	rm *.o ../voronoi.exe

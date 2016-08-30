@@ -65,6 +65,8 @@ ZPERIODR= 0.50000000  0.50000000   0.50000000
 ----------------------------------------------------------------------
 Parameters for the clusters    (if same spherical cluster else cylindrical)
 RCLUSTZ=1.10d0       RCLUSTXY=1.10d0
+
+<NFACELIM>= 20    ############# Consider only this number of nearest neighbours.
 ----------------------------------------------------------------------
 ATOMINFO
 Z     LMXC    KFG     CLS   REFPOT   NTC    FAC    IRNS   RMT     WGHT (overriden by MTWAL above)
@@ -101,8 +103,8 @@ TOLIMP= 1.D-8
 
 IMPINFO       
 2   ##### How many imp. atoms, followed by shifted (final) positions around which the shapes are expanded
-1    0.00d0  0.00d0  0.00d0    2.4  0.216  30.  ######## index, x,y,z, r_core,weight,Z
-2    0.26d0  0.26d0  0.26d0    2.4  0.216  30.  ######## index, x,y,z, r_core,weight,Z
+1    0.00d0  0.00d0  0.00d0    2.4  0.216  30.  ######## index, x,y,z, r_core,weight,Z  (weight is wished muffin tin in same units as for lattice sites)
+2    0.26d0  0.26d0  0.26d0    2.4  0.216  30.  ######## index, x,y,z, r_core,weight,Z  (if no weight was used for crystal atoms, set this to 1.0)
 1   ####### How many atoms have been shifted, followed by xyz of the polyhedron center; if none, put "0".
 2    0.25  0.25  0.25      ####   Indx (mapping to index above), x_old,y_old,z_old (unshifted positions)
 2   How many host-sites to be "killed" (could be a whole cluster); if none, put "0".

@@ -1,7 +1,7 @@
-      SUBROUTINE READINPUT(RBASIS,ABASIS,BBASIS,CBASIS, &
+      SUBROUTINE READINPUT(BRAVAIS,LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS, &
      &           DX,DY,DZ, &
      &           ALATC,BLATC,CLATC, &
-     &           IRNS,NAEZ,NEMB,KAOEZ,IRM,ZAT, &
+     &           IRNS,NAEZ,NEMB,KAOEZ,IRM,ZAT,SITEAT, &
      &           INS,KSHAPE, &
      &           LMAX,LMMAX,LPOT,  &
      &           NATYP,NSPIN, &
@@ -11,7 +11,7 @@
      &           I13, &
      &           NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,   &  
      &           TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE, &
-     &           LMTREF,RMTREF,SIZEFAC)   
+     &           LMTREF,RMTREF,SIZEFAC,NFACELIM)   
       implicit none
       include 'inc.geometry'
 !     .. Local Arrays ..
@@ -31,13 +31,14 @@
       INTEGER REFPOT(NATYPD+NEMBD)
       INTEGER KAOEZ(*)
       INTEGER NBSHIFT ! How many basis atoms have been shifted from polyhedron center
-      REAL*8  ZAT(*),MTFAC(NATYPD),RBASIS(3,*),RMTCORE(*),RMTREF(*)
+      INTEGER SITEAT(NATYPD),NOQ(NAEZD)
+      REAL*8  ZAT(*),MTFAC(NATYPD),BRAVAIS(3,3),RBASIS(3,*),RMTCORE(*),RMTREF(*)
       REAL*8  DX(*),DY(*),DZ(*),RBUNSHIFT(3,NATYPD),RAUX(3)  ! Unshifted positions
       REAL*8  TRIGHT(3,*),TLEFT(3,*),ZPERLEFT(3),ZPERIGHT(3) 
       REAL*8  MTWGHT(0:NTOTD)
       REAL*8  SIZEFAC(-NLEMBD*NEMBD:NTOTD)
       CHARACTER*24 TXC(3)
-      CHARACTER*200 UIO
+      CHARACTER*256 UIO
       CHARACTER*40 I12,I13,I19,I25,I40
       character*80 text
 !     ..
@@ -50,19 +51,19 @@
      &        IRM,IRNUMX,ISHIFT, &
      &        KPRE,KSCOEF,KSHAPE, &
      &        KVREL,KWS,KXC,LMAX,LMMAX,LMPOT,LPOT,MD, &
-     &        NATYP,NPNT1,NPNT2,NPNT3,NPOL,NSPIN,INDX
-      INTEGER NMIN,NSMALL,NRAD
+     &        NATYP,NPNT1,NPNT2,NPNT3,NPOL,NSPIN,INDX,IAT
+      INTEGER NMIN,NSMALL,NRAD,NFACELIM,NBR
       INTEGER NSTEPS,KMT,NAEZ,NEMB
       INTEGER NINEQ,NEMBZ,NZ,CENTEROFINV(3)
       REAL*8        ALATC,BLATC,CLATC
       INTEGER MMIN,MMAX,SINN,SOUT,RIN,ROUT
       INTEGER INTERVX,INTERVY,INTERVZ,NREF,NCLS
-      INTEGER NLBASIS,NRBASIS,NLEFT,NRIGHT          ! new1
-      LOGICAL COMPLX,LINTERFACE,LMTREF,LNEW     ! new1
+      INTEGER NLBASIS,NRBASIS,NLEFT,NRIGHT       
+      LOGICAL COMPLX,LINTERFACE,LMTREF,LNEW,LCARTESIAN 
 !     ..
 !     .. Local Scalars ..
       REAL*8        BRYMIX,STRMIX,E3,TX,TY,TZ
-      INTEGER I,IL,IP,J,IER,I1,IC,II,M2
+      INTEGER I,IL,IP,J,IER,I1,IC,II,M2,IQ
       CHARACTER*43 TSHAPE
 !
       CHARACTER*8 TESTC(16),OPTC(8)
@@ -98,7 +99,55 @@
 ! Begin Structure
       WRITE(*,*) 'Begin Structure'
 
-      CALL IoInput('NAEZ      ',UIO,1,7,IER)
+! set interface/bulk (2D/3D) mode
+      LINTERFACE = .FALSE.
+      CALL IoInput('INTERFACE       ',UIO,IL,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) LINTERFACE
+         WRITE(111,*) 'INTERFACE= ',LINTERFACE
+      ENDIF
+
+! Read in the bravais vectors (normalized to alatc)
+! Notation: BRAVAIS(J,I) J=x,y,z I=1,2,3
+! If the third bravais vector is zero, then surface (2-dimentional) geometry
+! is implied.
+!
+
+      
+      CALL IoInput('BRAVAIS         ',UIO,I,7,IER)
+      IF (IER.NE.0) THEN
+         WRITE(*,*) 'readinput: error: BRAVAIS not found, stopping.'
+         STOP 'readinput: error: BRAVAIS not found'
+      ENDIF
+
+      NBR = 3
+      IF (LINTERFACE) NBR = 2
+
+      BRAVAIS(:,:) = 0.D0
+      DO I=1,NBR
+         CALL IoInput('BRAVAIS         ',UIO,I,7,IER)
+              READ (UNIT=UIO,FMT=*) (BRAVAIS(J,I), J=1,3)
+      ENDDO
+
+      IF (BRAVAIS(1,3).EQ.0.D0.AND.BRAVAIS(2,3).EQ.0.D0.AND.BRAVAIS(3,3).EQ.0.D0) THEN
+         LINTERFACE=.TRUE.
+         WRITE(*,*) 'Surface geometry'
+      ENDIF
+
+      WRITE(111,FMT='(A10)') 'BRAVAIS   '
+      DO I=1,NBR
+         WRITE(111,FMT='(3E16.8)') BRAVAIS(1:3,I)
+      ENDDO
+
+
+      LCARTESIAN= .FALSE.  ! defalt is false, then bravais lattice coordinates are used
+      CALL IoInput('CARTESIAN       ',UIO,1,7,IER)
+      IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) LCARTESIAN
+      WRITE(*,*) 'readinput: CARTESIAN=',LCARTESIAN
+      WRITE(111,*) 'CARTESIAN= ',LCARTESIAN
+
+
+      CALL IoInput('NAEZ            ',UIO,1,7,IER)
       IF (IER.EQ.0) THEN
          READ (UNIT=UIO,FMT=*) NAEZ
       ELSE
@@ -113,24 +162,37 @@
 
 
       DO I=1,NAEZ
-          CALL IoInput('RBASIS    ',UIO,I,7,IER)
+          CALL IoInput('RBASIS          ',UIO,I,7,IER)
           IF (IER.NE.0) STOP 'RBASIS not found, stopping.'
           READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
       ENDDO                         ! I=1,NAEZ
+
+      NFACELIM = NFACED   ! Upper limit of allowed number of faces can be smaller than dimension for speedup
+      CALL IoInput('<NFACELIM>      ',UIO,1,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) NFACELIM
+         WRITE(111,*) '<NFACELIM>=',NFACELIM
+      ENDIF
+
+      IF (NFACELIM.GT.NFACED) THEN
+         WRITE(*,*) 'readinput: NFACELIM.GT.NFACED',NFACELIM,NFACED
+         STOP 'readinput: NFACELIM.GT.NFACED'
+      ENDIF
+
 
 
       RBUNSHIFT(1:3,1:NAEZ) = RBASIS(1:3,1:NAEZ)
       DX(1:NAEZ) = 0.D0
       DY(1:NAEZ) = 0.D0
       DZ(1:NAEZ) = 0.D0
-      CALL IoInput('NBSHIFT   ',UIO,0,7,IER)
+      CALL IoInput('NBSHIFT         ',UIO,0,7,IER)
       IF (IER.EQ.0)  THEN 
          WRITE(*,*) 'Reading unshifted positions...'
          READ (UNIT=UIO,FMT=*) NBSHIFT
          IF (NBSHIFT.GT.NAEZ) STOP 'NBSHIFT > NAEZ'
          WRITE(*,*) '... for',NBSHIFT,' basis atoms.'
          DO I = 1,NBSHIFT
-            CALL IoInput('RBUNSHIFT ',UIO,I,7,IER)
+            CALL IoInput('RBUNSHIFT       ',UIO,I,7,IER)
             READ (UNIT=UIO,FMT=*) INDX,(RBUNSHIFT(J,INDX), J=1,3)
          ENDDO
          !     Now put the unshifted positions in array rbasis,
@@ -151,10 +213,10 @@
       ABASIS = 1.D0
       BBASIS = 1.D0
       CBASIS = 1.D0
-      CALL IoInput('BASISCALE ',UIO,IL,7,IER)
+      CALL IoInput('BASISCALE       ',UIO,IL,7,IER)
       IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) ABASIS,BBASIS,CBASIS 
 
-      CALL IoInput('ALATBASIS ',UIO,IL,7,IER)
+      CALL IoInput('ALATBASIS       ',UIO,IL,7,IER)
       IF (IER.EQ.0) THEN 
          READ (UNIT=UIO,FMT=*) ALATC
       ELSE
@@ -174,10 +236,6 @@
       ! --- > Read Left and Right host and set up the embending positions
       !
       !
-      LINTERFACE = .FALSE.
-      CALL IoInput('INTERFACE ',UIO,IL,7,IER)
-      IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) LINTERFACE
-      IF (IER.NE.0) WRITE(*,*) 'INTERFACE not found, setting INTERFACE=.F.'
 
       NLEFT = 0 ; NRIGHT = 0 ; NEMB = 0 ! in 3d geometry
 
@@ -217,7 +275,7 @@
 
 
          NRIGHT = 10
-         CALL IoInput('NRIGHTHO  ',UIO,1,7,IER)
+         CALL IoInput('NRIGHTHO        ',UIO,1,7,IER)
          IF (IER.EQ.0) THEN
             READ (UNIT=UIO,FMT=*) NRIGHT
             WRITE(111,*) 'NRIGHTHO=',NRIGHT
@@ -239,12 +297,12 @@
             STOP 'readinput12: NLEFTHOS+NRIGHTHO exceeds dimension NLEMBD'
          ENDIF
 
-         CALL IoInput('<NLBASIS> ',UIO,IL,7,IER)
+         CALL IoInput('<NLBASIS>       ',UIO,IL,7,IER)
          IF (IER.EQ.0) THEN
             READ (UNIT=UIO,FMT=*) NLBASIS
          ELSE
             IER=0
-            CALL IoInput('NLBASIS   ',UIO,IL,7,IER)
+            CALL IoInput('NLBASIS         ',UIO,IL,7,IER)
             IF (IER.EQ.0) THEN
                READ (UNIT=UIO,FMT=*) NLBASIS
             ELSE
@@ -253,12 +311,12 @@
             ENDIF
          ENDIF
 
-         CALL IoInput('<NRBASIS> ',UIO,IL,7,IER)
+         CALL IoInput('<NRBASIS>       ',UIO,IL,7,IER)
          IF (IER.EQ.0) THEN
             READ (UNIT=UIO,FMT=*) NRBASIS
          ELSE
             IER=0
-            CALL IoInput('NRBASIS   ',UIO,IL,7,IER)
+            CALL IoInput('NRBASIS         ',UIO,IL,7,IER)
             IF (IER.EQ.0) THEN
                READ (UNIT=UIO,FMT=*) NRBASIS
             ELSE
@@ -280,7 +338,7 @@
          IF (LNEW) THEN
 
             DO I=1,NLBASIS
-               CALL IoInput('<RBLEFT>  ',UIO,I,7,IER)
+               CALL IoInput('<RBLEFT>        ',UIO,I,7,IER)
                READ (UNIT=UIO,FMT=*) (TLEFT(I1,I),I1=1,3)
                KAOEZ(NAEZ+I) = I            ! Default
                CALL IoInput('<KAOEZL>        ',UIO,I,7,IER)
@@ -291,12 +349,12 @@
             ENDDO
             WRITE(111,FMT='(A82)') '<RBRIGHT>                                                     <RMTREFL>   <KAOEZL>'
             DO I=1,NRBASIS
-               CALL IoInput('<RBRIGHT> ',UIO,I,7,IER)
+               CALL IoInput('<RBRIGHT>       ',UIO,I,7,IER)
                READ (UNIT=UIO,FMT=*) (TRIGHT(I1,I),I1=1,3)
                KAOEZ(NAEZ+NLBASIS+I) = I     ! Default
-               CALL IoInput('<KAOEZR>  ',UIO,I,7,IER)
+               CALL IoInput('<KAOEZR>        ',UIO,I,7,IER)
                IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) KAOEZ(NAEZ+NLBASIS+I)
-               CALL IoInput('<RMTREFR> ',UIO,I,7,IER)
+               CALL IoInput('<RMTREFR>       ',UIO,I,7,IER)
                IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) RMTREF(NAEZ+NLBASIS+I)
                WRITE (111,FMT='(3E20.12,3X,F9.6,3X,I5)') (TRIGHT(I1,I),I1=1,3),RMTREF(NAEZ+NLBASIS+I),KAOEZ(NAEZ+NLBASIS+I)
             ENDDO
@@ -306,24 +364,24 @@
 
             DO I=1,NLBASIS
                TLEFT(:,I) = 0.D0
-               CALL IoInput('LEFTBASIS ',UIO,I,7,IER)
+               CALL IoInput('LEFTBASIS       ',UIO,I,7,IER)
                READ (UNIT=UIO,FMT=*) (TLEFT(I1,I),I1=1,3),II
                KAOEZ(NAEZ+I) = II    ! changed 1.11.99
                write(6,*) 'this must be 1',KAOEZ(NAEZ+I),NAEZ+I
 
                RMTREF(NAEZ+I) = RMTREFDEF
-               CALL IoInput('<RMTREFL> ',UIO,I,7,IER) ! referen-pot rmt
+               CALL IoInput('<RMTREFL>       ',UIO,I,7,IER) ! referen-pot rmt
                IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) RMTREF(NAEZ+I)
 
             END DO
             DO I=1,NRBASIS
                TRIGHT(:,I) = 0.D0
-               CALL IoInput('RIGHBASIS ',UIO,I,7,IER)
+               CALL IoInput('RIGHBASIS       ',UIO,I,7,IER)
                READ (UNIT=UIO,FMT=*) (TRIGHT(I1,I),I1=1,3),II
                KAOEZ(NAEZ+NLBASIS+I) = II  ! changed 1.11.99
 
                RMTREF(NAEZ+NLBASIS+I) = RMTREFDEF
-               CALL IoInput('<RMTREFR> ',UIO,I,7,IER) ! referen-pot rmt
+               CALL IoInput('<RMTREFR>       ',UIO,I,7,IER) ! referen-pot rmt
                IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) RMTREF(NAEZ+NLBASIS+I)
                
             END DO
@@ -348,9 +406,9 @@
          ! goes in the NEMB positions 
          !
          !ccccccccccccccccccccccccccccccccccccccccccccccccccccc
-         CALL IoInput('ZPERIODL  ',UIO,IL,7,IER)
+         CALL IoInput('ZPERIODL        ',UIO,IL,7,IER)
               READ (UNIT=UIO,FMT=*) (ZPERLEFT(i1),I1=1,3)
-         CALL IoInput('ZPERIODR  ',UIO,IL,7,IER)
+         CALL IoInput('ZPERIODR        ',UIO,IL,7,IER)
               READ (UNIT=UIO,FMT=*) (ZPERIGHT(i1),I1=1,3) 
          WRITE(6,9430) NLEFT,NLBASIS
          WRITE(6,9440) NRIGHT,NRBASIS
@@ -401,13 +459,13 @@
       ! Wished muffin-tin (units of alat)
       DO ISITE=1,NAEZ
          MTWGHT(ISITE) = DSQRT(SIZEFAC(ISITE)) ! Initialize
-         CALL IoInput('<MTWAL>   ',UIO,ISITE,7,IER)
+         CALL IoInput('<MTWAL>         ',UIO,ISITE,7,IER)
          IF (IER.EQ.0)  READ (UNIT=UIO,FMT=*) MTWGHT(ISITE)
          IF (IER.EQ.0)  WRITE(*,*) 'Read in wished MT radius in ALAT:',MTWGHT(ISITE)
       ENDDO
       ! Wished muffin-tin (atomic units, overrides units of alat)
       DO ISITE=1,NAEZ
-         CALL IoInput('<MTWAU>   ',UIO,ISITE,7,IER)
+         CALL IoInput('<MTWAU>         ',UIO,ISITE,7,IER)
          IF (IER.EQ.0)  THEN 
             READ (UNIT=UIO,FMT=*) MTWGHT(ISITE)
             MTWGHT(ISITE) = MTWGHT(ISITE)/ALATC
@@ -422,7 +480,7 @@
          DO ISITE = NAEZ + 1,NAEZ + NLBASIS
             MTWGHT(ISITE) = 1.D0 ! Initialize
             IL = IL + 1
-            CALL IoInput('<LFMTWAL> ',UIO,IL,7,IER)
+            CALL IoInput('<LFMTWAL>       ',UIO,IL,7,IER)
             IF (IER.EQ.0)  READ (UNIT=UIO,FMT=*) MTWGHT(ISITE)
             IF (IER.EQ.0)  WRITE(*,*) 'Read in wished MT radius in ALAT:',MTWGHT(ISITE)
          ENDDO
@@ -430,7 +488,7 @@
          DO ISITE = NAEZ + NLBASIS + 1,NAEZ + NLBASIS + NRBASIS
             MTWGHT(ISITE) = 1.D0 ! Initialize
             IL = IL + 1
-            CALL IoInput('<RTMTWAL> ',UIO,IL,7,IER)
+            CALL IoInput('<RTMTWAL>       ',UIO,IL,7,IER)
             IF (IER.EQ.0)  READ (UNIT=UIO,FMT=*) MTWGHT(ISITE)
             IF (IER.EQ.0)  WRITE(*,*) 'Read in wished MT radius in ALAT:',MTWGHT(ISITE)
          ENDDO
@@ -439,7 +497,7 @@
          IL = 0
          DO ISITE = NAEZ + 1,NAEZ + NLBASIS
             IL = IL + 1
-            CALL IoInput('<LFMTWAU> ',UIO,IL,7,IER)
+            CALL IoInput('<LFMTWAU>       ',UIO,IL,7,IER)
             IF (IER.EQ.0)  THEN 
                READ (UNIT=UIO,FMT=*) MTWGHT(ISITE)
                MTWGHT(ISITE) = MTWGHT(ISITE)/ALATC
@@ -449,7 +507,7 @@
          IL = 0
          DO ISITE = NAEZ + NLBASIS + 1,NAEZ + NLBASIS + NRBASIS
             IL = IL + 1
-            CALL IoInput('<RTMTWAU> ',UIO,IL,7,IER)
+            CALL IoInput('<RTMTWAU>       ',UIO,IL,7,IER)
             IF (IER.EQ.0)  THEN 
                READ (UNIT=UIO,FMT=*) MTWGHT(ISITE)
                MTWGHT(ISITE) = MTWGHT(ISITE)/ALATC
@@ -492,7 +550,7 @@
 
 ! =============================================================================
 ! Start clusters setup
-      CALL IoInput('RCLUSTZ   ',UIO,IL,7,IER)
+      CALL IoInput('RCLUSTZ         ',UIO,IL,7,IER)
       IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) RCUTZ
       IF (IER.NE.0) THEN 
          WRITE(*,*) 'readinput12: RCLUSTZ not found, stopping.'
@@ -500,14 +558,14 @@
       END IF
 
       RCUTXY = RCUTZ
-      CALL IoInput('RCLUSTXY  ',UIO,IL,7,IER)
+      CALL IoInput('RCLUSTXY        ',UIO,IL,7,IER)
       IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) RCUTXY
 
       ! RMT of ref-pot in TB-KKR to determine TB-KKR clusters
       LMTREF = .FALSE.
       DO ISITE=1,NAEZ
          RMTREF(ISITE) = RMTREFDEF ! Initialize
-         CALL IoInput('<RMTREF>  ',UIO,ISITE,7,IER)
+         CALL IoInput('<RMTREF>        ',UIO,ISITE,7,IER)
          IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) RMTREF(ISITE)
          IF (IER.EQ.0) LMTREF = .TRUE.
          RMTREFDEF = RMTREF(1)  ! Re-define default in case it is only included for 1st atom.
@@ -534,16 +592,24 @@
 
       IL=1
       NSPIN = 1
-      CALL IoInput('NSPIN     ',UIO,1,7,IER)
+      CALL IoInput('NSPIN           ',UIO,1,7,IER)
       IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) NSPIN
       IF (IER.NE.0) WRITE(*,*) 'NSPIN not found, setting NSPIN=1.'
+      IF (NSPIN.NE.1.AND.NSPIN.NE.2) THEN
+         WRITE(*,*) 'readinput: NSPIN not 1 or 2',NSPIN
+         STOP 'readinput: incomprehensible value for NSPIN'
+      ENDIF
 
 
 
       NATYP = NAEZ
-      CALL IoInput('NATYP     ',UIO,1,7,IER)
+      CALL IoInput('NATYP           ',UIO,1,7,IER)
       IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) NATYP
       IF (IER.NE.0) WRITE(*,*) 'NATYP not found, setting NATYP=NAEZ.'
+      IF (NATYP.LT.NAEZ) THEN 
+         WRITE(*,*) 'readinput: NATYP.LT.NAEZ',NATYP,NAEZ
+         STOP 'readinput: NATYP.LT.NAEZ'
+      ENDIF
 
       WRITE(6,8000) NAEZ,NATYP,NSPIN
  8000 FORMAT('NAEZ=',I5,' ; NATYP=',I5' ; NSPIN=',I2)
@@ -553,28 +619,75 @@
       ZAT(1:NAEZ) = 29.D0         ! Default is copper.
 
 
-      DO I=1,NAEZ
-         CALL IoInput('ATOMINFO  ',UIO,I+1,7,IER)
-             IF (IER.EQ.0) READ (UNIT=UIO,FMT=*)    ZAT(I), &
-     &                        LMXC(I), &
-     &                       (KFG(J,I),J=1,4), &
-     &                        CLS(I), &
-     &                        REFPOT(I), &
-     &                        NTCELL(I), &
-     &                        MTFAC(I), &
-     &                        IRNS(I),RMTCORE(I),SIZEFAC(I)
-      END DO
+      CALL IoInput('ATOMINFO        ',UIO,I+1,7,IER)
+      IF (IER.EQ.0) THEN
+         DO I=1,NAEZ
+            CALL IoInput('ATOMINFO        ',UIO,I+1,7,IER)
+                IF (IER.EQ.0) READ (UNIT=UIO,FMT=*)    ZAT(I), &
+     &                           LMXC(I), &
+     &                          (KFG(J,I),J=1,4), &
+     &                           CLS(I), &
+     &                           REFPOT(I), &
+     &                           NTCELL(I), &
+     &                           MTFAC(I), &
+     &                           IRNS(I),RMTCORE(I),SIZEFAC(I)
+         END DO
+       ENDIF
 
       ! Read ZAT (overrides ATOMINFO read-in)
-      DO I = 1,NAEZ
-        CALL IoInput('<ZATOM>   ',UIO,I,7,IER)
+      DO I = 1,NATYP
+        CALL IoInput('<ZATOM>         ',UIO,I,7,IER)
          IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) ZAT(I)
       ENDDO
       ! Read RMTCORE (overrides ATOMINFO read-in)
       DO I = 1,NAEZ
-        CALL IoInput('<RMTCORE> ',UIO,I,7,IER)
+        CALL IoInput('<RMTCORE>       ',UIO,I,7,IER)
          IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) RMTCORE(I)
       ENDDO
+
+      DO IAT = 1,NATYPD
+         SITEAT(IAT) = IAT  ! For mapping in jellstart if there is no cpa mode
+      ENDDO
+
+! CPA mode:
+      IF (NATYP.GT.NAEZ) THEN ! CPA mode, read site for each atom
+
+         SITEAT(1:NATYPD) = 0  ! reset the site index per atom, it will be read in in case of cpa.
+
+         IER = 0
+         CALL IoInput('<SITE>          ',UIO,1,7,IER)
+         IF (IER.NE.0) THEN
+            WRITE(*,*) 'readinput: <SITE> in CPA mode not found, stopping.'
+            STOP 'readinput: <SITE> in CPA mode not found.'
+         ENDIF
+
+         WRITE(111,FMT='(A18)') '<SITE>  '
+         DO IAT = 1,NATYP
+            CALL IoInput('<SITE>          ',UIO,IAT,7,IER)
+            READ (UNIT=UIO,FMT=*) SITEAT(IAT)
+            WRITE(111,FMT='(I5)') SITEAT(IAT)
+            IF (SITEAT(IAT).GT.NAEZ.OR.SITEAT(IAT).LT.1) THEN
+               WRITE(*,*) 'readinput: CPA SITE ill-defined',IAT,SITEAT(IAT)
+               STOP 'readinput: CPA SITE ill-defined'
+            ENDIF
+         ENDDO
+
+         NOQ(1:NAEZD) = 0 
+         DO IAT = 1,NATYP
+            ISITE = SITEAT(IAT)
+            NOQ(ISITE) = NOQ(ISITE) + 1
+         ENDDO
+
+         DO ISITE=1,NAEZ
+            IF (NOQ(ISITE).LT.1) THEN
+               WRITE(6,*) 'readinput: CPA: SITE',ISITE,'HAS NO ASSIGNED ATOM'
+               STOP 'readinput: CPA, atoms not properly assigned.'
+            ENDIF
+         END DO
+
+      ENDIF
+! End CPA mode        
+
 
       WRITE(6,2028) NATYP
       WRITE(6,2104)
@@ -592,7 +705,6 @@
 
 
 
-
 ! End  chemistry
 ! =============================================================================
 
@@ -601,39 +713,39 @@
 ! Start control
 
       LMAX = 3
-      CALL IoInput('LMAX      ',UIO,0,7,IER)
+      CALL IoInput('LMAX            ',UIO,0,7,IER)
       IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) LMAX
       IF (IER.NE.0) WRITE(*,*) 'LMAX not found, setting LMAX=3.'
 
       KSHAPE = 2 ! Default
-      CALL IoInput('KSHAPE    ',UIO,1,7,IER)
+      CALL IoInput('KSHAPE          ',UIO,1,7,IER)
       IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) kshape
 
       IRM = 484 ! Default
-      CALL IoInput('IRM       ',UIO,1,7,IER)
+      CALL IoInput('IRM             ',UIO,1,7,IER)
       IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) irm
 
       INS = 1 ! Default
-      CALL IoInput('INS       ',UIO,1,7,IER)
+      CALL IoInput('INS             ',UIO,1,7,IER)
       IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) ins
 
-      CALL IoInput('NMIN      ',UIO,1,7,IER)
+      CALL IoInput('NMIN            ',UIO,1,7,IER)
       IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) NMIN
-      CALL IoInput('NRAD      ',UIO,1,7,IER)
+      CALL IoInput('NRAD            ',UIO,1,7,IER)
       IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) NRAD
       NRAD = MAX(NMIN,NRAD)
-      CALL IoInput('NSMALL    ',UIO,1,7,IER)
+      CALL IoInput('NSMALL          ',UIO,1,7,IER)
       IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) NSMALL
       NSMALL = MAX(NMIN,NSMALL)
       
       ! Tolerance for voronoi construction, defaults in maindriver data
-      CALL IoInput('<TOLHS>   ',UIO,1,7,IER)
+      CALL IoInput('<TOLHS>         ',UIO,1,7,IER)
       IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) TOLHS
 
-      CALL IoInput('<TOLVD>   ',UIO,1,7,IER)
+      CALL IoInput('<TOLVD>         ',UIO,1,7,IER)
       IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) TOLVDIST
 
-      CALL IoInput('<TOLAREA> ',UIO,1,7,IER)
+      CALL IoInput('<TOLAREA>       ',UIO,1,7,IER)
       IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) TOLAREA
 
 
@@ -689,15 +801,15 @@
 ! Start read run and test options and files
  
            
-      CALL IoInput('TESTOPT   ',UIO,1,7,IER)
+      CALL IoInput('TESTOPT         ',UIO,1,7,IER)
                      READ(UNIT=UIO,FMT=980)(TESTC(i),i=1,8)
-      CALL IoInput('TESTOPT   ',UIO,2,7,IER)
+      CALL IoInput('TESTOPT         ',UIO,2,7,IER)
                      READ(UNIT=UIO,FMT=980)(TESTC(8+i),i=1,8)
       WRITE(6,52) (TESTC(I),I=1,16)                                                 
  52   FORMAT(79('-')/' TEST OPTIONS:'/2(1X,A8,7('//',A8)/)/79('-'))
  
  
-      CALL IoInput('RUNOPT    ',UIO,1,7,IER)
+      CALL IoInput('RUNOPT          ',UIO,1,7,IER)
                    READ (UNIT=UIO,FMT=980)(OPTC(i),i=1,8)
       WRITE(6,62) (OPTC(i),i=1,8)                                              
  62   FORMAT(79('-')/' EXECUTION OPTIONS:'/1X,A8,7('//',A8)/79('-'))
@@ -705,16 +817,16 @@
  
       IL=1
       I12='                                        '
-      CALL IoInput('FILES     ',UIO,IL,7,IER)
+      CALL IoInput('FILES           ',UIO,IL,7,IER)
                      IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I12
       I13='                                        '
-      CALL IoInput('FILES     ',UIO,IL+1,7,IER)
+      CALL IoInput('FILES           ',UIO,IL+1,7,IER)
                      IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I13
       I40='                                        '
-      CALL IoInput('FILES     ',UIO,IL+2,7,IER)
+      CALL IoInput('FILES           ',UIO,IL+2,7,IER)
                      IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I40
       I19='                                        '
-      CALL IoInput('FILES     ',UIO,IL+3,7,IER)
+      CALL IoInput('FILES           ',UIO,IL+3,7,IER)
                      IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I19
 
       write(6,*) 'I12="',I12,'"'

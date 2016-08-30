@@ -110,7 +110,7 @@ c
      +     RMTREF(NAEZD+NEMBD),     ! MT-radius of ref. system
      +     RR(3,0:NRD),             ! set of real space vectors (in a.u.)
      +     RWS(NATYPD),             ! Wigner Seitz radius
-     +     ZATOM(NTOTD)
+     +     ZATOM(NTOTD)             ! Nuclear charge
       INTEGER ICC,                  ! center of cluster for output of GF
      +     ICLS, NAEZ,              ! number of atoms in unit cell
      +     NATYP,                   ! number of kinds of atoms in unit cell
@@ -125,10 +125,13 @@ c
      &     SHAPEREF(NTOTD),         ! representative atom having equiv. shape (cell + shift)
      &     CELLREF(NTOTD),          ! repr. atom having equiv. cell (without shift)
      &     IDSHAPE(NTOTD),          ! which shape is assigned to a given atom
-     &     SHAPEATOM(NSHAPED)       ! representative atom for each shape
+     &     SHAPEATOM(NSHAPED),      ! representative atom for each shape
+     &     SITEAT(NATYPD)           ! Site of each atom in unit cell for CPA calculations (1.LE.SITEAT(I).LE.NAEZ, I=1,..,NATYP)
       LOGICAL LSHIFT(NTOTD),        ! true if the expansion is arround shifted position
      &        LCONSTRUCTED(NSHAPED),! true if particular shape has been constructed
-     &        LMTREF                ! true if MT-radius of ref. system was read in from input.
+     &        LMTREF,               ! true if MT-radius of ref. system was read in from input.
+     &        LCARTESIAN,           ! cartesian or internal coordinates of basis
+     &        LCARTESIMP            ! cartesian or internal coordinates of impurities
 
       REAL*8 
      &     RMTHLF(NAEZD+NEMBD),     ! Touching muffin-tin from bisection to nearest neighbor
@@ -187,7 +190,7 @@ c Impurity:
       REAL*8 RMTHLFIMP(NIMPD)   ! Touching muffin-tin from bisection to nearest neighbor
 c End Impurity
 c
-      INTEGER NVEC
+      INTEGER NVEC,NFACELIM ! Number of vectors defining faces, maximum allowed number of faces
       REAL*8  RVEC(3,NFACED)
 c
 c  Shape functions
@@ -218,12 +221,14 @@ c
       REAL*8    DX(NTOTD),DY(NTOTD),DZ(NTOTD)
       REAL*8    ROUT,RTEST,DLT,CRAD,RX,RY,RZ,MTRADIUS,VTOT,
      &                 SHAPESHIFT(3,NTOTD)
-      CHARACTER*200 UIO
-      INTEGER LMAX,KEYPAN,NPOI,NA,IAT,JAT,ICL,NATOMS,NSHAPE,N1A,I2,II
+      CHARACTER*256 UIO
+      INTEGER NATOMS,NSITES,NSHAPE ! Number of atoms, sites, shapes
+      INTEGER LMAX,KEYPAN,NPOI,NA,IAT,JAT,ICL,N1A,I2,II,ISITE
+      INTEGER NBEGIN,ISITEBEGIN
       INTEGER IFACE,ISHAPE,JV,CELLREFI,IVERT
       INTEGER NM(NPAND),SHAPECL(NATYPD)
       INTEGER IL,I,J,IFILE,NREF,INS,KWS,LPOT,LMPOT,NSPIN,KSHAPE
-      INTEGER NR,KMT,NINEQ,LMMAX,I1,IC0,IX,IIMP,ICLSIMP,NBEGIN
+      INTEGER NR,KMT,NINEQ,LMMAX,I1,IC0,IX,IIMP,ICLSIMP
       LOGICAL LINTERFACE,LJELL,MAKESHAPE,VOROPLOT,LCOMPARE,LSKIP
       REAL*8    RCUTZ,RCUTXY,QBOUND,SHIFT(3),DIFF,RMT0,DXI,DYI,DZI
       REAL*8    WEIGHT0,RMTCOREI 
@@ -300,10 +305,10 @@ c
       DY(:) = 0.D0     
       DZ(:) = 0.D0     
 
-      CALL READINPUT(RBASIS,ABASIS,BBASIS,CBASIS,
+      CALL READINPUT(BRAVAIS,LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,
      &     DX,DY,DZ,
      &     ALATC,BLATC,CLATC,
-     &     IRNS,NAEZ,NEMB,KAOEZ,IRM,ZATOM,
+     &     IRNS,NAEZ,NEMB,KAOEZ,IRM,ZATOM,SITEAT,
      &     INS,KSHAPE,
      &     LMAX,LMMAX,LPOT, 
      &     NATYP,NSPIN,
@@ -313,15 +318,16 @@ c
      &     I13,
      &     NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,    
      &     TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE,
-     &     LMTREF,RMTREF,SIZEFAC)
+     &     LMTREF,RMTREF,SIZEFAC,NFACELIM)
+
 
       CALL LATTIX12(LINTERFACE,ALATC,BRAVAIS,RECBV,RR,NR,VOLUC)   
 
 c     
 c     Scale 
 c     
-      CALL SCALEVEC2000(RBASIS,ABASIS,BBASIS,CBASIS,NLBASIS,
-     &     NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,            
+      CALL SCALEVEC2000(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,
+     &     NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,            
      &     TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,KAOEZ)
 c
 c     Rationalise basis vectors
@@ -348,7 +354,8 @@ c
 
       DISTNN(1:NAEZ) = 2.D0*RMTHLF(1:NAEZ)
 
-      NATOMS = NAEZ
+      NSITES = NAEZ
+      NATOMS = NATYP
 
 !------------------------------------
 ! Begin impurity part
@@ -358,10 +365,11 @@ c
       ! For impurity calculation, the host clusters are used as input, 
       ! while impurity clusters are generated as output.
          CALL READIMPATOMS12(
+     >        ALATC,LCARTESIAN,
      <        NUMIMP,RIMPURITY,NKILLATOM,RKILL,DXIMP,DYIMP,DZIMP,
-     <        RMTIMP,IMPSIZE,ZIMP)
+     <        RMTIMP,IMPSIZE,ZIMP,LCARTESIMP)
          CALL SCALEVECIMP(
-     >        NUMIMP,NKILLATOM,BRAVAIS,LINTERFACE,
+     >        NUMIMP,NKILLATOM,BRAVAIS,LINTERFACE,LCARTESIMP,
      X        RIMPURITY,RKILL,DXIMP,DYIMP,DZIMP)
          CALL CLSGENIMP12(
      >        NUMIMP,RIMPURITY,NKILLATOM,RKILL,
@@ -384,9 +392,10 @@ c
          ! shapes later.
          ! This was already anticipated in subroutine CLSGENIMP_KKRFLEX
          ! when creating the array ATOMIMP.
-         NATOMS = NAEZ + NUMIMP
-         IF (NATOMS.GT.NTOTD) THEN
-            WRITE(*,*) 'Found ',NATOMS,' atoms, but NTOTD=',NTOTD
+         NSITES = NAEZ + NUMIMP
+         NATOMS = NATYP + NUMIMP  ! In cpa, NATYP>NAEZ
+         IF (NSITES.GT.NTOTD) THEN
+            WRITE(*,*) 'Found ',NSITES,' atoms, but NTOTD=',NTOTD
             STOP 'NTOTD'
          ENDIF
          IF (NCLS + NCLSIMP.GT.NCLSD) THEN
@@ -396,20 +405,21 @@ c
          ENDIF
       
          DO IIMP = 1,NUMIMP
-            IAT = NAEZ + IIMP
-            CLS(IAT)      = CLSIMP(IIMP)
-            ATOM(:,IAT)   = ATOMIMP(:,IIMP)
-            DX(IAT)       = DXIMP(IIMP)
-            DY(IAT)       = DYIMP(IIMP)
-            DZ(IAT)       = DZIMP(IIMP)
-            SIZEFAC(IAT)  = IMPSIZE(IIMP)
-            ZATOM(IAT)    = ZIMP(IIMP)
-            RMTCORE(IAT)  = RMTIMP(IIMP)
-            DISTNN(IAT)   = 2.D0*RMTHLFIMP(IIMP)
+            ISITE = NAEZ + IIMP
+            SITEAT(NATYP+IIMP) = ISITE          ! ZATOM is atom-dependent, not site dependent (CPA)
+            CLS(ISITE)        = CLSIMP(IIMP)
+            ATOM(:,ISITE)     = ATOMIMP(:,IIMP)
+            DX(ISITE)         = DXIMP(IIMP)
+            DY(ISITE)         = DYIMP(IIMP)
+            DZ(ISITE)         = DZIMP(IIMP)
+            SIZEFAC(ISITE)    = IMPSIZE(IIMP)
+            ZATOM(NATYP+IIMP) = ZIMP(IIMP)       ! ZATOM is atom-dependent, not site dependent (CPA)
+            RMTCORE(ISITE)    = RMTIMP(IIMP)
+            DISTNN(ISITE)     = 2.D0*RMTHLFIMP(IIMP)
             ! IRNS for impurities is initialized arbitrarily 
             ! but can be read-in if necessary. It is reset
             ! later: see "Check consistency of param. IRNS"
-            IRNS(IAT) = 208
+            IRNS(ISITE) = 208
          END DO
          DO ICLSIMP = 1,NCLSIMP
             ICLS = NCLS + ICLSIMP
@@ -448,7 +458,7 @@ c
 
 
 c The following parameters can be made atom-dependent and e.g. read in.
-      DO IAT = 1,NATOMS
+      DO IAT = 1,NSITES
          AOUT_ALL(IAT) = 0.025D0 ! Parameter A for exponential mesh of output-pot.
          IRWS(IAT) = IRM          ! Index of outmost point.
          IMT(IAT) = NMT
@@ -461,14 +471,17 @@ c -----------------------------------------------------------------
 
 c Find all inequivalent Voronoi cells
 
-      DO 20 IAT = 1,NATOMS  ! Loop over all atoms to find their cells
+      DO 20 IAT = 1,NSITES  ! Loop over all atoms to find their cells
 
 c        Prepare cluster for this voronoi cell. 
 c        Exclude first vector, which is always zero by cluster construction.         
 c        Store in array RVEC.
 
          ICLUSTER = CLS(IAT)
-         NVEC = NACLS(ICLUSTER) - 1  ! No. of cluster atoms excl. central
+         ! Upper limit of allowed number of faces can be smaller than dimension for speedup
+         NVEC = MIN(NACLS(ICLUSTER) - 1,NFACELIM)  ! No. of cluster atoms excl. central
+         WRITE(6,*) 'Preparing neighbours of Site:',IAT
+         WRITE(6,*) 'Number of considered neighbours is:',NFACELIM
          IF (NVEC.GT.NFACED) THEN
             WRITE(6,*) 'Increase NFACED ',NVEC,NFACED
             STOP
@@ -476,13 +489,15 @@ c        Store in array RVEC.
          DO IVEC = 2,NVEC + 1           
             RVEC(1:3,IVEC-1) = RCLS(1:3,IVEC,ICLUSTER) 
          END DO
+         WRITE(6,*) 'Max. neighbour distance is:',
+     &            DSQRT(RVEC(1,NVEC)**2+RVEC(2,NVEC)**2+RVEC(3,NVEC)**2)
 
 
 c        Cluster mapping done, now map weights.
          DO IVEC = 1,NVEC 
             II = ATOM(IVEC+1,IAT)   ! +1 because of exclusion of central atom
                                     ! II<0 for the embedded positions around the slab
-            IF (II.GT.NATOMS) II = 0  ! should not happen
+            IF (II.GT.NSITES) II = 0  ! should not happen
 
 c           In case of slab or decimation you have to take care of the boundary
 c           atoms. Give all atoms outside the system weight 1.0.
@@ -493,7 +508,7 @@ c           Therefore, sizefac(0) = 1.0 is defined earlier.
          WEIGHT0 = SIZEFAC(IAT)
      
 
-         WRITE(6,*) 'Entering VORONOI08 for atom=',IAT            
+         WRITE(6,*) 'Entering VORONOI12 for atom=',IAT            
          CALL VORONOI12(
      >    NVEC,RVEC,NVERTD,NFACED,WEIGHT0,WEIGHT,TOLVDIST,TOLAREA,TOLHS,
      <    RMT0,ROUT,VOLUME,NFACE,A3,B3,C3,D3,NVERT,XVERT,YVERT,ZVERT)
@@ -513,7 +528,7 @@ c        Now store results in atom-dependent array.
          ZVERT_ALL(:,:,IAT) = ZVERT(:,:)
 
 
- 20   ENDDO                 ! DO 20 IAT = 1,NATOMS 
+ 20   ENDDO                 ! DO 20 IAT = 1,NSITES 
 
 
 c-------------------------------------------------------------------------------
@@ -523,7 +538,7 @@ c If all faces are the same, then the cells are equivalent (except center-shift)
       NUMCELL = 1     ! Cell of first atom is always accepted.
       CELLREF(1) = 1
       
-      DO 30 IAT = 2,NATOMS
+      DO 30 IAT = 2,NSITES
          NFACE = NFACE_ALL(IAT)
          A3(:) = A3_ALL(:,IAT)
          B3(:) = B3_ALL(:,IAT)
@@ -556,7 +571,7 @@ c If all faces are the same, then the cells are equivalent (except center-shift)
             CELLREF(IAT) = IAT
          ENDIF
 
- 30   ENDDO  ! IAT = 2,NATOMS
+ 30   ENDDO  ! IAT = 2,NSITES
       WRITE(*,*) 'Found ',NUMCELL,' inequivalent cells.'
 
 c Now the number of inequivalent cells is NUMCELL.
@@ -568,7 +583,7 @@ c Consider two shape functions equivalent if the Voronoi cells are
 c equivalent (same CELLREF), if the shift DX,DY,DZ is the same,
 c and if the chosen core radius is the same.
 
-      DO IAT = 1,NATOMS 
+      DO IAT = 1,NSITES 
          IF (DABS(DX(IAT))+DABS(DY(IAT))+DABS(DZ(IAT)).GE.1.D-5) THEN
             LSHIFT(IAT) = .TRUE.
          ELSE
@@ -581,7 +596,7 @@ c and if the chosen core radius is the same.
       SHAPEATOM(1) = 1
       IDSHAPE(1) = 1
       
-      DO 40 IAT = 2,NATOMS
+      DO 40 IAT = 2,NSITES
 
          DXI = DX(IAT)
          DYI = DY(IAT)
@@ -609,7 +624,7 @@ c        If this point is reached, then no equivalent shape was found.
  40   ENDDO
 
       WRITE(*,*) 'Found ',NUMSHAPE,' inequivalent shapes.'
-      DO IAT = 1,NATOMS
+      DO IAT = 1,NSITES
          WRITE(*,FMT='(10(A10I5))') '%    Atom ',IAT,
      &        '  cellref ',CELLREF(IAT),' shaperef ',SHAPEREF(IAT),
      &        '  idshape ',IDSHAPE(IAT)
@@ -629,15 +644,19 @@ c Define RWS and RMT in case of ASA. Otherwise these are recalculated.
 c------------------------------------------------------------------------------
 
 
+      ISITEBEGIN = 1
       NBEGIN = 1
-      IF (OPT('IMPURITY')) NBEGIN = NAEZ + 1
+      IF (OPT('IMPURITY')) THEN 
+         ISITEBEGIN = NAEZ + 1
+         NBEGIN = NATYP + 1  ! In cpa, NATYP>NAEZ
+      ENDIF
 
 c**********************************************************************************
 cINS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-INS-
       IF (INS.GT.0) THEN
 
-c Loop to construct different shapes is from 1 to NATOMS=NAEZ for host calculation
-c or from NAEZ+1 to NATOMS=NAEZ+NUMIMP for impurity calculation.
+c Loop to construct different shapes is from 1 to NSITES=NAEZ for host calculation
+c or from NAEZ+1 to NSITES=NAEZ+NUMIMP for impurity calculation.
 
 
       LCONSTRUCTED(1:NUMSHAPE) = .FALSE. ! Initialize. Shapes not yet constructed.
@@ -648,7 +667,7 @@ c or from NAEZ+1 to NATOMS=NAEZ+NUMIMP for impurity calculation.
          ! In case of impurity calculation: check if the shape is only relevant
          ! for host atoms but not for impurity atoms. If so, then skip construction.
          LSKIP = .TRUE.
-         DO IAT = NBEGIN,NATOMS
+         DO IAT = ISITEBEGIN,NSITES
             IF (IDSHAPE(IAT).EQ.ISHAPE) LSKIP = .FALSE.
          ENDDO
          IF (LSKIP) GOTO 50     ! Avoid calculation
@@ -831,16 +850,16 @@ c------------------------------------------------------------------------------
 c Shapes constructed, now write out
 
       IF (OPT('WRITEALL')) THEN ! Write shape for every atom
-         WRITE(15,FMT='(I5)') NATOMS - NBEGIN + 1
+         WRITE(15,FMT='(I5)') NSITES - ISITEBEGIN + 1
 
          IF (OPT('IMPURITY')) THEN  ! write old-style scaling factor, not used any more
             WRITE(15,FMT='(E20.12)') 1.D0      
          ELSE
-            DO I1 = NBEGIN,NATOMS,4 ! write old-style scaling factor, not used any more
+            DO I1 = ISITEBEGIN,NSITES,4 ! write old-style scaling factor, not used any more
                WRITE(15,FMT='(4E20.12)') 1.D0,1.D0,1.D0,1.D0 
             ENDDO
          ENDIF
-         DO IAT = NBEGIN,NATOMS
+         DO IAT = ISITEBEGIN,NSITES
             ISHAPE = IDSHAPE(IAT)
             IF (LCONSTRUCTED(ISHAPE)) THEN
                WRITE(*,*) 'Writing out shape',ISHAPE,' for atom ',IAT
@@ -883,13 +902,13 @@ c     Print general information about lattice
 c     
       WRITE(6,*) '*******************************************'
       WRITE(6,*) ' Analyzing lattice finised ...     '
-      WRITE(6,*) ' Number of ATOMS..............',NATOMS
+      WRITE(6,*) ' Number of SITES..............',NSITES
       WRITE(6,*) ' Number of CLUSTERS ..........',NCLS
       WRITE(6,*) ' Number of CELLS..............',NUMCELL
       WRITE(6,*) ' Number of SHAPES.............',NUMSHAPE
       WRITE(6,*) ' Number of constructed shapes.',NUMCONSTRUCTED
 
-      DO IAT = NBEGIN,NATOMS
+      DO IAT = ISITEBEGIN,NSITES
          WRITE(6,901) IDSHAPE(IAT),CLS(IAT),DX(IAT),DY(IAT),DZ(IAT),IAT
       END DO
          
@@ -900,7 +919,7 @@ c
       IF (INS.EQ.0) WRITE(6,*) 'RMAX is the Atomic Sphere radius'
       VTOT = 0.D0
          
-      DO IAT = NBEGIN,NATOMS
+      DO IAT = ISITEBEGIN,NSITES
          WRITE(6,1150) IAT,VOLUMECL(IDSHAPE(IAT)),
      &        RMTCL(IDSHAPE(IAT)),RWSCL(IDSHAPE(IAT))
          VTOT = VTOT + VOLUMECL(IDSHAPE(IAT))
@@ -941,7 +960,7 @@ c         goto  88    ! skip potentials
            WRITE(6,*) ' If potentials do not match program will stop '
            WRITE(6,*) ' Expect to find the following potentials '
             
-           DO IAT = NBEGIN,NATOMS
+           DO IAT = ISITEBEGIN,NSITES
               CALL ELEMENTDATABASE(ZATOM(IAT),ELEM_NAME,TEXT,A1)
               IF (NSPIN.EQ.2) THEN
                  WRITE(6,1200) ELEM_NAME
@@ -971,7 +990,7 @@ c
 c     
 c Define param. IRNS and IMT. Check consistency. 
 c If unreasonable, set it equal to core-radius point.
-      DO IAT = 1,NATOMS
+      DO IAT = 1,NSITES
         WRITE(*,*) 'MESHN_ALL(IDSHAPE(IAT))',
      &   IAT,IDSHAPE(IAT),MESHN_ALL(IDSHAPE(IAT))
          IRWS(IAT) = IMT(IAT) + MESHN_ALL(IDSHAPE(IAT))
@@ -995,8 +1014,8 @@ c         IMT(IAT) = IRWS(IAT) - MESHN_ALL(IDSHAPE(IAT))
 
 
       IF (.NOT.LJELL) THEN
-         CALL GENPOTSTART(NSPIN,11,I13,INS,NBEGIN,NATOMS,ZATOM,IDSHAPE,
-     &        VOLUMECL,LPOT,AOUT_ALL,RWSCL,RMTCL,
+         CALL GENPOTSTART(NSPIN,11,I13,INS,ISITEBEGIN,NSITES,ZATOM,
+     &        SITEAT,IDSHAPE,VOLUMECL,LPOT,AOUT_ALL,RWSCL,RMTCL,
      &        RMTCORE,MESHN_ALL,XRN_ALL,DRN_ALL,
      &        IRWS,IRNS,ALATC,
      &        QBOUND,KXC,TXC,LJELL)
@@ -1004,10 +1023,10 @@ c         IMT(IAT) = IRWS(IAT) - MESHN_ALL(IDSHAPE(IAT))
 c     Using jellium potentials from dir:  jellpot
 c
       IF (LJELL) THEN 
-         CALL JELLSTART(NSPIN,11,I13,INS,NBEGIN,NATOMS,ZATOM,IDSHAPE,
-     &        VOLUMECL,LPOT,AOUT_ALL,RWSCL,RMTCL,
-     &        RMTCORE,MESHN_ALL,XRN_ALL,DRN_ALL,
-     &        IRWS,IRNS,ALATC,
+         CALL JELLSTART(NSPIN,11,I13,INS,NBEGIN,NATOMS,ZATOM,SITEAT,
+     &        KSHAPE,IDSHAPE,VOLUMECL,LPOT,AOUT_ALL,RWSCL,RMTCL,
+     &        RMTCORE,MESHN_ALL,XRN_ALL,DRN_ALL,THETAS_ALL,LMIFUN_ALL,
+     &        NFUN_ALL,IRWS,IRNS,ALATC,
      &        QBOUND,KXC,TXC)   
       END IF
       CLOSE(11)
@@ -1023,7 +1042,7 @@ c     -----------------------------------------------------------
 c Write out cell info.
 
       OPEN(69,FILE='vertices.dat',FORM='FORMATTED')
-      DO IAT = 1,NATOMS
+      DO IAT = 1,NSITES
          IF (CELLREF(IAT).EQ.IAT) THEN
             WRITE(69,FMT='("# Cell of representative atom:",I5)') IAT
             DO IFACE = 1,NFACE_ALL(IAT)
@@ -1051,7 +1070,7 @@ c Write out inner and outer radii per atom.
       WRITE(69,FMT='(2A48)') 
      &   '# IAT    Rmt0           Rout            Ratio(%)',
      &   '   dist(NN)      Rout/dist(NN) (%)              '
-      DO IAT = 1,NATOMS
+      DO IAT = 1,NSITES
          WRITE(69,FMT='(I5,2F15.10,F12.2,F15.10,F12.2)') 
      &   IAT,RMT0_ALL(IAT),ROUT_ALL(IAT),100*RMT0_ALL(IAT)/ROUT_ALL(IAT)
      &   ,DISTNN(IAT),100*ROUT_ALL(IAT)/DISTNN(IAT)
@@ -1064,7 +1083,7 @@ c includes shape calculation.
       ! to assist array allocation in other program
       NVERTMAX = 0
       NFACEMAX = 0
-      DO IAT = NBEGIN,NATOMS
+      DO IAT = ISITEBEGIN,NSITES
          IF (NFACE_ALL(IAT).GT.NFACEMAX) NFACEMAX = NFACE_ALL(IAT)
          DO IFACE = 1,NFACE_ALL(IAT)
             IF (NVERT_ALL(IFACE,IAT).GT.NVERTMAX) 
@@ -1075,13 +1094,13 @@ c includes shape calculation.
       OPEN(69,FILE='cellinfo.dat',FORM='FORMATTED')
       WRITE(69,FMT='("# Faces and vertices for all atoms")')
       WRITE(69,FMT='("# Number of atoms:")')
-      WRITE(69,FMT='(2I6)') NATOMS - NBEGIN + 1
+      WRITE(69,FMT='(2I6)') NSITES - ISITEBEGIN + 1
       WRITE(69,FMT='("# Largest number of faces and vertices:")')
       WRITE(69,FMT='(2I6)') NFACEMAX,NVERTMAX
 
-      DO IAT = NBEGIN,NATOMS
+      DO IAT = ISITEBEGIN,NSITES
          WRITE(69,FMT='(I6,"  Atom: Z=",F6.2)') 
-     &                      IAT - NBEGIN + 1,ZATOM(IAT)
+     &                      IAT - ISITEBEGIN + 1,ZATOM(IAT)
          WRITE(69,FMT='(2I6,"  Faces")') NFACE_ALL(IAT)
          DO IFACE = 1,NFACE_ALL(IAT)
             WRITE(69,FMT='(I6,4E16.8)') IFACE,A3_ALL(IFACE,IAT),
@@ -1151,11 +1170,13 @@ c unshifted in sub. readinput).
 
       WRITE(69,*) ' '
       WRITE(69,FMT='(A8)') '<SHAPE> '
-
-      DO IAT = 1,NAEZ
-         WRITE(69,FMT='(I6)')  IDSHAPE(IAT)
-      ENDDO
-      
+      IF (NATYP.EQ.NAEZ) THEN
+         WRITE(69,FMT='(I6)')  (IDSHAPE(IAT),IAT=1,NAEZ)
+      ELSE
+         WRITE(69,FMT='(2I6)')  
+     &        (SITEAT(IAT),IDSHAPE(SITEAT(IAT)),IAT=1,NATYP) ! CPA, NATYP>NAEZ
+      ENDIF
+         
 
       CLOSE(69)
 !---------------------------------------------------------------
@@ -1170,7 +1191,7 @@ c unshifted in sub. readinput).
          OPEN(UNIT=12,STATUS='unknown',FILE='voronoi.pov')
          WRITE(12,201)  
          
-         DO IAT = NBEGIN, NATOMS
+         DO IAT = ISITEBEGIN, NSITES
 
             ICL = IDSHAPE(IAT)  !CLS(IAT)
             RX = RBASIS(1,IAT)
