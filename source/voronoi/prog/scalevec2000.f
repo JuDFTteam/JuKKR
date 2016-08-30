@@ -1,5 +1,5 @@
-        SUBROUTINE SCALEVEC2000(RBASIS,ABASIS,BBASIS,CBASIS,NLBASIS,
-     &     NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT, 
+        SUBROUTINE SCALEVEC2000(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,
+     &     NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT, 
      &     TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,KAOEZ)
       implicit none
       include 'inc.geometry'
@@ -12,7 +12,7 @@
       INTEGER I,J,I1,IER
       INTEGER KAOEZ(NAEZD+NEMBD)
       REAL*8        TX,TY,TZ    
-      CHARACTER*200 UIO    
+      CHARACTER*256 UIO    
       LOGICAL LCARTESIAN,LINTERFACE   
 c
 c---->  normalization of basis vectors
@@ -47,14 +47,9 @@ c
 c ---> normalization of atomic positions in the unit cell
 c
       write(6,*) 'position of atoms in unit cell :'
-      LCARTESIAN= .false.   ! defalt is false then bravais lattice
-                           ! coordinates are used...
-      CALL IoInput('CARTESIAN ',UIO,1,7,IER)
-      IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) LCARTESIAN
-      WRITE(*,*) 'SCALEVEC2000: CARTESIAN=',LCARTESIAN
 c    
 c if lcartesian is true cartesian coordinates are used
-c else the basis are in units of the 
+c else the basis are in units of the bravais vectors
               
               IF (.NOT.LINTERFACE) THEN
                  IF (.NOT.LCARTESIAN) THEN  ! Rescale lattice

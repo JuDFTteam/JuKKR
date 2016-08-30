@@ -31,23 +31,26 @@ c * Comments etc in the program are ignored.
 c *                                               1.6.99
 c *
 c * The error handler is not working yet in all cases ....
-c * In this version only files 5000 lines long can be read in
+c * Only files NLINEMAX lines long can be read in
 c *******************************************************
       implicit none
-      INTEGER NCHAR,NABC,NCOLIO,NLINIO
-      PARAMETER(NCHAR=16,NABC=40,NCOLIO=256,NLINIO=5000)
-      CHARACTER CHARKEY*NCHAR
-      CHARACTER CHAR*NCOLIO
+      INTEGER NLINEMAX
+      PARAMETER (NLINEMAX = 3000)
+      CHARACTER CHARKEY*10
+      CHARACTER CHARKEY1*11
+      CHARACTER CHAR*200
       INTEGER ILINE,IERROR,IFILE
       integer i,ios,ier,npt,ilen,ipos,ipos1,ipos2,iklen,aaaa
-      CHARACTER STRING(NLINIO)*NCOLIO
-      CHARACTER STRING1*NCOLIO
+      CHARACTER STRING(NLINEMAX)*200
+      CHARACTER STRING1*200
+      INTEGER NABC
+      PARAMETER (NABC=39)
       CHARACTER ABC*NABC
       CHARACTER ATEST
-      DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
+      DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-<>'/
 c
-      IERROR = 0
       IER = 0
+      IERROR = 0
       CHAR(1:50)='                                                   '
       OPEN(UNIT=ifile,status='OLD',FILE='inputcard',iostat=ios,
      &           err=2000)
@@ -59,20 +62,20 @@ c
 c
          npt = 1
          do
-            read(ifile,FMT='(A256)',IOSTAT=ios) STRING(npt)
-            IF(ios.lt.0.or.npt.ge.NLINIO) EXIT
+            read(ifile,FMT='(A200)',IOSTAT=ios) STRING(npt)
+            IF(ios.lt.0.or.npt.ge.NLINEMAX) EXIT
             npt = npt + 1
          end do
           npt = npt - 1
 c          write(6,*) 'LINES :',npt
-          if (NPT.GE.NLINIO) 
+          if (NPT.GE.NLINEMAX) 
      &             WRITE(6,*)'Not all lines are read in from inputcard'
 
 c 2 lines below where changed
 c       ILEN = VERIFY(CHARKEY,ABC)
 c       IKLEN= VERIFY(CHARKEY,' ')
 c for linux
-        CALL VERIFY77(NABC,ABC,NCHAR,CHARKEY,ILEN,IKLEN)
+        CALL VERIFY77(CHARKEY,ILEN, IKLEN)
 c for linux
 c        write(6,*) CHARKEY(1:ILEN-1),ILEN,IKLEN
           IF(ILEN.LT.1) THEN 
@@ -122,37 +125,43 @@ c                   write(6,*) CHARKEY,CHAR ! test
        END DO  ! i=1,npt
        IER = 1
        IERROR = IERROR + IER
-Cccc       if (CHAR(1:20).eq.'                    ') then
-Cccc       write(6,*) 'Parameter ........ ',CHARKEY , ' NOT found'
-Cccc       write(6,*) 'Check your inputcard'
-Cccc       end if 
+       if (CHAR(1:20).eq.'                    ') then
+       write(6,*) 'Parameter ........ ',CHARKEY , ' NOT found'
+       write(6,*) 'Check your inputcard'
+       end if 
        close(IFILE)
       RETURN
  2000 write(6,*) ' Error while reading..... ',CHARKEY
       write(6,*) ' Check your  inputcard ! '
       STOP
+ 1000 FORMAT(10I4)
+ 1001 FORMAT(3F12.9)
+ 1002 FORMAT(200A1)
+ 1003 FORMAT(10L4)
+ 1004 FORMAT(I4)
+ 1005 FORMAT(4I4)
       END
-
-        SUBROUTINE VERIFY77(NABC,ABC,NCHAR,STR1,ipos1,ipos2)
+        SUBROUTINE VERIFY77(STR1,ipos1,ipos2)
         implicit none  
 c This sub returns the position of the first space character
 c in ipos2, and the position of the first letter in the string
 c STR1
 c
-        INTEGER NCHAR,NABC
-        CHARACTER STR1*NCHAR
+        INTEGER NABC
+        PARAMETER (NABC=39)
+        CHARACTER STR1*10
         CHARACTER ABC*NABC
         CHARACTER CHAR*1
         integer ipos,ipos1,ipos2,i,j
-!        DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
+        DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-<>'/
          ipos2 =0
 c
          ipos1 = INDEX(STR1,' ')
          do j=1,10
             char = str1(j:j+1)
-c           write(6,*) 'char : ',j, char 
+c            write(6,*) 'char : ',j, char 
             ipos = 0
-            do i=1,40
+            do i=1,NABC
                ipos = INDEX(CHAR,ABC(I:I))
                if (IPOS.GT.0) THEN
                   ipos2 = j

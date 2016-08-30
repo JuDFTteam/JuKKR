@@ -1,5 +1,5 @@
 C ************************************************************************
-      SUBROUTINE LATTIX12(LSURF,ALATC,BRAVAIS,RECBV,RR,NR,VOLUC)
+      SUBROUTINE LATTIX12(LINTERFACE,ALATC,BRAVAIS,RECBV,RR,NR,VOLUC)
 C ************************************************************************
 C LATTIX99 GENERATES THE REAL SPACE AND RECIPROCAL LATTICES.
 C BRAVAIS(I,J) ARE BASIS VECTORS, WITH I=X,Y,Z AND J=A,B,C.
@@ -12,7 +12,7 @@ C
       implicit none
       INCLUDE 'inc.geometry'
 C
-      LOGICAL LSURF
+      LOGICAL LINTERFACE
 C
       INTEGER
      +     NR,                       ! number of real space vectors
@@ -28,41 +28,16 @@ c                         ! altc.
      +     RECBV(3,3),              ! RECIPROCAL BASIS IN 2*PI/A
      +     RR(3,0:NRD)
 c
-      CHARACTER*200 UIO
 c
-      EXTERNAL CROSPR,SPATPR,VADD,VSUB,VEQ,DDET33,IOINPUT
+      EXTERNAL CROSPR,SPATPR,VADD,VSUB,VEQ,DDET33
 c
-      PARAMETER (PI   = 3.14159265358979312D0)
 c
 c ------------------------------------------------------------------------
-c
-c Read in the bravais vectors (normalized to alatc)
-c Notation: BRAVAIS(J,I) J=x,y,z I=1,2,3
-c If the third bravais vector is zero, then surface (2-dimentional) geometry
-c is implied.
-c
-      DO I=1,3
-         CALL IoInput('BRAVAIS   ',UIO,I,7,IER)
-              READ (UNIT=UIO,FMT=*) (BRAVAIS(J,I), J=1,3)
-      ENDDO
+      PI = 4.D0*DATAN(1.D0)
 
-      IF (BRAVAIS(1,3).EQ.0.D0.AND.BRAVAIS(2,3).EQ.0.D0.
-     &                          AND.BRAVAIS(3,3).EQ.0.D0) THEN
-         LSURF=.TRUE.
-         WRITE(*,*) 'Surface geometry'
-         IF (BRAVAIS(3,1).NE.0.D0.OR.BRAVAIS(3,2).NE.0.D0) THEN
-            WRITE(6,9010)
-            BRAVAIS(3,1) = 0.D0
-            BRAVAIS(3,2) = 0.D0
-         ENDIF
-      ENDIF
-
-      IF (LSURF) THEN
-         BRAVAIS(1:3,3) = 0.D0
-      ENDIF
 c
 c
-c Now generate the reciprocal lattice unit-vectors, and calculate the unit-cell
+c Generate the reciprocal lattice unit-vectors, and calculate the unit-cell
 c volume in units au**3.
 c Initialize:
       DO I=1,3
@@ -71,7 +46,7 @@ c Initialize:
          ENDDO
       ENDDO
 c Calculate:
-      IF (.NOT.(LSURF)) THEN
+      IF (.NOT.(LINTERFACE)) THEN
 c 1. 3-dimentional case
          DET=DDET33(BRAVAIS)
          IF (DET.EQ.0.D0) THEN
@@ -118,7 +93,7 @@ c
 c
 c ---> now generate the real-space lattice vectors for the cluster generation:
 c      The parameter LATT is not used in RRGEN
-      CALL RRGEN(BRAVAIS,ALATC,LSURF,RR,NR)
+      CALL RRGEN(BRAVAIS,ALATC,LINTERFACE,RR,NR)
 c
 c ---> test on volume unit cell:
 c

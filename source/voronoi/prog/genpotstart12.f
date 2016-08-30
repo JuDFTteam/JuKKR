@@ -1,5 +1,5 @@
-      SUBROUTINE GENPOTSTART(NSPIN,IFILE,I13,INS,NBEGIN,NATOMS,Z,IDSHAPE
-     &                ,VOLUMECL,LPOT,
+      SUBROUTINE GENPOTSTART(NSPIN,IFILE,I13,INS,NBEGIN,NATOMS,ZATOM,
+     &                 SITEAT,IDSHAPE,VOLUMECL,LPOT,
      &                 AOUT_ALL,RWSCL,RMTCL,RMTCORE,MESHN,XRN,DRN,
      &                 IRWS,IRNS,
      &                 ALATNEW,QBOUND,KXC,TXC,LJELL)
@@ -28,11 +28,11 @@ C     .. Scalar Arguments ..
      +        NBEG,NEND,NSPIN,KXC,NBEGIN
 C     ..
 C     .. Array Arguments ..
-      REAL*8           Z(NATYPD),VOLUMECL(*),RWSCL(*),RMTCL(*),
+      REAL*8           ZATOM(NATYPD),VOLUMECL(*),RWSCL(*),RMTCL(*),
      &                 AOUT_ALL(NATYPD),
      &                 RMTCORE(*),XRN(IRID,NSHAPED),DRN(IRID,NSHAPED)
       INTEGER IRNS(NATYPD),IRWS(NATYPD),ITITLE(20),
-     +        LCORE(20),NCORE,IDSHAPE(*)
+     +        LCORE(20),NCORE,IDSHAPE(*),SITEAT(*)
 C     ..
 C     .. Local Scalars ..
       REAL*8           A1,B1,EA,EFNEW,S1,Z1,DUMMY,RMAX,RMTNW1,RMT1,
@@ -43,7 +43,7 @@ C     .. Local Scalars ..
      +        J,NATOMS,IPOT,IRNSTOT,MESHN(NATYPD),MESHN0,ID,
      +        L,LM,LM1,LMPOT,LMPOTP,IRNSOUT,IRMTOUT,IRWSOUT,
      +        N,NCELL,NFUN,NR,IAT,IRNS1,NCORE1,LCORE1(20),IRC,
-     &        I1,I2
+     &        I1,I2,ISITE
       LOGICAL TEST,POTLM(LMPOTD)
 C     ..
 C     .. Local Arrays ..
@@ -71,6 +71,15 @@ c     --------------------------------------------------------------
       END DO  
 
       DO IAT = NBEGIN,NATOMS
+         ISITE = SITEAT(IAT)
+         ID = IDSHAPE(ISITE)
+
+         WRITE(*,FMT='(A$,I6,A$,I6,A$,I6,A1)') 
+     &              'Generating potential for atom',IAT,
+     &              ' at site',ISITE,
+     &              ' with shape',ID
+         WRITE(*,*) ' '
+
          DO ISPIN = 1,NSPIN
 
             DO LM=1,LMPOTD
@@ -193,14 +202,14 @@ c     The input mesh is constructed now Construct the output mesh
 c     
             ID = IDSHAPE(IAT)           
             ROUT(1) = 0.D0
-            AOUT = AOUT_ALL(IAT)
+            AOUT = AOUT_ALL(ISITE)
             RMAXOUT = RWSCL(ID) 
             RMTOUT  = RMTCL(ID)
-            IRWSOUT = IRWS(IAT)
-            IRMTOUT = IRWS(IAT) - MESHN(ID)
-            IRNSOUT = IRNS(IAT)  ! 22.1.12 Changed from IRNS(ID) to IRNS(IAT)
+            IRWSOUT = IRWS(ISITE)
+            IRMTOUT = IRWS(ISITE) - MESHN(ID)
+            IRNSOUT = IRNS(ISITE)  ! 22.1.12 Changed from IRNS(ID) to IRNS(IAT)
 
-            IF (INS.EQ.0) then
+            IF (KSHAPE.EQ.0) THEN
                BOUT = RMAXOUT / (EXP(AOUT*REAL(IRWSOUT-1))-1.0D0)
                DO IR=2,IRWSOUT
                   EA = EXP(AOUT*REAL(IR-1))

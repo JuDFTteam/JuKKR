@@ -341,6 +341,8 @@ c
             CLS(JATOM) = ICLUSTER
             NACLS(ICLUSTER) = NUMBER
             IREP(ICLUSTER) = JATOM ! cluster-class is represented by the cluster around jatom
+            WRITE(6,FMT='(A27,I5,A7,I5)')
+     &           'clsgen_voronoi: Cluster No.',ICLUSTER,' sites:',NUMBER
             DO IN = 1,NUMBER
                RCLS(1:3,IN,ICLUSTER) = RCLS1(1:3,IN)
                WRITE(6,800) JATOM,ATOM(IN,JATOM),EZOA(IN,JATOM),

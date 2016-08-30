@@ -1,7 +1,8 @@
-      SUBROUTINE JELLSTART(NSPIN,IFILE,I13,INS,NBEGIN,NATOMS,Z,IDSHAPE,
+      SUBROUTINE JELLSTART(NSPIN,IFILE,I13,INS,NBEGIN,NATOMS,
+     &                 ZATOM,SITEAT,KSHAPE,IDSHAPE,
      &                 VOLUMECL,LPOT,
-     &                 AOUT_ALL,RWSCL,RMTCL,RMTCORE,MESHN,XRN,DRN,
-     &                 IRWS,IRNS,
+     &                AOUT_ALL,RWSCL,RMTCL,RMTCORE,MESHN,XRN,DRN,THETAS,
+     &                 LMIFUN,NFUN,IRWS,IRNS,
      &                 ALATNEW,QBOUND,KXC,TXC)
 c ******************************************************
 c * This subroutine reads a jellium potential from the database
@@ -13,6 +14,8 @@ c ******************************************************
       PARAMETER (NPOTD=NSPIND*NATYPD)
       INTEGER LMPOTD
       PARAMETER (LMPOTD= (LPOTD+1)**2)
+      INTEGER IBMAXD
+      PARAMETER (IBMAXD=(LMAXD1+1)*(LMAXD1+1))
       INTEGER IRMIND,INSLPD
       PARAMETER (IRMIND=IRMD-IRNSD,INSLPD= (IRNSD+1)*LMPOTD)
       INTEGER LMXSPD
@@ -29,23 +32,25 @@ C     .. Scalar Arguments ..
      +        NBEG,NEND,NSPIN,KXC,NBEGIN
 C     ..
 C     .. Array Arguments ..
-      REAL*8           Z(NATYPD),VOLUMECL(*),RWSCL(*),RMTCL(*),
+      REAL*8           ZATOM(NATYPD),VOLUMECL(*),RWSCL(*),RMTCL(*),
      &                 AOUT_ALL(NATYPD),
-     &                 RMTCORE(*),XRN(IRID,NSHAPED),DRN(IRID,NSHAPED)
+     &                 RMTCORE(*),XRN(IRID,NSHAPED),DRN(IRID,NSHAPED),
+     &                 THETAS(IRID,IBMAXD,NSHAPED)
       INTEGER IRNS(NATYPD),IRWS(NATYPD),ITITLE(20),
-     +        LCORE(20),NCORE,IDSHAPE(*)
+     &        LCORE(20),NCORE,IDSHAPE(*),LMIFUN(IBMAXD,NSHAPED),
+     &        NFUN(NSHAPED),SITEAT(*)
 C     ..
 C     .. Local Scalars ..
       REAL*8           A1,B1,EA,EFNEW,S1,Z1,DUMMY,RMAX,RMTNW1,RMT1,
      &                 VBC(2),VCON,ECORE1(20),MAXA,AOUT,BOUT,RMTOUT,
      &                 PARSUM,PARSUMDERIV,R0,DIST,DR,RMAXOUT,RMTNEW
-      REAL*8           RWS0,BR,ZA,ZVALI,EINF,AR,AMSH
+      REAL*8           RWS0,BR,ZA,ZVALI,EINF,AR,AMSH,RFPI,ZZOR
       INTEGER I,IA,ICELL,ICORE,IFUN,IH,IMT1,INEW,IO,IPAN1,IR,IRC1,IRI,
      +        IRMINM,IRMINP,IRNS1P,IRT1P,IRWS1,ISAVE,ISPIN,ISUM,
      +        J,NATOMS,IPOT,IRNSTOT,MESHN(NATYPD),MESHN0,ID,
      +        L,LM,LM1,LMPOT,LMPOTP,IRNSOUT,IRMTOUT,IRWSOUT,
-     +        N,NCELL,NFUN,NR,IAT,IRNS1,NCORE1,LCORE1(20),IRC,NZ,
-     &        IRS1,NSEC,NZVALI,NC,II,I1,I2
+     +        N,NCELL,NR,IAT,IRNS1,NCORE1,LCORE1(20),IRC,NZ,
+     &        IRS1,NSEC,NZVALI,NC,II,I1,I2,ISITE
       LOGICAL TEST,POTLM(LMPOTD)
 C     ..
 C     .. Local Arrays ..
@@ -79,7 +84,7 @@ C     .. Local Arrays ..
      & 'Tm69','Yb70',
      & 'Lu71','Hf72','Ta73','W_74','Re75','Os76','Ir77','Pt78',
      & 'Au79','Hg80',
-     & 'Tl81','Pb82','Bi83','Po84','At85','Rn68','Fr87','Ra88',
+     & 'Tl81','Pb82','Bi83','Po84','At85','Rn86','Fr87','Ra88',
      & 'Ac89','Th90',
      & 'Pa91','U_92','Np93','Pu94','Am95','Cm96','Bk97','Cf98',
      & 'Es99','Fm__',
@@ -87,7 +92,12 @@ C     .. Local Arrays ..
      & 'Mt__','Uun_',
      & 'Uuu_','Uub_','NoE_'/
 c     --------------------------------------------------------------
-      WRITE(6,*) ' ****  READING  POTENTIAL  **** '
+      
+
+      RFPI = 4.D0*DSQRT(DATAN(1.D0))
+
+      WRITE(6,*) ' ****  JELLSTART POTENTIALS **** '
+      WRITE(6,*) 'From atom No.',NBEGIN,'to atom No.',NATOMS
 
       OPEN(19,STATUS='UNKNOWN',FILE='output.pot')
       DO I2=1,LMPOTD
@@ -100,6 +110,15 @@ c     --------------------------------------------------------------
       END DO
 
       DO IAT = NBEGIN,NATOMS
+         ISITE = SITEAT(IAT)
+         ID = IDSHAPE(ISITE)
+
+         WRITE(*,FMT='(A$,I6,A$,I6,A$,I6,A1)') 
+     &              'Generating potential for atom',IAT,
+     &              ' at site',ISITE,
+     &              ' with shape',ID
+         WRITE(*,*) ' '
+
          DO ISPIN=1,NSPIN
             DO LM=1,LMPOTD
                POTLM(LM) =.FALSE.
@@ -108,7 +127,7 @@ c     --------------------------------------------------------------
 
 c Find out what atom is needed            
 c            
-            NZ = Z(IAT)
+            NZ = ZATOM(IAT)
             IF (((NZ.GE.24.AND.NZ.LE.28).OR.(NZ.GE.57.AND.NZ.LE.70))
      &                                          .AND.ISPIN.EQ.2) THEN
             ATOMPOT = 'ElementDataBase/'//ELEM_FILE(NZ)//'.pots2'
@@ -208,17 +227,16 @@ c --------------------------------------------------------------------
 c     
 c     The input mesh has been constructed. Now construct the output mesh.
 c     
-            ID = IDSHAPE(IAT)           
             ROUT(1) = 0.D0
-            AOUT = AOUT_ALL(IAT)   
+            AOUT = AOUT_ALL(ISITE)   
             RMAXOUT = RWSCL(ID) 
             RMTOUT  = RMTCL(ID)
-            IRWSOUT = IRWS(IAT)
-            IRMTOUT = IRWS(IAT) - MESHN(ID)
-            IRNSOUT = IRNS(IAT)  ! 22.1.12 Changed from IRNS(ID) to IRNS(IAT)
+            IRWSOUT = IRWS(ISITE)
+            IRMTOUT = IRWS(ISITE) - MESHN(ID)
+            IRNSOUT = IRNS(ISITE)
 
 
-            IF (INS.EQ.0) THEN
+            IF (KSHAPE.EQ.0) THEN
                BOUT = RMAXOUT / (EXP(AOUT*REAL(IRWSOUT-1))-1.0D0)
                DO IR=2,IRWSOUT
                   EA = EXP(AOUT*REAL(IR-1))
@@ -242,7 +260,7 @@ c
                   IR = IRI + IRMTOUT
                   ROUT(IR) = ALATNEW*XRN(IRI,ID)   ! scaling is always 1.0d0
                   DRDIOUT(IR) = ALATNEW*DRN(IRI,ID)
-               ENd DO
+               END DO
                RMTNEW = ROUT(IRMTOUT)
                RMAXOUT = ROUT(IRWSOUT)
             END IF
@@ -274,6 +292,25 @@ c
                END DO
             END IF
 
+! Convolute with shapes
+            IF (KSHAPE.GT.0) THEN 
+               LMPOT = (LPOT + 1)**2
+               DO IRI=1,MESHN(ID)
+                  IR = IRI + IRMTOUT
+                  ZZOR = 2.D0 * ZATOM(IAT) / ROUT(IR) 
+                  DO IFUN = 2,NFUN(ID)
+                     LM1 = LMIFUN(IFUN,ID)
+                     IF (LM1.LE.LMPOT) THEN
+                        VINSOUT(IR,LM1) = ! (VM2ZOUT(IR) - ZZOR) * 
+     &                                    THETAS(IRI,IFUN,ID) 
+                     ENDIF
+                  ENDDO
+                  VM2ZOUT(IR) = (VM2ZOUT(IR) - ZZOR ) * 
+     &                           THETAS(IRI,1,ID) / RFPI + ZZOR ! Because the ratial solver adds -2*Z/R by default without shape convolution
+                                                                ! and assumes that the spher. component is without sqrt(4pi) factor.
+               END DO
+            ENDIF
+
             CALL RITESONE(19,ISPIN,Z1,ALATNEW,RMTOUT,RMTNEW,RMAXOUT,
      &                    ITITLE,ROUT,DRDIOUT,VM2ZOUT,IRWSOUT,AOUT,BOUT,
      &                    TXC,KXC,INS,IRNSOUT,
@@ -282,8 +319,8 @@ c
 c
 c Next atom or next spin
 c
-         END DO
-      END DO
+         END DO  ! ISPIN=1,NSPIN
+      END DO     ! IAT = NBEGIN,NATOMS
    
       RETURN
 

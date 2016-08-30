@@ -75,7 +75,7 @@ c
       REAL*8 RCUT2,RCUTXY2,R2
 c
       LOGICAL  L2DIM,CLUSTCOMP_VORONOI
-      CHARACTER*200 UIO
+      CHARACTER*256 UIO
       INTEGER IER
 c
 c
@@ -98,7 +98,7 @@ c  Cutoffs for max. cluster radius
 c Initialize number of non-equivalent impurity clusters.
       NCLSIMP = 0
 
-      CALL IoInput('TOLIMP    ',UIO,1,7,IER)
+      CALL IoInput('TOLIMP          ',UIO,1,7,IER)
       IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) TOLIMP
       ! Default is set by data-statement above.
 
