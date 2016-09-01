@@ -57,7 +57,6 @@ C     ..
 C     .. Local arrays ..
       DOUBLE COMPLEX STEST(LMXSPD)
       DOUBLE PRECISION G(0:LASSLD),YLM(LMXSPD),QI(3,NAEZD)
-      LOGICAL OPT
 C     ..
 C     .. External subroutines ..
       EXTERNAL GAMFC,YMY
@@ -236,7 +235,7 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 99001 FORMAT (5X,'WARNING : Convergence of SMAT(',I2,',',I2,') ',
-     &        ' for LMXSP =',I3,' is ',1P,D8.2,' > 1D-8',/,15X,
+     &        ' for LMXSP =',I3,' is ',1P,D9.2,' > 1D-8',/,15X,
      &        'You should use more lattice vectors (RMAX/GMAX)')
 99002 FORMAT (12X,47('-'),/,16X,'      Positions of atomic sites',/,16X,
      &        '    in CARTESIAN coordinates (a.u.)',/,12X,47('-'),/,15X,

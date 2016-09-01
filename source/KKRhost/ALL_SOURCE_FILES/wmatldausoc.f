@@ -1,5 +1,5 @@
       SUBROUTINE WMATLDAUSOC(NTLDAU,ITLDAU,NSPIN,DENMATN,LOPT,
-     &                    UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD)
+     &                    UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD)
 C **********************************************************************
 C *                                                                    *
 C * Calculation of Coulomb interaction potential in LDA+U              *
@@ -26,7 +26,7 @@ C
 C
 C Dummy arguments
 C
-      INTEGER NTLDAU,NSPIN,MMAXD,NPOTD
+      INTEGER NTLDAU,NSPIN,MMAXD
       INTEGER ITLDAU(NATYPD),LOPT(NATYPD)
       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD),
      &                 UEFF(NATYPD),JEFF(NATYPD),EDC(NATYPD),EU(NATYPD),
@@ -38,7 +38,7 @@ C
       DOUBLE COMPLEX CSUM,CSUM2,VLDAU(MMAXD,MMAXD,2,2)
       DOUBLE PRECISION DENMAT(MMAXD,MMAXD,2,2),DENTOT,
      &                 DENTOTS(NSPIND),FACTOR
-      INTEGER I1,IT,IPOT,IS,JS,M1,M2,M3,M4,MM,MMAX
+      INTEGER I1,IT,IS,JS,M1,M2,M3,M4,MM,MMAX
       INTEGER IPRINT
       CHARACTER*15 STR15
 C     ..

@@ -14,7 +14,7 @@ integer                    :: nsra,lmax,nrmax,nrmaxd,nvec
 double complex             :: eryd
 double precision           :: rmesh(nrmaxd)
 integer                    :: jlk_index(2*lmsize)
-integer                    :: l1,lm1,lm2,m1,ivec,ispinfullgmat,ir
+integer                    :: l1,lm1,m1,ivec,ispinfullgmat,ir
 integer                    :: use_fullgmat
 integer                    :: lmsize
 

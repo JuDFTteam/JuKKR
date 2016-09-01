@@ -1,4 +1,4 @@
-      SUBROUTINE RMATSTR(STR,LSTR,A,N,M,MLIN,MCOL,NQ,TOLP,NFIL)
+      SUBROUTINE RMATSTR(STR,LSTR,A,N,M,MLIN,MCOL,TOLP,NFIL)
 C   ********************************************************************
 C   *                                                                  *
 C   *   writes structure of REAL      NxN   matrix   A                 *
@@ -10,15 +10,20 @@ C   *   TOL         tolerance for difference                           *
 C   *                                                                  *
 C   *                                                         03/01/96 *
 C   ********************************************************************
+      IMPLICIT NONE
  
-      IMPLICIT REAL*8 (A-H,O-Z)
- 
-      PARAMETER ( NDIFMAX =  250 )
+      INTEGER, PARAMETER :: NDIFMAX =  250
+      INTEGER, intent(in) :: lstr, m, n, mlin, mcol, nfil
+      double precision, intent(in) :: tolp
 
       CHARACTER STR*(*)
       CHARACTER*150 FMT1,FMT2,FMT3,FMT4
       CHARACTER*1 CTAB(0:NDIFMAX), VZ(-1:+1)
       INTEGER    IW(M), ILSEP(20)
+      INTEGER :: ICAUC , ICZUC, NATOZ, ICALC, ICILC, K, NK, NM, NM2, 
+     &           NM1, NM3, IC0, N3, N2, N1, LF, L3, MM, NSL, IL, I,
+     &           NNON0, ND, NALF, J, ID, ICND, ISL
+      double precision :: tol
       REAL*8     A(M,M), CNUM,CA,CB,DTAB(0:NDIFMAX)  
       LOGICAL  CSMALL, CSAME
 

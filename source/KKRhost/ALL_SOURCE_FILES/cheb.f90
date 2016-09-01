@@ -292,10 +292,10 @@ end subroutine
 
 
 
-      function matvec_dmdm(mat1,vec1)
+      double precision function matvec_dmdm(mat1,vec1)
       implicit none
       double precision, intent(in) :: mat1(:,:),vec1(:)
-      double precision             :: matvec_dmdm(size(mat1,1))
+!       double precision             :: matvec_dmdm(size(mat1,1))
 !       real(8), intent(in) :: mat1(:,:),vec1(:)
 !       real(8)             :: matvec_dmdm(size(mat1,1))
       integer             :: n,m
@@ -308,10 +308,10 @@ end subroutine
       end function matvec_dmdm
 
 
-      function matvec_zmzm(mat1,vec1)
+      double complex function matvec_zmzm(mat1,vec1)
       implicit none
       double complex, intent(in) :: mat1(:,:),vec1(:)
-      double complex             :: matvec_zmzm(size(mat1,1))
+!       double complex             :: matvec_zmzm(size(mat1,1))
       integer             :: n,m
       m = size(mat1,1)
       n = size(mat1,2)
@@ -321,11 +321,11 @@ end subroutine
 
 
 
-      function matmat_dmdm(mat1,mat2,Ncheb)
+      double precision function matmat_dmdm(mat1,mat2,Ncheb)
       implicit none
       integer             :: Ncheb,n
       double precision, intent(in) :: mat1(0:Ncheb,0:Ncheb),mat2(0:Ncheb,0:Ncheb)
-      double precision             :: matmat_dmdm(Ncheb+1,Ncheb+1)
+!       double precision             :: matmat_dmdm(Ncheb+1,Ncheb+1)
 !      n = size(mat1,1)
 !      if(size(mat1,2).ne.n) stop 'matmat_dmdm: dimensions of first input array differ.'
 !      if(size(mat2,1).ne.n) stop 'matmat_dmdm: second input array has wrong dimensions.'

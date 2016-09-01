@@ -27,7 +27,7 @@ C     .. Local Scalars ..
      +                 DSDFD,DSDFU,DSPR,DSPRS,DVDR1,DVDR2,DVDRD,DVDRU,
      +                 EC,ECF,ECP,ECRS,ECZTA,EF3VI,EXPFAI,F1D,F1U,F2D,
      +                 F2U,F3D,F3U,FAI,FAI2,FD,FDD0,FK,FU,FZ,G,GF,GP,
-     +                 GR2,GR2D,GR2U,GZ,GZ2,GZ3,HUGEF,HUGEO,HUGES,PI,Q,
+     +                 GR2,GR2D,GR2U,GZ,GZ2,GZ3,HUGEF,HUGES,PI,Q,
      +                 Q1,Q2,Q3,R,RNC,RO113,RO13,RO2,RO43,RO76,RO83,ROD,
      +                 ROD13,ROD23,ROD3,ROD43,ROD53,ROU,ROU13,ROU23,
      +                 ROU3,ROU43,ROU53,RS,RS2,RS3,SD,SD2,SD3,SD4,SD6,
@@ -37,7 +37,7 @@ C     .. Local Scalars ..
      +                 XEDGD,XEDGU,XEDLD,XEDLU,XF,XL,XL0,XL01,XL02,XL03,
      +                 XL1,XL2,XL3,XLD,XLD1,XLD2,XLD3,XLF,XP,XS,ZT13M,
      +                 ZT13P,ZTA3,ZTA4
-      INTEGER IBH,ICA,ICG,IEX,IGD,IGH,IGL,IMJ,IP9,IPG,IPW,IVG,IVN,IXLF
+      INTEGER IBH,ICA,ICG,IEX,IGD,IGH,IGL,IMJ,IP9,IPG,IVG,IVN,IXLF
 C     ..
 C     .. External Subroutines ..
       EXTERNAL CORLSD,CPW91,EXCH91
@@ -51,8 +51,8 @@ C     .. Statement Functions ..
 C     ..
 C     .. Save statement ..
       SAVE GP,GF,B1P,B1F,B2P,B2F,CP,CF,DP,DF,AP,BP,AF,BF,A1,X01,B1,C1,
-     +     A2,X02,B2,C2,A3,X03,B3,C3,FDD0,HUGEO,HUGES,HUGEF,DSPR,IGL,
-     +     IGH,IMJ,IBH,ICA,ICG,IVN,IPW,IPG,IVG,IP9,IGD,IXLF,IEX,XLF
+     +     A2,X02,B2,C2,A3,X03,B3,C3,FDD0,HUGES,HUGEF,DSPR,IGL,
+     +     IGH,IMJ,IBH,ICA,ICG,IVN,IPG,IVG,IP9,IGD,IXLF,IEX,XLF
 C     ..
 C     .. Statement Function definitions ..
       FNCF(X) = (1.d0+X*X*X)*LOG(1.d0+1.d0/X) + X/2.d0 - X*X -
@@ -87,9 +87,9 @@ C     .. Data statements ..
       DATA A2,X02,B2,C2/.0310907d0,-.32500d0,7.06042d0,18.0578d0/
       DATA A3,X03,B3,C3/-.03377373d0,-.0047584d0,1.13107d0,13.0045d0/
       DATA FDD0/1.70992093d0/
-      DATA HUGEO,HUGES,HUGEF,DSPR/625.D0,1.d+6,50.D0,1.d-4/
-      DATA IGL,IGH,IMJ,IBH,ICA,ICG,IVN,IPW,IPG,IVG,IP9,IGD,IXLF,IEX,
-     +     XLF/0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.00D0/
+      DATA HUGES,HUGEF,DSPR/1.d+6,50.D0,1.d-4/
+      DATA IGL,IGH,IMJ,IBH,ICA,ICG,IVN,IPG,IVG,IP9,IGD,IXLF,IEX,
+     +     XLF/0,0,0,0,0,0,0,0,0,0,0,0,0,0.00D0/
 C     ..
 c.....-----------------------------------------------------------------
 c.....Perdew-zunger parametrization of Ceperley-Alder. g,a,b,c,d in ry.

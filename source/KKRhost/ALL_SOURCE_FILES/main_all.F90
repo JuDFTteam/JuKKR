@@ -9,13 +9,15 @@ program kkrcode
   use mod_timing
 
 #ifdef CPP_MPI
-  use mod_mympi, only: mympi_init, myrank, nranks, master,find_dims_2d, distribute_linear_on_tasks, create_newcomms_group_ie, MPIatom 
+  use mod_mympi, only: mympi_init, myrank, nranks, master,find_dims_2d, distribute_linear_on_tasks, create_newcomms_group_ie, MPIatom , MPIadapt, check_communication_pattern
 #else
-  use mod_mympi, only: mympi_init, myrank, nranks, master, MPIatom
+  use mod_mympi, only: mympi_init, myrank, nranks, master, MPIatom, MPIadapt
 #endif
 
 #ifdef CPP_MPI
   use mod_save_wavefun, only: t_wavefunctions, bcast_params_savewf
+#else
+  use mod_save_wavefun, only: t_wavefunctions
 #endif
 
   
@@ -26,15 +28,11 @@ program kkrcode
   implicit none
   
   integer :: ierr
-  
 #ifdef CPP_MPI
   integer :: myMPI_comm_at, myMPI_comm_ie, nranks_at, myrank_at, myrank_ie, nranks_ie, nranks_atcomm, myrank_atcomm
   integer :: dims(2)
 #endif
-
-  integer :: ie,irec,i1,ispin
   character(len=3) :: ctemp
-
   logical :: test
   external :: test
     
@@ -88,7 +86,7 @@ program kkrcode
   if(myrank==master) call timing_start('MPI 1')
   call bcast_t_inc_tgmat(t_inc,t_tgmat,t_cpa)
   ! also communicate logicals from t_lloyd
-  call bcast_t_lly_1(t_inc,t_lloyd)
+  call bcast_t_lly_1(t_lloyd)
   
   call bcast_t_params_scalars(t_params)
   if (myrank.ne.master) call init_t_params(t_params)
@@ -101,9 +99,21 @@ program kkrcode
   ! create 2d matrix for processors so that more processors than energy points can be used. 
   ! strategy here is to first parallelize the energy points ideally and then give all processors that are left to atom or k-point loop parallelization
   
-  ! communicate logical MPIatom
+  ! communicate logical MPIatom and MPIadapt
   call MPI_Bcast(MPIatom, 1, MPI_LOGICAL, master, MPI_COMM_WORLD, ierr)
   if(ierr/=MPI_SUCCESS) stop 'error broadcasting MPIatom in main_all'
+  call MPI_Bcast(MPIadapt, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=MPI_SUCCESS) stop 'error broadcasting MPIadapt in main_all'
+!   write(*,*) myrank, 'MPIatom etc', MPIatom,MPIadapt
+  ! allocate timing arrays
+  if(MPIadapt>0) then
+!      write(*,*) myrank, 'allocating timgings arrays'
+     allocate(timings_1a(t_inc%ielast,t_inc%natyp), timings_1b(t_inc%ielast), load_imbalance(t_inc%nkmesh), stat=ierr)
+     if(ierr/=0) stop '[main_all] Error allocating timing_1a, 1b arrays'
+     timings_1a(:,:) = 0.0d0
+     timings_1b(:) = 0.0d0
+     load_imbalance(:) = 0
+  end if
   ! create_subcomms_2d: first find maximal dimensions
   call find_dims_2d(nranks,t_inc%NATYP,t_inc%IELAST,dims,MPIatom)
   !save in dims
@@ -198,6 +208,25 @@ program kkrcode
     ! broadcast parameter arrays from master (e.g. update nonco angles etc.)
     call bcast_t_params_scalars(t_params)
     call bcast_t_params_arrays(t_params)
+    
+    
+    ! find out if MPI_communication pattern should be modified: (with test option 'MPIadapt' the program will be forced to change the communication grid after the first iteration and then compares the timings
+    if(MPIadapt==1 .and. t_inc%i_iteration>1) then
+      call check_communication_pattern(MPIatom, MPIadapt, timings_1a, timings_1b, load_imbalance, t_inc%nkmesh, t_inc%kmesh_ie)
+    end if
+    ! adapt MPI communicator grid to tackle load imbalance better
+    if(MPIadapt>0) then
+      ! create_subcomms_2d: first find maximal dimensions
+      call find_dims_2d(nranks,t_inc%NATYP,t_inc%IELAST,dims,MPIatom)
+      !save in dims
+      t_mpi_c_grid%dims = dims
+
+      ! create communicator for atom/energy matrix (load_imbalance instead of t_inc%kmesh in callig list)
+      call create_newcomms_group_ie( nranks,myrank,dims(1),dims(2),t_inc%nkmesh,load_imbalance,mympi_comm_ie,  &
+                                     & myrank_ie,nranks_ie,mympi_comm_at,myrank_at,nranks_at, myrank_atcomm,nranks_atcomm)
+      ! save grid info in type 't_mpi_c_grid'
+      call save_t_mpi_c_grid(t_mpi_c_grid,dims, myMPI_comm_ie, myMPI_comm_at, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
+    end if
 #endif
 
     call timing_stop('Time in Iteration')
@@ -210,9 +239,18 @@ program kkrcode
   ! deallocate arrays from t_params
   deallocate(t_params%EZ, t_params%WEZ, t_params%DROTQ, t_params%DSYMLL, t_params%LEFTTINVLL, t_params%RIGHTTINVLL, t_params%CREL, t_params%RC, t_params%RREL, t_params%SRREL, t_params%PHILDAU, t_params%VINS, t_params%VISP, t_params%VBC, t_params%VTREL, t_params%BTREL, t_params%SOCSCALE, t_params%DRDIREL, t_params%R2DRDIREL, t_params%RMREL, t_params%CMOMHOST       , t_params%ECORE, t_params%QMTET, t_params%QMPHI, t_params%QMPHITAB, t_params%QMTETTAB, t_params%QMGAMTAB, t_params%ZAT, t_params%R, t_params%DRDI, t_params%RMTREF, t_params%VREF, t_params%CLEB, t_params%RCLS, t_params%SOCSCL, t_params%CSCL, t_params%RBASIS, t_params%RR, t_params%CONC, t_params%RROT, t_params%RATOM, t_params%A, t_params%B, t_params%THETAS, t_params%RMT, t_params%RMTNEW, t_params%RWS, t_params%GSH, t_params%EREFLDAU, t_params%UEFF, t_params%JEFF, t_params%ULDAU, t_params%WLDAU, t_params%RPAN_INTERVALL, t_params%RNEW, t_params%MVEVI, t_params%MVEVIEF, t_params%THETASNEW, t_params%RHO2NS, t_params%R2NEF, t_params%RHOC, t_params%DENEFAT, t_params%ESPV, t_params%EDC, t_params%EU, t_params%RHOORB, t_params%ECOREREL, t_params%RCLSIMP, t_params%LOPT, t_params%ITLDAU , t_params%IRSHIFT, t_params%JWSREL , t_params%ZREL, t_params%LCORE, t_params%NCORE, t_params%IPAN , t_params%IRCUT, t_params%JEND , t_params%ICLEB, t_params%ATOM, t_params%CLS , t_params%NACLS, t_params%LOFLM, t_params%EZOA , t_params%KAOEZ, t_params%IQAT, t_params%ICPA, t_params%NOQ , t_params%KMESH , t_params%NSHELL, t_params%NSH1, t_params%NSH2, t_params%IJTABCALC, t_params%IJTABCALC_I, t_params%IJTABSYM, t_params%IJTABSH, t_params%ISH, t_params%JSH, t_params%IQCALC, t_params%ICHECK, t_params%ATOMIMP, t_params%REFPOT, t_params%IRREL, t_params%NRREL, t_params%IFUNM1, t_params%ITITLE, t_params%LMSP1, t_params%NTCELL, t_params%IXIPOL, t_params%IRNS  , t_params%IFUNM , t_params%LLMSP , t_params%LMSP, t_params%IMT , t_params%IRC , t_params%IRMIN, t_params%IRWS , t_params%NFU  , t_params%HOSTIMP, t_params%ILM    , t_params%IMAXSH , t_params%NPAN_LOG, t_params%NPAN_EQ , t_params%NPAN_TOT, t_params%IPAN_INTERVALL, t_params%NKCORE , t_params%KAPCORE, t_params%SYMUNITARY, t_params%VACFLAG, t_params%TXC, t_params%TESTC, t_params%OPTC, t_params%BZKP, t_params%VOLCUB, t_params%VOLBZ, t_params%NOFKS, t_params%THETA, t_params%PHI, stat=ierr)
   if(ierr/=0) stop '[main_all] Error deallocating arrays from t_params'
+  
   ! deallocate arrays from t_wavefunctions
-  deallocate(t_wavefunctions%isave_wavefun, t_wavefunctions%rll, t_wavefunctions%rllleft, t_wavefunctions%sll, t_wavefunctions%sllleft, stat=ierr)
-  if(ierr/=0) stop '[main_all] Error deallocating arrays from t_wavefunctions'
+  if(t_wavefunctions%Nwfsavemax>0) then
+   deallocate(t_wavefunctions%isave_wavefun, t_wavefunctions%rll, t_wavefunctions%rllleft, t_wavefunctions%sll, t_wavefunctions%sllleft, stat=ierr)
+   if(ierr/=0) stop '[main_all] Error deallocating arrays from t_wavefunctions'
+  end if
+  
+  ! deallocate arrays for MPIadapt
+  if(MPIadapt>0) then
+     deallocate(timings_1a, timings_1b, load_imbalance, stat=ierr)
+     if(ierr/=0) stop '[main_all] Error deallocating timing_1a, 1b arrays'
+  end if
   
   
 #ifdef CPP_MPI

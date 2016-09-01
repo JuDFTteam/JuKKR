@@ -10,9 +10,9 @@
 
       SUBROUTINE TBXCCPLJIJ(IFTMAT,IELAST,EZ,WEZ,NSPIN,NCPA,NAEZ, NATYP,
      &                      NOQ,ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,
-     &                      FACTL,NOFGIJ,NQCALC,IQCALC,IJTABCALC,
+     &                      NOFGIJ,NQCALC,IQCALC,IJTABCALC,
      &                      IJTABSYM,IJTABSH,ISH,JSH,DSYMLL,IPRINT,
-     &                      NATYPD,NAEZD,NSHELD,LMMAXD,NPOL)
+     &                      NATYPD,NSHELD,LMMAXD,NPOL)
 C   ********************************************************************
 C   *                                                                  *
 C   *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
@@ -40,7 +40,7 @@ C     .. Parameters
       PARAMETER ( NIJMAX = 200 )
 C     ..
 C     .. Scalar arguments
-      INTEGER IELAST,NSPIN,IFTMAT,IPRINT,LMMAXD,NAEZ,NAEZD,NATOMIMP,
+      INTEGER IELAST,NSPIN,IFTMAT,IPRINT,LMMAXD,NAEZ,NATOMIMP,
      &        NATYP,NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD,NPOL
       DOUBLE COMPLEX EZ(*), WEZ(*)
 C     ..
@@ -48,28 +48,38 @@ C     .. Array arguments
       INTEGER ATOMIMP(*),IJTABCALC(*),IJTABSH(*),IJTABSYM(*),
      &        IQAT(*),IQCALC(*),ISH(NSHELD,*),ITOQ(NATYPD,*),
      &        JSH(NSHELD,*),NOQ(*),NSHELL(0:NSHELD)
-      DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,*),FACTL(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,*)
       DOUBLE PRECISION RATOM(3,*)
 C     ..
 C     .. Local scalars
       INTEGER I1,IA,IFGMAT,IFMCPA,IQ,IREC,ISPIN,ISYM,IT,J1,JA,
      &        JQ,JT,L1,LM1,LM2,LSTR,NS,NSEFF,NSHCALC,NSMAX,NTCALC,
-     &        IE, ie_end, ie_num, ie_start, IERR
-      DOUBLE COMPLEX CSUM, WGTEMP, XINTEGDTMP
+     &        IE, ie_end, ie_num
+#ifdef CPP_MPI
+      INTEGER ie_start, IERR
+#endif
+      DOUBLE COMPLEX CSUM, WGTEMP
+#ifdef CPP_MPI
+      DOUBLE COMPLEX XINTEGDTMP
+#endif
       CHARACTER*8 FMT1
       CHARACTER*22 FMT2
       CHARACTER*8 JFBAS
-      CHARACTER*10 JFINTEG,JFNAME
+!       CHARACTER*10 JFINTEG,JFNAME
       CHARACTER*13 JFNAM
       CHARACTER*26 JFNAM2
       CHARACTER*80 STRBAR,STRTMP
 C     ..
 C     .. Local arrays
       INTEGER NIJCALC(:),KIJSH(:,:),JIJDONE(:,:,:)
-      DOUBLE COMPLEX JXCIJINT(:,:,:),XINTEGD(:,:,:),
-     &               csum_store(:,:,:,:), csum_store2(:,:,:,:)
-      ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT,XINTEGD,csum_store,
-     &            csum_store2
+      DOUBLE COMPLEX JXCIJINT(:,:,:)
+#ifndef CPP_MPI
+      DOUBLE COMPLEX, ALLOCATABLE :: XINTEGD(:,:,:)
+#else
+      DOUBLE COMPLEX, ALLOCATABLE :: csum_store(:,:,:,:),
+     &                               csum_store2(:,:,:,:)
+#endif
+      ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT
       DOUBLE COMPLEX DELTSST(LMMAXD,LMMAXD,NATYP),
      &               DMATTS(LMMAXD,LMMAXD,NATYP,NSPIN),
      &               DTILTS(LMMAXD,LMMAXD,NATYP,NSPIN),
@@ -89,7 +99,10 @@ C     EXTERNAL CINIT,CMATMUL,INITABJIJ,ZCOPY
       EXTERNAL TEST
 C     ..
 C     .. Save statement
-      SAVE IFGMAT,IFMCPA,JIJDONE,JXCIJINT,XINTEGD,KIJSH,NIJCALC
+      SAVE IFGMAT,IFMCPA,JIJDONE,JXCIJINT,KIJSH,NIJCALC
+#ifndef CPP_MPI
+      SAVE XINTEGD
+#endif
       SAVE NSHCALC,NSMAX
 C     ..
 C     .. Data statement
@@ -784,7 +797,7 @@ C
      &     "# for atom IT = ",I3," on site IQ = ",I3,/,
      &     "# R_IQ,JQ      J_IT,JT       JT",/,
      &     "# ( ALAT )       ( Ry )",/,"#      ")
-99010 FORMAT(F12.8,2X,E14.8,2X,I3,I5)
+99010 FORMAT(F12.8,2X,E15.8,2X,I3,I5)
 99011 FORMAT(6X,"Output written into the files Jij.atomX",/,
      &       6X,"  X = atom index in the input file")
 99012       FORMAT (10X,I3,3X,25(I3))

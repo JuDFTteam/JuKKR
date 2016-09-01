@@ -150,7 +150,7 @@ C *                                                                    *
 C **********************************************************************
 
       use mod_types, only: t_inc, t_tgmat, t_lloyd, t_cpa
-      use mod_mympi, only: MPIatom
+      use mod_mympi, only: MPIatom, MPIadapt
 
       IMPLICIT NONE
 C     ..
@@ -238,7 +238,7 @@ C     ..
       INTEGER ITMPDIR,ILTMP      
 C     ..
 C     .. Local scalars
-      INTEGER I1,I2
+      INTEGER I1
       integer ic, naclsmax, nqdos, irmdnew  !variables for t_inc filling
       double precision phi(natyp),theta(natyp)
 C     ..
@@ -354,7 +354,29 @@ C                                  meant for simpler passing of basic parameter 
       if(TEST('timings2')) t_inc%i_time = 2  !all timing files, all iterations
       
       !set switch for MPIatom test option (see mod_types and mod_mympi)
-      if(test('MPIatom ')) MPIatom = .true.
+      ! default values for MPIadapt and MPIatom
+      if(NATYP<=IELAST) then
+         MPIatom = .true.
+      else
+         MPIatom = .false.
+      end if
+      MPIadapt = 1 ! 1 means check timings and then reshuffle ranks if necessary
+      ! change default behaviour for the corresponding test flags are found
+      if(test('MPIatom ')) then
+         MPIatom = .true.
+         MPIadapt= 0 ! 0 means no change in communication scheme
+      end if
+      if(test('MPIenerg')) then
+         MPIatom = .false.
+         MPIadapt= 0
+      end if
+      if(test('MPIadapt')) then
+         MPIadapt= 2 ! 2 means force run with MPIatom then with MPIenerg and then compare to choose optimal 
+      end if
+      if(test('MPIatom ') .and. test('MPIenerg')) then
+         stop "[wunfiles] Found test options 'MPIenerg' and 'MPIatom'
+     & which do not work together. Please choose only one of these."
+      end if
       
       
       ! all parameters are stored in t_params fomr mod_wunfiles
@@ -374,7 +396,7 @@ C                                  meant for simpler passing of basic parameter 
      &        EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,R_LOG,E1,E2,TK,EFERMI,
      &        ALAT,CPATOL,MIXING,QBOUND,FCM,LAMBDA_XC,TOLRDIF,
      &        LINTERFACE,LRHOSYM,SOLVER,TMPDIR,ITMPDIR,ILTMP,
-     &        NTOTD,NCHEBD,NCHEB,DELTAE,0.d0,0.d0,t_params)
+     &        NTOTD,NCHEBD,NCHEB,DELTAE,t_params)
      
       ! initialize allocatable arrays
       call init_t_params(t_params)
@@ -1114,7 +1136,7 @@ C ======================================================================
      &        EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,R_LOG,E1,E2,TK,EFERMI,
      &        ALAT,CPATOL,MIXING,QBOUND,FCM,LAMBDA_XC,TOLRDIF,
      &        LINTERFACE,LRHOSYM,SOLVER,TMPDIR,ITMPDIR,ILTMP,
-     &        NTOTD,NCHEBD,NCHEB,DELTAE,EFOLD,CHRGOLD,t_params)
+     &        NTOTD,NCHEBD,NCHEB,DELTAE,t_params)
       ! fill scalars into t_params
       IMPLICIT NONE
       type(type_params), intent(inout) :: t_params
@@ -1134,7 +1156,7 @@ C     .. Scalar arguments
       INTEGER IDOLDAU,ITRUNLDAU,NTLDAU,NTOTD,NCHEBD,NCHEB
       INTEGER NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE
       DOUBLE PRECISION EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,R_LOG
-      DOUBLE PRECISION E1,E2,TK,EFERMI,ALAT,CPATOL,EFOLD,CHRGOLD
+      DOUBLE PRECISION E1,E2,TK,EFERMI,ALAT,CPATOL
       DOUBLE PRECISION MIXING,QBOUND,FCM,LAMBDA_XC,TOLRDIF
       DOUBLE COMPLEX DELTAE  ! Energy difference for numerical derivative
       LOGICAL LINTERFACE,LRHOSYM
@@ -1627,11 +1649,11 @@ C ------------------------------------------------------ cluster atoms
       end subroutine get_params_1a
 
 
-      subroutine get_params_1b(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,
-     &       NPOL,NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
+      subroutine get_params_1b(t_params,NATYPD,NACLSD,IELAST,
+     &       NPOL,NCLSD,NREFD,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
      &       NSPIN,LMAX,NCLS,NREF,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,
      &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,
-     &       LMAXD,NSHELD,NPRINCD,KPOIBZ,NTOTD,NSPOTD,ATOMIMP,NATOMIMPD,
+     &       NSHELD,NPRINCD,KPOIBZ,ATOMIMP,NATOMIMPD,
      &       ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,
      &       IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,
      &       NOQ,IQAT,NOFGIJD,NOFGIJ,NATOMIMP,CONC,KMESH,MAXMESH,NSYMAT,
@@ -1646,9 +1668,9 @@ C ------------------------------------------------------ cluster atoms
       use mod_types, only: t_inc
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params 
-      integer, intent(in)  :: IPAND,NATYPD,IRMD,NACLSD,NCLSD,NREFD,KREL,
-     &         NCLEB,NEMBD,NAEZD,LMAXD,NTOTD,IEMXD,
-     &         NSPOTD,NOFGIJD,NEMBD1,LMMAXD,NSYMAXD,NSPINDD
+      integer, intent(in)  :: NATYPD,NACLSD,NCLSD,NREFD,KREL,
+     &         NEMBD,NAEZD,IEMXD,
+     &         NOFGIJD,NEMBD1,LMMAXD,NSYMAXD,NSPINDD
      &        ,MAXMSHD,NSHELD,NPRINCD,KPOIBZ,NATOMIMPD,NRD
       integer, intent(inout) :: NSRA,NAEZ,NATYP,NSPIN,MAXMESH,
      &         LMAX,NCLS,NREF,LLY,NSYMAT,
@@ -1687,7 +1709,7 @@ C ------------------------------------------------------ cluster atoms
       character*80, intent(inout) :: TMPDIR
       logical, intent(inout) :: SYMUNITARY(NSYMAXD),VACFLAG(2)
       
-      integer :: i,j,l,id
+      integer :: i,l,id
       
 C     .. External Functions ..
       LOGICAL OPT,TEST
@@ -1840,7 +1862,7 @@ C
 
 
       subroutine get_params_1c(t_params,KREL,NAEZD,NATYPD,NCLEB,LM2D,
-     &          NCHEBD,IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,NCLSD,
+     &          NCHEBD,IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,
      &          NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NATYP,NAEZ,NSPIN,NACLS1,
      &          ICST,KMROT,IQAT,IDOLDAU,LMAX,IRWS,IPAN,IRCUT,IEND,ICLEB, 
      &          LOFLM,JEND,IFUNM1,LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,
@@ -1859,7 +1881,7 @@ C
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params 
       integer, intent(in)  :: KREL,NAEZD,NATYPD,NCLEB,LM2D,NTOTD,NCHEBD,
-     &          IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,NCLSD,MMAXD,IEMXD,
+     &          IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,MMAXD,IEMXD,
      &          IRMD,NSPIND,NSPOTD,IRMIND,LMAXD1,NCELLD,IRID
       integer, intent(inout) :: NSRA,INS,NATYP,NAEZ,NSPIN,ICST,KMROT,
      &          IQAT(NATYPD),IDOLDAU,LMAX,IRWS(NATYPD),IPAN(NATYPD),

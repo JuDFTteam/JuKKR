@@ -5,7 +5,7 @@
      &                    IFILIMP,RATOM,RCLSIMP,
      &                    NSYMAT,ISYMINDEX,RSYMAT,
      &                    KAOEZ,ATOMIMP,
-     &                    ROTNAME,IPRINT,HOSTIMP,LMAXD,LMMAXD,
+     &                    ROTNAME,HOSTIMP,LMAXD,LMMAXD,
      &                    NAEZD,NATYPD,NATOMIMPD,NEMBD,NSHELD)
 C **********************************************************************
 C *                                                                    *
@@ -19,7 +19,7 @@ C **********************************************************************
       INTEGER  LMAXD,LMMAXD,NAEZD,NATYPD,NATOMIMPD,NEMBD,NSHELD
 C     ..
 C     .. Scalar arguments
-      INTEGER ICC,NAEZ,NATOMIMP,NATYP,NSYMAT,IPRINT,NOFGIJ
+      INTEGER ICC,NAEZ,NATOMIMP,NATYP,NSYMAT,NOFGIJ
       CHARACTER*40 IFILIMP
 C     ..
 C     .. Array arguments
@@ -176,7 +176,6 @@ C
      +                 NSYMAT,RSYMAT,ISYMINDEX,ROTNAME,
      +                 NSHELL,RATOM(1,1),NSH1,NSH2,ISH,JSH,
      +                 IJTABSYM,IJTABSH,IJTABCALC,2,NSHELD)
-C    +                 IJTABSYM,IJTABSH,IJTABCALC,IPRINT,NSHELD)
 C
 C **********************************************************************
 C

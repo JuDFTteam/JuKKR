@@ -18,7 +18,7 @@
       
        use mod_types, only: t_tgmat, t_inc
 #ifdef CPP_MPI
-     &                     ,gather_tmat, gather_gref,
+     &                     ,gather_tmat,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
      &                      get_ntot_pT_ioff_pT_2D 
 #endif
@@ -103,20 +103,22 @@
        LOGICAL LDORHOEF
        DOUBLE PRECISION QVEC(:,:)       ! qdos ruess: q-vectors for qdos
        ALLOCATABLE QVEC                 ! qdos ruess
-       DOUBLE COMPLEX DENTOT(2),DENTMP(0:LMAXD1,2) ! qdos ruess
+#ifdef CPP_MPI
+       DOUBLE COMPLEX DENTOT(2)         ! qdos ruess
+#endif
        INTEGER IQ,NQDOS ! qdos ruess: number of qdos points
        INTEGER IX,M1,LMSHIFT1(4),LMSHIFT2(4)       ! qdos ruess
        INTEGER LRECGFLLE,IERR                           ! lmlm-dos
        INTEGER IDOLDAU,LOPT                                     ! LDAU
-       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND),PHILDAU(IRMD) ! LDAU
+       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND)!,PHILDAU(IRMD) ! LDAU
+       DOUBLE COMPLEX PHILDAU(IRMD)
+
        DOUBLE COMPLEX DENMATN(MMAXD,MMAXD,2,2)                  ! LDAU
-       INTEGER LMLO,LMHI,MMAX,M2,IS,JS                          ! LDAU
+       INTEGER LMLO,LMHI,MMAX,IS,JS                             ! LDAU
        DOUBLE COMPLEX GLDAU(LMMAXSO,LMMAXSO)                    ! LDAU
        ! OMP - number of threads, thread id
        integer nth,ith
 #ifdef CPP_MPI
-       integer :: mytot
-       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
        ! communication
        double complex, allocatable :: workc(:,:,:,:)
 #endif
@@ -127,9 +129,11 @@
 C      ..
        LOGICAL TEST,OPT
        EXTERNAL TEST,OPT
+#ifndef CPP_OMP
        ! test
        integer :: mu0
        ! test
+#endif
 ! determine if omp is used
        ith = 0
        nth = 1
@@ -297,21 +301,21 @@ c energy loop
 !$omp parallel do default(none)
 !$omp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
 !$omp& private(jlk_index,tmatll,ith)
+!$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
+!$omp& private(rho2ns_temp,rho2,temp1,jspin)
+!$omp& private(alphasph,alphall,ie_num, wavefunction_was_read_in)
+!$omp& firstprivate(t_inc)
+!$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
+!$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
 !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
 !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
 !$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
 !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
 !$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
-!$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
-!$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
-!$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
-!$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
+!$omp& shared(t_tgmat,ie_end, ie_start, t_wavefunctions)
 !$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
 !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
-!$omp& shared(t_tgmat,ie_end, ie_start)
-!$omp& private(alphasph,alphall,ie_num)
-!$omp& firstprivate(t_inc)
 #endif
        DO ie_num=1,ie_end
         IE = ie_start+ie_num
@@ -337,15 +341,15 @@ c energy loop
 
         if(t_wavefunctions%Nwfsavemax>0) then ! read wavefunctions?
          ! read in wavefunction from memory
-         call read_wavefunc(t_wavefunctions,rll, rllleft, sll, sllleft, 
-     &                      i1, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth,
-     &                      wavefunction_was_read_in)
+          call read_wavefunc(t_wavefunctions,rll, rllleft, sll, sllleft,
+     &                       i1, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth,
+     &                       wavefunction_was_read_in)
         end if
      
 c recalculate wavefuntions, also include left solution
 c contruct the spin-orbit coupling hamiltonian and add to potential
         CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,
-     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,
+     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,LMPOTD,
      +                     THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,
      +                     NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,
      &                     VNSPLL0,VNSPLL1(:,:,:,ith),'1')
@@ -412,11 +416,10 @@ cc right solutions
 c left solutions
 c contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
          CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,
-     +                     CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,THETA,PHI,
+     +                     CVLIGHT,SOCSCALE,NSPIN,LMPOTD,THETA,PHI,
      +                     IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,
      +                     IRMDNEW,NRMAXD,VNSPLL0,VNSPLL1(:,:,:,ith),
      +                     'transpose')
-
 cc extend matrix for the SRA treatment
          VNSPLL(:,:,:,ith)=CZERO
          IF (NSRA.EQ.2) THEN
@@ -504,8 +507,8 @@ c rotate gmat from global frame to local frame
 c calculate density 
        CALL RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,
      +                LMPOTD,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
-     +                IRMDNEW,NRMAXD,THETASNEW,IFUNM,RNEW,IMT1,LMSP,
-     +                RLL(:,:,:,ith),SLL(:,:,:,ith),
+     +                IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,
+     +                RLL(:,:,:,ith),
      +                RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,
@@ -669,19 +672,16 @@ c get orbital moment
          IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
          allocate(workc(0:LMAXD1,IEMXD,2,NQDOS))
          workc = (0.d0, 0.d0)
-         CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,
-     &                      t_mpi_c_grid%myMPI_comm_at,IERR)
+         CALL MPI_REDUCE(DEN, workc, IDIM, MPI_DOUBLE_COMPLEX, MPI_SUM,
+     &                      master, t_mpi_c_grid%myMPI_comm_at, IERR)
+!          CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,
+!      &                      t_mpi_c_grid%myMPI_comm_at,IERR)
          CALL ZCOPY(IDIM,WORKC,1,DEN,1)
          deallocate(workc)
          
          if(t_mpi_c_grid%myrank_at==master) then
-! #ifdef CPP_MPI
-!          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)         ! qdos
-!          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)         ! qdos
-! #else
          ie_start = 0
          ie_end   = IELAST
-! #endif
          DO ie_num=1,ie_end                                               ! qdos
            IE = ie_start+ie_num                                           ! qdos
            DO IQ=1,NQDOS                                                  ! qdos
@@ -964,31 +964,23 @@ C
       if(ierr/=MPI_SUCCESS) stop 'error bcast angles_new in rhovalnew'
 #endif
 
-       DEALLOCATE(VINS)
-       DEALLOCATE(VNSPLL0)
-       DEALLOCATE(VNSPLL1)
-       DEALLOCATE(VNSPLL)
-       DEALLOCATE(HLK)
-       DEALLOCATE(JLK)
-       DEALLOCATE(HLK2)
-       DEALLOCATE(JLK2)
-       DEALLOCATE(TMATSPH)
-       DEALLOCATE(RLL)
-       DEALLOCATE(SLL)
-       DEALLOCATE(RLLLEFT)
-       DEALLOCATE(SLLLEFT)
-       DEALLOCATE(CDEN)
-       DEALLOCATE(CDENLM)
-       DEALLOCATE(CDENNS)
-       DEALLOCATE(RHO2NSC,RHO2NSC_loop)
-       DEALLOCATE(RHO2NSNEW)
-       DEALLOCATE(R2NEFC,R2NEFC_loop)
-       DEALLOCATE(R2NEFNEW)
-       DEALLOCATE(R2ORBC)
-       DEALLOCATE(CDENTEMP)
-       DEALLOCATE(GFLLE_PART)
-       DEALLOCATE(GFLLE)
-       DEALLOCATE(DEN)
-       DEALLOCATE(DENLM)
+       ! deallocate arrays
+       DEALLOCATE(VINS, VNSPLL0, VNSPLL1, VNSPLL, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating VINS etc.'
+       DEALLOCATE(HLK, JLK, HLK2, JLK2, TMATSPH, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating HLK etc.'
+       DEALLOCATE(RLL, SLL, RLLLEFT, SLLLEFT, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating RLL etc.'
+       DEALLOCATE(CDEN, CDENLM, CDENNS, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating CDEN etc.'
+       DEALLOCATE(RHO2NSC,RHO2NSC_loop, RHO2NSNEW, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating RHO2NSC etc.'
+       DEALLOCATE(R2NEFC,R2NEFC_loop, R2NEFNEW, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating R2NEFC etc.'
+       DEALLOCATE(R2ORBC, CDENTEMP, GFLLE_PART, GFLLE, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating R2ORBC etc.'
+       DEALLOCATE(DEN, DENLM, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating DEN etc.'
+       
        END 
 

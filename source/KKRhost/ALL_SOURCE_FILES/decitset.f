@@ -2,7 +2,6 @@
      &                    NLBASIS,NRBASIS,FILELEFT,FILERIGHT,
      &                    INS,KVREL,KREL,NSPIN,KMROT,
      &                    VREF,RMTREF,NREF,REFPOT,
-     &                    RC,CREL,RREL,
      &                    LEFTTINV,RIGHTTINV,VACFLAG,
      &                    NEMBD1,IEMXD,IRMD,IPAND,
      &                    LMAXD,LMGF0D,LMMAXD,LM2D,NSPIND)
@@ -40,15 +39,14 @@ C     ..
 C     .. Array arguments ..
       INTEGER REFPOT(NEMBD1)
       DOUBLE PRECISION VREF(*),RMTREF(*),BRAVSYS(3,3)
-      DOUBLE COMPLEX CREL(LMMAXD,LMMAXD),RREL(LMMAXD,LMMAXD),
-     &               RC(LMMAXD,LMMAXD),EZ(IEMXD)
+      DOUBLE COMPLEX EZ(IEMXD)
       DOUBLE COMPLEX LEFTTINV(LMMAXD,LMMAXD,NEMBD1,NSPIND,IEMXD),
      &               RIGHTTINV(LMMAXD,LMMAXD,NEMBD1,NSPIND,IEMXD)
       LOGICAL VACFLAG(2)
 C     ..
 C     .. Local scalars ..
       INTEGER IHOST,I,LL,MM,LNGSTRING,NQHOST,ILHOST
-      INTEGER NHOST,ILOOPH
+      INTEGER NHOST
       INTEGER NQ,NT,IQOFF,ITOFF,IE,IH,IQH,IOQ,INFO
       INTEGER IPOT,I1,ISPIN,NSRA,LM1,LM2,IRC1,IREF
       INTEGER NTLEFT,NTRIGHT,NTHOST
@@ -79,13 +77,12 @@ C     .. Allocatable local arrays
       DOUBLE COMPLEX TREFLL(:,:,:),TMATLL(:,:),DHMAT(:,:,:)
       DOUBLE COMPLEX DTREFLL(:,:,:) ! LLY Lloyd
       DOUBLE COMPLEX ALPHAREF(:,:),DALPHAREF(:,:) ! LLY Lloyd Alpha matrix and deriv.
-      DOUBLE COMPLEX WN1(:,:)
       DOUBLE PRECISION VTREL(:,:),BTREL(:,:),R2DRDIREL(:,:)
       INTEGER ZREL(:)
       ALLOCATABLE ZAT,RWS,RMT,CONC,RR,DRDI,VISP,DROR,SOCSCL,CSCL
       ALLOCATABLE VTREL,BTREL,R2DRDIREL
       ALLOCATABLE IRWS,IPAN,IQAT,IRCUT,LOFLM,ZREL
-      ALLOCATABLE TREFLL,TMATLL,DHMAT,WN1
+      ALLOCATABLE TREFLL,TMATLL,DHMAT
       ALLOCATABLE DTREFLL,ALPHAREF,DALPHAREF ! LLY
 C     .. 
 C     .. External subroutines
@@ -260,27 +257,6 @@ C &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
      &                   TREFLL(1,1,I1),DTREFLL(1,1,I1),
      &                   ALPHAREF(0,I1),DALPHAREF(0,I1),LMAXD+1,LMGF0D)
             END DO
-!          ELSE
-!             ALLOCATE(WN1(LMGF0D,LMGF0D),STAT=I1)
-!             IF ( I1.NE.0 ) STOP '    Allocate WN1'
-!             DO I1 = 1,NREF
-!                CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAXD,IH,
-!      &                       WN1,DTREFLL(1,1,I1),LMAXD+1,LMGF0D)
-! C-----------------------------------------------------------------
-! C add second spin-block for relativistic calculation and transform
-! C from NREL to REL representation
-! C-----------------------------------------------------------------
-!                CALL CINIT(LMMAXD*LMMAXD,TMATLL)
-!                IF ( LMMAXD.NE.IH*2 ) STOP 'LMMAXD <> IH*2 '
-!                DO I=1,IH
-!                   TMATLL(I,I) = WN1(I,I)
-!                   TMATLL(IH+I,IH+I) = WN1(I,I)
-!                END DO
-!                CALL CHANGEREP(TMATLL,'RLM>REL',TREFLL(1,1,I1),LMMAXD,
-!      &                        LMMAXD,RC,CREL,RREL,'TREFLL',0)
-!             END DO
-!             DEALLOCATE(WN1,STAT=I1)
-!             IF ( I1.NE.0 ) STOP '    Deallocate WN1'
          END IF
 C &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 C

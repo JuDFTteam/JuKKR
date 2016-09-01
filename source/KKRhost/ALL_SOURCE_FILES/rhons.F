@@ -43,6 +43,7 @@ c                 if shape functions are used
 c
 c                               b.drittler   july 1989
 c-----------------------------------------------------------------------
+      IMPLICIT NONE
 C     .. Parameters ..
       INCLUDE 'inc.p'
 C
@@ -73,16 +74,19 @@ C     .. Array Arguments ..
      +               PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),PZ(IRMD,0:LMAXD),
      +               QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),QZ(IRMD,0:LMAXD),
      +               SZ(IRMD,0:LMAXD)
-     +              ,DENLM(LMMAXD),ENERG  ! lm-dos
+     +              ,DENLM(LMMAXD)
+#ifndef CPP_MPI
+     +              ,ENERG  ! lm-dos
+#endif
       DOUBLE PRECISION CLEB(*),DRDI(IRMD),RHO2NS(IRMD,LMPOTD),
      +                 THETAS(IRID,NFUND)
-     +                ,CVLIGHT              ! lm-dos
+!      +                ,CVLIGHT              ! lm-dos
       INTEGER ICLEB(NCLEB,4),IFUNM(*),IRCUT(0:IPAND),
      +        JEND(LMPOTD,0:LMAXD,0:LMAXD),LMSP(*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX DENNS,V1
-      INTEGER IMT1,L,LM,M,IRMAX
+      INTEGER IMT1,L,LM,M,IRMAX, LM1, LM2
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX CDEN(IRMD,0:LMAXD),CDENNS(IRMD),EFAC(LMMAXD)

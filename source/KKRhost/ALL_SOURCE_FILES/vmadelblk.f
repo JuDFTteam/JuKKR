@@ -1,8 +1,7 @@
 C*==vmadelblk.f    processed by SPAG 6.05Rc at 13:42 on  1 Feb 2002
-      SUBROUTINE VMADELBLK(CMOM,CMINST,LMAX,NSPIN,NAEZ,NATYP,V,ZAT,R,
-     &                     IRWS,IRCUT,IPAN,KSHAPE,NOQ,KAOEZ,IQAT,
-     &                     CONC,CATOM,ICC,HOSTIMP,IELAST,ATOMIMP,
-     &                     NATOMIMP,ALAT,VBC,VINTERS)
+      SUBROUTINE VMADELBLK(CMOM,CMINST,LMAX,NSPIN,NAEZ,V,ZAT,R,
+     &                     IRWS,IRCUT,IPAN,KSHAPE,NOQ,KAOEZ,
+     &                     CONC,CATOM,ICC,HOSTIMP,VINTERS)
 C **********************************************************************
 C
 C     calculate the madelung potentials and add these to the poten-
@@ -39,13 +38,9 @@ C     .. PARAMETER definitions
       PARAMETER (LMPOTD=(LPOTD+1)**2)
       INTEGER LMMAXD
       PARAMETER (LMMAXD= (KREL+1) * (LMAXD+1)**2)
-      INTEGER ATOMIMP(NATOMIMPD),NATOMIMP
-
-      DOUBLE PRECISION VBC(2)
-
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER LMAX,NSPIN,NAEZ,NATYP,KSHAPE,ICC
+      INTEGER LMAX,NSPIN,NAEZ,KSHAPE,ICC
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION CMOM(LMPOTD,*),CMINST(LMPOTD,*),
@@ -53,21 +48,18 @@ C     .. Array Arguments ..
       DOUBLE PRECISION CONC(NATYPD),CATOM(NATYPD)
       INTEGER IRWS(*),IRCUT(0:IPAND,*),IPAN(*),
      &        NOQ(NAEZD),KAOEZ(NATYPD,NAEZD+NEMBD),
-     &        IQAT(NATYPD),HOSTIMP(0:NATYPD)
+     &        HOSTIMP(0:NATYPD)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION AC,PI
       INTEGER LRECABMAD,IREC
       INTEGER I,L,LM,LM2,LMMAX,M,IO1,IO2,IPOT,IQ1,IQ2,
-     &        IRS1,ISPIN,IT1,IT2,IATOM,NOQVAL
-      DOUBLE PRECISION ALAT
+     &        IRS1,ISPIN,IT1,IT2,NOQVAL
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION AVMAD(LMPOTD,LMPOTD),BVMAD(LMPOTD)
       DOUBLE PRECISION VINTERS(LMPOTD,NAEZD)
       LOGICAL OPT
-      INTEGER IELAST,IE,I1,LRECTMT
-      DOUBLE COMPLEX TMAT0(LMMAXD,LMMAXD)
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,SQRT
@@ -93,8 +85,6 @@ C
 C
 C ************************************** loop over all types in unit cell
 
-!     DO IT1 = 1,NATYP         ! comment out bauer 2/7/2012
-
       DO IQ1 = 1,NAEZ            ! added bauer 2/7/2012
       NOQVAL=NOQ(IQ1)            ! added bauer 2/7/2012
       IF (NOQVAL<1) NOQVAL=1     ! added bauer 2/7/2012
@@ -102,7 +92,6 @@ C ************************************** loop over all types in unit cell
          IT1 = KAOEZ(IO1,IQ1)    ! added bauer 2/7/2012
 
 C ====================================== take a site occupied by atom IT1
-!        IQ1 = IQAT(1,IT1) ! comment out bauer 2/7/2012
 C
          IF (IT1/=-1) THEN                ! added bauer 2/7/2012
           IF ( KSHAPE.NE.0 ) THEN

@@ -1,11 +1,11 @@
 C*==deciopt.f    processed by SPAG 6.05Rc at 19:30 on  5 Jun 2004
       SUBROUTINE DECIOPT(ALAT,INS,KREL,KVREL,KMROT,NSPIN,NAEZ,LMMAX,
      &                   BRAVAIS,TK,NPOL,NPNT1,NPNT2,NPNT3,
-     &                   EZ,IELAST,KAOEZ,SCFSTEPS,
+     &                   EZ,IELAST,KAOEZ,
      &                   LEFTTINVLL,RIGHTTINVLL,VACFLAG,NLBASIS,NRBASIS,
-     &                   CMOMHOST,VREF,RMTREF,NREF,REFPOT,RC,CREL,RREL,
+     &                   CMOMHOST,VREF,RMTREF,NREF,REFPOT,
      &                   LMAXD,LMGF0D,LMMAXD,LM2D,NEMBD1,IEMXD,NSPIND,
-     &                   LMPOTD,NATYPD,IRMD,IPAND,KORBIT)
+     &                   LMPOTD,NATYPD,IRMD,IPAND)
 C **********************************************************************
 C *                                                                    *
 C * This routine treats the DECIMATION case setting up the single-site *
@@ -40,9 +40,9 @@ C **********************************************************************
 C     ..
 C     .. Scalar arguments
       INTEGER LMMAXD,NEMBD1,IEMXD,NSPIND,LMPOTD,NATYPD,IPAND,IRMD,LMAXD
-      INTEGER LM2D,NREF,LMGF0D,KORBIT           ! ruess: for tmat newsolver (SOC)
+      INTEGER LM2D,NREF,LMGF0D
       INTEGER INS,KREL,KMROT,NSPIN,NAEZ,LMMAX,NPOL,NPNT1,NPNT2,NPNT3
-      INTEGER IELAST,NLBASIS,NRBASIS,KVREL,SCFSTEPS
+      INTEGER IELAST,NLBASIS,NRBASIS,KVREL
       DOUBLE PRECISION ALAT,TK
 C     ..
 C     .. Array arguments
@@ -51,8 +51,6 @@ C     .. Array arguments
       DOUBLE PRECISION VREF(*),RMTREF(*)
       DOUBLE COMPLEX LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPIND,IEMXD),
      &               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPIND,IEMXD)
-      DOUBLE COMPLEX CREL(LMMAXD,LMMAXD),RREL(LMMAXD,LMMAXD),
-     &               RC(LMMAXD,LMMAXD)
       DOUBLE COMPLEX EZ(IEMXD)
       LOGICAL VACFLAG(2)
 C     ..
@@ -87,7 +85,7 @@ C
      &        LEFTTINVLL(1,1,1,1,1),RIGHTTINVLL(1,1,1,1,1),VACFLAG,
      &        IE,NLBASIS,NRBASIS,NAEZ,KAOEZ,KMROT,
      &        INS,NSPIN,LMMAX,IELAST,FILELEFT,FILERIGHT,
-     &        KREL,NATYPD,LMMAXD,NEMBD1,KORBIT)       ! ruess: pass KORBIT to decimaread for newsolver
+     &        KREL,NATYPD,LMMAXD,NEMBD1)
 C     
 C --> get the left and right host Delta_t matrices
 C
@@ -101,7 +99,7 @@ C
      &                         RIGHTTINVLL(1,1,1,ISPIN,IE),VACFLAG,
      &                         IE,NLBASIS,NRBASIS,NAEZ,KAOEZ,KMROT,INS,
      &                         NSPIN,LMMAX,IELAST,FILELEFT,FILERIGHT,
-     &                         KREL,NATYPD,LMMAXD,NEMBD1,KORBIT)
+     &                         KREL,NATYPD,LMMAXD,NEMBD1)
 C
 C --> host matrices have been written out in true units
 C     they are used in p.u. units (see kloopz) --> convert them here
@@ -137,7 +135,7 @@ C :::::::::::::::::::::::::::::::::::::::::::::::: decipots (calc tmats)
          CALL DECITSET(ALAT,BRAVAIS,EZ,IELAST,
      &                 NLBASIS,NRBASIS,FILELEFT,FILERIGHT,
      &                 INS,KVREL,KREL,NSPIN,KMROT,
-     &                 VREF,RMTREF,NREF,REFPOT,RC,CREL,RREL,
+     &                 VREF,RMTREF,NREF,REFPOT,
      &                 LEFTTINVLL,RIGHTTINVLL,VACFLAG,
      &                 NEMBD1,IEMXD,IRMD,IPAND,
      &                 LMAXD,LMGF0D,LMMAXD,LM2D,NSPIND)

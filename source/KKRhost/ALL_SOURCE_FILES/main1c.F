@@ -15,7 +15,7 @@
 #endif
       use mod_types, only: t_tgmat, t_inc, t_lloyd
 #ifdef CPP_MPI
-     &                     ,gather_tmat, gather_gref,
+     &                     ,gather_tmat, 
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
      &                      get_ntot_pT_ioff_pT_2D 
 #endif
@@ -66,7 +66,7 @@ C     .. itermdir parameter
       INTEGER NMVECMAX
       PARAMETER (NMVECMAX = 4)
 C     .. 
-      INTEGER LRECTMT,LRECTMT2
+      INTEGER LRECTMT
       PARAMETER (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
 !     ..
       DOUBLE COMPLEX CZERO
@@ -84,7 +84,7 @@ C     .. Local Scalars ..
       CHARACTER*5 TEXTNS
       CHARACTER*10 SOLVER
       CHARACTER*80 TMPDIR
-      LOGICAL ITERMVDIR,LDORHOEF,LMOMVEC,LREAD
+      LOGICAL ITERMVDIR,LDORHOEF,LMOMVEC
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C LDA+U
       INTEGER IDOLDAU,ITRUNLDAU,NTLDAU
@@ -110,15 +110,16 @@ C     ..
 C     .. Local Arrays ..
 #ifdef CPP_MPI
       DOUBLE COMPLEX,   allocatable :: WORK(:,:)
-      integer ierr,idim, nranks_local, myrank_ie_tmp
+      integer :: idim, nranks_local, myrank_ie_tmp
       double complex, allocatable :: workc(:,:,:,:)
 #endif
+      integer :: ierr
       DOUBLE COMPLEX EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX, allocatable :: den(:,:,:,:), denlm(:,:,:,:) ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS),DENLM(LMMAXD1,IEMXD,NPOTD,NQDOS)
-      DOUBLE COMPLEX DEN1(0:LMAXD1,IEMXD,2),WEZNORM(IEMXD)
+      DOUBLE COMPLEX DEN1(0:LMAXD1,IEMXD,2)
       DOUBLE COMPLEX CDOSAT0(IEMXD),CDOSAT1(IEMXD),CSUM                       ! LLY Lloyd
       DOUBLE COMPLEX CDOS0(IEMXD),CDOS_LLY(IEMXD,NSPIND),CDOS1(IEMXD),
-     +               CDOS2(NATYPD),cdos_dum(IEMXD,NSPIND)                     ! LLY Lloyd
+     +               CDOS2(NATYPD)                                            ! LLY Lloyd
       DOUBLE PRECISION CHARGE_LLY(NSPIND)  ! LLY
       DOUBLE COMPLEX EREAD                  !LLY
       DOUBLE PRECISION A(NATYPD),B(NATYPD),CHARGE(0:LMAXD1,NATYPD,2),
@@ -183,15 +184,14 @@ C     .. itermdir variables
 C     .. qdos and lmlm-dos ..
       CHARACTER*8 QDOSOPT
       DOUBLE COMPLEX DF(IEMXD)!,GFLLE(LMMAXSO,LMMAXSO,IEMXD,100)
-      DOUBLE COMPLEX DENTOT ! qdos
-      DOUBLE PRECISION, allocatable :: QVEC(:,:)
-      INTEGER IREC,LM1,LM2
 #ifdef CPP_MPI
-      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
-     &           myrank_at, myrank_ie, nranks_at,nranks_ie
-      integer :: ntot1, dims(2), mytot, ii
-      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
-     &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
+      DOUBLE COMPLEX DENTOT ! qdos
+#endif
+      DOUBLE PRECISION, allocatable :: QVEC(:,:)
+      INTEGER LM1,LM2
+#ifdef CPP_MPI
+      integer :: ntot1
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
       integer :: ihelp
 #endif
       integer :: i1_start, i1_end
@@ -200,7 +200,7 @@ C     .. qdos and lmlm-dos ..
       double precision :: angles_new(2,NATYPD)
 C     ..
 C     .. External Subroutines ..
-      EXTERNAL CINIT,RHOCORE,RHOVAL,WMATLDAU,WRLDAUPOT,WRLDOS,WRMOMS
+!       EXTERNAL CINIT,RHOCORE,RHOVAL,WMATLDAU,WRLDAUPOT,WRLDOS,WRMOMS
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DBLE,DIMAG,DREAL
@@ -248,7 +248,7 @@ C ======================================================================
 C
 C -------------------------------------------------------------- input1c
       call get_params_1c(t_params,KREL,NAEZD,NATYPD,NCLEB,LM2D,
-     &          NCHEBD,IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,NCLSD,
+     &          NCHEBD,IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,
      &          NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NATYP,NAEZ,NSPIN,NACLS1,
      &          ICST,KMROT,IQAT,IDOLDAU,LMAX,IRWS,IPAN,IRCUT,IEND,ICLEB,
      &          LOFLM,JEND,IFUNM1,LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,
@@ -340,10 +340,10 @@ C
             ICELL = NTCELL(I1)                                             ! LLY Lloyd
             DO IE = 1,IELAST                                               ! LLY Lloyd
                CALL RHOVAL0(                                               ! LLY Lloyd
-     &           EZ(IE),WEZ(IE),                                           ! LLY Lloyd
+     &           EZ(IE),                                                   ! LLY Lloyd
      &           DRDI(1,I1),RMESH(1,I1),                                   ! LLY Lloyd
      &           IPAN(I1),IRCUT(0,I1),IRWS(I1),                            ! LLY Lloyd
-     &           THETAS(1,1,ICELL),LMAX,                                   ! LLY Lloyd
+     &           THETAS(1,1,ICELL),                                        ! LLY Lloyd
      &           CDOSAT0(IE),CDOSAT1(IE))  
 
 c calculate contribution from free space
@@ -368,7 +368,7 @@ c calculate contribution from free space
          ENDDO                                                             ! LLY Lloyd
          CLOSE(701)                                                        ! LLY Lloyd
          end if ! myrank==master
-         CDOS_LLY(1:IEMXD,1:NSPIND) = CZERO                                ! LLY Lloyd
+         CDOS_LLY(1:ielast,1:NSPIN) = CZERO                                ! LLY Lloyd
          IF (.NOT.OPT('NEWSOSOL')) THEN
          if(t_lloyd%cdos_diff_lly_to_file) then
             OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
@@ -394,13 +394,13 @@ c calculate contribution from free space
             ENDDO    !ispin     
 #ifdef CPP_MPI
             ! MPI gather cdos_lly on all processors
-            ihelp      = IELAST*NSPIN  !IELAST*NSPIN
+            ihelp      = ielast*nspin  !IELAST*NSPIN
             allocate(work(ielast,nspin), stat=ierr)
             if(ierr/=0) stop '[main1c] Error allocating work'
             work = (0.d0, 0.d0)
-            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
+            CALL MPI_ALLREDUCE(cdos_lly(1:ielast,1:nspin),work,ihelp,
      &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
-            call zcopy(ihelp,work,1,cdos_lly,1)
+            call zcopy(ihelp,work,1,cdos_lly(1:ielast,1:nspin),1)
             deallocate(work, stat=ierr)
             if(ierr/=0) stop '[main1c] Error deallocating work'
 #endif
@@ -459,20 +459,20 @@ c calculate contribution from free space
             ENDDO
 #ifdef CPP_MPI
             ! MPI gather cdos_lly on all processors
-            ihelp      = IEMXD*NSPIND  !IELAST*NSPIN
-            allocate(work(iemxd,nspind), stat=ierr)
+            ihelp      = ielast*nspin  !IELAST*NSPIN
+            allocate(work(ielast,nspin), stat=ierr)
             if(ierr/=0) stop '[main1c] Error allocating work'
             work = (0.d0, 0.d0)
-            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
+            CALL MPI_ALLREDUCE(cdos_lly(1:ielast,1:nspin),work,ihelp,
      &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
-            call zcopy(ihelp,work,1,cdos_lly,1)
+            call zcopy(ihelp,work,1,cdos_lly(1:ielast,1:nspin),1)
             deallocate(work, stat=ierr)
             if(ierr/=0) stop '[main1c] Error deallocating work'
 #endif
           end if  !(t_lloyd%cdos_diff_lly_to_file)
           
 c Add free-space contribution cdos0                                     ! LLY
-          CDOS_LLY(1:IEMXD,1) = CDOS_LLY(1:IEMXD,1)+2D0*CDOS0(1:IEMXD)  ! LLY 
+          CDOS_LLY(1:ielast,1)=CDOS_LLY(1:ielast,1)+2D0*CDOS0(1:ielast) ! LLY 
           CSUM=CZERO                                                    ! LLY
           DO IE = 1,IELAST                                              ! LLY
            CSUM = CSUM + CDOS_LLY(IE,1) * WEZ(IE)                       ! LLY
@@ -549,7 +549,7 @@ C ----------------------------------------------------------------- SPIN
      &           LMOMVEC,QMTET(IQ),QMPHI(IQ),MVEVIL1,MVEVIL2,NMVECMAX,
      &           IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),
      &           DENMATC(1,1,IPOT),
-     &           LLY,NATYP,NQDOS)              ! LLY Lloyd
+     &           NATYP,NQDOS)
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhoval')
 #endif
@@ -686,7 +686,7 @@ C ================================================================ NATYP
 #ifdef CPP_TIMING
       call timing_start('main1c - communication')
 #endif
-      !MPI: reduce these arrays, so that all processors have the results (MPI_ALLREDUCE)
+      !MPI: reduce these arrays, so that master processor has the results (MPI_REDUCE)
 #ifdef CPP_TIMING
       call timing_start('main1c - communication')
 #endif
@@ -748,9 +748,9 @@ c interpolate potential
       IF ( IDOLDAU.EQ.1 ) 
      +           CALL CINIT(MMAXD*MMAXD*4*NATYPD,DENMATN(1,1,1,1,1))
 
-       CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IPAN,IRCUT,VINS,
-     +                        VISP,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,
-     +                        RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
+       CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,
+     +                        VISP,NPAN_LOG,NPAN_EQ,NPAN_TOT,
+     +                        RNEW,IPAN_INTERVALL,
      +                        VINSNEW)
 #ifdef CPP_MPI
         ntot1 = t_inc%NATYP
@@ -921,7 +921,7 @@ c rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
          CALL RENORM_LLY(
      &     CDOS_LLY,IELAST,NSPIN,NATYP,DEN,LMAXP1,CONC,
      &     1,IELAST,WEZ,IRCUT,IPAN,EZ,ZAT,
-     &     RHO2NS,CDOS1,CDOS2,R2NEF,DENEF,DENEFAT,ESPV)
+     &     RHO2NS,R2NEF,DENEF,DENEFAT,ESPV)
 
       ENDIF                                                              ! LLY Lloyd
 
@@ -976,7 +976,7 @@ C
      &                 UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD)
         ELSE
          CALL WMATLDAUSOC(NTLDAU,ITLDAU,NSPINPOT,DENMATN,LOPT,
-     &                 UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD)
+     &                 UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD)
         ENDIF
 C -> Mix old and new LDA+U interaction matrices
          CALL MIXLDAU(

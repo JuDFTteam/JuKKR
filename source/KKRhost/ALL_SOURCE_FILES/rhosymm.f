@@ -8,9 +8,10 @@ c     (dependencies in IXIPOL(*))
 c
 c     p. zahn, aug. 96
 c-----------------------------------------------------------------------
+      IMPLICIT NONE
 C     .. Parameters ..
       include 'inc.p'
-      INTEGER LMPOTD
+      INTEGER LMPOTD, NSPIN
       PARAMETER (LMPOTD= (LPOTD+1)**2)
 C     ..
 C     .. Scalar Arguments ..

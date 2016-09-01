@@ -45,7 +45,6 @@ C     .. Local Arrays ..
       DOUBLE COMPLEX DGLLDE(:,:),DGDE(:,:),
      &               DGDEOUT(NACLSMAX*LMGF0D,LMGF0D)
       DOUBLE COMPLEX LLY_G0TR   ! LLY Trace of  DTGLL for Lloyds formula
-      LOGICAL LDERIV  ! LLY calculate or not DTGLL and LLY_G0TR
       INTEGER LLY     ! LLY =0 : no Lloyd's formula; <>0: use Lloyd's formula
       ALLOCATABLE GREF,GLL,GTREF,DGLLDE,DGTDE,DGTDE0,DGDE,IPVT
 C     ..

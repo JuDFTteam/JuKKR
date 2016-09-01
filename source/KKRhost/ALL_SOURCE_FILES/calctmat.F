@@ -31,7 +31,8 @@ C *********************************************************************
 #endif
       use mod_mympi, only: myrank, nranks, master
 #ifdef CPP_MPI
-     &                      ,distribute_linear_on_tasks
+     &                      ,distribute_linear_on_tasks, MPIadapt
+      use mod_timing
 #endif
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
      &                     t_lloyd,init_tlloyd 
@@ -103,7 +104,7 @@ C     .. Local Arrays ..
       INTEGER IPIV(LMMAXD) ! LLY
       CHARACTER*9 TXTS(2)
 #ifdef CPP_MPI
-      integer :: ie_start, mytot
+      integer :: ie_start
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
       integer :: ie_end, ie_num
@@ -118,6 +119,11 @@ C     ..
 C     .. Data Statements
       DATA TXTS /'spin   UP','spin DOWN'/
 C     ..................................................................
+
+! save timing information to array, needed to tackle load imbalance adaptively
+      
+
+
 C ==LDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAU
 C 
       IF ( IDOLDAU.EQ.1 ) THEN
@@ -177,6 +183,9 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
        DO ie_num=1,ie_end
        
          IE = ie_start+ie_num
+         
+         !start timing measurement for this pair of ie and i1, needed for MPIadapt
+         call timing_start('time_1a_ieiatom')
 #else
       ! now initialize arrays for tmat, gmat, and gref
       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
@@ -244,10 +253,10 @@ C=======================================================================
 !due to an erro in the interface to drvreltmat > talk to long,
 !philipp 20_08_2015
              ELSE
-! C=======================================================================
-               CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,
-     &                      DRDIREL,R2DRDIREL,ZREL,JWSREL,SOLVER,SOCTL,
-     &                      CTL,LMMAXD,LMAXD,IRMD)
+                stop 'WARNING check DRVRELTMAT interface in code!!!'
+!                CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,
+!      &                      DRDIREL,R2DRDIREL,ZREL,JWSREL,SOLVER,SOCTL,
+!      &                      CTL,LMMAXD,LMAXD,IRMD)
             END IF
 C
 C non/scalar-relativistic OR relativistic
@@ -360,6 +369,13 @@ C ----------------------------------------------------------------------
             WRITE (1337,*)
          END IF
 C ----------------------------------------------------------------------
+
+#ifdef CPP_MPI
+         !stop timing measurement for this pair of ie and i1, needed for MPIadapt
+         if(MPIadapt)
+     & call timing_stop('time_1a_ieiatom',save_out=timings_1a(ie, i1))
+#endif
+
       END DO ! IE = 1,IELAST
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 C

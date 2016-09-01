@@ -17,7 +17,7 @@
       use mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatJij,
      &                     init_t_dtmatJij,init_t_dtmatJij_at
 #ifdef CPP_MPI
-     &                     ,gather_tmat, gather_gref,
+     &                     ,gather_tmat, gather_lly_dtmat,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
      &                      get_ntot_pT_ioff_pT_2D 
 #endif
@@ -71,7 +71,7 @@ C     .. Local Scalars ..
       DOUBLE PRECISION ALAT,PI
       PARAMETER  (PI=4.d0*datan(1.d0))
       INTEGER I1,ICST,IELAST,IEND,INS,IPOT,ISPIN,ITSCF,LMAX,NATYP,NAEZ, ! LLY added NAEZ
-     +        NCLS,NINEQ,NREF,NSPIN,NSRA,LM1,IR,IE
+     +        NCLS,NINEQ,NREF,NSPIN,NSRA!,IE
       INTEGER LLY ! LLY <> 0: apply Lloyds formula
       DOUBLE COMPLEX DELTAE  ! Energy difference for numerical derivative
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
@@ -107,11 +107,11 @@ C
      &                 RMREL(IRMD*KREL+(1-KREL),NATYPD)
       INTEGER JWSREL(NATYPD),ZREL(NATYPD)
       INTEGER ITMPDIR,ILTMP
-      CHARACTER*80 TMPDIR, filename
+      CHARACTER*80 TMPDIR!, filename
       LOGICAL LREFSYS,OPT,TEST
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C LDA+U
-      INTEGER IDOLDAU,ITRUNLDAU,NTLDAU,OLD
+      INTEGER IDOLDAU,ITRUNLDAU,NTLDAU
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
@@ -121,16 +121,14 @@ C LDA+U
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       INTEGER NATOMIMP, ATOMIMP(NATOMIMPD), IQAT(NATYPD)
 #ifdef CPP_MPI
-      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
-     &           myrank_at, myrank_ie, nranks_at,nranks_ie
-      integer :: ntot1, dims(2), mytot, ii
+      integer :: ntot1, mytot, ii
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
      &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
       ! communication of dtmat in case of lloyd
-      integer :: iwork, ierr
-      DOUBLE COMPLEX, allocatable :: work_lly(:,:,:), work_jij(:,:,:,:)
+      integer :: iwork
+      DOUBLE COMPLEX, allocatable :: work_jij(:,:,:,:)
 #endif
-      integer :: i1_start, i1_end, ie_start, ie_num, ie_end
+      integer :: i1_start, i1_end, ierr
 
 C-----------------------------------------------------------------------
 C     ..
@@ -281,7 +279,7 @@ C
        
        !for calculation of Jij-tensor: create array for additional t-matrices and
        !set atom-dependent flags which indicate if t-matrix is needed
-       call init_t_dtmatJij(t_inc,t_mpi_c_grid,t_dtmatJij) 
+       call init_t_dtmatJij(t_inc,t_dtmatJij) 
        IF(OPT('XCPL    '))THEN
         call set_Jijcalc_flags(t_dtmatJij,NATYPD,NATOMIMPD,NATOMIMP,
      +    ATOMIMP,IQAT)
@@ -291,16 +289,16 @@ C
        call read_angles(t_params,NATYP,THETA,PHI)
 
 c interpolate potential
-       CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IPAN,IRCUT,VINS,
-     +                        VISP,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,
-     +                        RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
+       CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,
+     +                        VISP,NPAN_LOG,NPAN_EQ,NPAN_TOT,
+     +                        RNEW,IPAN_INTERVALL,
      +                        VINSNEW)
 
        DO I1=i1_start,i1_end
 
         IPOT=NSPIN*(I1-1)+1
 
-        CALL TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,RMESH(1,I1),ZAT(I1),
+        CALL TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT(I1),
      +                      SOCSCALE(I1),EZ,NSRA,CLEB(1,1),ICLEB,IEND,
      &                      NCHEB,NPAN_TOT(I1),
      +                      RPAN_INTERVALL(0,I1),IPAN_INTERVALL(0,I1),
@@ -353,51 +351,19 @@ C
 
 
 #ifdef CPP_MPI
-      if(.not.t_tgmat%tmat_to_file) then ! .and. t_mpi_c_grid%dims(1)>1) then
-!       if(.not.t_tgmat%tmat_to_file) then
-      
+      if(.not.t_tgmat%tmat_to_file) then 
          do ii=0,t_mpi_c_grid%nranks_ie-1
           ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
           ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
          end do
-         
-          mytot = t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
-!      
+         mytot = t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
          call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
      &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
       end if
       
       if(lly/=0 .and. t_mpi_c_grid%nranks_ie>1) then
-      
-         !take care of cases when nranks_ie>natyp (set tralpha and dtmat to zero so that sum over ranks is correct)
-         if(t_mpi_c_grid%myrank_ie>=t_mpi_c_grid%dims(1)) then
-            t_lloyd%dtmat = (0.0d0, 0.0d0)
-            t_lloyd%tralpha = (0.0d0, 0.0d0)
-         end if
-      
-         !communicate dtmatll
-         IWORK = product(shape(t_lloyd%dtmat)) !LMMAXD*LMMAXD*t_mpi_c_grid%ntot2*nspin*NATYP
-         allocate(work_lly(LMMAXD,LMMAXD,iwork/LMMAXD**2),stat=ierr)
-         if(ierr/=0) stop 
-     & 'Error allocating work in calctmat for communication of dtmatll'
-         CALL MPI_ALLREDUCE(t_lloyd%dtmat,WORK_lly,IWORK,
-     &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
-     &                      t_mpi_c_grid%mympi_comm_ie,IERR)
-         CALL ZCOPY(IWORK,WORK_lly,1,t_lloyd%dtmat,1)
-         deallocate(work_lly, stat=ierr)
-         if(ierr/=0) stop '[main1a] Error deallocating work_lly'
-               
-         !communicate tralpha
-         IWORK = product(shape(t_lloyd%tralpha))
-         allocate(work_lly(iwork,1,1),stat=ierr)
-         if(ierr/=0) stop 
-     & 'Error allocating work in calctmat for communication of tralpha'
-         CALL MPI_ALLREDUCE(t_lloyd%tralpha,WORK_lly,IWORK,
-     &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
-     &                      t_mpi_c_grid%mympi_comm_ie,IERR)
-         CALL ZCOPY(IWORK,WORK_lly,1,t_lloyd%tralpha,1)
-         deallocate(work_lly, stat=ierr)
-         if(ierr/=0) stop '[main1a] Error deallocating work_lly'
+         call gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, 
+     &                         t_mpi_c_grid%mympi_comm_ie)
       endif
                
       !for calculation of Jij-tensor

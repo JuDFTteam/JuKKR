@@ -3,7 +3,7 @@ C*==decimaread.f    processed by SPAG 6.05Rc at 19:11 on  5 Jun 2004
      &                      LEFTTINVLL,RIGHTTINVLL,VACFLAG,IENERGY,
      &                      NLBASIS,NRBASIS,NAEZ,KAOEZ,KMROT,INS,NSPIN,
      &                      LMMAX,IELAST,FILELEFT,FILERIGHT,
-     &                      KREL,NATYPD,LMMAXD,NEMBD1,KORBIT)
+     &                      KREL,NATYPD,LMMAXD,NEMBD1)!,KORBIT)
 C **********************************************************************
 C *                                                                    *
 C * This subroutine reads in the t-matrices of the left                *
@@ -27,7 +27,7 @@ C *                                                                    *
 C **********************************************************************
       IMPLICIT NONE
 C     ..
-      INTEGER KREL,NATYPD,NEMBD1,LMMAXD,KORBIT
+      INTEGER KREL,NATYPD,NEMBD1,LMMAXD!,KORBIT
 C     ..
 C     .. Scalar arguments
       INTEGER NPTP1,NPTP2,NPTP3,NPOL,ISPIN,IENERGY

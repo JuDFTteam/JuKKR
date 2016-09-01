@@ -99,7 +99,7 @@
       DOUBLE COMPLEX CARG,CITPI,CFCTOR
       DOUBLE PRECISION ZKTR
       INTEGER I,I1,ILM,ISYM,IU,J,JLM,IL1,KPT,LM,LM1,LM2,
-     +        NS,COUNTER1,COUNTER2,IL2,IL1T,IL2T,IS1,IS2,
+     +        NS,IL2,
      &        JL1,JL2
 !     ..
 !     .. Local arrays ..
@@ -120,11 +120,8 @@
       DOUBLE PRECISION BZKPK(6),KP(3)
       INTEGER NDIM
 #ifdef CPP_MPI
-      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
-     &           myrank_at, myrank_ie, nranks_at,nranks_ie
-      integer :: ntot1, mytot, ii
-      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
-     &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
+      integer :: ntot1
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
       integer :: i1_start, i1_end
 #endif
 
@@ -137,8 +134,10 @@
 !     .. Intrinsic functions ..
       INTRINSIC ATAN,EXP
 !     ..
+#ifdef CPP_MPI
       DOUBLE COMPLEX WORK(LMMAXD,LMMAXD,NSYMAXD)
       INTEGER IERR,IWORK
+#endif
 !     ..
 
 !      NDIM=LMGF0D*NAEZ

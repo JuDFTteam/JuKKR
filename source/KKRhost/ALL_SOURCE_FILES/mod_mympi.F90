@@ -4,15 +4,16 @@ module mod_mympi
 implicit none
 
   private
-  public :: myrank, nranks, master, mympi_init, MPIatom
+  public :: myrank, nranks, master, mympi_init, MPIatom, MPIadapt
 #ifdef CPP_MPI
-  public :: distribute_linear_on_tasks, find_dims_2d, create_newcomms_group_ie, mympi_main1c_comm, mympi_main1c_comm_newsosol, mympi_main1c_comm_newsosol2
+  public :: distribute_linear_on_tasks, find_dims_2d, create_newcomms_group_ie, mympi_main1c_comm, mympi_main1c_comm_newsosol, mympi_main1c_comm_newsosol2, check_communication_pattern
 #endif
 
   integer, save :: myrank = -1
   integer, save :: nranks = -1
   integer, save :: master = -1
   logical, save :: MPIatom = .false.
+  integer, save :: MPIadapt = -1
 
 contains
 
@@ -20,9 +21,9 @@ contains
 
 #ifdef CPP_MPI
     use mpi
-#endif
 
     integer :: ierr
+#endif
 
     master = 0
 
@@ -165,10 +166,12 @@ contains
   
     rest = nranks-int(nranks/(ne*nat))*ne*nat
     if(myrank==0) write(1337,*) 'rest:',rest,ne,nat,nranks
+    if(myrank==0) write(1337,*) 'kmesh:',kmesh
    
     !find fraction of k:l:m
     do ik=1,nkmesh-1
-      k(ik) = (real(kmesh(1))/real(kmesh(nkmesh-ik+1))-1.)
+      k(ik) = int(real(kmesh(1))/real(kmesh(nkmesh-ik+1))-1.)
+      if(k(ik)==0) k(ik) = 1
     end do
     
     do ik=1,nkmesh-2
@@ -378,109 +381,239 @@ contains
     double complex, intent(inout)   :: DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS), DENLM(LMMAXD,IEMXD,NPOTD,NQDOS), DENMATC(MMAXD,MMAXD,NPOTD), MVEVI(NATYPD,3,NMVECMAX),   &
                                      & MVEVIL(0:LMAXD,NATYPD,3,NMVECMAX), MVEVIEF(NATYPD,3,NMVECMAX)
     
-    integer :: idim, ierr
+    integer :: idim, ierr!, myrank_comm
+    integer, parameter :: master = 0
     double precision, allocatable :: work1(:), work2(:,:), work3(:,:,:), work4(:,:,:,:)
-    double complex,   allocatable :: work1c(:), work2c(:,:), work3c(:,:,:), work4c(:,:,:,:)
+    double complex,   allocatable :: work3c(:,:,:), work4c(:,:,:,:)
     
-        allocate(work4(IRMD,LMPOTD,NATYPD,2))
-        work4 = 0.d0
-        IDIM = IRMD*LMPOTD*NATYPD*2
-        CALL MPI_ALLREDUCE(RHO2NS,work4,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
-        CALL DCOPY(IDIM,WORK4,1,RHO2NS,1)
-        deallocate(work4)
 
-        allocate(work4(IRMD,LMPOTD,NATYPD,2))
-        work4 = 0.d0
-        IDIM = IRMD*LMPOTD*NATYPD*2
-        CALL MPI_ALLREDUCE(R2NEF,work4,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
-        CALL DCOPY(IDIM,WORK4,1,R2NEF,1)
-        deallocate(work4)
+!     ! find myrank in this communicator
+!     call MPI_Comm_rank ( mympi_comm, myrank_comm, ierr )
+!     
+! ! all with allreduce instead of reduce:
+!     allocate(work4(IRMD,LMPOTD,NATYPD,2) , stat=ierr)
+!     if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!     work4 = 0.d0
+!     IDIM = IRMD*LMPOTD*NATYPD*2
+!     CALL MPI_REDUCE(RHO2NS, work4, IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm, IERR)
+!     CALL DCOPY(IDIM,WORK4,1,RHO2NS,1)
+!     deallocate(work4)
+!     
+! 
+!     allocate(work4(IRMD,LMPOTD,NATYPD,2) , stat=ierr)
+!     if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!     work4 = 0.d0
+!     IDIM = IRMD*LMPOTD*NATYPD*2
+!     CALL MPI_REDUCE(R2NEF,work4,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM, master,mympi_comm,IERR)
+!     CALL DCOPY(IDIM,WORK4,1,R2NEF,1)
+!     deallocate(work4)
+! 
+!     !ESPV needs integration over atoms and energies -> MPI_COMM_WORLD
+!     allocate(work2(0:LMAXD+1,NPOTD) , stat=ierr)
+!     if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!     work2 = 0.d0
+!     IDIM = (LMAXD+2)*NPOTD
+!     CALL MPI_REDUCE(ESPV,work2,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM, master,mympi_comm,IERR)
+!     CALL DCOPY(IDIM,WORK2,1,ESPV,1)
+!     deallocate(work2)
+! 
+!     allocate(work4c(0:LMAXD+1,IEMXD,NPOTD,NQDOS) , stat=ierr)
+!     if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!     work4c = (0.d0, 0.d0)
+!     IDIM = IEMXD*(LMAXD+2)*NPOTD*NQDOS
+!     CALL MPI_REDUCE(DEN,work4c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM, master,mympi_comm,IERR)
+!     CALL ZCOPY(IDIM,WORK4c,1,DEN,1)
+!     deallocate(work4c)
+! 
+!     allocate(work4c(IEMXD,LMMAXD,NPOTD,NQDOS) , stat=ierr)
+!     if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!     work4c = (0.d0, 0.d0)
+!     IDIM = IEMXD*(LMMAXD)*NPOTD*NQDOS
+!     CALL MPI_REDUCE(DENLM,work4c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM, master,mympi_comm,IERR)
+!     CALL ZCOPY(IDIM,WORK4c,1,DENLM,1)
+!     deallocate(work4c)
+! 
+!     IF (IDOLDAU.EQ.1) THEN 
+!        allocate(work3c(MMAXD,MMAXD,NPOTD) , stat=ierr)
+!        if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!        work3c = (0.d0, 0.d0)
+!        IDIM = MMAXD*MMAXD*NPOTD
+!        CALL MPI_REDUCE(DENMATC,work3c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM, master,mympi_comm,IERR)
+!        CALL ZCOPY(IDIM,WORK3c,1,DENMATC,1)
+!        deallocate(work3c)
+!     END IF
+! 
+!     allocate(work1(1) , stat=ierr)
+!     if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!     work1 = 0.d0
+!     IDIM = 1
+!     CALL MPI_REDUCE(DENEF,work1,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM, master,mympi_comm,IERR)
+!     CALL DCOPY(IDIM,WORK1,1,DENEF,1)
+!     deallocate(work1)
+! 
+!     allocate(work1(NATYP) , stat=ierr)
+!     if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!     work1 = 0.d0
+!     IDIM = NATYP
+!     CALL MPI_REDUCE(DENEFAT,work1,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM, master,mympi_comm,IERR)
+!     CALL DCOPY(IDIM,WORK1,1,DENEFAT,1)
+!     deallocate(work1)
+! 
+!     IF (KREL.EQ.1) THEN 
+!       allocate(work2(IRMD,NATYPD) , stat=ierr)
+!       if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!       work2 = 0.d0
+!       IDIM = IRMD*NATYPD
+!       CALL MPI_REDUCE(RHOORB,work2,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM, master,mympi_comm,IERR)
+!       CALL DCOPY(IDIM,WORK2,1,RHOORB,1)
+!       deallocate(work2)
+! 
+!       allocate(work3(0:LMAXD+2,NATYPD,3) , stat=ierr)
+!       if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!       work3 = 0.d0
+!       IDIM = (LMAXD+3)*NATYPD*3
+!       CALL MPI_REDUCE(MUORB,work3,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM, master,mympi_comm,IERR)
+!       CALL DCOPY(IDIM,WORK3,1,MUORB,1)
+!       deallocate(work3)
+! 
+!       IF (LMOMVEC) THEN
+!          allocate(work3c(NATYPD,3,NMVECMAX) , stat=ierr)
+!          if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!          work3c = (0.d0, 0.d0)
+!          IDIM = NATYPD*3*NMVECMAX
+!          CALL MPI_REDUCE(MVEVI,work3c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM, master,mympi_comm,IERR)
+!          CALL ZCOPY(IDIM,WORK3c,1,MVEVI,1)
+!          deallocate(work3c)
+! 
+!          allocate(work4c(LMAXD+1,NATYPD,3,NMVECMAX) , stat=ierr)
+!          if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!          work4c = (0.d0, 0.d0)
+!          IDIM = (LMAXD+1)*NATYPD*3*NMVECMAX
+!          CALL MPI_REDUCE(MVEVIL,work4c,IDIM, MPI_DOUBLE_COMPLEX,MPI_SUM, master,mympi_comm,IERR)
+!          CALL ZCOPY(IDIM,WORK4c,1,MVEVIL,1)
+!          deallocate(work4c)
+! 
+!          allocate( work3c(NATYPD,3,NMVECMAX) , stat=ierr)
+!          if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+!          work3c = (0.d0, 0.d0)
+!          IDIM = NATYPD*3*NMVECMAX
+!          CALL MPI_REDUCE(MVEVIEF, work3c, IDIM, MPI_DOUBLE_COMPLEX, MPI_SUM, master, mympi_comm, IERR)
+!          CALL ZCOPY(IDIM,WORK3c,1,MVEVIEF,1)
+!          deallocate(work3c)
+!       END IF   ! LMOMVEC
+!     END IF     ! KREL.EQ.1
+    
+    allocate(work4(IRMD,LMPOTD,NATYPD,2) , stat=ierr)
+    if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+    work4 = 0.d0
+    IDIM = IRMD*LMPOTD*NATYPD*2
+    CALL MPI_ALLREDUCE(RHO2NS,work4,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+    CALL DCOPY(IDIM,WORK4,1,RHO2NS,1)
+    deallocate(work4)
+    
 
-        !ESPV needs integration over atoms and energies -> MPI_COMM_WORLD
-        allocate(work2(0:LMAXD+1,NPOTD))
-        work2 = 0.d0
-        IDIM = (LMAXD+2)*NPOTD
-        CALL MPI_ALLREDUCE(ESPV,work2,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
-        CALL DCOPY(IDIM,WORK2,1,ESPV,1)
-        deallocate(work2)
+    allocate(work4(IRMD,LMPOTD,NATYPD,2) , stat=ierr)
+    if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+    work4 = 0.d0
+    IDIM = IRMD*LMPOTD*NATYPD*2
+    CALL MPI_ALLREDUCE(R2NEF,work4,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+    CALL DCOPY(IDIM,WORK4,1,R2NEF,1)
+    deallocate(work4)
 
-        allocate(work4c(0:LMAXD+1,IEMXD,NPOTD,NQDOS))
-        work4c = (0.d0, 0.d0)
-        IDIM = IEMXD*(LMAXD+2)*NPOTD*NQDOS
-        CALL MPI_ALLREDUCE(DEN,work4c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
-        CALL zCOPY(IDIM,WORK4c,1,DEN,1)
-        deallocate(work4c)
+    !ESPV needs integration over atoms and energies -> MPI_COMM_WORLD
+    allocate(work2(0:LMAXD+1,NPOTD) , stat=ierr)
+    if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+    work2 = 0.d0
+    IDIM = (LMAXD+2)*NPOTD
+    CALL MPI_ALLREDUCE(ESPV,work2,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+    CALL DCOPY(IDIM,WORK2,1,ESPV,1)
+    deallocate(work2)
 
-        allocate(work4c(IEMXD,LMMAXD,NPOTD,NQDOS))
-        work4c = (0.d0, 0.d0)
-        IDIM = IEMXD*(LMMAXD)*NPOTD*NQDOS
-        CALL MPI_ALLREDUCE(DENLM,work4c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
-        CALL zCOPY(IDIM,WORK4c,1,DENLM,1)
-        deallocate(work4c)
+    allocate(work4c(0:LMAXD+1,IEMXD,NPOTD,NQDOS) , stat=ierr)
+    if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+    work4c = (0.d0, 0.d0)
+    IDIM = IEMXD*(LMAXD+2)*NPOTD*NQDOS
+    CALL MPI_ALLREDUCE(DEN,work4c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+    CALL ZCOPY(IDIM,WORK4c,1,DEN,1)
+    deallocate(work4c)
 
-        IF (IDOLDAU.EQ.1) THEN 
-           allocate(work3c(MMAXD,MMAXD,NPOTD))
-           work3c = (0.d0, 0.d0)
-           IDIM = MMAXD*MMAXD*NPOTD
-           CALL MPI_ALLREDUCE(DENMATC,work3c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
-           CALL zCOPY(IDIM,WORK3c,1,DENMATC,1)
-           deallocate(work3c)
-        END IF
-        
+    allocate(work4c(IEMXD,LMMAXD,NPOTD,NQDOS) , stat=ierr)
+    if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+    work4c = (0.d0, 0.d0)
+    IDIM = IEMXD*(LMMAXD)*NPOTD*NQDOS
+    CALL MPI_ALLREDUCE(DENLM,work4c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+    CALL ZCOPY(IDIM,WORK4c,1,DENLM,1)
+    deallocate(work4c)
 
-        allocate(work1(1))
-        work1 = 0.d0
-        IDIM = 1
-        CALL MPI_ALLREDUCE(DENEF,work1,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
-        CALL DCOPY(IDIM,WORK1,1,DENEF,1)
-        deallocate(work1)
+    IF (IDOLDAU.EQ.1) THEN 
+       allocate(work3c(MMAXD,MMAXD,NPOTD) , stat=ierr)
+       if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+       work3c = (0.d0, 0.d0)
+       IDIM = MMAXD*MMAXD*NPOTD
+       CALL MPI_ALLREDUCE(DENMATC,work3c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+       CALL ZCOPY(IDIM,WORK3c,1,DENMATC,1)
+       deallocate(work3c)
+    END IF
 
-        allocate(work1(NATYP))
-        work1 = 0.d0
-        IDIM = NATYP
-        CALL MPI_ALLREDUCE(DENEFAT,work1,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
-        CALL DCOPY(IDIM,WORK1,1,DENEFAT,1)
-        deallocate(work1)
+    allocate(work1(1) , stat=ierr)
+    if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+    work1 = 0.d0
+    IDIM = 1
+    CALL MPI_ALLREDUCE(DENEF,work1,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+    CALL DCOPY(IDIM,WORK1,1,DENEF,1)
+    deallocate(work1)
 
-        IF (KREL.EQ.1) THEN 
-          allocate(work2(IRMD,NATYPD))
-          work2 = 0.d0
-          IDIM = IRMD*NATYPD
-          CALL MPI_ALLREDUCE(RHOORB,work2,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
-          CALL DCOPY(IDIM,WORK2,1,RHOORB,1)
-          deallocate(work2)
+    allocate(work1(NATYP) , stat=ierr)
+    if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+    work1 = 0.d0
+    IDIM = NATYP
+    CALL MPI_ALLREDUCE(DENEFAT,work1,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+    CALL DCOPY(IDIM,WORK1,1,DENEFAT,1)
+    deallocate(work1)
 
-          allocate(work3(0:LMAXD+2,NATYPD,3))
-          work3 = 0.d0
-          IDIM = (LMAXD+3)*NATYPD*3
-          CALL MPI_ALLREDUCE(MUORB,work3,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
-          CALL DCOPY(IDIM,WORK3,1,MUORB,1)
-          deallocate(work3)
+    IF (KREL.EQ.1) THEN 
+      allocate(work2(IRMD,NATYPD) , stat=ierr)
+      if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+      work2 = 0.d0
+      IDIM = IRMD*NATYPD
+      CALL MPI_ALLREDUCE(RHOORB,work2,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+      CALL DCOPY(IDIM,WORK2,1,RHOORB,1)
+      deallocate(work2)
 
-          IF (LMOMVEC) THEN
-             allocate(work3c(NATYPD,3,NMVECMAX))
-             work3c = (0.d0, 0.d0)
-             IDIM = NATYPD*3*NMVECMAX
-             CALL MPI_ALLREDUCE(MVEVI,work3c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
-             CALL zCOPY(IDIM,WORK3c,1,MVEVI,1)
-             deallocate(work3c)
+      allocate(work3(0:LMAXD+2,NATYPD,3) , stat=ierr)
+      if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+      work3 = 0.d0
+      IDIM = (LMAXD+3)*NATYPD*3
+      CALL MPI_ALLREDUCE(MUORB,work3,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+      CALL DCOPY(IDIM,WORK3,1,MUORB,1)
+      deallocate(work3)
 
-             allocate(work4c(LMAXD+1,NATYPD,3,NMVECMAX))
-             work4c = (0.d0, 0.d0)
-             IDIM = (LMAXD+1)*NATYPD*3*NMVECMAX
-             CALL MPI_ALLREDUCE(MVEVIL,work4c,IDIM, MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
-             CALL zCOPY(IDIM,WORK4c,1,MVEVIL,1)
-             deallocate(work4c)
+      IF (LMOMVEC) THEN
+         allocate(work3c(NATYPD,3,NMVECMAX) , stat=ierr)
+         if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+         work3c = (0.d0, 0.d0)
+         IDIM = NATYPD*3*NMVECMAX
+         CALL MPI_ALLREDUCE(MVEVI,work3c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+         CALL ZCOPY(IDIM,WORK3c,1,MVEVI,1)
+         deallocate(work3c)
 
-             allocate(work3c(NATYPD,3,NMVECMAX))
-             work3c = (0.d0, 0.d0)
-             IDIM = NATYPD*3*NMVECMAX
-             CALL MPI_ALLREDUCE(MVEVIEF,work3c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
-             CALL zCOPY(IDIM,WORK3c,1,MVEVIEF,1)
-             deallocate(work3c)
-             
-          END IF   ! LMOMVEC
-        END IF     ! KREL.EQ.1
+         allocate(work4c(LMAXD+1,NATYPD,3,NMVECMAX) , stat=ierr)
+         if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+         work4c = (0.d0, 0.d0)
+         IDIM = (LMAXD+1)*NATYPD*3*NMVECMAX
+         CALL MPI_ALLREDUCE(MVEVIL,work4c,IDIM, MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+         CALL ZCOPY(IDIM,WORK4c,1,MVEVIL,1)
+         deallocate(work4c)
+
+         allocate( work3c(NATYPD,3,NMVECMAX) , stat=ierr)
+         if(ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
+         work3c = (0.d0, 0.d0)
+         IDIM = NATYPD*3*NMVECMAX
+         CALL MPI_ALLREDUCE(MVEVIEF,work3c,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+         CALL ZCOPY(IDIM,WORK3c,1,MVEVIEF,1)
+         deallocate(work3c)
+      END IF   ! LMOMVEC
+    END IF     ! KREL.EQ.1
         
   end subroutine mympi_main1c_comm
 #endif
@@ -503,53 +636,138 @@ contains
      integer :: ierr, idim
      double precision, allocatable :: work(:,:,:,:)
      double complex, allocatable :: workc(:,:,:,:)
+     
 
+
+!     integer :: myMPItype1, Nelements
+!     integer, allocatable :: blocklen1(:), etype1(:)
+!     integer(kind=MPI_ADDRESS_KIND), allocatable :: disp1(:)
+!     
+!     Nelements = 12
+!     
+!     allocate(blocklen1(Nelements), etype1(Nelements), disp1(Nelements), stat=ierr)
+!     if(ierr/=0) stop '[] Error allocating arrays blocklen etc.'
+! 
+!     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!     
+!     !>>>   double complex arrays   >>>
+!     blocklen1(1) = IRMDNEW*LMPOTD*4
+!     call MPI_Get_address(r2nefc,          disp1(1), ierr)
+
+!     blocklen1(2) = IRMDNEW*LMPOTD*4
+!     call MPI_Get_address(RHO2NSC,         disp1(2), ierr)
+
+!     blocklen1(3) = (LMAXD1+1)*IEMXD*2*NQDOS
+!     call MPI_Get_address(DEN,             disp1(3), ierr)
+
+!     blocklen1(4) = LMMAXD*IEMXD*2*NQDOS
+!     call MPI_Get_address(DENLM,           disp1(4), ierr)
+
+!     blocklen1(5) = 4
+!     call MPI_Get_address(RHO2INT,         disp1(5), ierr)
+
+!     blocklen1(6) = LMMAXSO*LMMAXSO*IELAST*NQDOS
+!     call MPI_Get_address(GFLLE,           disp1(6), ierr)
+!     !<<<   double complex arrays   <<<
+!     
+!     !>>>   double precision arrays   >>>
+!     blocklen1(7) = (LMAXD1+1)*2
+!     call MPI_Get_address(ESPV,            disp1(7), ierr)
+
+!     blocklen1(8) = (LMAXD1+2)*3
+!     call MPI_Get_address(MUORB,           disp1(8), ierr)
+
+!     blocklen1(9) = 3
+!     call MPI_Get_address(DENORBMOM,       disp1(9), ierr)
+
+!     blocklen1(10) = 2*4
+!     call MPI_Get_address(DENORBMOMSP,     disp1(10), ierr)
+
+!     blocklen1(11) = 3
+!     call MPI_Get_address(DENORBMOMNS,     disp1(11), ierr)
+
+!     blocklen1(12) = (LMAXD+1)*3
+!     call MPI_Get_address(DENORBMOMLM,     disp1(12), ierr)
+!     !<<<   double precision arrays   <<<
+
+!      
+!     base  = disp1(1)
+!     disp1 = disp1 - base
+! 
+!     etype1(1:6) = MPI_DOUBLE_COMPLEX
+!     etype1(7:12) = MPI_DOUBLE_PRECISION
+! 
+!     call MPI_Type_create_struct(Nelements, blocklen1, disp1, etype1, myMPItype1, ierr)
+!     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_t_inc'
+! 
+!     call MPI_Type_commit(myMPItype1, ierr)
+!     if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_t_inc'
+! 
+! !     call MPI_Bcast(Nelements, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
+!     call MPI_Reduce(myMPItype1, work, Nelements, myMPItype1, master, MPI_COMM_WORLD, ierr)
+!     if(ierr/=MPI_SUCCESS) stop 'error brodcasting t_inc'
+! 
+!     call MPI_Type_free(myMPItype1, ierr)
+!     
+!     
+!     deallocate(blocklen1, etype1, disp1, stat=ierr)
+!     if(ierr/=0) stop '[] Error deallocating arrays blocklen etc.'
+    
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! all with reduce instead of allreduce:
       !double complex arrays
      IDIM = IRMDNEW*LMPOTD*4
      allocate(workc(IRMDNEW,LMPOTD,4,1), stat=ierr)
-     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, r2nefc'
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, r2nefc'
      workc = (0.d0, 0.d0)
-     CALL MPI_ALLREDUCE(r2nefc,workc(:,:,:,1),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(r2nefc,workc(:,:,:,1),IDIM,MPI_DOUBLE_COMPLEX, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for r2nefc'
      CALL ZCOPY(IDIM,WORKC,1,R2NEFC,1)
      deallocate(workc)
 
      IDIM = IRMDNEW*LMPOTD*4
      allocate(workc(IRMDNEW,LMPOTD,4,1), stat=ierr)
-     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, rho2nsc'
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, rho2nsc'
      workc = (0.d0, 0.d0)
-     CALL MPI_ALLREDUCE(RHO2NSC,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(RHO2NSC,workc,IDIM,MPI_DOUBLE_COMPLEX, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for rho2nsc'
      CALL ZCOPY(IDIM,WORKC,1,RHO2NSC,1)
      deallocate(workc)
 
      IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
      allocate(workc(0:LMAXD1,IEMXD,2,NQDOS), stat=ierr)
-     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, den'
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, den'
      workc = (0.d0, 0.d0)
-     CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for den'
      CALL ZCOPY(IDIM,WORKC,1,DEN,1)
      deallocate(workc)
 
      IDIM = LMMAXD*IEMXD*2*NQDOS
      allocate(workc(LMMAXD,IEMXD,2,NQDOS), stat=ierr)
-     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, denlm'
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, denlm'
      workc = (0.d0, 0.d0)
-     CALL MPI_ALLREDUCE(DENLM,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(DENLM,workc,IDIM,MPI_DOUBLE_COMPLEX, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denlm'
      CALL ZCOPY(IDIM,WORKC,1,DENLM,1)
      deallocate(workc)
 
      IDIM = 4
      allocate(workc(4,1,1,1), stat=ierr)
-     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, rho2int'
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, rho2int'
      workc = (0.d0, 0.d0)
-     CALL MPI_ALLREDUCE(RHO2INT,workc(:,1,1,1),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(RHO2INT,workc(:,1,1,1),IDIM,MPI_DOUBLE_COMPLEX, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for rho2int'
      CALL ZCOPY(IDIM,WORKC,1,RHO2INT,1)
      deallocate(workc)
 
      IDIM = LMMAXSO*LMMAXSO*IELAST*NQDOS
      allocate(workc(LMMAXSO,LMMAXSO,IELAST,NQDOS), stat=ierr)
-     if(ierr/=0) stop 'mympi_main1c_comm_newsosol] Error allocating workc, gflle'
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, gflle'
      workc = (0.d0, 0.d0)
-     CALL MPI_ALLREDUCE(GFLLE,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(GFLLE,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for gflle'
      CALL ZCOPY(IDIM,WORKC,1,GFLLE,1)
      deallocate(workc)
      
@@ -557,44 +775,155 @@ contains
      IDIM = (LMAXD1+1)*2
      allocate(work(0:LMAXD1,2,1,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(ESPV,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(ESPV,work,IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for espv'
      CALL DCOPY(IDIM,WORK,1,ESPV,1)
      deallocate(work)
 
      IDIM = (LMAXD1+2)*3
      allocate(work(0:LMAXD1+1,3,1,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(MUORB,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(MUORB,work,IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for muorb'
      CALL DCOPY(IDIM,WORK,1,MUORB,1)
      deallocate(work)
 
      IDIM = 3
      allocate(work(3,1,1,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(DENORBMOM,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(DENORBMOM,work,IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denobrmom'
      CALL DCOPY(IDIM,WORK,1,DENORBMOM,1)
      deallocate(work)
 
      IDIM = 2*4
      allocate(work(2,4,1,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(DENORBMOMSP,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(DENORBMOMSP,work,IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomsp'
      CALL DCOPY(IDIM,WORK,1,DENORBMOMSP,1)
      deallocate(work)
 
      IDIM = 3
      allocate(work(3,1,1,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(DENORBMOMNS,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(DENORBMOMNS,work,IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomns'
      CALL DCOPY(IDIM,WORK,1,DENORBMOMNS,1)
      deallocate(work)
 
      IDIM = (LMAXD+1)*3
      allocate(work(0:LMAXD1,3,1,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(DENORBMOMLM,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(DENORBMOMLM,work,IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomlm'
      CALL DCOPY(IDIM,WORK,1,DENORBMOMLM,1)
      deallocate(work)
+     
+! ! all with allreduce instead of reduce:
+!       !double complex arrays
+!      IDIM = IRMDNEW*LMPOTD*4
+!      allocate(workc(IRMDNEW,LMPOTD,4,1), stat=ierr)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, r2nefc'
+!      workc = (0.d0, 0.d0)
+!      CALL MPI_ALLREDUCE(r2nefc,workc(:,:,:,1),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for r2nefc'
+!      CALL ZCOPY(IDIM,WORKC,1,R2NEFC,1)
+!      deallocate(workc)
+! 
+!      IDIM = IRMDNEW*LMPOTD*4
+!      allocate(workc(IRMDNEW,LMPOTD,4,1), stat=ierr)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, rho2nsc'
+!      workc = (0.d0, 0.d0)
+!      CALL MPI_ALLREDUCE(RHO2NSC,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for rho2nsc'
+!      CALL ZCOPY(IDIM,WORKC,1,RHO2NSC,1)
+!      deallocate(workc)
+! 
+!      IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
+!      allocate(workc(0:LMAXD1,IEMXD,2,NQDOS), stat=ierr)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, den'
+!      workc = (0.d0, 0.d0)
+!      CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for den'
+!      CALL ZCOPY(IDIM,WORKC,1,DEN,1)
+!      deallocate(workc)
+! 
+!      IDIM = LMMAXD*IEMXD*2*NQDOS
+!      allocate(workc(LMMAXD,IEMXD,2,NQDOS), stat=ierr)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, denlm'
+!      workc = (0.d0, 0.d0)
+!      CALL MPI_ALLREDUCE(DENLM,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denlm'
+!      CALL ZCOPY(IDIM,WORKC,1,DENLM,1)
+!      deallocate(workc)
+! 
+!      IDIM = 4
+!      allocate(workc(4,1,1,1), stat=ierr)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, rho2int'
+!      workc = (0.d0, 0.d0)
+!      CALL MPI_ALLREDUCE(RHO2INT,workc(:,1,1,1),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for rho2int'
+!      CALL ZCOPY(IDIM,WORKC,1,RHO2INT,1)
+!      deallocate(workc)
+! 
+!      IDIM = LMMAXSO*LMMAXSO*IELAST*NQDOS
+!      allocate(workc(LMMAXSO,LMMAXSO,IELAST,NQDOS), stat=ierr)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, gflle'
+!      workc = (0.d0, 0.d0)
+!      CALL MPI_ALLREDUCE(GFLLE,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for gflle'
+!      CALL ZCOPY(IDIM,WORKC,1,GFLLE,1)
+!      deallocate(workc)
+!      
+!      !double precision arrays
+!      IDIM = (LMAXD1+1)*2
+!      allocate(work(0:LMAXD1,2,1,1))
+!      work = 0.d0
+!      CALL MPI_ALLREDUCE(ESPV,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for espv'
+!      CALL DCOPY(IDIM,WORK,1,ESPV,1)
+!      deallocate(work)
+! 
+!      IDIM = (LMAXD1+2)*3
+!      allocate(work(0:LMAXD1+1,3,1,1))
+!      work = 0.d0
+!      CALL MPI_ALLREDUCE(MUORB,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for muorb'
+!      CALL DCOPY(IDIM,WORK,1,MUORB,1)
+!      deallocate(work)
+! 
+!      IDIM = 3
+!      allocate(work(3,1,1,1))
+!      work = 0.d0
+!      CALL MPI_ALLREDUCE(DENORBMOM,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denobrmom'
+!      CALL DCOPY(IDIM,WORK,1,DENORBMOM,1)
+!      deallocate(work)
+! 
+!      IDIM = 2*4
+!      allocate(work(2,4,1,1))
+!      work = 0.d0
+!      CALL MPI_ALLREDUCE(DENORBMOMSP,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomsp'
+!      CALL DCOPY(IDIM,WORK,1,DENORBMOMSP,1)
+!      deallocate(work)
+! 
+!      IDIM = 3
+!      allocate(work(3,1,1,1))
+!      work = 0.d0
+!      CALL MPI_ALLREDUCE(DENORBMOMNS,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomns'
+!      CALL DCOPY(IDIM,WORK,1,DENORBMOMNS,1)
+!      deallocate(work)
+! 
+!      IDIM = (LMAXD+1)*3
+!      allocate(work(0:LMAXD1,3,1,1))
+!      work = 0.d0
+!      CALL MPI_ALLREDUCE(DENORBMOMLM,work,IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+!      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomlm'
+!      CALL DCOPY(IDIM,WORK,1,DENORBMOMLM,1)
+!      deallocate(work)
         
   end subroutine mympi_main1c_comm_newsosol
 #endif
@@ -622,21 +951,27 @@ contains
      IDIM = (1+LMAXD1)*IEMXD*NQDOS*NPOTD
      allocate(workc(0:LMAXD1,IEMXD,NQDOS,NPOTD))
      workc = (0.d0, 0.d0)
-     CALL MPI_ALLREDUCE(den,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(den,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX, MPI_SUM, master, mympi_comm ,IERR)
+!      CALL MPI_ALLREDUCE(den,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for den'
      CALL ZCOPY(IDIM,WORKC,1,DEN,1)
      deallocate(workc)
      
      IDIM = LMMAXD*IEMXD*NQDOS*NPOTD
      allocate(workc(LMMAXD,IEMXD,NQDOS,NPOTD))
      workc = (0.d0, 0.d0)
-     CALL MPI_ALLREDUCE(denlm,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(denlm,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX, MPI_SUM, master, mympi_comm ,IERR)
+!      CALL MPI_ALLREDUCE(denlm,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for denlm'
      CALL ZCOPY(IDIM,WORKC,1,DENLM,1)
      deallocate(workc)
 
      IDIM = MMAXD*MMAXD*NPOTD
      allocate(workc1(MMAXD,MMAXD,2,2,NATYPD))
      workc1 = (0.d0, 0.d0)
-     CALL MPI_ALLREDUCE(denmatn,workc1(:,:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(denmatn,workc1(:,:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX, MPI_SUM, master, mympi_comm ,IERR)
+!      CALL MPI_ALLREDUCE(denmatn,workc1(:,:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for denmatn'
      CALL ZCOPY(IDIM,WORKC1,1,DENMATN,1)
      deallocate(workc1)
 
@@ -644,53 +979,160 @@ contains
      IDIM = (LMAXD1+2)*3*NATYPD
      allocate(work(0:LMAXD1+1,3,NATYPD,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(muorb,work(:,:,:,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(muorb,work(:,:,:,1),IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+!      CALL MPI_ALLREDUCE(muorb,work(:,:,:,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for muorb'
      CALL DCOPY(IDIM,WORK,1,MUORB,1)
      deallocate(work)
 
      IDIM = (LMAXD1+1)*NPOTD
      allocate(work(0:LMAXD1,NPOTD,1,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(ESPV,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(ESPV,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+!      CALL MPI_ALLREDUCE(ESPV,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for espv'
      CALL DCOPY(IDIM,WORK,1,ESPV,1)
      deallocate(work)
 
      IDIM = IRMD*LMPOTD*NATYPD*2
      allocate(work(IRMD,LMPOTD,NATYPD,2))
      work = 0.d0
-     CALL MPI_ALLREDUCE(r2nef,work(:,:,:,:),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(r2nef,work(:,:,:,:),IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+!      CALL MPI_ALLREDUCE(r2nef,work(:,:,:,:),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for r2nef'
      CALL DCOPY(IDIM,WORK,1,R2NEF,1)
      deallocate(work)
 
      IDIM = IRMD*LMPOTD*NATYPD*2
      allocate(work(IRMD,LMPOTD,NATYPD,2))
      work = 0.d0
-     CALL MPI_ALLREDUCE(RHO2NS,work(:,:,:,:),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(RHO2NS,work(:,:,:,:),IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+!      CALL MPI_ALLREDUCE(RHO2NS,work(:,:,:,:),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for rho2ns'
      CALL DCOPY(IDIM,WORK,1,RHO2NS,1)
      deallocate(work)
 
      IDIM = NATYPD
      allocate(work(NATYPD,1,1,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(denefat,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(denefat,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+!      CALL MPI_ALLREDUCE(denefat,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for denefat'
      CALL DCOPY(IDIM,WORK,1,DENEFAT,1)
      deallocate(work)
 
      IDIM = 1
      allocate(work(1,1,1,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(denef,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(denef,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+!      CALL MPI_ALLREDUCE(denef,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for denef'
      CALL DCOPY(IDIM,WORK,1,DENEF,1)
      deallocate(work)
 
      IDIM = 2*NATYPD
      allocate(work(2,NATYPD,1,1))
      work = 0.d0
-     CALL MPI_ALLREDUCE(angles_new,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     CALL MPI_REDUCE(angles_new,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION, MPI_SUM, master, mympi_comm ,IERR)
+!      CALL MPI_ALLREDUCE(angles_new,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
+     if(ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for angles_new'
      CALL DCOPY(IDIM,WORK,1,angles_new,1)
      deallocate(work)
          
   end subroutine mympi_main1c_comm_newsosol2
+#endif
+
+
+#ifdef CPP_MPI
+  subroutine check_communication_pattern(MPIatom, MPIadapt, timings_1a, timings_1b, load_imbalance, nkmesh, kmesh_ie)
+  
+!     use mod_types, only: t_mpi_c_grid
+    use mpi
+    
+    implicit none
+  
+    integer, intent(inout) :: MPIadapt
+    logical, intent(inout) :: MPIatom
+    double precision, intent(inout) :: timings_1a(:,:), timings_1b(:)
+    integer, intent(out) :: load_imbalance(:)
+    integer, intent(in) :: nkmesh, kmesh_ie(:)
+  
+    double precision, allocatable :: t_average(:), work(:,:)
+    integer, allocatable :: kmesh_n(:)
+    integer :: nat, ne, ne_1b, ierr, ie, iat, ik, iwork
+  
+    
+    !find some dimensions
+    nat = size(timings_1a(1,:))
+    ne = size(timings_1a(:,1))
+    ne_1b = size(timings_1b)
+    if(ne/=ne_1b) stop '[check_communication_pattern] Error in shapes of timing arrays'
+    
+    
+    !communicate timing arrays
+    !timings_1a
+    iwork = ne*nat
+    allocate(work( ne, nat ), stat=ierr)
+    if(ierr/=0) stop '[check_communication_pattern] error allocating work'
+    call MPI_Allreduce(timings_1a, work, iwork, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
+    call dcopy(iwork, work, 1, timings_1a, 1)
+    deallocate(work, stat=ierr)
+    if(ierr/=0) stop '[check_communication_pattern] error deallocating work'
+    !timings_1b
+    iwork = ne
+    allocate(work( ne, 1 ), stat=ierr)
+    if(ierr/=0) stop '[check_communication_pattern] error allocating work'
+    call MPI_Allreduce(timings_1b, work(:,1), iwork, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
+    call dcopy(iwork, work(:,1), 1, timings_1b, 1)
+    deallocate(work, stat=ierr)
+    if(ierr/=0) stop '[check_communication_pattern] error deallocating work'
+    
+    
+    !first find average over atoms of timings of 1a
+    allocate(t_average(ne), stat=ierr)
+    if(ierr/=0) stop '[check_communication_pattern] Error allocating t_average'
+    
+    do ie=1,ne
+       t_average(ie) = 0.0d0
+       do iat=1,nat
+         t_average(ie) = t_average(ie) + timings_1a(ie,iat)/dfloat(nat)
+       end do
+!        if(myrank==master) write(1337,'(A,i9,2ES23.16)') '[check_communication_pattern]: ie, time for 1a and 1b', ie, timings_1b(ie),t_average(ie)
+!        if(myrank==master .and. t_inc%i_write) write(1337,'(A,i9,2ES23.16)') '[check_communication_pattern]: ie, time for 1a and 1b', ie, timings_1b(ie),t_average(ie)
+    end do
+    
+    
+    ! find how many different energy points have the same kmesh
+    allocate(kmesh_n(nkmesh), stat=ierr)
+    if(ierr/=0) stop '[check_communication_pattern] Error allocating kmesh_n'
+    kmesh_n(:) = 0
+    ik = 1
+    do ie=1,ne
+       ik = kmesh_ie(ie)
+       kmesh_n(ik) = kmesh_n(ik) + 1
+    end do
+    
+    !average timings of energypoints in different kmesh
+    load_imbalance(:) = 0
+    do ie=1,ne
+       ik = kmesh_ie(ie)                                  ! multiply with large number to have nice distiguishable integers
+       load_imbalance(ik) = load_imbalance(ik) + (  int( 10000.0d0 * ((t_average(ie)+timings_1b(ie))/t_average(ie)) )  ) / kmesh_n(ik)
+    end do
+    if(myrank==master) write(*,*) 'load_imbalance', load_imbalance
+!     if(myrank==master .and. t_inc%i_write) write(1337,'(A,i9,1000I9)') '[check_communication_pattern] load imbalance:', load_imbalance
+    
+    
+    !set MPIatom and MPIadapt accordingly
+    !...rest_at, rest_e => which fits actual load imbalance better => set MPIatom and MPIadapt
+    if(myrank==master) write(*,*) MPIatom, MPIadapt
+  
+  
+    
+    !finally deallocate work arrays
+    deallocate(t_average, kmesh_n, stat=ierr)
+    if(ierr/=0) stop '[check_communication_pattern] Error deallocating work arrays'
+    
+  end subroutine check_communication_pattern
 #endif
 
 end module mod_mympi

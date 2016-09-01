@@ -3,11 +3,11 @@
 ! this is commented out, since then the logical hostcode is not defined
 ! and thus "#indef hostcode" returns true and "#ifdef hostcode" false
 #define hostcode ! this is commented out to use the impurity code interface
-! this is commented out to use the test interface (see below)
-! needs hostcode interface
+!
+! the following optinos need the hostcode interface
 !#define test_run
 ! write out files for test runs
-!# define test_prep
+!#define test_prep
 
 
 ! choose between interface for impurity and host code (different calling lists)
@@ -129,7 +129,7 @@ implicit none
       ! running indices
       integer ivec, ivec2                            
       integer l1,l2,lm1,lm2,lm3
-      integer info,icheb3,icheb2,icheb,icheb1,ipan,mn,nm,mn2,nplm
+      integer info,icheb2,icheb,ipan,mn,nm,nplm
 
       ! source terms
       double complex :: gmatprefactor               ! prefactor of green function
@@ -295,7 +295,6 @@ call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 thread_id = omp_get_thread_num()
 #endif
 
-! if(.not.allocated(ull)) allocate ( ull(lmsize2,lmsize,nrmax) )
 allocate ( ull(lmsize2,lmsize,nrmax) )
 
 if ( use_sratrick==0 ) then
@@ -591,7 +590,6 @@ do ipan = 1,npan
     if (cmoderll/='0') then
       if (idotime==1) call timing_start('inversion')
       call zgetrf(nplm,nplm,slv,nplm,ipiv,info)
-      if (idotime==1) call timing_stop('inversion','test')
       if (info/=0) stop'rllsll: zgetrf'
       call zgetrs('n',nplm,lmsize,slv,nplm,ipiv,yrll,nplm,info)
       call zgetrs('n',nplm,lmsize,slv,nplm,ipiv,zrll,nplm,info)
@@ -603,14 +601,20 @@ do ipan = 1,npan
         call zgetrs('n',nplm,lmsize,srv,nplm,ipiv,yill,nplm,info)
         call zgetrs('n',nplm,lmsize,srv,nplm,ipiv,zill,nplm,info)
       else
-        call iterativesol (ncheb,lmsize2,lmsize,srv,yill)
-        call iterativesol (ncheb,lmsize2,lmsize,srv,zill)
+        stop 'iterative solver not implemented'
+!         call iterativesol (ncheb,lmsize2,lmsize,srv,yill)
+!         call iterativesol (ncheb,lmsize2,lmsize,srv,zill)
       end if
     end if
   elseif ( use_sratrick==1 ) then
     nplm = (ncheb+1)*lmsize
+#ifdef hostcode
+    call inverse(nplm,slv1)
+    call inverse(nplm,srv1)
+#else
     call inverse(nplm,slv1,work2,ipiv2)
     call inverse(nplm,srv1,work2,ipiv2)
+#endif
 
     call zgemm('n','n',nplm,lmsize,nplm,cone,slv1, &
                nplm,yrll1,nplm,czero,yrlltmp,nplm)
@@ -848,8 +852,8 @@ if ( use_sratrick==0 ) then
   deallocate ( slv,srv, stat=ierror )
 elseif ( use_sratrick==1 ) then
   deallocate ( work2, ipiv2, slv1, srv1, slv2, srv2 , slv3, srv3, yill1, zill1 , yrll1, zrll1 , yill2, zill2 , yrll2, zrll2, yrlltmp, stat=ierror  )
-  if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
 end if
+if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
 
 deallocate( work, allp, bllp, cllp, dllp, mrnvy, mrnvz , mrjvy, mrjvz,  mihvy, mihvz,  mijvy, mijvz, yill, zill , yrll, zrll, vjlr, vhlr, vjli, vhli ,yif,yrf,zif,zrf, stat=ierror )
 if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
@@ -877,24 +881,25 @@ end subroutine inverse
 #endif
 
 
-subroutine iterativesol (NCHEB,LMSIZE2,LMSIZE,MMAT,BMAT)
-integer :: NCHEB
-integer :: LMSIZE,LMSIZE2
-double complex :: MMAT(0:NCHEB,LMSIZE2,0:NCHEB,LMSIZE2)
-double complex :: BMAT(0:NCHEB,LMSIZE2,LMSIZE)
-double complex :: XMAT(0:NCHEB,LMSIZE2,LMSIZE)
-!########################################################
-! solves the system of linear equations
-! MMAT*XMAT = BMAT
-!########################################################
-
-NPLM = (NCHEB+1)*LMSIZE2
-CALL ZGEMM('N','N',NPLM,LMSIZE,NPLM,CONE,SRV, &
-    NPLM,ZILL,NPLM,CZERO,OUT,NPLM)
-
-
-
-end subroutine iterativesol
+! subroutine iterativesol (NCHEB,LMSIZE2,LMSIZE,MMAT,BMAT)
+! implicit none
+! integer, intent(in) :: NCHEB
+! integer, intent(in) :: LMSIZE,LMSIZE2
+! double complex :: MMAT(0:NCHEB,LMSIZE2,0:NCHEB,LMSIZE2)
+! double complex :: BMAT(0:NCHEB,LMSIZE2,LMSIZE)
+! double complex :: XMAT(0:NCHEB,LMSIZE2,LMSIZE)
+! !########################################################
+! ! solves the system of linear equations
+! ! MMAT*XMAT = BMAT
+! !########################################################
+! 
+! NPLM = (NCHEB+1)*LMSIZE2
+! CALL ZGEMM('N','N',NPLM,LMSIZE,NPLM,CONE,SRV, &
+!     NPLM,ZILL,NPLM,CZERO,OUT,NPLM)
+! 
+! 
+! 
+! end subroutine iterativesol
 
 
 #ifndef hostcode
@@ -920,6 +925,8 @@ program test_rllsll
    double precision, allocatable :: rpanbound(:), rmesh(:)
    double complex, allocatable ::  sll(:,:,:), rll(:,:,:), tllp(:,:), vll(:,:,:)
    double complex, allocatable :: alphaget(:,:) ! lly
+
+   double complex, parameter :: C0=(0.0d0, 0.0d0)
    
    call timing_init(0)
    call timing_start('read-in')
@@ -946,6 +953,11 @@ program test_rllsll
    allocate(sll(lmsize2,lmsize,nrmax), rll(lmsize2,lmsize,nrmax), tllp(lmsize,lmsize), vll(lmsize*nvec,lmsize*nvec,nrmax))
    allocate(rpanbound(0:npan), rmesh(nrmax))
    allocate(alphaget(lmsize, lmsize))
+
+   ! initialize to 0
+   rll = C0
+   sll = C0
+   tllp = C0
    
    read(1234, '(1ES25.15)') gmatprefactor
    read(1234, '(1000ES25.15)') hlk(1:lbessel,1:nrmax), jlk(1:lbessel,1:nrmax), hlk2(1:lbessel,1:nrmax), jlk2(1:lbessel,1:nrmax)

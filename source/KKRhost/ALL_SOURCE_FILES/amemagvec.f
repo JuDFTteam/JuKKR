@@ -157,7 +157,7 @@ C
          DO IPOL = 1,3
             STR20 = 'A  '//TXTMVEC(IMV)//'  ('//CHPOL(IPOL)//')'
             CALL RMATSTR(STR20,12,AMEMVEC(1,1,IPOL,IMVEC),NKM,NKMMAX,3,
-     &                   3,0,1D-8,6)
+     &                   3,1D-8,6)
          END DO
       END DO
       END

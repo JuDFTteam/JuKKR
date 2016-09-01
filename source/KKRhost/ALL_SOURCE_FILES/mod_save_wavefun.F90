@@ -37,7 +37,7 @@ contains
    
       type(type_wavefunctions), intent(inout) :: t_wavefunctions
       
-      integer :: nth, nat, ne, ierr, ie_end, i, ie, iat, maxpos(1), Nwfsave_count, nat_myrank, ne_myrank, ioff_at, ioff_ie
+      integer :: nth, nat, ne, ierr, i, ie, iat, maxpos(1), Nwfsave_count, nat_myrank, ne_myrank, ioff_at, ioff_ie
       double precision :: delta_mem
       
       integer, allocatable :: kmesh_priority(:), my_kmesh(:)
@@ -53,11 +53,18 @@ contains
 
       nat = t_inc%natyp
       ne =  t_inc%ielast
+#ifdef CPP_MPI
       ! local parameter for myrank
       nat_myrank = t_mpi_c_grid%ntot1
       ne_myrank  = t_mpi_c_grid%ntot2
       ioff_at = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)
       ioff_ie = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+#else
+      nat_myrank = nat
+      ne_myrank  = ne
+      ioff_at = 0
+      ioff_ie = 0
+#endif
       
       allocate(t_wavefunctions%isave_wavefun(nat, ne), stat=ierr)
       if(ierr/=0) stop '[find_isave_wavefun] Error allocating isave_wavefun'

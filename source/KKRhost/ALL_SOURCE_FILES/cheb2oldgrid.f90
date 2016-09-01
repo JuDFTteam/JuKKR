@@ -17,7 +17,7 @@ double precision :: Cinvmatrix(0:ncheb,0:ncheb)
 double precision,allocatable :: CCmatrix(:,:)
 double complex :: alphaparams(0:ncheb,lmmaxpot)
 double precision  :: rmeshnorm(nrmax)
-double precision halfsum,halfdiffinv,rshift,tol
+double precision halfsum,halfdiffinv,tol!,rshift
 parameter(tol=1.d-13)
 
 ! divide the mesh into subintervals

@@ -53,7 +53,7 @@ C     .. Array Arguments ..
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX ERYD
-      INTEGER I1,IC,ICLS,IE,LM1,LM2,LRECGF1,NACLSMAX
+      INTEGER I1,IC,ICLS,IE,LM1,NACLSMAX
       DOUBLE COMPLEX   LLY_G0TR_IE ! LLY
 C     ..
 C     .. Local Arrays ..
@@ -67,11 +67,8 @@ C     .. Local Arrays ..
 C     ..
 C     .. MPI ..
       integer :: IE_START, IE_END
-      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
-     &           myrank_at, myrank_ie, nranks_at,nranks_ie
-      integer :: ntot1, dims(2), mytot, idim, ierr
-      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
-     &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
+      integer :: ntot1, idim, ierr
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
       double complex, allocatable :: work(:,:,:)
 #endif
       integer :: i1_start, i1_end
@@ -232,7 +229,6 @@ C ----------------------------------------------------------------------
 #ifdef CPP_MPI
            end if !if(t_mpi_c_grid%myrank_ie==0) then
 #endif
-
          else
             t_tgmat%gref(:,:,:,ie_num) = GINP(:,:,:)
          end if
