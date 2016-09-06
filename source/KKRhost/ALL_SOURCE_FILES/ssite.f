@@ -3,7 +3,7 @@ C*==ssite.f    processed by SPAG 6.05Rc at 17:31 on 29 Apr 2001
      &                 SOCTL,CTL,ERYD,P,IHYPER,IPRINT,IKM1LIN,IKM2LIN,
      &                 NLQ,NKMQ,NLINQ,NT,NKM,IQAT,TSST,MSST,TSSTLIN,DZZ,
      &                 DZJ,SZZ,SZJ,OZZ,OZJ,BZZ,BZJ,QZZ,QZJ,TZZ,TZJ,VT,
-     &                 BT,AT,Z,NUCLEUS,R,DRDI,R2DRDI,JWS,IMT,AMEOPC,
+     &                 BT,AT,Z,NUCLEUS,R,DRDI,R2DRDI,JWS,IMT,
      &                 AMEOPO,LOPT,SOLVER,CGC,OZZS,OZJS,NLMAX,NQMAX,
      &                 LINMAX,NRMAX,NMMAX,NTMAX,NKMMAX,NKMPMAX,NLAMAX)
 C   ********************************************************************
@@ -57,8 +57,7 @@ C
      &        NKMMAX,NLAMAX,NLMAX,NMMAX,NQMAX,NRMAX,NT,NTMAX,NUCLEUS
       INTEGER NKMPMAX
       CHARACTER*10 SOLVER
-      REAL*8 AMEOPC(NKMMAX,NKMMAX,NLAMAX,3),
-     &       AMEOPO(NKMMAX,NKMMAX,NLAMAX,3),AT(NRMAX,NLAMAX,3,NTMAX),
+      REAL*8 AMEOPO(NKMMAX,NKMMAX,NLAMAX,3),AT(NRMAX,NLAMAX,3,NTMAX),
      &       BT(NRMAX,NTMAX),CTL(NTMAX,NLMAX),DRDI(NRMAX,NMMAX),
      &       R(NRMAX,NMMAX),R2DRDI(NRMAX,NMMAX),SOCTL(NTMAX,NLMAX),
      &       VT(NRMAX,NTMAX)
@@ -224,17 +223,19 @@ C------------------------------------------------------------------------
                CALL CINIT(I5,QI)
 C
                IF ( SOLVER(1:2).EQ.'BS' ) THEN
-                  CALL DIRBS(GETIRRSOL,CTL(IT,IL),IT,ERYD,L,MJ,KAP1,
+                  CALL DIRBS(GETIRRSOL,CTL(IT,IL),ERYD,L,MJ,KAP1,
      &                       KAP2,P,CG1,CG2,CG4,CG5,CG8,VT(1,IT),
      &                       BT(1,IT),Z(IT),NUCLEUS,R(1,IM),DRDI(1,IM),
      &                       DOVR,JTOP,PR,QR,PI,QI,ZG,ZF)
                ELSE IF ( SOLVER.EQ.'ABM-BI' ) THEN
-                  CALL DIRABMBI(GETIRRSOL,CTL(IT,IL),IT,ERYD,L,MJ,KAP1,
-     &                          KAP2,P,CG1,CG2,CG4,CG5,CG8,AMEOPC,
-     &                          AMEOPO,VT(1,IT),BT(1,IT),AT,Z(IT),
-     &                          NUCLEUS,R(1,IM),DRDI(1,IM),DOVR,JTOP,PR,
-     &                          QR,PI,QI,ZG,ZF,AP,AQ,NTMAX,NLAMAX,
-     &                          NKMMAX,NRMAX)
+                  stop 
+     &   ' < DIRABMBI > : Not implemented. Set SOLVER=BS in inputcard'
+!                   CALL DIRABMBI(GETIRRSOL,CTL(IT,IL),IT,ERYD,L,MJ,KAP1,
+!      &                          KAP2,P,CG1,CG2,CG4,CG5,CG8,AMEOPC,
+!      &                          AMEOPO,VT(1,IT),BT(1,IT),AT,Z(IT),
+!      &                          NUCLEUS,R(1,IM),DRDI(1,IM),DOVR,JTOP,PR,
+!      &                          QR,PI,QI,ZG,ZF,AP,AQ,NTMAX,NLAMAX,
+!      &                          NKMMAX,NRMAX)
                ELSE IF ( SOLVER(1:6).EQ.'ABM-OP' ) THEN
                   CALL DIRABMOP(GETIRRSOL,CTL(IT,IL),IT,ERYD,L,MJ,KAP1,
      &                          KAP2,P,CG1,CG2,CG4,CG5,CG8,AMEOPO,

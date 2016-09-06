@@ -1,4 +1,4 @@
-       SUBROUTINE TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,RMESH,ZAT,SOCSCALE,
+       SUBROUTINE TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,
      +                        EZ,NSRA,CLEB,ICLEB,IEND,NCHEB,NPAN_TOT,
      +                        RPAN_INTERVALL,IPAN_INTERVALL,
      +                        RNEW,VINSNEW,THETA,PHI,I1,IPOT,
@@ -12,12 +12,15 @@
 #endif
        use mod_mympi, only: myrank, nranks, master
 #ifdef CPP_MPI
-     &                      ,distribute_linear_on_tasks
+     &                      ,distribute_linear_on_tasks, MPIadapt
+       use mod_timing
 #endif
-      use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
+       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
      &                     t_lloyd,init_tlloyd, type_dtmatJijDij,
      &                     init_t_dtmatJij_at
-      use mod_jijhelp, only: calc_dtmatJij
+       use mod_jijhelp, only: calc_dtmatJij
+       use mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun,
+     &                             save_wavefunc
 
        IMPLICIT NONE
        include 'inc.p'
@@ -39,7 +42,7 @@
        DOUBLE PRECISION ZAT
        DOUBLE PRECISION SOCSCALE
        DOUBLE COMPLEX EZ(IEMXD),ERYD
-       DOUBLE PRECISION RMESH(IRMD),CLEB(*)
+       DOUBLE PRECISION CLEB(*)
        INTEGER ICLEB(NCLEB,4)
        DOUBLE PRECISION  RNEW(NRMAXD),
      +                   RPAN_INTERVALL(0:NTOTD),
@@ -69,18 +72,21 @@
          
        INTEGER JLK_INDEX(2*LMMAXSO)
       ! LLoyd:
-      INTEGER LLY,IDERIV,SIGNDE        ! LLY
-      DOUBLE COMPLEX DELTAE,TRALPHA,IPIV(LMMAXSO)            ! LLY
+      INTEGER LLY,IDERIV,SIGNDE,IPIV(LMMAXSO)    ! LLY
+      DOUBLE COMPLEX DELTAE,TRALPHA              ! LLY
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND)             ! LDAU
       INTEGER IDOLDAU,LOPT,LMLO,LMHI,MMAX                    ! LDAU
 !     .. OMP ..
       integer nth,ith         ! total number of threads and thread id
 #ifdef CPP_MPI
-      integer :: mytot
+!       integer :: mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
-      integer :: ie_end, ie_num, ie_start
-      character(len=80) :: filename
+      integer :: ie_end, ie_num, ie_start, ierr
+!       character(len=80) :: filename
+      ! test option
+      logical :: test
+      external :: test
 
 #ifdef CPP_OMP
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
@@ -96,7 +102,8 @@
 #endif
 
        IRMDNEW= NPAN_TOT*(NCHEB+1)
-       ALLOCATE(VINS(IRMDNEW,LMPOTD,NSPIN))
+       ALLOCATE(VINS(IRMDNEW,LMPOTD,NSPIN), stat=ierr)
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating VINS'
        VINS=0d0
        DO LM1=1,LMPOTD
         DO IR=1,IRMDNEW
@@ -110,8 +117,10 @@ cc set up the non-spherical ll' matrix for potential VLL'
        ELSEIF (NSRA.EQ.1) THEN
         USE_SRATRICK=0
        ENDIF
-       ALLOCATE(VNSPLL0(LMMAXSO,LMMAXSO,IRMDNEW))
-       ALLOCATE(VNSPLL1(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
+       ALLOCATE(VNSPLL0(LMMAXSO,LMMAXSO,IRMDNEW), stat=ierr)
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating vnspll0'
+       ALLOCATE(VNSPLL1(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating vnspll1'
        VNSPLL0=CZERO
        CALL VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,
      +                    CLEB,ICLEB,IEND,NSPIN,ZAT,RNEW,USE_SRATRICK)
@@ -136,21 +145,29 @@ cc set up the non-spherical ll' matrix for potential VLL'
 
 c initial allocate
        IF (NSRA.EQ.2) THEN
-        ALLOCATE(VNSPLL(2*LMMAXSO,2*LMMAXSO,IRMDNEW,0:nth-1))
+        ALLOCATE(VNSPLL(2*LMMAXSO,2*LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
        ELSE
-        ALLOCATE(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
+        ALLOCATE(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
        ENDIF
-
-       ALLOCATE(HLK(1:4*(LMAX+1),IRMDNEW,0:nth-1))
-       ALLOCATE(JLK(1:4*(LMAX+1),IRMDNEW,0:nth-1))
-       ALLOCATE(HLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1))
-       ALLOCATE(JLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1))
-       ALLOCATE(TMATSPH(2*(LMAX+1),0:nth-1))
-       ALLOCATE(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
-       ALLOCATE(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1))
-       ALLOCATE(RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1)) !maybe left solutions need to be calculated,
-       ALLOCATE(SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1)) ! to be derermined below. Allocate them here
-                                                               ! in any case.
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating vnspll'
+       ALLOCATE(HLK(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating hlk'
+       ALLOCATE(JLK(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating jlk'
+       ALLOCATE(HLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating hlk2'
+       ALLOCATE(JLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating jlk2'
+       ALLOCATE(TMATSPH(2*(LMAX+1),0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating tmatsph'
+       ALLOCATE(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating rll'
+       ALLOCATE(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating sll'
+       ALLOCATE(RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=ierr) !maybe left solutions need to be calculated,
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating rllleft'
+       ALLOCATE(SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=ierr) ! to be derermined below. Allocate them here
+       if(ierr/=0) stop '[tnat_newsolver] Error allocating sllleft'      ! in any case.
           
 c energy loop
        if(myrank==master.and.(t_inc%i_write>0)) 
@@ -159,7 +176,7 @@ c energy loop
 #ifdef CPP_MPI
        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
      &           t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), ! print this info only for first atom at master
-     &                  master,IELAST,ntot_pT,ioff_pT,.true.)
+     &                  master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
      
        ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
        ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
@@ -190,19 +207,22 @@ c energy loop
 #endif
 
        !for Jij-tensor calculation: allocate array to hold additional t-matrices
-       call init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij_at)
+       call init_t_dtmatJij_at(t_inc, t_mpi_c_grid, t_dtmatJij_at)
+       
+                
+       !initialize wfsave
+       if(t_inc%i_iteration==0) then
+            call find_isave_wavefun(t_wavefunctions)
+            ! reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
+            ! to prevent unnessesary storing of wavefunctions
+            if(test('STOP1B  ')) t_wavefunctions%Nwfsavemax = 0
+       endif
+         
 
 #ifdef CPP_OMP
 !$omp parallel do default(none) 
 !$omp& private(eryd,ie,ir,nvec,lm1,lm2,gmatprefactor) 
-!$omp& private(jlk_index,tmatll,ith,irec, ie_num) 
-!$omp& shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb) 
-!$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth) 
-!$omp& shared(rpan_intervall,vinsnew,ipan_intervall) 
-!$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0) 
-!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft) !,tmat_out)
-!$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start)
-!$omp& shared(lly,deltae,i1)!,dtmat_out,tral_out)
+!$omp& private(jlk_index,tmatll,ith,irec, ie_num)
 !$omp& private(tralpha, aux, ideriv, ipiv) 
 !$omp& private(alpha0)
 !$omp& private(alphall)
@@ -211,10 +231,22 @@ c energy loop
 !$omp& private(dtmatll) 
 !$omp& private(dalphall) 
 !$omp& firstprivate(t_inc)
+!$omp& shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb) 
+!$omp& shared(zat,socscale,ez,cleb,rnew,nth) 
+!$omp& shared(rpan_intervall,vinsnew,ipan_intervall) 
+!$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0) 
+!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)
+!$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)
+!$omp& shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)
 #endif
        DO ie_num=1,ie_end
        
          IE = ie_start+ie_num
+         
+#ifdef CPP_MPI
+         !start timing measurement for this pair of ie and i1, needed for MPIadapt
+         call timing_start('time_1a_ieiatom')
+#endif
 
          ! get current thread
          if (nth>=1) then
@@ -224,27 +256,6 @@ c energy loop
          else
             ith = 0
          endif
-
-         eryd = 0
-         ir = 0
-         nvec = 0
-         lm1 = 0
-         lm2 = 0
-         gmatprefactor = 0
-         jlk_index = 0
-         tmatll = 0
-         irec = 0
-         tralpha = 0
-         alpha0 = 0
-         alphall = 0
-         tmat0 = 0
-         alphasph = 0
-         dtmatll  = 0
-         dalphall = 0
-         aux = 0
-         ideriv = 0
-         ipiv = 0
-
 
 ! In case of Lloyds formula the derivative of t is needed. 
 ! Then calculate t at E+dE, E-dE and average for t, subtract for dt/dE
@@ -268,7 +279,7 @@ c energy loop
 
 c contruct the spin-orbit coupling hamiltonian and add to potential
         CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,
-     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,
+     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,LMPOTD,
      +                     THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,
      +                     NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,
      +                     VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),'1')
@@ -325,7 +336,6 @@ cc right solutions
           SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
         ENDIF
-
 
 c add spherical contribution of tmatrix
          IF (USE_SRATRICK.EQ.1) THEN
@@ -390,12 +400,15 @@ c add spherical contribution of tmatrix
 
 
 ! Calculate additional t-matrices for Jij-tensor calculation
-        if(t_dtmatJij_at%calculate) then
-c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-c       LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-c       contruct the spin-orbit coupling hamiltonian and add to potential
+        if(t_dtmatJij_at%calculate .or.
+     &     t_wavefunctions%isave_wavefun(i1, ie)>0) then
+c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        this needs to be done for the calculation of t-matrices for Jij tensor or if wavefunctions should be saved
+c
+c        contruct the spin-orbit coupling hamiltonian and add to potential
          CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,
-     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,
+     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,LMPOTD,
      +                     THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,
      +                     NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,
      +                     VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),
@@ -459,40 +472,53 @@ c        notice that exchange the order of left and right hankel/bessel function
           SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
          ENDIF
-c       LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 
-!       write(filename,'(A,I0,A)') 'callinglist_rank=',myrank,'.txt'
-!       open(65161,file=trim(filename),action='write',form='formatted')
-!       write(65161,'(3I8)') LMAXD,LMMAXD,LMMAXSO,
-!    +                       LMPOTD,NTOTD,NRMAXD,
-!    +                       NSRA,IRMDNEW,NSPIN,
-!    +                       NPAN_TOT,NCHEB,IEND,
-!    +                       NCLEB
-!       write(65161,'(A)')         'VINS -next' 
-!       write(65161,'(10ES25.16)')  VINS
-!       write(65161,'(A)')         'RLLLEFT -next' 
-!       write(65161,'(10ES25.16)')  RLLLEFT(:,:,:,ith)
-!       write(65161,'(A)')         'RLL -next' 
-!       write(65161,'(10ES25.16)')  RLL(:,:,:,ith)
-!       write(65161,'(A)')         'RPAN_INTERVALL -next' 
-!       write(65161,'(10ES25.16)')  RPAN_INTERVALL
-!       write(65161,'(A)')         'IPAN_INTERVALL -next' 
-!       write(65161,'(10I8)')       IPAN_INTERVALL
-!       write(65161,'(A)')         'ICLEB -next' 
-!       write(65161,'(10I8)')       ICLEB
-!       write(65161,'(A)')         'RNEW -next' 
-!       write(65161,'(10ES25.16)')  RNEW
-!       close(65161)
+!        write(filename,'(A,I0,A)') 'callinglist_rank=',myrank,'.txt'
+!        open(65161,file=trim(filename),action='write',form='formatted')
+!        write(65161,'(3I8)') LMAXD,LMMAXD,LMMAXSO,
+!    +                        LMPOTD,NTOTD,NRMAXD,
+!    +                        NSRA,IRMDNEW,NSPIN,
+!    +                        NPAN_TOT,NCHEB,IEND,
+!    +                        NCLEB
+!        write(65161,'(A)')         'VINS -next' 
+!        write(65161,'(10ES25.16)')  VINS
+!        write(65161,'(A)')         'RLLLEFT -next' 
+!        write(65161,'(10ES25.16)')  RLLLEFT(:,:,:,ith)
+!        write(65161,'(A)')         'RLL -next' 
+!        write(65161,'(10ES25.16)')  RLL(:,:,:,ith)
+!        write(65161,'(A)')         'RPAN_INTERVALL -next' 
+!        write(65161,'(10ES25.16)')  RPAN_INTERVALL
+!        write(65161,'(A)')         'IPAN_INTERVALL -next' 
+!        write(65161,'(10I8)')       IPAN_INTERVALL
+!        write(65161,'(A)')         'ICLEB -next' 
+!        write(65161,'(10I8)')       ICLEB
+!        write(65161,'(A)')         'RNEW -next' 
+!        write(65161,'(10ES25.16)')  RNEW
+!        close(65161)
 
-!       write(*,*) allocated(t_dtmatJij_at%dtmat_xyz),
-!    +             shape(t_dtmatJij_at%dtmat_xyz)
+!        write(*,*) allocated(t_dtmatJij_at%dtmat_xyz),
+!    +              shape(t_dtmatJij_at%dtmat_xyz)
 
-        call calc_dtmatJij(LMAXD,LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,
+
+         ! save_wavefuncions         
+         if(t_wavefunctions%Nwfsavemax>0) then
+            ! here all four (left, right, regular and irregular) are stored, the memory demand cound be reduced by a factor 2 if only the right solution would be computed here and saved and the left solution would be calculated later in main1c
+            call save_wavefunc(t_wavefunctions, rll, rllleft, 
+     &          sll, sllleft, i1, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth)
+         end if
+         
+        end if!t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
+        
+        if(t_dtmatJij_at%calculate) then
+         call calc_dtmatJij(LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,
      +        NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT(:,:,:,ith),RLL(:,:,:,ith),
      +        RPAN_INTERVALL,
      +        IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,
-     +        THETA,PHI,t_dtmatJij_at%dtmat_xyz(:,:,:,ie_num))
+     +        t_dtmatJij_at%dtmat_xyz(:,:,:,ie_num))
 
         end if!t_dtmatJij_at%calculate
          
@@ -503,7 +529,7 @@ c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
             WRITE(69,REC=IREC) TMATLL(:,:)
-!             WRITE(696969,*) TMATLL(:,:)
+!             WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
          else
 #ifdef CPP_MPI
             irec = ie_num +
@@ -532,25 +558,25 @@ c       LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #ifdef CPP_OMP
 !$omp end critical         
 #endif
+
+#ifdef CPP_MPI
+         !stop timing measurement for this pair of ie and i1, needed for MPIadapt
+         if(MPIadapt)
+     & call timing_stop('time_1a_ieiatom',save_out=timings_1a(ie, i1))
+#endif
+
        ENDDO ! IE loop 
 #ifdef CPP_OMP
 !$omp end parallel do
 #endif
 
 
-       DEALLOCATE(VINS)
-       DEALLOCATE(VNSPLL0)
-       DEALLOCATE(VNSPLL1)
-       DEALLOCATE(VNSPLL)
-       DEALLOCATE(HLK)
-       DEALLOCATE(JLK)
-       DEALLOCATE(HLK2)
-       DEALLOCATE(JLK2)
-       DEALLOCATE(TMATSPH)
-       DEALLOCATE(RLL)
-       DEALLOCATE(SLL)
-       DEALLOCATE(RLLLEFT)
-       DEALLOCATE(SLLLEFT)
+       DEALLOCATE(VINS, VNSPLL0, VNSPLL1, VNSPLL, stat=ierr)
+       if(ierr/=0) stop '[tmat_newsolver] Error dellocating vins etc.'
+       DEALLOCATE(HLK, JLK, HLK2, JLK2, stat=ierr)
+       if(ierr/=0) stop '[tmat_newsolver] Error dellocating hlk etc.'
+       DEALLOCATE(TMATSPH, RLL, SLL, RLLLEFT, SLLLEFT, stat=ierr)
+       if(ierr/=0) stop '[tmat_newsolver] Error dellocating rll etc.'
 
        END 
 

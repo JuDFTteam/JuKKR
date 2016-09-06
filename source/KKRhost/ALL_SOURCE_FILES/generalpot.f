@@ -1,6 +1,6 @@
 C **********************************************************************
       SUBROUTINE GENERALPOT(IFILE,NATPS,NATYP,NSPIN,Z,ALAT,RMT,RMTNEW,
-     +                 RWS,ITITLE,R,DRDI,VM2Z,IRWS,A,B,TXC,KXC,INS,IRNS,
+     +                 RWS,R,DRDI,VM2Z,IRWS,A,B,INS,IRNS,
      +                 LPOT,VINS,QBOUND,IRC,KSHAPE,EFERMI,VBC,ECORE,
      +                 LCORE,NCORE,LMPOTD,IRMD,IRMIND)
 c **************************************************
@@ -17,18 +17,17 @@ C     ..
 C     .. Scalar Arguments ..
       INTEGER LMPOTD,IRMD,IRMIND
       DOUBLE PRECISION ALAT,QBOUND
-      INTEGER IFILE,INS,KSHAPE,KXC,LPOT,NATPS,NATYP,NSPIN
+      INTEGER IFILE,INS,KSHAPE,LPOT,NATPS,NATYP,NSPIN
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION A(*),B(*),DRDI(IRMD,*),ECORE(20,*),EFERMI,
      +                 R(IRMD,*),RMT(*),RMTNEW(*),RWS(*),VBC(2),
      +                 VINS(IRMIND:IRMD,LMPOTD,*),VM2Z(IRMD,*),Z(*)
-      INTEGER IRC(*),IRNS(*),IRWS(*),ITITLE(20,*),LCORE(20,*),NCORE(*)
-      CHARACTER*24 TXC(*)
+      INTEGER IRC(*),IRNS(*),IRWS(*),LCORE(20,*),NCORE(*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A1,B1,RMAX,RMT1,RMTNW1,RV,SUM,Z1,PARSUM,
-     &                 PARSUMDERIV,R0,RINTER,DR,MAXA,VCON
+     &                 PARSUMDERIV,R0,RINTER,DR,MAXA
       INTEGER I,ICORE,IH,IP,IR,IRMIN,IRNS1,IS,ISAVE,J,LM,LMNR,
      &        LMPOT,NCORE1,NR,NZ1,NR_U,IRMIN_U,IRNS_U,
      &        IMT1,LM1,IRNSTOT
@@ -208,7 +207,7 @@ c          write (ifile,*) ALAT,RMAX,RMTNW1,RMT1
           WRITE (IFILE,FMT=8030) ALAT,RMAX,RMTNW1,RMT1
           WRITE (IFILE,FMT=8040) NR_U,IMT1,IRNS1
           WRITE (IFILE,FMT=8050) A1,B1
-          WRITE (IFILE,FMT=8060) EFERMI,VBC(IS)!,VCON
+          WRITE (IFILE,FMT=8060) EFERMI,VBC(IS)
           WRITE (IFILE,FMT=8070) NCORE1,LMPOT
           IF (NCORE1.GE.1) WRITE (IFILE,FMT=9040) (LCORE1(ICORE),
      +         ECORE1(ICORE),ICORE=1,NCORE1)
@@ -265,7 +264,7 @@ c
  8030 format (4f12.8, '   # alat, rmax, rmaxlog, rmt')
  8040 format (1p,3I6,31X,'  # IRWS, IRMT, IRNS ')
  8050 format (2D15.8,19X,'  # A , B ')
- 8060 format (3f12.8,13X,'  # Ef, vbc, vcon ')
+ 8060 format (3f12.8,13X,'  # Ef, vbc ')
  8070 format (1p,2I5,39X,'  # NCORE, LMPOT' )
  9000 FORMAT (7a4,6x,'  exc:',a24,3x,a10)
  9010 FORMAT (3f12.8)

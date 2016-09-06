@@ -29,7 +29,7 @@ C ..  Arguments
        LOGICAL LINTERFACE
 C ..
 C ..  Locals
-       INTEGER I,I1,I2,I3,IBR(3),IEQVEC,IQ,IQS,J,JQ,MM,NBR(3),NDIM,
+       INTEGER I,I1,I2,I3,IBR(3),IEQVEC,IQ,IQS,J,JQ,NBR(3),NDIM,
      &        NN,NOUT,JQS
 C.......................................................................
 C     uniquely identify a vector R_j - r_i = (r_j + T_n) - r_i by a 

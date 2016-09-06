@@ -78,6 +78,8 @@ $(OBJ)/mod_types.o  : $(COM)/mod_types.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_types.F90 -c -o $@
 $(OBJ)/mod_timing.o  : $(COM)/mod_timing.F90                 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_timing.F90 -c -o $@
+$(OBJ)/mod_save_wavefun.o  : $(COM)/mod_save_wavefun.F90                 ; \
+                        $(FC) $(FFLAGS) $(CPP) $(COM)/mod_save_wavefun.F90 -c -o $@
 
 FILENAME0 = kkr.x
 include makefile0
@@ -160,7 +162,7 @@ CPP= -D CPP_TIMING
 # change to if flag is matched
 openmp:   CPP = -D CPP_OMP
 ompdebug: CPP = -D CPP_OMP
-mpidebug: CPP = -D CPP_MPI
+mpidebug: CPP = -D CPP_MPI -D CPP_TIMING
 mpi:      CPP = -D CPP_MPI -D CPP_TIMING
 macmpi:   CPP = -D CPP_MPI -D CPP_TIMING
 macomp:   CPP = -D CPP_OMP -D CPP_TIMING
@@ -175,13 +177,12 @@ jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 # Compiler flags                                   #
 ####################################################
 # Default:
-FFLAGS       =  -O2 -r8 -traceback -module $(OBJ) 
+FFLAGS       =  -O2 -r8 -traceback -module $(OBJ)
 
 # Change to if flag is matched:
-openmp:   FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
-ompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g 
-debug:    FFLAGS = -CB -check all -traceback -g -fpe0 -warn -debug extended -mcmodel=medium -shared-intel
-mpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
+debug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g
+mpidebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g
+ompdebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g
 
 OPENMPFLAGS = 
 hybrid: OPENMPFLAGS = -openmp
@@ -252,8 +253,8 @@ clean:
 clear:
 	rm -rf *.mod *.o OBJ/ *__genmod.*
 
-compile:  mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
-	  $(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+compile:  mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+	  $(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
 serial:   compile
 debug:    compile

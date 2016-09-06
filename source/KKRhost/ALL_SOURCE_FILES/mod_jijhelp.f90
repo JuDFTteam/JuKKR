@@ -35,24 +35,17 @@ contains
 
 
 
-  subroutine calc_dtmatJij(LMAXD,LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,THETA,PHI,dtmat)
+  subroutine calc_dtmatJij(LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,dtmat)
 ! subroutine calc_dtmatJij(NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,dtmat)
 
     implicit none
-!   include 'inc.p'
-!   INTEGER LMMAXD
-!   PARAMETER (LMMAXD= (LMAXD+1)**2)
-!   INTEGER LMMAXSO
-!   PARAMETER (LMMAXSO=2*LMMAXD)
-!   INTEGER LMPOTD
-!   PARAMETER (LMPOTD= (LPOTD+1)**2)
     DOUBLE COMPLEX CZERO,CONE
     PARAMETER (CZERO=(0d0,0d0),CONE=(1d0,0d0))
 
-    integer, intent(in) :: LMAXD,LMMAXD,LMMAXSO,LMPOTD,NSRA,IRMDNEW,NRMAXD,NSPIN,IEND,NCLEB,NTOTD    !integer arguments that only define array sizes
+    integer, intent(in) :: LMMAXD,LMMAXSO,LMPOTD,NSRA,IRMDNEW,NRMAXD,NSPIN,IEND,NCLEB,NTOTD    !integer arguments that only define array sizes
 !   integer, intent(in) :: NSRA,IRMDNEW,NRMAXD,NSPIN,IEND,NCLEB,NTOTD    !integer arguments that only define array sizes
     INTEGER, intent(in) :: NPAN_TOT,NCHEB,IPAN_INTERVALL(0:NTOTD), ICLEB(NCLEB,4) !integer arguments
-    DOUBLE PRECISION, intent(in) :: RPAN_INTERVALL(0:NTOTD), VINS(IRMDNEW,LMPOTD,NSPIN), CLEB(*), RNEW(NRMAXD), THETA, PHI
+    DOUBLE PRECISION, intent(in) :: RPAN_INTERVALL(0:NTOTD), VINS(IRMDNEW,LMPOTD,NSPIN), CLEB(*), RNEW(NRMAXD)
     DOUBLE COMPLEX,   intent(in) :: RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW),&
                                   & RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW)
     DOUBLE COMPLEX, intent(out) :: dtmat(LMMAXSO,LMMAXSO,3)
@@ -78,7 +71,6 @@ contains
 
     !get the pauli spin matrices
     call calc_sigma(sigma) !use this to perform automatically infinitesimal rotations
-!   call calclambda(sigma,theta,phi) !this is a test (for comparison with impurity code
 
 
     !loop over sigma_{x,y,z}

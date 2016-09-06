@@ -30,7 +30,7 @@ C     .. Parameter definitions
       PARAMETER (CZERO= (0.0D0,0.0D0),CONE= (1.D0,0.D0))
 C     ..
 C     .. Scalar arguments
-      INTEGER NGCLUSD,NGCLUS,LMMAXD,IREC
+      INTEGER NGCLUS,LMMAXD,IREC
       INTEGER IGF,KREL,NATOMIMP
 C     ..
 C     .. Array arguments

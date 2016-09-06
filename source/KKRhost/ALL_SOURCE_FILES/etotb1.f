@@ -1,6 +1,6 @@
 C*==etotb1.f    processed by SPAG 6.05Rc at 11:37 on 26 Apr 2004
 C 17.10.95 ***************************************************************
-      SUBROUTINE ETOTB1(ECOU,EFERMI,EPOTIN,ESPC,ESPV,EXC,KPRE,LMAX,LPOT,
+      SUBROUTINE ETOTB1(ECOU,EPOTIN,ESPC,ESPV,EXC,KPRE,LMAX,LPOT,
      &                  LCOREMAX,NSPIN,NATYP,NSHELL,CONC,IDOLDAU,
      &                  LOPT,EU,EDCLDAU)
 C ************************************************************************
@@ -41,7 +41,6 @@ C
 C
 C Dummy arguments
 C
-      DOUBLE PRECISION EFERMI
       INTEGER KPRE,LMAX,LPOT,NATYP,NSPIN,IDOLDAU
       DOUBLE PRECISION CONC(NATYPD)
       DOUBLE PRECISION ECOU(0:LPOTD,*),EPOTIN(*),ESPC(0:3,NPOTD),

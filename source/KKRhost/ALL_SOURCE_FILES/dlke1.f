@@ -44,7 +44,7 @@ C     .. Array Arguments ..
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION CONVPU,TPI
-      INTEGER AM,I,II,IM,LM2,M,N,N1,NL
+      INTEGER AM,I,II,IM,LM2,M
       DOUBLE COMPLEX  EIKR,TT
       LOGICAL OPT,TEST
 C     ..

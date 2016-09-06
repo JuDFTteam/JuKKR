@@ -88,6 +88,9 @@ C
       allocate(t_params%BZKP(3,KPOIBZ,MAXMESH),
      &         t_params%VOLCUB(KPOIBZ,MAXMESH),
      &         t_params%VOLBZ(MAXMESH),t_params%NOFKS(MAXMESH))
+      ! needed for wavefunction saving
+      allocate(t_inc%kmesh_ie(IELAST))
+      t_inc%kmesh_ie = kmesh(1:ielast)
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       DO L = 1,MAXMESH
          IF (L.GT.1) THEN

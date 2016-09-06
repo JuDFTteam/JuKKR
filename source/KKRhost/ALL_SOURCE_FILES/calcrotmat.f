@@ -13,17 +13,19 @@ C   *       IREL=3     NK == odd          relativistic (kappa,mue)     *
 C   *                                                                  *
 C   *   12/11/96  HE  deal with beta = 0                               *
 C   ********************************************************************
-      IMPLICIT REAL*8 (A-H,O-Z)
+      IMPLICIT NONE
 C
       COMPLEX*16 CI, C0
       PARAMETER ( CI = (0.0D0,1.0D0), C0 = (0.0D0,0.0D0) )
       REAL*8 PI
       PARAMETER ( PI = 3.141592653589793238462643D0 )   
 C
-      REAL*8     NUM, MSB05, MSB05SQ, MSB05PW, J,M1,M2, RFAC,X
+      REAL*8     NUM, MSB05, MSB05SQ, MSB05PW, J, M1, M2, RFAC, DOM, 
+     &           X, CB05, CB05SQ, ALFDEG, BETDEG, GAMDEG, SUM, CB05PW
       REAL*8     FACT(0:100)
 
-      INTEGER    S, SLOW, SHIGH, OFF
+      INTEGER    S, SLOW, SHIGH, OFF, NKMMAX, IREL, NK, I1, I2, K, L,
+     &           IM1, IM2, NMUE
       COMPLEX*16 EMIM2A, EMIM1G, ROT(NKMMAX,NKMMAX) 
 C                       
 C INLINE FUNCTION    FACTORIAL FOR REAL ARGUMENT

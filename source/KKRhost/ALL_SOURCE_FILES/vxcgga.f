@@ -1,6 +1,6 @@
       SUBROUTINE VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,
      +                  IRWS,IRCUT,IPAN,KSHAPE,GSH,ILM,IMAXSH,
-     +                  IFUNM,THETAS,YR,WTYR,IJEND,LMSP,THET,YLM,DYLMT1,
+     +                  IFUNM,THETAS,WTYR,IJEND,LMSP,THET,YLM,DYLMT1,
      +                  DYLMT2,DYLMF1,DYLMF2,DYLMTF)
 c-----------------------------------------------------------------------
 c     add the exchange-correlation-potential to the given potential
@@ -54,7 +54,7 @@ C     INTEGER IGGA
      +                 DYLMTF(IJEND,LMPOTD),EXC(0:LPOTD,*),GSH(*),
      +                 RHO2NS(IRMD,LMPOTD,2),THET(IJEND),WTYR(IJEND,*),
      +                 THETAS(IRID,NFUND),V(IRMD,LMPOTD,2),
-     +                 YLM(IJEND,LMPOTD),YR(IJEND,*)
+     +                 YLM(IJEND,LMPOTD)
       INTEGER IFUNM(LMXSPD)
       INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND),
      +        LMSP(LMXSPD)

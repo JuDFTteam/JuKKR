@@ -1,7 +1,7 @@
       SUBROUTINE RENORM_LLY(                                       ! LLY Lloyd
      &     CDOS_LLY,IELAST,NSPIN,NATYP,CDEN,LMAXP1,CONC,
      &     IESTART,IEEND,WEZ,IRCUT,IPAN,EZ,ZAT,
-     &     RHO2NS,CDOS1,CDOS2,R2NEF,DENEF,DENEFAT,ESPV)
+     &     RHO2NS,R2NEF,DENEF,DENEFAT,ESPV)
 
 ! Renormalize the valence charge according to Lloyd's formula.
 ! Find renormalization constant per energy, then renormalize 
@@ -18,13 +18,12 @@
       PARAMETER (NPOTD= (2*(KREL+KORBIT) + 
      +           (1-(KREL+KORBIT))*NSPIND)*NATYPD)
 ! Input:
-      INTEGER LMAXP1,NATYP,NSPIN,IRMAX         ! LMAX+1 for FP or LMAX for ASA, number of atoms,radial pts
+      INTEGER LMAXP1,NATYP,NSPIN         ! LMAX+1 for FP or LMAX for ASA, number of atoms,radial pts
       INTEGER IESTART,IEEND,IELAST             ! Starting and ending energy point for renormalization
       INTEGER IRCUT(0:IPAND,NATYPD),IPAN(NATYPD) ! Mesh info
       DOUBLE PRECISION CONC(NATYPD)                      ! Concentration (for cpa)
       DOUBLE COMPLEX CDEN(0:LMAXD1,IEMXD,NPOTD)    ! Non-renormalized density per atom (density=-cden/pi)
-      DOUBLE COMPLEX CDOS_LLY(IEMXD,NSPIND),
-     +           CDOS1(IEMXD),CDOS2(NATYPD)    ! DOS according to Lloyd's formula
+      DOUBLE COMPLEX CDOS_LLY(IEMXD,NSPIND)        ! DOS according to Lloyd's formula
       DOUBLE COMPLEX WEZ(IEMXD),EZ(IEMXD)
       DOUBLE PRECISION ZAT(NATYPD)
 ! Input/Output:
@@ -93,10 +92,6 @@
             CREN(IE,ISPIN) = DIMAG((CDOS_LLY(IE,ISPIN)-
      +                              CDOS_LOCVC(IE,ISPIN))*WEZ(IE))/
      +                        DIMAG(CDOS_LOC(IE,ISPIN)*WEZ(IE))
-c            CREN(IE,ISPIN) = DIMAG((CDOS_LLY(IE,ISPIN)-CDOS1(IE))*
-c     +                        WEZ(IE))/
-c     +                        DIMAG(CDOS_LOC(IE,ISPIN)*WEZ(IE))
-
             ! Apply to DOS of each atom:
              DO I1=1,NATYPD
               IF (ZAT(I1).GT.1D-06) THEN
@@ -115,10 +110,6 @@ c     +                        DIMAG(CDOS_LOC(IE,ISPIN)*WEZ(IE))
             CREN(IE,1) = DIMAG((CDOS_LLY(IE,1)-CDOS_LOCVC(IE,1)-
      +                          CDOS_LOCVC(IE,2))*WEZ(IE))/
      +                    DIMAG((CDOS_LOC(IE,1)+CDOS_LOC(IE,2))*WEZ(IE))
-c            WEZ(IE) = CREN(IE,1)*WEZ(IE)
-c            CREN(IE,1) = DIMAG((CDOS_LLY(IE,1)-2d0*CDOS1(IE))*
-c     +                        WEZ(IE))/
-c     +                    DIMAG((CDOS_LOC(IE,1)+CDOS_LOC(IE,2))*WEZ(IE))
             ! Apply to DOS of each atom:
             DO ISPIN=1,NSPIN
              DO I1=1,NATYPD

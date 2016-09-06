@@ -16,10 +16,9 @@ C     .. Arguments ..
      &       ZPERIGHT(3),ZPERLEFT(3)
 C     ..
 C     .. Locals ..
-      INTEGER I,I1,IER,J
+      INTEGER I,I1,J
       LOGICAL LCARTESIAN
       DOUBLE PRECISION RBASIS1(3,NAEZD+NEMBD),TEMP(3),TX,TY,TZ
-      CHARACTER*256 UIO ! NCOLIO=256
 C
       WRITE (1337,'(79(1H=))')
       WRITE (1337,'(23X,A)') 'SCALEVEC: scale site coordinates'

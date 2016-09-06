@@ -8,7 +8,7 @@ C*==rhoval.f    processed by SPAG 6.05Rc at 11:22 on 10 May 2004
      &                  ZREL,JWSREL,IRSHIFT,ITERMVDIR,QMTET,QMPHI,
      &                  MVEVIL,MVEVILEF,NMVECMAX,
      &                  IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATC,
-     &                  LLY,NATYP,NQDOS)          ! LLY Lloyd
+     &                  NATYP,NQDOS)
 C
 C **********************************************************************
 C * For KREL = 1 (relativistic mode)                                   *
@@ -65,7 +65,6 @@ C     .. Scalar Arguments ..
       DOUBLE PRECISION ZAT
       INTEGER I1,ICST,IELAST,IEND,INS,IPAN,ISPIN,NSPIN,NSPINPOT,NSRA
       INTEGER JWSREL,ZREL,IRSHIFT,IDOLDAU,LOPT,NATYP
-      INTEGER LLY,IRMAX1,IELAST1,NSPIN1,NATYP1 ! LLY Lloyd
       INTEGER IHOST,NMVECMAX,IRMIN,NQDOS
       LOGICAL LDORHOEF
 C
@@ -98,6 +97,11 @@ C     .. the 3rd one should be the sum of them
      &                 RMREL(IRMD*KREL+(1-KREL))
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND)
       CHARACTER*10 SOLVER
+      
+!             DOUBLE PRECISION VT(NRMAX,NTMAX),BT(NRMAX,NTMAX)
+!       DOUBLE PRECISION R(NRMAX,NMMAX),R2DRDI(NRMAX,NMMAX)
+!       DOUBLE PRECISION DRDI(NRMAX,NMMAX),SOCTL(NTMAX,NLMAX)
+!       DOUBLE PRECISION CTL(NTMAX,NLMAX)
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 
 C      ITERMDIR variables
 C
@@ -116,12 +120,14 @@ C     .. Local Scalars ..
       DOUBLE PRECISION WLDAUAV
       DOUBLE COMPLEX DF,ERYD,EK
       DOUBLE PRECISION PI
+#ifndef CPP_MPI
       DOUBLE COMPLEX DENTOT ! qdos
+#endif
       INTEGER IDIM,IE,IR,L,LM1,LM2,LMHI,LMLO,IREC,ISPINPOT,
      &        LASTEZ,M1,MMAX
       INTEGER IQ!,NQDOS ! qdos number of qdos points
       INTEGER IX       ! qdos
-      INTEGER LRECGFLLE,LMSHIFT1(4),LMSHIFT2(4),JSPIN,L1 ! lmlm-dos
+      INTEGER LRECGFLLE,LMSHIFT1(4),LMSHIFT2(4) ! lmlm-dos
 
 C     .. this routine needs irregular wavefunctions
       LOGICAL LIRRSOL
@@ -138,14 +144,12 @@ C     .. Local Arrays ..
      +               SZ(IRMD,0:LMAXD),TMAT(0:LMAXD)
       DOUBLE PRECISION RS(IRMD,0:LMAXD),S(0:LMAXD)
       DOUBLE PRECISION CUTOFF(IRMD)
-      DOUBLE COMPLEX DENDUM(0:LMAXD1),GFLLE(:,:,:,:),DENTOT2(2),
-     +               DENTMP2(LMAXD,2),DUM_GFLLE(:,:)
+      DOUBLE COMPLEX DENDUM(0:LMAXD1),GFLLE(:,:,:,:),DUM_GFLLE(:,:)
       DOUBLE COMPLEX, ALLOCATABLE :: GLDAU(:,:)
       DOUBLE PRECISION QVEC(:,:)       ! qdos, q-vectors for qdos
       ALLOCATABLE QVEC,GFLLE,DUM_GFLLE      ! qdos, lmlm-dos
 #ifdef CPP_MPI
-      integer :: ie_start, mytot
-      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+      integer :: ie_start
 #endif
       integer :: ie_end, ie_num
 C     ..
@@ -332,7 +336,7 @@ C        Read BZ path for qdos calculation:
 ! !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
 ! !$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
 ! !$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
-! !$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
+! !$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1)
 ! !$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
 ! !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
 ! !$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
@@ -393,7 +397,7 @@ C
             IF ( INS.EQ.0 ) THEN
                CALL RHOLM(DEN(0,IE,IQ),DF,GMAT0,NSRA,
      +              RHO2NS(1,1,ISPIN),DRDI,IPAN,IRCUT,PZ,FZ,QZ,SZ,  
-     +              CLEB(1,1),ICLEB,IEND,JEND,EKL,DENLM(1,IE,IQ),EK)
+     +              CLEB(1,1),ICLEB,IEND,JEND,EKL)
             ELSE
                CALL RHONS(DEN(0,IE,IQ),DF,DRDI,GMAT0,EK,
      +             RHO2NS(1,1,ISPIN),IPAN,IRCUT,IRMIN,THETAS,IFUNM,LMSP,  ! Added IRMIN 1.7.2014
@@ -465,7 +469,8 @@ C=======================================================================
      &                  R2DRDIREL,ZREL,JWSREL,IRSHIFT,SOLVER,SOCTL,CTL,
      &                  QMTET,QMPHI,ITERMVDIR,MVEVIL,MVEVILEF,LMMAXD,
      &                  LMAXD,IRMD,LMPOTD,IEMXD,NMVECMAX,
-     &                  I1,QVEC,NQDOS)            ! qdos
+     &                  I1,NQDOS)            ! qdos
+     
 C
             DO L = 0,LMAXD1
                ESPV(L,1) = ESPV(L,1) + DIMAG(ERYD*DEN(L,IE,IQ)*DF)

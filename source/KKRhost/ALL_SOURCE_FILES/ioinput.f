@@ -39,7 +39,7 @@ c *******************************************************
       CHARACTER CHARKEY*NCHAR
       CHARACTER CHAR*NCOLIO
       INTEGER ILINE,IERROR,IFILE
-      integer i,ios,ier,npt,ilen,ipos,ipos1,ipos2,iklen,aaaa
+      integer i,ios,ier,npt,ilen,ipos,ipos1,iklen
       CHARACTER STRING(NLINIO)*NCOLIO
       CHARACTER STRING1*NCOLIO
       CHARACTER ABC*NABC

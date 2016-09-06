@@ -23,10 +23,9 @@ C     .. Array Arguments ..
       DOUBLE PRECISION RBASIS(3,NAEZD+NEMBD)
 C     ..
 C     .. Local Scalars ..
-      INTEGER IEND,IPRINT,IQ1,IQ2,LFMT,LM1,LM2,NCLEBD
+      INTEGER IEND,IPRINT,IQ1,IQ2,NCLEBD
       INTEGER NGMAX,NRMAX,NSHLG,NSHLR
       INTEGER LRECABMAD,IREC
-      CHARACTER*80 FMT
 C     ..
 C     .. Local Arrays ..
 C     .. Attention: Dimension LMXSPD*LMPOTD appears sometimes as NCLEB1

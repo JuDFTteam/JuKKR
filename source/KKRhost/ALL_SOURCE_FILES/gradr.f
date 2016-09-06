@@ -22,7 +22,7 @@ C     .. Local Scalars ..
      +                 DRXU3,DRXX,DRXX0,DRXX1,DRXX2,DRXX3,DRXXU,DRXXU0,
      +                 DRXXU1,DRXXU2,DRXXU3,F0,F1,F2,F3,F4,F5,G1,G2,G3,
      +                 G4,G5,XLF
-      INTEGER I,I1,I2,I3,I4,I5,I6,IBH,ICA,ICG,IEX,IGD,IGH,IGL,IHB,IMJ,
+      INTEGER I,I1,I2,I3,I4,I5,I6,ICA,ICG,IEX,IGD,IGH,IGL,IHB,IMJ,
      +        IP9,IPG,IPW,IST,IVG,IVN,IWR,IXLF,J,NDVPT,NRED
 C     ..
 C     .. Statement Functions ..
@@ -35,7 +35,7 @@ C     .. Intrinsic Functions ..
       INTRINSIC DBLE
 C     ..
 C     .. Save statement ..
-      SAVE NDVPT,IGL,IGH,IMJ,IBH,ICA,ICG,IVN,IPW,IPG,IVG,IP9,IGD,IXLF,
+      SAVE NDVPT,IGL,IGH,IMJ,ICA,ICG,IVN,IPW,IPG,IVG,IP9,IGD,IXLF,
      +     IEX,XLF,IWR
 C     ..
 C     .. Data statements ..
@@ -49,8 +49,8 @@ C      double precision f251,f252,f253,f254,f255
 C      double precision f261,f262,f263,f264,f265,f266
 
       DATA NDVPT/5/
-      DATA IGL,IGH,IMJ,IBH,ICA,ICG,IVN,IPW,IPG,IVG,IP9,IGD,IXLF,IEX,
-     +     XLF/0,0,0,0,0,1,0,0,1,0,0,1,0,0,0.00D0/
+      DATA IGL,IGH,IMJ,ICA,ICG,IVN,IPW,IPG,IVG,IP9,IGD,IXLF,IEX,
+     +     XLF/0,0,0,0,1,0,0,1,0,0,1,0,0,0.00D0/
       DATA IWR/0/
 C     ..
 C     .. Statement Function definitions ..

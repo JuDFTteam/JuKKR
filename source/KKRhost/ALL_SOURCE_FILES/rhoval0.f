@@ -1,5 +1,5 @@
-      SUBROUTINE RHOVAL0(EZ,WEZ,DRDI,RMESH,IPAN,IRCUT,IRWS,
-     &                  THETAS,LMAX,DOS0,DOS1)
+      SUBROUTINE RHOVAL0(EZ,DRDI,RMESH,IPAN,IRCUT,IRWS,
+     &                  THETAS,DOS0,DOS1)
 C
       IMPLICIT NONE
 C
@@ -19,8 +19,8 @@ C     .. Parameters ..
       PARAMETER ( CONE=(1.D0,0.D0),CZERO=(0.D0,0.D0),CI=(0.D0,1.D0) )
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER IPAN,LMAX,IRWS
-      DOUBLE COMPLEX EZ,WEZ,DOS0,DOS1
+      INTEGER IPAN,IRWS
+      DOUBLE COMPLEX EZ,DOS0,DOS1
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION DRDI(IRMD),
@@ -79,9 +79,9 @@ c
           END DO
         END IF
         CALL CSIMPK(CDEN0(1,L1),DENL,IPAN,IRCUT,DRDI)
-        DOS0 = DOS0 + DENL !WEZ*DENL
+        DOS0 = DOS0 + DENL
         CALL CSIMPK(CDEN1(1,L1),DENL,IPAN,IRCUT,DRDI)
-        DOS1 = DOS1 + DENL !WEZ*DENL
+        DOS1 = DOS1 + DENL
       END DO
 C
 C

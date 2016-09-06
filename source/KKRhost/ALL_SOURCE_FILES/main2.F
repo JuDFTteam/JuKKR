@@ -71,7 +71,7 @@ C     .. old/new FERMI energy
       DOUBLE PRECISION EFOLD,EFNEW
       DOUBLE PRECISION DENEF,E1,E2,TK
       DOUBLE PRECISION CHRGOLD,CHRGNT,E2SHIFT
-      DOUBLE PRECISION DF,STIME0,ETIME0
+      DOUBLE PRECISION DF
       DOUBLE PRECISION ALAT,FCM,MIX,MIXING,QBOUND,
      &                 FPI,PI,RFPI,RMSAVM,RMSAVQ,RMSAV0
       DOUBLE PRECISION SUM,RV
@@ -218,22 +218,22 @@ C declarations needed:
        LOGICAL LPOTSYMM(NATYPD,LMPOTD)
 c New variables for fixed Fermi energy calculations; noted as fxf
        DOUBLE PRECISION VMT_INIT(2),VSHIFT  ! fxf
-
-      REAL*8 PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
 C     ..
 ! for SIMULASA:
       INTEGER*4 IPOS,ILMP,IAS
+! allocatable arrays
+      integer :: ierr
 C     ..
 
-      allocate(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VONS(IRMD,LMPOTD,NPOTD))
-      allocate(VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD))
-      allocate(R2NEF(IRMD,LMPOTD,NATYPD,2),
-     &         RHO2NS(IRMD,LMPOTD,NATYPD,2),
-     &         RHO2NSNM(IRMD,LMPOTD,NATYPD,2))
-
-
 ! allocations:
-      allocate(THETAS(IRID,NFUND,NCELLD), THESME(IRID,NFUND,NCELLD))
+      allocate(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VONS(IRMD,LMPOTD,NPOTD),
+     &         VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD),
+     &         R2NEF(IRMD,LMPOTD,NATYPD,2),
+     &         RHO2NS(IRMD,LMPOTD,NATYPD,2),
+     &         RHO2NSNM(IRMD,LMPOTD,NATYPD,2),
+     &         THETAS(IRID,NFUND,NCELLD), 
+     &         THESME(IRID,NFUND,NCELLD), stat=ierr)
+      if(ierr/=0) stop '[main2] Error allocating arrays'
 
 C     ..................................................................
 Consistency check
@@ -501,10 +501,9 @@ C ---------------------------------------------------------------------
          ELSE
 C ---------------------------------------------------------------------
             CALL VMADELBLK(CMOM,CMINST,LPOT,NSPIN,NAEZ,
-     &                     NATYP,VONS,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE,
-     &                     NOQ,KAOEZ,IQAT,CONC,CHRGATOM(1,1),
-     &                     ICC,HOSTIMP,IELAST,ATOMIMP,NATOMIMP,ALAT,
-     &                     VBC,VINTERS)
+     &                     VONS,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE,
+     &                     NOQ,KAOEZ,CONC,CHRGATOM(1,1),
+     &                     ICC,HOSTIMP,VINTERS)
         END IF
 
       IF (OPT('KKRFLEX ')) THEN
@@ -945,7 +944,7 @@ C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 C
       IF ((KTE.EQ.1 .AND. ICC.EQ.0) .or. OPT('KKRFLEX ')) 
-     &     CALL ETOTB1(ECOU,E2,EPOTIN,ESPC,ESPV,EXC,KPRE,LMAX,LPOT,
+     &     CALL ETOTB1(ECOU,EPOTIN,ESPC,ESPV,EXC,KPRE,LMAX,LPOT,
      &                 LCOREMAX,NSPIN,NATYP,NSHELL(1),CONC,IDOLDAU,
      &                 LOPT,EU,EDC)
 C
@@ -1038,10 +1037,10 @@ C ======================================================================
  1080       FORMAT('CMOMC',2I6)
  1090       FORMAT(4D22.14)
  
-      deallocate(thetas, thesme)
-      deallocate(vins, vons)
-      deallocate(vxcm, vxcnm)
-      deallocate(R2NEF,RHO2NS,RHO2NSNM)
+      deallocate(thetas, thesme, vins, vons, vxcm, vxcnm, stat=ierr)
+      if(ierr/=0) stop '[main2] Error deallocating thetas etc.'
+      deallocate(R2NEF, RHO2NS, RHO2NSNM, stat=ierr)
+      if(ierr/=0) stop '[main2] Error deallocating r2nef etc.'
  
  
       END SUBROUTINE !main2
@@ -1078,9 +1077,6 @@ c Input/Output:
 c Inside
       REAL*8 PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
       INTEGER ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
-      INTEGER IER
-      CHARACTER*256 UIO ! NCOLIO=256
-
 
 
       DO IH = 1,NATYP

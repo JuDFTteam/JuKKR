@@ -7,11 +7,13 @@ c     IND is an array that holds the new positions
 c     max number of ellements to be sorted
 c     pos the position where the first element is found
 c ------------------------------------------------------------------------
+      IMPLICIT NONE
       INTEGER MAX,POS
       DOUBLE PRECISION  W(*)
       INTEGER IND(*)
 
       INTEGER I,II,J,JJ,K
+      DOUBLE PRECISION BOUND, DIFF
       DATA BOUND /1.0D-12/
 c ------------------------------------------------------------------------
       DO 10 I = 1,MAX

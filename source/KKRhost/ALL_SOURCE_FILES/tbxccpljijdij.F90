@@ -10,8 +10,8 @@ contains
 
   subroutine tbxccpljijdij( naezd,natypd,lmmaxd,lmgf0d,natomimpd,nsymaxd,iemxd, & !dimensions
                           & thetas, phis,&
-                          & nofgij,natomimp,atomimp,nofgijD,iqat,rclsimp,& !imp-cluser
-                          & nshelD,nshell,ijtabcalc,ijtabcalc_I,ijtabsh,ijtabsym,  & !shells
+                          & natomimp,atomimp,nofgijD,iqat,rclsimp,& !imp-cluser
+                          & ijtabcalc,ijtabcalc_I,ijtabsh,ijtabsym,  & !shells
                           & ielast,ez,wez,npol, & !energies
                           & dsymll, & !symmetries
                           & noq,itoq, ncpa) !CPA
@@ -39,19 +39,16 @@ contains
     !energy contour
     integer,        intent(in) :: ielast, iemxd, npol
     double complex, intent(in) :: ez(iemxd), wez(iemxd)
-    integer :: ie, ie_start, ie_end, ie_num
+    integer :: ie, ie_end, ie_num
+#ifdef CPP_MPI
+    integer :: ie_start
+#endif
 
 
     !shell indexing
-    integer, intent(in) :: nofgij,nofgijD,nshelD,natomimp,natomimpd
+    integer, intent(in) :: nofgijD,natomimp,natomimpd
     integer, intent(in) :: atomimp(natomimpd), iqat(natypd)
     double precision, intent(in) :: rclsimp(3,natomimpd)
-    integer             :: ntcalc(natypd)
-    integer, intent(in) :: nshell(0:nshelD)
-!                          nsh1(nshelD),    &
-!                          nsh2(nshelD),    &
-!                          ish(nshelD,nofgijD), &
-!                          jsh(nshelD,nofgijD)
     integer, intent(in) :: ijtabcalc(nofgijD),  &
                          & ijtabcalc_I(nofgijD),&
                          & ijtabsh(nofgijD),    &
@@ -72,10 +69,12 @@ contains
                                  & Tik(:,:), Tjl(:,:), w3(:,:)
 
     !
-    double complex, allocatable :: Jijmat(:,:,:,:), Jijmat_tmp(:,:,:,:), &
-                                 & jxcijint(:,:)
+    double complex, allocatable :: Jijmat(:,:,:,:), jxcijint(:,:)
+#ifdef CPP_MPI
+    double complex, allocatable :: Jijmat_tmp(:,:,:,:)
+#endif
     integer, allocatable :: indxarr(:,:)
-    double precision :: Jijmat_real(nalpha,nalpha)
+!     double precision :: Jijmat_real(nalpha,nalpha)
 
     integer :: i1,i2,nn,kk,ish,isym,iq,jq,iJ1,iI1,jt,it,kalpha,lalpha,&
              & irec,ierr,lm1,lm2,lm3,istore,ncount
@@ -459,8 +458,9 @@ contains
     end if!myrank==master
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 
-
+#ifdef CPP_MPI
   call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+#endif
 
 99009 FORMAT("# off-diagonal exchange coupling constants ",/,&
      &     "# for atom IT = ",I5," on site IQ = ",I5," impurity site = ",I5,/,&

@@ -8,27 +8,23 @@
       
       subroutine main1b()
       
-#ifdef CPP_MPI
-      use mpi
-#endif
-#ifdef CPP_TIMING
       use mod_timing
-#endif 
       use mod_types, only: t_tgmat, t_inc, t_lloyd, t_cpa, init_t_cpa
 #ifdef CPP_MPI
-     &                     ,gather_tmat, gather_gref,
-     &                      t_mpi_c_grid, save_t_mpi_c_grid,
-     &                      get_ntot_pT_ioff_pT_2D 
+     &                     ,t_mpi_c_grid, save_t_mpi_c_grid,
+     &                      get_ntot_pT_ioff_pT_2D
+      use mpi
 #endif
       use mod_mympi, only: myrank, nranks, master
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
-     &                     distribute_linear_on_tasks
+     &                     distribute_linear_on_tasks, MPIadapt
 #endif
       use mod_wunfiles
       use mod_tbxccpljij, only: tbxccpljij
       use mod_tbxccpljijdij, only: tbxccpljijdij
 
+      IMPLICIT NONE
       INCLUDE 'inc.p'
 C
 C *********************************************************************
@@ -81,7 +77,7 @@ C     .. Local Scalars ..
       INTEGER KMROT,INVMOD,ICC,IGF,IPRINT,IDECI
       INTEGER MAXMESH,NAEZ,I,ISPIN,I1,IE,IREC,L,LM1,LM2,L1
       INTEGER NATOMIMP,NSYMAT,NCPA,NCPAFAIL,ICPAFLAG,ITCPAMAX
-      INTEGER NMESH,ID,NOFGIJ,NQCALC
+      INTEGER NMESH,NOFGIJ,NQCALC
       INTEGER ITMPDIR,ILTMP
       INTEGER IQ,NQDOS ! qdos ruess:number of qdos points
       INTEGER IX,ISITE ! qdos ruess
@@ -92,10 +88,12 @@ C     RFCTOR=A/(2*PI) conversion factor to p.u.
       DOUBLE PRECISION CPATOL,ALAT,RFCTOR,THETA,PHI
       DOUBLE PRECISION PI,THETAS(NATYPD),PHIS(NATYPD)
       DOUBLE PRECISION RCLSIMP(3,NATOMIMPD)
-      DOUBLE COMPLEX DF,ERYD,EK,CFCTOR,CFCTORINV
-      LOGICAL OPT,TEST,LCPAIJ,LREAD
+      DOUBLE COMPLEX ERYD,CFCTOR,CFCTORINV
+      LOGICAL OPT,TEST,LCPAIJ
       CHARACTER*80 TMPDIR
+#ifndef CPP_MPI
       CHARACTER*80 TEXT !qdos ruess
+#endif
 C     .. 
 C     .. Local Arrays
       INTEGER NSHELL(0:NSHELD),REFPOT(NAEZD+NEMBD),ATOMIMP(NATOMIMPD)
@@ -139,8 +137,9 @@ C     .. effective (site-dependent) Delta_t^(-1) matrix ..
       DOUBLE COMPLEX FACTL(LMMAXD,LMMAXD)
       DOUBLE PRECISION RATOM(3,NSHELD),RROT(48,3,NSHELD)
       INTEGER NSH1(NSHELD),NSH2(NSHELD)
-      INTEGER IJTABCALC(NOFGIJD),IJTABCALC_I(NOFGIJD),
-     &        ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD)
+      INTEGER IJTABCALC(NOFGIJD),IJTABCALC_I(NOFGIJD)!,
+!      &        ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD)
+      INTEGER, ALLOCATABLE :: ISH(:,:),JSH(:,:)
       INTEGER IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD),IQCALC(NAEZD)
       DOUBLE COMPLEX CREL(LMMAXD,LMMAXD),RC(LMMAXD,LMMAXD),
      &               RREL(LMMAXD,LMMAXD),SRREL(2,2,LMMAXD)
@@ -161,14 +160,12 @@ C     ..
       INTEGER KMESH(IEMXD),NOFKS(MAXMSHD)
       DOUBLE PRECISION, allocatable :: BZKP(:,:,:)
       DOUBLE PRECISION VOLCUB(KPOIBZ,MAXMSHD),VOLBZ(MAXMSHD)
-      DOUBLE COMPLEX TR1(IEMXD,NATYPD)
       INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)
       CHARACTER*35 INVALG(0:2)
 #ifdef CPP_MPI
-      integer :: ie_start, mytot, ierr
-      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+      integer :: ie_start
 #endif
-      integer :: ie_num, ie_end
+      integer :: ie_num, ie_end, ierr
 C     ..
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C     for conductivity calculation
@@ -180,9 +177,6 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN
 C     ..
-C     .. External Subroutines ..
-      EXTERNAL CALCTREF13,CHANGEREP,KLOOPZ1_QDOS,OPT,CINIT
-C     ..
 C     .. Data statements
       DATA INVALG /'FULL MATRIX                        ',
      &             'BANDED MATRIX (slab)               ',
@@ -192,9 +186,13 @@ C     ..
 C
       if(t_inc%i_write>0) IPRINT=1
 
+      ! allocatable arrays
       allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-     &         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
-      allocate(BZKP(3,KPOIBZ,MAXMSHD))
+     &         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
+     &         BZKP(3,KPOIBZ,MAXMSHD), stat=ierr)
+      if(ierr/=0) stop '[main1b] Error allocating leftinvll etc.'
+      allocate(ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD), stat=ierr)
+      if(ierr/=0) stop '[main1b] Error allocating ISH and JSH'
 
 Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
@@ -209,11 +207,11 @@ C =             read in variables from unformatted files               =
 C ======================================================================
 C
 C -------------------------------------------------------------- input1b
-      call get_params_1b(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,NPOL,
-     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
+      call get_params_1b(t_params,NATYPD,NACLSD,IELAST,NPOL,
+     &       NCLSD,NREFD,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
      &       NSPIN,LMAX,NCLS,NREF,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,
      &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,
-     &       LMAXD,NSHELD,NPRINCD,KPOIBZ,NTOTD,NSPOTD,ATOMIMP,NATOMIMPD,
+     &       NSHELD,NPRINCD,KPOIBZ,ATOMIMP,NATOMIMPD,
      &       ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,
      &       IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,
      &       NOQ,IQAT,NOFGIJD,NOFGIJ,NATOMIMP,CONC,KMESH,MAXMESH,NSYMAT,
@@ -325,7 +323,11 @@ C
            OPEN (71,ACCESS='direct',RECL=2*LRECTMT,
      +           FILE='dmatproj.unformatted',FORM='unformatted')
        else
-           call init_t_cpa(t_inc,t_cpa,t_mpi_c_grid)
+#ifndef CPP_MPI
+           call init_t_cpa(t_inc,t_cpa,IELAST)
+#else
+           call init_t_cpa(t_inc,t_cpa,t_mpi_c_grid%ntot2)
+#endif
        end if!t_cpa%dmatproj_to_file
       END IF!LCPAIJ
 C
@@ -372,8 +374,10 @@ C Value of NQDOS changes to a read-in value if option qdos is applied, otherwise
 C        Read BZ path for qdos calculation:
          OPEN(67,FILE='qvec.dat')                       ! qdos ruess
          READ(67,*) NQDOS                               ! qdos ruess
-         DEALLOCATE(QVEC)                               ! qdos ruess: deallocate in first run allocated array to change it
-         ALLOCATE(QVEC(3,NQDOS))                        ! qdos ruess
+         DEALLOCATE(QVEC, stat=ierr)                    ! qdos ruess: deallocate in first run allocated array to change it
+         if(ierr/=0) stop '[main1b] Error deallocating qvec' 
+         ALLOCATE(QVEC(3,NQDOS), stat=ierr)             ! qdos ruess
+         if(ierr/=0) stop '[main1b] Error reallocating qvec'
          DO IQ = 1,NQDOS                                ! qdos ruess
             READ(67,*) (QVEC(IX,IQ),IX=1,3)             ! qdos ruess
          ENDDO                                          ! qdos ruess
@@ -388,7 +392,8 @@ C calling list or the contents of kloopz1.
          NSYMAT = 1
       ELSEIF (OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) THEN ! qdos ruess
 C Call the k loop just once with one k point to write out the tmat.qdos file
-         ALLOCATE(QVEC(3,NQDOS))                        ! qdos ruess
+         ALLOCATE(QVEC(3,NQDOS), stat=ierr)             ! qdos ruess
+         if(ierr/=0) stop '[main1b] Error allocating qvec'
          QVEC(1:3,1) = 0.D0                             ! qdos ruess
          KMESH(1:IELAST) = 1                            ! qdos ruess
          NOFKS(1) = 1                                   ! qdos ruess
@@ -415,6 +420,11 @@ C
          
          DO 360 ie_num=1,ie_end
             IE = ie_start+ie_num
+            
+            !start timing measurement for this ie, needed for MPIadapt
+            if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
+              call timing_start('time_1b_ie')
+            end if
 #else
          DO 360 IE = 1,IELAST
             ie_num = ie
@@ -596,11 +606,7 @@ C           Skip this part if first part of the qdos is running
               END IF  ! (NCPA.NE.0)
 
               DO I1 = 1,NSHELL(0)
-                DO LM1=1,LMMAXD
-                  DO LM2=1,LMMAXD
-                     GMAT0(LM1,LM2)=GMATLL(LM1,LM2,I1)
-                  ENDDO
-                ENDDO
+                GMAT0(:,:)=GMATLL(:,:,I1)
                 IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST *        ! qdos ruess: (without qdos, IQ=NQ=1)
      &                   (ISPIN-1) + NQDOS * IELAST * NSPIN * (I1-1) ! qdos ruess
                 if (t_tgmat%gmat_to_file) then
@@ -615,12 +621,12 @@ C           Skip this part if first part of the qdos is running
               IF (TEST('gmatasci')) THEN
                  WRITE(*,*) 'Writing out gmat.ascii'
                  DO I1 = 1,NSHELL(0)
-                 DO LM1=1,LMMAXD
-                 DO LM2=1,LMMAXD
-                    WRITE(298347,FMT='(3I5,2E25.16)') 
+                   DO LM1=1,LMMAXD
+                     DO LM2=1,LMMAXD
+                       WRITE(298347,FMT='(3I5,2E25.16)') 
      &              I1,LM1,LM2,GMATLL(LM1,LM2,I1)
-                 ENDDO
-                 ENDDO
+                     ENDDO
+                   ENDDO
                  ENDDO
               ENDIF
 
@@ -646,12 +652,8 @@ C           Skip this part if first part of the qdos is running
             IF ( LCPAIJ ) THEN
              if(t_cpa%dmatproj_to_file) then
                DO I1 = 1,NATYP
-                  DO LM2=1,LMMAXD
-                     DO LM1=1,LMMAXD
-                        GMAT0(LM1,LM2) = TSST(LM1,LM2,I1)
-                        W1(LM1,LM2)    = MSST(LM1,LM2,I1)
-                     END DO
-                  END DO
+                  GMAT0(:,:) = TSST(:,:,I1)
+                  W1(:,:)    = MSST(:,:,I1)
                   IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN*(I1-1)
                   WRITE (71,REC=IREC) GMAT0,W1
                END DO
@@ -691,6 +693,13 @@ C
             ENDIF                                                         ! LLY Lloyd
             
 c ------------------------------------------------------------------------
+
+#ifdef CPP_MPI
+            !stop timing measurement for this ie, needed for MPIadapt
+            if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
+              call timing_stop('time_1b_ie', save_out=timings_1b(ie) )
+            end if
+#endif
 
  360     CONTINUE               ! IE = 1,IELAST
 #ifdef CPP_TIMING
@@ -732,6 +741,12 @@ C
 
       DO 460 ie_num=1,ie_end
          IE = ie_start+ie_num
+   
+         !start timing measurement for this ie, needed for MPIadapt
+         if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
+           call timing_start('time_1b_ie')
+         end if
+
 #else
       ie_end = IELAST
       DO 460 IE=1,IELAST
@@ -907,11 +922,10 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 
                DO I1 = 1,NSHELL(0)
                   GMAT0(1:LMMAXD,1:LMMAXD) =GMATLL(1:LMMAXD,1:LMMAXD,I1)
-                  !IREC = IE + IELAST*(I1-1)     ! <-- before introducing qdos
                   IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST * (I1-1) ! qdos ruess
                   if (t_tgmat%gmat_to_file) then
                      WRITE (70,REC=IREC) GMAT0
-!                      write(707070,*) gmat0
+!                      write(707070,'(i9,200000F15.7)') irec, gmat0
 
                   else
                      IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
@@ -979,6 +993,13 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 
             ENDIF                                                   ! LLY 
          
+
+#ifdef CPP_MPI
+           !stop timing measurement for this ie, needed for MPIadapt
+           if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
+              call timing_stop('time_1b_ie', save_out=timings_1b(ie) )
+           end if
+#endif
 
  460  CONTINUE                  ! IE=1,IELAST
 #ifdef CPP_TIMING
@@ -1103,15 +1124,15 @@ C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
          IF (.NOT.OPT('NEWSOSOL')) THEN
             CALL TBXCCPLJIJ(69,IELAST,EZ,WEZ,NSPINDD,NCPA,NAEZ,NATYP,NOQ
      &                     ,ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,
-     &                      FACTL,NOFGIJ,NQCALC,IQCALC,IJTABCALC,
+     &                      NOFGIJ,NQCALC,IQCALC,IJTABCALC,
      &                      IJTABSYM,IJTABSH,ISH,JSH,
-     &                      DSYMLL,IPRINT,NATYPD,NAEZD,NSHELD,LMMAXD,
+     &                      DSYMLL,IPRINT,NATYPD,NSHELD,LMMAXD,
      &                      NPOL)
          ELSE !.NOT.OPT('NEWSOSOL'))
            CALL TBXCCPLJIJDIJ(naezd,natypd,lmmaxd,lmgf0d,natomimpd,
      &                        nsymaxd,iemxd,thetas,phis,
-     &                nofgij,natomimp,atomimp,nofgijD,iqat,rclsimp,
-     &                nshelD,nshell,ijtabcalc,ijtabcalc_I,ijtabsh,
+     &                natomimp,atomimp,nofgijD,iqat,rclsimp,
+     &                ijtabcalc,ijtabcalc_I,ijtabsh,
      &                ijtabsym,
      &                ielast,ez,wez,NPOL,dsymll,noq,itoq,ncpa)
          END IF
@@ -1173,7 +1194,15 @@ C
       endif
 
 
-      deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP)
+      ! clean up allocations
+      deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP, stat=ierr)
+      if(ierr/=0) stop '[main1b] Error deallocating leftinvll etc.'
+      if(opt('qdos    ')) then
+        deallocate(qvec, stat=ierr)
+        if(ierr/=0) stop '[main1b] Error deallocating qvec after main1b'
+      end if
+      deallocate(ISH, JSH, stat=ierr)
+      if(ierr/=0) stop '[main1b] Error deallocating ISH and JSH'
 
 
       END SUBROUTINE !main1b

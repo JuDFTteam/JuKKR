@@ -24,14 +24,13 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
 
 
 !local variables
-      integer             :: first
       CHARACTER(len=40)   :: I25
       integer             :: NREFOLD
       integer             :: natomimp
       real*8,allocatable  :: ratomimp(:,:)
 !      real*8,allocatable  :: rbasislist(:,:)
       integer,allocatable :: ATOMIMP(:)
-      integer             :: iatom,ibasis,idim1,idim2
+      integer             :: iatom,ibasis
       integer             :: ierr
 !       real*8              :: ratomvtest(3)
       real*8              :: rbasisnew(3)
@@ -40,10 +39,8 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
       real*8              :: bravais(3,3)
       real*8,allocatable  :: bravaisinv(:,:)
       real*8              :: tol
-      integer             :: IPVT(3),INFO
       integer             :: ndim
       integer             :: naeznew
-      CHARACTER(len=80)   :: UIO
 
       tol = 1.d-5
 
@@ -369,7 +366,7 @@ subroutine inverse_d1(mat)
   real(8), intent(inout) :: mat(:,:)
   real(8), allocatable   :: work(:)
   integer, allocatable   :: ipiv(:)
-  integer                :: n,info,i,j
+  integer                :: n,info
   n = size(mat,1)
   if(size(mat,2).ne.n) stop 'inverse_d1: array dimensions differ.'
   allocate ( ipiv(n),work(n) )

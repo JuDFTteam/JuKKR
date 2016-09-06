@@ -5,7 +5,7 @@ C*==drvrho.f    processed by SPAG 6.05Rc at 11:40 on 10 May 2004
      &                  JWS,ISHIFT,SOLVER,SOCTL,CTL,QMTET,QMPHI,
      &                  ITERMVDIR,MVEVIL,MVEVILEF,LMMAXD,LMAXD,IRMD,
      &                  LMPOTD,IEMXD,NMVECMAX,
-     &                  I1,QVEC,NQDOS)                       ! qdos ruess 
+     &                  I1,NQDOS)                       ! qdos ruess 
 C   ********************************************************************
 C   *                                                                  *
 C   * driving routine to call relativistic routines                    *
@@ -54,8 +54,7 @@ C orbital density
 C
 C Local variables
 C
-      REAL*8 AMEOPC(NKMMAX,NKMMAX,NLAMAX,3),
-     &       AMEOPO(NKMMAX,NKMMAX,NLAMAX,3),AT(NRMAX,NLAMAX,3,NTMAX),
+      REAL*8 AMEOPO(NKMMAX,NKMMAX,NLAMAX,3),AT(NRMAX,NLAMAX,3,NTMAX),
      &       BCOR(NTMAX),BCORS(NTMAX),CONC(NTMAX),
      &       DOS(NTMAX),DOSI(NTMAX),
      &       EFERMI,HFF(NTMAX),
@@ -98,8 +97,6 @@ C
 C     qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
       COMPLEX*16 GMAT0(LMMAXD,LMMAXD)                    !qdos ruess
       INTEGER NQDOS,IREC,IPOINT                          !qdos ruess 
-      DOUBLE PRECISION QVEC(3,NQDOS)                     !qdos ruess 
-      COMPLEX*16 DENTOT1,DENTOT2          !dummy arrays  !qdos ruess 
 C     qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
       INTRINSIC ATAN,SQRT
 
@@ -113,9 +110,6 @@ C
       INTEGER IMKMTAB(NKMMAX),IKMLLIM1(NKMMAX),IKMLLIM2(NKMMAX)
       CHARACTER*1 TXTL(0:NLMAX)
       INTEGER IGRID(2),IEPATH,NEPATH
-C
-      REAL*8 MVGAM(NTMAX,NMVECMAX),MVPHI(NTMAX,NMVECMAX),
-     &     MVTET(NTMAX,NMVECMAX) ! DUMMY 
 C     
       REAL*8 QMTET,QMPHI        ! ARG. LIST
       REAL*8 QMPHILOC(NQMAX),QMTETLOC(NQMAX) ! DUMMY
@@ -279,7 +273,7 @@ C
      &     ERYD,P,IHYPER,IPRINT,IKM1LIN,IKM2LIN,NLQ,NKMQ,NLINQ,NT,
      &     NKM,IQAT,TSST,MSST,TSSTLIN,DZZ,DZJ,SZZ,SZJ,OZZ,OZJ,BZZ,
      &     BZJ,QZZ,QZJ,TZZ,TZJ,VT,BT,AT,ZAT,NUCLEUS,R,DRDI,R2DRDI,
-     &     JWS,IMT,AMEOPC,AMEOPO,LOPT,SOLVER,CGC,OZZS,OZJS,NLMAX,NQMAX,
+     &     JWS,IMT,AMEOPO,LOPT,SOLVER,CGC,OZZS,OZJS,NLMAX,NQMAX,
      &     LINMAX,NRMAX,NMMAX,NTMAX,NKMMAX,NKMPMAX,NLAMAX)
 C     
 C-----------------------------------------------------------------------
@@ -378,22 +372,6 @@ C
       DEN(NL,IECURR+IEMXD) = CZERO
       DEN(NL,IECURR) = CZERO
 c
-c Write out qdos
-! this gives segmentation fault ?!
-!      DENTOT1 = DCMPLX(0.D0,0.D0)                                         ! qdos ruess 
-!      DENTOT2 = DCMPLX(0.D0,0.D0)                                         ! qdos ruess 
-!      DO IL = 0,NL                                                        ! qdos ruess 
-!         DENTOT1 = DENTOT1 + DEN(IL,IECURR)                               ! qdos ruess 
-!         DENTOT2 = DENTOT2 + DEN(IL,IECURR+IEMXD)                         ! qdos ruess 
-!      ENDDO                                                               ! qdos ruess 
-!      WRITE(31,9000) ERYD,QVEC(1,IPOINT),QVEC(2,IPOINT),QVEC(3,IPOINT),   ! qdos ruess 
-!     &     -DIMAG(DENTOT1)/PI,(-DIMAG(DEN(IL,IECURR))/PI,IL=0,LMAXD+1),   ! qdos ruess 
-!     &     -DREAL(DENTOT1)/PI,(-DREAL(DEN(IL,IECURR))/PI,IL=0,LMAXD+1)    ! qdos ruess 
-!      WRITE(32,9000) ERYD,QVEC(1,IPOINT),QVEC(2,IPOINT),QVEC(3,IPOINT),   ! qdos ruess 
-!     &-DIMAG(DENTOT2)/PI,(-DIMAG(DEN(IL,IECURR+IEMXD))/PI,IL=0,LMAXD+1),  ! qdos ruess 
-!     &-DREAL(DENTOT2)/PI,(-DREAL(DEN(IL,IECURR+IEMXD))/PI,IL=0,LMAXD+1)   ! qdos ruess 
-! 9000 FORMAT(5F10.6,40E16.8)
-c
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C      ITERMDIR
 C
@@ -407,11 +385,11 @@ C
          CALL CINIT(NLMAX*NTMAX*3*NMVECMAX,MVEVIL1)
          CALL CINIT(NLMAX*NTMAX*3*NMVECMAX,BMVEVIL1)
 C
-         CALL CALCMVEC(TXTL,NFILCBWF,SHFTEF,SPLITSS,IEPATH,NEPATH,IREL,
+         CALL CALCMVEC(NFILCBWF,SPLITSS,IEPATH,NEPATH,IREL,
      &                 IPRINT,NT,NL,MEZZ,MEZJ,TAUT,TSST,IQAT,NKMQ,NKM,
-     &                 IEC,NETAB,IGRID(IEPATH),WE,TXTT,FACT,MVEVDL0,
-     &                 MVEVIL1,BMVEVDL0,BMVEVIL1,MVPHI,MVTET,MVGAM,
-     &                 QMTETLOC,QMPHILOC,R2DRDI,JWS,IMT,AMEMVEC,
+     &                 IEC,NETAB,IGRID(IEPATH),WE,MVEVDL0,
+     &                 MVEVIL1,BMVEVDL0,BMVEVIL1,
+     &                 R2DRDI,JWS,IMT,AMEMVEC,
      &                 IKMLLIM1,IKMLLIM2,IMKMTAB,NTMAX,NLMAX,NMUEMAX,
      &                 NQMAX,NKMMAX,NMMAX,NMVECMAX,NRMAX)
 C     
