@@ -589,18 +589,18 @@ c            DEALLOCATE(GLLKE0)
           
           IF (LLY.NE.0) then
           IWORK = 1
-          CALL MPI_ALLREDUCE(LLY_GRTR,WORK,IWORK,
+          CALL MPI_ALLREDUCE(LLY_GRTR,WORK(1,1,1),IWORK,
      +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
      +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-          CALL ZCOPY(IWORK,WORK,1,LLY_GRTR,1)
+          CALL ZCOPY(IWORK,WORK(1,1,1),1,LLY_GRTR,1)
           endif
           
           if(lly.eq.2) then
           IWORK = 1
-          CALL MPI_ALLREDUCE(TRACET,WORK,IWORK,
+          CALL MPI_ALLREDUCE(TRACET,WORK(1,1,1),IWORK,
      +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
      +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-          CALL ZCOPY(IWORK,WORK,1,TRACET,1)
+          CALL ZCOPY(IWORK,WORK(1,1,1),1,TRACET,1)
           endif
 #endif
 

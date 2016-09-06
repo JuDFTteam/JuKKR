@@ -60,19 +60,20 @@ C     .. Local Arrays ..
       DOUBLE COMPLEX TREFLL(LMGF0D,LMGF0D,NREFD),
      &               DTREFLL(LMGF0D,LMGF0D,NREFD)                     ! LLY 
       DOUBLE COMPLEX,ALLOCATABLE:: GINP(:,:,:),
-     &                             DGINP(:,:,:)                       ! LLY
+     &                             DGINP(:,:,:), LLY_G0TR(:,:)        ! LLY
       DOUBLE COMPLEX ALPHAREF(0:LMAXD,NREFD),DALPHAREF(0:LMAXD,NREFD) ! LLY Lloyd Alpha matrix and deriv.
-      DOUBLE COMPLEX   LLY_G0TR(IEMXD,NCLSD) ! LLY
+      DOUBLE COMPLEX lly_g0tr_dum                     ! LLY dummy variable used if no LLY is chosen to save memory
+      DOUBLE COMPLEX, allocatable :: dginp_dum(:,:)   ! LLY dummy variable used if no LLY is chosen to save memory
 #ifdef CPP_MPI
 C     ..
 C     .. MPI ..
       integer :: IE_START, IE_END
-      integer :: ntot1, idim, ierr
+      integer :: ntot1, idim
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
       double complex, allocatable :: work(:,:,:)
 #endif
       integer :: i1_start, i1_end
-      integer :: ie_num
+      integer :: ie_num, ierr
 C     ..
 C     .. External Functions ..
       LOGICAL TEST
@@ -91,11 +92,21 @@ C     ..
       ENDDO
       LRECGRF1 = WLENGTH*4*NACLSMAX*LMGF0D*LMGF0D*NCLS 
 
-      ALLOCATE (  GINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
-      ALLOCATE ( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
-      
+      ! allocate and initialize ginp
+      ALLOCATE(  GINP(NACLSMAX*LMGF0D,LMGF0D,NCLS), 
+     &           dginp_dum(NACLSMAX*LMGF0D,LMGF0D), stat=ierr )
+      if(ierr/=0) stop '[tbref] Error allocating ginp etc.'
       ginp = (0.0d0, 0.0d0)
-      dginp = (0.0d0, 0.0d0)
+      
+      IF (LLY.NE.0) THEN
+         ! allocate and initialize dginp and lly_g0tr
+         ALLOCATE( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS), stat=ierr )
+         if(ierr/=0) stop '[tbref] Error allocating dginp'
+         ALLOCATE ( LLY_G0TR(IEMXD,NCLSD), stat=ierr )
+         if(ierr/=0) stop '[tbref] Error allocating lly_g0tr'
+         dginp = (0.0d0, 0.0d0)
+         LLY_G0TR = (0.0d0, 0.0d0)
+      ENDIF
 
 
       if (t_tgmat%gref_to_file) then
@@ -175,19 +186,19 @@ C
      +                 ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS),
      &                 TOLRDIF,
      +                 ALATC,0,GINP(1,1,ICLS),
-     &                 DGINP(1,1,ICLS),NACLSMAX,LLY_G0TR(IE,ICLS),LLY)
-         END DO
+     &                 dginp_dum,NACLSMAX,lly_g0tr_dum,LLY)
+     
+            ! copy from dummy variable to arrays
+            if(LLY.ne.0) then
+               DGINP(:,:,ICLS) = dginp_dum(:,:)
+               LLY_G0TR(IE,ICLS) = lly_g0tr_dum
+            end if
+            
+         END DO !icls
+         
 
 #ifdef CPP_MPI
          if(t_mpi_c_grid%nranks_ie>1) then
-           if(t_mpi_c_grid%myrank_ie>0) then
-              ! set these to zero to avoid double counting in communication below
-              GINP = (0.0d0, 0.0d0)
-              if(LLY.ne.0) then
-                 DGINP = (0.0d0, 0.0d0)
-                 LLY_G0TR(IE,:) = (0.0d0, 0.0d0)
-              end if
-           end if
            !gather results of ginp, dginp and lly_g0tr from above parallel loop
            IDIM = NACLSMAX*LMGF0D*LMGF0D*NCLS
            allocate(work(NACLSMAX*LMGF0D,LMGF0D,NCLS))
@@ -255,6 +266,11 @@ C ======================================================================
 
       IF (LLY.NE.0 .and. t_lloyd%dgref_to_file) CLOSE (681)
       IF (LLY.NE.0 .and. t_lloyd%g0tr_to_file) CLOSE (682)
-      DEALLOCATE (GINP,DGINP)
+      DEALLOCATE(GINP, stat=ierr)
+      if(ierr/=0) stop '[tbref] Error deallocating ginp'
+      if(LLY.NE.0) then
+         DEALLOCATE (DGINP, LLY_G0TR, stat=ierr)
+         if(ierr/=0) stop '[tbref] Error deallocating dginp etc.'
+      end if
 
       END

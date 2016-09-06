@@ -43,6 +43,8 @@ contains
       integer, allocatable :: kmesh_priority(:), my_kmesh(:)
       logical, allocatable :: mask(:)
       
+      logical :: firstrun
+      
       
       !>>>>>>>  set some parameters  >>>>>>>!
       nth = 1
@@ -65,104 +67,106 @@ contains
       ioff_at = 0
       ioff_ie = 0
 #endif
-      
-      allocate(t_wavefunctions%isave_wavefun(nat, ne), stat=ierr)
-      if(ierr/=0) stop '[find_isave_wavefun] Error allocating isave_wavefun'
-      !<<<<<<<  set some parameters  <<<<<<<!
-      
-      
-      !>>>>>>>  find numer of wavefunctions that can be stored and allocate store arrays  >>>>>>>!
-      ! memory demand for one atom and one energy point in Mbyte
-      delta_mem = dfloat(t_inc%NSRA*t_inc%LMMAXSO * t_inc%LMMAXSO * t_inc%IRMDNEW * nth * 16) / (1024.0d0**2)
-      ! find numer of wavefunctions that can be stored
-      t_wavefunctions%Nwfsavemax = t_wavefunctions%maxmem_number * 1024**(t_wavefunctions%maxmem_units-2) / dint( 4*delta_mem )
-      if(myrank==master) then
-         write(1337,"(A,/A,F15.2,A,/A,I11,/A,I11,A,I11,A)") '   ==> find_isave_wavefun ', &
-         &'   (maxmem given for storage:',dfloat((1024**(t_wavefunctions%maxmem_units-2))*t_wavefunctions%maxmem_number), 'MB', &
-         &'    number of wavefunctions (factor 4 for rll, sll left and right already in) that fit in:',t_wavefunctions%Nwfsavemax, &
-         &'    Ne=',ne,', Nat=',nat,''
-         write(1337,'(A,F15.2,A)') '    memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:', delta_mem, 'MB)  <=='
-      end if
-      
-      ! avoid unnessesary large allocations of arrays
-      if( t_wavefunctions%Nwfsavemax > nat_myrank*ne_myrank ) then
-         t_wavefunctions%Nwfsavemax = nat_myrank*ne_myrank
-         if(t_inc%i_write>0) write(1337,'(A,I5,A,I9)') '  rank',myrank,' reset Nwfsavemax to maximal needed number for this thread:',t_wavefunctions%Nwfsavemax
-      end if
 
+      ! check if this is the first run or not
+      firstrun = .true.
+      if(allocated(t_wavefunctions%isave_wavefun)) firstrun = .false.
       
-      if(t_wavefunctions%Nwfsavemax>0) then
-         ! allocate store arrays int t_wavefunctions
-         allocate(t_wavefunctions%rll(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
-         if(ierr/=0) stop '[find_isave_wavefun] Error allocating rll'
-         allocate(t_wavefunctions%rllleft(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
-         if(ierr/=0) stop '[find_isave_wavefun] Error allocating rllleft'
-         allocate(t_wavefunctions%sll(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
-         if(ierr/=0) stop '[find_isave_wavefun] Error allocating sll'
-         allocate(t_wavefunctions%sllleft(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
-         if(ierr/=0) stop '[find_isave_wavefun] Error allocating sllleft'
-      end if
-      !<<<<<<<  find numer of wavefunctions that can be stored and allocate store arrays  <<<<<<<!
+      if(firstrun) then
+      
+        allocate(t_wavefunctions%isave_wavefun(nat, ne), stat=ierr)
+        if(ierr/=0) stop '[find_isave_wavefun] Error allocating isave_wavefun'
+        !<<<<<<<  set some parameters  <<<<<<<!
+        
+        
+        !>>>>>>>  find numer of wavefunctions that can be stored and allocate store arrays  >>>>>>>!
+        ! memory demand for one atom and one energy point in Mbyte
+        delta_mem = dfloat(t_inc%NSRA*t_inc%LMMAXSO * t_inc%LMMAXSO * t_inc%IRMDNEW * nth * 16) / (1024.0d0**2)
+        ! find numer of wavefunctions that can be stored
+        t_wavefunctions%Nwfsavemax = t_wavefunctions%maxmem_number * 1024**(t_wavefunctions%maxmem_units-2) / dint( 4*delta_mem )
+        if(myrank==master) then
+           write(1337,"(A,/A,F15.2,A,/A,I11,/A,I11,A,I11,A)") '   ==> find_isave_wavefun ', &
+           &'   (maxmem given for storage:',dfloat((1024**(t_wavefunctions%maxmem_units-2))*t_wavefunctions%maxmem_number), 'MB', &
+           &'    number of wavefunctions (factor 4 for rll, sll left and right already in) that fit in:',t_wavefunctions%Nwfsavemax, &
+           &'    Ne=',ne,', Nat=',nat,''
+           write(1337,'(A,F15.2,A)') '    memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:', delta_mem, 'MB)  <=='
+        end if
+        
+        ! avoid unnessesary large allocations of arrays
+        if( t_wavefunctions%Nwfsavemax > nat_myrank*ne_myrank ) then
+           t_wavefunctions%Nwfsavemax = nat_myrank*ne_myrank
+           if(t_inc%i_write>0) write(1337,'(A,I5,A,I9)') '  rank',myrank,' reset Nwfsavemax to maximal needed number for this thread:',t_wavefunctions%Nwfsavemax
+        end if
+
+        
+        if(t_wavefunctions%Nwfsavemax>0) then
+           ! allocate store arrays int t_wavefunctions
+           allocate(t_wavefunctions%rll(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
+           if(ierr/=0) stop '[find_isave_wavefun] Error allocating rll'
+           allocate(t_wavefunctions%rllleft(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
+           if(ierr/=0) stop '[find_isave_wavefun] Error allocating rllleft'
+           allocate(t_wavefunctions%sll(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
+           if(ierr/=0) stop '[find_isave_wavefun] Error allocating sll'
+           allocate(t_wavefunctions%sllleft(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
+           if(ierr/=0) stop '[find_isave_wavefun] Error allocating sllleft'
+        end if
+        !<<<<<<<  find numer of wavefunctions that can be stored and allocate store arrays  <<<<<<<!
 
 
-      if(t_wavefunctions%Nwfsavemax>0) then
-         !>>>>>>>  find priority of saving wavefunctions according to kmesh  >>>>>>>!
-         ! kmesh( 1 : ne )
-         allocate(my_kmesh(ne_myrank), stat=ierr)
-         if(ierr/=0) stop '[find_isave_wavefun] Error allocating my_kmesh'
-         my_kmesh(:) = t_inc%kmesh_ie( 1+ioff_ie : ne_myrank+ioff_ie)
-         maxpos(1) = 0
-         do i=1,ne_myrank
-            if(my_kmesh(i)>maxpos(1)) maxpos(1) = my_kmesh(i)
-         end do
-         my_kmesh(:) = maxpos(1) - my_kmesh(:)
-         
-         allocate(kmesh_priority(ne_myrank), stat=ierr)
-         if(ierr/=0) stop '[find_isave_wavefun] Error allocating kmesh_priority'
-         allocate(mask(ne_myrank), stat=ierr)
-         if(ierr/=0) stop '[find_isave_wavefun] Error allocating mask'
-         
-         mask(:) = .true.
-         do i=1,ne_myrank
-            ! find position of maximal value in my_kmesh and fill array kmesh_priority
-            maxpos = maxloc(my_kmesh, mask=mask)
-            kmesh_priority(maxpos(1)) = i
-            ! update mask to exclude previously found position
-            mask(maxpos(1)) = .false.
-         end do ! i=1,ne_myrank
+        if(t_wavefunctions%Nwfsavemax>0) then
+           !>>>>>>>  find priority of saving wavefunctions according to kmesh  >>>>>>>!
+           ! kmesh( 1 : ne )
+           allocate(my_kmesh(ne_myrank), stat=ierr)
+           if(ierr/=0) stop '[find_isave_wavefun] Error allocating my_kmesh'
+           my_kmesh(:) = t_inc%kmesh_ie( 1+ioff_ie : ne_myrank+ioff_ie)
+           maxpos(1) = 0
+           do i=1,ne_myrank
+              if(my_kmesh(i)>maxpos(1)) maxpos(1) = my_kmesh(i)
+           end do
+           my_kmesh(:) = maxpos(1) - my_kmesh(:)
+           
+           allocate(kmesh_priority(ne_myrank), stat=ierr)
+           if(ierr/=0) stop '[find_isave_wavefun] Error allocating kmesh_priority'
+           allocate(mask(ne_myrank), stat=ierr)
+           if(ierr/=0) stop '[find_isave_wavefun] Error allocating mask'
+           
+           mask(:) = .true.
+           do i=1,ne_myrank
+              ! find position of maximal value in my_kmesh and fill array kmesh_priority
+              maxpos = maxloc(my_kmesh, mask=mask)
+              kmesh_priority(maxpos(1)) = i
+              ! update mask to exclude previously found position
+              mask(maxpos(1)) = .false.
+           end do ! i=1,ne_myrank
 
-         if(any(kmesh_priority==-1)) then
-            write(1337,*) '[find_isave_wavefun] kmesh_priority not found correctly; kmesh_priority:', kmesh_priority, '; mask:', mask
-            stop 
-         end if
-         !<<<<<<<  find priority of saving wavefunctions according to kmesh  <<<<<<<!
-         
-         
-         !>>>>>>>  set isave_wavefun array  >>>>>>>!
-         t_wavefunctions%isave_wavefun(:,:) = 0
-         Nwfsave_count = t_wavefunctions%Nwfsavemax
-         do iat=1,nat_myrank
-            t_wavefunctions%isave_wavefun(iat+ioff_at,1+ioff_ie:ioff_ie+ne_myrank) = kmesh_priority(:) + ne_myrank*(iat-1)
-            do ie=1,ne_myrank
-               if( (kmesh_priority(ie)>Nwfsave_count) ) then
-                  t_wavefunctions%isave_wavefun(iat+ioff_at, ie+ioff_ie) = 0
-               end if
-            end do
-            Nwfsave_count = Nwfsave_count - ne_myrank
-         end do
-         
-!          do ie=1,ne_myrank
-!             do iat=1,nat_myrank
-!                write(*,*) 'isave_wavefun',myrank, iat, ie, t_wavefunctions%isave_wavefun(iat+ioff_at, ie+ioff_ie), my_kmesh(ie)
-!             end do
-!          end do
-         !<<<<<<<  set isave_wavefun array  <<<<<<<!
-              
-              
-         ! deallocate work arrays
-         deallocate(mask, kmesh_priority, my_kmesh, stat=ierr)
-         if(ierr/=0) stop '[find_isave_wavefun] Error dellocating arrays'
-      end if
+           if(any(kmesh_priority==-1)) then
+              write(1337,*) '[find_isave_wavefun] kmesh_priority not found correctly; kmesh_priority:', kmesh_priority, '; mask:', mask
+              stop 
+           end if
+           !<<<<<<<  find priority of saving wavefunctions according to kmesh  <<<<<<<!
+           
+           
+           !>>>>>>>  set isave_wavefun array  >>>>>>>!
+           t_wavefunctions%isave_wavefun(:,:) = 0
+           Nwfsave_count = t_wavefunctions%Nwfsavemax
+           do iat=1,nat_myrank
+              t_wavefunctions%isave_wavefun(iat+ioff_at,1+ioff_ie:ioff_ie+ne_myrank) = kmesh_priority(:) + ne_myrank*(iat-1)
+              do ie=1,ne_myrank
+                 if( (kmesh_priority(ie)>Nwfsave_count) ) then
+                    t_wavefunctions%isave_wavefun(iat+ioff_at, ie+ioff_ie) = 0
+                 end if
+              end do
+              Nwfsave_count = Nwfsave_count - ne_myrank
+           end do
+           !<<<<<<<  set isave_wavefun array  <<<<<<<!
+                
+                
+           ! deallocate work arrays
+           deallocate(mask, kmesh_priority, my_kmesh, stat=ierr)
+           if(ierr/=0) stop '[find_isave_wavefun] Error dellocating arrays'
+        end if ! (t_wavefunctions%Nwfsavemax>0)
+        
+      end if ! firstrun
       
    end subroutine find_isave_wavefun
    

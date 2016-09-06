@@ -199,9 +199,6 @@ C     .. qdos and lmlm-dos ..
       
       double precision :: angles_new(2,NATYPD)
 C     ..
-C     .. External Subroutines ..
-!       EXTERNAL CINIT,RHOCORE,RHOVAL,WMATLDAU,WRLDAUPOT,WRLDOS,WRMOMS
-C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DBLE,DIMAG,DREAL
 C     ..

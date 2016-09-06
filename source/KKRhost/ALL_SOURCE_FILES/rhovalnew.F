@@ -508,7 +508,7 @@ c calculate density
        CALL RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,
      +                LMPOTD,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
      +                IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,
-     +                RLL(:,:,:,ith),
+     +                RLL(:,:,:,ith),!SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
      +                RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,
@@ -597,12 +597,18 @@ c get charge at the Fermi energy (IELAST)
        IF (IE.EQ.IELAST.AND.LDORHOEF) THEN
        CALL RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,
      +                LMPOTD,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
-     +                IRMDNEW,NRMAXD,THETASNEW,IFUNM,RNEW,IMT1,LMSP,
-     +                RLL(:,:,:,ith),SLL(:,:,:,ith),
+     +                IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,
+     +                RLL(:,:,:,ith),!SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
      +                RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),R2NEFC_loop(:,:,:,ith),0,
      +                GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL)
+!      SUBROUTINE RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL,EK,LMPOTD,
+!      +                      DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
+!      +                      IRMDNEW,THETASNEW,IFUNM,IMT1,
+!      +                      LMSP,RLL,RLLLEFT,SLLLEFT,
+!      +                      CDEN,CDENLM,CDENNS,RHO2NSC,CORBITAL,
+!      +                      GFLLE_PART,RPAN_INTERVALL,IPAN_INTERVALL)
        ENDIF
 
 
@@ -610,8 +616,8 @@ c get orbital moment
        DO IORB=1,3
         CALL RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,
      +                 LMPOTD,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
-     +                 IRMDNEW,NRMAXD,THETASNEW,IFUNM,RNEW,IMT1,LMSP,
-     +                 RLL(:,:,:,ith),SLL(:,:,:,ith),
+     +                 IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,
+     +                 RLL(:,:,:,ith),!SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
      +                 RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),
      +                 CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                 CDENNS(:,:,ith),R2ORBC(:,:,:,ith),IORB,

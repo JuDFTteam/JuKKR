@@ -361,7 +361,7 @@ C
      &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
       end if
       
-      if(lly/=0 .and. t_mpi_c_grid%nranks_ie>1) then
+      if(lly/=0 .and. .not.t_lloyd%dtmat_to_file) then
          call gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, 
      &                         t_mpi_c_grid%mympi_comm_ie)
       endif

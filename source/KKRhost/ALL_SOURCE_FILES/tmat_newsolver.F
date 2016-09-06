@@ -150,7 +150,6 @@ c initial allocate
         ALLOCATE(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
        ENDIF
        if(ierr/=0) stop '[tnat_newsolver] Error allocating vnspll'
-
        ALLOCATE(HLK(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
        if(ierr/=0) stop '[tnat_newsolver] Error allocating hlk'
        ALLOCATE(JLK(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
@@ -209,6 +208,16 @@ c energy loop
 
        !for Jij-tensor calculation: allocate array to hold additional t-matrices
        call init_t_dtmatJij_at(t_inc, t_mpi_c_grid, t_dtmatJij_at)
+       
+                
+       !initialize wfsave
+       if(t_inc%i_iteration==0) then
+            call find_isave_wavefun(t_wavefunctions)
+            ! reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
+            ! to prevent unnessesary storing of wavefunctions
+            if(test('STOP1B  ')) t_wavefunctions%Nwfsavemax = 0
+       endif
+         
 
 #ifdef CPP_OMP
 !$omp parallel do default(none) 
@@ -238,19 +247,6 @@ c energy loop
          !start timing measurement for this pair of ie and i1, needed for MPIadapt
          call timing_start('time_1a_ieiatom')
 #endif
-         
-         !initialize wfsave
-#ifdef CP_MPI
-         if( (I1-t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie))==1 
-     &       .and. ie_num==1 .and. t_inc%i_iteration==0) then
-#else
-         if( I1==1 .and. ie_num==1 .and. t_inc%i_iteration==0) then
-#endif
-            call find_isave_wavefun(t_wavefunctions)
-            ! reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
-            ! to prevent storing of wavefunctions
-            if(test('STOP1B  ')) t_wavefunctions%Nwfsavemax = 0
-         endif
 
          ! get current thread
          if (nth>=1) then
@@ -260,27 +256,6 @@ c energy loop
          else
             ith = 0
          endif
-
-         eryd = 0
-         ir = 0
-         nvec = 0
-         lm1 = 0
-         lm2 = 0
-         gmatprefactor = 0
-         jlk_index = 0
-         tmatll = 0
-         irec = 0
-         tralpha = 0
-         alpha0 = 0
-         alphall = 0
-         tmat0 = 0
-         alphasph = 0
-         dtmatll  = 0
-         dalphall = 0
-         aux = 0
-         ideriv = 0
-         ipiv = 0
-
 
 ! In case of Lloyds formula the derivative of t is needed. 
 ! Then calculate t at E+dE, E-dE and average for t, subtract for dt/dE
@@ -433,7 +408,7 @@ c        this needs to be done for the calculation of t-matrices for Jij tensor 
 c
 c        contruct the spin-orbit coupling hamiltonian and add to potential
          CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,
-     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,
+     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,LMPOTD,
      +                     THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,
      +                     NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,
      +                     VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),

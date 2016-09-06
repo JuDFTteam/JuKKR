@@ -174,7 +174,6 @@ contains
             allocate(t_tgmat%gmat(1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_tgmat%gmat'
          end if
-      
          t_tgmat%gmat(:,:,:) = (0.d0, 0.d0)
       endif
       
@@ -193,8 +192,7 @@ contains
             allocate(t_tgmat%gref(1,1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_tgmat%gref'
          end if
-   
-      t_tgmat%gref(:,:,:,:) = (0.d0, 0.d0)
+         t_tgmat%gref(:,:,:,:) = (0.d0, 0.d0)
       endif
 
    end subroutine init_tgmat
@@ -230,7 +228,6 @@ contains
             allocate(t_cpa%dtilts(1,1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_cpa%dmatts'
          end if
-      
          t_cpa%dmatts(:,:,:,:) = (0.d0, 0.d0)
       endif
 
@@ -243,7 +240,6 @@ contains
             allocate(t_cpa%dtilts(1,1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_cpa%dtilts'
          end if
-      
          t_cpa%dtilts(:,:,:,:) = (0.d0, 0.d0)
       endif
 
@@ -626,32 +622,33 @@ contains
     integer, intent(in) :: lmmaxd, mympi_comm
 
     double complex, allocatable :: work_lly(:,:,:)
-    integer :: ierr, iwork
+    integer :: ierr, iwork, nspin
     
-    !take care of cases when nranks_ie>natyp (set tralpha and dtmat to zero so that sum over ranks is correct)
-    if(t_mpi_c_grid%myrank_ie>=t_mpi_c_grid%dims(1)) then
-       t_lloyd%dtmat = (0.0d0, 0.0d0)
-       t_lloyd%tralpha = (0.0d0, 0.0d0)
-    end if
+    nspin = t_inc%nspin
+    if(t_inc%NEWSOSOL) nspin = 1
+
     
     !communicate dtmatll
-    iwork = product(shape(t_lloyd%dtmat)) !lmmaxd*lmmaxd*t_mpi_c_grid%ntot2*nspin*natyp
-    allocate(work_lly( lmmaxd, lmmaxd, iwork/lmmaxd**2 ), stat=ierr)
+    iwork = lmmaxd*lmmaxd*t_mpi_c_grid%ntot2*nspin*t_inc%natyp
+    if(iwork/=product(shape(t_lloyd%dtmat))) stop '[gather_lly_dtmat]: Error shape mismatch in gather_dtmat_lly'
+    allocate(work_lly( lmmaxd, lmmaxd, t_mpi_c_grid%ntot2*nspin*t_inc%natyp ), stat=ierr)
     if(ierr/=0) stop '[gather_lly_dtmat] error allocating work in calctmat for communication of dtmatll'
     call MPI_Allreduce(t_lloyd%dtmat, work_lly, iwork, MPI_DOUBLE_COMPLEX, MPI_SUM, mympi_comm, ierr)
     call zcopy(iwork, work_lly, 1, t_lloyd%dtmat, 1)
     deallocate(work_lly, stat=ierr)
     if(ierr/=0) stop '[gather_lly_dtmat] error deallocating work_lly'
+       
           
     !communicate tralpha
-    iwork = product(shape(t_lloyd%tralpha))
+    iwork = t_mpi_c_grid%ntot2*nspin*t_inc%natyp
+    if(iwork/=product(shape(t_lloyd%tralpha))) stop '[gather_lly_dtmat]: Error shape mismatch in gather_dtmat_lly'
     allocate(work_lly(iwork,1,1),stat=ierr)
     if(ierr/=0) stop '[gather_lly_dtmat] error allocating work in calctmat for communication of tralpha'
-    call MPI_Allreduce(t_lloyd%tralpha, work_lly, iwork, MPI_DOUBLE_COMPLEX, MPI_SUM, mympi_comm, ierr)
-    call zcopy(iwork, work_lly, 1, t_lloyd%tralpha, 1)
+    call MPI_Allreduce(t_lloyd%tralpha, work_lly(:,1,1), iwork, MPI_DOUBLE_COMPLEX, MPI_SUM, mympi_comm, ierr)
+    call zcopy(iwork, work_lly(:,1,1), 1, t_lloyd%tralpha, 1)
     deallocate(work_lly, stat=ierr)
     if(ierr/=0) stop '[gather_lly_dtmat] error deallocating work_lly'
-                          
+    
    end subroutine gather_lly_dtmat
 #endif
 

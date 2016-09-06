@@ -177,9 +177,6 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN
 C     ..
-! C     .. External Subroutines ..
-!       EXTERNAL CALCTREF13,CHANGEREP,KLOOPZ1_QDOS,OPT,CINIT
-C     ..
 C     .. Data statements
       DATA INVALG /'FULL MATRIX                        ',
      &             'BANDED MATRIX (slab)               ',
@@ -609,11 +606,7 @@ C           Skip this part if first part of the qdos is running
               END IF  ! (NCPA.NE.0)
 
               DO I1 = 1,NSHELL(0)
-                DO LM1=1,LMMAXD
-                  DO LM2=1,LMMAXD
-                     GMAT0(LM1,LM2)=GMATLL(LM1,LM2,I1)
-                  ENDDO
-                ENDDO
+                GMAT0(:,:)=GMATLL(:,:,I1)
                 IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST *        ! qdos ruess: (without qdos, IQ=NQ=1)
      &                   (ISPIN-1) + NQDOS * IELAST * NSPIN * (I1-1) ! qdos ruess
                 if (t_tgmat%gmat_to_file) then
@@ -628,12 +621,12 @@ C           Skip this part if first part of the qdos is running
               IF (TEST('gmatasci')) THEN
                  WRITE(*,*) 'Writing out gmat.ascii'
                  DO I1 = 1,NSHELL(0)
-                 DO LM1=1,LMMAXD
-                 DO LM2=1,LMMAXD
-                    WRITE(298347,FMT='(3I5,2E25.16)') 
+                   DO LM1=1,LMMAXD
+                     DO LM2=1,LMMAXD
+                       WRITE(298347,FMT='(3I5,2E25.16)') 
      &              I1,LM1,LM2,GMATLL(LM1,LM2,I1)
-                 ENDDO
-                 ENDDO
+                     ENDDO
+                   ENDDO
                  ENDDO
               ENDIF
 
@@ -659,12 +652,8 @@ C           Skip this part if first part of the qdos is running
             IF ( LCPAIJ ) THEN
              if(t_cpa%dmatproj_to_file) then
                DO I1 = 1,NATYP
-                  DO LM2=1,LMMAXD
-                     DO LM1=1,LMMAXD
-                        GMAT0(LM1,LM2) = TSST(LM1,LM2,I1)
-                        W1(LM1,LM2)    = MSST(LM1,LM2,I1)
-                     END DO
-                  END DO
+                  GMAT0(:,:) = TSST(:,:,I1)
+                  W1(:,:)    = MSST(:,:,I1)
                   IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN*(I1-1)
                   WRITE (71,REC=IREC) GMAT0,W1
                END DO
@@ -708,10 +697,6 @@ c ------------------------------------------------------------------------
 #ifdef CPP_MPI
             !stop timing measurement for this ie, needed for MPIadapt
             if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
-!               write(*,*) myrank, 'timing1b', ie, 
-!      &          t_mpi_c_grid%myrank_ie, t_mpi_c_grid%nranks_ie, 
-!      &          t_mpi_c_grid%myrank_at, t_mpi_c_grid%nranks_at, 
-!      &          timings_1b(ie)
               call timing_stop('time_1b_ie', save_out=timings_1b(ie) )
             end if
 #endif
@@ -937,7 +922,6 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 
                DO I1 = 1,NSHELL(0)
                   GMAT0(1:LMMAXD,1:LMMAXD) =GMATLL(1:LMMAXD,1:LMMAXD,I1)
-                  !IREC = IE + IELAST*(I1-1)     ! <-- before introducing qdos
                   IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST * (I1-1) ! qdos ruess
                   if (t_tgmat%gmat_to_file) then
                      WRITE (70,REC=IREC) GMAT0
@@ -1013,10 +997,6 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 #ifdef CPP_MPI
            !stop timing measurement for this ie, needed for MPIadapt
            if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
-!               write(*,*) myrank, 'timing1b', ie, 
-!      &          t_mpi_c_grid%myrank_ie, t_mpi_c_grid%nranks_ie, 
-!      &          t_mpi_c_grid%myrank_at, t_mpi_c_grid%nranks_at, 
-!      &          timings_1b(ie)
               call timing_stop('time_1b_ie', save_out=timings_1b(ie) )
            end if
 #endif

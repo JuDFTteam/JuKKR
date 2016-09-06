@@ -180,14 +180,14 @@ subroutine getCCmatrix(Ncheb,rmesh,nrmesh,Cmatrix)
 ! calculates the C matrix according to:
 ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
 implicit none
-integer  :: ncheb
-double precision :: rmesh(nrmesh)
-double precision :: Cmatrix(1:nrmesh,0:Ncheb)
-integer  :: icheb,nrmesh,ir
+integer, intent(in) :: ncheb,nrmesh
+double precision, intent(in)  :: rmesh(nrmesh)
+double precision, intent(out) :: Cmatrix(1:nrmesh,0:Ncheb)
+integer  :: icheb,ir
 
 do ir=1,nrmesh
   do icheb=0,ncheb
-    Cmatrix(ir,icheb)=cos(icheb*acos(rmesh(ir)))
+    Cmatrix(ir,icheb)=cos(dfloat(icheb)*dacos(rmesh(ir)))
   end do
 end do
 end subroutine getCCmatrix
@@ -197,8 +197,8 @@ subroutine getLambda(Ncheb,Lambda)
 ! set up the Lambda matrix which differentiates the coefficients of an
 ! Chebyshev expansion 
 implicit none
-integer          :: Ncheb
-double precision :: Lambda(0:Ncheb,0:Ncheb)
+integer, intent(in)           :: Ncheb
+double precision, intent(out) :: Lambda(0:Ncheb,0:Ncheb)
 !local
 integer icheb,icheb2
 do icheb2=1,Ncheb,2

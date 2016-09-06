@@ -155,9 +155,6 @@ C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
       if(myrank==master .and. t_inc%i_write>0) WRITE(1337,*) 'atom: ',I1
 #ifdef CPP_MPI
-!         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
-!      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-!      &                             master,IELAST,ntot_pT,ioff_pT,.true.)
         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
      &           t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), ! print this info only for first atom at master
      &                  master,IELAST,ntot_pT,ioff_pT,.true.)
@@ -175,9 +172,6 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
         ! now initialize arrays for tmat, gmat, and gref
         call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
         if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
-        
-!         write(*,*) 'calctmatloop',myrank,i1,ie,
-!      &      t_mpi_c_grid%myrank_ie,t_mpi_c_grid%myrank_at
 
 
        DO ie_num=1,ie_end
@@ -197,11 +191,11 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 #endif
          if(t_inc%i_write>0) WRITE(1337,*)'CALCTMAT: IE=',IE,' ATOM:',I1
 
-         TMATLL(1:LMMAXD,1:LMMAXD) = CZERO
-         DTMATLL(1:LMMAXD,1:LMMAXD) = CZERO
+         TMATLL(:,:) = CZERO
+         DTMATLL(:,:) = CZERO
 
-         ALPHALL(1:LMMAXD,1:LMMAXD) = CZERO
-         DALPHALL(1:LMMAXD,1:LMMAXD) = CZERO
+         ALPHALL(:,:) = CZERO
+         DALPHALL(:,:) = CZERO
 
 ! In case of Lloyds formula the derivative of t is needed. 
 ! Then calculate t at E+dE, E-dE and average for t, subtract for dt/dE
@@ -213,8 +207,8 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
             FZ(:,:) = CZERO
             SZ(:,:) = CZERO
             PNS(:,:,IRMIND:IRMD,:) = CZERO
-            TMAT0(1:LMMAXD,1:LMMAXD) = CZERO
-            ALPHA0(1:LMMAXD,1:LMMAXD) = CZERO
+            TMAT0(:,:) = CZERO
+            ALPHA0(:,:) = CZERO
 
             ERYD = EZ(IE) + SIGNDE * DELTAE / 2.D0 ! LLY
             if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
@@ -264,34 +258,26 @@ C=======================================================================
 C
             ! In case of derivative calculation, average the t-matrix
             ! of the two energies and calculate the difference
-            TMATLL(1:LMMAXD,1:LMMAXD) = TMATLL(1:LMMAXD,1:LMMAXD)   ! LLY
-     &                                   + TMAT0(1:LMMAXD,1:LMMAXD)       ! LLY
-            ALPHALL(1:LMMAXD,1:LMMAXD) =  ALPHALL(1:LMMAXD,1:LMMAXD)      ! LLY
-     &                                   + ALPHA0(1:LMMAXD,1:LMMAXD)      ! LLY
+            TMATLL(:,:) = TMATLL(:,:)  + TMAT0(:,:)          ! LLY
+            ALPHALL(:,:) =  ALPHALL(:,:)  + ALPHA0(:,:)      ! LLY
             IF (LLY.NE.0) THEN
-            DTMATLL(1:LMMAXD,1:LMMAXD) =DTMATLL(1:LMMAXD,1:LMMAXD)  ! LLY
-     &                              + SIGNDE * TMAT0(1:LMMAXD,1:LMMAXD)   ! LLY
-            DALPHALL(1:LMMAXD,1:LMMAXD) = DALPHALL(1:LMMAXD,1:LMMAXD)     ! LLY
-     &                              + SIGNDE * ALPHA0(1:LMMAXD,1:LMMAXD)  ! LLY
+            DTMATLL(:,:) =DTMATLL(:,:) + SIGNDE * TMAT0(:,:)      ! LLY
+            DALPHALL(:,:) = DALPHALL(:,:) + SIGNDE * ALPHA0(:,:)  ! LLY
             ENDIF
 
          ENDDO  ! SIGNDE = -IDERIV,IDERIV,2      ! LLY
 
          ! Average values of t-matrix and alpha at E+DE and E-DE
-         TMATLL(1:LMMAXD,1:LMMAXD) = 
-     &        TMATLL(1:LMMAXD,1:LMMAXD) / DFLOAT(1+IDERIV)  !/ 1 or 2 (IDERIV=1 or 2)! LLY
-         ALPHALL(1:LMMAXD,1:LMMAXD) = 
-     &        ALPHALL(1:LMMAXD,1:LMMAXD) / DFLOAT(1+IDERIV)    !/ 1 or 2 ! LLY
+         TMATLL(:,:) = TMATLL(:,:) / DFLOAT(1+IDERIV)      !/ 1 or 2 (IDERIV=1 or 2)! LLY
+         ALPHALL(:,:) = ALPHALL(:,:) / DFLOAT(1+IDERIV)    !/ 1 or 2 ! LLY
 
          IF (LLY.NE.0) THEN
-            ! Construct derivative of t-matrix and aplha
-            DTMATLL(1:LMMAXD,1:LMMAXD) = 
-     &           DTMATLL(1:LMMAXD,1:LMMAXD) / DELTAE
-            DALPHALL(1:LMMAXD,1:LMMAXD) = 
-     &           DALPHALL(1:LMMAXD,1:LMMAXD) / DELTAE
+            ! Construct derivative of t-matrix and alpha
+            DTMATLL(:,:) = DTMATLL(:,:) / DELTAE
+            DALPHALL(:,:) = DALPHALL(:,:) / DELTAE
             ! LLY Calculate Trace [alpha^-1 * d alpha/dE] for Lloyd's formula
-            ALPHA0(1:LMMAXD,1:LMMAXD) = CZERO
-            AUX(1:LMMAXD,1:LMMAXD) = CZERO
+            ALPHA0(:,:) = CZERO
+            AUX(:,:) = CZERO
             ! ALPHA0 = ALPHALL^-1
             CALL ZGEINV1(ALPHALL,ALPHA0,AUX,IPIV,LMMAXD)
             ! AUX = ALPHALL^-1 * DALPHALL
@@ -304,9 +290,9 @@ C
             ENDDO
 
             IF (LLY.EQ.-1) THEN ! Calculate Tr(t^-1 dt/dE) instead of Tr(alpha^-1 * d alpha/dE)
-               ALPHA0(1:LMMAXD,1:LMMAXD) = TMATLL(1:LMMAXD,1:LMMAXD)
-               TMAT0(1:LMMAXD,1:LMMAXD) = CZERO
-               AUX(1:LMMAXD,1:LMMAXD) = CZERO
+               ALPHA0(:,:) = TMATLL(:,:)
+               TMAT0(:,:) = CZERO
+               AUX(:,:) = CZERO
                ! ALPHA0 = TMATLL^-1
                CALL ZGEINV1(ALPHA0,TMAT0,AUX,IPIV,LMMAXD)
                ! Build trace
@@ -328,7 +314,7 @@ C
          ENDIF ! (LLY.NE.0) 
 
 
-         TMAT0(1:LMMAXD,1:LMMAXD) = TMATLL(1:LMMAXD,1:LMMAXD)
+         TMAT0(:,:) = TMATLL(:,:)
          IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)
          if (t_tgmat%tmat_to_file) then
             WRITE(69,REC=IREC) TMAT0
@@ -337,7 +323,7 @@ C
             IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*
      *             (I1-t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)-1)
 #else
-            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*I1
+            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*(I1-1)
 #endif
             t_tgmat%tmat(:,:,irec) = tmat0
          end if
@@ -347,6 +333,7 @@ C
                WRITE(691,REC=IREC) DTMATLL                                ! LLY
             else
                irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i1-1)
+             
                t_lloyd%dtmat(:,:,irec) = DTMATLL(:,:)
             end if ! t_lloyd%dtmat_to_file
             if(t_lloyd%tralpha_to_file) then

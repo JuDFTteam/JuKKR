@@ -104,10 +104,8 @@ program kkrcode
   if(ierr/=MPI_SUCCESS) stop 'error broadcasting MPIatom in main_all'
   call MPI_Bcast(MPIadapt, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
   if(ierr/=MPI_SUCCESS) stop 'error broadcasting MPIadapt in main_all'
-!   write(*,*) myrank, 'MPIatom etc', MPIatom,MPIadapt
   ! allocate timing arrays
   if(MPIadapt>0) then
-!      write(*,*) myrank, 'allocating timgings arrays'
      allocate(timings_1a(t_inc%ielast,t_inc%natyp), timings_1b(t_inc%ielast), load_imbalance(t_inc%nkmesh), stat=ierr)
      if(ierr/=0) stop '[main_all] Error allocating timing_1a, 1b arrays'
      timings_1a(:,:) = 0.0d0
@@ -186,8 +184,8 @@ program kkrcode
     if(test('STOP1B  '))then
 #ifdef CPP_MPI
       call MPI_Finalize(ierr)
-      stop 'Stop after main1b'
 #endif
+      stop 'Stop after main1b'
     end if!test
 
     ! calculate density
@@ -209,6 +207,14 @@ program kkrcode
     call bcast_t_params_scalars(t_params)
     call bcast_t_params_arrays(t_params)
     
+!     
+!     ! reset arrays for next iteration
+!     if(t_params%LLY/=0) then
+!        if(.not.t_lloyd%dtmat_to_file) t_lloyd%dtmat = (0.0d0, 0.0d0)
+!        if(.not.t_lloyd%tralpha_to_file) t_lloyd%tralpha = (0.0d0, 0.0d0)
+!        if(.not.t_lloyd%g0tr_to_file) t_lloyd%g0tr= (0.0d0, 0.0d0)
+!     end if
+!     
     
     ! find out if MPI_communication pattern should be modified: (with test option 'MPIadapt' the program will be forced to change the communication grid after the first iteration and then compares the timings
     if(MPIadapt==1 .and. t_inc%i_iteration>1) then
@@ -246,11 +252,13 @@ program kkrcode
    if(ierr/=0) stop '[main_all] Error deallocating arrays from t_wavefunctions'
   end if
   
+#ifdef CPP_MPI
   ! deallocate arrays for MPIadapt
   if(MPIadapt>0) then
      deallocate(timings_1a, timings_1b, load_imbalance, stat=ierr)
      if(ierr/=0) stop '[main_all] Error deallocating timing_1a, 1b arrays'
   end if
+#endif
   
   
 #ifdef CPP_MPI
