@@ -6,6 +6,7 @@ C *                                                                    *
 C * Reads in LDA+U arrays from formatted file 'ldaupot'                *
 C *                                                                    *
 C **********************************************************************
+      use mod_version_info
       IMPLICIT NONE
 C     ..
       INTEGER IRMD,MMAXD,NATYPD,NSPIND,IRWS(NATYPD)
@@ -31,6 +32,7 @@ C ======================================================================
 !      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
 
       OPEN (67,FILE='ldaupot',FORM='FORMATTED',STATUS='OLD',IOSTAT=IOS)
+      call version_check_header(67)
       IF ( IOS.GT.0 ) THEN
          WRITE(6,99001) 'Could not find LDA+U file'
          ITRUNLDAU = 0

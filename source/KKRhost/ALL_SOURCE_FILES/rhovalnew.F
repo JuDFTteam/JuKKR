@@ -29,6 +29,7 @@
      &                     mympi_main1c_comm_newsosol
 #endif      
        use mod_save_wavefun, only: t_wavefunctions, read_wavefunc
+       use mod_version_info
 
        IMPLICIT NONE
        include 'inc.p'
@@ -707,11 +708,13 @@ c get orbital moment
      +          FILE="qdos."//char(48+mod(I1/10,10))//                    ! qdos
      +          char(48+mod(I1,10))//"."//char(48+2)//".dat")             ! qdos
               end if                                                      ! qdos
+              call version_print_header(31)
               WRITE (31,*) ' '                                            ! qdos ruess
               WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! qdos ruess
               WRITE (31,'(7(A,3X))') '#   Re(E)','Im(E)',                 ! qdos
      &                      'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! qdos
               if(NSPIN.gt.1) then
+                call version_print_header(32)
                 WRITE (32,*) ' '                                          ! qdos ruess
                 WRITE (32,8600) '# ISPIN=',2,' I1=',I1                    ! qdos ruess
                 WRITE(32,'(7(A,3X))') '#   Re(E)','Im(E)',                ! qdos
@@ -826,8 +829,10 @@ c Write out lm-dos:                                                      ! lm-do
      +       FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
      +       char(48+2)//".dat")                                         ! lm-dos
            end if
+           call version_print_header(29)
            WRITE (29,*) ' '                                              ! lm-dos
            WRITE (29,8600) '# ISPIN=',1,' I1=',I1                        ! lm-dos
+           call version_print_header(30)
            WRITE (30,*) ' '                                              ! lm-dos
            WRITE (30,8600) '# ISPIN=',2,' I1=',I1                        ! lm-dos
          ENDIF !IE==1                                                    ! lm-dos

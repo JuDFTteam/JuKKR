@@ -5,6 +5,7 @@
      &                   TLEFT,TRIGHT,RMTREF,RMTREFAT,VREF,
      &                   IREFPOT,NREFPOT,RCLS,RCUT,RCUTXY,L2DIM,ALAT,
      &                NAEZD,NATYPD,NEMBD,NPRINCD,NRD,NACLSD,NCLSD,NREFD)
+      use mod_version_info
       implicit none
 ! ************************************************************************
 ! This subroutine is used to create the clusters around each atom 
@@ -103,6 +104,7 @@
 !          LSPHER=.TRUE.
       END IF 
       OPEN(8,FILE='clusters',status='unknown')
+      call version_print_header(8)
       WRITE(8,9005) NAEZ
       WRITE(8,9030) ALAT
       WRITE(8,9010) (ZAT(KAOEZ(1,IAT)),IAT=1,NAEZ-NVIRT)

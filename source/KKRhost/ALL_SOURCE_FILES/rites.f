@@ -38,7 +38,7 @@ C ===================================================================
       INTEGER NKCORE(20,NATYPD),KAPCORE(20,2*NATYPD)
 C ===================================================================
       INTEGER IRC(*),IRNS(*),IRWS(*),ITITLE(20,*),LCORE(20,*),NCORE(*)
-      CHARACTER*24 TXC(*)
+      CHARACTER*124 TXC(*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A1,B1,RMAX,RMT1,RMTNW1,RV,SIGN,SUM,Z1
@@ -192,7 +192,7 @@ c
 
       close(IFILE)
 
- 9000 FORMAT (7a4,6x,'  exc:',a24,3x,a10)
+ 9000 FORMAT (7a4,6x,'  exc:',a124,3x,a10)
  9010 FORMAT (3f12.8)
  9020 FORMAT (f10.5,/,f10.5,2f20.15)
  9030 FORMAT (i3,/,2d15.8,/,2i2)

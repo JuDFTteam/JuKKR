@@ -26,12 +26,16 @@ contains
 
 subroutine timing_init(my_rank)
   use mod_types, only: t_inc
+  use mod_version_info
   implicit none
   integer  :: my_rank
   character(len=3) :: ctemp
   if (init/=0) stop '[mod_timing] timing already initilized'
   write(ctemp,'(I03.3)') my_rank
-  if(t_inc%i_time>0) open(unit=43234059 , file='out_timing.'//trim(ctemp)//'.txt')
+  if(t_inc%i_time>0) then
+    open(unit=43234059 , file='out_timing.'//trim(ctemp)//'.txt')
+    call version_print_header(43234059)
+  end if
   init=1
 end subroutine timing_init
 

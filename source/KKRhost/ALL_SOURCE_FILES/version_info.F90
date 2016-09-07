@@ -101,7 +101,7 @@ contains
     character(len=10) :: first_characters
     
     read(unit, *) first_characters
-    if(.not. first_characters=='# serial: ') then
+    if(first_characters/='# serial: ') then
       rewind(unit)
     end if
 
