@@ -208,10 +208,10 @@ C ======================================================================VINS()
       use mpi
       use mod_mympi, only: nranks
 #endif
+      use mod_version
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
-      INCLUDE 'version'
 C     .. Parameters ..
 C parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
       INTEGER NEMBD1
@@ -442,6 +442,7 @@ C     ..
       if(ierr/=0) stop '[main0] Error allocating lefttinvll etc.'
 
       
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !Write version info:
       WRITE(*,2004) 'Screened Korringa-Kohn-Rostoker ',
      &              'Electronic Structure Code',
@@ -449,24 +450,35 @@ C     ..
      &              'Juelich-Munich 2001 - 2016',
      &             ' Code version: ',trim(version(1)),
      &             ' Compile options:',(trim(version(i)),i=2,4)
+      WRITE(1337,2004) 'Screened Korringa-Kohn-Rostoker ',
+     &              'Electronic Structure Code',
+     &              'for Bulk and Interfaces',
+     &              'Juelich-Munich 2001 - 2016',
+     &             ' Code version: ',trim(version(1)),
+     &             ' Compile options:',(trim(version(i)),i=2,4)
  2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)/79(1H*)/ )
-!  9090    FORMAT(D20.12)                                               ! fxf
 
 #ifdef CPP_OMP
 !$omp parallel shared(nth,ith)
-!$omp critical
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
       if(ith==0) then
-      WRITE(*,'(1X,A,I5//79(1H*)/)')'Number of OpenMP threads used:',nth
+      WRITE(*,'(1X,A,I5//79(1H*)/)')
+     &              'Number of OpenMP threads used:',nth
+      WRITE(1337,'(1X,A,I5//79(1H*)/)')
+     &              'Number of OpenMP threads used:',nth
       endif
-!$omp end critical
 !$omp end parallel
 #endif
+
 #ifdef CPP_MPI
-      WRITE(*,'(1X,A,I5//79(1H*)/)') 'Number of MPI ranks used:',nranks
+      WRITE(*,'(1X,A,I5//79(1H*)/)')
+     &              'Number of MPI ranks used:',nranks
+      WRITE(1337,'(1X,A,I5//79(1H*)/)')
+     &              'Number of MPI ranks used:',nranks
 #endif
 !End write version info
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 !Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
