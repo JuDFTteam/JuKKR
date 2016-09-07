@@ -71,14 +71,17 @@ VIR = ./ALL_SOURCE_FILES
 INCP = ./inc.p
 INCR = ./sprkkr_rmesh.dim
 
-
-$(OBJ)/mod_mympi.o  : $(COM)/mod_mympi.F90                 ; \
+$(OBJ)/mod_version.o  : $(COM)/version.f90 ; \
+                        $(FC) $(FFLAGS) $(COM)/version.f90 -c -o $@
+$(OBJ)/mod_version_info.o  : $(COM)/version_info.F90 ; \
+                        $(FC) $(FFLAGS) $(CPP) $(COM)/version_info.F90 -c -o $@
+$(OBJ)/mod_mympi.o  : $(COM)/mod_mympi.F90 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_mympi.F90 -c -o $@
-$(OBJ)/mod_types.o  : $(COM)/mod_types.F90                 ; \
+$(OBJ)/mod_types.o  : $(COM)/mod_types.F90 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_types.F90 -c -o $@
-$(OBJ)/mod_timing.o  : $(COM)/mod_timing.F90                 ; \
+$(OBJ)/mod_timing.o  : $(COM)/mod_timing.F90 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_timing.F90 -c -o $@
-$(OBJ)/mod_save_wavefun.o  : $(COM)/mod_save_wavefun.F90                 ; \
+$(OBJ)/mod_save_wavefun.o  : $(COM)/mod_save_wavefun.F90 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/mod_save_wavefun.F90 -c -o $@
 
 FILENAME0 = kkr.x
@@ -97,7 +100,7 @@ OBJECTS1c= $(PROGOBJS1c)
 include makefile2
 OBJECTS2 = $(PROGOBJS2)
 
-$(OBJ)/main_all.o  : $(COM)/main_all.F90                 ; \
+$(OBJ)/main_all.o  : $(COM)/main_all.F90 ; \
                         $(FC) $(FFLAGS) $(CPP) $(COM)/main_all.F90 -c -o $@
 
 ####################################################
@@ -253,8 +256,8 @@ clean:
 clear:
 	rm -rf *.mod *.o OBJ/ *__genmod.*
 
-compile:  mkdirobj getversion copyinc $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
-	  $(FC) -o $(FILENAME0) $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+compile:  mkdirobj getversion copyinc $(OBJ)/mod_version.o $(OBJ)/mod_version_info.o  $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+	  $(FC) -o $(FILENAME0) $(OBJ)/mod_version.o $(OBJ)/mod_version_info.o  $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
 
 serial:   compile
 debug:    compile

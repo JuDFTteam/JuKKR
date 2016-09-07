@@ -308,6 +308,10 @@ C                                  meant for simpler passing of basic parameter 
          NQDOS = 1
       END IF
    
+   
+   
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
       !fill t_inc
       t_inc%LMMAXD = LMMAXD
       t_inc%NSPIN  = NSPIN
@@ -320,7 +324,13 @@ C                                  meant for simpler passing of basic parameter 
       t_inc%NSHELL0 = NSHELL(0)
       IF(OPT('NEWSOSOL')) t_inc%NEWSOSOL = .true.
       IF(OPT('deci-out')) t_inc%deci_out = .true.
+      !t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       
+      
+      
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags
       !set logical switches in t_tgmat which control if tmat, gmat and gref are written to files or stored in memory
       if(TEST('tmatfile')) t_tgmat%tmat_to_file = .true.
       if(TEST('gmatfile')) t_tgmat%gmat_to_file = .true.
@@ -352,7 +362,13 @@ C                                  meant for simpler passing of basic parameter 
       t_inc%i_time = 1  !default: only timings from master, all iterations
       if(TEST('timings0')) t_inc%i_time = 0  !only timings from master, only the last iteration
       if(TEST('timings2')) t_inc%i_time = 2  !all timing files, all iterations
+      ! writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
       
+      
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! MPI communication scheme
       !set switch for MPIatom test option (see mod_types and mod_mympi)
       ! default values for MPIadapt and MPIatom
       if(NATYP<=IELAST) then
@@ -373,10 +389,16 @@ C                                  meant for simpler passing of basic parameter 
       if(test('MPIadapt')) then
          MPIadapt= 2 ! 2 means force run with MPIatom then with MPIenerg and then compare to choose optimal 
       end if
+      ! so far changing does not work yet, so turn this off:
+      MPIadapt = 0
+      
       if(test('MPIatom ') .and. test('MPIenerg')) then
          stop "[wunfiles] Found test options 'MPIenerg' and 'MPIatom'
      & which do not work together. Please choose only one of these."
       end if
+      ! MPI communication scheme
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      
       
       
       ! all parameters are stored in t_params fomr mod_wunfiles
@@ -432,6 +454,8 @@ C                                  meant for simpler passing of basic parameter 
           
 C ======================================================================
       END subroutine
+
+
 
 
 
