@@ -74,7 +74,7 @@
       implicit none
       integer, intent(in)  :: n
       integer              :: identity(n,n)
-      integer              :: i,j
+      integer              :: i
       identity = 0
       do i = 1,n
         identity(i,i) = 1
@@ -435,7 +435,7 @@
       real(8), intent(in)  :: mat1(:),mat2(:,:)
       real(8)              :: matmat_dpdm(size(mat2,1),size(mat2,1))
       real(8), allocatable :: vec(:),vec2(:)
-      integer              :: nn,n,k1,i
+      integer              :: nn,n,i
       n = size(mat2,1) ; nn = n*(n+1)/2 ; allocate ( vec(n),vec2(n) )
       if(size(mat2,2).ne.n)  stop 'matmat_dpdm: dimensions of second input array differ.'
       if(size(mat1)  .ne.nn) stop 'matmat_dpdm: first input array has wrong size.'
@@ -452,7 +452,7 @@
       real(8), intent(in)  :: mat1(:,:),mat2(:)
       real(8)              :: matmat_dmdp(size(mat1,1),size(mat1,1))
       real(8), allocatable :: vec(:),vec2(:)
-      integer              :: nn,n,k1,i
+      integer              :: nn,n,i
       n = size(mat1,1) ; nn = n*(n+1)/2 ; allocate ( vec(n),vec2(n) )
       if(size(mat1,2).ne.n)  stop 'matmat_dmdp: dimensions of first input array differ.'
       if(size(mat2)  .ne.nn) stop 'matmat_dmdp: second input array has wrong size.'
@@ -483,7 +483,7 @@
       complex(8)              :: matmat_dpzm(size(mat2,1),size(mat2,1))
       real(8),    allocatable :: vecr(:),veci(:)
       complex(8), allocatable :: vec2(:)
-      integer                 :: nn,n,k1,i
+      integer                 :: nn,n,i
       n = size(mat2,1) ; nn = n*(n+1)/2 ; allocate ( vecr(n),veci(n),vec2(n) )
       if(size(mat2,2).ne.n)  stop 'matmat_dpzm: dimensions of second input array differ.'
       if(size(mat1)  .ne.nn) stop 'matmat_dpzm: first input array has wrong size.'
@@ -502,7 +502,7 @@
       complex(8), intent(in)  :: mat2(:)
       complex(8)              :: matmat_dmzp(size(mat1,1),size(mat1,1))
       complex(8), allocatable :: vec1(:),vec(:)
-      integer                 :: nn,n,k1,i
+      integer                 :: nn,n,i
       n = size(mat1,1) ; nn = n*(n+1)/2 ; allocate ( vec(n),vec1(n) )
       if(size(mat1,2).ne.n)  stop 'matmat_dmzp: dimensions of first input array differ.'
       if(size(mat2)  .ne.nn) stop 'matmat_dmzp: second input array has wrong size.'
@@ -536,7 +536,7 @@
       real(8),    intent(in)  :: mat2(:,:)
       complex(8)              :: matmat_zpdm(size(mat2,1),size(mat2,1))
       complex(8), allocatable :: vec(:),vec2(:)
-      integer                 :: nn,n,k1,i
+      integer                 :: nn,n,i
       n = size(mat2,1) ; nn = n*(n+1)/2 ; allocate ( vec(n),vec2(n) )
       if(size(mat2,2).ne.n)  stop 'matmat_zpdm: dimensions of second input array differ.'
       if(size(mat1)  .ne.nn) stop 'matmat_zpdm: first input array has wrong size.'
@@ -555,7 +555,7 @@
       complex(8)              :: matmat_zmdp(size(mat1,1),size(mat1,1))
       complex(8), allocatable :: vec1(:)
       real(8),    allocatable :: vecr(:),veci(:)
-      integer                 :: nn,n,k1,i
+      integer                 :: nn,n,i
       n = size(mat1,1) ; nn = n*(n+1)/2 ; allocate ( vecr(n),veci(n),vec1(n) )
       if(size(mat1,2).ne.n)  stop 'matmat_zmdp: dimensions of first input array differ.'
       if(size(mat2)  .ne.nn) stop 'matmat_zmdp: second input array has wrong size.'
@@ -589,7 +589,7 @@
       complex(8), intent(in)  :: mat1(:),mat2(:,:)
       complex(8)              :: matmat_zpzm(size(mat2,1),size(mat2,2))
       complex(8), allocatable :: vec(:),vec2(:)
-      integer                 :: nn,n,k1,i,n2
+      integer                 :: nn,n,i,n2
       n  = size(mat2,1) ; nn = n*(n+1)/2 ; allocate ( vec(n),vec2(n) )
       n2 = size(mat2,2)
       if(size(mat1).ne.nn) stop 'matmat_zpzm: first input array has wrong size.'
@@ -606,7 +606,7 @@
       complex(8), intent(in)  :: mat1(:,:),mat2(:)
       complex(8)              :: matmat_zmzp(size(mat1,1),size(mat1,1))
       complex(8), allocatable :: vec(:),vec2(:)
-      integer                 :: nn,n,k1,i
+      integer                 :: nn,n,i
       n = size(mat1,1) ; nn = n*(n+1)/2 ; allocate ( vec(n),vec2(n) )
       if(size(mat1,2).ne.n)  stop 'matmat_zmzp: dimensions of first input array differ.'
       if(size(mat2)  .ne.nn) stop 'matmat_zmzp: second input array has wrong size.'
@@ -1225,7 +1225,7 @@
       integer, intent(in)    :: ir1
       integer, intent(inout) :: ir2
       integer, allocatable   :: iwork(:),ifail(:)
-      integer                :: n,m,ma,idum,info
+      integer                :: n,m,idum,info
       n = size(mat,1)
       m = ir2 - ir1 + 1 
       if(n.eq.0)            stop 'diagonalize_dvox: zero dimension in eigenvalue problem.'
@@ -1464,7 +1464,6 @@
       real(8),    allocatable :: eval1(:),rwork(:)
       integer,    allocatable :: iwork(:),ifail(:)
       integer                 :: n,nn,info
-      real(8)                 :: dlamch
       stop 'geteigen: disabled!'
       n = size(evec) ; nn = n*(n+1)/2
       if(size(mat) .ne.nn) stop 'diagonalize_zpvo: input matrix has wrong size.'
@@ -1542,7 +1541,7 @@
       real(8), intent(inout) :: mat(:,:)
       real(8), allocatable   :: work(:)
       integer, allocatable   :: ipiv(:)
-      integer                :: n,info,i,j
+      integer                :: n,info
       n = size(mat,1)
       if(size(mat,2).ne.n) stop 'inverse_d1: array dimensions differ.'
       allocate ( ipiv(n),work(n) )
@@ -1607,7 +1606,7 @@
       real(8), intent(out) :: matout(:)
       real(8), intent(in)  :: matin(:)
       real(8), allocatable :: eval(:),evec(:,:)
-      integer              :: nn,n,i,j
+      integer              :: nn,n,i
       nn = size(matin,1) ; n = nint(sqrt(0.25d0+2*nn)-0.5d0)
       if(size(matout).ne.nn) stop 'sqrtmat_dp: output array has wrong size.'
       allocate ( evec(n,n),eval(n) )
@@ -1643,7 +1642,7 @@
       complex(8), intent(in)  :: matin(:)
       complex(8), allocatable :: evec(:,:)
       real(8),    allocatable :: eval(:)
-      integer                 :: nn,n,i,j
+      integer                 :: nn,n,i
       nn = size(matin,1) ; n = nint(sqrt(0.25d0+2*nn)-0.5d0)
       if(size(matout).ne.nn) stop 'sqrtmat_zp: output array has wrong size.'
       allocate ( eval(n),evec(n,n) )
@@ -1675,7 +1674,7 @@
       implicit none
       real(8), intent(inout) :: mat(:)
       real(8), allocatable   :: eval(:),evec(:,:)
-      integer                :: nn,n,i,j
+      integer                :: nn,n,i
       nn = size(mat,1) ; n = nint(sqrt(0.25d0+2*nn)-0.5d0)
       allocate ( evec(n,n),eval(n) )
       call diagonalize(evec,eval,mat) ; if(any(eval.lt.0d0)) stop 'sqrtmat_dp1: negative eigenvalue.'
@@ -1708,7 +1707,7 @@
       complex(8), intent(inout) :: mat(:)
       complex(8), allocatable   :: evec(:,:)
       real(8),    allocatable   :: eval(:)
-      integer                   :: nn,n,i,j
+      integer                   :: nn,n,i
       nn = size(mat,1) ; n = nint(sqrt(0.25d0+2*nn)-0.5d0) 
       allocate ( eval(n),evec(n,n) )
       call diagonalize(evec,eval,mat) ; if(any(eval.lt.0d0)) stop 'sqrtmat_zp1: negative eigenvalue.'

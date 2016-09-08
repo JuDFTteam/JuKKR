@@ -10,150 +10,91 @@ module mod_timing
 contains 
 
 subroutine timing_init(my_rank)
+  use mod_version_info
   implicit none
   integer  :: my_rank
   character(len=3) :: ctemp
   if (init/=0) stop '[mod_timing] timing already initilized'
   write(ctemp,'(I03.3)') my_rank
   open(unit=43234059 , file='out_timing.'//trim(ctemp)//'.txt')
-  open(unit=432340591, file='out_timing.'//trim(ctemp)//'.txt.test')
+  call version_print_header(43234059)
+!   open(unit=432340591, file='out_timing.'//trim(ctemp)//'.txt.test')
   init=1
 end subroutine timing_init
 
 
 subroutine timing_start(mykey2)
   implicit none
-  integer time_array_1(8)
   integer ikey
   character(len=*)       :: mykey2
   character(len=nkeylen) :: mykey
-!   integer,save           :: firstrun=1
-! #ifdef MPI
-!        INCLUDE "mpif.h"
-! #endif
 
 if (init/=1) stop '[timing_start] please run init first'
-! write(*,*) mykey2
 
   mykey=mykey2
 
   ikey=timing_findkey(mykey,'noerror')
 
   if (ikey==-1) then
-!   if  ( ispaused(ikey)==0 ) then
     ikey=timing_setkey(mykey)
     interm_time(ikey)=0.0D0
   else
     if  ( ispaused(ikey)==1) then
-!     ikey=timing_findkey(mykey)
       if (ispaused(ikey)==0) stop '[timing_start] key already present unpaused'
     end if
   end if
-!   write(*,*) '[timing_start]',mykey2,ispaused
-!   write(*,*) '[timing_start]',ispaused
-!   write(*,*) '[timing_start]',ispaused
-!   write(*,*) '[timing_start]',timingkeys
 
    CALL SYSTEM_CLOCK(COUNT=start_time(ikey)) ! Start timing
-!   call date_and_time(values=time_array_1)
-!   start_time(ikey) = time_array_1 (5) * 3600 + time_array_1 (6) * 60 &
-!                    + time_array_1 (7) + 0.001 * time_array_1 (8)
-! #ifdef MPI
-!   start_time(ikey) = MPI_Wtime()
-! #endif
+   
 end subroutine timing_start
 
 subroutine timing_pause(mykey2)
   implicit none
-  integer time_array_1(8)
   integer    :: stop_time
   integer ikey
   character(len=*)       :: mykey2
   character(len=nkeylen) :: mykey
   real*8                   :: timing
-!   real*8,optional          :: timeout
   integer                   :: clock_rate
-! #ifdef MPI
-!        INCLUDE "mpif.h"
-! #endif
 
   mykey=mykey2
   ikey=timing_findkey(mykey)
-!   write(*,*) '[timing_stop]',ikey
 
 
   CALL SYSTEM_CLOCK(COUNT_RATE=clock_rate) ! Find the rate
   CALL SYSTEM_CLOCK(COUNT=stop_time) ! Stop timing
-
-
-!   call date_and_time(values=time_array_1)
-!   stop_time = time_array_1 (5) * 3600 + time_array_1 (6) * 60 &
-!             + time_array_1 (7) + 0.001 * time_array_1 (8)
-! #ifdef MPI
-!   stop_time = MPI_Wtime()
-! #endif
 
   timing = (stop_time-start_time(ikey))/real(clock_rate)
   interm_time(ikey)=interm_time(ikey)+timing
   CALL SYSTEM_CLOCK(COUNT=start_time(ikey))
   ispaused(ikey)=1
-! write(*,*) 'timingkeys',timingkeys
-! write(*,*) 'start_time',start_time
 
 end subroutine timing_pause
 
-subroutine timing_stop(mykey2,cmode)
+subroutine timing_stop(mykey2)
   implicit none
-  integer time_array_1(8)
   integer    :: stop_time
   integer ikey
   character(len=*)       :: mykey2
   character(len=nkeylen) :: mykey
   real*8                   :: timing
-!   real*8,optional          :: timeout
-  integer                   :: clock_rate
-  character(len=*),optional       :: cmode
-  
-! #ifdef MPI
-!        INCLUDE "mpif.h"
-! #endif
-!   if ( .not. present(cmode) ) cmode='normal' 
+  integer                   :: clock_rate 
 
   mykey=mykey2
   ikey=timing_findkey(mykey)
-!   write(*,*) '[timing_stop]',ikey
 
 
   CALL SYSTEM_CLOCK(COUNT_RATE=clock_rate) ! Find the rate
   CALL SYSTEM_CLOCK(COUNT=stop_time) ! Stop timing
 
 
-!   call date_and_time(values=time_array_1)
-!   stop_time = time_array_1 (5) * 3600 + time_array_1 (6) * 60 &
-!             + time_array_1 (7) + 0.001 * time_array_1 (8)
-! #ifdef MPI
-!   stop_time = MPI_Wtime()
-! #endif
-
   timing = (stop_time-start_time(ikey))/real(clock_rate)+interm_time(ikey)
 
   call timing_delkey(mykey)
 
-  if ( .not. present(cmode)) then
-    write(43234059,*)  mykey,'  ',timing
-  else if ( cmode=='test') then
-    write(432340591,*) mykey,'  ',timing
-!   else
-!      print *,cmode
-!      stop 'error in timing mode'
-  end if
-
-!   write(*,*) mykey,'  ',timing,interm_time(ikey)
-!   if (present(timeout)) timeout=timing
+  write(43234059,*)  mykey,'  ',timing
   ispaused(ikey)=0
 
-! write(*,*) 'timingkeys',timingkeys
-! write(*,*) 'start_time',start_time
 
 end subroutine timing_stop
 

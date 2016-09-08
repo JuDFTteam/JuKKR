@@ -71,17 +71,11 @@ use mod_chebyshev   ! lda+u
 !       parameter (lmmaxd= (krel+1) * (lmaxd+1)**2)
       INTEGER LMPOTD
 !       PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER NCLEB
       INTEGER IRMD
-!       INTEGER IRMIND
-      INTEGER IRID
-      INTEGER NFUND
-      INTEGER NSPIN
-!       PARAMETER (IRMIND=IRMD-IRNSD)
 ! C     ..
 ! C     .. Scalar Arguments ..
       DOUBLE COMPLEX DF,EK
-      INTEGER IEND,IMT1,IPAN1,NSRA
+      INTEGER IMT1,NSRA
       type(shapefun_type),intent(in)            :: shapefun
       integer        :: corbital
 

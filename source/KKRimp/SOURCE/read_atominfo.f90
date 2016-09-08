@@ -2,6 +2,7 @@ module mod_read_atominfo
 contains
 subroutine read_atominfo(cmode,cfilename_atom,natom,ntotatom,ratom,zatom,lmaxd,lmaxatom,killatom,vtotatom)
   use nrtype
+  use mod_version_info
   implicit none
 ! the routine reads the atom information using 2 modes
 ! - 'total' reads the information of all atoms, also the once which are beiing killed. 
@@ -24,7 +25,7 @@ integer,allocatable                      :: vtotatom(:)     ! 1= is screening at
 
 ! local variables
 integer                                  :: ifile_atom,ios,numb
-integer                                  :: iatom, jatom, iatom2,icountvatom
+integer                                  :: iatom, jatom, icountvatom
 real(kind=dp)                            :: temp1,temp2,temp3,temp4
 integer                                  :: temp5,temp6,temp7
 character(len=200)  ::string1
@@ -35,6 +36,8 @@ character(len=200)  ::string1
 ifile_atom=1000000 
 icountvatom=0
 open(unit=ifile_atom, file=cfilename_atom, status='old', iostat=ios)
+call version_check_header(ifile_atom)
+
   if (ios/=0) then
      write(*,*) '[read_atominfo] config file does not exist'
      stop

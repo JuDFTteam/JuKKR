@@ -86,7 +86,6 @@ C     .. Array Arguments ..
      +              ,DENLM(LMMAXD),DENLM2(LMMAXD),ENERG  ! lm-dos
       DOUBLE PRECISION CLEB(NCLEB),DRDI(IRMD),RHO2NS(IRMD,LMPOTD),
      +                 THETAS(IRID,NFUND)
-     +                ,CVLIGHT              ! lm-dos
       INTEGER ICLEB(NCLEB,4),IFUNM(*),IRCUT(0:IPAN),
      +        JEND(LMPOTD,0:LMAXD,0:LMAXD),LMSP(*)
 C     ..

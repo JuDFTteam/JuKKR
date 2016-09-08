@@ -40,6 +40,7 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
       use mod_mpienergy, only: mpienergy_distribute
       use mod_calccouplingconstants, only: calcJijmatrix,calccouplingconstants_writeoutJij
       use mod_checkinterpolation
+      use mod_version_info
       implicit none
       integer                         :: ITSCF
       type(cell_type)                 ::  cell(natom)
@@ -57,11 +58,10 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
       complex(kind=dpc)               ::  ez(ielast),wez(ielast)
       integer                         :: ielast
       type(config_type)             ::  config
-      complex(kind=dpc)               ::  gmatll((lmaxd+1)**2,(lmaxd+1)**2)
 !       real(kind=dp)                   ::  rho2ns(cell%nrmax,(2*lmaxatom+1)**2,nspin,natom), espv(0:lmaxatom+1,2)
 !       double complex                  ::  den(0:lmaxatom+1) !,ez(iemxd), &
-      integer                         ::  ie,ispin,iatom,jatom,ialpha
-      integer                         ::  lm1,lm2
+      integer                         ::  ie,ispin,iatom,ialpha
+      integer                         ::  lm1
       type(tmat_type),allocatable    :: tmat(:,:) !(lmmaxd,lmmaxd)
       type(energyparts_type)          :: energyparts !(lmmaxd,lmmaxd)
 !       integer                         :: itscf
@@ -75,11 +75,9 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
       integer                        :: nlmhost
 !       integer                        :: kgrefsoc
 
-      integer                        :: natomtemp,nlmhosttemp
       integer                        :: ispinfac,ierror
 
       integer                        :: writeout_ie
-      integer                        :: writeout_step
       integer                        :: nspinden
 ! write(*,*) 'test'
       double precision,allocatable    :: Jijmatrix(:,:,:,:)
@@ -197,38 +195,57 @@ if (ITSCF==1) then
 
 
   open(unit=34536254,file='out_Jijmatrix')
+  call version_print_header(34536254)
   open(unit=34536256,file='out_JijDij')
+  call version_print_header(34536256)
   open(unit=34536258,file='out_Jijmatrix_local')
+  call version_print_header(34536258)
   open(unit=34536259,file='out_JijDij_local')
+  call version_print_header(34536259)
   open(unit=34536268,file='out_Aimatrix')
+  call version_print_header(34536268)
 
   open(unit=22349375,file='out_energytotal_eV')
+  call version_print_header(22349375)
   open(unit=22349376,file='out_energysp_eV')
+  call version_print_header(22349376)
   open(unit=22349378,file='out_energytotal_per_atom_eV')
+  call version_print_header(22349378)
   open(unit=22349379,file='out_energysp_per_atom_eV')
+  call version_print_header(22349379)
 
   if ( config_testflag('write_density') ) then
-  open(unit=2342345,file='test_rho2ns')
+    open(unit=2342345,file='test_rho2ns')
+    call version_print_header(2342345)
   end if !( config_testflag('write_density') ) then
   if ( config_testflag('write_gmatonsite') ) then
     write(ctemp,'(I03.3)') my_rank
     open(unit=73467345,file='test_gmatonsite'//trim(ctemp)//'.txt')
+    call version_print_header(73467345)
   end if
 
   open(unit=2342348,file='test_rmesh')
   open(unit=2342349,file='test_rmeshnew')
   if (config%ncoll==1) then
     open(unit=23452324,file='out_magneticmoments_angle_nomix')
+    call version_print_header(23452324)
     open(unit=23452325,file='out_magneticmoments_nomix')
+    call version_print_header(23452325)
     open(unit=23452326,file='out_magneticmoments_angle')
+    call version_print_header(23452326)
     open(unit=23452327,file='out_magneticmoments')
+    call version_print_header(23452327)
   end if
 
   if (config%calcorbitalmoment==1) then
     open(unit=88943362,file='out_orbitalmoments')
+    call version_print_header(88943362)
     open(unit=88943363,file='out_orbitalmoments_ns')
+    call version_print_header(88943363)
     open(unit=88943364,file='out_orbitalmoments_lm')
+    call version_print_header(88943364)
     open(unit=88943365,file='out_orbitalmoments_sp')
+    call version_print_header(88943365)
   end if
 
 end if
@@ -1041,6 +1058,7 @@ end if
 ! l-dos
         OPEN(UNIT=30, &
             FILE="out_ldos.atom="//char(48+IATOM/10)//char(48+mod(IATOM,10))//"_spin"//char(48+ISPIN)//".dat")
+        call version_print_header(30)
         do ie=1,ielast
           WRITE(30,'(300G24.16)') DREAL(EZ(IE)),-DIMAG(DENSITY(IATOM)%DEN(LMAXATOM(IATOM)+2,ISPIN,IE))/PI,    & ! e, l-summed dos,
                                 (-DIMAG(DENSITY(IATOM)%DEN(ilval,ISPIN,IE))/PI,ilval=0,LMAXATOM(IATOM)+1)       ! l-resolved dos
@@ -1049,6 +1067,7 @@ end if
 ! lm-dos
         OPEN(UNIT=30, &
             FILE="out_lmdos.atom="//char(48+IATOM/10)//char(48+mod(IATOM,10))//"_spin"//char(48+ISPIN)//".dat")
+        call version_print_header(30)
         do ie=1,ielast
           WRITE(30,'(300G24.16)') DREAL(EZ(IE)),(-DIMAG(DENSITY(IATOM)%DENLM(LM1,ISPIN,IE))/PI,LM1=1,(LMAXATOM(IATOM)+1)**2)
         end do !ie
@@ -1056,8 +1075,9 @@ end if
 ! complex lmdos
         OPEN(UNIT=30, &
             FILE="out_clmdos.atom="//char(48+IATOM/10)//char(48+mod(IATOM,10))//"_spin"//char(48+ISPIN)//".dat")
-                WRITE(30,*) ielast, 'IELAST'
-                WRITE(30,*) lmaxatom(iatom), 'LMAX'
+        call version_print_header(30)
+        WRITE(30,*) ielast, 'IELAST'
+        WRITE(30,*) lmaxatom(iatom), 'LMAX'
         do ie=1,ielast
           WRITE(30,'(300G24.16)') EZ(IE), -DENSITY(IATOM)%DEN(LMAXATOM(IATOM)+2,ISPIN,IE)/PI,     &
                                   (-(DENSITY(IATOM)%DENLM(LM1,ISPIN,IE))/PI,LM1=1,(LMAXATOM(IATOM)+1)**2)

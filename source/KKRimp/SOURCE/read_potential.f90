@@ -32,7 +32,6 @@ subroutine read_potential(filename_pot,filename_shape,natom,lmaxd,zatom,lmaxatom
 
 ! temporary variables
    character(len=100)               ::  cline
-   real(kind=dp)                    ::  dtemp
    real(kind=dp)                    ::  expa
    integer                          ::  itemp,isum,ipan1,nr,lmval
    integer                          ::  inonzerolm
@@ -56,8 +55,6 @@ subroutine read_potential(filename_pot,filename_shape,natom,lmaxd,zatom,lmaxatom
    integer                          ::  ipan, ifun
    integer                          ::  npand
    real(kind=dp),allocatable        ::  xrn(:,:),drn(:,:)
-
-   character(len=28)                ::  vpot_name_temp
 ! type                                ::  rmesh_type
 
 ! 
@@ -599,8 +596,7 @@ implicit none
    character(len=*)      ::  filename_pot
    integer               ::  ins,lmmaxd,ncorestated,npot,nRMAXd,nrmax1
    integer               ::  ios,ifile_pot,ierror
-   character(len=200)    ::  string1,keyword2
-   character(len=5)      ::  ctemp
+   character(len=200)    ::  string1
    integer               ::  iline,iline2,itemp,i4
    real(kind=dp)         ::  temp4(4)
 

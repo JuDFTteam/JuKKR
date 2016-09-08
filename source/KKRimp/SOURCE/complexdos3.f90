@@ -18,6 +18,7 @@ module mod_complexdos3
 contains
 
 subroutine complexdos3(lmax,iemax,iatom,ispin,nspin,dos,doslm,ez)
+use mod_version_info
 implicit none
 integer       :: lmax
 integer       :: iemax
@@ -38,9 +39,11 @@ lmmax=(lmax+1)**2
 
 open(unit=30, &
      file="out_ldos.interpol.atom="//char(48+iatom/10)//char(48+mod(iatom,10))//"_spin"//char(48+ispin)//".dat")
+call version_print_header(30)
 
 open(unit=31, &
      file="out_lmdos.interpol.atom="//char(48+iatom/10)//char(48+mod(iatom,10))//"_spin"//char(48+ispin)//".dat")
+call version_print_header(31)
 
 
 do ie=2,iemax-1

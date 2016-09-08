@@ -36,7 +36,7 @@ c      PARAMETER (LMAXD=3,LMX=LMAXD+1,LPOTD=6)
 !       PARAMETER (NCLEB=LM3D*LMMAXD)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER LPOT,NATPER
+      INTEGER LPOT
 C     ..
 C     .. Array Arguments ..
       REAL*8 SN(3),VIN(*),VOUT(*) !bauer
@@ -47,9 +47,9 @@ C     .. Arrays in Common ..
 C     ..
 C     .. Local Scalars ..
       REAL*8 CLECG,EPI,FACTOR,FPI,PI,R,R1,R2,R3,S,R0
-      INTEGER I,I1,I2,IATOM,IEND,IL,ILM,IMAX,IMIN,J,L,L1,L2,L3,L3MAX,
-     +          LM1,LM2,LM3,LM4,LMMAX,LX,LY,M,M1,M1A,M1S,M2,M2A,M2S,M3,
-     +          M3A,M3S,M4,NATOM,NI1R,NI2R,LM
+      INTEGER I,IEND,J,L,L1,L2,L3,L3MAX,
+     +          LM1,LM2,LM3,LMMAX,LX,LY,M,M1,M1A,M1S,M2,M2A,M2S,M3,
+     +          M3A,M3S,LM
 C     ..
 C     .. Local Arrays ..
       REAL*8 CLEB(NCLEB),

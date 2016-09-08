@@ -24,9 +24,7 @@ double complex,allocatable :: gmatnew(:,:)
 integer                    :: my_rank
 integer                    :: nspinhost
 integer                    :: nlmhostnew
-integer                    :: nlmhost
 integer                    :: iatom,ie,ispin,ilm
-integer                    :: natom1
 integer                    :: lmmaxhost,lmaxhost
 integer                    :: recl1,recl2
 integer                    :: lmstart,lmstop,lmstart2,lmstop2

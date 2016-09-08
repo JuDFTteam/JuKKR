@@ -5,6 +5,7 @@ contains
 subroutine read_angle(natom,my_rank,density)
 use type_density
 use mod_config, only: config_runflag
+use mod_version_info
 implicit none
 !interface
 integer  :: natom
@@ -30,6 +31,7 @@ if (first==1) then
   end if
 
   open(unit=33952084, file='kkrflex_angle', status='old', iostat=ierror)
+  call version_check_header(33952084)
   if (ierror/=0) then
     if (my_rank==0) then 
       write(*,*) '[read_potential] angle file does not exist'
@@ -77,11 +79,14 @@ first=0
 end subroutine read_angle
 
 subroutine read_numbofangles(nangleconfigur,natom)
-integer :: nangleconfigur
-integer :: ios,linecount
+use mod_version_info
+implicit none
+integer :: nangleconfigur, natom
+integer :: ios,linecount, ierror
 character(len=200)  ::string1
 
 open(unit=345345318, file='kkrflex_angle', status='old', iostat=ierror)
+call version_check_header(345345318)
 ios=0
 linecount = -1
 do while (ios/=-1)

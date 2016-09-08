@@ -11,7 +11,7 @@ c Output:
 ! I/O
       TYPE(LDAU_TYPE)       LDAU(:)
 c Local:
-      INTEGER I1,IH,IS,LMLO,LMHI,M1,MMAX
+      INTEGER I1,IS,LMLO,LMHI,M1,MMAX
       REAL*8 SUM
 
 c     Initialize:

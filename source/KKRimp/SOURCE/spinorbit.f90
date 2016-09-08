@@ -28,7 +28,7 @@ double complex            :: LSHAM(2*(lmax+1)**2,2*(lmax+1)**2)
 integer                   :: lmmax
 integer                   :: irstart,irstop,ipan,ir
 double precision          :: widthfac
-double precision          :: vpot(nrmaxnew),vpot2(nrmaxnew)
+double precision          :: vpot(nrmaxnew)
 double precision          :: dvpotdr(nrmaxnew)
 double complex            :: RMASS,temp !(nrmaxnew)
 double complex            :: HSOFAC(nrmaxnew)
@@ -210,7 +210,7 @@ END SUBROUTINE REL_MASS
 ! c       complex                  ::     L_S(LMMAXD*2,LMMAXD*2)
 
 ! c  local variables 
-       integer                 ::     i1,i2,i1l,RL,lm1,lm2
+       integer                 ::     RL,lm1,lm2
        double complex                 ::     icompl
        double complex,allocatable     ::     LS_L(:,:)
 

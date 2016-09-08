@@ -68,8 +68,6 @@ integer          :: nrmaxd,lmpotd
 double precision :: theta,phi
 double precision :: theta_old,phi_old
 !local
-double precision :: dcostheta2,dsintheta2
-double complex   :: im,cimphi,imphi
 integer          :: ir,ilm
 double complex   :: W1(2,2),W2(2,2)
 double complex   :: W1_11W2_11, W1_11W2_22, W1_11W2_12, W1_11W2_21

@@ -24,7 +24,7 @@ use nrtype
 !       PARAMETER (LMMAXD= (2*LMAXD+1)**2)
 !    REAL(KIND=DP)  ::     CVLIGHT
 !       PARAMETER (CVLIGHT=274.0720442D0)
-      INTEGER LM2D
+   INTEGER LM2D
 !       PARAMETER (LM2D= (2*LMAXD+1)**2)
 
 integer :: IRMIND
@@ -33,15 +33,13 @@ integer :: IEMXD
 
 integer :: INS
 integer :: IRMTD
-! integer :: LMAXD
 integer :: NCORED
-! integer :: lmmaxd
 contains
 
-subroutine arrayparams_set(LMAXD1)!, IRMAXD1, IRNSD1)
+subroutine arrayparams_set(LMAXD1)
 integer,save          :: first = 1
 
-integer :: lmaxd1,irmaxd1, irnsd1
+integer :: lmaxd1
 
 IF (first/=1) stop '[array_params] Trying to change the array parameters more then one time not permitted'
 first=0
@@ -52,7 +50,6 @@ LMMAXD = (LMAXD+1)**2
 LMPOTD = (LPOTD+1)**2
 MMAXD  =  2*LMAXD+1
 LM2D= (2*LMAXD+1)**2
-NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2
 
 end subroutine arrayparams_set
 end module arrayparams

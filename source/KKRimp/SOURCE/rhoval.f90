@@ -76,9 +76,7 @@ MODULE MOD_RHOVAL
       real(kind=dp),allocatable             ::   cutoff(:) ,wldau(:,:,:)
 
       complex(kind=dpc),parameter           ::   czero=(0.0D0,0.0D0)
-      integer                               ::   lm1,lm2,lval,ir
-      integer                               ::   irec
-      integer                               ::   idim
+      integer                               ::   lm1,lm2,lval
       complex(kind=dpc)                     ::   df,ek
       logical,parameter                     ::   lirrsol=.true.
 
@@ -86,7 +84,6 @@ MODULE MOD_RHOVAL
                                                  cr(lmmaxatom,lmmaxatom), &
                                                  dr(lmmaxatom,lmmaxatom), &
                                                  ekl(0:lmaxatom),fz(cell%nrmax,0:lmaxatom), &
-                                                 gmat0(lmmaxatom,lmmaxatom), &
                                                  pns(lmmaxatom,lmmaxatom,cell%nrmin_ns:cell%nrmax,2), & 
                                                  pz(cell%nrmax,0:lmaxatom), &
                                                  qns(lmmaxatom,lmmaxatom,cell%nrmin_ns:cell%nrmax,2), &

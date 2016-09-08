@@ -15,8 +15,6 @@ implicit none
 !interface
 double complex :: array
 integer        :: ierror
-!local
-integer        :: ival1
 ierror=0
   IF (dimag(array) .NE. dimag(array)) ierror=1
   IF (dreal(array) .NE. dreal(array)) ierror=1
@@ -27,8 +25,6 @@ implicit none
 !interface
 double precision  :: array
 integer           :: ierror
-!local
-integer           :: ival1
 ierror=0
   IF (array .NE. array) ierror=1
 end subroutine checknan_dim0_real

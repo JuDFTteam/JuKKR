@@ -24,13 +24,13 @@ C     .. Array Arguments ..
       REAL*8 W(N),YR(N,0:LASSLD,0:LASSLD)
 
 C     .. Local Scalars ..
-      REAL*8 CLECG,EPI,FACTOR,FPI,PI,R,R1,R2,R3,S
-      INTEGER I,I1,I2,IATOM,IEND,IL,ILM,IMAX,IMIN,J,L,L1,L2,L3,L3MAX,
-     +        LM1,LM2,LM3,LM4,LMMAX,LX,LY,M,M1,M1A,M1S,M2,M2A,M2S,M3,
-     +        M3A,M3S,M4,NATOM,NI1R,NI2R
+      REAL*8 CLECG,EPI,FACTOR,FPI,PI,S
+      INTEGER I,IEND,J,L1,L2,L3,L3MAX,
+     +        LMMAX,M1,M1A,M1S,M2,M2A,M2S,M3,
+     +        M3A,M3S
 C     ..
 C     .. Local Arrays ..
-      REAL*8  CLEB(NCLEB,2),Y(LM3D)
+      REAL*8  CLEB(NCLEB,2)
       INTEGER ICLEB(NCLEB,4)
 C     ..
 C     .. Statement Functions ..

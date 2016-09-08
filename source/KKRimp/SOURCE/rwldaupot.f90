@@ -18,6 +18,7 @@
 ! PHI
 ! ----- 4 -----
       USE TYPE_LDAU 
+      use mod_version_info
       implicit none
 ! Input:
       INTEGER                        :: IPOS,NATYP,NSPIN,LMAXD,IRMD
@@ -27,13 +28,14 @@
       INTEGER                        :: IRUNLDAU
 ! Inside
       CHARACTER*20                   :: TEXT,TEXT1
-      INTEGER                        :: IR,M1,M2,M3,M4,I2,IS,I1,MMAXD,LMMAXD,NSPIND
+      INTEGER                        :: IR,M1,M2,M3,M4,IS,I1,MMAXD,LMMAXD,NSPIND
  
       MMAXD = 2*LMAXD + 1
       LMMAXD = (LMAXD + 1)**2
       NSPIND = 2
 
       OPEN (67,FILE='ldaupot',FORM='FORMATTED')
+      call version_print_header(67)
       REWIND (67)
 
       IF (LWRITE) THEN

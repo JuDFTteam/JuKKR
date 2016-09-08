@@ -31,7 +31,6 @@ implicit none
   double complex,parameter    :: czero=(0.0D0,0.0D0)
 !  double precision,parameter :: cvlight = 274.0720442d0
   integer                     :: lval_in
-  double precision            :: mode
   double complex,allocatable   :: rmass_matrix(:,:),rmass0_matrix(:,:),rmass0_inv(:,:)
   character(len=*),parameter  :: rmass_mode='spherical'
 

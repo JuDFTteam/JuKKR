@@ -26,7 +26,6 @@ double precision    :: zatom(natom)
 integer             :: nrmaxd
 real*8              :: alat
 !local
-integer :: iatom
 double precision          :: cmom_mt((2*lmaxd+1)**2,natom) !(lmpotd,ntotatom)
 
 ! allocate arrays

@@ -50,17 +50,9 @@ integer                                   :: ie                         ! lda+u
 type(ldau_type)                           :: ldau                       ! lda+u variables
 logical                                   :: calcleft
 !local
-double complex,allocatable                ::  vll2ddr(:,:)
-double complex,allocatable                ::  vll2ddr2(:,:)
-double complex,allocatable                ::  vpotll(:,:,:)
-double complex,allocatable                ::  vpotll2(:,:,:)
-integer                                   :: ir,lm1,lm2,lmpot,lmmax,ipan,ipan2,lmsize,lmsize2
-integer                                   :: irmin,irmax,irminnew,irmaxnew
-double precision                          :: rmin,rmax,rval
-double precision,allocatable              :: c1(:,:)
-double complex,allocatable                :: srllp(:,:), &
-                                             ull(:,:,:),sll(:,:,:),&
-                                             rll(:,:,:)
+double complex,allocatable                :: vpotll(:,:,:)
+double complex,allocatable                :: vpotll2(:,:,:)
+integer                                   :: ir,lm1,lm2,lmpot,lmmax,lmsize,lmsize2
 double complex                            :: gmatprefactor
 double complex,allocatable                :: hlk(:,:),jlk(:,:),hlk2(:,:),jlk2(:,:)
 integer,allocatable                       :: jlk_index(:)
@@ -70,7 +62,7 @@ integer                                   :: ierror,idotime
 complex(kind=dpc),allocatable             :: tmattemp(:,:)
 complex(kind=dpc),allocatable             :: tmatsph(:)
 double complex                            :: eryd
-integer                                   ::  idoldau,lmlo,lmhi,mmax,m1,imt1  ! lda+u 
+integer                                   :: lmlo,lmhi,mmax,imt1  ! lda+u 
 
 write(1337,*) 'starting calctmatnew'
 

@@ -162,14 +162,12 @@ implicit none
 type(wavefunction_type)                   :: wavefunction
 type(cell_typenew)                        :: cellnew
 type(gauntcoeff_type)                     :: gauntcoeff
-double precision                          :: zatom
 integer                                   :: lmmax
 integer                                   :: lmsize
 integer                                   :: lmax
 integer                                   :: lmpot
 integer                                   :: nrmax
 !local
-double precision                          :: vecn
 double precision                          :: theta,phi
 integer                                   :: leftsol
 double precision                          :: bpot(nrmax,lmpot,1)

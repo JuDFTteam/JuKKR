@@ -57,8 +57,7 @@ C
 C
 C Dummy arguments
 C
-      REAL*8 CVLIGHT
-      INTEGER NATOM,NATREF,NSPIN,NSRA,ISPIN
+      INTEGER NATOM,NSPIN
       INTEGER LMAXATOM(:)
       TYPE(LDAU_TYPE),ALLOCATABLE :: LDAU(:) ! lda+u variables dimension: (NATOM)
       TYPE(DENSITY_TYPE) :: DENSITY(:)
@@ -68,14 +67,13 @@ C Local variables
 C
 
       REAL*8,ALLOCATABLE  ::  WLDAU_OLD(:,:,:),RMS(:)   ! for mixing purposes
-      REAL*8 CGCRAC,WNORM,DENTOT,DENTOTS(2),RMSTOT
+      REAL*8 DENTOT,DENTOTS(2),RMSTOT
       COMPLEX*16 CSUM,CSUM2
       COMPLEX*16,ALLOCATABLE :: VLDAU(:,:)
       REAL*8 XMIX,STRMIX  ! mixing factor, input straight-mixing factor
-      INTEGER I1,IM1,IM2,IM3,IM4,IPOT1,IR,IRC1,IRS1,IRUNLDAU
-     &     ,KK,L1,LF,LFMAX,LL,M1,M2,M3,M4,MM,IS,JS,MMAX
-     &     ,LMSTART,LMEND,LM1,LM2,IAT,I3,I4,LMLO,LMHI,LMSLO,LMSHI
-      INTEGER NINT,IE,MDIM,ICELL
+      INTEGER IRUNLDAU, IAT
+     &     ,L1,M1,M2,M3,M4,MM,IS,JS,MMAX
+     &     ,LM1,LMLO,LMHI
 
 
 !      SAVE 
@@ -335,8 +333,8 @@ C 7. Write out rms error
       SUBROUTINE WMIX(XMIX,WLDAU,WLDAU_OLD,MMAXD,NSPIND)
 c Mix old and new potential. Linear mixing with factor xmix.
       implicit none
-      INTEGER MMAXD,NSPIND,NATLDAUD
-      INTEGER M1,M2,IS,IAT
+      INTEGER MMAXD,NSPIND
+      INTEGER M1,M2,IS!,IAT
       REAL*8 WLDAU_OLD(:,:,:) ! for mixing purposes
       REAL*8 WLDAU(:,:,:)
       REAL*8 XMIX,ONEMXMIX

@@ -21,20 +21,18 @@ C     .. Parameters ..
 C     ..
 C     .. Scalar Arguments ..
       INTEGER LMPOTD,NATOM,IRMD,INS
-      INTEGER LMAX,NEND,NSPIN,NSTART
+      INTEGER LMAX,NSPIN
       TYPE(DENSITY_TYPE) :: DENSITY(NATOM)
       TYPE(CELL_TYPE)    :: CELL(NATOM)
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION CMOM(LMPOTD,NATOM),FLMH(-1:1,NATOM),
-!      +       R(IRMD,*),
-     +       R2RHO(IRMD,LMPOTD,NATOM,NSPIN),
      +       VPOT(IRMD,LMPOTD,NSPIN,NATOM),ZATOM(NATOM)
 !       INTEGER IRWS(NATOM)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION RWS,VINT1
-      INTEGER I,IATOM,IPOT,IRWS1,LM,M
+      INTEGER I,IATOM,IRWS1,LM,M
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION FLM(-1:1,2),V1(IRMD)

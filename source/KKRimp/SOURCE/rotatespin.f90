@@ -16,12 +16,10 @@ type(density_type)    :: density
 type(cell_type)       :: cell
 integer               :: lmax,lmpot
 type(config_type)     :: config
-integer               :: ispin,ir,irstart,irstop,ipan
-double precision      :: widthfac
-double complex        :: densum(4),rho2ns_temp(2,2),sum1,int1
+integer               :: ispin
+double complex        :: rho2ns_temp(2,2)
 double precision      :: magmoment(3),magmoment2(3),totmagmoment,totxymagmoment,totmagmoment2,totxymagmoment2
 double precision      :: theta_old,phi_old
-double precision      :: rfpi
 !***********************************************************************
 ! integrate the complex density of states for LM=1 
 ! gives the total complex charge which is then

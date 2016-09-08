@@ -7,3 +7,4 @@ version
 /test/
 *.png
 out_*.txt
+version.f90

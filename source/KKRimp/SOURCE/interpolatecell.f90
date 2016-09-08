@@ -24,11 +24,10 @@ type(config_type)                         :: config
 real(kind=dp),allocatable                 ::  vpotnew(:,:)
 real(kind=dp),allocatable                 ::  testpot(:,:)
 integer                                   :: ispin,nspin,ishift
-integer                                   :: ir,lm1,lm2,lmpot,lmmax,ipan,ipan2
+integer                                   :: ir,lm1,lmpot,lmmax,ipan,ipan2
 integer                                   :: irmin,irmax,irminnew,irmaxnew
 integer                                   :: npan_logtemp
 double precision                          :: rmin,rmax,rval,fac !,rpan_logmesh
-integer                                   :: mode
 integer                                   :: first=1
 integer                                   :: ilinmesh_panshift,ilogmesh_panshift,itemp
 character(len=*)                          :: cmode

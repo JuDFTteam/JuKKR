@@ -29,7 +29,7 @@
       real*8                                ::     rlength,r1,r2,r3
       real*8                                ::     dfac(0:lpotmax,0:lpotmax)
       integer                               ::     lx, ly,ival
-      integer                               ::     lm1,lm2,lm3,lm4,l1,l2
+      integer                               ::     lm1,lm3,lm4,l1,l2
       real*8                                ::     y((2*lpotmax+1)**2)
 
 ! pi    = 3.14159265359D0

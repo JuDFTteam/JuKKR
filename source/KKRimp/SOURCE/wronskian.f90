@@ -29,7 +29,6 @@ double complex,allocatable ::  wronskian2(:,:,:)
 double complex             ::  CLambdaCinv(0:cellnew%ncheb,0:cellnew%ncheb)
 double precision           ::  CLambdaCinv_temp(0:cellnew%ncheb,0:cellnew%ncheb)
 double precision          :: widthfac
-double complex,allocatable  :: temp1(:,:)
 integer :: ilm1,ilm2,ir,ipan,irstart,irstop
 integer :: lmsize,lmsize2,nrmax
 

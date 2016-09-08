@@ -10,7 +10,7 @@ subroutine SpinSphericalHarmonic(kappa,mu,theta,phi,chi1,chi2)
 ! output: chi1 (first component), chi2 (second component)
 ! requires AssociatedLegendrePolynomials.f90
 implicit none
-  integer		:: kappa,l,m
+  integer		:: kappa,l
   real			:: mu,ms
   double precision	:: theta,phi
   double complex	:: chi1,chi2
@@ -186,7 +186,6 @@ implicit none
 ! input variable
 integer					:: lcut
 ! output variables
-integer					:: Lambdacut
 integer,allocatable,dimension(:)	:: KappaArray
 real,allocatable,dimension(:)		:: MuArray
 ! other variables

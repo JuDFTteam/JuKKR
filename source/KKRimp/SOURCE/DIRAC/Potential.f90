@@ -20,9 +20,7 @@ double precision                            :: zatom,VLLin(nrmax,(2*lcut+1)**2,2
 double complex                              :: PotMatrixArray(:,:,:)
 
 ! other variables
-integer                                     :: Lambdacut,Lambda1,Lambda2
 integer                                     :: k
-double precision                            :: r
 double complex,allocatable,dimension(:,:)   :: PotMatrix
 double complex,allocatable                  :: chi1array(:,:), chi2array(:,:)
 double precision                            :: theta_array(integrationpoints),phi_array(integrationpoints), weight_array(integrationpoints)
@@ -171,11 +169,10 @@ implicit none
 ! input
 ! l cut-off for the expansion in spin spherical harmonics
 integer                         :: lcut
-integer                         :: Lambdacut, Lambda1, Lambda2, Lambda3, Lambda4
+integer                         :: Lambdacut
 integer,allocatable             :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
 double complex,allocatable      :: DcoeffListA(:), DcoeffListB(:)
 double precision                :: temp_realpart, temp_imagpart
-double complex                  :: temp1, temp2
 character(len=100)              :: filename
 character(len=2)                :: lcutstring
 integer                         :: currentline, filelengthA, filelengthB
@@ -334,10 +331,6 @@ double precision                :: theta_array(integrationpoints), phi_array(int
 integer                         :: Lambdacut, Lambda1, Lambda2, Lambda3, Lambda4, test_zero, test_nonzero
 integer                         :: linecount, filelengthA, filelengthB
 double complex,allocatable      :: vcoeff(:,:,:), wcoeff(:,:,:)
-double precision                :: temp_realpart, temp_imagpart
-double complex                  :: temp1, temp2
-character(len=100)              :: filename
-character(len=2)                :: lcutstring
 
 
 integer,allocatable,dimension(:):: KappaArray, LambdabarArray
@@ -425,15 +418,11 @@ double precision                :: theta_array(integrationpoints), phi_array(int
 
 ! variables
 double precision                :: theta,phi
-double precision                :: x,y,z
 
-
-! functions provided by SpinSphericals
-integer                         :: kappa
 
 ! variables
-integer                         :: j,k,l,m
-double precision                :: test,deviation
+integer                         :: j,k
+double precision                :: deviation
 double precision                :: potPhi,potBx,potBy,potBz
 double precision                :: eval_phi,eval_theta
 integer                         :: out_potprecision
@@ -585,21 +574,15 @@ double precision                :: VLLin(:,:,:)
 
 ! variables
 double precision                :: theta,phi
-double precision                :: x,y,z
-
-
-integer                         :: kappa
 
 ! variables
-integer                         :: j,k,l,m
-double precision                :: test,deviation
-double precision                :: potPhi,potBx,potBy,potBz
+integer                         :: j,k
+double precision                :: deviation
+double precision                :: potPhi
 double precision                :: eval_phi,eval_theta
-integer                         :: out_potprecision
 double complex, dimension(4,4)  :: potMatrixIn,potMatrix,differenceMatrix ! 4x4 potential matrix
 
 integer                         :: Lambdacut, Lambda1, Lambda2
-double complex, dimension(4)    :: v
 double complex,allocatable,dimension(:,:,:) :: vcoeff
 
 integer,allocatable,dimension(:):: KappaArray, LambdabarArray
@@ -712,14 +695,13 @@ subroutine makeSpinSphericalArray(lcut,chi1array,chi2array)
   ! output: chi1array, chi2array
   double complex,allocatable            :: chi1array(:,:), chi2array(:,:)
   
-  integer                               :: Lambda1
   double complex                        :: chi1,chi2
   double precision                      :: x,y,z,r,theta,phi,weight
   integer                               :: kappa
   real                                  :: mu
   
   integer                               :: Lambdacut, j, Lambda
-  integer,allocatable,dimension(:)      :: KappaArray, LambdabarArray
+  integer,allocatable,dimension(:)      :: KappaArray
   real,allocatable,dimension(:)         :: MuArray
   
   Lambdacut = getLambdacut(lcut+1)
@@ -751,7 +733,6 @@ subroutine nuCoefficients(lcut,zatom,meshpoints,nr,chi1array,chi2array,theta_arr
   use Lebedev
   use DiracConfig
   implicit none
-  double complex, dimension(4)		:: vcoeff ! index 1..4 corresponds to a,b,c,d
   integer				:: Lambda
   double precision                      :: zatom,meshpoints(:)
   integer                               :: nr
@@ -764,14 +745,10 @@ subroutine nuCoefficients(lcut,zatom,meshpoints,nr,chi1array,chi2array,theta_arr
   double complex,allocatable    	:: nuL(:,:,:), nuR(:,:,:)
   integer				:: j
   ! ^ index 1..4 corresponds to a,b,c,d i.e. the different sub-matrices, index i=1,2 corresponds to the different eigenvalues of the respective sub-matrix 
-  double precision, dimension(4,2)	:: integrandL, integrandR
   double complex, dimension(4,2)	:: eigenvalue
   double complex, dimension(4,2,2)	:: eigenvector
   double complex			:: chi1,chi2
-  double precision			:: x,y,z,r,theta,phi,weight
   double precision			:: potPhi,potBx,potBy,potBz
-  integer				:: kappa1,kappa2
-  real					:: mu1,mu2
   integer				:: matrixindex,eigenvalueindex
  
   integer				:: lcut, Lambdacut
@@ -862,17 +839,8 @@ subroutine ExpansionCoefficients(Lambda1,Lambda2,lcut,meshpoints,nr,chi1array,ch
 
   double complex,allocatable    	:: nuL(:,:,:), nuR(:,:,:)
 
-  integer				:: j
   ! ^ index 1..4 corresponds to a,b,c,d i.e. the different sub-matrices, index i=1,2 corresponds to the different eigenvalues of the respective sub-matrix 
-  double precision, dimension(4,2)	:: integrandL, integrandR
-  double complex, dimension(4,2)	:: eigenvalue
-  double complex, dimension(4,2,2)	:: eigenvector
-  double complex			:: chi1,chi2
-  double precision			:: x,y,z,r,theta,phi,weight
-  double precision			:: potPhi,potBx,potBy,potBz
-  integer				:: kappa1,kappa2
-  real					:: mu1,mu2
-  integer				:: matrixindex,eigenvalueindex
+  integer				:: matrixindex
  
   integer				:: lcut, Lambdacut, printtimer
   integer,allocatable,dimension(:)	:: KappaArray, LambdabarArray
@@ -1024,11 +992,11 @@ subroutine getPotPhi(zatom,meshpoints,nr,theta,phi,VLLin,potPhi)
   use SpinSphericals
   use Constants
   implicit none
-  double precision :: r,theta,phi,x,y,z,potPhi,V_spinup,V_spindown
+  double precision :: r,theta,phi,potPhi,V_spinup,V_spindown
   double precision :: zatom,meshpoints(:)
   integer          :: nr,lcut,l,m
   double precision :: VLLin(:,:,:) !VLLin(nrmax,(2*lcut+1)**2,2)
-  integer          :: lmmax,lm,countnr,nrmax
+  integer          :: lmmax,lm,nrmax
 
   r = meshpoints(nr)
   lmmax=size(VLLin(1,:,1),1)
@@ -1072,11 +1040,11 @@ subroutine getPotB(zatom,meshpoints,nr,theta,phi,VLLin,potBx,potBy,potBz)
   use SpinSphericals
   use Constants
   implicit none
-  double precision                :: r,theta,phi,x,y,z,potBx,potBy,potBz,V_spinup,V_spindown
+  double precision                :: r,theta,phi,potBx,potBy,potBz,V_spinup,V_spindown
   double precision                :: zatom,meshpoints(:)
   integer                         :: nr,lcut,l,m
   double precision                :: VLLin(:,:,:)
-  integer                         :: lmmax,lm,countnr,nrmax
+  integer                         :: lmmax,lm,nrmax
 
   r = meshpoints(nr)
   lmmax=size(VLLin(1,:,1),1)

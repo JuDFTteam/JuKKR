@@ -15,6 +15,13 @@ C the matrix SR is the right spectral integration matrix
 C the matrix CSLC1 is the product of C, SL and C1
 C the matrix CSRC1 is the product of C, SR and C1
 C---------------------------------------------------------------------
+      IMPLICIT NONE
+C     ..
+C     .. Array Arguments ..
+      DOUBLE PRECISION CSLC1(0:N,0:N),CSRC1(0:N,0:N),SLC1SUM(0:N)
+C     ..
+C     .. Scalar Arguments ..
+      INTEGER N
 C     .. Local Scalars ..
       DOUBLE PRECISION PI
       INTEGER J,K
@@ -29,12 +36,6 @@ C     .. External Subroutines ..
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ATAN,COS
-C     ..
-C     .. Array Arguments ..
-      DOUBLE PRECISION CSLC1(0:N,0:N),CSRC1(0:N,0:N),SLC1SUM(0:N)
-C     ..
-C     .. Scalar Arguments ..
-      INTEGER N
 C     ..
       PI = 4.D0*ATAN(1.D0)
 C---------------------------------------------------------------------

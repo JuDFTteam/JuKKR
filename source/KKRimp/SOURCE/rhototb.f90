@@ -59,7 +59,7 @@
       real(kind=dp)                :: chrgnt
       real(kind=dp)                :: catom(nspin,natom)
 
-      real(kind=dp)                :: DIFF,FACTOR,RFPI,SUM,TOTSMOM,TOTOMOM
+      real(kind=dp)                :: DIFF,FACTOR,RFPI,SUM,TOTSMOM
       integer                      :: IR,IATOM,IFUN,IPAN1,IRC1,IRS1,ISPIN, &
                                       LM,LMPOT
 !       INTRINSIC ATAN,SQRT

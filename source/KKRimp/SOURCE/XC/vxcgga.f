@@ -102,7 +102,6 @@ C     ..
 c
 c---> loop over given representive atoms
 c
-
       IF (KSHAPE.NE.0) THEN
         IPAN1 = IPAN
         IRC1 = IRCUT(IPAN)
@@ -122,7 +121,6 @@ c
         VXCR(2,ISPIN) = 0.0D0
         VXCR(3,ISPIN) = 0.0D0
    10 CONTINUE
-
 c
 c---> initialize for ex.-cor. energy
 c
