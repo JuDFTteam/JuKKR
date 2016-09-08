@@ -88,7 +88,7 @@
      &        NPAN_TOT(:),                                               &
      &        IPAN_INTERVALL(:,:),NKCORE(:,:),KAPCORE(:,:)
       LOGICAL, allocatable :: SYMUNITARY(:),VACFLAG(:)
-      CHARACTER*24, allocatable :: TXC(:)
+      CHARACTER*124, allocatable :: TXC(:)
       CHARACTER*8,  allocatable :: OPTC(:),TESTC(:)
       
       end type type_params
@@ -233,7 +233,7 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*24 TXC(5)
+      CHARACTER*124 TXC(5)
       CHARACTER*80 TMPDIR
       INTEGER ITMPDIR,ILTMP      
 C     ..
@@ -615,7 +615,7 @@ C ======================================================================
      &         t_params%VACFLAG(2), stat=ierr)
       if(ierr/=0) stop '[init_t_params] Error allocating logicals'
      
-      ALLOCATE(t_params%TXC(5), stat=ierr) !CHARACTER*24
+      ALLOCATE(t_params%TXC(5), stat=ierr) !CHARACTER*124
       if(ierr/=0) stop '[init_t_params] Error allocating txc'
       
       if(.not.allocated(t_params%TESTC)) then
@@ -1125,7 +1125,7 @@ C ======================================================================
      &          MPI_COMM_WORLD,ierr)
 
       !CHARACTER
-      call MPI_Bcast(t_params%TXC,5*24, !5 entries of length 24
+      call MPI_Bcast(t_params%TXC,5*124, !5 entries of length 24
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*24
       call MPI_Bcast(t_params%TESTC,32*8, !32 entries of length 8
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
@@ -1399,7 +1399,7 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*24 TXC(5)  
+      CHARACTER*124 TXC(5)  
 C     ..
       !fill arrays:
       t_params%EZ             = EZ             
@@ -2121,7 +2121,7 @@ C
      &     R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),ECORE(20,NPOTD)
 
       double complex, intent(inout) :: EZ(IEMXD),WEZ(IEMXD)
-      character*24, intent(inout) :: TXC(5)
+      character*124, intent(inout) :: TXC(5)
       logical, intent(inout) :: LINTERFACE,LRHOSYM
 C     .. External Functions ..
       LOGICAL OPT,TEST
@@ -2425,6 +2425,7 @@ C
       ! read nonco_angles
       use mod_types, only: t_inc
       use mod_mympi, only: myrank, master
+      use mod_version_info
       IMPLICIT NONE
       type(type_params), intent(inout) :: t_params
       integer, intent(in) :: NATYP
@@ -2445,6 +2446,7 @@ C
        INQUIRE(file='nonco_angle.dat',EXIST=LREAD)
        IF (LREAD) THEN
          OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
+         call version_check_header(10)
          DO I1 = 1,NATYP
            READ(10,*) th1, ph1
            IF((ABS(th1).LT.(PI+eps)   .AND. ABS(th1).GT.eps).OR.

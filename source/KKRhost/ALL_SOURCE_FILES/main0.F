@@ -209,6 +209,7 @@ C ======================================================================VINS()
       use mod_mympi, only: nranks
 #endif
       use mod_version
+      use mod_version_info
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
@@ -319,7 +320,7 @@ C     .. Local Arrays ..
       INTEGER KMESH(IEMXD)
       INTEGER ITSCF,SCFSTEPS,KFORCE
       LOGICAL VACFLAG(2)
-      CHARACTER*24 TXC(5)
+      CHARACTER*124 TXC(5)
       INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD)
       DOUBLE PRECISION GSH(NGSHD)
       DOUBLE PRECISION TOLRDIF
@@ -449,14 +450,16 @@ C     ..
      &              'for Bulk and Interfaces',
      &              'Juelich-Munich 2001 - 2016',
      &             ' Code version: ',trim(version(1)),
-     &             ' Compile options:',(trim(version(i)),i=2,4)
+     &             ' Compile options:',(trim(version(i)),i=2,4),
+     &             ' serial number for files:', serialnr
       WRITE(1337,2004) 'Screened Korringa-Kohn-Rostoker ',
      &              'Electronic Structure Code',
      &              'for Bulk and Interfaces',
      &              'Juelich-Munich 2001 - 2016',
      &             ' Code version: ',trim(version(1)),
-     &             ' Compile options:',(trim(version(i)),i=2,4)
- 2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)/79(1H*)/ )
+     &             ' Compile options:',(trim(version(i)),i=2,4),
+     &             ' serial number for files: ', serialnr
+ 2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)//2A/79(1H*)/ )
 
 #ifdef CPP_OMP
 !$omp parallel shared(nth,ith)
@@ -825,6 +828,7 @@ C
       CALL WRITEHOSTSTRUCTURE(BRAVAIS,NATYP,RBASIS,NAEZD,NEMBD)
 
         OPEN (58,FILE='kkrflex_atominfo',FORM='FORMATTED')
+        call version_print_header(58)
         NVATOM=0
         DO I = 1,NATOMIMP
           IF (KAOEZ(1,ATOMIMP(I))==-1) NVATOM=NVATOM+1

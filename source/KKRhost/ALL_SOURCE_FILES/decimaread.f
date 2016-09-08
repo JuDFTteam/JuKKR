@@ -25,6 +25,7 @@ C *                                                                    *
 C * IENERGY <> 0 reads in the matrices/energy at IENERGY -> returned   *
 C *                                                                    *
 C **********************************************************************
+      use mod_version_info
       IMPLICIT NONE
 C     ..
       INTEGER KREL,NATYPD,NEMBD1,LMMAXD!,KORBIT
@@ -89,6 +90,7 @@ C ----------------------------------------------------------------------
             ELSE
                WRITE (1337,'(A,/)') FILEHOST(1:ILHOST)
                OPEN (36+IHOST,FILE=FILEHOST,STATUS='OLD',IOSTAT=IOS)
+               call version_check_header(36+IHOST)
 C ......................................................................
                IF ( IOS.GT.0 ) THEN
                   WRITE (6,'(/,5X,2A)') 'ERROR: Can not open host file '

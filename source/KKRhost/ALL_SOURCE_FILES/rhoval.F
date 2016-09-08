@@ -37,6 +37,7 @@ C **********************************************************************
      &                     ,distribute_linear_on_tasks
 #endif
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid, init_tgmat
+      use mod_version_info
       
       IMPLICIT NONE
 C
@@ -279,9 +280,11 @@ C
      +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
      +     char(48+ISPIN)//".dat")   ! lm-dos
          end if
+         call version_print_header(31)
       OPEN(30,   ! lm-dos
      +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
      +char(48+ISPIN)//".dat")   ! lm-dos
+      call version_print_header(31)
       WRITE (30,*) ' '   ! lm-dos
       WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
  8600 FORMAT (a8,I3,a4,I5)  ! lm-dos

@@ -26,6 +26,7 @@
      &           LCARTESIAN,BRAVAIS,RMAX,GMAX)
       use mod_wunfiles, only: t_params
       use mod_save_wavefun, only: t_wavefunctions
+      use mod_version_info
       IMPLICIT NONE
 !     ..
 !     .. Parameters
@@ -62,7 +63,7 @@
       DOUBLE PRECISION SOCSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
       DOUBLE PRECISION SOCSCALE(NATYPD)
       DOUBLE PRECISION CSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
-      CHARACTER*24 TXC(5)
+      CHARACTER*124 TXC(5)
       CHARACTER*256 UIO  ! NCOLIO=256
       CHARACTER*10 SOLVER
       CHARACTER*40 I12,I13,I19,I25,I40
@@ -169,15 +170,17 @@
 !
 !------------ array set up and definition of input parameter -----------
 !
-      TXC(1) = ' Morruzi,Janak,Williams '
-      TXC(2) = ' von Barth,Hedin        '
-      TXC(3) = ' Vosko,Wilk,Nusair      '
-      TXC(4) = ' GGA PW91               '
-      TXC(5) = ' GGA PBE                '
+      ! concatenate name & serial number
+      TXC(1) = ' Morruzi,Janak,Williams  #serial: ' // serialnr
+      TXC(2) = ' von Barth,Hedin         #serial: ' // serialnr
+      TXC(3) = ' Vosko,Wilk,Nusair       #serial: ' // serialnr
+      TXC(4) = ' GGA PW91                #serial: ' // serialnr
+      TXC(5) = ' GGA PBE                 #serial: ' // serialnr
 
       IPRINT = 0
 
       OPEN(111,FILE='inputcard_generated.txt') ! Write out found or assumed values
+      call version_print_header(111)
 
       RMTREFAT(:) = -1.D0 ! Signals the need for later calculation
       RMTREF(:) = -1.D0

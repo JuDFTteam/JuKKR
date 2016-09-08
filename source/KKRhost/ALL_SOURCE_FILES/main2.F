@@ -14,6 +14,7 @@
 #ifdef CPP_TIMING
       use mod_timing
 #endif
+      use mod_version_info
       
       implicit none
       
@@ -84,7 +85,7 @@ C     .. semicore ..
       DOUBLE PRECISION FSOLD,CHRGSEMICORE
 C     ..
       LOGICAL LRHOSYM,OPT,TEST,LINTERFACE
-      CHARACTER*24 TXC(5)
+      CHARACTER*124 TXC(5)
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX EZ(IEMXD),DEZ(IEMXD),WEZ(IEMXD)

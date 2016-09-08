@@ -11,6 +11,7 @@ all_incp_incudes.txt
 *.py
 !getversion.py
 version
+version.f90
 compver
 /benchmark/
 inc.p

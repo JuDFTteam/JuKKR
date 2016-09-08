@@ -26,6 +26,7 @@
      &                     mympi_main1c_comm,mympi_main1c_comm_newsosol2
 #endif
       use mod_wunfiles
+      use mod_version_info
 
       INCLUDE 'inc.p'
 C
@@ -656,6 +657,7 @@ C ================================================================ NATYP
      +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
      +     char(48+ISPIN)//".dat")
          end if
+         call version_print_header(31)
          
          IPOT = (I1-1) * NSPINPOT + ISPIN
 
@@ -720,6 +722,7 @@ c        IF (.not.OPT('qdos    ')) THEN                                   ! lm-d
      +                     char(48+mod(I1,10))//"."//                    ! lm-dos
      +                     char(48+ISPIN)//".dat")                       ! lm-dos
               end if                                                     ! lm-dos
+              call version_print_header(30)
               WRITE (30,*) ' '                                           ! lm-dos
               WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1                 ! lm-dos
  8600         FORMAT (a8,I3,a4,I5)                                       ! lm-dos
@@ -882,6 +885,7 @@ c interpolate potential
 c rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
         IF (.NOT.TEST('FIXMOM  ')) THEN
           OPEN(UNIT=13,file='nonco_angle_out.dat',form='formatted')
+          call version_print_header(13)
           DO I1=1,NATYP
             ! save to file in converted units (degrees)
             WRITE(13,*) angles_new(1,I1)/(2.0D0*PI)*360.0D0,

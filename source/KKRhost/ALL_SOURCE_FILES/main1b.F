@@ -23,6 +23,7 @@
       use mod_wunfiles
       use mod_tbxccpljij, only: tbxccpljij
       use mod_tbxccpljijdij, only: tbxccpljijdij
+      use mod_version_info
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
@@ -75,7 +76,7 @@ C     .. Local Scalars ..
       INTEGER NLBASIS,NRBASIS                     
       INTEGER IELAST,NPOL,INS,LMAX,NATYP,NREF,NSPIN,NSRA
       INTEGER KMROT,INVMOD,ICC,IGF,IPRINT,IDECI
-      INTEGER MAXMESH,NAEZ,I,ISPIN,I1,IE,IREC,L,LM1,LM2,L1
+      INTEGER MAXMESH,NAEZ,I,ISPIN,I1,IE,IREC,L,LM1,LM2,L1,RECLENGTH
       INTEGER NATOMIMP,NSYMAT,NCPA,NCPAFAIL,ICPAFLAG,ITCPAMAX
       INTEGER NMESH,NOFGIJ,NQCALC
       INTEGER ITMPDIR,ILTMP
@@ -338,8 +339,15 @@ C
           END IF
 
           IF ( ( OPT('KKRFLEX ') ) ) THEN
+              RECLENGTH = WLENGTH*2*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD
+              ! sometimes (lmax=2) the record length might be too small to store the parameters, then reclength needs to be bigger
+              IF(RECLENGTH<8*IELAST+6) THEN
+                 stop '[main1b] record length for kkrflex_green is
+     &too small to store parameters, use either more atoms in the 
+     &cluster, a higher lmax or less energy points'
+              END IF
               OPEN (888,ACCESS='direct',
-     &                   RECL=WLENGTH*2*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD,
+     &                   RECL=RECLENGTH,
      &                   FILE='kkrflex_green',FORM='unformatted')
           END IF
 
@@ -352,14 +360,19 @@ C    &             FILE='green',FORM='unformatted')                             
           IREC=1
 
           IF ( ( OPT('KKRFLEX ') ) ) THEN
-            WRITE(888,REC=IREC) IELAST,NSPIN,NATOMIMP,
-     &                NATOMIMP,LMMAXD,KORBIT,
+            do i=1,nranks
+             if(myrank==i) then
+              WRITE(888,REC=IREC) IELAST,NSPIN,NATOMIMP,
+     &                NATOMIMP, LMMAXD, KORBIT,
      &             (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
-            IF ( ( OPT('GPLAIN  ') ) ) THEN
-              WRITE(8888,'(5I,50000F)') IELAST,NSPIN,NATOMIMP,NATOMIMP,
-     &               (LMAX+1)**2,
+              IF ( ( OPT('GPLAIN  ') ) ) THEN
+                WRITE(8888,'(5I,50000F)') IELAST,NSPIN,NATOMIMP,
+     &               NATOMIMP, (LMAX+1)**2,
      &               (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
-            END IF
+              END IF
+             end if
+             call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+            end do
           END IF
 c         IF ( (.not. OPT('KKRFLEX ') ) ) THEN                !no-green
 c           WRITE(88,REC=IREC) IELAST,NSPIN,                  !no-green

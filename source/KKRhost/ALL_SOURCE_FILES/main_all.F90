@@ -48,7 +48,7 @@ call mympi_init()
 ! save myrank in ctemp, needed to open output unit 1337
 write(ctemp,'(I03.3)') myrank
 ! find serial number that is printed to files
-call construct_serialnr
+call construct_serialnr()
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< initialize MPI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -300,6 +300,12 @@ end do ! scf-iteration
 ! deallocate arrays from t_params
 deallocate(t_params%EZ, t_params%WEZ, t_params%DROTQ, t_params%DSYMLL, t_params%LEFTTINVLL, t_params%RIGHTTINVLL, t_params%CREL, t_params%RC, t_params%RREL, t_params%SRREL, t_params%PHILDAU, t_params%VINS, t_params%VISP, t_params%VBC, t_params%VTREL, t_params%BTREL, t_params%SOCSCALE, t_params%DRDIREL, t_params%R2DRDIREL, t_params%RMREL, t_params%CMOMHOST       , t_params%ECORE, t_params%QMTET, t_params%QMPHI, t_params%QMPHITAB, t_params%QMTETTAB, t_params%QMGAMTAB, t_params%ZAT, t_params%R, t_params%DRDI, t_params%RMTREF, t_params%VREF, t_params%CLEB, t_params%RCLS, t_params%SOCSCL, t_params%CSCL, t_params%RBASIS, t_params%RR, t_params%CONC, t_params%RROT, t_params%RATOM, t_params%A, t_params%B, t_params%THETAS, t_params%RMT, t_params%RMTNEW, t_params%RWS, t_params%GSH, t_params%EREFLDAU, t_params%UEFF, t_params%JEFF, t_params%ULDAU, t_params%WLDAU, t_params%RPAN_INTERVALL, t_params%RNEW, t_params%MVEVI, t_params%MVEVIEF, t_params%THETASNEW, t_params%RHO2NS, t_params%R2NEF, t_params%RHOC, t_params%DENEFAT, t_params%ESPV, t_params%EDC, t_params%EU, t_params%RHOORB, t_params%ECOREREL, t_params%RCLSIMP, t_params%LOPT, t_params%ITLDAU , t_params%IRSHIFT, t_params%JWSREL , t_params%ZREL, t_params%LCORE, t_params%NCORE, t_params%IPAN , t_params%IRCUT, t_params%JEND , t_params%ICLEB, t_params%ATOM, t_params%CLS , t_params%NACLS, t_params%LOFLM, t_params%EZOA , t_params%KAOEZ, t_params%IQAT, t_params%ICPA, t_params%NOQ , t_params%KMESH , t_params%NSHELL, t_params%NSH1, t_params%NSH2, t_params%IJTABCALC, t_params%IJTABCALC_I, t_params%IJTABSYM, t_params%IJTABSH, t_params%ISH, t_params%JSH, t_params%IQCALC, t_params%ICHECK, t_params%ATOMIMP, t_params%REFPOT, t_params%IRREL, t_params%NRREL, t_params%IFUNM1, t_params%ITITLE, t_params%LMSP1, t_params%NTCELL, t_params%IXIPOL, t_params%IRNS  , t_params%IFUNM , t_params%LLMSP , t_params%LMSP, t_params%IMT , t_params%IRC , t_params%IRMIN, t_params%IRWS , t_params%NFU  , t_params%HOSTIMP, t_params%ILM    , t_params%IMAXSH , t_params%NPAN_LOG, t_params%NPAN_EQ , t_params%NPAN_TOT, t_params%IPAN_INTERVALL, t_params%NKCORE , t_params%KAPCORE, t_params%SYMUNITARY, t_params%VACFLAG, t_params%TXC, t_params%TESTC, t_params%OPTC, t_params%BZKP, t_params%VOLCUB, t_params%VOLBZ, t_params%NOFKS, t_params%THETA, t_params%PHI, stat=ierr)
 if(ierr/=0) stop '[main_all] Error deallocating arrays from t_params'
+
+!delete temporary files
+if(myrank==master) then
+  open(69, file='abvmad.unformatted')
+  close(69, status='delete')
+end if
 
 ! deallocate arrays from t_wavefunctions
 if(t_wavefunctions%Nwfsavemax>0) then

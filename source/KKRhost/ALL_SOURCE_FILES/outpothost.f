@@ -15,6 +15,7 @@ C *                                                                    *
 C * Note: so far, only SPHERICAL case implemented                      *
 C *                                                                    *
 C **********************************************************************
+      use mod_version_info
       IMPLICIT NONE
 C     ..      
 C     .. Scalar arguments
@@ -58,6 +59,7 @@ C     ..
       WRITE (1337,'(5X,A,A,/)') '< OUTPOTHOST > : ',
      &                     'creating decimate.pot file - host potential'
       OPEN (37,FILE='decimate.pot',STATUS='unknown')
+      call version_print_header(37)
       WRITE (37,FMT=*) 'Host structure and potential for decimation'
       WRITE (37,FMT=99001)
       WRITE (37,FMT=99005) KREL,INS,NSPIN,KMROT

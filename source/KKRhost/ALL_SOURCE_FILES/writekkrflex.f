@@ -4,6 +4,7 @@
      
       use mod_types, only: t_tgmat
       use mod_wunfiles, only: t_params, read_angles
+      use mod_version_info
      
       implicit none
       include 'inc.p'
@@ -42,6 +43,7 @@ C     .. External Functions ..
 
       IF ( OPT('KKRFLEX ') ) THEN
         OPEN (6699,FILE='kkrflex_tmat',STATUS='unknown')
+        call version_print_header(6699)
         write(6699,*) '#',NATOMIMP,NSPIN,IELAST,LMMAXD,KORBIT
         if (t_tgmat%tmat_to_file) then
            OPEN (69,ACCESS='direct',RECL=WLENGTH*4*LMMAXD*LMMAXD,
@@ -91,6 +93,7 @@ C     .. External Functions ..
         CLOSE(6699)
 
         OPEN (91,FILE='kkrflex_intercell_ref',STATUS='unknown')
+        call version_print_header(91)
         WRITE(91,*) '# Intercell potential of each atom'
         WRITE(91,*) '# '
         WRITE(91,*) '# NATOMIMP',NATOMIMP
@@ -107,6 +110,7 @@ C     .. External Functions ..
         CLOSE(91)
 
         OPEN (91,FILE='kkrflex_intercell_cmoms',STATUS='unknown')
+        call version_print_header(91)
         WRITE(91,*) '# Charge moments of each atom in the unit cell'
         WRITE(91,*) '# Values given are CMOM + CMINST'
         WRITE(91,*) '# First colums is the core charge other'
