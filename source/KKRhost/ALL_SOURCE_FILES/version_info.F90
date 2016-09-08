@@ -100,7 +100,7 @@ contains
     integer, intent(in) :: unit
     character(len=10) :: first_characters
     
-    read(unit, *) first_characters
+    read(unit, '(A)') first_characters
     if(first_characters/='# serial: ') then
       rewind(unit)
     end if
