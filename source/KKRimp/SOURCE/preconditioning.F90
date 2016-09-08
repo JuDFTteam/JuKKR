@@ -597,18 +597,17 @@ end function this_readline
      implicit none
      integer          ::  NTOTATOM,NATOMTEMP,NSPIN,IELAST,lmsizehost,KGREFSOC
      character(len=5) ::  CHAR1 
-!      character(len=100) ::  CHAR2 
-!      character(len=103) ::  CHAR3 
+     character(len=100) ::  CHAR2 
+     character(len=103) ::  CHAR3 
      integer :: ios
 
      open(unit=6699, file='kkrflex_tmat', status='old', iostat=ios)
      call version_check_header(6699)
 
-!      read(unit=6699,fmt='(A)', iostat=ios) CHAR2
-!      CHAR3=CHAR2 !//' 0' ! older version of the JM do not have the KGREFSOC flag. We, therefore, add a zero 
-!                     !  to the string to prevent a conversion error
-!      read(CHAR3,'(A5,I9,I5,I9,I9,I5)') CHAR1,NATOMTEMP,NSPIN,IELAST,lmsizehost,KGREFSOC
-     read(6699,*) CHAR1,NATOMTEMP,NSPIN,IELAST,lmsizehost,KGREFSOC
+     read(unit=6699,fmt='(A)', iostat=ios) CHAR2
+     CHAR3=CHAR2 !//' 0' ! older version of the JM do not have the KGREFSOC flag. We, therefore, add a zero 
+                    !  to the string to prevent a conversion error
+     read(CHAR3,*) CHAR1,NATOMTEMP,NSPIN,IELAST,lmsizehost,KGREFSOC
 
 
 !      end if

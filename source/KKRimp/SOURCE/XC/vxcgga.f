@@ -61,7 +61,7 @@ C     INTEGER IGGA
      +                 DYLMTF(IJEND,LMPOTD),EXC(0:LPOTD,*),GSH(*),
      +                 RHO2NS(IRMD,LMPOTD,2),THET(IJEND),WTYR(IJEND,*),
      +                 THETAS(IRID,NFUND),V(IRMD,LMPOTD,2),
-     +                 YLM(IJEND,LMPOTD)
+     +                 YLM(IJEND,LMPOTD),YR(IJEND,*)
       INTEGER IFUNM(LMXSPD)
       INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND),
      +        LMSP(LMXSPD)
