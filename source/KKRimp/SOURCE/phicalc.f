@@ -40,9 +40,9 @@ C **********************************************************
       COMPLEX*16,ALLOCATABLE :: PZ(:,:),FZ(:,:) ! PZ(IRMD,0:LMAXD),FZ(IRMD,0:LMAXD)
 
 
-      INTEGER IPOT1,IRS1,IRC1,IPAN1
+      INTEGER IPOT1,IRS1,IRC1
 
-      INTEGER ILM2,LM1,LM2,LM3,II,IR,L1,MMAX,LMAX
+      INTEGER IR,L1,MMAX
       REAL*8 WNORM,WLDAUAVUD
       COMPLEX*16 CNORM,EZ,CZERO
 

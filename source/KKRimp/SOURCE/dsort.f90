@@ -10,12 +10,14 @@ CONTAINS
 !     max number of ellements to be sorted
 !     pos the position where the first element is found
 ! ------------------------------------------------------------------------
+      IMPLICIT NONE
       INTEGER           :: IMAX,POS
       DOUBLE PRECISION  :: W(:)
       INTEGER           :: IND(:)
 
       INTEGER           :: I,II,J,JJ,K
       INTEGER,PARAMETER :: BOUND =1.0D-12
+      DOUBLE PRECISION  :: DIFF
 ! ------------------------------------------------------------------------
 
     IF(imax>5) then

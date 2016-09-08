@@ -5,7 +5,8 @@ contains
 
 
 subroutine cellproperties_readhoststrucuture
-  implicit none
+use mod_version_info
+implicit none
 integer                       :: nbasis
 double precision,allocatable  :: rbasis(:,:)
 double precision              :: bravais(3,3)
@@ -15,6 +16,7 @@ double precision              :: bravais(3,3)
 integer                       :: ios,iline,iatom,idim1
 character(len=200)            :: string1
 open(unit=2382289,file='kkrflex_hoststructure', status='old', iostat=ios)
+call version_check_header(2382289)
 if (ios/=0) stop '[Error] could not open file kkrflex_hoststructure'
 ios=0
 do while (ios/=-1)

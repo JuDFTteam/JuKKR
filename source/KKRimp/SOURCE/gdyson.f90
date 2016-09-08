@@ -27,7 +27,6 @@ integer                                :: saveGmat
 
 !local
 integer                                :: iatom,ilm
-integer                                ::  irec
 double complex,parameter               :: cone=(1.0D0,0.0D0)
 double complex,parameter               :: czero=(0.0D0,0.0D0)
 double complex,allocatable             ::  gref1(:,:)

@@ -3,6 +3,7 @@ module mod_orbitalmoment
 contains
 
 subroutine calc_orbitalmoment(lmax,Loperator)
+use mod_version_info
 implicit none
 integer                         :: lmax
 double complex                  :: Loperator(:,:,:)
@@ -55,8 +56,11 @@ end if
 
 if (first==1) then
   open(unit=423492157,file='out_Lx')
+  call version_print_header(423492157)
   open(unit=423492158,file='out_Ly')
+  call version_print_header(423492158)
   open(unit=423492159,file='out_Lz')
+  call version_print_header(423492159)
   do ilm=1,lmsize
     write(423492157,'(5000F)'),Loperator(ilm,:,1)
     write(423492158,'(5000F)'),Loperator(ilm,:,2)

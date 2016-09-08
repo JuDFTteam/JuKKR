@@ -27,6 +27,7 @@ C
       USE mod_soutk
       USE MOD_RWLDAUPOT
       USE MOD_PHICALC
+      use mod_version_info
       IMPLICIT NONE
 
       TYPE(LDAU_TYPE),ALLOCATABLE    :: LDAU(:)  ! lda+u variables, intended dimension: (natyp) ! lda+u
@@ -39,7 +40,7 @@ C
 C
 C Dummy arguments
 C
-      INTEGER NSPIN,KVREL,LMAX
+      INTEGER NSPIN,KVREL
 !      DOUBLE PRECISION DRDI(:,:),R(:,:),   ,RWS(:),RMT(:)! DRDI(IRMD,NATYP),R(IRMD,NATYP)
       DOUBLE PRECISION VPOT(:,:,:,:),                    ! (IR,LM,ISPIN,IATOM)
      &     ZATOM(:)  ! (NATYP)
@@ -52,10 +53,10 @@ C
      &     SG(:),SL(:),TG(:),TL(:),
      &     WGTFCLMB(:),WINT(:),W2(:),VSPHER(:,:)
       DOUBLE PRECISION FACT(0:100),
-     &                 G12,G34,RFPI,RLOP,SCL,SUM,SUMFCLMB,WIG3J,WNORM
+     &                 G12,G34,RFPI,RLOP,SCL,SUM,SUMFCLMB,WIG3J
 !      DOUBLE PRECISION CGCRAC,GAUNTC1
-      DOUBLE PRECISION DATAN,DBLE,DSQRT
-      INTEGER I1,I2,IM1,IM2,IM3,IM4,IPAN,IPOT1,IR,IRC1,IRS1,IRUNLDAU,KK
+      DOUBLE PRECISION DBLE,DSQRT
+      INTEGER I1,IM1,IM2,IM3,IM4,IR,IRC1,IRS1,IRUNLDAU,KK
      &        ,L1,LF,LFMAX,LL,M1,M2,M3,M4,NSRA,IAT,ISPIN,IPOT,IPAN1
       INTEGER NINT,IERROR
 
@@ -70,6 +71,7 @@ C
 
 C
       OPEN (67,FILE='ldaupot',FORM='FORMATTED') 
+      call version_check_header(67)
       READ (67,*) IRUNLDAU
       CLOSE (67)
 C

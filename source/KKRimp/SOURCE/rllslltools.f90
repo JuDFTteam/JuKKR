@@ -82,7 +82,6 @@ double complex :: mat3(dim1,nblock)
 double complex,allocatable :: matsmall(:,:)
 double complex,allocatable :: mat2small(:,:)
 double complex,allocatable :: mat3small(:,:)
-integer          :: IPIV(dimblock),info
 integer          :: ival1, ival2,ival3, ival4
 integer          :: iblock
 ! nblock = dim1/dimblock

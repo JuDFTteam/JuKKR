@@ -22,6 +22,7 @@
       USE TYPE_CELL
       USE TYPE_CORESTATE
       USE MOD_CONFIG, only : config_testflag
+      use mod_version_info
       IMPLICIT NONE
 
       INTEGER              :: NSPIN
@@ -61,34 +62,28 @@
 !       INTEGER NKCORE(20,NATYPD),KAPCORE(20,2*NATYPD)
 ! C ===================================================================
 !       INTEGER IRC(*),IRNS(*),IRWS(*),ITITLE(20,*),LCORE(20,*),NCORE(*)
-      CHARACTER*24 TXC(10)
+      CHARACTER*124 TXC(10)
 ! C     ..
 ! C     .. Local Scalars ..
       DOUBLE PRECISION A1,B1,RMAX,RMT1,RMTNW1,RV,SIGN,SUM,Z1
-      INTEGER I,ICORE,IH,INEW,IP,IR,IRMIN,IRNS1,IS,ISAVE,J,LM,LMNR, &
+      INTEGER ICORE,INEW,IP,IR,IRMIN,IRNS1,ISAVE,LM,LMNR, &
               LMPOT,NCORE1,NR,IATOM,ISPIN,LPOT
 ! C     ..
 ! C     .. Local Arrays ..
       DOUBLE PRECISION DRADI(NRMAXD),ECORE1(20),RA(NRMAXD),VM2ZA(NRMAXD)
-      DOUBLE PRECISION ECORE2(20,2)
       INTEGER LCORE1(20)
-      CHARACTER*3 TXTK(4)
-      CHARACTER*1 TXTL(0:3)
 ! C     ..
 ! C     .. Intrinsic Functions ..
       INTRINSIC SQRT
-! C     ..
-      DATA TXTL/'s','p','d','f'/
-      DATA TXTK/'1/2','3/2','5/2','7/2'/
 ! C     ..
 ! c -------------------------------------------------------------------
       ISAVE = 1
       INEW  = 1
       IFILE = 324249
-      TXC(1) = ' Morruzi,Janak,Williams '
-      TXC(2) = ' von Barth,Hedin        '
-      TXC(3) = ' Vosko,Wilk,Nusair      '
-      TXC(4) = ' GGA PW91               '
+      TXC(1) = ' Morruzi,Janak,Williams  #serial: ' // serialnr
+      TXC(2) = ' von Barth,Hedin         #serial: ' // serialnr
+      TXC(3) = ' Vosko,Wilk,Nusair       #serial: ' // serialnr
+      TXC(4) = ' GGA PW91                #serial: ' // serialnr
 
       OPEN(UNIT=IFILE,FILE='out_potential')
   if ( config_testflag('write_density') ) then
@@ -245,7 +240,7 @@
 
       CLOSE(IFILE)
 
- 9000 FORMAT (a28,6x,'  exc:',a24,3x,a10)
+ 9000 FORMAT (a28,6x,'  exc:',a124,3x,a10)
  9010 FORMAT (3f12.8)
  9020 FORMAT (f10.5,/,f10.5,2f15.10)
  9030 FORMAT (i3,/,2d15.8,/,2i2)

@@ -61,7 +61,7 @@ C     INTEGER IGGA
      +                 DYLMTF(IJEND,LMPOTD),EXC(0:LPOTD,*),GSH(*),
      +                 RHO2NS(IRMD,LMPOTD,2),THET(IJEND),WTYR(IJEND,*),
      +                 THETAS(IRID,NFUND),V(IRMD,LMPOTD,2),
-     +                 YLM(IJEND,LMPOTD),YR(IJEND,*)
+     +                 YLM(IJEND,LMPOTD)
       INTEGER IFUNM(LMXSPD)
       INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND),
      +        LMSP(LMXSPD)
@@ -102,7 +102,6 @@ C     ..
 c
 c---> loop over given representive atoms
 c
-
       IF (KSHAPE.NE.0) THEN
         IPAN1 = IPAN
         IRC1 = IRCUT(IPAN)
@@ -122,7 +121,6 @@ c
         VXCR(2,ISPIN) = 0.0D0
         VXCR(3,ISPIN) = 0.0D0
    10 CONTINUE
-
 c
 c---> initialize for ex.-cor. energy
 c

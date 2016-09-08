@@ -30,8 +30,6 @@ subroutine gauntharmonics_set()!,lmaxatom)
   integer                                 :: lval
   integer                                 :: lmaxbounds(2)
   integer                                 :: lmaxd,lpotd,lmmaxd,lmpotd,lm2d
-  integer                                 :: iatom
-  integer                                 :: jj
 lmaxbounds=0
 ! call GAUNTHARMONICS_getlmaxbounds(lmaxatom,natom,lmaxbounds)
 lmaxbounds(1)=2

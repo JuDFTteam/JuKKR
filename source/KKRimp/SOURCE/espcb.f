@@ -51,7 +51,7 @@ C     .. Array Arguments ..
 !       INTEGER LCORE(20,*),NCORE(*),LCOREMAX(*)
 C     ..
 C     .. Local Scalars ..
-      INTEGER IATOM,IPOT,ISPIN,L,N
+      INTEGER IATOM,ISPIN,L,N
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC DBLE

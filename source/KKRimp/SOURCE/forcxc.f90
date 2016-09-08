@@ -23,7 +23,7 @@
       TYPE(CELL_TYPE) :: CELL(NATOM)
       TYPE(DENSITY_TYPE) :: DENSITY(NATOM)
       DOUBLE PRECISION ALAT
-      INTEGER LMAX,NATOM,NSPIN,NSTART
+      INTEGER LMAX,NATOM,NSPIN
 ! C     ..
 ! C     .. Array Arguments ..
       DOUBLE PRECISION FLM(-1:1,NATOM),FLMC(-1:1,NATOM) !,R(IRMD,*),
@@ -34,8 +34,8 @@
 !        INTEGER IRWS(*)
 ! C     ..
 ! C     .. Local Scalars ..
-      DOUBLE PRECISION DV,DVOL,FAC,RWS,TRP,VINT1,VOL
-      INTEGER I,IPER, ISPIN,IATOM,IATOMP,IRWS1,J,LM,M
+      DOUBLE PRECISION DV,FAC,RWS,TRP,VINT1,VOL
+      INTEGER I,ISPIN,IATOM,IRWS1,LM,M
 ! C     ..
 ! C     .. Local Arrays ..
       DOUBLE PRECISION F(3,NATOM),FLMH(-1:1,NATOM), &
@@ -183,15 +183,15 @@
              ' in units Ry/(a(Bohr) ')
  9200 FORMAT (1x,'>')
  9400 FORMAT (3x,i5,'th shell')
- 9600 FORMAT (7x,'fhx=',e12.6,2x,'fcx=',e12.6,2x,'fxcx=',e12.6,2x,'fx=',&
-             e12.6,' Ry/(a(Bohr))')
- 9601 FORMAT (7x,'fhy=',e12.6,2x,'fcy=',e12.6,2x,'fxcy=',e12.6,2x,'fy=', &
-             e12.6,' Ry/(a(Bohr))')
- 9602 FORMAT (7x,'fhz=',e12.6,2x,'fcz=',e12.6,2x,'fxcz=',e12.6,2x,'fz=',&
-             e12.6,' Ry/(a(Bohr))')
+ 9600 FORMAT (7x,'fhx=',e13.6,2x,'fcx=',e13.6,2x,'fxcx=',e13.6,2x,'fx=',&
+             e13.6,' Ry/(a(Bohr))')
+ 9601 FORMAT (7x,'fhy=',e13.6,2x,'fcy=',e13.6,2x,'fxcy=',e13.6,2x,'fy=', &
+             e13.6,' Ry/(a(Bohr))')
+ 9602 FORMAT (7x,'fhz=',e13.6,2x,'fcz=',e13.6,2x,'fxcz=',e13.6,2x,'fz=',&
+             e13.6' Ry/(a(Bohr))')
  9700 FORMAT (10x,'contribution to the trace of the dipol force tensor:'&
-             ,3x,e12.6,' Ry')
- 9800 FORMAT (7x,' volume change dvol/vol=',2x,e12.6,' Ry/(a(Bohr))**3',&
+             ,3x,e13.6,' Ry')
+ 9800 FORMAT (7x,' volume change dvol/vol=',2x,e13.6,' Ry/(a(Bohr))**3',&
              /,7x,'( notice: has to be divided',&
              ' by the bulk modulus of the host)')
  

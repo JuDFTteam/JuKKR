@@ -236,7 +236,7 @@ implicit none
 
 double complex        :: fn(:)
 type(cell_typenew)    :: cellnew
-integer               :: ir,irstart,irstop,ipan
+integer               :: irstart,irstop,ipan
 double precision      :: widthfac
 double complex        :: rho2ns_integrated,sum1,int1
 rho2ns_integrated=(0.0D0,0.0D0)

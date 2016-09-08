@@ -34,7 +34,7 @@ integer,save               ::  first = 1                       ! make sure routi
 character(len=*),parameter ::  cfilename_config = 'config.cfg' ! name of the config file
 integer                    ::  ifile_config                    
 character(len=200)         ::  string1,string2
-character(len=200)         ::  keyword, keyword1, keyword2, ctemp
+character(len=200)         ::  keyword, keyword1, keyword2
 integer                    ::  ios,ios2,iline,itemp
 
 ! ********************************************************** 

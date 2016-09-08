@@ -135,10 +135,7 @@ double precision             :: rms
 integer                      :: iter,n_init
 integer                      :: mbroylen
 integer                      :: max_iter
-double precision             :: totmagmoment,totxymagmoment
-double precision             :: magmoment(3)
 integer                      :: iatom,ipos
-double precision             :: totmagmoment_temp,totmagmoment_nomix(natom)
 
 allocate( vector(2*natom,2) )
 mvlen=natom*2
@@ -349,9 +346,9 @@ end subroutine mixbroydenspinangle
 
 !
 
-       integer i,j,k,info,ntasks
+       integer i,j,k,info
 
-       double precision fac1,fac2,fnorm,dfnorm,w0,work,aij,gmi,cmj,wtmp 
+       double precision fac1,fac2,fnorm,dfnorm,w0,aij,gmi,cmj,wtmp 
 
 !
 
@@ -707,6 +704,8 @@ end subroutine mixbroydenspinangle
 
 !     ==================================================================
 
+      implicit none
+
       integer itscf
 
       integer ivsiz
@@ -722,6 +721,10 @@ end subroutine mixbroydenspinangle
       double precision  fins(mivsiz,istore)
 
       double precision  fots(mivsiz,istore) 
+      
+!     ==================================================================
+
+      integer i, j
 
 !      write(6,'('' IN BROY_SAV: istore,itscf '',2i5)') istore,itscf
 

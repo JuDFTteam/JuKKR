@@ -56,8 +56,8 @@ program kkrflex
 
 
   use mod_mathtools
+  use mod_version_info
   implicit none 
-  include 'version' ! track version of code
 
 !***********************************
 ! main variables
@@ -103,8 +103,6 @@ program kkrflex
                                                                                  ! space Greens function Gnn'
   type(ldau_type),allocatable           :: ldau(:)                               ! lda+u variables, intended dimension: (NATOM)  ! lda+u
                                                                                  ! space Greens function Gnn'
-
-  integer                               :: chrgnt
 !***********************************
 ! energy variables 
 ! needs maybe to be combined to an derived type
@@ -135,7 +133,7 @@ program kkrflex
 !***********************************
 ! mixing stuff
 !***********************************
-  real(kind=8)                          :: rmsavq,rmsav0, rmsavm
+  real(kind=8)                          :: rmsavq, rmsavm
   real(kind=8)                          :: mixldau ! lda+u
 ! !   real(kind=8)                          :: mixing
   real(kind=8)                          :: sum,rv
@@ -147,10 +145,6 @@ program kkrflex
   type(gmatonsite_type),allocatable   :: gmatonsite(:,:)
   type(tmat_type),allocatable    :: tmatll(:,:) !(lmmaxd,lmmaxd)
   integer                              :: istop_selfcons
-
-
-  double complex,allocatable                 ::  test1(:,:)
-  logical :: test2
 
 #ifdef MPI
        INCLUDE "mpif.h"
@@ -183,6 +177,9 @@ mpi_size=1
       CALL MPI_COMM_RANK(MPI_COMM_WORLD, my_rank, ierror)
       CALL MPI_COMM_SIZE(MPI_COMM_WORLD, mpi_size, ierror)
 #endif
+! find serial number that is printed to files
+call construct_serialnr()
+
 call timing_init(my_rank)
 call timing_start('Total running time')
 call timing_start('time until scf starts')
@@ -191,7 +188,7 @@ if (my_rank==0) then
   write(*,*) ' **************************************************************************'
   write(*,*) ' **************************************************************************'
   write(*,*) '                               KKR FLEX IMPURITY CODE'
-  write(*,'(2A)') '                          Version: ',version
+  write(*,'(2A)') '                          Version: ',serialnr
   write(*,*) ' **************************************************************************'
   write(*,*) ' **************************************************************************'
 end if
@@ -215,8 +212,7 @@ write(*,*) 'check all matrix inversions. There might be an error due: Hermitian'
 ! ********************************************************** 
 write(ctemp,'(I03.3)') my_rank
 open(unit=1337, file='out_log.'//trim(ctemp)//'.txt')
-write(1337,'(2A)') '               Version: ',version
-
+call version_print_header(1337)
 ! ********************************************************** 
 ! first all parameters are read in from the config
 ! file and stored into the config type
@@ -561,12 +557,14 @@ end if
 
 if (itscf<=config%hfield_apply_niter2) then
   do iatom=1,19
-    do ispin=1,nspin
-    write(6,*) 'atom',iatom,'spin',ispin,'shifted by',config%HFIELD2(ispin)
-      do ir = 1,cell(iatom)%NRCORE !irmin1-1 
-        vpot(ir,1,ispin,iatom) = vpot(ir,1,ispin,iatom) + config%HFIELD2(ispin)
-      end do
-    end do !ispin
+    if(dabs(config%HFIELD2(ispin))>0.0d0) then
+      do ispin=1,nspin
+        write(6,*) 'atom',iatom,'spin',ispin,'shifted by',config%HFIELD2(ispin)
+          do ir = 1,cell(iatom)%NRCORE !irmin1-1 
+            vpot(ir,1,ispin,iatom) = vpot(ir,1,ispin,iatom) + config%HFIELD2(ispin)
+          end do
+      end do !ispin
+    end if
   end do !natom
 end if
 
@@ -592,12 +590,14 @@ end if
 
 if (itscf<=config%hfield_apply_niter) then
   do iatom=1,natom
-    write(6,*) 'atom',iatom,'spin',ispin,'shifted back by',DBLE(2*ISPIN-3)*config%HFIELD
-    do ispin=1,nspin
-      do ir = 1,cell(iatom)%NRCORE !irmin1-1 
-        vpot(ir,1,ispin,iatom) = vpot(ir,1,ispin,iatom) + DBLE(2*ISPIN-3)*config%HFIELD
-      end do
-    end do !ispin
+    if(dabs(config%HFIELD2(ispin))>0.0d0) then
+      do ispin=1,nspin
+        write(6,*) 'atom',iatom,'spin',ispin,'shifted back by',DBLE(2*ISPIN-3)*config%HFIELD
+        do ir = 1,cell(iatom)%NRCORE !irmin1-1 
+          vpot(ir,1,ispin,iatom) = vpot(ir,1,ispin,iatom) + DBLE(2*ISPIN-3)*config%HFIELD
+        end do
+      end do !ispin
+    end if
   end do !natom
 end if
 

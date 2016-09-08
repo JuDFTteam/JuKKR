@@ -12,7 +12,7 @@ integer                                    :: lmaxatom(natom)
 type(gauntshape_type),allocatable          :: gauntshape(:)
 type(shapefun_type)                        :: shapefun(natom)
 !local
-integer :: lmaxbounds(2)
+! integer :: lmaxbounds(2)
 integer,parameter                          :: NGSHD=4*13079 !bauer march2012
 integer                                    :: ins,lval
 !     GET ALL LMAX VALUES

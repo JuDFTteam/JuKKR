@@ -15,7 +15,7 @@ integer,intent(in)                     :: ielast
 integer,allocatable         :: mpi_iebounds(:,:)
 !local
 integer                  :: mpi_ielast(0:numbproc)
-integer                  :: ie,iestart,iestop,irank,ranktemp,ieleft
+integer                  :: iestart,iestop,irank,ieleft
 
 allocate( mpi_iebounds(2,0:numbproc-1) )
 ! mpi_ielast=0

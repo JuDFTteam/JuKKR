@@ -30,8 +30,8 @@ module mod_preconditioning
      integer                     :: KGREFSOC             ! =1 if SOC for the GREF 
      integer                     :: NSOC                 ! =2 if SOC for the GREF else: =1 
 
-     integer                     :: ie,nspinhost,lmnatom
-     integer                     :: ntotatomtemp,natomimpd,lmsizehost
+     integer                     :: ie
+     integer                     :: natomimpd,lmsizehost
      double complex,allocatable  :: gmathost(:,:)
      double complex,allocatable  :: gmathostnew(:,:)
      integer                     :: recl1,recl2,nspin,ispin,iatom
@@ -39,7 +39,6 @@ module mod_preconditioning
      integer                     :: nlmhostnew
      real(kind=dp),allocatable   :: RIMPATOM(:,:),zatom(:)
      integer                      :: lmaxd
-     integer                      :: lmaxhost
 !mpi
       integer,allocatable                      :: mpi_iebounds(:,:)
       integer                                  :: my_rank
@@ -314,7 +313,6 @@ integer                    :: lpothost
 real(kind=DP),allocatable  :: amat(:,:,:)
 real(kind=DP),allocatable  :: bmat(:,:)
 
-real(kind=DP)              :: deltar(3)
 integer                    :: substract_cmoms(ntotatom,ntotatom)
 character(len=*),parameter :: correct_mode='before_substractcmom'
 
@@ -407,6 +405,7 @@ end subroutine preconditioning_intercell !(natotatom)
 
 subroutine preconditioning_readcmoms(ntotatom,lmpothost,cmom,zatref)
 use nrtype
+use mod_version_info
 implicit none
 real(kind=DP)        :: cmom(lmpothost,ntotatom)
 real(kind=DP)        :: zatref(ntotatom)
@@ -414,6 +413,7 @@ character(len=10000)   :: cline
 integer              :: lmpothost,ntotatom
 integer              :: ios,iatom
 open(unit=88, file='kkrflex_intercell_cmoms')
+call version_check_header(88)
 do iatom=1,ntotatom
   cline=this_readline(88,ios)
   if (ios/=0) stop 'error in preconditioning_readcmoms'
@@ -424,6 +424,7 @@ end subroutine preconditioning_readcmoms
 
 subroutine preconditioning_readintercell(ntotatom,lmpothost,ach,alat,vmtzero)
 use nrtype
+use mod_version_info
 implicit none
 integer              :: lmpothost,ntotatom
 real(kind=DP)        :: ach(lmpothost,ntotatom)
@@ -435,6 +436,7 @@ integer              :: ntotatomtemp,lmpothosttemp
 real(kind=DP)              :: vmtzero(2)
 
 open(unit=88, file='kkrflex_intercell_ref')
+call version_check_header(88)
  cline=this_readline(88,ios)
 
 read(cline,*) ntotatomtemp,lmpothosttemp,alat,vmtzero(1),vmtzero(2)
@@ -487,7 +489,7 @@ end function this_readline
      integer          ::   ielasttemp,nspintemp
      DOUBLE COMPLEX,allocatable   ::   EZ(:),WEZ(:)
 !      DOUBLE COMPLEX               ::   EZtemp(1000),WEZtemp(1000)
-     integer                      ::   natomimpd,NATOMIMP,ie,recl1,ntotatom,lmsizehost,nsoc
+     integer                      ::   natomimpd,NATOMIMP,ie,recl1,ntotatom,lmsizehost
      integer :: kgrefsoc,kgrefsoctemp,lmsizehosttemp
 !  *******************************************************************
 !  first open the header of green function file to get information of
@@ -552,8 +554,8 @@ end function this_readline
      implicit none
      double complex,allocatable   ::  gclust(:,:)
      complex,allocatable   ::  gclustsingle(:,:)
-     integer                      ::  natomimp,lmmaxd,ie,lmsizehost,ispin,ielast
-     integer                      ::  ierror,ngclus,icall,irec
+     integer                      ::  natomimp,ie,lmsizehost,ispin,ielast
+     integer                      ::  ierror,ngclus,irec
      character(len=*)             ::  cmode
    ngclus=natomimp*lmsizehost
 !    write(*,*) natomimp,lmsizehost
@@ -583,7 +585,7 @@ end function this_readline
      double complex             ::  gclust(nlmhostnew,nlmhostnew)
 !      complex,allocatable   ::  gclustsingle(:,:)
      integer                      ::  ie,ispin,ielast,nlmhostnew
-     integer                      ::  ierror,irec
+     integer                      ::  irec
    irec = ielast*(ispin-1)+ ie+1
    write(89,rec=irec) gclust
    if(config_testflag('gmat_plain')) write(8989,'(65000f)') gclust
@@ -591,19 +593,22 @@ end function this_readline
 
 
      subroutine preconditioning_readtmatinfo(NTOTATOM,NSPIN,IELAST,lmsizehost,KGREFSOC)
+     use mod_version_info
      implicit none
      integer          ::  NTOTATOM,NATOMTEMP,NSPIN,IELAST,lmsizehost,KGREFSOC
      character(len=5) ::  CHAR1 
-     character(len=100) ::  CHAR2 
-     character(len=103) ::  CHAR3 
+!      character(len=100) ::  CHAR2 
+!      character(len=103) ::  CHAR3 
      integer :: ios
 
-open(unit=6699, file='kkrflex_tmat', status='old', iostat=ios)
+     open(unit=6699, file='kkrflex_tmat', status='old', iostat=ios)
+     call version_check_header(6699)
 
- read(unit=6699,fmt='(A)', iostat=ios) CHAR2
- CHAR3=CHAR2 //' 0' ! older version of the JM do not have the KGREFSOC flag. We, therefore, add a zero 
-                    !  to the string to prevent a conversion error
- read(CHAR3,*) CHAR1,NATOMTEMP,NSPIN,IELAST,lmsizehost,KGREFSOC
+!      read(unit=6699,fmt='(A)', iostat=ios) CHAR2
+!      CHAR3=CHAR2 !//' 0' ! older version of the JM do not have the KGREFSOC flag. We, therefore, add a zero 
+!                     !  to the string to prevent a conversion error
+!      read(CHAR3,'(A5,I9,I5,I9,I9,I5)') CHAR1,NATOMTEMP,NSPIN,IELAST,lmsizehost,KGREFSOC
+     read(6699,*) CHAR1,NATOMTEMP,NSPIN,IELAST,lmsizehost,KGREFSOC
 
 
 !      end if
@@ -619,6 +624,7 @@ open(unit=6699, file='kkrflex_tmat', status='old', iostat=ios)
    end subroutine !precontitioning_start
 
    subroutine preconditioning_readtmat(IELAST,lmsizehost,NATOMIMP,NSPIN,TMAT,KGREFSOC)
+     use mod_version_info
      implicit none
      double complex   ::  tmat(lmsizehost,lmsizehost,NATOMIMP,IELAST,NSPIN-KGREFSOC)
      integer          ::  ie,ielast,lmsizehost,natomimp
@@ -627,6 +633,7 @@ open(unit=6699, file='kkrflex_tmat', status='old', iostat=ios)
      integer          ::  IATOM,ISPIN,NSPIN,KGREFSOC
      character(len=50) ::  CHAR1 
      OPEN (88,FILE='kkrflex_tmat',STATUS='unknown')
+     call version_check_header(88)
      read(88,*)     CHAR1,NATOMIMPtemp,NSPINtemp,IELASTtemp,lmsizehosttemp
      if (natomimp/=natomimptemp)    stop '[preconditioning_readtmat] error'
      if (NSPIN/=NSPINtemp)          stop '[preconditioning_readtmat] error'

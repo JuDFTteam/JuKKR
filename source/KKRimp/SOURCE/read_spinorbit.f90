@@ -3,6 +3,7 @@ contains
 subroutine read_spinorbit(natom,cellorbit,myrank)
   use nrtype
   use type_cellorbit
+  use mod_version_info
   implicit none
   integer                           ::  natom
   integer                           ::  myrank
@@ -11,6 +12,7 @@ subroutine read_spinorbit(natom,cellorbit,myrank)
 integer                                  :: iatom,ios,ival
 
 open(unit=1000001, file='kkrflex_spinorbitperatom', status='old', iostat=ios)
+call version_check_header(1000001)
 if (ios/=0) then
    write(1337,*) '[read_spinorbit] no kkrflex_spinorbitperatom exists'
    if (myrank==0) then

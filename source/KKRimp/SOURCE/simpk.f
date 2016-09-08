@@ -18,11 +18,12 @@ c
 c     attention : input f is destroyed !
 c
 c-----------------------------------------------------------------------
+      IMPLICIT NONE
 
 !       INCLUDE 'inc.p'
 C     .. Scalar Arguments ..
       DOUBLE PRECISION FINT
-      INTEGER IPAN
+      INTEGER IPAN, IPAND
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION DRDI(*),F(*)

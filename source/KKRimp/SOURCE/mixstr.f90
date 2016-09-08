@@ -30,7 +30,6 @@
       INTEGER                      ::  IATOM, LVAL
       INTEGER                      ::  IPF ! some write out file
       INTEGER                      ::  LMPOT
-      INTEGER                      ::  LPOT
       INTEGER                      ::  IH,IHP1
       real*8                       ::  FAC,RMSERM,RMSERQ,VMN,VNM,VNP,VOLDM,VOLDP,VPN
       INTEGER                      ::  IRC1,IRMIN1,IR,LM

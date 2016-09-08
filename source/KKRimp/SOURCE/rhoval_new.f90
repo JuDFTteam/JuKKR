@@ -58,22 +58,16 @@ type(ldau_type)                           ::  ldau                       ! lda+u
 double complex,allocatable                :: rho2ns_complex(:,:,:)
 double complex,allocatable                :: rho2ns_complex_temp(:)
 !       real(kind=dp)                         ::   espv(0:lmaxatom+1,2)
-integer                                   :: ierror
 complex(kind=dpc)                         ::   df,ek
 double complex                            :: rho2ns_integrated(4),temp1
-double complex,allocatable                ::  vpotll(:,:,:)!(1:cellnew%nrmax,(2*lmaxatom+1)**2)
 integer                                   :: lval,imt1
-double complex                            :: tmat( (lmaxatom+1)**2, (lmaxatom+1)**2)
 
-double precision,allocatable              :: c1(:,:)
-double complex,allocatable                :: srllp(:,:), &
-                                             ull(:,:,:,:)
-double complex                            :: cden(cellnew%nrmaxnew,0:lmaxd,nspinden),cdenns(cellnew%nrmaxnew,nspinden),efac(lmmaxatom) &
-                                            ,cdenlm(cellnew%nrmaxnew,lmmaxatom,nspinden)  ! lm-dos
+double complex                            :: cden(cellnew%nrmaxnew,0:lmaxd,nspinden),cdenns(cellnew%nrmaxnew,nspinden), &
+                                             cdenlm(cellnew%nrmaxnew,lmmaxatom,nspinden)  ! lm-dos
 double complex,allocatable                :: gflle_part(:,:) ! lda+u
 
-integer                                   :: lm1,lm2,ir,ialpha
-integer                                   :: vlllmmax,jspin
+integer                                   :: lm1,ialpha
+integer                                   :: jspin
 integer                                   :: lmslo,lmshi            ! lda+u
 integer                                   :: nspinstart, nspinstop
 ! double precision              :: C0LL,fac

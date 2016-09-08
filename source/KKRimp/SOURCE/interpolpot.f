@@ -10,16 +10,17 @@ C  ******************************************************************
 C
 c take every NNLSQ points and interpolate with lsq.
 c
+      IMPLICIT NONE
 C     .. Parameters ..
 C     .. Scalar Arguments ..
-      INTEGER N0,N1
+      INTEGER N0,N1, NLOC
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION R0(N0),R1(N1),V0(N0),V1(N1)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION FACTOR
-      INTEGER I,ICON,IINT,ILAST,IP,IR,J,J1,N1ST,NN,NNLSQ,NORDER
+      INTEGER I,ICON,IINT,ILAST,IP,IR,J,J1,NN,NNLSQ,NORDER
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION C(NLOC),R(NLOC),V(NLOC)
@@ -273,7 +274,7 @@ C
      +       ' REQUESTED MAXIMUM DEGREE TOO LARGE - ','REDUCED TO ',I3)
  9010 FORMAT (1X,9D12.4)
  9020 FORMAT (/,' FOR DEGREE OF ',I2,' COEFFICIENTS ARE',/,/,' ',5X,
-     +       11D15.9)
+     +       11D16.9)
  9030 FORMAT (9X,' BETA IS ',E15.7,/,/)
       END SUBROUTINE
 
@@ -335,7 +336,7 @@ C
    50 CONTINUE
       RETURN
  9000 FORMAT (' REDUCTION NOT COMPLITED BECAUSE SMALL VALUE',
-     +       ' FOUND FOR DIVISOR IN ROW ',I3,D10.4)
+     +       ' FOUND FOR DIVISOR IN ROW ',I3,D11.4)
       END SUBROUTINE
 
 
