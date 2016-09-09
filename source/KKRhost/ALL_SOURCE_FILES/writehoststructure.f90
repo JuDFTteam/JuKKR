@@ -1,5 +1,6 @@
 subroutine writehoststructure(bravais,nrbasis,rbasis,NAEZD,NEMBD)
 use mod_version_info
+use mod_md5sums
 implicit none
 !interface
 double precision     :: bravais(3,3)
@@ -16,7 +17,7 @@ integer              :: ier
 integer              :: itemp1(12),it
 
 open(unit=3463453,file='kkrflex_hoststructure.dat')
-call version_print_header(3463453)
+call version_print_header(3463453, '; '//md5sum_potential//'; '//md5sum_shapefun)
 
 write(3463453,'(100A)') '[bravais]'
 write(3463453,'(100A)') '#   x   y   z - component'

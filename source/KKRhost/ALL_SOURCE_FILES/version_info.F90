@@ -56,15 +56,20 @@ contains
   end subroutine construct_serialnr
 
 
-  subroutine version_print_header(unit)
+  subroutine version_print_header(unit, addition)
     ! this is called after an open statement of a file that is written
     ! prints header line
     implicit none
     integer, intent(in) :: unit
+    character(len=*), optional, intent(in) :: addition
     
-    ! write header:             code     version     compver   timestamp
-    !               "# serial: kkrjm_v2.0-38-g6593f48_debug_20160907113604"
-    write(unit, '(2A)') '# serial: ',serialnr
+    if(.not. present(addition)) then
+       ! write header:             code     version     compver   timestamp
+       !               "# serial: kkrjm_v2.0-38-g6593f48_debug_20160907113604"
+       write(unit, '(2A)') '# serial: ',serialnr
+    else
+       write(unit, '(2A)') '# serial: ',serialnr // addition
+    end if
 
   end subroutine version_print_header
 

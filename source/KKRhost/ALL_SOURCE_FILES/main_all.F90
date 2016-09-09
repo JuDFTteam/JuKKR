@@ -8,6 +8,7 @@ use mod_main2
 use mod_types
 use mod_timing
 use mod_version_info
+use mod_md5sums
 
 #ifdef CPP_MPI
  use mod_mympi, only: mympi_init, myrank, nranks, master,find_dims_2d, distribute_linear_on_tasks, &
@@ -88,7 +89,6 @@ end if ! myrank ==master
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-
 ! without MPI (serial or openMP) something goes wrong if if files are not written out
 ! this seems to be only the case with the old solver
 #ifndef CPP_MPI
@@ -115,6 +115,12 @@ call bcast_t_lly_1(t_lloyd)
 call bcast_t_params_scalars(t_params)
 if (myrank.ne.master) call init_t_params(t_params)
 call bcast_t_params_arrays(t_params)
+
+
+! broadcast md5 sums (written to some output files (kkrflex_* etc.)
+#ifdef CPP_MPI
+call myMPI_Bcast_md5sums(t_params%INS, myrank, master)
+#endif
 
 ! in case of deci-out run everything only serially to write decifile correctly. This will be fixed in a later version when we get rid of the decifile
 if(t_inc%deci_out .and. t_mpi_c_grid%nranks_at>1) stop 'deci-out option chosen. Please run code serially in energy dimension!'

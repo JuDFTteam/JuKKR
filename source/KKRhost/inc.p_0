@@ -74,29 +74,28 @@ C =====================================================================
      &        NGSHD,NCHEBD,NTOTD,KORBIT,WLENGTH,KNOCO
 C ---------------------------------------------------------------------
 C     general settings
-      PARAMETER ( KREL = 0 )
-      PARAMETER ( KORBIT = 0 )
+      PARAMETER ( KREL = 0 )   ! 0 for scalar-relativistic, 1 for full relativistic
+      PARAMETER ( KORBIT = 0 ) ! 0 for old solver (noSOC), 1 for newsolver, needed for NEWSOSOL RUNOPT
       PARAMETER ( KNOCO= 0 )
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )
-      PARAMETER ( LMAXD = 3 )
+      PARAMETER ( LMAXD = 3 )  ! lmax cutoff, set according to LMAX in inputcard
       PARAMETER ( IEMXD = 101 )
       PARAMETER ( IRMD = 900, IRNSD = 890 )
 !      PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
       PARAMETER ( NRD = 20000, KPOIBZ = 250000)
       PARAMETER ( NMAXD = 2000000, ISHLD= 200000 )
-      PARAMETER ( NTREFD = 0 )             ! must be 0 for host program
+      PARAMETER ( NTREFD = 0 )
 C ---------------------------------------------------------------------
 C     structure-dependent
-      PARAMETER ( NAEZD = 64 )
-      PARAMETER ( NATYPD = NAEZD )
-!     PARAMETER ( NSHELD = NATYPD + 155)
+      PARAMETER ( NAEZD = 64 )      ! number of atoms in unit cell, set to NATYP value of inputcard
+      PARAMETER ( NATYPD = NAEZD )  ! number of atom types, in case of CPA set to a different number then NATYPD
       PARAMETER ( NSHELD = NATYPD + 300)
 !      PARAMETER ( NSHELD = NATYPD +1000)
       PARAMETER ( NATOMIMPD = 150)
       PARAMETER ( NREFD = NAEZD )
-      PARAMETER ( NPRINCD = 16 )
-      PARAMETER ( NEMBD = 8)
+      PARAMETER ( NPRINCD = 2 )  ! Number of principle layers, set to a number >= NRPINC in output of main0
+      PARAMETER ( NEMBD = 20)    ! Number of basis atoms on left & right host side, set to NHOSTL+NHOSTR
 C ---------------------------------------------------------------------
 C     non-spherical potential 
       PARAMETER ( NCELLD = NAEZD, IPAND = 50 )
