@@ -12,6 +12,7 @@
      &           NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,   &  
      &           TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE, &
      &           LMTREF,RMTREF,SIZEFAC,NFACELIM)   
+      use mod_version_info
       implicit none
       include 'inc.geometry'
 !     .. Local Arrays ..
@@ -37,7 +38,7 @@
       REAL*8  TRIGHT(3,*),TLEFT(3,*),ZPERLEFT(3),ZPERIGHT(3) 
       REAL*8  MTWGHT(0:NTOTD)
       REAL*8  SIZEFAC(-NLEMBD*NEMBD:NTOTD)
-      CHARACTER*24 TXC(3)
+      CHARACTER*124 TXC(3)
       CHARACTER*256 UIO
       CHARACTER*40 I12,I13,I19,I25,I40
       character*80 text
@@ -83,9 +84,9 @@
 !
 !------------ array set up and definition of input parameter -----------
 !
-      TXC(1) = ' Morruzi,Janak,Williams '
-      TXC(2) = ' von Barth,Hedin        '
-      TXC(3) = ' Vosko,Wilk,Nusair      '
+      TXC(1) = ' Morruzi,Janak,Williams  #serial: ' // serialnr 
+      TXC(2) = ' von Barth,Hedin         #serial: ' // serialnr
+      TXC(3) = ' Vosko,Wilk,Nusair       #serial: ' // serialnr
 
       OPEN(111,FILE='inputcard_generated.txt') ! Write out found or assumed values
 

@@ -33,7 +33,7 @@ C     .. Array Arguments ..
      +                 R(IRMD),RMT,RMTNEW,RWS,VBC(2),
      +                 VINS(IRMIND:IRMD,LMPOTD),VM2Z(IRMD),Z
       INTEGER IRC,IRNS,IRWS,ITITLE(20),LCORE(20),NCORE
-      CHARACTER*24 TXC(3)
+      CHARACTER*124 TXC(3)
       CHARACTER*4 ELEM_NAME
 C     ..
 C     .. Local Scalars ..
@@ -160,9 +160,9 @@ c
           !write(6,*) ' Potential finished go on'
    50   CONTINUE
    60 CONTINUE
- 8995 format (A4,' POTENTIAL SPIN DOWN',10X,'  exc:',a24)
- 8996 format (A4,' POTENTIAL SPIN UP  ',10X,'  exc:',a24)  
- 8999 format (A4,' POTENTIAL ',19X,'  exc:',a24)
+ 8995 format (A4,' POTENTIAL SPIN DOWN',10X,'  exc:',a124)
+ 8996 format (A4,' POTENTIAL SPIN UP  ',10X,'  exc:',a124)  
+ 8999 format (A4,' POTENTIAL ',19X,'  exc:',a124)
  9000 FORMAT (7a4,6x,'  exc:',a24,3x,a10)
  9010 FORMAT (3f12.8)
  9020 FORMAT (f10.5,/,f10.5,2f15.10)
