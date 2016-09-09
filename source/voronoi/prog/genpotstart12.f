@@ -55,7 +55,7 @@ C     .. Local Arrays ..
      &             WORK(IRMD,LMPOTD),RA(IRMD) 
       CHARACTER*40 BANER,TEXT,I13
       CHARACTER*4 ELEM_NAME 
-      CHARACTER*24 TXC(3)
+      CHARACTER*124 TXC(3)
 c     --------------------------------------------------------------
       WRITE(6,*) ' ****  READING  POTENTIAL  **** '
       OPEN(IFILE,STATUS='OLD',FILE=I13,ERR=1000)

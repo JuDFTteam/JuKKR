@@ -1,13 +1,45 @@
-dir      = .
+####################################################
+####################################################
+#         voronoi@JuKKR makefile
+####################################################
+#
+# to compile use the following options:
+#
+# make           -    standart compilation using
+#                     ifort on a single core
+# make serial    -    like make without deleting all preciously compiled files (clean)
+# make debug     -    compile with debug flags
+# make rwth      -    compile on RWTH cluste
+# make clean     -    removes all *.o files
+#
+default: install
+####################################################
+# specify the compiler which is going to be used   #
+####################################################
+# default value
 #FC =g77
 FC =ifort
-#FFLAGS= -O0 
-FFLAGS=-O2 -r8 -traceback -i8 #-heap-arrays -mcmodel=large
-# For debugging, checking array bounds, etc (makes code slower):
-# FFLAGS=-v -O0 -r8 -CB -check all -traceback -g -heap-arrays -mcmodel=large
-#LD=g77
-LD =ifort
-LIBS=-L../ -lblas
+
+
+# information for version-tracking in executable:
+# default
+COMPVER ='serial'
+# change default if compile option is hit
+debug: COMPVER ='debug'
+rwth: COMPVER ='rwth'
+
+
+####################################################
+# C preprocessor options                           #
+####################################################
+# Default option
+CPP= -D 
+
+####################################################
+# Objects to compile                               #
+####################################################
+dir      = .
+
 host = `hostname`
 
 voronoi = crospr.o vertex3d.o analyzevert3d.o halfspace.o polyhedron08.o voronoi12.o \
@@ -24,21 +56,69 @@ fakeshape.o findpanels.o suggestpts.o divpanels.o
 
 extras = equivws.o wsclasses.o  
 
+${voronoi}:	inc.geometry
+
+${newsubs}:	inc.geometry
 
 %.o: %.f
 	$(FC) -c $(FFLAGS)  $<
 %.o: %.f90
 	$(FC) -c $(FFLAGS)  $<
-voron:	${dir}/${voronoi} ${dir}/${newsubs} ${dir}/${newme}
-	${LD} ${voronoi} ${newsubs} ${T} ${LIBS}  -o ../voronoi.exe
+%.o: %.F
+	$(FC) $(CPP) -c $(FFLAGS)  $<
+%.o: %.F90
+	$(FC) $(CPP) -c $(FFLAGS)  $<
 
-${voronoi}:	inc.geometry
+####################################################
+# Libraries and compile flags                      #
+####################################################
 
-${newsubs}:	inc.geometry
+# standard libs
+# serial:
+LIBS=-L../ -lblas
+# RWTH cluster:
+rwth: LIBS= -mkl
 
-${newme}:	inc.geometry
+# standard compile flags
+FFLAGS=-O2 -r8 -traceback -i8 #-heap-arrays -mcmodel=large
+# For debugging, checking array bounds, etc (makes code slower):
+debug: FFLAGS=-v -O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
 
 
+####################################################
+# Do stuff                                         #
+####################################################
+
+.PHONY: getversion
+.PHONY: clear
+.PHONY: clean
+.PHONY: compile
+.PHONY: debug
+.PHONY: rwth
+.PHONY: serial
+.PHONY: install
+
+getversion:
+	@echo "Wrinting Version file: "; git describe;\
+	echo $(COMPVER)>compver; \
+	echo $(FFLAGS) >compflag; \
+	echo $(LIBS) >complib; \
+	${dir}/getversion.sh
+
+clear:
+	rm -f *.o ../voronoi.exe *.mod *__genmod.*
 
 clean:
-	rm *.o ../voronoi.exe
+	rm -f *.o ../voronoi.exe *.mod *__genmod.*
+
+compile: ${dir}/getversion ${dir}/version.o ${dir}/version_info.o ${dir}/${voronoi} ${dir}/${newsubs}
+	${FC} ${dir}/version.o ${dir}/version_info.o ${voronoi} ${newsubs} ${LIBS}  -o ../voronoi.exe
+
+
+
+serial: compile
+debug: compile
+rwth: compile
+install: clean serial
+
+

@@ -6,6 +6,7 @@ c ************************************************************************
      &                   TLEFT,TRIGHT,LMTREF,RMTREF,IREFPOT,
      &                   RCLS,RCUT,RCUTXY,L2DIM,
      &                   ALAT)
+      use mod_version_info
       implicit none
 c ************************************************************************
 c This subroutine is used to create the clusters around each atom 
@@ -106,6 +107,7 @@ c is returned. Some dimension tests are also done
 c          LSPHER=.TRUE.
       END IF 
       OPEN(8,FILE='clusters',status='unknown')
+      call version_print_header(8)
       WRITE(8,9005) NAEZ
       WRITE(8,9030) ALAT
       WRITE(8,9010) (ZAT(KAOEZ(IAT)),IAT=1,NAEZ)

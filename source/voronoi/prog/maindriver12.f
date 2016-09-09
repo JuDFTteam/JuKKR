@@ -1,4 +1,6 @@
       PROGRAM KKRGEOMETRY
+      use mod_version
+      use mod_version_info
       implicit none
       include 'inc.geometry' 
       INTEGER IBMAXD
@@ -235,7 +237,7 @@ c
       REAL*8    BBOX(3),IMPSIZE(NIMPD),WEIGHT(NFACED)
       REAL*8    SIZEFAC(-NLEMBD*NEMBD:NTOTD)
       INTEGER IRM,KXC,ICLUSTER,LMAXSHAPE,NRAD,NMIN,NSMALL
-      CHARACTER*24 TXC(3)
+      CHARACTER*124 TXC(3)
       LOGICAL OPT,TEST
       CHARACTER*3 ELEM_NAME
       CHARACTER*24 TEXT
@@ -279,18 +281,23 @@ c     -----------------------------------------------------------------------
 c     -----------------------------------------------------------------------     
 
 
-      ! Print version
-      WRITE(*,*) ' '
-      WRITE(*,*) 'This is the Voronoi program, version 2014-12-11.'
-      WRITE(*,*) ' '
+      ! Find serial number and print version
+      call construct_serialnr()
+      WRITE(*,'(A)')       '##########################################'
+      WRITE(*,'(A)')       'This is the Voronoi program'
+      WRITE(*,'(A,A)')     'Code version: ',trim(version(1))
+      WRITE(*,'(A,A,A,A)') 'Compile options:',(trim(version(i)),i=2,4)
+      WRITE(*,'(A,A)')     'serial number for files:', serialnr
+      WRITE(*,'(A)')       '##########################################'
+      WRITE(*,'(A)')
 
       IF (IRMD.LT.IRNSD) STOP 'Error: IRMD.LT.IRNSD'
       IF (IRNSD.LT.IRID) STOP 'Error: IRNSD.LT.IRID'
       PI = 4.D0*DATAN(1.D0)
       QBOUND = 1.D-07
-      TXC(1) = ' Morruzi,Janak,Williams '
-      TXC(2) = ' von Barth,Hedin        '
-      TXC(3) = ' Vosko,Wilk,Nusair      '
+      TXC(1) = ' Morruzi,Janak,Williams  #serial: ' // serialnr
+      TXC(2) = ' von Barth,Hedin         #serial: ' // serialnr
+      TXC(3) = ' Vosko,Wilk,Nusair       #serial: ' // serialnr
 c     
 c     Read Lattice form inputcard
 c
@@ -1042,6 +1049,7 @@ c     -----------------------------------------------------------
 c Write out cell info.
 
       OPEN(69,FILE='vertices.dat',FORM='FORMATTED')
+      call version_print_header(69)
       DO IAT = 1,NSITES
          IF (CELLREF(IAT).EQ.IAT) THEN
             WRITE(69,FMT='("# Cell of representative atom:",I5)') IAT
@@ -1064,6 +1072,7 @@ c Write out cell info.
 
 c Write out inner and outer radii per atom.
       OPEN(69,FILE='radii.dat',FORM='FORMATTED')
+      call version_print_header(69)
       WRITE(69,FMT='(2A52)') 
      &   '# Radii after shift of cell centers (units of alat),',
      &   ' ratio Rmt0/Rout, NN-dist. before shift, ratio      '
@@ -1092,6 +1101,7 @@ c includes shape calculation.
       ENDDO
 
       OPEN(69,FILE='cellinfo.dat',FORM='FORMATTED')
+      call version_print_header(69)
       WRITE(69,FMT='("# Faces and vertices for all atoms")')
       WRITE(69,FMT='("# Number of atoms:")')
       WRITE(69,FMT='(2I6)') NSITES - ISITEBEGIN + 1
@@ -1141,6 +1151,7 @@ c unshifted in sub. readinput).
 !---------------------------------------------------------------
 !-- Write out some results for the kkr input
       OPEN(69,FILE='atominfo.txt',FORM='FORMATTED')
+      call version_print_header(69)
 
       WRITE(69,FMT='(A8)') 'ATOMINFO'
       WRITE(69,2003)

@@ -1,5 +1,6 @@
       SUBROUTINE WRITESHAPE(NPAN,MESHN,NM,XRN,DRN,NFU,LMIFUN,THETAS,
      &                      ISHAPE)
+      use mod_version_info
       IMPLICIT NONE
 c Write out shape function into unit 15.
       include 'inc.geometry'
@@ -12,8 +13,12 @@ c Input:
 
 c Local:
       INTEGER IPAN1,IR,IFUN
+      CHARACTER(len=150) ::char1
       
-      WRITE(15,FMT=9020) NPAN,MESHN,ISHAPE
+      ! write serial number after Shape number
+      char1 = ';     # serial: ' // trim(serialnr)
+      
+      WRITE(15,FMT=9020) NPAN,MESHN,ISHAPE,trim(char1)
       WRITE (15,FMT=9000) (NM(IPAN1),IPAN1=1,NPAN)
       WRITE (15,FMT=9010) (XRN(IR),DRN(IR),IR=1,MESHN)
       WRITE (15,FMT=9000) NFU
@@ -26,6 +31,6 @@ c Local:
 
  9000 FORMAT (16I5)
  9010 FORMAT (4D20.12)
- 9020 FORMAT (2I5,' NPAN,MESHN;  Shape number',I6)
+ 9020 FORMAT (2I5,' NPAN,MESHN;  Shape number',I6,A)
 
       END
