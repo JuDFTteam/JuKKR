@@ -210,6 +210,7 @@ C ======================================================================VINS()
 #endif
       use mod_version
       use mod_version_info
+      use mod_md5sums
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
@@ -601,6 +602,16 @@ C
      +             DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,
      +             IRWS,1,LMPOTD,IRMIND,IRMD,LMXSPD,IPAND,IRID,
      +             IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)
+     
+     
+      ! find md5sums for potential and shapefunction
+      call get_md5sums(INS, I13, I19)
+      write(1337,'(A,A)') 
+     &'Doing calculation with potential: ',md5sum_potential
+      if(INS>0) then
+         write(1337,'(A,A)') 
+     &   'Doing calculation with shapefun: ',md5sum_shapefun
+      end if
 
 
       IF ( TEST('Vspher  ') ) THEN
@@ -828,7 +839,8 @@ C
       CALL WRITEHOSTSTRUCTURE(BRAVAIS,NATYP,RBASIS,NAEZD,NEMBD)
 
         OPEN (58,FILE='kkrflex_atominfo',FORM='FORMATTED')
-        call version_print_header(58)
+        call version_print_header(58,
+     &           '; '//md5sum_potential//'; '//md5sum_shapefun)
         NVATOM=0
         DO I = 1,NATOMIMP
           IF (KAOEZ(1,ATOMIMP(I))==-1) NVATOM=NVATOM+1
