@@ -127,16 +127,26 @@ C ======================================================================
       if(t_inc%i_write>0) write(1337,*) myrank, 'start tbref e-loop'
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-       
-      DO ie_num=1,ie_end
-       
-         IE = ie_start+ie_num
 #else
-      DO IE = 1,IELAST
-         ie_num = ie
+      ie_start = 0
+      ie_end = IELAST
 #endif
+
+      DO ie_num = 1,ie_end
+         IE = ie_start+ie_num
          if(t_inc%i_write>0) WRITE(1337,FMT='(A23,I5,2F14.8)') 
      &                         'TBREF: GREF for energy:',IE,EZ(IE)
+     
+     
+         ! reset arrays to zero (needed in case of MPIatom energy/atom distribution
+         ginp(:,:,:) = (0.0d0, 0.0d0)
+         if(LLY>0) then
+            dginp(:,:,:) = (0.0d0, 0.0d0)
+            LLY_G0TR(IE,:) = (0.0d0, 0.0d0)
+            dginp_dum = (0.0d0, 0.0d0)
+            lly_g0tr_dum = (0.0d0, 0.0d0)
+         endif
+         
 C
          ERYD = EZ(IE)
          DO I1 = 1,NREF
@@ -153,7 +163,9 @@ C
 C ----------------------------------------------------------------------
 #ifdef CPP_MPI
          ntot1 = NCLS
-
+         
+         if(myrank==master) write(1337,*) 'tbref NCLS loop:', NCLS, 
+     &                          t_mpi_c_grid%nranks_ie
          call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
      &                             master,ntot1,ntot_pT,ioff_pT,.true.)
@@ -234,15 +246,22 @@ C ----------------------------------------------------------------------
 #ifdef CPP_MPI
            !make sure only one processor writes for one energy point
            if(t_mpi_c_grid%myrank_ie==0) then
-#endif
-            WRITE (68,REC=IE) GINP                 ! Gref
-!             write(686868,'(i9,200000F15.7)') ie, ginp
-#ifdef CPP_MPI
+              WRITE (68,REC=IE) GINP                 ! Gref
            end if !if(t_mpi_c_grid%myrank_ie==0) then
+!            ! test writeout
+!            do i1=0,nranks-1
+!              if(myrank==i1) then
+!               write(686868+myrank,'(2i9,200000F15.7)') myrank, ie, ginp
+!              endif
+!              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie,ierr)
+!            end do
+!            ! end test writeout
+#else
+           WRITE (68,REC=IE) GINP                 ! Gref
 #endif
-         else
+         else   ! (t_tgmat%gref_to_file)
             t_tgmat%gref(:,:,:,ie_num) = GINP(:,:,:)
-         end if
+         end if ! (t_tgmat%gref_to_file)
          IF (LLY.NE.0) THEN                                ! LLY Lloyd
             if(t_lloyd%dgref_to_file) then                 ! LLY Lloyd
                WRITE (681,REC=IE) DGINP ! dGref/dE         ! LLY Lloyd
@@ -258,7 +277,7 @@ C ----------------------------------------------------------------------
 C
          IF (TEST('flow    ').and.(t_inc%i_write>0)) WRITE (1337,FMT=*) 
      &                               'G(n,lm,n,lm) (Ref) o.k.'
-      END DO
+      END DO ! IE
 C ======================================================================
       if (t_tgmat%gref_to_file) then
          CLOSE (68)

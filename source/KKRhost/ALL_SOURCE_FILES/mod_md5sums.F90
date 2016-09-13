@@ -7,7 +7,11 @@ module mod_md5sums
   implicit none
 
   private
+#ifdef CPP_MPI
   public md5sum_potential, md5sum_shapefun, lmd5sum_pot, lmd5sum_shape, get_md5sums, myMPI_Bcast_md5sums
+#else
+  public md5sum_potential, md5sum_shapefun, lmd5sum_pot, lmd5sum_shape, get_md5sums
+#endif
  
   integer :: lmd5sum_pot, lmd5sum_shape
   character(len=:), allocatable :: md5sum_potential, md5sum_shapefun
