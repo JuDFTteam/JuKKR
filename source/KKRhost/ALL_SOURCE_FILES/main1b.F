@@ -371,7 +371,9 @@ C    &             FILE='green',FORM='unformatted')                             
      &               (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
               END IF
              end if
+#ifdef CPP_MPI
              call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+#endif
             end do
           END IF
 c         IF ( (.not. OPT('KKRFLEX ') ) ) THEN                !no-green
