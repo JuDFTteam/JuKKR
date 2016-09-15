@@ -347,8 +347,7 @@ contains
                fmt2 = '(4(A,I5.5))'
                write (jfnam2,fmt2) 'Jij_enrg.',it,'.',jt,'.',i1,'.',i2
                open (499,file=jfnam2,status='unknown')
-               call version_print_header(499,
-     &           '; '//md5sum_potential//'; '//md5sum_shapefun)
+               call version_print_header(499,'; '//md5sum_potential//'; '//md5sum_shapefun)
                write(499,fmt='(a)') &
                     & '# Energy Re,Im ; j(E) Re,Im ; J(E) Re,Im ;&
                                       & d(E) Re,Im ; D(E) Re,Im ;&
@@ -408,8 +407,7 @@ contains
 
          write(jfnam,'(A,I5.5)') 'Jij.atom', lm1
          open(49,file=jfnam,form='formatted',action='write')
-         call version_print_header(49,
-     &           '; '//md5sum_potential//'; '//md5sum_shapefun)
+         call version_print_header(49,'; '//md5sum_potential//'; '//md5sum_shapefun)
          WRITE (49,99009) lm1,IQAT(lm1),i1
 
          do lm2=1,natypd
