@@ -95,6 +95,7 @@ c    rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
                   LMSP1=(I1SP1-1)*LMMAXD+LM1
                   DO LM2 =1,LMMAX
                     LMSP2=(I1SP2-1)*LMMAXD+LM2
+                    !write(*,*) IR,LM2,LM1,I1SP2,I1SP1,INSRA,I1
                     RLL(IR,LM2,LM1,I1SP2,I1SP1,INSRA,I1)=
      +                        PNS(LMSP2,LMSP1,IR,INSRA,I1)
                   END DO      !LM1=1,LMMAXD

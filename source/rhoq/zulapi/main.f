@@ -784,7 +784,17 @@ c       ENDIF
 c       ENDDO
 c
       ENDIF
-
+      
+!       if(test('rhoqtest') .and. .not.(opt('NO-BREAK'))) then
+!          ie_start = 2
+!          ie_end = 2
+!       else
+!          ie_start = 1
+!          ie_end = IELAST
+!       end if
+      
+      
+!       DO 360 IE = 2,2!1,IELAST
       DO 360 IE = 1,IELAST
 
         IF(TEST('ie      ')) then

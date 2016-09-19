@@ -10,13 +10,16 @@
       PARAMETER (CI= (0.0D0,1.0D0))
 !     ..
 !     .. Scalar Arguments ..
+!       DOUBLE PRECISION Z
       DOUBLE COMPLEX Z
       INTEGER LMAX
 !     ..
 !     .. Array Arguments ..
+!       DOUBLE PRECISION HL(0:LMAX),JL(0:LMAX),NL(0:LMAX)
       DOUBLE COMPLEX HL(0:LMAX),JL(0:LMAX),NL(0:LMAX)
 !     ..
 !     .. Local Scalars ..
+!       DOUBLE PRECISION TERMJ,TERMN,Z2,ZJ,ZN
       DOUBLE COMPLEX TERMJ,TERMN,Z2,ZJ,ZN
       DOUBLE PRECISION RL,RN,RNM
       INTEGER L,M,N
@@ -24,13 +27,14 @@
 !     .. Intrinsic Functions ..
       INTRINSIC CDABS,EXP
 !     ..
-!       write(*,*) Z, lmax
+!       write(*,*) Z, lmax, CDABS(Z)
 
       ZJ = 1.D0
       ZN = 1.D0
       Z2 = Z*Z
       IF (CDABS(Z).LT.LMAX+1.D0) THEN
-        IF(CDABS(Z).EQ.0.0D0) THEN
+        IF(CDABS(Z).LT.1.0D-4) THEN
+!         IF(CDABS(Z).EQ.0.0D0) THEN
            JL(0) = (1.0D0,0.0D0)
            JL(1:LMAX) = (0.0D0,0.0D0)
         ELSE

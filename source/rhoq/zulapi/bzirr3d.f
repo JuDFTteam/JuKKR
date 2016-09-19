@@ -80,6 +80,11 @@ c and its reciprocal cell (big!) in the real space normalized by 2*pi (rq).
 c
       do i = 1, 3
          do j = 1, 3
+!             ! test
+!             if(i==2) recbv(2,j) = (2.0d0*recbv(2,j) + recbv(1,j))/2.0d0
+!             if(i==2) bravais(2,j) = (2.0d0*bravais(2,j) + 
+!      &               bravais(1,j))/2.0d0
+!             ! test end
             gq(i,j)=recbv(i,j)/nkxyz1(j)
             rq(i,j)=bravais(i,j)*nkxyz1(j) !/alat
          enddo 

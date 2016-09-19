@@ -33,7 +33,7 @@ C     ..
             R = R + ABS(RCLS(I,N,IC1)-RCLS1(I,N))
           END DO
         END DO
-        IF (ABS(R).LT.1.D-6 .AND. REFLOG) THEN
+        IF (ABS(R).LT.1.D-5 .AND. REFLOG) THEN
         CLUSTCOMP = .TRUE.
         ENDIF
       END IF

@@ -64,7 +64,7 @@ c-----------------------------------------------------------------
       DOUBLE COMPLEX,ALLOCATABLE :: GLL(:,:,:,:),GIMP(:,:)
       
 !       integer :: thrid, nthrd
-      integer :: irec, mu, nscoef, ix, jx
+      integer :: irec, mu, nscoef, ix, jx, imin
       integer, allocatable :: iatomimp(:)
 
       WRITE(6,*) 'in writegreen'
@@ -192,29 +192,30 @@ c calculate green function for the host
        INVMOD=0 ! for FS calculation, we inverse a full matrix anyway
 
        IF (OPT('NO-BREAK')) THEN
+        
+        if(test('rhoqtest')) then 
        
         open(8888,file='mu0',form='formatted')
         read(8888,*) mu, nscoef
-        nscoef = nscoef-1
         allocate(iatomimp(nscoef))
         do i1=1,nscoef
           read(8888,*) iatomimp(i1)
         end do
         close(8888)
         
-        if(test('rhoqtest')) then 
-           open(9999, access='direct', file='tau0_k', 
-     &     form='unformatted', recl=(LMMAXSO*LMMAXSO)*4) ! lm blocks
+        
+      !find imin
+      imin = 1000
+      do i1=1,nscoef
+         write(*,*) 'find imin', imin, iatomimp(i1)
+        if(iatomimp(i1)<imin) imin = iatomimp(i1)
+      end do
+      nscoef = nscoef-1
+        
+        ! open file to store the scattering path operator
+        open(9999, access='direct', file='tau0_k', 
+     &  form='unformatted', recl=(LMMAXSO*LMMAXSO)*4) ! lm blocks
      
-!            write(*,*) 'reading kpts from file'
-!            open(8888, file='kpt_in.txt')
-!            read(8888,*) nofks
-!            write(*,*) nofks
-!            do k=1,nofks
-!              read(8888,*) (bzkp(ns,k), ns=1,3)
-!              volcub(k) = 1.0d0
-!            end do
-!            close(8888)
         end if
         write(*,*) 'open tau_k unform',LMMAXSO, LMMAXSO*LMMAXSO*4
 
@@ -319,56 +320,56 @@ c  for spin-orbit coupling G_LL'(k) double size
              ENDDO
             ENDDO
            ENDDO
+           
+           
            if(test('rhoqtest')) then 
-!              write(*,*) 'writing gllke',shape(gllke0),ns,nshell(0),K
-             if(k==1) write(*,*) '',i,j, mu, iatomimp
-!      &        (I==mu) , (J==mu) , any(I==iatomimp) ,any(J==iatomimp), 
-!      &              ((I==mu) .or. (J==mu) .or. 
-!      &            any(I==iatomimp) .or. any(J==iatomimp))
-             irec = (nscoef*2)*(K-1) + (nscoef*2)*NOFKS*(IE-1)
-!              if( ((I==mu) .and. any(J==iatomimp)) .or. ((J==mu) .and. 
-!      &            any(I==iatomimp)) ) then
-             if( ((I==mu) .and. any(J==iatomimp)) ) then
-               ix=0
-               jx=0
-               lm1 = 1
-               do while (ix==0)
-                 if(iatomimp(lm1)==j) ix = lm1
-                 lm1 = lm1 + 1
-               end do
-               irec = irec + nscoef + ix
-               write(9999,rec=irec) GLLKE0(1:LMMAXSO,1:LMMAXSO)
-               write(*,'(10I9)') i,j,mu,ix,jx,irec,k, ie,
-     &                                          nofks,nscoef
-             end if
-             
-             if( ((J==mu) .and. any(I==iatomimp)) ) then
-               ix=0
-               jx=0
-               lm1 = 1
-               do while(jx==0)
-                 if(iatomimp(lm1)==i) jx = lm1
-                 lm1 = lm1 + 1
-               end do
-               irec = irec + jx
-!                if(j==mu) then
-!                  irec = irec + nscoef + ix
-!                else
-!                  irec = irec + jx
-!                endif
-!                if (k==1 .and. ns==1) write(*,*) ix,jx,nscoef,irec,k,
-               write(*,'(10I9)') i,j,mu,ix,jx,irec,k, ie,
-     &                                          nofks,nscoef
-               write(9999,rec=irec) GLLKE0(1:LMMAXSO,1:LMMAXSO)
-               write(99991,'(4000E15.7)') BZKP(1:2,k),
-     &              RROT(1,1:2,NS),RBASIS(1:2,J),RBASIS(1:2,I),
-     &                   ETAIKR(1,NS),GLLKE0(1:LMMAXSO,1:LMMAXSO)
-             end if ! i==mu ...
-           end if ! test('rhoqtest')
+
+           irec = (nscoef*2)*(k-1) + (nscoef*2)*nofks*(IE-1-1)
+           if( ((i==mu) .and. any(j==iatomimp(1:nscoef))) ) then
+             ix=0
+             jx=0
+             lm1 = 1
+             do while (ix==0 .and. lm1<=nscoef)
+               if(iatomimp(lm1)==j) ix = j - imin + 1
+!                if(iatomimp(lm1)==jjj) ix = lm1
+               lm1 = lm1 + 1
+             end do
+             irec = irec + nscoef + ix
+!              write(*,*)
+       write(*,'(A,10I5)') 'ix',irec, ix, jx, k, ie, nscoef, i,j, imin
+             write(9999,rec=irec) GLLKE0(1:LMMAXSO,1:LMMAXSO)
+!              write(*,'(A,9I5,1000ES15.7)') 'ix',irec, ix, jx, k,            & 
+!      &        ie, nscoef, i,j,(LMMAXSO*LMMAXSO)*4, GLLKE0(1:4,1:4)
+           end if
+           
+           
+           irec = (nscoef*2)*(k-1) + (nscoef*2)*nofks*(IE-1-1)
+           if( ((j==mu) .and. any(i==iatomimp(1:nscoef))) ) then
+             ix=0
+             jx=0
+             lm1 = 1
+             do while (jx==0 .and. lm1<=nscoef+1)
+               if(iatomimp(lm1)==i) jx = i - imin + 1
+!                if(iatomimp(lm1)==i) jx = lm1
+               lm1 = lm1 + 1
+             end do
+             irec = irec + jx
+!              write(*,*)
+       write(*,'(A,18I5)') 'jx',irec, ix, jx, k, ie, nscoef, i,j, imin
+!              write(*,*) 'writeing gllke0'
+             write(9999,rec=irec) GLLKE0(1:LMMAXSO,1:LMMAXSO)
+           end if ! iii==mu ...
+
+         end if ! test('rhoqopt')
+           
           ENDDO ! NS
 
 !       !update statusbar
-!          if(mod(K,NOFKS/50)==0) write(6,FMT=200)
+         if(NOFKS>=50) then
+           if(mod(K,NOFKS/50)==0) write(6,FMT=200)
+         else
+           write(6,FMT=200)
+         end if
 !          if(thrid==0.and.mod(K,NOFKS/50/nthrd)==0) write(6,FMT=200)
          ENDDO ! K loop
 !          !$omp end do
@@ -384,27 +385,6 @@ c  for spin-orbit coupling G_LL'(k) double size
          WRITE(6,*) 'After k-points integration'
 !          if(thrid==0) WRITE(6,*) 'After k-points integration'
 !          !$omp end parallel
-         
-         if(test('rhoqtest')) then
-           ! close tau_k file
-           close(9999)
-           ! save kpoints
-           open(8888, file='kpts.txt', form='formatted')
-           write(8888,'(I9)') NOFKS
-           CALL GETVOLBZ(RECBV,BRAVAIS,VOLBZ)
-           write(8888,'(E16.7)') VOLBZ
-           do k=1,nofks
-             write(8888,'(4E16.7)') (BZKP(i1,K), i1=1,3), VOLCUB(K)
-           end do
-           write(8888,'(100E16.7)') RECBV(1:3,1:3),BRAVAIS(1:3,1:3)
-           close(8888)
-           ! save shell info
-           open(8888, file='shellinfo.txt')
-           write(8888,'(2I9)') NSHELL(0), mu, nscoef
-           write(8888,'(1000I9)') (iatomimp(i1), i1=1,nscoef)
-           write(8888,'(20000I9)') NSH1(1:NSHELL(0)), NSH2(1:NSHELL(0))
-           close(8888)
-         end if
 
        ELSE ! OPT('NO-BREAK')
         IF (OPT('BREAK-1 ')) THEN
@@ -432,6 +412,11 @@ c  for spin-orbit coupling G_LL'(k) double size
      +                 TINVLL(1:LMMAXSO,1:LMMAXSO,1:NAEZD),
      +                 GINP(1:LMAXSQ*NACLSD,1:LMAXSQ,1:NCLSD)
 
+          IF(IE==3 .and. test('rhoqtest')) then
+             write(180,'(I1)') 1
+          ELSEIF(IE==3 .and. .not.test('rhoqtest')) then
+             write(180,'(I1)') 0
+          ENDIF
           IF(IE==3) close(180)
 
         ELSEIF(OPT('BREAK-2 '))THEN
@@ -448,6 +433,42 @@ c  for spin-orbit coupling G_LL'(k) double size
         END IF!OPT('BREAK-1 ')
 
        END IF
+       
+       
+         
+         if(test('rhoqtest').and.ie==2) then
+           CALL BZIRR3D(NOFKS,NXYZ,KPOIBZ,BZKP,RECBV,BRAVAIS,RFCTOR,    &
+     &                  VOLCUB,VOLBZ,RSYMAT,NSYMAT,ISYMINDEX,LIRR)
+     
+       
+        open(8888,file='mu0',form='formatted')
+        read(8888,*) mu, nscoef
+        nscoef = nscoef-1
+        allocate(iatomimp(nscoef))
+        do i1=1,nscoef
+          read(8888,*) iatomimp(i1)
+        end do
+        close(8888)
+        
+           ! close tau_k file
+           close(9999)
+           ! save kpoints
+           open(8888, file='kpts.txt', form='formatted')
+           write(8888,'(I9)') NOFKS
+           CALL GETVOLBZ(RECBV,BRAVAIS,VOLBZ)
+           write(8888,'(E16.7)') VOLBZ
+           do k=1,nofks
+             write(8888,'(4E16.7)') (BZKP(i1,K), i1=1,3), VOLCUB(K)
+           end do
+           write(8888,'(100E16.7)') RECBV(1:3,1:3),BRAVAIS(1:3,1:3)
+           close(8888)
+           ! save shell info
+           open(8888, file='shellinfo.txt')
+           write(8888,'(2I9)') NSHELL(0), mu, nscoef
+           write(8888,'(1000I9)') (iatomimp(i1), i1=1,nscoef)
+           write(8888,'(20000I9)') NSH1(1:NSHELL(0)), NSH2(1:NSHELL(0))
+           close(8888)
+         end if
 
        IF (OPT('NO-BREAK').OR.OPT('BREAK-2 ')) THEN           
         ALLOCATE(GMATLL(LMMAXSO,LMMAXSO,NSHELL(0)))
