@@ -31,6 +31,7 @@ C
       use mod_types, only: t_tgmat, t_mpi_c_grid, t_cpa
       use mod_mympi, only: myrank, master
       use mod_version_info
+      use mod_md5sums
       IMPLICIT NONE
 C     ..
 C     .. Parameters
@@ -504,7 +505,8 @@ C                           because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                     WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
                     IF (IE.EQ.1) THEN
                        OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
-                       call version_print_header(499)
+                       call version_print_header(499,
+     &           '; '//md5sum_potential//'; '//md5sum_shapefun)
                        WRITE(499,FMT='(A)')
      &                      '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
                        WRITE(499,FMT='(3(A,I5))')
@@ -606,7 +608,8 @@ C                           because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                     FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
                     WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
                     OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
-                    call version_print_header(499)
+                    call version_print_header(499,
+     &           '; '//md5sum_potential//'; '//md5sum_shapefun)
                     WRITE(499,FMT='(A)')
      &                   '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
                     WRITE(499,FMT='(3(A,I5))')
@@ -749,6 +752,8 @@ C
 
 c         write(JFNAME,FMT1)JFINTEG, IT
          OPEN (49,FILE=JFNAM)
+         call version_print_header(49,
+     &           '; '//md5sum_potential//'; '//md5sum_shapefun)
          WRITE (49,99009) IT,IQAT(IT)
 c         open(22,FILE=JFNAME)
 c          write(22,99014)IT,IQAT(IT)
