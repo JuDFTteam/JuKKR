@@ -124,6 +124,7 @@
        double complex, allocatable :: workc(:,:,:,:)
 #endif
        integer :: ie_start,ie_end, ie_num
+       integer :: i1_myrank ! lmlm-dos, needed for MPI with more than one rank per energy point (nranks_ie>1) 
        double precision :: angles_new(2)
        ! read in wavefunctions
        logical :: wavefunction_was_read_in
@@ -277,7 +278,12 @@ C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos r
 3000  IF (IERR.NE.0) STOP 'ERROR READING ''qvec.dat'''                  ! qdos ruess
       END IF  ! OPT('qdos    ')                                         ! qdos ruess
 
-      IF ((OPT('lmlm-dos')).AND.(I1.EQ.1)) THEN                         ! lmlm-dos ruess
+#ifdef CPP_MPI
+      i1_myrank = i1 - t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)    ! lmlm-dos ruess 
+#else
+      i1_myrank = i1                                                    ! lmlm-dos ruess
+#endif
+      IF ((OPT('lmlm-dos')).AND.(I1_myrank.EQ.1)) THEN                  ! lmlm-dos ruess
          LRECGFLLE = 4*LMMAXSO*LMMAXSO*IELAST*NQDOS                     ! lmlm-dos ruess
          OPEN(91,ACCESS='direct',RECL=LRECGFLLE,FILE='gflle',           ! lmlm-dos ruess
      &         FORM='unformatted',STATUS='replace',ERR=3001,IOSTAT=IERR)! lmlm-dos ruess
