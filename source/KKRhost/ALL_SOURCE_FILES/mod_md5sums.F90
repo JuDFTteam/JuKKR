@@ -24,34 +24,66 @@ module mod_md5sums
     character(len=40), intent(in) :: filename_pot, filename_shape
     character(len=100) :: tmp_char
     integer :: istat
-    
-    ! create md5 checksums for potential and shapefun
-    call SYSTEM('md5 '//trim(filename_pot)//' > tmp_md5sum_pot')
 
-    if(ins>0) then
-      call SYSTEM('md5 '//trim(filename_shape)//' > tmp_md5sum_shape')
+    logical :: reorder, skipread
+    integer :: SYSTEM
+    external :: SYSTEM
+    
+    reorder  = .false.
+    skipread = .false.
+    ! create md5 checksum for potential
+    istat = SYSTEM('md5 '//trim(filename_pot)//' > tmp_md5sum_pot')
+    if(istat/=0)then
+      istat = SYSTEM('md5sum '//trim(filename_pot)//' > tmp_md5sum_pot')
+      reorder=.true.
+      if(istat/=0)then
+        skipread=.true.
+      end if
     end if
 
-    ! read in and then delete temporary file tmp_md5sum_pot
-    open(9999, file='tmp_md5sum_pot', status='old', iostat=istat)
-    if(istat/=0) stop '[get_md5sums] Error: could not create md5sum for potential file'
-    read(9999, '(A100)') tmp_char
-    close(9999, status='delete')
+    if(skipread) then
+      tmp_char = '00000000000000000000000000000000  '//trim(filename_pot)
+    else
+      ! read in and then delete temporary file tmp_md5sum_pot
+      open(9999, file='tmp_md5sum_pot', status='old', iostat=istat)
+      if(istat/=0) stop '[get_md5sums] Error: could not create md5sum for potential file'
+      read(9999, '(A100)') tmp_char
+      close(9999, status='delete')
+    end if!skipread
     lmd5sum_pot = len_trim(tmp_char)
     allocate(character(len=lmd5sum_pot) :: md5sum_potential, stat=istat)
     if(istat/=0) stop '[get_md5sums] Error allocating md5sum_potential'
     md5sum_potential = tmp_char(1:lmd5sum_pot)
 
+
+
+
     if(ins>0) then
-      open(9999, file='tmp_md5sum_shape', status='old', iostat=istat)
-      if(istat/=0) stop '[get_md5sums] Error: could not create md5sum for shapefun file'
-      read(9999, '(A100)') tmp_char
-      close(9999, status='delete')
+      reorder  = .false.
+      skipread = .false.
+      ! create md5 checksum for shapefun
+      istat = SYSTEM('md5 '//trim(filename_shape)//' > tmp_md5sum_shape')
+      if(istat/=0)then
+        istat = SYSTEM('md5sum '//trim(filename_shape)//' > tmp_md5sum_shape')
+        reorder=.true.
+        if(istat/=0)then
+          skipread=.true.
+        end if
+      end if
+
+      if(skipread) then
+        tmp_char = '00000000000000000000000000000000  '//trim(filename_shape)
+      else
+        open(9999, file='tmp_md5sum_shape', status='old', iostat=istat)
+        if(istat/=0) stop '[get_md5sums] Error: could not create md5sum for shapefun file'
+        read(9999, '(A100)') tmp_char
+        close(9999, status='delete')
+      end if!skipread
       lmd5sum_shape = len_trim(tmp_char)
       allocate(character(len=lmd5sum_pot) :: md5sum_shapefun, stat=istat)
       if(istat/=0) stop '[get_md5sums] Error allocating md5sum_shapefun'
       md5sum_shapefun = tmp_char(1:lmd5sum_shape)
-    end if
+    end if!ins>0
   
   end subroutine get_md5sums
   
