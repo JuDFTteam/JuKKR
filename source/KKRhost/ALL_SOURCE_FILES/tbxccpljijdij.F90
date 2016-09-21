@@ -299,7 +299,7 @@ contains
 
     lm1 = nalpha*nalpha*nstore*ielast
     call MPI_REDUCE( Jijmat,Jijmat_tmp,lm1,MPI_DOUBLE_COMPLEX, &
-                   & MPI_SUM,master,MPI_COMM_WORLD,ierr        )
+                   & MPI_SUM,master,t_mpi_c_grid%myMPI_comm_at,ierr)
     if(ierr/=MPI_SUCCESS)then
        write(*,*) 'Problem in MPI_REDUCE(Jijmat)'
        stop 'TBXCCPLJIJDIJ'
