@@ -40,13 +40,15 @@
 #ifdef CPP_MPI
       use mpi
       
-      use mod_types, only: t_tgmat, t_lloyd,
-     &                      t_mpi_c_grid
+      use mod_types, only: t_mpi_c_grid
+      use mod_mympi, only: myrank, nranks, master,
+     &                     distribute_linear_on_tasks
+#else
+      use mod_mympi, only: myrank, nranks, master 
 #endif
       use mod_types, only: t_inc
-      use mod_mympi, only: myrank, nranks, master 
-#ifdef CPP_MPI
-     &                     ,distribute_linear_on_tasks
+#ifdef CPP_TIMING
+      use mod_timing
 #endif
       IMPLICIT NONE
 !     ..
@@ -222,6 +224,9 @@
          BZKPK(4:6) = 0.D0
 
          ! -> Fourier transformation
+#ifdef CPP_TIMING
+            if(t_inc%i_time>0) call timing_start('main1b_fourier')
+#endif
  
          RRM(1:3,1:NRD) = -RR(1:3,1:NRD)
  
@@ -390,6 +395,9 @@
             !-----------------------------------------------------------------------
             ! ======================================================================
          END IF !  (KREL.EQ.0) 
+#ifdef CPP_TIMING
+            if(t_inc%i_time>0) call timing_pause('main1b_fourier')
+#endif
          ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
          IF (LLY.NE.0) GREFLLKE(1:ALM,1:ALM) = GLLKE(1:ALM,1:ALM) ! LLY Save k-dependent Gref
@@ -412,6 +420,9 @@
                ENDDO
             ENDDO
       
+#ifdef CPP_TIMING
+            if(t_inc%i_time>0) call timing_start('main1b_inversion')
+#endif
             !     --> Perform the inversion of matrix M
             !     the output is the scattering path operator TAU stored in GLLKE
             !     Actually -TAU, because TAU = (Deltat^-1 - Gref)^-1
@@ -420,6 +431,9 @@
             ELSE
             CALL INVERSION(GLLKE,INVMOD,ICHECK)
             ENDIF
+#ifdef CPP_TIMING
+            if(t_inc%i_time>0) call timing_pause('main1b_inversion')
+#endif
             ! ----------------------------------------------------------
             ! LLY Lloyd ----------------------------------------------------------
             IF (LLY.NE.0) THEN 

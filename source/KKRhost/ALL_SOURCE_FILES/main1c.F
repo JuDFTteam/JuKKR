@@ -630,54 +630,83 @@ C ================================================================ NATYP
       
       
 #ifdef CPP_MPI
-      !move writeout of qdos file here
-      IF (OPT('qdos    ')) THEN
-       ! first communicate den array to write out qdos files
-       IDIM = (LMAXD1+1)*IEMXD*NQDOS*NPOTD
-       allocate(workc(0:LMAXD1,IEMXD,NQDOS,NPOTD))
-       workc = (0.d0, 0.d0)
-       
-       CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,
-     &                    MPI_COMM_WORLD,IERR)
-       CALL ZCOPY(IDIM,WORKC,1,DEN,1)
-       deallocate(workc)
-         
-       if(myrank==master) then
-       
-       DO I1=1,NATYP
-      
-        DO ISPIN = 1,NSPIN
-        
-         if(NATYP.ge.100) then
-           OPEN(31,
-     +     FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//
-     +     char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")
-         else
-           OPEN(31,
-     +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//
-     +     char(48+ISPIN)//".dat")
-         end if
-         call version_print_header(31)
-         
-         IPOT = (I1-1) * NSPINPOT + ISPIN
-
-         DO IE=1,IELAST
-           DO IQ=1,NQDOS
-             DENTOT = DCMPLX(0.D0,0.D0)
-             DO L = 0,LMAXD1
-               DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)
-             ENDDO
+      !move writeout of qdos file here                                   ! qdos
+      IF (OPT('qdos    ')) THEN                                          ! qdos
+       ! first communicate den array to write out qdos files             ! qdos
+       IDIM = (LMAXD1+1)*IEMXD*NQDOS*NPOTD                               ! qdos
+       allocate(workc(0:LMAXD1,IEMXD,NQDOS,NPOTD))                       ! qdos
+       workc = (0.d0, 0.d0)                                              ! qdos
+                                                                         ! qdos
+       CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,     ! qdos
+     &                    MPI_COMM_WORLD,IERR)                           ! qdos
+       CALL ZCOPY(IDIM,WORKC,1,DEN,1)                                    ! qdos
+       deallocate(workc)                                                 ! qdos
+                                                                         ! qdos
+       if(myrank==master) then                                           ! qdos
+                                                                         ! qdos
+       DO I1=1,NATYP                                                     ! qdos
+                                                                         ! qdos
+        DO ISPIN = 1,NSPIN                                               ! qdos
+                                                                         ! qdos
+         if(NATYP.ge.100) then                                           ! qdos
+           OPEN(31,                                                      ! qdos
+     +     FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//       ! qdos
+     +     char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")             ! qdos
+         else                                                            ! qdos
+           OPEN(31,                                                      ! qdos
+     +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//      ! qdos
+     +     char(48+ISPIN)//".dat")                                       ! qdos
+         end if                                                          ! qdos
+         call version_print_header(31)                                   ! qdos
+                                                                         ! qdos 
+         IPOT = (I1-1) * NSPINPOT + ISPIN                                ! qdos
+                                                                         ! qdos
+         DO IE=1,IELAST                                                  ! qdos
+           DO IQ=1,NQDOS                                                 ! qdos
+             DENTOT = DCMPLX(0.D0,0.D0)                                  ! qdos
+             DO L = 0,LMAXD1                                             ! qdos
+               DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)                       ! qdos
+             ENDDO                                                       ! qdos
             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos
-     &                    -DIMAG(DENTOT)/PI,
-     &                   (-DIMAG(DEN(L,IE,IQ,IPOT))/PI,L=0,LMAXD1)      ! qdos
-           END DO ! IQ=1,NQDOS
-         END DO ! IE=1,IELAST
-         close(31)
-        END DO !ISPIN=1,NSPIN
-       ENDDO !I1
-       end if ! myrank_at==master
-      ENDIF ! OPT('qdos    ')
- 9000 FORMAT(5F10.6,40E16.8)
+     &                    -DIMAG(DENTOT)/PI,                             ! qdos
+     &                   (-DIMAG(DEN(L,IE,IQ,IPOT))/PI,L=0,LMAXD1)       ! qdos
+           END DO ! IQ=1,NQDOS                                           ! qdos
+         END DO ! IE=1,IELAST                                            ! qdos
+         close(31)                                                       ! qdos
+                                                                         ! qdos
+         if(test('compqdos')) then                                         ! complex qdos
+           if(NATYP.ge.100) then                                           ! complex qdos
+             OPEN(31,                                                      ! complex qdos
+     +       FILE="cqdos."//char(48+I1/100)//char(48+mod(I1/10,10))//      ! complex qdos
+     +       char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")             ! complex qdos
+           else                                                            ! complex qdos
+             OPEN(31,                                                      ! complex qdos
+     +       FILE="cqdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//     ! complex qdos
+     +       char(48+ISPIN)//".dat")                                       ! complex qdos
+           end if                                                          ! complex qdos
+           call version_print_header(31)                                   ! complex qdos
+                                                                           ! complex qdos 
+           IPOT = (I1-1) * NSPINPOT + ISPIN                                ! complex qdos
+                                                                           ! complex qdos
+           DO IE=1,IELAST                                                  ! complex qdos
+             DO IQ=1,NQDOS                                                 ! complex qdos
+               DENTOT = DCMPLX(0.D0,0.D0)                                  ! complex qdos
+               DO L = 0,LMAXD1                                             ! complex qdos
+                 DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)                       ! complex qdos
+               ENDDO                                                       ! complex qdos
+              WRITE(31,9002) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! complex qdos
+     &                       DENTOT,(DEN(L,IE,IQ,IPOT),L=0,LMAXD1)         ! complex qdos
+             END DO ! IQ=1,NQDOS                                           ! complex qdos
+           END DO ! IE=1,IELAST                                            ! complex qdos
+           close(31)                                                       ! complex qdos
+         end if                                                          ! qdos
+                                                                         ! qdos
+        END DO !ISPIN=1,NSPIN                                            ! qdos
+       ENDDO !I1                                                         ! qdos
+       end if ! myrank_at==master                                        ! qdos
+      ENDIF ! OPT('qdos    ')                                            ! qdos
+ 9000 FORMAT(5F10.6,40E16.8)                                             ! qdos
+ 9002 FORMAT(6F10.6,80E16.8)                                             ! complex qdos
  
       !reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
       NQDOS=1

@@ -10,6 +10,7 @@ contains
   subroutine set_Jijcalc_flags(t_dtmatJij,NATYPD,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
 
     use mod_types, only: t_inc, type_dtmatJijDij
+    use mod_save_wavefun, only: t_wavefunctions
 
     implicit none
     type(type_dtmatJijDij), intent(inout) :: t_dtmatJij(t_inc%NATYP)
@@ -24,6 +25,12 @@ contains
        END IF
      END DO!I1
     END DO!IQ
+    
+    ! change saveing option for wavefunctions
+    t_wavefunctions%save_rll     = .true.
+    t_wavefunctions%save_sll     = .true.
+    t_wavefunctions%save_rllleft = .true.
+    t_wavefunctions%save_sllleft = .true.
 
     !Test
 !   write(*,*) '=========== TEST FOR TMAT-CALC============='

@@ -22,7 +22,7 @@
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
      &                      get_ntot_pT_ioff_pT_2D 
 #endif
-       use mod_mympi, only: myrank, nranks, master
+       use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks,
@@ -126,7 +126,8 @@
        integer :: ie_start,ie_end, ie_num
        double precision :: angles_new(2)
        ! read in wavefunctions
-       logical :: wavefunction_was_read_in
+       logical :: rll_was_read_in, sll_was_read_in, 
+     &            rllleft_was_read_in, sllleft_was_read_in
 C      ..
        LOGICAL TEST,OPT
        EXTERNAL TEST,OPT
@@ -304,7 +305,9 @@ c energy loop
 !$omp& private(jlk_index,tmatll,ith)
 !$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
 !$omp& private(rho2ns_temp,rho2,temp1,jspin)
-!$omp& private(alphasph,alphall,ie_num, wavefunction_was_read_in)
+!$omp& private(alphasph,alphall,ie_num)
+!$omp& private(rll_was_read_in, sll_was_read_in)
+!$omp$ private(rllleft_was_read_in, sllleft_was_read_in)
 !$omp& firstprivate(t_inc)
 !$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
 !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
@@ -344,7 +347,8 @@ c energy loop
          ! read in wavefunction from memory
           call read_wavefunc(t_wavefunctions,rll, rllleft, sll, sllleft,
      &                       i1, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth,
-     &                       wavefunction_was_read_in)
+     &                       rll_was_read_in, sll_was_read_in, 
+     &                       rllleft_was_read_in, sllleft_was_read_in)
         end if
      
 c recalculate wavefuntions, also include left solution
@@ -370,7 +374,7 @@ cc extend matrix for the SRA treatment
         ENDIF
 
         if( (t_wavefunctions%Nwfsavemax>0 .and. 
-     &       .not. wavefunction_was_read_in ) 
+     &       .not. rll_was_read_in)
      &      .or. (t_wavefunctions%Nwfsavemax==0)) then ! read/recalc wavefunctions
         
 cc calculate the source terms in the Lippmann-Schwinger equation
@@ -414,7 +418,13 @@ cc right solutions
      +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
          ENDIF
          
+        end if ! read/recalc wavefunctions
+
+         
 c left solutions
+        if( (t_wavefunctions%Nwfsavemax>0 .and. 
+     &       .not. (rllleft_was_read_in.and.sllleft_was_read_in) )
+     &      .or. (t_wavefunctions%Nwfsavemax==0)) then ! read/recalc wavefunctions left
 c contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
          CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,
      +                     CVLIGHT,SOCSCALE,NSPIN,LMPOTD,THETA,PHI,
@@ -478,7 +488,7 @@ c notice that exchange the order of left and right hankel/bessel functions
      +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
          ENDIF
          
-        end if ! read/recalc wavefunctions
+        end if ! read/recalc wavefunctions left
 
         DO 200 IQ = 1,NQDOS                                       ! qdos
 c read in gf
@@ -674,25 +684,23 @@ c get orbital moment
       ENDDO
 
 #ifdef CPP_MPI
-       IF (OPT('qdos    ')) THEN                                          ! qdos ruess
-         ! first communicate den array to write out qdos files
-         IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
-         allocate(workc(0:LMAXD1,IEMXD,2,NQDOS))
-         workc = (0.d0, 0.d0)
-         CALL MPI_REDUCE(DEN, workc, IDIM, MPI_DOUBLE_COMPLEX, MPI_SUM,
-     &                      master, t_mpi_c_grid%myMPI_comm_at, IERR)
-!          CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,
-!      &                      t_mpi_c_grid%myMPI_comm_at,IERR)
-         CALL ZCOPY(IDIM,WORKC,1,DEN,1)
-         deallocate(workc)
-         
-         if(t_mpi_c_grid%myrank_at==master) then
-         ie_start = 0
-         ie_end   = IELAST
+       IF (OPT('qdos    ')) THEN                                          ! qdos
+         ! first communicate den array to write out qdos files            ! qdos
+         IDIM = (LMAXD1+1)*IEMXD*2*NQDOS                                  ! qdos
+         allocate(workc(0:LMAXD1,IEMXD,2,NQDOS))                          ! qdos
+         workc = (0.d0, 0.d0)                                             ! qdos
+         CALL MPI_REDUCE(DEN, workc, IDIM, MPI_DOUBLE_COMPLEX, MPI_SUM,   ! qdos
+     &                      master, t_mpi_c_grid%myMPI_comm_at, IERR)     ! qdos
+         CALL ZCOPY(IDIM,WORKC,1,DEN,1)                                   ! qdos
+         deallocate(workc)                                                ! qdos
+                                                                          ! qdos
+         if(t_mpi_c_grid%myrank_at==master) then                          ! qdos
+         ie_start = 0                                                     ! qdos
+         ie_end   = IELAST                                                ! qdos
          DO ie_num=1,ie_end                                               ! qdos
            IE = ie_start+ie_num                                           ! qdos
            DO IQ=1,NQDOS                                                  ! qdos
-             IF ((IQ.EQ.1).AND.(IE_num.EQ.1)) THEN                        ! qdos ruess
+             IF ((IQ.EQ.1).AND.(IE_num.EQ.1)) THEN                        ! qdos
               if(t_inc%NATYP.ge.100) then                                 ! qdos
                 OPEN(31,                                                  ! qdos
      +          FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//   ! qdos
@@ -708,37 +716,82 @@ c get orbital moment
      +          FILE="qdos."//char(48+mod(I1/10,10))//                    ! qdos
      +          char(48+mod(I1,10))//"."//char(48+2)//".dat")             ! qdos
               end if                                                      ! qdos
-              call version_print_header(31)
-              WRITE (31,*) ' '                                            ! qdos ruess
-              WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! qdos ruess
+              call version_print_header(31)                               ! qdos
+              WRITE (31,*) ' '                                            ! qdos
+              WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! qdos
               WRITE (31,'(7(A,3X))') '#   Re(E)','Im(E)',                 ! qdos
      &                      'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! qdos
-              if(NSPIN.gt.1) then
-                call version_print_header(32)
-                WRITE (32,*) ' '                                          ! qdos ruess
-                WRITE (32,8600) '# ISPIN=',2,' I1=',I1                    ! qdos ruess
+              if(NSPIN.gt.1) then                                         ! qdos
+                call version_print_header(32)                             ! qdos
+                WRITE (32,*) ' '                                          ! qdos
+                WRITE (32,8600) '# ISPIN=',2,' I1=',I1                    ! qdos
                 WRITE(32,'(7(A,3X))') '#   Re(E)','Im(E)',                ! qdos
      &                         'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'  ! qdos
               end if                                                      ! qdos
-             ENDIF   ! IQ.EQ.1                                            ! qdos ruess
-             DO JSPIN =1,2                                                ! qdos ruess
-               DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                          ! qdos ruess
-               DO L1 = 0,LMAXD1                                           ! qdos ruess
-                 DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)      ! qdos ruess
-               ENDDO                                                      ! qdos ruess
-             ENDDO                                                        ! qdos ruess
-c    write qdos.nn.s.dat                                                  ! qdos ruess
-             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos ruess
+             ENDIF   ! IQ.EQ.1                                            ! qdos
+             DO JSPIN =1,2                                                ! qdos
+               DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                          ! qdos
+               DO L1 = 0,LMAXD1                                           ! qdos
+                 DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)      ! qdos
+               ENDDO                                                      ! qdos
+             ENDDO                                                        ! qdos
+c    write qdos.nn.s.dat                                                  ! qdos
+             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos
      &                      -DIMAG(DENTOT(1))/PI,                         ! qdos
-     &                     (-DIMAG(DEN(L1,IE,IQ,1))/PI,L1=0,LMAXD1)       ! qdos ruess
-             WRITE(32,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos ruess
+     &                     (-DIMAG(DEN(L1,IE,IQ,1))/PI,L1=0,LMAXD1)       ! qdos
+             WRITE(32,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos
      &                      -DIMAG(DENTOT(2))/PI,                         ! qdos
-     &                     (-DIMAG(DEN(L1,IE,IQ,2))/PI,L1=0,LMAXD1)       ! qdos ruess
- 9000        FORMAT(5F10.6,40E16.8)                                       ! qdos ruess
+     &                     (-DIMAG(DEN(L1,IE,IQ,2))/PI,L1=0,LMAXD1)       ! qdos
+ 9000        FORMAT(5F10.6,40E16.8)                                       ! qdos
+                                                                          ! qdos
+             if(test('compqdos')) then                                      ! complex qdos
+               IF ((IQ.EQ.1).AND.(IE_num.EQ.1)) THEN                        ! complex qdos
+                if(t_inc%NATYP.ge.100) then                                 ! complex qdos
+                  OPEN(31,                                                  ! complex qdos
+     +            FILE="cqdos."//char(48+I1/100)//char(48+mod(I1/10,10))    ! complex qdos
+     +            //char(48+mod(I1,10))//"."//char(48+1)//".dat")           ! complex qdos
+                  OPEN(32,                                                  ! complex qdos
+     +            FILE="cqdos."//char(48+I1/100)//char(48+mod(I1/10,10))    ! complex qdos
+     +            //char(48+mod(I1,10))//"."//char(48+2)//".dat")           ! complex qdos
+                else                                                        ! complex qdos
+                  OPEN(31,                                                  ! complex qdos
+     +            FILE="cqdos."//char(48+mod(I1/10,10))//                   ! complex qdos
+     +            char(48+mod(I1,10))//"."//char(48+1)//".dat")             ! complex qdos
+                  OPEN(32,                                                  ! complex qdos
+     +            FILE="cqdos."//char(48+mod(I1/10,10))//                   ! complex qdos
+     +            char(48+mod(I1,10))//"."//char(48+2)//".dat")             ! complex qdos
+                end if                                                      ! complex qdos
+                call version_print_header(31)                               ! complex qdos
+                WRITE (31,*) ' '                                            ! complex qdos
+                WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! complex qdos
+                WRITE (31,'(7(A,3X))') '#   Re(E)','Im(E)',                 ! complex qdos
+     &                        'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! complex qdos
+                if(NSPIN.gt.1) then                                         ! complex qdos
+                  call version_print_header(32)                             ! complex qdos
+                  WRITE (32,*) ' '                                          ! complex qdos
+                  WRITE (32,8600) '# ISPIN=',2,' I1=',I1                    ! complex qdos
+                  WRITE(32,'(7(A,3X))') '#   Re(E)','Im(E)',                ! complex qdos
+     &                        'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! complex qdos
+                end if                                                      ! complex qdos
+               ENDIF   ! IQ.EQ.1                                            ! complex qdos
+               DO JSPIN =1,2                                                ! complex qdos
+                 DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                          ! complex qdos
+                 DO L1 = 0,LMAXD1                                           ! complex qdos
+                   DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)      ! complex qdos
+                 ENDDO                                                      ! complex qdos
+               ENDDO                                                        ! complex qdos
+c    write qdos.nn.s.dat                                                    ! complex qdos
+               WRITE(31,9002) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! complex qdos
+     &                        DENTOT(1), (DEN(L1,IE,IQ,1),L1=0,LMAXD1)      ! complex qdos
+               WRITE(32,9002) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! complex qdos
+     &                        DENTOT(2), (DEN(L1,IE,IQ,2),L1=0,LMAXD1)      ! complex qdos
+ 9002          FORMAT(6F10.6,80E16.8)                                       ! complex qdos
+             end if                                                         ! complex qdos
+                                                                          ! qdos
            ENDDO !IQ                                                      ! qdos
          ENDDO !IE                                                        ! qdos
-         end if !myrank_at==master
-       ENDIF      ! OPT('qdos    ')                                       ! qdos ruess
+         end if !myrank_at==master                                        ! qdos
+       ENDIF      ! OPT('qdos    ')                                       ! qdos
 #endif
        
 #ifdef CPP_MPI ! do communication only when compiled with MPI

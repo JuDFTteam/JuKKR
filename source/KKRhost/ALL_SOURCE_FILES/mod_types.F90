@@ -126,7 +126,7 @@ contains
 
    subroutine init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
    
-      use mod_mympi, only: myrank, master, nranks
+      use mod_mympi, only: nranks
    
       implicit none
    
@@ -200,7 +200,7 @@ contains
 
    subroutine init_t_cpa(t_inc,t_cpa,ntot2)
    
-      use mod_mympi, only: myrank, master, nranks
+      use mod_mympi, only: nranks
    
       implicit none
    
@@ -267,7 +267,7 @@ contains
    
    subroutine init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij_at)
 
-      use mod_mympi, only: myrank, master, nranks
+      use mod_mympi, only: nranks
 
       implicit none
 
@@ -308,7 +308,7 @@ contains
     !ruess: after myBcast_impcls from Pkkr_sidebranch2D_2014_12_16 by Bernd Zimmermann
 
     use mpi
-    use mod_mympi,   only: myrank, nranks, master
+    use mod_mympi,   only: master
     implicit none
 
     type(type_inc), intent(inout) :: t_inc
@@ -408,7 +408,7 @@ contains
    subroutine bcast_t_lly_1(t_lloyd)
 
     use mpi
-    use mod_mympi,   only: myrank, nranks, master
+    use mod_mympi,   only: master
     implicit none
 
     type(type_lloyd), intent(inout) :: t_lloyd
@@ -449,7 +449,7 @@ contains
 
    subroutine init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
    
-      use mod_mympi, only: myrank, master, nranks
+      use mod_mympi, only: nranks
    
       implicit none
    
@@ -614,7 +614,6 @@ contains
    subroutine gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, mympi_comm)
 
     use mpi
-    use mod_mympi,   only: myrank, master
     implicit none
 
     type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
@@ -657,7 +656,6 @@ contains
    subroutine gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_pT, ioff_pT, mytot, mympi_comm, nranks)
 
     use mpi
-    use mod_mympi,   only: myrank, master
     implicit none
 
     type(type_inc), intent(in) :: t_inc
@@ -725,7 +723,7 @@ contains
    subroutine gather_gmat(t_inc,t_tgmat,ntot_pT,ioff_pT,mytot)
 
     use mpi
-    use mod_mympi,   only: myrank, nranks, master
+    use mod_mympi,   only: nranks
     implicit none
 
     type(type_inc), intent(in) :: t_inc
@@ -736,7 +734,7 @@ contains
     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
     integer :: ierr
 
-    !Gather Pkk' so that all processors have the full matrix
+    !Gather gmat so that all processors have the full matrix
     ihelp      = t_inc%LMMAXD*t_inc%LMMAXD*t_inc%NQDOS!*t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
     if(t_mpi_c_grid%dims(1)>1) then
        recvcounts = ntot_pT*ihelp

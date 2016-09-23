@@ -2033,6 +2033,26 @@
       END IF
 ! ================================================================ LDA+U
 
+
+      IF(OPT('qdos    ')) THEN
+         allocate(t_params%qdos_atomselect(NATYP), stat=ier) !INTEGER
+         if(ier/=0) stop '[rinput13] Error alloc qdos_atomselect'
+
+         t_params%qdos_atomselect(1:NATYPD) = 1
+         !for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.
+!          CALL IoInput('qdosatoms       ',UIO,1,7,IER)
+!          IF (IER.EQ.0) THEN
+!            READ (UNIT=UIO,FMT=*) (t_params%qdos_atomselect(I),I=1,NATYP)
+!            WRITE(111,FMT='(A10,80I2)') 'qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
+!          ELSE
+!            WRITE(111,FMT='(A18,80I2)') 'Default qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
+!          ENDIF
+! 
+!          WRITE (1337,'(A)') 'atom selective writeout for qdos:'
+!          WRITE (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
+         
+      END IF
+
 ! ============================================================= WF_SAVE
       CALL IOInput('MEMWFSAVE       ',UIO,0,7,IER)
       IF (IER.EQ.0) THEN
@@ -2054,6 +2074,12 @@
          WRITE(1337,*) '< UNITMEMWFSAVE >, use default:', t_wavefunctions%maxmem_units, '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
          WRITE(111,*) 'Default UNITMEMWFSAVE= ',t_wavefunctions%maxmem_units, '(MB)'
       END IF
+      
+      !default flags: save only rll from main1a>tmatnewsolver since left solutions can be calculated always in main1c>rhovalnew and sll is not used
+      t_wavefunctions%save_rll     = .true.
+      t_wavefunctions%save_sll     = .false.
+      t_wavefunctions%save_rllleft = .false.
+      t_wavefunctions%save_sllleft = .false.
 ! ============================================================= WF_SAVE
 
 

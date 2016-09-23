@@ -206,7 +206,10 @@ c     wigner seitz radius , fermi energy and energy difference
 c     between electrostatic zero and muffin tin zero
 c
 c            READ (IFILE,FMT=9040) ZAT(IH),RWS(IH),EFNEW,VBC(ISPIN)
-            READ (IFILE,*) Z1,RWS(IH),EFNEW,VBC(ISPIN)
+            READ (IFILE,*) Z1
+            READ (IFILE,*) RWS(IH),EFNEW,VBC(ISPIN)
+            
+!             READ (IFILE,*) Z1,RWS(IH),EFNEW,VBC(ISPIN)
             IF (ZAT(IH).LT.0.D0) ZAT(IH) = Z1
             IF (Z1.NE.ZAT(IH).AND.ZAT(IH).GE.0.D0) THEN
                WRITE(*,*) 'Warning: For atom ',IH,

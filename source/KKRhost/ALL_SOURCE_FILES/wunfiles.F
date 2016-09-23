@@ -86,7 +86,8 @@
      &        HOSTIMP(:),ILM(:,:),IMAXSH(:),                             &
      &        NPAN_LOG(:),NPAN_EQ(:),                                    &
      &        NPAN_TOT(:),                                               &
-     &        IPAN_INTERVALL(:,:),NKCORE(:,:),KAPCORE(:,:)
+     &        IPAN_INTERVALL(:,:),NKCORE(:,:),KAPCORE(:,:),              &
+     &        qdos_atomselect(:)
       LOGICAL, allocatable :: SYMUNITARY(:),VACFLAG(:)
       CHARACTER*124, allocatable :: TXC(:)
       CHARACTER*8,  allocatable :: OPTC(:),TESTC(:)
@@ -608,8 +609,13 @@ C ======================================================================
      &t_params%NPAN_TOT(t_params%NATYPD),
      &t_params%IPAN_INTERVALL(0:t_params%NTOTD,t_params%NATYPD),
      &t_params%NKCORE(20,t_params%NATYPD),
-     &t_params%KAPCORE(20,t_params%NPOTD), stat=ierr) !INTEGER
+     &t_params%KAPCORE(20,t_params%NPOTD),stat=ierr) !INTEGER
       if(ierr/=0) stop '[init_t_params] Error allocating integers'
+      
+      if(.not. allocated(t_params%qdos_atomselect)) then
+         allocate(t_params%qdos_atomselect(t_params%NATYPD), stat=ierr) !INTEGER
+         if(ierr/=0) stop '[init_t_params] Error alloc qdos_atomselect'
+      end if
      
       ALLOCATE(t_params%SYMUNITARY(t_params%NSYMAXD), !LOGICALS
      &         t_params%VACFLAG(2), stat=ierr)
@@ -827,7 +833,7 @@ C ======================================================================
       subroutine bcast_t_params_arrays(t_params)
       ! broadcast arrays from t_params
       use mpi
-      use mod_mympi, only: master, myrank
+      use mod_mympi, only: master
       implicit none
       
       type(type_params), intent(inout) :: t_params
@@ -1116,6 +1122,8 @@ C ======================================================================
       call MPI_Bcast(t_params%NKCORE,(20*t_params%NATYPD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%KAPCORE,(20*t_params%NPOTD),
+     &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+      call MPI_Bcast(t_params%qdos_atomselect,(t_params%NATYPD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
 
       !LOGICAL
@@ -1538,7 +1546,6 @@ C     ..
      &       ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
       ! get relevant parameters from t_params
 !     ..
-      use mod_types, only: t_inc
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params 
       integer, intent(in)  :: IPAND,NATYPD,IRMD,NACLSD,NCLSD,NREFD,KREL,
@@ -1689,7 +1696,6 @@ C ------------------------------------------------------ cluster atoms
      &       RCLSIMP)
       ! get relevant parameters from t_params
 !     ..
-      use mod_types, only: t_inc
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params 
       integer, intent(in)  :: NATYPD,NACLSD,NCLSD,NREFD,KREL,
@@ -1901,7 +1907,6 @@ C
      &          IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
       ! get relevant parameters from t_params
 !     ..
-      use mod_types, only: t_inc
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params 
       integer, intent(in)  :: KREL,NAEZD,NATYPD,NCLEB,LM2D,NTOTD,NCHEBD,
@@ -2088,7 +2093,6 @@ C
      &     LINTERFACE,LRHOSYM,NGSHD,NAEZD,IRID,NSPOTD,IEMXD)
       ! get relevant parameters from t_params
 !     ..
-      use mod_types, only: t_inc
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params 
       

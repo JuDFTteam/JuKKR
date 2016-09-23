@@ -718,8 +718,10 @@ c ------------------------------------------------------------------------
 
  360     CONTINUE               ! IE = 1,IELAST
 #ifdef CPP_TIMING
-        call timing_stop('main1b - calctref13')
-        call timing_stop('main1b - kloopz')
+        if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
+        if(t_inc%i_time>0) call timing_pause('main1b_fourier')
+        if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+        if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
 #endif
 
          IF( NCPAFAIL .NE. 0 ) THEN
@@ -1018,8 +1020,10 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 
  460  CONTINUE                  ! IE=1,IELAST
 #ifdef CPP_TIMING
-        call timing_stop('main1b - calctref13')
-        call timing_stop('main1b - kloopz')
+        if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
+        if(t_inc%i_time>0) call timing_pause('main1b_fourier')
+        if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+        if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
 #endif
 
          IF( NCPAFAIL .NE. 0 ) THEN

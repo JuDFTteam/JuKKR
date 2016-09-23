@@ -21,7 +21,7 @@
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
      &                      get_ntot_pT_ioff_pT_2D 
 #endif
-      use mod_mympi, only: myrank, nranks, master
+      use mod_mympi, only: nranks, master
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks
