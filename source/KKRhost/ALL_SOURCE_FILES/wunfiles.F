@@ -337,6 +337,12 @@ C                                  meant for simpler passing of basic parameter 
       if(TEST('gmatfile')) t_tgmat%gmat_to_file = .true.
       if(TEST('greffile')) t_tgmat%gref_to_file = .true.
       if(TEST('projfile')) t_cpa%dmatproj_to_file = .true.
+      
+      
+      !bug bug bug bug bug
+      ! in case of ASA DIRAC solver (KREL==1) then gmat file has to be written out otherwise something is going wrong.
+      if(KREL>0) t_tgmat%gmat_to_file = .true.
+      !bug bug bug bug bug
 
       !some special run options:
       if(OPT('KKRFLEX '))  t_tgmat%tmat_to_file = .true.  ! for KKRFLEX option tmat must be written to file 

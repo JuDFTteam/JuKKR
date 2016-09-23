@@ -67,11 +67,11 @@ C     .. Local Arrays ..
 #ifdef CPP_MPI
 C     ..
 C     .. MPI ..
-      integer :: IE_START, IE_END
       integer :: ntot1, idim
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
       double complex, allocatable :: work(:,:,:)
 #endif
+      integer :: IE_START, IE_END
       integer :: i1_start, i1_end
       integer :: ie_num, ierr
 C     ..
