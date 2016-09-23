@@ -482,7 +482,7 @@ C
 C
             DO IR = 1,3
                DO L = 0,LMAXD
-                  write(1337,*) DF
+!                   write(1337,*) DF
                   MUORB(L,IR) = MUORB(L,IR) + DIMAG(DMUORB(L,IR)*DF)
                END DO
             END DO
