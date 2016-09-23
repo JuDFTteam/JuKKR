@@ -303,8 +303,8 @@ C
      +     char(48+ISPIN)//".dat")                                    ! complex qdos
          end if                                                       ! complex qdos
          call version_print_header(3031)                              ! complex qdos
-         WRITE (3031,'(A)') '#   lmax, natyp, nspin, nqdos, ielast:'  ! complex qdos
-         WRITE (3031,'(5I9)') lmax, natyp, nspin, nqdos, ielast       ! complex qdos
+         WRITE (3031,'(A)') '# lmax, natyp, nspin, nqdos, ielast:'    ! complex qdos
+         WRITE (3031,'(5I9)') lmaxd, natyp, nspin, nqdos, ielast      ! complex qdos
          WRITE (3031,'(7(A,3X))') '#   Re(E)','Im(E)',                ! complex qdos
      &                  'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! complex qdos
       ENDIF                                                           ! qdos
@@ -351,7 +351,7 @@ C        Read BZ path for qdos calculation:             ! qdos
 ! !$omp parallel do default(none)
 ! !$omp& private(eryd,ie,ir,irec,lm1,lm2)
 ! !$omp& private(jlk_index,tmatll,ith)
-! !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
+! !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmaxd)
 ! !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
 ! !$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
 ! !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
