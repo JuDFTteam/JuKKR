@@ -768,14 +768,16 @@ c    write qdos.nn.s.dat                                                  ! qdos
      +            char(48+mod(I1,10))//"."//char(48+2)//".dat")             ! complex qdos
                 end if                                                      ! complex qdos
                 call version_print_header(31)                               ! complex qdos
-                WRITE (31,*) ' '                                            ! complex qdos
-                WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! complex qdos
-                WRITE (31,'(7(A,3X))') '#   Re(E)','Im(E)',                 ! complex qdos
+                WRITE(31,*) ' '                                             ! complex qdos
+                WRITE(31,'(A)') '#   lmax, natyp, nspin, nqdos, ielast:'    ! complex qdos
+                WRITE(31,'(5I9)') lmax, natyp, nspin, nqdos, ielast         ! complex qdos
+                WRITE(31,'(7(A,3X))') '#   Re(E)','Im(E)',                  ! complex qdos
      &                        'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! complex qdos
                 if(NSPIN.gt.1) then                                         ! complex qdos
                   call version_print_header(32)                             ! complex qdos
-                  WRITE (32,*) ' '                                          ! complex qdos
-                  WRITE (32,8600) '# ISPIN=',2,' I1=',I1                    ! complex qdos
+                  WRITE(32,*) ' '                                           ! complex qdos
+                  WRITE(32,'(A)') '#   lmax, natyp, nspin, nqdos, ielast:'  ! complex qdos
+                  WRITE(32,'(5I9)') lmax, natyp, nspin, nqdos, ielast       ! complex qdos
                   WRITE(32,'(7(A,3X))') '#   Re(E)','Im(E)',                ! complex qdos
      &                        'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! complex qdos
                 end if                                                      ! complex qdos

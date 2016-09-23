@@ -659,6 +659,8 @@ C ================================================================ NATYP
      +     char(48+ISPIN)//".dat")                                       ! qdos
          end if                                                          ! qdos
          call version_print_header(31)                                   ! qdos
+         WRITE (31,'(7(A,3X))') '#   Re(E)','Im(E)',                     ! qdos
+     &                  'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'        ! qdos
                                                                          ! qdos 
          IPOT = (I1-1) * NSPINPOT + ISPIN                                ! qdos
                                                                          ! qdos
@@ -686,6 +688,10 @@ C ================================================================ NATYP
      +       char(48+ISPIN)//".dat")                                       ! complex qdos
            end if                                                          ! complex qdos
            call version_print_header(31)                                   ! complex qdos
+           WRITE (31,'(A)') '#   lmax, natyp, nspin, nqdos, ielast:'       ! complex qdos
+           WRITE (31,'(5I9)') lmax, natyp, nspin, nqdos, ielast            ! complex qdos
+           WRITE (31,'(7(A,3X))') '#   Re(E)','Im(E)',                     ! complex qdos
+     &                  'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'          ! complex qdos
                                                                            ! complex qdos 
            IPOT = (I1-1) * NSPINPOT + ISPIN                                ! complex qdos
                                                                            ! complex qdos
@@ -693,6 +699,7 @@ C ================================================================ NATYP
              DO IQ=1,NQDOS                                                 ! complex qdos
                DENTOT = DCMPLX(0.D0,0.D0)                                  ! complex qdos
                DO L = 0,LMAXD1                                             ! complex qdos
+                 DEN(L,IE,IQ,IPOT) = -2.0d0/pi*DEN(L,IE,IQ,IPOT)           ! complex qdos
                  DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)                       ! complex qdos
                ENDDO                                                       ! complex qdos
               WRITE(31,9002) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! complex qdos
@@ -707,7 +714,7 @@ C ================================================================ NATYP
        end if ! myrank_at==master                                        ! qdos
       ENDIF ! OPT('qdos    ')                                            ! qdos
  9000 FORMAT(5F10.6,40E16.8)                                             ! qdos
- 9002 FORMAT(6F10.6,80E16.8)                                             ! complex qdos
+ 9002 FORMAT(5F10.6,80E16.8)                                             ! complex qdos
  
       !reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
       NQDOS=1

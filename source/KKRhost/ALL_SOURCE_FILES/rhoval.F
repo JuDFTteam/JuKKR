@@ -138,7 +138,7 @@ C     .. Local Arrays ..
       DOUBLE COMPLEX ALPHA(0:LMAXD),AR(LMMAXD,LMMAXD),CR(LMMAXD,LMMAXD),
      +               DR(LMMAXD,LMMAXD),
      +               EKL(0:LMAXD),FZ(IRMD,0:LMAXD),
-!      +               GMATLL(LMMAXD,LMMAXD,IEMXD),
+     +               GMATLL(LMMAXD,LMMAXD,IEMXD),
      +               GMAT0(LMMAXD,LMMAXD),
      +               PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),PZ(IRMD,0:LMAXD),
      +               QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),QZ(IRMD,0:LMAXD),
@@ -281,12 +281,15 @@ C
      +     char(48+ISPIN)//".dat")                                    ! qdos
          end if                                                       ! qdos
          call version_print_header(31)                                ! qdos
+         WRITE (31,'(7(A,3X))') '#   Re(E)','Im(E)',                  ! qdos
+     &                  'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! qdos
       OPEN(30,                                                        ! lmdos
      +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//       ! lmdos
      +char(48+ISPIN)//".dat")                                         ! lmdos
       call version_print_header(31)                                   ! lmdos
       WRITE (30,*) ' '                                                ! lmdos
       WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1                      ! lmdos
+ 8600 FORMAT (a8,I3,a4,I5)                                            ! lmdos
       
       ! write out complex qdos for interpolation to the real axis     ! complex qdos
       if(test('compqdos')) then                                       ! complex qdos
@@ -299,9 +302,11 @@ C
      +     FILE="cqdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//  ! complex qdos
      +     char(48+ISPIN)//".dat")                                    ! complex qdos
          end if                                                       ! complex qdos
-         call version_print_header(31)                                ! complex qdos
-                                                                      ! qdos
- 8600 FORMAT (a8,I3,a4,I5)                                            ! lmdos
+         call version_print_header(3031)                              ! complex qdos
+         WRITE (3031,'(A)') '#   lmax, natyp, nspin, nqdos, ielast:'  ! complex qdos
+         WRITE (3031,'(5I9)') lmax, natyp, nspin, nqdos, ielast       ! complex qdos
+         WRITE (3031,'(7(A,3X))') '#   Re(E)','Im(E)',                ! complex qdos
+     &                  'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! complex qdos
       ENDIF                                                           ! qdos
 #endif
 
@@ -448,7 +453,7 @@ c Write out qdos:
  9000          FORMAT(5F10.6,40E16.8)                                     ! qdos
                ! writeout complex qdos for interpolation                  ! complex qdos
                if(test('compqdos')) then                                  ! complex qdos
-                  WRITE(31,9001) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),   ! complex qdos
+                 WRITE(3031,9001) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),  ! complex qdos
      &                           DENTOT,(DENLM(L,IE,IQ),L=1,LMMAXD)       ! complex qdos
                end if                                                     ! complex qdos
  9001          FORMAT(6F10.6,80E16.8)                                     ! qdos
@@ -488,18 +493,18 @@ C=======================================================================
 
             IQ = 1 ! reset IQ to zero, problem with qdos!!!
 
-             !!!! PROBLEM WITH ARRAY DIMENSIONS FOR VTREL ETC. !!!!
-#ifdef CPP_MPI
-             call MPI_FINALIZE(L)
-#endif
-             stop '[rhoval] ERROR array dimensions need to be checked!'
-!             CALL DRVRHO_QDOS(LDORHOEF,RHO2NS,R2NEF,DEN,DMUORB,RHOORB,
-!      &                  IE,ERYD,DF,LASTEZ,
-!      &                  GMATLL,VTREL,BTREL,RMREL,DRDIREL,
-!      &                  R2DRDIREL,ZREL,JWSREL,IRSHIFT,SOLVER,SOCTL,CTL,
-!      &                  QMTET,QMPHI,ITERMVDIR,MVEVIL,MVEVILEF,LMMAXD,
-!      &                  LMAXD,IRMD,LMPOTD,IEMXD,NMVECMAX,
-!      &                  I1,NQDOS)            ! qdos
+!              !!!! PROBLEM WITH ARRAY DIMENSIONS FOR VTREL ETC. !!!!
+! #ifdef CPP_MPI
+!              call MPI_FINALIZE(L)
+! #endif
+!              stop '[rhoval] ERROR array dimensions need to be checked!'
+            CALL DRVRHO_QDOS(LDORHOEF,RHO2NS,R2NEF,DEN,DMUORB,RHOORB,
+     &                  IE,ERYD,DF,LASTEZ,
+     &                  GMATLL,VTREL,BTREL,RMREL,DRDIREL,
+     &                  R2DRDIREL,ZREL,JWSREL,IRSHIFT,SOLVER,SOCTL,CTL,
+     &                  QMTET,QMPHI,ITERMVDIR,MVEVIL,MVEVILEF,LMMAXD,
+     &                  LMAXD,IRMD,LMPOTD,IEMXD,NMVECMAX,
+     &                  I1,NQDOS)            ! qdos
      
 C
             DO L = 0,LMAXD1
