@@ -619,7 +619,8 @@ C ----------------------------------------------------------------------
       END DO
 C ================================================================ NATYP
 #ifdef CPP_TIMING
-      if(ie_end>=ie_start) call timing_stop('main1c - rhoval')
+      call timing_stop('main1c - rhoval')
+!       if(ie_end>=ie_start) call timing_stop('main1c - rhoval')
 #endif
       CLOSE (69) !gmat file
 #ifndef CPP_MPI   
