@@ -43,14 +43,10 @@ C     ..
         END DO
       END DO
       DO I1 = 1,NATYP
-        REWIND 47
-        IF (I1.LT.10) WRITE (47,FMT='(A8,I1)') DOSFL0,I1
-        IF (I1.GE.10 .AND. I1.LT.100) WRITE (47,FMT='(A8,I2)') DOSFL0,
-     +      I1
-        IF (I1.GE.100) WRITE (47,FMT='(A8,I3)') DOSFL0,I1
-        REWIND 47
-        READ (47,FMT='(A11)') DOSFL
-        OPEN (48,FILE=DOSFL,FORM='formatted')
+        IF (I1<10) WRITE (dosfl,FMT='(A8,I1)') DOSFL0,I1
+        IF (I1>=10 .AND. I1<100) WRITE (dosfl,FMT='(A8,I2)') DOSFL0,I1
+        IF (I1>=100) WRITE (dosfl,FMT='(A8,I3)') DOSFL0,I1
+        OPEN (48,FILE=trim(DOSFL),FORM='formatted')
         call version_print_header(48)
         DO ISPIN = 1,NSPINPOT
             IPOT = NSPINPOT * (I1-1) + ISPIN
