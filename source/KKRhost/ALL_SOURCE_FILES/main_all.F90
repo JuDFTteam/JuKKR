@@ -315,9 +315,31 @@ end if
 
 ! deallocate arrays from t_wavefunctions
 if(t_wavefunctions%Nwfsavemax>0) then
- deallocate(t_wavefunctions%isave_wavefun, t_wavefunctions%rll, t_wavefunctions%rllleft, t_wavefunctions%sll, t_wavefunctions%sllleft, stat=ierr)
- if(ierr/=0) stop '[main_all] Error deallocating arrays from t_wavefunctions'
-end if
+
+ deallocate(t_wavefunctions%isave_wavefun, stat=ierr)
+ 
+ if(ierr/=0) stop '[main_all] Error deallocating arrays 1 from t_wavefunctions'
+ if(t_wavefunctions%save_rll) then
+   deallocate(t_wavefunctions%rll, stat=ierr)
+   if(ierr/=0) stop '[main_all] Error deallocating arrays 2 from t_wavefunctions'
+ endif
+ 
+ if(t_wavefunctions%save_sll) then
+   deallocate(t_wavefunctions%sll, stat=ierr)
+   if(ierr/=0) stop '[main_all] Error deallocating arrays 3 from t_wavefunctions'
+ endif
+ 
+ if(t_wavefunctions%save_rllleft) then
+   deallocate(t_wavefunctions%rllleft, stat=ierr)
+   if(ierr/=0) stop '[main_all] Error deallocating arrays 4 from t_wavefunctions'
+ endif
+ 
+ if(t_wavefunctions%save_sllleft) then
+   deallocate(t_wavefunctions%sllleft, stat=ierr)
+   if(ierr/=0) stop '[main_all] Error deallocating arrays 5 from t_wavefunctions'
+ endif
+ 
+end if !(t_wavefunctions%Nwfsavemax>0)
 
 #ifdef CPP_MPI
 ! deallocate arrays for MPIadapt

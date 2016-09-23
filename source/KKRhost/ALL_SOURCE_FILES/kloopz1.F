@@ -15,7 +15,6 @@ c 13.10.95 *************************************************************
      &                   DTREFLL,DTMATLL,DGINP,LLY_GRTR,TRACET,LLY)! LLY Lloyd
 c **********************************************************************
       use mod_types, only: t_inc
-      use mod_mympi, only: myrank, master
       IMPLICIT NONE
 C     .. Parameters ..
       include 'inc.p'

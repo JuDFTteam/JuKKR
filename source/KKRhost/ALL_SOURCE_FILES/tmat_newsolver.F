@@ -84,9 +84,9 @@
 #endif
       integer :: ie_end, ie_num, ie_start, ierr
 !       character(len=80) :: filename
-      ! test option
-      logical :: test
-      external :: test
+      ! test and run options
+      logical :: test, opt
+      external :: test, opt
 
 #ifdef CPP_OMP
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
@@ -103,7 +103,7 @@
 
        IRMDNEW= NPAN_TOT*(NCHEB+1)
        ALLOCATE(VINS(IRMDNEW,LMPOTD,NSPIN), stat=ierr)
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating VINS'
+       if(ierr/=0) stop '[tmat_newsolver] Error allocating VINS'
        VINS=0d0
        DO LM1=1,LMPOTD
         DO IR=1,IRMDNEW
@@ -117,10 +117,9 @@ cc set up the non-spherical ll' matrix for potential VLL'
        ELSEIF (NSRA.EQ.1) THEN
         USE_SRATRICK=0
        ENDIF
-       ALLOCATE(VNSPLL0(LMMAXSO,LMMAXSO,IRMDNEW), stat=ierr)
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating vnspll0'
-       ALLOCATE(VNSPLL1(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating vnspll1'
+       ALLOCATE(VNSPLL0(LMMAXSO,LMMAXSO,IRMDNEW),
+     &          VNSPLL1(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tmat_newsolver] Error allocating vnspll0/1'
        VNSPLL0=CZERO
        CALL VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,
      +                    CLEB,ICLEB,IEND,NSPIN,ZAT,RNEW,USE_SRATRICK)
@@ -144,30 +143,43 @@ cc set up the non-spherical ll' matrix for potential VLL'
 ! LDAU
 
 c initial allocate
+       ! potential array
        IF (NSRA.EQ.2) THEN
         ALLOCATE(VNSPLL(2*LMMAXSO,2*LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
        ELSE
         ALLOCATE(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
        ENDIF
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating vnspll'
-       ALLOCATE(HLK(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating hlk'
-       ALLOCATE(JLK(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating jlk'
-       ALLOCATE(HLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating hlk2'
-       ALLOCATE(JLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating jlk2'
+       if(ierr/=0) stop '[tmat_newsolver] Error allocating vnspll'
+       
+       ! source terms (bessel and hankel functions)
+       ALLOCATE(HLK(1:4*(LMAX+1),IRMDNEW,0:nth-1),
+     &          JLK(1:4*(LMAX+1),IRMDNEW,0:nth-1),
+     &          HLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1),
+     &          JLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tmat_newsolver] Error allocating hlk etc.'
+       
+       ! spherical part of tmatrix (used with SRATRICK)
        ALLOCATE(TMATSPH(2*(LMAX+1),0:nth-1), stat=ierr)
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating tmatsph'
-       ALLOCATE(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating rll'
-       ALLOCATE(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating sll'
-       ALLOCATE(RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=ierr) !maybe left solutions need to be calculated,
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating rllleft'
-       ALLOCATE(SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=ierr) ! to be derermined below. Allocate them here
-       if(ierr/=0) stop '[tnat_newsolver] Error allocating sllleft'      ! in any case.
+       if(ierr/=0) stop '[tmat_newsolver] Error allocating tmatsph'
+       
+       !regular and irregular wavefunctions
+       ALLOCATE(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),
+     &          SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1), stat=ierr)
+       if(ierr/=0) stop '[tmat_newsolver] Error allocating rll/sll'
+       
+       !left regular and irregular wavefunctions (used here only in case of XCPL or saving of left wavefunctions)
+       if( opt('XCPL    ') .or. (t_wavefunctions%save_rllleft
+     &                         .or.t_wavefunctions%save_sllleft) ) then
+          ALLOCATE(RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),
+     &             SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),
+     &             stat=ierr)
+          if(ierr/=0) stop '[tmat_newsolver] Error allocating r/sllleft'
+       else
+          ALLOCATE(RLLLEFT(1,1,1,0:nth-1), SLLLEFT(1,1,1,0:nth-1),
+     &             stat=ierr)
+          if(ierr/=0) stop 
+     &            '[tmat_newsolver] Error allocating r/sllleft dummies'
+       end if ! ( opt('XCPL    ') .or. ... )
           
 c energy loop
        if(myrank==master.and.(t_inc%i_write>0)) 
@@ -401,7 +413,10 @@ c add spherical contribution of tmatrix
 
 ! Calculate additional t-matrices for Jij-tensor calculation
         if(t_dtmatJij_at%calculate .or.
-     &     t_wavefunctions%isave_wavefun(i1, ie)>0) then
+     &     ( t_wavefunctions%isave_wavefun(i1, ie)>0 .and. 
+     &      (t_wavefunctions%save_rllleft .or.
+     &       t_wavefunctions%save_rllleft) )
+     &     ) then
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        this needs to be done for the calculation of t-matrices for Jij tensor or if wavefunctions should be saved
@@ -503,15 +518,15 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 !        write(*,*) allocated(t_dtmatJij_at%dtmat_xyz),
 !    +              shape(t_dtmatJij_at%dtmat_xyz)
 
-
-         ! save_wavefuncions         
-         if(t_wavefunctions%Nwfsavemax>0) then
-            ! here all four (left, right, regular and irregular) are stored, the memory demand cound be reduced by a factor 2 if only the right solution would be computed here and saved and the left solution would be calculated later in main1c
-            call save_wavefunc(t_wavefunctions, rll, rllleft, 
-     &          sll, sllleft, i1, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth)
-         end if
-         
         end if!t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
+        
+        
+        ! save_wavefuncions         
+        if(t_wavefunctions%Nwfsavemax>0) then
+          ! here all four (left, right, regular and irregular) are stored, the memory demand cound be reduced by a factor 2 if only the right solution would be computed here and saved and the left solution would be calculated later in main1c
+          call save_wavefunc(t_wavefunctions, rll, rllleft, 
+     &          sll, sllleft, i1, ie, NSRA, LMMAXSO, IRMDNEW, ith)
+        end if
         
         if(t_dtmatJij_at%calculate) then
          call calc_dtmatJij(LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,

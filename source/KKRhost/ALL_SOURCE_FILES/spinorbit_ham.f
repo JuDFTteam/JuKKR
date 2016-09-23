@@ -4,7 +4,6 @@
      +                  NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,VNSPLL,VNSPLL1,
      &                  MODE)
 
-      use mod_mympi, only: myrank, master
       IMPLICIT NONE 
 
       INTEGER LMAX,LMMAXD,NSPIN,NPAN_TOT,NCHEB,IRMDNEW,NRMAXD

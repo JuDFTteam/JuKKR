@@ -11,6 +11,7 @@ implicit none
       
       ! allocatable arrays
       integer, allocatable :: isave_wavefun(:,:)    ! 0 if (iat_myrank, ie_myrank) pair is not saved, 1...Nwfsavemax otherwise, for first, second, ... Nwfsavemax-th saved wavefunction on this rank; (Nat_myrank, Ne_myrank)
+      logical :: save_rll, save_sll, save_rllleft, save_sllleft ! logicals that say which wavefunctions are stored (used to reduce amount of memory that is used
       double complex, allocatable :: rll(:,:,:,:,:)     ! regular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
       double complex, allocatable :: rllleft(:,:,:,:,:) ! regular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
       double complex, allocatable :: sll(:,:,:,:,:)     ! iregular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
@@ -30,20 +31,22 @@ contains
 #ifdef CPP_OMP
       use omp_lib
 #endif
-      use mod_mympi, only: myrank, master, nranks
+      use mod_mympi, only: myrank, master
       use mod_types, only: t_inc, t_mpi_c_grid
       
       implicit none
    
       type(type_wavefunctions), intent(inout) :: t_wavefunctions
       
-      integer :: nth, nat, ne, ierr, i, ie, iat, maxpos(1), Nwfsave_count, nat_myrank, ne_myrank, ioff_at, ioff_ie
+      integer :: nth, nat, ne, ierr, i, ie, iat, maxpos(1), Nwfsave_count, nat_myrank, ne_myrank, ioff_at, ioff_ie, Nsave
       double precision :: delta_mem
       
       integer, allocatable :: kmesh_priority(:), my_kmesh(:)
       logical, allocatable :: mask(:)
       
       logical :: firstrun
+      
+      character(len=200) :: message
       
       
       !>>>>>>>  set some parameters  >>>>>>>!
@@ -80,16 +83,58 @@ contains
         
         
         !>>>>>>>  find numer of wavefunctions that can be stored and allocate store arrays  >>>>>>>!
-        ! memory demand for one atom and one energy point in Mbyte
+        ! memory demand for one atom and one energy point in Mbyte        
         delta_mem = dfloat(t_inc%NSRA*t_inc%LMMAXSO * t_inc%LMMAXSO * t_inc%IRMDNEW * nth * 16) / (1024.0d0**2)
+        
+        !number of wavefunction (rll, sll, rllleft, sllleft) that are needed to be stored
+        Nsave = 0
+        if(t_wavefunctions%save_rll    ) Nsave = Nsave+1
+        if(t_wavefunctions%save_sll    ) Nsave = Nsave+1
+        if(t_wavefunctions%save_rllleft) Nsave = Nsave+1
+        if(t_wavefunctions%save_sllleft) Nsave = Nsave+1
+        
+        delta_mem = delta_mem * Nsave
+        ! avoid division by zero
+        if(delta_mem<1.0d0) delta_mem = 1.0d0
+        
         ! find numer of wavefunctions that can be stored
-        t_wavefunctions%Nwfsavemax = t_wavefunctions%maxmem_number * 1024**(t_wavefunctions%maxmem_units-2) / dint( 4*delta_mem )
+        t_wavefunctions%Nwfsavemax = t_wavefunctions%maxmem_number * 1024**(t_wavefunctions%maxmem_units-2) / dint(delta_mem)
+        if(Nsave==0) then
+           write(1337, '(A)') '[find_isave_wavefun] Warning: Nsave is zero!!!'
+           write(1337, '(A)') 'reset Nwfsavemax to 0'
+           t_wavefunctions%Nwfsavemax=0
+        end if
+        
         if(myrank==master) then
-           write(1337,"(A,/A,F15.2,A,/A,I11,/A,I11,A,I11,A)") '   ==> find_isave_wavefun ', &
-           &'   (maxmem given for storage:',dfloat((1024**(t_wavefunctions%maxmem_units-2))*t_wavefunctions%maxmem_number), 'MB', &
-           &'    number of wavefunctions (factor 4 for rll, sll left and right already in) that fit in:',t_wavefunctions%Nwfsavemax, &
-           &'    Ne=',ne,', Nat=',nat,''
-           write(1337,'(A,F15.2,A)') '    memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:', delta_mem, 'MB)  <=='
+        
+           write(message,"(A)") '   ==> find_isave_wavefun '
+           write(1337, '(A)') trim(message)
+           if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
+           write(message,"(A,F15.2,A)") '   (maxmem given for storage:',dfloat((1024**(t_wavefunctions%maxmem_units-2))*t_wavefunctions%maxmem_number), 'MB'
+           write(1337, '(A)') trim(message)
+           if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
+           write(message,"(A,I11)") '    number of wavefunctions that fit in:',t_wavefunctions%Nwfsavemax
+           write(1337, '(A)') trim(message)
+           if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
+           write(message,"(A,I11,A,I11,A)") '    Ne=',ne,', Nat=',nat,''
+           write(1337, '(A)') trim(message)
+           if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
+           
+!            write(message,"(A,/A,F15.2,A,/A,I11,/A,I11,A,I11,A)") '   ==> find_isave_wavefun ', &
+!            &'   (maxmem given for storage:',dfloat((1024**(t_wavefunctions%maxmem_units-2))*t_wavefunctions%maxmem_number), 'MB', &
+!            &'    number of wavefunctions that fit in:',t_wavefunctions%Nwfsavemax, &
+!            &'    Ne=',ne,', Nat=',nat,''
+!            write(1337, '(A)') trim(message)
+!            write(*, '(A)') trim(message)
+           
+           write(message,'(A,F15.2,A)') '    memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:', delta_mem, 'MB)  <=='
+           write(1337, '(A)') trim(message)
+           write(*, '(A)') trim(message)
+           
+           write(message,'(A,I3,4(A,L))') '    Number of saved wavefunctions per atom and energy:',Nsave,'; save rll:',t_wavefunctions%save_rll,'; save sll:',t_wavefunctions%save_sll,'; save rllleft:',t_wavefunctions%save_rllleft,'; save sllleft:',t_wavefunctions%save_sllleft
+           write(1337, '(A)') trim(message)
+           write(*, '(A)') trim(message)
+           
         end if
         
         ! avoid unnessesary large allocations of arrays
@@ -101,14 +146,22 @@ contains
         
         if(t_wavefunctions%Nwfsavemax>0) then
            ! allocate store arrays int t_wavefunctions
-           allocate(t_wavefunctions%rll(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
-           if(ierr/=0) stop '[find_isave_wavefun] Error allocating rll'
-           allocate(t_wavefunctions%rllleft(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
-           if(ierr/=0) stop '[find_isave_wavefun] Error allocating rllleft'
-           allocate(t_wavefunctions%sll(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
-           if(ierr/=0) stop '[find_isave_wavefun] Error allocating sll'
-           allocate(t_wavefunctions%sllleft(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
-           if(ierr/=0) stop '[find_isave_wavefun] Error allocating sllleft'
+           if(t_wavefunctions%save_rll) then
+             allocate(t_wavefunctions%rll(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
+           end if
+           if(t_wavefunctions%save_sll) then
+             if(ierr/=0) stop '[find_isave_wavefun] Error allocating rll'
+             allocate(t_wavefunctions%rllleft(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
+             if(ierr/=0) stop '[find_isave_wavefun] Error allocating rllleft'
+           end if
+           if(t_wavefunctions%save_rllleft) then
+             allocate(t_wavefunctions%sll(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
+             if(ierr/=0) stop '[find_isave_wavefun] Error allocating sll'
+           end if
+           if(t_wavefunctions%save_sllleft) then
+             allocate(t_wavefunctions%sllleft(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
+             if(ierr/=0) stop '[find_isave_wavefun] Error allocating sllleft'
+           end if
         end if
         !<<<<<<<  find numer of wavefunctions that can be stored and allocate store arrays  <<<<<<<!
 
@@ -172,52 +225,90 @@ contains
    
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    
-   subroutine save_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, iat, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth)
+   subroutine save_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, iat, ie, NSRA, LMMAXSO, IRMDNEW, ith)
       !saves wavefunction of atom iat and energypoint ie if enough memory is given
 
-      use mod_mympi, only: myrank
       implicit none
       type(type_wavefunctions), intent(inout) :: t_wavefunctions
-      integer, intent(in) :: iat, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth
-      double complex, intent(in) :: rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), sllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1))
+      integer, intent(in) :: iat, ie, NSRA, LMMAXSO, IRMDNEW, ith
+      double complex, intent(in) :: rll(:,:,:,0:), rllleft(:,:,:,0:), sll(:,:,:,0:), sllleft(:,:,:,0:)
       
       integer :: isave
       
       isave = t_wavefunctions%isave_wavefun(iat, ie)
       
       if(isave>0) then
-         t_wavefunctions%rll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
-         t_wavefunctions%rllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
-         t_wavefunctions%sll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
-         t_wavefunctions%sllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = sllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
+         
+         if(t_wavefunctions%save_rll    ) then
+!             write(*,*) 'write out rll', ie, iat
+            t_wavefunctions%rll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
+         endif
+         
+         if(t_wavefunctions%save_rllleft) then
+!             write(*,*) 'write out rllleft', ie, iat
+            t_wavefunctions%rllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
+         endif
+         
+         if(t_wavefunctions%save_sll    ) then
+!             write(*,*) 'write out sll', ie, iat
+            t_wavefunctions%sll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
+         endif
+         
+         if(t_wavefunctions%save_sllleft) then
+!             write(*,*) 'write out sllleft', ie, iat
+            t_wavefunctions%sllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = sllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
+         endif
+         
       end if
 
    end subroutine save_wavefunc
    
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    
-   subroutine read_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, iat, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth, read_in)
+   subroutine read_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, iat, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth, read_in_rll, read_in_sll, read_in_rllleft, read_in_sllleft)
       !reads wavefunction of atom iat and energypoint ie if it was stored
    
-      use mod_mympi, only: myrank
       implicit none
       type(type_wavefunctions), intent(inout) :: t_wavefunctions
       integer, intent(in) :: iat, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth
       double complex, intent(out) :: rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), sllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1))
-      logical, intent(out) :: read_in ! true or false, if wavefunction of this (iat,ie) pair was read in or not, respectively
+      logical, intent(out) :: read_in_rll, read_in_sll, read_in_rllleft, read_in_sllleft ! true or false, if wavefunction of this (iat,ie) pair was read in or not, respectively
       
       integer :: isave
       
       isave = t_wavefunctions%isave_wavefun(iat, ie)
       
+      read_in_rll     = .false.
+      read_in_sll     = .false.
+      read_in_rllleft = .false.
+      read_in_sllleft = .false.
+      
       if(isave>0) then
-         rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%rll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
-         rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%rllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
-         sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%sll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
-         sllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%sllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
-         read_in = .true.
-      else
-         read_in = .false.
+         
+         if(t_wavefunctions%save_rll    ) then
+!            write(*,*) 'read in rll', ie, iat
+           rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%rll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
+           read_in_rll     = .true.
+         endif
+         
+         if(t_wavefunctions%save_rllleft) then
+!            write(*,*) 'read in rllleft', ie, iat
+           rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%rllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
+           read_in_rllleft = .true.
+         endif
+         
+         if(t_wavefunctions%save_sll    ) then
+!            write(*,*) 'read in sll', ie, iat
+           sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%sll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
+           read_in_sll     = .true.
+         endif
+         
+         if(t_wavefunctions%save_sllleft) then
+!            write(*,*) 'read in sllleft', ie, iat
+           sllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%sllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
+           read_in_sllleft = .true.
+         endif
+         
       end if
 
 
@@ -229,7 +320,6 @@ contains
    subroutine bcast_params_savewf(t_wavefunctions)
       !broadcast parameters for memory demand from master to all other ranks
       use mpi
-      use mod_mympi, only: myrank
       implicit none
       
       type(type_wavefunctions), intent(inout) :: t_wavefunctions
@@ -239,6 +329,14 @@ contains
       if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting maxmem_number'
       call MPI_Bcast(t_wavefunctions%maxmem_units, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
       if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting maxmem_units'
+      call MPI_Bcast(t_wavefunctions%save_rll, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting save_rll'
+      call MPI_Bcast(t_wavefunctions%save_sll, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting save_sll'
+      call MPI_Bcast(t_wavefunctions%save_rllleft, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting save_rllleft'
+      call MPI_Bcast(t_wavefunctions%save_sllleft, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting save_sllleft'
             
    end subroutine bcast_params_savewf
 #endif
