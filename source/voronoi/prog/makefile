@@ -10,6 +10,7 @@
 # make serial    -    like make without deleting all preciously compiled files (clean)
 # make debug     -    compile with debug flags
 # make rwth      -    compile on RWTH cluste
+# make jureca    -    compile on JURECA supercomputer
 # make clean     -    removes all *.o files
 #
 default: install
@@ -27,6 +28,7 @@ COMPVER ='serial'
 # change default if compile option is hit
 debug: COMPVER ='debug'
 rwth: COMPVER ='rwth'
+jureca: COMPVER ='jureca'
 
 
 ####################################################
@@ -78,6 +80,7 @@ ${newsubs}:	inc.geometry
 LIBS=-L../ -lblas
 # RWTH cluster:
 rwth: LIBS= -mkl
+jureca: LIBS= -mkl
 
 # standard compile flags
 FFLAGS=-O2 -r8 -traceback -i8 #-heap-arrays -mcmodel=large
@@ -95,6 +98,7 @@ debug: FFLAGS=-v -O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -
 .PHONY: compile
 .PHONY: debug
 .PHONY: rwth
+.PHONY: jureca
 .PHONY: serial
 .PHONY: install
 
@@ -120,5 +124,6 @@ serial: compile
 debug: compile
 rwth: compile
 install: clean serial
+jureca: compile
 
 
