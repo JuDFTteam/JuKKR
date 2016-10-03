@@ -1,6 +1,6 @@
 c number of different atoms in unitcell
       integer natypd
-      parameter (NATYPD =26)
+      parameter (NATYPD =24)
 c number of atoms in unitcell
       integer naezd
       parameter (NAEZD =NATYPD)
@@ -9,15 +9,15 @@ c highest valence orbital quantum number
       parameter (LMAXD = 2)
 c maximum number of reference potentials
       integer nrefd
-      parameter (NREFD = 1)
+      parameter (NREFD = 4)
 c number of spin directions (nspind= 1 non-spin-polarized
 c                                    2  spin-polarized    )
       integer NSPIND
-      parameter (NSPIND = 1)
+      parameter (NSPIND = 2)
 c spin-orbit coupling yes/no  (nspo= 1 no spin-orbit coupl
 c                                    2 with spin-orbit coupl)
       integer NSPOD
-      parameter (NSPOD = 0)
+      parameter (NSPOD = 2)
 c combined parameter for SOC and NSPIND 
       integer NSPD                   
       parameter (NSPD=MAX(NSPOD,NSPIND))

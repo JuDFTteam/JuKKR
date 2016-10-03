@@ -371,7 +371,7 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   ! find mu_orig
   ilayer = 0
   irun = 1
-  do while(irun==1)
+  do while(irun==1 .and. ilayer<t_rhoq%natyp)
     ilayer = ilayer+1
     if(dsqrt(sum(r_basis(:,ilayer)**2))<eps) irun = 0
   end do
@@ -1544,9 +1544,11 @@ program test
   
   open(9999, file='wavefunctions.txt')
   read(9999,'(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
-  !write(*,*) ntotd, npan_tot, ncheb, nsra, irmdnew, lmmaxso
+  write(*,*) ntotd, npan_tot, ncheb, nsra, irmdnew, lmmaxso
   allocate( rnew(irmdnew) )
-  read(9999,'(1000E26.17)') rnew
+!   read(9999,'(1000E26.17)') rnew
+!   read(9999,*) rnew(1:irmdnew)
+         read(9999,'(1000E26.17)') rnew(1:irmdnew)
   
   allocate( trq_of_r(lmmaxso,lmmaxso, 725, irmdnew) )
 
