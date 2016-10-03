@@ -16,7 +16,7 @@ C     .. Scalar Arguments ..
       INTEGER IJD,LMAX,LMMAXD
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION DX1,DX2,DX3,F0,PI,R,R1,R2,R3
+      DOUBLE PRECISION PI,R,R1,R2,R3
       INTEGER IJ,LM1
 C     ..
 C     .. External Subroutines ..
@@ -32,8 +32,7 @@ C     .. Array Arguments ..
 C     ..
 C     .. Local Arrays ..
 C
-      DOUBLE PRECISION COSFI(IJD),COSX(IJD),FAI(IJD),ND(3,3),SINFI(IJD),
-     +                 WGHT,Y(1000)
+      DOUBLE PRECISION WGHT,Y(1000)
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ABS,ACOS,ATAN,COS,SIN,SQRT
@@ -190,7 +189,7 @@ c Inside:
       real*8 tiny
       parameter(tiny=1.d-20)  ! if th < tiny set th=0
       real*8 tt,aa,cd  ! factors in calcul. of Ylm
-      integer ll,mm,ii,jj   ! l and m indexes
+      integer ll,mm,ii   ! l and m indexes
       integer lmmax      ! (lmax+1)**2, total number of spher. harmonics.
       integer imm,ipm,lpm,lmm,lpmp1,lmmp1 ! i-m,i+m,l+m,l-m,l+m+1,l-m-1
 

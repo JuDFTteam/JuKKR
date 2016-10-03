@@ -12,7 +12,6 @@ integer                         :: mode
 double complex   :: Umat(2*lmmax,2*lmmax)
 double complex   :: Udeggamat(2*lmmax,2*lmmax)
 double complex   :: mattemp(2*lmmax,2*lmmax)
-double precision :: matmat_zmzm
 
 !***********************************************************************
 ! create the rotation matrix:
@@ -60,8 +59,6 @@ integer          :: nrmaxd,lmpotd,nrmax
 double precision :: theta,phi
 double precision :: theta_old,phi_old
 !local
-double precision :: dcostheta2,dsintheta2
-double complex   :: im,cimphi,imphi
 integer          :: ir,ilm
 double complex   :: W1(2,2),W2(2,2)
 double complex   :: W1_11W2_11, W1_11W2_22, W1_11W2_12, W1_11W2_21
@@ -145,14 +142,11 @@ double complex                  :: Umat1     (2*lmmax,2*lmmax)
 double complex                  :: Udeggamat1(2*lmmax,2*lmmax)
 double complex                  :: Umat2     (2*lmmax,2*lmmax)
 double complex                  :: Udeggamat2(2*lmmax,2*lmmax)
-double precision                :: matmat_zmzm
 
 call create_Umatrix(theta_old,phi_old,lmmax,Umat1,Udeggamat1)
 
 call create_Umatrix(theta,phi,lmmax,Umat2,Udeggamat2)
 
-!Wmat1 = matmat_zmzm(Udeggamat2,Umat1)
-!Wmat2 = matmat_zmzm(Udeggamat1,Umat2)
   call zgemm('N','N',2*lmmax,2*lmmax,2*lmmax,(1d0,0d0),Udeggamat2,2*lmmax,Umat1,2*lmmax,(0d0,0d0),Wmat1,2*lmmax)
   call zgemm('N','N',2*lmmax,2*lmmax,2*lmmax,(1d0,0d0),Udeggamat1,2*lmmax,Umat2,2*lmmax,(0d0,0d0),Wmat2,2*lmmax)
 

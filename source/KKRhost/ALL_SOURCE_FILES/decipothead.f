@@ -9,6 +9,7 @@ C * checking for consistencies with the actual 2D system               *
 C *                                        v.popescu - munich, Dec 04  *
 C *                                                                    *
 C **********************************************************************
+      use mod_version_info
       IMPLICIT NONE
 C     ..
 C     .. Arguments
@@ -26,6 +27,7 @@ C     .. Locals
 C ----------------------------------------------------------------------
       IF (.NOT.(FILEHOST(1:7).EQ.'vacuum')) THEN
          OPEN (36+IHOST,FILE=FILEHOST,STATUS='OLD',IOSTAT=IOS)
+         call version_check_header(36+IHOST)
 C ......................................................................
          IF ( IOS.GT.0 ) THEN
             WRITE (6,'(/,5X,2A)') 'ERROR: Can not open host file ',

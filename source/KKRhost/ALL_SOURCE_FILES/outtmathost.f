@@ -6,6 +6,7 @@ C *                                                                    *
 C *  Writes out the header of the t-matrices decimation file           *
 C *                                                                    *
 C **********************************************************************
+      use mod_version_info
       IMPLICIT NONE
 C     ..
 C     .. Arguments ..
@@ -19,6 +20,7 @@ C ----------------------------------------------------------------------
       WRITE(1337,'(5X,A,/)')
      &                 '< DECIOPT > : writing header of decimation file'
       OPEN (37,FILE='decifile',STATUS='unknown')
+      call version_print_header(37)
       WRITE (37,FMT=*) 'INVERSE T-MATRIX AND CMOMS'
       WRITE (37,FMT=99001)
       WRITE (37,FMT=99002) ALAT,NSPIN,NAEZ,LMMAX,INS,KREL,KMROT

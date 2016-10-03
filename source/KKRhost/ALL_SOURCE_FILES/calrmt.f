@@ -71,9 +71,9 @@ c-----
 
 
  9000 FORMAT (1x,'potentials need more meshpoints',/,50 ('*'))
- 9010 FORMAT (' rmesh  z=',f5.2,'  a=',f6.4,'  b=',f8.6,'  rnuc=',f10.8,
-     +       '  r(2)=',f10.8,/,' r(',i3,')=',f6.4,'   drdi(1)=',f10.8,
-     +       '   drdi(irws)=',f8.6)
+ 9010 FORMAT (' rmesh  z=',f5.2,'  a=',f7.4,'  b=',f9.6,'  rnuc=',f11.8,
+     +       '  r(2)=',f11.8,/,' r(',i3,')=',f7.4,'   drdi(1)=',f11.8,
+     +       '   drdi(irws)=',f9.6)
  9020 FORMAT (' irws=',i6,' imt=',i6,/,' rws=',f12.8,' rmt=',f12.8,
      +       ' rmtnew=',f12.8,' alat=',f12.8)
       END

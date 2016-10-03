@@ -1,7 +1,10 @@
       SUBROUTINE ERRORTRAP(ROUTINE,K,ISTOP)
-      PARAMETER (KMAX=14)
-      CHARACTER ROUTINE*(*)
-      CHARACTER*60 T(KMAX), TEXT
+      
+      IMPLICIT NONE
+      INTEGER, PARAMETER           :: KMAX=14
+      INTEGER, intent(in)          :: K, ISTOP
+      CHARACTER(len=*), intent(in) :: ROUTINE
+      CHARACTER(len=60)            :: T(KMAX), TEXT
 
       DATA T /
      & 'program KKRSCF called for TASK <> SCF    check input file   ',

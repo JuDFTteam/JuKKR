@@ -40,13 +40,15 @@
 #ifdef CPP_MPI
       use mpi
       
-      use mod_types, only: t_tgmat, t_lloyd,
-     &                      t_mpi_c_grid
+      use mod_types, only: t_mpi_c_grid
+      use mod_mympi, only: myrank, nranks, master,
+     &                     distribute_linear_on_tasks
+#else
+      use mod_mympi, only: myrank, nranks, master 
 #endif
       use mod_types, only: t_inc
-      use mod_mympi, only: myrank, nranks, master 
-#ifdef CPP_MPI
-     &                     ,distribute_linear_on_tasks
+#ifdef CPP_TIMING
+      use mod_timing
 #endif
       IMPLICIT NONE
 !     ..
@@ -99,7 +101,7 @@
       DOUBLE COMPLEX CARG,CITPI,CFCTOR
       DOUBLE PRECISION ZKTR
       INTEGER I,I1,ILM,ISYM,IU,J,JLM,IL1,KPT,LM,LM1,LM2,
-     +        NS,COUNTER1,COUNTER2,IL2,IL1T,IL2T,IS1,IS2,
+     +        NS,IL2,
      &        JL1,JL2
 !     ..
 !     .. Local arrays ..
@@ -137,12 +139,12 @@
 !     .. Intrinsic functions ..
       INTRINSIC ATAN,EXP
 !     ..
+#ifdef CPP_MPI
       DOUBLE COMPLEX WORK(LMMAXD,LMMAXD,NSYMAXD)
       INTEGER IERR,IWORK
-      
-      
       integer :: ix,jx, mu, irec, nscoef, imin, ie
       integer, allocatable :: iatomimp(:)
+#endif
 !     ..
 
 !      NDIM=LMGF0D*NAEZ
@@ -219,6 +221,8 @@
 ! MPI:     
       ntot1 = NOFKS
 
+      if(myrank==master) write(1337,*) 'kkrmat k loop:', NOFKS, 
+     &                          t_mpi_c_grid%nranks_ie
       call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
      &                 t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
      &                           master,ntot1,ntot_pT,ioff_pT,.true.)
@@ -275,6 +279,9 @@
          BZKPK(4:6) = 0.D0
 
          ! -> Fourier transformation
+#ifdef CPP_TIMING
+            if(t_inc%i_time>0) call timing_start('main1b_fourier')
+#endif
  
          RRM(1:3,1:NRD) = -RR(1:3,1:NRD)
  
@@ -332,7 +339,6 @@
 
                DO I2=1,ALMGF0
                   DO I1=1,ALMGF0
-!                      GLLKEN(I1,I2)=(GLLKEN(I1,I2))! + GLLKEM(I2,I1))*0.5D0  
                      GLLKEN(I1,I2)=(GLLKEN(I1,I2) + GLLKEM(I2,I1))*0.5D0  
                      IF (LLY.NE.0)  DGLLKEN(I1,I2) =                      ! LLY Lloyd
      &                     ( DGLLKEN(I1,I2) + DGLLKEM(I2,I1) )*0.5D0      ! LLY Lloyd
@@ -444,6 +450,9 @@
             !-----------------------------------------------------------------------
             ! ======================================================================
          END IF !  (KREL.EQ.0) 
+#ifdef CPP_TIMING
+            if(t_inc%i_time>0) call timing_pause('main1b_fourier')
+#endif
          ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
          IF (LLY.NE.0) GREFLLKE(1:ALM,1:ALM) = GLLKE(1:ALM,1:ALM) ! LLY Save k-dependent Gref
@@ -466,6 +475,9 @@
                ENDDO
             ENDDO
       
+#ifdef CPP_TIMING
+            if(t_inc%i_time>0) call timing_start('main1b_inversion')
+#endif
             !     --> Perform the inversion of matrix M
             !     the output is the scattering path operator TAU stored in GLLKE
             !     Actually -TAU, because TAU = (Deltat^-1 - Gref)^-1
@@ -474,6 +486,9 @@
             ELSE
             CALL INVERSION(GLLKE,INVMOD,ICHECK)
             ENDIF
+#ifdef CPP_TIMING
+            if(t_inc%i_time>0) call timing_pause('main1b_inversion')
+#endif
             ! ----------------------------------------------------------
             ! LLY Lloyd ----------------------------------------------------------
             IF (LLY.NE.0) THEN 
@@ -703,23 +718,21 @@ c            DEALLOCATE(GLLKE0)
           CALL ZCOPY(IWORK,WORK,1,GS(1,1,1,NS),1)
         END DO
           
-          IF (LLY.NE.0) then
+        IF (LLY.NE.0) then
           IWORK = 1
-          CALL MPI_ALLREDUCE(LLY_GRTR,WORK,IWORK,
+          CALL MPI_ALLREDUCE(LLY_GRTR,WORK(1,1,1),IWORK,
      +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
      +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-!      +                       t_mpi_c_grid%mympi_comm_at,IERR)
-          CALL ZCOPY(IWORK,WORK,1,LLY_GRTR,1)
-          endif
+          CALL ZCOPY(IWORK,WORK(1,1,1),1,LLY_GRTR,1)
+        endif
           
-          if(lly.eq.2) then
+        if(lly.eq.2) then
           IWORK = 1
-          CALL MPI_ALLREDUCE(TRACET,WORK,IWORK,
+          CALL MPI_ALLREDUCE(TRACET,WORK(1,1,1),IWORK,
      +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
      +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-!      +                       t_mpi_c_grid%mympi_comm_at,IERR)
-          CALL ZCOPY(IWORK,WORK,1,TRACET,1)
-          endif
+          CALL ZCOPY(IWORK,WORK(1,1,1),1,TRACET,1)
+        endif
 #endif
 
       IF ( TEST('flow    ') .and. (t_inc%i_write>0)) 

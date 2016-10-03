@@ -29,8 +29,8 @@ c      INTEGER IRWS(*),NSHELL(*)
        INTEGER IRWS(*)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE PRECISION DV,DVOL,FAC,PI,RWS,TRP,VINT1,VOL
-      INTEGER I,IATYP,IPER,IPOT,IREP,IRWS1,ISPIN,J,LM,M
+      DOUBLE PRECISION DV,FAC,PI,RWS,TRP,VINT1,VOL!,DVOL
+      INTEGER I,IATYP,IPER,IPOT,IREP,IRWS1,ISPIN,LM,M!,J
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION F(3,NATYPD),FLMH(-1:1,NATYPD),
@@ -170,23 +170,23 @@ c
  9000 FORMAT (13x,'error stop in subroutine force :',
      +       ' the charge density has to contain non spherical',
      +       ' contributions up to l=1 at least ')
- 9101 FORMAT (1x,33 ('-'),' volume change ',33 ('-'),/,34x,
-     +       ' in units Ry/(a(Bohr)**3 ')
+!  9101 FORMAT (1x,33 ('-'),' volume change ',33 ('-'),/,34x,
+!      +       ' in units Ry/(a(Bohr)**3 ')
  9102 FORMAT (1x,81 ('-'))
  9100 FORMAT (1x,33 ('-'),' force on the nucleus ',33 ('-'),/,34x,
      +       ' in units Ry/(a(Bohr) ')
  9200 FORMAT (1x,'>')
  9400 FORMAT (3x,i5,'th shell')
- 9600 FORMAT (7x,'fhx=',e12.6,2x,'fcx=',e12.6,2x,'fxcx=',e12.6,2x,'fx=',
-     +       e12.6,' Ry/(a(Bohr))')
- 9601 FORMAT (7x,'fhy=',e12.6,2x,'fcy=',e12.6,2x,'fxcy=',e12.6,2x,'fy=',
-     +       e12.6,' Ry/(a(Bohr))')
- 9602 FORMAT (7x,'fhz=',e12.6,2x,'fcz=',e12.6,2x,'fxcz=',e12.6,2x,'fz=',
-     +       e12.6,' Ry/(a(Bohr))')
- 9700 FORMAT (10x,'contribution to the trace of the dipol force tensor:'
-     +       ,3x,e12.6,' Ry')
- 9800 FORMAT (7x,' volume change dvol/vol=',2x,e12.6,' Ry/(a(Bohr))**3',
-     +       /,7x,'( notice: has to be divided',
-     +       ' by the bulk modulus of the host)')
+ 9600 FORMAT (7x,'fhx=',e13.6,2x,'fcx=',e13.6,2x,'fxcx=',e13.6,2x,'fx=',
+     +       e13.6,' Ry/(a(Bohr))')
+ 9601 FORMAT (7x,'fhy=',e13.6,2x,'fcy=',e13.6,2x,'fxcy=',e13.6,2x,'fy=',
+     +       e13.6,' Ry/(a(Bohr))')
+ 9602 FORMAT (7x,'fhz=',e13.6,2x,'fcz=',e13.6,2x,'fxcz=',e13.6,2x,'fz=',
+     +       e13.6,' Ry/(a(Bohr))')
+!  9700 FORMAT (10x,'contribution to the trace of the dipol force tensor:'
+!      +       ,3x,e12.6,' Ry')
+!  9800 FORMAT (7x,' volume change dvol/vol=',2x,e12.6,' Ry/(a(Bohr))**3',
+!      +       /,7x,'( notice: has to be divided',
+!      +       ' by the bulk modulus of the host)')
  
       END

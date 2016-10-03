@@ -9,7 +9,7 @@ C   * the local frame of reference                                     *
 C   *                                                                  *
 C   ********************************************************************
       use mod_wunfiles, only: t_params
-      IMPLICIT REAL*8(A-H,O-Z)
+      IMPLICIT NONE
 C
 C PARAMETER definitions
 C
@@ -29,7 +29,7 @@ C
 C
 C Local variables
 C
-      DOUBLE PRECISION A,B,C,PHIXTR,TETXTR
+      DOUBLE PRECISION A,B,C,PHIXTR,TETXTR, D12, D23, D3X
       DOUBLE PRECISION DELPHI,DELTET,LASTERR,MIXING,QMGAMMIX,
      &       QMPHIMIX,QMTETMIX,WN,WO
       INTEGER I,IMV,IPREV,IPRINT,IQ,IT,ITAB,IXTR

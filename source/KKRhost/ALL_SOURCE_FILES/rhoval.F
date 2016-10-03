@@ -8,7 +8,7 @@ C*==rhoval.f    processed by SPAG 6.05Rc at 11:22 on 10 May 2004
      &                  ZREL,JWSREL,IRSHIFT,ITERMVDIR,QMTET,QMPHI,
      &                  MVEVIL,MVEVILEF,NMVECMAX,
      &                  IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATC,
-     &                  LLY,NATYP,NQDOS)          ! LLY Lloyd
+     &                  NATYP,NQDOS)
 C
 C **********************************************************************
 C * For KREL = 1 (relativistic mode)                                   *
@@ -32,11 +32,12 @@ C **********************************************************************
 #ifdef CPP_MPI
       use mpi
 #endif
-      use mod_mympi, only: myrank, nranks, master
+      use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
      &                     ,distribute_linear_on_tasks
 #endif
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid, init_tgmat
+      use mod_version_info
       
       IMPLICIT NONE
 C
@@ -65,7 +66,6 @@ C     .. Scalar Arguments ..
       DOUBLE PRECISION ZAT
       INTEGER I1,ICST,IELAST,IEND,INS,IPAN,ISPIN,NSPIN,NSPINPOT,NSRA
       INTEGER JWSREL,ZREL,IRSHIFT,IDOLDAU,LOPT,NATYP
-      INTEGER LLY,IRMAX1,IELAST1,NSPIN1,NATYP1 ! LLY Lloyd
       INTEGER IHOST,NMVECMAX,IRMIN,NQDOS
       LOGICAL LDORHOEF
 C
@@ -98,6 +98,11 @@ C     .. the 3rd one should be the sum of them
      &                 RMREL(IRMD*KREL+(1-KREL))
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND)
       CHARACTER*10 SOLVER
+      
+!             DOUBLE PRECISION VT(NRMAX,NTMAX),BT(NRMAX,NTMAX)
+!       DOUBLE PRECISION R(NRMAX,NMMAX),R2DRDI(NRMAX,NMMAX)
+!       DOUBLE PRECISION DRDI(NRMAX,NMMAX),SOCTL(NTMAX,NLMAX)
+!       DOUBLE PRECISION CTL(NTMAX,NLMAX)
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 
 C      ITERMDIR variables
 C
@@ -116,12 +121,14 @@ C     .. Local Scalars ..
       DOUBLE PRECISION WLDAUAV
       DOUBLE COMPLEX DF,ERYD,EK
       DOUBLE PRECISION PI
+#ifndef CPP_MPI
       DOUBLE COMPLEX DENTOT ! qdos
+#endif
       INTEGER IDIM,IE,IR,L,LM1,LM2,LMHI,LMLO,IREC,ISPINPOT,
      &        LASTEZ,M1,MMAX
       INTEGER IQ!,NQDOS ! qdos number of qdos points
       INTEGER IX       ! qdos
-      INTEGER LRECGFLLE,LMSHIFT1(4),LMSHIFT2(4),JSPIN,L1 ! lmlm-dos
+      INTEGER LRECGFLLE,LMSHIFT1(4),LMSHIFT2(4) ! lmlm-dos
 
 C     .. this routine needs irregular wavefunctions
       LOGICAL LIRRSOL
@@ -138,14 +145,12 @@ C     .. Local Arrays ..
      +               SZ(IRMD,0:LMAXD),TMAT(0:LMAXD)
       DOUBLE PRECISION RS(IRMD,0:LMAXD),S(0:LMAXD)
       DOUBLE PRECISION CUTOFF(IRMD)
-      DOUBLE COMPLEX DENDUM(0:LMAXD1),GFLLE(:,:,:,:),DENTOT2(2),
-     +               DENTMP2(LMAXD,2),DUM_GFLLE(:,:)
+      DOUBLE COMPLEX DENDUM(0:LMAXD1),GFLLE(:,:,:,:),DUM_GFLLE(:,:)
       DOUBLE COMPLEX, ALLOCATABLE :: GLDAU(:,:)
       DOUBLE PRECISION QVEC(:,:)       ! qdos, q-vectors for qdos
       ALLOCATABLE QVEC,GFLLE,DUM_GFLLE      ! qdos, lmlm-dos
 #ifdef CPP_MPI
-      integer :: ie_start, mytot
-      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+      integer :: ie_start
 #endif
       integer :: ie_end, ie_num
 C     ..
@@ -265,23 +270,44 @@ C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 C
 #ifndef CPP_MPI
-      IF (OPT('qdos    ')) THEN
-         if(NATYP.ge.100) then
-           OPEN(31,   ! lm-dos
-     +     FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! lm-dos
-     +     char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")   ! lm-dos
-         else
-           OPEN(31,   ! lm-dos
-     +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
-     +     char(48+ISPIN)//".dat")   ! lm-dos
-         end if
-      OPEN(30,   ! lm-dos
-     +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
-     +char(48+ISPIN)//".dat")   ! lm-dos
-      WRITE (30,*) ' '   ! lm-dos
-      WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1   ! lm-dos
- 8600 FORMAT (a8,I3,a4,I5)  ! lm-dos
-      ENDIF
+      IF (OPT('qdos    ')) THEN                                       ! qdos
+         if(NATYP.ge.100) then                                        ! qdos
+           OPEN(31,                                                   ! qdos
+     +     FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//    ! qdos
+     +     char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")          ! qdos
+         else                                                         ! qdos
+           OPEN(31,                                                   ! qdos
+     +     FILE="qdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! qdos
+     +     char(48+ISPIN)//".dat")                                    ! qdos
+         end if                                                       ! qdos
+         call version_print_header(31)                                ! qdos
+         WRITE (31,'(7(A,3X))') '#   Re(E)','Im(E)',                  ! qdos
+     &                  'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! qdos
+      OPEN(30,                                                        ! lmdos
+     +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//       ! lmdos
+     +char(48+ISPIN)//".dat")                                         ! lmdos
+      call version_print_header(31)                                   ! lmdos
+      WRITE (30,*) ' '                                                ! lmdos
+      WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1                      ! lmdos
+ 8600 FORMAT (a8,I3,a4,I5)                                            ! lmdos
+      
+      ! write out complex qdos for interpolation to the real axis     ! complex qdos
+      if(test('compqdos')) then                                       ! complex qdos
+         if(NATYP.ge.100) then                                        ! complex qdos
+           OPEN(3031,                                                 ! complex qdos
+     +     FILE="cqdos."//char(48+I1/100)//char(48+mod(I1/10,10))//   ! complex qdos
+     +     char(48+mod(I1,10))//"."//char(48+ISPIN)//".dat")          ! complex qdos
+         else                                                         ! complex qdos
+           OPEN(3031,                                                 ! complex qdos
+     +     FILE="cqdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//  ! complex qdos
+     +     char(48+ISPIN)//".dat")                                    ! complex qdos
+         end if                                                       ! complex qdos
+         call version_print_header(3031)                              ! complex qdos
+         WRITE (3031,'(A)') '# lmax, natyp, nspin, nqdos, ielast:'    ! complex qdos
+         WRITE (3031,'(5I9)') lmaxd, natyp, nspin, nqdos, ielast      ! complex qdos
+         WRITE (3031,'(7(A,3X))') '#   Re(E)','Im(E)',                ! complex qdos
+     &                  'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! complex qdos
+      ENDIF                                                           ! qdos
 #endif
 
 c set LMSHIFT value which is need to construct dentmp
@@ -296,7 +322,7 @@ c set LMSHIFT value which is need to construct dentmp
 
       NQDOS = 1                                         ! qdos 
       IF (OPT('qdos    ')) THEN                         ! qdos
-C        Read BZ path for qdos calculation:
+C        Read BZ path for qdos calculation:             ! qdos
          OPEN(67,FILE='qvec.dat')                       ! qdos
          READ(67,*) NQDOS                               ! qdos
          ALLOCATE(QVEC(3,NQDOS))                        ! qdos
@@ -325,14 +351,14 @@ C        Read BZ path for qdos calculation:
 ! !$omp parallel do default(none)
 ! !$omp& private(eryd,ie,ir,irec,lm1,lm2)
 ! !$omp& private(jlk_index,tmatll,ith)
-! !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
+! !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmaxd)
 ! !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
 ! !$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
 ! !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
 ! !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
 ! !$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
 ! !$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
-! !$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
+! !$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1)
 ! !$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
 ! !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
 ! !$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
@@ -393,7 +419,7 @@ C
             IF ( INS.EQ.0 ) THEN
                CALL RHOLM(DEN(0,IE,IQ),DF,GMAT0,NSRA,
      +              RHO2NS(1,1,ISPIN),DRDI,IPAN,IRCUT,PZ,FZ,QZ,SZ,  
-     +              CLEB(1,1),ICLEB,IEND,JEND,EKL,DENLM(1,IE,IQ),EK)
+     +              CLEB(1,1),ICLEB,IEND,JEND,EKL)
             ELSE
                CALL RHONS(DEN(0,IE,IQ),DF,DRDI,GMAT0,EK,
      +             RHO2NS(1,1,ISPIN),IPAN,IRCUT,IRMIN,THETAS,IFUNM,LMSP,  ! Added IRMIN 1.7.2014
@@ -413,17 +439,25 @@ c LDA+U
 
 #ifndef CPP_MPI
 c Write out qdos:
-            IF (OPT('qdos    ')) THEN
-               DENTOT = DCMPLX(0.D0,0.D0)
-               DO L = 0,LMAXD1
-                  DENTOT = DENTOT + DEN(L,IE,IQ)
-               ENDDO
+            IF (OPT('qdos    ')) THEN                                     ! qdos
+               DENTOT = DCMPLX(0.D0,0.D0)                                 ! qdos
+               DO L = 0,LMAXD1                                            ! qdos
+                  DENTOT = DENTOT + DEN(L,IE,IQ)                          ! qdos
+               ENDDO                                                      ! qdos
                WRITE(30,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! lmdos
-     &         -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)      ! lmdos
- 9000          FORMAT(5F10.6,40E16.8)
-               WRITE(31,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! lmdos
-     &         -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)      ! lmdos
-            ENDIF
+     &                       -DIMAG(DENTOT)/PI,                           ! lmdos
+     &                      (-DIMAG(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)        ! lmdos
+               WRITE(31,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos
+     &                       -DIMAG(DENTOT)/PI,                           ! qdos
+     &                      (-DIMAG(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)        ! qdos
+ 9000          FORMAT(5F10.6,40E16.8)                                     ! qdos
+               ! writeout complex qdos for interpolation                  ! complex qdos
+               if(test('compqdos')) then                                  ! complex qdos
+                 WRITE(3031,9001) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),  ! complex qdos
+     &                           DENTOT,(DENLM(L,IE,IQ),L=1,LMMAXD)       ! complex qdos
+               end if                                                     ! complex qdos
+ 9001          FORMAT(6F10.6,80E16.8)                                     ! qdos
+            ENDIF                                                         ! qdos
 #endif
 
  200        END DO                                                   ! qdos
@@ -459,13 +493,19 @@ C=======================================================================
 
             IQ = 1 ! reset IQ to zero, problem with qdos!!!
 
+!              !!!! PROBLEM WITH ARRAY DIMENSIONS FOR VTREL ETC. !!!!
+! #ifdef CPP_MPI
+!              call MPI_FINALIZE(L)
+! #endif
+!              stop '[rhoval] ERROR array dimensions need to be checked!'
             CALL DRVRHO_QDOS(LDORHOEF,RHO2NS,R2NEF,DEN,DMUORB,RHOORB,
      &                  IE,ERYD,DF,LASTEZ,
      &                  GMATLL,VTREL,BTREL,RMREL,DRDIREL,
      &                  R2DRDIREL,ZREL,JWSREL,IRSHIFT,SOLVER,SOCTL,CTL,
      &                  QMTET,QMPHI,ITERMVDIR,MVEVIL,MVEVILEF,LMMAXD,
      &                  LMAXD,IRMD,LMPOTD,IEMXD,NMVECMAX,
-     &                  I1,QVEC,NQDOS)            ! qdos
+     &                  I1,NQDOS)            ! qdos
+     
 C
             DO L = 0,LMAXD1
                ESPV(L,1) = ESPV(L,1) + DIMAG(ERYD*DEN(L,IE,IQ)*DF)
@@ -474,7 +514,7 @@ C
 C
             DO IR = 1,3
                DO L = 0,LMAXD
-                  write(1337,*) DF
+!                   write(1337,*) DF
                   MUORB(L,IR) = MUORB(L,IR) + DIMAG(DMUORB(L,IR)*DF)
                END DO
             END DO

@@ -541,7 +541,7 @@ C
      &        '  MUE-ORB:',F8.3)
 99011 FORMAT (' ',79('-'),/,' TOT',2F9.4,10X,F9.4,10X,F9.5,/,' E_band',
      &        F17.6,' [Ry]',/,' ',79('='))
-99012 FORMAT ((' ',79('*'),/),/,' SPRKKR-run for: ',15(A,F4.2))
+99012 FORMAT ((' ',79('*'),/),/,' KKR-run for: ',15(A,F5.2))
 99013 FORMAT (/,' results extrapolated to corrected FERMI - ENERGY:',/,
      &        ' CHARGE MISFIT     ',F9.5,/,' E_F CORRECTION    ',F9.5,/,
      &        ' NEW FERMI ENERGY  ',F9.5,/)

@@ -839,7 +839,7 @@ C     ------------------
                      CALL HFFCORE(RNUC,NZERO,KAP1,KAP2,NSOL,MJ,GCK,FCK,
      &                            NRC,SHF,S,NMEMAX,NKMMAX,RC,DRDIC,SDIA,
      &                            SMDIA,SOFF,SMOFF,QDIA,QOFF,QMDIA,
-     &                            QMOFF,NUCLEUS,Z(IT),JLIM)
+     &                            QMOFF,NUCLEUS,JLIM)
 C
                      DO K = 1,NMEMAX
                         SPLIT(K) = 0.0D0

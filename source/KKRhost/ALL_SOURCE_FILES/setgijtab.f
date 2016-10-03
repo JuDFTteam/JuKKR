@@ -1,7 +1,8 @@
 c      SC*==setgijtab.f    processed by SPAG 6.05Rc at 15:49 on 18 Oct 2004
       SUBROUTINE SETGIJTAB(LINTERFACE,ICC,NAEZ,IQAT,RBASIS,BRAVAIS,
      &                     NATOMIMP,ATOMIMP,RCLSIMP,NOFGIJ,IJTABCALC,
-     &                     IOFGIJ,JOFGIJ,NQCALC,IQCALC,NAEZD,NATOMIMPD)
+     &                     IOFGIJ,JOFGIJ,NQCALC,IQCALC,NATOMIMPD,
+     &                     IJTABCALC_I)
 C **********************************************************************
 C * Task-specific settings of Gij elements that need to be calculated  *
 C * Subroutine (called for ICC=-1) sets up the arrays                  *
@@ -18,11 +19,11 @@ C **********************************************************************
       IMPLICIT NONE
 C ..  
 C ..  Scalar arguments
-      INTEGER ICC,NAEZ,NAEZD,NATOMIMP,NATOMIMPD,NOFGIJ,NQCALC
+      INTEGER ICC,NAEZ,NATOMIMP,NATOMIMPD,NOFGIJ,NQCALC
       LOGICAL LINTERFACE
 C ..   
 C ..  Array arguments
-      INTEGER ATOMIMP(*),IJTABCALC(*),IOFGIJ(*),IQAT(*),
+      INTEGER ATOMIMP(*),IJTABCALC(*),IJTABCALC_I(*),IOFGIJ(*),IQAT(*),
      &        IQCALC(*),JOFGIJ(*)
       DOUBLE PRECISION BRAVAIS(3,3),RBASIS(3,*),RCLSIMP(3,*)
 C .. 
@@ -43,11 +44,11 @@ C
       IDO = 0
 C ======================================================================
       IF ( OPT('CONDUCT ') ) CALL GIJCOND(IDO,NAEZ,RBASIS,IQAT,NATOMIMP,
-     &     RCLSIMP,ATOMIMP,IJTABCALC,NAEZD,NATOMIMPD)
+     &     RCLSIMP,ATOMIMP,IJTABCALC,NATOMIMPD)
 C ======================================================================
       IF ( OPT('XCPL    ') ) CALL GIJXCPL(IDO,NAEZ,RBASIS,BRAVAIS,
      &     LINTERFACE,NQCALC,IQCALC,NATOMIMP,RCLSIMP,ATOMIMP,IJTABCALC,
-     &     NATOMIMPD)
+     &     IJTABCALC_I,NATOMIMPD)
 C ======================================================================
       IF ( IDO.EQ.0 ) THEN
          ICC = 0

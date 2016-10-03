@@ -10,11 +10,11 @@
      &           KFG,KVMAD,KVREL,KWS,KXC,LAMBDA_XC, &
      &           LMAX,LMMAX,LMPOT,LPOT,NATYP,NSPIN,&
      &           LMXC,TXC,ICC,REFPOT,&
-     &           IPRCOR,IRNUMX,ISHIFT,ITCCOR,&
+     &           ISHIFT,&
      &           INTERVX,INTERVY,INTERVZ,&
-     &           HFIELD,COMPLX,&
-     &           KMT,MTFAC,VBC,VCONST,LINIPOL,INIPOL,IXIPOL,LRHOSYM,&
-     &           MMIN,MMAX,SINN,SOUT,RIN,ROUT,M2,I12,I13,I19,I25,I40,&
+     &           HFIELD,&
+     &           MTFAC,VBC,VCONST,LINIPOL,INIPOL,IXIPOL,LRHOSYM,&
+     &           I12,I13,I19,I25,I40,&
      &           NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,    &
      &           TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTREF,RMTREFAT,&
      &           KFORCE,KMROT,QMTET,QMPHI,NCPA,ICPA,ITCPAMAX,CPATOL,&   
@@ -25,6 +25,8 @@
      &           TOLRDIF,LLY,DELTAE,&
      &           LCARTESIAN,BRAVAIS,RMAX,GMAX)
       use mod_wunfiles, only: t_params
+      use mod_save_wavefun, only: t_wavefunctions
+      use mod_version_info
       IMPLICIT NONE
 !     ..
 !     .. Parameters
@@ -61,7 +63,7 @@
       DOUBLE PRECISION SOCSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
       DOUBLE PRECISION SOCSCALE(NATYPD)
       DOUBLE PRECISION CSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
-      CHARACTER*24 TXC(5)
+      CHARACTER*124 TXC(5)
       CHARACTER*256 UIO  ! NCOLIO=256
       CHARACTER*10 SOLVER
       CHARACTER*40 I12,I13,I19,I25,I40
@@ -70,23 +72,22 @@
       DOUBLE PRECISION EMIN,EMAX,ESHIFT,FCM,HFIELD,MIXING,QBOUND,TK,&
      &       VCONST,ABASIS,BBASIS,CBASIS,RCUTZ,RCUTXY,LAMBDA_XC,TOLRDIF,RMAX,GMAX
       INTEGER ICC,ICST,IFILE,IGF,IMIX,INS,INSREF,&
-     &        IPE,IPF,IPFE,IPOTOU,IPRCOR,&
-     &        IRM,IRNUMX,ISHIFT,ITCCOR,ITDBRY,KCOR,&
+     &        IPE,IPF,IPFE,&
+     &        IRM,ISHIFT,ITDBRY,KCOR,&
      &        KEFG,KFROZN,KHFIELD,KHYP,KPRE,KSHAPE,KTE,KVMAD,&
      &        KVREL,KWS,KXC,LMAX,LMMAX,LMPOT,LPOT,KFORCE,&
      &        NATYP,NPNT1,NPNT2,NPNT3,NPOL,NSPIN,&
      &        NPAN_LOG,NPAN_EQ,NCHEB
       INTEGER NPOLSEMI,N1SEMI,N2SEMI,N3SEMI
       DOUBLE PRECISION FSEMICORE,EBOTSEMI,EMUSEMI,TKSEMI,R_LOG
-      INTEGER NSTEPS,KMT,NAEZ,NEMB
+      INTEGER NSTEPS,NAEZ,NEMB
       INTEGER NINEQ
       DOUBLE PRECISION ALAT
-      INTEGER MMIN,MMAX,SINN,SOUT,RIN,ROUT
       INTEGER INTERVX,INTERVY,INTERVZ,NREF,NCLS
       INTEGER NLBASIS,NRBASIS,NLEFT,NRIGHT,NDIM      
       INTEGER LLY
       DOUBLE COMPLEX DELTAE  ! LLY Energy difference for numerical derivative
-      LOGICAL LINIPOL,LRHOSYM,COMPLX,LINTERFACE,LCARTESIAN,LNEW,LATOMINFO
+      LOGICAL LINIPOL,LRHOSYM,LINTERFACE,LCARTESIAN,LNEW,LATOMINFO
 !----------------------------------------------------------------
 !     CPA variables. Routine has been modified to look for
 !     the token ATOMINFOC and only afterwards, if not found, for the
@@ -139,7 +140,7 @@
 !     ..
 !     .. Local Scalars ..
       DOUBLE PRECISION BRYMIX,STRMIX,TX,TY,TZ,DVEC(10)
-      INTEGER I,IL,J,IER,IER2,I1,II,IR,M2,IDOSEMICORE
+      INTEGER I,IL,J,IER,IER2,I1,II,IR,IDOSEMICORE
       CHARACTER*43 TSHAPE
       DOUBLE PRECISION SOSCALE,CTLSCALE
       INTEGER IMANSOC(NATYPD),NASOC,ISP(NATYPD)
@@ -169,15 +170,17 @@
 !
 !------------ array set up and definition of input parameter -----------
 !
-      TXC(1) = ' Morruzi,Janak,Williams '
-      TXC(2) = ' von Barth,Hedin        '
-      TXC(3) = ' Vosko,Wilk,Nusair      '
-      TXC(4) = ' GGA PW91               '
-      TXC(5) = ' GGA PBE                '
+      ! concatenate name & serial number
+      TXC(1) = ' Morruzi,Janak,Williams  #serial: ' // serialnr
+      TXC(2) = ' von Barth,Hedin         #serial: ' // serialnr
+      TXC(3) = ' Vosko,Wilk,Nusair       #serial: ' // serialnr
+      TXC(4) = ' GGA PW91                #serial: ' // serialnr
+      TXC(5) = ' GGA PBE                 #serial: ' // serialnr
 
       IPRINT = 0
 
       OPEN(111,FILE='inputcard_generated.txt') ! Write out found or assumed values
+      call version_print_header(111)
 
       RMTREFAT(:) = -1.D0 ! Signals the need for later calculation
       RMTREF(:) = -1.D0
@@ -1876,15 +1879,14 @@
 
 !Check for XCPL consistency 
 
-      MANCTL = ( KMROT.EQ.0 ).AND.( KREL.EQ.0 ).AND.( NPOL.NE.0 ).AND.( NSPIN.GT.1 )
+      MANCTL = ( KMROT.EQ.0 ).AND.( KREL.EQ.0 ).AND.( NSPIN.GT.1 )
       IF ( (OPT('XCPL    ') ).AND.( .NOT.MANCTL ) ) THEN
          WRITE (1337,*)
          WRITE (1337,*)&
      &        ' WARNING: XCPL running option requires collinear ',&
-     &        'magnetic systems, complex'
+     &        'magnetic systems'
          WRITE (1337,*)&
-     &        '          energy contour (NPOL<>0) in a NON/SCALAR',&
-     &        ' relativistic mode (KREL=0)'
+     &        ' in a NON/SCALAR/SCALAR+SOC relativistic mode (KREL=0)'
          WRITE (1337,*) ' Running option XCPL will be ignored'
          WRITE (1337,*)
          DO I=1,32
@@ -2032,6 +2034,55 @@
 ! ================================================================ LDA+U
 
 
+      IF(OPT('qdos    ')) THEN
+         allocate(t_params%qdos_atomselect(NATYP), stat=ier) !INTEGER
+         if(ier/=0) stop '[rinput13] Error alloc qdos_atomselect'
+
+         t_params%qdos_atomselect(1:NATYPD) = 1
+         !for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.
+!          CALL IoInput('qdosatoms       ',UIO,1,7,IER)
+!          IF (IER.EQ.0) THEN
+!            READ (UNIT=UIO,FMT=*) (t_params%qdos_atomselect(I),I=1,NATYP)
+!            WRITE(111,FMT='(A10,80I2)') 'qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
+!          ELSE
+!            WRITE(111,FMT='(A18,80I2)') 'Default qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
+!          ENDIF
+! 
+!          WRITE (1337,'(A)') 'atom selective writeout for qdos:'
+!          WRITE (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
+         
+      END IF
+
+! ============================================================= WF_SAVE
+      CALL IOInput('MEMWFSAVE       ',UIO,0,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_number
+         WRITE(1337,*) '< MEMWFSAVE >', t_wavefunctions%maxmem_number
+         WRITE(111,*) 'MEMWFSAVE=',t_wavefunctions%maxmem_number
+      ELSE
+         t_wavefunctions%maxmem_number = 0
+         WRITE(1337,*) '< MEMWFSAVE >, use default:', t_wavefunctions%maxmem_number
+         WRITE(111,*) 'Default MEMWFSAVE= ',t_wavefunctions%maxmem_number
+      END IF
+      CALL IOInput('UNITMEMWFSAVE   ',UIO,0,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_units
+         WRITE(1337,*) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
+         WRITE(111,*) 'UNITMEMWFSAVE=',t_wavefunctions%maxmem_units
+      ELSE
+         t_wavefunctions%maxmem_units = 2
+         WRITE(1337,*) '< UNITMEMWFSAVE >, use default:', t_wavefunctions%maxmem_units, '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
+         WRITE(111,*) 'Default UNITMEMWFSAVE= ',t_wavefunctions%maxmem_units, '(MB)'
+      END IF
+      
+      !default flags: save only rll from main1a>tmatnewsolver since left solutions can be calculated always in main1c>rhovalnew and sll is not used
+      t_wavefunctions%save_rll     = .true.
+      t_wavefunctions%save_sll     = .false.
+      t_wavefunctions%save_rllleft = .false.
+      t_wavefunctions%save_sllleft = .false.
+! ============================================================= WF_SAVE
+
+
 
       WRITE(1337,2100) 
       WRITE(1337,2040) KMROT
@@ -2047,8 +2098,6 @@
 ! ------------------------------------------------------------------------
  2010 FORMAT(' NSPIN '/I4)
  2011 FORMAT(' NSTEPS'/I4)
- 2013 FORMAT('      M2    MMIN    MMAX    SINN',&
-     &       '    SOUT     RIN    ROUT'/7I8)
  2014 FORMAT('          ALAT = ',F15.8)
  2015 FORMAT('   INTERVX   INTERVY   INTERVZ'/3I10)
  2016 FORMAT('    NCLS    NREF   NINEQ'/,3I8)
@@ -2062,7 +2111,6 @@
  2025 FORMAT((i4,3F15.8,2F6.1,2(1x,I3),4I3))
  2028 FORMAT(' NATYP '/,I4/,&
      &     '   Z lmx     KFG cls pot ntc  MTFAC irns SITE  CONC')
- 2029 FORMAT(' KMT   '/,I4)
  2031 FORMAT((3F15.8,2I6))
  2032 FORMAT(' NTCELLR'/,(10I4))
  2040 FORMAT(' KMROT'/,4I8)
@@ -2107,7 +2155,6 @@
  9210 FORMAT (' lmax'/,i4)
  9220 FORMAT ('          EMIN        EMAX        TK'/,3f12.6)
  9230 FORMAT ('   NPOL  NPNT1  NPNT2  NPNT3'/,4i7)
- 9240 FORMAT (' IRNUMX ITCCOR IPRCOR'/,3i7)
  9250 FORMAT ('  IFILE    IPE ISHIFT ESHIFT'/,3i7,f12.6)
  9260 FORMAT (' KSHAPE    IRM    INS   ICST INSREF'/,5i7)
  9270 FORMAT ('   KCOR  KVREL    KWS   KHYP KHFIELD   KXC'/,6i7)
@@ -2169,9 +2216,8 @@ IMPLICIT NONE
 INTEGER NOPTD
 PARAMETER (NOPTD=32)
 CHARACTER*8 STRING
-CHARACTER*8 OPTC(NOPTD)
 INTEGER II
-LOGICAL OPT,LADDED
+LOGICAL OPT
 EXTERNAL OPT
 
 IF (.NOT.OPT('        ')) THEN

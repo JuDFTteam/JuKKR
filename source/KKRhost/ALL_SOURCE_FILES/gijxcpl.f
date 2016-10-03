@@ -1,13 +1,16 @@
 C*==gijxcpl.f    processed by SPAG 6.05Rc at 15:40 on 18 Oct 2004
        SUBROUTINE GIJXCPL(IDO,NAEZ,RBASIS,BRAVAIS,LINTERFACE,
      &                   NIQCALC,IQCALC,NATOMIMP,RCLSIMP,ATOMIMP,
-     &                   IJTABCALC,NATOMIMPD)
+     &                   IJTABCALC,IJTABCALC_I,NATOMIMPD)
 C **********************************************************************
 C *                                                                    *
 C * In case of tasks requiring Gij blocks calculation, set variables:  *
 C *                                                                    *
 C * NATOMIMP, RCLSIMP(3,1..NATOMIMP), ATOMIMP(1..NATOMIMP)             *
 C * IJTABCALC flag to which pair is needed: I,J --> (I-1)*NATOMIMP + J *
+C *           indexing refers to the generated cluster                 *
+C * IJTABCALC_I same as IJTABCALC, but only flag to pair <IJ> is  set  *
+C *             (in contrast to the pairs <IJ> and <JI> for NEWSOSOL)  *
 C *           indexing refers to the generated cluster                 *
 C * NIQCALC   number of sites in the first unit cell contained in the  *
 C *           cluster                                                  *
@@ -21,12 +24,12 @@ C **********************************************************************
 C ..
 C ..  Arguments
        INTEGER IDO,NAEZ,NATOMIMP,NIQCALC,NATOMIMPD
-       INTEGER ATOMIMP(*),IJTABCALC(*),IQCALC(*)
+       INTEGER ATOMIMP(*),IJTABCALC(*),IJTABCALC_I(*),IQCALC(*)
        DOUBLE PRECISION BRAVAIS(3,3),RBASIS(3,*),RCLSIMP(3,*)
        LOGICAL LINTERFACE
 C ..
 C ..  Locals
-       INTEGER I,I1,I2,I3,IBR(3),IEQVEC,IQ,IQS,J,JQ,MM,NBR(3),NDIM,
+       INTEGER I,I1,I2,I3,IBR(3),IEQVEC,IQ,IQS,J,JQ,NBR(3),NDIM,
      &        NN,NOUT,JQS
 C.......................................................................
 C     uniquely identify a vector R_j - r_i = (r_j + T_n) - r_i by a 
@@ -49,9 +52,10 @@ C.......................................................................
        DOUBLE PRECISION CLURADXY,CLURADXYSQ,DRXYSQ
        LOGICAL LSPHER
        CHARACTER*256 UIO   ! NCOLIO=256
+       LOGICAL OPT
 C     ..
 C     .. Externals
-       EXTERNAL GETCLUSNXYZ,IOINPUT
+       EXTERNAL GETCLUSNXYZ,IOINPUT,OPT
 C     ..
        IDO = 0
 C
@@ -289,7 +293,7 @@ C     NOUT is the number of eliminated (repeated) sites
 C
        NOUT = 0
 C **********************************************************************
-      DO I = 1,NN
+       DO I = 1,NN
 C ======================================================================
           IF ( NVECI2J(I).EQ.1 ) THEN
 C
@@ -384,6 +388,10 @@ C ----------------------------------------------------------------------
 c                  IF ( IVECI2J(1,IREF(I,JQ)).EQ.1.AND.
 c     +               IVECI2J(2,IREF(I,JQ)).EQ.1 ) THEN
                       IJTABCALC(NN+JQ) = 1
+                      IF(OPT('NEWSOSOL'))THEN               !Jijtensor
+                        IJTABCALC((JQ-1)*NATOMIMP+IQ) = 1   !Jijtensor
+                        IJTABCALC_I(NN+JQ) = 1              !Jijtensor
+                      END IF                                !Jijtensor
                       NOUT = NOUT + 1
 c                  END IF
                    END IF

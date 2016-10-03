@@ -10,9 +10,9 @@
 
       SUBROUTINE TBXCCPLJIJ(IFTMAT,IELAST,EZ,WEZ,NSPIN,NCPA,NAEZ, NATYP,
      &                      NOQ,ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,
-     &                      FACTL,NOFGIJ,NQCALC,IQCALC,IJTABCALC,
+     &                      NOFGIJ,NQCALC,IQCALC,IJTABCALC,
      &                      IJTABSYM,IJTABSH,ISH,JSH,DSYMLL,IPRINT,
-     &                      NATYPD,NAEZD,NSHELD,LMMAXD)
+     &                      NATYPD,NSHELD,LMMAXD,NPOL)
 C   ********************************************************************
 C   *                                                                  *
 C   *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
@@ -28,8 +28,10 @@ C
 #ifdef CPP_MPI
       use mpi
 #endif
-      use mod_types, only: t_tgmat, t_mpi_c_grid
+      use mod_types, only: t_tgmat, t_mpi_c_grid, t_cpa
       use mod_mympi, only: myrank, master
+      use mod_version_info
+      use mod_md5sums
       IMPLICIT NONE
 C     ..
 C     .. Parameters
@@ -40,40 +42,51 @@ C     .. Parameters
       PARAMETER ( NIJMAX = 200 )
 C     ..
 C     .. Scalar arguments
-      INTEGER IELAST,NSPIN,IFTMAT,IPRINT,LMMAXD,NAEZ,NAEZD,NATOMIMP,
-     &        NATYP,NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD
+      INTEGER IELAST,NSPIN,IFTMAT,IPRINT,LMMAXD,NAEZ,NATOMIMP,
+     &        NATYP,NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD,NPOL
       DOUBLE COMPLEX EZ(*), WEZ(*)
 C     ..
 C     .. Array arguments
       INTEGER ATOMIMP(*),IJTABCALC(*),IJTABSH(*),IJTABSYM(*),
      &        IQAT(*),IQCALC(*),ISH(NSHELD,*),ITOQ(NATYPD,*),
      &        JSH(NSHELD,*),NOQ(*),NSHELL(0:NSHELD)
-      DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,*),FACTL(LMMAXD,LMMAXD)
+      DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,*)
       DOUBLE PRECISION RATOM(3,*)
 C     ..
 C     .. Local scalars
       INTEGER I1,IA,IFGMAT,IFMCPA,IQ,IREC,ISPIN,ISYM,IT,J1,JA,
      &        JQ,JT,L1,LM1,LM2,LSTR,NS,NSEFF,NSHCALC,NSMAX,NTCALC,
-     &        IE, ie_end, ie_num, ie_start, IERR
-      DOUBLE COMPLEX CSUM, WGTEMP, XINTEGDTMP
+     &        IE, ie_end, ie_num
+#ifdef CPP_MPI
+      INTEGER ie_start, IERR
+#endif
+      DOUBLE COMPLEX CSUM, WGTEMP
+#ifdef CPP_MPI
+      DOUBLE COMPLEX XINTEGDTMP
+#endif
       CHARACTER*8 FMT1
       CHARACTER*22 FMT2
       CHARACTER*8 JFBAS
-      CHARACTER*10 JFINTEG,JFNAME
+!       CHARACTER*10 JFINTEG,JFNAME
       CHARACTER*13 JFNAM
       CHARACTER*26 JFNAM2
       CHARACTER*80 STRBAR,STRTMP
 C     ..
 C     .. Local arrays
       INTEGER NIJCALC(:),KIJSH(:,:),JIJDONE(:,:,:)
-      DOUBLE COMPLEX JXCIJINT(:,:,:),XINTEGD(:,:,:),
-     &               csum_store(:,:,:,:), csum_store2(:,:,:,:)
-      ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT,XINTEGD,csum_store,
-     &            csum_store2
+      DOUBLE COMPLEX JXCIJINT(:,:,:)
+#ifndef CPP_MPI
+      DOUBLE COMPLEX, ALLOCATABLE :: XINTEGD(:,:,:)
+#else
+      DOUBLE COMPLEX, ALLOCATABLE :: csum_store(:,:,:,:),
+     &                               csum_store2(:,:,:,:)
+#endif
+      ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT
       DOUBLE COMPLEX DELTSST(LMMAXD,LMMAXD,NATYP),
-     &               DMATTS(LMMAXD,LMMAXD,NATYP,2),
-     &               DTILTS(LMMAXD,LMMAXD,NATYP,2),GMIJ(LMMAXD,LMMAXD),
-     &               GMJI(LMMAXD,LMMAXD),GS(LMMAXD,LMMAXD,2),
+     &               DMATTS(LMMAXD,LMMAXD,NATYP,NSPIN),
+     &               DTILTS(LMMAXD,LMMAXD,NATYP,NSPIN),
+     &               GMIJ(LMMAXD,LMMAXD),
+     &               GMJI(LMMAXD,LMMAXD),GS(LMMAXD,LMMAXD,NSPIN),
      &               TSST(LMMAXD,LMMAXD,NATYP,2),W1(LMMAXD,LMMAXD),
      &               W2(LMMAXD,LMMAXD),W3(LMMAXD,LMMAXD)
       DOUBLE PRECISION RSH(NSHELD),PI
@@ -84,9 +97,14 @@ C     .. Intrinsic Functions ..
 C     ..
 C     .. External Subroutines ..
 C     EXTERNAL CINIT,CMATMUL,INITABJIJ,ZCOPY
+      LOGICAL TEST
+      EXTERNAL TEST
 C     ..
 C     .. Save statement
-      SAVE IFGMAT,IFMCPA,JIJDONE,JXCIJINT,XINTEGD,KIJSH,NIJCALC
+      SAVE IFGMAT,IFMCPA,JIJDONE,JXCIJINT,KIJSH,NIJCALC
+#ifndef CPP_MPI
+      SAVE XINTEGD
+#endif
       SAVE NSHCALC,NSMAX
 C     ..
 C     .. Data statement
@@ -262,7 +280,7 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
          ie_end = ielast
 #endif
 C SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS SPIN
-      DO ISPIN = 1,2
+      DO ISPIN = 1,NSPIN
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT NATYP
          DO IT = 1,NATYP
 c            write(*,*) 'test brahim 3'
@@ -294,7 +312,10 @@ C ----------------------------------------------------------------------
                END DO
                CALL ZCOPY(LMMAXD*LMMAXD,DMATTS(1,1,IT,ISPIN),1,
      &                    DTILTS(1,1,IT,ISPIN),1)
-            ELSE
+            ELSE!NCPA.EQ.0
+             if(t_cpa%dmatproj_to_file)then
+               write(*,*) 'test read proj'
+               IREC = IE + IELAST*(ISPIN-1) + IELAST*2*(IT-1)
                READ (IFMCPA,REC=IREC) W1,W2
                DO J1 = 1,LMMAXD
                   DO I1 = 1,LMMAXD
@@ -302,7 +323,13 @@ C ----------------------------------------------------------------------
                      DTILTS(I1,J1,IT,ISPIN) = W2(I1,J1)
                   END DO
                END DO
-            END IF
+             else!t_cpa%dmatproj_to_file
+               irec = ie_num + ie_end*(ISPIN-1)
+               DMATTS(:,:,IT,ISPIN) = t_cpa%dmatts(:,:,IT,irec)
+               DTILTS(:,:,IT,ISPIN) = t_cpa%dtilts(:,:,IT,irec)
+
+             end if!t_cpa%dmatproj_to_file
+            END IF!NCPA.EQ.0
 C ----------------------------------------------------------------------
          END DO
 C TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
@@ -314,7 +341,7 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
          WRITE(1337,'(8X,60(1H-),/,10X,
      &        "Single-site and projection matrices read in",
      &        " for IT=1,",I3,/)') NATYP
-         DO ISPIN = 1,2
+         DO ISPIN = 1,NSPIN
             WRITE(1337,'(8X,60(1H+),/,30X,
      &           " ISPIN = ",I1,/,8X,60(1H+),/)') ISPIN
             DO IT = 1,NATYP
@@ -351,13 +378,13 @@ C ==>  get the off-diagonal Green function matrix Gij(UP) and Gji(DOWN)
 C      using the appropiate rotation (similar to ROTGLL routine)
 C      step one: read in GS for the representative shell
 C ======================================================================
-         DO ISPIN = 1,2
+         DO ISPIN = 1,NSPIN
           if (t_tgmat%gmat_to_file) then
-            IREC = IE + IELAST*(ISPIN-1) + IELAST*2*(NS-1)
+            IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN*(NS-1)
             READ (IFGMAT,REC=IREC) W1
           else
             ie_end = t_mpi_c_grid%ntot2
-            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*2*(NS-1)
+            IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN*(NS-1)
             W1(:,:) = t_tgmat%gmat(:,:,irec) 
           end if
           CALL ZCOPY(LMMAXD*LMMAXD,W1,1,GS(1,1,ISPIN),1)
@@ -376,7 +403,7 @@ C
             LM1 = (IA-1)*NATOMIMP + JA
             ISYM = IJTABSYM(LM1)
 C ----------------------------------------------------------------------
-            DO ISPIN = 1,2
+            DO ISPIN = 1,NSPIN
                CALL ZGEMM('C','N',LMMAXD,LMMAXD,LMMAXD,
      +                    CONE,DSYMLL(1,1,ISYM),LMMAXD,
      +                    GS(1,1,ISPIN),LMMAXD,CZERO,W2,LMMAXD)   
@@ -473,22 +500,28 @@ C                  -------> perform substraction instead of addition
 C                           because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                   ! Write out energy-resorved integrand and integral
                   ! Phivos Mavropoulos 24.10.2012
-                  FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
-                  WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
-                  IF (IE.EQ.1) THEN
-                     OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
-                     WRITE(499,FMT='(A)')
-     &                    '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
-                     WRITE(499,FMT='(3(A,I5))')
-     &                    '# IT=',IT,' JT=',JT,' SHELL=',NS
-                     WRITE(499,FMT='(A,I6)')
-     &                    '#ENERGIES: ',IELAST
-                  ELSE
-                   OPEN (499,FILE=JFNAM2,STATUS='OLD',POSITION='APPEND')
-                  ENDIF
-                  WRITE (499,FMT='(6E12.4)')
-     &            EZ(IE),XINTEGD(IT,JT,NSEFF),JXCIJINT(IT,JT,NSEFF)/4.D0
-                  CLOSE(499)
+                  IF(NPOL==0 .OR. TEST('Jijenerg'))then
+                    FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
+                    WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
+                    IF (IE.EQ.1) THEN
+                       OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
+                       call version_print_header(499,
+     &           '; '//md5sum_potential//'; '//md5sum_shapefun)
+                       WRITE(499,FMT='(A)')
+     &                      '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
+                       WRITE(499,FMT='(3(A,I5))')
+     &                      '# IT=',IT,' JT=',JT,' SHELL=',NS
+                       WRITE(499,FMT='(A,I6)')
+     &                      '#ENERGIES: ',IELAST
+                    ELSE
+                      OPEN (499,FILE=JFNAM2,STATUS='OLD',
+     &                          POSITION='APPEND')
+                    ENDIF
+                    WRITE (499,FMT='(6E12.4)')
+     &                EZ(IE),XINTEGD(IT,JT,NSEFF),
+     &                JXCIJINT(IT,JT,NSEFF)/4.D0
+                    CLOSE(499)
+                  ENDIF!(npol==0 .or. test('Jijenerg'))
 #endif
                   
                END DO !I1
@@ -508,9 +541,8 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
 C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC MPI Communication
 #ifdef CPP_MPI
-        if(myrank==master)then
           !allocate
-          ALLOCATE (csum_store2(NATYP,NATYP,NSHELL(0),IELAST),STAT=LM1)
+          ALLOCATE(csum_store2(NATYP,NATYP,NSHELL(0),IELAST),STAT=LM1)
           IF ( LM1.NE.0 ) THEN
              WRITE(6,99001) 'csum_store2'
              STOP
@@ -526,13 +558,11 @@ C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC MPI Communic
             END DO
            END DO
           END DO!IE
-        end if!myrank==master
 
         !perform communication and collect resutls in csum_store2
         LM1 = NATYP*NATYP*NSHELL(0)*IELAST
         call MPI_REDUCE(csum_store,csum_store2,LM1,MPI_DOUBLE_COMPLEX,
      &                  MPI_SUM,master,t_mpi_c_grid%myMPI_comm_at,IERR)
-!     &                  MPI_SUM,master,MPI_COMM_WORLD,IERR)
         if(IERR/=MPI_SUCCESS)then
            write(*,*) 'Problem in MPI_REDUCE(csum_store)'
            stop 'TBXCCPLJIJ'
@@ -574,27 +604,33 @@ C                  -------> perform substraction instead of addition
 C                           because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                   ! Write out energy-resorved integrand and integral
                   ! Phivos Mavropoulos 24.10.2012
-                  FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
-                  WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
-                  OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
-                  WRITE(499,FMT='(A)')
-     &                 '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
-                  WRITE(499,FMT='(3(A,I5))')
-     &                 '# IT=',IT,' JT=',JT,' SHELL=',NS
-                  WRITE(499,FMT='(A,I6)')
-     &                 '#ENERGIES: ',IELAST
+                  IF(NPOL==0 .OR. TEST('Jijenerg'))then
+                    FMT2 = '(A,I5.5,A,I5.5,A,I5.5)'
+                    WRITE (JFNAM2,FMT2) 'Jij_enrg.',IT,'.',JT,'.',NS
+                    OPEN (499,FILE=JFNAM2,STATUS='UNKNOWN')
+                    call version_print_header(499,
+     &           '; '//md5sum_potential//'; '//md5sum_shapefun)
+                    WRITE(499,FMT='(A)')
+     &                   '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
+                    WRITE(499,FMT='(3(A,I5))')
+     &                   '# IT=',IT,' JT=',JT,' SHELL=',NS
+                    WRITE(499,FMT='(A,I6)')
+     &                   '#ENERGIES: ',IELAST
+                  ENDIF!(NPOL==0 .OR. TEST('Jijenerg'))then
 
-                 DO IE=1,IELAST
-                  JXCIJINT(IT,JT,NSEFF) = JXCIJINT(IT,JT,NSEFF)
+                  DO IE=1,IELAST
+                    JXCIJINT(IT,JT,NSEFF) = JXCIJINT(IT,JT,NSEFF)
      &               - WEZ(IE)*csum_store(IT,JT,NSEFF,IE)/DBLE(NSPIN)
-                  XINTEGDTMP= 
+                    XINTEGDTMP= 
      &                csum_store(IT,JT,NSEFF,IE)/(PI*4.D0)
-                   WRITE (499,FMT='(6E12.4)')
-     &            EZ(IE),XINTEGDTMP,JXCIJINT(IT,JT,NSEFF)/4.D0
-
+                    IF(NPOL==0 .OR. TEST('Jijenerg'))then
+                      WRITE (499,FMT='(6E12.4)')
+     &                    EZ(IE),XINTEGDTMP,JXCIJINT(IT,JT,NSEFF)/4.D0
+                    ENDIF!(NPOL==0 .OR. TEST('Jijenerg'))then
+                   
                  END DO!IE
 
-                 close(499)
+                 IF(NPOL==0 .OR. TEST('Jijenerg')) close(499)
 
                END DO !I1
             END DO   !J1, loop over occupants
@@ -716,6 +752,8 @@ C
 
 c         write(JFNAME,FMT1)JFINTEG, IT
          OPEN (49,FILE=JFNAM)
+         call version_print_header(49,
+     &           '; '//md5sum_potential//'; '//md5sum_shapefun)
          WRITE (49,99009) IT,IQAT(IT)
 c         open(22,FILE=JFNAME)
 c          write(22,99014)IT,IQAT(IT)
@@ -767,7 +805,7 @@ C
      &     "# for atom IT = ",I3," on site IQ = ",I3,/,
      &     "# R_IQ,JQ      J_IT,JT       JT",/,
      &     "# ( ALAT )       ( Ry )",/,"#      ")
-99010 FORMAT(F12.8,2X,E14.8,2X,I3,I5)
+99010 FORMAT(F12.8,2X,E15.8,2X,I3,I5)
 99011 FORMAT(6X,"Output written into the files Jij.atomX",/,
      &       6X,"  X = atom index in the input file")
 99012       FORMAT (10X,I3,3X,25(I3))

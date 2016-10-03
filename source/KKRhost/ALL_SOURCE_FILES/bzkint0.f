@@ -98,7 +98,7 @@ C
      +              NSHELL,NAEZ,NATYP,NOQ,RBASIS,BRAVAIS,
      +              IFILIMP,RATOM,RCLSIMP,
      +              NSYMAT,ISYMINDEX,RSYMAT,KAOEZ,ATOMIMP,
-     +              ROTNAME,IPRINT,HOSTIMP,                 ! 20.02.2004
+     +              ROTNAME,HOSTIMP,                 ! 20.02.2004
      +              LMAXD,LMMAXD,NAEZD,NATYPD,NATOMIMPD,NEMBD,NSHELD)
 C
 C -->  creates difference vectors RROT for BZ integration in KKRMAT01

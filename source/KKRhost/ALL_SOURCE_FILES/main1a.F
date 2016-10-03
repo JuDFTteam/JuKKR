@@ -14,13 +14,14 @@
       use mod_timing
 #endif
       
-      use mod_types, only: t_tgmat, t_inc, t_lloyd
+      use mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatJij,
+     &                     init_t_dtmatJij,init_t_dtmatJij_at
 #ifdef CPP_MPI
-     &                     ,gather_tmat, gather_gref,
+     &                     ,gather_tmat, gather_lly_dtmat,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
      &                      get_ntot_pT_ioff_pT_2D 
 #endif
-      use mod_mympi, only: myrank, nranks, master
+      use mod_mympi, only: nranks, master
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks
@@ -29,6 +30,7 @@
       use mod_timing
 #endif
       use mod_wunfiles
+      use mod_jijhelp, only: set_Jijcalc_flags
      
       INCLUDE 'inc.p'
 C
@@ -69,7 +71,7 @@ C     .. Local Scalars ..
       DOUBLE PRECISION ALAT,PI
       PARAMETER  (PI=4.d0*datan(1.d0))
       INTEGER I1,ICST,IELAST,IEND,INS,IPOT,ISPIN,ITSCF,LMAX,NATYP,NAEZ, ! LLY added NAEZ
-     +        NCLS,NINEQ,NREF,NSPIN,NSRA,LM1,IR
+     +        NCLS,NINEQ,NREF,NSPIN,NSRA!,IE
       INTEGER LLY ! LLY <> 0: apply Lloyds formula
       DOUBLE COMPLEX DELTAE  ! Energy difference for numerical derivative
       INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD)
@@ -105,30 +107,28 @@ C
      &                 RMREL(IRMD*KREL+(1-KREL),NATYPD)
       INTEGER JWSREL(NATYPD),ZREL(NATYPD)
       INTEGER ITMPDIR,ILTMP
-      CHARACTER*80 TMPDIR
+      CHARACTER*80 TMPDIR!, filename
       LOGICAL LREFSYS,OPT,TEST
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 C LDA+U
-      INTEGER IDOLDAU,ITRUNLDAU,NTLDAU,OLD
+      INTEGER IDOLDAU,ITRUNLDAU,NTLDAU
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
-C      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C LDA+U
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+      INTEGER NATOMIMP, ATOMIMP(NATOMIMPD), IQAT(NATYPD)
 #ifdef CPP_MPI
-      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
-     &           myrank_at, myrank_ie, nranks_at,nranks_ie
-      integer :: ntot1, dims(2), mytot, ii
+      integer :: ntot1, mytot, ii
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
      &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
       ! communication of dtmat in case of lloyd
-      integer :: iwork, ierr
-      DOUBLE COMPLEX, allocatable :: work_lly(:,:,:)
+      integer :: iwork
+      DOUBLE COMPLEX, allocatable :: work_jij(:,:,:,:)
 #endif
-      integer :: i1_start, i1_end
+      integer :: i1_start, i1_end, ierr
 
 C-----------------------------------------------------------------------
 C     ..
@@ -168,12 +168,10 @@ C
      &       NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,LMAXD,
      &       NTOTD,NRMAXD,R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,
      &       R2DRDIREL,RMREL,IRMIND,LMPOTD,NSPOTD,NPOTD,JWSREL,ZREL,
-     &       ITSCF)
+     &       ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
 C
       IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
       
-C      if(IDOLDAU==1) ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
-
 C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
@@ -231,29 +229,30 @@ C
         end if
       ENDIF
 C
-      IF (.NOT.OPT('NEWSOSOL')) THEN
       
 #ifdef CPP_MPI
-        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
-     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                             master,ntot1,ntot_pT,ioff_pT,.true.,
+      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                 t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                           master,ntot1,ntot_pT,ioff_pT,.true.,
      + .true.)
 
-           i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-           i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+      i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+      i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
      &                ntot_pT(t_mpi_c_grid%myrank_ie)
-           t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+      t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 
-        if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
+      if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
      &            allocated(t_mpi_c_grid%ioff_pT1))) 
      &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),
      &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
-        t_mpi_c_grid%ntot_pT1 = ntot_pT
-        t_mpi_c_grid%ioff_pT1 = ioff_pT
+      t_mpi_c_grid%ntot_pT1 = ntot_pT
+      t_mpi_c_grid%ioff_pT1 = ioff_pT
 #else
-        i1_start = 1
-        i1_end   = NATYP
+      i1_start = 1
+      i1_end   = NATYP
 #endif
+
+      IF (.NOT.OPT('NEWSOSOL')) THEN
         DO I1 = i1_start,i1_end
           DO ISPIN = 1,NSPIN
             IPOT=NSPIN*(I1-1)+ispin
@@ -279,51 +278,62 @@ C
      
       ELSE
        
-      ! nonco angles: defined in mod_wunfiles
-      call read_angles(t_params,NATYP,THETA,PHI)
+       !for calculation of Jij-tensor: create array for additional t-matrices and
+       !set atom-dependent flags which indicate if t-matrix is needed
+       call init_t_dtmatJij(t_inc,t_dtmatJij) 
+       IF(OPT('XCPL    '))THEN
+        call set_Jijcalc_flags(t_dtmatJij,NATYPD,NATOMIMPD,NATOMIMP,
+     +    ATOMIMP,IQAT)
+       END IF!OPT('XCPL')
+
+       ! nonco angles: defined in mod_wunfiles
+       call read_angles(t_params,NATYP,THETA,PHI)
 
 c interpolate potential
-       CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IPAN,IRCUT,VINS,
-     +                        VISP,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,
-     +                        RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
+       CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,
+     +                        VISP,NPAN_LOG,NPAN_EQ,NPAN_TOT,
+     +                        RNEW,IPAN_INTERVALL,
      +                        VINSNEW)
-
-#ifdef CPP_MPI
-
-        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
-     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                             master,ntot1,ntot_pT,ioff_pT,.true.,
-     &  .true.)
-
-        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
-     &             ntot_pT(t_mpi_c_grid%myrank_ie)
-        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
-
-        if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and. 
-     &            allocated(t_mpi_c_grid%ioff_pT1))) 
-     &     allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),
-     &              t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1))
-        t_mpi_c_grid%ntot_pT1 = ntot_pT
-        t_mpi_c_grid%ioff_pT1 = ioff_pT
-#else
-        i1_start = 1
-        i1_end   = NATYP
-#endif
 
        DO I1=i1_start,i1_end
 
         IPOT=NSPIN*(I1-1)+1
 
-        CALL TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,RMESH(1,I1),ZAT(I1),
+        CALL TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT(I1),
      +                      SOCSCALE(I1),EZ,NSRA,CLEB(1,1),ICLEB,IEND,
      &                      NCHEB,NPAN_TOT(I1),
      +                      RPAN_INTERVALL(0,I1),IPAN_INTERVALL(0,I1),
      +                      RNEW(1,I1),VINSNEW,THETA(I1),PHI(I1),I1,IPOT
      &                      ,LLY,DELTAE, ! LLY
-     &                      IDOLDAU,LOPT(I1),WLDAU(1,1,1,I1)) ! LDAU
+     &                      IDOLDAU,LOPT(I1),WLDAU(1,1,1,I1), ! LDAU
+     &                      t_dtmatJij(I1))
 
        ENDDO !I1, atom loop
+
+
+c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+c      TTTTTTTTTTTTT TESTOUTPUT   Dij-implementation TTTTTTTTTTTTTTTTTT
+!      DO I1=i1_start,i1_end
+!       ie_start=t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+!       ie_end  =t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+!       DO ie_num=1,ie_end
+!        IE = ie_start+ie_num
+!        DO II=1,3
+!       write(filename,'(A,I3.3,A,I3.3,A,I1,A)') 'test_dtmat_iat=',I1,
+!    +                                                  '_ie=',IE,
+!    +                                                  'xyz=',II
+!       write(*,*) 'writing testfile:', trim(filename)
+!       if(allocated(t_dtmatJij(I1)%dtmat_xyz))then
+!       open(unit=13626,file=trim(filename), action='write',
+!    +       form='formatted')
+!      write(13626,'(2ES25.16)') t_dtmatJij(I1)%dtmat_xyz(:,:,II,ie_num)
+!       close(13626)
+!       end if
+!        ENDDO!II
+!       ENDDO!IE
+!      ENDDO !I1, atom loop
+!      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
       ENDIF !NEWSOSOL
 C
@@ -342,58 +352,72 @@ C
 
 
 #ifdef CPP_MPI
-      if(.not.t_tgmat%tmat_to_file) then ! .and. t_mpi_c_grid%dims(1)>1) then
-!       if(.not.t_tgmat%tmat_to_file) then
-      
+      if(.not.t_tgmat%tmat_to_file) then 
          do ii=0,t_mpi_c_grid%nranks_ie-1
           ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
           ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
          end do
-         
-          mytot = t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
-!      
+         mytot = t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
          call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
      &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
       end if
       
-      
-!        if(test('rhoqtest')) then
-! !           call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-! !           stop 'finished with rhoq output'
-!           LREFSYS=0
-!        end if
-      
-      if(lly/=0 .and. t_mpi_c_grid%nranks_ie>1) then
-      
-         !take care of cases when nranks_ie>natyp (set tralpha and dtmat to zero so that sum over ranks is correct)
-         if(t_mpi_c_grid%nranks_ie>natyp .and. 
-     &      t_mpi_c_grid%myrank_ie>=natyp ) t_lloyd%dtmat = 0
-         if(t_mpi_c_grid%nranks_ie>natyp .and. 
-     &      t_mpi_c_grid%myrank_ie>=natyp ) t_lloyd%tralpha = 0
-      
-         !communicate dtmatll
-         IWORK = product(shape(t_lloyd%dtmat)) !LMMAXD*LMMAXD*t_mpi_c_grid%ntot2*nspin*NATYP
-         allocate(work_lly(LMMAXD,LMMAXD,iwork/LMMAXD**2),stat=ierr)
-       if(ierr/=0) stop 
-     & 'Error allocating work in calctmat for communication of dtmatll'
-         CALL MPI_ALLREDUCE(t_lloyd%dtmat,WORK_lly,IWORK,
-     &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
-     &                      t_mpi_c_grid%mympi_comm_ie,IERR)
-         CALL ZCOPY(IWORK,WORK_lly,1,t_lloyd%dtmat,1)
-         deallocate(work_lly)
-               
-         !communicate tralpha
-         IWORK = product(shape(t_lloyd%tralpha))
-         allocate(work_lly(iwork,1,1),stat=ierr)
-       if(ierr/=0) stop 
-     & 'Error allocating work in calctmat for communication of tralpha'
-         CALL MPI_ALLREDUCE(t_lloyd%tralpha,WORK_lly,IWORK,
-     &                      MPI_DOUBLE_COMPLEX,MPI_SUM,
-     &                      t_mpi_c_grid%mympi_comm_ie,IERR)
-         CALL ZCOPY(IWORK,WORK_lly,1,t_lloyd%tralpha,1)
-         deallocate(work_lly)
-               
+      if(lly/=0 .and. .not.t_lloyd%dtmat_to_file) then
+         call gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, 
+     &                         t_mpi_c_grid%mympi_comm_ie)
       endif
+               
+      !for calculation of Jij-tensor
+      if(OPT('XCPL    ').and.OPT('NEWSOSOL'))then
+        DO I1=1,t_inc%NATYP
+          !initialize t_dtmatJij on other tasks
+          !   t_dtmatJij was already allocated for certain atoms within the atom loop
+          !   (in tmat_newsolver). This initialization cannot be made before tmat_newsolver,
+          !   because the division of the enegry loop (done in there) influences t_dtmatJij.
+          call init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij(I1))
+
+          !communicate
+          if(t_dtmatJij(I1)%calculate)then
+            iwork = product(shape(t_dtmatJij(I1)%dtmat_xyz))
+            allocate(work_jij(iwork,1,1,1),STAT=ierr)
+            if(ierr/=0) stop 
+     & 'Error allocating work in main1a for communication of dtmat_xyz'
+            call MPI_ALLREDUCE(t_dtmatJij(I1)%dtmat_xyz,work_jij,
+     &                         iwork,MPI_DOUBLE_COMPLEX,MPI_SUM,
+     &                         t_mpi_c_grid%mympi_comm_ie,IERR)
+            if(ierr/=MPI_SUCCESS) stop 'error communicating t_dtmatJij'
+            CALL ZCOPY(iwork,work_jij,1,t_dtmatJij(I1)%dtmat_xyz,1)
+            deallocate(work_jij, stat=ierr)
+         if(ierr/=0) stop '[main1a] Error deallocating work_jij'
+          end if!t_dtmatJij(I1)%calculate
+
+        END DO!I1=1,t_inc%NATYP
+c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+c      TTTTTTTTTTTTT TESTOUTPUT   Dij-implementation TTTTTTTTTTTTTTTTTT
+!      DO I1=1,t_inc%NATYP
+!       ie_start=t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+!       ie_end  =t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+!       DO ie_num=1,ie_end
+!        IE = ie_start+ie_num
+!        DO II=1,3
+!       write(filename,'(A,I3.3,A,I3.3,A,I1,A,I2)') 'test_dtmat_iat=',I1
+!    +                                                  ,'_ie=',IE,
+!    +                                                  'xyz=',II,
+!    +                                               'myrank=',myrank
+!       write(*,*) 'writing testfile:', trim(filename)
+!       if(allocated(t_dtmatJij(I1)%dtmat_xyz))then
+!       open(unit=13626,file=trim(filename), action='write',
+!    +       form='formatted')
+!      write(13626,'(2ES25.16)') t_dtmatJij(I1)%dtmat_xyz(:,:,II,ie_num)
+!       close(13626)
+!       end if
+!        ENDDO!II
+!       ENDDO!IE
+!      ENDDO !I1, atom loop
+!      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+      end if!OPT('XCPL    ').and.OPT('NEWSOSOL')
 #endif
 
 
@@ -413,9 +437,8 @@ C
       if(t_inc%i_write>0)
      &  WRITE (1337,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
 
-
-C      if(IDOLDAU==1) DEALLOCATE( ULDAU )
-      deallocate(vins, vinsnew)
+      deallocate(vins, vinsnew, stat=ierr)
+      if(ierr/=0) stop '[main1a] Error deallocating vins, vinsnew'
 
 
       END SUBROUTINE !main1a

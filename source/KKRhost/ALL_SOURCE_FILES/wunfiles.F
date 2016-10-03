@@ -64,7 +64,7 @@
      &                 THETASNEW(:,:,:),MVEVI(:,:,:),MVEVIEF(:,:,:),     &
      &                 RHO2NS(:,:,:,:),R2NEF(:,:,:,:),RHOC(:,:),
      &                 DENEFAT(:),ESPV(:,:),EDC(:),EU(:),RHOORB(:,:),
-     &                 ECOREREL(:,:),theta(:),phi(:)
+     &                 ECOREREL(:,:),theta(:),phi(:),RCLSIMP(:,:)
       INTEGER, allocatable :: LOPT(:),ITLDAU(:),                         &
      &        IRSHIFT(:),JWSREL(:),ZREL(:),                              &
      &        LCORE(:,:),NCORE(:),IPAN(:),                               &
@@ -75,7 +75,7 @@
      &        KAOEZ(:,:),IQAT(:),                                        &
      &        ICPA(:),NOQ(:),KMESH(:),                                   &
      &        NSHELL(:),NSH1(:),NSH2(:),                                 &
-     &        IJTABCALC(:),IJTABSYM(:),IJTABSH(:),                       &
+     &        IJTABCALC(:),IJTABCALC_I(:),IJTABSYM(:),IJTABSH(:),        &
      &        ISH(:,:),JSH(:,:),IQCALC(:),                               &
      &        ICHECK(:,:),ATOMIMP(:),REFPOT(:),                          &
      &        IRREL(:,:,:),NRREL(:,:),IFUNM1(:,:),                       &
@@ -86,9 +86,10 @@
      &        HOSTIMP(:),ILM(:,:),IMAXSH(:),                             &
      &        NPAN_LOG(:),NPAN_EQ(:),                                    &
      &        NPAN_TOT(:),                                               &
-     &        IPAN_INTERVALL(:,:),NKCORE(:,:),KAPCORE(:,:)
+     &        IPAN_INTERVALL(:,:),NKCORE(:,:),KAPCORE(:,:),              &
+     &        qdos_atomselect(:)
       LOGICAL, allocatable :: SYMUNITARY(:),VACFLAG(:)
-      CHARACTER*24, allocatable :: TXC(:)
+      CHARACTER*124, allocatable :: TXC(:)
       CHARACTER*8,  allocatable :: OPTC(:),TESTC(:)
       
       end type type_params
@@ -114,8 +115,8 @@
      &                    ATOM,CLS,RCLS,NACLS,LOFLM,SOLVER,SOCSCL,CSCL,
      &                    ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,
      &                    CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,NSH2,
-     &                    IJTABCALC,ISH,JSH,IJTABSYM,IJTABSH,NOFGIJ,
-     &                    NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,
+     &                   IJTABCALC,IJTABCALC_I,ISH,JSH,IJTABSYM,IJTABSH,
+     &                   NOFGIJ,NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,
      &                    KMESH,MAXMESH,NSYMAT,SYMUNITARY,RROT,
      &                    DSYMLL,INVMOD,ICHECK,
      &                    NATOMIMP,RATOM,ATOMIMP,
@@ -138,7 +139,7 @@
      &                    NGSHD,KREL,NTOTD,NCHEBD,NPAN_LOG,NPAN_EQ,
      &                    NCHEB,R_LOG,NPAN_TOT,RNEW,RPAN_INTERVALL,
      &                    IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,
-     &                    TOLRDIF,LLY,DELTAE)
+     &                    TOLRDIF,LLY,DELTAE,RCLSIMP)
 C **********************************************************************
 C *                                                                    *
 C *  This subroutine is part of the MAIN0 program in the tbkkr package *
@@ -149,7 +150,8 @@ C *  v.popescu, munich 2004                                            *
 C *                                                                    *
 C **********************************************************************
 
-      use mod_types, only: t_inc, t_tgmat, t_lloyd
+      use mod_types, only: t_inc, t_tgmat, t_lloyd, t_cpa
+      use mod_mympi, only: MPIatom, MPIadapt
 
       IMPLICIT NONE
 C     ..
@@ -202,6 +204,7 @@ C     .. Array arguments
 C      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
+      DOUBLE PRECISION RCLSIMP(3,NATOMIMPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C     ..
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
@@ -214,7 +217,8 @@ C     ..
      &        KAOEZ(NATYPD,NEMBD2),IQAT(NATYPD),
      &        ICPA(NAEZD),NOQ(NAEZD),KMESH(IEMXD)
       INTEGER NSHELL(0:NSHELD),NSH1(NSHELD),NSH2(NSHELD),
-     &        IJTABCALC(NOFGIJD),IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD)
+     &        IJTABCALC(NOFGIJD),IJTABCALC_I(NOFGIJD),IJTABSYM(NOFGIJD),
+     &        IJTABSH(NOFGIJD)
       INTEGER ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD),IQCALC(NAEZD)
       INTEGER ICHECK(NAEZDPD,NAEZDPD),ATOMIMP(NATOMIMPD),REFPOT(NEMBD2)
       INTEGER IRREL(2,2,LMMAXD),NRREL(2,LMMAXD),IFUNM1(LMXSPD,NATYPD),
@@ -230,13 +234,13 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*24 TXC(5)
+      CHARACTER*124 TXC(5)
       CHARACTER*80 TMPDIR
       INTEGER ITMPDIR,ILTMP      
 C     ..
 C     .. Local scalars
-      INTEGER I1,I2
-      integer ic, naclsmax, nqdos  !variables for t_inc filling
+      INTEGER I1
+      integer ic, naclsmax, nqdos, irmdnew  !variables for t_inc filling
       double precision phi(natyp),theta(natyp)
 C     ..
 C     .. External Functions ..
@@ -249,6 +253,16 @@ C
       ! put information about scf steps into t_inc
       t_inc%i_iteration = ITSCF
       t_inc%N_iteration = SCFSTEPS
+      ! put information for save_wavefun also in:
+      t_inc%NSRA =NSRA
+      t_inc%LMMAXSO = 2*(LMAXD+1)**2
+      irmdnew = 0
+      do i1=1,natypd
+        if (npan_tot(i1)*(ncheb+1)>irmdnew) then
+           irmdnew = npan_tot(i1)*(ncheb+1)
+        end if
+      end do
+      t_inc%IRMDNEW = irmdnew
 
 C ------------------------------------------------------------- itermdir
 C
@@ -295,6 +309,10 @@ C                                  meant for simpler passing of basic parameter 
          NQDOS = 1
       END IF
    
+   
+   
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
       !fill t_inc
       t_inc%LMMAXD = LMMAXD
       t_inc%NSPIN  = NSPIN
@@ -307,19 +325,34 @@ C                                  meant for simpler passing of basic parameter 
       t_inc%NSHELL0 = NSHELL(0)
       IF(OPT('NEWSOSOL')) t_inc%NEWSOSOL = .true.
       IF(OPT('deci-out')) t_inc%deci_out = .true.
+      !t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       
+      
+      
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags
       !set logical switches in t_tgmat which control if tmat, gmat and gref are written to files or stored in memory
       if(TEST('tmatfile')) t_tgmat%tmat_to_file = .true.
       if(TEST('gmatfile')) t_tgmat%gmat_to_file = .true.
       if(TEST('greffile')) t_tgmat%gref_to_file = .true.
+      if(TEST('projfile')) t_cpa%dmatproj_to_file = .true.
+      
+      
+      !bug bug bug bug bug
+      ! in case of ASA DIRAC solver (KREL==1) then gmat file has to be written out otherwise something is going wrong.
+      if(KREL>0) t_tgmat%gmat_to_file = .true.
+      !bug bug bug bug bug
+
       !some special run options:
       if(OPT('KKRFLEX '))  t_tgmat%tmat_to_file = .true.  ! for KKRFLEX option tmat must be written to file 
       if(OPT('qdos    '))  t_tgmat%gmat_to_file = .true.  ! for qdos write gmat to file since it scales with NQDOS and can become huge
       
       !set logical switches in t_lloyd which control if files are written to files or stored in memory
-      if(TEST('tmatfile').or.TEST('llyfiles')) 
+!       if(TEST('tmatfile').or.TEST('llyfiles')) 
+      if(TEST('wrtdtmat').or.TEST('llyfiles')) 
      &                    t_lloyd%dtmat_to_file = .true.
-      if(TEST('wrtdtmat').or.TEST('llyfiles'))
+      if(TEST('wrttral ').or.TEST('llyfiles'))
      &                    t_lloyd%tralpha_to_file = .true.
       if(TEST('wrtcdos ').or.TEST('llyfiles')) 
      &                    t_lloyd%cdos_diff_lly_to_file = .true.
@@ -336,6 +369,43 @@ C                                  meant for simpler passing of basic parameter 
       t_inc%i_time = 1  !default: only timings from master, all iterations
       if(TEST('timings0')) t_inc%i_time = 0  !only timings from master, only the last iteration
       if(TEST('timings2')) t_inc%i_time = 2  !all timing files, all iterations
+      ! writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      
+      
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! MPI communication scheme
+      !set switch for MPIatom test option (see mod_types and mod_mympi)
+      ! default values for MPIadapt and MPIatom
+      if(NATYP<=IELAST) then
+         MPIatom = .true.
+      else
+         MPIatom = .false.
+      end if
+      MPIadapt = 1 ! 1 means check timings and then reshuffle ranks if necessary
+      ! change default behaviour for the corresponding test flags are found
+      if(test('MPIatom ')) then
+         MPIatom = .true.
+         MPIadapt= 0 ! 0 means no change in communication scheme
+      end if
+      if(test('MPIenerg')) then
+         MPIatom = .false.
+         MPIadapt= 0
+      end if
+      if(test('MPIadapt')) then
+         MPIadapt= 2 ! 2 means force run with MPIatom then with MPIenerg and then compare to choose optimal 
+      end if
+      ! so far changing does not work yet, so turn this off:
+      MPIadapt = 0
+      
+      if(test('MPIatom ') .and. test('MPIenerg')) then
+         stop "[wunfiles] Found test options 'MPIenerg' and 'MPIatom'
+     & which do not work together. Please choose only one of these."
+      end if
+      ! MPI communication scheme
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      
       
       
       ! all parameters are stored in t_params fomr mod_wunfiles
@@ -355,7 +425,7 @@ C                                  meant for simpler passing of basic parameter 
      &        EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,R_LOG,E1,E2,TK,EFERMI,
      &        ALAT,CPATOL,MIXING,QBOUND,FCM,LAMBDA_XC,TOLRDIF,
      &        LINTERFACE,LRHOSYM,SOLVER,TMPDIR,ITMPDIR,ILTMP,
-     &        NTOTD,NCHEBD,NCHEB,DELTAE,0.d0,0.d0,t_params)
+     &        NTOTD,NCHEBD,NCHEB,DELTAE,t_params)
      
       ! initialize allocatable arrays
       call init_t_params(t_params)
@@ -376,10 +446,12 @@ C                                  meant for simpler passing of basic parameter 
      &       RPAN_INTERVALL,RNEW,THETASNEW,LOPT,ITLDAU,IRSHIFT,JWSREL,
      &       ZREL,LCORE,NCORE,IPAN,IRCUT,JEND,ICLEB,ATOM,CLS,NACLS,LOFLM
      &      ,EZOA,KAOEZ,IQAT,ICPA,NOQ,KMESH,NSHELL,NSH1,NSH2,IJTABCALC,
+     &       IJTABCALC_I,
      &       IJTABSYM,IJTABSH,ISH,JSH,IQCALC,ICHECK,ATOMIMP,REFPOT,IRREL
      &      ,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,
      &       LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,
-     &       NPAN_EQ,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG,TXC)
+     &       NPAN_EQ,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG,TXC,
+     &       RCLSIMP)
      
       ! save information about the energy mesh
       call save_emesh(IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSEMICORE,NPOL,TK,
@@ -393,12 +465,15 @@ C ======================================================================
 
 
 
+
+
       subroutine init_t_params(t_params)
       ! allocate arrays, has to be done after bcast t_params_scalars for myrank<>master
       ! otherwise are the parameters not set
       implicit none
       
       type(type_params), intent(inout) :: t_params
+      integer :: ierr
       
       ALLOCATE(t_params%EZ(t_params%IEMXD),   !DOUBLE COMPLEX
      &t_params%WEZ(t_params%IEMXD),
@@ -412,7 +487,8 @@ C ======================================================================
      &t_params%RC(t_params%LMMAXD,t_params%LMMAXD),
      &t_params%RREL(t_params%LMMAXD,t_params%LMMAXD),
      &t_params%SRREL(2,2,t_params%LMMAXD),
-     &t_params%PHILDAU(t_params%IRMD,t_params%NATYPD)) !DOUBLE COMPLEX
+     &t_params%PHILDAU(t_params%IRMD,t_params%NATYPD), stat=ierr) !DOUBLE COMPLEX
+      if(ierr/=0) stop '[init_t_params] Error allocating complexs'
      
       ALLOCATE(t_params%VINS(t_params%IRMIND:t_params%IRMD,
      &             t_params%LMPOTD,t_params%NSPOTD), !DOUBLE PRECISION
@@ -477,7 +553,9 @@ C ======================================================================
      &t_params%RHOORB(t_params%IRMD*t_params%KREL+(1-t_params%KREL),
      &                t_params%NATYPD),
      &t_params%ECOREREL(t_params%KREL*20+(1-t_params%KREL),
-     &                  t_params%NPOTD))    !DOUBLE PRECISION
+     &                  t_params%NPOTD),
+     &t_params%RCLSIMP(3,t_params%NATOMIMPD), stat=ierr)    !DOUBLE PRECISION
+      if(ierr/=0) stop '[init_t_params] Error allocating doubles'
      
       ALLOCATE(t_params%LOPT(t_params%NATYPD),
      &t_params%ITLDAU(t_params%NATYPD),
@@ -504,6 +582,7 @@ C ======================================================================
      &t_params%NSH1(t_params%NSHELD),
      &t_params%NSH2(t_params%NSHELD),
      &t_params%IJTABCALC(t_params%NOFGIJD),
+     &t_params%IJTABCALC_I(t_params%NOFGIJD),
      &t_params%IJTABSYM(t_params%NOFGIJD),
      &t_params%IJTABSH(t_params%NOFGIJD),
      &t_params%ISH(t_params%NSHELD,t_params%NOFGIJD),
@@ -536,27 +615,38 @@ C ======================================================================
      &t_params%NPAN_TOT(t_params%NATYPD),
      &t_params%IPAN_INTERVALL(0:t_params%NTOTD,t_params%NATYPD),
      &t_params%NKCORE(20,t_params%NATYPD),
-     &t_params%KAPCORE(20,t_params%NPOTD)) !INTEGER
+     &t_params%KAPCORE(20,t_params%NPOTD),stat=ierr) !INTEGER
+      if(ierr/=0) stop '[init_t_params] Error allocating integers'
+      
+      if(.not. allocated(t_params%qdos_atomselect)) then
+         allocate(t_params%qdos_atomselect(t_params%NATYPD), stat=ierr) !INTEGER
+         if(ierr/=0) stop '[init_t_params] Error alloc qdos_atomselect'
+      end if
      
       ALLOCATE(t_params%SYMUNITARY(t_params%NSYMAXD), !LOGICALS
-     &         t_params%VACFLAG(2))
+     &         t_params%VACFLAG(2), stat=ierr)
+      if(ierr/=0) stop '[init_t_params] Error allocating logicals'
      
-      ALLOCATE(t_params%TXC(5)) !CHARACTER*24
+      ALLOCATE(t_params%TXC(5), stat=ierr) !CHARACTER*124
+      if(ierr/=0) stop '[init_t_params] Error allocating txc'
       
       if(.not.allocated(t_params%TESTC)) then
-        ALLOCATE(t_params%TESTC(32),t_params%OPTC(32)) !CHARACTER*8
+        ALLOCATE(t_params%TESTC(32),t_params%OPTC(32), stat=ierr) !CHARACTER*8
+        if(ierr/=0) stop '[init_t_params] Error allocating testc'
       end if
       
       if (.not.allocated(t_params%nofks)) then
         allocate(t_params%BZKP(3,t_params%KPOIBZ,t_params%MAXMESH), ! double precision
      &           t_params%VOLCUB(t_params%KPOIBZ,t_params%MAXMESH), ! double precision
      &           t_params%VOLBZ(t_params%MAXMESH), ! double precision
-     &           t_params%NOFKS(t_params%MAXMESH)) ! integer
+     &           t_params%NOFKS(t_params%MAXMESH), stat=ierr) ! integer
+        if(ierr/=0) stop '[init_t_params] Error allocating kpts arrays'
       end if
       
       if (.not.allocated(t_params%theta)) then
         allocate(t_params%THETA(t_params%natyp),    !double precision
-     &           t_params%PHI(t_params%natyp))      !double precision
+     &           t_params%PHI(t_params%natyp), stat=ierr)      !double precision
+        if(ierr/=0) stop '[init_t_params] Error allocating theta/phi'
       end if
       
       end subroutine init_t_params
@@ -749,7 +839,7 @@ C ======================================================================
       subroutine bcast_t_params_arrays(t_params)
       ! broadcast arrays from t_params
       use mpi
-      use mod_mympi, only: master, myrank
+      use mod_mympi, only: master
       implicit none
       
       type(type_params), intent(inout) :: t_params
@@ -914,6 +1004,8 @@ C ======================================================================
      &          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%phi,t_params%natyp,
      &          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
+      call MPI_Bcast(t_params%RCLSIMP,3*t_params%NATOMIMPD,
+     &          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
      
       !INTEGERS
       call MPI_Bcast(t_params%LOPT,(t_params%NATYPD),
@@ -966,6 +1058,8 @@ C ======================================================================
       call MPI_Bcast(t_params%NSH2,(t_params%NSHELD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%IJTABCALC,(t_params%NOFGIJD),
+     &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+      call MPI_Bcast(t_params%IJTABCALC_I,(t_params%NOFGIJD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%IJTABSYM,(t_params%NOFGIJD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
@@ -1035,6 +1129,8 @@ C ======================================================================
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%KAPCORE,(20*t_params%NPOTD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
+      call MPI_Bcast(t_params%qdos_atomselect,(t_params%NATYPD),
+     &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
 
       !LOGICAL
       call MPI_Bcast(t_params%SYMUNITARY,(t_params%NSYMAXD),
@@ -1043,7 +1139,7 @@ C ======================================================================
      &          MPI_COMM_WORLD,ierr)
 
       !CHARACTER
-      call MPI_Bcast(t_params%TXC,5*24, !5 entries of length 24
+      call MPI_Bcast(t_params%TXC,5*124, !5 entries of length 24
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*24
       call MPI_Bcast(t_params%TESTC,32*8, !32 entries of length 8
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
@@ -1078,7 +1174,7 @@ C ======================================================================
      &        EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,R_LOG,E1,E2,TK,EFERMI,
      &        ALAT,CPATOL,MIXING,QBOUND,FCM,LAMBDA_XC,TOLRDIF,
      &        LINTERFACE,LRHOSYM,SOLVER,TMPDIR,ITMPDIR,ILTMP,
-     &        NTOTD,NCHEBD,NCHEB,DELTAE,EFOLD,CHRGOLD,t_params)
+     &        NTOTD,NCHEBD,NCHEB,DELTAE,t_params)
       ! fill scalars into t_params
       IMPLICIT NONE
       type(type_params), intent(inout) :: t_params
@@ -1098,7 +1194,7 @@ C     .. Scalar arguments
       INTEGER IDOLDAU,ITRUNLDAU,NTLDAU,NTOTD,NCHEBD,NCHEB
       INTEGER NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE
       DOUBLE PRECISION EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,R_LOG
-      DOUBLE PRECISION E1,E2,TK,EFERMI,ALAT,CPATOL,EFOLD,CHRGOLD
+      DOUBLE PRECISION E1,E2,TK,EFERMI,ALAT,CPATOL
       DOUBLE PRECISION MIXING,QBOUND,FCM,LAMBDA_XC,TOLRDIF
       DOUBLE COMPLEX DELTAE  ! Energy difference for numerical derivative
       LOGICAL LINTERFACE,LRHOSYM
@@ -1244,10 +1340,12 @@ C     ..
      &       RPAN_INTERVALL,RNEW,THETASNEW,LOPT,ITLDAU,IRSHIFT,JWSREL,
      &       ZREL,LCORE,NCORE,IPAN,IRCUT,JEND,ICLEB,ATOM,CLS,NACLS,LOFLM
      &      ,EZOA,KAOEZ,IQAT,ICPA,NOQ,KMESH,NSHELL,NSH1,NSH2,IJTABCALC,
+     &       IJTABCALC_I,
      &       IJTABSYM,IJTABSH,ISH,JSH,IQCALC,ICHECK,ATOMIMP,REFPOT,IRREL
      &      ,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,
      &       LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,
-     &       NPAN_EQ,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG,TXC)
+     &       NPAN_EQ,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG,TXC,
+     &       RCLSIMP)   
       ! fill arrays after they have been allocated in init_t_params
 C     ..
       IMPLICIT NONE
@@ -1285,6 +1383,7 @@ C     .. Array arguments
       DOUBLE PRECISION EREFLDAU(NATYPD),UEFF(NATYPD),JEFF(NATYPD)
       DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
+      DOUBLE PRECISION RCLSIMP(3,NATOMIMPD)
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C     ..
       INTEGER LOPT(NATYPD),ITLDAU(NATYPD)
@@ -1297,7 +1396,8 @@ C     ..
      &        KAOEZ(NATYPD,NEMBD2),IQAT(NATYPD),
      &        ICPA(NAEZD),NOQ(NAEZD),KMESH(IEMXD)
       INTEGER NSHELL(0:NSHELD),NSH1(NSHELD),NSH2(NSHELD),
-     &        IJTABCALC(NOFGIJD),IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD)
+     &        IJTABCALC(NOFGIJD),IJTABCALC_I(NOFGIJD),IJTABSYM(NOFGIJD),
+     &        IJTABSH(NOFGIJD)
       INTEGER ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD),IQCALC(NAEZD)
       INTEGER ICHECK(NAEZDPD,NAEZDPD),ATOMIMP(NATOMIMPD),REFPOT(NEMBD2)
       INTEGER IRREL(2,2,LMMAXD),NRREL(2,LMMAXD),IFUNM1(LMXSPD,NATYPD),
@@ -1313,7 +1413,7 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*24 TXC(5)  
+      CHARACTER*124 TXC(5)  
 C     ..
       !fill arrays:
       t_params%EZ             = EZ             
@@ -1369,6 +1469,7 @@ C     ..
       t_params%JEFF           = JEFF           
       if(t_params%IDOLDAU==1) t_params%ULDAU          = ULDAU             
       t_params%WLDAU          = WLDAU          
+      t_params%RCLSIMP        = RCLSIMP
       t_params%RPAN_INTERVALL = RPAN_INTERVALL 
       t_params%RNEW           = RNEW                        
       t_params%THETASNEW      = THETASNEW      
@@ -1397,6 +1498,7 @@ C     ..
       t_params%NSH1           = NSH1           
       t_params%NSH2           = NSH2           
       t_params%IJTABCALC      = IJTABCALC      
+      t_params%IJTABCALC_I    = IJTABCALC_I    
       t_params%IJTABSYM       = IJTABSYM       
       t_params%IJTABSH        = IJTABSH        
       t_params%ISH            = ISH            
@@ -1447,15 +1549,14 @@ C     ..
      &       NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,LMAXD,
      &       NTOTD,NRMAXD,R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,
      &       R2DRDIREL,RMREL,IRMIND,LMPOTD,NSPOTD,NPOTD,JWSREL,ZREL,
-     &       ITSCF)
+     &       ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
       ! get relevant parameters from t_params
 !     ..
-      use mod_types, only: t_inc
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params 
       integer, intent(in)  :: IPAND,NATYPD,IRMD,NACLSD,NCLSD,NREFD,KREL,
      &                        NCLEB,NEMBD,NAEZD,LM2D,LMAXD,NTOTD,NRMAXD,
-     &                        IEMXD,IRMIND,LMPOTD,NSPOTD,NPOTD
+     &                        IEMXD,IRMIND,LMPOTD,NSPOTD,NPOTD,NATOMIMPD
       integer, intent(inout) :: NSRA,NAEZ,NATYP,NSPIN,ICST,
      &         IRCUT(0:IPAND,NATYPD),LMAX,NCLS,NINEQ,NREF,LLY,
      &         INS,ATOM(NACLSD,NAEZD+NEMBD),CLS(NAEZD+NEMBD),
@@ -1464,7 +1565,8 @@ C     ..
      &         IRWS(NATYPD),IRMIN(NATYPD),ITMPDIR,ILTMP,IDOLDAU,
      &         NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),NCHEB,NPAN_TOT(NATYPD),
      &         IPAN_INTERVALL(0:NTOTD,NATYPD),NTLDAU,ITLDAU(NATYPD),
-     &         JWSREL(NATYPD),ZREL(NATYPD),ITSCF
+     &         JWSREL(NATYPD),ZREL(NATYPD),ITSCF,NATOMIMP,
+     &         ATOMIMP(NATOMIMPD),IQAT(NATYPD)
       double precision, intent(inout) :: ALAT,DRDI(IRMD,NATYPD),
      &         RMESH(IRMD,NATYPD),ZAT(NATYPD),RCLS(3,NACLSD,NCLSD),
      &         RMTREF(NREFD),VREF(NREFD),CLEB(NCLEB,2),
@@ -1576,43 +1678,49 @@ C ------------------------------------------------------ input_potential
          BTREL     = t_params%BTREL    
       END IF
       ITSCF    = t_params%ITSCF   
+C ------------------------------------------------------ cluster atoms
+      NATOMIMP   = t_params%NATOMIMP
+      ATOMIMP    = t_params%ATOMIMP
+      IQAT       = t_params%IQAT
 
       end subroutine get_params_1a
 
 
-      subroutine get_params_1b(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,
-     &       NCLSD,NREFD,NCLEB,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
+      subroutine get_params_1b(t_params,NATYPD,NACLSD,IELAST,
+     &       NPOL,NCLSD,NREFD,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,
      &       NSPIN,LMAX,NCLS,NREF,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,
      &       ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,
-     &       LMAXD,NSHELD,NPRINCD,KPOIBZ,NTOTD,NSPOTD,ATOMIMP,NATOMIMPD,
+     &       NSHELD,NPRINCD,KPOIBZ,ATOMIMP,NATOMIMPD,
      &       ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,
      &       IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,
      &       NOQ,IQAT,NOFGIJD,NOFGIJ,NATOMIMP,CONC,KMESH,MAXMESH,NSYMAT,
-     &       NQCALC,RATOM,RROT,DROTQ,IJTABCALC,IJTABSYM,IJTABSH,IQCALC,
+     &       NQCALC,RATOM,RROT,DROTQ,IJTABCALC,IJTABCALC_I,IJTABSYM,
+     &       IJTABSH,IQCALC,
      &       DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,
      &       NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,
-     &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD)
+     &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,
+     &       RCLSIMP)
       ! get relevant parameters from t_params
 !     ..
-      use mod_types, only: t_inc
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params 
-      integer, intent(in)  :: IPAND,NATYPD,IRMD,NACLSD,NCLSD,NREFD,KREL,
-     &         NCLEB,NEMBD,NAEZD,LMAXD,NTOTD,IEMXD,
-     &         NSPOTD,NOFGIJD,NEMBD1,LMMAXD,NSYMAXD,NSPINDD
+      integer, intent(in)  :: NATYPD,NACLSD,NCLSD,NREFD,KREL,
+     &         NEMBD,NAEZD,IEMXD,
+     &         NOFGIJD,NEMBD1,LMMAXD,NSYMAXD,NSPINDD
      &        ,MAXMSHD,NSHELD,NPRINCD,KPOIBZ,NATOMIMPD,NRD
       integer, intent(inout) :: NSRA,NAEZ,NATYP,NSPIN,MAXMESH,
      &         LMAX,NCLS,NREF,LLY,NSYMAT,
      &         INS,ATOM(NACLSD,NAEZD+NEMBD),CLS(NAEZD+NEMBD),NQCALC,
      &         NATOMIMP,ATOMIMP(NATOMIMPD),
-     &         NACLS(NCLSD),REFPOT(NAEZD+NEMBD),IELAST,
+     &         NACLS(NCLSD),REFPOT(NAEZD+NEMBD),IELAST,NPOL,
      &         ITMPDIR,ILTMP,INVMOD,
      &         ICC,IGF,NLBASIS,NRBASIS
      &        ,NCPA,ICPA(NAEZD),ITCPAMAX,IDECI,EZOA(NACLSD,NAEZD+NEMBD),
      &         NSHELL(0:NSHELD),KMROT,KAOEZ(NATYPD,NAEZD+NEMBD),
      &         NOQ(NAEZD),IQAT(NATYPD),ISH(NSHELD,NOFGIJD),NOFGIJ,
      &         JSH(NSHELD,NOFGIJD),NSH1(NSHELD),NSH2(NSHELD),
-     &         KMESH(IEMXD),IJTABCALC(NOFGIJD),IJTABSYM(NOFGIJD),
+     &         KMESH(IEMXD),IJTABCALC(NOFGIJD),IJTABCALC_I(NOFGIJD),
+     &         IJTABSYM(NOFGIJD),
      &         IJTABSH(NOFGIJD),IQCALC(NAEZD),NOFKS(MAXMSHD),
      &         ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD),IRREL(2,2,LMMAXD),
      &         NRREL(2,LMMAXD)
@@ -1624,7 +1732,9 @@ C ------------------------------------------------------ input_potential
      &         RROT(48,3,NSHELD),
      &         CONC(NATYPD),
      &         RBASIS(3,NAEZD+NEMBD),
-     &         BZKP(3,KPOIBZ,MAXMSHD),VOLCUB(KPOIBZ,MAXMSHD)
+     &         BZKP(3,KPOIBZ,MAXMSHD),
+     &         VOLCUB(KPOIBZ,MAXMSHD),
+     &         RCLSIMP(3,NATOMIMPD)
 
       double complex, intent(inout) :: EZ(IEMXD),
      &         DROTQ(LMMAXD,LMMAXD,NAEZD),DSYMLL(LMMAXD,LMMAXD,NSYMAXD),
@@ -1635,7 +1745,7 @@ C ------------------------------------------------------ input_potential
       character*80, intent(inout) :: TMPDIR
       logical, intent(inout) :: SYMUNITARY(NSYMAXD),VACFLAG(2)
       
-      integer :: i,j,l,id
+      integer :: i,l,id
       
 C     .. External Functions ..
       LOGICAL OPT,TEST
@@ -1705,6 +1815,7 @@ C ......................................................................
       NSH2      = t_params%NSH2     
       DROTQ     = t_params%DROTQ    
       IJTABCALC = t_params%IJTABCALC
+      IJTABCALC_I = t_params%IJTABCALC_I
       do I=1,NSHELL(0)
          do L=1,NOFGIJ
             ISH(I,L) = t_params%ISH(I,L)
@@ -1722,6 +1833,7 @@ C ......................................................................
       TMPDIR     = t_params%TMPDIR    
       ITMPDIR    = t_params%ITMPDIR   
       ILTMP      = t_params%ILTMP     
+      RCLSIMP    = t_params%RCLSIMP
       IF ( KREL.EQ.1 ) then
          RC    = t_params%RC   
          CREL  = t_params%CREL 
@@ -1774,6 +1886,7 @@ C
       IELAST = t_params%IELAST
       EZ     = t_params%EZ
       WEZ    = t_params%WEZ
+      NPOL   = t_params%NPOL      
 C -------------------------------------------------------------- itermdir
 C
       IF (OPT('ITERMDIR')) THEN
@@ -1785,7 +1898,7 @@ C
 
 
       subroutine get_params_1c(t_params,KREL,NAEZD,NATYPD,NCLEB,LM2D,
-     &          NCHEBD,IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,NCLSD,
+     &          NCHEBD,IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,
      &          NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NATYP,NAEZ,NSPIN,NACLS1,
      &          ICST,KMROT,IQAT,IDOLDAU,LMAX,IRWS,IPAN,IRCUT,IEND,ICLEB, 
      &          LOFLM,JEND,IFUNM1,LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,
@@ -1800,11 +1913,10 @@ C
      &          IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
       ! get relevant parameters from t_params
 !     ..
-      use mod_types, only: t_inc
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params 
       integer, intent(in)  :: KREL,NAEZD,NATYPD,NCLEB,LM2D,NTOTD,NCHEBD,
-     &          IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,NCLSD,MMAXD,IEMXD,
+     &          IPAND,LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,MMAXD,IEMXD,
      &          IRMD,NSPIND,NSPOTD,IRMIND,LMAXD1,NCELLD,IRID
       integer, intent(inout) :: NSRA,INS,NATYP,NAEZ,NSPIN,ICST,KMROT,
      &          IQAT(NATYPD),IDOLDAU,LMAX,IRWS(NATYPD),IPAN(NATYPD),
@@ -1987,7 +2099,6 @@ C
      &     LINTERFACE,LRHOSYM,NGSHD,NAEZD,IRID,NSPOTD,IEMXD)
       ! get relevant parameters from t_params
 !     ..
-      use mod_types, only: t_inc
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params 
       
@@ -2020,7 +2131,7 @@ C
      &     R2DRDIREL(IRMD*KREL+(1-KREL),NATYPD),ECORE(20,NPOTD)
 
       double complex, intent(inout) :: EZ(IEMXD),WEZ(IEMXD)
-      character*24, intent(inout) :: TXC(5)
+      character*124, intent(inout) :: TXC(5)
       logical, intent(inout) :: LINTERFACE,LRHOSYM
 C     .. External Functions ..
       LOGICAL OPT,TEST
@@ -2324,6 +2435,7 @@ C
       ! read nonco_angles
       use mod_types, only: t_inc
       use mod_mympi, only: myrank, master
+      use mod_version_info
       IMPLICIT NONE
       type(type_params), intent(inout) :: t_params
       integer, intent(in) :: NATYP
@@ -2331,7 +2443,8 @@ C
       
       logical :: lread, lcheckangles
       integer :: i1
-      double precision, parameter :: PI=4.d0*datan(1.d0)
+      double precision :: th1, ph1
+      double precision, parameter :: PI=4.d0*datan(1.d0), eps=1d-5
       
       ! if executed first in wunfiles theta is not allocated, thus read angles from file
       if(.not.allocated(t_params%theta)) then
@@ -2343,20 +2456,26 @@ C
        INQUIRE(file='nonco_angle.dat',EXIST=LREAD)
        IF (LREAD) THEN
          OPEN(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
+         call version_check_header(10)
          DO I1 = 1,NATYP
-            READ(10,*) THETA(I1),PHI(I1)
-           THETA(I1)=THETA(I1)*(2.0D0*PI/360.0D0)
-           PHI(I1)=PHI(I1)*(2.0D0*PI/360.0D0)
-           IF(ABS(THETA(I1)).LT.PI .OR. ABS(PHI(I1)).LT.2*PI) THEN
-              LCHECKANGLES = .true.
-           ENDIF
+           READ(10,*) th1, ph1
+           IF((ABS(th1).LT.(PI+eps)   .AND. ABS(th1).GT.eps).OR.
+     +        (ABS(ph1).LT.(2*PI+eps) .AND. ABS(ph1).GT.eps))
+     &          LCHECKANGLES = .true.
+           THETA(I1)=th1*(PI/180.0D0)
+           PHI(I1)  =ph1*(PI/180.0D0)
          ENDDO
          CLOSE(10)
          IF ( LCHECKANGLES.and.((t_inc%i_write>0).or.(myrank==master)) )
      & write(1337,*) 'WARNING: Check if your
      & nonco_angels file is correct! Found only values that are
      & smaller than pi for theta and 2pi for phi, respectively. But
-     & angles should be given in degrees (0...360)'
+     & angles are given in degree (0...360)'
+       write(1337,'(A)') '      I1  THETA[deg]  PHI[deg]'
+       do i1=1,NATYP
+         write(1337,'(I8,2F12.6)') i1,THETA(I1)*180D0/PI,
+     +                                 PHI(I1)*180D0/PI
+       end do!i1
        ENDIF ! LREAD
        
        !now save this also to t_params

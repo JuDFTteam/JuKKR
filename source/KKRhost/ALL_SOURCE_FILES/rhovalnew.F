@@ -9,25 +9,28 @@
        use omp_lib
 #endif
 #ifdef CPP_MPI
-      use mpi
+       use mpi
 #endif
 #ifdef CPP_TIMING
-      use mod_timing
+       use mod_timing
 #endif
 
       
-      use mod_types, only: t_tgmat, t_inc
+       use mod_types, only: t_tgmat, t_inc
 #ifdef CPP_MPI
-     &                     ,gather_tmat, gather_gref,
+     &                     ,gather_tmat,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
      &                      get_ntot_pT_ioff_pT_2D 
 #endif
-      use mod_mympi, only: myrank, nranks, master
+       use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks,
      &                     mympi_main1c_comm_newsosol
-#endif
+#endif      
+       use mod_save_wavefun, only: t_wavefunctions, read_wavefunc
+       use mod_version_info
+
        IMPLICIT NONE
        include 'inc.p'
        INTEGER NSPIN,NSRA,LMAX,IEND,IPOT,IELAST,NPAN_TOT,NCHEB,
@@ -101,31 +104,39 @@
        LOGICAL LDORHOEF
        DOUBLE PRECISION QVEC(:,:)       ! qdos ruess: q-vectors for qdos
        ALLOCATABLE QVEC                 ! qdos ruess
-       DOUBLE COMPLEX DENTOT(2),DENTMP(0:LMAXD1,2) ! qdos ruess
+#ifdef CPP_MPI
+       DOUBLE COMPLEX DENTOT(2)         ! qdos ruess
+#endif
        INTEGER IQ,NQDOS ! qdos ruess: number of qdos points
        INTEGER IX,M1,LMSHIFT1(4),LMSHIFT2(4)       ! qdos ruess
        INTEGER LRECGFLLE,IERR                           ! lmlm-dos
        INTEGER IDOLDAU,LOPT                                     ! LDAU
-       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND),PHILDAU(IRMD) ! LDAU
+       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND)!,PHILDAU(IRMD) ! LDAU
+       DOUBLE COMPLEX PHILDAU(IRMD)
+
        DOUBLE COMPLEX DENMATN(MMAXD,MMAXD,2,2)                  ! LDAU
-       INTEGER LMLO,LMHI,MMAX,M2,IS,JS                          ! LDAU
+       INTEGER LMLO,LMHI,MMAX,IS,JS                             ! LDAU
        DOUBLE COMPLEX GLDAU(LMMAXSO,LMMAXSO)                    ! LDAU
        ! OMP - number of threads, thread id
        integer nth,ith
 #ifdef CPP_MPI
-       integer :: mytot
-       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
        ! communication
        double complex, allocatable :: workc(:,:,:,:)
 #endif
        integer :: ie_start,ie_end, ie_num
+       integer :: i1_myrank ! lmlm-dos, needed for MPI with more than one rank per energy point (nranks_ie>1) 
        double precision :: angles_new(2)
+       ! read in wavefunctions
+       logical :: rll_was_read_in, sll_was_read_in, 
+     &            rllleft_was_read_in, sllleft_was_read_in
 C      ..
        LOGICAL TEST,OPT
        EXTERNAL TEST,OPT
-!        ! test
-!        integer :: mu0
-!        ! test
+#ifndef CPP_OMP
+       ! test
+       integer :: mu0
+       ! test
+#endif
 ! determine if omp is used
        ith = 0
        nth = 1
@@ -268,7 +279,12 @@ C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos r
 3000  IF (IERR.NE.0) STOP 'ERROR READING ''qvec.dat'''                  ! qdos ruess
       END IF  ! OPT('qdos    ')                                         ! qdos ruess
 
-      IF ((OPT('lmlm-dos')).AND.(I1.EQ.1)) THEN                         ! lmlm-dos ruess
+#ifdef CPP_MPI
+      i1_myrank = i1 - t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)    ! lmlm-dos ruess 
+#else
+      i1_myrank = i1                                                    ! lmlm-dos ruess
+#endif
+      IF ((OPT('lmlm-dos')).AND.(I1_myrank.EQ.1)) THEN                  ! lmlm-dos ruess
          LRECGFLLE = 4*LMMAXSO*LMMAXSO*IELAST*NQDOS                     ! lmlm-dos ruess
          OPEN(91,ACCESS='direct',RECL=LRECGFLLE,FILE='gflle',           ! lmlm-dos ruess
      &         FORM='unformatted',STATUS='replace',ERR=3001,IOSTAT=IERR)! lmlm-dos ruess
@@ -293,21 +309,23 @@ c energy loop
 !$omp parallel do default(none)
 !$omp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
 !$omp& private(jlk_index,tmatll,ith)
+!$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
+!$omp& private(rho2ns_temp,rho2,temp1,jspin)
+!$omp& private(alphasph,alphall,ie_num)
+!$omp& private(rll_was_read_in, sll_was_read_in)
+!$omp$ private(rllleft_was_read_in, sllleft_was_read_in)
+!$omp& firstprivate(t_inc)
+!$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
+!$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
 !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
 !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
 !$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
 !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
 !$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
-!$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
-!$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
-!$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
-!$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
+!$omp& shared(t_tgmat,ie_end, ie_start, t_wavefunctions)
 !$omp& reduction(+:rho2int,espv) reduction(-:muorb) 
 !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
-!$omp& shared(t_tgmat,ie_end, ie_start)
-!$omp& private(alphasph,alphall,ie_num)
-!$omp& firstprivate(t_inc)
 #endif
        DO ie_num=1,ie_end
         IE = ie_start+ie_num
@@ -331,10 +349,18 @@ c energy loop
 !$omp end critical
 #endif
 
+        if(t_wavefunctions%Nwfsavemax>0) then ! read wavefunctions?
+         ! read in wavefunction from memory
+          call read_wavefunc(t_wavefunctions,rll, rllleft, sll, sllleft,
+     &                       i1, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth,
+     &                       rll_was_read_in, sll_was_read_in, 
+     &                       rllleft_was_read_in, sllleft_was_read_in)
+        end if
+     
 c recalculate wavefuntions, also include left solution
 c contruct the spin-orbit coupling hamiltonian and add to potential
         CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,
-     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,
+     +                     ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,LMPOTD,
      +                     THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,
      +                     NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,
      &                     VNSPLL0,VNSPLL1(:,:,:,ith),'1')
@@ -344,120 +370,131 @@ cc extend matrix for the SRA treatment
         IF (NSRA.EQ.2) THEN
          IF (USE_SRATRICK.EQ.0) THEN
           CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
-     +               LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
+     +              LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
          ELSEIF (USE_SRATRICK.EQ.1) THEN
           CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
-     +            LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+     +           LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
          ENDIF
         ELSE
          VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
         ENDIF
 
+        if( (t_wavefunctions%Nwfsavemax>0 .and. 
+     &       .not. rll_was_read_in)
+     &      .or. (t_wavefunctions%Nwfsavemax==0)) then ! read/recalc wavefunctions
+        
 cc calculate the source terms in the Lippmann-Schwinger equation
 cc these are spherical hankel and bessel functions
-        HLK(:,:,ith)=CZERO
-        JLK(:,:,ith)=CZERO
-        HLK2(:,:,ith)=CZERO
-        JLK2(:,:,ith)=CZERO
-        GMATPREFACTOR=CZERO
-        JLK_INDEX=0
-        CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
+         HLK(:,:,ith)=CZERO
+         JLK(:,:,ith)=CZERO
+         HLK2(:,:,ith)=CZERO
+         JLK2(:,:,ith)=CZERO
+         GMATPREFACTOR=CZERO
+         JLK_INDEX=0
+         CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
      +                         LMMAXSO,1,JLK_INDEX,HLK(:,:,ith),
      +                         JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),
      +                         GMATPREFACTOR)
 
 c using spherical potential as reference
-        IF (USE_SRATRICK.EQ.1) THEN
-         CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
+         IF (USE_SRATRICK.EQ.1) THEN
+          CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
      +           LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,
      +                JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),
      +                JLK2(:,:,ith),GMATPREFACTOR,TMATSPH(:,ith),
      +                ALPHASPH,USE_SRATRICK)
-        ENDIF
+         ENDIF
 
 cc calculate the tmat and wavefunctions
-        RLL(:,:,:,ith)=CZERO
-        SLL(:,:,:,ith)=CZERO
+         RLL(:,:,:,ith)=CZERO
+         SLL(:,:,:,ith)=CZERO
 
 cc right solutions
-        TMATLL=CZERO
-        CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+         TMATLL=CZERO
+         CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLL(:,:,:,ith),SLL(:,:,:,ith),TMATLL,
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
      +          IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
      +              HLK2(:,:,ith),JLK2(:,:,ith),
      +              GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
-        IF (NSRA.EQ.2) THEN
-         RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+         IF (NSRA.EQ.2) THEN
+          RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-         SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+          SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-        ENDIF
+         ENDIF
+         
+        end if ! read/recalc wavefunctions
 
+         
 c left solutions
+        if( (t_wavefunctions%Nwfsavemax>0 .and. 
+     &       .not. (rllleft_was_read_in.and.sllleft_was_read_in) )
+     &      .or. (t_wavefunctions%Nwfsavemax==0)) then ! read/recalc wavefunctions left
 c contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
-        CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,
-     +                     CVLIGHT,SOCSCALE,NSRA,NSPIN,LMPOTD,THETA,PHI,
+         CALL SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,
+     +                     CVLIGHT,SOCSCALE,NSPIN,LMPOTD,THETA,PHI,
      +                     IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,
      +                     IRMDNEW,NRMAXD,VNSPLL0,VNSPLL1(:,:,:,ith),
      +                     'transpose')
-
 cc extend matrix for the SRA treatment
-        VNSPLL(:,:,:,ith)=CZERO
-        IF (NSRA.EQ.2) THEN
-         IF (USE_SRATRICK.EQ.0) THEN
-          CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
-     +               LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
-         ELSEIF (USE_SRATRICK.EQ.1) THEN
-          CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
-     +            LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+         VNSPLL(:,:,:,ith)=CZERO
+         IF (NSRA.EQ.2) THEN
+          IF (USE_SRATRICK.EQ.0) THEN
+           CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
+     +              LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
+          ELSEIF (USE_SRATRICK.EQ.1) THEN
+           CALL VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,
+     +           LMMAXSO,IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+          ENDIF
+         ELSE
+          VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
          ENDIF
-        ELSE
-         VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
-        ENDIF
 
 cc calculate the source terms in the Lippmann-Schwinger equation
 cc these are spherical hankel and bessel functions
-        HLK(:,:,ith)=CZERO
-        JLK(:,:,ith)=CZERO
-        HLK2(:,:,ith)=CZERO
-        JLK2(:,:,ith)=CZERO
-        GMATPREFACTOR=CZERO
-        JLK_INDEX=0
-        CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
+         HLK(:,:,ith)=CZERO
+         JLK(:,:,ith)=CZERO
+         HLK2(:,:,ith)=CZERO
+         JLK2(:,:,ith)=CZERO
+         GMATPREFACTOR=CZERO
+         JLK_INDEX=0
+         CALL RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,
      +                         LMMAXSO,1,JLK_INDEX,HLK(:,:,ith),
      +                         JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),
      +                         GMATPREFACTOR)
 
 cc using spherical potential as reference
 c notice that exchange the order of left and right hankel/bessel functions
-        IF (USE_SRATRICK.EQ.1) THEN
-         CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
+         IF (USE_SRATRICK.EQ.1) THEN
+          CALL CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,
      +           LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,
      +                JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
      +                HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,
      +                ALPHASPH,TMATSPH(:,ith),USE_SRATRICK)
-        ENDIF
+         ENDIF
 
 cc calculate the tmat and wavefunctions
-        RLLLEFT(:,:,:,ith)=CZERO
-        SLLLEFT(:,:,:,ith)=CZERO
+         RLLLEFT(:,:,:,ith)=CZERO
+         SLLLEFT(:,:,:,ith)=CZERO
 
 cc left solutions
 c notice that exchange the order of left and right hankel/bessel functions
-        TMATTEMP=CZERO
-        CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+         TMATTEMP=CZERO
+         CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),TMATTEMP,
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
      +        IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
      +              HLK(:,:,ith),JLK(:,:,ith),
      +              GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
-        IF (NSRA.EQ.2) THEN
-         RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+         IF (NSRA.EQ.2) THEN
+          RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-         SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+          SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-        ENDIF
+         ENDIF
+         
+        end if ! read/recalc wavefunctions left
 
         DO 200 IQ = 1,NQDOS                                       ! qdos
 c read in gf
@@ -487,8 +524,8 @@ c rotate gmat from global frame to local frame
 c calculate density 
        CALL RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,
      +                LMPOTD,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
-     +                IRMDNEW,NRMAXD,THETASNEW,IFUNM,RNEW,IMT1,LMSP,
-     +                RLL(:,:,:,ith),SLL(:,:,:,ith),
+     +                IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,
+     +                RLL(:,:,:,ith),!SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
      +                RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,
@@ -578,12 +615,18 @@ c get charge at the Fermi energy (IELAST)
        IF (IE.EQ.IELAST.AND.LDORHOEF) THEN
        CALL RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,
      +                LMPOTD,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
-     +                IRMDNEW,NRMAXD,THETASNEW,IFUNM,RNEW,IMT1,LMSP,
-     +                RLL(:,:,:,ith),SLL(:,:,:,ith),
+     +                IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,
+     +                RLL(:,:,:,ith),!SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
      +                RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),R2NEFC_loop(:,:,:,ith),0,
      +                GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL)
+!      SUBROUTINE RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL,EK,LMPOTD,
+!      +                      DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
+!      +                      IRMDNEW,THETASNEW,IFUNM,IMT1,
+!      +                      LMSP,RLL,RLLLEFT,SLLLEFT,
+!      +                      CDEN,CDENLM,CDENNS,RHO2NSC,CORBITAL,
+!      +                      GFLLE_PART,RPAN_INTERVALL,IPAN_INTERVALL)
        ENDIF
 
 
@@ -591,8 +634,8 @@ c get orbital moment
        DO IORB=1,3
         CALL RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,
      +                 LMPOTD,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
-     +                 IRMDNEW,NRMAXD,THETASNEW,IFUNM,RNEW,IMT1,LMSP,
-     +                 RLL(:,:,:,ith),SLL(:,:,:,ith),
+     +                 IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,
+     +                 RLL(:,:,:,ith),!SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
      +                 RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),
      +                 CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                 CDENNS(:,:,ith),R2ORBC(:,:,:,ith),IORB,
@@ -648,28 +691,23 @@ c get orbital moment
       ENDDO
 
 #ifdef CPP_MPI
-       IF (OPT('qdos    ')) THEN                                          ! qdos ruess
-         ! first communicate den array to write out qdos files
-         IDIM = (LMAXD1+1)*IEMXD*2*NQDOS
-         allocate(workc(0:LMAXD1,IEMXD,2,NQDOS))
-         workc = (0.d0, 0.d0)
-         CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,
-     &                      t_mpi_c_grid%myMPI_comm_at,IERR)
-         CALL ZCOPY(IDIM,WORKC,1,DEN,1)
-         deallocate(workc)
-         
-         if(t_mpi_c_grid%myrank_at==master) then
-! #ifdef CPP_MPI
-!          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)         ! qdos
-!          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)         ! qdos
-! #else
-         ie_start = 0
-         ie_end   = IELAST
-! #endif
+       IF (OPT('qdos    ')) THEN                                          ! qdos
+         ! first communicate den array to write out qdos files            ! qdos
+         IDIM = (LMAXD1+1)*IEMXD*2*NQDOS                                  ! qdos
+         allocate(workc(0:LMAXD1,IEMXD,2,NQDOS))                          ! qdos
+         workc = (0.d0, 0.d0)                                             ! qdos
+         CALL MPI_REDUCE(DEN, workc, IDIM, MPI_DOUBLE_COMPLEX, MPI_SUM,   ! qdos
+     &                      master, t_mpi_c_grid%myMPI_comm_at, IERR)     ! qdos
+         CALL ZCOPY(IDIM,WORKC,1,DEN,1)                                   ! qdos
+         deallocate(workc)                                                ! qdos
+                                                                          ! qdos
+         if(t_mpi_c_grid%myrank_at==master) then                          ! qdos
+         ie_start = 0                                                     ! qdos
+         ie_end   = IELAST                                                ! qdos
          DO ie_num=1,ie_end                                               ! qdos
            IE = ie_start+ie_num                                           ! qdos
            DO IQ=1,NQDOS                                                  ! qdos
-             IF ((IQ.EQ.1).AND.(IE_num.EQ.1)) THEN                        ! qdos ruess
+             IF ((IQ.EQ.1).AND.(IE_num.EQ.1)) THEN                        ! qdos
               if(t_inc%NATYP.ge.100) then                                 ! qdos
                 OPEN(31,                                                  ! qdos
      +          FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//   ! qdos
@@ -685,35 +723,84 @@ c get orbital moment
      +          FILE="qdos."//char(48+mod(I1/10,10))//                    ! qdos
      +          char(48+mod(I1,10))//"."//char(48+2)//".dat")             ! qdos
               end if                                                      ! qdos
-              WRITE (31,*) ' '                                            ! qdos ruess
-              WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! qdos ruess
+              call version_print_header(31)                               ! qdos
+              WRITE (31,*) ' '                                            ! qdos
+              WRITE (31,8600) '# ISPIN=',1,' I1=',I1                      ! qdos
               WRITE (31,'(7(A,3X))') '#   Re(E)','Im(E)',                 ! qdos
      &                      'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! qdos
-              if(NSPIN.gt.1) then
-                WRITE (32,*) ' '                                          ! qdos ruess
-                WRITE (32,8600) '# ISPIN=',2,' I1=',I1                    ! qdos ruess
+              if(NSPIN.gt.1) then                                         ! qdos
+                call version_print_header(32)                             ! qdos
+                WRITE (32,*) ' '                                          ! qdos
+                WRITE (32,8600) '# ISPIN=',2,' I1=',I1                    ! qdos
                 WRITE(32,'(7(A,3X))') '#   Re(E)','Im(E)',                ! qdos
      &                         'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'  ! qdos
               end if                                                      ! qdos
-             ENDIF   ! IQ.EQ.1                                            ! qdos ruess
-             DO JSPIN =1,2                                                ! qdos ruess
-               DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                          ! qdos ruess
-               DO L1 = 0,LMAXD1                                           ! qdos ruess
-                 DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)      ! qdos ruess
-               ENDDO                                                      ! qdos ruess
-             ENDDO                                                        ! qdos ruess
-c    write qdos.nn.s.dat                                                  ! qdos ruess
-             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos ruess
+             ENDIF   ! IQ.EQ.1                                            ! qdos
+             DO JSPIN =1,2                                                ! qdos
+               DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                          ! qdos
+               DO L1 = 0,LMAXD1                                           ! qdos
+                 DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)      ! qdos
+               ENDDO                                                      ! qdos
+             ENDDO                                                        ! qdos
+c    write qdos.nn.s.dat                                                  ! qdos
+             WRITE(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos
      &                      -DIMAG(DENTOT(1))/PI,                         ! qdos
-     &                     (-DIMAG(DEN(L1,IE,IQ,1))/PI,L1=0,LMAXD1)       ! qdos ruess
-             WRITE(32,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos ruess
+     &                     (-DIMAG(DEN(L1,IE,IQ,1))/PI,L1=0,LMAXD1)       ! qdos
+             WRITE(32,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! qdos
      &                      -DIMAG(DENTOT(2))/PI,                         ! qdos
-     &                     (-DIMAG(DEN(L1,IE,IQ,2))/PI,L1=0,LMAXD1)       ! qdos ruess
- 9000        FORMAT(5F10.6,40E16.8)                                       ! qdos ruess
+     &                     (-DIMAG(DEN(L1,IE,IQ,2))/PI,L1=0,LMAXD1)       ! qdos
+ 9000        FORMAT(5F10.6,40E16.8)                                       ! qdos
+                                                                          ! qdos
+             if(test('compqdos')) then                                      ! complex qdos
+               IF ((IQ.EQ.1).AND.(IE_num.EQ.1)) THEN                        ! complex qdos
+                if(t_inc%NATYP.ge.100) then                                 ! complex qdos
+                  OPEN(31,                                                  ! complex qdos
+     +            FILE="cqdos."//char(48+I1/100)//char(48+mod(I1/10,10))    ! complex qdos
+     +            //char(48+mod(I1,10))//"."//char(48+1)//".dat")           ! complex qdos
+                  OPEN(32,                                                  ! complex qdos
+     +            FILE="cqdos."//char(48+I1/100)//char(48+mod(I1/10,10))    ! complex qdos
+     +            //char(48+mod(I1,10))//"."//char(48+2)//".dat")           ! complex qdos
+                else                                                        ! complex qdos
+                  OPEN(31,                                                  ! complex qdos
+     +            FILE="cqdos."//char(48+mod(I1/10,10))//                   ! complex qdos
+     +            char(48+mod(I1,10))//"."//char(48+1)//".dat")             ! complex qdos
+                  OPEN(32,                                                  ! complex qdos
+     +            FILE="cqdos."//char(48+mod(I1/10,10))//                   ! complex qdos
+     +            char(48+mod(I1,10))//"."//char(48+2)//".dat")             ! complex qdos
+                end if                                                      ! complex qdos
+                call version_print_header(31)                               ! complex qdos
+                WRITE(31,*) ' '                                             ! complex qdos
+                WRITE(31,'(A)') '#   lmax, natyp, nspin, nqdos, ielast:'    ! complex qdos
+                WRITE(31,'(5I9)') lmax, natypd, nspin, nqdos, ielast        ! complex qdos
+                WRITE(31,'(7(A,3X))') '#   Re(E)','Im(E)',                  ! complex qdos
+     &                        'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! complex qdos
+                if(NSPIN.gt.1) then                                         ! complex qdos
+                  call version_print_header(32)                             ! complex qdos
+                  WRITE(32,*) ' '                                           ! complex qdos
+                  WRITE(32,'(A)') '# lmax, natyp, nspin, nqdos, ielast:'    ! complex qdos
+                  WRITE(32,'(5I9)') lmax, natypd, nspin, nqdos, ielast      ! complex qdos
+                  WRITE(32,'(7(A,3X))') '#   Re(E)','Im(E)',                ! complex qdos
+     &                        'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! complex qdos
+                end if                                                      ! complex qdos
+               ENDIF   ! IQ.EQ.1                                            ! complex qdos
+               DO JSPIN =1,2                                                ! complex qdos
+                 DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                          ! complex qdos
+                 DO L1 = 0,LMAXD1                                           ! complex qdos
+                   DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)      ! complex qdos
+                 ENDDO                                                      ! complex qdos
+               ENDDO                                                        ! complex qdos
+c    write qdos.nn.s.dat                                                    ! complex qdos
+               WRITE(31,9002) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! complex qdos
+     &                        DENTOT(1), (DEN(L1,IE,IQ,1),L1=0,LMAXD1)      ! complex qdos
+               WRITE(32,9002) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),      ! complex qdos
+     &                        DENTOT(2), (DEN(L1,IE,IQ,2),L1=0,LMAXD1)      ! complex qdos
+ 9002          FORMAT(6F10.6,80E16.8)                                       ! complex qdos
+             end if                                                         ! complex qdos
+                                                                          ! qdos
            ENDDO !IQ                                                      ! qdos
          ENDDO !IE                                                        ! qdos
-         end if !myrank_at==master
-       ENDIF      ! OPT('qdos    ')                                       ! qdos ruess
+         end if !myrank_at==master                                        ! qdos
+       ENDIF      ! OPT('qdos    ')                                       ! qdos
 #endif
        
 #ifdef CPP_MPI ! do communication only when compiled with MPI
@@ -723,20 +810,20 @@ c    write qdos.nn.s.dat                                                  ! qdos
        ! reset NQDOS to avoid endless communication
        NQDOS=1
        ! set these arrays to zero to avoid double counting in cases where extra ranks are used
-       if ( (t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1))
-     &   .and. (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) ) then
-         den = 0.d0
-         denlm = 0.d0
-         gflle = 0.d0
-         muorb = 0.d0
-         espv = 0.d0
-         r2nefc = 0.d0
-         rho2nsc = 0.d0
-         rho2int = 0.d0
-         denorbmom = 0.d0
-         denorbmomsp = 0.d0
-         denorbmomlm = 0.d0
-         denorbmomns = 0.d0
+       if ( t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1) ) then
+!          write(*,*) myrank, t_mpi_c_grid%myrank_ie, t_mpi_c_grid%dims
+         den = CZERO
+         denlm = CZERO
+         gflle = CZERO
+         r2nefc = CZERO
+         rho2nsc = CZERO
+         rho2int = CZERO
+         muorb = 0.0d0
+         espv = 0.0d0
+         denorbmom = 0.0d0
+         denorbmomsp = 0.0d0
+         denorbmomlm = 0.0d0
+         denorbmomns = 0.0d0
       endif
        call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
      &                            LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,
@@ -804,8 +891,10 @@ c Write out lm-dos:                                                      ! lm-do
      +       FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//   ! lm-dos
      +       char(48+2)//".dat")                                         ! lm-dos
            end if
+           call version_print_header(29)
            WRITE (29,*) ' '                                              ! lm-dos
            WRITE (29,8600) '# ISPIN=',1,' I1=',I1                        ! lm-dos
+           call version_print_header(30)
            WRITE (30,*) ' '                                              ! lm-dos
            WRITE (30,8600) '# ISPIN=',2,' I1=',I1                        ! lm-dos
          ENDIF !IE==1                                                    ! lm-dos
@@ -948,31 +1037,23 @@ C
       if(ierr/=MPI_SUCCESS) stop 'error bcast angles_new in rhovalnew'
 #endif
 
-       DEALLOCATE(VINS)
-       DEALLOCATE(VNSPLL0)
-       DEALLOCATE(VNSPLL1)
-       DEALLOCATE(VNSPLL)
-       DEALLOCATE(HLK)
-       DEALLOCATE(JLK)
-       DEALLOCATE(HLK2)
-       DEALLOCATE(JLK2)
-       DEALLOCATE(TMATSPH)
-       DEALLOCATE(RLL)
-       DEALLOCATE(SLL)
-       DEALLOCATE(RLLLEFT)
-       DEALLOCATE(SLLLEFT)
-       DEALLOCATE(CDEN)
-       DEALLOCATE(CDENLM)
-       DEALLOCATE(CDENNS)
-       DEALLOCATE(RHO2NSC,RHO2NSC_loop)
-       DEALLOCATE(RHO2NSNEW)
-       DEALLOCATE(R2NEFC,R2NEFC_loop)
-       DEALLOCATE(R2NEFNEW)
-       DEALLOCATE(R2ORBC)
-       DEALLOCATE(CDENTEMP)
-       DEALLOCATE(GFLLE_PART)
-       DEALLOCATE(GFLLE)
-       DEALLOCATE(DEN)
-       DEALLOCATE(DENLM)
+       ! deallocate arrays
+       DEALLOCATE(VINS, VNSPLL0, VNSPLL1, VNSPLL, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating VINS etc.'
+       DEALLOCATE(HLK, JLK, HLK2, JLK2, TMATSPH, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating HLK etc.'
+       DEALLOCATE(RLL, SLL, RLLLEFT, SLLLEFT, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating RLL etc.'
+       DEALLOCATE(CDEN, CDENLM, CDENNS, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating CDEN etc.'
+       DEALLOCATE(RHO2NSC,RHO2NSC_loop, RHO2NSNEW, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating RHO2NSC etc.'
+       DEALLOCATE(R2NEFC,R2NEFC_loop, R2NEFNEW, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating R2NEFC etc.'
+       DEALLOCATE(R2ORBC, CDENTEMP, GFLLE_PART, GFLLE, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating R2ORBC etc.'
+       DEALLOCATE(DEN, DENLM, stat=ierr)
+       if(ierr/=0) stop '[rhovalnew] Error deallocating DEN etc.'
+       
        END 
 

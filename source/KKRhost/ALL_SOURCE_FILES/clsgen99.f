@@ -4,6 +4,7 @@ c **********************************************************************
      &                    ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,RCLS,
      &                    RCUT,RCUTXY,L2DIM,ALAT,
      &                    NAEZD,NATYPD,NEMBD,NPRINCD,NRD,NACLSD,NCLSD)
+      use mod_version_info
       IMPLICIT NONE
 c **********************************************************************
 c This subroutine is used to create the clusters around each atom 
@@ -105,6 +106,7 @@ C
 Cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       IF (TEST('clusters')) THEN
          OPEN(8,FILE='clusters',STATUS='UNKNOWN')
+         call version_print_header(8)
          WRITE(8,9005) NAEZ
          WRITE(8,9030) ALAT
          WRITE(8,9010) (Z(KAOEZ(1,I)),I=1,NAEZ)
@@ -144,7 +146,6 @@ C
 C
                   ATOM(NUMBER,JATOM) = NA ! store the atom in elem cell
                   EZOA(NUMBER,JATOM) = N ! store the bravais vector
-                  write(*,'(A,4I9)') 'ezoa',jatom,na,n,number
                   DO I=1,3
                      RCLS1(I,NUMBER) = TMP(I)
                   END DO

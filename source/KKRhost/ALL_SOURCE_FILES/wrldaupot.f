@@ -6,6 +6,7 @@ C *                                                                    *
 C * Writes out LDA+U arrays into formatted file 'ldaupot'              *
 C *                                                                    *
 C **********************************************************************
+      use mod_version_info
       IMPLICIT NONE
 C     ..
       INTEGER IRMD,MMAXD,NATYPD,NSPIND,IRWS(NATYPD)
@@ -29,6 +30,7 @@ C      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
       
       
       OPEN (67,FILE='ldaupot_new',FORM='FORMATTED')
+      call version_print_header(67)
       WRITE(1337,99001)
       WRITE(67,99002) ITRUNLDAU,'    ITRUNLDAU'
       WRITE(67,99002) NATYP,'    NATYP'

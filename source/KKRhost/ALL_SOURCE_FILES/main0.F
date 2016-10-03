@@ -74,7 +74,6 @@ C                              : I,J = 1,NATOMIMP in the cluster
 C     ICST,                    : number of Born approximation
 C     IEND,                    : number of nonzero gaunt coeffizients
 C     IFILE,                   : unit specifier for potential card
-C     SINN,SOUT,RIN,ROUT,      : in/out of GF, WF, T-matrices
 C     INS,                     : 0 (MT), 1(ASA), 2(Full Potential)
 C     INSREF,                  : INS for reference pot. (usual 0)
 C     IPE,IPF,IPFE,            : not real used, IPFE should be 0
@@ -84,18 +83,10 @@ C     KHFELD,                  : 0,1: no / yes external magnetic field
 C     KSHAPE,                  : exact treatment of WS cell
 C     KVREL,                   : 0,1 : non / scalar relat. calculation
 C     KWS,                     : 0 (MT), 1(ASA)
-C     KMT,                     : scaling of RMT with MTFAC
-C                              : 0: RMT from crystal structure
-C                              : 1: RMT from crystal structure
-C                              :    scaled by RMTFAC
-C                              : 2: RMT = RMTFAC
-C                              : 3: RMT from ref. pot. card
 C     LMAX,                    : maximum l component in
 C                              : wave function expansion
 C     LPOT,                    : maximum l component in
 C                              : potential expansion
-C     MMIN,MMAX,               : min. max. eigenvalue
-C     M2,                      : maximum number of bands
 C     NAEZ,                    : number of atoms in unit cell
 C     NATYP,                   : number of kinds of atoms in unit cell
 C     NCLS,                    : number of reference clusters
@@ -135,7 +126,6 @@ C                              : component of non-spherical pot.
 C     JEND(LMPOTD,             : pointer array for icleb()
 C     LOFLM(LM2D),             : l of lm=(l,m) (GAUNT)
 C     NTCELL(NATYPD),          : index for WS cell
-C     NTCELLR(NREFD),          : index for WS cell of ref. pot.
 C     REFPOT(NATYPD+NEMBD)     : ref. pot. card  at position
 C     A(NATYPD),B(NATYPD)      : contants for exponential r mesh
 C     R(IRMD,NATYPD)           : radial mesh ( in units a Bohr)
@@ -218,10 +208,12 @@ C ======================================================================VINS()
       use mpi
       use mod_mympi, only: nranks
 #endif
+      use mod_version
+      use mod_version_info
+      use mod_md5sums
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
-      INCLUDE 'version'
 C     .. Parameters ..
 C parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
       INTEGER NEMBD1
@@ -261,22 +253,22 @@ C     .. Local Scalars ..
      +                 TK,VCONST,VOLUME0,LAMBDA_XC,RMAX,GMAX
       INTEGER I,I1,ICC,ICST,IE,IELAST,IEND,IFILE,IGF,
      +        IMIX,INS,INSREF,INTERVX,INTERVY,INTERVZ,INVMOD,
-     +        IPE,IPF,IPFE,IPOTOU,IPRCOR,IRM,IRNUMX,ISHIFT,ITCCOR,
-     +        ITDBRY,KCOR,KEFG,KFROZN,KHFELD,KHYP,KMT,KPRE,
+     +        IPE,IPF,IPFE,IRM,ISHIFT,
+     +        ITDBRY,KCOR,KEFG,KFROZN,KHFELD,KHYP,KPRE,
      +        KSHAPE,KTE,KVMAD,KVREL,KWS,KXC,LM,LMAX,LMMAX,
-     +        LMPOT,LPOT,M2,MAXMESH,MMAX,MMIN,NAEZ,NATOMIMP,NVIRT,NATYP,
+     +        LMPOT,LPOT,MAXMESH,NAEZ,NATOMIMP,NVIRT,NATYP,
      +        NCLS,NEMB,NINEQ,NLAYER,NLBASIS,NLEFT,
      +        NPNT1,NPNT2,NPNT3,NPOL,NR,NRBASIS,NREF,NRIGHT,
-     +        NSPIN,NSRA,NSYMAT,RIN,ROUT,SINN,SOUT,NOFGIJ,NQCALC,
+     +        NSPIN,NSRA,NSYMAT,NOFGIJ,NQCALC,
      +        NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT(NATYPD),
      +        NPAN_LOGNEW(NATYPD),NPAN_EQNEW(NATYPD)
-      INTEGER NS,LM1,LM2
+      INTEGER NS
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      +                 RNEW(NTOTD*(NCHEBD+1),NATYPD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       INTEGER IESEMICORE,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IDOSEMICORE
       DOUBLE PRECISION FSEMICORE,EBOTSEMI,EMUSEMI,TKSEMI,R_LOG
-      LOGICAL COMPLX,LINIPOL,LINTERFACE,LRHOSYM
+      LOGICAL LINIPOL,LINTERFACE,LRHOSYM
       LOGICAL LCARTESIAN
       CHARACTER*40 I12,I13,I19,I25,I40
       CHARACTER*10 SOLVER
@@ -320,14 +312,16 @@ C     .. Local Arrays ..
      +        LMSP1(LMXSPD,NATYPD),LMXC(NATYPD),LOFLM(LM2D),
      +        NACLS(NCLSD),NCORE(NPOTD),NFU(NATYPD),
      +        NSH1(NSHELD),NSH2(NSHELD),NSHELL(0:NSHELD),
-     +        NTCELL(NATYPD),NTCELLR(NREFD),REFPOT(NAEZD+NEMBD)
+     +        NTCELL(NATYPD),REFPOT(NAEZD+NEMBD)
       INTEGER IJTABCALC(NOFGIJD),IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD),
-     +        IOFGIJ(NOFGIJD),JOFGIJ(NOFGIJD),
-     +        ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD),IQCALC(NAEZD)
+     +        IOFGIJ(NOFGIJD),JOFGIJ(NOFGIJD),IJTABCALC_I(NOFGIJD),
+     +        IQCALC(NAEZD)
+!      +        ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD),IQCALC(NAEZD)
+      INTEGER, ALLOCATABLE :: ISH(:,:),JSH(:,:)
       INTEGER KMESH(IEMXD)
       INTEGER ITSCF,SCFSTEPS,KFORCE
       LOGICAL VACFLAG(2)
-      CHARACTER*24 TXC(5)
+      CHARACTER*124 TXC(5)
       INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD)
       DOUBLE PRECISION GSH(NGSHD)
       DOUBLE PRECISION TOLRDIF
@@ -410,7 +404,6 @@ C     ..
 C     .. distinguish between spin-dependent and spin-independent
 C     .. quantities
        DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
-!      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
       DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD) ! Spin-Dependent
       DOUBLE COMPLEX PHILDAU(IRMD,NATYPD) 
 C LDA+U LDA+U LDA+U
@@ -425,6 +418,7 @@ C ruess: IVSHIFT test option
       
       !allocations:
       double precision, allocatable :: THETAS(:,:,:), THETASNEW(:,:,:)
+      integer :: ierr
       
 #ifdef CPP_OMP
 !     .. OMP ..
@@ -449,36 +443,52 @@ C     ..
 
       allocate(THETAS(IRID,NFUND,NCELLD),THESME(IRID,NFUND,NCELLD),
      +         THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD),
-     +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
+     +         VINS(IRMIND:IRMD,LMPOTD,NSPOTD), stat=ierr)
+      if(ierr/=0) stop '[main0] Error allocating thetas etc.'
       allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),
-     +         RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD))
+     +    RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), stat=ierr)
+      if(ierr/=0) stop '[main0] Error allocating lefttinvll etc.'
 
       
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !Write version info:
       WRITE(*,2004) 'Screened Korringa-Kohn-Rostoker ',
      &              'Electronic Structure Code',
      &              'for Bulk and Interfaces',
      &              'Juelich-Munich 2001 - 2016',
      &             ' Code version: ',trim(version(1)),
-     &             ' Compile options:',(trim(version(i)),i=2,4)
- 2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)/79(1H*)/ )
-!  9090    FORMAT(D20.12)                                               ! fxf
+     &             ' Compile options:',(trim(version(i)),i=2,4),
+     &             ' serial number for files:', serialnr
+      WRITE(1337,2004) 'Screened Korringa-Kohn-Rostoker ',
+     &              'Electronic Structure Code',
+     &              'for Bulk and Interfaces',
+     &              'Juelich-Munich 2001 - 2016',
+     &             ' Code version: ',trim(version(1)),
+     &             ' Compile options:',(trim(version(i)),i=2,4),
+     &             ' serial number for files: ', serialnr
+ 2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)//2A/79(1H*)/ )
 
 #ifdef CPP_OMP
 !$omp parallel shared(nth,ith)
-!$omp critical
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
       if(ith==0) then
-      WRITE(*,'(1X,A,I5//79(1H*)/)')'Number of OpenMP threads used:',nth
+      WRITE(*,'(1X,A,I5//79(1H*)/)')
+     &              'Number of OpenMP threads used:',nth
+      WRITE(1337,'(1X,A,I5//79(1H*)/)')
+     &              'Number of OpenMP threads used:',nth
       endif
-!$omp end critical
 !$omp end parallel
 #endif
+
 #ifdef CPP_MPI
-      WRITE(*,'(1X,A,I5//79(1H*)/)') 'Number of MPI ranks used:',nranks
+      WRITE(*,'(1X,A,I5//79(1H*)/)')
+     &              'Number of MPI ranks used:',nranks
+      WRITE(1337,'(1X,A,I5//79(1H*)/)')
+     &              'Number of MPI ranks used:',nranks
 #endif
 !End write version info
+!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 !Consistency check
       IF ( (KREL.LT.0) .OR. (KREL.GT.1) )
@@ -495,7 +505,8 @@ C
       IDOLDAU = 0
       NOFGIJ = 0
       ! allocate and initialize testc and optc in t_params for run and test options
-      ALLOCATE(t_params%TESTC(32),t_params%OPTC(32)) !CHARACTER*8
+      ALLOCATE(t_params%TESTC(32),t_params%OPTC(32), stat=ierr) !CHARACTER*8
+      if(ierr/=0) stop '[main0] Error allocating testc etc.'
       t_params%OPTC(1:32) =  '        '
       t_params%TESTC(1:32) = '        '
 C
@@ -509,9 +520,9 @@ C
      +              IPFE,KCOR,KEFG,KFROZN,KHFELD,KHYP,KPRE,KSHAPE,KTE,
      +              KFG,KVMAD,KVREL,KWS,KXC,LAMBDA_XC,LMAX,LMMAX,LMPOT,
      +              LPOT,NATYP,NSPIN,LMXC,TXC,ICC,REFPOT,
-     +              IPRCOR,IRNUMX,ISHIFT,ITCCOR,INTERVX,INTERVY,INTERVZ,
-     +              HFIELD,COMPLX,KMT,MTFAC,VBC,VCONST,LINIPOL,INIPOL,
-     +              IXIPOL,LRHOSYM,MMIN,MMAX,SINN,SOUT,RIN,ROUT,M2,
+     +              ISHIFT,INTERVX,INTERVY,INTERVZ,
+     +              HFIELD,MTFAC,VBC,VCONST,LINIPOL,INIPOL,
+     +              IXIPOL,LRHOSYM,
      +              I12,I13,I19,I25,I40,
      +              NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,
      +              ZPERIGHT,TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,
@@ -523,8 +534,6 @@ C
      &              IRMD,IRNSD,NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,IVSHIFT,
      &              TOLRDIF,LLY,DELTAE,
      &              LCARTESIAN,BRAVAIS,RMAX,GMAX)
-     
-
 c
 C ================================================ deal with the lattice
 
@@ -592,13 +601,23 @@ C
       IF ( ICC.GT.0 )    OPEN (25,FILE=I25,STATUS='unknown',
      &                         FORM='formatted')
 C
-      CALL STARTB1(IFILE,1337,1337,IPE,KVREL,KWS,KHFELD,LMAX,1,NATYP,
-     +             ALATNEW,RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,VCONST,INS,
+      CALL STARTB1(IFILE,1337,1337,IPE,KVREL,KWS,LMAX,1,NATYP,
+     +             ALATNEW,RMTNEW,RMT,ITITLE,IMT,IRC,VCONST,INS,
      +             IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,KSHAPE,NTCELL,
      +             IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,VBC,C,
      +             DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,
-     +             IRWS,INIPOL,1,LMPOTD,IRMIND,IRMD,LMXSPD,IPAND,IRID,
+     +             IRWS,1,LMPOTD,IRMIND,IRMD,LMXSPD,IPAND,IRID,
      +             IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)
+     
+     
+      ! find md5sums for potential and shapefunction
+      call get_md5sums(INS, I13, I19)
+      write(1337,'(A,A)') 
+     &'Doing calculation with potential: ',md5sum_potential
+      if(INS>0) then
+         write(1337,'(A,A)') 
+     &   'Doing calculation with shapefun: ',md5sum_shapefun
+      end if
 
 
       IF(TEST('rhoqtest')) THEN
@@ -662,7 +681,7 @@ C ----------------------------------------------------------------------
       IF (OPT('GENPOT  ')) THEN
           REWIND(3)
           CALL GENERALPOT(3,1,NATYP,NSPIN,ZAT,ALAT,RMT,RMTNEW,RWS,
-     +         ITITLE,R,DRDI,VISP,IRWS,A,B,TXC,KXC,INS,IRNS,
+     +         R,DRDI,VISP,IRWS,A,B,INS,IRNS,
      +         LPOT,VINS,QBOUND,IRC,KSHAPE,E2IN,VBC,ECORE,
      +         LCORE,NCORE,LMPOTD,IRMD,IRMIND)
           CLOSE(3)
@@ -817,12 +836,16 @@ C
      &     CALL SETGIJTAB(LINTERFACE,ICC,NAEZ,IQAT,RBASIS,BRAVAIS,
      &                    NATOMIMP,ATOMIMP,RCLSIMP,
      &                    NOFGIJ,IJTABCALC,IOFGIJ,JOFGIJ,NQCALC,IQCALC,
-     &                    NAEZD,NATOMIMPD)
+     &                    NATOMIMPD,IJTABCALC_I)
 C
 C ======================================================================
 C
       DSYMLL=(0d0,0d0)
       DSYMLL1=(0d0,0d0)
+      
+      ! allocate ISH and JSH index arrays that might be quite big
+      ALLOCATE(ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD), stat=ierr)
+      if(ierr/=0) stop '[main0] Error allocating ISH, JSH'
 
       CALL BZKINT0(NSHELL,NAEZ,NATYP,NOQ,
      +             RBASIS,KAOEZ,ICC,BRAVAIS,RECBV,ATOMIMP,
@@ -843,6 +866,8 @@ C
       CALL WRITEHOSTSTRUCTURE(BRAVAIS,NATYP,RBASIS,NAEZD,NEMBD)
 
         OPEN (58,FILE='kkrflex_atominfo',FORM='FORMATTED')
+        call version_print_header(58,
+     &           '; '//md5sum_potential//'; '//md5sum_shapefun)
         NVATOM=0
         DO I = 1,NATOMIMP
           IF (KAOEZ(1,ATOMIMP(I))==-1) NVATOM=NVATOM+1
@@ -904,15 +929,23 @@ C
      &                 'No. of shell, No. of atoms in shell' ! fivos
             do lm = 1,NSHELL(i1) ! fivos
                write(1337,*) 'ish(i1,lm)',ish(i1,lm)
-               write(1337,8614) NSH1(i1),NSH2(i1) ! fivos
+               if(ISH(i1,lm)>0 .and. JSH(i1,lm)>0) then   !fix bernd
+                 write(1337,8614) NSH1(i1),NSH2(i1) ! fivos
      &              ,ISH(i1,lm),JSH(i1,lm) ! fivos
      &              ,(RCLSIMP(i,ISH(i1,lm)),i=1,3) ! fivos
      &              ,(RCLSIMP(i,JSH(i1,lm)),i=1,3) ! fivos
-               write(58,8614) NSH1(i1),NSH2(i1) ! fivos
+                 write(58,8614) NSH1(i1),NSH2(i1) ! fivos
      &              ,ISH(i1,lm),JSH(i1,lm) ! fivos
      &              ,(RCLSIMP(i,ISH(i1,lm)),i=1,3) ! fivos
      &              ,(RCLSIMP(i,JSH(i1,lm)),i=1,3) ! fivos
+               else!fix bernd
+                 write(1337,8615) NSH1(i1),NSH2(i1) ! fix bernd
+     &              ,ISH(i1,lm),JSH(i1,lm)          ! fix bernd
+                 write(58,8615) NSH1(i1),NSH2(i1)   ! fix bernd
+     &              ,ISH(i1,lm),JSH(i1,lm)          ! fix bernd
+               end if!fix bernd
  8614          format(4i5,6f16.6) ! fivos
+ 8615          format(4i5) ! fix bernd
             enddo               ! fivos
          enddo                  ! fivos
          write(1337,*) '###################'
@@ -920,8 +953,8 @@ C
       ENDIF
 ! end fivos
 
-      CALL GFMASK(LINTERFACE,ICHECK,ICC,INVMOD,NSH1,NSH2,NAEZ,NSHELL,
-     +            NAEZD,NPRINCD)
+      CALL GFMASK(LINTERFACE,ICHECK,ICC,INVMOD,NSH1,NSH2,NAEZ,
+     +            NSHELL(0),NAEZD,NPRINCD)
 C
 C======================================================================
 C set up transformation matrices between REL/NREL representations
@@ -977,10 +1010,10 @@ C
       IF ( OPT('DECIMATE') ) 
      &  CALL DECIOPT(ALAT,INS,KREL+KORBIT,KVREL,KMROT,NSPIN,NAEZ,LMMAX,
      &               BRAVAIS,TK,NPOL,NPNT1,NPNT2,NPNT3,
-     &               EZ,IELAST,KAOEZ,SCFSTEPS,
+     &               EZ,IELAST,KAOEZ,
      &               LEFTTINVLL,RIGHTTINVLL,VACFLAG,NLBASIS,NRBASIS,
-     &               CMOMHOST,VREF,RMTREF,NREF,REFPOT(NAEZ),RC,CREL,
-     &               RREL,LMAXD,LMGF0D,LMMAXD,LM2D,NEMBD1,IEMXD,
+     &               CMOMHOST,VREF,RMTREF,NREF,REFPOT(NAEZ),
+     &               LMAXD,LMGF0D,LMMAXD,LM2D,NEMBD1,IEMXD,
      &               NSPINDD,LMPOTD,NATYPD,IRMD,IPAND)
 C
 C ======================================================================
@@ -1007,9 +1040,7 @@ C
 C ======================================================================
 C LDA+U -- initialise 
 C
-C      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
       IF (OPT('LDA+U   ')) then
-           !ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
            CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
      &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,IRWS,
      &                    NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
@@ -1024,41 +1055,12 @@ C ======================================================================
 C
 C new solver for full-potential, spin-orbit, initialise
        IF (OPT('NEWSOSOL')) THEN
-       
-!        
-!         write(*,*) irmin(2),irws(2),ipan(2),ircut(:,2),
-!      &     r_log,npan_log,npan_eq,ncheb
 
-        CALL CREATE_NEWMESH(NSPIN,R,IRMIN,IRWS,IPAN,IRCUT,
+        CALL CREATE_NEWMESH(NSPIN,R,IRMIN,IPAN,IRCUT,
      +                      R_LOG,NPAN_LOG,NPAN_EQ,NCHEB,
      +                      NPAN_LOGNEW,NPAN_EQNEW,
      +                      NPAN_TOT,RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
      +                      NTCELL,THETAS,THETASNEW)
-     
-!           write(987997,*) thetas(:,:,1)
-!           write(*,*) NPAN_TOT, NCHEB
-!           write(987998,*) thetasnew(:NPAN_TOT(2)*(NCHEB+1),:10,1)
-! 
-!      
-!        open(9999, file='oldmesh_kkr.txt', form='formatted')
-! !        write(*,*) shape(thetas),shape(thetasnew)
-!        do i=1,irws(2)
-!          if(i<irmin(2)) then
-!            write(9999,'(2E22.15,I3)') R(i,2), 0.0, 0
-!          else
-!            write(9999,'(2E22.15,I3)') R(i,2), thetas(i-irmin+1,1,1), 1
-!          end if
-!        end do
-!        close(9999)
-!        open(9999, file='newmesh_kkr.txt', form='formatted')
-!        do i=1,NPAN_TOT(2)*(NCHEB+1)
-!          if(i<ipan_intervall(npan_log+npan_eq,2)+1) then
-!            write(9999,'(2E22.15,I3)') rnew(i,2), 0.0, 0
-!          else
-!            write(9999,'(2E22.15,I3)') rnew(i,2), thetasnew(i,1,1), 1 !-ipan_intervall(npan_log+npan_eq),1), 1
-!          end if
-!        end do
-!        close(9999)
 
       ENDIF
 
@@ -1075,8 +1077,8 @@ C new solver for full-potential, spin-orbit, initialise
      &              ATOM,CLS,RCLS,NACLS,LOFLM,SOLVER,SOCSCL,CSCL,
      &              ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,
      &              CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,NSH2,
-     &              IJTABCALC,ISH,JSH,IJTABSYM,IJTABSH,NOFGIJ,
-     &              NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,
+     &              IJTABCALC,IJTABCALC_I,ISH,JSH,IJTABSYM,IJTABSH,
+     &              NOFGIJ,NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,
      &              KMESH,MAXMESH,NSYMAT,SYMUNITARY,RROT,
      &              DSYMLL,INVMOD,ICHECK,
      &              NATOMIMP,RATOM,ATOMIMP,
@@ -1097,8 +1099,7 @@ C new solver for full-potential, spin-orbit, initialise
      &              NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,NTOTD,
      &              NCHEBD,NPAN_LOGNEW,NPAN_EQNEW,NCHEB,R_LOG,NPAN_TOT,
      &              RNEW,RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,
-     &              THETASNEW,SOCSCALE,TOLRDIF,LLY,DELTAE)
-
+     &              THETASNEW,SOCSCALE,TOLRDIF,LLY,DELTAE,RCLSIMP)
 
       IF (ISHIFT.EQ.2) THEN                                           ! fxf
          OPEN (67,FILE='vmtzero',FORM='formatted')                    ! fxf
@@ -1132,14 +1133,13 @@ C
  9070 FORMAT (5X,'INFO:  Output of cluster Green function at E Fermi')
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
  
- 
-c      if(allocated(ULDAU)      ) deallocate(ULDAU)
-      if(allocated(thetas)     ) deallocate(thetas)
-      if(allocated(thetasnew)  ) deallocate(thetasnew)
-      if(allocated(thesme)     ) deallocate(thesme)
-      if(allocated(vins)       ) deallocate(vins)
-      if(allocated(LEFTTINVLL) ) deallocate(LEFTTINVLL)
-      if(allocated(RIGHTTINVLL)) deallocate(RIGHTTINVLL)
+      ! deallocate unused arrays
+      deallocate(thetas, thetasnew, thesme, vins, stat=ierr)
+      if(ierr/=0) stop '[main0] Error deallocating thetas etc.'
+      deallocate(LEFTTINVLL, RIGHTTINVLL, stat=ierr)
+      if(ierr/=0) stop '[main0] Error deallocating lefttinvll etc.'
+      deallocate(ISH, JSH, stat=ierr)
+      if(ierr/=0) stop '[main0] Error deallocating ISH and JSH'
 
       END SUBROUTINE !MAIN0
       
@@ -1175,8 +1175,6 @@ c Input/Output:
 c Inside
       DOUBLE PRECISION PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
       INTEGER ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
-      INTEGER IER
-      CHARACTER*256 UIO ! NCOLIO=256
       DOUBLE PRECISION RFPI
       
       RFPI = SQRT(16.0D0*ATAN(1.0D0))

@@ -1,12 +1,12 @@
 C **********************************************************************
-      SUBROUTINE STARTB1(IFILE,IPF,IPFE,IPE,KVREL,KWS,KHFELD,LMAX,
-     +                  NBEG,NEND,ALAT,RMTNEW,RMT,ITITLE,HFIELD,IMT,IRC,
+      SUBROUTINE STARTB1(IFILE,IPF,IPFE,IPE,KVREL,KWS,LMAX,
+     +                  NBEG,NEND,ALAT,RMTNEW,RMT,ITITLE,IMT,IRC,
      +                  VCONST,INS,IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,
      +                  KSHAPE,NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,
      +                  LMSP,EFERMI,VBC,CVLIGHT,DROR,RS,S,VM2Z,RWS,
-     +                  ECORE,LCORE,NCORE,DRDI,R,Z,A,B,IRWS,INIPOL,
+     +                  ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,
      +                  IINFO,LMPOTD,IRMIND,IRMD,LMXSPD,IPAND,IRID,
-     +                  IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)
+     +                  IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)     
 C **********************************************************************
 c   reads the input potentials
 c
@@ -53,17 +53,17 @@ C     ..
 C     .. Scalar Arguments ..
       INTEGER LMPOTD,IRMIND,IRMD,LMXSPD
       INTEGER IPAND,IRID,IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD
-      INTEGER IFILE,IINFO,INS,IPE,IPF,IPFE,KHFELD,KSHAPE,KVREL,KWS,
+      INTEGER IFILE,IINFO,INS,IPE,IPF,IPFE,KSHAPE,KVREL,KWS,
      +        LMAX,LPOT,NBEG,NEND,NSPIN,IVSHIFT
-      DOUBLE PRECISION ALAT,CVLIGHT,EFERMI,HFIELD,VCONST
+      DOUBLE PRECISION ALAT,CVLIGHT,EFERMI,VCONST
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION A(*),B(*),DRDI(IRMD,*),DROR(IRMD,*),ECORE(20,*),
      +                 R(IRMD,*),RMT(*),RMTNEW(*),RS(IRMD,0:LMAXD,*),
      +                 RWS(*),S(0:LMAXD,*),THETAS(IRID,NFUND,*),VBC(*),
-     +                 VINS(IRMIND:IRMD,LMPOTD,*),VM2Z(IRMD,*),Z(*),
+     +                 VINS(IRMIND:IRMD,LMPOTD,*),VM2Z(IRMD,*),ZAT(*),
      &                 FPRADIUS(NATYPD)
-      INTEGER IFUNM(NATYPD,*),IMT(*),INIPOL(*),IPAN(*),
+      INTEGER IFUNM(NATYPD,*),IMT(*),IPAN(*),
      +        IRC(*),IRCUT(0:IPAND,*),
      +        IRMIN(*),IRNS(*),IRWS(*),ITITLE(20,*),
      +        LCORE(20,*),LLMSP(NATYPD,*),LMSP(NATYPD,*),
@@ -198,20 +198,23 @@ c
 c---  >read muffin-tin radius , lattice constant and new muffin radius
 c      (new mt radius is adapted to the given radial mesh)
 c
-            READ (IFILE,*) RMT(IH),ALAT,RMTNEW(IH)
+            READ (IFILE,FMT=*) RMT(IH),ALAT,RMTNEW(IH)
             !READ (IFILE,FMT=9030) RMT(IH),ALAT,RMTNEW(IH)
 c
 c---> read nuclear charge , lmax of the core states ,
 c     wigner seitz radius , fermi energy and energy difference
 c     between electrostatic zero and muffin tin zero
 c
-c            READ (IFILE,FMT=9040) Z(IH),RWS(IH),EFNEW,VBC(ISPIN)
-            READ (IFILE,*) Z1,RWS(IH),EFNEW,VBC(ISPIN)
-            IF (Z(IH).LT.0.D0) Z(IH) = Z1
-            IF (Z1.NE.Z(IH).AND.Z(IH).GE.0.D0) THEN
+c            READ (IFILE,FMT=9040) ZAT(IH),RWS(IH),EFNEW,VBC(ISPIN)
+            READ (IFILE,*) Z1
+            READ (IFILE,*) RWS(IH),EFNEW,VBC(ISPIN)
+            
+!             READ (IFILE,*) Z1,RWS(IH),EFNEW,VBC(ISPIN)
+            IF (ZAT(IH).LT.0.D0) ZAT(IH) = Z1
+            IF (Z1.NE.ZAT(IH).AND.ZAT(IH).GE.0.D0) THEN
                WRITE(*,*) 'Warning: For atom ',IH,
      &         ': ZATOM different in inputcard and in potential.',
-     &          Z(IH),Z1
+     &          ZAT(IH),Z1
             ENDIF
 c
 c---> if efermi .eq. 0 use value from in5
@@ -228,7 +231,10 @@ c     mesh  needed for shape functions, the constants a and b
 c     for the radial exponential mesh : r(i) = b*(exp(a*(i-1))-1)
 c     the no. of different core states and some other stuff
 c
-            READ (IFILE,FMT=9050) IRWS(IH),A(IH),B(IH),NCORE(I),INEW
+            !READ (IFILE,FMT=9050) IRWS(IH),A(IH),B(IH),NCORE(I),INEW
+            READ (IFILE,FMT=*) IRWS(IH)
+            READ (IFILE,FMT=*) A(IH),B(IH)
+            READ (IFILE,FMT=*) NCORE(I),INEW
 c
             NR = IRWS(IH)
 
@@ -355,7 +361,7 @@ c p.z.      IF (KSHAPE.NE.0) THEN
 c
 c---> kshape.eq.0 : calculate new rmt adapted to exp. mesh
 c
-            CALL CALRMT(IPF,IPFE,IPE,IMT(IH),Z(IH),RMT(IH),RWS(IH),
+            CALL CALRMT(IPF,IPFE,IPE,IMT(IH),ZAT(IH),RMT(IH),RWS(IH),
      +                  RMTNEW(IH),ALAT,DRDI(1,IH),A(IH),B(IH),IRWS1,
      +                  R(1,IH),IO,INS)
 c p.z. +                  R(1,IH),IO,KSHAPE)
@@ -406,7 +412,7 @@ c
 c
 c---> generate arrays for the calculation of the wave functions
 c
-            Z1 = Z(IH)
+            Z1 = ZAT(IH)
             DO 110 L = 0,LMAX
               IF (KVREL.GE.1) THEN
                  S1 = SQRT(DBLE(L*L+L+1)-4.0D0*Z1*Z1/ (CVLIGHT*CVLIGHT))
@@ -428,7 +434,7 @@ c
               IMT1 = IMT(IH)
               IRC1 = IRCUT(IPAN(IH),IH)
               CALL POTCUT(IMT1,IRC1,INS,LMPOT,R(1,IH),VM2Z(1,I),VSPSME,
-     +                    VINS(IRMIND,1,I),Z(IH),IRMD,IRMIND)
+     +                    VINS(IRMIND,1,I),ZAT(IH),IRMD,IRMIND)
             END IF
 c
 c--->  first iteration : shift all potentials (only for test purpose)
@@ -456,22 +462,9 @@ c
             IMT1 = IMT(IH)
             IRWS1 = IRWS(IH)
             CALL POTCUT(IMT1,IRWS1,INS,LMPOT,R(1,IH),VM2Z(1,I),VSPSME,
-     +                  VINS(IRMIND,1,I),Z(IH),IRMD,IRMIND)
+     +                  VINS(IRMIND,1,I),ZAT(IH),IRMD,IRMIND)
 
           END IF                    ! KSHAPE.EQ.0 .AND. KWS.EQ.0
-c
-!           move this to end of main0 so that non-spherical part is also shifted
-!           IF (KHFELD.EQ.1 ) THEN
-! c          IF (KHFELD.EQ.1 .AND. NSPIN.EQ.2) THEN
-! c
-! c--->       maybe apply a magnetic field
-! c
-!             write(6,*) 'atom',ih,'spin',ispin,'shifted by',
-!      +           -DBLE(2*ISPIN-3)*HFIELD*INIPOL(IH)
-!             DO 130 J = 1,IRCUT(IPAN(IH),IH)
-!               VM2Z(J,I) = VM2Z(J,I) - DBLE(2*ISPIN-3)*HFIELD*INIPOL(IH)
-!   130       CONTINUE
-!           END IF
 
   140   CONTINUE                    ! ISPIN = 1,NSPIN
 

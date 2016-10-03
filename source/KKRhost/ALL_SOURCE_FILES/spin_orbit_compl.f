@@ -12,7 +12,7 @@ c
        double complex, intent(out)    ::     L_S(LMMAXD*2,LMMAXD*2)
 
 c  local variables 
-       integer                 ::     i1,i2,i1l,RL,lm1,lm2
+       integer                 ::     RL,lm1,lm2
        double complex                 ::     icompl
        double complex,allocatable     ::     LS_L(:,:)
 

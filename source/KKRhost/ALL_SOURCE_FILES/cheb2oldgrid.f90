@@ -17,8 +17,8 @@ double precision :: Cinvmatrix(0:ncheb,0:ncheb)
 double precision,allocatable :: CCmatrix(:,:)
 double complex :: alphaparams(0:ncheb,lmmaxpot)
 double precision  :: rmeshnorm(nrmax)
-double precision halfsum,halfdiffinv,rshift,tol
-parameter(tol=1.d-13)
+double precision halfsum,halfdiffinv,tol!,rshift
+parameter(tol=1.d-11)
 
 ! divide the mesh into subintervals
 intsub(1,:)=0
@@ -82,7 +82,7 @@ do while (in<=npan_tot)
     ir2=ir+1-intsub(1,in)
     rmeshnorm(ir2)=(2*rmesh(ir)-(rpan_intervall(in)+rpan_intervall(in-1))) &
                                     /(rpan_intervall(in)-rpan_intervall(in-1))
-    if (abs(rmeshnorm(ir2))>1.0D0 .and. abs(rmeshnorm(ir2))-1.0D0<10e-14) then
+    if (abs(rmeshnorm(ir2))>1.0D0 .and. abs(abs(rmeshnorm(ir2))-1.0D0)<tol) then
       rmeshnorm(ir2)=sign(1.0D0,rmeshnorm(ir2))
     end if
    enddo

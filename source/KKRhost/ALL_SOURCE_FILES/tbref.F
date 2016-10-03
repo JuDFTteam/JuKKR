@@ -53,29 +53,27 @@ C     .. Array Arguments ..
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX ERYD
-      INTEGER I1,IC,ICLS,IE,LM1,LM2,LRECGF1,NACLSMAX
+      INTEGER I1,IC,ICLS,IE,LM1,NACLSMAX
       DOUBLE COMPLEX   LLY_G0TR_IE ! LLY
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX TREFLL(LMGF0D,LMGF0D,NREFD),
      &               DTREFLL(LMGF0D,LMGF0D,NREFD)                     ! LLY 
       DOUBLE COMPLEX,ALLOCATABLE:: GINP(:,:,:),
-     &                             DGINP(:,:,:)                       ! LLY
+     &                             DGINP(:,:,:), LLY_G0TR(:,:)        ! LLY
       DOUBLE COMPLEX ALPHAREF(0:LMAXD,NREFD),DALPHAREF(0:LMAXD,NREFD) ! LLY Lloyd Alpha matrix and deriv.
-      DOUBLE COMPLEX   LLY_G0TR(IEMXD,NCLSD) ! LLY
+      DOUBLE COMPLEX lly_g0tr_dum                     ! LLY dummy variable used if no LLY is chosen to save memory
+      DOUBLE COMPLEX, allocatable :: dginp_dum(:,:)   ! LLY dummy variable used if no LLY is chosen to save memory
 #ifdef CPP_MPI
 C     ..
 C     .. MPI ..
-      integer :: IE_START, IE_END
-      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
-     &           myrank_at, myrank_ie, nranks_at,nranks_ie
-      integer :: ntot1, dims(2), mytot, idim, ierr
-      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
-     &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
+      integer :: ntot1, idim
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
       double complex, allocatable :: work(:,:,:)
 #endif
+      integer :: IE_START, IE_END
       integer :: i1_start, i1_end
-      integer :: ie_num
+      integer :: ie_num, ierr
 C     ..
 C     .. External Functions ..
       LOGICAL TEST
@@ -94,11 +92,21 @@ C     ..
       ENDDO
       LRECGRF1 = WLENGTH*4*NACLSMAX*LMGF0D*LMGF0D*NCLS 
 
-      ALLOCATE (  GINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
-      ALLOCATE ( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) )
-      
+      ! allocate and initialize ginp
+      ALLOCATE(  GINP(NACLSMAX*LMGF0D,LMGF0D,NCLS), 
+     &           dginp_dum(NACLSMAX*LMGF0D,LMGF0D), stat=ierr )
+      if(ierr/=0) stop '[tbref] Error allocating ginp etc.'
       ginp = (0.0d0, 0.0d0)
-      dginp = (0.0d0, 0.0d0)
+      
+      IF (LLY.NE.0) THEN
+         ! allocate and initialize dginp and lly_g0tr
+         ALLOCATE( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS), stat=ierr )
+         if(ierr/=0) stop '[tbref] Error allocating dginp'
+         ALLOCATE ( LLY_G0TR(IEMXD,NCLSD), stat=ierr )
+         if(ierr/=0) stop '[tbref] Error allocating lly_g0tr'
+         dginp = (0.0d0, 0.0d0)
+         LLY_G0TR = (0.0d0, 0.0d0)
+      ENDIF
 
 
       if (t_tgmat%gref_to_file) then
@@ -119,16 +127,26 @@ C ======================================================================
       if(t_inc%i_write>0) write(1337,*) myrank, 'start tbref e-loop'
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-       
-      DO ie_num=1,ie_end
-       
-         IE = ie_start+ie_num
 #else
-      DO IE = 1,IELAST
-         ie_num = ie
+      ie_start = 0
+      ie_end = IELAST
 #endif
+
+      DO ie_num = 1,ie_end
+         IE = ie_start+ie_num
          if(t_inc%i_write>0) WRITE(1337,FMT='(A23,I5,2F14.8)') 
      &                         'TBREF: GREF for energy:',IE,EZ(IE)
+     
+     
+         ! reset arrays to zero (needed in case of MPIatom energy/atom distribution
+         ginp(:,:,:) = (0.0d0, 0.0d0)
+         if(LLY>0) then
+            dginp(:,:,:) = (0.0d0, 0.0d0)
+            LLY_G0TR(IE,:) = (0.0d0, 0.0d0)
+            dginp_dum = (0.0d0, 0.0d0)
+            lly_g0tr_dum = (0.0d0, 0.0d0)
+         endif
+         
 C
          ERYD = EZ(IE)
          DO I1 = 1,NREF
@@ -145,7 +163,9 @@ C
 C ----------------------------------------------------------------------
 #ifdef CPP_MPI
          ntot1 = NCLS
-
+         
+         if(myrank==master) write(1337,*) 'tbref NCLS loop:', NCLS, 
+     &                          t_mpi_c_grid%nranks_ie
          call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
      &                             master,ntot1,ntot_pT,ioff_pT,.true.)
@@ -178,8 +198,16 @@ C
      +                 ATOM(1,IC),REFPOT,RCLS(1,1,ICLS),NACLS(ICLS),
      &                 TOLRDIF,
      +                 ALATC,0,GINP(1,1,ICLS),
-     &                 DGINP(1,1,ICLS),NACLSMAX,LLY_G0TR(IE,ICLS),LLY)
-         END DO
+     &                 dginp_dum,NACLSMAX,lly_g0tr_dum,LLY)
+     
+            ! copy from dummy variable to arrays
+            if(LLY.ne.0) then
+               DGINP(:,:,ICLS) = dginp_dum(:,:)
+               LLY_G0TR(IE,ICLS) = lly_g0tr_dum
+            end if
+            
+         END DO !icls
+         
 
 #ifdef CPP_MPI
          if(t_mpi_c_grid%nranks_ie>1) then
@@ -221,16 +249,22 @@ C ----------------------------------------------------------------------
 #ifdef CPP_MPI
            !make sure only one processor writes for one energy point
            if(t_mpi_c_grid%myrank_ie==0) then
-#endif
-            WRITE (68,REC=IE) GINP                 ! Gref
-!             write(686868,*) ginp
-#ifdef CPP_MPI
+              WRITE (68,REC=IE) GINP                 ! Gref
            end if !if(t_mpi_c_grid%myrank_ie==0) then
+!            ! test writeout
+!            do i1=0,nranks-1
+!              if(myrank==i1) then
+!               write(686868+myrank,'(2i9,200000F15.7)') myrank, ie, ginp
+!              endif
+!              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie,ierr)
+!            end do
+!            ! end test writeout
+#else
+           WRITE (68,REC=IE) GINP                 ! Gref
 #endif
-
-         else
+         else   ! (t_tgmat%gref_to_file)
             t_tgmat%gref(:,:,:,ie_num) = GINP(:,:,:)
-         end if
+         end if ! (t_tgmat%gref_to_file)
          IF (LLY.NE.0) THEN                                ! LLY Lloyd
             if(t_lloyd%dgref_to_file) then                 ! LLY Lloyd
                WRITE (681,REC=IE) DGINP ! dGref/dE         ! LLY Lloyd
@@ -246,7 +280,7 @@ C ----------------------------------------------------------------------
 C
          IF (TEST('flow    ').and.(t_inc%i_write>0)) WRITE (1337,FMT=*) 
      &                               'G(n,lm,n,lm) (Ref) o.k.'
-      END DO
+      END DO ! IE
 C ======================================================================
       if (t_tgmat%gref_to_file) then
          CLOSE (68)
@@ -254,6 +288,11 @@ C ======================================================================
 
       IF (LLY.NE.0 .and. t_lloyd%dgref_to_file) CLOSE (681)
       IF (LLY.NE.0 .and. t_lloyd%g0tr_to_file) CLOSE (682)
-      DEALLOCATE (GINP,DGINP)
+      DEALLOCATE(GINP, stat=ierr)
+      if(ierr/=0) stop '[tbref] Error deallocating ginp'
+      if(LLY.NE.0) then
+         DEALLOCATE (DGINP, LLY_G0TR, stat=ierr)
+         if(ierr/=0) stop '[tbref] Error deallocating dginp etc.'
+      end if
 
       END

@@ -1,6 +1,6 @@
       SUBROUTINE HFFCORE(RNUC,JTOP,KAP1,KAP2,NSOL,MJ,GC,FC,NRC,SHF,S,
      &                   NMEMAX,NKMMAX,R,DRDI,SDIA,SMDIA,SOFF,SMOFF,
-     &                   QDIA,QOFF,QMDIA,QMOFF,NUCLEUS,Z,JLIM)
+     &                   QDIA,QOFF,QMDIA,QMOFF,NUCLEUS,JLIM)
 Cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 C     Calculates matrix elements of several hyperfine interaction
 C     connected quantities in the core.
@@ -32,7 +32,7 @@ C
 C
 C Dummy arguments
 C
-      INTEGER JLIM,JTOP,KAP1,KAP2,NKMMAX,NMEMAX,NRC,NSOL,NUCLEUS,S,Z
+      INTEGER JLIM,JTOP,KAP1,KAP2,NKMMAX,NMEMAX,NRC,NSOL,NUCLEUS,S
       REAL*8 MJ,RNUC
       REAL*8 DRDI(NRC),FC(2,2,NRC),GC(2,2,NRC),QDIA(NKMMAX),
      &       QMDIA(NKMMAX),QMOFF(NKMMAX),QOFF(NKMMAX),R(NRC),

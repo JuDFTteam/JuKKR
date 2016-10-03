@@ -149,11 +149,6 @@ c
                               ICLEB(I,4) = LM2*LMGF0D -
      +                                     (LM2*LM2-LM2)/2 + LM1 -
      +                                     LMGF0D
-                              
-!                               write(159487,'(4I9,10000ES15.7)') 
-!      &                I,ICLEB(i,1),ICLEB(i,2),ICLEB(i,3),CLEB(I,1),
-!      &                W(1:4*LMAXD),YR(1:4*LMAXD,L1,M1A)
-     
                               I = I + 1
                             END IF
 

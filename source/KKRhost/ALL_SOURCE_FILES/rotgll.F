@@ -30,7 +30,7 @@ C     .. Parameter definitions
       PARAMETER (CZERO= (0.0D0,0.0D0),CONE= (1.D0,0.D0))
 C     ..
 C     .. Scalar arguments
-      INTEGER NGCLUSD,NGCLUS,LMMAXD,IREC
+      INTEGER NGCLUS,LMMAXD,IREC
       INTEGER IGF,KREL,NATOMIMP
 C     ..
 C     .. Array arguments
@@ -158,8 +158,8 @@ C
                      IF ( NLIN.GT.NGCLUS*NGCLUS ) 
      &                    STOP "<ROTGLL>: NLIN.GT.(NATOMIMP*LMMAXD)**2"
                      GCLUST(NLIN) = GLL(LM1,LM2,IQ,JQ)
-!                      !test
-!                      WRITE(214321,'(4i,2E)') LM1,LM2,IQ,JQ,GCLUST(NLIN)
+                     !test
+!                    WRITE(214321,'(4i,2E)') LM1,LM2,IQ,JQ,GCLUST(NLIN)
                   END DO
                END DO
             END DO

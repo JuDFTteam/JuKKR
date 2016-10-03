@@ -2,8 +2,9 @@
 C
 C Dummy arguments
 C
-      INTEGER Z
-
+      integer z
+      
+      z = 0
       RNUCTAB = 0D0
       stop ' < RNUCTAB > : NUCLEUS <> 0 not implemented '
       end

@@ -63,7 +63,7 @@ c
      +                VONS(1,1,IPOT),R(1,IATYP),DRDI(1,IATYP),A(IATYP),
      +                IRWS(IATYP),IRCUT(0,IATYP),IPAN(IATYP),
      +                KSHAPE,GSH,ILM,IMAXSH,IFUNMIAT,THETAS(1,1,ICELL),
-     +                YR,WTYR,IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2,
+     +                WTYR,IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2,
      +                DYLMF1,DYLMF2,DYLMTF)
         END IF
       END DO

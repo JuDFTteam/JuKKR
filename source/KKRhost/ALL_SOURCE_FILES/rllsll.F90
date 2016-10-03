@@ -2,7 +2,13 @@
 ! change this definition if used in host/impurity code
 ! this is commented out, since then the logical hostcode is not defined
 ! and thus "#indef hostcode" returns true and "#ifdef hostcode" false
-#define hostcode ! comment this out to use the impurity code interface
+#define hostcode ! this is commented out to use the impurity code interface
+!
+! the following optinos need the hostcode interface
+!#define test_run
+! write out files for test runs
+!#define test_prep
+
 
 ! choose between interface for impurity and host code (different calling lists)
 #ifndef hostcode
@@ -123,7 +129,7 @@ implicit none
       ! running indices
       integer ivec, ivec2                            
       integer l1,l2,lm1,lm2,lm3
-      integer info,icheb3,icheb2,icheb,icheb1,ipan,mn,nm,mn2,nplm
+      integer info,icheb2,icheb,ipan,mn,nm,nplm
 
       ! source terms
       double complex :: gmatprefactor               ! prefactor of green function
@@ -198,7 +204,6 @@ implicit none
 
       integer ipiv(0:ncheb,lmsize2)
       integer,allocatable :: ipiv2(:)
-      logical test
       integer :: ierror,use_sratrick
       integer :: idotime
       integer,parameter  :: directsolv=1
@@ -238,6 +243,13 @@ implicit none
 ! implemented which should lead to an additional speed-up.
 ! ***********************************************************************
 
+#ifdef test_prep
+if(lmsize>1) then
+   call write_rllsll_test_input(ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1, gmatprefactor, cmoderll, cmodesll, cmodetest, hlk, jlk, hlk2, jlk2, jlk_index, rpanbound, rmesh, sll, rll, tllp, vll, alphaget)
+   stop 'done with writeout, stop here'
+end if
+#endif
+
 #ifndef hostcode
 if ( config_testflag('nosph') .or. lmsize==1 ) then
   use_sratrick=0
@@ -258,6 +270,9 @@ end if
 ! turn timing output off if in the host code
 idotime = 0
 #endif
+#ifdef test_run
+idotime = 1
+#endif
 if (idotime==1) call timing_start('rllsll')
 
 
@@ -271,49 +286,6 @@ end do
 call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 
 
-
-if(.not.allocated(ull)) allocate ( ull(lmsize2,lmsize,nrmax) )
-
-if ( use_sratrick==0 ) then
-  if(.not.allocated(slv)) allocate ( slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) )
-elseif ( use_sratrick==1 ) then
-  if(.not.allocated(work2)) allocate ( work2((ncheb+1)*lmsize,(ncheb+1)*lmsize), ipiv2((ncheb+1)*lmsize) )
-  if(.not.allocated(slv1)) allocate ( slv1(0:ncheb,lmsize,0:ncheb,lmsize), srv1(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(slv2)) allocate ( slv2(0:ncheb,lmsize,0:ncheb,lmsize), srv2(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(slv3)) allocate ( slv3(0:ncheb,lmsize,0:ncheb,lmsize), srv3(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(yill1)) allocate ( yill1(0:ncheb,lmsize,lmsize), zill1(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrll1)) allocate ( yrll1(0:ncheb,lmsize,lmsize), zrll1(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yill2)) allocate ( yill2(0:ncheb,lmsize,lmsize), zill2(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrll2)) allocate ( yrll2(0:ncheb,lmsize,lmsize), zrll2(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrlltmp)) allocate ( yrlltmp(0:ncheb,lmsize,lmsize)  )
-else
-  stop '[rllsll] error with testflag sph'
-end if
-
-if(.not.allocated(work)) allocate( work(lmsize,lmsize) )
-if(.not.allocated(allp)) allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
-if(.not.allocated(cllp)) allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
-if(.not.allocated(mrnvy)) allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
-if(.not.allocated(mrjvy)) allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
-if(.not.allocated(mihvy)) allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
-if(.not.allocated(mijvy)) allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
-if(.not.allocated(yill)) allocate( yill(0:ncheb,lmsize2,lmsize), zill(0:ncheb,lmsize2,lmsize) )
-if(.not.allocated(yrll)) allocate( yrll(0:ncheb,lmsize2,lmsize), zrll(0:ncheb,lmsize2,lmsize) )
-if(.not.allocated(vjlr)) allocate( vjlr(lmsize,lmsize2,0:ncheb), vhlr(lmsize,lmsize2,0:ncheb) )
-if(.not.allocated(vjli)) allocate( vjli(lmsize,lmsize2,0:ncheb), vhli(lmsize,lmsize2,0:ncheb) )
-
-yrll=(0.0d0,0.0d0)
-zill=(0.0d0,0.0d0)
-yrll=(0.0d0,0.0d0)
-zill=(0.0d0,0.0d0)
-
-if(.not.allocated(yif)) allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(yrf)) allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(zif)) allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(zrf)) allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
-
-
-
 #ifdef CPP_hybrid
 !$OMP PARALLEL DEFAULT (PRIVATE) &
 !$OMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
@@ -323,45 +295,45 @@ if(.not.allocated(zrf)) allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
 thread_id = omp_get_thread_num()
 #endif
 
-if(.not.allocated(ull)) allocate ( ull(lmsize2,lmsize,nrmax) )
+allocate ( ull(lmsize2,lmsize,nrmax) )
 
 if ( use_sratrick==0 ) then
-  if(.not.allocated(slv)) allocate ( slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) )
+  allocate ( slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) )
 elseif ( use_sratrick==1 ) then
-  if(.not.allocated(work2)) allocate ( work2((ncheb+1)*lmsize,(ncheb+1)*lmsize), ipiv2((ncheb+1)*lmsize) )
-  if(.not.allocated(slv1)) allocate ( slv1(0:ncheb,lmsize,0:ncheb,lmsize), srv1(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(slv2)) allocate ( slv2(0:ncheb,lmsize,0:ncheb,lmsize), srv2(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(slv3)) allocate ( slv3(0:ncheb,lmsize,0:ncheb,lmsize), srv3(0:ncheb,lmsize,0:ncheb,lmsize) )
-  if(.not.allocated(yill1)) allocate ( yill1(0:ncheb,lmsize,lmsize), zill1(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrll1)) allocate ( yrll1(0:ncheb,lmsize,lmsize), zrll1(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yill2)) allocate ( yill2(0:ncheb,lmsize,lmsize), zill2(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrll2)) allocate ( yrll2(0:ncheb,lmsize,lmsize), zrll2(0:ncheb,lmsize,lmsize) )
-  if(.not.allocated(yrlltmp)) allocate ( yrlltmp(0:ncheb,lmsize,lmsize)  )
+  allocate ( work2((ncheb+1)*lmsize,(ncheb+1)*lmsize), ipiv2((ncheb+1)*lmsize) )
+  allocate ( slv1(0:ncheb,lmsize,0:ncheb,lmsize), srv1(0:ncheb,lmsize,0:ncheb,lmsize) )
+  allocate ( slv2(0:ncheb,lmsize,0:ncheb,lmsize), srv2(0:ncheb,lmsize,0:ncheb,lmsize) )
+  allocate ( slv3(0:ncheb,lmsize,0:ncheb,lmsize), srv3(0:ncheb,lmsize,0:ncheb,lmsize) )
+  allocate ( yill1(0:ncheb,lmsize,lmsize), zill1(0:ncheb,lmsize,lmsize) )
+  allocate ( yrll1(0:ncheb,lmsize,lmsize), zrll1(0:ncheb,lmsize,lmsize) )
+  allocate ( yill2(0:ncheb,lmsize,lmsize), zill2(0:ncheb,lmsize,lmsize) )
+  allocate ( yrll2(0:ncheb,lmsize,lmsize), zrll2(0:ncheb,lmsize,lmsize) )
+  allocate ( yrlltmp(0:ncheb,lmsize,lmsize)  )
 else
   stop '[rllsll] error with testflag sph'
 end if
 
-if(.not.allocated(work)) allocate( work(lmsize,lmsize) )
-if(.not.allocated(allp)) allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
-if(.not.allocated(cllp)) allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
-if(.not.allocated(mrnvy)) allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
-if(.not.allocated(mrjvy)) allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
-if(.not.allocated(mihvy)) allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
-if(.not.allocated(mijvy)) allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
-if(.not.allocated(yill)) allocate( yill(0:ncheb,lmsize2,lmsize), zill(0:ncheb,lmsize2,lmsize) )
-if(.not.allocated(yrll)) allocate( yrll(0:ncheb,lmsize2,lmsize), zrll(0:ncheb,lmsize2,lmsize) )
-if(.not.allocated(vjlr)) allocate( vjlr(lmsize,lmsize2,0:ncheb), vhlr(lmsize,lmsize2,0:ncheb) )
-if(.not.allocated(vjli)) allocate( vjli(lmsize,lmsize2,0:ncheb), vhli(lmsize,lmsize2,0:ncheb) )
+allocate( work(lmsize,lmsize) )
+allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
+allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
+allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
+allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
+allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
+allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
+allocate( yill(0:ncheb,lmsize2,lmsize), zill(0:ncheb,lmsize2,lmsize) )
+allocate( yrll(0:ncheb,lmsize2,lmsize), zrll(0:ncheb,lmsize2,lmsize) )
+allocate( vjlr(lmsize,lmsize2,0:ncheb), vhlr(lmsize,lmsize2,0:ncheb) )
+allocate( vjli(lmsize,lmsize2,0:ncheb), vhli(lmsize,lmsize2,0:ncheb) )
 
 yrll=(0.0d0,0.0d0)
 zill=(0.0d0,0.0d0)
 yrll=(0.0d0,0.0d0)
 zill=(0.0d0,0.0d0)
 
-if(.not.allocated(yif)) allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(yrf)) allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(zif)) allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
-if(.not.allocated(zrf)) allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
+allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
+allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
+allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
+allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
 
 if (idotime==1) call timing_start('local')
 
@@ -618,7 +590,6 @@ do ipan = 1,npan
     if (cmoderll/='0') then
       if (idotime==1) call timing_start('inversion')
       call zgetrf(nplm,nplm,slv,nplm,ipiv,info)
-      if (idotime==1) call timing_stop('inversion','test')
       if (info/=0) stop'rllsll: zgetrf'
       call zgetrs('n',nplm,lmsize,slv,nplm,ipiv,yrll,nplm,info)
       call zgetrs('n',nplm,lmsize,slv,nplm,ipiv,zrll,nplm,info)
@@ -630,19 +601,19 @@ do ipan = 1,npan
         call zgetrs('n',nplm,lmsize,srv,nplm,ipiv,yill,nplm,info)
         call zgetrs('n',nplm,lmsize,srv,nplm,ipiv,zill,nplm,info)
       else
-        call iterativesol (ncheb,lmsize2,lmsize,srv,yill)
-        call iterativesol (ncheb,lmsize2,lmsize,srv,zill)
+        stop 'iterative solver not implemented'
+!         call iterativesol (ncheb,lmsize2,lmsize,srv,yill)
+!         call iterativesol (ncheb,lmsize2,lmsize,srv,zill)
       end if
     end if
   elseif ( use_sratrick==1 ) then
     nplm = (ncheb+1)*lmsize
-
-#ifndef hostcode
-    call inverse(nplm,slv1,work2,ipiv2)
-    call inverse(nplm,srv1,work2,ipiv2)
-#else
+#ifdef hostcode
     call inverse(nplm,slv1)
     call inverse(nplm,srv1)
+#else
+    call inverse(nplm,slv1,work2,ipiv2)
+    call inverse(nplm,srv1,work2,ipiv2)
 #endif
 
     call zgemm('n','n',nplm,lmsize,nplm,cone,slv1, &
@@ -878,36 +849,14 @@ if (idotime==1) call timing_stop('local3')
 if (idotime==1) call timing_stop('rllsll')
 
 if ( use_sratrick==0 ) then
-  if(allocated(slv)) deallocate ( slv,srv )
+  deallocate ( slv,srv, stat=ierror )
 elseif ( use_sratrick==1 ) then
-  if(allocated(work2)) deallocate ( work2, ipiv2 )
-  if(allocated(slv1)) deallocate ( slv1, srv1 )
-  if(allocated(slv2)) deallocate ( slv2, srv2 )
-  if(allocated(slv3)) deallocate ( slv3, srv3 )
-  if(allocated(yill1)) deallocate ( yill1, zill1 )
-  if(allocated(yrll1)) deallocate ( yrll1, zrll1 )
-  if(allocated(yill2)) deallocate ( yill2, zill2 )
-  if(allocated(yrll2)) deallocate ( yrll2, zrll2 )
-  if(allocated(yrlltmp)) deallocate ( yrlltmp )
+  deallocate ( work2, ipiv2, slv1, srv1, slv2, srv2 , slv3, srv3, yill1, zill1 , yrll1, zrll1 , yill2, zill2 , yrll2, zrll2, yrlltmp, stat=ierror  )
 end if
+if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
 
-if(allocated(work)) deallocate( work )
-if(allocated(allp)) deallocate( allp, bllp )
-if(allocated(cllp)) deallocate( cllp, dllp )
-if(allocated(mrnvy)) deallocate( mrnvy, mrnvz )
-if(allocated(mrjvy)) deallocate( mrjvy, mrjvz )
-if(allocated(mihvy)) deallocate( mihvy, mihvz )
-if(allocated(mijvy)) deallocate( mijvy, mijvz )
-if(allocated(yill)) deallocate( yill, zill )
-if(allocated(yrll)) deallocate( yrll, zrll )
-if(allocated(vjlr)) deallocate( vjlr, vhlr )
-if(allocated(vjli)) deallocate( vjli, vhli )
-
-if(allocated(yif)) deallocate( yif )
-if(allocated(yrf)) deallocate( yrf )
-if(allocated(zif)) deallocate( zif )
-if(allocated(zrf)) deallocate( zrf )
-
+deallocate( work, allp, bllp, cllp, dllp, mrnvy, mrnvz , mrjvy, mrjvz,  mihvy, mihvz,  mijvy, mijvz, yill, zill , yrll, zrll, vjlr, vhlr, vjli, vhli ,yif,yrf,zif,zrf, stat=ierror )
+if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
 end subroutine
 
 
@@ -932,27 +881,187 @@ end subroutine inverse
 #endif
 
 
-subroutine iterativesol (NCHEB,LMSIZE2,LMSIZE,MMAT,BMAT)
-integer :: NCHEB
-integer :: LMSIZE,LMSIZE2
-double complex :: MMAT(0:NCHEB,LMSIZE2,0:NCHEB,LMSIZE2)
-double complex :: BMAT(0:NCHEB,LMSIZE2,LMSIZE)
-double complex :: XMAT(0:NCHEB,LMSIZE2,LMSIZE)
-!########################################################
-! solves the system of linear equations
-! MMAT*XMAT = BMAT
-!########################################################
-
-NPLM = (NCHEB+1)*LMSIZE2
-CALL ZGEMM('N','N',NPLM,LMSIZE,NPLM,CONE,SRV, &
-    NPLM,ZILL,NPLM,CZERO,OUT,NPLM)
-
-
-
-end subroutine iterativesol
+! subroutine iterativesol (NCHEB,LMSIZE2,LMSIZE,MMAT,BMAT)
+! implicit none
+! integer, intent(in) :: NCHEB
+! integer, intent(in) :: LMSIZE,LMSIZE2
+! double complex :: MMAT(0:NCHEB,LMSIZE2,0:NCHEB,LMSIZE2)
+! double complex :: BMAT(0:NCHEB,LMSIZE2,LMSIZE)
+! double complex :: XMAT(0:NCHEB,LMSIZE2,LMSIZE)
+! !########################################################
+! ! solves the system of linear equations
+! ! MMAT*XMAT = BMAT
+! !########################################################
+! 
+! NPLM = (NCHEB+1)*LMSIZE2
+! CALL ZGEMM('N','N',NPLM,LMSIZE,NPLM,CONE,SRV, &
+!     NPLM,ZILL,NPLM,CZERO,OUT,NPLM)
+! 
+! 
+! 
+! end subroutine iterativesol
 
 
 #ifndef hostcode
 END MODULE MOD_RLLSLL
+#endif
+
+#ifdef test_run
+program test_rllsll
+
+   use mod_timing
+
+   implicit none
+   
+   integer :: ir
+   logical, parameter :: output=.true.
+   
+   integer :: ncheb, npan, lmsize, lmsize2, nvec, nrmax, lbessel, use_sratrick1
+   double complex :: gmatprefactor 
+   character(len=1) :: cmoderll,cmodesll,cmodetest
+   
+   double complex, allocatable :: hlk(:,:), jlk(:,:), hlk2(:,:), jlk2(:,:) 
+   integer, allocatable :: jlk_index(:)
+   double precision, allocatable :: rpanbound(:), rmesh(:)
+   double complex, allocatable ::  sll(:,:,:), rll(:,:,:), tllp(:,:), vll(:,:,:)
+   double complex, allocatable :: alphaget(:,:) ! lly
+
+   double complex, parameter :: C0=(0.0d0, 0.0d0)
+   
+   call timing_init(0)
+   call timing_start('read-in')
+   
+   write(*,'(A)') '  === starting test routine for rllsll ==='
+   write(*,'(A)') '  start reading data from file data_rllsll.txt'
+   
+   open(1234, file='data_rllsll.txt')
+   read(1234, '(7i9)') lbessel, nrmax, lmsize, nvec, npan, ncheb, use_sratrick1
+   read(1234, '(3a5)') cmoderll, cmodesll, cmodetest
+   
+   lmsize2 = nvec*lmsize
+   
+   write(*,'(A)') '  read in parameters:'
+   write(*,'(A,3I9)') '  lbessel, nrmax, lmsize, nvec = ', lbessel, nrmax, lmsize, nvec
+   write(*,'(A,2I9)') '  npan, ncheb = ', npan, ncheb
+   write(*,'(A,I9)') '  use_sratrick1 = ', use_sratrick1
+   write(*,'(A,3A9)') '  cmoderll, cmodesll, cmodetest = ', cmoderll, cmodesll, cmodetest
+   
+   write(*,'(A)') '  reding in arrays ...'
+   
+   allocate(hlk(lbessel,nrmax), jlk(lbessel,nrmax), hlk2(lbessel,nrmax), jlk2(lbessel,nrmax))
+   allocate(jlk_index(2*lmsize))
+   allocate(sll(lmsize2,lmsize,nrmax), rll(lmsize2,lmsize,nrmax), tllp(lmsize,lmsize), vll(lmsize*nvec,lmsize*nvec,nrmax))
+   allocate(rpanbound(0:npan), rmesh(nrmax))
+   allocate(alphaget(lmsize, lmsize))
+
+   ! initialize to 0
+   rll = C0
+   sll = C0
+   tllp = C0
+   
+   read(1234, '(1ES25.15)') gmatprefactor
+   read(1234, '(1000ES25.15)') hlk(1:lbessel,1:nrmax), jlk(1:lbessel,1:nrmax), hlk2(1:lbessel,1:nrmax), jlk2(1:lbessel,1:nrmax)
+   read(1234, '(1000i9)') jlk_index(1:2*lmsize)
+   read(1234, '(10000ES25.15)') rmesh(1:nrmax)
+   read(1234, '(10000ES25.15)') rpanbound(0:npan)
+   
+   do ir=1, nrmax
+     read(1234, '(10000ES25.15)') vll(1:lmsize2, 1:lmsize2, ir)
+   end do
+   close(1234)
+
+   call timing_stop('read-in')
+   
+   write(*,'(A)') 
+   write(*,'(A)') '  starting rllsll ...'
+   write(*,'(A)') 
+
+   call timing_start('total rllsll')
+   call rllsll(rpanbound,rmesh,vll,rll,sll,tllp, &
+               ncheb,npan,lmsize,lmsize2,lbessel,nrmax,nrmax, &
+               nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor, &
+               cmoderll,cmodesll,cmodetest,use_sratrick1,      &
+               alphaget) ! lly
+   call timing_stop('total rllsll')
+
+   write(*,'(A)') 
+   write(*,'(A)') '  finished rllsll run'
+   write(*,'(A)') 
+               
+   if(output) then
+
+     call timing_start('output')
+   
+     write(*,'(A)') '  writing output files'
+     open(1234, file='output_sll.txt')
+     write(1234, '(A)') '# output of rllsll test rountine: sll(1:lmsize2, 1:lmsize, ir) for ir in range(1, nrmax)'
+     write(1234, '(A,3I9)') '# lmsize2, lmsize, nrmax = ', lmsize2, lmsize, nrmax
+     do ir=1, nrmax
+       write(1234, '(10000ES25.15)') sll(1:lmsize2, 1:lmsize, ir)
+     end do
+     close(1234)
+
+     open(1234, file='output_rll.txt')
+     write(1234, '(A)') '# output of rllsll test rountine: rll(1:lmsize2, 1:lmsize, ir) for ir in range(1, nrmax)'
+     write(1234, '(A,3I9)') '# lmsize2, lmsize, nrmax = ', lmsize2, lmsize, nrmax
+     do ir=1, nrmax
+       write(1234, '(10000ES25.15)') rll(1:lmsize2, 1:lmsize, ir)
+     end do
+     close(1234)
+
+     open(1234, file='output_tllp.txt')
+     write(1234, '(A)') '# tllp(1:lmsize2, 1:lmsize) '
+     write(1234, '(A,3I9)') '# lmsize2, lmsize = ', lmsize2, lmsize
+     write(1234, '(10000ES25.15)') tllp(1:lmsize2, 1:lmsize2)
+     close(1234)
+     
+     write(*,*)
+     write(*,'(A)') '  === finished ==='
+
+     call timing_stop('output')
+
+   end if
+
+end program test_rllsll
+#endif
+
+
+#ifdef test_prep
+subroutine write_rllsll_test_input(ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1, gmatprefactor, cmoderll, cmodesll, cmodetest, hlk, jlk, hlk2, jlk2, jlk_index, rpanbound, rmesh, sll, rll, tllp, vll, alphaget)
+   implicit none
+   
+   integer :: ir
+   
+   integer, intent(in) :: ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1
+   double complex, intent(in) :: gmatprefactor 
+   character(len=1), intent(in) :: cmoderll,cmodesll,cmodetest
+   
+   double complex, intent(in) :: hlk(lbessel,nrmax), jlk(lbessel,nrmax), hlk2(lbessel,nrmax), jlk2(lbessel,nrmax) 
+   integer, intent(in) :: jlk_index(2*lmsize)
+   double precision, intent(in) :: rpanbound(0:npan), rmesh(nrmax)
+   double complex, intent(in) ::  sll(nvec*lmsize,lmsize,nrmax), rll(nvec*lmsize,lmsize,nrmax), tllp(lmsize,lmsize), vll(lmsize*nvec,lmsize*nvec,nrmax)
+   double complex, intent(in) :: alphaget(lmsize, lmsize)
+   
+   
+   write(*,'(A)') '  === starting writeout routine for rllsll ==='
+   
+   open(1234, file='data_rllsll.txt')
+   write(1234, '(7i9)') lbessel, nrmax, lmsize, nvec, npan, ncheb, use_sratrick1
+   write(1234, '(3a5)') cmoderll, cmodesll, cmodetest
+   
+   write(*,'(A)') '  writing arrays ...'
+   
+   write(1234, '(1ES25.15)') gmatprefactor
+   write(1234, '(1000ES25.15)') hlk(1:lbessel,1:nrmax), jlk(1:lbessel,1:nrmax), hlk2(1:lbessel,1:nrmax), jlk2(1:lbessel,1:nrmax)
+   write(1234, '(1000i9)') jlk_index(1:2*lmsize)
+   write(1234, '(10000ES25.15)') rmesh(1:nrmax)
+   write(1234, '(10000ES25.15)') rpanbound(0:npan)
+   
+   do ir=1, nrmax
+     write(1234, '(10000ES25.15)') vll(1:nvec*lmsize, 1:nvec*lmsize, ir)
+   end do
+   close(1234)
+   
+end subroutine write_rllsll_test_input
 #endif
 

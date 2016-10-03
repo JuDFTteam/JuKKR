@@ -1,6 +1,6 @@
 C*==gijcond.f    processed by SPAG 6.05Rc at 15:45 on 18 Oct 2004
       SUBROUTINE GIJCOND(IDO,NAEZ,RBASIS,IQAT,NATOMIMP,RCLSIMP,ATOMIMP,
-     &                   IJTABCALC,NAEZD,NATOMIMPD)
+     &                   IJTABCALC,NATOMIMPD)
 C **********************************************************************
 C *                                                                    *
 C * In case of tasks requiring Gij blocks calculation, set variables:  *
@@ -19,7 +19,7 @@ C ..  Parameters
       PARAMETER (NCPAIRD=10)
 C ..
 C ..  Arguments
-      INTEGER IDO,NAEZ,NAEZD,NATOMIMP,NATOMIMPD
+      INTEGER IDO,NAEZ,NATOMIMP,NATOMIMPD
       INTEGER ATOMIMP(*),IJTABCALC(*),IQAT(*)
       DOUBLE PRECISION RBASIS(3,*),RCLSIMP(3,*)
 C ..

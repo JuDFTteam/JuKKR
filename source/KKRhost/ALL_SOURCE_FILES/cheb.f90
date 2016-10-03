@@ -180,14 +180,14 @@ subroutine getCCmatrix(Ncheb,rmesh,nrmesh,Cmatrix)
 ! calculates the C matrix according to:
 ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
 implicit none
-integer  :: ncheb
-double precision :: rmesh(nrmesh)
-double precision :: Cmatrix(1:nrmesh,0:Ncheb)
-integer  :: icheb,nrmesh,ir
+integer, intent(in) :: ncheb,nrmesh
+double precision, intent(in)  :: rmesh(nrmesh)
+double precision, intent(out) :: Cmatrix(1:nrmesh,0:Ncheb)
+integer  :: icheb,ir
 
 do ir=1,nrmesh
   do icheb=0,ncheb
-    Cmatrix(ir,icheb)=cos(icheb*acos(rmesh(ir)))
+    Cmatrix(ir,icheb)=cos(dfloat(icheb)*dacos(rmesh(ir)))
   end do
 end do
 end subroutine getCCmatrix
@@ -197,8 +197,8 @@ subroutine getLambda(Ncheb,Lambda)
 ! set up the Lambda matrix which differentiates the coefficients of an
 ! Chebyshev expansion 
 implicit none
-integer          :: Ncheb
-double precision :: Lambda(0:Ncheb,0:Ncheb)
+integer, intent(in)           :: Ncheb
+double precision, intent(out) :: Lambda(0:Ncheb,0:Ncheb)
 !local
 integer icheb,icheb2
 do icheb2=1,Ncheb,2
@@ -292,10 +292,10 @@ end subroutine
 
 
 
-      function matvec_dmdm(mat1,vec1)
+      double precision function matvec_dmdm(mat1,vec1)
       implicit none
       double precision, intent(in) :: mat1(:,:),vec1(:)
-      double precision             :: matvec_dmdm(size(mat1,1))
+!       double precision             :: matvec_dmdm(size(mat1,1))
 !       real(8), intent(in) :: mat1(:,:),vec1(:)
 !       real(8)             :: matvec_dmdm(size(mat1,1))
       integer             :: n,m
@@ -308,10 +308,10 @@ end subroutine
       end function matvec_dmdm
 
 
-      function matvec_zmzm(mat1,vec1)
+      double complex function matvec_zmzm(mat1,vec1)
       implicit none
       double complex, intent(in) :: mat1(:,:),vec1(:)
-      double complex             :: matvec_zmzm(size(mat1,1))
+!       double complex             :: matvec_zmzm(size(mat1,1))
       integer             :: n,m
       m = size(mat1,1)
       n = size(mat1,2)
@@ -321,11 +321,11 @@ end subroutine
 
 
 
-      function matmat_dmdm(mat1,mat2,Ncheb)
+      double precision function matmat_dmdm(mat1,mat2,Ncheb)
       implicit none
       integer             :: Ncheb,n
       double precision, intent(in) :: mat1(0:Ncheb,0:Ncheb),mat2(0:Ncheb,0:Ncheb)
-      double precision             :: matmat_dmdm(Ncheb+1,Ncheb+1)
+!       double precision             :: matmat_dmdm(Ncheb+1,Ncheb+1)
 !      n = size(mat1,1)
 !      if(size(mat1,2).ne.n) stop 'matmat_dmdm: dimensions of first input array differ.'
 !      if(size(mat2,1).ne.n) stop 'matmat_dmdm: second input array has wrong dimensions.'

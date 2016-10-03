@@ -4,7 +4,13 @@ module mod_timing
 
 implicit none
 
-   
+  private
+  public :: timings_1a, timings_1b, load_imbalance, timing_init, timing_start, timing_stop, timing_pause, print_time_and_date
+  ! for adaptive load imbalance tackling
+  real*8, allocatable, save  :: timings_1a(:,:)
+  real*8, allocatable, save  :: timings_1b(:)
+  integer, allocatable, save :: load_imbalance(:)
+    
 
   integer,parameter      :: nkeys=20
   integer,parameter      :: nkeylen=40
@@ -20,19 +26,22 @@ contains
 
 subroutine timing_init(my_rank)
   use mod_types, only: t_inc
+  use mod_version_info
   implicit none
   integer  :: my_rank
   character(len=3) :: ctemp
   if (init/=0) stop '[mod_timing] timing already initilized'
   write(ctemp,'(I03.3)') my_rank
-  if(t_inc%i_time>0) open(unit=43234059 , file='out_timing.'//trim(ctemp)//'.txt')
+  if(t_inc%i_time>0) then
+    open(unit=43234059 , file='out_timing.'//trim(ctemp)//'.txt')
+    call version_print_header(43234059)
+  end if
   init=1
 end subroutine timing_init
 
 
 subroutine timing_start(mykey2)
   implicit none
-  integer time_array_1(8)
   integer ikey
   character(len=*)       :: mykey2
   character(len=nkeylen) :: mykey
@@ -58,7 +67,6 @@ end subroutine timing_start
 
 subroutine timing_pause(mykey2)
   implicit none
-  integer time_array_1(8)
   integer    :: stop_time
   integer ikey
   character(len=*)       :: mykey2
@@ -83,17 +91,17 @@ subroutine timing_pause(mykey2)
 
 end subroutine timing_pause
 
-subroutine timing_stop(mykey2,cmode)
+subroutine timing_stop(mykey2, save_out)
   use mod_types, only: t_inc
   implicit none
-  integer time_array_1(8)
-  integer    :: stop_time
-  integer ikey
-  character(len=*)       :: mykey2
-  character(len=nkeylen) :: mykey
-  real*8                   :: timing
-  integer                   :: clock_rate
-  character(len=*),optional       :: cmode
+  character(len=*), intent(in)  :: mykey2
+  real*8, intent(out), optional :: save_out
+  
+  integer                       :: stop_time
+  integer                       :: ikey
+  character(len=nkeylen)        :: mykey
+  real*8                        :: timing
+  integer                       :: clock_rate
   
   mykey=mykey2
   ikey=timing_findkey(mykey)
@@ -106,9 +114,14 @@ subroutine timing_stop(mykey2,cmode)
 
   call timing_delkey(mykey)
 
-  if(t_inc%i_time>0) write(43234059,*)  mykey,'  ',timing
-
   ispaused(ikey)=0
+  
+  if(present(save_out)) then
+     save_out = timing
+     return
+  else
+     if(t_inc%i_time>0) write(43234059,*)  mykey,'  ',timing
+  end if
 
 end subroutine timing_stop
 

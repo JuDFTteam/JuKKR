@@ -14,6 +14,7 @@
 #ifdef CPP_TIMING
       use mod_timing
 #endif
+      use mod_version_info
       
       implicit none
       
@@ -71,7 +72,7 @@ C     .. old/new FERMI energy
       DOUBLE PRECISION EFOLD,EFNEW
       DOUBLE PRECISION DENEF,E1,E2,TK
       DOUBLE PRECISION CHRGOLD,CHRGNT,E2SHIFT
-      DOUBLE PRECISION DF,STIME0,ETIME0
+      DOUBLE PRECISION DF
       DOUBLE PRECISION ALAT,FCM,MIX,MIXING,QBOUND,
      &                 FPI,PI,RFPI,RMSAVM,RMSAVQ,RMSAV0
       DOUBLE PRECISION SUM,RV
@@ -84,7 +85,7 @@ C     .. semicore ..
       DOUBLE PRECISION FSOLD,CHRGSEMICORE
 C     ..
       LOGICAL LRHOSYM,OPT,TEST,LINTERFACE
-      CHARACTER*24 TXC(5)
+      CHARACTER*124 TXC(5)
 C     ..
 C     .. Local Arrays ..
       DOUBLE COMPLEX EZ(IEMXD),DEZ(IEMXD),WEZ(IEMXD)
@@ -218,22 +219,22 @@ C declarations needed:
        LOGICAL LPOTSYMM(NATYPD,LMPOTD)
 c New variables for fixed Fermi energy calculations; noted as fxf
        DOUBLE PRECISION VMT_INIT(2),VSHIFT  ! fxf
-
-      REAL*8 PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
 C     ..
 ! for SIMULASA:
       INTEGER*4 IPOS,ILMP,IAS
+! allocatable arrays
+      integer :: ierr
 C     ..
 
-      allocate(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VONS(IRMD,LMPOTD,NPOTD))
-      allocate(VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD))
-      allocate(R2NEF(IRMD,LMPOTD,NATYPD,2),
-     &         RHO2NS(IRMD,LMPOTD,NATYPD,2),
-     &         RHO2NSNM(IRMD,LMPOTD,NATYPD,2))
-
-
 ! allocations:
-      allocate(THETAS(IRID,NFUND,NCELLD), THESME(IRID,NFUND,NCELLD))
+      allocate(VINS(IRMIND:IRMD,LMPOTD,NSPOTD),VONS(IRMD,LMPOTD,NPOTD),
+     &         VXCM(IRMD,LMPOTD,NPOTD),VXCNM(IRMD,LMPOTD,NPOTD),
+     &         R2NEF(IRMD,LMPOTD,NATYPD,2),
+     &         RHO2NS(IRMD,LMPOTD,NATYPD,2),
+     &         RHO2NSNM(IRMD,LMPOTD,NATYPD,2),
+     &         THETAS(IRID,NFUND,NCELLD), 
+     &         THESME(IRID,NFUND,NCELLD), stat=ierr)
+      if(ierr/=0) stop '[main2] Error allocating arrays'
 
 C     ..................................................................
 Consistency check
@@ -501,10 +502,9 @@ C ---------------------------------------------------------------------
          ELSE
 C ---------------------------------------------------------------------
             CALL VMADELBLK(CMOM,CMINST,LPOT,NSPIN,NAEZ,
-     &                     NATYP,VONS,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE,
-     &                     NOQ,KAOEZ,IQAT,CONC,CHRGATOM(1,1),
-     &                     ICC,HOSTIMP,IELAST,ATOMIMP,NATOMIMP,ALAT,
-     &                     VBC,VINTERS)
+     &                     VONS,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE,
+     &                     NOQ,KAOEZ,CONC,CHRGATOM(1,1),
+     &                     ICC,HOSTIMP,VINTERS)
         END IF
 
       IF (OPT('KKRFLEX ')) THEN
@@ -604,27 +604,9 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 C
 C =====================================================================
       VXCM(:,:,:) = 0.D0 
-!      write(66666,*) !'line1',EXC,KTE,KXC,LPOT,
-!     +               'line1',RHO2NS,
-!     +               'line2',VXCM,
-!     +               'line3',R,
-!     +               'line4',DRDI
-!     +               'line2',NSPIN,1,NATYP,RHO2NS,VXCM,R,DRDI,
-!     +               'line3',A,IRWS,IRCUT,IPAN,NTCELL,
-!     +               'line4',KSHAPE,GSH,ILM,IMAXSH,IFUNM,
-!     +               'line5',THETAS,LMSP
       CALL VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,1,NATYP,RHO2NS,VXCM,R,DRDI,
      +            A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM,IMAXSH,IFUNM,
      +            THETAS,LMSP)
-!      write(77777,*) !'line1',EXC,KTE,KXC,LPOT,
-!     +               'line1',RHO2NS,
-!     +               'line2',VXCM,
-!     +               'line3',R,
-!     +               'line4',DRDI
-!     +               'line2',NSPIN,1,NATYP,RHO2NS,VXCM,R,DRDI,
-!     +               'line3',A,IRWS,IRCUT,IPAN,NTCELL,
-!     +               'line4',KSHAPE,GSH,ILM,IMAXSH,IFUNM,
-!     +               'line5',THETAS,LMSP
 
         IF ( TEST('Vspher  ') ) VONS(1:IRMD,2:LMPOTD,1:NPOTD) = 0.D0
 
@@ -865,25 +847,6 @@ C ..................
 C ---------------------------------------------------------------------
 C
 C -->   final construction of the potentials (straight mixing)
-!test
-!      write(8888,*)
-!     +            'line1',FCM,
-!     +            'line2',IRC,
-!     +            'line3',IRMIN,
-!     +            'line4',R,
-!     +            'line5',DRDI,
-!     +            'line6',VONS,
-!     +            'line7',VSPSMDUM,
-!     +            'line8',VSPSMDUM,
-!     +            'line9',LSMEAR
-!      write(8888,*)'line1',RMSAVQ,RMSAVM,INS,LPOT,LMPOT,0,NSHELL,
-!     +            'line2',1,NATYP,CONC,NSPIN,
-!     +            'line3',ITSCF,RFPI,FPI,IPF,
-!     +            'line4',MIX,
-!     +            'line5',FCM,IRC,IRMIN,R,DRDI,VONS,
-!     +            'line6',VISP,VINS,
-!     +            'line7',VSPSMDUM,VSPSMDUM,LSMEAR
-!test
 C
       MIX = MIXING
       IF (TEST('alt mix ')) MIX = MIXING/DBLE(1+MOD(ITSCF,2))
@@ -982,7 +945,7 @@ C
 C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 C
       IF ((KTE.EQ.1 .AND. ICC.EQ.0) .or. OPT('KKRFLEX ')) 
-     &     CALL ETOTB1(ECOU,E2,EPOTIN,ESPC,ESPV,EXC,KPRE,LMAX,LPOT,
+     &     CALL ETOTB1(ECOU,EPOTIN,ESPC,ESPV,EXC,KPRE,LMAX,LPOT,
      &                 LCOREMAX,NSPIN,NATYP,NSHELL(1),CONC,IDOLDAU,
      &                 LOPT,EU,EDC)
 C
@@ -1075,10 +1038,10 @@ C ======================================================================
  1080       FORMAT('CMOMC',2I6)
  1090       FORMAT(4D22.14)
  
-      deallocate(thetas, thesme)
-      deallocate(vins, vons)
-      deallocate(vxcm, vxcnm)
-      deallocate(R2NEF,RHO2NS,RHO2NSNM)
+      deallocate(thetas, thesme, vins, vons, vxcm, vxcnm, stat=ierr)
+      if(ierr/=0) stop '[main2] Error deallocating thetas etc.'
+      deallocate(R2NEF, RHO2NS, RHO2NSNM, stat=ierr)
+      if(ierr/=0) stop '[main2] Error deallocating r2nef etc.'
  
  
       END SUBROUTINE !main2
@@ -1115,9 +1078,6 @@ c Input/Output:
 c Inside
       REAL*8 PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
       INTEGER ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
-      INTEGER IER
-      CHARACTER*256 UIO ! NCOLIO=256
-
 
 
       DO IH = 1,NATYP

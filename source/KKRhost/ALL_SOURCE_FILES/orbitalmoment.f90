@@ -3,7 +3,7 @@ implicit none
 integer                         :: lmax,lmsize
 double complex                  :: Loperator(lmsize,lmsize,3)
 integer,save                    :: first=1
-integer                         :: lval,ilm
+integer                         :: lval!,ilm
 double complex,allocatable      :: lorbit_onel(:,:,:)
 integer                         :: lmmax,lstart,lstop
 lmmax=(lmax+1)**2

@@ -5,6 +5,7 @@
      &                   TLEFT,TRIGHT,RMTREF,RMTREFAT,VREF,
      &                   IREFPOT,NREFPOT,RCLS,RCUT,RCUTXY,L2DIM,ALAT,
      &                NAEZD,NATYPD,NEMBD,NPRINCD,NRD,NACLSD,NCLSD,NREFD)
+      use mod_version_info
       implicit none
 ! ************************************************************************
 ! This subroutine is used to create the clusters around each atom 
@@ -37,15 +38,9 @@
 !     &     BBOX(3)                  ! bounding box for povray plots
 !
       INTEGER
-     +     KMT,                     ! scaling of RMT with MTFA! (not used)
-!                                   ! 0: RMT from crystal structure 
-!                                   ! 1: RMT - " -  scaled by RMTFAC
-!                                   ! 2: RMT = RMTFAC
-!                                   ! 3: RMT from ref. pot. card
      +     NAEZ,                    ! number of atoms in EZ
      +     NEMB,                    ! number of embedding postions
      +     NCLS,                    ! number of diff. clusters
-     +     NINEQ,                   ! number of nonequivalent atomic 
      +     NR,                      ! number of lattice vectors RR
      &     NLR,                     ! =NEMB in decimation, =0 in slab or bulk
      &     NVIRT,                   ! Number of virtual atoms
@@ -61,9 +56,9 @@
 !     .. locals
 
       INTEGER 
-     +     AJ,C,ILAY,J,N1,INUM,ISUM,IR,INEI,ISITE,JSITE,IAT1,
-     +     NA,NUMBER,MAXNUMBER,NC,NPRIN,ITEST1,ITEST,IX,
-     +     POS,IA,IN,IB,II,JATOM,ICU,IC,IAT,I0,I1,ICLUSTER,NCLSALL
+     +     ILAY,N1,IR,ISITE,JSITE,IAT1,
+     +     NA,NUMBER,MAXNUMBER,!IX,
+     +     POS,IA,IN,IB,II,JATOM,ICU,IC,IAT,I1,ICLUSTER,NCLSALL
       INTEGER IATOM(NACLSD),IEZOA(NACLSD),
      +     ISORT(NACLSD),ICOUPLMAT(NAEZD,NAEZD),
      &     IREP(NCLSD) ! representative atom of cluster (inverse of CLS)
@@ -73,11 +68,10 @@
 
 
       REAL*8        
-     +     RAD,R1,R2,RABS,RD,T,EPSSHL,TOL,TOL2,DISTMIN,
-     +     ASC(3),RCLS1(3,NACLSD),
-     +     R0(3,20),RG(3,NACLSD),TMP(3),RSORT(NACLSD)
-      INTEGER NLAY,                                
-     +        NLBASIS,NRBASIS,                    
+     +     R2,EPSSHL,TOL,TOL2,DISTMIN,
+     +     RCLS1(3,NACLSD),
+     +     RG(3,NACLSD),TMP(3),RSORT(NACLSD)
+      INTEGER NLBASIS,NRBASIS,                    
      +        NLEFT,NRIGHT           
       REAL*8                                   
      +        ZPERLEFT(3),ZPERIGHT(3),            
@@ -88,7 +82,6 @@
       LOGICAL  L2DIM,CLUSTCOMP_TB
 
 
-      LOGICAL TEST,OPT,pov
       EXTERNAL DSORT,CLUSTCOMP_TB
       INTRINSIC MIN,SQRT
 
@@ -111,6 +104,7 @@
 !          LSPHER=.TRUE.
       END IF 
       OPEN(8,FILE='clusters',status='unknown')
+      call version_print_header(8)
       WRITE(8,9005) NAEZ
       WRITE(8,9030) ALAT
       WRITE(8,9010) (ZAT(KAOEZ(1,IAT)),IAT=1,NAEZ-NVIRT)
@@ -119,7 +113,6 @@
       RCUTXY2 = RCUTXY**2
       RCUT2 = RCUT**2
       NLR = 0
-!      IF (OPT('DECIMATE')) NLR = NEMB
       IF (L2DIM) NLR = NEMB
       VREFAT(:) = 8.D0      ! Set to 8 Rydbergs
       VREF1(:) = 8.D0      ! Set to 8 Rydbergs
@@ -357,9 +350,6 @@
             RCLS1(1:3,IA) = RG(1:3,IB)
             ATOM(IA,JATOM) = IATOM(IB)
             EZOA(IA,JATOM) = IEZOA(IB) 
-!             write(*,'(A,1000I9)') 'ezoa',jatom,ia,number,
-!      &                            ATOM(IA,JATOM),EZOA(IA,JATOM)
-
          END DO
 !     
 !     Now the clusters have a unique sorting and can be compared with
