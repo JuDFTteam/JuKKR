@@ -759,6 +759,14 @@ C
         IF ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
       END DO
 C
+C --> update energy contour for Fermi-surface generation    ! fswrt=fermi-surface write
+      IF (OPT('FERMIOUT'))THEN                              ! fswrt
+        IF(AIMAG(EZ(1))>0d0) STOP 'E has imaginary part'    ! fswrt
+        IELAST=3                                            ! fswrt
+        EZ(2) = EZ(1) + CMPLX(1.0D-03,0.0D0)                ! fswrt
+        EZ(3) = EZ(1) - CMPLX(1.0D-03,0.0D0)                ! fswrt
+      END IF                                                ! fswrt
+C
 C --> update the value of NSPIN to be consistent with REL mode
 C
       IF (KREL.EQ.1) NSPIN = 1
@@ -1052,6 +1060,13 @@ C new solver for full-potential, spin-orbit, initialise
      &              NCHEBD,NPAN_LOGNEW,NPAN_EQNEW,NCHEB,R_LOG,NPAN_TOT,
      &              RNEW,RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,
      &              THETASNEW,SOCSCALE,TOLRDIF,LLY,DELTAE,RCLSIMP)
+
+
+      IF (OPT('FERMIOUT'))THEN                                        ! fswrt
+        CALL WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,  ! fswrt
+     +                         ALAT,BRAVAIS,RECBV,RBASIS,CLS,NACLS,   ! fswrt
+     +                         RCLS,EZOA,ATOM,RR)                     ! fswrt
+      END IF                                                          ! fswrt
 
       IF (ISHIFT.EQ.2) THEN                                           ! fxf
          OPEN (67,FILE='vmtzero',FORM='formatted')                    ! fxf
