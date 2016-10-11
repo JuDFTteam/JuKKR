@@ -1,6 +1,7 @@
       SUBROUTINE WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,
      +                             ALAT,BRAVAIS,RECBV,RBASIS,CLS,NACLS,
      +                             RCLS,EZOA,ATOM,RR)
+      use mod_version_info, only: serialnr
       IMPLICIT NONE
       INCLUDE 'inc.p'
 !interface
@@ -18,7 +19,7 @@ C     .. External Functions ..
 
 
           OPEN(934,FILE='TBkkr_params.txt',FORM='formatted')          
-          WRITE(934,'(A)') '#FILEVERSION= 2'                           
+          WRITE(934,'(A,A)') '#FILEVERSION= 2'//'   # serial: ',serialnr
           WRITE(934,'(I8,4X,A)') LMAXD, 'lmaxd',   LMAX, 'lmax',
      +                           KORBIT, 'korbit',
      +                           NSPIND, 'nspind', NRD, 'nrd',        
@@ -31,7 +32,7 @@ C     .. External Functions ..
           CLOSE(934)                                                  
 
           OPEN(935,FILE='TBkkr_container.txt',FORM='formatted')
-          WRITE(935,'(A)') '#FILEVERSION= 2'                           
+          WRITE(935,'(A,A)') '#FILEVERSION= 2'//'   # serial: ',serialnr
           !write out lattice information
           write(935,'(A)') 'alat:'
           write(935,'(ES25.16)') ALAT

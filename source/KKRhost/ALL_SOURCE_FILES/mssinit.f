@@ -3,6 +3,7 @@ C**********************************************************************
      &                   REFPOT,IQAT,ITOQ,NOQ,CONC,
      &                   KMROT,NATYP,NAEZ,LMMAXD) ! nrefd was taken out of calling list 1.2.2012
 C
+      use mod_mympi, only: myrank, master
       IMPLICIT NONE
       include 'inc.p' ! Included  1.2.2012
 C
