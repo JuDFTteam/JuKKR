@@ -15,6 +15,7 @@ c 13.10.95 *************************************************************
      &                   DTREFLL,DTMATLL,DGINP,LLY_GRTR,TRACET,LLY)! LLY Lloyd
 c **********************************************************************
       use mod_types, only: t_inc
+      use mod_mympi, only: myrank, master
       IMPLICIT NONE
 C     .. Parameters ..
       include 'inc.p'
@@ -135,6 +136,11 @@ C **********************************************************************
 C
 C     Reinitialise the ICALL counter for second run of kloopz1   !qdos ruess
       IF ( (OPT('qdos    ').AND.(IQDOSRUN.EQ.1)) ) ICALL = 1     !qdos ruess
+
+      IF (OPT('FERMIOUT') .and. myrank==master) THEN ! fswrt
+        write(6801,'(A)') 'energy(ie):'              ! fswrt
+        write(6801,'(2ES25.16)') ERYD                ! fswrt
+      END IF                                         ! fswrt
 C ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 C
 C --> the arrays ISUM are used in the symmetrisation routine SYMETRMAT 
@@ -173,8 +179,6 @@ C
      &             REFPOT,IQAT,ITOQ,NOQ,CONC,
      &             KMROT,NATYP,NAEZ,LMMAXD)  ! nrefd was taken out of calling list 1.2.2012
 
-
-
 C    VIRTUAL ATOMS:
 C    Be careful! in case of  OPT('VIRATOMS')==1 MSSQ is the Tmatrix 
 C    not the inverse T-matrix!!
@@ -193,6 +197,20 @@ C    MSST is the Delta_t^(-1) matrix in the LOCAL frame
 C         for each of the NATYP atoms
 C ----------------------------------------------------------------------
 C
+C     Write gref to the TBkkr-container-file
+! #ifdef CPP_MPI
+!       
+! #endif
+      IF (OPT('FERMIOUT') .and. myrank==master) THEN        ! fswrt
+        write(6801,'(A)') 'GINP(ie):'                       ! fswrt
+        do I=1,NCLSD                                        ! fswrt
+         do LM2=1,LMGF0D                                    ! fswrt
+          do LM1=1,NACLSD*LMGF0D                            ! fswrt
+            write(6801,'(2ES25.16)')  GINP(LM1,LM2,I)       ! fswrt
+          end do                                            ! fswrt
+         end do                                             ! fswrt
+        end do                                              ! fswrt
+      END IF                                                ! fswrt
 C
 C CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C                         BEGIN CPA - LOOP  (if required)

@@ -3,6 +3,7 @@ C**********************************************************************
      &                   REFPOT,IQAT,ITOQ,NOQ,CONC,
      &                   KMROT,NATYP,NAEZ,LMMAXD) ! nrefd was taken out of calling list 1.2.2012
 C
+      use mod_mympi, only: myrank, master
       IMPLICIT NONE
       include 'inc.p' ! Included  1.2.2012
 C
@@ -177,6 +178,19 @@ C
 C
 
       END DO
+C ----------------------------------------------------------------------
+C    store the Delta_t matrix
+C ----------------------------------------------------------------------
+      if (OPT('FERMIOUT') .and. myrank==master) then             ! fswrt
+        write(6801,'(A)') 'TMATLL(ie):'                          ! fswrt
+        do IQ=1,NAEZ                                             ! fswrt
+          do LM2=1,LMMAXD                                        ! fswrt
+            do LM1=1,LMMAXD                                      ! fswrt
+              write(6801,'(2ES25.16)') MSSQ(LM1,LM2,IQ)          ! fswrt
+            end do                                               ! fswrt
+          end do                                                 ! fswrt
+        end do                                                   ! fswrt
+      end if                                                     ! fswrt
 C ----------------------------------------------------------------------
 C
 C    MSSQ is now the Delta_t matrix in the GLOBAL frame

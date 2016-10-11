@@ -231,6 +231,19 @@ C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
 C
+C
+C ************************************************************************** !fswrt
+C     open file to store the output for the (external) Fermi-surface program !fswrt
+C      ---> this file is already partly filled with data by main0. More data !fswrt
+C           will be stored in                                                !fswrt
+      IF (OPT('FERMIOUT') .and. myrank==master) then                         !fswrt
+         OPEN(6801,FILE='TBkkr_container.txt', FORM='formatted',             !fswrt
+     &             POSITION='append')                                        !fswrt
+      ENDIF                                                                  !fswrt
+C
+C
+C
+C
 C     If qdos option is used set IQDOSRUN so that in a first run the 
 C     (t(E)-t_ref(E))^-1 matrix (tmat.qdos) and the gref matrix can be 
 C     written out for one k point, in a second run these matrices are 
@@ -1163,6 +1176,7 @@ C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 C
       CLOSE (69)
       CLOSE (70)
+      IF (OPT('FERMIOUT') .and. myrank==master) CLOSE(6801)  !fswrt
       IF ( LCPAIJ .and. t_cpa%dmatproj_to_file ) CLOSE (71)
 
       CLOSE(37)                                    ! qdos ruess

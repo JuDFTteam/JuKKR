@@ -2053,6 +2053,14 @@
          
       END IF
 
+
+! ============================================================= fswrt
+      IF (OPT('FERMIOUT').AND.(NSTEPS/=1))THEN           ! fswrt
+        WRITE(6,2012)                                    ! fswrt
+        NSTEPS = 1                                       ! fswrt
+      END IF                                             ! fswrt
+! ============================================================= fswrt
+
 ! ============================================================= WF_SAVE
       CALL IOInput('MEMWFSAVE       ',UIO,0,7,IER)
       IF (IER.EQ.0) THEN
@@ -2098,6 +2106,7 @@
 ! ------------------------------------------------------------------------
  2010 FORMAT(' NSPIN '/I4)
  2011 FORMAT(' NSTEPS'/I4)
+ 2012 FORMAT(' WARINING: Setting NSTEPS to 1 for runoption FERMOUT')
  2014 FORMAT('          ALAT = ',F15.8)
  2015 FORMAT('   INTERVX   INTERVY   INTERVZ'/3I10)
  2016 FORMAT('    NCLS    NREF   NINEQ'/,3I8)
