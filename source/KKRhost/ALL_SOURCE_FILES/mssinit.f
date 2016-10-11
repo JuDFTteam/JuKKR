@@ -180,7 +180,7 @@ C
 C ----------------------------------------------------------------------
 C    store the Delta_t matrix
 C ----------------------------------------------------------------------
-      if (OPT('FERMIOUT'))then                                   ! fswrt
+      if (OPT('FERMIOUT') .and. myrank==master) then             ! fswrt
         write(6801,'(A)') 'TMATLL(ie):'                          ! fswrt
         do IQ=1,NAEZ                                             ! fswrt
           do LM2=1,LMMAXD                                        ! fswrt
