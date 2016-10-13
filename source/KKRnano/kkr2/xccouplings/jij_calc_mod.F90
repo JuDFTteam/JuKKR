@@ -383,7 +383,8 @@ endsubroutine symjij
 !>    @param JXCIJINT integrated Jij(E), for IER=1 they are initialised
 !>           then pass old JXCIJINT for next energy point -
 !>           therefore integration is achieved: in,out
-subroutine XCCPLJIJ_START(i1, ier, wgte, rxij,nxij,ixcp,rxccls, gmatxij,dtixij, communicator, jxcijint,eresjij, naez, lmmaxd, nxijd, nspind) ! todo: remove i1, rxij, rxccls
+!subroutine XCCPLJIJ_START(i1, ier, wgte, rxij,nxij,ixcp,rxccls, gmatxij,dtixij, communicator, jxcijint,eresjij, naez, lmmaxd, nxijd, nspind) ! todo: remove i1, rxij, rxccls
+subroutine xccpljij_start(ier, wgte, nxij, ixcp, gmatxij, dtixij, communicator, jxcijint, eresjij, naez, lmmaxd, nxijd, nspind) ! removed i1, rxij, rxccls
   !   ********************************************************************
   !   *                                                                  *
   !   *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
@@ -403,15 +404,15 @@ subroutine XCCPLJIJ_START(i1, ier, wgte, rxij,nxij,ixcp,rxccls, gmatxij,dtixij, 
   !     ..
   !     .. scalar arguments
   double complex, intent(in) :: wgte
-  integer, intent(in) :: i1
+! integer, intent(in) :: i1
+! double precision :: rxij(nxijd)
+! double precision :: rxccls(3,nxijd)
   integer, intent(in) :: ier
   integer, intent(in) :: nxij
   logical, intent(in) :: eresjij
 
   double complex :: gmatxij(lmmaxd,lmmaxd,nxijd,nspind)
   double complex :: dtixij(lmmaxd,lmmaxd)
-  double precision :: rxij(nxijd)
-  double precision :: rxccls(3,nxijd)
   integer :: ixcp(nxijd)
   integer, intent(in) :: communicator
 

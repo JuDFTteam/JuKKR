@@ -247,23 +247,21 @@ module DimParams_mod
     ! record lengths
     self%lrecres2 = 4+8*(self%nspind*(self%lmaxd+7)+2*self%lpot+4+2)
 
-    call consistencyCheck01(self%iemxd, self%lmaxd, self%nspind, self%smpid)
+    call consistencyCheck01(self%lmaxd, self%nspind, self%smpid)
 
   endsubroutine ! calc
 
 
   ! Consistency checks
   !----------------------------------------------------------------------------
-  subroutine consistencyCheck01(iemxd, lmaxd, nspind, smpid) ! todo: remove iemxd
-    integer, intent(in) :: iemxd, lmaxd, nspind, smpid
+  subroutine consistencyCheck01(lmaxd, nspind, smpid)
+    integer, intent(in) :: lmaxd, nspind, smpid
 
     if (lmaxd < 0) stop "main2: LMAXD must be >= 0"
 
-    if (smpid /= 1 .and. smpid /=2) stop "main2: SMPID must be 1 or 2"
-
-    if (nspind /= 1 .and. nspind /=2) stop "main2: NSPIND must be 1 or 2"
-
-    if ((smpid == 2) .and. (nspind /= 2)) stop "main2: Spin parallelism is only possible if NSPIND=2, set SMPID=1"
+    if (smpid /= 1 .and. smpid /= 2) stop "main2: SMPID must be 1 or 2"
+    if (nspind /= 1 .and. nspind /= 2) stop "main2: NSPIND must be 1 or 2"
+    if (smpid == 2 .and. nspind /= 2) stop "main2: Spin parallelism is only possible if NSPIND=2, set SMPID=1"
     
   endsubroutine ! check
 

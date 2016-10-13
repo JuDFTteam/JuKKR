@@ -176,8 +176,6 @@ module ConstructShapes_mod
     integer :: npan, ii
 
     double precision :: radius
-
-    integer, parameter :: keypan = 0
     
     nfaced = size(rvec,2)
 
@@ -203,7 +201,7 @@ module ConstructShapes_mod
     allocate(xrn(meshnd))
     allocate(drn(meshnd))
     
-    call shapef(npoints_min, planes, tolvdist, toleuler, nmin, nvertices, vert, nface, lmax_shape, keypan, dlt, & 
+    call shapef(npoints_min, planes, tolvdist, toleuler, nmin, nvertices, vert, nface, lmax_shape, dlt, & 
       npan, nm, xrn, drn, meshn, &  ! radial mesh (output)
       thetas_s, lmifun_s, nfun, & ! shape function (output)
       ibmaxd, meshnd, npand, atom_id)
@@ -211,7 +209,7 @@ module ConstructShapes_mod
     ! muffin-tinization
     radius = new_MT_radius; if (MT_scale > tolvdist) radius = min(rmt*MT_scale, rmt) ! MT_scale > 0.0 overrides new_MT_radius
 
-    if (num_MT_points > 0) call mtmesh(num_MT_points, npan, meshn, nm, xrn, drn, nfun, thetas_s, lmifun_s, radius, atom_id)
+    if (num_MT_points > 0) call mtmesh(num_MT_points, npan, meshn, nm, xrn, drn, nfun, thetas_s, radius, atom_id)
 
     ! Construct shape-fun datastructure
     call create(self, meshn, ibmaxd, nfun)
@@ -254,7 +252,7 @@ module ConstructShapes_mod
   endsubroutine ! destroy
 
   !------------------------------------------------------------------------------
-  subroutine mtmesh(nrad, npan, meshn, nm, xrn, drn, nfu, thetas, lmifun, mtradius, atom_id)
+  subroutine mtmesh(nrad, npan, meshn, nm, xrn, drn, nfu, thetas, mtradius, atom_id)
     use Constants_mod, only: pi
     ! program  mtmesh.f adds one extra pannel inside the muffin-tin sphere to allow lattice relaxations.
     ! stores the mt-nized shapes in unit 15 as shapefun
@@ -264,7 +262,6 @@ module ConstructShapes_mod
     integer, intent(inout) :: nm(:)
     double precision, intent(inout) :: xrn(:), drn(:)
     double precision, intent(inout) :: thetas(:,:)
-    integer, intent(inout) :: lmifun(:) ! unchanged
     double precision, intent(in) :: mtradius
     integer, intent(in) :: atom_id
 

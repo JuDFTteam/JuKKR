@@ -140,7 +140,7 @@ module ProcessKKRresults_mod
         atom_id = calc%atom_ids(ila) ! get global atom_id from local index
 
         ! TODO: Fermi energy written to DOS files is just a dummy value (99.99)
-        call write_LDOS(densities%DEN,emesh%EZ,densities%lmaxd+1,emesh%IELAST,atomdata%core%ITITLE(:,1:dims%NSPIND), 99.99d0, &
+        call write_LDOS(densities%DEN, emesh%EZ, densities%lmaxd+1, emesh%IELAST, atomdata%core%ITITLE(:,1:dims%NSPIND), 99.99d0, &
                         emesh%E1, emesh%E2, params%ALAT, emesh%TK, dims%NSPIND, atom_id)
       enddo ! ila
     endif
@@ -157,14 +157,15 @@ module ProcessKKRresults_mod
       ! TODO: note: title written to complex.dos is not correct
       ! - taken from 1st local atom only
       ! TODO: Fermi energy written to complex.dos is not correct
-      call RESULTS(dims%LRECRES2,densities%IEMXD,ITER,dims%LMAXD, &
-      arrays%NAEZ,emesh%NPOL, &
-      dims%NSPIND,params%KPRE,params%KTE,atomdata%potential%LPOT, &
-      emesh%E1,emesh%E2,emesh%TK,emesh%EFERMI, &
-      params%ALAT,atomdata%core%ITITLE(:,1:dims%NSPIND), &
+      call RESULTS(dims%LRECRES2, densities%IEMXD, ITER, dims%LMAXD, &
+      arrays%NAEZ, emesh%NPOL, &
+      dims%NSPIND, params%KPRE, params%KTE, atomdata%potential%LPOT, &
+      emesh%E1, emesh%E2, emesh%TK, emesh%EFERMI, &
+      params%ALAT, atomdata%core%ITITLE(:,1:dims%NSPIND), &
       densities%total_charge_neutrality, &
-      arrays%ZAT,emesh%EZ,emesh%WEZ,params%LDAU, &
-      dims%iemxd)
+      arrays%ZAT, emesh%EZ,&
+!       emesh%WEZ,&
+      params%LDAU, dims%iemxd)
 
       call OUTTIME(mp%isMasterRank,'results......', getElapsedTime(program_timer), iter)
 
@@ -1385,7 +1386,9 @@ module ProcessKKRresults_mod
 
 ! process with MYLRANK(LMPIC) == 0 and LMPIC == 1 writes results
 
-  subroutine results(lrecres2, ielast, itscf, lmax, natoms, npol, nspin, kpre, compute_total_energy, lpot, e1, e2, tk, efermi, alat, ititle, chrgnt, zat, ez, wez, ldau, iemxd)
+  subroutine results(lrecres2, ielast, itscf, lmax, natoms, npol, nspin, kpre, compute_total_energy, lpot, e1, e2, tk, efermi, alat, ititle, chrgnt, zat, ez, &
+!     wez, &
+    ldau, iemxd)
   use Constants_mod, only: pi
     integer, intent(in) :: iemxd
     integer, intent(in) :: ielast, itscf, lmax, natoms, npol, nspin
@@ -1394,7 +1397,7 @@ module ProcessKKRresults_mod
     double precision, intent(in) :: e1, e2, tk, efermi
     double precision, intent(in) :: chrgnt, alat
     logical, intent(in) :: ldau
-    double complex, intent(in) :: ez(iemxd), wez(iemxd)
+    double complex, intent(in) :: ez(iemxd)!, wez(iemxd)
     double precision, intent(in) :: zat(natoms)
     integer, intent(in) :: ititle(20,*)
     
@@ -1442,7 +1445,8 @@ module ProcessKKRresults_mod
       if (npol == 0) then
         do i1 = 1, natoms
           read(71, rec=i1) qc, catom, charge, ecore, den
-          call wrldos(den, ez, wez, lmax+1, iemxd, npotd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
+!         call wrldos(den, ez, wez, lmax+1, iemxd, npotd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
+          call wrldos(den, ez, lmax+1, iemxd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
         enddo ! i1
       endif
 

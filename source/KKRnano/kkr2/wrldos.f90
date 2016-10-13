@@ -1,191 +1,148 @@
 !----------------------------------------------------------------------
 !>    Writes local density of states.
-      SUBROUTINE write_LDOS(DEN,EZ,LMAXD1,IEMXD,ITITLE, EFERMI,E1, E2,ALATC,TK,NSPIN,I1)
-      IMPLICIT NONE
+      subroutine write_ldos(den, ez, lmaxd1, iemxd, ititle, efermi, e1, e2, alatc, tK, nspin, i1)
+      implicit none
+      double precision, intent(in) :: alatc, e1, e2, efermi, tK
+      integer, intent(in) :: iemxd, lmaxd1, nspin, i1
+      double complex, intent(in) :: den(0:lmaxd1,iemxd,nspin), ez(iemxd)
+      double precision :: dostot(0:lmaxd1,2), pdostot(0:lmaxd1,2)
+      integer, intent(in) :: ititle(20,nspin)
 
-!     .. Parameters ..
-      DOUBLE PRECISION KB
-      PARAMETER       (KB=0.6333659D-5)
-!     ..
-!     .. Scalar Arguments ..
-      DOUBLE PRECISION ALATC,E1,E2,EFERMI,TK
-      INTEGER          IELAST,IEMXD,LMAXD1
-      INTEGER          NSPIN
-!     ..
-!     .. Array Arguments ..
-      DOUBLE COMPLEX   DEN(0:LMAXD1,IEMXD,NSPIN), EZ(IEMXD),WEZ(IEMXD)
-      DOUBLE PRECISION DOSTOT(0:LMAXD1,2), PDOSTOT(0:LMAXD1,2)
-      INTEGER          ITITLE(20,NSPIN)
-!     ..
-!     .. Local Scalars ..
-      DOUBLE PRECISION DOS,DOSSGN,EFCTOR,PI
-      INTEGER          I1,IA,IE,IPOT,ISPIN,L
-      CHARACTER(len=16) :: FNAME
-!     ..
-!     .. Intrinsic Functions ..
-      INTRINSIC ATAN,DBLE,DIMAG
-!     ..
-!     .. External Functions ..
-      LOGICAL TEST
-      EXTERNAL TEST
-!     ..
-      PI = 4.d0*ATAN(1.d0)
-      EFCTOR = 1.d0
-!     IF (TEST('EV      ')) EFCTOR = 13.6058D0
+!     .. locals ..
+      double precision, parameter :: kB=0.6333659d-5
+      double complex :: wez(iemxd) ! warning: wez is uninitialized !
+      double precision :: dos, dossgn, efctor, pi
+      integer :: ielast, ie, ipot, ispin, l
+      character(len=16) :: fname
+
+!     logical, external :: test
+
+      pi = 4.d0*atan(1.d0)
+      efctor = 1.d0
+!     if (test('ev      ')) efctor = 13.6058d0
 !
-      IELAST = IEMXD
+      ielast = iemxd
 !
-! initialize DOSTOT
-!
-      DO ISPIN = 1,NSPIN
-        DO L = 0,LMAXD1
-          DOSTOT(L,ISPIN) = 0.d0
-          PDOSTOT(L,ISPIN) = 0.d0
-        endDO
-      endDO
+! initialize dostot
+      dostot  = 0.d0
+      pdostot = 0.d0
 
 !=======================================================================
-! write DOS to file DOS.I1.dat - begin
+! write dos to file dos.i1.dat - begin
 !=======================================================================
-!
+      write(unit=fname, fmt="(a,i4.4,a)") 'DOS.',i1,'.dat'
+      open(48, file=fname, form='formatted', action='write')
 
-      WRITE(UNIT=FNAME, FMT="(a,i4.4,a)") 'DOS.',I1,'.dat'
+      do ispin = 1, nspin
+        ipot = nspin*(i1-1) + ispin
+        dossgn = 1.d0 ; if (ispin /= nspin) dossgn = -1.d0
 
-      open(48, FILE=FNAME, FORM='formatted', ACTION='WRITE')
-!
-        DO ISPIN = 1,NSPIN
-            IPOT = NSPIN * (I1-1) + ISPIN
-            DOSSGN = 1.d0
-            IF (ISPIN /= NSPIN) DOSSGN = -1.d0
-!
-            WRITE (48,FMT=9010) (ITITLE(IA,ISPIN),IA=1,19)
-            WRITE (48,FMT=9020) I1
-            WRITE (48,FMT=9030) ISPIN,IELAST,E1,E2,EFERMI,EFCTOR
-            WRITE (48,FMT=9040) EFERMI
-            WRITE (48,FMT=9050) TK,PI*KB*TK,ALATC
-!
-            DO IE = 1,IELAST
-                DOS = 0.d0
-                DO L = 0,LMAXD1
-                    DOS = DOS - 2.d0 * DIMAG(DEN(L,IE,ISPIN))/PI/DBLE(NSPIN)
-                    DOSTOT(L,ISPIN) = DOSTOT(L,ISPIN) + DIMAG(WEZ(IE)*DEN(L,IE,ISPIN))
-                endDO
-                WRITE (48,FMT=9060) DBLE(EZ(IE))*EFCTOR, (-2.d0*DIMAG(DEN(L,IE,ISPIN))*DOSSGN/EFCTOR/PI/DBLE(NSPIN),L=0,LMAXD1),DOS*DOSSGN/EFCTOR
-            endDO
-!
-            WRITE (48,FMT=9070) (DOSTOT(L,ISPIN)/EFCTOR/DBLE(NSPIN), L=0,LMAXD1)
-            IF (ISPIN /= NSPIN) WRITE (48,FMT=9000)
-        endDO
-        CLOSE (48)
-!
+        write (48,fmt=9010) ititle(1:19,ispin)
+        write (48,fmt=9020) i1
+        write (48,fmt=9030) ispin, ielast, e1, e2, efermi, efctor
+        write (48,fmt=9040) efermi
+        write (48,fmt=9050) tK, pi*kB*tK, alatc
+
+        do ie = 1, ielast
+          dos = 0.d0
+          do l = 0, lmaxd1
+            dos = dos - 2.d0 * dimag(den(l,ie,ispin))/(pi*nspin)
+            dostot(l,ispin) = dostot(l,ispin) + dimag(wez(ie)*den(l,ie,ispin))
+          enddo
+          write(48,fmt=9060) dble(ez(ie))*efctor, -2.d0*dimag(den(:,ie,ispin))*dossgn/(efctor*pi*nspin), dos*dossgn/efctor
+        enddo ! ie
+
+        write(48,fmt=9070) dostot(:,ispin)/(efctor*nspin)
+        if (ispin /= nspin) write(48,fmt=9000)
+      enddo ! ispin
+      close(48)
+
 !=======================================================================
-! write DOS to file DOS.I1.dat - end
+! write dos to file dos.i1.dat - end
 !=======================================================================
-      RETURN
- 9000 FORMAT ('&')
- 9010 FORMAT ('#',19a4)
- 9020 FORMAT ('# I1    :',I8)
+      return
+ 9000 format ('&')
+ 9010 format ('#',19a4)
+ 9020 format ('# I1    :',I8)
  9030 FORMAT ('# ISPIN :',I8,'   IELAST :',I5,/,'# E1,E2 :',2f12.5,' EFERMI :',f12.5,'   EFCTR',f10.6)
  9040 FORMAT ('# FERMI :',f12.5)
- 9050 FORMAT ('# TK    =',f8.1,'   Kelvin =',3p,f8.3,' mRyd',0p,/,'# ALAT   :',f12.5)
+ 9050 FORMAT ('# tK    =',f8.1,'   Kelvin =',3p,f8.3,' mRyd',0p,/,'# ALAT   :',f12.5)
  9060 FORMAT (1p,8e15.7)
  9065 FORMAT (1p,16d15.7)
  9070 FORMAT ('# Integrated DOS ',1p,d10.3,7d11.3)
- 9080 FORMAT ('&')
-      ENDsubroutine
+ 9080 format ('&')
+      endsubroutine ! write_ldos
 
-!> Writes complex.dos file (complex density of states).
-      SUBROUTINE WRLDOS(DEN,EZ,WEZ,LMAXD1,IEMXD,NPOTD,ITITLE,EFERMI,E1, E2,ALATC,TK,NSPIN,NAEZ,IELAST,I1,DOSTOT)
-      IMPLICIT NONE
+!> writes complex.dos file (complex density of states).
+!     subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, alatc, tK, nspin, naez, ielast, i1, dostot) ! remove wez and npotd
+      subroutine wrldos(den, ez, lmaxd1, iemxd, ititle, efermi, e1, e2, alatc, tK, nspin, naez, ielast, i1, dostot) ! remove wez and npotd
+      implicit none
+!     integer, intent(in) :: npotd ! todo: removed
+!     double complex, intent(in) :: wez(iemxd) ! todo: removed
+      double precision, intent(in) :: alatc, e1, e2, efermi, tK
+      integer, intent(in) :: ielast, iemxd, lmaxd1, naez, nspin
+      double complex, intent(in) :: den(0:lmaxd1,iemxd,nspin), ez(iemxd)
+      integer, intent(in) :: ititle(20,nspin)
+      double precision, intent(out) :: dostot(0:lmaxd1,2)
 
-!     .. Parameters ..
-      DOUBLE PRECISION KB
-      PARAMETER       (KB=0.6333659D-5)
-!     ..
-!     .. Scalar Arguments ..
-      DOUBLE PRECISION ALATC,E1,E2,EFERMI,TK
-      INTEGER          IELAST,IEMXD,LMAXD1, NAEZ,NPOTD ! todo: remove NPOTD
-      INTEGER          NSPIN
-!     ..
-!     .. Array Arguments ..
-      DOUBLE COMPLEX   DEN(0:LMAXD1,IEMXD,NSPIN), EZ(IEMXD),WEZ(IEMXD) ! todo: remove WEZ
-      DOUBLE PRECISION DOSTOT(0:LMAXD1,2), PDOSTOT(0:LMAXD1,2)
-      INTEGER          ITITLE(20,NSPIN)
-!     ..
-!     .. Local Scalars ..
-      DOUBLE COMPLEX   DOSCMPLX
-      DOUBLE PRECISION DOSSGN,EFCTOR,PI
-      INTEGER          I1,IA,IE,IPOT,ISPIN,L
-!     ..
-!     .. Intrinsic Functions ..
-      INTRINSIC ATAN,DBLE,DIMAG
-!     ..
-!     .. External Functions ..
-      LOGICAL TEST
-      EXTERNAL TEST
-!     ..
-      PI = 4.d0*ATAN(1.d0)
-      EFCTOR = 1.d0
+!     .. locals ..
+      double precision, parameter :: kB=0.6333659d-5
+      double complex   :: doscmplx
+      double precision :: dossgn, pi, pispininv
+      integer          :: i1, ie, ispin
+      double precision, parameter :: efactor = 1.d0, efactorinv = 1.d0/efactor
 
-! initialize DOSTOT
-!
-      DO ISPIN = 1,NSPIN
-        DO L = 0,LMAXD1
-          DOSTOT(L,ISPIN) = 0.d0
-          PDOSTOT(L,ISPIN) = 0.d0
-        endDO
-      endDO
-!
+      pi = 4.d0*atan(1.d0)
+      pispininv = 1.d0/(pi*nspin)
+      
+      dostot = 0.d0
+
 !
 ! open file complex.dos - kept for correspondence to complexdos3.f
 !
-      IF(I1 == 1) THEN
-      open(49,FILE='complex.dos', FORM='formatted', ACTION='write')
-      WRITE (49,*) NAEZ*NSPIN
-      WRITE (49,*) IELAST
-      WRITE (49,*) LMAXD1
-      endIF
+      if(i1 == 1) then
+        open(49,file='complex.dos', form='formatted', action='write')
+        write(49,*) naez*nspin
+        write(49,*) ielast
+        write(49,*) lmaxd1
+      endif
 
 !=======================================================================
-! Write complex DOS to file complex.dos - begin
+! write complex dos to file complex.dos - begin
 !=======================================================================
 !
-        DO ISPIN = 1,NSPIN
-            IPOT = NSPIN * (I1-1) + ISPIN
-            DOSSGN = 1.d0
-            IF (ISPIN /= NSPIN) DOSSGN = -1.d0
-!
-            WRITE (49,FMT=9010) (ITITLE(IA,ISPIN),IA=1,19)
-            WRITE (49,FMT=9020) I1
-            WRITE (49,FMT=9030) ISPIN,IELAST,E1,E2,EFERMI,EFCTOR
-            WRITE (49,FMT=9040) EFERMI
-            WRITE (49,FMT=9050) TK,PI*KB*TK,ALATC
-!
-            DO IE = 1,IELAST
-                DOSCMPLX = DCMPLX(0.d0,0.D0)
-                DO L = 0,LMAXD1
-                    DOSCMPLX = DOSCMPLX - 2.d0 * DEN(L,IE,ISPIN)/PI/DBLE(NSPIN)
-                endDO
-                WRITE (49,FMT=9065) EZ(IE)*EFCTOR, (-2.d0*DEN(L,IE,ISPIN)*DOSSGN/EFCTOR/PI/DBLE(NSPIN),L=0,LMAXD1),DOSCMPLX*DOSSGN/EFCTOR
-            endDO
-!
-            IF (ISPIN /= NSPIN.OR.I1 /= NAEZ) WRITE (49,FMT=9000)
-        endDO
-      IF(I1 == NAEZ) CLOSE (49)
+        do ispin = 1,nspin
+          dossgn = 1.d0
+          if (ispin /= nspin) dossgn = -1.d0
+
+          write(49,fmt=9010) ititle(1:19,ispin)
+          write(49,fmt=9020) i1
+          write(49,fmt=9030) ispin, ielast, e1, e2, efermi, efactor
+          write(49,fmt=9040) efermi
+          write(49,fmt=9050) tK, pi*kB*tK, alatc
+
+          do ie = 1,ielast
+            doscmplx = -2.d0*sum(den(:,ie,ispin))*pispininv
+            write(49,fmt=9065) ez(ie)*efactor, -2.d0*den(:,ie,ispin)*dossgn*efactorinv*pispininv, doscmplx*dossgn*efactorinv
+          enddo ! ie
+
+          if (ispin /= nspin .or. i1 /= naez) write(49,fmt=9000)
+        enddo ! ispin
+        if(i1 == naez) close(49)
 !
 !=======================================================================
-! Write complex DOS to file complex.dos - end
+! write complex dos to file complex.dos - end
 !=======================================================================
-      RETURN
+      return
 !
- 9000 FORMAT ('&')
- 9010 FORMAT ('#',19a4)
+ 9000 format ('&')
+ 9010 format ('#',19a4)
  9020 FORMAT ('# I1    :',I8)
  9030 FORMAT ('# ISPIN :',I8,'   IELAST :',I5,/,'# E1,E2 :',2f12.5,' EFERMI :',f12.5,'   EFCTR',f10.6)
  9040 FORMAT ('# FERMI :',f12.5)
- 9050 FORMAT ('# TK    =',f8.1,'   Kelvin =',3p,f8.3,' mRyd',0p,/,'# ALAT   :',f12.5)
+ 9050 FORMAT ('# tK    =',f8.1,'   Kelvin =',3p,f8.3,' mRyd',0p,/,'# ALAT   :',f12.5)
  9060 FORMAT (1p,8e15.7)
  9065 FORMAT (1p,16d15.7)
  9070 FORMAT ('# Integrated DOS ',1p,d10.3,7d11.3)
  9080 FORMAT ('&')
-      ENDsubroutine
+      endsubroutine

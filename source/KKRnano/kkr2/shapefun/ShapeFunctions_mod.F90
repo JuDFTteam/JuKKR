@@ -142,7 +142,6 @@ module ShapeFunctions_mod
 
 !------------------------------------------------------------------------------
   subroutine shapef(npoi, planes, tolvdist, toleuler, nmin, nvertices, vert, nface, lmax, &
-                    keypan, & ! todo: remove from interface
                     dlt, npan, nm, xrn, drn, meshn, &  ! radial mesh ! output parameters
                     thetas_s, lmifun_s, nfun, & ! shape function
                     ibmaxd, meshnd, npand, atom_id)
@@ -156,7 +155,6 @@ module ShapeFunctions_mod
     integer, intent(in) :: npoi
     double precision, intent(in) :: tolvdist, toleuler
     integer, intent(in) :: nmin, nface, lmax
-    integer, intent(in) :: keypan
     double precision, intent(in) :: dlt
 
     integer, intent(in) :: ibmaxd

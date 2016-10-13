@@ -7,8 +7,8 @@ module XCFunctionals_mod
   public :: mkxcpe_pw91
   public :: mkxcpe_pbe
   public :: fpexcpbe
-  public :: excpbex
-  public :: excpbec
+! public :: excpbex
+! public :: excpbec
   public :: excgcor2
  
   contains
@@ -560,7 +560,7 @@ IF(ro(1) > 1D-12 .AND. ro(2) > 1D-12 )THEN
     ss=drv1/(d*2D0*fk)
     uu=drv2/(d**2*(2D0*fk)**3)
     vv=drv3/(d*(2D0*fk)**2)
-    CALL excpbex(d,ss,uu,vv,ex,vx,llda,um,bet)
+    CALL excpbex(d,ss,uu,vv,ex,vx,llda,um) !,bet
     exc=exc+ex*(d/2D0)/(ro(1)+ro(2))
     IF(jsp == 1)vxcup=vx
     IF(jsp == 2)vxcdn=vx
@@ -594,7 +594,7 @@ IF(ro(1) > 1D-12 .AND. ro(2) > 1D-12 )THEN
   uu=drv2/(d**2*(2D0*sk*g)**3)
   vv=drv3/(d*(2D0*sk*g)**2)
   ww=drv4/(d**2*(2D0*sk*g)**2)
-  CALL excpbec(rs,zet,tt,uu,vv,ww,ec,vcup,vcdn,llda,um,bet)
+  CALL excpbec(rs,zet,tt,uu,vv,ww,ec,vcup,vcdn,llda,bet) !,um
   exc=exc+ec
   vxcup=vxcup+vcup
   vxcdn=vxcdn+vcdn
@@ -611,7 +611,7 @@ END SUBROUTINE fpexcpbe
 
 !*==excpbex.f    processed by SPAG 6.55Rc at 08:17 on 20 Dec 2009
 
-SUBROUTINE excpbex(rho,s,u,v,ex,vx,llda,um,bet)
+SUBROUTINE excpbex(rho,s,u,v,ex,vx,llda,um) !,bet
 !----------------------------------------------------------------------
 !  PBE EXCHANGE FOR A SPIN-UNPOLARIZED ELECTRONIC SYSTEM
 !  K Burke's modification of PW91 codes, May 14, 1996
@@ -653,7 +653,7 @@ REAL*8, INTENT(IN)                       :: v
 REAL*8, INTENT(OUT)                      :: ex
 REAL*8, INTENT(OUT)                      :: vx
 REAL*8, INTENT(IN)                       :: um
-REAL*8, INTENT(IN)                       :: bet
+!REAL*8, INTENT(IN)                       :: bet
 INTEGER, INTENT(IN)                      :: llda
 
 !*** Start of declarations rewritten by SPAG
@@ -707,7 +707,7 @@ vx = exunif*(thrd4*fxpbe-(u-thrd4*s2*s)*fss-v*fs)
 END SUBROUTINE excpbex
 !*==excpbec.f    processed by SPAG 6.55Rc at 08:17 on 20 Dec 2009
 
-SUBROUTINE excpbec(rs,zeta,t,uu,vv,ww,ec,vcup,vcdn,llda,um,bet)
+SUBROUTINE excpbec(rs,zeta,t,uu,vv,ww,ec,vcup,vcdn,llda,bet) ! removed um
 !engel
 !  This subroutine evaluates the correlation energy per particle and
 !  spin-up and spin-dn correlation potentials within the Perdew-Burke-
@@ -754,7 +754,7 @@ REAL*8, INTENT(IN)                       :: ww
 REAL*8, INTENT(OUT)                      :: ec
 REAL*8, INTENT(OUT)                      :: vcup
 REAL*8, INTENT(OUT)                      :: vcdn
-REAL*8, INTENT(IN)                       :: um
+!REAL*8, INTENT(IN)                       :: um
 REAL*8, INTENT(IN)                       :: bet
 INTEGER, INTENT(IN)                      :: llda
 

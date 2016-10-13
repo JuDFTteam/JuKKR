@@ -297,7 +297,7 @@ module KKRnano_Comm_mod
 
     ! Only ranks with Spin-Id=1 work!!!
     if (mp%mySpinId == 1) then
-      call XCCPLJIJ_START(I1, IER, energy_weight, RXIJ, NXIJ, IXCP, RXCCLS, GMATXIJ, DTIXIJ, &
+      call XCCPLJIJ_START(IER, energy_weight, NXIJ, IXCP, GMATXIJ, DTIXIJ, &
                           mp%mySEComm, JXCIJINT, ERESJIJ, mp%numAtomRanks, lmmaxd, nxijd, nspind)
     else
       JXCIJINT = dcmplx(1d9, 1d9) ! invalidate results for other ranks to be able to detect errors

@@ -77,8 +77,7 @@ module RadialMeshData_mod
     type(RadialMeshData), intent(inout) :: self
     integer, intent(in) :: irmd
     integer, intent(in) :: ipand
-    integer, intent(in), optional :: meshn
-    integer, intent(in), optional :: nfu
+    integer, intent(in), optional :: meshn, nfu
 
     self%irmd = irmd
     self%ipand = ipand
@@ -87,22 +86,22 @@ module RadialMeshData_mod
     allocate(self%DRDI(irmd))
     allocate(self%IRCUT(0:ipand))
 #ifdef USE_OLD_MESH
-    if(present(meshn) .AND. present(nfu)) then
+    if(present(meshn) .and. present(nfu)) then
       allocate(self%LLMSP(nfu))
       allocate(self%THETAS(meshn,nfu))
     endif
 #endif
-    self%R = 0.0d0
-    self%DRDI = 0.0d0
+    self%R = 0.d0
+    self%DRDI = 0.d0
     self%IRCUT = 0
 #ifdef USE_OLD_MESH
-    if(present(meshn) .AND. present(nfu)) then
-      self%LLMSP = 0.0d0
-      self%THETAS = 0.0d0
+    if(present(meshn) .and. present(nfu)) then
+      self%LLMSP = 0.d0
+      self%THETAS = 0.d0
     endif
 #endif
-    self%A = 0.0d0
-    self%B = 0.0d0
+    self%A = 0.d0
+    self%B = 0.d0
 
     self%IPAN = 0
     self%IRC = 0
@@ -111,13 +110,13 @@ module RadialMeshData_mod
     self%IRWS = 0
     self%IRMIN = 0
 #ifdef USE_OLD_MESH
-    if(present(meshn) .AND. present(nfu)) then
+    if(present(meshn) .and. present(nfu)) then
       self%MESHN = 0
       self%NFU = 0
     endif
 #endif
-    self%RWS = 0.0d0
-    self%RMT = 0.0d0
+    self%RWS = 0.d0
+    self%RMT = 0.d0
 
   endsubroutine ! create
 
@@ -125,14 +124,12 @@ module RadialMeshData_mod
   subroutine destroyRadialMeshData(self)
     type(RadialMeshData), intent(inout) :: self
 
-    deallocate(self%R)
-    deallocate(self%DRDI)
-    deallocate(self%IRCUT)
+    integer :: ist
+    deallocate(self%R, self%DRDI, self%IRCUT, stat=ist)
 #ifdef USE_OLD_MESH
-    if (allocated(self%LLMSP))  deallocate(self%LLMSP)
-    if (allocated(self%THETAS)) deallocate(self%THETAS)
+    deallocate(self%LLMSP, self%THETAS, stat=ist)
 #endif
-  endsubroutine
+  endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   ! meshn, nfu, llmsp and thetas are optional!
@@ -144,9 +141,7 @@ module RadialMeshData_mod
     integer, intent(in) :: nm(:)
     integer, intent(in) :: imt
     integer, intent(in) :: irns
-    integer, intent(in), optional :: meshn
-    integer, intent(in), optional :: nfu
-    integer, intent(in), optional :: llmsp (:)
+    integer, intent(in), optional :: meshn, nfu, llmsp(:)
     double precision, intent(in), optional :: thetas(:,:)
 
     call initInterstitialMesh(self, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas)
@@ -190,9 +185,7 @@ module RadialMeshData_mod
     integer, intent(in) :: nm(:)
     integer, intent(in) :: imt
     integer, intent(in) :: irns
-    integer, intent(in), optional :: meshn
-    integer, intent(in), optional :: nfu
-    integer, intent(in), optional :: llmsp (:)
+    integer, intent(in), optional :: meshn, nfu, llmsp(:)
     double precision, intent(in), optional :: thetas(:,:)
 
     integer :: isum, ii, ipan
@@ -200,12 +193,12 @@ module RadialMeshData_mod
     ipan = size(nm) + 1 ! +1 for muffin-tin region 1..imt
     self%ipan = ipan
     self%imt = imt
+    if(present(meshn) .and. present(nfu)) then
 #ifdef USE_OLD_MESH
-    if(present(meshn) .AND. present(nfu)) then
       self%meshn = meshn
       self%nfu = nfu
-    endif
 #endif
+    endif
     ! ircut(0) has to be 0, integrations start at ircut(i)+1
     self%ircut(0) = 0
     self%ircut(1) = imt
@@ -229,13 +222,13 @@ module RadialMeshData_mod
     self%irmin = self%irws - irns
     self%irns = irns
     self%rws  = self%r(self%irws)
+    if(present(llmsp) .and. present(thetas)) then
 #ifdef USE_OLD_MESH
-    if(present(llmsp) .AND. present(thetas)) then
       self%llmsp = llmsp
       self%thetas = thetas
-    endif
 #endif
-    endsubroutine
+    endif
+    endsubroutine ! init
 
 !==============================================================================
 !=                                    I/O                                     =
@@ -252,15 +245,16 @@ module RadialMeshData_mod
     integer, intent(in) :: recnr
 
     integer :: fu = 37
-    integer :: irmd, ipand, max_reclen, meshn, nfu
-
+    integer :: irmd, ipand, max_reclen
+#ifdef USE_OLD_MESH
+    integer :: meshn, nfu
+#endif
     ! index file has extension .idx
 
     call openRadialMeshDataIndexDAFile(self, fu, filename-".idx") ! ignored for task-local files
-    call readRadialMeshDataIndexDA(self, fu, recnr, &
-                                       irmd, ipand, max_reclen &
-#ifdef USE_OLD_MESH    
-                                       , meshn, nfu &
+    call readRadialMeshDataIndexDA(self, fu, recnr, irmd, ipand, max_reclen &
+#ifdef USE_OLD_MESH
+                                   , meshn, nfu &
 #endif
                                        )
     call closeRadialMeshDataIndexDAFile(fu)
@@ -446,16 +440,11 @@ module RadialMeshData_mod
     integer, intent(in) :: recnr
     integer, intent(in) :: max_reclen
 
-    integer, parameter :: MAGIC_NUMBER = -889271554
-
-    FILEWRITE (fileunit, rec=recnr) self%irmd, &
-                                self%ipand, &
+    FILEWRITE (fileunit, rec=recnr) self%irmd, self%ipand, &
 #ifdef USE_OLD_MESH
-                                self%meshn, &
-                                self%NFU, &
+                                self%meshn, self%NFU, &
 #endif
-                                max_reclen, &
-                                MAGIC_NUMBER + recnr
+                                max_reclen, MAGIC_NUMBER + recnr
 
   endsubroutine ! write
 
@@ -503,14 +492,11 @@ module RadialMeshData_mod
     integer :: reclen, max_reclen
 
     max_reclen = 0
-    inquire (iolength = reclen) self%irmd, &
-                                self%ipand, &
+    inquire (iolength = reclen) self%irmd, self%ipand, &
 #ifdef USE_OLD_MESH
-                                self%meshn, &
-                                self%NFU, &
+                                self%meshn, self%NFU, &
 #endif
-                                max_reclen, &
-                                MAGIC_NUMBER
+                                max_reclen, MAGIC_NUMBER
 
     open(fileunit, access='direct', file=filename, recl=reclen, form='unformatted')
 #endif
@@ -598,21 +584,17 @@ module RadialMeshData_mod
     integer, intent(out) :: irmd
     integer, intent(out) :: ipand
     integer, intent(out) :: max_reclen
-    integer, intent(out), optional :: meshn
-    integer, intent(out), optional :: nfu
+    integer, intent(out), optional :: meshn, nfu
 
     integer :: magic, checkmagic
 
     checkmagic = MAGIC_NUMBER + recnr
 
-    FILEREAD  (fileunit, rec=recnr) irmd, &
-                                ipand, &
+    FILEREAD  (fileunit, rec=recnr) irmd, ipand, &
 #ifdef USE_OLD_MESH                                
-                                meshn, &
-                                nfu, &
+                                meshn, nfu, &
 #endif
-                                max_reclen, &
-                                magic
+                                max_reclen, magic
 
     if (magic /= checkmagic) die_here("Invalid mesh index data read.") 
   endsubroutine ! read

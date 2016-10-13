@@ -447,10 +447,12 @@ module MadelungCalculator_mod
     double precision :: dmax2, v2, da, db, vx(3), vxy(3), vxyz(3)
     double precision, allocatable :: cv(:,:), d2(:)
     integer, allocatable :: perm(:), nvis(:) ! tmp for nsh, nvis=number_of_vectors_in_shell
+    character :: which_space
 #ifdef  ORIGINAL_N_SQUARE_ALGORITHM
     double precision :: very_large
     integer :: iminl(1)
 #endif
+    which_space = space
 
 !     numh = num/2 + 1
 !  ==> 1 - numh(1) : num(1) - numh(1) is equivalent to -num/2 : num - num/2, however, num was chosen odd, so its a symmetric
@@ -508,8 +510,8 @@ module MadelungCalculator_mod
     perm = permutation_of(d2(1:nvecs)) ! sort such that d2(perm(:)) is smallest first. This scales N*log(N)
 #endif
 
-    da = 0.d0 ! = tol_origin ! init ! todo: revise this (the first vector is [0.,0.,0.] always, so we can init with 0.d0)
-                                    ! todo discuss why the origin tolerance was introduced althoug there is tol_newshell and (if redundant) remove it
+    da = tol_origin ! init ! todo: revise this (the first vector is [0.,0.,0.] always, so we can init with 0.d0):
+    da = 0.d0              ! todo discuss why the origin tolerance was introduced althoug there is tol_newshell and (if redundant) remove it
     ish = 1 ! open the first shell
     nvis(ish) = 0 ! init number of vectors for the first shell
     
