@@ -10,6 +10,10 @@ module TFQMR_mod
 
   double complex, parameter, private :: CONE = (1.d0, 0.d0), ZERO=(0.d0, 0.d0)
 
+  interface solve
+    module procedure solve_with_TFQMR
+  endinterface
+  
   contains
 
   !***********************************************************************
@@ -19,7 +23,7 @@ module TFQMR_mod
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param ncol           number of right-hand sides = number of columns of B
   !> @param nrow           number of row elements of matrices mat_X, mat_B
-  subroutine solve(op, mat_X, mat_B, tolerance, ncol, nrow, initial_zero, precond, use_precond, vecs, &
+  subroutine solve_with_TFQMR(op, mat_X, mat_B, tolerance, ncol, nrow, initial_zero, precond, use_precond, vecs, &
                    iterations_needed, largest_residual) ! optional output args
     USE_LOGGING_MOD
     use SolverStats_mod, only: SolverStats
@@ -362,7 +366,7 @@ module TFQMR_mod
     WRITELOG(3,*) converged_at
     WRITELOG(3,*) RESN
 
-  endsubroutine ! tfqmr_solve
+  endsubroutine ! solve
 
   !------------------------------------------------------------------------------
   !> Applies the preconditioner (optional), then the sparse matrix on 'mat' and puts result

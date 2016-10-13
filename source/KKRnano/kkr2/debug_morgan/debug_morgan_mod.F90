@@ -167,7 +167,12 @@ module debug_morgan_mod
     double complex :: factor
 
     coeffs = dcmplx(0.0d0, 0.0d0)
-    allocate(temp_coeffs, source = coeffs)
+#ifndef __GFORTRAN__
+    allocate(temp_coeffs, source=coeffs)
+#else    
+    allocate(temp_coeffs(size(coeffs)))
+    temp_coeffs = coeffs ! copy
+#endif
 
     do ii = 1, size(reciprocal, 2)
       call calc_exponential_expansion(temp_coeffs, reciprocal(:,ii), radius, lmax)

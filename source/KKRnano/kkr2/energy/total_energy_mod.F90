@@ -1,4 +1,3 @@
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 !------------------------------------------------------------------------------
 !> Module with routines for alternative calculation of the
@@ -8,6 +7,7 @@
 !
 ! E_VXC = 1/2 \int V_XC \rho
 module total_energy_mod
+#include "macros.h"
   use Constants_mod, only : pi
   implicit none
   private

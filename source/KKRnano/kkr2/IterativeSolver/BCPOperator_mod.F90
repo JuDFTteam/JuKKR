@@ -311,7 +311,7 @@ module BCPOperator_mod
     double complex, intent(in)  :: vecs_in(naez*lmmaxd,num_columns)
     double complex, intent(out) :: vecs_out(naez*lmmaxd,num_columns)
     double complex, intent(in)  :: gllhblck(natbld*lmmaxd,xdim*ydim*zdim*natbld*lmmaxd)
-
+#ifdef HAS_FFTW3
     include 'fftw3.f'
     
     double complex, parameter :: cone  = (1.d0, 0.d0), czero = (0.d0, 0.d0)
@@ -438,7 +438,7 @@ module BCPOperator_mod
 
     call dFFTw_destroy_plan(FFTwplan_fwd)
     call dFFTw_destroy_plan(FFTwplan_bwd)
-
+#endif
   endsubroutine ! appblckcirc
   
 endmodule ! BCPOperator_mod

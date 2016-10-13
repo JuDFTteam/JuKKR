@@ -1,6 +1,8 @@
 module broyden_kkr_mod
+#ifndef __GFORTRAN__
   use, intrinsic :: ieee_features
   use, intrinsic :: ieee_arithmetic
+#endif
   implicit none
   private
   public :: mix_broyden2_com
@@ -20,7 +22,7 @@ module broyden_kkr_mod
     double precision, allocatable :: g_metric_all(:)
     double precision, allocatable :: sm_input(:)
     double precision, allocatable :: fm_output(:)
-    double precision :: nan
+    double precision :: nan, zero
 
     length = getBroydenDim(calc_data)
 
@@ -28,7 +30,13 @@ module broyden_kkr_mod
     allocate(fm_output(length))
     allocate(g_metric_all(length))
 
+#ifdef __GFORTRAN__
+    zero = 0.d0
+    nan = 1.d0/zero
+#else
     nan = ieee_value(nan, IEEE_SIGNALING_NAN)
+#endif
+
     ! debug
     sm_input = nan
     fm_output = nan
@@ -40,11 +48,11 @@ module broyden_kkr_mod
     call collapse_output_potentials(calc_data, fm_output)
     call calc_all_metrics(calc_data, g_metric_all)
 
-#define broyden calc_data%broyden
+#define broyden calc_data%Broyden
     call broyden_second(sm_input, fm_output, broyden%sm1s, broyden%fm1s, &
                         broyden%ui2, broyden%vi2, g_metric_all, broyden%mixing, &
                         communicator, broyden%itdbryd, length, iter)
-#undef broyden
+#undef  broyden
     call extract_mixed_potentials(sm_input, calc_data)
 
     if (any(isnan(sm_input))) then

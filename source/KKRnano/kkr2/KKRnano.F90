@@ -50,7 +50,7 @@ program KKRnano
   type(TimerMpi) :: iteration_timer
   type(EBalanceHandler) :: ebalance_handler
 
-  integer :: ITER, global_atom_id, ila, num_local_atoms, flag, ios, ilen, voronano
+  integer :: ITER, global_atom_id, ila, num_local_atoms, ios, ilen, voronano
   double precision  :: ebot 
 
   type(KKRnanoParallel) :: mp
@@ -154,7 +154,7 @@ program KKRnano
   call create(arrays, dims)
   call load(arrays, 'bin.arrays') ! every process does this!
 
-  flag = load(params, 'bin.input')
+  call load(params, 'bin.input', ios=ios)
   ! done reading variables
 
 
@@ -293,12 +293,12 @@ program KKRnano
 
       call outTime(mp%isMasterRank,'G obtained ..........', getElapsedTime(program_timer),ITER)
 
-      flag = 0
+      ios = 0
       if (mp%isInMasterGroup) then
         ! output: (some contained as references in calc_data)
         ! atomdata, densities, broyden, ldau_data,
         ! emesh (only correct for master)
-        flag = processKKRresults(iter, calc_data, mp, emesh, dims, params, arrays, program_timer)
+        ios = processKKRresults(iter, calc_data, mp, emesh, dims, params, arrays, program_timer)
 
       endif ! in master group
 
@@ -318,7 +318,7 @@ program KKRnano
 
       endif ! master
 
-      if (is_abort_by_rank0(flag, mp%myActiveComm)) exit
+      if (is_abort_by_rank0(ios, mp%myActiveComm)) exit
 
       call broadcast(emesh, mp%myActiveComm)
 

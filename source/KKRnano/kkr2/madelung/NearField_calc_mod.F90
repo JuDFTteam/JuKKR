@@ -2,7 +2,7 @@
 !>
 !> @author Elias Rabel
 
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
+#include "macros.h"
 
 ! TODO: There are a lot of optimisation possibilities in this near field calculation:
 ! *) Do not look for near cells at each iteration - especially since it is O(N**2)

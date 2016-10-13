@@ -145,10 +145,11 @@ print
 
 #----------- Generate code for reading config values from unformatted file -
 print '!'+'-'*79
-print 'integer function read' + configname + 'FromFile(values, filename) result(ios)'
+print 'subroutine read' + configname + 'FromFile(values, filename, ios)'
 print '  type(' + configname + '), intent(inout) :: values'
 print '  character(len=*), intent(in) :: filename'
-print
+print '  integer, intent(out) :: ios'
+print    
 print '  integer, parameter :: fu = ' + str(FILE_UNIT)
 print
 print '  open(fu, file=filename, form="unformatted", action="read", status="old", iostat=ios)'
@@ -165,7 +166,7 @@ for line in deffile:
 deffile.close()
 
 print '  close(fu)'
-print 'endfunction ! load'
+print 'endsubroutine ! load'
 print
 
 #----------- Generate code for reading config values from unformatted file -

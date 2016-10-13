@@ -1,7 +1,7 @@
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 !> Adds the Madelung Potential to all atoms.
 module MadelungPotential_mod
+#include "macros.h"
   implicit none
   private
   public :: addMadelungPotentialnew_com

@@ -1,8 +1,8 @@
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 !> @author Elias Rabel
 
 module NearField_mod
+#include "macros.h"
   use Constants_mod, only: pi
   implicit none
   private

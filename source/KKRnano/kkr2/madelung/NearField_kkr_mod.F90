@@ -11,7 +11,6 @@
 !> @author Elias Rabel
 module NearField_kkr_mod
 ! use NearField_mod, only: Potential
-  use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
   implicit none
   private
   public :: IntracellPotential, create, destroy, init, get
@@ -102,13 +101,19 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   subroutine createIntracellPotential(self, lmpotd, irmd)
+#ifndef __GFORTRAN__   
+  use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
+#endif
     type(IntracellPotential), intent(inout) :: self
     integer, intent(in) :: lmpotd
     integer, intent(in) :: irmd
+#ifndef __GFORTRAN__   
     double precision :: nan
-    
     nan = ieee_value(nan, IEEE_SIGNALING_NAN)
-    
+#else
+    double precision, parameter :: nan = -999.9d9
+#endif
+
     allocate(self%charge_moments(lmpotd))
     allocate(self%radial_points(irmd))
     allocate(self%v_intra_values(irmd,lmpotd))

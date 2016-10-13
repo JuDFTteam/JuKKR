@@ -4,13 +4,11 @@
 !> @author Elias Rabel
 
 #include "../DebugHelpers/logging_macros.h"
-
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
+#include "macros.h"
 
 module NearField_com_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   USE_LOGGING_MOD
-  use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
   implicit none
   private
   public :: LocalCellInfo, NearFieldCorrection
@@ -50,7 +48,9 @@ module NearField_com_mod
     use MadelungCalculator_mod, only: MadelungClebschData
     use ChunkIndex_mod, only: getRankAndLocalIndex
     use one_sided_commD_mod, only: exposeBufferD, hideBufferD, copyChunksNoSyncD
-  
+#ifndef __GFORTRAN__    
+    use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
+#endif
     type(NearFieldCorrection), intent(inout) :: nfc(:)
     type(LocalCellInfo), intent(in) :: lci(:)
     type(MadelungClebschData), intent(in) :: gaunt
@@ -66,11 +66,13 @@ module NearField_com_mod
     integer :: irmd
     integer :: nranks
     double precision, allocatable :: send_buffer(:,:,:), recv_buffer(:,:)
-    double precision :: nan
-    
     integer :: win
-
+#ifndef __GFORTRAN__    
+    double precision :: nan
     nan = ieee_value(nan, IEEE_SIGNALING_NAN)
+#else
+    double precision, parameter :: nan = -99.d9
+#endif
     
     num_local_atoms = size(lci)
     

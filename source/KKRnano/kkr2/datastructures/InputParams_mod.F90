@@ -524,9 +524,10 @@ integer function getValues(filename, values) result(ierror)
 endfunction ! get
 
 !-------------------------------------------------------------------------------
-integer function readInputParamsFromFile(values, filename) result(ios)
+subroutine readInputParamsFromFile(values, filename, ios)
   type(InputParams), intent(inout) :: values
   character(len=*), intent(in) :: filename
+  integer, intent(out) :: ios
 
   integer, parameter :: fu = 67
 
@@ -584,7 +585,7 @@ integer function readInputParamsFromFile(values, filename) result(ios)
   read(fu) values%fullbz
   read(fu) values%vref
   close(fu)
-endfunction ! load
+endsubroutine ! load
 
 !-------------------------------------------------------------------------------
 subroutine writeInputParamsToFile(values, filename)

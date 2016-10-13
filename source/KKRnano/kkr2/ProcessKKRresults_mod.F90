@@ -260,7 +260,7 @@ module ProcessKKRresults_mod
       atomdata     => getAtomData(calc, 1)
       mesh => atomdata%mesh_ptr
 
-#define broyden calc%broyden
+#define broyden calc%Broyden
       call BRYDBM_new_com(atomdata%potential%VISP,atomdata%potential%VONS, &
       atomdata%potential%VINS, &
       atomdata%potential%LMPOT,mesh%R,mesh%DRDI,broyden%MIXING, &
@@ -671,8 +671,15 @@ module ProcessKKRresults_mod
     atom_id = 0
 
     new_total_energy = 0.d0
-
-    allocate(vons_temp, source = atomdata%potential%vons)
+    
+#ifndef __GFORTRAN__
+    allocate(vons_temp, source=atomdata%potential%vons)
+#else
+#define v atomdata%potential%vons
+    allocate(vons_temp(size(v,1),size(v,2),size(v,3)))
+    vons_temp = v ! copy
+#undef v
+#endif
 
     calc_force = (params%KFORCE == 1) ! calculate force at each iteration
 

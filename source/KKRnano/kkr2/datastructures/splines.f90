@@ -87,7 +87,7 @@ SUBROUTINE splint(xa,ya,y2a,n,x,y,yderiv)
   ! klo and khi now bracket the input value of x.
   h=xa(khi)-xa(klo)
   ! The xa's must be distinct.
-  if (h.eq.0.d0) pause 'bad xa input in splint'
+  if (h.eq.0.d0) stop 'bad xa input in splint'
   ! Cubic spline polynomial is now evaluated.
   a = (xa(khi)-x)/h
   b = (x-xa(klo))/h

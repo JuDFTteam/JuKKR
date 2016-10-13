@@ -61,8 +61,13 @@ module KKROperator_mod
 !   naclsd = size(cluster_info%indn0_trc, 1) ! not used
     self%lmmaxd = lmmaxd
 
+#ifndef __GFORTRAN__
     allocate(self%atom_indices, source=atom_indices) ! local truncation zone indices of the source atoms
-
+#else
+    allocate(self%atom_indices(size(atom_indices))) ! local truncation zone indices of the source atoms
+    self%atom_indices = atom_indices ! copy
+#endif
+    
     call create(self%sparse, self%naez, sum_cluster)
 
     call getKKRMatrixStructure(lmax_array, cluster_info%numn0_trc, cluster_info%indn0_trc, self%sparse)

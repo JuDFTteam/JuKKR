@@ -1,9 +1,10 @@
 !> Build coefficient matrix for solution of Dyson equation.
 !>
 !> @author Elias Rabel
+#include "macros.h"
 
 #ifndef NDEBUG
-#define ASSERT(CONDITION) if (.not. (CONDITION)) then; write(*,*) "Assertion ", #CONDITION, " failed: ",  __FILE__, __LINE__; endif
+#define ASSERT(CONDITION) CHECKASSERT(CONDITION)
 #else
 #define ASSERT(CONDITION)
 #endif
