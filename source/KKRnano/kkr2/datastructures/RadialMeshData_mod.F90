@@ -332,7 +332,7 @@ module RadialMeshData_mod
     open(fileunit, file=num, form='unformatted', action='read', status='old')
 
     ! read header at beginning of file
-    call readRadialMeshDataHeader(self, fu, recnr, irmd, ipand, max_reclen &
+    call readRadialMeshDataHeader(self, fileunit, recnr, irmd, ipand, max_reclen &
 #ifdef USE_OLD_MESH
                                   , meshn, nfu &
 #endif

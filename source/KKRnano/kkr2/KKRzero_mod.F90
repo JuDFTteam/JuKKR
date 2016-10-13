@@ -132,7 +132,7 @@ module KKRzero_mod
       params%rmax = params%rmax*params%alat
       params%gmax = params%gmax/params%alat
       call store(dims, 'bin.dims')
-      ierror = store(params, 'bin.input')
+      call store(params, 'bin.input')
       arrays%bravais(:,1) = params%bravais_a(1:3)
       arrays%bravais(:,2) = params%bravais_b(1:3)
       arrays%bravais(:,3) = params%bravais_c(1:3)
@@ -204,7 +204,7 @@ module KKRzero_mod
       call readKpointsFile(arrays%maxmesh, arrays%nofks, arrays%bzkp, arrays%volcub, arrays%volbz)
       
       call store(dims, 'bin.dims')
-      ist = store(params, 'bin.input')
+      call store(params, 'bin.input')
       call store(arrays, 'bin.arrays')
 
       call store(emesh, filename='bin.energy_mesh.0')

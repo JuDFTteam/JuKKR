@@ -201,8 +201,7 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
       enddo ! ia
 
       if (n_warn_ignored_param  > 0) warn(6, 'in file "'-filename-'",'+n_warn_ignored_param+'expressions have been ignored!')
-      if (n_warn_line_truncated > 0) warn(6, 'in file "'-filename-'",'+n_warn_line_truncated+ &
-                                             'lines have been truncated! increate line length in'+__FILE__-':'-SourceLine2AdjustL)
+      if (n_warn_line_truncated > 0) warn(6, 'in file "'-filename-'",'+n_warn_line_truncated+'lines have been truncated! increate line length in'+__FILE__-':'-SourceLine2AdjustL)
       
       if (checks) then
         nadd = 0

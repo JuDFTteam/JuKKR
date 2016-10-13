@@ -1,5 +1,6 @@
 module SingleSiteHelpers_mod
   use Constants_mod, only: pi
+#include "macros.h"
   implicit none
   private
   public :: BesHan, Bessel
@@ -375,8 +376,6 @@ module SingleSiteHelpers_mod
 
   endsubroutine ! zgeinv1
       
-      
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
   subroutine regsol(cvlight, e, nsra, dlogdp, fz, hamf, mass, pz, dror, r, &
                  s, vm2z, z, ipan, ircut, irmd, ipand, lmaxd, &

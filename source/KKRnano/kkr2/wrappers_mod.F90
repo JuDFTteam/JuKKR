@@ -1,4 +1,3 @@
-#define CHECKASSERT(X) if (.not. (X)) then; write(*, *) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 !------------------------------------------------------------------------------
 !> This module provides wrappers for routines with enormous argument lists.
@@ -6,6 +5,7 @@
 !> Most of them are called in main2.
 !> @todo check intents
 module wrappers_mod
+#include "macros.h"
   implicit none
   private
   

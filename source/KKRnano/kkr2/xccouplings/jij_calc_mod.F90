@@ -1,7 +1,7 @@
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 !> Collection of the Jij calculation routines - have fun.
 module jij_calc_mod
+#include "macros.h"
   use JijData_mod, only: JijData
   implicit none
   private

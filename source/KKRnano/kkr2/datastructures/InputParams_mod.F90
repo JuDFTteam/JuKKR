@@ -587,11 +587,12 @@ integer function readInputParamsFromFile(values, filename) result(ios)
 endfunction ! load
 
 !-------------------------------------------------------------------------------
-integer function writeInputParamsToFile(values, filename) result(ios)
+subroutine writeInputParamsToFile(values, filename)
   type(InputParams), intent(inout) :: values
   character(len=*), intent(in) :: filename
 
   integer, parameter :: fu = 67
+  integer :: ios
 
   open(fu, file=filename, form="unformatted", action="write", iostat=ios)
   if (ios /= 0) return
@@ -647,6 +648,6 @@ integer function writeInputParamsToFile(values, filename) result(ios)
   write(fu) values%fullbz
   write(fu) values%vref
   close(fu)
-endfunction ! store
+endsubroutine
 
 endmodule !InputParams

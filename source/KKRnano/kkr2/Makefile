@@ -13,6 +13,35 @@ BUILDDIR = $(HOME)/build
 
 EXTRA_FLAGS =
 
+PLATFORM = GNU_Fortran
+TYPE = nodebug
+
+PROGRAM = kkr2.exe
+
+# Path to put object files
+# and module files
+BUILDDIR = $(HOME)/build/kkr2
+
+EXTRA_FLAGS =
+
+
+
+ifeq ($(PLATFORM),GNU_Fortran)
+FC = mpif77
+FC90 = mpif90 
+## -std=f2008
+# -module <path> specifies where to put .mod files
+FCFLAGS  = -B $(BUILDDIR)
+FCFLAGS += -J $(BUILDDIR)
+FCFLAGS += -I $(BUILDDIR) -I ./
+FCFLAGS += -O0
+FC90FLAGS = -ffree-line-length-0
+FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+LDFLAGS = -O0
+FCFLAGS += -g
+endif
+
+
 # ========= IFF Workstations ============
 ifeq ($(PLATFORM),ifort)
 #### module load intel impi mkl

@@ -51,7 +51,6 @@
 #define FILEREAD(X,Y) read(X,Y)
 #endif
 
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
 
 module BasisAtom_mod
 #include "macros.h"

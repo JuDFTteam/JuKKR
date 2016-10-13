@@ -314,8 +314,7 @@ module BCPOperator_mod
 
     include 'fftw3.f'
     
-    double complex, parameter :: cone  = (1.d0, 0.d0)
-    double complex, parameter :: czero = (0.d0, 0.d0)
+    double complex, parameter :: cone  = (1.d0, 0.d0), czero = (0.d0, 0.d0)
 
     !     local arrays - large, stack based!!!
     double complex :: tblck(natbld*lmmaxd,natbld*lmmaxd)

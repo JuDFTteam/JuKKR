@@ -17,9 +17,8 @@
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
-
 module ClusterInfo_mod
+#include "macros.h"
   implicit none
   private
   public :: ClusterInfo, create, destroy

@@ -170,11 +170,12 @@ print
 
 #----------- Generate code for reading config values from unformatted file -
 print '!'+'-'*79
-print 'integer function write' + configname + 'ToFile(values, filename) result(ios)'
+print 'subroutine write' + configname + 'ToFile(values, filename)'
 print '  type(' + configname + '), intent(inout) :: values'
 print '  character(len=*), intent(in) :: filename'
 print
 print '  integer, parameter :: fu = ' + str(FILE_UNIT)
+print '  integer :: ios'
 print
 print '  open(fu, file=filename, form="unformatted", action="write", iostat=ios)'
 print '  if (ios /= 0) return'
@@ -190,7 +191,7 @@ for line in deffile:
 deffile.close()
 
 print '  close(fu)'
-print 'endfunction ! store'
+print 'endsubroutine'
 print
 
 print 'endmodule !' + configname
