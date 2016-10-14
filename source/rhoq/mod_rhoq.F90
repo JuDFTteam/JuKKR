@@ -719,10 +719,10 @@ subroutine red_Q(t_rhoq, rb, qvec, iq)
   end do
   ! compute 2x2 inverse
   det = 1.0d0/(rbt(1,1)*rbt(2,2) - rbt(1,2)*rbt(2,1))
-  irbt(1,1) = det*rbt(2,2)
+  irbt(1,1) =  det*rbt(2,2)
   irbt(1,2) = -det*rbt(1,2)
   irbt(2,1) = -det*rbt(2,1)
-  irbt(2,2) = det*rbt(1,1)
+  irbt(2,2) =  det*rbt(1,1)
   
   ! compute rq = (RB^T)^-1.Q
   ! this gives coordinates in multiples of the reciprocal lattice vectors
@@ -744,20 +744,20 @@ subroutine red_Q(t_rhoq, rb, qvec, iq)
   
   ! find iq from projection
   iq = -1
-  minimum = 100.0d0
+!   minimum = 100.0d0
   do i=1,t_rhoq%Nkpt
     kpt(:) = t_rhoq%kpt(:,i)
     if(dabs(dsqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))<eps) then
       iq=i
     end if
-    if(minimum(1)>dabs(dsqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))) then
-      minimum(1) = dabs(dsqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))
-      minimum(2:3) = kpt(1:2)
-    end if
+!     if(minimum(1)>dabs(dsqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))) then
+!       minimum(1) = dabs(dsqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))
+!       minimum(2:3) = kpt(1:2)
+!     end if
   end do
   
   !check if iq was found
-  if(iq<1) write(*,*) qv, minimum
+  if(iq<1) write(*,*) qv!, minimum
   if(iq<1) stop '[red_Q] Error: no iq found'
   
   
@@ -772,6 +772,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   ! calculate Delta rho^mu(q) = Int{ Delta rho(q, X_mu+r), dr }
   !                           = -1/(2*pi*i) Tr[ Q^mu Int{ Ghost(k) tau Ghost(k+q),dk } - Q^mu,* Int{ Ghost^*(k) tau^* Ghost^*(k-q),dk }]
   use omp_lib
+  use mod_timing
   use IFPORT ! random numbers
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
@@ -786,14 +787,16 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   integer, intent(in) :: ipan_intervall(0:ntotd)
   
   ! local
-  integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, mythread, nthreads, Ni, Nj, Nqpt, ixyz, lm01, lm02, ir, l1, m1, imt1, lm2, lm3, ifun, imin, ielast, nref
+  integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, mythread, nthreads, Ni, Nj, Nqpt, ixyz, lm01, lm02, ir, l1, m1, imt1, lm2, lm3, ifun, imin, ielast, nref, ikx, iky, Nx, Ny
   integer, allocatable :: ipvt(:), refpot(:)
   double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), tmpG02(:,:), tll(:,:), trefll(:,:,:), tmp(:,:), tmpsum1(:,:), tmpsum2(:,:), exG0_tmp(:,:), qint(:,:,:), eiqr_lm(:,:), q_mu(:,:), cYlm(:), jl(:)
   double complex :: tr_tmpsum1, tr_tmpsum2, kweight, Z
   double precision, allocatable :: kpt(:,:), L_i(:,:), Qvec(:,:), Ylm(:), rnew(:), qvec_tmp(:,:)
+  integer, allocatable :: qvec_index_tmp(:,:), qvec_index(:,:)
   double precision :: QdotL, tmpk(3), tmpr(3), Rq, costheta, phi, box(3)
   integer, allocatable :: ifunm(:), lmsp(:), ntcell(:) ! shape functions
   double precision, allocatable :: thetasnew(:,:) ! shape functions in Chebychev mesh (new mesh)
+  logical, allocatable :: kmask(:)
 
   ! parameters
   double complex, parameter :: C0=(0.0d0, 0.0d0), Ci=(0.0d0, 1.0d0), C1=(1.0d0, 0.0d0)
@@ -813,12 +816,18 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   N = t_rhoq%lmmaxso
   if(N/=lmmaxso) stop '[calc_rhoq] lmmaxso input does not match value in t_rhoq'
   if(Nkp/=t_rhoq%nkpt) stop '[calc_rhoq] Nkp input does not match value in t_rhoq'
+  
   allocate(kpt(3,Nkp), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating kpt'
   kpt = t_rhoq%kpt
+  
   allocate(L_i(3,T_rhoq%Nscoef), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating L_i'
   L_i = t_rhoq%L_i
+  
+  allocate(kmask(Nkp), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating kmask'
+  kmask(:) = .true.
   
   
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -876,7 +885,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   
     irec = ie+ielast*(t_rhoq%ilay_scoef(i)-1) ! layer index 
     read(9999,rec=irec) tll(1:N,1:N)
-
+    ! t-t_ref
     tll = tll - trefll(:,:,refpot(t_rhoq%ilay_scoef(i)))
 
     ! initialize tinv
@@ -893,8 +902,10 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   
   irec =  ie+ielast*(t_rhoq%mu_0-1) ! layer index for probe layer mu_0
   !write(*,*) 'read tmat_mu0', irec
-  read(9999,rec=irec) tll(1:N,1:N) 
-  
+  read(9999,rec=irec) tll(1:N,1:N)
+  ! t-t_ref
+  tll = tll - trefll(:,:,refpot(t_rhoq%mu_0))
+
   ! initialize tinv
   tinv(1:N,1:N,t_rhoq%Nscoef+1)=C0
   do lm1=1,lmmaxso
@@ -941,6 +952,10 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
     write(*,*) 'find imin' ,imin,t_rhoq%ilay_scoef(i), t_rhoq%Nlayer
   end do
   
+  lm1 = 0
+  lm2 = 0
+  
+  call timing_start('calc rhoq - comp tau')
   ! calculate tau
   do k=1,Nkp
     ! find exG0_i(k) vector of lm-blocks (i is one component)
@@ -962,12 +977,28 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
       irec = irec + ix + (t_rhoq%Nlayer-1)
       read(998899,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
       
-      call red_Q(t_rhoq, recbv(1:2,1:2), tmpk(1:2), q)
+!       call red_Q(t_rhoq, recbv(1:2,1:2), tmpk(1:2), q)
+      q = k
+
+
+      ! set kmask
+      if(dsqrt(dreal(tau0_k(1,1))**2+dimag(tau0_k(1,1))**2)<eps) then
+        kmask(q) = .false.
+        G0ij_k(1:N,1:N,i,q) = C0
+        G0ji_k(1:N,1:N,i,q) = C0
+        if(i==1) lm2 = lm2+1
+      else
+        kmask(q) = .true.
+        if(i==1) lm1 = lm1+1
+      end if      
+
       
-      !! find G0ij_k from tau0_k and tinv
-      !call calc_G0_k(tau0_k, tinv(1:N,1:N,t_rhoq%Nscoef+1), tinv(1:N,1:N,i), tmpG0(1:N,1:N), t_rhoq%mu_0, mu_i, N)
-      !G0ij_k(1:N,1:N,i,q) = tmpG0(1:N,1:N)
-      G0ij_k(1:N,1:N,i,q) = tau0_k(1:N,1:N)
+      if(kmask(q)) then
+        ! find G0ij_k from tau0_k and tinv
+        call calc_G0_k(tau0_k, tinv(1:N,1:N,t_rhoq%Nscoef+1), tinv(1:N,1:N,i), tmpG0(1:N,1:N), t_rhoq%mu_0, mu_i, N)
+        G0ij_k(1:N,1:N,i,q) = tmpG0(1:N,1:N)
+!         G0ij_k(1:N,1:N,i,q) = tau0_k(1:N,1:N)
+      end if
       
       ! now mu_i,mu_0 element
       irec = ((t_rhoq%Nlayer-1)*2)*(k-1) + ((t_rhoq%Nlayer-1)*2)*Nkp*(ie-1-1)
@@ -975,36 +1006,41 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
       irec = irec + ix
       read(998888,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
       
-      
-      !!find G0ji_k from tau0_k and tinv
-      !call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tinv(1:N,1:N,t_rhoq%Nscoef+1), tmpG02(1:N,1:N), mu_i, t_rhoq%mu_0, N)
-      !G0ji_k(1:N,1:N,i,q) = tmpG02(1:N,1:N)
-      G0ji_k(1:N,1:N,i,q) = tau0_k(1:N,1:N)
+      if(kmask(q)) then
+        !find G0ji_k from tau0_k and tinv
+        call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tinv(1:N,1:N,t_rhoq%Nscoef+1), tmpG02(1:N,1:N), mu_i, t_rhoq%mu_0, N)
+        G0ji_k(1:N,1:N,i,q) = tmpG02(1:N,1:N)
+!         G0ji_k(1:N,1:N,i,q) = tau0_k(1:N,1:N)
+      end if
 
       tmpsum1 = tmpsum1 + G0ij_k(1:N,1:N,i,q)
       tmpsum2 = tmpsum2 + G0ji_k(1:N,1:N,i,q)
       
     end do ! i
 
-      tmp(1,1) = C0
-      do i=1,lmmaxso
-         tmp(1,1) = tmp(1,1) + tmpsum1(i,i)
-      end do
-      write(22345, '(1000ES15.7)') tmpk(1:2), tmp(1,1)
-      !write(12345, '(1000ES15.7)') tmpk(1:2), tmp(1,1)
-      tmp(1,1) = C0
-      do i=1,lmmaxso
-         tmp(1,1) = tmp(1,1) + tmpsum2(i,i)
-      end do
-      write(22346, '(1000ES15.7)') tmpk(1:2), tmp(1,1)
-      !write(12346, '(1000ES15.7)') tmpk(1:2), tmp(1,1)
+    ! test writeout of qdos (w/o single site contribution which is the same for all kpts)
+    tmp(1,1) = C0
+    do i=1,lmmaxso
+       tmp(1,1) = tmp(1,1) + tmpsum1(i,i)
+    end do
+    write(22345, '(1000ES15.7)') tmpk(1:2), tmp(1,1)
+    !write(12345, '(1000ES15.7)') tmpk(1:2), tmp(1,1)
+    tmp(1,1) = C0
+    do i=1,lmmaxso
+       tmp(1,1) = tmp(1,1) + tmpsum2(i,i)
+    end do
+    write(22346, '(1000ES15.7)') tmpk(1:2), tmp(1,1)
+    !write(12346, '(1000ES15.7)') tmpk(1:2), tmp(1,1)
 
   end do ! k
+  
+  write(*,*) 'kmask info:', lm1, lm2
   
 !   close(998899)
 !   close(998888)
   deallocate(tmp, tmpG0, tmpG02)
   deallocate(tmpsum1, tmpsum2)
+  
   
   ! take tau from t_rhoq and reshape it 
   allocate( tau(lmmaxso,lmmaxso,t_rhoq%Nscoef,t_rhoq%Nscoef), stat=ierr)
@@ -1025,9 +1061,11 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 
   ! done calculating tau
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  call timing_stop('calc rhoq - comp tau')
   
     
   
+  call timing_start('calc rhoq - Gaunt')
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! find second set of gaunt coefficients for sum_LL'L" [exp(-iqr)_L * Tr(R*Rleft)_L' * Theta)L" * C_LL'L"] which is then integrated radially
   
@@ -1056,8 +1094,10 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   
   ! done finding Gaunts for larger lmax values
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  call timing_stop('calc rhoq - Gaunt')
   
   
+  call timing_start('calc rhoq - shape')
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! find shapefunctions
   
@@ -1095,11 +1135,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   read(9999,'(E22.15,2I9)') R_LOG, NPAN_LOG, NPAN_EQ
   close(9999)
   
-!   npan_log = 15
-!   npan_eq  = 5
-!   npan_log = 10
-!   npan_eq  = 4
-  
   ! read shapefunction for atom mu_0 from file shapefun (Note: this file needs to be )
   call read_shape(thetas, lmsp, ifunm, irid, irmd, nfund, lpot_2, t_rhoq%mu_0, ipan, ntcell, t_rhoq%natyp)
      
@@ -1116,6 +1151,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   
   ! done finding shapefunction
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  call timing_stop('calc rhoq - shape')
   
   
   
@@ -1133,53 +1169,81 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 !   Nj = 4
   Nqpt = Ni*Nj*Nkp
   
+  Nx = int(dsqrt(dfloat(Nkp)))
+  Ny = Nx
+  if(Nx*Ny/=Nkp) stop '[calc_rhoq] Error: Nx*Ny/=Nkp'
+  
   
 !   write(*,*) 'alloc qvec', nkp, nqpt
   allocate(Qvec(3,Nqpt), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] Error allocating Qvec'
+  allocate(Qvec_index(3,Nqpt), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] Error allocating Qvec_index'
+  ! temporary arrays for reduces set of qpts in box (see below)
   allocate(Qvec_tmp(3,Nqpt), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] Error allocating Qvec_tmp'
+  allocate(Qvec_index_tmp(3,Nqpt), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] Error allocating Qvec_index_tmp'
 
   ! find qvecs based on kpts from integration
+  
+  open(888, file='qvec_index.dat', form='formatted')
+  
   do k=1,Nkp
     do i=1,Ni
       do j=1,Nj
         irec = k + Nkp*(i-1) + Nkp*Ni*(j-1)
-        do ixyz=1,3
-          Qvec(ixyz,irec) = kpt(ixyz,k) + (i-Ni)*recbv(ixyz,1) + (j-Nj)*recbv(ixyz,2)
-!           Qvec(ixyz,irec) = kpt(ixyz,k) + (i-Ni+1)*recbv(ixyz,1) + (j-Nj+1)*recbv(ixyz,2)
-        end do !ixyz
+        Qvec(1:3,irec) = kpt(1:3,k) + (i-Ni)*recbv(1:3,1) + (j-Nj)*recbv(1:3,2)
+        
+        ! find kx, ky indices from k=iky+(ikx-1)*Ny = 1...Nx*Ny
+        ikx = mod(k,Nx)
+        if (ikx<=0) ikx = ikx+Nx
+        iky = (k-ikx)/Nx+1
+        if (iky<=0) iky = iky+Ny
+        ! store these in qvec_index
+        qvec_index(1,irec) = ikx
+        qvec_index(2,irec) = iky
+        
+        write(888,'(2F14.7,6i9)') qvec(1:2,irec), irec, k, i,j, ikx, iky 
+        
       end do !j=1,Nj
     end do !i=1,Ni
+    
   end do !k=1,Nkp
+  
+  close(888)
 
   ! reduce qpts to box around Gamma
 
-  box(1) = 1.0d0!0.7d0
-  box(2) = 1.0d0!0.7d0
-  box(3) = 1.0d0!0.1d0
+  box(1) = 0.4d0!1.0d0!0.7d0
+  box(2) = 0.4d0!1.0d0!0.7d0
+  box(3) = 0.4d0!1.0d0!0.1d0
 
   k = 0
   do q=1,Nqpt
     if((abs(qvec(1,q))-box(1)<=eps).and.(abs(qvec(2,q))-box(2)<=eps).and.(abs(qvec(3,q))-box(3)<=eps)) then
       k = k+1
       qvec_tmp(1:3,k) = qvec(1:3,q)
+      qvec_index_tmp(1:2,k) = qvec_index(1:2,q)
     end if
   end do
 
   Nqpt = k
   write(*,*) 'red qvecs box',k, box
 
-
   ! change allocation 
   deallocate(qvec)
   allocate(Qvec(3,Nqpt), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] Error allocating Qvec'
+  deallocate(qvec_index)
+  allocate(Qvec_index(2,Nqpt), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] Error allocating Qvec'
 
   qvec(1:3, 1:Nqpt) = qvec_tmp(1:3, 1:Nqpt)
+  qvec_index(1:2, 1:Nqpt) = qvec_index_tmp(1:2, 1:Nqpt)
 
   ! deallocate temporary array
-  deallocate(qvec_tmp)
+  deallocate(qvec_tmp, qvec_index_tmp)
     
   ! done finding q-mesh
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1197,6 +1261,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
   write(*,FMT=190) !beginning of statusbar
   
+  call timing_start('calc rhoq - q-loop')
   !$omp parallel default(shared) private(q, tmpsum1, tmpsum2, k, kpq, kweight, i, j, tmp, tr_tmpsum1, tr_tmpsum2, mythread, nthreads, irec, ixyz, exG0_tmp, QdotL, tmpk, tmpr, q_mu, ifun, lm1, lm2, lm3, ir, qint, l1, m1, lm01, lm02, lm0, Z, Ylm, cYlm, phi, costheta, Rq, eiqr_lm, jl)
 !   write(*,*) 'alloc tmpsum'
   allocate(tmpsum1(N,N), stat=ierr)
@@ -1233,181 +1298,233 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   !$omp do 
   do q=1,Nqpt !q-loop     
    
+     
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> k-loop >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
      ! initialize kpt integration
      tmpsum1 = C0
      tmpsum2 = C0
-     
+     if(mythread==0) call timing_start('calc rhoq - q>k-loop')
      do k=1,Nkp !k-loop integration
        ! new: find kpq index from kvec+Qvec, compared with kpts in BZ
        ! find q from Q(q)
-       call red_Q(t_rhoq, recbv(1:2,1:2), Qvec(1:2,q)+kpt(1:2,k), kpq)
+       if(mythread==0) call timing_start('calc rhoq - q>k-loop>red_Q')       
+!        call red_Q(t_rhoq, recbv(1:2,1:2), Qvec(1:2,q)+kpt(1:2,k), kpq)
+       ! find ikx, iky indices from combined index k=iky+(ikx-1)*Ny
+       ikx = mod(k,Nx)
+       if (ikx<=0) ikx = ikx+Nx
+       iky = (k-ikx)/Nx+1
+       if (iky<=0) iky = iky+Ny
+       ! create i=(iqx+ikx)%Nx and j=(iqy+iky)%Ny
+       i = mod(qvec_index(1,q)+ikx, Nx)
+       if (i<=0) i = i+Nx
+       j = mod(qvec_index(2,q)+iky, Ny)
+       if (j<=0) j = j+Ny
+       ! then k+q is given by j+(i-1)*Ny
+       kpq = i+(j-1)*Nx
+!        if(mythread==0) write(*,*) k,q,kpq
+       if(mythread==0) call timing_pause('calc rhoq - q>k-loop>red_Q')
+       
+       if(kmask(kpq) .and. kmask(k)) then
      
-       ! read kweight from memory
-       kweight = dcmplx(t_rhoq%volcub(k), 0.0d0) ! complex number needed for zgemm later on
-       
-       ! kweight = kweight * exp(i q*L_i)
-       
-       do i=1,t_rhoq%Nscoef
-         do j=1,t_rhoq%Nscoef
-       
-           ! Sum( Int( exG0_i(k+q) tau_i,j exG0_j(k); dk ); i,j)
-           
-           ! collect phase factors
-           ! exG0 = G0*exp(-i(k+q)*L_i)
-           tmpk(:) = Qvec(:,q)+kpt(:,k)
-           tmpr(:) = L_i(:,i)
-           QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
-           ! exG0 = exG0*exp(+ik*L_j) -> G0tauG0*exp(-[(k+q)*L_i - k*L_j])
-           tmpk(:) = kpt(:,k)
-           tmpr(:) = L_i(:,j)
-           QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
-           ! multiply with phase
-           exG0_tmp(1:N,1:N) = G0ji_k(1:N,1:N,j,k)*exp(-2.0d0*pi*Ci*QdotL)
-           
-           ! tmp = tau*exG0_k(k)
-           tmp(1:N,1:N) = C0
-           call ZGEMM('n','n',N,N,N,C1,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
-           ! tmpsum1 = tmpsum1 + G0_k(k+q)*tmp*kweight
-           call ZGEMM('n','n',N,N,N,kweight,G0ij_k(1:N,1:N,i,kpq),N,tmp(1:N,1:N),N,C1,tmpsum1(1:N,1:N),N)
+         ! read kweight from memory
+         kweight = dcmplx(t_rhoq%volcub(k), 0.0d0) ! complex number needed for zgemm later on
          
+         ! kweight = kweight * exp(i q*L_i)
          
-           ! Int( exG0(k)^*.tau^*.exG0(k+q)^*, dk )
+         do i=1,t_rhoq%Nscoef
+           do j=1,t_rhoq%Nscoef
+         
+             ! Sum( Int( exG0_i(k+q) tau_i,j exG0_j(k); dk ); i,j)
+             
+             ! collect phase factors
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>phase1')
+             ! exG0 = G0*exp(-i(k+q)*L_i)
+             tmpk(:) = Qvec(:,q)+kpt(:,k)
+             tmpr(:) = L_i(:,i)
+             QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
+             ! exG0 = exG0*exp(+ik*L_j) -> G0tauG0*exp(-[(k+q)*L_i - k*L_j])
+             tmpk(:) = kpt(:,k)
+             tmpr(:) = L_i(:,j)
+             QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+             ! multiply with phase
+             exG0_tmp(1:N,1:N) = G0ji_k(1:N,1:N,j,k)*exp(-2.0d0*pi*Ci*QdotL)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase1')
+             
+             ! tmp = tau*exG0_k(k)
+             tmp(1:N,1:N) = C0
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>1.ZGEMM')
+             call ZGEMM('n','n',N,N,N,C1,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
+             ! tmpsum1 = tmpsum1 + G0_k(k+q)*tmp*kweight
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>2.ZGEMM')
+             call ZGEMM('n','n',N,N,N,kweight,G0ij_k(1:N,1:N,i,kpq),N,tmp(1:N,1:N),N,C1,tmpsum1(1:N,1:N),N)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>2.ZGEMM')
            
-           ! collect phase factors
-           ! exG0 = G0*exp(-i(k+q)*L_j)
-           tmpk(:) = Qvec(:,q)+kpt(:,k)
-           tmpr(:) = L_i(:,j)
-           QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
-           ! exG0 = exG0*exp(+ik*L_i) -> G0tauG0*exp(-[(k+q)*L_j - k*L_i])
-           tmpk(:) = kpt(:,k)
-           tmpr(:) = L_i(:,i)
-           QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
-           ! multiply with phase
-           exG0_tmp(1:N,1:N) = dconjg(G0ij_k(1:N,1:N,i,k))*exp(-2.0d0*pi*Ci*QdotL)
            
-           
-           ! tmp = dconjg(tau)*dconjg(exG0_k(k+q))
-           tmp(1:N,1:N) = C0
-           call ZGEMM('n','n',N,N,N,C1,dconjg(tau(1:N,1:N,i,j)),N,dconjg(G0ji_k(1:N,1:N,j,kpq)),N,C0,tmp(1:N,1:N),N)
-           ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k))*tmp*kweight
-           call ZGEMM('n','n',N,N,N,kweight,exG0_tmp(1:N,1:N),N,tmp(1:N,1:N),N,C1,tmpsum2(1:N,1:N),N)
-                      
-           end do !j
-       end do ! i
+             ! Int( exG0(k)^*.tau^*.exG0(k+q)^*, dk )
+             
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>phase2')
+             ! collect phase factors
+             ! exG0 = G0*exp(-i(k+q)*L_j)
+             tmpk(:) = Qvec(:,q)+kpt(:,k)
+             tmpr(:) = L_i(:,j)
+             QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
+             ! exG0 = exG0*exp(+ik*L_i) -> G0tauG0*exp(-[(k+q)*L_j - k*L_i])
+             tmpk(:) = kpt(:,k)
+             tmpr(:) = L_i(:,i)
+             QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+             ! multiply with phase
+             exG0_tmp(1:N,1:N) = dconjg(G0ij_k(1:N,1:N,i,k))*exp(-2.0d0*pi*Ci*QdotL)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase2')
+             
+             
+             ! tmp = dconjg(tau)*dconjg(exG0_k(k+q))
+             tmp(1:N,1:N) = C0
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>3.ZGEMM')
+             call ZGEMM('n','n',N,N,N,C1,dconjg(tau(1:N,1:N,i,j)),N,dconjg(G0ji_k(1:N,1:N,j,kpq)),N,C0,tmp(1:N,1:N),N)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>3.ZGEMM')
+             ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k))*tmp*kweight
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>4.ZGEMM')
+             call ZGEMM('n','n',N,N,N,kweight,exG0_tmp(1:N,1:N),N,tmp(1:N,1:N),N,C1,tmpsum2(1:N,1:N),N)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>4.ZGEMM')
+                        
+             end do !j
+         end do ! i
+         
+       end if ! (kmask(kpq) .and. kmask(k))
        
      end do ! k-loop
+     if(mythread==0) call timing_pause('calc rhoq - q>k-loop')
+     !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< k-loop <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      
      
      
-  !eiqr_lm generation: exp(-iq*r) = j_l(qr)*Y_L(-q)
-  eiqr_lm(:,:) = C0
-  if(dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)>=eps) then
-     Ylm = 0.0d0
-     cYlm = C0
-     Rq = dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)
-     costheta = -Qvec(3,q)/Rq ! =cos(theta)
-     phi = datan2(Qvec(2,q), Qvec(1,q)) + pi
-     do l1=0,LMAX_2
-       lm0 = l1**2+1 ! = l1*(l1+1)+m1+1 for m1=-l1
-       call cspher(cYlm(l1**2+1:(l1+1)**2), l1, costheta) ! computes real spherical harmonic for l=l1 without factor exp(i*m*phi)
-       do m1=-l1,l1
-         lm01 = l1* (l1+1) + m1 + 1
-         cYlm(lm01) = cYlm(lm01) * exp(Ci*m1*phi)
-       end do ! m1
-     end do ! l1
-     
-     ! convert complex spherical harmonics to real spherical harmonics
-     do l1=0,lmax_2
-       do m1=-l1,l1
-         if(m1<0) then
-           lm0 = l1* (l1+1) + m1 + 1
-           lm01 = l1* (l1+1) + abs(m1) + 1
-           Ylm(lm0) = dsqrt(2.0d0) * (-1.0d0)**m1 * dimag(cYlm(lm01))
-         elseif(m1==0) then
-           lm0 = l1* (l1+1) + m1 + 1
-           Ylm(lm0) = dreal(cYlm(lm0))
-         elseif(m1>0) then
-           lm0 = l1* (l1+1) + m1 + 1
-           Ylm(lm0) = dsqrt(2.0d0) * (-1.0d0)**m1 * dreal(cYlm(lm0))
-         end if
-       end do
-     end do
-     
-     ! construct exp(-i q.r)_L
-     do ir=1,irmdnew
-       Z = dcmplx(Rq*rnew(ir)/alat*2.0d0*pi, 0.0d0)
-       call CALC_JLK(jl, Z, LMAX_2)
-       do l1=0,lmax_2
-         do m1=-l1, l1
-           lm01 = L1* (L1+1) + M1 + 1
-           eiqr_lm(lm01, ir) = jl(l1) * Ylm(lm01) * (Ci**l1)/c0ll/c0ll
-         end do ! m1
-       end do ! l1
-     end do ! ir
-     
-  else
-  
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  eiqr  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+     if(mythread==0) call timing_start('calc rhoq - q>eiqr')
+     !eiqr_lm generation: exp(-iq*r) = j_l(qr)*Y_L(-q)
      eiqr_lm(:,:) = C0
-     
-  end if
-  
-  ! initialize qint
-  qint = C0
-
-  ! first treat spherical block (diagonal in lm, lm' -> only lm'==lm)
-  do lm01 = 1,lmmaxso
-    do lm02 = 1,lmmaxso
+     if(dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)>=eps) then
+        Ylm = 0.0d0
+        cYlm = C0
+        Rq = dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)
+        costheta = -Qvec(3,q)/Rq ! =cos(theta)
+        phi = datan2(Qvec(2,q), Qvec(1,q)) + pi
+        do l1=0,LMAX_2
+          lm0 = l1**2+1 ! = l1*(l1+1)+m1+1 for m1=-l1
+          call cspher(cYlm(l1**2+1:(l1+1)**2), l1, costheta) ! computes real spherical harmonic for l=l1 without factor exp(i*m*phi)
+          do m1=-l1,l1
+            lm01 = l1* (l1+1) + m1 + 1
+            cYlm(lm01) = cYlm(lm01) * exp(Ci*m1*phi)
+          end do ! m1
+        end do ! l1
+        
+        ! convert complex spherical harmonics to real spherical harmonics
         do l1=0,lmax_2
-        ! only diagonal (spherical)
-        m1 = 0
-        lm1 = l1 * (l1+1) + m1 + 1
-        ! fill diagonal
-        do ir = 1,irmdnew
-          !qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + trq_of_r(lm01, lm02, lm1, ir) * eiqr_lm(lm1, ir) ! note: diagonal in lm01!!!
-          qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + trq_of_r(lm01, lm02, lm1, ir) ! note: diagonal in lm01!!!
-!           qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + eiqr_lm(lm1, ir) ! note: diagonal in lm01!!!
-        enddo ! ir
-        ! add shapefunction to points with r> R_MT
-        do ir=imt1+1,irmdnew
-          qint(ir, lm01, lm02) = qint(ir, lm01, lm02)*thetasnew(ir,1)*c0ll ! add shapefunction on diagonal for last points outside of MT radius, c0ll comes from gaunt coefficients
-        enddo ! ir
-      enddo ! lm1
-    enddo ! lm02
-  enddo ! lm01
-  
-  
-  
-  ! treat non-spherical components -> off-diagonal blocks in lm, lm' matrices
-  do j = 1,iend ! loop over number of non-vanishing Gaunt coefficients
-    ! set lm indices for Gaunt coefficients
-    lm1 = icleb(j,1)
-    lm2 = icleb(j,2)
-    lm3 = icleb(j,3)
-    ! get shape function index for lm3
-    ifun = ifunm(lm3)
-    ! do loop over non-spherical points here
-    if(lmsp(lm3)/=0) then
-      do ir=imt1+1,irmdnew
-        do lm01=1,lmmaxso
-          do lm02=1,lmmaxso
-            !qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + cleb(j) * trq_of_r(lm01, lm02, lm1, ir) * eiqr_lm(lm2, ir) * thetasnew(ir,ifun)
-            qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + cleb(j) * trq_of_r(lm01, lm02, lm1, ir) * thetasnew(ir,ifun)
-!             qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + cleb(j) * eiqr_lm(lm2, ir) * thetasnew(ir,ifun)
-          enddo
-        enddo
-      enddo ! ir
-    end if ! lmsp(ifun)/=0
-  enddo ! j -> sum of Gaunt coefficients
-      
-    ! do radial integration
-  q_mu = C0
-  do lm01 = 1, lmmaxso ! loop over outer lm-component
-    do lm02 = 1, lmmaxso ! loop over outer lm-component
-      call intcheb_cell(qint(:,lm01,lm02),q_mu(lm01,lm02),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
-    end do ! lm02
-  end do ! lm01
-  
+          do m1=-l1,l1
+            if(m1<0) then
+              lm0 = l1* (l1+1) + m1 + 1
+              lm01 = l1* (l1+1) + abs(m1) + 1
+              Ylm(lm0) = dsqrt(2.0d0) * (-1.0d0)**m1 * dimag(cYlm(lm01))
+            elseif(m1==0) then
+              lm0 = l1* (l1+1) + m1 + 1
+              Ylm(lm0) = dreal(cYlm(lm0))
+            elseif(m1>0) then
+              lm0 = l1* (l1+1) + m1 + 1
+              Ylm(lm0) = dsqrt(2.0d0) * (-1.0d0)**m1 * dreal(cYlm(lm0))
+            end if
+          end do
+        end do
+        
+        ! construct exp(-i q.r)_L
+        do ir=1,irmdnew
+          Z = dcmplx(Rq*rnew(ir)/alat*2.0d0*pi, 0.0d0)
+          call CALC_JLK(jl, Z, LMAX_2)
+          do l1=0,lmax_2
+            do m1=-l1, l1
+              lm01 = L1* (L1+1) + M1 + 1
+              eiqr_lm(lm01, ir) = jl(l1) * Ylm(lm01) * (Ci**l1)/c0ll/c0ll
+            end do ! m1
+          end do ! l1
+        end do ! ir
+        
+     else
+     
+        eiqr_lm(:,:) = C0
+        
+     end if
+     if(mythread==0) call timing_pause('calc rhoq - q>eiqr')
+     !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  eiqr  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     
+     
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  qint  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+     if(mythread==0) call timing_start('calc rhoq - q>qint')
+     ! initialize qint
+     qint = C0
 
+     ! first treat spherical block (diagonal in lm, lm' -> only lm'==lm)
+     do lm01 = 1,lmmaxso
+       do lm02 = 1,lmmaxso
+           do l1=0,lmax_2
+           ! only diagonal (spherical)
+           m1 = 0
+           lm1 = l1 * (l1+1) + m1 + 1
+           ! fill diagonal
+           do ir = 1,irmdnew
+             qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + trq_of_r(lm01, lm02, lm1, ir) * eiqr_lm(lm1, ir) ! note: diagonal in lm01!!!
+!              qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + trq_of_r(lm01, lm02, lm1, ir) ! note: diagonal in lm01!!!
+!              qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + eiqr_lm(lm1, ir) ! note: diagonal in lm01!!!
+           enddo ! ir
+           ! add shapefunction to points with r> R_MT
+           do ir=imt1+1,irmdnew
+             qint(ir, lm01, lm02) = qint(ir, lm01, lm02)*thetasnew(ir,1)*c0ll ! add shapefunction on diagonal for last points outside of MT radius, c0ll comes from gaunt coefficients
+           enddo ! ir
+         enddo ! lm1
+       enddo ! lm02
+     enddo ! lm01
+     
+     
+     
+     ! treat non-spherical components -> off-diagonal blocks in lm, lm' matrices
+     do j = 1,iend ! loop over number of non-vanishing Gaunt coefficients
+       ! set lm indices for Gaunt coefficients
+       lm1 = icleb(j,1)
+       lm2 = icleb(j,2)
+       lm3 = icleb(j,3)
+       ! get shape function index for lm3
+       ifun = ifunm(lm3)
+       ! do loop over non-spherical points here
+       if(lmsp(lm3)/=0) then
+         do ir=imt1+1,irmdnew
+           do lm01=1,lmmaxso
+             do lm02=1,lmmaxso
+               qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + cleb(j) * trq_of_r(lm01, lm02, lm1, ir) * eiqr_lm(lm2, ir) * thetasnew(ir,ifun)
+!                qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + cleb(j) * trq_of_r(lm01, lm02, lm1, ir) * thetasnew(ir,ifun)
+!                qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + cleb(j) * eiqr_lm(lm2, ir) * thetasnew(ir,ifun)
+             enddo
+           enddo
+         enddo ! ir
+       end if ! lmsp(ifun)/=0
+     enddo ! j -> sum of Gaunt coefficients
+         
+       ! do radial integration
+     q_mu = C0
+     do lm01 = 1, lmmaxso ! loop over outer lm-component
+       do lm02 = 1, lmmaxso ! loop over outer lm-component
+         call intcheb_cell(qint(:,lm01,lm02),q_mu(lm01,lm02),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
+       end do ! lm02
+     end do ! lm01
+     if(mythread==0) call timing_pause('calc rhoq - q>qint')
+     !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  qint  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     
+
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> rhoq(iq) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
      ! calculate trace of Q^mu times k-kpoint integral
      tr_tmpsum1 = C0
      tr_tmpsum2 = C0
@@ -1432,22 +1549,36 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
      !$omp critical
      rhoq(q) = 1.d0/(2.d0*Ci) * (tr_tmpsum1 - tr_tmpsum2)
      !$omp end critical
+     !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< rhoq(iq) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      
      !update statusbar
      !$omp critical
      if(Nqpt>=50.and.mod(q,Nqpt/50)==0) write(*,FMT=200)
      !$omp end critical
-      
+       
   end do !q
   !$omp end do
+  if(mythread==0) call timing_stop('calc rhoq - q>k-loop>red_Q')
+  if(mythread==0) call timing_stop('calc rhoq - q>k-loop>phase1')
+  if(mythread==0) call timing_stop('calc rhoq - q>k-loop>1.ZGEMM')
+  if(mythread==0) call timing_stop('calc rhoq - q>k-loop>2.ZGEMM')
+  if(mythread==0) call timing_stop('calc rhoq - q>k-loop>phase2')
+  if(mythread==0) call timing_stop('calc rhoq - q>k-loop>3.ZGEMM')
+  if(mythread==0) call timing_stop('calc rhoq - q>k-loop>4.ZGEMM')
+  if(mythread==0) call timing_stop('calc rhoq - q>k-loop')
+  if(mythread==0) call timing_stop('calc rhoq - q>eiqr')
+  if(mythread==0) call timing_stop('calc rhoq - q>qint')
   
   deallocate(tmpsum1, tmpsum2, tmp, qint , eiqr_lm, jl, Ylm)
   
   !$omp end parallel
+  call timing_stop('calc rhoq - q-loop')
   
   ! done calculating rho(q)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
+  call timing_start('calc rhoq - writeout')
   ! write out result
   write(*,*) '' ! finish statusbar
   write(*,*) 'saving rhoq(q) to out_rhoq.txt'
@@ -1456,6 +1587,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
      write(9999,'(5E15.7)') Qvec(:,q),rhoq(q)
   end do
   close(9999)
+  call timing_stop('calc rhoq - writeout')
   
   
 !   deallocate(tau)
@@ -1473,8 +1605,11 @@ end module mod_rhoq
 ! for testing only, comment out when ready
 !TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!
 program test
-
+  
+  use mod_types, only: t_inc
   use mod_rhoq
+  use mod_timing
+  use mod_version_info
   
   character*256 :: uio ! unit in which to find inputcard
   integer :: nkpt ! total number of kpoints
@@ -1501,6 +1636,15 @@ program test
 
   
   integer :: lm1, lm2, i, j, ir
+  
+  ! set timing output
+  call construct_serialnr()
+  t_inc%i_time = 1
+  call timing_init(0)
+  call timing_start('total time')
+  
+  
+  call timing_start('read stuff')
   
   ! read in scalars
   uio = 'inputcard'
@@ -1569,6 +1713,12 @@ program test
   enddo
   close(9999)
   
+  call timing_stop('read stuff')
+  
+  
+
+  call timing_start('init rhoq')
+  
 
   call read_scoef_rhoq(t_rhoq)
 
@@ -1586,24 +1736,40 @@ program test
 !   call bcast_arrays_rhoq(t_rhoq)
 ! #endif
 
+  call timing_stop('init rhoq')
+  
+
 !   write(*,*) 'before Gimp,Dt',t_rhoq%Nscoef,allocated(t_rhoq%Dt), allocated(t_rhoq%Gimp)
 !   write(*,*) 'shape Gimp,Dt',shape(t_rhoq%Dt), shape(t_rhoq%Gimp)
+  call timing_start('read Dt Gimp')
   call read_Dt_Gimp_rhoq(t_rhoq, lmmaxso, t_rhoq%Nscoef)
+  call timing_stop('read Dt Gimp')
+  
   
   ! calculate impurity scattering path operator
+  call timing_start('calc tau')
   call calc_tau_rhoq(t_rhoq)
+  call timing_start('calc tau')
   
   
   ! calculate prefactor Q^{\mu}_{LL'} = Tr{ \int{ R_{L}(\vec{r})*Rleft_{L'}(\vec{r}) d\vec{r} }
+  call timing_start('calc Q_mu')
   call calc_Q_mu_rhoq(lmax, ntotd, npan_tot, &
         & nsra, lmmaxso, Rll, Rllleft, ipan_intervall, &
         & irmdnew, trq_of_r)
+  call timing_stop('calc Q_mu')
 
   ! calculate Fourier transform: \rho(\vec{q}) = \int \Delta\rho(\vec{q};\Chi_\mu+\vec{r}) d\vec{r}
 !   allocate(rhoq(t_rhoq%Nkpt), stat=ierr)
 !   if(ierr/=0) stop '[test] Error allocating rhoq'
+  call timing_start('calc rhoq')
   call calc_rhoq(t_rhoq, t_rhoq%lmmaxso, t_rhoq%Nkpt, trq_of_r, rhoq, recbv, lmax,   &
         &        ntotd, npan_tot, ncheb, rpan_intervall, ipan_intervall, irmdnew, alat )
+  call timing_stop('calc rhoq')
+  
+  
+  
+  call timing_stop('total time')
 
 
 end program test

@@ -1,6 +1,6 @@
 
 
-default: serial
+default: install
 
 FC =  ifort
 
@@ -34,10 +34,14 @@ mpi:      CPP = -D CPP_MPI
 # use -mcmodel=medium -shared-intel if you get the error message 
 # '...relocation truncated to fit...' when trying to compile, 
 # this happens for example for natyp>=75, iemxd>=101, KORBIT=1
-FFLAGS       =  -O3 -openmp -traceback -g #-CB -check all -check noarg_temp_created -g
+FFLAGS       =  -O3 -openmp -traceback -vec-report2
+#-vec-report5
+# -qopt-report=5 -qopt-report-phase=loop,vec -qopt-report-file=stdout
+#-CB -check all -check noarg_temp_created -g
 # Change to if flag is matched:
-openmp:   FFLAGS = -O2 #–Wl,-stack_size,0x1000000000,-stack_addr,0xc000000000 -heap-arrays # -r8 
-debug:    FFLAGS = -O0 -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended -openmp #-mcmodel=medium -shared-intel -openmp
+openmp:   FFLAGS = -O2 # –Wl,-stack_size,0x1000000000,-stack_addr,0xc000000000 -heap-arrays # -r8 
+debug:    FFLAGS = -O0 -openmp -r8 -CB -check all,noarg_temp_created,uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
+#FFLAGS = -O0 -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended -openmp #-mcmodel=medium -shared-intel -openmp
 mpidebug: FFLAGS = -g -CB -check all,noarg_temp_created  -traceback #-mcmodel=medium
 
 OPENMPFLAGS = 
@@ -53,13 +57,36 @@ clean:
 clear:
 	rm -rf *.mod *.o *__genmod.f90 *.i90
 
-SRCS = ioinput.o splint_real.o spline_real.o interpolspline.o gaunt_new.o gaunt2.o grule.o rcstop.o cspher.o calc_jlk.o opt.o test.o cinit.o mod_mympi.o mod_types.o intcheb_cell.o interpol_shape.o read_shape.o mod_rhoq.o
+SRCS = version.o version_info.o  mod_mympi.o mod_types.o mod_timing.o ioinput.o splint_real.o spline_real.o interpolspline.o gaunt_new.o gaunt2.o grule.o rcstop.o cspher.o calc_jlk.o opt.o test.o cinit.o intcheb_cell.o interpol_shape.o read_shape.o mod_rhoq.o
 
-serial:  $(SRCS) 
+COMPVER='serial'
+debug:    COMPVER='debug'
+openmp:   COMPVER='openmp'
+mpi:      COMPVER='mpi'
+mpidebug: COMPVER='mpidebug'
+
+getversion:
+	@echo "Wrinting Version file: "; git describe;\
+	echo $(COMPVER)>compver; \
+	echo $(FFLAGS) $(OPENMPFLAGS)>compflag; \
+	echo $(LLIBS) >complib; \
+	getversion.sh
+
+serial:  getversion $(SRCS) 
 	  $(FC) $(LLIBS)    -o $(FILENAME0) $(SRCS) $
-debug:   $(SRCS) 
+debug:   getversion $(SRCS) 
 	  $(FC) $(LLIBS)    -o $(FILENAME0) $(SRCS) $
 install: clean serial
+
+
+mod_%.o: %.f90
+	$(FC) -c $(FFLAGS)  $<
+mod_%.o: %.f
+	$(FC) -c $(FFLAGS)  $<
+mod_%.o: %.F90
+	$(FC) -c $(FFLAGS) $(CPP)  $<
+mod_%.o: %.F
+	$(FC) -c $(FFLAGS) $(CPP)  $<
 
 %.o: %.f90
 	$(FC) -c $(FFLAGS)  $<

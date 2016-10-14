@@ -19,6 +19,7 @@
 
       DO ir = 1,nrmaxnew
          R0 = rmeshnew(IR)
+!        write(*,*) ir, R0, nrmax
        call splint_real(rmesh,vpot,spline,nrmax,R0,PARSUM,PARSUMDERIV)
          vpotnew(IR) = PARSUM
       END DO

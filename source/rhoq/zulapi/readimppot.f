@@ -84,6 +84,11 @@ c read data from shapefun_imp file
 
    30   CONTINUE
       END IF                        ! INS.EQ.1
+      
+      ! check if all shapefunctions are there
+      if(INS/=0 .and. ncell/=natomimp) then
+         stop '[readimppot] Error: NCELL/=NATOMIMP'
+      end if
 
       DO ICELL=1,NCELL
        IF (INS.NE.0) THEN
@@ -107,13 +112,14 @@ c---> read title of potential card
         READ (21,FMT=9020) (ITITLE(IA,I),IA=1,20)
 c
 c---  >read muffin-tin radius , lattice constant and new muffin radius
-        READ (21,FMT=9030) RMT(IH),ALAT,RMTNEW(IH)
+        READ (21,FMT=*) RMT(IH),ALAT,RMTNEW(IH)
 c
 c---> read nuclear charge , lmax of the core states ,
 c     wigner seitz radius , fermi energy and energy difference
 c     between electrostatic zero and muffin tin zero
 c
-        READ (21,FMT=9040) ZIMP(IH),RWS(IH),EFNEW,VBC(ISPIN)
+        READ (21,FMT=*) ZIMP(IH)
+        read(21, *) RWS(IH),EFNEW,VBC(ISPIN)
 c
 c---> read : number of radial mesh points
 c     (in case of ws input-potential: last mesh point corresponds
@@ -125,8 +131,9 @@ c     mesh  needed for shape functions, the constants a and b
 c     for the radial exponential mesh : r(i) = b*(exp(a*(i-1))-1)
 c     the no. of different core states and some other stuff
 c
-        READ (21,FMT=9050) IRWSIMP(IH)
-        READ (21,FMT=9051) A(IH),B(IH),NCORE(I),INEW
+        READ (21,FMT=*) IRWSIMP(IH)
+        READ (21,FMT=*) A(IH),B(IH)
+        read(21,*) NCORE(I),INEW
         NR = IRWSIMP(IH)
 c---> read the different core states : l and energy
 c

@@ -68,7 +68,7 @@ c     +   DELTAIMP(NSPD*LMMAXD*NATOMIMP,NSPD*LMMAXD*NATOMIMP),
        LOGICAL TEST          ! added for test('DltBorn ') by Philipp, 18.01.16
        EXTERNAl TEST         ! added for test('DltBorn ') by Philipp, 18.01.16
 
-       WRITE(6,*) 'in tmatimp'
+       WRITE(6,*) 'in tmatimp', IPANIMP(1:NATOMIMP)
        IF (KSRA.GE.1) THEN
         NSRA=2
        ELSE
@@ -115,6 +115,7 @@ c data for the new mesh
        NPAN_INST= IPAN(I1)-1
        NPAN_TOT= NPAN_LOG+NPAN_EQ+NPAN_INST
        IRMDNEW= NPAN_TOT*(NCHEB+1)
+        write(*,*) npan_inst, npan_tot, irmdnew
 c new mesh
        ALLOCATE(RNEW(IRMDNEW))
        ALLOCATE(RPAN_INTERVALL(0:NPAN_TOT))
@@ -261,6 +262,7 @@ c data for the new mesh
        NPAN_INST= IPANIMP(I1)-1
        NPAN_TOT= NPAN_LOG+NPAN_EQ+NPAN_INST
        IRMDNEW= NPAN_TOT*(NCHEB+1)
+        write(*,*) npan_inst, npan_tot, irmdnew
 c new mesh
        ALLOCATE(RNEW(IRMDNEW))
        ALLOCATE(RPAN_INTERVALL(0:NPAN_TOT))
