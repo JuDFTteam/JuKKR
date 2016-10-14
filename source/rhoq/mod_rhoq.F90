@@ -1187,7 +1187,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 
   ! find qvecs based on kpts from integration
   
-  open(888, file='qvec_index.dat', form='formatted')
+!   open(888, file='qvec_index.dat', form='formatted')
   
   do k=1,Nkp
     do i=1,Ni
@@ -1204,14 +1204,14 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
         qvec_index(1,irec) = ikx
         qvec_index(2,irec) = iky
         
-        write(888,'(2F14.7,6i9)') qvec(1:2,irec), irec, k, i,j, ikx, iky 
+!         write(888,'(2F14.7,6i9)') qvec(1:2,irec), irec, k, i,j, ikx, iky 
         
       end do !j=1,Nj
     end do !i=1,Ni
     
   end do !k=1,Nkp
   
-  close(888)
+!   close(888)
 
   ! reduce qpts to box around Gamma
 
@@ -1222,9 +1222,11 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   k = 0
   do q=1,Nqpt
     if((abs(qvec(1,q))-box(1)<=eps).and.(abs(qvec(2,q))-box(2)<=eps).and.(abs(qvec(3,q))-box(3)<=eps)) then
-      k = k+1
-      qvec_tmp(1:3,k) = qvec(1:3,q)
-      qvec_index_tmp(1:2,k) = qvec_index(1:2,q)
+!       if((abs(qvec(1,q))-box(1)/2>eps).and.(abs(qvec(2,q))-box(2)/2>eps).and.(abs(qvec(3,q))-box(3)/2>eps)) then
+        k = k+1
+        qvec_tmp(1:3,k) = qvec(1:3,q)
+        qvec_index_tmp(1:2,k) = qvec_index(1:2,q)
+!       end if
     end if
   end do
 
