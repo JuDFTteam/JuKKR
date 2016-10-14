@@ -1,84 +1,82 @@
 # Makefile for kkr2
 
-# default values
+### default values
 PLATFORM ?= ifort
 TYPE ?= nodebug
 ### the user may specify TYPE=debug as a command line argument to make
 
 PROGRAM = kkr.exe
 
-# Path to put object files
-# and module files
+# Path to put object files and module files
 BUILDDIR = $(HOME)/build
 
 EXTRA_FLAGS =
-
-
-ifeq ($(PLATFORM),gfortran)
-FC = mpif77
-FC90 = mpif90 
-## -std=f2008
-# -module <path> specifies where to put .mod files
-FCFLAGS  = -B $(BUILDDIR)
-FCFLAGS += -J $(BUILDDIR)
-FCFLAGS += -I $(BUILDDIR) -I ./ 
-# FCFLAGS += -I /usr/include ## for fftw3
-FCFLAGS += -O0
-FC90FLAGS = -ffree-line-length-0
-FCFLAGS += -D USE_VOROWEIGHTS
-# FCFLAGS += -D TASKLOCAL_FILES
-LDFLAGS = -g -O0 -L/usr/local/intel/mkl/10.2.5.035/lib/64 -llapack -lblas
-FCFLAGS += -g
-# -lmkl_lapack -lmkl_blas
-endif
-
+FC90FLAGS = 
+FCFLAGS =
+LDFLAGS =
 
 # ========= IFF Workstations ============
 ifeq ($(PLATFORM),ifort)
-#### module load intel impi mkl
-  FC = mpiifort -warn all
-  FC90 = mpiifort -warn all
-  # -module <path> specifies where to put .mod files
-# FCFLAGS  = -openmp -openmp-report
-  FCFLAGS += -module $(BUILDDIR)
-  FCFLAGS += -I $(BUILDDIR)
-  FCFLAGS += -D USE_VOROWEIGHTS
-#   FCFLAGS += -D TASKLOCAL_FILES
-  FC90FLAGS = -g
-
-  LDFLAGS += -mkl
-
-  ifeq ($(TYPE),debug_light)
-  FCFLAGS += -O0 -g
-  else ifeq ($(TYPE),debug)
-  FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
-  else ifeq ($(TYPE),mtradii)
-  FCFLAGS += -O3 -D NOLOGGING -D USE_MTRADII 
-  else ifeq ($(TYPE),debug_mtradii)
-  FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -D USE_MTRADII
-  else ifeq ($(TYPE),old_mesh)
-  FCFLAGS += -O3 -g -D NOLOGGING -D USE_OLD_MESH
-  else
-  FCFLAGS += -O3 -D NOLOGGING
-  endif
+###> module load intel impi mkl
+	FC = mpiifort -warn all
+	FC90 = mpiifort -warn all
+	# -module <path> specifies where to put .mod files
+	# FCFLAGS += -openmp -openmp-report
+	FCFLAGS += -module $(BUILDDIR)
+	FCFLAGS += -I $(BUILDDIR)
+	FCFLAGS += -D USE_VOROWEIGHTS
+	# FCFLAGS += -D TASKLOCAL_FILES
+	FCFLAGS += -g
+	LDFLAGS += -mkl
+	ifeq ($(TYPE),debug_light)
+		FCFLAGS += -O0 -g
+	else ifeq ($(TYPE),debug)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+	else ifeq ($(TYPE),mtradii)
+		FCFLAGS += -O3 -D NOLOGGING -D USE_MTRADII 
+	else ifeq ($(TYPE),debug_mtradii)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -D USE_MTRADII
+	else ifeq ($(TYPE),old_mesh)
+		FCFLAGS += -O3 -g -D NOLOGGING -D USE_OLD_MESH
+	else
+		FCFLAGS += -O3 -D NOLOGGING
+	endif
 endif
+
+ifeq ($(PLATFORM),gfortran)
+	FC = mpif77
+	FC90 = mpif90 
+	FCFLAGS += -B $(BUILDDIR)
+	# -J <path> specifies where to put .mod files
+	FCFLAGS += -J $(BUILDDIR)  
+	FCFLAGS += -I $(BUILDDIR) -I ./ 
+	# FCFLAGS += -D HAS_FFTW3 -I /usr/include ## for fftw3
+	FCFLAGS += -O3
+	FC90FLAGS = -ffree-line-length-0
+	FCFLAGS += -D USE_VOROWEIGHTS
+	FCFLAGS += -D NOLOGGING
+	# FCFLAGS += -D TASKLOCAL_FILES ### breaks when TASKLOCAL_FILES is used
+	LDFLAGS += -g -O3 -L/usr/local/intel/mkl/10.2.5.035/lib/64 -llapack -lblas
+	FCFLAGS += -g
+endif
+
 
 # ========= IFF003 Cluster ============
 ifeq ($(PLATFORM),iff003)
-FC = mpiifort -warn
-FC90 = mpiifort -warn
-# -module <path> specifies where to put .mod files
-FCFLAGS = -openmp -mkl -module $(BUILDDIR)
-FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
-FC90FLAGS =
-FCFLAGS += -I $(BUILDDIR)
-LDFLAGS = -O3
-ifeq ($(TYPE),debug)
-FCFLAGS += -g
-endif
-# set run paths to look for shared libraries (-Wl means pass to linker)
-LDFLAGS +=  -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
-LDFLAGS +=  -Wl,-rpath '/usr/local/intel/lib/intel64'
+	FC = mpiifort -warn
+	FC90 = mpiifort -warn
+	# -module <path> specifies where to put .mod files
+	FCFLAGS += -openmp -mkl -module $(BUILDDIR)
+	FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+	FC90FLAGS +=
+	FCFLAGS += -I $(BUILDDIR)
+	LDFLAGS += -O3
+	ifeq ($(TYPE),debug)
+		FCFLAGS += -g
+	endif
+	# set run paths to look for shared libraries (-Wl means pass to linker)
+	LDFLAGS += -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
+	LDFLAGS += -Wl,-rpath '/usr/local/intel/lib/intel64'
 endif
 
 # ================== JURECA ======================
@@ -87,85 +85,78 @@ endif
 # ========= HPC Cluster - RWTH Aachen ============
 # MIGHT BE OUTDATED!!!
 ifeq ($(PLATFORM),rwth)
-FC = $(MPIF77) -warn
-FC90 = $(MPIFC) -warn
-# -module <path> specifies where to put .mod files
-FCFLAGS = $(FLAGS_OPENMP) -module $(BUILDDIR) -D USE_VOROWEIGHTS
-FCFLAGS += -gen-interfaces -warn interfaces
-FC90FLAGS =
-FCFLAGS += -I$(BUILDDIR) -DTASKLOCAL_FILES
-LDFLAGS = -O3 $(FLAGS_MATH_LINKER)
-# -lpthread
+	FC = $(MPIF77) -warn
+	FC90 = $(MPIFC) -warn
+	# -module <path> specifies where to put .mod files
+	FCFLAGS += $(FLAGS_OPENMP) -module $(BUILDDIR) -D USE_VOROWEIGHTS
+	FCFLAGS += -gen-interfaces -warn interfaces
+	FC90FLAGS +=
+	FCFLAGS += -I$(BUILDDIR) -DTASKLOCAL_FILES
+	LDFLAGS += -O3 $(FLAGS_MATH_LINKER)
+	# -lpthread
 endif
 
 # ============================= JUQUEEN========================================
 # MIGHT BE OUTDATED!!!
 ifeq ($(PLATFORM),JUQUEEN)
 
-ifeq ($(USETOOL),scalasca)
-FC = scalasca -instrument -user #end of line
-FC90 = scalasca -instrument -user #end of line
-TYPE = nodebug
-else
-FC =
-FC90 = 
-endif
+	ifeq ($(USETOOL),scalasca)
+		FC = scalasca -instrument -user #end of line
+		FC90 = scalasca -instrument -user #end of line
+		TYPE = nodebug
+	else
+		FC =
+		FC90 = 
+	endif
 
-FC += mpixlf77_r
-FC90 += mpixlf90_r
-#FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
-FCFLAGS = -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ -I/work/jiff02/jiff0212/KKRnano_0276dd3  
-FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -I.  -WF,-DUSE_VOROWEIGHTS
-#FCFLAGS += -WF,-Dell_int_t=integer
-#LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
-LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
-#-lfftw3
+	FC += mpixlf77_r
+	FC90 += mpixlf90_r
+	# FCFLAGS += -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
+	FCFLAGS += -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ -I/work/jiff02/jiff0212/KKRnano_0276dd3  
+	FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -I.  -WF,-DUSE_VOROWEIGHTS
+	# FCFLAGS += -WF,-Dell_int_t=integer
+	# LDFLAGS += -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
+	LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
 
-ifeq ($(TYPE),debug)
-FCFLAGS += -q64 -O3 -qstrict -g -qnosave -C -qinitauto=7FF7FFFF -WF,-DDEBUG1
-#-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
-else
-FCFLAGS += -q64 -O3 -qstrict -WF,-DNOLOGGING
-# -qipa
-endif
+	ifeq ($(TYPE),debug)
+		FCFLAGS += -q64 -O3 -qstrict -g -qnosave -C -qinitauto=7FF7FFFF -WF,-DDEBUG1
+		#-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
+	else
+		FCFLAGS += -q64 -O3 -qstrict -WF,-DNOLOGGING
+		# -qipa
+	endif
 
-ifeq ($(USETOOL),scalasca)
-FCFLAGS += -g
-endif
+	ifeq ($(USETOOL),scalasca)
+		FCFLAGS += -g
+	endif
 
 endif
 
 # ============================= JUQUEENgfort ========================================
 ifeq ($(PLATFORM),JUQUEENgfort)
+	ifeq ($(USETOOL),scalasca)
+		FC = scalasca -instrument -user #end of line
+		FC90 = scalasca -instrument -user #end of line
+		TYPE = nodebug
+	else
+		FC =
+		FC90 = 
+	endif
 
-ifeq ($(USETOOL),scalasca)
-FC = scalasca -instrument -user #end of line
-FC90 = scalasca -instrument -user #end of line
-TYPE = nodebug
-else
-FC =
-FC90 = 
-endif
-
-FC += mpigfortran
-FC90 += mpigfortran
-#FCFLAGS = -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
-FCFLAGS = -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
-FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -WF,-DUSE_VOROWEIGHTS
-#LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
-LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
-#-lfftw3
-
+	FC += mpigfortran
+	FC90 += mpigfortran
+	# FCFLAGS += -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
+	FCFLAGS += -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
+	FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -WF,-DUSE_VOROWEIGHTS
+	# LDFLAGS += -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
+	LDFLAGS += -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
 endif
 
 #==============================================================================
 
 # Paths to look for files
-DIRS = . DebugHelpers IterativeSolver XC madelung \
-         LDAU atomiccore \
-         xccouplings energy force lattice KKRnanoParallel \
-         MixingNew datastructures \
-         shapefun IterativeSolverBCP debug_morgan  
+DIRS = . DebugHelpers IterativeSolver XC madelung LDAU atomiccore xccouplings energy force lattice \
+       KKRnanoParallel MixingNew datastructures shapefun IterativeSolverBCP debug_morgan  
 
 #also add BUILDDIR to VPATH to look if object files have changed
 VPATH = $(DIRS) $(BUILDDIR)
@@ -185,19 +176,19 @@ OBJS += $(notdir ${SRCS90FPP:.F90=.o})
 all:	$(PROGRAM)
 
 $(PROGRAM): $(OBJS)
-	$(FC90) $(FCFLAGS) $(FC90FLAGS) -o $(PROGRAM) $(addprefix $(BUILDDIR)/,$(OBJS)) $(LDFLAGS) 
+	$(FC90) $(FCFLAGS) -o $(PROGRAM) $(addprefix $(BUILDDIR)/,$(OBJS)) $(LDFLAGS) 
 
 %.o: %.f
 	$(FC) $(FCFLAGS) $(EXTRA_FLAGS) -c $< -o $(BUILDDIR)/$@
-	
+
 %.o: %.f90
 	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
-	
+
 %.o: %.F
 	$(FC) $(FCFLAGS) $(EXTRA_FLAGS) -c $< -o $(BUILDDIR)/$@
-	
+
 %.o: %.F90
-	$(FC90) $(FCFLAGS) $(FC90FLAGS) $(EXTRA_FLAGS) -c $< -o $(BUILDDIR)/$@
+	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
 
 .PHONY: clean
 clean:
@@ -215,9 +206,9 @@ test:
 
 .PHONY: depend 
 depend:
-		$(SRCS90)
-		makedepend
-	
+	$(SRCS90)
+	makedepend
+
 #======================== Module dependencies ========================================
 
 KKRnano.o: Logging_mod.o KKRzero_mod.o BrillouinZoneMesh_mod.o PotentialConverter_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o AtomicCore_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o

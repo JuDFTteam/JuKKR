@@ -32,7 +32,7 @@ module Logging_mod
   !> Creates a logfile numbered by 'rank' and sets 'loglevel'
   !> @param loglevel determines amount of logging 0 (no logging) >0 write log
   subroutine openLogfile(rank, loglevel)
-    integer, intent(in) :: rank
+    integer, intent(in) :: rank !> MPI rank
     integer, intent(in) :: loglevel
 
     character(len=16) :: str
@@ -46,7 +46,6 @@ module Logging_mod
       open(LOGFILEHANDLE, file=str, form='formatted', status='replace')
       log_created = .true.
     endif
-    
   endsubroutine
 
   !----------------------------------------------------------------------------

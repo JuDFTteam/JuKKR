@@ -3,14 +3,12 @@
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; endif
-
-
 !------------------------------------------------------------------------------
 !> Set up modified index arrays for real space truncation.
 !> This is a convenient workaround to make real space truncation possible.
 !> Note: O(N**2) scaling in storage and setup time
 module TruncationZone_mod
+#include "macros.h"
   implicit none
   private
   public :: TruncationZone, create, destroy
