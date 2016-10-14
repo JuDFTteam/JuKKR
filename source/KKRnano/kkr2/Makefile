@@ -1,7 +1,7 @@
 # Makefile for kkr2
 
 # default values
-PLATFORM = ifort
+PLATFORM ?= ifort
 TYPE ?= nodebug
 ### the user may specify TYPE=debug as a command line argument to make
 
@@ -13,32 +13,23 @@ BUILDDIR = $(HOME)/build
 
 EXTRA_FLAGS =
 
-PLATFORM = GNU_Fortran
-TYPE = nodebug
 
-PROGRAM = kkr2.exe
-
-# Path to put object files
-# and module files
-BUILDDIR = $(HOME)/build/kkr2
-
-EXTRA_FLAGS =
-
-
-
-ifeq ($(PLATFORM),GNU_Fortran)
+ifeq ($(PLATFORM),gfortran)
 FC = mpif77
 FC90 = mpif90 
 ## -std=f2008
 # -module <path> specifies where to put .mod files
 FCFLAGS  = -B $(BUILDDIR)
 FCFLAGS += -J $(BUILDDIR)
-FCFLAGS += -I $(BUILDDIR) -I ./
+FCFLAGS += -I $(BUILDDIR) -I ./ 
+# FCFLAGS += -I /usr/include ## for fftw3
 FCFLAGS += -O0
 FC90FLAGS = -ffree-line-length-0
-FCFLAGS += -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
-LDFLAGS = -O0
+FCFLAGS += -D USE_VOROWEIGHTS
+# FCFLAGS += -D TASKLOCAL_FILES
+LDFLAGS = -g -O0 -L/usr/local/intel/mkl/10.2.5.035/lib/64 -llapack -lblas
 FCFLAGS += -g
+# -lmkl_lapack -lmkl_blas
 endif
 
 

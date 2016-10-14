@@ -1,8 +1,6 @@
 !> Converts unformatted potential file to the JM formatted potential file format
 !> NOTE: VBC entries are just dummy values!!! RMT, RMTNEW also?
 
-#define CHECKASSERT(X) if (.not. (X)) then; write(*,*) "ERROR: Check " // #X // " failed. ", __FILE__, __LINE__; STOP; endif
-
 module PotentialConverter_mod
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
