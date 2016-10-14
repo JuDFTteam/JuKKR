@@ -251,7 +251,7 @@ module BlockSparseRow_mod
     p%M = A%fastBlockDim
     p%N = B%slowBlockDim
     p%K = p%N
-    
+
     p%Annzb = A%nnzb
     p%Bnnzb = B%nnzb
     p%Cnnzb = C%nnzb
@@ -350,7 +350,7 @@ module BlockSparseRow_mod
       !$omp do private(jCol, Cind, islow, bvec)
       do Cind = 1, C _bsrEndPtr(C%mb) ; jCol = C%bsrColInd(Cind)
 #ifdef BSRX
-#warning   'Gaps in the BSRX format be ignored!'
+#warning   'Gaps in the BSRX format will be ignored!'
 #endif
           do islow = 1, C%slowBlockDim
             if (present(Bval)) bvec(:) = Bval(:,islow,Cind)
@@ -382,11 +382,6 @@ module BlockSparseRow_mod
 
     if (present(GiFlop)) GiFlop = C%fastBlockDim*8.*C%slowBlockDim*.5d0**30*C%nnzb ! assume a complex data_t, so each FMA has 8 Flop
   endsubroutine ! fusedMultiplyAdd
- 
-  
-  
-  
-  
   
   
   elemental subroutine destroyMultBRSplan(p)
@@ -395,8 +390,6 @@ module BlockSparseRow_mod
     integer :: ist
     deallocate(p%CindNelemStart, p%AindBind, stat=ist)
   endsubroutine ! destroy
-  
-  
   
   
   
@@ -481,7 +474,7 @@ module BlockSparseRow_mod
 
 !   write(*, '(A,9999(" ",i0))') 'create BSR: RowPtr',self%bsrRowPtr
 !   write(*, '(A,9999(" ",i0))') 'create BSR: ColInd',self%bsrColInd
-    
+
 #ifdef BSRX
     allocate(self%bsrEndPtr(self%mb), stat=ist)
     self%bsrEndPtr(:) = self%bsrRowPtr(2:) - 1
@@ -528,7 +521,7 @@ implicit none
   integer, parameter :: ShowR=0, ShowH=0, ShowG=0, Hfill=16
   integer :: ilen, ios, iarg, mb, nb, kb, M, N, K, nn, mm, kk, bm, bn, bk, Rind, nerror(19)=0, fi, si, bs=2 ! BlockSize
   double precision, parameter :: Gfill=0.5, pointG=.5d0**8, pointH=.5d0**11
-  double precision :: elem, tick, tock
+  double precision :: elem, tick, tock, timediff
   external :: zgemm ! BLAS matrix matrix multiplication
   complex_data_t, parameter :: one = 1.0, zero = 0.0
   complex_data_t, allocatable :: Hfull(:,:),  Gfull(:,:),  Rfull(:,:),  Rfill(:,:)
@@ -555,7 +548,8 @@ implicit none
   
   allocate(Hfull(M,K), Hnz(mb,kb), Gfull(K,N), Gnz(kb,nb), Rfull(M,N)) ! H*G=R
   
-  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for allocation ',tock-tick,' sec' ; tick = tock
+  tock = Wtime() ; timediff = tock - tick ; tick = tock
+  write(*, fmt="(9(A,F0.3))") 'time for allocation  ',timediff,' sec'
 
   Hfull = zero ; Hnz = .false.
   do bk = 1, size(Hfull, 2)/bs ! fill H (Hamiltonian)
@@ -592,8 +586,9 @@ implicit none
   deallocate(Hnz, Gnz)
 
   Rfull = zero
-
-  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for array filling ',tock-tick,' sec' ; tick = tock
+ 
+  tock = Wtime() ; timediff = tock - tick ; tick = tock  
+  write(*, fmt="(9(A,F0.3))") 'time for array filling  ',timediff,' sec'
 
   GiByte = (M*16.*K + K*16.*N + M*16.*N)*.5d0**30
   GiFlop = M*8.*K*.5d0**30*N
@@ -602,7 +597,9 @@ implicit none
   !                    M  N  K       A         B               C         ! GEMM:  C(m,n) += A(m,k) * B(k,n) ! Fortran style
   call zgemm('n', 'n', M, N, K, one, Hfull, M, Gfull, K, zero, Rfull, M) ! here:  R(m,n) += H(m,k) * G(k,n) ! Fortran style
                                                                          ! or:   R[n][m] += G[n][k] * H[k][m]  !  C - style
-  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for zgemm ',tock-tick,' sec' ; tick = tock
+  tock = Wtime() ; timediff = tock - tick ; tick = tock
+  write(*, fmt="(9(A,F0.3))") 'time for zgemm  ',timediff,' sec'
+  if (timediff > 0.) write(*, fmt="(9(A,F0.3))") 'performance for zgemm    ',GiFlop/timediff,' GiFlop/sec'
   
 #ifdef FULL_DEBUG
 !+full_debug
@@ -617,15 +614,16 @@ implicit none
   enddo ! nn
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(size(Gfull)*.01)
 
-  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for dot_product ',tock-tick,' sec' ; tick = tock
+  tock = Wtime() ; timediff = tock - tick ; tick = tock
+  write(*, fmt="(9(A,F0.3))") 'time for dot_product  ',timediff,' sec'
   
 !-full_debug
 #endif 
 
   call create(H, (reshape(Hfull, [bs,mb,bs,kb])), bsrVal=Hval) ! reshape to dim(fast,nb=ncols,slow,mb=nrows)
-  write(*,"(A,9(' ',i0))") "BlockSparseRow H: ",bsr_shape(H)
+  write(*,"(A,9('  ',i0))") "BlockSparseRow H: ",bsr_shape(H)
   call create(G, (reshape(Gfull, [bs,kb,bs,nb])), bsrVal=Gval) ! reshape to dim(fast,nb=ncols,slow,mb=nrows)
-  write(*,"(A,9(' ',i0))") "BlockSparseRow G: ",bsr_shape(G)
+  write(*,"(A,9('  ',i0))") "BlockSparseRow G: ",bsr_shape(G)
 
   !! use the sparse structure of G for R
 #define R G
@@ -633,13 +631,16 @@ implicit none
   
   GiByte = 16.*(size(Hval) + size(Gval) + size(Rval))*.5d0**30
 
-  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for BSR creation ',tock-tick,' sec' ; tick = tock
+  tock = Wtime() ; timediff = tock - tick ; tick = tock
+  write(*, fmt="(9(A,F0.3))") 'time for BSR creation  ',timediff,' sec'
   
   ! API: multiply(A, Aval, B, Bval, C, Cval, GiFlop)
   call multiply(H, Hval, G, Gval, R, Rval, GiFlop=GiFlop)
   write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop, ',GiByte,' GiByte'
 
-  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for spontaneous BSR x BSR ',tock-tick,' sec' ; tick = tock
+  tock = Wtime() ; timediff = tock - tick ; tick = tock
+  write(*, fmt="(9(A,F0.3))") 'time for spontaneous BSR x BSR  ',timediff,' sec'
+  if (timediff > 0.) write(*, fmt="(9(A,F0.3))") 'performance for spontan  ',GiFlop/timediff,' GiFlop/sec'
   
   nerror = 0
   do bm = 1, R%mb
@@ -663,13 +664,16 @@ implicit none
   call create(plan, H, G, R, GiFlop=GiFlop)
   write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop (planned)'
   
-  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for BSR x BSR planning ',tock-tick,' sec' ; tick = tock
+  tock = Wtime() ; timediff = tock - tick ; tick = tock
+  write(*, fmt="(9(A,F0.3))") 'time for BSR x BSR planning  ',timediff,' sec'
   
   ! API: multiply(p, Aval, Bval, Cval)
   call multiply(plan, Hval, Gval, Rval)
 
-  tock = Wtime() ; write(*, fmt="(9(A,F0.3))") 'time for BSR x BSR planned ',tock-tick,' sec' ; tick = tock
-  
+  tock = Wtime() ; timediff = tock - tick ; tick = tock
+  write(*, fmt="(9(A,F0.3))") 'time for BSR x BSR planned  ',timediff,' sec'
+  if (timediff > 0.) write(*, fmt="(9(A,F0.3))") 'performance for planned  ',GiFlop/timediff,' GiFlop/sec'
+
   nerror = 0
   do bm = 1, R%mb
     do Rind = R%bsrRowPtr(bm), R _bsrEndPtr(bm) ; bn = R%bsrColInd(Rind)
