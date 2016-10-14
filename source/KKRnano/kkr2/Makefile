@@ -13,6 +13,7 @@ BUILDDIR = $(HOME)/build
 EXTRA_FLAGS =
 FC90FLAGS = 
 FCFLAGS =
+PPFLAGS =
 LDFLAGS =
 
 # ========= IFF Workstations ============
@@ -24,8 +25,8 @@ ifeq ($(PLATFORM),ifort)
 	# FCFLAGS += -openmp -openmp-report
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
-	FCFLAGS += -D USE_VOROWEIGHTS
-	# FCFLAGS += -D TASKLOCAL_FILES
+	PPFLAGS += -D USE_VOROWEIGHTS
+	# PPFLAGS += -D TASKLOCAL_FILES
 	FCFLAGS += -g
 	LDFLAGS += -mkl
 	ifeq ($(TYPE),debug_light)
@@ -33,13 +34,19 @@ ifeq ($(PLATFORM),ifort)
 	else ifeq ($(TYPE),debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
 	else ifeq ($(TYPE),mtradii)
-		FCFLAGS += -O3 -D NOLOGGING -D USE_MTRADII 
+		FCFLAGS += -O3
+		PPFLAGS += -D USE_MTRADII 
+		PPFLAGS += -D NOLOGGING
 	else ifeq ($(TYPE),debug_mtradii)
-		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -D USE_MTRADII
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
+		PPFLAGS += -D USE_MTRADII
 	else ifeq ($(TYPE),old_mesh)
-		FCFLAGS += -O3 -g -D NOLOGGING -D USE_OLD_MESH
+		FCFLAGS += -O3 -g
+		PPFLAGS += -D USE_OLD_MESH
+		PPFLAGS += -D NOLOGGING
 	else
-		FCFLAGS += -O3 -D NOLOGGING
+		FCFLAGS += -O3
+		PPFLAGS += -D NOLOGGING
 	endif
 endif
 
@@ -50,11 +57,12 @@ ifeq ($(PLATFORM),gfortran)
 	# -J <path> specifies where to put .mod files
 	FCFLAGS += -J $(BUILDDIR)  
 	FCFLAGS += -I $(BUILDDIR) -I ./ 
-	# FCFLAGS += -D HAS_FFTW3 -I /usr/include ## for fftw3
+	# FCFLAGS += -I /usr/include ## for fftw3
+	# PPFLAGS += -D HAS_FFTW3    ## for fftw3
 	FCFLAGS += -O3
 	FC90FLAGS = -ffree-line-length-0
-	FCFLAGS += -D USE_VOROWEIGHTS
-	FCFLAGS += -D NOLOGGING
+	PPFLAGS += -D USE_VOROWEIGHTS
+	PPFLAGS += -D NOLOGGING
 	# FCFLAGS += -D TASKLOCAL_FILES ### breaks when TASKLOCAL_FILES is used
 	LDFLAGS += -g -O3 -L/usr/local/intel/mkl/10.2.5.035/lib/64 -llapack -lblas
 	FCFLAGS += -g
@@ -67,7 +75,9 @@ ifeq ($(PLATFORM),iff003)
 	FC90 = mpiifort -warn
 	# -module <path> specifies where to put .mod files
 	FCFLAGS += -openmp -mkl -module $(BUILDDIR)
-	FCFLAGS += -gen-interfaces -warn interfaces -DTASKLOCAL_FILES -DUSE_VOROWEIGHTS
+	FCFLAGS += -gen-interfaces -warn interfaces
+	PPFLAGS += -D TASKLOCAL_FILES 
+	PPFLAGS += -D USE_VOROWEIGHTS
 	FC90FLAGS +=
 	FCFLAGS += -I $(BUILDDIR)
 	LDFLAGS += -O3
@@ -88,10 +98,12 @@ ifeq ($(PLATFORM),rwth)
 	FC = $(MPIF77) -warn
 	FC90 = $(MPIFC) -warn
 	# -module <path> specifies where to put .mod files
-	FCFLAGS += $(FLAGS_OPENMP) -module $(BUILDDIR) -D USE_VOROWEIGHTS
+	FCFLAGS += $(FLAGS_OPENMP) -module $(BUILDDIR) 
+	PPFLAGS += -D USE_VOROWEIGHTS
 	FCFLAGS += -gen-interfaces -warn interfaces
 	FC90FLAGS +=
-	FCFLAGS += -I$(BUILDDIR) -DTASKLOCAL_FILES
+	FCFLAGS += -I$(BUILDDIR) 
+	PPFLAGS += -D TASKLOCAL_FILES
 	LDFLAGS += -O3 $(FLAGS_MATH_LINKER)
 	# -lpthread
 endif
@@ -113,16 +125,19 @@ ifeq ($(PLATFORM),JUQUEEN)
 	FC90 += mpixlf90_r
 	# FCFLAGS += -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
 	FCFLAGS += -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ -I/work/jiff02/jiff0212/KKRnano_0276dd3  
-	FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -I.  -WF,-DUSE_VOROWEIGHTS
+	FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -I. 
+	PPFLAGS += -WF,-DUSE_VOROWEIGHTS
 	# FCFLAGS += -WF,-Dell_int_t=integer
 	# LDFLAGS += -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
 	LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
 
 	ifeq ($(TYPE),debug)
-		FCFLAGS += -q64 -O3 -qstrict -g -qnosave -C -qinitauto=7FF7FFFF -WF,-DDEBUG1
+		FCFLAGS += -q64 -O3 -qstrict -g -qnosave -C -qinitauto=7FF7FFFF 
+		PPFLAGS += -WF,-DDEBUG1
 		#-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
 	else
-		FCFLAGS += -q64 -O3 -qstrict -WF,-DNOLOGGING
+		FCFLAGS += -q64 -O3 -qstrict 
+		PPFLAGS += -WF,-DNOLOGGING
 		# -qipa
 	endif
 
@@ -147,7 +162,8 @@ ifeq ($(PLATFORM),JUQUEENgfort)
 	FC90 += mpigfortran
 	# FCFLAGS += -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
 	FCFLAGS += -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
-	FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -WF,-DUSE_VOROWEIGHTS
+	FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) 
+	PPFLAGS += -WF,-DUSE_VOROWEIGHTS
 	# LDFLAGS += -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
 	LDFLAGS += -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
 endif
@@ -185,10 +201,10 @@ $(PROGRAM): $(OBJS)
 	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
 
 %.o: %.F
-	$(FC) $(FCFLAGS) $(EXTRA_FLAGS) -c $< -o $(BUILDDIR)/$@
+	$(FC) $(FCFLAGS) $(EXTRA_FLAGS) $(PPFLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/$@
 
 %.o: %.F90
-	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
+	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/$@
 
 .PHONY: clean
 clean:
