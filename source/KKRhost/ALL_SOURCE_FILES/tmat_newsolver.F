@@ -510,7 +510,7 @@ c        notice that exchange the order of left and right hankel/bessel function
            open(9999, file='params.txt')
            write(9999,*) lmmaxso, t_params%natyp
            write(9999,*) t_params%naez, t_params%nclsd, t_params%nrd, 
-     &                   t_params%nembd1, t_params%lmax
+     &                   t_params%nembd1-1, t_params%lmax
            write(9999,*) t_params%alat
            close(9999)
            !
@@ -520,13 +520,13 @@ c        notice that exchange the order of left and right hankel/bessel function
      &                                 1:t_params%nclsd), 
      &                   t_params%rr(1:3,0:t_params%nrd), 
      &                   t_params%atom(1:t_params%nclsd,
-     &                                 1:t_params%naez+t_params%nembd1)
+     &                              1:t_params%naez+t_params%nembd1-1)
 !      
 !      &t_params%ATOM(t_params%NACLSD,t_params%NEMBD2),
 !      
-           write(9999,*) t_params%cls(1:t_params%naez+t_params%nembd1), 
+         write(9999,*) t_params%cls(1:t_params%naez+t_params%nembd1-1), 
      &                   t_params%ezoa(1:t_params%nclsd,
-     &                                 1:t_params%naez+t_params%nembd1), 
+     &                              1:t_params%naez+t_params%nembd1-1), 
      &                   t_params%nacls(1:t_params%nclsd)
            close(9999)
            !
@@ -550,10 +550,7 @@ c        notice that exchange the order of left and right hankel/bessel function
            !
            ifinished = 1
          end if ! test('rhoqtest')
-         
-         
-c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+        
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
        

@@ -864,6 +864,7 @@ c read in t matrix
 c read in t-matrix from file
         IREC = IE + IELAST*(I1-1)
         if (t_tgmat%tmat_to_file) then
+!            write(*,*) ie, ielast, i1, irec
            READ (69,REC=IREC) TMAT
         else
            irec = ie_num + ie_end * (i1-1)
@@ -1246,16 +1247,16 @@ C
 
 
                 
-           if(test('rhoqtest')) then     
-      call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-      close(9889) ! tau0_k file
+      if(test('rhoqtest')) then     
+         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+         close(9889) ! tau0_k file
       
-                call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-                close(99992)
-                call timing_stop('Time in Iteration')
-                stop 'finished with rhoq output'
-                
-                end if
+         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+         close(99992)
+         call timing_stop('Time in Iteration')
+         stop 'finished with rhoq output'
+      
+      end if
 
       ! clean up allocations
       deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP, stat=ierr)

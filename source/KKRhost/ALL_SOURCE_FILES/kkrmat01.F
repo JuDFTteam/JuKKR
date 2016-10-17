@@ -144,6 +144,10 @@
       INTEGER IERR,IWORK
       integer :: ix,jx, mu, irec, nscoef, imin, ie
       integer, allocatable :: iatomimp(:)
+      
+      double precision, allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts
+      DOUBLE PRECISION RECBV(3,3)
+      logical, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
 #endif
 !     ..
 
@@ -211,6 +215,7 @@
       nscoef = nscoef-1
 
         
+        ! done in main1b already:
 !       open(9889, access='direct', file='tau0_k', &
 !      &form='unformatted', recl=(LMMAXD*LMMAXD+2)*4) ! lm blocks
 
@@ -245,17 +250,71 @@
       k_end = NOFKS 
 #endif
 
-        !print header of statusbar
-        if(test('rhoqtest')) then
+      !print header of statusbar
+      if(test('rhoqtest')) then
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !read recbv  
+        open(8888, file='kpts.txt', form='formatted')
+        read(8888,*)
+        read(8888,*)
+        do kpt=1,nofks
+          read(8888,*) 
+        end do
+        read(8888,'(100E16.7)') RECBV(1:3,1:3)
+        close(8888)
+        
+        allocate(kmask(nofks))
+        
+        ! use these as counters
+        k_start = 1
+        k_end = 0
+        
+        ! find kmask and number points in box
+        do kpt=1,nofks
+          !findig kmask
+          kmask(kpt) = .false.
+          do i=-1,1,1
+            do j=-1,1,1
+              kp(1:3) = bzkp(1:3,kpt)+i*recbv(1:3,1)+j*recbv(1:3,2)
+              if(dsqrt(kp(1)**2+kp(2)**2)<0.4d0) kmask(kpt)=.true.
+              if(dsqrt(kp(1)**2+kp(2)**2)<0.05d0) kmask(kpt)=.false.
+            end do
+          end do
+          ! end finding kmask
+          ! count number of kpts in reduced part
+          if(kmask(kpt)) k_end = k_end+1
+        end do
+        
+        ! fill rhoq_kmask (on reduced set of kpts)
+        allocate(rhoq_kmask(1:4,k_end))
+        do kpt=1, nofks
+          if(kmask(kpt)) then
+            rhoq_kmask(1:3,k_start) = bzkp(1:3,kpt)
+            rhoq_kmask(4,k_start) = dfloat(kpt)
+            k_start = k_start+1
+          end if
+        end do
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        
+        ! reset k_start to 1 (was used as a counter in the loop above)
+        k_start = 1
+        
+        
+        write(*,*) 'rhow: k-loop', k_start, k_end 
         write(6,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')
      &      0, 20, 40, 60, 80, 100
         write(6,FMT=190) !beginning of statusbar
-        end if
+        
+      end if
       
+      ! kpts loop
       DO KPT = k_start,k_end
          GLLKE(:,:) = CZERO
          IF (LLY.NE.0) DGLLKE(:,:) = CZERO
          KP(1:3) = BZKP(1:3,KPT)
+         
+         ! overwrite kpt in case of rhoqtest (take only reduced set of kpts)
+         if(test('rhoqtest')) kp(1:3) = rhoq_kmask(1:3,kpt)
  
          ETAIKR(1:NSYMAT,1:NSHELL) = VOLCUB(KPT)
  
@@ -612,54 +671,60 @@ c            DEALLOCATE(GLLKE0)
                   END DO
                END DO
 
-!            write(*,*) 'write rhoq?',myrank, test('rhoqtest')
-         if(test('rhoqtest')) then
-         
-!            write(*,'(9I9)') myrank, ie, nscoef, nofks, kpt, mu, i,j, 
-!      &       lmmaxd
-         
+               !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+               !>>>>>>>>>>>>>>>>>>>>>> rhoqtest >>>>>>>>>>>>>>>>>>>>>>>>
+               if(test('rhoqtest')) then
+!                
+!                  write(*,'(9I9)') myrank, ie, nscoef, nofks, kpt, mu,  
+!      &                            i,j,lmmaxd
 
-           irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
-           if( ((i==mu) .and. any(j==iatomimp(1:nscoef))) ) then
-             ix=0
-             jx=0
-             lm1 = 1
-             do while (ix==0 .and. lm1<=nscoef)
-               if(iatomimp(lm1)==j) ix = j - imin + 1
-               lm1 = lm1 + 1
-             end do
-             irec = irec + nscoef + ix
-!              write(*,'(A,2I9,1000000ES15.7)') 'wrt',myrank, 
-!      &  irec, kp(1:2), GLLKE(ILM+1:ILM+LMMAXD,JLM+LM+1:JLM+LM+LMMAXD)!g(1:LMMAXD,1:LMMAXD)
-!              write(9889,rec=irec) G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
-             write(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
-             write(998899,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
-           end if
-         
-           irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
-           if( ((j==mu) .and. any(i==iatomimp(1:nscoef))) ) then
-             ix=0
-             jx=0
-             lm1 = 1
-             do while (jx==0 .and. lm1<=nscoef+1)
-               if(iatomimp(lm1)==i) jx = i - imin + 1
-               lm1 = lm1 + 1
-             end do
-             irec = irec + jx
-!              write(*,'(A,2I9,1000ES15.7)') 'wrt',myrank, 
-!      &                             irec, kp(1:2), g(1:LMMAXD,1:LMMAXD)
-!              write(9889,rec=irec) g(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
-             write(9889,rec=irec) kp(1:2), g(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
-             write(998888,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
-           end if ! iii==mu ...
+                 irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1) + 
+     &                  (nscoef*2)*nofks*(IE-1-1)
+!                  irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
+                 if( ((i==mu) .and. any(j==iatomimp(1:nscoef))) ) then
+                   ix=0
+                   jx=0
+                   lm1 = 1
+                   do while (ix==0 .and. lm1<=nscoef)
+                     if(iatomimp(lm1)==j) ix = j - imin + 1
+                     lm1 = lm1 + 1
+                   end do
+                   irec = irec + nscoef + ix
+!                    write(*,'(A,2I9,1000000ES15.7)') 'wrt',myrank, 
+!       &       irec, kp(1:2), GLLKE(ILM+1:ILM+LMMAXD,JLM+LM+1:JLM+LM+LMMAXD)!g(1:LMMAXD,1:LMMAXD)
+!                    write(9889,rec=irec) G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+                   write(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+!                    write(998899,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+                 end if
+               
+                 irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1) + 
+     &                  (nscoef*2)*nofks*(IE-1-1)
+!                  irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
+                 if( ((j==mu) .and. any(i==iatomimp(1:nscoef))) ) then
+                   ix=0
+                   jx=0
+                   lm1 = 1
+                   do while (jx==0 .and. lm1<=nscoef+1)
+                     if(iatomimp(lm1)==i) jx = i - imin + 1
+                     lm1 = lm1 + 1
+                   end do
+                   irec = irec + jx
+!                    write(*,'(A,2I9,1000ES15.7)') 'wrt',myrank, 
+!       &                                  irec, kp(1:2), g(1:LMMAXD,1:LMMAXD)
+!                    write(9889,rec=irec) g(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+                   write(9889,rec=irec) kp(1:2), g(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+!                    write(998888,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+                 end if ! iii==mu ...
 
-         end if ! rhoqtest
+               end if ! rhoqtest
+               !<<<<<<<<<<<<<<<<<<<<<< rhoqtest <<<<<<<<<<<<<<<<<<<<<<<<
+               !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
            
-            END DO
-            
+            END DO ! ISYM = 1,NSYMAT
             
             ! ----------------------------------------------------------------------
-         END DO
+            
+         END DO !NS = 1,NSHELL
          ! ======================================================================
          IF (LLY.NE.0) LLY_GRTR =                                   ! LLY Lloyd Integration
      &                 LLY_GRTR + LLY_GRTR_K * VOLCUB(KPT) * NSYMAT ! LLY Lloyd Integration
@@ -676,11 +741,76 @@ c            DEALLOCATE(GLLKE0)
       END DO ! KPT = 1,NOFKS   end K-points loop
          
       if(test('rhoqtest')) then
-190   FORMAT('                 |'$)   ! status bar
-200   FORMAT('|'$)                    ! status bar
-      write(6,*)                      ! status bar
-      ! finished kpts status bar
-      end if
+190     FORMAT('                 |'$)   ! status bar
+200     FORMAT('|'$)                    ! status bar
+        write(6,*)                      ! status bar
+        ! finished kpts status bar
+        
+        write(*,*)                      ! status bar
+        write(*,*) 'rhoq: write-out loop'
+        write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')
+     &      0, 20, 40, 60, 80, 100
+        write(*,FMT=190) !beginning of statusbar
+      
+        ! write out fort.998899, fort.998888
+        ! ======================================================================
+        do kpt=1, nofks
+          DO NS = 1,NSHELL
+            I = NSH1(NS)
+            J = NSH2(NS)
+            DO ISYM = 1,NSYMAT
+              irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
+              if( ((i==mu) .and. any(j==iatomimp(1:nscoef))) ) then
+                ix=0
+                jx=0
+                lm1 = 1
+                do while (ix==0 .and. lm1<=nscoef)
+                  if(iatomimp(lm1)==j) ix = j - imin + 1
+                  lm1 = lm1 + 1
+                end do
+                irec = irec + nscoef + ix 
+                if(kmask(kpt)) then
+                   read(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)
+                else
+                   KP(1:3) = bzkp(1:3,kpt)
+                   G(1:LMMAXD,1:LMMAXD) = CZERO
+                end if
+                write(998899,'(10000ES15.7)') KP(1:2), 
+     &             G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+              end if
+              irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
+              if( ((j==mu) .and. any(i==iatomimp(1:nscoef))) ) then
+                ix=0
+                jx=0
+                lm1 = 1
+                do while (jx==0 .and. lm1<=nscoef+1)
+                  if(iatomimp(lm1)==i) jx = i - imin + 1
+                  lm1 = lm1 + 1
+                end do
+                irec = irec + jx
+                if(kmask(kpt)) then
+                   read(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)
+                else
+                   KP(1:3) = bzkp(1:3,kpt)
+                   G(1:LMMAXD,1:LMMAXD) = CZERO
+                end if
+                write(998888,'(10000ES15.7)') KP(1:2), 
+     &             G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+              end if ! iii==mu ...
+            END DO ! ISYM = 1,NSYMAT
+          END DO !NS = 1,NSHELL
+          
+          if(nofks>=50) then
+            if(mod(KPT-0,nofks/50)==0) write(6,FMT=200)
+          else
+            write(6,FMT=200)
+          end if
+          
+        end do !kpt=1,nofks
+        ! ======================================================================
+      
+        write(6,*)                      ! status bar
+      end if !test('rhoqtest')
 
       TRACET = CZERO
       IF (LLY.EQ.2) THEN 

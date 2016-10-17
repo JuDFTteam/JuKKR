@@ -21,6 +21,7 @@ FC =  ifort
 # change default value if a flag is matched
 mpi:       FC =  mpiifort
 hybrid:    FC =  mpiifort
+hybriddebug:    FC =  mpiifort
 # mac:
 macmpi:     FC =  /usr/local/impi/bin/mpif90  
 mpidebug:   FC = mpiifort
@@ -40,6 +41,7 @@ debug:     COMPVER ='debug'
 mpi:       COMPVER ='mpi'
 mpidebug:  COMPVER ='mpidebug'
 hybrid:    COMPVER ='hybrid'
+hybriddebug:    COMPVER ='hybrid'
 openmp:    COMPVER ='openmp'
 ompdebug:  COMPVER ='openmpdebug'
 mac:       COMPVER ='serial-mac'
@@ -145,6 +147,7 @@ rwthompdebug:  LLIBSOPENMP=$(RWTHLLIBSOMP)
 
 openmp: LLIBS=$(LLIBSOPENMP)
 hybrid: LLIBS=$(LLIBSOPENMP)
+hybriddebug: LLIBS=$(LLIBSOPENMP)
 ompdebug: LLIBS=$(LLIBSOPENMP)
 rwthomp: LLIBS=$(RWTHLLIBSOMP)
 rwthompdebug: LLIBS=$(RWTHLLIBSOMP)
@@ -167,37 +170,26 @@ rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
 rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
 hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
+hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 
 ####################################################
 # Compiler flags                                   #
 ####################################################
 # Default:
-#FFLAGS       =  -O2 -r8 -traceback -module $(OBJ)
-FFLAGS       =  -r8 -module $(OBJ)
-opt_O0: FFLAGS = -r8 -module $(OBJ) -O0
-opt_O1: FFLAGS = -r8 -module $(OBJ) -O1
-opt_O2: FFLAGS = -r8 -module $(OBJ) -O2
-opt_O3: FFLAGS = -r8 -module $(OBJ) -O3
-opt_ip: FFLAGS = -r8 -module $(OBJ) -O3 -ip
-opt_ipe: FFLAGS = -r8 -module $(OBJ) -O3 -ipe
-opt_fp: FFLAGS = -r8 -module $(OBJ) -O3 -fp-model fast=2
-opt_vec: FFLAGS = -r8 -module $(OBJ) -O3 -axAVX,SSE4.2,SSE4.1
-opt_profg: FFLAGS = -r8 -module $(OBJ) -O3 -prof-gen
-opt_profu: FFLAGS = -r8 -module $(OBJ) -O3 -prof-gen -prog-use
-#fp  ip  O1  O2  O3  prof_gen  prof_use  vec  xarch
-
-
+FFLAGS       =  -O2 -r8 -traceback -module $(OBJ)
 #FFLAGS       =  -r8 -module $(OBJ) -O3 -ip -axAVX,SSE4.2,SSE4.1 -fp-model fast=2
 # -opt-report5 -vec-report -opt-report-file=stdout
 
 # Change to if flag is matched:
 debug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g
+hybriddebug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g
 mpidebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g
 ompdebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g
 
 OPENMPFLAGS = 
 hybrid: OPENMPFLAGS = -openmp
+hybriddebug: OPENMPFLAGS = -openmp
 openmp: OPENMPFLAGS = -openmp
 ompdebug: OPENMPFLAGS = -openmp
 
@@ -233,6 +225,7 @@ rwthhybrid: OPENMPFLAGS = -openmp
 .PHONY: getversion
 .PHONY: compile
 .PHONY: hybrid
+.PHONY: hybriddebug
 .PHONY: mac
 .PHONY: macmpi
 .PHONY: macomp
@@ -274,6 +267,7 @@ openmp:   compile
 ompdebug: compile
 mpi:      compile
 hybrid:   compile
+hybriddebug:   compile
 mpidebug: compile
 rwthmpidebug: compile
 
