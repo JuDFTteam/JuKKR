@@ -17,6 +17,7 @@ module BlockSparseRow_mod
   type BlockSparseRow
     integer :: fastBlockDim = 0 !< == (lmax+1)^2
     integer :: slowBlockDim = 0 !< == (lmax+1)^2
+!   integer :: leadBlockDim = 0 !< == (((fastBlockDim - 1)/4)*4 + 4) aligned to 4: ToDo introduce alignment
     integer :: mb = 0 !< number of block rows, slow block dim
     integer :: nb = 0 !< number of block cols, fast block dim
     integer :: nnzb = 0 !< number of non-zero blocks
@@ -135,7 +136,7 @@ module BlockSparseRow_mod
 
 
   
-  subroutine multiplyBSR_to_BSR(A, Aval, B, Bval, C, Cval, GiFlop) ! unplanned
+  subroutine multiplyBSR_to_BSR(A, Aval, B, Bval, C, Cval, GiFlop, method) ! unplanned
     type(BlockSparseRow), intent(in) :: A !< Matrix to be inverted
     type(BlockSparseRow), intent(in) :: B !< Green function
     type(BlockSparseRow), intent(in) :: C !< Result operator
@@ -143,6 +144,7 @@ module BlockSparseRow_mod
     complex_data_t, intent(in)  :: Bval(:,:,:) ! (K,N,*) ! input  block list
     complex_data_t, intent(out) :: Cval(:,:,:) ! (M,N,*) ! result block list
     real, intent(out), optional :: GiFlop
+    character(len=*), intent(out), optional :: method
 
     ! .. locals ..
     integer :: cRow, aCol, cCol, Bind, Cind, Aind, M, N, K
@@ -193,6 +195,7 @@ module BlockSparseRow_mod
     !$omp end parallel
     
     if (present(GiFlop)) GiFlop = nBlockOps*(M*8.*N*.5d0**30*K) ! assume a complex data_t, so each FMA has 8 Flop
+    if (present(method)) method = "ijk"
   endsubroutine ! multiply
 
   
@@ -237,12 +240,14 @@ module BlockSparseRow_mod
   endsubroutine ! multiply
   
   
-  subroutine create_multBRSplan(p, A, B, C, GiFlop)
+  subroutine create_multBRSplan(p, A, B, C, GiFlop, method)
+    !!! compute A_ik * B_kj = C_ij 
     type(MultBSRplan), intent(inout) :: p !> plan
     type(BlockSparseRow), intent(in) :: A !< Matrix to be inverted 
     type(BlockSparseRow), intent(in) :: B !< Green function
     type(BlockSparseRow), intent(in) :: C !< Result operator
     real, intent(out), optional :: GiFlop
+    character(len=*), intent(out), optional :: method
 
     ! .. locals ..
     integer :: iRow, kCol, jCol, Bind, Cind, Aind, i01, ist, Nelem, nCij, Start
@@ -269,7 +274,7 @@ module BlockSparseRow_mod
       do iRow = 1, C%mb
         do Cind = C%bsrRowPtr(iRow), C _bsrEndPtr(iRow) ; jCol = C%bsrColInd(Cind)
           ! update matrix block element C_full[iRow,jCol]
-          
+
           nCij = nCij + 1
           Nelem = 0
           
@@ -313,6 +318,7 @@ module BlockSparseRow_mod
     if (p%nCij      /= nCij     ) stop 'fatal counting error! (nCij)'
     if (p%nBlockOps /= nBlockOps) stop 'fatal counting error! (nBlockOps)'
     if (present(GiFlop)) GiFlop = nBlockOps*(p%M*8.*p%N*.5d0**30*p%K) ! assume a complex data_t, so each FMA has 8 Flop
+    if (present(method)) method = "ijk"
   endsubroutine ! create
 
   
@@ -517,7 +523,7 @@ endmodule ! BlockSparseRow_mod
 program test_bsr
   use BlockSparseRow_mod !, only:
 implicit none
-  character(len=8) :: CLarg(0:3)
+  character(len=8) :: CLarg(0:3), method
   integer, parameter :: ShowR=0, ShowH=0, ShowG=0, Hfill=16
   integer :: ilen, ios, iarg, mb, nb, kb, M, N, K, nn, mm, kk, bm, bn, bk, Rind, nerror(19)=0, fi, si, bs=2 ! BlockSize
   double precision, parameter :: Gfill=0.5, pointG=.5d0**8, pointH=.5d0**11
@@ -635,7 +641,7 @@ implicit none
   write(*, fmt="(9(A,F0.3))") 'time for BSR creation  ',timediff,' sec'
   
   ! API: multiply(A, Aval, B, Bval, C, Cval, GiFlop)
-  call multiply(H, Hval, G, Gval, R, Rval, GiFlop=GiFlop)
+  call multiply(H, Hval, G, Gval, R, Rval, GiFlop=GiFlop, method=method)
   write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop, ',GiByte,' GiByte'
 
   tock = Wtime() ; timediff = tock - tick ; tick = tock
@@ -661,7 +667,7 @@ implicit none
   tick = Wtime() ! start time
   
   ! API: multiply(p, A, B, C, GiFlop)
-  call create(plan, H, G, R, GiFlop=GiFlop)
+  call create(plan, H, G, R, GiFlop=GiFlop, method=method)
   write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop (planned)'
   
   tock = Wtime() ; timediff = tock - tick ; tick = tock
