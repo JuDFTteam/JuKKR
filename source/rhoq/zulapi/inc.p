@@ -1,12 +1,12 @@
 c number of different atoms in unitcell
       integer natypd
-      parameter (NATYPD =26)
+      parameter (NATYPD =72)
 c number of atoms in unitcell
       integer naezd
       parameter (NAEZD =NATYPD)
 c highest valence orbital quantum number     
       integer lmaxd  
-      parameter (LMAXD = 2)
+      parameter (LMAXD = 3)
 c maximum number of reference potentials
       integer nrefd
       parameter (NREFD = 1)
@@ -23,7 +23,7 @@ c combined parameter for SOC and NSPIND
       parameter (NSPD=MAX(NSPOD,NSPIND))
 c number of layers in one principal layer
       integer NPRINCD
-      parameter (NPRINCD = 2)
+      parameter (NPRINCD = 8)
 c parameter for non-/spherical potentials (0/1)
       integer INSD
       parameter (INSD = 1)

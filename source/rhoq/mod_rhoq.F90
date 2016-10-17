@@ -957,6 +957,9 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   
   call timing_start('calc rhoq - comp tau')
   ! calculate tau
+  write(*,*) 'calculate G0_k from tau0_k'
+  write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
+  write(*,FMT=190) !beginning of statusbar
   do k=1,Nkp
     ! find exG0_i(k) vector of lm-blocks (i is one component)
 
@@ -1031,7 +1034,11 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
     end do
     write(22346, '(1000ES15.7)') tmpk(1:2), tmp(1,1)
     !write(12346, '(1000ES15.7)') tmpk(1:2), tmp(1,1)
-
+    
+    
+    !update statusbar
+    if(Nkp>=50.and.mod(k,Nkp/50)==0) write(*,FMT=200)
+    
   end do ! k
   
   write(*,*) 'kmask info:', lm1, lm2
@@ -1218,15 +1225,17 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   box(1) = 0.4d0!1.0d0!0.7d0
   box(2) = 0.4d0!1.0d0!0.7d0
   box(3) = 0.4d0!1.0d0!0.1d0
+  
+  write(*,*) 'reduce kpts to:', 0.12, box(1)
 
   k = 0
   do q=1,Nqpt
     if((abs(qvec(1,q))-box(1)<=eps).and.(abs(qvec(2,q))-box(2)<=eps).and.(abs(qvec(3,q))-box(3)<=eps)) then
-!       if((abs(qvec(1,q))-box(1)/2>eps).and.(abs(qvec(2,q))-box(2)/2>eps).and.(abs(qvec(3,q))-box(3)/2>eps)) then
+      if(dsqrt((qvec(1,q))**2+(qvec(2,q))**2+(qvec(3,q))**2)>0.12) then
         k = k+1
         qvec_tmp(1:3,k) = qvec(1:3,q)
         qvec_index_tmp(1:2,k) = qvec_index(1:2,q)
-!       end if
+      end if
     end if
   end do
 
