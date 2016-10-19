@@ -711,7 +711,7 @@ subroutine red_Q(t_rhoq, rb, qvec, iq)
   double precision, intent(in) :: qvec(2), rb(2,2)
   integer, intent(out) :: iq
   ! local
-  double precision :: rbt(2,2), irbt(2,2), rq(2), kpt(2), det, qv(2), minimum(3)
+  double precision :: rbt(2,2), irbt(2,2), rq(2), kpt(2), det, qv(2)!, minimum(3)
   integer :: i, j
   double precision, parameter :: eps=1.0d-04
   
@@ -817,6 +817,13 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   integer :: irid, irmd, ipand, irmin, irws, ipan, mu_0, nfund
   double precision, allocatable :: THETAS(:,:), R(:)
   double precision :: r_log
+  
+  
+  
+#ifndef CPP_explicit
+  ! for implicit:
+  double complex, allocatable :: A(:,:,:), B(:,:,:), C(:,:,:)
+#endif
   
   ! allocate kpoint arrays
   ierr = 0
@@ -1312,6 +1319,39 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   allocate( q_mu(lmmaxso,lmmaxso), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating q_mu'
   
+  
+
+#ifndef CPP_explicit
+  !reshape arrays and muktiply with kweight, tau_ij and do one sum over i already here
+  
+  allocate(A(N*Nkp,N,t_rhoq%Nscoef), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating A'
+  allocate(B(N,N*Nkp,t_rhoq%Nscoef), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating B'
+  allocate(C(N,N*Nkp,t_rhoq%Nscoef), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] error allocating C'
+  
+  do k=1,Nkp
+    !A_j(k) = sum_i (G0_0i(k)*kweight*tau_ij)
+    do j=1,t_rhoq%Nscoef
+      !sum over j
+      tmp = C0
+      do i=1,t_rhoq%Nscoef
+        Qdotl = kpt(1,k)*(L_i(1,i)-L_i(1,j))+kpt(2,k)*(L_i(2,i)-L_i(2,j))+kpt(3,k)*(L_i(3,i)-L_i(3,j))
+        kweight = exp(-2.0d0*pi*ci*QdotL)
+        
+        !tmp = G0_0i(k)*kweight(k)*exp(2pi*i*kpt(k).(L_i-L_j) . tau_ij
+        call ZGEMM('n','n',kweight,N,N,N,G0ij_k(1:N,1:N,i,k),N,tau(1:N,1:N,i,j),N,C0,tmp,N)
+      end do
+      A(1+(k-1)*N:k*N,1:N,j) = tmp(1:N,1:N)
+    
+      !B_j(k) = G0_j0(k) ! will be reshaped according to q-shift into array C_j(k), then multiply A.C
+      B(1:N,1+(k-1)*N:k*N,j) = G0ji_k(1:N,1:N,j,k)
+    
+    end do
+  end do
+#endif
+  
 #ifndef CPP_OMP2
   !$omp do
 #endif
@@ -1378,40 +1418,43 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
              ! tmp = tau*exG0_k(k)
              tmp(1:N,1:N) = C0
              if(mythread==0) call timing_start('calc rhoq - q>k-loop>1.ZGEMM')
-             call ZGEMM('n','n',N,N,N,:,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
+             call ZGEMM('n','n',N,N,N,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
              ! tmpsum1 = tmpsum1 + G0_k(k+q)*tmp*kweight
              if(mythread==0) call timing_start('calc rhoq - q>k-loop>2.ZGEMM')
              call ZGEMM('n','n',N,N,N,kweight,G0ij_k(1:N,1:N,i,kpq),N,tmp(1:N,1:N),N,C1,tmpsum1(1:N,1:N),N)
              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>2.ZGEMM')
            
-           
-             ! Int( exG0(k)^*.tau^*.exG0(k+q)^*, dk )
-             
-             if(mythread==0) call timing_start('calc rhoq - q>k-loop>phase2')
-             ! collect phase factors
-             ! exG0 = G0*exp(-i(k+q)*L_j)
-             tmpk(:) = Qvec(:,q)+kpt(:,k)
-             tmpr(:) = L_i(:,j)
-             QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
-             ! exG0 = exG0*exp(+ik*L_i) -> G0tauG0*exp(-[(k+q)*L_j - k*L_i])
-             tmpk(:) = kpt(:,k)
-             tmpr(:) = L_i(:,i)
-             QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
-             ! multiply with phase
-             exG0_tmp(1:N,1:N) = dconjg(G0ij_k(1:N,1:N,i,k))*exp(-2.0d0*pi*Ci*QdotL)
-             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase2')
-             
-             
-             ! tmp = dconjg(tau)*dconjg(exG0_k(k+q))
-             tmp(1:N,1:N) = C0
-             if(mythread==0) call timing_start('calc rhoq - q>k-loop>3.ZGEMM')
-             call ZGEMM('n','n',N,N,N,C1,dconjg(tau(1:N,1:N,i,j)),N,dconjg(G0ji_k(1:N,1:N,j,kpq)),N,C0,tmp(1:N,1:N),N)
-             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>3.ZGEMM')
-             ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k))*tmp*kweight
-             if(mythread==0) call timing_start('calc rhoq - q>k-loop>4.ZGEMM')
-             call ZGEMM('n','n',N,N,N,kweight,exG0_tmp(1:N,1:N),N,tmp(1:N,1:N),N,C1,tmpsum2(1:N,1:N),N)
-             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>4.ZGEMM')
+               !!!!!!!!!!!!!!! WARNING WARNING WARNING WARNING WARNING WARNING !!!!!!!!!!!!!!!!!!!!!
+! 
+!              ! Int( exG0(k)^*.tau^*.exG0(k+q)^*, dk )
+!              
+!              if(mythread==0) call timing_start('calc rhoq - q>k-loop>phase2')
+!              ! collect phase factors
+!              ! exG0 = G0*exp(-i(k+q)*L_j)
+!              tmpk(:) = Qvec(:,q)+kpt(:,k)
+!              tmpr(:) = L_i(:,j)
+!              QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
+!              ! exG0 = exG0*exp(+ik*L_i) -> G0tauG0*exp(-[(k+q)*L_j - k*L_i])
+!              tmpk(:) = kpt(:,k)
+!              tmpr(:) = L_i(:,i)
+!              QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+!              ! multiply with phase
+!              exG0_tmp(1:N,1:N) = dconjg(G0ij_k(1:N,1:N,i,k))*exp(-2.0d0*pi*Ci*QdotL)
+!              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase2')
+!              
+!              
+!              ! tmp = dconjg(tau)*dconjg(exG0_k(k+q))
+!              tmp(1:N,1:N) = C0
+!              if(mythread==0) call timing_start('calc rhoq - q>k-loop>3.ZGEMM')
+!              call ZGEMM('n','n',N,N,N,C1,dconjg(tau(1:N,1:N,i,j)),N,dconjg(G0ji_k(1:N,1:N,j,kpq)),N,C0,tmp(1:N,1:N),N)
+!              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>3.ZGEMM')
+!              ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k))*tmp*kweight
+!              if(mythread==0) call timing_start('calc rhoq - q>k-loop>4.ZGEMM')
+!              call ZGEMM('n','n',N,N,N,kweight,exG0_tmp(1:N,1:N),N,tmp(1:N,1:N),N,C1,tmpsum2(1:N,1:N),N)
+!              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>4.ZGEMM')
+               !!!!!!!!!!!!!!! WARNING WARNING WARNING WARNING WARNING WARNING !!!!!!!!!!!!!!!!!!!!!
+
                         
              end do !j
          end do ! i
@@ -1424,74 +1467,33 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 #endif
 
 #else
-         ! read kweight from memory
-         
+         ! not CPP_explicit !
          !!!!!!!!!!!!!!! WARNING WARNING WARNING WARNING WARNING WARNING !!!!!!!!!!!!!!!!!!!!!
          !!!!!!!WARNING kintegration not ready yet, kweight and pahse factors are definitely wrong, do this for performance analysis!!!!!
-         k  = 0
-         kweight = dcmplx(t_rhoq%volcub(k), 0.0d0) ! complex number needed for zgemm later on
          
-         do i=1,t_rhoq%Nscoef
-           do j=1,t_rhoq%Nscoef
+         !reshape B to C according to q shift
+         !           <1:Nkp-q      ;       1+Nkp-q:Nkp
+         !k:kpq, 1.) k=q, kpq=Nkp; 2.) k=1, kpq=q-1
+         k = q
+         kpq = Nkp
+         C(1:N,1+(k-1)*N:kpq*N,:) = B(1:N, 1+(1-1)*N:(Nkp-q)*N,:)
+         k = 1
+         kpq = Nkp-q
+         C(1:N,1+(k-1)*N:kpq*N,:) = B(1:N, 1+(1+Nkp-q-1)*N:Nkp*N,:)
+         
+         ! now multiply A_j.C_j and sum over all j
+         do j=1,t_rhoq%Nscoef
              ! Sum( Int( exG0_i(k+q) tau_i,j exG0_j(k); dk ); i,j)
              
-             tmpk(:) = Qvec(:,q)+kpt(:,k)
-             tmpr(:) = L_i(:,i)
+             tmpk(:) = Qvec(:,q)
+             tmpr(:) = L_i(:,i)-L_i(:,j)
              QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
-             ! exG0 = exG0*exp(+ik*L_j) -> G0tauG0*exp(-[(k+q)*L_i - k*L_j])
-             tmpk(:) = kpt(:,k)
-             tmpr(:) = L_i(:,j)
-             QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
-             ! multiply with phase
-             kweight = dcmplx(t_rhoq%volcub(k), 0.0d0)*exp(-2.0d0*pi*Ci*QdotL)
              
-             
-             exG0_tmp(1:N,1:N) = G0ji_k(1:N,1:N,j,k)
-             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase1')
-             
-             ! tmp = tau*exG0_k(k)
-             tmp(1:N,1:N) = C0
-             if(mythread==0) call timing_start('calc rhoq - q>k-loop>1.ZGEMM')
-             call ZGEMM('n','n',N,N,N,:,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
-             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
-             ! tmpsum1 = tmpsum1 + G0_k(k+q)*tmp*kweight
-             if(mythread==0) call timing_start('calc rhoq - q>k-loop>2.ZGEMM')
-             call ZGEMM('n','n',N,N,N,kweight,G0ij_k(1:N,1:N,i,kpq),N,tmp(1:N,1:N),N,C1,tmpsum1(1:N,1:N),N)
-             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>2.ZGEMM')
-           
-           
-             ! Int( exG0(k)^*.tau^*.exG0(k+q)^*, dk )
-             
-             if(mythread==0) call timing_start('calc rhoq - q>k-loop>phase2')
-             ! collect phase factors
-             ! exG0 = G0*exp(-i(k+q)*L_j)
-             tmpk(:) = Qvec(:,q)+kpt(:,k)
-             tmpr(:) = L_i(:,j)
-             QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
-             ! exG0 = exG0*exp(+ik*L_i) -> G0tauG0*exp(-[(k+q)*L_j - k*L_i])
-             tmpk(:) = kpt(:,k)
-             tmpr(:) = L_i(:,i)
-             QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
-             ! multiply with phase
-             kweight = dcmplx(t_rhoq%volcub(k), 0.0d0)*exp(-2.0d0*pi*Ci*QdotL)
-             
-             G0_tmp(1:N,1:N, 1:Nkpt-q) = dconjg(G0ji_k(1:N,1:N,j,kpq))
-             G0_tmp(1:N,1:N, Nkpt-q+1:Nkpt) = dconjg(G0ji_k(1:N,1:N,j,kpq))
-             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase2')
-             
-             
-             ! tmp = dconjg(tau)*dconjg(exG0_k(k+q))
-             tmp(1:N,1:N) = C0
-             if(mythread==0) call timing_start('calc rhoq - q>k-loop>3.ZGEMM')
-             call ZGEMM('n','n',N,N,N,C1,dconjg(tau(1:N,1:N,i,j)),N,G0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
-             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>3.ZGEMM')
-             ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k))*tmp*kweight
-             if(mythread==0) call timing_start('calc rhoq - q>k-loop>4.ZGEMM')
-             call ZGEMM('n','n',N,N,N,kweight,dconjg(G0ij_k(1:N,1:N,i,k)),N,tmp(1:N,1:N),N,C1,tmpsum2(1:N,1:N),N)
-             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>4.ZGEMM')
-                        
-             end do !j
-         end do ! i
+             call ZGEMM('n','n',N,N,N*Nkp,exp(-2.0d0*pi*ci*QdotL),A,N,C,N*Nkp,C0,tmpsum1)
+
+         end do ! j
+         
+         !done with k-integration
          
          !!!!!!!!!!!!!!! WARNING WARNING WARNING WARNING WARNING WARNING !!!!!!!!!!!!!!!!!!!!!
 
