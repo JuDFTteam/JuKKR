@@ -17,11 +17,16 @@ LLIBS  = -mkl #-lmkl_intel_thread -lmkl_core -lpthread -liomp5
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 
+
+LLIBS = $(LLIBSOPENMP)
+
 ####################################################
 # C preprocessor options                           #
 ####################################################
 # Default option
-CPP=
+CPP= -D noCPP
+#-D noCPP 
+#-D CPP_explicit -D CPP_OMP2
 # change to if flag is matched
 openmp:   CPP = -D CPP_OMP
 mpidebug: CPP = -D CPP_MPI
