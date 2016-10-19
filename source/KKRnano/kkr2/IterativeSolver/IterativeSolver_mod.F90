@@ -67,14 +67,14 @@ module IterativeSolver_mod
 
     integer :: nrow, ncol, iterations_needed, nvecs, ist
     double precision :: largest_residual
+    integer(kind=8) :: nFlops
 
     nrow = size(mat_B, 1)
     ncol = size(mat_B, 2)
 
     nvecs = 7; if(self%use_precond) nvecs = nvecs+1 ! need only 7 without preconditioning
-    if (size(self%vecs, 2) /= nvecs) then
+    if (size(self%vecs, 3) /= nvecs) then
       deallocate(self%vecs, stat=ist) ! ignore status
-      
       allocate(self%vecs(nrow,ncol,nvecs), stat=ist)
       
       if (ist /= 0) then
@@ -95,11 +95,12 @@ module IterativeSolver_mod
       stop
     endif
 
+    nFlops = 0    
     call solve(self%op, mat_X, mat_B, self%qmrbound, ncol, nrow, &
                self%initial_zero, self%precond, self%use_precond, &
-               self%vecs, iterations_needed, largest_residual)
+               self%vecs, iterations_needed, largest_residual, nFlops)
 
-    call reduce(self%stats, iterations_needed, largest_residual)
+    call reduce(self%stats, iterations_needed, largest_residual, nFlops)
   endsubroutine ! solve
   
   !----------------------------------------------------------------------------

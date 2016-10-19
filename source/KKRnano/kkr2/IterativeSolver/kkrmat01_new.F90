@@ -40,6 +40,7 @@ module kkrmat_mod
     use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
     use jij_calc_mod, only: global_jij_data, kkrjij
     use SolverStats_mod, only: reset !, SolverStats 
+    use SolverStats_mod, only: GiFlops
     use IterativeSolver_mod, only: IterativeSolver
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
@@ -53,7 +54,7 @@ module kkrmat_mod
     double precision, intent(in) :: kpoints(:,:) !< list of k-points dim(3,nkpoints)
     double precision, intent(in) :: kpointweight(:) !< k-point weights dim(nkpoints)
 
-    double complex, intent(out) :: GS(:,:,:) ! (lmmaxd,lmmaxd,num_local_atoms)
+    double complex, intent(out) :: GS(:,:,:) ! (lmmaxd,lmmaxd,num_local_atoms) result
     double complex, intent(in) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez_trc)
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat ! needed only for Jij-calculation
@@ -100,7 +101,7 @@ module kkrmat_mod
     ! ---> use sit
     !      G(n,n',L,L')(-k) = G(n',n,L',L)(k)
 
-    GS = zero ! init zero
+    GS = zero ! init result with zero
     bztr2 = zero ! init zero
 
     TESTARRAYLOG(3, Ginp)
@@ -157,16 +158,12 @@ module kkrmat_mod
     enddo ! ikpoint = 1, nkpoints
     !==============================================================================
 
-    !--------------------- LLY ----------------------------------------------------
     if (lly == 1) then   
-       bztr2 = bztr2*nsymat/volbz + tr_alph(1)
-       trace = zero
-       CALL MPI_ALLREDUCE(bztr2,trace,1, &
-                         MPI_DOUBLE_COMPLEX,MPI_SUM, &
-                         MPI_COMM_WORLD,ierr)
-       lly_grdt = trace
-    endif    
-    !------------------------------------------------------------------------------
+      bztr2 = bztr2*nsymat/volbz + tr_alph(1)
+      trace = zero
+      call MPI_Allreduce(bztr2, trace, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
+      lly_grdt = trace
+    endif ! lly == 1
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
 #undef Ginp
@@ -182,6 +179,7 @@ module kkrmat_mod
     WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", solver%stats%max_residual
     WRITELOG(3, *) "Max. num iterations for this E-point: ", solver%stats%max_iterations
     WRITELOG(3, *) "Sum of iterations for this E-point:   ", solver%stats%sum_iterations
+    WRITE(*, *) "useful Floating point operations:     ", GiFlops," GiFlop"
 
 #undef cluster
 #undef ms
@@ -278,15 +276,6 @@ module kkrmat_mod
     nacls = cluster%naclsd
     alm = naez*lmmaxd
 
-    ! Allocate additional arrays for Lloyd's formula    
-    allocate(gllke_x(naez*lmmaxd,nacls*lmmaxd))
-    allocate(dgde(naez*lmmaxd,nacls*lmmaxd))
-    allocate(gllke_x_t(nacls*lmmaxd,naez*lmmaxd))
-    allocate(dgde_t(nacls*lmmaxd,naez*lmmaxd))
-    allocate(gllke_x2(naez*lmmaxd,lmmaxd))
-    allocate(dgde2(naez*lmmaxd,lmmaxd))
-    allocate(dpde_local(naez*lmmaxd,lmmaxd))
-    
 
     !=======================================================================
     ! ---> fourier transformation
@@ -326,6 +315,15 @@ module kkrmat_mod
    ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     if (lly == 1) then ! LLY
+      ! Allocate additional arrays for Lloyd's formula    
+      allocate(gllke_x(naez*lmmaxd,nacls*lmmaxd))
+      allocate(dgde(naez*lmmaxd,nacls*lmmaxd))
+      allocate(gllke_x_t(nacls*lmmaxd,naez*lmmaxd))
+      allocate(dgde_t(nacls*lmmaxd,naez*lmmaxd))
+      allocate(gllke_x2(naez*lmmaxd,lmmaxd))
+      allocate(dgde2(naez*lmmaxd,lmmaxd))
+      allocate(dpde_local(naez*lmmaxd,lmmaxd))
+    
 #ifndef SPLIT_REFERENCE_FOURIER_COM
       call referenceFourier_com(op%DGLLh, op%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
@@ -339,9 +337,9 @@ module kkrmat_mod
       TESTARRAYLOG(3, op%DGLLh)
 
       call convertToFullMatrix(op%GLLH, op%sparse%ia, op%sparse%ja, op%sparse%ka, &
-                           op%sparse%kvstr, op%sparse%kvstr, GLLKE_X)
+                           op%sparse%kvstr, op%sparse%kvstr, gllke_x)
       call convertToFullMatrix(op%DGLLH, op%sparse%ia, op%sparse%ja, op%sparse%ka, &
-                           op%sparse%kvstr, op%sparse%kvstr, DGDE) 
+                           op%sparse%kvstr, op%sparse%kvstr, dgde) 
 
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
@@ -353,8 +351,8 @@ module kkrmat_mod
       gllke_x_t = transpose(gllke_x)
       dgde_t = transpose(dgde)
 
-      gllke_x2 = gllke_x_t(:, matrix_index:matrix_index+lmmaxd)
-      dgde2 = dgde_t(:, matrix_index:matrix_index+lmmaxd)
+      gllke_x2 = gllke_x_t(:,matrix_index:matrix_index+lmmaxd)
+      dgde2 = dgde_t(:,matrix_index:matrix_index+lmmaxd)
 
       call cinit(naez*lmmaxd*lmmaxd,dpde_local)
 

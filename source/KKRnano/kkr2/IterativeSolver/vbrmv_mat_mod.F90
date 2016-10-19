@@ -17,12 +17,13 @@ module vbrmv_mat_mod
   contains
 
   !> Heavily modified routine from SPARSKIT
-  subroutine vbrmv_mat(blk_nrows, ia, ja, ka, A, kvstr, x, Ax, max_blockdim, max_blocks_per_row)
+  subroutine vbrmv_mat(blk_nrows, ia, ja, ka, A, kvstr, x, Ax, max_blockdim, max_blocks_per_row, nFlops)
                        
     integer, intent(in) :: blk_nrows, ia(blk_nrows+1), ja(:), ka(:), kvstr(:)
     integer, intent(in) :: max_blockdim, max_blocks_per_row
     double complex, intent(in)  :: A(:), x(:,:)
     double complex, intent(out) :: Ax(:,:)
+    integer(kind=8), intent(inout) :: nFlops
     !-----------------------------------------------------------------------
     !     Sparse matrix-full vector product, in VBR format.
     !-----------------------------------------------------------------------
@@ -50,7 +51,7 @@ module vbrmv_mat_mod
 
     integer :: ibr, isr, j, k, nRHSs, iRHSs, nblk, nsum, nrows
     integer :: isc, ibc, leaddim_Ax, leaddim_Buffer
-
+    double precision, parameter :: kiF = 2.d0**-10
     double complex, parameter :: ZERO=(0.d0, 0.d0), ONE=(1.d0, 0.d0)
 
     nRHSs      = size(Ax, 2)
@@ -59,7 +60,7 @@ module vbrmv_mat_mod
 
     Ax = ZERO
 
-!$OMP PARALLEL PRIVATE(ibr,ibc,isr,isc,nrows,nsum,nblk,j,iRHSs,Buffer,k)
+!$OMP PARALLEL PRIVATE(ibr,ibc,isr,isc,nrows,nsum,nblk,j,iRHSs,Buffer,k) reduction(+:nFlops)
 !$OMP DO
     do ibr = 1, blk_nrows
       isr   = kvstr(ibr)
@@ -82,6 +83,7 @@ module vbrmv_mat_mod
       enddo ! j
 
       call ZGEMM('N', 'N', nrows, nRHSs, nsum, ONE, A(k:), nrows, Buffer, leaddim_Buffer, ZERO, Ax(isr,1), leaddim_Ax)
+      nFlops = nFlops + (8_8*nrows)*(nRHSs*nsum)
 
     enddo ! ibr
 !$OMP END DO

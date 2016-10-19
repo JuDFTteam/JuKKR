@@ -11,6 +11,7 @@ import time
 TESTDIR = os.getcwd() ### perform the calculation in the current working directory
 DECIMALS = 6 ### 8=all digits, 6 should be enough
 DEFAULT_lmax = 3
+DEFAULT_nthreads = 1
 DEFAULT_solver = 3 ## solver=3 is iterative while solver=4 is direct
 DEFAULT_Lly = 0 ## Lly=0/1 deactivate/activate Lloyd's formula
 ShowMD5 = True
@@ -37,7 +38,7 @@ def get_energy(string):
     else:
           raise ArgumentError
 
-def KKRnano(inputdir, nranks=1, nthreads=1, solver=DEFAULT_solver, lmax=DEFAULT_lmax, Lly=DEFAULT_Lly):
+def KKRnano(inputdir, nranks=1, nthreads=DEFAULT_nthreads, solver=DEFAULT_solver, lmax=DEFAULT_lmax, Lly=DEFAULT_Lly):
     """Run KKR-calculation with input from 'inputdir' and returns the total energy"""
     #print "start KKR for", inputdir, "with  lmax=",lmax, ", solver=",solver, ", nthreads=",nthreads, "nranks=",nranks
     out, err, tim = run_it("./clearfiles.sh")

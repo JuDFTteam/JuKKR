@@ -102,25 +102,27 @@ module KKROperator_mod
 
   !----------------------------------------------------------------------------
   !> Applies Operator on mat_X and returns result in mat_AX.
-  subroutine multiply_KKROperator(self, mat_X, mat_AX)
+  subroutine multiply_KKROperator(self, mat_X, mat_AX, nFlops)
     type(KKROperator) :: self
     double complex, intent(in)  :: mat_X(:,:)
     double complex, intent(out) :: mat_AX(:,:)
+    integer(kind=8), intent(inout) :: nFlops
 
     ! perform sparse VBR matrix * dense matrix
-    call multiply_vbr(self%GLLH, mat_X, mat_AX, self%sparse)
+    call multiply_vbr(self%GLLH, mat_X, mat_AX, self%sparse, nFlops)
   endsubroutine ! apply
 
-  subroutine multiply_vbr(A, x, Ax, sparse)
+  subroutine multiply_vbr(A, x, Ax, sparse, nFlops)
     use vbrmv_mat_mod, only: vbrmv_mat
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     double complex, intent(in)  :: A(:), x(:,:)
     double complex, intent(out) :: Ax(:,:)
     type(SparseMatrixDescription), intent(in) :: sparse
+    integer(kind=8), intent(inout) :: nFlops
 
     call vbrmv_mat(sparse%blk_nrows, sparse%ia, sparse%ja, sparse%ka, &
                    A, sparse%kvstr, x, Ax, &
-                   sparse%max_blockdim, sparse%max_blocks_per_row)
+                   sparse%max_blockdim, sparse%max_blocks_per_row, nFlops)
 
   endsubroutine ! multiply_vbr
 

@@ -24,7 +24,7 @@ module TFQMR_mod
   !> @param ncol           number of right-hand sides = number of columns of B
   !> @param nrow           number of row elements of matrices mat_X, mat_B
   subroutine solve_with_TFQMR(op, mat_X, mat_B, tolerance, ncol, nrow, initial_zero, precond, use_precond, vecs, &
-                   iterations_needed, largest_residual) ! optional output args
+                   iterations_needed, largest_residual, nFlops) ! optional output args
     USE_LOGGING_MOD
     use SolverStats_mod, only: SolverStats
     use KKROperator_mod, only: KKROperator
@@ -53,6 +53,7 @@ module TFQMR_mod
     ! optional args
     integer,          intent(out), optional :: iterations_needed
     double precision, intent(out), optional :: largest_residual
+    integer(kind=8), intent(inout), optional :: nFlops
     
     ! locals
 
@@ -73,7 +74,9 @@ module TFQMR_mod
 
     !------------- diagnostic variables -------------
     integer :: sparse_mult_count, res_probe_count ! count number of residual calculations
+    integer(kind=8) :: mFlops
     
+    mFlops = 0
     tfqmr_status = 0
     converged_at = 0
 
@@ -95,7 +98,7 @@ module TFQMR_mod
     else
 
       ! v5 = A*v1
-      call apply_precond_and_matrix(op, precond, mat_X, v5, vP, use_precond)
+      call apply_precond_and_matrix(op, precond, mat_X, v5, vP, use_precond, mFlops)
 
       sparse_mult_count = sparse_mult_count + 1
 
@@ -158,7 +161,7 @@ module TFQMR_mod
 
 
       ! v9 = A*v6
-      call apply_precond_and_matrix(op, precond, v6, v9, vP, use_precond)
+      call apply_precond_and_matrix(op, precond, v6, v9, vP, use_precond, mFlops)
 
       sparse_mult_count = sparse_mult_count + 1
 
@@ -223,7 +226,7 @@ module TFQMR_mod
       !=============================================================
 
       ! v8 = A*v6
-      call apply_precond_and_matrix(op, precond, v6, v8, vP, use_precond)
+      call apply_precond_and_matrix(op, precond, v6, v8, vP, use_precond, mFlops)
 
       sparse_mult_count = sparse_mult_count + 1
 
@@ -289,7 +292,7 @@ module TFQMR_mod
         ! has to be performed.
 
         ! v9 = A*v1
-        call apply_precond_and_matrix(op, precond, mat_X, v9, vP, use_precond)
+        call apply_precond_and_matrix(op, precond, mat_X, v9, vP, use_precond, mFlops)
 
         sparse_mult_count = sparse_mult_count + 1
 
@@ -351,6 +354,7 @@ module TFQMR_mod
 
     if (present(iterations_needed)) iterations_needed = iteration
     if (present(largest_residual)) largest_residual = max_residual
+    if (present(nFlops)) nFlops = nFlops + mFlops
 
     do icol = 1, ncol
       if (converged_at(icol) == 0) then
@@ -374,7 +378,7 @@ module TFQMR_mod
   !>
   !> mat_out = A P mat_in
   !> preconditioner is used only when use_precond=.true.
-  subroutine apply_precond_and_matrix(op, precond, mat_in, mat_out, temp, use_precond)
+  subroutine apply_precond_and_matrix(op, precond, mat_in, mat_out, temp, use_precond, mFlops)
     use KKROperator_mod, only: KKROperator, multiply
     use BCPOperator_mod, only: BCPOperator, multiply
 
@@ -385,12 +389,13 @@ module TFQMR_mod
     double complex, intent(out) :: mat_out(:,:)
     double complex, intent(out) :: temp(:,:)
     logical, intent(in) :: use_precond
+    integer(kind=8), intent(inout) :: mFlops
 
     if (use_precond) then
       call multiply(precond, mat_in, temp)
-      call multiply(op, temp, mat_out)
+      call multiply(op, temp, mat_out, mFlops)
     else
-      call multiply(op, mat_in, mat_out)
+      call multiply(op, mat_in, mat_out, mFlops)
     endif
 
   endsubroutine ! apply

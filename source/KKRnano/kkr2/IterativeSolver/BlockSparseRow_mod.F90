@@ -134,7 +134,55 @@ module BlockSparseRow_mod
     
   endfunction ! exists
 
+  
+  integer function get_block(bsr, val, row, col, block) result(success)
+    type(BlockSparseRow), intent(in) :: bsr
+    complex_data_t, intent(in)       :: val(:,:,:)
+    complex_data_t, intent(out)    :: block(:,:)
+    integer, intent(in) :: row, col
 
+    integer :: ind, n1, n2
+    if (dim_error(bsr, val)) stop __LINE__
+    
+    ind = exists(bsr, row, col)
+    if (ind < 1) then
+      success = -1 ! failed
+      block = zero ! safety, one should not use the content of block when failed, however, ... better clear
+      return
+    endif ! does not exist
+
+    success = 0 ! successful
+    if (any(shape(block) > [bsr%fastBlockDim, bsr%slowBlockDim])) stop __LINE__
+    n1 = min(size(block, 1), bsr%fastBlockDim)
+    n2 = min(size(block, 2), bsr%slowBlockDim)
+    block(:n1,:n2) = val(:n1,:n2,ind) ! potentially strided memory access
+
+  endfunction ! get
+
+  integer function set_block(bsr, val, row, col, block) result(success)
+    type(BlockSparseRow), intent(in) :: bsr
+    complex_data_t, intent(inout)    :: val(:,:,:)
+    complex_data_t, intent(in)     :: block(:,:)
+    integer, intent(in) :: row, col
+
+    integer :: ind, n1, n2
+    if (dim_error(bsr, val)) stop __LINE__
+
+    ind = exists(bsr, row, col)
+    if (ind < 1) then
+      success = -1 ! failed
+      return
+    endif ! does not exist
+
+    success = 0 ! successful
+    if (any(shape(block) > [bsr%fastBlockDim, bsr%slowBlockDim])) stop __LINE__
+    n1 = min(size(block, 1), bsr%fastBlockDim)
+    n2 = min(size(block, 2), bsr%slowBlockDim)
+    val(:n1,:n2,ind) = block(:n1,:n2) ! potentially strided memory access
+
+  endfunction ! set
+  
+  
   
   subroutine multiplyBSR_to_BSR(A, Aval, B, Bval, C, Cval, GiFlop, method) ! unplanned
     type(BlockSparseRow), intent(in) :: A !< Matrix to be inverted
@@ -194,7 +242,7 @@ module BlockSparseRow_mod
 
     !$omp end parallel
     
-    if (present(GiFlop)) GiFlop = nBlockOps*(M*8.*N*.5d0**30*K) ! assume a complex data_t, so each FMA has 8 Flop
+    if (present(GiFlop)) GiFlop = nBlockOps*(M*8.d0*N*.5d0**30*K) ! assume a complex data_t, so each FMA has 8 Flop
     if (present(method)) method = "ijk"
   endsubroutine ! multiply
 
@@ -317,7 +365,7 @@ module BlockSparseRow_mod
     enddo ! i01
     if (p%nCij      /= nCij     ) stop 'fatal counting error! (nCij)'
     if (p%nBlockOps /= nBlockOps) stop 'fatal counting error! (nBlockOps)'
-    if (present(GiFlop)) GiFlop = nBlockOps*(p%M*8.*p%N*.5d0**30*p%K) ! assume a complex data_t, so each FMA has 8 Flop
+    if (present(GiFlop)) GiFlop = nBlockOps*(p%M*8.d0*p%N*.5d0**30*p%K) ! assume a complex data_t, so each FMA has 8 Flop
     if (present(method)) method = "ijk"
   endsubroutine ! create
 
@@ -386,9 +434,49 @@ module BlockSparseRow_mod
 
     !$omp end parallel
 
-    if (present(GiFlop)) GiFlop = C%fastBlockDim*8.*C%slowBlockDim*.5d0**30*C%nnzb ! assume a complex data_t, so each FMA has 8 Flop
+    if (present(GiFlop)) GiFlop = C%fastBlockDim*6.d0*C%slowBlockDim*.5d0**30*C%nnzb ! assume a complex data_t, so each FMA has 8 Flop
   endsubroutine ! fusedMultiplyAdd
+
   
+  subroutine scaleAndAdd_BSR(Y, Yval, Xval, yscal, xscal, GiFlop) ! Y: = Y*yscal + X*xscal
+    type(BlockSparseRow), intent(in) :: Y !< operator structure, same for A and B assumed
+    complex_data_t, intent(inout) :: Yval(:,:,:) !         block list dim(fastBlockDim,slowBlockDim,nnzb)
+    complex_data_t, intent(in)    :: Xval(:,:,:) !  input  block list dim(fastBlockDim,slowBlockDim,nnzb)
+    complex_data_t, intent(in), optional :: yscal(:,:) ! input dim(slowBlockDim,nb), default=1
+    complex_data_t, intent(in), optional :: xscal(:,:) ! input dim(slowBlockDim,nb), default=1
+    real, intent(out), optional :: GiFlop
+
+    ! .. locals ..
+    integer :: jCol, Yind, islow
+    complex_data_t :: yscale, xscale
+    
+    if (dim_error(Y, Yval)) stop __LINE__
+    if (dim_error(Y, Xval)) stop __LINE__
+
+    if (present(yscal)) then
+      if (any(shape(yscal) /= [Y%slowBlockDim, Y%nb])) stop __LINE__ ! multiply yscal(::) to the fast dimensions
+    endif
+    if (present(xscal)) then
+      if (any(shape(xscal) /= [Y%slowBlockDim, Y%nb])) stop __LINE__ ! multiply xscal(::) to the fast dimensions
+    endif
+
+    !$omp parallel do private(jCol, Yind, islow)
+    do Yind = 1, Y _bsrEndPtr(Y%mb) ; jCol = Y%bsrColInd(Yind)
+#ifdef BSRX
+#warning   'Gaps in the BSRX format will be ignored!'
+#endif
+      do islow = 1, Y%slowBlockDim
+        yscale = one ; if (present(yscal)) yscale = yscal(islow,jCol)
+        xscale = one ; if (present(xscal)) xscale = xscal(islow,jCol)
+        Yval(:,islow,Yind) = Yval(:,islow,Yind)*yscale + Xval(:,islow,Yind)*xscale
+      enddo ! islow
+
+    enddo ! Yind
+    !$omp end parallel do
+
+    if (present(GiFlop)) GiFlop = Y%fastBlockDim*14.d0*Y%slowBlockDim*.5d0**30*Y%nnzb ! assume a complex data_t, so each FMA has 8 Flop
+  endsubroutine ! scaleAndAdd_BSR
+
   
   elemental subroutine destroyMultBRSplan(p)
     type(MultBSRplan), intent(inout) :: p !> plan
@@ -697,9 +785,9 @@ implicit none
   deallocate(Rval)
   
 
-  allocate(Rfill(M,N))
+! allocate(Rfill(M,N))
 !   !! test the multiplication with dense matrices  --> ToDo
-  deallocate(Rfill)
+! deallocate(Rfill)
   
 #undef R
   call destroy(H)
