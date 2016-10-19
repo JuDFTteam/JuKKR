@@ -556,6 +556,13 @@ subroutine calc_tau_rhoq(t_rhoq)
   t_rhoq%tau = t_rhoq%Dt
   call ZGEMM('n','n',N,N,N,C1,t_rhoq%Dt,N,temp,N,C1,t_rhoq%tau,N)
   
+  !test
+  write(*,*) 'writing tau'
+  do ierr=1,N
+    write(789456123, '(10000ES16.7)') t_rhoq%tau(ierr,:)
+  end do
+  !test
+  
   deallocate(temp)
 
 end subroutine calc_tau_rhoq
@@ -1305,8 +1312,9 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   allocate( q_mu(lmmaxso,lmmaxso), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating q_mu'
   
-  
-  !$omp do 
+#ifndef CPP_OMP2
+  !$omp do
+#endif
   do q=1,Nqpt !q-loop     
    
      
@@ -1316,6 +1324,12 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
      tmpsum1 = C0
      tmpsum2 = C0
      if(mythread==0) call timing_start('calc rhoq - q>k-loop')
+
+#ifdef CPP_explicit
+
+#ifdef CPP_OMP2
+     !$omp do
+#endif
      do k=1,Nkp !k-loop integration
        ! new: find kpq index from kvec+Qvec, compared with kpts in BZ
        ! find q from Q(q)
@@ -1345,7 +1359,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
          
          do i=1,t_rhoq%Nscoef
            do j=1,t_rhoq%Nscoef
-         
              ! Sum( Int( exG0_i(k+q) tau_i,j exG0_j(k); dk ); i,j)
              
              ! collect phase factors
@@ -1365,7 +1378,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
              ! tmp = tau*exG0_k(k)
              tmp(1:N,1:N) = C0
              if(mythread==0) call timing_start('calc rhoq - q>k-loop>1.ZGEMM')
-             call ZGEMM('n','n',N,N,N,C1,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
+             call ZGEMM('n','n',N,N,N,:,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
              ! tmpsum1 = tmpsum1 + G0_k(k+q)*tmp*kweight
              if(mythread==0) call timing_start('calc rhoq - q>k-loop>2.ZGEMM')
@@ -1406,6 +1419,83 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
        end if ! (kmask(kpq) .and. kmask(k))
        
      end do ! k-loop
+#ifdef CPP_OMP2
+     !$omp end do
+#endif
+
+#else
+         ! read kweight from memory
+         
+         !!!!!!!!!!!!!!! WARNING WARNING WARNING WARNING WARNING WARNING !!!!!!!!!!!!!!!!!!!!!
+         !!!!!!!WARNING kintegration not ready yet, kweight and pahse factors are definitely wrong, do this for performance analysis!!!!!
+         k  = 0
+         kweight = dcmplx(t_rhoq%volcub(k), 0.0d0) ! complex number needed for zgemm later on
+         
+         do i=1,t_rhoq%Nscoef
+           do j=1,t_rhoq%Nscoef
+             ! Sum( Int( exG0_i(k+q) tau_i,j exG0_j(k); dk ); i,j)
+             
+             tmpk(:) = Qvec(:,q)+kpt(:,k)
+             tmpr(:) = L_i(:,i)
+             QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
+             ! exG0 = exG0*exp(+ik*L_j) -> G0tauG0*exp(-[(k+q)*L_i - k*L_j])
+             tmpk(:) = kpt(:,k)
+             tmpr(:) = L_i(:,j)
+             QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+             ! multiply with phase
+             kweight = dcmplx(t_rhoq%volcub(k), 0.0d0)*exp(-2.0d0*pi*Ci*QdotL)
+             
+             
+             exG0_tmp(1:N,1:N) = G0ji_k(1:N,1:N,j,k)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase1')
+             
+             ! tmp = tau*exG0_k(k)
+             tmp(1:N,1:N) = C0
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>1.ZGEMM')
+             call ZGEMM('n','n',N,N,N,:,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
+             ! tmpsum1 = tmpsum1 + G0_k(k+q)*tmp*kweight
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>2.ZGEMM')
+             call ZGEMM('n','n',N,N,N,kweight,G0ij_k(1:N,1:N,i,kpq),N,tmp(1:N,1:N),N,C1,tmpsum1(1:N,1:N),N)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>2.ZGEMM')
+           
+           
+             ! Int( exG0(k)^*.tau^*.exG0(k+q)^*, dk )
+             
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>phase2')
+             ! collect phase factors
+             ! exG0 = G0*exp(-i(k+q)*L_j)
+             tmpk(:) = Qvec(:,q)+kpt(:,k)
+             tmpr(:) = L_i(:,j)
+             QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
+             ! exG0 = exG0*exp(+ik*L_i) -> G0tauG0*exp(-[(k+q)*L_j - k*L_i])
+             tmpk(:) = kpt(:,k)
+             tmpr(:) = L_i(:,i)
+             QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
+             ! multiply with phase
+             kweight = dcmplx(t_rhoq%volcub(k), 0.0d0)*exp(-2.0d0*pi*Ci*QdotL)
+             
+             G0_tmp(1:N,1:N, 1:Nkpt-q) = dconjg(G0ji_k(1:N,1:N,j,kpq))
+             G0_tmp(1:N,1:N, Nkpt-q+1:Nkpt) = dconjg(G0ji_k(1:N,1:N,j,kpq))
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase2')
+             
+             
+             ! tmp = dconjg(tau)*dconjg(exG0_k(k+q))
+             tmp(1:N,1:N) = C0
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>3.ZGEMM')
+             call ZGEMM('n','n',N,N,N,C1,dconjg(tau(1:N,1:N,i,j)),N,G0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>3.ZGEMM')
+             ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k))*tmp*kweight
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>4.ZGEMM')
+             call ZGEMM('n','n',N,N,N,kweight,dconjg(G0ij_k(1:N,1:N,i,k)),N,tmp(1:N,1:N),N,C1,tmpsum2(1:N,1:N),N)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>4.ZGEMM')
+                        
+             end do !j
+         end do ! i
+         
+         !!!!!!!!!!!!!!! WARNING WARNING WARNING WARNING WARNING WARNING !!!!!!!!!!!!!!!!!!!!!
+
+#endif
      if(mythread==0) call timing_pause('calc rhoq - q>k-loop')
      !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< k-loop <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1423,6 +1513,10 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
         Rq = dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)
         costheta = -Qvec(3,q)/Rq ! =cos(theta)
         phi = datan2(Qvec(2,q), Qvec(1,q)) + pi
+        
+#ifdef CPP_OMP2
+        !$omp do
+#endif
         do l1=0,LMAX_2
           lm0 = l1**2+1 ! = l1*(l1+1)+m1+1 for m1=-l1
           call cspher(cYlm(l1**2+1:(l1+1)**2), l1, costheta) ! computes real spherical harmonic for l=l1 without factor exp(i*m*phi)
@@ -1431,8 +1525,14 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
             cYlm(lm01) = cYlm(lm01) * exp(Ci*m1*phi)
           end do ! m1
         end do ! l1
+#ifdef CPP_OMP2
+        !$omp end do
+#endif
         
         ! convert complex spherical harmonics to real spherical harmonics
+#ifdef CPP_OMP2
+        !$omp do
+#endif
         do l1=0,lmax_2
           do m1=-l1,l1
             if(m1<0) then
@@ -1448,8 +1548,14 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
             end if
           end do
         end do
+#ifdef CPP_OMP2
+        !$omp end do
+#endif
         
         ! construct exp(-i q.r)_L
+#ifdef CPP_OMP2
+        !$omp do
+#endif
         do ir=1,irmdnew
           Z = dcmplx(Rq*rnew(ir)/alat*2.0d0*pi, 0.0d0)
           call CALC_JLK(jl, Z, LMAX_2)
@@ -1460,6 +1566,9 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
             end do ! m1
           end do ! l1
         end do ! ir
+#ifdef CPP_OMP2
+        !$omp end do
+#endif
         
      else
      
@@ -1478,6 +1587,9 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
      qint = C0
 
      ! first treat spherical block (diagonal in lm, lm' -> only lm'==lm)
+#ifdef CPP_OMP2
+     !$omp do
+#endif
      do lm01 = 1,lmmaxso
        do lm02 = 1,lmmaxso
            do l1=0,lmax_2
@@ -1497,10 +1609,16 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
          enddo ! lm1
        enddo ! lm02
      enddo ! lm01
+#ifdef CPP_OMP2
+     !$omp end do
+#endif
      
      
      
      ! treat non-spherical components -> off-diagonal blocks in lm, lm' matrices
+#ifdef CPP_OMP2
+     !$omp do
+#endif
      do j = 1,iend ! loop over number of non-vanishing Gaunt coefficients
        ! set lm indices for Gaunt coefficients
        lm1 = icleb(j,1)
@@ -1521,14 +1639,23 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
          enddo ! ir
        end if ! lmsp(ifun)/=0
      enddo ! j -> sum of Gaunt coefficients
+#ifdef CPP_OMP2
+     !$omp end do
+#endif
          
        ! do radial integration
      q_mu = C0
+#ifdef CPP_OMP2
+     !$omp do
+#endif
      do lm01 = 1, lmmaxso ! loop over outer lm-component
        do lm02 = 1, lmmaxso ! loop over outer lm-component
          call intcheb_cell(qint(:,lm01,lm02),q_mu(lm01,lm02),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
        end do ! lm02
      end do ! lm01
+#ifdef CPP_OMP2
+     !$omp end do
+#endif
      if(mythread==0) call timing_pause('calc rhoq - q>qint')
      !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  qint  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1551,11 +1678,17 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
      call ZGEMM('n','n',N,N,N,C1,dconjg(q_mu(1:N,1:N)),N,tmp(1:N,1:N),N,C0,tmpsum2(1:N,1:N),N)
            
      ! take trace
+#ifdef CPP_OMP2
+     !$omp do
+#endif
      do i=1,t_rhoq%lmmaxso
        tr_tmpsum1 = tr_tmpsum1 + tmpsum1(i,i)
        tr_tmpsum2 = tr_tmpsum2 + tmpsum2(i,i)
 !        tr_tmpsum1 = tr_tmpsum1 + q_mu(i,i)
      end do
+#ifdef CPP_OMP2
+     !$omp end do
+#endif
      
      !$omp critical
      rhoq(q) = 1.d0/(2.d0*Ci) * (tr_tmpsum1 - tr_tmpsum2)
@@ -1564,12 +1697,20 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      
      !update statusbar
+#ifdef CPP_OMP2
+     if(mythread==0) then
+        if(Nqpt>=50.and.mod(q,Nqpt/50)==0) write(*,FMT=200)
+     end if
+#else
      !$omp critical
      if(Nqpt>=50.and.mod(q,Nqpt/50)==0) write(*,FMT=200)
      !$omp end critical
+#endif
        
   end do !q
+#ifndef CPP_OMP2
   !$omp end do
+#endif
   if(mythread==0) call timing_stop('calc rhoq - q>k-loop>red_Q')
   if(mythread==0) call timing_stop('calc rhoq - q>k-loop>phase1')
   if(mythread==0) call timing_stop('calc rhoq - q>k-loop>1.ZGEMM')
