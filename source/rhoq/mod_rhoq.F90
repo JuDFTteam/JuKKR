@@ -1326,6 +1326,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 #ifndef CPP_explicit
   !reshape arrays and muktiply with kweight, tau_ij and do one sum over i already here
 
+  if(mythread==0) call timing_start('calc rhoq - q>k-loop>red_Q')
   !write(*,*) 'alloc A,B,C'  
   allocate(A(N*Nkp,N,t_rhoq%Nscoef), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating A'
@@ -1353,6 +1354,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
     
     end do
   end do
+  if(mythread==0) call timing_pause('calc rhoq - q>k-loop>red_Q')
 #endif
   
 #ifndef CPP_OMP2
@@ -1478,28 +1480,41 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
          !           <1:Nkp-q      ;       1+Nkp-q:Nkp
          !k:kpq, 1.) k=q, kpq=Nkp; 2.) k=1, kpq=q-1
          !write(*,*) 'big matrices for k integration'
+         
+         if(mythread==0) call timing_start('calc rhoq - q>k-loop>phase1')
          k = q
          kpq = Nkp
-         !write(*,*) q, 'C fill1',N,Nkp, 1+(k-1)*N, kpq*N, 1+(1-1)*N,(Nkp-q+1)*N
+!          write(*,*) q, 'C fill1',N,Nkp, 1+(k-1)*N, kpq*N, 1+(1-1)*N,(Nkp-q+1)*N
          C(1:N,1+(k-1)*N:kpq*N,:) = B(1:N, 1+(1-1)*N:(Nkp-q+1)*N,:)
-         !if(q>1) then
+         if(q>1) then
            k = 1
            kpq = q-1
-           !write(*,*) q, 'C fill2',N,Nkp,1+(k-1)*N, kpq*N,  1+(1+Nkp-q)*N,Nkp*N
+!            write(*,*) q, 'C fill2',N,Nkp,1+(k-1)*N, kpq*N,  1+(1+Nkp-q)*N,Nkp*N
            C(1:N,1+(k-1)*N:kpq*N,:) = B(1:N, 1+(1+Nkp-q)*N:Nkp*N,:)
-         !end if
+         end if
+         if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase1')
 
+             
          ! now multiply A_j.C_j and sum over all j
          do j=1,t_rhoq%Nscoef
              ! Sum( Int( exG0_i(k+q) tau_i,j exG0_j(k); dk ); i,j)
              
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>1.ZGEMM')
              tmpk(:) = Qvec(:,q)
              tmpr(:) = L_i(:,j)
              QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
+             kweight = exp(-2.0d0*pi*ci*QdotL)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
              
-             !call ZGEMM('n','n',N,N,N*Nkp,exp(-2.0d0*pi*ci*QdotL),A,N,C,N*Nkp,C0,tmpsum1)
+             if(mythread==0) call timing_start('calc rhoq - q>k-loop>2.ZGEMM')
+!              call ZGEMM('n','n',N,N,N*Nkp,kweight,C,N,A,N*Nkp,C0,tmpsum1)
+             if(mythread==0) call timing_pause('calc rhoq - q>k-loop>2.ZGEMM')
 
          end do ! j
+         if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
+         
+         
+         
          
          !done with k-integration
          
@@ -1721,7 +1736,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 #ifndef CPP_OMP2
   !$omp end do
 #endif
-#ifdef CPP_explicit
   if(mythread==0) call timing_stop('calc rhoq - q>k-loop>red_Q')
   if(mythread==0) call timing_stop('calc rhoq - q>k-loop>phase1')
   if(mythread==0) call timing_stop('calc rhoq - q>k-loop>1.ZGEMM')
@@ -1729,7 +1743,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   !if(mythread==0) call timing_stop('calc rhoq - q>k-loop>phase2')
   !if(mythread==0) call timing_stop('calc rhoq - q>k-loop>3.ZGEMM')
   !if(mythread==0) call timing_stop('calc rhoq - q>k-loop>4.ZGEMM')
-#endif
   if(mythread==0) call timing_stop('calc rhoq - q>k-loop')
   if(mythread==0) call timing_stop('calc rhoq - q>eiqr')
   if(mythread==0) call timing_stop('calc rhoq - q>qint')

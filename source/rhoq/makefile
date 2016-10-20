@@ -5,6 +5,8 @@ default: install
 FC =  ifort
 
 FILENAME0 = rhoq.x
+explicit1: FILENAME0 = rhoq.x_expl1
+explicit2: FILENAME0 = rhoq.x_expl2
 
 ####################################################
 # Libraries                                        #
@@ -18,7 +20,7 @@ LLIBS  = -mkl #-lmkl_intel_thread -lmkl_core -lpthread -liomp5
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 
 
-LLIBS = $(LLIBSOPENMP)
+# LLIBS = $(LLIBSOPENMP)
 
 ####################################################
 # C preprocessor options                           #
@@ -31,6 +33,8 @@ CPP= -D noCPP
 openmp:   CPP = -D CPP_OMP
 mpidebug: CPP = -D CPP_MPI
 mpi:      CPP = -D CPP_MPI
+explicit1: CPP = -D CPP_explicit
+explicit2: CPP= -D CPP_explicit -D CPP_OMP2
 
 ####################################################
 # Compiler flags                                   #
@@ -77,11 +81,14 @@ getversion:
 	echo $(LLIBS) >complib; \
 	getversion.sh
 
-serial:  getversion $(SRCS) 
-	  $(FC) $(LLIBS)    -o $(FILENAME0) $(SRCS) $
-debug:   getversion $(SRCS) 
-	  $(FC) $(LLIBS)    -o $(FILENAME0) $(SRCS) $
-install: clean serial
+compile:  getversion $(SRCS)
+	$(FC) $(LLIBS) -o $(FILENAME0) $(SRCS) $
+
+serial: compile
+explicit1: clean compile
+explicit2: clean compile 
+debug: compile
+install: clean serial explicit1 explicit2
 
 
 mod_%.o: %.f90
@@ -101,4 +108,3 @@ mod_%.o: %.F
 	$(FC) -c $(FFLAGS) $(CPP)  $<
 %.o: %.F
 	$(FC) -c $(FFLAGS) $(CPP)  $<
-
