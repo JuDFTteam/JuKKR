@@ -731,9 +731,12 @@ c ------------------------------------------------------------------------
  360     CONTINUE               ! IE = 1,IELAST
 #ifdef CPP_TIMING
         if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-        if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-        if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+        if(t_inc%i_time>0) call timing_stop('main1b - fourier')
+        if(t_inc%i_time>0) call timing_stop('main1b - inversion')
         if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
+        if(t_inc%i_time>0 .and.test('rhoqtest')) then
+           call timing_stop('main1b - kkrmat01 - writeout_rhoq')
+        endif
 #endif
 
          IF( NCPAFAIL .NE. 0 ) THEN
@@ -1066,8 +1069,8 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
  460  CONTINUE                  ! IE=1,IELAST
 #ifdef CPP_TIMING
         if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-        if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-        if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+        if(t_inc%i_time>0) call timing_stop('main1b - fourier')
+        if(t_inc%i_time>0) call timing_stop('main1b - inversion')
         if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
 #endif
 
@@ -1254,6 +1257,7 @@ C
          call MPI_BARRIER(MPI_COMM_WORLD, ierr)
          close(99992)
          call timing_stop('Time in Iteration')
+         if (myrank==master) call print_time_and_date('Done w. rhoq!!!')
          stop 'finished with rhoq output'
       
       end if

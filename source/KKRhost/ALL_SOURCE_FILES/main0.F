@@ -651,13 +651,44 @@ C
      
      
       ! find md5sums for potential and shapefunction
+#ifndef CPP_NOMD5      
       call get_md5sums(INS, I13, I19)
+#else
+      allocate( character(len=17) :: md5sum_potential )
+      allocate( character(len=17) :: md5sum_shapefun )
+      md5sum_potential = 'xxx CPP_NOMD5 xxx'
+      md5sum_shapefun  = 'xxx CPP_NOMD5 xxx'
+#endif
       write(1337,'(A,A)') 
      &'Doing calculation with potential: ',md5sum_potential
       if(INS>0) then
          write(1337,'(A,A)') 
      &   'Doing calculation with shapefun: ',md5sum_shapefun
       end if
+      
+      
+      IF(TEST('rhoqtest')) THEN
+         !read mu_0
+         open(9999, file='mu0', form='formatted')
+         read(9999,*) i1
+         close(9999)
+         ! write out corresponding mesh information
+         open(9999, file='rmesh_mu0.txt', form='formatted')
+         write(9999,'(A)') '# mu_0, IRMIN, IRWS, IPAN'
+         write(9999,'(4I9)') i1,IRMIN(i1), IRWS(i1), IPAN(i1)
+         write(9999,'(A)') '# R(1:IRWS)'
+         write(9999,'(1000E22.15)') R(1:IRWS(i1),i1)
+         write(9999,'(A)') '# NTCELL(1:NATYP)'
+         write(9999,'(1000I9)') NTCELL(1:NATYP)
+         write(9999,'(A)') '# IRCUT(1:IPAN)'
+         write(9999,'(1000I9)') IRCUT(1:IPAN(i1),i1)
+         write(9999,'(A)') '# R_LOG, NPAN_LOG, NPAN_EQ'
+         write(9999,'(E22.15,2I9)') R_LOG, NPAN_LOG, NPAN_EQ
+         close(9999)            
+      ENDIF
+
+
+
 
 
       IF ( TEST('Vspher  ') ) THEN
@@ -1021,25 +1052,39 @@ C
          END DO
       END IF
 C =========================================== treat decimation I/O cases
-#ifdef CPP_TIMING
-      call timing_start('main0 - deci-io')
-#endif
 C
-      IF ( OPT('deci-pot') ) 
-     & CALL OUTPOTHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,NATYP,E2IN,
+      IF ( OPT('deci-pot') ) THEN
+#ifdef CPP_TIMING
+      call timing_start('main0 - outpothost')
+#endif
+       CALL OUTPOTHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,NATYP,E2IN,
      &                 BRAVAIS,RBASIS,QMTET,QMPHI,NOQ,KAOEZ,IQAT,
      &                 ZAT,CONC,IPAN,IRCUT,SOLVER,SOCSCL,CSCL,
      &                 IRWS,RMTNEW,RWS,R,DRDI,VISP,
      &                 IRSHIFT,RMREL,DRDIREL,VTREL,BTREL,
      &                 LMAXD,NATYPD,NAEZD,IPAND,IRMD)
+#ifdef CPP_TIMING
+      call timing_stop('main0 - outpothost')
+#endif
+      ENDIF
 C
-      IF ( OPT('deci-out') ) 
-     &  CALL OUTTMATHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,LMMAX,
+      IF ( OPT('deci-out') ) THEN
+#ifdef CPP_TIMING
+      call timing_start('main0 - outtmathost')
+#endif
+        CALL OUTTMATHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,LMMAX,
      &                   BRAVAIS,RBASIS,QMTET,QMPHI,E2IN,TK,
      &                   NPOL,NPNT1,NPNT2,NPNT3)
+#ifdef CPP_TIMING
+      call timing_stop('main0 - outtmathost')
+#endif
+      ENDIF
 C
-      IF ( OPT('DECIMATE') ) 
-     &  CALL DECIOPT(ALAT,INS,KREL+KORBIT,KVREL,KMROT,NSPIN,NAEZ,LMMAX,
+      IF ( OPT('DECIMATE') ) THEN
+#ifdef CPP_TIMING
+      call timing_start('main0 - deciopt')
+#endif
+        CALL DECIOPT(ALAT,INS,KREL+KORBIT,KVREL,KMROT,NSPIN,NAEZ,LMMAX,
      &               BRAVAIS,TK,NPOL,NPNT1,NPNT2,NPNT3,
      &               EZ,IELAST,KAOEZ,
      &               LEFTTINVLL,RIGHTTINVLL,VACFLAG,NLBASIS,NRBASIS,
@@ -1047,8 +1092,9 @@ C
      &               LMAXD,LMGF0D,LMMAXD,LM2D,NEMBD1,IEMXD,
      &               NSPINDD,LMPOTD,NATYPD,IRMD,IPAND)
 #ifdef CPP_TIMING
-      call timing_stop('main0 - deci-io')
+      call timing_stop('main0 - deciopt')
 #endif
+      ENDIF
 C
 C ======================================================================
 C

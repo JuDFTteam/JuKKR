@@ -101,7 +101,7 @@ module mod_md5sums
     
     if(myrank/=master) then
       allocate(character(len=lmd5sum_pot) :: md5sum_potential, stat=ierr)
-      if(ierr/=0) stop '[myMPI_Bcast_md5sums] error allocating md5sum_potential'
+!       if(ierr/=0) stop '[myMPI_Bcast_md5sums] error allocating md5sum_potential'
     end if
     
     ! broadcast checksum
@@ -133,21 +133,21 @@ end module mod_md5sums
 
 
 
-!TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST
-#ifdef test
-program test
-
-  use mod_md5sums
-  implicit none
- 
-  call get_md5sums(1, 'potential', 'shapefun')
- 
-  write(*,*) 'md5sum for potential file:'
-  write(*,'(A)') md5sum_potential
- 
-  write(*,*) 'md5sum for shapefun file:'
-  write(*,'(A)') md5sum_shapefun
-
-end program test
-#endif
-!TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST
+! !TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST
+! #ifdef test
+! program test
+! 
+!   use mod_md5sums
+!   implicit none
+!  
+!   call get_md5sums(1, 'potential', 'shapefun')
+!  
+!   write(*,*) 'md5sum for potential file:'
+!   write(*,'(A)') md5sum_potential
+!  
+!   write(*,*) 'md5sum for shapefun file:'
+!   write(*,'(A)') md5sum_shapefun
+! 
+! end program test
+! #endif
+! !TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST

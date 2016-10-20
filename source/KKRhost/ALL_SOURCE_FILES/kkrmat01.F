@@ -50,6 +50,9 @@
 #ifdef CPP_TIMING
       use mod_timing
 #endif
+! #ifdef CPP_hybrid
+!       use omp_lib
+! #endif
       IMPLICIT NONE
 !     ..
 !     .. Parameters ..
@@ -140,7 +143,7 @@
       INTRINSIC ATAN,EXP
 !     ..
 #ifdef CPP_MPI
-      DOUBLE COMPLEX WORK(LMMAXD,LMMAXD,NSYMAXD)
+      DOUBLE COMPLEX, allocatable :: WORK(:,:,:,:)
       INTEGER IERR,IWORK
       integer :: ix,jx, mu, irec, nscoef, imin, ie
       integer, allocatable :: iatomimp(:)
@@ -149,6 +152,9 @@
       DOUBLE PRECISION RECBV(3,3)
       logical, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
 #endif
+! #ifdef CPP_hybrid
+      integer :: mythread
+! #endif
 !     ..
 
 !      NDIM=LMGF0D*NAEZ
@@ -300,12 +306,26 @@
         k_start = 1
         
         
-        write(*,*) 'rhow: k-loop', k_start, k_end 
+        write(*,*) 'rhoq: k-loop', k_start, k_end 
         write(6,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')
      &      0, 20, 40, 60, 80, 100
         write(6,FMT=190) !beginning of statusbar
         
       end if
+      
+      mythread = 0
+! #ifdef CPP_hybrid
+! !$omp parallel default(shared)
+! !$omp& private(kpt, ns, i, j, isym, carg, i1, zktr, i2, iq1, iq2, ioff1)
+! !$omp& private(ioff2, joff1, joff2, ikm1, ikm2, csum1, is, n1, n2)
+! !$omp& private(j1, csum2, j2, il1, il2, lm1, lm2, gaux1, gaux2)
+! !$omp& private(jl1, jl2, gaux3, ilm, jlm, mythread )
+! !$omp& reduction(+:trace)
+! 
+!       mythread = omp_get_thread_num()
+! #endif
+
+
       
       ! kpts loop
       DO KPT = k_start,k_end
@@ -319,7 +339,10 @@
          ETAIKR(1:NSYMAT,1:NSHELL) = VOLCUB(KPT)
  
          ! --> first NAEZ/NATYP elements of GS() are site-diagonal
- 
+
+! #ifdef CPP_hybrid
+! !$omp do
+! #endif
          DO NS = NSDIA+1,NSHELL
             I = NSH1(NS)
             J = NSH2(NS)
@@ -333,13 +356,17 @@
                ETAIKR(ISYM,NS) = ETAIKR(ISYM,NS) * EXP(CARG*CITPI)
             END DO
          END DO
+! #ifdef CPP_hybrid
+! !$omp end do
+! #endif
  
          BZKPK(1:3) = KP(1:3)
          BZKPK(4:6) = 0.D0
 
          ! -> Fourier transformation
 #ifdef CPP_TIMING
-            if(t_inc%i_time>0) call timing_start('main1b_fourier')
+         if(mythread==0 .and. t_inc%i_time>0) 
+     &                  call timing_start('main1b - fourier')
 #endif
  
          RRM(1:3,1:NRD) = -RR(1:3,1:NRD)
@@ -348,16 +375,22 @@
          IF (KREL.EQ.0) THEN
 
             !--------------------------------------------------------------------
+            if(mythread==0) then
             ALLOCATE(GLLKEN(ALMGF0,ALMGF0),STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKEN'
             GLLKEN(:,:) = CZERO
+            endif
+!             !$omp barrier
             !--------------------------------------------------------------------
             CALL DLKE0(GLLKEN,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,
      &                 EZOA,ATOM,BZKPK,RCLS,GINP)
             !--------------------------------------------------------------------
+            if(mythread==0) then
             ALLOCATE(GLLKEM(ALMGF0,ALMGF0),STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKEM'
             GLLKEM(:,:) = CZERO
+            endif
+!             !$omp barrier
             !--------------------------------------------------------------------
             CALL DLKE0(GLLKEM,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,
      &                 EZOA,ATOM,BZKPK,RCLS,GINP)
@@ -368,16 +401,22 @@
             ! and Fourier transform for the derivatives.
             IF (LLY.NE.0) THEN
                !--------------------------------------------------------------------
+            if(mythread==0) then
                ALLOCATE(DGLLKEN(ALMGF0,ALMGF0),STAT=IU)
                IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate DGLLKEM'
                DGLLKEN(:,:) = CZERO
+            endif
+!             !$omp barrier
                !--------------------------------------------------------------------
                CALL DLKE0(DGLLKEN,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,
      &                    EZOA,ATOM,BZKPK,RCLS,DGINP)
                !--------------------------------------------------------------------
+            if(mythread==0) then
                ALLOCATE(DGLLKEM(ALMGF0,ALMGF0),STAT=IU)
                IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate DGLLKEM'
                DGLLKEM(:,:) = CZERO
+            endif
+!             !$omp barrier
                !--------------------------------------------------------------------
                CALL DLKE0(DGLLKEM,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,
      &                    EZOA,ATOM,BZKPK,RCLS,DGINP)
@@ -405,6 +444,9 @@
                ENDDO
 
                ! bigger GLLKE matrix and rearrange with atom block
+! #ifdef CPP_hybrid
+! !$omp do
+! #endif
                DO IQ1=1,NAEZ
                   DO IQ2=1,NAEZ
 
@@ -430,9 +472,13 @@
 
                   ENDDO
                ENDDO
+! #ifdef CPP_hybrid
+! !$omp end do
+! #endif
  
             ENDIF               ! (.NOT.OPT('NEWSOSOL'))
             !-----------------------------------------------------------------------
+            if(mythread==0) then
             DEALLOCATE(GLLKEM,STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > deallocate GLLKEM'
             DEALLOCATE(GLLKEN,STAT=IU)
@@ -441,6 +487,8 @@
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > deallocate DGLLKEM'
             IF (LLY.NE.0) DEALLOCATE(DGLLKEN,STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > deallocate DGLLKEN'
+            endif
+!             !$omp barrier
             !-----------------------------------------------------------------------
 
             ! LLY Lloyd At this point DGLLKE contains the Fourier transform of the dGref/dE
@@ -448,10 +496,13 @@
          ELSE                   !  (KREL.EQ.0) 
             ! LLY Lloyd Not implementing Lloyds formula for KREL=1 (Dirac ASA)
             !-----------------------------------------------------------------------
+            if(mythread==0) then
             ALLOCATE(GLLKE0(ALMGF0,ALMGF0),STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKE0'
             ALLOCATE(GLLKE0M(ALMGF0,ALMGF0),STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKE0M'
+            endif
+!             !$omp barrier
             !-----------------------------------------------------------------------
             CALL DLKE0(GLLKE0,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,
      &                 EZOA,ATOM,BZKPK,RCLS,GINP)
@@ -468,6 +519,9 @@
             !    ==> GLLKE
 
             ! ======================================================================
+! #ifdef CPP_hybrid
+! !$omp do
+! #endif
             DO IQ1=1,NAEZ
                DO IQ2=1,NAEZ   
                   IOFF1 = LMMAXD*(IQ1-1)
@@ -503,14 +557,21 @@
                   ! ----------------------------------------------------------------------
                END DO
             END DO
+! #ifdef CPP_hybrid
+! !$omp end do
+! #endif
             !-----------------------------------------------------------------------
+            if(mythread==0) then
             DEALLOCATE(GLLKE0,GLLKE0M,STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > deallocate GLLKE0'
+            endif
+!             !$omp barrier
             !-----------------------------------------------------------------------
             ! ======================================================================
          END IF !  (KREL.EQ.0) 
 #ifdef CPP_TIMING
-            if(t_inc%i_time>0) call timing_pause('main1b_fourier')
+            if(mythread==0 .and. t_inc%i_time>0) 
+     &                 call timing_pause('main1b - fourier')
 #endif
          ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -535,7 +596,8 @@
             ENDDO
       
 #ifdef CPP_TIMING
-            if(t_inc%i_time>0) call timing_start('main1b_inversion')
+            if(mythread==0 .and. t_inc%i_time>0) 
+     &                 call timing_start('main1b - inversion')
 #endif
             !     --> Perform the inversion of matrix M
             !     the output is the scattering path operator TAU stored in GLLKE
@@ -546,7 +608,8 @@
             CALL INVERSION(GLLKE,INVMOD,ICHECK)
             ENDIF
 #ifdef CPP_TIMING
-            if(t_inc%i_time>0) call timing_pause('main1b_inversion')
+            if(mythread==0 .and. t_inc%i_time>0) 
+     &                 call timing_pause('main1b - inversion')
 #endif
             ! ----------------------------------------------------------
             ! LLY Lloyd ----------------------------------------------------------
@@ -653,6 +716,7 @@ c            DEALLOCATE(GLLKE0)
          ! --> global sum on array gs
 
          ! ======================================================================
+         ! no omp at this loop because of rhoq output
          DO NS = 1,NSHELL
             I = NSH1(NS)
             J = NSH2(NS)
@@ -730,7 +794,7 @@ c            DEALLOCATE(GLLKE0)
      &                 LLY_GRTR + LLY_GRTR_K * VOLCUB(KPT) * NSYMAT ! LLY Lloyd Integration
          
 
-        if(test('rhoqtest')) then
+        if(mythread==0 .and. test('rhoqtest')) then
          if(k_end>=50) then
            if(mod(KPT-k_start,k_end/50)==0) write(6,FMT=200)
          else
@@ -739,12 +803,19 @@ c            DEALLOCATE(GLLKE0)
         end if
 
       END DO ! KPT = 1,NOFKS   end K-points loop
+! #ifdef CPP_hybrid
+!       !$omp end parallel
+! #endif
          
       if(test('rhoqtest')) then
 190     FORMAT('                 |'$)   ! status bar
 200     FORMAT('|'$)                    ! status bar
         write(6,*)                      ! status bar
         ! finished kpts status bar
+        
+#ifdef CPP_hybrid
+        call timing_start('main1b - kkrmat01 - writeout_rhoq')
+#endif
         
         write(*,*)                      ! status bar
         write(*,*) 'rhoq: write-out loop'
@@ -810,6 +881,9 @@ c            DEALLOCATE(GLLKE0)
         ! ======================================================================
       
         write(6,*)                      ! status bar
+#ifdef CPP_TIMING
+        call timing_pause('main1b - kkrmat01 - writeout_rhoq')
+#endif
       end if !test('rhoqtest')
 
       TRACET = CZERO
@@ -840,29 +914,33 @@ c            DEALLOCATE(GLLKE0)
 !-----------------------------------------------------------------------
 ! 
 #ifdef CPP_MPI
-        DO NS = 1,NSHELL
-          IWORK = LMMAXD*LMMAXD*NSYMAXD
-          CALL MPI_ALLREDUCE(GS(1,1,1,NS),WORK,IWORK,
-     +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
-     +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-          CALL ZCOPY(IWORK,WORK,1,GS(1,1,1,NS),1)
-        END DO
-          
-        IF (LLY.NE.0) then
-          IWORK = 1
-          CALL MPI_ALLREDUCE(LLY_GRTR,WORK(1,1,1),IWORK,
-     +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
-     +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-          CALL ZCOPY(IWORK,WORK(1,1,1),1,LLY_GRTR,1)
-        endif
-          
-        if(lly.eq.2) then
-          IWORK = 1
-          CALL MPI_ALLREDUCE(TRACET,WORK(1,1,1),IWORK,
-     +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
-     +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-          CALL ZCOPY(IWORK,WORK(1,1,1),1,TRACET,1)
-        endif
+      allocate(WORK(LMMAXD,LMMAXD,NSYMAXD, nshell), stat=ierr)
+      if(ierr/=0) stop 'Error allocating work for communication of GS'
+      
+      IWORK = LMMAXD*LMMAXD*NSYMAXD*NSHELL
+      CALL MPI_ALLREDUCE(GS(1,1,1,1),WORK,IWORK,
+     +                   MPI_DOUBLE_COMPLEX,MPI_SUM,
+     +                   t_mpi_c_grid%mympi_comm_ie,IERR)
+      CALL ZCOPY(IWORK,WORK,1,GS(1,1,1,1),1)
+        
+      IF (LLY.NE.0) then
+        IWORK = 1
+        CALL MPI_ALLREDUCE(LLY_GRTR,WORK(1,1,1,1),IWORK,
+     +                     MPI_DOUBLE_COMPLEX,MPI_SUM,
+     +                     t_mpi_c_grid%mympi_comm_ie,IERR)
+        CALL ZCOPY(IWORK,WORK(1,1,1,1),1,LLY_GRTR,1)
+      endif
+        
+      if(lly.eq.2) then
+        IWORK = 1
+        CALL MPI_ALLREDUCE(TRACET,WORK(1,1,1,1),IWORK,
+     +                     MPI_DOUBLE_COMPLEX,MPI_SUM,
+     +                     t_mpi_c_grid%mympi_comm_ie,IERR)
+        CALL ZCOPY(IWORK,WORK(1,1,1,1),1,TRACET,1)
+      endif
+      
+      deallocate(WORK, stat=ierr)
+      if(ierr/=0) stop 'Error deallocating work for communication of GS'
 #endif
 
       IF ( TEST('flow    ') .and. (t_inc%i_write>0)) 

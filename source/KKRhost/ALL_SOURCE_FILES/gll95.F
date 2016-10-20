@@ -60,45 +60,55 @@ C     .. External Functions ..
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ABS,DBLE
+#ifdef CPP_hybrid
+      INTEGER thread_id
+#endif
 C     ..
       NGD1 = NACLSMAX*LMGF0D
       NDIM = LMGF0D*NATOM
-      
-#ifdef CPP_hybrid
-!$omp parallel default(none) 
-!$omp& private( n1, n2, rdiff, absrdiff, gll, gref0, info  )
-!$omp& private( nlm1, nlm2, dgllde, lm2, lm1, i )
-!$omp& shared( tolrdif, natom, ratom, alat, cleb, icleb, loflm )
-!$omp& shared( iend, gref, lly, dgde, ez, ndim, ngd1, out_wr )
-!$omp& shared( gtref, dgtde, ipvt, dgtde0, t_inc, lly_g0tr, dgdeout )
-#endif
 
-      ALLOCATE(GREF(NGD1,NGD1),GLL(LMGF0D,LMGF0D),DGLLDE(LMGF0D,LMGF0D),
-     &        GTREF(NGD1,LMGF0D),DGTDE(NGD1,LMGF0D),IPVT(NGD1),STAT=LM1)
-      IF(LM1/=0) stop 'Error allocating gref etc. <GLL95>'
-!       IF ( LM1.NE.0 ) THEN
-!          WRITE(6,99001) 'GREF/GLL/DGLLDE/GTREF'
-!          STOP '           < GLL95 > '
-!       END IF
-      GREF(:,:) = CZERO
-      GLL(:,:) = CZERO
-      DGLLDE(:,:) = CZERO
+      
+!     ! !ALLOCATE(GREF(NGD1,NGD1),GLL(LMGF0D,LMGF0D),DGLLDE(LMGF0D,LMGF0D),
+!     !&        GTREF(NGD1,LMGF0D),DGTDE(NGD1,LMGF0D),IPVT(NGD1),STAT=LM1)
+
+
+      ALLOCATE( GTREF(NGD1,LMGF0D),DGTDE(NGD1,LMGF0D), stat=lm1)
+      IF(LM1/=0) stop 'Error allocating gtref etc. <GLL95>'
       GTREF(:,:) = CZERO
       DGTDE(:,:) = CZERO
+      
+      ALLOCATE(GREF(NGD1,NGD1),IPVT(NGD1),STAT=LM1)
+      IF(LM1/=0) stop 'Error allocating gref etc. <GLL95>'
+      GREF(:,:) = CZERO
       IPVT(:) = 0
       IF (LLY.NE.0) THEN
          ALLOCATE ( DGTDE0(NGD1,NGD1) , DGDE(NGD1,NGD1), STAT=LM1 )
          IF(LM1/=0) stop 'Error allocating dgtde0 etc. <GLL95>'
-!          IF ( LM1.NE.0 ) THEN
-!             WRITE(6,99001) 'DGTDE/DGTDE0/DGDE'
-!             STOP '           < GLL95 > '
-!          END IF
+         DGTDE0(:,:) = CZERO
+         DGTDE(:,:) = CZERO
+      ENDIF
+      IF (LLY.NE.0) THEN
+         ALLOCATE ( DGTDE0(NGD1,NGD1) , DGDE(NGD1,NGD1), STAT=LM1 )
+         IF(LM1/=0) stop 'Error allocating dgtde0 etc. <GLL95>'
          DGTDE0(:,:) = CZERO
          DGTDE(:,:) = CZERO
       ENDIF
 99001 FORMAT(6X,"ERROR: failed to allocate array(s) :",A,/)
       IF (TEST('flow    ').and.(t_inc%i_write>0)) 
      &    WRITE (1337,FMT=*) '>>> GLL95'
+
+
+#ifdef CPP_hybrid
+!$omp parallel default(shared)
+!$omp& private(n1, n2, rdiff, absrdiff, lm2, lm1, nlm2, nlm1, GLL)
+!$omp& private(thread_id, gtref, dgtde, DGLLDE)
+      thread_id = omp_get_thread_num()
+#endif
+      ! allocate here, inside omp parallel region
+      ALLOCATE(GLL(LMGF0D,LMGF0D),DGLLDE(LMGF0D,LMGF0D), stat=lm1)
+      IF(LM1/=0) stop 'Error allocating gll etc. <GLL95>'
+      GLL(:,:) = CZERO
+      DGLLDE(:,:) = CZERO
 
 c
 c ---> construct free Green's function
@@ -136,6 +146,10 @@ C
       END DO
 #ifdef CPP_hybrid
 !$omp end do
+      ! deallocate in omp parallel region
+      DEALLOCATE( GLL, DGLLDE, STAT=LM1)
+      IF ( LM1.NE.0 ) STOP ' [gll13] dealloc'
+!$omp end parallel
 #endif
       IF (TEST('flow    ').and.(t_inc%i_write>0)) 
      &      WRITE (1337,FMT=*) 'GFREE o.k.'
@@ -172,10 +186,6 @@ c ----------------------------------------------------------------------
       END IF ! (LLY.NE.0)
 ! LLY Lloyd
 ! ----------------------------------------------------------------------
-
-#ifdef CPP_hybrid
-!$omp do
-#endif
       DO N2 = 1,NATOM
          NLM2 = (N2-1)*LMGF0D + 1
          ! GTREF =  -g*t
@@ -187,9 +197,6 @@ c ----------------------------------------------------------------------
          IF (TEST('REFPOT  ').and.(t_inc%i_write>0)) WRITE (1337,FMT=*)
      &                         N2,REFPOT(ABS(ATOM(N2)))
       END DO
-#ifdef CPP_hybrid
-!$omp end do
-#endif
 
       IF (TEST('WAIT    ')) WRITE (6,FMT=*) 'Input I'
       IF (TEST('WAIT    ')) READ (5,FMT=*) I
@@ -229,31 +236,22 @@ c ----------------------------------------------------------------------
 ! ----------------------------------------------------------------------
 
 
-#ifdef CPP_hybrid
-!$omp critical
-#endif
       IF (TEST('flow    ').and.(t_inc%i_write>0)) 
      &      WRITE (1337,FMT=*) 'GREFSY o.k.'
-! #ifdef CPP_hybrid
-! !$omp end critical
-! #endif
-! 
-! #ifdef CPP_hybrid
-! !$omp critical
-! #endif
+
       IF (OUT_WR.GT.0) WRITE (OUT_WR) ((GREF0(N,M),M=1,LMGF0D),N=1,NGD1)
-#ifdef CPP_hybrid
-!$omp end critical
-#endif
 
       ! deallocate arrays
-      DEALLOCATE( GREF, GLL, DGLLDE, GTREF, DGTDE, IPVT, STAT=LM1)
+      DEALLOCATE( GTREF, DGTDE, GREF, IPVT, STAT=LM1)
       IF ( LM1.NE.0 ) STOP ' [gll13] dealloc'
       IF (LLY.NE.0) THEN
          DEALLOCATE ( DGTDE0 , DGDE, STAT=LM1 )
          IF ( LM1.NE.0 ) STOP ' [gll13] dealloc'
       END IF
-#ifdef CPP_hybrid
-!$omp end parallel
-#endif
       END
+
+
+
+
+
+

@@ -38,7 +38,7 @@ C                 taken. Could also be a logical variable.
 C==========================================================================
       implicit none
       integer MAXK1,MAXK2,MAXK3,NSYMAXD
-      PARAMETER (MAXK1=500,MAXK2=500,MAXK3=100,NSYMAXD=48)
+      PARAMETER (MAXK1=501,MAXK2=501,MAXK3=100,NSYMAXD=48)
       !PARAMETER (MAXK1=350,MAXK2=350,MAXK3=70,NSYMAXD=48)
 C i/o
       ! made local ibk array allocatable to not take too much memory
@@ -164,9 +164,10 @@ C
               DO J = 1,3
                   BV(J) = DDOT(3,GQ(1,J),1,BGP(1,I),1)
               END DO
+              
               CALL DGEMV('N',3,3,1D0,BGINV,3,BV,1,0D0,CF,1)
 C     
-              DO J = 1,3
+              DO J = 1,NDIM
                   IF ( ABS(NINT(CF(J))-CF(J)).GT.1D-8 ) 
      &                 WRITE (1337,99006) I,J,CF(J)
                   NBGP(J,I,IS) = NINT(CF(J))

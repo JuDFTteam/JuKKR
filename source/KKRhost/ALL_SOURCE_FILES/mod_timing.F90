@@ -109,8 +109,11 @@ subroutine timing_stop(mykey2, save_out)
   CALL SYSTEM_CLOCK(COUNT_RATE=clock_rate) ! Find the rate
   CALL SYSTEM_CLOCK(COUNT=stop_time) ! Stop timing
 
-
-  timing = (stop_time-start_time(ikey))/real(clock_rate)+interm_time(ikey)
+  if(ispaused(ikey)==1) then
+     timing = interm_time(ikey)
+  else
+     timing = (stop_time-start_time(ikey))/real(clock_rate)+interm_time(ikey)
+  end if
 
   call timing_delkey(mykey)
 

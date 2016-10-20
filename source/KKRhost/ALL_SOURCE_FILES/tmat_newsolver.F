@@ -533,7 +533,7 @@ c        notice that exchange the order of left and right hankel/bessel function
            open(9999, file='wavefunctions.txt')
            write(9999,'(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
            write(9999,'(1000E26.17)') rnew(1:irmdnew)
-           write(*,*) ntotd, npan_tot, ncheb, nsra, irmdnew, lmmaxso, ie
+!            write(*,*) ntotd, npan_tot, ncheb, nsra, irmdnew, lmmaxso, ie
            do ir=1,irmdnew
              do lm1=1,nsra*lmmaxso
                do lm2=1,lmmaxso
@@ -580,14 +580,29 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #endif 
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
-                write(*,*) 'writing tmat', irec, lmmaxso
-                
-!                 if(test('rhoqtest')) then
+                if(test('rhoqtest')) then
+!                 write(*,*) 'writing tmat', irec, lmmaxso
+
+                  if(ie_num==1.and.i1==1) then
+                    write(*,*)                      ! status bar
+                    write(*,*) 'rhoq: write-out loop'
+                    write(*,
+     &   '("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')
+     &                          0, 20, 40, 60, 80, 100
+                    write(*,FMT=190) !beginning of statusbar
+                  endif
+                  
+                  if(t_params%NATYP>=50) then
+                    if(mod(I1,t_params%NATYP/50)==0) write(6,FMT=200)
+                  else
+                    write(6,FMT=200)
+                  end if
+                           
 !                 write(*,*) 'rotating with', theta, phi
 !             LMGF0D= (LMAXD+1)**2
 !             CALL ROTATEMATRIX(TMATLL,THETA,PHI,LMGF0D,0)
-!                 end if
-                
+                end if     
+                           
             WRITE(69,REC=IREC) TMATLL(:,:)
 !             WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
          else
@@ -629,6 +644,12 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #ifdef CPP_OMP
 !$omp end parallel do
 #endif
+
+
+190     FORMAT('                 |'$)   ! status bar
+200     FORMAT('|'$)                    ! status bar
+        if(test('rhoqtest').and.i1==t_params%natyp) write(6,*) ! status bar
+        ! finished kpts status bar
 
 
        DEALLOCATE(VINS, VNSPLL0, VNSPLL1, VNSPLL, stat=ierr)
