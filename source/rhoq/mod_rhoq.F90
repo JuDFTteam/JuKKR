@@ -1287,9 +1287,9 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   write(*,FMT=190) !beginning of statusbar
   
   call timing_start('calc rhoq - q-loop')
-#ifdef CPP_explicit
+! #ifdef CPP_explicit
   !$omp parallel default(shared) private(q, tmpsum1, tmpsum2, k, kpq, kweight, i, j, tmp, tr_tmpsum1, tr_tmpsum2, mythread, nthreads, irec, ixyz, exG0_tmp, QdotL, tmpk, tmpr, q_mu, ifun, lm1, lm2, lm3, ir, qint, l1, m1, lm01, lm02, lm0, Z, Ylm, cYlm, phi, costheta, Rq, eiqr_lm, jl)
-#endif
+! #endif
 !   write(*,*) 'alloc tmpsum'
   allocate(tmpsum1(N,N), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum1'
@@ -1328,13 +1328,22 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 
   if(mythread==0) call timing_start('calc rhoq - q>k-loop>red_Q')
   !write(*,*) 'alloc A,B,C'  
-  allocate(A(N*Nkp,N,t_rhoq%Nscoef), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] error allocating A'
-  allocate(B(N,N*Nkp,t_rhoq%Nscoef), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] error allocating B'
-  allocate(C(N,N*Nkp,t_rhoq%Nscoef), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] error allocating C'
+#ifdef CPP_OMP2
+  if(mythread==0) then
+#endif
+    allocate(A(N*Nkp,N,t_rhoq%Nscoef), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] error allocating A'
+    allocate(B(N,N*Nkp,t_rhoq%Nscoef), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] error allocating B'
+    allocate(C(N,N*Nkp,t_rhoq%Nscoef), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] error allocating C'
   
+#ifdef CPP_OMP2
+  end if
+  !$omp barrier
+  
+  !$omp do
+#endif
   do k=1,Nkp
     !A_j(k) = sum_i (G0_0i(k)*kweight*tau_ij)
     do j=1,t_rhoq%Nscoef
@@ -1354,11 +1363,20 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
     
     end do
   end do
-  if(mythread==0) call timing_pause('calc rhoq - q>k-loop>red_Q')
+#ifdef CPP_OMP2
+  !$omp end do
 #endif
-  
+
+  if(mythread==0) call timing_pause('calc rhoq - q>k-loop>red_Q')
+
+#endif
+
+
+
+#ifdef CPP_explicit
 #ifndef CPP_OMP2
   !$omp do
+#endif
 #endif
   do q=1,Nqpt !q-loop     
    
@@ -1423,11 +1441,11 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
              ! tmp = tau*exG0_k(k)
              tmp(1:N,1:N) = C0
              if(mythread==0) call timing_start('calc rhoq - q>k-loop>1.ZGEMM')
-             !call ZGEMM('n','n',N,N,N,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
+             call ZGEMM('n','n',N,N,N,C1,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
              ! tmpsum1 = tmpsum1 + G0_k(k+q)*tmp*kweight
              if(mythread==0) call timing_start('calc rhoq - q>k-loop>2.ZGEMM')
-             !call ZGEMM('n','n',N,N,N,kweight,G0ij_k(1:N,1:N,i,kpq),N,tmp(1:N,1:N),N,C1,tmpsum1(1:N,1:N),N)
+             call ZGEMM('n','n',N,N,N,kweight,G0ij_k(1:N,1:N,i,kpq),N,tmp(1:N,1:N),N,C1,tmpsum1(1:N,1:N),N)
              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>2.ZGEMM')
            
                !!!!!!!!!!!!!!! WARNING WARNING WARNING WARNING WARNING WARNING !!!!!!!!!!!!!!!!!!!!!
@@ -1496,6 +1514,9 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 
              
          ! now multiply A_j.C_j and sum over all j
+#ifdef CPP_OMP2
+         !$omp do
+#endif
          do j=1,t_rhoq%Nscoef
              ! Sum( Int( exG0_i(k+q) tau_i,j exG0_j(k); dk ); i,j)
              
@@ -1507,10 +1528,13 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
              
              if(mythread==0) call timing_start('calc rhoq - q>k-loop>2.ZGEMM')
-!              call ZGEMM('n','n',N,N,N*Nkp,kweight,C,N,A,N*Nkp,C0,tmpsum1)
+             call ZGEMM('n','n',N,N,N*Nkp,kweight,C,N,A,N*Nkp,C0,tmpsum1,N)
              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>2.ZGEMM')
 
          end do ! j
+#ifdef CPP_OMP2
+         !$omp end do
+#endif
          if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
          
          
@@ -1733,8 +1757,10 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 #endif
        
   end do !q
+#ifdef CPP_explicit
 #ifndef CPP_OMP2
   !$omp end do
+#endif
 #endif
   if(mythread==0) call timing_stop('calc rhoq - q>k-loop>red_Q')
   if(mythread==0) call timing_stop('calc rhoq - q>k-loop>phase1')
@@ -1749,9 +1775,9 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   
   deallocate(tmpsum1, tmpsum2, tmp, qint , eiqr_lm, jl, Ylm)
   
-#ifdef CPP_explicit
+! #ifdef CPP_explicit
   !$omp end parallel
-#endif
+! #endif
   call timing_stop('calc rhoq - q-loop')
   
   ! done calculating rho(q)
