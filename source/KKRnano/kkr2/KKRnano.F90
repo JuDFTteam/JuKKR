@@ -37,12 +37,10 @@ program KKRnano
 
   use CalculationData_mod, only: CalculationData, create, prepareMadelung, destroy
   use CalculationData_mod, only: getAtomData, getLDAUData
-  use BrillouinZoneMesh_mod, only: BrillouinZoneMesh
   
   use KKRzero_mod, only: main0
   use PotentialConverter_mod, only: kkrvform
   
-  use BrillouinZoneMesh_mod, only: BrillouinZoneMesh, create, load, destroy
   implicit none
 
   type(CalculationData) :: calc_data
@@ -62,8 +60,6 @@ program KKRnano
 
   type(BasisAtom), pointer :: atomdata
   type(LDAUData), pointer  :: ldau_data
-  
-! type(BrillouinZoneMesh) :: kmesh(8)
 
   external :: MPI_Init
   character(len=16) :: arg
@@ -157,10 +153,7 @@ program KKRnano
   call load(params, 'bin.input', ios=ios)
   ! done reading variables
 
-
   if (params%JIJ .and. dims%nspind /= 2) die_here("Jij calculation not possible for spin-unpolarized calc.")
-
-!  if (dims%LLY /= 0) die_here("Lloyds formula not supported in this version. Set lly=0")
 
   !=====================================================================
   ! processors not fitting in NAEZ*LMPID*SMPID*EMPID do nothing ... and wait after SC-ITER loop

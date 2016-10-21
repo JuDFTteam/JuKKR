@@ -9,7 +9,6 @@ module BrillouinZone_mod
   integer, parameter :: maxmshd = 8
   
   contains
-
   
   !------------------------------------------------------------------------
   ! Read k-mesh file
@@ -37,16 +36,16 @@ module BrillouinZone_mod
 
     rewind (fu) ! rewind the files to the beginning (probably legacy code)
     
-    read (fu, fmt=*) maxm ! read the maximum number of k-meshes given in that file
-    read (fu, fmt='(a)') comment
+    read(fu, fmt=*) maxm ! read the maximum number of k-meshes given in that file
+    read(fu, fmt='(a)') comment
     do l = 1, min(maxmesh, maxm)
-      read (fu, fmt='(i8,f15.10)') nofks(l), volbz(l)
-      read (fu, fmt='(a)') comment
+      read(fu, fmt='(i8,f15.10)') nofks(l), volbz(l)
+      read(fu, fmt='(a)') comment
       do i = 1, nofks(l)
-        read (fu, fmt=*) bzkp(1:3,i,l), volcub(i,l)
+        read(fu, fmt=*) bzkp(1:3,i,l), volcub(i,l)
       enddo ! i
     enddo ! l
-    close (fu)
+    close(fu)
     
   endsubroutine ! readKpointsFile
   
