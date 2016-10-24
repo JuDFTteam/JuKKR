@@ -3,10 +3,10 @@
 default: install
 
 FC =  ifort
+mpi: FC = /usr/local/impi/bin/mpifort
+
 
 FILENAME0 = rhoq.x
-explicit1: FILENAME0 = rhoq.x_expl1
-explicit2: FILENAME0 = rhoq.x_expl2
 
 ####################################################
 # Libraries                                        #
@@ -26,15 +26,12 @@ LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_th
 # C preprocessor options                           #
 ####################################################
 # Default option
-CPP= -D CPP_OMP2 
+CPP= -D noCPP 
 #-D noCPP 
-#-D CPP_explicit -D CPP_OMP2
 # change to if flag is matched
 openmp:   CPP = -D CPP_OMP
 mpidebug: CPP = -D CPP_MPI
 mpi:      CPP = -D CPP_MPI
-explicit1: CPP = -D CPP_explicit
-explicit2: CPP= -D CPP_explicit -D CPP_OMP2
 
 ####################################################
 # Compiler flags                                   #
@@ -43,7 +40,8 @@ explicit2: CPP= -D CPP_explicit -D CPP_OMP2
 # use -mcmodel=medium -shared-intel if you get the error message 
 # '...relocation truncated to fit...' when trying to compile, 
 # this happens for example for natyp>=75, iemxd>=101, KORBIT=1
-FFLAGS       =  -O3 -openmp -traceback -vec-report1 -xhost
+FFLAGS       =  -O3 -openmp -xhost
+#-vec-report1 -xhost
 #-vec-report5
 # -qopt-report=5 -qopt-report-phase=loop,vec -qopt-report-file=stdout
 #-CB -check all -check noarg_temp_created -g
@@ -55,10 +53,6 @@ mpidebug: FFLAGS = -g -CB -check all,noarg_temp_created  -traceback #-mcmodel=me
 
 OPENMPFLAGS = 
 openmp: OPENMPFLAGS = -openmp
-
-
-#explicit1: FFLAGS = -O0 -openmp -r8 -CB -check all,noarg_temp_created,uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
-#explicit2: FFLAGS = -O0 -openmp -r8 -CB -check all,noarg_temp_created,uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
 
 
 ####################################################
@@ -91,9 +85,8 @@ compile:  getversion $(SRCS)
 	$(FC) $(LLIBS) -o $(FILENAME0) $(SRCS) $
 
 serial: compile
-explicit1: compile
-explicit2: compile 
 debug: compile
+mpi: compile
 install: clean serial
 
 

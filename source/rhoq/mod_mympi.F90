@@ -19,9 +19,10 @@ contains
 
 #ifdef CPP_MPI
     use mpi
-#endif
+    
+        integer :: ierr
 
-!     integer :: ierr
+#endif
 
     master = 0
 
