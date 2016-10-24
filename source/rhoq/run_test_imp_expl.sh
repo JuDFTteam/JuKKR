@@ -1,9 +1,9 @@
 echo 'compile'
 cd ../
-make clean
-make serial
-make explicit1
-make explicit2
+#make clean
+#make serial
+#make explicit1
+#make explicit2
 
 cd -
 echo 'run tests'

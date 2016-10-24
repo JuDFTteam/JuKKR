@@ -1,6 +1,6 @@
 *.o
 *.mod
-rhoq.x
+rhoq.x*
 test_system/*
 *.exe
 *~

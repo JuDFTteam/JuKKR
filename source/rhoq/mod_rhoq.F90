@@ -1296,7 +1296,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   write(*,FMT=190) !beginning of statusbar
   
   call timing_start('calc rhoq - q-loop')
-    
+
   allocate(tmpsum1(N,N), tmpsum2(N,N), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating tmpsum1/2'
   
