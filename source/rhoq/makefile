@@ -26,7 +26,7 @@ LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_th
 # C preprocessor options                           #
 ####################################################
 # Default option
-CPP= -D noCPP
+CPP= -D CPP_OMP2 
 #-D noCPP 
 #-D CPP_explicit -D CPP_OMP2
 # change to if flag is matched
@@ -55,6 +55,12 @@ mpidebug: FFLAGS = -g -CB -check all,noarg_temp_created  -traceback #-mcmodel=me
 
 OPENMPFLAGS = 
 openmp: OPENMPFLAGS = -openmp
+
+
+#explicit1: FFLAGS = -O0 -openmp -r8 -CB -check all,noarg_temp_created,uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
+#explicit2: FFLAGS = -O0 -openmp -r8 -CB -check all,noarg_temp_created,uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
+
+
 ####################################################
 # Linking                                          #
 ####################################################
@@ -85,10 +91,10 @@ compile:  getversion $(SRCS)
 	$(FC) $(LLIBS) -o $(FILENAME0) $(SRCS) $
 
 serial: compile
-explicit1: clean compile
-explicit2: clean compile 
+explicit1: compile
+explicit2: compile 
 debug: compile
-install: clean serial explicit1 explicit2
+install: clean serial
 
 
 mod_%.o: %.f90
