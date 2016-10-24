@@ -462,8 +462,8 @@ C     ..
      &             ' serial number for files: ', serialnr
  2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)//2A/79(1H*)/ )
 
-#ifdef CPP_OMP
-!$omp parallel shared(nth,ith)
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+!$omp parallel shared(nth) private(ith)
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
       if(ith==0) then
@@ -788,24 +788,41 @@ C ----------------------------------------------------------------------
 C --> calculate Madelung constants (needed only for SCF calculations)
 C ----------------------------------------------------------------------
 cfivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
-      !OPEN(99,FILE='madelinfo.txt')
-      IF ( LINTERFACE ) THEN
-C -------------------------------------------------------------- 2D case
-         CALL MADELUNG2D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,
-     &                      BRAVAIS,RECBV,RBASIS,RMAX,GMAX,
-     &                      NLBASIS,NLEFT,ZPERLEFT,TLEFT,
-     &                      NRBASIS,NRIGHT,ZPERIGHT,TRIGHT,
-     &                      LMXSPD,LASSLD,LPOTD,LMPOTD,
-     &                      NMAXD,ISHLD,NEMBD1,WLENGTH)
-      ELSE
-C -------------------------------------------------------------- 3D case
-         CALL MADELUNG3D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,
-     &                      BRAVAIS,RECBV,RBASIS,RMAX,GMAX,
-     &                      NAEZD,LMXSPD,LASSLD,LPOTD,LMPOTD,
-     &                      NMAXD,ISHLD,NEMBD,WLENGTH)
-      END IF
+      IF (NPOL.NE.0) THEN  ! No madelung calculation in case of DOS.
+         !OPEN(99,FILE='madelinfo.txt')
 
-      !CLOSE(99)
+! Use option 'ewald2d' if the madelung summation is to be carried out in
+! single-slab mode, otherwise it is carried out in repeated (periodic)
+! slab mode.
+! Reason: the 2d-mode gives wrong results sometimes [e.g. in diamond
+! structure (110)].
+         IF (LINTERFACE.AND.( OPT('ewald2d ').OR.OPT('DECIMATE'))) THEN ! ewald2d
+            WRITE(*,*) 'Calling MADELUNG2D'
+C -------------------------------------------------------------- 2D case
+            CALL MADELUNG2D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,
+     &                         BRAVAIS,RECBV,RBASIS,RMAX,GMAX,
+     &                         NLBASIS,NLEFT,ZPERLEFT,TLEFT,
+     &                         NRBASIS,NRIGHT,ZPERIGHT,TRIGHT,
+     &                         LMXSPD,LASSLD,LPOTD,LMPOTD,
+     &                         NMAXD,ISHLD,NEMBD1,WLENGTH)
+            WRITE(*,*) 'Exited MADELUNG2D'
+         ELSE
+C -------------------------------------------------------------- 3D case
+            IF ( LINTERFACE )
+     &         CALL GETBR3(                                         ! ewald2d
+     >                     NEMBD1,NLBASIS,ALAT,TLEFT,NRBASIS,TRIGHT,
+     X                     BRAVAIS,RECBV,VOLUME0)
+
+            WRITE(*,*) 'Calling MADELUNG3D'
+            CALL MADELUNG3D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,
+     &                         BRAVAIS,RECBV,RBASIS,RMAX,GMAX,
+     &                         NAEZD,LMXSPD,LASSLD,LPOTD,LMPOTD,
+     &                         NMAXD,ISHLD,NEMBD,WLENGTH)
+            WRITE(*,*) 'Exited MADELUNG3D'
+         END IF
+
+         !CLOSE(99)
+      ENDIF
 C ----------------------------------------------------------------------
 cfivos      END IF
 C ======================================================================

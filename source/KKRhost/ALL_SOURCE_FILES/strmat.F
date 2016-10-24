@@ -29,6 +29,9 @@ C *  Dimension of arrays GN,RM changed from (4,*) to (3,*), the 4th    *
 C *  one not being used (see also lattice3d)     v.popescu May 2004    *
 C *                                                                    *
 C **********************************************************************
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+      use omp_lib
+#endif
       IMPLICIT NONE
 C     ..
 C     .. Parameters ..
@@ -99,6 +102,12 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 C **********************************************************************
+#if defined(CPP_OMP) .OR. defined(CPP_hybrid)
+!$omp parallel do default(shared) private(DQ1, DQ2, DQ3, STEST)
+!$omp& private(LM, NSTART, IT, NRS, NGS, NRE, NGE, I, R1 , R2)
+!$omp& private(R3 , R, YLM, ALPHA, G, L, RFAC, M, G1, G2)
+!$omp& private(G3, GA, BETA, EXPBSQ, DQDOTG, BFAC, S)
+#endif
       DO I1 = 1,NAEZ
          DO I2 = 1,NAEZ
 C======================================================================
@@ -215,6 +224,9 @@ C ---------------------------------------------------------------------
 C +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
          END DO
       END DO
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+!$omp end parallel do
+#endif
 C **********************************************************************
 C
       IF ( IPRINT.LT.2 ) RETURN
