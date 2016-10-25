@@ -15,7 +15,7 @@ module SparseMatrixDescription_mod
   type SparseMatrixDescription
     !> block dimensions of block-rows and block-cols
 !   integer, allocatable :: kvstr(:)
-    !> For each block row, give index in ja (and ka)
+    !> For each block row, give start index in ja
     integer, allocatable :: ia(:)
     !> Column-indices of non-zero blocks
     integer, allocatable :: ja(:)
@@ -27,7 +27,7 @@ module SparseMatrixDescription_mod
     !> maximal block dimension
     integer :: max_blockdim = 0
     !> Maximum number of non-zero blocks per block-row
-    integer :: max_blocks_per_row = 0
+    integer :: max_blocks_per_row = 0 ! is only needed in vbrmv_mat
   endtype
 
   interface create

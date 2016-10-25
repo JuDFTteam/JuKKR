@@ -27,7 +27,7 @@ module vbrmv_mat_mod
 !   integer, intent(in) :: ka(:)
 !   integer, intent(in) :: kvstr(:)
     integer, intent(in) :: max_blockdim, max_blocks_per_row
-    double complex, intent(in)  :: A(:), x(:,:)
+    double complex, intent(in)  :: A(:,:,:), x(:,:)
     double complex, intent(out) :: Ax(:,:)
     integer(kind=8), intent(inout) :: nFlops
     !-----------------------------------------------------------------------
@@ -76,7 +76,7 @@ module vbrmv_mat_mod
       nsum  = 0
 
 !     k = ka(ia(ibr))
-      k = max_blockdim*max_blockdim*(ia(ibr) - 1) + 1
+!     k = max_blockdim*max_blockdim*(ia(ibr) - 1) + 1
 !     if ( k /= ka(ia(ibr)) ) stop 'computed k differs from listed k!'
       do j = ia(ibr), ia(ibr+1)-1
         ibc  = ja(j)
@@ -94,7 +94,7 @@ module vbrmv_mat_mod
         nsum = nsum + nblk
       enddo ! j
 
-      call ZGEMM('N', 'N', nrows, nRHSs, nsum, ONE, A(k:), nrows, Buffer, leaddim_Buffer, ZERO, Ax(isr,1), leaddim_Ax)
+      call ZGEMM('N', 'N', nrows, nRHSs, nsum, ONE, A(1,1,ia(ibr)), nrows, Buffer, leaddim_Buffer, ZERO, Ax(isr,1), leaddim_Ax)
       nFlops = nFlops + (8_8*nrows)*(nRHSs*nsum)
 
     enddo ! ibr

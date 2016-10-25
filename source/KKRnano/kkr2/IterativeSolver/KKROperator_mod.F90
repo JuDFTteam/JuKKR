@@ -52,7 +52,7 @@ module KKROperator_mod
     integer, intent(in) :: lmmaxd
     integer(kind=2), intent(in) :: atom_indices(:)
 
-    integer :: sum_cluster, nCols, nRows
+    integer :: sum_cluster, nCols, nRows, nBlocks
 
     self%cluster_info => cluster_info
 
@@ -77,8 +77,13 @@ module KKROperator_mod
     
     allocate(self%mat_B(nRows,nCols))
     allocate(self%mat_X(nRows,nCols))
-    allocate(self%mat_A(getNNZ(self%sparse),1,1)) ! allocate memory for sparse matrix
-    allocate(self%mat_dAdE(getNNZ(self%sparse),1,1)) ! allocate memory for derivative
+    nBlocks = size(self%sparse%ja)
+    nCols = self%sparse%max_blockdim
+    nRows = self%sparse%max_blockdim
+!     allocate(self%mat_A(getNNZ(self%sparse),1,1)) ! allocate memory for sparse matrix
+!     allocate(self%mat_dAdE(getNNZ(self%sparse),1,1)) ! allocate memory for derivative
+    allocate(self%mat_A(nRows,nCols,nBlocks)) ! allocate memory for the KKR operator
+    allocate(self%mat_dAdE(nRows,nCols,nBlocks)) ! allocate memory for its energy derivative
     
   endsubroutine ! create
 
@@ -109,13 +114,13 @@ module KKROperator_mod
     integer(kind=8), intent(inout) :: nFlops
 
     ! perform sparse VBR matrix * dense matrix
-    call multiply_vbr(self%mat_A(:,1,1), mat_X, mat_AX, self%sparse, nFlops)
+    call multiply_vbr(self%mat_A, mat_X, mat_AX, self%sparse, nFlops)
   endsubroutine ! apply
 
   subroutine multiply_vbr(A, x, Ax, sparse, nFlops)
     use vbrmv_mat_mod, only: vbrmv_mat
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
-    double complex, intent(in)  :: A(:), x(:,:)
+    double complex, intent(in)  :: A(:,:,:), x(:,:)
     double complex, intent(out) :: Ax(:,:)
     type(SparseMatrixDescription), intent(in) :: sparse
     integer(kind=8), intent(inout) :: nFlops
