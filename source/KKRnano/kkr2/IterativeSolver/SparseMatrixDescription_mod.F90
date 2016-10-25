@@ -76,21 +76,16 @@ module SparseMatrixDescription_mod
     type(SparseMatrixDescription), intent(in) :: self
 
     getNNZ = self%ka(self%ia(self%blk_nrows + 1)) - 1
-
   endfunction ! get
 
   !----------------------------------------------------------------------------
   !> Returns number of non-zero elements (only if properly setup!).
-  integer function getNrows(self, naez)
+  integer function getNrows(self)
     type(SparseMatrixDescription), intent(in) :: self
-    integer, intent(in), optional :: naez
 
-    if (present(naez)) then
-      getNrows = self%kvstr(naez + 1) - 1 ! never happens, ToDo: remove
-    else
-      getNrows = self%kvstr(self%blk_nrows + 1) - 1
-    endif
-    
+!   getNrows = self%kvstr(self%blk_nrows + 1) - 1
+    getNrows = self%max_blockdim*self%blk_nrows
+    if (getNrows /= self%kvstr(self%blk_nrows + 1) - 1 ) stop __LINE__
   endfunction ! get
   
   !----------------------------------------------------------------------------

@@ -137,7 +137,8 @@ module kkrmat_mod
                      global_atom_idx_lly ,lly) !LLY
 
       do ila = 1, num_local_atoms
-        call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%kvstr, ila) ! extract solution
+!       call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%kvstr, ila) ! extract solution
+        call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%max_blockdim, ila) ! extract solution
 
         ! ----------- Integrate Scattering Path operator over k-points --> GS -----
         ! Note: here k-integration only in irreducible wedge
@@ -190,11 +191,12 @@ module kkrmat_mod
   !------------------------------------------------------------------------------
   !> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
   !> dependent on (k,E) into matrix G_diag
-  subroutine getGreenDiag(G_diag, mat_X, atom_index, kvstr, local_atom_index)
+  subroutine getGreenDiag(G_diag, mat_X, atom_index, blockdim, local_atom_index) !, kvstr
     double complex, intent(out) :: G_diag(:,:) ! dim(lmmaxd,lmmaxd)
     double complex, intent(in) :: mat_X(:,:)
     integer(kind=2), intent(in) :: atom_index 
-    integer, intent(in) :: kvstr(:)
+!   integer, intent(in) :: kvstr(:)
+    integer, intent(in) :: blockdim
     integer, intent(in) :: local_atom_index 
 
     integer :: lmmax1, start, ila !< local atom index
@@ -207,8 +209,10 @@ module kkrmat_mod
     ila = local_atom_index
     G_diag = zero
 
-    start  = kvstr(atom_index) - 1
-    lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
+!   start  = kvstr(atom_index) - 1
+!   lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
+    start  = blockdim*(atom_index - 1) + 1 - 1
+    lmmax1 = blockdim
 
     ASSERT(lmmax1 == size(G_diag, 1))
     ASSERT(lmmax1 == size(G_diag, 2))
@@ -337,9 +341,9 @@ module kkrmat_mod
       TESTARRAYLOG(3, op%DGLLh)
 
       call convertToFullMatrix(op%GLLH, op%sparse%ia, op%sparse%ja, op%sparse%ka, &
-                           op%sparse%kvstr, op%sparse%kvstr, gllke_x)
+                           op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, gllke_x)
       call convertToFullMatrix(op%DGLLH, op%sparse%ia, op%sparse%ja, op%sparse%ka, &
-                           op%sparse%kvstr, op%sparse%kvstr, dgde) 
+                           op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, dgde) 
 
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
@@ -420,7 +424,7 @@ module kkrmat_mod
         allocate(full(n,n), stat=ist)
         if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
-      call convertToFullMatrix(op%GLLh, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%kvstr, op%sparse%kvstr, full)
+      call convertToFullMatrix(op%GLLh, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, full)
       TESTARRAYLOG(3, full)
       call solveFull(full, op%mat_B, op%mat_X)
     endif ! cutoffmode == 4

@@ -33,9 +33,11 @@ module fillKKRMatrix_mod
     integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0),nrows)
     type(SparseMatrixDescription), intent(inout) :: sparse
 
-    integer :: nnzb, nrows, ncols, ij, irow, icol, jcol, start_address, row_block, col_block
+    integer :: nnzb, nrows, ncols, ij, irow, icol, jcol, start_address, row_block, col_block, lmmaxd, lmax
 
     nrows = size(lmax_array)
+    lmax = maxval(lmax_array)
+    lmmaxd = (lmax + 1)**2
     ncols = nrows ! a logical square matrix
 
     ASSERT( size(numn0) >= nrows )
@@ -60,9 +62,11 @@ module fillKKRMatrix_mod
     ij = 1
     do irow = 1, nrows
       row_block = (lmax_array(irow) + 1)**2
+      ASSERT( row_block == lmmaxd )
       sparse%kvstr(irow+1) = sparse%kvstr(irow) + row_block
       sparse%ia(irow) = ij ! start indices into ja
       sparse%max_blockdim = max(sparse%max_blockdim, row_block)
+      ASSERT( sparse%kvstr(irow+1) == irow*sparse%max_blockdim + 1 ) ! the needs to hold when we want to take out kvstr
       sparse%max_blocks_per_row = max(sparse%max_blocks_per_row, numn0(irow))
       do icol = 1, numn0(irow)
         ASSERT( ij <= nnzb )
@@ -75,12 +79,14 @@ module fillKKRMatrix_mod
         sparse%ja(ij) = jcol
 
         col_block = (lmax_array(jcol) + 1)**2
+        ASSERT( col_block == lmmaxd )
         start_address = start_address + row_block*col_block
 
         ij = ij + 1
       enddo ! icol
     enddo ! irow
     sparse%ka(ij) = start_address
+    ASSERT( sparse%ka(ij) == sparse%max_blockdim**2 * (ij - 1) + 1 ) ! the needs to hold when we want to take out ka
     sparse%ia(nrows+1) = ij ! final, important since the ranges are always [ia(i) ... ia(i+1)-1]
     ASSERT( ij == 1 + nnzb ) ! check
 
@@ -112,14 +118,18 @@ module fillKKRMatrix_mod
     
     start = 0
     do block_row = 1, naez_trc
-      istart_row = sparse%kvstr(block_row)
-      istop_row  = sparse%kvstr(block_row+1)
+!     istart_row = sparse%kvstr(block_row)
+!     istop_row  = sparse%kvstr(block_row+1)
+      istart_row = sparse%max_blockdim*(block_row - 1) + 1
+      istop_row  = sparse%max_blockdim*block_row + 1
       do ind_ia = sparse%ia(block_row), sparse%ia(block_row+1)-1
 
         block_col = sparse%ja(ind_ia) ! ja gives the block-column indices of non-zero blocks
 
-        istart_col = sparse%kvstr(block_col)
-        istop_col  = sparse%kvstr(block_col+1)
+!       istart_col = sparse%kvstr(block_col)
+!       istop_col  = sparse%kvstr(block_col+1)
+        istart_col = sparse%max_blockdim*(block_col - 1) + 1
+        istop_col  = sparse%max_blockdim*block_col + 1
 
 #ifndef NDEBUG
         if (1 > block_row .or. block_row > naez_trc) then
@@ -187,7 +197,8 @@ module fillKKRMatrix_mod
 
       atom_index = atom_indices(ii)
 
-      lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
+!     lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
+      lmmax1 = lmmaxd
 
 #ifndef NDEBUG
       if (lmmax1 /= lmmaxd) then
@@ -202,7 +213,7 @@ module fillKKRMatrix_mod
       ! Note: this is irrelevant, since the central atom
       ! should always be treated with the highest lmax
 
-      start = kvstr(atom_index) - 1
+      start = (atom_index - 1)*lmmaxd ! = kvstr(atom_index) - 1
       do lm2 = 1, lmmax2
         if (present(tmatLL)) then
           mat_B(start+ 1:lmmax1 + start,lm2+lmmax2*(ii-1)) = tmatLL(1:lmmax1,lm2,atom_index)
@@ -222,13 +233,13 @@ module fillKKRMatrix_mod
   !----------------------------------------------------------------------------
   !> Given the sparse matrix data 'smat' and the sparsity information,
   !> create the dense matrix representation of the matrix.
-  subroutine convertToFullMatrix(smat, ia, ja, ka, kvstr, kvstc, full)
+  subroutine convertToFullMatrix(smat, ia, ja, ka, kvstr, kvstc, BlockDim, full)
     double complex, intent(in) :: smat(:)
     integer, intent(in) :: ia(:)
     integer, intent(in) :: ja(:)
     integer, intent(in) :: ka(:)
-    integer, intent(in) :: kvstr(:)
-    integer, intent(in) :: kvstc(:)
+    integer, intent(in) :: kvstr(:), kvstc(:)
+    integer, intent(in) :: BlockDim
     double complex, intent(out) :: full(:,:)
 
     integer :: ibrow, ibcol, irow, icol, nrows, ind, ind_ia
@@ -243,8 +254,10 @@ module fillKKRMatrix_mod
 
         ibcol = ja(ind_ia)
 
-        do icol = kvstc(ibcol), kvstc(ibcol+1) - 1
-          do irow = kvstr(ibrow), kvstr(ibrow+1) - 1
+!       do   icol = kvstc(ibcol), kvstc(ibcol+1) - 1
+!         do irow = kvstr(ibrow), kvstr(ibrow+1) - 1
+      do   icol = BlockDim*(ibcol - 1) + 1, BlockDim*ibcol
+        do irow = BlockDim*(ibrow - 1) + 1, BlockDim*ibrow
 
             full(irow,icol) = smat(ind)
 
@@ -283,43 +296,6 @@ module fillKKRMatrix_mod
     deallocate(ipvt, stat=info)
   endsubroutine ! solveFull
 
-
-#if 0
-!+never
-
-  !------------------------------------------------------------------------------
-  !> Convert solution with l-cutoff to format of solution without l-cutoff.
-  !>
-  !> @param GLLKE1 output: solution in old format
-  !> @param mat_X: solution with l-cutoff
-  subroutine toOldSolutionFormat(gllke1, mat_X, lmmaxd, kvstr)
-    double complex, intent(out) :: gllke1(:,:)
-    double complex, intent(in) :: mat_X(:,:)
-    integer, intent(in) :: lmmaxd
-    integer, intent(in) :: kvstr(:)
-
-    integer :: num_atoms, atom_index, start, lm1, lmmax1
-
-    gllke1 = ZERO
-    num_atoms = size(kvstr) - 1
-
-    do atom_index = 1, num_atoms
-
-      start = kvstr(atom_index) - 1
-      lmmax1 = kvstr(atom_index + 1) - kvstr(atom_index)
-
-      do lm1 = 1, lmmax1
-        gllke1((atom_index-1)*lmmaxd+lm1,:) = mat_X(start+lm1,:)
-      enddo ! lm1
-
-    enddo ! atom_index
-
-  endsubroutine ! toOldSolutionFormat
-
-!-never
-#endif 
-  
-  
   
   !----------------------------------------------------------------------------
   !> Write sparse matrix data (without description) to a formatted or an unformatted file

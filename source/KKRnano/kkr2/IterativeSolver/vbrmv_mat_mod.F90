@@ -63,15 +63,19 @@ module vbrmv_mat_mod
 !$OMP PARALLEL PRIVATE(ibr,ibc,isr,isc,nrows,nsum,nblk,j,iRHSs,Buffer,k) reduction(+:nFlops)
 !$OMP DO
     do ibr = 1, blk_nrows
-      isr   = kvstr(ibr)
-      nrows = kvstr(ibr+1) - isr
+!     isr   = kvstr(ibr)
+!     nrows = kvstr(ibr+1) - isr
+      isr   = max_blockdim*(ibr - 1) + 1
+      nrows = max_blockdim
       nsum  = 0
 
       k = ka(ia(ibr))
       do j = ia(ibr), ia(ibr+1)-1
         ibc  = ja(j)
-        isc  = kvstr(ibc)
-        nblk = kvstr(ibc+1) - isc
+!       isc  = kvstr(ibc)
+!       nblk = kvstr(ibc+1) - isc
+        isc  = max_blockdim*(ibc - 1) + 1
+        nblk = max_blockdim
 
 !IBM* ASSERT(ITERCNT(16))
         do iRHSs = 1, nRHSs
