@@ -17,19 +17,15 @@ module vbrmv_mat_mod
   contains
 
   !> Heavily modified routine from SPARSKIT
-  subroutine vbrmv_mat(blk_nrows, ia, ja, A, x, Ax, lmsmax, max_blocks_per_row, nFlops)
-    
-    integer, intent(in) :: blk_nrows          ! ToDo remove from interface
-    integer, intent(in) :: max_blocks_per_row ! ToDo remove from interface
-    
-    integer, intent(in) :: ia(:) !> dim(blk_nrows + 1)
-    integer, intent(in) :: ja(:) !> dim(A%nnzb)
-    double complex, intent(in)  ::  A(:,:,:) ! (blockDim,blockDim,nnzb)
-    double complex, intent(in)  ::  x(:,:,:) ! (blockDim,nRHSs,nRows)
-    double complex, intent(out) :: Ax(:,:,:) ! (blockDim,nRHSs,nRows)
-    integer, intent(in) :: lmsmax
+  subroutine vbrmv_mat(ia, ja, A, x, Ax, lmsmax, nFlops)
+    integer, intent(in) :: ia(:) !> dim(blk_nrows + 1) !  start indices
+    integer, intent(in) :: ja(:) !> dim(A%nnzb)        ! column indices
+    double complex, intent(in)  ::  A(:,:,:) ! dim(blockDim,blockDim,nnzb)
+    double complex, intent(in)  ::  x(:,:,:) ! dim(blockDim,nRHSs,nRows)
+    double complex, intent(out) :: Ax(:,:,:) ! dim(blockDim,nRHSs,nRows)
+    integer, intent(in) :: lmsmax !> blocksize
     integer(kind=8), intent(inout) :: nFlops
-    
+
     external :: ZGEMM ! from BLAS
     
     !-----------------------------------------------------------------------
@@ -38,7 +34,7 @@ module vbrmv_mat_mod
     !     On entry:
     !--------------
     !     blk_nrows      = number of block rows in matrix A
-    !     ia,ja,ka,A,kvstr = matrix A in variable block row format, kvstc==kvstr since square operator
+    !     ia,ja,ka,A = matrix A in variable block row format
     !     x       = multiplier vector in full format
 
     !     nRHSs = number of columns of matrix A

@@ -127,11 +127,7 @@ module KKROperator_mod
     type(SparseMatrixDescription), intent(in) :: sparse
     integer(kind=8), intent(inout) :: nFlops
 
-    call vbrmv_mat(sparse%blk_nrows, sparse%ia, sparse%ja, &
-!                    sparse%ka, &
-                   A, &
-!                    sparse%kvstr, &
-                   x, Ax, sparse%max_blockdim, sparse%max_blocks_per_row, nFlops)
+    call vbrmv_mat(sparse%ia, sparse%ja, A, x, Ax, sparse%max_blockdim, nFlops)
 
   endsubroutine ! multiply_vbr
 

@@ -1016,7 +1016,7 @@ module SingleSiteHelpers_mod
     double complex, intent(in) :: qzekdr(lmmaxd,irmind:irmd,2)
     double complex, intent(in) :: qzlm(lmmaxd,irmind:irmd,2)
     double precision, intent(in) :: vnspll(lmmaxd,lmmaxd,irmind:irmd)
-    
+
     integer :: ir, lm
 
     if (nsra == 2) then
