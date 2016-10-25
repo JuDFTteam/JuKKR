@@ -33,21 +33,21 @@ module TFQMR_mod
     type(KKROperator), intent(in) :: op
     double precision, intent(in) :: tolerance
     integer, intent(in) :: nrow, ncol
-    double complex, intent(inout) :: mat_X(nrow,ncol)
-    double complex, intent(in)    :: mat_B(nrow,ncol)
+    double complex, intent(inout) :: mat_X(:,:,:) ! (nrow,ncol,X%nnzb)
+    double complex, intent(in)    :: mat_B(:,:,:) ! (nrow,ncol,B%nnzb)
 
     logical, intent(in) :: initial_zero
     type(BCPOperator) :: precond
     logical, intent(in) :: use_precond
-    double complex, intent(inout) :: vecs(:,:,3:) ! workspace
-#define v3 vecs(:,:,3)
-#define v4 vecs(:,:,4)
-#define v5 vecs(:,:,5)
-#define v6 vecs(:,:,6)
-#define v7 vecs(:,:,7)
-#define v8 vecs(:,:,8)
-#define v9 vecs(:,:,9)
-#define vP vecs(:,:,10)
+    double complex, intent(inout) :: vecs(:,:,:,3:) ! workspace
+#define v3 vecs(:,:,:,3)
+#define v4 vecs(:,:,:,4)
+#define v5 vecs(:,:,:,5)
+#define v6 vecs(:,:,:,6)
+#define v7 vecs(:,:,:,7)
+#define v8 vecs(:,:,:,8)
+#define v9 vecs(:,:,:,9)
+#define vP vecs(:,:,:,10)
     !!  vP is only accessed when preconditioning is active
 
     ! optional args
@@ -57,7 +57,7 @@ module TFQMR_mod
     
     ! locals
 
-    integer, parameter :: MaxIterations = 2000 ! limit of max. 2000 iterations
+    integer, parameter :: MaxIterations = 200 ! limit of max. 2000 iterations
     integer :: iteration, probe, icol
 
     !     small, local arrays with dimension ncol
@@ -385,9 +385,9 @@ module TFQMR_mod
     type(KKROperator), intent(in) :: op
     type(BCPOperator), intent(in) :: precond
 
-    double complex, intent(in)  :: mat_in(:,:)
-    double complex, intent(out) :: mat_out(:,:)
-    double complex, intent(out) :: temp(:,:)
+    double complex, intent(in)  :: mat_in(:,:,:)
+    double complex, intent(out) :: mat_out(:,:,:)
+    double complex, intent(out) :: temp(:,:,:)
     logical, intent(in) :: use_precond
     integer(kind=8), intent(inout) :: mFlops
 
@@ -403,38 +403,42 @@ module TFQMR_mod
   !------------------------------------------------------------------------------
   subroutine col_norms(norms, vectors)
     double precision, intent(out) :: norms(:)
-    double complex, intent(in) :: vectors(:,:)
+    double complex, intent(in) :: vectors(:,:,:)
 
-    integer :: col, ncol, nrow
+    integer :: col, nrow, block
     double precision, external :: DZNRM2 ! BLAS
 
-    ncol = size(norms)
     nrow = size(vectors, 1)
+    norms(:) = 0.d0
 
-    !$omp do private(col)
-    do col = 1, ncol
-      norms(col) = DZNRM2(nrow, vectors(:,col), 1)
-    enddo ! col
+    !$omp do private(col, block)
+    do block = 1, size(vectors, 3)
+      do col = 1, size(vectors, 2)
+        norms(col) = norms(col) + DZNRM2(nrow, vectors(:,col,block), 1)
+      enddo ! col
+    enddo ! block
     !$omp end do
     
   endsubroutine ! norms
 
   !------------------------------------------------------------------------------
-  subroutine col_dots(dots, vectorsv, vectorsw)
+  subroutine col_dots(dots, vector, wektor)
     double complex, intent(out) :: dots(:)
-    double complex, intent(in) :: vectorsv(:,:)
-    double complex, intent(in) :: vectorsw(:,:)
+    double complex, intent(in) :: vector(:,:,:)
+    double complex, intent(in) :: wektor(:,:,:)
 
-    integer :: col, ncol, nrow
+    integer :: col, nrow, block
     double complex, external :: ZDOTU ! BLAS
 
-    ncol = size(vectorsv, 2)
-    nrow = size(vectorsv, 1)
+    nrow = size(vector, 1)
+    dots(:) = ZERO
 
-    !$omp do private(col)
-    do col = 1, ncol
-      dots(col) = ZDOTU(nrow, vectorsv(:,col), 1, vectorsw(:,col), 1)
-    enddo ! col
+    !$omp do private(col, block)
+    do block = 1, size(vector, 3)
+      do col = 1, size(vector, 2)
+        dots(col) = dots(col) + ZDOTU(nrow, vector(:,col,block), 1, wektor(:,col,block), 1)
+      enddo ! col
+    enddo ! block
     !$omp end do
 
   endsubroutine ! dots
@@ -443,18 +447,17 @@ module TFQMR_mod
   !------------------------------------------------------------------------------
   subroutine col_axpy(factors, xvector, yvector)
     double complex, intent(in) :: factors(:)
-    double complex, intent(in) :: xvector(:,:)
-    double complex, intent(inout) :: yvector(:,:)
+    double complex, intent(in) :: xvector(:,:,:)
+    double complex, intent(inout) :: yvector(:,:,:)
 
-    integer :: col, ncol, nrow
+    integer :: col, block
 
-    ncol = size(factors)
-    nrow = size(xvector, 1)
-
-    !$omp do private(col)
-    do col = 1, ncol
-      yvector(:,col) = factors(col) * xvector(:,col) + yvector(:,col)
-    enddo ! col
+    !$omp do private(col, block)
+    do block = 1, size(yvector, 3)
+      do col = 1, size(yvector, 2)
+        yvector(:,col,block) = factors(col) * xvector(:,col,block) + yvector(:,col,block)
+      enddo ! col
+    enddo ! block
     !$omp end do
 
   endsubroutine ! y := a*x+y
@@ -462,18 +465,17 @@ module TFQMR_mod
   !------------------------------------------------------------------------------
   subroutine col_xpay(xvector, factors, yvector)
     double complex, intent(in) :: factors(:)
-    double complex, intent(in) :: xvector(:,:)
-    double complex, intent(inout) :: yvector(:,:)
+    double complex, intent(in) :: xvector(:,:,:)
+    double complex, intent(inout) :: yvector(:,:,:)
 
-    integer :: col, ncol, nrow
+    integer :: col, block
 
-    ncol = size(factors)
-    nrow = size(xvector, 1)
-
-    !$omp do private(col)
-    do col = 1, ncol
-      yvector(:,col) = xvector(:,col) + factors(col) * yvector(:,col)
-    enddo ! col
+    !$omp do private(col, block)
+    do block = 1, size(yvector, 3)
+      do col = 1, size(yvector, 2)
+        yvector(:,col,block) = xvector(:,col,block) + factors(col) * yvector(:,col,block)
+      enddo ! col
+    enddo ! block
     !$omp end do
     
   endsubroutine ! y := x+a*y

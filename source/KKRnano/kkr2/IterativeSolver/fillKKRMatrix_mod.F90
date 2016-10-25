@@ -185,21 +185,19 @@ module fillKKRMatrix_mod
 !------------------------------------------------------------------------------
 !> Builds the right hand site for the linear KKR matrix equation.
   subroutine buildRightHandSide(mat_B, lmmaxd, atom_indices, tmatLL)!, kvstr
-    double complex, intent(out) :: mat_B(:,:)
+    double complex, intent(out) :: mat_B(:,:,:) !> dim(lmmaxa,lmmaxd,nRHSs)
     integer, intent(in) :: lmmaxd
     integer(kind=2), intent(in) :: atom_indices(:) ! truncation zone indices of the local atoms
 !     integer, intent(in), optional :: kvstr(:) ! ToDo: remove from interface
     double complex, intent(in), optional :: tmatLL(lmmaxd,lmmaxd,*) !< dim(lmmaxd,lmmaxd,nrows)
 
-    integer :: start, ii, num_atoms, atom_index, lm2, lmmax1, lmmax2 
+    integer :: start, iRHS, atom_index, lm2, lmmax1, lmmax2 
 
     mat_B = ZERO
 
-    num_atoms = size(atom_indices)
+    do iRHS = 1, size(atom_indices)
 
-    do ii = 1, num_atoms
-
-      atom_index = atom_indices(ii)
+      atom_index = atom_indices(iRHS)
 
 !     lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
       lmmax1 = lmmaxd
@@ -211,22 +209,28 @@ module fillKKRMatrix_mod
       endif
 #endif
 
-      !lmmax2 = lmmaxd
-      lmmax2 = lmmax1
+      lmmax2 = lmmaxd
       ! use naive truncation: lmmax1 = lmmax2
       ! Note: this is irrelevant, since the central atom
       ! should always be treated with the highest lmax
 
-      start = (atom_index - 1)*lmmaxd ! = kvstr(atom_index) - 1
-      do lm2 = 1, lmmax2
+!     start = (atom_index - 1)*lmmaxd ! = kvstr(atom_index) - 1
+!     do lm2 = 1, lmmax2
+!       if (present(tmatLL)) then
+!         mat_B(start+ 1:lmmax1 + start,lm2+lmmax2*(iRHS-1)) = tmatLL(1:lmmax1,lm2,atom_index)
+!       else
+!         mat_B(start+lm2,lm2+lmmax2*(iRHS-1)) = CONE ! set the block to a unity matrix
+!       endif
+!     enddo ! lm2
+      do lm2 = 1, lmmaxd
         if (present(tmatLL)) then
-          mat_B(start+ 1:lmmax1 + start,lm2+lmmax2*(ii-1)) = tmatLL(1:lmmax1,lm2,atom_index)
+          mat_B(:,lm2+lmmaxd*(iRHS - 1),atom_index) = tmatLL(:,lm2,atom_index)
         else
-          mat_B(start+lm2,lm2+lmmax2*(ii-1)) = CONE ! set the block to a unity matrix
+          mat_B(lm2,lm2+lmmaxd*(iRHS - 1),atom_index) = CONE ! set the block to a unity matrix
         endif
       enddo ! lm2
 
-    enddo ! ii
+    enddo ! iRHS
 
   endsubroutine ! buildRightHandSide
 
@@ -293,18 +297,18 @@ module fillKKRMatrix_mod
     double complex, intent(out) :: mat_X(:,:)
 
     integer, allocatable :: ipvt(:)
-    integer :: ndim, nrhs, info
+    integer :: ndim, nRHSs, info
     external :: zgetrf, zgetrs ! LAPACK
 
     ndim = size(full, 1)
     allocate(ipvt(ndim))
 
-    nrhs = size(mat_B, 2)
+    nRHSs = size(mat_B, 2)
     mat_X(:,:) = mat_B(:,:)
     
     call zgetrf(ndim, ndim, full, ndim, ipvt, info) ! LU-factorize
 !   if (info /= 0) ! ToDo: warn
-    call zgetrs('n', ndim, nrhs, full, ndim, ipvt, mat_x, ndim, info) ! solve the system of linear equations
+    call zgetrs('n', ndim, nRHSs, full, ndim, ipvt, mat_x, ndim, info) ! solve the system of linear equations
 !   if (info /= 0) ! ToDo: warn
 
     deallocate(ipvt, stat=info)

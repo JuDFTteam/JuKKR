@@ -99,8 +99,8 @@ module BCPOperator_mod
   !> Applies Preconditioner/Operator on mat_X and returns result in mat_AX.
   subroutine multiply_BCPOperator(self, mat_X, mat_AX)
     type(BCPOperator) :: self
-    double complex, intent(in)  :: mat_X(:,:)
-    double complex, intent(out) :: mat_AX(:,:)
+    double complex, intent(in)  :: mat_X(:,:,:)
+    double complex, intent(out) :: mat_AX(:,:,:)
 
     integer :: num_columns, naez, natbld, xyzdim(3)
 

@@ -150,7 +150,8 @@ module kkrmat_mod
         ila = op%atom_indices(1) ! convert to default integer kind
         call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, naez, ila, &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
-                    op%mat_X, global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
+                    op%mat_X(:,:,1), global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
+                    stop __LINE__ ! invalid argument is passed, data layout of mat_X has changed
       endif ! jij
 
     !==============================================================================
@@ -191,7 +192,7 @@ module kkrmat_mod
   !> dependent on (k,E) into matrix G_diag
   subroutine getGreenDiag(G_diag, mat_X, atom_index, blockdim, local_atom_index) !, kvstr
     double complex, intent(out) :: G_diag(:,:) ! dim(lmmaxd,lmmaxd)
-    double complex, intent(in) :: mat_X(:,:)
+    double complex, intent(in) :: mat_X(:,:,:) !> dim(lmmaxd,lmmaxd,nnzb)
     integer(kind=2), intent(in) :: atom_index 
 !   integer, intent(in) :: kvstr(:)
     integer, intent(in) :: blockdim
@@ -214,9 +215,11 @@ module kkrmat_mod
 
     ASSERT(lmmax1 == size(G_diag, 1))
     ASSERT(lmmax1 == size(G_diag, 2))
+    ASSERT(lmmax1 == size(mat_X, 1))
 
-    G_diag(1:lmmax1,1:lmmax1) = mat_X(start+ 1:lmmax1 +start,(ila-1)*lmmax1+1:ila*lmmax1)
-    
+!   G_diag(1:lmmax1,1:lmmax1) = mat_X(start+ 1:lmmax1 +start,(ila-1)*lmmax1+1:ila*lmmax1)
+    G_diag(1:lmmax1,1:lmmax1) = mat_X(:,(ila - 1)*lmmax1 + 1:ila*lmmax1,atom_index)
+
   endsubroutine ! getGreenDiag
 
   !------------------------------------------------------------------------------
@@ -268,7 +271,7 @@ module kkrmat_mod
     double complex, allocatable :: dpde_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:)
     double complex :: tracek, gtdpde
     
-    integer :: naez, nacls, alm, lmmaxd, n, ist, matrix_index, lm1, lm2, il1
+    integer :: naez, nacls, alm, lmmaxd, n, ist, matrix_index, lm1, lm2, lm3, il1
     double complex :: cfctorinv
 
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
@@ -420,6 +423,7 @@ module kkrmat_mod
 
     ! ALTERNATIVE: direct solution with LAPACK
     if (cutoffmode == 4) then
+      stop 'direct solver requires reordering of data ! solver=4 !'
       n = size(op%mat_B, 1)
       if (any(shape(full) /= [n,n])) then
         deallocate(full, stat=ist) ! ignore status
@@ -430,7 +434,7 @@ module kkrmat_mod
 !     call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%max_blockdim, full)
       call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%max_blockdim, full)
       TESTARRAYLOG(3, full)
-      call solveFull(full, op%mat_B, op%mat_X)
+      call solveFull(full, op%mat_B(:,:,1), op%mat_X(:,:,1))
     endif ! cutoffmode == 4
 
     ! store the initial guess in previously selected slot (selected with 'iguess_set_k_ind')
@@ -452,9 +456,14 @@ module kkrmat_mod
       do lm1 = 1, lmmaxd
         do lm2 = 1, lmmaxd
           gtdpde = zero
-          do il1 = 1, lmmaxd*naez
-            gtdpde = gtdpde + op%mat_x(il1,lm2)*dpde_local(il1,lm1)
-          enddo
+!         do il1 = 1, lmmaxd*naez
+!           gtdpde = gtdpde + op%mat_X(il1,lm2)*dpde_local(il1,lm1)
+!         enddo ! il1
+          do il1 = 1, naez
+            do lm3 = 1, lmmaxd
+              gtdpde = gtdpde + op%mat_X(lm3,lm2,il1)*dpde_local(il1,lm1)
+            enddo ! lm3
+          enddo ! il1
           tracek = tracek + mssq(lm1,lm2,1)*gtdpde
         enddo
       enddo

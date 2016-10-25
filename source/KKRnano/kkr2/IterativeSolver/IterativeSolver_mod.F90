@@ -14,7 +14,7 @@ module IterativeSolver_mod
     type(KKROperator), pointer :: op => null()
     type(BCPOperator), pointer :: precond => null()
 
-    double complex, allocatable :: vecs(:,:,:) ! workspace
+    double complex, allocatable :: vecs(:,:,:,:) ! workspace
 
     logical :: use_precond = .false.
     logical :: initial_zero = .true.
@@ -62,32 +62,27 @@ module IterativeSolver_mod
     use TFQMR_mod, only: solve
     use SolverStats_mod, only: reduce
     type(IterativeSolver) :: self
-    double complex, intent(inout) :: mat_X(:,:)
-    double complex, intent(in)    :: mat_B(:,:)
+    double complex, intent(inout) :: mat_X(:,:,:)
+    double complex, intent(in)    :: mat_B(:,:,:)
 
-    integer :: nrow, ncol, iterations_needed, nvecs, ist
+    integer :: nrow, ncol, iterations_needed, nvecs, ist, nnzb
     double precision :: largest_residual
     integer(kind=8) :: nFlops
 
-    nrow = size(mat_B, 1)
-    ncol = size(mat_B, 2)
+    nrow = size(mat_X, 1)
+    ncol = size(mat_X, 2)
+    nnzb = size(mat_X, 3)
 
     nvecs = 7; if(self%use_precond) nvecs = nvecs+1 ! need only 7 without preconditioning
-    if (size(self%vecs, 3) /= nvecs) then
+    if (any(shape(self%vecs) /= [nrow,ncol,nnzb,nvecs])) then
       deallocate(self%vecs, stat=ist) ! ignore status
-      allocate(self%vecs(nrow,ncol,nvecs), stat=ist)
+      allocate(self%vecs(nrow,ncol,nnzb,nvecs), stat=ist)
       
       if (ist /= 0) then
-        write(*,*) "IterativeSolver error: Allocation of workspace failed! requested ",(nrow/1024.)*(ncol/1024.)*(nvecs/64.)," GiByte" ! 16 Byte per dp-complex
+        write(*,*) "IterativeSolver error: (Re-)Allocation of workspace failed! requested ",(nrow/1024.)*(ncol/1024.)*(nnzb/1024.)*(nvecs*16.)," GiByte" ! 16 Byte per dp-complex
         stop
       endif
       
-    else
-      if (size(self%vecs, 1) /= nrow .or. size(self%vecs, 2) /= ncol) then
-        ! when problem size has changed, one should destroy the solver and create a new one
-        write(*,*) "IterativeSolver error: Problem size has changed. Cannot reuse solver."
-        stop
-      endif
     endif
 
     if (.not. associated(self%op)) then

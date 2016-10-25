@@ -17,19 +17,21 @@ module vbrmv_mat_mod
   contains
 
   !> Heavily modified routine from SPARSKIT
-  subroutine vbrmv_mat(blk_nrows, ia, ja, &
-!              ka, &
-                       A, &
-!              kvstr, &
-                       x, Ax, max_blockdim, max_blocks_per_row, nFlops)
-                       
-    integer, intent(in) :: blk_nrows, ia(blk_nrows+1), ja(:)
-!   integer, intent(in) :: ka(:)
-!   integer, intent(in) :: kvstr(:)
-    integer, intent(in) :: max_blockdim, max_blocks_per_row
-    double complex, intent(in)  :: A(:,:,:), x(:,:)
-    double complex, intent(out) :: Ax(:,:)
+  subroutine vbrmv_mat(blk_nrows, ia, ja, A, x, Ax, lmsmax, max_blocks_per_row, nFlops)
+    
+    integer, intent(in) :: blk_nrows          ! ToDo remove from interface
+    integer, intent(in) :: max_blocks_per_row ! ToDo remove from interface
+    
+    integer, intent(in) :: ia(:) !> dim(blk_nrows + 1)
+    integer, intent(in) :: ja(:) !> dim(A%nnzb)
+    double complex, intent(in)  ::  A(:,:,:) ! (blockDim,blockDim,nnzb)
+    double complex, intent(in)  ::  x(:,:,:) ! (blockDim,nRHSs,nRows)
+    double complex, intent(out) :: Ax(:,:,:) ! (blockDim,nRHSs,nRows)
+    integer, intent(in) :: lmsmax
     integer(kind=8), intent(inout) :: nFlops
+    
+    external :: ZGEMM ! from BLAS
+    
     !-----------------------------------------------------------------------
     !     Sparse matrix-full vector product, in VBR format.
     !-----------------------------------------------------------------------
@@ -53,50 +55,46 @@ module vbrmv_mat_mod
     !-----local variables
 
 !IBM* ALIGN(32, Buffer)
-    double complex :: Buffer(max_blockdim*max_blocks_per_row,size(x, 2))
 
-    integer :: ibr, isr, j, k, nRHSs, iRHSs, nblk, nsum, nrows
-    integer :: isc, ibc, leaddim_Ax, leaddim_Buffer
-    double precision, parameter :: kiF = 2.d0**-10
+    integer :: ibr, Aind, nRHSs, nRows,leadDim_Ax, leadDim_x, leadDim_A
     double complex, parameter :: ZERO=(0.d0, 0.d0), ONE=(1.d0, 0.d0)
+    double complex :: beta
 
+    nRows      = size(Ax, 3)
+    if (nRows /= size(x, 3)) stop __LINE__
     nRHSs      = size(Ax, 2)
-    leaddim_Ax = size(Ax, 1)
-    leaddim_Buffer = max_blockdim*max_blocks_per_row
+    if (nRHSs /= size(x, 2)) stop __LINE__
+    leadDim_Ax = size(Ax, 1)
+    leadDim_x  = size(x, 1)
+    if (leadDim_Ax /= leadDim_x) stop __LINE__
+    leadDim_A  = size(A, 1)
+    if (leadDim_Ax /= leadDim_A) stop __LINE__
+    
+    if (leadDim_Ax < lmsmax) stop __LINE__
+    if (leadDim_A  < lmsmax) stop __LINE__
+    if (leadDim_x  < lmsmax) stop __LINE__
 
-    Ax = ZERO
-
-!$OMP PARALLEL PRIVATE(ibr,ibc,isr,isc,nrows,nsum,nblk,j,iRHSs,Buffer,k) reduction(+:nFlops)
+! #define GENERIC    
+  
+!$OMP PARALLEL PRIVATE(ibr, beta, Aind) reduction(+:nFlops)
 !$OMP DO
-    do ibr = 1, blk_nrows
-!     isr   = kvstr(ibr)
-!     nrows = kvstr(ibr+1) - isr
-      isr   = max_blockdim*(ibr - 1) + 1
-      nrows = max_blockdim
-      nsum  = 0
-
-!     k = ka(ia(ibr))
-!     k = max_blockdim*max_blockdim*(ia(ibr) - 1) + 1
-!     if ( k /= ka(ia(ibr)) ) stop 'computed k differs from listed k!'
-      do j = ia(ibr), ia(ibr+1)-1
-        ibc  = ja(j)
-!       isc  = kvstr(ibc)
-!       nblk = kvstr(ibc+1) - isc
-        isc  = max_blockdim*(ibc - 1) + 1
-        nblk = max_blockdim
-
-!IBM* ASSERT(ITERCNT(16))
-        do iRHSs = 1, nRHSs
-          ! call ZCOPY(nblk, x(isc,iRHSs), 1, Buffer(nsum+1,iRHSs), 1)
-          Buffer(nsum+1:nsum+nblk,iRHSs) = x(isc:isc+nblk-1,iRHSs)
-        enddo ! iRHSs
-
-        nsum = nsum + nblk
-      enddo ! j
-
-      call ZGEMM('N', 'N', nrows, nRHSs, nsum, ONE, A(1,1,ia(ibr)), nrows, Buffer, leaddim_Buffer, ZERO, Ax(isr,1), leaddim_Ax)
-      nFlops = nFlops + (8_8*nrows)*(nRHSs*nsum)
-
+    do ibr = 1, nRows
+#ifdef GENERIC
+      Ax(:,:,ibr) = ZERO
+#else      
+      beta = ZERO
+#endif
+      do Aind = ia(ibr), ia(ibr + 1) - 1
+#ifdef GENERIC
+        Ax(:,:,ibr) = Ax(:,:,ibr) + matmul(A(:,:,Aind), x(:,:,ja(Aind)))
+#else
+        !     gemm:          N       M,     K       1    A(N,K)       N          B(K,M)           K          1     C(N,M)       N        
+        !     here:          N       M,     N       1    A(N,N)       N          B(N,M)           N          1     C(N,M)       N        
+        call ZGEMM('n', 'n', lmsmax, nRHSs, lmsmax, ONE, A(1,1,Aind), leadDim_A, x(1,1,ja(Aind)), leadDim_x, beta, Ax(1,1,ibr), leadDim_Ax)
+#endif
+        nFlops = nFlops + (8_8*nRHSs)*(lmsmax*lmsmax)
+        beta = ONE
+      enddo ! Aind
     enddo ! ibr
 !$OMP END DO
 !$OMP END PARALLEL

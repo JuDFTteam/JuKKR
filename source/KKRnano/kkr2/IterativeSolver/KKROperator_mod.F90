@@ -22,8 +22,8 @@ module KKROperator_mod
     type(SparseMatrixDescription) :: sparse
     double complex, allocatable :: mat_A(:,:,:)
     double complex, allocatable :: mat_dAdE(:,:,:)
-    double complex, allocatable :: mat_B(:,:) ! ToDo: make it a sparse operator since it is mostly zero or an implicit action of subtracting mat_B
-    double complex, allocatable :: mat_X(:,:)
+    double complex, allocatable :: mat_B(:,:,:) ! ToDo: make it a sparse operator since it is mostly zero or an implicit action of subtracting mat_B
+    double complex, allocatable :: mat_X(:,:,:)
     integer(kind=2), allocatable :: atom_indices(:) !< a copy of the atom indices
     type(ClusterInfo), pointer :: cluster_info
   endtype
@@ -72,11 +72,13 @@ module KKROperator_mod
 
     call getKKRMatrixStructure(lmax_array, cluster_info%numn0_trc, cluster_info%indn0_trc, self%sparse)
 
-    nRows = getNrows(self%sparse)!, self%naez)
+    nRows = lmmaxd ! getNrows(self%sparse)
     nCols = lmmaxd*size(atom_indices)
+    nBlocks = self%sparse%blk_nrows
     
-    allocate(self%mat_B(nRows,nCols))
-    allocate(self%mat_X(nRows,nCols))
+    allocate(self%mat_B(nRows,nCols,nBlocks))
+    allocate(self%mat_X(nRows,nCols,nBlocks))
+    
     nBlocks = size(self%sparse%ja)
     nCols = self%sparse%max_blockdim
     nRows = self%sparse%max_blockdim
@@ -109,8 +111,8 @@ module KKROperator_mod
   !> Applies Operator on mat_X and returns result in mat_AX.
   subroutine multiply_KKROperator(self, mat_X, mat_AX, nFlops)
     type(KKROperator) :: self
-    double complex, intent(in)  :: mat_X(:,:)
-    double complex, intent(out) :: mat_AX(:,:)
+    double complex, intent(in)  :: mat_X(:,:,:)
+    double complex, intent(out) :: mat_AX(:,:,:)
     integer(kind=8), intent(inout) :: nFlops
 
     ! perform sparse VBR matrix * dense matrix
@@ -120,8 +122,8 @@ module KKROperator_mod
   subroutine multiply_vbr(A, x, Ax, sparse, nFlops)
     use vbrmv_mat_mod, only: vbrmv_mat
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
-    double complex, intent(in)  :: A(:,:,:), x(:,:)
-    double complex, intent(out) :: Ax(:,:)
+    double complex, intent(in)  :: A(:,:,:), x(:,:,:)
+    double complex, intent(out) :: Ax(:,:,:)
     type(SparseMatrixDescription), intent(in) :: sparse
     integer(kind=8), intent(inout) :: nFlops
 
