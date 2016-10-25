@@ -73,11 +73,11 @@ module KKROperator_mod
 
     nRows = lmmaxd
     nCols = lmmaxd*size(atom_indices)
-    nBlocks = self%sparse%blk_nrows
+    nBlocks = self%sparse%nRows
 
     allocate(self%mat_B(nRows,nCols,nBlocks))
     allocate(self%mat_X(nRows,nCols,nBlocks))
-    
+
     nRows = lmmaxd
     nCols = lmmaxd
     nBlocks = size(self%sparse%ja)
@@ -125,7 +125,7 @@ module KKROperator_mod
     type(SparseMatrixDescription), intent(in) :: sparse
     integer(kind=8), intent(inout) :: nFlops
 
-    call vbrmv_mat(sparse%ia, sparse%ja, A, x, Ax, sparse%max_blockdim, nFlops)
+    call vbrmv_mat(sparse%ia, sparse%ja, A, x, Ax, sparse%BlockDim, nFlops)
 
   endsubroutine ! multiply_vbr
 

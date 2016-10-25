@@ -28,67 +28,46 @@ module fillKKRMatrix_mod
   subroutine getKKRMatrixStructure(lmax_array, numn0, indn0, sparse)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
 
-    integer(kind=1), intent(in) :: lmax_array(:) !< lmax each row, dim(nrows)
-    integer, intent(in) :: numn0(:) !< dim(nrows)
-    integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0),nrows)
+    integer(kind=1), intent(in) :: lmax_array(:) !< lmax each row, dim(nRows)
+    integer, intent(in) :: numn0(:) !< dim(nRows)
+    integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0),nRows)
     type(SparseMatrixDescription), intent(inout) :: sparse
 
-    integer :: nnzb, nrows, ncols, ij, irow, icol, jcol, start_address, row_block, col_block, lmmaxd, lmax
+    integer :: nnzb, nRows, ncols, ij, irow, icol, jcol, lmmaxd
 
-    nrows = size(lmax_array)
-    lmax = maxval(lmax_array)
-    lmmaxd = (lmax + 1)**2
-    ncols = nrows ! a logical square matrix
+    nRows = size(lmax_array)
+    lmmaxd = (maxval(lmax_array) + 1)**2
+    ncols = nRows ! a logical square matrix
 
-    ASSERT( size(numn0) >= nrows )
-    ASSERT( size(indn0, 2) >= nrows )
-    ASSERT( size(sparse%ia) == 1 + nrows )
-!   ASSERT( size(sparse%kvstr) == 1 + nrows )
+    ASSERT( size(numn0) >= nRows )
+    ASSERT( size(indn0, 2) >= nRows )
+    ASSERT( size(sparse%ia) == 1 + nRows )
 
-    nnzb = sum(numn0(1:nrows)) ! number of non-zero blocks
+    nnzb = sum(numn0(1:nRows)) ! number of non-zero blocks
 
     ASSERT( size(sparse%ja) >= nnzb )
-!   ASSERT( size(sparse%ka) >= 1 + nnzb )
 
-    sparse%ia = 0
-    sparse%ja = 0 ! init block number
-!   sparse%ka = 0 ! init block start address into data array
-!   sparse%kvstr = 0 ! init block start indices
-    sparse%max_blockdim = 0
-    sparse%max_blocks_per_row = 0
+    sparse%ia(:) = 0
+    sparse%ja(:) = 0 ! init block number
+    sparse%BlockDim = lmmaxd
 
-    start_address = 1
-!   sparse%kvstr(1) = 1
-    ij = 1
-    do irow = 1, nrows
-      row_block = (lmax_array(irow) + 1)**2
-      ASSERT( row_block == lmmaxd )
-!     sparse%kvstr(irow+1) = sparse%kvstr(irow) + row_block
-      sparse%ia(irow) = ij ! start indices into ja
-      sparse%max_blockdim = max(sparse%max_blockdim, row_block)
-!     ASSERT( sparse%kvstr(irow+1) == irow*sparse%max_blockdim + 1 ) ! the needs to hold when we want to take out kvstr
-      sparse%max_blocks_per_row = max(sparse%max_blocks_per_row, numn0(irow))
+    ij = 0
+    do irow = 1, nRows
+      sparse%ia(irow) = ij + 1 ! start indices into ja
       do icol = 1, numn0(irow)
-        ASSERT( ij <= nnzb )
-!       sparse%ka(ij) = start_address ! start indices into the data array
+        ASSERT( ij < nnzb )
 
         ASSERT( icol <= size(indn0, 1) )
         jcol = indn0(icol,irow)
         ASSERT( 1 <= jcol .and. jcol <= ncols )
 
+        ij = ij + 1
         sparse%ja(ij) = jcol
 
-        col_block = (lmax_array(jcol) + 1)**2
-        ASSERT( col_block == lmmaxd )
-        start_address = start_address + row_block*col_block
-
-        ij = ij + 1
       enddo ! icol
     enddo ! irow
-!   sparse%ka(ij) = start_address
-!   ASSERT( sparse%ka(ij) == sparse%max_blockdim**2 * (ij - 1) + 1 ) ! the needs to hold when we want to take out ka
-    sparse%ia(nrows+1) = ij ! final, important since the ranges are always [ia(i) ... ia(i+1)-1]
-    ASSERT( ij == 1 + nnzb ) ! check
+    sparse%ia(nRows + 1) = ij + 1 ! final, important since the ranges are always [ia(i) ... ia(i+1)-1]
+    ASSERT( ij == nnzb ) ! check
 
   endsubroutine ! getKKRMatrixStructure
 
@@ -104,43 +83,32 @@ module fillKKRMatrix_mod
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
 
     double complex, intent(inout) :: smat(:,:,:) !< dim(lmmaxa,lmmaxd,nnzB)
-    double complex, intent(in) :: tmatLL(:,:,:) !< dim(lmmaxd,lmmaxd,nrows)
+    double complex, intent(in) :: tmatLL(:,:,:) !< dim(lmmaxd,lmmaxd,nRows)
     type(SparseMatrixDescription), intent(in) :: sparse
 
-    double complex :: temp(size(tmatLL, 1))
-    integer :: lmmaxa, lmmaxd, nrows
-    integer :: block_row, block_col, lm2, lm3, lmmax1, lmmax2, lmmax3!, start
-    integer :: istart_row, istop_row, istart_col, istop_col, ind_ia
+    double complex :: temp(size(smat, 1))
+    integer :: lmmaxa, lmmaxd, nRows, nCols, iRow, jCol, lm2, lm3, Aind
 
     lmmaxa = size(smat, 1) ! may be memory-aligned
     lmmaxd = size(tmatLL, 2)
     ASSERT( size(tmatLL, 1) == lmmaxd )
     ASSERT( lmmaxa >= lmmaxd )
-    nrows = size(tmatLL, 3)
-    
-!   start = 0
-    do block_row = 1, nrows
-!     istart_row = sparse%kvstr(block_row)
-!     istop_row  = sparse%kvstr(block_row+1)
-      istart_row = sparse%max_blockdim*(block_row - 1) + 1
-      istop_row  = sparse%max_blockdim*block_row + 1
-      do ind_ia = sparse%ia(block_row), sparse%ia(block_row+1)-1
+    nRows = sparse%nRows
+    ASSERT( nRows == size(tmatLL, 3) )
+    nCols = nRows ! a logical square matrix
 
-        block_col = sparse%ja(ind_ia) ! ja gives the block-column indices of non-zero blocks
-
-!       istart_col = sparse%kvstr(block_col)
-!       istop_col  = sparse%kvstr(block_col+1)
-        istart_col = sparse%max_blockdim*(block_col - 1) + 1
-        istop_col  = sparse%max_blockdim*block_col + 1
+    do iRow = 1, nRows
+      do Aind = sparse%ia(iRow), sparse%ia(iRow + 1) - 1
+        jCol = sparse%ja(Aind) ! ja gives the block-column indices of non-zero blocks
 
 #ifndef NDEBUG
-        if (1 > block_row .or. block_row > nrows) then
-          write (*,*) "buildKKRCoeffMatrix: invalid block_row", block_row
+        if (1 > iRow .or. iRow > nRows) then
+          write (*,*) "buildKKRCoeffMatrix: invalid iRow", iRow
           stop
         endif
 
-        if (1 > block_col .or. block_col > nrows) then
-          write (*,*) "buildKKRCoeffMatrix: invalid block_col", block_col
+        if (1 > jCol .or. jCol > nCols) then
+          write (*,*) "buildKKRCoeffMatrix: invalid jCol", jCol
           stop
         endif
 #endif
@@ -148,10 +116,6 @@ module fillKKRMatrix_mod
         ! dimension lmmax1 * lmmax1
         ! maybe it would be better to calculate T-matrix with all
         ! smaller lmax
-
-        lmmax1 = istop_row - istart_row
-        lmmax2 = istop_col - istart_col
-        lmmax3 = lmmax1
 
         ! something to think about:
         ! should Gref also be truncated to square?
@@ -162,66 +126,40 @@ module fillKKRMatrix_mod
         !  |----|                  |----------| (==lmmax1)  |----------|
         !  lmmax3==lmmax1
         
-        do lm2 = 1, lmmax2
+        do lm2 = 1, lmmaxd
 
           temp(:) = ZERO
-          do lm3 = 1, lmmax3
-!           temp(:) = temp(:) + tmatLL(:,lm3,block_row) * smat(start+lm3+lmmax3*(lm2-1),1,1) ! T*G
-            temp(:) = temp(:) + tmatLL(:,lm3,block_row) * smat(lm3,lm2,ind_ia) ! T*G
+          do lm3 = 1, lmmaxd
+            temp(:) = temp(:) + tmatLL(:,lm3,iRow) * smat(lm3,lm2,Aind) ! T*G
           enddo ! lm3
-          
-          if (block_row == block_col) temp(lm2) = temp(lm2) - CONE ! subtract 1.0 from the diagonal
 
-!         smat(start+lmmax1*(lm2-1)+ 1:lmmax1 +start+lmmax1*(lm2-1),1,1) = temp(1:lmmax1)
-          smat(1:lmmax1,lm2,ind_ia) = temp(1:lmmax1)
+          if (iRow == jCol) temp(lm2) = temp(lm2) - CONE ! subtract 1.0 from the diagonal
+
+          smat(1:lmmaxd,lm2,Aind) = temp(1:lmmaxd)
         enddo ! lm2
 
-!       start = start + lmmax2*lmmax1
-      enddo ! ind_ia ! block columns
+      enddo ! Aind ! block columns
     enddo ! block rows
 
   endsubroutine ! buildKKRCoeffMatrix
 
 !------------------------------------------------------------------------------
 !> Builds the right hand site for the linear KKR matrix equation.
-  subroutine buildRightHandSide(mat_B, lmmaxd, atom_indices, tmatLL)!, kvstr
+  subroutine buildRightHandSide(mat_B, lmmaxd, atom_indices, tmatLL)
     double complex, intent(out) :: mat_B(:,:,:) !> dim(lmmaxa,lmmaxd,nRHSs)
-    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: lmmaxd ! ToDo: remove from interface and derive lmmaxd from size(tmatLL, 2)
     integer(kind=2), intent(in) :: atom_indices(:) ! truncation zone indices of the local atoms
-!     integer, intent(in), optional :: kvstr(:) ! ToDo: remove from interface
-    double complex, intent(in), optional :: tmatLL(lmmaxd,lmmaxd,*) !< dim(lmmaxd,lmmaxd,nrows)
+    double complex, intent(in), optional :: tmatLL(:,:,:) !< dim(lmmaxd,lmmaxd,nRows)
 
-    integer :: start, iRHS, atom_index, lm2, lmmax1, lmmax2 
+    integer :: start, iRHS, atom_index, lm2
 
     mat_B = ZERO
+    ASSERT( size(tmatLL, 1) == lmmaxd )
+    ASSERT( size(tmatLL, 2) == lmmaxd )
 
     do iRHS = 1, size(atom_indices)
-
       atom_index = atom_indices(iRHS)
 
-!     lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
-      lmmax1 = lmmaxd
-
-#ifndef NDEBUG
-      if (lmmax1 /= lmmaxd) then
-        write (*,*) "Central atom not treated with highest lmax", atom_index
-        stop
-      endif
-#endif
-
-      lmmax2 = lmmaxd
-      ! use naive truncation: lmmax1 = lmmax2
-      ! Note: this is irrelevant, since the central atom
-      ! should always be treated with the highest lmax
-
-!     start = (atom_index - 1)*lmmaxd ! = kvstr(atom_index) - 1
-!     do lm2 = 1, lmmax2
-!       if (present(tmatLL)) then
-!         mat_B(start+ 1:lmmax1 + start,lm2+lmmax2*(iRHS-1)) = tmatLL(1:lmmax1,lm2,atom_index)
-!       else
-!         mat_B(start+lm2,lm2+lmmax2*(iRHS-1)) = CONE ! set the block to a unity matrix
-!       endif
-!     enddo ! lm2
       do lm2 = 1, lmmaxd
         if (present(tmatLL)) then
           mat_B(:,lm2+lmmaxd*(iRHS - 1),atom_index) = tmatLL(:,lm2,atom_index)
@@ -234,57 +172,34 @@ module fillKKRMatrix_mod
 
   endsubroutine ! buildRightHandSide
 
-!==============================================================================
-! Routines for testing
-!==============================================================================
 
   !----------------------------------------------------------------------------
   !> Given the sparse matrix data 'smat' and the sparsity information,
   !> create the dense matrix representation of the matrix.
-  subroutine convertToFullMatrix(smat, ia, ja, BlockDim, full_A)!, ka, kvstr, kvstc)
+  subroutine convertToFullMatrix(smat, ia, ja, BlockDim, full_A)
     double complex, intent(in) :: smat(:,:,:) !< dim(BlockDim,BlockDim,nnzb)
-    integer, intent(in) :: ia(:)
+    integer, intent(in) :: ia(:) !> dim(nRows + 1)
     integer, intent(in) :: ja(:)
-!     integer, intent(in), optional :: ka(:)
-!     integer, intent(in), optional :: kvstr(:), kvstc(:) ! ToDo: remove from interface
     integer, intent(in) :: BlockDim
     double complex, intent(out) :: full_A(:,:)
 
-    integer :: ibrow, ibcol, nrows, ind_ia!, ind, irow, icol
+    integer :: iRow, jCol, nRows, Aind
 
     full_A = ZERO
 
     ASSERT( size(smat, 1) == BlockDim )
     ASSERT( size(smat, 2) == BlockDim )
     
-    nrows = size(ia) - 1
+    nRows = size(ia) - 1
 
-    do ibrow = 1, nrows
-!     ind = ka(ia(ibrow))
-!     ind = BlockDim**2 * (ia(ibrow) - 1) + 1
-!     if (present(ka)) then
-!       ASSERT( ind == ka(ia(ibrow)) )
-!     endif ! ka
-      do ind_ia = ia(ibrow), ia(ibrow+1) - 1
+    do iRow = 1, nRows
+      do Aind = ia(iRow), ia(iRow+1) - 1
+        jCol = ja(Aind)
 
-        ibcol = ja(ind_ia)
+        full_A(BlockDim*(iRow - 1) + 1:BlockDim*iRow,BlockDim*(jCol - 1) + 1:BlockDim*jCol) = smat(:,:,Aind)
 
-!       do   icol = kvstc(ibcol), kvstc(ibcol+1) - 1
-!         do irow = kvstr(ibrow), kvstr(ibrow+1) - 1
-
-!       do   icol = BlockDim*(ibcol - 1) + 1, BlockDim*ibcol
-!         do irow = BlockDim*(ibrow - 1) + 1, BlockDim*ibrow
-! 
-!           full_A(irow,icol) = smat(ind,1,1)
-! 
-!           ind = ind + 1
-!         enddo ! irow
-!       enddo ! icol
-
-        full_A(BlockDim*(ibrow - 1) + 1:BlockDim*ibrow,BlockDim*(ibcol - 1) + 1:BlockDim*ibcol) = smat(:,:,ind_ia)
-
-      enddo ! ind_ia
-    enddo ! ibrow
+      enddo ! Aind
+    enddo ! iRow
 
   endsubroutine ! convertToFullMatrix
 

@@ -135,8 +135,7 @@ module kkrmat_mod
                      global_atom_idx_lly, Lly) !LLY
 
       do ila = 1, num_local_atoms
-!       call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%kvstr, ila) ! extract solution
-        call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%max_blockdim, ila) ! extract solution
+        call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%BlockDim, ila) ! extract solution
 
         ! ----------- Integrate Scattering Path operator over k-points --> GS -----
         ! Note: here k-integration only in irreducible wedge
@@ -190,35 +189,24 @@ module kkrmat_mod
   !------------------------------------------------------------------------------
   !> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
   !> dependent on (k,E) into matrix G_diag
-  subroutine getGreenDiag(G_diag, mat_X, atom_index, blockdim, local_atom_index) !, kvstr
-    double complex, intent(out) :: G_diag(:,:) ! dim(lmmaxd,lmmaxd)
-    double complex, intent(in) :: mat_X(:,:,:) !> dim(lmmaxd,lmmaxd,nnzb)
+  subroutine getGreenDiag(G_diag, mat_X, atom_index, lmsmax, iRHS)
+    double complex, intent(out) :: G_diag(:,:) ! dim(lmsmaxd,lmsmax)
+    double complex, intent(in) :: mat_X(:,:,:) !> dim(lmsmaxd,lmsmax,nnzb)
     integer(kind=2), intent(in) :: atom_index 
-!   integer, intent(in) :: kvstr(:)
-    integer, intent(in) :: blockdim
-    integer, intent(in) :: local_atom_index 
-
-    integer :: lmmax1, start, ila !< local atom index
+    integer, intent(in) :: lmsmax
+    integer, intent(in) :: iRHS 
 
     !                                      nn
     !         Copy the diagonal elements G_LL' of the Green's-function,
     !         dependent on (k,E) into matrix G_diag
     !         (n = n' = atom_index)
 
-    ila = local_atom_index
-    G_diag = zero
+    ASSERT( lmsmax == size(G_diag, 1))
+    ASSERT( lmsmax == size(G_diag, 2))
+    ASSERT( lmsmax == size(mat_X, 1))
 
-!   start  = kvstr(atom_index) - 1
-!   lmmax1 = kvstr(atom_index+1) - kvstr(atom_index)
-    start  = blockdim*(atom_index - 1) + 1 - 1
-    lmmax1 = blockdim
-
-    ASSERT(lmmax1 == size(G_diag, 1))
-    ASSERT(lmmax1 == size(G_diag, 2))
-    ASSERT(lmmax1 == size(mat_X, 1))
-
-!   G_diag(1:lmmax1,1:lmmax1) = mat_X(start+ 1:lmmax1 +start,(ila-1)*lmmax1+1:ila*lmmax1)
-    G_diag(1:lmmax1,1:lmmax1) = mat_X(:,(ila - 1)*lmmax1 + 1:ila*lmmax1,atom_index)
+    G_diag = ZERO
+    G_diag(1:lmsmax,1:lmsmax) = mat_X(1:lmsmax,(iRHS - 1)*lmsmax + 1:iRHS*lmsmax,atom_index)
 
   endsubroutine ! getGreenDiag
 
@@ -343,12 +331,8 @@ module kkrmat_mod
 
       TESTARRAYLOG(3, op%mat_dAdE)
 
-      call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, & ! op%sparse%ka, &
-!                          op%sparse%kvstr, op%sparse%kvstr, &
-                           op%sparse%max_blockdim, gllke_x)
-      call convertToFullMatrix(op%mat_dAdE, op%sparse%ia, op%sparse%ja, & ! op%sparse%ka, &
-!                          op%sparse%kvstr, op%sparse%kvstr, &
-                           op%sparse%max_blockdim, dgde) 
+      call convertToFullMatrix(op%mat_A,    op%sparse%ia, op%sparse%ja, op%sparse%BlockDim, gllke_x)
+      call convertToFullMatrix(op%mat_dAdE, op%sparse%ia, op%sparse%ja, op%sparse%BlockDim, dgde) 
 
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
@@ -391,9 +375,8 @@ module kkrmat_mod
     !    solve (1 - \Delta t * G_ref) X = \Delta t
     !    the solution X is the scattering path operator
 
-!   call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
     call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
-    ! call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr) ! construct RHS as unity
+!   call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices) ! construct RHS as unity
 
     if (iguess_data%prec == 1) then
       solver%initial_zero = .false.
@@ -437,9 +420,7 @@ module kkrmat_mod
         allocate(full_A(n,n), full_X(n,nRHSs), stat=ist)
         if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
-!     call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, full_A)
-!     call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%max_blockdim, full_A)
-      call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%max_blockdim, full_A)
+      call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%BlockDim, full_A)
       TESTARRAYLOG(3, full_A)
       
       ! convertToFullMatrix op%mat_B to full_B
@@ -1060,7 +1041,7 @@ module kkrmat_mod
         if (ind == jat) then ! see which one of the inequivalent atoms is hit (should only be true once)
 
           GinT = transpose(Ginp(:,:,iacls))
-          ist = modify_smat(sparse, iat, ind, ni, eikrm(iacls), GinT, smat)
+          call modify_smat(sparse, iat, ni, eikrm(iacls), GinT, smat)
 
         endif ! jat == ind
       enddo ! ni
@@ -1069,7 +1050,7 @@ module kkrmat_mod
         ind = indn0(ni,jat)
         if (ind == iat) then ! see which one of the inequivalent atoms is hit (should only be true once)
  
-          ist = modify_smat(sparse, jat, ind, ni, eikrp(iacls), Ginp(:,:,iacls), smat)
+          call modify_smat(sparse, jat, ni, eikrp(iacls), Ginp(:,:,iacls), smat)
 
         endif ! iat == ind
       enddo ! ni
@@ -1080,34 +1061,21 @@ module kkrmat_mod
   endsubroutine ! dlke0_smat
 
   
-  integer function modify_smat(sparse, ind, jnd, ni, eikr, Gin, smat) result(nOps)
+  subroutine modify_smat(sparse, ind, ni, eikr, Gin, smat)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     ! assume a variable block row sparse matrix description
     type(SparseMatrixDescription), intent(in) :: sparse
-    integer, intent(in) :: ind, jnd, ni !> source site_index, target site_index, ni
+    integer, intent(in) :: ind !> source site_index
+    integer, intent(in) :: ni  !> ???
     double complex, intent(in) :: eikr ! phase factor
     double complex, intent(in) :: Gin(:,:) !< dims(lmmaxd,lmmaxd)
     double complex, intent(inout) :: smat(:,:,:) !< dim(lmmaxd,lmmaxd,nnzb)
 
-    integer :: lm2, lmmax1, lmmax2, is0, Aind
+    integer :: Aind
 
-!   lmmax1 = sparse%kvstr(ind+1) - sparse%kvstr(ind)
-!   lmmax2 = sparse%kvstr(jnd+1) - sparse%kvstr(jnd)
-    lmmax1 = sparse%max_blockdim
-    lmmax2 = sparse%max_blockdim
-
-    do lm2 = 1, lmmax2
-!     is0 = sparse%ka(sparse%ia(ind) + ni-1) + lmmax1*(lm2-1) - 1
-!       is0 = sparse%max_blockdim**2 * (sparse%ia(ind) + ni-1 - 1) + 1 + lmmax1*(lm2-1) - 1
-! 
-!       smat(is0 + 1:lmmax1 + is0,1,1) = &
-!       smat(is0 + 1:lmmax1 + is0,1,1) + eikr * Gin(1:lmmax1,lm2)
-
-    enddo ! lm2
-    Aind = sparse%ia(ind) + ni-1
+    Aind = sparse%ia(ind) + ni - 1
     smat(:,:,Aind) = smat(:,:,Aind) + eikr * Gin(:,:)
 
-    nOps = lmmax1*lmmax2
-  endfunction ! modify_smat
+  endsubroutine ! modify_smat
   
 endmodule ! kkrmat_mod

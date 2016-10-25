@@ -1,7 +1,7 @@
 module SparseMatrixDescription_mod
   implicit none
   private
-  public :: SparseMatrixDescription, create, destroy, dump, getNNZ, getNrows
+  public :: SparseMatrixDescription, create, destroy, dump
   
   !> description of a (square) sparse matrix in VBR format
   !> VBR = variable block row.
@@ -13,21 +13,19 @@ module SparseMatrixDescription_mod
   !> The actual matrix data has to be stored separately
   !> in an 1D array.
   type SparseMatrixDescription
-    !> block dimensions of block-rows and block-cols
-!   integer, allocatable :: kvstr(:)
-    !> For each block row, give start index in ja
-    integer, allocatable :: ia(:)
-    !> Column-indices of non-zero blocks
-    integer, allocatable :: ja(:)
-    !> ia indices into ka - gives start indices of non-zero blocks
-    !> in matrix data array
-!   integer, allocatable :: ka(:)
+    !> block dimension
+    integer :: BlockDim = 0
     !> number of block rows
-    integer :: blk_nrows = 0
-    !> maximal block dimension
-    integer :: max_blockdim = 0
-    !> Maximum number of non-zero blocks per block-row
-    integer :: max_blocks_per_row = 0 ! is only needed in vbrmv_mat
+    integer :: nRows = 0
+    !> maximum column index
+    integer :: nCols = 0
+    !> number of non-zero blocks
+    integer :: nnzb = 0
+    !> For each block row, give start index in ja
+    integer, allocatable :: ia(:) !> dim(nRows + 1)
+    !> Column-indices of non-zero blocks
+    integer, allocatable :: ja(:) !> dim(nnzb)
+    !>
   endtype
 
   interface create
@@ -49,45 +47,28 @@ module SparseMatrixDescription_mod
   !
   !> Creates data structure that contains sparsity information of a
   !> square VBR (variable block row) matrix.
-  subroutine createSparseMatrixDescription(self, blk_nrows, max_num_blocks)
+  subroutine createSparseMatrixDescription(self, nRows, nnzb, nCols)
     type(SparseMatrixDescription), intent(inout) :: self
-    integer, intent(in) :: blk_nrows
-    integer, intent(in) :: max_num_blocks
+    integer, intent(in) :: nRows !> number of rows
+    integer, intent(in) :: nnzb !> number of non-zero blocks
+    integer, intent(in), optional :: nCols !> number of columns
 
-    allocate(self%ia(blk_nrows + 1))
-!   allocate(self%kvstr(blk_nrows + 1))
-    allocate(self%ja(max_num_blocks))
-!   allocate(self%ka(max_num_blocks + 1))
+    allocate(self%ia(nRows + 1))
+    allocate(self%ja(nnzb))
 
-    self%ia = 0
-!   self%kvstr = 0
-    self%ja = 0
-!   self%ka = 0
+    self%ia(:) = 0
+    self%ja(:) = 0
 
-    self%blk_nrows = blk_nrows
-    self%max_blockdim = 0
-    self%max_blocks_per_row = 0
+    self%nRows = nRows
+    if (present(nCols)) then
+      self%nCols = nCols
+    else       
+      self%nCols = nRows ! so far, this routine is only used for the KKR operator which is square
+    endif
+    self%nnzb = nnzb
+    self%BlockDim = 0
 
   endsubroutine ! create
-
-  !----------------------------------------------------------------------------
-  !> Returns number of non-zero elements (only if properly setup!).
-  integer function getNNZ(self)
-    type(SparseMatrixDescription), intent(in) :: self
-
-!   getNNZ = self%ka(self%ia(self%blk_nrows + 1)) - 1
-    getNNZ = self%max_blockdim**2 * size(self%ja)
-  endfunction ! get
-
-  !----------------------------------------------------------------------------
-  !> Returns number of non-zero elements (only if properly setup!).
-  integer function getNrows(self)
-    type(SparseMatrixDescription), intent(in) :: self
-
-!   getNrows = self%kvstr(self%blk_nrows + 1) - 1
-    getNrows = self%max_blockdim*self%blk_nrows
-!   if (getNrows /= self%kvstr(self%blk_nrows + 1) - 1 ) stop __LINE__
-  endfunction ! get
   
   !----------------------------------------------------------------------------
   !> Destroys SparseMatrixDescription object.
@@ -95,11 +76,12 @@ module SparseMatrixDescription_mod
     type(SparseMatrixDescription), intent(inout) :: self
 
     integer :: ist ! ignore status
-    deallocate(self%ia, self%ja, stat=ist)!, self%ka, self%kvstr
+    deallocate(self%ia, self%ja, stat=ist)
 
-    self%blk_nrows = 0
-    self%max_blockdim = 0
-    self%max_blocks_per_row = 0
+    self%nRows = 0
+    self%nCols = 0
+    self%BlockDim = 0
+    self%nnzb = 0
   endsubroutine ! destroy
 
   !---------------------------------------------------------------------------
@@ -111,13 +93,10 @@ module SparseMatrixDescription_mod
     integer, parameter :: fu = 97
 
     open(fu, file=filename, form='formatted', action='write')
-    write(fu, *) self%blk_nrows, size(self%ja)
-!   write(fu, *) self%kvstr
+    write(fu, *) self%nRows, self%nCols, self%nnzb
     write(fu, *) self%ia
     write(fu, *) self%ja
-!   write(fu, *) self%ka
-    write(fu, *) self%max_blockdim
-    write(fu, *) self%max_blocks_per_row
+    write(fu, *) self%BlockDim
     close(fu)
   endsubroutine ! dump
 
@@ -129,19 +108,17 @@ module SparseMatrixDescription_mod
     character(len=*), intent(in) :: filename
 
     integer, parameter :: fu = 97
-    integer :: blk_nrows, max_num_blocks
+    integer :: nRows, nCols, nnzb
 
     call destroy(self)
     
     open(fu, file=filename, form='formatted', action='read', status='old')
-    read(fu, *)  blk_nrows, max_num_blocks
-    call createSparseMatrixDescription(self, blk_nrows, max_num_blocks)
-!   read(fu, *) self%kvstr
+    read(fu, *)  nRows, nCols, nnzb
+    call createSparseMatrixDescription(self, nRows, nnzb, nCols)
     read(fu, *) self%ia
     read(fu, *) self%ja
-!   read(fu, *) self%ka
-    read(fu, *) self%max_blockdim
-    read(fu, *) self%max_blocks_per_row
+    read(fu, *) self%BlockDim
+    self%nnzb = nnzb
     close(fu)
   endsubroutine ! create
 
