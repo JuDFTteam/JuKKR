@@ -17,9 +17,12 @@ module vbrmv_mat_mod
   contains
 
   !> Heavily modified routine from SPARSKIT
-  subroutine vbrmv_mat(blk_nrows, ia, ja, ka, A, kvstr, x, Ax, max_blockdim, max_blocks_per_row, nFlops)
+  subroutine vbrmv_mat(blk_nrows, ia, ja, ka, A, &
+!              kvstr, &
+                       x, Ax, max_blockdim, max_blocks_per_row, nFlops)
                        
-    integer, intent(in) :: blk_nrows, ia(blk_nrows+1), ja(:), ka(:), kvstr(:)
+    integer, intent(in) :: blk_nrows, ia(blk_nrows+1), ja(:), ka(:)
+!   integer, intent(in) :: kvstr(:)
     integer, intent(in) :: max_blockdim, max_blocks_per_row
     double complex, intent(in)  :: A(:), x(:,:)
     double complex, intent(out) :: Ax(:,:)

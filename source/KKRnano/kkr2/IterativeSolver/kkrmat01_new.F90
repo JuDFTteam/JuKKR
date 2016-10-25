@@ -341,9 +341,11 @@ module kkrmat_mod
       TESTARRAYLOG(3, op%DGLLh)
 
       call convertToFullMatrix(op%GLLH, op%sparse%ia, op%sparse%ja, op%sparse%ka, &
-                           op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, gllke_x)
+!                          op%sparse%kvstr, op%sparse%kvstr, &
+                           op%sparse%max_blockdim, gllke_x)
       call convertToFullMatrix(op%DGLLH, op%sparse%ia, op%sparse%ja, op%sparse%ka, &
-                           op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, dgde) 
+!                          op%sparse%kvstr, op%sparse%kvstr, &
+                           op%sparse%max_blockdim, dgde) 
 
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
@@ -386,7 +388,8 @@ module kkrmat_mod
     !    solve (1 - \Delta t * G_ref) X = \Delta t
     !    the solution X is the scattering path operator
 
-    call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
+!   call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr, tmatLL=tmatLL) ! construct RHS with t-matrices
+    call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
     ! call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr) ! construct RHS as unity
 
     if (iguess_data%iguess == 1) then
@@ -424,7 +427,8 @@ module kkrmat_mod
         allocate(full(n,n), stat=ist)
         if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
-      call convertToFullMatrix(op%GLLh, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, full)
+!     call convertToFullMatrix(op%GLLh, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, full)
+      call convertToFullMatrix(op%GLLh, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%max_blockdim, full)
       TESTARRAYLOG(3, full)
       call solveFull(full, op%mat_B, op%mat_X)
     endif ! cutoffmode == 4
@@ -1059,8 +1063,10 @@ module kkrmat_mod
 
     integer :: lm2, lmmax1, lmmax2, is0
 
-    lmmax1 = sparse%kvstr(ind+1) - sparse%kvstr(ind)
-    lmmax2 = sparse%kvstr(jnd+1) - sparse%kvstr(jnd)
+!   lmmax1 = sparse%kvstr(ind+1) - sparse%kvstr(ind)
+!   lmmax2 = sparse%kvstr(jnd+1) - sparse%kvstr(jnd)
+    lmmax1 = sparse%max_blockdim
+    lmmax2 = sparse%max_blockdim
 
     do lm2 = 1, lmmax2
       is0 = sparse%ka(sparse%ia(ind) + ni-1) + lmmax1*(lm2-1) - 1

@@ -43,7 +43,7 @@ module fillKKRMatrix_mod
     ASSERT( size(numn0) >= nrows )
     ASSERT( size(indn0, 2) >= nrows )
     ASSERT( size(sparse%ia) == 1 + nrows )
-    ASSERT( size(sparse%kvstr) == 1 + nrows )
+!   ASSERT( size(sparse%kvstr) == 1 + nrows )
 
     nnzb = sum(numn0(1:nrows)) ! number of non-zero blocks
 
@@ -53,20 +53,20 @@ module fillKKRMatrix_mod
     sparse%ia = 0
     sparse%ja = 0 ! init block number
     sparse%ka = 0 ! init block start address into data array
-    sparse%kvstr = 0 ! init block start indices
+!   sparse%kvstr = 0 ! init block start indices
     sparse%max_blockdim = 0
     sparse%max_blocks_per_row = 0
 
     start_address = 1
-    sparse%kvstr(1) = 1
+!   sparse%kvstr(1) = 1
     ij = 1
     do irow = 1, nrows
       row_block = (lmax_array(irow) + 1)**2
       ASSERT( row_block == lmmaxd )
-      sparse%kvstr(irow+1) = sparse%kvstr(irow) + row_block
+!     sparse%kvstr(irow+1) = sparse%kvstr(irow) + row_block
       sparse%ia(irow) = ij ! start indices into ja
       sparse%max_blockdim = max(sparse%max_blockdim, row_block)
-      ASSERT( sparse%kvstr(irow+1) == irow*sparse%max_blockdim + 1 ) ! the needs to hold when we want to take out kvstr
+!     ASSERT( sparse%kvstr(irow+1) == irow*sparse%max_blockdim + 1 ) ! the needs to hold when we want to take out kvstr
       sparse%max_blocks_per_row = max(sparse%max_blocks_per_row, numn0(irow))
       do icol = 1, numn0(irow)
         ASSERT( ij <= nnzb )
@@ -184,7 +184,7 @@ module fillKKRMatrix_mod
     double complex, intent(out) :: mat_B(:,:)
     integer, intent(in) :: lmmaxd
     integer(kind=2), intent(in) :: atom_indices(:) ! truncation zone indices of the local atoms
-    integer, intent(in) :: kvstr(:)
+    integer, intent(in), optional :: kvstr(:) ! ToDo: remove from interface
     double complex, intent(in), optional :: tmatLL(lmmaxd,lmmaxd,*) !< dim(lmmaxd,lmmaxd,naez_trc)
 
     integer :: start, ii, num_atoms, atom_index, lm2, lmmax1, lmmax2 
@@ -233,12 +233,12 @@ module fillKKRMatrix_mod
   !----------------------------------------------------------------------------
   !> Given the sparse matrix data 'smat' and the sparsity information,
   !> create the dense matrix representation of the matrix.
-  subroutine convertToFullMatrix(smat, ia, ja, ka, kvstr, kvstc, BlockDim, full)
+  subroutine convertToFullMatrix(smat, ia, ja, ka, BlockDim, full, kvstr, kvstc)
     double complex, intent(in) :: smat(:)
     integer, intent(in) :: ia(:)
     integer, intent(in) :: ja(:)
     integer, intent(in) :: ka(:)
-    integer, intent(in) :: kvstr(:), kvstc(:)
+    integer, intent(in), optional :: kvstr(:), kvstc(:) ! ToDo: remove from interface
     integer, intent(in) :: BlockDim
     double complex, intent(out) :: full(:,:)
 

@@ -14,7 +14,7 @@ module SparseMatrixDescription_mod
   !> in an 1D array.
   type SparseMatrixDescription
     !> block dimensions of block-rows and block-cols
-    integer, allocatable :: kvstr(:)
+!   integer, allocatable :: kvstr(:)
     !> For each block row, give index in ja (and ka)
     integer, allocatable :: ia(:)
     !> Column-indices of non-zero blocks
@@ -55,12 +55,12 @@ module SparseMatrixDescription_mod
     integer, intent(in) :: max_num_blocks
 
     allocate(self%ia(blk_nrows + 1))
-    allocate(self%kvstr(blk_nrows + 1))
+!   allocate(self%kvstr(blk_nrows + 1))
     allocate(self%ja(max_num_blocks))
     allocate(self%ka(max_num_blocks + 1))
 
     self%ia = 0
-    self%kvstr = 0
+!   self%kvstr = 0
     self%ja = 0
     self%ka = 0
 
@@ -85,7 +85,7 @@ module SparseMatrixDescription_mod
 
 !   getNrows = self%kvstr(self%blk_nrows + 1) - 1
     getNrows = self%max_blockdim*self%blk_nrows
-    if (getNrows /= self%kvstr(self%blk_nrows + 1) - 1 ) stop __LINE__
+!   if (getNrows /= self%kvstr(self%blk_nrows + 1) - 1 ) stop __LINE__
   endfunction ! get
   
   !----------------------------------------------------------------------------
@@ -94,7 +94,7 @@ module SparseMatrixDescription_mod
     type(SparseMatrixDescription), intent(inout) :: self
 
     integer :: ist ! ignore status
-    deallocate(self%ia, self%kvstr, self%ja, self%ka, stat=ist)
+    deallocate(self%ia, self%ja, self%ka, stat=ist)!, self%kvstr
 
     self%blk_nrows = 0
     self%max_blockdim = 0
@@ -111,7 +111,7 @@ module SparseMatrixDescription_mod
 
     open(fu, file=filename, form='formatted', action='write')
     write(fu, *) self%blk_nrows, size(self%ja)
-    write(fu, *) self%kvstr
+!   write(fu, *) self%kvstr
     write(fu, *) self%ia
     write(fu, *) self%ja
     write(fu, *) self%ka
@@ -135,7 +135,7 @@ module SparseMatrixDescription_mod
     open(fu, file=filename, form='formatted', action='read', status='old')
     read(fu, *)  blk_nrows, max_num_blocks
     call createSparseMatrixDescription(self, blk_nrows, max_num_blocks)
-    read(fu, *) self%kvstr
+!   read(fu, *) self%kvstr
     read(fu, *) self%ia
     read(fu, *) self%ja
     read(fu, *) self%ka
