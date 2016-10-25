@@ -602,13 +602,13 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, &
   NCLEB = (lmax*2+1)**2 * (lmax+1)**2
   LPOT = 4*lmax
   
-  allocate( WG(4*LMAX), YRG(4*LMAX,0:4*LMAX,0:4*LMAX), CLEB(NCLEB), stat=ierr)
-  if(ierr/=0) stop '[calc_Q_mu_rhoq] Error allocating wg etc for gaunt2, gaunt'
-  allocate( ICLEB(NCLEB,3), JEND((LPOT+1)**2,0:LMAX,0:LMAX), LOFLM((2*LPOT+1)**2), stat=ierr )
+  allocate( WG(4*LMAX), YRG(4*LMAX,0:4*LMAX,0:4*LMAX), CLEB(NCLEB), ICLEB(NCLEB,3), JEND((LPOT+1)**2,0:LMAX,0:LMAX), LOFLM((2*LPOT+1)**2), stat=ierr )
   if(ierr/=0) stop '[calc_Q_mu_rhoq] Error allocating icleb etc for gaunt'
   
+  ! find wg, yrg
   CALL GAUNT2( WG, YRG, 4*LMAX )
   
+  ! compute gaunt coefficients (normal ones with lmax_1 = lmax_2 = lmax)
   CALL GAUNT_new( LMAX, LMAX, LPOT, WG, YRG, CLEB, LOFLM, ICLEB, IEND, JEND, NCLEB, LMAX, (LPOT+1)**2 )
   ! done computing gaunts
   
@@ -625,38 +625,38 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, &
 
   ! compute Tr[ R^mu_Lmabda(\vec{r}) R^left,mu_Lmabda'(\vec{r}) ]_L
   do ispin=1,2 ! sum over spins
-   do lm01=1,lmmaxso/2
-   do lm02=1,lmmaxso/2
-   
-    ! diagonal in lm1, lm2, lm3 -> spherical part
-    do lm1=1,lmmaxso/2
-      do ir=1,irmdnew
-        ! sum of Rll*Rllleft with Gaunt coefficients, with trace over big and small component (lmmaxso shift in first index of Rll, Rllleft)
-        trq_of_r(lm01, lm02, lm1, ir) = trq_of_r(lm01, lm02, lm1, ir) + ( Rll(lm01, lm1, ir)*Rllleft(lm02, lm1, ir) + Rll(lm01+lmmaxso, lm1, ir)*Rllleft(lm02+lmmaxso, lm1, ir) )
-      enddo ! ir
-    end do ! lm1
-   
-    ! non-spherical part
-    do j = 1,iend ! loop over number of non-vanishing Gaunt coefficients
-      ! set lm indices for Gaunt coefficients
-      lm1 = icleb(j,1) + lmshift(ispin) ! lmshift shifts between up and down spins
-      lm2 = icleb(j,2) + lmshift(ispin) ! same entry since under trace the spinors can be written as: X_s1*X_s2^\dagger = X_s2^\dagger*X_s1 = \delta_{s1,s2}
-      lm3 = icleb(j,3)
-      ! do loop over non-spherical points here
-!       do ir=imt1+1,irmdnew
-      do ir=1,irmdnew
-        ! sum of Rll*Rllleft with Gaunt coefficients, with trace over big and small component (lmmaxso shift in first index of Rll, Rllleft)
-        trq_of_r(lm01, lm02, lm3, ir) = trq_of_r(lm01, lm02, lm3, ir) + cleb(j) * ( Rll(lm01, lm1, ir)*Rllleft(lm02, lm2, ir) + Rll(lm01+lmmaxso, lm1, ir)*Rllleft(lm02+lmmaxso, lm2, ir) )
-      enddo ! ir
-    enddo ! j -> sum of Gaunt coefficients
-    
-   enddo ! lm02
-   enddo ! lm01
+    do lm01=1,lmmaxso/2
+      do lm02=1,lmmaxso/2
+      
+        ! diagonal in lm1, lm2, lm3 -> spherical part
+        do lm1=1,lmmaxso/2
+          do ir=1,irmdnew
+            ! sum of Rll*Rllleft with Gaunt coefficients, with trace over big and small component (lmmaxso shift in first index of Rll, Rllleft)
+            trq_of_r(lm01, lm02, lm1, ir) = trq_of_r(lm01, lm02, lm1, ir) + ( Rll(lm01, lm1, ir)*Rllleft(lm02, lm1, ir) + Rll(lm01+lmmaxso, lm1, ir)*Rllleft(lm02+lmmaxso, lm1, ir) )
+          enddo ! ir
+        end do ! lm1
+        
+        ! non-spherical part
+        do j = 1,iend ! loop over number of non-vanishing Gaunt coefficients
+          ! set lm indices for Gaunt coefficients
+          lm1 = icleb(j,1) + lmshift(ispin) ! lmshift shifts between up and down spins
+          lm2 = icleb(j,2) + lmshift(ispin) ! same entry since under trace the spinors can be written as: X_s1*X_s2^\dagger = X_s2^\dagger*X_s1 = \delta_{s1,s2}
+          lm3 = icleb(j,3)
+          ! do loop over non-spherical points here
+ !          do ir=imt1+1,irmdnew
+          do ir=1,irmdnew
+            ! sum of Rll*Rllleft with Gaunt coefficients, with trace over big and small component (lmmaxso shift in first index of Rll, Rllleft)
+            trq_of_r(lm01, lm02, lm3, ir) = trq_of_r(lm01, lm02, lm3, ir) + cleb(j) * ( Rll(lm01, lm1, ir)*Rllleft(lm02, lm2, ir) + Rll(lm01+lmmaxso, lm1, ir)*Rllleft(lm02+lmmaxso, lm2, ir) )
+          enddo ! ir
+        enddo ! j -> sum of Gaunt coefficients
+         
+        enddo ! lm02
+    enddo ! lm01
   enddo ! ispin -> sum over spins
-  
-  
-  deallocate( WG, YRG, CLEB )
-  deallocate( ICLEB, JEND, LOFLM )
+        
+        
+  deallocate( WG, YRG, CLEB, ICLEB, JEND, LOFLM, stat=ierr )
+  if(ierr/=0) stop '[calc_Q_mu_rhoq] Error deallocating gaunt arrays'
   
   
 end subroutine calc_Q_mu_rhoq
@@ -776,6 +776,127 @@ end subroutine red_Q
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
+subroutine get_tinv(t_rhoq, tinv)
+  use mod_mympi, only: myrank, master
+  implicit none
+  ! parameter
+  double complex, parameter :: C0=(0.0d0, 0.0d0), C1=(1.0d0, 0.0d0)
+
+  ! input
+  type(type_rhoq), intent(in) :: t_rhoq
+  ! output
+  double complex, intent(out) :: tinv(:,:,:) !allocated outside with (N,N,Nscoef+!)
+  ! local
+  integer :: nref, ie, ielast, ierr, i, irec, lrec, N, lm1
+  integer, allocatable :: ipvt(:), refpot(:)
+  double complex, allocatable :: tll(:,:), trefll(:,:,:)
+
+  !matrix dimensions (depending on lmax)
+  N = t_rhoq%lmmaxso
+  
+  !read stuff in master only and pass to other ranks (is fastest)
+  if(myrank==master) then
+    open(9999, file='refinfo', form='formatted')
+    read(9999,'(1I9)') NREF
+    allocate(refpot(1:t_rhoq%NATYP), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] ERROR in allocating refpot'
+    read(9999, '(1000I9)') refpot(1:t_rhoq%NATYP)
+    close(9999)
+  else
+    allocate(refpot(1:t_rhoq%NATYP), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] ERROR in allocating refpot'
+  endif
+  
+#ifdef CPP_MPI
+  call MPI_Bcast(refpot, t_rhoq%NATYP, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting scalars in t_rhoq'
+#endif
+  
+  if(myrank==master) then
+    allocate(trefll(N,N, NREF), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] error allocating trefll'
+    open(9999, file='tref', access='direct', recl=4*N**2 )
+    ie = 2
+    ielast = 3
+    do i = 1,nref
+       irec = ie + ielast*(i-1)
+       read(9999, rec=irec) trefll(1:N,1:N,i)
+    enddo ! i
+    close(9999)
+  else !myrank/=master
+    allocate(trefll(N,N, NREF), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] ERROR in allocating trefll'
+  endif
+  
+#ifdef CPP_MPI
+  call MPI_Bcast(trefll, N*N*NREF, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting scalars in t_rhoq'
+#endif
+  
+  if(myrank==master) then
+    !temporary array
+    allocate(ipvt(N), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] error allocating ipvt'
+    allocate(tll(N,N), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] error allocating tll'
+    tll = C0
+
+    ! read tmat and compute tinv = tmat^-1
+    lrec = 4*N**2
+    open(9999, file='tmat', access='direct', recl=lrec, form='unformatted')
+  
+    do i=1,t_rhoq%Nscoef
+  
+      irec = ie+ielast*(t_rhoq%ilay_scoef(i)-1) ! layer index 
+      read(9999,rec=irec) tll(1:N,1:N)
+      ! tau0_k is defined with respect to t_ref, thus: t-t_ref
+      tll = tll - trefll(:,:,refpot(t_rhoq%ilay_scoef(i)))
+
+      ! initialize tinv
+      tinv(1:N,1:N,i)=C0
+      do lm1=1,N
+        tinv(lm1,lm1,i)=C1
+      enddo
+    
+      ! LU decomposition to invert tll: tinv = tll^-1
+      call zgetrf(N,N,tll,N,ipvt,ierr)
+      call zgetrs('n',N,N,tll,N,ipvt,tinv(:,:,i),N,ierr)
+    
+    end do ! i
+  
+    irec =  ie+ielast*(t_rhoq%mu_0-1) ! layer index for probe layer mu_0
+    !write(*,*) 'read tmat_mu0', irec
+    read(9999,rec=irec) tll(1:N,1:N)
+    ! t-t_ref
+    tll = tll - trefll(:,:,refpot(t_rhoq%mu_0))
+
+    ! initialize tinv
+    tinv(1:N,1:N,t_rhoq%Nscoef+1)=C0
+    do lm1=1,N
+      tinv(lm1,lm1,t_rhoq%Nscoef+1)=C1
+    enddo
+    ! LU decomposition to invert tll
+    call zgetrf(N,N,tll,N,ipvt,ierr)
+    call zgetrs('n',N,N,tll,N,ipvt,tinv(:,:,t_rhoq%Nscoef+1),N,ierr)
+
+    ! close file 'tmat'
+    close(9999)
+  
+    deallocate(tll, ipvt, trefll, stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] error deallocating tll etc.'
+  end if !myrank==master
+  
+#ifdef CPP_MPI
+  call MPI_Bcast(tinv, N*N*(t_rhoq%Nscoef+1), MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting scalars in t_rhoq'
+#endif
+  
+end subroutine get_tinv
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
         &        ntotd, npan_tot, ncheb, rpan_intervall, ipan_intervall, irmdnew, alat )
   ! calculate Delta rho^mu(q) = Int{ Delta rho(q, X_mu+r), dr }
@@ -797,11 +918,15 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   integer, intent(in) :: ipan_intervall(0:ntotd)
   
   ! local
-  integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, nthreads, Ni, Nj, Nqpt, ixyz, lm01, lm02, ir, l1, m1, imt1, lm2, lm3, ifun, imin, ielast, nref, ikx, iky, Nx, Ny
+  integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, nthreads, Ni, Nj, Nqpt, ixyz, lm01, lm02, ir, l1, m1, imt1, lm2, lm3, ifun, imin, ielast, ikx, iky, Nx, Ny
   integer, save :: mythread
   !$omp threadprivate(mythread)
+  
+  integer :: NREF
   integer, allocatable :: ipvt(:), refpot(:)
-  double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), tll(:,:), trefll(:,:,:), tmpsum1(:,:), tmpsum2(:,:), qint(:,:,:), eiqr_lm(:,:), q_mu(:,:), cYlm(:)
+  double complex, allocatable :: tll(:,:), trefll(:,:,:)
+  
+  double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), tmpsum1(:,:), tmpsum2(:,:), qint(:,:,:), eiqr_lm(:,:), q_mu(:,:), cYlm(:)
   double complex, allocatable, save :: tmp(:,:), exG0_tmp(:,:), jl(:), qint_tmp(:,:,:)
   !$omp threadprivate(tmp, exG0_tmp, jl, qint_tmp)
   double complex :: tr_tmpsum1, tr_tmpsum2, kweight, Z
@@ -848,8 +973,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   ! calculate scattering path operator tau from host, tmat and impurty GF
   
   !allocate temporary arrays
-  allocate(ipvt(N), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] error allocating ipvt'
   allocate(tinv(N,N,t_rhoq%Nscoef+1), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating tinv'
   allocate(tau0_k(N,N), stat=ierr)
@@ -859,113 +982,12 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   allocate(G0ji_k(N,N,t_rhoq%Nscoef,Nkp), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating G0ji_k'
   
-  tinv = C0
   tau0_k = C0
   G0ij_k = C0
   G0ji_k = C0
-       
-  ie = 1
-  ielast = 1
   
-  if(myrank==master) then
-    open(9999, file='refinfo', form='formatted')
-    read(9999,'(1I9)') NREF
-    allocate(refpot(1:t_rhoq%NATYP), stat=ierr)
-    if(ierr/=0) stop '[calc_rhoq] ERROR in allocating refpot'
-    read(9999, '(1000I9)') refpot(1:t_rhoq%NATYP)
-    close(9999)
-  else
-    allocate(refpot(1:t_rhoq%NATYP), stat=ierr)
-    if(ierr/=0) stop '[calc_rhoq] ERROR in allocating refpot'
-  endif
-  
-#ifdef CPP_MPI
-  call MPI_Bcast(refpot, t_rhoq%NATYP, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting scalars in t_rhoq'
-#endif
-  
-  if(myrank==master) then
-    allocate(trefll(N,N, NREF), stat=ierr)
-    if(ierr/=0) stop '[calc_rhoq] error allocating trefll'
-    open(9999, file='tref', access='direct', recl=4*lmmaxso**2 )
-    ie = 2
-    ielast = 3
-    DO I = 1,NREF
-       irec = ie + ielast*(i-1)
-       read(9999, rec=irec) trefll(1:N,1:N,i)
-       write(9992,'(2ES15.7)') trefll(1:N,1:N,i)
-    ENDDO ! I1
-    close(9999)
-  else !myrank/=master
-    allocate(trefll(N,N, NREF), stat=ierr)
-    if(ierr/=0) stop '[calc_rhoq] ERROR in allocating trefll'
-  endif
-  
-#ifdef CPP_MPI
-  call MPI_Bcast(trefll, N*N*NREF, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting scalars in t_rhoq'
-#endif
-  
-  if(myrank==master) then
-    !temporary array
-    allocate(tll(N,N), stat=ierr)
-    if(ierr/=0) stop '[calc_rhoq] error allocating tll'
-    tll = C0
-
-    ! read tmat and compute tinv = tmat^-1
-    lrec = 4*N**2
-    open(9999, file='tmat', access='direct', recl=lrec, form='unformatted')
-  
-    do i=1,t_rhoq%Nscoef
-  
-      irec = ie+ielast*(t_rhoq%ilay_scoef(i)-1) ! layer index 
-      read(9999,rec=irec) tll(1:N,1:N)
-      ! t-t_ref
-      tll = tll - trefll(:,:,refpot(t_rhoq%ilay_scoef(i)))
-
-      ! initialize tinv
-      tinv(1:N,1:N,i)=C0
-      do lm1=1,lmmaxso
-        tinv(lm1,lm1,i)=C1
-      enddo
-    
-      ! LU decomposition to invert tll
-      call zgetrf(lmmaxso,lmmaxso,tll,lmmaxso,ipvt,ierr)
-      call zgetrs('n',lmmaxso,lmmaxso,tll,lmmaxso,ipvt,tinv(:,:,i),lmmaxso,ierr)
-    
-    end do ! i
-  
-    irec =  ie+ielast*(t_rhoq%mu_0-1) ! layer index for probe layer mu_0
-    !write(*,*) 'read tmat_mu0', irec
-    read(9999,rec=irec) tll(1:N,1:N)
-    ! t-t_ref
-    tll = tll - trefll(:,:,refpot(t_rhoq%mu_0))
-
-    ! initialize tinv
-    tinv(1:N,1:N,t_rhoq%Nscoef+1)=C0
-    do lm1=1,lmmaxso
-      tinv(lm1,lm1,t_rhoq%Nscoef+1)=C1
-    enddo
-    ! LU decomposition to invert tll
-    call zgetrf(lmmaxso,lmmaxso,tll,lmmaxso,ipvt,ierr)
-    call zgetrs('n',lmmaxso,lmmaxso,tll,lmmaxso,ipvt,tinv(:,:,t_rhoq%Nscoef+1),lmmaxso,ierr)
-
-    ! close file 'tmat'
-    close(9999)
-
-!     close(6699)
-  
-    deallocate(tll, ipvt, stat=ierr)
-    if(ierr/=0) stop '[calc_rhoq] error deallocating tll etc.'
-  end if
-  
-#ifdef CPP_MPI
-  call MPI_Bcast(tinv, N*N*(t_rhoq%Nscoef+1), MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting scalars in t_rhoq'
-#endif
-  
-  
-  
+  !tinv = (t-tref)^-1
+  call get_tinv(t_rhoq, tinv)
   
   ! open tau0_k file, written in writegreen of zulapi code
 !   lrec = 4*(N**2)
@@ -1104,21 +1126,21 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   LMAX_2 = 18
   LPOT_2 = 2*(LMAX_1+LMAX_2)
   
-  allocate( WG(4*LMAX_2), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] Error allocating wg '
-  allocate( YRG(4*LMAX_2,0:4*LMAX_2,0:4*LMAX_2), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] Error allocating yrg'
-  allocate( CLEB(NCLEB), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] Error allocating cleb'
-  allocate( ICLEB(NCLEB,3), JEND((LPOT_2+1)**2,0:LMAX_1,0:LMAX_2), LOFLM((2*LPOT_2+1)**2), stat=ierr )
-  if(ierr/=0) stop '[calc_rhoq] Error allocating icleb_2 etc for gaunt'
+  allocate( WG(4*LMAX_2), YRG(4*LMAX_2,0:4*LMAX_2,0:4*LMAX_2), stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] Error allocating wg, yrg'
+  allocate( CLEB(NCLEB), ICLEB(NCLEB,3), JEND((LPOT_2+1)**2,0:LMAX_1,0:LMAX_2), LOFLM((2*LPOT_2+1)**2), stat=ierr )
+  if(ierr/=0) stop '[calc_rhoq] Error allocating icleb etc for gaunt'
   
+  ! first set wg and yrg arrays (input for gaunt_new)
   !          ( > |  > |     <    )
   CALL GAUNT2( WG, YRG, 4*LMAX_2)
   
-  !             (    <  |    <  |   <   | < |  < |  >  |  >   |   >  |  >  |  >  |  >   |   <   |     <         )
+  ! compute gaunt coefficients depending on two different cutoffs (lmax_1 and lamx_2)
+  !             (    <  |    <  |   <   | < |  < |  >  |  >   |   >  |  >  |  >  |  >   |   <     |     <         )
   CALL GAUNT_new( LMAX_1, LMAX_2, LPOT_2, WG, YRG, CLEB, LOFLM, ICLEB, IEND, JEND, NCLEB, LMAX_2  , (LPOT_2+1)**2 )
   
+  deallocate(WG, YRG, stat=ierr)
+  if(ierr/=0) stop '[calc_rhoq] Error deallocating wg, yrg'
   
   if(myrank==master) write(*,*) 'done with gaunts'
   
@@ -1340,8 +1362,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   if(ierr/=0) stop '[calc_rhoq] error allocating q_mu'
   
 
-!   do q=1,Nqpt !q-loop
-  do q=Nqpt/2, Nqpt/2 !1,Nqpt !q-loop
+  do q=1,Nqpt !q-loop
+!   do q=Nqpt/2, Nqpt/2 !1,Nqpt !q-loop
    
      
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1823,41 +1845,54 @@ program test
   
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !>>>>>>>>>>>>>>>> read stuff in  >>>>>>>>>>>>>
+  
   call timing_start('init rhoq')
 
+  ! find ilay_scoef, r_scoef, Nlayer, Nscoef in t_rhoq from scoef
   call read_scoef_rhoq(t_rhoq)
 
+  ! read from inputcard
   call read_input_rhoq(t_rhoq, uio)
 
+  ! save kpt, volcub, volbz nkpt to t_rhoq
   call save_kmesh_rhoq(t_rhoq,nkpt,kpt,volcub,volbz)
 
+  ! save r_basis, lmmaxso, natyp to t_rhoq
   call save_geometry_rhoq(t_rhoq,r_basis,lmmaxso,natyp)
   
 #ifdef CPP_MPI
+  ! broadcast scalars in t_rhoq from master to other ranks
   call bcast_scalars_rhoq(t_rhoq)
 #endif
+
+  !allocate arrays in t_rhoq from scalars (used for myrank/=master)
   call init_t_rhoq(t_rhoq)
+  
 #ifdef CPP_MPI
+  ! bradcast arrays of t_rhoq from master to all other ranks 
   call bcast_arrays_rhoq(t_rhoq)
 #endif
+
   call timing_stop('init rhoq')
   !<<<<<<<<<<<<<<<< read stuff in  <<<<<<<<<<<<<
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   
-  ! read DTMTRX and GMATLL_GES (scattering files)
+  ! read DTMTRX and GMATLL_GES (scattering files), stored in t_rhoq%
   call timing_start('read Dt Gimp')
   call read_Dt_Gimp_rhoq(t_rhoq, lmmaxso, t_rhoq%Nscoef)
   call timing_stop('read Dt Gimp')
   
   
   ! calculate impurity scattering path operator from Dt, Gimp
+  ! tau_i,i' = Dt_i delta_i,i' + Dt_i Gimp_i,i' Dt_i'
   call timing_start('calc tau')
   call calc_tau_rhoq(t_rhoq)
   call timing_start('calc tau')
   
   
-  ! calculate prefactor Q^{\mu}_{LL'} = Tr{ \int{ R_{L}(\vec{r})*Rleft_{L'}(\vec{r}) d\vec{r} }
+  ! calculate prefactor Q^{\mu}_{LL'}(r) = R_{L}(\vec{r})*Rleft_{L'}(\vec{r})
+  ! used in calc_rhoq to get Q^{\mu}_{LL'}(\vec{q}) = \Int R_{L}(\vec{r})*Rleft_{L'}(\vec{r}) \exp{-i\vec{q}\cdot\vec{r}} d\vec{r}
   call timing_start('calc Q_mu')
   call calc_Q_mu_rhoq(lmax, ntotd, npan_tot, &
         & nsra, lmmaxso, Rll, Rllleft, ipan_intervall, &
@@ -1865,6 +1900,8 @@ program test
   call timing_stop('calc Q_mu')
 
   ! calculate Fourier transform: \rho(\vec{q}) = \int \Delta\rho(\vec{q};\Chi_\mu+\vec{r}) d\vec{r}
+  ! = Tr{ Q^{\mu}_{LL'}(q) \int [ \sum_{i,j}{\exp{-i\vec{q}\cdot (\vec{L}_i}-\vec{L}_j)} G0^{\mu_0,i}(k) \tau_i,j G0^{j,\mu_0}(k+q)} - \sum_{i,j}{\exp{-i\vec{q}\cdot (\vec{L}_i}-\vec{L}_j)} G0^{\mu_0,i}(k) \tau_i,j G0^{j,\mu_0}(k-q)}^* ] d^2k
+  ! where G0^{\mu,\mu_i} (k) = -t_{\mu}^-1 \delta_{\mu-\mu_i} + t_{mu}^-1 \tau_0^{\mu,\mu_i}(k) t_{mu_i}^-1
   call timing_start('calc rhoq')
   call calc_rhoq(t_rhoq, t_rhoq%lmmaxso, t_rhoq%Nkpt, trq_of_r, rhoq, recbv, lmax,   &
         &        ntotd, npan_tot, ncheb, rpan_intervall, ipan_intervall, irmdnew, alat )

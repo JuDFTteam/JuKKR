@@ -3,7 +3,7 @@
 default: install
 
 FC =  ifort
-mpi: FC = /usr/local/impi/bin/mpifort
+mpi: FC = mpiifort
 
 
 FILENAME0 = rhoq.x
