@@ -305,16 +305,16 @@ module kkrmat_mod
     ! not using locks does not scale well
   
 #ifndef SPLIT_REFERENCE_FOURIER_COM
-    call referenceFourier_com(op%GLLh, op%sparse, kpoint, alat, &
+    call referenceFourier_com(op%mat_A, op%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              RR, cluster%ezoa_trc, Ginp, global_atom_id, communicator)
 #else
-    call referenceFourier_part2(op%GLLh, op%sparse, kpoint, alat, &
+    call referenceFourier_part2(op%mat_A, op%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              RR, cluster%ezoa_trc, Ginp)
 #endif
 
-    TESTARRAYLOG(3, op%GLLh)
+    TESTARRAYLOG(3, op%mat_A)
 
    ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
@@ -329,21 +329,21 @@ module kkrmat_mod
       allocate(dpde_local(naez*lmmaxd,lmmaxd))
     
 #ifndef SPLIT_REFERENCE_FOURIER_COM
-      call referenceFourier_com(op%DGLLh, op%sparse, kpoint, alat, &
+      call referenceFourier_com(op%mat_dAdE, op%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              RR, cluster%ezoa_trc, DGinp, global_atom_id, communicator)
 #else
-      call referenceFourier_part2(op%DGLLh, op%sparse, kpoint, alat, &
+      call referenceFourier_part2(op%mat_dAdE, op%sparse, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              RR, cluster%ezoa_trc, DGinp)
 #endif
 
-      TESTARRAYLOG(3, op%DGLLh)
+      TESTARRAYLOG(3, op%mat_dAdE)
 
-      call convertToFullMatrix(op%GLLH, op%sparse%ia, op%sparse%ja, op%sparse%ka, &
+      call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, & ! op%sparse%ka, &
 !                          op%sparse%kvstr, op%sparse%kvstr, &
                            op%sparse%max_blockdim, gllke_x)
-      call convertToFullMatrix(op%DGLLH, op%sparse%ia, op%sparse%ja, op%sparse%ka, &
+      call convertToFullMatrix(op%mat_dAdE, op%sparse%ia, op%sparse%ja, & ! op%sparse%ka, &
 !                          op%sparse%kvstr, op%sparse%kvstr, &
                            op%sparse%max_blockdim, dgde) 
 
@@ -372,10 +372,10 @@ module kkrmat_mod
     ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     !----------------------------------------------------------------------------
-    call buildKKRCoeffMatrix(op%GLLh, tmatLL, op%sparse)
+    call buildKKRCoeffMatrix(op%mat_A, tmatLL, op%sparse)
     !----------------------------------------------------------------------------
 
-    TESTARRAYLOG(3, op%GLLh)
+    TESTARRAYLOG(3, op%mat_A)
 
     ! ==> now GLLh holds (1 - Delta_t * G_ref)
 
@@ -399,7 +399,7 @@ module kkrmat_mod
       solver%initial_zero = .true.
     endif
 
-    call calc(preconditioner, op%GLLh) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
+    call calc(preconditioner, op%mat_A) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
 
     if (cutoffmode == 3 .or. cutoffmode == 0) then
 
@@ -407,8 +407,8 @@ module kkrmat_mod
 
       if (DEBUG_dump_matrix) then
         call dump(op%sparse, "matrix_descriptor.dat") ! SparseMatrixDescription
-        call dump(op%GLLh,  "bin.matrix", formatted=.false.)
-        call dump(op%GLLh,  "matrix_form.dat", formatted=.true.)
+        call dump(op%mat_A,  "bin.matrix", formatted=.false.)
+        call dump(op%mat_A,  "matrix_form.dat", formatted=.true.)
         call dump(op%mat_X, "bin.solution", formatted=.false.)
         call dump(op%mat_X, "solution_form.dat", formatted=.true.)
         call dump(op%mat_B, "bin.rhs", formatted=.false.)
@@ -427,8 +427,9 @@ module kkrmat_mod
         allocate(full(n,n), stat=ist)
         if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
-!     call convertToFullMatrix(op%GLLh, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, full)
-      call convertToFullMatrix(op%GLLh, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%max_blockdim, full)
+!     call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, full)
+!     call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%max_blockdim, full)
+      call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%max_blockdim, full)
       TESTARRAYLOG(3, full)
       call solveFull(full, op%mat_B, op%mat_X)
     endif ! cutoffmode == 4
@@ -504,7 +505,7 @@ module kkrmat_mod
     use one_sided_commZ_mod, only: fenceZ
 #endif
     include 'mpif.h'
-    double complex, intent(out) :: GLLh(:)
+    double complex, intent(out) :: GLLh(:,:,:)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
@@ -713,7 +714,7 @@ module kkrmat_mod
   subroutine referenceFourier_part2(GLLh, sparse, kpoint, alat, nacls, atom, numn0, indn0, rr, ezoa, Gref_buffer)
     !! this operation will be performed for every k-point and does not include MPI communication
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
-    double complex, intent(out) :: GLLh(:)
+    double complex, intent(out) :: GLLh(:,:,:)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
@@ -765,7 +766,7 @@ module kkrmat_mod
                 indn0, rr, ezoa, Ginp, global_atom_id, comm)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     use ChunkIndex_mod, only: getRankAndLocalIndex
-    double complex, intent(out) :: GLLh(:)
+    double complex, intent(out) :: GLLh(:,:,:)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
@@ -1008,7 +1009,7 @@ module kkrmat_mod
   subroutine dlke0_smat(smat, iat, sparse, eikrm, eikrp, nacls, atom, numn0, indn0, Ginp)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     ! assume a variable block row sparse matrix description
-    double complex, intent(inout) :: smat(:)
+    double complex, intent(inout) :: smat(:,:,:)
     integer, intent(in) :: iat !> local_atom_idx of the source atom
     type(SparseMatrixDescription), intent(in) :: sparse
     double complex, intent(in) :: eikrm(nacls), eikrp(nacls) ! todo: many of these phase factors are real
@@ -1059,7 +1060,7 @@ module kkrmat_mod
     integer, intent(in) :: ind, jnd, ni !> source site_index, target site_index, ni
     double complex, intent(in) :: eikr ! phase factor
     double complex, intent(in) :: Gin(:,:) !< dims(lmmaxd,lmmaxd)
-    double complex, intent(inout) :: smat(:)
+    double complex, intent(inout) :: smat(:,:,:) !< dim(nnz,1,1)
 
     integer :: lm2, lmmax1, lmmax2, is0
 
@@ -1069,10 +1070,11 @@ module kkrmat_mod
     lmmax2 = sparse%max_blockdim
 
     do lm2 = 1, lmmax2
-      is0 = sparse%ka(sparse%ia(ind) + ni-1) + lmmax1*(lm2-1) - 1
+!     is0 = sparse%ka(sparse%ia(ind) + ni-1) + lmmax1*(lm2-1) - 1
+      is0 = sparse%max_blockdim**2 * (sparse%ia(ind) + ni-1 - 1) + 1 + lmmax1*(lm2-1) - 1
 
-      smat(is0 + 1:lmmax1 + is0) = &
-      smat(is0 + 1:lmmax1 + is0) + eikr * Gin(1:lmmax1,lm2)
+      smat(is0 + 1:lmmax1 + is0,1,1) = &
+      smat(is0 + 1:lmmax1 + is0,1,1) + eikr * Gin(1:lmmax1,lm2)
 
     enddo ! lm2
 

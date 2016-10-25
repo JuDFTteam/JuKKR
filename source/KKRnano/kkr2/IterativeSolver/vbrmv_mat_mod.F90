@@ -17,11 +17,14 @@ module vbrmv_mat_mod
   contains
 
   !> Heavily modified routine from SPARSKIT
-  subroutine vbrmv_mat(blk_nrows, ia, ja, ka, A, &
+  subroutine vbrmv_mat(blk_nrows, ia, ja, &
+!              ka, &
+                       A, &
 !              kvstr, &
                        x, Ax, max_blockdim, max_blocks_per_row, nFlops)
                        
-    integer, intent(in) :: blk_nrows, ia(blk_nrows+1), ja(:), ka(:)
+    integer, intent(in) :: blk_nrows, ia(blk_nrows+1), ja(:)
+!   integer, intent(in) :: ka(:)
 !   integer, intent(in) :: kvstr(:)
     integer, intent(in) :: max_blockdim, max_blocks_per_row
     double complex, intent(in)  :: A(:), x(:,:)
@@ -72,7 +75,9 @@ module vbrmv_mat_mod
       nrows = max_blockdim
       nsum  = 0
 
-      k = ka(ia(ibr))
+!     k = ka(ia(ibr))
+      k = max_blockdim*max_blockdim*(ia(ibr) - 1) + 1
+!     if ( k /= ka(ia(ibr)) ) stop 'computed k differs from listed k!'
       do j = ia(ibr), ia(ibr+1)-1
         ibc  = ja(j)
 !       isc  = kvstr(ibc)

@@ -79,7 +79,7 @@ module BCPOperator_mod
   !> uses bcpwupper
   subroutine calc_BCPOperator(self, GLLH)
     type(BCPOperator) :: self
-    double complex, intent(in) :: GLLH(:)
+    double complex, intent(in) :: GLLH(:,:,:) !< dim(nnz,1,1)
 
     integer :: naezd, blocks_per_row
     

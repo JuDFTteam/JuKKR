@@ -48,11 +48,11 @@ module fillKKRMatrix_mod
     nnzb = sum(numn0(1:nrows)) ! number of non-zero blocks
 
     ASSERT( size(sparse%ja) >= nnzb )
-    ASSERT( size(sparse%ka) >= 1 + nnzb )
+!   ASSERT( size(sparse%ka) >= 1 + nnzb )
 
     sparse%ia = 0
     sparse%ja = 0 ! init block number
-    sparse%ka = 0 ! init block start address into data array
+!   sparse%ka = 0 ! init block start address into data array
 !   sparse%kvstr = 0 ! init block start indices
     sparse%max_blockdim = 0
     sparse%max_blocks_per_row = 0
@@ -70,7 +70,7 @@ module fillKKRMatrix_mod
       sparse%max_blocks_per_row = max(sparse%max_blocks_per_row, numn0(irow))
       do icol = 1, numn0(irow)
         ASSERT( ij <= nnzb )
-        sparse%ka(ij) = start_address ! start indices into the data array
+!       sparse%ka(ij) = start_address ! start indices into the data array
 
         ASSERT( icol <= size(indn0, 1) )
         jcol = indn0(icol,irow)
@@ -85,8 +85,8 @@ module fillKKRMatrix_mod
         ij = ij + 1
       enddo ! icol
     enddo ! irow
-    sparse%ka(ij) = start_address
-    ASSERT( sparse%ka(ij) == sparse%max_blockdim**2 * (ij - 1) + 1 ) ! the needs to hold when we want to take out ka
+!   sparse%ka(ij) = start_address
+!   ASSERT( sparse%ka(ij) == sparse%max_blockdim**2 * (ij - 1) + 1 ) ! the needs to hold when we want to take out ka
     sparse%ia(nrows+1) = ij ! final, important since the ranges are always [ia(i) ... ia(i+1)-1]
     ASSERT( ij == 1 + nnzb ) ! check
 
@@ -103,7 +103,7 @@ module fillKKRMatrix_mod
   subroutine buildKKRCoeffMatrix(smat, tmatLL, sparse)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
 
-    double complex, intent(inout) :: smat(:)
+    double complex, intent(inout) :: smat(:,:,:) !< dim(nnz,1,1)
     double complex, intent(in) :: tmatLL(:,:,:) !< dim(lmmaxd,lmmaxd,naez_trc)
     type(SparseMatrixDescription), intent(in) :: sparse
 
@@ -164,12 +164,12 @@ module fillKKRMatrix_mod
 
           temp(:) = ZERO
           do lm3 = 1, lmmax3
-            temp(:) = temp(:) + tmatLL(:,lm3,block_row) * smat(start+lm3+lmmax3*(lm2-1)) ! T*G
+            temp(:) = temp(:) + tmatLL(:,lm3,block_row) * smat(start+lm3+lmmax3*(lm2-1),1,1) ! T*G
           enddo ! lm3
           
           if (block_row == block_col) temp(lm2) = temp(lm2) - CONE ! subtract 1.0 from the diagonal
 
-          smat(start+lmmax1*(lm2-1)+ 1:lmmax1 +start+lmmax1*(lm2-1)) = temp(1:lmmax1)
+          smat(start+lmmax1*(lm2-1)+ 1:lmmax1 +start+lmmax1*(lm2-1),1,1) = temp(1:lmmax1)
         enddo ! lm2
 
         start = start + lmmax2*lmmax1
@@ -233,11 +233,11 @@ module fillKKRMatrix_mod
   !----------------------------------------------------------------------------
   !> Given the sparse matrix data 'smat' and the sparsity information,
   !> create the dense matrix representation of the matrix.
-  subroutine convertToFullMatrix(smat, ia, ja, ka, BlockDim, full, kvstr, kvstc)
-    double complex, intent(in) :: smat(:)
+  subroutine convertToFullMatrix(smat, ia, ja, BlockDim, full, ka, kvstr, kvstc)
+    double complex, intent(in) :: smat(:,:,:) !< dim(nnz,1,1)
     integer, intent(in) :: ia(:)
     integer, intent(in) :: ja(:)
-    integer, intent(in) :: ka(:)
+    integer, intent(in), optional :: ka(:)
     integer, intent(in), optional :: kvstr(:), kvstc(:) ! ToDo: remove from interface
     integer, intent(in) :: BlockDim
     double complex, intent(out) :: full(:,:)
@@ -249,7 +249,11 @@ module fillKKRMatrix_mod
     nrows = size(ia) - 1
 
     do ibrow = 1, nrows
-      ind = ka(ia(ibrow))
+!     ind = ka(ia(ibrow))
+      ind = BlockDim**2 * (ia(ibrow) - 1) + 1
+!     if (present(ka)) then
+!       ASSERT( ind == ka(ia(ibrow)) )
+!     endif ! ka
       do ind_ia = ia(ibrow), ia(ibrow+1) - 1
 
         ibcol = ja(ind_ia)
@@ -259,7 +263,7 @@ module fillKKRMatrix_mod
       do   icol = BlockDim*(ibcol - 1) + 1, BlockDim*ibcol
         do irow = BlockDim*(ibrow - 1) + 1, BlockDim*ibrow
 
-            full(irow,icol) = smat(ind)
+            full(irow,icol) = smat(ind,1,1)
 
             ind = ind + 1
           enddo ! irow
@@ -300,7 +304,7 @@ module fillKKRMatrix_mod
   !----------------------------------------------------------------------------
   !> Write sparse matrix data (without description) to a formatted or an unformatted file
   subroutine dumpSparseMatrixData(smat, filename, formatted)
-    double complex, intent(in) :: smat(:)
+    double complex, intent(in) :: smat(:,:,:)
     character(len=*), intent(in) :: filename
     logical, intent(in) :: formatted
 
@@ -328,7 +332,7 @@ module fillKKRMatrix_mod
   !----------------------------------------------------------------------------
   !> Write sparse matrix data (without description) to unformatted file
   subroutine dumpSparseMatrixDataBinary(smat, filename)
-    double complex, intent(in) :: smat(:)
+    double complex, intent(in) :: smat(:,:,:)
     character(len=*), intent(in) :: filename
 
     integer, parameter :: fu = 97
@@ -341,7 +345,7 @@ module fillKKRMatrix_mod
   !----------------------------------------------------------------------------
   !> Read sparse matrix data from unformatted file
   subroutine loadSparseMatrixData(smat, filename)
-    double complex, intent(out) :: smat(:)
+    double complex, intent(out) :: smat(:,:,:)
     character(len=*), intent(in) :: filename
     
     integer, parameter :: fu = 97
@@ -410,7 +414,7 @@ module fillKKRMatrix_mod
   !> Write sparse matrix data (without description) to formatted file
   !> - useful for testing.
   subroutine dumpSparseMatrixDataFormatted(smat, filename)
-    double complex, intent(in) :: smat(:)
+    double complex, intent(in) :: smat(:,:,:)
     character(len=*), intent(in) :: filename
 
     integer, parameter :: fu = 97
@@ -419,7 +423,7 @@ module fillKKRMatrix_mod
     open(fu, file=filename, form='formatted', action='write')
 
     do ii = 1, size(smat)
-      write(fu, *) real(smat(ii)), aimag(smat(ii))
+      write(fu, *) real(smat(ii,1,1)), aimag(smat(ii,1,1))
     enddo ! ii
 
     close(fu)

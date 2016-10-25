@@ -20,8 +20,8 @@ module KKROperator_mod
     integer :: lmmaxd
     integer :: naez
     type(SparseMatrixDescription) :: sparse
-    double complex, allocatable :: GLLh(:)
-    double complex, allocatable :: dGLLh(:)
+    double complex, allocatable :: mat_A(:,:,:)
+    double complex, allocatable :: mat_dAdE(:,:,:)
     double complex, allocatable :: mat_B(:,:) ! ToDo: make it a sparse operator since it is mostly zero or an implicit action of subtracting mat_B
     double complex, allocatable :: mat_X(:,:)
     integer(kind=2), allocatable :: atom_indices(:) !< a copy of the atom indices
@@ -77,8 +77,8 @@ module KKROperator_mod
     
     allocate(self%mat_B(nRows,nCols))
     allocate(self%mat_X(nRows,nCols))
-    allocate(self%GLLh(getNNZ(self%sparse))) ! allocate memory for sparse matrix
-    allocate(self%dGLLh(getNNZ(self%sparse))) ! allocate memory for derivative
+    allocate(self%mat_A(getNNZ(self%sparse),1,1)) ! allocate memory for sparse matrix
+    allocate(self%mat_dAdE(getNNZ(self%sparse),1,1)) ! allocate memory for derivative
     
   endsubroutine ! create
 
@@ -89,8 +89,8 @@ module KKROperator_mod
 
     integer :: ist ! ignore status
     
-    deallocate(self%GLLh, stat=ist)
-    deallocate(self%dGLLh, stat=ist)
+    deallocate(self%mat_A, stat=ist)
+    deallocate(self%mat_dAdE, stat=ist)
     deallocate(self%mat_X, stat=ist)
     deallocate(self%mat_B, stat=ist)
 
@@ -109,7 +109,7 @@ module KKROperator_mod
     integer(kind=8), intent(inout) :: nFlops
 
     ! perform sparse VBR matrix * dense matrix
-    call multiply_vbr(self%GLLH, mat_X, mat_AX, self%sparse, nFlops)
+    call multiply_vbr(self%mat_A(:,1,1), mat_X, mat_AX, self%sparse, nFlops)
   endsubroutine ! apply
 
   subroutine multiply_vbr(A, x, Ax, sparse, nFlops)
@@ -120,7 +120,9 @@ module KKROperator_mod
     type(SparseMatrixDescription), intent(in) :: sparse
     integer(kind=8), intent(inout) :: nFlops
 
-    call vbrmv_mat(sparse%blk_nrows, sparse%ia, sparse%ja, sparse%ka, A, &
+    call vbrmv_mat(sparse%blk_nrows, sparse%ia, sparse%ja, &
+!                    sparse%ka, &
+                   A, &
 !                    sparse%kvstr, &
                    x, Ax, sparse%max_blockdim, sparse%max_blocks_per_row, nFlops)
 

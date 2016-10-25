@@ -21,7 +21,7 @@ module SparseMatrixDescription_mod
     integer, allocatable :: ja(:)
     !> ia indices into ka - gives start indices of non-zero blocks
     !> in matrix data array
-    integer, allocatable :: ka(:)
+!   integer, allocatable :: ka(:)
     !> number of block rows
     integer :: blk_nrows = 0
     !> maximal block dimension
@@ -57,12 +57,12 @@ module SparseMatrixDescription_mod
     allocate(self%ia(blk_nrows + 1))
 !   allocate(self%kvstr(blk_nrows + 1))
     allocate(self%ja(max_num_blocks))
-    allocate(self%ka(max_num_blocks + 1))
+!   allocate(self%ka(max_num_blocks + 1))
 
     self%ia = 0
 !   self%kvstr = 0
     self%ja = 0
-    self%ka = 0
+!   self%ka = 0
 
     self%blk_nrows = blk_nrows
     self%max_blockdim = 0
@@ -75,7 +75,8 @@ module SparseMatrixDescription_mod
   integer function getNNZ(self)
     type(SparseMatrixDescription), intent(in) :: self
 
-    getNNZ = self%ka(self%ia(self%blk_nrows + 1)) - 1
+!   getNNZ = self%ka(self%ia(self%blk_nrows + 1)) - 1
+    getNNZ = self%max_blockdim**2 * size(self%ja)
   endfunction ! get
 
   !----------------------------------------------------------------------------
@@ -94,7 +95,7 @@ module SparseMatrixDescription_mod
     type(SparseMatrixDescription), intent(inout) :: self
 
     integer :: ist ! ignore status
-    deallocate(self%ia, self%ja, self%ka, stat=ist)!, self%kvstr
+    deallocate(self%ia, self%ja, stat=ist)!, self%ka, self%kvstr
 
     self%blk_nrows = 0
     self%max_blockdim = 0
@@ -114,7 +115,7 @@ module SparseMatrixDescription_mod
 !   write(fu, *) self%kvstr
     write(fu, *) self%ia
     write(fu, *) self%ja
-    write(fu, *) self%ka
+!   write(fu, *) self%ka
     write(fu, *) self%max_blockdim
     write(fu, *) self%max_blocks_per_row
     close(fu)
@@ -138,7 +139,7 @@ module SparseMatrixDescription_mod
 !   read(fu, *) self%kvstr
     read(fu, *) self%ia
     read(fu, *) self%ja
-    read(fu, *) self%ka
+!   read(fu, *) self%ka
     read(fu, *) self%max_blockdim
     read(fu, *) self%max_blocks_per_row
     close(fu)
