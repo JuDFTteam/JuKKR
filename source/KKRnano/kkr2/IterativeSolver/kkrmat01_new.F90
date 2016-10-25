@@ -31,7 +31,7 @@ module kkrmat_mod
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine kkrmat01(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, lmmaxd, global_atom_id, communicator, iguess_data, &
-                          mssq, dginp, dtde, tr_alph, lly_grdt, volcub, volbz, global_atom_idx_lly, lly) !LLY
+                          mssq, dginp, dtde, tr_alph, lly_grdt, volcub, volbz, global_atom_idx_lly, Lly) !LLY
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
@@ -74,7 +74,7 @@ module kkrmat_mod
     double precision, intent(in) :: volcub (:)
     double precision, intent(in) :: volbz
     integer, intent(in)          :: global_atom_idx_lly
-    integer, intent(in)          :: lly
+    integer, intent(in)          :: Lly
 
     ! locals
     double complex :: G_diag(LMMAXD,LMMAXD)
@@ -114,7 +114,7 @@ module kkrmat_mod
     ! get the required reference Green functions from the other MPI processes
     call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
 ! #define Ginp Gref_buffer
-!     if (lly == 1) then ! LLY
+!     if (Lly == 1) then ! LLY
 !       call referenceFourier_com_part1(DGref_buffer, naez, DGinp, global_atom_id, communicator)
 !     endif ! LLY
 ! #define dginp DGref_buffer
@@ -134,7 +134,7 @@ module kkrmat_mod
       call kloopbody(solver, op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
                      alat, RR, global_atom_id, communicator, iguess_data, &
                      mssq, dtde, dginp, bztr2, volcub, ikpoint, &
-                     global_atom_idx_lly ,lly) !LLY
+                     global_atom_idx_lly ,Lly) !LLY
 
       do ila = 1, num_local_atoms
 !       call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%kvstr, ila) ! extract solution
@@ -159,12 +159,12 @@ module kkrmat_mod
     enddo ! ikpoint = 1, nkpoints
     !==============================================================================
 
-    if (lly == 1) then   
+    if (Lly == 1) then   
       bztr2 = bztr2*nsymat/volbz + tr_alph(1)
       trace = zero
       call MPI_Allreduce(bztr2, trace, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
       lly_grdt = trace
-    endif ! lly == 1
+    endif ! Lly == 1
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
 #undef Ginp
@@ -230,7 +230,7 @@ module kkrmat_mod
   !> op%atom_indices(:)
   subroutine kloopbody(solver, op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data, &
                        mssq, dtde, dginp, bztr2, volcub, ikpoint, &
-                       global_atom_idx_lly, lly) !LLY
+                       global_atom_idx_lly, Lly) !LLY
 
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
     use fillKKRMatrix_mod, only: dump
@@ -263,7 +263,7 @@ module kkrmat_mod
     double precision, intent(in)       :: volcub (:)
     integer, intent(in)                :: ikpoint 
     integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed, e.g. dtde, tmatll
-    integer, intent(in)                :: lly             !< LLY=1/0, turns Lloyd's formula on/off
+    integer, intent(in)                :: Lly             !< LLY=1/0, turns Lloyd's formula on/off
 
     ! Local LLY
     double complex, allocatable :: dpde_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:)
@@ -278,7 +278,7 @@ module kkrmat_mod
     lmmaxd = op%lmmaxd
     naez = op%naez
     nacls = cluster%naclsd
-    alm = naez*lmmaxd
+    alm = lmmaxd*naez
 
 
     !=======================================================================
@@ -318,15 +318,15 @@ module kkrmat_mod
 
    ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
-    if (lly == 1) then ! LLY
+    if (Lly == 1) then ! LLY
       ! Allocate additional arrays for Lloyd's formula    
-      allocate(gllke_x(naez*lmmaxd,nacls*lmmaxd))
-      allocate(dgde(naez*lmmaxd,nacls*lmmaxd))
-      allocate(gllke_x_t(nacls*lmmaxd,naez*lmmaxd))
-      allocate(dgde_t(nacls*lmmaxd,naez*lmmaxd))
-      allocate(gllke_x2(naez*lmmaxd,lmmaxd))
-      allocate(dgde2(naez*lmmaxd,lmmaxd))
-      allocate(dpde_local(naez*lmmaxd,lmmaxd))
+      allocate(gllke_x(lmmaxd*naez,lmmaxd*nacls))
+      allocate(dgde(lmmaxd*naez,lmmaxd*nacls))
+      allocate(gllke_x_t(lmmaxd*nacls,lmmaxd*naez))
+      allocate(dgde_t(lmmaxd*nacls,lmmaxd*naez))
+      allocate(gllke_x2(lmmaxd*naez,lmmaxd))
+      allocate(dgde2(lmmaxd*naez,lmmaxd))
+      allocate(dpde_local(lmmaxd*naez,lmmaxd))
     
 #ifndef SPLIT_REFERENCE_FOURIER_COM
       call referenceFourier_com(op%mat_dAdE, op%sparse, kpoint, alat, &
@@ -360,7 +360,7 @@ module kkrmat_mod
       gllke_x2 = gllke_x_t(:,matrix_index:matrix_index+lmmaxd)
       dgde2 = dgde_t(:,matrix_index:matrix_index+lmmaxd)
 
-      call cinit(naez*lmmaxd*lmmaxd,dpde_local)
+      call cinit(lmmaxd*naez*lmmaxd,dpde_local)
 
       call zgemm('n','n',alm,lmmaxd,lmmaxd,cone, dgde2,alm, tmatll(1,1,global_atom_idx_lly),lmmaxd,zero, dpde_local,alm)
 
@@ -442,18 +442,18 @@ module kkrmat_mod
     ! RESULT: mat_X
 
 
-    if (lly == 1) then ! LLY
+    if (Lly == 1) then ! LLY
       !--------------------------------------------------------
       !                /  -1    dM  \
       ! calculate  Tr  | M   * ---- | 
       !                \        dE  /
-    
-      tracek=zero
+
+      tracek = zero
 
       do lm1 = 1, lmmaxd
         do lm2 = 1, lmmaxd
           gtdpde = zero
-          do il1 = 1, naez*lmmaxd
+          do il1 = 1, lmmaxd*naez
             gtdpde = gtdpde + op%mat_x(il1,lm2)*dpde_local(il1,lm1)
           enddo
           tracek = tracek + mssq(lm1,lm2,1)*gtdpde
@@ -1060,9 +1060,9 @@ module kkrmat_mod
     integer, intent(in) :: ind, jnd, ni !> source site_index, target site_index, ni
     double complex, intent(in) :: eikr ! phase factor
     double complex, intent(in) :: Gin(:,:) !< dims(lmmaxd,lmmaxd)
-    double complex, intent(inout) :: smat(:,:,:) !< dim(nnz,1,1)
+    double complex, intent(inout) :: smat(:,:,:) !< dim(lmmaxd,lmmaxd,nnzb)
 
-    integer :: lm2, lmmax1, lmmax2, is0
+    integer :: lm2, lmmax1, lmmax2, is0, Aind
 
 !   lmmax1 = sparse%kvstr(ind+1) - sparse%kvstr(ind)
 !   lmmax2 = sparse%kvstr(jnd+1) - sparse%kvstr(jnd)
@@ -1071,12 +1071,14 @@ module kkrmat_mod
 
     do lm2 = 1, lmmax2
 !     is0 = sparse%ka(sparse%ia(ind) + ni-1) + lmmax1*(lm2-1) - 1
-      is0 = sparse%max_blockdim**2 * (sparse%ia(ind) + ni-1 - 1) + 1 + lmmax1*(lm2-1) - 1
-
-      smat(is0 + 1:lmmax1 + is0,1,1) = &
-      smat(is0 + 1:lmmax1 + is0,1,1) + eikr * Gin(1:lmmax1,lm2)
+!       is0 = sparse%max_blockdim**2 * (sparse%ia(ind) + ni-1 - 1) + 1 + lmmax1*(lm2-1) - 1
+! 
+!       smat(is0 + 1:lmmax1 + is0,1,1) = &
+!       smat(is0 + 1:lmmax1 + is0,1,1) + eikr * Gin(1:lmmax1,lm2)
 
     enddo ! lm2
+    Aind = sparse%ia(ind) + ni-1
+    smat(:,:,Aind) = smat(:,:,Aind) + eikr * Gin(:,:)
 
     nOps = lmmax1*lmmax2
   endfunction ! modify_smat

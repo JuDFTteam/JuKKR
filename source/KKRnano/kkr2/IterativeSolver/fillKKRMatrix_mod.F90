@@ -103,21 +103,23 @@ module fillKKRMatrix_mod
   subroutine buildKKRCoeffMatrix(smat, tmatLL, sparse)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
 
-    double complex, intent(inout) :: smat(:,:,:) !< dim(nnz,1,1)
-    double complex, intent(in) :: tmatLL(:,:,:) !< dim(lmmaxd,lmmaxd,naez_trc)
+    double complex, intent(inout) :: smat(:,:,:) !< dim(lmmaxa,lmmaxd,nnzB)
+    double complex, intent(in) :: tmatLL(:,:,:) !< dim(lmmaxd,lmmaxd,nrows)
     type(SparseMatrixDescription), intent(in) :: sparse
 
     double complex :: temp(size(tmatLL, 1))
-    integer :: lmmaxd, naez_trc
-    integer :: block_row, block_col, start, lm2, lm3, lmmax1, lmmax2, lmmax3
+    integer :: lmmaxa, lmmaxd, nrows
+    integer :: block_row, block_col, lm2, lm3, lmmax1, lmmax2, lmmax3!, start
     integer :: istart_row, istop_row, istart_col, istop_col, ind_ia
 
-    lmmaxd = size(tmatLL, 1)
-    ASSERT( size(tmatLL, 2) == lmmaxd )
-    naez_trc = size(tmatLL, 3)
+    lmmaxa = size(smat, 1) ! may be memory-aligned
+    lmmaxd = size(tmatLL, 2)
+    ASSERT( size(tmatLL, 1) == lmmaxd )
+    ASSERT( lmmaxa >= lmmaxd )
+    nrows = size(tmatLL, 3)
     
-    start = 0
-    do block_row = 1, naez_trc
+!   start = 0
+    do block_row = 1, nrows
 !     istart_row = sparse%kvstr(block_row)
 !     istop_row  = sparse%kvstr(block_row+1)
       istart_row = sparse%max_blockdim*(block_row - 1) + 1
@@ -132,12 +134,12 @@ module fillKKRMatrix_mod
         istop_col  = sparse%max_blockdim*block_col + 1
 
 #ifndef NDEBUG
-        if (1 > block_row .or. block_row > naez_trc) then
+        if (1 > block_row .or. block_row > nrows) then
           write (*,*) "buildKKRCoeffMatrix: invalid block_row", block_row
           stop
         endif
 
-        if (1 > block_col .or. block_col > naez_trc) then
+        if (1 > block_col .or. block_col > nrows) then
           write (*,*) "buildKKRCoeffMatrix: invalid block_col", block_col
           stop
         endif
@@ -159,20 +161,22 @@ module fillKKRMatrix_mod
         !  |    |  lmmax1     *    | G_ref    | lmmax3  =   |   T*G    |  lmmax1
         !  |----|                  |----------| (==lmmax1)  |----------|
         !  lmmax3==lmmax1
-
+        
         do lm2 = 1, lmmax2
 
           temp(:) = ZERO
           do lm3 = 1, lmmax3
-            temp(:) = temp(:) + tmatLL(:,lm3,block_row) * smat(start+lm3+lmmax3*(lm2-1),1,1) ! T*G
+!           temp(:) = temp(:) + tmatLL(:,lm3,block_row) * smat(start+lm3+lmmax3*(lm2-1),1,1) ! T*G
+            temp(:) = temp(:) + tmatLL(:,lm3,block_row) * smat(lm3,lm2,ind_ia) ! T*G
           enddo ! lm3
           
           if (block_row == block_col) temp(lm2) = temp(lm2) - CONE ! subtract 1.0 from the diagonal
 
-          smat(start+lmmax1*(lm2-1)+ 1:lmmax1 +start+lmmax1*(lm2-1),1,1) = temp(1:lmmax1)
+!         smat(start+lmmax1*(lm2-1)+ 1:lmmax1 +start+lmmax1*(lm2-1),1,1) = temp(1:lmmax1)
+          smat(1:lmmax1,lm2,ind_ia) = temp(1:lmmax1)
         enddo ! lm2
 
-        start = start + lmmax2*lmmax1
+!       start = start + lmmax2*lmmax1
       enddo ! ind_ia ! block columns
     enddo ! block rows
 
@@ -180,12 +184,12 @@ module fillKKRMatrix_mod
 
 !------------------------------------------------------------------------------
 !> Builds the right hand site for the linear KKR matrix equation.
-  subroutine buildRightHandSide(mat_B, lmmaxd, atom_indices, kvstr, tmatLL)
+  subroutine buildRightHandSide(mat_B, lmmaxd, atom_indices, tmatLL)!, kvstr
     double complex, intent(out) :: mat_B(:,:)
     integer, intent(in) :: lmmaxd
     integer(kind=2), intent(in) :: atom_indices(:) ! truncation zone indices of the local atoms
-    integer, intent(in), optional :: kvstr(:) ! ToDo: remove from interface
-    double complex, intent(in), optional :: tmatLL(lmmaxd,lmmaxd,*) !< dim(lmmaxd,lmmaxd,naez_trc)
+!     integer, intent(in), optional :: kvstr(:) ! ToDo: remove from interface
+    double complex, intent(in), optional :: tmatLL(lmmaxd,lmmaxd,*) !< dim(lmmaxd,lmmaxd,nrows)
 
     integer :: start, ii, num_atoms, atom_index, lm2, lmmax1, lmmax2 
 
@@ -233,24 +237,27 @@ module fillKKRMatrix_mod
   !----------------------------------------------------------------------------
   !> Given the sparse matrix data 'smat' and the sparsity information,
   !> create the dense matrix representation of the matrix.
-  subroutine convertToFullMatrix(smat, ia, ja, BlockDim, full, ka, kvstr, kvstc)
-    double complex, intent(in) :: smat(:,:,:) !< dim(nnz,1,1)
+  subroutine convertToFullMatrix(smat, ia, ja, BlockDim, full)!, ka, kvstr, kvstc)
+    double complex, intent(in) :: smat(:,:,:) !< dim(BlockDim,BlockDim,nnzb)
     integer, intent(in) :: ia(:)
     integer, intent(in) :: ja(:)
-    integer, intent(in), optional :: ka(:)
-    integer, intent(in), optional :: kvstr(:), kvstc(:) ! ToDo: remove from interface
+!     integer, intent(in), optional :: ka(:)
+!     integer, intent(in), optional :: kvstr(:), kvstc(:) ! ToDo: remove from interface
     integer, intent(in) :: BlockDim
     double complex, intent(out) :: full(:,:)
 
-    integer :: ibrow, ibcol, irow, icol, nrows, ind, ind_ia
+    integer :: ibrow, ibcol, nrows, ind_ia!, ind, irow, icol
 
     full = ZERO
 
+    ASSERT( size(smat, 1) == BlockDim )
+    ASSERT( size(smat, 2) == BlockDim )
+    
     nrows = size(ia) - 1
 
     do ibrow = 1, nrows
 !     ind = ka(ia(ibrow))
-      ind = BlockDim**2 * (ia(ibrow) - 1) + 1
+!     ind = BlockDim**2 * (ia(ibrow) - 1) + 1
 !     if (present(ka)) then
 !       ASSERT( ind == ka(ia(ibrow)) )
 !     endif ! ka
@@ -260,14 +267,17 @@ module fillKKRMatrix_mod
 
 !       do   icol = kvstc(ibcol), kvstc(ibcol+1) - 1
 !         do irow = kvstr(ibrow), kvstr(ibrow+1) - 1
-      do   icol = BlockDim*(ibcol - 1) + 1, BlockDim*ibcol
-        do irow = BlockDim*(ibrow - 1) + 1, BlockDim*ibrow
 
-            full(irow,icol) = smat(ind,1,1)
+!       do   icol = BlockDim*(ibcol - 1) + 1, BlockDim*ibcol
+!         do irow = BlockDim*(ibrow - 1) + 1, BlockDim*ibrow
+! 
+!           full(irow,icol) = smat(ind,1,1)
+! 
+!           ind = ind + 1
+!         enddo ! irow
+!       enddo ! icol
 
-            ind = ind + 1
-          enddo ! irow
-        enddo ! icol
+        full(BlockDim*(ibrow - 1) + 1:BlockDim*ibrow,BlockDim*(ibcol - 1) + 1:BlockDim*ibcol) = smat(:,:,ind_ia)
 
       enddo ! ind_ia
     enddo ! ibrow
@@ -418,14 +428,16 @@ module fillKKRMatrix_mod
     character(len=*), intent(in) :: filename
 
     integer, parameter :: fu = 97
-    integer :: ii
+    integer :: fi, si, bi
 
     open(fu, file=filename, form='formatted', action='write')
-
-    do ii = 1, size(smat)
-      write(fu, *) real(smat(ii,1,1)), aimag(smat(ii,1,1))
-    enddo ! ii
-
+    do bi = 1, size(smat, 3) ! block index
+      do si = 1, size(smat, 2) !  slow index
+        do fi = 1, size(smat, 1) !  fast index
+          write(fu, *) real(smat(fi,si,bi)), aimag(smat(fi,si,bi))
+        enddo ! fi
+      enddo ! si
+    enddo ! bi
     close(fu)
   endsubroutine ! dump
 
