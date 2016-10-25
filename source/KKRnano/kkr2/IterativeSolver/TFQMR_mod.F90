@@ -122,7 +122,7 @@ module TFQMR_mod
     where (abs(N2B) < EPSILON_DP) N2B = 1.d0  ! where N2B = 0 use absolute residual
 
     ! Supply auxiliary start vector r*
-    call ZRANDN(nrow*ncol, v3, 1) ! fill v3 with numbers in [0, 1]
+    call ZRANDN(size(v3), v3, 1) ! fill v3 with numbers in [0, 1]
 
     ! Initialize the variables.
 
@@ -401,20 +401,21 @@ module TFQMR_mod
   endsubroutine ! apply
 
   !------------------------------------------------------------------------------
-  subroutine col_norms(norms, vectors)
+  subroutine col_norms(norms, vector)
     double precision, intent(out) :: norms(:)
-    double complex, intent(in) :: vectors(:,:,:)
+    double complex, intent(in) :: vector(:,:,:)
 
     integer :: col, nrow, block
     double precision, external :: DZNRM2 ! BLAS
 
-    nrow = size(vectors, 1)
+    nrow = size(vector, 1)
+    if (size(norms, 1) /= size(vector, 2)) stop 'col_norms: strange!'
     norms(:) = 0.d0
-
+    
     !$omp do private(col, block)
-    do block = 1, size(vectors, 3)
-      do col = 1, size(vectors, 2)
-        norms(col) = norms(col) + DZNRM2(nrow, vectors(:,col,block), 1)
+    do block = 1, size(vector, 3)
+      do col = 1, size(vector, 2)
+        norms(col) = norms(col) + DZNRM2(nrow, vector(:,col,block), 1)
       enddo ! col
     enddo ! block
     !$omp end do
@@ -431,6 +432,8 @@ module TFQMR_mod
     double complex, external :: ZDOTU ! BLAS
 
     nrow = size(vector, 1)
+    if (size(dots, 1) /= size(vector, 2)) stop 'col_dots: strange! (v)'
+    if (size(dots, 1) /= size(wektor, 2)) stop 'col_dots: strange! (w)'
     dots(:) = ZERO
 
     !$omp do private(col, block)
@@ -443,7 +446,6 @@ module TFQMR_mod
 
   endsubroutine ! dots
 
-
   !------------------------------------------------------------------------------
   subroutine col_axpy(factors, xvector, yvector)
     double complex, intent(in) :: factors(:)
@@ -451,6 +453,8 @@ module TFQMR_mod
     double complex, intent(inout) :: yvector(:,:,:)
 
     integer :: col, block
+    if (size(factors, 1) /= size(xvector, 2)) stop 'col_axpy: strange! (x)'
+    if (size(factors, 1) /= size(yvector, 2)) stop 'col_axpy: strange! (y)'
 
     !$omp do private(col, block)
     do block = 1, size(yvector, 3)
@@ -469,6 +473,8 @@ module TFQMR_mod
     double complex, intent(inout) :: yvector(:,:,:)
 
     integer :: col, block
+    if (size(factors, 1) /= size(xvector, 2)) stop 'col_xpay: strange! (x)'
+    if (size(factors, 1) /= size(yvector, 2)) stop 'col_xpay: strange! (y)'
 
     !$omp do private(col, block)
     do block = 1, size(yvector, 3)
