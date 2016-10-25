@@ -241,18 +241,18 @@ module fillKKRMatrix_mod
   !----------------------------------------------------------------------------
   !> Given the sparse matrix data 'smat' and the sparsity information,
   !> create the dense matrix representation of the matrix.
-  subroutine convertToFullMatrix(smat, ia, ja, BlockDim, full)!, ka, kvstr, kvstc)
+  subroutine convertToFullMatrix(smat, ia, ja, BlockDim, full_A)!, ka, kvstr, kvstc)
     double complex, intent(in) :: smat(:,:,:) !< dim(BlockDim,BlockDim,nnzb)
     integer, intent(in) :: ia(:)
     integer, intent(in) :: ja(:)
 !     integer, intent(in), optional :: ka(:)
 !     integer, intent(in), optional :: kvstr(:), kvstc(:) ! ToDo: remove from interface
     integer, intent(in) :: BlockDim
-    double complex, intent(out) :: full(:,:)
+    double complex, intent(out) :: full_A(:,:)
 
     integer :: ibrow, ibcol, nrows, ind_ia!, ind, irow, icol
 
-    full = ZERO
+    full_A = ZERO
 
     ASSERT( size(smat, 1) == BlockDim )
     ASSERT( size(smat, 2) == BlockDim )
@@ -275,13 +275,13 @@ module fillKKRMatrix_mod
 !       do   icol = BlockDim*(ibcol - 1) + 1, BlockDim*ibcol
 !         do irow = BlockDim*(ibrow - 1) + 1, BlockDim*ibrow
 ! 
-!           full(irow,icol) = smat(ind,1,1)
+!           full_A(irow,icol) = smat(ind,1,1)
 ! 
 !           ind = ind + 1
 !         enddo ! irow
 !       enddo ! icol
 
-        full(BlockDim*(ibrow - 1) + 1:BlockDim*ibrow,BlockDim*(ibcol - 1) + 1:BlockDim*ibcol) = smat(:,:,ind_ia)
+        full_A(BlockDim*(ibrow - 1) + 1:BlockDim*ibrow,BlockDim*(ibcol - 1) + 1:BlockDim*ibcol) = smat(:,:,ind_ia)
 
       enddo ! ind_ia
     enddo ! ibrow
@@ -291,29 +291,31 @@ module fillKKRMatrix_mod
   !----------------------------------------------------------------------------
   !> Solution of a system of linear equations with multiple right hand sides,
   !> using standard dense matrix LAPACK routines.
-  subroutine solveFull(full, mat_B, mat_X)
-    double complex, intent(inout) :: full(:,:)
-    double complex, intent(in)  :: mat_B(:,:)
-    double complex, intent(out) :: mat_X(:,:)
+  integer function solveFull(full_A, full_X) result(info)
+    double complex, intent(inout) :: full_A(:,:)
+    double complex, intent(inout) :: full_X(:,:) ! on entry this contains full_B, on exit the solution
 
     integer, allocatable :: ipvt(:)
-    integer :: ndim, nRHSs, info
+    integer :: ndim, nRHSs
     external :: zgetrf, zgetrs ! LAPACK
 
-    ndim = size(full, 1)
+    ndim  = size(full_A, 1)
+    nRHSs = size(full_X, 2)
+    ASSERT( size(full_A, 2) == ndim ) ! must be square
+    ASSERT( size(full_X, 1) == ndim ) ! must match the dims of A
+    
     allocate(ipvt(ndim))
 
-    nRHSs = size(mat_B, 2)
-    mat_X(:,:) = mat_B(:,:)
-    
-    call zgetrf(ndim, ndim, full, ndim, ipvt, info) ! LU-factorize
+    ! factorization
+    call zgetrf(ndim, ndim, full_A, ndim, ipvt, info) ! LU-factorize
 !   if (info /= 0) ! ToDo: warn
-    call zgetrs('n', ndim, nRHSs, full, ndim, ipvt, mat_x, ndim, info) ! solve the system of linear equations
+
+    call zgetrs('n', ndim, nRHSs, full_A, ndim, ipvt, full_X, ndim, info) ! solve the system of linear equations
 !   if (info /= 0) ! ToDo: warn
 
     deallocate(ipvt, stat=info)
-  endsubroutine ! solveFull
-
+  endfunction ! solveFull
+  
   
   !----------------------------------------------------------------------------
   !> Write sparse matrix data (without description) to a formatted or an unformatted file

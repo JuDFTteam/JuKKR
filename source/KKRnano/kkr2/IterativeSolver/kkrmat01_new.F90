@@ -20,7 +20,7 @@ module kkrmat_mod
   private
   public :: kkrmat01
 
-  double complex, allocatable :: full(:,:)
+  double complex, allocatable :: full_A(:,:), full_X(:,:)
   double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
 
   contains
@@ -271,7 +271,8 @@ module kkrmat_mod
     double complex, allocatable :: dpde_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:)
     double complex :: tracek, gtdpde
     
-    integer :: naez, nacls, alm, lmmaxd, n, ist, matrix_index, lm1, lm2, lm3, il1
+    integer :: naez, nacls, alm, lmmaxd, nRHSs, ist, matrix_index, lm1, lm2, lm3, il1
+    integer :: i, n, nB, Bd
     double complex :: cfctorinv
 
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
@@ -423,18 +424,36 @@ module kkrmat_mod
 
     ! ALTERNATIVE: direct solution with LAPACK
     if (cutoffmode == 4) then
-      stop 'direct solver requires reordering of data ! solver=4 !'
-      n = size(op%mat_B, 1)
-      if (any(shape(full) /= [n,n])) then
-        deallocate(full, stat=ist) ! ignore status
-        allocate(full(n,n), stat=ist)
+    
+      nB = size(op%mat_X, 3)
+      n  = size(op%mat_A, 2)*nB
+      Bd = size(op%mat_A, 1)
+      nRHSs = size(op%mat_X, 2)
+      ASSERT( nRHSs == size(op%mat_B, 2) )
+      ASSERT( nB    == size(op%mat_B, 3) )
+      
+      if (any(shape(full_A) /= [n,n])) then
+        deallocate(full_A, full_X, stat=ist) ! ignore status
+        allocate(full_A(n,n), full_X(n,nRHSs), stat=ist)
         if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
-!     call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, full)
-!     call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%max_blockdim, full)
-      call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%max_blockdim, full)
-      TESTARRAYLOG(3, full)
-      call solveFull(full, op%mat_B(:,:,1), op%mat_X(:,:,1))
+!     call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%kvstr, op%sparse%kvstr, op%sparse%max_blockdim, full_A)
+!     call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%ka, op%sparse%max_blockdim, full_A)
+      call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%max_blockdim, full_A)
+      TESTARRAYLOG(3, full_A)
+      
+      ! convertToFullMatrix op%mat_B to full_B
+      do i = 1, nB
+        full_X(Bd*(i - 1) + 1:Bd*i,:) = op%mat_B(:,:,i)
+      enddo ! i
+      
+      ist = solveFull(full_A, full_X) ! on entry, full_X contains mat_B, compute the direct solution using LAPACK
+      
+      ! convert back full_X to op%mat_X
+      do i = 1, nB
+        op%mat_X(:,:,i) = full_X(Bd*(i - 1) + 1:Bd*i,:) 
+      enddo ! i
+
     endif ! cutoffmode == 4
 
     ! store the initial guess in previously selected slot (selected with 'iguess_set_k_ind')

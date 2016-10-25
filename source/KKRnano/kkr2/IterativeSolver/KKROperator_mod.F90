@@ -45,7 +45,7 @@ module KKROperator_mod
   subroutine create_KKROperator(self, cluster_info, lmmaxd, atom_indices)
     use TEST_lcutoff_mod, only: lmax_array
     use fillKKRMatrix_mod, only: getKKRMatrixStructure
-    use SparseMatrixDescription_mod, only: create, getNNZ, getNrows
+    use SparseMatrixDescription_mod, only: create
 
     type(KKROperator), intent(inout) :: self
     type(ClusterInfo), target, intent(in) :: cluster_info
@@ -58,7 +58,6 @@ module KKROperator_mod
 
     sum_cluster = sum(cluster_info%numn0_trc)
     self%naez = size(cluster_info%indn0_trc, 2)
-!   naclsd = size(cluster_info%indn0_trc, 1) ! not used
     self%lmmaxd = lmmaxd
 
 #ifndef __GFORTRAN__
@@ -67,23 +66,22 @@ module KKROperator_mod
     allocate(self%atom_indices(size(atom_indices))) ! local truncation zone indices of the source atoms
     self%atom_indices = atom_indices ! copy
 #endif
-    
+
     call create(self%sparse, self%naez, sum_cluster)
 
     call getKKRMatrixStructure(lmax_array, cluster_info%numn0_trc, cluster_info%indn0_trc, self%sparse)
 
-    nRows = lmmaxd ! getNrows(self%sparse)
+    nRows = lmmaxd
     nCols = lmmaxd*size(atom_indices)
     nBlocks = self%sparse%blk_nrows
-    
+
     allocate(self%mat_B(nRows,nCols,nBlocks))
     allocate(self%mat_X(nRows,nCols,nBlocks))
     
+    nRows = lmmaxd
+    nCols = lmmaxd
     nBlocks = size(self%sparse%ja)
-    nCols = self%sparse%max_blockdim
-    nRows = self%sparse%max_blockdim
-!     allocate(self%mat_A(getNNZ(self%sparse),1,1)) ! allocate memory for sparse matrix
-!     allocate(self%mat_dAdE(getNNZ(self%sparse),1,1)) ! allocate memory for derivative
+
     allocate(self%mat_A(nRows,nCols,nBlocks)) ! allocate memory for the KKR operator
     allocate(self%mat_dAdE(nRows,nCols,nBlocks)) ! allocate memory for its energy derivative
     

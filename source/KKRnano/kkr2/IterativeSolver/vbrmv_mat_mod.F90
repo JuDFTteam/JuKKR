@@ -70,31 +70,36 @@ module vbrmv_mat_mod
     if (leadDim_A  < lmsmax) stop __LINE__
     if (leadDim_x  < lmsmax) stop __LINE__
 
-! #define GENERIC    
-  
+! #define GENERIC
+#ifdef  GENERIC
+
+    do ibr = 1, nRows
+      Ax(:,:,ibr) = ZERO
+      do Aind = ia(ibr), ia(ibr + 1) - 1
+        Ax(:,:,ibr) = Ax(:,:,ibr) + matmul(A(:,:,Aind), x(:,:,ja(Aind)))
+      enddo ! Aind
+    enddo ! ibr
+
+#else
+
 !$OMP PARALLEL PRIVATE(ibr, beta, Aind) reduction(+:nFlops)
 !$OMP DO
     do ibr = 1, nRows
-#ifdef GENERIC
-      Ax(:,:,ibr) = ZERO
-#else      
-      beta = ZERO
-#endif
+      beta = ZERO ! instead of Ax(:,:,ibr) = ZERO, we simply set beta = ZERO for the 1st Aind-loop iteration
       do Aind = ia(ibr), ia(ibr + 1) - 1
-#ifdef GENERIC
-        Ax(:,:,ibr) = Ax(:,:,ibr) + matmul(A(:,:,Aind), x(:,:,ja(Aind)))
-#else
+      
         !     gemm:          N       M,     K       1    A(N,K)       N          B(K,M)           K          1     C(N,M)       N        
         !     here:          N       M,     N       1    A(N,N)       N          B(N,M)           N          1     C(N,M)       N        
         call ZGEMM('n', 'n', lmsmax, nRHSs, lmsmax, ONE, A(1,1,Aind), leadDim_A, x(1,1,ja(Aind)), leadDim_x, beta, Ax(1,1,ibr), leadDim_Ax)
-#endif
-        nFlops = nFlops + (8_8*nRHSs)*(lmsmax*lmsmax)
-        beta = ONE
+        
+        beta = ONE ! from the 2nd Aind-loop iteration, we need to accumulate onto Ax(:,:,ibr)
       enddo ! Aind
+      nFlops = nFlops + (8_8*nRHSs)*(lmsmax*lmsmax)*(ia(ibr + 1) - ia(ibr))
     enddo ! ibr
 !$OMP END DO
 !$OMP END PARALLEL
 
+#endif
   endsubroutine ! vbrmv_mat
 
 endmodule ! vbrmv_mat_mod
