@@ -445,7 +445,7 @@ module SingleSite_mod
 
       do ir = irmind, irc1
       
-        ! use gemm('n','n',M     ,N     ,K     ,1.  ,A(:M,:K)    ,M     ,B(:K,:N),K ,beta,C(:M,:N)    ,M)
+        ! use gemm('n','n',M     ,N     ,K     ,1.  ,A(:M,:K)    ,M     ,B(:K,:N),K ,0.  ,C(:M,:N)    ,M)
         call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,amat(1,1,ir),lmmaxd,arot,lmmaxd,zero,ader(1,1,ir),lmmaxd)
         call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,bmat(1,1,ir),lmmaxd,arot,lmmaxd,zero,bder(1,1,ir),lmmaxd)
         ! since the contraction index for these gemms is in the middle, we cannot group it into a larger gemm

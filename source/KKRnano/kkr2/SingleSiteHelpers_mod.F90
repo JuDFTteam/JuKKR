@@ -121,7 +121,7 @@ module SingleSiteHelpers_mod
     double complex, intent(out) :: tmat(0:lmaxd)
     double precision, intent(in) :: drdi(irmd),r(irmd), rs(irmd,0:lmaxd),s(0:lmaxd), vm2z(irmd), ldaucut(irmd), wmldauav(lmaxd+1)
     integer, intent(in) :: ircut(0:ipand), lldau(lmaxd+1)
-    
+
     double complex :: alphal,arg,bl,eklfac,hl,pn,qf,slope,tl,tlsqez, value,w,x,y
     double precision :: rirc,rsirc,s1
     integer :: ir,irc1,l,n, lmaxp1

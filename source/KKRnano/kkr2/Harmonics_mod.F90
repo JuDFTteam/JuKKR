@@ -162,7 +162,7 @@ module Harmonics_mod
     enddo ! j
     jend(lm3,l1,l2) = iend
       
-  endsubroutine gaunt
+  endsubroutine ! gaunt
 
       
       
@@ -254,7 +254,7 @@ module Harmonics_mod
       enddo ! l
     enddo ! k
     
-  endsubroutine gaunt2
+  endsubroutine ! gaunt2
   
   
   
@@ -323,7 +323,7 @@ module Harmonics_mod
       w(i) = 2.d0*(1. - x(i)*x(i))/(fx*fx)
     enddo ! i
     if (2*m > n) x(m) = 0.d0 ! center if n is odd
-  endsubroutine grule
+  endsubroutine ! grule
       
       
       
@@ -428,7 +428,7 @@ module Harmonics_mod
 
 !     WRITE (*,FMT="(' >>> SHAPE : IMAXSH(',I6,'),NGSHD :',2I6)") IMAXSH(LM1),NGSHD
 !     IF (IMAXSH(LM1) > NGSHD) CALL RCSTOP('SHAPE   ')
-  endsubroutine shapeg_impl
+  endsubroutine ! shapeg_impl
 
 !======================================================================
 
@@ -448,7 +448,7 @@ module Harmonics_mod
     ! not write to the arrays gsh and ilm and simply return the maximum index
     call shapeg_impl(lpot, gsh, ilm, imaxsh, w, yr, lmax, ngshd=1, ncount=ncount)
     
-  endsubroutine shapeg_count
+  endsubroutine ! shapeg_count
   
   
   subroutine shapeg(lpot, gsh, ilm, imaxsh, w, yr, lmax, ngshd)
@@ -465,7 +465,7 @@ module Harmonics_mod
     
     call shapeg_impl(lpot, gsh, ilm, imaxsh, w, yr, lmax, ngshd)
     
-  endsubroutine shapeg
+  endsubroutine ! shapeg
   
   
 ! **********************************************************************
@@ -501,7 +501,7 @@ module Harmonics_mod
     xy2 = v1*v1 + v2*v2
     xyz2 = xy2 + v3*v3
 
-    if (xyz2 <= 0.d0) stop 'ylm=0' ! call rcstop('ylm=0   ')
+    if (xyz2 <= 0.d0) stop 'ERROR Ylm: [x,y,z]=0 !!!' ! call rcstop('ylm=0   ')
     r = sqrt(xyz2)
  
     if (xy2 > szero*xyz2) then
@@ -561,6 +561,6 @@ module Harmonics_mod
       i = i + l ! forward i to the end (m==l) of this l-section
     enddo ! l
       
-  endsubroutine ymy
+  endsubroutine ! ymy
 
 endmodule ! Harmonics_mod

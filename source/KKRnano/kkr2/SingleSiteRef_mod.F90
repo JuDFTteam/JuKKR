@@ -428,8 +428,8 @@ module SingleSiteRef_mod
   
   subroutine gfree(rdiff, e, gmLL, cleb, icleb, loflm, iend, lmax, ncleb, derive)
     use Constants_mod, only: Pi
-    use SingleSiteHelpers_mod, only: beshan
-    use Harmonics_mod, only: ymy
+    use SingleSiteHelpers_mod, only: BesHan
+    use Harmonics_mod, only: Ymy
 
     double precision, intent(in) :: rdiff(3)
     integer, intent(in) :: lmax, ncleb, iend
@@ -455,8 +455,8 @@ module SingleSiteRef_mod
 !
 !---- calculation of free electron green's function :  g(m)ll'(e)
 !
-    call ymy(rdiff(1), rdiff(2), rdiff(3), rabs, yl, 2*lmax)
-    call beshan(hl, bl, nl, sqE*rabs, 2*lmax)
+    call Ymy(rdiff(1), rdiff(2), rdiff(3), rabs, yl, 2*lmax)
+    call BesHan(hl, bl, nl, sqE*rabs, 2*lmax)
 
     if (derive) then
 !-----------------------------------------------------------------------
