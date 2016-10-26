@@ -4,9 +4,12 @@ default: install
 
 FC =  ifort
 mpi: FC = mpiifort
+mpidebug: FC = mpiifort
 
 
 FILENAME0 = rhoq.x
+# mpi: FILENAME0 = rhoq.x_mpi
+# mpidebug: FILENAME0 = rhoq.x_mpi
 
 ####################################################
 # Libraries                                        #
@@ -49,7 +52,7 @@ FFLAGS       =  -O3 -openmp -xhost
 openmp:   FFLAGS = -O2 # –Wl,-stack_size,0x1000000000,-stack_addr,0xc000000000 -heap-arrays # -r8 
 debug:    FFLAGS = -O0 -openmp -r8 -CB -check all,noarg_temp_created,uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
 #FFLAGS = -O0 -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended -openmp #-mcmodel=medium -shared-intel -openmp
-mpidebug: FFLAGS = -g -CB -check all,noarg_temp_created  -traceback #-mcmodel=medium
+mpidebug: FFLAGS = -g -CB -check all,noarg_temp_created  -traceback 
 
 OPENMPFLAGS = 
 openmp: OPENMPFLAGS = -openmp
@@ -87,7 +90,8 @@ compile:  getversion $(SRCS)
 serial: compile
 debug: compile
 mpi: compile
-install: clean serial
+mpidebug: compile
+install: clean mpi
 
 
 mod_%.o: %.f90

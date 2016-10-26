@@ -7,11 +7,6 @@ use mpi
 implicit none
 
 type type_rhoq
-
-  ! number of scalars in this type, needed for MPI communication
-  integer :: Nscalars = 7
-  ! number of arrays in this type, needed for MPI communication
-  integer :: Narrays = 12
   
   ! impurity cluster
   integer :: Nscoef ! number of impurities in impurity cluster
@@ -34,8 +29,10 @@ type type_rhoq
   
   ! Green functions etc.
   logical :: Ghost_k_memsave ! logical switch which determines if Ghost_k is stored in a file or kept in memory
-  double complex, allocatable :: Ghost(:,:,:) ! (Nlayer,lmmaxso,lmmaxso), 
-  double complex, allocatable :: Ghost_k(:,:,:,:) ! (Nlayer,nkpt,lmmaxso,lmmaxso), 
+!   double complex, allocatable :: Ghost(:,:,:) ! (Nlayer,lmmaxso,lmmaxso), 
+!   double complex, allocatable :: Ghost_k(:,:,:,:) ! (Nlayer,nkpt,lmmaxso,lmmaxso), 
+
+  ! these are used later on (not included in Bcast with Narrays parameter)
   double complex, allocatable :: Dt(:,:) ! (Nscoef,Nscoef,lmmaxso,lmmaxso), 
   double complex, allocatable :: Gimp(:,:) ! (Nscoef,Nscoef,lmmaxso,lmmaxso), 
   double complex, allocatable :: tau(:,:) ! (Nscoef,Nscoef,lmmaxso,lmmaxso), 
@@ -61,35 +58,15 @@ subroutine bcast_scalars_rhoq(t_rhoq)
   type(type_rhoq), intent(inout) :: t_rhoq
   ! local variables
   integer :: ierr
-  integer :: blocklen1(t_rhoq%Nscalars),etype1(t_rhoq%Nscalars),myMPItype1
-  integer(kind=MPI_ADDRESS_KIND) :: disp1(t_rhoq%Nscalars), base
-  
-  call MPI_Get_address(t_rhoq%Nscoef,          disp1(1), ierr)
-  call MPI_Get_address(t_rhoq%Nlayer,          disp1(2), ierr)
-  call MPI_Get_address(t_rhoq%nkpt,            disp1(3), ierr)
-  call MPI_Get_address(t_rhoq%mu_0,            disp1(4), ierr)
-  call MPI_Get_address(t_rhoq%natyp,           disp1(5), ierr)
-  call MPI_Get_address(t_rhoq%lmmaxso,          disp1(6), ierr)
-  call MPI_Get_address(t_rhoq%Ghost_k_memsave, disp1(7), ierr)
 
-  base  = disp1(1)
-  disp1 = disp1 - base
-
-  blocklen1(1:7) = 1
-
-  etype1(1:6) = MPI_INTEGER
-  etype1(7)   = MPI_LOGICAL
-
-  call MPI_Type_create_struct(t_rhoq%Nscalars, blocklen1, disp1, etype1, myMPItype1, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[bcast_scalars_rhoq] Problem in create_mpimask_t_rhoq'
-  
-  call MPI_Type_commit(myMPItype1, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[bcast_scalars_rhoq] error comiting create_mpimask_t_rhoq'
-  
-  call MPI_Bcast(t_rhoq%Nscalars, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[bcast_scalars_rhoq] error brodcasting scalars in t_rhoq'
-  
-  call MPI_Type_free(myMPItype1, ierr)
+  call MPI_Bcast(t_rhoq%Nscoef, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%Nlayer, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%nkpt, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%mu_0, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%natyp, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%lmmaxso, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%volbz, 1, MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%Ghost_k_memsave, 1, MPI_LOGICAL, master, MPI_COMM_WORLD, ierr)
 
 end subroutine bcast_scalars_rhoq
 #endif
@@ -108,53 +85,13 @@ subroutine bcast_arrays_rhoq(t_rhoq)
   type(type_rhoq), intent(inout) :: t_rhoq
   ! local variables
   integer :: ierr
-  integer :: blocklen1(t_rhoq%Narrays),etype1(t_rhoq%Narrays),myMPItype1
-  integer(kind=MPI_ADDRESS_KIND) :: disp1(t_rhoq%Narrays), base
 
-  call MPI_Get_address(t_rhoq%ilay_scoef, disp1(1), ierr)
-  call MPI_Get_address(t_rhoq%r_scoef,    disp1(2), ierr)
-  call MPI_Get_address(t_rhoq%volbz,      disp1(3), ierr)
-  call MPI_Get_address(t_rhoq%kpt,        disp1(4), ierr)
-  call MPI_Get_address(t_rhoq%volcub,     disp1(5), ierr)
-  call MPI_Get_address(t_rhoq%r_basis,    disp1(6), ierr)
-  call MPI_Get_address(t_rhoq%L_i,        disp1(7), ierr)
-  call MPI_Get_address(t_rhoq%Ghost,      disp1(8), ierr)
-  call MPI_Get_address(t_rhoq%Ghost_k,    disp1(9), ierr)
-  call MPI_Get_address(t_rhoq%Dt,        disp1(10), ierr)
-  call MPI_Get_address(t_rhoq%Gimp,      disp1(11), ierr)
-  call MPI_Get_address(t_rhoq%tau,       disp1(12), ierr)
-
-  base  = disp1(1)
-  disp1 = disp1 - base
-
-  blocklen1(1)  = t_rhoq%Nscoef
-  blocklen1(2)  = 3*t_rhoq%Nscoef
-  blocklen1(3)  = 1
-  blocklen1(4)  = 3*t_rhoq%nkpt
-  blocklen1(4)  = t_rhoq%nkpt
-  blocklen1(6)  = 3*t_rhoq%natyp
-  blocklen1(7)  = 3*(t_rhoq%Nscoef+1)
-  blocklen1(8)  = t_rhoq%Nlayer*t_rhoq%lmmaxso*t_rhoq%lmmaxso
-  blocklen1(9)  = t_rhoq%Nlayer*t_rhoq%nkpt*t_rhoq%lmmaxso*t_rhoq%lmmaxso
-  blocklen1(10) = t_rhoq%Nscoef*t_rhoq%lmmaxso*t_rhoq%lmmaxso
-  blocklen1(11) = t_rhoq%Nscoef*t_rhoq%Nscoef*t_rhoq%lmmaxso*t_rhoq%lmmaxso
-  blocklen1(12) = t_rhoq%Nscoef*t_rhoq%Nscoef*t_rhoq%lmmaxso*t_rhoq%lmmaxso
-
-  etype1(1)    = MPI_INTEGER
-  etype1(2:7)  = MPI_DOUBLE_PRECISION
-  etype1(7:11) = MPI_DOUBLE_COMPLEX
-
-  call MPI_Type_create_struct(t_rhoq%Narrays, blocklen1, disp1, etype1, myMPItype1, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[bcast_arrays_rhoq] Problem in create_mpimask_t_rhoq'
-  
-  call MPI_Type_commit(myMPItype1, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[bcast_arrays_rhoq] error comiting create_mpimask_t_rhoq'
-  
-  call MPI_Bcast(t_rhoq%Narrays, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[bcast_arrays_rhoq] error brodcasting scalars in t_rhoq'
-  
-  call MPI_Type_free(myMPItype1, ierr)
-
+  call MPI_Bcast(t_rhoq%ilay_scoef, t_rhoq%Nscoef,       MPI_INTEGER,          master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%r_scoef,    3*t_rhoq%Nscoef,     MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%kpt,        3*t_rhoq%nkpt,       MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%volcub,     t_rhoq%nkpt,         MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%r_basis,    3*t_rhoq%natyp,      MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%L_i,        3*(t_rhoq%Nscoef+1), MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
 
 end subroutine bcast_arrays_rhoq
 #endif
@@ -169,11 +106,13 @@ subroutine init_t_rhoq(t_rhoq)
   type(type_rhoq), intent(inout) :: t_rhoq
   integer :: ierr, N
   
-  N = t_rhoq%Nscoef*t_rhoq%lmmaxso
 
   ierr = 0
+  !integer array
   if(.not.allocated(t_rhoq%ilay_scoef)) allocate(t_rhoq%ilay_scoef(t_rhoq%Nscoef), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating ilay_scoef in rhoq'
+  
+  !double precision
   if(.not.allocated(t_rhoq%r_scoef)) allocate(t_rhoq%r_scoef(3,t_rhoq%Nscoef), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating r_scoef in rhoq'
   if(.not.allocated(t_rhoq%kpt)) allocate(t_rhoq%kpt(3,t_rhoq%nkpt), stat=ierr)
@@ -184,16 +123,20 @@ subroutine init_t_rhoq(t_rhoq)
   if(ierr/=0) stop '[init_t_rhoq] error allocating r_basis in rhoq'
   if(.not.allocated(t_rhoq%L_i)) allocate(t_rhoq%L_i(3,t_rhoq%Nscoef+1), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating Nscoef in rhoq'
-  if(.not.allocated(t_rhoq%Ghost)) allocate(t_rhoq%Ghost(t_rhoq%lmmaxso,t_rhoq%lmmaxso,t_rhoq%Nlayer), stat=ierr)
-  if(ierr/=0) stop '[init_t_rhoq] error allocating Nscoef in rhoq'
-  if(.not.allocated(t_rhoq%Ghost_k)) allocate(t_rhoq%Ghost_k(t_rhoq%lmmaxso,t_rhoq%lmmaxso,t_rhoq%Nlayer,t_rhoq%nkpt), stat=ierr)
-  if(ierr/=0) stop '[init_t_rhoq] error allocating Nscoef in rhoq'
+
+  N = t_rhoq%Nscoef*t_rhoq%lmmaxso
+  
+  !double complex
   if(.not.allocated(t_rhoq%Dt)) allocate(t_rhoq%Dt(N, N), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating Nscoef in rhoq'
   if(.not.allocated(t_rhoq%Gimp)) allocate(t_rhoq%Gimp(N, N), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating Nscoef in rhoq'
   if(.not.allocated(t_rhoq%tau)) allocate(t_rhoq%tau(N, N) , stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating Nscoef in rhoq'
+  
+!   if(.not.allocated(t_rhoq%Ghost)) allocate(t_rhoq%Ghost(t_rhoq%lmmaxso,t_rhoq%lmmaxso,t_rhoq%Nlayer), stat=ierr)
+!   if(ierr/=0) stop '[init_t_rhoq] error allocating Nscoef in rhoq'
+!   if(.not.allocated(t_rhoq%Ghost_k)) allocate(t_rhoq%Ghost_k(t_rhoq%lmmaxso,t_rhoq%lmmaxso,t_rhoq%Nlayer,t_rhoq%nkpt), stat=ierr)  
 
 end subroutine init_t_rhoq
 
@@ -418,13 +361,29 @@ end subroutine get_L_vecs_rhoq
 
 subroutine read_Dt_Gimp_rhoq(t_rhoq, lmmaxso, ncls)
   ! read in DTMTRX and GMATLL_GES, provided by zulapi code
+  use mod_mympi, only: myrank, master
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   integer, intent(in) :: lmmaxso, ncls
+#ifdef CPP_MPI
+  integer :: ierr
+#endif
 
-  ! read in 
-  call read_DTMTRX( t_rhoq%Dt, lmmaxso, ncls)
-  call read_green_ll(ncls, lmmaxso, t_rhoq%Gimp)
+  if(myrank==master) then
+    ! read in DTMTRX and GMATLL_GES on master
+    call read_DTMTRX( t_rhoq%Dt, lmmaxso, ncls)
+    call read_green_ll(ncls, lmmaxso, t_rhoq%Gimp)
+  endif
+
+#ifdef CPP_MPI
+  ! broadcast Dt and Gimp
+
+  call MPI_Bcast(t_rhoq%Dt, (ncls*lmmaxso)**2, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=0) stop '[read_Dt_Gimp_rhoq] Error Bcast Dt'
+  
+  call MPI_Bcast(t_rhoq%Gimp, (ncls*lmmaxso)**2, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=0) stop '[read_Dt_Gimp_rhoq] Error Bcast Gimp'
+#endif
 
 end subroutine read_Dt_Gimp_rhoq
 
@@ -558,12 +517,12 @@ subroutine calc_tau_rhoq(t_rhoq)
   t_rhoq%tau = t_rhoq%Dt
   call ZGEMM('n','n',N,N,N,C1,t_rhoq%Dt,N,temp,N,C1,t_rhoq%tau,N)
   
-  !test
-  write(*,*) 'writing tau'
-  do ierr=1,N
-    write(789456123, '(10000ES16.7)') t_rhoq%tau(ierr,:)
-  end do
-  !test
+!   !test
+!   write(*,*) 'writing tau'
+!   do ierr=1,N
+!     write(789456123, '(10000ES16.7)') t_rhoq%tau(ierr,:)
+!   end do
+!   !test
   
   deallocate(temp)
 
@@ -823,12 +782,14 @@ subroutine get_tinv(t_rhoq, tinv)
        read(9999, rec=irec) trefll(1:N,1:N,i)
     enddo ! i
     close(9999)
-  else !myrank/=master
-    allocate(trefll(N,N, NREF), stat=ierr)
-    if(ierr/=0) stop '[calc_rhoq] ERROR in allocating trefll'
   endif
   
 #ifdef CPP_MPI
+  call MPI_Bcast(NREF, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  if(myrank/=master) then
+    allocate(trefll(N,N, NREF), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] ERROR in allocating trefll'
+  end if
   call MPI_Bcast(trefll, N*N*NREF, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
   if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting scalars in t_rhoq'
 #endif
@@ -897,20 +858,23 @@ end subroutine get_tinv
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
+subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         &        ntotd, npan_tot, ncheb, rpan_intervall, ipan_intervall, irmdnew, alat )
   ! calculate Delta rho^mu(q) = Int{ Delta rho(q, X_mu+r), dr }
   !                           = -1/(2*pi*i) Tr[ Q^mu Int{ Ghost(k) tau Ghost(k+q),dk } - Q^mu,* Int{ Ghost^*(k) tau^* Ghost^*(k-q),dk }]
   use omp_lib
   use mod_timing
   use IFPORT ! random numbers
+#ifdef CPP_MPI
+  use mod_mympi, only: master, myrank, nranks, distribute_linear_on_tasks
+#else
   use mod_mympi, only: master, myrank, nranks
+#endif
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   integer, intent(in) :: lmmaxso, Nkp, irmdnew, lmax
   double complex, intent(inout) :: trq_of_r(lmmaxso,lmmaxso, 725, irmdnew)
   double precision, intent(in) :: recbv(3,3), alat
-  double complex, allocatable, intent(out) :: rhoq(:)
   
   integer :: ntotd, npan_tot, ncheb, npan_log, npan_eq
   integer npan_lognew,npan_eqnew
@@ -918,17 +882,16 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   integer, intent(in) :: ipan_intervall(0:ntotd)
   
   ! local
-  integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, nthreads, Ni, Nj, Nqpt, ixyz, lm01, lm02, ir, l1, m1, imt1, lm2, lm3, ifun, imin, ielast, ikx, iky, Nx, Ny
+  integer :: lrec, i, irec, k, mu, mu_i, ie, N, q, j, kpq, ierr, lm1, ix, nthreads, Ni, Nj, Nqpt, lm01, lm02, ir, l1, m1, imt1, lm2, lm3, ifun, imin, ielast, ikx, iky, Nx, Ny
+  
   integer, save :: mythread
   !$omp threadprivate(mythread)
   
-  integer :: NREF
-  integer, allocatable :: ipvt(:), refpot(:)
-  double complex, allocatable :: tll(:,:), trefll(:,:,:)
+  double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), tmpsum1(:,:), tmpsum2(:,:), qint(:,:,:), eiqr_lm(:,:), q_mu(:,:), cYlm(:), rhoq(:)
   
-  double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), tmpsum1(:,:), tmpsum2(:,:), qint(:,:,:), eiqr_lm(:,:), q_mu(:,:), cYlm(:)
   double complex, allocatable, save :: tmp(:,:), exG0_tmp(:,:), jl(:), qint_tmp(:,:,:)
   !$omp threadprivate(tmp, exG0_tmp, jl, qint_tmp)
+  
   double complex :: tr_tmpsum1, tr_tmpsum2, kweight, Z
   double precision, allocatable :: kpt(:,:), L_i(:,:), Qvec(:,:), rnew(:), qvec_tmp(:,:), Ylm(:)
   integer, allocatable :: qvec_index_tmp(:,:), qvec_index(:,:)
@@ -949,6 +912,11 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   integer :: irid, irmd, ipand, irmin, irws, ipan, mu_0, nfund
   double precision, allocatable :: THETAS(:,:), R(:)
   double precision :: r_log
+  
+#ifdef CPP_MPI
+  integer, allocatable :: ntot_pT(:), ioff_pT(:)
+#endif
+  integer :: q_start, q_end
   
   ! allocate kpoint arrays
   ierr = 0
@@ -975,36 +943,38 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   !allocate temporary arrays
   allocate(tinv(N,N,t_rhoq%Nscoef+1), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating tinv'
-  allocate(tau0_k(N,N), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] error allocating tau0_k'
   allocate(G0ij_k(N,N,t_rhoq%Nscoef,Nkp), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating G0ij_k'
   allocate(G0ji_k(N,N,t_rhoq%Nscoef,Nkp), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating G0ji_k'
   
-  tau0_k = C0
   G0ij_k = C0
   G0ji_k = C0
   
   !tinv = (t-tref)^-1
   call get_tinv(t_rhoq, tinv)
   
-  ! open tau0_k file, written in writegreen of zulapi code
-!   lrec = 4*(N**2)
-  lrec = 4*(N**2+1)
-!   lrec = 4*(N**2+2)
-!   open(9999, file='tau0_k', access='direct', form='unformatted', recl=lrec)
   
-  ! find imin
-  imin = 1000
-  do i=1,t_rhoq%Nscoef
-    if(t_rhoq%ilay_scoef(i)<imin) imin = t_rhoq%ilay_scoef(i)
-    if(myrank==master) write(*,*) 'find imin' ,imin,t_rhoq%ilay_scoef(i), t_rhoq%Nlayer
-  end do
   
+  call timing_start('calc rhoq - comp tau')
   if(myrank==master) then
   
+    ! find imin
+    imin = 1000
+    do i=1,t_rhoq%Nscoef
+      if(t_rhoq%ilay_scoef(i)<imin) imin = t_rhoq%ilay_scoef(i)
+      if(myrank==master) write(*,*) 'find imin' ,imin,t_rhoq%ilay_scoef(i), t_rhoq%Nlayer
+    end do
+  
+    ! open tau0_k file, written in writegreen of zulapi code
+!     lrec = 4*(N**2)
+    lrec = 4*(N**2+1)
+!     lrec = 4*(N**2+2)
+!     open(9999, file='tau0_k', access='direct', form='unformatted', recl=lrec)
+  
     ! allocate temporary arrays
+    allocate(tau0_k(N,N), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] error allocating tau0_k'
     allocate(tmpG0(N,N), stat=ierr)
     if(ierr/=0) stop '[calc_rhoq] error allocating tmpG0'
   
@@ -1012,7 +982,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
     lm1 = 0
     lm2 = 0
 
-    call timing_start('calc rhoq - comp tau')
     ! calculate tau
     write(*,*) 'calculate G0_k from tau0_k'
     write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
@@ -1033,6 +1002,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
         ! first mu_0,mu_i element
         irec = irec + ix + (t_rhoq%Nlayer-1)
         read(998899,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
+!         !test
+!         tau0_k(1,1) = (1.0d0, 0d0)
         
 ! !       call red_Q(t_rhoq, recbv(1:2,1:2), tmpk(1:2), q)
         q = k
@@ -1054,6 +1025,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
           ! find G0ij_k from tau0_k and tinv
           call calc_G0_k(tau0_k, tinv(1:N,1:N,t_rhoq%Nscoef+1), tinv(1:N,1:N,i), tmpG0(1:N,1:N), t_rhoq%mu_0, mu_i, N)
           G0ij_k(1:N,1:N,i,q) = tmpG0(1:N,1:N)
+!           G0ij_k(1:N,1:N,i,q) = tau0_k(1:N,1:N)
         end if
         
         ! now mu_i,mu_0 element
@@ -1061,11 +1033,14 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
         ix = mu_i - mu + 1
         irec = irec + ix
         read(998888,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
+!         !test
+!         tau0_k(1,1) = (1.0d0, 0d0)
         
         if(kmask(q)) then
           !find G0ji_k from tau0_k and tinv
           call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tinv(1:N,1:N,t_rhoq%Nscoef+1), tmpG0(1:N,1:N), mu_i, t_rhoq%mu_0, N)
           G0ji_k(1:N,1:N,i,q) = tmpG0(1:N,1:N)
+!           G0ji_k(1:N,1:N,i,q) = tau0_k(1:N,1:N)
         end if
         
       end do ! i
@@ -1077,18 +1052,21 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
     
 !     close(998899)
 !     close(998888)
-    deallocate(tmpG0)
+    deallocate(tmpG0, tau0_k, stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] error deallocating tmpG0 etc'
 
     write(*,*) !status bar
-    write(*,*) 'kmask info:', lm1, lm2
+    write(*,*) 'kmask info (inside/outside):', lm1, lm2
   
   endif !myrank==master
 
 #ifdef CPP_MPI
+  call MPI_Bcast(kmask, Nkp, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting kmask in t_rhoq'
   call MPI_Bcast(G0ji_k, N*N*t_rhoq%Nscoef*Nkp, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting scalars in t_rhoq'
-  call MPI_Bcast(G0ji_k, N*N*t_rhoq%Nscoef*Nkp, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
-  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting scalars in t_rhoq'
+  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting G0ji_k in t_rhoq'
+  call MPI_Bcast(G0ij_k, N*N*t_rhoq%Nscoef*Nkp, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting G0ij_k in t_rhoq'
 #endif
   
   
@@ -1117,36 +1095,48 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   
     
   
-  call timing_start('calc rhoq - Gaunt')
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! find second set of gaunt coefficients for sum_LL'L" [exp(-iqr)_L * Tr(R*Rleft)_L' * Theta)L" * C_LL'L"] which is then integrated radially
+  call timing_start('calc rhoq - Gaunt')
   
   NCLEB =   ((lmax*2+1)**2 * (lmax+1)**2 )*100
   LMAX_1 = 6
   LMAX_2 = 18
   LPOT_2 = 2*(LMAX_1+LMAX_2)
   
-  allocate( WG(4*LMAX_2), YRG(4*LMAX_2,0:4*LMAX_2,0:4*LMAX_2), stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] Error allocating wg, yrg'
   allocate( CLEB(NCLEB), ICLEB(NCLEB,3), JEND((LPOT_2+1)**2,0:LMAX_1,0:LMAX_2), LOFLM((2*LPOT_2+1)**2), stat=ierr )
   if(ierr/=0) stop '[calc_rhoq] Error allocating icleb etc for gaunt'
   
-  ! first set wg and yrg arrays (input for gaunt_new)
-  !          ( > |  > |     <    )
-  CALL GAUNT2( WG, YRG, 4*LMAX_2)
+  if(myrank==master) then
   
-  ! compute gaunt coefficients depending on two different cutoffs (lmax_1 and lamx_2)
-  !             (    <  |    <  |   <   | < |  < |  >  |  >   |   >  |  >  |  >  |  >   |   <     |     <         )
-  CALL GAUNT_new( LMAX_1, LMAX_2, LPOT_2, WG, YRG, CLEB, LOFLM, ICLEB, IEND, JEND, NCLEB, LMAX_2  , (LPOT_2+1)**2 )
-  
-  deallocate(WG, YRG, stat=ierr)
-  if(ierr/=0) stop '[calc_rhoq] Error deallocating wg, yrg'
-  
-  if(myrank==master) write(*,*) 'done with gaunts'
-  
+    !temporary arrays
+    allocate( WG(4*LMAX_2), YRG(4*LMAX_2,0:4*LMAX_2,0:4*LMAX_2), stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] Error allocating wg, yrg'
+    
+    ! first set wg and yrg arrays (input for gaunt_new)
+    !          ( > |  > |     <    )
+    CALL GAUNT2( WG, YRG, 4*LMAX_2)
+    
+    ! compute gaunt coefficients depending on two different cutoffs (lmax_1 and lamx_2)
+    !             (    <  |    <  |   <   | < |  < |  >  |  >   |   >  |  >  |  >  |  >   |   <     |     <         )
+    CALL GAUNT_new( LMAX_1, LMAX_2, LPOT_2, WG, YRG, CLEB, LOFLM, ICLEB, IEND, JEND, NCLEB, LMAX_2  , (LPOT_2+1)**2 )
+    
+    deallocate(WG, YRG, stat=ierr)
+    if(ierr/=0) stop '[calc_rhoq] Error deallocating wg, yrg'
+    
+    if(myrank==master) write(*,*) 'done with gaunts'
+    
+  end if !myrank==master
+#ifdef CPP_MPI
+  call MPI_Bcast(IEND, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(CLEB, NCLEB, MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(ICLEB, NCLEB*3, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(JEND, (LPOT_2+1)**2*(LMAX_1+1)*(LMAX_2+1), MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(LOFLM, (2*LPOT_2+1)**2, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+#endif
+  call timing_stop('calc rhoq - Gaunt')
   ! done finding Gaunts for larger lmax values
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  call timing_stop('calc rhoq - Gaunt')
   
   
   call timing_start('calc rhoq - shape')
@@ -1161,45 +1151,61 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   
   allocate( ifunm( (2*lpot_2+1)**2 ), lmsp( (2*lpot_2+1)**2 ) ) ! shape functions
   allocate( thetasnew(NTOTD*(NCHEB+1),nfund) ) ! shape functions in Chebychev mesh (new mesh)
-  allocate( NTCELL(1:t_rhoq%NATYP) )
-  allocate( thetas(irid,nfund) )
-  allocate( rnew(irmdnew) )
+  allocate( rnew(irmdnew) ) ! new mesh
   
-  rnew = 0.0d0
+  if(myrank==master) then
   
-  thetas = 0.0d0
-  thetasnew = 0.0d0
-  
-  ! read in corresponding mesh information
-  open(9999, file='rmesh_mu0.txt', form='formatted')
-  read(9999,*) !'# mu_0, IRMIN, IRWS, IRNS'
-  read(9999,'(4I9)') mu_0, irmin, irws, ipan
-  if(mu_0/=t_rhoq%mu_0) stop 'Error: mu0 value does not match!!!'
-  allocate( R(1:irws) )
-  allocate( ircut(1:ipan) )
-  read(9999,*) !'# R(1:IRWS)'
-  read(9999,'(1000E22.15)') R(1:irws)
-  read(9999,*) !'# NTCELL(1:NATYP)'
-  read(9999,'(1000I9)') ntcell(1:t_rhoq%natyp)
-  read(9999,'(A)') !'# IRCUT(1:IPAN)'
-  read(9999,'(1000I9)') ircut(1:ipan)
-  read(9999,'(A)') !'# R_LOG, NPAN_LOG, NPAN_EQ'
-  read(9999,'(E22.15,2I9)') R_LOG, NPAN_LOG, NPAN_EQ
-  close(9999)
-  
-  ! read shapefunction for atom mu_0 from file shapefun (Note: this file needs to be )
-  call read_shape(thetas, lmsp, ifunm, irid, irmd, nfund, lpot_2, t_rhoq%mu_0, ipan, ntcell, t_rhoq%natyp)
-     
-  ! interpolate shapefunction from old mesh (stored in r(1:irws)) to chebychev mesh (output as rnew)
-  call interpol_shape(R,irmin,irws,ipan,ircut,r_log,npan_log,npan_eq,ncheb,           &
-     &                npan_tot,rnew,rpan_intervall,ipan_intervall,thetas,thetasnew,     &
-     &                nfund, npan_lognew, npan_eqnew)
-     
-  ! deallocate arrays in old mesh, from here on only the new (chebychev) mesh is used
-  deallocate( R, ircut, thetas, ntcell )
-  
-  
-  write(*,*) 'done with shapes'
+    allocate( NTCELL(1:t_rhoq%NATYP) )
+    allocate( thetas(irid,nfund) )
+    
+    rnew = 0.0d0
+    
+    thetas = 0.0d0
+    thetasnew = 0.0d0
+    
+    ! read in corresponding mesh information
+    open(9999, file='rmesh_mu0.txt', form='formatted')
+    read(9999,*) !'# mu_0, IRMIN, IRWS, IRNS'
+    read(9999,'(4I9)') mu_0, irmin, irws, ipan
+    if(mu_0/=t_rhoq%mu_0) stop 'Error: mu0 value does not match!!!'
+    allocate( R(1:irws) )
+    allocate( ircut(1:ipan) )
+    read(9999,*) !'# R(1:IRWS)'
+    read(9999,'(1000E22.15)') R(1:irws)
+    read(9999,*) !'# NTCELL(1:NATYP)'
+    read(9999,'(1000I9)') ntcell(1:t_rhoq%natyp)
+    read(9999,'(A)') !'# IRCUT(1:IPAN)'
+    read(9999,'(1000I9)') ircut(1:ipan)
+    read(9999,'(A)') !'# R_LOG, NPAN_LOG, NPAN_EQ'
+    read(9999,'(E22.15,2I9)') R_LOG, NPAN_LOG, NPAN_EQ
+    close(9999)
+    
+    ! read shapefunction for atom mu_0 from file shapefun (Note: this file needs to be )
+    call read_shape(thetas, lmsp, ifunm, irid, irmd, nfund, lpot_2, t_rhoq%mu_0, ipan, ntcell, t_rhoq%natyp)
+       
+    ! interpolate shapefunction from old mesh (stored in r(1:irws)) to chebychev mesh (output as rnew)
+    call interpol_shape(R,irmin,irws,ipan,ircut,r_log,npan_log,npan_eq,ncheb,           &
+       &                npan_tot,rnew,rpan_intervall,ipan_intervall,thetas,thetasnew,     &
+       &                nfund, npan_lognew, npan_eqnew)
+       
+!        npan_tot, irmdnew
+       
+    ! deallocate arrays in old mesh, from here on only the new (chebychev) mesh is used
+    deallocate( R, ircut, thetas, ntcell )
+    
+    
+    if(myrank==master) write(*,*) 'done with shapes'
+    
+  end if ! myrank=master
+#ifdef CPP_MPI
+  !
+  call MPI_Bcast(ifunm, (2*lpot_2+1)**2, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  !arrays
+  call MPI_Bcast(ifunm, (2*lpot_2+1)**2, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(lmsp, (2*lpot_2+1)**2, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(thetasnew, NTOTD*(NCHEB+1)*nfund, MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(rnew, irmdnew, MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+#endif
   
   ! done finding shapefunction
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1217,8 +1223,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   Nj = 2
 !   Ni = 3
 !   Nj = 3
-!   Ni = 4
-!   Nj = 4
   Nqpt = Ni*Nj*Nkp
   
   Nx = int(dsqrt(dfloat(Nkp)))
@@ -1263,6 +1267,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
     end do !i=1,Ni
     
   end do !k=1,Nkp
+  !$omp end parallel do
   
 !   close(888)
 
@@ -1272,7 +1277,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   box(2) = 0.4d0!1.0d0!0.7d0
   box(3) = 0.4d0!1.0d0!0.1d0
   
-  write(*,*) 'reduce kpts to:', 0.12, box(1)
+  if(myrank==master) write(*,*) 'reduce kpts to:', 0.12, box(1)
 
   k = 0
   do q=1,Nqpt
@@ -1286,7 +1291,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   end do
 
   Nqpt = k
-  write(*,*) 'red qvecs box',k, box
+  if(myrank==master) write(*,*) 'red qvecs box',k, box
 
   ! change allocation 
   deallocate(qvec)
@@ -1310,12 +1315,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   allocate(rhoq(Nqpt), stat=ierr)
   rhoq = C0
   if(ierr/=0) stop '[calc_rhoq] Error allocating rhoq'
-  
-  !print header of statusbar
-190      FORMAT('                 |'$)   ! status bar
-200      FORMAT('|'$)                    ! status bar
-  write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
-  write(*,FMT=190) !beginning of statusbar
   
   call timing_start('calc rhoq - q-loop')
 
@@ -1361,8 +1360,39 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   allocate( q_mu(lmmaxso,lmmaxso), stat=ierr)
   if(ierr/=0) stop '[calc_rhoq] error allocating q_mu'
   
+  
+#ifdef CPP_MPI
 
-  do q=1,Nqpt !q-loop
+  allocate(ntot_pT(0:nranks-1), ioff_pT(0:nranks-1), stat=ierr)
+  if(ierr/=0) stop 'Error allocating ntot_pT etc.'
+  
+  call distribute_linear_on_tasks(nranks, myrank, master, Nqpt, ntot_pT, ioff_pT, .true.)
+  
+  q_start = ioff_pT(myrank) + 1
+  q_end   = ioff_pT(myrank) + ntot_pT(myrank)
+  
+  write(*,*) myrank, q_start, q_end
+
+
+  
+
+  call MPI_Barrier(MPI_COMM_WORLD, ierr)
+!   call MPI_FINALIZE(ierr)
+!   stop
+  
+#else
+
+  q_start = 1
+  q_end = Nqpt
+  
+#endif
+
+  !print header of statusbar
+190      FORMAT('                 |'$)   ! status bar
+200      FORMAT('|'$)                    ! status bar
+  if(myrank==master) write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
+  if(myrank==master) write(*,FMT=190) !beginning of statusbar
+  do q=q_start,q_end !q-loop
 !   do q=Nqpt/2, Nqpt/2 !1,Nqpt !q-loop
    
      
@@ -1419,6 +1449,13 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
              exG0_tmp(1:N,1:N) = G0ji_k(1:N,1:N,j,k)*exp(-2.0d0*pi*Ci*QdotL)
              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase1')
              
+!              !testing
+!              exG0_tmp(1:N,1:N) = G0ji_k(1:N,1:N,j,k)
+!              tau(1:N,1:N,i,j) = C0
+!              do ierr=1,N
+!                tau(ierr, ierr, i,j) = C1
+!              end do
+             
              ! tmp = tau*exG0_k(k)
              tmp(1:N,1:N) = C0
              if(mythread==0) call timing_start('calc rhoq - q>k-loop>1.ZGEMM')
@@ -1428,6 +1465,12 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
              if(mythread==0) call timing_start('calc rhoq - q>k-loop>2.ZGEMM')
              call ZGEMM('n','n',N,N,N,kweight,G0ij_k(1:N,1:N,i,kpq),N,tmp(1:N,1:N),N,C1,tmpsum1(1:N,1:N),N)
              if(mythread==0) call timing_pause('calc rhoq - q>k-loop>2.ZGEMM')
+             
+             !test
+!              tmpsum1(:,:)  = tmpsum1(:,:) + tau(1:N,1:N,i,j)
+!              tmpsum1(:,:)  = tmpsum1(:,:) + G0ji_k(1:N,1:N,j,k)
+!              tmpsum1(:,:)  = tmpsum1(:,:) + G0ij_k(1:N,1:N,i,k)
+!              tmpsum1(:,:)  = tmpsum1(:,:) + exp(-2.0d0*pi*Ci*QdotL)
            
 
              ! Int( exG0(k)^*.tau^*.exG0(k+q)^*, dk )
@@ -1659,12 +1702,13 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
 !      !$omp end parallel do
      
      rhoq(q) = 1.d0/(2.d0*Ci) * (tr_tmpsum1 - tr_tmpsum2)
-!      write(*,*) mythread, q, rhoq(q)
      !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< rhoq(iq) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      
      !update statusbar
-     if(Nqpt>=50.and.mod(q,Nqpt/50)==0) write(*,FMT=200)
+     if(myrank==master) then
+       if( ((q_end-q_start)>=50.and.mod(q,(q_end-q_start)/50)==0) .or. ((q_end-q_start)<50) ) write(*,FMT=200)
+     end if
        
   end do !q
   
@@ -1695,20 +1739,53 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, rhoq, recbv, lmax,   &
   ! done calculating rho(q)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
-  call timing_start('calc rhoq - writeout')
+  if(myrank==master) then
+    write(*,*) '' ! finish statusbar
+    write(*,*) 'saving rhoq(q) to out_rhoq.txt'
+  end if
+  
+  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! write out result
-  write(*,*) '' ! finish statusbar
-  write(*,*) 'saving rhoq(q) to out_rhoq.txt'
-  open(9999, file='out_rhoq.txt', form='formatted')
-  do q=1,Nqpt
-     write(9999,'(5E15.7)') Qvec(:,q),rhoq(q)
-  end do
-  close(9999)
+  call timing_start('calc rhoq - writeout')
+  
+#ifdef CPP_MPI
+  !Gather results on master
+  allocate(tmp(Nqpt,1), stat=ierr)
+  if(ierr/=0) stop 'Error allocating tmp for REDUCE of rhoq'
+
+  call MPI_REDUCE(rhoq, tmp, Nqpt, MPI_DOUBLE_COMPLEX, MPI_SUM, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=MPI_SUCCESS) stop 'ERROR in REDUCE for rhoq(q) before writeout'
+  
+  if(myrank==master) then
+    rhoq(:) = tmp(:,1)
+  endif
+    
+  deallocate(tmp, stat=ierr)
+  if(ierr/=0) stop 'Error deallocating tmp for REDUCE of rhoq'
+#endif
+  
+  if(myrank==master) then
+!     open(9999, file='out_rhoq.txt'//char(49+myrank), form='formatted')
+    open(9999, file='out_rhoq.txt', form='formatted')
+    do q=1,Nqpt
+       write(9999,'(5E15.7)') Qvec(:,q),rhoq(q)
+    end do
+    close(9999)
+  end if
+  
   call timing_stop('calc rhoq - writeout')
+  ! done with write out result
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   
-!   deallocate(tau)
-!   deallocate(tau0_k)
+#ifdef CPP_MPI
+  deallocate(ntot_pT, ioff_pT, stat=ierr)
+  if(ierr/=0) stop 'Error deallocating ntot_pT etc.'
+#endif
+  
+  
+  deallocate(rhoq)
     
 end subroutine calc_rhoq
 
@@ -1758,11 +1835,11 @@ program test
   double precision, parameter :: pi = 4.0d0*datan(1.0d0) ! pi/4 = arctan(1)
 
   
-  integer :: lm1, lm2, i, j, ir
+  integer :: lm1, lm2, i, j, ir, ierr
   
 #ifdef CPP_MPI
   ! initialize MPI
-  call MPI_Init ( i )
+  call MPI_Init ( ierr )
 #endif
   ! set variables master, myrank and nranks for serial (myrank=master=0, nranks=1) as well as parallel execution
   call mympi_init()
@@ -1775,90 +1852,98 @@ program test
   call timing_start('total time')
   
   
-  call timing_start('read stuff')
-  
-  ! read in scalars
-  uio = 'inputcard'
-  open(9999, file='params.txt')
-  read(9999,*) lmmaxso, natyp
-  read(9999,*) naez, ncls, nr, nemb, lmax
-  read(9999,*) alat
-  close(9999)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !>>>>>>>>>>>>>>>> read stuff in  >>>>>>>>>>>>>
+    call timing_start('read stuff')
+  if(myrank==master) then
+    
+    ! read in scalars
+    uio = 'inputcard'
+    open(9999, file='params.txt')
+    read(9999,*) lmmaxso, natyp
+    read(9999,*) naez, ncls, nr, nemb, lmax
+    read(9999,*) alat
+    close(9999)
 
-  
+    
 
-  open(9999, file='kpts.txt', form='formatted')
-  read(9999,'(I9)') nkpt
-  read(9999,'(E16.7)') volbz
-  allocate( kpt(3,nkpt), volcub(nkpt) )
-  do i=1,nkpt
-    read(9999,'(4E16.7)') (kpt(j,i), j=1,3), volcub(i)
-  end do
-  allocate(recbv(3,3), bravais(3,3))
-  read(9999,'(100E16.7)') recbv(1:3,1:3),bravais(1:3,1:3)
-  close(9999)
-  
-  ! convert from alat units to a.u. units (used in the remainder of the code)
-  recbv = recbv !* (2.0d0*pi)/alat  !* alat !2*pi! * alat
-  kpt = kpt !* (2.0d0*pi)/alat      !* alat !2*pi! * alat
-!   recbv = recbv * (2.0d0*pi)/alat  !* alat !2*pi! * alat
-!   kpt = kpt * (2.0d0*pi)/alat      !* alat !2*pi! * alat
-
-!   write(*,*) 'kpoints', nkpt, volbz
-  
-  open(9999, file='host.txt')
-  allocate( r_basis(3,natyp), Ghost(lmmaxso,lmmaxso,t_rhoq%Nlayer) )
-  allocate( rcls(3,ncls,ncls), rr(3,0:nr) )
-  allocate( atom(ncls,naez+nemb), cls(naez+nemb), ezoa(ncls,naez+nemb), nacls(ncls) )
-  read(9999,*) r_basis(1:3,1:natyp)
-  read(9999,*) rcls(1:3,1:ncls,1:ncls), rr(1:3,0:nr), atom(1:ncls,1:naez+nemb)
-  read(9999,*) cls(1:naez+nemb), ezoa(1:ncls,1:naez+nemb), nacls(1:ncls)
-  close(9999)
-  
-  open(9999, file='wavefunctions.txt')
-  read(9999,'(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
-  write(*,*) ntotd, npan_tot, ncheb, nsra, irmdnew, lmmaxso
-  allocate( rnew(irmdnew) )
-         read(9999,'(1000E26.17)') rnew(1:irmdnew)
-  
-  allocate( trq_of_r(lmmaxso,lmmaxso, 725, irmdnew) )
-
-
-  allocate( Rll(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew),          &
- &          Rllleft(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew) ,     &
- &          rpan_intervall(0:ntotd),ipan_intervall(0:ntotd) )
-  do ir=1,irmdnew
-    do lm1=1,nsra*lmmaxso
-      do lm2=1,lmmaxso
-        read(9999,'(20000E16.7)') Rll(lm1, lm2, ir) 
-        read(9999,'(20000E16.7)') Rllleft(lm1, lm2, ir)
-      end do
+    open(9999, file='kpts.txt', form='formatted')
+    read(9999,'(I9)') nkpt
+    read(9999,'(E16.7)') volbz
+    allocate( kpt(3,nkpt), volcub(nkpt) )
+    do i=1,nkpt
+      read(9999,'(4E16.7)') (kpt(j,i), j=1,3), volcub(i)
     end do
-  enddo
-  do lm1=0,ntotd
-    read(9999,'(E16.7,I9)') rpan_intervall(lm1), ipan_intervall(lm1)
-  enddo
-  close(9999)
+    allocate(recbv(3,3), bravais(3,3))
+    read(9999,'(100E16.7)') recbv(1:3,1:3),bravais(1:3,1:3)
+    close(9999)
+    
+    ! convert from alat units to a.u. units (used in the remainder of the code)
+    recbv = recbv !* (2.0d0*pi)/alat  !* alat !2*pi! * alat
+    kpt = kpt !* (2.0d0*pi)/alat      !* alat !2*pi! * alat
+!     recbv = recbv * (2.0d0*pi)/alat  !* alat !2*pi! * alat
+!     kpt = kpt * (2.0d0*pi)/alat      !* alat !2*pi! * alat
+
+!     write(*,*) 'kpoints', nkpt, volbz
+    
+    open(9999, file='host.txt')
+    allocate( r_basis(3,natyp), Ghost(lmmaxso,lmmaxso,t_rhoq%Nlayer) )
+    allocate( rcls(3,ncls,ncls), rr(3,0:nr) )
+    allocate( atom(ncls,naez+nemb), cls(naez+nemb), ezoa(ncls,naez+nemb), nacls(ncls) )
+    read(9999,*) r_basis(1:3,1:natyp)
+    read(9999,*) rcls(1:3,1:ncls,1:ncls), rr(1:3,0:nr), atom(1:ncls,1:naez+nemb)
+    read(9999,*) cls(1:naez+nemb), ezoa(1:ncls,1:naez+nemb), nacls(1:ncls)
+    close(9999)
+    
+    open(9999, file='wavefunctions.txt')
+    read(9999,'(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
+    write(*,*) ntotd, npan_tot, ncheb, nsra, irmdnew, lmmaxso
+    allocate( rnew(irmdnew) )
+           read(9999,'(1000E26.17)') rnew(1:irmdnew)
+    
+    allocate( trq_of_r(lmmaxso,lmmaxso, 725, irmdnew) )
+
+
+    allocate( Rll(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew),          &
+   &          Rllleft(1:nsra*lmmaxso,1:lmmaxso,1:irmdnew) ,     &
+   &          rpan_intervall(0:ntotd),ipan_intervall(0:ntotd) )
+    do ir=1,irmdnew
+      do lm1=1,nsra*lmmaxso
+        do lm2=1,lmmaxso
+          read(9999,'(20000E16.7)') Rll(lm1, lm2, ir) 
+          read(9999,'(20000E16.7)') Rllleft(lm1, lm2, ir)
+        end do
+      end do
+    enddo
+    do lm1=0,ntotd
+      read(9999,'(E16.7,I9)') rpan_intervall(lm1), ipan_intervall(lm1)
+    enddo
+    close(9999)
   
+  endif !myrank==master
   call timing_stop('read stuff')
+  !<<<<<<<<<<<<<<<< read stuff in  <<<<<<<<<<<<<
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !>>>>>>>>>>>>>>>> read stuff in  >>>>>>>>>>>>>
-  
+  !>>>>>>>>>>>>>>>>> init rhoq >>>>>>>>>>>>>>>>>
   call timing_start('init rhoq')
+  
+  if(myrank==master) then
 
-  ! find ilay_scoef, r_scoef, Nlayer, Nscoef in t_rhoq from scoef
-  call read_scoef_rhoq(t_rhoq)
+    ! find ilay_scoef, r_scoef, Nlayer, Nscoef in t_rhoq from scoef
+    call read_scoef_rhoq(t_rhoq)
 
-  ! read from inputcard
-  call read_input_rhoq(t_rhoq, uio)
+    ! read from inputcard
+    call read_input_rhoq(t_rhoq, uio)
 
-  ! save kpt, volcub, volbz nkpt to t_rhoq
-  call save_kmesh_rhoq(t_rhoq,nkpt,kpt,volcub,volbz)
+    ! save kpt, volcub, volbz nkpt to t_rhoq
+    call save_kmesh_rhoq(t_rhoq,nkpt,kpt,volcub,volbz)
 
-  ! save r_basis, lmmaxso, natyp to t_rhoq
-  call save_geometry_rhoq(t_rhoq,r_basis,lmmaxso,natyp)
+    ! save r_basis, lmmaxso, natyp to t_rhoq
+    call save_geometry_rhoq(t_rhoq,r_basis,lmmaxso,natyp)
+  endif !myrank==master
   
 #ifdef CPP_MPI
   ! broadcast scalars in t_rhoq from master to other ranks
@@ -1874,42 +1959,79 @@ program test
 #endif
 
   call timing_stop('init rhoq')
-  !<<<<<<<<<<<<<<<< read stuff in  <<<<<<<<<<<<<
+  !<<<<<<<<<<<<<<<<< init rhoq <<<<<<<<<<<<<<<<<
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   
   ! read DTMTRX and GMATLL_GES (scattering files), stored in t_rhoq%
   call timing_start('read Dt Gimp')
-  call read_Dt_Gimp_rhoq(t_rhoq, lmmaxso, t_rhoq%Nscoef)
+  call read_Dt_Gimp_rhoq(t_rhoq, t_rhoq%lmmaxso, t_rhoq%Nscoef)
   call timing_stop('read Dt Gimp')
-  
   
   ! calculate impurity scattering path operator from Dt, Gimp
   ! tau_i,i' = Dt_i delta_i,i' + Dt_i Gimp_i,i' Dt_i'
   call timing_start('calc tau')
   call calc_tau_rhoq(t_rhoq)
-  call timing_start('calc tau')
+  call timing_stop('calc tau')
   
   
   ! calculate prefactor Q^{\mu}_{LL'}(r) = R_{L}(\vec{r})*Rleft_{L'}(\vec{r})
   ! used in calc_rhoq to get Q^{\mu}_{LL'}(\vec{q}) = \Int R_{L}(\vec{r})*Rleft_{L'}(\vec{r}) \exp{-i\vec{q}\cdot\vec{r}} d\vec{r}
   call timing_start('calc Q_mu')
-  call calc_Q_mu_rhoq(lmax, ntotd, npan_tot, &
-        & nsra, lmmaxso, Rll, Rllleft, ipan_intervall, &
-        & irmdnew, trq_of_r)
+  if(myrank==master) then
+    call calc_Q_mu_rhoq(lmax, ntotd, npan_tot, &
+          & nsra, lmmaxso, Rll, Rllleft, ipan_intervall, &
+          & irmdnew, trq_of_r)
+  endif
+#ifdef CPP_MPI
+  call MPI_Bcast(irmdnew, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  
+  if(myrank/=master) then
+    allocate(recbv(3,3), stat=ierr)
+    if(ierr/=0) stop 'Error allocating recbv for myrank/=master'
+  end if
+  call MPI_Bcast(recbv, 3*3, MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+  
+  call MPI_Bcast(lmax, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(ntotd, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(npan_tot, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(ncheb, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(alat, 1, MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+  
+  if(myrank/=master) then
+    allocate(rpan_intervall(0:ntotd),ipan_intervall(0:ntotd), stat=ierr)
+    if(ierr/=0) stop 'Error allocating rpan_ntervall for myrank/=master'
+  end if
+  call MPI_Bcast(rpan_intervall, ntotd+1, MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(ipan_intervall, ntotd+1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  
+  
+  if(myrank/=master) then
+    allocate(trq_of_r(t_rhoq%lmmaxso,t_rhoq%lmmaxso,725,irmdnew), stat=ierr)
+    if(ierr/=0) stop 'Error allocating trq_of_r for myrank/=master'
+  end if
+  call MPI_Bcast(trq_of_r, t_rhoq%lmmaxso*t_rhoq%lmmaxso*725*irmdnew, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
+#endif
   call timing_stop('calc Q_mu')
+
 
   ! calculate Fourier transform: \rho(\vec{q}) = \int \Delta\rho(\vec{q};\Chi_\mu+\vec{r}) d\vec{r}
   ! = Tr{ Q^{\mu}_{LL'}(q) \int [ \sum_{i,j}{\exp{-i\vec{q}\cdot (\vec{L}_i}-\vec{L}_j)} G0^{\mu_0,i}(k) \tau_i,j G0^{j,\mu_0}(k+q)} - \sum_{i,j}{\exp{-i\vec{q}\cdot (\vec{L}_i}-\vec{L}_j)} G0^{\mu_0,i}(k) \tau_i,j G0^{j,\mu_0}(k-q)}^* ] d^2k
   ! where G0^{\mu,\mu_i} (k) = -t_{\mu}^-1 \delta_{\mu-\mu_i} + t_{mu}^-1 \tau_0^{\mu,\mu_i}(k) t_{mu_i}^-1
   call timing_start('calc rhoq')
-  call calc_rhoq(t_rhoq, t_rhoq%lmmaxso, t_rhoq%Nkpt, trq_of_r, rhoq, recbv, lmax,   &
+  call calc_rhoq(t_rhoq, t_rhoq%lmmaxso, t_rhoq%Nkpt, trq_of_r, recbv, lmax,   &
         &        ntotd, npan_tot, ncheb, rpan_intervall, ipan_intervall, irmdnew, alat )
   call timing_stop('calc rhoq')
   
   
   
   call timing_stop('total time')
+  
+  
+#ifdef CPP_MPI
+  ! finalize MPI
+  call MPI_Finalize ( ierr )
+#endif
 
 
 end program test
