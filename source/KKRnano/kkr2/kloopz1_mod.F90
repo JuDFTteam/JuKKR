@@ -11,7 +11,7 @@ module kloopz1_mod
   subroutine kloopz1(Gmatn, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
                          nsymat, dsymll, tmatLL, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                          DGinp_local, dtde, tr_alph, lly_grdt, &
-                         global_atom_idx_lly, lly) ! LLY 
+                         global_atom_idx_lly, lly, solver_type) ! LLY 
 
 ! only part of arrays for corresponding spin direction is passed
 ! (Gmatn, tsst_local, dtde_local, lly_grdt, tr_alph, gmatxij)
@@ -64,6 +64,7 @@ module kloopz1_mod
     double complex, intent(out)  :: lly_grdt
     integer       , intent(in)   :: global_atom_idx_lly
     integer       , intent(in)   :: lly
+    integer, intent(in) :: solver_type
 
     external :: zgetri, zgetrf, zgemm ! LAPACK routines
  
@@ -107,7 +108,7 @@ module kloopz1_mod
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
     call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                      mssq, DGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly) !LLY
+                      mssq, DGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly, solver_type) !LLY
 !-------------------------------------------------------- SYMMETRISE gll
 
 !      kkrmat01 returns GS (local) which contains the scattering path operator

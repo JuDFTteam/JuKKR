@@ -31,7 +31,6 @@ implicit none
 
     use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, stopTimer, resumeTimer, outtime
     use EBalanceHandler_mod, only: EBalanceHandler
-    use TEST_lcutoff_mod, only: DEBUG_dump_matrix
 
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
@@ -258,8 +257,8 @@ implicit none
                     tmatLL, arrays%lmmaxd, &
                     calc%trunc_zone%global_atom_id, mp%mySEComm, &
                     calc%iguess_data, IE, PRSPIN, &
-                    DGrefn_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly) ! LLY, note: num_local_atoms must be equal to 1 
-                   
+                    DGrefn_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly, & ! LLY, note: num_local_atoms must be equal to 1 
+                    params%solver)
   !------------------------------------------------------------------------------
 
             if (mp%myAtomRank == 0 .and. params%KTE >= 0) &

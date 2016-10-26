@@ -31,7 +31,7 @@ module kkrmat_mod
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine kkrmat01(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                          mssq, dginp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly) ! LLY
+                          mssq, dginp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, solver_type) ! LLY
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
@@ -74,6 +74,7 @@ module kkrmat_mod
     double precision, intent(in) :: volbz
     integer, intent(in)          :: global_atom_idx_lly
     integer, intent(in)          :: Lly
+    integer, intent(in) :: solver_type
 
     ! locals
     double complex :: G_diag(LMMAXD,LMMAXD)
@@ -130,7 +131,7 @@ module kkrmat_mod
       call kloopbody(solver, op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
                      alat, RR, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                      mssq, dtde, dginp, bztr2, kpointweight, ikpoint, &
-                     global_atom_idx_lly, Lly) !LLY
+                     global_atom_idx_lly, Lly, solver_type) !LLY
 
       do ila = 1, num_local_atoms
         call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%BlockDim, ila) ! extract solution
@@ -217,14 +218,13 @@ module kkrmat_mod
   !> op%atom_indices(:)
   subroutine kloopbody(solver, op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                        mssq, dtde, dginp, bztr2, volcub, ikpoint, &
-                       global_atom_idx_lly, Lly) !LLY
+                       global_atom_idx_lly, Lly, solver_type) !LLY
 
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
     use fillKKRMatrix_mod, only: dump
     use IterativeSolver_mod, only: IterativeSolver, solve
     use SparseMatrixDescription_mod, only: dump
     use InitialGuess_mod, only: InitialGuess, load, store
-    use TEST_lcutoff_mod, only: cutoffmode, DEBUG_dump_matrix
     use KKROperator_mod, only: KKROperator
     use BCPOperator_mod, only: BCPOperator, calc
 
@@ -252,6 +252,7 @@ module kkrmat_mod
     integer, intent(in)                :: ikpoint 
     integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed, e.g. dtde, tmatll
     integer, intent(in)                :: Lly             !< LLY=1/0, turns Lloyd's formula on/off
+    integer, intent(in) :: solver_type
 
     double complex, allocatable :: dPdE_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:) ! LLY
     double complex :: tracek, gtdPdE ! LLY
@@ -384,11 +385,11 @@ module kkrmat_mod
 
     call calc(preconditioner, op%mat_A) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
 
-    if (cutoffmode == 3 .or. cutoffmode == 0) then
+    if (solver_type == 3 .or. solver_type == 0) then
 
       call solve(solver, op%mat_X, op%mat_B) ! use iterative solver
 
-      if (DEBUG_dump_matrix) then
+#ifdef DEBUG_dump_matrix
         call dump(op%sparse, "matrix_descriptor.dat") ! SparseMatrixDescription
         call dump(op%mat_A,  "bin.matrix", formatted=.false.)
         call dump(op%mat_A,  "matrix_form.dat", formatted=.true.)
@@ -396,14 +397,13 @@ module kkrmat_mod
         call dump(op%mat_X, "solution_form.dat", formatted=.true.)
         call dump(op%mat_B, "bin.rhs", formatted=.false.)
         call dump(op%mat_B, "rhs_form.dat", formatted=.true.)
-      endif ! DEBUG_dump_matrix
-      
-    endif ! cutoffmode in {0,3}
+#endif
+    endif ! solver_type in {0,3}
 
     TESTARRAYLOG(3, op%mat_B)
 
     ! ALTERNATIVE: direct solution with LAPACK
-    if (cutoffmode == 4) then
+    if (solver_type == 4) then
     
       nB = size(op%mat_X, 3)
       n  = size(op%mat_A, 2)*nB
@@ -432,7 +432,7 @@ module kkrmat_mod
         op%mat_X(:,:,i) = full_X(Bd*(i - 1) + 1:Bd*i,:) 
       enddo ! i
 
-    endif ! cutoffmode == 4
+    endif ! solver_type == 4
 
     ! store the initial guess in previously selected slot (selected with 'iguess_set_k_ind')
     call store(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
