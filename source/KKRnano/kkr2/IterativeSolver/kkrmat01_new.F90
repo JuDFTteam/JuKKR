@@ -30,14 +30,14 @@ module kkrmat_mod
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine kkrmat01(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
-                          Ginp, lmmaxd, global_atom_id, communicator, iguess_data, &
-                          mssq, dginp, dtde, tr_alph, lly_grdt, volcub, volbz, global_atom_idx_lly, Lly) !LLY
+                          Ginp, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
+                          mssq, dginp, dtde, tr_alph, lly_grdt, volcub, volbz, global_atom_idx_lly, Lly) ! LLY
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
     USE_LOGGING_MOD
     USE_ARRAYLOG_MOD
-    use InitialGuess_mod, only: InitialGuess, iguess_set_k_ind
+    use InitialGuess_mod, only: InitialGuess
     use jij_calc_mod, only: global_jij_data, kkrjij
     use SolverStats_mod, only: reset !, SolverStats 
     use SolverStats_mod, only: GiFlops
@@ -64,6 +64,7 @@ module kkrmat_mod
     integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
+    integer, intent(in) :: ienergy, ispin
 
     !LLY
     double complex, intent(in)   :: mssq (:,:,:)    !< inverted T-matrix
@@ -126,15 +127,12 @@ module kkrmat_mod
 
       WRITELOG(4, *) "k-point ", ikpoint
 
-      ! select right slot for storing initial guess
-      call iguess_set_k_ind(iguess_data, ikpoint)
-
       ! Get the scattering path operator for k-point kpoints(:,ikpoint)
       ! output: op%mat_X
       call kloopbody(solver, op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
-                     alat, RR, global_atom_id, communicator, iguess_data, &
+                     alat, RR, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                      mssq, dtde, dginp, bztr2, volcub, ikpoint, &
-                     global_atom_idx_lly ,Lly) !LLY
+                     global_atom_idx_lly, Lly) !LLY
 
       do ila = 1, num_local_atoms
 !       call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%kvstr, ila) ! extract solution
@@ -172,7 +170,7 @@ module kkrmat_mod
     deallocate(Gref_buffer, stat=ila) ! ignore status
 !    deallocate(DGref_buffer, stat=ila) ! LLY, ignore status
 #endif    
-    
+
     do ila = 1, num_local_atoms
       TESTARRAYLOG(3, GS(:,:,ila))
     enddo ! ila
@@ -228,7 +226,7 @@ module kkrmat_mod
   !> Solution is stored in op%mat_X.
   !> Scattering path operator is calculated for atoms given in
   !> op%atom_indices(:)
-  subroutine kloopbody(solver, op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data, &
+  subroutine kloopbody(solver, op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                        mssq, dtde, dginp, bztr2, volcub, ikpoint, &
                        global_atom_idx_lly, Lly) !LLY
 
@@ -255,6 +253,7 @@ module kkrmat_mod
     integer, intent(in) :: global_atom_id(:) ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
     integer, intent(in) :: communicator      ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
     type(InitialGuess), intent(inout) :: iguess_data
+    integer, intent(in) :: ienergy, ispin
     ! LLY
     double complex, intent(in)         :: mssq(:,:,:)    !< inverted T-matrix
     double complex, intent(in)         :: dtde(:,:,:)     !< energy derivative of T-matrix
@@ -392,9 +391,9 @@ module kkrmat_mod
     call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
     ! call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, op%sparse%kvstr) ! construct RHS as unity
 
-    if (iguess_data%iguess == 1) then
+    if (iguess_data%prec == 1) then
       solver%initial_zero = .false.
-      call load(iguess_data, op%mat_X)
+      call load(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
     else
       solver%initial_zero = .true.
     endif
@@ -435,7 +434,7 @@ module kkrmat_mod
     endif ! cutoffmode == 4
 
     ! store the initial guess in previously selected slot (selected with 'iguess_set_k_ind')
-    call store(iguess_data, op%mat_X)
+    call store(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
 
     TESTARRAYLOG(3, op%mat_X)
     

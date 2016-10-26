@@ -9,7 +9,7 @@ module kloopz1_mod
   contains
 
   subroutine kloopz1(Gmatn, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
-                         nsymat, dsymll, tmatLL, lmmaxd, global_atom_id, communicator, iguess_data, &
+                         nsymat, dsymll, tmatLL, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                          DGinp_local, dtde, tr_alph, lly_grdt, &
                          global_atom_idx_lly, lly) ! LLY 
 
@@ -44,6 +44,7 @@ module kloopz1_mod
     integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
+    integer, intent(in) :: ienergy, ispin
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat
     double complex, intent(in) :: dsymll(:,:,:) !< dim(lmmaxd,lmmaxd,nsymat)
@@ -69,8 +70,7 @@ module kloopz1_mod
     ! locals
     double precision :: mrfctori, tauvBZ
     integer :: ist ! status for LAPACK calls
-    integer :: ispin, isym
-    integer :: num_local_atoms, ila
+    integer :: isym, num_local_atoms, ila
     double complex, allocatable :: GS(:,:,:)
     integer, allocatable :: ipvt(:), info(:,:) ! work array for LAPACK
     double complex, allocatable :: temp(:), gll(:,:), tpg(:,:), xc(:,:), mssq(:,:,:) ! effective (site-dependent) delta_t^(-1) matrix
@@ -106,7 +106,7 @@ module kloopz1_mod
     
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
-    call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, global_atom_id, communicator, iguess_data, &
+    call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                       mssq, DGinp_local, dtde, tr_alph, lly_grdt, k_point_weights, volBZ, global_atom_idx_lly, lly) !LLY
 !-------------------------------------------------------- SYMMETRISE gll
 
@@ -172,10 +172,8 @@ module kloopz1_mod
 
     if (global_jij_data%do_jij_calculation) then
 
-      ispin = global_jij_data%active_spin
-
       call SYMJIJ(alat, tauvBZ, nsymat, dsymll, global_jij_data%NXIJ, global_jij_data%IXCP, &
-                  tmatLL, mssq, global_jij_data%GSXIJ, global_jij_data%GMATXIJ(:,:,:,ispin), &  ! Result
+                  tmatLL, mssq, global_jij_data%GSXIJ, global_jij_data%GMATXIJ(:,:,:,global_jij_data%active_spin), &  ! Result
                   op%cluster_info%naez_trc, lmmaxd, global_jij_data%nxijd)
     endif ! jij
 

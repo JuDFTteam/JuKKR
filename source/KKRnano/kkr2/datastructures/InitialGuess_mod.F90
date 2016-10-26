@@ -1,22 +1,17 @@
 !------------------------------------------------------------------------------
 !> Module to save solutions obtained in self consistency step for use as
 !> initial guesses in next self consistency step.
-!> @author: Elias Rabel
+!> @author: Elias Rabel, Paul F. Baumeister
 module InitialGuess_mod
   implicit none
   private
   public :: InitialGuess, create, destroy, load, store
-  public :: update_ekm, iguess_set_energy_ind, iguess_set_spin_ind, iguess_set_k_ind
 
   type InitialGuess
-    !PRIVATE
-    integer :: ekm
-    integer :: e_ind
-    integer :: k_ind
-    integer :: spin_ind
-    integer :: iguess
-    complex, allocatable :: PRSC(:,:,:)
-    integer, allocatable :: ek_indices(:)
+    integer :: prec ! precision: 0:no saving, 1:single precision, 2:double complex
+    integer, allocatable :: ek_offsets(:)
+           complex, allocatable :: prsc(:,:,:) ! if prec == 1
+    double complex, allocatable :: prsz(:,:,:) ! if prec == 2
   endtype ! InitialGuess
 
   interface create
@@ -38,176 +33,72 @@ module InitialGuess_mod
   
   contains
 
-  !------------------------------------------------------------------------------
-  subroutine createInitialGuess(self, nofks, num_spin, blocksize, iguess)
+  subroutine createInitialGuess(self, nofks, nspin, datasize, prec)
     type(InitialGuess) :: self
     integer, intent(in) :: nofks(:)
-    integer, intent(in) :: num_spin
-    integer, intent(in) :: blocksize
-    integer, intent(in) :: iguess
+    integer, intent(in) :: nspin ! number of collinear spins, must bin in [1,2]
+    integer, intent(in) :: datasize
+    integer, intent(in) :: prec ! must be in [0,1,2]
     
-    integer :: ii, ekmd
-    double complex, parameter :: czero=(0.d0, 0.d0)
+    integer :: ik, nk, ekmd, ist
 
-    allocate(self%ek_indices(size(nofks) + 1))
+    nk = size(nofks)
+    allocate(self%ek_offsets(nk+1))
 
-    self%ek_indices(1) = 1
-    do ii = 1, size(nofks)
-      self%ek_indices(ii+1) = nofks(ii) + self%ek_indices(ii)
-    enddo
+    self%ek_offsets(1) = 0
+    do ik = 1, nk
+      self%ek_offsets(ik+1) = self%ek_offsets(ik) + nofks(ik) 
+    enddo ! ik
+    ekmd = self%ek_offsets(nk+1) ! == sum of all
 
-    ekmd = self%ek_indices(size(self%ek_indices))
-
-    ! only allocate storage if iguess flag is set
-    if (iguess == 1) then
-      allocate(self%prsc(blocksize, ekmd, num_spin))
-      self%prsc = CZERO
+    ! only allocate storage if prec flag is set
+    self%prec = 0
+    if (prec == 1) then
+      allocate(self%prsc(datasize,ekmd,nspin), stat=ist)
+      self%prsc = 0.
+      self%prec = 1
+    else if(prec == 2) then
+      allocate(self%prsz(datasize,ekmd,nspin), stat=ist)
+      self%prsz = 0.d0
+      self%prec = 2
     endif
-
-    self%iguess = iguess
-    self%ekm = 1
-    self%k_ind = 1
-    self%e_ind = 1
-    self%spin_ind = 1
 
   endsubroutine ! create
 
-  !------------------------------------------------------------------------------
-  subroutine iguess_set_energy_ind(self, e_ind)
+#define EKM  (self%ek_offsets(ie) + ik)
+
+  subroutine iguess_load(self, startval, ik, is, ie)
     type(InitialGuess), intent(inout) :: self
-    integer, intent(in) :: e_ind
+    double complex, intent(out) :: startval(:,:)
+    integer, intent(in) :: ik, is, ie
     
-    self%e_ind = e_ind
-    call update_ekm(self)
-  endsubroutine ! set
-
-  !------------------------------------------------------------------------------
-  subroutine iguess_set_spin_ind(self, spin_ind)
-    type(InitialGuess), intent(inout) :: self
-    integer, intent(in) :: spin_ind
-    
-    self%spin_ind = spin_ind
-  endsubroutine ! set
-
-  !------------------------------------------------------------------------------
-  subroutine iguess_set_k_ind(self, k_ind)
-    type(InitialGuess), intent(inout) :: self
-    
-    integer, intent(in) :: k_ind
-    self%k_ind = k_ind
-    call update_ekm(self)
-  endsubroutine ! set
-
-  !------------------------------------------------------------------------------
-  subroutine iguess_load(self, x0)
-    type(InitialGuess), intent(inout) :: self
-    double complex, intent(out) :: x0(:,:)
-
-    double complex, parameter :: czero=(0.d0, 0.d0)
-    if (self%iguess == 1) then
-      call initialGuess_load_impl(x0, self%prsc(:,self%ekm,self%spin_ind))
+    if (self%prec == 1) then
+      startval = reshape(dcmplx(self%prsc(:,EKM,is)), shape(startval))
+    else if (self%prec == 2) then
+      startval = reshape(       self%prsz(:,EKM,is) , shape(startval))
     else
-      x0 = czero
+      startval = 0.d0
     endif
   endsubroutine ! load
-
-  !------------------------------------------------------------------------------
-  subroutine iguess_save(self, solution)
+  
+  subroutine iguess_save(self, solution, ik, is, ie)
     type(InitialGuess), intent(inout) :: self
     double complex, intent(in) :: solution(:,:)
+    integer, intent(in) :: ik, is, ie
 
-    if (self%iguess == 1) call initialGuess_save_impl(self%prsc(:,self%ekm,self%spin_ind), solution)
+    if (self%prec == 1) then
+      self%prsc(:,EKM,is) = reshape(solution, [size(solution)])
+    else if (self%prec == 2) then
+      self%prsz(:,EKM,is) = reshape(solution, [size(solution)])
+    endif
   endsubroutine ! save
 
-  !------------------------------------------------------------------------------
-  subroutine update_ekm(self)
-    type(InitialGuess), intent(inout) :: self
-    
-    self%ekm = self%ek_indices(self%e_ind) + self%k_ind - 1
-  endsubroutine ! update
-
-  !------------------------------------------------------------------------------
   subroutine destroyInitialGuess(self)
     type(InitialGuess), intent(inout) :: self
     
-    if (allocated(self%prsc)) deallocate(self%prsc)
+    integer :: ist
+    deallocate(self%prsc, self%prsz, self%ek_offsets, stat=ist) ! ignore status
   endsubroutine ! destroy
-
-  !=================== private helper routines ===============================
-
-  subroutine initialGuess_load_impl(x0, prsc)
-    ! ------------------------------------------------------------------------
-    ! Initial guess optimization: Using the result of previous
-    ! self-consistency step as starting vector for iterative solver
-    ! Options:
-    ! a) sc prec
-    !    store solution obtained at the last self-consistency iteration
-    !                                                         A. Thiess Nov'09
-    ! simplified: Elias Rabel, 2012
-    ! ------------------------------------------------------------------------
-    complex, intent(in) :: prsc(:)
-    double complex, intent(inout) :: x0(:,:)
-
-    double complex, parameter :: czero=(0.d0,0.d0)
-    integer :: lm2, site_lm_index, ind, lmmaxd
-
-    !-----------------------------------------------------------------------
-
-    ! translate sparse format of prsc back to x0 ..
-
-    lmmaxd = size(x0, 2)
-    x0 = czero
-
-    do ind = 1, size(prsc)
-
-      site_lm_index = int((ind-1)/lmmaxd) + 1
-      lm2 = mod((ind-1),lmmaxd) + 1
-
-      x0(site_lm_index,lm2) = dcmplx(real(prsc(ind)),aimag(prsc(ind)))
-
-    enddo
-
-  endsubroutine ! load
-
-  !------------------------------------------------------------------------------
-  subroutine initialGuess_save_impl(prsc, gllke1)
-    ! ------------------------------------------------------------------------
-    ! Initial guess optimization: Using the result of previous
-    ! self-consistency step as starting vector for iterative solver
-    ! Options:
-    ! a) sc prec
-    !    store solution obtained at the last self-consistency iteration
-    !                                                         A. Thiess Nov'09
-    ! simplified: Elias Rabel, 2012
-    ! ------------------------------------------------------------------------
-    double complex, intent(in) :: gllke1(:,:)
-    complex, intent(inout) :: prsc(:)
-
-    integer :: ind, lm2, site_lm_index
-
-    ! ================================================================
-    ! fb) store new result as initial guess for the next self-consistency
-    !     iteration in
-
-    ind = 1
-
-      !do site_index=1,naez
-      !do lm1=1,lmmaxd
-      do site_lm_index = 1, size(gllke1, 1)
-        ! site_lm_index=lmmaxd*(site_index-1)+lm1  ! use a combined site and lm-index
-        do lm2=1, size(gllke1, 2)
-
-          ! convert to single precision
-          prsc(ind) = cmplx(dreal(gllke1(site_lm_index,lm2)),dimag(gllke1(site_lm_index,lm2)))
-
-          ind =  ind + 1
-
-        enddo ! lm2
-      enddo ! site_lm_index
-
-  ! ================================================================
-
-  endsubroutine ! save
 
 endmodule ! InitialGuess_mod
 
@@ -215,40 +106,32 @@ endmodule ! InitialGuess_mod
 program test
   use InitialGuess_mod
   implicit none
-  double complex :: block(2,2), block_read(2,2)
+  double complex :: block(2,2,1), block_read(2,2,1)
   type(InitialGuess) :: ig
-  integer :: e, spin, k, ekm, nofks(6) = (/1, 2, 3, 4, 5, 6 /)
+  integer :: ie, is, ik, nofks(6) = [1, 2, 3, 4, 5, 6]!, ekm
 
-  call create(ig, nofks, 2, 4, 1)
+  call create(ig, nofks, 2, 4, prec=2) ! igues=1 means storage in single precision complex, 2:double complex
 
-  ekm = 1
-  do e = 1, 6
-    do k = 1, nofks(e)
-      do spin = 1, 2
-        block = dcmplx(ekm, spin)
-        call iguess_set_energy_ind(ig, e)
-        call iguess_set_k_ind(ig, k)
-        call iguess_set_spin_ind(ig, spin) 
-        call load(ig, block)
-      enddo ! spin
-      ekm = ekm + 1
-    enddo ! k
-  enddo ! e
+  do ie = 1, 6
+    do ik = 1, nofks(ie)
+      do is = 1, 2
+        block = dcmplx(ik+10000.*ie, is)
+        call store(ig, block, ik, is, ie)
+      enddo ! is
+    enddo ! ik
+  enddo ! ie
 
-  do e = 1, 6
-    do k = 1, nofks(e)
-      do spin = 1, 2
+  do ie = 1, 6
+    do ik = 1, nofks(ie)
+      do is = 1, 2
         block_read = -3424
-        call iguess_set_energy_ind(ig, e)
-        call iguess_set_k_ind(ig, k)
-        call iguess_set_spin_ind(ig, spin)
-        call load(ig, block_read)
+        call load(ig, block_read, ik, is, ie)
         write(*,*) block_read
         write(*,*) "-----------------------------"
-      enddo ! spin
-    enddo ! k
-  enddo ! e
-  
+      enddo ! is
+    enddo ! ik
+  enddo ! ie
+
   call destroy(ig)
 
 endprogram

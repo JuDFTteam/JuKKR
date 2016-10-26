@@ -51,8 +51,8 @@ implicit none
     use EBalanceHandler_mod, only: EBalanceHandler, startEBalanceTiming, stopEBalanceTiming, update
 
     use kloopz1_mod, only: kloopz1
-    use InitialGuess_mod, only: InitialGuess, iguess_set_energy_ind, iguess_set_spin_ind
-
+    use InitialGuess_mod, only: InitialGuess
+    
     use wrappers_mod, only: calctmat_wrapper, calcdtmat_wrapper
     use jij_calc_mod, only: clsjij, writejijs, jij_data => global_jij_data
 
@@ -242,9 +242,6 @@ implicit none
 
             TESTARRAYLOG(3, tmatLL)
 
-            call iguess_set_energy_ind(calc%iguess_data, ie)
-            call iguess_set_spin_ind(calc%iguess_data, PRSPIN)
-
             jij_data%active_spin = ispin
 
   !          WRITE(*,'(14i5)') getMyWorldRank(mp),mp%myAtomRank,getMyAtomId(mp),getMySpinId(mp),
@@ -260,7 +257,7 @@ implicit none
                     GrefN_buffer, arrays%NSYMAT, arrays%DSYMLL, &
                     tmatLL, arrays%lmmaxd, &
                     calc%trunc_zone%global_atom_id, mp%mySEComm, &
-                    calc%iguess_data, &
+                    calc%iguess_data, IE, PRSPIN, &
                     DGrefn_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly) ! LLY, note: num_local_atoms must be equal to 1 
                    
   !------------------------------------------------------------------------------
