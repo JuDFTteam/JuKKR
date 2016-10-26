@@ -69,7 +69,7 @@ module InitialGuess_mod
 
   subroutine iguess_load(self, startval, ik, is, ie)
     type(InitialGuess), intent(inout) :: self
-    double complex, intent(out) :: startval(:,:)
+    double complex, intent(out) :: startval(:,:,:)
     integer, intent(in) :: ik, is, ie
     
     if (self%prec == 1) then
@@ -83,7 +83,7 @@ module InitialGuess_mod
   
   subroutine iguess_save(self, solution, ik, is, ie)
     type(InitialGuess), intent(inout) :: self
-    double complex, intent(in) :: solution(:,:)
+    double complex, intent(in) :: solution(:,:,:)
     integer, intent(in) :: ik, is, ie
 
     if (self%prec == 1) then
