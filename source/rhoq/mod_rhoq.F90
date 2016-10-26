@@ -1910,12 +1910,11 @@ program test
     do ir=1,irmdnew
       do lm1=1,nsra*lmmaxso
         do lm2=1,lmmaxso
-          read(9999,'(20000E16.7)') Rll(lm1, lm2, ir) 
-          read(9999,'(20000E16.7)') Rllleft(lm1, lm2, ir)
+          read(9999,'(20000E16.7)') Rll(lm1, lm2, ir), Rllleft(lm1, lm2, ir)
         end do
       end do
     enddo
-    do lm1=0,ntotd
+    do lm1=0,npan_tot
       read(9999,'(E16.7,I9)') rpan_intervall(lm1), ipan_intervall(lm1)
     enddo
     close(9999)
