@@ -107,7 +107,7 @@ module kloopz1_mod
     ! 3 T-matrix cutoff with new solver
     ! 4 T-matrix cutoff with direct solver
     call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                      mssq, DGinp_local, dtde, tr_alph, lly_grdt, k_point_weights, volBZ, global_atom_idx_lly, lly) !LLY
+                      mssq, DGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly) !LLY
 !-------------------------------------------------------- SYMMETRISE gll
 
 !      kkrmat01 returns GS (local) which contains the scattering path operator

@@ -31,7 +31,7 @@ module kkrmat_mod
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine kkrmat01(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                          mssq, dginp, dtde, tr_alph, lly_grdt, volcub, volbz, global_atom_idx_lly, Lly) ! LLY
+                          mssq, dginp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly) ! LLY
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
@@ -39,12 +39,11 @@ module kkrmat_mod
     USE_ARRAYLOG_MOD
     use InitialGuess_mod, only: InitialGuess
     use jij_calc_mod, only: global_jij_data, kkrjij
-    use SolverStats_mod, only: reset !, SolverStats 
-    use SolverStats_mod, only: GiFlops
+    use SolverStats_mod, only: reset, GiFlops
     use IterativeSolver_mod, only: IterativeSolver
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
-    use mpi
+    use MPI, only: MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD!, MPI_Allreduce 
 
     type(IterativeSolver), intent(inout) :: solver
     type(KKROperator), intent(inout) :: op
@@ -72,7 +71,6 @@ module kkrmat_mod
     double complex, intent(in)   :: dtde(:,:,:)     !< dT/dE
     double complex, intent(in)   :: tr_alph(:) 
     double complex, intent(out)  :: lly_grdt
-    double precision, intent(in) :: volcub (:)
     double precision, intent(in) :: volbz
     integer, intent(in)          :: global_atom_idx_lly
     integer, intent(in)          :: Lly
@@ -81,7 +79,7 @@ module kkrmat_mod
     double complex :: G_diag(LMMAXD,LMMAXD)
     double complex :: bztr2, trace ! LLY
     integer :: site_lm_size, num_local_atoms, naclsd, naez, ikpoint, ila, ierr
-!   type(SolverStats) :: stats
+
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
 !    double complex, allocatable :: DGref_buffer(:,:,:,:) ! LLY
@@ -131,7 +129,7 @@ module kkrmat_mod
       ! output: op%mat_X
       call kloopbody(solver, op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
                      alat, RR, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                     mssq, dtde, dginp, bztr2, volcub, ikpoint, &
+                     mssq, dtde, dginp, bztr2, kpointweight, ikpoint, &
                      global_atom_idx_lly, Lly) !LLY
 
       do ila = 1, num_local_atoms
@@ -178,7 +176,7 @@ module kkrmat_mod
     WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", solver%stats%max_residual
     WRITELOG(3, *) "Max. num iterations for this E-point: ", solver%stats%max_iterations
     WRITELOG(3, *) "Sum of iterations for this E-point:   ", solver%stats%sum_iterations
-    WRITE(*, *) "useful Floating point operations:     ", GiFlops," GiFlop"
+    WRITELOG(2, *) "useful Floating point operations:     ", GiFlops," GiFlop"
 
 #undef cluster
 #undef ms
