@@ -164,12 +164,12 @@ C     ..
       INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)
       CHARACTER*35 INVALG(0:2)
 #ifdef CPP_MPI
-      integer :: ie_start, mytot
+      integer :: mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
       integer :: ihelp
       double complex, allocatable :: work(:,:)
 #endif
-      integer :: ie_num, ie_end, ierr
+      integer :: ie_start, ie_num, ie_end, ierr
 C     ..
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C     for conductivity calculation
@@ -453,10 +453,12 @@ C
          DO 360 ie_num=1,ie_end
             IE = ie_start+ie_num
             
+#ifdef CPP_MPI
             !start timing measurement for this ie, needed for MPIadapt
             if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
               call timing_start('time_1b_ie')
             end if
+#endif
 C
             if (t_tgmat%gref_to_file) then
                READ (68,REC=IE) GINP
@@ -784,10 +786,12 @@ C
       DO 460 ie_num=1,ie_end
          IE = ie_start+ie_num
    
+#ifdef CPP_MPI
          !start timing measurement for this ie, needed for MPIadapt
          if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
            call timing_start('time_1b_ie')
          end if
+#endif
 
 c read in Green function of reference system
        if (t_tgmat%gref_to_file) then
@@ -1251,10 +1255,14 @@ C
 
                 
       if(test('rhoqtest')) then     
+#ifdef CPP_MPI
          call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+#endif
          close(9889) ! tau0_k file
       
+#ifdef CPP_MPI
          call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+#endif
          close(99992)
          call timing_stop('Time in Iteration')
          if (myrank==master) call print_time_and_date('Done w. rhoq!!!')

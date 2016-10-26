@@ -130,8 +130,8 @@
       integer :: ntot1, mytot, ii
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
      &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
-      integer :: k_start, k_end
 #endif
+      integer :: k_start, k_end
 
 
       LOGICAL TEST,OPT
@@ -142,7 +142,7 @@
 !     .. Intrinsic functions ..
       INTRINSIC ATAN,EXP
 !     ..
-#ifdef CPP_MPI
+!#ifdef CPP_MPI
       DOUBLE COMPLEX, allocatable :: WORK(:,:,:,:)
       INTEGER IERR,IWORK
       integer :: ix,jx, mu, irec, nscoef, imin, ie
@@ -151,7 +151,7 @@
       double precision, allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts
       DOUBLE PRECISION RECBV(3,3)
       logical, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
-#endif
+!#endif
 ! #ifdef CPP_hybrid
       integer :: mythread
 ! #endif
@@ -203,6 +203,7 @@
         close(8888)
       end if
       
+#ifdef CPP_MPI
       call MPI_Bcast(mu, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
       if(ierr/=MPI_SUCCESS) stop 'Error Bcast mu0'
       call MPI_Bcast(nscoef,1,MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
@@ -211,6 +212,7 @@
       call MPI_Bcast(iatomimp, nscoef, MPI_INTEGER, master, 
      &               MPI_COMM_WORLD, ierr)
       if(ierr/=MPI_SUCCESS) stop 'Error Bcast iatomimp'
+#endif
       
       
       !find imin
@@ -813,9 +815,9 @@ c            DEALLOCATE(GLLKE0)
         write(6,*)                      ! status bar
         ! finished kpts status bar
         
-#ifdef CPP_hybrid
+!#ifdef CPP_hybrid
         call timing_start('main1b - kkrmat01 - writeout_rhoq')
-#endif
+!#endif
         
         write(*,*)                      ! status bar
         write(*,*) 'rhoq: write-out loop'
