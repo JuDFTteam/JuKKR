@@ -255,10 +255,9 @@ module kkrmat_mod
     integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed, e.g. dtde, tmatll
     integer, intent(in)                :: Lly             !< LLY=1/0, turns Lloyd's formula on/off
 
-    ! Local LLY
-    double complex, allocatable :: dpde_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:)
-    double complex :: tracek, gtdpde
-    
+    double complex, allocatable :: dPdE_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:) ! LLY
+    double complex :: tracek, gtdPdE ! LLY
+
     integer :: naez, nacls, alm, lmmaxd, nRHSs, ist, matrix_index, lm1, lm2, lm3, il1
     integer :: i, n, nB, Bd
     double complex :: cfctorinv
@@ -317,7 +316,7 @@ module kkrmat_mod
       allocate(dgde_t(lmmaxd*nacls,lmmaxd*naez))
       allocate(gllke_x2(lmmaxd*naez,lmmaxd))
       allocate(dgde2(lmmaxd*naez,lmmaxd))
-      allocate(dpde_local(lmmaxd*naez,lmmaxd))
+      allocate(dPdE_local(lmmaxd*naez,lmmaxd))
     
 #ifndef SPLIT_REFERENCE_FOURIER_COM
       call referenceFourier_com(op%mat_dAdE, op%sparse, kpoint, alat, &
@@ -339,7 +338,7 @@ module kkrmat_mod
       ! ------- = ------- * T(E) + G(E,k) * -----
       !   dE        dE                       dE
   
-      matrix_index = (global_atom_idx_lly-1)*lmmaxd+1
+      matrix_index = (global_atom_idx_lly - 1)*lmmaxd + 1
 
       gllke_x_t = transpose(gllke_x)
       dgde_t = transpose(dgde)
@@ -347,11 +346,11 @@ module kkrmat_mod
       gllke_x2 = gllke_x_t(:,matrix_index:matrix_index+lmmaxd)
       dgde2 = dgde_t(:,matrix_index:matrix_index+lmmaxd)
 
-      call cinit(lmmaxd*naez*lmmaxd,dpde_local)
+      call cinit(lmmaxd*naez*lmmaxd,dPdE_local)
 
-      call zgemm('n','n',alm,lmmaxd,lmmaxd,cone, dgde2,alm, tmatll(1,1,global_atom_idx_lly),lmmaxd,zero, dpde_local,alm)
+      call zgemm('n','n',alm,lmmaxd,lmmaxd,cone, dgde2,alm, tmatll(1,1,global_atom_idx_lly),lmmaxd,zero, dPdE_local,alm)
 
-      call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv, gllke_x2,alm, dtde(:,:,global_atom_idx_lly),lmmaxd,cone,dpde_local,alm)
+      call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv, gllke_x2,alm, dtde(:,:,global_atom_idx_lly),lmmaxd,cone,dPdE_local,alm)
       !--------------------------------------------------------
  
     endif ! LLY
@@ -453,23 +452,21 @@ module kkrmat_mod
 
       tracek = zero
 
-      do lm1 = 1, lmmaxd
-        do lm2 = 1, lmmaxd
-          gtdpde = zero
-!         do il1 = 1, lmmaxd*naez
-!           gtdpde = gtdpde + op%mat_X(il1,lm2)*dpde_local(il1,lm1)
-!         enddo ! il1
+      do lm2 = 1, lmmaxd
+        do lm1 = 1, lmmaxd
+          gtdPdE = zero
           do il1 = 1, naez
             do lm3 = 1, lmmaxd
-              gtdpde = gtdpde + op%mat_X(lm3,lm2,il1)*dpde_local(il1,lm1)
+              gtdPdE = gtdPdE + op%mat_X(lm3,lm2,il1)*dPdE_local(lmmaxd*(il1 - 1) + lm3,lm1)
             enddo ! lm3
           enddo ! il1
-          tracek = tracek + mssq(lm1,lm2,1)*gtdpde
-        enddo
-      enddo
+          tracek = tracek + mssq(lm1,lm2,1)*gtdPdE
+        enddo ! lm1
+      enddo ! lm2
 
       bztr2 = bztr2 + tracek*volcub(ikpoint)
       !--------------------------------------------------------
+      deallocate(gllke_x, dgde, gllke_x_t, dgde_t, gllke_x2, dgde2, dPdE_local, stat=ist)
     endif ! LLY
 
 #undef cluster

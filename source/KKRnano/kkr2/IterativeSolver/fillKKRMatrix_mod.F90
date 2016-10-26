@@ -151,7 +151,7 @@ module fillKKRMatrix_mod
     integer(kind=2), intent(in) :: atom_indices(:) ! truncation zone indices of the local atoms
     double complex, intent(in), optional :: tmatLL(:,:,:) !< dim(lmmaxd,lmmaxd,nRows)
 
-    integer :: start, iRHS, atom_index, lm2
+    integer :: iRHS, atom_index, lm2
 
     mat_B = ZERO
     ASSERT( size(tmatLL, 1) == lmmaxd )
