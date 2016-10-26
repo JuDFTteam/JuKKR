@@ -82,6 +82,10 @@ OBJECTS1c= $(OBJ)/main1c.o $(OBJ)/rhoval.o $(OBJ)/rhoval0.o $(OBJ)/rhocore.o $(O
 OBJECTS2 = $(OBJ)/main2.o $(OBJ)/vmadelblk.o $(OBJ)/vinterface.o $(OBJ)/etotb1.o $(OBJ)/rhototb.o $(OBJ)/brydbm.o $(OBJ)/brysh1.o $(OBJ)/brysh2.o $(OBJ)/brysh3.o $(OBJ)/convol.o $(OBJ)/ecoub.o $(OBJ)/epotinb.o $(OBJ)/espcb.o $(OBJ)/force.o $(OBJ)/forceh.o $(OBJ)/forcxc.o $(OBJ)/mixstr.o $(OBJ)/mtzero.o $(OBJ)/reg2.o $(OBJ)/rhosymm.o $(OBJ)/rites.o $(OBJ)/sinwk.o $(OBJ)/vintras.o $(OBJ)/corlsd.o $(OBJ)/cpw91.o $(OBJ)/cylm02.o $(OBJ)/exch91.o $(OBJ)/gcor91.o $(OBJ)/gradr.o $(OBJ)/gradrl.o $(OBJ)/gxcpt.o $(OBJ)/mkxcpe.o $(OBJ)/spher.o $(OBJ)/sphere_gga.o $(OBJ)/sphere_nogga.o $(OBJ)/trarea.o $(OBJ)/vosko.o $(OBJ)/vxcdrv.o $(OBJ)/vxcgga.o $(OBJ)/vxclm.o $(OBJ)/vxcspo.o $(OBJ)/lebedev.o $(OBJ)/mkxcpe2.o $(OBJ)/mdirnewang.o $(OBJ)/scfiterang.o $(OBJ)/writekkrflex.o
 
 
+# for some reason main0 must not be compiled with optimizations in the case of hybrid compilation?!
+$(OBJ)/main0.o: $(SRC)/main0.F
+	$(FC) -r8 -traceback -module $(OBJ) $(CPP) $(OPENMPFLAGS) -c -o $(OBJ)/main0.o $(SRC)/main0.F
+
 
 $(OBJ)/mod_%.o: $(SRC)/%.f
 	$(FC) $(FFLAGS)  $(OPENMPFLAGS) -c -o $@ $<
@@ -208,34 +212,9 @@ rwthhybrid: OPENMPFLAGS = -openmp
 
 
 ####################################################
-# Linking                                          #
+# helper                                           #
 ####################################################
-.PHONY: default
-.PHONY: mkdirobj
-.PHONY: isincpthere
-.PHONY: copyinc
-.PHONY: clean
-.PHONY: clear
-.PHONY: serial
-.PHONY: debug
-.PHONY: openmp
-.PHONY: mpi
-.PHONY: mpidebug
-.PHONY: install
-.PHONY: getversion
-.PHONY: compile
-.PHONY: hybrid
-.PHONY: hybriddebug
-.PHONY: mac
-.PHONY: macmpi
-.PHONY: macomp
-.PHONY: rwth
-.PHONY: rwthmpi
-.PHONY: rwthomp
-.PHONY: rwthmpidebug
-.PHONY: rwthompdebug
-.PHONY: rwthhybrid
-.PHONY: jureca
+.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid jureca
 
 getversion:
 	@echo "Wrinting Version file: "; git describe;\
@@ -258,8 +237,31 @@ clean:
 clear:
 	rm -rf *.mod *.o OBJ/ *__genmod.*
 
-compile:  mkdirobj getversion copyinc $(MODULES) $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+
+# define three steps of compilation
+
+#DOPARALLEL= 0
+#ifeq($(DOPARALLEL), 0)
+#  .NOTPARALLEL:
+#endif
+
+# first compile modules in serial
+compile0: mkdirobj getversion copyinc $(MODULES)
+
+# then compile everything exept main_all, and do this in parallel if -j is given
+compile1:  $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2)
+
+# finally compile main_all and do linking in serial
+compile2:  compile0 compile1 $(OBJ)/main_all.o
 	  $(FC) -o $(FILENAME0) $(MODULES) $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+
+# set compile steps 0,1,2 together:
+compile: compile0 compile1 compile2
+
+###################################################################
+
+
+
 
 serial:   compile
 debug:    compile
@@ -283,16 +285,3 @@ rwthmpidebug: compile
 rwthompdebug: compile
 rwthhybrid:   compile
 jureca: compile
-
-
-
-opt_O0: mpi 
-opt_O1: mpi
-opt_O2: mpi
-opt_O3: mpi
-opt_ip: mpi
-opt_ipe: mpi
-opt_fp: mpi
-opt_vec: mpi
-opt_profg: mpi
-opt_profu: mpi
