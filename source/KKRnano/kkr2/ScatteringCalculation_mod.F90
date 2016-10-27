@@ -287,8 +287,7 @@ implicit none
         if (XCCPL) then
           call jijSpinCommunication_com(mp, jij_data%GMATXIJ, jij_data%DTIXIJ)
 
-          ! calculate DTIXIJ = T_down - T_up
-          call calcDeltaTupTdown(jij_data%DTIXIJ)
+          jij_data%DTIXIJ(:,:,1) = jij_data%DTIXIJ(:,:,2) - jij_data%DTIXIJ(:,:,1) ! calculate DTIXIJ = T_down - T_up
 
           JSCAL = emesh%WEZ(IE)/DBLE(jij_data%NSPIND)
 
@@ -407,7 +406,6 @@ implicit none
     else
       call create(solv, qmrbound, kkr_op) ! register sparse matrix and preconditioner at solver
     endif
-
     
   endsubroutine ! setup_solver
 
@@ -435,17 +433,6 @@ implicit none
     character(len=*), intent(in) :: solver_stats
     write(6, fmt='(A,I4,A,2F11.6,A,I0,A,I0,9A)') ' ** IE =',ie,' ENERGY =',ez_point,' ispin = ',ispin,' NofKs = ',nmesh,'  ',trim(solver_stats)
   endsubroutine ! print
-
-  !----------------------------------------------------------------------------
-  !> Calculate \Delta T_up - T_down for exchange couplings calculation.
-  !> The result is stored in dtixij(:,:,1)
-  subroutine calcDeltaTupTdown(dtixij)
-    double complex, intent(inout) :: dtixij(:,:,:)
-    
-    integer :: lmmaxd
-    lmmaxd = size(dtixij, 1)
-    dtixij(1:lmmaxd,1:lmmaxd,1) = dtixij(1:lmmaxd,1:lmmaxd,2) - dtixij(1:lmmaxd,1:lmmaxd,1)
-  endsubroutine ! calc
 
   !----------------------------------------------------------------------------
   !> Substract diagonal reference T matrix of certain spin channel
