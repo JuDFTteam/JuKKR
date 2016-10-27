@@ -29,7 +29,7 @@ implicit none
     USE_LOGGING_MOD
     USE_ARRAYLOG_MOD
 
-    use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, stopTimer, resumeTimer, outTime
+    use TimerMpi_mod, only: TimerMpi, getTime, createTimer, stopTimer, startTimer, outTime, outTimeStats
     use EBalanceHandler_mod, only: EBalanceHandler
 
     use DimParams_mod, only: DimParams
@@ -81,7 +81,7 @@ implicit none
     type(BCPOperator), target :: precond
 
     double complex, parameter :: ZERO = (0.d0, 0.d0)
-    type(TimerMpi) :: mult_scattering_timer, single_site_timer
+    type(TimerMpi) :: mult_scattering_timer, single_site_timer, reference_green_timer, kpoint_timer
     double complex :: JSCAL ! scaling factor for Jij calculation
     integer(kind=2), allocatable :: atom_indices(:)
     integer :: ie, ispin, prspin, nmesh, ist
@@ -119,11 +119,10 @@ implicit none
 
     xccpl = .false.
 
-    call resetTimer(mult_scattering_timer)
-    call stopTimer(mult_scattering_timer)
-
-    call resetTimer(single_site_timer)
-    call stopTimer(single_site_timer)
+    call createTimer(mult_scattering_timer)
+    call createTimer(single_site_timer)
+    call createTimer(reference_green_timer)
+    call createTimer(kpoint_timer)
 
     prspin = 1
 
@@ -168,6 +167,8 @@ implicit none
 
   !------------------------------------------------------------------------------
         ! if we have rMTref given for all atoms inside the reference cluster radius we can compute the Tref on the fly
+
+        call startTimer(reference_green_timer)          
         
         !$omp parallel do private(ila, iacls)
         do ila = 1, num_local_atoms
@@ -189,6 +190,8 @@ implicit none
         !$omp endparallel do
   !------------------------------------------------------------------------------
 
+        call stopTimer(reference_green_timer)          
+  
   ! SPIN ==================================================================
   !     BEGIN do loop over spins
   ! SPIN===================================================================
@@ -200,7 +203,7 @@ implicit none
 
             PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
             
-            call resumeTimer(single_site_timer)          
+            call startTimer(single_site_timer)          
 
   !------------------------------------------------------------------------------
             !$omp parallel do private(ila, atomdata, ldau_data, i1)
@@ -235,7 +238,7 @@ implicit none
   !------------------------------------------------------------------------------
 
             call stopTimer(single_site_timer)
-            call resumeTimer(mult_scattering_timer)
+            call startTimer(mult_scattering_timer)
 
   ! <<>> Multiple scattering part
 
@@ -245,10 +248,6 @@ implicit none
             TESTARRAYLOG(3, tmatLL)
 
             jij_data%active_spin = ispin
-
-  !          WRITE(*,'(14i5)') getMyWorldRank(mp),mp%myAtomRank,getMyAtomId(mp),getMySpinId(mp),
-  !            mp%myEnergyId,getMySEId(mp),getNumAtomRanks(mp),getNumSpinRanks(mp),getNumEnergyRanks(mp),
-  !            getNumSERanks(mp),getNumWorldRanks(mp),0,mp%isMasterRank,mp%isInMasterGroup
 
             nmesh = emesh%kmesh(IE)
 
@@ -261,7 +260,7 @@ implicit none
                     calc%trunc_zone%global_atom_id, mp%mySEComm, &
                     calc%iguess_data, IE, PRSPIN, &
                     dGrefN_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly, & ! LLY, note: num_local_atoms must be equal to 1 
-                    params%solver)
+                    params%solver, kpoint_timer)
   !------------------------------------------------------------------------------
 
             if (mp%myAtomRank == 0 .and. params%KTE >= 0) &
@@ -313,8 +312,15 @@ implicit none
   !     enddo loop over energies (EMPID-parallel)
   ! IE ====================================================================
 
-    call outTime(mp%isMasterRank, 'Single site scattering took', getElapsedTime(single_site_timer), ITER)
-    call outTime(mp%isMasterRank, 'Multiple scattering    took', getElapsedTime(mult_scattering_timer), ITER)
+    call outTime(mp%isMasterRank, 'Reference system Green  took', getTime(reference_green_timer), ITER)
+    call outTime(mp%isMasterRank, 'Single site scattering  took', getTime(single_site_timer), ITER)
+    call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(kpoint_timer), ITER)
+    if (mp%isMasterRank) call outTimeStats(reference_green_timer, 'Reference G stats:')
+    if (mp%isMasterRank) call outTimeStats(single_site_timer,     'Single site stats:')
+    if (mp%isMasterRank) call outTimeStats(kpoint_timer,          'Mult. scat. stats:') ! per k-point
+!   if (mp%isMasterRank) call outTimeStats(mult_scattering_timer, 'Multi. site stats:') ! this timer is ...
+!   !         ... only energy point resolved, high variance expected due to different k-point mesh sizes
+!   call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(mult_scattering_timer), ITER)
 
 !   if (mp%isMasterRank) write(6, fmt='(A,I4,9A)') 'iter:',ITER,'  solver stats: ',trim(solv%represent_total_stats())
     

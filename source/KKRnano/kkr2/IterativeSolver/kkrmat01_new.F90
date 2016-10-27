@@ -31,7 +31,7 @@ module kkrmat_mod
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine kkrmat01(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                          mssq, dginp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, solver_type) ! LLY
+                          mssq, dginp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, solver_type, kpoint_timer) ! LLY
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
@@ -43,6 +43,7 @@ module kkrmat_mod
     use IterativeSolver_mod, only: IterativeSolver
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
+    use TimerMpi_mod, only: TimerMpi, startTimer, stopTimer
     use MPI, only: MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD!, MPI_Allreduce 
 
     type(IterativeSolver), intent(inout) :: solver
@@ -74,6 +75,7 @@ module kkrmat_mod
     integer, intent(in)          :: global_atom_idx_lly
     integer, intent(in)          :: Lly
     integer, intent(in) :: solver_type
+    type(TimerMpi), intent(inout) :: kpoint_timer
 
     ! locals
     double complex, allocatable :: G_diag(:,:) ! dim(lmmaxd,lmmaxd)
@@ -120,6 +122,7 @@ module kkrmat_mod
     !==============================================================================
     do ikpoint = 1, nkpoints ! K-POINT-LOOP
     !==============================================================================
+      call startTimer(kpoint_timer)
 
       WRITELOG(4, *) "k-point ", ikpoint
 
@@ -149,6 +152,7 @@ module kkrmat_mod
                     stop __LINE__ ! invalid argument is passed, data layout of mat_X has changed
       endif ! jij
 
+      call stopTimer(kpoint_timer)
     !==============================================================================
     enddo ! ikpoint = 1, nkpoints
     !==============================================================================
@@ -179,6 +183,7 @@ module kkrmat_mod
 
 #undef cluster
 #undef ms
+
   endsubroutine ! kkrmat01
 
 

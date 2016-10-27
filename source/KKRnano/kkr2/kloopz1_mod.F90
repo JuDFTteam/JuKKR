@@ -13,7 +13,7 @@ module kloopz1_mod
   subroutine kloopz1(GmatN, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
                          dsymLL, tmatLL, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                          dGinp_local, dtde, tr_alph, lly_grdt, &
-                         global_atom_idx_lly, lly, solver_type) ! LLY 
+                         global_atom_idx_lly, lly, solver_type, kpoint_timer) ! LLY 
 
 ! only part of arrays for corresponding spin direction is passed
 ! (GmatN, tsst_local, dtde_local, lly_grdt, tr_alph, gmatxij)
@@ -34,6 +34,7 @@ module kloopz1_mod
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
     use Constants_mod, only: pi
+    use TimerMpi_mod, only: TimerMpi
     use jij_calc_mod, only: global_jij_data, symjij
     
     type(IterativeSolver), intent(inout) :: solv
@@ -64,6 +65,7 @@ module kloopz1_mod
     integer       , intent(in)    :: global_atom_idx_lly
     integer       , intent(in)    :: lly
     integer, intent(in) :: solver_type
+    type(TimerMpi), intent(inout) :: kpoint_timer
 
     external :: zgetri, zgetrf, zgemm ! LAPACK routines
  
@@ -110,7 +112,7 @@ module kloopz1_mod
     ! solver_type=3 T-matrix cutoff with new solver
     ! solver_type=4 T-matrix cutoff with direct solver
     call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                      mssq, dGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly, solver_type) !LLY
+                      mssq, dGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly, solver_type, kpoint_timer) !LLY
                       
 !-------------------------------------------------------- SYMMETRISE gll
 

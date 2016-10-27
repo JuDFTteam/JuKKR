@@ -22,7 +22,7 @@ program KKRnano
   use BasisAtom_mod, only: BasisAtom
   use LDAUData_mod, only: LDAUData
 
-  use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, outTime, resumeTimer, stopTimer, outTimeStats
+  use TimerMpi_mod, only: TimerMpi, getTime, createTimer, outTime, startTimer, stopTimer, outTimeStats
   use EBalanceHandler_mod, only: EBalanceHandler, create, init, setEqualDistribution, destroy
 
   use AtomicCore_mod, only: rhocore
@@ -140,10 +140,12 @@ program KKRnano
   
   OPENLOG(mp%myWorldRank, 3*theta(mp%myWorldRank < 128)) ! max. 128 logfiles
 
-  call resetTimer(program_timer)
+  call createTimer(program_timer)
+  call startTimer(program_timer)
   if (mp%isMasterRank) then
     open(2, file='time-info', action='write', iostat=ios)
     if (ios /= 0) warn(6, "unable to create time-info file!") ! but the output will be redirected to fort.2
+    write(2,'(79("="))') ! double separator line in time-info file
   endif ! master
 
   call create(arrays, dims)
@@ -176,7 +178,7 @@ program KKRnano
     call create(emesh, dims%iemxd) ! createEnergyMesh
     call load(emesh, filename='bin.energy_mesh.0') ! every process does this!!!
 
-    call outTime(mp%isMasterRank, 'input files read ...............', getElapsedTime(program_timer), 0)
+    call outTime(mp%isMasterRank, 'input files read ...............', getTime(program_timer), 0)
 
 #ifdef DEBUG_NO_ELECTROSTATICS
     warn(6, "preprocessor define has switched off electrostatics for debugging")
@@ -184,7 +186,7 @@ program KKRnano
     call prepareMadelung(calc_data, arrays)
 #endif
 
-    call outTime(mp%isMasterRank, 'Madelung sums calc .............', getElapsedTime(program_timer), 0)
+    call outTime(mp%isMasterRank, 'Madelung sums calc .............', getTime(program_timer), 0)
 
     call create(ebalance_handler, emesh%ielast)
     call init(ebalance_handler, mp)
@@ -218,14 +220,15 @@ program KKRnano
                             ref_cluster=calc_data%ref_cluster_a(ila), communicator=mp%mySEComm)
     enddo ! ila
     
-    call resetTimer(iteration_timer)
+    call createTimer(iteration_timer)
+    if (mp%isMasterRank) write(2,'(79("="))') ! double separator line in time-info file
 
     ! start self-consistency loop   
     do iter = 1, params%SCFSTEPS
 
-      call resumeTimer(iteration_timer)
+      call startTimer(iteration_timer)
 
-      if (mp%isMasterRank) call outTime(mp%isMasterRank, 'start iteration at .............', getElapsedTime(program_timer), iter)
+      if (mp%isMasterRank) call outTime(mp%isMasterRank, 'start iteration ................', getTime(program_timer), iter)
 
       WRITELOG(2, *) "Iteration atom-rank ", iter, mp%myAtomRank ! write logg message into time-info file
 
@@ -278,14 +281,14 @@ program KKRnano
       endif ! ldau
 ! LDA+U
 
-      call outTime(mp%isMasterRank, 'initialized at .................', getElapsedTime(program_timer), iter)
+      call outTime(mp%isMasterRank, 'initialized ....................', getTime(program_timer), iter)
 
       ! Scattering calculations - that is what KKR is all about
       ! output: (some contained as references in calc_data)
       ! ebalance_handler, kkr (!), jij_data, ldau_data
       call energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, mp, arrays)
 
-      call outTime(mp%isMasterRank, 'G obtained at ..................', getElapsedTime(program_timer), iter)
+      call outTime(mp%isMasterRank, 'G obtained .....................', getTime(program_timer), iter)
       ios = 0
       if (mp%isInMasterGroup) then
         ! output: (some contained as references in calc_data)
@@ -307,7 +310,6 @@ program KKRnano
         call store(emesh, filename='bin.energy_mesh')
 
         write(*,'(79("="))') ! double separator line
-        call outTime(.true. , 'SCF iteration          took', getElapsedTime(iteration_timer), iter)
 
       endif ! master
 
@@ -316,16 +318,15 @@ program KKRnano
       call broadcast(emesh, mp%myActiveComm)
 
       call stopTimer(iteration_timer)
+      if (mp%isMasterRank) &
+      call outTime(.true. , 'SCF iteration           took', getTime(iteration_timer), iter)
+      if (mp%isMasterRank) write(2,'(79("="))') ! double separator line in time-info file
 
     enddo ! iter ! SC ITERATION LOOP iter=1, SCFSTEPS
     
-    if (mp%isMasterRank) call outTimeStats(iteration_timer, 'SCF stats:')
-
     if (params%kforce == 1 .and. mp%isInMasterGroup) & ! write forces if requested, master-group only
       call output_forces(calc_data, 0, mp%myAtomRank, mp%mySEComm)
       
-    if (mp%isMasterRank) close(2) ! time-info
-
     call destroy(ebalance_handler)
     call destroy(calc_data)
     call destroy(emesh)
@@ -343,10 +344,16 @@ program KKRnano
   
   if (mp%isMasterRank) ios = show_warning_lines(unit=6)
 
-  call outTime(mp%isMasterRank,'total time...........', getElapsedTime(program_timer), iter)
-
-  call destroy(mp) ! Free KKRnano mpi resources
+  call stopTimer(program_timer)
+  if (mp%isMasterRank) then
+    call outTimeStats(iteration_timer, 'SCF stats:')
+    write(2,'(79("="))') ! double separator line in time-info file
+    call outTime(.true., 'KKRnano run             took', getTime(program_timer), iter - 1)
+    write(2,'(79("="))') ! double separator line in time-info file
+    close(2) ! time-info
+  endif ! master
   
+  call destroy(mp) ! Free KKRnano mpi resources
   
   contains
 
