@@ -84,7 +84,7 @@ module CalculationData_mod
   !----------------------------------------------------------------------------
   ! TODO: atoms_per_procs * num_procs MUST BE = naez, 
   !       rank = 0,1,..., num_atom_ranks-1
-  subroutine createCalculationData(self, dims, params, arrays, mp, voronano)
+  subroutine createCalculationData(self, dims, params, arrays, mp, kmesh, voronano)
     use KKRnanoParallel_mod, only: KKRnanoParallel
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
@@ -95,6 +95,7 @@ module CalculationData_mod
     type(InputParams), intent(in) :: params
     type(Main2Arrays), intent(in) :: arrays
     type(KKRnanoParallel), intent(in) :: mp
+    integer, intent(in) :: kmesh(:) !> index of k-mesh for each energy point
     integer, intent(in) :: voronano
 
     integer :: atoms_per_proc, num_local_atoms, ila
@@ -137,7 +138,7 @@ module CalculationData_mod
     enddo ! ila
 
     ! Now construct all datastructures and calculate initial data
-    call constructEverything(self, dims, params, arrays, mp, voronano)
+    call constructEverything(self, dims, params, arrays, mp, kmesh, voronano)
 
     ! call repr_CalculationData(self)
   endsubroutine ! create
@@ -254,7 +255,7 @@ module CalculationData_mod
 
   !----------------------------------------------------------------------------
   !> Helper routine: called by createCalculationData.
-  subroutine constructEverything(self, dims, params, arrays, mp, voronano)
+  subroutine constructEverything(self, dims, params, arrays, mp, kmesh, voronano)
     use KKRnanoParallel_mod, only: KKRnanoParallel
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
@@ -266,6 +267,7 @@ module CalculationData_mod
     type(InputParams), intent(in):: params
     type(Main2Arrays), intent(in):: arrays
     type(KKRnanoParallel), intent(in) :: mp
+    integer, intent(in) :: kmesh(:) !> index of k-mesh for each energy point
     integer, intent(in) :: voronano
 
     integer :: atom_id, ila, irmd
@@ -337,34 +339,31 @@ module CalculationData_mod
     call create(self%broyden, getBroydenDim(self), dims%itdbryd, params%imix, params%mixing) ! createBroydenData ! getBroydenDim replaces former NTIRD
 
 !   write(*,*) __FILE__,__LINE__," setup_iguess deavtivated for DEBUG!"
-    call setup_iguess(self, dims, arrays%nofks) ! setup storage for iguess
+    call setup_iguess(self, dims, arrays%nofks, kmesh) ! setup storage for iguess
 
   endsubroutine ! constructEverything
 
   !----------------------------------------------------------------------------
   !> Initialise iguess datastructure.
-  subroutine setup_iguess(self, dims, nofks)!, kmesh)
+  subroutine setup_iguess(self, dims, nofks, kmesh)
     use DimParams_mod, only: DimParams
     use InitialGuess_mod, only: create
-    use TEST_lcutoff_mod, only: num_truncated
 
     type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in) :: dims
-    integer, intent(in) :: nofks(:)!, kmesh(:)
+    integer, intent(in) :: nofks(:) !> number of k-points for each k-mesh
+    integer, intent(in) :: kmesh(:) !> index of k-mesh for each energy point
 
     integer, allocatable :: num_k_points(:)
     integer :: ie, blocksize, ns
-
-    ! TODO: This is overdimensioned when l-cutoff is used!!!
-    if (num_truncated(dims%lmaxd) /= dims%naez) &
-      warn(6, "The memory proportions for iGuess are overdimensioned when l-dependent truncation is applied!")
+    
 
     ! DO NOT USE IGUESS together with l-cutoff!!! RS-cutoff is fine
     blocksize = self%trunc_zone%naez_trc * self%num_local_atoms * dims%lmmaxd**2
 
     allocate(num_k_points(dims%iemxd))
     do ie = 1, dims%iemxd
-      num_k_points(ie) = nofks(1) ! nofks(kmesh(ie)) !! cannot easily access emesh%kmesh, use the largest
+      num_k_points(ie) = nofks(kmesh(ie)) !! cannot easily access emesh%kmesh, use the largest
     enddo ! ie
 
     ns = 1; if (dims%smpid == 1 .and. dims%nspind == 2) ns = 2 ! no spin parallelisation choosen, processes must store both spin-directions

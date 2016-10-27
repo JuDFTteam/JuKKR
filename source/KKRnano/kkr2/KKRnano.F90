@@ -40,6 +40,7 @@ program KKRnano
   
   use KKRzero_mod, only: main0
   use PotentialConverter_mod, only: kkrvform
+  use TEST_lcutoff_mod, only: num_truncated
   
   implicit none
 
@@ -165,8 +166,11 @@ program KKRnano
     ! pre self-consistency preparations
 
     assert(dims%naez > 0) 
+    
+    call create(emesh, dims%iemxd) ! createEnergyMesh
+    call load(emesh, filename='bin.energy_mesh.0') ! every process does this!!!
 
-    call create(calc_data, dims, params, arrays, mp, voronano) ! calls 'createCalculationData'
+    call create(calc_data, dims, params, arrays, mp, emesh%kmesh, voronano)
     
     if (voronano == 1) then
       ios = show_warning_lines(unit=6)
@@ -174,9 +178,6 @@ program KKRnano
     endif
 
     num_local_atoms = calc_data%num_local_atoms
-
-    call create(emesh, dims%iemxd) ! createEnergyMesh
-    call load(emesh, filename='bin.energy_mesh.0') ! every process does this!!!
 
     call outTime(mp%isMasterRank, 'input files read ...............', getTime(program_timer), 0)
 
@@ -223,6 +224,9 @@ program KKRnano
     call createTimer(iteration_timer)
     if (mp%isMasterRank) write(2,'(79("="))') ! double separator line in time-info file
 
+    ! TODO: This is overdimensioned when l-cutoff is used!!!
+    if (mp%isMasterRank .and. num_truncated(dims%lmaxd) /= dims%naez) warn(6, "The memory for iGuess is overdimensioned!")
+    
     ! start self-consistency loop   
     do iter = 1, params%SCFSTEPS
 
