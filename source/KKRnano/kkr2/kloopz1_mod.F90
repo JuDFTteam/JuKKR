@@ -1,5 +1,7 @@
 !> multiple scattering k-loop and symmetrisation
 module kloopz1_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: kloopz1
@@ -8,13 +10,13 @@ module kloopz1_mod
   
   contains
 
-  subroutine kloopz1(Gmatn, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
-                         nsymat, dsymll, tmatLL, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                         DGinp_local, dtde, tr_alph, lly_grdt, &
+  subroutine kloopz1(GmatN, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
+                         dsymLL, tmatLL, global_atom_id, communicator, iguess_data, ienergy, ispin, &
+                         dGinp_local, dtde, tr_alph, lly_grdt, &
                          global_atom_idx_lly, lly, solver_type) ! LLY 
 
 ! only part of arrays for corresponding spin direction is passed
-! (Gmatn, tsst_local, dtde_local, lly_grdt, tr_alph, gmatxij)
+! (GmatN, tsst_local, dtde_local, lly_grdt, tr_alph, gmatxij)
 !
 ! NofKs .. number of k-points, integer
 ! volBZ .. brillouin zone volume, double
@@ -33,55 +35,55 @@ module kloopz1_mod
     use KKROperator_mod, only: KKROperator
     use Constants_mod, only: pi
     use jij_calc_mod, only: global_jij_data, symjij
-    integer, parameter :: nsymaxd = 48
-
+    
     type(IterativeSolver), intent(inout) :: solv
     type(KKROperator), intent(inout) :: op
     type(BCPOperator), intent(inout) :: precond
-
-    integer, intent(in) :: lmmaxd
+!   integer, intent(in) :: lmmaxd
     !> mapping trunc. index -> atom index
     integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
     integer, intent(in) :: ienergy, ispin
     double precision, intent(in) :: alat
-    integer, intent(in) :: nsymat
-    double complex, intent(in) :: dsymll(:,:,:) !< dim(lmmaxd,lmmaxd,nsymat)
-    double complex, intent(out) :: Gmatn(:,:,:) !< dim(lmmaxd,lmmaxd,num_local_atoms) ! result
-    double complex, intent(inout) :: Ginp_local(:,:,:,:) !< reference green function dim(lmmaxd,lmmaxd,naclsd,num_local_atoms)
-    double complex, intent(in) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,naez_trc)
+    double complex, intent(in) :: dsymLL(:,:,:) !< dim(lmmaxd,lmmaxd,nsymat)
+    double complex, intent(out) :: GmatN(:,:,:) !< dim(lmmaxd,lmmaxd,num_local_atoms) ! result
+    double complex, intent(inout) :: Ginp_local(:,:,:,:) !< dim(lmmaxd,lmmaxd,naclsd,num_local_atoms) reference green function 
+    double complex, intent(in) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,num_trunc_atoms)
     double precision, intent(in) :: rr(:,0:) !< lattice vectors(1:3,0:nrd)
     integer, intent(in) :: NofKs
     double precision, intent(in) :: volBZ
     double precision, intent(in) :: Bzkp(:,:) ! dim (3,kpoibz)
     double precision, intent(in) :: k_point_weights(:) ! dim kpoibz
- 
+
     ! LLY
-    double complex, intent(inout)   :: DGinp_local(:,:,:,:) !< energy derivative of reference green function
-    double complex, intent(in)   :: tr_alph(:)
-    double complex, intent(in)   :: dtde(:,:,:) 
-    double complex, intent(out)  :: lly_grdt
-    integer       , intent(in)   :: global_atom_idx_lly
-    integer       , intent(in)   :: lly
+    double complex, intent(inout) :: dGinp_local(:,:,:,:) !< dim(lmmaxd,lmmaxd,naclsd,num_local_atoms) energy derivative of reference green function
+    double complex, intent(in)    :: tr_alph(:)
+    double complex, intent(in)    :: dtde(:,:,:) 
+    double complex, intent(out)   :: lly_grdt
+    integer       , intent(in)    :: global_atom_idx_lly
+    integer       , intent(in)    :: lly
     integer, intent(in) :: solver_type
 
     external :: zgetri, zgetrf, zgemm ! LAPACK routines
  
     ! locals
     double precision :: mrfctori, tauvBZ
-    integer :: ist ! status for LAPACK calls
-    integer :: isym, num_local_atoms, ila
+    integer :: N, isym, num_local_atoms, naclsd, num_trunc_atoms, ila, nsymat, ist ! status for LAPACK calls
     double complex, allocatable :: GS(:,:,:)
     integer, allocatable :: ipvt(:), info(:,:) ! work array for LAPACK
     double complex, allocatable :: temp(:), gll(:,:), tpg(:,:), xc(:,:), mssq(:,:,:) ! effective (site-dependent) delta_t^(-1) matrix
 
-    integer :: N
-    N = lmmaxd ! abbrev.
-    
-    if (any(shape(dsymll) < [N,N,nsymat])) stop 'shape(dsymll) unexpected!'
-
+    N = size(tmatLL, 2)
+    nsymat = size(dsymLL, 3)
     num_local_atoms = size(op%atom_indices)
+    num_trunc_atoms = size(tmatLL, 3)
+    naclsd = size(Ginp_local, 3)
+    
+    assert( all(shape(dsymLL) == [N,N,nsymat]) )
+    assert( all(shape(GmatN) == [N,N,num_local_atoms]) )
+    assert( all(shape(Ginp_local) == [N,N,naclsd,num_local_atoms]) )
+    assert( all(shape(tmatLL) == [N,N,num_trunc_atoms]) )
 
     allocate(GS(N,N,num_local_atoms), mssq(N,N,num_local_atoms), ipvt(N), info(2,num_local_atoms), temp(N*N), stat=ist)
     if (ist /= 0) stop "KLOOPZ1: FATAL Error, failure to allocate memory, probably out of memory."
@@ -105,10 +107,11 @@ module kloopz1_mod
     
     
     
-    ! 3 T-matrix cutoff with new solver
-    ! 4 T-matrix cutoff with direct solver
-    call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                      mssq, DGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly, solver_type) !LLY
+    ! solver_type=3 T-matrix cutoff with new solver
+    ! solver_type=4 T-matrix cutoff with direct solver
+    call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, global_atom_id, communicator, iguess_data, ienergy, ispin, &
+                      mssq, dGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly, solver_type) !LLY
+                      
 !-------------------------------------------------------- SYMMETRISE gll
 
 !      kkrmat01 returns GS (local) which contains the scattering path operator
@@ -133,12 +136,12 @@ module kloopz1_mod
 
         !       tpg = tauvBZ * DLL * GS
 
-        call zgemm('n','n',N,N,N,CONE,dsymll(:,:,isym),size(dsymll, 1),GS(:,:,ila),N,ZERO,tpg(:,:),N)
+        call zgemm('n','n',N,N,N,CONE,dsymLL(:,:,isym),size(dsymLL, 1),GS(:,:,ila),N,ZERO,tpg(:,:),N)
 
         !     gll = gll + tpg * DLL(i)^H
-        !                           C  ! dsymll might be complex in REL case
+        !                           C  ! dsymLL might be complex in REL case
 
-        call zgemm('n','c',N,N,N,CONE,tpg(:,:),N,dsymll(:,:,isym),size(dsymll, 1),CONE,gll(:,:),N)
+        call zgemm('n','c',N,N,N,CONE,tpg(:,:),N,dsymLL(:,:,isym),size(dsymLL, 1),CONE,gll(:,:),N)
 
       enddo ! isym
       gll(:,:) = gll(:,:)*tauvBZ
@@ -165,21 +168,18 @@ module kloopz1_mod
 
 !       gll(:,:) = xc(:,:) + gll(:,:)
 
-  !   Gmatn = GMATLL = -gll/rfctor...............rescaled and copied into output array
+  !   GmatN = GMATLL = -gll/rfctor...............rescaled and copied into output array
 
-      Gmatn(:N,:N,ila) = gll(:,:)*mrfctori
+      GmatN(:N,:N,ila) = gll(:,:)*mrfctori
 
     enddo ! ila
 
-    if (global_jij_data%do_jij_calculation) then
-
-      call SYMJIJ(alat, tauvBZ, nsymat, dsymll, global_jij_data%NXIJ, global_jij_data%IXCP, &
+    if (global_jij_data%do_jij_calculation) &
+      call SYMJIJ(alat, tauvBZ, nsymat, dsymLL, global_jij_data%NXIJ, global_jij_data%IXCP, &
                   tmatLL, mssq, global_jij_data%GSXIJ, global_jij_data%GMATXIJ(:,:,:,global_jij_data%active_spin), &  ! Result
-                  op%cluster_info%naez_trc, lmmaxd, global_jij_data%nxijd)
-    endif ! jij
+                  num_trunc_atoms, N, global_jij_data%nxijd)
 
     deallocate(GS, mssq, gll, tpg, xc, stat=ist)
-
   endsubroutine ! kloopz1
 
 endmodule ! kloopz1_mod

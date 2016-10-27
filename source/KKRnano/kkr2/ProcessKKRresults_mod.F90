@@ -27,7 +27,7 @@ module ProcessKKRresults_mod
     use KKRnanoParallel_mod, only: KKRnanoParallel
     use EnergyMesh_mod, only: EnergyMesh
     use CalculationData_mod, only: CalculationData
-    use TimerMpi_mod, only: TimerMpi, getElapsedTime, outtime
+    use TimerMpi_mod, only: TimerMpi, getElapsedTime, outTime
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
@@ -122,15 +122,15 @@ module ProcessKKRresults_mod
 
     call closeBasisAtomPotentialDAFile(37)
 
-    call OUTTIME(mp%isMasterRank, 'potential written .. ', getElapsedTime(program_timer), iter)
+    call outTime(mp%isMasterRank, 'potential written .. ', getElapsedTime(program_timer), iter)
 
   ! Wait here in order to guarantee regular and non-errorneous output
   ! in RESULTS
-    call OUTTIME(mp%isMasterRank, 'barrier begin.. ', getElapsedTime(program_timer), iter)
+    call outTime(mp%isMasterRank, 'barrier begin.. ', getElapsedTime(program_timer), iter)
 
     call MPI_BARRIER(mp%mySEComm,IERR)
 
-    call OUTTIME(mp%isMasterRank, 'barrier end... ', getElapsedTime(program_timer), iter)
+    call outTime(mp%isMasterRank, 'barrier end... ', getElapsedTime(program_timer), iter)
 
     ! output of local density of states (task-local files)
     if (params%NPOL == 0) then
@@ -167,7 +167,7 @@ module ProcessKKRresults_mod
 !       emesh%WEZ,&
       params%LDAU, dims%iemxd)
 
-      call OUTTIME(mp%isMasterRank,'results......', getElapsedTime(program_timer), iter)
+      call outTime(mp%isMasterRank,'results......', getElapsedTime(program_timer), iter)
 
       ! manual exit possible by creation of file 'STOP' in home directory
       processKKRresults = processKKRresults + 2*stopfile_flag()
@@ -346,7 +346,7 @@ module ProcessKKRresults_mod
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
     use DimParams_mod, only: DimParams
-    use TimerMpi_mod, only: TimerMpi, getElapsedTime, outtime
+    use TimerMpi_mod, only: TimerMpi, getElapsedTime, outTime
     
     use RadialMeshData_mod, only: RadialMeshData
     use ShapefunData_mod, only: ShapefunData
@@ -417,7 +417,7 @@ module ProcessKKRresults_mod
     if (dims%LLY == 1) then
       TESTARRAYLOG(3, emesh%WEZRN)
       TESTARRAYLOG(3, densities%RNORM)
-      call OUTTIME(mp%isMasterRank, 'Lloyd processed......', getElapsedTime(program_timer), ITER)
+      call outTime(mp%isMasterRank, 'Lloyd processed......', getElapsedTime(program_timer), ITER)
     endif
 
     ! now WEZRN stores the weights for E-integration
@@ -526,7 +526,7 @@ module ProcessKKRresults_mod
       close(r1fu)
     endif
 
-    call OUTTIME(mp%isMasterRank, 'density calculated ..', getElapsedTime(program_timer), ITER)
+    call outTime(mp%isMasterRank, 'density calculated ..', getElapsedTime(program_timer), ITER)
 
   !------------------------------------------------------------------------------
     ! OMP had problems here, should be corrected now but not tested - therefore commented out
@@ -583,7 +583,7 @@ module ProcessKKRresults_mod
     emesh%E2 = new_fermi  ! Assumes that for every atom the same Fermi correction
                           ! was calculated !!!
 
-    call OUTTIME(mp%isMasterRank, 'RHOMOM ......', getElapsedTime(program_timer), ITER)
+    call outTime(mp%isMasterRank, 'RHOMOM ......', getElapsedTime(program_timer), ITER)
 
 #ifndef NOLOGGING
     ! log some results
@@ -614,7 +614,7 @@ module ProcessKKRresults_mod
     use Main2Arrays_mod, only: Main2Arrays
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
-    use TimerMpi_mod, only: TimerMpi, getElapsedTime, outtime
+    use TimerMpi_mod, only: TimerMpi, getElapsedTime, outTime
     
     use BasisAtom_mod, only: BasisAtom
     use LDAUData_mod, only: LDAUData
@@ -699,12 +699,12 @@ module ProcessKKRresults_mod
     !!!$omp endparallel do
   !------------------------------------------------------------------------------
 
-    call OUTTIME(mp%isMasterRank, 'VINTRAS ......', getElapsedTime(program_timer), ITER)
+    call outTime(mp%isMasterRank, 'VINTRAS ......', getElapsedTime(program_timer), ITER)
 
     ! perform near field correction for ALL local atoms
     if (params%near_field > 0) then
       call add_near_field_corr(calc, arrays, params%alat, mp%mySEComm)
-      call OUTTIME(mp%isMasterRank,'near field....', getElapsedTime(program_timer),ITER)
+      call outTime(mp%isMasterRank,'near field....', getElapsedTime(program_timer),ITER)
     endif
 
 #ifndef DEBUG_NO_ELECTROSTATICS
@@ -712,7 +712,7 @@ module ProcessKKRresults_mod
     ! operation on all atoms! O(N**2)
     call addMadelungPotentialnew_com(calc, arrays%ZAT, mp%myAtomRank, dims%naez/mp%numAtomRanks, mp%mySEComm)
 
-    call OUTTIME(mp%isMasterRank, 'VMADELBLK ......', getElapsedTime(program_timer), ITER)
+    call outTime(mp%isMasterRank, 'VMADELBLK ......', getElapsedTime(program_timer), ITER)
 #endif
 
   !=============== DEBUG: Morgan charge distribution test =======================
@@ -814,7 +814,7 @@ module ProcessKKRresults_mod
 
     if (params%KTE >= 0) close(r2fu)
 
-    call OUTTIME(mp%isMasterRank, 'before CONVOL.....', getElapsedTime(program_timer), ITER)
+    call outTime(mp%isMasterRank, 'before CONVOL.....', getElapsedTime(program_timer), ITER)
 
     call allreduceMuffinTinShift_com(mp%mySEComm, VAV0, VBC_new, VOL0)
 
@@ -854,7 +854,7 @@ module ProcessKKRresults_mod
     !$omp endparallel do
     !------------------------------------------------------------------------------
 
-    call OUTTIME(mp%isMasterRank, 'calculated pot ......', getElapsedTime(program_timer), ITER)
+    call outTime(mp%isMasterRank, 'calculated pot ......', getElapsedTime(program_timer), ITER)
 
     call sum_total_energy_com(new_total_energy_all, new_total_energy, 0, mp%mySEComm)
 

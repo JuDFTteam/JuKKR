@@ -19,10 +19,8 @@ module KKRresults_mod
 
   type KKRresults
     double precision, allocatable :: rMTref(:)
-    double complex, allocatable :: tmatN(:,:,:)  
-    double complex, allocatable :: dtdE(:,:,:)  
-!     double complex, allocatable :: trefLL(:,:,:)  
-!     double complex, allocatable :: dtrefLL(:,:,:)  
+    double complex, allocatable :: TmatN(:,:,:)  
+    double complex, allocatable :: dTmatN(:,:,:) !< energy derivative of TmatN
     double complex, allocatable :: tref_ell(:,:) !< dim(0:lmax,1:)
     double complex, allocatable :: dtref_ell(:,:)  !< dim(0:lmax,1:)
     double complex, allocatable :: dGrefN(:,:,:,:)
@@ -30,7 +28,6 @@ module KKRresults_mod
     double complex, allocatable :: Lly_G0Tr(:)   
     double complex, allocatable :: Lly_Grdt(:,:)  
     double complex, allocatable :: Tr_alph(:)  
-    integer :: noiter
 
     integer :: lmmaxd
     integer :: nspind
@@ -101,10 +98,8 @@ module KKRresults_mod
     endif
 
     ALLOCATECHECK(self%rMTref(naclsd))
-    ALLOCATECHECK(self%tmatN(LMMAXD,LMMAXD,nspind))
-    ALLOCATECHECK(self%dtdE(LMMAXD,LMMAXD,nspind))
-!     ALLOCATECHECK(self%trefLL(LMMAXD,LMMAXD,naclsd))
-!     ALLOCATECHECK(self%dtrefLL(LMMAXD,LMMAXD,naclsd))
+    ALLOCATECHECK(self%TmatN(LMMAXD,LMMAXD,nspind))
+    ALLOCATECHECK(self%dTmatN(LMMAXD,LMMAXD,nspind))
     ALLOCATECHECK(self%tref_ell(0:lmaxd,naclsd))
     ALLOCATECHECK(self%dtref_ell(0:lmaxd,naclsd))
     ALLOCATECHECK(self%dGrefN(LMMAXD,LMMAXD,naclsd,1))
@@ -112,11 +107,6 @@ module KKRresults_mod
     ALLOCATECHECK(self%Lly_G0Tr(iemxd))
     ALLOCATECHECK(self%Lly_Grdt(iemxd,nspind))
     ALLOCATECHECK(self%Tr_alph(nspind))
-
-    self%noiter = 0
-
-!     self%trefLL  = CZERO
-!     self%dtrefLL = CZERO
 
     ! use garbage values for initialisation
     self%GmatN    = dcmplx(9e9, 9e9)
@@ -132,10 +122,8 @@ module KKRresults_mod
     integer :: memory_stat
 
     DEALLOCATECHECK(self%rMTref)
-    DEALLOCATECHECK(self%tmatN)
-    DEALLOCATECHECK(self%dtdE)
-!     DEALLOCATECHECK(self%trefLL)
-!     DEALLOCATECHECK(self%dtrefLL)
+    DEALLOCATECHECK(self%TmatN)
+    DEALLOCATECHECK(self%dTmatN)
     DEALLOCATECHECK(self%tref_ell)
     DEALLOCATECHECK(self%dtref_ell)
     DEALLOCATECHECK(self%dGrefN)

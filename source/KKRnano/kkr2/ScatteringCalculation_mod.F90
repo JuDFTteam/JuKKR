@@ -29,7 +29,7 @@ implicit none
     USE_LOGGING_MOD
     USE_ARRAYLOG_MOD
 
-    use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, stopTimer, resumeTimer, outtime
+    use TimerMpi_mod, only: TimerMpi, getElapsedTime, resetTimer, stopTimer, resumeTimer, outTime
     use EBalanceHandler_mod, only: EBalanceHandler
 
     use DimParams_mod, only: DimParams
@@ -93,7 +93,7 @@ implicit none
     double complex, allocatable :: dtmatLL(:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
     double complex, allocatable :: GrefN_buffer(:,:,:,:) !< GrefN for all local atoms
-    double complex, allocatable :: DGrefN_buffer(:,:,:,:) !< DGrefN for all local atoms, LLY
+    double complex, allocatable :: dGrefN_buffer(:,:,:,:) !< DGrefN for all local atoms, LLY
 
     lmmaxd = (dims%lmaxd+1)**2
 
@@ -111,7 +111,7 @@ implicit none
     allocate(dtmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for derivative of t-matrices, LLY
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms))
-    allocate(DGrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms)) ! LLY
+    allocate(dGrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms)) ! LLY
     allocate(atom_indices(num_local_atoms))
 
     if (params%jij  .and. num_local_atoms > 1) stop "Jij and num_local_atoms > 1 not supported."
@@ -121,8 +121,9 @@ implicit none
 
     call resetTimer(mult_scattering_timer)
     call stopTimer(mult_scattering_timer)
-    
+
     call resetTimer(single_site_timer)
+    call stopTimer(single_site_timer)
 
     prspin = 1
 
@@ -181,7 +182,7 @@ implicit none
                     calc%gaunts%CLEB, calc%ref_cluster_a(ila)%RCLS, calc%gaunts%ICLEB, &
                     calc%gaunts%LOFLM, calc%ref_cluster_a(ila)%nacls, &
                     kkr(ila)%Tref_ell, kkr(ila)%dTref_ell, GrefN_buffer(:,:,:,ila), &
-                    DGrefN_buffer(:,:,:,ila), kkr(ila)%Lly_G0Tr(IE), &
+                    dGrefN_buffer(:,:,:,ila), kkr(ila)%Lly_G0Tr(IE), &
                     dims%lmaxd, calc%gaunts%ncleb, dims%Lly)
 
         enddo  ! ila
@@ -198,6 +199,8 @@ implicit none
           if (isWorkingSpinRank(mp, ispin)) then
 
             PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
+            
+            call resumeTimer(single_site_timer)          
 
   !------------------------------------------------------------------------------
             !$omp parallel do private(ila, atomdata, ldau_data, i1)
@@ -210,22 +213,22 @@ implicit none
 
               jij_data%DTIXIJ(:,:,ISPIN) = kkr(ila)%TmatN(:,:,ISPIN) ! save t-matrix for Jij-calc.
 
-              if (dims%Lly == 1) &  ! calculate derivative of t-matrix for Lloyd's formula
-              call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr(ila)%dTdE, kkr(ila)%Tr_alph, ldau_data, params%Volterra)
-
               ! t_ref-matrix of central cluster atom has index 1
-              call substractReferenceTmatrix(dims%lmaxd, kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL, kkr(ila)%Tref_ell(:,1), kkr(ila)%TmatN(:,:,ISPIN))
-              
-              ! do the same for derivative of T-matrix
-              call substractReferenceTmatrix(dims%lmaxd, kkr(ila)%lmmaxd, arrays%NSYMAT, arrays%DSYMLL, kkr(ila)%dTref_ell(:,1), kkr(ila)%dTdE(:,:,ISPIN))
+              call substractReferenceTmatrix(arrays%dsymLL(:,:,:arrays%NSYMAT), kkr(ila)%Tref_ell(:,1), kkr(ila)%TmatN(:,:,ISPIN))
+
+              if (dims%Lly == 1) then  ! calculate derivative of t-matrix for Lloyd's formula
+                call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr(ila)%dTmatN, kkr(ila)%Tr_alph, ldau_data, params%Volterra)
+               
+                ! do the same for derivative of T-matrix
+                call substractReferenceTmatrix(arrays%dsymLL(:,:,:arrays%NSYMAT), kkr(ila)%dTref_ell(:,1), kkr(ila)%dTmatN(:,:,ISPIN))
+              endif ! Lly
 
               ! TmatN now contains Delta t = t - t_ref !!!
               ! dTdE now contains Delta dt !!!
 
-              ! renormalize Tr_alph
-              kkr(ila)%Tr_alph(ISPIN) = kkr(ila)%Tr_alph(ISPIN) - kkr(ila)%Lly_G0Tr(IE)
+              kkr(ila)%Tr_alph(ISPIN) = kkr(ila)%Tr_alph(ISPIN) - kkr(ila)%Lly_G0Tr(IE) ! renormalize Tr_alph
 
-              call rescaleTmatrix(kkr(ila)%TmatN(:,:,ISPIN), kkr(ila)%lmmaxd, params%alat)
+              call rescaleTmatrix(kkr(ila)%TmatN(:,:,ISPIN), params%alat)
 
             enddo ! ila
             !$omp endparallel do
@@ -253,11 +256,11 @@ implicit none
             call kloopz1(GmatN_buffer, solv, kkr_op, precond, params%ALAT, &
                     arrays%NOFKS(nmesh), arrays%VOLBZ(nmesh), arrays%BZKP(:,:,nmesh), arrays%VOLCUB(:,nmesh), &
                     calc%lattice_vectors%RR, & ! periodic images
-                    GrefN_buffer, arrays%NSYMAT, arrays%DSYMLL, &
-                    tmatLL, arrays%lmmaxd, &
+                    GrefN_buffer, arrays%dsymLL(:,:,:arrays%NSYMAT), &
+                    tmatLL, &
                     calc%trunc_zone%global_atom_id, mp%mySEComm, &
                     calc%iguess_data, IE, PRSPIN, &
-                    DGrefn_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly, & ! LLY, note: num_local_atoms must be equal to 1 
+                    dGrefN_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly, & ! LLY, note: num_local_atoms must be equal to 1 
                     params%solver)
   !------------------------------------------------------------------------------
 
@@ -270,7 +273,6 @@ implicit none
             enddo ! ila
 
             call stopTimer(mult_scattering_timer)
-            call resumeTimer(single_site_timer)
 
   ! SPIN ==================================================================
           endif ! isWorkingSpinRank
@@ -311,11 +313,10 @@ implicit none
   !     enddo loop over energies (EMPID-parallel)
   ! IE ====================================================================
 
-    call stopTimer(single_site_timer)
+    call outTime(mp%isMasterRank, 'Single site scattering took', getElapsedTime(single_site_timer), ITER)
+    call outTime(mp%isMasterRank, 'Multiple scattering    took', getElapsedTime(mult_scattering_timer), ITER)
 
-!     if (mp%isMasterRank) &
-!       write(6, fmt='(A,I4,9A)') 'iter:',ITER,'  solver stats: ',trim(solv%represent_total_stats())
-    
+!   if (mp%isMasterRank) write(6, fmt='(A,I4,9A)') 'iter:',ITER,'  solver stats: ',trim(solv%represent_total_stats())
     
   !=======================================================================
     ! communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
@@ -323,10 +324,6 @@ implicit none
       call collectMSResults_com(mp, kkr(ila)%GmatN, kkr(ila)%LLY_GRDT, ebalance_handler%EPROC)
     enddo ! ila
   !=======================================================================
-
-  ! TIME
-    call OUTTIME(mp%isMasterRank, 'Single Site took.....', getElapsedTime(single_site_timer), ITER)
-    call OUTTIME(mp%isMasterRank, 'Mult. Scat. took.....', getElapsedTime(mult_scattering_timer), ITER)
 
   !=======================================================================
   !     output of Jij's
@@ -368,7 +365,7 @@ implicit none
 
     call cleanup_solver(solv, kkr_op, precond)
 
-    deallocate(tmatLL, atom_indices, DGrefN_buffer, GrefN_buffer, GmatN_buffer, stat=ist)
+    deallocate(tmatLL, dtmatLL, atom_indices, GrefN_buffer, dGrefN_buffer, GmatN_buffer, stat=ist)
 
   endsubroutine ! energyLoop
 
@@ -437,56 +434,58 @@ implicit none
   !----------------------------------------------------------------------------
   !> Substract diagonal reference T matrix of certain spin channel
   !> from real system's T matrix.
-  subroutine substractReferenceTmatrix(lmax, lmmaxd, nsymat, dsymll, TrefLL, TmatN)
-    integer, intent(in) :: lmax
-    integer, intent(in) :: lmmaxd
-    integer, intent(in) :: nsymat
-    double complex, intent(in) :: dsymll(:,:,:) !> dim(lmmaxd,lmmaxd,nsymat)
-    double complex, intent(in) :: TrefLL(0:) !> dim(0:lmax) ! m-degenerate and diagonal
+  subroutine substractReferenceTmatrix(dsymLL, TrefLL, TmatN)
+    double complex, intent(in) :: dsymLL(:,:,:) !> dim(lmmaxd,lmmaxd,nsymat)
+    double complex, intent(in) :: TrefLL(0:) !> dim(0:lmax) ! emm-degenerate and diagonal
     double complex, intent(inout) :: TmatN(:,:) !> dim(lmmaxd,lmmaxd)
     
-    double complex :: uTu_sum(lmmaxd,lmmaxd), uT(lmmaxd,lmmaxd)
+    integer :: lmax, lmmaxd, nsymat, isym, lm, ell, emm, ist
+    double complex, allocatable :: uTu_sum(:,:), uT(:,:)
     double precision :: denom
-    integer :: isym, lm, l, m
-   
     double complex, parameter :: cone=(1.d0, 0.d0), zero=(0.d0, 0.d0)
- 
-    ! note: TrefLL is diagonal due to a spherical reference potential, therefore, we only subtract the diagonal elements
-    ASSERT( (lmax + 1)**2 == lmmaxd )
-    
-    do l = 0, lmax
-      do m = -l, l
-        lm = l*l + l + m + 1
-        TmatN(lm,lm) = TmatN(lm,lm) - TrefLL(l) ! Tref is stored m-degenerate and diagonal
-      enddo ! m
-    enddo ! l
 
+    lmax = size(TrefLL, 1) - 1
+    lmmaxd = (lmax + 1)**2
+    nsymat = size(dsymLL, 3)
+
+    ! note: TrefLL is diagonal due to a spherical reference potential, therefore, we only subtract the diagonal elements
+    ASSERT( all(shape(TmatN) == [lmmaxd, lmmaxd]) )
+    ASSERT( all(shape(dsymLL) == [lmmaxd, lmmaxd, nsymat]) )
+
+    do ell = 0, lmax
+      do emm = -ell, ell
+        lm = ell*ell + ell + emm + 1
+        TmatN(lm,lm) = TmatN(lm,lm) - TrefLL(ell) ! Tref is stored emm-degenerate and diagonal
+      enddo ! emm
+    enddo ! ell
+
+    allocate(uTu_sum(lmmaxd,lmmaxd), uT(lmmaxd,lmmaxd))
     !------------------------------------------------- SYMMETRISE TMATN
-    uTu_sum(:,:) = TmatN(:,:) ! copy, the 1st entry is the unity operation
+    uTu_sum(:,:) = TmatN(:,:) ! copy, since the 1st entry is the unity operation, start loop from 2
     do isym = 2, nsymat
-      call zgemm('n', 'n', lmmaxd, lmmaxd, lmmaxd, cone, dsymll(1,1,isym), lmmaxd, TmatN, lmmaxd, zero, uT, lmmaxd)
-      call zgemm('n', 'c', lmmaxd, lmmaxd, lmmaxd, cone, uT, lmmaxd, dsymll(1,1,isym), lmmaxd, cone, uTu_sum, lmmaxd)
+      call zgemm('n', 'n', lmmaxd, lmmaxd, lmmaxd, cone, dsymLL(1,1,isym), lmmaxd, TmatN, lmmaxd, zero, uT, lmmaxd)
+      call zgemm('n', 'c', lmmaxd, lmmaxd, lmmaxd, cone, uT, lmmaxd, dsymLL(1,1,isym), lmmaxd, cone, uTu_sum, lmmaxd)
     enddo ! isym
 
     denom = 1.d0/dble(nsymat)
     TmatN(:,:) = uTu_sum(:,:)*denom ! average
     !------------------------------------------------- SYMMETRISE TMATN
-
+    deallocate(uTu_sum, uT, stat=ist) ! ignore status
   endsubroutine ! subtract
 
   !------------------------------------------------------------------------------
   !> Rescale and symmetrise T-matrix.
-  subroutine rescaleTmatrix(tsst_local, lmmaxd, alat)
+  subroutine rescaleTmatrix(tsst_local, alat)
     use Constants_mod, only: pi
-    double complex, intent(inout) :: tsst_local(lmmaxd,lmmaxd)
-    integer, intent(in) :: lmmaxd
+    double complex, intent(inout) :: tsst_local(:,:) ! dim(lmmaxd,lmmaxd)
     double precision, intent(in) :: alat
 
-    integer :: lm1, lm2
+    integer :: lm1, lm2, lmmaxd
     double precision :: rfctori
 
     rfctori = pi/alat ! = 0.5*(alat/(2*pi))^(-1)
-
+    lmmaxd = size(tsst_local, 2)
+    
     ! convert inverted delta_t-matrices to p.u.
     ! also a symmetrisation of the matrix is performed
 
@@ -528,7 +527,7 @@ implicit none
 
     do ila = 1, num_local_atoms
       tsst_local(:,:,ila) = kkr(ila)%TmatN(:,:,ispin)
-      dtsst_local(:,:,ila) = kkr(ila)%dtde(:,:,ispin) ! LLY
+      dtsst_local(:,:,ila) = kkr(ila)%dTmatN(:,:,ispin) ! LLY
     enddo ! ila
 
     call copyFromZ_com(tmatLL, tsst_local, calc%trunc_zone%global_atom_id, chunk_size, num_local_atoms, communicator)

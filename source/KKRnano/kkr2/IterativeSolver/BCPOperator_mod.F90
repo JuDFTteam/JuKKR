@@ -8,6 +8,8 @@
 ! or amorphous structures
 
 module BCPOperator_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   use ClusterInfo_mod, only: ClusterInfo
   implicit none
   private

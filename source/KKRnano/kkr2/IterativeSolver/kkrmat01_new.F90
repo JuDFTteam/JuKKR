@@ -30,7 +30,7 @@ module kkrmat_mod
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine kkrmat01(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
-                          Ginp, lmmaxd, global_atom_id, communicator, iguess_data, ienergy, ispin, &
+                          Ginp, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                           mssq, dginp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, solver_type) ! LLY
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
@@ -56,10 +56,9 @@ module kkrmat_mod
     double complex, intent(out) :: GS(:,:,:) ! (lmmaxd,lmmaxd,num_local_atoms) result
     double complex, intent(in) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez_trc)
     double precision, intent(in) :: alat
-    integer, intent(in) :: nsymat ! needed only for Jij-calculation
+    integer, intent(in) :: nsymat ! needed only for Jij-calculation and Lloyds formula
     double precision, intent(in) :: RR(:,0:)
     double complex, intent(inout) :: Ginp(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,nclsd)
-    integer, intent(in) :: lmmaxd
     integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
@@ -77,13 +76,13 @@ module kkrmat_mod
     integer, intent(in) :: solver_type
 
     ! locals
-    double complex :: G_diag(LMMAXD,LMMAXD)
+    double complex, allocatable :: G_diag(:,:) ! dim(lmmaxd,lmmaxd)
     double complex :: bztr2, trace ! LLY
-    integer :: site_lm_size, num_local_atoms, naclsd, naez, ikpoint, ila, ierr
+    integer :: num_local_atoms, naclsd, naez, ikpoint, ila, ierr, lmmaxd, ist
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
-!    double complex, allocatable :: DGref_buffer(:,:,:,:) ! LLY
+!    double complex, allocatable :: dGref_buffer(:,:,:,:) ! LLY
 #endif
 
 #define cluster op%cluster_info
@@ -91,9 +90,7 @@ module kkrmat_mod
     ! array dimensions
     naez = cluster%naez_trc
     naclsd = cluster%naclsd
-
-    site_lm_size = naez*LMMAXD
-
+    lmmaxd = size(GS, 2)
     num_local_atoms = size(op%atom_indices)
 
     ! WARNING: Symmetry assumptions might have been used that are
@@ -115,11 +112,11 @@ module kkrmat_mod
     call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
 ! #define Ginp Gref_buffer
 !     if (Lly == 1) then ! LLY
-!       call referenceFourier_com_part1(DGref_buffer, naez, DGinp, global_atom_id, communicator)
+!       call referenceFourier_com_part1(dGref_buffer, naez, DGinp, global_atom_id, communicator)
 !     endif ! LLY
-! #define dginp DGref_buffer
+! #define dginp dGref_buffer
 #endif
-   
+    allocate(G_diag(lmmaxd,lmmaxd))
     !==============================================================================
     do ikpoint = 1, nkpoints ! K-POINT-LOOP
     !==============================================================================
@@ -134,7 +131,7 @@ module kkrmat_mod
                      global_atom_idx_lly, Lly, solver_type) !LLY
 
       do ila = 1, num_local_atoms
-        call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), op%sparse%BlockDim, ila) ! extract solution
+        call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), ila) ! extract solution
 
         ! ----------- Integrate Scattering Path operator over k-points --> GS -----
         ! Note: here k-integration only in irreducible wedge
@@ -166,8 +163,8 @@ module kkrmat_mod
 #ifdef SPLIT_REFERENCE_FOURIER_COM
 #undef Ginp
 #undef dginp
-    deallocate(Gref_buffer, stat=ila) ! ignore status
-!    deallocate(DGref_buffer, stat=ila) ! LLY, ignore status
+    deallocate(Gref_buffer, stat=ist) ! ignore status
+!    deallocate(dGref_buffer, stat=ist) ! LLY, ignore status
 #endif    
 
     do ila = 1, num_local_atoms
@@ -178,6 +175,7 @@ module kkrmat_mod
     WRITELOG(3, *) "Max. num iterations for this E-point: ", solver%stats%max_iterations
     WRITELOG(3, *) "Sum of iterations for this E-point:   ", solver%stats%sum_iterations
     WRITELOG(2, *) "useful Floating point operations:     ", GiFlops," GiFlop"
+    deallocate(G_diag, stat=ist) ! ignore status
 
 #undef cluster
 #undef ms
@@ -188,21 +186,21 @@ module kkrmat_mod
   !------------------------------------------------------------------------------
   !> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
   !> dependent on (k,E) into matrix G_diag
-  subroutine getGreenDiag(G_diag, mat_X, atom_index, lmsmax, iRHS)
+  subroutine getGreenDiag(G_diag, mat_X, atom_index, iRHS)
     double complex, intent(out) :: G_diag(:,:) ! dim(lmsmaxd,lmsmax)
-    double complex, intent(in) :: mat_X(:,:,:) !> dim(lmsmaxd,lmsmax,nnzb)
+    double complex, intent(in) :: mat_X(:,:,:) !> dim(lmsmaxd,lmsmax*nRHS,nrows) ToDo: dim(lmsmaxd,lmsmax,nnzb)
     integer(kind=2), intent(in) :: atom_index 
-    integer, intent(in) :: lmsmax
     integer, intent(in) :: iRHS 
 
+    integer :: lmsmax
     !                                      nn
     !         Copy the diagonal elements G_LL' of the Green's-function,
     !         dependent on (k,E) into matrix G_diag
     !         (n = n' = atom_index)
-
+    lmsmax = size(mat_X, 1)
     ASSERT( lmsmax == size(G_diag, 1))
     ASSERT( lmsmax == size(G_diag, 2))
-    ASSERT( lmsmax == size(mat_X, 1))
+    ASSERT( 1 <= iRHS .and. iRHS <= size(mat_X, 2)/lmsmax )
 
     G_diag = ZERO
     G_diag(1:lmsmax,1:lmsmax) = mat_X(1:lmsmax,(iRHS - 1)*lmsmax + 1:iRHS*lmsmax,atom_index)
@@ -549,7 +547,7 @@ module kkrmat_mod
 
     ! Note: some MPI implementations might need the use of MPI_Alloc_mem
     allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd))
-!    allocate(DGref_buffer(lmmaxd,lmmaxd,naclsd))
+!    allocate(dGref_buffer(lmmaxd,lmmaxd,naclsd))
 
     call MPI_Comm_size(communicator, nranks, ierr)
 

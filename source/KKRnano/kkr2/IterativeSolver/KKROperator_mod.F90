@@ -118,14 +118,14 @@ module KKROperator_mod
   endsubroutine ! apply
 
   subroutine multiply_vbr(A, x, Ax, sparse, nFlops)
-    use vbrmv_mat_mod, only: vbrmv_mat
+    use vbrmv_mat_mod, only: bsr_times_mat
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     double complex, intent(in)  :: A(:,:,:), x(:,:,:)
     double complex, intent(out) :: Ax(:,:,:)
-    type(SparseMatrixDescription), intent(in) :: sparse
+    type(SparseMatrixDescription), intent(in) :: sparse ! BSR matrix structure
     integer(kind=8), intent(inout) :: nFlops
 
-    call vbrmv_mat(sparse%ia, sparse%ja, A, x, Ax, sparse%BlockDim, nFlops)
+    call bsr_times_mat(sparse%ia, sparse%ja, A, x, Ax, nFlops)
 
   endsubroutine ! multiply_vbr
 

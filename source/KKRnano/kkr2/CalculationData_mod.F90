@@ -1,6 +1,6 @@
 !> @author Elias Rabel
 
-#include "DebugHelpers/test_macros.h"
+! #include "DebugHelpers/test_macros.h"
 
 module CalculationData_mod
 #include "macros.h"
@@ -100,7 +100,7 @@ module CalculationData_mod
     integer :: atoms_per_proc, num_local_atoms, ila
 
     atoms_per_proc = dims%naez / mp%numAtomRanks
-    ASSERT( mp%numAtomRanks * atoms_per_proc == dims%naez )
+    assert( mp%numAtomRanks * atoms_per_proc == dims%naez )
     num_local_atoms = atoms_per_proc !TODO
 
     self%num_local_atoms = num_local_atoms
@@ -128,12 +128,12 @@ module CalculationData_mod
     ! process 2 treats atoms 3,4 and so on
     ! FOR USE OF TRUNCATION THESE atoms have to be close together!!!
 
-    ASSERT( size(self%atom_ids) == num_local_atoms )
+    assert( size(self%atom_ids) == num_local_atoms )
 
     do ila = 1, num_local_atoms
       self%atom_ids(ila) = mp%myAtomRank * atoms_per_proc + ila
 !       self%a(ila)%atom_id = mp%myAtomRank * atoms_per_proc + ila
-      ASSERT( self%atom_ids(ila) <= dims%naez )
+      assert( self%atom_ids(ila) <= dims%naez )
     enddo ! ila
 
     ! Now construct all datastructures and calculate initial data
@@ -325,7 +325,7 @@ module CalculationData_mod
 
       call create(self%madelung_sum_a(ila), self%madelung_calc%lmxspd, dims%naez) ! createMadelungLatticeSum
 
-      ! ASSERT( arrays%ZAT(atom_id) == atomdata%Z_nuclear )
+      ! assert( arrays%ZAT(atom_id) == atomdata%Z_nuclear )
 
     enddo ! ila
 
@@ -537,7 +537,7 @@ module CalculationData_mod
       ipand = size(inter_mesh%nm) + 1
       irnsd = irmd - (dims%irmd - dims%irnsd)
 
-      ASSERT( inter_mesh%xrn(1) /= 0.d0 ) ! write(*,*) irmd, irid, ipand, irnsd
+      assert( inter_mesh%xrn(1) /= 0.d0 ) ! write(*,*) irmd, irid, ipand, irnsd
 
       call create(self%mesh_a(ila), irmd, ipand)
 

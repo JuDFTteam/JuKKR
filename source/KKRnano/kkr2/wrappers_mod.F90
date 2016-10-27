@@ -9,9 +9,9 @@ module wrappers_mod
   implicit none
   private
   
-  public :: RHOVAL_wrapper, CALCTMAT_wrapper, CALCDTMAT_wrapper, MIXSTR_wrapper, VINTRAS_wrapper
+  public :: RHOVAL_wrapper, calcTmat_wrapper, calcdTmat_wrapper, MIXSTR_wrapper, VINTRAS_wrapper
   public :: RHOTOTB_wrapper, ESPCB_wrapper, EPOTINB_wrapper, VXCDRV_wrapper, MTZERO_wrapper
-  public :: CONVOL_wrapper, RHOMOM_NEW_wrapper!, RHOCORE_wrapper
+  public :: CONVOL_wrapper, RHOMOM_NEW_wrapper
 
   contains
 
@@ -72,25 +72,25 @@ module wrappers_mod
                   lmaxd, mesh%irmd, irnsd, cell%irid, mesh%ipand, cell%nfund, gaunts%ncleb, method)
 
     enddo ! ispin
-  endsubroutine
+  endsubroutine ! rhoval
 
   !------------------------------------------------------------------------------
-  subroutine CALCTMAT_wrapper(atomdata, emesh, ie, ispin, icst, nsra, gaunts, tmatn, tr_alph, ldau_data, method)
+  subroutine calcTmat_wrapper(atomdata, emesh, ie, ispin, icst, nsra, gaunts, tmatn, tr_alph, ldau_data, method)
     use BasisAtom_mod, only: BasisAtom
     use EnergyMesh_mod, only: EnergyMesh
     use LDAUData_mod, only: LDAUData
     use GauntCoefficients_mod, only: GauntCoefficients
     
-    use SingleSite_mod, only: calctmat
+    use SingleSite_mod, only: calcTmat
 
     type(BasisAtom), intent(in) :: atomdata
     type(GauntCoefficients), intent(in) :: gaunts
     type(EnergyMesh), intent(in) :: emesh
-    type(LDAUData) :: ldau_data
-    integer :: ie
-    integer :: ispin
-    integer :: icst
-    integer :: nsra
+    type(LDAUData), intent(inout) :: ldau_data
+    integer, intent(in) :: ie
+    integer, intent(in) :: ispin
+    integer, intent(in) :: icst
+    integer, intent(in) :: nsra
     double complex, intent(inout) :: tmatn(:,:,:)
     double complex, intent(inout) :: tr_alph(:)
     integer, intent(in) :: method
@@ -112,7 +112,7 @@ module wrappers_mod
     CHECKASSERT( size(tmatn, 1) == lmmaxd )
     CHECKASSERT( size(tmatn, 2) == lmmaxd )
 
-    call calctmat(ldau_data%ldau, ldau_data%nldau, icst, &
+    call calcTmat(ldau_data%ldau, ldau_data%nldau, icst, &
                   nsra, emesh%ez(ie), &
                   mesh%drdi, mesh%r, atomdata%potential%vins(irmind,1,ispin), &
                   atomdata%potential%visp(:,ispin), atomdata%z_nuclear, mesh%ipan, &
@@ -120,25 +120,25 @@ module wrappers_mod
                   tmatn(:,:,ispin), tr_alph(ispin), lmaxd, &
                   ldau_data%lldau, ldau_data%wmldau(:,:,:,ispin), &
                   gaunts%ncleb, mesh%ipand, mesh%irmd, irnsd, method)
-  endsubroutine
+  endsubroutine ! calcTmat
 
   !------------------------------------------------------------------------------
-  subroutine CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, icst, nsra, gaunts, dtde, tr_alph, ldau_data, method)
+  subroutine calcdTmat_wrapper(atomdata, emesh, ie, ispin, icst, nsra, gaunts, dtde, tr_alph, ldau_data, method)
     use BasisAtom_mod, only: BasisAtom
     use RadialMeshData_mod, only: RadialMeshData
     use EnergyMesh_mod, only: EnergyMesh
     use LDAUData_mod, only: LDAUData
     use GauntCoefficients_mod, only: GauntCoefficients
-    use SingleSite_mod, only: CALCDTMAT, calcdtmat_DeltaEz
+    use SingleSite_mod, only: calcdTmat, calcdTmat_DeltaEz
     
     type(BasisAtom), intent(in) :: atomdata
     type(GauntCoefficients), intent(in) :: gaunts
     type(EnergyMesh), intent(in) :: emesh
-    type(LDAUData) :: ldau_data
-    integer :: ie
-    integer :: ispin
-    integer :: icst
-    integer :: nsra
+    type(LDAUData), intent(inout) :: ldau_data
+    integer, intent(in) :: ie
+    integer, intent(in) :: ispin
+    integer, intent(in) :: icst
+    integer, intent(in) :: nsra
     double complex, intent(inout) :: dtde(:,:,:)
     double complex, intent(inout) :: tr_alph(:)
     integer, intent(in) :: method
@@ -161,9 +161,9 @@ module wrappers_mod
     CHECKASSERT( size(dtde, 1) == lmmaxd )
     CHECKASSERT( size(dtde, 2) == lmmaxd )
 
-    call calcdtmat_deltaez(delta_e_z, ie, emesh%npnt123(1), emesh%npnt123(2), emesh%npnt123(3), emesh%tk)
+    call calcdTmat_DeltaEz(delta_e_z, ie, emesh%npnt123(1), emesh%npnt123(2), emesh%npnt123(3), emesh%tk)
 
-    call calcdtmat(ldau_data%ldau, ldau_data%nldau, icst, &
+    call calcdTmat(ldau_data%ldau, ldau_data%nldau, icst, &
                   nsra, emesh%ez(ie), delta_e_z, &
                   mesh%drdi, mesh%r, atomdata%potential%vins(irmind,1,ispin), &
                   atomdata%potential%visp(:,ispin), atomdata%z_nuclear, mesh%ipan, &
@@ -171,7 +171,7 @@ module wrappers_mod
                   dtde(:,:,ispin), tr_alph(ispin), lmaxd, &
                   ldau_data%lldau, ldau_data%wmldau(:,:,:,ispin), &
                   gaunts%ncleb, mesh%ipand, mesh%irmd, irnsd, method)
-  endsubroutine
+  endsubroutine ! calcdTmat
 
   !------------------------------------------------------------------------------
   !> Wraps mixstr_new.
@@ -193,7 +193,7 @@ module wrappers_mod
                     mesh%irc, mesh%irmin, mesh%r, mesh%drdi, atomdata%potential%vons, atomdata%potential%visp, atomdata%potential%vins, &
                     mesh%irmd, irnsd)
 
-  endsubroutine
+  endsubroutine ! mixstr
 
   !----------------------------------------------------------------------------
   !> Adds intracell potential. in and output: atomdata (changed)
@@ -217,7 +217,7 @@ module wrappers_mod
     cell%theta, cell%lmsp, &
     mesh%irmd, cell%irid, cell%nfund, shgaunts%ngshd, mesh%ipand)
 
-  endsubroutine
+  endsubroutine ! vintras
 
   !----------------------------------------------------------------------------
   !> Calculates total charge and spin of cell.
@@ -242,7 +242,7 @@ module wrappers_mod
                     catom, &
                     mesh%irmd, cell%irid, mesh%ipand, cell%nfund)
 
-  endsubroutine
+  endsubroutine ! rhototb
 
 
   !------------------------------------------------------------------------------
@@ -262,7 +262,7 @@ module wrappers_mod
     call espcb_new(espc, nspind, atomdata%core%ecore, &
         atomdata%core%lcore(:,1:nspind), lcoremax, atomdata%core%ncore(1:nspind))
 
-  endsubroutine
+  endsubroutine ! espcb
 
   !------------------------------------------------------------------------------
   subroutine EPOTINB_wrapper(epotin, rho2ns, atomdata)
@@ -285,7 +285,7 @@ module wrappers_mod
                     mesh%ircut, mesh%ipan, atomdata%z_nuclear, &
                     mesh%irmd, irnsd, mesh%ipand)
 
-  endsubroutine
+  endsubroutine ! epotinb
 
   !------------------------------------------------------------------------------
   !> Add exchange-correlation to 'vons_potential' and calculate exchange correlation energy.
@@ -315,7 +315,7 @@ module wrappers_mod
               cell%theta, cell%lmsp, &
               mesh%irmd, cell%irid, cell%nfund, shgaunts%ngshd, mesh%ipand)
 
-  endsubroutine
+  endsubroutine ! vxcdrv
 
   !----------------------------------------------------------------------------
   subroutine MTZERO_wrapper(vav0, vol0, atomdata)
@@ -337,7 +337,7 @@ module wrappers_mod
                     mesh%ipan, cell%lmsp, cell%ifunm, &
                     cell%theta, mesh%irws, vav0, vol0, &
                     mesh%irmd, cell%irid, cell%nfund, mesh%ipand)
-  endsubroutine
+  endsubroutine ! MTzero
 
 
   !----------------------------------------------------------------------------
@@ -364,7 +364,7 @@ module wrappers_mod
                       mesh%r, atomdata%potential%vons(1,1,ispin), cell%lmsp, &
                       cell%irid, cell%nfund, mesh%irmd, shgaunts%ngshd)
     enddo ! ispin
-  endsubroutine
+  endsubroutine ! convol
 
 
 !   !------------------------------------------------------------------------------
@@ -425,7 +425,7 @@ module wrappers_mod
               cell%theta, cell%lmsp, &
               mesh%irmd, cell%irid, cell%nfund, mesh%ipand, shgaunts%ngshd)
 
-  endsubroutine
+  endsubroutine ! rhomom
 
 !==============================================================================
 ! Some helper routines for the wrappers
@@ -448,7 +448,7 @@ module wrappers_mod
       vons_ispin(ir,1) = vons_ispin(ir,1) + rfpi*vbc
     enddo ! ir
 
-  endsubroutine
+  endsubroutine ! shift
 
 
-endmodule wrappers_mod
+endmodule ! wrappers_mod

@@ -1,15 +1,10 @@
 !> Build coefficient matrix for solution of Dyson equation.
 !>
 !> @author Elias Rabel
-#include "macros.h"
-
-#ifndef NDEBUG
-#define ASSERT(CONDITION) CHECKASSERT(CONDITION)
-#else
-#define ASSERT(CONDITION)
-#endif
 
 module fillKKRMatrix_mod
+#include "macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: getKKRMatrixStructure, buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
@@ -39,13 +34,13 @@ module fillKKRMatrix_mod
     lmmaxd = (maxval(lmax_array) + 1)**2
     ncols = nRows ! a logical square matrix
 
-    ASSERT( size(numn0) >= nRows )
-    ASSERT( size(indn0, 2) >= nRows )
-    ASSERT( size(sparse%ia) == 1 + nRows )
+    assert( size(numn0) >= nRows )
+    assert( size(indn0, 2) >= nRows )
+    assert( size(sparse%ia) == 1 + nRows )
 
     nnzb = sum(numn0(1:nRows)) ! number of non-zero blocks
 
-    ASSERT( size(sparse%ja) >= nnzb )
+    assert( size(sparse%ja) >= nnzb )
 
     sparse%ia(:) = 0
     sparse%ja(:) = 0 ! init block number
@@ -55,11 +50,11 @@ module fillKKRMatrix_mod
     do irow = 1, nRows
       sparse%ia(irow) = ij + 1 ! start indices into ja
       do icol = 1, numn0(irow)
-        ASSERT( ij < nnzb )
+        assert( ij < nnzb )
 
-        ASSERT( icol <= size(indn0, 1) )
+        assert( icol <= size(indn0, 1) )
         jcol = indn0(icol,irow)
-        ASSERT( 1 <= jcol .and. jcol <= ncols )
+        assert( 1 <= jcol .and. jcol <= ncols )
 
         ij = ij + 1
         sparse%ja(ij) = jcol
@@ -67,7 +62,7 @@ module fillKKRMatrix_mod
       enddo ! icol
     enddo ! irow
     sparse%ia(nRows + 1) = ij + 1 ! final, important since the ranges are always [ia(i) ... ia(i+1)-1]
-    ASSERT( ij == nnzb ) ! check
+    assert( ij == nnzb ) ! check
 
   endsubroutine ! getKKRMatrixStructure
 
@@ -91,10 +86,10 @@ module fillKKRMatrix_mod
 
     lmmaxa = size(smat, 1) ! may be memory-aligned
     lmmaxd = size(tmatLL, 2)
-    ASSERT( size(tmatLL, 1) == lmmaxd )
-    ASSERT( lmmaxa >= lmmaxd )
+    assert( size(tmatLL, 1) == lmmaxd )
+    assert( lmmaxa >= lmmaxd )
     nRows = sparse%nRows
-    ASSERT( nRows == size(tmatLL, 3) )
+    assert( nRows == size(tmatLL, 3) )
     nCols = nRows ! a logical square matrix
 
     do iRow = 1, nRows
@@ -154,8 +149,8 @@ module fillKKRMatrix_mod
     integer :: iRHS, atom_index, lm2
 
     mat_B = ZERO
-    ASSERT( size(tmatLL, 1) == lmmaxd )
-    ASSERT( size(tmatLL, 2) == lmmaxd )
+    assert( size(tmatLL, 1) == lmmaxd )
+    assert( size(tmatLL, 2) == lmmaxd )
 
     do iRHS = 1, size(atom_indices)
       atom_index = atom_indices(iRHS)
@@ -187,8 +182,8 @@ module fillKKRMatrix_mod
 
     full_A = ZERO
 
-    ASSERT( size(smat, 1) == BlockDim )
-    ASSERT( size(smat, 2) == BlockDim )
+    assert( size(smat, 1) == BlockDim )
+    assert( size(smat, 2) == BlockDim )
     
     nRows = size(ia) - 1
 
@@ -216,8 +211,8 @@ module fillKKRMatrix_mod
 
     ndim  = size(full_A, 1)
     nRHSs = size(full_X, 2)
-    ASSERT( size(full_A, 2) == ndim ) ! must be square
-    ASSERT( size(full_X, 1) == ndim ) ! must match the dims of A
+    assert( size(full_A, 2) == ndim ) ! must be square
+    assert( size(full_X, 1) == ndim ) ! must match the dims of A
     
     allocate(ipvt(ndim))
 

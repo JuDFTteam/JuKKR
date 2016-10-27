@@ -17,12 +17,14 @@
 
 
 module KKRnano_Comm_mod
+#include "../macros.h"
+  use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   public :: jijSpinCommunication_com, jijLocalEnergyIntegration, jijReduceIntResults_com
   public :: collectMSResults_com, redistributeInitialGuess_com
   public :: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
-  
+
   contains
 
   !----------------------------------------------------------------------------

@@ -1,8 +1,8 @@
 !> TFQMR solver
 
-#include "../DebugHelpers/logging_macros.h"
 
 module TFQMR_mod
+#include "../DebugHelpers/logging_macros.h"
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   implicit none
   private
@@ -453,8 +453,10 @@ module TFQMR_mod
     double complex, intent(inout) :: yvector(:,:,:)
 
     integer :: col, block
-    if (size(factors, 1) /= size(xvector, 2)) stop 'col_axpy: strange! (x)'
+#ifndef NDEBUG
     if (size(factors, 1) /= size(yvector, 2)) stop 'col_axpy: strange! (y)'
+    if (any(shape(xvector) /= shape(yvector))) stop 'col_axpy: strange! (y vs. x)'
+#endif    
 
     !$omp do private(col, block)
     do block = 1, size(yvector, 3)
@@ -473,8 +475,10 @@ module TFQMR_mod
     double complex, intent(inout) :: yvector(:,:,:)
 
     integer :: col, block
-    if (size(factors, 1) /= size(xvector, 2)) stop 'col_xpay: strange! (x)'
+#ifndef NDEBUG
     if (size(factors, 1) /= size(yvector, 2)) stop 'col_xpay: strange! (y)'
+    if (any(shape(xvector) /= shape(yvector))) stop 'col_xpay: strange! (y vs. x)'
+#endif
 
     !$omp do private(col, block)
     do block = 1, size(yvector, 3)

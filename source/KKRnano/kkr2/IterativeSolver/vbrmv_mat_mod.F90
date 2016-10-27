@@ -12,18 +12,17 @@
 module vbrmv_mat_mod
   implicit none
   private
-  public :: vbrmv_mat
+  public :: bsr_times_mat
   
   contains
 
   !> Heavily modified routine from SPARSKIT
-  subroutine vbrmv_mat(ia, ja, A, x, Ax, lmsmax, nFlops)
+  subroutine bsr_times_mat(ia, ja, A, x, Ax, nFlops)
     integer, intent(in) :: ia(:) !> dim(blk_nrows + 1) !  start indices
     integer, intent(in) :: ja(:) !> dim(A%nnzb)        ! column indices
     double complex, intent(in)  ::  A(:,:,:) ! dim(blockDim,blockDim,nnzb)
     double complex, intent(in)  ::  x(:,:,:) ! dim(blockDim,nRHSs,nRows)
     double complex, intent(out) :: Ax(:,:,:) ! dim(blockDim,nRHSs,nRows)
-    integer, intent(in) :: lmsmax !> blocksize
     integer(kind=8), intent(inout) :: nFlops
 
     external :: ZGEMM ! from BLAS
@@ -52,7 +51,7 @@ module vbrmv_mat_mod
 
 !IBM* ALIGN(32, Buffer)
 
-    integer :: ibr, Aind, nRHSs, nRows,leadDim_Ax, leadDim_x, leadDim_A
+    integer :: ibr, Aind, nRHSs, nRows,leadDim_Ax, leadDim_x, leadDim_A, blocksize
     double complex, parameter :: ZERO=(0.d0, 0.d0), ONE=(1.d0, 0.d0)
     double complex :: beta
 
@@ -64,14 +63,15 @@ module vbrmv_mat_mod
     leadDim_x  = size(x, 1)
     if (leadDim_Ax /= leadDim_x) stop __LINE__
     leadDim_A  = size(A, 1)
+    blocksize  = size(A, 2)
     if (leadDim_Ax /= leadDim_A) stop __LINE__
     
-    if (leadDim_Ax < lmsmax) stop __LINE__
-    if (leadDim_A  < lmsmax) stop __LINE__
-    if (leadDim_x  < lmsmax) stop __LINE__
+    if (leadDim_Ax < blocksize) stop __LINE__
+    if (leadDim_A  < blocksize) stop __LINE__
+    if (leadDim_x  < blocksize) stop __LINE__
 
-! #define GENERIC
-#ifdef  GENERIC
+! #define GENERIC_matmul
+#ifdef  GENERIC_matmul
 
     do ibr = 1, nRows
       Ax(:,:,ibr) = ZERO
@@ -82,24 +82,22 @@ module vbrmv_mat_mod
 
 #else
 
-!$OMP PARALLEL PRIVATE(ibr, beta, Aind) reduction(+:nFlops)
-!$OMP DO
+!$OMP DO PARALLEL PRIVATE(ibr, beta, Aind) reduction(+:nFlops)
     do ibr = 1, nRows
       beta = ZERO ! instead of Ax(:,:,ibr) = ZERO, we simply set beta = ZERO for the 1st Aind-loop iteration
       do Aind = ia(ibr), ia(ibr + 1) - 1
       
-        !     gemm:          N       M,     K       1    A(N,K)       N          B(K,M)           K          1     C(N,M)       N        
-        !     here:          N       M,     N       1    A(N,N)       N          B(N,M)           N          1     C(N,M)       N        
-        call ZGEMM('n', 'n', lmsmax, nRHSs, lmsmax, ONE, A(1,1,Aind), leadDim_A, x(1,1,ja(Aind)), leadDim_x, beta, Ax(1,1,ibr), leadDim_Ax)
+        !     gemm:          N         M,      K          1    A(N,K)       N          B(K,M)           K          1     C(N,M)       N        
+        !     here:          N         M,      N          1    A(N,N)       N          B(N,M)           N          1     C(N,M)       N        
+        call ZGEMM('n', 'n', blocksize, nRHSs, blocksize, ONE, A(1,1,Aind), leadDim_A, x(1,1,ja(Aind)), leadDim_x, beta, Ax(1,1,ibr), leadDim_Ax)
         
         beta = ONE ! from the 2nd Aind-loop iteration, we need to accumulate onto Ax(:,:,ibr)
       enddo ! Aind
-      nFlops = nFlops + (8_8*nRHSs)*(lmsmax*lmsmax)*(ia(ibr + 1) - ia(ibr))
+      nFlops = nFlops + (8_8*nRHSs)*(blocksize*blocksize)*(ia(ibr + 1) - ia(ibr))
     enddo ! ibr
-!$OMP END DO
-!$OMP END PARALLEL
+!$OMP END PARALLEL DO
 
 #endif
-  endsubroutine ! vbrmv_mat
+  endsubroutine ! bsr_times_mat
 
 endmodule ! vbrmv_mat_mod
