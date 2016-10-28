@@ -29,7 +29,6 @@ module InitialGuess_mod
   interface store
     module procedure iguess_save
   endinterface
-
   
   contains
 
@@ -38,7 +37,7 @@ module InitialGuess_mod
     integer, intent(in) :: nofks(:)
     integer, intent(in) :: nspin ! number of collinear spins, must bin in [1,2]
     integer, intent(in) :: datasize
-    integer, intent(in) :: prec ! must be in [0,1,2]
+    integer, intent(in) :: prec ! must be one of {0: do not save, 1: save in 32bit, 2: save in 64bit}
     
     integer :: ik, nk, ekmd, ist
 
@@ -70,6 +69,7 @@ module InitialGuess_mod
   subroutine iguess_load(self, startval, ik, is, ie)
     type(InitialGuess), intent(inout) :: self
     double complex, intent(out) :: startval(:,:,:)
+    
     integer, intent(in) :: ik, is, ie
     
     if (self%prec == 1) then
@@ -84,6 +84,7 @@ module InitialGuess_mod
   subroutine iguess_save(self, solution, ik, is, ie)
     type(InitialGuess), intent(inout) :: self
     double complex, intent(in) :: solution(:,:,:)
+    
     integer, intent(in) :: ik, is, ie
 
     if (self%prec == 1) then
@@ -134,5 +135,5 @@ program test
 
   call destroy(ig)
 
-endprogram
+endprogram ! test
 #endif

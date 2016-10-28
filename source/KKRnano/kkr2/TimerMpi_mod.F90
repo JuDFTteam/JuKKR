@@ -64,9 +64,9 @@ module TimerMpi_mod
     if (self%running) call stopTimer(self)
     stats_string = getTimerStats(self)
     if (present(iter)) then
-      write(2, fmt="('iter:',i4,2x,9a)") iter, name, '  ',stats_string
+      write(2, fmt="('iter:',i4,2x,9a)") iter, name, '  ', trim(stats_string)
     else
-      write(2, fmt="(2x,9a)") name, '  ', stats_string
+      write(2, fmt="(2x,9a)") name, '  ', trim(stats_string)
     endif
   endsubroutine ! outTime
   
