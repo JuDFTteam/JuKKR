@@ -125,10 +125,11 @@ module TimerMpi_mod
   double precision function getTime(self)
     type(TimerMpi), intent(in) :: self
     
-    double precision :: duration
-    duration = 0.d0
-    if (self%running) duration = now() - self%start_time
-    getTime = self%sum_samples + duration
+    if (self%running) then
+      getTime = now() - self%start_time
+    else
+      getTime = self%sum_samples
+    endif
   endfunction ! get
 
   character(len=96) function getTimerStats(self) result(str)

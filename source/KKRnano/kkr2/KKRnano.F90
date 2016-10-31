@@ -321,10 +321,10 @@ program KKRnano
 
       call broadcast(emesh, mp%myActiveComm)
 
-      call stopTimer(iteration_timer)
       if (mp%isMasterRank) &
       call outTime(.true. , 'SCF iteration           took', getTime(iteration_timer), iter)
       if (mp%isMasterRank) write(2,'(79("="))') ! double separator line in time-info file
+      call stopTimer(iteration_timer)
 
     enddo ! iter ! SC ITERATION LOOP iter=1, SCFSTEPS
     
