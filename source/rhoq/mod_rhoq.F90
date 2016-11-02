@@ -1503,14 +1503,14 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
        
      end do ! k-loop
      !$omp end do
-          
-     !$omp single
      
      
      if(mythread==0) call timing_pause('calc rhoq - q>k-loop')
      !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< k-loop <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      
+!      !$omp single
+     if(mythread==master) then
 !           eiqr_lm(:,:) = C1
 
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1657,7 +1657,9 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
      !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  qint  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      
-     !$omp end single
+!      !$omp end single
+     endif!(mythread==master)
+     !$omp barrier
       
 
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
