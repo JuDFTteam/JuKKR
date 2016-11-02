@@ -45,7 +45,7 @@ implicit none
     use EnergyMesh_mod, only: EnergyMesh
     
     use KKRnanoParallel_mod, only: KKRnanoParallel, isWorkingSpinRank
-    use KKRnano_Comm_mod, only: jijSpinCommunication_com, jijLocalEnergyIntegration, jijReduceIntResults_com, collectMSResults_com, redistributeInitialGuess_com
+    use KKRnano_Comm_mod, only: jijSpinCommunication_com, jijLocalEnergyIntegration, jijReduceIntResults_com, collectMSResults_com, redistributeInitialGuess
 
     use EBalanceHandler_mod, only: EBalanceHandler, startEBalanceTiming, stopEBalanceTiming, update
 
@@ -361,8 +361,13 @@ implicit none
           WRITELOG(3, *) "EPROC:     ", ebalance_handler%EPROC
           WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
 
-          call redistributeInitialGuess_com(mp, calc%iguess_data%PRSC(:,:,PRSPIN), &
+          if (calc%iguess_data%prec == 1) then
+            call redistributeInitialGuess(mp, calc%iguess_data%prsc(:,:,PRSPIN), &
               ebalance_handler%EPROC, ebalance_handler%EPROC_old, emesh%kmesh, arrays%NofKs)
+          elseif (calc%iguess_data%prec == 2) then
+            call redistributeInitialGuess(mp, calc%iguess_data%prsz(:,:,PRSPIN), &
+              ebalance_handler%EPROC, ebalance_handler%EPROC_old, emesh%kmesh, arrays%NofKs)
+          endif
 
         endif ! isWorkingSpinRank
       enddo ! ISPIN

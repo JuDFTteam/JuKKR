@@ -22,9 +22,13 @@ module KKRnano_Comm_mod
   implicit none
   private
   public :: jijSpinCommunication_com, jijLocalEnergyIntegration, jijReduceIntResults_com
-  public :: collectMSResults_com, redistributeInitialGuess_com
+  public :: collectMSResults_com, redistributeInitialGuess
   public :: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
 
+  interface redistributeInitialGuess
+    module procedure redistributeInitialGuess_c, redistributeInitialGuess_z
+  endinterface
+  
   contains
 
   !----------------------------------------------------------------------------
@@ -129,12 +133,12 @@ module KKRnano_Comm_mod
   endsubroutine ! collect
 
   !----------------------------------------------------------------------------
-  subroutine redistributeInitialGuess_com(mp, PRSC, EPROC, EPROCO, KMESH, NofKs)
+  subroutine redistributeInitialGuess_c(mp, prs, EPROC, EPROCO, KMESH, NofKs)
     use KKRnanoParallel_mod, only: KKRnanoParallel, mapToWorldRank
     use comm_patternsC_mod, only: comm_redistributeVC
 
     type(KKRnanoParallel), intent(in) :: mp
-    complex, intent(inout) :: PRSC(:,:)
+    complex, intent(inout) :: prs(:,:) ! single precision complex
     integer, intent(in) :: EPROC(:), EPROCO(:), KMESH(:), NofKs(:)
 
     integer, allocatable :: blocksizes(:), old_owners(:), new_owners(:)
@@ -142,7 +146,7 @@ module KKRnano_Comm_mod
     integer :: single_block_size, num_energy_iemxd, ie
 
     num_energy_iemxd = size(EPROC)
-    single_block_size = size(PRSC, 1)
+    single_block_size = size(prs, 1)
 
     ASSERT(num_energy_iemxd == size(EPROCO))
     ASSERT(num_energy_iemxd == size(KMESH))
@@ -158,7 +162,7 @@ module KKRnano_Comm_mod
       blocksizes(ie) = single_block_size*NofKs(KMESH(IE))
     enddo ! ie
 
-    call comm_redistributeVC(mp%myWorldRank, PRSC, blocksizes, old_owners, new_owners)
+    call comm_redistributeVC(mp%myWorldRank, prs, blocksizes, old_owners, new_owners)
 
     DEALLOCATECHECK(blocksizes)
     DEALLOCATECHECK(old_owners)
@@ -166,6 +170,45 @@ module KKRnano_Comm_mod
 
   endsubroutine ! redistribute
 
+  !----------------------------------------------------------------------------
+  subroutine redistributeInitialGuess_z(mp, prs, EPROC, EPROCO, KMESH, NofKs)
+    use KKRnanoParallel_mod, only: KKRnanoParallel, mapToWorldRank
+    use comm_patternsZ_mod, only: comm_redistributeVZ
+
+    type(KKRnanoParallel), intent(in) :: mp
+    double complex, intent(inout) :: prs(:,:) ! double precision complex
+    integer, intent(in) :: EPROC(:), EPROCO(:), KMESH(:), NofKs(:)
+
+    integer, allocatable :: blocksizes(:), old_owners(:), new_owners(:)
+    integer :: memory_stat
+    integer :: single_block_size, num_energy_iemxd, ie
+
+    num_energy_iemxd = size(EPROC)
+    single_block_size = size(prs, 1)
+
+    ASSERT(num_energy_iemxd == size(EPROCO))
+    ASSERT(num_energy_iemxd == size(KMESH))
+
+    ALLOCATECHECK(blocksizes(num_energy_iemxd))
+    ALLOCATECHECK(old_owners(num_energy_iemxd))
+    ALLOCATECHECK(new_owners(num_energy_iemxd))
+
+    do ie = 1, num_energy_iemxd
+      old_owners(ie) = mapToWorldRank(mp, mp%myAtomId, mp%mySpinId, EPROCO(ie))
+      new_owners(ie) = mapToWorldRank(mp, mp%myAtomId, mp%mySpinId, EPROC(ie))
+      ASSERT(KMESH(ie) < size(NofKs))
+      blocksizes(ie) = single_block_size*NofKs(KMESH(IE))
+    enddo ! ie
+
+    call comm_redistributeVZ(mp%myWorldRank, prs, blocksizes, old_owners, new_owners)
+
+    DEALLOCATECHECK(blocksizes)
+    DEALLOCATECHECK(old_owners)
+    DEALLOCATECHECK(new_owners)
+
+  endsubroutine ! redistribute
+  
+  
   !----------------------------------------------------------------------------
   !> Communicate Potential from Master-Group to all other (Spin,Energy)-Groups.
   subroutine communicatePotential(mp, VISP, VINS, ECORE)
