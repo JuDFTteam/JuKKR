@@ -974,7 +974,7 @@ c calculate new THETA and PHI for non-colinear
         TOTXYMOMENT=SQRT(MOMENT(1)**2+MOMENT(2)**2)
 
         IF (ABS(TOTXYMOMENT).GT.1d-05) THEN
-         IF (ABS(MOMENT(3).LT.1d-05)) THEN
+         IF (ABS(MOMENT(3)).LT.1d-05) THEN
           THETANEW=PI/2d0
          ELSE
           THETANEW=ACOS(MOMENT(3)/TOTMOMENT)
