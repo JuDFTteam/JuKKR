@@ -11,11 +11,20 @@ module TruncationZone_mod
   private
   public :: TruncationZone, create, destroy
 
+#ifndef local_index_t
+#define local_index_t integer(kind=2)
+#endif
+
+#ifndef global_ID_type
+#define global_ID_type integer(kind=4)
+#endif
+
+
   type TruncationZone
     integer :: naez_trc = 0 !> number of atoms in truncation zone
     integer :: naez_all = 0 !> number of all atoms in the system
-    integer(kind=2), allocatable :: local_atom_idx(:) !> map atom index to truncation zone atom index (-1 == not in truncation zone == OUTSIDE)
-    integer(kind=4), allocatable :: global_atom_id(:) !> map truncation zone atom index to atom index ("inverse" of local_atom_idx)
+    local_index_t, allocatable :: local_atom_idx(:) !> map atom index to truncation zone atom index (-1 == not in truncation zone == OUTSIDE)
+    global_ID_type, allocatable :: global_atom_id(:) !> map truncation zone atom index to atom index ("inverse" of local_atom_idx)
   endtype
 
   interface create
@@ -39,7 +48,9 @@ module TruncationZone_mod
     ell_int_t, intent(in) :: mask(:)
     ell_int_t, intent(in), optional :: masks(:,:) !> one mask per local atom, dim(naez_all,num_local_atoms)
 
-    integer :: gid, idx, memory_stat
+    integer :: memory_stat
+    global_ID_type :: gid
+    local_index_t  :: idx
     integer(kind=8), parameter :: Two = 2
     
     self%naez_all = size(mask)

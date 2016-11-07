@@ -238,7 +238,7 @@ c.....
 
       END IF
 
-      NRED = DBLE(NDVPT)/2 + .1D0
+      NRED = int(DBLE(NDVPT)/2 + .1D0)
 
       DO 30 J = NRED + IST,MESH - NRED
 
@@ -421,7 +421,7 @@ c.....
 
       END IF
 
-      NRED = DBLE(NDVPT)/2 + .1D0
+      NRED = int(DBLE(NDVPT)/2 + .1D0)
 
       IF (MESH-NRED.LE.IST) THEN
          WRITE (6,FMT='(/'' mesh-nred.lt.ist. mesh,nred,ist='',3i4)')

@@ -35,7 +35,7 @@ module ShapeIntegrationHelpers_mod
       w2 =  dble(isi)
       call recur0(lmax, x2, theta, w2, s)
     else
-      n = (x2 - x1)/dlt + 3
+      n = floor((x2 - x1)/dlt + 3)
       allocate(xx(n), ww(n))
       call gauleg(x1, x2, xx, ww, n)
       do k = 1, n

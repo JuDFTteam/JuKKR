@@ -337,11 +337,11 @@ subroutine symjij(&
         
      ! assume that for iu == 1 we have th unit matrix ==> ull(1) is equal to unity matrix
       call zcopy(lmmaxd*lmmaxd,gsxij(1,1,1,xij),1,gll,1)
-      call zscal(lmmaxd*lmmaxd,cmplx(tauvbz, 0.d0),gll,1)
+      call zscal(lmmaxd*lmmaxd,dcmplx(tauvbz, 0.d0),gll,1)
      
     do iu = 2, nsymat
       ! --->      tpg = tauvbz * DLL * GS
-      call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cmplx(tauvbz, 0.d0),dsymll(1,1,iu),lmmaxd,gsxij(1,1,iu,xij),lmmaxd,czero,tpg,lmmaxd)
+      call zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,dcmplx(tauvbz, 0.d0),dsymll(1,1,iu),lmmaxd,gsxij(1,1,iu,xij),lmmaxd,czero,tpg,lmmaxd)
       !
       ! --->    GLL = GLL + TPG * DLL(i)^T
       call zgemm('N','C',lmmaxd,lmmaxd,lmmaxd,cone,tpg,lmmaxd,dsymll(1,1,iu),lmmaxd,cone,gll,lmmaxd)

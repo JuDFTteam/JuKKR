@@ -1333,14 +1333,14 @@ module ProcessKKRresults_mod
     integer :: ii, ios
     integer, parameter :: fu=99
 
-    prefactors = cmplx(1.d0, 0.d0)
+    prefactors = dcmplx(1.d0, 0.d0)
 
     open(unit=fu, form='formatted', file='morgan_prefactors.dat', action='read', status='old', iostat=ios)
     if (ios /= 0) return ! (1.0, 0.0) for all prefactors
     
     do ii = 1, size(prefactors)
       read(unit=fu, fmt=*) re, im
-      prefactors(ii) = cmplx(re, im)
+      prefactors(ii) = dcmplx(re, im)
     enddo ! ii
     close(unit=fu)
   endsubroutine ! read

@@ -189,9 +189,9 @@ c
 
       IF (IMAP.GT.NTIRD) stop 'NIRDBRY'
 
-      DO 10 IJ = 1,IMAP
+      DO IJ = 1,IMAP
         FM1(IJ) = RMIXIV* (FM1(IJ)-SM1(IJ))
-   10 CONTINUE
+      ENDDO ! IJ
 c
       IJ = 0
       DO 60 ISP = 1,NSPIN
@@ -212,7 +212,7 @@ C
    40       CONTINUE
           END IF
 
-   50   CONTINUE
+c  50   CONTINUE
 
    60 CONTINUE
 c

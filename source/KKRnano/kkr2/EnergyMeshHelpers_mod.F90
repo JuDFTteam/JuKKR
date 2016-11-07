@@ -322,7 +322,7 @@ module EnergyMeshHelpers_mod
         npnt = 1
         do i = 2, npnt2-1
           npnt = npnt + 1
-          er = febot + (i-1)*de
+          er = febot + (i-1)*dreal(de)
           ez(npnt) = dcmplx(er, etk)
           df(npnt) = de
         enddo ! i
@@ -341,7 +341,7 @@ module EnergyMeshHelpers_mod
         npnt = 0
         do i = 1, npnt2
           npnt = npnt + 1
-          er = ebot + (i-1)*de
+          er = ebot + (i-1)*dreal(de)
           ez(npnt) = dcmplx(er, etk)
           df(npnt) = de
         enddo ! i

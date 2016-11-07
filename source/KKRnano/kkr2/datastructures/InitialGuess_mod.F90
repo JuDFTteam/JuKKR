@@ -88,7 +88,7 @@ module InitialGuess_mod
     integer, intent(in) :: ik, is, ie
 
     if (self%prec == 1) then
-      self%prsc(:,EKM,is) = reshape(solution, [size(solution)])
+      self%prsc(:,EKM,is) = reshape(solution, [size(solution)]) ! convert to single precision complex
     else if (self%prec == 2) then
       self%prsz(:,EKM,is) = reshape(solution, [size(solution)])
     endif

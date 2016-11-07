@@ -101,7 +101,7 @@ module ShapeStandardMesh_mod
     dist = abs(crt(1) - crt(npan))
     do i = 1, npan-1
       d1 = abs(crt(i) - crt(i+1))
-      nm(i) = naprox*d1/dist
+      nm(i) = floor((naprox*d1)/dist)
       if (nm(i) < nmin) nm(i) = nmin
     enddo ! i (panels)
     n = nmin*(npan-1)

@@ -163,14 +163,14 @@ module ClusterInfo_mod
       do jj = 1, nacls
 
         atom = recv_buf(OFFSET_ATOM + jj,ii) ! atom received
-        ezoa = recv_buf(OFFSET_EZOA + jj,ii) ! ezoa received (proposed new code)
+        ezoa = recv_buf(OFFSET_EZOA + jj,ii) ! convert to integer(kind=2)
 ! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',atom
         ind = trunc_zone%local_atom_idx(atom)
 
         if (ind > 0) then ! ind == -1 means that this atom is outside of truncation zone
           cnt = cnt + 1
           self%atom_trc(cnt,ii) = ind ! atom translated into local indices of the trunc_zone
-          self%ezoa_trc(cnt,ii) = ezoa ! does not need translation (proposed new code)
+          self%ezoa_trc(cnt,ii) = ezoa ! index of the periodic image (does not need translation)
 #ifdef DEBUG
           global_target_atom_id(cnt) = atom !!! DEBUG
 #endif          

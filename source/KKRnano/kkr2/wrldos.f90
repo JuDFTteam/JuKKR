@@ -68,9 +68,9 @@
  9040 FORMAT ('# FERMI :',f12.5)
  9050 FORMAT ('# tK    =',f8.1,'   Kelvin =',3p,f8.3,' mRyd',0p,/,'# ALAT   :',f12.5)
  9060 FORMAT (1p,8e15.7)
- 9065 FORMAT (1p,16d15.7)
+!9065 FORMAT (1p,16d15.7)
  9070 FORMAT ('# Integrated DOS ',1p,d10.3,7d11.3)
- 9080 format ('&')
+!9080 format ('&')
       endsubroutine ! write_ldos
 
 !> writes complex.dos file (complex density of states).
@@ -141,8 +141,8 @@
  9030 FORMAT ('# ISPIN :',I8,'   IELAST :',I5,/,'# E1,E2 :',2f12.5,' EFERMI :',f12.5,'   EFCTR',f10.6)
  9040 FORMAT ('# FERMI :',f12.5)
  9050 FORMAT ('# tK    =',f8.1,'   Kelvin =',3p,f8.3,' mRyd',0p,/,'# ALAT   :',f12.5)
- 9060 FORMAT (1p,8e15.7)
+!9060 FORMAT (1p,8e15.7)
  9065 FORMAT (1p,16d15.7)
- 9070 FORMAT ('# Integrated DOS ',1p,d10.3,7d11.3)
- 9080 FORMAT ('&')
+!9070 FORMAT ('# Integrated DOS ',1p,d10.3,7d11.3)
+!9080 FORMAT ('&')
       endsubroutine

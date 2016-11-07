@@ -178,16 +178,14 @@ module fillKKRMatrix_mod
     integer, intent(in) :: BlockDim
     double complex, intent(out) :: full_A(:,:)
 
-    integer :: iRow, jCol, nRows, Aind
+    integer :: iRow, jCol, Aind
 
     full_A = ZERO
 
     assert( size(smat, 1) == BlockDim )
     assert( size(smat, 2) == BlockDim )
-    
-    nRows = size(ia) - 1
 
-    do iRow = 1, nRows
+    do iRow = 1, size(ia) - 1
       do Aind = ia(iRow), ia(iRow+1) - 1
         jCol = ja(Aind)
 

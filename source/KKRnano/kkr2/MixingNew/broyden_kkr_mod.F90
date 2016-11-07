@@ -58,7 +58,7 @@ module broyden_kkr_mod
 #undef  broyden
     call extract_mixed_potentials(sm_input, calc_data)
 
-    if (any(isnan(sm_input))) then
+    if (any(is_nan(sm_input))) then
       write(*,*) "NaN detected!"
       stop
     endif
@@ -68,10 +68,10 @@ module broyden_kkr_mod
 
   !----------------------------------------------------------------------------
   !> Returns if x is NaN.
-  elemental logical function isnan(x)
+  elemental logical function is_nan(x)
     double precision, intent(in) :: x
-    isnan = .not. (x == x)
-  endfunction ! isnan
+    is_nan = .not. (x == x)
+  endfunction ! is_nan
 
   !----------------------------------------------------------------------------
   !> Collapse all local input potentials into one array

@@ -110,7 +110,8 @@ module NearField_calc_mod
     integer :: ii, num, nx, ny, nz, count_near
     double precision :: center(3), vec(3), four_rws_squared, dist_sq
     integer, parameter :: MAX_NEAR = 64 ! there should be never more than 64 near cells
-    double precision :: near_inds_temp(MAX_NEAR), dist_vecs_temp(3,MAX_NEAR)
+    integer :: near_inds_temp(MAX_NEAR)
+    double precision :: dist_vecs_temp(3,MAX_NEAR)
 
     double precision, parameter :: TOL = 1.d-6
 

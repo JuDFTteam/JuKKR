@@ -46,7 +46,7 @@ module TEST_lcutoff_mod
     if (cutoff_radius > R_active) then ! a single cutoff radius is active
       ! this is equivalent to lcutoff_radii=[0 ... 0 cutoff_radius 0 ... 0] at position lmax 
       nradii = 1
-      l_lim(nradii) = lmax
+      l_lim(nradii) = lmax ! convert to ell_int_t
       r2lim(nradii) = cutoff_radius**2
       if (any(lcutoff_radii > R_active)) &
         warn(6, "ell-dependent truncation (lcutoff_radii) is deactivated by cutoff_radius for ell="-lmax) 
@@ -55,7 +55,7 @@ module TEST_lcutoff_mod
       do ell = min(ubound(lcutoff_radii, 1), lmax, 8), 0, -1
         if (lcutoff_radii(ell) > R_active) then
           nradii = nradii + 1 
-          l_lim(nradii) = ell
+          l_lim(nradii) = ell ! convert to ell_int_t
           r2lim(nradii) = lcutoff_radii(ell)**2
         endif
       enddo ! ell

@@ -37,7 +37,7 @@ C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ACOS,ATAN,CMPLX,CONJG,COS,DBLE,SIN,SQRT
 C     ..
-      CI = CMPLX(0.d0,1.d0)
+      CI = DCMPLX(0.d0,1.d0)
       ONE = 1.d0
       PI = 4.d0*ATAN(ONE)
       LLMAX = (LMAX+1)**2
@@ -47,9 +47,9 @@ C     ..
         THET(IP) = ACOS(COSX(IP))
         FI = FAI(IP)
         DI = 2*FAI(IP)
-        EP1F = CMPLX(COS(FI),SIN(FI))
+        EP1F = DCMPLX(COS(FI),SIN(FI))
         EM1F = CONJG(EP1F)
-        EP2F = CMPLX(COS(DI),SIN(DI))
+        EP2F = DCMPLX(COS(DI),SIN(DI))
         EM2F = CONJG(EP2F)
 
         DO 50 L = 0,LMAX
@@ -61,7 +61,7 @@ c
             AAA = M*FAI(IP)
             CCC = COS(AAA)
             SSS = SIN(AAA)
-            CYLM0(I) = YL(MM)*CMPLX(CCC,SSS)
+            CYLM0(I) = YL(MM)*DCMPLX(CCC,SSS)
    10     CONTINUE
 
           DO 20 M = -L,L

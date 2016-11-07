@@ -217,8 +217,7 @@ else if (kxc==5) then
                dylmf1,dylmf2,dylmtf,drrl,ddrrl,drrul,ddrrul,  &
                irmd,lmpotd,lmmax,.true.)
 else
-write(*,*) 'error in vxcgga: in order to use gga set kxc=3 (pw91), kxc=4 (pbe) &
-or kxc=5 (pbesol). lda is used for kxc<3)'
+write(*,*) 'error in vxcgga: in order to use gga set kxc=3 (pw91), kxc=4 (pbe) or kxc=5 (pbesol). lda is used for kxc<3)'
 stop
 endif 
   

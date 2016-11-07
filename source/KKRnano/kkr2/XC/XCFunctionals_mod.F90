@@ -452,7 +452,7 @@ DO  ip=1,np
     END DO
   END DO
   DO  lm=1,lmmax
-    l1=SQRT(DBLE(lm)-5D-1)
+    l1 = int(SQRT(DBLE(lm) - 0.5))
     d(1)=d(1)+rholm(lm,1)*ylm(ip,lm)
     d(2)=d(2)+rholm(lm,2)*ylm(ip,lm)
     dl(1)=dl(1)+DBLE(l1*(l1+1))*rholm(lm,1)*ylm(ip,lm)

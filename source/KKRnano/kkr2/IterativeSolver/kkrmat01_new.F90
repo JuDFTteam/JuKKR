@@ -74,14 +74,14 @@ module kkrmat_mod
     double precision, intent(in) :: volbz
     integer, intent(in)          :: global_atom_idx_lly
     integer, intent(in)          :: Lly
-    
+
     integer, intent(in) :: solver_type
     type(TimerMpi), intent(inout) :: kpoint_timer
 
     ! locals
     double complex, allocatable :: G_diag(:,:) ! dim(lmmaxd,lmmaxd)
     double complex :: bztr2, trace ! LLY
-    integer :: num_local_atoms, naclsd, naez, ikpoint, ila, ierr, lmmaxd, ist
+    integer :: num_local_atoms, naez, ikpoint, ila, ierr, lmmaxd, ist!, naclsd
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
@@ -90,7 +90,7 @@ module kkrmat_mod
 
     ! array dimensions
     naez = op%cluster_info%naez_trc
-    naclsd = op%cluster_info%naclsd
+!   naclsd = op%cluster_info%naclsd
     lmmaxd = size(GS, 2)
     num_local_atoms = size(op%atom_indices)
 
@@ -112,9 +112,10 @@ module kkrmat_mod
     ! get the required reference Green functions from the other MPI processes
     call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
 #define Ginp Gref_buffer
-    if (Lly == 1) & ! LLY
-    call referenceFourier_com_part1(dGref_buffer, naez, dGinp, global_atom_id, communicator)
+    if (Lly == 1) then ! LLY
+      call referenceFourier_com_part1(dGref_buffer, naez, dGinp, global_atom_id, communicator)
 #define dGinp dGref_buffer
+    endif
 #endif
     allocate(G_diag(lmmaxd,lmmaxd))
     !==============================================================================
@@ -235,7 +236,7 @@ module kkrmat_mod
     type(BCPOperator), intent(inout) :: preconditioner
     double precision, intent(in) :: kpoint(3)
     double complex, intent(in) :: tmatLL(:,:,:)
-    double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,nclsd) independent of the kpoint, ToDo: try not to communicate it again for every kpoint
+    double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,N) where N=num_local_atoms or naez_trc if defined(SPLIT_REFERENCE_FOURIER_COM)
     double precision, intent(in) :: alat
     double precision, intent(in)  :: RR(:,0:)
     integer, intent(in) :: global_atom_id(:) ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
@@ -245,7 +246,7 @@ module kkrmat_mod
     ! LLY
     double complex, intent(in)         :: mssq(:,:,:)    !< inverted T-matrix
     double complex, intent(in)         :: dtde(:,:,:)     !< energy derivative of T-matrix
-    double complex, intent(in)         :: dGinp(:,:,:,:)  !< dG_ref/dE dim: lmmaxd, lmmaxd, naclsd, nclsd 
+    double complex, intent(in)         :: dGinp(:,:,:,:)  !< dG_ref/dE dim(lmmaxd,lmmaxd,naclsd,N) where N=num_local_atoms or naez_trc if defined(SPLIT_REFERENCE_FOURIER_COM)
     double complex, intent(out)        :: bztr2
     double precision, intent(in)       :: volcub (:)
     integer, intent(in)                :: ikpoint 
@@ -266,7 +267,6 @@ module kkrmat_mod
     lmmaxd = op%lmmaxd
     naez = op%naez
     nacls = cluster%naclsd
-    alm = lmmaxd*naez
 
 
     !=======================================================================
@@ -304,10 +304,12 @@ module kkrmat_mod
 
     TESTARRAYLOG(3, op%mat_A)
 
-   ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
+    ! ToDo: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     if (Lly == 1) then ! LLY
-      ! Allocate additional arrays for Lloyd's formula    
+      ! Allocate additional arrays for Lloyd's formula
+      alm = lmmaxd*naez
+
       allocate(gllke_x(lmmaxd*naez,lmmaxd*nacls))
       allocate(dgde(lmmaxd*naez,lmmaxd*nacls))
       allocate(gllke_x_t(lmmaxd*nacls,lmmaxd*naez))
@@ -336,19 +338,19 @@ module kkrmat_mod
       ! ------- = ------- * T(E) + G(E,k) * -----
       !   dE        dE                       dE
   
-      matrix_index = (global_atom_idx_lly - 1)*lmmaxd + 1
+      matrix_index = (global_atom_idx_lly - 1)*lmmaxd
 
       gllke_x_t = transpose(gllke_x)
       dgde_t = transpose(dgde)
 
-      gllke_x2 = gllke_x_t(:,matrix_index:matrix_index+lmmaxd)
-      dgde2 = dgde_t(:,matrix_index:matrix_index+lmmaxd)
+      gllke_x2 = gllke_x_t(:,matrix_index+ 1:lmmaxd +matrix_index)
+      dgde2    = dgde_t   (:,matrix_index+ 1:lmmaxd +matrix_index)
 
-      call cinit(lmmaxd*naez*lmmaxd,dPdE_local)
+      dPdE_local = zero ! init
 
       call zgemm('n','n',alm,lmmaxd,lmmaxd,cone, dgde2,alm, tmatll(1,1,global_atom_idx_lly),lmmaxd,zero, dPdE_local,alm)
 
-      call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv, gllke_x2,alm, dtde(:,:,global_atom_idx_lly),lmmaxd,cone,dPdE_local,alm)
+      call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv, gllke_x2,alm, dtde(:,:,global_atom_idx_lly),lmmaxd,cone, dPdE_local,alm)
       !--------------------------------------------------------
  
     endif ! LLY
@@ -384,26 +386,9 @@ module kkrmat_mod
 
     call calc(preconditioner, op%mat_A(:,:,:,0)) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
 
-    if (solver_type == 3 .or. solver_type == 0) then
+    selectcase(solver_type)
+    case (4) ! direct solution with LAPACK, should only be used for small systems
 
-      call solve(solver, op%mat_X, op%mat_B) ! use iterative solver
-
-#ifdef DEBUG_dump_matrix
-        call dump(op%bsr_A, "matrix_descriptor.dat") ! SparseMatrixDescription
-        call dump(op%mat_A,  "bin.matrix", formatted=.false.)
-        call dump(op%mat_A,  "matrix_form.dat", formatted=.true.)
-        call dump(op%mat_X, "bin.solution", formatted=.false.)
-        call dump(op%mat_X, "solution_form.dat", formatted=.true.)
-        call dump(op%mat_B, "bin.rhs", formatted=.false.)
-        call dump(op%mat_B, "rhs_form.dat", formatted=.true.)
-#endif
-    endif ! solver_type in {0,3}
-
-    TESTARRAYLOG(3, op%mat_B)
-
-    ! ALTERNATIVE: direct solution with LAPACK
-    if (solver_type == 4) then
-    
       nB = size(op%mat_X, 3)
       n  = size(op%mat_A, 2)*nB
       Bd = size(op%mat_A, 1)
@@ -423,15 +408,34 @@ module kkrmat_mod
       do i = 1, nB
         full_X(Bd*(i - 1) + 1:Bd*i,:) = op%mat_B(:,:,i)
       enddo ! i
-      
+
       ist = solveFull(full_A, full_X) ! on entry, full_X contains mat_B, compute the direct solution using LAPACK
+      if (ist /= 0) die_here("failed to directly invert a matrix of dim"+n+"with"+nRHSs+"right hand sides!")
       
       ! convert back full_X to op%mat_X
       do i = 1, nB
         op%mat_X(:,:,i) = full_X(Bd*(i - 1) + 1:Bd*i,:) 
       enddo ! i
 
-    endif ! solver_type == 4
+    case (0, 3) ! iterative solver
+      if(solver_type == 0) warn(6, "solver_type ="+solver_type+"is deprecated, please use 3")
+
+      call solve(solver, op%mat_X, op%mat_B) ! use iterative solver
+
+#ifdef DEBUG_dump_matrix
+        call dump(op%bsr_A, "matrix_descriptor.dat") ! SparseMatrixDescription
+        call dump(op%mat_A,  "bin.matrix", formatted=.false.)
+        call dump(op%mat_A,  "matrix_form.dat", formatted=.true.)
+        call dump(op%mat_X, "bin.solution", formatted=.false.)
+        call dump(op%mat_X, "solution_form.dat", formatted=.true.)
+        call dump(op%mat_B, "bin.rhs", formatted=.false.)
+        call dump(op%mat_B, "rhs_form.dat", formatted=.true.)
+#endif
+    case default
+      warn(6, "No solver selected! Problem is not solved, solver_type ="+solver_type)
+    endselect ! solver_type
+    
+    TESTARRAYLOG(3, op%mat_B)
 
     ! store the initial guess in previously selected slot (selected with 'iguess_set_k_ind')
     call store(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)

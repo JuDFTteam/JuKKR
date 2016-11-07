@@ -203,7 +203,7 @@ module AtomicCore_mod
       tsrme = 2.d0*sqrt(-e)
       re = (log(-tsrme*e/1.d-8)/tsrme - (z+z)/e)*2.d0
 
-      irend = log(re/b + 1.d0)/a + 1.d0
+      irend = floor(log(re/b + 1.d0)/a + 1.d0)
       irend = (irend/2)*2 + 1
       irend = min0(irend, nr)
       irend = max0(irend, 35)
@@ -227,7 +227,7 @@ module AtomicCore_mod
           hl = hankel_core(l+2, arg)
           dofe = (l + 1.d0)/rn - cappai*hl(l+2)/hl(l+1)
           valu = 1.d-10
-          slop = valu*dofe
+          slop = valu*dreal(dofe)
           ! todo: valu and slop are real, maybe this part can be simplified ...
           ! since the Hankel functions are evaluated for purely imaginary arguments
         endif

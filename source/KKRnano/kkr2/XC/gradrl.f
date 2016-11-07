@@ -160,6 +160,6 @@ c    &              drrul(iir,llm),ddrrul(iir,llm)
 c9997 format(1x,' drrl ddrrl drrul ddrrul',5f10.5)
 C
       RETURN
- 9000 FORMAT (1x,' l1max=',i5,' mesh=',i5,'nspi=',i5,' ipan=',i5)
+!9000 FORMAT (1x,' l1max=',i5,' mesh=',i5,'nspi=',i5,' ipan=',i5)
  9010 FORMAT (1x,'  ip ist ien',3i5)
       END
