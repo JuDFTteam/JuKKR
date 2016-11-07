@@ -19,10 +19,10 @@ module KKROperator_mod
   type :: KKROperator
     integer :: lmmaxd
     integer :: naez
-    type(SparseMatrixDescription) :: sparse
-    double complex, allocatable :: mat_A(:,:,:)
-    double complex, allocatable :: mat_dAdE(:,:,:)
-    double complex, allocatable :: mat_B(:,:,:) ! ToDo: make it a sparse operator since it is mostly zero or an implicit action of subtracting mat_B
+    type(SparseMatrixDescription) :: bsr_A, bsr_X, bsr_B
+    double complex, allocatable :: mat_A(:,:,:,:) !> dim(fastBlockDim,slowBlockDim,bsr_A%nnzb,0:Lly)
+!   double complex, allocatable :: mat_dAdE(:,:,:)
+    double complex, allocatable :: mat_B(:,:,:)
     double complex, allocatable :: mat_X(:,:,:)
     integer(kind=2), allocatable :: atom_indices(:) !< a copy of the atom indices
     type(ClusterInfo), pointer :: cluster_info
@@ -42,17 +42,17 @@ module KKROperator_mod
 
   contains
 
-  subroutine create_KKROperator(self, cluster_info, lmmaxd, atom_indices)
+  subroutine create_KKROperator(self, cluster_info, lmmaxd, atom_indices, Lly)
     use TEST_lcutoff_mod, only: lmax_array
     use fillKKRMatrix_mod, only: getKKRMatrixStructure
     use SparseMatrixDescription_mod, only: create
 
     type(KKROperator), intent(inout) :: self
     type(ClusterInfo), target, intent(in) :: cluster_info
-    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: lmmaxd, Lly
     integer(kind=2), intent(in) :: atom_indices(:)
 
-    integer :: sum_cluster, nCols, nRows, nBlocks
+    integer :: sum_cluster, nCols, nRows, nBlocks, nLloyd
 
     self%cluster_info => cluster_info
 
@@ -67,23 +67,24 @@ module KKROperator_mod
     self%atom_indices = atom_indices ! copy
 #endif
 
-    call create(self%sparse, self%naez, sum_cluster)
+    call create(self%bsr_A, self%naez, sum_cluster)
 
-    call getKKRMatrixStructure(lmax_array, cluster_info%numn0_trc, cluster_info%indn0_trc, self%sparse)
+    call getKKRMatrixStructure(lmax_array, cluster_info%numn0_trc, cluster_info%indn0_trc, self%bsr_A)
 
     nRows = lmmaxd
     nCols = lmmaxd*size(atom_indices)
-    nBlocks = self%sparse%nRows
+    nBlocks = self%bsr_A%nRows
 
     allocate(self%mat_B(nRows,nCols,nBlocks))
     allocate(self%mat_X(nRows,nCols,nBlocks))
 
     nRows = lmmaxd
     nCols = lmmaxd
-    nBlocks = size(self%sparse%ja)
-
-    allocate(self%mat_A(nRows,nCols,nBlocks)) ! allocate memory for the KKR operator
-    allocate(self%mat_dAdE(nRows,nCols,nBlocks)) ! allocate memory for its energy derivative
+    nBlocks = size(self%bsr_A%ja)
+    nLloyd = min(max(0, Lly), 1) ! for the energy derivative
+    
+    allocate(self%mat_A(nRows,nCols,nBlocks,0:nLloyd)) ! allocate memory for the KKR operator
+!   allocate(self%mat_dAdE(nRows,nCols,nBlocks)) ! allocate memory 
     
   endsubroutine ! create
 
@@ -95,11 +96,11 @@ module KKROperator_mod
     integer :: ist ! ignore status
     
     deallocate(self%mat_A, stat=ist)
-    deallocate(self%mat_dAdE, stat=ist)
+!   deallocate(self%mat_dAdE, stat=ist)
     deallocate(self%mat_X, stat=ist)
     deallocate(self%mat_B, stat=ist)
 
-    call destroy(self%sparse)
+    call destroy(self%bsr_A)
 
     deallocate(self%atom_indices, stat=ist)
     nullify(self%cluster_info)
@@ -113,19 +114,19 @@ module KKROperator_mod
     double complex, intent(out) :: mat_AX(:,:,:)
     integer(kind=8), intent(inout) :: nFlops
 
-    ! perform sparse VBR matrix * dense matrix
-    call multiply_vbr(self%mat_A, mat_X, mat_AX, self%sparse, nFlops)
+    ! perform bsr_A VBR matrix * dense matrix
+    call multiply_vbr(self%mat_A(:,:,:,0), mat_X, mat_AX, self%bsr_A, nFlops)
   endsubroutine ! apply
 
-  subroutine multiply_vbr(A, x, Ax, sparse, nFlops)
+  subroutine multiply_vbr(A, x, Ax, bsr_A, nFlops)
     use vbrmv_mat_mod, only: bsr_times_mat
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     double complex, intent(in)  :: A(:,:,:), x(:,:,:)
     double complex, intent(out) :: Ax(:,:,:)
-    type(SparseMatrixDescription), intent(in) :: sparse ! BSR matrix structure
+    type(SparseMatrixDescription), intent(in) :: bsr_A ! BSR matrix structure
     integer(kind=8), intent(inout) :: nFlops
 
-    call bsr_times_mat(sparse%ia, sparse%ja, A, x, Ax, nFlops)
+    call bsr_times_mat(bsr_A%ia, bsr_A%ja, A, x, Ax, nFlops)
 
   endsubroutine ! multiply_vbr
 

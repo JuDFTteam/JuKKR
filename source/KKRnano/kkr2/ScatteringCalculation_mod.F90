@@ -405,7 +405,7 @@ implicit none
     double precision, intent(in) :: qmrbound
     integer(kind=2), intent(in) :: atom_indices(:) !< indices of atoms treated at once
 
-    call create(kkr_op, cluster_info, lmmaxd, atom_indices)
+    call create(kkr_op, cluster_info, lmmaxd, atom_indices, dims%Lly)
     
     if (dims%bcpd == 1) then
       ! set the solver options for BCP preconditioner

@@ -3,15 +3,9 @@ module SparseMatrixDescription_mod
   private
   public :: SparseMatrixDescription, create, destroy, dump
   
-  !> description of a (square) sparse matrix in VBR format
-  !> VBR = variable block row.
-  !>
-  !> For a description of the VBR format see :
-  !> Y. Saad, SPARSKIT: a basic tool kit for sparse matrix computations - Version 2 (1994).
-  !>
+  !> description of a (square) block sparse matrix structure in Block Spare Row (BSR) format
   !
-  !> The actual matrix data has to be stored separately
-  !> in an 1D array.
+  !> The actual matrix data has to be stored separately in an 3D array.
   type SparseMatrixDescription
     !> block dimension
     integer :: BlockDim = 0
@@ -25,7 +19,6 @@ module SparseMatrixDescription_mod
     integer, allocatable :: ia(:) !> dim(nRows + 1)
     !> Column-indices of non-zero blocks
     integer, allocatable :: ja(:) !> dim(nnzb)
-    !>
   endtype
 
   interface create
@@ -46,7 +39,7 @@ module SparseMatrixDescription_mod
   !> Creates SparseMatrixDescription object.
   !
   !> Creates data structure that contains sparsity information of a
-  !> square VBR (variable block row) matrix.
+  !> square BSR (block sparse row) matrix.
   subroutine createSparseMatrixDescription(self, nRows, nnzb, nCols)
     type(SparseMatrixDescription), intent(inout) :: self
     integer, intent(in) :: nRows !> number of rows

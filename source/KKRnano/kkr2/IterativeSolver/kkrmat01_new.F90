@@ -9,7 +9,7 @@
 #include "../DebugHelpers/test_macros.h"
 
 
-!#define SPLIT_REFERENCE_FOURIER_COM
+#define SPLIT_REFERENCE_FOURIER_COM
 
 module kkrmat_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
@@ -31,7 +31,7 @@ module kkrmat_mod
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine kkrmat01(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                          mssq, dginp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, solver_type, kpoint_timer) ! LLY
+                          mssq, dGinp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, solver_type, kpoint_timer) ! LLY
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
@@ -54,12 +54,12 @@ module kkrmat_mod
     double precision, intent(in) :: kpoints(:,:) !< list of k-points dim(3,nkpoints)
     double precision, intent(in) :: kpointweight(:) !< k-point weights dim(nkpoints)
 
-    double complex, intent(out) :: GS(:,:,:) ! (lmmaxd,lmmaxd,num_local_atoms) result
-    double complex, intent(in) :: tmatLL(:,:,:) ! (lmmaxd,lmmaxd,naez_trc)
+    double complex, intent(out) :: GS(:,:,:) ! dim(lmmaxd,lmmaxd,num_local_atoms) result
+    double complex, intent(in) :: tmatLL(:,:,:) ! dim(lmmaxd,lmmaxd,naez_trc)
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat ! needed only for Jij-calculation and Lloyds formula
     double precision, intent(in) :: RR(:,0:)
-    double complex, intent(inout) :: Ginp(:,:,:,:) ! (lmmaxd,lmmaxd,naclsd,nclsd)
+    double complex, intent(inout) :: Ginp(:,:,:,:) ! dim(lmmaxd,lmmaxd,naclsd,num_local_atoms)
     integer, intent(in) :: global_atom_id(:)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
@@ -67,13 +67,14 @@ module kkrmat_mod
 
     !LLY
     double complex, intent(in)   :: mssq (:,:,:)    !< inverted T-matrix
-    double complex, intent(inout) :: dginp(:,:,:,:)  !< dG_ref/dE,  dim: lmmaxd, lmmaxd, naclsd, nclsd
+    double complex, intent(inout) :: dGinp(:,:,:,:)  !< dG_ref/dE dim(lmmaxd,lmmaxd,naclsd,num_local_atoms)
     double complex, intent(in)   :: dtde(:,:,:)     !< dT/dE
     double complex, intent(in)   :: tr_alph(:) 
     double complex, intent(out)  :: lly_grdt
     double precision, intent(in) :: volbz
     integer, intent(in)          :: global_atom_idx_lly
     integer, intent(in)          :: Lly
+    
     integer, intent(in) :: solver_type
     type(TimerMpi), intent(inout) :: kpoint_timer
 
@@ -84,14 +85,12 @@ module kkrmat_mod
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
-!    double complex, allocatable :: dGref_buffer(:,:,:,:) ! LLY
+    double complex, allocatable :: dGref_buffer(:,:,:,:) ! LLY
 #endif
 
-#define cluster op%cluster_info
-
     ! array dimensions
-    naez = cluster%naez_trc
-    naclsd = cluster%naclsd
+    naez = op%cluster_info%naez_trc
+    naclsd = op%cluster_info%naclsd
     lmmaxd = size(GS, 2)
     num_local_atoms = size(op%atom_indices)
 
@@ -112,11 +111,10 @@ module kkrmat_mod
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     ! get the required reference Green functions from the other MPI processes
     call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
-! #define Ginp Gref_buffer
-!     if (Lly == 1) then ! LLY
-!       call referenceFourier_com_part1(dGref_buffer, naez, DGinp, global_atom_id, communicator)
-!     endif ! LLY
-! #define dginp dGref_buffer
+#define Ginp Gref_buffer
+    if (Lly == 1) & ! LLY
+    call referenceFourier_com_part1(dGref_buffer, naez, dGinp, global_atom_id, communicator)
+#define dGinp dGref_buffer
 #endif
     allocate(G_diag(lmmaxd,lmmaxd))
     !==============================================================================
@@ -130,8 +128,9 @@ module kkrmat_mod
       ! output: op%mat_X
       call kloopbody(solver, op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, &
                      alat, RR, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                     mssq, dtde, dginp, bztr2, kpointweight, ikpoint, &
-                     global_atom_idx_lly, Lly, solver_type) !LLY
+                     mssq, dtde, dGinp, bztr2, kpointweight, ikpoint, &
+                     global_atom_idx_lly, Lly, & !LLY
+                     solver_type)
 
       do ila = 1, num_local_atoms
         call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), ila) ! extract solution
@@ -166,10 +165,10 @@ module kkrmat_mod
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
 #undef Ginp
-#undef dginp
     deallocate(Gref_buffer, stat=ist) ! ignore status
-!    deallocate(dGref_buffer, stat=ist) ! LLY, ignore status
-#endif    
+#undef dGinp
+    deallocate(dGref_buffer, stat=ist) ! LLY, ignore status
+#endif
 
     do ila = 1, num_local_atoms
       TESTARRAYLOG(3, GS(:,:,ila))
@@ -180,9 +179,6 @@ module kkrmat_mod
     WRITELOG(3, *) "Sum of iterations for this E-point:   ", solver%stats%sum_iterations
     WRITELOG(2, *) "useful Floating point operations:     ", GiFlops," GiFlop"
     deallocate(G_diag, stat=ist) ! ignore status
-
-#undef cluster
-#undef ms
 
   endsubroutine ! kkrmat01
 
@@ -220,7 +216,7 @@ module kkrmat_mod
   !> Scattering path operator is calculated for atoms given in
   !> op%atom_indices(:)
   subroutine kloopbody(solver, op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                       mssq, dtde, dginp, bztr2, volcub, ikpoint, &
+                       mssq, dtde, dGinp, bztr2, volcub, ikpoint, &
                        global_atom_idx_lly, Lly, solver_type) !LLY
 
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
@@ -249,7 +245,7 @@ module kkrmat_mod
     ! LLY
     double complex, intent(in)         :: mssq(:,:,:)    !< inverted T-matrix
     double complex, intent(in)         :: dtde(:,:,:)     !< energy derivative of T-matrix
-    double complex, intent(in)         :: dginp(:,:,:,:)  !< dG_ref/dE dim: lmmaxd, lmmaxd, naclsd, nclsd 
+    double complex, intent(in)         :: dGinp(:,:,:,:)  !< dG_ref/dE dim: lmmaxd, lmmaxd, naclsd, nclsd 
     double complex, intent(out)        :: bztr2
     double precision, intent(in)       :: volcub (:)
     integer, intent(in)                :: ikpoint 
@@ -297,11 +293,11 @@ module kkrmat_mod
     ! not using locks does not scale well
   
 #ifndef SPLIT_REFERENCE_FOURIER_COM
-    call referenceFourier_com(op%mat_A, op%sparse, kpoint, alat, &
+    call referenceFourier_com(op%mat_A(:,:,:,0), op%bsr_A, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              RR, cluster%ezoa_trc, Ginp, global_atom_id, communicator)
 #else
-    call referenceFourier_part2(op%mat_A, op%sparse, kpoint, alat, &
+    call referenceFourier_part2(op%mat_A(:,:,:,0), op%bsr_A, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
              RR, cluster%ezoa_trc, Ginp)
 #endif
@@ -321,19 +317,19 @@ module kkrmat_mod
       allocate(dPdE_local(lmmaxd*naez,lmmaxd))
     
 #ifndef SPLIT_REFERENCE_FOURIER_COM
-      call referenceFourier_com(op%mat_dAdE, op%sparse, kpoint, alat, &
+      call referenceFourier_com(op%mat_A(:,:,:,Lly), op%bsr_A, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
-             RR, cluster%ezoa_trc, DGinp, global_atom_id, communicator)
+             RR, cluster%ezoa_trc, dGinp, global_atom_id, communicator)
 #else
-      call referenceFourier_part2(op%mat_dAdE, op%sparse, kpoint, alat, &
+      call referenceFourier_part2(op%mat_A(:,:,:,Lly), op%bsr_A, kpoint, alat, &
              cluster%nacls_trc, cluster%atom_trc,  cluster%numn0_trc, cluster%indn0_trc, &
-             RR, cluster%ezoa_trc, DGinp)
+             RR, cluster%ezoa_trc, dGinp)
 #endif
 
-      TESTARRAYLOG(3, op%mat_dAdE)
+      TESTARRAYLOG(3, op%mat_A(:,:,:,Lly))
 
-      call convertToFullMatrix(op%mat_A,    op%sparse%ia, op%sparse%ja, op%sparse%BlockDim, gllke_x)
-      call convertToFullMatrix(op%mat_dAdE, op%sparse%ia, op%sparse%ja, op%sparse%BlockDim, dgde) 
+      call convertToFullMatrix(op%mat_A(:,:,:,0),   op%bsr_A%ia, op%bsr_A%ja, op%bsr_A%BlockDim, gllke_x)
+      call convertToFullMatrix(op%mat_A(:,:,:,Lly), op%bsr_A%ia, op%bsr_A%ja, op%bsr_A%BlockDim, dgde) 
 
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
@@ -360,10 +356,10 @@ module kkrmat_mod
     ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     !----------------------------------------------------------------------------
-    call buildKKRCoeffMatrix(op%mat_A, tmatLL, op%sparse)
+    call buildKKRCoeffMatrix(op%mat_A(:,:,:,0), tmatLL, op%bsr_A)
     !----------------------------------------------------------------------------
 
-    TESTARRAYLOG(3, op%mat_A)
+    TESTARRAYLOG(3, op%mat_A(:,:,:,0))
 
     ! ==> now GLLh holds (1 - Delta_t * G_ref)
 
@@ -386,14 +382,14 @@ module kkrmat_mod
       solver%initial_zero = .true.
     endif
 
-    call calc(preconditioner, op%mat_A) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
+    call calc(preconditioner, op%mat_A(:,:,:,0)) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
 
     if (solver_type == 3 .or. solver_type == 0) then
 
       call solve(solver, op%mat_X, op%mat_B) ! use iterative solver
 
 #ifdef DEBUG_dump_matrix
-        call dump(op%sparse, "matrix_descriptor.dat") ! SparseMatrixDescription
+        call dump(op%bsr_A, "matrix_descriptor.dat") ! SparseMatrixDescription
         call dump(op%mat_A,  "bin.matrix", formatted=.false.)
         call dump(op%mat_A,  "matrix_form.dat", formatted=.true.)
         call dump(op%mat_X, "bin.solution", formatted=.false.)
@@ -420,7 +416,7 @@ module kkrmat_mod
         allocate(full_A(n,n), full_X(n,nRHSs), stat=ist)
         if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
-      call convertToFullMatrix(op%mat_A, op%sparse%ia, op%sparse%ja, op%sparse%BlockDim, full_A)
+      call convertToFullMatrix(op%mat_A(:,:,:,0), op%bsr_A%ia, op%bsr_A%ja, op%bsr_A%BlockDim, full_A)
       TESTARRAYLOG(3, full_A)
       
       ! convertToFullMatrix op%mat_B to full_B
