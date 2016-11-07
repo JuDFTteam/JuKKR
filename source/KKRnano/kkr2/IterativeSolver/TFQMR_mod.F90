@@ -198,8 +198,8 @@ module TFQMR_mod
         ZTMP = VAR * COSI
       elsewhere
         ! early convergence or breakdown(stagnation)
-        COSI = ZERO
-        VAR = ZERO
+        COSI = 0.d0
+        VAR = 0.d0
         ZTMP = CONE
         tfqmr_status = -2
       endwhere
@@ -242,8 +242,8 @@ module TFQMR_mod
         COSI  = 1.d0 / ( 1.d0 + VAR )
       elsewhere
         ! early convergence or breakdown
-        VAR = ZERO
-        COSI = ZERO
+        VAR = 0.d0
+        COSI = 0.d0
         tfqmr_status = -2
       endwhere
       TAU  = DTMP * COSI

@@ -59,7 +59,11 @@ ifeq ($(PLATFORM),gfortran)
 	FCFLAGS += -I $(BUILDDIR) -I ./ 
 	# FCFLAGS += -I /usr/include ## for fftw3
 	# PPFLAGS += -D HAS_FFTW3    ## for fftw3
-	FCFLAGS += -O3
+	ifeq ($(TYPE),debug)
+		FCFLAGS += -O0 -g -Wall -Warray-bounds
+	else
+		FCFLAGS += -O3
+	endif
 	FC90FLAGS = -ffree-line-length-0
 	PPFLAGS += -D USE_VOROWEIGHTS
 	PPFLAGS += -D NOLOGGING
