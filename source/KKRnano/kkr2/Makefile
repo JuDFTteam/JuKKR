@@ -284,7 +284,7 @@ ldauinit.o: Quadrature_mod.o
 ldauphi.o: Quadrature_mod.o
 force.o: Quadrature_mod.o
 forceh.o: Quadrature_mod.o
-forcxc.o: Quadrature_mod.o
+forcxc.o: Quadrature_mod.o Constants_mod.o
 mtzero_new.o: Quadrature_mod.o
 epotinb_new.o: Quadrature_mod.o
 vxclm.o: Quadrature_mod.o
