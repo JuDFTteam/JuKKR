@@ -12,17 +12,17 @@ subroutine read_spinorbit(natom,cellorbit,myrank)
 integer                                  :: iatom,ios,ival
 
 open(unit=1000001, file='kkrflex_spinorbitperatom', status='old', iostat=ios)
-call version_check_header(1000001)
 if (ios/=0) then
    write(1337,*) '[read_spinorbit] no kkrflex_spinorbitperatom exists'
    if (myrank==0) then
      write(*,*) '[read_spinorbit] no kkrflex_spinorbitperatom exists'
    end if
-!set default value
-do iatom = 1, natom
-   cellorbit%use_spinorbit(iatom)=1
-enddo
+   !set default value
+   do iatom = 1, natom
+      cellorbit%use_spinorbit(iatom)=1
+   enddo
 else 
+  call version_check_header(1000001)
   if (myrank==0) then
     print *, 'Using kkrflex_spinorbitperatom '
     print *, '---------------------------------'
