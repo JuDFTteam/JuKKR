@@ -69,29 +69,6 @@ contains
   end subroutine version_print_header
 
 
-
-!   subroutine version_potname(unit)
-! 
-!     implicit none
-!   
-!     integer, intent(in) :: unit
-!   
-!   
-! 
-!   end subroutine version_potname
-
-
-
-!   subroutine version_shapename(unit)
-! 
-!     implicit none
-!   
-!   
-! 
-!   end subroutine version_shapename
-
-
-
   subroutine version_check_header(unit)
     ! this is called after an open statement of a file that is read
     ! checks if a header with serial-number is in the first line

@@ -31,7 +31,6 @@ if (first==1) then
   end if
 
   open(unit=33952084, file='kkrflex_angle', status='old', iostat=ierror)
-  call version_check_header(33952084)
   if (ierror/=0) then
     if (my_rank==0) then 
       write(*,*) '[read_potential] angle file does not exist'
@@ -50,6 +49,8 @@ if (first==1) then
       write(1337,*) iatom,density(iatom)%theta,density(iatom)%phi,density(iatom)%magmomentfixed
     end do
     return
+  else
+    call version_check_header(33952084)
   end if
 
 end if

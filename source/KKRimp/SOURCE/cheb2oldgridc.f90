@@ -74,7 +74,9 @@ do in=1,cellnew%npan_tot
       write(*,*) 'borders r=',cellnew%rpan_intervall(in-1),cellnew%rpan_intervall(in)
       write(*,*) 'meshpoints in rmesh n=',intsub(1,in),intsub(2,in)
       write(*,*) 'rval :'
-      write(*,'(50000E)') cell%rmesh(intsub(1,in):intsub(2,in)) 
+      !write(*,'(50000E)') cell%rmesh(intsub(1,in):intsub(2,in))
+      write(*,'(50000E)') cell%rmesh(intsub(1,in))
+      write(*,'(50000E)') cell%rmesh(intsub(2,in))
       write(*,*) '------------------------------------------------------------',in
       write(*,*) '[cheb2oldgridc] something went wrong in this panel'
       stop
