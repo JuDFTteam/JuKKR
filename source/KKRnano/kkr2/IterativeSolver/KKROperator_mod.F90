@@ -19,12 +19,11 @@ module KKROperator_mod
   type :: KKROperator
     integer :: lmmaxd
     integer :: naez
-    type(SparseMatrixDescription) :: bsr_A, bsr_X, bsr_B
-    double complex, allocatable :: mat_A(:,:,:,:) !> dim(fastBlockDim,slowBlockDim,bsr_A%nnzb,0:Lly)
-!   double complex, allocatable :: mat_dAdE(:,:,:)
-    double complex, allocatable :: mat_B(:,:,:)
-    double complex, allocatable :: mat_X(:,:,:)
-    integer(kind=2), allocatable :: atom_indices(:) !< a copy of the atom indices
+    type(SparseMatrixDescription) :: bsr_A, bsr_X!, bsr_B
+    double complex, allocatable :: mat_A(:,:,:,:) !< dim(fastBlockDim,slowBlockDim,bsr_A%nnzb,0:Lly)
+    double complex, allocatable :: mat_B(:,:,:)   !< dim(fastBlockDim,slowBlockDim,bsr_B%nnzb)
+    double complex, allocatable :: mat_X(:,:,:)   !< dim(fastBlockDim,slowBlockDim,bsr_X%nnzb)
+    integer(kind=2), allocatable :: atom_indices(:) !< local truncation zone indices of the source atoms
     type(ClusterInfo), pointer :: cluster_info
   endtype
 
@@ -50,7 +49,7 @@ module KKROperator_mod
     type(KKROperator), intent(inout) :: self
     type(ClusterInfo), target, intent(in) :: cluster_info
     integer, intent(in) :: lmmaxd, Lly
-    integer(kind=2), intent(in) :: atom_indices(:)
+    integer(kind=2), intent(in) :: atom_indices(:) !< local truncation zone indices of the source atoms
 
     integer :: sum_cluster, nCols, nRows, nBlocks, nLloyd
 
@@ -80,11 +79,10 @@ module KKROperator_mod
 
     nRows = lmmaxd
     nCols = lmmaxd
-    nBlocks = size(self%bsr_A%ja)
+    nBlocks = size(self%bsr_A%ColIndex)
     nLloyd = min(max(0, Lly), 1) ! for the energy derivative
-    
+
     allocate(self%mat_A(nRows,nCols,nBlocks,0:nLloyd)) ! allocate memory for the KKR operator
-!   allocate(self%mat_dAdE(nRows,nCols,nBlocks)) ! allocate memory 
     
   endsubroutine ! create
 
@@ -96,11 +94,12 @@ module KKROperator_mod
     integer :: ist ! ignore status
     
     deallocate(self%mat_A, stat=ist)
-!   deallocate(self%mat_dAdE, stat=ist)
     deallocate(self%mat_X, stat=ist)
     deallocate(self%mat_B, stat=ist)
 
     call destroy(self%bsr_A)
+    call destroy(self%bsr_X)
+!   call destroy(self%bsr_B)
 
     deallocate(self%atom_indices, stat=ist)
     nullify(self%cluster_info)
@@ -126,7 +125,7 @@ module KKROperator_mod
     type(SparseMatrixDescription), intent(in) :: bsr_A ! BSR matrix structure
     integer(kind=8), intent(inout) :: nFlops
 
-    call bsr_times_mat(bsr_A%ia, bsr_A%ja, A, x, Ax, nFlops)
+    call bsr_times_mat(bsr_A%RowStart, bsr_A%ColIndex, A, x, Ax, nFlops)
 
   endsubroutine ! multiply_vbr
 

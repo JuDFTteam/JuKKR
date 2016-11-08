@@ -330,8 +330,8 @@ module kkrmat_mod
 
       TESTARRAYLOG(3, op%mat_A(:,:,:,Lly))
 
-      call convertToFullMatrix(op%mat_A(:,:,:,0),   op%bsr_A%ia, op%bsr_A%ja, op%bsr_A%BlockDim, gllke_x)
-      call convertToFullMatrix(op%mat_A(:,:,:,Lly), op%bsr_A%ia, op%bsr_A%ja, op%bsr_A%BlockDim, dgde) 
+      call convertToFullMatrix(op%mat_A(:,:,:,0),   op%bsr_A%RowStart, op%bsr_A%ColIndex, gllke_x)
+      call convertToFullMatrix(op%mat_A(:,:,:,Lly), op%bsr_A%RowStart, op%bsr_A%ColIndex, dgde) 
 
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
@@ -374,8 +374,8 @@ module kkrmat_mod
     !    solve (1 - \Delta t * G_ref) X = \Delta t
     !    the solution X is the scattering path operator
 
-    call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
-!   call buildRightHandSide(op%mat_B, lmmaxd, op%atom_indices) ! construct RHS as unity
+    call buildRightHandSide(op%mat_B, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
+!   call buildRightHandSide(op%mat_B, op%atom_indices) ! construct RHS as unity
 
     if (iguess_data%prec == 1) then
       solver%initial_zero = .false.
@@ -401,7 +401,7 @@ module kkrmat_mod
         allocate(full_A(n,n), full_X(n,nRHSs), stat=ist)
         if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
-      call convertToFullMatrix(op%mat_A(:,:,:,0), op%bsr_A%ia, op%bsr_A%ja, op%bsr_A%BlockDim, full_A)
+      call convertToFullMatrix(op%mat_A(:,:,:,0), op%bsr_A%RowStart, op%bsr_A%ColIndex, full_A)
       TESTARRAYLOG(3, full_A)
       
       ! convertToFullMatrix op%mat_B to full_B
@@ -1071,7 +1071,7 @@ module kkrmat_mod
 
     integer :: Aind
 
-    Aind = sparse%ia(ind) + ni - 1
+    Aind = sparse%RowStart(ind) + ni - 1
     smat(:,:,Aind) = smat(:,:,Aind) + eikr * Gin(:,:)
 
   endsubroutine ! modify_smat

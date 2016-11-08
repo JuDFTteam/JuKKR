@@ -7,18 +7,18 @@ module SparseMatrixDescription_mod
   !
   !> The actual matrix data has to be stored separately in an 3D array.
   type SparseMatrixDescription
-    !> block dimension
-    integer :: BlockDim = 0
     !> number of block rows
     integer :: nRows = 0
     !> maximum column index
     integer :: nCols = 0
     !> number of non-zero blocks
     integer :: nnzb = 0
-    !> For each block row, give start index in ja
-    integer, allocatable :: ia(:) !> dim(nRows + 1)
+    !> For each block row, give start index in ColIndex
+    integer, allocatable :: RowStart(:) !> dim(nRows + 1)
     !> Column-indices of non-zero blocks
-    integer, allocatable :: ja(:) !> dim(nnzb)
+    integer, allocatable :: ColIndex(:) !> dim(nnzb)
+!     !> block dimension
+!     integer :: BlockDim = 0
   endtype
 
   interface create
@@ -46,11 +46,11 @@ module SparseMatrixDescription_mod
     integer, intent(in) :: nnzb !> number of non-zero blocks
     integer, intent(in), optional :: nCols !> number of columns
 
-    allocate(self%ia(nRows + 1))
-    allocate(self%ja(nnzb))
+    allocate(self%RowStart(nRows + 1))
+    allocate(self%ColIndex(nnzb))
 
-    self%ia(:) = 0
-    self%ja(:) = 0
+    self%RowStart(:) = 0
+    self%ColIndex(:) = 0
 
     self%nRows = nRows
     if (present(nCols)) then
@@ -59,7 +59,7 @@ module SparseMatrixDescription_mod
       self%nCols = nRows ! so far, this routine is only used for the KKR operator which is square
     endif
     self%nnzb = nnzb
-    self%BlockDim = 0
+!   self%BlockDim = 0
 
   endsubroutine ! create
   
@@ -69,12 +69,12 @@ module SparseMatrixDescription_mod
     type(SparseMatrixDescription), intent(inout) :: self
 
     integer :: ist ! ignore status
-    deallocate(self%ia, self%ja, stat=ist)
+    deallocate(self%RowStart, self%ColIndex, stat=ist)
 
     self%nRows = 0
     self%nCols = 0
-    self%BlockDim = 0
     self%nnzb = 0
+!   self%BlockDim = 0
   endsubroutine ! destroy
 
   !---------------------------------------------------------------------------
@@ -87,9 +87,9 @@ module SparseMatrixDescription_mod
 
     open(fu, file=filename, form='formatted', action='write')
     write(fu, *) self%nRows, self%nCols, self%nnzb
-    write(fu, *) self%ia
-    write(fu, *) self%ja
-    write(fu, *) self%BlockDim
+    write(fu, *) self%RowStart
+    write(fu, *) self%ColIndex
+!   write(fu, *) self%BlockDim
     close(fu)
   endsubroutine ! dump
 
@@ -108,9 +108,9 @@ module SparseMatrixDescription_mod
     open(fu, file=filename, form='formatted', action='read', status='old')
     read(fu, *)  nRows, nCols, nnzb
     call createSparseMatrixDescription(self, nRows, nnzb, nCols)
-    read(fu, *) self%ia
-    read(fu, *) self%ja
-    read(fu, *) self%BlockDim
+    read(fu, *) self%RowStart
+    read(fu, *) self%ColIndex
+!   read(fu, *) self%BlockDim
     self%nnzb = nnzb
     close(fu)
   endsubroutine ! create

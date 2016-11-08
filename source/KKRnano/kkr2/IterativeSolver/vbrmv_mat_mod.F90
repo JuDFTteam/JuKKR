@@ -18,8 +18,8 @@ module vbrmv_mat_mod
 
   !> Heavily modified routine from SPARSKIT
   subroutine bsr_times_mat(ia, ja, A, x, Ax, nFlops)
-    integer, intent(in) :: ia(:) !> dim(blk_nrows + 1) !  start indices
-    integer, intent(in) :: ja(:) !> dim(A%nnzb)        ! column indices
+    integer, intent(in) :: ia(:) !> dim(A%nRows + 1) !  start indices
+    integer, intent(in) :: ja(:) !> dim(A%nnzb)      ! column indices
     double complex, intent(in)  ::  A(:,:,:) ! dim(blockDim,blockDim,nnzb)
     double complex, intent(in)  ::  x(:,:,:) ! dim(blockDim,nRHSs,nRows)
     double complex, intent(out) :: Ax(:,:,:) ! dim(blockDim,nRHSs,nRows)
