@@ -25,7 +25,7 @@ module TFQMR_mod
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param ncol           number of right-hand sides = number of columns of B
   !> @param nrow           number of row elements of matrices mat_X, mat_B
-  subroutine solve_with_TFQMR(op, mat_X, mat_B, tolerance, ncol, nrow, initial_zero, precond, use_precond, vecs, &
+  subroutine solve_with_TFQMR(op, mat_X, mat_B, tolerance, ncol, nRHSs, initial_zero, precond, use_precond, vecs, &
                    iterations_needed, largest_residual, nFlops) ! optional output args
     USE_LOGGING_MOD
     use SolverStats_mod, only: SolverStats
@@ -34,7 +34,7 @@ module TFQMR_mod
 
     type(KKROperator), intent(in) :: op
     double precision, intent(in) :: tolerance
-    integer, intent(in) :: nrow, ncol
+    integer, intent(in) :: ncol, nRHSs
     double complex, intent(inout) :: mat_X(:,:,:) !< dim(X%fastBlockDim,X%slowBlockDim,X%nnzb)
     double complex, intent(in)    :: mat_B(:,:,:) !< dim(B%fastBlockDim,B%slowBlockDim,B%nnzb)
 
@@ -63,7 +63,6 @@ module TFQMR_mod
     integer :: iteration, probe, icol, iRHS
 
     !     small, local arrays with dimension ncol
-    integer, parameter :: nRHSs = 1
     double complex,   dimension(ncol,nRHSs) :: ZTMP, RHO, ETA, BETA, mALPHA ! -alpha
     double precision, dimension(ncol,nRHSs) :: residual_upper_bound, DTMP, COSI, TAU, VAR, RESN, R0, N2B  ! norm of right-hand side
 
@@ -78,13 +77,15 @@ module TFQMR_mod
     !------------- diagnostic variables -------------
     integer :: sparse_mult_count, res_probe_count ! count number of residual calculations
     integer(kind=8) :: mFlops
-    
-    column_index_t, allocatable :: jCol(:)
-    
-    allocate(jCol(op%bsr_A%nRows))
-    jCol(:) = 1
 
-    
+#ifdef useBSR
+#define ColIndices op%bsr_X%ColIndex
+#else
+    column_index_t, allocatable :: ColIndices(:)
+    allocate(ColIndices(op%bsr_A%nRows))
+    ColIndices(:) = 1
+#endif
+
     mFlops = 0
     tfqmr_status = 0
     converged_at = 0
@@ -119,14 +120,14 @@ module TFQMR_mod
     v5 = -v5 ! correct for sign change at setup
     
     ! R0 = norm(v5)
-    call col_norms(R0, v5, jCol)
+    call col_norms(R0, v5, ColIndices)
 
     ! use norm of B for convergence criterion - use it for residual normalisation instead of B-AX0 contrary to original TFQMR
 
     ! N2B = norm(v2)
     v4 = ZERO
     v4 = v4 - mat_B ! subtract RightHandSide
-    call col_norms(N2B, v4, jCol) ! col_norms(N2B, mat_B)
+    call col_norms(N2B, v4, ColIndices) ! col_norms(N2B, mat_B)
 
     where (abs(N2B) < EPSILON_DP) N2B = 1.d0  ! where N2B = 0 use absolute residual
 
@@ -150,7 +151,7 @@ module TFQMR_mod
     do iteration = 1, MaxIterations
 
       ! ZTMP = v3*v5
-      call col_dots(ZTMP, v3, v5, jCol)
+      call col_dots(ZTMP, v3, v5, ColIndices)
 
       where (abs(ZTMP) < EPSILON_DP .or. abs(RHO) < EPSILON_DP)
         ! severe breakdown
@@ -163,10 +164,10 @@ module TFQMR_mod
       endwhere
 
       ! v4 = beta*v4 + v8
-      call col_xpay(v8, BETA, v4, jCol)
+      call col_xpay(v8, BETA, v4, ColIndices)
 
       ! v6 = beta*v6 + v5
-      call col_xpay(v5, BETA, v6, jCol)
+      call col_xpay(v5, BETA, v6, ColIndices)
 
 
       ! v9 = A*v6
@@ -175,10 +176,10 @@ module TFQMR_mod
       sparse_mult_count = sparse_mult_count + 1
 
       ! v4 = beta*v4 + v9
-      call col_xpay(v9, BETA, v4, jCol)
+      call col_xpay(v9, BETA, v4, ColIndices)
 
       ! ZTMP = v3*v4
-      call col_dots(ZTMP, v3, v4, jCol)
+      call col_dots(ZTMP, v3, v4, ColIndices)
 
       where (abs(ZTMP) > EPSILON_DP .and. abs(RHO) > EPSILON_DP)
         mALPHA = -RHO / ZTMP
@@ -191,13 +192,13 @@ module TFQMR_mod
       endwhere
 
       ! v7 = ZTMP*v7 + v6
-      call col_xpay(v6, ZTMP, v7, jCol)
+      call col_xpay(v6, ZTMP, v7, ColIndices)
 
       ! v5 = v5 - alpha*v9
-      call col_axpy(mALPHA, v9, v5, jCol)
+      call col_axpy(mALPHA, v9, v5, ColIndices)
 
       ! DTMP = norm(v5)
-      call col_norms(DTMP, v5, jCol)
+      call col_norms(DTMP, v5, ColIndices)
 
 
       DTMP = DTMP * DTMP
@@ -221,13 +222,13 @@ module TFQMR_mod
       endwhere
 
       ! v1 = v1 + eta*v7
-      call col_axpy(ETA, v7, mat_X, jCol)
+      call col_axpy(ETA, v7, mat_X, ColIndices)
 
       ! v6 = v6 - alpha*v4
-      call col_axpy(mALPHA, v4, v6, jCol)
+      call col_axpy(mALPHA, v4, v6, ColIndices)
 
       ! v7 = ZTMP*v7 + v6
-      call col_xpay(v6, ZTMP, v7, jCol)
+      call col_xpay(v6, ZTMP, v7, ColIndices)
 
 
       !=============================================================
@@ -240,10 +241,10 @@ module TFQMR_mod
       sparse_mult_count = sparse_mult_count + 1
 
       ! v5 = v5 - alpha*v8
-      call col_axpy(mALPHA, v8, v5, jCol)
+      call col_axpy(mALPHA, v8, v5, ColIndices)
 
       ! DTMP = norm(v5)
-      call col_norms(DTMP, v5, jCol)
+      call col_norms(DTMP, v5, ColIndices)
 
       DTMP = DTMP * DTMP
       where (abs(TAU) > EPSILON_DP)
@@ -264,7 +265,7 @@ module TFQMR_mod
       endwhere
 
       ! v1 = v1 + eta*v7
-      call col_axpy(ETA, v7, mat_X, jCol)
+      call col_axpy(ETA, v7, mat_X, ColIndices)
 
       ! Residual upper bound calculation
       residual_upper_bound = sqrt( (2*iteration + 1) * TAU) / N2B
@@ -309,7 +310,7 @@ module TFQMR_mod
         v9 = v9 - mat_B ! flipped sign ! subtract RightHandSide
 
         ! RESN = norm(v9)
-        call col_norms(RESN, v9, jCol)
+        call col_norms(RESN, v9, ColIndices)
 
         RESN = RESN / N2B
 

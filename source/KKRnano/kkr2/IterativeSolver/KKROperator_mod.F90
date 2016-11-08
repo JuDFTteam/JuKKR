@@ -18,7 +18,6 @@ module KKROperator_mod
   !> Represents the operator/matrix (1 - \Delta T G_ref).
   type :: KKROperator
     integer :: lmmaxd
-    integer :: naez
     type(SparseMatrixDescription) :: bsr_A, bsr_X!, bsr_B
     double complex, allocatable :: mat_A(:,:,:,:) !< dim(fastBlockDim,slowBlockDim,bsr_A%nnzb,0:Lly)
     double complex, allocatable :: mat_B(:,:,:)   !< dim(fastBlockDim,slowBlockDim,bsr_B%nnzb)
@@ -42,21 +41,17 @@ module KKROperator_mod
   contains
 
   subroutine create_KKROperator(self, cluster_info, lmmaxd, atom_indices, Lly)
-    use TEST_lcutoff_mod, only: lmax_array
-    use fillKKRMatrix_mod, only: getKKRMatrixStructure
-    use SparseMatrixDescription_mod, only: create
+    use TEST_lcutoff_mod, only: lmax_a_array
+    use fillKKRMatrix_mod, only: getKKRMatrixStructure, getKKRSolutionStructure
 
     type(KKROperator), intent(inout) :: self
     type(ClusterInfo), target, intent(in) :: cluster_info
     integer, intent(in) :: lmmaxd, Lly
     integer(kind=2), intent(in) :: atom_indices(:) !< local truncation zone indices of the source atoms
 
-    integer :: sum_cluster, nCols, nRows, nBlocks, nLloyd
+    integer :: nCols, nRows, nBlocks, nLloyd
 
     self%cluster_info => cluster_info
-
-    sum_cluster = sum(cluster_info%numn0_trc)
-    self%naez = size(cluster_info%indn0_trc, 2)
     self%lmmaxd = lmmaxd
 
 #ifndef __GFORTRAN__
@@ -66,24 +61,31 @@ module KKROperator_mod
     self%atom_indices = atom_indices ! copy
 #endif
 
-    call create(self%bsr_A, self%naez, sum_cluster)
+    ! create block sparse structure of matrix A
+    call getKKRMatrixStructure(cluster_info%numn0_trc, cluster_info%indn0_trc, self%bsr_A)
+    
+    ! create block sparse structure of solution X
+    call getKKRSolutionStructure(lmax_a_array, self%bsr_X)
 
-    call getKKRMatrixStructure(lmax_array, cluster_info%numn0_trc, cluster_info%indn0_trc, self%bsr_A)
-
-    nRows = lmmaxd
-    nCols = lmmaxd*size(atom_indices)
+    nRows = lmmaxd ! here we can introduce memory alignment
+#ifndef useBSR    
+    nCols = lmmaxd*size(atom_indices) ! rectangluar shaped -- does not conform with a correct parallelization of truncation
     nBlocks = self%bsr_A%nRows
+#else
+    nCols = lmmaxd
+    nBlocks = self%bsr_X%nnzb
+#endif
 
     allocate(self%mat_B(nRows,nCols,nBlocks))
     allocate(self%mat_X(nRows,nCols,nBlocks))
 
-    nRows = lmmaxd
+    nRows = lmmaxd ! here we can introduce memory alignment
     nCols = lmmaxd
     nBlocks = size(self%bsr_A%ColIndex)
-    nLloyd = min(max(0, Lly), 1) ! for the energy derivative
+    nLloyd = min(max(0, Lly), 1) ! for the energy derivative needed in Lloyd''s formula
 
     allocate(self%mat_A(nRows,nCols,nBlocks,0:nLloyd)) ! allocate memory for the KKR operator
-    
+
   endsubroutine ! create
 
 
@@ -108,25 +110,22 @@ module KKROperator_mod
   !----------------------------------------------------------------------------
   !> Applies Operator on mat_X and returns result in mat_AX.
   subroutine multiply_KKROperator(self, mat_X, mat_AX, nFlops)
+    use vbrmv_mat_mod, only: bsr_times_mat
+    use bsrmm_mod, only: bsr_times_bsr
+    
     type(KKROperator) :: self
     double complex, intent(in)  :: mat_X(:,:,:)
     double complex, intent(out) :: mat_AX(:,:,:)
     integer(kind=8), intent(inout) :: nFlops
 
-    ! perform bsr_A VBR matrix * dense matrix
-    call multiply_vbr(self%mat_A(:,:,:,0), mat_X, mat_AX, self%bsr_A, nFlops)
+#ifndef useBSR
+    ! perform sparse VBR matrix * dense matrix
+    call bsr_times_mat(self%bsr_A%RowStart, self%bsr_A%ColIndex, self%mat_A(:,:,:,0), mat_X, mat_AX, nFlops)
+#else
+    ! perform BSR matrix * BSR matrix: bsr_times_bsr(Y, ia, ja, A, ix, jx, X, nFlops)
+    call bsr_times_bsr(mat_AX, self%bsr_A%RowStart, self%bsr_A%ColIndex, self%mat_A(:,:,:,0), self%bsr_X%RowStart, self%bsr_X%ColIndex, mat_X, nFlops)
+#endif
+
   endsubroutine ! apply
-
-  subroutine multiply_vbr(A, x, Ax, bsr_A, nFlops)
-    use vbrmv_mat_mod, only: bsr_times_mat
-    use SparseMatrixDescription_mod, only: SparseMatrixDescription
-    double complex, intent(in)  :: A(:,:,:), x(:,:,:)
-    double complex, intent(out) :: Ax(:,:,:)
-    type(SparseMatrixDescription), intent(in) :: bsr_A ! BSR matrix structure
-    integer(kind=8), intent(inout) :: nFlops
-
-    call bsr_times_mat(bsr_A%RowStart, bsr_A%ColIndex, A, x, Ax, nFlops)
-
-  endsubroutine ! multiply_vbr
-
+  
 endmodule ! KKROperator_mod

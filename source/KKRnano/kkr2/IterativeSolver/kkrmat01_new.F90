@@ -134,7 +134,7 @@ module kkrmat_mod
                      solver_type)
 
       do ila = 1, num_local_atoms
-        call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), ila) ! extract solution
+        call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), ila, op%bsr_X) ! extract solution
 
         ! ----------- Integrate Scattering Path operator over k-points --> GS -----
         ! Note: here k-integration only in irreducible wedge
@@ -188,25 +188,32 @@ module kkrmat_mod
   !------------------------------------------------------------------------------
   !> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
   !> dependent on (k,E) into matrix G_diag
-  subroutine getGreenDiag(G_diag, mat_X, atom_index, iRHS)
-    double complex, intent(out) :: G_diag(:,:) ! dim(lmsmaxd,lmsmax)
-    double complex, intent(in) :: mat_X(:,:,:) !> dim(lmsmaxd,lmsmax*nRHS,nrows) ToDo: dim(lmsmaxd,lmsmax,nnzb)
-    integer(kind=2), intent(in) :: atom_index 
-    integer, intent(in) :: iRHS 
+  subroutine getGreenDiag(G_diag, mat_X, atom_index, iRHS, bsr_X)
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription, exists
+    double complex, intent(out) :: G_diag(:,:) ! dim(lmsd,lmsd)
+    double complex, intent(in) :: mat_X(:,:,:) !> dim(lmsa,lmsd*nRHS,nrows) with useBSR: dim(lmsa,lmsd,nnzb)
+    integer(kind=2), intent(in) :: atom_index
+    integer, intent(in) :: iRHS
+    type(SparseMatrixDescription), intent(in) :: bsr_X
 
-    integer :: lmsmax
+    integer :: lmsd, Xind, row
     !                                      nn
     !         Copy the diagonal elements G_LL' of the Green's-function,
     !         dependent on (k,E) into matrix G_diag
     !         (n = n' = atom_index)
-    lmsmax = size(mat_X, 1)
-    ASSERT( lmsmax == size(G_diag, 1))
-    ASSERT( lmsmax == size(G_diag, 2))
-    ASSERT( 1 <= iRHS .and. iRHS <= size(mat_X, 2)/lmsmax )
-
+    lmsd = size(mat_X, 1)
+    ASSERT( lmsd == size(G_diag, 1))
+    ASSERT( lmsd == size(G_diag, 2))
     G_diag = ZERO
-    G_diag(1:lmsmax,1:lmsmax) = mat_X(1:lmsmax,(iRHS - 1)*lmsmax + 1:iRHS*lmsmax,atom_index)
-
+#ifndef useBSR
+    ASSERT( 1 <= iRHS .and. iRHS <= size(mat_X, 2)/lmsd )
+    G_diag(:,:) = mat_X(:lmsd,(iRHS - 1)*lmsd + 1:iRHS*lmsd,atom_index)
+#else
+    row = atom_index
+    Xind = exists(bsr_X, row, col=iRHS)
+    if (Xind < 1) die_here("diagonal element not contained in X, row="-row-", col="-iRHS)
+    G_diag(:,:) = mat_X(:lmsd,:,Xind)
+#endif
   endsubroutine ! getGreenDiag
 
   !------------------------------------------------------------------------------
@@ -220,7 +227,7 @@ module kkrmat_mod
                        mssq, dtde, dGinp, bztr2, volcub, ikpoint, &
                        global_atom_idx_lly, Lly, solver_type) !LLY
 
-    use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertToFullMatrix
+    use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertBSRToFullMatrix, convertFullMatrixToBSR
     use fillKKRMatrix_mod, only: dump
     use IterativeSolver_mod, only: IterativeSolver, solve
     use SparseMatrixDescription_mod, only: dump
@@ -235,7 +242,7 @@ module kkrmat_mod
     type(KKROperator), intent(inout) :: op
     type(BCPOperator), intent(inout) :: preconditioner
     double precision, intent(in) :: kpoint(3)
-    double complex, intent(in) :: tmatLL(:,:,:)
+    double complex, intent(in) :: tmatLL(:,:,:) !> tmatLL(lmsd,lmsd,naez_trc)
     double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,N) where N=num_local_atoms or naez_trc if defined(SPLIT_REFERENCE_FOURIER_COM)
     double precision, intent(in) :: alat
     double precision, intent(in)  :: RR(:,0:)
@@ -246,7 +253,7 @@ module kkrmat_mod
     ! LLY
     double complex, intent(in)         :: mssq(:,:,:)    !< inverted T-matrix
     double complex, intent(in)         :: dtde(:,:,:)     !< energy derivative of T-matrix
-    double complex, intent(in)         :: dGinp(:,:,:,:)  !< dG_ref/dE dim(lmmaxd,lmmaxd,naclsd,N) where N=num_local_atoms or naez_trc if defined(SPLIT_REFERENCE_FOURIER_COM)
+    double complex, intent(in)         :: dGinp(:,:,:,:)  !< dG_ref/dE dim(lmmaxd,lmmaxd,naclsd,N), compare N from above
     double complex, intent(out)        :: bztr2
     double precision, intent(in)       :: volcub (:)
     integer, intent(in)                :: ikpoint 
@@ -265,7 +272,7 @@ module kkrmat_mod
     
 #define cluster op%cluster_info
     lmmaxd = op%lmmaxd
-    naez = op%naez
+    naez = size(tmatLL, 3) ! number of atoms in the unified truncation zones
     nacls = cluster%naclsd
 
 
@@ -330,8 +337,8 @@ module kkrmat_mod
 
       TESTARRAYLOG(3, op%mat_A(:,:,:,Lly))
 
-      call convertToFullMatrix(op%mat_A(:,:,:,0),   op%bsr_A%RowStart, op%bsr_A%ColIndex, gllke_x)
-      call convertToFullMatrix(op%mat_A(:,:,:,Lly), op%bsr_A%RowStart, op%bsr_A%ColIndex, dgde) 
+      call convertBSRToFullMatrix(op%mat_A(:,:,:,0),   op%bsr_A, gllke_x)
+      call convertBSRToFullMatrix(op%mat_A(:,:,:,Lly), op%bsr_A, dgde) 
 
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
@@ -374,8 +381,9 @@ module kkrmat_mod
     !    solve (1 - \Delta t * G_ref) X = \Delta t
     !    the solution X is the scattering path operator
 
-    call buildRightHandSide(op%mat_B, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
-!   call buildRightHandSide(op%mat_B, op%atom_indices) ! construct RHS as unity
+    ! ToDo: use bsr_B instead of bsr_X
+    call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
+!   call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices) ! construct RHS as unity
 
     if (iguess_data%prec == 1) then
       solver%initial_zero = .false.
@@ -389,38 +397,52 @@ module kkrmat_mod
     selectcase(solver_type)
     case (4) ! direct solution with LAPACK, should only be used for small systems
 
+#ifndef useBSR
       nB = size(op%mat_X, 3)
       n  = size(op%mat_A, 2)*nB
       Bd = size(op%mat_A, 1)
       nRHSs = size(op%mat_X, 2)
       ASSERT( nRHSs == size(op%mat_B, 2) )
       ASSERT( nB    == size(op%mat_B, 3) )
-      
+#else
+      Bd = size(op%mat_A, 2)
+      n =     Bd*op%bsr_A%nRows
+      nRHSs = Bd*op%bsr_X%nCols
+#endif
+
       if (any(shape(full_A) /= [n,n])) then
         deallocate(full_A, full_X, stat=ist) ! ignore status
         allocate(full_A(n,n), full_X(n,nRHSs), stat=ist)
         if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
-      call convertToFullMatrix(op%mat_A(:,:,:,0), op%bsr_A%RowStart, op%bsr_A%ColIndex, full_A)
+      call convertBSRToFullMatrix(op%mat_A(:,:,:,0), op%bsr_A, full_A)
       TESTARRAYLOG(3, full_A)
-      
-      ! convertToFullMatrix op%mat_B to full_B
+
+      ! convert op%mat_B to full_B
+#ifndef useBSR
       do i = 1, nB
         full_X(Bd*(i - 1) + 1:Bd*i,:) = op%mat_B(:,:,i)
       enddo ! i
+#else
+      call convertBSRToFullMatrix(op%mat_B, op%bsr_X, full_X)
+#endif
 
       ist = solveFull(full_A, full_X) ! on entry, full_X contains mat_B, compute the direct solution using LAPACK
       if (ist /= 0) die_here("failed to directly invert a matrix of dim"+n+"with"+nRHSs+"right hand sides!")
       
       ! convert back full_X to op%mat_X
+#ifndef useBSR
       do i = 1, nB
         op%mat_X(:,:,i) = full_X(Bd*(i - 1) + 1:Bd*i,:) 
       enddo ! i
+#else
+      call convertFullMatrixToBSR(op%mat_X, op%bsr_X, full_X)
+#endif
 
     case (0, 3) ! iterative solver
       if(solver_type == 0) warn(6, "solver_type ="+solver_type+"is deprecated, please use 3")
 
-      call solve(solver, op%mat_X, op%mat_B) ! use iterative solver
+      call solve(solver)!, op%mat_X, op%mat_B) ! use iterative solver
 
 #ifdef DEBUG_dump_matrix
         call dump(op%bsr_A, "matrix_descriptor.dat") ! SparseMatrixDescription
@@ -515,7 +537,7 @@ module kkrmat_mod
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
-    integer, intent(in) :: nacls(:)
+    integer, intent(in) :: nacls(:) ! dim(naez_trc)
     integer(kind=2), intent(in) :: atom(:,:)
     integer, intent(in) :: numn0(:)
     integer(kind=2), intent(in) :: indn0(:,:)

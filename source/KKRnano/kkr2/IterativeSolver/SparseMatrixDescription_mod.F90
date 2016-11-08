@@ -1,7 +1,7 @@
 module SparseMatrixDescription_mod
   implicit none
   private
-  public :: SparseMatrixDescription, create, destroy, dump
+  public :: SparseMatrixDescription, create, destroy, dump, exists
   
   !> description of a (square) block sparse matrix structure in Block Spare Row (BSR) format
   !
@@ -17,8 +17,6 @@ module SparseMatrixDescription_mod
     integer, allocatable :: RowStart(:) !> dim(nRows + 1)
     !> Column-indices of non-zero blocks
     integer, allocatable :: ColIndex(:) !> dim(nnzb)
-!     !> block dimension
-!     integer :: BlockDim = 0
   endtype
 
   interface create
@@ -34,6 +32,26 @@ module SparseMatrixDescription_mod
   endinterface
 
   contains
+
+  integer function exists(bsr, row, col) result(Ind)
+    type(SparseMatrixDescription), intent(in) :: bsr
+    integer, intent(in) :: row, col
+
+    Ind = BSR_entry_exists(bsr%RowStart, bsr%Colindex, row, col)
+    
+  endfunction ! exists
+  
+  integer function BSR_entry_exists(RowStart, Colindex, row, col) result(Ind)
+    integer, intent(in) :: RowStart(:), ColIndex(:), row, col
+
+    ! ToDo: the ColIndex list should be sorted ascendingly, so bisection search will be faster
+    do Ind = RowStart(row), RowStart(row + 1) - 1
+      if (ColIndex(Ind) == col) return ! Ind
+    enddo ! Ind
+    Ind = -1 ! not found
+    
+  endfunction ! exists
+
 
   !----------------------------------------------------------------------------
   !> Creates SparseMatrixDescription object.

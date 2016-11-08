@@ -58,54 +58,59 @@ module IterativeSolver_mod
   !>
   !> The workspace is allocated on demand and stays allocated.
   !> Deallocate with call IterativeSolver%destroy
-  subroutine solve_with_solver(self, mat_X, mat_B)
+  subroutine solve_with_solver(self)
     use TFQMR_mod, only: solve
     use SolverStats_mod, only: reduce
-    type(IterativeSolver) :: self
-    double complex, intent(inout) :: mat_X(:,:,:)
-    double complex, intent(in)    :: mat_B(:,:,:)
+    type(IterativeSolver), intent(inout) :: self
 
     integer :: nrow, ncol, iterations_needed, nvecs, ist, nnzb
     double precision :: largest_residual
     integer(kind=8) :: nFlops
 
+    if (.not. associated(self%op)) stop "IterativeSolver error: No matrix/operator set."
+    
+    ! adopt the dimensions of mat_X
+#define mat_X self%op%mat_X    
+#define mat_B self%op%mat_B
     nrow = size(mat_X, 1)
     ncol = size(mat_X, 2)
     nnzb = size(mat_X, 3)
 
-    nvecs = 7; if(self%use_precond) nvecs = nvecs+1 ! need only 7 without preconditioning
+    nvecs = 7 ; if(self%use_precond) nvecs = nvecs + 1 ! need one more for preconditioning
     if (any(shape(self%vecs) /= [nrow,ncol,nnzb,nvecs])) then
+      ! resize
       deallocate(self%vecs, stat=ist) ! ignore status
       allocate(self%vecs(nrow,ncol,nnzb,nvecs), stat=ist)
-      
       if (ist /= 0) then
-        write(*,*) "IterativeSolver error: (Re-)Allocation of workspace failed! requested ",(nrow/1024.)*(ncol/1024.)*(nnzb/1024.)*(nvecs*16.)," GiByte" ! 16 Byte per dp-complex
+        write(*,*) "IterativeSolver error: (Re-)Allocation of workspace failed! requested ", &
+         (nrow/1024.)*(ncol/1024.)*(nnzb/1024.)*(nvecs*16.)," GiByte" ! 16 Byte per dp-complex
         stop
-      endif
-      
-    endif
+      endif ! failed
+    endif ! needs resize
 
-    if (.not. associated(self%op)) then
-      write(*,*) "IterativeSolver error: No matrix/operator set."
-      stop
-    endif
-
-    nFlops = 0    
-    call solve(self%op, mat_X, mat_B, self%qmrbound, ncol, nrow, &
+#ifdef useBSR
+#define nRHSs self%op%bsr_X%nCols
+#else
+#define nRHSs 1
+#endif
+    
+    nFlops = 0
+    ! call TFQMR solver
+    call solve(self%op, mat_X, mat_B, self%qmrbound, ncol, nRHSs, &
                self%initial_zero, self%precond, self%use_precond, &
                self%vecs, iterations_needed, largest_residual, nFlops)
 
     call reduce(self%stats, iterations_needed, largest_residual, nFlops)
   endsubroutine ! solve
-  
+
   !----------------------------------------------------------------------------
   elemental subroutine destroy_solver(self)
     type(IterativeSolver), intent(inout) :: self
     
     integer :: ist ! ignore status
     deallocate(self%vecs, stat=ist)
-    nullify(self%op)
     nullify(self%precond)
+    nullify(self%op)
   endsubroutine ! destroy
   
 endmodule ! IterativeSolver_mod
