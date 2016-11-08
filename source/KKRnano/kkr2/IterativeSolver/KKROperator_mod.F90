@@ -81,7 +81,7 @@ module KKROperator_mod
 
     nRows = lmmaxd ! here we can introduce memory alignment
     nCols = lmmaxd
-    nBlocks = size(self%bsr_A%ColIndex)
+    nBlocks = self%bsr_A%nnzb
     nLloyd = min(max(0, Lly), 1) ! for the energy derivative needed in Lloyd''s formula
 
     allocate(self%mat_A(nRows,nCols,nBlocks,0:nLloyd)) ! allocate memory for the KKR operator
@@ -112,7 +112,7 @@ module KKROperator_mod
   subroutine multiply_KKROperator(self, mat_X, mat_AX, nFlops)
     use vbrmv_mat_mod, only: bsr_times_mat
     use bsrmm_mod, only: bsr_times_bsr
-    
+
     type(KKROperator) :: self
     double complex, intent(in)  :: mat_X(:,:,:)
     double complex, intent(out) :: mat_AX(:,:,:)

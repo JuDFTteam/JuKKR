@@ -46,6 +46,9 @@ module fillKKRMatrix_mod
         endif ! block is non-zero
 
       enddo ! jCol
+#ifndef NDEBUG
+!     write(0, '(i4,a,999i1)') iRow,"  ",lmax_a(iRow,:)+1
+#endif
     enddo ! iRow
     bsr_X%RowStart(bsr_X%nRows + 1) = Xind + 1 ! final, important since the ranges are always [RowStart(i) ... RowStart(i+1)-1]
     assert( Xind == bsr_X%nnzb ) ! check
@@ -159,7 +162,7 @@ module fillKKRMatrix_mod
     integer(kind=2), intent(in) :: atom_indices(:) !> truncation zone indices of the local atoms
     double complex, intent(in), optional :: tmatLL(:,:,:) !< dim(lmsd,lmsd,nRows)
 
-    integer :: iRHS, atom_index, lm2, lmsd
+    integer :: iRHS, atom_index, lm2, lmsd, Bind
 
     mat_B = ZERO
     lmsd  = size(tmatLL, 2)
@@ -171,19 +174,19 @@ module fillKKRMatrix_mod
     do iRHS = 1, size(atom_indices)
       atom_index = atom_indices(iRHS)
 #ifdef useBSR
-      atom_index = exists(bsr_B, row=atom_index, col=iRHS)
-      if (atom_index < 1) stop "fatal! bsr_B cannot find diagonal element"
-      
+      Bind = exists(bsr_B, row=atom_index, col=iRHS)
+      if (Bind < 1) stop "fatal! bsr_B cannot find diagonal element"
+
       if (present(tmatLL)) then
-        mat_B(:lmsd,:,atom_index) = tmatLL(:,:,atom_indices(iRHS))
+        mat_B(:lmsd,:,Bind) = tmatLL(:,:,atom_index)
       else
         do lm2 = 1, lmsd
-          mat_B(lm2,lm2,atom_index) = CONE ! set the block to a unity matrix
+          mat_B(lm2,lm2,Bind) = CONE ! set the block to a unity matrix
         enddo ! lm2
       endif
 #else
       if (present(tmatLL)) then
-        mat_B(:lsmd,lmsd*(iRHS - 1) + 1:lmsd*iRHS,atom_index) = tmatLL(:,:,atom_index)
+        mat_B(:lmsd,lmsd*(iRHS - 1) + 1:lmsd*iRHS,atom_index) = tmatLL(:,:,atom_index)
       else
         do lm2 = 1, lmsd
           mat_B(lm2,lm2 + lmsd*(iRHS - 1),atom_index) = CONE ! set the block to a unity matrix

@@ -93,7 +93,7 @@ module IterativeSolver_mod
 #else
 #define nRHSs 1
 #endif
-    
+
     nFlops = 0
     ! call TFQMR solver
     call solve(self%op, mat_X, mat_B, self%qmrbound, ncol, nRHSs, &

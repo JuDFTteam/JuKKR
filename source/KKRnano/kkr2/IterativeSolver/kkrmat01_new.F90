@@ -385,12 +385,6 @@ module kkrmat_mod
     call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
 !   call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices) ! construct RHS as unity
 
-    if (iguess_data%prec == 1) then
-      solver%initial_zero = .false.
-      call load(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
-    else
-      solver%initial_zero = .true.
-    endif
 
     call calc(preconditioner, op%mat_A(:,:,:,0)) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
 
@@ -420,21 +414,17 @@ module kkrmat_mod
 
       ! convert op%mat_B to full_B
 #ifndef useBSR
-      do i = 1, nB
-        full_X(Bd*(i - 1) + 1:Bd*i,:) = op%mat_B(:,:,i)
-      enddo ! i
+      full_X = 0 ; do i = 1, nB ; full_X(Bd*(i - 1) + 1:Bd*i,:) = op%mat_B(:,:,i) ; enddo ! i
 #else
       call convertBSRToFullMatrix(op%mat_B, op%bsr_X, full_X)
 #endif
 
       ist = solveFull(full_A, full_X) ! on entry, full_X contains mat_B, compute the direct solution using LAPACK
       if (ist /= 0) die_here("failed to directly invert a matrix of dim"+n+"with"+nRHSs+"right hand sides!")
-      
+
       ! convert back full_X to op%mat_X
 #ifndef useBSR
-      do i = 1, nB
-        op%mat_X(:,:,i) = full_X(Bd*(i - 1) + 1:Bd*i,:) 
-      enddo ! i
+      do i = 1, nB ; op%mat_X(:,:,i) = full_X(Bd*(i - 1) + 1:Bd*i,:) ; enddo ! i
 #else
       call convertFullMatrixToBSR(op%mat_X, op%bsr_X, full_X)
 #endif
@@ -442,7 +432,15 @@ module kkrmat_mod
     case (0, 3) ! iterative solver
       if(solver_type == 0) warn(6, "solver_type ="+solver_type+"is deprecated, please use 3")
 
-      call solve(solver)!, op%mat_X, op%mat_B) ! use iterative solver
+      ! only iterative solvers need an initial guess
+      if (iguess_data%prec == 1) then
+        solver%initial_zero = .false.
+        call load(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
+      else
+        solver%initial_zero = .true.
+      endif
+
+      call solve(solver) ! use iterative solver
 
 #ifdef DEBUG_dump_matrix
         call dump(op%bsr_A, "matrix_descriptor.dat") ! SparseMatrixDescription
@@ -453,19 +451,17 @@ module kkrmat_mod
         call dump(op%mat_B, "bin.rhs", formatted=.false.)
         call dump(op%mat_B, "rhs_form.dat", formatted=.true.)
 #endif
+
+      ! store the initial guess
+      call store(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
+
     case default
       warn(6, "No solver selected! Problem is not solved, solver_type ="+solver_type)
     endselect ! solver_type
     
     TESTARRAYLOG(3, op%mat_B)
-
-    ! store the initial guess in previously selected slot (selected with 'iguess_set_k_ind')
-    call store(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
-
     TESTARRAYLOG(3, op%mat_X)
-    
     ! RESULT: mat_X
-
 
     if (Lly == 1) then ! LLY
       !--------------------------------------------------------
