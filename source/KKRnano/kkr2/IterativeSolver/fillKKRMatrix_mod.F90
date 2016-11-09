@@ -10,7 +10,7 @@ module fillKKRMatrix_mod
   public :: getKKRMatrixStructure, buildKKRCoeffMatrix, buildRightHandSide, solveFull
   public :: dump
   public :: getKKRSolutionStructure
-  public :: convertBSRToFullMatrix, convertToFullMatrix, convertFullMatrixToBSR
+  public :: convertBSRToFullMatrix, convertToFullMatrix, convertFullMatrixToBSR, getGreenDiag
 
   double complex, parameter :: ZERO=(0.d0, 0.d0), CONE=(1.d0, 0.d0)
   
@@ -25,30 +25,46 @@ module fillKKRMatrix_mod
   subroutine getKKRSolutionStructure(lmax_a, bsr_X)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription, create
 
-    integer(kind=1), intent(in) :: lmax_a(:,:) !< lmax of each interaction dim(naez_trc,num_local_atoms)
+    integer(kind=1), intent(in) :: lmax_a(:,:) !< lmax of each interaction dim(naez_trc,num_local_atoms), -1: truncated
     type(SparseMatrixDescription), intent(inout) :: bsr_X
 
     integer :: iRow, jCol, Xind
+
+!   if (all(lmax_a >= 0)) then
+    warn(6, "X_mat will NOT be made rectangular!")
+    if (.false.) then
+!   if (all(lmax_a >= 0)) warn(6, "X_mat can be rectangular!")
+!     if (.true.) then
+!       warn(6, "X_mat will be made rectangular!")
+
+      call create(bsr_X, nRows=size(lmax_a, 1), nnzb=size(lmax_a, 1), nCols=1)
+
+      ! generate BSR descriptor of a flat structure, fuse RHS atoms into rectangular blocks
+      bsr_X%RowStart(:) = [(iRow, iRow = 1, bsr_X%nRows + 1)] ! start indices into ColIndex
+      bsr_X%ColIndex(:) = 1
+
+      return
+    endif
 
     call create(bsr_X, nRows=size(lmax_a, 1), nnzb=count(lmax_a >= 0), nCols=size(lmax_a, 2))
 
     assert( size(bsr_X%RowStart) == 1 + bsr_X%nRows )
     assert( size(bsr_X%ColIndex) == bsr_X%nnzb )
-    
+
     Xind = 0
     do iRow = 1, bsr_X%nRows
       bsr_X%RowStart(iRow) = Xind + 1 ! start indices into ColIndex
       do jCol = 1, bsr_X%nCols
 
-        if (lmax_a(iRow,jCol) >= 0) then ! sub-optimal indexing here
+        if (lmax_a(iRow,jCol) >= 0) then ! sub-optimal indexing into lmax_a here
           Xind = Xind + 1
           bsr_X%ColIndex(Xind) = jCol
         endif ! block is non-zero
 
       enddo ! jCol
-#ifndef NDEBUG
-!     write(0, '(i4,a,999i1)') iRow,"  ",lmax_a(iRow,:)+1
-#endif
+! #ifndef NDEBUG
+!       write(0, '(i6,a,999i1)') iRow,"  ",lmax_a(iRow,:)+1 ! beware: the iRow index is in internal representation
+! #endif
     enddo ! iRow
     bsr_X%RowStart(bsr_X%nRows + 1) = Xind + 1 ! final, important since the ranges are always [RowStart(i) ... RowStart(i+1)-1]
     assert( Xind == bsr_X%nnzb ) ! check
@@ -65,7 +81,7 @@ module fillKKRMatrix_mod
     integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0),nRows) column indices of non-zero elements per row
     type(SparseMatrixDescription), intent(out) :: bsr_A
 
-    integer :: Aind, iRow, icol, jCol
+    integer :: Aind, iRow, iacls, jCol
 
     call create(bsr_A, nRows=size(numn0), nnzb=sum(numn0)) ! nCols==nRows by default
 
@@ -76,17 +92,17 @@ module fillKKRMatrix_mod
     Aind = 0
     do iRow = 1, bsr_A%nRows
       bsr_A%RowStart(iRow) = Aind + 1 ! start indices into ColIndex
-      do icol = 1, numn0(iRow)
+      do iacls = 1, numn0(iRow)
         assert( Aind < bsr_A%nnzb )
 
-        assert( icol <= size(indn0, 1) )
-        jCol = indn0(icol,iRow)
+        assert( iacls <= size(indn0, 1) )
+        jCol = indn0(iacls,iRow)
         assert( 1 <= jCol .and. jCol <= bsr_A%nCols )
 
         Aind = Aind + 1
         bsr_A%ColIndex(Aind) = jCol
 
-      enddo ! icol
+      enddo ! iacls
     enddo ! iRow
     bsr_A%RowStart(bsr_A%nRows + 1) = Aind + 1 ! final, important since the ranges are always [RowStart(i) ... RowStart(i+1)-1]
     assert( Aind == bsr_A%nnzb ) ! check
@@ -162,7 +178,7 @@ module fillKKRMatrix_mod
     integer(kind=2), intent(in) :: atom_indices(:) !> truncation zone indices of the local atoms
     double complex, intent(in), optional :: tmatLL(:,:,:) !< dim(lmsd,lmsd,nRows)
 
-    integer :: iRHS, atom_index, lm2, lmsd, Bind
+    integer :: iRHS, atom_index, lm2, lmsd, Bind, nRHS_group, iRHS_group, ing
 
     mat_B = ZERO
     lmsd  = size(tmatLL, 2)
@@ -170,69 +186,112 @@ module fillKKRMatrix_mod
     assert( size(mat_B, 1)  >= lmsd )
 !   assert( size(mat_B, 2)  == lmsd ) ! <future>
     assert( modulo(size(mat_B, 2), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
+    nRHS_group = size(mat_B, 2) / lmsd ! integer division should be exact
+    assert( nRHS_group >= 1 )
 
     do iRHS = 1, size(atom_indices)
       atom_index = atom_indices(iRHS)
-#ifdef useBSR
-      Bind = exists(bsr_B, row=atom_index, col=iRHS)
+      iRHS_group = (iRHS - 1)/nRHS_group  + 1
+      ing = modulo((iRHS - 1),nRHS_group) + 1
+! #ifdef useBSR
+      Bind = exists(bsr_B, row=atom_index, col=iRHS_group) ! find index in BSR structure
+! #else
+!       Bind = atom_index ! we have rectangular storage
+! #endif
       if (Bind < 1) stop "fatal! bsr_B cannot find diagonal element"
-
       if (present(tmatLL)) then
-        mat_B(:lmsd,:,Bind) = tmatLL(:,:,atom_index)
+        mat_B(:lmsd,lmsd*(ing - 1) + 1:lmsd*ing,Bind) = tmatLL(:,:,atom_index)
       else
         do lm2 = 1, lmsd
-          mat_B(lm2,lm2,Bind) = CONE ! set the block to a unity matrix
+          mat_B(lm2,lm2 + lmsd*(ing - 1),Bind) = CONE ! set the block to a unity matrix
         enddo ! lm2
       endif
-#else
-      if (present(tmatLL)) then
-        mat_B(:lmsd,lmsd*(iRHS - 1) + 1:lmsd*iRHS,atom_index) = tmatLL(:,:,atom_index)
-      else
-        do lm2 = 1, lmsd
-          mat_B(lm2,lm2 + lmsd*(iRHS - 1),atom_index) = CONE ! set the block to a unity matrix
-        enddo ! lm2
-      endif
-#endif
     enddo ! iRHS
-
+    
   endsubroutine ! buildRightHandSide
 
 
   
-  subroutine convertBSRToFullMatrix(smat, bsr, full)
+  !------------------------------------------------------------------------------
+  !> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
+  !> dependent on (k,E) into matrix G_diag
+  subroutine getGreenDiag(G_diag, mat_X, bsr_X, atom_index, iRHS)
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription, exists
+    double complex, intent(out) :: G_diag(:,:) ! dim(lmsd,lmsd)
+    double complex, intent(in) :: mat_X(:,:,:) !> dim(lmsa,lmsd*nRHS_group,nnzb)
+    type(SparseMatrixDescription), intent(in) :: bsr_X
+    integer(kind=2), intent(in) :: atom_index
+    integer, intent(in) :: iRHS
+
+    integer :: lmsd, Xind, row, nRHS_group, iRHS_group, ing
+    !                                      nn
+    !         Copy the diagonal elements G_LL' of the Green's-function,
+    !         dependent on (k,E) into matrix G_diag
+    !         (n = n' = atom_index)
+    
+    row = atom_index ! convert from integer(kind=2) to default integer
+
+    lmsd = size(G_diag, 2)
+    assert( lmsd == size(G_diag, 1) )
+    assert( lmsd == size(mat_X, 1) )
+    
+    assert( modulo(size(mat_X, 2), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
+    nRHS_group = size(mat_X, 2) / lmsd ! integer division should be exact
+    assert( nRHS_group >= 1 )
+    
+    
+      iRHS_group = (iRHS - 1)/nRHS_group  + 1
+      ing = modulo((iRHS - 1),nRHS_group) + 1
+      Xind = exists(bsr_X, row, col=iRHS_group) ! find index in BSR structure
+      if (Xind < 1) die_here("diagonal element not contained in X, row="-row-", col="-iRHS)
+
+    G_diag = ZERO
+    G_diag(:,:) = mat_X(:lmsd,(ing - 1)*lmsd + 1:lmsd*ing,Xind)
+! #ifndef useBSR
+!     assert( 1 <= iRHS .and. iRHS <= size(mat_X, 2)/lmsd )
+!     G_diag(:,:) = mat_X(:lmsd,(iRHS - 1)*lmsd + 1:lmsd*iRHS,atom_index)
+! #else
+!     Xind = exists(bsr_X, row, col=iRHS)
+!     G_diag(:,:) = mat_X(:lmsd,:,Xind)
+! #endif
+  endsubroutine ! getGreenDiag
+  
+  
+  subroutine convertBSRToFullMatrix(full, bsr, smat)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
   
-    double complex, intent(in) :: smat(:,:,:) !< dim(lmsa,lmsd,nnzb)
-    type(SparseMatrixDescription), intent(in) :: bsr
     double complex, intent(out) :: full(:,:)
+    type(SparseMatrixDescription), intent(in) :: bsr
+    double complex, intent(in) :: smat(:,:,:) !< dim(lmsa,lmsd,nnzb)
     
-    call convertToFullMatrix(smat, bsr%RowStart, bsr%ColIndex, full)
+    call convertToFullMatrix(full, bsr%RowStart, bsr%ColIndex, smat)
     
   endsubroutine
   
   !----------------------------------------------------------------------------
   !> Given the sparse matrix data 'smat' and the sparsity information,
   !> create the dense matrix representation of the matrix.
-  subroutine convertToFullMatrix(smat, RowStart, ColIndex, full)
+  subroutine convertToFullMatrix(full, RowStart, ColIndex, smat)
   
-    double complex, intent(in) :: smat(:,:,:) !< dim(lmsa,lmsd,nnzb)
+    double complex, intent(out) :: full(:,:) !< dim(lmsa*nRows,lmsd*nCols)
     integer, intent(in) :: RowStart(:) !> dim(nRows + 1)
     integer, intent(in) :: ColIndex(:) !> dim(nnzb)
-    double complex, intent(out) :: full(:,:)
+    double complex, intent(in) :: smat(:,:,:) !< dim(lmsa,lmsd,nnzb)
 
-    integer :: iRow, jCol, Aind, lmsd
+    integer :: iRow, jCol, Aind, lmsd, lmsa
 
     full = ZERO
 
+    lmsa = size(smat, 1)
     lmsd = size(smat, 2)
-    assert( size(smat, 1) == lmsd )
+!   assert( lmsd == size(smat, 1) ) ! does not hold if we use this method also to convert X_mat with rectangular (non-square) blocks that originate from grouping
     assert( size(ColIndex) == size(smat, 3) )
 
     do iRow = 1, size(RowStart) - 1
       do Aind = RowStart(iRow), RowStart(iRow+1) - 1
         jCol = ColIndex(Aind)
 
-        full(lmsd*(iRow - 1) + 1:lmsd*iRow,lmsd*(jCol - 1) + 1:lmsd*jCol) = smat(1:lmsd,:,Aind)
+        full(lmsa*(iRow - 1) + 1:lmsa*iRow,lmsd*(jCol - 1) + 1:lmsd*jCol) = smat(1:lmsa,:,Aind)
 
       enddo ! Aind
     enddo ! iRow
@@ -268,7 +327,6 @@ module fillKKRMatrix_mod
     deallocate(ipvt, stat=info)
   endfunction ! solveFull
   
-  
   subroutine convertFullMatrixToBSR(smat, bsr, full)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
   
@@ -290,19 +348,19 @@ module fillKKRMatrix_mod
     integer, intent(in) :: ColIndex(:) !> dim(nnzb)
     double complex, intent(in) :: full(:,:)
 
-    integer :: iRow, jCol, Aind, lmsd
+    integer :: iRow, jCol, Aind, lmsd, lmsa
 
     smat = ZERO
 
+    lmsa = size(smat, 1)
     lmsd = size(smat, 2)
-    assert( size(smat, 1) == lmsd )
     assert( size(ColIndex) == size(smat, 3) )
 
     do iRow = 1, size(RowStart) - 1
       do Aind = RowStart(iRow), RowStart(iRow+1) - 1
         jCol = ColIndex(Aind)
 
-        smat(1:lmsd,:,Aind) = full(lmsd*(iRow - 1) + 1:lmsd*iRow,lmsd*(jCol - 1) + 1:lmsd*jCol)
+        smat(1:lmsa,:,Aind) = full(lmsa*(iRow - 1) + 1:lmsa*iRow,lmsd*(jCol - 1) + 1:lmsd*jCol)
 
       enddo ! Aind
     enddo ! iRow

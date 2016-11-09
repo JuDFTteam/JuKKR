@@ -44,6 +44,7 @@ module kkrmat_mod
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
     use TimerMpi_mod, only: TimerMpi, startTimer, stopTimer
+    use fillKKRMatrix_mod, only: getGreenDiag ! retrieve result
     use MPI, only: MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD!, MPI_Allreduce 
 
     type(IterativeSolver), intent(inout) :: solver
@@ -134,7 +135,7 @@ module kkrmat_mod
                      solver_type)
 
       do ila = 1, num_local_atoms
-        call getGreenDiag(G_diag, op%mat_X, op%atom_indices(ila), ila, op%bsr_X) ! extract solution
+        call getGreenDiag(G_diag, op%mat_X, op%bsr_X, op%atom_indices(ila), ila) ! extract solution
 
         ! ----------- Integrate Scattering Path operator over k-points --> GS -----
         ! Note: here k-integration only in irreducible wedge
@@ -183,38 +184,6 @@ module kkrmat_mod
 
   endsubroutine ! kkrmat01
 
-
-
-  !------------------------------------------------------------------------------
-  !> Copy the diagonal elements G_{LL'}^{nn'} of the Green's-function,
-  !> dependent on (k,E) into matrix G_diag
-  subroutine getGreenDiag(G_diag, mat_X, atom_index, iRHS, bsr_X)
-    use SparseMatrixDescription_mod, only: SparseMatrixDescription, exists
-    double complex, intent(out) :: G_diag(:,:) ! dim(lmsd,lmsd)
-    double complex, intent(in) :: mat_X(:,:,:) !> dim(lmsa,lmsd*nRHS,nrows) with useBSR: dim(lmsa,lmsd,nnzb)
-    integer(kind=2), intent(in) :: atom_index
-    integer, intent(in) :: iRHS
-    type(SparseMatrixDescription), intent(in) :: bsr_X
-
-    integer :: lmsd, Xind, row
-    !                                      nn
-    !         Copy the diagonal elements G_LL' of the Green's-function,
-    !         dependent on (k,E) into matrix G_diag
-    !         (n = n' = atom_index)
-    lmsd = size(mat_X, 1)
-    ASSERT( lmsd == size(G_diag, 1))
-    ASSERT( lmsd == size(G_diag, 2))
-    G_diag = ZERO
-#ifndef useBSR
-    ASSERT( 1 <= iRHS .and. iRHS <= size(mat_X, 2)/lmsd )
-    G_diag(:,:) = mat_X(:lmsd,(iRHS - 1)*lmsd + 1:iRHS*lmsd,atom_index)
-#else
-    row = atom_index
-    Xind = exists(bsr_X, row, col=iRHS)
-    if (Xind < 1) die_here("diagonal element not contained in X, row="-row-", col="-iRHS)
-    G_diag(:,:) = mat_X(:lmsd,:,Xind)
-#endif
-  endsubroutine ! getGreenDiag
 
   !------------------------------------------------------------------------------
   !> Calculate scattering path operator for 'kpoint'.
@@ -265,7 +234,7 @@ module kkrmat_mod
     double complex :: tracek, gtdPdE ! LLY
 
     integer :: naez, nacls, alm, lmmaxd, nRHSs, ist, matrix_index, lm1, lm2, lm3, il1
-    integer :: i, n, nB, Bd
+    integer :: n, Bd!, nB, i
     double complex :: cfctorinv
 
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
@@ -337,8 +306,8 @@ module kkrmat_mod
 
       TESTARRAYLOG(3, op%mat_A(:,:,:,Lly))
 
-      call convertBSRToFullMatrix(op%mat_A(:,:,:,0),   op%bsr_A, gllke_x)
-      call convertBSRToFullMatrix(op%mat_A(:,:,:,Lly), op%bsr_A, dgde) 
+      call convertBSRToFullMatrix(gllke_x, op%bsr_A, op%mat_A(:,:,:,0))
+      call convertBSRToFullMatrix(   dgde, op%bsr_A, op%mat_A(:,:,:,Lly))
 
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
@@ -391,43 +360,43 @@ module kkrmat_mod
     selectcase(solver_type)
     case (4) ! direct solution with LAPACK, should only be used for small systems
 
-#ifndef useBSR
-      nB = size(op%mat_X, 3)
-      n  = size(op%mat_A, 2)*nB
-      Bd = size(op%mat_A, 1)
-      nRHSs = size(op%mat_X, 2)
-      ASSERT( nRHSs == size(op%mat_B, 2) )
-      ASSERT( nB    == size(op%mat_B, 3) )
-#else
+! #ifndef useBSR
+!       nB = size(op%mat_X, 3)
+!       n  = size(op%mat_A, 2)*nB
+!       Bd = size(op%mat_A, 1)
+!       nRHSs = size(op%mat_X, 2)
+!       ASSERT( nRHSs == size(op%mat_B, 2) )
+!       ASSERT( nB    == size(op%mat_B, 3) )
+! #else
       Bd = size(op%mat_A, 2)
-      n =     Bd*op%bsr_A%nRows
-      nRHSs = Bd*op%bsr_X%nCols
-#endif
+      n =  Bd*op%bsr_A%nRows
+      nRHSs = op%bsr_X%nCols*size(op%mat_X, 2)
+! #endif
 
       if (any(shape(full_A) /= [n,n])) then
         deallocate(full_A, full_X, stat=ist) ! ignore status
         allocate(full_A(n,n), full_X(n,nRHSs), stat=ist)
         if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
       endif
-      call convertBSRToFullMatrix(op%mat_A(:,:,:,0), op%bsr_A, full_A)
+      call convertBSRToFullMatrix(full_A, op%bsr_A, op%mat_A(:,:,:,0))
       TESTARRAYLOG(3, full_A)
 
       ! convert op%mat_B to full_B
-#ifndef useBSR
-      full_X = 0 ; do i = 1, nB ; full_X(Bd*(i - 1) + 1:Bd*i,:) = op%mat_B(:,:,i) ; enddo ! i
-#else
-      call convertBSRToFullMatrix(op%mat_B, op%bsr_X, full_X)
-#endif
+! #ifndef useBSR
+!       full_X = 0 ; do i = 1, nB ; full_X(Bd*(i - 1) + 1:Bd*i,:) = op%mat_B(:,:,i) ; enddo ! i
+! #else
+      call convertBSRToFullMatrix(full_X, op%bsr_X, op%mat_B)
+! #endif
 
       ist = solveFull(full_A, full_X) ! on entry, full_X contains mat_B, compute the direct solution using LAPACK
       if (ist /= 0) die_here("failed to directly invert a matrix of dim"+n+"with"+nRHSs+"right hand sides!")
 
       ! convert back full_X to op%mat_X
-#ifndef useBSR
-      do i = 1, nB ; op%mat_X(:,:,i) = full_X(Bd*(i - 1) + 1:Bd*i,:) ; enddo ! i
-#else
+! #ifndef useBSR
+!       do i = 1, nB ; op%mat_X(:,:,i) = full_X(Bd*(i - 1) + 1:Bd*i,:) ; enddo ! i
+! #else
       call convertFullMatrixToBSR(op%mat_X, op%bsr_X, full_X)
-#endif
+! #endif
 
     case (0, 3) ! iterative solver
       if(solver_type == 0) warn(6, "solver_type ="+solver_type+"is deprecated, please use 3")

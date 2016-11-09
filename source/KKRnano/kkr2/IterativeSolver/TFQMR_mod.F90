@@ -78,13 +78,7 @@ module TFQMR_mod
     integer :: sparse_mult_count, res_probe_count ! count number of residual calculations
     integer(kind=8) :: mFlops
 
-#ifdef useBSR
 #define ColIndices op%bsr_X%ColIndex
-#else
-    column_index_t, allocatable :: ColIndices(:)
-    allocate(ColIndices(op%bsr_A%nRows))
-    ColIndices(:) = 1
-#endif
 
     mFlops = 0
     tfqmr_status = 0

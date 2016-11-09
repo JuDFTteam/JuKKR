@@ -13,7 +13,8 @@ BUILDDIR = $(HOME)/build
 EXTRA_FLAGS =
 FC90FLAGS = 
 FCFLAGS =
-PPFLAGS = -D useBSR
+PPFLAGS = 
+# -D useBSR
 LDFLAGS =
 
 # ========= IFF Workstations ============

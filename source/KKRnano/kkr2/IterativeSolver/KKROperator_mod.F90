@@ -68,13 +68,12 @@ module KKROperator_mod
     call getKKRSolutionStructure(lmax_a_array, self%bsr_X)
 
     nRows = lmmaxd ! here we can introduce memory alignment
-#ifndef useBSR    
-    nCols = lmmaxd*size(atom_indices) ! rectangluar shaped -- does not conform with a correct parallelization of truncation
-    nBlocks = self%bsr_A%nRows
-#else
-    nCols = lmmaxd
+    if (self%bsr_X%nCols == 1) then
+      nCols = lmmaxd*size(atom_indices) ! rectangluar shaped -- does not conform with a correct parallelization of truncation for num_local_atoms > 1
+    else
+      nCols = lmmaxd
+    endif
     nBlocks = self%bsr_X%nnzb
-#endif
 
     allocate(self%mat_B(nRows,nCols,nBlocks))
     allocate(self%mat_X(nRows,nCols,nBlocks))
@@ -118,13 +117,11 @@ module KKROperator_mod
     double complex, intent(out) :: mat_AX(:,:,:)
     integer(kind=8), intent(inout) :: nFlops
 
-#ifndef useBSR
     ! perform sparse VBR matrix * dense matrix
-    call bsr_times_mat(self%bsr_A%RowStart, self%bsr_A%ColIndex, self%mat_A(:,:,:,0), mat_X, mat_AX, nFlops)
-#else
+!   call bsr_times_mat(self%bsr_A%RowStart, self%bsr_A%ColIndex, self%mat_A(:,:,:,0), mat_X, mat_AX, nFlops)
+
     ! perform BSR matrix * BSR matrix: bsr_times_bsr(Y, ia, ja, A, ix, jx, X, nFlops)
     call bsr_times_bsr(mat_AX, self%bsr_A%RowStart, self%bsr_A%ColIndex, self%mat_A(:,:,:,0), self%bsr_X%RowStart, self%bsr_X%ColIndex, mat_X, nFlops)
-#endif
 
   endsubroutine ! apply
   

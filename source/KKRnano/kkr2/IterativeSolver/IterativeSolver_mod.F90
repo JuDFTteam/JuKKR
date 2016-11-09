@@ -63,40 +63,30 @@ module IterativeSolver_mod
     use SolverStats_mod, only: reduce
     type(IterativeSolver), intent(inout) :: self
 
-    integer :: nrow, ncol, iterations_needed, nvecs, ist, nnzb
+    integer :: ndim(4), iterations_needed, ist
     double precision :: largest_residual
     integer(kind=8) :: nFlops
 
     if (.not. associated(self%op)) stop "IterativeSolver error: No matrix/operator set."
     
     ! adopt the dimensions of mat_X
-#define mat_X self%op%mat_X    
-#define mat_B self%op%mat_B
-    nrow = size(mat_X, 1)
-    ncol = size(mat_X, 2)
-    nnzb = size(mat_X, 3)
+    ndim(1:3) = shape(self%op%mat_X)
 
-    nvecs = 7 ; if(self%use_precond) nvecs = nvecs + 1 ! need one more for preconditioning
-    if (any(shape(self%vecs) /= [nrow,ncol,nnzb,nvecs])) then
+    ndim(4) = 7 ; if(self%use_precond) ndim(4) = ndim(4) + 1 ! need one more for preconditioning
+    if (any(shape(self%vecs) /= ndim)) then
       ! resize
       deallocate(self%vecs, stat=ist) ! ignore status
-      allocate(self%vecs(nrow,ncol,nnzb,nvecs), stat=ist)
+      allocate(self%vecs(ndim(1),ndim(2),ndim(3),ndim(4)), stat=ist)
       if (ist /= 0) then
         write(*,*) "IterativeSolver error: (Re-)Allocation of workspace failed! requested ", &
-         (nrow/1024.)*(ncol/1024.)*(nnzb/1024.)*(nvecs*16.)," GiByte" ! 16 Byte per dp-complex
+         product(ndim(1:3)/1024.)*(ndim(4)*16.)," GiByte" ! 16 Byte per dp-complex
         stop
       endif ! failed
     endif ! needs resize
 
-#ifdef useBSR
-#define nRHSs self%op%bsr_X%nCols
-#else
-#define nRHSs 1
-#endif
-
     nFlops = 0
     ! call TFQMR solver
-    call solve(self%op, mat_X, mat_B, self%qmrbound, ncol, nRHSs, &
+    call solve(self%op, self%op%mat_X, self%op%mat_B, self%qmrbound, ndim(2), self%op%bsr_X%nCols, &
                self%initial_zero, self%precond, self%use_precond, &
                self%vecs, iterations_needed, largest_residual, nFlops)
 
