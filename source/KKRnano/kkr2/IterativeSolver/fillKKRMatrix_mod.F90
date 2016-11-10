@@ -28,14 +28,15 @@ module fillKKRMatrix_mod
     integer(kind=1), intent(in) :: lmax_a(:,:) !< lmax of each interaction dim(naez_trc,num_local_atoms), -1: truncated
     type(SparseMatrixDescription), intent(inout) :: bsr_X
 
-    integer :: iRow, jCol, Xind
+    integer :: iRow, jCol, Xind, nnzb
+    
+    nnzb = count(lmax_a >= 0)
 
-!   if (all(lmax_a >= 0)) then
-    warn(6, "X_mat will NOT be made rectangular!")
+    if (nnzb == size(lmax_a)) then ! no element is truncated
+      warn(6, "X_mat will NOT be made rectangular, although it could!")
+    endif
     if (.false.) then
-!   if (all(lmax_a >= 0)) warn(6, "X_mat can be rectangular!")
-!     if (.true.) then
-!       warn(6, "X_mat will be made rectangular!")
+!     warn(6, "X_mat will be stored rectangular!")
 
       call create(bsr_X, nRows=size(lmax_a, 1), nnzb=size(lmax_a, 1), nCols=1)
 
@@ -46,7 +47,7 @@ module fillKKRMatrix_mod
       return
     endif
 
-    call create(bsr_X, nRows=size(lmax_a, 1), nnzb=count(lmax_a >= 0), nCols=size(lmax_a, 2))
+    call create(bsr_X, nRows=size(lmax_a, 1), nnzb=nnzb, nCols=size(lmax_a, 2))
 
     assert( size(bsr_X%RowStart) == 1 + bsr_X%nRows )
     assert( size(bsr_X%ColIndex) == bsr_X%nnzb )
@@ -193,11 +194,7 @@ module fillKKRMatrix_mod
       atom_index = atom_indices(iRHS)
       iRHS_group = (iRHS - 1)/nRHS_group  + 1
       ing = modulo((iRHS - 1),nRHS_group) + 1
-! #ifdef useBSR
       Bind = exists(bsr_B, row=atom_index, col=iRHS_group) ! find index in BSR structure
-! #else
-!       Bind = atom_index ! we have rectangular storage
-! #endif
       if (Bind < 1) stop "fatal! bsr_B cannot find diagonal element"
       if (present(tmatLL)) then
         mat_B(:lmsd,lmsd*(ing - 1) + 1:lmsd*ing,Bind) = tmatLL(:,:,atom_index)
@@ -233,27 +230,20 @@ module fillKKRMatrix_mod
 
     lmsd = size(G_diag, 2)
     assert( lmsd == size(G_diag, 1) )
-    assert( lmsd == size(mat_X, 1) )
+!   assert( lmsd == size(mat_X, 1) ) ! fails of alignment padding is non-zero
     
     assert( modulo(size(mat_X, 2), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
     nRHS_group = size(mat_X, 2) / lmsd ! integer division should be exact
     assert( nRHS_group >= 1 )
-    
     
       iRHS_group = (iRHS - 1)/nRHS_group  + 1
       ing = modulo((iRHS - 1),nRHS_group) + 1
       Xind = exists(bsr_X, row, col=iRHS_group) ! find index in BSR structure
       if (Xind < 1) die_here("diagonal element not contained in X, row="-row-", col="-iRHS)
 
-    G_diag = ZERO
-    G_diag(:,:) = mat_X(:lmsd,(ing - 1)*lmsd + 1:lmsd*ing,Xind)
-! #ifndef useBSR
-!     assert( 1 <= iRHS .and. iRHS <= size(mat_X, 2)/lmsd )
-!     G_diag(:,:) = mat_X(:lmsd,(iRHS - 1)*lmsd + 1:lmsd*iRHS,atom_index)
-! #else
-!     Xind = exists(bsr_X, row, col=iRHS)
-!     G_diag(:,:) = mat_X(:lmsd,:,Xind)
-! #endif
+      G_diag = ZERO
+      G_diag(:,:) = mat_X(:lmsd,(ing - 1)*lmsd + 1:lmsd*ing,Xind)
+    
   endsubroutine ! getGreenDiag
   
   

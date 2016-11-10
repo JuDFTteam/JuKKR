@@ -415,10 +415,13 @@ module TFQMR_mod
     column_index_t, intent(in) :: colInd(:)
 
     integer :: col, nrow, block, jCol
-    double precision, external :: DZNRM2 ! BLAS
+    double precision, external :: DZNRM2 ! BLAS double complex 2-norm
 
     nrow = size(vector, 1)
+#ifndef NDEBUG
     if (size(norms, 1) /= size(vector, 2)) stop 'col_norms: strange!'
+    if (size(colInd) /= size(vector, 3)) stop 'col_norms: strange! (colInd vs. v)'
+#endif    
     norms = 0.d0
     
     !$omp do private(col, block, jCol) reduction(+:norms)
@@ -429,7 +432,7 @@ module TFQMR_mod
       enddo ! col
     enddo ! block
     !$omp end do
-    
+
   endsubroutine ! norms
 
   !------------------------------------------------------------------------------
@@ -440,11 +443,15 @@ module TFQMR_mod
     column_index_t, intent(in) :: colInd(:)
 
     integer :: col, nrow, block, jCol
-    double complex, external :: ZDOTU ! BLAS
+    double complex, external :: ZDOTU ! BLAS double complex inner product, Unconjugated
 
     nrow = size(vector, 1)
+#ifndef NDEBUG
     if (size(dots, 1) /= size(vector, 2)) stop 'col_dots: strange! (v)'
     if (size(dots, 1) /= size(wektor, 2)) stop 'col_dots: strange! (w)'
+    if (any(shape(vector) /= shape(wektor))) stop 'col_dots: strange! (v vs. w)'
+    if (size(colInd) /= size(vector, 3)) stop 'col_dots: strange! (colInd vs. v)'
+#endif
     dots = ZERO
 
     !$omp do private(col, block, jCol) reduction(+:dots)
@@ -469,7 +476,8 @@ module TFQMR_mod
 #ifndef NDEBUG
     if (size(factors, 1) /= size(yvector, 2)) stop 'col_axpy: strange! (y)'
     if (any(shape(xvector) /= shape(yvector))) stop 'col_axpy: strange! (y vs. x)'
-#endif    
+    if (size(colInd) /= size(xvector, 3)) stop 'col_axpy: strange! (colInd vs. x)'
+#endif
 
     !$omp do private(col, block, jCol)
     do block = 1, size(yvector, 3)
@@ -493,6 +501,7 @@ module TFQMR_mod
 #ifndef NDEBUG
     if (size(factors, 1) /= size(yvector, 2)) stop 'col_xpay: strange! (y)'
     if (any(shape(xvector) /= shape(yvector))) stop 'col_xpay: strange! (y vs. x)'
+    if (size(colInd) /= size(xvector, 3)) stop 'col_xpay: strange! (colInd vs. x)'
 #endif
 
     !$omp do private(col, block, jCol)

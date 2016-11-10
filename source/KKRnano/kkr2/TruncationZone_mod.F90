@@ -37,6 +37,10 @@ module TruncationZone_mod
 
   integer, parameter, private :: OUTSIDE = -1 ! must be -1 in C-language, could be 0 in Fortran
 
+#ifndef NDEBUG
+  global_ID_type, allocatable, protected, public :: global_atom_id(:) ! see above
+#endif
+
   contains
   
 #ifndef ell_int_t
@@ -54,10 +58,10 @@ module TruncationZone_mod
     integer(kind=8), parameter :: Two = 2
     
     self%naez_all = size(mask)
-    if (self%naez_all >= Two**31) stop 'integer(kind=4) not sufficient for global_atom_id in TruncationZone_mod.F90!' ! value range exceeded
+    if (self%naez_all > huge(gid)) stop 'integer-kind not sufficient for global_atom_id in TruncationZone_mod.F90!' ! value range exceeded
     
     self%naez_trc = count(mask >= 0)
-    if (self%naez_trc >= Two**15) stop 'integer(kind=2) not sufficient for local_atom_idx in TruncationZone_mod.F90!' ! value range exceeded 
+    if (self%naez_trc > huge(idx)) stop 'integer-kind not sufficient for local_atom_idx in TruncationZone_mod.F90!' ! value range exceeded 
 
     ! setup index map from global indices to a process local view
     ALLOCATECHECK(self%local_atom_idx(OUTSIDE:self%naez_all))
@@ -70,12 +74,17 @@ module TruncationZone_mod
       if (mask(gid) >= 0) then
         idx = idx + 1
         self%local_atom_idx(gid) = idx ! enumerate
-        self%global_atom_id(idx) = gid ! quasi inverse
+        self%global_atom_id(idx) = gid ! quasi inverse ...
         ! inverse means that all(self%local_atom_idx(self%global_atom_id(:)) == [1, 2, 3, ..., naez_trc])
       else
         self%local_atom_idx(gid) = OUTSIDE ! atom not in truncation cluster
       endif
     enddo ! gid
+
+#ifndef NDEBUG
+    allocate(global_atom_id(self%naez_trc))
+    global_atom_id(:) = self%global_atom_id(:) ! make a copy that we can use for DEBUG purposes by use TruncationZone_mod, only: global_atom_id
+#endif
 
     ! if (.not. present(masks)) return
     ! this must hold: (mask(:) >= 0) .eqv. any(masks >= 0, dim=2)

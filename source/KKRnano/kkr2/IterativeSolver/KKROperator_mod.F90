@@ -38,6 +38,10 @@ module KKROperator_mod
     module procedure multiply_KKROperator
   endinterface
 
+#ifndef NDEBUG
+  integer(kind=2), allocatable, protected, public :: local_atom_indices(:) ! see above
+#endif
+
   contains
 
   subroutine create_KKROperator(self, cluster_info, lmmaxd, atom_indices, Lly)
@@ -49,7 +53,7 @@ module KKROperator_mod
     integer, intent(in) :: lmmaxd, Lly
     integer(kind=2), intent(in) :: atom_indices(:) !< local truncation zone indices of the source atoms
 
-    integer :: nCols, nRows, nBlocks, nLloyd
+    integer :: nCols, nRows, nBlocks, nLloyd, ist
 
     self%cluster_info => cluster_info
     self%lmmaxd = lmmaxd
@@ -60,6 +64,13 @@ module KKROperator_mod
     allocate(self%atom_indices(size(atom_indices))) ! local truncation zone indices of the source atoms
     self%atom_indices = atom_indices ! copy
 #endif
+
+#ifndef NDEBUG
+    deallocate(local_atom_indices, stat=ist) ! ignore status
+    allocate(local_atom_indices(size(atom_indices)), stat=ist) ! see above
+    local_atom_indices(:) = atom_indices(:) ! make a copy that we can use for DEBUG purposes by use KKROperator_mod, only: local_atom_indices
+#endif
+
 
     ! create block sparse structure of matrix A
     call getKKRMatrixStructure(cluster_info%numn0_trc, cluster_info%indn0_trc, self%bsr_A)

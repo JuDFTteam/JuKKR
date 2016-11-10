@@ -2,17 +2,13 @@
 #define DEBUG
 
 module bsrmm_mod
+#ifndef NDEBUG
+  use TruncationZone_mod, only: gId => global_atom_id
+  use KKROperator_mod, only: lAi => local_atom_indices
+#endif
   implicit none
   private
   public :: bsr_times_bsr
-
-  
-#ifdef DEBUG
-  logical, private :: dbg = .true.
-#define cDBG if(dbg)
-#else
-#define cDBG !
-#endif
 
   contains
 
@@ -37,6 +33,15 @@ module bsrmm_mod
     ! private variables
     integer :: iRow, Yind, jCol, Aind, kCol, Xind
     double complex :: beta
+#ifdef DEBUG
+    logical, save :: dbg = .true.
+#define   cDBG    if(dbg)
+    integer(kind=1) :: print_A(size(ja))
+      print_A(:) = 0
+cDBG  print_A(:) = 1
+#else
+#define cDBG !
+#endif
 
     leadDim_A = size(A, 1)
     leadDim_X = size(X, 1)
@@ -67,15 +72,26 @@ module bsrmm_mod
           if (Xind > 0) then ! yes
 
 #ifdef DEBUG
-#define show(X) #X,"=",X,", "
-!! cDBG write(*, "(99(2a,i0,a))") show(iRow),show(jCol),show(kCol),show(Yind),show(Aind),show(Xind)
-            if (Xind > size(X, 3)) then
-              write(0,*) __FILE__,__LINE__," ERROR: ",show(iRow),show(jCol),show(kCol),show(Yind),show(Aind),show(Xind),&
-                show(size(Y,3)),show(size(A,3)),show(size(X,3)),show(jx(ix(kRow):ix(kRow+1)-1))
-            endif
+
+! ! ! cDBG  write(*, "(3(a,i0),a,9999(e24.16))") "iRow=",gId(iRow)," jCol=",gId(lAi(jCol))," k=",gId(kCol), " A(:,:,Aind)= ",A(:,:,Aind)
+if(dbg) then
+!   if (print_A(Aind) > 0) then
+    write(*, "(2(a,i0),a,9999(e24.16))") "iRow=",gId(iRow)," kCol=",gId(kCol), " A= ",A(:,:,Aind), dble(Aind)
+!     print_A(Aind) = 0 ! do not print this element more than once
+!   endif
+endif
+
+! #define show(X) #X,"=",X,", "
+! !! cDBG write(*, "(99(2a,i0,a))") show(iRow),show(jCol),show(kCol), show(Yind),show(Aind),show(Xind)
+!             if (Xind > size(X, 3)) then
+!               write(0,*) __FILE__,__LINE__," ERROR: ",show(iRow),show(jCol),show(kCol),show(Yind),show(Aind),show(Xind),&
+!                 show(size(Y,3)),show(size(A,3)),show(size(X,3)),show(jx(ix(kRow):ix(kRow+1)-1))
+!             endif
             if (Xind > size(X, 3)) stop __LINE__
             if (Aind > size(A, 3)) stop __LINE__
             if (Yind > size(Y, 3)) stop __LINE__
+            
+            
 #endif
           
             ! now: Y[:,:,Yind] += A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
@@ -88,7 +104,7 @@ module bsrmm_mod
           endif ! X_full[kRow,jCol] exists
 #undef kRow
         enddo ! Aind
-        
+
       enddo ! Yind
     enddo ! iRow
 cDBG iRow = show_BSR_structure(6, ia, ja, ix, jx)
@@ -122,7 +138,7 @@ cDBG dbg = .false. !! switch off after 1st iteration
       do Xind = ix(iRow), ix(iRow + 1) - 1 ; jCol = jx(Xind)       + (nRows + 4) ; if(jCol > len(line)) cycle
         line(jCol:jCol) = char(48 + mod(Xind, 10))
       enddo ! Xind
-      write(unit, fmt='(i6,9a)', iostat=ios) iRow,"    ",trim(line)
+      write(unit, fmt='(i6,9a)', iostat=ios) gId(iRow),"    ",trim(line)
     enddo ! iRow
   endfunction ! show
 #endif

@@ -352,26 +352,16 @@ module kkrmat_mod
 
     ! ToDo: use bsr_B instead of bsr_X
     call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
-!   call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices) ! construct RHS as unity
-
+!   call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices) ! construct RHS as unity matrices
 
     call calc(preconditioner, op%mat_A(:,:,:,0)) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
 
     selectcase(solver_type)
     case (4) ! direct solution with LAPACK, should only be used for small systems
 
-! #ifndef useBSR
-!       nB = size(op%mat_X, 3)
-!       n  = size(op%mat_A, 2)*nB
-!       Bd = size(op%mat_A, 1)
-!       nRHSs = size(op%mat_X, 2)
-!       ASSERT( nRHSs == size(op%mat_B, 2) )
-!       ASSERT( nB    == size(op%mat_B, 3) )
-! #else
       Bd = size(op%mat_A, 2)
       n =  Bd*op%bsr_A%nRows
       nRHSs = op%bsr_X%nCols*size(op%mat_X, 2)
-! #endif
 
       if (any(shape(full_A) /= [n,n])) then
         deallocate(full_A, full_X, stat=ist) ! ignore status
@@ -381,22 +371,12 @@ module kkrmat_mod
       call convertBSRToFullMatrix(full_A, op%bsr_A, op%mat_A(:,:,:,0))
       TESTARRAYLOG(3, full_A)
 
-      ! convert op%mat_B to full_B
-! #ifndef useBSR
-!       full_X = 0 ; do i = 1, nB ; full_X(Bd*(i - 1) + 1:Bd*i,:) = op%mat_B(:,:,i) ; enddo ! i
-! #else
-      call convertBSRToFullMatrix(full_X, op%bsr_X, op%mat_B)
-! #endif
+      call convertBSRToFullMatrix(full_X, op%bsr_X, op%mat_B) ! convert op%mat_B to full_B
 
       ist = solveFull(full_A, full_X) ! on entry, full_X contains mat_B, compute the direct solution using LAPACK
       if (ist /= 0) die_here("failed to directly invert a matrix of dim"+n+"with"+nRHSs+"right hand sides!")
 
-      ! convert back full_X to op%mat_X
-! #ifndef useBSR
-!       do i = 1, nB ; op%mat_X(:,:,i) = full_X(Bd*(i - 1) + 1:Bd*i,:) ; enddo ! i
-! #else
-      call convertFullMatrixToBSR(op%mat_X, op%bsr_X, full_X)
-! #endif
+      call convertFullMatrixToBSR(op%mat_X, op%bsr_X, full_X) ! convert back full_X to op%mat_X
 
     case (0, 3) ! iterative solver
       if(solver_type == 0) warn(6, "solver_type ="+solver_type+"is deprecated, please use 3")
