@@ -120,16 +120,12 @@ module KKROperator_mod
   !----------------------------------------------------------------------------
   !> Applies Operator on mat_X and returns result in mat_AX.
   subroutine multiply_KKROperator(self, mat_X, mat_AX, nFlops)
-    use vbrmv_mat_mod, only: bsr_times_mat
     use bsrmm_mod, only: bsr_times_bsr
 
     type(KKROperator) :: self
     double complex, intent(in)  :: mat_X(:,:,:)
     double complex, intent(out) :: mat_AX(:,:,:)
     integer(kind=8), intent(inout) :: nFlops
-
-    ! perform sparse VBR matrix * dense matrix
-!   call bsr_times_mat(self%bsr_A%RowStart, self%bsr_A%ColIndex, self%mat_A(:,:,:,0), mat_X, mat_AX, nFlops)
 
     ! perform BSR matrix * BSR matrix: bsr_times_bsr(Y, ia, ja, A, ix, jx, X, nFlops)
     call bsr_times_bsr(mat_AX, self%bsr_A%RowStart, self%bsr_A%ColIndex, self%mat_A(:,:,:,0), self%bsr_X%RowStart, self%bsr_X%ColIndex, mat_X, nFlops)

@@ -1,7 +1,7 @@
 ! KKRnano
 ! massive parallel KKR for nanoscaled systems
 
-#include "DebugHelpers/test_macros.h"
+! #include "DebugHelpers/test_macros.h"
 #include "DebugHelpers/logging_macros.h"
 
 program KKRnano

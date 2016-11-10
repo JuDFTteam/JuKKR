@@ -11,9 +11,9 @@ module kloopz1_mod
   contains
 
   subroutine kloopz1(GmatN, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
-                         dsymLL, tmatLL, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                         dGinp_local, dtde, tr_alph, lly_grdt, &
-                         global_atom_idx_lly, lly, solver_type, kpoint_timer) ! LLY 
+                     dsymLL, tmatLL, global_atom_id, communicator, iguess_data, ienergy, ispin, &
+                     dGinp_local, dtde, tr_alph, lly_grdt, global_atom_idx_lly, lly, & ! LLY 
+                     solver_type, kpoint_timer)
 
 ! only part of arrays for corresponding spin direction is passed
 ! (GmatN, tsst_local, dtde_local, lly_grdt, tr_alph, gmatxij)
@@ -27,8 +27,7 @@ module kloopz1_mod
 ! dginp ...      derivative of reference green's function
 ! tsst_local ..  t-matrix
 
-    use kkrmat_mod, only: kkrmat01
-    
+    use KKRmat_mod, only: MultipleScattering
     use InitialGuess_mod, only: InitialGuess
     use IterativeSolver_mod, only: IterativeSolver
     use BCPOperator_mod, only: BCPOperator
@@ -64,6 +63,7 @@ module kloopz1_mod
     double complex, intent(out)   :: lly_grdt
     integer       , intent(in)    :: global_atom_idx_lly
     integer       , intent(in)    :: lly
+    
     integer, intent(in) :: solver_type
     type(TimerMpi), intent(inout) :: kpoint_timer
 
@@ -104,19 +104,21 @@ module kloopz1_mod
     mrfctori = -(2.d0*pi)/alat ! = inverse of -alat/(2*PI)
 
 !=======================================================================
-!     Note: the actual k-loop is in kkrmat01 (it is not parallelized)
-!     The integration over k is also performed in kkrmat01
+!     Note: the actual k-loop is in MultipleScattering (it is not parallelized)
+!     The integration over k is also performed in MultipleScattering
     
     
     
     ! solver_type=3 T-matrix cutoff with new solver
     ! solver_type=4 T-matrix cutoff with direct solver
-    call kkrmat01(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, Ginp_local, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                      mssq, dGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly, solver_type, kpoint_timer) !LLY
+    call MultipleScattering(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, &
+                      Ginp_local, global_atom_id, communicator, iguess_data, ienergy, ispin, &
+                      mssq, dGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly, & !LLY
+                      solver_type, kpoint_timer)
                       
 !-------------------------------------------------------- SYMMETRISE gll
 
-!      kkrmat01 returns GS (local) which contains the scattering path operator
+!      MultipleScattering returns GS (local) which contains the scattering path operator
 !      (already integrated over the irreducible wedge in k-space)
 !      scattering path operator: ((Delta_T)^-1 - G_ref)^-1
 
@@ -176,12 +178,14 @@ module kloopz1_mod
 
     enddo ! ila
 
-    if (global_jij_data%do_jij_calculation) &
+    if (global_jij_data%do_jij_calculation) then
       call SYMJIJ(alat, tauvBZ, nsymat, dsymLL, global_jij_data%NXIJ, global_jij_data%IXCP, &
                   tmatLL, mssq, global_jij_data%GSXIJ, global_jij_data%GMATXIJ(:,:,:,global_jij_data%active_spin), &  ! Result
                   num_trunc_atoms, N, global_jij_data%nxijd)
-
+    endif ! jij
+    
     deallocate(GS, mssq, gll, tpg, xc, stat=ist)
+    
   endsubroutine ! kloopz1
 
 endmodule ! kloopz1_mod

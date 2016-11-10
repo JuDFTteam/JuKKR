@@ -10,14 +10,14 @@
 
 #define SPLIT_REFERENCE_FOURIER_COM
 
-module kkrmat_mod
+module KKRmat_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   use arraytest2_mod, only: !import no name here, just mention it for the module dependency
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: kkrmat01, free_memory
+  public :: MultipleScattering, free_memory
 
   double complex, allocatable :: full_A(:,:), full_X(:,:)
   double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
@@ -32,7 +32,7 @@ module kkrmat_mod
   !> Solves multiple scattering problem for every k-point.
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
-  subroutine kkrmat01(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
+  subroutine MultipleScattering(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                           mssq, dGinp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, solver_type, kpoint_timer) ! LLY
     !   performs k-space integration,
@@ -184,7 +184,7 @@ module kkrmat_mod
     WRITELOG(2, *) "useful Floating point operations:     ", GiFlops," GiFlop"
     deallocate(G_diag, stat=ist) ! ignore status
 
-  endsubroutine ! kkrmat01
+  endsubroutine ! MultipleScattering
 
 
   !------------------------------------------------------------------------------
@@ -1023,5 +1023,5 @@ module kkrmat_mod
     nBytes = 16 * (size(full_A) + size(full_X))
     deallocate(full_A, full_X, stat=ist) ! ignore status
   endfunction ! free_memory
-  
-endmodule ! kkrmat_mod
+
+endmodule ! KKRmat_mod

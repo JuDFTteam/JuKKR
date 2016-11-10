@@ -97,9 +97,6 @@ module TEST_lcutoff_mod
       num_truncated(ell) = count(lmax_full == ell)
     enddo ! ell
 
-    if (num_local_atoms > 1 .and. num_truncated(lmax) /= naez) &
-      warn(6, "cannot handle more than one local atom correctly with truncation, but found"+num_local_atoms)
-
     call create(trunc_zone, mask=lmax_full, masks=lmax_atom)
 
     allocate(lmax_array(trunc_zone%naez_trc)) ! lmax_array is never deallocated - who cares

@@ -1,13 +1,6 @@
 !> Multiplication of two BSR-matrices (block sparse row matrices)
-#ifndef NDEBUG
-#define DEBUG
-#endif
 
 module bsrmm_mod
-#ifndef NDEBUG
-  use TruncationZone_mod, only: gId => global_atom_id
-  use KKROperator_mod, only: lAi => local_atom_indices
-#endif
   implicit none
   private
   public :: bsr_times_bsr
@@ -35,15 +28,6 @@ module bsrmm_mod
     ! private variables
     integer :: iRow, Yind, jCol, Aind, kCol, Xind
     double complex :: beta
-#ifdef DEBUG
-    logical, save :: dbg = .true.
-#define   cDBG    if(dbg)
-    integer(kind=1) :: print_A(size(ja))
-      print_A(:) = 0
-cDBG  print_A(:) = 1
-#else
-#define cDBG !
-#endif
 
     leadDim_A = size(A, 1)
     leadDim_X = size(X, 1)
@@ -61,41 +45,29 @@ cDBG  print_A(:) = 1
 #define YnRows XnRows
     if (XnRows /= size(ia) - 1) stop __LINE__
 
+!$omp parallel
+!$omp do private(iRow, Yind, jCol, Aind, kCol, Xind, beta)
     do iRow = 1, YnRows
       ! reuse elements of Y, i.e. keep the accumulator in the cache
-      do Yind = iy(iRow), iy(iRow + 1) - 1 
+      do Yind = iy(iRow), iy(iRow + 1) - 1
+#ifdef DEBUG
+       if (Yind > size(Y, 3)) stop __LINE__
+#endif
+      
         jCol = jy(Yind) ! update   matrix block element Y_full[iRow,jCol]
 
         beta = zero
         do Aind = ia(iRow), ia(iRow + 1) - 1
+#ifdef DEBUG
+          if (Aind > size(A, 3)) stop __LINE__
+#endif
           kCol = ja(Aind) ! for each matrix block element A_full[iRow,kCol]
 #define kRow kCol          
           Xind = BSR_entry_exists(ix, jx, row=kRow, col=jCol) ! find out if X_full[kRow,jCol] exists
           if (Xind > 0) then ! yes
-
 #ifdef DEBUG
-
-! ! ! cDBG  write(*, "(3(a,i0),a,9999(e24.16))") "iRow=",gId(iRow)," jCol=",gId(lAi(jCol))," k=",gId(kCol), " A(:,:,Aind)= ",A(:,:,Aind)
-if(dbg) then
-!   if (print_A(Aind) > 0) then
-    write(*, "(2(a,i0),a,9999(e24.16))") "iRow=",gId(iRow)," kCol=",gId(kCol), " A= ",A(:,:,Aind), dble(Aind)
-!     print_A(Aind) = 0 ! do not print this element more than once
-!   endif
-endif
-
-! #define show(X) #X,"=",X,", "
-! !! cDBG write(*, "(99(2a,i0,a))") show(iRow),show(jCol),show(kCol), show(Yind),show(Aind),show(Xind)
-!             if (Xind > size(X, 3)) then
-!               write(0,*) __FILE__,__LINE__," ERROR: ",show(iRow),show(jCol),show(kCol),show(Yind),show(Aind),show(Xind),&
-!                 show(size(Y,3)),show(size(A,3)),show(size(X,3)),show(jx(ix(kRow):ix(kRow+1)-1))
-!             endif
             if (Xind > size(X, 3)) stop __LINE__
-            if (Aind > size(A, 3)) stop __LINE__
-            if (Yind > size(Y, 3)) stop __LINE__
-            
-            
 #endif
-          
             ! now: Y[:,:,Yind] += A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
             !                    M     N     K          A                       B                             C
             call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)
@@ -109,10 +81,10 @@ endif
 
       enddo ! Yind
     enddo ! iRow
-#ifdef DEBUG
-cDBG iRow = show_BSR_structure(6, ia, ja, ix, jx)
-cDBG dbg = .false. !! switch off after 1st iteration
-#endif
+#undef YnRows
+!$omp end do
+!$omp end parallel
+
   endsubroutine ! bsr_times_bsr
 
   integer function BSR_entry_exists(RowStart, Colindex, row, col) result(Ind)

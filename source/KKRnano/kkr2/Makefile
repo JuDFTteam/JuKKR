@@ -13,7 +13,7 @@ BUILDDIR = $(HOME)/build
 EXTRA_FLAGS =
 FC90FLAGS = 
 FCFLAGS =
-PPFLAGS = -D NDEBUG
+PPFLAGS = -D NDEBUG -D USE_VOROWEIGHTS
 LDFLAGS =
 
 # ========= IFF Workstations ============
@@ -25,7 +25,7 @@ ifeq ($(PLATFORM),ifort)
 # 	FCFLAGS += -openmp -openmp-report
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
-	PPFLAGS += -D USE_VOROWEIGHTS
+	PPFLAGS += 
 	# PPFLAGS += -D TASKLOCAL_FILES
 	FCFLAGS += -g
 	LDFLAGS += -mkl -g
@@ -65,7 +65,6 @@ ifeq ($(PLATFORM),gfortran)
 		FCFLAGS += -O3
 	endif
 	FC90FLAGS = -ffree-line-length-0
-	PPFLAGS += -D USE_VOROWEIGHTS
 	PPFLAGS += -D NOLOGGING
 	# FCFLAGS += -D TASKLOCAL_FILES ### breaks when TASKLOCAL_FILES is used
 	LDFLAGS += -g -O3 -L/usr/local/intel/mkl/10.2.5.035/lib/64 -llapack -lblas
@@ -81,7 +80,6 @@ ifeq ($(PLATFORM),iff003)
 	FCFLAGS += -openmp -mkl -module $(BUILDDIR)
 	FCFLAGS += -gen-interfaces -warn interfaces
 	PPFLAGS += -D TASKLOCAL_FILES 
-	PPFLAGS += -D USE_VOROWEIGHTS
 	FC90FLAGS +=
 	FCFLAGS += -I $(BUILDDIR)
 	LDFLAGS += -O3
@@ -103,7 +101,6 @@ ifeq ($(PLATFORM),rwth)
 	FC90 = $(MPIFC) -warn
 	# -module <path> specifies where to put .mod files
 	FCFLAGS += $(FLAGS_OPENMP) -module $(BUILDDIR) 
-	PPFLAGS += -D USE_VOROWEIGHTS
 	FCFLAGS += -gen-interfaces -warn interfaces
 	FC90FLAGS +=
 	FCFLAGS += -I$(BUILDDIR) 
@@ -233,7 +230,7 @@ depend:
 
 KKRnano.o: Logging_mod.o KKRzero_mod.o PotentialConverter_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o AtomicCore_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
 TruncationZone_mod.o: Main2Arrays_mod.o
-kkrmat01_new.o: arraytest2_mod.o Logging_mod.o  TimerMpi_mod.o KKROperator_mod.o one_sided_commZ_mod.o ClusterInfo_mod.o IterativeSolver_mod.o jij_calc_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o  SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o
+KKRmat_mod.o: arraytest2_mod.o Logging_mod.o  TimerMpi_mod.o KKROperator_mod.o one_sided_commZ_mod.o ClusterInfo_mod.o IterativeSolver_mod.o jij_calc_mod.o TEST_lcutoff_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o  SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o
 ProcessKKRresults_mod.o: arraytest2_mod.o KKRnanoParallel_mod.o Logging_mod.o lloyds_formula_mod.o wrappers_mod.o brydbm_new_com_mod.o Main2Arrays_mod.o ShapefunData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o CalculationData_mod.o muffin_tin_zero_mod.o RadialMeshData_mod.o MadelungPotential_mod.o broyden_kkr_mod.o EnergyMesh_mod.o BasisAtom_mod.o DensityResults_mod.o lloyd0_new_mod.o KKRresults_mod.o InputParams_mod.o TimerMpi_mod.o DimParams_mod.o BroydenData_mod.o NearField_calc_mod.o debug_morgan_mod.o total_energy_mod.o
 NearField_calc_mod.o: RadialMeshData_mod.o NearField_com_mod.o BasisAtom_mod.o CalculationData_mod.o
 NearField_mod.o: Harmonics_mod.o MadelungCalculator_mod.o Constants_mod.o NearField_kkr_mod.o
@@ -252,7 +249,7 @@ EnergyMesh_mod.o: EnergyMeshHelpers_mod.o
 InterpolateBasisAtom_mod.o: RadialMeshData_mod.o BasisAtom_mod.o PotentialData_mod.o AtomicCoreData_mod.o
 SingleSiteRef_mod.o: Harmonics_mod.o kkr_helpers_mod.o SingleSiteHelpers_mod.o Exceptions_mod.o
 IterativeSolver_mod.o:  TFQMR_mod.o SolverStats_mod.o
-kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o kkrmat01_new.o jij_calc_mod.o IterativeSolver_mod.o InitialGuess_mod.o Constants_mod.o TimerMpi_mod.o
+kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o KKRmat_mod.o jij_calc_mod.o IterativeSolver_mod.o InitialGuess_mod.o Constants_mod.o TimerMpi_mod.o
 ShapeCriticalPoints_mod.o: Constants_mod.o ShapeGeometryHelpers_mod.o  PolygonFaces_mod.o
 MadelungPotential_mod.o: BasisAtom_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o DensityResults_mod.o EnergyResults_mod.o CalculationData_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o Exceptions_mod.o
@@ -268,7 +265,7 @@ jij_calc_mod.o: JijData_mod.o
 broyden_kkr_mod.o: brydbm_new_com_mod.o broyden_second_mod.o BroydenData_mod.o CalculationData_mod.o
 ShapeFunctions_mod.o: PolygonFaces_mod.o  ShapeCriticalPoints_mod.o Constants_mod.o ShapeIntegration_mod.o ShapeStandardMesh_mod.o
 ConfigReader_mod.o: ConfigReaderDictionary_mod.o
-KKROperator_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o vbrmv_mat_mod.o bsrmm_mod.o
+KKROperator_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o bsrmm_mod.o
 lloyd0_new_mod.o: BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o EnergyMesh_mod.o LDAUData_mod.o GauntCoefficients_mod.o ValenceDensity_mod.o 
 ClusterInfo_mod.o: TruncationZone_mod.o RefCluster_mod.o one_sided_commI_mod.o
 ScatteringCalculation_mod.o: KKRnanoParallel_mod.o one_sided_commD_mod.o Constants_mod.o SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o  KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o IterativeSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o TEST_lcutoff_mod.o
@@ -323,7 +320,7 @@ RefCluster_mod.o: Sorting_mod.o
 LatticeVectors_mod.o: Sorting_mod.o
 jij_calc_mod.o: Symmetry_mod.o
 Harmonics_mod.o: Constants_mod.o
-kkrmat01_new.o: Exceptions_mod.o InitialGuess_mod.o jij_calc_mod.o SolverStats_mod.o IterativeSolver_mod.o BCPOperator_mod.o KKROperator_mod.o TimerMpi_mod.o fillKKRMatrix_mod.o ClusterInfo_mod.o
+KKRmat_mod.o: Exceptions_mod.o InitialGuess_mod.o jij_calc_mod.o SolverStats_mod.o IterativeSolver_mod.o BCPOperator_mod.o KKROperator_mod.o TimerMpi_mod.o fillKKRMatrix_mod.o ClusterInfo_mod.o
 BrillouinZoneMesh_mod.o: Exceptions_mod.o
 AtomicCore_mod.o: Exceptions_mod.o Quadrature_mod.o Constants_mod.o
 JelliumPotentials_mod.o: Exceptions_mod.o
