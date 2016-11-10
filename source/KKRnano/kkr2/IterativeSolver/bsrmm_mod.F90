@@ -1,5 +1,7 @@
 !> Multiplication of two BSR-matrices (block sparse row matrices)
+#ifndef NDEBUG
 #define DEBUG
+#endif
 
 module bsrmm_mod
 #ifndef NDEBUG
@@ -107,8 +109,10 @@ endif
 
       enddo ! Yind
     enddo ! iRow
+#ifdef DEBUG
 cDBG iRow = show_BSR_structure(6, ia, ja, ix, jx)
 cDBG dbg = .false. !! switch off after 1st iteration
+#endif
   endsubroutine ! bsr_times_bsr
 
   integer function BSR_entry_exists(RowStart, Colindex, row, col) result(Ind)

@@ -13,7 +13,7 @@ BUILDDIR = $(HOME)/build
 EXTRA_FLAGS =
 FC90FLAGS = 
 FCFLAGS =
-PPFLAGS = 
+PPFLAGS = -D NDEBUG
 LDFLAGS =
 
 # ========= IFF Workstations ============
@@ -268,7 +268,7 @@ jij_calc_mod.o: JijData_mod.o
 broyden_kkr_mod.o: brydbm_new_com_mod.o broyden_second_mod.o BroydenData_mod.o CalculationData_mod.o
 ShapeFunctions_mod.o: PolygonFaces_mod.o  ShapeCriticalPoints_mod.o Constants_mod.o ShapeIntegration_mod.o ShapeStandardMesh_mod.o
 ConfigReader_mod.o: ConfigReaderDictionary_mod.o
-KKROperator_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o vbrmv_mat_mod.o
+KKROperator_mod.o: TEST_lcutoff_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o vbrmv_mat_mod.o bsrmm_mod.o
 lloyd0_new_mod.o: BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o EnergyMesh_mod.o LDAUData_mod.o GauntCoefficients_mod.o ValenceDensity_mod.o 
 ClusterInfo_mod.o: TruncationZone_mod.o RefCluster_mod.o one_sided_commI_mod.o
 ScatteringCalculation_mod.o: KKRnanoParallel_mod.o one_sided_commD_mod.o Constants_mod.o SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o  KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o IterativeSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o TEST_lcutoff_mod.o

@@ -64,20 +64,16 @@ module SparseMatrixDescription_mod
     integer, intent(in) :: nnzb !> number of non-zero blocks
     integer, intent(in), optional :: nCols !> number of columns
 
+    self%nRows = nRows
     allocate(self%RowStart(nRows + 1))
-    allocate(self%ColIndex(nnzb))
-
     self%RowStart(:) = 0
+    
+    self%nnzb = nnzb
+    allocate(self%ColIndex(nnzb))
     self%ColIndex(:) = 0
 
-    self%nRows = nRows
-    if (present(nCols)) then
-      self%nCols = nCols
-    else       
-      self%nCols = nRows ! so far, this routine is only used for the KKR operator which is square
-    endif
-    self%nnzb = nnzb
-!   self%BlockDim = 0
+    ! so far, this routine is only used for the KKR operator which is square
+    self%nCols = nRows ; if (present(nCols)) self%nCols = nCols
 
   endsubroutine ! create
   
@@ -92,11 +88,10 @@ module SparseMatrixDescription_mod
     self%nRows = 0
     self%nCols = 0
     self%nnzb = 0
-!   self%BlockDim = 0
   endsubroutine ! destroy
 
   !---------------------------------------------------------------------------
-  !> Writes SparseMatrixDescription to formatted file - useful for testing.
+  !> Writes SparseMatrixDescription to formatted file
   subroutine dumpSparseMatrixDescription(self, filename)
     type(SparseMatrixDescription), intent(in) :: self
     character(len=*), intent(in) :: filename
@@ -105,15 +100,13 @@ module SparseMatrixDescription_mod
 
     open(fu, file=filename, form='formatted', action='write')
     write(fu, *) self%nRows, self%nCols, self%nnzb
-    write(fu, *) self%RowStart
-    write(fu, *) self%ColIndex
-!   write(fu, *) self%BlockDim
+    write(fu, '(9999(i0," "))') self%RowStart
+    write(fu, '(9999(i0," "))') self%ColIndex
     close(fu)
   endsubroutine ! dump
 
   !---------------------------------------------------------------------------
   !> Creates and reads SparseMatrixDescription from formatted file
-  !> - useful for testing.
   subroutine createSparseMatrixDescriptionFromFile(self, filename)
     type(SparseMatrixDescription), intent(inout) :: self
     character(len=*), intent(in) :: filename
@@ -122,14 +115,11 @@ module SparseMatrixDescription_mod
     integer :: nRows, nCols, nnzb
 
     call destroy(self)
-    
     open(fu, file=filename, form='formatted', action='read', status='old')
     read(fu, *)  nRows, nCols, nnzb
     call createSparseMatrixDescription(self, nRows, nnzb, nCols)
     read(fu, *) self%RowStart
     read(fu, *) self%ColIndex
-!   read(fu, *) self%BlockDim
-    self%nnzb = nnzb
     close(fu)
   endsubroutine ! create
 

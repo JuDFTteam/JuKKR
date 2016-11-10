@@ -22,7 +22,7 @@ module BCPOperator_mod
     logical :: active = .false.
     integer :: xyzdim(3) = 1
     integer :: natbld = 1
-    type(ClusterInfo), pointer :: cluster_info
+    type(ClusterInfo), pointer :: cluster
     integer :: lmmaxd
   endtype
 
@@ -46,30 +46,30 @@ module BCPOperator_mod
 
   !----------------------------------------------------------------------------
   !> Setup of BCP preconditioner
-  subroutine create_BCPOperator(self, natbld, xyzdim, cluster_info, lmmaxd)
+  subroutine create_BCPOperator(self, natbld, xyzdim, cluster, lmmaxd)
     type(BCPOperator) :: self
     integer, intent(in) :: natbld, xyzdim(3)
-    type(ClusterInfo), target  :: cluster_info
+    type(ClusterInfo), target  :: cluster
     integer, intent(in) :: lmmaxd
 
     integer :: naezd, blocks_per_row
 
-    naezd = cluster_info%naez_trc
+    naezd = cluster%naez_trc
 
     CHECKASSERT(naezd == natbld*product(xyzdim(1:3)))
 
     allocate(self%gllhblck(natbld*lmmaxd,naezd*lmmaxd))
 
-    blocks_per_row = cluster_info%numn0_trc(1)
+    blocks_per_row = cluster%numn0(1)
 
     ! SEVERE restriction of preconditioner code:
     ! The number of non-zero blocks must be the same in each row
     ! this is not the case for all crystal structures (e.g. perovskite)
-    CHECKASSERT(all(cluster_info%numn0_trc == blocks_per_row ))
+    CHECKASSERT(all(cluster%numn0 == blocks_per_row ))
 
     self%natbld = natbld
     self%xyzdim = xyzdim
-    self%cluster_info => cluster_info
+    self%cluster => cluster
     self%lmmaxd = lmmaxd
     self%active = .true.
 
@@ -87,10 +87,10 @@ module BCPOperator_mod
     
     if (.not. self%active) return
     
-    naezd = self%cluster_info%naez_trc
-    blocks_per_row = self%cluster_info%numn0_trc(1)
+    naezd = self%cluster%naez_trc
+    blocks_per_row = self%cluster%numn0(1)
 
-    call bcpwupper(GLLH, self%GLLHBLCK, naezd, self%cluster_info%numn0_trc, self%cluster_info%indn0_trc, &
+    call bcpwupper(GLLH, self%GLLHBLCK, naezd, self%cluster%numn0, self%cluster%indn0, &
                    self%lmmaxd, self%natbld, &
                    self%xyzdim(1), self%xyzdim(2), self%xyzdim(3), &
                    blocks_per_row)
@@ -110,7 +110,7 @@ module BCPOperator_mod
     xyzdim(:) = self%xyzdim(1:3)
 
     num_columns = size(mat_X, 2)
-    naez = self%cluster_info%naez_trc
+    naez = self%cluster%naez_trc
 
     ASSERT(naez == natbld*product(xyzdim(1:3)))
 
@@ -123,7 +123,7 @@ module BCPOperator_mod
     type(BCPOperator), intent(inout) :: self
 
     if (allocated(self%GLLHBLCK)) deallocate(self%GLLHBLCK)
-    nullify(self%cluster_info)
+    nullify(self%cluster)
   endsubroutine ! destroy
 
   

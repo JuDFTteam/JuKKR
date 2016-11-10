@@ -18,12 +18,12 @@ module KKROperator_mod
   !> Represents the operator/matrix (1 - \Delta T G_ref).
   type :: KKROperator
     integer :: lmmaxd
-    type(SparseMatrixDescription) :: bsr_A, bsr_X!, bsr_B
+    type(SparseMatrixDescription) :: bsr_A, bsr_X!, bsr_B ToDo: introduce B with less entries than X
     double complex, allocatable :: mat_A(:,:,:,:) !< dim(fastBlockDim,slowBlockDim,bsr_A%nnzb,0:Lly)
     double complex, allocatable :: mat_B(:,:,:)   !< dim(fastBlockDim,slowBlockDim,bsr_B%nnzb)
     double complex, allocatable :: mat_X(:,:,:)   !< dim(fastBlockDim,slowBlockDim,bsr_X%nnzb)
     integer(kind=2), allocatable :: atom_indices(:) !< local truncation zone indices of the source atoms
-    type(ClusterInfo), pointer :: cluster_info
+    type(ClusterInfo), pointer :: cluster
   endtype
 
   interface create
@@ -44,18 +44,18 @@ module KKROperator_mod
 
   contains
 
-  subroutine create_KKROperator(self, cluster_info, lmmaxd, atom_indices, Lly)
+  subroutine create_KKROperator(self, cluster, lmmaxd, atom_indices, Lly)
     use TEST_lcutoff_mod, only: lmax_a_array
     use fillKKRMatrix_mod, only: getKKRMatrixStructure, getKKRSolutionStructure
 
     type(KKROperator), intent(inout) :: self
-    type(ClusterInfo), target, intent(in) :: cluster_info
+    type(ClusterInfo), target, intent(in) :: cluster
     integer, intent(in) :: lmmaxd, Lly
     integer(kind=2), intent(in) :: atom_indices(:) !< local truncation zone indices of the source atoms
 
     integer :: nCols, nRows, nBlocks, nLloyd, ist
 
-    self%cluster_info => cluster_info
+    self%cluster => cluster
     self%lmmaxd = lmmaxd
 
 #ifndef __GFORTRAN__
@@ -73,7 +73,7 @@ module KKROperator_mod
 
 
     ! create block sparse structure of matrix A
-    call getKKRMatrixStructure(cluster_info%numn0_trc, cluster_info%indn0_trc, self%bsr_A)
+    call getKKRMatrixStructure(cluster%numn0, cluster%indn0, self%bsr_A)
     
     ! create block sparse structure of solution X
     call getKKRSolutionStructure(lmax_a_array, self%bsr_X)
@@ -114,7 +114,7 @@ module KKROperator_mod
 !   call destroy(self%bsr_B)
 
     deallocate(self%atom_indices, stat=ist)
-    nullify(self%cluster_info)
+    nullify(self%cluster)
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------

@@ -8,7 +8,7 @@ module IterativeSolver_mod
   implicit none
   private
   
-  public :: IterativeSolver, create, solve, destroy
+  public :: IterativeSolver, create, solve, destroy, free_memory
   
   type :: IterativeSolver
     type(KKROperator), pointer :: op => null()
@@ -28,6 +28,10 @@ module IterativeSolver_mod
   
   interface solve
     module procedure solve_with_solver
+  endinterface
+
+  interface free_memory
+    module procedure free_memory_solver
   endinterface
 
   interface destroy
@@ -94,11 +98,20 @@ module IterativeSolver_mod
   endsubroutine ! solve
 
   !----------------------------------------------------------------------------
+  !> The workspace is deallocated and needs to be allocated on next use
+  integer(kind=8) function free_memory_solver(self) result(nBytes)
+    type(IterativeSolver), intent(inout) :: self
+    integer :: ist
+    nBytes = 16 * size(self%vecs)
+    deallocate(self%vecs, stat=ist) ! ignore status
+  endfunction ! free_memory
+
+  !----------------------------------------------------------------------------
   elemental subroutine destroy_solver(self)
     type(IterativeSolver), intent(inout) :: self
     
-    integer :: ist ! ignore status
-    deallocate(self%vecs, stat=ist)
+    integer :: ist
+    deallocate(self%vecs, stat=ist) ! ignore status
     nullify(self%precond)
     nullify(self%op)
   endsubroutine ! destroy
