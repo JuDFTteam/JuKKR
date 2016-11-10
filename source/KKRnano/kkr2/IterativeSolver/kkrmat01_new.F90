@@ -10,7 +10,7 @@
 
 
 
-#define SPLIT_REFERENCE_FOURIER_COM
+! #define SPLIT_REFERENCE_FOURIER_COM
 
 module kkrmat_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
@@ -207,7 +207,7 @@ module kkrmat_mod
     use InitialGuess_mod, only: InitialGuess, load, store
     use KKROperator_mod, only: KKROperator
     use BCPOperator_mod, only: BCPOperator, calc
-
+    
     USE_ARRAYLOG_MOD
     USE_LOGGING_MOD
 
@@ -243,10 +243,9 @@ module kkrmat_mod
 
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
     
-#define cluster op%cluster
     lmmaxd = op%lmmaxd
     naez = size(tmatLL, 3) ! number of atoms in the unified truncation zones
-    nacls = cluster%naclsd
+    nacls = op%cluster%naclsd
 
 
     !=======================================================================
@@ -267,19 +266,20 @@ module kkrmat_mod
     !
     ! The same calculation as with Lloyds formula is done all over again ???
     ! - NO! eikrm and eikrp are SWAPPED in call to DLKE0 !!!!
+#define cluster op%cluster
 
 
     ! if the following macro is defined, don't use MPI RMA locks
     ! not using locks does not scale well
   
 #ifndef SPLIT_REFERENCE_FOURIER_COM
-    call referenceFourier_com(op%mat_A(:,:,:,0), op%bsr_A, kpoint, alat, &
-             cluster%nacls, cluster%atom,  cluster%numn0, cluster%indn0, &
-             RR, cluster%ezoa, cluster%jacls, Ginp, global_atom_id, communicator)
+    call referenceFourier_com(op%mat_A(:,:,:,0), op%bsr_A, kpoint, alat, RR, cluster, &
+!              cluster%nacls, cluster%atom, cluster%numn0, cluster%indn0, cluster%ezoa, cluster%jacls, &
+             Ginp, global_atom_id, communicator)
 #else
-    call referenceFourier_part2(op%mat_A(:,:,:,0), op%bsr_A, kpoint, alat, &
-             cluster%nacls, cluster%atom,  cluster%numn0, cluster%indn0, &
-             RR, cluster%ezoa, cluster%jacls, Ginp)
+    call referenceFourier_part2(op%mat_A(:,:,:,0), op%bsr_A, kpoint, alat, RR, cluster, &
+!              cluster%nacls, cluster%atom, cluster%numn0, cluster%indn0, cluster%ezoa, cluster%jacls, &
+             Ginp)
 #endif
 
     TESTARRAYLOG(3, op%mat_A)
@@ -299,13 +299,13 @@ module kkrmat_mod
       allocate(dPdE_local(lmmaxd*naez,lmmaxd))
     
 #ifndef SPLIT_REFERENCE_FOURIER_COM
-      call referenceFourier_com(op%mat_A(:,:,:,Lly), op%bsr_A, kpoint, alat, &
-             cluster%nacls, cluster%atom,  cluster%numn0, cluster%indn0, &
-             RR, cluster%ezoa, cluster%jacls, dGinp, global_atom_id, communicator)
+      call referenceFourier_com(op%mat_A(:,:,:,Lly), op%bsr_A, kpoint, alat, RR, cluster, &
+!              cluster%nacls, cluster%atom,  cluster%numn0, cluster%indn0, cluster%ezoa, cluster%jacls, &
+             dGinp, global_atom_id, communicator)
 #else
-      call referenceFourier_part2(op%mat_A(:,:,:,Lly), op%bsr_A, kpoint, alat, &
-             cluster%nacls, cluster%atom,  cluster%numn0, cluster%indn0, &
-             RR, cluster%ezoa, cluster%jacls, dGinp)
+      call referenceFourier_part2(op%mat_A(:,:,:,Lly), op%bsr_A, kpoint, alat, RR, cluster,&
+!              cluster%nacls, cluster%atom, cluster%numn0, cluster%indn0, cluster%ezoa, cluster%jacls, &
+             dGinp)
 #endif
 
 
@@ -475,26 +475,31 @@ module kkrmat_mod
   !>
   !> Uses fence calls instead of locks.
   !> Might not perform and scale as well as referenceFourier_com
-  subroutine referenceFourier_com(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
-                indn0, rr, ezoa, jacls, Ginp, global_atom_id, communicator)
+  subroutine referenceFourier_com(Grefk, sparse, kpoint, alat, rr, cluster, &
+!                nacls, atom, numn0, indn0, ezoa, jacls, &
+                Ginp, global_atom_id, communicator)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     use ChunkIndex_mod, only: getRankAndLocalIndex
     use one_sided_commZ_mod, only: exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
 #ifdef NO_LOCKS_MPI
     use one_sided_commZ_mod, only: fenceZ
 #endif
+    use ClusterInfo_mod, only: ClusterInfo
     include 'mpif.h'
-    double complex, intent(out) :: GLLh(:,:,:)
+    double complex, intent(out) :: Grefk(:,:,:)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
-    integer, intent(in) :: nacls(:) ! dim(naez_trc)
-    integer(kind=2), intent(in) :: atom(:,:)
-    integer, intent(in) :: numn0(:)
-    integer(kind=2), intent(in) :: indn0(:,:)
     double precision, intent(in) :: rr(:,0:)
-    integer(kind=2), intent(in) :: ezoa(:,:)
-    integer(kind=2), intent(in) :: jacls(:,:)
+    type(ClusterInfo), intent(in) :: cluster
+    
+!     integer, intent(in) :: nacls(:) ! dim(naez_trc)
+!     integer(kind=2), intent(in) :: atom(:,:)
+!     integer, intent(in) :: numn0(:)
+!     integer(kind=2), intent(in) :: indn0(:,:)
+!     integer(kind=2), intent(in) :: ezoa(:,:)
+!     integer(kind=2), intent(in) :: jacls(:,:)
+    
     double complex, intent(in) :: Ginp(:,:,:,:)
     integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> global atom index
     integer, intent(in) :: communicator
@@ -511,12 +516,13 @@ module kkrmat_mod
     
     if (num_local_atoms == 1) then
       ! this version using point-to-point MPI communication is so far only implemented for 1 atom per process
-      call referenceFourier_mpi(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
-                indn0, rr, ezoa, Ginp, global_atom_id, communicator)
+      call referenceFourier_mpi(Grefk, sparse, kpoint, alat, rr, cluster, &
+!       nacls, atom, numn0, indn0, ezoa, &
+                                Ginp, global_atom_id, communicator)
       return
     endif
 
-    naez = size(nacls)
+    naez = cluster%naez_trc
     ASSERT(naez == size(global_atom_id))
     lmmaxd = size(Ginp, 1)
     ASSERT(lmmaxd == size(Ginp, 2))
@@ -539,7 +545,7 @@ module kkrmat_mod
     ! share Ginp with all other processes in 'communicator'
     call exposeBufferZ(win, Ginp, lmmaxd*lmmaxd*naclsd*num_local_atoms, lmmaxd*lmmaxd*naclsd, communicator)
 
-    GLLh = zero ! init
+    Grefk = zero ! init
 
     ! loop up to naez_max to ensure that each rank does the same amount of fence calls
     do site_index = 1, naez_max
@@ -581,10 +587,12 @@ module kkrmat_mod
 
       if (.true.) then
 #endif
-        call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
+        call dlke1(alat, cluster%nacls(site_index), rr, cluster%ezoa(:,site_index), kpoint, eikrm, eikrp)
         
-!       call dlke0_smat(GLLh, site_index, sparse, eikrm, eikrp, nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer)
-        call dlke0_smat(GLLh, site_index, sparse, eikrm, eikrp, nacls, atom, numn0, indn0, jacls, Gref_buffer)
+!       call dlke0_smat(Grefk, site_index, sparse, eikrm, eikrp, nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer)
+        call dlke0_smat(Grefk, site_index, sparse, eikrm, eikrp, cluster, &
+!                       nacls, atom, numn0, indn0, jacls, &
+                        Gref_buffer)
 
       endif ! site_index in bounds
       
@@ -691,44 +699,51 @@ module kkrmat_mod
 
   endsubroutine ! referenceFourier_com_part1
 
-  subroutine referenceFourier_part2(GLLh, sparse, kpoint, alat, nacls, atom, numn0, indn0, rr, ezoa, jacls, Gref_buffer)
+  subroutine referenceFourier_part2(Grefk, sparse, kpoint, alat, rr, cluster, &
+!   nacls, atom, numn0, indn0, ezoa, jacls, &
+                                    Gref_buffer)
     !! this operation will be performed for every k-point and does not include MPI communication
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
-    double complex, intent(out) :: GLLh(:,:,:)
+    use ClusterInfo_mod, only: ClusterInfo
+    double complex, intent(out) :: Grefk(:,:,:)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
-    integer, intent(in) :: nacls(:)
-    integer(kind=2), intent(in) :: atom(:,:)
-    integer, intent(in) :: numn0(:)
-    integer(kind=2), intent(in) :: indn0(:,:)
     double precision, intent(in) :: rr(:,0:)
-    integer(kind=2), intent(in) :: ezoa(:,:)
-    integer(kind=2), intent(in) :: jacls(:,:)
+    type(ClusterInfo), intent(in) :: cluster
+    
+!     integer, intent(in) :: nacls(:)
+!     integer(kind=2), intent(in) :: atom(:,:)
+!     integer, intent(in) :: numn0(:)
+!     integer(kind=2), intent(in) :: indn0(:,:)
+!     integer(kind=2), intent(in) :: ezoa(:,:)
+!     integer(kind=2), intent(in) :: jacls(:,:)
+    
     double complex, intent(in) :: Gref_buffer(:,:,:,:)
 
     ! locals
-    integer :: site_index, naez, lmmaxd, naclsd, ist
+    integer :: site_index, lmmaxd, naclsd, ist
     double complex, allocatable :: eikrm(:), eikrp(:)
 
-    naez = size(nacls)
     lmmaxd = size(Gref_buffer, 1)
     ASSERT ( size(Gref_buffer, 2) == lmmaxd )
 
-    naclsd = maxval(nacls)
+    naclsd = cluster%naclsd
     ASSERT ( size(Gref_buffer, 3) >= naclsd )
 
     allocate(eikrm(naclsd), eikrp(naclsd))
 
-    GLLh = zero ! init
+    Grefk = zero ! init
 
     ! loop up to naez_max to ensure that each rank does the same amount of fence calls
-    do site_index = 1, naez
+    do site_index = 1, cluster%naez_trc
 
-      call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
+      call dlke1(alat, cluster%nacls(site_index), rr, cluster%ezoa(:,site_index), kpoint, eikrm, eikrp)
 
-!     call dlke0_smat(GLLh, site_index, sparse, eikrm, eikrp, nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer(:,:,:,site_index))
-      call dlke0_smat(GLLh, site_index, sparse, eikrm, eikrp, nacls, atom, numn0, indn0, jacls, Gref_buffer(:,:,:,site_index))
+!     call dlke0_smat(Grefk, site_index, sparse, eikrm, eikrp, nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer(:,:,:,site_index))
+      call dlke0_smat(Grefk, site_index, sparse, eikrm, eikrp, cluster, &
+!         nacls, atom, numn0, indn0, jacls, 
+                      Gref_buffer(:,:,:,site_index))
 
     enddo ! site_index
 
@@ -744,21 +759,26 @@ module kkrmat_mod
   
 #ifndef SPLIT_REFERENCE_FOURIER_COM
   
-  subroutine referenceFourier_mpi(GLLh, sparse, kpoint, alat, nacls, atom, numn0, &
-                indn0, rr, ezoa, jacls, Ginp, global_atom_id, comm)
+  subroutine referenceFourier_mpi(Grefk, sparse, kpoint, alat, rr, cluster, &
+!             nacls, atom, numn0, indn0, ezoa, jacls, &
+            Ginp, global_atom_id, comm)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     use ChunkIndex_mod, only: getRankAndLocalIndex
-    double complex, intent(out) :: GLLh(:,:,:)
+    use ClusterInfo_mod, only: ClusterInfo
+    double complex, intent(out) :: Grefk(:,:,:)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
-    integer, intent(in) :: nacls(:)
-    integer(kind=2), intent(in) :: atom(:,:)
-    integer, intent(in) :: numn0(:)
-    integer(kind=2), intent(in) :: indn0(:,:)
     double precision, intent(in) :: rr(:,0:)
-    integer(kind=2), intent(in) :: ezoa(:,:)
-    integer(kind=2), intent(in) :: jacls(:,:)
+    type(ClusterInfo), intent(in) :: cluster
+    
+!     integer, intent(in) :: nacls(:)
+!     integer(kind=2), intent(in) :: atom(:,:)
+!     integer, intent(in) :: numn0(:)
+!     integer(kind=2), intent(in) :: indn0(:,:)
+!     integer(kind=2), intent(in) :: ezoa(:,:)
+!     integer(kind=2), intent(in) :: jacls(:,:)
+    
     double complex, intent(in) :: Ginp(:,:,:,:)
     integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> atom index
     integer, intent(in) :: comm
@@ -773,7 +793,7 @@ module kkrmat_mod
     integer, parameter :: TAGMOD = 2**15
     include 'mpif.h'
 
-    naez = size(nacls)
+    naez = cluster%naez_trc
     ASSERT(naez == size(global_atom_id))
     lmmaxd = size(Ginp, 1)
     ASSERT(lmmaxd == size(Ginp, 2))
@@ -833,17 +853,19 @@ module kkrmat_mod
 #endif
 
     ! ===============================================================================
-    ! part 2: perform the Fourier transformation and prepare the entries of GLLh
+    ! part 2: perform the Fourier transformation and prepare the entries of Grefk
     ! ===============================================================================
-    GLLh = zero ! init
+    Grefk = zero ! init
     allocate(eikrm(naclsd), eikrp(naclsd))
 
     do site_index = 1, naez
     
-      call dlke1(alat, nacls(site_index), rr, ezoa(:,site_index), kpoint, eikrm, eikrp)
+      call dlke1(alat, cluster%nacls(site_index), rr, cluster%ezoa(:,site_index), kpoint, eikrm, eikrp)
 
-!     call dlke0_smat(GLLh, site_index, sparse, eikrm, eikrp, nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer(:,:,:,SITE_INDEX))
-      call dlke0_smat(GLLh, site_index, sparse, eikrm, eikrp, nacls, atom, numn0, indn0, jacls, Gref_buffer(:,:,:,SITE_INDEX))
+!     call dlke0_smat(Grefk, site_index, sparse, eikrm, eikrp, nacls(site_index), atom(:,site_index), numn0, indn0, Gref_buffer(:,:,:,SITE_INDEX))
+      call dlke0_smat(Grefk, site_index, sparse, eikrm, eikrp, cluster, &
+!                          nacls, atom, numn0, indn0, jacls, &
+                         Gref_buffer(:,:,:,SITE_INDEX))
 
     enddo ! site_index
     
@@ -990,47 +1012,53 @@ module kkrmat_mod
   endsubroutine ! dlke1
   
   
-  subroutine dlke0_smat(smat, iat, sparse, eikrm, eikrp, nacls, atom, numn0, indn0, jacls, Ginp)
+  subroutine dlke0_smat(smat, iat, sparse, eikrm, eikrp, c, &
+!       nacls, atom, numn0, indn0, jacls, &
+      Ginp)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
+    use ClusterInfo_mod, only: ClusterInfo
     ! assume a block sparse row matrix description
     double complex, intent(inout) :: smat(:,:,:)
     integer, intent(in) :: iat !> local_atom_index of the source atom
     type(SparseMatrixDescription), intent(in) :: sparse
     double complex, intent(in) :: eikrm(:), eikrp(:) ! ToDo: many of these phase factors are real
-    integer, intent(in) :: nacls(:) !< number of atoms in the cluster around each site
-    integer(kind=2), intent(in) :: atom(:,:) !< dim(maxval(nacls)+,naez_trc)
-    integer, intent(in) :: numn0(:) !< dim(naez_trc)
-    integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0)+,naez_trc)
-    integer(kind=2), intent(in) :: jacls(:,:) !< dim(maxval(nacls)+,naez_trc)
+    type(ClusterInfo), intent(in) :: c ! cluster
+    
+!     integer, intent(in)         :: nacls(:)   !< dim(naez_trc) number of atoms in the cluster around each site
+!     integer(kind=2), intent(in) :: atom(:,:)  !< dim(maxval(nacls)+,naez_trc)
+!     integer, intent(in)         :: numn0(:)   !< dim(naez_trc)
+!     integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0)+,naez_trc)
+!     integer(kind=2), intent(in) :: jacls(:,:) !< dim(maxval(nacls)+,naez_trc)
+
     double complex, intent(in) :: Ginp(:,:,:) !< dim(lmmaxd,lmmaxd,nacls+)
 
     integer :: jat, iacls, in0, ind, Aind, jacl
 
-    do iacls = 1, nacls(iat) ! loop over all atoms in the reference cluster around source atom iat
-      jat =  atom(iacls,iat) ! local_atom_index of the target atom iacls in the cluster around source atom iat
+    do iacls = 1, c%nacls(iat) ! loop over all atoms in the reference cluster around source atom iat
+      jat =  c%atom(iacls,iat) ! local_atom_index of the target atom iacls in the cluster around source atom iat
       ASSERT( jat > 0 ) ! the target atom should exists inside the truncation zone
 
-      do in0 = 1, numn0(iat) ! loop over the set of inequivalent atoms in the reference cluster around source atom iat
-        ind = indn0(in0,iat) ! local_atom_index of the inequivalent target atom
+      do in0 = 1, c%numn0(iat) ! loop over the set of inequivalent atoms in the reference cluster around source atom iat
+        ind = c%indn0(in0,iat) ! local_atom_index of the inequivalent target atom
         if (ind == jat) then ! see which one of the inequivalent atoms is hit (should only be true once)
 
           assert( in0 < sparse%RowStart(iat + 1) )
           Aind = sparse%RowStart(iat) - 1 + in0
           assert( ind == sparse%ColIndex(Aind) )
-          jacl = jacls(iacls,iat)
+          jacl = c%jacls(iacls,iat)
           smat(:,:,Aind) = smat(:,:,Aind) + eikrm(iacls) * transpose(Ginp(:,:,jacl))
 
         endif ! jat == ind
       enddo ! in0
 
-      do in0 = 1, numn0(jat) ! loop over the set of inequivalent atoms in the reference cluster around target atom jat
-        ind = indn0(in0,jat) ! local_atom_index of the inequivalent target atom
+      do in0 = 1, c%numn0(jat) ! loop over the set of inequivalent atoms in the reference cluster around target atom jat
+        ind = c%indn0(in0,jat) ! local_atom_index of the inequivalent target atom
         if (ind == iat) then ! see which one of the inequivalent atoms is hit (should only be true once)
 
           assert( in0 < sparse%RowStart(jat + 1) )
           Aind = sparse%RowStart(jat) - 1 + in0
           assert( ind == sparse%ColIndex(Aind) )
-          jacl = jacls(iacls,iat)
+          jacl = c%jacls(iacls,iat)
           smat(:,:,Aind) = smat(:,:,Aind) + eikrp(iacls) * Ginp(:,:,jacl)
 
         endif ! iat == ind
@@ -1039,7 +1067,7 @@ module kkrmat_mod
     enddo ! iacls
 
   endsubroutine ! dlke0_smat
-  
+
   !----------------------------------------------------------------------------
   !> The workspace is deallocated and needs to be allocated on next use
   integer(kind=8) function free_memory_kkrmat() result(nBytes)

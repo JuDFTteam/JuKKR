@@ -323,7 +323,7 @@ RefCluster_mod.o: Sorting_mod.o
 LatticeVectors_mod.o: Sorting_mod.o
 jij_calc_mod.o: Symmetry_mod.o
 Harmonics_mod.o: Constants_mod.o
-kkrmat01_new.o: Exceptions_mod.o
+kkrmat01_new.o: Exceptions_mod.o InitialGuess_mod.o jij_calc_mod.o SolverStats_mod.o IterativeSolver_mod.o BCPOperator_mod.o KKROperator_mod.o TimerMpi_mod.o fillKKRMatrix_mod.o ClusterInfo_mod.o
 BrillouinZoneMesh_mod.o: Exceptions_mod.o
 AtomicCore_mod.o: Exceptions_mod.o Quadrature_mod.o Constants_mod.o
 JelliumPotentials_mod.o: Exceptions_mod.o

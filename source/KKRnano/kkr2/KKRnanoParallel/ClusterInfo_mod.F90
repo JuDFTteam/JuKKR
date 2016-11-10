@@ -68,7 +68,7 @@ module ClusterInfo_mod
     type(TruncationZone), intent(in)    :: trunc_zone
     integer, intent(in)                 :: communicator
 
-    integer :: ii, jj, cnt, ila
+    integer :: ii, cnt, ila, iacls, ineqv
     integer :: OFFSET_INDN, OFFSET_ATOM, OFFSET_EZOA
     integer :: nacls, numn0, naclsd, numn0d, naez_trc, num_local_atoms, blocksize
     integer :: memory_stat ! needed in allocatecheck
@@ -77,6 +77,7 @@ module ClusterInfo_mod
     integer(kind=4) :: atom_id, atom, indn0 ! global atom ids
     integer(kind=4), allocatable :: send_buf(:,:), recv_buf(:,:) ! global atom ids, require more than 16bit
 #ifdef DEBUG
+    integer :: jj
     integer(kind=4), allocatable :: global_target_atom_id(:) !!! DEBUG
 #endif
     integer, parameter :: N_ALIGN = 1 ! 1:no alignment, 4: 8 Byte alignment, 32: 64 Byte alignment 
@@ -152,10 +153,10 @@ module ClusterInfo_mod
       numn0 = recv_buf(3,ii)
       ! indn0 and atom have to be transformed to truncation zone indices
       cnt = 0
-      do jj = 1, numn0 ! loop over all inequivalent atoms in the cluster
+      do ineqv = 1, numn0 ! loop over all inequivalent atoms in the cluster
 
-        indn0 = recv_buf(OFFSET_INDN + jj,ii) ! indn0 received
-! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',indn0
+        indn0 = recv_buf(OFFSET_INDN + ineqv,ii) ! indn0 received
+! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' ineqv=',ineqv,' ind=',indn0
         ind = trunc_zone%local_atom_idx(indn0) ! translate into a local index of the truncation zone
 
         if (ind > 0) then ! ind == -1 means that this atom is outside of truncation zone
@@ -166,7 +167,7 @@ module ClusterInfo_mod
           global_target_atom_id(cnt) = indn0 !!! DEBUG
 #endif
         endif ! ind > 0
-      enddo ! jj
+      enddo ! ineqv
 
       CHECKASSERT( 0 < cnt .and. cnt <= numn0 )
       self%numn0(ii) = cnt
@@ -176,23 +177,23 @@ module ClusterInfo_mod
 
       nacls = recv_buf(2,ii)
       cnt = 0
-      do jj = 1, nacls ! loop over all atoms in the cluster
+      do iacls = 1, nacls ! loop over all atoms in the cluster
 
-        atom = recv_buf(OFFSET_ATOM + jj,ii) ! atom received
-        ezoa = recv_buf(OFFSET_EZOA + jj,ii) ! convert to integer(kind=2)
-! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' jj=',jj,' ind=',atom
+        atom = recv_buf(OFFSET_ATOM + iacls,ii) ! atom received
+        ezoa = recv_buf(OFFSET_EZOA + iacls,ii) ! convert to integer(kind=2)
+! ! ! ! write(*,'(9(a,i0))') __FILE__,__LINE__,' ii=',ii,' iacls=',iacls,' ind=',atom
         ind = trunc_zone%local_atom_idx(atom)
 
         if (ind > 0) then ! ind == -1 means that this atom is outside of truncation zone
           cnt = cnt + 1
           self%atom(cnt,ii) = ind ! atom translated into local indices of the truncation zone
           self%ezoa(cnt,ii) = ezoa ! index of the periodic image (does not need translation)
-          self%jacls(cnt,ii) = jj ! store the position of this image when referencing Gref(:,:,jacls)
+          self%jacls(cnt,ii) = iacls ! store the position of this image when referencing Gref(:,:,jacls)
 #ifdef DEBUG
           global_target_atom_id(cnt) = atom !!! DEBUG
 #endif          
         endif ! ind > 0
-      enddo ! jj
+      enddo ! iacls
 
       CHECKASSERT( 0 < cnt .and. cnt <= nacls )
       self%nacls(ii) = cnt

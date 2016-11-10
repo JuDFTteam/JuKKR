@@ -28,15 +28,20 @@ module fillKKRMatrix_mod
     integer(kind=1), intent(in) :: lmax_a(:,:) !< lmax of each interaction dim(naez_trc,num_local_atoms), -1: truncated
     type(SparseMatrixDescription), intent(inout) :: bsr_X
 
-    integer :: iRow, jCol, Xind, nnzb
-    
-    nnzb = count(lmax_a >= 0)
+    integer, parameter :: GROUPING = 0 ! -1: never, 0: auto, 1:always
+    integer :: iRow, jCol, Xind, nnzb, group
+ 
+    nnzb = count(lmax_a >= 0) ! number of non-zero blocks in X
 
-    if (nnzb == size(lmax_a)) then ! no element is truncated
-      warn(6, "X_mat will NOT be made rectangular, although it could!")
+    if (nnzb < size(lmax_a)) then ! truncation can be applied
+      group = max(0, GROUPING)
+      if (GROUPING > 0) warn(6, "X_mat will be stored rectangular!") ! always group
+    else
+      group = 1 + GROUPING
+      if (GROUPING < 0) warn(6, "X_mat will NOT be made rectangular, although it could!") ! never group
     endif
-    if (.false.) then
-!     warn(6, "X_mat will be stored rectangular!")
+
+    if (group > 0) then
 
       call create(bsr_X, nRows=size(lmax_a, 1), nnzb=size(lmax_a, 1), nCols=1)
 
