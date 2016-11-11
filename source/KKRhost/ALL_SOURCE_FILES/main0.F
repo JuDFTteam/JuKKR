@@ -262,7 +262,7 @@ C     .. Local Scalars ..
      +        NSPIN,NSRA,NSYMAT,NOFGIJ,NQCALC,
      +        NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT(NATYPD),
      +        NPAN_LOGNEW(NATYPD),NPAN_EQNEW(NATYPD)
-      INTEGER NS
+      INTEGER NS, LRECABMAD, IREC
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      +                 RNEW(NTOTD*(NCHEBD+1),NATYPD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
@@ -822,7 +822,22 @@ C -------------------------------------------------------------- 3D case
          END IF
 
          !CLOSE(99)
-      ENDIF
+      ELSE !NPOL==0
+      ! write dummy files
+
+         !DOUBLE PRECISION AVMAD(LMPOTD,LMPOTD),BVMAD(LMPOTD)
+         LRECABMAD = WLENGTH*2*LMPOTD*LMPOTD + WLENGTH*2*LMPOTD
+         OPEN (69,ACCESS='direct',RECL=LRECABMAD,
+     &         FILE='abvmad.unformatted', FORM='unformatted')
+          DO I = 1,NAEZ
+             DO J = 1,NAEZ
+                IREC = J + NAEZ*(I-1)
+                WRITE (69,REC=IREC) 0.0d0, 0.0d0!AVMAD,BVMAD
+             END DO
+          END DO
+          CLOSE(69)
+
+      ENDIF !NPOL==0
 C ----------------------------------------------------------------------
 cfivos      END IF
 C ======================================================================
