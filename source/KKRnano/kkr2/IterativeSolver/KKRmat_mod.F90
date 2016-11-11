@@ -960,12 +960,12 @@ module KKRmat_mod
   endsubroutine ! dlke1
   
   
-  subroutine dlke0_smat(smat, iat, sparse, eikrm, eikrp, c, Ginp)
+  subroutine dlke0_smat(smat, isa, sparse, eikrm, eikrp, c, Ginp)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     use ClusterInfo_mod, only: ClusterInfo
     ! assume a block sparse row matrix description
     double complex, intent(inout) :: smat(:,:,:)
-    integer, intent(in) :: iat !> local_atom_index of the source atom
+    integer, intent(in) :: isa !> local_atom_index of the source atom
     type(SparseMatrixDescription), intent(in) :: sparse
     double complex, intent(in) :: eikrm(:), eikrp(:) ! ToDo: many of these phase factors are real
     double complex, intent(in) :: Ginp(:,:,:) !< dim(lmmaxd,lmmaxd,nacls+)
@@ -975,42 +975,42 @@ module KKRmat_mod
 !     integer(kind=2), intent(in) :: atom(:,:)  !< dim(maxval(nacls)+,naez_trc)
 !     integer,         intent(in) :: numn0(:)   !< dim(naez_trc)
 !     integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0)+,naez_trc)
-!     integer(kind=2), intent(in) :: jacls(:,:) !< dim(maxval(nacls)+,naez_trc)
 
     ! .. locals
-    integer :: jat, iacls, in0, ind, Aind, jacl
+    integer :: ita, iacls, in0, jCol, Aind
 
     ! symmetrization of the reference Green function with simultaneous Fourier transformation (applying Bloch factors)
     
-    do iacls = 1, c%nacls(iat) ! loop over all atoms in the reference cluster around source atom iat
-      jat =  c%atom(iacls,iat) ! local_atom_index of the target atom iacls in the cluster around source atom iat
-      ASSERT( jat > 0 ) ! the target atom should exists inside the truncation zone
+    do iacls = 1, c%nacls(isa) ! loop over all atoms in the reference cluster around source atom isa
+      ita =  c%atom(iacls,isa) ! local_atom_index of the target atom iacls in the cluster around source atom isa
 
-      do in0 = 1, c%numn0(iat) ! loop over the set of inequivalent atoms in the reference cluster around source atom iat
-        ind = c%indn0(in0,iat) ! local_atom_index of the inequivalent target atom
-        if (ind == jat) then ! see which one of the inequivalent atoms is hit (should only be true once)
+      if (ita > 0) then ! target atoms that do not exists inside the truncation zone are not treated
 
-          assert( in0 < sparse%RowStart(iat + 1) )
-          Aind = sparse%RowStart(iat) - 1 + in0
-          assert( ind == sparse%ColIndex(Aind) )
-          jacl = c%jacls(iacls,iat)
-          smat(:,:,Aind) = smat(:,:,Aind) + eikrm(iacls) * transpose(Ginp(:,:,jacl))
+        do in0 = 1,  c%numn0(isa) ! loop over the set of inequivalent atoms in the reference cluster around source atom isa
+          jCol = c%indn0(in0,isa) ! local_atom_index of the inequivalent target atom
+          if (jCol == ita) then ! see which one of the inequivalent atoms is hit (should only be true once)
 
-        endif ! jat == ind
-      enddo ! in0
+            assert( in0 < sparse%RowStart(isa + 1) )
+            Aind = sparse%RowStart(isa) - 1 + in0
+            assert( jCol == sparse%ColIndex(Aind) )
+            smat(:,:,Aind) = smat(:,:,Aind) + eikrm(iacls) * transpose(Ginp(:,:,iacls))
 
-      do in0 = 1, c%numn0(jat) ! loop over the set of inequivalent atoms in the reference cluster around target atom jat
-        ind = c%indn0(in0,jat) ! local_atom_index of the inequivalent target atom
-        if (ind == iat) then ! see which one of the inequivalent atoms is hit (should only be true once)
+          endif ! ita == jCol
+        enddo ! in0
 
-          assert( in0 < sparse%RowStart(jat + 1) )
-          Aind = sparse%RowStart(jat) - 1 + in0
-          assert( ind == sparse%ColIndex(Aind) )
-          jacl = c%jacls(iacls,iat)
-          smat(:,:,Aind) = smat(:,:,Aind) + eikrp(iacls) * Ginp(:,:,jacl)
+        do in0 = 1,  c%numn0(ita) ! loop over the set of inequivalent atoms in the reference cluster around target atom ita
+          jCol = c%indn0(in0,ita) ! local_atom_index of the inequivalent target atom
+          if (jCol == isa) then ! see which one of the inequivalent atoms is hit (should only be true once)
 
-        endif ! iat == ind
-      enddo ! in0
+            assert( in0 < sparse%RowStart(ita + 1) )
+            Aind = sparse%RowStart(ita) - 1 + in0
+            assert( jCol == sparse%ColIndex(Aind) )
+            smat(:,:,Aind) = smat(:,:,Aind) + eikrp(iacls) * Ginp(:,:,iacls)
+
+          endif ! isa == jCol
+        enddo ! in0
+
+      endif ! ita > 0
 
     enddo ! iacls
 

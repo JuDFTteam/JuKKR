@@ -517,9 +517,9 @@ module CalculationData_mod
     integer :: i, atom_id, ila, irmd, irid, ipand, irnsd, ierror
     type(InterstitialMesh) :: inter_mesh
     double precision :: new_MT_radius
-    integer :: num_MT_points
+    integer :: num_MT_points, nwarn
 
-
+    nwarn = 0
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
 
@@ -529,7 +529,7 @@ module CalculationData_mod
       call create(self%cell_a(ila), inter_mesh, arrays%rbasis, arrays%bravais, atom_id, &
                   params%rclust_voronoi, 4*dims%lmaxd, &
                   dims%irid-num_MT_points, &
-                  params%nmin_panel, num_MT_points, new_MT_radius, MT_scale, atom_id)
+                  params%nmin_panel, num_MT_points, new_MT_radius, MT_scale, atom_id, nwarn)
 
       irmd = dims%irmd - dims%irid + size(inter_mesh%xrn)
       irid = size(inter_mesh%xrn)
@@ -549,7 +549,8 @@ module CalculationData_mod
       call destroy(inter_mesh)
 
     enddo ! ila
-
+    if (nwarn > 0) warn(6, "file voro_weights cannot be opened in"+nwarn+" cases, use 1.0 for all.")
+    
     ! optional output of shapefunctions in single file (VORONANO)
     if (voronano == 1) then
       call MPI_BARRIER(MPI_COMM_WORLD, ierror)

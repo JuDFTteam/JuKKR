@@ -37,7 +37,7 @@ module ConstructShapes_mod
   !------------------------------------------------------------------------------
   !> Reads Voronoi weights from file 'voro_weights'
   !> this is kind of a hack and does not scale well.
-  subroutine read_voro_weights(weights, atom_indicies, num_atoms)
+  integer function read_voro_weights(weights, atom_indicies, num_atoms) result(warning)
     double precision, intent(inout) :: weights(:)
     integer, intent(in) :: atom_indicies(:) ! index table
     integer, intent(in) :: num_atoms
@@ -47,7 +47,8 @@ module ConstructShapes_mod
  
     open(32, file='voro_weights', form='formatted', action='read', status='old', iostat=ios)
     if (ios /= 0) then
-      write(*,*) "Warning! file voro_weights cannot be opened, use 1.0 for all."
+      ! write(*,*) "Warning! file voro_weights cannot be opened, use 1.0 for all."
+      warning = 1
       weights(:) = 1.d0
       return
     endif
@@ -61,7 +62,8 @@ module ConstructShapes_mod
       weights(ii) = weight_table(atom_indicies(ii))
     enddo ! ii
     
-  endsubroutine ! read_voro_weights
+    warning = 0
+  endfunction ! read_voro_weights
 
   !------------------------------------------------------------------------------
   !> Construct shape functions and interstitial mesh.
@@ -73,7 +75,7 @@ module ConstructShapes_mod
   !> MT_scale > 0.0 overrides new_MT_radius!!!
   subroutine createShape(self, inter_mesh, rbasis, bravais, center_ind, &
                       rcluster, lmax_shape, npoints_min, nmin_panel, &
-                      num_MT_points, new_MT_radius, MT_scale, atom_id)
+                      num_MT_points, new_MT_radius, MT_scale, atom_id, nwarnings)
     use LatticeVectors_mod, only: LatticeVectors, create, destroy
     use RefCluster_mod, only: RefCluster, create, destroy
     use ShapefunData_mod, only: ShapefunData
@@ -94,6 +96,7 @@ module ConstructShapes_mod
     double precision, intent(in) :: new_MT_radius
     double precision, intent(in) :: MT_scale
     integer, intent(in) :: atom_id
+    integer, intent(inout) :: nwarnings
 
     type(LatticeVectors) :: lattice_vectors
     type(RefCluster) :: cluster
@@ -110,7 +113,7 @@ module ConstructShapes_mod
 #ifdef USE_VOROWEIGHTS
     if (cluster%atom(1) /= atom_id) stop 'ConstructShapes_mod.F90:111 Index error!'
     ! HACK: Read voronoi weights from file - this does not scale well!
-    call read_voro_weights(weights, cluster%atom, size(rbasis, 2))
+    nwarnings = nwarnings + read_voro_weights(weights, cluster%atom, size(rbasis, 2))
 #endif
 
     ! the cluster positions are in cluster%rcls
