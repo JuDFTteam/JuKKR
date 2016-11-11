@@ -9,7 +9,6 @@
 #include "../DebugHelpers/test_macros.h"
 
 #define SPLIT_REFERENCE_FOURIER_COM
-#define newBLOCH
 
 module KKRmat_mod
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
@@ -35,7 +34,8 @@ module KKRmat_mod
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine MultipleScattering(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                          mssq, dGinp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, solver_type, kpoint_timer) ! LLY
+                          mssq, dGinp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, & ! LLY
+                          solver_type, kpoint_timer)
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
@@ -489,7 +489,7 @@ module KKRmat_mod
     ! locals
     integer :: site_index, naez, naclsd, lmmaxd, ist
     integer :: num_local_atoms, atom_requested
-    double complex, allocatable :: Gref_buffer(:,:,:), eikRR(:,:), eikrm(:), eikrp(:) ! dim: naclsd
+    double complex, allocatable :: Gref_buffer(:,:,:), eikRR(:,:)
     integer(kind=4) :: chunk_inds(2,1)
     integer :: win, nranks, ierr
     integer :: naez_max
@@ -507,13 +507,9 @@ module KKRmat_mod
     lmmaxd = size(Ginp, 1)
     ASSERT(lmmaxd == size(Ginp, 2))
     naclsd = size(Ginp, 3)
-    
-    allocate(eikrm(naclsd), eikrp(naclsd))
 
-#ifdef newBLOCH    
     allocate(eikRR(0:1,0:size(RR, 2)-1))
     call Bloch_factors(alat, RR, kpoint, eikRR)
-#endif    
     
     ! Note: some MPI implementations might need the use of MPI_Alloc_mem
     allocate(Gref_buffer(lmmaxd,lmmaxd,naclsd))
@@ -572,15 +568,7 @@ module KKRmat_mod
 
       if (.true.) then
 #endif
-        call dlke1(alat, cluster%nacls(site_index), RR, cluster%ezoa(:,site_index), kpoint, eikrm, eikrp)
-
-        call dlke0_smat(Grefk, site_index, sparse, &
-#ifdef newBLOCH
-             eikRR, &
-#else
-             eikrm, eikrp, &
-#endif
-             cluster, Gref_buffer)
+        call dlke0_smat(Grefk, site_index, sparse, eikRR, cluster, Gref_buffer)
 
       endif ! site_index in bounds
       
@@ -700,39 +688,23 @@ module KKRmat_mod
     double complex, intent(in) :: Gref_buffer(:,:,:,:)
 
     ! locals
-    integer :: site_index, lmmaxd, naclsd, ist
-    double complex, allocatable :: eikRR(:,:), eikrm(:), eikrp(:)
+    integer :: site_index, ist
+    double complex, allocatable :: eikRR(:,:) ! Bloch phase factors
+    
+    ASSERT ( size(Gref_buffer, 2) == size(Gref_buffer, 1) )
+    ASSERT ( size(Gref_buffer, 3) >= cluster%naclsd )
 
-    lmmaxd = size(Gref_buffer, 1)
-    ASSERT ( size(Gref_buffer, 2) == lmmaxd )
-
-    naclsd = cluster%naclsd
-    ASSERT ( size(Gref_buffer, 3) >= naclsd )
-
-    allocate(eikrm(naclsd), eikrp(naclsd))
-#ifdef newBLOCH    
     allocate(eikRR(0:1,0:size(RR, 2)-1))
     call Bloch_factors(alat, RR, kpoint, eikRR)
-#endif    
 
     Grefk = zero ! init
 
     ! loop up to naez_max to ensure that each rank does the same amount of fence calls
     do site_index = 1, cluster%naez_trc
 
-      call dlke1(alat, cluster%nacls(site_index), RR, cluster%ezoa(:,site_index), kpoint, eikrm, eikrp)
-
-      call dlke0_smat(Grefk, site_index, sparse, &
-#ifdef newBLOCH
-             eikRR, &
-#else
-             eikrm, eikrp, &
-#endif
-            cluster, Gref_buffer(:,:,:,site_index))
+      call dlke0_smat(Grefk, site_index, sparse, eikRR, cluster, Gref_buffer(:,:,:,site_index))
 
     enddo ! site_index
-
-    deallocate(eikrm, eikrp, stat=ist)
 
   endsubroutine ! referenceFourier_part2
   
@@ -831,27 +803,17 @@ module KKRmat_mod
     ! part 2: perform the Fourier transformation and prepare the entries of Grefk
     ! ===============================================================================
     Grefk = zero ! init
-    allocate(eikrm(naclsd), eikrp(naclsd))
-#ifdef newBLOCH    
+
     allocate(eikRR(0:1,0:size(RR, 2)-1))
     call Bloch_factors(alat, RR, kpoint, eikRR)
-#endif    
 
     do site_index = 1, naez
     
-      call dlke1(alat, cluster%nacls(site_index), RR, cluster%ezoa(:,site_index), kpoint, eikrm, eikrp)
-
-      call dlke0_smat(Grefk, site_index, sparse, &
-#ifdef newBLOCH
-                      eikRR, &
-#else
-                      eikrm, eikrp, & 
-#endif
-                      cluster, Gref_buffer(:,:,:,SITE_INDEX))
+      call dlke0_smat(Grefk, site_index, sparse, eikRR, cluster, Gref_buffer(:,:,:,SITE_INDEX))
 
     enddo ! site_index
-    
-    deallocate(Gref_buffer, eikrm, eikrp, stat=ist)
+
+    deallocate(Gref_buffer, eikRR, stat=ist)
 
   endsubroutine ! referenceFourier_mpi
 
@@ -932,66 +894,66 @@ module KKRmat_mod
 #endif
 
 
-  !     >> Input parameters
-  !>    @param     alat    lattice constant a
-  !>    @param     nacls   number of atoms in cluster
-  !>    @param     RR      periodic image vectors
-  !>    @param     ezoa
-  !>    @param     kpoint
-  !>    @param     naclsd. maximal number of atoms in cluster
-
-  !     << Output parameters
-  !>    @param     eikrm   Fourier exponential factor with minus sign
-  !>    @param     eikrp   Fourier exponential factor with plus sign
-  subroutine dlke1(alat, nacls, RR, ezoa, kpoint, eikrm, eikrp)
-  use Constants_mod, only: pi
-    ! ----------------------------------------------------------------------
-    !     Fourier transformation of the cluster Greens function
-    !     Prepares the calculation (calculates Fourier factors) for dlke0
-    ! ----------------------------------------------------------------------
-    double precision, intent(in) :: alat
-    integer, intent(in) :: nacls !< number of vectors in the reference cluster
-    integer(kind=2), intent(in) :: ezoa(1:) !< index list of periodic image vector
-    double precision, intent(in) :: kpoint(1:3) !< k-point (vector in the Brillouin zone)
-    double precision, intent(in) :: RR(1:,0:) !< dim(1:3,0:) periodic image vectors
-    double complex, intent(out) :: eikrp(:), eikrm(:) !< dim(nacls)
-
-    double complex, parameter :: ci=(0.d0, 1.d0)
-    double precision :: convpuh, tpi
-    double complex :: tt, exparg
-    integer :: iacls
-
-    tpi = 2.d0*pi
-    convpuh = alat/tpi * 0.5d0 ! the factor 0.5 comes in because we anti-hermitize the A operator
-
-    do iacls = 1, nacls
-       
-      ! Here we do       --                  nn'
-      !                  \                   ii'          ii'
-      !                  /  exp(+ik(x  -x ))G   (E)  =   G   (k,E)
-      !                  --          n'  n   LL'          LL'
-      !                  n'
-      ! Be careful about the minus sign included here. RR is not
-      ! symmetric around each atom. The minus comes from the fact that
-      ! the repulsive potential GF is calculated for 0n and not n0!
-
-      if (ezoa(iacls) == 0) then
-        ! the periodic image vector is (0,0,0)
-        ASSERT( all(RR(1:3,ezoa(iacls)) == 0.d0) )
-        eikrp(iacls) = dcmplx(convpuh, 0.d0)
-        eikrm(iacls) = dcmplx(convpuh, 0.d0)
-      else
-  
-        tt = -ci*tpi*dot_product(kpoint(1:3), RR(1:3,ezoa(iacls))) ! purely imaginary number
-
-        ! convert to p.u. and multiply with 1/2 (done above)
-        exparg = exp(tt)
-        eikrp(iacls) =       exparg  * convpuh
-        eikrm(iacls) = conjg(exparg) * convpuh ! we can re-use exparg here instead of exp(-tt) since tt is purely imaginary
-      endif
-    enddo ! iacls
-
-  endsubroutine ! dlke1
+!   !     >> Input parameters
+!   !>    @param     alat    lattice constant a
+!   !>    @param     nacls   number of atoms in cluster
+!   !>    @param     RR      periodic image vectors
+!   !>    @param     ezoa
+!   !>    @param     kpoint
+!   !>    @param     naclsd. maximal number of atoms in cluster
+! 
+!   !     << Output parameters
+!   !>    @param     eikrm   Fourier exponential factor with minus sign
+!   !>    @param     eikrp   Fourier exponential factor with plus sign
+!   subroutine dlke1(alat, nacls, RR, ezoa, kpoint, eikrm, eikrp)
+!   use Constants_mod, only: pi
+!     ! ----------------------------------------------------------------------
+!     !     Fourier transformation of the cluster Greens function
+!     !     Prepares the calculation (calculates Fourier factors) for dlke0
+!     ! ----------------------------------------------------------------------
+!     double precision, intent(in) :: alat
+!     integer, intent(in) :: nacls !< number of vectors in the reference cluster
+!     integer(kind=2), intent(in) :: ezoa(1:) !< index list of periodic image vector
+!     double precision, intent(in) :: kpoint(1:3) !< k-point (vector in the Brillouin zone)
+!     double precision, intent(in) :: RR(1:,0:) !< dim(1:3,0:) periodic image vectors
+!     double complex, intent(out) :: eikrp(:), eikrm(:) !< dim(nacls)
+! 
+!     double complex, parameter :: ci=(0.d0, 1.d0)
+!     double precision :: convpuh, tpi
+!     double complex :: tt, exparg
+!     integer :: iacls
+! 
+!     tpi = 2.d0*pi
+!     convpuh = alat/tpi * 0.5d0 ! the factor 0.5 comes in because we anti-hermitize the A operator
+! 
+!     do iacls = 1, nacls
+!        
+!       ! Here we do       --                  nn'
+!       !                  \                   ii'          ii'
+!       !                  /  exp(+ik(x  -x ))G   (E)  =   G   (k,E)
+!       !                  --          n'  n   LL'          LL'
+!       !                  n'
+!       ! Be careful about the minus sign included here. RR is not
+!       ! symmetric around each atom. The minus comes from the fact that
+!       ! the repulsive potential GF is calculated for 0n and not n0!
+! 
+!       if (ezoa(iacls) == 0) then
+!         ! the periodic image vector is (0,0,0)
+!         ASSERT( all(RR(1:3,ezoa(iacls)) == 0.d0) )
+!         eikrp(iacls) = dcmplx(convpuh, 0.d0)
+!         eikrm(iacls) = dcmplx(convpuh, 0.d0)
+!       else
+!   
+!         tt = -ci*tpi*dot_product(kpoint(1:3), RR(1:3,ezoa(iacls))) ! purely imaginary number
+! 
+!         ! convert to p.u. and multiply with 1/2 (done above)
+!         exparg = exp(tt)
+!         eikrp(iacls) =       exparg  * convpuh
+!         eikrm(iacls) = conjg(exparg) * convpuh ! we can re-use exparg here instead of exp(-tt) since tt is purely imaginary
+!       endif
+!     enddo ! iacls
+! 
+!   endsubroutine ! dlke1
 
   
   subroutine Bloch_factors(alat, RR, kpoint, eikRR)
@@ -1038,26 +1000,14 @@ module KKRmat_mod
   endsubroutine ! Bloch_factors
 
   
-  subroutine dlke0_smat(smat, isa, sparse, &
-#ifdef newBLOCH
-  eikRR, &
-#else
-  eikrm, eikrp, &
-#endif
-  c, Ginp)
+  subroutine dlke0_smat(smat, isa, sparse, eikRR, c, Ginp)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     use ClusterInfo_mod, only: ClusterInfo
     ! assume a block sparse row matrix description
     double complex, intent(inout) :: smat(:,:,:)
     integer, intent(in) :: isa !> local_atom_index of the source atom
     type(SparseMatrixDescription), intent(in) :: sparse
-#ifdef newBLOCH
     double complex, intent(in) :: eikRR(0:,0:) ! (0=m:1=p,0:nr-1)
-#define eikrm(iacls) eikRR(0,c%ezoa(iacls,isa))
-#define eikrp(iacls) eikRR(1,c%ezoa(iacls,isa))
-#else
-    double complex, intent(in) :: eikrm(:), eikrp(:) ! ToDo: many of these phase factors are real
-#endif
     double complex, intent(in) :: Ginp(:,:,:) !< dim(lmmaxd,lmmaxd,nacls+)
     type(ClusterInfo), intent(in) :: c ! cluster
 !!! members of ClusterInfo c now:
@@ -1065,7 +1015,7 @@ module KKRmat_mod
 !     integer(kind=2) :: atom(:,:)  !< dim(maxval(nacls)+,naez_trc)
 !     integer,        :: numn0(:)   !< dim(naez_trc)
 !     integer(kind=2) :: indn0(:,:) !< dim(maxval(numn0)+,naez_trc)
-!     integer(kind=2) :: ezoa(:,:)  !< dim(maxval(nacls)+,naez_trc) ! index of periodic image into array lattice_vectors%rr
+!     integer(kind=2) :: ezoa(:,:)  !< dim(maxval(nacls)+,naez_trc) ! index of periodic image into array lattice_vectors%rr or array eikRR
 
     ! .. locals
     integer :: ita, iacls, in0, jCol, Aind
@@ -1084,7 +1034,7 @@ module KKRmat_mod
             assert( in0 < sparse%RowStart(isa + 1) )
             Aind = sparse%RowStart(isa) - 1 + in0
             assert( jCol == sparse%ColIndex(Aind) )
-            smat(:,:,Aind) = smat(:,:,Aind) + eikrm(iacls) * transpose(Ginp(:,:,iacls))
+            smat(:,:,Aind) = smat(:,:,Aind) + eikRR(0,c%ezoa(iacls,isa)) * transpose(Ginp(:,:,iacls))
 
           endif ! ita == jCol
         enddo ! in0
@@ -1096,7 +1046,7 @@ module KKRmat_mod
             assert( in0 < sparse%RowStart(ita + 1) )
             Aind = sparse%RowStart(ita) - 1 + in0
             assert( jCol == sparse%ColIndex(Aind) )
-            smat(:,:,Aind) = smat(:,:,Aind) + eikrp(iacls) * Ginp(:,:,iacls)
+            smat(:,:,Aind) = smat(:,:,Aind) + eikRR(1,c%ezoa(iacls,isa)) * Ginp(:,:,iacls)
 
           endif ! isa == jCol
         enddo ! in0
