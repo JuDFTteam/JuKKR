@@ -56,7 +56,7 @@ implicit none
     use jij_calc_mod, only: clsjij, writejijs, jij_data => global_jij_data
 
     use IterativeSolver_mod, only: IterativeSolver
-    use SolverStats_mod, only: represent
+    use SolverStats_mod, only: represent, GiFlops
     use BCPOperator_mod, only: BCPOperator
     use KKROperator_mod, only: KKROperator
 
@@ -127,7 +127,7 @@ implicit none
     prspin = 1
 
     ! calculate exchange couplings only at last self-consistency step and when Jij=true
-    if (ITER == params%SCFSTEPS .and. params%JIJ) XCCPL = .true. ! activate in last SCF iteration
+    if (iter == params%SCFSTEPS .and. params%JIJ) XCCPL = .true. ! activate in last SCF iteration
 
     if (XCCPL) then
       jij_data%do_jij_calculation = .true. ! Trigger jij-calculation
@@ -312,18 +312,19 @@ implicit none
   !     enddo loop over energies (EMPID-parallel)
   ! IE ====================================================================
 
-    call outTime(mp%isMasterRank, 'Reference system Green  took', getTime(reference_green_timer), ITER)
-    call outTime(mp%isMasterRank, 'Single site scattering  took', getTime(single_site_timer), ITER)
-    call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(kpoint_timer), ITER)
+    call outTime(mp%isMasterRank, 'Reference system Green  took', getTime(reference_green_timer), iter)
+    call outTime(mp%isMasterRank, 'Single site scattering  took', getTime(single_site_timer), iter)
+    call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(kpoint_timer), iter)
     if (mp%isMasterRank) call outTimeStats(reference_green_timer, 'Reference G stats:')
     if (mp%isMasterRank) call outTimeStats(single_site_timer,     'Single site stats:')
     if (mp%isMasterRank) call outTimeStats(kpoint_timer,          'Mult. scat. stats:') ! per k-point
 !   if (mp%isMasterRank) call outTimeStats(mult_scattering_timer, 'Multi. site stats:') ! this timer is ...
 !   !         ... only energy point resolved, high variance expected due to different k-point mesh sizes
-!   call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(mult_scattering_timer), ITER)
+!   call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(mult_scattering_timer), iter)
 
-!   if (mp%isMasterRank) write(6, fmt='(A,I4,9A)') 'iter:',ITER,'  solver stats: ',trim(solv%represent_total_stats())
-    
+!   if (mp%isMasterRank) write(6, fmt='(A,I4,9A)') 'iter:',iter,'  solver stats: ',trim(solv%represent_total_stats())
+    if (mp%isMasterRank) write(6, fmt='(a,i4,9(a,f0.6))') 'iter:',iter,'  aggregate ',GiFlops/1024.d0,' TiFlop on master process' ! useful flops in the iterative solver part
+
   !=======================================================================
     ! communicate information of 1..EMPID and 1..SMPID processors to MASTERGROUP
     do ila = 1, num_local_atoms
@@ -362,11 +363,9 @@ implicit none
           WRITELOG(3, *) "EPROC_old: ", ebalance_handler%EPROC_old
 
           if (calc%iguess_data%prec == 1) then
-            call redistributeInitialGuess(mp, calc%iguess_data%prsc(:,:,PRSPIN), &
-              ebalance_handler%EPROC, ebalance_handler%EPROC_old, emesh%kmesh, arrays%NofKs)
+            call redistributeInitialGuess(mp, calc%iguess_data%prsc(:,:,PRSPIN), ebalance_handler%EPROC, ebalance_handler%EPROC_old, emesh%kmesh, arrays%NofKs)
           elseif (calc%iguess_data%prec == 2) then
-            call redistributeInitialGuess(mp, calc%iguess_data%prsz(:,:,PRSPIN), &
-              ebalance_handler%EPROC, ebalance_handler%EPROC_old, emesh%kmesh, arrays%NofKs)
+            call redistributeInitialGuess(mp, calc%iguess_data%prsz(:,:,PRSPIN), ebalance_handler%EPROC, ebalance_handler%EPROC_old, emesh%kmesh, arrays%NofKs)
           endif
 
         endif ! isWorkingSpinRank
@@ -376,7 +375,7 @@ implicit none
 
     call cleanup_solver(solv, kkr_op, precond)
 
-    deallocate(tmatLL, dtmatLL, atom_indices, GrefN_buffer, dGrefN_buffer, GmatN_buffer, stat=ist)
+    deallocate(tmatLL, dtmatLL, atom_indices, GrefN_buffer, dGrefN_buffer, GmatN_buffer, stat=ist) ! ignore status
 
   endsubroutine ! energyLoop
 

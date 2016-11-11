@@ -102,7 +102,6 @@ module TFQMR_mod
 
       ! v5 = A*v1
       call apply_precond_and_matrix(op, precond, mat_X, v5, vP, use_precond, mFlops)
-
       sparse_mult_count = sparse_mult_count + 1
 
       ! v5 = v2 - v5 ; r0 = b - A*x0
@@ -111,16 +110,16 @@ module TFQMR_mod
     endif
 
     v5 = -v5 ! correct for sign change at setup
-    
+
     ! R0 = norm(v5)
-    call col_norms(R0, v5, ColIndices)
+    call col_norms(R0, v5, ColIndices, mFlops)
 
     ! use norm of B for convergence criterion - use it for residual normalisation instead of B-AX0 contrary to original TFQMR
 
     ! N2B = norm(v2)
     v4 = ZERO
     v4 = v4 - mat_B ! subtract RightHandSide
-    call col_norms(N2B, v4, ColIndices) ! col_norms(N2B, mat_B)
+    call col_norms(N2B, v4, ColIndices, mFlops) ! col_norms(N2B, mat_B)
 
     where (abs(N2B) < EPSILON_DP) N2B = 1.d0  ! where N2B = 0 use absolute residual
 
@@ -144,7 +143,7 @@ module TFQMR_mod
     do iteration = 1, MaxIterations
 
       ! ZTMP = v3*v5
-      call col_dots(ZTMP, v3, v5, ColIndices)
+      call col_dots(ZTMP, v3, v5, ColIndices, mFlops)
 
       where (abs(ZTMP) < EPSILON_DP .or. abs(RHO) < EPSILON_DP)
         ! severe breakdown
@@ -157,22 +156,21 @@ module TFQMR_mod
       endwhere
 
       ! v4 = beta*v4 + v8
-      call col_xpay(v8, BETA, v4, ColIndices)
+      call col_xpay(v8, BETA, v4, ColIndices, mFlops)
 
       ! v6 = beta*v6 + v5
-      call col_xpay(v5, BETA, v6, ColIndices)
+      call col_xpay(v5, BETA, v6, ColIndices, mFlops)
 
 
       ! v9 = A*v6
       call apply_precond_and_matrix(op, precond, v6, v9, vP, use_precond, mFlops)
-
       sparse_mult_count = sparse_mult_count + 1
 
       ! v4 = beta*v4 + v9
-      call col_xpay(v9, BETA, v4, ColIndices)
+      call col_xpay(v9, BETA, v4, ColIndices, mFlops)
 
       ! ZTMP = v3*v4
-      call col_dots(ZTMP, v3, v4, ColIndices)
+      call col_dots(ZTMP, v3, v4, ColIndices, mFlops)
 
       where (abs(ZTMP) > EPSILON_DP .and. abs(RHO) > EPSILON_DP)
         mALPHA = -RHO / ZTMP
@@ -185,13 +183,13 @@ module TFQMR_mod
       endwhere
 
       ! v7 = ZTMP*v7 + v6
-      call col_xpay(v6, ZTMP, v7, ColIndices)
+      call col_xpay(v6, ZTMP, v7, ColIndices, mFlops)
 
       ! v5 = v5 - alpha*v9
-      call col_axpy(mALPHA, v9, v5, ColIndices)
+      call col_axpy(mALPHA, v9, v5, ColIndices, mFlops)
 
       ! DTMP = norm(v5)
-      call col_norms(DTMP, v5, ColIndices)
+      call col_norms(DTMP, v5, ColIndices, mFlops)
 
 
       DTMP = DTMP * DTMP
@@ -215,13 +213,13 @@ module TFQMR_mod
       endwhere
 
       ! v1 = v1 + eta*v7
-      call col_axpy(ETA, v7, mat_X, ColIndices)
+      call col_axpy(ETA, v7, mat_X, ColIndices, mFlops)
 
       ! v6 = v6 - alpha*v4
-      call col_axpy(mALPHA, v4, v6, ColIndices)
+      call col_axpy(mALPHA, v4, v6, ColIndices, mFlops)
 
       ! v7 = ZTMP*v7 + v6
-      call col_xpay(v6, ZTMP, v7, ColIndices)
+      call col_xpay(v6, ZTMP, v7, ColIndices, mFlops)
 
 
       !=============================================================
@@ -230,14 +228,13 @@ module TFQMR_mod
 
       ! v8 = A*v6
       call apply_precond_and_matrix(op, precond, v6, v8, vP, use_precond, mFlops)
-
       sparse_mult_count = sparse_mult_count + 1
 
       ! v5 = v5 - alpha*v8
-      call col_axpy(mALPHA, v8, v5, ColIndices)
+      call col_axpy(mALPHA, v8, v5, ColIndices, mFlops)
 
       ! DTMP = norm(v5)
-      call col_norms(DTMP, v5, ColIndices)
+      call col_norms(DTMP, v5, ColIndices, mFlops)
 
       DTMP = DTMP * DTMP
       where (abs(TAU) > EPSILON_DP)
@@ -258,7 +255,7 @@ module TFQMR_mod
       endwhere
 
       ! v1 = v1 + eta*v7
-      call col_axpy(ETA, v7, mat_X, ColIndices)
+      call col_axpy(ETA, v7, mat_X, ColIndices, mFlops)
 
       ! Residual upper bound calculation
       RUB = sqrt( (2*iteration + 1) * TAU) / N2B
@@ -296,14 +293,13 @@ module TFQMR_mod
 
         ! v9 = A*v1
         call apply_precond_and_matrix(op, precond, mat_X, v9, vP, use_precond, mFlops)
-
         sparse_mult_count = sparse_mult_count + 1
 
         ! v9 = v2 - v9
         v9 = v9 - mat_B ! flipped sign ! subtract RightHandSide
 
         ! RESN = norm(v9)
-        call col_norms(RESN, v9, ColIndices)
+        call col_norms(RESN, v9, ColIndices, mFlops)
 
         RESN = RESN / N2B
 
@@ -408,10 +404,11 @@ module TFQMR_mod
   endsubroutine ! apply
 
   !------------------------------------------------------------------------------
-  subroutine col_norms(norms, vector, colInd)
+  subroutine col_norms(norms, vector, colInd, mFlops)
     double precision, intent(out) :: norms(:,:)
     double complex, intent(in) :: vector(:,:,:)
     column_index_t, intent(in) :: colInd(:)
+    integer(kind=8), intent(inout) :: mFlops
 
     integer :: col, nrow, block, jCol
     double precision, external :: DZNRM2 ! BLAS double complex 2-norm
@@ -432,15 +429,16 @@ module TFQMR_mod
     enddo ! block
     !$omp end do
 
-    ! nFlops = 4*size(vector)
+    mFlops = mFlops + 4*size(vector)
   endsubroutine ! norms
 
   !------------------------------------------------------------------------------
-  subroutine col_dots(dots, vector, wektor, colInd)
+  subroutine col_dots(dots, vector, wektor, colInd, mFlops)
     double complex, intent(out) :: dots(:,:)
     double complex, intent(in) :: vector(:,:,:)
     double complex, intent(in) :: wektor(:,:,:)
     column_index_t, intent(in) :: colInd(:)
+    integer(kind=8), intent(inout) :: mFlops
 
     integer :: col, nrow, block, jCol
     double complex, external :: ZDOTU ! BLAS double complex inner product, Unconjugated
@@ -463,15 +461,16 @@ module TFQMR_mod
     enddo ! block
     !$omp end do
 
-    ! nFlops = 8*size(vector)
+    mFlops = mFlops + 8*size(vector)
   endsubroutine ! dots
 
   !------------------------------------------------------------------------------
-  subroutine col_axpy(factors, xvector, yvector, colInd)
+  subroutine col_axpy(factors, xvector, yvector, colInd, mFlops)
     double complex, intent(in) :: factors(:,:)
     double complex, intent(in) :: xvector(:,:,:)
     double complex, intent(inout) :: yvector(:,:,:)
     column_index_t, intent(in) :: colInd(:)
+    integer(kind=8), intent(inout) :: mFlops
 
     integer :: col, block, jCol
 #ifndef NDEBUG
@@ -489,15 +488,16 @@ module TFQMR_mod
     enddo ! block
     !$omp end do
 
-    ! nFlops = 8*size(yvector)
+    mFlops = mFlops + 8*size(yvector)
   endsubroutine ! y := a*x+y
 
   !------------------------------------------------------------------------------
-  subroutine col_xpay(xvector, factors, yvector, colInd)
+  subroutine col_xpay(xvector, factors, yvector, colInd, mFlops)
     double complex, intent(in) :: factors(:,:)
     double complex, intent(in) :: xvector(:,:,:)
     double complex, intent(inout) :: yvector(:,:,:)
     column_index_t, intent(in) :: colInd(:)
+    integer(kind=8), intent(inout) :: mFlops
 
     integer :: col, block, jCol
 #ifndef NDEBUG
@@ -515,7 +515,7 @@ module TFQMR_mod
     enddo ! block
     !$omp end do
     
-    ! nFlops = 8*size(yvector)
+    mFlops = mFlops + 8*size(yvector)
   endsubroutine ! y := x+a*y
 
 endmodule ! TFQMR_mod

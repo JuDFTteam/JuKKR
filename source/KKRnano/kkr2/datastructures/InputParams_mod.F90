@@ -79,7 +79,7 @@ module InputParams_mod
 
   contains
 !-------------------------------------------------------------------------------
-integer function getValues(filename, values) result(ierror)
+integer function getValues(filename, self) result(ierror)
   use ConfigReader_mod, only: ConfigReader, create, destroy
   use ConfigReader_mod, only: not_found => CONFIG_READER_ERR_VAR_NOT_FOUND
   use ConfigReader_mod, only: use_default => CONFIG_READER_USE_DEFAULT_VALUE
@@ -87,7 +87,7 @@ integer function getValues(filename, values) result(ierror)
 
   character(len=*), intent(in) :: filename
 
-  type(InputParams), intent(inout) :: values
+  type(InputParams), intent(inout) :: self
   type(ConfigReader) :: cr
 
   ierror = 0
@@ -101,7 +101,7 @@ integer function getValues(filename, values) result(ierror)
   endif
 
 
-  ierror = getValue(cr, "alat", values%alat , def=1.0)
+  ierror = getValue(cr, "alat", self%alat , def=1.0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for alat. Set alat to 1.0"
     ierror = 0 ! ok, no error
@@ -110,25 +110,25 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "bravais_a", values%bravais_a)
+  ierror = getValue(cr, "bravais_a", self%bravais_a)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for bravais_a."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "bravais_b", values%bravais_b)
+  ierror = getValue(cr, "bravais_b", self%bravais_b)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for bravais_b."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "bravais_c", values%bravais_c)
+  ierror = getValue(cr, "bravais_c", self%bravais_c)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for bravais_c."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "cartesian", values%cartesian , def=.TRUE.)
+  ierror = getValue(cr, "cartesian", self%cartesian , def=.TRUE.)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for cartesian. Set cartesian to .TRUE."
     ierror = 0 ! ok, no error
@@ -137,7 +137,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "bzdivide", values%bzdivide , def=8)
+  ierror = getValue(cr, "bzdivide", self%bzdivide , def=8)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for bzdivide. Set bzdivide to 8"
     ierror = 0 ! ok, no error
@@ -146,7 +146,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "rclust", values%rclust , def=1.5)
+  ierror = getValue(cr, "rclust", self%rclust , def=1.5)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for rclust. Set rclust to 1.5"
     ierror = 0 ! ok, no error
@@ -155,43 +155,43 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "emin", values%emin)
+  ierror = getValue(cr, "emin", self%emin)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for emin."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "emax", values%emax)
+  ierror = getValue(cr, "emax", self%emax)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for emax."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "npol", values%npol)
+  ierror = getValue(cr, "npol", self%npol)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for npol."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "npnt1", values%npnt1)
+  ierror = getValue(cr, "npnt1", self%npnt1)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for npnt1."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "npnt2", values%npnt2)
+  ierror = getValue(cr, "npnt2", self%npnt2)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for npnt2."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "npnt3", values%npnt3)
+  ierror = getValue(cr, "npnt3", self%npnt3)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for npnt3."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "tempr", values%tempr , def=800.0)
+  ierror = getValue(cr, "tempr", self%tempr , def=800.0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for tempr. Set tempr to 800.0"
     ierror = 0 ! ok, no error
@@ -200,7 +200,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "ebotsemi", values%ebotsemi , def=0.0)
+  ierror = getValue(cr, "ebotsemi", self%ebotsemi , def=0.0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for ebotsemi. Set ebotsemi to 0.0"
     ierror = 0 ! ok, no error
@@ -209,7 +209,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "emusemi", values%emusemi , def=0.0)
+  ierror = getValue(cr, "emusemi", self%emusemi , def=0.0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for emusemi. Set emusemi to 0.0"
     ierror = 0 ! ok, no error
@@ -218,7 +218,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "fsemicore", values%fsemicore , def=1.0)
+  ierror = getValue(cr, "fsemicore", self%fsemicore , def=1.0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for fsemicore. Set fsemicore to 1.0"
     ierror = 0 ! ok, no error
@@ -227,7 +227,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "npntsemi", values%npntsemi , def=0)
+  ierror = getValue(cr, "npntsemi", self%npntsemi , def=0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for npntsemi. Set npntsemi to 0"
     ierror = 0 ! ok, no error
@@ -236,7 +236,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "solver", values%solver , def=3)
+  ierror = getValue(cr, "solver", self%solver , def=3)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for solver. Set solver to 3"
     ierror = 0 ! ok, no error
@@ -245,13 +245,13 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "scfsteps", values%scfsteps)
+  ierror = getValue(cr, "scfsteps", self%scfsteps)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for scfsteps."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "imix", values%imix , def=0)
+  ierror = getValue(cr, "imix", self%imix , def=0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for imix. Set imix to 0"
     ierror = 0 ! ok, no error
@@ -260,13 +260,13 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "mixing", values%mixing)
+  ierror = getValue(cr, "mixing", self%mixing)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for mixing."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "fcm", values%fcm , def=20.0)
+  ierror = getValue(cr, "fcm", self%fcm , def=20.0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for fcm. Set fcm to 20.0"
     ierror = 0 ! ok, no error
@@ -275,7 +275,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "target_rms", values%target_rms , def=1.0D-8)
+  ierror = getValue(cr, "target_rms", self%target_rms , def=1.0D-8)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for target_rms. Set target_rms to 1.0D-8"
     ierror = 0 ! ok, no error
@@ -284,19 +284,19 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "gmax", values%gmax)
+  ierror = getValue(cr, "gmax", self%gmax)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for gmax."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "rmax", values%rmax)
+  ierror = getValue(cr, "rmax", self%rmax)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for rmax."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "kxc", values%kxc , def=2)
+  ierror = getValue(cr, "kxc", self%kxc , def=2)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for kxc. Set kxc to 2"
     ierror = 0 ! ok, no error
@@ -305,7 +305,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "qmrbound", values%qmrbound , def=1.0D-6)
+  ierror = getValue(cr, "qmrbound", self%qmrbound , def=1.0D-6)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for qmrbound. Set qmrbound to 1.0D-6"
     ierror = 0 ! ok, no error
@@ -314,7 +314,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "volterra", values%volterra , def=0)
+  ierror = getValue(cr, "volterra", self%volterra , def=0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for volterra. Set volterra to 0"
     ierror = 0 ! ok, no error
@@ -323,7 +323,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "icst", values%icst , def=4)
+  ierror = getValue(cr, "icst", self%icst , def=4)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for icst. Set icst to 4"
     ierror = 0 ! ok, no error
@@ -332,7 +332,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "kpre", values%kpre , def=0)
+  ierror = getValue(cr, "kpre", self%kpre , def=0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for kpre. Set kpre to 0"
     ierror = 0 ! ok, no error
@@ -341,7 +341,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "kforce", values%kforce , def=1)
+  ierror = getValue(cr, "kforce", self%kforce , def=1)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for kforce. Set kforce to 1"
     ierror = 0 ! ok, no error
@@ -350,7 +350,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "ldau", values%ldau , def=.FALSE.)
+  ierror = getValue(cr, "ldau", self%ldau , def=.FALSE.)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for ldau. Set ldau to .FALSE."
     ierror = 0 ! ok, no error
@@ -359,7 +359,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "nsra", values%nsra , def=2)
+  ierror = getValue(cr, "nsra", self%nsra , def=2)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for nsra. Set nsra to 2"
     ierror = 0 ! ok, no error
@@ -368,7 +368,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "kte", values%kte , def=1)
+  ierror = getValue(cr, "kte", self%kte , def=1)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for kte. Set kte to 1"
     ierror = 0 ! ok, no error
@@ -377,7 +377,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "jij", values%jij , def=.FALSE.)
+  ierror = getValue(cr, "jij", self%jij , def=.FALSE.)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for jij. Set jij to .FALSE."
     ierror = 0 ! ok, no error
@@ -386,7 +386,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "rcutjij", values%rcutjij , def=2.30)
+  ierror = getValue(cr, "rcutjij", self%rcutjij , def=2.30)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for rcutjij. Set rcutjij to 2.30"
     ierror = 0 ! ok, no error
@@ -395,13 +395,13 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "rclust_voronoi", values%rclust_voronoi)
+  ierror = getValue(cr, "rclust_voronoi", self%rclust_voronoi)
   if (ierror /= 0) then
     write(*,*) "Bad/no value given for rclust_voronoi."
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "nmin_panel", values%nmin_panel , def=7)
+  ierror = getValue(cr, "nmin_panel", self%nmin_panel , def=7)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for nmin_panel. Set nmin_panel to 7"
     ierror = 0 ! ok, no error
@@ -410,7 +410,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "num_MT_points", values%num_MT_points , def=10)
+  ierror = getValue(cr, "num_MT_points", self%num_MT_points , def=10)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for num_MT_points. Set num_MT_points to 10"
     ierror = 0 ! ok, no error
@@ -419,7 +419,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "MT_scale", values%MT_scale , def=0.98)
+  ierror = getValue(cr, "MT_scale", self%MT_scale , def=0.98)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for MT_scale. Set MT_scale to 0.98"
     ierror = 0 ! ok, no error
@@ -428,7 +428,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "RMT_ref_scale", values%RMT_ref_scale , def=0.995)
+  ierror = getValue(cr, "RMT_ref_scale", self%RMT_ref_scale , def=0.995)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for RMT_ref_scale. Set RMT_ref_scale to 0.995"
     ierror = 0 ! ok, no error
@@ -437,7 +437,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "cutoff_radius", values%cutoff_radius , def=-1.d0)
+  ierror = getValue(cr, "cutoff_radius", self%cutoff_radius , def=-1.d0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for cutoff_radius. Set cutoff_radius to -1.d0"
     ierror = 0 ! ok, no error
@@ -446,7 +446,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "lcutoff_radii", values%lcutoff_radii , def=0.d0)
+  ierror = getValue(cr, "lcutoff_radii", self%lcutoff_radii , def=0.d0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for lcutoff_radii. Set lcutoff_radii to 0.d0"
     ierror = 0 ! ok, no error
@@ -455,7 +455,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "near_field", values%near_field , def=0)
+  ierror = getValue(cr, "near_field", self%near_field , def=0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for near_field. Set near_field to 0"
     ierror = 0 ! ok, no error
@@ -464,7 +464,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "elementdatabasepath", values%elementdatabasepath , def='~/KKR/ElementDataBase')
+  ierror = getValue(cr, "elementdatabasepath", self%elementdatabasepath , def='~/KKR/ElementDataBase')
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for elementdatabasepath. Set elementdatabasepath to '~/KKR/ElementDataBase'"
     ierror = 0 ! ok, no error
@@ -473,7 +473,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "write_shapes", values%write_shapes , def=0)
+  ierror = getValue(cr, "write_shapes", self%write_shapes , def=0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for write_shapes. Set write_shapes to 0"
     ierror = 0 ! ok, no error
@@ -482,7 +482,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "mt_zero_shift", values%mt_zero_shift , def=0.0)
+  ierror = getValue(cr, "mt_zero_shift", self%mt_zero_shift , def=0.0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for mt_zero_shift. Set mt_zero_shift to 0.0"
     ierror = 0 ! ok, no error
@@ -491,7 +491,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "DEBUG_morgan_electrostatics", values%DEBUG_morgan_electrostatics , def=0)
+  ierror = getValue(cr, "DEBUG_morgan_electrostatics", self%DEBUG_morgan_electrostatics , def=0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for DEBUG_morgan_electrostatics. Set DEBUG_morgan_electrostatics to 0"
     ierror = 0 ! ok, no error
@@ -500,7 +500,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "fullbz", values%fullbz , def=.FALSE.)
+  ierror = getValue(cr, "fullbz", self%fullbz , def=.FALSE.)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for fullbz. Set fullbz to .FALSE."
     ierror = 0 ! ok, no error
@@ -509,7 +509,7 @@ integer function getValues(filename, values) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "vref", values%vref , def=8.d0)
+  ierror = getValue(cr, "vref", self%vref , def=8.d0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for vref. Set vref to 8.d0"
     ierror = 0 ! ok, no error
@@ -524,131 +524,30 @@ integer function getValues(filename, values) result(ierror)
 endfunction ! get
 
 !-------------------------------------------------------------------------------
-subroutine readInputParamsFromFile(values, filename, ios)
-  type(InputParams), intent(inout) :: values
+subroutine readInputParamsFromFile(self, filename, ios)
+  type(InputParams), intent(inout) :: self
   character(len=*), intent(in) :: filename
   integer, intent(out) :: ios
 
   integer, parameter :: fu = 67
+  integer :: ioc
 
   open(fu, file=filename, form="unformatted", action="read", status="old", iostat=ios)
   if (ios /= 0) return
-  read(fu) values%alat
-  read(fu) values%bravais_a
-  read(fu) values%bravais_b
-  read(fu) values%bravais_c
-  read(fu) values%cartesian
-  read(fu) values%bzdivide
-  read(fu) values%rclust
-  read(fu) values%emin
-  read(fu) values%emax
-  read(fu) values%npol
-  read(fu) values%npnt1
-  read(fu) values%npnt2
-  read(fu) values%npnt3
-  read(fu) values%tempr
-  read(fu) values%ebotsemi
-  read(fu) values%emusemi
-  read(fu) values%fsemicore
-  read(fu) values%npntsemi
-  read(fu) values%solver
-  read(fu) values%scfsteps
-  read(fu) values%imix
-  read(fu) values%mixing
-  read(fu) values%fcm
-  read(fu) values%target_rms
-  read(fu) values%gmax
-  read(fu) values%rmax
-  read(fu) values%kxc
-  read(fu) values%qmrbound
-  read(fu) values%volterra
-  read(fu) values%icst
-  read(fu) values%kpre
-  read(fu) values%kforce
-  read(fu) values%ldau
-  read(fu) values%nsra
-  read(fu) values%kte
-  read(fu) values%jij
-  read(fu) values%rcutjij
-  read(fu) values%rclust_voronoi
-  read(fu) values%nmin_panel
-  read(fu) values%num_MT_points
-  read(fu) values%MT_scale
-  read(fu) values%RMT_ref_scale
-  read(fu) values%cutoff_radius
-  read(fu) values%lcutoff_radii
-  read(fu) values%near_field
-  read(fu) values%elementdatabasepath
-  read(fu) values%write_shapes
-  read(fu) values%mt_zero_shift
-  read(fu) values%DEBUG_morgan_electrostatics
-  read(fu) values%fullbz
-  read(fu) values%vref
-  close(fu)
+  read(fu, iostat=ios) self
+  close(fu, iostat=ioc)
 endsubroutine ! load
 
 !-------------------------------------------------------------------------------
-subroutine writeInputParamsToFile(values, filename)
-  type(InputParams), intent(inout) :: values
+subroutine writeInputParamsToFile(self, filename)
+  type(InputParams), intent(inout) :: self
   character(len=*), intent(in) :: filename
 
   integer, parameter :: fu = 67
-  integer :: ios
 
-  open(fu, file=filename, form="unformatted", action="write", iostat=ios)
-  if (ios /= 0) return
-  write(fu) values%alat
-  write(fu) values%bravais_a
-  write(fu) values%bravais_b
-  write(fu) values%bravais_c
-  write(fu) values%cartesian
-  write(fu) values%bzdivide
-  write(fu) values%rclust
-  write(fu) values%emin
-  write(fu) values%emax
-  write(fu) values%npol
-  write(fu) values%npnt1
-  write(fu) values%npnt2
-  write(fu) values%npnt3
-  write(fu) values%tempr
-  write(fu) values%ebotsemi
-  write(fu) values%emusemi
-  write(fu) values%fsemicore
-  write(fu) values%npntsemi
-  write(fu) values%solver
-  write(fu) values%scfsteps
-  write(fu) values%imix
-  write(fu) values%mixing
-  write(fu) values%fcm
-  write(fu) values%target_rms
-  write(fu) values%gmax
-  write(fu) values%rmax
-  write(fu) values%kxc
-  write(fu) values%qmrbound
-  write(fu) values%volterra
-  write(fu) values%icst
-  write(fu) values%kpre
-  write(fu) values%kforce
-  write(fu) values%ldau
-  write(fu) values%nsra
-  write(fu) values%kte
-  write(fu) values%jij
-  write(fu) values%rcutjij
-  write(fu) values%rclust_voronoi
-  write(fu) values%nmin_panel
-  write(fu) values%num_MT_points
-  write(fu) values%MT_scale
-  write(fu) values%RMT_ref_scale
-  write(fu) values%cutoff_radius
-  write(fu) values%lcutoff_radii
-  write(fu) values%near_field
-  write(fu) values%elementdatabasepath
-  write(fu) values%write_shapes
-  write(fu) values%mt_zero_shift
-  write(fu) values%DEBUG_morgan_electrostatics
-  write(fu) values%fullbz
-  write(fu) values%vref
+  open(fu, file=filename, form="unformatted", action="write")
+  write(fu) self
   close(fu)
-endsubroutine
+endsubroutine ! store
 
-endmodule !InputParams
+endmodule ! InputParams

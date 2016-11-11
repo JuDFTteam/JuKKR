@@ -145,34 +145,10 @@ module DimParams_mod
     integer, parameter :: fu = 67
 
     open(fu, file=filename, form='unformatted', action='read', status='old')
-
-    read(fu) self!%lmaxd
-!     read(fu) self%nspind
-!     read(fu) self%naez
-!     read(fu) self%irnsd
-!     read(fu) self%irmd
-!     read(fu) self%irid
-!     read(fu) self%nxijd
-!     read(fu) self%kpoibz
-!     read(fu) self%iguessd
-!     read(fu) self%bcpd
-!     read(fu) self%lly
-!     read(fu) self%smpid
-!     read(fu) self%empid
-!     read(fu) self%nthrds
-!     read(fu) self%xdim
-!     read(fu) self%ydim
-!     read(fu) self%zdim
-!     read(fu) self%natbld
-!     read(fu) self%itdbryd
-!     read(fu) self%iemxd
-!     read(fu) self%ekmd
-!     read(fu) self%num_atom_procs
-
+    read(fu) self
     close(fu)
 
-    ! deal with derived parameters
-    call calculateDerivedParameters(self)
+    call calculateDerivedParameters(self) ! deal with derived parameters
 
   endsubroutine ! create
   
@@ -186,30 +162,7 @@ module DimParams_mod
     integer, parameter :: fu = 67
 
     open(fu, file=filename, form='unformatted', action='write')
-
-    write(fu) self!%lmaxd
-!     write(fu) self%nspind
-!     write(fu) self%naez
-!     write(fu) self%irnsd
-!     write(fu) self%irmd
-!     write(fu) self%irid
-!     write(fu) self%nxijd
-!     write(fu) self%kpoibz
-!     write(fu) self%iguessd
-!     write(fu) self%bcpd
-!     write(fu) self%lly
-!     write(fu) self%smpid
-!     write(fu) self%empid
-!     write(fu) self%nthrds
-!     write(fu) self%xdim
-!     write(fu) self%ydim
-!     write(fu) self%zdim
-!     write(fu) self%natbld
-!     write(fu) self%itdbryd
-!     write(fu) self%iemxd
-!     write(fu) self%ekmd
-!     write(fu) self%num_atom_procs
-
+    write(fu) self
     close(fu)
 
   endsubroutine ! write
