@@ -116,11 +116,8 @@ module KKRmat_mod
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     ! get the required reference Green functions from the other MPI processes
     call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
-#define Ginp Gref_buffer
-    if (Lly == 1) then ! LLY
+    if (Lly == 1) & ! LLY
       call referenceFourier_com_part1(dGref_buffer, naez, dGinp, global_atom_id, communicator)
-#define dGinp dGref_buffer
-    endif
 #endif
 
     allocate(G_diag(lmmaxd,lmmaxd))
@@ -133,12 +130,14 @@ module KKRmat_mod
 
       ! Get the scattering path operator for k-point kpoints(:,ikpoint)
       ! output: op%mat_X
-      call kloopbody(solver, op, preconditioner, kpoints(1:3,ikpoint), tmatLL, Ginp, alat, RR, &
-#ifndef SPLIT_REFERENCE_FOURIER_COM    
-                     global_atom_id, communicator, &
-#endif                       
+      call kloopbody(solver, op, preconditioner, kpoints(1:3,ikpoint), tmatLL, alat, RR, &
+#ifdef SPLIT_REFERENCE_FOURIER_COM
+                     Gref_buffer, dGref_buffer, &
+#else
+                     Ginp, dGinp, global_atom_id, communicator, &
+#endif
                      iguess_data, ienergy, ispin, ikpoint, &
-                     mssq, dtde, dGinp, bztr2, kpointweight, global_atom_idx_lly, Lly, & !LLY
+                     mssq, dtde, bztr2, kpointweight, global_atom_idx_lly, Lly, & !LLY
                      solver_type)
 
       do ila = 1, num_local_atoms
@@ -164,20 +163,19 @@ module KKRmat_mod
     !==============================================================================
     enddo ! ikpoint = 1, nkpoints
     !==============================================================================
+    
+#ifdef SPLIT_REFERENCE_FOURIER_COM
+    deallocate(Gref_buffer, stat=ist) ! ignore status
+    deallocate(dGref_buffer, stat=ist) ! LLY, ignore status
+#endif
+    deallocate(G_diag, stat=ist) ! ignore status
 
     if (Lly == 1) then   
       bztr2 = bztr2*nsymat/volbz + tr_alph(1)
       trace = zero
-      call MPI_Allreduce(bztr2, trace, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
+      call MPI_Allreduce(bztr2, trace, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, communicator, ierr)
       lly_grdt = trace
     endif ! Lly == 1
-
-#ifdef SPLIT_REFERENCE_FOURIER_COM
-    deallocate(Ginp, stat=ist) ! ignore status
-#undef Ginp
-    deallocate(dGinp, stat=ist) ! LLY, ignore status
-#undef dGinp
-#endif
 
     do ila = 1, num_local_atoms
       TESTARRAYLOG(3, GS(:,:,ila))
@@ -187,7 +185,6 @@ module KKRmat_mod
     WRITELOG(3, *) "Max. num iterations for this E-point: ", solver%stats%max_iterations
     WRITELOG(3, *) "Sum of iterations for this E-point:   ", solver%stats%sum_iterations
     WRITELOG(2, *) "useful Floating point operations:     ", GiFlops," GiFlop"
-    deallocate(G_diag, stat=ist) ! ignore status
 
   endsubroutine ! MultipleScattering
 
@@ -199,12 +196,12 @@ module KKRmat_mod
   !> Solution is stored in op%mat_X.
   !> Scattering path operator is calculated for atoms given in
   !> op%atom_indices(:)
-  subroutine kloopbody(solver, op, preconditioner, kpoint, tmatLL, Ginp, alat, RR, &
-#ifndef SPLIT_REFERENCE_FOURIER_COM    
+  subroutine kloopbody(solver, op, preconditioner, kpoint, tmatLL, alat, RR, Ginp, dGinp, &
+#ifndef SPLIT_REFERENCE_FOURIER_COM
                        global_atom_id, communicator, &
-#endif                       
+#endif
                        iguess_data, ienergy, ispin, ikpoint, &
-                       mssq, dtde, dGinp, bztr2, volcub, global_atom_idx_lly, Lly, & !LLY
+                       mssq, dtde, bztr2, volcub, global_atom_idx_lly, Lly, & !LLY
                        solver_type)
 
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertBSRToFullMatrix, convertFullMatrixToBSR
@@ -224,20 +221,20 @@ module KKRmat_mod
     double precision, intent(in) :: kpoint(3)
     double complex, intent(in) :: tmatLL(:,:,:) !> tmatLL(lmsd,lmsd,naez_trc)
     double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,N) where N=num_local_atoms or naez_trc if defined(SPLIT_REFERENCE_FOURIER_COM)
+    double complex, intent(in) :: dGinp(:,:,:,:) !< dim(lmmaxd,lmmaxd,naclsd,N) LLY: dG_ref/dE , compare N from above
     double precision, intent(in) :: alat
     double precision, intent(in)  :: RR(:,0:)
 #ifndef SPLIT_REFERENCE_FOURIER_COM    
     integer, intent(in) :: global_atom_id(:) ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
     integer, intent(in) :: communicator      ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
 #else     
-#define referenceFourier_com(A1,A2,A3,A4,A5,A6,A7,A8,A9) referenceFourier_part2(A1,A2,A3,A4,A5,A6,A7)
+#define referenceFourier_com(A,B,C,D,E,F,G,H,I) referenceFourier_part2(A,B,C,D,E,F,G)
 #endif    
     type(InitialGuess), intent(inout) :: iguess_data
     integer, intent(in) :: ienergy, ispin, ikpoint
     ! LLY
     double complex, intent(in)         :: mssq(:,:,:)    !< inverted T-matrix
     double complex, intent(in)         :: dtde(:,:,:)     !< energy derivative of T-matrix
-    double complex, intent(in)         :: dGinp(:,:,:,:)  !< dG_ref/dE dim(lmmaxd,lmmaxd,naclsd,N), compare N from above
     double complex, intent(out)        :: bztr2
     double precision, intent(in)       :: volcub (:)
     integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed, e.g. dtde, tmatll
