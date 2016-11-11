@@ -62,10 +62,9 @@ module TFQMR_mod
     integer, parameter :: MaxIterations = 200 ! limit of max. 2000 iterations
     integer :: iteration, probe, icol, iRHS
 
-    !     small, local arrays with dimension ncol
+    ! small, local arrays with dimension(ncol,nRHSs)
     double complex,   dimension(ncol,nRHSs) :: ZTMP, RHO, ETA, BETA, mALPHA ! -alpha
-    double precision, dimension(ncol,nRHSs) :: residual_upper_bound, DTMP, COSI, TAU, VAR, RESN, R0, N2B  ! norm of right-hand side
-
+    double precision, dimension(ncol,nRHSs) :: RUB, DTMP, COSI, TAU, VAR, RESN, R0, N2B ! norm of right-hand side
     integer :: tfqmr_status(ncol,nRHSs) ! 0 = not converged, negative = breakdown, 1 = converged
     integer :: converged_at(ncol,nRHSs) ! stores iteration where calculation converged, 0 = never converged
     logical :: isDone
@@ -262,9 +261,9 @@ module TFQMR_mod
       call col_axpy(ETA, v7, mat_X, ColIndices)
 
       ! Residual upper bound calculation
-      residual_upper_bound = sqrt( (2*iteration + 1) * TAU) / N2B
+      RUB = sqrt( (2*iteration + 1) * TAU) / N2B
 
-      max_upper_bound = maxval(residual_upper_bound)
+      max_upper_bound = maxval(RUB)
 
       if (max_upper_bound <= target_upper_bound) then
         probe = iteration ! probe residual
@@ -433,6 +432,7 @@ module TFQMR_mod
     enddo ! block
     !$omp end do
 
+    ! nFlops = 4*size(vector)
   endsubroutine ! norms
 
   !------------------------------------------------------------------------------
@@ -463,6 +463,7 @@ module TFQMR_mod
     enddo ! block
     !$omp end do
 
+    ! nFlops = 8*size(vector)
   endsubroutine ! dots
 
   !------------------------------------------------------------------------------
@@ -488,6 +489,7 @@ module TFQMR_mod
     enddo ! block
     !$omp end do
 
+    ! nFlops = 8*size(yvector)
   endsubroutine ! y := a*x+y
 
   !------------------------------------------------------------------------------
@@ -513,6 +515,7 @@ module TFQMR_mod
     enddo ! block
     !$omp end do
     
+    ! nFlops = 8*size(yvector)
   endsubroutine ! y := x+a*y
 
 endmodule ! TFQMR_mod
