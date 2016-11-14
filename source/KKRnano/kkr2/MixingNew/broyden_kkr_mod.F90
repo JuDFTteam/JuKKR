@@ -81,23 +81,24 @@ module broyden_kkr_mod
     use BasisAtom_mod, only: BasisAtom
   
     type(CalculationData), intent(in) :: calc_data
-    double precision, intent(inout) :: array(*)
+    double precision, intent(out) :: array(*)
 
-    integer :: ilocal, num_local_atoms, imap, imap_new
+    integer :: ilocal, offset, num
     type(BasisAtom), pointer :: atomdata
 
-    num_local_atoms = calc_data%num_local_atoms
-
-    imap = 0
-    do ilocal = 1, num_local_atoms
-      atomdata =>getAtomData(calc_data, ilocal)
-      call BRYSH3_new(array(imap+1),atomdata%potential%VISP,atomdata%potential%VINS, &
-                      atomdata%potential%irmind,atomdata%potential%irmd, &
+    offset = 0
+    do ilocal = 1, calc_data%num_local_atoms
+      atomdata => getAtomData(calc_data, ilocal)
+      num = BRYSH3_new(array(offset+1), & ! assumed size array
+                      atomdata%potential%VISP, &
+                      atomdata%potential%VINS, &
+                      atomdata%potential%irmind, &
+                      atomdata%potential%irmd, &
                       atomdata%potential%nspin, &
-                      imap_new,atomdata%potential%lmpot, &
-                      atomdata%potential%irmd, atomdata%potential%irnsd)
-
-      imap = imap + imap_new
+                      atomdata%potential%lmpot, &
+                      atomdata%potential%irmd, &
+                      atomdata%potential%irnsd)
+      offset = offset + num
     enddo ! ilocal
   endsubroutine ! collapse_input_potentials
 
@@ -107,24 +108,24 @@ module broyden_kkr_mod
     use brydbm_new_com_mod, only: BRYSH1_new
     use CalculationData_mod, only: CalculationData, getAtomData
     use BasisAtom_mod, only: BasisAtom
-  
-    type(CalculationData), intent(in) :: calc_data
-    double precision, intent(inout) :: array(*)
 
-    integer :: ilocal, num_local_atoms, imap, imap_new
+    type(CalculationData), intent(in) :: calc_data
+    double precision, intent(out) :: array(*)
+
+    integer :: ilocal, offset, num
     type(BasisAtom), pointer :: atomdata
 
-    num_local_atoms = calc_data%num_local_atoms
-
-    imap = 0
-    do ilocal = 1, num_local_atoms
+    offset = 0
+    do ilocal = 1, calc_data%num_local_atoms
       atomdata => getAtomData(calc_data, ilocal)
-      call BRYSH1_new(array(imap+1),atomdata%potential%vons, &
-                      atomdata%potential%irmind, atomdata%potential%irmd, &
-                      atomdata%potential%nspin, imap_new, atomdata%potential%lmpot, &
+      num = BRYSH1_new(array(offset+1), & ! assumed size array
+                      atomdata%potential%vons, &
+                      atomdata%potential%irmind, &
+                      atomdata%potential%irmd, &
+                      atomdata%potential%nspin, &
+                      atomdata%potential%lmpot, &
                       atomdata%potential%irmd)
-
-      imap = imap + imap_new
+      offset = offset + num
     enddo ! ilocal
   endsubroutine ! collapse_output_potentials
 
@@ -140,24 +141,22 @@ module broyden_kkr_mod
     double precision, intent(in) :: array(:)
     type(CalculationData), intent(inout) :: calc_data
 
-    integer :: ilocal, num_local_atoms, ind, num
+    integer :: ilocal, offset, num, npot
     type(BasisAtom), pointer :: atomdata
 
-    num_local_atoms = calc_data%num_local_atoms
-
-    ind = 1
+    offset = 0
     num = 0
-    do ilocal = 1, num_local_atoms
+    do ilocal = 1, calc_data%num_local_atoms
       atomdata => getAtomData(calc_data, ilocal)
-
-      num = getNumPotentialValues(atomdata%potential)
-      call BRYSH2_new(array(ind:ind+num-1),atomdata%potential%VONS, &
+      npot = getNumPotentialValues(atomdata%potential)
+      num = BRYSH2_new(array(offset + 1:npot +offset), &
+                      atomdata%potential%VONS, &
                       atomdata%potential%irmind, &
-                      atomdata%potential%irmd, atomdata%potential%nspin, &
-                      num, atomdata%potential%LMPOT, atomdata%potential%IRMD)
-
-      ind = ind+num
-
+                      atomdata%potential%irmd, &
+                      atomdata%potential%nspin, &
+                      atomdata%potential%LMPOT, &
+                      atomdata%potential%IRMD)
+      offset = offset + num
     enddo ! ilocal
   endsubroutine ! extract_mixed_potentials
 
@@ -168,33 +167,31 @@ module broyden_kkr_mod
     use PotentialData_mod, only: getNumPotentialValues
   
     type(CalculationData), intent(in) :: calc_data
-    double precision, intent(inout) :: g_metric_all(:)
+    double precision, intent(out) :: g_metric_all(:)
 
-    integer :: ilocal, num_local_atoms, ind, num
+    integer :: ilocal, offset, npot
     type(BasisAtom), pointer :: atomdata
 
-    num_local_atoms = calc_data%num_local_atoms
-
-    ind = 1
-    num = 0
-    do ilocal = 1, num_local_atoms
+    offset = 0
+    do ilocal = 1, calc_data%num_local_atoms
       atomdata => getAtomData(calc_data, ilocal)
-
-      num = getNumPotentialValues(atomdata%potential)
-      call calc_metric(g_metric_all(ind:ind+num-1), atomdata%potential%LMPOT, &
-                       atomdata%mesh_ptr%r, atomdata%mesh_ptr%drdi, &
-                       atomdata%potential%irmd, atomdata%potential%irmind, &
-                       atomdata%potential%nspin, num)
-
-      ind = ind + num
+      npot = getNumPotentialValues(atomdata%potential)
+      call calc_metric(g_metric_all(offset + 1:npot +offset), &
+                       atomdata%potential%LMPOT, &
+                       atomdata%mesh_ptr%r, &
+                       atomdata%mesh_ptr%drdi, &
+                       atomdata%potential%irmd, &
+                       atomdata%potential%irmind, &
+                       atomdata%potential%nspin)
+      offset = offset + npot
     enddo ! ilocal
   endsubroutine ! calc_all_metrics
 
   !----------------------------------------------------------------------------
-  subroutine calc_metric(g_metric, lmpot, r, drdi, irc, irmin, nspin, nmap)
-    double precision, intent(out) :: g_metric(nmap)
-    integer, intent(in) :: lmpot, nmap, irc, irmin, nspin
-    double precision :: r(:), drdi(:)
+  subroutine calc_metric(g_metric, lmpot, r, drdi, irc, irmin, nspin)
+    double precision, intent(out) :: g_metric(:)
+    integer, intent(in) :: lmpot, irc, irmin, nspin
+    double precision, intent(in) :: r(:), drdi(:)
 
     integer :: ij, ir, lm, isp
     double precision :: volinv
@@ -207,18 +204,16 @@ module broyden_kkr_mod
         ij = ij + 1
         g_metric(ij) = volinv*r(ir)*r(ir)*drdi(ir)
       enddo ! ir
-      !
-      if (lmpot > 1) then
 
-        do lm = 2, lmpot
-          do ir = irmin, irc
-            ij = ij + 1
-            g_metric(ij) = volinv*r(ir)*r(ir)*drdi(ir)
-          enddo ! ir
-        enddo ! lm
-      endif
+      do lm = 2, lmpot
+        do ir = irmin, irc
+          ij = ij + 1
+          g_metric(ij) = volinv*r(ir)*r(ir)*drdi(ir)
+        enddo ! ir
+      enddo ! lm
 
     enddo ! isp
+    
   endsubroutine ! calc_metric
 
 endmodule ! broyden_kkr_mod

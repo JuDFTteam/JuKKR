@@ -1,6 +1,6 @@
 
 !================================================================
-!> Collects contributions to the rms errors from all sites and
+!> collects contributions to the rms errors from all sites and
 !> prints rms errors.
 !
 !> output of a) rms-error
@@ -8,98 +8,63 @@
 ! called by main2
 !================================================================
 
-!> RMSAVQ, RMSAVM: on input: local rms erros, on output: global rms
+!> rmsavq, rmsavm: on input: local rms erros, on output: global rms
 !> errors.
-subroutine RMSOUT_com(RMSAVQ,RMSAVM,ITER,NSPIN,NAEZ, &
-MYLRANK, communicator)
-
+subroutine rmsout_com(rmsavq, rmsavm, iter, nspin, naez, myrank, communicator)
   implicit none
 
-  double precision, intent(inout) :: RMSAVM,RMSAVQ
+  double precision, intent(inout) :: rmsavm, rmsavq
 
-  integer ITER,NSPIN,NAEZ
-  !     ..
-  !     .. MPI variables ..
-  !     .. L-MPI ..
-  integer      MYLRANK, communicator
+  integer, intent(in) :: iter, nspin, naez
+  integer, intent(in) :: myrank, communicator
 
-  double precision RMSQ, RMSM
+  double precision rmsq, rmsm
 
-  call allreduceRMS_com(RMSQ, RMSM, RMSAVQ,RMSAVM,NAEZ, communicator)
+  call allreducerms_com(rmsq, rmsm, rmsavq, rmsavm, naez, communicator)
 
-  ! ================== MYRANK.EQ.0 =======================================
-  if(MYLRANK.eq.0) then
+  if (myrank == 0) call printrmserror(iter, nspin, rmsm, rmsq)
 
-    call printRMSerror(ITER, NSPIN, RMSM, RMSQ)
+  rmsavq = rmsq
+  rmsavm = rmsm
 
-  end if
-  ! ============= MYRANK.EQ.0 ============================================
-  RMSAVQ = RMSQ
-  RMSAVM = RMSM
-
-end
+endsubroutine ! rmsout_com
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-!> Communicate the contributions of the rms error of charge and magnetisation
-!> density and return results in RMSQ and RMSM.
-subroutine allreduceRMS_com(RMSQ, RMSM, &  ! output
-RMSAVQ_local,RMSAVM_local,NAEZ, & !in
-communicator) !in
-
+!> communicate the contributions of the rms error of charge and magnetisation
+!> density and return results in rmsq and rmsm.
+subroutine allreducerms_com(rmsq, rmsm, rmsavq_local, rmsavm_local, naez, communicator)
   implicit none
+  include 'mpif.h'
 
-  INCLUDE 'mpif.h'
-
-  double precision RMSAVM_local,RMSAVQ_local, &
-  WORK1(2),WORK2(2)
-
-  integer NAEZ
-
+  double precision, intent(in) :: rmsavm_local, rmsavq_local
+  double precision, intent(in) :: rmsq, rmsm
+  integer, intent(in) :: naez
+  integer, intent(in) :: communicator
 
   !     .. local scalars ..
-  double precision RMSQ,RMSM
-  !     ..
-  !     .. MPI variables ..
-  integer communicator
-  integer ierr
+  double precision :: send(2), recv(2)
+  integer :: ierr
 
-  !****************************************************** MPI COLLECT DATA
+  send(:) = [rmsavq_local, rmsavm_local]
 
-  WORK1(1) = RMSAVQ_local
-  WORK1(2) = RMSAVM_local
+  call MPI_Allreduce(send, recv, 2, mpi_double_precision, mpi_sum, communicator, ierr)
 
-  call MPI_ALLREDUCE(WORK1,WORK2,2, &
-  MPI_DOUBLE_PRECISION,MPI_SUM,communicator, &
-  IERR)
+  rmsq = sqrt(recv(1)/naez)
+  rmsm = sqrt(recv(2)/naez)
 
-  RMSQ = SQRT(WORK2(1)/NAEZ)
-  RMSM = SQRT(WORK2(2)/NAEZ)
-
-  !****************************************************** MPI COLLECT DATA
-  ! +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  ! ======================================================================
-
-end
+endsubroutine ! allreducerms_com
 
 !------------------------------------------------------------------------------
-!> Output rms errors to screen.
-subroutine printRMSerror(ITER, NSPIN, RMSM, RMSQ)
+!> output rms errors to screen.
+subroutine printrmserror(iter, nspin, rmsm, rmsq)
   implicit none
-  integer :: ITER
-  integer :: NSPIN
-  double precision :: RMSM
-  double precision :: RMSQ
+  integer, intent(in) :: iter, nspin
+  double precision, intent(in) :: rmsm, rmsq
 
-  write(6,'(79(1H-),/)')
-  if (NSPIN.eq.2) then
-    write (6,fmt=9041) ITER,RMSQ,RMSM
-  else
-    write (6,fmt=9051) ITER,RMSQ
-  end if
-  write(6,'(79(1H-))')
+  write(6,'(79(1h-),/)')
+  write (6,fmt="('      ITERATION',i4,' average rms-error : v+ + v- = ',1p,d11.4)") iter, rmsq
+  if (nspin == 2) &
+  write (6,fmt="(39x,' v+ - v- = ',1p,d11.4)") rmsm
+  write(6,'(79(1h-))')
 
-9041 format ('      ITERATION',I4,' average rms-error : v+ + v- = ', &
-  1p,d11.4,/,39x,' v+ - v- = ',1p,d11.4)
-9051 format ('      ITERATION',I4,' average rms-error : v+ + v- = ', &
-  1p,d11.4)
-end subroutine
+endsubroutine ! print

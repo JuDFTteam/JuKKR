@@ -628,6 +628,7 @@ module ProcessKKRresults_mod
     use total_energy_mod, only: madelung_energy, madelung_ref_radius_correction, energy_electrostatic_wrapper
     use MadelungPotential_mod, only: addMadelungPotentialnew_com
     use muffin_tin_zero_mod, only: allreduceMuffinTinShift_com, printMuffinTinShift
+    use AtomicForce_mod, only: force, forceh, forcxc
     use wrappers_mod, only: VINTRAS_wrapper, VXCDRV_wrapper, MTZERO_wrapper, CONVOL_wrapper
     
     integer, intent(in)                       :: iter
@@ -752,13 +753,13 @@ module ProcessKKRresults_mod
 
       if (calc_force) then
 
-        call FORCEH(densities%force_FLM,atomdata%potential%LPOT, &
+        call forceh(densities%force_FLM,atomdata%potential%LPOT, &
                     densities%RHO2NS,atomdata%potential%VONS, &
                     mesh%R,mesh%DRDI, min(mesh%imt, MAX_MADELUNG_RADIUS_INDEX), atomdata%Z_nuclear,mesh%irmd)
 
         force_FLMC = 0.d0 ! temporary needed later in forcxc
 
-        call FORCE(densities%force_FLM,force_FLMC,atomdata%potential%LPOT, &
+        call force(densities%force_FLM,force_FLMC,atomdata%potential%LPOT, &
                   atomdata%potential%NSPIN, atomdata%core%RHOCAT, &
                   atomdata%potential%VONS, mesh%R, mesh%DRDI, &
                   mesh%IMT, mesh%irmd)
@@ -774,8 +775,7 @@ module ProcessKKRresults_mod
       ! output: vons_temp, EXC (exchange energy) (l-resolved)
 
       vons_temp = 0.d0 ! V_XC stored in temporary, must not add before energy calc.
-      call VXCDRV_wrapper(vons_temp, energies%EXC, params%KXC, densities%RHO2NS, &
-                          calc%shgaunts, atomdata)
+      call VXCDRV_wrapper(vons_temp, energies%EXC, params%KXC, densities%RHO2NS, calc%shgaunts, atomdata)
 
   ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
       call calculatePotentials_energies()
@@ -786,7 +786,7 @@ module ProcessKKRresults_mod
     ! Force calculation continues here
 
       if (calc_force) then
-        call FORCXC(densities%force_FLM,force_FLMC,atomdata%potential%LPOT, &
+        call forcxc(densities%force_FLM,force_FLMC,atomdata%potential%LPOT, &
                     atomdata%potential%NSPIN, atomdata%core%RHOCAT, &
                     atomdata%potential%VONS, mesh%R, &
                     mesh%DRDI, mesh%IMT, mesh%irmd)
