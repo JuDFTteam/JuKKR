@@ -1097,7 +1097,7 @@ C new solver for full-potential, spin-orbit, initialise
       IF (OPT('FERMIOUT'))THEN                                        ! fswrt
         CALL WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,  ! fswrt
      +                         ALAT,BRAVAIS,RECBV,RBASIS,CLS,NACLS,   ! fswrt
-     +                         RCLS,EZOA,ATOM,RR)                     ! fswrt
+     +                         RCLS,EZOA,ATOM,RR,NSPIN)                     ! fswrt
       END IF                                                          ! fswrt
 
       IF (ISHIFT.EQ.2) THEN                                           ! fxf
