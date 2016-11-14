@@ -13,7 +13,7 @@ module TimerMpi_mod
     double precision :: min_sample = 0.d0
     double precision :: max_sample = 0.d0
     integer(kind=4)  :: num_samples = 0
-    logical :: running = .false.
+    logical(kind=1)  :: running = .false.
   endtype ! TimerMpi
 
   contains

@@ -25,9 +25,10 @@ module TFQMR_mod
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param ncol           number of right-hand sides = number of columns of B
   !> @param nrow           number of row elements of matrices mat_X, mat_B
-  subroutine solve_with_TFQMR(op, mat_X, mat_B, tolerance, ncol, nRHSs, initial_zero, precond, use_precond, vecs, &
+  subroutine solve_with_TFQMR(op, mat_X, mat_B, tolerance, ncol, nRHSs, initial_zero, precond, use_precond, vecs, kernel_timer, &
                    iterations_needed, largest_residual, nFlops) ! optional output args
     USE_LOGGING_MOD
+    use TimerMpi_mod, only: TimerMpi, startTimer, stopTimer
     use SolverStats_mod, only: SolverStats
     use KKROperator_mod, only: KKROperator
     use BCPOperator_mod, only: BCPOperator, multiply
@@ -51,6 +52,7 @@ module TFQMR_mod
 #define v9 vecs(:,:,:,9)
 #define vP vecs(:,:,:,10)
     !!  vP is only accessed when preconditioning is active
+    type(TimerMpi), intent(inout) :: kernel_timer
 
     ! optional args
     integer,          intent(out), optional :: iterations_needed
@@ -100,9 +102,11 @@ module TFQMR_mod
 
     else
 
+      call startTimer(kernel_timer)
       ! v5 = A*v1
       call apply_precond_and_matrix(op, precond, mat_X, v5, vP, use_precond, mFlops)
       sparse_mult_count = sparse_mult_count + 1
+      call  stopTimer(kernel_timer)
 
       ! v5 = v2 - v5 ; r0 = b - A*x0
       v5 = v5 - mat_B ! subtract RightHandSide
@@ -162,9 +166,11 @@ module TFQMR_mod
       call col_xpay(v5, BETA, v6, ColIndices, mFlops)
 
 
+      call startTimer(kernel_timer)
       ! v9 = A*v6
       call apply_precond_and_matrix(op, precond, v6, v9, vP, use_precond, mFlops)
       sparse_mult_count = sparse_mult_count + 1
+      call  stopTimer(kernel_timer)
 
       ! v4 = beta*v4 + v9
       call col_xpay(v9, BETA, v4, ColIndices, mFlops)
@@ -227,8 +233,10 @@ module TFQMR_mod
       !=============================================================
 
       ! v8 = A*v6
+      call startTimer(kernel_timer)
       call apply_precond_and_matrix(op, precond, v6, v8, vP, use_precond, mFlops)
       sparse_mult_count = sparse_mult_count + 1
+      call  stopTimer(kernel_timer)
 
       ! v5 = v5 - alpha*v8
       call col_axpy(mALPHA, v8, v5, ColIndices, mFlops)
@@ -292,8 +300,10 @@ module TFQMR_mod
         ! has to be performed.
 
         ! v9 = A*v1
+        call startTimer(kernel_timer)
         call apply_precond_and_matrix(op, precond, mat_X, v9, vP, use_precond, mFlops)
         sparse_mult_count = sparse_mult_count + 1
+        call  stopTimer(kernel_timer)
 
         ! v9 = v2 - v9
         v9 = v9 - mat_B ! flipped sign ! subtract RightHandSide

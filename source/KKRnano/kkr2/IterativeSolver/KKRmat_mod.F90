@@ -30,7 +30,7 @@ module KKRmat_mod
   subroutine MultipleScattering(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                           mssq, dGinp, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, & ! LLY
-                          solver_type, kpoint_timer)
+                          solver_type, kpoint_timer, kernel_timer)
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
     !   Greens function of the real system -> GS(*,*,*),
@@ -76,7 +76,7 @@ module KKRmat_mod
     integer, intent(in)          :: Lly
 
     integer, intent(in) :: solver_type
-    type(TimerMpi), intent(inout) :: kpoint_timer
+    type(TimerMpi), intent(inout) :: kpoint_timer, kernel_timer
 
     ! locals
     double complex, allocatable :: G_diag(:,:) ! dim(lmmaxd,lmmaxd)
@@ -133,7 +133,7 @@ module KKRmat_mod
 #endif
                      iguess_data, ienergy, ispin, ikpoint, &
                      mssq, dtde, bztr2, kpointweight, global_atom_idx_lly, Lly, & !LLY
-                     solver_type)
+                     solver_type, kernel_timer)
 
       do ila = 1, num_local_atoms
         call getGreenDiag(G_diag, op%mat_X, op%bsr_X, op%atom_indices(ila), ila) ! extract solution
@@ -197,7 +197,7 @@ module KKRmat_mod
 #endif
                        iguess_data, ienergy, ispin, ikpoint, &
                        mssq, dtde, bztr2, volcub, global_atom_idx_lly, Lly, & !LLY
-                       solver_type)
+                       solver_type, kernel_timer)
 
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide
     use fillKKRMatrix_mod, only: convertBSRToFullMatrix! LLY , convertFullMatrixToBSR!, solveFull
@@ -208,6 +208,7 @@ module KKRmat_mod
     use InitialGuess_mod, only: InitialGuess, load, store
     use KKROperator_mod, only: KKROperator
     use BCPOperator_mod, only: BCPOperator, calc
+    use TimerMpi_mod, only: TimerMpi
     
     USE_ARRAYLOG_MOD
     USE_LOGGING_MOD
@@ -238,7 +239,8 @@ module KKRmat_mod
     integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed, e.g. dtde, tmatll
     integer, intent(in)                :: Lly             !< LLY=1/0, turns Lloyd's formula on/off
     integer, intent(in) :: solver_type
-
+    type(TimerMpi), intent(inout) :: kernel_timer
+    
     double complex, allocatable :: dPdE_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:) ! LLY
     double complex :: tracek, gtdPdE ! LLY
 
@@ -367,7 +369,7 @@ module KKRmat_mod
         iterative_solver%initial_zero = .true.
       endif
 
-      call solve(iterative_solver) ! use iterative solver
+      call solve(iterative_solver, kernel_timer) ! use iterative solver
 
 #ifdef DEBUG_dump_matrix
       call dump(op%bsr_A, "matrix_descriptor.dat") ! SparseMatrixDescription

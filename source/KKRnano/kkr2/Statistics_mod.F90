@@ -101,7 +101,7 @@ module Statistics_mod
     dev  = sqrt(max(0.d0, var)) ! compute sigma as sqrt(variance)
     minv = -xinf(1)
     maxv =  xinf(0)
-    write(unit=str, fmt=frmt, iostat=ios) mean," +/-",dev,"  [",minv,", ",maxv,"]"
+    write(unit=str, fmt=frmt, iostat=ios) mean," +/- ",dev,"  [",minv,", ",maxv,"]"
   endfunction ! eval
 
   character(len=96) function eval_flt(xmom, xinf, ndigits) result(str)
@@ -125,7 +125,7 @@ module Statistics_mod
     dev  = sqrt(max(0.d0, var)) ! compute sigma as sqrt(variance)
     minv = -xinf(1)
     maxv =  xinf(0)
-    write(unit=str, fmt=frmt, iostat=ios) mean," +/-",dev,"  [",minv,", ",maxv,"]"
+    write(unit=str, fmt=frmt, iostat=ios) mean," +/- ",dev,"  [",minv,", ",maxv,"]"
   endfunction ! eval
 
 endmodule ! Statistics_mod

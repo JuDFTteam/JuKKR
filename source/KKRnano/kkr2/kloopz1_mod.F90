@@ -13,7 +13,7 @@ module kloopz1_mod
   subroutine kloopz1(GmatN, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
                      dsymLL, tmatLL, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                      dGinp_local, dtde, tr_alph, lly_grdt, global_atom_idx_lly, lly, & ! LLY 
-                     solver_type, kpoint_timer)
+                     solver_type, kpoint_timer, kernel_timer)
 
 ! only part of arrays for corresponding spin direction is passed
 ! (GmatN, tsst_local, dtde_local, lly_grdt, tr_alph, gmatxij)
@@ -65,7 +65,7 @@ module kloopz1_mod
     integer       , intent(in)    :: lly
     
     integer, intent(in) :: solver_type
-    type(TimerMpi), intent(inout) :: kpoint_timer
+    type(TimerMpi), intent(inout) :: kpoint_timer, kernel_timer
 
     external :: zgetri, zgetrf, zgemm ! LAPACK routines
  
@@ -114,7 +114,7 @@ module kloopz1_mod
     call MultipleScattering(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, &
                       Ginp_local, global_atom_id, communicator, iguess_data, ienergy, ispin, &
                       mssq, dGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly, & !LLY
-                      solver_type, kpoint_timer)
+                      solver_type, kpoint_timer, kernel_timer)
                       
 !-------------------------------------------------------- SYMMETRISE gll
 

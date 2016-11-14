@@ -81,7 +81,7 @@ implicit none
     type(BCPOperator), target :: precond
 
     double complex, parameter :: ZERO = (0.d0, 0.d0)
-    type(TimerMpi) :: mult_scattering_timer, single_site_timer, reference_green_timer, kpoint_timer
+    type(TimerMpi) :: mult_scattering_timer, single_site_timer, reference_green_timer, kpoint_timer, kernel_timer
     double complex :: JSCAL ! scaling factor for Jij calculation
     integer(kind=2), allocatable :: atom_indices(:)
     integer :: ie, ispin, prspin, nmesh, ist
@@ -123,6 +123,7 @@ implicit none
     call createTimer(single_site_timer)
     call createTimer(reference_green_timer)
     call createTimer(kpoint_timer)
+    call createTimer(kernel_timer)
 
     prspin = 1
 
@@ -260,7 +261,7 @@ implicit none
                     calc%trunc_zone%global_atom_id, mp%mySEComm, &
                     calc%iguess_data, IE, PRSPIN, &
                     dGrefN_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly, & ! LLY, note: num_local_atoms must be equal to 1 
-                    params%solver, kpoint_timer)
+                    params%solver, kpoint_timer, kernel_timer)
   !------------------------------------------------------------------------------
 
             if (mp%myAtomRank == 0 .and. params%KTE >= 0) &
@@ -318,6 +319,7 @@ implicit none
     if (mp%isMasterRank) call outTimeStats(reference_green_timer, 'Reference G stats:')
     if (mp%isMasterRank) call outTimeStats(single_site_timer,     'Single site stats:')
     if (mp%isMasterRank) call outTimeStats(kpoint_timer,          'Mult. scat. stats:') ! per k-point
+    if (mp%isMasterRank) call outTimeStats(kernel_timer,          'KKRoperator stats:') ! per invocation of the KKR_operator
 !   if (mp%isMasterRank) call outTimeStats(mult_scattering_timer, 'Multi. site stats:') ! this timer is ...
 !   !         ... only energy point resolved, high variance expected due to different k-point mesh sizes
 !   call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(mult_scattering_timer), iter)

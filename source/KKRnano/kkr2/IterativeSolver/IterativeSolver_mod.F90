@@ -62,11 +62,13 @@ module IterativeSolver_mod
   !>
   !> The workspace is allocated on demand and stays allocated.
   !> Deallocate with call IterativeSolver%destroy
-  subroutine solve_with_solver(self)
+  subroutine solve_with_solver(self, timer)
     use TFQMR_mod, only: solve
+    use TimerMpi_mod, only: TimerMpi
     use SolverStats_mod, only: reduce
     type(IterativeSolver), intent(inout) :: self
-
+    type(TimerMpi), intent(inout) :: timer
+    
     integer :: ndim(4), iterations_needed, ist
     double precision :: largest_residual
     integer(kind=8) :: nFlops
@@ -92,7 +94,7 @@ module IterativeSolver_mod
     ! call TFQMR solver
     call solve(self%op, self%op%mat_X, self%op%mat_B, self%qmrbound, ndim(2), self%op%bsr_X%nCols, &
                self%initial_zero, self%precond, self%use_precond, &
-               self%vecs, iterations_needed, largest_residual, nFlops)
+               self%vecs, timer, iterations_needed, largest_residual, nFlops)
 
     call reduce(self%stats, iterations_needed, largest_residual, nFlops)
   endsubroutine ! solve
