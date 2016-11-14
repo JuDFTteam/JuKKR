@@ -17,7 +17,7 @@ module NearField_calc_mod
 
   contains
 
-  subroutine add_near_field_corr(calc_data, arrays, alat, mpi_comm)
+  subroutine add_near_field_corr(calc_data, arrays, alat, communicator)
     use Main2Arrays_mod, only: Main2Arrays
     use DensityResults_mod, only: DensityResults
     use CalculationData_mod, only: CalculationData, getAtomData, getDensities
@@ -28,7 +28,7 @@ module NearField_calc_mod
     type(CalculationData), intent(inout) :: calc_data
     type(Main2Arrays), intent(in) :: arrays
     double precision, intent(in) :: alat
-    integer, intent(in) :: mpi_comm
+    integer, intent(in) :: communicator
 
     type(LocalCellInfo), allocatable :: local_cell(:)
     type(NearFieldCorrection), allocatable :: nf_correction(:)
@@ -70,7 +70,7 @@ module NearField_calc_mod
 
     enddo ! ilocal
 
-    call calculate(nf_correction, local_cell, calc_data%madelung_calc%clebsch, mpi_comm) ! calc_nf_correction
+    call calculate(nf_correction, local_cell, calc_data%madelung_calc%clebsch, communicator) ! calc_nf_correction
 
     do ilocal = 1, num_local_atoms
       atomdata => getAtomData(calc_data, ilocal)

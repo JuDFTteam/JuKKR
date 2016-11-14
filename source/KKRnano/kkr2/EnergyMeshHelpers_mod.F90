@@ -130,9 +130,9 @@ module EnergyMeshHelpers_mod
     integer :: ierr
     double precision :: es(4)
     es = [e1, e2, e3, e4]
-    call MPI_Bcast(ez,  iemxd, mpi_double_complex, 0, comm, ierr)
-    call MPI_Bcast(wez, iemxd, mpi_double_complex, 0, comm, ierr)
-    call MPI_Bcast(es,    4, mpi_double_precision, 0, comm, ierr)
+    call MPI_Bcast(ez,  iemxd, MPI_DOUBLE_COMPLEX, 0, comm, ierr)
+    call MPI_Bcast(wez, iemxd, MPI_DOUBLE_COMPLEX, 0, comm, ierr)
+    call MPI_Bcast(es,    4, MPI_DOUBLE_PRECISION, 0, comm, ierr)
     e1 = es(1); e2 = es(2); e3 = es(3); e4 = es(4)
 #endif
   endsubroutine ! broadcast

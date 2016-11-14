@@ -175,7 +175,7 @@ module EBalanceHandler_mod
     ! TODO: broadcast
     if (balance%num_eprocs_empid > 1) then
 
-      call MPI_REDUCE(balance%ETIME,MTIME,balance%ierlast,MPI_REAL,MPI_MAX, 0, mp%myActiveComm,IERR)
+      call MPI_Reduce(balance%ETIME,MTIME,balance%ierlast,MPI_REAL,MPI_MAX, 0, mp%myActiveComm,IERR)
 
       COMMCHECK(IERR)
 
@@ -225,7 +225,7 @@ module EBalanceHandler_mod
     ! save old ebalance information WRONG!!!! already done
     ! balance%eproc_old = balance%eproc
 
-    call MPI_BCAST(balance%eproc, balance%ierlast, MPI_INTEGER, 0, mp%myActiveComm, ierr)
+    call MPI_Bcast(balance%eproc, balance%ierlast, MPI_INTEGER, 0, mp%myActiveComm, ierr)
 
     COMMCHECK(IERR)
 
@@ -274,10 +274,8 @@ subroutine ebalance1(ierlast, eproc, eproco, empid, iemxd, equal)
   ! to the set of processors of empi=1,...,empid
 
 
-  !                               alexander thiess, 7th of december 2009
+  !                               alexander thiess, 2009/12/07
   ! =======================================================================
-
-  include 'mpif.h'
 
   integer, intent(in) :: ierlast, empid, iemxd ! iemxd is to be removed
   integer, intent(out) :: eproc(iemxd), eproco(iemxd)
@@ -382,7 +380,7 @@ subroutine ebalance2(ierlast, npnt1, myactvrank, activecomm, mtime, eproc, eproc
   ! use timing of iter-1 >>>
   !=======================================================================
   !     gather on all processors all timings
-  !call mpi_allreduce(etime,mtime,iemxd,mpi_real,mpi_max, activecomm,ierr)
+  ! call MPI_Allreduce(etime,mtime,iemxd,MPI_REAL,MPI_MAX,activecomm,ierr)
 
 
   !----------------------------------------------------------------------
@@ -478,8 +476,8 @@ subroutine ebalance2(ierlast, npnt1, myactvrank, activecomm, mtime, eproc, eproc
 
 !   write information on load-balancing to formatted file 'balance'
 
-!   inquire(file='stop', exist=stopit)
-!   if (iter == scfsteps) then
+! inquire(file='stop', exist=stopit)
+! if (iter == scfsteps) then
     if (myactvrank == 0) then
       open(50, file='ebalance', form='formatted', status='replace', action='write')
       write(50, *) "# Energy load-balancing file"
@@ -493,7 +491,7 @@ subroutine ebalance2(ierlast, npnt1, myactvrank, activecomm, mtime, eproc, eproc
       
       close(50)
     endif
-!   endif
+! endif
 
 endsubroutine ! ebalance2
 

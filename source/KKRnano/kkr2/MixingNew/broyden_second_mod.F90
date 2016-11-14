@@ -57,30 +57,28 @@ module broyden_second_mod
  ! ui2, vi2 ... work arrays
  ! g_metric ... diagonal of metric matrix
  ! imap ... length of arrays
-subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
-                          communicator, itdbryd, imap, iter)
-
+subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, communicator, itdbryd, imap, iter)
   implicit none
-
   include 'mpif.h'
-
-  ! Parameters
-  double precision, parameter :: ONE =1.0d0
+  external :: MPI_Allreduce
+  double precision, external :: ddot
 
   ! Arguments
-  double precision, intent(inout), dimension(imap) :: sm
-  double precision, intent(inout), dimension(imap) :: fm
-  double precision, intent(inout), dimension(imap) :: sm1
-  double precision, intent(inout), dimension(imap) :: fm1
-  double precision, intent(inout), dimension(imap, 2:itdbryd) :: ui2
-  double precision, intent(inout), dimension(imap, 2:itdbryd) :: vi2
-
+  double precision, intent(inout) :: sm(imap)
+  double precision, intent(inout) :: fm(imap)
+  double precision, intent(inout) :: sm1(imap)
+  double precision, intent(inout) :: fm1(imap)
+  double precision, intent(inout) :: ui2(imap,2:itdbryd)
+  double precision, intent(inout) :: vi2(imap,2:itdbryd)
   double precision, intent(in) :: alpha
-  double precision, intent(in), dimension(imap) :: g_metric
+  double precision, intent(in) :: g_metric(imap)
   integer, intent(in) :: communicator
   integer, intent(in) :: itdbryd
   integer, intent(in) :: imap
   integer, intent(in) :: iter
+  
+  ! Parameters
+  double precision, parameter :: ONE = 1.d0
 
   ! Local variables of broyden_second
   double precision :: rmixiv
@@ -93,16 +91,12 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
   integer :: mit
   integer :: it
   integer :: ierr
-  double precision, dimension(2:itdbryd) :: am
-  double precision, dimension(2:itdbryd) :: am_local
-  double precision, dimension(imap) :: work
-  double precision, dimension(imap) :: vi3
-  double precision, dimension(imap) :: ui3
+  double precision :: am(2:itdbryd), am_local(2:itdbryd)
+  double precision :: work(imap)
+  double precision :: vi3(imap)
+  double precision :: ui3(imap)
   double precision :: EPS
 
-   !    .. External Functions ..
-   double precision, external :: ddot
-   external MPI_Allreduce
 
    EPS = epsilon(1.0d0)
 
@@ -116,17 +110,15 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
 
    ! from simple mixed V_out -> reconstruct unmixed V_out ! OMG! WTF!
    ! fm = 1/alpha * (V_out[V_in] - V_in)
-   if (mit == 1) then
-     work = fm
-   end if
+   if (mit == 1) work = fm
 
    do ij = 1,imap
-     fm(ij) = rmixiv* (fm(ij)-sm(ij))
-   end do
+     fm(ij) = rmixiv*(fm(ij) - sm(ij))
+   enddo ! ij
 
    !=====  For MIT GT 1 activ  ==============================================
 
-   if (mit.gt.1) then
+   if (mit > 1) then
 
      !----> calculate  sm = rho(m) - rho(m-1)
      !----> calculate dfm = f[m] - f[m-1]
@@ -134,7 +126,7 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
      do ij = 1,imap
        sm1(ij) = sm(ij) - sm1(ij)
        fm1(ij) = fm(ij) - fm1(ij)
-     end do
+     enddo ! ij
 
      ! sm1 = \Delta V_in
      ! fm1 = \Delta V_out
@@ -145,17 +137,16 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
      ! = alpha*\Delta V_out + \Delta V_in
      do ij = 1,imap
        ui3(ij) = alpha*fm1(ij) + sm1(ij)
-     end do
+     enddo ! ij
 
      do it = 2,mit - 1
        do ij = 1,imap
-         work(ij)=vi2(ij,it)
-       enddo
+         work(ij) = vi2(ij,it)
+       enddo ! ij
        am_local(it) = ddot(imap,fm1,1,work,1)
-     enddo
+     enddo ! it
 
-     call MPI_Allreduce(am_local,am,(itdbryd-1), &
-     MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
+     call MPI_Allreduce(am_local,am,(itdbryd-1), MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
 
      ! active only from 3rd iteration on
      ! ui3 = \sum_i^j -am_i (alpha*\Delta V_out + \Delta V_in)_i
@@ -164,9 +155,9 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
      do it = 2,mit - 1
        do ij = 1,imap
          work(ij)=ui2(ij,it)
-       enddo
+       enddo ! ij
        call daxpy(imap,-am(it),work,1,ui3,1)
-     enddo
+     enddo ! it
 
      !-------->     b r o y d e n ' s   s e c o n d    m e t h o d
      !----> calculate v[m] ; convoluted with the metric g
@@ -174,15 +165,14 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
      ! vi3 = G . \Delta V_out
      do ij = 1,imap
        vi3(ij) = g_metric(ij)*fm1(ij)
-     end do
+     enddo ! ij
 
      !----> calculate #vm# and normalize v[m]
 
      ! = (\Delta V_out)^T . G . (\Delta V_out) ! using diagonal metric matrix G
      ddot_local = ddot(imap,vi3,1,fm1,1)
 
-     call MPI_Allreduce(ddot_local,ddot_global,1, &
-     MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
+     call MPI_Allreduce(ddot_local,ddot_global,1, MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
 
      vmnorm = ddot_global
 
@@ -191,22 +181,22 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
      if (vmnorm > EPS) then ! vmnorm must not be zero
        call dscal(imap,one/vmnorm,vi3,1)
      else
-       vi3 = 0.0d0
-     end if
+       vi3 = 0.d0
+     endif
 
      !============ END MIXING, NOW OUTPUT =====================================
 
      !----> store u3(ij) and v3(ij) for following iterations
      do ij = 1,imap
-       ui2(ij,mit)=ui3(ij)
-       vi2(ij,mit)=vi3(ij)
-     enddo
+       ui2(ij,mit) = ui3(ij)
+       vi2(ij,mit) = vi3(ij)
+     enddo ! ij
 
      !----> update f[m-1] = f[m]  ; rho(m) = rho(m-1)
      do ij = 1,imap
        fm1(ij) = fm(ij)
        sm1(ij) = sm(ij)
-     end do
+     enddo ! ij
 
      !----> calculate cmm
      !
@@ -219,32 +209,31 @@ subroutine broyden_second(sm, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
      ! cmm = 1/alpha * (V_out[V_in] - V_in] . (\Delta V_out / ||\Delta V_out||)
      cmm_local = ddot(imap,fm,1,vi3,1)
 
-     call MPI_Allreduce(cmm_local,cmm_global,1, &
-     MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
+     call MPI_Allreduce(cmm_local,cmm_global,1, MPI_DOUBLE_PRECISION,MPI_SUM,communicator,ierr)
 
      !----> update rho(m+1)
      !
      ! V_in_new = (1 - cmm) * (alpha*\Delta V_out + \Delta V_in) + V_in
      call daxpy(imap,one-cmm_global,ui3,1,sm,1)
 
-   else if (mit == 1) then !1st iteration
+   elseif (mit == 1) then !1st iteration
 
      !----> update f[m-1] = f[m]  ; rho(m) = rho(m-1)
      do ij = 1,imap
        fm1(ij) = fm(ij)
        sm1(ij) = sm(ij)
-     end do
+     enddo ! ij
      sm = work
 
    else
      write(*,*) "Iteration index has to be >= 1."
      STOP
-   end if
+   endif
 
    !      MIT = MIT + 1
- end subroutine
+ endsubroutine
 
-end module
+endmodule ! broyden_second_mod
 
 #ifdef TEST_BROYDEN_SECOND_MOD__
 !> Test-case for Broyden's second method
@@ -262,14 +251,14 @@ program test_broyden_second_mod
   double precision :: g_metric(2)
   double precision :: x(2)
   integer :: ii, ierr
-  double precision, dimension(2) :: fm
-  double precision, dimension(2) :: sm1
-  double precision, dimension(2) :: fm1
-  double precision, dimension(2, 2:DIM_HIST) :: ui2
-  double precision, dimension(2, 2:DIM_HIST) :: vi2
+  double precision :: fm (2)
+  double precision :: sm1(2)
+  double precision :: fm1(2)
+  double precision :: ui2(2,2:DIM_HIST)
+  double precision :: vi2(2,2:DIM_HIST)
 
-  x = (/ 10.0d0, -1.8d0 /)
-  g_metric = (/1.0d0, 1.0d0/)
+  x =        (/ 10.d0, -1.8d0 /)
+  g_metric = (/ 1.0d0,  1.0d0 /)
 
   alpha = 0.01d0
 
@@ -281,11 +270,10 @@ program test_broyden_second_mod
     ! simple mix first
     fm = (1. - alpha) * x + alpha * fm
 
-    call broyden_second(x, fm, sm1, fm1, ui2,vi2, g_metric, alpha, &
-                        MPI_COMM_WORLD, DIM_HIST, 2, ii)
+    call broyden_second(x, fm, sm1, fm1, ui2,vi2, g_metric, alpha, MPI_COMM_WORLD, DIM_HIST, 2, ii)
 
     write(*,*) ii, x
-  end do
+  enddo ! ii
 
   call MPI_Finalize(ierr)
 
@@ -298,6 +286,6 @@ program test_broyden_second_mod
 
       f(1) = 2*x(1)**3 + 2*x(1)*x(2) + x(2)**2 - 21*x(1) - 7 + 3
       f(2) =   x(1)**2 + 2*x(1)*x(2) + 2*x(2)**3-13*x(2) - 11 + 2
-    end subroutine
-end program
+    endsubroutine
+endprogram
 #endif

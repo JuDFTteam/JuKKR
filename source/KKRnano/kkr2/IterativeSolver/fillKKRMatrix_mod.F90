@@ -7,7 +7,7 @@ module fillKKRMatrix_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: getKKRMatrixStructure, buildKKRCoeffMatrix, buildRightHandSide, solveFull
+  public :: getKKRMatrixStructure, buildKKRCoeffMatrix, buildRightHandSide!, solveFull
   public :: dump
   public :: getKKRSolutionStructure
   public :: convertBSRToFullMatrix, convertToFullMatrix, convertFullMatrixToBSR, getGreenDiag
@@ -294,33 +294,6 @@ module fillKKRMatrix_mod
   endsubroutine ! convertToFullMatrix
   
   
-  !----------------------------------------------------------------------------
-  !> Solution of a system of linear equations with multiple right hand sides,
-  !> using standard dense matrix LAPACK routines.
-  integer function solveFull(full_A, full_X) result(info)
-    double complex, intent(inout) :: full_A(:,:)
-    double complex, intent(inout) :: full_X(:,:) ! on entry this contains full_B, on exit the solution
-
-    integer, allocatable :: ipvt(:)
-    integer :: ndim, nRHSs
-    external :: zgetrf, zgetrs ! LAPACK
-
-    ndim  = size(full_A, 1)
-    nRHSs = size(full_X, 2)
-    assert( size(full_A, 2) == ndim ) ! must be square
-    assert( size(full_X, 1) == ndim ) ! must match the dims of A
-    
-    allocate(ipvt(ndim))
-
-    ! factorization
-    call zgetrf(ndim, ndim, full_A, ndim, ipvt, info) ! LU-factorize
-!   if (info /= 0) ! ToDo: warn
-
-    call zgetrs('n', ndim, nRHSs, full_A, ndim, ipvt, full_X, ndim, info) ! solve the system of linear equations
-!   if (info /= 0) ! ToDo: warn
-
-    deallocate(ipvt, stat=info)
-  endfunction ! solveFull
   
   subroutine convertFullMatrixToBSR(smat, bsr, full)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription

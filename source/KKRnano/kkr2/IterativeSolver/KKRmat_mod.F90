@@ -17,14 +17,9 @@ module KKRmat_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: MultipleScattering, free_memory
+  public :: MultipleScattering
 
-  double complex, allocatable :: full_A(:,:), full_X(:,:)
   double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
-
-  interface free_memory
-    module procedure free_memory_kkrmat
-  endinterface
 
   contains
 
@@ -196,7 +191,7 @@ module KKRmat_mod
   !> Solution is stored in op%mat_X.
   !> Scattering path operator is calculated for atoms given in
   !> op%atom_indices(:)
-  subroutine kloopbody(solver, op, preconditioner, kpoint, tmatLL, alat, RR, Ginp, dGinp, &
+  subroutine kloopbody(iterative_solver, op, preconditioner, kpoint, tmatLL, alat, RR, Ginp, dGinp, &
 #ifndef SPLIT_REFERENCE_FOURIER_COM
                        global_atom_id, communicator, &
 #endif
@@ -204,9 +199,11 @@ module KKRmat_mod
                        mssq, dtde, bztr2, volcub, global_atom_idx_lly, Lly, & !LLY
                        solver_type)
 
-    use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide, solveFull, convertBSRToFullMatrix, convertFullMatrixToBSR
+    use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide
+    use fillKKRMatrix_mod, only: convertBSRToFullMatrix! LLY , convertFullMatrixToBSR!, solveFull
     use fillKKRMatrix_mod, only: dump
     use IterativeSolver_mod, only: IterativeSolver, solve
+    use DirectSolver_mod, only: DirectSolver, solve
     use SparseMatrixDescription_mod, only: dump
     use InitialGuess_mod, only: InitialGuess, load, store
     use KKROperator_mod, only: KKROperator
@@ -215,7 +212,8 @@ module KKRmat_mod
     USE_ARRAYLOG_MOD
     USE_LOGGING_MOD
 
-    type(IterativeSolver), intent(inout) :: solver
+    type(DirectSolver), save :: direct_solver
+    type(IterativeSolver), intent(inout) :: iterative_solver
     type(KKROperator), intent(inout) :: op
     type(BCPOperator), intent(inout) :: preconditioner
     double precision, intent(in) :: kpoint(3)
@@ -244,8 +242,7 @@ module KKRmat_mod
     double complex, allocatable :: dPdE_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:) ! LLY
     double complex :: tracek, gtdPdE ! LLY
 
-    integer :: naez, nacls, alm, lmmaxd, nRHSs, ist, matrix_index, lm1, lm2, lm3, il1
-    integer :: n, Bd!, nB, i
+    integer :: naez, nacls, alm, lmmaxd, ist, matrix_index, lm1, lm2, lm3, il1
     double complex :: cfctorinv
 
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
@@ -298,7 +295,7 @@ module KKRmat_mod
     
       call referenceFourier_com(op%mat_A(:,:,:,Lly), op%bsr_A, kpoint, alat, RR, op%cluster, dGinp, global_atom_id, communicator)
 
-#undef referenceFourier_com
+#undef     referenceFourier_com
 
       TESTARRAYLOG(3, op%mat_A(:,:,:,Lly))
 
@@ -327,7 +324,7 @@ module KKRmat_mod
  
     endif ! LLY
     
-    ! TODO: merge the referenceFourier_part2 with buildKKRCoeffMatrix
+    ! ToDo: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     !----------------------------------------------------------------------------
     call buildKKRCoeffMatrix(op%mat_A(:,:,:,0), tmatLL, op%bsr_A)
@@ -351,42 +348,26 @@ module KKRmat_mod
     call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
 !   call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices) ! construct RHS as unity matrices
 
-    call calc(preconditioner, op%mat_A(:,:,:,0)) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! TODO: check
+    call calc(preconditioner, op%mat_A(:,:,:,0)) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! ToDo: check
 
     selectcase(solver_type)
     case (4) ! direct solution with LAPACK, should only be used for small systems
 
-      Bd = size(op%mat_A, 2)
-      n =  Bd*op%bsr_A%nRows
-      nRHSs = op%bsr_X%nCols*size(op%mat_X, 2)
-
-      if (any(shape(full_A) /= [n,n])) then
-        deallocate(full_A, full_X, stat=ist) ! ignore status
-        allocate(full_A(n,n), full_X(n,nRHSs), stat=ist)
-        if (ist /= 0) die_here("failed to allocate dense matrix with"+(n*.5**26*n)+"GiByte!")
-      endif
-      call convertBSRToFullMatrix(full_A, op%bsr_A, op%mat_A(:,:,:,0))
-      TESTARRAYLOG(3, full_A)
-
-      call convertBSRToFullMatrix(full_X, op%bsr_X, op%mat_B) ! convert op%mat_B to full_B
-
-      ist = solveFull(full_A, full_X) ! on entry, full_X contains mat_B, compute the direct solution using LAPACK
-      if (ist /= 0) die_here("failed to directly invert a matrix of dim"+n+"with"+nRHSs+"right hand sides!")
-
-      call convertFullMatrixToBSR(op%mat_X, op%bsr_X, full_X) ! convert back full_X to op%mat_X
+      call solve(direct_solver, op, op%mat_X)
+      ! warning, the memory of the direct solver can only be freed here as this is a save variable of this procedure
 
     case (0, 3) ! iterative solver
-      if(solver_type == 0) warn(6, "solver_type ="+solver_type+"is deprecated, please use 3")
+      if (solver_type == 0) warn(6, "solver_type ="+solver_type+"is deprecated, please use 3")
 
       ! only iterative solvers need an initial guess
       if (iguess_data%prec == 1) then
-        solver%initial_zero = .false.
+        iterative_solver%initial_zero = .false.
         call load(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
       else
-        solver%initial_zero = .true.
+        iterative_solver%initial_zero = .true.
       endif
 
-      call solve(solver) ! use iterative solver
+      call solve(iterative_solver) ! use iterative solver
 
 #ifdef DEBUG_dump_matrix
       call dump(op%bsr_A, "matrix_descriptor.dat") ! SparseMatrixDescription
@@ -924,13 +905,5 @@ module KKRmat_mod
     enddo ! iacls
 
   endsubroutine ! dlke0_smat
-
-  !----------------------------------------------------------------------------
-  !> The workspace is deallocated and needs to be allocated on next use
-  integer(kind=8) function free_memory_kkrmat() result(nBytes)
-    integer :: ist
-    nBytes = 16 * (size(full_A) + size(full_X))
-    deallocate(full_A, full_X, stat=ist) ! ignore status
-  endfunction ! free_memory
 
 endmodule ! KKRmat_mod

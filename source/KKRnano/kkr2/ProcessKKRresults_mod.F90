@@ -128,7 +128,7 @@ module ProcessKKRresults_mod
   ! in RESULTS
     call outTime(mp%isMasterRank, 'barrier begin ..................', getTime(program_timer), iter)
 
-    call MPI_BARRIER(mp%mySEComm,IERR)
+    call MPI_Barrier(mp%mySEComm, IERR)
 
     call outTime(mp%isMasterRank, 'barrier end ....................', getTime(program_timer), iter)
 

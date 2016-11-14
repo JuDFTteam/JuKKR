@@ -89,8 +89,6 @@ module MadelungPotential_mod
     integer, intent(in) :: loflm(lmxspd)
     integer, intent(in) :: atoms_per_proc
 
-    external :: MPI_Bcast
-    
     integer :: i2, ilm
     integer ierr, mylrank, communicator
     double precision :: cmom_save((lpot+1)**2)
@@ -138,8 +136,8 @@ module MadelungPotential_mod
         CMINST_SAVE = 0.d0
       endif
 
-      call MPI_BCAST(CMOM_SAVE,   LMPOTD, MPI_DOUBLE_PRECISION, root, communicator, IERR)
-      call MPI_BCAST(CMINST_SAVE, LMPOTD, MPI_DOUBLE_PRECISION, root, communicator, IERR)
+      call MPI_Bcast(CMOM_SAVE,   LMPOTD, MPI_DOUBLE_PRECISION, root, communicator, IERR)
+      call MPI_Bcast(CMINST_SAVE, LMPOTD, MPI_DOUBLE_PRECISION, root, communicator, IERR)
 
       !-------- bcast information of cmom and cminst end----------------------
 

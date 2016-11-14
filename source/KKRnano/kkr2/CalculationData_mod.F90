@@ -553,7 +553,7 @@ module CalculationData_mod
     
     ! optional output of shapefunctions in single file (VORONANO)
     if (voronano == 1) then
-      call MPI_BARRIER(MPI_COMM_WORLD, ierror)
+      call MPI_Barrier(MPI_COMM_WORLD, ierror)
       if (mp%isMasterRank) then
         open(15, file='shapefun.header', form="formatted", status='replace', action='READWRITE')
         write(15, fmt='(i5)') dims%naez
@@ -631,7 +631,7 @@ module CalculationData_mod
     !$omp endparallel do
 
     ! output of potential in single file
-    call MPI_BARRIER(MPI_COMM_WORLD, ierror)
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
     if (mp%isMasterRank) then
 #ifdef HAS_EXECUTE_COMMAND_LINE       
         call EXECUTE_COMMAND_LINE("cat potential.0* > potential.voronano")

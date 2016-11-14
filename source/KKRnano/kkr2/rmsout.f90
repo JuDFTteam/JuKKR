@@ -37,7 +37,7 @@ subroutine allreducerms_com(rmsq, rmsm, rmsavq_local, rmsavm_local, naez, commun
   include 'mpif.h'
 
   double precision, intent(in) :: rmsavm_local, rmsavq_local
-  double precision, intent(in) :: rmsq, rmsm
+  double precision, intent(out) :: rmsq, rmsm
   integer, intent(in) :: naez
   integer, intent(in) :: communicator
 
@@ -47,7 +47,7 @@ subroutine allreducerms_com(rmsq, rmsm, rmsavq_local, rmsavm_local, naez, commun
 
   send(:) = [rmsavq_local, rmsavm_local]
 
-  call MPI_Allreduce(send, recv, 2, mpi_double_precision, mpi_sum, communicator, ierr)
+  call MPI_Allreduce(send, recv, 2, MPI_DOUBLE_PRECISION, MPI_SUM, communicator, ierr)
 
   rmsq = sqrt(recv(1)/naez)
   rmsm = sqrt(recv(2)/naez)

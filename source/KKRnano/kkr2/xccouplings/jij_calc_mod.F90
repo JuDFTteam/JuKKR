@@ -193,7 +193,7 @@ subroutine kkrjij(&
   !     .. LOCAL SCALARS ..
   integer          i3,i5,isym,lm,ilm,xij,ierr
   double complex   carg, mtpii
-  integer :: status(MPI_status_size)
+  integer :: status(MPI_STATUS_SIZE)
   integer, external :: mapblock
 
   call MPI_Comm_Size(communicator, comm_size, ierr)
@@ -219,9 +219,9 @@ subroutine kkrjij(&
     !
     !         broadcast IXCPS from processor of atom I5 to all
     !
-    call MPI_bcast(ixcps,nxijd,MPI_integer, mapblock(i5,1,naez,1,0,comm_size-1), communicator,ierr)
+    call MPI_Bcast(ixcps,nxijd,MPI_INTEGER, mapblock(i5,1,naez,1,0,comm_size-1), communicator,ierr)
     !
-    call MPI_barrier(communicator,ierr)
+    call MPI_Barrier(communicator,ierr)
     !
     do xij = 2, nxij
     ! ....
@@ -246,19 +246,19 @@ subroutine kkrjij(&
             call zcopy(lmmaxd,gllke1(ilm,lm),1,gsend(1,lm),1)
           enddo ! lm
 
-          call MPI_send(gsend,lmmaxd*lmmaxd,MPI_double_complex, mapblock(i5,1,naez,1,0,comm_size-1), 99,communicator,ierr)
+          call MPI_Send(gsend,lmmaxd*lmmaxd,MPI_DOUBLE_COMPLEX, mapblock(i5,1,naez,1,0,comm_size-1), 99,communicator,ierr)
         endif
 
 
         if (i5 == i3) then
-          call MPI_recv(grecv,lmmaxd*lmmaxd,MPI_double_complex, mapblock(ixcps(xij),1,naez,1,0,comm_size-1), 99,communicator,status,ierr)
+          call MPI_Recv(grecv,lmmaxd*lmmaxd,MPI_DOUBLE_COMPLEX, mapblock(ixcps(xij),1,naez,1,0,comm_size-1), 99,communicator,status,ierr)
 
           do lm = 1, lmmaxd
             call zcopy(lmmaxd,grecv(1,lm),1,gxij(1,lm,xij),1)
           enddo ! lm
         endif
 
-        call MPI_barrier(communicator, ierr)
+        call MPI_Barrier(communicator, ierr)
 
       endif
     enddo ! xij
@@ -458,7 +458,7 @@ subroutine xccpljij_start(ier, wgte, nxij, ixcp, gmatxij, dtixij, communicator, 
   ! ==>  get dtjxij = t(up) - t(down) for all atoms
 
 
-  call MPI_allgather(dtixij,lmmaxd*lmmaxd,MPI_double_complex, dtnxij_all,lmmaxd*lmmaxd,MPI_double_complex, communicator,ierr)
+  call MPI_Allgather(dtixij,lmmaxd*lmmaxd,MPI_DOUBLE_COMPLEX, dtnxij_all,lmmaxd*lmmaxd,MPI_DOUBLE_COMPLEX, communicator,ierr)
 
 
   do xij = 2, nxij ! loop xij = 1, nxij(i1)

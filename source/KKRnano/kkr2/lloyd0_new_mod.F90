@@ -67,8 +67,7 @@ subroutine lloyd0_wrapper_com(atomdata, communicator, lly_grdt, emesh, rnorm, ll
   else ! no lloyd
 
     do ie = 1, ielast
-      emesh%wezrn(ie,1) = emesh%wez(ie)
-      emesh%wezrn(ie,2) = emesh%wez(ie)
+      emesh%wezrn(ie,1:2) = emesh%wez(ie)
     enddo ! ie
     
   endif
@@ -110,31 +109,31 @@ subroutine lloyd0_new(ez,wez,cleb,drdi,r,irmin, &
 
   double complex :: ez(iemxd)  ! in
   double complex :: wez(iemxd) ! in
-  double precision::cleb(ncleb,2)   !in
-  double precision::drdi(irmd) !in
-  double precision::r(irmd)    !in
-  integer::irmin !in
-  double precision::vins((irmd-irnsd):irmd,(2*lmax+1)**2, 2)  !in?
-  double precision::visp(irmd,2) ! in?
-  double precision::thetas(irid,nfund) !in
-  double precision::zat !in
-  integer::icleb(ncleb,3)
-  !integer::ifunm1(lmxspd,naez) (2*lpotd+1)**2
-  integer::ifunm1((4*lmax+1)**2) !in?
-  integer::ipan !in
-  integer::ircut(0:ipand) !in
-  !integer::lmsp1(lmxspd,naezd)
-  integer::lmsp1((4*lmax+1)**2) !in
-  integer::jend((lmax+1)**2, 0:lmax, 0:lmax) !in
-  integer::loflm((2*lmax+1)**2) !in
-  integer::icst
-  integer::ielast
-  integer::iend
-  integer::nspin !in
-  integer::nsra  !in
-!  integer::fred  !in
+  double precision :: cleb(ncleb,2)   !in
+  double precision :: drdi(irmd) !in
+  double precision :: r(irmd)    !in
+  integer :: irmin !in
+  double precision :: vins((irmd-irnsd):irmd,(2*lmax+1)**2, 2)  !in?
+  double precision :: visp(irmd,2) ! in?
+  double precision :: thetas(irid,nfund) !in
+  double precision :: zat !in
+  integer :: icleb(ncleb,3)
+  !integer :: ifunm1(lmxspd,naez) (2*lpotd+1)**2
+  integer :: ifunm1((4*lmax+1)**2) !in?
+  integer :: ipan !in
+  integer :: ircut(0:ipand) !in
+  !integer :: lmsp1(lmxspd,naezd)
+  integer :: lmsp1((4*lmax+1)**2) !in
+  integer :: jend((lmax+1)**2, 0:lmax, 0:lmax) !in
+  integer :: loflm((2*lmax+1)**2) !in
+  integer :: icst
+  integer :: ielast
+  integer :: iend
+  integer :: nspin !in
+  integer :: nsra  !in
+!  integer :: fred  !in
   double complex :: wezrn(iemxd,2)  ! out
-  double precision::rnorm(iemxd,2)  !out
+  double precision :: rnorm(iemxd,2)  !out
   double complex :: gmatn((lmax+1)**2, (lmax+1)**2, iemxd, nspin) ! inout?
   double complex :: lly_grdt(iemxd,nspin) ! in
 
@@ -142,10 +141,10 @@ subroutine lloyd0_new(ez,wez,cleb,drdi,r,irmin, &
   !double complex :: dmatldau(mmaxd,mmaxd,nspind,lmaxd1)
   double complex :: dmatldau(2*lmax+1,2*lmax+1,nspin,lmax+1)  ! out
   double complex :: phildau(irmd,lmax+1) !in?
-  double precision::wmldau(2*lmax+1,2*lmax+1,lmax+1,nspin) !in?
-  integer::nldau !in
+  double precision :: wmldau(2*lmax+1,2*lmax+1,lmax+1,nspin) !in?
+  integer :: nldau !in
   logical::ldau  !in
-  integer::lldau(lmax+1) !in?
+  integer :: lldau(lmax+1) !in?
   !------------------------------------------------------------------
 
   integer, intent(in) :: communicator
@@ -157,17 +156,17 @@ subroutine lloyd0_new(ez,wez,cleb,drdi,r,irmin, &
   integer :: ie, ispin, l
 
   !     dynamically allocated arrays
-  !double complex :: work1(4*iemxd)
-  !double complex :: work2(4*iemxd)
+  !double complex :: send(4*iemxd)
+  !double complex :: recv(4*iemxd)
   !double complex :: dos(iemxd,2) ! local
   !double complex :: dos0(iemxd)  ! loc
   !double complex :: dos1(iemxd)  ! loc
   !double complex :: den0(0:lmax+1,iemxd,nspin) ! loc
-  !double precision::rho2n1(irmd,lmpotd,2)
-  !double precision::rho2n1(irmd,(2*lmax+1)**2, 2)   ! loc
-  !double precision::rho2n2(irmd,lmpotd,2)
-  !double precision::rho2n2(irmd,(2*lmax+1)**2, 2)   ! loc
-  !double precision::espv(0:lmax+1,nspin) ! loc
+  !double precision :: rho2n1(irmd,lmpotd,2)
+  !double precision :: rho2n1(irmd,(2*lmax+1)**2, 2)   ! loc
+  !double precision :: rho2n2(irmd,lmpotd,2)
+  !double precision :: rho2n2(irmd,(2*lmax+1)**2, 2)   ! loc
+  !double precision :: espv(0:lmax+1,nspin) ! loc
 
   double complex, allocatable :: dos(:,:)
   double complex, allocatable :: dos0(:)
@@ -249,7 +248,6 @@ endsubroutine ! lloyd0_new
 
 !------------------------------------------------------------------------------
 subroutine lloyd_calcrenormalisation(dos, dos0, dos1, lly_grdt, rnorm, wez, wezrn, nspin, ielast, iemxd)
-
   double complex, intent(in) :: dos(iemxd,2)
   double complex, intent(in) :: dos0(iemxd)
   double complex, intent(in) :: dos1(iemxd)
@@ -265,7 +263,6 @@ subroutine lloyd_calcrenormalisation(dos, dos0, dos1, lly_grdt, rnorm, wez, wezr
   double precision :: d1loc, d1locint
   double precision :: dloyd, dloydint
   double precision :: dloc
-  ! ======================================================================
 
   do ispin = 1, nspin
 
@@ -295,58 +292,48 @@ subroutine lloyd_calcrenormalisation(dos, dos0, dos1, lly_grdt, rnorm, wez, wezr
       rnorm(ie,ispin) = rnorm(ie,ispin)*(dloydint + d0locint - d1locint)/(dloydint + d0locint)
     enddo ! ie
 
-  enddo
-endsubroutine
-
-
-!------------------------------------------------------------------------------
-subroutine lloyd_communicate(dos, dos0, dos1, iemxd, communicator)
-  include 'mpif.h'
-
-  double complex, intent(inout) :: dos(iemxd,2)
-  double complex, intent(inout) :: dos0(iemxd)
-  double complex, intent(inout) :: dos1(iemxd)
-  integer, intent(in) :: iemxd
-  integer, intent(in) :: communicator
-
-  integer :: ierr
-  double complex, allocatable :: work1(:), work2(:)
-  double complex, parameter :: czero = (0.d0, 0.d0)
-
-  integer :: ist
-
-  allocate(work1(4*iemxd), work2(4*iemxd), stat=ist)
+  enddo ! ispin
   
-  if (ist /= 0) stop "lloyd0: fatal error, failure to allocate memory. probably out of memory."
+endsubroutine ! lloyd_calcrenormalisation
 
-  work1 = czero
-  work2 = czero
 
-  !==  allreduce dos  ==============================================
+  !------------------------------------------------------------------------------
+  subroutine lloyd_communicate(dos, dos0, dos1, iemxd, communicator)
+    include 'mpif.h'
 
-  ! call zcopy(iemxd,dos0,1,work1,1)
-  ! call zcopy(iemxd,dos1,1,work1(iemxd+1),1)
-  ! call zcopy(2*iemxd,dos,1,work1(2*iemxd+1),1)
+    double complex, intent(inout) :: dos(iemxd,2)
+    double complex, intent(inout) :: dos0(iemxd)
+    double complex, intent(inout) :: dos1(iemxd)
+    integer, intent(in) :: iemxd
+    integer, intent(in) :: communicator
 
-  ! pack
-  work1(1:iemxd) = dos0
-  work1(iemxd+1:2*iemxd) = dos1
-  work1(2*iemxd+1:3*iemxd) = dos(:,1)
-  work1(3*iemxd+1:4*iemxd) = dos(:,2)
+    integer :: ierr, ist
+    double complex, allocatable :: send(:), recv(:)
+    double complex, parameter :: czero = (0.d0, 0.d0)
 
-  call mpi_allreduce(work1, work2, 4*iemxd, mpi_double_complex, mpi_sum, communicator, ierr)
+    allocate(send(4*iemxd), recv(4*iemxd), stat=ist)
+    if (ist /= 0) stop "lloyd0: fatal error, failure to allocate memory. probably out of memory."
 
-  ! unpack
-  dos0 = work2(1:iemxd)
-  dos1 = work2(iemxd+1:2*iemxd)
-  dos(:,1) = work2(2*iemxd+1:3*iemxd)
-  dos(:,2) = work2(3*iemxd+1:4*iemxd)
+    send = czero
+    recv = czero
 
-  ! call zcopy(iemxd,work2,1,dos0,1)
-  ! call zcopy(iemxd,work2(iemxd+1),1,dos1,1)
-  ! call zcopy(2*iemxd,work2(2*iemxd+1),1,dos,1)
+    !==  allreduce density of states  ======================================
 
-  deallocate(work1, work2)
-endsubroutine
+    ! pack
+    send(0*iemxd+1:1*iemxd) = dos0(:)
+    send(1*iemxd+1:2*iemxd) = dos1(:)
+    send(2*iemxd+1:3*iemxd) = dos(:,1)
+    send(3*iemxd+1:4*iemxd) = dos(:,2)
+
+    call MPI_Allreduce(send, recv, 4*iemxd, MPI_DOUBLE_COMPLEX, MPI_SUM, communicator, ierr)
+
+    ! unpack
+    dos0(:)  = recv(0*iemxd+1:1*iemxd)
+    dos1(:)  = recv(1*iemxd+1:2*iemxd)
+    dos(:,1) = recv(2*iemxd+1:3*iemxd)
+    dos(:,2) = recv(3*iemxd+1:4*iemxd)
+
+    deallocate(send, recv, stat=ist) ! ignore status
+  endsubroutine ! lloyd_communicate
 
 endmodule ! lloyd
