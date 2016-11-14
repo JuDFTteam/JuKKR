@@ -282,7 +282,7 @@ module CalculationData_mod
     enddo ! ila
     !$omp endparallel do
 
-    call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays, params%lcutoff_radii, params%cutoff_radius) ! setup the truncation zone
+    call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays, params%lcutoff_radii, params%cutoff_radius, mp%mySEComm) ! setup the truncation zone
 
     call create(self%clusters, self%ref_cluster_a, self%trunc_zone, mp%mySEComm) ! createClusterInfo
 

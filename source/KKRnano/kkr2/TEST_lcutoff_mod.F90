@@ -4,6 +4,9 @@
 module TEST_lcutoff_mod
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
+#include "DebugHelpers/logging_macros.h"
+  use Logging_mod, only:    !import no name here, just mention it for the module dependency 
+  USE_LOGGING_MOD
   implicit none
   private
 
@@ -22,15 +25,21 @@ module TEST_lcutoff_mod
   contains
 
   !----------------------------------------------------------------------------
-  subroutine initLcutoffNew(trunc_zone, atom_ids, arrays, lcutoff_radii, cutoff_radius)
+  subroutine initLcutoffNew(trunc_zone, atom_ids, arrays, lcutoff_radii, cutoff_radius, communicator)
     use Main2Arrays_mod, only: Main2Arrays
     use TruncationZone_mod, only: TruncationZone, create
+#define useStatistics
+#ifdef  useStatistics
+    use Statistics_mod, only: add, allreduce, eval
+    integer(kind=8), allocatable :: sum_stats(:,:), max_stats(:,:)
+#endif
 
     type(TruncationZone), intent(inout) :: trunc_zone
     type(Main2Arrays), intent(in) :: arrays
     integer, intent(in) :: atom_ids(:) !< list of global atom IDs
     double precision, intent(in) :: lcutoff_radii(0:) !< 
     double precision, intent(in) :: cutoff_radius !< 
+    integer, intent(in) :: communicator
     
     double precision, parameter :: R_active = 1.e-6 ! truncation radii below this are inactive
     integer :: naez, lmax, atomindex, ila, num_local_atoms, ist, nradii, ell
@@ -67,6 +76,10 @@ module TEST_lcutoff_mod
     allocate(lmax_full(naez), lmax_atom(naez,num_local_atoms), stat=ist)
     if (ist /= 0) die_here("allocation of masks failed, requested"+(naez*.5**20*(num_local_atoms + 1))+"MiByte")
     
+#ifdef  useStatistics    
+    allocate(sum_stats(0:3,1), max_stats(0:1,1), stat=ist) ; sum_stats = 0 ; max_stats = -huge(0)
+#endif
+    
     lmax_full = -1 ! init as truncated
 
     do ila = 1, num_local_atoms
@@ -89,8 +102,18 @@ module TEST_lcutoff_mod
       write(*,'(a,2(i0,a),9(" ",i0))') "atom #",atomindex,':  ',num_truncated(-1),' outside and inside s,p,d,f,... :',num_truncated(0:)
 #endif
 
+#ifdef  useStatistics    
+      call add(count(lmax_atom(:,ila) >= 0), sum_stats(:,1), max_stats(:,1))
+#endif
+
       lmax_full(:) = max(lmax_full(:), lmax_atom(:,ila)) ! reduction: merge truncation zones of local atoms
     enddo ! ila
+    
+#ifdef  useStatistics    
+    ist = allreduce(sum_stats, max_stats, communicator)
+    WRITELOG(0,*) "truncation stats: ",trim(eval(sum_stats(:,1), max_stats(:,1)))
+    deallocate(sum_stats, max_stats, stat=ist)
+#endif
 
     num_truncated(:) = 0
     do ell = -1, lmax

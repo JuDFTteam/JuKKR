@@ -83,25 +83,25 @@ module Statistics_mod
   
   character(len=64) function eval_int(xmom, xinf, ndigits) result(str)
     integer(kind=8), intent(in) :: xmom(0:) ! [size(x), sum(x), sum(x*x), ...]
-    integer, intent(in) :: xinf(0:1) ! [maxval(x), -minval(x)]
+    integer(kind=8), intent(in) :: xinf(0:1) ! [maxval(x), -minval(x)]
     integer, intent(in), optional :: ndigits ! digits behind the floating point
     
     integer :: ios, ndig, minv, maxv
-    character(len=16) :: frmt
+    character(len=32) :: frmt
     double precision :: invN, mean, var, dev
     
     invN = 1.d0/dble(max(1, xmom(0)))
     mean = xmom(1)*invN ! divide by the number of samples
     
     ndig = 1 ; if (present(ndigits)) ndig = max(0, ndigits)
-    frmt = '(9(a,i0))' ; if (ndig > 0) write(unit=frmt, fmt="(9(a,i0))", iostat=ios) "(2(f0.",ndig,",a),9(i0,a))"
+    frmt = '(9(i0,a))' ; if (ndig > 0) write(unit=frmt, fmt="(9(a,i0))", iostat=ios) "(2(f0.",ndig,",a),9(i0,a))"
     
     var  = 0 ; if (ubound(xmom, 1) > 1) &
     var  = xmom(2)*invN - mean*mean ! variance
     dev  = sqrt(max(0.d0, var)) ! compute sigma as sqrt(variance)
     minv = -xinf(1)
     maxv =  xinf(0)
-    write(unit=str, fmt=frmt, iostat=ios) mean," +/- ",dev," [",minv,", ",maxv,"]"
+    write(unit=str, fmt=frmt, iostat=ios) mean," +/-",dev,"  [",minv,", ",maxv,"]"
   endfunction ! eval
 
   character(len=96) function eval_flt(xmom, xinf, ndigits) result(str)
@@ -110,7 +110,7 @@ module Statistics_mod
     integer, intent(in), optional :: ndigits ! significant digits in total
     
     integer :: ios, ndig, nd10
-    character(len=16) :: frmt
+    character(len=32) :: frmt
     real(kind=8) :: invN, mean, var, dev, minv, maxv
     
     invN = 1.d0/dble(max(1.d0, xmom(0)))
@@ -118,14 +118,14 @@ module Statistics_mod
     
     ndig = 1 ; if (present(ndigits)) ndig = max(1, ndigits)
     nd10 = ceiling(log10(mean))
-    frmt = '(9(a,f0.1))' !; if (mean > 0) write(unit=frmt, fmt="(9(a,i0))", iostat=ios) "(2(f0.",ndig,",a),9(i0,a))" ! ToDo
+    frmt = '(9(f0.1,a))' !; if (mean > 0) write(unit=frmt, fmt="(9(a,i0))", iostat=ios) "(2(f0.",ndig,",a),9(i0,a))" ! ToDo
 
     var  = 0 ; if (ubound(xmom, 1) > 1) &
     var  = xmom(2)*invN - mean*mean ! variance
     dev  = sqrt(max(0.d0, var)) ! compute sigma as sqrt(variance)
     minv = -xinf(1)
     maxv =  xinf(0)
-    write(unit=str, fmt=frmt, iostat=ios) mean," +/- ",dev," [",minv,", ",maxv,"]"
+    write(unit=str, fmt=frmt, iostat=ios) mean," +/-",dev,"  [",minv,", ",maxv,"]"
   endfunction ! eval
 
 endmodule ! Statistics_mod

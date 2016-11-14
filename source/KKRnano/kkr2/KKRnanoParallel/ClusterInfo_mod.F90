@@ -35,17 +35,6 @@ module ClusterInfo_mod
     integer(kind=2), allocatable :: indn0(:,:) !> dim(numn0d,naez_trc) ! ordered set of indices of inequivalent atoms in the cluster
     integer(kind=2), allocatable ::  atom(:,:) !> dim(naclsd,naez_trc) ! indices of target atoms (periodic images included)
     integer(kind=2), allocatable ::  ezoa(:,:) !> dim(naclsd,naez_trc) ! index of periodic image into array lattice_vectors%rr
-#ifdef ClusterInfoStatistics
-    !> some statistics
-    integer(kind=8) :: sum_stats(0:3,3,0:1) !> dim(moments, quantities,local:global)
-    integer         :: max_stats(0:1,3,0:1) !> dim(max:-min,quantities,local:global)
-#define reduce_stats(n, Q) self%sum_stats(:,Q,0) = self%sum_stats(:,Q,0) + [1, n, n*n, n*n*n] ; self%max_stats(:,Q,0) = max(self%max_stats(:,Q,0), [n, -n])
-
-#else
-
-#define reduce_stats(n, Q)
-
-#endif    
   endtype
 
 #ifdef ClusterInfoStatistics
@@ -75,6 +64,9 @@ module ClusterInfo_mod
   !>
   !> @param ref_clusters    all the local ref. clusters
   subroutine createClusterInfo(self, ref_clusters, trunc_zone, communicator)
+#ifdef ClusterInfoStatistics
+    use Statistics_mod, only: add, allreduce, eval
+#endif    
     use RefCluster_mod, only: RefCluster
     use TruncationZone_mod, only: TruncationZone
     use one_sided_commI_mod, only: copyFromI_com
@@ -97,6 +89,15 @@ module ClusterInfo_mod
     integer(kind=4), allocatable :: send_buf(:,:), recv_buf(:,:) ! global atom ids, require more than 16bit
     integer(kind=4), allocatable :: global_target_atom_id(:) !!! DEBUG
     integer, parameter :: N_ALIGN = 1 ! 1:no alignment, 4: 8 Byte alignment, 32: 64 Byte alignment
+#ifdef ClusterInfoStatistics
+    !> some statistics
+    integer(kind=8) :: sum_stats(0:3,3) !> dim(moments, quantities)
+    integer(kind=8) :: max_stats(0:1,3) !> dim(max:-min,quantities)
+#define reduce_stats(n, Q) call add(n, sum_stats(:,Q), max_stats(:,Q))
+    sum_stats = 0 ; max_stats = -huge(0) ! init statistics
+#else
+#define reduce_stats(n, Q)
+#endif
     
     num_local_atoms = size(ref_clusters)
 
@@ -159,7 +160,6 @@ cDBG  ALLOCATECHECK(global_target_atom_id(naclsd)) !!! DEBUG
     self%ezoa = -1
 
     
-    self%sum_stats = 0 ; self%max_stats = -huge(0)
     
     do isa = 1, self%naez_trc
       atom_id = recv_buf(POS_INDEX,isa)
@@ -208,14 +208,19 @@ cDBG  write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' old nacls='
     
 #ifdef ClusterInfoStatistics
     ! allreduce statistics
-    call MPI_Comm_rank(communicator, myrank, ierr)
-    call MPI_Allreduce(self%sum_stats(:,:,0), self%sum_stats(:,:,1), size(self%sum_stats)/2, MPI_INTEGER8, MPI_SUM, communicator, ierr)
-    call MPI_Allreduce(self%max_stats(:,:,0), self%max_stats(:,:,1), size(self%max_stats)/2, MPI_INTEGER , MPI_MAX, communicator, ierr)
+!     call MPI_Allreduce(self%sum_stats(:,:,0), self%sum_stats(:,:,1), size(self%sum_stats)/2, MPI_INTEGER8, MPI_SUM, communicator, ierr)
+!     call MPI_Allreduce(self%max_stats(:,:,0), self%max_stats(:,:,1), size(self%max_stats)/2, MPI_INTEGER , MPI_MAX, communicator, ierr)
+    ierr = allreduce(sum_stats, max_stats, communicator)
     ! show
+    call MPI_Comm_rank(communicator, myrank, ierr)
     if (myrank == 0) then
-      write(*, fmt="(9a)") __FILE__,":   ",eval_stats(xmom=self%sum_stats(:,STATS_NACLS,1), xinf=self%max_stats(:,STATS_NACLS,1), quantity="nacls")
-      write(*, fmt="(9a)") __FILE__,":   ",eval_stats(xmom=self%sum_stats(:,STATS_NUMN0,1), xinf=self%max_stats(:,STATS_NUMN0,1), quantity="numn0")
-      write(*, fmt="(9a)") __FILE__,":   ",eval_stats(xmom=self%sum_stats(:,STATS_NEWN0,1), xinf=self%max_stats(:,STATS_NEWN0,1), quantity="newn0")
+!       write(*, fmt="(9a)") __FILE__,":   ",eval_stats(xmom=self%sum_stats(:,STATS_NACLS,1), xinf=self%max_stats(:,STATS_NACLS,1), quantity="nacls")
+!       write(*, fmt="(9a)") __FILE__,":   ",eval_stats(xmom=self%sum_stats(:,STATS_NUMN0,1), xinf=self%max_stats(:,STATS_NUMN0,1), quantity="numn0")
+!       write(*, fmt="(9a)") __FILE__,":   ",eval_stats(xmom=self%sum_stats(:,STATS_NEWN0,1), xinf=self%max_stats(:,STATS_NEWN0,1), quantity="newn0")
+
+      write(*, fmt="(9a)") __FILE__,":  nacls stats: ",trim(eval(xmom=sum_stats(:,STATS_NACLS), xinf=max_stats(:,STATS_NACLS)))
+      write(*, fmt="(9a)") __FILE__,":  numn0 stats: ",trim(eval(xmom=sum_stats(:,STATS_NUMN0), xinf=max_stats(:,STATS_NUMN0)))
+      write(*, fmt="(9a)") __FILE__,":  newn0 stats: ",trim(eval(xmom=sum_stats(:,STATS_NEWN0), xinf=max_stats(:,STATS_NEWN0)))
     endif
 #endif
 
@@ -232,20 +237,20 @@ cDBG  deallocate(global_target_atom_id, stat=ist) ! ignore status !!! DEBUG
     self%naez_trc = 0
   endsubroutine ! destroy
   
-#ifdef ClusterInfoStatistics
-  character(len=64) function eval_stats(xmom, xinf, quantity) result(str)
-    integer(kind=8), intent(in) :: xmom(0:2) ! [size(x), sum(x), sum(x*x)]
-    integer, intent(in) :: xinf(0:1) ! [maxval(x), -minval(x)]
-    character(len=*), intent(in) :: quantity    
-    integer :: ios
-    double precision :: inv, mean, var, dev
-    inv = 1.d0/dble(max(1, xmom(0)))
-    mean = xmom(1)*inv ! divide by the number of samples
-    var  = xmom(2)*inv - mean*mean ! variance
-    dev  = sqrt(max(0.d0, var)) ! compute sigma as sqrt(variance)
-    write(unit=str, fmt="(a,2(a,f0.1),9(a,i0))", iostat=ios) &
-      trim(quantity),": ",mean," +/- ",dev,", min ",-xinf(1)," max ",xinf(0)
-  endfunction ! eval
-#endif
+! #ifdef ClusterInfoStatistics
+!   character(len=64) function eval_stats(xmom, xinf, quantity) result(str)
+!     integer(kind=8), intent(in) :: xmom(0:2) ! [size(x), sum(x), sum(x*x)]
+!     integer, intent(in) :: xinf(0:1) ! [maxval(x), -minval(x)]
+!     character(len=*), intent(in) :: quantity    
+!     integer :: ios
+!     double precision :: inv, mean, var, dev
+!     inv = 1.d0/dble(max(1, xmom(0)))
+!     mean = xmom(1)*inv ! divide by the number of samples
+!     var  = xmom(2)*inv - mean*mean ! variance
+!     dev  = sqrt(max(0.d0, var)) ! compute sigma as sqrt(variance)
+!     write(unit=str, fmt="(a,2(a,f0.1),9(a,i0))", iostat=ios) &
+!       trim(quantity),": ",mean," +/- ",dev,", min ",-xinf(1)," max ",xinf(0)
+!   endfunction ! eval
+! #endif
 
 endmodule ! ClusterInfo_mod
