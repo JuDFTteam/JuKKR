@@ -9,16 +9,13 @@ module DirectSolver_mod
   implicit none
   private
   
-  public :: DirectSolver, solve, destroy!, create
+  public :: DirectSolver, solve, destroy !, create
   
   type :: DirectSolver
-    double complex, allocatable :: full_A(:,:), full_X(:,:)
+    double complex, allocatable :: full_A(:,:) !< dim(n,n)
+    double complex, allocatable :: full_X(:,:) !< dim(n,nRHSs)
   endtype
 
-!   interface create
-!     module procedure create_solver
-!   endinterface
-  
   interface solve
     module procedure solve_with_solver
   endinterface
@@ -26,6 +23,10 @@ module DirectSolver_mod
   interface destroy
     module procedure destroy_solver
   endinterface
+
+!   interface create
+!     module procedure create_solver
+!   endinterface
 
   contains
 

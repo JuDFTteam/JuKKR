@@ -360,7 +360,7 @@ module KKRmat_mod
       if (solver_type == 0) warn(6, "solver_type ="+solver_type+"is deprecated, please use 3")
 
       ! only iterative solvers need an initial guess
-      if (iguess_data%prec == 1) then
+      if (iguess_data%prec > 0) then
         iterative_solver%initial_zero = .false.
         call load(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
       else

@@ -323,5 +323,6 @@ KKRmat_mod.o: Exceptions_mod.o InitialGuess_mod.o jij_calc_mod.o SolverStats_mod
 BrillouinZoneMesh_mod.o: Exceptions_mod.o
 AtomicCore_mod.o: Exceptions_mod.o Quadrature_mod.o Constants_mod.o
 JelliumPotentials_mod.o: Exceptions_mod.o
+DirectSolver_mod.o: Exceptions_mod.o KKROperator_mod.o fillKKRMatrix_mod.o
 
 # DO NOT DELETE

@@ -7,16 +7,20 @@ module fillKKRMatrix_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: getKKRMatrixStructure, buildKKRCoeffMatrix, buildRightHandSide!, solveFull
+  public :: getKKRMatrixStructure, getKKRSolutionStructure, buildKKRCoeffMatrix, buildRightHandSide
+  public :: getGreenDiag
   public :: dump
-  public :: getKKRSolutionStructure
-  public :: convertBSRToFullMatrix, convertToFullMatrix, convertFullMatrixToBSR, getGreenDiag
+  public :: convertBSRToFullMatrix, convertToFullMatrix, convertFullMatrixToBSR
 
   double complex, parameter :: ZERO=(0.d0, 0.d0), CONE=(1.d0, 0.d0)
   
   interface dump
     module procedure dumpDenseMatrix, dumpSparseMatrixData
   endinterface
+
+!   interface convert
+!     module procedure convertBSRToFullMatrix, convertToFullMatrix, convertFullMatrixToBSR, convertFullMatrixTo
+!   endinterface
 
   contains
 
@@ -292,7 +296,6 @@ module fillKKRMatrix_mod
     enddo ! iRow
 
   endsubroutine ! convertToFullMatrix
-  
   
   
   subroutine convertFullMatrixToBSR(smat, bsr, full)
