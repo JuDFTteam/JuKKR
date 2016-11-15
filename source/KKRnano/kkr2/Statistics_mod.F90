@@ -2,130 +2,122 @@ module Statistics_mod
   implicit none
   private
   
-  public :: eval, add, allreduce
+  public :: SimpleStats, init, add, allreduce, eval
+  
+  ! planned: getMPIstats --> each process adds his number. 
+  !          Can already be emulated by this sequence: init(s); add(s, mynumber); i=allreduce(s, comm); eval(s)
 
+  integer, public, parameter :: NUMBER_OF_MOMENTS = 4
+  
+  type SimpleStats
+    real(kind=8) :: moment(0:NUMBER_OF_MOMENTS-1) ! [size(x), sum(x), sum(x**2), ...] ! MPI_Allreduce with MPI_SUM
+    real(kind=8) :: xtrema(0:1) ! [-minval(x), maxval(x)], minus minval is stored, so MPI_Allreduce both with MPI_MAX 
+    character(len=16) :: name
+  endtype
+
+  interface init
+    module procedure init_stats
+  endinterface
+  
   interface add
-    module procedure reduce_i8, reduce_i4, reduce_r8, reduce_r4
+    module procedure add_1r8, add_nr8
   endinterface
 
   interface allreduce
-    module procedure allreduce_i8, allreduce_r8
+    module procedure allreduce_nss
   endinterface
   
   interface eval
-    module procedure eval_int, eval_flt
+    module procedure eval_stats
   endinterface
-
+  
   contains
 
-  subroutine reduce_i8(x, xmom, xinf)
-    integer(kind=8), intent(in) :: x
-    integer(kind=8), intent(inout) :: xmom(0:) ! [size(x), sum(x), sum(x*x), ...]
-    integer(kind=8), intent(inout) :: xinf(0:1) ! [maxval(x), -minval(x)]
+  elemental subroutine init_stats(self, name)
+    type(SimpleStats), intent(inout) :: self
+    character(len=*),  intent(in)    :: name
+    self%moment = 0.d0 ! init
+    self%xtrema = -huge(1.d0) ! init
+    self%name = adjustl(name)
+  endsubroutine ! init
 
-    xmom = xmom + [1_8, x, x*x, x*x*x]
-    xinf = max(xinf, [x, -x])
-  endsubroutine ! reduce
-
-  subroutine reduce_i4(x, xmom, xinf)
-    integer(kind=4), intent(in) :: x
-    integer(kind=8), intent(inout) :: xmom(0:), xinf(0:1)
-    call reduce_i8(int(x, kind=8), xmom, xinf)
-  endsubroutine ! reduce
-
-  subroutine reduce_r8(x, xmom, xinf)
+  subroutine add_1r8(self, x)
+    type(SimpleStats), intent(inout) :: self
     real(kind=8), intent(in) :: x
-    real(kind=8), intent(inout) :: xmom(0:) ! [size(x), sum(x), sum(x*x), ...]
-    real(kind=8), intent(inout) :: xinf(0:1) ! [maxval(x), -minval(x)]
 
-    xmom = xmom + [1.d0, x, x*x, x*x*x]
-    xinf = max(xinf, [x, -x])
+    self%moment(0:3) = self%moment(0:3) + [1.d0, x, x*x, x*x*x]
+    self%xtrema(0:1) = max(self%xtrema(0:1), [-x, x])
   endsubroutine ! reduce
 
-  subroutine reduce_r4(x, xmom, xinf)
-    real(kind=4), intent(in) :: x
-    real(kind=8), intent(inout) :: xmom(0:), xinf(0:1)
-    call reduce_r8(real(x, kind=8), xmom, xinf)
+  subroutine add_nr8(self, x)
+    type(SimpleStats), intent(inout) :: self(:)
+    real(kind=8), intent(in) :: x(:)
+    integer :: i ! group index
+    do i = 1, size(self)
+      self(i)%moment(0:3) = self(i)%moment(0:3) + [1.d0, x(i), x(i)*x(i), x(i)*x(i)*x(i)]
+      self(i)%xtrema(0:1) = max(self(i)%xtrema(0:1), [-x(i), x(i)])
+    enddo ! i
   endsubroutine ! reduce
-  
-  
-  integer function allreduce_i8(xmom, xinf, communicator) result(ierr)
+
+  integer function allreduce_nss(self, communicator) result(ierr)
     include 'mpif.h'
-    integer(kind=8), intent(inout) :: xmom(0:,:) ! [size(x), sum(x), sum(x*x), ...]
-    integer(kind=8), intent(inout) :: xinf(0:,:) ! [maxval(x), -minval(x)]
-    integer, intent(in) :: communicator   
-    integer(kind=8), allocatable :: tmom(:,:), tinf(:,:)
-    
-    allocate(tmom(size(xmom, 1),size(xmom,2)), tinf(size(xinf, 1),size(xinf,2))) 
-    tmom = xmom ; tinf = xinf ! copy 
-    
-    call MPI_Allreduce(xmom, tmom, size(xmom), MPI_INTEGER8, MPI_SUM, communicator, ierr)
-    call MPI_Allreduce(xinf, tinf, size(xinf), MPI_INTEGER8, MPI_MAX, communicator, ierr)
+    type(SimpleStats), intent(inout) :: self(:) ! group many to save communication latencies
+    integer, intent(in) :: communicator
 
-    deallocate(tmom, tinf)
+    real(kind=8), allocatable :: ssum(:,:,:), smax(:,:,:)
+    integer, parameter :: iSEND=1, iRECV=2, m = NUMBER_OF_MOMENTS
+    integer :: ist, ngroup, i
+
+    ngroup = size(self)
+    allocate(ssum(0:m-1,ngroup,iSEND:iRECV), smax(0:1,ngroup,iSEND:iRECV), stat=ierr)
+    
+    ! pack
+    do i = 1, ngroup
+      ssum(:,i,iSend) = self(i)%moment(:) 
+      smax(:,i,iSend) = self(i)%xtrema(:) 
+    enddo ! i
+    
+    call MPI_Allreduce(ssum(:,:,iSend), ssum(:,:,iRECV), m*ngroup, MPI_REAL8, MPI_SUM, communicator, ierr)
+    call MPI_Allreduce(smax(:,:,iSend), smax(:,:,iRECV), 2*ngroup, MPI_REAL8, MPI_MAX, communicator, ierr)
+    
+    ! unpack
+    do i = 1, ngroup
+      self(i)%moment(:) = ssum(:,i,iRECV) 
+      self(i)%xtrema(:) = smax(:,i,iRECV) 
+    enddo ! i
+
+    deallocate(ssum, smax, stat=ist) ! ignore status
   endfunction ! allreduce
-  
-  integer function allreduce_r8(xmom, xinf, communicator) result(ierr)
-    include 'mpif.h'
-    real(kind=8), intent(inout) :: xmom(0:,:) ! [size(x), sum(x), sum(x*x), ...]
-    real(kind=8), intent(inout) :: xinf(0:,:) ! [maxval(x), -minval(x)]
-    integer, intent(in) :: communicator   
-    real(kind=8), allocatable :: tmom(:,:), tinf(:,:)
-    
-    allocate(tmom(size(xmom, 1),size(xmom,2)), tinf(size(xinf, 1),size(xinf,2))) 
-    tmom = xmom ; tinf = xinf ! copy 
-    
-    call MPI_Allreduce(xmom, tmom, size(xmom), MPI_REAL8, MPI_SUM, communicator, ierr)
-    call MPI_Allreduce(xinf, tinf, size(xinf), MPI_REAL8, MPI_MAX, communicator, ierr)
 
-    deallocate(tmom, tinf)
-  endfunction ! allreduce
-  
-  character(len=64) function eval_int(xmom, xinf, ndigits) result(str)
-    integer(kind=8), intent(in) :: xmom(0:) ! [size(x), sum(x), sum(x*x), ...]
-    integer(kind=8), intent(in) :: xinf(0:1) ! [maxval(x), -minval(x)]
-    integer, intent(in), optional :: ndigits ! digits behind the floating point
+  character(len=96) function eval_stats(self, scaleby, ndigits) result(str)
+    type(SimpleStats),      intent(in) :: self
+    real(kind=8), optional, intent(in) :: scaleby ! scale results by this
+    integer,      optional, intent(in) :: ndigits ! if we know that the data are all integer, we should pass ndigits=0
     
-    integer :: ios, ndig, minv, maxv
-    character(len=32) :: frmt
-    double precision :: invN, mean, var, dev
+    integer :: ios, ndig!, nd10
+    character(len=32) :: frmt, minmax
+    real(kind=8) :: invN, mean, var, dev, xtr(0:1), scal
     
-    invN = 1.d0/dble(max(1, xmom(0)))
-    mean = xmom(1)*invN ! divide by the number of samples
+    scal = 1.d0 ; if (present(scaleby)) scal = scaleby
+    ndig = 1    ; if (present(ndigits)) ndig = ndigits
+
+    invN = 1.d0/dble(max(1.d0, self%moment(0)))
+    mean = self%moment(1)*invN ! divide by the number of samples
     
-    ndig = 1 ; if (present(ndigits)) ndig = max(0, ndigits)
-    frmt = '(9(i0,a))' ; if (ndig > 0) write(unit=frmt, fmt="(9(a,i0))", iostat=ios) "(2(f0.",ndig,",a),9(i0,a))"
-    
-    var  = 0 ; if (ubound(xmom, 1) > 1) &
-    var  = xmom(2)*invN - mean*mean ! variance
+!   nd10 = ceiling(log10(mean))
+
+    var  = 0 ; if (ubound(self%moment, 1) > 1) &
+    var  = self%moment(2)*invN - mean*mean ! variance
     dev  = sqrt(max(0.d0, var)) ! compute sigma as sqrt(variance)
-    minv = -xinf(1)
-    maxv =  xinf(0)
-    write(unit=str, fmt=frmt, iostat=ios) mean," +/- ",dev,"  [",minv,", ",maxv,"]"
+    xtr(0:1) = self%xtrema(0:1)*[-scal, scal]
+    if (all(abs(xtr - nint(xtr)) < 0.1**(ndig+1))) then
+      write(unit=minmax, fmt='("  [",i0,", ",i0,"]")', iostat=ios) nint(xtr)   
+    else
+      write(unit=frmt, fmt="(9(a,i0))", iostat=ios) '("  [",f0.",ndig,",", ",f0.",ndig,"]")' ! generate format string
+      write(unit=minmax, fmt=frmt, iostat=ios) xtr
+    endif
+    write(unit=frmt, fmt="(9(a,i0))", iostat=ios) "(a,9(a,f0.",ndig,"))" ! generate format string
+    write(unit=str, fmt=frmt, iostat=ios) trim(self%name),": ",mean*scal," +/- ",dev*scal, trim(minmax)
   endfunction ! eval
-
-  character(len=96) function eval_flt(xmom, xinf, ndigits) result(str)
-    real(kind=8), intent(in) :: xmom(0:) ! [size(x), sum(x), sum(x*x), ...]
-    real(kind=8), intent(in) :: xinf(0:1) ! [maxval(x), -minval(x)]
-    integer, intent(in), optional :: ndigits ! significant digits in total
-    
-    integer :: ios, ndig, nd10
-    character(len=32) :: frmt
-    real(kind=8) :: invN, mean, var, dev, minv, maxv
-    
-    invN = 1.d0/dble(max(1.d0, xmom(0)))
-    mean = xmom(1)*invN ! divide by the number of samples
-    
-    ndig = 1 ; if (present(ndigits)) ndig = max(1, ndigits)
-    nd10 = ceiling(log10(mean))
-    frmt = '(9(f0.1,a))' !; if (mean > 0) write(unit=frmt, fmt="(9(a,i0))", iostat=ios) "(2(f0.",ndig,",a),9(i0,a))" ! ToDo
-
-    var  = 0 ; if (ubound(xmom, 1) > 1) &
-    var  = xmom(2)*invN - mean*mean ! variance
-    dev  = sqrt(max(0.d0, var)) ! compute sigma as sqrt(variance)
-    minv = -xinf(1)
-    maxv =  xinf(0)
-    write(unit=str, fmt=frmt, iostat=ios) mean," +/- ",dev,"  [",minv,", ",maxv,"]"
-  endfunction ! eval
-
+ 
 endmodule ! Statistics_mod

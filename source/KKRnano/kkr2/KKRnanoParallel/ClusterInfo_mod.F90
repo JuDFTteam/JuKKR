@@ -37,9 +37,6 @@ module ClusterInfo_mod
     integer(kind=2), allocatable ::  ezoa(:,:) !> dim(naclsd,naez_trc) ! index of periodic image into array lattice_vectors%rr
   endtype
 
-#ifdef ClusterInfoStatistics
-  integer, parameter, private :: STATS_NACLS = 1, STATS_NUMN0 = 2, STATS_NEWN0 = 3 ! enums for statistics
-#endif
 
   interface create
     module procedure createClusterInfo
@@ -65,7 +62,7 @@ module ClusterInfo_mod
   !> @param ref_clusters    all the local ref. clusters
   subroutine createClusterInfo(self, ref_clusters, trunc_zone, communicator)
 #ifdef ClusterInfoStatistics
-    use Statistics_mod, only: add, allreduce, eval
+    use Statistics_mod, only: SimpleStats, init, add, allreduce, eval
 #endif    
     use RefCluster_mod, only: RefCluster
     use TruncationZone_mod, only: TruncationZone
@@ -79,8 +76,6 @@ module ClusterInfo_mod
     integer, intent(in)                 :: communicator
 
     integer :: isa, newn0, ila, ineqv, ist
-    integer :: OFFSET_INDN, OFFSET_ATOM, OFFSET_EZOA, POS_MAGIC
-    integer, parameter :: POS_INDEX=1, POS_NACLS=2, POS_NUMN0=3
     integer :: nacls, numn0, naclsd, numn0d, num_local_atoms, blocksize
     integer :: memory_stat ! needed in allocatecheck
     integer :: myrank, ierr ! MPI error status
@@ -88,17 +83,19 @@ module ClusterInfo_mod
     integer(kind=4) :: atom_id, indn0 ! global atom ids
     integer(kind=4), allocatable :: send_buf(:,:), recv_buf(:,:) ! global atom ids, require more than 16bit
     integer(kind=4), allocatable :: global_target_atom_id(:) !!! DEBUG
-    integer, parameter :: N_ALIGN = 1 ! 1:no alignment, 4: 8 Byte alignment, 32: 64 Byte alignment
-#ifdef ClusterInfoStatistics
-    !> some statistics
-    integer(kind=8) :: sum_stats(0:3,3) !> dim(moments, quantities)
-    integer(kind=8) :: max_stats(0:1,3) !> dim(max:-min,quantities)
-#define reduce_stats(n, Q) call add(n, sum_stats(:,Q), max_stats(:,Q))
-    sum_stats = 0 ; max_stats = -huge(0) ! init statistics
-#else
-#define reduce_stats(n, Q)
-#endif
     
+    integer, parameter :: N_ALIGN = 1 ! 1:no alignment, 4: 8 Byte alignment, 32: 64 Byte alignment
+    integer :: OFFSET_INDN, OFFSET_ATOM, OFFSET_EZOA, POS_MAGIC
+    integer, parameter :: POS_INDEX=1, POS_NACLS=2, POS_NUMN0=3, POS_NEWN0=POS_INDEX
+
+#ifdef ClusterInfoStatistics
+    type(SimpleStats) :: stats(3)
+#define reduce_stats(NEWINT, QUANTITY) call add(stats(QUANTITY), dble(NEWINT))
+    call init(stats, name=["newn0", "nacls", "numn0"])
+#else
+#define reduce_stats(N, Q)
+#endif
+
     num_local_atoms = size(ref_clusters)
 
     nacls = maxval(ref_clusters(:)%nacls) ! find maximum for locally stored clusters
@@ -112,7 +109,7 @@ module ClusterInfo_mod
 
     self%naez_trc = trunc_zone%naez_trc
 
-    ! start packing a send buffer
+    ! start packing the send buffer
     OFFSET_ATOM = POS_NUMN0 ! the first three numbers are [source_atom_index, nacls, numn0]
     OFFSET_EZOA = OFFSET_ATOM + naclsd
     OFFSET_INDN = OFFSET_EZOA + naclsd
@@ -141,6 +138,7 @@ module ClusterInfo_mod
     ! communication
     call copyFromI_com(recv_buf, send_buf, trunc_zone%global_atom_id, blocksize, num_local_atoms, communicator)
 
+    ! prepare data structure arrays
     DEALLOCATECHECK(send_buf)
 cDBG  ALLOCATECHECK(global_target_atom_id(naclsd)) !!! DEBUG
     ALLOCATECHECK(self%nacls(self%naez_trc))
@@ -158,15 +156,14 @@ cDBG  ALLOCATECHECK(global_target_atom_id(naclsd)) !!! DEBUG
     self%indn0 = -1
     self%atom = -1
     self%ezoa = -1
-
     
-    
+    ! start unpacking and processing the receive buffer
     do isa = 1, self%naez_trc
       atom_id = recv_buf(POS_INDEX,isa)
       CHECKASSERT( atom_id == trunc_zone%global_atom_id(isa) ) ! check if send_buf from right atom was received
 
       numn0 = recv_buf(POS_NUMN0,isa)
-      reduce_stats(numn0, STATS_NUMN0)
+      reduce_stats(numn0, POS_NUMN0)
       
       ! the indices in indn0 have to be transformed to truncation zone indices
       newn0 = 0 ! create a new version of numn0
@@ -187,13 +184,13 @@ cDBG      global_target_atom_id(newn0) = indn0 !!! DEBUG
 
       CHECKASSERT( 0 < newn0 .and. newn0 <= numn0 )
       self%numn0(isa) = newn0
-      reduce_stats(newn0, STATS_NEWN0)
+      reduce_stats(newn0, POS_NEWN0)
       
 cDBG  write(*,'(4(a,i0),999(" ",i0))') __FILE__,__LINE__,' atom_id=',atom_id,' numn0=',newn0,' indn0= ',global_target_atom_id(1:newn0) !!! DEBUG
 
       nacls = recv_buf(POS_NACLS,isa) ! nacls
       self%nacls(isa) = nacls
-      reduce_stats(nacls, STATS_NACLS)
+      reduce_stats(nacls, POS_NACLS)
 
       self%atom(1:nacls,isa) = trunc_zone%local_atom_idx(recv_buf(OFFSET_ATOM + 1:nacls + OFFSET_ATOM,isa)) ! translate into truncation zone indices here
 cDBG  global_target_atom_id(1:nacls) = recv_buf(OFFSET_ATOM + 1:nacls + OFFSET_ATOM,isa) !!! DEBUG
@@ -205,23 +202,14 @@ cDBG  write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' old nacls='
 
       CHECKASSERT( recv_buf(POS_MAGIC,isa) == MAGIC_NUMBER ) ! check if the end of recv_buf seems correct
     enddo ! isa
-    
-#ifdef ClusterInfoStatistics
-    ! allreduce statistics
-!     call MPI_Allreduce(self%sum_stats(:,:,0), self%sum_stats(:,:,1), size(self%sum_stats)/2, MPI_INTEGER8, MPI_SUM, communicator, ierr)
-!     call MPI_Allreduce(self%max_stats(:,:,0), self%max_stats(:,:,1), size(self%max_stats)/2, MPI_INTEGER , MPI_MAX, communicator, ierr)
-    ierr = allreduce(sum_stats, max_stats, communicator)
-    ! show
-    call MPI_Comm_rank(communicator, myrank, ierr)
-    if (myrank == 0) then
-!       write(*, fmt="(9a)") __FILE__,":   ",eval_stats(xmom=self%sum_stats(:,STATS_NACLS,1), xinf=self%max_stats(:,STATS_NACLS,1), quantity="nacls")
-!       write(*, fmt="(9a)") __FILE__,":   ",eval_stats(xmom=self%sum_stats(:,STATS_NUMN0,1), xinf=self%max_stats(:,STATS_NUMN0,1), quantity="numn0")
-!       write(*, fmt="(9a)") __FILE__,":   ",eval_stats(xmom=self%sum_stats(:,STATS_NEWN0,1), xinf=self%max_stats(:,STATS_NEWN0,1), quantity="newn0")
+    ! receive buffer is processed
 
-      write(*, fmt="(9a)") __FILE__,":  nacls stats: ",trim(eval(xmom=sum_stats(:,STATS_NACLS), xinf=max_stats(:,STATS_NACLS)))
-      write(*, fmt="(9a)") __FILE__,":  numn0 stats: ",trim(eval(xmom=sum_stats(:,STATS_NUMN0), xinf=max_stats(:,STATS_NUMN0)))
-      write(*, fmt="(9a)") __FILE__,":  newn0 stats: ",trim(eval(xmom=sum_stats(:,STATS_NEWN0), xinf=max_stats(:,STATS_NEWN0)))
-    endif
+#ifdef ClusterInfoStatistics
+    ierr = allreduce(stats, communicator) ! allreduce statistics
+    call MPI_Comm_rank(communicator, myrank, ierr)
+    do ist = 1, size(stats)
+      if (myrank == 0) write(*, fmt="(9a)") __FILE__,": stats for ",trim(eval(stats(ist)))
+    enddo ! ist
 #endif
 
 cDBG  deallocate(global_target_atom_id, stat=ist) ! ignore status !!! DEBUG
@@ -230,27 +218,11 @@ cDBG  deallocate(global_target_atom_id, stat=ist) ! ignore status !!! DEBUG
   
   elemental subroutine destroyClusterInfo(self)
     type(ClusterInfo), intent(inout) :: self
-
     integer :: ist
     deallocate(self%nacls, self%numn0, self%indn0, self%atom, self%ezoa, stat=ist) ! ignore status
     self%naclsd = 0
+    self%numn0d = 0
     self%naez_trc = 0
   endsubroutine ! destroy
-  
-! #ifdef ClusterInfoStatistics
-!   character(len=64) function eval_stats(xmom, xinf, quantity) result(str)
-!     integer(kind=8), intent(in) :: xmom(0:2) ! [size(x), sum(x), sum(x*x)]
-!     integer, intent(in) :: xinf(0:1) ! [maxval(x), -minval(x)]
-!     character(len=*), intent(in) :: quantity    
-!     integer :: ios
-!     double precision :: inv, mean, var, dev
-!     inv = 1.d0/dble(max(1, xmom(0)))
-!     mean = xmom(1)*inv ! divide by the number of samples
-!     var  = xmom(2)*inv - mean*mean ! variance
-!     dev  = sqrt(max(0.d0, var)) ! compute sigma as sqrt(variance)
-!     write(unit=str, fmt="(a,2(a,f0.1),9(a,i0))", iostat=ios) &
-!       trim(quantity),": ",mean," +/- ",dev,", min ",-xinf(1)," max ",xinf(0)
-!   endfunction ! eval
-! #endif
 
 endmodule ! ClusterInfo_mod

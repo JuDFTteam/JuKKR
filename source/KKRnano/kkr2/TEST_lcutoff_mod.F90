@@ -30,8 +30,10 @@ module TEST_lcutoff_mod
     use TruncationZone_mod, only: TruncationZone, create
 #define useStatistics
 #ifdef  useStatistics
-    use Statistics_mod, only: add, allreduce, eval
-    integer(kind=8), allocatable :: sum_stats(:,:), max_stats(:,:)
+!     use Statistics_mod, only: add, allreduce, eval
+!     integer(kind=8), allocatable :: sum_stats(:,:), max_stats(:,:)
+    use Statistics_mod, only: SimpleStats, init, add, allreduce, eval
+    type(SimpleStats) :: stats(1)
 #endif
 
     type(TruncationZone), intent(inout) :: trunc_zone
@@ -45,7 +47,7 @@ module TEST_lcutoff_mod
     integer :: naez, lmax, atomindex, ila, num_local_atoms, ist, nradii, ell
     ell_int_t, allocatable :: lmax_atom(:,:), lmax_full(:)
     ell_int_t :: l_lim(9), ellmax
-    double precision :: r2lim(9)   
+    double precision :: r2lim(9)
 
     lmax = 0; do while ((lmax + 1)**2 < arrays%lmmaxd); lmax = lmax + 1; enddo ! find back global lmax
     ellmax = lmax ! convert to ell_int_t
@@ -77,9 +79,9 @@ module TEST_lcutoff_mod
     if (ist /= 0) die_here("allocation of masks failed, requested"+(naez*.5**20*(num_local_atoms + 1))+"MiByte")
     
 #ifdef  useStatistics    
-    allocate(sum_stats(0:3,1), max_stats(0:1,1), stat=ist) ; sum_stats = 0 ; max_stats = -huge(0)
+    call init(stats, name=["ntrunc"])
 #endif
-    
+
     lmax_full = -1 ! init as truncated
 
     do ila = 1, num_local_atoms
@@ -103,16 +105,15 @@ module TEST_lcutoff_mod
 #endif
 
 #ifdef  useStatistics    
-      call add(count(lmax_atom(:,ila) >= 0), sum_stats(:,1), max_stats(:,1))
+      call add(stats(1), dble(count(lmax_atom(:,ila) >= 0)))
 #endif
 
       lmax_full(:) = max(lmax_full(:), lmax_atom(:,ila)) ! reduction: merge truncation zones of local atoms
     enddo ! ila
     
 #ifdef  useStatistics    
-    ist = allreduce(sum_stats, max_stats, communicator)
-    WRITELOG(0,*) "truncation stats: ",trim(eval(sum_stats(:,1), max_stats(:,1)))
-    deallocate(sum_stats, max_stats, stat=ist)
+    ist = allreduce(stats, communicator)
+    WRITELOG(0,*) "truncation stats: ",trim(eval(stats(1)))
 #endif
 
     num_truncated(:) = 0
