@@ -29,12 +29,15 @@ C     .. External Functions ..
           WRITE(934,'(A,A)') '#FILEVERSION= 2'//'   # serial: ',serialnr
           WRITE(934,'(I8,4X,A)') LMAXD, 'lmaxd',   LMAX, 'lmax',
      +                           KORBIT, 'korbit',
-     +                           NSPIN, 'nspin, used as nspind', NRD, 'nrd',          ! write nspin instead of npsind for program to work with nspin==1 case 
+     +                           NSPIN, 'nspin, used as nspind',        ! write nspin instead of npsind for program to work with nspin==1 case 
+     +                           NRD, 'nrd',
      +                           NEMBD, 'nembd',   NEMB, 'nemb',      
-     +                           NCLS, 'ncls once again, used as nclsd',   NCLS, 'ncls',        ! ncls instead of nclsd for smaller files (see kloopz writeout)
+     +                           NCLS, 'ncls once again, used as nclsd',
+     +                           NCLS, 'ncls',                          ! ncls instead of nclsd for smaller files (see kloopz writeout)
      +                           NATYPD, 'natypd', NATYP, 'natyp',    
      +                           NAEZD, 'naezd',   NAEZ, 'naez',      
-     +                           NACLSMAX, 'naclsmax, used as naclsd', IELAST, 'ielast', ! naclsmax instead of naclsd for smaller files
+     +                           NACLSMAX, 'naclsmax, used as naclsd',  ! naclsmax instead of naclsd for smaller files
+     +                           IELAST, 'ielast',
      +                           INS, 'ins'                           
           CLOSE(934)                                                  
 
