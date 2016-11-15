@@ -373,8 +373,7 @@ C    &             FILE='green',FORM='unformatted')                             
           IREC=1
 
           IF ( ( OPT('KKRFLEX ') ) ) THEN
-            do i=1,nranks
-             if(myrank==i) then
+            if(myrank==master) then
               WRITE(888,REC=IREC) IELAST,NSPIN,NATOMIMP,
      &                NATOMIMP, LMMAXD, KORBIT,
      &             (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
@@ -383,11 +382,10 @@ C    &             FILE='green',FORM='unformatted')                             
      &               NATOMIMP, (LMAX+1)**2,
      &               (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
               END IF
-             end if
+            end if
 #ifdef CPP_MPI
-             call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 #endif
-            end do
           END IF
 c         IF ( (.not. OPT('KKRFLEX ') ) ) THEN                !no-green
 c           WRITE(88,REC=IREC) IELAST,NSPIN,                  !no-green
