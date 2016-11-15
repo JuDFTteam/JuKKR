@@ -28,7 +28,7 @@ module TFQMR_mod
   subroutine solve_with_TFQMR(op, mat_X, mat_B, tolerance, ncol, nRHSs, initial_zero, precond, use_precond, vecs, kernel_timer, &
                    iterations_needed, largest_residual, nFlops) ! optional output args
     USE_LOGGING_MOD
-    use TimerMpi_mod, only: TimerMpi, startTimer, stopTimer
+    use TimerMpi_mod, only: TimerMpi
     use SolverStats_mod, only: SolverStats
     use KKROperator_mod, only: KKROperator
     use BCPOperator_mod, only: BCPOperator, multiply
@@ -102,11 +102,8 @@ module TFQMR_mod
 
     else
 
-      call startTimer(kernel_timer)
       ! v5 = A*v1
-      call apply_precond_and_matrix(op, precond, mat_X, v5, vP, use_precond, mFlops)
-      sparse_mult_count = sparse_mult_count + 1
-      call  stopTimer(kernel_timer)
+      call apply_precond_and_matrix(op, precond, mat_X, v5, vP)!, use_precond, mFlops, kernel_timer, sparse_mult_count)
 
       ! v5 = v2 - v5 ; r0 = b - A*x0
       v5 = v5 - mat_B ! subtract RightHandSide
@@ -166,11 +163,8 @@ module TFQMR_mod
       call col_xpay(v5, BETA, v6, ColIndices, mFlops)
 
 
-      call startTimer(kernel_timer)
       ! v9 = A*v6
-      call apply_precond_and_matrix(op, precond, v6, v9, vP, use_precond, mFlops)
-      sparse_mult_count = sparse_mult_count + 1
-      call  stopTimer(kernel_timer)
+      call apply_precond_and_matrix(op, precond, v6, v9, vP)!, use_precond, mFlops, kernel_timer, sparse_mult_count)
 
       ! v4 = beta*v4 + v9
       call col_xpay(v9, BETA, v4, ColIndices, mFlops)
@@ -233,10 +227,7 @@ module TFQMR_mod
       !=============================================================
 
       ! v8 = A*v6
-      call startTimer(kernel_timer)
-      call apply_precond_and_matrix(op, precond, v6, v8, vP, use_precond, mFlops)
-      sparse_mult_count = sparse_mult_count + 1
-      call  stopTimer(kernel_timer)
+      call apply_precond_and_matrix(op, precond, v6, v8, vP)!, use_precond, mFlops, kernel_timer, sparse_mult_count)
 
       ! v5 = v5 - alpha*v8
       call col_axpy(mALPHA, v8, v5, ColIndices, mFlops)
@@ -300,10 +291,7 @@ module TFQMR_mod
         ! has to be performed.
 
         ! v9 = A*v1
-        call startTimer(kernel_timer)
-        call apply_precond_and_matrix(op, precond, mat_X, v9, vP, use_precond, mFlops)
-        sparse_mult_count = sparse_mult_count + 1
-        call  stopTimer(kernel_timer)
+        call apply_precond_and_matrix(op, precond, mat_X, v9, vP)!, use_precond, mFlops, kernel_timer, sparse_mult_count)
 
         ! v9 = v2 - v9
         v9 = v9 - mat_B ! flipped sign ! subtract RightHandSide
@@ -350,7 +338,7 @@ module TFQMR_mod
       !         x = M  * y
       !              2
       ! has to be performed.
-      call multiply(precond, mat_X, vP)
+      call multiply(precond, mat_X, vP) ! warning: this part is not counted in mFlops and timers
       mat_X = vP
     endif
 
@@ -383,36 +371,51 @@ module TFQMR_mod
     WRITELOG(3,*) converged_at
     WRITELOG(3,*) RESN
 
+  contains
+
+    !------------------------------------------------------------------------------
+    !> Applies the preconditioner (optional), then the sparse matrix on 'mat' and puts result into 'mat_out'.
+    !>
+    !> mat_out = A P mat_in
+    !> preconditioner is used only when use_precond=.true.
+    subroutine apply_precond_and_matrix(op, precond, mat_in, mat_out, temp)!, use_precond, mFlops, kernel_timer, sparse_mult_count)
+      use KKROperator_mod, only: KKROperator, multiply
+      use BCPOperator_mod, only: BCPOperator, multiply
+      use TimerMpi_mod, only: startTimer, stopTimer!, TimerMpi
+
+      type(KKROperator), intent(in) :: op
+      type(BCPOperator), intent(in) :: precond
+
+      double complex, intent(in)  :: mat_in(:,:,:)
+      double complex, intent(out) :: mat_out(:,:,:)
+      double complex, intent(out) :: temp(:,:,:)
+  !     logical, intent(in) :: use_precond
+  !     integer(kind=8), intent(inout) :: mFlops
+  !     type(TimerMpi), intent(inout) :: kernel_timer
+  !     integer, intent(inout) :: sparse_mult_count
+
+      if (use_precond) then
+      
+        call multiply(precond, mat_in, temp) ! act with preconditioner on mat_in
+        
+        call startTimer(kernel_timer)
+        call multiply(op, temp, mat_out, mFlops) ! act with op on temp
+        call  stopTimer(kernel_timer)
+        
+      else
+      
+        call startTimer(kernel_timer)
+        call multiply(op, mat_in, mat_out, mFlops) ! act with op on mat_in
+        call  stopTimer(kernel_timer)
+        
+      endif
+      
+      sparse_mult_count = sparse_mult_count + 1
+      
+    endsubroutine ! apply
+
   endsubroutine ! solve
-
-  !------------------------------------------------------------------------------
-  !> Applies the preconditioner (optional), then the sparse matrix on 'mat' and puts result
-  !> into 'mat_out'.
-  !>
-  !> mat_out = A P mat_in
-  !> preconditioner is used only when use_precond=.true.
-  subroutine apply_precond_and_matrix(op, precond, mat_in, mat_out, temp, use_precond, mFlops)
-    use KKROperator_mod, only: KKROperator, multiply
-    use BCPOperator_mod, only: BCPOperator, multiply
-
-    type(KKROperator), intent(in) :: op
-    type(BCPOperator), intent(in) :: precond
-
-    double complex, intent(in)  :: mat_in(:,:,:)
-    double complex, intent(out) :: mat_out(:,:,:)
-    double complex, intent(out) :: temp(:,:,:)
-    logical, intent(in) :: use_precond
-    integer(kind=8), intent(inout) :: mFlops
-
-    if (use_precond) then
-      call multiply(precond, mat_in, temp)
-      call multiply(op, temp, mat_out, mFlops)
-    else
-      call multiply(op, mat_in, mat_out, mFlops)
-    endif
-
-  endsubroutine ! apply
-
+  
   !------------------------------------------------------------------------------
   subroutine col_norms(norms, vector, colInd, mFlops)
     double precision, intent(out) :: norms(:,:)
