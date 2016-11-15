@@ -3,7 +3,7 @@
 module bsrmm_mod
   implicit none
   private
-  public :: bsr_times_bsr, destroy
+  public :: bsr_times_bsr, bsrMultPlan, destroy
   
   type bsrMultPlan
     integer :: nthreads = 1 ! default=1
@@ -33,12 +33,11 @@ module bsrmm_mod
     self%nByte = 0 ! data transfer
   endsubroutine
 
-  subroutine create_bsr_time_bsr_plan(self, shapeY, ia, ja, shapeA, ix, jx, shapeX)
+  subroutine create_bsr_time_bsr_plan(self, ia, ja, shapeA, ix, jx, shapeX)
     type(bsrMultPlan), intent(inout) :: self
-    integer, intent(in) :: shapeY(:) ! == [lmsa, nRHS, X%nnzb]
     integer, intent(in) :: ia(:) !> dim(A%nRows + 1) !  start indices
     integer, intent(in) :: ja(:) !> dim(A%nnzb)      ! column indices
-    integer, intent(in) :: shapeA(:) ! == [lmsa, lmsd, A%nnzb]
+    integer, intent(in) :: shapeA(:) ! == [lmsa, lmsd, A%nnzb, ...]
     integer, intent(in) :: ix(:) !> dim(X%nRows + 1) !  start indices
     integer, intent(in) :: jx(:) !> dim(X%nnzb)      ! column indices
     integer, intent(in) :: shapeX(:) ! == [lmsa, nRHS, X%nnzb]
@@ -58,15 +57,12 @@ module bsrmm_mod
     
     leadDim_A = shapeA(1)
     leadDim_X = shapeX(1)
-    leadDim_Y = shapeY(1)
+    leadDim_Y = shapeX(1)
     
     lmsd = shapeA(2)
     nRHS = shapeX(2)
 
-    if (leadDim_Y /= leadDim_X) stop __LINE__
     if (leadDim_A /= leadDim_X) stop __LINE__
-    if (shapeX(2) /= shapeY(2)) stop __LINE__
-    if (shapeX(3) /= shapeY(3)) stop __LINE__
 
     
     call destroy(self) ! deallocate everything

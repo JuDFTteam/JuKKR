@@ -11,6 +11,7 @@
 module KKROperator_mod
   use SparseMatrixDescription_mod, only: SparseMatrixDescription
   use ClusterInfo_mod, only: ClusterInfo
+  use bsrmm_mod, only: bsrMultPlan
   implicit none
   private
   public :: KKROperator, create, destroy, multiply
@@ -24,6 +25,7 @@ module KKROperator_mod
     double complex, allocatable :: mat_X(:,:,:)   !< dim(fastBlockDim,slowBlockDim,bsr_X%nnzb)
     integer(kind=2), allocatable :: atom_indices(:) !< local truncation zone indices of the source atoms
     type(ClusterInfo), pointer :: cluster
+    type(bsrMultPlan) :: plan
   endtype
 
   interface create
@@ -45,6 +47,7 @@ module KKROperator_mod
   contains
 
   subroutine create_KKROperator(self, cluster, lmmaxd, atom_indices, Lly)
+    use bsrmm_mod, only: bsr_times_bsr ! planning
     use TEST_lcutoff_mod, only: lmax_a_array
     use fillKKRMatrix_mod, only: getKKRMatrixStructure, getKKRSolutionStructure
 
@@ -96,6 +99,9 @@ module KKROperator_mod
 
     allocate(self%mat_A(nRows,nCols,nBlocks,0:nLloyd)) ! allocate memory for the KKR operator
 
+    ! plan the operation
+    call bsr_times_bsr(self%plan, self%bsr_A%RowStart, self%bsr_A%ColIndex, shape(self%mat_A), self%bsr_X%RowStart, self%bsr_X%ColIndex, shape(self%mat_X))
+    
   endsubroutine ! create
 
 
@@ -119,17 +125,27 @@ module KKROperator_mod
 
   !----------------------------------------------------------------------------
   !> Applies Operator on mat_X and returns result in mat_AX.
-  subroutine multiply_KKROperator(self, mat_X, mat_AX, nFlops)
+  subroutine multiply_KKROperator(self, mat_X, mat_AX, nFlop)
     use bsrmm_mod, only: bsr_times_bsr
 
-    type(KKROperator) :: self
+    type(KKROperator), intent(in) :: self
     double complex, intent(in)  :: mat_X(:,:,:)
     double complex, intent(out) :: mat_AX(:,:,:)
-    integer(kind=8), intent(inout) :: nFlops
+    integer(kind=8), intent(inout) :: nFlop
 
-    ! perform BSR matrix * BSR matrix: bsr_times_bsr(Y, ia, ja, A, ix, jx, X, nFlops)
-    call bsr_times_bsr(mat_AX, self%bsr_A%RowStart, self%bsr_A%ColIndex, self%mat_A(:,:,:,0), self%bsr_X%RowStart, self%bsr_X%ColIndex, mat_X, nFlops)
+    if (self%plan%mtasks > 0) then
+    
+      ! perform BSR matrix * BSR matrix: bsr_times_bsr(plan, Y, A, X) according to plan
+      call bsr_times_bsr(self%plan, mat_AX, self%mat_A(:,:,:,0), mat_X)
+      nFlop = nFlop + self%plan%nFlop
 
+    else
+    
+      ! perform BSR matrix * BSR matrix: bsr_times_bsr(Y, ia, ja, A, ix, jx, X, nFlop) spontaneously
+      call bsr_times_bsr(mat_AX, self%bsr_A%RowStart, self%bsr_A%ColIndex, self%mat_A(:,:,:,0), self%bsr_X%RowStart, self%bsr_X%ColIndex, mat_X, nFlop)
+      
+    endif
+    
   endsubroutine ! apply
   
 endmodule ! KKROperator_mod
