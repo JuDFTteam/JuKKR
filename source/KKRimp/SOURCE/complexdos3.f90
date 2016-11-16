@@ -46,6 +46,11 @@ open(unit=31, &
 call version_print_header(31)
 
 
+! write explanatory header
+write(30, '(A)') "# E, total, l-channels (s, p, d, ..., ns)"
+write(31, '(A)') "# E, total, lm-channels (s, p_x, p_y, p_z,  d_{x^2-y^2}, d_{xz}, d_{z^2}, d_{yz}, d_{xy}, ...)"
+
+
 do ie=2,iemax-1
   deltae = dreal(ez(ie+1) - ez(ie))
   eim = dimag(ez(ie))
@@ -64,8 +69,8 @@ do ie=2,iemax-1
 
   write(30,'(300g24.16)') enew,-dimag(dosnew(lmax+2))/pi,    & ! e, l-summed dos,
                         (-dimag(dosnew(lval))/pi,lval=0,lmax+1)       ! l-resolved dos
-  write(31,'(300g24.16)') enew,-dimag(doslmnew(lmax+2))/pi,    & ! e, l-summed dos,
-                        (-dimag(doslmnew(lval))/pi,lval=1,lmmax)       ! l-resolved dos
+  write(31,'(300g24.16)') enew,-dimag(dosnew(lmax+2))/pi,    & ! e, l-summed dos,
+                        (-dimag(doslmnew(lval))/pi,lval=1,lmmax)       ! lm-resolved dos
 
 !   write(50,9001) enew,dimag(dosnew(lmax+1)) &
 !                ,(dimag(dosnew(lval)),lval=0,lmax)
