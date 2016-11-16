@@ -209,6 +209,14 @@ c energy loop
        ! now initialize arrays for tmat, gmat, and gref
        call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
        if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+       
+       
+       if(test('rhoqtest')) then
+          if(ielast/=3) stop 'Error: wrong energy contour for rhoqtest'
+          ie_start=1
+          ie_end=1
+       end if
+       
 #else
        if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
      &           allocated(t_mpi_c_grid%ioff_pT2))) 
@@ -585,15 +593,17 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 
                   if(ie_num==1.and.i1==1) then
                     write(*,*)                      ! status bar
-                    write(*,*) 'rhoq: write-out loop'
+                    write(*,*) 'rhoq: write-out t-mat', 
+     &                               ie_end, t_params%natyp
                     write(*,
      &   '("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')
      &                          0, 20, 40, 60, 80, 100
                     write(*,FMT=190) !beginning of statusbar
                   endif
                   
-                  if(t_params%NATYP>=50) then
-                    if(mod(I1,t_params%NATYP/50)==0) write(6,FMT=200)
+                  if(t_params%NATYP*ie_end>=50) then
+                    if(mod( I1+t_params%natyp*(ie_num-1),
+     &                 (t_params%NATYP*ie_end/50))==0 ) write(6,FMT=200)
                   else
                     write(6,FMT=200)
                   end if
@@ -604,7 +614,7 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
                 end if     
                            
             WRITE(69,REC=IREC) TMATLL(:,:)
-!             WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
+            WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
          else
 #ifdef CPP_MPI
             irec = ie_num +

@@ -244,6 +244,19 @@ C ======================================================================
 C =                     End read in variables                          =
 C ======================================================================
 C
+C
+C ************************************************************************** !fswrt
+C     open file to store the output for the (external) Fermi-surface program !fswrt
+C      ---> this file is already partly filled with data by main0. More data !fswrt
+C           will be stored in                                                !fswrt
+      IF (OPT('FERMIOUT') .and. myrank==master) then                         !fswrt
+         OPEN(6801,FILE='TBkkr_container.txt', FORM='formatted',             !fswrt
+     &             POSITION='append')                                        !fswrt
+      ENDIF                                                                  !fswrt
+C
+C
+C
+C
 C     If qdos option is used set IQDOSRUN so that in a first run the 
 C     (t(E)-t_ref(E))^-1 matrix (tmat.qdos) and the gref matrix can be 
 C     written out for one k point, in a second run these matrices are 
@@ -373,8 +386,7 @@ C    &             FILE='green',FORM='unformatted')                             
           IREC=1
 
           IF ( ( OPT('KKRFLEX ') ) ) THEN
-            do i=1,nranks
-             if(myrank==i) then
+            if(myrank==master) then
               WRITE(888,REC=IREC) IELAST,NSPIN,NATOMIMP,
      &                NATOMIMP, LMMAXD, KORBIT,
      &             (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
@@ -383,11 +395,10 @@ C    &             FILE='green',FORM='unformatted')                             
      &               NATOMIMP, (LMAX+1)**2,
      &               (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
               END IF
-             end if
+            end if
 #ifdef CPP_MPI
-             call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 #endif
-            end do
           END IF
 c         IF ( (.not. OPT('KKRFLEX ') ) ) THEN                !no-green
 c           WRITE(88,REC=IREC) IELAST,NSPIN,                  !no-green
@@ -482,6 +493,7 @@ C
 #ifdef CPP_TIMING
         call timing_start('main1b - calctref13')
 #endif
+            TREFLL(:,:,:) = CZERO
             IF ( KREL.EQ.0 ) THEN
                DO I1 = 1,NREF
                   CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
@@ -608,12 +620,12 @@ C
 #endif
             CALL KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ,
      &                 NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH),
-     &           VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,RR,RBASIS,EZOA,ATOM,
-     &                 RCLS,ICC,GINP,IDECI,LEFTTINVLL(1,1,1,1,IE), 
-     &                 RIGHTTINVLL(1,1,1,1,IE),VACFLAG,
-     &                 NLBASIS,NRBASIS,FACTL,NATOMIMP,NSYMAT,DSYMLL,
-     &                 RATOM,RROT,NSH1,NSH2,IJTABSYM,IJTABSH,ICHECK,
-     &                 INVMOD,REFPOT,TREFLL,TSST,MSST,CFCTOR,  
+     &                 VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,NCLS,RR,
+     &                 RBASIS,EZOA,ATOM,RCLS,ICC,GINP,IDECI, 
+     &                 LEFTTINVLL(1,1,1,1,IE),RIGHTTINVLL(1,1,1,1,IE),
+     &                 VACFLAG,NLBASIS,NRBASIS,FACTL,NATOMIMP,NSYMAT,
+     &                 DSYMLL,RATOM,RROT,NSH1,NSH2,IJTABSYM,IJTABSH,
+     &                 ICHECK,INVMOD,REFPOT,TREFLL,TSST,MSST,CFCTOR,  
      &                 CFCTORINV,CREL,RC,RREL,SRREL,IRREL,NRREL,DROTQ,
      &                 SYMUNITARY,KMROT,NATYP,NCPA,ICPA,ITCPAMAX,
      &                 CPATOL,NOQ,IQAT,ITOQ,CONC,IPRINT,ICPAFLAG,
@@ -964,12 +976,12 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 #endif
             CALL KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ,
      &              NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH),
-     &           VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,RR,RBASIS,EZOA,ATOM,
-     &              RCLS,ICC,GINP,IDECI,LEFTTINVLL(1,1,1,1,IE),
-     &              RIGHTTINVLL(1,1,1,1,IE),VACFLAG,
-     &              NLBASIS,NRBASIS,FACTL,NATOMIMP,NSYMAT,DSYMLL,
-     &              RATOM,RROT,NSH1,NSH2,IJTABSYM,IJTABSH,ICHECK,
-     &              INVMOD,REFPOT,TREFLL,TSST,MSST,CFCTOR,
+     &              VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,NCLS,RR,RBASIS,
+     &              EZOA,ATOM,RCLS,ICC,GINP,IDECI,
+     &              LEFTTINVLL(1,1,1,1,IE),RIGHTTINVLL(1,1,1,1,IE),
+     &              VACFLAG,NLBASIS,NRBASIS,FACTL,NATOMIMP,NSYMAT,
+     &              DSYMLL,RATOM,RROT,NSH1,NSH2,IJTABSYM,IJTABSH,
+     &              ICHECK,INVMOD,REFPOT,TREFLL,TSST,MSST,CFCTOR,
      &              CFCTORINV,CREL,RC,RREL,SRREL,IRREL,NRREL,DROTQ,
      &              SYMUNITARY,KMROT,NATYP,NCPA,ICPA,ITCPAMAX,
      &              CPATOL,NOQ,IQAT,ITOQ,CONC,IPRINT,ICPAFLAG,
@@ -994,7 +1006,7 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                   IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST * (I1-1) ! qdos ruess
                   if (t_tgmat%gmat_to_file) then
                      WRITE (70,REC=IREC) GMAT0
-!                      write(707070,'(i9,200000F15.7)') irec, gmat0
+                     write(707070,'(i9,200000F15.7)') irec, gmat0
 
                   else
                      IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
@@ -1226,6 +1238,7 @@ C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 C
       CLOSE (69)
       CLOSE (70)
+      IF (OPT('FERMIOUT') .and. myrank==master) CLOSE(6801)  !fswrt
       IF ( LCPAIJ .and. t_cpa%dmatproj_to_file ) CLOSE (71)
 
       CLOSE(37)                                    ! qdos ruess

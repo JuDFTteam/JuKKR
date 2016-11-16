@@ -34,6 +34,8 @@ c     Kb=0.6333659D-5
 c     pi=3.14159265358979312d0
 c     eim=pi*Kb*Tk
       OPEN (49,FILE='complex.dos',FORM='formatted')
+      read(49, '(A)') text(1:10)
+      if (text(1:10)/='# serial: ' ) rewind(49)
       OPEN (50,FILE='new3.dos',FORM='formatted')
       OPEN (51,FILE='new3_eV_EF.dos',FORM='formatted')
       READ (49,*) NPOT
@@ -44,49 +46,67 @@ c     eim=pi*Kb*Tk
 
 
       do II=1,NPOT
-      write(*,*) 'Reading potential',II
-c Read header:
-      do IHEADER=1,3
-      read(49,9002) TEXT
-      write(50,9002) TEXT
-      write(51,9002) TEXT
-      if (IHEADER.eq.1) write(*,9002) TEXT
-      enddo
-      read(49,FMT='(A45,F10.6,A20)') TEXT1,EF,TEXT2
-      write(50,FMT='(A45,F10.6,A20)') TEXT1,EF,TEXT2
-      write(51,FMT='(A45,F10.6,A20)') TEXT1,EF,TEXT2
-      do IHEADER=5,9
-      read(49,9002) TEXT
-      write(50,9002) TEXT
-      write(51,9002) TEXT
-      enddo
-c Read dos: (total dos stored at DOS(LMAX+1,IE))
-      do IE=1,IEMAX
-         read(49,*) EZ(IE),(DOS(LL,IE),LL=0,LMAX+1)
-      enddo
-c Compute and write out corrected dos at new (middle) energy points:
-      do IE=2,IEMAX-1
-      DELTAE = DREAL(EZ(IE+1) - EZ(IE))
-      EIM = DIMAG(EZ(IE))
-      ENEW = DREAL(EZ(IE)) ! Real quantity
-
-      do LL=0,LMAX+1
-         DOSNEW(LL) = DOS(LL,IE)
-     &      + 0.5d0*(DOS(LL,IE-1)-DOS(LL,IE+1))*DCMPLX(0.d0,EIM)/DELTAE
-      enddo
-         
-      write(50,9001) ENEW,DIMAG(DOSNEW(LMAX+1))
-     &             ,(DIMAG(DOSNEW(LL)),LL=0,LMAX)
-      write(51,9001) (ENEW-EF)*EV,DIMAG(DOSNEW(LMAX+1))/EV
-     &             ,(DIMAG(DOSNEW(LL))/EV,LL=0,LMAX)
-
-      enddo ! IE=2,IEMAX-1
-
-      if (II.ne.NPOT) then 
-         read(49,*)     
-         write(50,9002) ' '
-         write(51,9002) ' '
-      endif
+        write(text, '(I)') (ii-1)/2+1
+        write(text2, '(I)') mod(ii+1,2)+1
+        open(55, 
+     &          file='dos.interpol.atom'//trim(adjustl(text))//
+     &                '_spin'//trim(adjustl(text2)) )
+        write(*,*) 'Reading potential',II
+c   Read header:
+        do IHEADER=1,3
+          read(49,9002) TEXT
+          write(50,9002) TEXT
+          write(55,9002) TEXT
+          write(51,9002) TEXT
+          if (IHEADER.eq.1) write(*,9002) TEXT
+        enddo
+        read(49,FMT='(A45,F10.6,A20)') TEXT1,EF,TEXT2
+        write(50,FMT='(A45,F10.6,A20)') TEXT1,EF,TEXT2
+        write(55,FMT='(A45,F10.6,A20)') TEXT1,EF,TEXT2
+        write(51,FMT='(A45,F10.6,A20)') TEXT1,EF,TEXT2
+        do IHEADER=5,9
+          read(49,9002) TEXT
+          write(50,9002) TEXT
+          write(55,9002) TEXT
+          write(51,9002) TEXT
+        enddo
+c   Read dos: (total dos stored at DOS(LMAX+1,IE))
+        do IE=1,IEMAX
+           read(49,*) EZ(IE),(DOS(LL,IE),LL=0,LMAX+1)
+        enddo
+c   Compute and write out corrected dos at new (middle) energy points:
+        do IE=2,IEMAX-1
+          DELTAE = DREAL(EZ(IE+1) - EZ(IE))
+          EIM = DIMAG(EZ(IE))
+          ENEW = DREAL(EZ(IE)) ! Real quantity
+          
+          do LL=0,LMAX+1
+             DOSNEW(LL) = DOS(LL,IE)
+     &       + 0.5d0*(DOS(LL,IE-1)-DOS(LL,IE+1))*DCMPLX(0.d0,EIM)/DELTAE
+          enddo
+             
+          if(mod(ii+1,2)+1==1) then
+             write(55,9001) ENEW,-DIMAG(DOSNEW(LMAX+1))
+     &                    ,(-DIMAG(DOSNEW(LL)),LL=0,LMAX)
+          else
+             write(55,9001) ENEW,DIMAG(DOSNEW(LMAX+1))
+     &                    ,(DIMAG(DOSNEW(LL)),LL=0,LMAX)
+          end if
+          write(50,9001) ENEW,DIMAG(DOSNEW(LMAX+1))
+     &                 ,(DIMAG(DOSNEW(LL)),LL=0,LMAX)
+          write(51,9001) (ENEW-EF)*EV,DIMAG(DOSNEW(LMAX+1))/EV
+     &                 ,(DIMAG(DOSNEW(LL))/EV,LL=0,LMAX)
+  
+        enddo ! IE=2,IEMAX-1
+  
+        if (II.ne.NPOT) then 
+           read(49,*)     
+           write(50,9002) ' '
+           write(55,9002) ' '
+           write(51,9002) ' '
+        endif
+  
+        close(55) ! close dos.interpol.atom files
 
       enddo ! II=1,NPOT
 

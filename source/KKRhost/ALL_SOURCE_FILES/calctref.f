@@ -144,6 +144,8 @@
          DALPHAREF(L1)=( L1/2.D0/ROOTE2 - (L1+1)/2.D0/ROOTE1 - DB1/B1 )* 
      &                   ALPHAREF(L1)
 
+         TREFLL(:,:) = (0.0d0, 0.0d0)
+         DTREFLL(:,:) = (0.0d0, 0.0d0)
          DO J1 = -L1,L1
             LM1 = L1*(L1+1) + J1 + 1
             TREFLL(LM1,LM1) = TMATANAL

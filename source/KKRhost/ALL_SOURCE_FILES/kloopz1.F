@@ -2,11 +2,11 @@ c*==kloopz1.f    processed by SPAG 6.05Rc at 16:33 on 10 Oct 2001
 c 13.10.95 *************************************************************
       SUBROUTINE KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,
      &                   NSHELL,NAEZ,NOFKS,VOLBZ,BZKP,VOLCUB,CLS,NACLS,
-     &                   NACLSMAX,RR,RBASIS,EZOA,ATOM,RCLS,ICC,GINP,   
-     &                   IDECI,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NLBASIS,
-     &                   NRBASIS,FACTL,NATOMIMP,NSYMAT,DSYMLL,RATOM,
-     &                   RROT,NSH1,NSH2,IJTABSYM,IJTABSH,ICHECK,INVMOD,
-     &                   REFPOT,TREFLL,TSST,MSST,CFCTOR,          
+     &                   NACLSMAX,NCLS,RR,RBASIS,EZOA,ATOM,RCLS,ICC,   
+     &                   GINP,IDECI,LEFTTINVLL,RIGHTTINVLL,VACFLAG,
+     &                   NLBASIS,NRBASIS,FACTL,NATOMIMP,NSYMAT,DSYMLL,
+     &                   RATOM,RROT,NSH1,NSH2,IJTABSYM,IJTABSH,ICHECK,
+     &                   INVMOD,REFPOT,TREFLL,TSST,MSST,CFCTOR,          
      &                   CFCTORINV,CREL,RC,RREL,SRREL,IRREL,NRREL,DROTQ,
      &                   SYMUNITARY,KMROT,NATYP,NCPA,ICPA,ITCPAMAX,
      &                   CPATOL,NOQ,IQAT,ITOQ,CONC,IPRINT,ICPAFLAG,
@@ -49,7 +49,7 @@ C     ..
 C     .. Scalar Arguments ..
       INTEGER ICC,ICPAFLAG,IDECI,IE,IGF,INS,INVMOD,IPRINT,ITCPAMAX,
      +        KMROT,NAEZ,NATOMIMP,NATYP,NCPA,NLBASIS,NRBASIS,NOFKS,
-     +        NSYMAT,ISPIN,NSPIN,NACLSMAX,
+     +        NSYMAT,ISPIN,NSPIN,NACLSMAX,NCLS,
      +        IQDOSRUN            !qdos ruess: counts qdos run
      &       ,LLY ! LLY <> 0 => use Lloyd formula
       DOUBLE PRECISION ALAT,VOLBZ,CPATOL
@@ -69,8 +69,8 @@ C     .. Array Arguments ..
       DOUBLE PRECISION RATOM(3,*),RBASIS(3,*),RCLS(3,NACLSD,*),
      +                 RR(3,0:NRD),RROT(48,3,*)
       DOUBLE COMPLEX GMATLL(LMMAXD,LMMAXD,*),
-     +               GINP(LMGF0D*NACLSMAX,LMGF0D,*),
-     &               DGINP(LMGF0D*NACLSMAX,LMGF0D,*) ! LLY Energy deriv. of GINP (=Gref)
+     +               GINP(LMGF0D*NACLSMAX,LMGF0D,NCLS),
+     &               DGINP(LMGF0D*NACLSMAX,LMGF0D,NCLS) ! LLY Energy deriv. of GINP (=Gref)
       DOUBLE COMPLEX LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPIN),
      &               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPIN)
       DOUBLE COMPLEX TSST(LMMAXD,LMMAXD,NATYPD),
