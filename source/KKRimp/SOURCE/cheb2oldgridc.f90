@@ -67,8 +67,9 @@ end if
 
 do in=1,cellnew%npan_tot
   do ir=intsub(1,in),intsub(2,in)
-    if (     cell%rmesh(ir)<cellnew%rpan_intervall(in-1) &
-        .or. cell%rmesh(ir)>cellnew%rpan_intervall(in)   ) then
+    ! added checking against tolerance level since sometimes a 10**-15 differece gave a wrong positive in this error checking
+    if (     cell%rmesh(ir)-cellnew%rpan_intervall(in-1)<-tol &
+        .or. cell%rmesh(ir)-cellnew%rpan_intervall(in)>tol   ) then
       write(*,*) '------------------------------------------------------------',in
       write(*,*) 'panel ',in
       write(*,*) 'borders r=',cellnew%rpan_intervall(in-1),cellnew%rpan_intervall(in)
