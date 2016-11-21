@@ -58,7 +58,7 @@ module KKROperator_mod
     integer, intent(in) :: lmmaxd, Lly
     integer(kind=2), intent(in) :: atom_indices(:) !< local truncation zone indices of the source atoms
 
-    integer :: nCols, nRows, nLloyd, ist
+    integer :: nCols, nRows, nLloyd, ist, nRHS_group
 
     self%cluster => cluster
     self%lmmaxd = lmmaxd
@@ -83,19 +83,16 @@ module KKROperator_mod
     ! create block sparse structure of solution X
     call getKKRSolutionStructure(self%bsr_X, lmax_a_array)
 
+    nRHS_group = 1; if (self%bsr_X%nCols == 1) nRHS_group = size(atom_indices) ! rectangluar shaped -- does not conform with a correct parallelization of truncation for num_local_atoms > 1
+    
     ! create a very sparse right hand side descriptor
-    call getRightHandSideStructure(self%bsr_B, atom_indices)
+    call getRightHandSideStructure(self%bsr_B, atom_indices, nRHS_group)
     allocate(self%B_subset_of_X(self%bsr_B%nnzb))
     ist = subset(set=self%bsr_X, sub=self%bsr_B, list=self%B_subset_of_X)
     if (ist /= 0) stop 'KKROperator: creation of subset list failed!'
     
     nRows = lmmaxd ! here we can introduce memory alignment
-
-    if (self%bsr_X%nCols == 1) then
-      nCols = lmmaxd*size(atom_indices) ! rectangluar shaped -- does not conform with a correct parallelization of truncation for num_local_atoms > 1
-    else
-      nCols = lmmaxd
-    endif
+    nCols = lmmaxd*nRHS_group
 
     allocate(self%mat_B(nRows,nCols,self%bsr_B%nnzb))
     allocate(self%mat_X(nRows,nCols,self%bsr_X%nnzb))

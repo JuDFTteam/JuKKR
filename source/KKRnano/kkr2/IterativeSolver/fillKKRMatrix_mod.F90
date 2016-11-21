@@ -32,8 +32,7 @@ module fillKKRMatrix_mod
     type(SparseMatrixDescription), intent(out) :: bsr_X
     integer(kind=1), intent(in) :: lmax_a(:,:) !< lmax of each interaction dim(naez_trc,num_local_atoms), -1: truncated
 
-    integer, parameter :: GROUPING = -1 ! -1: never, 0: auto, 1:always
-    ! GROUP NEVER as this is so far not compatible with a the very sparse bsr_B descriptior 
+    integer, parameter :: GROUPING = 0 ! -1:never, 0:auto, 1:always
     integer :: iRow, jCol, Xind, nnzb, group
  
     nnzb = count(lmax_a >= 0) ! number of non-zero blocks in X
@@ -121,10 +120,11 @@ module fillKKRMatrix_mod
 
 !------------------------------------------------------------------------------
 !> Builds the right hand site for the linear KKR matrix equation.
-  subroutine getRightHandSideStructure(bsr_B, row_indices)
+  subroutine getRightHandSideStructure(bsr_B, row_indices, nRHS_group)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription, create
     type(SparseMatrixDescription), intent(out) :: bsr_B
     integer(kind=2), intent(in) :: row_indices(:) !> truncation zone indices of the local atoms
+    integer, intent(in) :: nRHS_group ! 1:no grouping, 2+:grouping of RHS columns
 
     integer :: iRow, jCol, row_index, ist, Bind, nRows
     integer, allocatable :: ColIndices(:) ! temporary structure
@@ -147,7 +147,7 @@ module fillKKRMatrix_mod
       if (jCol > 0) then
   
         Bind = Bind + 1 ! create a new entry
-        bsr_B%ColIndex(Bind) = jCol
+        bsr_B%ColIndex(Bind) = (jCol - 1)/nRHS_group + 1 ! when grouping is active, these need to be reduced by the group size
 
       endif ! in this row one non-zero entry exists
     enddo ! iRow
@@ -155,7 +155,7 @@ module fillKKRMatrix_mod
     assert( Bind == bsr_B%nnzb ) ! check
     
     deallocate(ColIndices, stat=ist) ! ignore status   
-  endsubroutine ! buildRightHandSide
+  endsubroutine ! getRightHandSideStructure
 
   
   !---------------------------------------------------------------------
@@ -198,7 +198,7 @@ module fillKKRMatrix_mod
           stop
         endif
 #endif
-        ! multiply the T matrix onto 
+        ! multiply the T matrix onto smat
 
         do lm2 = 1, lmsd
 
@@ -219,15 +219,15 @@ module fillKKRMatrix_mod
 
 !------------------------------------------------------------------------------
 !> Builds the right hand site for the linear KKR matrix equation.
-  subroutine buildRightHandSide(mat_B, bsr_B, atom_indices, tmatLL)
+  subroutine buildRightHandSide(mat_B, bsr_B, row_indices, tmatLL)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription, exists
   
     double complex, intent(out) :: mat_B(:,:,:) !> dim(lmsa,lmsd,nRHSs)
     type(SparseMatrixDescription), intent(in) :: bsr_B
-    integer(kind=2), intent(in) :: atom_indices(:) !> truncation zone indices of the local atoms
+    integer(kind=2), intent(in) :: row_indices(:) !> truncation zone indices of the local atoms
     double complex, intent(in), optional :: tmatLL(:,:,:) !< dim(lmsd,lmsd,nRows)
 
-    integer :: iRHS, atom_index, lm2, lmsd, Bind, nRHS_group, iRHS_group, ing
+    integer :: iRHS, row_index, lms, lmsd, Bind, nRHS_group, iRHS_group, ing
 
     mat_B = ZERO
     lmsd  = size(tmatLL, 2)
@@ -238,18 +238,19 @@ module fillKKRMatrix_mod
     nRHS_group = size(mat_B, 2) / lmsd ! integer division should be exact
     assert( nRHS_group >= 1 )
 
-    do iRHS = 1, size(atom_indices)
-      atom_index = atom_indices(iRHS)
+    do iRHS = 1, size(row_indices)
+      row_index = row_indices(iRHS)
       iRHS_group = (iRHS - 1)/nRHS_group  + 1
       ing = modulo((iRHS - 1),nRHS_group) + 1
-      Bind = exists(bsr_B, row=atom_index, col=iRHS_group) ! find index in BSR structure
+      Bind = exists(bsr_B, row=row_index, col=iRHS_group) ! find index in BSR structure
       if (Bind < 1) stop "fatal! bsr_B cannot find diagonal element"
+      
       if (present(tmatLL)) then
-        mat_B(:lmsd,lmsd*(ing - 1) + 1:lmsd*ing,Bind) = tmatLL(:,:,atom_index)
+        mat_B(:lmsd,lmsd*(ing - 1) + 1:lmsd*ing,Bind) = tmatLL(:,:,row_index)
       else
-        do lm2 = 1, lmsd
-          mat_B(lm2,lm2 + lmsd*(ing - 1),Bind) = CONE ! set the block to a unity matrix
-        enddo ! lm2
+        do lms = 1, lmsd
+          mat_B(lms,lms + lmsd*(ing - 1),Bind) = CONE ! set the block to a unity matrix
+        enddo ! lms
       endif
     enddo ! iRHS
     
