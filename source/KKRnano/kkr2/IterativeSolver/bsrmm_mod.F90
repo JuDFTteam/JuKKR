@@ -9,14 +9,21 @@ module bsrmm_mod
     integer :: nthreads = 1 ! default=1
     integer(kind=8) :: mtasks = 0 !< == maxval(ntasks)
     integer, allocatable :: ntasks(:) !< dim(nthreads)
-    integer(kind=4), allocatable :: task(:,:,:) !< dim(0:3,mtasks,nthreads)
+    
+! ! Structure of Arrays
+! #define task_AoSoA(a,b,c) task(b,a,c) 
+
+! Array of Structures
+#define task_AoSoA(a,b,c) task(a,b,c) 
+
+    integer(kind=4), allocatable :: task(:,:,:) !< dim(0:3,mtasks,nthreads) ! data layout SoA, ToDo: check if AoS is better
     integer(kind=8) :: nFlop = 0, nByte = 0 ! stats
   endtype
-  
+
   interface bsr_times_bsr
     module procedure bsr_times_bsr_spontaneous, bsr_times_bsr_planned, create_bsr_time_bsr_plan
   endinterface
-  
+
   interface destroy
     module procedure destroy_plan
   endinterface
@@ -52,7 +59,8 @@ module bsrmm_mod
     ! private variables
     integer :: Yind, Aind, Xind
     integer :: iRow, jCol, kCol
-    integer :: ist, i01, ibeta
+    integer :: ist, i01, beta
+    integer, parameter :: one=1, zero=0
     integer(kind=8) :: nallops, nFlop, nByte
     
     leadDim_A = shapeA(1)
@@ -66,7 +74,7 @@ module bsrmm_mod
 
     
     call destroy(self) ! deallocate everything
-    allocate(self%task(0:3,0:0,0:0))
+    allocate(self%task_AoSoA(0:3,0:0,0:0))
 
     XnRows = size(ix) - 1
 #define YnRows XnRows
@@ -86,14 +94,13 @@ module bsrmm_mod
       
         jCol = jy(Yind) ! update   matrix block element Y_full[iRow,jCol]
 
-        ! beta = zero
-        ibeta = 0
+        beta = zero
         do Aind = ia(iRow), ia(iRow + 1) - 1
 #ifdef DEBUG
           if (Aind > size(A, 3)) stop __LINE__
 #endif
           kCol = ja(Aind) ! for each matrix block element A_full[iRow,kCol]
-#define kRow kCol          
+#define kRow kCol
           Xind = BSR_entry_exists(ix, jx, row=kRow, col=jCol) ! find out if X_full[kRow,jCol] exists
           if (Xind > 0) then ! yes
 #ifdef DEBUG
@@ -106,10 +113,9 @@ module bsrmm_mod
             nallops = nallops + 1
             nFlop = nFlop + (8_8*lmsd)*(nRHS*lmsd)
 
-            self%task(0:3,i01*nallops,i01*1) = [Yind, Aind, Xind, ibeta] ! store task
+            self%task_AoSoA(0:3,i01*nallops,i01*1) = [Yind, Aind, Xind, beta] ! store task
 
-            ! beta = one
-            ibeta = 1
+            beta = one
           endif ! X_full[kRow,jCol] exists
 #undef kRow
         enddo ! Aind
@@ -123,7 +129,7 @@ module bsrmm_mod
       ! after 1st iteration
       self%nthreads = 1
       self%mtasks = nallops
-      allocate(self%ntasks(self%nthreads), self%task(0:3,self%mtasks,self%nthreads), stat=ist)
+      allocate(self%ntasks(self%nthreads), self%task_AoSoA(0:3,self%mtasks,self%nthreads), stat=ist)
       if (ist /= 0) stop __LINE__ ! allocation failed
       self%ntasks(1) = self%mtasks ! one thread takes all tasks
       self%nFlop = nFlop
@@ -173,17 +179,17 @@ module bsrmm_mod
 !$omp do private(Yind, Aind, Xind, beta, itask, ithread) schedule(static, 1)
     do ithread = 1, self%nthreads
       do itask = 1, self%ntasks(ithread)
-      
-       Yind = self%task(0,itask,ithread)
-       Aind = self%task(1,itask,ithread)
-       Xind = self%task(2,itask,ithread)
-       beta = self%task(3,itask,ithread) * ONE
+
+       Yind = self%task_AoSoA(0,itask,ithread)
+       Aind = self%task_AoSoA(1,itask,ithread)
+       Xind = self%task_AoSoA(2,itask,ithread)
+       beta = self%task_AoSoA(3,itask,ithread) * ONE
 #ifdef DEBUG
        if (Yind > size(Y, 3)) stop __LINE__
        if (Aind > size(A, 3)) stop __LINE__
        if (Xind > size(X, 3)) stop __LINE__
 #endif
-  
+
         ! now: Y[:,:,Yind] += A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
         !                    M     N     K          A                       B                             C
         call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)

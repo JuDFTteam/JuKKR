@@ -64,7 +64,7 @@ module DirectSolver_mod
     
 !   TESTARRAYLOG(3, full_A)
 
-    call convertBSRToFullMatrix(self%full_X, op%bsr_X, op%mat_B) ! convert op%mat_B to full_B ToDo: use bsr_B here once it is implemented
+    call convertBSRToFullMatrix(self%full_X, op%bsr_B, op%mat_B) ! convert op%mat_B to full_B
 
     ist = solveFull(n, self%full_A, self%full_X) ! on entry, full_X contains mat_B, compute the direct solution using LAPACK
     if (ist /= 0) die_here("failed to directly invert a matrix of dim"+n+"with"+nRHSs+"right hand sides!")

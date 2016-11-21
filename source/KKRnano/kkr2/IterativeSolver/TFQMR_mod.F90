@@ -80,6 +80,8 @@ module TFQMR_mod
     integer(kind=8) :: mFlops
 
 #define ColIndices op%bsr_X%ColIndex
+#define MINUS(Y, B) call subset_add(Y, B, -1.d0, op%B_subset_of_X, mFlops)  
+#define PLUS(Y,  B) call subset_add(Y, B,  1.d0, op%B_subset_of_X, mFlops)  
 
     mFlops = 0
     tfqmr_status = 0
@@ -98,7 +100,8 @@ module TFQMR_mod
       mat_X = ZERO
    
       ! v5 = v2 ; r0 = B - A*x0 = B ! no need to multiply A here
-      v5 = -mat_B ! subtract RightHandSide
+      v5 = ZERO
+      PLUS(v5, mat_B) ! v5 = mat_B ! add RightHandSide
 
     else
 
@@ -106,11 +109,10 @@ module TFQMR_mod
       call apply_precond_and_matrix(op, precond, mat_X, v5, vP)!, use_precond, mFlops, kernel_timer, sparse_mult_count)
 
       ! v5 = v2 - v5 ; r0 = b - A*x0
-      v5 = v5 - mat_B ! subtract RightHandSide
+      MINUS(v5, mat_B) ! v5 = v5 - mat_B ! subtract RightHandSide
+      v5 = -v5 ! correct for sign change at setup
 
     endif
-
-    v5 = -v5 ! correct for sign change at setup
 
     ! R0 = norm(v5)
     call col_norms(R0, v5, ColIndices, mFlops)
@@ -119,7 +121,7 @@ module TFQMR_mod
 
     ! N2B = norm(v2)
     v4 = ZERO
-    v4 = v4 - mat_B ! subtract RightHandSide
+    MINUS(v4, mat_B) ! v4 = v4 - mat_B ! subtract RightHandSide
     call col_norms(N2B, v4, ColIndices, mFlops) ! col_norms(N2B, mat_B)
 
     where (abs(N2B) < EPSILON_DP) N2B = 1.d0  ! where N2B = 0 use absolute residual
@@ -294,7 +296,7 @@ module TFQMR_mod
         call apply_precond_and_matrix(op, precond, mat_X, v9, vP)!, use_precond, mFlops, kernel_timer, sparse_mult_count)
 
         ! v9 = v2 - v9
-        v9 = v9 - mat_B ! flipped sign ! subtract RightHandSide
+        MINUS(v9, mat_B) ! v9 = v9 - mat_B ! flipped sign ! subtract RightHandSide
 
         ! RESN = norm(v9)
         call col_norms(RESN, v9, ColIndices, mFlops)
@@ -496,7 +498,7 @@ module TFQMR_mod
     do block = 1, size(yvector, 3)
       jCol = colInd(block)
       do col = 1, size(yvector, 2)
-        yvector(:,col,block) = factors(col,jCol) * xvector(:,col,block) + yvector(:,col,block)
+        yvector(:,col,block) = yvector(:,col,block) + factors(col,jCol) * xvector(:,col,block)
       enddo ! col
     enddo ! block
     !$omp end do
@@ -531,4 +533,31 @@ module TFQMR_mod
     mFlops = mFlops + 8*size(yvector)
   endsubroutine ! y := x+a*y
 
+  !------------------------------------------------------------------------------
+  subroutine subset_add(yvector, bvector, factor, subInd, mFlops)
+    double complex, intent(inout) :: yvector(:,:,:)
+    double complex, intent(in)    :: bvector(:,:,:)
+    double precision, intent(in) :: factor ! can be extended to double complex if that is necessary
+    integer, intent(in) :: subInd(:) !> precomputed sub-index list
+    integer(kind=8), intent(inout) :: mFlops
+
+    integer :: block, Yind
+#ifndef NDEBUG
+    if (size(bvector, 1) /= size(yvector, 1)) stop 'subset_add: strange! (1)'
+    if (size(bvector, 2) /= size(yvector, 2)) stop 'subset_add: strange! (2)'
+    if (size(bvector, 3)  > size(yvector, 3)) stop 'subset_add: strange! (y vs. b)'
+    if (size(subInd) /= size(bvector, 3)) stop 'subset_add: strange! (b vs. subInd)'
+#endif
+
+    !$omp do private(block, Yind)
+    do block = 1, size(bvector, 3)
+      Yind = subInd(block)
+      yvector(:,:,Yind) = yvector(:,:,Yind) + factor * bvector(:,:,block)
+    enddo ! block
+    !$omp end do
+    
+    mFlops = mFlops + 4*size(bvector)
+  endsubroutine ! y := y + a*b with different shapes of Y and B
+  
+  
 endmodule ! TFQMR_mod

@@ -7,7 +7,8 @@ module fillKKRMatrix_mod
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
-  public :: getKKRMatrixStructure, getKKRSolutionStructure, buildKKRCoeffMatrix, buildRightHandSide
+  public :: getKKRMatrixStructure, getKKRSolutionStructure, getRightHandSideStructure
+  public :: buildKKRCoeffMatrix, buildRightHandSide
   public :: getGreenDiag
   public :: dump
   public :: convertBSRToFullMatrix, convertToFullMatrix, convertFullMatrixToBSR
@@ -26,13 +27,13 @@ module fillKKRMatrix_mod
 
   !------------------------------------------------------------------------------
   !> Setup of the sparsity pattern of the KKR-Solution.
-  subroutine getKKRSolutionStructure(lmax_a, bsr_X)
+  subroutine getKKRSolutionStructure(bsr_X, lmax_a)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription, create
-
+    type(SparseMatrixDescription), intent(out) :: bsr_X
     integer(kind=1), intent(in) :: lmax_a(:,:) !< lmax of each interaction dim(naez_trc,num_local_atoms), -1: truncated
-    type(SparseMatrixDescription), intent(inout) :: bsr_X
 
-    integer, parameter :: GROUPING = 0 ! -1: never, 0: auto, 1:always
+    integer, parameter :: GROUPING = -1 ! -1: never, 0: auto, 1:always
+    ! GROUP NEVER as this is so far not compatible with a the very sparse bsr_B descriptior 
     integer :: iRow, jCol, Xind, nnzb, group
  
     nnzb = count(lmax_a >= 0) ! number of non-zero blocks in X
@@ -67,7 +68,7 @@ module fillKKRMatrix_mod
       do jCol = 1, bsr_X%nCols
 
         if (lmax_a(iRow,jCol) >= 0) then ! sub-optimal indexing into lmax_a here
-          Xind = Xind + 1
+          Xind = Xind + 1 ! create a new entry
           bsr_X%ColIndex(Xind) = jCol
         endif ! block is non-zero
 
@@ -84,12 +85,11 @@ module fillKKRMatrix_mod
   
   !------------------------------------------------------------------------------
   !> Setup of the sparsity pattern of the KKR-Matrix.
-  subroutine getKKRMatrixStructure(numn0, indn0, bsr_A)
+  subroutine getKKRMatrixStructure(bsr_A, numn0, indn0)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription, create
-
+    type(SparseMatrixDescription), intent(out) :: bsr_A
     integer, intent(in) :: numn0(:) !< dim(nRows) number of non-zero elements in each row
     integer(kind=2), intent(in) :: indn0(:,:) !< dim(maxval(numn0),nRows) column indices of non-zero elements per row
-    type(SparseMatrixDescription), intent(out) :: bsr_A
 
     integer :: Aind, iRow, iacls, jCol
 
@@ -109,7 +109,7 @@ module fillKKRMatrix_mod
         jCol = indn0(iacls,iRow)
         assert( 1 <= jCol .and. jCol <= bsr_A%nCols )
 
-        Aind = Aind + 1
+        Aind = Aind + 1 ! create a new entry
         bsr_A%ColIndex(Aind) = jCol
 
       enddo ! iacls
@@ -119,6 +119,45 @@ module fillKKRMatrix_mod
 
   endsubroutine ! getKKRMatrixStructure
 
+!------------------------------------------------------------------------------
+!> Builds the right hand site for the linear KKR matrix equation.
+  subroutine getRightHandSideStructure(bsr_B, row_indices)
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription, create
+    type(SparseMatrixDescription), intent(out) :: bsr_B
+    integer(kind=2), intent(in) :: row_indices(:) !> truncation zone indices of the local atoms
+
+    integer :: iRow, jCol, row_index, ist, Bind, nRows
+    integer, allocatable :: ColIndices(:) ! temporary structure
+
+    nRows = maxval(row_indices)
+    call create(bsr_B, nRows, nnzb=size(row_indices), nCols=size(row_indices))
+
+    allocate(ColIndices(bsr_B%nRows))
+    ColIndices = -1
+    
+    do jCol = 1, bsr_B%nCols ! loop over right hand sides
+      row_index = row_indices(jCol)
+      ColIndices(row_index) = jCol
+    enddo ! jCol == iRHS
+    
+    Bind = 0
+    do iRow = 1, bsr_B%nRows
+      bsr_B%RowStart(iRow) = Bind + 1 ! start indices into ColIndex
+      jCol = ColIndices(iRow)
+      if (jCol > 0) then
+  
+        Bind = Bind + 1 ! create a new entry
+        bsr_B%ColIndex(Bind) = jCol
+
+      endif ! in this row one non-zero entry exists
+    enddo ! iRow
+    bsr_B%RowStart(bsr_B%nRows + 1) = Bind + 1 ! final, important since the ranges are always [RowStart(i) ... RowStart(i+1)-1]
+    assert( Bind == bsr_B%nnzb ) ! check
+    
+    deallocate(ColIndices, stat=ist) ! ignore status   
+  endsubroutine ! buildRightHandSide
+
+  
   !---------------------------------------------------------------------
   !> Given G_ref we build (T*G_ref - 1) -> coefficent matrix.
   !>

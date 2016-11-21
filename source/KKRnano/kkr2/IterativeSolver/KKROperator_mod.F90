@@ -11,7 +11,7 @@
 module KKROperator_mod
   use SparseMatrixDescription_mod, only: SparseMatrixDescription
   use ClusterInfo_mod, only: ClusterInfo
-  use bsrmm_mod, only: bsrMultPlan
+  use bsrmm_mod, only: bsrMultPlan, destroy
   implicit none
   private
   public :: KKROperator, create, destroy, multiply
@@ -19,13 +19,14 @@ module KKROperator_mod
   !> Represents the operator/matrix (1 - \Delta T G_ref).
   type :: KKROperator
     integer :: lmmaxd
-    type(SparseMatrixDescription) :: bsr_A, bsr_X!, bsr_B ToDo: introduce B with less entries than X
+    type(SparseMatrixDescription) :: bsr_A, bsr_X, bsr_B ! ToDo: introduce B with less entries than X
     double complex, allocatable :: mat_A(:,:,:,:) !< dim(fastBlockDim,slowBlockDim,bsr_A%nnzb,0:Lly)
     double complex, allocatable :: mat_B(:,:,:)   !< dim(fastBlockDim,slowBlockDim,bsr_B%nnzb)
     double complex, allocatable :: mat_X(:,:,:)   !< dim(fastBlockDim,slowBlockDim,bsr_X%nnzb)
     integer(kind=2), allocatable :: atom_indices(:) !< local truncation zone indices of the source atoms
     type(ClusterInfo), pointer :: cluster
-    type(bsrMultPlan) :: plan
+    type(bsrMultPlan) :: plan ! this plan allows to achieve performance when multiplying mat_A to mat_X
+    integer, allocatable :: B_subset_of_X(:) !< dim(B%nnzb) this plan allows to subtract mat_B from mat_X
   endtype
 
   interface create
@@ -49,14 +50,15 @@ module KKROperator_mod
   subroutine create_KKROperator(self, cluster, lmmaxd, atom_indices, Lly)
     use bsrmm_mod, only: bsr_times_bsr ! planning
     use TEST_lcutoff_mod, only: lmax_a_array
-    use fillKKRMatrix_mod, only: getKKRMatrixStructure, getKKRSolutionStructure
+    use fillKKRMatrix_mod, only: getKKRMatrixStructure, getKKRSolutionStructure, getRightHandSideStructure
+    use SparseMatrixDescription_mod, only: SparseMatrixDescription, subset
 
     type(KKROperator), intent(inout) :: self
     type(ClusterInfo), target, intent(in) :: cluster
     integer, intent(in) :: lmmaxd, Lly
     integer(kind=2), intent(in) :: atom_indices(:) !< local truncation zone indices of the source atoms
 
-    integer :: nCols, nRows, nBlocks, nLloyd, ist
+    integer :: nCols, nRows, nLloyd, ist
 
     self%cluster => cluster
     self%lmmaxd = lmmaxd
@@ -76,28 +78,32 @@ module KKROperator_mod
 
 
     ! create block sparse structure of matrix A
-    call getKKRMatrixStructure(cluster%numn0, cluster%indn0, self%bsr_A)
+    call getKKRMatrixStructure(self%bsr_A, cluster%numn0, cluster%indn0)
     
     ! create block sparse structure of solution X
-    call getKKRSolutionStructure(lmax_a_array, self%bsr_X)
+    call getKKRSolutionStructure(self%bsr_X, lmax_a_array)
 
+    ! create a very sparse right hand side descriptor
+    call getRightHandSideStructure(self%bsr_B, atom_indices)
+    allocate(self%B_subset_of_X(self%bsr_B%nnzb))
+    ist = subset(set=self%bsr_X, sub=self%bsr_B, list=self%B_subset_of_X)
+    if (ist /= 0) stop 'KKROperator: creation of subset list failed!'
+    
     nRows = lmmaxd ! here we can introduce memory alignment
+
     if (self%bsr_X%nCols == 1) then
       nCols = lmmaxd*size(atom_indices) ! rectangluar shaped -- does not conform with a correct parallelization of truncation for num_local_atoms > 1
     else
       nCols = lmmaxd
     endif
-    nBlocks = self%bsr_X%nnzb
 
-    allocate(self%mat_B(nRows,nCols,nBlocks))
-    allocate(self%mat_X(nRows,nCols,nBlocks))
+    allocate(self%mat_B(nRows,nCols,self%bsr_B%nnzb))
+    allocate(self%mat_X(nRows,nCols,self%bsr_X%nnzb))
 
-    nRows = lmmaxd ! here we can introduce memory alignment
     nCols = lmmaxd
-    nBlocks = self%bsr_A%nnzb
     nLloyd = min(max(0, Lly), 1) ! for the energy derivative needed in Lloyd''s formula
 
-    allocate(self%mat_A(nRows,nCols,nBlocks,0:nLloyd)) ! allocate memory for the KKR operator
+    allocate(self%mat_A(nRows,nCols,self%bsr_A%nnzb,0:nLloyd)) ! allocate memory for the KKR operator
 
     ! plan the operation
     call bsr_times_bsr(self%plan, self%bsr_A%RowStart, self%bsr_A%ColIndex, shape(self%mat_A), self%bsr_X%RowStart, self%bsr_X%ColIndex, shape(self%mat_X))
@@ -117,8 +123,10 @@ module KKROperator_mod
 
     call destroy(self%bsr_A)
     call destroy(self%bsr_X)
-!   call destroy(self%bsr_B)
+    call destroy(self%bsr_B)
 
+    call destroy(self%plan)
+    
     deallocate(self%atom_indices, stat=ist)
     nullify(self%cluster)
   endsubroutine ! destroy

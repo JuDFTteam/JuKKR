@@ -1,7 +1,7 @@
 module SparseMatrixDescription_mod
   implicit none
   private
-  public :: SparseMatrixDescription, create, destroy, dump, exists
+  public :: SparseMatrixDescription, create, destroy, dump, exists, subset
   
   !> description of a (square) block sparse matrix structure in Block Spare Row (BSR) format
   !
@@ -52,6 +52,37 @@ module SparseMatrixDescription_mod
     
   endfunction ! exists
 
+  integer function subset(set, sub, list) result(nfail) ! returns 0 un success
+    !! this is needed to subtract or add the values of two operators whereas SUB must be a subset of SET
+    type(SparseMatrixDescription), intent(in) :: set, sub
+    integer, intent(out)                      :: list(:) !< dim(set%nnzb), list of indices into SET for which SUB exists
+    ! local vars
+    integer :: iRow, jCol, SubInd, SetInd
+    
+    nfail = 0 ! init
+    if (size(list) < sub%nnzb) then
+#ifdef DEBUG
+      write(*,*) __FILE__,": BSR subset: ERROR: ",size(list)," = size(list) < sub%nnzb = ",sub%nnzb
+#endif
+      nfail = -sub%nnzb
+      return
+    endif ! list too short
+    
+    do iRow = 1, sub%nRows
+      do SubInd = sub%RowStart(iRow), sub%RowStart(iRow + 1) - 1
+        jCol = sub%ColIndex(SubInd)
+        SetInd = exists(set, iRow, jCol)
+        if (SetInd > 0) then
+          list(SubInd) = SetInd ! entry exists
+        else
+          nfail = nfail + 1
+#ifdef DEBUG
+          write(*,*) __FILE__,": BSR subset: ERROR: entry(iRow, jCol) of subset does not exist in set. iRow, jCol =",iRow, jCol
+#endif
+        endif
+      enddo ! SubInd
+    enddo ! iRow
+  endfunction ! subset
 
   !----------------------------------------------------------------------------
   !> Creates SparseMatrixDescription object.

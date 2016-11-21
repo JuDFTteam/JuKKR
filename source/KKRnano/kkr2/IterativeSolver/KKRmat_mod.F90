@@ -346,9 +346,8 @@ module KKRmat_mod
     !    the solution X is the scattering path operator
 
     ! ToDo: move buildRightHandSide out of the k-loop (independent of k-points)
-    ! ToDo: use bsr_B instead of bsr_X
-    call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
-!   call buildRightHandSide(op%mat_B, op%bsr_X, op%atom_indices) ! construct RHS as unity matrices
+    call buildRightHandSide(op%mat_B, op%bsr_B, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
+!   call buildRightHandSide(op%mat_B, op%bsr_B, op%atom_indices) ! construct RHS as unity matrices
 
     call calc(preconditioner, op%mat_A(:,:,:,0)) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! ToDo: check
 
