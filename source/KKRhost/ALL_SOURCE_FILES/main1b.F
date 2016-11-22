@@ -94,7 +94,10 @@ C     RFCTOR=A/(2*PI) conversion factor to p.u.
       CHARACTER*80 TMPDIR
 #ifndef CPP_MPI
       CHARACTER*80 TEXT !qdos ruess
+#else
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
+      INTEGER iq_start, iq_end ! qdos
 C     .. 
 C     .. Local Arrays
       INTEGER NSHELL(0:NSHELD),REFPOT(NAEZD+NEMBD),ATOMIMP(NATOMIMPD)
@@ -597,7 +600,32 @@ C
                ENDDO                                          ! qdos ruess
             END IF                                            ! qdos ruess
 C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
-            DO 200 IQ = 1,NQDOS                               ! qdos ruess
+
+            iq_start = 1
+            iq_end   = NQDOS
+#ifdef CPP_MPI
+            IF (OPT('qdos    ')) THEN
+              if(myrank==master) write(1337,*) 'q loop:', NQDOS, 
+     &                                  t_mpi_c_grid%nranks_ie
+              call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                   master,NQDOS,ntot_pT,ioff_pT,.true.)
+
+              iq_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+              iq_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &                   ntot_pT(t_mpi_c_grid%myrank_ie)
+              t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+              t_mpi_c_grid%ntot_pT1 = ntot_pT
+              t_mpi_c_grid%ioff_pT1 = ioff_pT
+              
+              ! Barrier needed because i first run only tmatrix is witten out and only in second run the q loop is done which is parallel
+              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
+              if(ierr/=0) stop '[main1b] Error in MPI Barrier'
+            END IF !(OPT('qdos    '))
+#endif
+
+            DO 200 IQ = iq_start,iq_end                       ! qdos ruess
             IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
 C
 #ifdef CPP_TIMING
@@ -915,7 +943,31 @@ c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDO
                ENDDO                                          ! qdos ruess
             END IF                                            ! qdos ruess
 C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
-            DO 220 IQ = 1,NQDOS                               ! qdos ruess
+            iq_start = 1
+            iq_end   = NQDOS
+#ifdef CPP_MPI
+            IF (OPT('qdos    ')) THEN
+              if(myrank==master) write(1337,*) 'q loop:', NQDOS, 
+     &                                  t_mpi_c_grid%nranks_ie
+              call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                   master,NQDOS,ntot_pT,ioff_pT,.true.)
+
+              iq_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+              iq_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &                   ntot_pT(t_mpi_c_grid%myrank_ie)
+              t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+              t_mpi_c_grid%ntot_pT1 = ntot_pT
+              t_mpi_c_grid%ioff_pT1 = ioff_pT
+              
+              ! Barrier needed because i first run only tmatrix is witten out and only in second run the q loop is done which is parallel
+              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
+              if(ierr/=0) stop '[main1b] Error in MPI Barrier'
+            END IF !(OPT('qdos    '))
+#endif
+
+            DO 220 IQ = iq_start,iq_end                       ! qdos ruess
             IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
 
 #ifdef CPP_TIMING

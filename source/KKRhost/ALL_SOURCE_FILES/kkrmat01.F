@@ -178,21 +178,32 @@
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ K-points loop
 #ifdef CPP_MPI
 ! MPI:     
-      ntot1 = NOFKS
+      if(.not.opt('qdos    ')) then
+      
+        ntot1 = NOFKS
 
-      if(myrank==master) write(1337,*) 'kkrmat k loop:', NOFKS, 
-     &                          t_mpi_c_grid%nranks_ie
-      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
-     &                 t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                           master,ntot1,ntot_pT,ioff_pT,.true.)
+        if(myrank==master) write(1337,*) 'kkrmat k loop:', NOFKS, 
+     &                            t_mpi_c_grid%nranks_ie
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
 
-      i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-      i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
-     &           ntot_pT(t_mpi_c_grid%myrank_ie)
-      t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &             ntot_pT(t_mpi_c_grid%myrank_ie)
+        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 
-      t_mpi_c_grid%ntot_pT1 = ntot_pT
-      t_mpi_c_grid%ioff_pT1 = ioff_pT
+        t_mpi_c_grid%ntot_pT1 = ntot_pT
+        t_mpi_c_grid%ioff_pT1 = ioff_pT
+      
+      else !.not.opt('qdos    ')
+      
+        i1_start = 1
+        i1_end = NOFKS
+      
+      end if !.not.opt('qdos    ')
+      
+      
       
       DO KPT = i1_start,i1_end
 #else
@@ -595,6 +606,7 @@ c            DEALLOCATE(GLLKE0)
 !-----------------------------------------------------------------------
 ! 
 #ifdef CPP_MPI
+      IF(.not.opt('qdos    ')) then
         DO NS = 1,NSHELL
           IWORK = LMMAXD*LMMAXD*NSYMAXD
           CALL MPI_ALLREDUCE(GS(1,1,1,NS),WORK,IWORK,
@@ -618,6 +630,7 @@ c            DEALLOCATE(GLLKE0)
      +                       t_mpi_c_grid%mympi_comm_ie,IERR)
           CALL ZCOPY(IWORK,WORK(1,1,1),1,TRACET,1)
         endif
+      ENDIF !.not.opt('qdos    ')
 #endif
 
       IF ( TEST('flow    ') .and. (t_inc%i_write>0)) 
