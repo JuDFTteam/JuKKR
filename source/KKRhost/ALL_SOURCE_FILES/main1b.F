@@ -571,6 +571,9 @@ C --> setting up of Delta_t moved to < KLOOPZ1 >
 C
             IF (OPT('readcpa ').OR.
      &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
+              ! Barrier needed because i first run only tmatrix is witten out and only in second run the q loop is done which is parallel
+              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
+              if(ierr/=0) stop '[main1b] Error in MPI Barrier'
                DO ISITE = 1,NAEZ                              ! qdos ruess
                   TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
 #ifdef CPP_MPI
@@ -618,10 +621,6 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 
               t_mpi_c_grid%ntot_pT1 = ntot_pT
               t_mpi_c_grid%ioff_pT1 = ioff_pT
-              
-              ! Barrier needed because i first run only tmatrix is witten out and only in second run the q loop is done which is parallel
-              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
-              if(ierr/=0) stop '[main1b] Error in MPI Barrier'
             END IF !(OPT('qdos    '))
 #endif
 
@@ -915,6 +914,9 @@ c rotate t-matrix from local to global frame
 c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS
             IF (OPT('readcpa ').OR.
      &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
+              ! Barrier needed because i first run only tmatrix is witten out and only in second run the q loop is done which is parallel
+              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
+              if(ierr/=0) stop '[main1b] Error in MPI Barrier'
                DO ISITE = 1,NAEZ                              ! qdos ruess
                   TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
 #ifdef CPP_MPI
@@ -960,10 +962,6 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 
               t_mpi_c_grid%ntot_pT1 = ntot_pT
               t_mpi_c_grid%ioff_pT1 = ioff_pT
-              
-              ! Barrier needed because i first run only tmatrix is witten out and only in second run the q loop is done which is parallel
-              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
-              if(ierr/=0) stop '[main1b] Error in MPI Barrier'
             END IF !(OPT('qdos    '))
 #endif
 
