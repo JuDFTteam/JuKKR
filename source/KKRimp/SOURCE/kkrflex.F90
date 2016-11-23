@@ -110,6 +110,7 @@ program kkrflex
   double complex,allocatable            :: ez(:)                                 ! energy mesh from the host
   double complex,allocatable            :: wez(:)                                ! integration weights
   integer                               :: ielast                                ! number of energy points in ez, wez
+  double complex                        :: llyfac                                ! renormalization factor for the simplest form of lloyds formula (opton LLYsimple)
 !   integer,allocatable                   :: mpi_ielast(:)
   real(kind=dp),allocatable             :: intercell_ach(:,:)                    ! intercell potential of the host
                                                        !(lmpotd,ntotatom)        ! without the contribution of the 
@@ -277,6 +278,27 @@ call timing_start('PRECONDITIONING_start')
 call PRECONDITIONING_start(my_rank,mpi_size,ez, wez, ielast, intercell_ach,alat,vmtzero,config%lattice_relax,gmatbulk)
 call timing_stop('PRECONDITIONING_start')
 call log_write('<<<<<<<<<<<<<<<<<<< end PRECONDITIONING_start <<<<<<<<<<<<<<<<<<<')
+
+
+
+! LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple
+if ( config_runflag('LLYsimple') ) then
+  if (my_rank==0) then
+    write(*,'(A)') 'Found option LLYsimple: reading in renormalization factor from file kkrflex_llyfac'
+    open(192837, file='kkrflex_llyfac', form='formatted', iostat=ierror)
+    if(ierror/=0) stop 'Error: File kkrflex_llyfac not found, needed for LLYsimple option'
+    read(192837, *) llyfac
+    close(192837)
+    write(*,*) 'Renormalize weights with factor:',llyfac
+  end if
+#ifdef MPI
+  call MPI_Bcast(llyfac, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierror)
+  if(ierror/=0) stop 'Error in MPI_Bcast for llyfac'
+#endif
+  !renormalize weights on every rank
+  wez(:) = wez(:)*llyfac
+end if
+! LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple
 
 
 
