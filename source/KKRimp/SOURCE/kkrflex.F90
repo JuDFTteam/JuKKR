@@ -284,8 +284,8 @@ call log_write('<<<<<<<<<<<<<<<<<<< end PRECONDITIONING_start <<<<<<<<<<<<<<<<<<
 ! LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple
 if ( config_runflag('LLYsimple') ) then
   if (my_rank==0) then
-    write(*,*) 'Found option LLYsimple: reading in renormalization factor from file kkrflex_llyfac'
-    open(192837, file='kkrflex_llyfac', form='unformatted', iostat=ierror)
+    write(*,'(A)') 'Found option LLYsimple: reading in renormalization factor from file kkrflex_llyfac'
+    open(192837, file='kkrflex_llyfac', form='formatted', iostat=ierror)
     if(ierror/=0) stop 'Error: File kkrflex_llyfac not found, needed for LLYsimple option'
     read(192837, *) llyfac
     close(192837)
