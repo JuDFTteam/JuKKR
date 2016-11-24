@@ -6,7 +6,7 @@ C **********************************************************************
      +                  LMSP,EFERMI,VBC,CVLIGHT,DROR,RS,S,VM2Z,RWS,
      +                  ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,
      +                  IINFO,LMPOTD,IRMIND,IRMD,LMXSPD,IPAND,IRID,
-     +                  IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)     
+     +                  IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)
 C **********************************************************************
 c   reads the input potentials
 c
@@ -74,12 +74,12 @@ C     .. Local Scalars ..
       INTEGER I,IA,ICELL,ICORE,IFUN,IH,IMT1,INEW,IO,IPAN1,IR,IRC1,IRI,
      +        IRMINM,IRMINP,IRNS1P,IRT1P,IRWS1,ISAVE,ISPIN,ISUM,
      +        J,L,LM,LM1,LMPOT,LMPOTP,N,NCELL,NFUN,NR
-      INTEGER INSLPD
+      INTEGER INSLPD,LMSHAPEMAX
       LOGICAL TEST
 C     ..
 C     .. Local Arrays ..
       DOUBLE PRECISION DRN(IRID,NCELLD),SCALE(NCELLD),U(IRMD),
-     +                 XRN(IRID,NCELLD)
+     +                 XRN(IRID,NCELLD),RDUMMY(IRID)
       DOUBLE PRECISION VSPSME(IRMD) ! dummy for potcut IMPURITY-compatible
       INTEGER MESHN(NCELLD),NM(IPAND,NCELLD),NPAN(NCELLD)
 C     ..
@@ -104,6 +104,7 @@ c---> set speed of light
 c
       CVLIGHT = 274.0720442D0
       INSLPD= (IRNSD+1) * LMPOTD * NSPOTD
+      LMSHAPEMAX = (4*LMAXD+1)**2
       CALL RINIT(INSLPD,VINS(IRMIND,1,1))
 c-----------------------------------------------------------------------
 c
@@ -157,10 +158,14 @@ c
 
           DO 20 IFUN = 1,NFUN
             READ (19,FMT=9000) LM
-            LLMSP(ICELL,IFUN) = LM
-            LMSP(ICELL,LM) = 1
-            IFUNM(ICELL,LM) = IFUN
-            READ (19,FMT=9010) (THETAS(N,IFUN,ICELL),N=1,MESHN(ICELL))
+            IF(LM<=LMSHAPEMAX)THEN
+              LLMSP(ICELL,IFUN) = LM
+              LMSP(ICELL,LM) = 1
+              IFUNM(ICELL,LM) = IFUN
+              READ (19,FMT=9010) (THETAS(N,IFUN,ICELL),N=1,MESHN(ICELL))
+            ELSE
+              READ (19,FMT=9010) (RDUMMY(N),N=1,MESHN(ICELL))
+            ENDIF
    20     CONTINUE
 
    30   CONTINUE
