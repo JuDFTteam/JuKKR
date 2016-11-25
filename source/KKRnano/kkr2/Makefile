@@ -2,8 +2,10 @@
 
 ### default values
 PLATFORM ?= ifort
-TYPE ?= nodebug
 ### the user may specify TYPE=debug as a command line argument to make
+TYPE ?= nodebug
+### the user may specify SMP=openmp as a command line argument to make
+SMP ?= none
 
 PROGRAM = kkr.exe
 
@@ -23,7 +25,9 @@ ifeq ($(PLATFORM),ifort)
 	FC = mpiifort -warn all
 	FC90 = mpiifort -warn all
 	# -module <path> specifies where to put .mod files
-# 	FCFLAGS += -openmp -openmp-report
+  	ifeq ($(SMP),openmp)
+ 		FCFLAGS += -openmp -openmp-report
+        endif
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
 	PPFLAGS += 
@@ -58,6 +62,9 @@ ifeq ($(PLATFORM),gfortran)
 	# -J <path> specifies where to put .mod files
 	FCFLAGS += -J $(BUILDDIR)  
 	FCFLAGS += -I $(BUILDDIR) -I ./ 
+	ifeq ($(SMP),openmp)
+		FCFLAGS += -fopenmp
+	endif		
 	# FCFLAGS += -I /usr/include ## for fftw3
 	# PPFLAGS += -D HAS_FFTW3    ## for fftw3
 	ifeq ($(TYPE),debug)

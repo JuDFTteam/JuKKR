@@ -173,6 +173,8 @@ module SingleSite_mod
   subroutine pnstmat(drdi,ek,icst,pz,qz,fz,sz,pns,tmatll,vins, ipan,ircut,nsra,cleb,icleb,iend,loflm,tmat, &
                     det,lkonv, ldau,nldau,lldau, wmldau_ispin,wmldauav,ldaucut, lmaxd, irmd, irnsd, ipand, ncleb, method)
     use SingleSiteHelpers_mod, only: vllns, wftsca
+    external :: zgetrf ! from BLAS
+    
     integer, intent(in) :: lmaxd, irmd, irnsd, ipand, ncleb
     double complex, intent(in) :: ek
     double complex, intent(out) :: det
@@ -194,22 +196,38 @@ module SingleSite_mod
     integer, intent(in) :: icleb(ncleb,3), ircut(0:ipand), loflm(*), lldau(lmaxd+1)
     integer, intent(in) :: method !< method for single site solver, Volterra or Fredholm
     
-    external :: zgetrf ! from BLAS
-    double complex  :: ar((lmaxd+1)**2,(lmaxd+1)**2)
-    ! ToDo: make these variables allocatable so we do not run into problems with stacksize 
-    double complex  :: cmat((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
-    double complex  :: dmat((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
-    double complex  :: efac((lmaxd+1)**2)
-    double complex  :: pzekdr((lmaxd+1)**2,irmd-irnsd:irmd,2)
-    double complex  :: pzlm((lmaxd+1)**2, irmd-irnsd:irmd,2)
-    double complex  :: qzekdr((lmaxd+1)**2,irmd-irnsd:irmd,2)
-    double complex  :: qzlm((lmaxd+1)**2,irmd-irnsd:irmd,2)
-    double precision :: vnspll((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
+    ! .. locals
+    double complex, allocatable :: ar(:,:) !> dim((lmaxd+1)**2,(lmaxd+1)**2)
+    double complex, allocatable :: cmat(:,:,:) !> dim((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
+    double complex, allocatable :: dmat(:,:,:) !> dim((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
+    double complex, allocatable :: efac(:) !> dim((lmaxd+1)**2)
+    double complex, allocatable :: pzekdr(:,:,:) !> dim((lmaxd+1)**2,irmd-irnsd:irmd,2)
+    double complex, allocatable :: qzekdr(:,:,:) !> dim((lmaxd+1)**2,irmd-irnsd:irmd,2)
+    double complex, allocatable :: pzlm(:,:,:) !> dim((lmaxd+1)**2,irmd-irnsd:irmd,2)
+    double complex, allocatable :: qzlm(:,:,:) !> dim((lmaxd+1)**2,irmd-irnsd:irmd,2)
+    double precision, allocatable :: vnspll(:,:,:) !> dim((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd)
+    integer, allocatable :: ipvt(:) !> dim((lmaxd+1)**2)
 
-    integer :: i,irc1,lm1,lm2,lmmkonv,ir,m1,m2,lmlo,lmhi,ildau
-    integer :: ipvt((lmaxd+1)**2)
-    integer :: info, irmind, lmmaxd
+    integer :: i, irc1, lm1, lm2, lmmkonv, ir, m1, m2, lmlo, lmhi, ildau
+    integer :: info, irmind, lmmaxd, ist
+    
+    irmind = irmd-irnsd
+    lmmaxd = (lmaxd+1)**2
+    irc1 = ircut(ipan)
 
+    allocate(ar((lmaxd+1)**2,(lmaxd+1)**2), &
+             cmat((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd), &
+             dmat((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd), &
+             efac((lmaxd+1)**2), &
+             pzekdr((lmaxd+1)**2,irmd-irnsd:irmd,2), &
+             qzekdr((lmaxd+1)**2,irmd-irnsd:irmd,2), &
+             pzlm((lmaxd+1)**2,irmd-irnsd:irmd,2), &
+             qzlm((lmaxd+1)**2,irmd-irnsd:irmd,2), &
+             vnspll((lmaxd+1)**2,(lmaxd+1)**2,irmd-irnsd:irmd), &
+             ipvt((lmaxd+1)**2), stat=ist)
+    if (ist /= 0) stop 'allocation in pnstmat failed!'
+    
+    
 !     initialisation of some local arrays
     pzlm = zero
     qzlm = zero
@@ -218,10 +236,6 @@ module SingleSite_mod
     ar = zero
 !     end initialisation
 
-    irmind = irmd-irnsd
-    lmmaxd = (lmaxd+1)**2
-
-    irc1 = ircut(ipan)
 
     call vllns(vnspll,vins,cleb,icleb,iend, lmaxd, irmd, irnsd, ncleb)
 
@@ -244,7 +258,7 @@ module SingleSite_mod
 ! lda+u
 ! add wldau to non-spherical porential vins in case of lda+u
 ! use the average wldau (=wldauav) and calculate the deviation
-! of wldau from this. use the deviation in the born series
+! of wldau from this. use the deviation in the Born series
 ! for the non-spherical wavefunction, while the average is
 ! used for the spherical wavefunction.
 !
@@ -293,12 +307,13 @@ module SingleSite_mod
       det = ar(lm1,lm1)*det
     enddo ! lm1
 
+    deallocate(ar, cmat, dmat, efac, pzekdr, qzekdr, pzlm, qzlm, vnspll, ipvt, stat=ist) ! ignore status
   endsubroutine ! pnstmat
       
       
 !-----------------------------------------------------------------------
 !     determines the regular non spherical wavefunctions , the
-!       alpha matrix and the t - matrix in the n-th. born appro-
+!       alpha matrix and the t - matrix in the n-th. Born appro-
 !       ximation ( n given by input parameter icst )
 !
 !
@@ -312,7 +327,7 @@ module SingleSite_mod
 !      the matrices ar and br are determined by integral equations
 !        containing pns and only the non spherical contributions of
 !        the potential , stored in vinspll . these integral equations
-!        are  solved iteratively with born approximation up to given n.
+!        are  solved iteratively with Born approximation up to given n.
 !
 !     the original way of writing the cr and dr matrices in the equa-
 !        tions above caused numerical troubles . therefore here are used
@@ -346,31 +361,34 @@ module SingleSite_mod
                   qzlm, pzekdr, qzekdr, ek, ader, amat, bder, bmat, nsra,  &
                   irmind, irmd, ipand, lmmaxd, method)
     use SingleSiteHelpers_mod, only: csinwd, csout, wfint, wfint0, zgeinv1
-    double complex, intent(in) :: ek
-    integer, intent(in) ::  icst,ipan,ipand,irmd,irmind,lmmaxd,nsra
-    double complex, intent(out) :: ader(lmmaxd,lmmaxd,irmind:irmd)
+    external :: zgemm ! from BLAS
+
+    integer, intent(in) :: icst, ipan, ipand, irmd, irmind, lmmaxd, nsra
+    integer, intent(in) :: ircut(0:ipand)
     double complex, intent(out) :: ar(lmmaxd,lmmaxd)
-    double complex, intent(out) :: amat(lmmaxd,lmmaxd,irmind:irmd)
-    double complex, intent(out) :: bder(lmmaxd,lmmaxd,irmind:irmd)
-    double complex, intent(out) :: bmat(lmmaxd,lmmaxd,irmind:irmd)
     double complex, intent(out) :: br(lmmaxd,lmmaxd)
     double complex, intent(in) :: efac(*)
     double complex, intent(inout) :: pns(lmmaxd,lmmaxd,irmind:irmd,2)
-    double complex, intent(in) :: pzekdr(lmmaxd,irmind:irmd,2)
+    double precision, intent(in) :: vnspll(lmmaxd,lmmaxd,irmind:irmd)
     double complex, intent(in) :: pzlm(lmmaxd,irmind:irmd,2)
-    double complex, intent(in) :: qzekdr(lmmaxd,irmind:irmd,2)
     double complex, intent(in) :: qzlm(lmmaxd,irmind:irmd,2)
-    double precision, intent(in) ::  vnspll(lmmaxd,lmmaxd,irmind:irmd)
-    integer, intent(in) :: ircut(0:ipand)
+    double complex, intent(in) :: pzekdr(lmmaxd,irmind:irmd,2)
+    double complex, intent(in) :: qzekdr(lmmaxd,irmind:irmd,2)
+    double complex, intent(in) :: ek
+    double complex, intent(out) :: ader(lmmaxd,lmmaxd,irmind:irmd)
+    double complex, intent(out) :: amat(lmmaxd,lmmaxd,irmind:irmd)
+    double complex, intent(out) :: bder(lmmaxd,lmmaxd,irmind:irmd)
+    double complex, intent(out) :: bmat(lmmaxd,lmmaxd,irmind:irmd)
     integer, intent(in) :: method !< 0: Fredholm (default), 1: Volterra
 
-    external :: zgemm ! from BLAS
+    ! .. locals
     double precision :: err
-    integer :: i, ir, irc1, j, lm, lmmsqd
+    integer :: i, ir, irc1, j, lm, lmmsqd, ist
     double complex, allocatable :: pns0(:,:,:,:), pns1(:,:,:), arot(:,:)
     logical :: Volterra ! false ==> Fredholm equation, true ==> Volterra equation
     
-    allocate(pns0(lmmaxd,lmmaxd,irmind:irmd,2), pns1(lmmaxd,lmmaxd,irmind:irmd), arot(lmmaxd,lmmaxd))
+    allocate(pns0(lmmaxd,lmmaxd,irmind:irmd,2), pns1(lmmaxd,lmmaxd,irmind:irmd), arot(lmmaxd,lmmaxd), stat=ist)
+    if (ist /= 0) stop 'allocation failed in regns'
     
     Volterra = (method /= 0)
     
@@ -379,7 +397,7 @@ module SingleSite_mod
 
     do i = 0, icst
     
-!---> set up integrands for i-th born approximation
+!---> set up integrands for i-th Born approximation
       if (i == 0) then
         call wfint0(ader, bder, pzlm, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, lmmaxd)
       else  ! i
@@ -401,7 +419,7 @@ module SingleSite_mod
         enddo ! lm
       enddo ! ir
       
-!---> calculate non sph. wft. in i-th born approximation
+!---> calculate non sph. wft. in i-th Born approximation
       do j = 1, nsra
         do ir = irmind, irc1
           do lm = 1, lmmaxd
@@ -478,7 +496,7 @@ module SingleSite_mod
 
     endif ! Volterra
     
-    deallocate(pns0, pns1, arot)
+    deallocate(pns0, pns1, arot, stat=ist) ! ignore status
 
 !---> store alpha and t - matrix
     do lm = 1, lmmaxd

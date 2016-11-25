@@ -11,7 +11,7 @@ module GaussWeights_mod
 
   integer function Gauss_Legendre_weights(n, xi, wi) result(ist)
     integer, intent(in) :: n
-    doubleprecision, intent(out) :: xi(:), wi(:) 
+    double precision, intent(out) :: xi(:), wi(:) 
     integer :: i
 
     ist = 0
@@ -837,7 +837,7 @@ module GaussWeights_mod
 
   integer function Gauss_Fermi_Dirac_weights(n, xi, wi) result(ist)
     integer, intent(in) :: n
-    doubleprecision, intent(out) :: xi(:), wi(:) 
+    double precision, intent(out) :: xi(:), wi(:) 
 
     ist = 0
     selectcase (n)
@@ -1001,4 +1001,4 @@ module GaussWeights_mod
 
   endfunction ! Gauss_Fermi_Dirac_weights
 
-endmodule GaussWeights_mod      
+endmodule ! GaussWeights_mod      
