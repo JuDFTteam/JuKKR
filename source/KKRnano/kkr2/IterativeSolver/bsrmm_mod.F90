@@ -18,6 +18,7 @@ module bsrmm_mod
 
     integer(kind=4), allocatable :: task(:,:,:) !< dim(0:3,mtasks,nthreads) ! data layout SoA, ToDo: check if AoS is better
     integer(kind=8) :: nFlop = 0, nByte = 0 ! stats
+    integer :: kernel = 0 ! which block multiplication implementation should be used
   endtype
 
   interface bsr_times_bsr
@@ -57,27 +58,29 @@ module bsrmm_mod
 
     ! local variables
     integer :: leadDim_Y, leadDim_X, leadDim_A, lmsd, nRHS, XnRows
+    integer :: shapeY(3)
     ! private variables
     integer :: Yind, Aind, Xind
     integer :: iRow, jCol, kCol
     integer :: ist, i01, beta, ithread
     integer, parameter :: one=1, zero=0
     integer(kind=8) :: nallops
+    character(len=32) :: name
     
+    shapeY = shapeX
     leadDim_A = shapeA(1)
     leadDim_X = shapeX(1)
-    leadDim_Y = shapeX(1)
-    
+    leadDim_Y = shapeY(1)
+
     lmsd = shapeA(2)
     nRHS = shapeX(2)
 
     if (leadDim_A /= leadDim_X) stop __LINE__
     
-    
     XnRows = size(ix) - 1
 #define YnRows XnRows
     if (XnRows /= size(ia) - 1) stop __LINE__
-    
+
   do i01 = 0, 1 ! run two iterations, 1st and 2nd
 
     if (i01 == 0) then
@@ -87,14 +90,14 @@ module bsrmm_mod
 !$omp parallel
 !$      self%nthreads = omp_get_num_threads()
 !$omp end parallel
-      if (self%nthreads > 1) write(*, '(9(a,i0))') "create a multiplication plan for ", self%nthreads, " threads"
+      if (self%nthreads > 1) write(*, '(9(a,i0))') "create a multiplication plan for  ",self%nthreads," threads"
       allocate(self%ntasks(0:self%nthreads-1)) ! allocate a dummy
 
     else
       ! after 1st iteration and before 2nd iteration
       self%mtasks = maxval(self%ntasks) ! determine the maximum number of tasks per thread
-      write(*, '(3(a,i0),999(" ",i0))') "multiplication plan for ", nallops, " tasks on ", self%nthreads, " threads is balanced as ", self%ntasks
-      
+      write(*, '(3(a,i0),999("  ",i0))') "multiplication plan for  ",nallops," tasks on ",self%nthreads," threads is balanced as  ",self%ntasks
+
       allocate(self%task_AoSoA(0:3,self%mtasks,0:self%nthreads-1), stat=ist)
       if (ist /= 0) stop __LINE__ ! allocation failed
 
@@ -110,28 +113,24 @@ module bsrmm_mod
     do iRow = 1, YnRows
       ! reuse elements of Y, i.e. keep the accumulator in the cache
       do Yind = iy(iRow), iy(iRow + 1) - 1
-#ifdef DEBUG
-       if (Yind > size(Y, 3)) stop __LINE__
-#endif
+       if (Yind > shapeY(3)) stop __LINE__ ! DEBUG
         ithread = minloc(self%ntasks, dim=1) - 1 ! find out which thread id has so far received the least number of tasks 
+        ! it is important that only one threads works on one Yind as different threads may run on different cores or ...
+        ! ... even in different NUMA (non-uniform memory access) domains so that the update of Y(:,:,Yind) would lead to false sharing
 
         jCol = jy(Yind) ! update   matrix block element Y_full[iRow,jCol]
 
         beta = zero
         do Aind = ia(iRow), ia(iRow + 1) - 1
-#ifdef DEBUG
-          if (Aind > size(A, 3)) stop __LINE__
-#endif
+          if (Aind > shapeA(3)) stop __LINE__ ! DEBUG
           kCol = ja(Aind) ! for each matrix block element A_full[iRow,kCol]
 #define kRow kCol
           Xind = BSR_entry_exists(ix, jx, row=kRow, col=jCol) ! find out if X_full[kRow,jCol] exists
           if (Xind > 0) then ! yes
-#ifdef DEBUG
-            if (Xind > size(X, 3)) stop __LINE__
-#endif
-            ! now: Y[:,:,Yind] += A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
+            if (Xind > shapeX(3)) stop __LINE__ ! DEBUG
+            ! now: Y[:,:,Yind] += beta * A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
             !                    M     N     K          A                       B                             C
-!           call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)
+        !!! call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)
 
             nallops = nallops + 1
             self%ntasks(ithread) = self%ntasks(ithread) + 1
@@ -149,11 +148,25 @@ module bsrmm_mod
     enddo ! iRow
 #undef YnRows
 
-
   enddo ! i01
 
 #undef iy
 #undef jy
+
+    !=============================================================================================
+    ! decide which kernel routine to be used for block-times-block operations
+    !=============================================================================================
+    selectcase (leadDim_A)
+    !!! auto suggest hand implemented routines
+!   case (    4) ; self%kernel =  4 ; name = "kernel4x4xN"
+!   case (   16) ; self%kernel = 16 ; name = "kernel16x16xN"
+    case default ; self%kernel =  0 ; name = "zgemm"
+    endselect ! lda
+#ifdef  KERNEL
+    write(*, '(9(a,i0))') "Warning! kernel is fixed at compile time: use ",KERNEL," while suggested kernel was ",self%kernel," (0=zgemm)"
+    self%kernel = KERNEL ! overwrite variable in plan for correct display
+#endif
+    !=============================================================================================
 
   endsubroutine ! bsr_times_bsr
 
@@ -172,6 +185,7 @@ module bsrmm_mod
 
     ! local variables
     integer :: leadDim_Y, leadDim_X, leadDim_A, lmsd, nRHS, XnRows
+    integer :: shapeY(3)
     ! private variables
     integer :: Yind, Aind, Xind
     integer :: iRow, jCol, kCol
@@ -179,9 +193,10 @@ module bsrmm_mod
     integer, parameter :: one=1, zero=0
     integer(kind=8) :: nallops, nFlop, nByte
     
+    shapeY = shapeX
     leadDim_A = shapeA(1)
     leadDim_X = shapeX(1)
-    leadDim_Y = shapeX(1)
+    leadDim_Y = shapeY(1)
     
     lmsd = shapeA(2)
     nRHS = shapeX(2)
@@ -196,7 +211,7 @@ module bsrmm_mod
 #define YnRows XnRows
     if (XnRows /= size(ia) - 1) stop __LINE__
     
-  do i01 = 0, 1 
+  do i01 = 0, 1
     nallops = 0
     nFlop = 0
     nByte = 0
@@ -204,25 +219,19 @@ module bsrmm_mod
     do iRow = 1, YnRows
       ! reuse elements of Y, i.e. keep the accumulator in the cache
       do Yind = iy(iRow), iy(iRow + 1) - 1
-#ifdef DEBUG
-       if (Yind > size(Y, 3)) stop __LINE__
-#endif
+       if (Yind > shapeY(3)) stop __LINE__ ! DEBUG
       
         jCol = jy(Yind) ! update   matrix block element Y_full[iRow,jCol]
 
         beta = zero
         do Aind = ia(iRow), ia(iRow + 1) - 1
-#ifdef DEBUG
-          if (Aind > size(A, 3)) stop __LINE__
-#endif
+          if (Aind > shapeA(3)) stop __LINE__ ! DEBUG
           kCol = ja(Aind) ! for each matrix block element A_full[iRow,kCol]
 #define kRow kCol
           Xind = BSR_entry_exists(ix, jx, row=kRow, col=jCol) ! find out if X_full[kRow,jCol] exists
           if (Xind > 0) then ! yes
-#ifdef DEBUG
-            if (Xind > size(X, 3)) stop __LINE__
-#endif
-            ! now: Y[:,:,Yind] += A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
+            if (Xind > shapeX(3)) stop __LINE__ ! DEBUG
+            ! now: Y[:,:,Yind] += beta * A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
             !                    M     N     K          A                       B                             C
 !           call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)
 
@@ -275,12 +284,14 @@ module bsrmm_mod
     external :: zgemm ! from BLAS
 
     ! local variables
-    integer :: leadDim_Y, leadDim_X, leadDim_A, lmsd, nRHS
+    integer :: leadDim_Y, leadDim_X, leadDim_A, lmsd, nRHS, kernel
     double complex, parameter :: ZERO=(0.d0, 0.d0), ONE=(1.d0, 0.d0)
     ! private variables
     integer :: Yind, Aind, Xind
     integer :: itask, ithread
     double complex :: beta
+    
+    kernel = self%kernel
 
     leadDim_A = size(A, 1)
     leadDim_X = size(X, 1)
@@ -299,19 +310,28 @@ module bsrmm_mod
     do ithread = 0, self%nthreads - 1
       do itask = 1, self%ntasks(ithread)
 
-       Yind = self%task_AoSoA(0,itask,ithread)
-       Aind = self%task_AoSoA(1,itask,ithread)
-       Xind = self%task_AoSoA(2,itask,ithread)
-       beta = self%task_AoSoA(3,itask,ithread) * ONE
+        Yind = self%task_AoSoA(0,itask,ithread)
+        Aind = self%task_AoSoA(1,itask,ithread)
+        Xind = self%task_AoSoA(2,itask,ithread)
+        beta = self%task_AoSoA(3,itask,ithread) * ONE
 #ifdef DEBUG
-       if (Yind > size(Y, 3)) stop __LINE__
-       if (Aind > size(A, 3)) stop __LINE__
-       if (Xind > size(X, 3)) stop __LINE__
+        if (Yind > size(Y, 3)) stop __LINE__
+        if (Aind > size(A, 3)) stop __LINE__
+        if (Xind > size(X, 3)) stop __LINE__
 #endif
 
-        ! now: Y[:,:,Yind] += A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
-        !                    M     N     K          A                       B                             C
-        call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)
+        selectcase (KERNEL) ! this must be in ALLCAPS as we want to replace it by the preprocessor if we compile a production version
+        case (4)
+          if (self%task_AoSoA(3,itask,ithread) == 0) Y(:,:,Yind) = ZERO
+          call kernel4x4xN(nRHS, A(:,:,Aind), X(:,:,Xind), Y(:,:,Yind))
+        case (16)
+          if (self%task_AoSoA(3,itask,ithread) == 0) Y(:,:,Yind) = ZERO
+          call kernel16x16xN(nRHS, A(:,:,Aind), X(:,:,Xind), Y(:,:,Yind))
+        case default
+          ! now: Y[:,:,Yind] += beta * A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
+          !                    M     N     K          A                       B                             C
+          call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)
+        endselect ! kernel
 
       enddo ! itask
     enddo ! ithread
@@ -383,7 +403,7 @@ module bsrmm_mod
 #ifdef DEBUG
             if (Xind > size(X, 3)) stop __LINE__
 #endif
-            ! now: Y[:,:,Yind] += A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
+            ! now: Y[:,:,Yind] += beta * A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
             !                    M     N     K          A                       B                             C
             call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)
 
@@ -435,5 +455,36 @@ module bsrmm_mod
     enddo ! iRow
   endfunction ! show
 #endif
-  
+
+  subroutine kernel16x16xN(nRHS, A, X, Y)
+#define NM 15
+    integer, intent(in)           :: nRHS
+    double complex, intent(in)    :: X(0:NM,nRHS), A(0:NM,0:NM)
+    double complex, intent(inout) :: Y(0:NM,nRHS)
+    
+    integer :: i, k
+    do i = 1, nRHS
+      do k = 0, NM
+        Y(0:NM,i) = Y(0:NM,i) + A(0:NM,k)*X(k,i)
+      enddo ! k
+    enddo ! i
+#undef NM
+  endsubroutine ! kernel
+
+  subroutine kernel4x4xN(nRHS, A, X, Y)
+#define NM 3
+    integer, intent(in)           :: nRHS
+    double complex, intent(in)    :: X(0:NM,nRHS), A(0:NM,0:NM)
+    double complex, intent(inout) :: Y(0:NM,nRHS)
+    
+    integer :: i, k
+    do i = 1, nRHS
+      do k = 0, NM
+        Y(0:NM,i) = Y(0:NM,i) + A(0:NM,k)*X(k,i)
+      enddo ! k
+    enddo ! i
+#undef NM
+  endsubroutine ! kernel
+
 endmodule ! vbrmv_mat_mod
+

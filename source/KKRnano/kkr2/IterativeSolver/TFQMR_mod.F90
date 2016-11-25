@@ -423,7 +423,7 @@ module TFQMR_mod
     column_index_t, intent(in) :: colInd(:)
     integer(kind=8), intent(inout) :: mFlops
 
-    integer :: col, nrow, block, jCol
+    integer :: col, block, jCol, nrow
     double precision, external :: DZNRM2 ! BLAS double complex 2-norm
 
     nrow = size(vector, 1)
@@ -433,6 +433,7 @@ module TFQMR_mod
 #endif    
     norms = 0.d0
     
+!$omp parallel
     !$omp do private(col, block, jCol) reduction(+:norms)
     do block = 1, size(vector, 3)
       jCol = colInd(block)
@@ -441,8 +442,9 @@ module TFQMR_mod
       enddo ! col
     enddo ! block
     !$omp end do
+!$omp end parallel
 
-    mFlops = mFlops + 4*size(vector)
+    mFlops = mFlops + 4_8*size(vector)
   endsubroutine ! norms
 
   !------------------------------------------------------------------------------
@@ -453,7 +455,7 @@ module TFQMR_mod
     column_index_t, intent(in) :: colInd(:)
     integer(kind=8), intent(inout) :: mFlops
 
-    integer :: col, nrow, block, jCol
+    integer :: col, block, jCol, nrow
     double complex, external :: ZDOTU ! BLAS double complex inner product, Unconjugated
 
     nrow = size(vector, 1)
@@ -465,6 +467,7 @@ module TFQMR_mod
 #endif
     dots = ZERO
 
+!$omp parallel
     !$omp do private(col, block, jCol) reduction(+:dots)
     do block = 1, size(vector, 3)
       jCol = colInd(block)
@@ -473,8 +476,9 @@ module TFQMR_mod
       enddo ! col
     enddo ! block
     !$omp end do
+!$omp end parallel
 
-    mFlops = mFlops + 8*size(vector)
+    mFlops = mFlops + 8_8*size(vector)
   endsubroutine ! dots
 
   !------------------------------------------------------------------------------
@@ -492,6 +496,7 @@ module TFQMR_mod
     if (size(colInd) /= size(xvector, 3)) stop 'col_axpy: strange! (colInd vs. x)'
 #endif
 
+!$omp parallel
     !$omp do private(col, block, jCol)
     do block = 1, size(yvector, 3)
       jCol = colInd(block)
@@ -500,8 +505,9 @@ module TFQMR_mod
       enddo ! col
     enddo ! block
     !$omp end do
+!$omp end parallel
 
-    mFlops = mFlops + 8*size(yvector)
+    mFlops = mFlops + 8_8*size(yvector)
   endsubroutine ! y := a*x+y
 
   !------------------------------------------------------------------------------
@@ -519,6 +525,7 @@ module TFQMR_mod
     if (size(colInd) /= size(xvector, 3)) stop 'col_xpay: strange! (colInd vs. x)'
 #endif
 
+!$omp parallel
     !$omp do private(col, block, jCol)
     do block = 1, size(yvector, 3)
       jCol = colInd(block)
@@ -527,8 +534,9 @@ module TFQMR_mod
       enddo ! col
     enddo ! block
     !$omp end do
+!$omp end parallel
     
-    mFlops = mFlops + 8*size(yvector)
+    mFlops = mFlops + 8_8*size(yvector)
   endsubroutine ! y := x+a*y
 
   !------------------------------------------------------------------------------
@@ -547,14 +555,16 @@ module TFQMR_mod
     if (size(subInd) /= size(bvector, 3)) stop 'subset_add: strange! (b vs. subInd)'
 #endif
 
+!$omp parallel
     !$omp do private(block, Yind)
     do block = 1, size(bvector, 3)
       Yind = subInd(block)
       yvector(:,:,Yind) = yvector(:,:,Yind) + factor * bvector(:,:,block)
     enddo ! block
     !$omp end do
+!$omp end parallel
     
-    mFlops = mFlops + 4*size(bvector)
+    mFlops = mFlops + 4_8*size(bvector)
   endsubroutine ! y := y + a*b with different shapes of Y and B
   
   
