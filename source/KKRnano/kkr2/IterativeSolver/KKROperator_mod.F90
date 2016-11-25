@@ -104,7 +104,7 @@ module KKROperator_mod
 
     ! plan the operation
     call bsr_times_bsr(self%plan, self%bsr_A%RowStart, self%bsr_A%ColIndex, shape(self%mat_A), self%bsr_X%RowStart, self%bsr_X%ColIndex, shape(self%mat_X))
-    
+
   endsubroutine ! create
 
 
@@ -123,6 +123,7 @@ module KKROperator_mod
     call destroy(self%bsr_B)
 
     call destroy(self%plan)
+    deallocate(self%B_subset_of_X, stat=ist)
     
     deallocate(self%atom_indices, stat=ist)
     nullify(self%cluster)
@@ -139,7 +140,7 @@ module KKROperator_mod
     integer(kind=8), intent(inout) :: nFlop
 
     if (self%plan%mtasks > 0) then
-    
+
       ! perform BSR matrix * BSR matrix: bsr_times_bsr(plan, Y, A, X) according to plan
       call bsr_times_bsr(self%plan, mat_AX, self%mat_A(:,:,:,0), mat_X)
       nFlop = nFlop + self%plan%nFlop
