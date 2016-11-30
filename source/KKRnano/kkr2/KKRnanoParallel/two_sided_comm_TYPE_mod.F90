@@ -115,8 +115,8 @@ module two_sided_comm_TYPE_mod
 
 !     rank = (gid - 1)/max_local_atoms ! block distribution of atoms to ranks
       chunk_inds(:,iout) = getRankAndLocalIndex(gid, max_local_atoms*nranks, nranks)
-      rank   = chunk_inds(1,iout) ! remote rank
-      iinp = chunk_inds(2,iout) ! local index on remote rank
+      rank = chunk_inds(1,iout) ! remote rank
+!     iinp = chunk_inds(2,iout) ! local index on remote rank, index not used here
       
       nreq(rank) = nreq(rank) + 1 ! add one request
     enddo ! iout
@@ -151,7 +151,7 @@ module two_sided_comm_TYPE_mod
 
     allocate(nrecv(nPairs)) ; nrecv(:) = 0
     do iout = 1, natoms
-      rank   = chunk_inds(1,iout) ! remote rank
+      rank = chunk_inds(1,iout) ! remote rank
       iinp = chunk_inds(2,iout) ! local index on remote rank
       
       ipair = rank2pair(rank)
@@ -159,7 +159,7 @@ module two_sided_comm_TYPE_mod
       
       inz = self%recv_start(ipair) + nrecv(ipair)
       nrecv(ipair) = nrecv(ipair) + 1 ! create a new request
-      
+
       temp_recv_index(inz) = iinp ! store the local owner index in remote sender rank which I want to receive
       self%recv_index(inz) = iout
 
@@ -238,16 +238,16 @@ module two_sided_comm_TYPE_mod
 
   
   subroutine reference_sys_com(self, Gout, Ginp)
+    type(DataExchangeTable), intent(in) :: self
+    NUMBER_TYPE, intent(out) :: Gout(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:LLy,naclsd,num_trunc_atoms)
+    NUMBER_TYPE, intent(in)  :: Ginp(:,:,:,:,:) !< dim(lmmaxd,lmmaxd,0:LLy,naclsd,num_local_atoms)
+    
     ! In order to implement point-to-point communication also with max_local_atoms > 1,
     ! we need to set up a sparse matrix that describes 
     !   which references system (col) we need to receive from which rank (pair)
     ! then, we need to communicate these matrices
     !   and create the tables about which local reference system we need to send to which rank (pair)
-    
-    type(DataExchangeTable), intent(in) :: self
-    NUMBER_TYPE, intent(out) :: Gout(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:LLy,naclsd,num_trunc_atoms)
-    NUMBER_TYPE, intent(in)  :: Ginp(:,:,:,:,:) !< dim(lmmaxd,lmmaxd,0:LLy,naclsd,num_local_atoms)
-    
+
     integer, allocatable :: rreq(:), sreq(:), rstats(:,:), sstats(:,:)
     integer :: ncount, ipair, rank, tag, ierr, ist, inz, iinp, iout
     include 'mpif.h' ! only: MPI_STATUS_SIZE, MPI_INTEGER, MPI_REQUEST_NULL
@@ -258,11 +258,11 @@ module two_sided_comm_TYPE_mod
     do ist = 1, 4
       assert( size(Ginp, ist) == size(Gout, ist) )
     enddo ! ist
-    
-    allocate(rreq(self%recv_n), rstats(MPI_STATUS_SIZE,self%recv_n), &
-             sreq(self%send_n), sstats(MPI_STATUS_SIZE,self%send_n), stat=ist)
-    rreq(:) = MPI_REQUEST_NULL
+
+    allocate(sreq(self%send_n), sstats(MPI_STATUS_SIZE,self%send_n), &
+             rreq(self%recv_n), rstats(MPI_STATUS_SIZE,self%recv_n), stat=ist) ! ToDo: catch status
     sreq(:) = MPI_REQUEST_NULL
+    rreq(:) = MPI_REQUEST_NULL
 
     ! now communication works like this
     do ipair = 1, self%npairs
@@ -271,14 +271,14 @@ module two_sided_comm_TYPE_mod
       do inz = self%send_start(ipair), self%send_start(ipair + 1) - 1
         tag = inz - self%send_start(ipair)
         iinp = self%send_index(inz)
-        ! ncount = size(Ginp, 1)*size(Ginp, 2)*self%send_size(inz) ! ToDo
+        ! ncount = size(Ginp, 1)*size(Ginp, 2)*size(Ginp, 3)*self%send_size(inz) ! ToDo
         call MPI_Isend(Ginp(:,:,:,:,iinp), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, sreq(inz), ierr)
       enddo ! inz
 
       do inz = self%recv_start(ipair), self%recv_start(ipair + 1) - 1
         tag = inz - self%recv_start(ipair)
         iout = self%recv_index(inz)
-        ! ncount = size(Gout, 1)*size(Gout, 2)*self%recv_size(inz) ! ToDo
+        ! ncount = size(Gout, 1)*size(Gout, 2)*size(Gout, 3)*self%recv_size(inz) ! ToDo
         call MPI_Irecv(Gout(:,:,:,:,iout), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, rreq(inz), ierr)
       enddo ! inz
 

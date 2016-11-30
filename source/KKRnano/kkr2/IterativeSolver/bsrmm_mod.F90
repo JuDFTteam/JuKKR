@@ -95,7 +95,7 @@ module bsrmm_mod
     else
       ! after 1st iteration and before 2nd iteration
       self%mtasks = maxval(self%ntasks) ! determine the maximum number of tasks per thread
-      write(*, '(3(a,i0),999("  ",i0))') "multiplication plan for  ",sum(self%ntasks)," tasks on ",self%nthreads," threads is balanced as  ",self%ntasks
+      write(*, '(3(a,i0),999(" ",i0))') "multiplication plan for  ",sum(self%ntasks)," tasks on  ",self%nthreads," threads is balanced as  ",self%ntasks
 
       allocate(self%task_AoSoA(0:3,self%mtasks,0:self%nthreads-1), stat=ist)
       if (ist /= 0) stop __LINE__ ! allocation failed
