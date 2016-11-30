@@ -20,7 +20,7 @@ module KKRmat_mod
   public :: MultipleScattering
 
   double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
-
+  
   contains
 
   !------------------------------------------------------------------------------
@@ -732,6 +732,7 @@ module KKRmat_mod
 
   endsubroutine ! referenceFourier_part2
 
+  
 
   subroutine referenceFourier_mpi_part1(Gref_buffer, naez, Ginp, global_atom_id, comm)
     use ChunkIndex_mod, only: getRankAndLocalIndex

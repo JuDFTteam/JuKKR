@@ -50,7 +50,7 @@ module bsrmm_mod
     integer, intent(in) :: ix(:) !> dim(X%nRows + 1) !  start indices
     integer, intent(in) :: jx(:) !> dim(X%nnzb)      ! column indices
     integer, intent(in) :: shapeX(:) ! == [lmsa, nRHS, X%nnzb]
-    ! for the result Y we assume the same BSR structure as X
+    ! for the result Y we assume the same BSR structure and shape as X
 #define iy ix
 #define jy jx
 
@@ -64,7 +64,6 @@ module bsrmm_mod
     integer :: iRow, jCol, kCol
     integer :: ist, i01, beta, ithread
     integer, parameter :: one=1, zero=0
-    integer(kind=8) :: nallops
     character(len=32) :: name
     
     shapeY = shapeX
@@ -96,18 +95,15 @@ module bsrmm_mod
     else
       ! after 1st iteration and before 2nd iteration
       self%mtasks = maxval(self%ntasks) ! determine the maximum number of tasks per thread
-      write(*, '(3(a,i0),999("  ",i0))') "multiplication plan for  ",nallops," tasks on ",self%nthreads," threads is balanced as  ",self%ntasks
+      write(*, '(3(a,i0),999("  ",i0))') "multiplication plan for  ",sum(self%ntasks)," tasks on ",self%nthreads," threads is balanced as  ",self%ntasks
 
       allocate(self%task_AoSoA(0:3,self%mtasks,0:self%nthreads-1), stat=ist)
       if (ist /= 0) stop __LINE__ ! allocation failed
 
-      if (nallops /= sum(self%ntasks)) stop __LINE__ ! consistency check
     endif
   
     self%nFlop = 0
     self%nByte = 0
-    
-    nallops = 0
     self%ntasks(:) = 0 ! init number of tasks per thread
 
     do iRow = 1, YnRows
@@ -132,9 +128,7 @@ module bsrmm_mod
             !                    M     N     K          A                       B                             C
         !!! call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)
 
-            nallops = nallops + 1
-            self%ntasks(ithread) = self%ntasks(ithread) + 1
-
+            self%ntasks(ithread) = self%ntasks(ithread) + 1 ! schedule this task on thread i
             if (i01 > 0) self%task_AoSoA(0:3,self%ntasks(ithread),ithread) = [Yind, Aind, Xind, beta] ! store task in 2nd iteration
 
             self%nFlop = self%nFlop + (8_8*lmsd)*(nRHS*lmsd)
@@ -171,107 +165,6 @@ module bsrmm_mod
   endsubroutine ! bsr_times_bsr
 
   
-  subroutine create_bsr_time_bsr_plan_1thread(self, ia, ja, shapeA, ix, jx, shapeX)
-    type(bsrMultPlan), intent(inout) :: self
-    integer, intent(in) :: ia(:) !> dim(A%nRows + 1) !  start indices
-    integer, intent(in) :: ja(:) !> dim(A%nnzb)      ! column indices
-    integer, intent(in) :: shapeA(:) ! == [lmsa, lmsd, A%nnzb, ...]
-    integer, intent(in) :: ix(:) !> dim(X%nRows + 1) !  start indices
-    integer, intent(in) :: jx(:) !> dim(X%nnzb)      ! column indices
-    integer, intent(in) :: shapeX(:) ! == [lmsa, nRHS, X%nnzb]
-    ! for the result Y we assume the same BSR structure as X
-#define iy ix
-#define jy jx
-
-    ! local variables
-    integer :: leadDim_Y, leadDim_X, leadDim_A, lmsd, nRHS, XnRows
-    integer :: shapeY(3)
-    ! private variables
-    integer :: Yind, Aind, Xind
-    integer :: iRow, jCol, kCol
-    integer :: ist, i01, beta
-    integer, parameter :: one=1, zero=0
-    integer(kind=8) :: nallops, nFlop, nByte
-    
-    shapeY = shapeX
-    leadDim_A = shapeA(1)
-    leadDim_X = shapeX(1)
-    leadDim_Y = shapeY(1)
-    
-    lmsd = shapeA(2)
-    nRHS = shapeX(2)
-
-    if (leadDim_A /= leadDim_X) stop __LINE__
-
-    
-    call destroy(self) ! deallocate everything
-    allocate(self%task_AoSoA(0:3,0:0,0:0))
-
-    XnRows = size(ix) - 1
-#define YnRows XnRows
-    if (XnRows /= size(ia) - 1) stop __LINE__
-    
-  do i01 = 0, 1
-    nallops = 0
-    nFlop = 0
-    nByte = 0
-  
-    do iRow = 1, YnRows
-      ! reuse elements of Y, i.e. keep the accumulator in the cache
-      do Yind = iy(iRow), iy(iRow + 1) - 1
-       if (Yind > shapeY(3)) stop __LINE__ ! DEBUG
-      
-        jCol = jy(Yind) ! update   matrix block element Y_full[iRow,jCol]
-
-        beta = zero
-        do Aind = ia(iRow), ia(iRow + 1) - 1
-          if (Aind > shapeA(3)) stop __LINE__ ! DEBUG
-          kCol = ja(Aind) ! for each matrix block element A_full[iRow,kCol]
-#define kRow kCol
-          Xind = BSR_entry_exists(ix, jx, row=kRow, col=jCol) ! find out if X_full[kRow,jCol] exists
-          if (Xind > 0) then ! yes
-            if (Xind > shapeX(3)) stop __LINE__ ! DEBUG
-            ! now: Y[:,:,Yind] += beta * A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
-            !                    M     N     K          A                       B                             C
-!           call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)
-
-            nallops = nallops + 1
-            nFlop = nFlop + (8_8*lmsd)*(nRHS*lmsd)
-
-            self%task_AoSoA(0:3,i01*nallops,0) = [Yind, Aind, Xind, beta] ! store all tasks in the 1st thread
-
-            beta = one
-          endif ! X_full[kRow,jCol] exists
-#undef kRow
-        enddo ! Aind
-
-      enddo ! Yind
-    enddo ! iRow
-#undef YnRows
-
-    if (i01 == 0) then
-      call destroy(self) ! deallocate everything
-      ! after 1st iteration
-      self%nthreads = 1
-      self%mtasks = nallops
-      allocate(self%ntasks(0:self%nthreads-1), self%task_AoSoA(0:3,self%mtasks,0:self%nthreads-1), stat=ist)
-      if (ist /= 0) stop __LINE__ ! allocation failed
-      self%ntasks(0) = self%mtasks ! one thread takes all tasks
-      self%nFlop = nFlop
-      self%nByte = nByte
-    else
-      ! consistency checks in 2nd iteration
-      if (self%nFlop /= nFlop)  stop __LINE__
-      if (self%mtasks /= nallops) stop __LINE__
-    endif
-
-  enddo ! i01
-
-#undef iy
-#undef jy
-
-  endsubroutine ! bsr_times_bsr
-  
   
   
   subroutine bsr_times_bsr_planned(self, Y, A, X)
@@ -291,7 +184,7 @@ module bsrmm_mod
     integer :: itask, ithread
     double complex :: beta
     
-    kernel = self%kernel
+    kernel = self%kernel ! must be lowercase !
 
     leadDim_A = size(A, 1)
     leadDim_X = size(X, 1)

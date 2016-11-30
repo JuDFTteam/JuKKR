@@ -59,6 +59,7 @@ module one_sided_commD_mod
   implicit none
   private
   
+  ! these statements must be each one in one line as we use the sed text replacement
   public :: copyFromD_com
   public :: exposeBufferD
   public :: copyChunksD
@@ -87,9 +88,7 @@ module one_sided_commD_mod
     integer, intent(in) :: comm
 
     integer(kind=4), allocatable :: chunk_inds(:,:)
-    integer :: ii, ierr, nranks, atom_requested
-    integer :: naez, naez_trc ! size(atomindices)
-    integer :: win
+    integer :: ii, ierr, nranks, atom_requested, naez, naez_trc, win
 
     naez_trc = size(atom_ids) ! number of truncated atoms
 
@@ -113,7 +112,7 @@ module one_sided_commD_mod
 
     deallocate(chunk_inds)
 
-  endsubroutine copyFromD_com
+  endsubroutine ! copyFromD_com
 
 
 
@@ -124,10 +123,8 @@ module one_sided_commD_mod
     integer, intent(in) :: chunk_size 
     integer, intent(in) :: comm
 
-    integer :: ierr
-
     integer(kind=MPI_ADDRESS_KIND) :: typesize, lowerbound
-    integer :: disp_unit
+    integer :: disp_unit, ierr
 
     call MPI_Type_get_extent(NUMBERMPID, lowerbound, typesize, ierr)
     COMMCHECK(ierr)
@@ -138,7 +135,7 @@ module one_sided_commD_mod
     call MPI_Win_create(buffer, typesize*bsize, disp_unit, MPI_INFO_NULL, comm, win, ierr)
     COMMCHECK(ierr)
     
-  endsubroutine exposeBufferD
+  endsubroutine ! exposeBufferD
 
   !------------------------------------------------------------------------------
   !> Copy chunks of size 'chunk_size' located at 
@@ -156,7 +153,7 @@ module one_sided_commD_mod
     ! ensure that Get has completed and dest_buffer is valid
     call fenceD(win)
 
-  endsubroutine copyChunksD
+  endsubroutine ! copyChunksD
 
   !------------------------------------------------------------------------------
   !> Copy chunks of size 'chunk_size' located at
@@ -171,8 +168,7 @@ module one_sided_commD_mod
     integer(kind=4), intent(in) :: chunk_inds(:,:) ! (2,*)
     integer, intent(in) :: chunk_size
 
-    integer :: owner_rank, local_ind
-    integer :: ii, ierr
+    integer :: owner_rank, local_ind, ii, ierr
     integer(kind=MPI_ADDRESS_KIND) :: disp
 
     do ii = 1, size(chunk_inds, 2)
@@ -186,7 +182,7 @@ module one_sided_commD_mod
 
     enddo ! ii
 
-  endsubroutine copyChunksNoSyncD
+  endsubroutine ! copyChunksNoSyncD
 
   !------------------------------------------------------------------------------
   !> Wrapper for fence call.
@@ -195,9 +191,9 @@ module one_sided_commD_mod
 
     integer :: ierr
     call MPI_Win_fence(0, win, ierr)
-
     COMMCHECK(ierr)
-  endsubroutine fenceD
+    
+  endsubroutine ! fenceD
 
   !------------------------------------------------------------------------------
   !> Hide buffer after completing one-sided communication.
@@ -205,13 +201,12 @@ module one_sided_commD_mod
     integer, intent(inout) :: win
 
     integer :: ierr
-
     call MPI_Win_free(win, ierr)
     COMMCHECK(ierr)
 
-  endsubroutine hideBufferD
+  endsubroutine ! hideBufferD
 
-endmodule one_sided_commD_mod
+endmodule ! one_sided_commD_mod
 
 #ifdef TEST_ONE_SIDED_COMM_D__
 ! a test program - not compiled due to conditional compilation
@@ -281,5 +276,5 @@ program test
   COMMCHECK(ierr)
   
   !write(*,*) "OK: TEST successful"
-endprogram
+endprogram ! test
 #endif
