@@ -245,8 +245,8 @@ module two_sided_comm_TYPE_mod
     !   and create the tables about which local reference system we need to send to which rank (pair)
     
     type(DataExchangeTable), intent(in) :: self
-    NUMBER_TYPE, intent(out) :: Gout(:,:,:,:) !> dim(lmmaxd,lmmaxd,naclsd,num_trunc_atoms)
-    NUMBER_TYPE, intent(in)  :: Ginp(:,:,:,:) !< dim(lmmaxd,lmmaxd,naclsd,num_local_atoms)
+    NUMBER_TYPE, intent(out) :: Gout(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:LLy,naclsd,num_trunc_atoms)
+    NUMBER_TYPE, intent(in)  :: Ginp(:,:,:,:,:) !< dim(lmmaxd,lmmaxd,0:LLy,naclsd,num_local_atoms)
     
     integer, allocatable :: rreq(:), sreq(:), rstats(:,:), sstats(:,:)
     integer :: ncount, ipair, rank, tag, ierr, ist, inz, iinp, iout
@@ -254,8 +254,8 @@ module two_sided_comm_TYPE_mod
 
     assert( self%comm /= 0 )
     
-    ncount = size(Ginp(:,:,:,1))
-    do ist = 1, 3
+    ncount = size(Ginp(:,:,:,:,1))
+    do ist = 1, 4
       assert( size(Ginp, ist) == size(Gout, ist) )
     enddo ! ist
     
@@ -272,14 +272,14 @@ module two_sided_comm_TYPE_mod
         tag = inz - self%send_start(ipair)
         iinp = self%send_index(inz)
         ! ncount = size(Ginp, 1)*size(Ginp, 2)*self%send_size(inz) ! ToDo
-        call MPI_Isend(Ginp(:,:,:,iinp), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, sreq(inz), ierr)
+        call MPI_Isend(Ginp(:,:,:,:,iinp), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, sreq(inz), ierr)
       enddo ! inz
 
       do inz = self%recv_start(ipair), self%recv_start(ipair + 1) - 1
         tag = inz - self%recv_start(ipair)
         iout = self%recv_index(inz)
         ! ncount = size(Gout, 1)*size(Gout, 2)*self%recv_size(inz) ! ToDo
-        call MPI_Irecv(Gout(:,:,:,iout), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, rreq(inz), ierr)
+        call MPI_Irecv(Gout(:,:,:,:,iout), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, rreq(inz), ierr)
       enddo ! inz
 
     enddo ! ipair

@@ -12,11 +12,11 @@ module kloopz1_mod
 
   subroutine kloopz1(GmatN, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
                      dsymLL, tmatLL, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                     dGinp_local, dtde, tr_alph, lly_grdt, global_atom_idx_lly, lly, & ! LLY 
+                     dtde, tr_alph, Lly_grdt, global_atom_idx_Lly, Lly, & ! LLY 
                      solver_type, kpoint_timer, kernel_timer)
 
 ! only part of arrays for corresponding spin direction is passed
-! (GmatN, tsst_local, dtde_local, lly_grdt, tr_alph, gmatxij)
+! (GmatN, tsst_local, dtde_local, Lly_grdt, tr_alph, gmatxij)
 !
 ! NofKs .. number of k-points, integer
 ! volBZ .. brillouin zone volume, double
@@ -48,7 +48,7 @@ module kloopz1_mod
     double precision, intent(in) :: alat
     double complex, intent(in) :: dsymLL(:,:,:) !< dim(lmmaxd,lmmaxd,nsymat)
     double complex, intent(out) :: GmatN(:,:,:) !< dim(lmmaxd,lmmaxd,num_local_atoms) ! result
-    double complex, intent(inout) :: Ginp_local(:,:,:,:) !< dim(lmmaxd,lmmaxd,naclsd,num_local_atoms) reference green function 
+    double complex, intent(inout) :: Ginp_local(:,:,0:,:,:) !< dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms) reference green function 
     double complex, intent(in) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,num_trunc_atoms)
     double precision, intent(in) :: rr(:,0:) !< lattice vectors(1:3,0:nrd)
     integer, intent(in) :: NofKs
@@ -57,12 +57,11 @@ module kloopz1_mod
     double precision, intent(in) :: k_point_weights(:) ! dim kpoibz
 
     ! LLY
-    double complex, intent(inout) :: dGinp_local(:,:,:,:) !< dim(lmmaxd,lmmaxd,naclsd,num_local_atoms) energy derivative of reference green function
     double complex, intent(in)    :: tr_alph(:)
     double complex, intent(in)    :: dtde(:,:,:) 
-    double complex, intent(out)   :: lly_grdt
-    integer       , intent(in)    :: global_atom_idx_lly
-    integer       , intent(in)    :: lly
+    double complex, intent(out)   :: Lly_grdt
+    integer       , intent(in)    :: global_atom_idx_Lly
+    integer       , intent(in)    :: Lly
     
     integer, intent(in) :: solver_type
     type(TimerMpi), intent(inout) :: kpoint_timer, kernel_timer
@@ -80,11 +79,11 @@ module kloopz1_mod
     nsymat = size(dsymLL, 3)
     num_local_atoms = size(op%atom_indices)
     num_trunc_atoms = size(tmatLL, 3)
-    naclsd = size(Ginp_local, 3)
+    naclsd = size(Ginp_local, 4)
     
     assert( all(shape(dsymLL) == [N,N,nsymat]) )
     assert( all(shape(GmatN) == [N,N,num_local_atoms]) )
-    assert( all(shape(Ginp_local) == [N,N,naclsd,num_local_atoms]) )
+    assert( all(shape(Ginp_local) == [N,N,1+Lly,naclsd,num_local_atoms]) )
     assert( all(shape(tmatLL) == [N,N,num_trunc_atoms]) )
 
     allocate(GS(N,N,num_local_atoms), mssq(N,N,num_local_atoms), ipvt(N), info(2,num_local_atoms), temp(N*N), stat=ist)
@@ -113,7 +112,7 @@ module kloopz1_mod
     ! solver_type=4 T-matrix cutoff with direct solver
     call MultipleScattering(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, &
                       Ginp_local, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                      mssq, dGinp_local, dtde, tr_alph, lly_grdt, volBZ, global_atom_idx_lly, lly, & !LLY
+                      mssq, dtde, tr_alph, Lly_grdt, volBZ, global_atom_idx_Lly, Lly, & !LLY
                       solver_type, kpoint_timer, kernel_timer)
                       
 !-------------------------------------------------------- SYMMETRISE gll

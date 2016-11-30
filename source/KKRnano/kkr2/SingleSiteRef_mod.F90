@@ -119,7 +119,7 @@ module SingleSiteRef_mod
 
 
 !------------------------------------------------------------------------------
-  subroutine gref(e, alat, iend, cleb, rcls, icleb, loflm, nacls, tref_ell, dtref_ell, grefn, dgrefn, Lly_g0tr, lmax, ncleb, Lly)
+  subroutine gref(e, alat, iend, cleb, rcls, icleb, loflm, nacls, tref_ell, dtref_ell, grefn, Lly_g0tr, lmax, ncleb, Lly)
     integer, intent(in) :: lmax, nacls, Lly
     double complex, intent(in) :: e
     double precision, intent(in) :: alat
@@ -130,8 +130,7 @@ module SingleSiteRef_mod
     integer, intent(in) :: icleb(ncleb,3)
     integer, intent(in) :: loflm((2*lmax+1)**2)
     double complex, intent(in)  :: tref_ell(0:lmax,nacls), dtref_ell(0:lmax,nacls)
-    double complex, intent(out) ::  grefn((lmax+1)**2,(lmax+1)**2,nacls)
-    double complex, intent(out) :: dgrefn((lmax+1)**2,(lmax+1)**2,nacls)
+    double complex, intent(out) :: grefn(:,:,0:,:) ! grefn((lmax+1)**2,(lmax+1)**2,0:1,nacls)
     double complex, intent(out) :: Lly_g0tr
 
     integer :: iacls, lm, lmmaxd, ist
@@ -139,8 +138,7 @@ module SingleSiteRef_mod
     
     lmmaxd = (lmax + 1)**2
     
-    assert(all(shape( grefn) == [lmmaxd, lmmaxd, nacls]))
-    assert(all(shape(dgrefn) == [lmmaxd, lmmaxd, nacls]))
+    assert(all(shape(grefn) >= [lmmaxd, lmmaxd, 1+Lly, nacls])) ! prepare for deferred shape interface
     
     allocate(ginp(lmmaxd,nacls,lmmaxd,0:1))
     
@@ -148,9 +146,10 @@ module SingleSiteRef_mod
 
     do iacls = 1, nacls
       do lm = 1, lmmaxd
-       ! ginp has dim(lmmaxd,nacls,lmmaxd,0:1), so we interchange the 2nd and 3rd dim here
-        grefn(:,lm,iacls) = ginp(:,iacls,lm,0) ! value
-       dgrefn(:,lm,iacls) = ginp(:,iacls,lm,1) ! energy derivative
+        ! ginp has dim(lmmaxd,nacls,lmmaxd,0:1), so we interchange dimensions here
+        grefn(:,lm,0,iacls) = ginp(:,iacls,lm,0) ! value
+        if (Lly > 0) & 
+        grefn(:,lm,Lly,iacls) = ginp(:,iacls,lm,1) ! energy derivative
       enddo ! lm
     enddo ! iacls
     

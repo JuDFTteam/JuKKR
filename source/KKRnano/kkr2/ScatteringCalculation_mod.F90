@@ -92,8 +92,7 @@ implicit none
     double complex, allocatable :: tmatLL(:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: dtmatLL(:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
-    double complex, allocatable :: GrefN_buffer(:,:,:,:) !< GrefN for all local atoms
-    double complex, allocatable :: dGrefN_buffer(:,:,:,:) !< DGrefN for all local atoms, LLY
+    double complex, allocatable :: GrefN_buffer(:,:,:,:,:) !< GrefN for all local atoms
 
     lmmaxd = (dims%lmaxd+1)**2
 
@@ -110,8 +109,7 @@ implicit none
     allocate(tmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for t-matrices
     allocate(dtmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for derivative of t-matrices, LLY
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
-    allocate(GrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms))
-    allocate(dGrefN_buffer(lmmaxd,lmmaxd,calc%clusters%naclsd,num_local_atoms)) ! LLY
+    allocate(GrefN_buffer(lmmaxd,lmmaxd,0:dims%Lly,calc%clusters%naclsd,num_local_atoms))
     allocate(atom_indices(num_local_atoms))
 
     if (params%jij  .and. num_local_atoms > 1) stop "Jij and num_local_atoms > 1 not supported."
@@ -183,8 +181,8 @@ implicit none
           call gref(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
                     calc%gaunts%CLEB, calc%ref_cluster_a(ila)%RCLS, calc%gaunts%ICLEB, &
                     calc%gaunts%LOFLM, calc%ref_cluster_a(ila)%nacls, &
-                    kkr(ila)%Tref_ell, kkr(ila)%dTref_ell, GrefN_buffer(:,:,:,ila), &
-                    dGrefN_buffer(:,:,:,ila), kkr(ila)%Lly_G0Tr(IE), &
+                    kkr(ila)%Tref_ell, kkr(ila)%dTref_ell, GrefN_buffer(:,:,:,:,ila), &
+                    kkr(ila)%Lly_G0Tr(IE), &
                     dims%lmaxd, calc%gaunts%ncleb, dims%Lly)
 
         enddo  ! ila
@@ -260,7 +258,7 @@ implicit none
                     tmatLL, &
                     calc%trunc_zone%global_atom_id, mp%mySEComm, &
                     calc%iguess_data, IE, PRSPIN, &
-                    dGrefN_buffer, dtmatLL, kkr(1)%tr_alph, kkr(1)%lly_grdt(ie,ispin), calc%atom_ids(1), dims%lly, & ! LLY, note: num_local_atoms must be equal to 1 
+                    dtmatLL, kkr(1)%tr_alph, kkr(1)%Lly_grdt(ie,ispin), calc%atom_ids(1), dims%Lly, & ! LLY, note: num_local_atoms must be equal to 1 
                     params%solver, kpoint_timer, kernel_timer)
   !------------------------------------------------------------------------------
 
@@ -377,7 +375,7 @@ implicit none
 
     call cleanup_solver(solv, kkr_op, precond)
 
-    deallocate(tmatLL, dtmatLL, atom_indices, GrefN_buffer, dGrefN_buffer, GmatN_buffer, stat=ist) ! ignore status
+    deallocate(tmatLL, dtmatLL, atom_indices, GrefN_buffer, GmatN_buffer, stat=ist) ! ignore status
 
   endsubroutine ! energyLoop
 
@@ -552,7 +550,7 @@ implicit none
 
   !------------------------------------------------------------------------------
   !> Gather all rMTref values of the reference cluster.
-  !> @param rMTref_local all locally determined rMTref value
+  !> @param rMTref_local all locaLly determined rMTref value
   !> @param rMTref       on exit all rMTref value in ref_cluster
   subroutine gatherrMTref_com(rMTref_local, rMTref, ref_cluster, communicator)
     use RefCluster_mod, only: RefCluster
