@@ -48,7 +48,7 @@ module KKRmat_mod
     use fillKKRMatrix_mod, only: getGreenDiag ! retrieve result
     use MPI, only: MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD!, MPI_Allreduce 
     
-    use two_sided_comm_TYPE_mod, only: DataExchangeTable, create, reference_sys_com!, destroy
+    use two_sided_comm_TYPE_mod, only: DataExchangeTable, create, reference_sys_com!, destroy ! ToDo: when is the commTable destroyed?
 
     type(IterativeSolver), intent(inout) :: solver
     type(KKROperator), intent(inout) :: op
@@ -58,8 +58,8 @@ module KKRmat_mod
     double precision, intent(in) :: kpoints(:,:) !< list of k-points dim(3,nkpoints)
     double precision, intent(in) :: kpointweight(:) !< k-point weights dim(nkpoints)
 
-    double complex, intent(out) :: GS(:,:,:) ! dim(lmsmaxd,lmsmaxd,num_local_atoms) result
-    double complex, intent(in) :: tmatLL(:,:,:) ! dim(lmsmaxd,lmsmaxd,naez_trc)
+    double complex, intent(out) :: GS(:,:,:) ! dim(lmsd,lmsd,num_local_atoms) result
+    double complex, intent(in) :: tmatLL(:,:,:) ! dim(lmsd,lmsd,num_trunc_atoms)
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat ! needed only for Jij-calculation and Lloyds formula
     double precision, intent(in) :: RR(:,0:)
@@ -84,9 +84,9 @@ module KKRmat_mod
     type(TimerMpi), intent(inout) :: kpoint_timer, kernel_timer
 
     ! locals
-    double complex, allocatable :: G_diag(:,:) ! dim(lmsmaxd,lmsmaxd)
+    double complex, allocatable :: G_diag(:,:) ! dim(lmsd,lmsd)
     double complex :: bztr2, trace ! LLY
-    integer :: num_local_atoms, naez, ikpoint, ila, ierr, ist, lmsmaxd, nd(5)
+    integer :: num_local_atoms, num_trunc_atoms, ikpoint, ila, ierr, ist, lmsd, nd(5)
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     logical, save :: init_commTable = .false.
@@ -97,8 +97,8 @@ module KKRmat_mod
 #endif
 
     ! array dimensions
-    naez = op%cluster%naez_trc
-    lmsmaxd = size(GS, 2)
+    num_trunc_atoms = op%cluster%naez_trc
+    lmsd = size(GS, 2)
     num_local_atoms = size(op%atom_indices)
 
     ! WARNING: Symmetry assumptions might have been used that are
@@ -117,24 +117,24 @@ module KKRmat_mod
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     if (.not. init_commTable) then
-      call create(commTable, num_local_atoms, naez, global_atom_id, communicator)
+      call create(commTable, num_local_atoms, num_trunc_atoms, global_atom_id, communicator)
       init_commTable = .true.
     endif
 
 !     ! get the required reference Green functions from the other MPI processes
-!     call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
+!     call referenceFourier_com_part1(Gref_buffer, num_trunc_atoms, Ginp, global_atom_id, communicator)
 !     if (Lly == 1) & ! LLY
-!       call referenceFourier_com_part1(dGref_buffer, naez, dGinp, global_atom_id, communicator)
+!       call referenceFourier_com_part1(dGref_buffer, num_trunc_atoms, dGinp, global_atom_id, communicator)
 
     nd = shape(Ginp) ! ToDo maybe also here, we can move the Lly dimension to be 3rd instead of two different arrays
-    allocate(Gref_buffer(nd(1),nd(2),0:nd(3)-1,nd(4),naez), stat=ist) ! ToDo: move 0:Lly to be the 3rd dimension
-    if (ist /= 0) die_here("failed to allocate Gref_buffer with"+(product(nd(1:4))*.5**26*naez)+"GiByte for reference_sys_com") 
+    allocate(Gref_buffer(nd(1),nd(2),0:nd(3)-1,nd(4),num_trunc_atoms), stat=ist) ! ToDo: move 0:Lly to be the 3rd dimension
+    if (ist /= 0) die_here("failed to allocate Gref_buffer with"+(product(nd(1:4))*.5**26*num_trunc_atoms)+"GiByte for reference_sys_com") 
 
     ! get the required reference Green functions from the other MPI processes
     call reference_sys_com(commTable, Gref_buffer, Ginp)
 #endif
 
-    allocate(G_diag(lmsmaxd,lmsmaxd))
+    allocate(G_diag(lmsd,lmsd))
     !==============================================================================
     do ikpoint = 1, nkpoints ! K-POINT-LOOP
     !==============================================================================
@@ -167,9 +167,9 @@ module KKRmat_mod
       if (global_jij_data%do_jij_calculation) then
         ! communicate off-diagonal elements and multiply with exp-factor
         ila = op%atom_indices(1) ! convert to default integer kind
-        call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, naez, ila, &
+        call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, num_trunc_atoms, ila, &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
-                    op%mat_X(:,:,1), global_jij_data%GSXIJ, communicator, lmsmaxd, global_jij_data%nxijd)
+                    op%mat_X(:,:,1), global_jij_data%GSXIJ, communicator, lmsd, global_jij_data%nxijd)
                     stop __LINE__ ! invalid argument is passed, data layout of mat_X has changed
       endif ! jij
 
@@ -263,13 +263,13 @@ module KKRmat_mod
     double complex, allocatable :: dPdE_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:) ! LLY
     double complex :: tracek, gtdPdE ! LLY
 
-    integer :: naez, nacls, alm, lmmaxd, ist, matrix_index, lm1, lm2, lm3, il1
+    integer :: num_trunc_atoms, nacls, alm, lmmaxd, ist, matrix_index, lm1, lm2, lm3, il1
     double complex :: cfctorinv
 
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
     
     lmmaxd = op%lmmaxd
-    naez = size(tmatLL, 3) ! number of atoms in the unified truncation zones
+    num_trunc_atoms = size(tmatLL, 3) ! number of atoms in the unified truncation zones
     nacls = op%cluster%naclsd
 
 
@@ -304,15 +304,15 @@ module KKRmat_mod
 
     if (Lly == 1) then ! LLY
       ! Allocate additional arrays for Lloyd's formula
-      alm = lmmaxd*naez
+      alm = lmmaxd*num_trunc_atoms
 
-      allocate(gllke_x(lmmaxd*naez,lmmaxd*nacls))
-      allocate(dgde(lmmaxd*naez,lmmaxd*nacls))
-      allocate(gllke_x_t(lmmaxd*nacls,lmmaxd*naez))
-      allocate(dgde_t(lmmaxd*nacls,lmmaxd*naez))
-      allocate(gllke_x2(lmmaxd*naez,lmmaxd))
-      allocate(dgde2(lmmaxd*naez,lmmaxd))
-      allocate(dPdE_local(lmmaxd*naez,lmmaxd))
+      allocate(gllke_x(lmmaxd*num_trunc_atoms,lmmaxd*nacls))
+      allocate(dgde(lmmaxd*num_trunc_atoms,lmmaxd*nacls))
+      allocate(gllke_x_t(lmmaxd*nacls,lmmaxd*num_trunc_atoms))
+      allocate(dgde_t(lmmaxd*nacls,lmmaxd*num_trunc_atoms))
+      allocate(gllke_x2(lmmaxd*num_trunc_atoms,lmmaxd))
+      allocate(dgde2(lmmaxd*num_trunc_atoms,lmmaxd))
+      allocate(dPdE_local(lmmaxd*num_trunc_atoms,lmmaxd))
     
 !     call referenceFourier_com(op%mat_A(:,:,:,Lly), op%bsr_A, kpoint, alat, RR, op%cluster, dGinp, global_atom_id, communicator)
 
@@ -421,7 +421,7 @@ module KKRmat_mod
       do lm2 = 1, lmmaxd
         do lm1 = 1, lmmaxd
           gtdPdE = zero
-          do il1 = 1, naez
+          do il1 = 1, num_trunc_atoms
             do lm3 = 1, lmmaxd
               gtdPdE = gtdPdE + op%mat_X(lm3,lm2,il1)*dPdE_local(lmmaxd*(il1 - 1) + lm3,lm1)
             enddo ! lm3
@@ -474,18 +474,18 @@ module KKRmat_mod
 #endif
     use ClusterInfo_mod, only: ClusterInfo
     include 'mpif.h'
-    double complex, intent(out) :: Grefk(:,:,:,0:)
+    double complex, intent(out) :: Grefk(:,:,:,:) ! (lmsa,lmsd,nnzb,0:Lly)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
     double precision, intent(in) :: RR(:,0:)
     type(ClusterInfo), intent(in) :: cluster
-    double complex, intent(in) :: Ginp(:,:,0:,:,:)
+    double complex, intent(in) :: Ginp(:,:,:,:,:) ! (lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms)
     integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> global atom index
     integer, intent(in) :: communicator
 
     ! locals
-    integer :: site_index, naez, naclsd, nLly, lmmaxd, ist
+    integer :: site_index, num_trunc_atoms, naclsd, nLly, lmmaxd, ist
     integer :: num_local_atoms, atom_requested
     double complex, allocatable :: Gref_buffer(:,:,:,:), eikRR(:,:)
     integer(kind=4) :: chunk_inds(2,1)
@@ -500,8 +500,8 @@ module KKRmat_mod
       return
     endif
 
-    naez = cluster%naez_trc
-    ASSERT(naez == size(global_atom_id))
+    num_trunc_atoms = cluster%naez_trc
+    ASSERT(num_trunc_atoms == size(global_atom_id))
     lmmaxd = size(Ginp, 1)
     ASSERT(lmmaxd == size(Ginp, 2))
     nLly = size(Ginp, 3)
@@ -517,9 +517,9 @@ module KKRmat_mod
 
 #ifdef NO_LOCKS_MPI
     ! get maximum number of atoms of all truncation zones
-    call MPI_Allreduce(naez, naez_max, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+    call MPI_Allreduce(num_trunc_atoms, naez_max, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
 #else
-    naez_max = naez
+    naez_max = num_trunc_atoms
 #endif
 
     ! share Ginp with all other processes in 'communicator'
@@ -532,7 +532,7 @@ module KKRmat_mod
 
 #ifdef NO_LOCKS_MPI
       call fenceZ(win)
-      if (site_index <= naez) then
+      if (site_index <= num_trunc_atoms) then
 #endif
 
         ! get Ginp(:,:,:)[global_atom_id(site_index)]
@@ -542,11 +542,11 @@ module KKRmat_mod
 
 #ifdef NO_LOCKS_MPI
         call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*nLly*naclsd)
-      endif ! site_index <= naez
+      endif ! site_index <= num_trunc_atoms
       
       call fenceZ(win) ! ensures that data has arrived in Gref_buffer
       
-      if (site_index <= naez) then
+      if (site_index <= num_trunc_atoms) then
 #else
 
 #ifdef IDENTICAL_REF
@@ -571,12 +571,12 @@ module KKRmat_mod
 
     call hideBufferZ(win)
 
-    deallocate(Gref_buffer, eikRR, stat=ist)
+    deallocate(Gref_buffer, eikRR, stat=ist) ! ignore status
 
   endsubroutine ! referenceFourier_com
 
   
-  subroutine referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
+  subroutine referenceFourier_com_part1(Gref_buffer, num_trunc_atoms, Ginp, global_atom_id, communicator)
     !! distributes the Ginp
     use ChunkIndex_mod, only: getRankAndLocalIndex
     use one_sided_commZ_mod, only: exposeBufferZ, copyChunksNoSyncZ, hideBufferZ
@@ -584,10 +584,10 @@ module KKRmat_mod
     use one_sided_commZ_mod, only: fenceZ
 #endif
     include 'mpif.h'
-    double complex, allocatable, intent(out) :: Gref_buffer(:,:,:,:,:)
-    integer, intent(in) :: naez ! = size(nacls)
-    double complex, intent(in) :: Ginp(:,:,0:,:,:)
-    integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> global atom index
+    double complex, allocatable, intent(out) :: Gref_buffer(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_trunc_atoms)
+    integer, intent(in) :: num_trunc_atoms ! ToDo: remove from interface
+    double complex, intent(in) :: Ginp(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms)
+    integer, intent(in) :: global_atom_id(:) !> dim(num_trunc_atoms) mapping trunc. index -> global atom index
     integer, intent(in) :: communicator
 
     ! locals
@@ -597,34 +597,35 @@ module KKRmat_mod
     integer :: win, nranks, ierr
     integer :: naez_max
     
-    num_local_atoms = size(Ginp, 4)
-    ASSERT(naez == size(global_atom_id))
-    lmmaxd = size(Ginp, 1)
-    ASSERT(lmmaxd == size(Ginp, 2))
-    nLly = size(Ginp, 3)
-    naclsd = size(Ginp, 4)
+    ASSERT( num_trunc_atoms == size(global_atom_id) )
+    lmmaxd          = size(Ginp, 1)
+    ASSERT( lmmaxd == size(Ginp, 2) )
+    nLly            = size(Ginp, 3)
+    naclsd          = size(Ginp, 4)
+    num_local_atoms = size(Ginp, 5)
 
     ! Note: some MPI implementations might need the use of MPI_Alloc_mem
-    if (any(shape(Gref_buffer) /= [lmmaxd,lmmaxd,nLly,naclsd,naez])) then
+    if (any(shape(Gref_buffer) /= [lmmaxd,lmmaxd,nLly,naclsd,num_trunc_atoms])) then
       deallocate(Gref_buffer, stat=ist)
-      allocate(Gref_buffer(lmmaxd,lmmaxd,0:nLly-1,naclsd,naez), stat=ist)
+      allocate(Gref_buffer(lmmaxd,lmmaxd,0:nLly-1,naclsd,num_trunc_atoms), stat=ist)
       ! Note: some MPI implementations might need the use of MPI_Alloc_mem
-      if (ist /= 0) die_here("failed to allocate Gref_buffer in referenceFourier_com_part1 with"+(lmmaxd*lmmaxd*nLly*naclsd*.5**26*naez)+"GiByte") 
+      if (ist /= 0) die_here("failed to allocate Gref_buffer in referenceFourier_com_part1 with"+(lmmaxd*lmmaxd*nLly*naclsd*.5**26*num_trunc_atoms)+"GiByte") 
     endif ! shape matches
 
     if (num_local_atoms == 1) then
       ! this version using point-to-point MPI communication is so far only implemented for 1 atom per process
-      call referenceFourier_mpi_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
-      return
+!     call referenceFourier_mpi_part1(Gref_buffer, num_trunc_atoms, Ginp, global_atom_id, communicator)
+!     return
+      warn(6, "referenceFourier_mpi_part1 is not called")
     endif
     
     call MPI_Comm_size(communicator, nranks, ierr)
 
 #ifdef NO_LOCKS_MPI
     ! get maximum number of atoms of all truncation zones
-    call MPI_Allreduce(naez, naez_max, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+    call MPI_Allreduce(num_trunc_atoms, naez_max, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
 #else
-    naez_max = naez
+    naez_max = num_trunc_atoms
 #endif
 
     ! share Ginp with all other processes in 'communicator'
@@ -635,7 +636,7 @@ module KKRmat_mod
 
 #ifdef NO_LOCKS_MPI
       call fenceZ(win)
-      if (site_index <= naez) then
+      if (site_index <= num_trunc_atoms) then
 #endif
 
         atom_requested = global_atom_id(site_index)
@@ -643,7 +644,7 @@ module KKRmat_mod
 
 #ifdef NO_LOCKS_MPI
         call copyChunksNoSyncZ(Gref_buffer(:,:,:,site_index), win, chunk_inds, lmmaxd*lmmaxd*nLly*naclsd)
-      endif ! site_index <= naez
+      endif ! site_index <= num_trunc_atoms
       
       call fenceZ(win) ! ensures that data has arrived in Gref_buffer
 #else
@@ -672,39 +673,39 @@ module KKRmat_mod
   subroutine referenceFourier_mpi(Grefk, sparse, kpoint, alat, RR, cluster, Ginp, global_atom_id, comm)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     use ClusterInfo_mod, only: ClusterInfo
-    double complex, intent(out) :: Grefk(:,:,:,0:)
+    double complex, intent(out) :: Grefk(:,:,:,:) !> dim(lmsa,lmsd,nnzb,0:Lly)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
     double precision, intent(in) :: RR(:,0:)
     type(ClusterInfo), intent(in) :: cluster
-    double complex, intent(in) :: Ginp(:,:,0:,:,:)
+    double complex, intent(in) :: Ginp(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms)
     integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> atom index
     integer, intent(in) :: comm
 
     ! locals
-    integer :: num_local_atoms, naez, naclsd, lmmaxd, nLly, ist
-    double complex, allocatable :: Gref_buffer(:,:,:,:,:)
+    integer :: num_local_atoms, num_trunc_atoms, naclsd, lmmaxd, nLly, ist
+    double complex, allocatable :: Gref_buffer(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_trunc_atoms)
     integer, parameter :: TAGMOD = 2**15
     include 'mpif.h'
 
-    naez = cluster%naez_trc
-    ASSERT( naez == size(global_atom_id) )
+    num_trunc_atoms = cluster%naez_trc
+    ASSERT( num_trunc_atoms == size(global_atom_id) )
 #ifdef IDENTICAL_REF
-    naez = 1
+    num_trunc_atoms = 1
 #endif
-    lmmaxd = size(Ginp, 1)
+    lmmaxd          = size(Ginp, 1)
     ASSERT( lmmaxd == size(Ginp, 2) )
-    nLly = size(Ginp, 3)
-    naclsd = size(Ginp, 4)
+    nLly            = size(Ginp, 3)
+    naclsd          = size(Ginp, 4)
     num_local_atoms = size(Ginp, 5)
 
     ASSERT( num_local_atoms == 1 ) ! only 1 atom per MPI process
 
     ! Note: some MPI implementations might need the use of MPI_Alloc_mem
-    allocate(Gref_buffer(lmmaxd,lmmaxd,0:nLly-1,naclsd,naez))
+    allocate(Gref_buffer(lmmaxd,lmmaxd,0:nLly-1,naclsd,num_trunc_atoms))
     
-    call referenceFourier_mpi_part1(Gref_buffer, naez, Ginp, global_atom_id, comm)
+    call referenceFourier_mpi_part1(Gref_buffer, Ginp, global_atom_id, comm)
 
     call referenceFourier_part2(Grefk, sparse, kpoint, alat, RR, cluster, Gref_buffer)
 
@@ -715,17 +716,17 @@ module KKRmat_mod
     !! this operation will be performed for every k-point and does not include MPI communication
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     use ClusterInfo_mod, only: ClusterInfo
-    double complex, intent(out) :: Grefk(:,:,:,0:)
+    double complex, intent(out) :: Grefk(:,:,:,:) !> dim(lmsa,lmsd,nnzb,0:Lly)
     type(SparseMatrixDescription), intent(in) :: sparse
     double precision, intent(in) :: kpoint(3)
     double precision, intent(in) :: alat
     double precision, intent(in) :: RR(:,0:)
     type(ClusterInfo), intent(in) :: cluster
-    double complex, intent(in) :: Gref_buffer(:,:,0:,:,:)
+    double complex, intent(in) :: Gref_buffer(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_trunc_atoms)
 
     ! locals
     integer :: site_index, ist
-    double complex, allocatable :: eikRR(:,:) ! Bloch phase factors
+    double complex, allocatable :: eikRR(:,:) !> dim(0:1,0:nr) Bloch phase factors
     
     ASSERT ( size(Gref_buffer, 2) == size(Gref_buffer, 1) )
     ASSERT ( size(Gref_buffer, 4) >= cluster%naclsd )
@@ -756,11 +757,10 @@ module KKRmat_mod
 
   
 
-  subroutine referenceFourier_mpi_part1(Gref_buffer, num_trunc_atoms, Ginp, global_atom_id, comm)
+  subroutine referenceFourier_mpi_part1(Gref_buffer, Ginp, global_atom_id, comm)
     use ChunkIndex_mod, only: getRankAndLocalIndex
-    double complex, intent(out) :: Gref_buffer(:,:,0:,:,:) !> dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_trunc_atoms)
-    double complex, intent(in)  :: Ginp(:,:,0:,:,:)        !< dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms)
-    integer, intent(in) :: num_trunc_atoms ! ToDo: remove from interface
+    double complex, intent(out) :: Gref_buffer(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_trunc_atoms)
+    double complex, intent(in)  :: Ginp(:,:,:,:,:)        !< dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms)
     integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> atom index
     integer, intent(in) :: comm
 
@@ -771,21 +771,21 @@ module KKRmat_mod
     ! locals
     integer(kind=4) :: chunk_inds(2,1)
     integer :: site_index, naclsd, nLly, lmmaxd, ist
-    integer :: num_local_atoms, atom_requested
+    integer :: num_local_atoms, num_trunc_atoms, atom_requested
     integer :: rank, tag, myrank, nranks, ierr, ncount
     integer, allocatable :: reqs(:,:), stats(:,:,:)
     integer, parameter :: TAGMOD = 2**15
     include 'mpif.h'
 
-    ASSERT( num_trunc_atoms == size(global_atom_id) )
-    lmmaxd = size(Ginp, 1)
+    lmmaxd          = size(Ginp, 1)
     ASSERT( lmmaxd == size(Ginp, 2) )
-    nLly = size(Ginp, 3)
-    naclsd = size(Ginp, 4)
+    nLly            = size(Ginp, 3)
+    naclsd          = size(Ginp, 4)
     num_local_atoms = size(Ginp, 5)
+    num_trunc_atoms = size(Gref_buffer, 5)
+    ASSERT( num_trunc_atoms == size(global_atom_id) )
 
     ASSERT( num_local_atoms == 1 ) ! only 1 atom per MPI process
-    ASSERT( num_trunc_atoms == size(Gref_buffer, 4) )
 
     call MPI_Comm_size(comm, nranks, ierr)
     call MPI_Comm_rank(comm, myrank, ierr)
@@ -878,7 +878,7 @@ module KKRmat_mod
     use SparseMatrixDescription_mod, only: SparseMatrixDescription
     use ClusterInfo_mod, only: ClusterInfo
     ! assume a block sparse row matrix description
-    double complex, intent(inout) :: smat(:,:,:,0:) !< dim(lmsmaxd,lmsmaxd,nnzb,0:Lly)
+    double complex, intent(inout) :: smat(:,:,:,0:) !< dim(lmsd,lmsd,nnzb,0:Lly)
     integer, intent(in) :: isa !> local_atom_index of the source atom
     type(SparseMatrixDescription), intent(in) :: sparse
     double complex, intent(in) :: eikRR(0:,0:) ! (0=m:1=p,0:nr-1)
