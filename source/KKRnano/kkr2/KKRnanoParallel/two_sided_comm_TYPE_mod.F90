@@ -41,6 +41,9 @@
 
 module two_sided_comm_TYPE_mod
 ! use ChunkIndex_mod, only: getRankAndLocalIndex
+
+#define assert(condition) if(.not. (condition)) stop __LINE__
+
   implicit none
   private
   
@@ -79,12 +82,12 @@ module two_sided_comm_TYPE_mod
     type(DataExchangeTable), intent(out) :: self
     integer, intent(in) :: max_local_atoms
     integer, intent(in) :: natoms ! number of atoms inside the truncation zone
-    integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> global atom index
+    integer, intent(in) :: global_atom_id(:) !> mapping trunc index -> global atom index
     integer, intent(in) :: comm
 
     ! locals
     integer(kind=4), allocatable :: chunk_inds(:,:) ! dim(2,natoms) 
-    integer :: itrunc, ilocal, rank, tag, myrank, nranks, ierr, ist
+    integer :: iout, iinp, rank, tag, myrank, nranks, ierr, ist
     integer(kind=4) :: gid ! global atom id
     integer, parameter :: TAGMOD = 2**15
     integer, allocatable :: nrecv(:), nsend(:), temp_recv_index(:)
@@ -107,23 +110,23 @@ module two_sided_comm_TYPE_mod
     
     ! loop over the sites sending the information
     nreq(:) = 0
-    do itrunc = 1, natoms
-      gid = global_atom_id(itrunc) ! get the global atom id
+    do iout = 1, natoms
+      gid = global_atom_id(iout) ! get the global atom id
 
 !     rank = (gid - 1)/max_local_atoms ! block distribution of atoms to ranks
-      chunk_inds(:,itrunc) = getRankAndLocalIndex(gid, max_local_atoms*nranks, nranks)
-      rank   = chunk_inds(1,itrunc) ! remote rank
-      ilocal = chunk_inds(2,itrunc) ! local index on remote rank
+      chunk_inds(:,iout) = getRankAndLocalIndex(gid, max_local_atoms*nranks, nranks)
+      rank   = chunk_inds(1,iout) ! remote rank
+      iinp = chunk_inds(2,iout) ! local index on remote rank
       
       nreq(rank) = nreq(rank) + 1 ! add one request
-    enddo ! itrunc
+    enddo ! iout
     
     
     nPairs = count(nreq > 0)
     allocate(self%pair2rank(nPairs))
     allocate(rank2pair(0:nranks-1)) ; rank2pair(:) = -1
     
-    assert(sum(nreq) == natoms)
+    assert( sum(nreq) == natoms )
     self%recv_n = natoms
 
     ! create prefix sum
@@ -141,27 +144,27 @@ module two_sided_comm_TYPE_mod
         inz = inz + nreq(rank)
       endif
     enddo ! rank
-    assert(inz == self%recv_n)
+    assert( inz == self%recv_n )
     self%recv_start(nPairs + 1) = self%recv_n + 1
 
     deallocate(nreq, stat=ist) ! ignore status
 
     allocate(nrecv(nPairs)) ; nrecv(:) = 0
-    do itrunc = 1, natoms
-      rank   = chunk_inds(1,itrunc) ! remote rank
-      ilocal = chunk_inds(2,itrunc) ! local index on remote rank
+    do iout = 1, natoms
+      rank   = chunk_inds(1,iout) ! remote rank
+      iinp = chunk_inds(2,iout) ! local index on remote rank
       
       ipair = rank2pair(rank)
-      assert(ipair > 0) ! this pair must exist, otherwise we made a fatal error
+      assert( ipair > 0 ) ! this pair must exist, otherwise we made a fatal error
       
       inz = self%recv_start(ipair) + nrecv(ipair)
       nrecv(ipair) = nrecv(ipair) + 1 ! create a new request
       
-      temp_recv_index(inz) = ilocal ! store the local owner index in remote sender rank which I want to receive
-      self%recv_index(inz) = itrunc
+      temp_recv_index(inz) = iinp ! store the local owner index in remote sender rank which I want to receive
+      self%recv_index(inz) = iout
 
-!     self%recv_index(inz) = global_atom_id(itrunc) ! get the global atom id, needed for DEBUG only
-!     self%recv_size(inz)  = nacls_trunc(itrunc) ! ToDo
+!     self%recv_index(inz) = global_atom_id(iout) ! get the global atom id, needed for DEBUG only
+!     self%recv_size(inz)  = nacls_trunc(iout) ! ToDo
     enddo ! atoms
 
     deallocate(chunk_inds, stat=ist) ! ignore status
@@ -198,10 +201,10 @@ module two_sided_comm_TYPE_mod
       self%send_start(ipair) = inz + 1
       inz = inz + nsend(ipair)
     enddo ! ipair
-    assert(inz == self%send_n)
+    assert( inz == self%send_n )
     self%send_start(nPairs + 1) = self%send_n + 1
 
-    ! communicate lists of ilocal-indices
+    ! communicate lists of iinp-indices
     reqs(:,:) = MPI_REQUEST_NULL
     do ipair = 1, nPairs
       rank = self%pair2rank(ipair)
@@ -225,14 +228,14 @@ module two_sided_comm_TYPE_mod
   elemental subroutine destroy_DataExchangeTable(self)
     type(DataExchangeTable), intent(inout) :: self
     integer :: ist
-    self%comm = MPI_COMM_NULL
+    self%comm = 0
     self%nPairs = 0
     self%recv_n = 0
     self%send_n = 0
     deallocate(self%pair2rank, self%recv_start, self%recv_index, self%send_start, self%send_index, stat=ist)
 !   deallocate(self%send_size, self%recv_size, stat=ist) ! ignore status
   endsubroutine ! destroy
-  
+
   
   subroutine reference_sys_com(self, Gout, Ginp)
     ! In order to implement point-to-point communication also with max_local_atoms > 1,
@@ -245,15 +248,21 @@ module two_sided_comm_TYPE_mod
     NUMBER_TYPE, intent(out) :: Gout(:,:,:,:) !> dim(lmmaxd,lmmaxd,naclsd,num_trunc_atoms)
     NUMBER_TYPE, intent(in)  :: Ginp(:,:,:,:) !< dim(lmmaxd,lmmaxd,naclsd,num_local_atoms)
     
-    integer, allocatable :: reqs(:,:), stats(:,:,:)
-    integer :: ncount, ipair, rank, tag, ierr
-    include 'mpif.h'
+    integer, allocatable :: rreq(:), sreq(:), rstats(:,:), sstats(:,:)
+    integer :: ncount, ipair, rank, tag, ierr, ist, inz, iinp, iout
+    include 'mpif.h' ! only: MPI_STATUS_SIZE, MPI_INTEGER, MPI_REQUEST_NULL
 
+    assert( self%comm /= 0 )
+    
     ncount = size(Ginp(:,:,:,1))
-    assert(all(shape(Ginp(:,:,:,1) == shape(Gout(:,:,:,1)))
+    do ist = 1, 3
+      assert( size(Ginp, ist) == size(Gout, ist) )
+    enddo ! ist
     
     allocate(rreq(self%recv_n), rstats(MPI_STATUS_SIZE,self%recv_n), &
              sreq(self%send_n), sstats(MPI_STATUS_SIZE,self%send_n), stat=ist)
+    rreq(:) = MPI_REQUEST_NULL
+    sreq(:) = MPI_REQUEST_NULL
 
     ! now communication works like this
     do ipair = 1, self%npairs
@@ -261,16 +270,16 @@ module two_sided_comm_TYPE_mod
       
       do inz = self%send_start(ipair), self%send_start(ipair + 1) - 1
         tag = inz - self%send_start(ipair)
-        ilocal = self%send_index(inz)
+        iinp = self%send_index(inz)
         ! ncount = size(Ginp, 1)*size(Ginp, 2)*self%send_size(inz) ! ToDo
-        call MPI_Isend(Ginp(:,:,:,ilocal), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, sreq(inz), ierr)
+        call MPI_Isend(Ginp(:,:,:,iinp), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, sreq(inz), ierr)
       enddo ! inz
 
       do inz = self%recv_start(ipair), self%recv_start(ipair + 1) - 1
         tag = inz - self%recv_start(ipair)
-        itrunc = self%recv_index(inz)
+        iout = self%recv_index(inz)
         ! ncount = size(Gout, 1)*size(Gout, 2)*self%recv_size(inz) ! ToDo
-        call MPI_Irecv(Gout(:,:,:,itrunc), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, rreq(inz), ierr)
+        call MPI_Irecv(Gout(:,:,:,iout), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, rreq(inz), ierr)
       enddo ! inz
 
     enddo ! ipair

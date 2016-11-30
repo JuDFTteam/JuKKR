@@ -15,12 +15,14 @@ module KKRmat_mod
   use arraytest2_mod, only: !import no name here, just mention it for the module dependency
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
+  
   implicit none
   private
   public :: MultipleScattering
 
   double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
   
+
   contains
 
   !------------------------------------------------------------------------------
@@ -45,6 +47,8 @@ module KKRmat_mod
     use TimerMpi_mod, only: TimerMpi, startTimer, stopTimer
     use fillKKRMatrix_mod, only: getGreenDiag ! retrieve result
     use MPI, only: MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD!, MPI_Allreduce 
+    
+    use two_sided_comm_TYPE_mod, only: DataExchangeTable, create, reference_sys_com!, destroy
 
     type(IterativeSolver), intent(inout) :: solver
     type(KKROperator), intent(inout) :: op
@@ -54,8 +58,8 @@ module KKRmat_mod
     double precision, intent(in) :: kpoints(:,:) !< list of k-points dim(3,nkpoints)
     double precision, intent(in) :: kpointweight(:) !< k-point weights dim(nkpoints)
 
-    double complex, intent(out) :: GS(:,:,:) ! dim(lmmaxd,lmmaxd,num_local_atoms) result
-    double complex, intent(in) :: tmatLL(:,:,:) ! dim(lmmaxd,lmmaxd,naez_trc)
+    double complex, intent(out) :: GS(:,:,:) ! dim(lmsmaxd,lmsmaxd,num_local_atoms) result
+    double complex, intent(in) :: tmatLL(:,:,:) ! dim(lmsmaxd,lmsmaxd,naez_trc)
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat ! needed only for Jij-calculation and Lloyds formula
     double precision, intent(in) :: RR(:,0:)
@@ -67,7 +71,7 @@ module KKRmat_mod
 
     !LLY
     double complex, intent(in)   :: mssq (:,:,:)    !< inverted T-matrix
-    double complex, intent(inout) :: dGinp(:,:,:,:)  !< dG_ref/dE dim(lmmaxd,lmmaxd,naclsd,num_local_atoms)
+    double complex, intent(in)   :: dGinp(:,:,:,:)  !< dG_ref/dE dim(lmmaxd,lmmaxd,naclsd,num_local_atoms)
     double complex, intent(in)   :: dtde(:,:,:)     !< dT/dE
     double complex, intent(in)   :: tr_alph(:) 
     double complex, intent(out)  :: lly_grdt
@@ -79,19 +83,21 @@ module KKRmat_mod
     type(TimerMpi), intent(inout) :: kpoint_timer, kernel_timer
 
     ! locals
-    double complex, allocatable :: G_diag(:,:) ! dim(lmmaxd,lmmaxd)
+    double complex, allocatable :: G_diag(:,:) ! dim(lmsmaxd,lmsmaxd)
     double complex :: bztr2, trace ! LLY
-    integer :: num_local_atoms, naez, ikpoint, ila, ierr, lmmaxd, ist!, naclsd
+    integer :: num_local_atoms, naez, ikpoint, ila, ierr, ist, lmsmaxd, nd(5)
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
+    logical, save :: init_commTable = .false.
+    type(DataExchangeTable), save :: commTable
+
     ! needs more memory
-    double complex, allocatable :: Gref_buffer(:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
-    double complex, allocatable :: dGref_buffer(:,:,:,:) ! LLY
+    double complex, allocatable :: Gref_buffer(:,:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
 #endif
 
     ! array dimensions
     naez = op%cluster%naez_trc
-    lmmaxd = size(GS, 2)
+    lmsmaxd = size(GS, 2)
     num_local_atoms = size(op%atom_indices)
 
     ! WARNING: Symmetry assumptions might have been used that are
@@ -109,13 +115,27 @@ module KKRmat_mod
     call reset(solver%stats)
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
+    if (.not. init_commTable) then
+      call create(commTable, num_local_atoms, naez, global_atom_id, communicator)
+      init_commTable = .true.
+    endif
+
+!     ! get the required reference Green functions from the other MPI processes
+!     call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
+!     if (Lly == 1) & ! LLY
+!       call referenceFourier_com_part1(dGref_buffer, naez, dGinp, global_atom_id, communicator)
+
+    nd(1:4) = shape(Ginp) ! ToDo maybe also here, we can move the Lly dimension to be 3rd instead of two different arrays
+    allocate(Gref_buffer(nd(1),nd(2),nd(3),naez,0:Lly), stat=ist) ! ToDo: move 0:Lly to be the 3rd dimension
+    if (ist /= 0) die_here("failed to allocate Gref_buffer with"+(product(nd(1:3))*.5**26*naez*(1+Lly))+"GiByte for reference_sys_com") 
+
     ! get the required reference Green functions from the other MPI processes
-    call referenceFourier_com_part1(Gref_buffer, naez, Ginp, global_atom_id, communicator)
+    call reference_sys_com(commTable, Gref_buffer(:,:,:,:,0), Ginp)
     if (Lly == 1) & ! LLY
-      call referenceFourier_com_part1(dGref_buffer, naez, dGinp, global_atom_id, communicator)
+      call reference_sys_com(commTable, Gref_buffer(:,:,:,:,Lly), dGinp)
 #endif
 
-    allocate(G_diag(lmmaxd,lmmaxd))
+    allocate(G_diag(lmsmaxd,lmsmaxd))
     !==============================================================================
     do ikpoint = 1, nkpoints ! K-POINT-LOOP
     !==============================================================================
@@ -127,7 +147,7 @@ module KKRmat_mod
       ! output: op%mat_X
       call kloopbody(solver, op, preconditioner, kpoints(1:3,ikpoint), tmatLL, alat, RR, &
 #ifdef SPLIT_REFERENCE_FOURIER_COM
-                     Gref_buffer, dGref_buffer, &
+                     Gref_buffer(:,:,:,:,0), Gref_buffer(:,:,:,:,Lly), &
 #else
                      Ginp, dGinp, global_atom_id, communicator, &
 #endif
@@ -150,7 +170,7 @@ module KKRmat_mod
         ila = op%atom_indices(1) ! convert to default integer kind
         call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, naez, ila, &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
-                    op%mat_X(:,:,1), global_jij_data%GSXIJ, communicator, lmmaxd, global_jij_data%nxijd)
+                    op%mat_X(:,:,1), global_jij_data%GSXIJ, communicator, lmsmaxd, global_jij_data%nxijd)
                     stop __LINE__ ! invalid argument is passed, data layout of mat_X has changed
       endif ! jij
 
@@ -161,7 +181,6 @@ module KKRmat_mod
     
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     deallocate(Gref_buffer, stat=ist) ! ignore status
-    deallocate(dGref_buffer, stat=ist) ! LLY, ignore status
 #endif
     deallocate(G_diag, stat=ist) ! ignore status
 
