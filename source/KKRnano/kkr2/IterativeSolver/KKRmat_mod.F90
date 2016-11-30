@@ -48,7 +48,8 @@ module KKRmat_mod
     use fillKKRMatrix_mod, only: getGreenDiag ! retrieve result
     use MPI, only: MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD!, MPI_Allreduce 
     
-    use two_sided_comm_TYPE_mod, only: DataExchangeTable, create, reference_sys_com!, destroy ! ToDo: when is the commTable destroyed?
+    use ExchangeTable_mod, only: ExchangeTable, create, destroy ! ToDo: when is the xTable destroyed?
+    use two_sided_commZ_mod, only: reference_sys_comZ
 
     type(IterativeSolver), intent(inout) :: solver
     type(KKROperator), intent(inout) :: op
@@ -63,8 +64,7 @@ module KKRmat_mod
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat ! needed only for Jij-calculation and Lloyds formula
     double precision, intent(in) :: RR(:,0:)
-!   double complex, intent(inout) :: Ginp(:,:,:,:) ! dim(lmmaxd,lmmaxd,naclsd,num_local_atoms)
-    double complex, intent(inout) :: Ginp(:,:,0:,:,:) ! dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms)
+    double complex, intent(inout) :: Ginp(:,:,0:,:,:) ! dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms), contains dG_ref/dE if Lly>0
     integer, intent(in) :: global_atom_id(:) ! dim(num_trunc_atoms)
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
@@ -72,7 +72,6 @@ module KKRmat_mod
 
     !LLY
     double complex, intent(in)   :: mssq (:,:,:)    !< inverted T-matrix
-!   double complex, intent(in)   :: dGinp(:,:,:,:)  !< dG_ref/dE dim(lmmaxd,lmmaxd,naclsd,num_local_atoms)
     double complex, intent(in)   :: dtde(:,:,:)     !< dT/dE
     double complex, intent(in)   :: tr_alph(:) 
     double complex, intent(out)  :: lly_grdt
@@ -89,8 +88,8 @@ module KKRmat_mod
     integer :: num_local_atoms, num_trunc_atoms, ikpoint, ila, ierr, ist, lmsd, nd(5)
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
-    logical, save :: init_commTable = .false.
-    type(DataExchangeTable), save :: commTable
+    logical, save :: init_xTable = .false.
+    type(ExchangeTable), save :: xTable
 
     ! needs more memory
     double complex, allocatable :: Gref_buffer(:,:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
@@ -116,22 +115,20 @@ module KKRmat_mod
     call reset(solver%stats)
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
-    if (.not. init_commTable) then
-      call create(commTable, num_local_atoms, num_trunc_atoms, global_atom_id, communicator)
-      init_commTable = .true.
+    if (.not. init_xTable) then
+      call create(xTable, num_local_atoms, num_trunc_atoms, global_atom_id, communicator)
+      init_xTable = .true.
     endif
 
 !     ! get the required reference Green functions from the other MPI processes
 !     call referenceFourier_com_part1(Gref_buffer, num_trunc_atoms, Ginp, global_atom_id, communicator)
-!     if (Lly == 1) & ! LLY
-!       call referenceFourier_com_part1(dGref_buffer, num_trunc_atoms, dGinp, global_atom_id, communicator)
 
     nd = shape(Ginp) ! ToDo maybe also here, we can move the Lly dimension to be 3rd instead of two different arrays
     allocate(Gref_buffer(nd(1),nd(2),0:nd(3)-1,nd(4),num_trunc_atoms), stat=ist) ! ToDo: move 0:Lly to be the 3rd dimension
     if (ist /= 0) die_here("failed to allocate Gref_buffer with"+(product(nd(1:4))*.5**26*num_trunc_atoms)+"GiByte for reference_sys_com") 
 
     ! get the required reference Green functions from the other MPI processes
-    call reference_sys_com(commTable, Gref_buffer, Ginp)
+    call reference_sys_comZ(xTable, product(nd(1:4)), Gref_buffer, Ginp)
 #endif
 
     allocate(G_diag(lmsd,lmsd))
