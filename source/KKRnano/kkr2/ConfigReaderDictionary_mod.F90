@@ -51,7 +51,7 @@ module ConfigReaderDictionary_mod
     if (present(message)) write(*,*) message
 
     stop
-  endsubroutine
+  endsubroutine ! fatal
 
   subroutine createDictionary(this)
     type(Dictionary), intent(inout) :: this
@@ -64,7 +64,7 @@ module ConfigReaderDictionary_mod
 
     allocate(this%dict(INITIAL_SIZE), stat=ierror)
     if (ierror /= 0) call fatalErrorDictionary()
-  endsubroutine createDictionary
+  endsubroutine ! create
 
 
   !----------------------------------------------------------------------------
@@ -123,7 +123,7 @@ module ConfigReaderDictionary_mod
     
     this%counter = this%counter + 1 ! increment the counter
 
-  endsubroutine
+  endsubroutine ! pushBack
 
 
   !----------------------------------------------------------------------------
@@ -149,7 +149,7 @@ module ConfigReaderDictionary_mod
       endif
     enddo ! ind
     
-  endsubroutine
+  endsubroutine ! get
 
   !----------------------------------------------------------------------------
   !> This routine can be used to find variables that have never been looked up.
@@ -183,7 +183,7 @@ module ConfigReaderDictionary_mod
 
     next_ptr = ind + 1
 
-  endsubroutine
+  endsubroutine ! get
 
   !> output of dictionary content to stdout
   !> useful for testing purposes
@@ -202,16 +202,13 @@ module ConfigReaderDictionary_mod
   !> Frees resources used by dictionary.
   !>
   !> This routine has to be called after use of the dictionary
-  subroutine destroyDictionary(this)
+  elemental subroutine destroyDictionary(this)
     type(Dictionary), intent(inout) :: this
 
-    integer :: ierror
+    integer :: ist ! ignore status
+!   if (.not. allocated(this%dict)) call fatalErrorDictionary("Dictionary was already destroyed.")
+    deallocate(this%dict, stat=ist)
+!   if (ist /= 0) call fatalErrorDictionary()
+  endsubroutine ! destroy
 
-    if (.not. allocated(this%dict)) &
-      call fatalErrorDictionary("Dictionary was already destroyed.")
-
-    deallocate(this%dict, stat=ierror)
-    if (ierror /= 0) call fatalErrorDictionary()
-  endsubroutine destroyDictionary
-
-endmodule ConfigReaderDictionary_mod
+endmodule ! ConfigReaderDictionary_mod

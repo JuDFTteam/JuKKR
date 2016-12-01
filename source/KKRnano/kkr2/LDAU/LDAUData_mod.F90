@@ -101,18 +101,11 @@ module LDAUData_mod
   !-----------------------------------------------------------------------------
   !> Destroys a LDAUData object.
   !> @param[inout] self    The LDAUData object to destroy.
-  subroutine destroyLDAUData(self)
+  elemental subroutine destroyLDAUData(self)
     type(LDAUData), intent(inout) :: self
 
-    integer :: memory_stat
-
-    DEALLOCATECHECK(self%phildau)
-    DEALLOCATECHECK(self%dmatldau)
-    DEALLOCATECHECK(self%uldau)
-    DEALLOCATECHECK(self%jldau)
-    DEALLOCATECHECK(self%umldau)
-    DEALLOCATECHECK(self%wmldau)
-    DEALLOCATECHECK(self%lldau)
+    integer :: ist
+    deallocate(self%phildau, self%dmatldau, self%uldau, self%jldau, self%umldau, self%wmldau, self%lldau, stat=ist) ! ignore status
   endsubroutine ! destroy
 
 endmodule ! LDAUData_mod

@@ -12,9 +12,7 @@
 ! they are used.
 
 #define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
-#define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
-#define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module Main2Arrays_mod
   implicit none
@@ -61,19 +59,6 @@ module Main2Arrays_mod
   contains
 
   !-----------------------------------------------------------------------------
-  !> Constructs a Main2Arrays object.
-  !> @param[in,out] self    The Main2Arrays object to construct.
-  !> @param[in]    dims    Dimension parameters
-  subroutine createMain2Arrays(self, dims)
-    use DimParams_mod, only: DimParams
-    type(Main2Arrays), intent(inout) :: self
-    type(DimParams), intent(in) :: dims
-
-    call createMain2ArraysImpl(self, dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)    
-
-  endsubroutine ! create
-
-  !-----------------------------------------------------------------------------
   !> Constructs a Main2Arrays object. (implementation, don't call directly!)
   !> @param[in,out] self    The Main2Arrays object to construct.
   !> @param[in]    iemxd
@@ -81,7 +66,7 @@ module Main2Arrays_mod
   !> @param[in]    naez
   !> @param[in]    kpoibz
   !> @param[in]    maxmshd
-  subroutine createMain2ArraysImpl(self, lmmaxd, naez, kpoibz, maxmshd)
+  subroutine createMain2Arrays(self, lmmaxd, naez, kpoibz, maxmshd)
     type(Main2Arrays), intent(inout) :: self
     integer, intent(in) :: lmmaxd, naez, kpoibz, maxmshd
     
@@ -117,10 +102,11 @@ module Main2Arrays_mod
   !-----------------------------------------------------------------------------
   !> Destroys a Main2Arrays object.
   !> @param[in,out] self    The Main2Arrays object to destroy.
-  subroutine destroyMain2Arrays(self)
+  elemental subroutine destroyMain2Arrays(self)
     type(Main2Arrays), intent(inout) :: self
 
-    integer :: memory_stat
+    integer :: ist ! ignore status
+#define DEALLOCATECHECK(X) deallocate(X, stat=ist)
 
     DEALLOCATECHECK(self%dsymll)
     DEALLOCATECHECK(self%rbasis)
@@ -129,7 +115,6 @@ module Main2Arrays_mod
     DEALLOCATECHECK(self%volbz)
     DEALLOCATECHECK(self%nofks)
     DEALLOCATECHECK(self%zat)
-    
   endsubroutine ! destroy
 
   !-----------------------------------------------------------------------------
@@ -176,7 +161,7 @@ module Main2Arrays_mod
               self%volbz, &
               self%nofks, &
               self%zat, &
-              self%nsymat, & ! write some scalars too
+              self%nsymat, & ! read some scalars too
               self%maxmesh
     close(fu)
 

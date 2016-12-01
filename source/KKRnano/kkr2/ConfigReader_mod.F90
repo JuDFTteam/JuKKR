@@ -81,12 +81,11 @@ module ConfigReader_mod
 
 
 !---------------------------------------------------------------------
-  subroutine destroyConfigReader(this)
+  elemental subroutine destroyConfigReader(this)
     use ConfigReaderDictionary_mod, only: destroy
     type(ConfigReader), intent(inout) :: this
 
     call destroy(this%parse_dict)
-
   endsubroutine ! destroy
 
 !---------------------------------------------------------------------

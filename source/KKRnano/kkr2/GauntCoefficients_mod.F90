@@ -11,9 +11,7 @@
 ! they are used.
 
 #define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
-#define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=ist); CHECKALLOC(ist)
-#define DEALLOCATECHECK(X) deallocate(X, stat=ist); CHECKDEALLOC(ist)
 
 module GauntCoefficients_mod
   implicit none
@@ -40,14 +38,14 @@ module GauntCoefficients_mod
     module procedure destroyGauntCoefficients
   endinterface
   
-  !ncleb = (2*lmaxd+1)**2 * (lmaxd+1)**2
+  ! ncleb = (2*lmaxd+1)**2 * (lmaxd+1)**2
 
   contains
 
   !----------------------------------------------------------------------------
-  subroutine createGauntCoefficients(coeff, lmax)
+  subroutine createGauntCoefficients(self, lmax)
     use Harmonics_mod, only: Gaunt, Gaunt2 ! initialization of wg and yrg
-    type(GauntCoefficients), intent(inout) :: coeff
+    type(GauntCoefficients), intent(inout) :: self
     integer, intent(in) :: lmax
     
     integer :: ist
@@ -60,39 +58,33 @@ module GauntCoefficients_mod
     lm2d = (2*lmax+1)**2
     lmpotd = (lpot+1) ** 2
 
-    coeff%lmax = lmax
-    coeff%ncleb = ncleb
+    self%lmax = lmax
+    self%ncleb = ncleb
 
-    ALLOCATECHECK(coeff%cleb(ncleb,2))
-    ALLOCATECHECK(coeff%icleb(ncleb,3))
-    ALLOCATECHECK(coeff%jend(lmpotd,0:lmax,0:lmax))
-    ALLOCATECHECK(coeff%loflm(lm2d))
+    ALLOCATECHECK(self%cleb(ncleb,2))
+    ALLOCATECHECK(self%icleb(ncleb,3))
+    ALLOCATECHECK(self%jend(lmpotd,0:lmax,0:lmax))
+    ALLOCATECHECK(self%loflm(lm2d))
     
-    coeff%cleb = 0.d0
-    coeff%icleb = -1
-    coeff%jend = -1
-    coeff%loflm = -1
+    self%cleb = 0.d0
+    self%icleb = -1
+    self%jend = -1
+    self%loflm = -1
 
     ALLOCATECHECK(wg(lassld))
     ALLOCATECHECK(yrg(lassld,0:lassld,0:lassld))
 
     call Gaunt2(wg, yrg, lmax)
-    call Gaunt(lmax, lpot, wg, yrg, coeff%cleb, coeff%loflm, coeff%icleb, coeff%iend, coeff%jend, coeff%ncleb)
+    call Gaunt(lmax, lpot, wg, yrg, self%cleb, self%loflm, self%icleb, self%iend, self%jend, self%ncleb)
 
-    DEALLOCATECHECK(wg)
-    DEALLOCATECHECK(yrg)
-
+    deallocate(wg, yrg, stat=ist)
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyGauntCoefficients(coeff)
-    type(GauntCoefficients), intent(inout) :: coeff
-    integer :: ist
-    
-    DEALLOCATECHECK(coeff%CLEB)
-    DEALLOCATECHECK(coeff%ICLEB)
-    DEALLOCATECHECK(coeff%JEND)
-    DEALLOCATECHECK(coeff%LOFLM)
+  elemental subroutine destroyGauntCoefficients(self)
+    type(GauntCoefficients), intent(inout) :: self
+    integer :: ist ! ignore status
+    deallocate(self%cleb, self%icleb, self%jend, self%loflm, stat=ist)
   endsubroutine ! destroy
 
-endmodule GauntCoefficients_mod
+endmodule ! GauntCoefficients_mod

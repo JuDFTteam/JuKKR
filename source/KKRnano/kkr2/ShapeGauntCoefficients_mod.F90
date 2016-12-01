@@ -41,11 +41,11 @@ module ShapeGauntCoefficients_mod
   contains
 
   !----------------------------------------------------------------------------
-  subroutine createShapeGauntCoefficients(coeff, lmax)
+  subroutine createShapeGauntCoefficients(self, lmax)
     use Harmonics_mod, only: Gaunt2 ! initialization of wg and yrg
     use Harmonics_mod, only: SHAPEG_count
     use Harmonics_mod, only: SHAPEG
-    type(ShapeGauntCoefficients), intent(inout) :: coeff
+    type(ShapeGauntCoefficients), intent(inout) :: self
     integer, intent(in) :: lmax
     !---------------------------
     integer :: memory_stat
@@ -61,8 +61,8 @@ module ShapeGauntCoefficients_mod
 
     LMPOTD = (LPOT+1) ** 2
 
-    coeff%lmax = lmax
-    coeff%lmpotd = LMPOTD
+    self%lmax = lmax
+    self%lmpotd = LMPOTD
 
     ALLOCATECHECK(WG(LASSLD))
     ALLOCATECHECK(YRG(LASSLD,0:LASSLD,0:LASSLD))
@@ -70,17 +70,17 @@ module ShapeGauntCoefficients_mod
     call GAUNT2(WG, YRG, lmax)
     call SHAPEG_count(LPOT, WG, YRG, LMAX, NGSHD) ! determine number of coefficients
 
-    ALLOCATECHECK(coeff%GSH(NGSHD))
-    ALLOCATECHECK(coeff%ILM(NGSHD,3))
-    ALLOCATECHECK(coeff%IMAXSH(0:LMPOTD))
+    ALLOCATECHECK(self%GSH(NGSHD))
+    ALLOCATECHECK(self%ILM(NGSHD,3))
+    ALLOCATECHECK(self%IMAXSH(0:LMPOTD))
 
-    coeff%GSH = 0.0d0
-    coeff%ILM = -1
-    coeff%IMAXSH = -1
+    self%GSH = 0.0d0
+    self%ILM = -1
+    self%IMAXSH = -1
 
-    call SHAPEG(LPOT, coeff%GSH, coeff%ILM, coeff%IMAXSH, WG, YRG, LMAX, NGSHD)
+    call SHAPEG(LPOT, self%GSH, self%ILM, self%IMAXSH, WG, YRG, LMAX, NGSHD)
 
-    coeff%NGSHD = NGSHD
+    self%NGSHD = NGSHD
 
     DEALLOCATECHECK(WG)
     DEALLOCATECHECK(YRG)
@@ -88,13 +88,10 @@ module ShapeGauntCoefficients_mod
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyShapeGauntCoefficients(coeff)
-    type(ShapeGauntCoefficients), intent(inout) :: coeff
-    integer :: memory_stat
-
-    DEALLOCATECHECK(coeff%GSH)
-    DEALLOCATECHECK(coeff%ILM)
-    DEALLOCATECHECK(coeff%IMAXSH)
+  elemental subroutine destroyShapeGauntCoefficients(self)
+    type(ShapeGauntCoefficients), intent(inout) :: self
+    integer :: ist ! ignore status
+    deallocate(self%GSH, self%ILM, self%IMAXSH, stat=ist)
   endsubroutine ! destroy
 
-endmodule ShapeGauntCoefficients_mod
+endmodule ! ShapeGauntCoefficients_mod

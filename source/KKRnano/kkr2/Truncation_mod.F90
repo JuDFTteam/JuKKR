@@ -1,7 +1,7 @@
 
 ! JUST FOR TESTING purposes
 ! replace by proper implementation
-module TEST_lcutoff_mod
+module Truncation_mod
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
 #include "DebugHelpers/logging_macros.h"
@@ -10,7 +10,7 @@ module TEST_lcutoff_mod
   implicit none
   private
 
-  public :: initLcutoffNew
+  public :: initTruncation
 
 #ifndef ell_int_t
 #define ell_int_t integer(kind=1)
@@ -20,36 +20,38 @@ module TEST_lcutoff_mod
   ell_int_t, allocatable, protected, public :: lmax_a_array(:,:) ! ell_max for each atom-atom pair
   ell_int_t, allocatable, protected, public :: lmax_array(:) ! ell_max for each atom in the truncation region
 
-  integer, protected, public :: num_truncated(-1:8)
+  integer, allocatable, protected, public :: num_nonzero(:) ! dim(num_local_atoms)
+  integer, allocatable, protected, public :: num_elements(:) ! dim(num_local_atoms)
+  integer, protected, public :: num_truncated(-1:9)
 
   contains
+  
+#define useStatistics
 
   !----------------------------------------------------------------------------
-  subroutine initLcutoffNew(trunc_zone, atom_ids, arrays, lcutoff_radii, cutoff_radius, communicator)
-    use Main2Arrays_mod, only: Main2Arrays
+  subroutine initTruncation(self, atom_ids, lmax, bravais, rbasis, lcutoff_radii, cutoff_radius, comm)
     use TruncationZone_mod, only: TruncationZone, create
-#define useStatistics
+
 #ifdef  useStatistics
-!     use Statistics_mod, only: add, allreduce, eval
-!     integer(kind=8), allocatable :: sum_stats(:,:), max_stats(:,:)
     use Statistics_mod, only: SimpleStats, init, add, allreduce, eval
     type(SimpleStats) :: stats(1)
 #endif
 
-    type(TruncationZone), intent(inout) :: trunc_zone
-    type(Main2Arrays), intent(in) :: arrays
+    type(TruncationZone), intent(inout) :: self
+    integer, intent(in) :: lmax
+    double precision, intent(in) :: bravais(3,3)
+    double precision, intent(in) :: rbasis(:,:)
     integer, intent(in) :: atom_ids(:) !< list of global atom IDs
     double precision, intent(in) :: lcutoff_radii(0:) !< 
     double precision, intent(in) :: cutoff_radius !< 
-    integer, intent(in) :: communicator
+    integer, intent(in) :: comm
     
     double precision, parameter :: R_active = 1.e-6 ! truncation radii below this are inactive
-    integer :: naez, lmax, atomindex, ila, num_local_atoms, ist, nradii, ell
+    integer :: naez, atomindex, ila, num_local_atoms, ist, nradii, ell
     ell_int_t, allocatable :: lmax_atom(:,:), lmax_full(:)
     ell_int_t :: l_lim(9), ellmax
     double precision :: r2lim(9)
 
-    lmax = 0; do while ((lmax + 1)**2 < arrays%lmmaxd); lmax = lmax + 1; enddo ! find back global lmax
     ellmax = lmax ! convert to ell_int_t
 
     l_lim = -1
@@ -74,7 +76,7 @@ module TEST_lcutoff_mod
     l_lim = min(l_lim, ellmax) ! never higher than this
 
     num_local_atoms = size(atom_ids)
-    naez = size(arrays%rbasis, 2)
+    naez = size(rbasis, 2)
     allocate(lmax_full(naez), lmax_atom(naez,num_local_atoms), stat=ist)
     if (ist /= 0) die_here("allocation of masks failed, requested"+(naez*.5**20*(num_local_atoms + 1))+"MiByte")
     
@@ -89,7 +91,7 @@ module TEST_lcutoff_mod
 
       if (nradii > 0) then
         ! compute truncation zones
-        call calcCutoffarray(lmax_atom(:,ila), l_lim, r2lim, arrays%rbasis, arrays%rbasis(:,atomindex), arrays%bravais, nradii)
+        call calcCutoffarray(lmax_atom(:,ila), l_lim, r2lim, rbasis, rbasis(:,atomindex), bravais, nradii)
         lmax_atom(atomindex,ila) = ellmax ! diagonal element is always full
       else
         lmax_atom(:,ila) = ellmax ! init as full interaction, no truncation
@@ -112,7 +114,7 @@ module TEST_lcutoff_mod
     enddo ! ila
     
 #ifdef  useStatistics    
-    ist = allreduce(stats, communicator)
+    ist = allreduce(stats, comm)
     WRITELOG(0,*) "truncation stats: ",trim(eval(stats(1)))
 #endif
 
@@ -121,21 +123,24 @@ module TEST_lcutoff_mod
       num_truncated(ell) = count(lmax_full == ell)
     enddo ! ell
 
-    call create(trunc_zone, mask=lmax_full, masks=lmax_atom)
+    call create(self, mask=lmax_full)
 
-    allocate(lmax_array(trunc_zone%naez_trc)) ! lmax_array is never deallocated - who cares
-    lmax_array(:) = lmax_full(trunc_zone%global_atom_id(:)) ! compression to cluster atoms only
+    allocate(lmax_array(self%naez_trc)) ! lmax_array is never deallocated - who cares
+    lmax_array(:) = lmax_full(self%global_atom_id(:)) ! compression to cluster atoms only
 
     ! also store the information for each local atom in module vars
-    allocate(lmax_a_array(trunc_zone%naez_trc,num_local_atoms)) ! todo: deallocate somewhen
+    allocate(num_nonzero(num_local_atoms), num_elements(num_local_atoms))
+    allocate(lmax_a_array(self%naez_trc,num_local_atoms)) ! todo: deallocate somewhen
     do ila = 1, num_local_atoms
-      lmax_a_array(:,ila) = lmax_atom(trunc_zone%global_atom_id(:),ila) ! compression to cluster atoms only
+      lmax_a_array(:,ila) = lmax_atom(self%global_atom_id(:),ila) ! compression to cluster atoms only
+      num_nonzero(ila) = count(lmax_a_array(:,ila) >= 0)
+      num_elements(ila) = sum((lmax_a_array(:,ila) + 1)**2)
     enddo ! ila
 
     if( .not. all(lmax_array == maxval(lmax_a_array, dim=2)) ) die_here('masks are inconsistent')
 
     deallocate(lmax_atom, lmax_full, stat=ist) ! ignore status
-  endsubroutine ! initLcutoffNew
+  endsubroutine ! initTruncation
 
   
   !----------------------------------------------------------------------------
@@ -206,4 +211,4 @@ module TEST_lcutoff_mod
 
   endfunction ! distance squared
 
-endmodule ! TEST_lcutoff_mod
+endmodule ! Truncation_mod

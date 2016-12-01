@@ -49,7 +49,7 @@ module KKROperator_mod
 
   subroutine create_KKROperator(self, cluster, lmmaxd, atom_indices, Lly)
     use bsrmm_mod, only: bsr_times_bsr ! planning
-    use TEST_lcutoff_mod, only: lmax_a_array
+    use Truncation_mod, only: lmax_a_array
     use fillKKRMatrix_mod, only: getKKRMatrixStructure, getKKRSolutionStructure, getRightHandSideStructure
     use SparseMatrixDescription_mod, only: SparseMatrixDescription, subset
 
@@ -108,7 +108,7 @@ module KKROperator_mod
   endsubroutine ! create
 
 
-  subroutine destroy_KKROperator(self)
+  elemental subroutine destroy_KKROperator(self)
     use SparseMatrixDescription_mod, only: destroy
     type(KKROperator), intent(inout) :: self
 

@@ -51,6 +51,7 @@ module InitialGuess_mod
     ekmd = self%ek_offsets(nk+1) ! == sum of all
 
     ! only allocate storage if prec flag is set
+    ist = 0
     self%prec = 0
     if (prec == 1) then
       allocate(self%prsc(datasize,ekmd,nspin), stat=ist)
@@ -61,6 +62,7 @@ module InitialGuess_mod
       self%prsz = 0.d0
       self%prec = 2
     endif
+    if (ist /= 0) write(*,'(9(2a,f0.6))') __FILE__," failed to allocated memory: ",datasize*0.5d0**27*ekmd*nspin*self%prec," GiByte"
 
   endsubroutine ! create
 
@@ -94,11 +96,10 @@ module InitialGuess_mod
     endif
   endsubroutine ! save
 
-  subroutine destroyInitialGuess(self)
+  elemental subroutine destroyInitialGuess(self)
     type(InitialGuess), intent(inout) :: self
-    
-    integer :: ist
-    deallocate(self%prsc, self%prsz, self%ek_offsets, stat=ist) ! ignore status
+    integer :: ist ! ignore status
+    deallocate(self%prsc, self%prsz, self%ek_offsets, stat=ist)
   endsubroutine ! destroy
 
 endmodule ! InitialGuess_mod

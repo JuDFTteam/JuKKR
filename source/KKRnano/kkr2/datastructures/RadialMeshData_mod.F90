@@ -121,10 +121,10 @@ module RadialMeshData_mod
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyRadialMeshData(self)
+  elemental subroutine destroyRadialMeshData(self)
     type(RadialMeshData), intent(inout) :: self
 
-    integer :: ist
+    integer :: ist ! ignore status
     deallocate(self%R, self%DRDI, self%IRCUT, stat=ist)
 #ifdef USE_OLD_MESH
     deallocate(self%LLMSP, self%THETAS, stat=ist)

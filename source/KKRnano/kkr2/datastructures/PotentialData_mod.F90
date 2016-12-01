@@ -71,7 +71,7 @@ module PotentialData_mod
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyPotentialData(potential)
+  elemental subroutine destroyPotentialData(potential)
     type(PotentialData), intent(inout) :: potential
 
     deallocate(potential%vins)

@@ -60,7 +60,7 @@ module ClusterInfo_mod
   !> The cluster information is communicated within each truncation zone
   !>
   !> @param ref_clusters    all the local ref. clusters
-  subroutine createClusterInfo(self, ref_clusters, trunc_zone, communicator)
+  subroutine createClusterInfo(self, ref_clusters, trunc_zone, communicator, xTable)
 #ifdef ClusterInfoStatistics
     use Statistics_mod, only: SimpleStats, init, add, allreduce, eval
 #endif    
@@ -68,9 +68,8 @@ module ClusterInfo_mod
     use TruncationZone_mod, only: TruncationZone
 !   use one_sided_commI_mod, only: copyFromI_com
     use ExchangeTable_mod, only: ExchangeTable
-    use ExchangeTable_mod, only: create, destroy
+!   use ExchangeTable_mod, only: create, destroy
     use two_sided_commI_mod, only: reference_sys_com
-    type(ExchangeTable) :: xTable
     
     include 'mpif.h'
 
@@ -78,6 +77,7 @@ module ClusterInfo_mod
     type(RefCluster), intent(in)        :: ref_clusters(:)
     type(TruncationZone), intent(in)    :: trunc_zone
     integer, intent(in)                 :: communicator
+    type(ExchangeTable), intent(in)     :: xTable
 
     integer :: ita, newn0, ila, ineqv, ist
     integer :: nacls, numn0, naclsd, numn0d, num_local_atoms, num_trunc_atoms, blocksize
@@ -142,9 +142,9 @@ module ClusterInfo_mod
     ! communication
 !   call copyFromI_com(recv_buf, send_buf, trunc_zone%global_atom_id, blocksize, num_local_atoms, communicator)
     
-    call create(xTable, trunc_zone%global_atom_id, communicator, max_local_atoms=num_local_atoms)
+!     call create(xTable, trunc_zone%global_atom_id, communicator, max_local_atoms=num_local_atoms)
     call reference_sys_com(xTable, blocksize, send_buf, recv_buf)
-    call destroy(xTable)
+!     call destroy(xTable)
     
     ! prepare data structure arrays
     DEALLOCATECHECK(send_buf)

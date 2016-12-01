@@ -3,9 +3,7 @@
 ! they are used.
 
 #define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
-#define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
-#define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 !> Energy contributions of one atom.
 module EnergyResults_mod
@@ -84,16 +82,10 @@ module EnergyResults_mod
   !-----------------------------------------------------------------------------
   !> Destroys a EnergyResults object.
   !> @param[in,out] self    The EnergyResults object to destroy.
-  subroutine destroyEnergyResults(self)
+  elemental subroutine destroyEnergyResults(self)
     type(EnergyResults), intent(inout) :: self
-
-    integer :: memory_stat
-
-    DEALLOCATECHECK(self%ecou)
-    DEALLOCATECHECK(self%espc)
-    DEALLOCATECHECK(self%espv)
-    DEALLOCATECHECK(self%exc)
-    DEALLOCATECHECK(self%ac_madelung)
+    integer :: ist ! ignore status
+    deallocate(self%ecou, self%espc, self%espv, self%exc, self%ac_madelung, stat=ist)
   endsubroutine ! destroy
 
-endmodule
+endmodule ! EnergyResults_mod

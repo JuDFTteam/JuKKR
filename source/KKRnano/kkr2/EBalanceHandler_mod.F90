@@ -196,15 +196,12 @@ module EBalanceHandler_mod
   !----------------------------------------------------------------------------
   !> Destroys EBalanceHandler.
   !> Call initEBalanceHandler before use
-  subroutine destroyEBalanceHandler(balance)
+  elemental subroutine destroyEBalanceHandler(balance)
     type(EBalanceHandler), intent(inout) :: balance
 
-    integer :: memory_stat
-
-    DEALLOCATECHECK(balance%eproc)
-    DEALLOCATECHECK(balance%eproc_old)
-    DEALLOCATECHECK(balance%etime)
-  endsubroutine
+    integer :: ist
+    deallocate(balance%eproc, balance%eproc_old, balance%etime, stat=ist) ! ignore status
+  endsubroutine ! destroy
 
 
 !==============================================================================

@@ -118,8 +118,8 @@ module KKRzero_mod
 
     dims%iemxd = getEnergyMeshSize(params%npol, [params%npnt1, params%npnt2, params%npnt3], params%npntsemi)
     call create(emesh, dims%iemxd)
-    
-    call create(arrays, dims) ! important: determine IEMXD before creating arrays
+
+    call create(arrays, dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)
 
     call rinputnew99(arrays%rbasis, arrays%zat, dims%naez) ! will modify naez if naez == 0 (auto mode)
     arrays%naez = dims%naez ! store corrected number of all atoms also in arrays%

@@ -12,27 +12,27 @@ module DebugCheckArrayI_mod
 
   contains
 
-  subroutine createDebugCheckArrayI(debug_array, array_to_check, num_elements, array_name)
-    type(DebugCheckArrayI), intent(inout) :: debug_array
+  subroutine createDebugCheckArrayI(self, array_to_check, num_elements, array_name)
+    type(DebugCheckArrayI), intent(inout) :: self
     integer, intent(in) :: array_to_check(num_elements)
     integer, intent(in) :: num_elements
     character(len=*), intent(in) :: array_name
 
     integer :: ii
     
-    allocate(debug_array%array_data(num_elements))
+    allocate(self%array_data(num_elements))
 
-    debug_array%num_elements = num_elements
-    debug_array%array_name = array_name
+    self%num_elements = num_elements
+    self%array_name = array_name
 
     do ii = 1, num_elements
-      debug_array%array_data(ii) = array_to_check(ii)  
+      self%array_data(ii) = array_to_check(ii)  
     enddo ! ii
 
   endsubroutine
 
-  logical function testDebugCheckArrayI(debug_array, array_to_check, fail_message)
-    type(DebugCheckArrayI), intent(in) :: debug_array
+  logical function testDebugCheckArrayI(self, array_to_check, fail_message)
+    type(DebugCheckArrayI), intent(in) :: self
     integer, intent(in) :: array_to_check(*) ! accept any array
     character(len=*), intent(in), optional :: fail_message
 
@@ -40,13 +40,13 @@ module DebugCheckArrayI_mod
 
     testDebugCheckArrayI = .false.
 
-    do ii = 1, debug_array%num_elements
-      if (debug_array%array_data(ii) /= array_to_check(ii)) then
+    do ii = 1, self%num_elements
+      if (self%array_data(ii) /= array_to_check(ii)) then
         write(*,*) "testDebugCheckArrayI: Arrays do not match. Element ", ii
         if (present(fail_message)) then
-          write(*,*) debug_array%array_name, fail_message
+          write(*,*) self%array_name, fail_message
         else
-          write(*,*) debug_array%array_name 
+          write(*,*) self%array_name 
         endif
         return
       endif  
@@ -56,11 +56,11 @@ module DebugCheckArrayI_mod
 
   endfunction
 
-  subroutine destroyDebugCheckArrayI(debug_array)
-    type(DebugCheckArrayI), intent(inout) :: debug_array
-    
-    deallocate(debug_array%array_data)
-  endsubroutine
+  elemental subroutine destroyDebugCheckArrayI(self)
+    type(DebugCheckArrayI), intent(inout) :: self
+    integer :: ist
+    deallocate(self%array_data, stat=ist) ! ignore status
+  endsubroutine ! destroy
   
 endmodule
 

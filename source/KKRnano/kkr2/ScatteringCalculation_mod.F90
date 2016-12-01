@@ -404,7 +404,7 @@ implicit none
     integer(kind=2), intent(in) :: atom_indices(:) !< indices of atoms treated at once
 
     call create(kkr_op, cluster_info, lmmaxd, atom_indices, dims%Lly)
-    
+
     if (dims%bcpd == 1) then
       ! set the solver options for BCP preconditioner
       call create(precond, dims%natbld, [dims%xdim, dims%ydim, dims%zdim], cluster_info, lmmaxd)
@@ -412,7 +412,7 @@ implicit none
     else
       call create(solv, qmrbound, kkr_op) ! register sparse matrix and preconditioner at solver
     endif
-    
+
   endsubroutine ! setup_solver
 
   !------------------------------------------------------------------------------
@@ -469,7 +469,7 @@ implicit none
     enddo ! ell
 
     allocate(uTu_sum(lmmaxd,lmmaxd), uT(lmmaxd,lmmaxd))
-    !------------------------------------------------- SYMMETRISE TMATN
+    !------------------------------------------------- SYMMETRISE TmatN
     uTu_sum(:,:) = TmatN(:,:) ! copy, since the 1st entry is the unity operation, start loop from 2
     do isym = 2, nsymat
       call zgemm('n', 'n', lmmaxd, lmmaxd, lmmaxd, cone, dsymLL(1,1,isym), lmmaxd, TmatN, lmmaxd, zero, uT, lmmaxd)
@@ -478,7 +478,7 @@ implicit none
 
     denom = 1.d0/dble(nsymat)
     TmatN(:,:) = uTu_sum(:,:)*denom ! average
-    !------------------------------------------------- SYMMETRISE TMATN
+    !------------------------------------------------- SYMMETRISE TmatN
     deallocate(uTu_sum, uT, stat=ist) ! ignore status
   endsubroutine ! subtract
 

@@ -11,20 +11,17 @@ module TruncationZone_mod
   private
   public :: TruncationZone, create, destroy
 
-#ifndef trunc_index_t
+!!! indices into rbasis(1:3,:)
+#define global_atom_id_t integer(kind=4)
+
+!!! indices inside the truncation zone
 #define trunc_index_t integer(kind=2)
-#endif
-
-#ifndef global_ID_type
-#define global_ID_type integer(kind=4)
-#endif
-
 
   type TruncationZone
     integer :: naez_trc = 0 !> number of atoms in truncation zone
     integer :: naez_all = 0 !> number of all atoms in the system
     trunc_index_t, allocatable :: trunc_atom_idx(:) !> map atom index to truncation zone atom index (-1 == not in truncation zone == OUTSIDE)
-    global_ID_type, allocatable :: global_atom_id(:) !> map truncation zone atom index to atom index ("inverse" of trunc_atom_idx)
+    global_atom_id_t, allocatable :: global_atom_id(:) !> map truncation zone atom index to atom index ("inverse" of trunc_atom_idx)
   endtype
 
   interface create
@@ -38,24 +35,23 @@ module TruncationZone_mod
   integer, parameter, private :: OUTSIDE = -1 ! must be -1 in C-language, could be 0 in Fortran
 
 #ifndef NDEBUG
-  global_ID_type, allocatable, protected, public :: global_atom_id(:) ! see above
+  global_atom_id_t, allocatable, protected, public :: global_atom_id(:) ! see above. This array is accessible from everywhere for debug purposes
 #endif
 
-  contains
-  
+!!! ell quantum numbers
 #ifndef ell_int_t
 #define ell_int_t integer(kind=1)
 #endif
 
-  subroutine createTruncationZone(self, mask, masks)
+  contains
+
+  subroutine createTruncationZone(self, mask)
     type(TruncationZone), intent(inout) :: self
     ell_int_t, intent(in) :: mask(:)
-    ell_int_t, intent(in), optional :: masks(:,:) !> one mask per local atom, dim(naez_all,num_local_atoms)
 
     integer :: memory_stat
-    global_ID_type :: gid
+    global_atom_id_t :: gid
     trunc_index_t  :: idx
-    integer(kind=8), parameter :: Two = 2
     
     self%naez_all = size(mask)
     if (self%naez_all > huge(gid)) stop 'integer-kind not sufficient for global_atom_id in TruncationZone_mod.F90!' ! value range exceeded
@@ -85,11 +81,6 @@ module TruncationZone_mod
     allocate(global_atom_id(self%naez_trc))
     global_atom_id(:) = self%global_atom_id(:) ! make a copy that we can use for DEBUG purposes by use TruncationZone_mod, only: global_atom_id
 #endif
-
-    ! if (.not. present(masks)) return
-    ! this must hold: (mask(:) >= 0) .eqv. any(masks >= 0, dim=2)
-    !
-    ! ToDo: use masks to determine more
 
   endsubroutine ! create
   

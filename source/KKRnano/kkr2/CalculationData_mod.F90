@@ -24,6 +24,7 @@ module CalculationData_mod
   use TruncationZone_mod, only: TruncationZone, create, destroy
   use InitialGuess_mod, only: InitialGuess, create, destroy
   use LatticeVectors_mod, only: LatticeVectors, create, destroy
+  use ExchangeTable_mod, only: ExchangeTable, create, destroy
   
   implicit none
   private
@@ -63,6 +64,7 @@ module CalculationData_mod
     type(GauntCoefficients)             :: gaunts
     type(TruncationZone)                :: trunc_zone
     type(ClusterInfo)                   :: clusters
+    type(ExchangeTable)                 :: xtable
     type(BroydenData)                   :: broyden
     type(InitialGuess)                  :: iguess_data ! storage for initial guess
   endtype ! CalculationData
@@ -164,46 +166,45 @@ module CalculationData_mod
   endsubroutine ! prepare Madelung
 
   !----------------------------------------------------------------------------
-  subroutine destroyCalculationData(self)
+  elemental subroutine destroyCalculationData(self)
     type(CalculationData), intent(inout) :: self
 
-    integer :: ila
+    integer :: ist ! ignore status
     
-    do ila = 1, self%num_local_atoms
+    call destroy(self%ref_cluster_a)
+    call destroy(self%madelung_sum_a)
+    call destroy(self%atomdata_a)
+    call destroy(self%cell_a)
+    call destroy(self%mesh_a)
+    call destroy(self%ldau_data_a)
+    call destroy(self%jij_data_a)
+    call destroy(self%densities_a)
+    call destroy(self%kkr_a)
+    call destroy(self%energies_a)
 
-      call destroy(self%ref_cluster_a(ila))
-      call destroy(self%madelung_sum_a(ila))
-      call destroy(self%atomdata_a(ila))
-      call destroy(self%cell_a(ila))
-      call destroy(self%mesh_a(ila))
-      call destroy(self%ldau_data_a(ila))
-      call destroy(self%jij_data_a(ila))
-      call destroy(self%densities_a(ila))
-      call destroy(self%kkr_a(ila))
-      call destroy(self%energies_a(ila))
+!   deallocate(self%a)
 
-    enddo ! ila
-    
-!     deallocate(self%a)
-    
     call destroy(self%lattice_vectors)
     call destroy(self%madelung_calc)
-    call destroy(self%gaunts)
     call destroy(self%shgaunts)
+    call destroy(self%gaunts)
+    call destroy(self%trunc_zone)
+    call destroy(self%clusters)
+    call destroy(self%xtable)
     call destroy(self%broyden)
     call destroy(self%iguess_data)
 
-    deallocate(self%mesh_a)
-    deallocate(self%cell_a)
-    deallocate(self%atomdata_a)
-    deallocate(self%ref_cluster_a)
-    deallocate(self%kkr_a)
-    deallocate(self%densities_a)
-    deallocate(self%energies_a)
-    deallocate(self%madelung_sum_a)
-    deallocate(self%ldau_data_a)
-    deallocate(self%jij_data_a)
-    deallocate(self%atom_ids)
+    deallocate(self%mesh_a, stat=ist)
+    deallocate(self%cell_a, stat=ist)
+    deallocate(self%atomdata_a, stat=ist)
+    deallocate(self%ref_cluster_a, stat=ist)
+    deallocate(self%kkr_a, stat=ist)
+    deallocate(self%densities_a, stat=ist)
+    deallocate(self%energies_a, stat=ist)
+    deallocate(self%madelung_sum_a, stat=ist)
+    deallocate(self%ldau_data_a, stat=ist)
+    deallocate(self%jij_data_a, stat=ist)
+    deallocate(self%atom_ids, stat=ist)
     
   endsubroutine ! destroy
 
@@ -260,7 +261,7 @@ module CalculationData_mod
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
-    use TEST_lcutoff_mod, only: num_truncated, initLcutoffNew                
+    use Truncation_mod, only: num_truncated, initTruncation                
     
     type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in)  :: dims
@@ -282,9 +283,11 @@ module CalculationData_mod
     enddo ! ila
     !$omp endparallel do
 
-    call initLcutoffNew(self%trunc_zone, self%atom_ids, arrays, params%lcutoff_radii, params%cutoff_radius, mp%mySEComm) ! setup the truncation zone
+    call initTruncation(self%trunc_zone, self%atom_ids, dims%lmaxd, arrays%bravais, arrays%rbasis, params%lcutoff_radii, params%cutoff_radius, mp%mySEComm) ! setup the truncation zone
 
-    call create(self%clusters, self%ref_cluster_a, self%trunc_zone, mp%mySEComm) ! createClusterInfo
+    call create(self%xtable, self%trunc_zone%global_atom_id, comm=mp%mySEComm, max_local_atoms=self%num_local_atoms) ! createExchangeTable
+
+    call create(self%clusters, self%ref_cluster_a, self%trunc_zone, mp%mySEComm, xTable=self%xtable) ! createClusterInfo
 
     if (mp%isMasterRank) then
       write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd
@@ -348,6 +351,7 @@ module CalculationData_mod
   subroutine setup_iguess(self, dims, nofks, kmesh)
     use DimParams_mod, only: DimParams
     use InitialGuess_mod, only: create
+    use Truncation_mod, only: num_elements
 
     type(CalculationData), intent(inout) :: self
     type(DimParams), intent(in) :: dims
@@ -358,12 +362,11 @@ module CalculationData_mod
     integer :: ie, blocksize, ns
     
 
-    ! DO NOT USE IGUESS together with l-cutoff!!! RS-cutoff is fine
-    blocksize = self%trunc_zone%naez_trc * self%num_local_atoms * dims%lmmaxd**2
+    blocksize = sum(num_elements(:)) ! ToDo: prepare this for noco
 
     allocate(num_k_points(dims%iemxd))
     do ie = 1, dims%iemxd
-      num_k_points(ie) = nofks(kmesh(ie)) !! cannot easily access emesh%kmesh, use the largest
+      num_k_points(ie) = nofks(kmesh(ie))
     enddo ! ie
 
     ns = 1; if (dims%smpid == 1 .and. dims%nspind == 2) ns = 2 ! no spin parallelisation choosen, processes must store both spin-directions

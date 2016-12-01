@@ -8,9 +8,7 @@
 ! they are used.
 
 #define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
-#define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
-#define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module KKRresults_mod
   implicit none
@@ -116,22 +114,22 @@ module KKRresults_mod
   !-----------------------------------------------------------------------------
   !> Destroys a KKRresults object.
   !> @param[inout] self    The KKRresults object to destroy.
-  subroutine destroyKKRresults(self)
+  elemental subroutine destroyKKRresults(self)
     type(KKRresults), intent(inout) :: self
 
-    integer :: memory_stat
+    integer :: ist
 
-    DEALLOCATECHECK(self%rMTref)
-    DEALLOCATECHECK(self%TmatN)
-    DEALLOCATECHECK(self%dTmatN)
-    DEALLOCATECHECK(self%tref_ell)
-    DEALLOCATECHECK(self%dtref_ell)
-    DEALLOCATECHECK(self%dGrefN)
-    DEALLOCATECHECK(self%GmatN)
-    DEALLOCATECHECK(self%Lly_G0Tr)
-    DEALLOCATECHECK(self%Lly_Grdt)
-    DEALLOCATECHECK(self%Tr_alph)
+    deallocate(self%rMTref, stat=ist)
+    deallocate(self%TmatN, stat=ist)
+    deallocate(self%dTmatN, stat=ist)
+    deallocate(self%tref_ell, stat=ist)
+    deallocate(self%dtref_ell, stat=ist)
+    deallocate(self%dGrefN, stat=ist)
+    deallocate(self%GmatN, stat=ist)
+    deallocate(self%Lly_G0Tr, stat=ist)
+    deallocate(self%Lly_Grdt, stat=ist)
+    deallocate(self%Tr_alph, stat=ist)
 
   endsubroutine ! destroy
 
-endmodule
+endmodule ! KKRresults_mod

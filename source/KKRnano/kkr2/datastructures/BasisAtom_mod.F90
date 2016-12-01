@@ -153,7 +153,7 @@ module BasisAtom_mod
   endsubroutine ! associate
 
   !----------------------------------------------------------------------------
-  subroutine destroyBasisAtom(self)
+  elemental subroutine destroyBasisAtom(self)
     type(BasisAtom), intent(inout) :: self
 
     nullify(self%cell_ptr)

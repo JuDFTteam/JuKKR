@@ -74,16 +74,11 @@ module BroydenData_mod
   !-----------------------------------------------------------------------------
   !> Destroys a BroydenData object.
   !> @param[inout] self    The BroydenData object to destroy.
-  subroutine destroyBroydenData(self)
+  elemental subroutine destroyBroydenData(self)
     type(BroydenData), intent(inout) :: self
 
-    integer :: memory_stat
-
-    DEALLOCATECHECK(self%sm1s)
-    DEALLOCATECHECK(self%fm1s)
-    DEALLOCATECHECK(self%ui2)
-    DEALLOCATECHECK(self%vi2)
-    DEALLOCATECHECK(self%wit)
+    integer :: ist ! ignore status
+    deallocate(self%sm1s, self%fm1s, self%ui2, self%vi2, self%wit, stat=ist)
   endsubroutine ! destroy
   
 endmodule ! BroydenData_mod

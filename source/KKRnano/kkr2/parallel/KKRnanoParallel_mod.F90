@@ -154,10 +154,9 @@ implicit none
   !--------------------------------------------------------------
   subroutine destroyKKRnanoParallel(self)
     include 'mpif.h'
-
     type(KKRnanoParallel), intent(inout) :: self
+    
     integer :: ierr
-
     if (self%mySEComm /= MPI_COMM_NULL) call MPI_Comm_free(self%mySEComm, ierr)
     call MPI_Comm_free(self%myActiveComm, ierr)
     call MPI_Finalize(ierr)

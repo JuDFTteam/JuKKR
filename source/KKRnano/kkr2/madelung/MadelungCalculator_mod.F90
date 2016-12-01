@@ -116,31 +116,31 @@ module MadelungCalculator_mod
   !> Has to be configured with a properly setup MadelungCalculator.
   !> The MadelungCalculator can be reused for several MadelungLatticeSums
   !> as long as the geometry and lmax does not change
-  subroutine createMadelungLatticeSum(madelung_sum, lmxspd, num_atoms)!, madelung_calc
-    type(MadelungLatticeSum), intent(inout) :: madelung_sum
+  subroutine createMadelungLatticeSum(self, lmxspd, num_atoms)
+    type(MadelungLatticeSum), intent(inout) :: self
     integer, intent(in) :: lmxspd, num_atoms
 
-    madelung_sum%num_atoms = num_atoms
-    allocate(madelung_sum%smat(lmxspd,num_atoms))
+    self%num_atoms = num_atoms
+    allocate(self%smat(lmxspd,num_atoms))
   endsubroutine ! create
 
   
   !----------------------------------------------------------------------------
   !> Destroys a MadelungCalculator object.
-  subroutine destroyMadelungCalculator(madelung_calc)
-    type(MadelungCalculator), intent(inout) :: madelung_calc
-
-    call destroyMadelungLatticeData(madelung_calc%lattice)
-    call destroyMadelungClebschData(madelung_calc%clebsch)
-    deallocate(madelung_calc%dfac)
+  elemental subroutine destroyMadelungCalculator(self)
+    type(MadelungCalculator), intent(inout) :: self
+    integer :: ist ! ignore status
+    call destroy(self%lattice)
+    call destroy(self%clebsch)
+    deallocate(self%dfac, stat=ist)
   endsubroutine ! destroy
   
   !----------------------------------------------------------------------------
   !> Destroys and frees storage of Madelung lattice sum.
-  subroutine destroyMadelungLatticeSum(madelung_sum)
-    type(MadelungLatticeSum), intent(inout) :: madelung_sum
-
-    deallocate(madelung_sum%smat)
+  elemental subroutine destroyMadelungLatticeSum(self)
+    type(MadelungLatticeSum), intent(inout) :: self
+    integer :: ist ! ignore status
+    deallocate(self%smat, stat=ist)
   endsubroutine ! destroy  
 
   !----------------------------------------------------------------------------
@@ -191,38 +191,37 @@ module MadelungCalculator_mod
 
 
   !----------------------------------------------------------------------------
-  subroutine createMadelungHarmonics(harmonics, lmax)
+  subroutine createMadelungHarmonics(self, lmax)
     use Harmonics_mod, only: Gaunt2 ! initialization of wg and yrg
-    type(MadelungHarmonics), intent(inout) :: harmonics
+    type(MadelungHarmonics), intent(inout) :: self
     integer, intent(in) :: lmax
 
     integer :: lassld, ist
 
     lassld = 4*lmax
-    if (harmonics%lassld == lassld) return ! already done
+    if (self%lassld == lassld) return ! already done
 
-    deallocate(harmonics%wg, harmonics%yrg, stat=ist)
-    allocate(harmonics%wg(lassld), harmonics%yrg(lassld,0:lassld,0:lassld), stat=ist)
+    deallocate(self%wg, self%yrg, stat=ist)
+    allocate(self%wg(lassld), self%yrg(lassld,0:lassld,0:lassld), stat=ist)
     if (ist /= 0) die_here("Allocation of YRG with lmax="-lassld+"failed!")
     
-    call gaunt2(harmonics%wg, harmonics%yrg, lmax)
+    call gaunt2(self%wg, self%yrg, lmax)
     
-    harmonics%lassld = lassld
+    self%lassld = lassld
   endsubroutine ! create
 
   !----------------------------------------------------------------------------
-  subroutine destroyMadelungHarmonics(harmonics)
-    type(MadelungHarmonics), intent(inout) :: harmonics
-
-    deallocate(harmonics%wg, harmonics%yrg)
+  elemental subroutine destroyMadelungHarmonics(self)
+    type(MadelungHarmonics), intent(inout) :: self
+    integer :: ist ! ignore status
+    deallocate(self%wg, self%yrg, stat=ist)
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
-  subroutine destroyMadelungLatticeData(lattice)
-    type(MadelungLatticeData), intent(inout) :: lattice
-
-    deallocate(lattice%gn, lattice%nsg)
-    deallocate(lattice%rm, lattice%nsr)
+  elemental subroutine destroyMadelungLatticeData(self)
+    type(MadelungLatticeData), intent(inout) :: self
+    integer :: ist ! ignore status
+    deallocate(self%gn, self%nsg, self%rm, self%nsr, stat=ist)
   endsubroutine ! destroy
  
   !----------------------------------------------------------------------------
@@ -262,10 +261,10 @@ module MadelungCalculator_mod
   endsubroutine ! create
   
   !----------------------------------------------------------------------------
-  subroutine destroyMadelungClebschData(self)
+  elemental subroutine destroyMadelungClebschData(self)
     type(MadelungClebschData), intent(inout) :: self
-
-    deallocate(self%cleb, self%loflm, self%icleb)
+    integer :: ist ! ignore status
+    deallocate(self%cleb, self%loflm, self%icleb, stat=ist)
   endsubroutine ! destroy
  
 

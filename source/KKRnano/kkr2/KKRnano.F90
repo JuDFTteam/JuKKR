@@ -40,7 +40,6 @@ program KKRnano
   
   use KKRzero_mod, only: main0
   use PotentialConverter_mod, only: kkrvform
-  use TEST_lcutoff_mod, only: num_truncated
   
   implicit none
 
@@ -149,7 +148,7 @@ program KKRnano
     write(2,'(79("="))') ! double separator line in time-info file
   endif ! master
 
-  call create(arrays, dims)
+  call create(arrays, dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)
   call load(arrays, 'bin.arrays') ! every process does this!
 
   call load(params, 'bin.input', ios=ios)
@@ -223,9 +222,6 @@ program KKRnano
     
     call createTimer(iteration_timer)
     if (mp%isMasterRank) write(2,'(79("="))') ! double separator line in time-info file
-
-    ! TODO: This is overdimensioned when l-cutoff is used!!!
-    if (mp%isMasterRank .and. num_truncated(dims%lmaxd) /= dims%naez) warn(6, "The memory for iGuess is overdimensioned!")
     
     ! start self-consistency loop   
     do iter = 1, params%SCFSTEPS

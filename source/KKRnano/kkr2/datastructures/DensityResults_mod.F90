@@ -3,9 +3,7 @@
 ! they are used.
 
 #define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
-#define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
-#define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
 
 module DensityResults_mod
 implicit none
@@ -88,19 +86,18 @@ implicit none
   !-----------------------------------------------------------------------------
   !> Destroys a DensityResults object.
   !> @param[in,out] self    The DensityResults object to destroy.
-  subroutine destroyDensityResults(self)
+  elemental subroutine destroyDensityResults(self)
     type(DensityResults), intent(inout) :: self
 
-    integer :: memory_stat
-
-    DEALLOCATECHECK(self%r2nef)
-    DEALLOCATECHECK(self%rho2ns)
-    DEALLOCATECHECK(self%charge)
-    DEALLOCATECHECK(self%cminst)
-    DEALLOCATECHECK(self%cmom)
-    DEALLOCATECHECK(self%catom)
-    DEALLOCATECHECK(self%den)
-    DEALLOCATECHECK(self%rnorm)
+    integer :: ist ! ignore status
+    deallocate(self%r2nef, stat=ist)
+    deallocate(self%rho2ns, stat=ist)
+    deallocate(self%charge, stat=ist)
+    deallocate(self%cminst, stat=ist)
+    deallocate(self%cmom, stat=ist)
+    deallocate(self%catom, stat=ist)
+    deallocate(self%den, stat=ist)
+    deallocate(self%rnorm, stat=ist)
   endsubroutine ! destroy
 
 endmodule ! DensityResults_mod
