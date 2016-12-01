@@ -89,8 +89,7 @@ implicit none
     integer :: lmmaxd
     logical :: xccpl
 
-    double complex, allocatable :: tmatLL(:,:,:) !< all t-matrices inside the truncation zone
-    double complex, allocatable :: dtmatLL(:,:,:) !< all t-matrices inside the truncation zone
+    double complex, allocatable :: tmatLL(:,:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
     double complex, allocatable :: GrefN_buffer(:,:,:,:,:) !< GrefN for all local atoms
 
@@ -106,8 +105,7 @@ implicit none
     num_local_atoms = calc%num_local_atoms
 
     
-    allocate(tmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for t-matrices
-    allocate(dtmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc)) ! allocate buffer for derivative of t-matrices, LLY
+    allocate(tmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc,0:dims%Lly)) ! allocate buffer for t-matrices
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GrefN_buffer(lmmaxd,lmmaxd,0:dims%Lly,calc%clusters%naclsd,num_local_atoms))
     allocate(atom_indices(num_local_atoms))
@@ -144,7 +142,7 @@ implicit none
     ! get the indices of atoms that shall be treated at once by the process
     ! = truncation zone indices of local atoms
     do ila = 1, num_local_atoms
-      atom_indices(ila) = calc%trunc_zone%local_atom_idx(calc%atom_ids(ila)) ! get global local truncation zone indices from global atom_ids 
+      atom_indices(ila) = calc%trunc_zone%trunc_atom_idx(calc%atom_ids(ila)) ! get global local truncation zone indices from global atom_ids 
       CHECKASSERT(atom_indices(ila) > 0)
     enddo ! ila
 
@@ -242,7 +240,7 @@ implicit none
   ! <<>> Multiple scattering part
 
             ! gather t-matrices from own truncation zone
-            call gatherTmatrices_com(calc, tmatLL, dtmatLL, ispin, mp%mySEComm)
+            call gatherTmatrices_com(calc, tmatLL, ispin, mp%mySEComm)
 
             TESTARRAYLOG(3, tmatLL)
 
@@ -258,7 +256,8 @@ implicit none
                     tmatLL, &
                     calc%trunc_zone%global_atom_id, mp%mySEComm, &
                     calc%iguess_data, IE, PRSPIN, &
-                    dtmatLL, kkr(1)%tr_alph, kkr(1)%Lly_grdt(ie,ispin), calc%atom_ids(1), dims%Lly, & ! LLY, note: num_local_atoms must be equal to 1 
+!                     dtmatLL, &
+                    kkr(1)%tr_alph, kkr(1)%Lly_grdt(ie,ispin), calc%atom_ids(1), dims%Lly, & ! LLY, note: num_local_atoms must be equal to 1 
                     params%solver, kpoint_timer, kernel_timer)
   !------------------------------------------------------------------------------
 
@@ -375,7 +374,7 @@ implicit none
 
     call cleanup_solver(solv, kkr_op, precond)
 
-    deallocate(tmatLL, dtmatLL, atom_indices, GrefN_buffer, GmatN_buffer, stat=ist) ! ignore status
+    deallocate(tmatLL, atom_indices, GrefN_buffer, GmatN_buffer, stat=ist) ! ignore status
 
   endsubroutine ! energyLoop
 
@@ -502,7 +501,7 @@ implicit none
     do lm2 = 1, lmmaxd
       do lm1 = 1, lm2 ! triangular loop including the diagonal
         tsst_local(lm1,lm2) = (tsst_local(lm1,lm2) + tsst_local(lm2,lm1))*rfctori
-        tsst_local(lm2,lm1) = tsst_local(lm1,lm2) ! symmetric under exchange lm1 <--> lm2
+        tsst_local(lm2,lm1) =  tsst_local(lm1,lm2) ! symmetric under exchange lm1 <--> lm2
       enddo ! lm1
     enddo ! lm2
     
@@ -512,39 +511,48 @@ implicit none
   !> Gather all t-matrices for 'ispin'-channel (from truncation zone only).
   !>
   !> Uses MPI-RMA
-  subroutine gatherTmatrices_com(calc, tmatLL, dtde, ispin, communicator)
+  subroutine gatherTmatrices_com(calc, tmatLL, ispin, communicator)
     use CalculationData_mod, only: CalculationData
     use KKRresults_mod, only: KKRresults
-    use one_sided_commZ_mod, only: copyFromZ_com
+!   use one_sided_commZ_mod, only: copyFromZ_com
+    
+    use two_sided_commZ_mod, only: reference_sys_com
+    use ExchangeTable_mod, only: ExchangeTable
+    use ExchangeTable_mod, only: create, destroy
+    type(ExchangeTable) :: xTable
 
     type(CalculationData), intent(in) :: calc
-    double complex, intent(inout) :: tmatLL(:,:,:)
-    double complex, intent(inout) :: dtde(:,:,:) ! LLY
+    double complex, intent(inout) :: tmatLL(:,:,:,0:) !> dim(lmmaxd,lmmaxd,num_local_atoms,0:Lly)
     integer, intent(in) :: ispin
     integer, intent(in) :: communicator
 
-    integer :: ila, num_local_atoms, lmmaxd, chunk_size
-    double complex, allocatable :: tsst_local(:,:,:)
-    double complex, allocatable :: dtsst_local(:,:,:) ! LLY
+    integer :: ila, num_local_atoms, lmmaxd, ist, chunk_size, iLly, nLly
+    double complex, allocatable :: tsst_local(:,:,:,:)
 
     num_local_atoms = calc%num_local_atoms
     lmmaxd = size(tmatLL, 1)
+    ASSERT(  size(tmatLL, 2) == lmmaxd )
+    ASSERT(  size(tmatLL, 3) == size(calc%trunc_zone%global_atom_id) ) ! num_trunc_atoms
+    nLly   = size(tmatLL, 4)
 
-    allocate(tsst_local(lmmaxd,lmmaxd,num_local_atoms))
-    allocate(dtsst_local(lmmaxd,lmmaxd,num_local_atoms)) ! LLY
-
-    chunk_size = size(tsst_local, 1)*size(tsst_local, 2)
+    allocate(tsst_local(lmmaxd,lmmaxd,num_local_atoms,0:nLly-1))
 
     do ila = 1, num_local_atoms
-      tsst_local(:,:,ila) = kkr(ila)%TmatN(:,:,ispin)
-      dtsst_local(:,:,ila) = kkr(ila)%dTmatN(:,:,ispin) ! LLY
+      tsst_local(:,:,ila,0) = kkr(ila)%TmatN(:,:,ispin)
+      if (nLly > 1) &
+      tsst_local(:,:,ila,1) = kkr(ila)%dTmatN(:,:,ispin) ! LLY
     enddo ! ila
 
-    call copyFromZ_com(tmatLL, tsst_local, calc%trunc_zone%global_atom_id, chunk_size, num_local_atoms, communicator)
-    call copyFromZ_com(dtde, dtsst_local, calc%trunc_zone%global_atom_id, chunk_size, num_local_atoms, communicator)
+    chunk_size = size(tmatLL, 1)*size(tmatLL, 2)
+    
+    call create(xTable, calc%trunc_zone%global_atom_id, communicator, max_local_atoms=num_local_atoms)
+    do iLly = 0, nLly - 1
+!     call copyFromZ_com(tmatLL(:,:,:,iLly), tsst_local(:,:,:,iLly), calc%trunc_zone%global_atom_id, chunk_size, num_local_atoms, communicator)
+      call reference_sys_com(xTable, chunk_size, tsst_local(:,:,:,iLly), tmatLL(:,:,:,iLly))
+    enddo ! iLly
+    call destroy(xTable)
 
-    deallocate(tsst_local)
-    deallocate(dtsst_local)
+    deallocate(tsst_local, stat=ist) ! ignore status
   endsubroutine ! gather
 #undef kkr
 

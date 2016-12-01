@@ -19,13 +19,13 @@ module NearField_com_mod
     double precision, allocatable :: v_intra(:,:)
     double precision, allocatable :: radial_points(:)
     integer :: critical_index !< apply correction only starting at 'critical_index'
-    integer, allocatable :: near_cell_indices(:) ! global atom indices
+    integer(kind=4), allocatable :: near_cell_indices(:) ! global atom indices
     !> vectors pointing from near cell center to local cell
     double precision, allocatable :: near_cell_dist_vec(:,:)
   endtype
   
   type NearFieldCorrection
-    double precision, allocatable :: delta_potential(:,:)
+    double precision, allocatable :: delta_potential(:,:) !> dim(irmd,lmpotd)
   endtype
 
   interface create
@@ -60,11 +60,7 @@ module NearField_com_mod
     
     type(IntracellPotential) :: intra_pot
     integer(kind=4) :: chunk(2,1)
-    integer :: num_local_atoms, ila, icell
-    integer :: max_npoints, npoints, lmpotd
-    integer :: ierr, i1, i2
-    integer :: irmd
-    integer :: nranks
+    integer :: num_local_atoms, ila, icell, max_npoints, npoints, lmpotd, ierr, i1, i2, irmd, nranks
     double precision, allocatable :: send_buffer(:,:,:), recv_buffer(:,:)
     integer :: win
 #ifndef __GFORTRAN__    
@@ -84,6 +80,7 @@ module NearField_com_mod
     enddo ! ila
 
     call MPI_Comm_size(communicator, nranks, ierr)
+    ! find the global maximum for the size of the communication buffers
     call MPI_Allreduce(npoints, max_npoints, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
 
     allocate(send_buffer(0:max_npoints,0:lmpotd,num_local_atoms))
@@ -96,7 +93,12 @@ module NearField_com_mod
 
     do ila = 1, num_local_atoms
       irmd = size(lci(ila)%radial_points)
-      ! begin packing
+      ! begin packing:
+      !    0      1       2       3   ...
+      ! 0  irmd   radial_points(1:)   ...
+      ! 1  cm(1)  v_intra v_intra v_intra
+      ! 2  cm(2)  v_intra v_intra v_intra
+      ! 3  ...    v_intra v_intra v_intra
       !--------------------------------------------------------------------------------------------
       send_buffer(1:irmd,1:lmpotd,ila) = lci(ila)%v_intra(:,:)
       send_buffer(0,1:lmpotd,ila) = lci(ila)%charge_moments(:)
@@ -189,8 +191,7 @@ module NearField_com_mod
     call calculate(coeffs, dist_vec, intra_pot%charge_moments, gaunt) ! calc_wrong_contribution_coeff
     
     ! substract wrong potential
-    ell = 0
-    emm = 0
+    ell = 0 ; emm = 0 ! emm = -ell
     do lm = 1, size(coeffs)
       do ii = critical_index, size(radial_points)
         delta_potential(ii,lm) = delta_potential(ii,lm) - coeffs(lm) * (-radial_points(ii))**ell
@@ -199,7 +200,7 @@ module NearField_com_mod
       if (emm > ell) then
         ell = ell + 1
         emm = -ell
-      endif
+      endif ! next ell-channel
     enddo ! lm
 
     ! add correct contribution

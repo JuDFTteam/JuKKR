@@ -31,7 +31,7 @@ module KKRmat_mod
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine MultipleScattering(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
                           Ginp, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                          mssq, dtde, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, & ! LLY
+                          mssq, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, & ! LLY
                           solver_type, kpoint_timer, kernel_timer)
     !   performs k-space integration,
     !   determines scattering path operator (g(k,e)-t**-1)**-1 and
@@ -48,8 +48,9 @@ module KKRmat_mod
     use fillKKRMatrix_mod, only: getGreenDiag ! retrieve result
     use MPI, only: MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD!, MPI_Allreduce 
     
-    use ExchangeTable_mod, only: ExchangeTable, create, destroy ! ToDo: when is the xTable destroyed?
-    use two_sided_commZ_mod, only: reference_sys_comZ
+    use ExchangeTable_mod, only: ExchangeTable
+    use ExchangeTable_mod, only: create, destroy ! ToDo: when is the xTable destroyed?
+    use two_sided_commZ_mod, only: reference_sys_com
 
     type(IterativeSolver), intent(inout) :: solver
     type(KKROperator), intent(inout) :: op
@@ -60,7 +61,7 @@ module KKRmat_mod
     double precision, intent(in) :: kpointweight(:) !< k-point weights dim(nkpoints)
 
     double complex, intent(out) :: GS(:,:,:) ! dim(lmsd,lmsd,num_local_atoms) result
-    double complex, intent(in) :: tmatLL(:,:,:) ! dim(lmsd,lmsd,num_trunc_atoms)
+    double complex, intent(in) :: tmatLL(:,:,:,0:) ! dim(lmsd,lmsd,num_trunc_atoms,0:Lly)
     double precision, intent(in) :: alat
     integer, intent(in) :: nsymat ! needed only for Jij-calculation and Lloyds formula
     double precision, intent(in) :: RR(:,0:)
@@ -71,8 +72,8 @@ module KKRmat_mod
     integer, intent(in) :: ienergy, ispin
 
     !LLY
-    double complex, intent(in)   :: mssq (:,:,:)    !< inverted T-matrix
-    double complex, intent(in)   :: dtde(:,:,:)     !< dT/dE
+    double complex, intent(in)   :: mssq(:,:,:) !< inverted T-matrix
+!   double complex, intent(in)   :: dtde(:,:,:) !< dT/dE
     double complex, intent(in)   :: tr_alph(:) 
     double complex, intent(out)  :: lly_grdt
     double precision, intent(in) :: volbz
@@ -116,7 +117,7 @@ module KKRmat_mod
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     if (.not. init_xTable) then
-      call create(xTable, num_local_atoms, num_trunc_atoms, global_atom_id, communicator)
+      call create(xTable, global_atom_id, communicator, max_local_atoms=num_local_atoms)
       init_xTable = .true.
     endif
 
@@ -128,7 +129,7 @@ module KKRmat_mod
     if (ist /= 0) die_here("failed to allocate Gref_buffer with"+(product(nd(1:4))*.5**26*num_trunc_atoms)+"GiByte for reference_sys_com") 
 
     ! get the required reference Green functions from the other MPI processes
-    call reference_sys_comZ(xTable, product(nd(1:4)), Gref_buffer, Ginp)
+    call reference_sys_com(xTable, product(nd(1:4)), Ginp, Gref_buffer)
 #endif
 
     allocate(G_diag(lmsd,lmsd))
@@ -148,7 +149,7 @@ module KKRmat_mod
                      Ginp, global_atom_id, communicator, &
 #endif
                      iguess_data, ienergy, ispin, ikpoint, &
-                     mssq, dtde, bztr2, kpointweight, global_atom_idx_lly, Lly, & !LLY
+                     mssq, bztr2, kpointweight, global_atom_idx_lly, Lly, & !LLY
                      solver_type, kernel_timer)
 
       do ila = 1, num_local_atoms
@@ -211,7 +212,7 @@ module KKRmat_mod
                        global_atom_id, communicator, &
 #endif
                        iguess_data, ienergy, ispin, ikpoint, &
-                       mssq, dtde, bztr2, volcub, global_atom_idx_lly, Lly, & !LLY
+                       mssq, bztr2, volcub, global_atom_idx_lly, Lly, & !LLY
                        solver_type, kernel_timer)
 
     use fillKKRMatrix_mod, only: buildKKRCoeffMatrix, buildRightHandSide
@@ -233,10 +234,8 @@ module KKRmat_mod
     type(KKROperator), intent(inout) :: op
     type(BCPOperator), intent(inout) :: preconditioner
     double precision, intent(in) :: kpoint(3)
-    double complex, intent(in) :: tmatLL(:,:,:) !> tmatLL(lmsd,lmsd,naez_trc)
-    double complex, intent(in) :: Ginp(:,:,0:,:,:) !> Ginp(lmmaxd,lmmaxd,0:Lly,naclsd,N) where N=num_local_atoms or naez_trc if defined(SPLIT_REFERENCE_FOURIER_COM)
-!   double complex, intent(in) :: Ginp(:,:,:,:) !> Ginp(lmmaxd,lmmaxd,naclsd,N) where N=num_local_atoms or naez_trc if defined(SPLIT_REFERENCE_FOURIER_COM)
-!   double complex, intent(in) :: dGinp(:,:,:,:) !< dim(lmmaxd,lmmaxd,naclsd,N) LLY: dG_ref/dE , compare N from above
+    double complex, intent(in) :: tmatLL(:,:,:,0:) !> tmatLL(lmsd,lmsd,num_trunc_atoms,0:Lly)
+    double complex, intent(in) :: Ginp(:,:,0:,:,:) !> Ginp(lmmaxd,lmmaxd,0:Lly,naclsd,N) where N=num_local_atoms or num_trunc_atoms if defined(SPLIT_REFERENCE_FOURIER_COM)
     double precision, intent(in) :: alat
     double precision, intent(in)  :: RR(:,0:)
 #ifndef SPLIT_REFERENCE_FOURIER_COM    
@@ -248,11 +247,10 @@ module KKRmat_mod
     type(InitialGuess), intent(inout) :: iguess_data
     integer, intent(in) :: ienergy, ispin, ikpoint
     ! LLY
-    double complex, intent(in)         :: mssq(:,:,:)    !< inverted T-matrix
-    double complex, intent(in)         :: dtde(:,:,:)     !< energy derivative of T-matrix
+    double complex, intent(in)         :: mssq(:,:,:) !< inverted T-matrix
     double complex, intent(out)        :: bztr2
     double precision, intent(in)       :: volcub (:)
-    integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed, e.g. dtde, tmatll
+    integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed, e.g. dtde, tmatLL
     integer, intent(in)                :: Lly             !< LLY=1/0, turns Lloyd's formula on/off
     integer, intent(in) :: solver_type
     type(TimerMpi), intent(inout) :: kernel_timer
@@ -335,17 +333,17 @@ module KKRmat_mod
 
       dPdE_local = zero ! init
 
-      call zgemm('n','n',alm,lmmaxd,lmmaxd,cone, dgde2,alm, tmatll(1,1,global_atom_idx_lly),lmmaxd,zero, dPdE_local,alm)
+      call zgemm('n','n',alm,lmmaxd,lmmaxd,cone, dgde2,alm, tmatLL(1,1,global_atom_idx_lly,0),lmmaxd,zero, dPdE_local,alm)
 
-      call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv, gllke_x2,alm, dtde(:,:,global_atom_idx_lly),lmmaxd,cone, dPdE_local,alm)
+      call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv, gllke_x2,alm, tmatLL(1,1,global_atom_idx_lly,Lly),lmmaxd,cone, dPdE_local,alm)
       !--------------------------------------------------------
- 
+
     endif ! LLY
     
     ! ToDo: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     !----------------------------------------------------------------------------
-    call buildKKRCoeffMatrix(op%mat_A(:,:,:,0), tmatLL, op%bsr_A)
+    call buildKKRCoeffMatrix(op%mat_A(:,:,:,0), tmatLL(:,:,:,0), op%bsr_A)
     !----------------------------------------------------------------------------
 
     TESTARRAYLOG(3, op%mat_A(:,:,:,0))
@@ -362,7 +360,7 @@ module KKRmat_mod
     !    the solution X is the scattering path operator
 
     ! ToDo: move buildRightHandSide out of the k-loop (independent of k-points)
-    call buildRightHandSide(op%mat_B, op%bsr_B, op%atom_indices, tmatLL=tmatLL) ! construct RHS with t-matrices
+    call buildRightHandSide(op%mat_B, op%bsr_B, op%atom_indices, tmatLL(:,:,:,0)) ! construct RHS with t-matrices
 !   call buildRightHandSide(op%mat_B, op%bsr_B, op%atom_indices) ! construct RHS as unity matrices
 
     call calc(preconditioner, op%mat_A(:,:,:,0)) ! calculate preconditioner from sparse matrix data ! should be BROKEN due to variable block row format ! ToDo: check

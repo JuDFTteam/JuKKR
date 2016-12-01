@@ -59,15 +59,15 @@ module two_sided_comm_TYPE_mod
   implicit none
   private
   
-  public :: reference_sys_com_TYPE
+  public :: reference_sys_com
 
   contains
 
-  subroutine reference_sys_com_TYPE(self, ncount, Gout, Ginp)
+  subroutine reference_sys_com(self, ncount, Ginp, Gout)
     type(ExchangeTable), intent(in) :: self
     integer, intent(in) :: ncount
-    NUMBER_TYPE, intent(out) :: Gout(ncount,*) !> dim(ncount,num_trunc_atoms)
     NUMBER_TYPE, intent(in)  :: Ginp(ncount,*) !< dim(ncount,num_local_atoms)
+    NUMBER_TYPE, intent(out) :: Gout(ncount,*) !> dim(ncount,num_trunc_atoms)
     
     ! In order to implement point-to-point communication also with max_local_atoms > 1,
     ! we need to set up a sparse matrix that describes 
@@ -110,8 +110,10 @@ module two_sided_comm_TYPE_mod
 
         assert( self%send_start(ipair) - self%send_start(ipair + 1) == self%recv_start(ipair) - self%recv_start(ipair + 1) )
         do inz = self%recv_start(ipair), self%recv_start(ipair + 1) - 1
-          iout = self%recv_index(inz)
           ist = inz - self%recv_start(ipair) + self%send_start(ipair)
+          sreq(ist) = MPI_REQUEST_NULL ! no need to wait for these
+          rreq(inz) = MPI_REQUEST_NULL ! no need to wait for these
+          iout = self%recv_index(inz)
           iinp = self%send_index(ist)
           Gout(:,iout) = Ginp(:,iinp) ! local copy
         enddo ! inz
@@ -125,11 +127,11 @@ module two_sided_comm_TYPE_mod
     deallocate(rreq, rstats, sreq, sstats, stat=ist) ! ignore status
   endsubroutine ! reference_sys_com
 
-  subroutine reference_sys_com_TYPE_var_sizes(self, Gout, Ginp)
+  subroutine reference_sys_com_var_sizes(self, Ginp, Gout)
     ! if we have additional information about the sizes stored in self, we can extend this method to variable message sizes
     type(ExchangeTable), intent(in) :: self
-    NUMBER_TYPE, intent(out) :: Gout(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:LLy,naclsd,num_trunc_atoms)
     NUMBER_TYPE, intent(in)  :: Ginp(:,:,:,:,:) !< dim(lmmaxd,lmmaxd,0:LLy,naclsd,num_local_atoms)
+    NUMBER_TYPE, intent(out) :: Gout(:,:,:,:,:) !> dim(lmmaxd,lmmaxd,0:LLy,naclsd,num_trunc_atoms)
     
     ! In order to implement point-to-point communication also with max_local_atoms > 1,
     ! we need to set up a sparse matrix that describes 

@@ -11,8 +11,8 @@ module TruncationZone_mod
   private
   public :: TruncationZone, create, destroy
 
-#ifndef local_index_t
-#define local_index_t integer(kind=2)
+#ifndef trunc_index_t
+#define trunc_index_t integer(kind=2)
 #endif
 
 #ifndef global_ID_type
@@ -23,8 +23,8 @@ module TruncationZone_mod
   type TruncationZone
     integer :: naez_trc = 0 !> number of atoms in truncation zone
     integer :: naez_all = 0 !> number of all atoms in the system
-    local_index_t, allocatable :: local_atom_idx(:) !> map atom index to truncation zone atom index (-1 == not in truncation zone == OUTSIDE)
-    global_ID_type, allocatable :: global_atom_id(:) !> map truncation zone atom index to atom index ("inverse" of local_atom_idx)
+    trunc_index_t, allocatable :: trunc_atom_idx(:) !> map atom index to truncation zone atom index (-1 == not in truncation zone == OUTSIDE)
+    global_ID_type, allocatable :: global_atom_id(:) !> map truncation zone atom index to atom index ("inverse" of trunc_atom_idx)
   endtype
 
   interface create
@@ -54,30 +54,30 @@ module TruncationZone_mod
 
     integer :: memory_stat
     global_ID_type :: gid
-    local_index_t  :: idx
+    trunc_index_t  :: idx
     integer(kind=8), parameter :: Two = 2
     
     self%naez_all = size(mask)
     if (self%naez_all > huge(gid)) stop 'integer-kind not sufficient for global_atom_id in TruncationZone_mod.F90!' ! value range exceeded
     
     self%naez_trc = count(mask >= 0)
-    if (self%naez_trc > huge(idx)) stop 'integer-kind not sufficient for local_atom_idx in TruncationZone_mod.F90!' ! value range exceeded 
+    if (self%naez_trc > huge(idx)) stop 'integer-kind not sufficient for trunc_atom_idx in TruncationZone_mod.F90!' ! value range exceeded 
 
     ! setup index map from global indices to a process local view
-    ALLOCATECHECK(self%local_atom_idx(OUTSIDE:self%naez_all))
-    ALLOCATECHECK(self%global_atom_id(self%naez_trc)) ! setup "inverse" of local_atom_idx
+    ALLOCATECHECK(self%trunc_atom_idx(OUTSIDE:self%naez_all))
+    ALLOCATECHECK(self%global_atom_id(self%naez_trc)) ! setup "inverse" of trunc_atom_idx
 
-    self%local_atom_idx(OUTSIDE:0) = OUTSIDE
+    self%trunc_atom_idx(OUTSIDE:0) = OUTSIDE
 
     idx = 0
     do gid = 1, self%naez_all
       if (mask(gid) >= 0) then
         idx = idx + 1
-        self%local_atom_idx(gid) = idx ! enumerate
+        self%trunc_atom_idx(gid) = idx ! enumerate
         self%global_atom_id(idx) = gid ! quasi inverse ...
-        ! inverse means that all(self%local_atom_idx(self%global_atom_id(:)) == [1, 2, 3, ..., naez_trc])
+        ! inverse means that all(self%trunc_atom_idx(self%global_atom_id(:)) == [1, 2, 3, ..., naez_trc])
       else
-        self%local_atom_idx(gid) = OUTSIDE ! atom not in truncation cluster
+        self%trunc_atom_idx(gid) = OUTSIDE ! atom not in truncation cluster
       endif
     enddo ! gid
 
@@ -97,7 +97,7 @@ module TruncationZone_mod
     type(TruncationZone), intent(inout) :: self
 
     integer :: ist ! ignore status
-    deallocate(self%local_atom_idx, self%global_atom_id, stat=ist)
+    deallocate(self%trunc_atom_idx, self%global_atom_id, stat=ist)
     self%naez_all = 0
     self%naez_trc = 0
   endsubroutine ! destroy

@@ -12,7 +12,7 @@ module kloopz1_mod
 
   subroutine kloopz1(GmatN, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
                      dsymLL, tmatLL, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                     dtde, tr_alph, Lly_grdt, global_atom_idx_Lly, Lly, & ! LLY 
+                     tr_alph, Lly_grdt, global_atom_idx_Lly, Lly, & ! LLY 
                      solver_type, kpoint_timer, kernel_timer)
 
 ! only part of arrays for corresponding spin direction is passed
@@ -39,9 +39,7 @@ module kloopz1_mod
     type(IterativeSolver), intent(inout) :: solv
     type(KKROperator), intent(inout) :: op
     type(BCPOperator), intent(inout) :: precond
-!   integer, intent(in) :: lmmaxd
-    !> mapping trunc. index -> atom index
-    integer, intent(in) :: global_atom_id(:)
+    integer, intent(in) :: global_atom_id(:) !> mapping trunc. index -> atom index
     integer, intent(in) :: communicator
     type(InitialGuess), intent(inout) :: iguess_data
     integer, intent(in) :: ienergy, ispin
@@ -49,7 +47,7 @@ module kloopz1_mod
     double complex, intent(in) :: dsymLL(:,:,:) !< dim(lmmaxd,lmmaxd,nsymat)
     double complex, intent(out) :: GmatN(:,:,:) !< dim(lmmaxd,lmmaxd,num_local_atoms) ! result
     double complex, intent(inout) :: Ginp_local(:,:,0:,:,:) !< dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms) reference green function 
-    double complex, intent(in) :: tmatLL(:,:,:) !< t-matrices (lmmaxd,lmmaxd,num_trunc_atoms)
+    double complex, intent(in) :: tmatLL(:,:,:,0:) !< t-matrices (lmmaxd,lmmaxd,num_trunc_atoms,0:Lly)
     double precision, intent(in) :: rr(:,0:) !< lattice vectors(1:3,0:nrd)
     integer, intent(in) :: NofKs
     double precision, intent(in) :: volBZ
@@ -58,7 +56,7 @@ module kloopz1_mod
 
     ! LLY
     double complex, intent(in)    :: tr_alph(:)
-    double complex, intent(in)    :: dtde(:,:,:) 
+!   double complex, intent(in)    :: dtde(:,:,:) 
     double complex, intent(out)   :: Lly_grdt
     integer       , intent(in)    :: global_atom_idx_Lly
     integer       , intent(in)    :: Lly
@@ -76,6 +74,7 @@ module kloopz1_mod
     double complex, allocatable :: temp(:), gll(:,:), tpg(:,:), xc(:,:), mssq(:,:,:) ! effective (site-dependent) delta_t^(-1) matrix
 
     N = size(tmatLL, 2)
+    assert( N == size(tmatLL, 1) )
     nsymat = size(dsymLL, 3)
     num_local_atoms = size(op%atom_indices)
     num_trunc_atoms = size(tmatLL, 3)
@@ -84,13 +83,13 @@ module kloopz1_mod
     assert( all(shape(dsymLL) == [N,N,nsymat]) )
     assert( all(shape(GmatN) == [N,N,num_local_atoms]) )
     assert( all(shape(Ginp_local) == [N,N,1+Lly,naclsd,num_local_atoms]) )
-    assert( all(shape(tmatLL) == [N,N,num_trunc_atoms]) )
+    assert( all(shape(tmatLL) == [N,N,num_trunc_atoms,1+Lly]) )
 
     allocate(GS(N,N,num_local_atoms), mssq(N,N,num_local_atoms), ipvt(N), info(2,num_local_atoms), temp(N*N), stat=ist)
     if (ist /= 0) stop "KLOOPZ1: FATAL Error, failure to allocate memory, probably out of memory."
     
     do ila = 1, num_local_atoms
-      mssq(:,:,ila) = tmatLL(1:N,1:N,op%atom_indices(ila))
+      mssq(:,:,ila) = tmatLL(1:N,1:N,op%atom_indices(ila),0)
       ! inversion:
       !     The (local) Delta_t matrix is inverted and stored in mssq
       call zgetrf(N,N,mssq(:,:,ila),N,ipvt,info(1,ila)) ! LU-factorize
@@ -112,7 +111,7 @@ module kloopz1_mod
     ! solver_type=4 T-matrix cutoff with direct solver
     call MultipleScattering(solv, op, precond, Bzkp, NofKs, k_point_weights, GS, tmatLL, alat, nsymat, rr, &
                       Ginp_local, global_atom_id, communicator, iguess_data, ienergy, ispin, &
-                      mssq, dtde, tr_alph, Lly_grdt, volBZ, global_atom_idx_Lly, Lly, & !LLY
+                      mssq, tr_alph, Lly_grdt, volBZ, global_atom_idx_Lly, Lly, & !LLY
                       solver_type, kpoint_timer, kernel_timer)
                       
 !-------------------------------------------------------- SYMMETRISE gll

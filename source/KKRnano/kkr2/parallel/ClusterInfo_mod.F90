@@ -66,8 +66,12 @@ module ClusterInfo_mod
 #endif    
     use RefCluster_mod, only: RefCluster
     use TruncationZone_mod, only: TruncationZone
-    use one_sided_commI_mod, only: copyFromI_com
-
+!   use one_sided_commI_mod, only: copyFromI_com
+    use ExchangeTable_mod, only: ExchangeTable
+    use ExchangeTable_mod, only: create, destroy
+    use two_sided_commI_mod, only: reference_sys_com
+    type(ExchangeTable) :: xTable
+    
     include 'mpif.h'
 
     type(ClusterInfo), intent(inout)    :: self
@@ -136,8 +140,12 @@ module ClusterInfo_mod
     ALLOCATECHECK(recv_buf(blocksize,num_trunc_atoms))
 
     ! communication
-    call copyFromI_com(recv_buf, send_buf, trunc_zone%global_atom_id, blocksize, num_local_atoms, communicator)
-
+!   call copyFromI_com(recv_buf, send_buf, trunc_zone%global_atom_id, blocksize, num_local_atoms, communicator)
+    
+    call create(xTable, trunc_zone%global_atom_id, communicator, max_local_atoms=num_local_atoms)
+    call reference_sys_com(xTable, blocksize, send_buf, recv_buf)
+    call destroy(xTable)
+    
     ! prepare data structure arrays
     DEALLOCATECHECK(send_buf)
 cDBG  ALLOCATECHECK(global_target_atom_id(naclsd)) !!! DEBUG
@@ -171,7 +179,7 @@ cDBG  ALLOCATECHECK(global_target_atom_id(naclsd)) !!! DEBUG
 
         indn0 = recv_buf(OFFSET_INDN + ineqv,ita) ! indn0 received
 cDBG    write(*,'(9(a,i0))') __FILE__,__LINE__,' ita=',ita,' ineqv=',ineqv,' indn0=',indn0
-        ind = trunc_zone%local_atom_idx(indn0) ! translate into a local index of the truncation zone
+        ind = trunc_zone%trunc_atom_idx(indn0) ! translate into a local index of the truncation zone
 
         if (ind > 0) then ! ind == -1 means that this atom is outside of truncation zone
           newn0 = newn0 + 1
@@ -192,7 +200,7 @@ cDBG  write(*,'(4(a,i0),999(" ",i0))') __FILE__,__LINE__,' atom_id=',atom_id,' n
       self%nacls(ita) = nacls
       reduce_stats(nacls, POS_NACLS)
 
-      self%atom(1:nacls,ita) = trunc_zone%local_atom_idx(recv_buf(OFFSET_ATOM + 1:nacls + OFFSET_ATOM,ita)) ! translate into truncation zone indices here
+      self%atom(1:nacls,ita) = trunc_zone%trunc_atom_idx(recv_buf(OFFSET_ATOM + 1:nacls + OFFSET_ATOM,ita)) ! translate into truncation zone indices here
 cDBG  global_target_atom_id(1:nacls) = recv_buf(OFFSET_ATOM + 1:nacls + OFFSET_ATOM,ita) !!! DEBUG
 cDBG  write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' nacls=',nacls,' atom@ezoa= ',(global_target_atom_id(ist),'@',self%ezoa(ist,ita),' ', ist=1,nacls) !!! DEBUG
 
