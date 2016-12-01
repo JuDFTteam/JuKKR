@@ -37,8 +37,6 @@ module NearField_kkr_mod
     double precision :: rws_bounding
     integer :: counter_spline
   endtype
-  
-  double precision, parameter, private :: PI = 3.1415926535897932d0
 
   interface create
     module procedure createIntracellPotential
@@ -60,30 +58,30 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   subroutine getIntracellPotential(self, v_intra, radius)
+    use Constants_mod, only: pi
     type(IntracellPotential), intent(inout) :: self
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
     
     double precision :: yderiv
-    integer :: lmpotd
-    integer :: lm, L, M
+    integer :: lmpotd, lm, ell, emm
     
     lmpotd = size(v_intra)
     
-    L = 0
-    M = 0
+    ell = 0
+    emm = 0
     
     if (radius > self%rws_bounding) then
     
       do lm = 1, lmpotd
 
         ! calculate potential from charge moments
-        v_intra(lm) = 8.0d0 * PI / (2*L + 1) * self%charge_moments(lm) / (radius**(L+1))
+        v_intra(lm) = 8.0d0 * pi * self%charge_moments(lm) / (radius**(ell+1) * (2*ell + 1))
 
-        M = M + 1
-        if (M > L) then
-          L = L + 1
-          M = -L
+        emm = emm + 1
+        if (emm > ell) then
+          ell = ell + 1
+          emm = -ell
         endif
       enddo ! lm
 
@@ -91,8 +89,7 @@ module NearField_kkr_mod
 
       ! calculate potential from known values within the bounding sphere
       do lm = 1, lmpotd
-        call splint(self%xarray, self%yarray(:, lm), self%y2ndder(:, lm), &
-                    self%counter_spline, radius, v_intra(lm), yderiv)
+        call splint(self%xarray, self%yarray(:,lm), self%y2ndder(:,lm), self%counter_spline, radius, v_intra(lm), yderiv)
       enddo ! lm
 
     endif
@@ -131,13 +128,10 @@ module NearField_kkr_mod
   
   !----------------------------------------------------------------------------
   subroutine initIntracellPotential(self)
+    use Constants_mod, only: pi
     type(IntracellPotential), intent(inout) :: self
     
-    integer :: lmpotd
-    integer :: irmd
-    integer :: ii
-    integer :: L, M
-    integer :: counter
+    integer :: lmpotd, irmd, ii, ell, emm, counter
     double precision :: derivative
     double precision, parameter :: TOL = 1.d-10
     
@@ -156,26 +150,25 @@ module NearField_kkr_mod
       if (abs(self%radial_points(ii) - self%radial_points(ii-1)) > TOL) then
         counter = counter + 1
         self%xarray(counter) = self%radial_points(ii)
-        self%yarray(counter, :) = self%v_intra_values(ii, :)
+        self%yarray(counter,:) = self%v_intra_values(ii,:)
       endif
     enddo ! ii
           
     self%counter_spline = counter
     
-    L = 0
-    M = 0
+    ell = 0
+    emm = 0
     do ii = 1, lmpotd
 
       ! match derivative of spline interpolation at bounding sphere
-      derivative = -8 * PI / (2 * dble(L) + 1) * (dble(L) + 1) & 
-                   * self%charge_moments(ii) / self%rws_bounding**(L+2)
+      derivative = -8.d0 * pi * (ell + 1.d0) * self%charge_moments(ii) / ( self%rws_bounding**(ell+2) * (2*ell + 1) )
 
-      call spline(irmd, self%xarray, self%yarray(:, ii), counter, 1.d35, derivative, self%y2ndder(:, ii))
+      call spline(irmd, self%xarray, self%yarray(:,ii), counter, 1.d35, derivative, self%y2ndder(:,ii))
       
-      M = M + 1
-      if (M > L) then
-        L = L + 1
-        M = -L
+      emm = emm + 1
+      if (emm > ell) then
+        ell = ell + 1
+        emm = -ell
       endif
     enddo ! ii
     
@@ -184,10 +177,10 @@ module NearField_kkr_mod
   !----------------------------------------------------------------------------
   elemental subroutine destroyIntracellPotential(self)
     type(IntracellPotential), intent(inout) :: self
-    integer :: ist
+    integer :: ist ! ignore status
     deallocate(self%charge_moments, self%radial_points, &
                self%v_intra_values, self%xarray, &
                self%yarray, self%y2ndder, stat=ist)
   endsubroutine ! destroy
-  
+
 endmodule ! NearField_kkr_mod

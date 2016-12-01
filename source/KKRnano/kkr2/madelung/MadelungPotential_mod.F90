@@ -25,7 +25,7 @@ module MadelungPotential_mod
 
     naez = size(ZAT)
 #define mc calc_data%madelung_calc
-    call VMADELBLK_new2_com(calc_data, mc%LPOT, naez, ZAT, mc%LMPOTD, &
+    call VMADELBLK_new2_com(calc_data, mc%LPOT, naez, ZAT, mc%lmpotd, &
          mc%clebsch%CLEB, mc%clebsch%ICLEB, mc%clebsch%IEND, &
          mc%LMXSPD,mc%clebsch%NCLEBD, mc%clebsch%LOFLM, mc%DFAC, &
          rank, atoms_per_proc, &
@@ -47,10 +47,10 @@ module MadelungPotential_mod
   !>    the madelung-potential is expanded into spherical harmonics.
   !>    the lm-term of the potential v of the atom i is given by
   !>
-  !>     v(r,lm,i) =  (-r)**l * {avmad(i,i2,lm,l'm')*cmom(i2,l'm')
+  !>     v(r,lm,i) =  (-r)**ell * {avmad(i,i2,lm,ell'emm')*cmom(i2,ell'emm')
   !>                                              +bvmad(i,i2,lm)*z(i2)}
   !>
-  !>    summed over i2 (all atoms) and l'm'
+  !>    summed over i2 (all atoms) and ell'emm'
   !>    (see notes by b.drittler)
   !>
   !>                              b.drittler   nov. 1989
@@ -73,109 +73,102 @@ module MadelungPotential_mod
 
     include 'mpif.h'
 
-    type(CalculationData), intent(inout) :: calc_data
-
+    type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: iend, lpot, lmxspd, nclebd, lmpot, naez
-
-    type(BasisAtom), pointer :: atomdata
-    type(DensityResults), pointer :: densities
-    type(EnergyResults), pointer :: energies
-    type(RadialMeshData), pointer :: mesh
-
     double precision, intent(in) :: zat(:)
     double precision, intent(in) :: cleb(nclebd)
     double precision, intent(in) :: dfac(0:lpot,0:lpot)
     integer, intent(in) :: icleb(nclebd,3)
     integer, intent(in) :: loflm(lmxspd)
-    integer, intent(in) :: atoms_per_proc
+    integer, intent(in) :: mylrank, atoms_per_proc, communicator
 
-    integer :: i2, ilm
-    integer ierr, mylrank, communicator
-    double precision :: cmom_save((lpot+1)**2)
-    double precision :: cminst_save((lpot+1)**2)
-    integer :: num_local_atoms
-    integer :: ilocal
-    integer :: ilocal2
-    integer :: root
-    integer :: lmpotd
+    type(BasisAtom), pointer :: atomdata
+    type(DensityResults), pointer :: densities
+    type(EnergyResults), pointer :: energies
+    type(RadialMeshData), pointer :: mesh
+    integer :: i2, ilm, ierr
+    double precision :: cmom_save((lpot+1)**2), cminst_save((lpot+1)**2)
+    integer :: num_local_atoms, ila, jla
+    integer :: root, lmpotd
     
     lmpotd = (lpot+1)**2
 
     num_local_atoms = calc_data%num_local_atoms
 
-    do ilocal = 1, num_local_atoms
-      energies => getEnergies(calc_data, ilocal)
+    do ila = 1, num_local_atoms
+      energies => getEnergies(calc_data, ila)
       energies%AC_madelung = 0.d0
     enddo
 
     !===== begin loop over all atoms =========================================
     ! O(N**2) in calculation and communication !!!
 
-    do I2 = 1, NAEZ
+    do i2 = 1, naez
 
       ! use omp single for MPI part?
       ! if MPI comm. dominates over calculation, OpenMP won't do much
 
-      root = (I2 - 1) / atoms_per_proc
-      ilocal2 = mod( (I2 - 1), atoms_per_proc ) + 1
+      root = (i2 - 1) / atoms_per_proc
+      jla = mod( (i2 - 1), atoms_per_proc ) + 1
 
       !-------- bcast information of cmom and cminst begin --------------------
 
       if (MYLRANK == root) then
 
-        CHECKASSERT(I2 == calc_data%atom_ids(ilocal2))
+        CHECKASSERT(i2 == calc_data%atom_ids(jla))
 
-        densities => getDensities(calc_data, ilocal2)
+        densities => getDensities(calc_data, jla)
 
-        do ILM = 1, LMPOT
-          CMOM_SAVE(ILM) = densities%CMOM(ILM)
-          CMINST_SAVE(ILM) = densities%CMINST(ILM)
+        do ilm = 1, lmpot
+          cmom_save(ilm) = densities%CMOM(ilm)
+          cminst_save(ilm) = densities%CMINST(ilm)
         enddo
       else
-        CMOM_SAVE = 0.d0
-        CMINST_SAVE = 0.d0
+        cmom_save = 0.d0
+        cminst_save = 0.d0
       endif
 
-      call MPI_Bcast(CMOM_SAVE,   LMPOTD, MPI_DOUBLE_PRECISION, root, communicator, IERR)
-      call MPI_Bcast(CMINST_SAVE, LMPOTD, MPI_DOUBLE_PRECISION, root, communicator, IERR)
+      call MPI_Bcast(cmom_save,   lmpotd, MPI_DOUBLE_PRECISION, root, communicator, ierr)
+      call MPI_Bcast(cminst_save, lmpotd, MPI_DOUBLE_PRECISION, root, communicator, ierr)
 
       !-------- bcast information of cmom and cminst end----------------------
 
 
       ! --> calculate avmad(lm1,lm2)
 
-      do ilocal = 1, num_local_atoms  ! no OpenMP ?
-        energies => getEnergies(calc_data, ilocal)
+      do ila = 1, num_local_atoms  ! no OpenMP ?
+        energies => getEnergies(calc_data, ila)
 
-        call sumAC(energies%AC_madelung, CMOM_SAVE, CMINST_SAVE, ZAT(I2), &
-                   calc_data%madelung_sum_a(ilocal)%SMAT(:,I2), &
-                   LPOT, CLEB, ICLEB, IEND, LOFLM, DFAC)
+        call sumAC(energies%AC_madelung, cmom_save, cminst_save, zat(i2), &
+                   calc_data%madelung_sum_a(ila)%smat(:,i2), &
+                   lpot, cleb, icleb, iend, loflm, dfac)
 
-      enddo ! ilocal
+      enddo ! ila
 
-    enddo ! I2
+    enddo ! i2
     !===== endloop over all atoms =========================================
 
     !     contributions are accumulated in AC !!!
 
 
-    do ilocal = 1, num_local_atoms
-      atomdata => getAtomData(calc_data, ilocal)
-      energies => getEnergies(calc_data, ilocal)
+    do ila = 1, num_local_atoms
+      atomdata => getAtomData(calc_data, ila)
+      energies => getEnergies(calc_data, ila)
       mesh => atomdata%mesh_ptr
 
       call addPot(atomdata%potential%VONS, energies%VMAD, &
                   energies%AC_madelung, atomdata%potential%LPOT, &
                   mesh%R, mesh%IRCUT, mesh%IPAN, atomdata%potential%NSPIN)
 
-    enddo ! ilocal
+    enddo ! ila
 
   endsubroutine ! VMADELBLK_new2_com
 
   !----------------------------------------------------------------------------
   subroutine addPot(vons, vmad, ac, lpot, r, ircut, ipan, nspin)
+    use Constants_mod, only: pi
     double precision, intent(inout) :: vons(:,:,:)
-    double precision, intent(inout) :: vmad
+    double precision, intent(out)   :: vmad
     double precision, intent(in)    :: ac(:)
     integer, intent(in) :: lpot
     double precision, intent(in) :: r(:)
@@ -183,36 +176,32 @@ module MadelungPotential_mod
     integer, intent(in) :: ipan
     integer, intent(in) :: nspin
 
-    integer :: irs1
-    integer :: l, m, lm, i
-    integer :: ispin
-    double precision :: pi
-
-    pi = 4.d0*atan(1.d0)
+    integer :: irs1, ell, emm, lm, i, ispin
+    
     vmad = 0.d0
 
     irs1 = ircut(ipan)
 
-    do l = 0, lpot
-      do m = -l, l
-        lm = l*l + l + m + 1
+    do ell = 0, lpot
+      do emm = -ell, ell
+        lm = ell*ell + ell + emm + 1
 
         if (lm == 1) vmad = ac(1)/sqrt(4.d0*pi)
 
         !---> add to v the intercell-potential
 
-        do ispin = 1,nspin
+        do ispin = 1, nspin
 
-          !---> in the case of l=0 : r(1)**l is not defined
+          !---> in the case of ell=0 : r(1)**ell is not defined
 
-          if (l == 0) vons(1,1,ispin) = vons(1,1,ispin) + ac(lm)
+          if (ell == 0) vons(1,1,ispin) = vons(1,1,ispin) + ac(lm)
           do i = 2, irs1
-            vons(i,lm,ispin) = vons(i,lm,ispin) + (-r(i))**l*ac(lm)
+            vons(i,lm,ispin) = vons(i,lm,ispin) + (-r(i))**ell*ac(lm)
           enddo ! i
         enddo ! ispin
 
-      enddo ! m
-    enddo ! l
+      enddo ! emm
+    enddo ! ell
 
   endsubroutine ! add
 

@@ -12,6 +12,9 @@ module NearField_mod
     module procedure calc_near_field, calc_wrong_contribution_coeff
   endinterface
 
+  
+  integer, parameter, private :: NUM_LEBEDEV = 434
+   
   contains
 
   !----------------------------------------------------------------------------
@@ -25,7 +28,7 @@ module NearField_mod
     double precision, intent(in)    :: charge_mom_total(:)
     type(MadelungClebschData), intent(in) :: Gaunt
 
-    integer :: lmx, l, m, ii, lmmaxd, l1, l2, lm1, lm2, lm3, lmx_prime, lmmaxd_prime
+    integer :: lmx, l, m, ii, lmmaxd, l1, l2, lm1, lm2, lm3, lmx_prime, lmmaxd_prime, ist
     double precision :: r, rfac
     double precision, allocatable :: ylm(:), smat(:), avmad(:,:), dfac(:,:)
 
@@ -39,7 +42,7 @@ module NearField_mod
 
     allocate(ylm(lmmaxd_prime), smat(lmmaxd_prime), avmad(lmmaxd,lmmaxd))
 
-    call calculate(dfac, lmx) ! createDfac: calculate complicated prefactor, will be allocated here
+    call calculate(dfac, lmx) ! createDfac: calculate complicated prefactor, will be allocated in here
 
     call ymy(dist_vec(1), dist_vec(2), dist_vec(3), r, ylm, lmx_prime)
 
@@ -71,7 +74,7 @@ module NearField_mod
 
     ac_wrong = matmul(avmad, charge_mom_total)
 
-    deallocate(ylm, smat, avmad, dfac, stat=ii)
+    deallocate(ylm, smat, avmad, dfac, stat=ist)
   endsubroutine ! calc
 
   !----------------------------------------------------------------------------
@@ -85,10 +88,9 @@ module NearField_mod
     type(IntracellPotential), intent(inout) :: pot
     integer, intent(in), optional :: lmax_prime
 
-    integer :: lmmaxd, lmax, lmmaxd_prime
-    integer, parameter :: NUM_LEBEDEV = 434
+    integer :: lmmaxd, lmax, lmmaxd_prime, ij, lm, lmax_p, ist
     double precision :: v_leb(3), vec(3)
-    double precision :: weight_leb(NUM_LEBEDEV)
+    double precision, allocatable :: weight_leb(:) ! (NUM_LEBEDEV)
     double precision, allocatable :: sph_harm_leb(:,:)
     double precision, allocatable :: sph_harm(:)
     double precision, allocatable :: v_intra(:)
@@ -96,22 +98,19 @@ module NearField_mod
     double precision, allocatable :: temp(:)
     double precision :: norm_vec, dummy, four_pi ! prefactor for Lebedev: 4*pi
 
-    integer :: ij, lm
-    integer :: lmax_p
-
     four_pi = 4.d0*pi
 
     lmmaxd = size(v_near)
     lmax = int(sqrt(dble(lmmaxd) + 0.1) - 1)
     
     if (.not. present(lmax_prime)) lmax_p = lmax
-    
+
     lmmaxd_prime = (lmax_p+1)**2
 
     CHECKASSERT( (lmax + 1)**2 == lmmaxd )
 
     allocate(sph_harm(lmmaxd_prime), v_intra(lmmaxd_prime), temp(lmmaxd))
-    allocate(sph_harm_leb(NUM_LEBEDEV,lmmaxd), integrand(NUM_LEBEDEV,lmmaxd))
+    allocate(sph_harm_leb(NUM_LEBEDEV,lmmaxd), integrand(NUM_LEBEDEV,lmmaxd), weight_leb(NUM_LEBEDEV))
 
     do ij = 1, NUM_LEBEDEV
 
@@ -133,7 +132,6 @@ module NearField_mod
       endif
 
 #ifdef TEST_POTENTIALS
-!     call get_const_monopole(v_intra, norm_vec)
       call get_const_multipole(v_intra, norm_vec)
 #else
       call get(pot, v_intra, norm_vec) ! get intracell potential at radius 'norm_vec'
@@ -152,6 +150,7 @@ module NearField_mod
 
     v_near = sum(integrand, dim=1)
 
+    deallocate(weight_leb, sph_harm_leb, sph_harm, v_intra, integrand, temp, stat=ist)
   endsubroutine ! calc
 
   !----------------------------------------------------------------------------
@@ -159,12 +158,11 @@ module NearField_mod
   ! The first column of 'integrand' must be 1.0 and the others = 0.0
   subroutine test_lebedev()
     use Harmonics_mod, only: ymy
-    integer, parameter :: lmax = 2, lmmaxd = (lmax+1)**2, NUM_LEBEDEV = 434
+    integer, parameter :: lmax = 2, lmmaxd = (lmax+1)**2
 
-    double precision :: integrand(lmmaxd,lmmaxd)
-    double precision :: ylm(lmmaxd)
+    double precision :: integrand(lmmaxd,lmmaxd), ylm(lmmaxd)
     double precision :: vnorm, vec(3), weight, four_pi
-    integer ij, lm1, lm2
+    integer :: ij, lm1, lm2
 
     four_pi = 4.d0*pi
     integrand = 0.d0
@@ -180,15 +178,17 @@ module NearField_mod
 
     write(*,*) integrand
   endsubroutine ! test
+  
+#ifdef TEST_POTENTIALS
+!+never
 
   !----------------------------------------------------------------------------
   ! evaluate spherical harmonic expansion at angles given by 'vec'.
   double precision function eval_expansion(coeffs, vec)
     use Harmonics_mod, only: ymy
-    double precision :: coeffs(:)
-    double precision :: vec(3)
+    double precision, intent(in) :: coeffs(:), vec(3)
 
-    integer :: lmmaxd, lmax
+    integer :: lmmaxd, lmax, ist
     double precision, allocatable :: ylm(:)
     double precision :: vnorm
 
@@ -196,19 +196,15 @@ module NearField_mod
     lmax = int(sqrt(dble(lmmaxd) + 0.1) - 1)
 
     allocate(ylm(lmmaxd))
-    call YMY(vec(1), vec(2), vec(3), vnorm, ylm, LMAX)
+    call ymy(vec(1), vec(2), vec(3), vnorm, ylm, lmax)
 
     eval_expansion = dot_product(coeffs, ylm)
+    deallocate(ylm, stat=ist)
   endfunction ! eval
-
-
-#ifdef TEST_POTENTIALS
-!+never
 
 !------------------------------------------------------------------------------
 ! Some test potentials that replace 
 !------------------------------------------------------------------------------
-
 
   !----------------------------------------------------------------------------
   !> A test potential: constant multipole moments
@@ -217,20 +213,20 @@ module NearField_mod
     double precision, intent(out) :: v_intra(:)
     double precision, intent(in) :: radius
 
-    integer :: lm, L, M
+    integer :: lm, ell, emm
 
     lm = 1
-    L = 0
-    M = 0
+    ell = 0
+    emm = 0
     do while (.true.)
-      v_intra(lm) = 4.d0*sqrt(pi)/(radius**(L+1)*(2*L+1))
+      v_intra(lm) = 4.d0*sqrt(pi)/(radius**(ell+1)*(2*ell+1))
       lm = lm + 1
-      M = M + 1
-      if (M > L) then
-        L = L + 1
-        M = -L
+      emm = emm + 1
+      if (emm > ell) then
+        ell = ell + 1
+        emm = -ell
       endif
-      if (lm > size(v_intra)) exit
+      if (lm > size(v_intra)) return
     enddo ! while
 
   endsubroutine ! get
@@ -239,9 +235,9 @@ module NearField_mod
   !> A test potential: potential of a (unit) monopole
   subroutine get_const_monopole(v_intra, radius)
     double precision, intent(out) :: v_intra(:)
-    double precision, intent(in) :: radius
+    double precision, intent(in)  :: radius
 
-    v_intra = 0.d0
+    v_intra(:) = 0.d0
     v_intra(1) = 4.d0*sqrt(pi)/radius
   endsubroutine ! get
 
@@ -271,7 +267,7 @@ endmodule ! NearField_mod
 !    double precision :: r_temp
 !  
 !    type(MadelungClebschData) :: clebsch
-!    integer :: L, M, ii
+!    integer :: ell, emm, ii
 !  
 !    !call test_lebedev()
 !    call calc_near_field(v_near, radius, d , pot, LMAX)
@@ -288,10 +284,10 @@ endmodule ! NearField_mod
 !    call calc_wrong_contribution_coeff(ac_wrong, d, cmom, clebsch)
 !  
 !    ii = 1
-!    do L = 0, LMAX
-!      do M = -L, L
-!        v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**L)
-!        write(*,*) L, M, v_near(ii), v_mad_wrong(ii) 
+!    do ell = 0, LMAX
+!      do emm = -ell, ell
+!        v_mad_wrong(ii) = (ac_wrong(ii) * (-radius)**ell)
+!        write(*,*) ell, emm, v_near(ii), v_mad_wrong(ii) 
 !        ii = ii + 1
 !      enddo
 !    enddo

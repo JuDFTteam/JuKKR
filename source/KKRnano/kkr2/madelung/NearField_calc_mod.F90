@@ -30,10 +30,9 @@ module NearField_calc_mod
     double precision, intent(in) :: alat
     integer, intent(in) :: communicator
 
-    type(LocalCellInfo), allocatable :: local_cell(:)
-    type(NearFieldCorrection), allocatable :: nf_correction(:)
-    integer :: num_local_atoms
-    integer :: ilocal
+    type(LocalCellInfo), allocatable :: lci(:) ! local cell info
+    type(NearFieldCorrection), allocatable :: nfc(:) ! near field correction
+    integer :: num_local_atoms, ila
     integer :: ispin
     integer :: atom_id
     type(BasisAtom), pointer :: atomdata
@@ -41,51 +40,46 @@ module NearField_calc_mod
     type(DensityResults), pointer :: densities
 
     num_local_atoms = calc_data%num_local_atoms
-    allocate(local_cell(num_local_atoms))
-    allocate(nf_correction(num_local_atoms))
+    allocate(lci(num_local_atoms), nfc(num_local_atoms))
 
-    do ilocal = 1, num_local_atoms
-      atomdata => getAtomData(calc_data, ilocal)
+    do ila = 1, num_local_atoms
+      atomdata => getAtomData(calc_data, ila)
       mesh => atomdata%mesh_ptr
-      densities => getDensities(calc_data, ilocal)
-      atom_id = calc_data%atom_ids(ilocal)
+      densities => getDensities(calc_data, ila)
+      atom_id = calc_data%atom_ids(ila)
 
-      call create(nf_correction(ilocal), mesh%irmd, atomdata%potential%lmpot)
+      call create(nfc(ila), mesh%irmd, atomdata%potential%lmpot)
 
       ! setup information on local cells
       ! calculate near-field corrections for each radial point
-      call create(local_cell(ilocal), mesh%irmd, atomdata%potential%lmpot, 1)
+      call create(lci(ila), mesh%irmd, atomdata%potential%lmpot, 1)
 
-      local_cell(ilocal)%charge_moments = densities%cmom + densities%cminst
-      local_cell(ilocal)%v_intra = atomdata%potential%vons(:,:,1)
-      local_cell(ilocal)%radial_points = mesh%r
+      lci(ila)%charge_moments = densities%cmom + densities%cminst
+      lci(ila)%v_intra = atomdata%potential%vons(:,:,1)
+      lci(ila)%radial_points = mesh%r
 
-      call find_near_cells(local_cell(ilocal)%near_cell_indices, &
-                           local_cell(ilocal)%near_cell_dist_vec, &
-                           arrays%rbasis, arrays%bravais, &
-                           atom_id, mesh%rws / alat)
+      call find_near_cells(lci(ila)%near_cell_indices, lci(ila)%near_cell_dist_vec, arrays%rbasis, arrays%bravais, atom_id, mesh%rws/alat)
 
       ! VERY IMPORTANT: convert distance vectors to units of alat!
-      local_cell(ilocal)%near_cell_dist_vec = local_cell(ilocal)%near_cell_dist_vec * alat
+      lci(ila)%near_cell_dist_vec(:,:) = lci(ila)%near_cell_dist_vec(:,:) * alat
 
-    enddo ! ilocal
+    enddo ! ila
 
-    call calculate(nf_correction, local_cell, calc_data%madelung_calc%clebsch, communicator) ! calc_nf_correction
+    call calculate(nfc, lci, calc_data%madelung_calc%clebsch, communicator) ! calc_nf_correction
 
-    do ilocal = 1, num_local_atoms
-      atomdata => getAtomData(calc_data, ilocal)
+    do ila = 1, num_local_atoms
+      atomdata => getAtomData(calc_data, ila)
 
       ! nf correction has to be added to each spin channel
       do ispin = 1, atomdata%potential%nspin
-        atomdata%potential%vons(:,:,ispin) = atomdata%potential%vons(:,:,ispin) &
-                                           + nf_correction(ilocal)%delta_potential
+        atomdata%potential%vons(:,:,ispin) = atomdata%potential%vons(:,:,ispin) + nfc(ila)%delta_potential
       enddo ! ispin
-    enddo ! ilocal
+    enddo ! ila
 
-    call destroy(nf_correction)
-    call destroy(local_cell)
+    call destroy(nfc)
+    call destroy(lci)
 
-  endsubroutine
+  endsubroutine ! add_near_field_corr
 
 
   !----------------------------------------------------------------------------
@@ -99,7 +93,7 @@ module NearField_calc_mod
   !> realistic lattice structures
   !> Note: O(N**2) scaling!
   subroutine find_near_cells(near_inds, dist_vecs, rbasis, bravais, center_ind, radius_bounding)
-    integer, allocatable, intent(out) :: near_inds(:)
+    integer,          allocatable, intent(out) :: near_inds(:)
     double precision, allocatable, intent(out) :: dist_vecs(:,:)
 
     double precision, intent(in) :: rbasis(:,:)
@@ -107,11 +101,11 @@ module NearField_calc_mod
     integer, intent(in) :: center_ind
     double precision, intent(in) :: radius_bounding
 
+    integer, parameter :: MAX_NEAR = 64 ! there should be never more than 64 near cells
+    integer          :: near_inds_temp(MAX_NEAR)
+    double precision :: dist_vecs_temp(3,MAX_NEAR)
     integer :: ii, num, nx, ny, nz, count_near
     double precision :: center(3), vec(3), four_rws_squared, dist_sq
-    integer, parameter :: MAX_NEAR = 64 ! there should be never more than 64 near cells
-    integer :: near_inds_temp(MAX_NEAR)
-    double precision :: dist_vecs_temp(3,MAX_NEAR)
 
     double precision, parameter :: TOL = 1.d-6
 
@@ -135,7 +129,7 @@ module NearField_calc_mod
               ! it is important to skip the center!
               count_near = count_near + 1
 
-              CHECKASSERT (count_near <= MAX_NEAR )
+              CHECKASSERT( count_near <= MAX_NEAR )
               near_inds_temp(count_near) = ii
               dist_vecs_temp(:,count_near) = vec
             endif
