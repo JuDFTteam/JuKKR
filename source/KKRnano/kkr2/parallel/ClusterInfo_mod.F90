@@ -60,7 +60,7 @@ module ClusterInfo_mod
   !> The cluster information is communicated within each truncation zone
   !>
   !> @param ref_clusters    all the local ref. clusters
-  subroutine createClusterInfo(self, ref_clusters, trunc_zone, communicator, xTable)
+  subroutine createClusterInfo(self, ref_clusters, trunc_zone, xTable)
 #ifdef ClusterInfoStatistics
     use Statistics_mod, only: SimpleStats, init, add, allreduce, eval
 #endif    
@@ -76,8 +76,7 @@ module ClusterInfo_mod
     type(ClusterInfo), intent(inout)    :: self
     type(RefCluster), intent(in)        :: ref_clusters(:)
     type(TruncationZone), intent(in)    :: trunc_zone
-    integer, intent(in)                 :: communicator
-    type(ExchangeTable), intent(in)     :: xTable
+    type(ExchangeTable), intent(in)     :: xTable ! also contains a communicator
 
     integer :: ita, newn0, ila, ineqv, ist
     integer :: nacls, numn0, naclsd, numn0d, num_local_atoms, num_trunc_atoms, blocksize
@@ -107,8 +106,8 @@ module ClusterInfo_mod
     CHECKASSERT( numn0 <= nacls )
 
     ! determine global maximal number of cluster atoms
-    call MPI_Allreduce(nacls, naclsd, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
-    call MPI_Allreduce(numn0, numn0d, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+    call MPI_Allreduce(nacls, naclsd, 1, MPI_INTEGER, MPI_MAX, xTable%comm, ierr)
+    call MPI_Allreduce(numn0, numn0d, 1, MPI_INTEGER, MPI_MAX, xTable%comm, ierr)
     CHECKASSERT( numn0d <= naclsd )
 
     num_trunc_atoms = trunc_zone%naez_trc
@@ -140,9 +139,9 @@ module ClusterInfo_mod
     ALLOCATECHECK(recv_buf(blocksize,num_trunc_atoms))
 
     ! communication
-!   call copyFromI_com(recv_buf, send_buf, trunc_zone%global_atom_id, blocksize, num_local_atoms, communicator)
+!   call copyFromI_com(recv_buf, send_buf, trunc_zone%global_atom_id, blocksize, num_local_atoms, xTable%comm)
     
-!     call create(xTable, trunc_zone%global_atom_id, communicator, max_local_atoms=num_local_atoms)
+!     call create(xTable, trunc_zone%global_atom_id, xTable%comm, max_local_atoms=num_local_atoms)
     call reference_sys_com(xTable, blocksize, send_buf, recv_buf)
 !     call destroy(xTable)
     
@@ -213,8 +212,8 @@ cDBG  write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' old nacls='
     ! receive buffer is processed
 
 #ifdef ClusterInfoStatistics
-    ierr = allreduce(stats, communicator) ! allreduce statistics
-    call MPI_Comm_rank(communicator, myrank, ierr)
+    ierr = allreduce(stats, xTable%comm) ! allreduce statistics
+    call MPI_Comm_rank(xTable%comm, myrank, ierr)
     do ist = 1, size(stats)
       if (myrank == 0) write(*, fmt="(9a)") __FILE__,": stats for ",trim(eval(stats(ist)))
     enddo ! ist

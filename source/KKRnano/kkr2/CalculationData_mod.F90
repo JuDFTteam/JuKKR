@@ -287,7 +287,7 @@ module CalculationData_mod
 
     call create(self%xtable, self%trunc_zone%global_atom_id, comm=mp%mySEComm, max_local_atoms=self%num_local_atoms) ! createExchangeTable
 
-    call create(self%clusters, self%ref_cluster_a, self%trunc_zone, mp%mySEComm, xTable=self%xtable) ! createClusterInfo
+    call create(self%clusters, self%ref_cluster_a, self%trunc_zone, xTable=self%xtable) ! createClusterInfo
 
     if (mp%isMasterRank) then
       write(*,*) "Number of lattice vectors created     : ", self%lattice_vectors%nrd

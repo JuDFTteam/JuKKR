@@ -254,7 +254,7 @@ implicit none
                     calc%lattice_vectors%RR, & ! periodic images
                     GrefN_buffer, arrays%dsymLL(:,:,:arrays%NSYMAT), &
                     tmatLL, &
-                    calc%trunc_zone%global_atom_id, mp%mySEComm, &
+                    calc%trunc_zone%global_atom_id, mp%mySEComm, calc%xtable, &
                     calc%iguess_data, IE, PRSPIN, &
 !                     dtmatLL, &
                     kkr(1)%tr_alph, kkr(1)%Lly_grdt(ie,ispin), calc%atom_ids(1), dims%Lly, & ! LLY, note: num_local_atoms must be equal to 1 
@@ -517,14 +517,14 @@ implicit none
 !   use one_sided_commZ_mod, only: copyFromZ_com
     
     use two_sided_commZ_mod, only: reference_sys_com
-    use ExchangeTable_mod, only: ExchangeTable
-    use ExchangeTable_mod, only: create, destroy
-    type(ExchangeTable) :: xTable
+!   use ExchangeTable_mod, only: ExchangeTable
+!   use ExchangeTable_mod, only: create, destroy
+!   type(ExchangeTable) :: xTable
 
     type(CalculationData), intent(in) :: calc
     double complex, intent(inout) :: tmatLL(:,:,:,0:) !> dim(lmmaxd,lmmaxd,num_local_atoms,0:Lly)
     integer, intent(in) :: ispin
-    integer, intent(in) :: communicator
+    integer, intent(in) :: communicator ! ToDo: remove from interface
 
     integer :: ila, num_local_atoms, lmmaxd, ist, chunk_size, iLly, nLly
     double complex, allocatable :: tsst_local(:,:,:,:)
@@ -545,12 +545,12 @@ implicit none
 
     chunk_size = size(tmatLL, 1)*size(tmatLL, 2)
     
-    call create(xTable, calc%trunc_zone%global_atom_id, communicator, max_local_atoms=num_local_atoms)
+!   call create(xTable, calc%trunc_zone%global_atom_id, communicator, max_local_atoms=num_local_atoms)
     do iLly = 0, nLly - 1
 !     call copyFromZ_com(tmatLL(:,:,:,iLly), tsst_local(:,:,:,iLly), calc%trunc_zone%global_atom_id, chunk_size, num_local_atoms, communicator)
-      call reference_sys_com(xTable, chunk_size, tsst_local(:,:,:,iLly), tmatLL(:,:,:,iLly))
+      call reference_sys_com(calc%xTable, chunk_size, tsst_local(:,:,:,iLly), tmatLL(:,:,:,iLly))
     enddo ! iLly
-    call destroy(xTable)
+!   call destroy(xTable)
 
     deallocate(tsst_local, stat=ist) ! ignore status
   endsubroutine ! gather

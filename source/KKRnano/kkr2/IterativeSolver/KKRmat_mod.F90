@@ -30,7 +30,7 @@ module KKRmat_mod
   !>
   !> Returns diagonal k-integrated part of Green's function in GS.
   subroutine MultipleScattering(solver, op, preconditioner, kpoints, nkpoints, kpointweight, GS, tmatLL, alat, nsymat, RR, &
-                          Ginp, global_atom_id, communicator, iguess_data, ienergy, ispin, &
+                          Ginp, global_atom_id, communicator, xTable, iguess_data, ienergy, ispin, &
                           mssq, tr_alph, lly_grdt, volbz, global_atom_idx_lly, Lly, & ! LLY
                           solver_type, kpoint_timer, kernel_timer)
     !   performs k-space integration,
@@ -49,7 +49,6 @@ module KKRmat_mod
     use MPI, only: MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD!, MPI_Allreduce 
     
     use ExchangeTable_mod, only: ExchangeTable
-    use ExchangeTable_mod, only: create, destroy ! ToDo: when is the xTable destroyed?
     use two_sided_commZ_mod, only: reference_sys_com
 
     type(IterativeSolver), intent(inout) :: solver
@@ -68,6 +67,7 @@ module KKRmat_mod
     double complex, intent(inout) :: Ginp(:,:,0:,:,:) ! dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms), contains dG_ref/dE if Lly>0
     integer, intent(in) :: global_atom_id(:) ! dim(num_trunc_atoms)
     integer, intent(in) :: communicator
+    type(ExchangeTable), intent(in) :: xTable
     type(InitialGuess), intent(inout) :: iguess_data
     integer, intent(in) :: ienergy, ispin
 
@@ -89,9 +89,6 @@ module KKRmat_mod
     integer :: num_local_atoms, num_trunc_atoms, ikpoint, ila, ierr, ist, lmsd, nd(5)
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
-    logical, save :: init_xTable = .false.
-    type(ExchangeTable), save :: xTable
-
     ! needs more memory
     double complex, allocatable :: Gref_buffer(:,:,:,:,:) ! split_reference_fourier_com uses more memory but calls the communication routine only 1x per energy point
 #endif
@@ -116,10 +113,6 @@ module KKRmat_mod
     call reset(solver%stats)
 
 #ifdef SPLIT_REFERENCE_FOURIER_COM
-    if (.not. init_xTable) then
-      call create(xTable, global_atom_id, communicator, max_local_atoms=num_local_atoms)
-      init_xTable = .true.
-    endif
 
 !     ! get the required reference Green functions from the other MPI processes
 !     call referenceFourier_com_part1(Gref_buffer, num_trunc_atoms, Ginp, global_atom_id, communicator)
