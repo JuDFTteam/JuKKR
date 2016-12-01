@@ -75,8 +75,8 @@ module ClusterInfo_mod
     type(TruncationZone), intent(in)    :: trunc_zone
     integer, intent(in)                 :: communicator
 
-    integer :: isa, newn0, ila, ineqv, ist
-    integer :: nacls, numn0, naclsd, numn0d, num_local_atoms, blocksize
+    integer :: ita, newn0, ila, ineqv, ist
+    integer :: nacls, numn0, naclsd, numn0d, num_local_atoms, num_trunc_atoms, blocksize
     integer :: memory_stat ! needed in allocatecheck
     integer :: myrank, ierr ! MPI error status
     integer(kind=2) :: ind ! local atom index
@@ -107,7 +107,7 @@ module ClusterInfo_mod
     call MPI_Allreduce(numn0, numn0d, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
     CHECKASSERT( numn0d <= naclsd )
 
-    self%naez_trc = trunc_zone%naez_trc
+    num_trunc_atoms = trunc_zone%naez_trc
 
     ! start packing the send buffer
     OFFSET_ATOM = POS_NUMN0 ! the first three numbers are [source_atom_index, nacls, numn0]
@@ -133,7 +133,7 @@ module ClusterInfo_mod
     enddo ! ila
     ! send buffer is packed
 
-    ALLOCATECHECK(recv_buf(blocksize,self%naez_trc))
+    ALLOCATECHECK(recv_buf(blocksize,num_trunc_atoms))
 
     ! communication
     call copyFromI_com(recv_buf, send_buf, trunc_zone%global_atom_id, blocksize, num_local_atoms, communicator)
@@ -141,8 +141,8 @@ module ClusterInfo_mod
     ! prepare data structure arrays
     DEALLOCATECHECK(send_buf)
 cDBG  ALLOCATECHECK(global_target_atom_id(naclsd)) !!! DEBUG
-    ALLOCATECHECK(self%nacls(self%naez_trc))
-    ALLOCATECHECK(self%numn0(self%naez_trc))
+    ALLOCATECHECK(self%nacls(num_trunc_atoms))
+    ALLOCATECHECK(self%numn0(num_trunc_atoms))
     self%nacls = 0
     self%numn0 = 0
 
@@ -150,32 +150,32 @@ cDBG  ALLOCATECHECK(global_target_atom_id(naclsd)) !!! DEBUG
     self%naclsd = ((naclsd - 1)/N_ALIGN + 1)*N_ALIGN ! alignment
     self%numn0d = ((numn0d - 1)/N_ALIGN + 1)*N_ALIGN ! alignment
 
-    ALLOCATECHECK(self%indn0(self%numn0d,self%naez_trc))
-    ALLOCATECHECK( self%atom(self%naclsd,self%naez_trc))
-    ALLOCATECHECK( self%ezoa(self%naclsd,self%naez_trc))
+    ALLOCATECHECK(self%indn0(self%numn0d,num_trunc_atoms))
+    ALLOCATECHECK( self%atom(self%naclsd,num_trunc_atoms))
+    ALLOCATECHECK( self%ezoa(self%naclsd,num_trunc_atoms))
     self%indn0 = -1
     self%atom = -1
     self%ezoa = -1
     
     ! start unpacking and processing the receive buffer
-    do isa = 1, self%naez_trc
-      atom_id = recv_buf(POS_INDEX,isa)
-      CHECKASSERT( atom_id == trunc_zone%global_atom_id(isa) ) ! check if send_buf from right atom was received
+    do ita = 1, num_trunc_atoms
+      atom_id = recv_buf(POS_INDEX,ita)
+      CHECKASSERT( atom_id == trunc_zone%global_atom_id(ita) ) ! check if send_buf from right atom was received
 
-      numn0 = recv_buf(POS_NUMN0,isa)
+      numn0 = recv_buf(POS_NUMN0,ita)
       reduce_stats(numn0, POS_NUMN0)
       
       ! the indices in indn0 have to be transformed to truncation zone indices
       newn0 = 0 ! create a new version of numn0
       do ineqv = 1, numn0 ! loop over all inequivalent atoms in the cluster
 
-        indn0 = recv_buf(OFFSET_INDN + ineqv,isa) ! indn0 received
-cDBG    write(*,'(9(a,i0))') __FILE__,__LINE__,' isa=',isa,' ineqv=',ineqv,' indn0=',indn0
+        indn0 = recv_buf(OFFSET_INDN + ineqv,ita) ! indn0 received
+cDBG    write(*,'(9(a,i0))') __FILE__,__LINE__,' ita=',ita,' ineqv=',ineqv,' indn0=',indn0
         ind = trunc_zone%local_atom_idx(indn0) ! translate into a local index of the truncation zone
 
         if (ind > 0) then ! ind == -1 means that this atom is outside of truncation zone
           newn0 = newn0 + 1
-          self%indn0(newn0,isa) = ind ! indn0 translated into local indices of the truncation zone
+          self%indn0(newn0,ita) = ind ! indn0 translated into local indices of the truncation zone
           ! if trunc_zone%global_atom_id(:) is in ascending order (strictly monotonous), also indn0 will inherit that property
 cDBG      global_target_atom_id(newn0) = indn0 !!! DEBUG
         endif ! ind > 0
@@ -183,25 +183,25 @@ cDBG      global_target_atom_id(newn0) = indn0 !!! DEBUG
       enddo ! ineqv
 
       CHECKASSERT( 0 < newn0 .and. newn0 <= numn0 )
-      self%numn0(isa) = newn0
+      self%numn0(ita) = newn0
       reduce_stats(newn0, POS_NEWN0)
       
 cDBG  write(*,'(4(a,i0),999(" ",i0))') __FILE__,__LINE__,' atom_id=',atom_id,' numn0=',newn0,' indn0= ',global_target_atom_id(1:newn0) !!! DEBUG
 
-      nacls = recv_buf(POS_NACLS,isa) ! nacls
-      self%nacls(isa) = nacls
+      nacls = recv_buf(POS_NACLS,ita) ! nacls
+      self%nacls(ita) = nacls
       reduce_stats(nacls, POS_NACLS)
 
-      self%atom(1:nacls,isa) = trunc_zone%local_atom_idx(recv_buf(OFFSET_ATOM + 1:nacls + OFFSET_ATOM,isa)) ! translate into truncation zone indices here
-cDBG  global_target_atom_id(1:nacls) = recv_buf(OFFSET_ATOM + 1:nacls + OFFSET_ATOM,isa) !!! DEBUG
-cDBG  write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' nacls=',nacls,' atom@ezoa= ',(global_target_atom_id(ist),'@',self%ezoa(ist,isa),' ', ist=1,nacls) !!! DEBUG
+      self%atom(1:nacls,ita) = trunc_zone%local_atom_idx(recv_buf(OFFSET_ATOM + 1:nacls + OFFSET_ATOM,ita)) ! translate into truncation zone indices here
+cDBG  global_target_atom_id(1:nacls) = recv_buf(OFFSET_ATOM + 1:nacls + OFFSET_ATOM,ita) !!! DEBUG
+cDBG  write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' nacls=',nacls,' atom@ezoa= ',(global_target_atom_id(ist),'@',self%ezoa(ist,ita),' ', ist=1,nacls) !!! DEBUG
 
       ! the index of the periodic image does not need translation
-      self%ezoa(1:nacls,isa) = recv_buf(OFFSET_EZOA + 1:nacls + OFFSET_EZOA,isa) ! convert to integer(kind=2)
-cDBG  write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' old nacls=',nacls,' atom@ezoa= ',(global_target_atom_id(ist),'@',recv_buf(OFFSET_EZOA+ist,isa),' ', ist=1,nacls) !!! DEBUG
+      self%ezoa(1:nacls,ita) = recv_buf(OFFSET_EZOA + 1:nacls + OFFSET_EZOA,ita) ! convert to integer(kind=2)
+cDBG  write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' old nacls=',nacls,' atom@ezoa= ',(global_target_atom_id(ist),'@',recv_buf(OFFSET_EZOA+ist,ita),' ', ist=1,nacls) !!! DEBUG
 
-      CHECKASSERT( recv_buf(POS_MAGIC,isa) == MAGIC_NUMBER ) ! check if the end of recv_buf seems correct
-    enddo ! isa
+      CHECKASSERT( recv_buf(POS_MAGIC,ita) == MAGIC_NUMBER ) ! check if the end of recv_buf seems correct
+    enddo ! ita
     ! receive buffer is processed
 
 #ifdef ClusterInfoStatistics
@@ -211,6 +211,8 @@ cDBG  write(*,'(999(a,i0))') __FILE__,__LINE__,' atom_id=',atom_id,' old nacls='
       if (myrank == 0) write(*, fmt="(9a)") __FILE__,": stats for ",trim(eval(stats(ist)))
     enddo ! ist
 #endif
+
+    self%naez_trc = num_trunc_atoms
 
 cDBG  deallocate(global_target_atom_id, stat=ist) ! ignore status !!! DEBUG
     DEALLOCATECHECK(recv_buf)

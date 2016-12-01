@@ -76,10 +76,12 @@ module two_sided_comm_TYPE_mod
     !   and create the tables about which local reference system we need to send to which rank (pair)
 
     integer, allocatable :: rreq(:), sreq(:), rstats(:,:), sstats(:,:)
-    integer :: ipair, rank, tag, ierr, ist, inz, iinp, iout
+    integer :: ipair, rank, tag, ierr, ist, inz, iinp, iout, myrank
     include 'mpif.h' ! only: MPI_STATUS_SIZE, MPI_INTEGER, MPI_REQUEST_NULL
 
     assert( self%comm /= 0 )
+    
+    call MPI_Comm_rank(self%comm, myrank, ierr)
 
     allocate(sreq(self%send_n), sstats(MPI_STATUS_SIZE,self%send_n), &
              rreq(self%recv_n), rstats(MPI_STATUS_SIZE,self%recv_n), stat=ist) ! ToDo: catch status
@@ -89,18 +91,32 @@ module two_sided_comm_TYPE_mod
     ! now communication works like this
     do ipair = 1, self%npairs
       rank = self%pair2rank(ipair)
-      
-      do inz = self%send_start(ipair), self%send_start(ipair + 1) - 1
-        tag = inz - self%send_start(ipair)
-        iinp = self%send_index(inz)
-        call MPI_Isend(Ginp(:,iinp), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, sreq(inz), ierr)
-      enddo ! inz
 
-      do inz = self%recv_start(ipair), self%recv_start(ipair + 1) - 1
-        tag = inz - self%recv_start(ipair)
-        iout = self%recv_index(inz)
-        call MPI_Irecv(Gout(:,iout), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, rreq(inz), ierr)
-      enddo ! inz
+      if (rank /= myrank) then
+      
+        do inz = self%send_start(ipair), self%send_start(ipair + 1) - 1
+          tag = inz - self%send_start(ipair)
+          iinp = self%send_index(inz)
+          call MPI_Isend(Ginp(:,iinp), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, sreq(inz), ierr)
+        enddo ! inz
+
+        do inz = self%recv_start(ipair), self%recv_start(ipair + 1) - 1
+          tag = inz - self%recv_start(ipair)
+          iout = self%recv_index(inz)
+          call MPI_Irecv(Gout(:,iout), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, rreq(inz), ierr)
+        enddo ! inz
+        
+      else  ! rank /= myrank
+
+        assert( self%send_start(ipair) - self%send_start(ipair + 1) == self%recv_start(ipair) - self%recv_start(ipair + 1) )
+        do inz = self%recv_start(ipair), self%recv_start(ipair + 1) - 1
+          iout = self%recv_index(inz)
+          ist = inz - self%recv_start(ipair) + self%send_start(ipair)
+          iinp = self%send_index(ist)
+          Gout(:,iout) = Ginp(:,iinp) ! local copy
+        enddo ! inz
+        
+      endif ! rank /= myrank
 
     enddo ! ipair
     call MPI_Waitall(self%send_n, sreq, sstats, ierr) ! wait until all sends have finished

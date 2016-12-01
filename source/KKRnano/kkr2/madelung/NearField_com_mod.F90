@@ -19,7 +19,7 @@ module NearField_com_mod
     double precision, allocatable :: v_intra(:,:)
     double precision, allocatable :: radial_points(:)
     integer :: critical_index !< apply correction only starting at 'critical_index'
-    integer, allocatable :: near_cell_indices(:)
+    integer, allocatable :: near_cell_indices(:) ! global atom indices
     !> vectors pointing from near cell center to local cell
     double precision, allocatable :: near_cell_dist_vec(:,:)
   endtype
@@ -104,7 +104,7 @@ module NearField_com_mod
       
       ! we also have to store the actual number of mesh points for each local atom
       ! small hack: convert integer number to double to simplify communication
-      send_buffer(0,0,ila) = dble(irmd) 
+      send_buffer(0,0,ila) = dble(irmd) ! convert to double
       !--------------------------------------------------------------------------------------------
       ! end packing
     enddo ! ila
@@ -152,14 +152,12 @@ module NearField_com_mod
       WRITELOG(2,*) "Near field corrections for local atom ", ila
       WRITELOG(2,*) "Near field - delta potential (point/norm):"
       do i1 = 1, size(nfc(ila)%delta_potential, 1)
-        WRITELOG(2,*) i1, lci(ila)%radial_points(i1), &
-                      sqrt(dot_product(nfc(ila)%delta_potential(i1,:), &
-                                       nfc(ila)%delta_potential(i1,:)))
+        WRITELOG(2,*) i1, lci(ila)%radial_points(i1), sqrt(sum(nfc(ila)%delta_potential(i1,:)**2))
       enddo ! i1
 
       WRITELOG(2,*) "Near field - delta potential (LM/norm):"
       do i2 = 1, size(nfc(ila)%delta_potential, 2)
-        WRITELOG(2,*) i2, sqrt(dot_product(nfc(ila)%delta_potential(:,i2), nfc(ila)%delta_potential(:,i2)))
+        WRITELOG(2,*) i2, sqrt(sum(nfc(ila)%delta_potential(:,i2)**2))
       enddo ! i2
 
     enddo ! ila
@@ -228,18 +226,15 @@ module NearField_com_mod
   !----------------------------------------------------------------------------
   elemental subroutine destroyLocalCellInfo(self)
     type(LocalCellInfo), intent(inout) :: self
-    
     integer :: ist
-    deallocate(self%charge_moments, self%v_intra, self%radial_points, stat=ist)
-    if (allocated(self%near_cell_indices)) deallocate(self%near_cell_indices, stat=ist)
-    if (allocated(self%near_cell_dist_vec)) deallocate(self%near_cell_dist_vec, stat=ist)
+    deallocate(self%charge_moments, self%v_intra, self%radial_points, &
+               self%near_cell_indices, self%near_cell_dist_vec, stat=ist) ! ignore status
   endsubroutine ! destroy
 
   !----------------------------------------------------------------------------
   subroutine createNearFieldCorrection(self, irmd, lmpotd)
     type(NearFieldCorrection), intent(inout) :: self
-    integer, intent(in) :: irmd
-    integer, intent(in) :: lmpotd
+    integer, intent(in) :: irmd, lmpotd
 
     allocate(self%delta_potential(irmd,lmpotd))
   endsubroutine ! create
@@ -248,7 +243,7 @@ module NearField_com_mod
   elemental subroutine destroyNearFieldCorrection(self)
     type(NearFieldCorrection), intent(inout) :: self
     integer :: ist
-    deallocate(self%delta_potential, stat=ist)
+    deallocate(self%delta_potential, stat=ist) ! ignore status
   endsubroutine ! destroy
 
 endmodule ! NearField_com_mod
