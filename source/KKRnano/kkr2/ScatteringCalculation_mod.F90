@@ -240,7 +240,7 @@ implicit none
   ! <<>> Multiple scattering part
 
             ! gather t-matrices from own truncation zone
-            call gatherTmatrices_com(calc, tmatLL, ispin, mp%mySEComm)
+            call gatherTmatrices_com(calc, tmatLL, ispin)!, mp%mySEComm)
 
             TESTARRAYLOG(3, tmatLL)
 
@@ -511,12 +511,12 @@ implicit none
   !> Gather all t-matrices for 'ispin'-channel (from truncation zone only).
   !>
   !> Uses MPI-RMA
-  subroutine gatherTmatrices_com(calc, tmatLL, ispin, communicator)
+  subroutine gatherTmatrices_com(calc, tmatLL, ispin)!, communicator)
     use CalculationData_mod, only: CalculationData
-    use KKRresults_mod, only: KKRresults
-!   use one_sided_commZ_mod, only: copyFromZ_com
+    use two_sided_commZ_mod, only: distribute
     
-    use two_sided_commZ_mod, only: reference_sys_com
+!   use KKRresults_mod, only: KKRresults
+!   use one_sided_commZ_mod, only: copyFromZ_com
 !   use ExchangeTable_mod, only: ExchangeTable
 !   use ExchangeTable_mod, only: create, destroy
 !   type(ExchangeTable) :: xTable
@@ -524,7 +524,7 @@ implicit none
     type(CalculationData), intent(in) :: calc
     double complex, intent(inout) :: tmatLL(:,:,:,0:) !> dim(lmmaxd,lmmaxd,num_local_atoms,0:Lly)
     integer, intent(in) :: ispin
-    integer, intent(in) :: communicator ! ToDo: remove from interface
+!   integer, intent(in) :: communicator ! ToDo: remove from interface
 
     integer :: ila, num_local_atoms, lmmaxd, ist, chunk_size, iLly, nLly
     double complex, allocatable :: tsst_local(:,:,:,:)
@@ -548,7 +548,7 @@ implicit none
 !   call create(xTable, calc%trunc_zone%global_atom_id, communicator, max_local_atoms=num_local_atoms)
     do iLly = 0, nLly - 1
 !     call copyFromZ_com(tmatLL(:,:,:,iLly), tsst_local(:,:,:,iLly), calc%trunc_zone%global_atom_id, chunk_size, num_local_atoms, communicator)
-      call reference_sys_com(calc%xTable, chunk_size, tsst_local(:,:,:,iLly), tmatLL(:,:,:,iLly))
+      call distribute(calc%xTable, chunk_size, tsst_local(:,:,:,iLly), tmatLL(:,:,:,iLly))
     enddo ! iLly
 !   call destroy(xTable)
 

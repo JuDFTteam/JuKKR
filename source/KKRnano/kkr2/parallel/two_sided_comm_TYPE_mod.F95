@@ -59,11 +59,11 @@ module two_sided_comm_TYPE_mod
   implicit none
   private
   
-  public :: reference_sys_com
+  public :: distribute
 
   contains
 
-  subroutine reference_sys_com(self, ncount, Ginp, Gout)
+  subroutine distribute(self, ncount, Ginp, Gout)
     type(ExchangeTable), intent(in) :: self
     integer, intent(in) :: ncount
     NUMBER_TYPE, intent(in)  :: Ginp(ncount,*) !< dim(ncount,num_local_atoms)
@@ -125,9 +125,9 @@ module two_sided_comm_TYPE_mod
     call MPI_Waitall(self%recv_n, rreq, rstats, ierr) ! wait until all receives have finished
 
     deallocate(rreq, rstats, sreq, sstats, stat=ist) ! ignore status
-  endsubroutine ! reference_sys_com
+  endsubroutine ! distribute
 
-  subroutine reference_sys_com_var_sizes(self, Ginp, Gout)
+  subroutine distribute_var_sizes(self, Ginp, Gout)
     ! if we have additional information about the sizes stored in self, we can extend this method to variable message sizes
     type(ExchangeTable), intent(in) :: self
     NUMBER_TYPE, intent(in)  :: Ginp(:,:,:,:,:) !< dim(lmmaxd,lmmaxd,0:LLy,naclsd,num_local_atoms)
@@ -178,6 +178,6 @@ module two_sided_comm_TYPE_mod
     call MPI_Waitall(self%recv_n, rreq, rstats, ierr) ! wait until all receives have finished
 
     deallocate(rreq, rstats, sreq, sstats, stat=ist) ! ignore status
-  endsubroutine ! reference_sys_com
+  endsubroutine ! distribute
 
 endmodule ! two_sided_comm_TYPE_mod

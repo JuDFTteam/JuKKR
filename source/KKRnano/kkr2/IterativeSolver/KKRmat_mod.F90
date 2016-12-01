@@ -49,7 +49,7 @@ module KKRmat_mod
     use MPI, only: MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD!, MPI_Allreduce 
     
     use ExchangeTable_mod, only: ExchangeTable
-    use two_sided_commZ_mod, only: reference_sys_com
+    use two_sided_commZ_mod, only: distribute
 
     type(IterativeSolver), intent(inout) :: solver
     type(KKROperator), intent(inout) :: op
@@ -119,10 +119,10 @@ module KKRmat_mod
 
     nd = shape(Ginp) ! ToDo maybe also here, we can move the Lly dimension to be 3rd instead of two different arrays
     allocate(Gref_buffer(nd(1),nd(2),0:nd(3)-1,nd(4),num_trunc_atoms), stat=ist) ! ToDo: move 0:Lly to be the 3rd dimension
-    if (ist /= 0) die_here("failed to allocate Gref_buffer with"+(product(nd(1:4))*.5**26*num_trunc_atoms)+"GiByte for reference_sys_com") 
+    if (ist /= 0) die_here("failed to allocate Gref_buffer with"+(product(nd(1:4))*.5**26*num_trunc_atoms)+"GiByte for distribute") 
 
     ! get the required reference Green functions from the other MPI processes
-    call reference_sys_com(xTable, product(nd(1:4)), Ginp, Gref_buffer)
+    call distribute(xTable, product(nd(1:4)), Ginp, Gref_buffer)
 #endif
 
     allocate(G_diag(lmsd,lmsd))

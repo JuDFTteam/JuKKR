@@ -69,7 +69,7 @@ module ClusterInfo_mod
 !   use one_sided_commI_mod, only: copyFromI_com
     use ExchangeTable_mod, only: ExchangeTable
 !   use ExchangeTable_mod, only: create, destroy
-    use two_sided_commI_mod, only: reference_sys_com
+    use two_sided_commI_mod, only: distribute
     
     include 'mpif.h'
 
@@ -142,7 +142,7 @@ module ClusterInfo_mod
 !   call copyFromI_com(recv_buf, send_buf, trunc_zone%global_atom_id, blocksize, num_local_atoms, xTable%comm)
     
 !     call create(xTable, trunc_zone%global_atom_id, xTable%comm, max_local_atoms=num_local_atoms)
-    call reference_sys_com(xTable, blocksize, send_buf, recv_buf)
+    call distribute(xTable, blocksize, send_buf, recv_buf)
 !     call destroy(xTable)
     
     ! prepare data structure arrays
