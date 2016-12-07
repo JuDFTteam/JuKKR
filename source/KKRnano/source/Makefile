@@ -333,6 +333,7 @@ DirectSolver_mod.o: Exceptions_mod.o KKROperator_mod.o fillKKRMatrix_mod.o
 ExchangeTable_mod.o: ChunkIndex_mod.o
 two_sided_commZ_mod.o: ExchangeTable_mod.o
 two_sided_commI_mod.o: ExchangeTable_mod.o
+LocalAtomData_mod.o: Exceptions_mod.o RadialMeshData_mod.o ShapefunData_mod.o BasisAtom_mod.o LDAUData_mod.o JijData_mod.o RefCluster_mod.o MadelungCalculator_mod.o DensityResults_mod.o EnergyResults_mod.o KKRresults_mod.o
 
 
 # DO NOT DELETE

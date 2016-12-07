@@ -42,27 +42,32 @@ module ConstructShapes_mod
     integer, intent(in) :: atom_indicies(:) ! index table
     integer, intent(in) :: num_atoms
 
-    integer :: ii, ios, ij
-    double precision :: weight_table(num_atoms)
+    integer :: ii, ios
+    double precision, allocatable, save :: weight_table(:) ! dim(num_atoms) ! will be created from file 'voro_weights' at first invocation
  
-    open(32, file='voro_weights', form='formatted', action='read', status='old', iostat=ios)
-    if (ios /= 0) then
-      ! write(*,*) "Warning! file voro_weights cannot be opened, use 1.0 for all."
-      warning = 1
-      weights(:) = 1.d0
-      return
+    warning = 0
+    
+    if (.not. allocated(weight_table)) then
+    
+      allocate(weight_table(num_atoms))
+      weight_table(:) = 1.d0 ! default
+        
+      open(32, file='voro_weights', form='formatted', action='read', status='old', iostat=ios)
+      if (ios /= 0) then
+        ! write(*,*) "Warning! file voro_weights cannot be opened, use 1.0 for all."
+        warning = 1
+      else
+
+        do ii = 1, num_atoms
+          read(32, *) weight_table(ii)
+        enddo ! ii
+        close(32, iostat=ios)
+
+      endif
     endif
 
-    do ii = 1, num_atoms
-      read(32, *) weight_table(ii)
-    enddo ! ii
-    close(32, iostat=ios)
-
-    do ij = 1, size(atom_indicies)
-      weights(ij) = weight_table(atom_indicies(ij))
-    enddo ! ij
+    weights(:) = weight_table(atom_indicies(:))
     
-    warning = 0
   endfunction ! read_voro_weights
 
   !------------------------------------------------------------------------------
