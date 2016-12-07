@@ -60,7 +60,7 @@ module bsrmm_mod
 !$  integer, external :: omp_get_num_threads
 
     ! local variables
-    integer :: leadDim_Y, leadDim_X, leadDim_A, lmsd, nRHS, XnRows
+    integer :: leadDim_Y, leadDim_X, leadDim_A, lmsd, nRHS, nRows
     integer :: shapeY(3)
     ! private variables
     integer :: Yind, Aind, Xind
@@ -68,7 +68,14 @@ module bsrmm_mod
     integer :: ist, i01, beta, ithread
     integer, parameter :: one=1, zero=0
     character(len=32) :: name
-    
+    integer :: iperm
+! #define OVERLAP_PERMUATION
+#ifdef  OVERLAP_PERMUATION
+    integer, allocatable :: perm(:), weights(:)
+#else
+#define PERM(x) x
+#endif
+
     shapeY = shapeX
     leadDim_A = shapeA(1)
     leadDim_X = shapeX(1)
@@ -79,9 +86,16 @@ module bsrmm_mod
 
     if (leadDim_A /= leadDim_X) stop __LINE__
     
-    XnRows = size(ix) - 1
-#define YnRows XnRows
-    if (XnRows /= size(ia) - 1) stop __LINE__
+    nRows = size(ix) - 1
+    if (nRows /= size(ia) - 1) stop __LINE__
+
+#ifdef  OVERLAP_PERMUATION    
+    allocate(perm(nRows), weights(nRows))
+    write(*, '(9(a,i0))') "permute order of rows"
+!   weights(:) = 1 ! default
+    weights(:) = ix(2:nRows+1) - ix(1:nRows) ! how many elements are non-zero in this row of X or Y
+    call maximize_overlap(perm, ia, ja, weights)
+#endif
 
   do i01 = 0, 1 ! run two iterations, 1st and 2nd
 
@@ -109,7 +123,9 @@ module bsrmm_mod
     self%nByte = 0
     self%ntasks(:) = 0 ! init number of tasks per thread
 
-    do iRow = 1, YnRows
+    do iperm = 1, nRows
+      iRow = PERM(iperm)
+      
       ! reuse elements of Y, i.e. keep the accumulator in the cache
       do Yind = iy(iRow), iy(iRow + 1) - 1
        if (Yind > shapeY(3)) stop __LINE__ ! DEBUG
@@ -123,7 +139,7 @@ module bsrmm_mod
         do Aind = ia(iRow), ia(iRow + 1) - 1
           if (Aind > shapeA(3)) stop __LINE__ ! DEBUG
           kCol = ja(Aind) ! for each matrix block element A_full[iRow,kCol]
-#define kRow kCol
+#define   kRow kCol
           Xind = BSR_entry_exists(ix, jx, row=kRow, col=jCol) ! find out if X_full[kRow,jCol] exists
           if (Xind > 0) then ! yes
             if (Xind > shapeX(3)) stop __LINE__ ! DEBUG
@@ -138,12 +154,11 @@ module bsrmm_mod
 
             beta = one
           endif ! X_full[kRow,jCol] exists
-#undef kRow
+#undef    kRow
         enddo ! Aind
 
       enddo ! Yind
     enddo ! iRow
-#undef YnRows
 
   enddo ! i01
 
@@ -168,7 +183,85 @@ module bsrmm_mod
   endsubroutine ! bsr_times_bsr
 
   
-  
+#ifdef  OVERLAP_PERMUATION 
+  subroutine maximize_overlap(perm, ia, ja, weights) ! scales as nRows^2
+    integer, intent(out) :: perm(:) ! dim(nRows) new permutation
+    integer, intent(in) :: ia(:) ! dim(nRows+1)
+    integer, intent(in) :: ja(:) ! dim(nnzb)
+    integer, intent(in) :: weights(:) ! dim(nCols), nCols==nRows
+     
+    integer :: nRows, nCols, iRow, jRow, start_pair(2), inxt(1), ist, Aind, ijovl, ovlsum, sums(0:1)
+    integer, allocatable :: ovl(:,:), rowi(:), iperm(:)
+    
+    nRows = size(ia) - 1
+    if (size(ja) /= ia(nRows + 1) - 1) stop __LINE__
+    nCols = nRows
+    if (size(weights) /= nCols) stop __LINE__
+
+    if (size(perm) /= nRows) stop __LINE__
+    
+    allocate(ovl(nRows,nRows)) ! shared
+    allocate(rowi(nCols)) ! private
+    
+    ovlsum = 0
+    do iRow = 1, nRows
+      rowi(:) = 0
+      do Aind = ia(iRow), ia(iRow + 1) - 1
+        rowi(ja(Aind)) = weights(ja(Aind))
+      enddo ! Aind
+
+      ovl(iRow,iRow) = 0 ! diagonal elements are meaningless
+      do jRow = 1, iRow - 1 ! loop over off-diagonal elements
+
+        ijovl = 0
+        do Aind = ia(jRow), ia(jRow + 1) - 1
+          ijovl = ijovl + rowi(ja(Aind))
+        enddo ! Aind
+        ovl(jRow,iRow) = ijovl ! weighted overlap
+        ovl(iRow,jRow) = ijovl ! symmetric
+
+        if (jRow == iRow - 1) ovlsum = ovlsum + ijovl
+      enddo ! jRow
+    enddo ! iRow
+    sums(0) = ovlsum
+    
+    deallocate(rowi, stat=ist) ! ignore status
+
+#ifdef DEBUG
+    do iRow = 1, nRows
+      write(*, '(a,999I4)') "overlap: ",ovl(:,iRow) ! DEBUG
+    enddo ! iRow
+#endif
+
+    allocate(iperm(nRows))
+    iperm = 0 ! init
+    
+    start_pair = maxloc(ovl)
+    jRow = start_pair(2) ! start where the overlap is largest
+    
+    ovlsum = 0
+    do iRow = 1, nRows
+      perm(iRow) = jRow
+      iperm(jRow) = iRow ! inverse permutation
+      inxt = maxloc(ovl(:,jRow), mask=(iperm == 0))
+      ovlsum = ovlsum + ovl(inxt(1),jRow)
+      ovl(:,jRow) = 0
+      ovl(jRow,:) = 0
+      jRow = inxt(1)
+    enddo ! iRow
+    sums(1) = ovlsum
+
+    if (any(ovl /= 0)) stop 'DEBUG: maximize_overlap: not all elements were eleminated!'
+    
+    write(*, '(9(a,f0.3))') "improve overlap from ",sums(0)/dble(nRows)," to ",sums(1)/dble(nRows)
+#ifdef DEBUG
+    write(*, '(a,999(" ",i0))') "overlap permutation     ", perm  ! DEBUG
+    write(*, '(a,999(" ",i0))') "overlap inv. permutation", iperm ! DEBUG
+#endif
+    deallocate(ovl, iperm, stat=ist) ! ignore status
+  endsubroutine ! max
+#endif
+
   
   subroutine bsr_times_bsr_planned(self, Y, A, X)
     type(bsrMultPlan), intent(in) :: self
@@ -239,11 +332,11 @@ module bsrmm_mod
   
   subroutine bsr_times_bsr_spontaneous(Y, ia, ja, A, ix, jx, X, nFlop)
     double complex, intent(out) :: Y(:,:,:) ! dim(lmsa,nRHS,X%nnzb)
-    integer, intent(in) :: ia(:) !> dim(A%nRows + 1) !  start indices
-    integer, intent(in) :: ja(:) !> dim(A%nnzb)      ! column indices
+    integer, intent(in) :: ia(:) !> dim(nRows + 1) !  start indices
+    integer, intent(in) :: ja(:) !> dim(A%nnzb)    ! column indices
     double complex, intent(in)  :: A(:,:,:) ! dim(lmsa,lmsd,A%nnzb)
-    integer, intent(in) :: ix(:) !> dim(X%nRows + 1) !  start indices
-    integer, intent(in) :: jx(:) !> dim(X%nnzb)      ! column indices
+    integer, intent(in) :: ix(:) !> dim(nRows + 1) !  start indices
+    integer, intent(in) :: jx(:) !> dim(X%nnzb)    ! column indices
     double complex, intent(in)  :: X(:,:,:) ! dim(lmsa,nRHS,X%nnzb)
     integer(kind=8), intent(inout) :: nFlop
     ! for the result Y we assume the same BSR structure as X
@@ -253,7 +346,7 @@ module bsrmm_mod
     external :: zgemm ! from BLAS
 
     ! local variables
-    integer :: leadDim_Y, leadDim_X, leadDim_A, lmsd, nRHS, XnRows
+    integer :: leadDim_Y, leadDim_X, leadDim_A, lmsd, nRHS, nRows
     double complex, parameter :: ZERO=(0.d0, 0.d0), ONE=(1.d0, 0.d0)
     ! private variables
     integer :: Yind, Aind, Xind
@@ -272,13 +365,12 @@ module bsrmm_mod
     if (size(X, 2) /= size(Y, 2)) stop __LINE__
     if (size(X, 3) /= size(Y, 3)) stop __LINE__
 
-    XnRows = size(ix) - 1
-#define YnRows XnRows
-    if (XnRows /= size(ia) - 1) stop __LINE__
+    nRows = size(ix) - 1
+    if (nRows /= size(ia) - 1) stop __LINE__
 
 !$omp parallel
 !$omp do private(iRow, Yind, jCol, Aind, kCol, Xind, beta) reduction(+:nFlop)
-    do iRow = 1, YnRows
+    do iRow = 1, nRows
       ! reuse elements of Y, i.e. keep the accumulator in the cache
       do Yind = iy(iRow), iy(iRow + 1) - 1
 #ifdef DEBUG
@@ -293,7 +385,7 @@ module bsrmm_mod
           if (Aind > size(A, 3)) stop __LINE__
 #endif
           kCol = ja(Aind) ! for each matrix block element A_full[iRow,kCol]
-#define kRow kCol          
+#define   kRow kCol          
           Xind = BSR_entry_exists(ix, jx, row=kRow, col=jCol) ! find out if X_full[kRow,jCol] exists
           if (Xind > 0) then ! yes
 #ifdef DEBUG
@@ -307,12 +399,11 @@ module bsrmm_mod
 
             beta = one
           endif ! X_full[kRow,jCol] exists
-#undef kRow
+#undef    kRow
         enddo ! Aind
 
       enddo ! Yind
     enddo ! iRow
-#undef YnRows
 !$omp end do
 !$omp end parallel
 #undef iy
