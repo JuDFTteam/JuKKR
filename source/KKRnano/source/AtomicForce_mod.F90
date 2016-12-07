@@ -26,8 +26,10 @@ implicit none
 
     fac = dsqrt((4.d0*pi)/3.d0)
     if (lpot < 1) then
-      write(6, *) "error stop in subroutine force : the charge density has to contain non spherical contributions up to l=1 at least"
-      stop
+      write(*, *) "error stop in subroutine force : the charge density has to contain non spherical contributions up to l=1 at least"
+      flm  = 0.d0
+      flmc = 0.d0
+      return
     endif
 
     rws = r(irws)
@@ -75,11 +77,10 @@ implicit none
     enddo ! m
 
   endsubroutine ! force
-  
+
 !     calculates the Hellmann-Feynman force.
 !
-!     attention: a factor sqrt(4*pi/3) is missing here, this is
-!     corrected in routine 'force'
+!     attention: a factor sqrt(4*pi/3) is missing here, this is corrected in routine 'force'
   subroutine forceh(flmh, lpot, rho2ns, v, r, drdi, irws, z, irmd)
   use Quadrature_mod, only: Simpson
   use Constants_mod, only: pi
@@ -97,8 +98,9 @@ implicit none
     double precision :: flm(-1:1,2), v1(irmd)
     
     if (lpot < 1) then
-        write(6, *) "error stop in subroutine force : the charge density has to contain non spherical contributions up to l=1 at least"
-        stop
+      write(*, *) "error stop in subroutine force : the charge density has to contain non spherical contributions up to l=1 at least"
+      flmh = 0.d0
+      return
     endif
 !
 !
@@ -134,7 +136,7 @@ implicit none
     enddo ! m
 
   endsubroutine ! forceh
-      
+
   
   subroutine forcxc(flm, flmc, lpot, nspin, rhoc,v,r, drdi, irws, irmd)
     use Quadrature_mod, only: Simpson
@@ -157,8 +159,8 @@ implicit none
     fac = sqrt((4.d0*pi)/3.d0)
 
     if (lpot < 1) then
-      write(6, fmt="('error stop in subroutine force : the charge density has to contain non spherical contributions up to l=1 at least')")
-      stop
+      write(*, *) "error stop in subroutine force : the charge density has to contain non spherical contributions up to l=1 at least"
+      return
     endif
 
     tail_cor(:) = 0.d0
