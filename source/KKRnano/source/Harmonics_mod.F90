@@ -492,7 +492,7 @@ module Harmonics_mod
     
     double precision :: a,cd,cph,cth,fac,fpi,rtwo,sgm,sph,sth,t,xy2,xyz2,xy
     double precision :: c(0:lmax), p(0:lmax,0:lmax), s(0:lmax)
-    integer :: i,l,m
+    integer :: i, l, m
 
     fpi = 4.d0*pi
     rtwo = sqrt(2.d0)

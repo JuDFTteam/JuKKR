@@ -7,6 +7,7 @@ module BrillouinZone_mod
   public :: bzkint0, readKpointsFile
   
   integer, parameter :: maxmshd = 8
+  character(len=*), parameter :: default_file_name='kpoints', alternative_file_name='new.kpoints'
   
   contains
   
@@ -19,19 +20,18 @@ module BrillouinZone_mod
 
     integer, parameter :: fu = 52 ! file unit
     integer :: i, l, ios, maxm
-    character(len=*), parameter :: defname='kpoints', altname='new.kpoints'
     character(len=32) :: comment
 
-    open(fu, file=altname, form='formatted', status='old', action='read', iostat=ios)
+    open(fu, file=alternative_file_name, form='formatted', status='old', action='read', iostat=ios)
     if (ios /= 0) then ! default to reading the old kpoint file
-      open(fu, file=defname, form='formatted', status='old', action='read', iostat=ios)
+      open(fu, file=default_file_name, form='formatted', status='old', action='read', iostat=ios)
       if (ios /= 0) then ! failed to read the old kpoint file
-        write(*,*) 'ERROR: file "',defname,'" not found, nor file "'-altname-'".'
-        die_here('file "'-defname-'" not found!')
+        write(*,*) 'ERROR: file "',default_file_name,'" not found, nor file "'-alternative_file_name-'".'
+        die_here('file "'-default_file_name-'" not found!')
       endif
     else ! file new.kpoints exists - use those kpoints
-      write(*,*) 'WARNING: rejecting file "',defname,'" - using file "',altname,'" instead.'
-      warn(6, 'rejecting file "'-defname-'" - use file "'-altname-'" instead.')
+      write(*,*) 'WARNING: rejecting file "',default_file_name,'" - using file "',alternative_file_name,'" instead.'
+      warn(6, 'rejecting file "'-default_file_name-'" - use file "'-alternative_file_name-'" instead.')
     endif
 
     rewind (fu) ! rewind the files to the beginning (probably legacy code)
@@ -39,14 +39,14 @@ module BrillouinZone_mod
     read(fu, fmt=*) maxm ! read the maximum number of k-meshes given in that file
     read(fu, fmt='(a)') comment
     do l = 1, min(maxmesh, maxm)
-      read(fu, fmt='(i8,f15.10)') nofks(l), volbz(l)
+      read(fu, fmt=*) nofks(l), volbz(l)
       read(fu, fmt='(a)') comment
       do i = 1, nofks(l)
         read(fu, fmt=*) bzkp(1:3,i,l), volcub(i,l)
       enddo ! i
     enddo ! l
     close(fu)
-    
+
   endsubroutine ! readKpointsFile
   
   
@@ -116,10 +116,11 @@ module BrillouinZone_mod
     integer, intent(out) :: maxmesh, ekmd
     integer, intent(out) :: kmesh(iemxd) !< mapping of k-meshes and energy contour points
 
-    integer :: ie, ik, im, n, nb(3), ekmin, nxyz(3), nofks(maxmshd), newnofks(maxmshd), fu
+    integer :: ie, ik, im, n, nb(3), newmaxmesh, ekmin, nxyz(3), nofks(maxmshd), newnofks(maxmshd), fu
     logical :: newkp, oldkp
     double precision :: wxyz(0:3), volBz, newvolBz
     double precision, allocatable :: kwxyz(:,:) !< dim(0:3,product(nbxyz(1:3)))
+    character(len=64) :: line 
     type(BrillouinZoneMesh), intent(out) :: kpms(:)
 
     ! set number of different k-meshes 
@@ -154,15 +155,15 @@ module BrillouinZone_mod
 
     if (nowrite) then
       fu = 0
-      inquire(file='kpoints', exist=oldkp)
+      inquire(file=default_file_name, exist=oldkp)
       if (oldkp) then
-        warn(6, "a file 'kpoints' exists and is not overwritten.")
+        warn(6, "a file '"-default_file_name-"' exists and is not overwritten.")
       else
-        warn(6, "file 'kpoints' is not created.")
+        warn(6, "file '"-default_file_name-"' is not created.")
       endif
     else
       fu = 54
-      open(unit=fu, file='kpoints', action='write') ! create or overwrite existing file with the same name
+      open(unit=fu, file=default_file_name, action='write') ! create or overwrite existing file with the same name
       write(unit=fu, fmt='(9(a,i0))') ' ',maxmesh
       write(unit=fu, fmt='(9(a,i0))') '# ',maxmesh,' Brillouin zone meshes will follow' ! comment line
     endif
@@ -202,13 +203,16 @@ module BrillouinZone_mod
     write(6,*) '           EKMIN=',ekmin,'  EKMD=',ekmd
 
     ! check the format of the file called new.kpoints 
-    inquire(file='new.kpoints', exist=newkp)
+    inquire(file=alternative_file_name, exist=newkp)
     if (newkp) then
 
-      open(53, file='new.kpoints', form='formatted', action='read', status='old')
+      open(53, file=alternative_file_name, form='formatted', action='read', status='old')
       rewind(53)
+      read(53, fmt=*) newmaxmesh
+      read(53, fmt='(a)') line ! comment
       do im = 1, maxmesh
-        read(53, fmt='(i8,f15.10)') newnofks(im), newvolBz
+        read(53, fmt=*) newnofks(im), newvolBz
+        read(53, fmt='(a)') line ! comment
         do ik = 1, newnofks(im)
           read(53, fmt=*) wxyz(1:3), wxyz(0) ! read dummies just to see if the format is good
         enddo ! ik

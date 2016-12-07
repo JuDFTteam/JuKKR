@@ -67,7 +67,7 @@ module Startb1_mod
     type(PotentialEntry) :: pe(2)
     type(BasisAtom) :: atom
     type(RadialMeshData) :: mesh
-    integer, parameter :: fu = 13
+    integer, parameter :: fu = 13, fa = 37
     integer :: cell_index, n_warn_alat_differs
     double precision :: radius_muffin_tin
 
@@ -78,7 +78,7 @@ module Startb1_mod
     
     n_warn_alat_differs = 0
 
-    if (.not. nowrite) call openBasisAtomDAFile(atom, 37, 'bin.atoms', action='write')
+    if (.not. nowrite) call openBasisAtomDAFile(atom, fa, 'bin.atoms', action='write')
     
     open(unit=fu, file='potential', status='old', form='formatted', action='read')
     do iatom = 1, naez
@@ -122,13 +122,13 @@ module Startb1_mod
 
       call createBasisAtom(atom, 1, lpot_atom, nspin, pe(1)%sblock%IRT1P - pe(1)%sblock%IRNS, pe(1)%sblock%IRT1P)  ! create dummy basis atom
 
-      inquire (iolength = reclen) atom%potential%vins, &
-                                  atom%potential%visp, &
-                                  atom%core%ecore
+      inquire(iolength=reclen) atom%potential%vins, &
+                               atom%potential%visp, &
+                               atom%core%ecore
 
       max_reclen = max(max_reclen, reclen)
 
-      ! write file 'atoms'
+      ! write file 'bin.atoms'
       atom%atom_index = iatom
       atom%cell_index = ntcell(iatom)
       atom%Z_nuclear = Zat(iatom)
@@ -145,7 +145,7 @@ module Startb1_mod
         atom%core%ITITLE(:,ispin) = pe(ispin)%header%ITITLE
       enddo
 
-      if (.not. nowrite) call writeBasisAtomDA(atom, 37, iatom)
+      if (.not. nowrite) call writeBasisAtomDA(atom, fa, iatom)
 
       cell_index = modulo(ntcell(iatom) - 1, sfile%ncell) + 1
       if (cell_index < ntcell(iatom)) nbackfold = nbackfold + 1
@@ -164,7 +164,7 @@ module Startb1_mod
     enddo ! iatom ! end loop over atoms
     close(fu)
     
-    if (.not. nowrite) call closeBasisAtomDAFile(37)
+    if (.not. nowrite) call closeBasisAtomDAFile(fa)
 
     if (n_warn_alat_differs > 0) &
       warn(6, "In"+n_warn_alat_differs/nspin+"potential files ALAT is not the same as in the input!")

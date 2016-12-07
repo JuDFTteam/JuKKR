@@ -147,22 +147,19 @@ module CalculationData_mod
 
   !----------------------------------------------------------------------------
   !> Calculate Madelung Lattice sums for all local atoms.
-  subroutine prepareMadelung(self, arrays)
-    use Main2Arrays_mod, only: Main2Arrays
+  subroutine prepareMadelung(self, rbasis)
     use MadelungCalculator_mod, only: calculate
 
     type(CalculationData), intent(inout) :: self
-    type(Main2Arrays), intent(in):: arrays
+    double precision, intent(in) :: rbasis(:,:) ! dim(3,naez_all)
 
     integer :: atom_id, ila
 
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
-      atom_id = self%atom_ids(ila)
-      call calculate(self%madelung_sum_a(ila), self%madelung_calc, atom_id, arrays%rbasis)
+      call calculate(self%madelung_sum_a(ila), self%madelung_calc, atom_id, rbasis) ! this still scales N^3
     enddo ! ila
 
-!   stop 'DEBUG: stop after calculateMadelungLatticeSum in CalculationData_mod.F90:166'    
   endsubroutine ! prepare Madelung
 
   !----------------------------------------------------------------------------

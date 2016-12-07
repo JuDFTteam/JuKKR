@@ -150,14 +150,14 @@ module MadelungCalculator_mod
   !> Needs a properly constructed MadelungLatticeSum object.
   subroutine calculateMadelungLatticeSum(self, calc, atom_index, rbasis)
     type(MadelungLatticeSum), intent(inout) :: self
-    type(MadelungCalculator), intent(in) :: calc ! by introducing this, I try to get rid of the pointers in all the MadelungLatticeSum objects that all point to the same calculator
+    type(MadelungCalculator), intent(in) :: calc ! by introducing this, we get rid of the pointers in all the MadelungLatticeSum objects that all point to the same calculator
     integer, intent(in) :: atom_index
     double precision, intent(in) :: rbasis(3,self%num_atoms)
 
     call strmat(calc%alat, lmax=2*calc%lpot, naez=self%num_atoms, &
       ngmax=calc%lattice%ngmax, nrmax=calc%lattice%nrmax, &
       nlshellg=calc%lattice%nsg(calc%lattice%nshlg), nlshellr=calc%lattice%nsr(calc%lattice%nshlr), &
-      gv=calc%lattice%gn, rv=calc%lattice%rm, qv=rbasis, vol=calc%volume0, i1=atom_index, &
+      gv=calc%lattice%gn, rv=calc%lattice%rm, rbasis=rbasis, vol=calc%volume0, i1=atom_index, &
       smat=self%smat) ! result
 
   endsubroutine ! calc
@@ -231,7 +231,7 @@ module MadelungCalculator_mod
 
     integer :: icleb_dummy(1,3), iend
     double precision :: cleb_dummy(1)
-    integer :: l, m, i, ist, lpot
+    integer :: ell, emm, lm, ist, lpot
 
     type(MadelungHarmonics) :: hmx
 
@@ -249,14 +249,14 @@ module MadelungCalculator_mod
     call destroyMadelungHarmonics(hmx)
     
     allocate(self%loflm((2*lpot+1)**2))
-    i = 0
-    do l = 0, 2*lpot
-      do m = -l, l
-        i = i + 1
-        assert(i == l*l + l + m + 1)
-        self%loflm(i) = l
-      enddo ! m
-    enddo ! l
+    lm = 0
+    do ell = 0, 2*lpot
+      do emm = -ell, ell
+        lm = lm + 1
+        assert(lm == ell*ell + ell + emm + 1)
+        self%loflm(lm) = ell
+      enddo ! emm
+    enddo ! ell
     
   endsubroutine ! create
   
@@ -432,7 +432,7 @@ module MadelungCalculator_mod
   integer function count_vectors_in_sphere(numh, bm, dmax, vec, rad, nvecs, nshells, nsh, tol_origin, tol_newshell, space) result(ist)
 #ifndef ORIGINAL_N_SQUARE_ALGORITHM
     use Sorting_mod, only: permutation_of
-#endif    
+#endif
     integer, intent(in) :: numh(3)
     double precision, intent(in) :: bm(3,3) !< bravais matrix or reciprocal space basis
     double precision, intent(in) :: dmax !< cutoff radius of the sphere
@@ -453,7 +453,7 @@ module MadelungCalculator_mod
 #endif
     which_space = space
 
-!     numh = num/2 + 1
+!   numh = num/2 + 1
 !  ==> 1 - numh(1) : num(1) - numh(1) is equivalent to -num/2 : num - num/2, however, num was chosen odd, so its a symmetric
     
     dmax2 = dmax**2 ! radius^2
@@ -462,16 +462,28 @@ module MadelungCalculator_mod
     !                 generate lattice vectors of real or reciprocal space
     ! **********************************************************************
 
+#ifdef SUPERCELL_ELECTROSTATICS
+#define SKIP_GVECTORS(i123) if(space == 'g' .and. modulo(i123, SUPERCELL_ELECTROSTATICS) == 0) cycle 
+    if (space == 'g') write(*,*) "Warning: translational symmetry fixed to ", SUPERCELL_ELECTROSTATICS
+#else
+#define SKIP_GVECTORS(i123) 
+#endif
+
     do i01 = 0, 1 ! loop runs twice: iteration #0: count & allocate, iteration #1: store
     
       i = 0 ! init
-      do i1 = -numh(1), numh(1) ! 1 - numh(1), num(1) - numh(1)
+      do i1 = -numh(1), numh(1)
+        SKIP_GVECTORS(i1)
         vx(1:3) = i1*bm(1:3,1)
-        do i2 = -numh(2), numh(2) ! 1 - numh(2), num(2) - numh(2)
+        do i2 = -numh(2), numh(2)
+          SKIP_GVECTORS(i2)
           vxy(1:3) = i2*bm(1:3,2) + vx(1:3) 
-          do i3 = -numh(3), numh(3) ! 1 - numh(3), num(3) - numh(3)
+          do i3 = -numh(3), numh(3)
+            SKIP_GVECTORS(i3)
             vxyz(1:3) = i3*bm(1:3,3) + vxy(1:3) 
-            
+
+#undef SKIP_GVECTORS
+
             v2 = sum(vxyz(1:3)**2)
 
             if (v2 <= dmax2) then
@@ -488,6 +500,9 @@ module MadelungCalculator_mod
       
       if (i01 == 0) then ! after first iteration (the "count" iteration) and before the second iteration (the "store" iteration)
         nvecs = i
+#ifdef SUPERCELL_ELECTROSTATICS
+        if (space == 'g') write(*,'(9(a,i0))') "Warning: use only each ",SUPERCELL_ELECTROSTATICS,"-th reciprocal lattice vector, ",nvecs," in total."
+#endif
         allocate(cv(1:3,nvecs), d2(nvecs), nvis(nvecs), stat=ist)
       endif
 
@@ -635,13 +650,13 @@ module MadelungCalculator_mod
   !>*                                                                    *
   !>*         - summed over all lattice vectors rv  -                    *
   !>*                                                                    *
-  !>*  ylm       : real spherical harmic to given l,m                    *
+  !>*  ylm       : real spherical harmic to given l,emm                    *
   !>*  q(i),q(j) : basis vectors of the unit cell                        *
   !>*                                                                    *
   !>*  in the case of i = j, rv = 0 is omitted.                          *
   !>*                                                                    *
   !>*  the ewald method is used to perform the lattice summations        *
-  !>*  the splitting parameter lamda is set equal sqrt(pi)/alat          *
+  !>*  the splitting parameter lambda is set equal sqrt(pi)/alat          *
   !>*  (alat is the lattice constant) .                                  *
   !>*                                                                    *
   !>*  if the contribution of the last shell of the direct and the       *
@@ -656,7 +671,7 @@ module MadelungCalculator_mod
 
 ! OpenMP parallelised, needs threadsafe erfcex, gamfc and ymy E.R.
 
-  subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, qv, vol, i1, smat)
+  subroutine strmat(alat, lmax, naez, ngmax, nrmax, nlshellg, nlshellr, gv, rv, rbasis, vol, i1, smat)
     use Harmonics_mod, only: ymy
     use Constants_mod, only: pi
 
@@ -671,21 +686,21 @@ module MadelungCalculator_mod
     ! (todo for gv and rv: introduce a forth component that has the vector absolute, so the evaluation of ymy can be made faster)
     double precision, intent(in) :: gv(3,*) !< list of vectors in the reciprocal space 
     double precision, intent(in) :: rv(3,*) !< list of vectors in the real space 
-    double precision, intent(in) :: qv(3,*) !< list of atomic positions (usuall called rbasis)
+    double precision, intent(in) :: rbasis(3,*) !< list of atomic positions
     integer, intent(in) :: i1 !< atom index of the source atom
     double precision, intent(out) :: smat(:,:) ! ((lmax+1)^2,naez)
 
-    double complex, parameter :: CI=(0.d0,1.d0)
+    double complex, parameter :: mCI=(0.d0, -1.d0), ZERO=(0.d0, 0.d0)
     double precision, parameter :: BOUND=1.d-8
-    double precision :: alpha, lamda, kappa
+    double precision :: alpha, lambda, kappa
     double precision :: dq(3), ga, vr(3), ra, ga2
     double precision :: dqdotg
-    double precision :: fpi, rfac, sqrtPiInv, sqrtPi
-    integer :: i, i2, i01, ist
-    integer :: l, m, lm
-    integer :: nge, ngs, nre, nrs, nstart
+    double precision :: fpi, sqrtPiInv, sqrtPi, rfac
     double complex :: bfac, stest((lmax+1)**2)
     double precision :: g(0:lmax), ylm((lmax+1)**2)
+    integer :: i, i2, i01, ist
+    integer :: ell, emm, lm
+    integer :: nge, ngs, nre, nrs
 
     logical, parameter :: precompute_Ymy_g = .true.
     double precision, allocatable :: Ymy_g(:,:)
@@ -696,12 +711,12 @@ module MadelungCalculator_mod
 
     assert(size(smat, 1) == (lmax+1)**2) ! check leading dimension
 
-    lamda = sqrt(pi)/alat ! choose proper splitting parameter
-    kappa = -0.25d0/(lamda*lamda)
+    lambda = sqrt(pi)/alat ! choose proper splitting parameter
+    kappa = -0.25d0/(lambda*lambda)
 
     if (precompute_Ymy_g) then
-!     write(*,'(9(2a,f0.3))') __FILE__,' allocate ',(1+(lmax+1)**2)*(ngmax-1)*.5**17,' MiByte to precompute Ylm in g-space'
       allocate(Ymy_g(0:(lmax+1)**2,2:ngmax), stat=ist)
+      if (ist /= 0) die_here('allocation of'+((1+(lmax+1)**2)*(ngmax-1)*.5**17)+'MiByte to precompute Ylm in g-space failed')
       do i = 2, ngmax
         call ymy(gv(1,i), gv(2,i), gv(3,i), ga, Ymy_g(1:,i), lmax)
         Ymy_g(0,i) = ga ! store the length of the g-space vector
@@ -709,55 +724,47 @@ module MadelungCalculator_mod
     endif ! precompute
 
 
-    ! **********************************************************************
-    !$omp parallel do private(i2,dq,stest,lm,nstart,i01,nrs,ngs,nre,nge,i,vr,ylm,ra,alpha,g,rfac,l,m,ga,ga2,dqdotg,bfac)
+    !$omp parallel do private(i2,dq,stest,lm,i01,nrs,ngs,nre,nge,i,vr,ylm,ra,alpha,g,rfac,ell,emm,ga,ga2,dqdotg,bfac)
     do i2 = 1, naez 
       !======================================================================
-      dq(1:3) = (qv(1:3,i1) - qv(1:3,i2)) * alat
+      dq(1:3) = (rbasis(1:3,i1) - rbasis(1:3,i2)) * alat
 
-      stest(:) = 0.d0
-      stest(1) = -sqrtPi/(vol*2.d0*lamda*lamda)
-      
+      stest(:) = ZERO
+      stest(1) = -sqrtPi/(vol*2.d0*lambda*lambda)
+
       ! --> exclude the origin and add correction if i1 == i2
       if (i1 == i2) then
-        stest(1) = stest(1) - lamda/pi
-        nstart = 2
+        stest(1) = stest(1) - lambda/pi
+        nrs = 2 ! omit the self-interaction by starting from 2
       else
-        nstart = 1
+        nrs = 1
       endif
-      
-      ! --> loop first over n-1 shells of real and reciprocal lattice - then
-      !     add the contribution of the last shells to see convergence
-      do i01 = 0, 1
-      
-        if (i01 == 0) then
-          nrs = nstart
-          ngs = 2
-          nre = nrmax - nlshellr ! nlshellr==nsr(nshlr), loop over all but the last shell
-          nge = ngmax - nlshellg ! nlshellg==nsg(nshlg), loop over all but the last shell
-        else ! loop over the last shell only (to check the convergence)
-          nrs = nre + 1
-          ngs = nge + 1
-          nre = nrmax
-          nge = ngmax
-        endif
 
-        ! --> sum over real lattice
+        ! set the loop limits for the first iteration
+        ngs = 2 ! always omit the g=0-vector by starting from 2
+        nre = nrmax - nlshellr ! nlshellr==nsr(nshlr), loop over all but the last shell
+        nge = ngmax - nlshellg ! nlshellg==nsg(nshlg), loop over all but the last shell
+
+      ! --> loop first over n-1 shells of real and reciprocal lattice - then
+      !     in the second iteration add the contribution of the last shells to see convergence
+      do i01 = 0, 1
+
+        ! --> sum over real space lattice
         do i = nrs, nre
           vr(1:3) = dq(1:3) - rv(1:3,i)
 
           call ymy(vr(1), vr(2), vr(3), ra, ylm, lmax)
-          alpha = lamda*ra
+          alpha = lambda*ra
           g(0:lmax) = gamfc(lmax, alpha, ra)
 
-          do l = 0, lmax
-            rfac = g(l)*sqrtPiInv!/sqrt(pi)
-            do m = -l, l
-              lm = l*l + l + m + 1
+          do ell = 0, lmax
+            rfac = g(ell)*sqrtPiInv
+            do emm = -ell, ell
+              lm = ell*ell + ell + emm + 1
               stest(lm) = stest(lm) + ylm(lm)*rfac
-            enddo ! m
-          enddo ! l
-         
+            enddo ! emm
+          enddo ! ell
+
         enddo ! i
 
         ! --> sum over reciprocal lattice
@@ -773,35 +780,47 @@ module MadelungCalculator_mod
           dqdotg = dq(1)*gv(1,i) + dq(2)*gv(2,i) + dq(3)*gv(3,i)
 
           bfac = fpi*exp(dcmplx(kappa*ga2, dqdotg))/(ga2*vol)
-          do l = 0, lmax
-            do m = -l, l
-              lm = l*l + l + m + 1
+          do ell = 0, lmax
+            do emm = -ell, ell
+              lm = ell*ell + ell + emm + 1
               stest(lm) = stest(lm) + ylm(lm)*bfac
-            enddo ! m
-            bfac = (-CI)*bfac*ga/dble(2*l+1)
-          enddo ! l
-          
+            enddo ! emm
+            bfac = mCI*bfac*ga/(2.d0*ell + 1.d0)
+          enddo ! ell
+
         enddo ! i
 
         if (i01 == 0) then
-          if (any(abs(dimag(stest(:))) > BOUND)) die_here("Imaginary contribution to REAL lattice sum")
+#ifndef SUPERCELL_ELECTROSTATICS  
+          if (any(abs(aimag(stest(:))) > BOUND)) &
+            die_here("Imaginary contribution to REAL lattice sum, largest="+maxval(abs(aimag(stest))))
+#endif
           smat(:,i2) = dble(stest(:)) ! store only real part
-          stest(:) = 0.d0
+          stest(:) = ZERO ! reset before computing the contribution of the last shell
         else
           smat(:,i2) = smat(:,i2) + dble(stest(:)) ! add only real part
 !           ! --> test convergence
 !           do lm = 1, (lmax+1)**2
-!             !IF (2 < 1 .AND. ABS(dble(stest(lm))) > BOUND) WRITE (6,FMT=99001) I1,I2,LM,ABS(dble(stest(lm)))
-! 99001       format (5x,'WARNING : Convergence of SMAT(',i2,',',i2,') for LMXSP =',i3,' is ',1p,d8.2,' > 1D-8',/,15x,'You should use more lattice vectors (RMAX/GMAX)')
+!             ! if (i2 < i1 .and. abs(dble(stest(lm))) > BOUND) then
+!             !  write(*, fmt="(5x,'WARNING : Convergence of SMAT(',i0,',',i0,') for LMXSP =',i0,' is ',1p,d8.2,' > ',d8.2)") &
+!             !  i1,i2,lm,abs(dble(stest(lm))),BOUND
+!             !  write(*, fmt="(15x,'You should use more lattice vectors (RMAX/GMAX)')")
+!             ! endif
 !           enddo ! lm
         endif
+
+        ! set the loop limits for the second iteration (convergence check) where the last shell of points is added
+        nrs = nre + 1
+        ngs = nge + 1
+        nre = nrmax
+        nge = ngmax
         
       enddo ! i01
     enddo ! i2 ! loop over all atoms
     !$omp end parallel do
 
     if (precompute_Ymy_g) deallocate(Ymy_g, stat=ist)
-    
+
   endsubroutine ! strmat
   
   
@@ -885,7 +904,7 @@ module MadelungCalculator_mod
     !      calculation of convergence function
     !            glh = i(alpha,l)/r**(l+1)*sqrt(pi)
     !      with
-    !            alpha = r times the splitting paramter lamda
+    !            alpha = r times the splitting paramter lambda
     !      and
     !            i(x,l) = erfc(x) + exp(-x*x)/sqrt(pi) *
     !

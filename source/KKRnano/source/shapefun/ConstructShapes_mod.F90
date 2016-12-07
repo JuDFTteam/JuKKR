@@ -42,7 +42,7 @@ module ConstructShapes_mod
     integer, intent(in) :: atom_indicies(:) ! index table
     integer, intent(in) :: num_atoms
 
-    integer :: ii, ios
+    integer :: ii, ios, ij
     double precision :: weight_table(num_atoms)
  
     open(32, file='voro_weights', form='formatted', action='read', status='old', iostat=ios)
@@ -58,9 +58,9 @@ module ConstructShapes_mod
     enddo ! ii
     close(32, iostat=ios)
 
-    do ii = 1, size(atom_indicies)
-      weights(ii) = weight_table(atom_indicies(ii))
-    enddo ! ii
+    do ij = 1, size(atom_indicies)
+      weights(ij) = weight_table(atom_indicies(ij))
+    enddo ! ij
     
     warning = 0
   endfunction ! read_voro_weights
@@ -85,7 +85,7 @@ module ConstructShapes_mod
     type(InterstitialMesh), intent(inout) :: inter_mesh
 
     ! Input:
-    double precision, intent(in) :: rbasis(:,:)
+    double precision, intent(in) :: rbasis(:,:) ! dim(3,naez_all)
     double precision, intent(in) :: bravais(3,3)
     integer, intent(in)          :: center_ind
     double precision, intent(in) :: rcluster !> radius to create the cluster
@@ -107,7 +107,7 @@ module ConstructShapes_mod
     call create(cluster, lattice_vectors%rr, rbasis, rcluster, center_ind)
 
     allocate(weights(size(cluster%rcls, 2)))
-    weights = 1.d0 ! all weights are the same, so their differences are zero 
+    weights(:) = 1.d0 ! all weights are the same, so their differences are zero 
     ! --> planes cut space in the exact center between two atomic cores
 
 #ifdef USE_VOROWEIGHTS

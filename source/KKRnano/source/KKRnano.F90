@@ -183,7 +183,7 @@ program KKRnano
 #ifdef DEBUG_NO_ELECTROSTATICS
     warn(6, "preprocessor define has switched off electrostatics for debugging")
 #else
-    call prepareMadelung(calc_data, arrays)
+    call prepareMadelung(calc_data, arrays%rbasis)
 #endif
 
     call outTime(mp%isMasterRank, 'Madelung sums calc .............', getTime(program_timer), 0)

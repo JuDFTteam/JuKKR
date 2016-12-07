@@ -536,7 +536,7 @@ subroutine writeJiJs(i1, rxij, nxij, ixcp, rxccls, jxcijint, nxijd)
   write(73, fmt='(a)') "# j    R_ij(ALAT)   J_ij(Ry)      RXCCLS                   IXCP"
   do xij = 2, nxij
     jxcijint(xij) = 0.25d0*jxcijint(xij)
-    write(73, fmt='(i3,3x,f9.5,6x,d9.3,6x,3(1x,f7.4),i5)') xij,rxij(xij),dimag(jxcijint(xij)),rxccls(1:3,xij),ixcp(xij)
+    write(73, fmt='(i3,3x,f9.5,6x,d9.2,6x,3(1x,f7.4),i5)') xij,rxij(xij),dimag(jxcijint(xij)),rxccls(1:3,xij),ixcp(xij)
   enddo ! xij
   close(73, iostat=ios)
 endsubroutine

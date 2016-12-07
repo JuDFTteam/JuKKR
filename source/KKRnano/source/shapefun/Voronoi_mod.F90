@@ -99,7 +99,7 @@ module Voronoi_mod
 
     ! Check that the origin is not included in RVEC.
     do ivec = 1, nvec
-      if (sum(abs(rvec(1:3,ivec))) < 1.d-12) die_here("vector #"-ivec+"is zero!")
+      if (sum(abs(rvec(1:3,ivec))) < 1.d-12) die_here("vector #"-ivec+"is zero! atom#"-atom_id)
     enddo ! ivec
 
     ! Define the planes as normal to the vectors RVEC, passing from t as in eq. (2) above:

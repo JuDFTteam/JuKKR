@@ -1,5 +1,8 @@
 !> Multiplication of two BSR-matrices (block sparse row matrices)
 
+!!!!!!! KERNEL == 0: always use zgemm
+#define KERNEL 0
+
 module bsrmm_mod
   implicit none
   private

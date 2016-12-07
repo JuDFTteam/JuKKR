@@ -16,8 +16,8 @@ EXTRA_FLAGS =
 FC90FLAGS = 
 FCFLAGS =
 PPFLAGS =
-PPFLAGS += -D KERNEL=0
 PPFLAGS += -D USE_VOROWEIGHTS
+# PPFLAGS += -D SUPERCELL_ELECTROSTATICS=2 ### does not work: Imaginary contribution to REAL lattice sum 
 #  -D NDEBUG
 LDFLAGS =
 
@@ -303,7 +303,6 @@ ShapeGauntCoefficients_mod.o: Harmonics_mod.o
 MadelungCalculator_mod.o: Harmonics_mod.o Lattice_mod.o Sorting_mod.o
 sphere_gga.o: Harmonics_mod.o
 sphere_nogga.o: Harmonics_mod.o
-strmat_new.o: Harmonics_mod.o
 debug_morgan_mod.o: Harmonics_mod.o
 BrillouinZone_mod.o: Symmetry_mod.o VectorMath_mod.o
 Lattice_mod.o: VectorMath_mod.o Constants_mod.o
@@ -313,7 +312,6 @@ EnergyMeshHelpers_mod.o: GaussWeights_mod.o Constants_mod.o
 jij_calc_mod.o: Sorting_mod.o
 PotentialConverter_mod.o: DimParams_mod.o BasisAtom_mod.o RadialMeshData_mod.o PotentialData_mod.o
 Startb1_mod.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o
-strmat_new.o: Exceptions_mod.o
 one_sided_commZ_mod.o: ChunkIndex_mod.o 
 one_sided_commI_mod.o: ChunkIndex_mod.o 
 one_sided_commD_mod.o: ChunkIndex_mod.o 
