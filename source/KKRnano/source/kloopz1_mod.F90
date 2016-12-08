@@ -47,18 +47,17 @@ module kloopz1_mod
     integer, intent(in) :: ienergy, ispin
     double precision, intent(in) :: alat
     double complex, intent(in) :: dsymLL(:,:,:) !< dim(lmmaxd,lmmaxd,nsymat)
-    double complex, intent(out) :: GmatN(:,:,:) !< dim(lmmaxd,lmmaxd,num_local_atoms) ! result
+    double complex, intent(out) :: GmatN(:,:,:) !< dim(lmsd,lmsd,num_local_atoms) ! result
     double complex, intent(inout) :: Ginp_local(:,:,0:,:,:) !< dim(lmmaxd,lmmaxd,0:Lly,naclsd,num_local_atoms) reference green function 
-    double complex, intent(in) :: tmatLL(:,:,:,0:) !< t-matrices (lmmaxd,lmmaxd,num_trunc_atoms,0:Lly)
+    double complex, intent(in) :: tmatLL(:,:,:,0:) !< t-matrices (lmsd,lmsd,num_trunc_atoms,0:Lly)
     double precision, intent(in) :: rr(:,0:) !< lattice vectors(1:3,0:nrd)
     integer, intent(in) :: NofKs
     double precision, intent(in) :: volBZ
-    double precision, intent(in) :: Bzkp(:,:) ! dim (3,kpoibz)
+    double precision, intent(in) :: Bzkp(:,:) ! dim(3,kpoibz)
     double precision, intent(in) :: k_point_weights(:) ! dim kpoibz
 
     ! LLY
     double complex, intent(in)    :: tr_alph(:)
-!   double complex, intent(in)    :: dtde(:,:,:) 
     double complex, intent(out)   :: Lly_grdt
     integer       , intent(in)    :: global_atom_idx_Lly
     integer       , intent(in)    :: Lly
@@ -75,7 +74,7 @@ module kloopz1_mod
     integer, allocatable :: ipvt(:), info(:,:) ! work array for LAPACK
     double complex, allocatable :: temp(:), gll(:,:), tpg(:,:), xc(:,:), mssq(:,:,:) ! effective (site-dependent) delta_t^(-1) matrix
 
-    N = size(tmatLL, 2)
+    N = size(tmatLL, 2) ! ToDo: perpare for non-collinear
     assert( N == size(tmatLL, 1) )
     nsymat = size(dsymLL, 3)
     num_local_atoms = size(op%atom_indices)

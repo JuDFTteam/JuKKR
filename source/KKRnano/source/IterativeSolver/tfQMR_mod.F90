@@ -1,7 +1,7 @@
-!> TFQMR solver
+!> tfQMR solver
 
 
-module TFQMR_mod
+module tfQMR_mod
 #include "../DebugHelpers/logging_macros.h"
   use Logging_mod, only:    !import no name here, just mention it for the module dependency 
   implicit none
@@ -11,7 +11,7 @@ module TFQMR_mod
   double complex, parameter, private :: CONE=(1.d0, 0.d0), ZERO=(0.d0, 0.d0)
 
   interface solve
-    module procedure solve_with_TFQMR
+    module procedure solve_with_tfQMR
   endinterface
 
 #define column_index_t integer  
@@ -25,7 +25,7 @@ module TFQMR_mod
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
   !> @param ncol           number of right-hand sides = number of columns of B
   !> @param nrow           number of row elements of matrices mat_X, mat_B
-  subroutine solve_with_TFQMR(op, mat_X, mat_B, tolerance, ncol, nRHSs, initial_zero, precond, use_precond, vecs, kernel_timer, &
+  subroutine solve_with_tfQMR(op, mat_X, mat_B, tolerance, ncol, nRHSs, initial_zero, precond, use_precond, vecs, kernel_timer, &
                    iterations_needed, largest_residual, nFlops) ! optional output args
     USE_LOGGING_MOD
     use TimerMpi_mod, only: TimerMpi
@@ -67,7 +67,7 @@ module TFQMR_mod
     ! small, local arrays with dimension(ncol,nRHSs)
     double complex,   dimension(ncol,nRHSs) :: ZTMP, RHO, ETA, BETA, mALPHA ! -alpha
     double precision, dimension(ncol,nRHSs) :: RUB, DTMP, COSI, TAU, VAR, RESN, R0, N2B ! norm of right-hand side
-    integer :: tfqmr_status(ncol,nRHSs) ! 0 = not converged, negative = breakdown, 1 = converged
+    integer :: tfQMR_status(ncol,nRHSs) ! 0 = not converged, negative = breakdown, 1 = converged
     integer :: converged_at(ncol,nRHSs) ! stores iteration where calculation converged, 0 = never converged
     logical :: isDone
 
@@ -84,7 +84,7 @@ module TFQMR_mod
 #define PLUS(Y,  B) call subset_add(Y, B,  1.d0, op%B_subset_of_X, mFlops)  
 
     mFlops = 0
-    tfqmr_status = 0
+    tfQMR_status = 0
     converged_at = 0
 
     target_upper_bound = tolerance * TEST_FACTOR
@@ -117,7 +117,7 @@ module TFQMR_mod
     ! R0 = norm(v5)
     call col_norms(R0, v5, ColIndices, mFlops)
 
-    ! use norm of B for convergence criterion - use it for residual normalisation instead of B-AX0 contrary to original TFQMR
+    ! use norm of B for convergence criterion - use it for residual normalisation instead of B-AX0 contrary to original tfQMR
 
     ! N2B = norm(v2)
     v4 = ZERO
@@ -152,7 +152,7 @@ module TFQMR_mod
         ! severe breakdown
         BETA = ZERO
         RHO = ZERO
-        tfqmr_status = -1
+        tfQMR_status = -1
       elsewhere
         BETA = ZTMP / RHO
         RHO  = ZTMP
@@ -181,7 +181,7 @@ module TFQMR_mod
         ! severe breakdown
         mALPHA = ZERO
         ZTMP = ZERO
-        tfqmr_status = -1
+        tfQMR_status = -1
       endwhere
 
       ! v7 = ZTMP*v7 + v6
@@ -204,13 +204,13 @@ module TFQMR_mod
         COSI = 0.d0
         VAR = 0.d0
         ZTMP = CONE
-        tfqmr_status = -2
+        tfQMR_status = -2
       endwhere
       TAU  = DTMP * COSI
       ETA  = -mALPHA * COSI
 
       ! do not modify brokedown components
-      where (tfqmr_status < 0)
+      where (tfQMR_status < 0)
         ETA = ZERO
       endwhere
 
@@ -245,13 +245,13 @@ module TFQMR_mod
         ! early convergence or breakdown
         VAR = 0.d0
         COSI = 0.d0
-        tfqmr_status = -2
+        tfQMR_status = -2
       endwhere
       TAU  = DTMP * COSI
       ETA  = -mALPHA * COSI
 
       ! do not modify brokedown components
-      where (tfqmr_status < 0)
+      where (tfQMR_status < 0)
         ETA = ZERO
       endwhere
 
@@ -275,7 +275,7 @@ module TFQMR_mod
       isDone = .true.
       do iRHS = 1, nRHSs
         do icol = 1, ncol
-          if (tfqmr_status(icol,iRHS) /= -1) isDone = .false.
+          if (tfQMR_status(icol,iRHS) /= -1) isDone = .false.
         enddo ! icol
       enddo ! iRHS
 
@@ -307,13 +307,13 @@ module TFQMR_mod
         do iRHS = 1, nRHSs
           do icol = 1, ncol
             if (RESN(icol,iRHS) > tolerance) then
-              if (tfqmr_status(icol,iRHS) == 0) then
+              if (tfQMR_status(icol,iRHS) == 0) then
                 ! if no breakdown has occured continue converging
                 isDone = .false.
               endif
             else
-              if (tfqmr_status(icol,iRHS) <= 0) then
-                tfqmr_status(icol,iRHS) = 1
+              if (tfQMR_status(icol,iRHS) <= 0) then
+                tfQMR_status(icol,iRHS) = 1
                 converged_at(icol,iRHS) = iteration ! component converged
               endif
             endif
@@ -360,7 +360,7 @@ module TFQMR_mod
     do iRHS = 1, nRHSs
       do icol = 1, ncol
         if (converged_at(icol,iRHS) == 0) then
-          select case (tfqmr_status(icol,iRHS))
+          select case (tfQMR_status(icol,iRHS))
             case (-1)    ; WRITELOG(3,*) "Component not converged (SEVERE breakdown): ", icol
             case (-2)    ; WRITELOG(3,*) "Component not converged (stagnated): ", icol
             case default ; WRITELOG(3,*) "Component not converged: ", icol
@@ -369,7 +369,7 @@ module TFQMR_mod
       enddo ! icol
     enddo ! iRHS
 
-    WRITELOG(3,*) tfqmr_status
+    WRITELOG(3,*) tfQMR_status
     WRITELOG(3,*) converged_at
     WRITELOG(3,*) RESN
 
@@ -568,4 +568,4 @@ module TFQMR_mod
   endsubroutine ! y := y + a*b with different shapes of Y and B
   
   
-endmodule ! TFQMR_mod
+endmodule ! tfQMR_mod

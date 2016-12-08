@@ -72,8 +72,7 @@ module KKRmat_mod
     integer, intent(in) :: ienergy, ispin
 
     !LLY
-    double complex, intent(in)   :: mssq(:,:,:) !< inverted T-matrix
-!   double complex, intent(in)   :: dtde(:,:,:) !< dT/dE
+    double complex, intent(in)   :: mssq(:,:,:) !< dim(lmsd,lmsd,num_trunc_atoms) inverted T-matrix
     double complex, intent(in)   :: tr_alph(:) 
     double complex, intent(out)  :: lly_grdt
     double precision, intent(in) :: volbz
@@ -185,7 +184,7 @@ module KKRmat_mod
       TESTARRAYLOG(3, GS(:,:,ila))
     enddo ! ila
 
-    WRITELOG(3, *) "Max. TFQMR residual for this E-point: ", solver%stats%max_residual
+    WRITELOG(3, *) "Max. tfQMR residual for this E-point: ", solver%stats%max_residual
     WRITELOG(3, *) "Max. num iterations for this E-point: ", solver%stats%max_iterations
     WRITELOG(3, *) "Sum of iterations for this E-point:   ", solver%stats%sum_iterations
     WRITELOG(2, *) "useful Floating point operations:     ", GiFlops," GiFlop"
@@ -240,7 +239,7 @@ module KKRmat_mod
     type(InitialGuess), intent(inout) :: iguess_data
     integer, intent(in) :: ienergy, ispin, ikpoint
     ! LLY
-    double complex, intent(in)         :: mssq(:,:,:) !< inverted T-matrix
+    double complex, intent(in)         :: mssq(:,:,:) !< dim(lmsd,lmsd,num_trunc_atoms) inverted T-matrix
     double complex, intent(out)        :: bztr2
     double precision, intent(in)       :: volcub (:)
     integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed, e.g. dtde, tmatLL
@@ -251,12 +250,12 @@ module KKRmat_mod
     double complex, allocatable :: dPdE_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:) ! LLY
     double complex :: tracek, gtdPdE ! LLY
 
-    integer :: num_trunc_atoms, nacls, alm, lmmaxd, ist, matrix_index, lm1, lm2, lm3, il1
+    integer :: num_trunc_atoms, nacls, alm, lmsd, ist, matrix_index, lm1, lm2, lm3, il1
     double complex :: cfctorinv
 
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
     
-    lmmaxd = op%lmmaxd
+    lmsd = size(tmatLL, 2)
     num_trunc_atoms = size(tmatLL, 3) ! number of atoms in the unified truncation zones
     nacls = op%cluster%naclsd
 
@@ -292,15 +291,15 @@ module KKRmat_mod
 
     if (Lly == 1) then ! LLY
       ! Allocate additional arrays for Lloyd's formula
-      alm = lmmaxd*num_trunc_atoms
+      alm = lmsd*num_trunc_atoms
 
-      allocate(gllke_x(lmmaxd*num_trunc_atoms,lmmaxd*nacls))
-      allocate(dgde(lmmaxd*num_trunc_atoms,lmmaxd*nacls))
-      allocate(gllke_x_t(lmmaxd*nacls,lmmaxd*num_trunc_atoms))
-      allocate(dgde_t(lmmaxd*nacls,lmmaxd*num_trunc_atoms))
-      allocate(gllke_x2(lmmaxd*num_trunc_atoms,lmmaxd))
-      allocate(dgde2(lmmaxd*num_trunc_atoms,lmmaxd))
-      allocate(dPdE_local(lmmaxd*num_trunc_atoms,lmmaxd))
+      allocate(gllke_x(lmsd*num_trunc_atoms,lmsd*nacls))
+      allocate(dgde(lmsd*num_trunc_atoms,lmsd*nacls))
+      allocate(gllke_x_t(lmsd*nacls,lmsd*num_trunc_atoms))
+      allocate(dgde_t(lmsd*nacls,lmsd*num_trunc_atoms))
+      allocate(gllke_x2(lmsd*num_trunc_atoms,lmsd))
+      allocate(dgde2(lmsd*num_trunc_atoms,lmsd))
+      allocate(dPdE_local(lmsd*num_trunc_atoms,lmsd))
     
 !     call referenceFourier_com(op%mat_A(:,:,:,Lly), op%bsr_A, kpoint, alat, RR, op%cluster, dGinp, global_atom_id, communicator)
 
@@ -316,19 +315,19 @@ module KKRmat_mod
       ! ------- = ------- * T(E) + G(E,k) * -----
       !   dE        dE                       dE
   
-      matrix_index = (global_atom_idx_lly - 1)*lmmaxd
+      matrix_index = (global_atom_idx_lly - 1)*lmsd
 
       gllke_x_t = transpose(gllke_x)
       dgde_t = transpose(dgde)
 
-      gllke_x2 = gllke_x_t(:,matrix_index+ 1:lmmaxd +matrix_index)
-      dgde2    = dgde_t   (:,matrix_index+ 1:lmmaxd +matrix_index)
+      gllke_x2 = gllke_x_t(:,matrix_index+ 1:lmsd +matrix_index)
+      dgde2    = dgde_t   (:,matrix_index+ 1:lmsd +matrix_index)
 
       dPdE_local = zero ! init
 
-      call zgemm('n','n',alm,lmmaxd,lmmaxd,cone, dgde2,alm, tmatLL(1,1,global_atom_idx_lly,0),lmmaxd,zero, dPdE_local,alm)
+      call zgemm('n','n',alm,lmsd,lmsd,cone, dgde2,alm, tmatLL(1,1,global_atom_idx_lly,0),lmsd,zero, dPdE_local,alm)
 
-      call zgemm('n','n',alm,lmmaxd,lmmaxd,cfctorinv, gllke_x2,alm, tmatLL(1,1,global_atom_idx_lly,Lly),lmmaxd,cone, dPdE_local,alm)
+      call zgemm('n','n',alm,lmsd,lmsd,cfctorinv, gllke_x2,alm, tmatLL(1,1,global_atom_idx_lly,Lly),lmsd,cone, dPdE_local,alm)
       !--------------------------------------------------------
 
     endif ! LLY
@@ -348,7 +347,7 @@ module KKRmat_mod
     ! and B = Delta_t
 
     !===================================================================
-    ! 3) solve linear set of equations by iterative TFQMR scheme
+    ! 3) solve linear set of equations by iterative tfQMR scheme
     !    solve (\Delta t * G_ref - 1) X = \Delta t
     !    the solution X is the scattering path operator
 
@@ -406,12 +405,12 @@ module KKRmat_mod
 
       tracek = zero
 
-      do lm2 = 1, lmmaxd
-        do lm1 = 1, lmmaxd
+      do lm2 = 1, lmsd
+        do lm1 = 1, lmsd
           gtdPdE = zero
           do il1 = 1, num_trunc_atoms
-            do lm3 = 1, lmmaxd
-              gtdPdE = gtdPdE + op%mat_X(lm3,lm2,il1)*dPdE_local(lmmaxd*(il1 - 1) + lm3,lm1)
+            do lm3 = 1, lmsd
+              gtdPdE = gtdPdE + op%mat_X(lm3,lm2,il1)*dPdE_local(lmsd*(il1 - 1) + lm3,lm1)
             enddo ! lm3
           enddo ! il1
           tracek = tracek + mssq(lm1,lm2,1)*gtdPdE
@@ -474,7 +473,7 @@ module KKRmat_mod
 
     ! locals
     integer :: site_index, num_trunc_atoms, naclsd, nLly, lmmaxd, ist
-    integer :: num_local_atoms, atom_requested
+    integer :: num_local_atoms, max_local_atoms, atom_requested
     double complex, allocatable :: Gref_buffer(:,:,:,:), eikRR(:,:)
     integer(kind=4) :: chunk_inds(2,1)
     integer :: win, nranks, ierr
@@ -502,7 +501,8 @@ module KKRmat_mod
     allocate(Gref_buffer(lmmaxd,lmmaxd,0:nLly-1,naclsd))
 
     call MPI_Comm_size(communicator, nranks, ierr)
-
+    call MPI_Allreduce(num_local_atoms, max_local_atoms, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+    
 #ifdef NO_LOCKS_MPI
     ! get maximum number of atoms of all truncation zones
     call MPI_Allreduce(num_trunc_atoms, naez_max, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
@@ -526,7 +526,7 @@ module KKRmat_mod
         ! get Ginp(:,:,:)[global_atom_id(site_index)]
 
         atom_requested = global_atom_id(site_index)
-        chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, num_local_atoms*nranks, nranks)
+        chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, max_local_atoms*nranks, nranks)
 
 #ifdef NO_LOCKS_MPI
         call copyChunksNoSyncZ(Gref_buffer, win, chunk_inds, lmmaxd*lmmaxd*nLly*naclsd)
@@ -580,7 +580,7 @@ module KKRmat_mod
 
     ! locals
     integer :: site_index, naclsd, lmmaxd, nLly, ist
-    integer :: num_local_atoms, atom_requested
+    integer :: num_local_atoms, max_local_atoms, atom_requested
     integer(kind=4) :: chunk_inds(2,1)
     integer :: win, nranks, ierr
     integer :: naez_max
@@ -608,6 +608,7 @@ module KKRmat_mod
     endif
     
     call MPI_Comm_size(communicator, nranks, ierr)
+    call MPI_Allreduce(num_local_atoms, max_local_atoms, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
 
 #ifdef NO_LOCKS_MPI
     ! get maximum number of atoms of all truncation zones
@@ -628,7 +629,7 @@ module KKRmat_mod
 #endif
 
         atom_requested = global_atom_id(site_index)
-        chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, num_local_atoms*nranks, nranks)
+        chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, max_local_atoms*nranks, nranks)
 
 #ifdef NO_LOCKS_MPI
         call copyChunksNoSyncZ(Gref_buffer(:,:,:,site_index), win, chunk_inds, lmmaxd*lmmaxd*nLly*naclsd)
@@ -759,7 +760,7 @@ module KKRmat_mod
     ! locals
     integer(kind=4) :: chunk_inds(2,1)
     integer :: site_index, naclsd, nLly, lmmaxd, ist
-    integer :: num_local_atoms, num_trunc_atoms, atom_requested
+    integer :: num_local_atoms, max_local_atoms, num_trunc_atoms, atom_requested
     integer :: rank, tag, myrank, nranks, ierr, ncount
     integer, allocatable :: reqs(:,:), stats(:,:,:)
     integer, parameter :: TAGMOD = 2**15
@@ -777,6 +778,7 @@ module KKRmat_mod
 
     call MPI_Comm_size(comm, nranks, ierr)
     call MPI_Comm_rank(comm, myrank, ierr)
+    call MPI_Allreduce(num_local_atoms, max_local_atoms, 1, MPI_INTEGER, MPI_MAX, comm, ierr)
     
     allocate(reqs(2,num_trunc_atoms), stats(MPI_STATUS_SIZE,2,num_trunc_atoms), stat=ist)
     reqs(:,:) = MPI_REQUEST_NULL
@@ -791,8 +793,8 @@ module KKRmat_mod
     do site_index = 1, num_trunc_atoms
       atom_requested = global_atom_id(site_index) ! get the global atom id
 
-!     rank = (atom_requested - 1)/num_local_atoms ! block distribution of atoms to ranks
-      chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, num_local_atoms*nranks, nranks)
+!     rank = (atom_requested - 1)/max_local_atoms ! block distribution of atoms to ranks
+      chunk_inds(:,1) = getRankAndLocalIndex(atom_requested, max_local_atoms*nranks, nranks)
       rank = chunk_inds(1,1)
       assert( chunk_inds(2,1) == 1 ) ! since there may only be one local atom, its local index must be one
 
@@ -880,8 +882,11 @@ module KKRmat_mod
 !     integer(kind=2) :: ezoa(:,:)  !< dim(maxval(nacls)+,naez_trc) ! index of periodic image into array lattice_vectors%rr or array eikRR
 
     ! .. locals
-    integer :: ita, iacls, in0, jCol, Aind, iLly
+    integer :: ita, iacls, in0, jCol, Aind, iLly, lmsd, lmmaxd
    
+    lmmaxd = size(Ginp, 2)
+    lmsd   = size(smat, 2)
+    if (lmmaxd /= lmsd) stop 'dlke0_smat is not prepared for non-collinear'
 
     ! symmetrization of the reference Green function with simultaneous Fourier transformation (applying Bloch factors)
     

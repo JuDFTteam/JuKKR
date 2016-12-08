@@ -86,7 +86,7 @@ implicit none
     integer(kind=2), allocatable :: atom_indices(:)
     integer :: ie, ispin, prspin, nmesh, ist
     integer :: i1, ila, num_local_atoms, iacls
-    integer :: lmmaxd
+    integer :: lmmaxd, lmsd
     logical :: xccpl
 
     double complex, allocatable :: tmatLL(:,:,:,:) !< all t-matrices inside the truncation zone
@@ -94,6 +94,7 @@ implicit none
     double complex, allocatable :: GrefN_buffer(:,:,:,:,:) !< GrefN for all local atoms
 
     lmmaxd = (dims%lmaxd+1)**2
+    lmsd = lmmaxd * 1 ! ToDo: factor 2 for non-collinear
 
     atomdata  => getAtomData(calc, 1)
     i1 = atomdata%atom_index
@@ -104,8 +105,7 @@ implicit none
 
     num_local_atoms = calc%num_local_atoms
 
-    
-    allocate(tmatLL(lmmaxd,lmmaxd,calc%trunc_zone%naez_trc,0:dims%Lly)) ! allocate buffer for t-matrices
+    allocate(tmatLL(lmsd,lmsd,calc%trunc_zone%naez_trc,0:dims%Lly)) ! allocate buffer for t-matrices
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GrefN_buffer(lmmaxd,lmmaxd,0:dims%Lly,calc%clusters%naclsd,num_local_atoms))
     allocate(atom_indices(num_local_atoms))
@@ -148,7 +148,7 @@ implicit none
 
     ! setup the solver + bcp preconditioner, allocates a lot of memory
     ! it is good to do these allocations outside of energy loop: ToDo
-    call setup_solver(solv, kkr_op, precond, dims, calc%clusters, lmmaxd, params%qmrbound, atom_indices)
+    call setup_solver(solv, kkr_op, precond, dims, calc%clusters, lmsd, params%qmrbound, atom_indices)
 
     
   ! IE ====================================================================
@@ -240,7 +240,7 @@ implicit none
   ! <<>> Multiple scattering part
 
             ! gather t-matrices from own truncation zone
-            call gatherTmatrices_com(calc, tmatLL, ispin)!, mp%mySEComm)
+            call gatherTmatrices_com(calc, tmatLL, ispin)
 
             TESTARRAYLOG(3, tmatLL)
 
@@ -384,10 +384,10 @@ implicit none
 
   !------------------------------------------------------------------------------
   !> Don't forget to clean up!!!
-  !> Sets up TFQMR and preconditioner - matrix not setup yet!
+  !> Sets up tfQMR and preconditioner - matrix not setup yet!
   !> preconditioner not calculated yet
   !> Matrix setup happens later in kkrmat
-  subroutine setup_solver(solv, kkr_op, precond, dims, cluster_info, lmmaxd, qmrbound, atom_indices)
+  subroutine setup_solver(solv, kkr_op, precond, dims, cluster_info, lmsd, qmrbound, atom_indices)
     use IterativeSolver_mod, only: IterativeSolver, create
     use KKROperator_mod, only: KKROperator, create
     use BCPOperator_mod, only: BCPOperator, create
@@ -399,15 +399,15 @@ implicit none
     type(BCPOperator), intent(inout) :: precond
     type(DimParams), intent(in) :: dims
     type(ClusterInfo), intent(in) :: cluster_info
-    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: lmsd
     double precision, intent(in) :: qmrbound
     integer(kind=2), intent(in) :: atom_indices(:) !< indices of atoms treated at once
 
-    call create(kkr_op, cluster_info, lmmaxd, atom_indices, dims%Lly)
+    call create(kkr_op, cluster_info, lmsd, atom_indices, dims%Lly)
 
     if (dims%bcpd == 1) then
       ! set the solver options for BCP preconditioner
-      call create(precond, dims%natbld, [dims%xdim, dims%ydim, dims%zdim], cluster_info, lmmaxd)
+      call create(precond, dims%natbld, [dims%xdim, dims%ydim, dims%zdim], cluster_info, lmsd)
       call create(solv, qmrbound, kkr_op, precond)
     else
       call create(solv, qmrbound, kkr_op) ! register sparse matrix and preconditioner at solver
@@ -511,20 +511,14 @@ implicit none
   !> Gather all t-matrices for 'ispin'-channel (from truncation zone only).
   !>
   !> Uses MPI-RMA
-  subroutine gatherTmatrices_com(calc, tmatLL, ispin)!, communicator)
+  subroutine gatherTmatrices_com(calc, tmatLL, ispin)
     use CalculationData_mod, only: CalculationData
     use two_sided_commZ_mod, only: distribute
-    
-!   use KKRresults_mod, only: KKRresults
 !   use one_sided_commZ_mod, only: copyFromZ_com
-!   use ExchangeTable_mod, only: ExchangeTable
-!   use ExchangeTable_mod, only: create, destroy
-!   type(ExchangeTable) :: xTable
 
     type(CalculationData), intent(in) :: calc
     double complex, intent(inout) :: tmatLL(:,:,:,0:) !> dim(lmmaxd,lmmaxd,num_local_atoms,0:Lly)
     integer, intent(in) :: ispin
-!   integer, intent(in) :: communicator ! ToDo: remove from interface
 
     integer :: ila, num_local_atoms, lmmaxd, ist, chunk_size, iLly, nLly
     double complex, allocatable :: tsst_local(:,:,:,:)
@@ -545,12 +539,10 @@ implicit none
 
     chunk_size = size(tmatLL, 1)*size(tmatLL, 2)
     
-!   call create(xTable, calc%trunc_zone%global_atom_id, communicator, max_local_atoms=num_local_atoms)
     do iLly = 0, nLly - 1
 !     call copyFromZ_com(tmatLL(:,:,:,iLly), tsst_local(:,:,:,iLly), calc%trunc_zone%global_atom_id, chunk_size, num_local_atoms, communicator)
       call distribute(calc%xTable, chunk_size, tsst_local(:,:,:,iLly), tmatLL(:,:,:,iLly))
     enddo ! iLly
-!   call destroy(xTable)
 
     deallocate(tsst_local, stat=ist) ! ignore status
   endsubroutine ! gather

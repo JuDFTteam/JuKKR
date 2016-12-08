@@ -50,7 +50,7 @@ module ChunkIndex_mod
     integer(kind=4) :: rank_loc(2) ! result
 
     integer :: atoms_per_proc  
-    atoms_per_proc = num / nranks  
+    atoms_per_proc = (num - 1) / nranks + 1  
 
     rank_loc(1) = (ind - 1) / atoms_per_proc ! owner rank
     rank_loc(2) = ind - rank_loc(1)*atoms_per_proc

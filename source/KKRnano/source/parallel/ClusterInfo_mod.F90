@@ -68,7 +68,6 @@ module ClusterInfo_mod
     use TruncationZone_mod, only: TruncationZone
 !   use one_sided_commI_mod, only: copyFromI_com
     use ExchangeTable_mod, only: ExchangeTable
-!   use ExchangeTable_mod, only: create, destroy
     use two_sided_commI_mod, only: distribute
     
     include 'mpif.h'

@@ -52,7 +52,7 @@ d gmax
 d rmax
 ### XC functional: LDA-VWN (Vosko-Wilk-Nusair) = 2, GGA-PW91 = 3, GGA-PBE = 4, GGA-PBEsol = 5
 i kxc 2
-### for TFQMR solver: convergence reached if relative residual is smaller than 'qmrbound'
+### for tfQMR solver: convergence reached if relative residual is smaller than 'qmrbound'
 d qmrbound 1.0D-6
 ### single site solver (0/1 -> Fredholm/Volterra)
 i volterra 0

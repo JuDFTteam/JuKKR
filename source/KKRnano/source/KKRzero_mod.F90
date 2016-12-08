@@ -306,7 +306,7 @@ module KKRzero_mod
       write(6, fmt="(16x,'   in CARTESIAN coordinates (ALAT units)')")
       write(6, fmt="(12x,51(1h-),/,15x,a,/,12x,51(1h-))") 'IQ       x           y           z       IT'
       do i = 1, naez
-        write(6, fmt="(13x,i5,3f12.6,10i3)") i, rbasis(1:3,i), i
+        write(6, fmt="(13x,i5,3f12.6,'  ',i0)") i, rbasis(1:3,i), i
       enddo ! i
       write(6,'(12x,51(1h-),/)')
     else ! rescale lattice
@@ -318,7 +318,7 @@ module KKRzero_mod
       do i = 1, naez
         rb(1:3) = rbasis(1:3,i)
         rbasis(1:3,i) = rb(1)*bravais(1:3,1) + rb(2)*bravais(1:3,2) + rb(3)*bravais(1:3,3)
-        write(6, fmt="(12x,i3,3f14.8,10i3)") i, rbasis(1:3,i), i
+        write(6, fmt="(12x,i3,3f14.8,'  ',i0)") i, rbasis(1:3,i), i
       enddo ! i
       write(6,'(12x,49(1h-),/)')
     endif

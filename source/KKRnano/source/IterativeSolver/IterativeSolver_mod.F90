@@ -14,7 +14,7 @@ module IterativeSolver_mod
     type(KKROperator), pointer :: op => null()
     type(BCPOperator), pointer :: precond => null()
 
-    double complex, allocatable :: vecs(:,:,:,:) ! workspace
+    double complex, allocatable :: vecs(:,:,:,:) ! dim(lmsa,lmsd,nnzb,3:9) workspace
 
     logical :: use_precond = .false.
     logical :: initial_zero = .true.
@@ -63,7 +63,7 @@ module IterativeSolver_mod
   !> The workspace is allocated on demand and stays allocated.
   !> Deallocate with call IterativeSolver%destroy
   subroutine solve_with_solver(self, timer)
-    use TFQMR_mod, only: solve
+    use tfQMR_mod, only: solve
     use TimerMpi_mod, only: TimerMpi
     use SolverStats_mod, only: reduce
     type(IterativeSolver), intent(inout) :: self
@@ -91,7 +91,7 @@ module IterativeSolver_mod
     endif ! needs resize
 
     nFlops = 0
-    ! call TFQMR solver
+    ! call tfQMR solver
     call solve(self%op, self%op%mat_X, self%op%mat_B, self%qmrbound, ndim(2), self%op%bsr_X%nCols, &
                self%initial_zero, self%precond, self%use_precond, &
                self%vecs, timer, iterations_needed, largest_residual, nFlops)

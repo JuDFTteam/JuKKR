@@ -60,7 +60,7 @@ module NearField_com_mod
     
     type(IntracellPotential) :: intra_pot
     integer(kind=4) :: chunk(2,1)
-    integer :: num_local_atoms, ila, icell, max_npoints, npoints, lmpotd, ierr, i1, i2, irmd, nranks
+    integer :: num_local_atoms, max_local_atoms, ila, icell, max_npoints, npoints, lmpotd, ierr, i1, i2, irmd, nranks
     double precision, allocatable :: send_buffer(:,:,:), recv_buffer(:,:)
     integer :: win
 #ifndef __GFORTRAN__    
@@ -82,6 +82,7 @@ module NearField_com_mod
     call MPI_Comm_size(communicator, nranks, ierr)
     ! find the global maximum for the size of the communication buffers
     call MPI_Allreduce(npoints, max_npoints, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+    call MPI_Allreduce(num_local_atoms, max_local_atoms, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
 
     allocate(send_buffer(0:max_npoints,0:lmpotd,num_local_atoms))
     allocate(recv_buffer(0:max_npoints,0:lmpotd))
@@ -118,7 +119,7 @@ module NearField_com_mod
       nfc(ila)%delta_potential = 0.d0
       do icell = 1, size(lci(ila)%near_cell_indices)
 
-        chunk(:,1) = getRankAndLocalIndex(lci(ila)%near_cell_indices(icell), nranks*num_local_atoms, nranks)
+        chunk(:,1) = getRankAndLocalIndex(lci(ila)%near_cell_indices(icell), max_local_atoms*nranks, nranks)
 
         call MPI_Win_Lock(MPI_LOCK_SHARED, chunk(1,1), 0, win, ierr)
         CHECKASSERT(ierr == 0)

@@ -40,7 +40,7 @@ module SparseMatrixDescription_mod
     Ind = BSR_entry_exists(bsr%RowStart, bsr%Colindex, row, col)
     
   endfunction ! exists
-  
+
   integer function BSR_entry_exists(RowStart, Colindex, row, col) result(Ind)
     integer, intent(in) :: RowStart(:), ColIndex(:), row, col
 
@@ -49,7 +49,7 @@ module SparseMatrixDescription_mod
       if (ColIndex(Ind) == col) return ! Ind
     enddo ! Ind
     Ind = -1 ! not found
-    
+
   endfunction ! exists
 
   integer function subset(set, sub, list) result(nfail) ! returns 0 un success

@@ -88,13 +88,14 @@ module one_sided_comm_TYPE_mod
     integer, intent(in) :: comm
 
     integer(kind=4), allocatable :: chunk_inds(:,:)
-    integer :: ii, ierr, nranks, atom_requested, naez, naez_trc, win
+    integer :: ii, ierr, nranks, atom_requested, naez, naez_trc, win, max_local_atoms
 
     naez_trc = size(atom_ids) ! number of truncated atoms
 
     call MPI_Comm_size(comm, nranks, ierr)
+    call MPI_Allreduce(num_local_atoms, max_local_atoms, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
 
-    naez = num_local_atoms*nranks ! number of all atoms
+    naez = max_local_atoms*nranks ! number of all atoms
 
     allocate(chunk_inds(2,naez_trc))
 
@@ -216,21 +217,14 @@ program test
 
   include 'mpif.h'
 
-  integer :: myrank
-  integer :: num_ranks
-  integer :: nchunks_total
-  integer :: partner_rank
-
+  integer :: myrank, num_ranks, nchunks_total, partner_rank
   integer, parameter :: CHUNKSIZE=6, CHUNKSPERPROC=3, NUMREQUESTED=7
 
   NUMBER_TYPE :: buffer(CHUNKSIZE,CHUNKSPERPROC)
   NUMBER_TYPE :: dest_buffer(CHUNKSIZE, NUMREQUESTED)
   integer :: chunks_req(NUMREQUESTED)
   integer(kind=4) :: chunk_inds(2,NUMREQUESTED)
-  integer :: win
-  integer :: ierr
-  integer :: ii 
-  integer :: local_ind
+  integer :: win, ierr, ii, local_ind
 
   call MPI_Init(ierr)
   COMMCHECK(ierr)

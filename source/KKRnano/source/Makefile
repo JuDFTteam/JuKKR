@@ -257,14 +257,14 @@ ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o Voronoi_mod.o ShapeFu
 EnergyMesh_mod.o: EnergyMeshHelpers_mod.o
 InterpolateBasisAtom_mod.o: RadialMeshData_mod.o BasisAtom_mod.o PotentialData_mod.o AtomicCoreData_mod.o
 SingleSiteRef_mod.o: Harmonics_mod.o kkr_helpers_mod.o SingleSiteHelpers_mod.o Exceptions_mod.o
-IterativeSolver_mod.o:  TFQMR_mod.o SolverStats_mod.o TimerMpi_mod.o
+IterativeSolver_mod.o:  tfQMR_mod.o SolverStats_mod.o TimerMpi_mod.o
 kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o KKRmat_mod.o jij_calc_mod.o IterativeSolver_mod.o InitialGuess_mod.o Constants_mod.o TimerMpi_mod.o
 ShapeCriticalPoints_mod.o: Constants_mod.o ShapeGeometryHelpers_mod.o  PolygonFaces_mod.o
 MadelungPotential_mod.o: BasisAtom_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o DensityResults_mod.o EnergyResults_mod.o CalculationData_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o Exceptions_mod.o
 ShapeIntegration_mod.o: ShapeIntegrationHelpers_mod.o Constants_mod.o  PolygonFaces_mod.o
 BasisAtom_mod.o: Exceptions_mod.o RadialMeshData_mod.o ShapefunData_mod.o PotentialData_mod.o AtomicCoreData_mod.o
-TFQMR_mod.o: Logging_mod.o SolverStats_mod.o KKROperator_mod.o BCPOperator_mod.o TimerMpi_mod.o
+tfQMR_mod.o: Logging_mod.o SolverStats_mod.o KKROperator_mod.o BCPOperator_mod.o TimerMpi_mod.o
 KKRresults_mod.o: DimParams_mod.o
 DimParams_mod.o: ConfigReader_mod.o Exceptions_mod.o
 fillKKRMatrix_mod.o: SparseMatrixDescription_mod.o Exceptions_mod.o

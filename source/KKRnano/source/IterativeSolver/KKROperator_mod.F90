@@ -18,7 +18,6 @@ module KKROperator_mod
 
   !> Represents the operator/matrix (1 - \Delta T G_ref).
   type :: KKROperator
-    integer :: lmmaxd
     type(SparseMatrixDescription) :: bsr_A, bsr_X, bsr_B ! ToDo: introduce B with less entries than X
     double complex, allocatable :: mat_A(:,:,:,:) !< dim(fastBlockDim,slowBlockDim,bsr_A%nnzb,0:Lly)
     double complex, allocatable :: mat_B(:,:,:)   !< dim(fastBlockDim,slowBlockDim,bsr_B%nnzb)
@@ -47,7 +46,7 @@ module KKROperator_mod
 
   contains
 
-  subroutine create_KKROperator(self, cluster, lmmaxd, atom_indices, Lly)
+  subroutine create_KKROperator(self, cluster, lmsd, atom_indices, Lly)
     use bsrmm_mod, only: bsr_times_bsr ! planning
     use Truncation_mod, only: lmax_a_array
     use fillKKRMatrix_mod, only: getKKRMatrixStructure, getKKRSolutionStructure, getRightHandSideStructure
@@ -55,13 +54,12 @@ module KKROperator_mod
 
     type(KKROperator), intent(inout) :: self
     type(ClusterInfo), target, intent(in) :: cluster
-    integer, intent(in) :: lmmaxd, Lly
+    integer, intent(in) :: lmsd, Lly
     integer(kind=2), intent(in) :: atom_indices(:) !< local truncation zone indices of the source atoms
 
     integer :: nCols, nRows, nLloyd, ist, nRHS_group
 
     self%cluster => cluster
-    self%lmmaxd = lmmaxd
 
 #ifndef __GFORTRAN__
     allocate(self%atom_indices, source=atom_indices) ! local truncation zone indices of the source atoms
@@ -90,14 +88,14 @@ module KKROperator_mod
     allocate(self%B_subset_of_X(self%bsr_B%nnzb))
     ist = subset(set=self%bsr_X, sub=self%bsr_B, list=self%B_subset_of_X)
     if (ist /= 0) stop 'KKROperator: creation of subset list failed!'
-    
-    nRows = lmmaxd ! here we can introduce memory alignment
-    nCols = lmmaxd*nRHS_group
+
+    nRows = lmsd ! here we can introduce memory alignment
+    nCols = lmsd*nRHS_group
 
     allocate(self%mat_B(nRows,nCols,self%bsr_B%nnzb))
     allocate(self%mat_X(nRows,nCols,self%bsr_X%nnzb))
 
-    nCols = lmmaxd
+    nCols = lmsd
     nLloyd = min(max(0, Lly), 1) ! for the energy derivative needed in Lloyd''s formula
 
     allocate(self%mat_A(nRows,nCols,self%bsr_A%nnzb,0:nLloyd)) ! allocate memory for the KKR operator

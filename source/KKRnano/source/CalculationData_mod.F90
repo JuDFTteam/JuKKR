@@ -38,6 +38,7 @@ module CalculationData_mod
   type CalculationData
 
     integer :: num_local_atoms !< atoms in this process
+    integer :: max_local_atoms !< MPI_MAX of num_local_atoms
     integer :: max_reclen_meshes
     integer :: max_reclen_potential
 
@@ -100,11 +101,10 @@ module CalculationData_mod
     integer, intent(in) :: kmesh(:) !> index of k-mesh for each energy point
     integer, intent(in) :: voronano
 
-    integer :: atoms_per_proc, num_local_atoms, ila
+    integer :: num_local_atoms, ila
 
-    atoms_per_proc = dims%naez / mp%numAtomRanks
-    assert( mp%numAtomRanks * atoms_per_proc == dims%naez )
-    num_local_atoms = atoms_per_proc !TODO
+    self%max_local_atoms = (dims%naez - 1) / mp%numAtomRanks + 1
+    num_local_atoms = min(dims%naez - self%max_local_atoms * mp%myAtomRank, self%max_local_atoms)
 
     self%num_local_atoms = num_local_atoms
 
@@ -134,8 +134,8 @@ module CalculationData_mod
     assert( size(self%atom_ids) == num_local_atoms )
 
     do ila = 1, num_local_atoms
-      self%atom_ids(ila) = mp%myAtomRank * atoms_per_proc + ila
-!       self%a(ila)%atom_id = mp%myAtomRank * atoms_per_proc + ila
+      self%atom_ids(ila) = mp%myAtomRank * self%max_local_atoms + ila
+!       self%a(ila)%atom_id = mp%myAtomRank * self%max_local_atoms + ila
       assert( self%atom_ids(ila) <= dims%naez )
     enddo ! ila
 
@@ -282,7 +282,7 @@ module CalculationData_mod
 
     call initTruncation(self%trunc_zone, self%atom_ids, dims%lmaxd, arrays%bravais, arrays%rbasis, params%lcutoff_radii, params%cutoff_radius, mp%mySEComm) ! setup the truncation zone
 
-    call create(self%xtable, self%trunc_zone%global_atom_id, comm=mp%mySEComm, max_local_atoms=self%num_local_atoms) ! createExchangeTable
+    call create(self%xtable, self%trunc_zone%global_atom_id, comm=mp%mySEComm, max_local_atoms=self%max_local_atoms) ! createExchangeTable
 
     call create(self%clusters, self%ref_cluster_a, self%trunc_zone, xTable=self%xtable) ! createClusterInfo
 
