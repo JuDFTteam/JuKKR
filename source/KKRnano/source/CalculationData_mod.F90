@@ -104,12 +104,17 @@ module CalculationData_mod
     integer :: num_local_atoms, ila
 
     self%max_local_atoms = (dims%naez - 1) / mp%numAtomRanks + 1
-    num_local_atoms = min(dims%naez - self%max_local_atoms * mp%myAtomRank, self%max_local_atoms)
-
-    self%num_local_atoms = num_local_atoms
-
-!     allocate(self%a(num_local_atoms))
+!   num_local_atoms = min(max(0, dims%naez - self%max_local_atoms*mp%myAtomRank), self%max_local_atoms)
+    num_local_atoms = min(dims%naez - self%max_local_atoms*mp%myAtomRank, self%max_local_atoms)
+    if (num_local_atoms < self%max_local_atoms) &
+      write(*, '(9(a,i0))') "Treat only ",num_local_atoms," instead of ",self%max_local_atoms," local atoms in rank #",mp%myAtomRank
+    if (num_local_atoms < 1) die_here("The number of local atoms must be >= 1 or the rank should be inactive, found"+num_local_atoms)
+    num_local_atoms = max(0, num_local_atoms) ! however, this does not work
     
+    self%num_local_atoms = num_local_atoms ! store
+
+!   allocate(self%a(num_local_atoms))
+
     ! one datastructure for each local atom
     allocate(self%mesh_a(num_local_atoms)) ! only used inside this module
     allocate(self%cell_a(num_local_atoms)) ! only used inside this module
@@ -131,6 +136,7 @@ module CalculationData_mod
     ! process 2 treats atoms 3,4 and so on
     ! FOR USE OF TRUNCATION THESE atoms have to be close together!!!
 
+!   write(*,*) "size(self%atom_ids) = ",size(self%atom_ids),"  num_local_atoms = ",num_local_atoms 
     assert( size(self%atom_ids) == num_local_atoms )
 
     do ila = 1, num_local_atoms
@@ -314,9 +320,9 @@ module CalculationData_mod
     endif ! in master group
 
     do ila = 1, self%num_local_atoms
-
       atom_id = self%atom_ids(ila)
       irmd = self%mesh_a(ila)%irmd
+!     write(*,*) here,trim(" initialize  local atom #"-ila+"global atom_id="-atom_id)
 
       call create(self%kkr_a(ila), dims, self%clusters%naclsd) ! createKKRresults
       call create(self%densities_a(ila), dims%lmpotd, dims%lmaxd, dims%iemxd, dims%nspind, irmd) ! createDensityResults
@@ -328,7 +334,7 @@ module CalculationData_mod
       call create(self%madelung_sum_a(ila), self%madelung_calc%lmxspd, dims%naez) ! createMadelungLatticeSum
 
       ! assert( arrays%ZAT(atom_id) == atomdata%Z_nuclear )
-
+!     write(*,*) here,trim(" initialized local atom #"-ila+"global atom_id="-atom_id)
     enddo ! ila
 
     ! calculate Gaunt coefficients

@@ -88,24 +88,32 @@ module two_sided_comm_TYPE_mod
     sreq(:) = MPI_REQUEST_NULL
     rreq(:) = MPI_REQUEST_NULL
 
+! #define DEBUG
+
     ! now communication works like this
     do ipair = 1, self%npairs
       rank = self%pair2rank(ipair)
 
       if (rank /= myrank) then
-      
+
         do inz = self%send_start(ipair), self%send_start(ipair + 1) - 1
           tag = inz - self%send_start(ipair)
           iinp = self%send_index(inz)
           call MPI_Isend(Ginp(:,iinp), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, sreq(inz), ierr)
+#ifdef DEBUG
+          write(*, '(9(a,i0))') "send local _TYPE-element ",iinp,"@",myrank," with tag ",tag," to rank ",rank
+#endif
         enddo ! inz
 
         do inz = self%recv_start(ipair), self%recv_start(ipair + 1) - 1
           tag = inz - self%recv_start(ipair)
           iout = self%recv_index(inz)
           call MPI_Irecv(Gout(:,iout), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, rreq(inz), ierr)
+#ifdef DEBUG
+          write(*, '(9(a,i0))') "I (rank ",myrank,") want to receive a _TYPE-element with tag ",tag," from rank ",rank
+#endif
         enddo ! inz
-        
+
       else  ! rank /= myrank
 
         assert( self%send_start(ipair) - self%send_start(ipair + 1) == self%recv_start(ipair) - self%recv_start(ipair + 1) )
@@ -116,14 +124,25 @@ module two_sided_comm_TYPE_mod
           iout = self%recv_index(inz)
           iinp = self%send_index(ist)
           Gout(:,iout) = Ginp(:,iinp) ! local copy
+#ifdef DEBUG
+          write(*, '(9(a,i0))') "copy local _TYPE-element ",iinp,"@",myrank," locally"
+#endif
         enddo ! inz
         
       endif ! rank /= myrank
 
     enddo ! ipair
+    
+! #define DEBUG
+    
+#ifdef DEBUG
+    write(*,*) "Wait for two_sided_comm_TYPE to finish"
+#endif    
     call MPI_Waitall(self%send_n, sreq, sstats, ierr) ! wait until all sends have finished
     call MPI_Waitall(self%recv_n, rreq, rstats, ierr) ! wait until all receives have finished
-
+#ifdef DEBUG
+    write(*,*) "two_sided_comm_TYPE finished"
+#endif
     deallocate(rreq, rstats, sreq, sstats, stat=ist) ! ignore status
   endsubroutine ! distribute
 

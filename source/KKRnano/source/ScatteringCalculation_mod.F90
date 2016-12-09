@@ -4,8 +4,8 @@
 
 !> @author Modularisation: Elias Rabel
 module ScatteringCalculation_mod
-  use Logging_mod, only:    !import no name here, just mention it for the module dependency 
-  use arraytest2_mod, only: !import no name here, just mention it for the module dependency 
+  use Logging_mod, only:    ! import no name, just mention it for the module dependency 
+  use arraytest2_mod, only: ! import no name, just mention it for the module dependency 
 implicit none
   private
   public  :: energyLoop, gatherrMTref_com
@@ -552,25 +552,28 @@ implicit none
   !> Gather all rMTref values of the reference cluster.
   !> @param rMTref_local all locaLly determined rMTref value
   !> @param rMTref       on exit all rMTref value in ref_cluster
-  subroutine gatherrMTref_com(rMTref_local, rMTref, ref_cluster, communicator)
-    use RefCluster_mod, only: RefCluster
+  subroutine gatherrMTref_com(rMTref, ref_cluster_atoms, rMTref_local, communicator)
     use one_sided_commD_mod, only: copyFromD_com
 
+    double precision, intent(out) :: rMTref(:) ! (clusters%naclsd)
+    integer(kind=4), intent(in) :: ref_cluster_atoms(:) ! ref_cluster%atom(ref_cluster%nacls)
     double precision, intent(in) :: rMTref_local(:) ! (num_local_atoms)
-    double precision, intent(out) :: rMTref(:) ! (ref_cluster%nacls)
-    type(RefCluster), intent(in) :: ref_cluster
     integer, intent(in) :: communicator
-    
+
     double precision, allocatable :: rMTref_all(:,:,:), rMTref_loc(:,:,:)
 
     allocate(rMTref_all(1,1,size(rMTref, 1)), rMTref_loc(1,1,size(rMTref_local, 1)))
-    
+
+    ASSERT( size(rMTref) >= size(ref_cluster_atoms) ) 
+    ! rMTref is allocated with dim(clusters%naclsd) whereas
+    ! ref_cluster_atoms   with dim(ref_cluster_a(ila)%nacls), therefore no equality here 
+
     rMTref_all = 0.d0
     
     rMTref_loc(1,1,:) = rMTref_local(:) ! in
     
-    call copyFromD_com(rMTref_all, rMTref_loc, ref_cluster%atom, 1, size(rMTref_local, 1), communicator)
-    
+    call copyFromD_com(rMTref_all, rMTref_loc, ref_cluster_atoms, 1, size(rMTref_local, 1), communicator)
+
     rMTref(:) = rMTref_all(1,1,:) ! out
 
     deallocate(rMTref_all, rMTref_loc)

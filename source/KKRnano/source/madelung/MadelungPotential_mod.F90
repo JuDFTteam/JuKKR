@@ -13,23 +13,19 @@ module MadelungPotential_mod
   !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
   !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
   !> Wrapper for VMADELBLK
-  subroutine addMadelungPotentialnew_com(calc_data, ZAT, rank, atoms_per_proc, communicator)
+  subroutine addMadelungPotentialnew_com(calc_data, ZAT, myrank, atoms_per_proc, communicator)
     use CalculationData_mod, only: CalculationData
     
     type(CalculationData), intent(inout) :: calc_data
     double precision, intent(in) :: ZAT(:)
-    integer, intent(in) :: rank, atoms_per_proc
+    integer, intent(in) :: myrank, atoms_per_proc ! ToDo: remove from interface
     integer, intent(in) :: communicator
 
-    integer :: naez
-
-    naez = size(ZAT)
 #define mc calc_data%madelung_calc
-    call VMADELBLK_new2_com(calc_data, mc%LPOT, naez, ZAT, mc%lmpotd, &
+    call VMADELBLK_new2_com(calc_data, mc%LPOT, size(ZAT), ZAT, mc%lmpotd, &
          mc%clebsch%CLEB, mc%clebsch%ICLEB, mc%clebsch%IEND, &
          mc%LMXSPD,mc%clebsch%NCLEBD, mc%clebsch%LOFLM, mc%DFAC, &
-         rank, atoms_per_proc, &
-         communicator)
+         myrank, atoms_per_proc, communicator)
 #undef mc
   endsubroutine ! add
 
@@ -63,14 +59,14 @@ module MadelungPotential_mod
   !>
   ! **********************************************************************
   subroutine VMADELBLK_new2_com(calc_data, lpot, naez, zat, &
-    lmpot, cleb, icleb, iend, lmxspd, nclebd, loflm, dfac, mylrank, atoms_per_proc, communicator)
+    lmpot, cleb, icleb, iend, lmxspd, nclebd, loflm, dfac, myrank, atoms_per_proc, communicator)
 
     use CalculationData_mod, only: CalculationData, getEnergies, getDensities, getEnergies, getAtomData
     use EnergyResults_mod, only: EnergyResults
     use DensityResults_mod, only: DensityResults
     use BasisAtom_mod, only: BasisAtom
     use RadialMeshData_mod, only: RadialMeshData
-
+    use ChunkIndex_mod, only: getRankAndLocalIndex
     include 'mpif.h'
 
     type(CalculationData), intent(in) :: calc_data
@@ -80,16 +76,18 @@ module MadelungPotential_mod
     double precision, intent(in) :: dfac(0:lpot,0:lpot)
     integer, intent(in) :: icleb(nclebd,3)
     integer, intent(in) :: loflm(lmxspd)
-    integer, intent(in) :: mylrank, atoms_per_proc, communicator
+    integer, intent(in) :: myrank, atoms_per_proc ! ToDo: remove from interface
+    integer, intent(in) :: communicator
 
     type(BasisAtom), pointer :: atomdata
     type(DensityResults), pointer :: densities
     type(EnergyResults), pointer :: energies
     type(RadialMeshData), pointer :: mesh
-    integer :: i2, ilm, ierr
+    integer :: i2, ilm, ierr, nranks
     double precision :: cmom_save((lpot+1)**2), cminst_save((lpot+1)**2)
     integer :: num_local_atoms, ila, jla
-    integer :: root, lmpotd
+    integer(kind=4) :: chunk_ind(2)
+    integer :: rank, lmpotd
     
     lmpotd = (lpot+1)**2
 
@@ -99,6 +97,9 @@ module MadelungPotential_mod
       energies => getEnergies(calc_data, ila)
       energies%AC_madelung = 0.d0
     enddo
+    
+    call MPI_Comm_size(communicator, nranks, ierr)
+!   call MPI_Comm_rank(communicator, myrank, ierr)
 
     !===== begin loop over all atoms =========================================
     ! O(N**2) in calculation and communication !!!
@@ -108,28 +109,29 @@ module MadelungPotential_mod
       ! use omp single for MPI part?
       ! if MPI comm. dominates over calculation, OpenMP won't do much
 
-      root = (i2 - 1) / atoms_per_proc
-      jla = mod( (i2 - 1), atoms_per_proc ) + 1
+      chunk_ind(:) = getRankAndLocalIndex(i2, naez, nranks)
+      rank = chunk_ind(1)
+      jla  = chunk_ind(2)
 
       !-------- bcast information of cmom and cminst begin --------------------
 
-      if (MYLRANK == root) then
+      if (myrank == rank) then
 
-        CHECKASSERT(i2 == calc_data%atom_ids(jla))
+        CHECKASSERT( i2 == calc_data%atom_ids(jla) )
 
         densities => getDensities(calc_data, jla)
 
         do ilm = 1, lmpot
-          cmom_save(ilm) = densities%CMOM(ilm)
+          cmom_save(ilm)   = densities%CMOM(ilm)
           cminst_save(ilm) = densities%CMINST(ilm)
         enddo
       else
-        cmom_save = 0.d0
+        cmom_save   = 0.d0
         cminst_save = 0.d0
       endif
 
-      call MPI_Bcast(cmom_save,   lmpotd, MPI_DOUBLE_PRECISION, root, communicator, ierr)
-      call MPI_Bcast(cminst_save, lmpotd, MPI_DOUBLE_PRECISION, root, communicator, ierr)
+      call MPI_Bcast(cmom_save,   lmpotd, MPI_DOUBLE_PRECISION, rank, communicator, ierr)
+      call MPI_Bcast(cminst_save, lmpotd, MPI_DOUBLE_PRECISION, rank, communicator, ierr)
 
       !-------- bcast information of cmom and cminst end----------------------
 

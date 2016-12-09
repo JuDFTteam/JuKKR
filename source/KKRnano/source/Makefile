@@ -17,7 +17,7 @@ FC90FLAGS =
 FCFLAGS =
 PPFLAGS =
 PPFLAGS += -D USE_VOROWEIGHTS
-# PPFLAGS += -D SUPERCELL_ELECTROSTATICS=2 ### does not work: Imaginary contribution to REAL lattice sum 
+# PPFLAGS += -D SUPERCELL_ELECTROSTATICS=2 ### does not work, test again: Imaginary contribution to REAL lattice sum 
 #  -D NDEBUG
 LDFLAGS =
 

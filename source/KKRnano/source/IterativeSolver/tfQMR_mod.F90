@@ -3,7 +3,7 @@
 
 module tfQMR_mod
 #include "../DebugHelpers/logging_macros.h"
-  use Logging_mod, only:    !import no name here, just mention it for the module dependency 
+  use Logging_mod, only:    ! import no name, just mention it for the module dependency 
   implicit none
   private
   public :: solve

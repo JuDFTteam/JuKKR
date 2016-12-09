@@ -2,8 +2,8 @@
 !>
 
 module DirectSolver_mod
-  use Logging_mod, only:    !import no name here, just mention it for the module dependency 
-  use arraytest2_mod, only: !import no name here, just mention it for the module dependency
+  use Logging_mod, only:    ! import no name, just mention it for the module dependency 
+  use arraytest2_mod, only: ! import no name, just mention it for the module dependency
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none

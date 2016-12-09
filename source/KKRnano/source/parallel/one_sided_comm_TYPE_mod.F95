@@ -55,7 +55,6 @@
 #endif
 
 module one_sided_comm_TYPE_mod
-  use ChunkIndex_mod, only: getRankAndLocalIndex
   implicit none
   private
   
@@ -80,6 +79,7 @@ module one_sided_comm_TYPE_mod
   !> size of receive buffer:  chunk_size*size(atom_ids)
   !> Uses MPI-RMA
   subroutine copyFrom_TYPE_com(receive_buf, local_buf, atom_ids, chunk_size, num_local_atoms, comm)
+    use ChunkIndex_mod, only: getRankAndLocalIndex
     NUMBER_TYPE, intent(inout) :: receive_buf(*)    ! receive
     NUMBER_TYPE, intent(inout) :: local_buf(*) ! send
     integer, intent(in) :: atom_ids(:)
@@ -88,14 +88,12 @@ module one_sided_comm_TYPE_mod
     integer, intent(in) :: comm
 
     integer(kind=4), allocatable :: chunk_inds(:,:)
-    integer :: ii, ierr, nranks, atom_requested, naez, naez_trc, win, max_local_atoms
+    integer :: ii, ierr, nranks, atom_requested, naez_trc, win, max_local_atoms
 
     naez_trc = size(atom_ids) ! number of truncated atoms
 
     call MPI_Comm_size(comm, nranks, ierr)
-    call MPI_Allreduce(num_local_atoms, max_local_atoms, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
-
-    naez = max_local_atoms*nranks ! number of all atoms
+    call MPI_Allreduce(num_local_atoms, max_local_atoms, 1, MPI_INTEGER, MPI_MAX, comm, ierr)
 
     allocate(chunk_inds(2,naez_trc))
 
@@ -103,7 +101,7 @@ module one_sided_comm_TYPE_mod
       ! get 'real' atom index
       atom_requested = atom_ids(ii)
 
-      chunk_inds(:,ii) = getRankAndLocalIndex(atom_requested, naez, nranks)
+      chunk_inds(:,ii) = getRankAndLocalIndex(atom_requested, max_local_atoms*nranks, nranks)
 
     enddo ! ii
 
@@ -212,6 +210,7 @@ endmodule ! one_sided_comm_TYPE_mod
 #ifdef TEST_ONE_SIDED_COMM__TYPE__
 ! a test program - not compiled due to conditional compilation
 program test
+  use ChunkIndex_mod, only: getRankAndLocalIndex
   use one_sided_comm_TYPE_mod
   implicit none
 

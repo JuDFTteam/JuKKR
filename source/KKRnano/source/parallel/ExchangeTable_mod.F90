@@ -177,6 +177,9 @@ module ExchangeTable_mod
       call MPI_Irecv(nsend(ipair), 1, MPI_INTEGER, rank, tag, comm, reqs(2,ipair), ierr)
       
     enddo ! ipair
+    
+! #define DEBUG
+    
     ! we have to assume that the communication pattern is symmetric
     ! i.e. each pair of two ranks either communicates into both directions or not at all
     ! we assume a symmetric communication pattern, i.e. if 
@@ -215,8 +218,15 @@ module ExchangeTable_mod
       call MPI_Irecv(self%send_index(self%send_start(ipair):), nsend(ipair), MPI_INTEGER, rank, tag, comm, reqs(2,ipair), ierr)
 
     enddo ! ipair
+#ifdef DEBUG
+    if (myrank == 0) write(*,*) "exchange indices  in communication pattern ..."
+#endif
     call MPI_Waitall(2*nPairs, reqs, stats, ierr) ! wait until all sends and all receives have finished
-    
+    call MPI_Barrier(comm, ierr) ! wait until all sends and all receives have finished on all processes
+#ifdef DEBUG
+    if (myrank == 0) write(*,*) "indices exchanged in communication pattern --> ok"
+#endif
+
     self%npairs = nPairs ! store and mark the object as usable
     self%comm = comm ! store a copy of the MPI communicator handle
 

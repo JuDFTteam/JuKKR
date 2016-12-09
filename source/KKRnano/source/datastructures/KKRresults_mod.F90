@@ -56,7 +56,7 @@ module KKRresults_mod
     use DimParams_mod, only: DimParams
     type(KKRresults), intent(inout) :: self
     type(DimParams),  intent(in)    :: dims
-    integer, intent(in)              :: naclsd
+    integer, intent(in)             :: naclsd
 
     call createKKRresultsImpl(self, dims%lmaxd, dims%lmmaxd, dims%nspind, naclsd, dims%iemxd, dims%nguessd, dims%ekmd, dims%smpid)
   endsubroutine ! create

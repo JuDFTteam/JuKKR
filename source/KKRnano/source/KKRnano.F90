@@ -9,7 +9,7 @@ program KKRnano
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   use Warnings_mod, only: show_warning_lines
 
-  use Logging_mod, only:    !import no name here, just mention it for the module dependency 
+  use Logging_mod, only:    ! import no name, just mention it for the module dependency 
   USE_LOGGING_MOD
 
   use KKRnanoParallel_mod, only: KKRnanoParallel, create, destroy
@@ -47,9 +47,13 @@ program KKRnano
   type(TimerMpi) :: program_timer, iteration_timer
   type(EBalanceHandler) :: ebalance_handler
 
-  integer :: iter, global_atom_id, ila, num_local_atoms, ios, ilen, voronano
+  integer :: iter, global_atom_id, ila, ios, ilen, voronano
   double precision  :: ebot 
 
+
+  double precision  :: rMT_dummy(1)
+  integer           :: iMT_dummy(1) = 1
+  
   type(KKRnanoParallel) :: mp
 
   type(EnergyMesh)  :: emesh
@@ -70,7 +74,7 @@ program KKRnano
 #endif
 #endif
  
-  call MPI_Init(ios) ! --> needs to be called here, otherwise MPI_Abort and MPI_Wtime cannot be used during toolbox functionalities
+  call MPI_Init(ios) ! --> needs to be called now, otherwise MPI_Abort and MPI_Wtime cannot be used during toolbox functionalities
   
   voronano = 0
   call get_command_argument(1, arg, ilen, ios)
@@ -102,7 +106,7 @@ program KKRnano
     ! start the former kkr2.exe    
   endselect ! arg
 
-  ! from here the former kkr2.exe actions are performed
+  ! from now on the former kkr2.exe actions are performed
   
   call load(dims, 'bin.dims') ! read dimension parameters from file 'bin.dims'
 
@@ -176,8 +180,6 @@ program KKRnano
       stop ! Voronoi work is done in 'create'
     endif
 
-    num_local_atoms = calc_data%num_local_atoms
-
     call outTime(mp%isMasterRank, 'input files read ...............', getTime(program_timer), 0)
 
 #ifdef DEBUG_NO_ELECTROSTATICS
@@ -193,7 +195,7 @@ program KKRnano
     call setEqualDistribution(ebalance_handler, (emesh%npnt123(1) == 0))
 
     ! here, we communicate the rMTref values early, so we could compute tref and dtrefdE locally for each atom inside the reference cluster 
-    do ila = 1, num_local_atoms
+    do ila = 1, calc_data%num_local_atoms
       atomdata => getAtomdata(calc_data, ila)
 #ifdef DEBUG_NO_VINS
       atomdata%potential%VINS = 0.0   
@@ -216,9 +218,14 @@ program KKRnano
       close(20)
 #endif
       ! this only works if all process enter the following subroutine the same number of times, so num_local_atoms may not differ among the processes
-      call gatherrMTref_com(rMTref_local=calc_data%atomdata_a(:)%rMTref, rMTref=calc_data%kkr_a(ila)%rMTref(:), &
-                            ref_cluster=calc_data%ref_cluster_a(ila), communicator=mp%mySEComm)
+      call gatherrMTref_com(rMTref=calc_data%kkr_a(ila)%rMTref(:), ref_cluster_atoms=calc_data%ref_cluster_a(ila)%atom(:), &
+                            rMTref_local=calc_data%atomdata_a(:)%rMTref, communicator=mp%mySEComm)
     enddo ! ila
+
+    do ios = calc_data%num_local_atoms + 1, calc_data%max_local_atoms
+      ! if num_local_atoms differs among the processes, we need to call extra times
+      call gatherrMTref_com(rMTref=rMT_dummy, ref_cluster_atoms=iMT_dummy, rMTref_local=calc_data%atomdata_a(:)%rMTref, communicator=mp%mySEComm)
+    enddo ! ios
     
     call createTimer(iteration_timer)
     if (mp%isMasterRank) write(2,'(79("="))') ! double separator line in time-info file
@@ -234,7 +241,7 @@ program KKRnano
 
       ! New: instead of reading potential every time, communicate it
       ! between energy and spin processes of same atom
-      do ila = 1, num_local_atoms
+      do ila = 1, calc_data%num_local_atoms
         atomdata => getAtomdata(calc_data, ila)
         call communicatePotential(mp, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
       enddo ! ila
@@ -244,7 +251,7 @@ program KKRnano
         ! Not threadsafe: intcor, intin, intout have a save statement
         ebot = emesh%E1; if (any(params%npntsemi > 0)) ebot = emesh%EBOTSEMI
         !!!$omp parallel do private(ila, atomdata)
-        do ila = 1, num_local_atoms
+        do ila = 1, calc_data%num_local_atoms
           atomdata => getAtomdata(calc_data, ila)
 !         call RHOCORE_wrapper(ebot, params%NSRA, atomdata)
 #define mesh atomdata%mesh_ptr
@@ -261,7 +268,7 @@ program KKRnano
 ! LDA+U ! TODO: does not work for num_local_atoms > 1
       if (params%LDAU) then
         ! For now only 1 atom per process is supported (1 local atom)
-        CHECKASSERT(num_local_atoms == 1)
+        CHECKASSERT(calc_data%num_local_atoms == 1)
 
         atomdata  => getAtomData(calc_data, 1)
         ldau_data => getLDAUData(calc_data, 1)
