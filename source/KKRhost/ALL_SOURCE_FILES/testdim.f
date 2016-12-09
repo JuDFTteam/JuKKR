@@ -192,7 +192,9 @@ c
      +       'No usage of embedding points. NEMB is set to ',NEMB,'.'
       END IF
 c
-      IF (.NOT.OPT('full inv').AND. .NOT.OPT('SPARSE  ')) THEN
+c FLAVIANO 21.10.2014
+      IF (.NOT.OPT('full inv').AND. .NOT.OPT('SPARSE  ') 
+     +                        .AND. .NOT.OPT('godfrin '))THEN
 c
 c --->  constants for O(N) algorithm for matrix inversion
 c

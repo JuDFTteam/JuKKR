@@ -1,30 +1,31 @@
-c ************************************************************************
+! ************************************************************************
       SUBROUTINE INVERSION(GLLKE,INVMOD,ICHECK)
-c ************************************************************************
-c This subroutine calculates the inversion of a matrix
-c in 4 different ways depending on the form of the matrix
-c
-c     INVMOD = 0  ----> total inversion scheme
-c     INVMOD = 1  ----> band matrix inversion scheme
-c     INVMOD = 2  ----> corner band matrix inversion scheme
-c     INVMOD = 3  ----> sparse matrix inversion scheme
-c
-c ------------------------------------------------------------------------
+! ************************************************************************
+! This subroutine calculates the inversion of a matrix
+! in 4 different ways depending on the form of the matrix
+!
+!     INVMOD = 0  ----> total inversion scheme
+!     INVMOD = 1  ----> band matrix inversion scheme
+!     INVMOD = 2  ----> corner band matrix inversion scheme
+!     INVMOD = 3  ----> gofrin module
+!
+! ------------------------------------------------------------------------
+      use godfrin  ! GODFRIN
 
       implicit none
 
-c     .. parameters ..
+!     .. parameters ..
       include 'inc.p'
-C
-C *********************************************************************
-C * For KREL = 1 (relativistic mode)                                  *
-C *                                                                   *
-C *  NPOTD = 2 * NATYPD                                               *
-C *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-C *  NSPIND = 1                                                       *
-C *                                                                   *
-C *********************************************************************
-C
+!
+! *********************************************************************
+! * For KREL = 1 (relativistic mode)                                  *
+! *                                                                   *
+! *  NPOTD = 2 * NATYPD                                               *
+! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
+! *  NSPIND = 1                                                       *
+! *                                                                   *
+! *********************************************************************
+!
 
       INTEGER LMMAXD
       PARAMETER (LMMAXD = (KREL+KORBIT+1) * (LMAXD+1)**2)
@@ -42,127 +43,141 @@ C
       INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)  ! changed 3.11.99
 
       EXTERNAL ZGETRF,ZGETRS,ZCOPY,INVSLAB
+!     number of atoms, blocks, block dimensions (how many atoms in block)
+      integer :: na, nb, bdims(naezd)   ! GODFRIN
+!     diagonal part of inverse only, periodic system, use PARDISO solver instead
+      logical :: ldiag, lper, lpardiso  ! GODFRIN
 
       allocate(GTEMP(ALMD,ALMD))
 
+!     Naive number of layers in each principal layer
       NLAYER=NAEZD/NPRINCD
 
-      IF (INVMOD.EQ.0) THEN     ! total matrix inversion
-
-
-
-         DO I=1,ALMD
-            DO J=1,ALMD
-               GTEMP(I,J)=CZERO
-               IF (I.EQ.J) THEN
-                  GTEMP(I,J)=CONE
-               ENDIF
-            ENDDO
-         ENDDO
-
-
-c     write (6,*) '-------full inversion calculation--------'
-
-         CALL ZGETRF(ALMD,ALMD,GLLKE,ALMD,IPVT,INFO)
-         CALL ZGETRS('N',ALMD,ALMD,GLLKE,ALMD,IPVT,GTEMP,ALMD,INFO)
-
-         CALL ZCOPY(ALMD*ALMD,GTEMP,1,GLLKE,1)
-
-
-
-      ELSE IF ((INVMOD.GE.1).AND.(INVMOD.LE.2)) THEN ! slab or supercell
-                                ! inversion
-
-
-         DO 337 I1 = 1,NLAYERD
-         DO 337 IP1 = 1,NPRINCD
-         DO 337 IP2 = 1,NPRINCD
+!  ---------------------------------------------------------------------
+!                        full matrix inversion
+!  ---------------------------------------------------------------------
+      IF (INVMOD==0) THEN
+!       initialize unit matrix
+        DO I=1,ALMD
+          DO J=1,ALMD
+            GTEMP(I,J)=CZERO
+            IF (I.EQ.J) THEN
+               GTEMP(I,J)=CONE
+            END IF
+          END DO
+        END DO
+!     write (6,*) '-------full inversion calculation--------'
+        CALL ZGETRF(ALMD,ALMD,GLLKE,ALMD,IPVT,INFO)
+        CALL ZGETRS('N',ALMD,ALMD,GLLKE,ALMD,IPVT,GTEMP,ALMD,INFO)
+        CALL ZCOPY(ALMD*ALMD,GTEMP,1,GLLKE,1)
+!  ---------------------------------------------------------------------
+!            block tridiagonal inversion (slab or supercell)
+!  ---------------------------------------------------------------------
+      ELSE IF (INVMOD==1 .OR. INVMOD==2) THEN
+!       copy blocks of assumed tridiagonal matrix
+        DO I1=1,NLAYERD
+          DO IP1=1,NPRINCD
+          DO IP2=1,NPRINCD
             II1 = (I1-1)*NPRINCD+IP1
             II2 = (I1-1)*NPRINCD+IP2
-            DO 347 LM1 = 1,LMMAXD
-            DO 347 LM2 = 1,LMMAXD
-               LDI1 = LMMAXD*(IP1-1)+LM1
-               IL1 = LMMAXD*(II1-1)+LM1
-               LDI2 = LMMAXD*(IP2-1)+LM2
-               IL2 = LMMAXD*(II2-1)+LM2
-               GDI(LDI1,LDI2,I1) = GLLKE(IL1,IL2)
- 347        CONTINUE
- 337     CONTINUE
-
-c     this part now is correct also for    ! changes 20/10/99
-c     supercell geometry : 20/10/99       
-c---> upper linear part
-       DO 357 I1 = 1,NLAYERD
-       DO 357 IP1 = 1,NPRINCD
-       DO 357 IP2 = 1,NPRINCD
-          DO 367 LM1 = 1,LMMAXD
-          DO 367 LM2 = 1,LMMAXD
-             LDI1 = LMMAXD*(IP1-1)+LM1
-             LDI2 = LMMAXD*(IP2-1)+LM2
-             IF(I1.LE.(NLAYERD-1)) THEN
+            DO LM1=1,LMMAXD
+            DO LM2=1,LMMAXD
+              LDI1 = LMMAXD*(IP1-1)+LM1
+              IL1 = LMMAXD*(II1-1)+LM1
+              LDI2 = LMMAXD*(IP2-1)+LM2
+              IL2 = LMMAXD*(II2-1)+LM2
+              GDI(LDI1,LDI2,I1) = GLLKE(IL1,IL2)
+            END DO
+            END DO
+          END DO
+          END DO
+        END DO
+!       this part now is correct also for    ! changes 20/10/99
+!       supercell geometry : 20/10/99       
+!       --> upper linear part
+        DO I1=1,NLAYERD
+          DO IP1=1,NPRINCD
+          DO IP2=1,NPRINCD
+            DO LM1=1,LMMAXD
+            DO LM2=1,LMMAXD
+              LDI1 = LMMAXD*(IP1-1)+LM1
+              LDI2 = LMMAXD*(IP2-1)+LM2
+              IF (I1.LE.(NLAYERD-1)) THEN
                 II1 = (I1-1)*NPRINCD+IP1
                 II2 = I1*NPRINCD+IP2
                 IL1 = LMMAXD*(II1-1)+LM1
                 IL2 = LMMAXD*(II2-1)+LM2
                 GUP(LDI1,LDI2,I1) =  GLLKE(IL1,IL2)
-             ELSE
+              ELSE
                 II1 = IP1
                 II2 = (NLAYERD-1)*NPRINCD+IP2
                 IL1 = LMMAXD*(II1-1)+LM1
                 IL2 = LMMAXD*(II2-1)+LM2
                 GDOW(LDI1,LDI2,I1) = GLLKE(IL1,IL2)
-             ENDIF
- 367      CONTINUE
- 357   CONTINUE
-
-
-c---> lower linear part
-       DO 333 I1 = 1,NLAYERD 
-       DO 333 IP1 = 1,NPRINCD
-       DO 333 IP2 = 1,NPRINCD    
-          DO 335 LM1 = 1,LMMAXD
-          DO 335 LM2 = 1,LMMAXD
-             LDI1 = LMMAXD*(IP1-1)+LM1
-             LDI2 = LMMAXD*(IP2-1)+LM2
-             IF(I1.LE.(NLAYERD-1)) THEN
+              END IF
+            END DO
+            END DO
+          END DO
+          END DO
+        END DO
+!       --> lower linear part
+        DO I1=1,NLAYERD 
+          DO IP1=1,NPRINCD
+          DO IP2=1,NPRINCD    
+            DO LM1=1,LMMAXD
+            DO LM2=1,LMMAXD
+              LDI1 = LMMAXD*(IP1-1)+LM1
+              LDI2 = LMMAXD*(IP2-1)+LM2
+              IF (I1.LE.(NLAYERD-1)) THEN
                 II1 = I1*NPRINCD+IP1
                 II2 = (I1-1)*NPRINCD+IP2
                 IL1 = LMMAXD*(II1-1)+LM1
                 IL2 = LMMAXD*(II2-1)+LM2
                 GDOW(LDI1,LDI2,I1) =  GLLKE(IL1,IL2)
-             ELSE
+              ELSE
                 II1 = (NLAYERD-1)*NPRINCD+IP1
                 II2 = IP2
                 IL1 = LMMAXD*(II1-1)+LM1
                 IL2 = LMMAXD*(II2-1)+LM2
                 GUP(LDI1,LDI2,I1) = GLLKE(IL1,IL2)
-             ENDIF
- 335      CONTINUE
- 333   CONTINUE
-
-c     end of the corrected part  20/10/99
-
-       IF (INVMOD.EQ.1) THEN
-
+              END IF
+            END DO
+            END DO
+          END DO
+          END DO
+        END DO
+!       end of the corrected part  20/10/99
+!
+!       slab: matrix is block tridiagonal
+        IF (INVMOD==1) THEN
           CALL INVSLAB(GDI,GUP,GDOW,GLLKE,ICHECK)
-
-c          write (6,*) '-------slab calculation--------'
-
-       ELSE IF (INVMOD.EQ.2) THEN ! supercell geometry inversion
-
-           CALL INVSUPERCELL(GDI,GUP,GDOW,GLLKE,ICHECK)
-
-c          write (6,*) '-------supercell calculation--------'
-
-       ENDIF
-
-
-      ELSE                      ! sparse matrix inversion
-
-C     NOT YET IMPLEMENTED!!!!!!!!!
-
-
+!          write (6,*) '-------slab calculation--------'
+!       supercell: matrix is tridiagonal with corner blocks
+        ELSE IF (INVMOD==2) THEN
+          CALL INVSUPERCELL(GDI,GUP,GDOW,GLLKE,ICHECK)
+!          write (6,*) '-------supercell calculation--------'
+        ENDIF
+!  ---------------------------------------------------------------------
+!                          godfrin module
+!  ---------------------------------------------------------------------
+      ELSE IF (INVMOD==3) THEN
+        open(file='godfrin.dat',unit=123456,status='old')     ! GODFRIN
+        read(123456,*)                                        ! GODFRIN
+        read(123456,*) na, nb, ldiag, lper, lpardiso          ! GODFRIN
+        read(123456,*) bdims(1:nb)                            ! GODFRIN
+        close(123456)                                         ! GODFRIN
+!       some checks
+        if (na /= naezd) stop 'godfrin: na /= naezd'                 ! GODFRIN
+        if (na /= sum(bdims(1:nb))) stop 'godfrin: na /= sum(bdims)' ! GODFRIN
+!       multiply blocks by angular momentum dimension
+        na = na*lmmaxd; bdims(1:nb) = bdims(1:nb)*lmmaxd            ! GODFRIN
+        call sparse_inverse(gllke,na,nb,bdims,ldiag,lper,lpardiso)  ! GODFRIN
+!  ---------------------------------------------------------------------
+      ELSE
+!       if it gets here, did you have a coffee before running the code?
+        STOP 'UNKNOWN INVERSION MODE !!!'
       ENDIF
+!  ---------------------------------------------------------------------
 
 
       deallocate(GTEMP)

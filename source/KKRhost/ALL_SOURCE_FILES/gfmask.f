@@ -26,7 +26,7 @@ C     .. Local variables
       INTEGER ICOUPLE(NAEZD,NAEZD)
       INTEGER I,J,K,II,ISTEP1,ILT1,ISTEP2,ILT2,IL2,IL1,LFCHK
       CHARACTER*80 FMTCHK
-      CHARACTER*35 INVALG(0:2)
+      CHARACTER*35 INVALG(0:3)  ! GODFRIN
 C     ..
 C     .. External functions
       LOGICAL OPT,TEST
@@ -35,7 +35,8 @@ C     ..
 C     .. Data statements
       DATA INVALG /'FULL MATRIX                        ',
      &             'BANDED MATRIX (slab)               ',
-     &             'BANDED + CORNERS MATRIX (supercell)' /
+     &             'BANDED + CORNERS MATRIX (supercell)',
+     &             'godfrin module' /   ! GODFRIN
 
       WRITE (1337,99000)
 C
@@ -50,8 +51,13 @@ C
 C --> full inversion is performed ONLY BY EXPLICIT request
 C
       IF ( OPT('full inv') )  INVMOD = 0
-C         
-      IF ( ( INVMOD.NE.0 ).AND.
+!
+! ----------------------------------------------------------------------
+      if (opt('godfrin ')) invmod = 3  ! GODFRIN
+! ----------------------------------------------------------------------
+C        
+C FLAVIANO 21.10.2014 GODFRIN 
+      IF ( ( INVMOD.NE.0 ).AND.(INVMOD.NE.3).AND.
      &     ( MOD(NAEZ,NPRINCD).NE.0 ) ) THEN
          WRITE(6,99001) NAEZ,NPRINCD
          STOP
