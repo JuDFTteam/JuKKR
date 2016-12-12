@@ -36,7 +36,7 @@ C     .. Data statements
       DATA INVALG /'FULL MATRIX                        ',
      &             'BANDED MATRIX (slab)               ',
      &             'BANDED + CORNERS MATRIX (supercell)',
-     &             'godfrin module' /   ! GODFRIN
+     &             'godfrin module                     ' /   ! GODFRIN
 
       WRITE (1337,99000)
 C
@@ -56,7 +56,7 @@ C
       if (opt('godfrin ')) invmod = 3  ! GODFRIN
 ! ----------------------------------------------------------------------
 C        
-C FLAVIANO 21.10.2014 GODFRIN 
+C 21.10.2014 GODFRIN Flaviano 
       IF ( ( INVMOD.NE.0 ).AND.(INVMOD.NE.3).AND.
      &     ( MOD(NAEZ,NPRINCD).NE.0 ) ) THEN
          WRITE(6,99001) NAEZ,NPRINCD

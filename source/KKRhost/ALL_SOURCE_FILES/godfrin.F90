@@ -4,13 +4,23 @@
 ! Extended to handle periodic boundary conditions
 ! Option to use standard sparse solver added
 
-
   implicit none
 
+  type :: type_godfrin                                ! GODFRIN Flaviano
+    !For the input parameters of the godfrin inversion scheme 
+    !na: number of atoms, nb: number of blocks
+    integer :: na, nb                                         
+    !ldiag: diagonal part of inverse only, lper: periodic system, lpardiso: use PARDISO solver instead
+    logical :: ldiag, lper, lpardiso                          
+    !bdims: block dimensions (how many atoms in each block)
+    integer, allocatable :: bdims(:)                       
+  end type type_godfrin                                       
+
+  type (type_godfrin), save :: t_godfrin              ! GODFRIN Flaviano
 
 ! Only the driver is made public
   private
-  public :: sparse_inverse
+  public :: sparse_inverse, t_godfrin, bcast_params_godfrin
 
 
 !-----------------------------------------------------------------------
@@ -804,5 +814,31 @@
   end subroutine out_mat
 !-----------------------------------------------------------------------
 
+#ifdef CPP_MPI
+   subroutine bcast_params_godfrin(t_godfrin)  !GODFRIN Flaviano
+      !broadcast parameters for godfrin matrix inversion scheme
+      use mpi
+      implicit none
+      
+      type(type_godfrin), intent(inout) :: t_godfrin
+      integer :: ierr
+
+      call MPI_Bcast(t_godfrin%na, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting maxmem_number'
+      call MPI_Bcast(t_godfrin%nb, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting maxmem_units'
+      call MPI_Bcast(t_godfrin%ldiag, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting save_rll'
+      call MPI_Bcast(t_godfrin%lper, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting save_sll'
+      call MPI_Bcast(t_godfrin%lpardiso, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting save_rllleft'
+
+      if(.not. allocated(t_godfrin%bdims) ) allocate(t_godfrin%bdims(t_godfrin%nb))
+      call MPI_Bcast(t_godfrin%bdims, t_godfrin%nb, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop '[bcast_params_savewf] Error broadcasting save_sllleft'
+            
+   end subroutine bcast_params_godfrin
+#endif
 
   end module godfrin

@@ -1,6 +1,7 @@
       module MOD_MAIN0 
       
       use mod_wunfiles
+
 #ifdef CPP_TIMING
       use mod_timing
 #endif
@@ -522,7 +523,7 @@ C
      +              ZPERIGHT,TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,
      +              RMTREF,RMTREFAT,KFORCE,
      &              KMROT,QMTET,QMPHI,NCPA,ICPA,ITCPAMAX,CPATOL,NOQ,
-     &              IQAT,CONC,SOLVER,SOCSCL,CSCL,KREL,SOCSCALE,
+     &              IQAT,CONC,SOLVER,SOCSCL,CSCL,KREL,SOCSCALE,KORBIT, !GODFRIN Flaviano
      &              LOPT,UEFF,JEFF,EREFLDAU,KREADLDAU,
      &              LMAXD,LPOTD,NSPIND,NAEZD,NATYPD,NEMBD,NPRINCD,
      &              IRMD,IRNSD,NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,IVSHIFT,

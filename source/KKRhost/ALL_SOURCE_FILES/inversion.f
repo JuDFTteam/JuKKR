@@ -10,7 +10,7 @@
 !     INVMOD = 3  ----> gofrin module
 !
 ! ------------------------------------------------------------------------
-      use godfrin  ! GODFRIN
+      use godfrin ! GODFRIN Flaviano
 
       implicit none
 
@@ -43,10 +43,6 @@
       INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)  ! changed 3.11.99
 
       EXTERNAL ZGETRF,ZGETRS,ZCOPY,INVSLAB
-!     number of atoms, blocks, block dimensions (how many atoms in block)
-      integer :: na, nb, bdims(naezd)   ! GODFRIN
-!     diagonal part of inverse only, periodic system, use PARDISO solver instead
-      logical :: ldiag, lper, lpardiso  ! GODFRIN
 
       allocate(GTEMP(ALMD,ALMD))
 
@@ -161,17 +157,9 @@
 !                          godfrin module
 !  ---------------------------------------------------------------------
       ELSE IF (INVMOD==3) THEN
-        open(file='godfrin.dat',unit=123456,status='old')     ! GODFRIN
-        read(123456,*)                                        ! GODFRIN
-        read(123456,*) na, nb, ldiag, lper, lpardiso          ! GODFRIN
-        read(123456,*) bdims(1:nb)                            ! GODFRIN
-        close(123456)                                         ! GODFRIN
-!       some checks
-        if (na /= naezd) stop 'godfrin: na /= naezd'                 ! GODFRIN
-        if (na /= sum(bdims(1:nb))) stop 'godfrin: na /= sum(bdims)' ! GODFRIN
-!       multiply blocks by angular momentum dimension
-        na = na*lmmaxd; bdims(1:nb) = bdims(1:nb)*lmmaxd            ! GODFRIN
-        call sparse_inverse(gllke,na,nb,bdims,ldiag,lper,lpardiso)  ! GODFRIN
+        call sparse_inverse(gllke,t_godfrin%na,t_godfrin%nb,
+     +    t_godfrin%bdims,t_godfrin%ldiag,t_godfrin%lper,
+     +    t_godfrin%lpardiso)  ! GODFRIN Flaviano
 !  ---------------------------------------------------------------------
       ELSE
 !       if it gets here, did you have a coffee before running the code?
