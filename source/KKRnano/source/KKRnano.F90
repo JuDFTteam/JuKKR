@@ -32,7 +32,6 @@ program KKRnano
   use Main2Arrays_mod, only: Main2Arrays, create, load, destroy
 
   use ScatteringCalculation_mod, only: energyLoop
-  use ScatteringCalculation_mod, only: gatherrMTref_com
   use ProcessKKRresults_mod, only: processKKRresults, output_forces
 
   use CalculationData_mod, only: CalculationData, create, prepareMadelung, destroy
@@ -49,10 +48,6 @@ program KKRnano
 
   integer :: iter, global_atom_id, ila, ios, ilen, voronano
   double precision  :: ebot 
-
-
-  double precision  :: rMT_dummy(1)
-  integer           :: iMT_dummy(1) = 1
   
   type(KKRnanoParallel) :: mp
 
@@ -151,6 +146,7 @@ program KKRnano
     if (ios /= 0) warn(6, "unable to create time-info file!") ! but the output will be redirected to fort.2
     write(2,'(79("="))') ! double separator line in time-info file
   endif ! master
+  call outTime(mp%isMasterRank, 'timer started ..................', getTime(program_timer), 0)
 
   call create(arrays, dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)
   call load(arrays, 'bin.arrays') ! every process does this!
@@ -174,7 +170,7 @@ program KKRnano
     call load(emesh, filename='bin.energy_mesh.0') ! every process does this!!!
 
     call create(calc_data, dims, params, arrays, mp, emesh%kmesh, voronano)
-    
+
     if (voronano == 1) then
       ios = show_warning_lines(unit=6)
       stop ! Voronoi work is done in 'create'
@@ -194,7 +190,8 @@ program KKRnano
     call init(ebalance_handler, mp)
     call setEqualDistribution(ebalance_handler, (emesh%npnt123(1) == 0))
 
-    ! here, we communicate the rMTref values early, so we could compute tref and dtrefdE locally for each atom inside the reference cluster 
+    call outTime(mp%isMasterRank, 'Energy balancer initialized ....', getTime(program_timer), 0)
+    
     do ila = 1, calc_data%num_local_atoms
       atomdata => getAtomdata(calc_data, ila)
 #ifdef DEBUG_NO_VINS
@@ -203,7 +200,7 @@ program KKRnano
       global_atom_id = calc_data%atom_ids(ila) ! get global atom_id from local index
 #ifdef PRINT_MTRADII
       write(unit=num, '(A,I7.7)') "mtradii_out.",global_atom_id
-      open(20, file=num)
+      open(20, file=num, action='write')
       write(20,*) atomdata%rMTref
       write(20,*) atomdata%radius_muffin_tin
       endfile(20)
@@ -211,22 +208,15 @@ program KKRnano
 #endif
 #ifdef USE_MTRADII
       write(unit=num, '(A,I7.7)') "mtradii_in.",global_atom_id
-      open(20, file=num)
+      open(20, file=num, action='read', status='old')
       read(20,*) atomdata%rMTref
       read(20,*) atomdata%radius_muffin_tin
-      endfile(20)
       close(20)
 #endif
-      ! this only works if all process enter the following subroutine the same number of times, so num_local_atoms may not differ among the processes
-      call gatherrMTref_com(rMTref=calc_data%kkr_a(ila)%rMTref(:), ref_cluster_atoms=calc_data%ref_cluster_a(ila)%atom(:), &
-                            rMTref_local=calc_data%atomdata_a(:)%rMTref, communicator=mp%mySEComm)
     enddo ! ila
-
-    do ios = calc_data%num_local_atoms + 1, calc_data%max_local_atoms
-      ! if num_local_atoms differs among the processes, we need to call extra times
-      call gatherrMTref_com(rMTref=rMT_dummy, ref_cluster_atoms=iMT_dummy, rMTref_local=calc_data%atomdata_a(:)%rMTref, communicator=mp%mySEComm)
-    enddo ! ios
     
+    call outTime(mp%isMasterRank, 'Muffin-Tin radii scattered .....', getTime(program_timer), 0)
+
     call createTimer(iteration_timer)
     if (mp%isMasterRank) write(2,'(79("="))') ! double separator line in time-info file
     

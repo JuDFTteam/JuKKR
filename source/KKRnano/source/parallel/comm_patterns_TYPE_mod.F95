@@ -29,34 +29,13 @@ module comm_patterns_TYPE_mod
   
 !   !!! interfacing these functions does not work because of (*) interfaces
 !   public :: comm_gather, comm_redistribute, comm_bcast, send_array
-!   
-!   interface comm_gather
-!     module procedure comm_gather_TYPE
-!   endinterface
-! 
-!   interface comm_redistribute
-!     module procedure comm_redistribute_TYPE, &
-!                      comm_redistributeV_TYPE
-!   endinterface
-!   
-!   interface comm_bcast
-!     module procedure comm_bcast_TYPE, &
-!                      comm_bcast2_TYPE
-!   endinterface
-! 
-!   interface send_array
-!     module procedure send_array_TYPE
-!   endinterface
   
-  ! deprecated public statements (to be private in the future)
   public :: comm_gather_TYPE
   public :: comm_redistribute_TYPE
   public :: comm_redistributeV_TYPE
   public :: comm_bcast_TYPE
-  public :: comm_bcast2_TYPE
+  public :: comm_bcast2_TYPE ! is not used in the code so far
   public :: send_array_TYPE
-  
-  include 'mpif.h'
   
   contains
 
@@ -82,7 +61,7 @@ module comm_patterns_TYPE_mod
 
     enddo ! rank_index
 
-  endsubroutine comm_gather_TYPE
+  endsubroutine ! comm_gather
 
   !--------------------------------------------------------------------------
   !> Redistributes array-parts among groups of ranks.
@@ -108,7 +87,7 @@ module comm_patterns_TYPE_mod
 
     enddo ! rank_index
 
-  endsubroutine comm_redistribute_TYPE
+  endsubroutine ! comm_redistribute
 
   !--------------------------------------------------------------------------
   !> Redistributes array-parts of different sizes (given by array 'blocksizes'
@@ -136,7 +115,7 @@ module comm_patterns_TYPE_mod
 
     enddo ! rank_index
 
-  endsubroutine comm_redistributeV_TYPE
+  endsubroutine ! comm_redistributeV
 
   !-------------------------------------------------------------------
   !> communicate 'array' starting from 'owner' to all the ranks
@@ -168,7 +147,7 @@ module comm_patterns_TYPE_mod
 
     enddo ! rank_index
 
-  endsubroutine comm_bcast_TYPE
+  endsubroutine ! comm_bcast
 
   !-------------------------------------------------------------------
   !> communicate 'array' starting from the first entry in 'ranks'
@@ -193,7 +172,7 @@ module comm_patterns_TYPE_mod
 
     enddo ! rank_index
 
-  endsubroutine comm_bcast2_TYPE
+  endsubroutine ! comm_bcast2
 
   !-----------------------------------------------------------------
   !> Helper routine. Sends 'length' entries of 'array' from sender to
@@ -205,6 +184,8 @@ module comm_patterns_TYPE_mod
     integer, intent(in) :: sender
     integer, intent(in) :: receiver
 
+    include 'mpif.h'
+    
     integer :: ierr
     integer :: tag
     integer :: status(MPI_STATUS_SIZE)
@@ -213,18 +194,15 @@ module comm_patterns_TYPE_mod
 
     if (sender /= receiver) then
 
-      if (my_world_rank == sender) then
+      if (my_world_rank == sender) &
         call MPI_Send(array, length, NUMBERMPI_TYPE, receiver, tag, MPI_COMM_WORLD, ierr)
-        COMMCHECK(ierr)
-      endif
 
-      if (my_world_rank == receiver) then
+      if (my_world_rank == receiver) &
         call MPI_Recv(array, length, NUMBERMPI_TYPE, sender, tag, MPI_COMM_WORLD, status, ierr)
-        COMMCHECK(ierr)
-      endif
+        
+      COMMCHECK(ierr) ! only MPI_Send or MPI_Recv has been called, never both
+    endif ! sender /= receiver
 
-    endif
+  endsubroutine ! send_array
 
-  endsubroutine send_array_TYPE
-
-endmodule comm_patterns_TYPE_mod
+endmodule ! comm_patterns_mod

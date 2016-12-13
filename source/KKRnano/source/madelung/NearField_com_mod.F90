@@ -51,8 +51,8 @@ module NearField_com_mod
 #ifndef __GFORTRAN__    
     use, intrinsic :: ieee_arithmetic, only: ieee_value, IEEE_SIGNALING_NAN
 #endif
-    type(NearFieldCorrection), intent(inout) :: nfc(:)
-    type(LocalCellInfo), intent(in) :: lci(:)
+    type(NearFieldCorrection), intent(inout) :: nfc(:) ! dim(num_local_atoms)
+    type(LocalCellInfo), intent(in) :: lci(:) ! dim(num_local_atoms)
     type(MadelungClebschData), intent(in) :: gaunt
     integer, intent(in) :: communicator
     
@@ -60,7 +60,7 @@ module NearField_com_mod
     
     type(IntracellPotential) :: intra_pot
     integer(kind=4) :: chunk(2,1)
-    integer :: num_local_atoms, max_local_atoms, ila, icell, max_npoints, npoints, lmpotd, ierr, i1, i2, irmd, nranks
+    integer :: num_local_atoms, max_local_atoms, ila, icell, max_npoints, lmpotd, ierr, i1, i2, irmd, nranks
     double precision, allocatable :: send_buffer(:,:,:), recv_buffer(:,:)
     integer :: win
 #ifndef __GFORTRAN__    
@@ -74,19 +74,19 @@ module NearField_com_mod
     
     lmpotd = size(lci(1)%v_intra, 2)
     
-    npoints = 0
+    irmd = 0
     do ila = 1, num_local_atoms
-      npoints = max(npoints, size(lci(ila)%radial_points))
+      irmd = max(irmd, size(lci(ila)%radial_points))
     enddo ! ila
 
     call MPI_Comm_size(communicator, nranks, ierr)
     ! find the global maximum for the size of the communication buffers
-    call MPI_Allreduce(npoints, max_npoints, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
+    call MPI_Allreduce(irmd, max_npoints, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
     call MPI_Allreduce(num_local_atoms, max_local_atoms, 1, MPI_INTEGER, MPI_MAX, communicator, ierr)
 
     allocate(send_buffer(0:max_npoints,0:lmpotd,num_local_atoms))
     allocate(recv_buffer(0:max_npoints,0:lmpotd))
-    
+
 #ifndef NDEBUG
     send_buffer = nan
     recv_buffer = nan
@@ -131,7 +131,7 @@ module NearField_com_mod
 
         ! begin unpacking
         !--------------------------------------------------------------------------------------------
-        irmd = int(recv_buffer(0,0) + 0.1d0) ! convert back to integer
+        irmd = int(recv_buffer(0,0) + 0.1) ! convert back to integer
 
         WRITELOG(2,*) "cell, irmd(icell) ", lci(ila)%near_cell_indices(icell), irmd
 

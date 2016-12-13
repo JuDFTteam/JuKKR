@@ -236,7 +236,7 @@ module BasisAtom_mod
                            self%core%ITITLE, &
                            magic(2)
 
-    if (any(magic /= MAGIC_NUMBER)) die_here("Invalid basis self data read.")
+    if (any(magic /= MAGIC_NUMBER)) die_here("Invalid BasisAtom data read.")
   endsubroutine ! read
 
   !----------------------------------------------------------------------------

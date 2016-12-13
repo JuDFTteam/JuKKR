@@ -85,8 +85,6 @@ module CalculationData_mod
   contains
 
   !----------------------------------------------------------------------------
-  ! TODO: atoms_per_procs * num_procs MUST BE = naez, 
-  !       rank = 0,1,..., num_atom_ranks-1
   subroutine createCalculationData(self, dims, params, arrays, mp, kmesh, voronano)
     use KKRnanoParallel_mod, only: KKRnanoParallel
     use DimParams_mod, only: DimParams
@@ -110,7 +108,7 @@ module CalculationData_mod
       write(*, '(9(a,i0))') "Treat only ",num_local_atoms," instead of ",self%max_local_atoms," local atoms in rank #",mp%myAtomRank
     if (num_local_atoms < 1) die_here("The number of local atoms must be >= 1 or the rank should be inactive, found"+num_local_atoms)
     num_local_atoms = max(0, num_local_atoms) ! however, this does not work
-    
+
     self%num_local_atoms = num_local_atoms ! store
 
 !   allocate(self%a(num_local_atoms))
@@ -141,7 +139,7 @@ module CalculationData_mod
 
     do ila = 1, num_local_atoms
       self%atom_ids(ila) = mp%myAtomRank * self%max_local_atoms + ila
-!       self%a(ila)%atom_id = mp%myAtomRank * self%max_local_atoms + ila
+!     self%a(ila)%atom_id = mp%myAtomRank * self%max_local_atoms + ila
       assert( self%atom_ids(ila) <= dims%naez )
     enddo ! ila
 

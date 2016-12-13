@@ -8,7 +8,7 @@ module ScatteringCalculation_mod
   use arraytest2_mod, only: ! import no name, just mention it for the module dependency 
 implicit none
   private
-  public  :: energyLoop, gatherrMTref_com
+  public  :: energyLoop
 
   contains
 
@@ -62,6 +62,8 @@ implicit none
 
     use SingleSiteRef_mod, only: tref, gref
     
+    use two_sided_commD_mod, only: distribute
+    
     integer, intent(in) :: iter
     type(CalculationData), intent(inout) :: calc
     type(KKRnanoParallel), intent(in)    :: mp
@@ -88,7 +90,9 @@ implicit none
     integer :: i1, ila, num_local_atoms, iacls
     integer :: lmmaxd, lmsd
     logical :: xccpl
-
+    double precision :: rMTref
+    double precision, allocatable :: rMTs(:)
+    
     double complex, allocatable :: tmatLL(:,:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
     double complex, allocatable :: GrefN_buffer(:,:,:,:,:) !< GrefN for all local atoms
@@ -150,6 +154,8 @@ implicit none
     ! it is good to do these allocations outside of energy loop: ToDo
     call setup_solver(solv, kkr_op, precond, dims, calc%clusters, lmsd, params%qmrbound, atom_indices)
 
+    allocate(rMTs(calc%trunc_zone%naez_trc))
+    call distribute(calc%xTable, 1, calc%atomdata_a(:)%rMTref, rMTs) ! communicate the Muffin-Tin radii within the truncation zone
     
   ! IE ====================================================================
   !     BEGIN do loop over energies (EMPID-parallel)
@@ -167,15 +173,17 @@ implicit none
 
         call startTimer(reference_green_timer)          
         
-        !$omp parallel do private(ila, iacls)
+        !$omp parallel do private(ila, iacls, rMTref)
         do ila = 1, num_local_atoms
 
           do iacls = 1, calc%ref_cluster_a(ila)%nacls
             ! this calls tref several times with the same parameters if the local atoms are close to each other
-            call tref(emesh%EZ(IE), params%vref, dims%lmaxd, kkr(ila)%rMTref(iacls), &
+!           rMTref = kkr(ila)%rMTref(iacls) ! possible if it has been communicated earlier
+            rMTref = rMTs(calc%trunc_zone%trunc_atom_idx(calc%ref_cluster_a(ila)%atom(iacls)))
+            call tref(emesh%EZ(IE), params%vref, dims%lmaxd, rMTref, &
                       kkr(ila)%Tref_ell(:,iacls), kkr(ila)%dTref_ell(:,iacls), derive=(dims%Lly > 0))
           enddo ! iacls
-        
+
           call gref(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
                     calc%gaunts%CLEB, calc%ref_cluster_a(ila)%RCLS, calc%gaunts%ICLEB, &
                     calc%gaunts%LOFLM, calc%ref_cluster_a(ila)%nacls, &
@@ -374,7 +382,7 @@ implicit none
 
     call cleanup_solver(solv, kkr_op, precond)
 
-    deallocate(tmatLL, atom_indices, GrefN_buffer, GmatN_buffer, stat=ist) ! ignore status
+    deallocate(tmatLL, atom_indices, GrefN_buffer, GmatN_buffer, rMTs, stat=ist) ! ignore status
 
   endsubroutine ! energyLoop
 
@@ -514,7 +522,6 @@ implicit none
   subroutine gatherTmatrices_com(calc, tmatLL, ispin)
     use CalculationData_mod, only: CalculationData
     use two_sided_commZ_mod, only: distribute
-!   use one_sided_commZ_mod, only: copyFromZ_com
 
     type(CalculationData), intent(in) :: calc
     double complex, intent(inout) :: tmatLL(:,:,:,0:) !> dim(lmmaxd,lmmaxd,num_local_atoms,0:Lly)
@@ -540,43 +547,11 @@ implicit none
     chunk_size = size(tmatLL, 1)*size(tmatLL, 2)
     
     do iLly = 0, nLly - 1
-!     call copyFromZ_com(tmatLL(:,:,:,iLly), tsst_local(:,:,:,iLly), calc%trunc_zone%global_atom_id, chunk_size, num_local_atoms, communicator)
       call distribute(calc%xTable, chunk_size, tsst_local(:,:,:,iLly), tmatLL(:,:,:,iLly))
     enddo ! iLly
 
     deallocate(tsst_local, stat=ist) ! ignore status
   endsubroutine ! gather
 #undef kkr
-
-  !------------------------------------------------------------------------------
-  !> Gather all rMTref values of the reference cluster.
-  !> @param rMTref_local all locaLly determined rMTref value
-  !> @param rMTref       on exit all rMTref value in ref_cluster
-  subroutine gatherrMTref_com(rMTref, ref_cluster_atoms, rMTref_local, communicator)
-    use one_sided_commD_mod, only: copyFromD_com
-
-    double precision, intent(out) :: rMTref(:) ! (clusters%naclsd)
-    integer(kind=4), intent(in) :: ref_cluster_atoms(:) ! ref_cluster%atom(ref_cluster%nacls)
-    double precision, intent(in) :: rMTref_local(:) ! (num_local_atoms)
-    integer, intent(in) :: communicator
-
-    double precision, allocatable :: rMTref_all(:,:,:), rMTref_loc(:,:,:)
-
-    allocate(rMTref_all(1,1,size(rMTref, 1)), rMTref_loc(1,1,size(rMTref_local, 1)))
-
-    ASSERT( size(rMTref) >= size(ref_cluster_atoms) ) 
-    ! rMTref is allocated with dim(clusters%naclsd) whereas
-    ! ref_cluster_atoms   with dim(ref_cluster_a(ila)%nacls), therefore no equality here 
-
-    rMTref_all = 0.d0
-    
-    rMTref_loc(1,1,:) = rMTref_local(:) ! in
-    
-    call copyFromD_com(rMTref_all, rMTref_loc, ref_cluster_atoms, 1, size(rMTref_local, 1), communicator)
-
-    rMTref(:) = rMTref_all(1,1,:) ! out
-
-    deallocate(rMTref_all, rMTref_loc)
-  endsubroutine ! gather
 
 endmodule ! ScatteringCalculation_mod

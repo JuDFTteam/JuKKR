@@ -230,11 +230,11 @@ module KKRmat_mod
     double complex, intent(in) :: Ginp(:,:,0:,:,:) !> Ginp(lmmaxd,lmmaxd,0:Lly,naclsd,N) where N=num_local_atoms or num_trunc_atoms if defined(SPLIT_REFERENCE_FOURIER_COM)
     double precision, intent(in) :: alat
     double precision, intent(in)  :: RR(:,0:)
-#ifndef SPLIT_REFERENCE_FOURIER_COM    
+#ifndef SPLIT_REFERENCE_FOURIER_COM
     integer, intent(in) :: global_atom_id(:) ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
     integer, intent(in) :: communicator      ! becomes redundant with SPLIT_REFERENCE_FOURIER_COM
-#else     
-#define referenceFourier_com(A,B,C,D,E,F,G,H,I) referenceFourier_part2(A,B,C,D,E,F,G)
+#else
+#define  referenceFourier_com(A,B,C,D,E,F,G,H,I)  referenceFourier_part2(A,B,C,D,E,F,G)
 #endif
     type(InitialGuess), intent(inout) :: iguess_data
     integer, intent(in) :: ienergy, ispin, ikpoint
@@ -257,7 +257,6 @@ module KKRmat_mod
     
     lmsd = size(tmatLL, 2)
     num_trunc_atoms = size(tmatLL, 3) ! number of atoms in the unified truncation zones
-    nacls = op%cluster%naclsd
 
 
     !=======================================================================
@@ -285,31 +284,15 @@ module KKRmat_mod
   
     call referenceFourier_com(op%mat_A, op%bsr_A, kpoint, alat, RR, op%cluster, Ginp, global_atom_id, communicator)
 
+#undef   referenceFourier_com
+
     TESTARRAYLOG(3, op%mat_A)
 
     ! ToDo: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     if (Lly == 1) then ! LLY
       ! Allocate additional arrays for Lloyd's formula
-      alm = lmsd*num_trunc_atoms
-
-      allocate(gllke_x(lmsd*num_trunc_atoms,lmsd*nacls))
-      allocate(dgde(lmsd*num_trunc_atoms,lmsd*nacls))
-      allocate(gllke_x_t(lmsd*nacls,lmsd*num_trunc_atoms))
-      allocate(dgde_t(lmsd*nacls,lmsd*num_trunc_atoms))
-      allocate(gllke_x2(lmsd*num_trunc_atoms,lmsd))
-      allocate(dgde2(lmsd*num_trunc_atoms,lmsd))
-      allocate(dPdE_local(lmsd*num_trunc_atoms,lmsd))
-    
-!     call referenceFourier_com(op%mat_A(:,:,:,Lly), op%bsr_A, kpoint, alat, RR, op%cluster, dGinp, global_atom_id, communicator)
-
-#undef     referenceFourier_com
-
-      TESTARRAYLOG(3, op%mat_A(:,:,:,Lly))
-
-      call convertBSRToFullMatrix(gllke_x, op%bsr_A, op%mat_A(:,:,:,0))
-      call convertBSRToFullMatrix(   dgde, op%bsr_A, op%mat_A(:,:,:,Lly))
-
+      
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
       ! ------- = ------- * T(E) + G(E,k) * -----
@@ -317,19 +300,40 @@ module KKRmat_mod
   
       matrix_index = (global_atom_idx_lly - 1)*lmsd
 
-      gllke_x_t = transpose(gllke_x)
+      nacls = op%cluster%naclsd
+      
+      alm = lmsd*num_trunc_atoms
+
+      TESTARRAYLOG(3, op%mat_A(:,:,:,Lly))
+
+      allocate(dgde(lmsd*num_trunc_atoms,lmsd*nacls))
+      call convertBSRToFullMatrix(dgde, op%bsr_A, op%mat_A(:,:,:,Lly))
+      allocate(dgde_t(lmsd*nacls,lmsd*num_trunc_atoms))
       dgde_t = transpose(dgde)
+      deallocate(dgde, stat=ist)
 
-      gllke_x2 = gllke_x_t(:,matrix_index+ 1:lmsd +matrix_index)
-      dgde2    = dgde_t   (:,matrix_index+ 1:lmsd +matrix_index)
+      allocate(dgde2(lmsd*num_trunc_atoms,lmsd))
+      dgde2 = dgde_t(:,matrix_index+ 1:lmsd +matrix_index)
+      deallocate(dgde_t, stat=ist)
 
-      dPdE_local = zero ! init
+      allocate(dPdE_local(lmsd*num_trunc_atoms,lmsd))
 
       call zgemm('n','n',alm,lmsd,lmsd,cone, dgde2,alm, tmatLL(1,1,global_atom_idx_lly,0),lmsd,zero, dPdE_local,alm)
+      deallocate(dgde2, stat=ist)
+
+      allocate(gllke_x(lmsd*num_trunc_atoms,lmsd*nacls))
+      call convertBSRToFullMatrix(gllke_x, op%bsr_A, op%mat_A(:,:,:,0))
+      allocate(gllke_x_t(lmsd*nacls,lmsd*num_trunc_atoms))
+      gllke_x_t = transpose(gllke_x)
+      deallocate(gllke_x, stat=ist)
+
+      allocate(gllke_x2(lmsd*num_trunc_atoms,lmsd))
+      gllke_x2 = gllke_x_t(:,matrix_index+ 1:lmsd +matrix_index)
+      deallocate(gllke_x_t, stat=ist)
 
       call zgemm('n','n',alm,lmsd,lmsd,cfctorinv, gllke_x2,alm, tmatLL(1,1,global_atom_idx_lly,Lly),lmsd,cone, dPdE_local,alm)
+      deallocate(gllke_x2, stat=ist)
       !--------------------------------------------------------
-
     endif ! LLY
     
     ! ToDo: merge the referenceFourier_part2 with buildKKRCoeffMatrix
@@ -419,7 +423,7 @@ module KKRmat_mod
 
       bztr2 = bztr2 + tracek*volcub(ikpoint)
       !--------------------------------------------------------
-      deallocate(gllke_x, dgde, gllke_x_t, dgde_t, gllke_x2, dgde2, dPdE_local, stat=ist)
+      deallocate(dPdE_local, stat=ist)
     endif ! LLY
 
   endsubroutine ! kloopbody
