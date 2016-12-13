@@ -45,6 +45,8 @@
   double complex, parameter :: czero = (0.d0,0.d0), cone = (1.d0,0.d0)
   double complex, parameter :: cminus = (-1.d0,0.d0)
 ! ----------------------------------------------------------------------
+! Switch to print or not the running time
+  logical,        parameter :: ltiming = .FALSE.
 
 
   contains
@@ -138,30 +140,30 @@
   call cpu_time(start)
   call tridiag_save(a,na,periodic)
   call cpu_time(finish)
-  write(*,'("tridiag_save           time=",f10.3," s")') finish - start
+  if(ltiming) write(*,'("tridiag_save           time=",f10.3," s")') finish - start
 ! This computes the diagonal elements
   call cpu_time(start)
   call get_diagonal(a,na,periodic)
   call cpu_time(finish)
-  write(*,'("get_diagonal           time=",f10.3," s")') finish - start
+  if(ltiming) write(*,'("get_diagonal           time=",f10.3," s")') finish - start
 ! This fills in the rest
   if (.not.diagonal) then
     call cpu_time(start)
     call get_offdiagonal(a,na,periodic)
     call cpu_time(finish)
-    write(*,'("get_offdiagonal        time=",f10.3," s")') finish - start
+    if(ltiming) write(*,'("get_offdiagonal        time=",f10.3," s")') finish - start
   end if
 ! Corrections for periodic blocks
   if (periodic) then
     call cpu_time(start)
     call diagonal_correction(a,na)
     call cpu_time(finish)
-    write(*,'("diagonal_correction    time=",f10.3," s")') finish - start
+    if(ltiming) write(*,'("diagonal_correction    time=",f10.3," s")') finish - start
     if (.not.diagonal) then
       call cpu_time(start)
       call offdiagonal_correction(a,na)
       call cpu_time(finish)
-      write(*,'("offdiagonal_correction time=",f10.3," s")') finish - start
+      if(ltiming) write(*,'("offdiagonal_correction time=",f10.3," s")') finish - start
     end if
   end if
 ! Free memory
@@ -188,7 +190,7 @@
   a(1:n,1:n) = tmp
   deallocate(asparse,b,tmp,ia,ja,perm)
   call cpu_time(finish)
-  write(*,'("PARDISO sparse solver  time=",f10.3," s")') finish - start
+  if(ltiming) write(*,'("PARDISO sparse solver  time=",f10.3," s")') finish - start
 ! ======================================================================
   end if
 ! ======================================================================

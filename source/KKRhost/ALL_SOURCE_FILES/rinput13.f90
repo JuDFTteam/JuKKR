@@ -2094,7 +2094,8 @@
 
 ! Begin Godfrin inversion scheme control                       ! GODFRIN Flaviano
 !==========================================================
-      WRITE(111,*) 'Godfrin inversion scheme parameters'
+      WRITE(111 ,*) 'Godfrin inversion scheme parameters'
+      WRITE(1337,*) 'Godfrin inversion scheme parameters'
 
       t_godfrin%na = NAEZD
       CALL IOINPUT('GODFRIN         ',UIO,2,7,IER)
@@ -2109,10 +2110,12 @@
       write(*,*) t_godfrin%na
       IF( t_godfrin%na /= sum(t_godfrin%bdims) ) stop 'godfrin: na /= sum(bdims)'
 
-      WRITE(111,FMT='(A7)') 'Godfrin'
-      WRITE(111,FMT='(A7)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
-      WRITE(111,*) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
-      WRITE(111,*) t_godfrin%bdims(1:t_godfrin%nb)
+      WRITE(111 ,FMT='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
+      WRITE(1337,FMT='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
+      WRITE(111 ,*) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      WRITE(1337,*) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      WRITE(111 ,FMT='(50(I0," "))') t_godfrin%bdims(:)
+      WRITE(1337,FMT='(50(I0," "))') t_godfrin%bdims(:)
 
       !multiply blocks by angular momentum dimension
       IL = (KREL+KORBIT+1) * (LMAXD+1)**2 ! LMMAXD
@@ -2120,9 +2123,9 @@
       t_godfrin%bdims = t_godfrin%bdims*IL
 
       IF(ICC/=0 .AND. t_godfrin%ldiag) THEN
-        t_godfrin%ldiag = "F"
-        WRITE(111,FMT='(A7)') 'rinput13: Warning! ICC/=0 , then "ldiag" should not be "T" :'
-        WRITE(111,FMT='(A7)') '          Godfrin inversion scheme is imposing ldiag = F'
+        t_godfrin%ldiag = .FALSE.
+        WRITE(111 ,FMT='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
+        WRITE(1337,FMT='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
       END IF 
         
 ! End Godfrin inversion scheme control                         ! GODFRIN Flaviano
