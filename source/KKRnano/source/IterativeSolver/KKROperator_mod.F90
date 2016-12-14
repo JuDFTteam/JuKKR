@@ -89,16 +89,22 @@ module KKROperator_mod
     ist = subset(set=self%bsr_X, sub=self%bsr_B, list=self%B_subset_of_X)
     if (ist /= 0) stop 'KKROperator: creation of subset list failed!'
 
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+#define NCOLS nRows
+#define NROWS nCols
+    write(*,*) "warning: transposition of KKROperator-quantities"
+#endif
+
     nRows = lmsd ! here we can introduce memory alignment
     nCols = lmsd*nRHS_group
 
-    allocate(self%mat_B(nRows,nCols,self%bsr_B%nnzb))
-    allocate(self%mat_X(nRows,nCols,self%bsr_X%nnzb))
+    allocate(self%mat_B(NROWS,NCOLS,self%bsr_B%nnzb))
+    allocate(self%mat_X(NROWS,NCOLS,self%bsr_X%nnzb))
 
     nCols = lmsd
     nLloyd = min(max(0, Lly), 1) ! for the energy derivative needed in Lloyd''s formula
 
-    allocate(self%mat_A(nRows,nCols,self%bsr_A%nnzb,0:nLloyd)) ! allocate memory for the KKR operator
+    allocate(self%mat_A(NROWS,NCOLS,self%bsr_A%nnzb,0:nLloyd)) ! allocate memory for the KKR operator
 
     ! plan the operation
     call bsr_times_bsr(self%plan, self%bsr_A%RowStart, self%bsr_A%ColIndex, shape(self%mat_A), self%bsr_X%RowStart, self%bsr_X%ColIndex, shape(self%mat_X))

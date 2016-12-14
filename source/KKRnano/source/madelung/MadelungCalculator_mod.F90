@@ -701,10 +701,13 @@ module MadelungCalculator_mod
     integer :: i, i2, i01, ist
     integer :: ell, emm, lm
     integer :: nge, ngs, nre, nrs
+    integer :: nwarn
 
     logical, parameter :: precompute_Ymy_g = .true.
     double precision, allocatable :: Ymy_g(:,:)
 
+    nwarn = 0
+    
     fpi = 4.d0*pi
     sqrtPi = sqrt(pi)
     sqrtPiInv = 1./sqrtPi
@@ -791,9 +794,12 @@ module MadelungCalculator_mod
         enddo ! i
 
         if (i01 == 0) then
-#ifndef SUPERCELL_ELECTROSTATICS  
           if (any(abs(aimag(stest(:))) > BOUND)) &
+#ifndef SUPERCELL_ELECTROSTATICS
             die_here("Imaginary contribution to REAL lattice sum, largest="+maxval(abs(aimag(stest))))
+#else
+            nwarn = nwarn + 1 ! to make it correct, we need a reduction(+:nwarn) in the openmp statements
+!           warn(6,  "Imaginary contribution to REAL lattice sum, largest="+maxval(abs(aimag(stest))))
 #endif
           smat(:,i2) = dble(stest(:)) ! store only real part
           stest(:) = ZERO ! reset before computing the contribution of the last shell
@@ -818,6 +824,8 @@ module MadelungCalculator_mod
       enddo ! i01
     enddo ! i2 ! loop over all atoms
     !$omp end parallel do
+
+    if (nwarn > 0) warn(6, "Imaginary contribution to REAL lattice sum in at least"+nwarn+"situations!")
 
     if (precompute_Ymy_g) deallocate(Ymy_g, stat=ist)
 

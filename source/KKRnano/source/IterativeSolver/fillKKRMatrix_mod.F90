@@ -200,6 +200,10 @@ module fillKKRMatrix_mod
 #endif
         ! multiply the T matrix onto smat
 
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+#define smat(a,b,c) SMAT(b,a,c)
+#endif
+
         do lm2 = 1, lmsd
 
           temp(:) = ZERO
@@ -211,6 +215,10 @@ module fillKKRMatrix_mod
 
           smat(:,lm2,Aind) = temp(:)
         enddo ! lm2
+
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+#undef  smat
+#endif
 
       enddo ! Aind ! block columns
     enddo ! block rows
@@ -234,8 +242,14 @@ module fillKKRMatrix_mod
     assert( size(tmatLL, 1) == lmsd ) ! assume square shape
     assert( size(mat_B, 1)  >= lmsd )
 !   assert( size(mat_B, 2)  == lmsd ) ! <future>
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+#define mat_B(a,b,c) MAT_B(b,a,c)
+    assert( modulo(size(mat_B, 1), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
+    nRHS_group = size(mat_B, 1) / lmsd ! integer division should be exact
+#else
     assert( modulo(size(mat_B, 2), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
     nRHS_group = size(mat_B, 2) / lmsd ! integer division should be exact
+#endif
     assert( nRHS_group >= 1 )
 
     do iRHS = 1, size(row_indices)
@@ -244,7 +258,7 @@ module fillKKRMatrix_mod
       ing = modulo((iRHS - 1),nRHS_group) + 1
       Bind = exists(bsr_B, row=row_index, col=iRHS_group) ! find index in BSR structure
       if (Bind < 1) stop "fatal! bsr_B cannot find diagonal element"
-      
+
       if (present(tmatLL)) then
         mat_B(:lmsd,lmsd*(ing - 1) + 1:lmsd*ing,Bind) = tmatLL(:,:,row_index)
       else
@@ -252,6 +266,11 @@ module fillKKRMatrix_mod
           mat_B(lms,lms + lmsd*(ing - 1),Bind) = CONE ! set the block to a unity matrix
         enddo ! lms
       endif
+
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+#undef  mat_B
+#endif
+
     enddo ! iRHS
     
   endsubroutine ! buildRightHandSide
@@ -281,8 +300,13 @@ module fillKKRMatrix_mod
     assert( lmsd == size(G_diag, 1) )
 !   assert( lmsd == size(mat_X, 1) ) ! fails of alignment padding is non-zero
     
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+    assert( modulo(size(mat_X, 1), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
+    nRHS_group = size(mat_X, 1) / lmsd ! integer division should be exact
+#else
     assert( modulo(size(mat_X, 2), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
     nRHS_group = size(mat_X, 2) / lmsd ! integer division should be exact
+#endif
     assert( nRHS_group >= 1 )
     
       iRHS_group = (iRHS - 1)/nRHS_group  + 1
@@ -291,10 +315,13 @@ module fillKKRMatrix_mod
       if (Xind < 1) die_here("diagonal element not contained in X, row="-row-", col="-iRHS)
 
       G_diag = ZERO
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+      G_diag(:,:) = transpose(mat_X(:lmsd,(ing - 1)*lmsd + 1:lmsd*ing,Xind))
+#else
       G_diag(:,:) = mat_X(:lmsd,(ing - 1)*lmsd + 1:lmsd*ing,Xind)
-    
+#endif
   endsubroutine ! getGreenDiag
-  
+
   
   subroutine convertBSRToFullMatrix(full, bsr, smat)
     use SparseMatrixDescription_mod, only: SparseMatrixDescription

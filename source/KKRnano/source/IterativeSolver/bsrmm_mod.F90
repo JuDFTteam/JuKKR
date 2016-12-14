@@ -82,9 +82,13 @@ module bsrmm_mod
     leadDim_Y = shapeY(1)
 
     lmsd = shapeA(2)
+    
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+    nRHS = shapeX(1)
+#else
     nRHS = shapeX(2)
-
     if (leadDim_A /= leadDim_X) stop __LINE__
+#endif
     
     nRows = size(ix) - 1
     if (nRows /= size(ia) - 1) stop __LINE__
@@ -280,6 +284,8 @@ module bsrmm_mod
     integer :: itask, ithread
     double complex :: beta
     
+    if (any(shape(X) /= shape(Y))) stop __LINE__
+    
     kernel = self%kernel ! must be lowercase !
 
     leadDim_A = size(A, 1)
@@ -287,12 +293,12 @@ module bsrmm_mod
     leadDim_Y = size(Y, 1)
     
     lmsd = size(A, 2)
-    nRHS = size(X, 2)
-
-    if (leadDim_Y /= leadDim_X) stop __LINE__
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+    nRHS = size(X, 1)
+#else
     if (leadDim_A /= leadDim_X) stop __LINE__
-    if (size(X, 2) /= size(Y, 2)) stop __LINE__
-    if (size(X, 3) /= size(Y, 3)) stop __LINE__
+    nRHS = size(X, 2)
+#endif
 
 !$omp parallel
 !$omp do private(Yind, Aind, Xind, beta, itask, ithread) schedule(static, 1)
@@ -309,18 +315,25 @@ module bsrmm_mod
         if (Xind > size(X, 3)) stop __LINE__
 #endif
 
-        selectcase (KERNEL) ! this must be in ALLCAPS as we want to replace it by the preprocessor if we compile a production version
-        case (4)
-          if (self%task_AoSoA(3,itask,ithread) == 0) Y(:,:,Yind) = ZERO
-          call kernel4x4xN(nRHS, A(:,:,Aind), X(:,:,Xind), Y(:,:,Yind))
-        case (16)
-          if (self%task_AoSoA(3,itask,ithread) == 0) Y(:,:,Yind) = ZERO
-          call kernel16x16xN(nRHS, A(:,:,Aind), X(:,:,Xind), Y(:,:,Yind))
-        case default
+!         selectcase (KERNEL) ! this must be in ALLCAPS as we want to replace it by the preprocessor if we compile a production version
+!         case (4)
+!           if (self%task_AoSoA(3,itask,ithread) == 0) Y(:,:,Yind) = ZERO
+!           call kernel4x4xN(nRHS, A(:,:,Aind), X(:,:,Xind), Y(:,:,Yind))
+!         case (16)
+!           if (self%task_AoSoA(3,itask,ithread) == 0) Y(:,:,Yind) = ZERO
+!           call kernel16x16xN(nRHS, A(:,:,Aind), X(:,:,Xind), Y(:,:,Yind))
+!         case default
+! 
           ! now: Y[:,:,Yind] += beta * A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
           !                    M     N     K          A                       B                             C
           call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), leadDim_A, X(:,1,Xind), leadDim_X, beta, Y(:,1,Yind), leadDim_Y)
-        endselect ! kernel
+!           
+!         endselect ! kernel
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+!           ! now: Y[:,:,Yind] += beta * A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
+!           !                    M     N     K          A                       B                             C
+          call zgemm('n', 'n', nRHS, lmsd, lmsd, one, X(:,1,Xind), leadDim_X, A(:,1,Aind), leadDim_A, beta, Y(:,1,Yind), leadDim_Y)
+#endif
 
       enddo ! itask
     enddo ! ithread

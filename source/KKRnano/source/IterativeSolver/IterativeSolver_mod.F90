@@ -69,7 +69,7 @@ module IterativeSolver_mod
     type(IterativeSolver), intent(inout) :: self
     type(TimerMpi), intent(inout) :: timer
     
-    integer :: ndim(4), iterations_needed, ist
+    integer :: ndim(4), iterations_needed, ist, nRHSs
     double precision :: largest_residual
     integer(kind=8) :: nFlops
 
@@ -84,15 +84,21 @@ module IterativeSolver_mod
       deallocate(self%vecs, stat=ist) ! ignore status
       allocate(self%vecs(ndim(1),ndim(2),ndim(3),ndim(4)), stat=ist)
       if (ist /= 0) then
-        write(*,*) "IterativeSolver error: (Re-)Allocation of workspace failed! requested ", &
-         product(ndim(1:3)/1024.)*(ndim(4)*16.)," GiByte" ! 16 Byte per dp-complex
+        write(*, '(9(a,f0.3))') "IterativeSolver error: (Re-)Allocation of workspace failed! requested ", &
+         product(ndim(1:3)/1024.)*ndim(4)*16.," GiByte" ! 16 Byte per dp-complex
         stop
       endif ! failed
     endif ! needs resize
 
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+    nRHSs = ndim(1)
+#else
+    nRHSs = ndim(2)
+#endif
+
     nFlops = 0
     ! call tfQMR solver
-    call solve(self%op, self%op%mat_X, self%op%mat_B, self%qmrbound, ndim(2), self%op%bsr_X%nCols, &
+    call solve(self%op, self%op%mat_X, self%op%mat_B, self%qmrbound, nRHSs, self%op%bsr_X%nCols, &
                self%initial_zero, self%precond, self%use_precond, &
                self%vecs, timer, iterations_needed, largest_residual, nFlops)
 

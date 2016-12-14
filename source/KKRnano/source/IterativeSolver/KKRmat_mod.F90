@@ -160,7 +160,7 @@ module KKRmat_mod
         call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, num_trunc_atoms, ila, &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
                     op%mat_X(:,:,1), global_jij_data%GSXIJ, communicator, lmsd, global_jij_data%nxijd)
-                    stop __LINE__ ! invalid argument is passed, data layout of mat_X has changed
+                    stop __LINE__ ! invalid argument is passed, data layout of mat_X has changed, and maybe transposed
       endif ! jij
 
       call stopTimer(kpoint_timer)
@@ -908,7 +908,15 @@ module KKRmat_mod
               assert( in0 < sparse%RowStart(isa + 1) )
               Aind = sparse%RowStart(isa) - 1 + in0
               assert( jCol == sparse%ColIndex(Aind) )
-              smat(:,:,Aind,iLly) = smat(:,:,Aind,iLly) + eikRR(0,c%ezoa(iacls,isa)) * transpose(Ginp(:,:,iLly,iacls))
+
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+#define NONtranspose(X) transpose(X)
+#define transpose(X)    (X)
+#else
+#define NONtranspose(X) (X)
+#endif
+
+              smat(:lmmaxd,:lmmaxd,Aind,iLly) = smat(:lmmaxd,:lmmaxd,Aind,iLly) + eikRR(0,c%ezoa(iacls,isa)) * transpose(Ginp(:,:,iLly,iacls))
 
             endif ! ita == jCol
           enddo ! in0
@@ -920,7 +928,7 @@ module KKRmat_mod
               assert( in0 < sparse%RowStart(ita + 1) )
               Aind = sparse%RowStart(ita) - 1 + in0
               assert( jCol == sparse%ColIndex(Aind) )
-              smat(:,:,Aind,iLly) = smat(:,:,Aind,iLly) + eikRR(1,c%ezoa(iacls,isa)) * Ginp(:,:,iLly,iacls)
+              smat(:lmmaxd,:lmmaxd,Aind,iLly) = smat(:lmmaxd,:lmmaxd,Aind,iLly) + eikRR(1,c%ezoa(iacls,isa)) * NONtranspose(Ginp(:,:,iLly,iacls))
 
             endif ! isa == jCol
           enddo ! in0

@@ -71,6 +71,10 @@ program KKRnano
  
   call MPI_Init(ios) ! --> needs to be called now, otherwise MPI_Abort and MPI_Wtime cannot be used during toolbox functionalities
   
+#ifdef  SUPERCELL_ELECTROSTATICS
+  warn(6, "Fix symmetry with SUPERCELL_ELECTROSTATICS ="+SUPERCELL_ELECTROSTATICS)
+#endif
+
   voronano = 0
   call get_command_argument(1, arg, ilen, ios)
   selectcase (arg)
@@ -338,6 +342,10 @@ program KKRnano
 
   call destroy(arrays)
   call destroy(dims)
+
+#ifdef  SUPERCELL_ELECTROSTATICS
+  warn(6, "Fixed symmetry with SUPERCELL_ELECTROSTATICS ="+SUPERCELL_ELECTROSTATICS)
+#endif
   
   if (mp%isMasterRank) ios = show_warning_lines(unit=6)
 

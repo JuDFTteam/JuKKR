@@ -711,7 +711,7 @@ module ProcessKKRresults_mod
 #ifndef DEBUG_NO_ELECTROSTATICS
     ! output: VONS (changed), VMAD
     ! operation on all atoms! O(N**2)
-    call addMadelungPotentialnew_com(calc, arrays%ZAT, mp%myAtomRank, (dims%naez-1)/mp%numAtomRanks+1, mp%mySEComm)
+    call addMadelungPotentialnew_com(calc, arrays%ZAT, mp%mySEComm)
 
     call outTime(mp%isMasterRank, 'vmadelblk ......................', getTime(program_timer), ITER)
 #endif

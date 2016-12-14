@@ -13,19 +13,17 @@ module MadelungPotential_mod
   !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
   !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
   !> Wrapper for VMADELBLK
-  subroutine addMadelungPotentialnew_com(calc_data, ZAT, myrank, atoms_per_proc, communicator)
+  subroutine addMadelungPotentialnew_com(calc_data, zat, communicator)
     use CalculationData_mod, only: CalculationData
     
     type(CalculationData), intent(inout) :: calc_data
-    double precision, intent(in) :: ZAT(:)
-    integer, intent(in) :: myrank, atoms_per_proc ! ToDo: remove from interface
+    double precision, intent(in) :: zat(:)
     integer, intent(in) :: communicator
 
 #define mc calc_data%madelung_calc
-    call VMADELBLK_new2_com(calc_data, mc%LPOT, size(ZAT), ZAT, mc%lmpotd, &
+    call VMADELBLK_new2_com(calc_data, mc%LPOT, size(zat), zat, mc%lmpotd, &
          mc%clebsch%CLEB, mc%clebsch%ICLEB, mc%clebsch%IEND, &
-         mc%LMXSPD,mc%clebsch%NCLEBD, mc%clebsch%LOFLM, mc%DFAC, &
-         myrank, atoms_per_proc, communicator)
+         mc%LMXSPD,mc%clebsch%NCLEBD, mc%clebsch%LOFLM, mc%DFAC, communicator)
 #undef mc
   endsubroutine ! add
 
@@ -59,7 +57,7 @@ module MadelungPotential_mod
   !>
   ! **********************************************************************
   subroutine VMADELBLK_new2_com(calc_data, lpot, naez, zat, &
-    lmpot, cleb, icleb, iend, lmxspd, nclebd, loflm, dfac, myrank, atoms_per_proc, communicator)
+    lmpot, cleb, icleb, iend, lmxspd, nclebd, loflm, dfac, communicator)
 
     use CalculationData_mod, only: CalculationData, getEnergies, getDensities, getEnergies, getAtomData
     use EnergyResults_mod, only: EnergyResults
@@ -76,14 +74,13 @@ module MadelungPotential_mod
     double precision, intent(in) :: dfac(0:lpot,0:lpot)
     integer, intent(in) :: icleb(nclebd,3)
     integer, intent(in) :: loflm(lmxspd)
-    integer, intent(in) :: myrank, atoms_per_proc ! ToDo: remove from interface
     integer, intent(in) :: communicator
 
     type(BasisAtom), pointer :: atomdata
     type(DensityResults), pointer :: densities
     type(EnergyResults), pointer :: energies
     type(RadialMeshData), pointer :: mesh
-    integer :: i2, ilm, ierr, nranks
+    integer :: i2, ilm, ierr, nranks, myrank
     double precision :: cmom_save((lpot+1)**2), cminst_save((lpot+1)**2)
     integer :: num_local_atoms, ila, jla
     integer(kind=4) :: chunk_ind(2)
@@ -99,7 +96,7 @@ module MadelungPotential_mod
     enddo
     
     call MPI_Comm_size(communicator, nranks, ierr)
-!   call MPI_Comm_rank(communicator, myrank, ierr)
+    call MPI_Comm_rank(communicator, myrank, ierr)
 
     !===== begin loop over all atoms =========================================
     ! O(N**2) in calculation and communication !!!
@@ -178,7 +175,7 @@ module MadelungPotential_mod
     integer, intent(in) :: ipan
     integer, intent(in) :: nspin
 
-    integer :: irs1, ell, emm, lm, i, ispin
+    integer :: irs1, ell, emm, lm, ir, ispin
     
     vmad = 0.d0
 
@@ -197,9 +194,9 @@ module MadelungPotential_mod
           !---> in the case of ell=0 : r(1)**ell is not defined
 
           if (ell == 0) vons(1,1,ispin) = vons(1,1,ispin) + ac(lm)
-          do i = 2, irs1
-            vons(i,lm,ispin) = vons(i,lm,ispin) + (-r(i))**ell*ac(lm)
-          enddo ! i
+          do ir = 2, irs1
+            vons(ir,lm,ispin) = vons(ir,lm,ispin) + (-r(ir))**ell*ac(lm)
+          enddo ! ir
         enddo ! ispin
 
       enddo ! emm
@@ -210,6 +207,7 @@ module MadelungPotential_mod
 
   !------------------------------------------------------------------------------
   subroutine sumAC(ac, cmom_save, cminst_save, zat_i2, smat_i2, lpot, cleb, icleb, iend, loflm, dfac)
+  use Constants_mod, only: pi
     double precision, intent(inout) :: ac(:)
     double precision, intent(in) :: cmom_save(:)
     double precision, intent(in) :: cminst_save(:)
@@ -222,13 +220,9 @@ module MadelungPotential_mod
     integer, intent(in) :: loflm(:)
     integer, intent(in) :: lpot
 
-    integer :: lm, lm1, lm2, lm3, l1, l2, i, lmmax, lmpot
-    double precision :: pi, fpi
+    integer :: lm1, lm2, lm3, i, lmmax, lmpot, ell
     double precision :: avmad((lpot+1)**2,(lpot+1)**2)
     double precision :: bvmad((lpot+1)**2)
-
-    pi = 4.d0*atan(1.d0)
-    fpi = 4.d0*pi
 
     lmpot = (lpot+1)**2
     lmmax = lmpot
@@ -239,12 +233,10 @@ module MadelungPotential_mod
       lm1 = icleb(i,1)
       lm2 = icleb(i,2)
       lm3 = icleb(i,3)
-      l1 = loflm(lm1)
-      l2 = loflm(lm2)
 
       ! --> this loop has to be calculated only for l1+l2=l3
 
-      avmad(lm1,lm2) = avmad(lm1,lm2) + 2.d0*dfac(l1,l2)*smat_i2(lm3)*cleb(i)
+      avmad(lm1,lm2) = avmad(lm1,lm2) + 2.d0*dfac(loflm(lm1),loflm(lm2))*smat_i2(lm3)*cleb(i)
     enddo ! i
 
     ! --> calculate bvmad(lm1)
@@ -252,19 +244,19 @@ module MadelungPotential_mod
     bvmad(:) = 0.d0
 
     do lm1 = 1, lmpot
-      l1 = loflm(lm1)
-      bvmad(lm1) = bvmad(lm1) - 2.d0*fpi/dble(2*l1+1)*smat_i2(lm1)
+      ell = loflm(lm1)
+      bvmad(lm1) = bvmad(lm1) - (8.d0*pi/(2*ell + 1.d0))*smat_i2(lm1)
     enddo ! lm1
 
-    do lm = 1, lmpot
-      ac(lm) = ac(lm) + bvmad(lm)*zat_i2
+    do lm1 = 1, lmpot
+      ac(lm1) = ac(lm1) + bvmad(lm1)*zat_i2
 
       !---> take moments of sphere
 
       do lm2 = 1, lmmax
-        ac(lm) = ac(lm) + avmad(lm,lm2)*(cmom_save(lm2) + cminst_save(lm2))
+        ac(lm1) = ac(lm1) + avmad(lm1,lm2)*(cmom_save(lm2) + cminst_save(lm2))
       enddo ! lm2
-    enddo ! lm
+    enddo ! lm1
 
   endsubroutine ! sum
 

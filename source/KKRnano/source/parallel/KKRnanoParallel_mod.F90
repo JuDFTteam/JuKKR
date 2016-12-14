@@ -51,7 +51,7 @@ implicit none
     integer :: mySpinId    ! Note Ids start from 1 !
     integer :: myEnergyId
     integer :: myAtomId
-    integer :: mySEId
+    integer :: mySEId ! is not accessed outside of the create-function
 
     integer :: numComms
     integer :: numWorldRanks      !< Total number of ranks in MPI_COMM_WORLD

@@ -23,9 +23,9 @@ module tfQMR_mod
   ! v2 = mat_B
   !> @param op             coefficient matrix/operator
   !> @param initial_zero   true - use 0 as initial guess, false: provide own initial guess in mat_X
-  !> @param ncol           number of right-hand sides = number of columns of B
+  !> @param nCols           number of right-hand sides = number of columns of B
   !> @param nrow           number of row elements of matrices mat_X, mat_B
-  subroutine solve_with_tfQMR(op, mat_X, mat_B, tolerance, ncol, nRHSs, initial_zero, precond, use_precond, vecs, kernel_timer, &
+  subroutine solve_with_tfQMR(op, mat_X, mat_B, tolerance, nRHSs, nCols, initial_zero, precond, use_precond, vecs, kernel_timer, &
                    iterations_needed, largest_residual, nFlops) ! optional output args
     USE_LOGGING_MOD
     use TimerMpi_mod, only: TimerMpi
@@ -35,7 +35,8 @@ module tfQMR_mod
 
     type(KKROperator), intent(in) :: op
     double precision, intent(in) :: tolerance
-    integer, intent(in) :: ncol, nRHSs
+    integer, intent(in) :: nRHSs ! number of Right Hand Sides
+    integer, intent(in) :: nCols ! number of block columns
     double complex, intent(inout) :: mat_X(:,:,:) !< dim(X%fastBlockDim,X%slowBlockDim,X%nnzb)
     double complex, intent(in)    :: mat_B(:,:,:) !< dim(B%fastBlockDim,B%slowBlockDim,B%nnzb)
 
@@ -62,13 +63,13 @@ module tfQMR_mod
     ! locals
 
     integer, parameter :: MaxIterations = 200 ! limit of max. 2000 iterations
-    integer :: iteration, probe, icol, iRHS
-
-    ! small, local arrays with dimension(ncol,nRHSs)
-    double complex,   dimension(ncol,nRHSs) :: ZTMP, RHO, ETA, BETA, mALPHA ! -alpha
-    double precision, dimension(ncol,nRHSs) :: RUB, DTMP, COSI, TAU, VAR, RESN, R0, N2B ! norm of right-hand side
-    integer :: tfQMR_status(ncol,nRHSs) ! 0 = not converged, negative = breakdown, 1 = converged
-    integer :: converged_at(ncol,nRHSs) ! stores iteration where calculation converged, 0 = never converged
+    integer :: iteration, probe, iRHS, icol
+    
+    ! small, local arrays with dimension(nRHSs,nCols)
+    double complex,   dimension(nRHSs,nCols) :: ZTMP, RHO, ETA, BETA, mALPHA ! -alpha
+    double precision, dimension(nRHSs,nCols) :: RUB, DTMP, COSI, TAU, VAR, RESN, R0, N2B ! norm of right-hand side
+    integer :: tfQMR_status(nRHSs,nCols) ! 0 = not converged, negative = breakdown, 1 = converged
+    integer :: converged_at(nRHSs,nCols) ! stores iteration where calculation converged, 0 = never converged
     logical :: isDone
 
     !------------ convergence parameters-----------
@@ -273,11 +274,11 @@ module tfQMR_mod
 
       !check for complete breakdown
       isDone = .true.
-      do iRHS = 1, nRHSs
-        do icol = 1, ncol
-          if (tfQMR_status(icol,iRHS) /= -1) isDone = .false.
-        enddo ! icol
-      enddo ! iRHS
+      do icol = 1, nCols
+        do iRHS = 1, nRHSs
+          if (tfQMR_status(iRHS,icol) /= -1) isDone = .false.
+        enddo ! iRHS
+      enddo ! icol
 
       if (isDone) exit ! exit iteration loop
 
@@ -304,21 +305,21 @@ module tfQMR_mod
         RESN = RESN / N2B
 
         isDone = .true.
-        do iRHS = 1, nRHSs
-          do icol = 1, ncol
-            if (RESN(icol,iRHS) > tolerance) then
-              if (tfQMR_status(icol,iRHS) == 0) then
+        do icol = 1, nCols
+          do iRHS = 1, nRHSs
+            if (RESN(iRHS,icol) > tolerance) then
+              if (tfQMR_status(iRHS,icol) == 0) then
                 ! if no breakdown has occured continue converging
                 isDone = .false.
               endif
             else
-              if (tfQMR_status(icol,iRHS) <= 0) then
-                tfQMR_status(icol,iRHS) = 1
-                converged_at(icol,iRHS) = iteration ! component converged
+              if (tfQMR_status(iRHS,icol) <= 0) then
+                tfQMR_status(iRHS,icol) = 1
+                converged_at(iRHS,icol) = iteration ! component converged
               endif
             endif
-          enddo ! icol
-        enddo ! iRHS
+          enddo ! iRHS
+        enddo ! icol
 
         max_residual = maxval(RESN)
 
@@ -357,17 +358,17 @@ module tfQMR_mod
     if (present(largest_residual)) largest_residual = max_residual
     if (present(nFlops)) nFlops = nFlops + mFlops
 
-    do iRHS = 1, nRHSs
-      do icol = 1, ncol
-        if (converged_at(icol,iRHS) == 0) then
-          select case (tfQMR_status(icol,iRHS))
-            case (-1)    ; WRITELOG(3,*) "Component not converged (SEVERE breakdown): ", icol
-            case (-2)    ; WRITELOG(3,*) "Component not converged (stagnated): ", icol
-            case default ; WRITELOG(3,*) "Component not converged: ", icol
+    do icol = 1, nCols
+      do iRHS = 1, nRHSs
+        if (converged_at(iRHS,icol) == 0) then
+          select case (tfQMR_status(iRHS,icol))
+            case (-1)    ; WRITELOG(3,*) "Component not converged (SEVERE breakdown): ", iRHS
+            case (-2)    ; WRITELOG(3,*) "Component not converged (stagnated): ", iRHS
+            case default ; WRITELOG(3,*) "Component not converged: ", iRHS
           endselect
         endif
-      enddo ! icol
-    enddo ! iRHS
+      enddo ! iRHS
+    enddo ! icol
 
     WRITELOG(3,*) tfQMR_status
     WRITELOG(3,*) converged_at
@@ -416,6 +417,11 @@ module tfQMR_mod
 
   endsubroutine ! solve
   
+
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+#define COL :
+#endif
+
   !------------------------------------------------------------------------------
   subroutine col_norms(norms, vector, colInd, mFlops)
     double precision, intent(out) :: norms(:,:)
@@ -428,9 +434,9 @@ module tfQMR_mod
 
     nrow = size(vector, 1)
 #ifndef NDEBUG
-    if (size(norms, 1) /= size(vector, 2)) stop 'col_norms: strange!'
+!   if (size(norms, 1) /= size(vector, 2)) stop 'col_norms: strange!'
     if (size(colInd) /= size(vector, 3)) stop 'col_norms: strange! (colInd vs. v)'
-#endif    
+#endif
     norms = 0.d0
     
 !$omp parallel
@@ -438,7 +444,11 @@ module tfQMR_mod
     do block = 1, size(vector, 3)
       jCol = colInd(block)
       do col = 1, size(vector, 2)
+#ifdef  COL
+        norms(:,jCol) = norms(:,jCol) + dreal(vector(:,col,block))**2 + aimag(vector(:,col,block))**2
+#else
         norms(col,jCol) = norms(col,jCol) + DZNRM2(nrow, vector(:,col,block), 1)
+#endif
       enddo ! col
     enddo ! block
     !$omp end do
@@ -460,8 +470,7 @@ module tfQMR_mod
 
     nrow = size(vector, 1)
 #ifndef NDEBUG
-    if (size(dots, 1) /= size(vector, 2)) stop 'col_dots: strange! (v)'
-    if (size(dots, 1) /= size(wektor, 2)) stop 'col_dots: strange! (w)'
+!   if (size(dots, 1) /= size(vector, 2)) stop 'col_dots: strange! (v)'
     if (any(shape(vector) /= shape(wektor))) stop 'col_dots: strange! (v vs. w)'
     if (size(colInd) /= size(vector, 3)) stop 'col_dots: strange! (colInd vs. v)'
 #endif
@@ -472,7 +481,11 @@ module tfQMR_mod
     do block = 1, size(vector, 3)
       jCol = colInd(block)
       do col = 1, size(vector, 2)
+#ifdef  COL
+        dots(:,jCol) = dots(:,jCol) + vector(:,col,block)*wektor(:,col,block) ! row-major
+#else
         dots(col,jCol) = dots(col,jCol) + ZDOTU(nrow, vector(:,col,block), 1, wektor(:,col,block), 1)
+#endif
       enddo ! col
     enddo ! block
     !$omp end do
@@ -491,7 +504,7 @@ module tfQMR_mod
 
     integer :: col, block, jCol
 #ifndef NDEBUG
-    if (size(factors, 1) /= size(yvector, 2)) stop 'col_axpy: strange! (y)'
+!   if (size(factors, 1) /= size(yvector, 2)) stop 'col_axpy: strange! (y)'
     if (any(shape(xvector) /= shape(yvector))) stop 'col_axpy: strange! (y vs. x)'
     if (size(colInd) /= size(xvector, 3)) stop 'col_axpy: strange! (colInd vs. x)'
 #endif
@@ -501,7 +514,7 @@ module tfQMR_mod
     do block = 1, size(yvector, 3)
       jCol = colInd(block)
       do col = 1, size(yvector, 2)
-        yvector(:,col,block) = yvector(:,col,block) + factors(col,jCol) * xvector(:,col,block)
+        yvector(:,col,block) = yvector(:,col,block) + factors(COL,jCol) * xvector(:,col,block)
       enddo ! col
     enddo ! block
     !$omp end do
@@ -520,7 +533,7 @@ module tfQMR_mod
 
     integer :: col, block, jCol
 #ifndef NDEBUG
-    if (size(factors, 1) /= size(yvector, 2)) stop 'col_xpay: strange! (y)'
+!   if (size(factors, 1) /= size(yvector, 2)) stop 'col_xpay: strange! (y)'
     if (any(shape(xvector) /= shape(yvector))) stop 'col_xpay: strange! (y vs. x)'
     if (size(colInd) /= size(xvector, 3)) stop 'col_xpay: strange! (colInd vs. x)'
 #endif
@@ -530,7 +543,7 @@ module tfQMR_mod
     do block = 1, size(yvector, 3)
       jCol = colInd(block)
       do col = 1, size(yvector, 2)
-        yvector(:,col,block) = xvector(:,col,block) + factors(col,jCol) * yvector(:,col,block)
+        yvector(:,col,block) = xvector(:,col,block) + factors(COL,jCol) * yvector(:,col,block)
       enddo ! col
     enddo ! block
     !$omp end do
@@ -538,6 +551,10 @@ module tfQMR_mod
     
     mFlops = mFlops + 8_8*size(yvector)
   endsubroutine ! y := x+a*y
+
+#ifdef COL
+#undef COL
+#endif
 
   !------------------------------------------------------------------------------
   subroutine subset_add(yvector, bvector, factor, subInd, mFlops)
