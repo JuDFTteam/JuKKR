@@ -79,6 +79,9 @@ module tfQMR_mod
     !------------- diagnostic variables -------------
     integer :: sparse_mult_count, res_probe_count ! count number of residual calculations
     integer(kind=8) :: mFlops
+    
+    double complex, allocatable :: v3aux(:,:,:) ! ToDo: remove again
+    integer :: ibaux
 
 #define ColIndices op%bsr_X%ColIndex
 #define MINUS(Y, B) call subset_add(Y, B, -1.d0, op%B_subset_of_X, mFlops)  
@@ -128,7 +131,16 @@ module tfQMR_mod
     where (abs(N2B) < EPSILON_DP) N2B = 1.d0  ! where N2B = 0 use absolute residual
 
     ! Supply auxiliary start vector r*
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+    allocate(v3aux(size(vecs, 2),size(vecs, 1),size(vecs, 3)))
+    call ZRANDN(size(v3aux), v3aux, 1) ! fill v3aux with numbers in [0, 1]
+    do ibaux = 1, size(vecs, 3)
+      vecs(:,:,ibaux,3) = transpose(v3aux(:,:,ibaux))
+    enddo ! ibaux
+    deallocate(v3aux)
+#else
     call ZRANDN(size(v3), v3, 1) ! fill v3 with numbers in [0, 1]
+#endif
 
     ! Initialize the variables.
 
@@ -418,9 +430,6 @@ module tfQMR_mod
   endsubroutine ! solve
   
 
-#ifdef  TRANSPOSE_TO_ROW_MAJOR
-#define COL :
-#endif
 
   !------------------------------------------------------------------------------
   subroutine col_norms(norms, vector, colInd, mFlops)
@@ -431,10 +440,13 @@ module tfQMR_mod
 
     integer :: col, block, jCol, nrow
     double precision, external :: DZNRM2 ! BLAS double complex 2-norm
-
     nrow = size(vector, 1)
 #ifndef NDEBUG
-!   if (size(norms, 1) /= size(vector, 2)) stop 'col_norms: strange!'
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+    if (size(norms, 1) /= size(vector, 1)) stop 'col_norms: strange! TRANSPOSE_TO_ROW_MAJOR'
+#else    
+    if (size(norms, 1) /= size(vector, 2)) stop 'col_norms: strange!'
+#endif
     if (size(colInd) /= size(vector, 3)) stop 'col_norms: strange! (colInd vs. v)'
 #endif
     norms = 0.d0
@@ -444,14 +456,23 @@ module tfQMR_mod
     do block = 1, size(vector, 3)
       jCol = colInd(block)
       do col = 1, size(vector, 2)
-#ifdef  COL
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
         norms(:,jCol) = norms(:,jCol) + dreal(vector(:,col,block))**2 + aimag(vector(:,col,block))**2
 #else
-        norms(col,jCol) = norms(col,jCol) + DZNRM2(nrow, vector(:,col,block), 1)
+        norms(col,jCol) = norms(col,jCol) + DZNRM2(nrow, vector(:,col,block), 1)**2 ! this is wrong with the ^2 as DZNRM2 is not a linear function
 #endif
       enddo ! col
     enddo ! block
     !$omp end do
+    
+    !$omp barrier
+
+    !$omp do private(jCol)
+    do jCol = 1, size(norms, 2)
+      norms(:,jCol) = sqrt(norms(:,jCol))
+    enddo ! jCol
+    !$omp end do
+
 !$omp end parallel
 
     mFlops = mFlops + 4_8*size(vector)
@@ -467,10 +488,13 @@ module tfQMR_mod
 
     integer :: col, block, jCol, nrow
     double complex, external :: ZDOTU ! BLAS double complex inner product, Unconjugated
-
     nrow = size(vector, 1)
 #ifndef NDEBUG
-!   if (size(dots, 1) /= size(vector, 2)) stop 'col_dots: strange! (v)'
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+    if (size(dots, 1) /= size(vector, 1)) stop 'col_dots: strange! TRANSPOSE_TO_ROW_MAJOR'
+#else    
+    if (size(dots, 1) /= size(vector, 2)) stop 'col_dots: strange! (v)'
+#endif
     if (any(shape(vector) /= shape(wektor))) stop 'col_dots: strange! (v vs. w)'
     if (size(colInd) /= size(vector, 3)) stop 'col_dots: strange! (colInd vs. v)'
 #endif
@@ -481,7 +505,7 @@ module tfQMR_mod
     do block = 1, size(vector, 3)
       jCol = colInd(block)
       do col = 1, size(vector, 2)
-#ifdef  COL
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
         dots(:,jCol) = dots(:,jCol) + vector(:,col,block)*wektor(:,col,block) ! row-major
 #else
         dots(col,jCol) = dots(col,jCol) + ZDOTU(nrow, vector(:,col,block), 1, wektor(:,col,block), 1)
@@ -504,9 +528,17 @@ module tfQMR_mod
 
     integer :: col, block, jCol
 #ifndef NDEBUG
-!   if (size(factors, 1) /= size(yvector, 2)) stop 'col_axpy: strange! (y)'
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+    if (size(factors, 1) /= size(yvector, 1)) stop 'col_axpy: strange! TRANSPOSE_TO_ROW_MAJOR'
+#else    
+    if (size(factors, 1) /= size(yvector, 2)) stop 'col_axpy: strange! (y)'
+#endif
     if (any(shape(xvector) /= shape(yvector))) stop 'col_axpy: strange! (y vs. x)'
     if (size(colInd) /= size(xvector, 3)) stop 'col_axpy: strange! (colInd vs. x)'
+#endif
+
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+#define COL :
 #endif
 
 !$omp parallel
@@ -533,7 +565,11 @@ module tfQMR_mod
 
     integer :: col, block, jCol
 #ifndef NDEBUG
-!   if (size(factors, 1) /= size(yvector, 2)) stop 'col_xpay: strange! (y)'
+#ifdef  TRANSPOSE_TO_ROW_MAJOR
+    if (size(factors, 1) /= size(yvector, 1)) stop 'col_xpay: strange! TRANSPOSE_TO_ROW_MAJOR'
+#else    
+    if (size(factors, 1) /= size(yvector, 2)) stop 'col_xpay: strange! (y)'
+#endif
     if (any(shape(xvector) /= shape(yvector))) stop 'col_xpay: strange! (y vs. x)'
     if (size(colInd) /= size(xvector, 3)) stop 'col_xpay: strange! (colInd vs. x)'
 #endif
@@ -548,13 +584,13 @@ module tfQMR_mod
     enddo ! block
     !$omp end do
 !$omp end parallel
-    
-    mFlops = mFlops + 8_8*size(yvector)
-  endsubroutine ! y := x+a*y
 
 #ifdef COL
 #undef COL
 #endif
+    
+    mFlops = mFlops + 8_8*size(yvector)
+  endsubroutine ! y := x+a*y
 
   !------------------------------------------------------------------------------
   subroutine subset_add(yvector, bvector, factor, subInd, mFlops)

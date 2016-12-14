@@ -94,8 +94,10 @@ module KKRmat_mod
 
     ! array dimensions
     num_trunc_atoms = op%cluster%naez_trc
-    lmsd = size(GS, 2)
+    lmsd =  size(GS, 2)
+    ASSERT( size(GS, 1) == lmsd )
     num_local_atoms = size(op%atom_indices)
+    ASSERT( size(GS, 3) == num_local_atoms )
 
     ! WARNING: Symmetry assumptions might have been used that are
     ! not valid in cases of non-local potential (e.g. for Spin-Orbit coupling)
@@ -167,7 +169,7 @@ module KKRmat_mod
     !==============================================================================
     enddo ! ikpoint = 1, nkpoints
     !==============================================================================
-    
+
 #ifdef SPLIT_REFERENCE_FOURIER_COM
     deallocate(Gref_buffer, stat=ist) ! ignore status
 #endif
@@ -492,9 +494,9 @@ module KKRmat_mod
     endif
 
     num_trunc_atoms = cluster%naez_trc
-    ASSERT(num_trunc_atoms == size(global_atom_id))
+    ASSERT( num_trunc_atoms == size(global_atom_id) )
     lmmaxd = size(Ginp, 1)
-    ASSERT(lmmaxd == size(Ginp, 2))
+    ASSERT( lmmaxd == size(Ginp, 2) )
     nLly = size(Ginp, 3)
     naclsd = size(Ginp, 4)
 
@@ -911,12 +913,13 @@ module KKRmat_mod
 
 #ifdef  TRANSPOSE_TO_ROW_MAJOR
 #define NONtranspose(X) transpose(X)
-#define transpose(X)    (X)
+#define YEStranspose(X) (X)
 #else
 #define NONtranspose(X) (X)
+#define YEStranspose(X) transpose(X)
 #endif
 
-              smat(:lmmaxd,:lmmaxd,Aind,iLly) = smat(:lmmaxd,:lmmaxd,Aind,iLly) + eikRR(0,c%ezoa(iacls,isa)) * transpose(Ginp(:,:,iLly,iacls))
+              smat(:lmmaxd,:lmmaxd,Aind,iLly) = smat(:lmmaxd,:lmmaxd,Aind,iLly) + eikRR(0,c%ezoa(iacls,isa)) * YEStranspose(Ginp(:,:,iLly,iacls))
 
             endif ! ita == jCol
           enddo ! in0

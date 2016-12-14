@@ -17,8 +17,12 @@ FC90FLAGS =
 FCFLAGS =
 PPFLAGS =
 PPFLAGS += -D USE_VOROWEIGHTS
+# PPFLAGS += -D EXPORT_A_MATRIX=444
+# PPFLAGS += -D EXPORT_B_VECTOR=222
 # PPFLAGS += -D TRANSPOSE_TO_ROW_MAJOR
-# PPFLAGS += -D SUPERCELL_ELECTROSTATICS=2 ### seems work, ToDo: test again and converge to the end
+### TRANSPOSE_TO_ROW_MAJOR seems to work, however, there was a bug in col_norms about the non-linearity of DZNRM2, so we have to see which references went wrong
+# PPFLAGS += -D SUPERCELL_ELECTROSTATICS=2
+### SUPERCELL_ELECTROSTATICS seems work, ToDo: test again and converge to the end
 #  -D NDEBUG
 LDFLAGS =
 
@@ -335,6 +339,7 @@ ExchangeTable_mod.o: ChunkIndex_mod.o
 two_sided_commZ_mod.o: ExchangeTable_mod.o
 two_sided_commI_mod.o: ExchangeTable_mod.o
 LocalAtomData_mod.o: Exceptions_mod.o RadialMeshData_mod.o ShapefunData_mod.o BasisAtom_mod.o LDAUData_mod.o JijData_mod.o RefCluster_mod.o MadelungCalculator_mod.o DensityResults_mod.o EnergyResults_mod.o KKRresults_mod.o
-
+bsrmm_mod.o: CacheOverlap_mod.o
+CacheOverlap_mod.o:
 
 # DO NOT DELETE

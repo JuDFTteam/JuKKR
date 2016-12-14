@@ -241,14 +241,18 @@ module fillKKRMatrix_mod
     lmsd  = size(tmatLL, 2)
     assert( size(tmatLL, 1) == lmsd ) ! assume square shape
     assert( size(mat_B, 1)  >= lmsd )
-!   assert( size(mat_B, 2)  == lmsd ) ! <future>
+    assert( size(mat_B, 2)  >= lmsd )
+
 #ifdef  TRANSPOSE_TO_ROW_MAJOR
-#define mat_B(a,b,c) MAT_B(b,a,c)
+    assert( size(mat_B, 2)  == lmsd ) ! works only if transposed
     assert( modulo(size(mat_B, 1), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
     nRHS_group = size(mat_B, 1) / lmsd ! integer division should be exact
+#define mat_B(a,b,c) MAT_B(b,a,c)
+#define trans_(x) transpose(x)
 #else
     assert( modulo(size(mat_B, 2), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
     nRHS_group = size(mat_B, 2) / lmsd ! integer division should be exact
+#define trans_(x) (x)
 #endif
     assert( nRHS_group >= 1 )
 
@@ -260,7 +264,10 @@ module fillKKRMatrix_mod
       if (Bind < 1) stop "fatal! bsr_B cannot find diagonal element"
 
       if (present(tmatLL)) then
-        mat_B(:lmsd,lmsd*(ing - 1) + 1:lmsd*ing,Bind) = tmatLL(:,:,row_index)
+        mat_B(:lmsd,lmsd*(ing - 1) + 1:lmsd*ing,Bind) = trans_( tmatLL(:,:,row_index) )
+#ifdef EXPORT_B_VECTOR
+        write(EXPORT_B_VECTOR, '(32ES24.16)') tmatLL(:,:,row_index)
+#endif
       else
         do lms = 1, lmsd
           mat_B(lms,lms + lmsd*(ing - 1),Bind) = CONE ! set the block to a unity matrix
@@ -272,6 +279,7 @@ module fillKKRMatrix_mod
 #endif
 
     enddo ! iRHS
+    
     
   endsubroutine ! buildRightHandSide
 
@@ -297,28 +305,30 @@ module fillKKRMatrix_mod
     row = atom_index ! convert from integer(kind=2) to default integer
 
     lmsd = size(G_diag, 2)
-    assert( lmsd == size(G_diag, 1) )
-!   assert( lmsd == size(mat_X, 1) ) ! fails of alignment padding is non-zero
-    
+    assert( lmsd == size(G_diag, 1) ) ! assume square shape
+    assert( size(mat_X, 1) >= lmsd )
+
 #ifdef  TRANSPOSE_TO_ROW_MAJOR
     assert( modulo(size(mat_X, 1), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
     nRHS_group = size(mat_X, 1) / lmsd ! integer division should be exact
+#define mat_X(a,b,c) MAT_X(b,a,c)
 #else
     assert( modulo(size(mat_X, 2), lmsd) == 0 ) ! the number of columns is a multiple of the block dimension
     nRHS_group = size(mat_X, 2) / lmsd ! integer division should be exact
 #endif
     assert( nRHS_group >= 1 )
-    
+
       iRHS_group = (iRHS - 1)/nRHS_group  + 1
       ing = modulo((iRHS - 1),nRHS_group) + 1
       Xind = exists(bsr_X, row, col=iRHS_group) ! find index in BSR structure
       if (Xind < 1) die_here("diagonal element not contained in X, row="-row-", col="-iRHS)
 
       G_diag = ZERO
+      G_diag(:,:) = trans_(mat_X(:lmsd,(ing - 1)*lmsd + 1:lmsd*ing,Xind))
+
 #ifdef  TRANSPOSE_TO_ROW_MAJOR
-      G_diag(:,:) = transpose(mat_X(:lmsd,(ing - 1)*lmsd + 1:lmsd*ing,Xind))
-#else
-      G_diag(:,:) = mat_X(:lmsd,(ing - 1)*lmsd + 1:lmsd*ing,Xind)
+#undef  trans_
+#undef  mat_X
 #endif
   endsubroutine ! getGreenDiag
 

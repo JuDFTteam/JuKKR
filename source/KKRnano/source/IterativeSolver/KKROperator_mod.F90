@@ -61,19 +61,14 @@ module KKROperator_mod
 
     self%cluster => cluster
 
-#ifndef __GFORTRAN__
-    allocate(self%atom_indices, source=atom_indices) ! local truncation zone indices of the source atoms
-#else
     allocate(self%atom_indices(size(atom_indices))) ! local truncation zone indices of the source atoms
     self%atom_indices = atom_indices ! copy
-#endif
 
 #ifndef NDEBUG
     deallocate(local_atom_indices, stat=ist) ! ignore status
     allocate(local_atom_indices(size(atom_indices)), stat=ist) ! see above
     local_atom_indices(:) = atom_indices(:) ! make a copy that we can use for DEBUG purposes by use KKROperator_mod, only: local_atom_indices
 #endif
-
 
     ! create block sparse structure of matrix A
     call getKKRMatrixStructure(self%bsr_A, cluster%numn0, cluster%indn0)
