@@ -851,14 +851,15 @@ contains
       if(ierr/=0) stop 'Problem allocating imarked in readin on master'
       read(iounit,'(10I8)') imarked
       close(iounit)
-    end if!myrank==master
 
-    ! check if twice the same cube in cubesfile
-    do i=1,nmarked
-      do j=1,nmarked
-        if(imarked(i)==imarked(j).and.i/=j) stop 'Twice the same cube in cubesfile'
+      ! check if twice the same cube in cubesfile
+      do i=1,nmarked
+        do j=1,nmarked
+          if(imarked(i)==imarked(j).and.i/=j) stop 'Twice the same cube in cubesfile'
+        end do
       end do
-    end do
+
+    end if!myrank==master
 
 #ifdef CPP_MPI
     call MPI_Bcast(nCub3, 3, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
