@@ -18,7 +18,7 @@
 #========================================================
 # IFF cluster
 FC = mpiifort
-FFLAGS = -r8 -O3
+FFLAGS = -r8 -O3 -traceback
 ###FFLAGS += -openmp
 CPPFLAGS =  -D CPP_MPI
 ###CPPFLAGS += -D CPP_DEBUG
