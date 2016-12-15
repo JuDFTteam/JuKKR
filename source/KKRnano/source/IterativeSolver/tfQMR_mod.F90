@@ -464,7 +464,7 @@ module tfQMR_mod
       enddo ! col
     enddo ! block
     !$omp end do
-    
+
     !$omp barrier
 
     !$omp do private(jCol)
