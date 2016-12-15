@@ -459,7 +459,7 @@ module tfQMR_mod
 #ifdef  TRANSPOSE_TO_ROW_MAJOR
         norms(:,jCol) = norms(:,jCol) + dreal(vector(:,col,block))**2 + aimag(vector(:,col,block))**2
 #else
-        norms(col,jCol) = norms(col,jCol) + DZNRM2(nrow, vector(:,col,block), 1)**2 ! this is wrong with the ^2 as DZNRM2 is not a linear function
+        norms(col,jCol) = norms(col,jCol) + DZNRM2(nrow, vector(:,col,block), 1)**2 ! this is wrong without the ^2 as DZNRM2 is not a linear function
 #endif
       enddo ! col
     enddo ! block
@@ -469,7 +469,7 @@ module tfQMR_mod
 
     !$omp do private(jCol)
     do jCol = 1, size(norms, 2)
-      norms(:,jCol) = sqrt(norms(:,jCol))
+      norms(:,jCol) = sqrt(norms(:,jCol)) ! ToDo: discuss if we need to take the square root at all
     enddo ! jCol
     !$omp end do
 

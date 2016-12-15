@@ -342,8 +342,8 @@ module fillKKRMatrix_mod
     
     call convertToFullMatrix(full, bsr%RowStart, bsr%ColIndex, smat)
     
-  endsubroutine
-  
+  endsubroutine ! convert
+
   !----------------------------------------------------------------------------
   !> Given the sparse matrix data 'smat' and the sparsity information,
   !> create the dense matrix representation of the matrix.
@@ -372,7 +372,7 @@ module fillKKRMatrix_mod
       enddo ! Aind
     enddo ! iRow
 
-  endsubroutine ! convertToFullMatrix
+  endsubroutine ! convert
   
   
   subroutine convertFullMatrixToBSR(smat, bsr, full)
@@ -384,7 +384,7 @@ module fillKKRMatrix_mod
     
     call convertFullMatrixTo(smat, bsr%RowStart, bsr%ColIndex, full)
     
-  endsubroutine
+  endsubroutine ! convert
   
   !----------------------------------------------------------------------------
   !> Given the sparse matrix data 'smat' and the sparsity information,
@@ -413,7 +413,7 @@ module fillKKRMatrix_mod
       enddo ! Aind
     enddo ! iRow
 
-  endsubroutine ! convertToFullMatrix
+  endsubroutine ! convert
   
   
   !----------------------------------------------------------------------------
