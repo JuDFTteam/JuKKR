@@ -22,7 +22,6 @@ PPFLAGS += -D USE_VOROWEIGHTS
 # PPFLAGS += -D TRANSPOSE_TO_ROW_MAJOR
 ### TRANSPOSE_TO_ROW_MAJOR seems to work, however, there was a bug in col_norms about the non-linearity of DZNRM2, so we have to see which references went wrong
 # PPFLAGS += -D SUPERCELL_ELECTROSTATICS=2
-### SUPERCELL_ELECTROSTATICS seems work, ToDo: test again and converge to the end
 #  -D NDEBUG
 LDFLAGS =
 
