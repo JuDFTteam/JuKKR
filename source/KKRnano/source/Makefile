@@ -140,7 +140,7 @@ ifeq ($(PLATFORM),JUQUEEN)
 	# FCFLAGS += -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
 	FCFLAGS += -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ -I/work/jiff02/jiff0212/KKRnano_0276dd3  
 	FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -I. 
-	PPFLAGS += -WF,-DUSE_VOROWEIGHTS
+	PPFLAGS = -WF,-DUSE_VOROWEIGHTS
 	# FCFLAGS += -WF,-Dell_int_t=integer
 	# LDFLAGS += -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
 	LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
@@ -214,12 +214,17 @@ $(PROGRAM): $(OBJS)
 %.o: %.f90
 	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
 
+%.o: %.f95
+	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
+
 %.o: %.F
 	$(FC) $(FCFLAGS) $(EXTRA_FLAGS) $(PPFLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/$@
 
 %.o: %.F90
 	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/$@
 
+%.o: %.F95
+	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/$@
 .PHONY: clean
 clean:
 	rm -f $(BUILDDIR)/*.o 
@@ -243,7 +248,7 @@ depend:
 
 KKRnano.o: Logging_mod.o KKRzero_mod.o PotentialConverter_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o AtomicCore_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
 TruncationZone_mod.o: Main2Arrays_mod.o
-KKRmat_mod.o: ExchangeTable_mod.o two_sided_commZ_mod.o arraytest2_mod.o Logging_mod.o TimerMpi_mod.o KKROperator_mod.o one_sided_commZ_mod.o ClusterInfo_mod.o IterativeSolver_mod.o jij_calc_mod.o Truncation_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o  SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o
+KKRmat_mod.o: ExchangeTable_mod.o two_sided_commZ_mod.o arraytest2_mod.o Logging_mod.o TimerMpi_mod.o KKROperator_mod.o one_sided_commZ_mod.o ClusterInfo_mod.o IterativeSolver_mod.o jij_calc_mod.o Truncation_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o  SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o DirectSolver_mod.o
 ProcessKKRresults_mod.o: arraytest2_mod.o KKRnanoParallel_mod.o AtomicForce_mod.o Logging_mod.o Lloyds_formula_mod.o wrappers_mod.o brydbm_new_com_mod.o Main2Arrays_mod.o ShapefunData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o CalculationData_mod.o muffin_tin_zero_mod.o RadialMeshData_mod.o MadelungPotential_mod.o broyden_kkr_mod.o EnergyMesh_mod.o BasisAtom_mod.o DensityResults_mod.o Lloyd0_new_mod.o KKRresults_mod.o InputParams_mod.o TimerMpi_mod.o DimParams_mod.o BroydenData_mod.o NearField_calc_mod.o debug_morgan_mod.o total_energy_mod.o
 NearField_calc_mod.o: RadialMeshData_mod.o NearField_com_mod.o BasisAtom_mod.o CalculationData_mod.o
 NearField_mod.o: Harmonics_mod.o MadelungCalculator_mod.o Constants_mod.o NearField_kkr_mod.o
@@ -281,7 +286,7 @@ ConfigReader_mod.o: ConfigReaderDictionary_mod.o
 KKROperator_mod.o: Truncation_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o bsrmm_mod.o
 Lloyd0_new_mod.o: BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o EnergyMesh_mod.o LDAUData_mod.o GauntCoefficients_mod.o ValenceDensity_mod.o 
 ClusterInfo_mod.o: Statistics_mod.o TruncationZone_mod.o RefCluster_mod.o two_sided_commI_mod.o ExchangeTable_mod.o
-ScatteringCalculation_mod.o: KKRnanoParallel_mod.o one_sided_commD_mod.o Constants_mod.o SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o  KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o IterativeSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o Truncation_mod.o
+ScatteringCalculation_mod.o: KKRnanoParallel_mod.o one_sided_commD_mod.o Constants_mod.o SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o  KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o IterativeSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o Truncation_mod.o two_sided_commD_mod.o 
 Truncation_mod.o: Exceptions_mod.o TruncationZone_mod.o Main2Arrays_mod.o Logging_mod.o Statistics_mod.o
 total_energy_mod.o: Quadrature_mod.o BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o ShapeGauntCoefficients_mod.o
 vxcgga.o: XCFunctionals_mod.o
