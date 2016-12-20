@@ -123,44 +123,44 @@ ifeq ($(PLATFORM),rwth)
 endif
 
 # ============================= JUQUEEN========================================
-# MIGHT BE OUTDATED!!!
-ifeq ($(PLATFORM),JUQUEEN)
+ifeq ($(PLATFORM),juqueen)
 
-	ifeq ($(USETOOL),scalasca)
-		FC = scalasca -instrument -user #end of line
-		FC90 = scalasca -instrument -user #end of line
-		TYPE = nodebug
-	else
-		FC =
-		FC90 = 
-	endif
+#ifeq ($(USETOOL),scalasca)
+#FC = scalasca -instrument -user #end of line
+#FC90 = scalasca -instrument -user #end of line
+#TYPE = nodebug
+#else
+FC =
+FC90 = 
+#endif
 
-	FC += mpixlf77_r
-	FC90 += mpixlf90_r
-	# FCFLAGS += -qsmp=omp -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ 
-	FCFLAGS += -qsmp=omp:noauto -qnosave -qdirective -qxlf2003=polymorphic -I/bgsys/local/fftw3/3.3.2/fftw_g/include/ -I/work/jiff02/jiff0212/KKRnano_0276dd3  
-	FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -I. 
-	PPFLAGS = -WF,-DUSE_VOROWEIGHTS
-	# FCFLAGS += -WF,-Dell_int_t=integer
-	# LDFLAGS += -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslsmpbg -lfftw3 
-	LDFLAGS = -L/opt/ibmmath/essl/5.1/lib64 -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3 
+FC += mpixlf77_r
+FC90 += mpixlf90_r
+FCFLAGS = -qsmp=omp -qnosave -qdirective -qxlf2003=polymorphic  -I$(PWD) 
+FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -I/bgsys/local/fftw3/3.3.2/fftw_g/include/
+PPFLAGS = -WF,-DUSE_VOROWEIGHTS -WF,-DCOMPUTE_tref_LOCALLY -WF,-DNOLOGGING
 
-	ifeq ($(TYPE),debug)
-		FCFLAGS += -q64 -O3 -qstrict -g -qnosave -C -qinitauto=7FF7FFFF 
-		PPFLAGS += -WF,-DDEBUG1
-		#-qcheck -qflttrap=inv:zero:nanq:ov:und:enable -qarch=450 
-	else
-		FCFLAGS += -q64 -O3 -qstrict 
-		PPFLAGS += -WF,-DNOLOGGING
-		# -qipa
-	endif
+#ESSL
+#LDFLAGS = -L/bgsys/local/lib -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3
 
-	ifeq ($(USETOOL),scalasca)
-		FCFLAGS += -g
-	endif
+#ESSLSMP
+LDFLAGS = -L/bgsys/local/lib -lesslsmpbg -L/opt/ibmcmp/xlsmp/3.1/bglib64 -lxlsmp -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lfftw3 
 
+ifeq ($(TYPE),debug)
+  FCFLAGS += -q64 -O0 -qstrict -g -qnosave -C -qinitauto=7FF7FFFF -WF,-DDEBUG1
+else ifeq ($(TYPE),scorep)
+  FC = scorep mpixlf77_r	
+  FC90 = scorep mpixlf90_r
+  FCFLAGS += -q64 -O3 -qstrict
+else
+  FCFLAGS += -q64 -O3 -qstrict
 endif
 
+#ifeq ($(USETOOL),scalasca)
+#FCFLAGS += -g
+#endif
+
+endif
 # ============================= JUQUEENgfort ========================================
 ifeq ($(PLATFORM),JUQUEENgfort)
 	ifeq ($(USETOOL),scalasca)

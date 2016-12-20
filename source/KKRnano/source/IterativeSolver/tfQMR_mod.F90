@@ -62,7 +62,7 @@ module tfQMR_mod
     
     ! locals
 
-    integer, parameter :: MaxIterations = 200 ! limit of max. 2000 iterations
+    integer, parameter :: MaxIterations = 2000 ! limit of max. 2000 iterations
     integer :: iteration, probe, iRHS, icol
     
     ! small, local arrays with dimension(nRHSs,nCols)
