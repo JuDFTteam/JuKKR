@@ -619,8 +619,8 @@ C ----------------------------------------------------------------------
       END DO
 C ================================================================ NATYP
 #ifdef CPP_TIMING
-      call timing_stop('main1c - rhoval')
-!       if(ie_end>=ie_start) call timing_stop('main1c - rhoval')
+!     call timing_stop('main1c - rhoval')
+      if(i1_end>=i1_start) call timing_stop('main1c - rhoval')
 #endif
       CLOSE (69) !gmat file
 #ifndef CPP_MPI   
@@ -912,7 +912,8 @@ c interpolate potential
 #endif
       
 #ifdef CPP_TIMING
-      call timing_stop('main1c - rhovalnew')
+      !call timing_stop('main1c - rhovalnew')
+      if(i1_end>=i1_start) call timing_stop('main1c - rhovalnew')
 #endif
 
       CLOSE (69)
