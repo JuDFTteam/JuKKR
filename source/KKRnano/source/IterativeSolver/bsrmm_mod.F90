@@ -110,13 +110,13 @@ module bsrmm_mod
 !$omp parallel
 !$      self%nthreads = omp_get_num_threads()
 !$omp end parallel
-      if (self%nthreads > 1) write(*, '(9(a,i0))') "create a multiplication plan for  ",self%nthreads," threads"
+!      if (self%nthreads > 1) write(*, '(9(a,i0))') "create a multiplication plan for  ",self%nthreads," threads"
       allocate(self%ntasks(0:self%nthreads-1)) ! allocate a dummy
 
     else
       ! after 1st iteration and before 2nd iteration
       self%mtasks = maxval(self%ntasks) ! determine the maximum number of tasks per thread
-      write(*, '(3(a,i0),999(" ",i0))') "multiplication plan for  ",sum(self%ntasks)," tasks on  ",self%nthreads," threads is balanced as  ",self%ntasks
+!      write(*, '(3(a,i0),999(" ",i0))') "multiplication plan for  ",sum(self%ntasks)," tasks on  ",self%nthreads," threads is balanced as  ",self%ntasks
 
       allocate(self%task_AoSoA(0:3,self%mtasks,0:self%nthreads-1), stat=ist)
       if (ist /= 0) stop __LINE__ ! allocation failed
@@ -179,7 +179,7 @@ module bsrmm_mod
     case default ; self%kernel =  0 ; name = "zgemm"
     endselect ! lda
 #ifdef  KERNEL
-    write(*, '(9(a,i0))') "Warning! kernel is fixed at compile time: use ",KERNEL," while suggested kernel was ",self%kernel," (0=zgemm)"
+!    write(*, '(9(a,i0))') "Warning! kernel is fixed at compile time: use ",KERNEL," while suggested kernel was ",self%kernel," (0=zgemm)"
     self%kernel = KERNEL ! overwrite variable in plan for correct display
 #endif
     !=============================================================================================
