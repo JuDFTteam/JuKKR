@@ -100,3 +100,15 @@ i DEBUG_morgan_electrostatics 0
 l fullbz .FALSE.
 ### repulsive reference potential
 d vref 8.d0
+### [NOCO] turn on/off spin-orbit coupling
+l soc .FALSE.
+### [NOCO] SOC scaling factor
+d socscale 1.0D0
+### [NOCO] number of logarithmic panels
+i npan_log 30
+### [NOCO] number of equally distant panels
+i npan_eq 30
+### [NOCO] number of Chebychev points in panel
+i ncheb 10
+### [NOCO] size of logarithmic panel
+d r_log 0.1D0

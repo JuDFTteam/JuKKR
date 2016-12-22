@@ -66,6 +66,12 @@ module InputParams_mod
     integer :: DEBUG_morgan_electrostatics
     logical :: fullbz
     double precision :: vref
+    logical :: soc
+    double precision :: socscale
+    integer :: npan_log
+    integer :: npan_eq
+    integer :: ncheb
+    double precision :: r_log
   endtype ! InputParams
 
 
@@ -305,9 +311,9 @@ integer function getValues(filename, self) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "qmrbound", self%qmrbound , def=1.0D-6)
+  ierror = getValue(cr, "qmrbound", self%qmrbound , def=1.0D-9)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for qmrbound. Set qmrbound to 1.0D-6"
+    write(*,*) "WARNING: Bad/no value given for qmrbound. Set qmrbound to 1.0D-9"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for qmrbound."
@@ -515,6 +521,60 @@ integer function getValues(filename, self) result(ierror)
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for vref."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "soc", self%soc , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for soc. Set soc to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for soc."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "socscale", self%socscale , def=1.0D0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for socscale. Set socscale to 1.0D0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for socscale."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "npan_log", self%npan_log , def=30)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for npan_log. Set npan_log to 30"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for npan_log."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "npan_eq", self%npan_eq , def=30)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for npan_eq. Set npan_eq to 30"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for npan_eq."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "ncheb", self%ncheb , def=10)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for ncheb. Set ncheb to 10"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for ncheb."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "r_log", self%r_log , def=0.1D0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for r_log. Set r_log to 0.1D0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for r_log."
     destroy_and_return
   endif
 

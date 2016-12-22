@@ -43,6 +43,8 @@ module DimParams_mod
     integer :: nthrds
     integer :: maxmshd
     integer :: num_atom_procs !< atom-parallelisation number of mpi-procs
+    integer :: korbit !NOCO
+    integer :: lmmaxd_noco !NOCO, lmmaxd_noco = (korbit+1)*lmmaxd
   endtype ! DimParams
 
   
@@ -120,6 +122,7 @@ module DimParams_mod
     if (getValue(cr, "YDIM",    self%ydim, def=1) > 0)      die_here("unable to read YDIM in file"+filename)
     if (getValue(cr, "ZDIM",    self%zdim, def=1) > 0)      die_here("unable to read ZDIM in file"+filename)
 
+    if (getValue(cr, "KORBIT",  self%korbit, def=0) > 0)    die_here("unable to read KORBIT in file"+filename)
     ! new default 0: automatically adopt to the number of currently running MPI processes
     if (getValue(cr, "num_atom_procs", self%num_atom_procs, def=AUTO) > 0) die_here("num_atom_procs could not be parsed in file"+filename)
 
@@ -187,6 +190,7 @@ module DimParams_mod
 
     ! derived dimension parameters
     self%lmmaxd = (self%lmaxd+1)**2
+    self%lmmaxd_noco = (1+self%korbit)*(self%lmaxd+1)**2 !NOCO   
 
     self%lmaxd1 = self%lmaxd+1
     self%mmaxd  = 2*self%lmaxd + 1
