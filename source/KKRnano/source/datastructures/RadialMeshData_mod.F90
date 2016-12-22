@@ -37,10 +37,8 @@ module RadialMeshData_mod
     integer :: IRNS
     integer :: IRWS   !< index of max. radius
     integer :: IRMIN
-#ifdef USE_OLD_MESH
     integer :: meshn    !< number of interstitial mesh points 
     integer :: nfu    !< number of non-zero shape function components 
-#endif
     ! arrays
     double precision, allocatable :: R(:)
     double precision, allocatable :: DRDI(:)
