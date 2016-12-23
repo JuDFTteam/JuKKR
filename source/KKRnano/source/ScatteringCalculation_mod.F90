@@ -64,6 +64,8 @@ implicit none
     
     use two_sided_commD_mod, only: distribute
     
+    use ChebMeshData_mod, only: interpolate_poten  ! NOCO
+    
     integer, intent(in) :: iter
     type(CalculationData), intent(inout) :: calc
     type(KKRnanoParallel), intent(in)    :: mp
@@ -154,6 +156,22 @@ implicit none
     ! it is good to do these allocations outside of energy loop: ToDo
     call setup_solver(solv, kkr_op, precond, dims, calc%clusters, lmsd, params%qmrbound, atom_indices)
 
+    !-------------------- NOCO --------------------------------
+    ! interpolate potential to Chebychev mesh
+     if (dims%korbit == 1) then            
+        do ila = 1, num_local_atoms
+        atomdata => getAtomData(calc, ila)
+      
+        if (allocated(atomdata%potential%vinscheb)) deallocate(atomdata%potential%vinscheb)
+        allocate(atomdata%potential%vinscheb(atomdata%chebmesh_ptr%irmd_new,atomdata%potential%lmpot,2))
+        call interpolate_poten(dims%nspind,atomdata%mesh_ptr%r,atomdata%mesh_ptr%irmin,atomdata%mesh_ptr%irws,atomdata%mesh_ptr%ircut,atomdata%potential%vins,  &
+                              atomdata%potential%visp,atomdata%chebmesh_ptr%npan_lognew,atomdata%chebmesh_ptr%npan_eqnew,  &
+                              atomdata%chebmesh_ptr%npan_tot,atomdata%chebmesh_ptr%rnew,  &
+                              atomdata%chebmesh_ptr%ipan_intervall,atomdata%potential%vinscheb, &
+                              atomdata%mesh_ptr%irmd,atomdata%potential%lmpot)
+        enddo
+     endif
+!---------------------------------------------------------
     allocate(rMTs(calc%trunc_zone%naez_trc))
     call distribute(calc%xTable, 1, calc%atomdata_a(:)%rMTref, rMTs) ! communicate the Muffin-Tin radii within the truncation zone
     

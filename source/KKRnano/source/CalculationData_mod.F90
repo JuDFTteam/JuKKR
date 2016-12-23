@@ -117,6 +117,7 @@ module CalculationData_mod
 
     ! one datastructure for each local atom
     allocate(self%mesh_a(num_local_atoms)) ! only used inside this module
+    allocate(self%cheb_mesh_a(num_local_atoms)) ! only used inside this module, NOCO
     allocate(self%cell_a(num_local_atoms)) ! only used inside this module
     allocate(self%ref_cluster_a(num_local_atoms)) ! only visible to this module and ScatteringCalculation_mod.F90
     allocate(self%atomdata_a(num_local_atoms))
@@ -198,6 +199,7 @@ module CalculationData_mod
     call destroy(self%iguess_data)
 
     deallocate(self%mesh_a, stat=ist)
+    deallocate(self%cheb_mesh_a, stat=ist) ! NOCO
     deallocate(self%cell_a, stat=ist)
     deallocate(self%atomdata_a, stat=ist)
     deallocate(self%ref_cluster_a, stat=ist)
@@ -468,7 +470,7 @@ module CalculationData_mod
         self%atomdata_a(ila) = old_atom_a(ila)
         call associateBasisAtomMesh(self%atomdata_a(ila), self%mesh_a(ila))
         ! generate storage for cell information + shape-functions
-        call createCellData(self%cell_a(ila), self%mesh_a(ila)%meshn, (2*dims%LPOT+1)**2, (2*dims%LPOT+1)**2)
+        call create(self%cell_a(ila), self%mesh_a(ila)%meshn, (2*dims%LPOT+1)**2, (2*dims%LPOT+1)**2)
         ! >>> fill shdata with values from old mesh >>>
         do ii = 1, self%mesh_a(ila)%nfu
            self%cell_a(ila)%llmsp(ii) = self%mesh_a(ila)%llmsp(ii)

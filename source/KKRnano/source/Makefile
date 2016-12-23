@@ -43,10 +43,11 @@ ifeq ($(PLATFORM),ifort)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+		PPFLAGS += -D USE_OLD_MESH
 	else ifeq ($(TYPE),mtradii)
 		FCFLAGS += -O3
 		PPFLAGS += -D USE_MTRADII 
-		PPFLAGS += -D NOLOGGING
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else ifeq ($(TYPE),debug_mtradii)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
@@ -286,8 +287,7 @@ ConfigReader_mod.o: ConfigReaderDictionary_mod.o
 KKROperator_mod.o: Truncation_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o bsrmm_mod.o
 Lloyd0_new_mod.o: BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o EnergyMesh_mod.o LDAUData_mod.o GauntCoefficients_mod.o ValenceDensity_mod.o 
 ClusterInfo_mod.o: Statistics_mod.o TruncationZone_mod.o RefCluster_mod.o two_sided_commI_mod.o ExchangeTable_mod.o
-ScatteringCalculation_mod.o: KKRnanoParallel_mod.o one_sided_commD_mod.o Constants_mod.o SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o  KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o IterativeSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o Truncation_mod.o two_sided_commD_mod.o 
-Truncation_mod.o: Exceptions_mod.o TruncationZone_mod.o Main2Arrays_mod.o Logging_mod.o Statistics_mod.o
+ScatteringCalculation_mod.o: KKRnanoParallel_mod.o one_sided_commD_mod.o Constants_mod.o SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o  KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o IterativeSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o Truncation_mod.o two_sided_commD_mod.o ChebMeshData_mod.o
 total_energy_mod.o: Quadrature_mod.o BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o ShapeGauntCoefficients_mod.o
 vxcgga.o: XCFunctionals_mod.o
 KKRzero_mod.o: Exceptions_mod.o BrillouinZoneMesh_mod.o PositionReader_mod.o MadelungCalculator_mod.o Startb1_mod.o EnergyMesh_mod.o EnergyMeshHelpers_mod.o Lattice_mod.o BrillouinZone_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o ShapefunData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o ldauinfo_read.o ldaustart.o NonCollinearMagnetismData_mod.o
@@ -347,5 +347,6 @@ LocalAtomData_mod.o: Exceptions_mod.o RadialMeshData_mod.o ShapefunData_mod.o Ba
 bsrmm_mod.o: CacheOverlap_mod.o
 CacheOverlap_mod.o:
 ChebMeshData_mod.o: InputParams_mod.o
+Truncation_mod.o: Logging_mod.o Exceptions_mod.o TruncationZone_mod.o
 
 # DO NOT DELETE

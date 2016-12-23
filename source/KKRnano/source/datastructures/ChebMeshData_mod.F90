@@ -16,7 +16,8 @@ module ChebMeshData_mod
  ! public :: initChebMesh, initMuffinTinMesh, initInterstitialMesh,
   public :: writeChebMeshDataDA           
   public :: readChebMeshDataDA, openChebMeshDataDAFile, closeChebMeshDataDAFile, writeChebMeshDataIndexDA      
-  public :: readChebMeshDataIndexDA, openChebMeshDataIndexDAFile, closeChebMeshDataIndexDAFile             
+  public :: readChebMeshDataIndexDA, openChebMeshDataIndexDAFile, closeChebMeshDataIndexDAFile 
+  public :: interpolate_poten  
  ! public :: readChebMeshDataHeader    
   
   type ChebMeshData
@@ -432,6 +433,105 @@ ipotm=0
   end do
 
 end subroutine ConstructChebMesh
+
+
+  !----------------------------------------------------------------------------
+  !> Interpolate potential to Chebyshev mesh
+subroutine interpolate_poten(nspin,r,irmin,irws,ircut,vins,  &
+        visp,npan_log,npan_eq,  &
+        npan_tot,rnew,  &
+        ipan_intervall,vinsnew, &
+        irmd, lmpotd) ! new parameters
+ 
+implicit none
+
+integer, intent(in)                      :: nspin
+double precision, intent(in)             :: r(:)
+integer, intent(in)                      :: irmin
+integer, intent(in)                      :: irws
+integer, intent(in)                      :: ircut(0:)
+double precision, intent(in)             :: vins(irmin:,:,:)
+double precision, intent(in)             :: visp(:,:)
+integer, intent(in)                      :: npan_log
+integer, intent(in)                      :: npan_eq
+integer, intent(in)                      :: npan_tot
+double precision, intent(in)             :: rnew(:)
+integer, intent(in)                      :: ipan_intervall(0:)
+double precision, intent(out)            :: vinsnew(:,:,:)
+integer, intent(in)                      :: irmd
+integer, intent(in)                      :: lmpotd
+
+
+
+double precision, allocatable :: vinsin(:,:,:)
+
+integer :: ipot,ipotm,imin,imax,ip,ir,lm1,ispin,iminnew,imaxnew,ir2
+
+vinsnew=0D0
+ipotm=0
+allocate(vinsin(irmd,lmpotd,nspin))! irmd=#points in old mesh
+
+ipot=1
+  
+! save input potential to VINSIN
+  vinsin=0D0
+  do ir=1,irws
+    if (ir < irmin) then
+      vinsin(ir,1,1)=visp(ir,ipot)
+      vinsin(ir,1,nspin)=visp(ir,ipot+nspin-1)
+    else
+      do lm1=1,lmpotd
+        if (lm1 == 1) then
+          vinsin(ir,lm1,1)=visp(ir,ipot)
+          vinsin(ir,lm1,nspin)=visp(ir,ipot+nspin-1)
+        else
+          vinsin(ir,lm1,1)=vins(ir,lm1,ipot)
+          vinsin(ir,lm1,nspin)=vins(ir,lm1,ipot+nspin-1)
+        end if
+      end do
+    end if
+  end do
+  
+  do ispin=1,nspin
+    
+    ipotm=ipotm+1
+    
+    do lm1=1,lmpotd
+      
+      imin=1
+      imax=irmin
+      do ip=1,npan_log
+        iminnew=ipan_intervall(ip-1)+1
+        imaxnew=ipan_intervall(ip)
+        call interpolspline(r(imin:imax),rnew(iminnew:imaxnew),  &
+            vinsin(imin:imax,lm1,ispin), vinsnew(iminnew:imaxnew,lm1,ipotm),  &
+            imax-imin+1,imaxnew-iminnew+1)
+      end do
+      
+      imin=irmin
+      imax=ircut(1)
+      do ip=npan_log+1,npan_log+npan_eq
+        iminnew=ipan_intervall(ip-1)+1
+        imaxnew=ipan_intervall(ip)
+        call interpolspline(r(imin:imax),rnew(iminnew:imaxnew),  &
+            vinsin(imin:imax,lm1,ispin), vinsnew(iminnew:imaxnew,lm1,ipotm),  &
+            imax-imin+1,imaxnew-iminnew+1)
+      end do
+      
+      ir2=0
+      do ip=npan_log+npan_eq+1,npan_tot
+        ir2=ir2+1
+        imin=ircut(ir2)+1
+        imax=ircut(ir2+1)
+        iminnew=ipan_intervall(ip-1)+1
+        imaxnew=ipan_intervall(ip)
+        call interpolspline(r(imin:imax),rnew(iminnew:imaxnew),  &
+            vinsin(imin:imax,lm1,ispin), vinsnew(iminnew:imaxnew,lm1,ipotm),  &
+            imax-imin+1,imaxnew-iminnew+1)
+      end do
+    end do ! lm1
+  end do ! ispin
+end subroutine interpolate_poten
 
   !----------------------------------------------------------------------------
   !> Helping routine for ConstructChebMesh 

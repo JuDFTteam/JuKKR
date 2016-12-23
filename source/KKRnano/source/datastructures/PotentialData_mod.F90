@@ -16,6 +16,7 @@ module PotentialData_mod
     !> contain this factor!
     double precision, allocatable :: visp(:,:)
     double precision, allocatable :: vons(:,:,:)        !< output potential - contains all L-components
+    double precision, allocatable :: vinscheb(:,:,:)    !< potential interpolated to Chebychev mesh, NOCO 
     integer :: nspin
     integer :: lpot
     integer :: irmind
