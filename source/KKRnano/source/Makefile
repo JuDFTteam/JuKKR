@@ -50,13 +50,13 @@ ifeq ($(PLATFORM),ifort)
 	else ifeq ($(TYPE),debug_mtradii)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
-	else ifeq ($(TYPE),old_mesh)
-		FCFLAGS += -O3 -g
-		PPFLAGS += -D USE_OLD_MESH
-		PPFLAGS += -D NOLOGGING
+#	else ifeq ($(TYPE),old_mesh)
+#		FCFLAGS += -O3 -g
+#		PPFLAGS += -D USE_OLD_MESH
+#		PPFLAGS += -D NOLOGGING
 	else
 		FCFLAGS += -O3
-		PPFLAGS += -D NOLOGGING
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	endif
 endif
 
@@ -259,7 +259,7 @@ ShapeGeometryHelpers_mod.o: Exceptions_mod.o Constants_mod.o
 ShapeStandardMesh_mod.o: Exceptions_mod.o Constants_mod.o
 wrappers_mod.o: ValenceDensity_mod.o SingleSite_mod.o BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o ##AtomicCore_mod.o
 BCPOperator_mod.o:  ClusterInfo_mod.o Exceptions_mod.o
-CalculationData_mod.o: Exceptions_mod.o ExchangeTable_mod.o KKRnanoParallel_mod.o JelliumPotentials_mod.o LatticeVectors_mod.o TruncationZone_mod.o Main2Arrays_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o Truncation_mod.o
+CalculationData_mod.o: Exceptions_mod.o ExchangeTable_mod.o KKRnanoParallel_mod.o JelliumPotentials_mod.o LatticeVectors_mod.o TruncationZone_mod.o Main2Arrays_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o Truncation_mod.o ChebMeshData_mod.o
 NearField_com_mod.o: Logging_mod.o one_sided_commD_mod.o NearField_mod.o MadelungCalculator_mod.o NearField_kkr_mod.o
 ShapeIntegrationHelpers_mod.o: Constants_mod.o
 ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o Voronoi_mod.o ShapeFunctions_mod.o LatticeVectors_mod.o
@@ -272,7 +272,7 @@ ShapeCriticalPoints_mod.o: Constants_mod.o ShapeGeometryHelpers_mod.o  PolygonFa
 MadelungPotential_mod.o: BasisAtom_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o DensityResults_mod.o EnergyResults_mod.o CalculationData_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o Exceptions_mod.o
 ShapeIntegration_mod.o: ShapeIntegrationHelpers_mod.o Constants_mod.o  PolygonFaces_mod.o
-BasisAtom_mod.o: Exceptions_mod.o RadialMeshData_mod.o ShapefunData_mod.o PotentialData_mod.o AtomicCoreData_mod.o
+BasisAtom_mod.o: Exceptions_mod.o RadialMeshData_mod.o ShapefunData_mod.o PotentialData_mod.o AtomicCoreData_mod.o ChebMeshData_mod.o
 tfQMR_mod.o: Logging_mod.o SolverStats_mod.o KKROperator_mod.o BCPOperator_mod.o TimerMpi_mod.o
 KKRresults_mod.o: DimParams_mod.o
 DimParams_mod.o: ConfigReader_mod.o Exceptions_mod.o
@@ -346,5 +346,6 @@ two_sided_commI_mod.o: ExchangeTable_mod.o
 LocalAtomData_mod.o: Exceptions_mod.o RadialMeshData_mod.o ShapefunData_mod.o BasisAtom_mod.o LDAUData_mod.o JijData_mod.o RefCluster_mod.o MadelungCalculator_mod.o DensityResults_mod.o EnergyResults_mod.o KKRresults_mod.o
 bsrmm_mod.o: CacheOverlap_mod.o
 CacheOverlap_mod.o:
+ChebMeshData_mod.o: InputParams_mod.o
 
 # DO NOT DELETE

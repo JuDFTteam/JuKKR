@@ -59,6 +59,7 @@ module BasisAtom_mod
   use PotentialData_mod, only: PotentialData, create, destroy
   use AtomicCoreData_mod, only: AtomicCoreData, create, destroy
   use RadialMeshData_mod, only: RadialMeshData, create, destroy
+  use ChebMeshData_mod, only: ChebMeshData
   implicit none
 
   public :: BasisAtom, create, destroy, load
@@ -81,6 +82,7 @@ module BasisAtom_mod
     type(AtomicCoreData) :: core
     type(ShapefunData), pointer :: cell_ptr => null()
     type(RadialMeshData), pointer :: mesh_ptr => null()
+    type(ChebMeshData), pointer :: chebmesh_ptr => null()
   endtype
 
   interface create
@@ -152,6 +154,18 @@ module BasisAtom_mod
 
   endsubroutine ! associate
 
+  !----------------------------------------------------------------------------
+  !> Associates a basis atom with its Chebychev mesh (Bauer).
+  !>  
+  !> That way one does not have to keep track of which mesh belongs
+  !> to which atom - as soon the relation has been established.
+  subroutine associateBasisAtomChebMesh(atom, chebmesh)
+    type(BasisAtom), intent(inout) :: atom
+    type(ChebMeshData), target, intent(in) :: chebmesh
+
+    atom%chebmesh_ptr => chebmesh
+
+  endsubroutine ! associate
   !----------------------------------------------------------------------------
   elemental subroutine destroyBasisAtom(self)
     type(BasisAtom), intent(inout) :: self

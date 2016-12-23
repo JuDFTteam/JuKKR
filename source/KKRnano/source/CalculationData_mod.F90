@@ -9,6 +9,7 @@ module CalculationData_mod
   use MadelungCalculator_mod, only: MadelungCalculator, create, destroy
   use MadelungCalculator_mod, only: MadelungLatticeSum, create, destroy ! todo: two types hosted in one module
   use RadialMeshData_mod, only: RadialMeshData, create, destroy
+  use ChebMeshData_mod, only: ChebMeshData ! NOCO
   use ShapefunData_mod, only: ShapefunData, create, destroy
   use BasisAtom_mod, only: BasisAtom, create, destroy
   use KKRresults_mod, only: KKRresults, create, destroy
@@ -48,6 +49,7 @@ module CalculationData_mod
     
     ! atom local data - different for each atom
     type(RadialMeshData), pointer     :: mesh_a(:)         => null()
+    type(ChebMeshData), pointer       :: cheb_mesh_a(:)    => null() ! NOCO
     type(ShapefunData), pointer       :: cell_a(:)         => null()
     type(BasisAtom), pointer          :: atomdata_a(:)     => null()
     type(DensityResults), pointer     :: densities_a(:)    => null()
@@ -385,8 +387,9 @@ module CalculationData_mod
     use Main2Arrays_mod, only: Main2Arrays
     
     use ShapefunData_mod, only: create
-    use BasisAtom_mod, only: load, associateBasisAtomMesh, associateBasisAtomCell
+    use BasisAtom_mod, only: load, associateBasisAtomMesh, associateBasisAtomCell, associateBasisAtomChebMesh
     use RadialMeshData_mod, only: load
+    use ChebMeshData_mod, only: load
     use KKRnanoParallel_mod, only: KKRnanoParallel
      
     type(CalculationData), intent(inout) :: self
@@ -396,7 +399,7 @@ module CalculationData_mod
     type(KKRnanoParallel), intent(in) :: mp
     integer, intent(in) :: voronano
     
-    integer :: ila, atom_id, ist
+    integer :: ila, atom_id, ist, ii
     type(BasisAtom), allocatable      :: old_atom_a(:)
     type(RadialMeshData), allocatable :: old_mesh_a(:)
     double precision, allocatable     :: new_MT_radii(:)
@@ -407,10 +410,12 @@ module CalculationData_mod
     allocate(old_mesh_a(self%num_local_atoms))
     allocate(new_MT_radii(self%num_local_atoms))
 
+#ifndef USE_OLD_MESH
     ! generate storage for cell information + shape-functions
     do ila = 1, self%num_local_atoms
       call create(self%cell_a(ila), dims%irid, (2*dims%LPOT+1)**2, (2*dims%LPOT+1)**2)
     enddo ! ila
+#endif
 
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
@@ -428,6 +433,11 @@ module CalculationData_mod
         call associateBasisAtomMesh(old_atom_a(ila), old_mesh_a(ila))
 
         new_MT_radii(ila) = old_atom_a(ila)%radius_muffin_tin / params%alat
+
+        if (dims%korbit == 1) then ! NOCO
+          call load(self%cheb_mesh_a(ila),"cheb_meshes.0", atom_id, old_mesh_a(ila)%nfu, params)
+        endif
+
       else
         if(params%MT_scale < tolvdist) then
           write(*,*) 'Warning: MT_scale in input.conf is set to 0.0d0 -> MT radius is automatically set to 2.37'
@@ -438,6 +448,7 @@ module CalculationData_mod
     enddo ! ila
 #ifndef USE_OLD_MESH
     ! generate shapes and meshes
+    if (dims%korbit == 1) die_here("In order to conduct NOCO calculations (korbit = 1) use makefile flag 'USE_OLD_MESH'") 
     call generateShapesTEST(self, dims, params, arrays, new_MT_radii, params%MT_scale, mp, voronano)
 #endif
 
@@ -447,7 +458,7 @@ module CalculationData_mod
         atom_id = self%atom_ids(ila)
 
 #ifndef USE_OLD_MESH
-      ! Geometry might have changed - interpolate to new mesh
+        ! Geometry might have changed - interpolate to new mesh
         call interpolateBasisAtom(self%atomdata_a(ila), old_atom_a(ila), self%mesh_a(ila), dims%lpot)
 #endif
 
@@ -456,18 +467,27 @@ module CalculationData_mod
         self%mesh_a(ila) = old_mesh_a(ila)
         self%atomdata_a(ila) = old_atom_a(ila)
         call associateBasisAtomMesh(self%atomdata_a(ila), self%mesh_a(ila))
+        ! generate storage for cell information + shape-functions
+        call createCellData(self%cell_a(ila), self%mesh_a(ila)%meshn, (2*dims%LPOT+1)**2, (2*dims%LPOT+1)**2)
+        ! >>> fill shdata with values from old mesh >>>
         do ii = 1, self%mesh_a(ila)%nfu
-          self%cell_a(ila)%shdata%llmsp(ii) = self%mesh_a(ila)%llmsp(ii)
-          self%cell_a(ila)%shdata%lmsp(self%mesh_a(ila)%llmsp(ii)) = 1
-          self%cell_a(ila)%shdata%ifunm(self%mesh_a(ila)%llmsp(ii)) = ii
+           self%cell_a(ila)%llmsp(ii) = self%mesh_a(ila)%llmsp(ii)
+           self%cell_a(ila)%lmsp(self%mesh_a(ila)%llmsp(ii)) = 1
+           self%cell_a(ila)%ifunm(self%mesh_a(ila)%llmsp(ii)) = ii
         end do
-        self%cell_a(ila)%shdata%nfu = self%mesh_a(ila)%nfu
-        self%cell_a(ila)%shdata%theta(1:self%mesh_a(ila)%meshn, 1:self%mesh_a(ila)%nfu) = self%mesh_a(ila)%thetas(1:self%mesh_a(ila)%meshn,1:self%mesh_a(ila)%nfu)
+        ! copy the shape functions
+        self%cell_a(ila)%theta(1:self%mesh_a(ila)%meshn, 1:self%mesh_a(ila)%nfu) = self%mesh_a(ila)%thetas(1:self%mesh_a(ila)%meshn,1:self%mesh_a(ila)%nfu)
+        self%cell_a(ila)%nfu = self%mesh_a(ila)%nfu
         ! set maximum possible muffin-tin radius (ALAT units)
-        self%cell_a(ila)%shdata%max_muffin_tin = self%mesh_a(ila)%rmt/params%alat
-        self%cell_a(ila)%shdata%num_faces = 9999 ! not needed
+        self%cell_a(ila)%max_muffin_tin = self%mesh_a(ila)%rmt/params%alat
+        self%cell_a(ila)%num_faces = 9999 ! not needed
+        ! <<< fill shdata with values from old mesh <<<
         ! <<< use old mesh<<<
 #endif
+
+        if (dims%korbit == 1) then ! NOCO
+          call associateBasisAtomChebMesh(self%atomdata_a(ila), self%cheb_mesh_a(ila))
+        endif
 
         ! set new MT radius
         self%atomdata_a(ila)%radius_muffin_tin = self%mesh_a(ila)%rmt
@@ -482,7 +502,9 @@ module CalculationData_mod
         self%cell_a(ila)%cell_index = self%atomdata_a(ila)%cell_index
         call associateBasisAtomCell(self%atomdata_a(ila), self%cell_a(ila))
 
+#ifndef USE_OLD_MESH
         CHECKASSERT( dims%IRMIND == self%mesh_a(ila)%IRMIN ) ! check mesh
+#endif
         CHECKASSERT( self%atomdata_a(ila)%atom_index == atom_id )
 
 #ifndef USE_OLD_MESH
