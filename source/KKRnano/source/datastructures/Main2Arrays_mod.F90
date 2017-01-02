@@ -24,15 +24,13 @@ module Main2Arrays_mod
     integer :: lmmaxd
     integer :: isymindex(48)
     double complex,   allocatable :: dsymll(:,:,:)  !< tau symmetry matrices
-    
+
     integer :: naez
     double precision :: bravais(3,3)
     double precision, allocatable :: rbasis(:,:)    !< basis atom positions rbasis(3,naez)
     double precision, allocatable :: zat(:)         !< atomic numbers zat(naez)
 
-    integer :: kpoibz
     integer :: maxmesh
-    integer :: maxmshd
     double precision, allocatable :: bzkp(:,:,:)    !< kpoints for each mesh
     double precision, allocatable :: volcub(:,:)    !< kpoint weights
     double precision, allocatable :: volbz(:)       !< bz volume?
@@ -77,8 +75,6 @@ module Main2Arrays_mod
 
     self%lmmaxd = lmmaxd
     self%naez = naez
-    self%kpoibz = kpoibz
-    self%maxmshd = maxmshd
 
     ALLOCATECHECK(self%dsymll(lmmaxd,lmmaxd,48))
     ALLOCATECHECK(self%bzkp(3,kpoibz,maxmshd))
