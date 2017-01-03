@@ -147,7 +147,7 @@ module KKRzero_mod
        if(dims%nspind .NE. 2) die_here('NSPIND=2 in global.conf is mandatory for SOC calculations')
        call create(noco, dims%naez)
        call nonco_angle_read(noco%theta_noco, noco%phi_noco, noco%angle_fixed, dims%naez)
-       call store(arrays, 'bin.noco')
+       call store(noco, 'bin.noco')
     else
        if(dims%korbit .NE. 0) die_here('When not using NOCO: KORBIT in global.conf should be zero')    
     endif
@@ -214,7 +214,7 @@ module KKRzero_mod
 
     call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais, recbv, arrays%nsymat, arrays%isymindex, &
                  arrays%dsymll, params%bzdivide, emesh%ielast, emesh%iesemicore, emesh%ez, dims%iemxd, emesh%kmesh, arrays%maxmesh, &
-                 dims%lmaxd, krel, dims%ekmd, params%fullbz, nowrite=(checkmode /= 0), kpms=kmeshes) ! after return from bzkint0, ekmd contains the right value
+                 dims%lmaxd, krel, dims%ekmd, params%fullbz, dims%korbit, nowrite=(checkmode /= 0), kpms=kmeshes) ! after return from bzkint0, ekmd contains the right value
     
 !   Conversion of rmax and gmax to atomic units
     params%rmax = params%rmax*params%alat

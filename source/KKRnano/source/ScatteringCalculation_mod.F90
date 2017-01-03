@@ -24,7 +24,7 @@ implicit none
   !>         *) Logfiles (if requested)
   !>         *) JIJ-Files (if requested)
   !>         *) matrix dump (if requested)
-  subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, mp, arrays)
+  subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, mp, arrays, noco)
 
     USE_LOGGING_MOD
     USE_ARRAYLOG_MOD
@@ -35,6 +35,7 @@ implicit none
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
+    use NonCollinearMagnetismData_mod, only: NOCOData ! NOCO
 
     use CalculationData_mod, only: CalculationData, getAtomData, getLDAUData
 
@@ -65,6 +66,7 @@ implicit none
     use two_sided_commD_mod, only: distribute
     
     use ChebMeshData_mod, only: interpolate_poten  ! NOCO
+    use NonCollinearMagnetism_mod, only: tmat_newsolver, rotatematrix  ! NOCO
     
     integer, intent(in) :: iter
     type(CalculationData), intent(inout) :: calc
@@ -74,6 +76,7 @@ implicit none
     type(Main2Arrays), intent(in)        :: arrays
     type(DimParams), intent(in)          :: dims
     type(InputParams), intent(in)        :: params
+    type(NOCOData), intent(in)           :: noco ! NOCO
 
     ! locals
 
@@ -89,8 +92,9 @@ implicit none
     double complex :: JSCAL ! scaling factor for Jij calculation
     integer(kind=2), allocatable :: atom_indices(:)
     integer :: ie, ispin, prspin, nmesh, ist
-    integer :: i1, ila, num_local_atoms, iacls
-    integer :: lmmaxd, lmsd
+    integer :: i1, ila, num_local_atoms, iacls, ilm
+    integer :: lmmaxd
+    integer :: lmmaxd_noco ! NOCO
     logical :: xccpl
     double precision :: rMTref
     double precision, allocatable :: rMTs(:)
@@ -100,7 +104,7 @@ implicit none
     double complex, allocatable :: GrefN_buffer(:,:,:,:,:) !< GrefN for all local atoms
 
     lmmaxd = (dims%lmaxd+1)**2
-    lmsd = lmmaxd * 1 ! ToDo: factor 2 for non-collinear
+    lmmaxd_noco = lmmaxd * (dims%korbit+1) ! NOCO
 
     atomdata  => getAtomData(calc, 1)
     i1 = atomdata%atom_index
@@ -111,7 +115,7 @@ implicit none
 
     num_local_atoms = calc%num_local_atoms
 
-    allocate(tmatLL(lmsd,lmsd,calc%trunc_zone%naez_trc,0:dims%Lly)) ! allocate buffer for t-matrices
+    allocate(tmatLL(lmmaxd_noco,lmmaxd_noco,calc%trunc_zone%naez_trc,0:dims%Lly)) ! allocate buffer for t-matrices
     allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
     allocate(GrefN_buffer(lmmaxd,lmmaxd,0:dims%Lly,calc%clusters%naclsd,num_local_atoms))
     allocate(atom_indices(num_local_atoms))
@@ -154,7 +158,7 @@ implicit none
 
     ! setup the solver + bcp preconditioner, allocates a lot of memory
     ! it is good to do these allocations outside of energy loop: ToDo
-    call setup_solver(solv, kkr_op, precond, dims, calc%clusters, lmsd, params%qmrbound, atom_indices)
+    call setup_solver(solv, kkr_op, precond, dims, calc%clusters, lmmaxd_noco, params%qmrbound, atom_indices)
 
     !-------------------- NOCO --------------------------------
     ! interpolate potential to Chebychev mesh
@@ -200,6 +204,11 @@ implicit none
             rMTref = rMTs(calc%trunc_zone%trunc_atom_idx(calc%ref_cluster_a(ila)%atom(iacls)))
             call tref(emesh%EZ(IE), params%vref, dims%lmaxd, rMTref, &
                       kkr(ila)%Tref_ell(:,iacls), kkr(ila)%dTref_ell(:,iacls), derive=(dims%Lly > 0))
+            !if (dims%korbit == 1) then ! NOCO
+            !  do ilm = 0, dims%lmaxd
+            !    kkr(ila)%Tref_ell(ilm+dims%lmaxd+1,iacls) = kkr(ila)%Tref_ell(ilm,iacls) 
+            !  enddo
+            !endif
           enddo ! iacls
 
           call gref(emesh%EZ(IE), params%ALAT, calc%gaunts%IEND, &
@@ -221,7 +230,7 @@ implicit none
   !------------------------------------------------------------------------------
   !     beginning of SMPID-parallel section
   !------------------------------------------------------------------------------
-        spinloop: do ISPIN = 1, dims%NSPIND
+        spinloop: do ISPIN = 1, dims%NSPIND-dims%KORBIT
           if (isWorkingSpinRank(mp, ispin)) then
 
             PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
@@ -235,18 +244,32 @@ implicit none
               ldau_data => getLDAUData(calc, ila)
               i1 = calc%atom_ids(ila) ! get global atom_id from local index
 
-              call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr(ila)%TmatN, kkr(ila)%Tr_alph, ldau_data, params%Volterra)
-
+              if (dims%korbit == 1) then ! NOCO
+                call tmat_newsolver(ie,dims%nspind,dims%lmaxd,atomdata%Z_nuclear,params%socscale,  &
+                                    emesh%ez,params%nsra,calc%gaunts%cleb(:,1),calc%gaunts%icleb, &
+                                    calc%gaunts%iend,params%ncheb,atomdata%chebmesh_ptr%npan_tot,  &
+                                    atomdata%chebmesh_ptr%rpan_intervall,atomdata%chebmesh_ptr%ipan_intervall,  &
+                                    atomdata%chebmesh_ptr%rnew,atomdata%potential%vinscheb, &
+                                    noco%theta_noco(i1),noco%phi_noco(i1),1,  & !ipot=1 because potential has only one or two entries (spin polarized case)
+                                    !dims%lly,        &    
+                                    atomdata%potential%lmpot,atomdata%chebmesh_ptr%irmd_new, &
+                                    kkr(ila)%TmatN(:,:,ispin),params%soc)
+               
+                call rotatematrix(kkr(ila)%TmatN(:,:,ispin),noco%theta_noco(i1),noco%phi_noco(i1),lmmaxd,0)
+              else
+                call CALCTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA,&
+                     calc%gaunts, kkr(ila)%TmatN, kkr(ila)%Tr_alph, ldau_data, params%Volterra)
+              endif
               jij_data%DTIXIJ(:,:,ISPIN) = kkr(ila)%TmatN(:,:,ISPIN) ! save t-matrix for Jij-calc.
 
               ! t_ref-matrix of central cluster atom has index 1
-              call substractReferenceTmatrix(arrays%dsymLL(:,:,:arrays%NSYMAT), kkr(ila)%Tref_ell(:,1), kkr(ila)%TmatN(:,:,ISPIN))
+              call substractReferenceTmatrix(arrays%dsymLL(:,:,:arrays%NSYMAT), kkr(ila)%Tref_ell(:,1), kkr(ila)%TmatN(:,:,ISPIN), lmmaxd_noco, lmmaxd, dims%korbit)
 
               if (dims%Lly == 1) then  ! calculate derivative of t-matrix for Lloyd's formula
                 call CALCDTMAT_wrapper(atomdata, emesh, ie, ispin, params%ICST, params%NSRA, calc%gaunts, kkr(ila)%dTmatN, kkr(ila)%Tr_alph, ldau_data, params%Volterra)
                
                 ! do the same for derivative of T-matrix
-                call substractReferenceTmatrix(arrays%dsymLL(:,:,:arrays%NSYMAT), kkr(ila)%dTref_ell(:,1), kkr(ila)%dTmatN(:,:,ISPIN))
+                call substractReferenceTmatrix(arrays%dsymLL(:,:,:arrays%NSYMAT), kkr(ila)%dTref_ell(:,1), kkr(ila)%dTmatN(:,:,ISPIN), lmmaxd_noco, lmmaxd, dims%korbit)
               endif ! Lly
 
               ! TmatN now contains Delta t = t - t_ref !!!
@@ -469,42 +492,48 @@ implicit none
   !----------------------------------------------------------------------------
   !> Substract diagonal reference T matrix of certain spin channel
   !> from real system's T matrix.
-  subroutine substractReferenceTmatrix(dsymLL, TrefLL, TmatN)
+  subroutine substractReferenceTmatrix(dsymLL, TrefLL, TmatN, lmmaxd_noco, lmmaxd, korbit)
     double complex, intent(in) :: dsymLL(:,:,:) !> dim(lmmaxd,lmmaxd,nsymat)
     double complex, intent(in) :: TrefLL(0:) !> dim(0:lmax) ! emm-degenerate and diagonal
     double complex, intent(inout) :: TmatN(:,:) !> dim(lmmaxd,lmmaxd)
+    integer, intent(in) :: lmmaxd_noco
+    integer, intent(in) :: lmmaxd
+    integer, intent(in) :: korbit ! NOCO
     
-    integer :: lmax, lmmaxd, nsymat, isym, lm, ell, emm, ist
+    integer :: lmax, nsymat, isym, lm, ell, emm, ist, iorbit
     double complex, allocatable :: uTu_sum(:,:), uT(:,:)
     double precision :: denom
     double complex, parameter :: cone=(1.d0, 0.d0), zero=(0.d0, 0.d0)
 
     lmax = size(TrefLL, 1) - 1
-    lmmaxd = (lmax + 1)**2
     nsymat = size(dsymLL, 3)
 
     ! note: TrefLL is diagonal due to a spherical reference potential, therefore, we only subtract the diagonal elements
-    ASSERT( all(shape(TmatN) == [lmmaxd, lmmaxd]) )
+    ASSERT( all(shape(TmatN) == [lmmaxd_noco, lmmaxd_noco]) )
     ASSERT( all(shape(dsymLL) == [lmmaxd, lmmaxd, nsymat]) )
 
-    do ell = 0, lmax
-      do emm = -ell, ell
-        lm = ell*ell + ell + emm + 1
-        TmatN(lm,lm) = TmatN(lm,lm) - TrefLL(ell) ! Tref is stored emm-degenerate and diagonal
-      enddo ! emm
-    enddo ! ell
+    do iorbit = 0, korbit ! NOCO
+      do ell = 0, lmax
+        do emm = -ell, ell
+          lm = ell*ell + ell + emm + 1 + iorbit*lmmaxd
+          TmatN(lm,lm) = TmatN(lm,lm) - TrefLL(ell) ! Tref is stored emm-degenerate and diagonal
+        enddo ! emm
+      enddo ! ell
+    enddo ! iorbit
 
-    allocate(uTu_sum(lmmaxd,lmmaxd), uT(lmmaxd,lmmaxd))
-    !------------------------------------------------- SYMMETRISE TmatN
-    uTu_sum(:,:) = TmatN(:,:) ! copy, since the 1st entry is the unity operation, start loop from 2
-    do isym = 2, nsymat
-      call zgemm('n', 'n', lmmaxd, lmmaxd, lmmaxd, cone, dsymLL(1,1,isym), lmmaxd, TmatN, lmmaxd, zero, uT, lmmaxd)
-      call zgemm('n', 'c', lmmaxd, lmmaxd, lmmaxd, cone, uT, lmmaxd, dsymLL(1,1,isym), lmmaxd, cone, uTu_sum, lmmaxd)
-    enddo ! isym
+    allocate(uTu_sum(lmmaxd_noco,lmmaxd_noco), uT(lmmaxd_noco,lmmaxd_noco))
+    if (korbit == 0) then ! NOCO
+      !------------------------------------------------- SYMMETRISE TmatN
+      uTu_sum(:,:) = TmatN(:,:) ! copy, since the 1st entry is the unity operation, start loop from 2
+      do isym = 2, nsymat
+        call zgemm('n', 'n', lmmaxd_noco, lmmaxd_noco, lmmaxd_noco, cone, dsymLL(1,1,isym), lmmaxd_noco, TmatN, lmmaxd_noco, zero, uT, lmmaxd_noco)
+        call zgemm('n', 'c', lmmaxd_noco, lmmaxd_noco, lmmaxd_noco, cone, uT, lmmaxd_noco, dsymLL(1,1,isym), lmmaxd_noco, cone, uTu_sum, lmmaxd_noco)
+      enddo ! isym
 
-    denom = 1.d0/dble(nsymat)
-    TmatN(:,:) = uTu_sum(:,:)*denom ! average
-    !------------------------------------------------- SYMMETRISE TmatN
+      denom = 1.d0/dble(nsymat)
+      TmatN(:,:) = uTu_sum(:,:)*denom ! average
+      !------------------------------------------------- SYMMETRISE TmatN
+    endif
     deallocate(uTu_sum, uT, stat=ist) ! ignore status
   endsubroutine ! subtract
 

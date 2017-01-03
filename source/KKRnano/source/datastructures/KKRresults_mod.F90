@@ -28,6 +28,7 @@ module KKRresults_mod
     double complex, allocatable :: Tr_alph(:)  
 
     integer :: lmmaxd
+    integer :: lmmaxd_noco ! NOCO
     integer :: nspind
     integer :: naclsd
     integer :: iemxd
@@ -58,7 +59,7 @@ module KKRresults_mod
     type(DimParams),  intent(in)    :: dims
     integer, intent(in)             :: naclsd
 
-    call createKKRresultsImpl(self, dims%lmaxd, dims%lmmaxd, dims%nspind, naclsd, dims%iemxd, dims%nguessd, dims%ekmd, dims%smpid)
+    call createKKRresultsImpl(self, dims%lmaxd, dims%lmmaxd, dims%korbit, dims%nspind, naclsd, dims%iemxd, dims%nguessd, dims%ekmd, dims%smpid)
   endsubroutine ! create
 
   !-----------------------------------------------------------------------------
@@ -68,10 +69,11 @@ module KKRresults_mod
   !> @param[in]    nspind
   !> @param[in]    naclsd
   !> @param[in]    iemxd
-  subroutine createKKRresultsImpl(self, lmaxd, lmmaxd, nspind, naclsd, iemxd, nguessd, ekmd, smpid)
+  subroutine createKKRresultsImpl(self, lmaxd, lmmaxd, korbit, nspind, naclsd, iemxd, nguessd, ekmd, smpid)
     type(KKRresults), intent(inout) :: self
     integer, intent(in) :: lmaxd
     integer, intent(in) :: lmmaxd
+    integer, intent(in) :: korbit ! NOCO
     integer, intent(in) :: nspind
     integer, intent(in) :: naclsd
     integer, intent(in) :: iemxd
@@ -80,9 +82,13 @@ module KKRresults_mod
     integer, intent(in) :: smpid
 
     integer :: memory_stat
+    integer :: lmaxd_noco, lmmaxd_noco ! NOCO
     double complex, parameter :: CZERO=(0.d0, 0.d0)
 
-    self%lmmaxd = LMMAXD
+    lmmaxd_noco = lmmaxd*(korbit+1) ! NOCO
+
+    self%lmmaxd = lmmaxd
+    self%lmmaxd_noco = lmmaxd_noco ! NOCO
     self%nspind = nspind
     self%naclsd = naclsd
     self%iemxd = iemxd
@@ -96,12 +102,12 @@ module KKRresults_mod
     endif
 
     ALLOCATECHECK(self%rMTref(naclsd))
-    ALLOCATECHECK(self%TmatN(LMMAXD,LMMAXD,nspind))
-    ALLOCATECHECK(self%dTmatN(LMMAXD,LMMAXD,nspind))
+    ALLOCATECHECK(self%TmatN(lmmaxd_noco,lmmaxd_noco,nspind))
+    ALLOCATECHECK(self%dTmatN(lmmaxd_noco,lmmaxd_noco,nspind))
     ALLOCATECHECK(self%tref_ell(0:lmaxd,naclsd))
     ALLOCATECHECK(self%dtref_ell(0:lmaxd,naclsd))
-    ALLOCATECHECK(self%dGrefN(LMMAXD,LMMAXD,naclsd,1))
-    ALLOCATECHECK(self%GmatN(LMMAXD,LMMAXD,iemxd,nspind))
+    ALLOCATECHECK(self%dGrefN(lmmaxd,lmmaxd,naclsd,1))
+    ALLOCATECHECK(self%GmatN(lmmaxd_noco,lmmaxd_noco,iemxd,nspind))
     ALLOCATECHECK(self%Lly_G0Tr(iemxd))
     ALLOCATECHECK(self%Lly_Grdt(iemxd,nspind))
     ALLOCATECHECK(self%Tr_alph(nspind))

@@ -51,7 +51,7 @@ module BrillouinZone_mod
   
   
   subroutine bzkint0(naez, rbasis, bravais, recbv, nsymat, isymindex, &
-                     dsymll, intervxyz, ielast, iesemicore, ez, iemxd, kmesh, maxmesh, lmax, krel, ekmd, fullbz, nowrite, kpms)
+                     dsymll, intervxyz, ielast, iesemicore, ez, iemxd, kmesh, maxmesh, lmax, krel, ekmd, fullbz, korbit, nowrite, kpms)
     use Symmetry_mod, only: pointgrp, findgroup, symtaumat
     use BrillouinZoneMesh_mod, only: BrillouinZoneMesh!, create, load, store, destroy
 
@@ -67,6 +67,7 @@ module BrillouinZone_mod
     double precision, intent(in) :: bravais(3,3), rbasis(3,naez), recbv(3,3)
     integer, intent(out) :: isymindex(nsymaxd)
     integer, intent(out) :: kmesh(iemxd)
+    integer, intent(in) :: korbit ! NOCO
     logical, intent(in) :: nowrite
     type(BrillouinZoneMesh), intent(out) :: kpms(:)
 
@@ -76,7 +77,7 @@ module BrillouinZone_mod
     logical :: lirr
     double precision :: rsymat(3,3,64)
     character(len=10) :: rotname(64)
-    integer :: lmmaxd, iprint
+    integer :: lmmaxd, iprint, i
 
     lmmaxd = (lmax+1)**2
 
@@ -99,9 +100,14 @@ module BrillouinZone_mod
     ! generate Brillouin zone k-meshes
     call bzkmesh(intervxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, iesemicore, ez, kmesh, iprint, iemxd, ekmd, nowrite, kpms)
 
-    call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, naez, lmmaxd, naez, lmax+1, krel, iprint, nsymaxd)
-
-    ! now dsymll hold nsymat symmetrization matrices
+    if (korbit == 0) then
+      call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, naez, lmmaxd, naez, lmax+1, krel, iprint, nsymaxd)
+      ! now dsymll hold nsymat symmetrization matrice
+    else ! NOCO
+      do i=1, lmmaxd
+        dsymll(i,i,1) = 1.0d0
+      enddo
+    endif 
   endsubroutine ! bzkint0
 
       

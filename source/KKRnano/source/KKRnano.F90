@@ -30,6 +30,7 @@ program KKRnano
   use DimParams_mod, only: DimParams, load, destroy
   use InputParams_mod, only: InputParams, load
   use Main2Arrays_mod, only: Main2Arrays, create, load, destroy
+  use NonCollinearMagnetismData_mod, only: NOCOData, load, create
 
   use ScatteringCalculation_mod, only: energyLoop
   use ProcessKKRresults_mod, only: processKKRresults, output_forces
@@ -55,6 +56,7 @@ program KKRnano
   type(Main2Arrays) :: arrays
   type(DimParams)   :: dims
   type(InputParams) :: params
+  type(NOCOData)    :: noco
 
   type(BasisAtom), pointer :: atomdata
   type(LDAUData), pointer  :: ldau_data
@@ -154,7 +156,10 @@ program KKRnano
 
   call create(arrays, dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)
   call load(arrays, 'bin.arrays') ! every process does this!
-
+  if (dims%korbit == 1) then
+     call create(noco, dims%naez)
+     call load(noco, 'bin.noco') ! every process does this!, NOCO
+  endif
   call load(params, 'bin.input', ios=ios)
   ! done reading variables
 
@@ -287,7 +292,7 @@ program KKRnano
       ! Scattering calculations - that is what KKR is all about
       ! output: (some contained as references in calc_data)
       ! ebalance_handler, kkr (!), jij_data, ldau_data
-      call energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, mp, arrays)
+      call energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, mp, arrays, noco)
 
       call outTime(mp%isMasterRank, 'G obtained .....................', getTime(program_timer), iter)
       ios = 0
