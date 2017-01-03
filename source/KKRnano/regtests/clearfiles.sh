@@ -26,6 +26,8 @@ rm -f  shapefun
 # rm -f  complex.dos
 # rm -f  kpoints_full
 # rm -f  meshes
+# rm -f  loggs
+# rm -f  last
 # rm -f  OUT
 
 rm -f  time-info

@@ -126,7 +126,10 @@ module KKRzero_mod
     ist = getValues("input.conf", params)
     if (ist /= 0) die_here('failed to read "input.conf"!')
 
-    if (dims%KPOIBZ < params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)) die_here('Kpoint allocation insufficient. Increase KPOIBZ!')
+    if (dims%KPOIBZ < params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)) then
+      dims%KPOIBZ = params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)
+      warn(6,'Kpoint allocation insufficient. KPOIBZ is increased to ' + params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)) 
+    endif
 
     dims%iemxd = getEnergyMeshSize(params%npol, [params%npnt1, params%npnt2, params%npnt3], params%npntsemi)
     call create(emesh, dims%iemxd)

@@ -346,7 +346,7 @@ two_sided_commI_mod.o: ExchangeTable_mod.o
 LocalAtomData_mod.o: Exceptions_mod.o RadialMeshData_mod.o ShapefunData_mod.o BasisAtom_mod.o LDAUData_mod.o JijData_mod.o RefCluster_mod.o MadelungCalculator_mod.o DensityResults_mod.o EnergyResults_mod.o KKRresults_mod.o
 bsrmm_mod.o: CacheOverlap_mod.o
 CacheOverlap_mod.o:
-ChebMeshData_mod.o: InputParams_mod.o
+ChebMeshData_mod.o: InputParams_mod.o RadialMeshData_mod.o
 Truncation_mod.o: Logging_mod.o Exceptions_mod.o TruncationZone_mod.o
 
 # DO NOT DELETE
