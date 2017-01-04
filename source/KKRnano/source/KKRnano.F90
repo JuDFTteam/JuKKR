@@ -154,7 +154,7 @@ program KKRnano
   endif ! master
   call outTime(mp%isMasterRank, 'timer started ..................', getTime(program_timer), 0)
 
-  call create(arrays, dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)
+  call create(arrays, dims%lmmaxd, dims%lmmaxd_noco, dims%naez, dims%kpoibz, dims%maxmshd)
   call load(arrays, 'bin.arrays') ! every process does this!
   if (dims%korbit == 1) then
      call create(noco, dims%naez)

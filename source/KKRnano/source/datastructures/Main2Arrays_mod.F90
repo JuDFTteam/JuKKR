@@ -22,6 +22,7 @@ module Main2Arrays_mod
   type Main2Arrays
     integer :: nsymat
     integer :: lmmaxd
+    integer :: lmmaxd_noco ! NOCO
     integer :: isymindex(48)
     double complex,   allocatable :: dsymll(:,:,:)  !< tau symmetry matrices
 
@@ -64,9 +65,10 @@ module Main2Arrays_mod
   !> @param[in]    naez
   !> @param[in]    kpoibz
   !> @param[in]    maxmshd
-  subroutine createMain2Arrays(self, lmmaxd, naez, kpoibz, maxmshd)
+  subroutine createMain2Arrays(self, lmmaxd, lmmaxd_noco, naez, kpoibz, maxmshd)
     type(Main2Arrays), intent(inout) :: self
     integer, intent(in) :: lmmaxd, naez, kpoibz, maxmshd
+    integer, intent(in) :: lmmaxd_noco ! NOCO
     
     integer :: memory_stat
 
@@ -74,9 +76,10 @@ module Main2Arrays_mod
     self%maxmesh = 0
 
     self%lmmaxd = lmmaxd
+    self%lmmaxd_noco = lmmaxd_noco
     self%naez = naez
 
-    ALLOCATECHECK(self%dsymll(lmmaxd,lmmaxd,48))
+    ALLOCATECHECK(self%dsymll(lmmaxd_noco,lmmaxd_noco,48))
     ALLOCATECHECK(self%bzkp(3,kpoibz,maxmshd))
     ALLOCATECHECK(self%volcub(kpoibz,maxmshd))
     ALLOCATECHECK(self%volbz(maxmshd))

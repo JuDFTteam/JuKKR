@@ -116,7 +116,7 @@ implicit none
     num_local_atoms = calc%num_local_atoms
 
     allocate(tmatLL(lmmaxd_noco,lmmaxd_noco,calc%trunc_zone%naez_trc,0:dims%Lly)) ! allocate buffer for t-matrices
-    allocate(GmatN_buffer(lmmaxd,lmmaxd,num_local_atoms))
+    allocate(GmatN_buffer(lmmaxd_noco,lmmaxd_noco,num_local_atoms))
     allocate(GrefN_buffer(lmmaxd,lmmaxd,0:dims%Lly,calc%clusters%naclsd,num_local_atoms))
     allocate(atom_indices(num_local_atoms))
 
@@ -277,7 +277,7 @@ implicit none
 
               kkr(ila)%Tr_alph(ISPIN) = kkr(ila)%Tr_alph(ISPIN) - kkr(ila)%Lly_G0Tr(IE) ! renormalize Tr_alph
 
-              call rescaleTmatrix(kkr(ila)%TmatN(:,:,ISPIN), params%alat)
+              call rescaleTmatrix(kkr(ila)%TmatN(:,:,ISPIN), params%alat, dims%korbit)
 
             enddo ! ila
             !$omp endparallel do
@@ -306,7 +306,8 @@ implicit none
                     calc%trunc_zone%global_atom_id, mp%mySEComm, calc%xtable, &
                     calc%iguess_data, IE, PRSPIN, &
 !                     dtmatLL, &
-                    kkr(1)%tr_alph, kkr(1)%Lly_grdt(ie,ispin), calc%atom_ids(1), dims%Lly, & ! LLY, note: num_local_atoms must be equal to 1 
+                    kkr(1)%tr_alph, kkr(1)%Lly_grdt(ie,ispin), calc%atom_ids(1), dims%Lly, & ! LLY, note: num_local_atoms must be equal to 1
+                    dims%korbit, &
                     params%solver, kpoint_timer, kernel_timer)
   !------------------------------------------------------------------------------
 
@@ -510,7 +511,7 @@ implicit none
 
     ! note: TrefLL is diagonal due to a spherical reference potential, therefore, we only subtract the diagonal elements
     ASSERT( all(shape(TmatN) == [lmmaxd_noco, lmmaxd_noco]) )
-    ASSERT( all(shape(dsymLL) == [lmmaxd, lmmaxd, nsymat]) )
+    ASSERT( all(shape(dsymLL) == [lmmaxd_noco, lmmaxd_noco, nsymat]) )
 
     do iorbit = 0, korbit ! NOCO
       do ell = 0, lmax
@@ -539,10 +540,11 @@ implicit none
 
   !------------------------------------------------------------------------------
   !> Rescale and symmetrise T-matrix.
-  subroutine rescaleTmatrix(tsst_local, alat)
+  subroutine rescaleTmatrix(tsst_local, alat, korbit)
     use Constants_mod, only: pi
     double complex, intent(inout) :: tsst_local(:,:) ! dim(lmmaxd,lmmaxd)
     double precision, intent(in) :: alat
+    integer, intent(in) :: korbit ! NOCO
 
     integer :: lm1, lm2, lmmaxd
     double precision :: rfctori
@@ -553,12 +555,20 @@ implicit none
     ! convert inverted delta_t-matrices to p.u.
     ! also a symmetrisation of the matrix is performed
 
-    do lm2 = 1, lmmaxd
-      do lm1 = 1, lm2 ! triangular loop including the diagonal
-        tsst_local(lm1,lm2) = (tsst_local(lm1,lm2) + tsst_local(lm2,lm1))*rfctori
-        tsst_local(lm2,lm1) =  tsst_local(lm1,lm2) ! symmetric under exchange lm1 <--> lm2
-      enddo ! lm1
-    enddo ! lm2
+    if (korbit .NE. 1) then
+      do lm2 = 1, lmmaxd
+        do lm1 = 1, lm2
+          tsst_local(lm1,lm2) = (tsst_local(lm1,lm2) + tsst_local(lm2,lm1))*rfctori
+          tsst_local(lm2,lm1) = tsst_local(lm1,lm2) ! symmetric under exchange lm1 <--> lm2
+        enddo ! lm1
+      enddo ! lm2
+    else ! NOCO: T-Matrix is not necessarily symmetric
+      do lm2 = 1, lmmaxd
+        do lm1 = 1, lmmaxd
+          tsst_local(lm1,lm2) = tsst_local(lm1,lm2)*2.0d0*rfctori
+        enddo ! lm1
+      enddo ! lm2
+    endif
     
   endsubroutine ! rescale
 

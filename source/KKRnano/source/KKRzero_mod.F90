@@ -134,7 +134,7 @@ module KKRzero_mod
     dims%iemxd = getEnergyMeshSize(params%npol, [params%npnt1, params%npnt2, params%npnt3], params%npntsemi)
     call create(emesh, dims%iemxd)
 
-    call create(arrays, dims%lmmaxd, dims%naez, dims%kpoibz, dims%maxmshd)
+    call create(arrays, dims%lmmaxd, dims%lmmaxd_noco, dims%naez, dims%kpoibz, dims%maxmshd)
 
     call rinputnew99(arrays%rbasis, arrays%zat, dims%naez) ! will modify naez if naez == 0 (auto mode)
     arrays%naez = dims%naez ! store corrected number of all atoms also in arrays%
@@ -214,7 +214,7 @@ module KKRzero_mod
 
     call bzkint0(arrays%naez, arrays%rbasis, arrays%bravais, recbv, arrays%nsymat, arrays%isymindex, &
                  arrays%dsymll, params%bzdivide, emesh%ielast, emesh%iesemicore, emesh%ez, dims%iemxd, emesh%kmesh, arrays%maxmesh, &
-                 dims%lmaxd, krel, dims%ekmd, params%fullbz, dims%korbit, nowrite=(checkmode /= 0), kpms=kmeshes) ! after return from bzkint0, ekmd contains the right value
+                 dims%lmaxd, dims%lmmaxd_noco, krel+dims%korbit, dims%ekmd, params%fullbz, dims%korbit, nowrite=(checkmode /= 0), kpms=kmeshes) ! after return from bzkint0, ekmd contains the right value
     
 !   Conversion of rmax and gmax to atomic units
     params%rmax = params%rmax*params%alat

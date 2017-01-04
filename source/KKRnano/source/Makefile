@@ -51,12 +51,12 @@ ifeq ($(PLATFORM),ifort)
 	else ifeq ($(TYPE),debug_mtradii)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
- 	else ifeq ($(TYPE),voronano_mesh)
-		FCFLAGS += -O3
-		PPFLAGS += -D NOLOGGING
-	else
+ 	else ifeq ($(TYPE),voronoi_mesh)
 		FCFLAGS += -O3
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else
+		FCFLAGS += -O3
+		PPFLAGS += -D NOLOGGING
 	endif
 endif
 

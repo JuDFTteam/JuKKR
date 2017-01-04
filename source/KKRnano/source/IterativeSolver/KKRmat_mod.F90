@@ -892,7 +892,7 @@ module KKRmat_mod
    
     lmmaxd = size(Ginp, 2)
     lmsd   = size(smat, 2)
-    if (lmmaxd /= lmsd) stop 'dlke0_smat is not prepared for non-collinear'
+!    if (lmmaxd /= lmsd) stop 'dlke0_smat is not prepared for non-collinear'
 
     ! symmetrization of the reference Green function with simultaneous Fourier transformation (applying Bloch factors)
     
@@ -920,7 +920,6 @@ module KKRmat_mod
 #endif
 
               smat(:lmmaxd,:lmmaxd,Aind,iLly) = smat(:lmmaxd,:lmmaxd,Aind,iLly) + eikRR(0,c%ezoa(iacls,isa)) * YEStranspose(Ginp(:,:,iLly,iacls))
-
             endif ! ita == jCol
           enddo ! in0
 
@@ -932,7 +931,6 @@ module KKRmat_mod
               Aind = sparse%RowStart(ita) - 1 + in0
               assert( jCol == sparse%ColIndex(Aind) )
               smat(:lmmaxd,:lmmaxd,Aind,iLly) = smat(:lmmaxd,:lmmaxd,Aind,iLly) + eikRR(1,c%ezoa(iacls,isa)) * NONtranspose(Ginp(:,:,iLly,iacls))
-
             endif ! isa == jCol
           enddo ! in0
 
@@ -942,6 +940,9 @@ module KKRmat_mod
 
     enddo ! iLly
 
+    if (lmmaxd /= lmsd) then ! NOCO, duplicate G_ref along the diagonal (first quadrant -> fourth quadrant)
+      smat(lmmaxd+1:lmsd,lmmaxd+1:lmsd,:,:) = smat(1:lmmaxd,1:lmmaxd,:,:) 
+    endif ! lmmaxd /= lmsd
   endsubroutine ! dlke0_smat
 
 endmodule ! KKRmat_mod

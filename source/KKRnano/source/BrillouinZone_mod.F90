@@ -51,7 +51,7 @@ module BrillouinZone_mod
   
   
   subroutine bzkint0(naez, rbasis, bravais, recbv, nsymat, isymindex, &
-                     dsymll, intervxyz, ielast, iesemicore, ez, iemxd, kmesh, maxmesh, lmax, krel, ekmd, fullbz, korbit, nowrite, kpms)
+                     dsymll, intervxyz, ielast, iesemicore, ez, iemxd, kmesh, maxmesh, lmax, lmmaxd_noco, krel, ekmd, fullbz, korbit, nowrite, kpms)
     use Symmetry_mod, only: pointgrp, findgroup, symtaumat
     use BrillouinZoneMesh_mod, only: BrillouinZoneMesh!, create, load, store, destroy
 
@@ -62,12 +62,13 @@ module BrillouinZone_mod
     integer, intent(in)  :: naez, krel, lmax, iemxd
     integer, intent(out) :: nsymat, maxmesh
     integer, intent(in)  :: intervxyz(3), ielast, iesemicore
-    double complex, intent(out) :: dsymll((lmax+1)**2,(lmax+1)**2,nsymaxd) ! (lmmaxd,lmmaxd,nsymaxd)
+    double complex, intent(out) :: dsymll(lmmaxd_noco,lmmaxd_noco,nsymaxd) ! (lmmaxd,lmmaxd,nsymaxd)
     double complex, intent(in) :: ez(iemxd)
     double precision, intent(in) :: bravais(3,3), rbasis(3,naez), recbv(3,3)
     integer, intent(out) :: isymindex(nsymaxd)
     integer, intent(out) :: kmesh(iemxd)
     integer, intent(in) :: korbit ! NOCO
+    integer, intent(in) :: lmmaxd_noco ! NOCO
     logical, intent(in) :: nowrite
     type(BrillouinZoneMesh), intent(out) :: kpms(:)
 
@@ -79,7 +80,6 @@ module BrillouinZone_mod
     character(len=10) :: rotname(64)
     integer :: lmmaxd, iprint, i
 
-    lmmaxd = (lmax+1)**2
 
     write(6,'(79(1h=),/,15x,a)') 'BZKINT0: finding symmetry, setting BZ integration'
     write(6,'(79(1h=),/)')
@@ -91,23 +91,17 @@ module BrillouinZone_mod
     iprint = 0 ; if (test('TAUSTRUC')) iprint = 2
 
     ! test: full Brillouin zone integration
-    if (fullbz) then
+    if (fullbz .OR. korbit == 1) then
       nsymat = 1 ! limit the number of applied symmetries to the 1st one (which is always unity)
       lirr = .false.
-      write(6,'(8x,2a,/)') 'Test option < fullBZ > : overriding NSYMAT,', ' generate full BZ k-mesh'
+      write(6,'(8x,2a,/)') 'Test option < fullBZ > or NOCO solver: overriding NSYMAT,', ' generate full BZ k-mesh'
     endif ! full Brillouin zone
 
     ! generate Brillouin zone k-meshes
     call bzkmesh(intervxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, iesemicore, ez, kmesh, iprint, iemxd, ekmd, nowrite, kpms)
 
-    if (korbit == 0) then
-      call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, naez, lmmaxd, naez, lmax+1, krel, iprint, nsymaxd)
+      call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, naez, lmmaxd_noco, naez, lmax+1, krel, iprint, nsymaxd)
       ! now dsymll hold nsymat symmetrization matrice
-    else ! NOCO
-      do i=1, lmmaxd
-        dsymll(i,i,1) = 1.0d0
-      enddo
-    endif 
   endsubroutine ! bzkint0
 
       

@@ -76,7 +76,7 @@ module RefCluster_mod
     real(kind=8),      allocatable :: rsort(:)   ! dim(macls) ! this could be float32 if sorting routine available, ToDo: check influence
     integer, parameter :: ConstructVectorsOnce = 0 ! 1 or 0, 0:saves memory
     double precision, allocatable :: rg(:,:) ! dim(3,macls)
-    double precision, parameter   :: LiftDegeneracy(3) = [1.d5, 1.d2, 1.d0] ! equivalent to JM code
+    double precision, parameter   :: LiftDegeneracy(3) = [1.d0, 1.d3, 1.d6] ! equivalent to JM code
 
     call destroy(self)
   

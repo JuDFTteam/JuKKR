@@ -13,6 +13,7 @@ module kloopz1_mod
   subroutine kloopz1(GmatN, solv, op, precond, alat, NofKs, volBZ, Bzkp, k_point_weights, rr, Ginp_local, &
                      dsymLL, tmatLL, global_atom_id, communicator, xTable, iguess_data, ienergy, ispin, &
                      tr_alph, Lly_grdt, global_atom_idx_Lly, Lly, & ! LLY 
+                     korbit, & ! NOCO
                      solver_type, kpoint_timer, kernel_timer)
 
 ! only part of arrays for corresponding spin direction is passed
@@ -56,6 +57,8 @@ module kloopz1_mod
     double precision, intent(in) :: Bzkp(:,:) ! dim(3,kpoibz)
     double precision, intent(in) :: k_point_weights(:) ! dim kpoibz
 
+    integer, intent(in) :: korbit ! NOCO
+    
     ! LLY
     double complex, intent(in)    :: tr_alph(:)
     double complex, intent(out)   :: Lly_grdt
@@ -83,7 +86,7 @@ module kloopz1_mod
     
     assert( all(shape(dsymLL) == [N,N,nsymat]) )
     assert( all(shape(GmatN) == [N,N,num_local_atoms]) )
-    assert( all(shape(Ginp_local) == [N,N,1+Lly,naclsd,num_local_atoms]) )
+    assert( all(shape(Ginp_local) == [N/(korbit+1),N/(korbit+1),1+Lly,naclsd,num_local_atoms]) )
     assert( all(shape(tmatLL) == [N,N,num_trunc_atoms,1+Lly]) )
 
     allocate(GS(N,N,num_local_atoms), mssq(N,N,num_local_atoms), ipvt(N), info(2,num_local_atoms), temp(N*N), stat=ist)
