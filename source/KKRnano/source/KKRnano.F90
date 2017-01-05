@@ -156,10 +156,6 @@ program KKRnano
 
   call create(arrays, dims%lmmaxd, dims%lmmaxd_noco, dims%naez, dims%kpoibz, dims%maxmshd)
   call load(arrays, 'bin.arrays') ! every process does this!
-  if (dims%korbit == 1) then
-     call create(noco, dims%naez)
-     call load(noco, 'bin.noco') ! every process does this!, NOCO
-  endif
   call load(params, 'bin.input', ios=ios)
   ! done reading variables
 
@@ -292,7 +288,7 @@ program KKRnano
       ! Scattering calculations - that is what KKR is all about
       ! output: (some contained as references in calc_data)
       ! ebalance_handler, kkr (!), jij_data, ldau_data
-      call energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, mp, arrays, noco)
+      call energyLoop(iter, calc_data, emesh, params, dims, ebalance_handler, mp, arrays)
 
       call outTime(mp%isMasterRank, 'G obtained .....................', getTime(program_timer), iter)
       ios = 0

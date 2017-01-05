@@ -1,22 +1,60 @@
 !*==wrmoms.f    processed by SPAG 6.05Rc at 15:39 on  1 Mar 2002
 !     Write angular momentum resolved charges to stdout
-  subroutine wrmoms(nspin, charge, i1, lmax, lmaxp1, first, last)
+  subroutine wrmoms(nspin, charge, muorb, i1, lmax, lmaxp1, first, last)
     implicit none
     integer, intent(in) :: nspin, i1, lmax, lmaxp1
     logical, intent(in) :: first, last
     double precision, intent(in) :: charge(0:lmaxp1,2)
+    double precision, intent(in) :: muorb(0:lmax+2,3)
     ! local variables
     character(len=5), parameter :: textns = ' ns =' ! non-spherical
     character(len=4), parameter :: textell(0:9) = [' s =',' p =',' d =',' f =',' g =',' h =',' i =',' j =',' k =',' l =']
     
-    double precision :: muspin(0:lmaxp1+1), sumch(2)
+    double precision :: muspin(0:lmaxp1+1), sumch(2), mutot
     integer :: l
+    integer :: krel
 
     muspin(:) = 0.d0
     sumch(:) = 0.d0
-    
+    krel = 1
     if (nspin == 2) then
-    
+    if (krel == 1) then
+      if (first) then ! first atom
+        write(6, '(/,78(1h#))')
+        write(6, fmt='(15x,a)') "l-decomposed valence charges and magnetic/orbital moments"
+        write(6, '(78(1h#))')
+        write(6, fmt='(/,8x,a)') " ATOM        N_el spin dn  N_el spin up    m_spin    m_orb   spin dn  spin up"
+        write(6, '(9x,78(1h=))')
+      endif ! first atom
+
+      do l = 0, lmaxp1
+        sumch(1:2) = sumch(1:2) + charge(l,1:2)
+        muspin(l) = charge(l,2) - charge(l,1)
+        muspin(lmaxp1+1) = muspin(lmaxp1+1) + muspin(l)
+      enddo ! l
+      mutot = muspin(lmaxp1+1) + muorb(lmaxp1+1,3) 
+      
+      l = 0
+        write(6, fmt='(8x,i5,2x,a4,2(f14.8),2x,f8.4,2x,3f8.4)') i1, textell(l), charge(l,1:2), muspin(l), muorb(0,3), muorb(0,1), muorb(0,2)
+      do l = 1, lmax
+        write(6, fmt='(15x,a4,2(f14.8),2x,f8.4,2x,3f8.4)') textell(l), charge(l,1:2), muspin(l), muorb(l,3), muorb(l,1), muorb(l,2)
+      enddo ! l
+      l = lmaxp1
+        write(6, fmt='(15x,a4,2(f14.8),2x,f8.4,2x,3f8.4)') textns, charge(l,1:2), muspin(l), muorb(l,3), muorb(l,1), muorb(l,2)
+
+      write(6, fmt='(16x,19(1h-),$)')
+      write(6,'(50(1h-))')
+      write(6, fmt='(15x,a4,2(f14.8),2x,f8.4,2x,3f8.4)') ' TOT', sumch(1:2), muspin(lmaxp1+1), muorb(lmax+2,3), muorb(lmax+2,1), muorb(lmax+2,2)
+      write(6,'(33x,f14.8,12x,f8.4)') sumch(1) + sumch(2), mutot
+      
+      if (last) then ! last atom
+        write(6,'(/,78(1h#))')
+        write(6, *)
+      else  ! last atom
+        write(6, '(9x,49(1h=))') ! separation line
+      endif ! last atom
+
+    else !krel
       if (first) then ! first atom
         write(6, '(/,78(1h#))')
         write(6, fmt='(15x,a)') "l-decomposed valence charges and magnetic moments"
@@ -32,7 +70,7 @@
       enddo ! l
 
       l = 0
-        write(6, fmt='(i13,2x,a4,2(f14.8),2x,f8.4)') i1, textell(l), charge(l,1:2), muspin(l)
+        write(6, fmt='(8x,i5,2x,a4,2(f14.8),2x,f8.4)') i1, textell(l), charge(l,1:2), muspin(l)
       do l = 1, lmax
         write(6, fmt='(15x,a4,2(f14.8),2x,f8.4)') textell(l), charge(l,1:2), muspin(l)
       enddo ! l
@@ -43,15 +81,16 @@
       write(6,'(23(1h-))')
       write(6, fmt='(15x,a4,2(f14.8),2x,f8.4)') ' TOT', sumch(1:2), muspin(lmaxp1+1)
       write(6,'(33x,f14.8)') sumch(1) + sumch(2)
-
+      
       if (last) then ! last atom
         write(6,'(/,78(1h#))')
         write(6, *)
       else  ! last atom
         write(6, '(9x,49(1h=))') ! separation line
       endif ! last atom
-
-    else
+    
+    endif !krel
+    else !nspin
 
       if (first) then ! first atom
         write(6, '(/,44(1h#))')
@@ -81,7 +120,7 @@
         write(6, '(9x,26(1h=))') ! separation line
       endif ! last atom
     
-    endif
+      endif !nspin
     
   endsubroutine ! wrmoms
 

@@ -25,6 +25,7 @@ implicit none
     double complex, allocatable :: den(:,:,:)        !< complex density of states
     double precision :: force_flm(-1:1)
     double precision, allocatable :: rnorm(:,:)      !> renormalisation factors lloyd - leave here?
+    double precision, allocatable :: muorb(:,:)      !> NOCO, muorb(LMAXD+1,3), orbital magnetic moment, starts at l=0
 
     integer :: irmd
     integer :: lmpotd
@@ -76,10 +77,12 @@ implicit none
     ALLOCATECHECK(self%catom(nspind))
     ALLOCATECHECK(self%den(0:lmaxd+1,iemxd,nspind))
     ALLOCATECHECK(self%rnorm(iemxd,2))
+    ALLOCATECHECK(self%muorb(0:lmaxd+2,3))
 
     !initialise to be safe
     self%rho2ns = 0.0d0
     self%r2nef = 0.0d0
+    self%muorb = 0.0d0
     self%force_flm = 9999.9d0
   endsubroutine ! create
 
@@ -98,6 +101,7 @@ implicit none
     deallocate(self%catom, stat=ist)
     deallocate(self%den, stat=ist)
     deallocate(self%rnorm, stat=ist)
+    deallocate(self%muorb, stat=ist)
   endsubroutine ! destroy
 
 endmodule ! DensityResults_mod

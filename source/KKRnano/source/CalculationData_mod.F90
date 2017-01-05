@@ -26,6 +26,7 @@ module CalculationData_mod
   use InitialGuess_mod, only: InitialGuess, create, destroy
   use LatticeVectors_mod, only: LatticeVectors, create, destroy
   use ExchangeTable_mod, only: ExchangeTable, create, destroy
+  use NonCollinearMagnetismData_mod, only: NOCOData, create, load, destroy
   
   implicit none
   private
@@ -70,6 +71,7 @@ module CalculationData_mod
     type(ExchangeTable)                 :: xtable
     type(BroydenData)                   :: broyden
     type(InitialGuess)                  :: iguess_data ! storage for initial guess
+    type(NOCOData)                      :: noco_data   ! NOCO
   endtype ! CalculationData
   
   interface create
@@ -197,6 +199,7 @@ module CalculationData_mod
     call destroy(self%xtable)
     call destroy(self%broyden)
     call destroy(self%iguess_data)
+    call destroy(self%noco_data) ! NOCO
 
     deallocate(self%mesh_a, stat=ist)
     deallocate(self%cheb_mesh_a, stat=ist) ! NOCO
@@ -335,6 +338,11 @@ module CalculationData_mod
 
       call create(self%madelung_sum_a(ila), self%madelung_calc%lmxspd, dims%naez) ! createMadelungLatticeSum
 
+      call create(self%noco_data, dims%naez) ! createNOCOData
+     
+      if (dims%korbit == 1) then
+        call load(self%noco_data, 'bin.noco') ! every process does this!, NOCO
+      endif
       ! assert( arrays%ZAT(atom_id) == atomdata%Z_nuclear )
 !     write(*,*) here,trim(" initialized local atom #"-ila+"global atom_id="-atom_id)
     enddo ! ila

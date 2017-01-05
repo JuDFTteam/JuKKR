@@ -24,7 +24,7 @@ implicit none
   !>         *) Logfiles (if requested)
   !>         *) JIJ-Files (if requested)
   !>         *) matrix dump (if requested)
-  subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, mp, arrays, noco)
+  subroutine energyLoop(iter, calc, emesh, params, dims, ebalance_handler, mp, arrays)
 
     USE_LOGGING_MOD
     USE_ARRAYLOG_MOD
@@ -35,7 +35,7 @@ implicit none
     use DimParams_mod, only: DimParams
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
-    use NonCollinearMagnetismData_mod, only: NOCOData ! NOCO
+!    use NonCollinearMagnetismData_mod, only: NOCOData ! NOCO
 
     use CalculationData_mod, only: CalculationData, getAtomData, getLDAUData
 
@@ -76,7 +76,7 @@ implicit none
     type(Main2Arrays), intent(in)        :: arrays
     type(DimParams), intent(in)          :: dims
     type(InputParams), intent(in)        :: params
-    type(NOCOData), intent(in)           :: noco ! NOCO
+!    type(NOCOData), intent(in)           :: noco ! NOCO
 
     ! locals
 
@@ -112,6 +112,7 @@ implicit none
     jij_data => calc%jij_data_a(1) ! global name jij_data, jij works only with max. 1 local atom
     
 #define kkr(ila) calc%kkr_a(ila)
+#define noco     calc%noco_data
 
     num_local_atoms = calc%num_local_atoms
 

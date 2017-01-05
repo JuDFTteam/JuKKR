@@ -16,17 +16,24 @@ module wrappers_mod
   contains
 
 #define mesh atomdata%mesh_ptr
+#define chebmesh atomdata%chebmesh_ptr
 #define cell atomdata%cell_ptr
   
   !----------------------------------------------------------------------------
   !> Calculate valence electron density.
-  subroutine RHOVAL_wrapper(atomdata, ldorhoef, icst, nsra, rho2ns, r2nef, den, espv, gmatn, gaunts, emesh, ldau_data, method)
+  subroutine RHOVAL_wrapper(atomdata, ldorhoef, icst, nsra, rho2ns, r2nef, den, &
+                            espv, gmatn, gaunts, emesh, ldau_data, method, &
+                            korbit, theta_noco, phi_noco, angle_fixed, &
+                            muorb, iemxd, params) ! NOCO/SOC
     use BasisAtom_mod, only: BasisAtom
     use GauntCoefficients_mod, only: GauntCoefficients
     use EnergyMesh_mod, only: EnergyMesh
     use LDAUData_mod, only: LDAUData
 
     use ValenceDensity_mod, only: rhoval
+    
+    use NonCollinearMagnetism_mod, only: rhovalnew ! NOCO  
+    use InputParams_mod, only: InputParams ! NOCO  
     
     logical, intent(in) :: ldorhoef
     integer, intent(in) :: icst !< num. born iterations
@@ -42,7 +49,17 @@ module wrappers_mod
     type(LDAUData), intent(inout) :: ldau_data ! inout?
     integer, intent(in) :: method !< method for solving the single site problem, Volterra or Fredholm
 
-    integer :: ispin, nspind, irmind, irnsd, lmaxd
+    integer, intent(in)             :: korbit      ! NOCO
+    double precision, intent(inout) :: theta_noco  ! NOCO
+    double precision, intent(inout) :: phi_noco    ! NOCO
+    integer (kind=1), intent(in)    :: angle_fixed ! NOCO
+!    logical, intent(in)             :: soc        ! NOCO
+!    double precision, intent(in)    :: socscale   ! NOCO
+    double precision, intent(out)   :: muorb(0:,:) ! NOCO
+    integer, intent(in)             :: iemxd       ! NOCO
+    type(InputParams), intent(in)   :: params      ! NOCO
+    
+    integer :: ispin, nspind, irmind, irnsd, lmaxd, l
 
     nspind = atomdata%nspin
     irmind = atomdata%potential%irmind
@@ -51,6 +68,32 @@ module wrappers_mod
 
     CHECKASSERT( 2*lmaxd == atomdata%potential%lpot )
 
+    !-------------------------------------- NOCO ---------------------
+    if (korbit == 1) then
+       call rhovalnew(ldorhoef,emesh%ielast,nsra,nspind,lmaxd,emesh%ez,emesh%wez,atomdata%z_nuclear,  &
+                      params%socscale,gaunts%cleb(:,1),gaunts%icleb,gaunts%iend, &
+                      cell%ifunm,cell%lmsp,params%ncheb,  &
+                      chebmesh%npan_tot,params%npan_log,params%npan_eq,mesh%r,mesh%irws,  &
+                      chebmesh%rpan_intervall,chebmesh%ipan_intervall,  &
+                      chebmesh%rnew,atomdata%potential%vinscheb,chebmesh%thetasnew, &
+                      theta_noco,phi_noco,angle_fixed,1,  &  ! ipot=1
+                      den,espv,rho2ns,r2nef, gmatn(:,:,:,1), muorb,  & ! just one spin component of gmatn needed
+                      atomdata%potential%lpot,lmaxd,mesh%irmd,chebmesh%irmd_new,iemxd, params%soc)
+ 
+       ! calculate correct orbital moment
+       do ispin=1,nspind
+         do l=0,lmaxd+1
+           muorb(l,3)=muorb(l,3)+muorb(l,ispin)
+         enddo
+       enddo
+       do ispin=1,3
+         do l=0,lmaxd+1
+           muorb(lmaxd+2,ispin)=muorb(lmaxd+2,ispin)+muorb(l,ispin)
+         enddo
+       enddo
+  !------------------------------------------- ---------------------
+
+   else !KORBIT
     do ispin = 1, nspind
 
       ! has to be done after lloyd
@@ -72,6 +115,8 @@ module wrappers_mod
                   lmaxd, mesh%irmd, irnsd, cell%irid, mesh%ipand, cell%nfund, gaunts%ncleb, method)
 
     enddo ! ispin
+   endif !KORBIT
+
   endsubroutine ! rhoval
 
   !------------------------------------------------------------------------------

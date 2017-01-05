@@ -434,6 +434,7 @@ module ProcessKKRresults_mod
       densities => getDensities(calc, ila)
       energies  => getEnergies(calc, ila)
       ldau_data => getLDAUData(calc, ila)
+      atom_id = calc%atom_ids(ila) ! get global atom_id from local index
   !------------------------------------------------------------------------------
 
       ! has to be done after Lloyd
@@ -441,10 +442,14 @@ module ProcessKKRresults_mod
       densities%DEN = CZERO
 
       ! calculate valence charge density and band energies
+      if (mp%isMasterRank .and. dims%korbit == 1) write(*,*) "Entering RHOVAL_wrapper! This might take some time, because NOCO (Bauer) solver is used..."
       call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
                           densities%RHO2NS, densities%R2NEF, &
                           densities%DEN, energies%ESPV, calc%kkr_a(ila)%GMATN, &
-                          calc%gaunts, emesh, ldau_data, params%Volterra)
+                          calc%gaunts, emesh, ldau_data, params%Volterra, &
+                          dims%korbit, calc%noco_data%theta_noco(atom_id), calc%noco_data%phi_noco(atom_id), &
+                          calc%noco_data%angle_fixed(atom_id), & 
+                          densities%muorb, densities%iemxd, params)
 
       ! LDAU
       if (ldau_data%LDAU .and. ldau_data%NLDAU >= 1) then
@@ -520,7 +525,9 @@ module ProcessKKRresults_mod
 
         call writeResults1File(r1fu, densities%CATOM, densities%CHARGE, densities%DEN, &
                               atomdata%core%ECORE, atom_id, emesh%NPOL, &
-                              atomdata%core%QC_corecharge)
+                              atomdata%core%QC_corecharge, densities%MUORB, &
+                              calc%noco_data%phi_noco(atom_id), calc%noco_data%theta_noco(atom_id), &
+                              calc%noco_data%angle_fixed(atom_id))
       enddo
 
       close(r1fu)
@@ -985,18 +992,24 @@ module ProcessKKRresults_mod
 
   !----------------------------------------------------------------------------
   !> Write some stuff to the 'results1' file
-  subroutine writeResults1File(fu, catom, charge, den, ecore, i1, npol, qc)
+  subroutine writeResults1File(fu, catom, charge, den, ecore, i1, npol, qc, &
+                               muorb, phi_soc, theta_soc, angle_fixed)
+                           
     integer, intent(in) :: fu !< file unit
     double precision, intent(in) :: catom(:), charge(:,:)
     double complex, intent(in) :: den(:,:,:)
     double precision, intent(in) :: ecore(20,2)
     integer, intent(in) :: i1, npol
     double precision, intent(in) :: qc
+    double precision, intent(in) :: muorb(:,:)  ! NOCO
+    double precision, intent(in) :: phi_soc     ! NOCO
+    double precision, intent(in) :: theta_soc   ! NOCO
+    integer (kind=1), intent(in) :: angle_fixed ! NOCO
 
     if (npol == 0) then
-      write(unit=fu, rec=i1) qc,catom,charge,ecore,den  ! write density of states (den) only when certain options set
+      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,angle_fixed,den  ! write density of states (den) only when certain options set
     else
-      write(unit=fu, rec=i1) qc,catom,charge,ecore
+      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,angle_fixed
     endif
   endsubroutine ! write
 
