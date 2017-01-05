@@ -54,6 +54,9 @@ ifeq ($(PLATFORM),ifort)
  	else ifeq ($(TYPE),voronoi_mesh)
 		FCFLAGS += -O3
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+ 	else ifeq ($(TYPE),voronoi_mesh_debug)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else
 		FCFLAGS += -O3
 		PPFLAGS += -D NOLOGGING
