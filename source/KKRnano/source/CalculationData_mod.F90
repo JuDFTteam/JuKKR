@@ -338,14 +338,16 @@ module CalculationData_mod
 
       call create(self%madelung_sum_a(ila), self%madelung_calc%lmxspd, dims%naez) ! createMadelungLatticeSum
 
-      call create(self%noco_data, dims%naez) ! createNOCOData
-     
-      if (dims%korbit == 1) then
-        call load(self%noco_data, 'bin.noco') ! every process does this!, NOCO
-      endif
+
       ! assert( arrays%ZAT(atom_id) == atomdata%Z_nuclear )
 !     write(*,*) here,trim(" initialized local atom #"-ila+"global atom_id="-atom_id)
     enddo ! ila
+
+    call create(self%noco_data, dims%naez) ! createNOCOData
+     
+    if (dims%korbit == 1) then
+        call load(self%noco_data, 'bin.noco') ! every process does this!, NOCO
+    endif
 
     ! calculate Gaunt coefficients
     call create(self%gaunts, dims%lmaxd) ! createGauntCoefficients

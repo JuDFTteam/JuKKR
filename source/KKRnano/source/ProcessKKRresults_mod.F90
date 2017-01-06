@@ -983,7 +983,8 @@ module ProcessKKRresults_mod
 
     integer :: lrecres1
 
-    lrecres1 = 8*43 + 16*(lmaxd+2)
+    !lrecres1 = 8*43 + 16*(lmaxd+2)
+    lrecres1 = 8*43 + 16*(lmaxd+2) + 8*(lmaxd+3)*3 + 8*2 + 1*1 ! NOCO with nonco angles and angle_fixed
     if (npol == 0) lrecres1 = lrecres1 + 32*(lmaxd+2)*iemxd
 
     fu = 71
@@ -1431,7 +1432,11 @@ module ProcessKKRresults_mod
     double precision :: ecore(20,2)
     double precision :: charge(0:lmax+1,2)
     double precision :: catom(nspin), qc
-    double precision :: vmad, totsmom
+    double precision :: vmad, totsmom 
+    double precision muorb(0:LMAX+2,3) !NOCO
+    double precision phi_noco !NOCO
+    double precision theta_noco !NOCO
+    integer (kind=1) angle_fixed !NOCO
     integer :: lrecres1, lrecres2
     integer :: lcoremax, i1, ispin, lpot
     character(len=*), parameter :: &
@@ -1444,8 +1449,9 @@ module ProcessKKRresults_mod
     integer :: npotd
     npotd = nspin*natoms
 
-    lrecres1 = 8*43 + 16*(lmax+2)
-
+    !lrecres1 = 8*43 + 16*(lmax+2) ! w/o NOCO
+    lrecres1 = 8*43 + 16*(lmax+2) + 8*(lmax+3)*3 + 8*2 + 1*1 ! NOCO with noco angles and angle_fixed option
+    
     if (npol == 0) lrecres1 = lrecres1 + 32*(lmax+2)*iemxd ! dos calc.
 
     if (compute_total_energy >= 0) then
@@ -1453,12 +1459,13 @@ module ProcessKKRresults_mod
 
       ! moments output
       do i1 = 1, natoms
-        if (npol == 0) then
-          read(71, rec=i1) qc, catom, charge, ecore, den
+        if (npol == 0) then 
+          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,angle_fixed,den
         else
-          read(71, rec=i1) qc, catom, charge, ecore
+          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,angle_fixed
         endif
-        call wrmoms(nspin, charge, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
+       
+        call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
       enddo ! i1
 
       ! density of states output

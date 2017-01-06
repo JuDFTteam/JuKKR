@@ -43,7 +43,6 @@ ifeq ($(PLATFORM),ifort)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
-		PPFLAGS += -D USE_OLD_MESH
 	else ifeq ($(TYPE),mtradii)
 		FCFLAGS += -O3
 		PPFLAGS += -D USE_MTRADII 

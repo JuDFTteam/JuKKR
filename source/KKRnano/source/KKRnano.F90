@@ -30,7 +30,6 @@ program KKRnano
   use DimParams_mod, only: DimParams, load, destroy
   use InputParams_mod, only: InputParams, load
   use Main2Arrays_mod, only: Main2Arrays, create, load, destroy
-  use NonCollinearMagnetismData_mod, only: NOCOData, load, create
 
   use ScatteringCalculation_mod, only: energyLoop
   use ProcessKKRresults_mod, only: processKKRresults, output_forces
@@ -56,7 +55,6 @@ program KKRnano
   type(Main2Arrays) :: arrays
   type(DimParams)   :: dims
   type(InputParams) :: params
-  type(NOCOData)    :: noco
 
   type(BasisAtom), pointer :: atomdata
   type(LDAUData), pointer  :: ldau_data
