@@ -1456,7 +1456,8 @@ module ProcessKKRresults_mod
 
     if (compute_total_energy >= 0) then
       open(71, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='read', status='old')
-
+      open(13,file='nonco_angle_out.dat',form='formatted')
+    
       ! moments output
       do i1 = 1, natoms
         if (npol == 0) then 
@@ -1466,7 +1467,13 @@ module ProcessKKRresults_mod
         endif
        
         call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
+        ! save to file in converted units (degrees)
+            write(13,*) theta_noco/(2.0D0*PI)*360.0D0, &
+                        phi_noco/(2.0D0*PI)*360.0D0, &
+                        angle_fixed
       enddo ! i1
+
+      close(13)
 
       ! density of states output
       if (npol == 0) then

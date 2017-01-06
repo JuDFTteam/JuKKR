@@ -100,7 +100,7 @@
 !     parameter (ntird=(irmd+(irnsd+1)*(lmpotd-1))*nspind)
 
       double precision, allocatable, dimension(:) :: fm, fm1, g, sm, sm1, work, vi3, ui3 !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind)
-      double precision, allocatable :: ui2(:,:), vi2(:,:) !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind,2:itdbryd)
+      double precision :: ui2(:,:), vi2(:,:) !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind,2:itdbryd)
       double precision :: wit(2:itdbryd)
 
       ntird = (irmd + (irnsd + 1)*(lmpot - 1))*nspind
@@ -113,8 +113,7 @@
 
       if (itdbryd > itdthd .or. itdthd > 200) stop 'itdbryd'
       
-      allocate(fm(ntird), fm1(ntird), g(ntird), sm(ntird), sm1(ntird), work(ntird), vi3(ntird), ui3(ntird), &
-               ui2(ntird,2:itdbryd), vi2(ntird,2:itdbryd), stat=ist)
+      allocate(fm(ntird), fm1(ntird), g(ntird), sm(ntird), sm1(ntird), work(ntird), vi3(ntird), ui3(ntird), stat=ist)
       if (ist /= 0) stop "Broyden new com: allocation failed!"
       
       if (imix <= 2 .or. imix > 5) stop 'imixd'
@@ -432,7 +431,7 @@
       fm1s(ij) = fm1(ij)
     enddo ! ij
 
-    deallocate(fm, fm1, g, sm, sm1, work, vi3, ui3, ui2, vi2, stat=ist) ! ignore status
+    deallocate(fm, fm1, g, sm, sm1, work, vi3, ui3, stat=ist) ! ignore status
   endsubroutine ! brydbm_new_com
 
 ! ************************************************************************
