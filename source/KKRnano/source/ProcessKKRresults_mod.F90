@@ -39,6 +39,8 @@ module ProcessKKRresults_mod
 
     use CalculationData_mod, only: getDensities, getEnergies, getAtomData
     
+    use NonCollinearMagnetismData_mod, only: store
+    
     include 'mpif.h'
 
     integer, intent(in)                                 :: iter
@@ -97,6 +99,10 @@ module ProcessKKRresults_mod
     ! use any atomdata to open file - use reclen stored in calc
     atomdata => getAtomData(calc, 1)
     call openBasisAtomPotentialDAFile(atomdata, 37, "bin.vpotnew", calc%max_reclen_potential, action='write')
+
+    !if (dims%korbit == 1 .and. mp%isMasterRank) then ! NOCO
+    !  call store(calc%noco_data, 'bin.noco')
+    !endif
 
     do ila = 1, num_local_atoms ! no OpenMP
       atomdata => getAtomData(calc, ila)
@@ -427,8 +433,9 @@ module ProcessKKRresults_mod
 
     LDORHOEF = (emesh%NPOL /= 0) ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
+      if (mp%isMasterRank .and. dims%korbit == 1) write(*,*) "Entering RHOVAL_wrapper! This might take some time, because NOCO (Bauer) solver is used..."
   !------------------------------------------------------------------------------
-    !$omp parallel do reduction(+: chrgnt,denef) private(ila,atomdata,densities,energies,ldau_data,denef_local,chrgnt_local)
+    !$omp parallel do reduction(+: chrgnt,denef, chrgsemicore) private(ila,atomdata,densities,energies,ldau_data,denef_local,chrgnt_local)
     do ila = 1, num_local_atoms
       atomdata  => getAtomData(calc, ila)
       densities => getDensities(calc, ila)
@@ -442,7 +449,6 @@ module ProcessKKRresults_mod
       densities%DEN = CZERO
 
       ! calculate valence charge density and band energies
-      if (mp%isMasterRank .and. dims%korbit == 1) write(*,*) "Entering RHOVAL_wrapper! This might take some time, because NOCO (Bauer) solver is used..."
       call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
                           densities%RHO2NS, densities%R2NEF, &
                           densities%DEN, energies%ESPV, calc%kkr_a(ila)%GMATN, &
@@ -680,15 +686,15 @@ module ProcessKKRresults_mod
 
     new_total_energy = 0.d0
     
-#ifndef __GFORTRAN__
-    allocate(vons_temp, source=atomdata%potential%vons)
-#else
+!#ifndef __GFORTRAN__
+!    allocate(vons_temp, source=atomdata%potential%vons)
+!#else
 #define v atomdata%potential%vons
     allocate(vons_temp(size(v,1),size(v,2),size(v,3)))
-    vons_temp = v ! copy
-#undef v
-#endif
-
+!    vons_temp = v ! copy
+!#undef v
+!#endif
+    
     calc_force = (params%KFORCE == 1) ! calculate force at each iteration
 
   !------------------------------------------------------------------------------
@@ -783,7 +789,6 @@ module ProcessKKRresults_mod
 
       vons_temp = 0.d0 ! V_XC stored in temporary, must not add before energy calc.
       call VXCDRV_wrapper(vons_temp, energies%EXC, params%KXC, densities%RHO2NS, calc%shgaunts, atomdata)
-
   ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
       call calculatePotentials_energies()
   ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE

@@ -56,6 +56,9 @@ ifeq ($(PLATFORM),ifort)
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+ 	else ifeq ($(TYPE),voronoi_mesh_debug_light)
+		FCFLAGS += -O0 -g
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else
 		FCFLAGS += -O3
 		PPFLAGS += -D NOLOGGING
@@ -350,5 +353,6 @@ CacheOverlap_mod.o:
 ChebMeshData_mod.o: InputParams_mod.o RadialMeshData_mod.o
 Truncation_mod.o: Logging_mod.o Exceptions_mod.o TruncationZone_mod.o
 NonCollinearMagnetism_mod.o: RadialMeshData_mod.o ChebMeshData_mod.o
+NonCollinearMagnetismData_mod.o: Exceptions_mod.o
 
 # DO NOT DELETE

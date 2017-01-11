@@ -26,7 +26,7 @@ module CalculationData_mod
   use InitialGuess_mod, only: InitialGuess, create, destroy
   use LatticeVectors_mod, only: LatticeVectors, create, destroy
   use ExchangeTable_mod, only: ExchangeTable, create, destroy
-  use NonCollinearMagnetismData_mod, only: NOCOData, create, load, destroy
+  use NonCollinearMagnetismData_mod, only: NOCOData, create, load, destroy, loadascii
   
   implicit none
   private
@@ -344,10 +344,20 @@ module CalculationData_mod
     enddo ! ila
 
     call create(self%noco_data, dims%naez) ! createNOCOData
-     
+
+!   in case of a NOCO calculation - read file 'nonco_angle.dat'
     if (dims%korbit == 1) then
-        call load(self%noco_data, 'bin.noco') ! every process does this!, NOCO
+       if(dims%nspind .NE. 2) die_here('NSPIND=2 in global.conf is mandatory for SOC calculations')
+       call loadascii(self%noco_data%theta_noco, self%noco_data%phi_noco, self%noco_data%angle_fixed, dims%naez)
+       !call store(noco, 'bin.noco.0')
+    else
+       if(dims%korbit .NE. 0) die_here('When not using NOCO: KORBIT in global.conf should be zero')    
     endif
+    
+
+!    if (dims%korbit == 1) then
+!        call load(self%noco_data, 'bin.noco.0') ! every process does this!, NOCO
+!    endif
 
     ! calculate Gaunt coefficients
     call create(self%gaunts, dims%lmaxd) ! createGauntCoefficients
@@ -401,7 +411,7 @@ module CalculationData_mod
     use ShapefunData_mod, only: create
     use BasisAtom_mod, only: load, associateBasisAtomMesh, associateBasisAtomCell, associateBasisAtomChebMesh
     use RadialMeshData_mod, only: load
-    use ChebMeshData_mod, only: load
+    use ChebMeshData_mod, only: load, create, construct ! NOCO
     use KKRnanoParallel_mod, only: KKRnanoParallel
      
     type(CalculationData), intent(inout) :: self
@@ -416,6 +426,8 @@ module CalculationData_mod
     type(RadialMeshData), allocatable :: old_mesh_a(:)
     double precision, allocatable     :: new_MT_radii(:)
 
+    integer :: npan_tot_cheb, irmd_cheb ! NOCO
+    
     double precision, parameter :: tolvdist = 1.d-12
 
     allocate(old_atom_a(self%num_local_atoms))
@@ -446,9 +458,9 @@ module CalculationData_mod
 
         new_MT_radii(ila) = old_atom_a(ila)%radius_muffin_tin / params%alat
 
-        if (dims%korbit == 1) then ! NOCO
-          call load(self%cheb_mesh_a(ila),"cheb_meshes.0", atom_id, old_mesh_a(ila)%nfu, params)
-        endif
+!        if (dims%korbit == 1) then ! NOCO
+!          call load(self%cheb_mesh_a(ila),"bin.chebmeshes.0", atom_id, old_mesh_a(ila)%nfu, params)
+!        endif
 
       else
         if(params%MT_scale < tolvdist) then
@@ -496,7 +508,20 @@ module CalculationData_mod
         ! <<< fill shdata with values from old mesh <<<
         ! <<< use old mesh<<<
 #endif
-
+        if (dims%korbit == 1) then ! NOCO
+          npan_tot_cheb = self%mesh_a(ila)%ipand-1+params%npan_eq+params%npan_log  ! number of overall intervals in Chebychev mesh  
+          irmd_cheb     = npan_tot_cheb*(params%ncheb+1)                              ! number of radial mesh points in Chebychev mesh
+     
+          call create(self%cheb_mesh_a(ila), irmd_cheb, npan_tot_cheb, self%cell_a(ila)%nfu, params) ! create data for new radial mesh for atom iatom
+        endif
+        if (dims%korbit == 1) then ! NOCO
+          call construct(params%r_log,params%npan_log,params%npan_eq,params%ncheb, &
+                      self%cheb_mesh_a(ila)%npan_lognew,self%cheb_mesh_a(ila)%npan_eqnew, &
+                      self%cheb_mesh_a(ila)%npan_tot,self%cheb_mesh_a(ila)%rnew, &
+                      self%cheb_mesh_a(ila)%rpan_intervall,self%cheb_mesh_a(ila)%ipan_intervall, &
+                      self%cheb_mesh_a(ila)%thetasnew,self%cell_a(ila)%theta, &
+                      self%cell_a(ila)%nfu,self%mesh_a(ila))
+        endif
         if (dims%korbit == 1) then ! NOCO
           call associateBasisAtomChebMesh(self%atomdata_a(ila), self%cheb_mesh_a(ila))
         endif

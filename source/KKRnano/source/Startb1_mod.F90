@@ -296,28 +296,28 @@ module Startb1_mod
           call openBasisAtomPotentialIndexDAFile(atom, 38, 'bin.vpotnew.0.idx', action='write')
           call openRadialMeshDataIndexDAFile(mesh, 93, "bin.meshes.0.idx")
           if (korbit == 1) then
-            call openChebMeshDataIndexDAFile(cheb_mesh, 101, "cheb_meshes.0.idx")
+            call openChebMeshDataIndexDAFile(cheb_mesh, 101, "bin.chebmeshes.0.idx")
           endif
 #endif
           call openBasisAtomPotentialDAFile(atom, 39, 'bin.vpotnew.0', max_reclen, action='write')
           call openRadialMeshDataDAFile(mesh, 94, "bin.meshes.0", max_reclen_mesh)
-          if (korbit == 1) then
-            call openChebMeshDataDAFile(102 , "cheb_meshes.0", max_reclen_chebmesh)
-          endif
+!          if (korbit == 1) then
+!            call openChebMeshDataDAFile(102 , "bin.chebmeshes.0", max_reclen_chebmesh)
+!          endif
         endif ! iatom == 1
 
         call writeBasisAtomPotentialDA(atom, 39, iatom)
         call writeRadialMeshDataDA(mesh, 94, iatom)
-        if (korbit == 1) then
-          call writeChebMeshDataDA(cheb_mesh, 102, iatom)
-        endif
+!        if (korbit == 1) then
+!          call writeChebMeshDataDA(cheb_mesh, 102, iatom)
+!        endif
 
 #ifndef TASKLOCAL_FILES
         call writeBasisAtomPotentialIndexDA(atom, 38, iatom, max_reclen)
         call writeRadialMeshDataIndexDA(mesh, 93, iatom, max_reclen_mesh)
-        if (korbit == 1) then
-          call writeChebMeshDataIndexDA(cheb_mesh, 101, iatom, max_reclen_chebmesh)
-        endif
+!        if (korbit == 1) then
+!          call writeChebMeshDataIndexDA(cheb_mesh, 101, iatom, max_reclen_chebmesh)
+!        endif
 #endif
       endif ! not nowrite
 

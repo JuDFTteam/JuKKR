@@ -145,9 +145,9 @@ module KKRzero_mod
 !   in case of a NOCO calculation - read file 'nonco_angle.dat'
     if (dims%korbit == 1) then
        if(dims%nspind .NE. 2) die_here('NSPIND=2 in global.conf is mandatory for SOC calculations')
-       call create(noco, dims%naez)
-       call nonco_angle_read(noco%theta_noco, noco%phi_noco, noco%angle_fixed, dims%naez)
-       call store(noco, 'bin.noco')
+!       call create(noco, dims%naez)
+!       call nonco_angle_read(noco%theta_noco, noco%phi_noco, noco%angle_fixed, dims%naez)
+!       call store(noco, 'bin.noco.0')
     else
        if(dims%korbit .NE. 0) die_here('When not using NOCO: KORBIT in global.conf should be zero')    
     endif
@@ -243,44 +243,6 @@ module KKRzero_mod
     call destroy(emesh)
     
   endsubroutine ! main0
-
-!>    Reads nonco_angle.dat file.
-subroutine nonco_angle_read(theta, phi, angle_fixed, naez)
-
-  double precision,  intent(out) :: theta (naez)
-  double precision,  intent(out) :: phi (naez)
-  integer (kind=1),  intent(out) :: angle_fixed (naez) ! (1): keep angle fixed, (0): relax angle
-  integer, intent(in)            :: naez
-
-  logical :: lread, lcheckangles
-  integer :: I1 
-  double precision, parameter :: PI=4.d0*datan(1.d0), eps=1d-5
-
-  theta(:) = 0.D0
-  phi(:) = 0.D0
-  lread = .FALSE.
-  LCHECKANGLES = .false.
-
-  inquire(file='nonco_angle.dat',EXIST=lread)
-  if (lread) then
-          open(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
-          do I1 = 1,naez
-             read(10,*) theta(I1),phi(I1),angle_fixed(I1)
-            ! if((abs(theta(I1)).lt.(pi+eps)   .and. abs(theta(I1)).gt.eps) .or. &
-            ! (abs(phi(I1)).lt.(2*pi+eps) .and. abs(phi(I1)).gt.eps)) then
-            !   LCHECKANGLES = .true.
-            ! endif
-             if(LCHECKANGLES .eqv. .true.) then
-               die_here('angles in nonco_angle.dat are not given in a correct format')       
-             endif
-             theta(i1)=theta(I1)*(pi/180.0d0)
-             phi(i1)  =phi(i1)*(pi/180.0d0)
-          enddo
-  else
-       die_here('failed to read "nonco_angle.dat"!')
-  endif
-
-endsubroutine
 
   
 !>    Reads atominfo and rbasis files.
