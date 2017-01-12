@@ -1277,16 +1277,18 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
 
   ! reduce qpts to box around Gamma
 
-  box(1) = 0.4d0!1.0d0!0.7d0
-  box(2) = 0.4d0!1.0d0!0.7d0
-  box(3) = 0.4d0!1.0d0!0.1d0
+  box(1) = 1.00d0
+  box(2) = 0.40d0
+  box(3) = 0.00d0 ! no kz-limit, use for inner radius cutoff
   
-  if(myrank==master) write(*,*) 'reduce kpts to:', 0.12, box(1)
+  if(myrank==master) write(*,*) 'reduce kpts to:', box(3), box(1)
 
   k = 0
   do q=1,Nqpt
-    if((abs(qvec(1,q))-box(1)<=eps).and.(abs(qvec(2,q))-box(2)<=eps).and.(abs(qvec(3,q))-box(3)<=eps)) then
-      if(dsqrt((qvec(1,q))**2+(qvec(2,q))**2+(qvec(3,q))**2)>0.12) then
+    if((abs(qvec(1,q))-box(1)<=eps).and.(abs(qvec(2,q))-box(2)<=eps)) then
+      if((qvec(1,q)-box(1)<=eps).and.(qvec(2,q)-box(2)<=eps)) then
+    !if((abs(qvec(1,q))-box(1)<=eps).and.(abs(qvec(2,q))-box(2)<=eps).and.(abs(qvec(3,q))-box(3)<=eps)) then
+    !  if(dsqrt((qvec(1,q))**2+(qvec(2,q))**2+(qvec(3,q))**2)>box(3)) then
         k = k+1
         qvec_tmp(1:3,k) = qvec(1:3,q)
         qvec_index_tmp(1:2,k) = qvec_index(1:2,q)
@@ -1375,7 +1377,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   q_start = ioff_pT(myrank) + 1
   q_end   = ioff_pT(myrank) + ntot_pT(myrank)
   
-  write(*,'(A,I9,A,I9,A,I9)') 'Rank', myrank, 'does q-points', q_start, 'to', q_end
+  write(*,'(A,I9,A,I9,A,I9)') 'Rank ', myrank, ' does q-points ', q_start, ' to ', q_end
   call MPI_Barrier(MPI_COMM_WORLD, ierr)
   
 #else

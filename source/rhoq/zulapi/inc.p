@@ -1,6 +1,6 @@
 c number of different atoms in unitcell
       integer natypd
-      parameter (NATYPD =72)
+      parameter (NATYPD =32)
 c number of atoms in unitcell
       integer naezd
       parameter (NAEZD =NATYPD)
