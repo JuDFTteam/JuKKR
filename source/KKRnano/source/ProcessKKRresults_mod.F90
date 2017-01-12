@@ -435,7 +435,7 @@ module ProcessKKRresults_mod
 
       if (mp%isMasterRank .and. dims%korbit == 1) write(*,*) "Entering RHOVAL_wrapper! This might take some time, because NOCO (Bauer) solver is used..."
   !------------------------------------------------------------------------------
-    !$omp parallel do reduction(+: chrgnt,denef, chrgsemicore) private(ila,atomdata,densities,energies,ldau_data,denef_local,chrgnt_local)
+    !$omp parallel do reduction(+: chrgnt,denef, chrgsemicore) private(ila,atomdata,densities,energies,ldau_data,denef_local,chrgnt_local,atom_id)
     do ila = 1, num_local_atoms
       atomdata  => getAtomData(calc, ila)
       densities => getDensities(calc, ila)
@@ -750,9 +750,9 @@ module ProcessKKRresults_mod
     if (params%KTE >= 0) r2fu = openResults2File(dims%LRECRES2)
 
   !------------------------------------------------------------------------------
-    !!!$omp parallel do reduction(+: VAV0, VOL0) &
-    !!!$omp private(ila, atomdata, densities, energies, ldau_data, atom_id, &
-    !!!$omp         lcoremax, VAV0_local, VOL0_local, mesh, force_flmc)
+    !!!$nomp parallel do reduction(+: VAV0, VOL0) &
+    !!!$nomp private(ila, atomdata, densities, energies, ldau_data, atom_id, &
+    !!!$nomp         lcoremax, VAV0_local, VOL0_local, mesh, force_flmc)
     do ila = 1, num_local_atoms
       atomdata     => getAtomData(calc, ila)
       densities    => getDensities(calc, ila)
@@ -787,6 +787,8 @@ module ProcessKKRresults_mod
       ! TODO: OpenMP critical !!! VXCDRV is most likely not threadsafe!
       ! output: vons_temp, EXC (exchange energy) (l-resolved)
 
+      deallocate(vons_temp, stat=ist)
+      allocate(vons_temp(size(v,1),size(v,2),size(v,3)))
       vons_temp = 0.d0 ! V_XC stored in temporary, must not add before energy calc.
       call VXCDRV_wrapper(vons_temp, energies%EXC, params%KXC, densities%RHO2NS, calc%shgaunts, atomdata)
   ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
@@ -795,6 +797,8 @@ module ProcessKKRresults_mod
 
       atomdata%potential%vons = atomdata%potential%vons + vons_temp
 
+      deallocate(vons_temp, stat=ist)
+      allocate(vons_temp(size(v,1),size(v,2),size(v,3)))
     ! Force calculation continues here
 
       if (calc_force) then
@@ -821,7 +825,7 @@ module ProcessKKRresults_mod
 
   !------------------------------------------------------------------------------
     enddo ! ila
-    !!!$omp endparallel do
+    !!!$nomp endparallel do
   !------------------------------------------------------------------------------
 
     if (params%KTE >= 0) close(r2fu)

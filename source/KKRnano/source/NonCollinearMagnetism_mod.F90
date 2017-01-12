@@ -3951,12 +3951,12 @@ allocate(gmat0(lmmaxso,lmmaxso))
 allocate(jlk_index(2*lmmaxso))
 
 ! determine if omp is used
-!$omp parallel shared(nth,ith)
-!$omp single
+!!$omp parallel shared(nth,ith)
+!!$omp single
 ith = 0
-nth = omp_get_num_threads()
-!$omp end single
-!$omp end parallel
+nth = 1
+!!$omp end single
+!!$omp end parallel
 !WRITE(*,*) 'nth =',nth
 
 pi=4D0*DATAN(1D0)
@@ -4095,11 +4095,11 @@ END DO
 !!$omp& reduction(+:rho2int,espv) reduction(-:muorb)
 !!$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
 DO ie=1,ielast
-  IF (nth>=1) THEN
-    ith = omp_get_thread_num()
-  ELSE
+!  IF (nth>=1) THEN
+!    ith = omp_get_thread_num()
+!  ELSE
     ith = 0
-  END IF
+!  END IF
   
   eryd=ez(ie)
   ek=SQRT(eryd)
