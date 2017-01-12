@@ -472,7 +472,6 @@ module CalculationData_mod
     enddo ! ila
 #ifndef USE_OLD_MESH
     ! generate shapes and meshes
-    if (dims%korbit == 1) die_here("In order to conduct NOCO calculations (korbit = 1) use makefile flag 'USE_OLD_MESH'") 
     call generateShapesTEST(self, dims, params, arrays, new_MT_radii, params%MT_scale, mp, voronano)
 #endif
 

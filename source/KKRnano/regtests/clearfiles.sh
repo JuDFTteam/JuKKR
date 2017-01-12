@@ -8,6 +8,7 @@ rm -f  potential
 rm -f  rbasis.xyz
 rm -f  voro_weights
 rm -f  shapefun
+rm -f  nonco_angle.dat
 
 # rm -f  *.unf ## deprecated
 # rm -f  vpotnew*
@@ -35,3 +36,4 @@ rm -f  kpoints
 
 rm -f  gmon.out
 rm -f  bin.* ## delete all binary files
+rm -f  nonco_angle_out.dat

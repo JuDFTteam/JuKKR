@@ -119,7 +119,7 @@ module KKRzero_mod
 
 #ifndef USE_OLD_MESH
     if (dims%korbit /= 0) then
-      die_here("In order to conduct NOCO calculations (korbit = 1) use makefile flag 'USE_OLD_MESH'") 
+      warn(6,"For NOCO calculations (korbit = 1) usage of makefile option 'TYPE=voronoi_mesh' is advised") 
     endif
 #endif
 

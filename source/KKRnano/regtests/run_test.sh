@@ -7,7 +7,7 @@ day=`date "+%Y%m%d%H%M"` ## today's date, hour, minute
 
 rm -f ./last ## remove old soft link
 
-nohup ./tests.py < /dev/null > ${day}_tests.txt
+nohup python2.7 ./tests.py < /dev/null > ${day}_tests.txt
 
 ./clearfiles.sh
 mkdir ${ARCHIVE}

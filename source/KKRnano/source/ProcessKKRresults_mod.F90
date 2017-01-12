@@ -171,7 +171,8 @@ module ProcessKKRresults_mod
       densities%total_charge_neutrality, &
       arrays%ZAT, emesh%EZ,&
 !       emesh%WEZ,&
-      params%LDAU, dims%iemxd)
+      params%LDAU, dims%iemxd, &
+      dims%korbit)
 
       call outTime(mp%isMasterRank, 'results ........................', getTime(program_timer), iter)
 
@@ -1418,7 +1419,8 @@ module ProcessKKRresults_mod
 
   subroutine results(lrecres2, ielast, itscf, lmax, natoms, npol, nspin, kpre, compute_total_energy, lpot, e1, e2, tk, efermi, alat, ititle, chrgnt, zat, ez, &
 !     wez, &
-    ldau, iemxd)
+    ldau, iemxd, &
+    korbit)
   use Constants_mod, only: pi
     integer, intent(in) :: iemxd
     integer, intent(in) :: ielast, itscf, lmax, natoms, npol, nspin
@@ -1430,6 +1432,7 @@ module ProcessKKRresults_mod
     double complex, intent(in) :: ez(iemxd)!, wez(iemxd)
     double precision, intent(in) :: zat(natoms)
     integer, intent(in) :: ititle(20,*)
+    integer, intent(in) :: korbit ! NOCO
     
 !   logical, external :: TEST
 #define TEST(STRING) .false.
@@ -1465,7 +1468,7 @@ module ProcessKKRresults_mod
 
     if (compute_total_energy >= 0) then
       open(71, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='read', status='old')
-      open(13,file='nonco_angle_out.dat',form='formatted')
+      if (korbit == 1) open(13,file='nonco_angle_out.dat',form='formatted') ! NOCO
     
       ! moments output
       do i1 = 1, natoms
@@ -1476,13 +1479,15 @@ module ProcessKKRresults_mod
         endif
        
         call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
+        if (korbit == 1) then ! NOCO
         ! save to file in converted units (degrees)
-            write(13,*) theta_noco/(2.0D0*PI)*360.0D0, &
-                        phi_noco/(2.0D0*PI)*360.0D0, &
-                        angle_fixed
+          write(13,*) theta_noco/(2.0D0*PI)*360.0D0, &
+                      phi_noco/(2.0D0*PI)*360.0D0, &
+                      angle_fixed
+        endif
       enddo ! i1
 
-      close(13)
+      if (korbit == 1)  close(13)
 
       ! density of states output
       if (npol == 0) then
