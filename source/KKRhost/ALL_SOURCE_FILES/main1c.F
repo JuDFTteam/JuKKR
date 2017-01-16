@@ -231,7 +231,8 @@ C     .. Data statements ..
       VINS = 0.0d0
       RHO2NS = 0.0d0
       R2NEF = 0.0d0
-      
+      angles_new = 0.0d0
+      MUORB = 0.0d0
 C     ..
 C
 Consistency check
@@ -830,9 +831,6 @@ c interpolate potential
       i1_start = 1
       i1_end   = NATYP
 #endif
-
-      !initialize output nonco angles
-      angles_new = 0.0d0
 
       DO I1 = i1_start,i1_end
       

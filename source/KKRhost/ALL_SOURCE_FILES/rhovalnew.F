@@ -255,11 +255,11 @@ c LM shifts for correct density summation
        LMSHIFT2(3)=LMMAXD                                              ! qdos ruess
        LMSHIFT2(4)=0                                                   ! qdos ruess
 
-       DO IR=1,3
-        DO LM1=0,LMAXD1+1
-         MUORB(LM1,IR)=0d0
-        ENDDO
-       ENDDO 
+c      DO IR=1,3
+c       DO LM1=0,LMAXD1+1
+c        MUORB(LM1,IR)=0d0  !zimmer: initialization shifted to main1c
+c       ENDDO
+c      ENDDO
 
       NQDOS = 1                                                         ! qdos ruess 
       IF (OPT('qdos    ')) THEN                                         ! qdos ruess
