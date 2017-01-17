@@ -6,7 +6,11 @@ The following input files from the small cell need to be copied into this direct
 - (voro_weights)
 - (nonco_angle_out.dat)
 
-Then set up a text file named 'inputcard' which contains the word 'BRAVAIS' in the first line
+In order to get an ASCII potential file you might need to run "kkr.exe --convert"
+and concatanate the 'vpot.*' files in the directory where the binary potential files are ('vpotnew', 'vpotnew.idx',...)
+KKRnano can also be forced to write out updated shapefunctions by setting "write_shapes=1" in 'input.conf'
+
+Then set up a text file named 'inputcard' which contains the term "BRAVAIS" in the first line
 and the Bravais vectors of your small unit cell underneath, e.g.
 
 BRAVAIS
