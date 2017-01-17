@@ -14,7 +14,7 @@ module Startb1_mod
   contains
 
 ! determine the record length
-  subroutine startb1_wrapper_new(alat, nspin, EFERMI, Zat, naez, korbit, params, nowrite)
+  subroutine startb1_wrapper_new(alat, nspin, EFERMI, Zat, naez, nowrite)
     use read_formatted_shapefun_mod, only: ShapefunFile, create, destroy
     use InputParams_mod, only: InputParams
     double precision, intent(in) :: alat
@@ -22,13 +22,13 @@ module Startb1_mod
     double precision, intent(out) :: EFERMI
     integer, intent(in) :: nspin
     double precision, intent(out):: Zat(:)
-    integer, intent(in) :: korbit              ! NOCO
-    type(InputParams), intent(in) :: params    ! NOCO
+!    integer, intent(in) :: korbit              ! NOCO
+!    type(InputParams), intent(in) :: params    ! NOCO
     logical, intent(in) :: nowrite
 
     integer :: ntcell(naez)
     integer :: max_reclen, max_reclen_mesh
-    integer :: max_reclen_chebmesh  ! NOCO
+!    integer :: max_reclen_chebmesh  ! NOCO
     type(ShapefunFile) :: sfile
 
     ! read the complete shapefun file to -> sfile
@@ -38,11 +38,11 @@ module Startb1_mod
 
     ! write atoms file and get maximum record lengths for vpotnew file and meshes file
     call write_atoms_file(alat, nspin, ntcell, Zat, naez, sfile, EFERMI, max_reclen, &
-                          max_reclen_mesh, max_reclen_chebmesh, korbit, params, nowrite)
+                          max_reclen_mesh, nowrite)
 
     ! routine to write binary potential and binary meshes
     call write_binary_potential(alat, nspin, ntcell, naez, sfile, max_reclen, &
-                                 max_reclen_mesh, max_reclen_chebmesh, korbit, params, nowrite)
+                                max_reclen_mesh, nowrite)
 
     call destroy(sfile)
 
@@ -51,14 +51,14 @@ module Startb1_mod
 !------------------------------------------------------------------------------
 !> Write the 'atoms' file (= binary analogue to atominfo - used for parallel reading in kkr2)
 !> and determine the record length ('max_reclen') for the binary direct access potential file.
-  subroutine write_atoms_file(alat, nspin, ntcell, Zat, naez, sfile, EFERMI, max_reclen, max_reclen_mesh, max_reclen_chebmesh, korbit, params, nowrite)
+  subroutine write_atoms_file(alat, nspin, ntcell, Zat, naez, sfile, EFERMI, max_reclen, max_reclen_mesh, nowrite)
 
     use read_formatted_mod, only: PotentialEntry, create, destroy
     use read_formatted_shapefun_mod, only: ShapefunFile
     use BasisAtom_mod, only: BasisAtom, createBasisAtom, openBasisAtomDAFile, writeBasisAtomDA, closeBasisAtomDAFile, destroy
     use RadialMeshData_mod, only: RadialMeshData, getMinReclenMesh, create, destroy
-    use ChebMeshData_mod, only: ChebMeshData, getMinReclenChebMesh, create, destroy ! NOCO
-    use InputParams_mod, only: InputParams
+!    use ChebMeshData_mod, only: ChebMeshData, getMinReclenChebMesh, create, destroy ! NOCO
+!    use InputParams_mod, only: InputParams
     double precision, intent(in) :: alat
     integer, intent(in) :: nspin
     double precision, intent(out) :: Zat(:)
@@ -68,9 +68,9 @@ module Startb1_mod
     double precision, intent(out) :: EFERMI
     integer, intent(out) :: max_reclen
     integer, intent(out) :: max_reclen_mesh
-    integer, intent(out) :: max_reclen_chebmesh ! NOCO
-    integer, intent(in) :: korbit               ! NOCO
-    type(InputParams), intent(in) :: params     ! NOCO
+!    integer, intent(out) :: max_reclen_chebmesh ! NOCO
+!    integer, intent(in) :: korbit               ! NOCO
+!    type(InputParams), intent(in) :: params     ! NOCO
     logical, intent(in) :: nowrite
 
     integer :: iatom, ispin, nbackfold
@@ -78,15 +78,15 @@ module Startb1_mod
     type(PotentialEntry) :: pe(2)
     type(BasisAtom) :: atom
     type(RadialMeshData) :: mesh
-    type(ChebMeshData) :: cheb_mesh ! NOCO
+!    type(ChebMeshData) :: cheb_mesh ! NOCO
     integer, parameter :: fu = 13, fa = 37
     integer :: cell_index, n_warn_alat_differs
     double precision :: radius_muffin_tin
-    integer :: npan_tot, irmd_cheb   ! NOCO
+!    integer :: npan_tot, irmd_cheb   ! NOCO
     
     max_reclen = 0
     max_reclen_mesh = 0
-    max_reclen_chebmesh = 0 !NOCO
+!    max_reclen_chebmesh = 0 !NOCO
     reclen = 0
     nbackfold = 0
     
@@ -170,18 +170,18 @@ module Startb1_mod
       ! this is a bit of a hack
       max_reclen_mesh = max(getMinReclenMesh(mesh), max_reclen_mesh)
      
-      if (korbit == 1) then ! NOCO
+!      if (korbit == 1) then ! NOCO
 
-        npan_tot = sfile%mesh(iatom)%npan+params%npan_eq+params%npan_log  ! number of overall intervals in new mesh  
-        irmd_cheb = npan_tot*(params%ncheb+1)                              ! number of radial mesh points in new mesh
-        call create(cheb_mesh, irmd_cheb, npan_tot, sfile%shapes(cell_index)%nfu, params) ! create data for new radial mesh for atom iatom
+!        npan_tot = sfile%mesh(iatom)%npan+params%npan_eq+params%npan_log  ! number of overall intervals in new mesh  
+!        irmd_cheb = npan_tot*(params%ncheb+1)                              ! number of radial mesh points in new mesh
+!        call create(cheb_mesh, irmd_cheb, npan_tot, sfile%shapes(cell_index)%nfu, params) ! create data for new radial mesh for atom iatom
 
       ! determine maximal record length for cheby_meshes.0 file
       ! this is a bit of a hack
-        max_reclen_chebmesh = max(getMinReclenChebMesh(cheb_mesh), max_reclen_chebmesh)
+!        max_reclen_chebmesh = max(getMinReclenChebMesh(cheb_mesh), max_reclen_chebmesh)
 
-        call destroy(cheb_mesh)
-      endif
+!        call destroy(cheb_mesh)
+!      endif
 
       ! cleanup
       call destroy(mesh)
@@ -208,7 +208,7 @@ module Startb1_mod
   endfunction ! lmpot_to_lpot
 
 
-  subroutine write_binary_potential(alat, nspin, ntcell, naez, sfile, max_reclen, max_reclen_mesh, max_reclen_chebmesh, korbit, params, nowrite)
+  subroutine write_binary_potential(alat, nspin, ntcell, naez, sfile, max_reclen, max_reclen_mesh, nowrite)
     use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy
     use read_formatted_shapefun_mod, only: ShapefunFile
     use BasisAtom_mod, only: BasisAtom, create, destroy
@@ -219,10 +219,10 @@ module Startb1_mod
 #endif
     use RadialMeshData_mod, only: RadialMeshData, initRadialMesh, create, destroy
     use RadialMeshData_mod, only: openRadialMeshDataDAFile, writeRadialMeshDataDA, closeRadialMeshDataDAFile
-    use ChebMeshData_mod, only: ChebMeshData, create, destroy, construct ! NOCO
-    use ChebMeshData_mod, only: openChebMeshDataDAFile, writeChebMeshDataDA, closeChebMeshDataDAFile ! NOCO
-    use ChebMeshData_mod, only: openChebMeshDataIndexDAFile, writeChebMeshDataIndexDA, closeChebMeshDataIndexDAFile ! NOCO
-    use InputParams_mod, only: InputParams
+!    use ChebMeshData_mod, only: ChebMeshData, create, destroy, construct ! NOCO
+!    use ChebMeshData_mod, only: openChebMeshDataDAFile, writeChebMeshDataDA, closeChebMeshDataDAFile ! NOCO
+!    use ChebMeshData_mod, only: openChebMeshDataIndexDAFile, writeChebMeshDataIndexDA, closeChebMeshDataIndexDAFile ! NOCO
+!    use InputParams_mod, only: InputParams
     double precision, intent(in) :: alat
     integer, intent(in) :: nspin
     integer, intent(in) :: naez
@@ -230,18 +230,18 @@ module Startb1_mod
     type(ShapefunFile), intent(in) :: sfile
     integer, intent(in) :: max_reclen
     integer, intent(in) :: max_reclen_mesh
-    integer, intent(in) :: max_reclen_chebmesh ! NOCO
-    integer, intent(in) :: korbit               ! NOCO
-    type(InputParams), intent(in) :: params     ! NOCO
+!    integer, intent(in) :: max_reclen_chebmesh ! NOCO
+!    integer, intent(in) :: korbit               ! NOCO
+!    type(InputParams), intent(in) :: params     ! NOCO
     logical, intent(in) :: nowrite
 
     type(BasisAtom) :: atom
     type(PotentialEntry) :: pe(2)
     type(RadialMeshData) :: mesh
-    type(ChebMeshData) :: cheb_mesh ! NOCO
+!    type(ChebMeshData) :: cheb_mesh ! NOCO
     integer, parameter :: fu=13
     integer :: cell_index, lpot, irmd, irmind, ipand, irns, irid, iatom, ispin
-    integer :: npan_tot, irmd_cheb   ! NOCO
+!    integer :: npan_tot, irmd_cheb   ! NOCO
     
     open(unit=fu, file='potential', form='formatted', status='old', action='read')
     
@@ -262,12 +262,12 @@ module Startb1_mod
 
       call create(atom, iatom, lpot, nspin, irmind, irmd) ! createBasisAtom
       call create(mesh, irmd, ipand, irid, sfile%shapes(cell_index)%nfu) ! createRadialMeshData
-      if (korbit == 1) then ! NOCO
-        npan_tot = sfile%mesh(iatom)%npan+params%npan_eq+params%npan_log  ! number of overall intervals in new mesh  
-        irmd_cheb = npan_tot*(params%ncheb+1)                              ! number of radial mesh points in new mesh
+!      if (korbit == 1) then ! NOCO
+!        npan_tot = sfile%mesh(iatom)%npan+params%npan_eq+params%npan_log  ! number of overall intervals in new mesh  
+!        irmd_cheb = npan_tot*(params%ncheb+1)                              ! number of radial mesh points in new mesh
      
-        call create(cheb_mesh, irmd_cheb, npan_tot, sfile%shapes(cell_index)%nfu, params) ! create data for new radial mesh for atom iatom
-      endif
+!        call create(cheb_mesh, irmd_cheb, npan_tot, sfile%shapes(cell_index)%nfu, params) ! create data for new radial mesh for atom iatom
+!      endif
       ! set potential
       do ispin = 1, nspin
         atom%potential%vins(:,:,ispin) = pe(ispin)%nsblocks%vins
@@ -281,23 +281,23 @@ module Startb1_mod
                           irid, sfile%shapes(cell_index)%nfu, sfile%shapes(cell_index)%llmsp, &
                           sfile%shapes(cell_index)%thetas)
       
-      if (korbit == 1) then ! NOCO
-        call construct(params%r_log,params%npan_log,params%npan_eq,params%ncheb, &
-                      cheb_mesh%npan_lognew,cheb_mesh%npan_eqnew, &
-                      cheb_mesh%npan_tot,cheb_mesh%rnew, &
-                      cheb_mesh%rpan_intervall,cheb_mesh%ipan_intervall, &
-                      cheb_mesh%thetasnew,sfile%shapes(iatom)%thetas, &
-                      sfile%shapes(cell_index)%nfu,mesh)
-      endif
+!      if (korbit == 1) then ! NOCO
+!        call construct(params%r_log,params%npan_log,params%npan_eq,params%ncheb, &
+!                      cheb_mesh%npan_lognew,cheb_mesh%npan_eqnew, &
+!                      cheb_mesh%npan_tot,cheb_mesh%rnew, &
+!                      cheb_mesh%rpan_intervall,cheb_mesh%ipan_intervall, &
+!                      cheb_mesh%thetasnew,sfile%shapes(iatom)%thetas, &
+!                      sfile%shapes(cell_index)%nfu,mesh)
+!      endif
       if (.not. nowrite) then
       
         if (iatom == 1) then
 #ifndef TASKLOCAL_FILES
           call openBasisAtomPotentialIndexDAFile(atom, 38, 'bin.vpotnew.0.idx', action='write')
           call openRadialMeshDataIndexDAFile(mesh, 93, "bin.meshes.0.idx")
-          if (korbit == 1) then
-            call openChebMeshDataIndexDAFile(cheb_mesh, 101, "bin.chebmeshes.0.idx")
-          endif
+!          if (korbit == 1) then
+!            call openChebMeshDataIndexDAFile(cheb_mesh, 101, "bin.chebmeshes.0.idx")
+!          endif
 #endif
           call openBasisAtomPotentialDAFile(atom, 39, 'bin.vpotnew.0', max_reclen, action='write')
           call openRadialMeshDataDAFile(mesh, 94, "bin.meshes.0", max_reclen_mesh)
@@ -324,9 +324,9 @@ module Startb1_mod
       ! cleanup
       call destroy(atom)
       call destroy(mesh)
-      if (korbit == 1) then
-        call destroy(cheb_mesh)
-      endif
+!      if (korbit == 1) then
+!        call destroy(cheb_mesh)
+!      endif
       do ispin = 1, nspin
         call destroy(pe(ispin))
       enddo
@@ -339,16 +339,16 @@ module Startb1_mod
     
       call closeBasisAtomPotentialDAFile(39)
       call closeRadialMeshDataDAFile(94)
-      if (korbit == 1) then
-        call closeChebMeshDataDAFile(102)
-      endif
+!      if (korbit == 1) then
+!        call closeChebMeshDataDAFile(102)
+!      endif
 
 #ifndef TASKLOCAL_FILES
       call closeBasisAtomPotentialIndexDAFile(38)
       call closeRadialMeshDataIndexDAFile(93)
-      if (korbit == 1) then
-        call closeChebMeshDataIndexDAFile(101)
-      endif
+!      if (korbit == 1) then
+!        call closeChebMeshDataIndexDAFile(101)
+!      endif
 #endif
     endif ! not nowrite
 
