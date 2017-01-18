@@ -37,7 +37,7 @@ ifeq ($(PLATFORM),ifort)
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
 	# PPFLAGS += -D TASKLOCAL_FILES
-	FCFLAGS += -g
+	FCFLAGS += -g -traceback
 	LDFLAGS += -mkl -g
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
