@@ -96,8 +96,6 @@ module KKRzero_mod
     use EnergyMesh_mod, only: getEnergyMeshSize, EnergyMesh, create, init, update, store, destroy
     use Startb1_mod, only: startb1_wrapper_new
     
-    use NonCollinearMagnetismData_mod, only: NOCOData, create, store
-
     integer, intent(in) :: checkmode ! 0: usual kkr0, >0: checks only, no writing of any files
     integer, intent(in) :: voronano  ! 0: usual kkr0,  1: returns before reading potential and shapefunctions
     
@@ -113,8 +111,6 @@ module KKRzero_mod
     type(EnergyMesh)    :: emesh
     type(BrillouinZoneMesh) :: kmeshes(8)
 
-    type(NOCOData)      :: noco ! NOCO
-    
     call parse(dims, "global.conf", altfile="input.conf")
 
 #ifndef USE_OLD_MESH
@@ -126,11 +122,17 @@ module KKRzero_mod
     ist = getValues("input.conf", params)
     if (ist /= 0) die_here('failed to read "input.conf"!')
 
+    ! global.conf <-> input.conf consistency checks
     if (dims%KPOIBZ < params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)) then
       dims%KPOIBZ = params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)
       warn(6,'Kpoint allocation insufficient. KPOIBZ is increased to ' + params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)) 
     endif
 
+    if (dims%ITDBRYD < params%scfsteps) then
+      dims%ITDBRYD = params%scfsteps
+      warn(6,'ITBRYD increased to ' + dims%ITDBRYD) 
+    endif
+    
     dims%iemxd = getEnergyMeshSize(params%npol, [params%npnt1, params%npnt2, params%npnt3], params%npntsemi)
     call create(emesh, dims%iemxd)
 
@@ -145,9 +147,6 @@ module KKRzero_mod
 !   in case of a NOCO calculation - read file 'nonco_angle.dat'
     if (dims%korbit == 1) then
        if(dims%nspind .NE. 2) die_here('NSPIND=2 in global.conf is mandatory for SOC calculations')
-!       call create(noco, dims%naez)
-!       call nonco_angle_read(noco%theta_noco, noco%phi_noco, noco%angle_fixed, dims%naez)
-!       call store(noco, 'bin.noco.0')
     else
        if(dims%korbit .NE. 0) die_here('When not using NOCO: KORBIT in global.conf should be zero')    
     endif
@@ -173,7 +172,7 @@ module KKRzero_mod
     ! if energy_mesh.0 file is missing, also regenerate start files
     if (startpot_exists) then
 
-      call startb1_wrapper_new(params%alat, dims%nspind, efermi, arrays%zat, dims%naez, dims%korbit, params, nowrite=(checkmode /= 0))
+      call startb1_wrapper_new(params%alat, dims%nspind, efermi, arrays%zat, dims%naez, nowrite=(checkmode /= 0))
 
     else
       ! no formatted potential provided

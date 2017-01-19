@@ -448,6 +448,7 @@ module ProcessKKRresults_mod
       ! has to be done after Lloyd
       ! output: RHO2NS, R2NEF, DEN, ESPV
       densities%DEN = CZERO
+      densities%muorb = 0.0d0
 
       ! calculate valence charge density and band energies
       call RHOVAL_wrapper(atomdata, LdoRhoEF, params%ICST, params%NSRA, &
