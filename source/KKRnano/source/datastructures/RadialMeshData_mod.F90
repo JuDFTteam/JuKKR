@@ -85,6 +85,8 @@ module RadialMeshData_mod
     allocate(self%IRCUT(0:ipand))
 #ifdef USE_OLD_MESH
     if(present(meshn) .and. present(nfu)) then
+      write(*,*) 'meshn=', meshn
+      write(*,*) 'nfu=', nfu
       allocate(self%LLMSP(nfu))
       allocate(self%THETAS(meshn,nfu))
     endif
