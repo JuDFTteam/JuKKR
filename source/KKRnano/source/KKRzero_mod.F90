@@ -128,11 +128,6 @@ module KKRzero_mod
       warn(6,'Kpoint allocation insufficient. KPOIBZ is increased to ' + params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)) 
     endif
 
-    if (dims%ITDBRYD < params%scfsteps) then
-      dims%ITDBRYD = params%scfsteps
-      warn(6,'ITBRYD increased to ' + dims%ITDBRYD) 
-    endif
-    
     dims%iemxd = getEnergyMeshSize(params%npol, [params%npnt1, params%npnt2, params%npnt3], params%npntsemi)
     call create(emesh, dims%iemxd)
 

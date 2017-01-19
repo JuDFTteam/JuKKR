@@ -100,7 +100,8 @@
 !     parameter (ntird=(irmd+(irnsd+1)*(lmpotd-1))*nspind)
 
       double precision, allocatable, dimension(:) :: fm, fm1, g, sm, sm1, work, vi3, ui3 !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind)
-      double precision :: ui2(:,:), vi2(:,:) !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind,2:itdbryd)
+      double precision :: ui2(1:,2:)  !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind,2:itdbryd)
+      double precision :: vi2(1:,2:) !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind,2:itdbryd)
       double precision :: wit(2:itdbryd)
 
       ntird = (irmd + (irnsd + 1)*(lmpot - 1))*nspind
