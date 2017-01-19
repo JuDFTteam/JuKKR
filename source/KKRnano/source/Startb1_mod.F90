@@ -164,6 +164,7 @@ module Startb1_mod
       cell_index = modulo(ntcell(iatom) - 1, sfile%ncell) + 1
       if (cell_index < ntcell(iatom)) nbackfold = nbackfold + 1
       
+      write(*,*) 'createRadialMeshData for atom #', iatom
       call create(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1, sfile%mesh(cell_index)%meshn, sfile%shapes(iatom)%nfu) ! createRadialMeshData
       
       ! determine maximal record length for meshes.0 file
