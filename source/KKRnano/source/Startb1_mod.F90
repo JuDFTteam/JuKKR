@@ -164,7 +164,7 @@ module Startb1_mod
       cell_index = modulo(ntcell(iatom) - 1, sfile%ncell) + 1
       if (cell_index < ntcell(iatom)) nbackfold = nbackfold + 1
       
-      call create(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1) ! createRadialMeshData
+      call create(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1, sfile%mesh(cell_index)%meshn, sfile%shapes(iatom)%nfu) ! createRadialMeshData
       
       ! determine maximal record length for meshes.0 file
       ! this is a bit of a hack
@@ -261,7 +261,8 @@ module Startb1_mod
       irid = sfile%mesh(cell_index)%meshn
 
       call create(atom, iatom, lpot, nspin, irmind, irmd) ! createBasisAtom
-      call create(mesh, irmd, ipand) ! createRadialMeshData
+      write(*,*) 'createRadialMeshData for atom #', iatom
+      call create(mesh, irmd, ipand, irid, sfile%shapes(cell_index)%nfu) ! createRadialMeshData
 !      if (korbit == 1) then ! NOCO
 !        npan_tot = sfile%mesh(iatom)%npan+params%npan_eq+params%npan_log  ! number of overall intervals in new mesh  
 !        irmd_cheb = npan_tot*(params%ncheb+1)                              ! number of radial mesh points in new mesh
