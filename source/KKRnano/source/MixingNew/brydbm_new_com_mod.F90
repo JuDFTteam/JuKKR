@@ -75,6 +75,8 @@
       integer, intent(in) :: communicator
       double precision, intent(in) :: alpha
       double precision, intent(inout) :: sm1s(:), fm1s(:) !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind)
+      double precision, intent(inout) :: ui2(:,:), vi2(:,:) !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind,2:itdbryd)
+      double precision, intent(inout) :: wit(2:itdbryd)
       
 !     ..
 !     .. local scalars ..
@@ -94,14 +96,12 @@
 !     .. local arrays ..
 !     .. these arrays are automatic (dynamically allocated)
 !        fortran arrays
-      double precision am(2:itdbryd),bm(2:itdbryd),am_local(2:itdbryd),bm_local(2:itdbryd)
+      double precision :: am(2:itdbryd), bm(2:itdbryd), am_local(2:itdbryd), bm_local(2:itdbryd)
 
 !     the following arrays have dimension ntird
 !     parameter (ntird=(irmd+(irnsd+1)*(lmpotd-1))*nspind)
 
       double precision, allocatable, dimension(:) :: fm, fm1, g, sm, sm1, work, vi3, ui3 !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind)
-      double precision :: ui2(:,:), vi2(:,:) !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind,2:itdbryd)
-      double precision :: wit(2:itdbryd)
 
       ntird = (irmd + (irnsd + 1)*(lmpot - 1))*nspind
       if (size(sm1s) < ntird) stop __LINE__
