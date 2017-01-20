@@ -122,6 +122,7 @@ module KKRzero_mod
     ist = getValues("input.conf", params)
     if (ist /= 0) die_here('failed to read "input.conf"!')
 
+    ! global.conf <-> input.conf consistency checks
     if (dims%KPOIBZ < params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)) then
       dims%KPOIBZ = params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)
       warn(6,'Kpoint allocation insufficient. KPOIBZ is increased to ' + params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)) 
