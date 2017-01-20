@@ -185,7 +185,7 @@ module Startb1_mod
 
 
   subroutine write_binary_potential(alat, nspin, ntcell, naez, sfile, max_reclen, max_reclen_mesh, nowrite)
-    use read_formatted_mod, only: PotentialEntry, create_read_PotentialEntry, destroy
+    use read_formatted_mod, only: PotentialEntry, create, destroy
     use read_formatted_shapefun_mod, only: ShapefunFile
     use BasisAtom_mod, only: BasisAtom, create, destroy
     use BasisAtom_mod, only: openBasisAtomPotentialDAFile, writeBasisAtomPotentialDA, closeBasisAtomPotentialDAFile
@@ -215,7 +215,7 @@ module Startb1_mod
     do iatom = 1, naez
 
       do ispin = 1, nspin
-        call create_read_PotentialEntry(pe(ispin), fu, iatom)
+        call create(pe(ispin), fu, iatom) ! create_read_PotentialEntry
       enddo ! spin
 
       cell_index = modulo(ntcell(iatom) - 1, sfile%ncell) + 1 ! backfold

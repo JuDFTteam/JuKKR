@@ -11,7 +11,6 @@ module read_formatted_mod
 
   ! use the following 2 routines to read one potential entry from a file.
   public :: PotentialEntry, create, destroy
-  public :: create_read_PotentialEntry, destroy_PotentialEntry
 
   integer, parameter :: max_number_core_states = 20
   
