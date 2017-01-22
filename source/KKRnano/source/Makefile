@@ -17,11 +17,9 @@ FC90FLAGS =
 FCFLAGS =
 PPFLAGS =
 PPFLAGS += -D USE_VOROWEIGHTS
-# PPFLAGS += -D EXPORT_A_MATRIX=444
-# PPFLAGS += -D EXPORT_B_VECTOR=222
 # PPFLAGS += -D TRANSPOSE_TO_ROW_MAJOR
 ### TRANSPOSE_TO_ROW_MAJOR seems to work, however, there was a bug in col_norms about the non-linearity of DZNRM2, so we have to see which references went wrong
-# PPFLAGS += -D SUPERCELL_ELECTROSTATICS=2
+# PPFLAGS += -D SUPERCELL_ELECTROSTATICS=8
 #  -D NDEBUG
 LDFLAGS =
 
@@ -37,7 +35,7 @@ ifeq ($(PLATFORM),ifort)
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
 	# PPFLAGS += -D TASKLOCAL_FILES
-	FCFLAGS += -g
+	FCFLAGS += -g -traceback
 	LDFLAGS += -mkl -g
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
@@ -194,6 +192,9 @@ else ifeq ($(TYPE),scorep)
   FC = scorep mpixlf77_r	
   FC90 = scorep mpixlf90_r
   FCFLAGS += -q64 -O3 -qstrict
+else ifeq ($(TYPE),voronoi_mesh)
+  FCFLAGS += -q64 -O3 -qstrict
+  PPFLAGS += -WF,-DUSE_OLD_MESH 
 else
   FCFLAGS += -q64 -O3 -qstrict
 endif
@@ -331,7 +332,7 @@ ClusterInfo_mod.o: Statistics_mod.o TruncationZone_mod.o RefCluster_mod.o two_si
 ScatteringCalculation_mod.o: KKRnanoParallel_mod.o one_sided_commD_mod.o Constants_mod.o SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o  KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o IterativeSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o Truncation_mod.o two_sided_commD_mod.o ChebMeshData_mod.o NonCollinearMagnetism_mod.o
 total_energy_mod.o: Quadrature_mod.o BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o ShapeGauntCoefficients_mod.o
 vxcgga.o: XCFunctionals_mod.o
-KKRzero_mod.o: Exceptions_mod.o BrillouinZoneMesh_mod.o PositionReader_mod.o MadelungCalculator_mod.o Startb1_mod.o EnergyMesh_mod.o EnergyMeshHelpers_mod.o Lattice_mod.o BrillouinZone_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o ShapefunData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o ldauinfo_read.o ldaustart.o NonCollinearMagnetismData_mod.o
+KKRzero_mod.o: Exceptions_mod.o BrillouinZoneMesh_mod.o PositionReader_mod.o MadelungCalculator_mod.o Startb1_mod.o EnergyMesh_mod.o EnergyMeshHelpers_mod.o Lattice_mod.o BrillouinZone_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o ShapefunData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o ldauinfo_read.o ldaustart.o
 SingleSite_mod.o: SingleSiteHelpers_mod.o
 ldauphi.o: SingleSite_mod.o
 SingleSiteHelpers_mod.o: Constants_mod.o
