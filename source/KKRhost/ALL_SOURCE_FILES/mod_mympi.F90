@@ -289,18 +289,64 @@ contains
 
     !create new communicator from group
     call MPI_COMM_GROUP(MPI_COMM_WORLD,mympi_group_world,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_GROUP with code ', ierr
+      write(*,*) 'Error in MPI_COMM_GROUP with code ', ierr
+      stop 'Error in MPI_COMM_GROUP'
+    end if
+      
     call MPI_GROUP_INCL(mympi_group_world,groups(myg,1),mygroup,mympi_group_ie,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_GROUP_INCL with code ', ierr
+      write(*,*) 'Error in MPI_GROUP_INCL with code ', ierr
+      stop 'Error in MPI_GROUP_INCL'
+    end if
     call MPI_COMM_CREATE(MPI_COMM_WORLD,mympi_group_ie,mympi_comm_ie,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_CREATE with code ', ierr
+      write(*,*) 'Error in MPI_COMM_CREATE with code ', ierr
+      stop 'Error in MPI_COMM_CREATE'
+    end if
     call MPI_GROUP_FREE(mympi_group_ie,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_GROUP_FREE with code ', ierr
+      write(*,*) 'Error in MPI_GROUP_FREE with code ', ierr
+      stop 'Error in MPI_GROUP_FREE'
+    end if
    
     !get rank and size in new communicator
     call MPI_COMM_RANK(mympi_comm_ie,myrank_ie,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_RANK(ie) with code ', ierr
+      write(*,*) 'Error in MPI_COMM_RANK(ie) with code ', ierr
+      stop 'Error in MPI_COMM_RANK(ie)'
+    end if
     call MPI_COMM_SIZE(mympi_comm_ie,nranks_ie,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_SIZE(ie) with code ', ierr
+      write(*,*) 'Error in MPI_COMM_SIZE(ie) with code ', ierr
+      stop 'Error in MPI_COMM_SIZE(ie)'
+    end if
    
     !create communicator to communicate between differen energies (i.e. different groups)
     call MPI_COMM_SPLIT(MPI_COMM_WORLD,myrank_ie,myg,mympi_comm_at,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_SPLIT', ierr
+      write(*,*) 'Error in MPI_COMM_SPLIT ', ierr
+      stop 'Error in MPI_COMM_SPLIT'
+    end if
     call MPI_COMM_RANK(mympi_comm_at,myrank_atcomm,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_RANK(at) with code ', ierr
+      write(*,*) 'Error in MPI_COMM_RANK(at) with code ', ierr
+      stop 'Error in MPI_COMM_RANK(at)'
+    end if
     call MPI_COMM_SIZE(mympi_comm_at,nranks_atcomm,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_SIZE(at) with code ', ierr
+      write(*,*) 'Error in MPI_COMM_SIZE(at) with code ', ierr
+      stop 'Error in MPI_COMM_SIZE(at)'
+    end if
     
     nranks_at = ne    
     myrank_at = myg-1
