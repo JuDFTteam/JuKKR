@@ -65,9 +65,10 @@ module Startb1_mod
     integer, intent(out) :: max_reclen_mesh
     logical, intent(in) :: nowrite
 
-    integer :: iatom, ispin, nbackfold
-    integer :: reclen, lpot_atom
-    type(PotentialEntry) :: pe(2)
+    integer :: iatom, ispin, n_warn_backfolding
+    integer :: reclen, lpot_atom, ib
+    logical :: bf ! backfold
+    type(PotentialEntry), allocatable :: pe(:,:)
     type(BasisAtom) :: atom
     type(RadialMeshData) :: mesh
     integer, parameter :: fu = 13, fa = 37
@@ -77,23 +78,28 @@ module Startb1_mod
     max_reclen = 0
     max_reclen_mesh = 0
     reclen = 0
-    nbackfold = 0
-    
+    n_warn_backfolding = 0
     n_warn_alat_differs = 0
+    
+    bf = (sfile%ncell < naez)
+    ib = 1 ; if (bf) ib = sfile%ncell
+    allocate(pe(2,ib))
 
     if (.not. nowrite) call openBasisAtomDAFile(atom, fa, 'bin.atoms', action='write')
     
     open(unit=fu, file='potential', status='old', form='formatted', action='read')
     do iatom = 1, naez
 
+      ib = 1 ; if (bf) ib = modulo(iatom - 1, sfile%ncell) + 1
       do ispin = 1, nspin
-        call create(pe(ispin), fu, iatom) ! create_read_PotentialEntry
+        if (iatom <= sfile%ncell) &
+        call create(pe(ispin,ib), fu, iatom) ! create_read_PotentialEntry
 
-        if (iatom == 1 .and. ispin == 1) EFERMI = pe(ispin)%header%EFERMI ! take approximate Fermi energy from 1st potential entry
+        if (iatom == 1 .and. ispin == 1) EFERMI = pe(ispin,ib)%header%EFERMI ! take approximate Fermi energy from 1st potential entry
 
   !        The nuclear charge Z is now solely determined by the 'potential' file, 'atominfo' is no longer needed
 
-        Zat(iatom) = pe(ispin)%header%Z_nuclear
+        Zat(iatom) = pe(ispin,ib)%header%Z_nuclear
 
   !        The parameter ntcell is now automatically set to the index of the atom (1st atom -> 1st pe in shapefun file,
   !        2nd atom -> 2nd pe in shapefun file), 'atominfo' is no longer needed
@@ -103,27 +109,27 @@ module Startb1_mod
   !        The muffin-tin radius (formerly RMT in atominfo) is set to the value of RMT in the 'potential' file,
   !        'atominfo' is no longer needed
 
-        radius_muffin_tin = pe(ispin)%header%RMT
+        radius_muffin_tin = pe(ispin,ib)%header%RMT
 
   !        ! do some consistency checks
-  !        if (abs(Zat(iatom) - pe(ispin)%header%Z_nuclear) > 1.d-8) then
+  !        if (abs(Zat(iatom) - pe(ispin,ib)%header%Z_nuclear) > 1.d-8) then
   !          write(*,*) "ERROR: Mismatch of nuclear charge between atominfo and potential file for pe: ", iatom
-  !          write(*,*) Zat(iatom), pe(ispin)%header%Z_nuclear
+  !          write(*,*) Zat(iatom), pe(ispin,ib)%header%Z_nuclear
   !          STOP
   !        endif
 
-        if (abs(alat - pe(ispin)%header%alat) > 1.d-8) n_warn_alat_differs = n_warn_alat_differs + 1
+        if (abs(alat - pe(ispin,ib)%header%alat) > 1.d-8) n_warn_alat_differs = n_warn_alat_differs + 1
       enddo ! ispin
 
-      lpot_atom = lmpot_to_lpot(pe(1)%sblock%lmpot)
-      CHECKASSERT( (lpot_atom+1)**2 == pe(1)%sblock%lmpot)
+      lpot_atom = lmpot_to_lpot(pe(1,ib)%sblock%lmpot)
+      CHECKASSERT( (lpot_atom+1)**2 == pe(1,ib)%sblock%lmpot)
 
       ! number of radial points must be the same for every spin direction
-      CHECKASSERT( pe(1)%sblock%irt1p == pe(nspin)%sblock%irt1p )
-      CHECKASSERT( pe(1)%sblock%irns == pe(nspin)%sblock%irns )
-      CHECKASSERT( pe(1)%sblock%lmpot == pe(nspin)%sblock%lmpot )
+      CHECKASSERT( pe(1,ib)%sblock%irt1p == pe(nspin,ib)%sblock%irt1p )
+      CHECKASSERT( pe(1,ib)%sblock%irns == pe(nspin,ib)%sblock%irns )
+      CHECKASSERT( pe(1,ib)%sblock%lmpot == pe(nspin,ib)%sblock%lmpot )
 
-      call createBasisAtom(atom, 1, lpot_atom, nspin, pe(1)%sblock%IRT1P - pe(1)%sblock%IRNS, pe(1)%sblock%IRT1P)  ! create dummy basis atom
+      call createBasisAtom(atom, 1, lpot_atom, nspin, pe(1,ib)%sblock%IRT1P - pe(1,ib)%sblock%IRNS, pe(1,ib)%sblock%IRT1P)  ! create dummy basis atom
 
       inquire(iolength=reclen) atom%potential%vins, &
                                atom%potential%visp, &
@@ -143,17 +149,21 @@ module Startb1_mod
       atom%core%ITITLE = 0
 
       do ispin = 1, nspin
-        atom%core%NCORE(ispin) = pe(ispin)%csblock%NCORE
-        atom%core%LCORE(:,ispin) = pe(ispin)%csblock%LCORE
-        atom%core%ITITLE(:,ispin) = pe(ispin)%header%ITITLE
+        atom%core%NCORE(ispin) = pe(ispin,ib)%csblock%NCORE
+        atom%core%LCORE(:,ispin) = pe(ispin,ib)%csblock%LCORE
+        atom%core%ITITLE(:,ispin) = pe(ispin,ib)%header%ITITLE
       enddo
 
       if (.not. nowrite) call writeBasisAtomDA(atom, fa, iatom)
+      
+      call destroy(atom)
 
       cell_index = modulo(ntcell(iatom) - 1, sfile%ncell) + 1
-      if (cell_index < ntcell(iatom)) nbackfold = nbackfold + 1
+      if (cell_index < ntcell(iatom)) n_warn_backfolding = n_warn_backfolding + 1
       
-      call create(mesh, pe(1)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1, sfile%mesh(cell_index)%meshn, sfile%shapes(cell_index)%nfu) ! createRadialMeshData
+      call create(mesh, pe(1,ib)%sblock%IRT1P, sfile%mesh(cell_index)%npan+1, sfile%mesh(cell_index)%meshn, sfile%shapes(cell_index)%nfu) ! createRadialMeshData
+
+      if(.not. bf) call destroy(pe(:,1))
       
       ! determine maximal record length for meshes.0 file
       ! this is a bit of a hack
@@ -161,19 +171,19 @@ module Startb1_mod
      
       ! cleanup
       call destroy(mesh)
-      call destroy(atom)
-      call destroy(pe)
 
     enddo ! iatom ! end loop over atoms
     close(fu)
     
     if (.not. nowrite) call closeBasisAtomDAFile(fa)
+    
+    call destroy(pe)
 
     if (n_warn_alat_differs > 0) &
       warn(6, "In"+n_warn_alat_differs/nspin+"potential files ALAT is not the same as in the input!")
 
-    if (nbackfold > 0) &
-      warn(6, "In"+nbackfold+"cases the shapfun index has been backfolded into [1,"+sfile%ncell-"]!")
+    if (n_warn_backfolding > 0) &
+      warn(6, "In"+n_warn_backfolding+"cases the shapefun and potential index has been backfolded into [1,"+sfile%ncell-"]!")
 
   endsubroutine ! write_atoms_file
 
@@ -205,24 +215,31 @@ module Startb1_mod
     logical, intent(in) :: nowrite
 
     type(BasisAtom) :: atom
-    type(PotentialEntry) :: pe(2)
+    integer :: ib
+    logical :: bf ! backfold
+    type(PotentialEntry), allocatable :: pe(:,:)
     type(RadialMeshData) :: mesh
     integer, parameter :: fu=13
     integer :: cell_index, lpot, irmd, irmind, ipand, irns, irid, iatom, ispin
+
+    bf = (sfile%ncell < naez)
+    ib = 1 ; if (bf) ib = sfile%ncell
+    allocate(pe(2,ib))
     
     open(unit=fu, file='potential', form='formatted', status='old', action='read')
-    
     do iatom = 1, naez
 
+      ib = 1 ; if (bf) ib = modulo(iatom - 1, sfile%ncell) + 1
       do ispin = 1, nspin
-        call create(pe(ispin), fu, iatom) ! create_read_PotentialEntry
+        if (iatom <= sfile%ncell) &
+        call create(pe(ispin,ib), fu, iatom) ! create_read_PotentialEntry
       enddo ! spin
 
       cell_index = modulo(ntcell(iatom) - 1, sfile%ncell) + 1 ! backfold
 
-      lpot = lmpot_to_lpot(pe(1)%sblock%lmpot)
-      irmd = pe(1)%sblock%irt1p
-      irns = pe(1)%sblock%irns
+      lpot = lmpot_to_lpot(pe(1,ib)%sblock%lmpot)
+      irmd = pe(1,ib)%sblock%irt1p
+      irns = pe(1,ib)%sblock%irns
       irmind = irmd - irns
       ipand = sfile%mesh(cell_index)%npan+1
       irid = sfile%mesh(cell_index)%meshn
@@ -232,10 +249,12 @@ module Startb1_mod
 
       ! set potential
       do ispin = 1, nspin
-        atom%potential%vins(:,:,ispin) = pe(ispin)%nsblocks%vins
-        atom%potential%visp(:,ispin) = pe(ispin)%sblock%visp
-        atom%core%ecore(:,ispin) = pe(ispin)%csblock%ecore
+        atom%potential%vins(:,:,ispin) = pe(ispin,ib)%nsblocks%vins
+        atom%potential%visp(:,ispin) = pe(ispin,ib)%sblock%visp
+        atom%core%ecore(:,ispin) = pe(ispin,ib)%csblock%ecore
       enddo ! ispin
+      
+      if(.not. bf) call destroy(pe(:,1))
 
       ! initialise radial mesh
       call initRadialMesh(mesh, alat, sfile%mesh(cell_index)%xrn, sfile%mesh(cell_index)%drn, &
@@ -266,14 +285,14 @@ module Startb1_mod
       ! cleanup
       call destroy(atom)
       call destroy(mesh)
-      do ispin = 1, nspin
-        call destroy(pe(ispin))
-      enddo
 
     enddo ! endloop over atoms
 
     close(fu)
-    
+
+    call destroy(pe)
+    deallocate(pe)
+
     if (.not. nowrite) then
     
       call closeBasisAtomPotentialDAFile(39)
