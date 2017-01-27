@@ -47,7 +47,7 @@ ifeq ($(PLATFORM),ifort)
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else ifeq ($(TYPE),debug_mtradii)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
-		PPFLAGS += -D USE_MTRADII
+		PPFLAGS += -D USE_MTRADII -D USE_OLD_MESH -D NOLOGGING
  	else ifeq ($(TYPE),voronoi_mesh)
 		FCFLAGS += -O3
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
