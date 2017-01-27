@@ -570,9 +570,9 @@ module ProcessKKRresults_mod
 
       new_fermi = emesh%E2
 
-      ! allow only a maximal Fermi Energy shift of 0.3 Ry
+      ! allow only a maximal Fermi Energy shift of 0.05 Ry
       call doFermiEnergyCorrection(atomdata, mp%isMasterRank .and. (ila == 1), & ! show only once
-                                  arrays%naez, 0.3d0, CHRGNT, DENEF, densities%R2NEF, &
+                                  arrays%naez, 0.05d0, CHRGNT, DENEF, densities%R2NEF, &
                                   energies%ESPV, densities%RHO2NS, new_fermi)
 
       ! calculate multipole moments
