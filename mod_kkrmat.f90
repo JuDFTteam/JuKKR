@@ -15,7 +15,7 @@ IMPLICIT NONE
   PRIVATE
   PUBLIC :: CalcKKRmat, CalcKKRmat2, InvertT, CalcTMAT, &
           & compute_kkr_eigenvectors, compute_kkr_eigenvectors2, &
-          & compute_kkr_eigenvectors2_dk
+          & compute_kkr_eigenvectors2_dk, compute_kkr_eigenvectors_memopt
 
 CONTAINS
 
@@ -252,7 +252,138 @@ CONTAINS
   end subroutine compute_kkr_eigenvectors
 
 
+  subroutine compute_kkr_eigenvectors_memopt(inc, lattice, cluster, ginp, tinvll, kpoint, eigw_memopt, LVeig_memopt, RVeig_memopt, nb_ev)
 
+    use type_inc,      only: inc_type
+    use type_data,     only: lattice_type, cluster_type, tgmatrx_type
+    use mod_dlke,      only: dlke0
+    use mod_eigvects,  only: normeigv_new, normeigv_new_memopt
+    use mod_mympi,     only: myrank, nranks, master
+
+    implicit none
+
+    type(inc_type),     intent(in) :: inc
+    type(lattice_type), intent(in) :: lattice
+    type(cluster_type), intent(in) :: cluster
+    double precision,   intent(in) :: kpoint(3)
+    double complex,     intent(in) :: ginp(inc%naclsd*inc%lmmax,inc%lmmax,inc%nclsd),&
+                                    & tinvll(inc%lmmaxso,inc%lmmaxso,inc%naezd)
+
+    ! to optimize memory, only return eigen values and eigen vectors close to
+    ! Fermi energy (up to inc%neig, which might need to be increased)
+    double complex,    intent(out) :: LVeig_memopt(inc%almso,inc%neig),&
+                                    & RVeig_memopt(inc%almso,inc%neig),&
+                                    & eigw_memopt(inc%neig)
+
+    integer,           intent(out) :: nb_ev ! number of eigen values and eigen vectors
+
+    double complex              :: LVeig(inc%almso,inc%almso),&
+                                 & RVeig(inc%almso,inc%almso),&
+                                 & eigw(inc%almso)
+
+    double complex   :: gllke(inc%almso,inc%almso),&
+                      & gllketmp(inc%alm,inc%alm), &
+                      & mmat(inc%almso,inc%almso)
+
+    integer          :: ierr, naux, i, j, t1, t2, tim
+    double precision, allocatable :: daux(:)
+    double complex,   allocatable :: aux(:)
+
+    ! for FEAST library
+    integer,dimension(64) :: feastparam 
+    integer :: loop, info
+    double precision :: epsout, resr(inc%neig*2) ! residual
+    double complex   :: eig_temp(inc%almso,inc%neig*2)
+
+    ! calculate the Greens function
+    gllketmp = (0d0, 0d0)
+    call dlke0( gllketmp, inc, lattice%alat, cluster%cls, cluster%nacls,&
+              & cluster%rr, cluster%ezoa, cluster%atom, kpoint,         &
+              & cluster%rcls, ginp                                      )
+
+    ! for spin-orbit coupling, double the array G(k,E)_LL'
+    gllke = (0d0,0d0)
+    gllke(1:inc%alm, 1:inc%alm) = gllketmp
+    if(inc%nspd==2) gllke(inc%alm+1:inc%almso,inc%alm+1:inc%almso) = gllketmp
+
+    ! find the KKR-matrix
+    mmat = (0d0,0d0)
+    call CalcKKRmat(inc, gllke, tinvll, mmat)
+
+    ! diagonalize the KKR-matrix and store the eigenvalues and eigenvectors
+
+    eigw_memopt  = (0d0,0d0)
+    LVeig_memopt = (0d0,0d0)
+    RVeig_memopt = (0d0,0d0)
+
+    if(inc%feast==.true.)then
+      call feastinit(feastparam)
+      if (myrank==master) then
+        feastparam(1)=1
+      else
+        feastparam(1)=0
+      endif!myrank==master
+
+      feastparam(3)=11
+      feastparam(6)=1
+      feastparam(10)=1
+
+      if (myrank==master) call system_clock(t1,tim)
+
+      call zfeast_geev(inc%almso,mmat,inc%almso,feastparam,epsout,loop,(0.0d0,0.00d0),inc%reig,inc%neig,eigw_memopt,eig_temp,nb_ev,resr,info)
+      if(info/=0) write(*,*) 'FEAST error : info=',info 
+      
+      if (myrank==master) then
+        call system_clock(t2,tim)
+        print *,'Time for diagonalization',(t2-t1)*1.0d0/tim
+      end if!myrank==master
+
+      RVeig_memopt=eig_temp(:,1:nb_ev)
+      LVeig_memopt=eig_temp(:,1+inc%neig:nb_ev+inc%neig)
+
+    else
+      naux = 2*inc%almso**2+5*inc%almso
+      allocate( daux(2*inc%almso), aux(naux), STAT=ierr )
+      if(ierr/=0) stop 'Problem allocating aux arrays'
+
+      eigw  = (0d0,0d0)
+      LVeig = (0d0,0d0)
+      RVeig = (0d0,0d0)
+
+      if (myrank==master) call system_clock(t1,tim)
+
+      call ZGEEV( 'V','V', inc%almso, mmat, inc%almso, eigw, LVeig,  &
+                & inc%almso, RVeig, inc%almso, aux, naux, daux, ierr )
+      if (ierr /= 0 ) stop "Problems with diagonalizing KKR-matrix"
+      
+      if (myrank==master) then
+        call system_clock(t2,tim)
+        print *,'Time for diagonalization',(t2-t1)*1.0d0/tim
+      end if!myrank==master
+
+      ! save eigen values < inc%reig
+      nb_ev = 0
+      do i=1,inc%almso
+        if (abs(eigw(i))<inc%reig) then
+          nb_ev = nb_ev + 1
+          LVeig_memopt(:,nb_ev)=LVeig(:,i)
+          RVeig_memopt(:,nb_ev)=RVeig(:,i)
+          eigw_memopt(nb_ev)   =eigw(i)
+          if(nb_ev>inc%neig) stop 'memopt : too many eigen values found ! Adapt array size'
+        end if!
+      end do!
+
+      deallocate(aux,daux)
+    end if!inc%feast==.true.
+
+    if (myrank==master) write(234,*) nb_ev
+    if (nb_ev<1) stop 'memopt : 0 eigen values found, reig is probably too small'
+
+    ! normalize the eigenvectors
+!    if (nb_ev>0) call normeigv_new(nb_ev, LVeig_memopt(:,1:nb_ev), RVeig_memopt(:,1:nb_ev))
+    if (nb_ev>0) call normeigv_new_memopt(inc%almso, nb_ev, LVeig_memopt, RVeig_memopt)
+
+  end subroutine compute_kkr_eigenvectors_memopt
 
 
   subroutine compute_kkr_eigenvectors2(inc, lattice, cluster, ginp, tmat, kpoint, eigw, LVeig, RVeig)
@@ -313,6 +444,8 @@ CONTAINS
 
     ! normalize the eigenvectors
     call normeigv_new(inc%almso, LVeig, RVeig)
+
+    deallocate(daux,aux)
 
   end subroutine compute_kkr_eigenvectors2
 

@@ -10,7 +10,7 @@ module mod_iohelp
   implicit none
 
   private
-  public :: file_present, getBZvolume, get_nLines
+  public :: file_present, file_present2, getBZvolume, get_nLines
 #ifdef CPP_MPI
   public :: open_mpifile_setview, close_mpifile
 #endif
@@ -39,6 +39,22 @@ contains
     file_present = file_exist
 
   end function file_present
+
+
+
+  logical function file_present2(filename)
+
+    implicit none
+
+    character(len=*) :: filename
+    logical          :: file_exist
+    integer          :: ierr
+
+    inquire(file=filename, exist=file_exist)
+
+    file_present2 = file_exist
+
+  end function file_present2
 
 
 
