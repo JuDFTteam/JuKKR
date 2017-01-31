@@ -104,6 +104,37 @@ contains
         read(unit=uio,fmt=*) inc%nrootmax
         if(inc%nrootmax==0) inc%nrootmax = inc%almso/inc%ndegen
 
+        call IoInput('MEMOPT    ',uio,1,7,ierr)
+
+        if(ierr==0) then
+          read(unit=uio,fmt=*) inc%memopt
+        else ! ensures compatibility of old format input files
+          write(*,*) "Warning : MEMOPT set to .false. by default !"
+          inc%memopt = .false.
+        end if!ierr/=0
+
+        if(inc%memopt==.true.) then
+          call IoInput('NEIG      ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) inc%neig
+          if(inc%neig==0) then
+             inc%neig = 32 ! empirical
+             write(*,*)"neig automatically set to ", inc%neig
+          endif!inc%neig==0
+
+          call IoInput('REIG      ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) inc%reig
+          if(inc%reig==0.0d0) then
+             inc%reig = 8.0/inc%natyp ! empirical
+             write(*,*)"reig automatically set to ", inc%reig
+          endif!inc%reig==0
+
+          call IoInput('FEAST     ',uio,1,7,ierr)
+          read(unit=uio,fmt=*) inc%feast
+
+!          inc%ielast=1
+!          write(*,*)"ielast automatically set to 1 to save memory (not suitable for Fermi velocity!)"
+        end if!inc%memopt==1
+
         write(filename,fmt_fn_ext) filename_tbkkrrhod, ext_formatted
         inquire(file=trim(filename), exist=inc%lrhod)
 

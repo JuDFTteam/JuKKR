@@ -241,7 +241,10 @@ contains
 
     ipointer = 0
     do ikp=1,nkpts_orig
-      if(cubeids_orig(ikp)==-1) cycle
+      if(cubeids_orig(ikp)==-1)then
+        write(*,'(A,3ES16.9)') 'skipping cube: k=', kpoints_orig(:,ikp)
+        cycle
+      end if
       ipointer = ipointer+1
       kpoints_new(:,ipointer) = kpoints_orig(:,ikp)
       cubeids_new(ipointer)   = cubeids_orig(ikp)
