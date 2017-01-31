@@ -509,7 +509,7 @@ module SingleSiteHelpers_mod
             zocsq = -2.d0*z*z/(cvlight*cvlight)
             a(-1) = 0.d0
             a(0) = 1.d0
-            b(0) = cmplx(sm1*cvlight*cvlight/(2*z), 0.d0)
+            b(0) = dcmplx(sm1*cvlight*cvlight/(2*z), 0.d0)
             do j = 1,3
               a(j) = (0.d0,0.d0)
               b(j) = (0.d0,0.d0)

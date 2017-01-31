@@ -440,16 +440,16 @@ module SingleSite_mod
       call csout(pns0(1,1,irmind,j), pns1, lmmsqd, irmind, irmd, ipan, ircut)
       err = maxval(abs(pns1(:,:,irc1)))
       ! convergence check
-      if (err > 1d-3) then
-        if (Volterra) then
-          write(*,*)'regns.f: Volterra equation does not converge -> consider &
-          increasing icst in input.conf or switching to Fredholm'
-        else
-          write(*,*)'regns.f: Fredholm equation does not converge -> consider &
-          increasing icst in input.conf or switching to Volterra'
-        endif
-        stop 'error 1 in regns.f'
-      endif
+!      if (err > 1d-3) then
+!        if (Volterra) then
+!          write(*,*)'regns.f: Volterra equation does not converge -> consider &
+!          increasing icst in input.conf or switching to Fredholm'
+!        else
+!          write(*,*)'regns.f: Fredholm equation does not converge -> consider &
+!          increasing icst in input.conf or switching to Volterra'
+!        endif
+!        stop 'error 1 in regns.f'
+!      endif
     enddo ! j
 ! end convergence check      
 !-----------------------------------------------------------------------
