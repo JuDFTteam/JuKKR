@@ -10,7 +10,8 @@ module mod_eigvects
 implicit none
 
   private
-  public :: orthgonalize_wavefunc, normalize_wavefunc, calc_norm_wavefunc, calc_proj_wavefunc, normeigv_new, compare_eigv, rewrite_eigv_atom
+  public :: orthgonalize_wavefunc, normalize_wavefunc, calc_norm_wavefunc, calc_proj_wavefunc,&
+          & normeigv_new, compare_eigv, rewrite_eigv_atom,compare_eigv_memopt,normeigv_new_memopt
 
 
 
@@ -95,6 +96,61 @@ contains
 
 
   end subroutine compare_eigv
+
+
+
+
+
+  subroutine compare_eigv_memopt(inc, LVref, RV2, nb_ev, LMout, uio)
+    ! Compare an reference-eigenvector (LVref) with several other
+    !   eigenvectors (contained in RV2) and find the one with the
+    !   largest overlap (index LMout). However, only consider
+    !   those eigenvectors LV2(:,i2) when take(i2)=.true..
+
+
+    use type_inc
+    use mod_mathtools, only: bubblesort
+
+    implicit none
+
+    type(inc_type), intent(in) :: inc
+    double complex, intent(in) :: LVref(inc%almso), &
+                                & RV2(inc%almso,inc%neig)
+    integer, intent(in)        :: nb_ev
+    integer, intent(out)       :: LMout
+    integer, optional, intent(in) :: uio
+
+    integer          :: lm2, sorted(inc%neig)
+    double complex   :: cprojs(inc%neig)
+    double precision :: projs(inc%neig), projmax
+
+    !calculate projections on other eigenvectors
+    cprojs = (0d0, 0d0)
+    projs  = 0d0
+    do lm2=1,nb_ev
+        cprojs(lm2) = dot_product(LVref,RV2(:,lm2))
+        projs(lm2)  = dble(cprojs(lm2))**2 + dimag(cprojs(lm2))**2
+    end do!lm2
+
+
+    !find corresponding eigenvector
+    projmax = 0d0
+    LMout =  0
+    do lm2=1,nb_ev
+      if(projs(lm2)>projmax) then
+        projmax = projs(lm2)
+        LMout   = lm2
+      end if!proj==projmax
+    end do!lm2
+
+    if(present(uio)) then
+      call bubblesort(inc%neig, projs, sorted)
+      write(uio,"(5X,6(I8,16X))") sorted(inc%neig-5:inc%neig)
+      write(uio,"(5X,6(8X,E16.6))") projs(sorted(inc%neig-5:inc%neig))
+    end if!present(uio)
+
+
+  end subroutine compare_eigv_memopt
 
 
 
@@ -267,7 +323,6 @@ subroutine normeigv_new(almso, LV, RV)
     if(abs(norm-CONE)>1d-3) write(*,*) "norm not 1, (lm, norm)=", lm1, norm
   end do
 
-
   do lm1=1,almso
     do lm2=lm1+1,almso
       proj = dot_product(LV(:,lm2),RV(:,lm1))
@@ -276,6 +331,43 @@ subroutine normeigv_new(almso, LV, RV)
   end do
 
 end subroutine normeigv_new
+
+
+
+
+subroutine normeigv_new_memopt(almso, nb_ev, LV, RV)
+
+  integer,        intent(in)    :: almso, nb_ev
+  double complex, intent(inout) :: LV(almso,nb_ev), RV(almso,nb_ev)
+
+  integer        :: lm1, lm2
+  double complex :: snorm, norm, proj
+
+  double complex, parameter :: cone=(1d0,0d0)
+
+  !normalize correctly
+  do lm2=1,nb_ev
+    snorm=sqrt(dot_product(LV(:,lm2), RV(:,lm2)))
+    RV(:,lm2) = RV(:,lm2)/snorm
+    LV(:,lm2) = LV(:,lm2)/conjg(snorm)
+  end do!lm2
+
+  !perform checks
+  do lm1=1,nb_ev
+    norm = dot_product(LV(:,lm1),RV(:,lm1))
+    if(abs(norm-CONE)>1d-3) write(*,*) "norm not 1, (lm, norm)=", lm1, norm
+  end do
+
+  if(nb_ev>1) then ! with memory optimization number of eigen values can be <= 1
+    do lm1=1,nb_ev
+      do lm2=lm1+1,nb_ev
+        proj = dot_product(LV(:,lm2),RV(:,lm1))
+        if(abs(proj)>1d-4) write(*,*) "proj not 0, (lm1, lm2, proj)=", lm1, lm2, proj
+      end do
+    end do
+  end if!almso>1
+
+end subroutine normeigv_new_memopt
 
 
 
