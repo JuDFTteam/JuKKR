@@ -245,6 +245,7 @@ contains
         else!cfg%simpson==.true.
           if(cfg%simpson) write(*,*) 'Simpson rule is not implemented for inc%nBZdim =/= 2. Taking standard (=linear) integration.'
           call calculate_response_functions_CRTA_vis(inc%nBZdim,nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,inc%natypd,nkpts,nkpts_all,kpt2irr,irr2kpt,kpoints,fermivel,torqval,torqval_atom,spinvec_atom,spinflux_atom)
+!          call calculate_response_functions_CRTA_vis(inc%nBZdim,nsym,isym,symmetries%rotmat,lattice%alat,BZVol,inc%ndegen,inc%natypd,nkpts,nkpts_all,kpt3irr,irr2kpt,kpoints,alphaval(:,1,:),torqval,torqval_atom,spinvec_atom,spinflux_atom)
         end if!cfg%simpson==.true.
       end if!cfg%mode==MODE_VIS
     end if!myrank==master
@@ -1948,7 +1949,9 @@ contains
     end if!allocated(torqval)
 
     if(allocated(spinvec_atom)) then
-      spinacc_atom = -integ_spinacc_atom/BZVol*alat/tpi ! units of (e a_0 mu_B)/(Rd)
+!      spinacc_atom = -integ_spinacc_atom/BZVol*alat/tpi ! units of (e a_0 mu_B)/(Rd)
+!     change sign because magnetic moment and angular momentum have opposite sign
+      spinacc_atom = integ_spinacc_atom/BZVol*alat/tpi ! units of (e a_0 mu_B)/(Rd)
 
       if(myrank==master)then
         open(unit=iounit,file="spinacc_resp.CRTA.int.dat",form='formatted',action='write')
@@ -1959,7 +1962,9 @@ contains
     end if!allocated(spinvec_atom)
 
     if(allocated(spinflux)) then
-      spinflux_resp = integ_spinflux/BZVol*alat/tpi
+!      spinflux_resp = integ_spinflux/BZVol*alat/tpi
+!     change sign because we want the spin flux that flows INTO the MT
+      spinflux_resp = -integ_spinflux/BZVol*alat/tpi
 
       if(myrank==master)then
         open(unit=iounit,file="spinflux_resp.CRTA.int.dat",form='formatted',action='write')
@@ -1983,6 +1988,7 @@ contains
     integer,          intent(in)  :: nBZdim, nsym, ndeg, natyp, nkpts, nkpts_all, kpt2irr(nkpts_all), irr2kpt(nkpts), isym(nsym)
     double precision, intent(in)  :: alat, BZVol, kpoints(3,nkpts)
     double precision, intent(in)  :: rotmat(64,3,3), fermivel(3,nkpts)
+!    double precision, allocatable, intent(in)  :: torqval(:,:,:)      !torqval(3,ndeg,nkpts)
     double precision, allocatable, intent(in)  :: torqval(:,:,:)      !torqval(3,ndeg,nkpts)
     double precision, allocatable, intent(in)  :: torqval_atom(:,:,:,:) !torqval_atom(3,natypd,ndeg,nkpts)
     double precision, allocatable, intent(in)  :: spinvec_atom(:,:,:,:) !spinvec_atom(3,natypd,ndeg,nkpts)
@@ -2235,7 +2241,9 @@ contains
     end if!allocated(torqval)
 
     if(allocated(spinvec_atom)) then
-      spinacc_atom = -integ_spinacc_atom*(2)**0.5/BZVol*alat/tpi ! sqrt(2) for mu_B
+!      spinacc_atom = -integ_spinacc_atom*(2)**0.5/BZVol*alat/tpi ! sqrt(2) for mu_B
+!     change sign because magnetic moment and angular momentum have opposite sign
+      spinacc_atom = integ_spinacc_atom/BZVol*alat/tpi
 
       if(myrank==master)then
         open(unit=iounit,file="spinacc_resp.CRTA.vis.dat",form='formatted',action='write')
