@@ -353,7 +353,7 @@ module ProcessKKRresults_mod
     use InputParams_mod, only: InputParams
     use Main2Arrays_mod, only: Main2Arrays
     use DimParams_mod, only: DimParams
-    use TimerMpi_mod, only: TimerMpi, getTime, outTime
+    use TimerMpi_mod, only: TimerMpi, getTime, outTime, stopTimer, startTimer, outTimeStats
     
     use RadialMeshData_mod, only: RadialMeshData
     use ShapefunData_mod, only: ShapefunData
@@ -396,6 +396,8 @@ module ProcessKKRresults_mod
     integer :: ila, r1fu
     integer :: num_local_atoms
 
+    type(TimerMpi) :: val_charge_timer
+
     double complex, allocatable :: prefactors(:)  ! for Morgan charge test only
 
     num_local_atoms = calc%num_local_atoms
@@ -434,6 +436,7 @@ module ProcessKKRresults_mod
 
     LDORHOEF = (emesh%NPOL /= 0) ! needed in RHOVAL, 'L'ogical 'DO' RHO at 'E'-'F'ermi
 
+    call startTimer(val_charge_timer)          
       if (mp%isMasterRank .and. dims%korbit == 1) write(*,*) "Entering RHOVAL_wrapper! This might take some time, because NOCO (Bauer) solver is used..."
   !------------------------------------------------------------------------------
     !$omp parallel do reduction(+: chrgnt,denef, chrgsemicore) private(ila,atomdata,densities,energies,ldau_data,denef_local,chrgnt_local,atom_id)
@@ -518,6 +521,7 @@ module ProcessKKRresults_mod
     !$omp endparallel do
   !------------------------------------------------------------------------------
 
+    call stopTimer(val_charge_timer)
     call sumNeutralityDOSFermi_com(CHRGNT, DENEF, mp%mySEComm)
 
     ! write to 'results1' - only to be read in in results.f
@@ -541,6 +545,7 @@ module ProcessKKRresults_mod
       close(r1fu)
     endif
 
+    call outTime(mp%isMasterRank, 'Valence charge density took', getTime(val_charge_timer), iter)
     call outTime(mp%isMasterRank, 'density calculated .............', getTime(program_timer), ITER)
 
   !------------------------------------------------------------------------------
