@@ -11,11 +11,12 @@ module mod_fermisurf_basic
 
   private
   public :: ROOT_IMAG, ROOT_ANY, ROOT_REAL, roots_along_edge, compare_two_eigv_in_substeps, &
-          & connect_eigw_in_substeps, find_roots_any_eigw, mark_cubes_FScross, &
+          & connect_eigw_in_substeps, find_roots_any_eigw, find_roots_any_eigw_memopt, &
+          & mark_cubes_FScross, mark_cubes_FScross_memopt, &
           & generate_cubevertices, generate_squarevertices, unroll_ixyz, &
           & read_cubesfile, save_cubesfile, find_kpoints_irredset, save_kpointsfile_vis, &
-          & save_kpointsfile_int, testpath, get_cubesinfo_filename
-
+          & save_kpointsfile_int, testpath, get_cubesinfo_filename, &
+          & connect_eigw_in_substeps_memopt, roots_along_edge_memopt, compare_two_eigv_in_substeps_memopt
   integer, parameter :: ROOT_ANY=0, ROOT_REAL=1, ROOT_IMAG=2
 
 contains
@@ -241,6 +242,7 @@ contains
                          & eigwroot, 136                                                 )
     close(136)
 
+    deallocate(LVroot,RVroot,eigwroot,ksub,LVeig,RVeig,eigw,connection,STAT=ierr)
 
   end subroutine testpath
 
@@ -332,6 +334,93 @@ contains
 
 
 
+  subroutine connect_eigw_in_substeps_memopt( inc, lattice, cluster, tgmatrx, nsteps, kends, &
+                                     & connection, ksub, eigw, LVeig, RVeig, nb_bands      )
+  !===========================================================================================!
+  ! Connect the eigenvalues between two k-points, kends(:,1) and kends(:,2).                  !
+  ! The connection is made by dividing the intervall into nsteps subintervals,                !
+  !   and comparing the eigenvectors of each subinterval.                                     !
+  !                                                                                           !
+  ! The subroutine returns:                                                                   !
+  !  - the connection-array, defined by:                                                      !
+  !      eigw(lm1, ikp=1) == eigw(connection(lm1,1),1) <--> eigw(connection(lm1,ikp),ikp)     !
+  !  - the kpoints of the submesh                                                             !
+  !  - the eigenvalues and correcly normalized (left and right) eigenvectors                  !
+  !===========================================================================================!
+
+    use type_inc
+    use type_data,    only: lattice_type, cluster_type, tgmatrx_type
+    use mod_kkrmat,   only: compute_kkr_eigenvectors, compute_kkr_eigenvectors_memopt
+    use mod_eigvects, only: compare_eigv, compare_eigv_memopt
+    implicit none
+
+    type(inc_type),     intent(in) :: inc
+    type(lattice_type), intent(in) :: lattice
+    type(cluster_type), intent(in) :: cluster
+    type(tgmatrx_type), intent(in) :: tgmatrx
+    integer,            intent(in) :: nsteps
+    double precision,   intent(in) :: kends(3,2)
+
+    integer,          intent(out) :: connection(inc%neig,nsteps+1)
+    double precision, intent(out) :: ksub(3,nsteps+1)
+    double complex,   intent(out) :: LVeig(inc%almso,inc%neig,nsteps+1),&
+                                   & RVeig(inc%almso,inc%neig,nsteps+1),&
+                                   & eigw(inc%neig,nsteps+1)
+    integer                       :: nb_ev(nsteps+1)
+    integer,          intent(out) :: nb_bands                       
+
+    !--- Locals ---
+
+    integer :: ikp, ierr, lm1, lmconn, istep
+
+    ! helper variables
+    double precision :: dkp(3)
+
+    dkp = (kends(:,2) - kends(:,1))/nsteps
+    do ikp=1,nsteps+1
+
+      !--- create submesh to divide the input-intervall ---!
+      ksub(:,ikp) = kends(:,1) + dble(ikp-1)*dkp
+
+      !--- find the KKR-matrix, -eigenvectors and ---!
+      !---  -eigenvalues on each sub-kpoint       ---!
+      call compute_kkr_eigenvectors_memopt( inc, lattice, cluster, tgmatrx%ginp(:,:,:,1),&
+                                   & tgmatrx%tinvll(:,:,:,1), ksub(:,ikp),        &
+                                   & eigw(:,ikp), LVeig(:,:,ikp), RVeig(:,:,ikp),nb_ev(ikp))
+!     call compute_kkr_eigenvectors2( inc, lattice, cluster, tgmatrx%ginp(:,:,:,1),&
+!                                   & tgmatrx%tmat(:,:,1), ksub(:,ikp),            &
+!                                   & eigw(:,ikp), LVeig(:,:,ikp), RVeig(:,:,ikp)  )
+    end do!ikp
+
+    nb_bands=nb_ev(1)
+
+
+    !-----------------------------------------------------!
+    !--- for each step: make connection of eigenvalues ---!
+    !--- between 2 k-points by comparing eigenvectors. ---!
+    !-----------------------------------------------------!
+
+    !initialize the connections
+    connection = 0
+    do lm1=1,nb_bands
+        connection(lm1,1) = lm1
+    end do!lm1
+
+    !compare eigenvectors and make the connection
+    do istep=1,nsteps
+      do lm1=1,nb_bands
+        lmconn = connection(lm1,istep)
+        call compare_eigv_memopt(inc, LVeig(:,lmconn,istep), RVeig(:,:,istep+1), nb_ev(istep+1), connection(lm1,istep+1))
+      end do!lm1
+    end do!istep
+
+
+  end subroutine connect_eigw_in_substeps_memopt
+
+
+
+
+
   subroutine roots_along_edge( inc, lattice, cluster, tgmatrx, nsteps, kends, niterate, &
                              & roottype, rooteps, nroot, lmroot, kroot, LVroot,         &
                              & RVroot, eigwroot, uio, eigwends                          )
@@ -398,7 +487,7 @@ contains
     double precision :: dtmpsort(inc%almso)
 
     call connect_eigw_in_substeps( inc, lattice, cluster, tgmatrx, nsteps, kends,            &
-                                 & connection, kpoints_steps, eigw_steps, LV_steps, RV_steps )
+                                   & connection, kpoints_steps, eigw_steps, LV_steps, RV_steps )
 
     !determine which eigenvalues to scan
     if(inc%ndegen==2)then
@@ -540,6 +629,220 @@ contains
 
 
 
+  subroutine roots_along_edge_memopt( inc, lattice, cluster, tgmatrx, nsteps, kends, niterate, &
+                             & roottype, rooteps, nroot, lmroot, kroot, LVroot,                &
+                             & RVroot, eigwroot, uio, eigwends                                 )
+  !===========================================================================================!
+  ! Find the roots of the KKR eigenvalues along a line from kends(:,1) to kends(:,2).         !
+  !                                                                                           !
+  ! In a first step, the line is divided into nedgesteps subintervals (see routine            !
+  !   connect_eigw_in_substeps for details). Then, an iterative scheme (nested intervals) is  !
+  !   used to refine the position of the root on the line.                                    !
+  !   If uio>0, then information if written to the io-unit 'uio'.                             !
+  !                                                                                           !
+  ! The subroutine returns:                                                                   !
+  !  - nroot:         the number of roots on the edge.                                        !
+  !  - lmroot(j):     the number of eigenvalue belonging to the root at the j-th k-point.     !
+  !  - kroot(:,:,j):  the j-th k-point where an eigenvalue becomes zero.                      !
+  !  - LVroot(:,:,j): all left EVs at the j-th kpoint.                                        !
+  !  - RVroot(:,:,j): all right EVs at the j-th kpoint.                                       !
+  !  - eigwroot(:,j): all eigenvalues at the j-th kpoint.                                     !
+  !  - eigwends(i,j): the eigenvalues of the band belonging to the j-th k-point at the start  !
+  !===========================================================================================!
+
+    use type_inc
+    use type_data,    only: lattice_type, cluster_type, tgmatrx_type
+    use mod_kkrmat,   only: compute_kkr_eigenvectors, compute_kkr_eigenvectors_memopt
+    use mod_eigvects, only: compare_eigv, compare_eigv_memopt
+    use mod_mathtools,only: bubblesort
+    use mod_mympi,    only: myrank, nranks, master
+    implicit none
+
+    type(inc_type),     intent(in) :: inc
+    type(lattice_type), intent(in) :: lattice
+    type(cluster_type), intent(in) :: cluster
+    type(tgmatrx_type), intent(in) :: tgmatrx
+    integer,            intent(in) :: nsteps, niterate, uio
+    double precision,   intent(in) :: kends(3,2)
+    integer,            intent(in) :: roottype
+    double precision,   intent(in) :: rooteps
+    integer,            intent(out) :: nroot, lmroot(inc%nrootmax)
+    double precision,   intent(out) :: kroot(3,inc%nrootmax)
+    double complex,     intent(out) :: LVroot(inc%almso,inc%neig,inc%nrootmax), &
+                                     & RVroot(inc%almso,inc%neig,inc%nrootmax), &
+                                     & eigwroot(inc%neig,inc%nrootmax)
+    integer                         :: nb_bands_roots(inc%nrootmax)
+    double complex, intent(out), optional :: eigwends(2,inc%nrootmax)
+
+    integer          :: connection(inc%neig,nsteps+1), root_interval(inc%neig)
+    double precision :: kpoints_steps(3,nsteps+1)
+    double complex   :: LV_steps(inc%almso,inc%neig,nsteps+1),&
+                      & RV_steps(inc%almso,inc%neig,nsteps+1),&
+                      & eigw_steps(inc%neig,nsteps+1)
+
+    ! for the iterative scheme
+    integer          :: iter, step_intersect, counter
+    double precision :: xtmp, dtmp, kleft(3), kright(3), kmiddle(3)
+    double complex   :: LVleft(inc%almso),           &
+                      & RVleft(inc%almso),           &
+                      & LVright(inc%almso),          &
+                      & RVright(inc%almso),          &
+                      & eigwleft,                    &
+                      & eigwright,                   &
+                      & eigwmiddle(inc%neig),        &
+                      & LVmiddle(inc%almso,inc%neig),&
+                      & RVmiddle(inc%almso,inc%neig)
+
+    integer :: lmsort(inc%neig), loopstep, lmi, lm1, ierr, newconnect, nb_bands
+    double precision :: dtmpsort(inc%neig)
+
+
+    call connect_eigw_in_substeps_memopt( inc, lattice, cluster, tgmatrx, nsteps, kends,            &
+                                 & connection, kpoints_steps, eigw_steps, LV_steps, RV_steps, nb_bands )
+
+    !determine which eigenvalues to scan
+    if(inc%ndegen==2)then
+      !in case of a degeneracy of each eigenvalue, take only one of each pair
+      dtmpsort = abs(eigw_steps(:,1))
+      call bubblesort(inc%neig, dtmpsort, lmsort) ! returns permutation in sortindx
+      loopstep = 2 !skip every second eigenvalue (see loop below)
+    else
+      do lm1=1,inc%neig
+        lmsort(lm1) = lm1
+      end do!lm1
+      loopstep = 1
+    end if
+
+    root_interval = 0
+    !find which lm intersects with zero and store the interval-number
+    do lmi=1,nb_bands,loopstep
+      call find_roots_lm_eigw_memopt(inc%neig,inc%reig,nsteps,connection,eigw_steps,roottype,1d0,lmsort(lmi),root_interval(lmi))
+    end do!lmi
+
+    if(uio>0) write(uio,'("Number of possible roots=" ,I0)') count(root_interval>0)
+
+    !find the precise k-point by iteration
+    counter = 0
+    nb_bands_roots = 0
+    lmloop: do lmi=1,nb_bands,loopstep
+
+      !pick variables
+      lm1 = lmsort(lmi)
+      step_intersect = root_interval(lmi)
+!      if(uio>0) write(uio,'(2X,"lm= ",I0,", interval= ",I0,", abs(eigw)= ",ES18.9)') lm1, step_intersect, abs(eigw_steps(lm1,1))
+      if(uio>0) write(uio,'(2X,"lm= ",I0,", interval= ",I0,", real(eigw)= ",ES18.9,", imag(eigw)= ",ES18.9)') lm1, step_intersect, dble(eigw_steps(lm1,1)),aimag(eigw_steps(lm1,1))
+      if(step_intersect==0) cycle !no intersection of this band with zero
+
+      ! pick kpoints, eigenvectors and eigenvalues of this subinterval
+      kleft(:)  = kpoints_steps(:,step_intersect)
+      LVleft(:) = LV_steps(:,connection(lm1,step_intersect),step_intersect)
+      RVleft(:) = RV_steps(:,connection(lm1,step_intersect),step_intersect)
+      eigwleft  = eigw_steps(connection(lm1,step_intersect),step_intersect)
+
+      kright(:)  = kpoints_steps(:,step_intersect+1)
+      LVright(:) = LV_steps(:,connection(lm1,step_intersect+1),step_intersect+1)
+      RVright(:) = RV_steps(:,connection(lm1,step_intersect+1),step_intersect+1)
+      eigwright  = eigw_steps(connection(lm1,step_intersect+1),step_intersect+1)
+
+
+      !================ START ===============!
+      !--- Refine the k-point on the edge ---!
+      !======================================!
+      do iter=1,niterate
+
+        !--------------------------------------------------------!
+        ! STEP b): determine the interpolated intersection-point !
+        !--------------------------------------------------------!
+        select case (roottype)
+          case(ROOT_REAL)
+            xtmp = dble(eigwleft)/(dble(eigwleft)-dble(eigwright))
+          case(ROOT_IMAG)
+            xtmp = aimag(eigwleft)/(aimag(eigwleft)-aimag(eigwright))
+          case default; stop 'option not known: only real/imag'
+        end select!roottype
+
+        kmiddle = (1d0-xtmp)*kleft + xtmp*kright
+
+        !--------------------------------------------------------------------!
+        ! STEP c): determine the (true) eigenvalue at the interpolated point !
+        !--------------------------------------------------------------------!
+
+        call compute_kkr_eigenvectors_memopt( inc, lattice, cluster, tgmatrx%ginp(:,:,:,1),   &
+                                     & tgmatrx%tinvll(:,:,:,1), kmiddle,                      &
+                                     & eigwmiddle, LVmiddle, RVmiddle, nb_bands_roots(counter))
+!       call compute_kkr_eigenvectors2( inc, lattice, cluster, tgmatrx%ginp(:,:,:,1),&
+!                                     & tgmatrx%tmat(:,:,1), kmiddle,                &
+!                                     & eigwmiddle, LVmiddle, RVmiddle               )
+
+        ! make the connection to the left end of the interval
+        newconnect=0
+        call compare_eigv_memopt( inc, LVleft,RVmiddle,nb_bands_roots(counter),newconnect)
+
+
+
+        !-------------------------------------!
+        ! STEP c): determine the new interval !
+        !-------------------------------------!
+        select case (roottype)
+          case(ROOT_REAL)
+            dtmp = dble(eigwleft)*dble(eigwmiddle(newconnect))
+          case(ROOT_IMAG)
+            dtmp = aimag(eigwleft)*aimag(eigwmiddle(newconnect))
+          case default; stop 'option not known: only real/imag'
+        end select!roottype
+
+        if(dtmp<0d0)then
+          kright(:)  = kmiddle
+          LVright(:) = LVmiddle(:,newconnect)
+          RVright(:) = RVmiddle(:,newconnect)
+          eigwright  = eigwmiddle(newconnect)
+        else
+          kleft(:)  = kmiddle
+          LVleft(:) = LVmiddle(:,newconnect)
+          RVleft(:) = RVmiddle(:,newconnect)
+          eigwleft  = eigwmiddle(newconnect)
+        end if
+
+        if(uio>0) write(uio,'(4X,"iter= ",I0,", kmiddle= (",3ES25.16,"), eigw_min=(",2ES18.9,"), abs(eigw_min)= ",ES18.9,", lm_min=",I0)') iter, kmiddle, eigwmiddle(newconnect), abs(eigwmiddle(newconnect)), newconnect
+
+      end do!iter
+      !======================================!
+      !--- Refine the k-point on the edge ---!
+      !=============== END ==================!
+
+      !save results
+      if(abs(eigwmiddle(newconnect))<rooteps)then
+        counter = counter+1
+        if(counter>inc%nrootmax)then
+          counter = counter-1
+          write(*,*) 'Attention: counter>nrootmax is reached'
+          exit lmloop
+        end if!counter>inc%nrootmax
+
+        kroot(:,counter)  = kmiddle
+        LVroot(:,:,counter) = LVmiddle(:,:)
+        RVroot(:,:,counter) = RVmiddle(:,:)
+        eigwroot(:,counter) = eigwmiddle(:)
+        lmroot(counter)     = newconnect
+        if(present(eigwends))then
+          eigwends(1,counter) = eigw_steps(connection(lm1,1),1)
+          eigwends(2,counter) = eigw_steps(connection(lm1,nsteps+1),nsteps+1)
+        end if
+      end if!abs(dtmp)<rooteps
+
+    end do lmloop!lmi
+    if(myrank==master)write(123,*)eigwroot(:,1)
+    if(myrank==master)write(124,*)eigwroot(:,2)
+    nroot=counter
+    if(uio>0) write(uio,'("Number of roots found matching the criteria: ", I0)') nroot
+    if(uio>0 .and. nroot>0) write(uio,'(2X,"lm= ",8I8)') lmroot(1:nroot)
+
+  end subroutine roots_along_edge_memopt
+
+
+
+
+
   subroutine find_roots_any_eigw(almso,nsteps,connection,eigw,roottype,rooteps,anyroot)
 
     implicit none
@@ -600,6 +903,79 @@ contains
 
 
 
+  subroutine find_roots_any_eigw_memopt(neig,reig,nb_bands,nsteps,connection,eigw,roottype,rooteps,anyroot)
+
+    implicit none
+
+    integer,          intent(in) :: neig, nsteps, connection(neig,nsteps+1), nb_bands
+    double precision, intent(in) :: reig
+    double complex,   intent(in) :: eigw(neig,nsteps+1)
+    integer,          intent(in) :: roottype
+    double precision, intent(in) :: rooteps
+
+    logical, intent(out) :: anyroot
+
+    integer          :: istep, lm1
+    double precision :: dtmp1, dtmp2, xscal
+    double complex   :: ctmp1, ctmp2
+
+    !search for an root on the edge
+    anyroot=.false.
+    outer: do istep=1,nsteps
+      inner: do lm1=1,nb_bands
+
+
+        ctmp1 = eigw(connection(lm1,istep), istep)
+        ctmp2 = eigw(connection(lm1,istep+1), istep+1)
+
+        select case (roottype)
+          case(ROOT_ANY)
+            dtmp1 =  dble(ctmp1) *  dble(ctmp2)
+            dtmp2 = aimag(ctmp1) * aimag(ctmp2)
+            if(dtmp1<0d0 .or.  dtmp2<0d0 )then
+              if(abs(eigw(connection(lm1,istep),istep)) < reig*0.75) then
+                ! otherwise probability is high that the two eigen values are not from the
+                ! same band and that the root is an accident
+                anyroot = .true.
+                exit outer
+              end if!abs(eigw(connection(lm1,istep),istep)) < reig/2.0
+            end if
+          case(ROOT_REAL)
+            dtmp1 =  dble(ctmp1) *  dble(ctmp2)
+            xscal = -dble(ctmp1) / (dble(ctmp2) - dble(ctmp1))
+            dtmp2 = (aimag(ctmp2)-aimag(ctmp1))*xscal + aimag(ctmp1)
+            if(dtmp1<0d0 .and.  abs(dtmp2)<rooteps )then
+              if(abs(eigw(connection(lm1,istep),istep)) < reig*0.75) then
+                ! otherwise probability is high that the two eigen values are not from the
+                ! same band and that the root is an accident
+                anyroot = .true.
+                exit outer
+              end if!abs(eigw(connection(lm1,istep),istep)) < reig/2.0
+            end if
+          case(ROOT_IMAG)
+            dtmp1 =  aimag(ctmp1) *  aimag(ctmp2)
+            xscal = -aimag(ctmp1) / (aimag(ctmp2) - aimag(ctmp1))
+            dtmp2 = (dble(ctmp2)-dble(ctmp1))*xscal + dble(ctmp1)
+            if(dtmp1<0d0 .and.  abs(dtmp2)<rooteps )then
+              if(abs(eigw(connection(lm1,istep),istep)) < reig*0.75) then
+                ! otherwise probability is high that the two eigen values are not from the
+                ! same band and that the root is an accident
+                anyroot = .true.
+                exit outer
+              end if!abs(eigw(connection(lm1,istep),istep)) < reig/2.0
+            end if
+          case default; stop 'option not known'
+        end select!roottype
+
+      end do inner!lm1
+    end do outer!istep
+
+  end subroutine find_roots_any_eigw_memopt
+
+
+
+
+
   subroutine find_roots_lm_eigw(almso,nsteps,connection,eigw,roottype,rooteps,lm1,root_interval)
 
     implicit none
@@ -611,9 +987,9 @@ contains
 
     integer, intent(out) :: root_interval
 
-    integer          :: istep, icount
-    double precision :: dtmp1, dtmp2, xscal
-    double complex   :: ctmp1, ctmp2
+    integer           :: istep, icount
+    double precision  :: dtmp1, dtmp2, xscal
+    double complex    :: ctmp1, ctmp2
 
     !search for an root on the edge
     root_interval = 0
@@ -655,6 +1031,74 @@ contains
     if(icount>1) root_interval = 0
 
   end subroutine find_roots_lm_eigw
+
+
+
+
+
+  subroutine find_roots_lm_eigw_memopt(neig,reig,nsteps,connection,eigw,roottype,rooteps,lm1,root_interval)
+
+    implicit none
+
+    integer,          intent(in) :: neig, nsteps, connection(neig,nsteps+1)
+    double precision, intent(in) :: reig
+    double complex,   intent(in) :: eigw(neig,nsteps+1)
+    integer,          intent(in) :: roottype, lm1
+    double precision, intent(in) :: rooteps
+
+    integer, intent(out) :: root_interval
+
+    integer           :: istep, icount
+    double precision  :: dtmp1, dtmp2, xscal
+    double complex    :: ctmp1, ctmp2
+
+    !search for an root on the edge
+    root_interval = 0
+    icount = 0
+    do istep=1,nsteps
+
+        ctmp1 = eigw( connection(lm1,istep),   istep   )
+        ctmp2 = eigw( connection(lm1,istep+1), istep+1 )
+
+        select case (roottype)
+          case(ROOT_ANY)
+            dtmp1 =  dble(ctmp1) *  dble(ctmp2)
+            dtmp2 = aimag(ctmp1) * aimag(ctmp2)
+            if(dtmp1<0d0 .or.  dtmp2<0d0 ) then
+              root_interval = istep
+              icount = icount+1
+            end if
+          case(ROOT_REAL)
+            dtmp1 =  dble(ctmp1) *  dble(ctmp2)
+            xscal = -dble(ctmp1) / (dble(ctmp2) - dble(ctmp1))
+            dtmp2 = (aimag(ctmp2)-aimag(ctmp1))*xscal + aimag(ctmp1)
+            if(dtmp1<0d0 .and.  abs(dtmp2)<rooteps )then
+              root_interval = istep
+              icount = icount+1
+            end if
+          case(ROOT_IMAG)
+            dtmp1 =  aimag(ctmp1) *  aimag(ctmp2)
+            xscal = -aimag(ctmp1) / (aimag(ctmp2) - aimag(ctmp1))
+            dtmp2 = (dble(ctmp2)-dble(ctmp1))*xscal + dble(ctmp1)
+            if(dtmp1<0d0 .and.  abs(dtmp2)<rooteps )then
+              root_interval = istep
+              icount = icount+1
+            end if
+          case default; stop 'option not known'
+        end select!roottype
+
+        if(abs(eigw(connection(lm1,istep),istep)) >= reig*0.75) then
+          ! probability is high that the two eigen values are not from the
+          ! same band and that the root is an accident
+          root_interval = 0
+          icount = icount-1
+        end if!eigw(connection(lm1,istep),istep) >= inc%reig/2.0
+
+    end do!istep
+
+    if(icount>1) root_interval = 0
+
+  end subroutine find_roots_lm_eigw_memopt
 
 
 
@@ -745,6 +1189,100 @@ contains
     if(any(sorted(1:inc%ndegen)==lm0)) match=.true.
 
   end subroutine compare_two_eigv_in_substeps
+
+
+
+
+
+
+
+  subroutine compare_two_eigv_in_substeps_memopt( inc, lattice, cluster, tgmatrx, nsteps, &
+                                                & kends, lm_in, LV1all, RV2ref, eigw2ref, &
+                                                & match                                   )
+
+    use type_inc
+    use type_data,     only: lattice_type, cluster_type, tgmatrx_type
+    use mod_kkrmat,    only: compute_kkr_eigenvectors, compute_kkr_eigenvectors_memopt
+    use mod_eigvects,  only: compare_eigv, compare_eigv_memopt 
+    use mod_mathtools, only: bubblesort
+    implicit none
+
+    type(inc_type),     intent(in)  :: inc
+    type(lattice_type), intent(in)  :: lattice
+    type(cluster_type), intent(in)  :: cluster
+    type(tgmatrx_type), intent(in)  :: tgmatrx
+    integer,            intent(in)  :: nsteps, lm_in
+    double precision,   intent(in)  :: kends(3,2)
+    double complex,     intent(in)  :: LV1all(inc%almso,inc%neig),&
+                                     & RV2ref(inc%almso),         &
+                                     & eigw2ref
+    logical,            intent(out) :: match
+
+    ! kkr-matrix
+    double precision :: ksub(3)
+    double complex   :: LVleft(inc%almso),&
+                      & LVeig(inc%almso,inc%neig),&
+                      & RVeig(inc%almso,inc%neig),&
+                      & eigw(inc%neig)
+
+    integer          :: nb_ev
+
+    !sorting
+    integer          :: lm2, sorted(inc%neig)
+    double complex   :: cproj
+    double precision :: projs(inc%neig), diffs(inc%neig)
+
+    integer          :: ierr, istep, lm0
+
+!   write(999,'("kends(:,1)=",3ES18.9)') kends(:,1)
+!   write(999,'("kends(:,2)=",3ES18.9)') kends(:,2)
+
+    lm0 = lm_in
+    LVleft = LV1all(:,lm0)
+    LVeig = LV1all
+
+    do istep=1,nsteps+1
+      ksub = kends(:,1) + dble(istep)/(nsteps+1)*( kends(:,2) - kends(:,1) )
+
+      call compute_kkr_eigenvectors_memopt( inc, lattice, cluster, tgmatrx%ginp(:,:,:,1),&
+                                   & tgmatrx%tinvll(:,:,:,1), ksub, eigw, LVeig, RVeig, nb_ev)
+!     call compute_kkr_eigenvectors2( inc, lattice, cluster, tgmatrx%ginp(:,:,:,1), &
+!                                   & tgmatrx%tmat(:,:,1), ksub, eigw, LVeig, RVeig )
+
+      ! find the corresponding eigenvctor to LVleft
+      call compare_eigv_memopt(inc, LVleft, RVeig, nb_ev, lm0)
+
+      LVleft = LVeig(:,lm0)
+!     write(999,'(2ES18.9)') eigw(lm0)
+
+    end do!istep
+
+
+    !====================================!
+    !=== find the FINAL corresponding ===!
+    !===      eigenvctor to RV2       ===!
+    !====================================!
+
+!   !calculate projections on other eigenvectors
+!   projs  = 0d0
+!   do lm2=1,inc%almso
+!       cproj = dot_product(LVeig(:,lm2),RV2ref(:))
+!       projs(lm2)  = dble(cproj)**2 + dimag(cproj)**2
+!   end do!lm2
+
+!   !find if corresponding eigenvector is matching
+!   call bubblesort(inc%almso, projs, sorted)
+!   match = .false.
+!   if(any(sorted(inc%almso+1-inc%ndegen:inc%almso)==lm0)) match=.true.
+
+    !find if the corresponding eigenvalue is matching
+    diffs = abs( eigw-eigw2ref )
+    call bubblesort(inc%neig, diffs, sorted)
+
+    match = .false.
+    if(any(sorted(1:inc%ndegen)==lm0)) match=.true.
+
+  end subroutine compare_two_eigv_in_substeps_memopt
 
 
 
@@ -858,7 +1396,6 @@ contains
           if(imarked(i)==imarked(j).and.i/=j) stop 'Twice the same cube in cubesfile'
         end do
       end do
-
     end if!myrank==master
 
 #ifdef CPP_MPI
@@ -981,6 +1518,111 @@ contains
 #endif
 
   end subroutine mark_cubes_FScross
+
+
+
+
+
+  subroutine mark_cubes_FScross_memopt(inc, lattice, cluster, tgmatrx, nCub3, nsteps, nverts, nedges, diag_ids, bounds, roottype, rooteps, nmarked, imarked)
+
+    use type_inc,       only: inc_type
+    use type_data,      only: lattice_type, cluster_type, tgmatrx_type
+    use mod_parutils,   only: distribute_linear_on_tasks
+    use mod_mympi,      only: myrank, nranks, master
+#ifdef CPP_MPI
+    use mpi
+#endif
+    implicit none
+
+    type(inc_type),     intent(in) :: inc
+    type(lattice_type), intent(in) :: lattice
+    type(cluster_type), intent(in) :: cluster
+    type(tgmatrx_type), intent(in) :: tgmatrx
+    integer,            intent(in) :: nCub3(3), nsteps, nverts, nedges, diag_ids(2,nedges)
+    double precision,   intent(in) :: bounds(3,2)
+    integer,            intent(in) :: roottype
+    double precision,   intent(in) :: rooteps
+    integer,              intent(inout) :: nmarked
+    integer, allocatable, intent(inout) :: imarked(:)
+
+    integer :: ncubmarked_tmp, ioff, nkpt, ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
+    integer :: ncubmarked_pT(0:nranks-1), iioff(0:nranks-1)
+    double precision :: kverts(3,nverts)
+    integer, allocatable :: icubmarked_tmp(:)
+
+    integer          :: connection(inc%neig,nsteps+1), nb_bands
+    double precision :: ksub(3,nsteps+1), kends(3,2)
+    double complex   :: LVeig(inc%almso,inc%neig,nsteps+1),&
+                      & RVeig(inc%almso,inc%neig,nsteps+1),&
+                      & eigw(inc%neig,nsteps+1)
+
+    integer :: iedge, irank, icub, ierr
+    logical :: edgeroot(nedges)
+
+    !Parallelize
+    call distribute_linear_on_tasks(nranks,myrank,master, nmarked, ntot_pT, ioff_pT, .false.)
+    nkpt = ntot_pT(myrank)
+    ioff = ioff_pT(myrank)
+
+    !Create temp arrays
+    allocate(icubmarked_tmp(nkpt), STAT=ierr)
+    if(ierr/=0) stop 'Problem allocating icubmarked_tmp in mark_cubes_FScross'
+    ncubmarked_tmp = 0
+    icubmarked_tmp = -1
+
+    !Test whether cubes cross FS
+    do icub=1,nkpt
+      if(mod(icub,10)==0 .and. myrank==master) write(*,"(2X,F8.3,A)") dble(icub)/nkpt*100, ' percent done'
+      select case (nverts)
+        case (8); call generate_cubevertices(nCub3,imarked(icub+ioff), bounds, kverts)
+        case (4); call generate_squarevertices(nCub3,imarked(icub+ioff), bounds, kverts)
+        case default; stop 'Case nverts not allowed in mark_cubes_FScross'
+      end select!
+      edgeroot = .false.
+      do iedge=1,nedges
+        kends(:,1) = kverts(:,diag_ids(1,iedge))
+        kends(:,2) = kverts(:,diag_ids(2,iedge))
+        nb_bands = 0
+        call connect_eigw_in_substeps_memopt( inc, lattice, cluster, tgmatrx, nsteps, kends, &
+                                     & connection, ksub, eigw, LVeig, RVeig, nb_bands        )
+        call find_roots_any_eigw_memopt( inc%neig, inc%reig, nb_bands, nsteps, connection, eigw, &
+                                & roottype, rooteps, edgeroot(iedge)   )
+      end do!iedge
+      if(any(edgeroot))then
+        ncubmarked_tmp = ncubmarked_tmp + 1
+        icubmarked_tmp(ncubmarked_tmp) = imarked(icub+ioff)
+      end if!l_cut
+    end do!icub
+
+    deallocate(imarked)
+
+#ifdef CPP_MPI
+    !Combine results
+    call MPI_Allgather(ncubmarked_tmp, 1, MPI_INTEGER, ncubmarked_pT, 1, MPI_INTEGER, MPI_COMM_WORLD, ierr )
+    if(ierr/=MPI_SUCCESS) stop 'Problem in Allgather(ncubmarked_tmp) in mark_cubes_FScross'
+
+    nmarked = sum(ncubmarked_pT)
+    allocate(imarked(nmarked), STAT=ierr)
+    if(ierr/=0) stop 'Problem allocating imarked in mark_cubes_FScross'
+
+    iioff = 0
+    do irank=1,nranks-1
+      iioff(irank) = sum(ncubmarked_pT(0:irank-1))
+    end do
+
+    call MPI_Allgatherv( icubmarked_tmp, ncubmarked_tmp, MPI_INTEGER, &
+                       & imarked, ncubmarked_pT, iioff, MPI_INTEGER,  &
+                       & MPI_COMM_WORLD, ierr )
+    if(ierr/=MPI_SUCCESS) stop 'Problem in Allgatherv(icubmarked_tmp) in mark_cubes_FScross'
+
+#else
+    nmarked=ncubmarked_tmp
+    allocate(imarked(nmarked), STAT=ierr)
+    if(ierr/=0) stop 'Problem allocating imarked in mark_cubes_FScross'
+    imarked = icubmarked_tmp(1:ncubmarked_tmp)
+#endif
+
+  end subroutine mark_cubes_FScross_memopt
 
 
 

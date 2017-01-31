@@ -13,7 +13,7 @@ module type_inc
 
       sequence
 
-      integer :: N = 29
+      integer :: N = 33
 
       integer :: lmaxd  = -1
       integer :: lmax   = -1
@@ -41,6 +41,11 @@ module type_inc
       integer :: ndegen = -1
       integer :: nBZdim = -1
       integer :: nrootmax = -1
+
+      integer          :: neig   = -1
+      double precision :: reig   = 0.0
+      logical          :: memopt = .false.
+      logical          :: feast  = .false.
 
       logical :: lrhod = .false.
       logical :: ltorq = .false.
@@ -92,10 +97,14 @@ contains
     call MPI_Get_address(inc%ndegen, disp(23), ierr)
     call MPI_Get_address(inc%nBZdim, disp(24), ierr)
     call MPI_Get_address(inc%nrootmax,disp(25), ierr)
-    call MPI_Get_address(inc%lrhod,  disp(26), ierr)
-    call MPI_Get_address(inc%ltorq,  disp(27), ierr)
-    call MPI_Get_address(inc%lspinflux,  disp(28), ierr)
-    call MPI_Get_address(inc%lalpha,  disp(29), ierr)
+    call MPI_Get_address(inc%neig,   disp(26), ierr)
+    call MPI_Get_address(inc%reig,   disp(27), ierr)
+    call MPI_Get_address(inc%memopt, disp(28), ierr)
+    call MPI_Get_address(inc%feast,  disp(29), ierr)
+    call MPI_Get_address(inc%lrhod,  disp(30), ierr)
+    call MPI_Get_address(inc%ltorq,  disp(31), ierr)
+    call MPI_Get_address(inc%lspinflux,  disp(32), ierr)
+    call MPI_Get_address(inc%lalpha,  disp(33), ierr)
 !    call MPI_Get_address(inc%simpson,  disp(28), ierr)
 
     base = disp(1)
@@ -103,8 +112,9 @@ contains
 
     blocklen=1
 
-    etype(1:25)  = MPI_INTEGER
-    etype(26:29) = MPI_LOGICAL
+    etype(1:26)  = MPI_INTEGER
+    etype(27)    = MPI_DOUBLE_PRECISION
+    etype(28:33) = MPI_LOGICAL
 
     call MPI_Type_create_struct(N, blocklen, disp, etype, myMPItype, iout)
 
