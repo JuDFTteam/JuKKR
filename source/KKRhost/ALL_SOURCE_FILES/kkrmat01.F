@@ -50,9 +50,6 @@
 #ifdef CPP_TIMING
       use mod_timing
 #endif
-! #ifdef CPP_hybrid
-!       use omp_lib
-! #endif
       IMPLICIT NONE
 !     ..
 !     .. Parameters ..
@@ -125,11 +122,8 @@
       DOUBLE PRECISION BZKPK(6),KP(3)
       INTEGER NDIM
 #ifdef CPP_MPI
-      integer :: myMPI_comm_grid, myMPI_comm_at, myMPI_comm_ie,
-     &           myrank_at, myrank_ie, nranks_at,nranks_ie
-      integer :: ntot1, mytot, ii
-      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
-     &           ntot_all(0:nranks-1), ioff_all(0:nranks-1)
+      integer :: ntot1
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
       integer :: k_start, k_end
 
@@ -279,16 +273,17 @@
         
         ! find kmask and number points in box
         do kpt=1,nofks
-          !findig kmask
-          kmask(kpt) = .false.
-          do i=-1,1,1
-            do j=-1,1,1
-              kp(1:3) = bzkp(1:3,kpt)+i*recbv(1:3,1)+j*recbv(1:3,2)
-              if(dsqrt(kp(1)**2+kp(2)**2)<0.4d0) kmask(kpt)=.true.
-              if(dsqrt(kp(1)**2+kp(2)**2)<0.05d0) kmask(kpt)=.false.
-            end do
-          end do
-          ! end finding kmask
+          !!findig kmask
+          !kmask(kpt) = .false.
+          !do i=-1,1,1
+          !  do j=-1,1,1
+          !    kp(1:3) = bzkp(1:3,kpt)+i*recbv(1:3,1)+j*recbv(1:3,2)
+          !    if(dsqrt(kp(1)**2+kp(2)**2)<0.4d0) kmask(kpt)=.true.
+          !    if(dsqrt(kp(1)**2+kp(2)**2)<0.05d0) kmask(kpt)=.false.
+          !  end do
+          !end do
+          !! end finding kmask
+          kmask(kpt) = .true.
           ! count number of kpts in reduced part
           if(kmask(kpt)) k_end = k_end+1
         end do
@@ -760,7 +755,7 @@ c            DEALLOCATE(GLLKE0)
 !       &       irec, kp(1:2), GLLKE(ILM+1:ILM+LMMAXD,JLM+LM+1:JLM+LM+LMMAXD)!g(1:LMMAXD,1:LMMAXD)
 !                    write(9889,rec=irec) G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
                    write(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
-!                    write(998899,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+           write(9988992,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
                  end if
                
                  irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1) + 

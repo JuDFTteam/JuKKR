@@ -238,9 +238,9 @@ C
                DMUORB(L,IR) = (0.0D0,0.0D0)
             END DO
 C
-            DO L = 0,LMAXD1 + 1
-               MUORB(L,IR) = 0.0D0
-            END DO
+C           DO L = 0,LMAXD1 + 1       !zimmer: initialization shifted to main1c
+C              MUORB(L,IR) = 0.0D0
+C           END DO
          END DO
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -283,7 +283,8 @@ C
          call version_print_header(31)                                ! qdos
          WRITE (31,'(7(A,3X))') '#   Re(E)','Im(E)',                  ! qdos
      &                  'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'     ! qdos
-      endif
+      endif                                                           ! qdos
+
       OPEN(30,                                                        ! lmdos
      +FILE="lmdos."//char(48+I1/10)//char(48+mod(I1,10))//"."//       ! lmdos
      +char(48+ISPIN)//".dat")                                         ! lmdos

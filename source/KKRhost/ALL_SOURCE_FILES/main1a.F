@@ -216,7 +216,6 @@ c ITSCF is initialised to 0 in main0
 C
         
       if (t_tgmat%tmat_to_file) then
-!          write(*,*) 'lrec tmat', lrectmt
          CALL OPENDAFILE(69,'tmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
       end if
       

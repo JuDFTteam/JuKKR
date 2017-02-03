@@ -286,19 +286,6 @@ end do
 call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 
 
-allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
-allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
-allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
-allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
-allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
-allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
-allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
-allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
-allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
-allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
-allocate ( ull(lmsize2,lmsize,nrmax) )
-allocate( work(lmsize,lmsize) )
-
 #ifdef CPP_hybrid
 !$OMP PARALLEL DEFAULT (PRIVATE) &
 !$OMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
@@ -307,6 +294,8 @@ allocate( work(lmsize,lmsize) )
 
 thread_id = omp_get_thread_num()
 #endif
+
+allocate ( ull(lmsize2,lmsize,nrmax) )
 
 if ( use_sratrick==0 ) then
   allocate ( slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) )
@@ -324,6 +313,13 @@ else
   stop '[rllsll] error with testflag sph'
 end if
 
+allocate( work(lmsize,lmsize) )
+allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
+allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
+allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
+allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
+allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
+allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
 allocate( yill(0:ncheb,lmsize2,lmsize), zill(0:ncheb,lmsize2,lmsize) )
 allocate( yrll(0:ncheb,lmsize2,lmsize), zrll(0:ncheb,lmsize2,lmsize) )
 allocate( vjlr(lmsize,lmsize2,0:ncheb), vhlr(lmsize,lmsize2,0:ncheb) )
@@ -333,6 +329,11 @@ yrll=(0.0d0,0.0d0)
 zill=(0.0d0,0.0d0)
 yrll=(0.0d0,0.0d0)
 zill=(0.0d0,0.0d0)
+
+allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
+allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
+allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
+allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
 
 if (idotime==1) call timing_start('local')
 
@@ -729,14 +730,6 @@ do ipan = 1,npan
 end do !ipan
 #ifdef CPP_hybrid
 !$OMP END DO
-
-if ( use_sratrick==0 ) then
-  deallocate( slv, srv )
-elseif ( use_sratrick==1 ) then
-  deallocate( work2, ipiv2, slv1, srv1, slv2, srv2, slv3, srv3, yill1, zill1, yrll1, zrll1, yill2, zill2, yrll2, zrll2,  yrlltmp )
-end if
-
-deallocate( yill, zill, yrll, zrll, vjlr, vhlr, vjli, vhli )
 !$OMP END PARALLEL
 #endif
 ! end the big loop over the subintervals
@@ -855,7 +848,14 @@ if (idotime==1) call timing_stop('local2')
 if (idotime==1) call timing_stop('local3')
 if (idotime==1) call timing_stop('rllsll')
 
-deallocate( work, allp, bllp, cllp, dllp, mrnvy, mrnvz , mrjvy, mrjvz,  mihvy, mihvz,  mijvy, mijvz, yif, yrf, zif, zrf, stat=ierror )
+if ( use_sratrick==0 ) then
+  deallocate ( slv,srv, stat=ierror )
+elseif ( use_sratrick==1 ) then
+  deallocate ( work2, ipiv2, slv1, srv1, slv2, srv2 , slv3, srv3, yill1, zill1 , yrll1, zrll1 , yill2, zill2 , yrll2, zrll2, yrlltmp, stat=ierror  )
+end if
+if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
+
+deallocate( work, allp, bllp, cllp, dllp, mrnvy, mrnvz , mrjvy, mrjvz,  mihvy, mihvz,  mijvy, mijvz, yill, zill , yrll, zrll, vjlr, vhlr, vjli, vhli ,yif,yrf,zif,zrf, stat=ierror )
 if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
 end subroutine
 

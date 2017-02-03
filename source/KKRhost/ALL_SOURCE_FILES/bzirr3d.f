@@ -62,9 +62,6 @@ C local
 
       DOUBLE PRECISION DDET33,DDOT
       EXTERNAL DDET33,DDOT
-      
-      ! test option
-      LOGICAL, EXTERNAL :: TEST
 
       allocate(ibk(0:MAXK1,0:MAXK2,0:MAXK3))
 
@@ -164,7 +161,6 @@ C
               DO J = 1,3
                   BV(J) = DDOT(3,GQ(1,J),1,BGP(1,I),1)
               END DO
-              
               CALL DGEMV('N',3,3,1D0,BGINV,3,BV,1,0D0,CF,1)
 C     
               DO J = 1,NDIM
@@ -273,22 +269,6 @@ C========================================================================
       END DO    
 
       deallocate(ibk)
-      
-      
-!       ! test option rhoq
-!       if(test('rhoqtest')) then
-!         write(*,*) 'changeing kmesh:', NKXYZ(1:3)
-!         NKP = 1
-!         DO I=0,NKXYZ1(1)
-!            DO J=0,NKXYZ1(2)
-!               KP(1,NKP) = -0.4d0+2*0.4d0/NKXYZ(1)*dfloat(i)
-!               KP(2,NKP) = -0.4d0+2*0.4d0/NKXYZ(2)*dfloat(j)
-!               KP(3,NKP) = 0.0d0
-!               NKP = NKP + 1
-!               IF ( NKP>KPOIBZ ) stop 'Error in bzirr3d for rhoqtest'
-!            ENDDO
-!         ENDDO
-!       end if
 
       RETURN
 

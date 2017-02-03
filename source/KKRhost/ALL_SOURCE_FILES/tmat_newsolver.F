@@ -358,9 +358,9 @@ cc right solutions
      +              '1','1','0',USE_SRATRICK,ALPHA0(:,:))
         ! devide small component by cvlight so that it actually is small
         IF (NSRA.EQ.2) THEN
-         RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+          RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-         SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
+          SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
         ENDIF
 
@@ -571,7 +571,6 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
           call save_wavefunc(t_wavefunctions, rll, rllleft, 
      &          sll, sllleft, i1, ie, NSRA, LMMAXSO, IRMDNEW, ith)
         end if
-       
         
         if(t_dtmatJij_at%calculate) then
          call calc_dtmatJij(LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,
@@ -579,13 +578,13 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
      +        RPAN_INTERVALL,
      +        IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,
      +        t_dtmatJij_at%dtmat_xyz(:,:,:,ie_num))
-       
+
         end if!t_dtmatJij_at%calculate
          
          ! writeout
 #ifdef CPP_OMP        
 !$omp critical
-#endif 
+#endif
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
                 if(test('rhoqtest')) then
@@ -614,7 +613,7 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
                 end if     
                            
             WRITE(69,REC=IREC) TMATLL(:,:)
-            WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
+!             WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
          else
 #ifdef CPP_MPI
             irec = ie_num +

@@ -257,23 +257,20 @@ C
             ENDDO                                              ! LLY Lloyd
          ENDIF                                                 ! LLY Lloyd
 C ----------------------------------------------------------------------
-
-!          if(test('rhoqtest')) GINP = (1.0d0, 0.0d0)
-
          if (t_tgmat%gref_to_file) then
 #ifdef CPP_MPI
            !make sure only one processor writes for one energy point
            if(t_mpi_c_grid%myrank_ie==0) then
               WRITE (68,REC=IE) GINP                 ! Gref
            end if !if(t_mpi_c_grid%myrank_ie==0) then
-           ! test writeout
-           do i1=0,nranks-1
-             if(myrank==i1) then
-              write(686868+myrank,'(2i9,200000F15.7)') myrank, ie, ginp
-             endif
-             call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie,ierr)
-           end do
-           ! end test writeout
+!            ! test writeout
+!            do i1=0,nranks-1
+!              if(myrank==i1) then
+!               write(686868+myrank,'(2i9,200000F15.7)') myrank, ie, ginp
+!              endif
+!              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie,ierr)
+!            end do
+!            ! end test writeout
 #else
            WRITE (68,REC=IE) GINP                 ! Gref
 #endif

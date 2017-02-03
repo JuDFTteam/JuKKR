@@ -262,7 +262,7 @@ C     .. Local Scalars ..
      +        NSPIN,NSRA,NSYMAT,NOFGIJ,NQCALC,
      +        NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT(NATYPD),
      +        NPAN_LOGNEW(NATYPD),NPAN_EQNEW(NATYPD)
-      INTEGER NS
+      INTEGER NS, LRECABMAD, IREC
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      +                 RNEW(NTOTD*(NCHEBD+1),NATYPD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
@@ -462,8 +462,8 @@ C     ..
      &             ' serial number for files: ', serialnr
  2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)//2A/79(1H*)/ )
 
-#if defined(CPP_OMP) .OR. defined(CPP_hybrid)
-!$omp parallel shared(nth,ith)
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+!$omp parallel shared(nth) private(ith)
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
       if(ith==0) then
@@ -836,6 +836,14 @@ C
         IF ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
       END DO
 C
+C --> update energy contour for Fermi-surface generation    ! fswrt=fermi-surface write
+      IF (OPT('FERMIOUT'))THEN                              ! fswrt
+        IF(AIMAG(EZ(1))>0d0) STOP 'E has imaginary part'    ! fswrt
+        IELAST=3                                            ! fswrt
+        EZ(2) = EZ(1) + CMPLX(1.0D-03,0.0D0)                ! fswrt
+        EZ(3) = EZ(1) - CMPLX(1.0D-03,0.0D0)                ! fswrt
+      END IF                                                ! fswrt
+C
 C --> update the value of NSPIN to be consistent with REL mode
 C
       IF (KREL.EQ.1) NSPIN = 1
@@ -860,26 +868,56 @@ C ----------------------------------------------------------------------
       call timing_start('main0 - madelung')
 #endif
 cfivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
-      !OPEN(99,FILE='madelinfo.txt')
-      IF ( LINTERFACE ) THEN
+      IF (NPOL.NE.0) THEN  ! No madelung calculation in case of DOS.
+         !OPEN(99,FILE='madelinfo.txt')
+
+! Use option 'ewald2d' if the madelung summation is to be carried out in
+! single-slab mode, otherwise it is carried out in repeated (periodic)
+! slab mode.
+! Reason: the 2d-mode gives wrong results sometimes [e.g. in diamond
+! structure (110)].
+         IF (LINTERFACE.AND.( OPT('ewald2d ').OR.OPT('DECIMATE'))) THEN ! ewald2d
+            WRITE(*,*) 'Calling MADELUNG2D'
 C -------------------------------------------------------------- 2D case
-         CALL MADELUNG2D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,
-     &                      BRAVAIS,RECBV,RBASIS,RMAX,GMAX,
-     &                      NLBASIS,NLEFT,ZPERLEFT,TLEFT,
-     &                      NRBASIS,NRIGHT,ZPERIGHT,TRIGHT,
-     &                      LMXSPD,LASSLD,LPOTD,LMPOTD,
-     &                      NMAXD,ISHLD,NEMBD1,WLENGTH)
-      ELSE
+            CALL MADELUNG2D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,
+     &                         BRAVAIS,RECBV,RBASIS,RMAX,GMAX,
+     &                         NLBASIS,NLEFT,ZPERLEFT,TLEFT,
+     &                         NRBASIS,NRIGHT,ZPERIGHT,TRIGHT,
+     &                         LMXSPD,LASSLD,LPOTD,LMPOTD,
+     &                         NMAXD,ISHLD,NEMBD1,WLENGTH)
+            WRITE(*,*) 'Exited MADELUNG2D'
+         ELSE
 C -------------------------------------------------------------- 3D case
-         CALL MADELUNG3D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,
-     &                      BRAVAIS,RECBV,RBASIS,RMAX,GMAX,
-     &                      NAEZD,LMXSPD,LASSLD,LPOTD,LMPOTD,
-     &                      NMAXD,ISHLD,NEMBD,WLENGTH)
-      END IF
-      !CLOSE(99)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - madelung')
-#endif
+            IF ( LINTERFACE )
+     &         CALL GETBR3(                                         ! ewald2d
+     >                     NEMBD1,NLBASIS,ALAT,TLEFT,NRBASIS,TRIGHT,
+     X                     BRAVAIS,RECBV,VOLUME0)
+
+            WRITE(*,*) 'Calling MADELUNG3D'
+            CALL MADELUNG3D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,
+     &                         BRAVAIS,RECBV,RBASIS,RMAX,GMAX,
+     &                         NAEZD,LMXSPD,LASSLD,LPOTD,LMPOTD,
+     &                         NMAXD,ISHLD,NEMBD,WLENGTH)
+            WRITE(*,*) 'Exited MADELUNG3D'
+         END IF
+
+         !CLOSE(99)
+      ELSE !NPOL==0
+      ! write dummy files
+
+         !DOUBLE PRECISION AVMAD(LMPOTD,LMPOTD),BVMAD(LMPOTD)
+         LRECABMAD = WLENGTH*2*LMPOTD*LMPOTD + WLENGTH*2*LMPOTD
+         OPEN (69,ACCESS='direct',RECL=LRECABMAD,
+     &         FILE='abvmad.unformatted', FORM='unformatted')
+          DO I = 1,NAEZ
+             DO J = 1,NAEZ
+                IREC = J + NAEZ*(I-1)
+                WRITE (69,REC=IREC) 0.0d0, 0.0d0!AVMAD,BVMAD
+             END DO
+          END DO
+          CLOSE(69)
+
+      ENDIF !NPOL==0
 C ----------------------------------------------------------------------
 cfivos      END IF
 C ======================================================================
@@ -1196,6 +1234,11 @@ C new solver for full-potential, spin-orbit, initialise
 #ifdef CPP_TIMING
       call timing_stop('main0 - wunfiles')
 #endif
+      IF (OPT('FERMIOUT'))THEN                                        ! fswrt
+        CALL WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,  ! fswrt
+     +                         ALAT,BRAVAIS,RECBV,RBASIS,CLS,NACLS,   ! fswrt
+     +                         RCLS,EZOA,ATOM,RR,NSPIN)                     ! fswrt
+      END IF                                                          ! fswrt
 
       IF (ISHIFT.EQ.2) THEN                                           ! fxf
          OPEN (67,FILE='vmtzero',FORM='formatted')                    ! fxf

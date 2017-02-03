@@ -58,7 +58,7 @@ C     .. Local Scalars ..
       DOUBLE PRECISION PI,CM1,FPI
       INTEGER I,IATOM,IB,IH1,ILAY1,ILAY2,IO2,
      &        IPOT,IRS1,ISPIN,IT1,IT2,L,LM,LM2,LMPOT,M
-      LOGICAL OPT,TEST
+      LOGICAL OPT,TEST,LREAD
       INTEGER LRECAMAD,IREC,NLEFTOFF,NRIGHTOFF,NLEFTALL,NRIGHTALL
       INTEGER ILEFT,IRIGHT
 C     ..
@@ -70,10 +70,17 @@ C     .. External Functions/Subroutines
 C     ..
       IF(TEST('flow    ')) WRITE (1337,*) '>>>>>> Vinterface'
 C
-      LRECAMAD = WLENGTH*2*LMPOTD*LMPOTD
-C
-      OPEN (69,ACCESS='direct',RECL=LRECAMAD,FILE='avmad.unformatted',
-     +     FORM='unformatted')
+      INQUIRE(FILE='avmad.unformatted',EXIST=LREAD) ! ewald2d
+      IF (LREAD) THEN
+         LRECAMAD = WLENGTH*2*LMPOTD*LMPOTD
+         OPEN (69,ACCESS='direct',RECL=LRECAMAD,
+     +   FILE='avmad.unformatted',FORM='unformatted')
+      ELSE
+         LRECAMAD = WLENGTH*2*LMPOTD*LMPOTD + WLENGTH*2*LMPOTD 
+         OPEN (69,ACCESS='direct',RECL=LRECAMAD,
+     +   FILE='abvmad.unformatted',FORM='unformatted')
+      ENDIF
+
 C
       WRITE(1337,FMT=99001)
       WRITE(1337,FMT=99002)

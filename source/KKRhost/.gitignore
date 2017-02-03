@@ -1,5 +1,6 @@
 *.mod
 *.x
+*.exe
 *~
 */*~
 *.o
@@ -15,3 +16,5 @@ version.f90
 compver
 /benchmark/
 inc.p
+*/out_timing.*.txt
+*/output.*.txt

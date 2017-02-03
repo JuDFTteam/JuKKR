@@ -231,7 +231,8 @@ C     .. Data statements ..
       VINS = 0.0d0
       RHO2NS = 0.0d0
       R2NEF = 0.0d0
-      
+      angles_new = 0.0d0
+      MUORB = 0.0d0
 C     ..
 C
 Consistency check
@@ -919,7 +920,8 @@ c interpolate potential
 #endif
       
 #ifdef CPP_TIMING
-      call timing_stop('main1c - rhovalnew')
+      !call timing_stop('main1c - rhovalnew')
+      if(i1_end>=i1_start) call timing_stop('main1c - rhovalnew')
 #endif
 
       CLOSE (69)
@@ -1143,46 +1145,6 @@ C
 #ifdef CPP_TIMING
       call timing_stop('main1c - serial part')
 #endif
-!       if(test('rhoqtest')) then
-! 
-!         open(9999, file='cleb_shapefun.txt')
-!         write(9999,*) 'params'
-!         write(9999,*) t_params%ncleb, t_params%lm2d, t_params%lmaxd,
-!      &                t_params%iend, t_params%nfund, t_params%lmxspd,
-!      &                nrmaxd
-!         write(9999,*) 'cleb'
-!         do lm1=1,t_params%ncleb
-!           write(9999,'(E16.7,4I9)') t_params%cleb(lm1,1), 
-!      &                              t_params%icleb(lm1,1:4)
-!         end do
-!         write(9999,*) 'loflm'
-!         do lm1=1,t_params%lm2d
-!           write(9999,'(I9)') t_params%loflm(lm1)
-!         end do
-!         open(8888, file='mu0')
-!         read(8888,*) i1
-!         close(8888)
-!         ICELL = NTCELL(I1)
-!         write(9999,*) 'ifunm'
-!         do lm1=1,lmxspd
-!           write(9999,'(I9)') ifunm1(lm1,icell)
-!         end do
-!         write(9999,*) 'lmsp'
-!         do lm1=1,lmxspd
-!           write(9999,'(I9)') LMSP1(LM1,icell)
-!         end do
-!         write(9999,*) 'thetasnew',nrmaxd,nfund
-!         do lm1=1,nrmaxd
-!           do lm2=1,nfund
-!             write(9999,'(E16.7)') thetasnew(lm1,lm2,icell)
-!           end do
-!         end do
-!         close(9999)
-! !         open(987987, file='shapefun_test')
-! !         write(987987,*) thetasnew
-! !         close(987987)
-! 
-!       endif
 #ifdef CPP_MPI
       end if !myrank==master
 #endif

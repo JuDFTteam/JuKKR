@@ -151,7 +151,7 @@ C *                                                                    *
 C **********************************************************************
 
       use mod_types, only: t_inc, t_tgmat, t_lloyd, t_cpa
-      use mod_mympi, only: MPIatom, MPIadapt
+      use mod_mympi, only: nranks, MPIatom, MPIadapt
 
       IMPLICIT NONE
 C     ..
@@ -398,6 +398,19 @@ C                                  meant for simpler passing of basic parameter 
       end if
       ! so far changing does not work yet, so turn this off:
       MPIadapt = 0
+
+      if(opt('FERMIOUT')) then                                          ! fswrt
+         MPIatom = .true.                                               ! fswrt
+         if(SCFSTEPS>1) then                                            ! fswrt
+            write(*,*) 'Warning: Setting SCFSTEPS=1 for FERMIOUT option'! fswrt
+            SCFSTEPS = 1                                                ! fswrt
+         end if                                                         ! fswrt
+         if (nranks>NATYP) then                                         ! fswrt
+            write(*,*) 'FERMIOUT option chosen'                         ! fswrt
+            write(*,*) 'Nranks>NATYP', nranks, NATYP                    ! fswrt
+            stop 'Please choose Nranks<=NATYP'                          ! fswrt
+         end if                                                         ! fswrt
+      end if                                                            ! fswrt
       
       if(test('MPIatom ') .and. test('MPIenerg')) then
          stop "[wunfiles] Found test options 'MPIenerg' and 'MPIatom'
