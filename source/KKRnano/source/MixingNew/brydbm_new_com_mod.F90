@@ -75,7 +75,7 @@
       integer, intent(in) :: communicator
       double precision, intent(in) :: alpha
       double precision, intent(inout) :: sm1s(:), fm1s(:) !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind)
-      double precision, intent(inout) :: ui2(:,:), vi2(:,:) !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind,2:itdbryd)
+      double precision, intent(inout) :: ui2(1:,2:), vi2(1:,2:) !> dim((irmd+(irnsd+1)*(lmpot-1))*nspind,2:itdbryd)
       double precision, intent(inout) :: wit(2:itdbryd)
       
 !     ..
