@@ -248,14 +248,18 @@ C ----------------------------------------------------------------------
            if(t_mpi_c_grid%myrank_ie==0) then
               WRITE (68,REC=IE) GINP                 ! Gref
            end if !if(t_mpi_c_grid%myrank_ie==0) then
-!            ! test writeout
-!            do i1=0,nranks-1
-!              if(myrank==i1) then
-!               write(686868+myrank,'(2i9,200000F15.7)') myrank, ie, ginp
-!              endif
-!              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie,ierr)
-!            end do
-!            ! end test writeout
+
+           ! human readable writeout if test option is hit
+           if(test('fileverb')) then
+             ! test writeout
+             do i1=0,nranks-1
+               if(myrank==i1) then
+                write(686868+myrank,'(2i9,200000F15.7)') myrank,ie,ginp
+              endif
+              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie,ierr)
+             end do
+             ! end test writeout
+           end if
 #else
            WRITE (68,REC=IE) GINP                 ! Gref
 #endif
