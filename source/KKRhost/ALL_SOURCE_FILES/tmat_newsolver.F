@@ -544,7 +544,10 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
             WRITE(69,REC=IREC) TMATLL(:,:)
-!             WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
+            ! human readable writeout if test option is hit
+            if(test('fileverb')) then
+               WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
+            end if
          else
 #ifdef CPP_MPI
             irec = ie_num +

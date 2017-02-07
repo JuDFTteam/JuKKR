@@ -953,8 +953,10 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                   IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST * (I1-1) ! qdos ruess
                   if (t_tgmat%gmat_to_file) then
                      WRITE (70,REC=IREC) GMAT0
-!                      write(707070,'(i9,200000F15.7)') irec, gmat0
-
+                     ! human readable writeout if test option is hit
+                     if(test('fileverb')) then
+                        write(707070,'(i9,200000F15.7)') irec, gmat0
+                     end if
                   else
                      IREC = IQ + NQDOS * (ie_num-1) + NQDOS * 
      &                    ie_end * (I1-1)
