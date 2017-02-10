@@ -361,16 +361,16 @@ implicit none
   !     enddo loop over energies (EMPID-parallel)
   ! IE ====================================================================
 
-    call outTime(mp%isMasterRank, 'Reference system Green  took', getTime(reference_green_timer), iter)
-    call outTime(mp%isMasterRank, 'Single site scattering  took', getTime(single_site_timer), iter)
-    call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(kpoint_timer), iter)
+!   call outTime(mp%isMasterRank, 'Reference system Green  took', getTime(reference_green_timer), iter)
+!   call outTime(mp%isMasterRank, 'Single site scattering  took', getTime(single_site_timer), iter)
+!   call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(kpoint_timer), iter)
+!   call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(mult_scattering_timer), iter)
     if (mp%isMasterRank) call outTimeStats(reference_green_timer, 'Reference G stats:')
     if (mp%isMasterRank) call outTimeStats(single_site_timer,     'Single site stats:')
     if (mp%isMasterRank) call outTimeStats(kpoint_timer,          'Mult. scat. stats:') ! per k-point
-    if (mp%isMasterRank) call outTimeStats(kernel_timer,          'KKRoperator stats:') ! per invocation of the KKR_operator
+    if (mp%isMasterRank) call outTimeStats(kernel_timer,          '  + KKRoperator stats:') ! per invocation of the KKR_operator, time is inclusive in kpoint_timer
 !   if (mp%isMasterRank) call outTimeStats(mult_scattering_timer, 'Multi. site stats:') ! this timer is ...
 !   !         ... only energy point resolved, high variance expected due to different k-point mesh sizes
-!   call outTime(mp%isMasterRank, 'Multi. site scattering  took', getTime(mult_scattering_timer), iter)
 
 !   if (mp%isMasterRank) write(6, fmt='(A,I4,9A)') 'iter:',iter,'  solver stats: ',trim(solv%represent_total_stats())
     if (mp%isMasterRank) write(6, fmt='(a,i4,9(a,f0.6))') 'iter:',iter,'  aggregate ',GiFlops/1024.d0,' TiFlop on master process' ! useful flops in the iterative solver part
