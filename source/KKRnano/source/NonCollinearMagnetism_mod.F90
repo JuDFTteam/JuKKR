@@ -1413,13 +1413,13 @@ allocate(ipiv(lmmaxso))
 !     .. OMP ..
 ! determine if omp parallelisation is used (compiled with -openmp flag and
 ! OMP_NUM_THREADS>1)
-!$omp parallel shared(nth,ith)
-!$omp single
+!$noomp parallel shared(nth,ith)
+!$noomp single
 nth = 1
 ith = 0
 !nth = omp_get_num_threads()
-!$omp end single
-!$omp end parallel
+!$noomp end single
+!$noomp end parallel
 ! write(*,*) 'nth =',nth
 
 irmdnew= npan_tot*(ncheb+1)
@@ -1464,15 +1464,15 @@ allocate(sllleft(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1))
 ! energy loop
 !WRITE(6,*) 'atom: ',i1,' NSRA:',nsra
 
-!!$omp parallel do default(none)
-!!$omp& private(eryd,ie,i1,ir,irec,nvec,lm1,lm2,gmatprefactor)
-!!$omp& private(jlk_index,tmatll,ith)
-!!$omp& shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb)
-!!$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth)
-!!$omp& shared(rpan_intervall,vinsnew,ipan_intervall)
-!!$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
-!!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,tmat_out)
-!!$omp& shared(tmatsph)
+!!$noomp parallel do default(none)
+!!$noomp& private(eryd,ie,i1,ir,irec,nvec,lm1,lm2,gmatprefactor)
+!!$noomp& private(jlk_index,tmatll,ith)
+!!$noomp& shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb)
+!!$noomp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth)
+!!$noomp& shared(rpan_intervall,vinsnew,ipan_intervall)
+!!$noomp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
+!!$noomp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,tmat_out)
+!!$noomp& shared(tmatsph)
 !DO ie=1,ielast
 ! get current thread
 !  IF (nth>=1) THEN
@@ -1481,10 +1481,10 @@ allocate(sllleft(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1))
     ith = 0
 !  END IF
   eryd = ez(ie)
-!!$omp critical
+!!$noomp critical
 !  WRITE(6,*) 'energy:',ie,'',eryd
 !write(*,*) 'nested omp?',omp_get_nested()
-!!$omp end critical
+!!$noomp end critical
   
 ! contruct the spin-orbit coupling hamiltonian and add to potential
   CALL spinorbit_ham(lmax,lmmaxd,vins,rnew,  &
@@ -1637,7 +1637,7 @@ allocate(sllleft(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1))
   END IF
   TmatN(:,:) = tmatll(:,:)
 !END DO ! IE loop
-!!$omp end parallel do
+!!$noomp end parallel do
 
 ! serial write out after parallel calculation of tmat
 !DO ie=1,ielast
@@ -2386,7 +2386,7 @@ implicit none
       INTEGER JLK_INDEX(2*LMSIZE)
 #endif
 
-      character(len=1) :: cmoderll,cmodesll            ! These define the op(V(r)) in the eqs. above
+      character(len=1) :: cmoderll,cmodesll,cmodetest  ! These define the op(V(r)) in the eqs. above
                                                        ! (comment in the beginning of this subroutine)
                                                        ! cmoderll ="1" : op( )=identity       for reg. solution
                                                        ! cmoderll ="T" : op( )=transpose in L for reg. solution
@@ -3951,12 +3951,12 @@ allocate(gmat0(lmmaxso,lmmaxso))
 allocate(jlk_index(2*lmmaxso))
 
 ! determine if omp is used
-!!$omp parallel shared(nth,ith)
-!!$omp single
+!!$noomp parallel shared(nth,ith)
+!!$noomp single
 ith = 0
 nth = 1
-!!$omp end single
-!!$omp end parallel
+!!$noomp end single
+!!$noomp end parallel
 !WRITE(*,*) 'nth =',nth
 
 pi=4D0*DATAN(1D0)
@@ -4079,21 +4079,21 @@ END DO
 ! energy loop
 !WRITE(6,*) 'atom: ',i1
 ! omp: start parallel region here
-!!$omp parallel do default(none)
-!!$omp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
-!!$omp& private(jlk_index,tmatll,ith)
-!!$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
-!!$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
-!!$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
-!!$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
-!!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
-!!$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
-!!$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
-!!$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
-!!$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
-!!$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
-!!$omp& reduction(+:rho2int,espv) reduction(-:muorb)
-!!$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
+!!$noomp parallel do default(none)
+!!$noomp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
+!!$noomp& private(jlk_index,tmatll,ith)
+!!$noomp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
+!!$noomp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
+!!$noomp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
+!!$noomp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
+!!$noomp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
+!!$noomp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
+!!$noomp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
+!!$noomp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
+!!$noomp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
+!!$noomp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
+!!$noomp& reduction(+:rho2int,espv) reduction(-:muorb)
+!!$noomp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
 DO ie=1,ielast
 !  IF (nth>=1) THEN
 !    ith = omp_get_thread_num()
@@ -4106,9 +4106,9 @@ DO ie=1,ielast
   df=wez(ie)/DBLE(nspin)
   IF (nsra == 2) ek = SQRT( eryd + eryd*eryd/(cvlight*cvlight) ) *  &
       ( 1D0 + eryd/(cvlight*cvlight) )
-!!$omp critical
+!!$noomp critical
 !  WRITE(6,*) 'energy:',ie,'',eryd
-!!$omp end critical
+!!$noomp end critical
 !
 !         IREC=IE+IELAST*(I1-1)
 !         READ(69,REC=IREC) GMAT0
@@ -4248,9 +4248,9 @@ DO ie=1,ielast
     den(:,ie,:,iq)=czero
 ! read in gf
 !    irec = iq + nqdos * (ie-1) +  nqdos * ielast * (i1-1)     ! qdos
-!!$omp critical
+!!$noomp critical
 !    READ(69,REC=irec) gmat0
-!!$omp end critical
+!!$noomp end critical
    
      GMAT0 = gmatn(:,:,ie)
 ! rotate gmat from global frame to local frame
@@ -4370,7 +4370,7 @@ DO iorb=1,3
   END DO
 END DO ! IORB
 END DO ! IE loop
-!!$omp end parallel do
+!!$noomp end parallel do
 ! omp: move sum from rhooutnew here after parallel calculation
 DO ir=1,irmdnew
   DO lm1=1,lmpotd
