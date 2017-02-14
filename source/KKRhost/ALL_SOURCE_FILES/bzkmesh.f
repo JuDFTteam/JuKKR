@@ -117,14 +117,9 @@ C
       IF(TEST('kptsfile')) WRITE(52,FMT='(I8,F15.10,/,(3F12.8,D20.10))')
      +        NOFKS,VOLBZ,((BZKP(ID,I),ID=1,3),VOLCUB(I),I=1,NOFKS)
         IF( TEST('rhoqtest') .and. (L==1) ) THEN
-           !open(9999, file='kpoints.txt')
-           !write(9999,*) nofks
-           !write(9999,*) volbz, bzkp(1:3,1:nofks)
-           !close(9999)
-        
            ! save kpoints
            open(8888, file='kpts.txt', form='formatted')
-           write(8888,'(I9)') NOFKS
+           write(8888,'(3I9)') NOFKS, NXYZ(1), NXYZ(2)
            write(8888,'(E16.7)') VOLBZ
            do ks=1,nofks
              write(8888,'(4E16.7)') (BZKP(i,KS), i=1,3), VOLCUB(KS)

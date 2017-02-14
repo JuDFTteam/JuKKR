@@ -273,17 +273,20 @@
         
         ! find kmask and number points in box
         do kpt=1,nofks
-          !!findig kmask
-          !kmask(kpt) = .false.
-          !do i=-1,1,1
-          !  do j=-1,1,1
-          !    kp(1:3) = bzkp(1:3,kpt)+i*recbv(1:3,1)+j*recbv(1:3,2)
-          !    if(dsqrt(kp(1)**2+kp(2)**2)<0.4d0) kmask(kpt)=.true.
-          !    if(dsqrt(kp(1)**2+kp(2)**2)<0.05d0) kmask(kpt)=.false.
-          !  end do
-          !end do
-          !! end finding kmask
-          kmask(kpt) = .true.
+          !findig kmask
+          kmask(kpt) = .false.
+          do i=-1,1,1
+            do j=-1,1,1
+              kp(1:3) = bzkp(1:3,kpt)+i*recbv(1:3,1)+j*recbv(1:3,2)
+              if(dsqrt(kp(1)**2+kp(2)**2)<0.4d0) kmask(kpt)=.true.
+              if(dsqrt(kp(1)**2+kp(2)**2)<0.05d0) kmask(kpt)=.false.
+!              ! for MoTe2, EF<E<EF+100: |kx|<0.3 and |ky|<0.15
+!              if(dabs(kp(1))<0.3 .and. dabs(kp(2))<0.15) 
+!     &                                     kmask(kpt) = .true.
+            end do
+          end do
+          ! end finding kmask
+          !kmask(kpt) = .true.
           ! count number of kpts in reduced part
           if(kmask(kpt)) k_end = k_end+1
         end do
@@ -735,13 +738,9 @@ c            DEALLOCATE(GLLKE0)
                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                !>>>>>>>>>>>>>>>>>>>>>> rhoqtest >>>>>>>>>>>>>>>>>>>>>>>>
                if(test('rhoqtest')) then
-!                
-!                  write(*,'(9I9)') myrank, ie, nscoef, nofks, kpt, mu,  
-!      &                            i,j,lmmaxd
 
                  irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1) + 
      &                  (nscoef*2)*nofks*(IE-1-1)
-!                  irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
                  if( ((i==mu) .and. any(j==iatomimp(1:nscoef))) ) then
                    ix=0
                    jx=0
@@ -751,16 +750,11 @@ c            DEALLOCATE(GLLKE0)
                      lm1 = lm1 + 1
                    end do
                    irec = irec + nscoef + ix
-!                    write(*,'(A,2I9,1000000ES15.7)') 'wrt',myrank, 
-!       &       irec, kp(1:2), GLLKE(ILM+1:ILM+LMMAXD,JLM+LM+1:JLM+LM+LMMAXD)!g(1:LMMAXD,1:LMMAXD)
-!                    write(9889,rec=irec) G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
                    write(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
-           write(9988992,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
                  end if
                
                  irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1) + 
      &                  (nscoef*2)*nofks*(IE-1-1)
-!                  irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
                  if( ((j==mu) .and. any(i==iatomimp(1:nscoef))) ) then
                    ix=0
                    jx=0
@@ -770,11 +764,7 @@ c            DEALLOCATE(GLLKE0)
                      lm1 = lm1 + 1
                    end do
                    irec = irec + jx
-!                    write(*,'(A,2I9,1000ES15.7)') 'wrt',myrank, 
-!       &                                  irec, kp(1:2), g(1:LMMAXD,1:LMMAXD)
-!                    write(9889,rec=irec) g(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
                    write(9889,rec=irec) kp(1:2), g(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
-!                    write(998888,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
                  end if ! iii==mu ...
 
                end if ! rhoqtest

@@ -87,12 +87,6 @@ C     ..
          DGTDE0(:,:) = CZERO
          DGTDE(:,:) = CZERO
       ENDIF
-      IF (LLY.NE.0) THEN
-         ALLOCATE ( DGTDE0(NGD1,NGD1) , DGDE(NGD1,NGD1), STAT=LM1 )
-         IF(LM1/=0) stop 'Error allocating dgtde0 etc. <GLL95>'
-         DGTDE0(:,:) = CZERO
-         DGTDE(:,:) = CZERO
-      ENDIF
 99001 FORMAT(6X,"ERROR: failed to allocate array(s) :",A,/)
       IF (TEST('flow    ').and.(t_inc%i_write>0)) 
      &    WRITE (1337,FMT=*) '>>> GLL95'

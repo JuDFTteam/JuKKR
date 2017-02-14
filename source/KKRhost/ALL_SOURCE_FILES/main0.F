@@ -484,18 +484,18 @@ C     ..
      &              'Number of MPI ranks used:',nranks
       WRITE(1337,'(1X,A,I5//79(1H*)/)')
      &              'Number of MPI ranks used:',nranks
-! #ifdef CPP_hybrid
-! !$omp parallel shared(nth,ith)
-!       nth = omp_get_num_threads()
-!       ith = omp_get_thread_num()
-!       if(ith==0) then
-!          WRITE(*,'(1X,A,I5//79(1H*)/)')
-!      &              'Number of OpenMP threads used per rank:',nth
-!          WRITE(1337,'(1X,A,I5//79(1H*)/)')
-!      &              'Number of OpenMP threads used per rank:',nth
-!       endif
-! !$omp end parallel
-! #endif
+#ifdef CPP_hybrid
+!$omp parallel shared(nth,ith)
+      nth = omp_get_num_threads()
+      ith = omp_get_thread_num()
+      if(ith==0) then
+         WRITE(*,'(1X,A,I5//79(1H*)/)')
+     &              'Number of OpenMP threads used per rank:',nth
+         WRITE(1337,'(1X,A,I5//79(1H*)/)')
+     &              'Number of OpenMP threads used per rank:',nth
+      endif
+!$omp end parallel
+#endif
 #endif
 !End write version info
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv

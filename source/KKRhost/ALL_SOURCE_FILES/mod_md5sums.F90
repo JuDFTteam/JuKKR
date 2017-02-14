@@ -101,7 +101,7 @@ module mod_md5sums
     
     if(myrank/=master) then
       allocate(character(len=lmd5sum_pot) :: md5sum_potential, stat=ierr)
-!       if(ierr/=0) stop '[myMPI_Bcast_md5sums] error allocating md5sum_potential'
+      if(ierr/=0) stop '[myMPI_Bcast_md5sums] error allocating md5sum_potential'
     end if
     
     ! broadcast checksum

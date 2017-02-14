@@ -613,7 +613,9 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
                 end if     
                            
             WRITE(69,REC=IREC) TMATLL(:,:)
-!             WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
+            if(test('fileverb')) then
+               WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
+            end if
          else
 #ifdef CPP_MPI
             irec = ie_num +
