@@ -192,7 +192,7 @@ module bsrmm_mod
     double complex, intent(in)  :: A(:,:,:) ! dim(lmsa,lmsd,A%nnzb)
     double complex, intent(in)  :: X(:,:,:) ! dim(lmsa,nRHS,X%nnzb)
     ! for the result Y we assume the same BSR structure as X
-    
+
     external :: zgemm ! from BLAS
 
     ! local variables
@@ -202,9 +202,9 @@ module bsrmm_mod
     integer :: Yind, Aind, Xind
     integer :: itask, ithread
     double complex :: beta
-    
+
     if (any(shape(X) /= shape(Y))) stop __LINE__
-    
+
     kernel = self%kernel ! must be lowercase !
 
     leadDim = size(X, 1)
@@ -218,6 +218,8 @@ module bsrmm_mod
     nRHS = size(X, 2)
 #endif
 
+!!! The thread parallelization forsees schedule(static, 1) as the
+!!!       mapping to the individual threads has been done before.
 !$omp parallel
 !$omp do private(Yind, Aind, Xind, beta, itask, ithread) schedule(static, 1)
     do ithread = 0, self%nthreads - 1
@@ -226,21 +228,21 @@ module bsrmm_mod
         Yind = self%task_AoSoA(0,itask,ithread)
         Aind = self%task_AoSoA(1,itask,ithread)
         Xind = self%task_AoSoA(2,itask,ithread)
-        beta = self%task_AoSoA(3,itask,ithread) * ONE
 #ifdef DEBUG
         if (Yind > size(Y, 3)) stop __LINE__
         if (Aind > size(A, 3)) stop __LINE__
         if (Xind > size(X, 3)) stop __LINE__
 #endif
 
-!         selectcase (KERNEL) ! this must be in ALLCAPS as we want to replace it by the preprocessor if we compile a production version
-!         case (4)
-!           if (self%task_AoSoA(3,itask,ithread) == 0) Y(:,:,Yind) = ZERO
-!           call kernel4x4xN(nRHS, A(:,:,Aind), X(:,:,Xind), Y(:,:,Yind))
-!         case (16)
-!           if (self%task_AoSoA(3,itask,ithread) == 0) Y(:,:,Yind) = ZERO
-!           call kernel16x16xN(nRHS, A(:,:,Aind), X(:,:,Xind), Y(:,:,Yind))
-!         case default
+        selectcase (KERNEL) ! this must be in ALLCAPS as we want to replace it by the preprocessor if we compile a production version
+        case (4)
+            if (self%task_AoSoA(3,itask,ithread) == 0) Y(:,:,Yind) = ZERO
+            call kernel4x4xN(nRHS, A(:,:,Aind), X(:,:,Xind), Y(:,:,Yind))
+        case (16)
+            if (self%task_AoSoA(3,itask,ithread) == 0) Y(:,:,Yind) = ZERO
+            call kernel16x16xN(nRHS, A(:,:,Aind), X(:,:,Xind), Y(:,:,Yind))
+        case default
+            beta = self%task_AoSoA(3,itask,ithread) * ONE
 
 #ifdef  TRANSPOSE_TO_ROW_MAJOR
 !           ! now: Y[:,:,Yind] += beta * A[:,:,Aind] .times. X[:,:,Xind] ! GEMM:  C(m,n) += sum( A(m,:) * B(:,n) )
@@ -252,7 +254,7 @@ module bsrmm_mod
             call zgemm('n', 'n', lmsd, nRHS, lmsd, one, A(:,1,Aind), lmsa, X(:,1,Xind), leadDim, beta, Y(:,1,Yind), leadDim)
 #endif
 
-!         endselect ! kernel
+        endselect ! kernel
 
       enddo ! itask
     enddo ! ithread
@@ -310,7 +312,7 @@ module bsrmm_mod
 #ifdef DEBUG
        if (Yind > size(Y, 3)) stop __LINE__
 #endif
-      
+
         jCol = jy(Yind) ! update   matrix block element Y_full[iRow,jCol]
 
         beta = zero
@@ -440,10 +442,10 @@ implicit none
 
   character(len=8) :: CLarg(0:3), method
   integer, parameter :: ShowR=0, ShowH=0, ShowG=0, Hfill=16
-  integer(kind=8) :: nFlop
+  integer(kind=8) :: nFlop = 0
   integer :: ilen, ios, iarg, mb, nb, kb, M, N, K, nn, mm, kk, bm, bn, bk, Rind, nerror(19)=0, fi, si, bs=2 ! BlockSize
-  double precision, parameter :: Gfill=0.5, pointG=.5d0**8, pointH=.5d0**11
-  double precision :: elem, tick, tock, timediff
+  double precision, parameter :: Gfill=0.5, pointG=.5d0**8, pointH=.5d0**11, Giga = 0.5d0**30
+  double precision :: elem, tick, tock, timediff, GiFlop, GiByte
   complex_data_t :: celem
   external :: zgemm ! BLAS matrix matrix multiplication
   complex_data_t, parameter :: one = 1.0, zero = 0.0
@@ -451,7 +453,6 @@ implicit none
   complex_data_t, allocatable :: Hval(:,:,:), Gval(:,:,:), Rval(:,:,:)
   logical(kind=1), allocatable :: Hnz(:,:), Gnz(:,:)
   type(BlockSparseRow) :: H, G!,R==G operators
-  real :: GiFlop, GiByte
   type(bsrMultPlan) :: plan
 
 #define Wtime omp_get_wtime
@@ -516,8 +517,8 @@ implicit none
   tock = Wtime() ; timediff = tock - tick ; tick = tock  
   write(*, fmt="(9(A,F0.3))") 'time for array filling  ',timediff,' sec'
 
-  GiByte = (M*16.*K + K*16.*N + M*16.*N)*.5d0**30
-  GiFlop = M*8.*K*.5d0**30*N
+  GiByte = (M*16d0*K + K*16d0*N + M*16d0*N)*Giga ! Total memory of all three dense matrices
+  GiFlop = M*8d0*K*Giga*N
   write(*,"(9(A,F0.6))") "Dense  matrix-matrix  multiply: ",GiFlop,' GiFlop, ',GiByte,' GiByte'
   ! build reference A an M x K matrix, B a K x N matrix and C an M x N matrix using the BLAS routine
   !                    M  N  K       A         B               C         ! GEMM:  C(m,n) += A(m,k) * B(k,n) ! Fortran style
@@ -528,7 +529,7 @@ implicit none
   if (timediff > 0.) write(*, fmt="(9(A,F0.3))") 'performance for zgemm    ',GiFlop/timediff,' GiFlop/sec'
 
 #ifdef FULL_DEBUG
-!+full_debug
+!+ full_debug
 
   nerror = 0
   do nn = 1, size(Rfull, 2)
@@ -543,7 +544,7 @@ implicit none
   tock = Wtime() ; timediff = tock - tick ; tick = tock
   write(*, fmt="(9(A,F0.3))") 'time for dot_product  ',timediff,' sec'
 
-!-full_debug
+!- full_debug
 #endif 
 
   allocate(t4(bs,mb,bs,kb))
@@ -561,12 +562,13 @@ implicit none
 #define R G
   allocate(Rval(bs,bs,R%nnzb)) ; Rval = 0
 
-  GiByte = 16.*(size(Hval) + size(Gval) + size(Rval))*.5d0**30
+  GiByte = 16d0*(size(Hval) + size(Gval) + size(Rval))*Giga ! Total memory of all three sparse matrices (index lists not included)
 
   tock = Wtime() ; timediff = tock - tick ; tick = tock
   write(*, fmt="(9(A,F0.3))") 'time for BSR creation  ',timediff,' sec'
 
   call bsr_times_bsr(Rval, H%bsrRowPtr, H%bsrColInd, Hval, G%bsrRowPtr, G%bsrColInd, Gval, nFlop)
+  GiFlop = nFlop*Giga
   write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop, ',GiByte,' GiByte'
 
   tock = Wtime() ; timediff = tock - tick ; tick = tock
@@ -575,7 +577,7 @@ implicit none
 
   nerror = 0
   do bm = 1, R%mb
-    do Rind = R%bsrRowPtr(bm), R%bsrRowPtr(bm+1)-1 ; bn = R%bsrColInd(Rind)
+    do Rind = R%bsrRowPtr(bm), R _bsrEndPtr(bm) ; bn = R%bsrColInd(Rind)
       do   si = 1, bs ; nn = bs*bn - bs + si 
         do fi = 1, bs ; mm = bs*bm - bs + fi
           call compare(Rval(fi,si,Rind), Rfull(mm,nn), nerror)
@@ -591,7 +593,8 @@ implicit none
   tick = Wtime() ! start time
 
   call bsr_times_bsr(plan, H%bsrRowPtr, H%bsrColInd, shape(Hval), G%bsrRowPtr, G%bsrColInd, shape(Gval))
-  write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",plan%nFlop*.5**30,' GiFlop (planned)'
+  GiFlop = plan%nFlop*Giga
+  write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop (planned)'
 
   tock = Wtime() ; timediff = tock - tick ; tick = tock
   write(*, fmt="(9(A,F0.3))") 'time for BSR x BSR planning  ',timediff,' sec'
@@ -604,7 +607,7 @@ implicit none
 
   nerror = 0
   do bm = 1, R%mb
-    do Rind = R%bsrRowPtr(bm), R%bsrRowPtr(bm+1)-1 ; bn = R%bsrColInd(Rind)
+    do Rind = R%bsrRowPtr(bm), R _bsrEndPtr(bm) ; bn = R%bsrColInd(Rind)
       do   si = 1, bs ; nn = bs*bn - bs + si 
         do fi = 1, bs ; mm = bs*bm - bs + fi
           call compare(Rval(fi,si,Rind), Rfull(mm,nn), nerror)
@@ -616,7 +619,7 @@ implicit none
 
   call destroy(plan)
 
-  deallocate(Rval, stat=ios)
+  deallocate(Rval, Hval, Gval, stat=ios)
 
 ! allocate(Rfill(M,N))
 !   !! test the multiplication with dense matrices  --> ToDo
