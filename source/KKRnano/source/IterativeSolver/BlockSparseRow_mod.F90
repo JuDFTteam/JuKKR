@@ -106,9 +106,9 @@ module BlockSparseRow_mod
   function bsr_shape(bsr) result(s)
     type(BlockSparseRow), intent(in) :: bsr
     integer :: s(3) ! result
-    s = [bsr%fastBlockDim, bsr%slowBlockDim, bsr%nnzb]    
+    s = [bsr%fastBlockDim, bsr%slowBlockDim, bsr%nnzb]
   endfunction ! bsr_shape
-    
+
   logical function dim_error(bsr, val) result(wrong)
     type(BlockSparseRow), intent(in) :: bsr
     complex_data_t, intent(in) :: val(:,:,:)
@@ -631,17 +631,17 @@ implicit none
   read(unit=CLarg(1), fmt=*) mb ! number of target blocks
   read(unit=CLarg(2), fmt=*) nb ! number of RHS blocks
   read(unit=CLarg(3), fmt=*) bs ! block size
-  
+
   kb = mb ! H is a square operator
 
   M = mb*bs
   N = nb*bs
   K = kb*bs
-  
+
   tick = Wtime() ! start time
-  
+
   allocate(Hfull(M,K), Hnz(mb,kb), Gfull(K,N), Gnz(kb,nb), Rfull(M,N)) ! H*G=R
-  
+
   tock = Wtime() ; timediff = tock - tick ; tick = tock
   write(*, fmt="(9(A,F0.3))") 'time for allocation  ',timediff,' sec'
 
@@ -680,7 +680,7 @@ implicit none
   deallocate(Hnz, Gnz)
 
   Rfull = zero
- 
+
   tock = Wtime() ; timediff = tock - tick ; tick = tock  
   write(*, fmt="(9(A,F0.3))") 'time for array filling  ',timediff,' sec'
 
@@ -694,7 +694,7 @@ implicit none
   tock = Wtime() ; timediff = tock - tick ; tick = tock
   write(*, fmt="(9(A,F0.3))") 'time for zgemm  ',timediff,' sec'
   if (timediff > 0.) write(*, fmt="(9(A,F0.3))") 'performance for zgemm    ',GiFlop/timediff,' GiFlop/sec'
-  
+
 #ifdef FULL_DEBUG
 !+full_debug
 
@@ -710,7 +710,7 @@ implicit none
 
   tock = Wtime() ; timediff = tock - tick ; tick = tock
   write(*, fmt="(9(A,F0.3))") 'time for dot_product  ',timediff,' sec'
-  
+
 !-full_debug
 #endif 
 
@@ -722,12 +722,12 @@ implicit none
   !! use the sparse structure of G for R
 #define R G
   allocate(Rval(bs,bs,R%nnzb)) ; Rval = 0
-  
+
   GiByte = 16.*(size(Hval) + size(Gval) + size(Rval))*.5d0**30
 
   tock = Wtime() ; timediff = tock - tick ; tick = tock
   write(*, fmt="(9(A,F0.3))") 'time for BSR creation  ',timediff,' sec'
-  
+
   ! API: multiply(A, Aval, B, Bval, C, Cval, GiFlop)
   call multiply(H, Hval, G, Gval, R, Rval, GiFlop=GiFlop, method=method)
   write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop, ',GiByte,' GiByte'
@@ -735,7 +735,7 @@ implicit none
   tock = Wtime() ; timediff = tock - tick ; tick = tock
   write(*, fmt="(9(A,F0.3))") 'time for spontaneous BSR x BSR  ',timediff,' sec'
   if (timediff > 0.) write(*, fmt="(9(A,F0.3))") 'performance for spontan  ',GiFlop/timediff,' GiFlop/sec'
-  
+
   nerror = 0
   do bm = 1, R%mb
     do Rind = R%bsrRowPtr(bm), R _bsrEndPtr(bm) ; bn = R%bsrColInd(Rind)
@@ -747,20 +747,20 @@ implicit none
     enddo ! Rind
   enddo ! bm
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(size(Gfull)*.01)
-  
+
   !============================
   Rval = 0
 
-  
+
   tick = Wtime() ! start time
-  
+
   ! API: multiply(p, A, B, C, GiFlop)
   call create(plan, H, G, R, GiFlop=GiFlop, method=method)
   write(*,"(9(A,F0.6))") "BlockSparseRow matrix multiply: ",GiFlop,' GiFlop (planned)'
-  
+
   tock = Wtime() ; timediff = tock - tick ; tick = tock
   write(*, fmt="(9(A,F0.3))") 'time for BSR x BSR planning  ',timediff,' sec'
-  
+
   ! API: multiply(p, Aval, Bval, Cval)
   call multiply(plan, Hval, Gval, Rval)
 
@@ -781,18 +781,18 @@ implicit none
   write(*, fmt="(A,99(' ',F0.1))") " errors", nerror/(size(Gfull)*.01)
 
   call destroy(plan)
-  
+
   deallocate(Rval)
-  
+
 
 ! allocate(Rfill(M,N))
 !   !! test the multiplication with dense matrices  --> ToDo
 ! deallocate(Rfill)
-  
+
 #undef R
   call destroy(H)
   call destroy(G)
-  
+
   contains
 
     subroutine compare(elem, eref, nerror)
@@ -803,7 +803,7 @@ implicit none
         if (abs(elem - eref) > .1d0**ip) nerror(ip) = nerror(ip) + 1  
       enddo ! ip
     endsubroutine
-  
+
 endprogram ! test
 
 !- TESTMAIN_BlockSparseRow
