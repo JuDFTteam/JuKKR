@@ -593,12 +593,6 @@ c get charge at the Fermi energy (IELAST)
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),R2NEFC_loop(:,:,:,ith),0,
      +                GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL)
-!      SUBROUTINE RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL,EK,LMPOTD,
-!      +                      DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
-!      +                      IRMDNEW,THETASNEW,IFUNM,IMT1,
-!      +                      LMSP,RLL,RLLLEFT,SLLLEFT,
-!      +                      CDEN,CDENLM,CDENNS,RHO2NSC,CORBITAL,
-!      +                      GFLLE_PART,RPAN_INTERVALL,IPAN_INTERVALL)
        ENDIF
 
 
