@@ -16,19 +16,21 @@ default: install
 ####################################################
 # specify the compiler which is going to be used   #
 ####################################################
-# default value
+###  default value  ###
 FC =  ifort
 # change default value if a flag is matched
 mpi:       FC =  mpiifort
 hybrid:    FC =  mpiifort
-# mac:
+hybriddebug:    FC =  mpiifort
+###  mac  ###
 macmpi:     FC =  /usr/local/impi/bin/mpif90  
 mpidebug:   FC = mpiifort
-#rwth cluster
+###  rwth cluster  ###
 rwthmpi: FC=$(MPIFC)
-rwthmpidebug: FC=$(MPIFC)  # marmotf90   
+rwthmpidebug: FC=$(MPIFC)
+# marmotf90
 rwthhybrid: FC=$(MPIFC)
-#jureca
+###  jureca  ###
 jureca: FC = mpif90
 # $(MPIFC)
 
@@ -36,10 +38,12 @@ jureca: FC = mpif90
 # information for version-tracking in executable:
 # default
 COMPVER ='serial'
+# special cases
 debug:     COMPVER ='debug'
 mpi:       COMPVER ='mpi'
 mpidebug:  COMPVER ='mpidebug'
 hybrid:    COMPVER ='hybrid'
+hybriddebug:    COMPVER ='hybriddebug'
 openmp:    COMPVER ='openmp'
 ompdebug:  COMPVER ='openmpdebug'
 mac:       COMPVER ='serial-mac'
@@ -79,26 +83,36 @@ OBJECTS1c= $(OBJ)/main1c.o $(OBJ)/rhoval.o $(OBJ)/rhoval0.o $(OBJ)/rhocore.o $(O
 
 OBJECTS2 = $(OBJ)/main2.o $(OBJ)/vmadelblk.o $(OBJ)/vinterface.o $(OBJ)/etotb1.o $(OBJ)/rhototb.o $(OBJ)/brydbm.o $(OBJ)/brysh1.o $(OBJ)/brysh2.o $(OBJ)/brysh3.o $(OBJ)/convol.o $(OBJ)/ecoub.o $(OBJ)/epotinb.o $(OBJ)/espcb.o $(OBJ)/force.o $(OBJ)/forceh.o $(OBJ)/forcxc.o $(OBJ)/mixstr.o $(OBJ)/mtzero.o $(OBJ)/reg2.o $(OBJ)/rhosymm.o $(OBJ)/rites.o $(OBJ)/sinwk.o $(OBJ)/vintras.o $(OBJ)/corlsd.o $(OBJ)/cpw91.o $(OBJ)/cylm02.o $(OBJ)/exch91.o $(OBJ)/gcor91.o $(OBJ)/gradr.o $(OBJ)/gradrl.o $(OBJ)/gxcpt.o $(OBJ)/mkxcpe.o $(OBJ)/spher.o $(OBJ)/sphere_gga.o $(OBJ)/sphere_nogga.o $(OBJ)/trarea.o $(OBJ)/vosko.o $(OBJ)/vxcdrv.o $(OBJ)/vxcgga.o $(OBJ)/vxclm.o $(OBJ)/vxcspo.o $(OBJ)/lebedev.o $(OBJ)/mkxcpe2.o $(OBJ)/mdirnewang.o $(OBJ)/scfiterang.o $(OBJ)/writekkrflex.o
 
-
+# only these conatin explicit !$omp statements:
+$(OBJ)/main0.o: $(SRC)/main0.F
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+$(OBJ)/rhoval.o: $(SRC)/rhoval.F
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+$(OBJ)/rhovalnew.o: $(SRC)/rhovalnew.F
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+$(OBJ)/strmat.o: $(SRC)/strmat.F
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+$(OBJ)/tmat_newsolver.o: $(SRC)/tmat_newsolver.F
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
 
 $(OBJ)/mod_%.o: $(SRC)/%.f
-	$(FC) $(FFLAGS)  $(OPENMPFLAGS) -c -o $@ $<
+	$(FC) $(FFLAGS)  -c -o $@ $<
 $(OBJ)/mod_%.o: $(SRC)/%.f90
-	$(FC) $(FFLAGS)  $(OPENMPFLAGS) -c -o $@ $<
+	$(FC) $(FFLAGS)  -c -o $@ $<
 $(OBJ)/mod_%.o: $(SRC)/%.F
-	$(FC) $(FFLAGS)  $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+	$(FC) $(FFLAGS)  $(CPP) -c -o $@ $<
 $(OBJ)/mod_%.o: $(SRC)/%.F90
-	$(FC) $(FFLAGS)  $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+	$(FC) $(FFLAGS)  $(CPP) -c -o $@ $<
 
 
 $(OBJ)/%.o: $(SRC)/%.f
-	$(FC) $(FFLAGS)  $(OPENMPFLAGS) -c -o $@ $<
+	$(FC) $(FFLAGS)   -c -o $@ $<
 $(OBJ)/%.o: $(SRC)/%.f90
-	$(FC) $(FFLAGS)  $(OPENMPFLAGS) -c -o $@ $<
+	$(FC) $(FFLAGS)   -c -o $@ $<
 $(OBJ)/%.o: $(SRC)/%.F
-	$(FC) $(FFLAGS)  $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+	$(FC) $(FFLAGS)   $(CPP) -c -o $@ $<
 $(OBJ)/%.o: $(SRC)/%.F90
-	$(FC) $(FFLAGS)  $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+	$(FC) $(FFLAGS)   $(CPP) -c -o $@ $<
 
 ####################################################
 # Libraries                                        #
@@ -145,6 +159,7 @@ rwthompdebug:  LLIBSOPENMP=$(RWTHLLIBSOMP)
 
 openmp: LLIBS=$(LLIBSOPENMP)
 hybrid: LLIBS=$(LLIBSOPENMP)
+hybriddebug: LLIBS=$(LLIBSOPENMP)
 ompdebug: LLIBS=$(LLIBSOPENMP)
 rwthomp: LLIBS=$(RWTHLLIBSOMP)
 rwthompdebug: LLIBS=$(RWTHLLIBSOMP)
@@ -167,66 +182,44 @@ rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
 rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
 hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
+hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid -D CPP_NOMD5
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 
 ####################################################
 # Compiler flags                                   #
 ####################################################
 # Default:
-FFLAGS       =  -O2 -r8 -traceback -module $(OBJ)
-
+# flags for ifort: optimization, default 8 bytes, trackeback to line, compiled module files in $(OBJ), save compiler version info in executable
 # Change to if flag is matched:
-debug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g
-mpidebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g
-ompdebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g
+debug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
+hybriddebug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
+mpidebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
+ompdebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
 
 OPENMPFLAGS = 
-hybrid: OPENMPFLAGS = -openmp
+hybrid: OPENMPFLAGS = -openmp 
+hybriddebug: OPENMPFLAGS = -openmp
 openmp: OPENMPFLAGS = -openmp
 ompdebug: OPENMPFLAGS = -openmp
+rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
+rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 
-macmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
-macompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
-rwthmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g
-rwthompdebug: FFLAGS = -O2 -r8 -traceback -module $(OBJ) -g
+macmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g -sox
+macompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g -sox
+rwthmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g -sox
+rwthompdebug: FFLAGS = -O2 -r8 -traceback -module $(OBJ) -g -sox
 #rwthompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
 
 rwthomp: OPENMPFLAGS = -openmp
-rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -openmp
 rwthompdebug: OPENMPFLAGS = -openmp
-rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ)
 rwthhybrid: OPENMPFLAGS = -openmp
 
 
 
 ####################################################
-# Linking                                          #
+# helper                                           #
 ####################################################
-.PHONY: default
-.PHONY: mkdirobj
-.PHONY: isincpthere
-.PHONY: copyinc
-.PHONY: clean
-.PHONY: clear
-.PHONY: serial
-.PHONY: debug
-.PHONY: openmp
-.PHONY: mpi
-.PHONY: mpidebug
-.PHONY: install
-.PHONY: getversion
-.PHONY: compile
-.PHONY: hybrid
-.PHONY: mac
-.PHONY: macmpi
-.PHONY: macomp
-.PHONY: rwth
-.PHONY: rwthmpi
-.PHONY: rwthomp
-.PHONY: rwthmpidebug
-.PHONY: rwthompdebug
-.PHONY: rwthhybrid
-.PHONY: jureca
+.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid jureca
 
 getversion:
 	@echo "Wrinting Version file: "; git describe;\
@@ -249,8 +242,26 @@ clean:
 clear:
 	rm -rf *.mod *.o OBJ/ *__genmod.*
 
-compile:  mkdirobj getversion copyinc $(MODULES) $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o 
+
+# define three steps of compilation
+
+# first compile modules (has to be done in serial)
+compile0: mkdirobj getversion copyinc $(MODULES)
+
+# then compile everything exept main_all (this can be done in parallel if -j is given)
+compile1:  $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2)
+
+# finally compile main_all and do linking in serial
+compile2:  compile0 compile1 $(OBJ)/main_all.o
 	  $(FC) -o $(FILENAME0) $(MODULES) $(OBJECTS0) $(OBJECTS1a) $(OBJECTS1b) $(OBJECTS1c) $(OBJECTS2) $(OBJ)/main_all.o $(LLIBS)
+
+# set compile steps 0,1,2 together:
+compile: compile0 compile1 compile2
+
+###################################################################
+
+
+
 
 serial:   compile
 debug:    compile
@@ -258,6 +269,7 @@ openmp:   compile
 ompdebug: compile
 mpi:      compile
 hybrid:   compile
+hybriddebug:   compile
 mpidebug: compile
 rwthmpidebug: compile
 
