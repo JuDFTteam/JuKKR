@@ -316,6 +316,7 @@ CONTAINS
     LVeig_memopt = (0d0,0d0)
     RVeig_memopt = (0d0,0d0)
 
+#ifdef CPP_FEAST
     if(inc%feast==.true.)then
       call feastinit(feastparam)
       if (myrank==master) then
@@ -342,6 +343,7 @@ CONTAINS
       LVeig_memopt=eig_temp(:,1+inc%neig:nb_ev+inc%neig)
 
     else
+#endif
       naux = 2*inc%almso**2+5*inc%almso
       allocate( daux(2*inc%almso), aux(naux), STAT=ierr )
       if(ierr/=0) stop 'Problem allocating aux arrays'
@@ -374,7 +376,9 @@ CONTAINS
       end do!
 
       deallocate(aux,daux)
+#ifdef CPP_FEAST
     end if!inc%feast==.true.
+#endif
 
     if (myrank==master) write(234,*) nb_ev
     if (nb_ev<1) stop 'memopt : 0 eigen values found, reig is probably too small'
