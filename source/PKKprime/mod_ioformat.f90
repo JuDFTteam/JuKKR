@@ -53,6 +53,7 @@ module mod_ioformat
     character(len=*), parameter :: filename_vtktest  = 'fstest'
     character(len=*), parameter :: filename_vtkonfs  = 'visdata'
     character(len=*), parameter :: filename_scattfixk= 'scattfix'
+    character(len=*), parameter :: filename_scattfixk_out= 'scattfix_out'
     character(len=*), parameter :: filename_lifetime = 'lifetime'
     character(len=*), parameter :: filename_scattmat = 'scatteringmatrix'
 
