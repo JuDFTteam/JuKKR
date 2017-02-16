@@ -29,14 +29,21 @@ CPPFLAGS =  -D CPP_MPI
 -L/usr/local/intel/lib/intel64 -lifcore -limf -Wl,-rpath,/usr/local/intel/lib/intel64 #Standard LApack with new Compiler V12
 LDFLAGS= -L/usr/local/intel/lib/intel64 -lifcore -limf -Wl,-rpath,/usr/local/intel/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 #OMP-Version of LApack
 
+# FOR FEAST ALGORITHM:
+feast: LDFLAGS= -L/usr/local/intel/Compiler/11.1/059/mkl/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -L./libs/FEAST/3.0/lib/x64 -lfeast_dense -lfeast #including FEAST library
+feast: CPPFLAGS= -D CPP_FEAST
 #========================================================
 
 #========================================================
 # RWTH cluster
-#FC = $(MPIFC)
-#FFLAGS = $(FLAGS_FAST)
-#CPPFLAGS =  -DCPP_MPI
-#LDFLAGS= $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+rwth: FC = $(MPIFC)
+rwth: FFLAGS = $(FLAGS_FAST) -traceback
+rwth: CPPFLAGS =  -DCPP_MPI
+rwth: LDFLAGS= $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+allrwth: FC = $(MPIFC)
+allrwth: FFLAGS = $(FLAGS_FAST) -traceback
+allrwth: CPPFLAGS =  -DCPP_MPI
+allrwth: LDFLAGS= $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 #========================================================
 
 
@@ -155,5 +162,10 @@ clean:
 all: $(PKKR) $(BAND) $(REFI) $(MERG) $(AMAT) $(SPMX) $(VISD) $(VINT)
 
 install: clear all
+
+rwth: $(PKKR)
+allrwth: $(PKKR) $(BAND) $(REFI) $(MERG) $(AMAT) $(SPMX) $(VISD) $(VINT)
+
+feast: $(PKKR)
 
 ##########################################################################
