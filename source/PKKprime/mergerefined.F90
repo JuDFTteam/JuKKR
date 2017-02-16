@@ -50,6 +50,9 @@ program mergerefined
                                  & scalardata(:,:)
 
 
+  integer :: iarg, narg
+  character(len=20) :: arg_name
+
   !initialize MPI
 #ifdef CPP_MPI
   call MPI_Init ( ierr )
@@ -60,12 +63,27 @@ program mergerefined
   call pointgrp(rotmat,rotname)
   areatot = 0d0
 
+  nBZdim = -1
+
+  narg=command_argument_count()
+  if (narg>0) then
+    do iarg=1,narg
+      call get_command_argument(iarg,arg_name)
+      if (arg_name=='--2' .or. arg_name=='-2') nBZdim=2
+      if (arg_name=='--3' .or. arg_name=='-3') nBZdim=3
+    end do
+  end if
+  
 
   write(*,*) '****************************************************'
   write(*,*) '* What is the dimensionality of your BZ            *'
   write(*,*) '* - - - - - - - - - - - - - - - - - - - - - - - - -*'
   write(*,*) '* possible choices implemented: 2 or 3             *'
-  read(*,*) nBZdim
+
+  if (nBZdim==-1) read(*,*) nBZdim
+
+  write(*,'(A,I3,A)') 'mode ', nBZdim, ' chosen'
+  if (.not.(nBZdim==2 .or. nBZdim==3)) stop 'illegal mode'
 
   !read in the cubes header
   write(filename,fmt_fn_ext) filename_cubesinfo, ext_formatted
