@@ -1796,7 +1796,7 @@ contains
     double precision, allocatable :: areas(:)
 
     !scattering
-    double precision, allocatable :: Pkkfix(:,:,:,:)!, Pkkfix_loc(:,:,:,:)
+    double precision, allocatable :: Pkkfix(:,:,:,:), Pkkfix_outfix(:,:,:,:)!, Pkkfix_loc(:,:,:,:)
 
     !parallelization
     integer :: ntot_pT(0:nranks-1),    ioff_pT(0:nranks-1), &
@@ -1817,10 +1817,10 @@ contains
     !counter and temp arrays
     integer :: ierr, isqa, ikp, ispin1, ispin2, clmso, ihelp, irveigel, printstep
     integer :: nkpts1, nkpts_all1
-    double complex :: Tkk_tmp
+    double complex :: Tkk_tmp,Tkk_tmp_outfix
     integer,          allocatable :: kpt2irr1(:), irr2kpt1(:)
     double precision, allocatable :: areas1(:), kpoints1(:,:)
-    double complex,   allocatable :: Ctmp(:,:,:)
+    double complex,   allocatable :: Ctmp(:,:,:),Ctmp_outfix(:,:,:)
 
     !parameter
     double complex, parameter :: CZERO=(0d0,0d0), CONE=(1d0,0d0), CI=(0d0,1d0)
@@ -1831,6 +1831,7 @@ contains
     end if
     call set_symmetries(inc, lattice, symmetries)
 
+    if(myrank==master) write(*,*) 'get_incident_kvector'
     call get_incident_kvector(inc, lattice, cluster, tgmatrx, kpoint_fix)
 
     nsqa = get_nsqa()
@@ -1842,7 +1843,9 @@ contains
             & STAT=ierr                                         )
     if(ierr/=0) stop 'Problem allocating rveig_fix etc'
 
+    if(myrank==master) write(*,*) 'calc_wavefun_kpoint'
     call calc_wavefun_kpoint(inc, lattice, cluster, tgmatrx, nsqa, kpoint_fix, spinval_fix, rveig_fix)
+    if(myrank==master) write(*,*) 'extend_coeffvector2cluster_allsqa'
     call extend_coeffvector2cluster_allsqa(inc, lattice, impcls, nsqa, kpoint_fix, rveig_fix, rveig_fix_impcls)
 
 
@@ -1870,6 +1873,12 @@ contains
     allocate(isym(nsym))
     isym = (/ 1 /)
 
+    !allocate(kpoints(3,2))
+    !kpoints(:,1) = kpoint_fix(:)
+    !kpoints(:,2) = -kpoint_fix(:)
+    !if(myrank==master) write(*,*) 'kpoint fix, kpoint',kpoint_fix,kpoints
+
+    !nkpts = 2
     call distribute_linear_on_tasks(nranks, myrank, master, nkpts, ntot_pT, ioff_pT, .true.)
     nkpt = ntot_pT(myrank)
     ioff = ioff_pT(myrank)
@@ -1882,8 +1891,9 @@ contains
 
     clmso = impcls%clmso
     allocate( Pkkfix(inc%ndegen,inc%ndegen,nsqa,nkpts), &
-!           & Pkkfix_loc(inc%ndegen,inc%ndegen,nsqa,nkpt),  &
-            & Ctmp(clmso,inc%ndegen,nsqa), STAT=ierr )
+            & Pkkfix_outfix(inc%ndegen,inc%ndegen,nsqa,nkpts), &
+            & Ctmp(clmso,inc%ndegen,nsqa), &
+            & Ctmp_outfix(clmso,inc%ndegen,nsqa), STAT=ierr )
     if(ierr/=0) stop 'Problem allocating Pkkfix, Ctmp in calc_scattering_fixk'
     Ctmp = CZERO
 
@@ -1893,8 +1903,9 @@ contains
       do ispin1=1,inc%ndegen
 !OLD--------------------------------------------------------------------------------------------!OLD
 !OLD    ! Ctmp = conjg(c_kfix) * Amat                                                           !OLD
-!OLD    call ZGEMM( 'C','N', 1, clmso, clmso, CONE, rveig_fix_impcls(:,ispin1,isqa), &          !OLD
-!OLD              & clmso, Amat, clmso, CZERO, Ctmp(:,ispin1,isqa), 1                )          !OLD
+! uncommented for k0==kfinal writeout as well
+        call ZGEMM( 'C','N', 1, clmso, clmso, CONE, rveig_fix_impcls(:,ispin1,isqa), &          !OLD
+                  & clmso, Amat, clmso, CZERO, Ctmp_outfix(:,ispin1,isqa), 1                )          !OLD
 !OLD--------------------------------------------------------------------------------------------!OLD
 !NEW    in the old implementation, the fixed k was actually an outgoing k-vector                !NEW
 !NEW    ! Ctmp =  Amat*c_kfix                                                                   !NEW
@@ -1905,7 +1916,6 @@ contains
     end do!isqa
     !=== Prepare the incomming vector ===!
     !================  END  =============!
-
 
 
     !================ BEGIN ================!
@@ -1930,8 +1940,9 @@ contains
 
 !OLD---------------------------------------------------------------------------------------------!OLD
 !OLD        ! Tkk' = conjg(c_kfix) * Amat * c_k                                                  !OLD
-!OLD        call ZGEMM( 'N','N', 1, 1, clmso, CONE, Ctmp(:,ispin1,isqa), 1,      &               !OLD
-!OLD                  & rveig_in_impcls(:,ispin2,isqa), clmso, CZERO, Tkk_tmp, 1 )               !OLD
+! uncommented for k0==kfinal writeout as well
+            call ZGEMM( 'N','N', 1, 1, clmso, CONE, Ctmp_outfix(:,ispin1,isqa), 1,      &               !OLD
+                      & rveig_in_impcls(:,ispin2,isqa), clmso, CZERO, Tkk_tmp_outfix, 1 )               !OLD
 !OLD---------------------------------------------------------------------------------------------!OLD
 !NEW         in the old implementation, the fixed k was actually an outgoing k-vector         ---!NEW
 !NEW        ! Tkk' = conjg(c_k) * Amat * c_kfix                                                  !NEW
@@ -1940,6 +1951,7 @@ contains
 
             ! Pkk = |Tkk|^2
             Pkkfix(ispin2,ispin1,isqa,ikp) = dble(Tkk_tmp)**2 + aimag(Tkk_tmp)**2
+            Pkkfix_outfix(ispin2,ispin1,isqa,ikp) = dble(Tkk_tmp_outfix)**2 + aimag(Tkk_tmp_outfix)**2
 
           end do!ispin2
         end do!ispin1
@@ -1956,18 +1968,20 @@ contains
     ihelp      = inc%ndegen*inc%ndegen*nsqa
     recvcounts = ntot_pT*ihelp
     displs     = ioff_pT*ihelp
-!   call MPI_Gather( Pkkfix_loc, ihelp*nkpt, MPI_DOUBLE_PRECISION, &
-!                  & Pkkfix,     ihelp*nkpt, MPI_DOUBLE_PRECISION, &
-!                  & master, MPI_COMM_WORLD, ierr )
 
+    if(myrank==master) write(*,*) 'before mpiallgather Pkkfix:',ihelp,recvcounts,displs,nkpt
     call MPI_Allgatherv( Pkkfix, ihelp*nkpt, MPI_DOUBLE_PRECISION,         &
                        & Pkkfix, recvcounts, displs, MPI_DOUBLE_PRECISION, &
                        & MPI_COMM_WORLD, ierr )
-
+! gather Pkk' for fixed outgoing k
+    call MPI_Allgatherv( Pkkfix_outfix, ihelp*nkpt, MPI_DOUBLE_PRECISION,         &
+                       & Pkkfix_outfix, recvcounts, displs, MPI_DOUBLE_PRECISION, &
+                       & MPI_COMM_WORLD, ierr )
 
 
     !save scattfix to file
-    if(myrank==master) call save_scattfix(trim(filemode), nkpts, nsqa, inc%ndegen, kpoint_fix, Pkkfix, nsym, isym)
+    if(myrank==master) call save_scattfix(trim(filemode), nkpts, nsqa, inc%ndegen, kpoint_fix, Pkkfix, nsym, isym, 'start')
+    if(myrank==master) call save_scattfix(trim(filemode), nkpts, nsqa, inc%ndegen, kpoint_fix, Pkkfix_outfix, nsym, isym, 'outfix')
 
 
     if(myrank==master .and. sca%mode==MODE_VIS .and. inc%nBZdim==3) then
@@ -2030,7 +2044,15 @@ contains
                                  & RVroot(:,:,:), &
                                  & eigwroot(:,:)
 
+   double precision, parameter :: eps=1e-6!threshold which determines if kstart==kstop so that line-search is not done
+
     if(myrank==master)then
+
+      if(sqrt((sca%kfix(1,1)-sca%kfix(1,2))**2+(sca%kfix(2,1)-sca%kfix(2,2))**2+(sca%kfix(3,1)-sca%kfix(3,2))**2)<eps) then
+          write(*,*) 'take input as k-point'
+          ! if start==stop for fixed interval take only this point without finding the intersection with the FS
+          kpoint_fix = sca%kfix(:,1)
+      else
 
       allocate( lmroot(inc%nrootmax),&
               & kroot(3,inc%nrootmax),&
@@ -2055,6 +2077,8 @@ contains
       kpoint_fix = kroot(:,sca%roottake)
 
       deallocate(lmroot, LVroot, RVroot, eigwroot)
+
+      end if !kfix_start==kfix_stop
 
     end if!myrank==master
 
@@ -3337,24 +3361,38 @@ contains
 
 
 
-  subroutine save_scattfix(filemode, nkpts, nsqa, ndegen, kfix, Pkkfix, nsym, isym)
+  subroutine save_scattfix(filemode, nkpts, nsqa, ndegen, kfix, Pkkfix, nsym, isym, mode)
 
-    use mod_ioformat,   only: fmt_fn_sub_ext, ext_formatted, filename_scattfixk
+    use mod_ioformat,   only: fmt_fn_sub_ext, ext_formatted, filename_scattfixk, filename_scattfixk_out
     implicit none
 
     character(len=*), intent(in) :: filemode
+    character(len=*), intent(in) :: mode
     integer,          intent(in) :: nkpts, nsqa, ndegen, nsym, isym(nsym)
     double precision, intent(in) :: kfix(3), Pkkfix(ndegen,ndegen,nsqa,nkpts)
 
     integer :: ii
-    character(len=256) :: filename, fmtstr
+    !character(len=256) :: filename, fmtstr
+    character(len=512) :: filename, fmtstr
 
     write(fmtstr,'(A,I0,A)') '(', nsqa*ndegen**2,'ES25.16)'
+    write(*,*) 'in save_sattfix:',mode,mode=='start'
+    write(*,*) 'filename:',len(filename_scattfixk),filename_scattfixk
+    write(*,*) 'filename out:',len(filename_scattfixk_out),filename_scattfixk_out
+    write(*,*) 'filemode:',len(filemode),filemode
 
-    write(filename,fmt_fn_sub_ext) filename_scattfixk, filemode, ext_formatted
+    if (mode=='start') then
+       write(filename,fmt_fn_sub_ext) filename_scattfixk, filemode, ext_formatted
+    else
+       write(filename,fmt_fn_sub_ext) filename_scattfixk_out,filemode, ext_formatted
+    endif
     open(unit=326529, file=trim(filename), form='formatted', action='write')
 
-    write(326529,'(A,3ES25.16)') '# incoming k-vector = ', kfix
+    if (mode=='start') then
+       write(326529,'(A,3ES25.16)') '# incoming k-vector = ', kfix
+    else
+       write(326529,'(A,3ES25.16)') '# outgoing k-vector = ', kfix
+    endif
     if(ndegen==2)then
       write(326529,'(A)') '# for each SQA: P^uu, P^du, P^ud, P^dd, where the second spin index refers to the incoming k'
     else!ndegen==2

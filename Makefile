@@ -25,8 +25,9 @@ CPPFLAGS =  -D CPP_MPI
 ###LDFLAGS= -L/usr/local/intel/Compiler/11.1/059/mkl/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 #OMP-Version of LApack
 ###LDFLAGS= -openmp -L/usr/local/intel/Compiler/11.1/059/mkl/lib/em64t -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread #Standard LApack + separate OMP
 ###LDFLAGS= -L/usr/local/intel/Compiler/11.1/059/mkl/lib/em64t -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread #Standard LApack
-LDFLAGS= -llapack_ifort -lblas_ifort \
+#LDFLAGS= -llapack_ifort -lblas_ifort \
 -L/usr/local/intel/lib/intel64 -lifcore -limf -Wl,-rpath,/usr/local/intel/lib/intel64 #Standard LApack with new Compiler V12
+LDFLAGS= -L/usr/local/intel/lib/intel64 -lifcore -limf -Wl,-rpath,/usr/local/intel/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 #OMP-Version of LApack
 
 # FOR FEAST ALGORITHM:
 feast: LDFLAGS= -L/usr/local/intel/Compiler/11.1/059/mkl/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -L./libs/FEAST/3.0/lib/x64 -lfeast_dense -lfeast #including FEAST library
