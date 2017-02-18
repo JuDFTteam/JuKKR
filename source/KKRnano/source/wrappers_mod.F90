@@ -24,6 +24,7 @@ module wrappers_mod
   subroutine RHOVAL_wrapper(atomdata, ldorhoef, icst, nsra, rho2ns, r2nef, den, &
                             espv, gmatn, gaunts, emesh, ldau_data, method, &
                             korbit, theta_noco, phi_noco, angle_fixed, &
+                            moment_x, moment_y, moment_z, &
                             muorb, iemxd, params) ! NOCO/SOC
     use BasisAtom_mod, only: BasisAtom
     use GauntCoefficients_mod, only: GauntCoefficients
@@ -50,9 +51,12 @@ module wrappers_mod
     integer, intent(in) :: method !< method for solving the single site problem, Volterra or Fredholm
 
     integer, intent(in)             :: korbit      ! NOCO
-    double precision, intent(inout) :: theta_noco  ! NOCO
-    double precision, intent(inout) :: phi_noco    ! NOCO
+    double precision, intent(out)   :: theta_noco  ! NOCO
+    double precision, intent(out)   :: phi_noco    ! NOCO
     integer (kind=1), intent(in)    :: angle_fixed ! NOCO
+    double precision, intent(out)   :: moment_x    ! NOCO
+    double precision, intent(out)   :: moment_y    ! NOCO
+    double precision, intent(out)   :: moment_z    ! NOCO
 !    logical, intent(in)             :: soc        ! NOCO
 !    double precision, intent(in)    :: socscale   ! NOCO
     double precision, intent(out)   :: muorb(0:,:) ! NOCO
@@ -76,7 +80,8 @@ module wrappers_mod
                       chebmesh%npan_tot,params%npan_log,params%npan_eq,mesh%r,mesh%irws,  &
                       chebmesh%rpan_intervall,chebmesh%ipan_intervall,  &
                       chebmesh%rnew,atomdata%potential%vinscheb,chebmesh%thetasnew, &
-                      theta_noco,phi_noco,angle_fixed,1,  &  ! ipot=1
+                      theta_noco,phi_noco,angle_fixed,moment_x,moment_y,moment_z,&
+                      1,  &  ! ipot=1
                       den,espv,rho2ns,r2nef, gmatn(:,:,:,1), muorb,  & ! just one spin component of gmatn needed
                       atomdata%potential%lpot,lmaxd,mesh%irmd,chebmesh%irmd_new,iemxd, params%soc)
  

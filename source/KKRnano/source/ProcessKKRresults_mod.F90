@@ -456,6 +456,7 @@ module ProcessKKRresults_mod
                           calc%gaunts, emesh, ldau_data, params%Volterra, &
                           dims%korbit, calc%noco_data%theta_noco(atom_id), calc%noco_data%phi_noco(atom_id), &
                           calc%noco_data%angle_fixed(atom_id), & 
+                          calc%noco_data%moment_x(atom_id),calc%noco_data%moment_y(atom_id), calc%noco_data%moment_z(atom_id), &
                           densities%muorb, densities%iemxd, params)
 
       ! LDAU
@@ -535,7 +536,9 @@ module ProcessKKRresults_mod
                               atomdata%core%ECORE, atom_id, emesh%NPOL, &
                               atomdata%core%QC_corecharge, densities%MUORB, &
                               calc%noco_data%phi_noco(atom_id), calc%noco_data%theta_noco(atom_id), &
-                              calc%noco_data%angle_fixed(atom_id))
+                              calc%noco_data%angle_fixed(atom_id), &
+                              calc%noco_data%moment_x(atom_id),calc%noco_data%moment_y(atom_id), &
+                              calc%noco_data%moment_z(atom_id))
       enddo
 
       close(r1fu)
@@ -995,7 +998,8 @@ module ProcessKKRresults_mod
     integer :: lrecres1
 
     !lrecres1 = 8*43 + 16*(lmaxd+2)
-    lrecres1 = 8*43 + 16*(lmaxd+2) + 8*(lmaxd+3)*3 + 8*2 + 1*1 ! NOCO with nonco angles and angle_fixed
+    !lrecres1 = 8*43 + 16*(lmaxd+2) + 8*(lmaxd+3)*3 + 8*2 + 1*1 ! NOCO with nonco angles and angle_fixed
+    lrecres1 = 8*43 + 16*(lmaxd+2) + 8*(lmaxd+3)*3 + 8*2 + 1*1 + 8*3 ! NOCO with nonco angles and angle_fixed and moments
     if (npol == 0) lrecres1 = lrecres1 + 32*(lmaxd+2)*iemxd
 
     fu = 71
@@ -1005,7 +1009,8 @@ module ProcessKKRresults_mod
   !----------------------------------------------------------------------------
   !> Write some stuff to the 'results1' file
   subroutine writeResults1File(fu, catom, charge, den, ecore, i1, npol, qc, &
-                               muorb, phi_soc, theta_soc, angle_fixed)
+                               muorb, phi_soc, theta_soc, angle_fixed, &
+                               moment_x, moment_y, moment_z)
                            
     integer, intent(in) :: fu !< file unit
     double precision, intent(in) :: catom(:), charge(:,:)
@@ -1017,11 +1022,16 @@ module ProcessKKRresults_mod
     double precision, intent(in) :: phi_soc     ! NOCO
     double precision, intent(in) :: theta_soc   ! NOCO
     integer (kind=1), intent(in) :: angle_fixed ! NOCO
+    double precision, intent(in) :: moment_x    ! NOCO
+    double precision, intent(in) :: moment_y    ! NOCO
+    double precision, intent(in) :: moment_z    ! NOCO
 
     if (npol == 0) then
-      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,angle_fixed,den  ! write density of states (den) only when certain options set
+      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,angle_fixed, &
+              moment_x,moment_y,moment_z,den  ! write density of states (den) only when certain options set
     else
-      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,angle_fixed
+      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,angle_fixed, &
+              moment_x,moment_y,moment_z
     endif
   endsubroutine ! write
 
@@ -1450,6 +1460,9 @@ module ProcessKKRresults_mod
     double precision phi_noco !NOCO
     double precision theta_noco !NOCO
     integer (kind=1) angle_fixed !NOCO
+    double precision moment_x !NOCO
+    double precision moment_y !NOCO
+    double precision moment_z !NOCO
     integer :: lrecres1, lrecres2
     integer :: lcoremax, i1, ispin, lpot
     character(len=*), parameter :: &
@@ -1463,32 +1476,46 @@ module ProcessKKRresults_mod
     npotd = nspin*natoms
 
     !lrecres1 = 8*43 + 16*(lmax+2) ! w/o NOCO
-    lrecres1 = 8*43 + 16*(lmax+2) + 8*(lmax+3)*3 + 8*2 + 1*1 ! NOCO with noco angles and angle_fixed option
+    !lrecres1 = 8*43 + 16*(lmax+2) + 8*(lmax+3)*3 + 8*2 + 1*1 ! NOCO with noco angles and angle_fixed option
+    lrecres1 = 8*43 + 16*(lmax+2) + 8*(lmax+3)*3 + 8*2 + 1*1 + 8*3 ! NOCO with noco angles and angle_fixed option and moments
     
     if (npol == 0) lrecres1 = lrecres1 + 32*(lmax+2)*iemxd ! dos calc.
 
     if (compute_total_energy >= 0) then
       open(71, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='read', status='old')
       if (korbit == 1) open(13,file='nonco_angle_out.dat',form='formatted') ! NOCO
+      if (korbit == 1) open(14,file='nonco_moment_out.dat',form='formatted') ! NOCO
     
       ! moments output
       do i1 = 1, natoms
         if (npol == 0) then 
-          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,angle_fixed,den
+          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,angle_fixed, &
+                  moment_x,moment_y,moment_z,den
         else
-          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,angle_fixed
+          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,angle_fixed, &
+                  moment_x,moment_y,moment_z
         endif
        
         call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
         if (korbit == 1) then ! NOCO
-        ! save to file in converted units (degrees)
+        ! save to 'nonco_angle_out.dat' in converted units (degrees)
           write(13,*) theta_noco/(2.0D0*PI)*360.0D0, &
+                      phi_noco/(2.0D0*PI)*360.0D0, &
+                      angle_fixed
+        ! save to ' in converted units (degrees)
+
+          write(14,"(6f12.5,1i5)") moment_x, &
+                      moment_y, &
+                      moment_z, &
+                      sqrt(moment_x**2+moment_y**2+moment_z**2), &
+                      theta_noco/(2.0D0*PI)*360.0D0, &
                       phi_noco/(2.0D0*PI)*360.0D0, &
                       angle_fixed
         endif
       enddo ! i1
 
       if (korbit == 1)  close(13)
+      if (korbit == 1)  close(14)
 
       ! density of states output
       if (npol == 0) then
