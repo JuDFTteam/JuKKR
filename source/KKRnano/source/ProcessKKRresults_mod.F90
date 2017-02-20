@@ -1566,8 +1566,8 @@ module ProcessKKRresults_mod
       write(6, '(79(1h+))')
       write(6, fmt=F92) itscf,chrgnt                        ! charge neutrality
       if (nspin == 2) write(6, fmt=F93) totsmom             ! total mag. moment
-      if (nspin == 2) write(6, fmt=F88) 180.0/PI*max_delta_theta     ! Delta theta, NOCO
-      if (nspin == 2) write(6, fmt=F89) 180.0/PI*max_delta_phi       ! Delta phi, NOCO
+      if (korbit == 1) write(6, fmt=F88) 180.0/PI*max_delta_theta     ! Delta theta, NOCO
+      if (korbit == 1) write(6, fmt=F89) 180.0/PI*max_delta_phi       ! Delta phi, NOCO
       write(6, '(79(1h+))')
 
       close(71)
