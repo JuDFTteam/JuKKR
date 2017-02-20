@@ -1498,7 +1498,7 @@ module ProcessKKRresults_mod
     if (compute_total_energy >= 0) then
       open(71, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='read', status='old')
       if (korbit == 1) open(13,file='nonco_angle_out.dat',form='formatted') ! NOCO
-      if (korbit == 1) open(14,file='nonco_moment_out.dat',form='formatted') ! NOCO
+      if (korbit == 1) open(14,file='nonco_moment_out.txt',form='formatted') ! NOCO
     
       ! moments output
       do i1 = 1, natoms
@@ -1521,7 +1521,7 @@ module ProcessKKRresults_mod
                       phi_noco/(2.0D0*PI)*360.0D0, &
                       angle_fixed
 
-          ! save extended information to 'nonco_moment_out.dat', e.g. for
+          ! save extended information to 'nonco_moment_out.txt', e.g. for
           ! visualization
           write(14,"(6f12.5,1i5)") moment_x, &
                       moment_y, &
