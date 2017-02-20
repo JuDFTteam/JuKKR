@@ -455,6 +455,7 @@ module ProcessKKRresults_mod
                           densities%DEN, energies%ESPV, calc%kkr_a(ila)%GMATN, &
                           calc%gaunts, emesh, ldau_data, params%Volterra, &
                           dims%korbit, calc%noco_data%theta_noco(atom_id), calc%noco_data%phi_noco(atom_id), &
+                          calc%noco_data%theta_noco_old(atom_id), calc%noco_data%phi_noco_old(atom_id), &
                           calc%noco_data%angle_fixed(atom_id), & 
                           calc%noco_data%moment_x(atom_id),calc%noco_data%moment_y(atom_id), calc%noco_data%moment_z(atom_id), &
                           densities%muorb, densities%iemxd, params)
@@ -536,6 +537,7 @@ module ProcessKKRresults_mod
                               atomdata%core%ECORE, atom_id, emesh%NPOL, &
                               atomdata%core%QC_corecharge, densities%MUORB, &
                               calc%noco_data%phi_noco(atom_id), calc%noco_data%theta_noco(atom_id), &
+                              calc%noco_data%phi_noco_old(atom_id), calc%noco_data%theta_noco_old(atom_id), &
                               calc%noco_data%angle_fixed(atom_id), &
                               calc%noco_data%moment_x(atom_id),calc%noco_data%moment_y(atom_id), &
                               calc%noco_data%moment_z(atom_id))
@@ -999,7 +1001,7 @@ module ProcessKKRresults_mod
 
     !lrecres1 = 8*43 + 16*(lmaxd+2)
     !lrecres1 = 8*43 + 16*(lmaxd+2) + 8*(lmaxd+3)*3 + 8*2 + 1*1 ! NOCO with nonco angles and angle_fixed
-    lrecres1 = 8*43 + 16*(lmaxd+2) + 8*(lmaxd+3)*3 + 8*2 + 1*1 + 8*3 ! NOCO with nonco angles and angle_fixed and moments
+    lrecres1 = 8*43 + 16*(lmaxd+2) + 8*(lmaxd+3)*3 + 8*4 + 1*1 + 8*3 ! NOCO with old and new nonco angles, angle_fixed and moments
     if (npol == 0) lrecres1 = lrecres1 + 32*(lmaxd+2)*iemxd
 
     fu = 71
@@ -1009,7 +1011,8 @@ module ProcessKKRresults_mod
   !----------------------------------------------------------------------------
   !> Write some stuff to the 'results1' file
   subroutine writeResults1File(fu, catom, charge, den, ecore, i1, npol, qc, &
-                               muorb, phi_soc, theta_soc, angle_fixed, &
+                               muorb, phi_soc, theta_soc, phi_soc_old, &
+                               theta_soc_old, angle_fixed, &
                                moment_x, moment_y, moment_z)
                            
     integer, intent(in) :: fu !< file unit
@@ -1018,19 +1021,21 @@ module ProcessKKRresults_mod
     double precision, intent(in) :: ecore(20,2)
     integer, intent(in) :: i1, npol
     double precision, intent(in) :: qc
-    double precision, intent(in) :: muorb(:,:)  ! NOCO
-    double precision, intent(in) :: phi_soc     ! NOCO
-    double precision, intent(in) :: theta_soc   ! NOCO
-    integer (kind=1), intent(in) :: angle_fixed ! NOCO
-    double precision, intent(in) :: moment_x    ! NOCO
-    double precision, intent(in) :: moment_y    ! NOCO
-    double precision, intent(in) :: moment_z    ! NOCO
+    double precision, intent(in) :: muorb(:,:)    ! NOCO
+    double precision, intent(in) :: phi_soc       ! NOCO
+    double precision, intent(in) :: theta_soc     ! NOCO
+    double precision, intent(in) :: phi_soc_old   ! NOCO
+    double precision, intent(in) :: theta_soc_old ! NOCO
+    integer (kind=1), intent(in) :: angle_fixed   ! NOCO
+    double precision, intent(in) :: moment_x      ! NOCO
+    double precision, intent(in) :: moment_y      ! NOCO
+    double precision, intent(in) :: moment_z      ! NOCO
 
     if (npol == 0) then
-      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,angle_fixed, &
+      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,phi_soc_old,theta_soc_old,angle_fixed, &
               moment_x,moment_y,moment_z,den  ! write density of states (den) only when certain options set
     else
-      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,angle_fixed, &
+      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,phi_soc_old,theta_soc_old,angle_fixed, &
               moment_x,moment_y,moment_z
     endif
   endsubroutine ! write
@@ -1459,10 +1464,14 @@ module ProcessKKRresults_mod
     double precision muorb(0:LMAX+2,3) !NOCO
     double precision phi_noco !NOCO
     double precision theta_noco !NOCO
+    double precision phi_noco_old !NOCO
+    double precision theta_noco_old !NOCO
     integer (kind=1) angle_fixed !NOCO
     double precision moment_x !NOCO
     double precision moment_y !NOCO
     double precision moment_z !NOCO
+    double precision max_delta_theta !NOCO
+    double precision max_delta_phi !NOCO
     integer :: lrecres1, lrecres2
     integer :: lcoremax, i1, ispin, lpot
     character(len=*), parameter :: &
@@ -1470,14 +1479,19 @@ module ProcessKKRresults_mod
     F91="(7X,'spin moment in Wigner Seitz cell =',f10.6)", &
     F92="('      ITERATION',I4,' charge neutrality in unit cell = ',f12.6)", &
     F93="('                    TOTAL mag. moment in unit cell = ',f12.6)", &
+    F88="('                    Maximum change of angle theta (deg)  = ',f12.6)", &
+    F89="('                    Maximum change of angle phi (deg)  = ',f12.6)", &
     F94="(4X,'nuclear charge  ',F10.6,9X,'core charge =   ',F10.6)"
     
     integer :: npotd
     npotd = nspin*natoms
 
+    max_delta_theta = 0.d0 !NOCO
+    max_delta_phi = 0.d0   !NOCO
+
     !lrecres1 = 8*43 + 16*(lmax+2) ! w/o NOCO
     !lrecres1 = 8*43 + 16*(lmax+2) + 8*(lmax+3)*3 + 8*2 + 1*1 ! NOCO with noco angles and angle_fixed option
-    lrecres1 = 8*43 + 16*(lmax+2) + 8*(lmax+3)*3 + 8*2 + 1*1 + 8*3 ! NOCO with noco angles and angle_fixed option and moments
+    lrecres1 = 8*43 + 16*(lmax+2) + 8*(lmax+3)*3 + 8*4 + 1*1 + 8*3 ! NOCO with old and new noco angles, angle_fixed option and moments
     
     if (npol == 0) lrecres1 = lrecres1 + 32*(lmax+2)*iemxd ! dos calc.
 
@@ -1489,21 +1503,26 @@ module ProcessKKRresults_mod
       ! moments output
       do i1 = 1, natoms
         if (npol == 0) then 
-          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,angle_fixed, &
+          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,phi_noco_old,theta_noco_old,angle_fixed, &
                   moment_x,moment_y,moment_z,den
         else
-          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,angle_fixed, &
+          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,phi_noco_old,theta_noco_old,angle_fixed, &
                   moment_x,moment_y,moment_z
         endif
        
         call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
         if (korbit == 1) then ! NOCO
-        ! save to 'nonco_angle_out.dat' in converted units (degrees)
+
+           max_delta_theta = max(max_delta_theta,abs(theta_noco-theta_noco_old)) 
+           max_delta_phi   = max(max_delta_phi,abs(phi_noco-phi_noco_old))
+
+          ! save to 'nonco_angle_out.dat' in converted units (degrees)
           write(13,*) theta_noco/(2.0D0*PI)*360.0D0, &
                       phi_noco/(2.0D0*PI)*360.0D0, &
                       angle_fixed
-        ! save to ' in converted units (degrees)
 
+          ! save extended information to 'nonco_moment_out.dat', e.g. for
+          ! visualization
           write(14,"(6f12.5,1i5)") moment_x, &
                       moment_y, &
                       moment_z, &
@@ -1547,6 +1566,8 @@ module ProcessKKRresults_mod
       write(6, '(79(1h+))')
       write(6, fmt=F92) itscf,chrgnt                        ! charge neutrality
       if (nspin == 2) write(6, fmt=F93) totsmom             ! total mag. moment
+      if (nspin == 2) write(6, fmt=F88) 180.0/PI*max_delta_theta     ! Delta theta, NOCO
+      if (nspin == 2) write(6, fmt=F89) 180.0/PI*max_delta_phi       ! Delta phi, NOCO
       write(6, '(79(1h+))')
 
       close(71)

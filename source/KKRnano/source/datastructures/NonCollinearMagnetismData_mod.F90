@@ -16,12 +16,14 @@ module NonCollinearMagnetismData_mod
   public :: NOCOData, create, destroy, load, store, loadascii
 
   type NOCOData
-    double precision, allocatable :: theta_noco(:)   !< non-collinear magnetism angle, WARNING: not synchronized between MPI threads
-    double precision, allocatable :: phi_noco(:)     !< non-collinear magnetism angle, WARNING: not synchronized between MPI threads
-    integer (kind=1), allocatable :: angle_fixed(:) !< keep angles fixed (1) or not (0), WARNING: not synchronized between MPI threads
-    double precision, allocatable :: moment_x(:)     !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
-    double precision, allocatable :: moment_y(:)     !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
-    double precision, allocatable :: moment_z(:)     !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
+    double precision, allocatable :: theta_noco(:)       !< non-collinear magnetism angle, WARNING: not synchronized between MPI threads
+    double precision, allocatable :: phi_noco(:)         !< non-collinear magnetism angle, WARNING: not synchronized between MPI threads
+    double precision, allocatable :: theta_noco_old(:)   !< non-collinear magnetism angle from iteration before, WARNING: not synchronized between MPI threads
+    double precision, allocatable :: phi_noco_old(:)     !< non-collinear magnetism angle from iteration before, WARNING: not synchronized between MPI threads
+    integer (kind=1), allocatable :: angle_fixed(:)      !< keep angles fixed (1) or not (0), WARNING: not synchronized between MPI threads
+    double precision, allocatable :: moment_x(:)         !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
+    double precision, allocatable :: moment_y(:)         !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
+    double precision, allocatable :: moment_z(:)         !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
   
   endtype ! NOCOData
 
@@ -59,6 +61,8 @@ module NonCollinearMagnetismData_mod
 
     ALLOCATECHECK(self%theta_noco(naez))
     ALLOCATECHECK(self%phi_noco(naez))
+    ALLOCATECHECK(self%theta_noco_old(naez))
+    ALLOCATECHECK(self%phi_noco_old(naez))
     ALLOCATECHECK(self%angle_fixed(naez))
     ALLOCATECHECK(self%moment_x(naez))
     ALLOCATECHECK(self%moment_y(naez))
@@ -77,6 +81,8 @@ module NonCollinearMagnetismData_mod
 
     DEALLOCATECHECK(self%theta_noco)
     DEALLOCATECHECK(self%phi_noco)
+    DEALLOCATECHECK(self%theta_noco_old)
+    DEALLOCATECHECK(self%phi_noco_old)
     DEALLOCATECHECK(self%angle_fixed)
     DEALLOCATECHECK(self%moment_x)
     DEALLOCATECHECK(self%moment_y)
@@ -95,6 +101,8 @@ module NonCollinearMagnetismData_mod
     open(fu, file=filename, form='unformatted', action='write')
     write(fu) self%theta_noco, &
               self%phi_noco, &
+              self%theta_noco_old, &
+              self%phi_noco_old, &
               self%angle_fixed, &
               self%moment_x, &
               self%moment_y, &
@@ -116,6 +124,8 @@ module NonCollinearMagnetismData_mod
 
     read(fu) self%theta_noco, &
               self%phi_noco, &
+              self%theta_noco_old, &
+              self%phi_noco_old, &
               self%angle_fixed, &
               self%moment_x, &
               self%moment_y, &

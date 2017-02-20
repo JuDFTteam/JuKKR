@@ -23,7 +23,8 @@ module wrappers_mod
   !> Calculate valence electron density.
   subroutine RHOVAL_wrapper(atomdata, ldorhoef, icst, nsra, rho2ns, r2nef, den, &
                             espv, gmatn, gaunts, emesh, ldau_data, method, &
-                            korbit, theta_noco, phi_noco, angle_fixed, &
+                            korbit, theta_noco, phi_noco, theta_noco_old, &                          
+                            phi_noco_old, angle_fixed, &
                             moment_x, moment_y, moment_z, &
                             muorb, iemxd, params) ! NOCO/SOC
     use BasisAtom_mod, only: BasisAtom
@@ -50,18 +51,20 @@ module wrappers_mod
     type(LDAUData), intent(inout) :: ldau_data ! inout?
     integer, intent(in) :: method !< method for solving the single site problem, Volterra or Fredholm
 
-    integer, intent(in)             :: korbit      ! NOCO
-    double precision, intent(out)   :: theta_noco  ! NOCO
-    double precision, intent(out)   :: phi_noco    ! NOCO
-    integer (kind=1), intent(in)    :: angle_fixed ! NOCO
-    double precision, intent(out)   :: moment_x    ! NOCO
-    double precision, intent(out)   :: moment_y    ! NOCO
-    double precision, intent(out)   :: moment_z    ! NOCO
-!    logical, intent(in)             :: soc        ! NOCO
-!    double precision, intent(in)    :: socscale   ! NOCO
-    double precision, intent(out)   :: muorb(0:,:) ! NOCO
-    integer, intent(in)             :: iemxd       ! NOCO
-    type(InputParams), intent(in)   :: params      ! NOCO
+    integer, intent(in)             :: korbit          ! NOCO
+    double precision, intent(out)   :: theta_noco      ! NOCO
+    double precision, intent(out)   :: phi_noco        ! NOCO
+    integer (kind=1), intent(in)    :: angle_fixed     ! NOCO
+    double precision, intent(out)   :: theta_noco_old  ! NOCO
+    double precision, intent(out)   :: phi_noco_old    ! NOCO
+    double precision, intent(out)   :: moment_x        ! NOCO
+    double precision, intent(out)   :: moment_y        ! NOCO
+    double precision, intent(out)   :: moment_z        ! NOCO
+!    logical, intent(in)             :: soc            ! NOCO
+!    double precision, intent(in)    :: socscale       ! NOCO
+    double precision, intent(out)   :: muorb(0:,:)     ! NOCO
+    integer, intent(in)             :: iemxd           ! NOCO
+    type(InputParams), intent(in)   :: params          ! NOCO
     
     integer :: ispin, nspind, irmind, irnsd, lmaxd, l
 
@@ -74,7 +77,12 @@ module wrappers_mod
 
     !-------------------------------------- NOCO ---------------------
     if (korbit == 1) then
-       call rhovalnew(ldorhoef,emesh%ielast,nsra,nspind,lmaxd,emesh%ez,emesh%wez,atomdata%z_nuclear,  &
+
+        ! store angles from iteration before to compare
+        theta_noco_old = theta_noco
+        phi_noco_old   = phi_noco
+      
+        call rhovalnew(ldorhoef,emesh%ielast,nsra,nspind,lmaxd,emesh%ez,emesh%wez,atomdata%z_nuclear,  &
                       params%socscale,gaunts%cleb(:,1),gaunts%icleb,gaunts%iend, &
                       cell%ifunm,cell%lmsp,params%ncheb,  &
                       chebmesh%npan_tot,params%npan_log,params%npan_eq,mesh%r,mesh%irws,  &
