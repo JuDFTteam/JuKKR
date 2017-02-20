@@ -1797,6 +1797,7 @@ contains
 
     !scattering
     double precision, allocatable :: Pkkfix(:,:,:,:), Pkkfix_outfix(:,:,:,:)!, Pkkfix_loc(:,:,:,:)
+    double precision, allocatable :: tmp_global(:,:,:,:) ! for communication
 
     !parallelization
     integer :: ntot_pT(0:nranks-1),    ioff_pT(0:nranks-1), &
@@ -1970,13 +1971,27 @@ contains
     displs     = ioff_pT*ihelp
 
     if(myrank==master) write(*,*) 'before mpiallgather Pkkfix:',ihelp,recvcounts,displs,nkpt
+
+    allocate( tmp_global(inc%ndegen,inc%ndegen,nsqa,nkpts), stat=ierr)
+    if(ierr/=0) stop 'Error allocating tmp_global for Pkkfix communication in mod_scattering'
+
+    tmp_global(:,:,:,:) = 0.0d0
     call MPI_Allgatherv( Pkkfix, ihelp*nkpt, MPI_DOUBLE_PRECISION,         &
-                       & Pkkfix, recvcounts, displs, MPI_DOUBLE_PRECISION, &
+                       & tmp_global, recvcounts, displs, MPI_DOUBLE_PRECISION, &
                        & MPI_COMM_WORLD, ierr )
+    if(ierr/=MPI_SUCCESS) stop 'Error in MPI_Allgatherv for PKKfix'
+    Pkkfix = tmp_global
+
 ! gather Pkk' for fixed outgoing k
+    tmp_global(:,:,:,:) = 0.0d0
     call MPI_Allgatherv( Pkkfix_outfix, ihelp*nkpt, MPI_DOUBLE_PRECISION,         &
-                       & Pkkfix_outfix, recvcounts, displs, MPI_DOUBLE_PRECISION, &
+                       & tmp_global, recvcounts, displs, MPI_DOUBLE_PRECISION, &
                        & MPI_COMM_WORLD, ierr )
+    if(ierr/=MPI_SUCCESS) stop 'Error in MPI_Allgatherv for PKKfix_outfix'
+    Pkkfix_outfix = tmp_global
+
+    deallocate( tmp_global, stat=ierr)
+    if(ierr/=0) stop 'Error deallocating tmp_global for Pkkfix communication in mod_scattering'
 
 
     !save scattfix to file
