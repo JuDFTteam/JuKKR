@@ -1472,6 +1472,9 @@ module ProcessKKRresults_mod
     double precision moment_z !NOCO
     double precision max_delta_theta !NOCO
     double precision max_delta_phi !NOCO
+    double precision max_delta_angle !NOCO
+    double precision delta_angle !NOCO
+    integer :: max_delta_atom !NOCO
     integer :: lrecres1, lrecres2
     integer :: lcoremax, i1, ispin, lpot
     character(len=*), parameter :: &
@@ -1479,15 +1482,20 @@ module ProcessKKRresults_mod
     F91="(7X,'spin moment in Wigner Seitz cell =',f10.6)", &
     F92="('      ITERATION',I4,' charge neutrality in unit cell = ',f12.6)", &
     F93="('                    TOTAL mag. moment in unit cell = ',f12.6)", &
-    F88="('                    Maximum change of angle theta (deg)  = ',f12.6)", &
-    F89="('                    Maximum change of angle phi (deg)  = ',f12.6)", &
+    F86="('                    Largest spin moment direction change for atom   = ',i5.1)", &
+    F87="('                    Angle between old and new moment (deg)  = ',f12.6)", &
+    F88="('                    Change of angle theta (deg)  = ',f12.6)", &
+    F89="('                    Change of angle phi (deg)  = ',f12.6)", &
     F94="(4X,'nuclear charge  ',F10.6,9X,'core charge =   ',F10.6)"
     
     integer :: npotd
     npotd = nspin*natoms
 
+    delta_angle = 0.0d0    !NOCO
     max_delta_theta = 0.d0 !NOCO
     max_delta_phi = 0.d0   !NOCO
+    max_delta_angle = 0.d0 !NOCO
+    max_delta_atom = 1     !NOCO
 
     !lrecres1 = 8*43 + 16*(lmax+2) ! w/o NOCO
     !lrecres1 = 8*43 + 16*(lmax+2) + 8*(lmax+3)*3 + 8*2 + 1*1 ! NOCO with noco angles and angle_fixed option
@@ -1513,8 +1521,18 @@ module ProcessKKRresults_mod
         call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
         if (korbit == 1) then ! NOCO
 
-           max_delta_theta = max(max_delta_theta,abs(theta_noco-theta_noco_old)) 
-           max_delta_phi   = max(max_delta_phi,abs(phi_noco-phi_noco_old))
+           delta_angle = acos(sin(theta_noco)*sin(theta_noco_old)*cos(phi_noco-phi_noco_old)+ &
+                         cos(theta_noco)*cos(theta_noco_old))
+           if (abs(delta_angle) >= max_delta_angle) then
+             max_delta_atom = i1
+             write(*,*) 'max_delta_atom= ', i1
+             max_delta_angle = abs(delta_angle)
+             max_delta_theta = abs(theta_noco_old-theta_noco)
+             max_delta_phi = abs(phi_noco_old-phi_noco)
+           endif
+!           max_delta_angle = max(max_delta_angle,abs(delta_angle)) 
+!           max_delta_theta = max(max_delta_theta,abs(theta_noco-theta_noco_old)) 
+!           max_delta_phi   = max(max_delta_phi,abs(phi_noco-phi_noco_old))
 
           ! save to 'nonco_angle_out.dat' in converted units (degrees)
           write(13,*) theta_noco/(2.0D0*PI)*360.0D0, &
@@ -1566,8 +1584,10 @@ module ProcessKKRresults_mod
       write(6, '(79(1h+))')
       write(6, fmt=F92) itscf,chrgnt                        ! charge neutrality
       if (nspin == 2) write(6, fmt=F93) totsmom             ! total mag. moment
-      if (nspin == 2) write(6, fmt=F88) 180.0/PI*max_delta_theta     ! Delta theta, NOCO
-      if (nspin == 2) write(6, fmt=F89) 180.0/PI*max_delta_phi       ! Delta phi, NOCO
+      if (korbit == 1) write(6, fmt=F86) max_delta_atom               ! atom with largest spin moment direction change, NOCO
+      if (korbit == 1) write(6, fmt=F87) 180.0/PI*max_delta_angle     ! largest spin moment direction change, NOCO
+      if (korbit == 1) write(6, fmt=F88) 180.0/PI*max_delta_theta     ! Corresponding theta angle change, NOCO
+      if (korbit == 1) write(6, fmt=F89) 180.0/PI*max_delta_phi       ! Corresponding phi angle change, NOCO
       write(6, '(79(1h+))')
 
       close(71)
