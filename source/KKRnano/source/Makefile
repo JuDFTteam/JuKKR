@@ -178,7 +178,8 @@ FC += mpixlf77_r
 FC90 += mpixlf90_r
 FCFLAGS = -qsmp=omp -qnosave -qdirective -qxlf2003=polymorphic  -I$(PWD) 
 FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -I/bgsys/local/fftw3/3.3.2/fftw_g/include/
-PPFLAGS = -WF,-DUSE_VOROWEIGHTS -WF,-DCOMPUTE_tref_LOCALLY -WF,-DNOLOGGING
+PPFLAGS = -WF,-DUSE_VOROWEIGHTS -WF,-DCOMPUTE_tref_LOCALLY -WF,-DNOLOGGING -WF,-DCPP_hybrid
+
 
 #ESSL
 #LDFLAGS = -L/bgsys/local/lib -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3
