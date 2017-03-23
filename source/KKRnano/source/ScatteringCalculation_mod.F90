@@ -67,7 +67,7 @@ implicit none
     
     use ChebMeshData_mod, only: interpolate_poten  ! NOCO
     use NonCollinearMagnetism_mod, only: tmat_newsolver, rotatematrix  ! NOCO
-    
+
     integer, intent(in) :: iter
     type(CalculationData), intent(inout) :: calc
     type(KKRnanoParallel), intent(in)    :: mp
@@ -95,6 +95,7 @@ implicit none
     integer :: i1, ila, num_local_atoms, iacls, ilm
     integer :: lmmaxd
     integer :: lmmaxd_noco ! NOCO
+    integer :: omp_threads !DEBUGGING
     logical :: xccpl
     double precision :: rMTref
     double precision, allocatable :: rMTs(:)
@@ -245,6 +246,8 @@ implicit none
               ldau_data => getLDAUData(calc, ila)
               i1 = calc%atom_ids(ila) ! get global atom_id from local index
 
+!              omp_threads = omp_get_num_threads()   !DEBUGGING
+!              write(*,*) 'OMP_threads', omp_threads !DEBUGGING 
               if (dims%korbit == 1) then ! NOCO
                 call tmat_newsolver(ie,dims%nspind,dims%lmaxd,atomdata%Z_nuclear,params%socscale,  &
                                     emesh%ez,params%nsra,calc%gaunts%cleb(:,1),calc%gaunts%icleb, &

@@ -2554,6 +2554,9 @@ if(.not.allocated(zrf)) allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
 
 
 #ifdef CPP_hybrid
+!call omp_set_num_threads(16)
+!number_of_openmp_threads = omp_get_num_threads()
+!write(*,*) 'number_of_openmp_threads: ', number_of_openmp_threads
 !$OMP PARALLEL DEFAULT (PRIVATE) &
 !$OMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
 !$OMP&  zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &

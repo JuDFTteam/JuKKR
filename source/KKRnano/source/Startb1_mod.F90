@@ -28,10 +28,12 @@ module Startb1_mod
     integer :: max_reclen, max_reclen_mesh
     type(ShapefunFile) :: sfile
 
+!    write(*,*) 'read shapefun file'
     ! read the complete shapefun file to -> sfile
     open(91, file='shapefun', form='formatted', status='old', action='read')
     call create(sfile, 91) ! create_read_ShapefunFile
     close(91)
+!    write(*,*) 'finished reading shapefun file'
 
     ! write atoms file and get maximum record lengths for vpotnew file and meshes file
     call write_atoms_file(alat, nspin, ntcell, Zat, naez, sfile, EFERMI, max_reclen, &
