@@ -54,7 +54,7 @@ subroutine clsjij(i1, naez, rr, nr, rbasis, rcut, nsymat, isymindex, ixcp, nxcp,
   double precision rxccls(3,nxijd), & ! real space pos of atom in cluster
        tmp(3), &
        ircls(3,nxijd),rsort(nxijd), &
-       rmat(64,3,3)
+       rmat(3,3,64)
   integer :: iixcp(nxijd),inxcp(nxijd),isort(nxijd)
   double precision :: rcut2, rtmp
   integer :: iaez, ib, id, ir, iv, ix
