@@ -342,11 +342,21 @@ call timing_stop('read potential')
 ! ********************************************************** 
 
 if (my_rank==0) print *,'****************************************************************'
-if (trim(config%modeexcorr)=='LDA') then
+if ((trim(config%modeexcorr)=='LDA').OR.(trim(config%modeexcorr)=='LDA-VWN')) then
   do iatom=1,natom
     cell(iatom)%kxc=2
   end do
-  if (my_rank==0) print *,'using LDA'
+  if (my_rank==0) print *,'using LDA (Vosko-Wilk-Nusair)'
+elseif (trim(config%modeexcorr)=='LDA-vBH') then
+  do iatom=1,natom
+    cell(iatom)%kxc=1
+  end do
+  if (my_rank==0) print *,'using LDA (von Bath-Hedin)'
+elseif (trim(config%modeexcorr)=='LDA-MJW') then
+  do iatom=1,natom
+    cell(iatom)%kxc=0
+  end do
+  if (my_rank==0) print *,'using LDA (Moruzzi-Janak-Williams)'
 elseif (trim(config%modeexcorr)=='GGA') then
   do iatom=1,natom
     cell(iatom)%kxc=3
