@@ -714,8 +714,16 @@
       SOCSCALE(1:NATYPD) = 1.D0   ! Spin-orbit scaling
       CALL IoInput('<SOCSCL>        ',UIO,1,7,IER)
       IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)
-         WRITE(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
+         WRITE(111,'(A10)') '<SOCSCL>  '
+         DO I = 1,NATYP
+            CALL IoInput('<SOCSCL>        ',UIO,I,7,IER)
+            IF (IER.EQ.0) THEN
+               READ (UNIT=UIO,FMT=*) SOCSCALE(I)
+               WRITE(111,FMT='(F6.3)') SOCSCALE(I)
+            ENDIF
+         ENDDO
+!        READ (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)                       !Bernd - old way
+!        WRITE(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP) !Bernd - old way
       ELSE
          WRITE(111,FMT='(A18,50E10.2)') 'Default <SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
       ENDIF
