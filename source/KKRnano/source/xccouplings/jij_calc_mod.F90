@@ -54,7 +54,7 @@ subroutine clsjij(i1, naez, rr, nr, rbasis, rcut, nsymat, isymindex, ixcp, nxcp,
   double precision rxccls(3,nxijd), & ! real space pos of atom in cluster
        tmp(3), &
        ircls(3,nxijd),rsort(nxijd), &
-       rmat(64,3,3)
+       rmat(3,3,64)
   integer :: iixcp(nxijd),inxcp(nxijd),isort(nxijd)
   double precision :: rcut2, rtmp
   integer :: iaez, ib, id, ir, iv, ix
@@ -173,7 +173,7 @@ subroutine kkrjij(&
   integer          ixcp(nxijd)      ! corresp. to Jij no. XIJ on the real space lattice
 
   !double complex   gllke1(naez*lmmaxd,lmmaxd)
-  double complex :: gllke1(:,:)
+  double complex :: gllke1(:,:,:) !(lmmaxd,lmmaxd,nnzb)
 
   
   double complex, parameter :: cione=(0.d0,-1.d0)
@@ -199,8 +199,10 @@ subroutine kkrjij(&
   call MPI_Comm_Size(communicator, comm_size, ierr)
 
   CHECKASSERT(naez == comm_size)
-  CHECKASSERT(size(GLLKE1, 1) == naez * lmmaxd)
+  !CHECKASSERT(size(GLLKE1, 1) == naez * lmmaxd)
+  CHECKASSERT(size(GLLKE1, 1) == lmmaxd)
   CHECKASSERT(size(GLLKE1, 2) == lmmaxd)
+  CHECKASSERT(size(GLLKE1, 3) == naez)
 
   ! ------------------------------------------------------------------------
 
@@ -231,8 +233,8 @@ subroutine kkrjij(&
         ! ...
         if (i3 == i5) then
           do lm = 1, lmmaxd
-            ilm = lmmaxd*(i3-1) + 1
-            call zcopy(lmmaxd,gllke1(ilm,lm),1,gxij(1,lm,xij),1)
+            !ilm = lmmaxd*(i3-1) + 1
+            call zcopy(lmmaxd,gllke1(1,lm,i3),1,gxij(1,lm,xij),1)
           enddo ! lm
         endif ! i3 == i5
           
@@ -242,8 +244,8 @@ subroutine kkrjij(&
       
         if (ixcps(xij) == i3) then
           do lm = 1, lmmaxd
-            ilm = lmmaxd*(i5-1) + 1
-            call zcopy(lmmaxd,gllke1(ilm,lm),1,gsend(1,lm),1)
+            !ilm = lmmaxd*(i5-1) + 1
+            call zcopy(lmmaxd,gllke1(1,lm,i5),1,gsend(1,lm),1)
           enddo ! lm
 
           call MPI_Send(gsend,lmmaxd*lmmaxd,MPI_DOUBLE_COMPLEX, mapblock(i5,1,naez,1,0,comm_size-1), 99,communicator,ierr)

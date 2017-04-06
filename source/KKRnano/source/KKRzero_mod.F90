@@ -167,7 +167,9 @@ module KKRzero_mod
     ! if energy_mesh.0 file is missing, also regenerate start files
     if (startpot_exists) then
 
+!      write(*,*) 'Entering startb1_wrapper_new'
       call startb1_wrapper_new(params%alat, dims%nspind, efermi, arrays%zat, dims%naez, nowrite=(checkmode /= 0))
+!      write(*,*) 'Leaving startb1_wrapper_new'
 
     else
       ! no formatted potential provided

@@ -1525,7 +1525,7 @@ module ProcessKKRresults_mod
                          cos(theta_noco)*cos(theta_noco_old))
            if (abs(delta_angle) >= max_delta_angle) then
              max_delta_atom = i1
-             write(*,*) 'max_delta_atom= ', i1
+!             write(*,*) 'max_delta_atom= ', i1
              max_delta_angle = abs(delta_angle)
              max_delta_theta = abs(theta_noco_old-theta_noco)
              max_delta_phi = abs(phi_noco_old-phi_noco)
