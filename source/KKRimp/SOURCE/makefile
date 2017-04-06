@@ -27,13 +27,14 @@ FC =  ifort
 
 # change default value if a flag is matched
 mpi:        FC = mpiifort
-rwthmpi:        FC = $(MPIFC)
-mpitrace:  FC = vtf90 -vt:f90 $(MPIFC)
+rwthmpi:    FC = $(MPIFC)
+mpitrace:   FC = vtf90 -vt:f90 $(MPIFC)
 mpidebug:   FC = mpiifort
 gfort:      FC = /usr/users/iff_th1/bauer/bin/gfortran
 pg:         FC = pgf90 
 hybrid:     FC= mpiifort
-rwthhybrid:     FC= $(MPIFC) 
+rwthhybrid: FC= $(MPIFC) 
+jureca:     FC = mpif90
 
 
 # default
@@ -47,6 +48,7 @@ gfort:     COMPVER = 'gfort'
 pg:        COMPVER = 'pg'
 hybrid:    COMPVER = 'hybrid'
 rwthhybrid:    COMPVER = 'rwthhybrid'
+jureca   : COMPVER='jureca'
 
 ####################################################
 # Objects to compile                               #
@@ -91,6 +93,9 @@ LLIBSGFORT = -L/usr/local/nag/lib -lnag -llapack_ifort -lblas_ifort  -L/usr/loca
 LLIBSMAC  =  -mkl #-L/usr/local/Library/Frameworks/Intel_MKL.framework/Libraries/32 -lmkl_intel \
               -lmkl_intel_thread -lmkl_core -lguide -lpthread -i_dynamic
 
+# JURECA:
+JURECALIBS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
+
 
 # set library paths according to compile option
 hybrid: LLIBS=$(LLIBSOPENMP)
@@ -100,6 +105,7 @@ openmp: LLIBS=$(LLIBSOPENMP)
 gfort: LLIBS=$(LLIBSGFORT)
 rwthmpi: LLIBS=$(LLIBSRWTH)
 mac: LLIBS=$(LLIBSMAC)
+jureca: LLIBS=$(JURECALIBS)
 
 ####################################################
 # C preprocessor options                           #
@@ -114,6 +120,7 @@ rwthmpi:       CPP = -D MPI
 gfort:         CPP = -D GFORT
 hybrid:        CPP = -D MPI -D CPP_HYBRID
 rwthhybrid:    CPP = -D MPI -D CPP_HYBRID
+jureca:        CPP = -D MPI
 
 ####################################################
 # Compiler flags                                   #
@@ -171,6 +178,7 @@ rwthmpi: compile
 mpitrace: compile
 mpidebug: compile
 mac: compile
+jureca: compile
 
 install: clean mpi
 
