@@ -174,10 +174,10 @@ ifeq ($(PLATFORM),qpace3)
 		PPFLAGS += -D USE_MTRADII
  	else ifeq ($(TYPE),voronoi_mesh)
 		FCFLAGS += -O3
-		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH -D CPP_OMP
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH #-D CPP_OMP
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
-		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH -D CPP_OMP
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH #-D CPP_OMP
  	else ifeq ($(TYPE),voronoi_mesh_debug_light)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
