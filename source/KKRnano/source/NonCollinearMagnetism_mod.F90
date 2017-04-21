@@ -2341,7 +2341,7 @@ use mod_chebyshev
 #endif
 !use mod_timing                            ! timing routine
 #ifdef CPP_hybrid
-use omp_lib ! omp functions
+!use omp_lib ! omp functions
 #endif
 implicit none
       integer :: ncheb                               ! number of chebyshev nodes
@@ -2447,7 +2447,7 @@ implicit none
 
 #ifdef CPP_hybrid
 !     openMP variable --sacin 23/04/2015
-      integer :: thread_id, number_of_openmp_threads,number_of_processor
+!      integer :: thread_id, number_of_openmp_threads,number_of_processor
 #endif
 
       external zgetrf,zgetrs
@@ -2557,12 +2557,12 @@ if(.not.allocated(zrf)) allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
 !call omp_set_num_threads(16)
 !number_of_openmp_threads = omp_get_num_threads()
 !write(*,*) 'number_of_openmp_threads: ', number_of_openmp_threads
-!$OMP PARALLEL DEFAULT (PRIVATE) &
-!$OMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
-!$OMP&  zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
-!$OMP&  cmoderll,cmodesll,cmodetest,use_sratrick, rmesh)
+!$NOOMP PARALLEL DEFAULT (PRIVATE) &
+!$NOOMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
+!$NOOMP&  zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
+!$NOOMP&  cmoderll,cmodesll,cmodetest,use_sratrick, rmesh)
 
-thread_id = omp_get_thread_num()
+!thread_id = omp_get_thread_num()
 #endif
 
 if(.not.allocated(ull)) allocate ( ull(lmsize2,lmsize,nrmax) )
@@ -2610,7 +2610,7 @@ if(.not.allocated(zrf)) allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
 ! loop over subintervals
 #ifdef CPP_hybrid
 ! openMP pragmas added sachin, parallel region starts earlier to get allocations of arrays right
-!$OMP DO
+!$NOOMP DO
 #endif
 do ipan = 1,npan
 
@@ -2994,8 +2994,8 @@ do ipan = 1,npan
 
 end do !ipan
 #ifdef CPP_hybrid
-!$OMP END DO
-!$OMP END PARALLEL
+!$NOOMP END DO
+!$NOOMP END PARALLEL
 #endif
 ! end the big loop over the subintervals
 
@@ -3831,8 +3831,11 @@ SUBROUTINE rhovalnew(ldorhoef,ielast,nsra,nspin,lmax,ez,wez,zat,  &
  
 ! Code converted using TO_F90 by Alan Miller
 ! Date: 2016-04-21  Time: 11:39:57
+
  
-use omp_lib
+#ifdef CPP_OMP
+       use omp_lib
+#endif
 
 IMPLICIT NONE
 
@@ -3958,14 +3961,17 @@ allocate(gmat0(lmmaxso,lmmaxso))
 !allocate(dentmp(0:lmaxd1,2))
 allocate(jlk_index(2*lmmaxso))
 
+
 ! determine if omp is used
-!!$noomp parallel shared(nth,ith)
-!!$noomp single
-ith = 0
-nth = 1
-!!$noomp end single
-!!$noomp end parallel
-!WRITE(*,*) 'nth =',nth
+       ith = 0
+       nth = 1
+#ifdef CPP_OMP
+!$omp parallel shared(nth,ith)
+!$omp single
+       nth = omp_get_num_threads()
+!$omp end single
+!$omp end parallel
+#endif
 
 pi=4D0*DATAN(1D0)
 irmdnew= npan_tot*(ncheb+1)
@@ -4086,28 +4092,35 @@ END DO
 
 ! energy loop
 !WRITE(6,*) 'atom: ',i1
+
+
+#ifdef CPP_OMP
 ! omp: start parallel region here
-!!$noomp parallel do default(none)
-!!$noomp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
-!!$noomp& private(jlk_index,tmatll,ith)
-!!$noomp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
-!!$noomp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
-!!$noomp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
-!!$noomp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
-!!$noomp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
-!!$noomp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
-!!$noomp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
-!!$noomp& private(rho2ns_temp,dentot,dentmp,rho2,temp1,jspin)
-!!$noomp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
-!!$noomp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
-!!$noomp& reduction(+:rho2int,espv) reduction(-:muorb)
-!!$noomp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
+!$omp parallel do default(none) ,&
+!$omp& private(eryd,ie,ir,lm1,lm2,gmatprefactor,nvec) ,&
+!$omp& private(jlk_index,tmatll,ith) ,&
+!$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax) ,&
+!$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew) ,&
+!$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop) ,&
+!$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0) ,&
+!$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp) ,&
+!$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft) ,&
+!$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp) ,&
+!$omp& private(rho2ns_temp,rho2,temp1,jspin) ,&
+!$omp& shared(ldorhoef,nqdos,wez,lmsp,imt1,ifunm) ,&
+!$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop) ,&
+!$omp& shared(lmaxd,lmaxd1,lmmaxd,lmpotd,nrmaxd,soc,lmmaxso,gmatn) ,&
+!$omp& reduction(+:rho2int,espv) reduction(-:muorb) ,&
+!$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
+#endif
+
 DO ie=1,ielast
-!  IF (nth>=1) THEN
-!    ith = omp_get_thread_num()
-!  ELSE
-    ith = 0
-!  END IF
+
+#ifdef CPP_OMP
+    ith = omp_get_thread_num()
+#else
+        ith = 0
+#endif
   
   eryd=ez(ie)
   ek=SQRT(eryd)
@@ -4378,7 +4391,10 @@ DO iorb=1,3
   END DO
 END DO ! IORB
 END DO ! IE loop
-!!$noomp end parallel do
+
+#ifdef CPP_OMP
+!$omp end parallel do
+#endif
 ! omp: move sum from rhooutnew here after parallel calculation
 DO ir=1,irmdnew
   DO lm1=1,lmpotd
