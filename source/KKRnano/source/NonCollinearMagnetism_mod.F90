@@ -2554,6 +2554,9 @@ if(.not.allocated(zrf)) allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
 
 
 #ifdef CPP_hybrid
+!call omp_set_num_threads(16)
+!number_of_openmp_threads = omp_get_num_threads()
+!write(*,*) 'number_of_openmp_threads: ', number_of_openmp_threads
 !$OMP PARALLEL DEFAULT (PRIVATE) &
 !$OMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
 !$OMP&  zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
@@ -3820,7 +3823,9 @@ SUBROUTINE rhovalnew(ldorhoef,ielast,nsra,nspin,lmax,ez,wez,zat,  &
         socscale,cleb,icleb,iend,ifunm,lmsp,ncheb,  &
         npan_tot,npan_log,npan_eq,rmesh,irws,  &
         rpan_intervall,ipan_intervall,  &
-        rnew,vinsnew,thetasnew,theta,phi,angle_fixed,ipot,  &
+        rnew,vinsnew,thetasnew,theta,phi,angle_fixed, &
+        moment_x,moment_y,moment_z, &
+        ipot,  &
         den_out,espv,rho2ns,r2nef,gmatn, muorb,  &
         lpotd,lmaxd,irmd,irmd_new,iemxd,soc) ! new parameters
  
@@ -3859,6 +3864,9 @@ DOUBLE PRECISION, INTENT(IN)             :: thetasnew(:,:)
 DOUBLE PRECISION, INTENT(INOUT)          :: theta
 DOUBLE PRECISION, INTENT(INOUT)          :: phi
 INTEGER (kind=1), INTENT(IN)             :: angle_fixed
+DOUBLE PRECISION, INTENT(OUT)            :: moment_x
+DOUBLE PRECISION, INTENT(OUT)            :: moment_y
+DOUBLE PRECISION, INTENT(OUT)            :: moment_z
 !INTEGER, INTENT(IN)                      :: i1
 INTEGER, INTENT(IN)                      :: ipot
 DOUBLE COMPLEX, INTENT(OUT)              :: den_out(0:,:,:)
@@ -4533,6 +4541,10 @@ if (angle_fixed == 0) then ! angle not fixed
   moment(1)=DIMAG(rho2int(3)+rho2int(4))
   moment(2)=-REAL(rho2int(3)-rho2int(4))
   moment(3)=DIMAG(-rho2int(1)+rho2int(2))
+
+  moment_x=moment(1)
+  moment_y=moment(2)
+  moment_z=moment(3)
   
   totmoment=SQRT(moment(1)**2+moment(2)**2+moment(3)**2)
   totxymoment=SQRT(moment(1)**2+moment(2)**2)
@@ -4574,6 +4586,15 @@ if (angle_fixed == 0) then ! angle not fixed
       theta,phi,irmd)
 
 else ! angle fixed
+
+  moment(1)=DIMAG(rho2int(3)+rho2int(4))
+  moment(2)=-REAL(rho2int(3)-rho2int(4))
+  moment(3)=DIMAG(-rho2int(1)+rho2int(2))
+
+  moment_x=moment(1)
+  moment_y=moment(2)
+  moment_z=moment(3)
+  
   rho2ns(:,:,:)=DIMAG(rho2nsnew(:,:,:))
   r2nef(:,:,:)=DIMAG(r2nefnew(:,:,:))
 endif

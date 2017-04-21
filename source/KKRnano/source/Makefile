@@ -147,6 +147,45 @@ ifeq ($(PLATFORM),jureca)
 	endif
 endif
 
+# ================== QPACE3 ======================
+ifeq ($(PLATFORM),qpace3)
+###> module load intel impi mkl
+	FC = mpiifort
+	FC90 = mpiifort
+	# -module <path> specifies where to put .mod files
+  	ifeq ($(SMP),openmp)
+ 		FCFLAGS += -qopenmp -qopt-report
+        endif
+	FCFLAGS += -module $(BUILDDIR)
+	FCFLAGS += -I $(BUILDDIR)
+	# PPFLAGS += -D TASKLOCAL_FILES
+	FCFLAGS += -g
+	LDFLAGS += -mkl -g
+	ifeq ($(TYPE),debug_light)
+		FCFLAGS += -O0 -g
+	else ifeq ($(TYPE),debug)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+	else ifeq ($(TYPE),mtradii)
+		FCFLAGS += -O3
+		PPFLAGS += -D USE_MTRADII 
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else ifeq ($(TYPE),debug_mtradii)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
+		PPFLAGS += -D USE_MTRADII
+ 	else ifeq ($(TYPE),voronoi_mesh)
+		FCFLAGS += -O3
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH #-D CPP_hybrid
+ 	else ifeq ($(TYPE),voronoi_mesh_debug)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH #-D CPP_hybrid
+ 	else ifeq ($(TYPE),voronoi_mesh_debug_light)
+		FCFLAGS += -O0 -g
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else
+		FCFLAGS += -O3
+		PPFLAGS += -D NOLOGGING
+	endif
+endif
 # ========= HPC Cluster - RWTH Aachen ============
 # MIGHT BE OUTDATED!!!
 ifeq ($(PLATFORM),rwth)
@@ -176,9 +215,14 @@ FC90 =
 
 FC += mpixlf77_r
 FC90 += mpixlf90_r
-FCFLAGS = -qsmp=omp -qnosave -qdirective -qxlf2003=polymorphic  -I$(PWD) 
+FCFLAGS = -qnosave -qdirective -qxlf2003=polymorphic  -I$(PWD) 
 FCFLAGS += -qmoddir=$(BUILDDIR) -I$(BUILDDIR) -I/bgsys/local/fftw3/3.3.2/fftw_g/include/
-PPFLAGS = -WF,-DUSE_VOROWEIGHTS -WF,-DCOMPUTE_tref_LOCALLY -WF,-DNOLOGGING
+PPFLAGS = -WF,-DUSE_VOROWEIGHTS -WF,-DCOMPUTE_tref_LOCALLY -WF,-DNOLOGGING 
+
+ifeq ($(SMP),openmp)
+	FCFLAGS += -qsmp=omp
+        PPFLAGS += -WF,-DCPP_hybrid
+endif
 
 #ESSL
 #LDFLAGS = -L/bgsys/local/lib -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lesslbg -lfftw3

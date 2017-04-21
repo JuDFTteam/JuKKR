@@ -161,8 +161,8 @@ module KKRmat_mod
         ila = op%atom_indices(1) ! convert to default integer kind
         call KKRJIJ(kpoints(1:3,ikpoint), kpointweight(ikpoint), nsymat, num_trunc_atoms, ila, &
                     global_jij_data%NXIJ, global_jij_data%IXCP,global_jij_data%ZKRXIJ, &
-                    op%mat_X(:,:,1), global_jij_data%GSXIJ, communicator, lmsd, global_jij_data%nxijd)
-                    stop __LINE__ ! invalid argument is passed, data layout of mat_X has changed, and maybe transposed
+                    op%mat_X(:,:,:), global_jij_data%GSXIJ, communicator, lmsd, global_jij_data%nxijd)
+!                    stop __LINE__ ! invalid argument is passed, data layout of mat_X has changed, and maybe transposed
       endif ! jij
 
       call stopTimer(kpoint_timer)
