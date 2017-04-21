@@ -364,7 +364,8 @@ contains
 !                 Jijmat_real(:,:)=Jijmat_real(:,:)+dimag(wez(ie)*Jijmat(:,:,istore,ie))/2d0
 
                   jtmp(1) = (Jijmat(1,1,istore,ie)+Jijmat(2,2,istore,ie))/2d0
-                  jtmp(2) = (Jijmat(2,1,istore,ie)-Jijmat(1,2,istore,ie))/2d0
+                  !jtmp(2) = (Jijmat(2,1,istore,ie)-Jijmat(1,2,istore,ie))/2d0 !<- old defiition (until Apr.2017) which assumed +Dij.(SixSj)
+                  jtmp(2) = (Jijmat(1,2,istore,ie)-Jijmat(2,1,istore,ie))/2d0  !<- changed to -Dij.(SixSj), to be consistent with KKRwiki
                   jtmp(3) = (Jijmat(1,1,istore,ie)-Jijmat(2,2,istore,ie))/2d0
                   jtmp(4) = (Jijmat(2,1,istore,ie)+Jijmat(1,2,istore,ie))/2d0
 
