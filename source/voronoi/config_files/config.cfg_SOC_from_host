@@ -1,0 +1,80 @@
+########################################
+#       KKRFLEX config file            #
+########################################
+
+#########################################
+# setting test or run flags
+#
+# use: RUNFLAG= key1 key2 key3
+#########################################
+RUNFLAG= SIMULASA   #kkrsusc 
+#########################################
+# useful RUNFLAGS:
+# GBULKtomemory - store the reference greensfunction of
+#                 the bulk system in the memory instead
+#                 of reading it from the disc in each step
+# kkrsusc       - kkrsusc add-on
+#########################################
+TESTFLAG= tmatnew   spline    sph 
+
+SPINORBIT= 1
+CALCORBITALMOMENT= 1
+
+RADIUS_LOGPANELS= 1.0
+NPAN_LOGPANELFAC= 2
+
+RADIUS_MIN= -1 
+NCOLL= 1
+
+NPAN_LOG= 15 
+NPAN_EQ= 5
+NCHEB= 12
+# Set up of the different panels
+# Use the same values as in the JMcode
+
+#HFIELD= 0.02  30
+# magnetic field in a.u. and iterations
+
+INS= 1
+# non-spherical potential
+# INS=1 use non=spherical parts
+# INS=0 just use spherical part
+
+KVREL= 1
+# scalar relativistic calculation
+# KVREL= 1 
+
+ICST= 2
+# Number of Born iterations for the non-sperical
+# calculation
+
+NSPIN= 2
+# magnetic calculation
+# NSPIN=1 non magnetic
+# NSPIN=2 collinear magnetic calculation
+
+#########################################
+# selfconsistency setting
+#########################################
+SCFSTEPS= 100
+# number of scf steps
+
+IMIX= 4
+# mixing type:
+# IMIX = 0  straight
+# IMIX = 3  broyden"s 1st method
+# IMIX = 4  broyden"s 2nd method
+# IMIX = 5  generalized anderson method
+
+ITDBRY= 20
+# number of potentials to 'remember' for 
+# broyden mixing
+
+MIXFAC= 0.02
+# mixing factor for straight mixing
+# Potmix = (1-MIXFAC) * Potold + MIXFAC * Potnew
+
+QBOUND= 1E-7
+# convergence bound, 
+# if RMS(potnew-potold)<QBOUND then stop the 
+# iterations
