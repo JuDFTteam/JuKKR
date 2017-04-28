@@ -243,7 +243,7 @@
     lcurrcorr = .false.
   end if
 
-! Interpolation of spin-current spin correlation function (added by Sascha)
+! Interpolation of spin-current spin correlation function 
   call find_keyinfile('lcurrcorrint',nchars,nlines,inputfile,iline,ipos,found)
   if (found) then
     read(inputfile(iline)(ipos:nchars),*) lcurrcorrint
@@ -254,7 +254,7 @@
     lcurrcorrint = .false.
   end if
 
-! Divergence of spin-current function (added by Sascha)
+! Divergence of spin-current function 
   call find_keyinfile('lcurrcorrdiv',nchars,nlines,inputfile,iline,ipos,found)
   if (found) then
     read(inputfile(iline)(ipos:nchars),*) lcurrcorrdiv

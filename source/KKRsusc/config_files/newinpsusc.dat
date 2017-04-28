@@ -1,0 +1,265 @@
+#-----------------------------------------------------------------------
+#-----------------------------------------------------------------------
+#                           Global options
+#-----------------------------------------------------------------------
+# lwarn    = T, F  =>  warn about keys not found
+# ikkr     = 1, 2  =>  old/new version of KKR program
+# ldos     = T, F  =>  compute DOS
+# lsoc     = T, F  =>  SOC
+# lldau    = T, F  =>  LDA+U
+# lbfield  = T, F  =>  external magnetic field
+# lsusc    = T, F  =>  magnetic susceptibility
+# lrot     = T, F  =>  rotations of spin orientations
+# ljij     = T, F  =>  magnetic interactions
+# lsemodel = T, F  =>  self-energy model via rational function
+# lhdio    = T, F  =>  write pots, wfns, outsusc.dat to disk
+# lrestart = T, F  =>  run in restart mode
+#-----------------------------------------------------------------------
+
+ lwarn= T
+ ikkr= 2  ldos= F  lsoc= T  lldau= F  lbfield= F  lsusc= F
+ lrot= F  lfit= F  ljij= F  lsemodel= F  lhdio= T  lrestart= F
+
+# Number of energies, atoms, max basis size, lmax, max radial points, max spin
+ nesusc= 30  nasusc= 13  nbmax= 8  nlmax= 3  isra= 0  nrmax= 484  nsmax= 2
+
+# igroup(1:ngroup)  =>  how many atoms in each group; all in one line
+ ngroup= 2
+ igroup= 1 12          
+
+# Which atoms belong to which groups
+# ia(1:igroup(ig))  =>  atom numbers as given in impurity.coefs or kkrflex_atominfo
+ ig=  1  ia=   1 
+ ig=  2  ia=   2 3 4 5 6 7 8 9 10 11 12 13
+
+#-----------------------------------------------------------------------
+#                    Global options for groundstate
+#-----------------------------------------------------------------------
+# lscfmesh        = T, F  =>  if escf is different from esusc
+# lfreegf         = T, F  =>  replace structural GF by free space GF
+# lrhodiag        = T, F  =>  diagonalize density matrix
+# lgsonsite       = T, F  =>  use onsite GF in groundstate
+# lgsstruct       = T, F  =>  use structural GF in groundstate
+# lnewdensity     = T, F  =>  update charge density in host KKR program
+# lebandnoef      = T, F  =>  whether to include Fermi energy in band energy
+# lnobxc          = T, F  =>  kill spin density in selected atoms
+# lcurrent        = T, F  =>  calculate ground state charge and spin currents
+# lcurrentsoc     = T, F  =>  soc contribution to the current
+# lcurrentzeeman  = T, F  =>  zeeman contribution to the current
+# lcurrentint     = T, F  =>  interpolation on regular grid
+# lcurrentoutput  = T, F  =>  outputs lm-decomposition of currents
+# nint            = 1,... =>  grid size for interpolation per atom (n x n x n)
+# lpositions      = T, F  =>  read atomic positions from positions.dat file (needed for currents)
+#-----------------------------------------------------------------------
+
+ lscfmesh= F     lfreegf= F     lnobxc= F       lebandnoef= F
+ lrhodiag= F     lgsonsite= T   lgsstruct= T    lnewdensity= T
+ lcurrent= F     lpositions= F  lcurrentsoc= F  lcurrentzeeman= F 
+ lcurrentint= F  nint= 25       lcurrentoutput= F
+
+#-----------------------------------------------------------------------
+#                       Atomic options for groundstate
+#-----------------------------------------------------------------------
+# inobxc =  0, 1  =>  kill spin density for atom group 
+#-----------------------------------------------------------------------
+
+ ig=  1  inobxc= 0
+
+#-----------------------------------------------------------------------
+#                        Global options for DOS
+#-----------------------------------------------------------------------
+# idos  = 1, 2     =>  use projection energies or straight line with fitted GF
+# nedos = 201      =>  how many energies if idos = 2
+# dose0 = ere eim  =>  complex energy defining starting point
+# dose1 = ere eim  =>  complex energy defining end point
+# ldosacon = T, F  =>  analytical continuation to real axis?
+# nedosacon = 5    =>  how many energies to use for rational function
+# dosezero = 0.d0  =>  energy zero
+# dosefac = 1.d0   =>  energy conversion factor
+# ldosdmat = T, F  =>  spectral density matrix
+#-----------------------------------------------------------------------
+
+ idos= 1 nedos= 201  dose0= -0.3000  0.0010 dose1= 0.9000  0.0010
+ ldosacon= F  nedosacon= 4  dosezero= 0.d0  dosefac= 1.d0  ldosdmat= F
+
+#-----------------------------------------------------------------------
+#                       Atomic options for DOS  
+#-----------------------------------------------------------------------
+# iadmat          = 0, 1               =>  output density matrix for chosen atom group 
+# ildmat(0:nlmax) = number ... number  =>  which angular momentum channels
+#-----------------------------------------------------------------------
+
+ ig=  1  iadmat= 1  ildmat= 0 0 1 0
+ ig=  2  iadmat= 1  ildmat= 0 0 1 0
+
+#-----------------------------------------------------------------------
+#                    Global options for magnetic field
+#-----------------------------------------------------------------------
+# lbconst    = T, F       =>  constraining magnetic fields                 
+# lbfield0   = T, F       =>  same magnetic field for all atoms (override)
+# ibfield0   = 1, 2, 3, 4 =>  B.S, B.L, B.(L+S), constraining field
+# blen0      = 1.d-3      =>  intensity of global magnetic field / constraining field
+# bdir0      = ux uy uz   =>  direction of global magnetic field / constraining direction
+#-----------------------------------------------------------------------
+
+ lbconst= F
+ lbfield0= F  ibfield0= 1  blen0= 1.d-3  bdir0= 0.0000  0.0000  1.0000
+
+#-----------------------------------------------------------------------
+#                   Atomic options for magnetic field
+#-----------------------------------------------------------------------
+# ibfield = 0, 1, 2, 3  =>  no B field, B.S, B.L, B.(L+S)
+# blen    = 1.d-3       =>  intensity of local magnetic field
+# bdir    = ux uy uz    =>  direction of local magnetic field
+#-----------------------------------------------------------------------
+
+ ig=  1  ibfield= 1  blen= 1.d-3  bdir= 0.0000  0.0000  1.0000
+ ig=  2  ibfield= 1  blen= 1.d-3  bdir= 0.0000  0.0000  1.0000
+
+#-----------------------------------------------------------------------
+#                       Atomic options for SOC
+#-----------------------------------------------------------------------
+# isoc       = 0, 1, 2, 3  =>  no SOC, full SOC, z SOC, xy SOC
+# socscaling = 1.000       =>  scale SOC potential by this factor
+# default atomic options: isoc = 1 , socscaling = 1.0 for all atoms
+#-----------------------------------------------------------------------
+ ig=  1  isoc= 1  socscaling= 1.0000
+ ig=  2  isoc= 1  socscaling= 1.0000
+
+#-----------------------------------------------------------------------
+#                 Global options for spin rotations
+#-----------------------------------------------------------------------
+# ispinrot= 0, 1  =>  same rotation for all atoms or follow magdir.dat
+# urot= x y z     =>  new spin orientation, for irot= 0
+# dirmix2= 0.1000 =>  mix factor for update of spin orientations from torques
+# dirmix3= 0.1000 =>  mix factor for update of spin orientations from output directions
+# lgrefsph= T, F  =>  whether the input GF is collinear ASA or not
+# check also options given in magdir.dat
+#-----------------------------------------------------------------------
+
+ ispinrot= 0  urot= 1.0000  0.0000  0.0000  dirmix2= 0.000  dirmix3= 0.500
+ lgrefsph= T
+
+#-----------------------------------------------------------------------
+#                        Global options for Jij
+#-----------------------------------------------------------------------
+# ljijtensor= T, F  =>  Ebert or Lichtenstein formula
+# ljijef=     T, F  =>  Fermi energy correction from constant Ne
+# ljionsite=  T, F  =>  onsite correction
+#-----------------------------------------------------------------------
+
+ ljijtensor= F  ljijef= F  ljionsite= F
+
+#-----------------------------------------------------------------------
+#                       Atomic options for Jij
+#-----------------------------------------------------------------------
+# ijij= 0, 1  =>  Jij pairs formed with these atoms or not
+# default atomic options: ijij = 1 for all atoms
+#-----------------------------------------------------------------------
+
+ ig=  1  ijij= 1
+ ig=  2  ijij= 1
+
+#-----------------------------------------------------------------------
+#                 Global options for susceptibility
+#-----------------------------------------------------------------------
+# ldynsusc      = T, F            =>  dynamic or static susceptibility
+# nomega        = 0.0500          =>  how many frequencies
+# omegamin      = 0.0000  0.0000  =>  complex first frequency
+# omegamax      = 0.0010  0.0000  =>  complex last frequency
+# domega        = 0.0000          =>  frequency interval (overrides nomega)
+# nlmax0        = 6               =>  lmax cutoff for susceptibility basis
+# lkha          = F               =>  include Hartree kernel
+# lkxc          = T               =>  include xc kernel
+# lcartesian    = T, F            =>  output representation for susceptibility
+# lanalytic     = T, F            =>  include analytic integral
+# lnonanalytic  = T, F            =>  include nonanalytic integral
+# lenhanced     = T, F            =>  solve Dyson equation for susceptibility
+# itermax       = 0               =>  iterations to try to get Goldstone mode
+# lambdamis     = 0.d0            =>  mix factor for Goldstone mode
+# lsumrule      = T, F            =>  use spin sum rule
+# lnewsumrule   = T, F            =>  use new sum rule
+# lsusconsite   = T, F            =>  use onsite gf in susc
+# lsuscstruct   = T, F            =>  use structural gf in susc
+# lcurrcorr     = T, F            =>  spin-current--spin-density correlation function
+# lcurrcorrint  = T, F            =>  interpolation on reg grid of correlation function
+# lcurrcorrdiv  = T, F            =>  divergence of correlation function
+# lscalarcorr   = T, F            =>  correction from scalar relativistic mass to continuity equation
+#-----------------------------------------------------------------------
+
+ ldynsusc= T
+ nomega=2001  omegamin= -0.0010  0.0000  omegamax= 0.0010  0.0000  domega= 0.0000  nlmax0= 0
+ lkha= F      lkxc= T           lcartesian= T  lanalytic= T   lnonanalytic= T  lenhanced= T
+ itermax= 0   lambdamix= 0.000  lsumrule= T    lnewsumrule= T 
+ lcurrcorr= T lcurrcorrint= T   lcurrcorrdiv= T
+
+#-----------------------------------------------------------------------
+#                 Atomic options for susceptibility
+# isusc = 0, 1, 2, 3  =>  no susc, transverse, longitudinal, full
+# ikha  = 0, 1        =>  no Hartree, Hartree kernel
+# ikxc  = 0, 1, 2, 3  =>  no xc, transverse xc, longitudinal xc, full xc
+# default atomic options: isusc = 0 for all atoms
+#-----------------------------------------------------------------------
+
+ ig=  1    isusc= 1  ikha= 0  ikxc= 3
+ ig=  2    isusc= 1  ikha= 0  ikxc= 3
+
+#-----------------------------------------------------------------------
+#                       Global options for LDA+U
+#-----------------------------------------------------------------------
+# lrhomat = T, F    =>  read in starting density matrices
+# ldaumix = 0.0500  =>  straight mixing for density matrices
+# ldauitc = 20      =>  from which SCF iteration to start mixing density matrices
+#-----------------------------------------------------------------------
+
+ lrhomat= T  ldaumix= 0.0500  ldauitc= 20
+
+#-----------------------------------------------------------------------
+#                       Atomic options for LDA+U
+#-----------------------------------------------------------------------
+# ildau         = 0, 1, 2            =>  no LDA+U, Dudarev LDA+U, full LDA+U (not in yet)
+# ueff(0:nlmax) = number ... number  =>  U parameter (if zero for some l nothing happens)
+# jeff(0:nlmax) = number ... number  =>  J parameter (if zero for some l nothing happens)
+# default atomic options: ildau = 0 for all atoms
+#-----------------------------------------------------------------------
+
+ ig=  1  ildau= 1  ueff= 0.0000  0.0000  0.0735  0.0000  jeff= 0.0000  0.0000  0.0000  0.0000
+ ig=  2  ildau= 1  ueff= 0.0000  0.0000  0.0735  0.0000  jeff= 0.0000  0.0000  0.0000  0.0000
+
+#-----------------------------------------------------------------------
+#                 Global options for GF rational fit
+#-----------------------------------------------------------------------
+# ifit= 2                =>  rational fit
+# numd= 19               =>  max degree of numerator
+# dend= 20               =>  max degree of denominator
+# eshift= 0.0000 0.0000  =>  shift of energy zero in rational function
+# lregf= T, F            =>  do a constant shift of Re GF
+# fudge= 0.0000          =>  by how much
+#-----------------------------------------------------------------------
+
+ ifit= 2  numd= 19  dend=20  eshift= 0.0000  0.0000  lregf= F  fudge= 0.0000
+
+#-----------------------------------------------------------------------
+#                       Global options for basis
+#-----------------------------------------------------------------------
+# lbasisdefault = T, F     =>  set default basis options or read everything from input
+# ibasis        = 1, 2, 3  =>  basis defined per l and s, per l or per atom
+# ibasismethod  = 1, 2     =>  orthogonalization by Gram-Schmidt or overlap matrix
+# basistol      = 1.d-3    =>  threshold to decide how many basis functions to keep
+# lbasisfreeze  = T, F     =>  whether the basis is computed every iteration or not
+# ldefault      = T, F     =>  use default energies for basis, no need for atomic specification
+# ltmatproj     = T, F     =>  project t-matix in basis
+#-----------------------------------------------------------------------
+
+ lbasisdefault= T  ibasis= 2  ibasismethod= 2  basistol= 1.d-3  lbasisfreeze= F
+
+#-----------------------------------------------------------------------
+#                       Atomic options for basis
+#-----------------------------------------------------------------------
+                         # s  p  d  f    
+# ig=  1  nspin= 2  iwsusc= 1  1  1  0
+# # group # L    # N basis function # energy spin up energy spin down
+# ig=  1  il= 0  ib= 1               ewsusc=  0.5901 0.000    0.5901 0.000
+# ig=  1  il= 1  ib= 1               ewsusc=  0.5901 0.000    0.5901 0.000
+# ig=  1  il= 2  ib= 1               ewsusc=  0.5901 0.000    0.5901 0.000
+#-----------------------------------------------------------------------
