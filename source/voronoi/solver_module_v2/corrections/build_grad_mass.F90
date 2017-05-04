@@ -1,4 +1,4 @@
-  subroutine build_grad_mass(c,e,z,nr,r,vr,socscaling,ia)
+  subroutine build_grad_mass(c,e,z,nr,r,vr,ia)
 ! Calculated the gradient of the scalar relativistic mass
 ! grad_k ln(M(r)) = - 2 M(r)*v_soc(r)*r*(e_r)_k
 ! with
@@ -19,15 +19,13 @@
 ! Atomic number
   real(kind=r8b),    intent(in)  :: z
 ! Atom number
-  real(kind=r8b),    intent(in)  :: ia
+  integer(kind=i4b), intent(in)  :: ia
 ! Number of radial points
   integer(kind=i4b), intent(in)  :: nr
 ! Radial mesh values
   real(kind=r8b),    intent(in)  :: r(nr)
 ! Spherical spin-averaged radial potential
   real(kind=r8b),    intent(in)  :: vr(nr)
-! Scaling of potential strength
-  real(kind=r8b),    intent(in)  :: socscaling
 ! -------------------------------------------------------------------
 ! Complex SOC potential
   complex(kind=c8b) :: vsoc(nr)
@@ -53,22 +51,15 @@
 ! 1/r dV/dr
   vsoc(1:nr) = 2.d0*z/(r(1:nr)**3) + dvdr/r(1:nr)
 ! multiply by the inverse relativistic mass
-  vsoc(1:nr) = socscaling*vsoc(1:nr)/(mass(1:nr))**2
+  vsoc(1:nr) = vsoc(1:nr)/(mass(1:nr))**2
 ! calculate grad_mass=-2*mass(r)*vsoc*r
   do i=1,3
     grad_mass(i,1:nr,ilmxyz(i),ia)=-2.d0*mass(1:nr)*vsoc(1:nr)*r(1:nr)
   end do
-  write(*,'(" grad_mass constructed")')
-  if (ia==1) then
-    do ir = 1,nr
-      write(*,'(100e18.9)') r(ir), (grad_mass(i,ir,ilmxyz(i),ia),i=1,3)
-    end do
-  end if
-  open(unit=12121,file="grad_mass.dat")
-  write(12121,'("# r grad_mass x/y/z")')
+  write(*,'(" grad_mass constructed for atom ",i4)') ia
+  write(*,'(" r grad_mass x/y/z")')
   do ir = 1,nr
-    write(12121,'(100e18.9)') r(ir), (grad_mass(i,ir,ilmxyz(i),ia),i=1,3)
+    write(*,'(100e18.9)') r(ir), (grad_mass(i,ir,ilmxyz(i),ia),i=1,3)
   end do
-  close(12121)
 ! All done!
   end subroutine build_grad_mass

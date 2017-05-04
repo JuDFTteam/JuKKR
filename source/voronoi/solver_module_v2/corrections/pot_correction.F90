@@ -185,7 +185,7 @@
 !    do ie=1,nesusc
     ie = nesusc
       do ia=1,nasusc
-        call build_grad_mass(c,esusc(ie),zat(ia),nrpts(ia),rmesh(:,ia),vr(:,ia),socscaling(ia),ia)
+        call build_grad_mass(c,esusc(ie),zat(ia),nrpts(ia),rmesh(:,ia),vr(:,ia),ia)
       end do
 !    end do
   end if
