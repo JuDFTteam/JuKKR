@@ -365,7 +365,7 @@ $(OBJ)/in_gmat_soc.o: $(PROJDIR)/in_gmat_soc.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 $(OBJ)/in_tmat_soc.o: $(PROJDIR)/in_tmat_soc.F90 
-	$(FC) $(FDBFLAGS) -c -I$(OBJ) $< -o $@
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 ########################################################################
 #                       Groundstate module
