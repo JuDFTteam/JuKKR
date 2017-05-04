@@ -58,5 +58,17 @@
   do i=1,3
     grad_mass(i,1:nr,ilmxyz(i),ia)=-2.d0*mass(1:nr)*vsoc(1:nr)*r(1:nr)
   end do
+  write(*,'(" grad_mass constructed")')
+  if (ia==1) then
+    do ir = 1,nr
+      write(*,'(100e18.9)') r(ir), (grad_mass(i,ir,ilmxyz(i),ia),i=1,3)
+    end do
+  end if
+  open(unit=12121,file="grad_mass.dat")
+  write(12121,'("# r grad_mass x/y/z")')
+  do ir = 1,nr
+    write(12121,'(100e18.9)') r(ir), (grad_mass(i,ir,ilmxyz(i),ia),i=1,3)
+  end do
+  close(12121)
 ! All done!
   end subroutine build_grad_mass
