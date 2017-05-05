@@ -17,6 +17,10 @@ FC90FLAGS =
 FCFLAGS =
 PPFLAGS =
 PPFLAGS += -D USE_VOROWEIGHTS
+
+# PPFLAGS += -D BENCHMARK_tfQMR
+# PPFLAGS += -D EXPORT_tfQMR_PROBLEM
+
 # PPFLAGS += -D TRANSPOSE_TO_ROW_MAJOR
 ### TRANSPOSE_TO_ROW_MAJOR seems to work, however, there was a bug in col_norms about the non-linearity of DZNRM2, so we have to see which references went wrong
 #PPFLAGS += -D SUPERCELL_ELECTROSTATICS=8
@@ -30,7 +34,7 @@ ifeq ($(PLATFORM),ifort)
 	FC90 = mpiifort -warn all
 	# -module <path> specifies where to put .mod files
   	ifeq ($(SMP),openmp)
- 		FCFLAGS += -openmp -openmp-report
+ 		FCFLAGS += -qopenmp
         endif
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)

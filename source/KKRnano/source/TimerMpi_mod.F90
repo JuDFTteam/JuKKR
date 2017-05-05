@@ -54,21 +54,24 @@ module TimerMpi_mod
   endsubroutine ! outTime
 
 
-  subroutine outTimeStats(self, name, iter)
+  subroutine outTimeStats(self, name, iter, unit)
     type(TimerMpi), intent(inout) :: self !> intent(inout) as this stops the timer
     character(len=*), intent(in)  :: name ! which part of the code was timed
     integer, intent(in), optional :: iter !> iteration number
+    integer, intent(in), optional :: unit !> output unit number
 
     character(len=96) :: stats_string
 
+    integer :: iou
+    iou = 2; if(present(unit)) iou = unit
 !   if (self%running) call stopTimer(self)
-!   if (self%running) write(2,*) "Warning! Tried to get timer stats when still running ",nowTime - self%start_time ! warning
+!   if (self%running) write(iou,*) "Warning! Tried to get timer stats when still running ",nowTime - self%start_time ! warning
 
     stats_string = getTimerStats(self)
     if (present(iter)) then
-      write(2, fmt="('iter:',i4,2x,9a)") iter, name, '  ', trim(stats_string)
+      write(iou, fmt="('iter:',i4,2x,9a)") iter, name, '  ', trim(stats_string)
     else
-      write(2, fmt="(2x,9a)") name, '  ', trim(stats_string)
+      write(iou, fmt="(2x,9a)") name, '  ', trim(stats_string)
     endif
   endsubroutine ! outTime
 

@@ -39,6 +39,9 @@ program KKRnano
 
   use KKRzero_mod, only: main0
   use PotentialConverter_mod, only: kkrvform
+#ifdef BENCHMARK_tfQMR
+  use tfQMR_mod, only: benchmark_tfQMR
+#endif
 
   implicit none
 
@@ -106,6 +109,13 @@ program KKRnano
     '    --voronano            Produces Voronoi output necessary to start a calculation with KKRnano', &
     ''
     stop
+  case ('--benchmark')
+#ifdef BENCHMARK_tfQMR
+    call benchmark_tfQMR()
+    stop ! done
+#else
+    stop 'For benchmarking of the tfQMR solver, please compile with -D BENCHMARK_tfQMR'
+#endif
   case default
     ! start the former kkr2.exe    
   endselect ! arg

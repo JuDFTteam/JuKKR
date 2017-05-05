@@ -1,12 +1,17 @@
 !> tfQMR solver
 
-
 module tfQMR_mod
 #include "../DebugHelpers/logging_macros.h"
   use Logging_mod, only:    ! import no name, just mention it for the module dependency 
   implicit none
   private
   public :: solve
+
+! #define EXPORT_tfQMR_PROBLEM
+
+#ifdef  BENCHMARK_tfQMR
+  public :: benchmark_tfQMR
+#endif
 
   double complex, parameter, private :: CONE=(1.d0, 0.d0), ZERO=(0.d0, 0.d0)
 
@@ -386,6 +391,10 @@ module tfQMR_mod
     WRITELOG(3,*) converged_at
     WRITELOG(3,*) RESN
 
+#ifdef EXPORT_tfQMR_PROBLEM
+  call dump_tfQMR_problem(op, tolerance, nRHSs, nCols, mat_X, mat_B)
+#endif
+
   contains
 
     !------------------------------------------------------------------------------
@@ -619,6 +628,182 @@ module tfQMR_mod
     
     mFlops = mFlops + 4_8*size(bvector)
   endsubroutine ! y := y + a*b with different shapes of Y and B
-  
-  
+
+#ifdef  EXPORT_tfQMR_PROBLEM
+  subroutine dump_tfQMR_problem(op, tolerance, nRHSs, nCols, mat_X, mat_B)
+    use KKROperator_mod, only: KKROperator
+    type(KKROperator), intent(in) :: op
+    double precision, intent(in) :: tolerance
+    integer, intent(in) :: nRHSs ! number of Right Hand Sides
+    integer, intent(in) :: nCols ! number of block columns
+    double complex, intent(in)    :: mat_X(:,:,:) !< dim(X%fastBlockDim,X%slowBlockDim,X%nnzb)
+    double complex, intent(in)    :: mat_B(:,:,:) !< dim(B%fastBlockDim,B%slowBlockDim,B%nnzb)
+
+    integer, parameter :: iou = 753
+    integer, save :: filenumber = 0
+    character(len=256) :: filename
+    integer :: ios
+
+    filenumber = filenumber + 1
+    write(unit=filename, fmt="(a,i0)") "tfqmr_problem.",filenumber
+    open(iou, file=filename, action="write", status="old", iostat=ios)
+    if (ios /= 0) then
+      write(*,"(9a)") __FILE__," file '",trim(filename),"' does not exist!" ! use touch to create them
+      return ! failed
+    else
+      write(*,"(9a)") __FILE__," export tfQMR problem to file '",trim(filename),"'."
+    endif
+
+    write(iou, "(9(a,i0))")   "nRHSs   ",nRHSs,"   ! number of Right Hand Sides"
+    write(iou, "(9(a,i0))")   "nCols   ",nCols,"   ! number of block columns"
+    write(iou, "(a,es12.3)")  "tolerance  ",tolerance
+
+    write(iou, "(a)") ! blank line
+    write(iou, "(9(a,i0))")       "bsr_A%nCols   ",op%bsr_A%nCols,"   ! number of columns"
+    write(iou, "(9(a,i0))")   "size(bsr_A%RowStart) ",size(op%bsr_A%RowStart),"   ! should match nRows+1= ",op%bsr_A%nRows+1 ! should match
+    write(iou, "(10(' ',i0))") op%bsr_A%RowStart
+    write(iou, "(9(a,i0))")   "size(bsr_A%ColIndex) ",size(op%bsr_A%ColIndex),"   ! should match nnzb= ",op%bsr_A%nnzb ! should match
+    write(iou, "(10(' ',i0))") op%bsr_A%ColIndex
+
+    write(iou, "(a)") ! blank line
+    write(iou, "(9(a,i0))")       "bsr_B%nCols   ",op%bsr_B%nCols,"   ! number of columns"
+    write(iou, "(9(a,i0))")   "size(bsr_B%RowStart)   ",size(op%bsr_B%RowStart),"   ! should match nRows+1= ",op%bsr_B%nRows+1 ! should match
+    write(iou, "(10(' ',i0))") op%bsr_B%RowStart
+    write(iou, "(9(a,i0))")   "size(bsr_B%ColIndex)   ",size(op%bsr_B%ColIndex),"   ! should match nnzb= ",op%bsr_B%nnzb ! should match
+    write(iou, "(10(' ',i0))") op%bsr_B%ColIndex
+
+    write(iou, "(a)") ! blank line
+    write(iou, "(9(a,i0))")       "bsr_X%nCols   ",op%bsr_X%nCols,"   ! number of columns"
+    write(iou, "(9(a,i0))")   "size(bsr_X%RowStart)   ",size(op%bsr_X%RowStart),"   ! should match nRows+1= ",op%bsr_X%nRows+1 ! should match
+    write(iou, "(10(' ',i0))") op%bsr_X%RowStart
+    write(iou, "(9(a,i0))")   "size(bsr_X%ColIndex)   ",size(op%bsr_X%ColIndex),"   ! should match nnzb= ",op%bsr_X%nnzb ! should match
+    write(iou, "(10(' ',i0))") op%bsr_X%ColIndex
+
+    write(iou, "(a)") ! blank line
+    write(iou, "(a,9(' ',i0))") "shape(mat_A)   ",shape(op%mat_A) ! may have a forth entry: 1+Lly
+    write(iou, *) op%mat_A
+
+    write(iou, "(a)") ! blank line
+    write(iou, "(a,9(' ',i0))") "shape(mat_B)   ",shape(mat_B)
+    write(iou, *) mat_B
+
+    write(iou, "(a)") ! blank line
+    write(iou, "(a,9(' ',i0))") "shape(mat_X)   ",shape(mat_X)
+    write(iou, *) mat_X
+
+    close(iou, iostat=ios)
+  endsubroutine ! dump
+#endif
+
+#ifdef  BENCHMARK_tfQMR
+  subroutine benchmark_tfQMR()
+    use TimerMpi_mod, only: TimerMpi, outTimeStats, startTimer, stopTimer, createTimer
+    use KKROperator_mod, only: KKROperator, destroy
+    use BCPOperator_mod, only: BCPOperator
+    use SparseMatrixDescription_mod, only: subset!, SparseMatrixDescription
+
+    type(TimerMpi)    :: kernel_timer, solver_timer
+    integer(kind=8)   :: nFlops
+    type(KKROperator) :: op
+    type(BCPOperator) :: precond
+    double precision  :: tolerance, largest_residual
+    integer           :: nRHSs, nCols, iterations_needed
+    double complex, allocatable :: vecs(:,:,:,:) !< workspace dim(X%fastBlockDim,X%slowBlockDim,X%nnzb,3:9+1)
+    integer           :: d(3), ist, iter, nRepetitions = 16
+    logical, parameter :: initial_zero=.true., use_precond=.false.
+
+    call load_tfQMR_problem(op, tolerance, nRHSs, nCols, filenumber=0)
+
+    allocate(op%B_subset_of_X(op%bsr_B%nnzb))
+    ist = subset(set=op%bsr_X, sub=op%bsr_B, list=op%B_subset_of_X)
+    if (ist /= 0) stop 'KKROperator: creation of subset list failed!'
+
+    d = shape(op%mat_X)
+    allocate(vecs(d(1),d(2),d(3),3:11)) ! allocate workspace
+    vecs(:,:,:,11) = op%mat_X ! copy reference solution from the problem file
+
+    call createTimer(solver_timer); call createTimer(kernel_timer) ! init timers
+    write(*, "(9(a,i0))") "tfQMR problem loaded, start ",nRepetitions," repetitions."
+    nFlops = 0
+    do iter = 1, nRepetitions
+      call startTimer(solver_timer)
+      !======================================================================
+      call solve_with_tfQMR(op, op%mat_X, op%mat_B, tolerance, nRHSs, nCols, &
+               initial_zero, precond, use_precond, vecs, kernel_timer, &
+               iterations_needed, largest_residual, nFlops)
+      !======================================================================
+      call stopTimer(solver_timer)
+    enddo ! iter
+    write(*, "(9(a,es9.1))") "tfQMR quality: largest deviation is",maxval(abs(op%mat_X - vecs(:,:,:,11)))
+    write(*, "(9(a,f0.6))") "tfQMR performed ",nFlops*1e-12," TFlop."
+    call outTimeStats(solver_timer, name=" tfQMR solver", unit=6)
+    call outTimeStats(kernel_timer, name="   KKR kernel", unit=6)
+
+    call destroy(op); deallocate(vecs, stat=ist) ! clean up
+  endsubroutine ! benchmark_tfQMR
+
+  subroutine load_tfQMR_problem(op, tolerance, nRHSs, nCols, filenumber)
+    use KKROperator_mod, only: KKROperator
+    type(KKROperator), intent(inout) :: op
+    double precision, intent(out) :: tolerance
+    integer, intent(out) :: nRHSs ! number of Right Hand Sides
+    integer, intent(out) :: nCols ! number of block columns
+
+    integer, intent(in) :: filenumber
+    integer, parameter :: iou = 753
+    character(len=256) :: filename, line
+    character(len=32) :: word
+    integer :: ios, n1, n2, n3
+
+    write(unit=filename, fmt="(a,i0)") "tfqmr_problem.",filenumber
+    open(iou, file=filename, action="read", iostat=ios)
+    if (ios /= 0) then
+      write(*,'(9a)') __FILE__," Failed to open ",trim(filename)
+      stop
+    endif
+
+      read(iou, fmt='(a)', iostat=ios) line ! read 1st line
+    do while(ios == 0)
+! write(*,"(9a)") trim(filename),": read line ",trim(line) ! DEBUG
+      if(line /= "") then
+
+		read(unit=line, fmt=*) word, n1
+! write(*,"(9a)") trim(filename),": read word ",trim(word) ! DEBUG
+		selectcase(word)
+		case("nRHSs")      ; nRHSs = n1
+		case("nCols")      ; nCols = n1
+		case("tolerance")  ; read(unit=line, fmt=*) word, tolerance
+
+#define ABX bsr_A
+		case("bsr_A%nCols"); op%ABX%nCols = n1
+		case("size(bsr_A%RowStart)"); op%ABX%nRows = n1-1; allocate(op%ABX%RowStart(n1)); read(iou, fmt=*) op%ABX%RowStart
+		case("size(bsr_A%ColIndex)"); op%ABX%nnzb  = n1;   allocate(op%ABX%ColIndex(n1)); read(iou, fmt=*) op%ABX%ColIndex
+#define ABX bsr_B
+		case("bsr_B%nCols"); op%ABX%nCols = n1
+		case("size(bsr_B%RowStart)"); op%ABX%nRows = n1-1; allocate(op%ABX%RowStart(n1)); read(iou, fmt=*) op%ABX%RowStart
+		case("size(bsr_B%ColIndex)"); op%ABX%nnzb  = n1;   allocate(op%ABX%ColIndex(n1)); read(iou, fmt=*) op%ABX%ColIndex
+#define ABX bsr_X
+		case("bsr_X%nCols"); op%ABX%nCols = n1
+		case("size(bsr_X%RowStart)"); op%ABX%nRows = n1-1; allocate(op%ABX%RowStart(n1)); read(iou, fmt=*) op%ABX%RowStart
+		case("size(bsr_X%ColIndex)"); op%ABX%nnzb  = n1;   allocate(op%ABX%ColIndex(n1)); read(iou, fmt=*) op%ABX%ColIndex
+#undef  ABX
+
+		case("shape(mat_A)"); read(unit=line, fmt=*) word, n1, n2, n3; allocate(op%mat_A(n1,n2,n3,0:0)) ; read(iou, fmt=*) op%mat_A
+		case("shape(mat_B)"); read(unit=line, fmt=*) word, n1, n2, n3; allocate(op%mat_B(n1,n2,n3))     ; read(iou, fmt=*) op%mat_B
+		case("shape(mat_X)"); read(unit=line, fmt=*) word, n1, n2, n3; allocate(op%mat_X(n1,n2,n3))     ; read(iou, fmt=*) op%mat_X
+
+		case default; write(*,*) __FILE__," found unrekognized '",word,"' in ",filename
+		endselect ! word
+! write(*,"(9a)") trim(filename),": found ",trim(word) ! DEBUG
+      else
+! write(*,"(9a)") trim(filename),": found empty line" ! DEBUG
+      endif ! line not empty
+
+      read(iou, fmt='(a)', iostat=ios) line ! read next line
+    enddo ! while
+
+    close(iou, iostat=ios)
+  endsubroutine ! load
+#endif
+
 endmodule ! tfQMR_mod
