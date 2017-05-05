@@ -180,14 +180,13 @@
 ! allocate grad_mass
   if(lscalarcorr) then
     if(allocated(grad_mass)) deallocate(grad_mass)
-    allocate(grad_mass(1:3,1:nrmax,1:lmmax,1:nasusc))
-    grad_mass(:,:,:,:)=0.d0
-!    do ie=1,nesusc
-    ie = nesusc
+    allocate(grad_mass(1:3,1:nrmax,1:lmmax,1:nasusc,1:nesusc))
+    grad_mass(:,:,:,:,:)=0.d0
+    do ie = 1,nesusc
       do ia=1,nasusc
-        call build_grad_mass(c,esusc(ie),zat(ia),nrpts(ia),rmesh(:,ia),vr(:,ia),ia)
+        call build_grad_mass(c,esusc(ie),zat(ia),nrpts(ia),rmesh(:,ia),vr(:,ia),ia,ie)
       end do
-!    end do
+    end do
   end if
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Loop over energies for susc sum rule
