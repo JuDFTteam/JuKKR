@@ -642,10 +642,12 @@ module tfQMR_mod
     integer, parameter :: iou = 753
     integer, save :: filenumber = 0
     character(len=256) :: filename
-    integer :: ios
+    integer :: ios, rank
+    include 'mpif.h'
+    call MPI_Comm_rank(MPI_COMM_WORLD, rank, ios) ! uses the world rank
 
     filenumber = filenumber + 1
-    write(unit=filename, fmt="(a,i0)") "tfqmr_problem.",filenumber
+    write(unit=filename, fmt="(9(a,i0))") "tfqmr_problem.",filenumber,"-rank.",rank
     open(iou, file=filename, action="write", status="old", iostat=ios)
     if (ios /= 0) then
       write(*,"(9a)") __FILE__," file '",trim(filename),"' does not exist!" ! use touch to create them
@@ -755,7 +757,7 @@ module tfQMR_mod
     character(len=32) :: word
     integer :: ios, n1, n2, n3
 
-    write(unit=filename, fmt="(a,i0)") "tfqmr_problem.",filenumber
+    write(unit=filename, fmt="(9(a,i0))") "tfqmr_problem.",filenumber
     open(iou, file=filename, action="read", iostat=ios)
     if (ios /= 0) then
       write(*,'(9a)') __FILE__," Failed to open ",trim(filename)
