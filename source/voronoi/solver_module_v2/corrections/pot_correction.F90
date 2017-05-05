@@ -381,7 +381,6 @@
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Compute the static susceptibility and the kernels
 !  if (lsusc) call static_susc_more(onsite,struct)
-! Added by Sascha:
   if (lsusc .and. lcurrcorr) call gradient_susc_basis
   if (lsusc) call static_susc2(onsite,struct)
   if (lsusc .and. lkxc .and. lsumrule) call kxc_sumrule
