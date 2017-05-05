@@ -182,11 +182,15 @@
     if(allocated(grad_mass)) deallocate(grad_mass)
     allocate(grad_mass(1:3,1:nrmax,1:lmmax,1:nasusc,1:nesusc))
     grad_mass(:,:,:,:,:)=0.d0
+    open(unit=229,file="scalar_rel_mass.dat")
+    open(unit=239,file="scalar_rel_mass_deriative.dat")
     do ie = 1,nesusc
       do ia=1,nasusc
         call build_grad_mass(c,esusc(ie),zat(ia),nrpts(ia),rmesh(:,ia),vr(:,ia),ia,ie)
       end do
     end do
+    close(229)
+    close(239)
   end if
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Loop over energies for susc sum rule
