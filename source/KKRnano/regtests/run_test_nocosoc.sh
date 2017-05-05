@@ -10,7 +10,7 @@ rm -f ./last ## remove old soft link
 nohup python2.7 ./tests_nocosoc.py < /dev/null > ${day}_tests.txt
 
 ./clearfiles.sh
-mkdir ${ARCHIVE}
+mkdir -p ${ARCHIVE}
 mv ${day}_tests.txt ${ARCHIVE}
 
 ln -s ${ARCHIVE}/${day}_tests.txt ./last
