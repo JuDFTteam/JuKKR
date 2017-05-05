@@ -9,6 +9,7 @@
 ! -----------------------------------------------------------------------
   deallocate(phiref)
   deallocate(pzc,pqc,noregcoeffs,noirrcoeffs)
+  deallocate(noregcoeffs_soc,noirrcoeffs_soc)
   if (isra == 1) deallocate(fzc,psc,fqc,fsc)
   if (lsusc) deallocate(mtotsusc,mxcsusc,msocsusc)
 !  deallocate(torque)
