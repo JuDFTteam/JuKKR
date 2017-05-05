@@ -502,7 +502,7 @@
 ! --> storage for kronecker form of susc denominator
   complex(kind=c8b), allocatable :: denominator(:,:)
 ! Gradient of scalar relativistic mass (added by Sascha)
-  complex(kind=c8b), allocatable :: grad_mass(:,:,:,:)
+  complex(kind=c8b), allocatable :: grad_mass(:,:,:,:,:)
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
 !         Variables and storage for the input/output module      

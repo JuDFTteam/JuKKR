@@ -1,4 +1,4 @@
-  subroutine build_grad_mass(c,e,z,nr,r,vr,ia)
+  subroutine build_grad_mass(c,e,z,nr,r,vr,ia,ie)
 ! Calculated the gradient of the scalar relativistic mass
 ! grad_k ln(M(r)) = - 2 M(r)*v_soc(r)*r*(e_r)_k
 ! with
@@ -18,6 +18,8 @@
   complex(kind=c8b), intent(in)  :: e
 ! Atomic number
   real(kind=r8b),    intent(in)  :: z
+! Energy point number
+  integer(kind=i4b), intent(in)  :: ie
 ! Atom number
   integer(kind=i4b), intent(in)  :: ia
 ! Number of radial points
@@ -54,12 +56,12 @@
   vsoc(1:nr) = vsoc(1:nr)/(mass(1:nr))**2
 ! calculate grad_mass=-2*mass(r)*vsoc*r
   do i=1,3
-    grad_mass(i,1:nr,ilmxyz(i),ia)=-2.d0*mass(1:nr)*vsoc(1:nr)*r(1:nr)
+    grad_mass(i,1:nr,ilmxyz(i),ia,ie)=-2.d0*mass(1:nr)*vsoc(1:nr)*r(1:nr)
   end do
   write(*,'(" grad_mass constructed for atom ",i4)') ia
   write(*,'(" r grad_mass x/y/z")')
   do ir = 1,nr
-    write(*,'(100e18.9)') r(ir), (grad_mass(i,ir,ilmxyz(i),ia),i=1,3)
+    write(*,'(100e18.9)') r(ir), (grad_mass(i,ir,ilmxyz(i),ia,ie),i=1,3)
   end do
 ! All done!
   end subroutine build_grad_mass

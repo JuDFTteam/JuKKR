@@ -150,7 +150,7 @@
             do klm=1,lmmax
               tmprgaunt = rgaunt(ilm,klm,1)
               if(abs(tmprgaunt) > ylmtol) then 
-                mass_correction_r(1:nr,is,js,ia2,ja2) = mass_correction_r(1:nr,is,js,ia2,ja2) - gradbasis_lm(1:nr,a,ilm,iq)*enhanced_curr_corr(iq,jq)*suscnorm(jq)*tmprgaunt*grad_mass(a,1:nr,klm,ia)
+                mass_correction_r(1:nr,is,js,ia2,ja2) = mass_correction_r(1:nr,is,js,ia2,ja2) - gradbasis_lm(1:nr,a,ilm,iq)*enhanced_curr_corr(iq,jq)*suscnorm(jq)*tmprgaunt*grad_mass(a,1:nr,klm,ia,nesusc)
               end if
             end do
           end do
