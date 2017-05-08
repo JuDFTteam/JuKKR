@@ -1,4 +1,4 @@
-  subroutine build_grad_mass(c,e,z,nr,r,vr,socscaling,ia)
+  subroutine build_grad_mass(c,e,z,nr,r,vr,ia,ie)
 ! Calculated the gradient of the scalar relativistic mass
 ! grad_k ln(M(r)) = - 2 M(r)*v_soc(r)*r*(e_r)_k
 ! with
@@ -18,57 +18,50 @@
   complex(kind=c8b), intent(in)  :: e
 ! Atomic number
   real(kind=r8b),    intent(in)  :: z
+! Energy point number
+  integer(kind=i4b), intent(in)  :: ie
 ! Atom number
-  real(kind=r8b),    intent(in)  :: ia
+  integer(kind=i4b), intent(in)  :: ia
 ! Number of radial points
   integer(kind=i4b), intent(in)  :: nr
 ! Radial mesh values
   real(kind=r8b),    intent(in)  :: r(nr)
 ! Spherical spin-averaged radial potential
   real(kind=r8b),    intent(in)  :: vr(nr)
-! Scaling of potential strength
-  real(kind=r8b),    intent(in)  :: socscaling
 ! -------------------------------------------------------------------
 ! Complex SOC potential
   complex(kind=c8b) :: vsoc(nr)
-  complex(kind=c8b) :: mass(nr)
+  complex(kind=c8b) :: mass(nr), work(nr)
   real(kind=r8b)    :: dvdr(nr)
   integer(kind=i4b) :: ir,i
   integer(kind=i4b) :: ilmxyz(1:3)
 ! ilm for unit vector in direction x,y,z
   ilmxyz(1)=lm2i(1,1);ilmxyz(2)=lm2i(-1,1);ilmxyz(3)=lm2i(0,1)
-! Relativistic mass multiplied by c
-  mass(1:nr) = c + (e - vr(1:nr) + 2.d0*z/r(1:nr))/c
-! dV/dr for e-e potential
-  call calc_derivative_panels(vr(1:nr),dvdr(1:nr),r,nr,npanat(ia),ircutat(:,ia))
-!! forward difference
-!  dvdr(1) = (vr(2) - vr(1))/(r(2) - r(1))
-!! backward difference
-!  dvdr(nr) = (vr(nr) - vr(nr-1))/(r(nr) - r(nr-1))
-!! centered differences
-!  do ir=2,nr-1
-!    dvdr(ir) = 0.5d0*(vr(ir+1) - vr(ir))/(r(ir+1) - r(ir))
-!    dvdr(ir) = dvdr(ir) + 0.5d0*(vr(ir) - vr(ir-1))/(r(ir) - r(ir-1))
+! Relativistic mass (without c, differs from build_vsoc)
+  mass(1:nr) = 1.d0 + (e - vr(1:nr) + 2.d0*z/r(1:nr))/c**2
+! write out mass
+  write(229,'("# r mass           for ia,ie=",2i4)') ia,ie
+  do ir=1,nr
+    write(229,'(10e18.9)') r(ir), mass(ir)
+  end do
+!! dV/dr for e-e potential
+!  call calc_derivative_panels(vr(1:nr),dvdr(1:nr),r,nr,npanat(ia),ircutat(:,ia))
+!! 1/r dV/dr
+!  vsoc(1:nr) = 2.d0*z/(r(1:nr)**3) + dvdr/r(1:nr)
+!! multiply by the inverse relativistic mass and the speed of light
+!  vsoc(1:nr) = vsoc(1:nr)/(mass(1:nr))**2/c**2
+!! calculate grad_mass=-mass(r)*vsoc*r
+!  do i=1,3
+!    grad_mass(i,1:nr,ilmxyz(i),ia,ie)=-1.d0*mass(1:nr)*vsoc(1:nr)*r(1:nr)
 !  end do
-! 1/r dV/dr
-  vsoc(1:nr) = 2.d0*z/(r(1:nr)**3) + dvdr/r(1:nr)
-! multiply by the inverse relativistic mass
-  vsoc(1:nr) = socscaling*vsoc(1:nr)/(mass(1:nr))**2
-! calculate grad_mass=-2*mass(r)*vsoc*r
+! calculate d lnM/ dr directly by finite differences  
+  call calc_derivative_panels(log(mass(1:nr)),work(1:nr),r,nr,npanat(ia),ircutat(:,ia))
   do i=1,3
-    grad_mass(i,1:nr,ilmxyz(i),ia)=-2.d0*mass(1:nr)*vsoc(1:nr)*r(1:nr)
+    grad_mass(i,1:nr,ilmxyz(i),ia,ie) = work(1:nr)
   end do
-  write(*,'(" grad_mass constructed")')
-  if (ia==1) then
-    do ir = 1,nr
-      write(*,'(100e18.9)') r(ir), (grad_mass(i,ir,ilmxyz(i),ia),i=1,3)
-    end do
-  end if
-  open(unit=12121,file="grad_mass.dat")
-  write(12121,'("# r grad_mass x/y/z")')
+  write(239,'("# r grad_mass           for ia,ie=",2i4)') ia,ie
   do ir = 1,nr
-    write(12121,'(100e18.9)') r(ir), (grad_mass(i,ir,ilmxyz(i),ia),i=1,3)
+    write(239,'(100e18.9)') r(ir), (grad_mass(i,ir,ilmxyz(i),ia,ie),i=1,3)
   end do
-  close(12121)
 ! All done!
   end subroutine build_grad_mass
