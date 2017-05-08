@@ -112,9 +112,8 @@ program KKRnano
   case ('--benchmark')
 #ifdef BENCHMARK_tfQMR
     call benchmark_tfQMR()
-    stop ! done
 #else
-    stop 'For benchmarking of the tfQMR solver, please compile with -D BENCHMARK_tfQMR'
+    die('For benchmarking of the tfQMR solver, please compile with -D BENCHMARK_tfQMR')
 #endif
   case default
     ! start the former kkr2.exe    

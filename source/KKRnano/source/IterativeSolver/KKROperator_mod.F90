@@ -15,6 +15,7 @@ module KKROperator_mod
   implicit none
   private
   public :: KKROperator, create, destroy, multiply
+  public :: make_multiplication_plan
 
   !> Represents the operator/matrix (1 - \Delta T G_ref).
   type :: KKROperator
@@ -101,10 +102,19 @@ module KKROperator_mod
 
     allocate(self%mat_A(NROWS,NCOLS,self%bsr_A%nnzb,0:nLloyd)) ! allocate memory for the KKR operator
 
-    ! plan the operation
-    call bsr_times_bsr(self%plan, self%bsr_A%RowStart, self%bsr_A%ColIndex, shape(self%mat_A), self%bsr_X%RowStart, self%bsr_X%ColIndex, shape(self%mat_X))
-
+    call make_multiplication_plan(self)
+    
   endsubroutine ! create
+    
+  subroutine make_multiplication_plan(self)
+    use bsrmm_mod, only: bsr_times_bsr ! planning
+    type(KKROperator), intent(inout) :: self
+
+    ! plan the operation
+    call bsr_times_bsr(self%plan, self%bsr_A%RowStart, self%bsr_A%ColIndex, &
+    shape(self%mat_A), self%bsr_X%RowStart, self%bsr_X%ColIndex, shape(self%mat_X))
+
+  endsubroutine ! make_plan
 
 
   elemental subroutine destroy_KKROperator(self)
