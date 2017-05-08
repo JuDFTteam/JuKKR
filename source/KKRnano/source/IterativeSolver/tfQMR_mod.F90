@@ -700,7 +700,7 @@ module tfQMR_mod
 #ifdef  BENCHMARK_tfQMR
   subroutine benchmark_tfQMR()
     use TimerMpi_mod, only: TimerMpi, outTimeStats, startTimer, stopTimer, createTimer
-    use KKROperator_mod, only: KKROperator, destroy
+    use KKROperator_mod, only: KKROperator, destroy, make_multiplication_plan
     use BCPOperator_mod, only: BCPOperator
     use SparseMatrixDescription_mod, only: subset!, SparseMatrixDescription
 
@@ -714,7 +714,11 @@ module tfQMR_mod
     integer           :: d(3), ist, iter, nRepetitions = 16
     logical, parameter :: initial_zero=.true., use_precond=.false.
 
+    include 'mpif.h'
+
     call load_tfQMR_problem(op, tolerance, nRHSs, nCols, filenumber=0)
+
+    call make_multiplication_plan(op) ! otherwise spontaneous matrix-matrix-multiplications are called
 
     allocate(op%B_subset_of_X(op%bsr_B%nnzb))
     ist = subset(set=op%bsr_X, sub=op%bsr_B, list=op%B_subset_of_X)
@@ -726,6 +730,7 @@ module tfQMR_mod
 
     call createTimer(solver_timer); call createTimer(kernel_timer) ! init timers
     write(*, "(9(a,i0))") "tfQMR problem loaded, start ",nRepetitions," repetitions."
+    call MPI_Barrier(MPI_COMM_WORLD, ist)
     nFlops = 0
     do iter = 1, nRepetitions
       call startTimer(solver_timer)
@@ -742,6 +747,7 @@ module tfQMR_mod
     call outTimeStats(kernel_timer, name="   KKR kernel", unit=6)
 
     call destroy(op); deallocate(vecs, stat=ist) ! clean up
+    call MPI_Finalize(ist) ; stop ! exit
   endsubroutine ! benchmark_tfQMR
 
   subroutine load_tfQMR_problem(op, tolerance, nRHSs, nCols, filenumber)
