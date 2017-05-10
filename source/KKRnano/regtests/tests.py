@@ -73,7 +73,7 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
     out, err, tim = run_it("OMP_STACKSIZE=80M OMP_NUM_THREADS={0} mpirun -np {1} kkr.exe".format(int(nthreads), int(nranks)))
     ### grep the result
     total_energy = get_energy(out)
-    print "KKR for", inputdir, "with  lmax=",lmax,
+    print "KKR for", inputdir, " with lmax=",lmax," gives", total_energy, "Ryd",
     if solver != DEFAULT_solver:
         print ", solver=",solver,
     if nthreads != DEFAULT_nthreads:
@@ -82,7 +82,7 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
         print ", nranks=",nranks,
     if Lly != DEFAULT_Lly:
         print ", Lly=",Lly,
-    print " gives", total_energy, "Ryd in", tim," sec"
+    print " in", tim," sec"
     out, err, tim = run_it("./clearfiles.sh")
     return total_energy
 
