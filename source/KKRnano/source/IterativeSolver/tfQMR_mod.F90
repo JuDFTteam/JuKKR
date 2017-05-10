@@ -703,6 +703,7 @@ module tfQMR_mod
     use KKROperator_mod, only: KKROperator, destroy, make_multiplication_plan
     use BCPOperator_mod, only: BCPOperator
     use SparseMatrixDescription_mod, only: subset!, SparseMatrixDescription
+    include 'mpif.h'
 
     type(TimerMpi)    :: kernel_timer, solver_timer
     integer(kind=8)   :: nFlops
@@ -711,10 +712,12 @@ module tfQMR_mod
     double precision  :: tolerance, largest_residual
     integer           :: nRHSs, nCols, iterations_needed
     double complex, allocatable :: vecs(:,:,:,:) !< workspace dim(X%fastBlockDim,X%slowBlockDim,X%nnzb,3:9+1)
-    integer           :: d(3), ist, iter, nRepetitions = 16
     logical, parameter :: initial_zero=.true., use_precond=.false.
-
-    include 'mpif.h'
+    integer           :: d(3), ist, iter, nRepetitions = 16, nthreads = -1, nranks = -1
+!$  integer :: omp_get_num_threads
+!$omp parallel
+!$  nthreads = omp_get_num_threads()
+!$omp end parallel
 
     call load_tfQMR_problem(op, tolerance, nRHSs, nCols, filenumber=0)
 
@@ -729,7 +732,9 @@ module tfQMR_mod
     vecs(:,:,:,11) = op%mat_X ! copy reference solution from the problem file
 
     call createTimer(solver_timer); call createTimer(kernel_timer) ! init timers
-    write(*, "(9(a,i0))") "tfQMR problem loaded, start ",nRepetitions," repetitions."
+    call MPI_Comm_size(MPI_COMM_WORLD, nranks, ist)
+    write(*, "(9(a,i0))") "tfQMR problem loaded, start ",nRepetitions, & 
+      " repetitions on ",nthreads," threads and ",nranks," ranks."
     call MPI_Barrier(MPI_COMM_WORLD, ist)
     nFlops = 0
     do iter = 1, nRepetitions
