@@ -20,7 +20,8 @@ module KKRmat_mod
   private
   public :: MultipleScattering
 
-  double complex, parameter :: zero=(0.d0, 0.d0), cone=(1.d0, 0.d0)
+  double complex, parameter :: zero=(0.d0, 0.d0)
+  double complex, parameter :: cone=(1.d0, 0.d0)
   
 
   contains
@@ -244,15 +245,16 @@ module KKRmat_mod
     double complex, intent(in)         :: mssq(:,:,:) !< dim(lmsd,lmsd,num_trunc_atoms) inverted T-matrix
     double complex, intent(out)        :: bztr2
     double precision, intent(in)       :: volcub (:)
-    integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed, e.g. dtde, tmatLL
+    integer, intent(in)                :: global_atom_idx_lly !< includes the global index of local atom so that atom-specific entries in global arrays can be accessed for Lloyd's formula, e.g. tmatLL
     integer, intent(in)                :: Lly             !< LLY=1/0, turns Lloyd's formula on/off
     integer, intent(in) :: solver_type
     type(TimerMpi), intent(inout) :: kernel_timer
     
-    double complex, allocatable :: dPdE_local(:,:), gllke_x(:,:), dgde(:,:), gllke_x_t(:,:), dgde_t(:,:), gllke_x2(:,:), dgde2(:,:) ! LLY
-    double complex :: tracek, gtdPdE ! LLY
+    double complex, allocatable :: dPdE_local(:,:,:), gllke_x(:,:), dgde(:,:), MinvdMdE(:,:,:), TinvMinvdMdE(:,:,:) ! LLY
+    double complex :: tracek  ! LLY
+         
 
-    integer :: num_trunc_atoms, nacls, alm, lmsd, ist, matrix_index, lm1, lm2, lm3, il1
+    integer :: num_trunc_atoms, lmsd, lm1, idx_lly, i1
     double complex :: cfctorinv
 
     cfctorinv = (cone*8.d0*atan(1.d0))/alat
@@ -293,48 +295,30 @@ module KKRmat_mod
     ! ToDo: merge the referenceFourier_part2 with buildKKRCoeffMatrix
 
     if (Lly == 1) then ! LLY
-      ! Allocate additional arrays for Lloyd's formula
       
       !--------------------------------------------------------
       ! dP(E,k)   dG(E,k)                   dT(E)
       ! ------- = ------- * T(E) + G(E,k) * -----
       !   dE        dE                       dE
-  
-      matrix_index = (global_atom_idx_lly - 1)*lmsd
 
-      nacls = op%cluster%naclsd
-      
-      alm = lmsd*num_trunc_atoms
+     TESTARRAYLOG(3, op%mat_A(:,:,:,Lly))
 
-      TESTARRAYLOG(3, op%mat_A(:,:,:,Lly))
+     ! Allocate additional arrays for Lloyd's formula
+     allocate(dPdE_local(lmsd,lmsd,num_trunc_atoms)) 
+     allocate(MinvdMdE(lmsd,lmsd,num_trunc_atoms)) 
+     allocate(TinvMinvdMdE(lmsd,lmsd,num_trunc_atoms)) 
+     allocate(dgde(lmsd,lmsd))
+     allocate(gllke_x(lmsd,lmsd))
 
-      allocate(dgde(lmsd*num_trunc_atoms,lmsd*nacls))
-      call convertBSRToFullMatrix(dgde, op%bsr_A, op%mat_A(:,:,:,Lly))
-      allocate(dgde_t(lmsd*nacls,lmsd*num_trunc_atoms))
-      dgde_t = transpose(dgde)
-      deallocate(dgde, stat=ist)
+     do i1=1,num_trunc_atoms ! loop over target atoms (=num_trunc_atoms)
+       idx_lly = op%bsr_A%rowstart(global_atom_idx_lly)+i1-1 ! fetch entry index in mat_A that corresponds to G_ref^(global_atom_idx_lly,i1)
+       dgde = op%mat_A(:,:,idx_lly,1) ! load on-site dG_ref/dE for atom i1
+       gllke_x = op%mat_A(:,:,idx_lly,0) ! load on-site G_ref for atom i1
+       call zgemm('t','n',lmsd,lmsd,lmsd,cone,dgde(:,:),lmsd,tmatLL(:,:,global_atom_idx_lly,0),lmsd,zero,dPdE_local(:,:,i1),lmsd)  ! perform dG_ref/dE*T(E) for transposed (!) lm-block of atom i1
+       call zgemm('t','n',lmsd,lmsd,lmsd,cfctorinv,gllke_x(:,:),lmsd,tmatLL(:,:,global_atom_idx_lly,1),lmsd,cone,dPdE_local(:,:,i1),lmsd)  ! perform G_ref*dT(E)/dE for transposed (!) lm-block of atom i1
+     enddo
 
-      allocate(dgde2(lmsd*num_trunc_atoms,lmsd))
-      dgde2 = dgde_t(:,matrix_index+ 1:lmsd +matrix_index)
-      deallocate(dgde_t, stat=ist)
 
-      allocate(dPdE_local(lmsd*num_trunc_atoms,lmsd))
-
-      call zgemm('n','n',alm,lmsd,lmsd,cone, dgde2,alm, tmatLL(1,1,global_atom_idx_lly,0),lmsd,zero, dPdE_local,alm)
-      deallocate(dgde2, stat=ist)
-
-      allocate(gllke_x(lmsd*num_trunc_atoms,lmsd*nacls))
-      call convertBSRToFullMatrix(gllke_x, op%bsr_A, op%mat_A(:,:,:,0))
-      allocate(gllke_x_t(lmsd*nacls,lmsd*num_trunc_atoms))
-      gllke_x_t = transpose(gllke_x)
-      deallocate(gllke_x, stat=ist)
-
-      allocate(gllke_x2(lmsd*num_trunc_atoms,lmsd))
-      gllke_x2 = gllke_x_t(:,matrix_index+ 1:lmsd +matrix_index)
-      deallocate(gllke_x_t, stat=ist)
-
-      call zgemm('n','n',alm,lmsd,lmsd,cfctorinv, gllke_x2,alm, tmatLL(1,1,global_atom_idx_lly,Lly),lmsd,cone, dPdE_local,alm)
-      deallocate(gllke_x2, stat=ist)
       !--------------------------------------------------------
     endif ! LLY
     
@@ -405,28 +389,30 @@ module KKRmat_mod
 
     if (Lly == 1) then ! LLY
       !--------------------------------------------------------
-      !                /  -1    dM  \
-      ! calculate  Tr  | M   * ---- | 
-      !                \        dE  /
+      !                / /  -1    dM  \     -1 \
+      ! calculate  Tr  | | M   * ---- |  * T   | 
+      !                \ \        dE  /        /
+
 
       tracek = zero
-
-      do lm2 = 1, lmsd
-        do lm1 = 1, lmsd
-          gtdPdE = zero
-          do il1 = 1, num_trunc_atoms
-            do lm3 = 1, lmsd
-              gtdPdE = gtdPdE + op%mat_X(lm3,lm2,il1)*dPdE_local(lmsd*(il1 - 1) + lm3,lm1)
-            enddo ! lm3
-          enddo ! il1
-          tracek = tracek + mssq(lm1,lm2,1)*gtdPdE
-        enddo ! lm1
-      enddo ! lm2
-
+      do i1=1,num_trunc_atoms ! loop over atoms (=num_trunc_atoms)
+        call zgemm('t','n',lmsd,lmsd,lmsd,cone,op%mat_X(:,:,i1),lmsd,dPdE_local(:,:,i1),lmsd,zero,MinvdMdE(:,:,i1),lmsd)  ! perform M^-1*dM/dE for transposed (!) lm-block of atom i1
+        call zgemm('n','n',lmsd,lmsd,lmsd,cone,MinvdMdE(:,:,i1),lmsd,mssq(:,:,1),lmsd,zero,TinvMinvdMdE(:,:,i1),lmsd)  ! perform M^-1*dM/dE*T^-1(E) for lm-block of atom i1
+        do lm1=1,lmsd ! calculate trace of M^-1*dM/dE
+          tracek = tracek + TinvMinvdMdE(lm1,lm1,i1)
+        enddo
+      enddo
       bztr2 = bztr2 + tracek*volcub(ikpoint)
-      !--------------------------------------------------------
-      deallocate(dPdE_local, stat=ist)
-    endif ! LLY
+
+
+      ! Deallocate additional arrays for Lloyd's formula
+      deallocate(dPdE_local)
+      deallocate(MinvdMdE) 
+      deallocate(TinvMinvdMdE) 
+      deallocate(dgde)
+      deallocate(gllke_x)
+     
+   endif ! LLY
 
   endsubroutine ! kloopbody
 

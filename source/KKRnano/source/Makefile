@@ -68,8 +68,8 @@ ifeq ($(PLATFORM),ifort)
 endif
 
 ifeq ($(PLATFORM),gfortran)
-	FC = mpif77
-	FC90 = mpif90 
+	FC = mpifort
+	FC90 = mpifort 
 	FCFLAGS += -B $(BUILDDIR)
 	# -J <path> specifies where to put .mod files
 	FCFLAGS += -J $(BUILDDIR)  
@@ -87,8 +87,7 @@ ifeq ($(PLATFORM),gfortran)
 	FC90FLAGS = -ffree-line-length-0
 	PPFLAGS += -D NOLOGGING
 	# FCFLAGS += -D TASKLOCAL_FILES ### breaks when TASKLOCAL_FILES is used
-	LDFLAGS += -g -O3 -L/usr/local/intel/mkl/10.2.5.035/lib/64 -llapack -lblas
-	FCFLAGS += -g
+	LDFLAGS += -L /usr/local/atlas/lib -llapack -lf77blas -lcblas -latlas
 endif
 
 
