@@ -310,13 +310,13 @@ module KKRmat_mod
      allocate(dgde(lmsd,lmsd))
      allocate(gllke_x(lmsd,lmsd))
 
-     do i1=1,num_trunc_atoms ! loop over target atoms (=num_trunc_atoms)
+     do i1 = 1, num_trunc_atoms ! loop over target atoms (=num_trunc_atoms)
        idx_lly = op%bsr_A%rowstart(global_atom_idx_lly)+i1-1 ! fetch entry index in mat_A that corresponds to G_ref^(global_atom_idx_lly,i1)
        dgde = op%mat_A(:,:,idx_lly,1) ! load on-site dG_ref/dE for atom i1
        gllke_x = op%mat_A(:,:,idx_lly,0) ! load on-site G_ref for atom i1
        call zgemm('t','n',lmsd,lmsd,lmsd,cone,dgde(:,:),lmsd,tmatLL(:,:,global_atom_idx_lly,0),lmsd,zero,dPdE_local(:,:,i1),lmsd)  ! perform dG_ref/dE*T(E) for transposed (!) lm-block of atom i1
        call zgemm('t','n',lmsd,lmsd,lmsd,cfctorinv,gllke_x(:,:),lmsd,tmatLL(:,:,global_atom_idx_lly,1),lmsd,cone,dPdE_local(:,:,i1),lmsd)  ! perform G_ref*dT(E)/dE for transposed (!) lm-block of atom i1
-     enddo
+     enddo ! i1
 
 
       !--------------------------------------------------------
@@ -395,13 +395,13 @@ module KKRmat_mod
 
 
       tracek = zero
-      do i1=1,num_trunc_atoms ! loop over atoms (=num_trunc_atoms)
+      do i1 = 1, num_trunc_atoms ! loop over atoms (=num_trunc_atoms)
         call zgemm('t','n',lmsd,lmsd,lmsd,cone,op%mat_X(:,:,i1),lmsd,dPdE_local(:,:,i1),lmsd,zero,MinvdMdE(:,:,i1),lmsd)  ! perform M^-1*dM/dE for transposed (!) lm-block of atom i1
         call zgemm('n','n',lmsd,lmsd,lmsd,cone,MinvdMdE(:,:,i1),lmsd,mssq(:,:,1),lmsd,zero,TinvMinvdMdE(:,:,i1),lmsd)  ! perform M^-1*dM/dE*T^-1(E) for lm-block of atom i1
-        do lm1=1,lmsd ! calculate trace of M^-1*dM/dE
+        do lm1 = 1, lmsd ! calculate trace of M^-1*dM/dE
           tracek = tracek + TinvMinvdMdE(lm1,lm1,i1)
-        enddo
-      enddo
+        enddo ! lm1
+      enddo ! i1
       bztr2 = bztr2 + tracek*volcub(ikpoint)
 
 
