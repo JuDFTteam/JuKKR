@@ -7,3 +7,11 @@
 ################
 *.log
 *.aux
+
+*.swp
+# scoef_maker #
+###############
+codes/scoef_maker/*
+!codes/scoef_maker/scoef_maker.F90
+!codes/scoef_maker/test_scoef
+!codes/scoef_maker/makefile
