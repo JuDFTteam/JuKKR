@@ -191,7 +191,7 @@
   if (ldos .and. ldosdmat) call density_matrix(lgsonsite,lgsstruct)
 ! ----------------------------------------------------------------------
 ! Interpolation of charge and magnetization density on regular grid
-  if(lsusc .AND. lcurrcorr) call rho_interpolation()
+  if (lsusc .AND. lcurrcorr .AND. lcurrcorrint) call rho_interpolation()
 ! ----------------------------------------------------------------------
   call cpu_time(finish)
   deallocate(gfsum,egfsum,tgfsum)

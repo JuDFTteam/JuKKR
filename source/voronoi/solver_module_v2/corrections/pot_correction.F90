@@ -180,14 +180,17 @@
 ! allocate grad_mass
   if(lscalarcorr) then
     if(allocated(grad_mass)) deallocate(grad_mass)
-    allocate(grad_mass(1:3,1:nrmax,1:lmmax,1:nasusc))
-    grad_mass(:,:,:,:)=0.d0
-!    do ie=1,nesusc
-    ie = nesusc
+    allocate(grad_mass(1:3,1:nrmax,1:lmmax,1:nasusc,1:nesusc))
+    grad_mass(:,:,:,:,:)=0.d0
+    open(unit=229,file="scalar_rel_mass.dat")
+    open(unit=239,file="scalar_rel_mass_deriative.dat")
+    do ie = 1,nesusc
       do ia=1,nasusc
-        call build_grad_mass(c,esusc(ie),zat(ia),nrpts(ia),rmesh(:,ia),vr(:,ia),socscaling(ia),ia)
+        call build_grad_mass(c,esusc(ie),zat(ia),nrpts(ia),rmesh(:,ia),vr(:,ia),ia,ie)
       end do
-!    end do
+    end do
+    close(229)
+    close(239)
   end if
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Loop over energies for susc sum rule
@@ -382,7 +385,6 @@
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! Compute the static susceptibility and the kernels
 !  if (lsusc) call static_susc_more(onsite,struct)
-! Added by Sascha:
   if (lsusc .and. lcurrcorr) call gradient_susc_basis
   if (lsusc) call static_susc2(onsite,struct)
   if (lsusc .and. lkxc .and. lsumrule) call kxc_sumrule
