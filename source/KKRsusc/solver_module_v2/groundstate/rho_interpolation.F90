@@ -15,7 +15,6 @@
   character(len=1024) :: filename
 
   
-  work = rho_lm
 ! ----------------------------------------------------- 
 ! only for ia = 1 
 ! Generalization easily possible if needed
@@ -37,15 +36,13 @@
   lmax4 = i2lm(2,lmmax4)
 
 ! setting up the cubic spline interpolation
-! work2(1,:,:,ia)=(work(2,:,:,ia)-work(1,:,:,ia))/(r(2)-r(1))         !derivative at left bound
-! work2(2,:,:,ia)=(work(nr,:,:,ia)-work(nr-1,:,:,ia))/(r(nr)-r(nr-1)) !derivative at right bound
   do is = 0,3
     do ilm = 1,lmmax2
 !     calculate second derivate of m_lm, which is used for the spline interpolation
 !     work3 is array with second derivative
 !     call spline(r,work(1:nr,ilm,is,ia),nr,work2(1,ilm,is,ia),work2(2,ilm,is,ia),work3(1:nr,ilm,is,ia))
       write(*,*) numpan, numrcut(:)
-      call spline_panels(r,work(1:nr,ilm,is,ia),nr,work3(1:nr,ilm,is,ia),numpan, numrcut(:))
+      call spline_panels(r,rho_lm(1:nr,ilm,is,ia),nr,work3(1:nr,ilm,is,ia),numpan, numrcut(:))
     end do
   end do
 
@@ -63,7 +60,7 @@
           !write(*,*) i,j,k
             do is = 0,3
               do ilm=1,lmmax2
-                call splint(r,work(:,ilm,is,ia),work3(:,ilm,is,ia),nr,rtmp,ctmp)
+                call splint(r,rho_lm(:,ilm,is,ia),work3(:,ilm,is,ia),nr,rtmp,ctmp)
                 rho_int(is,i,j,k)=rho_int(is,i,j,k)+ctmp*ylmtmp(ilm)
               end do
             end do

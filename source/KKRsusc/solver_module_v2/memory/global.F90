@@ -454,7 +454,7 @@
 ! --> all non-zero components of groundstate charge and magnetization densities
   real(kind=r8b),    allocatable :: old_rho2ns(:,:,:,:), gs_qlm(:,:), gs_mlm(:,:), new_rho2ns(:,:,:,:)
 ! --> charge and magnetization densities (not projected)
-  real(kind=r8b),    allocatable :: rho_lm(:,:,:,:)
+  complex(kind=c8b), allocatable :: rho_lm(:,:,:,:)
 ! --> density matrix integrated over WS sphere
   complex(kind=c8b), allocatable :: rhomat(:,:,:)
 ! --> xc kernel
