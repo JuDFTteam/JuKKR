@@ -41,7 +41,7 @@
     endif
     ien = numrcut(ip+1) - nrpts0(1) + 1                               
   
-    call spline_panels2(r,y,ist,ien,y1(ist),y1(ien),y2(ist:ien))
+    call spline_panels2(r(ist:ien),y(ist:ien),ist,ien,y1(ist),y1(ien),y2(ist:ien))
   end do ! panels
 
   end subroutine spline_panels_complex
@@ -81,7 +81,7 @@
     endif
     ien = numrcut(ip+1) - nrpts0(1) + 1                               
   
-    call spline_panels2(r,y,ist,ien,y1(ist),y1(ien),y2(ist:ien))
+    call spline_panels2(r(ist:ien),y(ist:ien),ist,ien,y1(ist),y1(ien),y2(ist:ien))
   end do ! panels
 
   end subroutine spline_panels_real

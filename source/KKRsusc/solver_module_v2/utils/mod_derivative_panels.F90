@@ -36,8 +36,6 @@
       endif
       ien = numrcut(ip+1) - nrpts0(1) + 1                               
 !     forward difference
-      write(*,*) 'ist = ', ist
-      write(*,*) 'nr = ', nr
       dfdr(ist)= (f(ist+1)-f(ist))/(r(ist+1)-r(ist))
 !     central differences with a second order approach (for non uniform r grid)
       do ir=ist+1, ien-1

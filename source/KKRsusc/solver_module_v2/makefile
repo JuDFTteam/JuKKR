@@ -40,7 +40,7 @@ UTILS    = $(OBJ)/radint.o $(OBJ)/ymy_gaunts.o $(OBJ)/rymy.o \
            $(OBJ)/bessel_new.o $(OBJ)/free_gf.o $(OBJ)/ratval.o \
            $(OBJ)/ratroots.o $(OBJ)/least_squares.o $(OBJ)/ratval2.o \
            $(OBJ)/rotvec.o $(OBJ)/mod_derivative_panels.o $(OBJ)/ymy.o \
-           $(OBJ)/spline.o $(OBJ)/mod_spline_panels.o $(OBJ)/mod_spline_panels2.o \
+           $(OBJ)/spline.o $(OBJ)/mod_spline_panels2.o $(OBJ)/mod_spline_panels.o \
            $(OBJ)/splint.o 
 
 PROJDIR  = projection
@@ -205,11 +205,11 @@ $(OBJ)/mod_derivative_panels.o: $(UTILSDIR)/mod_derivative_panels.F90
 $(OBJ)/spline.o: $(UTILSDIR)/spline.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
-$(OBJ)/mod_spline_panels.o: $(UTILSDIR)/mod_spline_panels.F90
-	$(FC) $(FDBFLAGS) -c -I$(OBJ) $< -o $@; mv mod_spline_panels.mod $(OBJ)/
-
 $(OBJ)/mod_spline_panels2.o: $(UTILSDIR)/mod_spline_panels2.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@; mv mod_spline_panels2.mod $(OBJ)/
+
+$(OBJ)/mod_spline_panels.o: $(UTILSDIR)/mod_spline_panels.F90
+	$(FC) $(FDBFLAGS) -c -I$(OBJ) $< -o $@; mv mod_spline_panels.mod $(OBJ)/
 
 $(OBJ)/splint.o: $(UTILSDIR)/splint.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
