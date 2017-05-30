@@ -106,6 +106,11 @@
 !    call get_xc2(ia,lmmax4,kxclm)
 !    call get_xc_basis(ia,lmmax2,gfsum,kxc,kxcbasis(:,:,ia))
 ! ----------------------------------------------------------------
+! Interpolation of charge and magnetization density on regular grid
+    if (ia==1) then
+      if ((lsusc .AND. lcurrcorr .AND. lcurrcorrint) .OR. (lcurrent .AND. lcurrentint)) call rho_interpolation()
+    end if
+! ----------------------------------------------------------------------
   end do
   if(lcurrent) then
     close(220); close(221); close(222); close(223)
@@ -189,9 +194,6 @@
 ! ----------------------------------------------------------------------
 ! output density matrix for selected atoms and l-channels
   if (ldos .and. ldosdmat) call density_matrix(lgsonsite,lgsstruct)
-! ----------------------------------------------------------------------
-! Interpolation of charge and magnetization density on regular grid
-  if ((lsusc .AND. lcurrcorr .AND. lcurrcorrint) .OR. (lcurrent .AND. lcurrentint)) call rho_interpolation()
 ! ----------------------------------------------------------------------
   call cpu_time(finish)
   deallocate(gfsum,egfsum,tgfsum)

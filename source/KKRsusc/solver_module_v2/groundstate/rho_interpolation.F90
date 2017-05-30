@@ -41,6 +41,7 @@
 !     calculate second derivate of m_lm, which is used for the spline interpolation
 !     work3 is array with second derivative
 !     call spline(r,work(1:nr,ilm,is,ia),nr,work2(1,ilm,is,ia),work2(2,ilm,is,ia),work3(1:nr,ilm,is,ia))
+      write(*,*) npanat(ia), ircutat(:,ia)
       call spline_panels(r,work(1:nr,ilm,is,ia),nr,work3(1:nr,ilm,is,ia),npanat(ia),ircutat(:,ia))
     end do
   end do
