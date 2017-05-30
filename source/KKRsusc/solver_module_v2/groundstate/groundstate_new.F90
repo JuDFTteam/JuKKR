@@ -97,6 +97,11 @@
     end if
 ! Compute DOS
     if (ldos) call density_of_states(ia,lgsonsite,lgsstruct)
+! ----------------------------------------------------------------------
+! Interpolation of charge and magnetization density on regular grid
+    if(ia==1) then
+      if ((lsusc .AND. lcurrcorr .AND. lcurrcorrint) .OR. (lcurrent .AND. lcurrentint)) call rho_interpolation()
+    end if
 !    write(*,*) "before density matrix"
 ! ----------------------------------------------------------------
 ! xc-potential and energy
@@ -189,9 +194,6 @@
 ! ----------------------------------------------------------------------
 ! output density matrix for selected atoms and l-channels
   if (ldos .and. ldosdmat) call density_matrix(lgsonsite,lgsstruct)
-! ----------------------------------------------------------------------
-! Interpolation of charge and magnetization density on regular grid
-  if ((lsusc .AND. lcurrcorr .AND. lcurrcorrint) .OR. (lcurrent .AND. lcurrentint)) call rho_interpolation()
 ! ----------------------------------------------------------------------
   call cpu_time(finish)
   deallocate(gfsum,egfsum,tgfsum)
