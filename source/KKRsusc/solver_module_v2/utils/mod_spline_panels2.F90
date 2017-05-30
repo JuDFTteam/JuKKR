@@ -76,7 +76,7 @@
 ! #############################################################
   integer(kind=i4b), parameter        :: nmax=1000
   integer(kind=i4b)                   :: i,k
-  complex(kind=c8b)                   :: p,qn,un,u(nmax)
+  real(kind=r8b)                      :: p,qn,un,u(nmax)
   real(kind=r8b)                      :: sig
   
 ! if derivative at the left border is too large take second derivative as zero
@@ -109,4 +109,5 @@
     y2(k)=y2(k)*y2(k+1)+u(k)
   end do
   
-  end subroutine spline_panels2_complex
+  end subroutine spline_panels2_real
+  end module mod_spline_panels2

@@ -1,12 +1,12 @@
   subroutine rho_interpolation(numpan,numrcut)
   use global
+  use mod_spline_panels
 
   implicit none
 
 ! --> Number of panels > 1
   integer(kind=i4b), intent(in)       :: numpan, numrcut(numpan+1) 
 ! ---------------------------------------------------------------------------
-  complex(kind=c8b)           :: work(1:nrmax,1:lmmax2,0:3,1:nasusc2) ! ,work2(1:nrmax,1:lmmax2,0:3,1:nasusc2)
   complex(kind=c8b)           :: work3(1:nrmax,1:lmmax2,0:3,1:nasusc2)
   integer(kind=i4b)           :: i4(4),i3(3),ilm,jlm,ib,jb,is,js,ia,ja,ia2,ja2,lmax4,jq,iq,i,j,k,nr,ir
   complex(kind=c8b)           :: block(1:4,1:4),czero=0.d0,cone=(1.d0,0.d0),ci=(0.d0,1.d0)

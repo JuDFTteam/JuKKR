@@ -3,7 +3,8 @@
 ! lm decompositon and interpolation on regular grid
 
   use global
-  use derivative_panels
+  use mod_derivative_panels
+  use mod_spline_panels
   implicit none
 
   complex(kind=c8b), intent(in)   :: curr_lm(1:nrmax,1:3,1:lmmax4,1:4,1:4,1:nasusc2)

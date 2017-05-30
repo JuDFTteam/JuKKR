@@ -3,7 +3,8 @@
 ! Uniform magnetic field acting on the first atom is assumed => (0,0) component of r' dependence
 ! routine is only working for ia ==1
   use global
-  use derivative_panels
+  use mod_derivative_panels
+  use mod_spline_panels
   implicit none 
  
   integer(kind=i4b), intent(in)  :: iw

@@ -1,5 +1,6 @@
   subroutine current_interpolation(curr_lm,lmmaxJ,r,nr,curr_int,ia,spin,numpan,numrcut)
   use global, only: i4b,r8b,c8b,i2lm,ri,lpositions,n_int
+  use mod_spline_panels
   implicit none
   
   integer(kind=i4b), intent(in)  :: nr,lmmaxJ,ia,spin

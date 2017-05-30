@@ -3,7 +3,7 @@
 ! lm decompositon and interpolation on regular grid
 
   use global
-  use derivative_panels
+  use mod_derivative_panels
   implicit none
 
   integer(kind=i4b), intent(in)   :: iw

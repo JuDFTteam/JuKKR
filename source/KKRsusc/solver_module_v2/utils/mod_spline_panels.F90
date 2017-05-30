@@ -15,7 +15,8 @@
 !       first derivatives y1
 ! output: second derivative y2
   use global, only: i4b,r8b,c8b,npanat,ircutat, nrpts0
-  use derivative_panels
+  use mod_derivative_panels
+  use mod_spline_panels2
 
   implicit none
   
@@ -54,7 +55,8 @@
 !       first derivatives y1
 ! output: second derivative y2
   use global, only: i4b,r8b,c8b,npanat,ircutat, nrpts0
-  use derivative_panels
+  use mod_derivative_panels
+  use mod_spline_panels2
 
   implicit none
   
@@ -83,3 +85,4 @@
   end do ! panels
 
   end subroutine spline_panels_real
+  end module mod_spline_panels

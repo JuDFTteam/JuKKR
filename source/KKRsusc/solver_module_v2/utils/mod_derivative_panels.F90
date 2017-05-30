@@ -1,4 +1,4 @@
-  module derivative_panels 
+  module mod_derivative_panels 
 
   interface calc_derivative_panels
     module procedure calc_derivative_panels_real, calc_derivative_panels_complex
@@ -97,4 +97,4 @@
     end do ! panels
 
     end subroutine calc_derivative_panels_real
-end module derivative_panels
+end module mod_derivative_panels
