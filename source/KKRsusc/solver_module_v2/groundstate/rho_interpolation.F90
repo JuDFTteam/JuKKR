@@ -1,7 +1,10 @@
-  subroutine rho_interpolation()
+  subroutine rho_interpolation(numpan,numrcut)
   use global
 
   implicit none
+
+! --> Number of panels > 1
+  integer(kind=i4b), intent(in)       :: numpan, numrcut(numpan+1) 
 ! ---------------------------------------------------------------------------
   complex(kind=c8b)           :: work(1:nrmax,1:lmmax2,0:3,1:nasusc2) ! ,work2(1:nrmax,1:lmmax2,0:3,1:nasusc2)
   complex(kind=c8b)           :: work3(1:nrmax,1:lmmax2,0:3,1:nasusc2)
@@ -41,8 +44,8 @@
 !     calculate second derivate of m_lm, which is used for the spline interpolation
 !     work3 is array with second derivative
 !     call spline(r,work(1:nr,ilm,is,ia),nr,work2(1,ilm,is,ia),work2(2,ilm,is,ia),work3(1:nr,ilm,is,ia))
-      write(*,*) npanat(ia), ircutat(:,ia)
-      call spline_panels(r,work(1:nr,ilm,is,ia),nr,work3(1:nr,ilm,is,ia),npanat(ia),ircutat(:,ia))
+      write(*,*) numpan, numrcut(:)
+      call spline_panels(r,work(1:nr,ilm,is,ia),nr,work3(1:nr,ilm,is,ia),numpan, numrcut(:))
     end do
   end do
 

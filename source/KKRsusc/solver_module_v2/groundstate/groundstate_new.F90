@@ -108,7 +108,7 @@
 ! ----------------------------------------------------------------
 ! Interpolation of charge and magnetization density on regular grid
     if (ia==1) then
-      if ((lsusc .AND. lcurrcorr .AND. lcurrcorrint) .OR. (lcurrent .AND. lcurrentint)) call rho_interpolation()
+      if ((lsusc .AND. lcurrcorr .AND. lcurrcorrint) .OR. (lcurrent .AND. lcurrentint)) call rho_interpolation(npanat(ia),ircutat(:,ia))
     end if
 ! ----------------------------------------------------------------------
   end do
