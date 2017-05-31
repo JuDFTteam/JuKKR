@@ -200,7 +200,7 @@ $(OBJ)/rotvec.o: $(UTILSDIR)/rotvec.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 $(OBJ)/mod_derivative_panels.o: $(UTILSDIR)/mod_derivative_panels.F90
-	$(FC) $(FDBFLAGS) -c -I$(OBJ) $< -o $@; mv mod_derivative_panels.mod $(OBJ)/
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@; mv mod_derivative_panels.mod $(OBJ)/
 
 $(OBJ)/spline.o: $(UTILSDIR)/spline.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
@@ -209,7 +209,7 @@ $(OBJ)/mod_spline_panels2.o: $(UTILSDIR)/mod_spline_panels2.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@; mv mod_spline_panels2.mod $(OBJ)/
 
 $(OBJ)/mod_spline_panels.o: $(UTILSDIR)/mod_spline_panels.F90
-	$(FC) $(FDBFLAGS) -c -I$(OBJ) $< -o $@; mv mod_spline_panels.mod $(OBJ)/
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@; mv mod_spline_panels.mod $(OBJ)/
 
 $(OBJ)/splint.o: $(UTILSDIR)/splint.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
@@ -428,7 +428,7 @@ $(OBJ)/density_matrix.o: $(GSDIR)/density_matrix.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 $(OBJ)/rho_interpolation.o: $(GSDIR)/rho_interpolation.F90
-	$(FC) $(FDBFLAGS) -c -I$(OBJ) $< -o $@
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 ########################################################################
 #                       Corrections module
