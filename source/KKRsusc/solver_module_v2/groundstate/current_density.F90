@@ -3,7 +3,7 @@
 ! the net-current contribution to the orbital magnetic moment for atom ia
 
   use global
-  use derivative_panels
+  use mod_derivative_panels
 
   implicit none
 
