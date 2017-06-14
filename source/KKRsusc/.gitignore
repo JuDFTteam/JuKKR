@@ -7,7 +7,7 @@
 ################
 *.log
 *.aux
-
+user_guide/NEW_FORMAT/main.pdf
 *.swp
 # scoef_maker #
 ###############

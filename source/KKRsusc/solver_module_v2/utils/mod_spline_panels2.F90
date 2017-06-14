@@ -26,7 +26,6 @@
   complex(kind=c8b)                   :: p,qn,un,u(nmax)
   real(kind=r8b)                      :: sig
   
-  write(*,*) n0,n1
 ! if derivative at the left border is too large take second derivative as zero
   if(abs(ypn0) .gt. 0.99e30) then
     y2(n0)=0.d0
