@@ -98,10 +98,6 @@
 ! Compute DOS
     if (ldos) call density_of_states(ia,lgsonsite,lgsstruct)
 ! ----------------------------------------------------------------------
-! Interpolation of charge and magnetization density on regular grid
-    if(ia==1) then
-      if ((lsusc .AND. lcurrcorr .AND. lcurrcorrint) .OR. (lcurrent .AND. lcurrentint)) call rho_interpolation()
-    end if
 !    write(*,*) "before density matrix"
 ! ----------------------------------------------------------------
 ! xc-potential and energy
@@ -113,7 +109,9 @@
 ! ----------------------------------------------------------------
 ! Interpolation of charge and magnetization density on regular grid
     if (ia==1) then
-      if ((lsusc .AND. lcurrcorr .AND. lcurrcorrint) .OR. (lcurrent .AND. lcurrentint)) call rho_interpolation(npanat(ia),ircutat(:,ia))
+! Interpolation is not working with the panels
+! SIGSEV in line 35 of  mod_spline_panels2.F90
+!      if ((lsusc .AND. lcurrcorr .AND. lcurrcorrint) .OR. (lcurrent .AND. lcurrentint)) call rho_interpolation(npanat(ia),ircutat(:,ia))
     end if
 ! ----------------------------------------------------------------------
   end do
