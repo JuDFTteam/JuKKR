@@ -34,7 +34,7 @@ ifeq ($(PLATFORM),ifort)
 	FC90 = mpiifort -warn all
 	# -module <path> specifies where to put .mod files
   	ifeq ($(SMP),openmp)
- 		FCFLAGS += -qopenmp
+ 		FCFLAGS += -openmp
         endif
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
@@ -61,6 +61,10 @@ ifeq ($(PLATFORM),ifort)
  	else ifeq ($(TYPE),voronoi_mesh_debug_light)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else ifeq ($(TYPE),voronoi_mesh_print_mtradii)
+		FCFLAGS += -O0 -g
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH -D PRINT_MTRADII
+
 	else
 		FCFLAGS += -O3
 		PPFLAGS += -D NOLOGGING
