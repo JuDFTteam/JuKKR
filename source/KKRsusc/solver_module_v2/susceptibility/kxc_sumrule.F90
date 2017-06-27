@@ -102,6 +102,7 @@
   do q2=1,jqmax
     do q1=1,iqmax
       kernel(q1,q2) = 0.5d0*(kssusc0(iqp(q1),iqm(q2)) + kssusc0(iqm(q1),iqp(q2)))
+      kernel(q1,q2) = kernel(q1,q2) + 0.5d0*(kssusc0(iqp(q1),iqp(q2)) + kssusc0(iqm(q1),iqm(q2)))
     end do
   end do
 !  do iq=1,iqmax
