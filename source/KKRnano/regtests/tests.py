@@ -136,6 +136,6 @@ class Test_semiconductors(unittest.TestCase):
             self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=2**r), Etot, DECIMALS)
         ### Lloyd formula
         self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=8, Lly=1), -7405.74826372, DECIMALS)
-        self.assertAlmostEqual(KKRnano("ZnO", nranks=8, Lly=1), -7405.74826397, DECIMALS)
+        self.assertAlmostEqual(KKRnano("ZnO", nranks=8, Lly=1), -7405.74826372, DECIMALS)
 
 unittest.main()

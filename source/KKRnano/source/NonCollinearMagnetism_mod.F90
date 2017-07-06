@@ -4603,6 +4603,18 @@ if (angle_fixed == 0) then ! angle not fixed
 
 else ! angle fixed
 
+  rho2ns_temp(1,1)=rho2int(1)
+  rho2ns_temp(2,2)=rho2int(2)
+  rho2ns_temp(1,2)=rho2int(3)
+  rho2ns_temp(2,1)=rho2int(4)
+  
+  CALL rotatematrix(rho2ns_temp,theta,phi,1,0)
+  
+  rho2int(1)=rho2ns_temp(1,1)
+  rho2int(2)=rho2ns_temp(2,2)
+  rho2int(3)=rho2ns_temp(1,2)
+  rho2int(4)=rho2ns_temp(2,1)
+
   moment(1)=DIMAG(rho2int(3)+rho2int(4))
   moment(2)=-REAL(rho2int(3)-rho2int(4))
   moment(3)=DIMAG(-rho2int(1)+rho2int(2))

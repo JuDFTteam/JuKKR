@@ -214,7 +214,7 @@ program KKRnano
 #endif
       global_atom_id = calc_data%atom_ids(ila) ! get global atom_id from local index
 #ifdef PRINT_MTRADII
-      write(unit=num, '(A,I7.7)') "mtradii_out.",global_atom_id
+      write(unit=num, fmt="(A,I7.7)") "mtradii_out.",global_atom_id
       open(20, file=num, action='write')
       write(20,*) atomdata%rMTref
       write(20,*) atomdata%radius_muffin_tin
@@ -222,7 +222,7 @@ program KKRnano
       close(20)
 #endif
 #ifdef USE_MTRADII
-      write(unit=num, '(A,I7.7)') "mtradii_in.",global_atom_id
+      write(unit=num, fmt="(A,I7.7)") "mtradii_in.",global_atom_id
       open(20, file=num, action='read', status='old')
       read(20,*) atomdata%rMTref
       read(20,*) atomdata%radius_muffin_tin

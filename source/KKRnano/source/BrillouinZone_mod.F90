@@ -78,7 +78,7 @@ module BrillouinZone_mod
     logical :: lirr
     double precision :: rsymat(3,3,64)
     character(len=10) :: rotname(64)
-    integer :: lmmaxd, iprint, i
+    integer :: iprint ! lmmaxd, i
 
 
     write(6,'(79(1h=),/,15x,a)') 'BZKINT0: finding symmetry, setting BZ integration'

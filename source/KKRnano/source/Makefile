@@ -34,7 +34,7 @@ ifeq ($(PLATFORM),ifort)
 	FC90 = mpiifort -warn all
 	# -module <path> specifies where to put .mod files
   	ifeq ($(SMP),openmp)
- 		FCFLAGS += -qopenmp
+ 		FCFLAGS += -openmp
         endif
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
@@ -61,6 +61,10 @@ ifeq ($(PLATFORM),ifort)
  	else ifeq ($(TYPE),voronoi_mesh_debug_light)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else ifeq ($(TYPE),voronoi_mesh_print_mtradii)
+		FCFLAGS += -O0 -g
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH -D PRINT_MTRADII
+
 	else
 		FCFLAGS += -O3
 		PPFLAGS += -D NOLOGGING
@@ -68,8 +72,8 @@ ifeq ($(PLATFORM),ifort)
 endif
 
 ifeq ($(PLATFORM),gfortran)
-	FC = mpif77
-	FC90 = mpif90 
+	FC = mpifort
+	FC90 = mpifort 
 	FCFLAGS += -B $(BUILDDIR)
 	# -J <path> specifies where to put .mod files
 	FCFLAGS += -J $(BUILDDIR)  
@@ -87,8 +91,7 @@ ifeq ($(PLATFORM),gfortran)
 	FC90FLAGS = -ffree-line-length-0
 	PPFLAGS += -D NOLOGGING
 	# FCFLAGS += -D TASKLOCAL_FILES ### breaks when TASKLOCAL_FILES is used
-	LDFLAGS += -g -O3 -L/usr/local/intel/mkl/10.2.5.035/lib/64 -llapack -lblas
-	FCFLAGS += -g
+	LDFLAGS += -L /usr/local/atlas/lib -llapack -lf77blas -lcblas -latlas
 endif
 
 
