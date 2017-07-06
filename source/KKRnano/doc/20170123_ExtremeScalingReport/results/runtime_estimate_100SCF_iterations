@@ -1,0 +1,63 @@
+### NumberOfRacks TotalRuntime[s] SCFiteration[s] Total100Iterations[h] Total10Iterations[h]
+
+# 16MPI * 4omp
+1		750.65		642.468		17.88		1.81
+2		839.31		698.077		19.43		1.98
+4		973.22		844.514		23.49		2.38
+8		1223.35		1027.83		28.61		2.91
+16		1880.77		1639.937	45.62		4.62
+24		1077.4		683.331		19.09		2.01
+28		1210.65		696.96		19.50		2.08
+
+# 8MPI * 8omp
+1		714.09		613.018		17.06		1.73
+2		753.73		625.75		17.42		1.77
+#4 missing
+8		1003.47		841.891		23.43		2.38
+16		1371.8		1145.928	31.89		3.25
+24		2910.42		760.468		21.72		2.71
+28		2969.26		1858.197	51.93		5.47
+
+# 1MPI * 64omp
+1		883.21		720.088		20.05		2.05
+2		935.92		766.881		21.35		2.18
+4		1031.35		860.001		23.94		2.44
+8		1108.9		960.577		26.72		2.71
+16		1461.52		1231.897	34.28		3.49
+24		1923.07		1468.46		40.92		4.21
+28		2162.59		1672.94		46.61		4.78
+
+######## MnGeB20_weakscaling_cubic_massiveomp/32x32x24/run2/time-info:		1771.01		1391.629	38.76		3.97
+######## MnGeB20_weakscaling_cubic_massiveomp/32x32x28/run2/time-info:		2007.73		1512.262	42.14		4.34
+
+#									total[s]	SCF[s]		100 it[h]	10 iterations [h]
+# MnGeB20_weakscaling_cubic/16x16x16/run/time-info:			973.22		844.514		23.49		2.38
+# MnGeB20_weakscaling_cubic/16x16x8/run/time-info:			839.31		698.077		19.43		1.98
+# MnGeB20_weakscaling_cubic/16x8x8/run/time-info:			750.65		642.468		17.88		1.81
+# MnGeB20_weakscaling_cubic/32x16x16/run/time-info:			1223.35		1027.83		28.61		2.91
+# MnGeB20_weakscaling_cubic/32x32x16/run/time-info:			1880.77		1639.937	45.62		4.62
+# MnGeB20_weakscaling_cubic/32x32x24/run2/time-info:			1077.4		683.331		19.09		2.01
+# MnGeB20_weakscaling_cubic/32x32x28/run2/time-info:			1210.65		696.96		19.50		2.08
+
+# MnGeB20_weakscaling_cubic_fairomp/16x16x8/run/time-info:		753.73		625.75		17.42		1.77
+# MnGeB20_weakscaling_cubic_fairomp/16x8x8/run/time-info:		714.09		613.018		17.06		1.73
+# MnGeB20_weakscaling_cubic_fairomp/32x16x16/run/time-info:		1003.47		841.891		23.43		2.38
+# MnGeB20_weakscaling_cubic_fairomp/32x32x16/run/time-info:		1371.8		1145.928	31.89		3.25
+# MnGeB20_weakscaling_cubic_fairomp/32x32x24/run/time-info:		2910.42		760.468		21.72		2.71
+# MnGeB20_weakscaling_cubic_fairomp/32x32x28/run/time-info:		2969.26		1858.197	51.93		5.47
+
+# MnGeB20_weakscaling_cubic_massiveomp/16x16x16/run/time-info:		1031.35		860.001		23.94		2.44
+# MnGeB20_weakscaling_cubic_massiveomp/16x16x8/run/time-info:		935.92		766.881		21.35		2.18
+# MnGeB20_weakscaling_cubic_massiveomp/16x8x8/run/time-info:		883.21		720.088		20.05		2.05
+# MnGeB20_weakscaling_cubic_massiveomp/32x16x16/run/time-info:		1108.9		960.577		26.72		2.71
+# MnGeB20_weakscaling_cubic_massiveomp/32x32x16/run/time-info:		1461.52		1231.897	34.28		3.49
+# MnGeB20_weakscaling_cubic_massiveomp/32x32x24/run/time-info:		1923.07		1468.46		40.92		4.21
+# MnGeB20_weakscaling_cubic_massiveomp/32x32x24/run2/time-info:		1771.01		1391.629	38.76		3.97
+# MnGeB20_weakscaling_cubic_massiveomp/32x32x28/run/time-info:		2162.59		1672.94		46.61		4.78
+# MnGeB20_weakscaling_cubic_massiveomp/32x32x28/run2/time-info:		2007.73		1512.262	42.14		4.34
+
+# MnGeB20_weakscaling_cubic_moderateomp/16x16x16/run/time-info:		830.25		718.701		19.99		2.03
+# MnGeB20_weakscaling_cubic_moderateomp/16x16x8/run/time-info:		771.38		667.254		18.56		1.88
+# MnGeB20_weakscaling_cubic_moderateomp/16x8x8/run/time-info:		4664.67		4565.29		126.84		12.71
+# MnGeB20_weakscaling_cubic_moderateomp/16x8x8/run2/time-info:		1213.3		1116.335	31.04		3.13
+
