@@ -1,0 +1,458 @@
+\documentclass [a4paper, 12pt]{article}
+
+\usepackage{amssymb}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{times}
+\usepackage{float}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+\textwidth 16 cm
+\textheight 23 cm
+\setlength{\oddsidemargin}{0.1 cm}
+\setlength{\topmargin}{1 cm}
+\setlength{\headheight}{0cm}
+\setlength{\headsep}{0cm}
+\setlength{\footskip}{0.75cm}
+\setlength{\parindent}{0cm}
+\setlength{\oddsidemargin}{0.1 cm}
+\setlength{\itemsep}{10pt}
+\bibliographystyle{gcs}
+ 
+\begin{document}
+ 
+\begin{figure}[H]
+\begin{center}
+  \includegraphics[scale=0.45]{Figures/GCS-hlrs-fzj-lrz.jpg}\\
+\end{center}
+\end{figure}
+
+\begin{center}
+{\LARGE \bf Project Proposal for Tier0/Tier1 HPC Access} \\
+
+\bigskip
+\bigskip
+\bigskip
+\end{center}
+\textbf{Period}\\
+\phantom{MM}\textit{01.11.2017-31.10.2018}
+
+\bigskip
+\textbf{Project title}\\
+\phantom{MM}\textit{KKRnano: Quantum description of topological matter}
+
+\bigskip
+\textbf{Type of project}\\
+\phantom{MM} \textit{new project}
+
+%\bigskip
+%\textbf{Project ID}\\
+%\phantom{MM} \textit{Please provide in case of a project extension}
+
+\bigskip
+\textbf{Principal investigator}\\
+\phantom{MM} \textit{ Prof. Dr. Stefan Bl{\"u}gel,
+Forschungszentrum J{\"u}lich GmbH, 
+Wilhelm-Johnen-Straße,
+52428 J{\"u}lich 
+}
+
+\bigskip
+\textbf{Project contributor(s)}\\
+\phantom{MM} \textit{Name, affiliation, address}
+
+\newpage
+
+\vfill
+\tableofcontents
+\vfill
+
+\newpage
+
+
+
+\section{Introduction}
+\rule{\textwidth}{0.4pt}\\
+\textit{Give a short outline of the scientific background of your research, including references.}\\
+
+\textit{(about 1 page)}
+
+We developed a unique electronic structure code, called KKRnano \cite{zeller_towards_2008,thiess_massively_2012},
+specifically designed for petaFLOP computing. Our methodology scales linearly
+with the number of treated atoms so that we can realize system sizes of up to 
+458752  atoms in a unit cell. This has already been shown on the full JUQUEEN
+machine \cite{brommel_juqueen_2017}. Recently, we implemented a relativistic generalization of our algorithm 
+enabling us to calculate complex non-collinear magnetic structures such as skyrmions
+in real space. Skyrmions, are two-dimensional magnetization solitons, i.e. two-dimensional
+magnetic structures localized in space, topologically protected by a non-trivial
+magnetization texture, which has particle-like properties. 
+These days, they constitute one of the hottest subjects in the field of 
+magnetism because such topological solitons are considered to be the smallest 
+information-carrying particles at room temperature \cite{fert_skyrmions_2013}.  
+We plan to perform large-scale density functional theory (DFT) calculations with 
+KKRnano for materials exhibiting these complex magnetic skyrmion textures on Hazel Hen 
+since test runs on this particular machine confirmed our expectations with regards to performance. 
+The focus of our work is on the germanide MnGe as it exhibits a three-dimensional magnetic structure,
+which is totally not understood so far (see preliminary results
+\cite{tanigaki_real-space_2015,bornemann_investigation_2017}).
+
+\section{Preliminary Work}
+\rule{\textwidth}{0.4pt}\\
+\textit{Provide a brief summary of your preliminary work in connection with the proposed project, including references.}\\
+
+\textit{(about 1 to 2 pages)}
+
+
+In the last two years we have completely modernized our code and considerably improved 
+its flexibility with respect to the number of cores and the number of MPI tasks and
+OpenMP threads which can used in production runs. By changing the computational algorithms
+we have also improved the computational efficiency of the both for conventional
+supercomputers (e.g. JUQUEEN) and the cluster-booster architecture
+(e.g. NVIDIA Tesla GPUs) \cite{dutot_addressing_2016}. 
+We have tested the new version of the code for a number of large systems, 
+in particular for MnGe supercells with B20 structure containing between 8192 and 458752 atoms,
+during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}). 
+
+\section{Description of the Project}
+\rule{\textwidth}{0.4pt}\\
+\subsection{Project Details}
+\textit{Describe your research project in detail, structured in sub-projects, if applicable. Include discussion of the scientific questions that you are planning to address and the overall scientific goals of the project. It is important that you describe the innovative aspects, impact and topicality of the proposal.}
+\begin{itshape}
+\begin{itemize}\setlength{\itemsep}{-2pt}
+  \item Scientific questions you want to address
+  \item Scientific objectives
+  \item Computational objectives
+  \item Approach and expected outcome
+  \item Expected impact on the research area
+  \item Scientific and technical innovation potential
+  \item Progress beyond the state-of-the-art
+\end{itemize}
+\end{itshape}
+
+\subsubsection{Sub-project 1}
+\textit{...}
+
+\subsubsection{Sub-project 2}
+\textit{...}\\
+
+\textit{(1 to 2 pages per sub-project)}
+
+\begin{figure}
+	\centering
+	\begin{subfigure}{.5\textwidth}
+		  \centering
+		  \includegraphics[width=.99\linewidth]{Figures/MnGe_skyrmion.png}
+		  %\caption{}
+		  \label{fig:sub1}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+		  \centering
+		  \includegraphics[width=.99\linewidth]{Figures/MnGe_antiskyrmion.png}
+	          %\caption{}
+                  \label{fig:sub2}
+	\end{subfigure}
+	\caption{Graphical representation of a Skyrmion (left) and an anti-skyrmion (right) 
+	with atom magnetization pointing in positive (red) and negative (blue) z-direction.}
+	\label{fig:test}
+\end{figure}
+
+This proposal is inspired by the recent discovery of magnetic skyrmion lattices in bulk helical magnets.
+In these systems a variety of phenomena can be of importance to the physics observed in experiment,
+e.g. the topological Hall effect and spin-transfer torque at ultra-low current densities
+\cite{kanazawa_large_2011}.
+Special attention has been drawn on cubic B20-type compounds with broken lattice inversion symmetry.
+These compounds form a class of materials in which skyrmion phases have been observed experimentally
+\cite{nagaosa_topological_2013}.
+In a recent study \cite{tanigaki_real-space_2015} 
+it was found by real-space observation transmission electron microscopy 
+that a cubic lattice of skyrmions and anti-skyrmions (see Fig. 1) exists in B20-MnGe with
+a lattice constant of about 3-6 nm. In contrast to other systems exhibiting a similar magnetic phase,
+here the rather small lattice allows for first-principles density functional (DFT) calculations. 
+\\
+MnGe is currently subject to extensive theoretical investigation in the solid state physics community.
+However, to the best of our knowledge large-scale DFT calculations have not yet been performed.
+We are confident that such calculations can provide new insight into the nature of
+the observed magnetic textures and the underlying creation mechanisms.
+At present there is a lack of a convincing explanation of what is observed in experiment. 
+Research in the framework of micromagnetic models identified both magnetic frustration (RKKY interaction) 
+as well as spin-orbit coupling induced Dzyaloshinskii-Moriya interaction as potentially
+crucial to a better understanding \cite{koretsune_control_2015,altynbaev_hidden_2016}.
+Based on our own model simulations we deem it
+possible that textures even more exotic than skyrmions and anti-skyrmions \cite{rybakov_new_2015}
+can be stabilized in MnGe.
+
+In the past months first KKRnano calculations for MnGe were conducted on the HPC machines JUQUEEN,
+JURECA and QPACE3. A 6x6x6 supercell of MnGe, which contains 1728 atoms, is large enough to cover 
+an edge length of 3 nm, and small enough for routine calculations with our code. Since one cannot 
+expect the skyrmion lattice period, which we hope to find in DFT calculations, to be exactly the 
+one observed in the experiments, we also plan to increase the size of the supercell to a 12x12x12
+supercell with 13824 atoms and a length of 6 nm. If necessary we can increase the size even
+to a 24x24x24 supercell with 110592 atoms as we demonstrated during the
+JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}
+where we managed to use the full machine in combination 
+with a linear scaling behavior.
+At the same event the High-Q club membership was renewed for KKRnano.
+
+
+\subsection{Review Processes}
+\textit{Has the underlying research project already successfully undergone a scientific review process? Is the project funded by public money?
+If yes, please also provide information about the funding source
+(e.g. State, BMWi, BMBF, DFG, EU, $\dots$)}
+
+The development of the KKR method in general and of the code KKRnano in particular has been recognized 
+by the Board of Directors of Forschungszentrum J{\"u}lich as important work in the interest of 
+Forschungszentrum J{\"u}lich. The Board of Directors has supported the work by a Helmholtz professorship 
+for Prof. Peter Dederichs, as the third Jülich scientist to be honored with the award,i
+after the Nobel Prize winner Prof. Peter Grünberg in 2007 and Prof. Siegfried Mantl in 2011. 
+The Board of Directors has also supported the work by authorizing the employment of Dr. Rudolf Zeller, 
+who reached the mandatory retirement age in Oct. 2014, as a part-time employee at least until Nov. 2017. 
+
+
+\section{Numerical Methods and Algorithms} 
+\rule{\textwidth}{0.4pt}\\
+\textit{Describe the numerical methods and algorithms that you are planning to use, improve, or develop.}\\
+ 
+\textit{(1 to 2 pages)}
+\bigskip
+
+The tfQMR solver accounts for the major part of the computational work.
+The Korringa-Kohn-Rostocker (KKR) formalism requires to solve a linear matrix
+equation of the form Ax=B, where A and B are complex matrices and x is a solution
+vector to the equation. In our particular case A and B are quadratic sparse matrices with NxN elements.
+Standard solving algorithms scale as $N^3$ which severely limits the treatable system size.
+However, the sparsity of A and B can be exploited by using customized iterative algorithms for sparse matrices.
+To avoid the $O(N^3)$ computational bottleneck of the density-functional calculations,
+in KKRnano the linear matrix equation is solved iteratively by the
+transpose free quasi minimal residual (tfQMR) method \cite{freund_qmr:_1991}.
+To achieve quadratically scaling computational effort it is important that A and B are sparse
+and that convergence of the tfQMR iterations is guaranteed. Sparsity of A
+is achieved by choosing a reference system of repulsive potentials and convergence
+of the tfQMR iterations is achieved by working in the complex energy plane. Both concepts,
+the repulsive reference system and application of complex energy have been
+introduced by us into the KKR method [19, 20] and are used worldwide since many years. 
+
+In KKRnano the tfQMR algorithm \cite{freund_qmr:_1991} was implemented which allows to
+achieve quadratic scaling $(N^2)$ with system size. By truncating inter-atomic
+interactions above a certain distance the scaling behavior can even be made linear.
+For super-large-scale calculations (above 100000 atoms) the electrostatics solver begins
+to require an amount of computing resources that is not negligible anymore. 
+The electrostatic problem is given in terms of a Poisson equation that connects electric field and potential. 
+Solving this equation scales quadratically with system size. 
+
+
+\section{Computer Resources}
+\rule{\textwidth}{0.4pt}\\
+\subsection{Code performance and workflow}
+\textit{Describe the codes, packages or libraries that you need to undertake the project, and how these will enable the research to be achieved. Include for \textbf{each code to be used} information about}
+\begin{itshape}
+\begin{itemize}\setlength{\itemsep}{-2pt}
+  \item Which code will be used
+  \item How is the code parallelized (pure MPI, mixed MPI/OpenMP, Pthreads, CUDA, etc.)
+  \item The amount of memory necessary (per core, per node and in total)
+  \item Scaling plots \textbf{and} tables with speedup results for runs with typical, parameter sets, problem size, and I/O \textbf{of the planned project} (no general benchmark results are accepted)
+  \item Describe architecture, machine/system name, and problem size used for the scaling plots
+  \item Current job profile (independent jobs, chained jobs, workflow, etc.)
+\end{itemize}
+\end{itshape}
+
+{\it \textbf{Important:} please take into account the corresponding technical guidelines and requirements (e.g. required minimal code scalability, memory restictions, etc.) of the machine you have chosen!}\\
+
+\textit{If you use third-party codes, include}
+\begin{itshape}
+\begin{itemize}\setlength{\itemsep}{-2pt}
+  \item Name, version, licensing model and conditions
+  \item Web page and other references
+  \item Contact information of the code developers.
+  \item Your relationship to the code (developer, collaborator to main developers, end user, etc.)
+\end{itemize}
+\end{itshape}
+\textit{Here we give an example table and plot for presenting scaling and performance information.}
+
+\begin{table}[H]
+\caption{\label{tab_scaling} Scaling behavior of {\tt $<$code$>$} on {\tt $<$architecture and system$>$} at {\tt $<$location$>$}. This test was performed with $5\cdot 10^6$ particles, absolute timings per timestep (s) and relative speedup normalized to 1024 cores are given.}
+\begin{center} 
+\setlength{\tabcolsep}{10pt}
+\renewcommand{\arraystretch}{1.2}
+ \begin{tabular}{lcccc}
+ \#cores  & absolute timing (s) & speedup  & Performance per core [MFLOP/s]\\
+\hline
+1024     & 189.6                        & 1.0000   & 600 \\
+2048     & \phantom{1}99.0      & 1.9154   & 576 \\
+4096     & \phantom{1}55.6      & 3.4088   & 511 \\
+8192     & \phantom{1}30.8      & 6.1376   & 460 \\
+
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\begin{table}[h!]
+	\caption{Scaling behaviour of KKRnano on JUQUEEN at Forschungszentrum J{\"u}lich. 
+		Total runtime (Total), tfQMR solver runtime (tfQMR) and electrostatics solver runtime (ES)
+		    in weak scaling measurement series employing moderate OpenMP parallelization
+		      with $16$ MPI ranks per node and $4$ threads per process. 
+		        Runtimes are given in seconds. (t) indicates the tuned version where final I/O is omitted.}
+			\begin{center}
+				\begin{tabular}{|c|r|r|r|r|r|r|}
+					\hline
+					 Supercell               & bg\_size & MPI ranks &   Threads &    Total & tfQMR &  ES \\
+					\hline\hline
+					$16 \times  8 \times  8$ &  1,024   &  16,384   &    65,536 &      750 &   432 &  84 \\
+					$16 \times 16 \times  8$ &  2,048   &  32,768   &   131,072 &      839 &   432 &  86 \\
+					$16 \times 16 \times 16$ &  4,096   &  65,536   &   262,144 &      973 &   430 &  96 \\
+					$32 \times 16 \times 16$ &  8,192   & 131,072   &   524,288 &     1223 &   431 & 113 \\
+					$32 \times 32 \times 16$ & 16,384   & 262,144   & 1,048,576 &     1880 &   432 & 196 \\
+					$32 \times 32 \times 24$ & 24,576   & 393,216   & 1,572,864 & (t) 1077 &   431 & 353 \\
+					$32 \times 32 \times 28$ & 28,672   & 458,752   & 1,835,008 & (t) 1210 &   430 & 470 \\
+					\hline
+				\end{tabular}
+			\end{center}
+			\label{kkrnano:mnge_weakscaling_moderateomp}
+		\end{table}
+
+\begin{figure}[H]
+\begin{center}
+ \includegraphics[scale=0.45]{Figures/total_runtimes.pdf}
+\end{center}
+\caption{Runtime of one self-consistent iteration with KKRnano 
+	on IBM BlueGene/Q at Forschungszentrum J{\"u}lich.
+	This data was obtained with a problem size ranging from 8192 atoms (1 rack) to 229376 atoms (28 racks).
+	Different distribution of MPI tasks (MPI) and openMP threads (omp) leads to slightly different runtimes.}
+\label{fig:total_runtimes}
+\end{figure}
+
+
+\begin{figure}[H]
+\begin{center}
+ \includegraphics[scale=0.45]{Figures/combinedtfqmrelectrostatics.pdf}
+\end{center}
+\caption{Time per iteration spent in the tfQMR solver (solid lines) 
+	and in the electrostatics solver (dashed lines) for the calculations depicted in
+	\cref{fig:total_runtimes}.}
+\label{fig:tfqmr_es_times}
+\end{figure}
+
+\textit{(1 to 2 pages)}
+\newpage
+\subsection{Justification of resources requested}
+\textit{Outline the amount of resources you request for the current granting period, structured in sub-projects, if applicable. This should include information such as}
+\begin{itshape}
+\begin{itemize}\setlength{\itemsep}{-2pt}
+    \item Type of run (e.g. pre- /post-processing run, production run, visualization, etc.)
+    \item Problem size for planned runs (e.g. \# particles or the like)
+    \item Number of runs planned
+    \item Number of steps per run
+    \item Wall-clock time per run
+    \item Number of cores/GPUs used per run
+    \item Total amount of requested computing time (core-hours and/or GPU-hours, if applicable)
+    \item Resources for data analytics, if applicable
+\end{itemize}
+\end{itshape}
+\textit{This information should take the form of a table like the example table shown below. Please, specify the requested time in appropriate units, preferred units are core hours (core-h) and GPU-hours.}\\
+
+
+
+\begin{tabular}{llcccccc} \hline\hline
+  Sub-project & 
+  Type &
+  Problem & 
+  \# runs & 
+  \# steps/ & 
+  Wall time/ & 
+  \# cores/ & 
+  Total \\
+  &
+  of run &
+  size  &
+  &
+  run &
+  step [hours] &
+  run &
+  [core-h] \\
+ \hline\hline
+  Sub-proj. 1 & 
+  Preproc. &
+  P1 & 
+  R1 & 
+  S1 &
+  W1 &
+  C1 &
+  R1$\cdot$S1$\cdot$W1$\cdot$C1 \\
+   ~     &
+  Type 1 &
+  P2 & 
+  R2 & 
+  S2 &
+  W2 &
+  C2 &
+  R2$\cdot$S2$\cdot$W2$\cdot$C2 \\
+$\cdots$ &\multicolumn{7}{c}{$\cdots$}\\
+\hline\hline
+TOTAL & & & & & & & sum of above\\
+\end{tabular}
+\bigskip
+
+\textit{(0.5 to 1 page)}
+
+\section{Resource Management and Work Schedule}
+\rule{\textwidth}{0.4pt}\\
+\subsection{Resource management}
+\textit{Describe how you intend to manage the resources you have requested. This should include a description of the methods you will deploy to monitor progress of the project and how project results are documented.}\\
+
+\textit{(0.5 to 1 page)}
+
+\subsection{Work schedule}
+\textit{Please, provide a short work schedule, structured in sub-projects, if applicable. Include a table and/or Gantt chart.}
+
+\subsubsection{Sub-project 1}
+\textit{...}
+
+\subsubsection{Sub-project 2}
+\textit{...}\\
+
+\bigskip
+%\textit{Example for a Gantt chart:}
+%\begin{figure}[H]
+%\begin{flushleft}
+% \includegraphics[scale=0.82]{Figures/gantt_chart.jpg}
+%\end{flushleft}
+% \caption{\label{fig_workschedule}Work schedule for the project.}
+%\end{figure}
+
+\section{Key Personnel and Experiences}
+\rule{\textwidth}{0.4pt}\\
+\textit{Give a short introduction of the key persons involved in the project and their experience (max 3 persons).}\\
+
+\textit{(half a page)}
+
+Prof. Peter H. Dederichs is one of the pioneers in electronic structure work in Germany.
+From 2004 to 2012 he was chairman of the Psi-k network, a European-based, worldwide network 
+of researchers working on the advancement of first-principles computational materials science.
+He is author or coauthor of more than 340 publications with up to now over 17000 citations.
+Dr. Rudolf Zeller has been working in the field of density-functional calculations for more than 40 years. 
+He is the main developer of the full-potential KKR programs, including KKRnano, 
+which are now used in J{\"u}lich and several other places in Germany. He is author or co-author of more 
+than 250 publications with over 11000 citations. Dr. Tetsuya Fukushima, who obtained his PhD in 2008,
+is author or co-author of already more than 40 publications, mostly concerned with new advanced materials, 
+with more than already 1200 citations. Two of these publications appeared in the prestigious 
+journal Review of Modern Physics in 2010 and 2015. Marcel Bornemann is a PhD student, who has already
+obtained a detailed knowledge of the computer code KKRnano and of the principles of writing modern code. 
+He was able to implement important enhancements in KKRnano as the extension to non-collinear
+magnetism including relativistic effects without much help from the senior scientists.
+\newpage
+
+\bibliography{My_Library}
+
+%\section{Bibliographic References}
+%\rule{\textwidth}{0.4pt}\\
+%\textit{Provide recent/most important bibliographic references that are relevant to the project.}\\
+
+\bigskip
+\begin{flushright}
+{\tiny V1.3-2016JUN07}
+\end{flushright}
+\end{document}
