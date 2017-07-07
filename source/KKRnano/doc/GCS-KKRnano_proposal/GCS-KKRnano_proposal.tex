@@ -1,6 +1,8 @@
 \documentclass [a4paper, 12pt]{article}
 
+\usepackage[utf8]{inputenc}
 \usepackage{amssymb}
+\usepackage{bm}
 \usepackage{epsfig}
 \usepackage{graphicx}
 \usepackage{times}
@@ -22,7 +24,10 @@
 \setlength{\oddsidemargin}{0.1 cm}
 \setlength{\itemsep}{10pt}
 \bibliographystyle{gcs}
- 
+
+\DeclareUnicodeCharacter{2212}{-}
+\newcommand{\matr}[1]{\bm{#1}}  
+
 \begin{document}
  
 \begin{figure}[H]
@@ -131,29 +136,29 @@ supercomputers (e.g. JUQUEEN) and the cluster-booster architecture
 (e.g. NVIDIA Tesla GPUs) \cite{dutot_addressing_2016}. 
 We have tested the new version of the code for a number of large systems, 
 in particular for MnGe supercells with B20 structure containing between 8192 and 458752 atoms,
-during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}). 
+during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}).
 
 \section{Description of the Project}
 \rule{\textwidth}{0.4pt}\\
 \subsection{Project Details}
-\textit{Describe your research project in detail, structured in sub-projects, if applicable. Include discussion of the scientific questions that you are planning to address and the overall scientific goals of the project. It is important that you describe the innovative aspects, impact and topicality of the proposal.}
-\begin{itshape}
-\begin{itemize}\setlength{\itemsep}{-2pt}
-  \item Scientific questions you want to address
-  \item Scientific objectives
-  \item Computational objectives
-  \item Approach and expected outcome
-  \item Expected impact on the research area
-  \item Scientific and technical innovation potential
-  \item Progress beyond the state-of-the-art
-\end{itemize}
-\end{itshape}
+%\textit{Describe your research project in detail, structured in sub-projects, if applicable. Include discussion of the scientific questions that you are planning to address and the overall scientific goals of the project. It is important that you describe the innovative aspects, impact and topicality of the proposal.}
+%\begin{itshape}
+%\begin{itemize}\setlength{\itemsep}{-2pt}
+%  \item Scientific questions you want to address
+%  \item Scientific objectives
+%  \item Computational objectives
+%  \item Approach and expected outcome
+%  \item Expected impact on the research area
+%  \item Scientific and technical innovation potential
+%  \item Progress beyond the state-of-the-art
+%\end{itemize}
+%\end{itshape}
 
-\subsubsection{Sub-project 1}
-\textit{...}
+%\subsubsection{Sub-project 1}
+%\textit{...}
 
-\subsubsection{Sub-project 2}
-\textit{...}\\
+%\subsubsection{Sub-project 2}
+%\textit{...}\\
 
 \textit{(1 to 2 pages per sub-project)}
 
@@ -235,25 +240,38 @@ who reached the mandatory retirement age in Oct. 2014, as a part-time employee a
 \textit{(1 to 2 pages)}
 \bigskip
 
-The tfQMR solver accounts for the major part of the computational work.
-The Korringa-Kohn-Rostocker (KKR) formalism requires to solve a linear matrix
-equation of the form Ax=B, where A and B are complex matrices and x is a solution
-vector to the equation. In our particular case A and B are quadratic sparse matrices with NxN elements.
-Standard solving algorithms scale as $N^3$ which severely limits the treatable system size.
-However, the sparsity of A and B can be exploited by using customized iterative algorithms for sparse matrices.
-To avoid the $O(N^3)$ computational bottleneck of the density-functional calculations,
-in KKRnano the linear matrix equation is solved iteratively by the
-transpose free quasi minimal residual (tfQMR) method \cite{freund_qmr:_1991}.
-To achieve quadratically scaling computational effort it is important that A and B are sparse
-and that convergence of the tfQMR iterations is guaranteed. Sparsity of A
-is achieved by choosing a reference system of repulsive potentials and convergence
-of the tfQMR iterations is achieved by working in the complex energy plane. Both concepts,
-the repulsive reference system and application of complex energy have been
-introduced by us into the KKR method [19, 20] and are used worldwide since many years. 
+Contrary to other density-functional codes, which determine the Kohn-Sham orbitals by solving
+the differential Kohn-Sham wave equation, in KKRnano the Green function for the Kohn-Sham
+equation is obtained by solving an integral equation in real space. For the solution, space is divided
+into non-overlapping cells around the atoms and the calculations are separated into single-cell parts,
+where only the potential within the individual cell enters, and a large complex linear matrix equation for 
+the matrix elements $G_{LL}^{nn'} (\epsilon)$ of the Green function $G(r, r , \epsilon)$:
+\begin{equation}
+	G_{LL'}^{nn'} (\epsilon) = G_{LL'}^{r,nn'} (\epsilon) + \sum_{n''} \sum_{L''}
+	G_{LL''}^{r,nn''} (\epsilon) \sum_{L'''} \Delta t_{L'' L'''}^{n''} (\epsilon)
+	G_{L'''L'}^{n''n'} (\epsilon)
+	\label{eq:dyson_eq}
+\end{equation}
+This problem is identical to solving a complex linear matrix equation of the form
+\begin{equation}
+	\matr{A} \vec{x} = \vec{b}
+\end{equation}
+As is well known this problem scales as $O(N^3)$, where $N$ denotes the dimension of the $N \times N$
+matrix $\matr{A}$. Standard solving schemes therefore severly limit the treatable system size.
 
-In KKRnano the tfQMR algorithm \cite{freund_qmr:_1991} was implemented which allows to
-achieve quadratic scaling $(N^2)$ with system size. By truncating inter-atomic
-interactions above a certain distance the scaling behavior can even be made linear.
+However, by choosing a reference system of repulsive potentials
+$\matr{A}$ can be made sparse and this can again be exploited
+by using customized iterative algorithms for sparse matrices.
+Our method of choice is the transpose free quasi minimal residual (tfQMR) algorithm \cite{freund_qmr:_1991}.
+It enables us to achieve $O(N^2)$ scaling. 
+Convergence of the tfQMR iterations is achieved by working in the complex energy plane. Both concepts,
+the repulsive reference system and application of complex energy have been
+introduced by us into the KKR method \cite{zeller_application_1982,zeller_theory_1995}
+and are used worldwide since many years. 
+By truncating inter-atomic interactions above a certain distance even an $O(N)$ scaling 
+behavior can be realized.
+In most application scenarios the tfQMR solver accounts for the major part of the computational work.
+\\
 For super-large-scale calculations (above 100000 atoms) the electrostatics solver begins
 to require an amount of computing resources that is not negligible anymore. 
 The electrostatic problem is given in terms of a Poisson equation that connects electric field and potential. 
@@ -263,72 +281,100 @@ Solving this equation scales quadratically with system size.
 \section{Computer Resources}
 \rule{\textwidth}{0.4pt}\\
 \subsection{Code performance and workflow}
-\textit{Describe the codes, packages or libraries that you need to undertake the project, and how these will enable the research to be achieved. Include for \textbf{each code to be used} information about}
-\begin{itshape}
-\begin{itemize}\setlength{\itemsep}{-2pt}
-  \item Which code will be used
-  \item How is the code parallelized (pure MPI, mixed MPI/OpenMP, Pthreads, CUDA, etc.)
-  \item The amount of memory necessary (per core, per node and in total)
-  \item Scaling plots \textbf{and} tables with speedup results for runs with typical, parameter sets, problem size, and I/O \textbf{of the planned project} (no general benchmark results are accepted)
-  \item Describe architecture, machine/system name, and problem size used for the scaling plots
-  \item Current job profile (independent jobs, chained jobs, workflow, etc.)
-\end{itemize}
-\end{itshape}
+%\textit{Describe the codes, packages or libraries that you need to undertake the project, and how these will enable the research to be achieved. Include for \textbf{each code to be used} information about}
+%\begin{itshape}
+%\begin{itemize}\setlength{\itemsep}{-2pt}
+%  \item Which code will be used
+%  \item How is the code parallelized (pure MPI, mixed MPI/OpenMP, Pthreads, CUDA, etc.)
+%  \item The amount of memory necessary (per core, per node and in total)
+%  \item Scaling plots \textbf{and} tables with speedup results for runs with typical, parameter sets, problem size, and I/O \textbf{of the planned project} (no general benchmark results are accepted)
+%  \item Describe architecture, machine/system name, and problem size used for the scaling plots
+%  \item Current job profile (independent jobs, chained jobs, workflow, etc.)
+%\end{itemize}
+%\end{itshape}
 
-{\it \textbf{Important:} please take into account the corresponding technical guidelines and requirements (e.g. required minimal code scalability, memory restictions, etc.) of the machine you have chosen!}\\
+The natural parallelization strategy in KKRnano is domain decomposition with a simple 
+matching between atomic cells and processors. Both, the single scattering part of the 
+calculations and the iterative solution of \cref{eq:dyson_eq} can be done separately for each cell. 
+Communication between the processors is required to distribute the $t$-matrices and the 
+reference Green function matrix before \cref{eq:dyson_eq} is solved and because density information
+must be distributed to obtain the electrostatic potential for the next density functional
+self-consistency step. KKRnano is also parallelized over the energy points $\epsilon$ and 
+the two spin directions so that more than one MPI process per atom can be utilized.
+On the other hand it is also possible to map several atoms to one MPI process so that
+systems with several thousand atoms can be investigated also if only a few hundred
+processors are available, however, with associated longer wall-clock runtimes.
+\\
+For an efficient use of computers featuring symmetric multiprocessing (SMP) KKRnano contains openMP directives
+in the most time consuming parts so that e.g. on JUQUEEN calculations can be performed with combinations 
+ranging from 1 MPI task and 64 threads to 64 MPI tasks and 1 thread per node. Weak-scaling data
+for different combinations
+obtained on JUQUEEN is depicted in \cref{fig:total_runtimes}. For these performance tests MnGe supercells
+ranging from 8192 atoms (1 rack) to 229376 atoms (28 racks/full machine) were used.
+In order to achieve linear scaling in the tfQMR solver the calculations were 
+done by setting the interaction range described by truncation of the Green function to include 
+always 1308 atoms around each considered site.
+\cref{fig:tfqmr_es_times} provides a scaling analysis of the tfQMR and electrostatics solver. It nicely shows 
+a constant runtime for the tfQMR solver but also that the runtime of the electrostatics solver becomes
+more and more significant, when calculations are done for more than 65536 atoms (8 racks). 
+However, the standard system sizes we are aiming
+for with this project proposal are going to be smaller than that.
+The discrepancy between \cref{fig:total_runtimes} and \cref{fig:tfqmr_es_times} with regards to linear
+scaling can be mainly attributed to Fortran direct-access I/O which does not scale well on a GPFS file system.
+The implementation of a more suitable I/O library (e.g., MPI I/O or SIONlib) is likely to solve this issue.i
+In terms of memory consumption it could be observed that the 1GB/core ratio on JUQUEEN is not exceeded.
+Additionally, test runs on Hazel Hen showed that the memory provided per node is sufficient for the calculations
+we aim for.
+\\
+KKRnano jobs are launched as independent jobs requiring a short (less than 60 seconds) serial 'prepare'-step on
+the head node
+before launching the main large-scale calculation .
 
-\textit{If you use third-party codes, include}
-\begin{itshape}
-\begin{itemize}\setlength{\itemsep}{-2pt}
-  \item Name, version, licensing model and conditions
-  \item Web page and other references
-  \item Contact information of the code developers.
-  \item Your relationship to the code (developer, collaborator to main developers, end user, etc.)
-\end{itemize}
-\end{itshape}
-\textit{Here we give an example table and plot for presenting scaling and performance information.}
+%{\it \textbf{Important:} please take into account the corresponding technical guidelines and requirements (e.g. required minimal code scalability, memory restictions, etc.) of the machine you have chosen!}\\
 
-\begin{table}[H]
-\caption{\label{tab_scaling} Scaling behavior of {\tt $<$code$>$} on {\tt $<$architecture and system$>$} at {\tt $<$location$>$}. This test was performed with $5\cdot 10^6$ particles, absolute timings per timestep (s) and relative speedup normalized to 1024 cores are given.}
-\begin{center} 
-\setlength{\tabcolsep}{10pt}
-\renewcommand{\arraystretch}{1.2}
- \begin{tabular}{lcccc}
- \#cores  & absolute timing (s) & speedup  & Performance per core [MFLOP/s]\\
-\hline
-1024     & 189.6                        & 1.0000   & 600 \\
-2048     & \phantom{1}99.0      & 1.9154   & 576 \\
-4096     & \phantom{1}55.6      & 3.4088   & 511 \\
-8192     & \phantom{1}30.8      & 6.1376   & 460 \\
+%\textit{Here we give an example table and plot for presenting scaling and performance information.}
 
-\end{tabular}
-\end{center}
-\end{table}
+%\begin{table}[H]
+%\caption{\label{tab_scaling} Scaling behavior of {\tt $<$code$>$} on {\tt $<$architecture and system$>$} at {\tt $<$location$>$}. This test was performed with $5\cdot 10^6$ particles, absolute timings per timestep (s) and relative speedup normalized to 1024 cores are given.}
+%\begin{center} 
+%\setlength{\tabcolsep}{10pt}
+%\renewcommand{\arraystretch}{1.2}
+% \begin{tabular}{lcccc}
+% \#cores  & absolute timing (s) & speedup  & Performance per core [MFLOP/s]\\
+%\hline
+%1024     & 189.6                        & 1.0000   & 600 \\
+%2048     & \phantom{1}99.0      & 1.9154   & 576 \\
+%4096     & \phantom{1}55.6      & 3.4088   & 511 \\
+%8192     & \phantom{1}30.8      & 6.1376   & 460 \\
+
+%\end{tabular}
+%\end{center}
+%\end{table}
 
 
-\begin{table}[h!]
-	\caption{Scaling behaviour of KKRnano on JUQUEEN at Forschungszentrum J{\"u}lich. 
-		Total runtime (Total), tfQMR solver runtime (tfQMR) and electrostatics solver runtime (ES)
-		    in weak scaling measurement series employing moderate OpenMP parallelization
-		      with $16$ MPI ranks per node and $4$ threads per process. 
-		        Runtimes are given in seconds. (t) indicates the tuned version where final I/O is omitted.}
-			\begin{center}
-				\begin{tabular}{|c|r|r|r|r|r|r|}
-					\hline
-					 Supercell               & bg\_size & MPI ranks &   Threads &    Total & tfQMR &  ES \\
-					\hline\hline
-					$16 \times  8 \times  8$ &  1,024   &  16,384   &    65,536 &      750 &   432 &  84 \\
-					$16 \times 16 \times  8$ &  2,048   &  32,768   &   131,072 &      839 &   432 &  86 \\
-					$16 \times 16 \times 16$ &  4,096   &  65,536   &   262,144 &      973 &   430 &  96 \\
-					$32 \times 16 \times 16$ &  8,192   & 131,072   &   524,288 &     1223 &   431 & 113 \\
-					$32 \times 32 \times 16$ & 16,384   & 262,144   & 1,048,576 &     1880 &   432 & 196 \\
-					$32 \times 32 \times 24$ & 24,576   & 393,216   & 1,572,864 & (t) 1077 &   431 & 353 \\
-					$32 \times 32 \times 28$ & 28,672   & 458,752   & 1,835,008 & (t) 1210 &   430 & 470 \\
-					\hline
-				\end{tabular}
-			\end{center}
-			\label{kkrnano:mnge_weakscaling_moderateomp}
-		\end{table}
+%\begin{table}[h!]
+%	\caption{Scaling behaviour of KKRnano on JUQUEEN at Forschungszentrum J{\"u}lich. 
+%		Total runtime (Total), tfQMR solver runtime (tfQMR) and electrostatics solver runtime (ES)
+%		    in weak scaling measurement series employing moderate OpenMP parallelization
+%		      with $16$ MPI ranks per node and $4$ threads per process. 
+%		        Runtimes are given in seconds. (t) indicates the tuned version where final I/O is omitted.}
+%			\begin{center}
+%				\begin{tabular}{|c|r|r|r|r|r|r|}
+%					\hline
+%					 Supercell               & bg\_size & MPI ranks &   Threads &    Total & tfQMR &  ES \\
+%					\hline\hline
+%					$16 \times  8 \times  8$ &  1,024   &  16,384   &    65,536 &      750 &   432 &  84 \\
+%					$16 \times 16 \times  8$ &  2,048   &  32,768   &   131,072 &      839 &   432 &  86 \\
+%					$16 \times 16 \times 16$ &  4,096   &  65,536   &   262,144 &      973 &   430 &  96 \\
+%					$32 \times 16 \times 16$ &  8,192   & 131,072   &   524,288 &     1223 &   431 & 113 \\
+%					$32 \times 32 \times 16$ & 16,384   & 262,144   & 1,048,576 &     1880 &   432 & 196 \\
+%					$32 \times 32 \times 24$ & 24,576   & 393,216   & 1,572,864 & (t) 1077 &   431 & 353 \\
+%					$32 \times 32 \times 28$ & 28,672   & 458,752   & 1,835,008 & (t) 1210 &   430 & 470 \\
+%					\hline
+%				\end{tabular}
+%			\end{center}
+%			\label{kkrnano:mnge_weakscaling_moderateomp}
+%		\end{table}
 
 \begin{figure}[H]
 \begin{center}
@@ -445,6 +491,10 @@ TOTAL & & & & & & & sum of above\\
 
 \textit{(half a page)}
 
+Prof. Stefan Bl{\"u}gel is...
+\\
+Dr. Paul F. Baumeister is...
+\\
 Prof. Peter H. Dederichs is one of the pioneers in electronic structure work in Germany.
 From 2004 to 2012 he was chairman of the Psi-k network, a European-based, worldwide network 
 of researchers working on the advancement of first-principles computational materials science.
@@ -452,10 +502,7 @@ He is author or coauthor of more than 340 publications with up to now over 17000
 Dr. Rudolf Zeller has been working in the field of density-functional calculations for more than 40 years. 
 He is the main developer of the full-potential KKR programs, including KKRnano, 
 which are now used in J{\"u}lich and several other places in Germany. He is author or co-author of more 
-than 250 publications with over 11000 citations. Dr. Tetsuya Fukushima, who obtained his PhD in 2008,
-is author or co-author of already more than 40 publications, mostly concerned with new advanced materials, 
-with more than already 1200 citations. Two of these publications appeared in the prestigious 
-journal Review of Modern Physics in 2010 and 2015. Marcel Bornemann is a PhD student, who has already
+than 250 publications with over 11000 citations. Marcel Bornemann is a PhD student, who has already
 obtained a detailed knowledge of the computer code KKRnano and of the principles of writing modern code. 
 He was able to implement important enhancements in KKRnano as the extension to non-collinear
 magnetism including relativistic effects without much help from the senior scientists.

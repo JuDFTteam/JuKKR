@@ -2,8 +2,6 @@
 \contentsline {section}{\numberline {2}Preliminary Work}{3}{section.2}
 \contentsline {section}{\numberline {3}Description of the Project}{3}{section.3}
 \contentsline {subsection}{\numberline {3.1}Project Details}{4}{subsection.3.1}
-\contentsline {subsubsection}{\numberline {3.1.1}Sub-project 1}{4}{subsubsection.3.1.1}
-\contentsline {subsubsection}{\numberline {3.1.2}Sub-project 2}{4}{subsubsection.3.1.2}
 \contentsline {subsection}{\numberline {3.2}Review Processes}{5}{subsection.3.2}
 \contentsline {section}{\numberline {4}Numerical Methods and Algorithms}{5}{section.4}
 \contentsline {section}{\numberline {5}Computer Resources}{6}{section.5}
