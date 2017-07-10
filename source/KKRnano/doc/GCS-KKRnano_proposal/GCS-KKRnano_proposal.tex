@@ -2,6 +2,7 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage{amssymb}
+\usepackage{amsmath}
 \usepackage{bm}
 \usepackage{epsfig}
 \usepackage{graphicx}
@@ -217,7 +218,7 @@ JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}
 where we managed to use the full machine in combination 
 with a linear scaling behavior.
 At the same event the High-Q club membership was renewed for KKRnano.
-
+\textbf{In total, we expect to use about 50.0 million core hours on Hazel Hen for this project.}
 
 \subsection{Review Processes}
 \textit{Has the underlying research project already successfully undergone a scientific review process? Is the project funded by public money?
@@ -405,6 +406,7 @@ before launching the main large-scale calculation .
 \begin{itshape}
 \begin{itemize}\setlength{\itemsep}{-2pt}
     \item Type of run (e.g. pre- /post-processing run, production run, visualization, etc.)
+
     \item Problem size for planned runs (e.g. \# particles or the like)
     \item Number of runs planned
     \item Number of steps per run
@@ -414,6 +416,24 @@ before launching the main large-scale calculation .
     \item Resources for data analytics, if applicable
 \end{itemize}
 \end{itshape}
+
+We plan to do pure production runs that feature different non-trivial magnetic textures, e.g. skyrmions.
+Each run consists of typically about 100 self-consistent iterations that are needed to converge
+the electronic density. Our current setup requires approximately 1000 s per iteration depending on the accuracy
+the calculation aims at. We stress that such calculations depend on several tunable parameters, e.g. number of
+k-points, cutoff radii and atomic positions. Therefore, it is essential to check results with different parameter
+settings in order to make sure that physical interpretations are valid and reproducable. 
+With the \textbf{requested amount of 50 million core hours} (approx $1.8 \times 10^{11}$ core-s)
+we are able to do roughly 1000 independent calculations with
+the smallest setup featuring a unit cell of 1728 atoms:
+\begin{equation}
+	n_{\text{calculations}} = \frac{1.8 \times 10^{11} }{ 1000 \times 100 \times 1728} \approx 1000 
+\end{equation}
+For the larger calculations computational needs increase linearly, e.g. a setup of
+13824 atoms allows for 125 calculations given 50 million core hours on Hazel Hen.
+Experimental data suggests that single magnetic textures can be stabilized in supercells containing between
+1728 and 13824 atoms which corresponds to a length scale of 3-6 nm.
+
 \textit{This information should take the form of a table like the example table shown below. Please, specify the requested time in appropriate units, preferred units are core hours (core-h) and GPU-hours.}\\
 
 
