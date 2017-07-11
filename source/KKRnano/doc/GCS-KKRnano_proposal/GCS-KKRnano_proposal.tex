@@ -72,14 +72,14 @@ Institute for Advanced Simulation, Forschungszentrum J\"ulich, D-52425 J\"ulich,
 Institute for Advanced Simulation, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
 }
 
+\phantom{MM} \textit{Dr. Rudolf Zeller,
+Institute for Advanced Simulation, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
+}
+
 \phantom{MM} \textit{Dr. Paul F. Baumeister,
 J\"ulich Supercomputing Centre, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
 }
 
-
-\phantom{MM} \textit{Dr. Rudolf Zeller,
-Institute for Advanced Simulation, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
-}
 
 \phantom{MM} \textit{Prof. Dr. Peter H. Dederichs,
 Institute for Advanced Simulation, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
@@ -109,7 +109,7 @@ with the number of treated atoms so that we can realize system sizes of up to
 458752  atoms in a unit cell. This has already been shown on the full JUQUEEN
 machine \cite{brommel_juqueen_2017}. Recently, we implemented a relativistic generalization of our algorithm 
 enabling us to calculate complex non-collinear magnetic structures such as skyrmions
-in real space. Skyrmions, are two-dimensional magnetization solitons, i.e. two-dimensional
+in real space. Skyrmions are two-dimensional magnetization solitons, i.e. two-dimensional
 magnetic structures localized in space, topologically protected by a non-trivial
 magnetization texture, which has particle-like properties. 
 These days, they constitute one of the hottest subjects in the field of 
@@ -132,12 +132,16 @@ which is totally not understood so far (see preliminary results
 In the last two years we have completely modernized our code and considerably improved 
 its flexibility with respect to the number of cores and the number of MPI tasks and
 OpenMP threads which can used in production runs. By changing the computational algorithms
-we have also improved the computational efficiency of the both for conventional
+we have also improved the computational efficiency both for conventional
 supercomputers (e.g. JUQUEEN) and the cluster-booster architecture
 (e.g. NVIDIA Tesla GPUs) \cite{dutot_addressing_2016}. 
 We have tested the new version of the code for a number of large systems, 
 in particular for MnGe supercells with B20 structure containing between 8192 and 458752 atoms,
 during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}).
+\\
+As a first step towards unraveling the mystery of skyrmionic textures in MnGe B20 we
+performed simulations based on simple micromagnetic models that can provide an elementary understanding
+of magnetism in many-body systems. The results from this are discussed below.
 
 \section{Description of the Project}
 \rule{\textwidth}{0.4pt}\\
@@ -163,7 +167,33 @@ during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}).
 
 \textit{(1 to 2 pages per sub-project)}
 
-\begin{figure}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}{.5\textwidth}
+		  \centering
+		  \includegraphics[width=.99\linewidth]{Figures/tokura_exp.png}
+		  %\caption{Enlarged in-plane magnetic-moment configurations as observed in experiment.}
+		  \label{fig:sub1}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+		  \centering
+		  \includegraphics[width=.99\linewidth]{Figures/tokura_sim.png}
+		  %\caption{Simulated in-plane magnetic-moment configurations and projected
+		  %positions of hedgehogs (blue) and antihedgehogs (red).}
+                  \label{fig:sub2}
+	\end{subfigure}
+	\caption{In-plane magnetic moment configurations of cubic-lattice skyrmion 
+		in MnGe and projected positions of hedgehog and antihedgehog according to
+	        Tanigaki et al. \cite{tanigaki_real-space_2015}.
+		Left: Enlarged in-plane magnetic-moment configurations as observed in experiment.
+		Right: Simulated in-plane magnetic-moment configurations and projected
+		positions of magnetic hedgehogs (blue) and antihedgehogs (red).}
+		
+	\label{fig:test}
+\end{figure}
+
+
+\begin{figure}[H]
 	\centering
 	\begin{subfigure}{.5\textwidth}
 		  \centering
@@ -183,7 +213,7 @@ during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}).
 \end{figure}
 
 This proposal is inspired by the recent discovery of magnetic skyrmion lattices in bulk helical magnets.
-In these systems a variety of phenomena can be of importance to the physics observed in experiment,
+In these systems a variety of phenomena can be of importance to what is observed in experiment,
 e.g. the topological Hall effect and spin-transfer torque at ultra-low current densities
 \cite{kanazawa_large_2011}.
 Special attention has been drawn on cubic B20-type compounds with broken lattice inversion symmetry.
@@ -203,7 +233,9 @@ At present there is a lack of a convincing explanation of what is observed in ex
 Research in the framework of micromagnetic models identified both magnetic frustration (RKKY interaction) 
 as well as spin-orbit coupling induced Dzyaloshinskii-Moriya interaction as potentially
 crucial to a better understanding \cite{koretsune_control_2015,altynbaev_hidden_2016}.
-Based on our own model simulations we deem it
+Our own spin model simulations which are less elaborate than a DFT-based approach with KKRnano yielded meta-stable
+topologically protected skyrmionic textures \cite{bornemann_investigation_2017}.
+Based on these simulations we also deem it
 possible that textures even more exotic than skyrmions and anti-skyrmions \cite{rybakov_new_2015}
 can be stabilized in MnGe.
 
@@ -228,7 +260,7 @@ If yes, please also provide information about the funding source
 The development of the KKR method in general and of the code KKRnano in particular has been recognized 
 by the Board of Directors of Forschungszentrum J{\"u}lich as important work in the interest of 
 Forschungszentrum J{\"u}lich. The Board of Directors has supported the work by a Helmholtz professorship 
-for Prof. Peter Dederichs, as the third Jülich scientist to be honored with the award,i
+for Prof. Peter Dederichs, as the third Jülich scientist to be honored with the award,
 after the Nobel Prize winner Prof. Peter Grünberg in 2007 and Prof. Siegfried Mantl in 2011. 
 The Board of Directors has also supported the work by authorizing the employment of Dr. Rudolf Zeller, 
 who reached the mandatory retirement age in Oct. 2014, as a part-time employee at least until Nov. 2017. 
@@ -253,7 +285,11 @@ the matrix elements $G_{LL}^{nn'} (\epsilon)$ of the Green function $G(r, r , \e
 	G_{L'''L'}^{n''n'} (\epsilon)
 	\label{eq:dyson_eq}
 \end{equation}
-This problem is identical to solving a complex linear matrix equation of the form
+In the following we refer to $\Delta t_{L'' L'''}^{n''} (\epsilon)$ as the $\Delta t$-matrices and
+$G_{LL''}^{r,nn''} (\epsilon)$ as the reference Green functions. At this point we do not
+discuss the formalism of obtaining them but refer the reader to the existing literature\cite{zeller_towards_2008}.
+\\
+The given problem is identical to solving a complex linear matrix equation of the form
 \begin{equation}
 	\matr{A} \vec{x} = \vec{b}
 \end{equation}
@@ -262,15 +298,15 @@ matrix $\matr{A}$. Standard solving schemes therefore severly limit the treatabl
 
 However, by choosing a reference system of repulsive potentials
 $\matr{A}$ can be made sparse and this can again be exploited
-by using customized iterative algorithms for sparse matrices.
-Our method of choice is the transpose free quasi minimal residual (tfQMR) algorithm \cite{freund_qmr:_1991}.
-It enables us to achieve $O(N^2)$ scaling. 
+by using customized iterative algorithms for solving linear matrix equations involving sparse matrices.
+Our method of choice is the transpose free quasi minimal residual (tfQMR) algorithm \cite{freund_qmr:_1991}
+which enables us to achieve $O(N^2)$ scaling. 
 Convergence of the tfQMR iterations is achieved by working in the complex energy plane. Both concepts,
 the repulsive reference system and application of complex energy have been
 introduced by us into the KKR method \cite{zeller_application_1982,zeller_theory_1995}
 and are used worldwide since many years. 
 By truncating inter-atomic interactions above a certain distance even an $O(N)$ scaling 
-behavior can be realized.
+behavior can be realized and this feature should be used in any calculation involving more than 1000 atoms.
 In most application scenarios the tfQMR solver accounts for the major part of the computational work.
 \\
 For super-large-scale calculations (above 100000 atoms) the electrostatics solver begins
@@ -297,8 +333,10 @@ Solving this equation scales quadratically with system size.
 The natural parallelization strategy in KKRnano is domain decomposition with a simple 
 matching between atomic cells and processors. Both, the single scattering part of the 
 calculations and the iterative solution of \cref{eq:dyson_eq} can be done separately for each cell. 
-Communication between the processors is required to distribute the $t$-matrices and the 
-reference Green function matrix before \cref{eq:dyson_eq} is solved and because density information
+Communication between the processors is required to distribute the
+$\Delta t$-matrices and the 
+reference Green function matrix
+before \cref{eq:dyson_eq} is solved and because density information
 must be distributed to obtain the electrostatic potential for the next density functional
 self-consistency step. KKRnano is also parallelized over the energy points $\epsilon$ and 
 the two spin directions so that more than one MPI process per atom can be utilized.
@@ -316,20 +354,20 @@ In order to achieve linear scaling in the tfQMR solver the calculations were
 done by setting the interaction range described by truncation of the Green function to include 
 always 1308 atoms around each considered site.
 \cref{fig:tfqmr_es_times} provides a scaling analysis of the tfQMR and electrostatics solver. It nicely shows 
-a constant runtime for the tfQMR solver but also that the runtime of the electrostatics solver becomes
+a constant runtime of the tfQMR solver but also that the runtime of the electrostatics solver becomes
 more and more significant, when calculations are done for more than 65536 atoms (8 racks). 
 However, the standard system sizes we are aiming
 for with this project proposal are going to be smaller than that.
-The discrepancy between \cref{fig:total_runtimes} and \cref{fig:tfqmr_es_times} with regards to linear
+The small discrepancy between \cref{fig:total_runtimes} and \cref{fig:tfqmr_es_times} with regards to linear
 scaling can be mainly attributed to Fortran direct-access I/O which does not scale well on a GPFS file system.
-The implementation of a more suitable I/O library (e.g., MPI I/O or SIONlib) is likely to solve this issue.i
+The implementation of a more suitable I/O library (e.g., MPI I/O or SIONlib) is likely to solve this issue.
 In terms of memory consumption it could be observed that the 1GB/core ratio on JUQUEEN is not exceeded.
 Additionally, test runs on Hazel Hen showed that the memory provided per node is sufficient for the calculations
 we aim for.
 \\
 KKRnano jobs are launched as independent jobs requiring a short (less than 60 seconds) serial 'prepare'-step on
 the head node
-before launching the main large-scale calculation .
+before launching the parallel large-scale calculation .
 
 %{\it \textbf{Important:} please take into account the corresponding technical guidelines and requirements (e.g. required minimal code scalability, memory restictions, etc.) of the machine you have chosen!}\\
 
@@ -402,20 +440,20 @@ before launching the main large-scale calculation .
 \textit{(1 to 2 pages)}
 \newpage
 \subsection{Justification of resources requested}
-\textit{Outline the amount of resources you request for the current granting period, structured in sub-projects, if applicable. This should include information such as}
-\begin{itshape}
-\begin{itemize}\setlength{\itemsep}{-2pt}
-    \item Type of run (e.g. pre- /post-processing run, production run, visualization, etc.)
+%\textit{Outline the amount of resources you request for the current granting period, structured in sub-projects, if applicable. This should include information such as}
+%\begin{itshape}
+%\begin{itemize}\setlength{\itemsep}{-2pt}
+%    \item Type of run (e.g. pre- /post-processing run, production run, visualization, etc.)
 
-    \item Problem size for planned runs (e.g. \# particles or the like)
-    \item Number of runs planned
-    \item Number of steps per run
-    \item Wall-clock time per run
-    \item Number of cores/GPUs used per run
-    \item Total amount of requested computing time (core-hours and/or GPU-hours, if applicable)
-    \item Resources for data analytics, if applicable
-\end{itemize}
-\end{itshape}
+%    \item Problem size for planned runs (e.g. \# particles or the like)
+%    \item Number of runs planned
+%    \item Number of steps per run
+%    \item Wall-clock time per run
+%    \item Number of cores/GPUs used per run
+%    \item Total amount of requested computing time (core-hours and/or GPU-hours, if applicable)
+%    \item Resources for data analytics, if applicable
+%\end{itemize}
+%\end{itshape}
 
 We plan to do pure production runs that feature different non-trivial magnetic textures, e.g. skyrmions.
 Each run consists of typically about 100 self-consistent iterations that are needed to converge
@@ -430,71 +468,79 @@ the smallest setup featuring a unit cell of 1728 atoms:
 	n_{\text{calculations}} = \frac{1.8 \times 10^{11} }{ 1000 \times 100 \times 1728} \approx 1000 
 \end{equation}
 For the larger calculations computational needs increase linearly, e.g. a setup of
-13824 atoms allows for 125 calculations given 50 million core hours on Hazel Hen.
-Experimental data suggests that single magnetic textures can be stabilized in supercells containing between
+13824 atoms allows for 125 full calculations given 50 million core hours on Hazel Hen.
+Note that
+experimental data suggests that single magnetic textures can be stabilized in supercells containing between
 1728 and 13824 atoms which corresponds to a length scale of 3-6 nm.
 
-\textit{This information should take the form of a table like the example table shown below. Please, specify the requested time in appropriate units, preferred units are core hours (core-h) and GPU-hours.}\\
+%\textit{This information should take the form of a table like the example table shown below. Please, specify the requested time in appropriate units, preferred units are core hours (core-h) and GPU-hours.}\\
 
 
 
-\begin{tabular}{llcccccc} \hline\hline
-  Sub-project & 
-  Type &
-  Problem & 
-  \# runs & 
-  \# steps/ & 
-  Wall time/ & 
-  \# cores/ & 
-  Total \\
-  &
-  of run &
-  size  &
-  &
-  run &
-  step [hours] &
-  run &
-  [core-h] \\
- \hline\hline
-  Sub-proj. 1 & 
-  Preproc. &
-  P1 & 
-  R1 & 
-  S1 &
-  W1 &
-  C1 &
-  R1$\cdot$S1$\cdot$W1$\cdot$C1 \\
-   ~     &
-  Type 1 &
-  P2 & 
-  R2 & 
-  S2 &
-  W2 &
-  C2 &
-  R2$\cdot$S2$\cdot$W2$\cdot$C2 \\
-$\cdots$ &\multicolumn{7}{c}{$\cdots$}\\
-\hline\hline
-TOTAL & & & & & & & sum of above\\
-\end{tabular}
-\bigskip
+%\begin{tabular}{llcccccc} \hline\hline
+%  Sub-project & 
+%  Type &
+%  Problem & 
+%  \# runs & 
+%  \# steps/ & 
+%  Wall time/ & 
+%  \# cores/ & 
+%  Total \\
+%  &
+%  of run &
+%  size  &
+%  &
+%  run &
+%  step [hours] &
+%  run &
+%  [core-h] \\
+% \hline\hline
+%  Sub-proj. 1 & 
+%  Preproc. &
+%  P1 & 
+%  R1 & 
+%  S1 &
+%  W1 &
+%  C1 &
+%  R1$\cdot$S1$\cdot$W1$\cdot$C1 \\
+%   ~     &
+%  Type 1 &
+%  P2 & 
+%  R2 & 
+%  S2 &
+%  W2 &
+%  C2 &
+%  R2$\cdot$S2$\cdot$W2$\cdot$C2 \\
+%$\cdots$ &\multicolumn{7}{c}{$\cdots$}\\
+%\hline\hline
+%TOTAL & & & & & & & sum of above\\
+%\end{tabular}
+%\bigskip
 
 \textit{(0.5 to 1 page)}
 
 \section{Resource Management and Work Schedule}
 \rule{\textwidth}{0.4pt}\\
-\subsection{Resource management}
-\textit{Describe how you intend to manage the resources you have requested. This should include a description of the methods you will deploy to monitor progress of the project and how project results are documented.}\\
+%\subsection{Resource management}
+%\textit{Describe how you intend to manage the resources you have requested. This should include a description of the methods you will deploy to monitor progress of the project and how project results are documented.}\\
 
 \textit{(0.5 to 1 page)}
 
-\subsection{Work schedule}
-\textit{Please, provide a short work schedule, structured in sub-projects, if applicable. Include a table and/or Gantt chart.}
+%\subsection{Work schedule}
+%\textit{Please, provide a short work schedule, structured in sub-projects, if applicable. Include a table and/or Gantt chart.}
 
-\subsubsection{Sub-project 1}
-\textit{...}
+%\subsubsection{Sub-project 1}
+%\textit{...}
 
-\subsubsection{Sub-project 2}
-\textit{...}\\
+%\subsubsection{Sub-project 2}
+%\textit{...}\\
+
+The progress of the work concerned with the development and the application of KKRnano
+is discussed in regular bi-weekly strategy meetings of the project team.
+The code development and the protocols of the strategy meetings are documented
+using the Trac system at URL https://trac.version.fz-juelich.de/KKRnano so
+that all changes to the code and all experience with its use are easy to find.
+
 
 \bigskip
 %\textit{Example for a Gantt chart:}
@@ -513,19 +559,22 @@ TOTAL & & & & & & & sum of above\\
 
 Prof. Stefan Bl{\"u}gel is...
 \\
+Marcel Bornemann is a PhD student, who has already
+obtained a detailed knowledge of the computer code KKRnano and of the principles of writing modern code. 
+He was able to implement important enhancements in KKRnano as the extension to non-collinear
+magnetism including relativistic effects without much help from the senior scientists.
+\\
+Dr. Rudolf Zeller has been working in the field of density-functional calculations for more than 40 years. 
+He is the main developer of the full-potential KKR programs, including KKRnano, 
+which are now used in J{\"u}lich and several other places in Germany. He is author or co-author of more 
+than 250 publications with over 11000 citations.
+\\
 Dr. Paul F. Baumeister is...
 \\
 Prof. Peter H. Dederichs is one of the pioneers in electronic structure work in Germany.
 From 2004 to 2012 he was chairman of the Psi-k network, a European-based, worldwide network 
 of researchers working on the advancement of first-principles computational materials science.
 He is author or coauthor of more than 340 publications with up to now over 17000 citations.
-Dr. Rudolf Zeller has been working in the field of density-functional calculations for more than 40 years. 
-He is the main developer of the full-potential KKR programs, including KKRnano, 
-which are now used in J{\"u}lich and several other places in Germany. He is author or co-author of more 
-than 250 publications with over 11000 citations. Marcel Bornemann is a PhD student, who has already
-obtained a detailed knowledge of the computer code KKRnano and of the principles of writing modern code. 
-He was able to implement important enhancements in KKRnano as the extension to non-collinear
-magnetism including relativistic effects without much help from the senior scientists.
 \newpage
 
 \bibliography{My_Library}
