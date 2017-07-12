@@ -103,18 +103,22 @@ Institute for Advanced Simulation, Forschungszentrum J\"ulich, D-52425 J\"ulich,
 
 \textit{(about 1 page)}
 
-We developed a unique electronic structure code, called KKRnano \cite{zeller_towards_2008,thiess_massively_2012},
+We have developed a unique electronic structure code, 
+called KKRnano \cite{zeller_towards_2008,thiess_massively_2012},
 specifically designed for petaFLOP computing. Our method scales linearly
 with the number of treated atoms so that we can realize system sizes of up to 
 458752  atoms in a unit cell. This has already been shown on the full JUQUEEN
-machine \cite{brommel_juqueen_2017}. Recently, we implemented a relativistic generalization of our algorithm 
+machine \cite{brommel_juqueen_2017}.
+\\
+Recently, we implemented a relativistic generalization of our algorithm 
 enabling us to calculate complex non-collinear magnetic structures such as skyrmions
 in real space. Skyrmions are two-dimensional magnetization solitons, i.e. two-dimensional
 magnetic structures localized in space, topologically protected by a non-trivial
 magnetization texture, which has particle-like properties. 
 These days, they constitute one of the hottest subjects in the field of 
 magnetism because such topological solitons are considered to be the smallest 
-information-carrying particles at room temperature \cite{fert_skyrmions_2013}.  
+information-carrying particles at room temperature \cite{fert_skyrmions_2013}. 
+\\
 We plan to perform large-scale density functional theory (DFT) calculations with 
 KKRnano for materials exhibiting these complex magnetic skyrmion textures on Hazel Hen 
 since test runs on this particular machine confirmed our expectations with regards to performance. 
@@ -128,8 +132,11 @@ which is not understood so far (see preliminary results
 
 \textit{(about 1 to 2 pages)}
 
-
-In the last two years we have completely modernized our code and considerably improved 
+KKRnano was first applied to Gd doped GaN where special emphasis was put on
+magnetic interactions between defects \cite{thiess_superparamagnetism_2012}. Subsequently,
+the phase change material GeSbTe was investigated \cite{zhang_role_2012}.
+\\
+During the last two years we have completely modernized our code and considerably improved 
 its flexibility with respect to the number of cores and the number of MPI tasks and
 OpenMP threads which can used in production runs. By changing the computational algorithms
 we have also improved the computational efficiency both for conventional
@@ -137,9 +144,9 @@ supercomputers (e.g. JUQUEEN) and the cluster-booster architecture
 (e.g. NVIDIA Tesla GPUs) \cite{dutot_addressing_2016}. 
 We have tested the new version of the code for a number of large systems, 
 in particular for MnGe supercells with B20 structure containing between 8192 and 458752 atoms,
-during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}).
+during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}.
 \\
-As a first step towards unraveling the mystery of skyrmionic textures in MnGe B20 we
+As a first step towards unraveling the mystery of skyrmionic textures in B20-MnGe we
 performed simulations based on simple micromagnetic models that can provide an elementary understanding
 of magnetism in many-body systems. The results from this are discussed below.
 
@@ -167,7 +174,7 @@ of magnetism in many-body systems. The results from this are discussed below.
 
 \textit{(1 to 2 pages per sub-project)}
 
-\begin{figure}[H]
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}{.5\textwidth}
 		  \centering
@@ -189,11 +196,41 @@ of magnetism in many-body systems. The results from this are discussed below.
 		Right: Simulated in-plane magnetic-moment configurations and projected
 		positions of magnetic hedgehogs (blue) and antihedgehogs (red).}
 		
-	\label{fig:test}
+	\label{fig:tokura_results}
 \end{figure}
 
 
-\begin{figure}[H]
+This proposal is inspired by the recent discovery of magnetic skyrmion lattices in bulk helical magnets.
+In these systems a variety of phenomena can be of importance to what is observed in experiment,
+e.g. the topological Hall effect and spin-transfer torque at ultra-low current densities
+\cite{kanazawa_large_2011}.
+Special attention has been drawn on cubic B20-type compounds with broken lattice inversion symmetry.
+These compounds form a class of materials in which skyrmion phases have been observed experimentally
+\cite{nagaosa_topological_2013}.
+In a recent study \cite{tanigaki_real-space_2015} 
+it was found by real-space observation transmission electron microscopy 
+that a cubic lattice of skyrmions and anti-skyrmions (see \cref{fig:tokura_results}) exists in B20-MnGe with
+a lattice constant of about 3-6 nm. Findings by Kanazawa et al. suggest that this
+lattice is set up by a superposition of three orthogonal helical
+structures also referred to as 3q-state \cite{kanazawa_noncentrosymmetric_2017}.
+In contrast to other systems exhibiting a similar magnetic phase,
+here the rather short helical wavelength allows for first-principles density functional (DFT) calculations
+with KKRnano. 
+\\
+MnGe is currently subject to extensive investigation in the solid state physics community
+\cite{kanazawa_large_2011,kanazawa_possible_2012,grigoriev_chiral_2013,tanigaki_real-space_2015,
+martin_magnetic_2016}.
+However, to the best of our knowledge large-scale DFT calculations have not yet been performed.
+We are confident that such calculations can provide new insight into the nature of
+the observed magnetic textures and the underlying creation mechanisms.
+At present there is a lack of a convincing explanation of what is observed in experiment. 
+Research in the framework of micromagnetic models identified both magnetic frustration (RKKY interaction) 
+as well as spin-orbit coupling induced Dzyaloshinskii-Moriya interaction as potentially
+crucial to a better understanding \cite{koretsune_control_2015,altynbaev_hidden_2016}.
+Our own spin model simulations which are less elaborate than a DFT-based approach with KKRnano yielded meta-stable
+topologically protected skyrmionic textures \cite{bornemann_investigation_2017} stabilized by RKKY interaction
+(see \cref{fig:sd_results}).
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}{.5\textwidth}
 		  \centering
@@ -208,58 +245,81 @@ of magnetism in many-body systems. The results from this are discussed below.
                   \label{fig:sub2}
 	\end{subfigure}
 	\caption{Graphical representation of a Skyrmion (left) and an anti-skyrmion (right) 
-	with atom magnetization pointing in positive (red) and negative (blue) z-direction.}
-	\label{fig:test}
+	with atom magnetization pointing in positive (red) and negative (blue) z-direction. Results
+	are obtained from a micromagnetic model with parameters for B20-MnGe
+	taken from electronic structure calculations.}
+	\label{fig:sd_results}
 \end{figure}
 
-This proposal is inspired by the recent discovery of magnetic skyrmion lattices in bulk helical magnets.
-In these systems a variety of phenomena can be of importance to what is observed in experiment,
-e.g. the topological Hall effect and spin-transfer torque at ultra-low current densities
-\cite{kanazawa_large_2011}.
-Special attention has been drawn on cubic B20-type compounds with broken lattice inversion symmetry.
-These compounds form a class of materials in which skyrmion phases have been observed experimentally
-\cite{nagaosa_topological_2013}.
-In a recent study \cite{tanigaki_real-space_2015} 
-it was found by real-space observation transmission electron microscopy 
-that a cubic lattice of skyrmions and anti-skyrmions (see Fig. 1) exists in B20-MnGe with
-a lattice constant of about 3-6 nm. In contrast to other systems exhibiting a similar magnetic phase,
-here the rather small lattice allows for first-principles density functional (DFT) calculations. 
-\\
-MnGe is currently subject to extensive theoretical investigation in the solid state physics community.
-However, to the best of our knowledge large-scale DFT calculations have not yet been performed.
-We are confident that such calculations can provide new insight into the nature of
-the observed magnetic textures and the underlying creation mechanisms.
-At present there is a lack of a convincing explanation of what is observed in experiment. 
-Research in the framework of micromagnetic models identified both magnetic frustration (RKKY interaction) 
-as well as spin-orbit coupling induced Dzyaloshinskii-Moriya interaction as potentially
-crucial to a better understanding \cite{koretsune_control_2015,altynbaev_hidden_2016}.
-Our own spin model simulations which are less elaborate than a DFT-based approach with KKRnano yielded meta-stable
-topologically protected skyrmionic textures \cite{bornemann_investigation_2017}.
 Based on these simulations we also deem it
 possible that textures even more exotic than skyrmions and anti-skyrmions \cite{rybakov_new_2015}
-can be stabilized in MnGe.
-
-In the past months first KKRnano calculations for MnGe were conducted on the HPC machines JUQUEEN,
+can be stabilized in B20-MnGe.
+\\
+In the past months first KKRnano calculations for B20-MnGe were conducted on the HPC machines JUQUEEN,
 JURECA and QPACE3. A 6x6x6 supercell of MnGe, which contains 1728 atoms, is large enough to cover 
 an edge length of 3 nm, and small enough for routine calculations with our code. Since one cannot 
 expect the skyrmion lattice period, which we hope to find in DFT calculations, to be exactly the 
 one observed in the experiments, we also plan to increase the size of the supercell to a 12x12x12
 supercell with 13824 atoms and a length of 6 nm. If necessary we can increase the size even
-to a 24x24x24 supercell with 110592 atoms as we demonstrated during the
-JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}
-where we managed to use the full machine in combination 
-with a linear scaling behavior.
-At the same event the High-Q club membership was renewed for KKRnano.
-\textbf{In total, we expect to use about 50.0 million core hours on Hazel Hen for this project.}
+to a 24x24x24 supercell with 110592 atoms \cite{brommel_juqueen_2017}.
+\\
+Our agenda is composed of the following sub-projects that we consider to be of importance
+to a depper understanding of helical textures in
+MnGe B20.
+
+\subsubsection{Identification of non-trivial magnetic ground states}
+The by far most important task in a large-scale DFT calculation for MnGe on which 
+all the following sub-projects depend is the search for
+non-trivial magnetic ground states as opposed to trivial ones, e.g. ferromagnetism or anti-ferromagnetism.
+Here, our top priority is to simulate the aforementioned 3q-state. In addition the simulation of single stable
+skyrmions and anti-skyrmions is planned. Especially anti-skyrmions are of great interest to us as they
+have seldom if ever been observed in any material.
+\\
+The calculations planned here are going to require a lot of parameter tuning
+(e.g. supercell size) and testing to find
+suitable configurations and therefore
+\textbf{we consider an allocation of 20 million core hours as necessary for this sub-project.}
+\subsubsection{Creation mechanisms leading to non-trivial magnetic states}
+The identification of ground-state candidates is to be followed by an investigation of
+mechanisms that lead to the formation of such ground-states. Our all-electron approach will allow 
+us to exactly quantify the origin of differences in total energy and therefore give us strong hints
+to what the system-inherent physics are driven by.
+\\
+\textbf{We estimate a need for 10 million core hours for this sub-project.}
+\subsubsection{Investigation of Mn(1-x)Fe(x)Ge alloys}
+Both B20-MnGe and B20-FeGe are chiral magnets exhibiting helical structures. While in
+B20-MnGe a suprisingly short helical wavelength of 3-6 nm is observed \cite{tanigaki_real-space_2015},
+a much larger one of
+approx. 70 nm is seen in B20-FeGe \cite{lebech_magnetic_1989}. This huge difference has not yet been explained.
+Our hypothesis is that it originates from fundamentally different effects, i.e. that
+magnetic frustration dominates in B20-MnGe while in B20-FeGe the interplay between
+isotropic exchange interaction and Dzyaloshinskii-Moriya interaction plays a major role.
+\\
+We plan to
+simulate Mn(1-x)Fe(x)Ge alloys where the concentration of Mn and Fe is varied.
+This work is going to help us solve the question of what is the fundamental difference between
+chiral magnetism in B20-MnGe and B20-FeGe.
+\\
+\textbf{10 million core hours are accounted for this sub-project.}
+
+\subsubsection{Influence of impurities and defects}
+B20-MnGe samples used to gather experimental data inevitably contain impurites and defects. 
+These may have an influence on the magnetic properties of materials and thus play a crucial role
+in the creation of helical structures. 
+Here, our ambition is to simulate point defects, e.g. oxygen interstitials, in B20-MnGe and study
+their impact.
+\\
+\textbf{10 million core hours are accounted for this sub-project.}
 
 \subsection{Review Processes}
 \textit{Has the underlying research project already successfully undergone a scientific review process? Is the project funded by public money?
 If yes, please also provide information about the funding source
 (e.g. State, BMWi, BMBF, DFG, EU, $\dots$)}
 
-KKRnano was granted a substantial amount of computing time by several committees in the past years.
-From 2014 to 2016 alone we succesfully applied for 18.5 million core-h on JUQUEEN
-and 0.45 million core-h on JURECA.
+Projects based on KKRnano were
+granted a substantial amount of computing time by several committees in the past years.
+The code itself was awarded the High-Q club membership in 2014 which requires the ability to
+effeciently utilise the entire 28-rack BlueGene/Q system installed in Jülich.
 
 
 %The development of the KKR method in general and of the code KKRnano in particular has been recognized 
@@ -353,12 +413,33 @@ For an efficient use of computers featuring symmetric multiprocessing (SMP) KKRn
 in the most time consuming parts so that e.g. on JUQUEEN calculations can be performed with combinations 
 ranging from 1 MPI task and 64 threads to 64 MPI tasks and 1 thread per node. Weak-scaling data
 for different combinations
-obtained on JUQUEEN is depicted in \cref{fig:total_runtimes}. For these performance tests MnGe supercells
+obtained on JUQUEEN is depicted in \cref{fig:total_runtimes}.
+\begin{figure}[h]
+\begin{center}
+ \includegraphics[scale=0.45]{Figures/total_runtimes.pdf}
+\end{center}
+\caption{Runtime of one self-consistent iteration with KKRnano 
+	on IBM BlueGene/Q at Forschungszentrum J{\"u}lich.
+	This data was obtained with a problem size ranging from 8192 atoms (1 rack) to 229376 atoms (28 racks).
+	Different distribution of MPI tasks (MPI) and openMP threads (omp) leads to slightly different runtimes.}
+\label{fig:total_runtimes}
+\end{figure}
+For these performance tests MnGe supercells
 ranging from 8192 atoms (1 rack) to 229376 atoms (28 racks/full machine) were used.
 In order to achieve linear scaling in the tfQMR solver the calculations were 
 done by setting the interaction range described by truncation of the Green function to include 
 always 1308 atoms around each considered site.
-\cref{fig:tfqmr_es_times} provides a scaling analysis of the tfQMR and electrostatics solver. It nicely shows 
+\cref{fig:tfqmr_es_times} provides a scaling analysis of the tfQMR and electrostatics solver.
+\begin{figure}[h]
+\begin{center}
+ \includegraphics[scale=0.45]{Figures/combinedtfqmrelectrostatics.pdf}
+\end{center}
+\caption{Time per iteration spent in the tfQMR solver (solid lines) 
+	and in the electrostatics solver (dashed lines) for the calculations depicted in
+	\cref{fig:total_runtimes}.}
+\label{fig:tfqmr_es_times}
+\end{figure}
+It nicely shows 
 a constant runtime of the tfQMR solver but also that the runtime of the electrostatics solver becomes
 more and more significant, when calculations are done for more than 65536 atoms (8 racks). 
 However, the standard system sizes we are aiming
@@ -372,7 +453,8 @@ we aim for.
 \\
 KKRnano jobs are launched as independent jobs requiring a short (less than 60 seconds) serial 'prepare'-step on
 the head node
-before launching the parallel large-scale calculation .
+before launching the parallel large-scale calculation. All post-processing will be
+performed on local computers.
 
 %{\it \textbf{Important:} please take into account the corresponding technical guidelines and requirements (e.g. required minimal code scalability, memory restictions, etc.) of the machine you have chosen!}\\
 
@@ -420,27 +502,9 @@ before launching the parallel large-scale calculation .
 %			\label{kkrnano:mnge_weakscaling_moderateomp}
 %		\end{table}
 
-\begin{figure}[H]
-\begin{center}
- \includegraphics[scale=0.45]{Figures/total_runtimes.pdf}
-\end{center}
-\caption{Runtime of one self-consistent iteration with KKRnano 
-	on IBM BlueGene/Q at Forschungszentrum J{\"u}lich.
-	This data was obtained with a problem size ranging from 8192 atoms (1 rack) to 229376 atoms (28 racks).
-	Different distribution of MPI tasks (MPI) and openMP threads (omp) leads to slightly different runtimes.}
-\label{fig:total_runtimes}
-\end{figure}
 
 
-\begin{figure}[H]
-\begin{center}
- \includegraphics[scale=0.45]{Figures/combinedtfqmrelectrostatics.pdf}
-\end{center}
-\caption{Time per iteration spent in the tfQMR solver (solid lines) 
-	and in the electrostatics solver (dashed lines) for the calculations depicted in
-	\cref{fig:total_runtimes}.}
-\label{fig:tfqmr_es_times}
-\end{figure}
+
 
 \textit{(1 to 2 pages)}
 \newpage
