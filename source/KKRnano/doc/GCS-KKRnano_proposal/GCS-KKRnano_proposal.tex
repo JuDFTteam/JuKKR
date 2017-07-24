@@ -89,12 +89,6 @@ J\"ulich Supercomputing Centre, Forschungszentrum J\"ulich, D-52425 J\"ulich, Ge
 }
 
 
-\phantom{MM} \textit{Prof. Dr. Peter H. Dederichs,
-Institute for Advanced Simulation, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
-}
-
-
-
 \newpage
 
 \vfill
@@ -112,26 +106,26 @@ Institute for Advanced Simulation, Forschungszentrum J\"ulich, D-52425 J\"ulich,
 \textit{(about 1 page)}
 
 We have developed a unique electronic structure code, 
-called KKRnano \cite{zeller_towards_2008,thiess_massively_2012},
+KKRnano \cite{zeller_towards_2008,thiess_massively_2012},
 specifically designed for petaFLOP computing. Our method scales linearly
-with the number of treated atoms so that we can realize system sizes of up to 
-458752  atoms in a unit cell. This has already been shown on the full JUQUEEN
+with the number of atoms, so that we can realize system sizes of up to 
+458752 atoms in a unit cell. This has already been shown on the full JUQUEEN
 machine \cite{brommel_juqueen_2017}.
 \\
 Recently, we implemented a relativistic generalization of our algorithm 
-enabling us to calculate complex non-collinear magnetic structures such as skyrmions
+enabling us to calculate complex non-collinear magnetic structures, such as skyrmions,
 in real space. Skyrmions are two-dimensional magnetization solitons, i.e. two-dimensional
 magnetic structures localized in space, topologically protected by a non-trivial
 magnetization texture, which has particle-like properties. 
-These days, they constitute one of the hottest subjects in the field of 
-magnetism because such topological solitons are considered to be the smallest 
+These days, they constitute one of the most active subjects in the field of 
+magnetism, because such topological solitons are considered to be the smallest 
 information-carrying particles at room temperature \cite{fert_skyrmions_2013,castelvecchi_strange_2017}. 
 \\
 We plan to perform large-scale density functional theory (DFT) calculations with 
-KKRnano for materials exhibiting these complex magnetic skyrmion textures on Hazel Hen 
-since test runs on this particular machine confirmed our expectations with regards to performance. 
-The focus of our work is on the germanide MnGe as it exhibits a three-dimensional magnetic structure,
-which is not understood so far (see preliminary results
+KKRnano for materials exhibiting these complex magnetic skyrmion textures. We plan to use Hazel Hen, 
+for which test runs confirmed our expectations of performance. 
+The focus of our work is on the germanide MnGe, as it exhibits a three-dimensional magnetic structure,
+which is not yet understood (see preliminary results
 \cite{tanigaki_real-space_2015,bornemann_investigation_2017}).
 
 \section{Preliminary Work}
@@ -140,21 +134,21 @@ which is not understood so far (see preliminary results
 
 \textit{(about 1 to 2 pages)}
 
-KKRnano was first applied to Gd doped GaN where special emphasis was put on
+KKRnano was first applied to Gd doped GaN, where special emphasis was placed on
 magnetic interactions between defects \cite{thiess_superparamagnetism_2012}. Subsequently,
 the phase change material GeSbTe was investigated \cite{zhang_role_2012}.
 \\
-During the last two years we have completely modernized our code and considerably improved 
+During the last two years we have completely rewritten the code and considerably improved 
 its flexibility with respect to the number of cores and the number of MPI tasks and
-OpenMP threads which can be used in production runs. By changing the computational algorithms
+OpenMP threads that can be used in production runs. By changing the computational algorithms
 we have also improved the computational efficiency both for conventional
 supercomputers (e.g. JUQUEEN) and the cluster-booster architecture
 (e.g. NVIDIA Tesla GPUs) \cite{dutot_addressing_2016}. 
-We have tested the new version of the code for a number of large systems, 
+We have tested the new version of the code for several large systems, 
 in particular for MnGe supercells with B20 structure containing between 8192 and 458752 atoms,
 during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}.
 \\
-As a first step towards unraveling the mystery of skyrmionic textures in B20-MnGe we
+As a first step towards unravelling the mystery of skyrmionic textures in B20-MnGe we
 performed simulations based on simple micromagnetic models that can provide an elementary understanding
 of magnetism in many-body systems. The results from this are discussed below.
 
@@ -208,12 +202,12 @@ of magnetism in many-body systems. The results from this are discussed below.
 \end{figure}
 
 
-This proposal is inspired by the recent discovery of magnetic skyrmion lattices in bulk helical magnets.
-In these systems a variety of phenomena can be of importance to what is observed in experiment,
-e.g. the topological Hall effect and spin-transfer torque at ultra-low current densities
+This proposal is inspired by the recent discovery of magnetic skyrmion lattices in bulk helical magnets,
+where a variety of phenomena can be important in explaining experimental observations.
+Examples are the topological Hall effect and spin-transfer torque at ultra-low current densities
 \cite{kanazawa_large_2011}.
-Special attention has been drawn on cubic B20-type compounds with broken lattice inversion symmetry.
-These compounds form a class of materials in which skyrmion phases have been observed experimentally
+Special attention has been paid to cubic B20-type compounds with broken lattice inversion symmetry,
+where skyrmion phases have been observed experimentally
 \cite{nagaosa_topological_2013}.
 In a recent study \cite{tanigaki_real-space_2015} 
 it was found by real-space observation transmission electron microscopy 
@@ -222,21 +216,22 @@ a lattice constant of about 3-6 nm. Findings by Kanazawa et al. suggest that thi
 lattice is set up by a superposition of three orthogonal helical
 structures also referred to as 3q-state \cite{kanazawa_noncentrosymmetric_2017}.
 In contrast to other systems exhibiting a similar magnetic phase,
-here the rather short helical wavelength allows for first-principles density functional (DFT) calculations
+here the rather short helical wavelength allows for density functional (DFT) calculations
 with KKRnano. 
 \\
-B20-MnGe is currently subject to extensive investigation in the solid state physics community
+B20-MnGe is currently the subject of extensive investigation.
 \cite{kanazawa_large_2011,kanazawa_possible_2012,grigoriev_chiral_2013,tanigaki_real-space_2015,
 martin_magnetic_2016}.
-However, to the best of our knowledge large-scale DFT calculations have not yet been performed.
+However, we know of large-scale DFT calculations that have been performed.
 We are confident that such calculations can shed light onto the nature of
 the observed magnetic textures and the underlying creation mechanisms.
 At present there is a lack of a convincing explanation of what is observed in experiment. 
 Research in the framework of micromagnetic models identified both magnetic frustration (RKKY interaction) 
 as well as spin-orbit coupling induced Dzyaloshinskii-Moriya interaction as potentially
-crucial to a better understanding \cite{altynbaev_hidden_2016,koretsune_control_2015,}.
-Our own spin model simulations which are less elaborate than a DFT-based approach with KKRnano yielded meta-stable
-topologically protected skyrmionic textures \cite{bornemann_investigation_2017} stabilized by RKKY interaction
+crucial to a better understanding \cite{altynbaev_hidden_2016,koretsune_control_2015}.
+Our own spin model simulations are less elaborate than a DFT-based approach with KKRnano, but they
+yielded meta-stable
+topologically protected skyrmionic textures \cite{bornemann_investigation_2017} stabilized by the RKKY interaction
 (see \cref{fig:sd_results}).
 \begin{figure}[h]
 	\centering
@@ -264,37 +259,39 @@ possible that textures even more exotic than skyrmions and anti-skyrmions as pro
 \cite{rybakov_new_2015},
 can be stabilized in B20-MnGe.
 \\
-In the past months first KKRnano calculations for B20-MnGe were conducted on the HPC machines JUQUEEN,
-JURECA and QPACE3. A 6x6x6 supercell of MnGe, which contains 1728 atoms, is large enough to cover 
-an edge length of 3 nm, and small enough for routine calculations with our code. Since one cannot 
+In the past few months, we have performed the
+first KKRnano calculations for B20-MnGe on the HPC machines JUQUEEN,
+JURECA and QPACE3. A 6x6x6 supercell of MnGe with 1728 atoms, has an
+edge length of 3 nm and is small enough for routine calculations with our code. We do not 
 expect the skyrmion lattice period, which we hope to find in DFT calculations, to be exactly the 
-one observed in the experiments, we also plan to increase the size of the supercell to a 12x12x12
-supercell with 13824 atoms and a length of 6 nm. If necessary we can increase the size even
+one observed in the experiments, so we plan to increase the size of the supercell to a 12x12x12
+supercell with 13824 atoms and a length of 6 nm. If necessary, we can increase the size
 to a 24x24x24 supercell with 110592 atoms \cite{brommel_juqueen_2017}.
 \\
 Our agenda is composed of the following sub-projects that we consider to be of importance
-to a depper understanding of helical textures in
+to a deeper understanding of helical textures in
 B20-MnGe.
 
 \subsubsection{Identification of non-trivial magnetic ground states in B20-MnGe}
-The by far most important task connected to large-scale DFT calculations for MnGe is the search for
+The most important task by far connected to large-scale DFT calculations for MnGe is the search for
 non-trivial magnetic ground states as opposed to trivial ones,
 e.g. ferromagnetism or anti-ferromagnetism.
-Here, our top priority is to simulate the aforementioned 3q-state. In addition the simulation of single stable
-skyrmions and anti-skyrmions is planned. Especially anti-skyrmions are of great interest to us as they
-have seldom if ever been observed in any material.
-\\
-The calculations planned here are going to require a lot of parameter tuning
-(e.g. supercell size) and testing to find
-suitable configurations and therefore
-\textbf{we consider an allocation of 20 million core hours as necessary for this sub-project.}
+Here, our top priority is to simulate the 3q-state mentioned above. In addition, we plan
+the simulation of single stable
+skyrmions and anti-skyrmions. Anti-skyrmions are of great interest as they
+have seldom, if ever, been observed in any material.
+%\\
+%The calculations planned here are going to require much parameter tuning
+%(e.g. supercell size) and testing to find
+%suitable configurations and therefore
+%\textbf{we consider an allocation of 20 million core hours as necessary for this sub-project.}
 \subsubsection{Creation mechanisms leading to non-trivial magnetic states in B20-MnGe}
 The identification of ground-state candidates is to be followed by an investigation of
 mechanisms that lead to the formation of such ground-states. Our all-electron approach will allow 
 us to exactly quantify the origin of differences in total energy and therefore give us strong hints
 to what the system-inherent physics are driven by.
-\\
-\textbf{We estimate a need for 5 million core hours for this sub-project.}
+%\\
+%\textbf{We estimate a need for 5 million core hours for this sub-project.}
 \subsubsection{Investigation of Mn(1-x)Fe(x)Ge alloys}
 Both B20-MnGe and B20-FeGe are chiral magnets exhibiting helical structures. While in
 B20-MnGe a suprisingly short helical wavelength of 3-6 nm is observed \cite{tanigaki_real-space_2015},
@@ -309,20 +306,20 @@ simulate Mn(1-x)Fe(x)Ge alloys where the concentration of Mn and Fe is varied.
 This work is going to help us solve the question of what is the fundamental difference in chiral magnetism
 between
 chiral magnetism in B20-MnGe and B20-FeGe.
-\\
-\textbf{15 million core hours are accounted for this sub-project.}
+%\\
+%\textbf{15 million core hours are accounted for this sub-project.}
 
 \subsubsection{Influence of impurities and defects in B20-MnGe}
-B20-MnGe samples used to gather experimental data inevitably contain impurites and defects. 
-These may have an influence on the magnetic properties of materials and thus play a crucial role
+B20-MnGe samples used to gather experimental data inevitably contain impurites and defects 
+that may influence the magnetic properties of materials and thus play a crucial role
 in the creation and stability of helical structures.
-A lot of interesting research has already been done on the interplay of
+Much interesting research has already been done on the interplay of
 skyrmions and impurities/defects for other structures
 \cite{fert_skyrmions_2013,woo_observation_2016,jiang_direct_2016,crum_perpendicular_2015}.
-We are going to extend this research to B20-MnGe and
+We shall extend this research to B20-MnGe and
 study the effect of impurities and point defects, e.g. oxygen interstitials.
-\\
-\textbf{10 million core hours are accounted for this sub-project.}
+%\\
+%\textbf{10 million core hours are accounted for this sub-project.}
 
 \subsection{Review Processes}
 \textit{Has the underlying research project already successfully undergone a scientific review process? Is the project funded by public money?
