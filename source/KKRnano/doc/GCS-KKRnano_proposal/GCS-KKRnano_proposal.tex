@@ -146,16 +146,39 @@ its flexibility with respect to the number of cores and the number of MPI tasks 
 OpenMP threads that can be used in production runs. By changing the computational algorithms
 we have also improved the computational efficiency both for conventional
 supercomputers (e.g. JUQUEEN) and the cluster-booster architecture
-(e.g. NVIDIA Tesla GPUs) \cite{dutot_addressing_2016}. 
-We have tested the new version of the code for several large systems, 
+(e.g. NVIDIA Tesla GPUs) \cite{dutot_addressing_2016}.
+In the latest versions of KKRnano BLAS routines for linear algebra are used throughout the code
+enhancing both readibility and performance of the code. Furthermore, KKRnano is now
+fully FORTRAN90 compliant with all the subroutines embedded in modules.
+In order to benefit from accelerators installed in current and upcoming machines we
+ported the core part of KKRnano, i.e. the TFQMR solver, to GPUs. The TFQMR solver was rewritten
+in C++ and utilizes cuBLAS routines from the CUDA toolkit developed by Nvidia.
+\\
+Subsequently, we tested the new version of the code for several large systems, 
 in particular for MnGe supercells with B20 structure containing between 8192 and 458752 atoms,
 during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}.
+Due to limited computing time test runs for B20-MnGe were conducted on a smaller scale on JURECA and Hazel Hen.
+As expected, performance results are similar for both machines and superior to JUQUEEN.
+The results obtained within the test project on Hazel Hen entered
+in our estimate of computational costs in \cref{sec:just}.
 \\
 As a first step towards unravelling the mystery of skyrmionic textures in B20-MnGe we
 performed simulations based on simple micromagnetic models that can provide an elementary understanding
-of magnetism in many-body systems. The results from this are discussed below.
+of magnetism in many-body systems. A more detailed explanation of our results is given in \cref{sec:desc}.
+\\
+Additionally, the elementary unit cell consisting of 8 atoms (4 Mn and 4 Ge) was
+studied with KKRnano to get a feeling of how parameters should be chosen and
+to ensure that quantities obtained from DFT
+match those observed in experiment.
+Our calculations yielded an equilibrium lattice constant that is within the tolerance limit
+associated with local density approximation as well as a magnetic moment that is resonably close to
+the one
+found in experiment.
+
+
 
 \section{Description of the Project}
+\label{sec:desc}
 \rule{\textwidth}{0.4pt}\\
 \subsection{Project Details}
 %\textit{Describe your research project in detail, structured in sub-projects, if applicable. Include discussion of the scientific questions that you are planning to address and the overall scientific goals of the project. It is important that you describe the innovative aspects, impact and topicality of the proposal.}
@@ -522,6 +545,7 @@ performed on local computers.
 \textit{(1 to 2 pages)}
 \newpage
 \subsection{Justification of resources requested}
+\label{sec:just}
 %\textit{Outline the amount of resources you request for the current granting period, structured in sub-projects, if applicable. This should include information such as}
 %\begin{itshape}
 %\begin{itemize}\setlength{\itemsep}{-2pt}
