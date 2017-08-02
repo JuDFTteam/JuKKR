@@ -148,11 +148,11 @@ we have also improved the computational efficiency both for conventional
 supercomputers (e.g. JUQUEEN) and the cluster-booster architecture
 (e.g. NVIDIA Tesla GPUs) \cite{dutot_addressing_2016}.
 In the latest versions of KKRnano BLAS routines for linear algebra are used throughout the code
-enhancing both readibility and performance of the code. Furthermore, KKRnano is now
+enhancing both readability and performance of the code. Furthermore, KKRnano is now
 fully FORTRAN90 compliant with all the subroutines embedded in modules.
 In order to benefit from accelerators installed in current and upcoming machines we
 ported the core part of KKRnano, i.e. the TFQMR solver, to GPUs. The TFQMR solver was rewritten
-in C++ and utilizes cuBLAS routines from the CUDA toolkit developed by Nvidia.
+in C++ and utilizes cuBLAS routines from the CUDA toolkit developed by NVIDIA.
 \\
 Subsequently, we tested the new version of the code for several large systems, 
 in particular for MnGe supercells with B20 structure containing between 8192 and 458752 atoms,
@@ -162,7 +162,7 @@ As expected, performance results are similar for both machines and superior to J
 The results obtained within the test project on Hazel Hen entered
 in our estimate of computational costs in \cref{sec:just}.
 \\
-As a first step towards unravelling the mystery of skyrmionic textures in B20-MnGe we
+As a first step towards a comprehensive understanding of skyrmionic textures in B20-MnGe we
 performed simulations based on simple micromagnetic models that can provide an elementary understanding
 of magnetism in many-body systems. A more detailed explanation of our results is given in \cref{sec:desc}.
 \\
@@ -171,7 +171,7 @@ studied with KKRnano to get a feeling of how parameters should be chosen and
 to ensure that quantities obtained from DFT
 match those observed in experiment.
 Our calculations yielded an equilibrium lattice constant that is within the tolerance limit
-associated with local density approximation as well as a magnetic moment that is resonably close to
+associated with local density approximation as well as a magnetic moment that is reasonably close to
 the one
 found in experiment.
 
@@ -218,11 +218,11 @@ found in experiment.
                   \label{fig:sub2}
 	\end{subfigure}
 	\caption{In-plane magnetic moment configurations of cubic-lattice skyrmion 
-		in MnGe and projected positions of hedgehog and antihedgehog according to
+		in MnGe and projected positions of hedgehog and anti-hedgehog according to
 	        Tanigaki et al. \cite{tanigaki_real-space_2015}.
 		Left: Enlarged in-plane magnetic-moment configurations as observed in experiment.
 		Right: Simulated in-plane magnetic-moment configurations and projected
-		positions of magnetic hedgehogs (blue) and antihedgehogs (red).}
+		positions of magnetic hedgehogs (blue) and anti-hedgehogs (red).}
 		
 	\label{fig:tokura_results}
 \end{figure}
@@ -320,7 +320,7 @@ to what the system-inherent physics are driven by.
 %\textbf{We estimate a need for 5 million core hours for this sub-project.}
 \subsubsection{Investigation of Mn(1-x)Fe(x)Ge alloys}
 Both B20-MnGe and B20-FeGe are chiral magnets exhibiting helical structures. While in
-B20-MnGe a suprisingly short helical wavelength of 3-6 nm is observed \cite{tanigaki_real-space_2015},
+B20-MnGe a surprisingly short helical wavelength of 3-6 nm is observed \cite{tanigaki_real-space_2015},
 a much larger one of
 approx. 70 nm is seen in B20-FeGe \cite{lebech_magnetic_1989}. This huge difference has not yet been explained.
 Our hypothesis is that it originates from fundamentally different effects, i.e. that
@@ -336,7 +336,7 @@ chiral magnetism in B20-MnGe and B20-FeGe.
 %\textbf{15 million core hours are accounted for this sub-project.}
 
 \subsubsection{Influence of impurities and defects in B20-MnGe}
-B20-MnGe samples used to gather experimental data inevitably contain impurites and defects 
+B20-MnGe samples used to gather experimental data inevitably contain impurities and defects 
 that may influence the magnetic properties of materials and thus play a crucial role
 in the creation and stability of helical structures.
 Much interesting research has already been done on the interplay of
@@ -355,7 +355,7 @@ If yes, please also provide information about the funding source
 Projects based on KKRnano have been granted
 granted substantial computing resources by several committees in the past years.
 The code itself was awarded the High-Q club membership in 2014 which requires the ability to
-effeciently utilise the entire 28-rack BlueGene/Q system installed in Jülich.
+efficiently utilize the entire 28-rack BlueGene/Q system installed in J\"ulich.
 
 
 %The development of the KKR method in general and of the code KKRnano in particular has been recognized 
@@ -400,15 +400,15 @@ be calculated.
 However, by choosing a reference system of repulsive potentials
 $\matr{A}$ can be made sparse and this can again be exploited
 by using customized iterative algorithms for solving linear sparse matrix equations.
-Our method uses the transpose free quasi minimal residual (tfQMR) algorithm \cite{freund_qmr:_1991}
+Our method uses the transpose free quasi minimal residual (TFQMR) algorithm \cite{freund_qmr:_1991}
 which enables us to achieve $O(N^2)$ scaling. 
-Convergence of the tfQMR iterations is achieved by working in the complex energy plane. Both concepts,
+Convergence of the TFQMR iterations is achieved by working in the complex energy plane. Both concepts,
 the repulsive reference system and application of complex energy, were
 introduced by us into the KKR method \cite{zeller_application_1982,zeller_theory_1995}
 and are used worldwide for many years. 
 By truncating inter-atomic interactions above a certain distance, an $O(N)$ scaling 
 behavior can be realized, and this feature should be used in any calculation involving more than 1000 atoms.
-In most applications the tfQMR solver accounts for more than 70 \% of the computational work.
+In most applications the TFQMR solver accounts for more than 70 \% of the computational work.
 \\
 For super-large-scale calculations (above 100000 atoms) the electrostatics solver begins
 to require an amount of computing resources that is not negligible anymore. 
@@ -445,7 +445,7 @@ On the other hand, it is also possible to map several atoms to one MPI process s
 systems with several thousand atoms can also be investigated if only a few hundred
 processors are available, but with associated longer wall-clock runtimes.
 \\
-For an efficient use of computers featuring symmetric multiprocessing (SMP) KKRnano contains openMP directives
+For an efficient use of computers featuring symmetric multiprocessing (SMP) KKRnano contains OpenMP directives
 in the most time consuming parts, so that e.g. on JUQUEEN calculations can be performed with combinations 
 ranging from 1 MPI task and 64 threads to 64 MPI tasks and 1 thread per node. Weak-scaling data
 for different combinations
@@ -457,26 +457,26 @@ obtained on JUQUEEN is depicted in \Cref{fig:total_runtimes}.
 \caption{Runtime of one self-consistent iteration with KKRnano 
 	on IBM BlueGene/Q at Forschungszentrum J{\"u}lich.
 	This data was obtained with a problem size ranging from 8192 atoms (1 rack) to 229376 atoms (28 racks).
-	Different distribution of MPI tasks (MPI) and openMP threads (omp) leads to slightly different runtimes.}
+	Different distribution of MPI tasks (MPI) and OpenMP threads (omp) leads to slightly different runtimes.}
 \label{fig:total_runtimes}
 \end{figure}
 For these performance tests MnGe supercells
 with 8192 atoms (1 rack) to 229376 atoms (28 racks/full machine) were used.
-In order to achieve linear scaling in the tfQMR solver the calculations were 
+In order to achieve linear scaling in the TFQMR solver the calculations were 
 done by setting the interaction range described by truncation of the Green function to include 
 1308 atoms around each considered site.
-\Cref{fig:tfqmr_es_times} provides a scaling analysis of the tfQMR and electrostatics solver.
+\Cref{fig:tfqmr_es_times} provides a scaling analysis of the TFQMR and electrostatics solver.
 \begin{figure}[h]
 \begin{center}
  \includegraphics[scale=0.45]{Figures/combinedtfqmrelectrostatics.pdf}
 \end{center}
-\caption{Time per iteration spent in the tfQMR solver (solid lines) 
+\caption{Time per iteration spent in the TFQMR solver (solid lines) 
 	and in the electrostatics solver (dashed lines) for the calculations depicted in
 	\Cref{fig:total_runtimes}.}
 \label{fig:tfqmr_es_times}
 \end{figure}
 It shows 
-a constant runtime of the tfQMR solver but also that the runtime of the electrostatics solver becomes
+a constant runtime of the TFQMR solver but also that the runtime of the electrostatics solver becomes
 more and more significant when calculations are done for more than 65536 atoms (8 racks). 
 The standard system sizes we are aiming
 for with this project proposal will, however, be smaller than that.
@@ -564,9 +564,9 @@ performed on local computers.
 We plan to do pure production runs that feature different non-trivial magnetic textures, such as skyrmions.
 Each run consists of typically about 100 self-consistent iterations that are needed to converge
 the electronic density. Our current setup requires approximately 1000 s per iteration depending on the desired
-accuracy. We emphasise that such calculations depend on several tunable parameters, e.g. number of
+accuracy. We emphasize that such calculations depend on several tunable parameters, e.g. number of
 k-points, cutoff radii and atomic positions, and it is essential to check results with different parameter
-settings in order to ensure that physical interpretations are valid and reproducable. 
+settings in order to ensure that physical interpretations are valid and reproducible. 
 %With the \textbf{requested amount of 50 million core hours} (approx $1.8 \times 10^{11}$ core-s)
 %we are able to do roughly 1000 independent calculations with
 %the smallest setup featuring a unit cell of 1728 atoms:
