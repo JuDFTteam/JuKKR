@@ -6,6 +6,7 @@
 !> @todo check intents
 module wrappers_mod
 #include "macros.h"
+use Warnings_mod, only: launch_warning
   implicit none
   private
   
