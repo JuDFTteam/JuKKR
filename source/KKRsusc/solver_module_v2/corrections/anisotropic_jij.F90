@@ -3,6 +3,7 @@
 ! Eq. 9 in PRB 79, 045209 (2009)
 ! One factor of 1/2 is taken into the definition of the magnetic Hamiltonian:
 ! H = -1/2 \sum_{ij} e_i J_{ij} e_j
+! WARNING: I suspect that there is an extra factor of 2 included which is not compatible with the previous H
 
   use global
 
@@ -11,11 +12,12 @@
 ! Whether to add LDA+U correction to spin splitting
   logical,  intent(in) :: lldautoo
 ! ----------------------------------------------------------------------
+  real(kind=r8b),    parameter :: pi = 4.d0*atan(1.d0)
   complex(kind=c8b), parameter :: czero = (0.d0,0.d0), cone = (1.d0,0.d0), cminus = (-1.d0,0.d0)
   complex(kind=c8b), parameter :: i2pi = cmplx(0.d0,8.d0*atan(1.d0))
   real(kind=r8b),    parameter :: uz(3) = (/0.d0,0.d0,1.d0/)
 ! Which atoms for Jij's
-  integer(kind=i4b) :: najij
+  integer(kind=i4b) :: najij, najij1, najij2
   integer(kind=i4b) :: iajij(nasusc)
 ! Exchange interactions
   complex(kind=c8b), allocatable :: jijdos(:,:,:,:,:)
@@ -33,14 +35,27 @@
   integer(kind=i4b) :: info
   integer(kind=i4b), allocatable :: ipiv(:)
 
+
+! ----------------------------------------------------------------------
 ! Use ijij to find which atoms to compute Jij for
-  najij = 0
+! Place atoms with local moments (ijij == 1) first
+  najij1 = 0
   do ia=1,nasusc
-    if (ijij(ia) /= 0) then
-      najij = najij + 1
-      iajij(najij) = ia
+    if (ijij(ia) == 1) then
+      najij1 = najij1 + 1
+      iajij(najij1) = ia
     end if
   end do
+! Then atoms with induced moments (ijij == 2)
+  najij2 = 0
+  do ia=1,nasusc
+    if (ijij(ia) == 2) then
+      najij2 = najij2 + 1
+      iajij(najij1+najij2) = ia
+    end if
+  end do
+  najij = najij1 + najij2
+! ----------------------------------------------------------------------
   write(*,'("anisotropic_jij: RAM=",f16.3," MB",/)') 16.d0*(najij+4)*nlmsb*nlmsb/1024.d0**2
   allocate(dti(nlmsb,nlmsb,6,najij),jij(3,3,najij,najij),jiout(najij),jijdos(3,3,najij,najij,nesusc))
   allocate(chi0(3,3,najij,najij),linres(2*najij,2*najij),rhs(2*najij),ipiv(2*najij))
@@ -51,6 +66,12 @@
 !  allocate(gij(nlms,nlms),gji(nlms,nlms),work1(nlms,nlms),work2(nlms,nlms))
   jij = czero; bxcef = 0.d0; msef = 0.d0; dosef = 0.d0; msbxc = 0.d0; chi0 = 0.d0
 ! --------------------------------------------------------------------
+!                  definition of spin Hamiltonian
+! --------------------------------------------------------------------
+  write(*,'(" Magnetic exchange interactions:")')
+  write(*,'(" Hamiltonian is defined as H = -1/2 \sum_ij e_i J_ij e_j ")')
+  write(*,'(" e_i is a unit vector in the direction of the spin moment of atom i",/)')
+! --------------------------------------------------------------------
 !                       t-matrix corrections
 ! --------------------------------------------------------------------
   write(*,'(" Magnetic exchange interactions: J onsite")')
@@ -59,7 +80,7 @@
     ia = iajij(ia2)
 !   dti = Ri Bi Ri \vec\sigma
     call build_dti(1,ia,lldautoo,dti(:,:,:,ia2),jiout(ia2))
-    write(*,'(" ia=",i4,"  Jiiout=",es16.8)') iajij(ia2), jiout(ia2)
+    write(*,'(" ia=",i4,"  Jiiout=",es16.8," Ry")') iajij(ia2), jiout(ia2)
 !    do i=1,3
 !      trace = czero
 !      do ilms=1,nlms
@@ -93,8 +114,8 @@
 !   --------------------------------------------------------------------
 !                         t-matrix corrections
 !   --------------------------------------------------------------------
-    do ia2=1,najij
-      ia = iajij(ia2)
+!    do ia2=1,najij
+!      ia = iajij(ia2)
 !     dti = Ri Bi Ri \vec\sigma
 !      call build_dti_v2(ie,ia,lldautoo,dti(:,:,:,ia2))
 !      do i=1,3
@@ -104,7 +125,7 @@
 !        end do
 !        write(iodb,'(" tr dti=",2i4,2es16.8)') ie, ia, trace
 !      end do
-    end do
+!    end do
 !   --------------------------------------------------------------------
 !                           Jij for all pairs    
 !   --------------------------------------------------------------------
@@ -112,6 +133,8 @@
       ja = iajij(ja2)
       do ia2=1,najij
         ia = iajij(ia2)
+!       for the induced moments get only onsite part
+        if (ja2 > najij1 .and. ia2 /= ja2) cycle
 !       collect the relevant blocks of the structural GF
 !        gij = czero; gji = czero
 !        do jlms=1,nlms
@@ -182,7 +205,8 @@
             do ilms=1,nlmsba(ia)
               trace = trace + work1(ilms,ilms)
             end do
-            jij(i,j,ia2,ja2) = jij(i,j,ia2,ja2) + real(2.d0*de*trace/i2pi)
+!            jij(i,j,ia2,ja2) = jij(i,j,ia2,ja2) + real(2.d0*de*trace/i2pi)
+            jij(i,j,ia2,ja2) = jij(i,j,ia2,ja2) + aimag(de*trace/pi)
 !           spectral density for Jij
             re = real(trace); im = aimag(trace)
             if (abs(re) < 1.d-10) re = 0.d0
@@ -200,7 +224,8 @@
             do ilms=1,nlmsba(ia)
               trace = trace + work1(ilms,ilms)
             end do
-            chi0(i,j,ia2,ja2) = chi0(i,j,ia2,ja2) - real(2.d0*de*trace/i2pi)
+!            chi0(i,j,ia2,ja2) = chi0(i,j,ia2,ja2) - real(2.d0*de*trace/i2pi)
+            chi0(i,j,ia2,ja2) = chi0(i,j,ia2,ja2) - aimag(de*trace/pi)
 !           ------------------------------------------------------------
 !           dVi * Gij(E-i0)  = dVi * Gji(E+i0)^\dagger--> work1
 !            call zgemm('N','C',nlmsba(ia),nlmsba(ja),nlmsba(ia),cone,dti(:,:,i,ia2),nlmsb,gji,nlmsb,czero,work1,nlmsb)
@@ -223,7 +248,8 @@
           do ilms=1,nlmsba(ja)
             trace = trace + work2(ilms,ilms)
           end do
-          dosef(ja2) = dosef(ja2) + real(2.d0*de*trace/i2pi)/3.d0  ! it's inside the j loop
+!          dosef(ja2) = dosef(ja2) + real(2.d0*de*trace/i2pi)/3.d0  ! it's inside the j loop
+          dosef(ja2) = dosef(ja2) + aimag(de*trace/pi)/3.d0  ! it's inside the j loop
 !         averaged Bxc at EF from atoms in Jij
 !         dVj * ( Gji(E+i0) * Gij(E+i0)) --> work1
           call zgemm('N','N',nlmsba(ja),nlmsba(ja),nlmsba(ja),cone,dti(:,:,j,ja2),nlmsb,work2,nlmsb,czero,work1,nlmsb)
@@ -231,7 +257,8 @@
           do ilms=1,nlmsba(ja)
             trace = trace + work1(ilms,ilms)
           end do
-          bxcef(j,ja2) = bxcef(j,ja2) + real(2.d0*de*trace/i2pi)
+!          bxcef(j,ja2) = bxcef(j,ja2) + real(2.d0*de*trace/i2pi)
+          bxcef(j,ja2) = bxcef(j,ja2) + aimag(de*trace/pi)
 !         averaged mspin at EF from atoms in Jij
 !         pauli_j * ( Gji(E+i0) * Gij(E+i0)) --> work1
           call zgemm('N','N',nlmsba(ja),nlmsba(ja),nlmsba(ja),cone,dti(:,:,j+3,ja2),nlmsb,work2,nlmsb,czero,work1,nlmsb)
@@ -239,7 +266,8 @@
           do ilms=1,nlmsba(ja)
             trace = trace + work1(ilms,ilms)
           end do
-          msef(j,ja2) = msef(j,ja2) - real(2.d0*de*trace/i2pi)
+!          msef(j,ja2) = msef(j,ja2) - real(2.d0*de*trace/i2pi)
+          msef(j,ja2) = msef(j,ja2) - aimag(de*trace/pi)
 !         averaged ms * Bxc
           if (ia2 == ja2) then
 !           dVj * Gii(E+i0) --> work1
@@ -248,7 +276,8 @@
             do ilms=1,nlmsba(ja)
               trace = trace + work1(ilms,ilms)
             end do
-            msbxc(j,ja2) = msbxc(j,ja2) + real(2.d0*de*trace/i2pi)
+!            msbxc(j,ja2) = msbxc(j,ja2) + real(2.d0*de*trace/i2pi)
+            msbxc(j,ja2) = msbxc(j,ja2) + aimag(de*trace/pi)
           end if
 !         ------------------------------------------------------------
         end do  ! j loop
@@ -293,6 +322,8 @@
   do ja2=1,najij
     jiavg = 0.d0
     do ia2=1,najij
+!     for the induced moments get only onsite part
+      if (ja2 > najij1 .and. ia2 /= ja2) cycle
 !     rotate to local frame
 !     R_i^T J_ij R_j
       jij(:,:,ia2,ja2) = matmul(transpose(rotmat(:,:,ia2)),matmul(jij(:,:,ia2,ja2),rotmat(:,:,ja2)))
@@ -308,7 +339,9 @@
         end do
       end if
 !     ------------------------------------------------------------------
-      jij(:,:,ia2,ja2) = 2.d0*jij(:,:,ia2,ja2)
+!     ****************************** FACTOR OF 2 ***********************
+!      jij(:,:,ia2,ja2) = 2.d0*jij(:,:,ia2,ja2)
+      jij(:,:,ia2,ja2) = jij(:,:,ia2,ja2)
 !     chop small numbers
       where (abs(jij(:,:,ia2,ja2)) < 1.d-10) jij(:,:,ia2,ja2) = 0.d0
 !      jiavg = jiavg + 0.5d0*(jij(1,1,ia2,ja2) + jij(2,2,ia2,ja2) + jij(1,2,ia2,ja2) - jij(2,1,ia2,ja2))
