@@ -167,8 +167,8 @@ module wrappers_mod
     CHECKASSERT( lmaxd*2 == atomdata%potential%lpot )
     CHECKASSERT( size(tr_alph) == nspind )
     CHECKASSERT( size(tmatn, 3) == nspind )
-    CHECKASSERT( size(tmatn, 1) == lmmaxd )
-    CHECKASSERT( size(tmatn, 2) == lmmaxd )
+    if( size(tmatn, 1) /= lmmaxd ) warn(6,"t-matrix does not have the same number of lm-components as given in the potential")
+    if( size(tmatn, 2) /= lmmaxd ) warn(6,"t-matrix does not have the same number of lm-components as given in the potential"
 
     call calcTmat(ldau_data%ldau, ldau_data%nldau, icst, &
                   nsra, emesh%ez(ie), &
