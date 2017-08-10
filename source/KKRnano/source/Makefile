@@ -352,7 +352,7 @@ InputParams_mod.o: ConfigReader_mod.o
 PolygonFaces_mod.o: Constants_mod.o
 ShapeGeometryHelpers_mod.o: Exceptions_mod.o Constants_mod.o
 ShapeStandardMesh_mod.o: Exceptions_mod.o Constants_mod.o
-wrappers_mod.o: ValenceDensity_mod.o SingleSite_mod.o BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o NonCollinearMagnetism_mod.o ##AtomicCore_mod.o
+wrappers_mod.o: Warnings_mod.o ValenceDensity_mod.o SingleSite_mod.o BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o NonCollinearMagnetism_mod.o ##AtomicCore_mod.o
 BCPOperator_mod.o:  ClusterInfo_mod.o Exceptions_mod.o
 CalculationData_mod.o: Exceptions_mod.o ExchangeTable_mod.o KKRnanoParallel_mod.o JelliumPotentials_mod.o LatticeVectors_mod.o TruncationZone_mod.o Main2Arrays_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o Truncation_mod.o ChebMeshData_mod.o NonCollinearMagnetismData_mod.o
 NearField_com_mod.o: Logging_mod.o one_sided_commD_mod.o NearField_mod.o MadelungCalculator_mod.o NearField_kkr_mod.o
