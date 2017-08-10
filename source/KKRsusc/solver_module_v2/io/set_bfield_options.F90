@@ -94,7 +94,8 @@
 
 !   all atoms set to the same thing
     ntot = nasusc
-    ibfield(1:nasusc) = ibfield0; blen(1:nasusc) = blen0
+    ibfield(1:nasusc) = ibfield0
+    blen(1:nasusc) = blen0
     bdir(:,1:nasusc)  = spread(bdir0,2,nasusc)
 
 ! ****
@@ -105,7 +106,8 @@
 
 !   Defaults
     ntot = 0
-    ibfield(1:nasusc) = 0; blen(1:nasusc) = 0.d0
+    ibfield(1:nasusc) = 0
+    blen(1:nasusc) = 0.d0
     bdir(:,1:nasusc) = spread((/ 0.d0, 0.d0, 1.d0 /),2,nasusc)
 
 !   Search for atom info lines
