@@ -90,6 +90,9 @@
 ! ******************************
 ! Spin orientations from kkrflex
 ! ******************************
+! is this part needed and correct?
+! it always overwrites the first if statement for lsoc_new = False
+! Line 27-34 are overwritten
   else 
     do ia = 1, nasusc
       magdir0(:,ia) = magdir(:,ia)

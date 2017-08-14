@@ -30,16 +30,21 @@
   axis(2) = u1(3)*u0(1) - u1(1)*u0(3)
   axis(3) = u1(1)*u0(2) - u1(2)*u0(1)
   u0len = sqrt(dot_product(axis,axis))
-! Collinear?
+! Collinear
   if (u0len < tol) then
     if (abs(cosa) < tol) then
-      spinrot = pauli(:,:,1)  ! sigma_x <=> flip spin
+!     -i sigma_y <=> flip spin
+      cosa = 0.d0; sina = 1.d0
+      axis(:) = (/ 0.d0, -1.d0, 0.d0 /)
     else
-      spinrot = pauli(:,:,4)  ! sigma_0 <=> unit matrix
+!     sigma_0 <=> do nothing
+      cosa = 1.d0; sina = 0.d0
+      axis(:) = (/ 0.d0, 0.d0, 0.d0 /)
     end if
-    return
+! Not collinear
+  else
+    axis = axis/u0len
   end if
-  axis = axis/u0len
 !  write(iodb,'("spinrotation: angle, axis=",4f16.8)') 45.d0*alpha/atan(1.d0), axis(1:3)
 ! Spin rotation matrix
   spinrot = cosa*pauli(:,:,4) + iu*sina*(axis(1)*pauli(:,:,1) + axis(2)*pauli(:,:,2) + axis(3)*pauli(:,:,3))

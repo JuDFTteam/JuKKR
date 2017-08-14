@@ -120,11 +120,11 @@
 !         Get the projected GFs
 !         Gji(E + i0)
           call projected_gf(ie0+je,ja,ia,gfji0,lsusconsite,lsuscstruct)
-          if (.true.) call local_frame(ja,ia,magdir,gfji0,gf)   !!!!!!!!!!!!!!!!!! this only needs to be called if lrot or soc from host!!!!!!!!!!!!!!!!!!!!!
+          if (lrot .OR. lsoc_new) call local_frame(ja,ia,magdir,gfji0,gf)   
 !         Gji(E - i0) = Gij(E + i0)^\dagger
           call projected_gf(ie0+je,ia,ja,gfjiw,lsusconsite,lsuscstruct)
-          if (.true.) call local_frame(ia,ja,magdir,gfjiw,gf)  !!!! same here !!!!!!!!!!!!!!!!!
           gfjiw = conjg(transpose(gfjiw))
+          if (lrot .OR. lsoc_new) call local_frame(ia,ja,magdir,gfjiw,gf)  
 !         --------------------------------------------------------------
 !         ~~~~~~~~~~~~~~~~
           do ie=1,ipan(ip)     ! energy
@@ -135,11 +135,13 @@
 !           ------------------------------------------------------------
 !           Gij(E + i0)
             call projected_gf(ie0+ie,ia,ja,gfijw,lsusconsite,lsuscstruct)
-            if (.true.) call local_frame(ia,ja,magdir,gfijw,gf)
+!           if (.true.) call local_frame(ia,ja,magdir,gfijw,gf)   !Why always true? Laziness of Juba..
+            if (lrot .OR. lsoc_new) call local_frame(ia,ja,magdir,gfijw,gf)  
 !           Gij(E - i0) = Gji(E + i0)^\dagger
             call projected_gf(ie0+ie,ja,ia,gfij0,lsusconsite,lsuscstruct)
-            if (.true.) call local_frame(ja,ia,magdir,gfij0,gf)
             gfij0 = conjg(transpose(gfij0))
+!           if (.true.) call local_frame(ja,ia,magdir,gfij0,gf)
+            if (lrot .OR. lsoc_new) call local_frame(ja,ia,magdir,gfij0,gf)
 !           ------------------------------------------------------------
             if (ie == je) then
 !             Extrapolation to EB + i0

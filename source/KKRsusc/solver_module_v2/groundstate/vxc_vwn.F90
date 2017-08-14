@@ -1,6 +1,6 @@
   subroutine vxc_vwn(den,mag,vxc,bxc,exc)
 ! xc potential from VWN parametrization
-! densities without 4pi and r^2
+! densities without 4pi and r^2 (true densities)
 ! check definition of rs
   use global
 
@@ -37,9 +37,10 @@
   if (den < tol) denfix = tol
   if (den < mag) denfix = mag
 
+! V/Ne = 1/n = 4pi/3 rs^3
 ! density and relative spin polarization
   rs = (3.d0/(fourpi*denfix))**(1.d0/3.d0)
-!  rs = (3.d0/den)**(1.d0/3.d0)
+!  rs = (3.d0/den)**(1.d0/3.d0)  ! definition in old VOSKO routine
   x = sqrt(rs); x2 = x*x; x3 = x*x2; x4 = x2*x2
   zeta = magfix/denfix
   zeta3 = zeta**3
