@@ -41,7 +41,7 @@ UTILS    = $(OBJ)/radint.o $(OBJ)/ymy_gaunts.o $(OBJ)/rymy.o \
            $(OBJ)/ratroots.o $(OBJ)/least_squares.o $(OBJ)/ratval2.o \
            $(OBJ)/rotvec.o $(OBJ)/mod_derivative_panels.o $(OBJ)/ymy.o \
            $(OBJ)/spline.o $(OBJ)/mod_spline_panels2.o $(OBJ)/mod_spline_panels.o \
-           $(OBJ)/splint.o 
+           $(OBJ)/splint.o $(OBJ)/zchop.o
 
 PROJDIR  = projection
 PROJ     = $(OBJ)/reg_coeffs.o $(OBJ)/irr_coeffs.o $(OBJ)/out_coeffs.o \
@@ -88,7 +88,8 @@ SUSC     = $(OBJ)/dyn_susc_expansion.o $(OBJ)/dynamic_susc.o $(OBJ)/dynamic_susc
            $(OBJ)/analytic_continuation.o $(OBJ)/add_susc_block_one_sided.o \
            $(OBJ)/current_correlation.o $(OBJ)/current_correlation_interpolation.o \
            $(OBJ)/current_correlation_divergence_interpolation.o $(OBJ)/susc_interpolation.o \
-           $(OBJ)/current_correlation_divergence.o
+           $(OBJ)/current_correlation_divergence.o $(OBJ)/build_twist.o $(OBJ)/kxc_sumrule2.o
+
 
 
 IODIR    = io
@@ -212,6 +213,9 @@ $(OBJ)/mod_spline_panels.o: $(UTILSDIR)/mod_spline_panels.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@; mv mod_spline_panels.mod $(OBJ)/
 
 $(OBJ)/splint.o: $(UTILSDIR)/splint.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+
+$(OBJ)/zchop.o: $(UTILSDIR)/zchop.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 ########################################################################
@@ -605,6 +609,12 @@ $(OBJ)/current_correlation_divergence_interpolation.o: $(SUSCDIR)/current_correl
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 $(OBJ)/susc_interpolation.o: $(SUSCDIR)/susc_interpolation.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+
+$(OBJ)/build_twist.o: $(SUSCDIR)/build_twist.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+
+$(OBJ)/kxc_sumrule2.o: $(SUSCDIR)/kxc_sumrule2.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 ########################################################################
