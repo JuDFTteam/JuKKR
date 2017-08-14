@@ -162,11 +162,11 @@
   logical           :: lsumrule = .false.
 ! --> spin sum rule for noncollinear case
   logical           :: lnewsumrule = .false.
-! --> spin-current spin correlation function (added by Sascha)
+! --> spin-current spin correlation function 
   logical           :: lcurrcorr = .false.
-! --> interpolation of spin-current spin correlation function (added by Sascha)
+! --> interpolation of spin-current spin correlation function
   logical           :: lcurrcorrint = .false.
-! --> divergence of spin-current spin correlation function (added by Sascha)
+! --> divergence of spin-current spin correlation function
   logical           :: lcurrcorrdiv = .false.
 ! --> number of x,y,z points on interpolation grid 
   integer(kind=i4b) :: n_int
@@ -501,7 +501,7 @@
   complex(kind=c8b), allocatable :: kernel(:,:)
 ! --> storage for kronecker form of susc denominator
   complex(kind=c8b), allocatable :: denominator(:,:)
-! Gradient of scalar relativistic mass (added by Sascha)
+! Gradient of scalar relativistic mass
   complex(kind=c8b), allocatable :: grad_mass(:,:,:,:,:)
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
