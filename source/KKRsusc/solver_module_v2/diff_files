@@ -1,37 +1,143 @@
-solver_module_v2/makefile
-solver_module_v2/memory/finit_arrays.F90
-solver_module_v2/memory/finit_basis.F90
-solver_module_v2/memory/finit_gfpartsfit.F90
-solver_module_v2/memory/finit_param.F90
-solver_module_v2/memory/global.F90
-solver_module_v2/memory/init_arrays.F90
-solver_module_v2/memory/init_basis.F90
-solver_module_v2/memory/init_gfpartsfit.F90
-solver_module_v2/memory/init_param.F90
-solver_module_v2/projection/irr_coeffs.F90
-solver_module_v2/projection/irr_coeffs_ia.F90
-solver_module_v2/projection/out_coeffs_ia.F90
-solver_module_v2/projection/out_gmat.F90
-solver_module_v2/projection/out_tgmat.F90
-solver_module_v2/projection/reg_coeffs.F90
-solver_module_v2/projection/reg_coeffs_ia.F90
-solver_module_v2/projection/save_coeffs_ia.F90
-solver_module_v2/projection/save_gsij.F90
-solver_module_v2/projection/save_tmati.F90
-solver_module_v2/projection/tmat_proj.F90
-solver_module_v2/susceptibility/build_khartree.F90
-solver_module_v2/susceptibility/build_kxcalda.F90
-solver_module_v2/susceptibility/build_kxcalda2.F90
-solver_module_v2/susceptibility/build_kxcalda4.F90
-solver_module_v2/susceptibility/dyn_susc_expansion.F90
-solver_module_v2/susceptibility/get_xc.F90
-solver_module_v2/susceptibility/get_xc2.F90
-solver_module_v2/susceptibility/get_xc_basis.F90
-solver_module_v2/susceptibility/kxc_sumrule.F90
-solver_module_v2/susceptibility/static_susc.F90
-solver_module_v2/susceptibility/static_susc2.F90
-solver_module_v2/susceptibility/static_susc_enhanced.F90
-solver_module_v2/susceptibility/static_susc_rsa.F90
-solver_module_v2/utils/radint.F90
-solver_module_v2/utils/rotvec.F90
-solver_module_v2/utils/ymy.F90
+Files solver_module_v2/corrections/build_dti.F90 and /Users/brinker/solver_module_v2_Manuel/corrections/build_dti.F90 differ
+Files solver_module_v2/corrections/build_vrotb.F90 and /Users/brinker/solver_module_v2_Manuel/corrections/build_vrotb.F90 differ
+Files solver_module_v2/corrections/build_vscfb.F90 and /Users/brinker/solver_module_v2_Manuel/corrections/build_vscfb.F90 differ
+Files solver_module_v2/corrections/build_vscfb2.F90 and /Users/brinker/solver_module_v2_Manuel/corrections/build_vscfb2.F90 differ
+Files solver_module_v2/corrections/build_vsoc.F90 and /Users/brinker/solver_module_v2_Manuel/corrections/build_vsoc.F90 differ
+Files solver_module_v2/corrections/build_vsocb.F90 and /Users/brinker/solver_module_v2_Manuel/corrections/build_vsocb.F90 differ
+Files solver_module_v2/corrections/ms_from_bxc4.F90 and /Users/brinker/solver_module_v2_Manuel/corrections/ms_from_bxc4.F90 differ
+Files solver_module_v2/corrections/pot_correction.F90 and /Users/brinker/solver_module_v2_Manuel/corrections/pot_correction.F90 differ
+Files solver_module_v2/corrections/spin_directions.F90 and /Users/brinker/solver_module_v2_Manuel/corrections/spin_directions.F90 differ
+Files solver_module_v2/corrections/torque_soc2.F90 and /Users/brinker/solver_module_v2_Manuel/corrections/torque_soc2.F90 differ
+Only in solver_module_v2/groundstate: calc_derivative_panel.F90
+Files solver_module_v2/groundstate/charge_density.F90 and /Users/brinker/solver_module_v2_Manuel/groundstate/charge_density.F90 differ
+Only in solver_module_v2/groundstate: current_density.F90
+Only in solver_module_v2/groundstate: current_interpolation.F90
+Only in solver_module_v2/groundstate: current_soc.F90
+Only in solver_module_v2/groundstate: current_zeeman.F90
+Files solver_module_v2/groundstate/get_gfsum.F90 and /Users/brinker/solver_module_v2_Manuel/groundstate/get_gfsum.F90 differ
+Files solver_module_v2/groundstate/get_xc2.F90 and /Users/brinker/solver_module_v2_Manuel/groundstate/get_xc2.F90 differ
+Files solver_module_v2/groundstate/get_xc_basis.F90 and /Users/brinker/solver_module_v2_Manuel/groundstate/get_xc_basis.F90 differ
+Files solver_module_v2/groundstate/groundstate_new.F90 and /Users/brinker/solver_module_v2_Manuel/groundstate/groundstate_new.F90 differ
+Files solver_module_v2/groundstate/integrated_charge.F90 and /Users/brinker/solver_module_v2_Manuel/groundstate/integrated_charge.F90 differ
+Files solver_module_v2/groundstate/read_rho2ns.F90 and /Users/brinker/solver_module_v2_Manuel/groundstate/read_rho2ns.F90 differ
+Only in solver_module_v2/groundstate: rho_interpolation.F90
+Files solver_module_v2/groundstate/save_rho2ns.F90 and /Users/brinker/solver_module_v2_Manuel/groundstate/save_rho2ns.F90 differ
+Files solver_module_v2/groundstate/update_rho2ns.F90 and /Users/brinker/solver_module_v2_Manuel/groundstate/update_rho2ns.F90 differ
+Only in /Users/brinker/solver_module_v2_Manuel/: inpsusc.dat
+Files solver_module_v2/io/load_input.F90 and /Users/brinker/solver_module_v2_Manuel/io/load_input.F90 differ
+Files solver_module_v2/io/new_input.F90 and /Users/brinker/solver_module_v2_Manuel/io/new_input.F90 differ
+Files solver_module_v2/io/outsusc_in.F90 and /Users/brinker/solver_module_v2_Manuel/io/outsusc_in.F90 differ
+Files solver_module_v2/io/outsusc_in2.F90 and /Users/brinker/solver_module_v2_Manuel/io/outsusc_in2.F90 differ
+Only in solver_module_v2/io: outsusc_in_soc.F90
+Files solver_module_v2/io/outsusc_out.F90 and /Users/brinker/solver_module_v2_Manuel/io/outsusc_out.F90 differ
+Files solver_module_v2/io/set_basis_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_basis_options.F90 differ
+Files solver_module_v2/io/set_bfield_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_bfield_options.F90 differ
+Files solver_module_v2/io/set_dos_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_dos_options.F90 differ
+Files solver_module_v2/io/set_fit_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_fit_options.F90 differ
+Files solver_module_v2/io/set_global_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_global_options.F90 differ
+Files solver_module_v2/io/set_groundstate_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_groundstate_options.F90 differ
+Files solver_module_v2/io/set_groups.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_groups.F90 differ
+Files solver_module_v2/io/set_jij_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_jij_options.F90 differ
+Files solver_module_v2/io/set_ldau_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_ldau_options.F90 differ
+Files solver_module_v2/io/set_selfe_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_selfe_options.F90 differ
+Files solver_module_v2/io/set_soc_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_soc_options.F90 differ
+Files solver_module_v2/io/set_spinrot_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_spinrot_options.F90 differ
+Files solver_module_v2/io/set_susc_options.F90 and /Users/brinker/solver_module_v2_Manuel/io/set_susc_options.F90 differ
+Files solver_module_v2/makefile and /Users/brinker/solver_module_v2_Manuel/makefile differ
+Files solver_module_v2/memory/finit_arrays.F90 and /Users/brinker/solver_module_v2_Manuel/memory/finit_arrays.F90 differ
+Files solver_module_v2/memory/finit_basis.F90 and /Users/brinker/solver_module_v2_Manuel/memory/finit_basis.F90 differ
+Files solver_module_v2/memory/finit_gfpartsfit.F90 and /Users/brinker/solver_module_v2_Manuel/memory/finit_gfpartsfit.F90 differ
+Files solver_module_v2/memory/finit_param.F90 and /Users/brinker/solver_module_v2_Manuel/memory/finit_param.F90 differ
+Files solver_module_v2/memory/global.F90 and /Users/brinker/solver_module_v2_Manuel/memory/global.F90 differ
+Files solver_module_v2/memory/init_arrays.F90 and /Users/brinker/solver_module_v2_Manuel/memory/init_arrays.F90 differ
+Only in solver_module_v2/memory: init_arrays_tgmat.F90
+Files solver_module_v2/memory/init_basis.F90 and /Users/brinker/solver_module_v2_Manuel/memory/init_basis.F90 differ
+Files solver_module_v2/memory/init_gfpartsfit.F90 and /Users/brinker/solver_module_v2_Manuel/memory/init_gfpartsfit.F90 differ
+Only in solver_module_v2/memory: init_gfpartsfit_coeff_gfpq.F90
+Files solver_module_v2/memory/init_param.F90 and /Users/brinker/solver_module_v2_Manuel/memory/init_param.F90 differ
+Only in solver_module_v2/projection: in_coeffs_soc.F90
+Only in solver_module_v2/projection: in_gmat_soc.F90
+Only in solver_module_v2/projection: in_tmat_soc.F90
+Files solver_module_v2/projection/irr_coeffs.F90 and /Users/brinker/solver_module_v2_Manuel/projection/irr_coeffs.F90 differ
+Only in /Users/brinker/solver_module_v2_Manuel/projection: irr_coeffs_ia.F90
+Only in solver_module_v2/projection: irr_coeffs_soc.F90
+Only in /Users/brinker/solver_module_v2_Manuel/projection: out_coeffs_ia.F90
+Only in solver_module_v2/projection: out_coeffs_soc.F90
+Files solver_module_v2/projection/out_gmat.F90 and /Users/brinker/solver_module_v2_Manuel/projection/out_gmat.F90 differ
+Files solver_module_v2/projection/out_tgmat.F90 and /Users/brinker/solver_module_v2_Manuel/projection/out_tgmat.F90 differ
+Only in solver_module_v2/projection: out_tgmat_soc.F90
+Files solver_module_v2/projection/reg_coeffs.F90 and /Users/brinker/solver_module_v2_Manuel/projection/reg_coeffs.F90 differ
+Only in /Users/brinker/solver_module_v2_Manuel/projection: reg_coeffs_ia.F90
+Only in solver_module_v2/projection: reg_coeffs_soc.F90
+Only in /Users/brinker/solver_module_v2_Manuel/projection: save_coeffs_ia.F90
+Files solver_module_v2/projection/save_gsij.F90 and /Users/brinker/solver_module_v2_Manuel/projection/save_gsij.F90 differ
+Files solver_module_v2/projection/save_tmati.F90 and /Users/brinker/solver_module_v2_Manuel/projection/save_tmati.F90 differ
+Only in solver_module_v2/projection: spinrot_scatt_sol.F90
+Files solver_module_v2/projection/tmat_proj.F90 and /Users/brinker/solver_module_v2_Manuel/projection/tmat_proj.F90 differ
+Only in /Users/brinker/solver_module_v2_Manuel/: solver.F90
+Only in solver_module_v2/susceptibility: add_susc_block_one_sided.F90
+Files solver_module_v2/susceptibility/build_khartree.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/build_khartree.F90 differ
+Files solver_module_v2/susceptibility/build_kxcalda.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/build_kxcalda.F90 differ
+Files solver_module_v2/susceptibility/build_kxcalda2.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/build_kxcalda2.F90 differ
+Files solver_module_v2/susceptibility/build_kxcalda4.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/build_kxcalda4.F90 differ
+Only in /Users/brinker/solver_module_v2_Manuel/susceptibility: build_twist.F90
+Only in solver_module_v2/susceptibility: current_correlation.F90
+Only in solver_module_v2/susceptibility: current_correlation_divergence.F90
+Only in solver_module_v2/susceptibility: current_correlation_divergence_interpolation.F90
+Only in solver_module_v2/susceptibility: current_correlation_interpolation.F90
+Files solver_module_v2/susceptibility/dyn_susc_expansion.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/dyn_susc_expansion.F90 differ
+Files solver_module_v2/susceptibility/get_xc.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/get_xc.F90 differ
+Files solver_module_v2/susceptibility/get_xc2.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/get_xc2.F90 differ
+Files solver_module_v2/susceptibility/get_xc_basis.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/get_xc_basis.F90 differ
+Files solver_module_v2/susceptibility/kxc_sumrule.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/kxc_sumrule.F90 differ
+Only in /Users/brinker/solver_module_v2_Manuel/susceptibility: kxc_sumrule2.F90
+Files solver_module_v2/susceptibility/static_susc.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/static_susc.F90 differ
+Files solver_module_v2/susceptibility/static_susc2.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/static_susc2.F90 differ
+Files solver_module_v2/susceptibility/static_susc_enhanced.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/static_susc_enhanced.F90 differ
+Files solver_module_v2/susceptibility/static_susc_rsa.F90 and /Users/brinker/solver_module_v2_Manuel/susceptibility/static_susc_rsa.F90 differ
+Only in solver_module_v2/susceptibility: susc_interpolation.F90
+Files solver_module_v2/utils/bessel.F90 and /Users/brinker/solver_module_v2_Manuel/utils/bessel.F90 differ
+Only in solver_module_v2/utils: mod_derivative_panels.F90
+Only in solver_module_v2/utils: mod_spline_panels.F90
+Only in solver_module_v2/utils: mod_spline_panels2.F90
+Files solver_module_v2/utils/radint.F90 and /Users/brinker/solver_module_v2_Manuel/utils/radint.F90 differ
+Files solver_module_v2/utils/rotvec.F90 and /Users/brinker/solver_module_v2_Manuel/utils/rotvec.F90 differ
+Only in solver_module_v2/utils: spline.F90
+Only in solver_module_v2/utils: splint.F90
+Files solver_module_v2/utils/ymy.F90 and /Users/brinker/solver_module_v2_Manuel/utils/ymy.F90 differ
+Only in /Users/brinker/solver_module_v2_Manuel/utils: zchop.F90
+Only in /Users/brinker/solver_module_v2_Manuel/: xaa
+Only in /Users/brinker/solver_module_v2_Manuel/: cat_outsusc1
+Only in /Users/brinker/solver_module_v2_Manuel/: cat_outsusc1.F90
+Only in /Users/brinker/solver_module_v2_Manuel/: cat_outsusc2
+Only in /Users/brinker/solver_module_v2_Manuel/: cat_outsusc2.F90
+Only in /Users/brinker/solver_module_v2_Manuel/: changes_for_jmcode
+Only in /Users/brinker/solver_module_v2_Manuel/: eigendemo.F90
+Only in /Users/brinker/solver_module_v2_Manuel/: emesh.scf
+Only in /Users/brinker/solver_module_v2_Manuel/: enerspinloops01.f
+Only in /Users/brinker/solver_module_v2_Manuel/: fort.666
+Only in /Users/brinker/solver_module_v2_Manuel/: fpimpu.f
+Only in /Users/brinker/solver_module_v2_Manuel/: ioout
+Only in /Users/brinker/solver_module_v2_Manuel/: iotest
+Only in /Users/brinker/solver_module_v2_Manuel/: iotest.F90
+Only in /Users/brinker/solver_module_v2_Manuel/: kkrproj
+Only in /Users/brinker/solver_module_v2_Manuel/: kkrproj.F90
+Only in /Users/brinker/solver_module_v2_Manuel/: kkrproj.o
+Only in /Users/brinker/solver_module_v2_Manuel/: lebedev_ascii.gga
+Only in /Users/brinker/solver_module_v2_Manuel/: lorb_files
+Only in /Users/brinker/solver_module_v2_Manuel/: makefile.backup
+Only in /Users/brinker/solver_module_v2_Manuel/: makefile_oldimp
+Only in /Users/brinker/solver_module_v2_Manuel/: makeiotest
+Only in /Users/brinker/solver_module_v2_Manuel/: makeproj
+Only in /Users/brinker/solver_module_v2_Manuel/: makesolver
+Only in /Users/brinker/solver_module_v2_Manuel/: makesolver_check
+Only in /Users/brinker/solver_module_v2_Manuel/: makesolver_fast
+Only in /Users/brinker/solver_module_v2_Manuel/: maketest
+Only in /Users/brinker/solver_module_v2_Manuel/: module_solver.F90
+Only in /Users/brinker/solver_module_v2_Manuel/: newinpsusc.dat
+Only in /Users/brinker/solver_module_v2_Manuel/: obj
+Only in /Users/brinker/solver_module_v2_Manuel/: out_newinpsusc.dat
+Only in /Users/brinker/solver_module_v2_Manuel/: out_test
+Only in /Users/brinker/solver_module_v2_Manuel/: outinpsusc.dat
+Only in /Users/brinker/solver_module_v2_Manuel/: test
+Only in /Users/brinker/solver_module_v2_Manuel/: test.F90
