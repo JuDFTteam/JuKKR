@@ -387,7 +387,7 @@
 !  if (lsusc) call static_susc_more(onsite,struct)
   if (lsusc .and. lcurrcorr) call gradient_susc_basis
   if (lsusc) call static_susc2(onsite,struct)
-  if (lsusc .and. lkxc .and. lsumrule) call kxc_sumrule
+  if (lsusc .and. lkxc .and. lsumrule) call kxc_sumrule2
   if (lsusc .and. lkxc) call build_kxcalda2
   if (lsusc .and. lkha) call build_khartree(intra,inter)
   if (lsusc .and. (lkxc .or. lkha) .and. lenhanced) then
