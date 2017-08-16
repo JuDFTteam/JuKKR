@@ -264,11 +264,11 @@ c come with a different sign convention compared to the usual in the
 c program: sin(fi)**m --> (-1)**m * sin(fi)**m. Thus some signs change.
 c This is taken care of here:
       fi = datan2(v2,v1)
-      if (fi.lt.0.d0) then
-         do mm = 1,lmax
-            smfi(mm) = -smfi(mm) 
-         enddo
-      endif
+c      if (fi.lt.0.d0) then
+c         do mm = 1,lmax
+c            smfi(mm) = -smfi(mm) 
+c         enddo
+c      endif
 c
 c
 c

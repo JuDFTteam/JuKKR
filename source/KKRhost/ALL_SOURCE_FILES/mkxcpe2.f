@@ -1,6 +1,6 @@
       SUBROUTINE MKXCPE2(IR,NP,RV,RHOLM,VXCP,EXCP,YLM,DYLMT1,DYLMF1,
      +                   DYLMF2,DYLMTF,DRRL,DDRRL,DRRUL,DDRRUL,IRMD,
-     +                   LMPOTD,LMMAX)
+     +                   LMPOTD,LMMAX,USE_SOL)
 c     ------------------------------------------------------------------
 c     Calculation of the exchange-correlation potential.
 c     coded by M. Ogura, Apr. 2015, Munich
@@ -19,8 +19,21 @@ c
       real*8 c,pi,s
       integer ip,ispin,l1,lm,n
       real*8 d(2),d1(3,2),d2(5,2),dl(2)
+c     use_sol=0 -> PBE, use_sol=1 -> PBEsol
+      logical use_sol
+      real*8 :: um,bet
 c
       pi=4d0*atan(1d0)
+c   
+c Set 'UM' for subroutine 'excpbex' and 'BET' for subroutine 'excpbec' for PBE or PBEsol
+      IF (use_sol) THEN
+        um=0.123456790123456D0
+        bet=0.046D0
+      ELSE
+        um=0.2195149727645171D0
+        bet=0.06672455060314922D0
+      END IF
+c
 c
 c     --- surface integration
       do 20 ip=1,np
@@ -64,19 +77,23 @@ c     --- surface integration
       d1(3,ispin)=d1(3,ispin)/rv/s
       d2(3,ispin)=d2(3,ispin)/rv/s
       d2(5,ispin)=d2(5,ispin)/rv**2/s
+      call fpexcpbe(d,dl,d1,d2,rv,s,c,vxcp(ip,1),vxcp(ip,2),excp(ip),
+     +              um,bet)
       else
       d1(3,ispin)=0d0
       d2(3,ispin)=0d0
       d2(5,ispin)=0d0
+      vxcp(ip,1)=0d0 
+      vxcp(ip,2)=0d0 
+      excp(ip)=0d0 
       endif
  52   continue
-      call fpexcpbe(d,dl,d1,d2,rv,s,c,vxcp(ip,1),vxcp(ip,2),excp(ip))
  20   continue
 c
       return
       end
 c
-      subroutine fpexcpbe(ro,rol,ro1,ro2,xr,s,c,v1,v2,exc)
+      subroutine fpexcpbe(ro,rol,ro1,ro2,xr,s,c,v1,v2,exc,um,bet)
 c----------------------------------------------------------------------
 c     driver routine for PBE GGA subroutines.
 c     based on excpbe.f in Munich code (version on 20 Dec 2009)
@@ -86,6 +103,7 @@ c----------------------------------------------------------------------
 c
       real*8 c,exc,s,v1,v2,xr
       real*8 ro(2),rol(2),ro1(3,2),ro2(5,2)
+      real*8 um,bet
 c
       real*8 conf,conrs,d,drv1,drv2,drv2s,drv3,drv4,ec,ex,fk,g,pi,rs,sk
      &      ,ss,thrd,thrd2,tt,uu,vcdn,vcup,vv,vx,vxcdn,vxcup,ww,x,xd,xu
@@ -126,7 +144,7 @@ c     ---begin the spin loop for exchange
       ss=drv1/(d*2d0*fk)
       uu=drv2/(d**2*(2d0*fk)**3)
       vv=drv3/(d*(2d0*fk)**2)
-      call excpbex(d,ss,uu,vv,ex,vx,llda)
+      call excpbex(d,ss,uu,vv,ex,vx,llda,um)
       exc=exc+ex*(d/2d0)/(ro(1)+ro(2))
       if(jsp .eq. 1)vxcup=vx
       if(jsp .eq. 2)vxcdn=vx
@@ -161,7 +179,7 @@ c     ---correlation
       uu=drv2/(d**2*(2d0*sk*g)**3)
       vv=drv3/(d*(2d0*sk*g)**2)
       ww=drv4/(d**2*(2d0*sk*g)**2)
-      call excpbec(rs,zet,tt,uu,vv,ww,ec,vcup,vcdn,llda)
+      call excpbec(rs,zet,tt,uu,vv,ww,ec,vcup,vcdn,llda,bet)
       exc=exc+ec
       vxcup=vxcup+vcup
       vxcdn=vxcdn+vcdn
@@ -177,7 +195,7 @@ c
       end
 c
 C*==excpbex.f    processed by SPAG 6.55Rc at 08:17 on 20 Dec 2009
-      SUBROUTINE EXCPBEX(RHO,S,U,V,EX,VX,LLDA)
+      SUBROUTINE EXCPBEX(RHO,S,U,V,EX,VX,LLDA,UM)
 C----------------------------------------------------------------------
 C  PBE EXCHANGE FOR A SPIN-UNPOLARIZED ELECTRONIC SYSTEM
 C  K Burke's modification of PW91 codes, May 14, 1996
@@ -215,14 +233,20 @@ C*** Start of declarations rewritten by SPAG
 C
 C PARAMETER definitions
 C
-      REAL*8 THRD,THRD4,AX,UM,UK,UL
-      PARAMETER (THRD=1.D0/3.D0,THRD4=4.D0/3.D0,
-     &           AX=-0.738558766382022405884230032680836D0,
-     &           UM=0.2195149727645171D0,UK=0.8040D0,UL=UM/UK)
+      REAL*8, PARAMETER :: thrd=1.d0/3.d0
+      REAL*8, PARAMETER :: thrd4=4.d0/3.d0
+      REAL*8, PARAMETER :: ax=-0.738558766382022405884230032680836D0
+      REAL*8, PARAMETER :: uk=0.8040D0
+      REAL*8            :: ul
+
+
+c      PARAMETER (THRD=1.D0/3.D0,THRD4=4.D0/3.D0,
+c     &           AX=-0.738558766382022405884230032680836D0,
+c     &           UM=0.2195149727645171D0,UK=0.8040D0,UL=UM/UK)
 C
 C Dummy arguments
 C
-      REAL*8 EX,RHO,S,U,V,VX
+      REAL*8 EX,RHO,S,U,V,VX,UM
       INTEGER LLDA
 C
 C Local variables
@@ -232,6 +256,9 @@ C
 C*** End of declarations rewritten by SPAG
 C
 C----------------------------------------------------------------------
+c    Define UL with via UM and UK
+      UL=UM/UK
+c
 C----------------------------------------------------------------------
 C construct LDA exchange energy density
       EXUNIF = AX*RHO**THRD
@@ -261,7 +288,7 @@ C calculate potential from [b](24)
       VX = EXUNIF*(THRD4*FXPBE-(U-THRD4*S2*S)*FSS-V*FS)
       END
 C*==excpbec.f    processed by SPAG 6.55Rc at 08:17 on 20 Dec 2009
-      SUBROUTINE EXCPBEC(RS,ZETA,T,UU,VV,WW,EC,VCUP,VCDN,LLDA)
+      SUBROUTINE EXCPBEC(RS,ZETA,T,UU,VV,WW,EC,VCUP,VCDN,LLDA,BET)
 Cengel
 C  This subroutine evaluates the correlation energy per particle and
 C  spin-up and spin-dn correlation potentials within the Perdew-Burke-
@@ -302,17 +329,25 @@ C*** Start of declarations rewritten by SPAG
 C
 C PARAMETER definitions
 C
-      REAL*8 THRD,THRDM,THRD2,SIXTHM,THRD4,GAM,FZZ,GAMMA,BET,DELT,ETA
-      PARAMETER (THRD=1.D0/3.D0,THRDM=-THRD,THRD2=2.D0*THRD,
-     &           SIXTHM=THRDM/2.D0,THRD4=4.D0*THRD,
-     &           GAM=0.5198420997897463295344212145565D0,
-     &           FZZ=8.D0/(9.D0*GAM),
-     &           GAMMA=0.03109069086965489503494086371273D0,
-     &           BET=0.06672455060314922D0,DELT=BET/GAMMA,ETA=1.D-12)
+      REAL*8, PARAMETER :: thrd=1.d0/3.d0
+      REAL*8, PARAMETER :: thrdm=-thrd
+      REAL*8, PARAMETER :: thrd2=2.d0*thrd
+      REAL*8, PARAMETER :: sixthm=thrdm/2.d0
+      REAL*8, PARAMETER :: thrd4=4.d0*thrd
+      REAL*8, PARAMETER :: gam=0.5198420997897463295344212145565D0
+      REAL*8, PARAMETER :: fzz=8.d0/(9.d0*gam)
+      REAL*8, PARAMETER :: gamma=0.03109069086965489503494086371273D0
+      REAL*8, PARAMETER :: eta=1.d-12
+c      PARAMETER (THRD=1.D0/3.D0,THRDM=-THRD,THRD2=2.D0*THRD,
+c     &           SIXTHM=THRDM/2.D0,THRD4=4.D0*THRD,
+c     &           GAM=0.5198420997897463295344212145565D0,
+c     &           FZZ=8.D0/(9.D0*GAM),
+c     &           GAMMA=0.03109069086965489503494086371273D0,
+c     &           BET=0.06672455060314922D0,DELT=BET/GAMMA,ETA=1.D-12)
 C
 C Dummy arguments
 C
-      REAL*8 EC,RS,T,UU,VCDN,VCUP,VV,WW,ZETA
+      REAL*8 EC,RS,T,UU,VCDN,VCUP,VV,WW,ZETA,BET
       INTEGER LLDA
 C
 C Local variables
@@ -320,7 +355,7 @@ C
       REAL*8 ALFM,ALFRSM,B,B2,BEC,BG,COMM,ECRS,ECZETA,EP,EPRS,EU,EURS,F,
      &       FAC,FACT0,FACT1,FACT2,FACT3,FACT5,FZ,G,G3,G4,GZ,H,HB,HBT,
      &       HRS,HRST,HT,HTT,HZ,HZT,PON,PREF,Q4,Q5,Q8,Q9,RSTHRD,RTRS,T2,
-     &       T4,T6,Z4
+     &       T4,T6,Z4,DELT
       EXTERNAL EXCGCOR2
 C
 C*** End of declarations rewritten by SPAG
@@ -335,6 +370,9 @@ C      bet=coefficient in gradient expansion for correlation, [a](4).
 C      eta=small number to stop d phi/ dzeta from blowing up at
 C          |zeta|=1.
 C----------------------------------------------------------------------
+c    Define DELT via BET and GAMMA
+      DELT=BET/GAMMA
+c
 C----------------------------------------------------------------------
 C find LSD energy contributions, using [c](10) and Table I[c].
 C EU=unpolarized LSD correlation energy

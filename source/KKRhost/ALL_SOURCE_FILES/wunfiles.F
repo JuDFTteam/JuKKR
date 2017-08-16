@@ -234,7 +234,7 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*124 TXC(5)
+      CHARACTER*124 TXC(6)
       CHARACTER*80 TMPDIR
       INTEGER ITMPDIR,ILTMP      
 C     ..
@@ -640,7 +640,7 @@ C ======================================================================
      &         t_params%VACFLAG(2), stat=ierr)
       if(ierr/=0) stop '[init_t_params] Error allocating logicals'
      
-      ALLOCATE(t_params%TXC(5), stat=ierr) !CHARACTER*124
+      ALLOCATE(t_params%TXC(6), stat=ierr) !CHARACTER*124
       if(ierr/=0) stop '[init_t_params] Error allocating txc'
       
       if(.not.allocated(t_params%TESTC)) then
@@ -1152,7 +1152,7 @@ C ======================================================================
      &          MPI_COMM_WORLD,ierr)
 
       !CHARACTER
-      call MPI_Bcast(t_params%TXC,5*124, !5 entries of length 24
+      call MPI_Bcast(t_params%TXC,6*124, !5 entries of length 24
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*24
       call MPI_Bcast(t_params%TESTC,32*8, !32 entries of length 8
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
@@ -1426,7 +1426,7 @@ C     ..
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*124 TXC(5)  
+      CHARACTER*124 TXC(6)  
 C     ..
       !fill arrays:
       t_params%EZ             = EZ             
