@@ -485,13 +485,16 @@ DO  ip=1,np
       d1(3,ispin)=d1(3,ispin)/rv/s
       d2(3,ispin)=d2(3,ispin)/rv/s
       d2(5,ispin)=d2(5,ispin)/rv**2/s
+      CALL fpexcpbe(d,dl,d1,d2,rv,s,c,vxcp(ip,1),vxcp(ip,2),excp(ip),um,bet)
     ELSE
       d1(3,ispin)=0D0
       d2(3,ispin)=0D0
       d2(5,ispin)=0D0
+      vxcp(ip,1) =0D0
+      vxcp(ip,2) =0D0
+      excp(ip)   =0D0
     END IF
   END DO
-  CALL fpexcpbe(d,dl,d1,d2,rv,s,c,vxcp(ip,1),vxcp(ip,2),excp(ip),um,bet)
 END DO
 
 RETURN
@@ -598,6 +601,7 @@ IF(ro(1) > 1D-12 .AND. ro(2) > 1D-12 )THEN
   exc=exc+ec
   vxcup=vxcup+vcup
   vxcdn=vxcdn+vcdn
+END IF
   
 !     ---convert from h to ry
   exc=2D0*exc
@@ -606,7 +610,6 @@ IF(ro(1) > 1D-12 .AND. ro(2) > 1D-12 )THEN
   
   v1=xu
   v2=xd
-END IF
 END SUBROUTINE fpexcpbe
 
 !*==excpbex.f    processed by SPAG 6.55Rc at 08:17 on 20 Dec 2009
