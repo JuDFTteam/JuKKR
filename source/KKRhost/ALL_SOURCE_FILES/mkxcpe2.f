@@ -79,6 +79,8 @@ c     --- surface integration
       d2(5,ispin)=d2(5,ispin)/rv**2/s
       call fpexcpbe(d,dl,d1,d2,rv,s,c,vxcp(ip,1),vxcp(ip,2),excp(ip),
      +              um,bet)
+      write(*,*) 'vxcp= ', vxcp(ip,1), 'ip= ', ip, 'rv= ', rv,
+     +           's= ', s, 'c= ', c, 'd= ', d, 'd1= ', d1, 'd2= ', d2
       else
       d1(3,ispin)=0d0
       d2(3,ispin)=0d0
@@ -184,6 +186,7 @@ c     ---correlation
       vxcup=vxcup+vcup
       vxcdn=vxcdn+vcdn
 c
+      endif
 c     ---convert from h to ry
       exc=2d0*exc
       xu=2d0*vxcup
@@ -191,7 +194,6 @@ c     ---convert from h to ry
 c
       v1=xu
       v2=xd
-      endif
       end
 c
 C*==excpbex.f    processed by SPAG 6.55Rc at 08:17 on 20 Dec 2009
