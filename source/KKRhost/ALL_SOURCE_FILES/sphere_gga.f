@@ -264,6 +264,9 @@ c come with a different sign convention compared to the usual in the
 c program: sin(fi)**m --> (-1)**m * sin(fi)**m. Thus some signs change.
 c This is taken care of here:
       fi = datan2(v2,v1)
+c THE CHANGE OF SIGN BELOW IS WRONG AND THEREFORE NOT DONE ANYMORE
+c It was introduced to keep results consistent with older versions which
+c already yielded wrong results
 c      if (fi.lt.0.d0) then
 c         do mm = 1,lmax
 c            smfi(mm) = -smfi(mm) 
