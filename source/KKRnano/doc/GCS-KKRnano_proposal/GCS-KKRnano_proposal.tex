@@ -62,31 +62,36 @@
 \bigskip
 \textbf{Principal investigator}\\
 \phantom{MM} \textit{ Prof. Dr. Stefan Bl{\"u}gel,
-Institute for Advanced Simulation and Peter Gr\"unberg Institute, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
+Institute for Advanced Simulation and Peter Gr\"unberg Institut, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
 }
 
 \bigskip
 \textbf{Project contributor(s)}\\
 
 \phantom{MM} \textit{Marcel Bornemann,
-Institute for Advanced Simulation and Peter Gr\"unberg Institute, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
+Institute for Advanced Simulation and Peter Gr\"unberg Institut, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
 }
 
 \phantom{MM} \textit{Dr. Sergii Grytsiuk,
-Institute for Advanced Simulation and Peter Gr\"unberg Institute, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
+Institute for Advanced Simulation and Peter Gr\"unberg Institut, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
 }
 
+\phantom{MM} \textit{Dr. Roman Kováčik,
+Institute for Advanced Simulation and Peter Gr\"unberg Institut, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
+}
+
+
 \phantom{MM} \textit{Dr. Rudolf Zeller,
-Institute for Advanced Simulation and Peter Gr\"unberg Institute, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
+Institute for Advanced Simulation and Peter Gr\"unberg Institut, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
 }
 
 \phantom{MM} \textit{Dr. Phivos Mavropoulos,
-Institute for Advanced Simulation and Peter Gr\"unberg Institute, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
+Institute for Advanced Simulation and Peter Gr\"unberg Institut, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
 }
 
-\phantom{MM} \textit{Dr. Paul F. Baumeister,
-Institute for Advanced Simulation and Peter Gr\"unberg Institute, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
-}
+%\phantom{MM} \textit{Dr. Paul F. Baumeister,
+%Institute for Advanced Simulation and J\"ulich Supercomputing Centre, Forschungszentrum J\"ulich, D-52425 J\"ulich, Germany
+%}
 
 
 \newpage
@@ -101,9 +106,9 @@ Institute for Advanced Simulation and Peter Gr\"unberg Institute, Forschungszent
 
 \section{Introduction}
 \rule{\textwidth}{0.4pt}\\
-\textit{Give a short outline of the scientific background of your research, including references.}\\
+%\textit{Give a short outline of the scientific background of your research, including references.}\\
 
-\textit{(about 1 page)}
+%\textit{(about 1 page)}
 
 We have developed a unique electronic structure code, 
 KKRnano \cite{zeller_towards_2008,thiess_massively_2012},
@@ -125,19 +130,24 @@ We plan to perform large-scale density functional theory (DFT) calculations with
 KKRnano for materials exhibiting these complex magnetic skyrmion textures. We would like to use Hazel Hen
 because test runs showed that KKRnano performs best on machines with Sandy Bridge
 architecture.
-The focus of our work is on the germanide MnGe, as it exhibits a three-dimensional magnetic structure
+The focus of our work is on the germanide MnGe that is particularly
+interesting among the chiral magnetic B20 compounds, as it exhibits a three-dimensional magnetic structure
 that is not yet understood (see preliminary results
-\cite{tanigaki_real-space_2015,bornemann_investigation_2017}).
+\cite{tanigaki_real-space_2015,rybakov_new_2016,bornemann_investigation_2017}).
 
 
 
 \section{Preliminary Work}
 \rule{\textwidth}{0.4pt}\\
-\textit{Provide a brief summary of your preliminary work in connection with the proposed project, including references.}\\
+%\textit{Provide a brief summary of your preliminary work in connection with the proposed project, including references.}\\
 
-\textit{(about 1 to 2 pages)}
+%\textit{(about 1 to 2 pages)}
 
-KKRnano was first applied to Gd doped GaN, where special emphasis was placed on
+It is fair to state that our group has accumulated strong expertise
+in the field of magnetism \cite{bode_chiral_2007,heinze_spontaneous_2011,brede_long-range_2014,
+dupe_engineering_2016,gayles_dzyaloshinskii-moriya_2015}.
+\\
+The code KKRnano was first applied to Gd doped GaN, where special emphasis was placed on
 magnetic interactions between defects \cite{thiess_superparamagnetism_2012}. Subsequently,
 the phase change material GeSbTe was investigated \cite{zhang_role_2012}.
 \\
@@ -159,7 +169,7 @@ in particular for MnGe supercells with B20 structure containing between 8192 and
 during the JUQUEEN Extreme Scaling Workshop 2017 \cite{brommel_juqueen_2017}.
 Due to limited computing time test runs for B20-MnGe were conducted on a smaller scale on JURECA and Hazel Hen.
 As expected, performance results are similar for both machines and superior to JUQUEEN.
-The results obtained within the test project on Hazel Hen entered
+The results obtained within the test project on Hazel Hen (ACID 44110) entered
 in our estimate of computational costs in \cref{sec:just}.
 \\
 As a first step towards a comprehensive understanding of skyrmionic textures in B20-MnGe we
@@ -200,7 +210,7 @@ found in experiment.
 %\subsubsection{Sub-project 2}
 %\textit{...}\\
 
-\textit{(1 to 2 pages per sub-project)}
+%\textit{(1 to 2 pages per sub-project)}
 
 \begin{figure}[h]
 	\centering
@@ -213,7 +223,7 @@ found in experiment.
 	\begin{subfigure}{.5\textwidth}
 		  \centering
 		  \includegraphics[width=.99\linewidth]{Figures/tokura_sim.png}
-		  %\caption{Simulated in-plane magnetic-moment configurations and projected
+		  %\caption{Presumed in-plane magnetic-moment configurations and projected
 		  %positions of hedgehogs (blue) and antihedgehogs (red).}
                   \label{fig:sub2}
 	\end{subfigure}
@@ -228,7 +238,8 @@ found in experiment.
 \end{figure}
 
 
-This proposal is inspired by the recent discovery of magnetic skyrmion lattices in bulk helical magnets,
+This proposal is inspired by the recent discovery of magnetic skyrmion lattices in bulk helical magnets
+\cite{muhlbauer_skyrmion_2009,yu_real-space_2010,yu_near_2011,shibata_towards_2013},
 where a variety of phenomena can be important in explaining experimental observations.
 Examples are the topological Hall effect and spin-transfer torque at ultra-low current densities
 \cite{kanazawa_large_2011}.
@@ -241,14 +252,14 @@ that a cubic lattice of skyrmions and anti-skyrmions (see \Cref{fig:tokura_resul
 a lattice constant of about 3-6 nm. Findings by Kanazawa et al. suggest that this
 lattice is set up by a superposition of three orthogonal helical
 structures also referred to as 3q-state \cite{kanazawa_noncentrosymmetric_2017}.
-In contrast to other systems exhibiting a similar magnetic phase,
+In contrast to other systems exhibiting a chiral magnetic phase,
 here the rather short helical wavelength allows for density functional (DFT) calculations
 with KKRnano. 
 \\
-B20-MnGe is currently the subject of extensive investigation.
-\cite{kanazawa_large_2011,kanazawa_possible_2012,grigoriev_chiral_2013,tanigaki_real-space_2015,
+B20-MnGe is currently the subject of extensive investigation
+\cite{tanigaki_real-space_2015,kanazawa_large_2011,kanazawa_possible_2012,grigoriev_chiral_2013,
 martin_magnetic_2016}.
-However, we know of large-scale DFT calculations that have been performed.
+However, we know of no large-scale DFT calculations that have been performed.
 We are confident that such calculations can shed light onto the nature of
 the observed magnetic textures and the underlying creation mechanisms.
 At present there is a lack of a convincing explanation of what is observed in experiment. 
@@ -273,9 +284,9 @@ topologically protected skyrmionic textures \cite{bornemann_investigation_2017} 
 	          %\caption{}
                   \label{fig:sub2}
 	\end{subfigure}
-	\caption{Graphical representation of a Skyrmion (left) and an anti-skyrmion (right) 
+	\caption{Graphical representation of a skyrmion (left) and an anti-skyrmion (right) 
 	with atom magnetization pointing in positive (red) and negative (blue) z-direction. Results
-	are obtained from a micromagnetic model with parameters for B20-MnGe
+	are obtained from a atomistic spin-lattice model with parameters for B20-MnGe
 	taken from electronic structure calculations.}
 	\label{fig:sd_results}
 \end{figure}
@@ -329,9 +340,8 @@ isotropic exchange interaction and Dzyaloshinskii-Moriya interaction plays a maj
 \\
 We plan to
 simulate Mn(1-x)Fe(x)Ge alloys where the concentration of Mn and Fe is varied.
-This work is going to help us solve the question of what is the fundamental difference in chiral magnetism
-between
-chiral magnetism in B20-MnGe and B20-FeGe.
+This work is going to help us solve the question of what is the fundamental difference between chiral magnetism
+in B20-MnGe and B20-FeGe.
 %\\
 %\textbf{15 million core hours are accounted for this sub-project.}
 
@@ -348,9 +358,9 @@ study the effect of impurities and point defects, e.g. oxygen interstitials.
 %\textbf{10 million core hours are accounted for this sub-project.}
 
 \subsection{Review Processes}
-\textit{Has the underlying research project already successfully undergone a scientific review process? Is the project funded by public money?
-If yes, please also provide information about the funding source
-(e.g. State, BMWi, BMBF, DFG, EU, $\dots$)}
+%\textit{Has the underlying research project already successfully undergone a scientific review process? Is the project funded by public money?
+%If yes, please also provide information about the funding source
+%(e.g. State, BMWi, BMBF, DFG, EU, $\dots$)}
 
 Projects based on KKRnano have been granted
 granted substantial computing resources by several committees in the past years.
@@ -372,10 +382,10 @@ that will become operational in 2018.
 
 \section{Numerical Methods and Algorithms} 
 \rule{\textwidth}{0.4pt}\\
-\textit{Describe the numerical methods and algorithms that you are planning to use, improve, or develop.}\\
+%\textit{Describe the numerical methods and algorithms that you are planning to use, improve, or develop.}\\
  
-\textit{(1 to 2 pages)}
-\bigskip
+%\textit{(1 to 2 pages)}
+%\bigskip
 
 Contrary to other DFT codes, which determine the Kohn-Sham orbitals by solving
 the Kohn-Sham differential wave equation, in KKRnano the Green function for the Kohn-Sham
@@ -545,7 +555,7 @@ performed on local computers.
 
 
 
-\textit{(1 to 2 pages)}
+%\textit{(1 to 2 pages)}
 \newpage
 \subsection{Justification of resources requested}
 \label{sec:just}
@@ -673,13 +683,13 @@ of 3-6 nm which corresponds to a supercell size of
 
 
 
-$\cdots$ &\multicolumn{7}{c}{$\cdots$}\\
+%$\cdots$ &\multicolumn{7}{c}{$\cdots$}\\
 \hline\hline
 TOTAL & & & & & & & 50 mio. \\
 \end{tabular}
 \bigskip
 
-\textit{(0.5 to 1 page)}
+%\textit{(0.5 to 1 page)}
 
 \subsubsection{Sub-project 1: Identification of non-trivial magnetic ground states in B20-MnGe}
 The crucial parameter for identifying non-trivial magnetic ground states is the
@@ -724,7 +734,7 @@ to be performed each time.
 %\subsection{Resource management}
 %\textit{Describe how you intend to manage the resources you have requested. This should include a description of the methods you will deploy to monitor progress of the project and how project results are documented.}\\
 
-\textit{(0.5 to 1 page)}
+%\textit{(0.5 to 1 page)}
 
 %\subsection{Work schedule}
 %\textit{Please, provide a short work schedule, structured in sub-projects, if applicable. Include a table and/or Gantt chart.}
@@ -753,26 +763,61 @@ that all changes to the code and all experience with its use are readily availab
 
 \section{Key Personnel and Experience}
 \rule{\textwidth}{0.4pt}\\
-\textit{Give a short introduction of the key persons involved in the project and their experience (max 3 persons).}\\
+%\textit{Give a short introduction of the key persons involved in the project and their experience (max 3 persons).}\\
 
-\textit{(half a page)}
+%\textit{(half a page)}
 
-Prof. Stefan Bl{\"u}gel is...
+Prof. Stefan Bl{\"u}gel is a professor of physics at the RWTH Aachen University as well as 
+institute director of the department Quantum Theory of Materials of the 
+Peter Gr\"unberg Institut and the Institute for Advanced Simulation. 
+He belongs to the first generation in Germany that has pursued computational physics 
+using HPC. His core expertise is in electronic structure 
+theory based on density functional theory (DFT).
+He participated in several funding initiatives including those of the 
+Horizon 2020 e-INFRA-2015 call
+(e.g. MaX Center of Excellence - Materials design at the Exascale [\url{http://www.max-centre.eu}]).
+He published more than 400 papers that are cited more than 13000 times (H-factor 61).
+His publication record can be found on ORCiD [\url{https://orcid.org}] (id: 0000-0001-9987-4733) 
+and Researcher ID
+[\url{http://www.researcherid.com}] (id: J-8323-2013).
 \\
 Marcel Bornemann is a PhD student who has
 detailed knowledge of the computer code KKRnano and of the principles of writing modern code. 
 He implemented important enhancements in KKRnano such as the extension to non-collinear
 magnetism including relativistic effects.
 \\
-Dr. Sergii Grytsiuk is...
+Dr. Sergii Grytsiuk is
+an experienced HPC user on various facilities world wide, including the IBM Blue Gene at KAUST. 
+The core of his scientific expertise is magnetic thin films. 
 \\
-Dr. Rudolf Zeller has been working in the field of density-functional calculations for more than 40 years. 
+Dr. Roman Kováčik has worked on characterization of complex catalyst surfaces 
+by DFT calculations of scanning tunneling 
+microscopy data and combination of DFT with the dynamical mean-field 
+theory. Since 2012, he works at Forschungszentrum J\"ulich, focusing mainly on
+development within the Korringa-Kohn-Rostoker Green Function method, 
+particularly the effect of spin disorder on electronic and transport properties 
+of magnetic materials. His publication record can be found on ORCiD 
+[\url{https://orcid.org}] (id: 0000-0002-2780-547X) and Researcher ID 
+[\url{http://www.researcherid.com}] (id: E-1169-2011).
+\\
+Dr. Rudolf Zeller has been working in the field of DFT calculations for more than 40 years. 
 He is the main developer of the full-potential KKR programs, including KKRnano, 
-which are now used in J{\"u}lich and several other places in Germany. 
+which are now used in J{\"u}lich and several other places in Germany.
+His publication record can be found on ORCiD [\url{https://orcid.org}] (id: 0000-0002-9462-2649) 
+and Researcher ID
+[\url{http://www.researcherid.com}] (id: K-7094-2013).
 \\
-Dr. Phivos Mavropoulos is...
-\\
-Dr. Paul F. Baumeister is...
+Dr. Phivos Mavropoulos is a Principal Investigator at the Institute for Advanced Simulation—Quantum
+Theory of Materials, Forschungszentrum J\"ulich.
+He has been working on the development and application of KKR-based codes for 20 years. 
+His expertise lies in DFT calculations of magnetic and transport
+properties of metallic and insulating systems, including complex problems as non-collinear magnetism, 
+tunnel junctions, impurities and impurity scattering, magnetic interactions and phase transition temperatures.
+His publication record can be found on ORCiD [\url{https://orcid.org}] (id: 0000-0002-0205-8025) 
+and Researcher ID
+[\url{http://www.researcherid.com}] (id: H-6189-2013).
+%\\
+%Dr. Paul F. Baumeister is...
 
 \newpage
 
