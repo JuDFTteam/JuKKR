@@ -58,22 +58,19 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
     if lmax != DEFAULT_lmax:
         with open("input.conf", "a") as myfile: ## append to file
             myfile.write("LMAXD = {0}\n".format(int(lmax)))
-            #print "lmax = {0}".format(int(lmax))
     if solver != DEFAULT_solver:
         with open("input.conf", "a") as myfile: ## append to file
             myfile.write("solver = {0}\n".format(int(solver)))
-            #print "solver = {0}".format(int(solver))
     if Lly != DEFAULT_Lly:
         with open("input.conf", "a") as myfile: ## append to file
             myfile.write("LLY = {0}\n".format(int(Lly)))
-            #print "lmax = {0}".format(int(lmax))
 
     out, err, tim = run_it("./kkr.exe --prepare") ### start from JM-formatted potential file
     ## execute the code
-    out, err, tim = run_it("OMP_STACKSIZE=80M OMP_NUM_THREADS={0} mpirun -np {1} kkr.exe".format(int(nthreads), int(nranks)))
+    out, err, tim = run_it("OMP_STACKSIZE=80M OMP_NUM_THREADS={0} mpiexec -np {1} kkr.exe".format(int(nthreads), int(nranks)))
     ### grep the result
     total_energy = get_energy(out)
-    print "KKR for", inputdir, " with lmax=",lmax," gives", total_energy, "Ryd",
+    print "KKR for",inputdir," with lmax=",lmax," gives",total_energy,"Ryd",
     if solver != DEFAULT_solver:
         print ", solver=",solver,
     if nthreads != DEFAULT_nthreads:
@@ -136,6 +133,6 @@ class Test_semiconductors(unittest.TestCase):
             self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=2**r), Etot, DECIMALS)
         ### Lloyd formula
         self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=8, Lly=1), -7405.74826372, DECIMALS)
-        self.assertAlmostEqual(KKRnano("ZnO", nranks=8, Lly=1), -7405.74826372, DECIMALS)
+        self.assertAlmostEqual(KKRnano("ZnO",                nranks=8, Lly=1), -7405.74826372, DECIMALS)
 
 unittest.main()

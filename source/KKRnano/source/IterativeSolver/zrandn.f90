@@ -13,7 +13,7 @@
 !
 !     Noel M. Nachtigal
 !     April 23, 1993
-!     Paul F. Baumeister (upgrad to Fortran90)
+!     Paul F. Baumeister (upgrade to Fortran90)
 !     Nov 7, 2016
 !     
 !
