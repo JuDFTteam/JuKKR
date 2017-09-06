@@ -193,6 +193,8 @@ ifeq ($(PLATFORM),qpace3)
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
+
+
 # ========= HPC Cluster - RWTH Aachen ============
 # MIGHT BE OUTDATED!!!
 ifeq ($(PLATFORM),rwth)
