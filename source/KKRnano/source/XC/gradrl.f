@@ -43,7 +43,7 @@ c
       DO 30 IP = 1,IPAN
         IST = IRCUT(IP-1) + 1
         IEN = IRCUT(IP)
-        WRITE (6,FMT=9010) IP,IST,IEN
+c        WRITE (6,FMT=9010) IP,IST,IEN
         IF (IP.EQ.1) THEN
           DO 10 IR = IST,IEN
             DRDI2(IR) = DX
