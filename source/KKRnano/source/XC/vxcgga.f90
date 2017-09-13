@@ -103,7 +103,7 @@ integer :: lmpotd
 lmpotd= (lpot+1)**2
 
 !     ..
-write (6,fmt=*) ' GGA CALCULATION '
+!write (6,fmt=*) ' GGA CALCULATION '
 fpi = 16.d0*atan(1.d0)
 lmmax = (lpot+1)* (lpot+1)
 
