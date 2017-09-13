@@ -121,7 +121,7 @@ ifeq ($(PLATFORM),jureca)
 	FC90 = mpif90
 	# -module <path> specifies where to put .mod files
   	ifeq ($(SMP),openmp)
- 		FCFLAGS += -openmp -openmp-report
+ 		FCFLAGS += -qopenmp -qopt-report
         endif
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
@@ -140,7 +140,7 @@ ifeq ($(PLATFORM),jureca)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -g -no-prec-div -fp-model fast=2 -xHost 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -150,6 +150,46 @@ ifeq ($(PLATFORM),jureca)
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else
 		FCFLAGS += -O3
+		PPFLAGS += -D NOLOGGING
+	endif
+endif
+
+# ================== JURECA KNL ======================
+ifeq ($(PLATFORM),jureca_knl)
+###> module load intel impi mkl
+	FC = mpif77
+	FC90 = mpif90
+	# -module <path> specifies where to put .mod files
+  	ifeq ($(SMP),openmp)
+ 		FCFLAGS += -qopenmp -qopt-report
+        endif
+	FCFLAGS += -module $(BUILDDIR)
+	FCFLAGS += -I $(BUILDDIR)
+	# PPFLAGS += -D TASKLOCAL_FILES
+	FCFLAGS += -g
+	LDFLAGS += -mkl -g
+	ifeq ($(TYPE),debug_light)
+		FCFLAGS += -O0 -g
+	else ifeq ($(TYPE),debug)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+	else ifeq ($(TYPE),mtradii)
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
+		PPFLAGS += -D USE_MTRADII 
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else ifeq ($(TYPE),debug_mtradii)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
+		PPFLAGS += -D USE_MTRADII
+ 	else ifeq ($(TYPE),voronoi_mesh)
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+ 	else ifeq ($(TYPE),voronoi_mesh_debug)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+ 	else ifeq ($(TYPE),voronoi_mesh_debug_light)
+		FCFLAGS += -O0 -g
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
