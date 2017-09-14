@@ -115,6 +115,7 @@ ifeq ($(PLATFORM),iff003)
 endif
 
 # ================== JURECA ======================
+# optimal setup on one node seems to be 8MPI/3OMP
 ifeq ($(PLATFORM),jureca)
 ###> module load intel impi mkl
 	FC = mpif77
@@ -127,20 +128,20 @@ ifeq ($(PLATFORM),jureca)
 	FCFLAGS += -I $(BUILDDIR)
 	# PPFLAGS += -D TASKLOCAL_FILES
 	FCFLAGS += -g
-	LDFLAGS += -mkl -g
+	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
 	else ifeq ($(TYPE),mtradii)
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
 		PPFLAGS += -D USE_MTRADII 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else ifeq ($(TYPE),debug_mtradii)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -ipo -O2 -g -no-prec-div -fp-model fast=2 -xHost 
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -149,12 +150,18 @@ ifeq ($(PLATFORM),jureca)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
 
 # ================== JURECA KNL ======================
+# COMPILE ON KNL NODE
+# module purge
+# module use /usr/local/software/mod_environment
+# module load Architecture/KNL
+# module load Intel IntelMPI
+# optimal setup on one node seems to be 8MPI/8OMP
 ifeq ($(PLATFORM),jureca_knl)
 ###> module load intel impi mkl
 	FC = mpif77
@@ -164,23 +171,23 @@ ifeq ($(PLATFORM),jureca_knl)
  		FCFLAGS += -qopenmp -qopt-report
         endif
 	FCFLAGS += -module $(BUILDDIR)
-	FCFLAGS += -I $(BUILDDIR)
+	FCFLAGS += -I $(BUILDDIR) -I${MKLROOT}/include
 	# PPFLAGS += -D TASKLOCAL_FILES
 	FCFLAGS += -g
-	LDFLAGS += -mkl -g
+	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
 	else ifeq ($(TYPE),mtradii)
-		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xhost 
 		PPFLAGS += -D USE_MTRADII 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else ifeq ($(TYPE),debug_mtradii)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xhost
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -189,7 +196,7 @@ ifeq ($(PLATFORM),jureca_knl)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else
-		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xhost
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
@@ -207,20 +214,20 @@ ifeq ($(PLATFORM),qpace3)
 	FCFLAGS += -I $(BUILDDIR)
 	# PPFLAGS += -D TASKLOCAL_FILES
 	FCFLAGS += -g
-	LDFLAGS += -mkl -g
+	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
 	else ifeq ($(TYPE),mtradii)
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xhost 
 		PPFLAGS += -D USE_MTRADII 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else ifeq ($(TYPE),debug_mtradii)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xhost 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH #-D CPP_OMP
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -229,7 +236,7 @@ ifeq ($(PLATFORM),qpace3)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xhost 
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
