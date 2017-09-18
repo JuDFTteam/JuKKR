@@ -164,8 +164,8 @@ endif
 # optimal setup on one node seems to be 8MPI/8OMP
 ifeq ($(PLATFORM),jureca_knl)
 ###> module load intel impi mkl
-	FC = mpif77
-	FC90 = mpif90
+	FC = mpiifort
+	FC90 = mpiifort
 	# -module <path> specifies where to put .mod files
   	ifeq ($(SMP),openmp)
  		FCFLAGS += -qopenmp -qopt-report
@@ -174,7 +174,7 @@ ifeq ($(PLATFORM),jureca_knl)
 	FCFLAGS += -I $(BUILDDIR) -I${MKLROOT}/include
 	# PPFLAGS += -D TASKLOCAL_FILES
 	FCFLAGS += -g
-	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
+	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -ldl 
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
@@ -187,7 +187,7 @@ ifeq ($(PLATFORM),jureca_knl)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xhost
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xMIC-AVX512 #-xhost
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
