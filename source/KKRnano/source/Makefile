@@ -34,13 +34,13 @@ ifeq ($(PLATFORM),ifort)
 	FC90 = mpiifort -warn all
 	# -module <path> specifies where to put .mod files
   	ifeq ($(SMP),openmp)
- 		FCFLAGS += -qopenmp
+ 		FCFLAGS += -openmp
         endif
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
 	# PPFLAGS += -D TASKLOCAL_FILES
-	FCFLAGS += -g -traceback
-	LDFLAGS += -mkl -g
+	FCFLAGS += -g
+	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
@@ -53,7 +53,7 @@ ifeq ($(PLATFORM),ifort)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII -D USE_OLD_MESH -D NOLOGGING
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -66,7 +66,7 @@ ifeq ($(PLATFORM),ifort)
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH -D PRINT_MTRADII
 
 	else
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
