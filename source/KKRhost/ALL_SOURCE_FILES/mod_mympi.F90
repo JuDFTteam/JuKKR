@@ -393,7 +393,7 @@ contains
   if(myrank==0) then
     write(1337,'(A)') '=================================================='  
     write(1337,'(A,I5,A)') '    MPI parallelization: use',nranks,' ranks'
-    write(1337,'(A,I3,A,I4)') '    create processor array of size',nat,' x',ne
+    write(1337,'(A,I3,A,I4)') '    create processor array of size (nat x ne) ',nat,' x',ne
     if(rest>0) write(1337,'(A,I3)') '                                   with rest',rest
     if(rest>0) write(1337,'(A,10I3)') '    divide rest onto last energy points (k,l,m):',ktake
     write(1337,'(A)') '                N_E'

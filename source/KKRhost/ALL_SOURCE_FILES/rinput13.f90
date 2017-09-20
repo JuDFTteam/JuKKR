@@ -246,9 +246,14 @@
       NDIM = 3
       IF (LINTERFACE) NDIM = 2
       IF (.NOT.LINTERFACE.AND..NOT.OPT('SUPRCELL')) THEN 
-         WRITE(*,*) '3D-calculation, adding run-option "full inv" for full inversion.'
+         WRITE(1337,*) '3D-calculation, adding run-option "full inv" for full inversion.'
          CALL ADDOPT('full inv')
       ENDIF
+
+      IF (OPT('WRTGREEN')) THEN 
+         WRITE(1337,*) 'WRTGREEN option found, adding run-opt to "full inv" for full inversion.'
+         CALL ADDOPT('full inv')
+      END IF
 
 
       WRITE(111,*) 'Bravais vectors in units of ALAT'
@@ -961,7 +966,10 @@
       ELSE
          WRITE(111,*) 'Default IGREENFUN= ',IGF
       ENDIF
-      IF (OPT('KKRFLEX ')) IGF = 1
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN')) THEN
+         write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX or WRTGREEN options'
+         IGF = 1
+      END IF
 
       ICC = 0
       CALL IoInput('ICC             ',UIO,1,7,IER)
@@ -971,7 +979,10 @@
       ELSE
          WRITE(111,*) 'Default ICC= ',ICC
       ENDIF
-      IF (OPT('KKRFLEX ')) ICC = 1
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN')) THEN
+         write(1337,*) 'Setting ICC=1 for KKRFLEX or WRTGREEN options'
+         ICC = 1
+      END IF
       IF ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1
 
       IF ( ICC.NE.0 .AND. IGF.EQ.0 ) IGF = 1

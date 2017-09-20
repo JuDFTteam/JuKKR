@@ -240,6 +240,12 @@ C           will be stored in                                                !fs
          OPEN(6801,FILE='TBkkr_container.txt', FORM='formatted',             !fswrt
      &             POSITION='append')                                        !fswrt
       ENDIF                                                                  !fswrt
+
+!     open file for WRTGREEN option (writes green_host file for
+!     GMATLL_GES creation in zulapi part) file is filled in ROTGLL called in kloopz
+      IF (OPT('WRTGREEN') .and. myrank==master) THEN
+         OPEN(58,FILE='green_host', FORM='formatted')
+      ENDIF
 C
 C
 C
@@ -457,6 +463,12 @@ C
             ie_end = ielast
 #endif
 C
+            ! write energy into green_host file
+            IF (OPT('WRTGREEN') .and. myrank==master) THEN
+               WRITE(58,'(2e17.9)') EZ(IE)
+            ENDIF
+
+
             if (t_tgmat%gref_to_file) then
                READ (68,REC=IE) GINP
             else
@@ -657,7 +669,9 @@ C           Skip this part if first part of the qdos is running
               ENDIF
 
 
-            IF ( NATOMIMP==1 .and. OPT('KKRFLEX ') ) THEN
+            ! writeout of host green function for impurity code for single-atom cluster (not captured in rotgll)
+            IF ( NATOMIMP==1 ) THEN
+              IF ( OPT('KKRFLEX ') ) THEN
                 I1=ATOMIMP(1)
                 irec = ielast*(ispin-1)+ ie+1
                 ILM=0
@@ -670,10 +684,20 @@ C           Skip this part if first part of the qdos is running
                 ENDDO
                 irec = ielast*(ispin-1)+ ie+1
                 WRITE(888,REC=irec) GIMP
-                IF ( ( OPT('GPLAIN  ') ) ) THEN
+                IF ( OPT('GPLAIN  ') ) THEN
                   WRITE(8888,'(50000E)') GIMP
                 END IF
-            END IF
+              ENDIF ! KKRFLEX
+              IF (OPT('WRTGREEN') .and. myrank==master) THEN
+                DO LM2=1,LMMAXD
+                  DO LM1=1,LMMAXD
+                    ! writeout of green_host for WRTGREEN option
+                    WRITE(58,'((2I5),(2e17.9))') LM2, LM1,
+     &                                     GMATLL(LM1,LM2,I1)
+                  END DO
+                END DO
+              ENDIF ! WRTGREEN
+            END IF !( NATOMIMP==1 )
 
             IF ( LCPAIJ ) THEN
              if(t_cpa%dmatproj_to_file) then
@@ -781,6 +805,10 @@ C
          ie_num = ie
 #endif
 
+       ! write energy into green_host file
+       IF (OPT('WRTGREEN') .and. myrank==master) THEN
+          WRITE(58,'(2e17.9)') EZ(IE)
+       ENDIF
        
 c read in Green function of reference system
        if (t_tgmat%gref_to_file) then
@@ -987,6 +1015,15 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                      ENDDO
                   ENDDO
                   WRITE(888,REC=IREC) GIMP
+                  IF (OPT('WRTGREEN') .and. myrank==master) THEN
+                    DO LM2=1,LMMAXD
+                      DO LM1=1,LMMAXD
+                        ! writeout of green_host for WRTGREEN option
+                        WRITE(58,'((2I5),(2e17.9))') LM2, LM1,
+     &                                         GMATLL(LM1,LM2,I1)
+                      END DO
+                    END DO
+                  ENDIF ! WRTGREEN
                ENDIF
 
                IF ( LCPAIJ ) THEN
@@ -1066,6 +1103,11 @@ C
 C    ----------------------------------------------------------------
 C    |           END of do loop over spins and energies             |
 C    ----------------------------------------------------------------
+
+      ! close green_host file after write out
+      IF (OPT('WRTGREEN') .and. myrank==master) THEN
+         CLOSE(58)
+      ENDIF
 C
       CLOSE (68)
 c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green

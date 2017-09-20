@@ -48,7 +48,7 @@ C     .. Local arrays
 C     ..
 C     .. Local scalars
       INTEGER ILIN,IQ,ICALL,ISH,ISYM,JQ
-      INTEGER LM1,LM2,NLIN
+      INTEGER LM1,LM2,NLIN, ILM, JLM
       CHARACTER*1 CNT
       CHARACTER*4 STR4I,STR4J
       CHARACTER*18 STR18
@@ -152,6 +152,7 @@ C
          END IF
          DO  JQ=1,NATOMIMP
             DO LM2=1,LMMAXD
+               JLM = (JQ-1)*LMMAXD+LM2
                DO  IQ=1,NATOMIMP
                   DO LM1=1,LMMAXD
                      NLIN = NLIN + 1
@@ -160,6 +161,12 @@ C
                      GCLUST(NLIN) = GLL(LM1,LM2,IQ,JQ)
                      !test
 !                    WRITE(214321,'(4i,2E)') LM1,LM2,IQ,JQ,GCLUST(NLIN)
+                     ! writeout of green_host for WRTGREEN option
+                     IF(OPT('WRTGREEN')) THEN
+                       ILM=(IQ-1)*LMMAXD+LM1
+                       WRITE(58,'((2I5),(2e17.9))') JLM, ILM,
+     &                                        GLL(LM1,LM2,IQ,JQ)
+                     END IF
                   END DO
                END DO
             END DO
@@ -189,7 +196,7 @@ c          WRITE(88,REC=ICALL) GCLUST                                           
 c        END IF                                                                   !no-green
 
          DEALLOCATE (GCLUST)
-      ENDIF
+      ENDIF !IGF/=0
 C***********************************************************************
       DEALLOCATE (GLL,TPG)
       RETURN

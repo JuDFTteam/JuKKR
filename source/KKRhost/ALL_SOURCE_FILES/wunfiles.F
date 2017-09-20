@@ -399,7 +399,7 @@ C                                  meant for simpler passing of basic parameter 
       ! so far changing does not work yet, so turn this off:
       MPIadapt = 0
 
-      if(opt('FERMIOUT')) then                                          ! fswrt
+      if(opt('FERMIOUT').or.OPT('WRTGREEN')) then                       ! fswrt
          MPIatom = .true.                                               ! fswrt
          if(SCFSTEPS>1) then                                            ! fswrt
             write(*,*) 'Warning: Setting SCFSTEPS=1 for FERMIOUT option'! fswrt
