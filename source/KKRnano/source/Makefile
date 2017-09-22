@@ -39,8 +39,8 @@ ifeq ($(PLATFORM),ifort)
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
 	# PPFLAGS += -D TASKLOCAL_FILES
-	FCFLAGS += -g -traceback
-	LDFLAGS += -mkl -g
+	FCFLAGS += -g
+	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
@@ -53,7 +53,7 @@ ifeq ($(PLATFORM),ifort)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII -D USE_OLD_MESH -D NOLOGGING
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -66,7 +66,7 @@ ifeq ($(PLATFORM),ifort)
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH -D PRINT_MTRADII
 
 	else
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
@@ -95,52 +95,38 @@ ifeq ($(PLATFORM),gfortran)
 endif
 
 
-# ========= IFF003 Cluster ============
-ifeq ($(PLATFORM),iff003)
-	FC = mpiifort -warn
-	FC90 = mpiifort -warn
-	# -module <path> specifies where to put .mod files
-	FCFLAGS += -openmp -mkl -module $(BUILDDIR)
-	FCFLAGS += -gen-interfaces -warn interfaces
-	PPFLAGS += -D TASKLOCAL_FILES 
-	FC90FLAGS +=
-	FCFLAGS += -I $(BUILDDIR)
-	LDFLAGS += -O3
-	ifeq ($(TYPE),debug)
-		FCFLAGS += -g
-	endif
-	# set run paths to look for shared libraries (-Wl means pass to linker)
-	LDFLAGS += -Wl,-rpath '/usr/local/intel/mkl/lib/intel64'
-	LDFLAGS += -Wl,-rpath '/usr/local/intel/lib/intel64'
-endif
-
 # ================== JURECA ======================
+# optimal setup on one node seems to be 8MPI/3OMP for 64 atoms
+# The following software stages were tested and work:
+# module --force purge
+# module use /usr/local/software/jureca/OtherStages
+# module load Stages/2016a
+# module load intel-para
 ifeq ($(PLATFORM),jureca)
-###> module load intel impi mkl
 	FC = mpif77
 	FC90 = mpif90
 	# -module <path> specifies where to put .mod files
   	ifeq ($(SMP),openmp)
- 		FCFLAGS += -openmp -openmp-report
+ 		FCFLAGS += -qopenmp -qopt-report
         endif
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
 	# PPFLAGS += -D TASKLOCAL_FILES
 	FCFLAGS += -g
-	LDFLAGS += -mkl -g
+	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
 	else ifeq ($(TYPE),mtradii)
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
 		PPFLAGS += -D USE_MTRADII 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else ifeq ($(TYPE),debug_mtradii)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -149,14 +135,58 @@ ifeq ($(PLATFORM),jureca)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
+		PPFLAGS += -D NOLOGGING
+	endif
+endif
+
+# ================== JURECA KNL ======================
+# optimal setup on one node seems to be 8MPI/8OMP for 64 atoms
+# code does not run on standard JURECA nodes because of AVX512
+# module purge
+# module use /usr/local/software/mod_environment
+# module load Architecture/KNL
+# module load Intel IntelMPI
+ifeq ($(PLATFORM),jureca_knl)
+	FC = mpiifort
+	FC90 = mpiifort
+	# -module <path> specifies where to put .mod files
+  	ifeq ($(SMP),openmp)
+ 		FCFLAGS += -qopenmp -qopt-report
+        endif
+	FCFLAGS += -module $(BUILDDIR)
+	FCFLAGS += -I $(BUILDDIR) -I${MKLROOT}/include
+	# PPFLAGS += -D TASKLOCAL_FILES
+	FCFLAGS += -g
+	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -ldl 
+	ifeq ($(TYPE),debug_light)
+		FCFLAGS += -O0 -g
+	else ifeq ($(TYPE),debug)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+	else ifeq ($(TYPE),mtradii)
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xhost 
+		PPFLAGS += -D USE_MTRADII 
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else ifeq ($(TYPE),debug_mtradii)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
+		PPFLAGS += -D USE_MTRADII
+ 	else ifeq ($(TYPE),voronoi_mesh)
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xMIC-AVX512 
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+ 	else ifeq ($(TYPE),voronoi_mesh_debug)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+ 	else ifeq ($(TYPE),voronoi_mesh_debug_light)
+		FCFLAGS += -O0 -g
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xMIC-AVX512
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
 
 # ================== QPACE3 ======================
 ifeq ($(PLATFORM),qpace3)
-###> module load intel impi mkl
 	FC = mpiifort
 	FC90 = mpiifort
 	# -module <path> specifies where to put .mod files
@@ -167,20 +197,20 @@ ifeq ($(PLATFORM),qpace3)
 	FCFLAGS += -I $(BUILDDIR)
 	# PPFLAGS += -D TASKLOCAL_FILES
 	FCFLAGS += -g
-	LDFLAGS += -mkl -g
+	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
 	else ifeq ($(TYPE),mtradii)
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xhost 
 		PPFLAGS += -D USE_MTRADII 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else ifeq ($(TYPE),debug_mtradii)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xMIC-AVX512 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH #-D CPP_OMP
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -189,10 +219,12 @@ ifeq ($(PLATFORM),qpace3)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else
-		FCFLAGS += -O3
+		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xMIC-AVX512
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
+
+
 # ========= HPC Cluster - RWTH Aachen ============
 # MIGHT BE OUTDATED!!!
 ifeq ($(PLATFORM),rwth)
