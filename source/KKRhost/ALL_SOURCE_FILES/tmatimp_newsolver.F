@@ -149,7 +149,7 @@ c-----------------------------------------------------------------
 
        ! set start/end of parallel atom loops
        if(t_inc%i_write>0) write(1337, *) 'Parallelization host atoms:'
-       call distribute_linear_on_tasks(nranks, myrank, master, NATYPD, 
+       call distribute_linear_on_tasks(nranks, myrank, master, IHOST, 
      &                                  ntot_pT,ioff_pT,.true.)
        i1_start = ioff_pT(myrank) + 1
        i1_end   = ioff_pT(myrank) + ntot_pT(myrank)
@@ -160,7 +160,7 @@ c-----------------------------------------------------------------
        i1_end_imp   = ioff_pT(myrank) + ntot_pT(myrank)
 #else
        i1_start = 1
-       i1_end = NATYPD
+       i1_end = IHOST
        i1_start_imp = 1
        i1_end_imp = NATOMIMP
 #endif
@@ -208,14 +208,14 @@ c new mesh
  
 c calculate tmat and radial wavefunctions of host atoms      
 ! parallelized with MPI over atoms
-      DO I1=i1_start, i1_end
+      DO I2=i1_start, i1_end
+       I1=HOSTIMP(I2)
+       
        THETA = THETAhost(i1)
        PHI = PHIhost(i1)
-       DO I2=1,IHOST
-        IF (I1.EQ.HOSTIMP(I2)) THEN
          ISPIN=1
          IPOT=NSPIN*(I1-1)+1
-         WRITE(6,*) 'HOST',I2,I1,IPOT,allocated(vinsnew)
+         WRITE(6,*) 'HOST',I2,I1
 
 c set up the non-spherical ll' matrix for potential VLL'
        IF (NSRA.EQ.2) THEN
@@ -365,8 +365,6 @@ c save potential for a host
           DEALLOCATE(HLK2)
           DEALLOCATE(JLK2)
           DEALLOCATE(SLL,RLL)
-         ENDIF
-        ENDDO ! I1
        ENDDO ! I2
 
        DEALLOCATE(RNEW,RPAN_INTERVALL,IPAN_INTERVALL,VINSNEW)
@@ -484,7 +482,7 @@ c new mesh
         PHI = PHIimp(i1)
         ISPIN=1
         IPOT=NSPIN*(I1-1)+1
-        WRITE(6,*) 'IMP',I1,ipot
+        WRITE(6,*) 'IMP',I1
 
        ALLOCATE(VNSIMP(NSRA*LMMAXSO,NSRA*LMMAXSO,IRMDNEW(I1)))
        VNSIMP=CZERO

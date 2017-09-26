@@ -199,6 +199,13 @@
       i1_start = 1
       i1_end = NOFKS
 #endif
+      ! k-loop not needed for GREENIMP-case
+      if(opt('GREENIMP')) then
+         if(myrank==master) write(*,*) 'Skipping kloop in kkrmat' 
+         i1_start = 1
+         i1_end = 0
+      end if
+
       !print header of statusbar for k-loop
       if(t_inc%i_write>0) then
       write(1337,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')

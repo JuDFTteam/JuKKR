@@ -758,10 +758,12 @@ c ------------------------------------------------------------------------
 
  360     CONTINUE               ! IE = 1,IELAST
 #ifdef CPP_TIMING
-        if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-        if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-        if(t_inc%i_time>0) call timing_stop('main1b_inversion')
-        if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
+        if(.not.OPT('GREENIMP')) then
+           if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
+           if(t_inc%i_time>0) call timing_pause('main1b_fourier')
+           if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+           if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
+        endif
 #endif
 !EEEEEEEEEEEEEEEEEEEEEEEEE  NO-SOC EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
@@ -1077,10 +1079,12 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 
  460  CONTINUE                  ! IE=1,IELAST
 #ifdef CPP_TIMING
-        if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-        if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-        if(t_inc%i_time>0) call timing_stop('main1b_inversion')
-        if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
+        if(.not.OPT('GREENIMP')) then
+           if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
+           if(t_inc%i_time>0) call timing_pause('main1b_fourier')
+           if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+           if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
+        endif
 #endif
 !EEEEEEEEEEEEEEEEEEEEEEEEEEEE  SOC  EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
@@ -1200,7 +1204,7 @@ C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
       IF ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) THEN
 #ifdef CPP_TIMING
-            call timing_start('main1b - tbxccpl')
+         call timing_start('main1b - tbxccpl')
 #endif
          IF(NQDOS/=1) stop 'QDOS option not compatible with XCPL'
          IF (.NOT.OPT('NEWSOSOL')) THEN
@@ -1219,7 +1223,7 @@ C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
      &                ielast,ez,wez,NPOL,dsymll,noq,itoq,ncpa)
          END IF
 #ifdef CPP_TIMING
-            call timing_stop('main1b - tbxccpl')
+         call timing_stop('main1b - tbxccpl')
 #endif
       END IF
 C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

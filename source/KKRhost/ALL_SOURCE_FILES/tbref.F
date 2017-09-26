@@ -195,7 +195,7 @@ C ----------------------------------------------------------------------
          !skip this part with GREENIMP option
          if(opt('GREENIMP')) then
             i1_start = 1
-            i1_end = 1
+            i1_end = 0
          end if
 
          DO ICLS=i1_start,i1_end
