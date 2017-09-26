@@ -11,6 +11,7 @@
 #else
        use mod_mympi, only: myrank, master, nranks
 #endif
+       use mod_types, only: t_inc
        use mod_create_newmesh
        use mod_version_info
        use mod_wunfiles, only: t_params
@@ -146,12 +147,12 @@ c-----------------------------------------------------------------
        if(ierr/=0) stop 'Error MPI_Bcast PHIimp in tmatimp'
 
        ! set start/end of parallel atom loops
-       write(1337, *) 'Parallelization host atoms:'
+       if(t_inc%i_write>0) write(1337, *) 'Parallelization host atoms:'
        call distribute_linear_on_tasks(nranks, myrank, master, NATYPD, 
      &                                  ntot_pT,ioff_pT,.true.)
        i1_start = ioff_pT(myrank) + 1
        i1_end   = ioff_pT(myrank) + ntot_pT(myrank)
-       write(1337, *) 'Parallelization impurity atoms:'
+       if(t_inc%i_write>0) write(1337, *) 'Parallelization imp. atoms:'
        call distribute_linear_on_tasks(nranks, myrank, master, NATOMIMP,
      &                                  ntot_pT,ioff_pT,.true.)
        i1_start_imp = ioff_pT(myrank) + 1
@@ -177,7 +178,6 @@ c data for the new mesh
             IRMDNEW = NPAN_TOT(I1)*(NCHEB+1)
          ENDIF
        END DO
-       !IRMDNEW= NTOTD*(NCHEB+1)
 c new mesh
        ALLOCATE(RNEW(IRMDNEW,NATYPD))
        ALLOCATE(RPAN_INTERVALL(0:NTOTD,NATYPD))
