@@ -251,8 +251,11 @@
       ENDIF
 
       IF (OPT('WRTGREEN')) THEN 
-         WRITE(1337,*) 'WRTGREEN option found, adding run-opt to "full inv" for full inversion.'
+         WRITE(1337,*) 'WRTGREEN option found'
+         WRITE(1337,*) 'adding run-opt "full inv" for full inversion.'
+         WRITE(1337,*) 'adding run-opt "fix mesh"'
          CALL ADDOPT('full inv')
+         CALL ADDOPT('fix mesh')
       END IF
 
 
