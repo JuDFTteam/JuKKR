@@ -9,13 +9,15 @@
       subroutine main1b()
       
       use mod_timing
-      use mod_types, only: t_tgmat, t_inc, t_lloyd, t_cpa, init_t_cpa
+      use mod_types, only: t_tgmat,t_inc,t_lloyd,t_cpa,init_t_cpa,t_imp
 #ifdef CPP_MPI
      &                     ,t_mpi_c_grid, save_t_mpi_c_grid,
-     &                      get_ntot_pT_ioff_pT_2D
+     &                      get_ntot_pT_ioff_pT_2D, 
+     &                      init_params_t_imp, init_t_imp, 
+     &                      bcast_t_imp_scalars, bcast_t_imp_arrays
       use mpi
 #endif
-      use mod_mympi, only: myrank, nranks, master
+      use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks, MPIadapt
@@ -128,6 +130,8 @@ C     .. GINP   = cluster GF (ref. syst.)
      &               ALPHAREF(0:LMAXD,NREFD),DALPHAREF(0:LMAXD,NREFD), ! LLY Lloyd Alpha matrix and deriv.
      &               TRALPHAREF(IEMXD),                                ! LLY Lloyd  
      &               CDOS_LLY(IEMXD,NSPIND),CDOSREF_LLY(IEMXD)         ! LLY Lloyd
+      DOUBLE COMPLEX, allocatable :: DTMTRX(:,:) ! for GREENIMP
+
 C     .. effective (site-dependent) Delta_t^(-1) matrix ..
       DOUBLE COMPLEX WN2(LMGF0D,LMGF0D)                  ! LLY
       DOUBLE COMPLEX MSST(LMMAXD,LMMAXD,NATYPD)
@@ -446,6 +450,7 @@ C
       DO 370 ISPIN = 1,NSPIN
 C
 C
+!EEEEEEEEEEEEEEEEEEEEEEEEE  NO-SOC EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 #ifdef CPP_MPI         
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
@@ -758,6 +763,7 @@ c ------------------------------------------------------------------------
         if(t_inc%i_time>0) call timing_stop('main1b_inversion')
         if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
 #endif
+!EEEEEEEEEEEEEEEEEEEEEEEEE  NO-SOC EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
          IF( NCPAFAIL .NE. 0 ) THEN
             if(t_inc%i_write>0) then
@@ -787,6 +793,7 @@ C
       ! nonco angles
       call read_angles(t_params,NATYP,THETAS,PHIS)
 
+!EEEEEEEEEEEEEEEEEEEEEEEEEEEE  SOC  EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 #ifdef CPP_MPI
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
@@ -1048,24 +1055,24 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
             ENDIF               ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
  220     CONTINUE               ! IQ = 1,NQ                                         ! qdos ruess
 
-            IF (LLY.NE.0) THEN                                      ! LLY 
+         IF (LLY.NE.0) THEN                                      ! LLY 
 
-               CDOS_LLY(IE,1) =   TRALPHA(IE,1)                     ! LLY
-     &                - LLY_GRTR(IE,1) / VOLBZ(1) + 2d0*LLY_G0TR(IE)    ! LLY 
+            CDOS_LLY(IE,1) =   TRALPHA(IE,1)                     ! LLY
+     &             - LLY_GRTR(IE,1) / VOLBZ(1) + 2d0*LLY_G0TR(IE)    ! LLY 
 
-               CDOS_LLY(IE,1) = CDOS_LLY(IE,1) / PI                 ! LLY 
+            CDOS_LLY(IE,1) = CDOS_LLY(IE,1) / PI                 ! LLY 
 
-               CDOSREF_LLY(IE) = TRALPHAREF(IE) - LLY_G0TR(IE)      ! LLY 
+            CDOSREF_LLY(IE) = TRALPHAREF(IE) - LLY_G0TR(IE)      ! LLY 
 
 
-            ENDIF                                                   ! LLY 
+         ENDIF                                                   ! LLY 
          
 
 #ifdef CPP_MPI
-           !stop timing measurement for this ie, needed for MPIadapt
-           if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
-              call timing_stop('time_1b_ie', save_out=timings_1b(ie) )
-           end if
+         !stop timing measurement for this ie, needed for MPIadapt
+         if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
+            call timing_stop('time_1b_ie', save_out=timings_1b(ie) )
+         end if
 #endif
 
  460  CONTINUE                  ! IE=1,IELAST
@@ -1075,6 +1082,7 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
         if(t_inc%i_time>0) call timing_stop('main1b_inversion')
         if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
 #endif
+!EEEEEEEEEEEEEEEEEEEEEEEEEEEE  SOC  EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
          IF( NCPAFAIL .NE. 0 ) THEN
             if(t_inc%i_write>0) then
@@ -1231,21 +1239,130 @@ C     kpoint (defined in qvec.dat)
       if(t_lloyd%dtmat_to_file)   CLOSE(691)
       if(t_lloyd%tralpha_to_file) CLOSE(692)
       IF (IQDOSRUN.EQ.1) GO TO 210                 ! qdos ruess
+
+
+
+      !Do stuff for GREENIMP option (previously done in zulapi code)
+      IF (OPT('GREENIMP')) THEN
+
+        ! consistency checks
+        if(.not.(ielast==1.or.ielast==3)) stop 
+     + 'Error: GREENIMP option only possible with 1 () or 3 () energy
+     +  points in contour'
+        if(ielast==1 .and.dabs(dimag(ez(1)))>10**-10) stop 
+     + 'Error: T>0 for GREENIMP (DTMTRX writeout, IELAST==3)'
+        if(ielast==3 .and.dabs(dimag(ez(1)))<10**-10) stop 
+     + 'Error: T==0 for GREENIMP (GMATLL_GES writeout, IELAST==3)'
+        ! end consistency checks
+
+#ifdef CPP_MPI
+        ! init arrays and communicate parameters of t_imp for all ranks
+        ! that are not the master
+        write(*,*) myrank,'bcast scalars'
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        call bcast_t_imp_scalars(t_imp)
+        write(*,*)t_imp%IHOST,   'l1',myrank
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*)t_imp%NATOMIMP,'l2',myrank
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*)t_imp%IPAND,   'l3',myrank
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*)t_imp%NATYPD,  'l4',myrank
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*)t_imp%IRMD,    'l5',myrank
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*)t_imp%IRID,    'l6',myrank
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*)t_imp%NFUND,   'l7',myrank
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*)t_imp%NSPIN,   'l8',myrank
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*)t_imp%IRMIND,  'l9',myrank
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*)t_imp%LMPOTD, 'l10',myrank
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
+        write(*,*) myrank,'init'
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        if(myrank/=master) call init_t_imp(t_inc,t_imp)
+
+        write(*,*) myrank,'bcast arrays'
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        call bcast_t_imp_arrays(t_imp)
+
+
+        write(*,*) myrank,'ihost',t_imp%IHOST
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*) myrank,'hostimp',t_imp%HOSTIMP(1:2)
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*) myrank,'rimp',t_imp%RIMP(1:2,1:2)
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*) myrank,'zimp',t_imp%ZIMP(1:2)
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*) myrank,'irwsimp',t_imp%IRWSIMP(1:2)
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*) myrank,'ipanimp',t_imp%IPANIMP(1:2)
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*) myrank,'ircutimp',t_imp%IRCUTIMP(0:2,1:2)
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        write(*,*) myrank,'irminimp',t_imp%IRMINIMP(1:2)
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        !write(*,*) myrank,'vinsimp',t_imp%VINSIMP
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        !write(*,*) myrank,'vispimp',t_imp%VISPIMP
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+#endif
+        
+        do ie=1,ielast ! big ie loop (use only for GMATLL output)
+
+          IF (IELAST.EQ.3 .and. ie==1 .and. myrank==master) then
+             OPEN(UNIT=59,FILE='GMATLL_GES',FORM='FORMATTED')
+             OPEN(UNIT=60,FILE='green_host',FORM='FORMATTED')
+          ENDIF
+          ALLOCATE(DTMTRX(LMMAXD*t_imp%NATOMIMP,LMMAXD*t_imp%NATOMIMP), 
+     &             stat=ierr)
+          if(ierr/=0) stop 'Error allocating DTMTRX'
+          DTMTRX=CZERO
+ 
+         ! find DTMTRX (written out for IELAST==1), parallelized with
+         ! mpi over atoms
+          CALL TMATIMP_NEWSOLVER(t_params%NSPIN,
+     &       t_params%LMAX,t_params%R,t_params%ZAT,t_params%IELAST,
+     +       EZ(IE),NSRA-1,t_params%IRWS,t_params%IPAN,
+     &       t_params%IRCUT,t_params%IRMIN,CVLIGHT,
+     &       t_params%CLEB(1,1),t_params%ICLEB,t_params%IEND,
+     +       t_params%NPAN_LOG,t_params%NPAN_EQ,t_params%NCHEB,
+     &       t_params%R_LOG,t_params%VINS,t_params%VISP,t_imp%NATOMIMP,
+     +       t_params%RCLSIMP,t_params%ATOMIMP(1:t_imp%NATOMIMP),
+     +       t_imp%IHOST,t_imp%HOSTIMP(1:t_imp%NATOMIMP),
+     +       t_imp%RIMP(1:t_params%IRMD,1:t_imp%NATOMIMP),
+     +       t_imp%ZIMP(1:t_imp%NATOMIMP),
+     +       t_imp%IRWSIMP(1:t_imp%NATOMIMP),
+     +       t_imp%IPANIMP(1:t_imp%NATOMIMP),
+     &       t_imp%IRCUTIMP(0:t_params%IPAND,1:t_imp%NATOMIMP),
+     +       t_imp%IRMINIMP(1:t_imp%NATOMIMP),t_imp%VINSIMP,
+     +       t_imp%VISPIMP,DTMTRX)
+
+         ! compute GMATLL_GES, on master rank only
+          IF (IELAST.EQ.3 .and. myrank==master) THEN
+           CALL GREENIMP(t_imp%NATOMIMP,DTMTRX,t_params%EZ(IE))
+          ENDIF
+          
+          DEALLOCATE(DTMTRX, stat=ierr)
+          if(ierr/=0) stop 'Error deallocating DTMTRX'
+
+        end do ! ie-loop
+
+        ! done with GREENIMP option, stopping now
+#ifdef CPP_MPI
+        call MPI_FINALIZE(ierr)
+#endif
+        STOP 'done with GREENIMP, stopping here!'
+
+      ENDIF ! GREENIMP
+
 C ----------------------------------------------------------------------
 C
-      if(t_inc%i_write>0) 
-     &   WRITE (1337,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
-
- 2100 FORMAT(/,79(1H=),/,5X,' Inversion algorithm used : ',A,/,
-     &     79(1H=),/)
-99019 FORMAT (/,1X,79('*'),/,
-     &             ' tolerance for CPA-cycle:',F15.7,/,
-     &             ' CPA not converged for',I3,' energies:',/,
-     &             3(' E:',I3,F7.4,:,2X))
-99020 FORMAT (/,1X,79('*'),/,25X,'no problems with',
-     &         '  CPA-cycle ',/,1X,79('*'),/)
-
-
       if( test('rhoqtest') .and. (myrank==master) ) then
         open(9999, file='params.txt')
         write(9999,*) 2*LMMAXD, t_params%natyp
@@ -1278,6 +1395,21 @@ C
       end if
       deallocate(ISH, JSH, stat=ierr)
       if(ierr/=0) stop '[main1b] Error deallocating ISH and JSH'
+
+
+
+      if(t_inc%i_write>0) 
+     &   WRITE (1337,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
+
+ 2100 FORMAT(/,79(1H=),/,5X,' Inversion algorithm used : ',A,/,
+     &     79(1H=),/)
+99019 FORMAT (/,1X,79('*'),/,
+     &             ' tolerance for CPA-cycle:',F15.7,/,
+     &             ' CPA not converged for',I3,' energies:',/,
+     &             3(' E:',I3,F7.4,:,2X))
+99020 FORMAT (/,1X,79('*'),/,25X,'no problems with',
+     &         '  CPA-cycle ',/,1X,79('*'),/)
+
 
 
       END SUBROUTINE !main1b

@@ -1,9 +1,11 @@
       module MOD_MAIN0 
       
       use mod_wunfiles
+      use mod_types, only: t_imp
 #ifdef CPP_TIMING
       use mod_timing
 #endif
+      use mod_create_newmesh
       
       implicit none
       
@@ -1048,11 +1050,13 @@ C
 C new solver for full-potential, spin-orbit, initialise
        IF (OPT('NEWSOSOL')) THEN
 
-        CALL CREATE_NEWMESH(NSPIN,R,IRMIN,IPAN,IRCUT,
+        CALL CREATE_NEWMESH(NATYPD,LMAXD,LPOTD,IRMD,IRNSD,IPAND,
+     +                      IRID,NTOTD,NFUND,NCHEBD,NTOTD*(NCHEBD+1),
+     +                      NSPIN,R,IRMIN,IPAN,IRCUT,
      +                      R_LOG,NPAN_LOG,NPAN_EQ,NCHEB,
      +                      NPAN_LOGNEW,NPAN_EQNEW,
      +                      NPAN_TOT,RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
-     +                      NTCELL,THETAS,THETASNEW)
+     +                      NCELLD,NTCELL,THETAS,THETASNEW)
 
       ENDIF
 
@@ -1089,16 +1093,33 @@ C new solver for full-potential, spin-orbit, initialise
      &              NCLEB,NACLSD,NCLSD,LM2D,LMAXD+1,MMAXD,NRD,NSHELD,
      &              NSYMAXD,NAEZD/NPRINCD,NATOMIMPD,NOFGIJD,
      &              NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,NTOTD,
-     &              NCHEBD,NPAN_LOGNEW,NPAN_EQNEW,NCHEB,R_LOG,NPAN_TOT,
-     &              RNEW,RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,
-     &              THETASNEW,SOCSCALE,TOLRDIF,LLY,DELTAE,RCLSIMP)
+     &              NCHEBD,NPAN_LOG,NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,
+     &              NCHEB,R_LOG,NPAN_TOT,RNEW,RPAN_INTERVALL,
+     &              IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF,
+     &              LLY,DELTAE,RCLSIMP)
 
 
       IF (OPT('FERMIOUT'))THEN                                        ! fswrt
         CALL WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,  ! fswrt
      +                         ALAT,BRAVAIS,RECBV,RBASIS,CLS,NACLS,   ! fswrt
-     +                         RCLS,EZOA,ATOM,RR,NSPIN)                     ! fswrt
+     +                         RCLS,EZOA,ATOM,RR,NSPIN)               ! fswrt
       END IF                                                          ! fswrt
+
+
+      IF (OPT('GREENIMP')) THEN                                        ! GREENIMP
+         ! fill array dimensions and allocate arrays in t_imp          ! GREENIMP
+         call init_params_t_imp(t_imp,IPAND,NATYPD,IRMD,IRID,NFUND,    ! GREENIMP
+     &                          NSPIN,IRMIND,LMPOTD)                   ! GREENIMP
+         call init_t_imp(t_inc,t_imp)                                  ! GREENIMP
+                                                                       ! GREENIMP
+         ! next read impurity potential and shapefunction              ! GREENIMP
+         CALL READIMPPOT(NATOMIMP,INS,1337,0,0,2,NSPIN,LPOT,           ! GREENIMP
+     &                   t_imp%IPANIMP,t_imp%THETASIMP,t_imp%IRCUTIMP, ! GREENIMP
+     &                   t_imp%IRWSIMP,KHFELD,HFIELD,t_imp%VINSIMP,    ! GREENIMP
+     &                   t_imp%VISPIMP,t_imp%IRMINIMP,                 ! GREENIMP
+     &                   t_imp%RIMP,t_imp%ZIMP)                        ! GREENIMP
+      END IF                                                           ! GREENIMP
+
 
       IF (ISHIFT.EQ.2) THEN                                           ! fxf
          OPEN (67,FILE='vmtzero',FORM='formatted')                    ! fxf

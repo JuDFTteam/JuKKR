@@ -966,8 +966,8 @@
       ELSE
          WRITE(111,*) 'Default IGREENFUN= ',IGF
       ENDIF
-      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN')) THEN
-         write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX or WRTGREEN options'
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) THEN
+         write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP options'
          IGF = 1
       END IF
 
@@ -979,8 +979,8 @@
       ELSE
          WRITE(111,*) 'Default ICC= ',ICC
       ENDIF
-      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN')) THEN
-         write(1337,*) 'Setting ICC=1 for KKRFLEX or WRTGREEN options'
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) THEN
+         write(1337,*) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP options'
          ICC = 1
       END IF
       IF ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1
@@ -1018,6 +1018,14 @@
       WRITE(1337,2104)
       WRITE(1337,2015) INTERVX,INTERVY,INTERVZ 
       WRITE(1337,2102)
+
+      IF(OPT('GREENIMP')) THEN
+         write(*,*) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+         write(1337,*) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+         INTERVX = 1
+         INTERVY = 1
+         INTERVZ = 1
+      ENDIF
 
 
       ! Energy contour

@@ -786,7 +786,9 @@ c interpolate potential
       IF ( IDOLDAU.EQ.1 ) 
      +           CALL CINIT(MMAXD*MMAXD*4*NATYPD,DENMATN(1,1,1,1,1))
 
-       CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,
+       CALL INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATYPD,IPAND,
+     +                        NSPOTD,NTOTD,NCHEBD,NTOTD*(NCHEBD+1),
+     +                        NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,
      +                        VISP,NPAN_LOG,NPAN_EQ,NPAN_TOT,
      +                        RNEW,IPAN_INTERVALL,
      +                        VINSNEW)
