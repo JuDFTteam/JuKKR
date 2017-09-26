@@ -150,10 +150,10 @@ C ======================================================================
 C
          !skip this part with GREENIMP option
          if(opt('GREENIMP')) then
-            i1_start = 1
-            i1_end = 1
             if(myrank==master) write(*,*) 
-     +       'Skipping atom loop in tbref for energy point',ie'of'ielast
+     +  'Skipping atom loop in tbref for energy point',ie,'of',ielast
+            i1_start = 1
+            i1_end = 0
          else
             i1_start = 1
             i1_end = NREF

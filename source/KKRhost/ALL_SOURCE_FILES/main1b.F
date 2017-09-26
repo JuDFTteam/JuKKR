@@ -1258,59 +1258,9 @@ C     kpoint (defined in qvec.dat)
 #ifdef CPP_MPI
         ! init arrays and communicate parameters of t_imp for all ranks
         ! that are not the master
-        write(*,*) myrank,'bcast scalars'
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
         call bcast_t_imp_scalars(t_imp)
-        write(*,*)t_imp%IHOST,   'l1',myrank
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*)t_imp%NATOMIMP,'l2',myrank
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*)t_imp%IPAND,   'l3',myrank
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*)t_imp%NATYPD,  'l4',myrank
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*)t_imp%IRMD,    'l5',myrank
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*)t_imp%IRID,    'l6',myrank
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*)t_imp%NFUND,   'l7',myrank
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*)t_imp%NSPIN,   'l8',myrank
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*)t_imp%IRMIND,  'l9',myrank
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*)t_imp%LMPOTD, 'l10',myrank
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-
-        write(*,*) myrank,'init'
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
         if(myrank/=master) call init_t_imp(t_inc,t_imp)
-
-        write(*,*) myrank,'bcast arrays'
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
         call bcast_t_imp_arrays(t_imp)
-
-
-        write(*,*) myrank,'ihost',t_imp%IHOST
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*) myrank,'hostimp',t_imp%HOSTIMP(1:2)
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*) myrank,'rimp',t_imp%RIMP(1:2,1:2)
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*) myrank,'zimp',t_imp%ZIMP(1:2)
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*) myrank,'irwsimp',t_imp%IRWSIMP(1:2)
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*) myrank,'ipanimp',t_imp%IPANIMP(1:2)
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*) myrank,'ircutimp',t_imp%IRCUTIMP(0:2,1:2)
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        write(*,*) myrank,'irminimp',t_imp%IRMINIMP(1:2)
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        !write(*,*) myrank,'vinsimp',t_imp%VINSIMP
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        !write(*,*) myrank,'vispimp',t_imp%VISPIMP
-        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 #endif
         
         do ie=1,ielast ! big ie loop (use only for GMATLL output)
@@ -1357,7 +1307,8 @@ C     kpoint (defined in qvec.dat)
 #ifdef CPP_MPI
         call MPI_FINALIZE(ierr)
 #endif
-        STOP 'done with GREENIMP, stopping here!'
+        if(myrank==master) write(*,*) 'done with GREENIMP, stop here!'
+        STOP
 
       ENDIF ! GREENIMP
 

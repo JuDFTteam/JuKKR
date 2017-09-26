@@ -189,8 +189,7 @@ jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 # Compiler flags                                   #
 ####################################################
 # Default:
-FFLAGS = -O2 -r8 -module $(OBJ) -sox
-# -xHost 
+FFLAGS = -O2 -r8 -module $(OBJ) -sox -xHost 
 # flags for ifort: optimization, default 8 bytes, trackeback to line, compiled module files in $(OBJ), save compiler version info in executable
 # Change to if flag is matched:
 debug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox

@@ -255,7 +255,7 @@ C
       if(opt('GREENIMP')) then
          if(myrank==master) write(*,*) 'Skipping atom loop in main1a'
          i1_start = 1
-         i1_end = 1
+         i1_end = 0
       end if
 
       IF (.NOT.OPT('NEWSOSOL')) THEN

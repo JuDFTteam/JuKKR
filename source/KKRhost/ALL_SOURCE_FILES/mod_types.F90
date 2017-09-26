@@ -938,19 +938,6 @@ contains
     call MPI_Get_address(t_imp%VISPIMP,    disp2(10), ierr)
     call MPI_Get_address(t_imp%VINSIMP,    disp2(11), ierr)
     call MPI_Get_address(t_imp%RCLSIMP,    disp2(12), ierr)
-!      ! integer arrays
-!         allocate(t_imp%IPANIMP(NATOMIMP), STAT=ierr)
-!         allocate(t_imp%IRCUTIMP(0:IPAND,NATOMIMP), STAT=ierr)
-!         allocate(t_imp%IRMINIMP(NATOMIMP), STAT=ierr)
-!         allocate(t_imp%IRWSIMP(NATOMIMP), STAT=ierr)
-!         allocate(t_imp%HOSTIMP(NATYPD), STAT=ierr)
-!      ! double precision arrays
-!         allocate(t_imp%RIMP(IRMD,NATOMIMP), STAT=ierr)
-!         allocate(t_imp%ZIMP(NATOMIMP), STAT=ierr)
-!         allocate(t_imp%THETASIMP(IRID,NFUND,NATOMIMP), STAT=ierr)
-!         allocate(t_imp%VISPIMP(IRMD,NATOMIMP*NSPIN), STAT=ierr)
-!         allocate(t_imp%VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN), STAT=ierr)
-!         allocate(t_imp%RCLSIMP(3,NATOMIMP), STAT=ierr)
 
 
     base  = disp2(1)
@@ -966,7 +953,6 @@ contains
     blocklen2(8)=t_imp%NATOMIMP
     blocklen2(9)=t_imp%IRID*t_imp%NFUND*t_imp%NATOMIMP
     blocklen2(10)=t_imp%IRMD*t_imp%NATOMIMP*t_imp%NSPIN
-    !blocklen2(11)=(t_imp%IRMD-t_imp%IRMIND)*t_imp%LMPOTD*t_imp%NATOMIMP*t_imp%NSPIN
     blocklen2(11)=(t_imp%IRMD-t_imp%IRMIND+1)*t_imp%LMPOTD*t_imp%NATOMIMP*t_imp%NSPIN
     blocklen2(12)=3*t_imp%NATOMIMP
 

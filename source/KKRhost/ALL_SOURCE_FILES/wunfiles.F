@@ -3,7 +3,7 @@
       implicit none
       
          
-   !define type that replace wunfiles here, later define bcast routine
+      !define type that replace wunfiles here, later define bcast routine
       type :: type_params
    
       integer :: Nscalars = 126
