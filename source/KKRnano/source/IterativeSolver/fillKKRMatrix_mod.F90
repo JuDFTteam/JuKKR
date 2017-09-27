@@ -130,6 +130,7 @@ module fillKKRMatrix_mod
     integer, allocatable :: ColIndices(:) ! temporary structure
 
     nRows = maxval(row_indices)
+    ! Warning: when creating bsr_B and grouping is active, nCols might be wrong
     call create(bsr_B, nRows, nnzb=size(row_indices), nCols=size(row_indices))
 
     allocate(ColIndices(bsr_B%nRows))
