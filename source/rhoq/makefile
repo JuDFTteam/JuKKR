@@ -16,7 +16,8 @@ FILENAME0 = rhoq.x
 ####################################################
 
 # standart libs
-LLIBS  = -mkl #-lmkl_intel_thread -lmkl_core -lpthread -liomp5
+#LLIBS  = -mkl -liomp5  #-mkl #-lmkl_intel_thread -lmkl_core -lpthread -liomp5
+LLIBS  = -mkl=sequential -liomp5  #-mkl #-lmkl_intel_thread -lmkl_core -lpthread -liomp5
 #LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 
 # openmp libs
@@ -43,20 +44,20 @@ mpi:      CPP = -D CPP_MPI
 # use -mcmodel=medium -shared-intel if you get the error message 
 # '...relocation truncated to fit...' when trying to compile, 
 # this happens for example for natyp>=75, iemxd>=101, KORBIT=1
-FFLAGS       =  -O3 -openmp -xhost
+FFLAGS       =  -O3 -qopenmp -xhost -g
 #-vec-report1 -xhost
 #-vec-report5
 # -qopt-report=5 -qopt-report-phase=loop,vec -qopt-report-file=stdout
 #-CB -check all -check noarg_temp_created -g
 # Change to if flag is matched:
-openmp:   FFLAGS = -O2 # –Wl,-stack_size,0x1000000000,-stack_addr,0xc000000000 -heap-arrays # -r8 
-debug:    FFLAGS = -O0 -openmp -r8 -CB -check all -traceback
-# debug:    FFLAGS = -O0 -openmp -r8 -CB -check all,noarg_temp_created,uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
-#FFLAGS = -O0 -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended -openmp #-mcmodel=medium -shared-intel -openmp
-mpidebug: FFLAGS = -g -CB -check all,noarg_temp_created  -traceback 
+openmp:   FFLAGS = -O3 -qopenmp -xhost -g -qopt-report=5 -qopt-report-phase=loop,vec -qopt-report-file=optrep.txt
+debug:    FFLAGS = -O0 -qopenmp -r8 -CB -check all -traceback
+# debug:    FFLAGS = -O0 -qopenmp -r8 -CB -check all,noarg_temp_created,uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
+#FFLAGS = -O0 -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended -qopenmp #-mcmodel=medium -shared-intel -qopenmp
+mpidebug: FFLAGS = -g -CB -check all,noarg_temp_created  -traceback  -O0 -fpe0 -warn -debug extended -qopenmp
 
 OPENMPFLAGS = 
-openmp: OPENMPFLAGS = -openmp
+openmp: OPENMPFLAGS = -qopenmp
 
 
 ####################################################
@@ -83,7 +84,7 @@ getversion:
 	echo $(COMPVER)>compver; \
 	echo $(FFLAGS) $(OPENMPFLAGS)>compflag; \
 	echo $(LLIBS) >complib; \
-	getversion.sh
+	./getversion.sh
 
 compile:  getversion $(SRCS)
 	$(FC) $(LLIBS) -o $(FILENAME0) $(SRCS) $
@@ -91,6 +92,7 @@ compile:  getversion $(SRCS)
 serial: compile
 debug: compile
 mpi: compile
+openmp: compile
 mpidebug: compile
 install: clean mpi
 
