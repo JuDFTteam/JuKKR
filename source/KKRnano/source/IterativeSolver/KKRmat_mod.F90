@@ -147,6 +147,8 @@ module KKRmat_mod
                      mssq, bztr2, kpointweight, global_atom_idx_lly, Lly, & !LLY
                      solver_type, kernel_timer)
 
+!$omp parallel
+!$omp do private(ila, G_diag)
       do ila = 1, num_local_atoms
         call getGreenDiag(G_diag, op%mat_X, op%bsr_X, op%atom_indices(ila), ila) ! extract solution
 
@@ -155,6 +157,8 @@ module KKRmat_mod
         GS(:,:,ila) = GS(:,:,ila) + kpointweight(ikpoint)*G_diag(:,:) 
         ! -------------------------------------------------------------------------
       enddo ! ila
+!$omp end do
+!$omp end parallel
       
       ! ToDo: use mat_X to calculate Jij -- needs to be updated
       if (global_jij_data%do_jij_calculation) then

@@ -89,18 +89,25 @@ module kloopz1_mod
     assert( all(shape(Ginp_local) == [N/(korbit+1),N/(korbit+1),1+Lly,naclsd,num_local_atoms]) )
     assert( all(shape(tmatLL) == [N,N,num_trunc_atoms,1+Lly]) )
 
-    allocate(GS(N,N,num_local_atoms), mssq(N,N,num_local_atoms), ipvt(N), info(2,num_local_atoms), temp(N*N), stat=ist)
+    allocate(GS(N,N,num_local_atoms), mssq(N,N,num_local_atoms), info(2,num_local_atoms), stat=ist)
     if (ist /= 0) stop "KLOOPZ1: FATAL Error, failure to allocate memory, probably out of memory."
     
+!$omp parallel private(ipvt, temp)
+    allocate(ipvt(N), temp(N*N), stat=ist)
+!$omp do private(ila)
     do ila = 1, num_local_atoms
       mssq(:,:,ila) = tmatLL(1:N,1:N,op%atom_indices(ila),0)
       ! inversion:
       !     The (local) Delta_t matrix is inverted and stored in mssq
       call zgetrf(N,N,mssq(:,:,ila),N,ipvt,info(1,ila)) ! LU-factorize
       call zgetri(N,mssq(:,:,ila),N,ipvt,temp,N*N,info(2,ila)) ! compute inverse
-    enddo ! ila    
+    enddo ! ila
+!$omp end do
+    deallocate(ipvt, temp, stat=ist)
+!$omp end parallel
+
     if (any(info /= 0)) write(*, '(a,999("  f",i0," i",i0))') "zgetrf or zgetri returned an error:", info ! warn
-    deallocate(ipvt, temp, info, stat=ist)    
+    deallocate(info, stat=ist)
     
 !     rfctor=A/(2*PI) conversion factor to p.u.
     mrfctori = -(2.d0*pi)/alat ! = inverse of -alat/(2*PI)
@@ -129,9 +136,10 @@ module kloopz1_mod
 !      Note: the symmetry operations apply on the (LL')-space
     tauvBZ = 1.d0/volBZ
 
+!$omp parallel private(gll, tpg, xc)
     allocate(gll(N,N), tpg(N,N), xc(N,N), stat=ist)
     if (ist /= 0) stop "KLOOPZ1: FATAL Error2, failure to allocate memory, probably out of memory."
-    
+!$omp do private(ila, isym)
     do ila = 1, num_local_atoms
 
       gll(:,:) = GS(:N,:N,ila) ! 1st symmetry matrix is the unity operation
@@ -179,6 +187,9 @@ module kloopz1_mod
       GmatN(:N,:N,ila) = gll(:,:)*mrfctori
 
     enddo ! ila
+!$omp end do
+    deallocate(gll, tpg, xc, stat=ist)
+!$omp end parallel
 
     if (global_jij_data%do_jij_calculation) then
       call SYMJIJ(alat, tauvBZ, nsymat, dsymLL, global_jij_data%NXIJ, global_jij_data%IXCP, &
@@ -186,7 +197,7 @@ module kloopz1_mod
                   num_trunc_atoms, N, global_jij_data%nxijd)
     endif ! jij
     
-    deallocate(GS, mssq, gll, tpg, xc, stat=ist)
+    deallocate(GS, mssq, stat=ist)
     
   endsubroutine ! kloopz1
 
