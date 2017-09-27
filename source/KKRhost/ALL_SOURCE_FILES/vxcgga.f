@@ -197,14 +197,21 @@ c
 c
 c    only for spin-polarized
 c
+c PW91 functional
         IF(KXC.EQ.3)THEN
            CALL MKXCPE(NSPIN2,IR,IJEND,L1MAX,RPOINT,RHOLM,VXC,EXCIJ,
      +                 THET,YLM,DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF,DRRL,
      +                 DDRRL,DRRUL,DDRRUL,IRMD,LMPOTD)
+c PBE functional
         ELSEIF(KXC.EQ.4)THEN
            CALL MKXCPE2(IR,IJEND,RPOINT,RHOLM,VXC,EXCIJ,YLM,DYLMT1,
      +                  DYLMF1,DYLMF2,DYLMTF,DRRL,DDRRL,DRRUL,DDRRUL,
-     +                  IRMD,LMPOTD,LMMAX)
+     +                  IRMD,LMPOTD,LMMAX,.false.)
+c PBEsol functional
+        ELSEIF(KXC.EQ.5)THEN
+           CALL MKXCPE2(IR,IJEND,RPOINT,RHOLM,VXC,EXCIJ,YLM,DYLMT1,
+     +                  DYLMF1,DYLMF2,DYLMTF,DRRL,DDRRL,DRRUL,DDRRUL,
+     +                  IRMD,LMPOTD,LMMAX,.true.)
         ELSE
            WRITE(1337,*) ' KXC ???'
            STOP

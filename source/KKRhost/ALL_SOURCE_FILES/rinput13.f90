@@ -63,7 +63,7 @@
       DOUBLE PRECISION SOCSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
       DOUBLE PRECISION SOCSCALE(NATYPD)
       DOUBLE PRECISION CSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
-      CHARACTER*124 TXC(5)
+      CHARACTER*124 TXC(6)
       CHARACTER*256 UIO  ! NCOLIO=256
       CHARACTER*10 SOLVER
       CHARACTER*40 I12,I13,I19,I25,I40
@@ -176,6 +176,7 @@
       TXC(3) = ' Vosko,Wilk,Nusair       #serial: ' // serialnr
       TXC(4) = ' GGA PW91                #serial: ' // serialnr
       TXC(5) = ' GGA PBE                 #serial: ' // serialnr
+      TXC(6) = ' GGA PBEsol              #serial: ' // serialnr
 
       IPRINT = 0
 
