@@ -21,7 +21,7 @@
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
      &                      get_ntot_pT_ioff_pT_2D 
 #endif
-      use mod_mympi, only: nranks, master
+      use mod_mympi, only: nranks, master, myrank
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks
@@ -251,6 +251,13 @@ C
       i1_end   = NATYP
 #endif
 
+      !skip this part with GREENIMP option
+      if(opt('GREENIMP')) then
+         if(myrank==master) write(*,*) 'Skipping atom loop in main1a'
+         i1_start = 1
+         i1_end = 1
+      end if
+
       IF (.NOT.OPT('NEWSOSOL')) THEN
         DO I1 = i1_start,i1_end
           DO ISPIN = 1,NSPIN
@@ -289,7 +296,9 @@ C
        call read_angles(t_params,NATYP,THETA,PHI)
 
 c interpolate potential
-       CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,
+       CALL INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATYPD,IPAND,
+     +                        NSPOTD,NTOTD,NCHEBD,NTOTD*(NCHEBD+1),
+     +                        NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,
      +                        VISP,NPAN_LOG,NPAN_EQ,NPAN_TOT,
      +                        RNEW,IPAN_INTERVALL,
      +                        VINSNEW)

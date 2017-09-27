@@ -489,34 +489,6 @@ c        notice that exchange the order of left and right hankel/bessel function
          ENDIF
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-
-!        write(filename,'(A,I0,A)') 'callinglist_rank=',myrank,'.txt'
-!        open(65161,file=trim(filename),action='write',form='formatted')
-!        write(65161,'(3I8)') LMAXD,LMMAXD,LMMAXSO,
-!    +                        LMPOTD,NTOTD,NRMAXD,
-!    +                        NSRA,IRMDNEW,NSPIN,
-!    +                        NPAN_TOT,NCHEB,IEND,
-!    +                        NCLEB
-!        write(65161,'(A)')         'VINS -next' 
-!        write(65161,'(10ES25.16)')  VINS
-!        write(65161,'(A)')         'RLLLEFT -next' 
-!        write(65161,'(10ES25.16)')  RLLLEFT(:,:,:,ith)
-!        write(65161,'(A)')         'RLL -next' 
-!        write(65161,'(10ES25.16)')  RLL(:,:,:,ith)
-!        write(65161,'(A)')         'RPAN_INTERVALL -next' 
-!        write(65161,'(10ES25.16)')  RPAN_INTERVALL
-!        write(65161,'(A)')         'IPAN_INTERVALL -next' 
-!        write(65161,'(10I8)')       IPAN_INTERVALL
-!        write(65161,'(A)')         'ICLEB -next' 
-!        write(65161,'(10I8)')       ICLEB
-!        write(65161,'(A)')         'RNEW -next' 
-!        write(65161,'(10ES25.16)')  RNEW
-!        close(65161)
-
-!        write(*,*) allocated(t_dtmatJij_at%dtmat_xyz),
-!    +              shape(t_dtmatJij_at%dtmat_xyz)
 
         end if!t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
         

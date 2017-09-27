@@ -807,7 +807,12 @@ c    write qdos.nn.s.dat                                                    ! co
        call timing_start('main1c - communication')
 #endif
        ! reset NQDOS to avoid endless communication
-       NQDOS=1
+       If( .not.OPT('lmdos    ')) THEN
+          NQDOS=1
+       ELSE
+          if(myrank==master) write(*,*) 'lmlm-dos option, communcation 
+     &might take a while!', IEMXD,NQDOS
+       ENDIF
        ! set these arrays to zero to avoid double counting in cases where extra ranks are used
        if ( t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1) ) then
 !          write(*,*) myrank, t_mpi_c_grid%myrank_ie, t_mpi_c_grid%dims
