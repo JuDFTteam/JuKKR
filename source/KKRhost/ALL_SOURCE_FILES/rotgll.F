@@ -162,7 +162,7 @@ C
                      !test
 !                    WRITE(214321,'(4i,2E)') LM1,LM2,IQ,JQ,GCLUST(NLIN)
                      ! writeout of green_host for WRTGREEN option
-                     IF(OPT('WRTGREEN')) THEN
+                     IF(OPT('WRTGREEN') .and. myrank==master) THEN
                        ILM=(IQ-1)*LMMAXD+LM1
                        WRITE(58,'((2I5),(2e17.9))') JLM, ILM,
      &                                        GLL(LM1,LM2,IQ,JQ)
