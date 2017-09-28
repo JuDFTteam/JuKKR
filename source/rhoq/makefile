@@ -44,14 +44,14 @@ mpi:      CPP = -D CPP_MPI
 # use -mcmodel=medium -shared-intel if you get the error message 
 # '...relocation truncated to fit...' when trying to compile, 
 # this happens for example for natyp>=75, iemxd>=101, KORBIT=1
-FFLAGS       =  -O3 -qopenmp -xhost -g
+FFLAGS       =  -O3 -openmp -xhost -g
 #-vec-report1 -xhost
 #-vec-report5
 # -qopt-report=5 -qopt-report-phase=loop,vec -qopt-report-file=stdout
 #-CB -check all -check noarg_temp_created -g
 # Change to if flag is matched:
 openmp:   FFLAGS = -O3 -qopenmp -xhost -g -qopt-report=5 -qopt-report-phase=loop,vec -qopt-report-file=optrep.txt
-debug:    FFLAGS = -O0 -qopenmp -r8 -CB -check all -traceback
+debug:    FFLAGS = -O0 -openmp -r8 -CB -check all -traceback
 # debug:    FFLAGS = -O0 -qopenmp -r8 -CB -check all,noarg_temp_created,uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
 #FFLAGS = -O0 -CB -check all,noarg_temp_created  -traceback -g -fpe0 -warn -debug extended -qopenmp #-mcmodel=medium -shared-intel -qopenmp
 mpidebug: FFLAGS = -g -CB -check all,noarg_temp_created  -traceback  -O0 -fpe0 -warn -debug extended -qopenmp

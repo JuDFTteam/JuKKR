@@ -224,7 +224,13 @@ subroutine read_input_rhoq(t_rhoq, uio)
     read (unit=uio,fmt=*) t_rhoq%natyp
     write(*,*) 'number of layers in system (natyp)= ',t_rhoq%natyp
   else
-    stop '[read_input_rhoq] error "NATYP" not found in inputcard'
+    call ioinput('NAEZ            ',uio,1,7,ier)
+    if (ier.eq.0) then
+      read (unit=uio,fmt=*) t_rhoq%natyp
+      write(*,*) 'number of layers in system (natyp)= ',t_rhoq%natyp
+    else
+      stop '[read_input_rhoq] error neither "NATYP" nor "NAEZ" found in inputcard'
+    endif
   endif
 
   call ioinput('Ghost_k_memsave ',uio,1,7,ier)
@@ -329,9 +335,6 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   allocate(rcls_i(3,t_rhoq%Nscoef), r_basis(3,t_rhoq%natyp), L_i(3,t_rhoq%Nscoef))
   r_basis = t_rhoq%r_basis
   rcls_i = t_rhoq%r_scoef
-  
-!   write(*,*) 'rbasis',r_basis
-!   write(*,*) 'rcls_i', rcls_i
     
   ! find mu_orig
   ilayer = 0
@@ -341,7 +344,6 @@ subroutine get_L_vecs_rhoq(t_rhoq)
     if(dsqrt(sum(r_basis(:,ilayer)**2))<eps) irun = 0
   end do
   mu_orig = ilayer
-!   write(*,*) 'mu_orig', mu_orig
   
   ! find mu_cls
   ilayer = 0
@@ -351,7 +353,6 @@ subroutine get_L_vecs_rhoq(t_rhoq)
     if(dsqrt(sum(rcls_i(:,ilayer)**2))<eps) irun = 0
   end do
   mu_cls = t_rhoq%ilay_scoef(ilayer)
-!   write(*,*) 'mu_cls', mu_cls
   
   ! set R_mu and R_cls from mu_orig and mu_cls
   R_mu(:) = r_basis(:,t_rhoq%mu_0)
@@ -360,11 +361,7 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   ! L_i = r^cls_i - \Chi^{\mu_i} + \Chi^{\mu_{cls}} - 
   do ilayer=1,t_rhoq%Nscoef
     L_i(:,ilayer) = rcls_i(:,ilayer)+R_cls(:)-R_mu(:)+r_basis(:,t_rhoq%mu_0)-r_basis(:,t_rhoq%ilay_scoef(ilayer))
-!     write(*,'(A, 100ES15.7)') 'L_i', L_I(:,ilayer),r_basis(:,t_rhoq%ilay_scoef(ilayer)),rcls_i(:,ilayer),R_cls(:),R_mu(:)
   end do
-!   write(*,*) 'R_mu',R_mu
-!   write(*,*) 'R_cls',R_cls
-!   write(*,*) 'rcls_i',rcls_i(:,:)
   
   ! save result and exit
   ierr = 0
@@ -537,12 +534,6 @@ subroutine calc_tau_rhoq(t_rhoq)
   t_rhoq%tau = t_rhoq%Dt
   call ZGEMM('n','n',N,N,N,C1,t_rhoq%Dt,N,temp,N,C1,t_rhoq%tau,N)
   
-!   !test
-!   write(*,*) 'writing tau'
-!   do ierr=1,N
-!     write(789456123, '(10000ES16.7)') t_rhoq%tau(ierr,:)
-!   end do
-!   !test
   
   deallocate(temp)
 
@@ -630,12 +621,10 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, &
           lm3 = icleb(j,3)
           ! do loop over non-spherical points here
  !          do ir=imt1+1,irmdnew
-          !$omp simd reduction(+:trq_of_r)
           do ir=1,irmdnew
             ! sum of Rll*Rllleft with Gaunt coefficients, with trace over big and small component (lmmaxso shift in first index of Rll, Rllleft)
             trq_of_r(lm01, lm02, lm3, ir) = trq_of_r(lm01, lm02, lm3, ir) + cleb(j) * ( Rll(lm01, lm1, ir)*Rllleft(lm02, lm2, ir) + Rll(lm01+lmmaxso, lm1, ir)*Rllleft(lm02+lmmaxso, lm2, ir) )
           enddo ! ir
-          !$omp end simd
         enddo ! j -> sum of Gaunt coefficients
          
         enddo ! lm02
@@ -741,16 +730,11 @@ subroutine red_Q(t_rhoq, rb, qvec, iq)
   
   ! find iq from projection
   iq = -1
-!   minimum = 100.0d0
   do i=1,t_rhoq%Nkpt
     kpt(:) = t_rhoq%kpt(:,i)
     if(dabs(dsqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))<eps) then
       iq=i
     end if
-!     if(minimum(1)>dabs(dsqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))) then
-!       minimum(1) = dabs(dsqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))
-!       minimum(2:3) = kpt(1:2)
-!     end if
   end do
   
   !check if iq was found
@@ -856,7 +840,6 @@ subroutine get_tinv(t_rhoq, tinv)
     end do ! i
   
     irec =  ie+ielast*(t_rhoq%mu_0-1) ! layer index for probe layer mu_0
-    !write(*,*) 'read tmat_mu0', irec
     read(9999,rec=irec) tll(1:N,1:N)
     ! t-t_ref
     tll = tll - trefll(:,:,refpot(t_rhoq%mu_0))
@@ -1001,9 +984,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
     end do
   
     ! open tau0_k file, written in writegreen of zulapi code
-!     lrec = 4*(N**2)
     lrec = 4*(N**2+1)
-!     lrec = 4*(N**2+2)
 !     open(9999, file='tau0_k', access='direct', form='unformatted', recl=lrec)
   
     ! allocate temporary arrays
@@ -1044,10 +1025,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         ! first mu_0,mu_i element
         irec = irec + ix + (t_rhoq%Nlayer-1)
         read(998899,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
-!         !test
-!         tau0_k(1,1) = (1.0d0, 0d0)
-        
-! !       call red_Q(t_rhoq, recbv(1:2,1:2), tmpk(1:2), q)
         q = k
 
 
@@ -1067,8 +1044,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
           ! find G0ij_k from tau0_k and tinv
           call calc_G0_k(tau0_k, tinv(1:N,1:N,t_rhoq%Nscoef+1), tinv(1:N,1:N,i), tmpG0(1:N,1:N), t_rhoq%mu_0, mu_i, N)
           G0ij_k(1:N,1:N,i,q) = tmpG0(1:N,1:N)
-!           !test
-!           G0ij_k(1:N,1:N,i,q) = tau0_k(1:N,1:N)
 
           !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
           ! writeout trace of tau_0ij_k and tau_0ji_k
@@ -1086,16 +1061,12 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         ix = mu_i - mu + 1
         irec = irec + ix
         read(998888,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
-!         !test
-!         tau0_k(1,1) = (1.0d0, 0d0)
         
         if(kmask(q)) then
 
           !find G0ji_k from tau0_k and tinv
           call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tinv(1:N,1:N,t_rhoq%Nscoef+1), tmpG0(1:N,1:N), mu_i, t_rhoq%mu_0, N)
           G0ji_k(1:N,1:N,i,q) = tmpG0(1:N,1:N)
-!           !test
-!           G0ji_k(1:N,1:N,i,q) = tau0_k(1:N,1:N)
 
           !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
           ! writeout trace of tau_0ij_k and tau_0ji_k
@@ -1389,7 +1360,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-!   write(*,*) 'alloc rhoq'
   allocate(rhoq(Nqpt), stat=ierr)
   rhoq = C0
   if(ierr/=0) stop '[calc_rhoq] Error allocating rhoq'
@@ -1460,8 +1430,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
 #endif
 
 
-! !$omp parallel default(shared) private(lm01, lm02, l1, m1, lm1, ir, j ,lm2, lm3, ifun, k, ikx, iky, i, kpq, kweight, tmpk, tmpr, QdotL) private(tr_tmpsum1, tr_tmpsum2) reduction(+:rhoq) private(q)
-
 !$omp parallel default(shared) private(q, k, kpq, kweight, i, j, tr_tmpsum1, tr_tmpsum2, nthreads, irec, QdotL, tmpk, tmpr, ifun, lm1, lm2, lm3, ir, l1, m1, lm01, lm02, lm0, Z, phi, costheta, Rq)
  ! open big parallel section for k-loop etc. in q-loop, closed after q-loop
 
@@ -1472,7 +1440,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   if(myrank==master .and. mythread==master) write(*,FMT=190) !beginning of statusbar
   !$omp do schedule(dynamic,1)
   do q=q_start,q_end !q-loop
-!   do q=Nqpt/2, Nqpt/2 !1,Nqpt !q-loop   
      
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> k-loop >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1483,10 +1450,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
      if(mythread==0) call timing_start('calc rhoq - q>k-loop')
 
      do k=1,Nkp !k-loop integration
-       ! new: find kpq index from kvec+Qvec, compared with kpts in BZ
-       ! find q from Q(q)
-       !if(mythread==0) call timing_start('calc rhoq - q>k-loop>red_Q')       
-!        call red_Q(t_rhoq, recbv(1:2,1:2), Qvec(1:2,q)+kpt(1:2,k), kpq)
        ! find ikx, iky indices from combined index k=iky+(ikx-1)*Ny
        ikx = mod(k,Nx)
        if (ikx<=0) ikx = ikx+Nx
@@ -1499,7 +1462,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
        if (j<=0) j = j+Ny
        ! then k+q is given by j+(i-1)*Ny
        kpq = i+(j-1)*Nx
-       !if(mythread==0) call timing_pause('calc rhoq - q>k-loop>red_Q')
        
        if(kmask(kpq) .and. kmask(k)) then
      
@@ -1510,10 +1472,10 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
          
          do i=1,t_rhoq%Nscoef
            do j=1,t_rhoq%Nscoef
+
              ! Sum( Int( exG0_i(k+q) tau_i,j exG0_j(k); dk ); i,j)
              
              ! collect phase factors
-             !if(mythread==0) call timing_start('calc rhoq - q>k-loop>phase1')
              ! exG0 = G0*exp(-i(k+q)*L_i)
              tmpk(:) = Qvec(:,q)+kpt(:,k)
              tmpr(:) = L_i(:,i)
@@ -1524,35 +1486,17 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
              QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
              ! multiply with phase
              exG0_tmp(1:N,1:N) = G0ji_k(1:N,1:N,j,k)*exp(-2.0d0*pi*Ci*QdotL)
-             !if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase1')
              
-!              !testing
-!              exG0_tmp(1:N,1:N) = G0ji_k(1:N,1:N,j,k)
-!              tau(1:N,1:N,i,j) = C0
-!              do ierr=1,N
-!                tau(ierr, ierr, i,j) = C1
-!              end do
-             
+
              ! tmp = tau*exG0_k(k)
              tmp(1:N,1:N) = C0
-             !if(mythread==0) call timing_start('calc rhoq - q>k-loop>1.ZGEMM')
              call ZGEMM('n','n',N,N,N,C1,tau(1:N,1:N,i,j),N,exG0_tmp(1:N,1:N),N,C0,tmp(1:N,1:N),N)
-             !if(mythread==0) call timing_pause('calc rhoq - q>k-loop>1.ZGEMM')
              ! tmpsum1 = tmpsum1 + G0_k(k+q)*tmp*kweight
-             !if(mythread==0) call timing_start('calc rhoq - q>k-loop>2.ZGEMM')
              call ZGEMM('n','n',N,N,N,kweight,G0ij_k(1:N,1:N,i,kpq),N,tmp(1:N,1:N),N,C1,tmpsum1(1:N,1:N),N)
-             !if(mythread==0) call timing_pause('calc rhoq - q>k-loop>2.ZGEMM')
-             
-             !test
-!              tmpsum1(:,:)  = tmpsum1(:,:) + tau(1:N,1:N,i,j)
-!              tmpsum1(:,:)  = tmpsum1(:,:) + G0ji_k(1:N,1:N,j,k)
-!              tmpsum1(:,:)  = tmpsum1(:,:) + G0ij_k(1:N,1:N,i,k)
-!              tmpsum1(:,:)  = tmpsum1(:,:) + exp(-2.0d0*pi*Ci*QdotL)
-           
 
-             ! Int( exG0(k)^*.tau^*.exG0(k+q)^*, dk )
+
+             ! Second part:  Int( exG0(k)^*.tau^*.exG0(k+q)^*, dk )
              
-             !if(mythread==0) call timing_start('calc rhoq - q>k-loop>phase2')
              ! collect phase factors
              ! exG0 = G0*exp(-i(k+q)*L_j)
              tmpk(:) = Qvec(:,q)+kpt(:,k)
@@ -1564,18 +1508,13 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
              QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
              ! multiply with phase
              exG0_tmp(1:N,1:N) = dconjg(G0ij_k(1:N,1:N,i,k))*exp(-2.0d0*pi*Ci*QdotL)
-             !if(mythread==0) call timing_pause('calc rhoq - q>k-loop>phase2')
              
              
              ! tmp = dconjg(tau)*dconjg(exG0_k(k+q))
              tmp(1:N,1:N) = C0
-             !if(mythread==0) call timing_start('calc rhoq - q>k-loop>3.ZGEMM')
              call ZGEMM('n','n',N,N,N,C1,dconjg(tau(1:N,1:N,i,j)),N,dconjg(G0ji_k(1:N,1:N,j,kpq)),N,C0,tmp(1:N,1:N),N)
-             !if(mythread==0) call timing_pause('calc rhoq - q>k-loop>3.ZGEMM')
              ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k))*tmp*kweight
-             !if(mythread==0) call timing_start('calc rhoq - q>k-loop>4.ZGEMM')
              call ZGEMM('n','n',N,N,N,kweight,exG0_tmp(1:N,1:N),N,tmp(1:N,1:N),N,C1,tmpsum2(1:N,1:N),N)
-             !if(mythread==0) call timing_pause('calc rhoq - q>k-loop>4.ZGEMM')
 
                         
              end do !j
@@ -1662,7 +1601,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
      qint = C0
      
      ! first treat spherical block (diagonal in lm, lm' -> only lm'==lm)
-     !if(mythread==0) call timing_start('calc rhoq - q>qint - 1')
      do lm02 = 1,lmmaxso
        do lm01 = 1,lmmaxso
            do l1=0,lmax !lmax_2 lmax instead of lmax_2 since trq_of_r has cutoff of 2*lmax and not lmax_2
@@ -1672,11 +1610,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
            ! fill diagonal
            do ir = 1,irmdnew
              qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + trq_of_r(lm01, lm02, lm1, ir) * eiqr_lm(lm1, ir) ! note: diagonal in lm01!!!
-!test
-!              qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + trq_of_r(lm01, lm02, lm1, ir) ! note: diagonal in lm01!!!
-!              qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + eiqr_lm(lm1, ir) ! note: diagonal in lm01!!!
-!              qint(ir, lm01, lm02) = qint(ir, lm01, lm02)
-!test
            enddo ! ir
            ! add shapefunction to points with r> R_MT
            do ir=imt1+1,irmdnew
@@ -1685,10 +1618,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
          enddo ! lm1
        enddo ! lm02
      enddo ! lm01
-     !if(mythread==0) call timing_pause('calc rhoq - q>qint - 1')
      
      ! treat non-spherical components -> off-diagonal blocks in lm, lm' matrices
-     !if(mythread==0) call timing_start('calc rhoq - q>qint - 2')
      do j = 1,iend ! loop over number of non-vanishing Gaunt coefficients
        ! set lm indices for Gaunt coefficients
        lm1 = icleb(j,1)
@@ -1702,30 +1633,19 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
            do lm01=1,lmmaxso
              do lm02=1,lmmaxso
                qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + cleb(j) * trq_of_r(lm01, lm02, lm1, ir) * eiqr_lm(lm2, ir) * thetasnew(ir,ifun)
-!test
-!                qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + cleb(j) * trq_of_r(lm01, lm02, lm1, ir) * thetasnew(ir,ifun)
-!                qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + cleb(j) * eiqr_lm(lm2, ir) * thetasnew(ir,ifun)
-!                qint(ir, lm01, lm02) = qint(ir, lm01, lm02) + cleb(j) * thetasnew(ir,ifun)
-!test
              enddo
            enddo
          enddo ! ir
        end if ! lmsp(ifun)/=0
      enddo ! j -> sum of Gaunt coefficients
-     !if(mythread==0) call timing_pause('calc rhoq - q>qint - 2')     
      
      ! do radial integration
-     !if(mythread==0) call timing_start('calc rhoq - q>qint - 3')
      q_mu = C0
      do lm01 = 1, lmmaxso ! loop over outer lm-component
-!test
-!       q_mu(lm01, lm01) = C1
-!test
        do lm02 = 1, lmmaxso ! loop over outer lm-component
          call intcheb_cell(qint(:,lm01,lm02),q_mu(lm01,lm02),rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
        end do ! lm02
      end do ! lm01
-     !if(mythread==0) call timing_pause('calc rhoq - q>qint - 3')
           
      if(mythread==0) call timing_pause('calc rhoq - q>qint')
      !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  qint  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -1735,13 +1655,13 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> rhoq(iq) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
      ! calculate trace of Q^mu times k-kpoint integral
-     tr_tmpsum1 = C0
-     tr_tmpsum2 = C0
+
      ! tmpsum1 = Tr{ q_mu Int(G0.tau.G0.exp(...), dk) } = Tr{ q_mu.tmpsum1 }
      tmp = C0
      tmp(1:N,1:N) = tmpsum1(1:N,1:N)
      tmpsum1(1:N,1:N) = C0
      call ZGEMM('n','n',N,N,N,C1,q_mu(1:N,1:N),N,tmp(1:N,1:N),N,C0,tmpsum1(1:N,1:N),N)
+
      ! tmpsum2 = Tr{ q_mu^* Int(G0^*.tau^*.G0^*.exp(...), dk) } = Tr{ q_mu^*.tmpsum2 }
      tmp = C0
      tmp(1:N,1:N) = tmpsum2(1:N,1:N)
@@ -1749,10 +1669,11 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
      call ZGEMM('n','n',N,N,N,C1,dconjg(q_mu(1:N,1:N)),N,tmp(1:N,1:N),N,C0,tmpsum2(1:N,1:N),N)
            
      ! take trace
+     tr_tmpsum1 = C0
+     tr_tmpsum2 = C0
      do i=1,t_rhoq%lmmaxso
        tr_tmpsum1 = tr_tmpsum1 + tmpsum1(i,i)
        tr_tmpsum2 = tr_tmpsum2 + tmpsum2(i,i)
-!        tr_tmpsum1 = tr_tmpsum1 + q_mu(i,i)
      end do
      
      rhoq(q) = 1.d0/(2.d0*Ci) * (tr_tmpsum1 - tr_tmpsum2)
@@ -1772,18 +1693,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   !finish big parallel section
   !$omp end parallel
   
-  !if(mythread==0) call timing_stop('calc rhoq - q>k-loop>red_Q')
-  !if(mythread==0) call timing_stop('calc rhoq - q>k-loop>phase1')
-  !if(mythread==0) call timing_stop('calc rhoq - q>k-loop>1.ZGEMM')
-  !if(mythread==0) call timing_stop('calc rhoq - q>k-loop>2.ZGEMM')
-  !if(mythread==0) call timing_stop('calc rhoq - q>k-loop>phase2')
-  !if(mythread==0) call timing_stop('calc rhoq - q>k-loop>3.ZGEMM')
-  !if(mythread==0) call timing_stop('calc rhoq - q>k-loop>4.ZGEMM')
   if(mythread==0) call timing_stop('calc rhoq - q>k-loop')
   if(mythread==0) call timing_stop('calc rhoq - q>eiqr')
-  !if(mythread==0) call timing_stop('calc rhoq - q>qint - 1')
-  !if(mythread==0) call timing_stop('calc rhoq - q>qint - 2')
-  !if(mythread==0) call timing_stop('calc rhoq - q>qint - 3')
   if(mythread==0) call timing_stop('calc rhoq - q>qint')
   
   
@@ -1826,7 +1737,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
 #endif
   
   if(myrank==master) then
-!     open(9999, file='out_rhoq.txt'//char(49+myrank), form='formatted')
     open(9999, file='out_rhoq.txt', form='formatted')
     do q=1,Nqpt
        write(9999,'(5E15.7)') Qvec(:,q),rhoq(q)
@@ -1856,7 +1766,7 @@ end subroutine calc_rhoq
 end module mod_rhoq
 
 
-! for testing only, comment out when ready
+! standalone version for testing only, comment out when ready
 !TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!TEST!
 program test
   
