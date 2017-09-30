@@ -219,10 +219,25 @@ module ProcessKKRresults_mod
     double precision :: RMSAVQ, RMSAVM ! rms error charge dens. and mag. density (contribution of all local sites)
     double precision :: RMSAVQ_single, RMSAVM_single
     integer :: ila, num_local_atoms
+    integer :: imt_local ! index that marks the end of spherical potential entries, needed for B-field
 
     mix_potential = 0
 
     num_local_atoms = calc%num_local_atoms
+
+    ! subtract B-field from spherical part of potential if iter/=1
+    ! B-field is hence turned off before potential mixing
+    if (params%b_field .and. iter /= 1) then
+       do ila = 1, num_local_atoms
+          atomdata => getAtomData(calc, ila)
+          mesh => atomdata%mesh_ptr
+          imt_local = mesh%imt
+          atomdata%potential%visp(1:imt_local,1) = atomdata%potential%visp(1:imt_local,1) - params%b_field_val
+          atomdata%potential%visp(1:imt_local,2) = atomdata%potential%visp(1:imt_local,2) + params%b_field_val
+          atomdata%potential%vons(1:imt_local,1,1) = atomdata%potential%vons(1:imt_local,1,1) - params%b_field_val
+          atomdata%potential%vons(1:imt_local,1,2) = atomdata%potential%vons(1:imt_local,1,2) + params%b_field_val
+       enddo
+    endif
 
     ! -->   calculation of RMS and final construction of the potentials (straight mixing)
     RMSAVQ = 0.d0
@@ -280,6 +295,18 @@ module ProcessKKRresults_mod
     else if (params%imix == 6) then
       ! use Broyden mixing that supports num_local_atoms > 1
       call mix_broyden2_com(calc, iter, mp%mySEComm)
+    endif
+
+    ! add B-field to spherical part of potential
+    ! Here, B-field is turned on after potential mixing
+    if (params%b_field) then
+       do ila = 1, num_local_atoms
+          atomdata => getAtomData(calc, ila)
+          mesh => atomdata%mesh_ptr
+          imt_local = mesh%imt
+          atomdata%potential%vons(1:imt_local,1,1) = atomdata%potential%vons(1:imt_local,1,1) + params%b_field_val
+          atomdata%potential%vons(1:imt_local,1,2) = atomdata%potential%vons(1:imt_local,1,2) - params%b_field_val
+       enddo
     endif
 
   endfunction ! mix_potential

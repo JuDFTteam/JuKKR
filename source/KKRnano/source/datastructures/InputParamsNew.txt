@@ -64,6 +64,10 @@ i kpre 0
 i kforce 1
 ### use LDA+U
 l ldau .FALSE.
+### constant B-field that is added in each iteration
+l b_field .FALSE.
+### value of constant B-field that is added in each iteration
+d b_field_val 0.0D0
 ### 1=non-scalar-relativistic 2=scalar-relativistic
 i nsra 2
 ### 1=calculate energies, -1 = total energy only, less I/O

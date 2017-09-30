@@ -48,6 +48,8 @@ module InputParams_mod
     integer :: kpre
     integer :: kforce
     logical :: ldau
+    logical :: b_field
+    double precision :: b_field_val
     integer :: nsra
     integer :: kte
     logical :: jij
@@ -362,6 +364,24 @@ integer function getValues(filename, self) result(ierror)
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for ldau."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "b_field", self%b_field , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for b_field. Set b_field to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for b_field."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "b_field_val", self%b_field_val , def=0.0D0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for b_field_val. Set b_field_val to 0.0D0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for b_field_val."
     destroy_and_return
   endif
 
