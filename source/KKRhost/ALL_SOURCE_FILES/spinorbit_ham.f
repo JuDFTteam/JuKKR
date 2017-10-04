@@ -4,6 +4,8 @@
      +                  NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,VNSPLL,VNSPLL1,
      &                  MODE)
 
+      !use mod_cheb, only: getCLambdaCinv
+
       IMPLICIT NONE 
 
       INTEGER LMAX,LMMAXD,NSPIN,NPAN_TOT,NCHEB,IRMDNEW,NRMAXD

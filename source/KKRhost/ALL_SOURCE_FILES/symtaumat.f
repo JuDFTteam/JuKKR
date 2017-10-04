@@ -36,11 +36,11 @@ C
 C
 C Local variables
 C
-      REAL*8 A,B,CO1,CO2,CO3,DET,FACT(0:100),PI,RJ,RMJ,SI1,SI2,SI3,SK,
-     &       SYMEULANG(3,48),TET1,TET2,TET3
+      double precision  A,B,CO1,CO2,CO3,DET,FACT(0:100),PI,RJ,RMJ,
+     &        SI1,SI2,SI3,SK,SYMEULANG(3,48),TET1,TET2,TET3
       LOGICAL CHECKRMAT
       DOUBLE PRECISION DBLE
-      REAL*8 DDET33
+      double precision  DDET33
       COMPLEX*16 DINV(NKMMAX,NKMMAX),DTIM(NKMMAX,NKMMAX),
      &           RC(NKMMAX,NKMMAX),W1(NKMMAX,NKMMAX),W2(NKMMAX,NKMMAX)
       LOGICAL EQUAL
@@ -48,9 +48,9 @@ C
      &        ITOP,J,K,L,LOOP,M,N,NK,NKEFF,NKM,NLM,NOK,NS
       INTEGER NINT
       DOUBLE PRECISION RMAT(3,3)
-      REAL*8 W
+      double precision  W
 C
-      EQUAL(A,B) = (ABS(A-B).LT.1D-7)
+      EQUAL(A,B) = (DABS(A-B).LT.1D-7)
 C
       WRITE (1337,99001)
 C
@@ -133,7 +133,7 @@ C----------------------------------------------------------------------
          IF ( LOOP.EQ.1 ) TET2 = -TET2
          SI2 = SIN(TET2)
 C
-         IF ( EQUAL(CO2,1D0) ) THEN
+         IF ( EQUAL(CO2,1.0D0) ) THEN
             TET1 = ACOS(RMAT(1,1))
             IF ( .NOT.EQUAL(RMAT(1,2),SIN(TET1)) ) THEN
                TET1 = -TET1

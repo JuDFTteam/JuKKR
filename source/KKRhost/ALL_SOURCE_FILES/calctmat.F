@@ -104,9 +104,9 @@ C     .. Local Arrays ..
       INTEGER IPIV(LMMAXD) ! LLY
       CHARACTER*9 TXTS(2)
 #ifdef CPP_MPI
-      integer :: ie_start
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
+      integer :: ie_start
       integer :: ie_end, ie_num
 C     ..
 C     .. External Functions ..

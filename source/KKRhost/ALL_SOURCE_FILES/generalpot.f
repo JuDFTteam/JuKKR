@@ -369,7 +369,7 @@ c next call.
 c klo and khi now bracket the input value of x.
       H=XA(KHI)-XA(KLO)
 c The xa's must be distinct.
-      IF (H.EQ.0.D0) PAUSE 'Bad XA input in SPLINT'
+      IF (H.EQ.0.D0) STOP 'Bad XA input in SPLINT'
 c Cubic spline polynomial is now evaluated.
       A = (XA(KHI)-X)/H
       B = (X-XA(KLO))/H

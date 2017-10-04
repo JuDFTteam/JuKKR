@@ -591,8 +591,8 @@ C
         IF ( TEST('RHOVALW ') ) THEN !Bauer
         open(unit=324234,file='out_rhoval')
         WRITE(324234,*) '#IATOM',I1
-        write(324234,'(50000F)') RHO2NS(:,:,I1,1)
-        IF (NSPIN==2) write(324234,'(50000F)') RHO2NS(:,:,I1,2)
+        write(324234,'(50000F14.7)') RHO2NS(:,:,I1,1)
+        IF (NSPIN==2) write(324234,'(50000F14.7)') RHO2NS(:,:,I1,2)
         END IF
 
 

@@ -24,7 +24,7 @@ C   ********************************************************************
      &           NM1, NM3, IC0, N3, N2, N1, LF, L3, MM, NSL, IL, I,
      &           NNON0, ND, NALF, J, ID, ICND, ISL
       double precision :: tol
-      REAL*8     A(M,M), CNUM,CA,CB,DTAB(0:NDIFMAX)  
+      DOUBLE PRECISION     A(M,M), CNUM,CA,CB,DTAB(0:NDIFMAX)  
       LOGICAL  CSMALL, CSAME
 
       SAVE VZ

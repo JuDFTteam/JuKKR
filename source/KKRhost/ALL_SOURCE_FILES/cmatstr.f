@@ -24,19 +24,19 @@ C*** Start of declarations rewritten by SPAG
 C
 C PARAMETER definitions
 C
-      COMPLEX*16 CI
+      DOUBLE COMPLEX CI
       PARAMETER (CI=(0.0D0,1.0D0))
 C
 C Dummy arguments
 C
       INTEGER IJQ,K_FMT_FIL,LSTR,M,MCOL,MLIN,N
       CHARACTER*(*) STR
-      REAL*8 TOLP
-      COMPLEX*16 A(M,M)
+      DOUBLE PRECISION TOLP
+      DOUBLE COMPLEX A(M,M)
 C
 C Local variables
 C
-      COMPLEX*16 B(N,N),CA,CB,ARG,DTAB(0:N*N)
+      DOUBLE COMPLEX B(N,N),CA,CB,ARG,DTAB(0:N*N)
       CHARACTER CHAR
       LOGICAL SAME,SMALL
       CHARACTER*1 CTAB(0:N*N),VZ(-1:+1)
@@ -46,7 +46,7 @@ C
      &        J0,JP,JQ,K,L3,LF,MM,N1,N2,N3,NC,ND,NFIL,NK,NM,NM1,NM2,NM3,
      &        NNON0,NSL
       INTEGER ICHAR,ISIGN,NINT
-      REAL*8 TOL
+      DOUBLE PRECISION TOL
 C
 C*** End of declarations rewritten by SPAG
 C

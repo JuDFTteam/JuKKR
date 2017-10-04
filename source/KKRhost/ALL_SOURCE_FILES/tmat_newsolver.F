@@ -242,7 +242,8 @@ c energy loop
 !$omp& private(alphasph) 
 !$omp& private(dtmatll) 
 !$omp& private(dalphall) 
-!$omp& firstprivate(t_inc)
+!$omp& shared(t_inc)
+!!$omp& firstprivate(t_inc)
 !$omp& shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb) 
 !$omp& shared(zat,socscale,ez,cleb,rnew,nth) 
 !$omp& shared(rpan_intervall,vinsnew,ipan_intervall) 
@@ -415,7 +416,7 @@ c add spherical contribution of tmatrix
         if(t_dtmatJij_at%calculate .or.
      &     ( t_wavefunctions%isave_wavefun(i1, ie)>0 .and. 
      &      (t_wavefunctions%save_rllleft .or.
-     &       t_wavefunctions%save_rllleft) )
+     &       t_wavefunctions%save_sllleft) )
      &     ) then
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL

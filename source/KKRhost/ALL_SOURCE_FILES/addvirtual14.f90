@@ -73,7 +73,7 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
       allocate(ATOMIMP(natomimp))
       do iatom=1,natomimp
         read(32452345,*) ratomimp(:,iatom),ATOMIMP(iatom)
-        write(1337,'(A,I,A,3F)') 'IMPATOM ',iatom,' :',ratomimp(:,iatom)
+        write(1337,'(A8,I5,A2,3F14.7)') 'IMPATOM ',iatom,' :',ratomimp(:,iatom)
       end do
 
 !  -----------------------------------------------------------------
