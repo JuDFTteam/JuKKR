@@ -221,9 +221,22 @@ module ProcessKKRresults_mod
     integer :: ila, num_local_atoms
     integer :: imt_local ! index that marks the end of spherical potential entries, needed for B-field
 
+    double precision, parameter :: gfactor = 2.00231930436182  ! g-factor [dimensionless]
+    double precision, parameter :: mu_b = 5.7883818012D-05     ! Bohr magneton [eV/T]
+    double precision, parameter :: rydtoev = 13.605698066      ! conversion factor for Ryd to eV
+    double precision            :: b_field_val_ryd
+
     mix_potential = 0
 
+    b_field_val_ryd = 0.0d0
     num_local_atoms = calc%num_local_atoms
+
+    ! Convert B-field value from T to Ryd
+    ! The quantity is multiplied with 0.5 because the total shift in the
+    ! potential is 2*b_field_val_ryd
+    if (params%b_field) then
+       b_field_val_ryd = (0.5*gfactor*mu_b*params%b_field_val)/rydtoev 
+    endif
 
     ! subtract B-field from spherical part of potential if iter/=1
     ! B-field is hence turned off before potential mixing
@@ -232,10 +245,10 @@ module ProcessKKRresults_mod
           atomdata => getAtomData(calc, ila)
           mesh => atomdata%mesh_ptr
           imt_local = mesh%imt
-          atomdata%potential%visp(1:imt_local,1) = atomdata%potential%visp(1:imt_local,1) - params%b_field_val
-          atomdata%potential%visp(1:imt_local,2) = atomdata%potential%visp(1:imt_local,2) + params%b_field_val
-          atomdata%potential%vons(1:imt_local,1,1) = atomdata%potential%vons(1:imt_local,1,1) - params%b_field_val
-          atomdata%potential%vons(1:imt_local,1,2) = atomdata%potential%vons(1:imt_local,1,2) + params%b_field_val
+          atomdata%potential%visp(1:imt_local,1) = atomdata%potential%visp(1:imt_local,1) - b_field_val_ryd
+          atomdata%potential%visp(1:imt_local,2) = atomdata%potential%visp(1:imt_local,2) + b_field_val_ryd
+          atomdata%potential%vons(1:imt_local,1,1) = atomdata%potential%vons(1:imt_local,1,1) - b_field_val_ryd
+          atomdata%potential%vons(1:imt_local,1,2) = atomdata%potential%vons(1:imt_local,1,2) + b_field_val_ryd
        enddo
     endif
 
@@ -304,8 +317,8 @@ module ProcessKKRresults_mod
           atomdata => getAtomData(calc, ila)
           mesh => atomdata%mesh_ptr
           imt_local = mesh%imt
-          atomdata%potential%vons(1:imt_local,1,1) = atomdata%potential%vons(1:imt_local,1,1) + params%b_field_val
-          atomdata%potential%vons(1:imt_local,1,2) = atomdata%potential%vons(1:imt_local,1,2) - params%b_field_val
+          atomdata%potential%vons(1:imt_local,1,1) = atomdata%potential%vons(1:imt_local,1,1) + b_field_val_ryd
+          atomdata%potential%vons(1:imt_local,1,2) = atomdata%potential%vons(1:imt_local,1,2) - b_field_val_ryd
        enddo
     endif
 
