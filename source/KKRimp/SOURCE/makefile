@@ -32,7 +32,7 @@ mpitrace:   FC = vtf90 -vt:f90 $(MPIFC)
 mpidebug:   FC = mpiifort
 gfort:      FC = /usr/users/iff_th1/bauer/bin/gfortran
 pg:         FC = pgf90 
-hybrid:     FC= mpiifort -traceback
+hybrid:     FC= mpiifort
 rwthhybrid: FC= $(MPIFC) 
 jureca:     FC = mpif90
 
