@@ -517,11 +517,26 @@ end function this_readline
    write(1337,*) '[read_energy] host lmsizehost',lmsizehosttemp
    write(1337,*) '[read_energy] Spin orbit coupling used? (1=yes,0=no)',kgrefsoc
 
-  if (ntotatom/=natomimp) stop '[preconditioning_readenergy] ntotatom error'
-  if (natomimpd/=natomimp) stop '[preconditioning_readenergy] ntotatom error'
-  if (ielast/=ielasttemp) stop '[preconditioning_readenergy] ielast error'
-  if (nspin/=nspintemp) stop '[preconditioning_readenergy] nspin error'
-  if (lmsizehost/=lmsizehosttemp) stop '[preconditioning_readenergy] lmsizehost error'
+  if (ntotatom/=natomimp) then
+    write(*,*) ntotatom, natomimp
+    stop '[preconditioning_readenergy] ntotatom error'
+  endif
+  if (natomimpd/=natomimp) then
+    write(*,*) natomimpd, natomimp
+    stop '[preconditioning_readenergy] ntotatom error'
+  endif
+  if (ielast/=ielasttemp) then
+    write(*,*) ielast, ielasttemp
+    stop '[preconditioning_readenergy] ielast error'
+  endif
+  if (nspin/=nspintemp) then
+    write(*,*) nspin, nspintemp
+    stop '[preconditioning_readenergy] nspin error'
+  endif
+  if (lmsizehost/=lmsizehosttemp) then
+    write(*,*) lmsizehost, lmsizehosttemp
+    stop '[preconditioning_readenergy] lmsizehost error'
+  endif
 
 !  *******************************************************************
 !  now reopen the file to read the energy weights
