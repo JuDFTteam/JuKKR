@@ -108,7 +108,7 @@ use sourceterms
 use mod_chebyshev
 #endif
 use mod_timing                            ! timing routine
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 use omp_lib ! omp functions
 #endif
 implicit none
@@ -211,7 +211,7 @@ implicit none
       DOUBLE COMPLEX ALPHAGET(LMSIZE,LMSIZE) ! LLY
 #endif
 
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !     openMP variable --sacin 23/04/2015
       integer :: thread_id, number_of_openmp_threads,number_of_processor
 #endif
@@ -299,7 +299,7 @@ allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
 allocate ( ull(lmsize2,lmsize,nrmax) )
 allocate( work(lmsize,lmsize) )
 
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !$OMP PARALLEL DEFAULT (PRIVATE) &
 !$OMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
 !$OMP&  zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
@@ -337,7 +337,7 @@ zill=(0.0d0,0.0d0)
 if (idotime==1) call timing_start('local')
 
 ! loop over subintervals
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 ! openMP pragmas added sachin, parallel region starts earlier to get allocations of arrays right
 !$OMP DO
 #endif
@@ -727,7 +727,7 @@ do ipan = 1,npan
   if (idotime==1) call timing_pause('local3')
 
 end do !ipan
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !$OMP END DO
 
 if ( use_sratrick==0 ) then
@@ -1162,7 +1162,7 @@ use sourceterms
 use mod_chebyshev
 #endif
 use mod_timing                            ! timing routine
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 use omp_lib ! omp functions
 #endif
 implicit none
@@ -1241,7 +1241,7 @@ implicit none
       DOUBLE COMPLEX ALPHAGET(LMSIZE,LMSIZE) ! LLY
 #endif
 
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !     openMP variable --sacin 23/04/2015
       integer :: thread_id, number_of_openmp_threads,number_of_processor
 #endif
@@ -1309,7 +1309,7 @@ end do
 call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 
 
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !$OMP PARALLEL DEFAULT (PRIVATE) &
 !$OMP&  SHARED(tau,npan,drpan2,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,yrf, &
 !$OMP&  zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
@@ -1331,7 +1331,7 @@ allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
 if (idotime==1) call timing_start('local')
 
 ! loop over subintervals
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 ! openMP pragmas added sachin, parallel region starts earlier to get allocations of arrays right
 !$OMP DO
 #endif
@@ -1357,7 +1357,7 @@ do ipan = 1,npan
   if (idotime==1) call timing_pause('local3')
 
 end do !ipan
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !$OMP END DO
 !$OMP END PARALLEL
 #endif
@@ -1561,7 +1561,7 @@ use sourceterms
 use mod_chebyshev
 #endif
 use mod_timing                            ! timing routine
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 use omp_lib ! omp functions
 #endif
 implicit none
@@ -1638,7 +1638,7 @@ implicit none
       DOUBLE COMPLEX ALPHAGET(LMSIZE,LMSIZE) ! LLY
 #endif
 
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !     openMP variable --sacin 23/04/2015
       integer :: thread_id, number_of_openmp_threads,number_of_processor
 #endif
@@ -1706,7 +1706,7 @@ end do
 call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 
 
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !$OMP PARALLEL DEFAULT (PRIVATE) &
 !$OMP&  SHARED(tau,npan,drpan2,rpanbound,mihvy,mihvz,mijvy,mijvz,yif, &
 !$OMP&  zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
@@ -1726,7 +1726,7 @@ allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
 if (idotime==1) call timing_start('local')
 
 ! loop over subintervals
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 ! openMP pragmas added sachin, parallel region starts earlier to get allocations of arrays right
 !$OMP DO
 #endif
@@ -1753,7 +1753,7 @@ do ipan = 1,npan
   if (idotime==1) call timing_pause('local3')
 
 end do !ipan
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !$OMP END DO
 !$OMP END PARALLEL
 #endif
