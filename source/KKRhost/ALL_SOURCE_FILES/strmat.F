@@ -102,7 +102,7 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 C
 C **********************************************************************
-#if defined(CPP_OMP) .OR. defined(CPP_hybrid)
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
 !$omp parallel do default(shared) private(DQ1, DQ2, DQ3, STEST)
 !$omp& private(LM, NSTART, IT, NRS, NGS, NRE, NGE, I, R1 , R2)
 !$omp& private(R3 , R, YLM, ALPHA, G, L, RFAC, M, G1, G2)

@@ -180,9 +180,9 @@ macomp:   CPP = -D CPP_OMP -D CPP_TIMING
 rwthmpi:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
-rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
-hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
-hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid -D CPP_NOMD5
+rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
+hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
+hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID -D CPP_NOMD5
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 
 ####################################################
