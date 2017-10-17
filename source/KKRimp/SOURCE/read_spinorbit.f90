@@ -30,7 +30,7 @@ else
   do iatom = 1, natom
     read(unit=1000001, fmt=*) ival 
     if (ival/=1 .and. ival/= 0) then
-      print *, '[read_spinorbit] kkrflex_spinorbitperatom inconsistent'
+      print *, '[read_spinorbit] kkrflex_spinorbitperatom inconsistent (.ne. 0 or 1)'
     end if
     cellorbit%use_spinorbit(iatom)=ival
     if (myrank==0) then
