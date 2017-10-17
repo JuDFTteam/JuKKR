@@ -283,6 +283,7 @@ call log_write('<<<<<<<<<<<<<<<<<<< end PRECONDITIONING_start <<<<<<<<<<<<<<<<<<
 
 ! LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple
 if ( config_runflag('LLYsimple') ) then
+  call log_write('>>>>>>>>>>>>>>>>>>>>> NEWWEIGHTS >>>>>>>>>>>>>>>>>>>>>')
   if (my_rank==0) then
     write(*,'(A)') 'Found option LLYsimple: reading in renormalization factor from file kkrflex_llyfac'
     open(192837, file='kkrflex_llyfac', form='formatted', iostat=ierror)
@@ -297,6 +298,10 @@ if ( config_runflag('LLYsimple') ) then
 #endif
   !renormalize weights on every rank
   wez(:) = wez(:)*llyfac
+  do idummy=1,ielast
+    write(1337, '(A,I5,A,F20.14,A,F20.14)') 'IE: ',idummy,' new weight: ',real(wez(idummy)), ' ', imag(wez(idummy))
+  end do
+  call log_write('<<<<<<<<<<<<<<<<<<< end NEWWEIGHTS <<<<<<<<<<<<<<<<<<<')
 end if
 ! LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple LLYsimple
 
@@ -361,7 +366,7 @@ elseif (trim(config%modeexcorr)=='GGA') then
   do iatom=1,natom
     cell(iatom)%kxc=3
   end do
-  if (my_rank==0) print *,'using GGA'
+  if (my_rank==0) print *,'using GGA (PW91)'
 elseif (trim(config%modeexcorr)=='File') then
   open(unit=23437243,file='kkrflex_xc')
   if (my_rank==0)  then

@@ -108,7 +108,7 @@ use sourceterms
 use mod_chebyshev
 #endif
 use mod_timing                            ! timing routine
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 use omp_lib ! omp functions
 #endif
 implicit none
@@ -211,7 +211,7 @@ implicit none
       DOUBLE COMPLEX ALPHAGET(LMSIZE,LMSIZE) ! LLY
 #endif
 
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !     openMP variable --sacin 23/04/2015
       integer :: thread_id, number_of_openmp_threads,number_of_processor
 #endif
@@ -266,10 +266,10 @@ else
 end if
 #endif
 
-#ifdef hostcode
+!#ifdef hostcode
 ! turn timing output off if in the host code
 idotime = 0
-#endif
+!#endif
 #ifdef test_run
 idotime = 1
 #endif
@@ -286,16 +286,28 @@ end do
 call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 
 
-#ifdef CPP_hybrid
+allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
+allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
+allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
+allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
+allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
+allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
+allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
+allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
+allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
+allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
+allocate ( ull(lmsize2,lmsize,nrmax) )
+allocate( work(lmsize,lmsize) )
+
+#ifdef CPP_HYBRID
 !$OMP PARALLEL DEFAULT (PRIVATE) &
 !$OMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
 !$OMP&  zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
 !$OMP&  cmoderll,cmodesll,cmodetest,use_sratrick, rmesh)
 
 thread_id = omp_get_thread_num()
+if(thread_id==0) write(1337, *) 'in rllsll: hybrid version, using',omp_get_num_threads(),'OpenMP threads'
 #endif
-
-allocate ( ull(lmsize2,lmsize,nrmax) )
 
 if ( use_sratrick==0 ) then
   allocate ( slv(0:ncheb,lmsize2,0:ncheb,lmsize2),srv(0:ncheb,lmsize2,0:ncheb,lmsize2) )
@@ -313,13 +325,6 @@ else
   stop '[rllsll] error with testflag sph'
 end if
 
-allocate( work(lmsize,lmsize) )
-allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
-allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
-allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
-allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
-allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
-allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
 allocate( yill(0:ncheb,lmsize2,lmsize), zill(0:ncheb,lmsize2,lmsize) )
 allocate( yrll(0:ncheb,lmsize2,lmsize), zrll(0:ncheb,lmsize2,lmsize) )
 allocate( vjlr(lmsize,lmsize2,0:ncheb), vhlr(lmsize,lmsize2,0:ncheb) )
@@ -330,15 +335,10 @@ zill=(0.0d0,0.0d0)
 yrll=(0.0d0,0.0d0)
 zill=(0.0d0,0.0d0)
 
-allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
-allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
-allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
-allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
-
 if (idotime==1) call timing_start('local')
 
 ! loop over subintervals
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 ! openMP pragmas added sachin, parallel region starts earlier to get allocations of arrays right
 !$OMP DO
 #endif
@@ -728,8 +728,16 @@ do ipan = 1,npan
   if (idotime==1) call timing_pause('local3')
 
 end do !ipan
-#ifdef CPP_hybrid
+#ifdef CPP_HYBRID
 !$OMP END DO
+
+if ( use_sratrick==0 ) then
+  deallocate( slv, srv )
+elseif ( use_sratrick==1 ) then
+  deallocate( work2, ipiv2, slv1, srv1, slv2, srv2, slv3, srv3, yill1, zill1, yrll1, zrll1, yill2, zill2, yrll2, zrll2,  yrlltmp )
+end if
+
+deallocate( yill, zill, yrll, zrll, vjlr, vhlr, vjli, vhli )
 !$OMP END PARALLEL
 #endif
 ! end the big loop over the subintervals
@@ -848,14 +856,7 @@ if (idotime==1) call timing_stop('local2')
 if (idotime==1) call timing_stop('local3')
 if (idotime==1) call timing_stop('rllsll')
 
-if ( use_sratrick==0 ) then
-  deallocate ( slv,srv, stat=ierror )
-elseif ( use_sratrick==1 ) then
-  deallocate ( work2, ipiv2, slv1, srv1, slv2, srv2 , slv3, srv3, yill1, zill1 , yrll1, zrll1 , yill2, zill2 , yrll2, zrll2, yrlltmp, stat=ierror  )
-end if
-if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
-
-deallocate( work, allp, bllp, cllp, dllp, mrnvy, mrnvz , mrjvy, mrjvz,  mihvy, mihvz,  mijvy, mijvz, yill, zill , yrll, zrll, vjlr, vhlr, vjli, vhli ,yif,yrf,zif,zrf, stat=ierror )
+deallocate( work, allp, bllp, cllp, dllp, mrnvy, mrnvz , mrjvy, mrjvz,  mihvy, mihvz,  mijvy, mijvz, yif, yrf, zif, zrf, stat=ierror )
 if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
 end subroutine
 

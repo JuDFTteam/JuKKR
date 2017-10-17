@@ -66,7 +66,7 @@ double complex                            :: cden(cellnew%nrmaxnew,0:lmaxd,nspin
                                              cdenlm(cellnew%nrmaxnew,lmmaxatom,nspinden)  ! lm-dos
 double complex,allocatable                :: gflle_part(:,:) ! lda+u
 
-integer                                   :: lm1,ialpha
+integer                                   :: lm1,ialpha, mval
 integer                                   :: jspin
 integer                                   :: lmslo,lmshi            ! lda+u
 integer                                   :: nspinstart, nspinstop
@@ -203,6 +203,13 @@ end do
       do lval = 0,lmaxatom+1
         density%ncharge(lval,jspin) = density%ncharge(lval,jspin) + DIMAG(density%den(lval,jspin,ie)*df)
       end do
+!      ! test lmresolved charge
+!      do lval = 1,lmaxatom
+!        do mval=-lval,lval
+!          lm1 = lval**2+lval+mval+1
+!          write(*,*) 'lm charges: iatom, ie, jspin, lm', iatom, ie, jspin, lm1, DIMAG(density%denlm(lm1,jspin,ie)*df)
+!        end do
+!      end do
       do lval = 0,lmaxatom+1
         energyparts%espv(lval,jspin,iatom) = energyparts%espv(lval,jspin,iatom) + dimag( (eryd-efermi)*density%den(lval,jspin,ie)*df)
 !         write(*,*) 'ep',jspin,energyparts%espv(lval,jspin,iatom)
