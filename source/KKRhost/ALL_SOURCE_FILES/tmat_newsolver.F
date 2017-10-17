@@ -337,12 +337,25 @@ cc calculate the tmat and wavefunctions
 cc right solutions
         TMAT0=CZERO
         ALPHA0=CZERO ! LLY
+C faster calculation of RLL.
+C no irregular solutions are needed in self-consistent iterations
+C because the t-matrix depends only on RLL
+        IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+        CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+     +              RLL(:,:,:,ith),TMAT0(:,:),NCHEB,
+     +              NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
+     +              NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
+     +              HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,
+     +              '1',USE_SRATRICK,ALPHA0(:,:))
+        ELSE
         CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLL(:,:,:,ith),SLL(:,:,:,ith),TMAT0(:,:),NCHEB,
      +              NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
      +              NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
      +              HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,
      +              '1','1','0',USE_SRATRICK,ALPHA0(:,:))
+        END IF
+
         IF (NSRA.EQ.2) THEN
           RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
@@ -476,20 +489,29 @@ cc       left solutions
 c        notice that exchange the order of left and right hankel/bessel functions
          TMAT0=CZERO
          ALPHA0=CZERO ! LLY
+C faster calculation of RLL.
+C no left solutions are needed in self-consistent iterations
+C because the t-matrix depends only on RLL
+         IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+         ! do nothing
+         ELSE
          CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),TMAT0,NCHEB,
      +             NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
      +             NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
      +             HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,
      +             '1','1','0',USE_SRATRICK,ALPHA0)
+         END IF
          IF (NSRA.EQ.2) THEN
           RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
           SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
          ENDIF
+
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+
 
         end if!t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
         

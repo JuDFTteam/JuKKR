@@ -106,8 +106,7 @@ C     .. Local Arrays ..
 #ifdef CPP_MPI
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
-      integer :: ie_start
-      integer :: ie_end, ie_num
+      integer :: ie_end, ie_num, ie_start
 C     ..
 C     .. External Functions ..
       LOGICAL TEST
