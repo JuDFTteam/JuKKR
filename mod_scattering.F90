@@ -16,7 +16,7 @@ module mod_scattering
 
 
   type :: sca_TYPE
-    integer :: N1 = 16
+    integer :: N1 = 17
     integer :: lscatfixk=-1
     integer :: llifetime=-1
     integer :: lboltzmann=-1
@@ -32,6 +32,7 @@ module mod_scattering
     double precision :: gammaval  =  0.001837465441 ! 25 meV in Rydbergs
     double precision :: impconc   =  1d0
     integer :: subarr_inp(2) = -1
+    integer :: maskint = 0
     !allocatable arrays
     integer :: N2 = 2
     double precision, allocatable :: weight_imp(:)
@@ -491,7 +492,7 @@ contains
     end if!myrank==master
 
     if(myrank==master) then
-      open(unit=1326,file='lifetime.int.txt',form='formatted',action='write')
+      open(unit=1326,file='lifetime_boltzmann.int.txt',form='formatted',action='write')
       write(1326,'(3I8)') nkpts, nsym, inc%ndegen
       write(1326,'(12I8)') isym
       do ikp=1,nkpts
@@ -1442,7 +1443,7 @@ contains
     use mod_read,       only: read_kpointsfile_vis, read_kpointsfile_int, read_weights, read_fermivelocity
     use mod_parutils,   only: distribute_linear_on_tasks
     use mod_iohelp,     only: open_mpifile_setview, close_mpifile, getBZvolume
-    use mod_ioformat,   only: filemode_vis, filemode_int, filename_eigvect, fmt_fn_ext, filename_lifetime, ext_vtkxml
+    use mod_ioformat,   only: filemode_vis, filemode_int, filename_eigvect, fmt_fn_ext, filename_lifetime, ext_vtkxml, filename_intmask
     use mod_vtkxml,     only: write_pointdata_rot
     use mod_mympi,      only: myrank, nranks, master
     use mod_mathtools,  only: pi
@@ -1456,6 +1457,11 @@ contains
 
     integer :: nsqa
     double precision, allocatable :: taukinv(:,:)
+
+    !for masked integration, e.g. to get surface-to-bulk scattering rates etc.
+    double precision, allocatable :: taukinv_masked(:,:)
+    logical :: l_maskfile
+    integer, allocatable :: intmask(:)
 
     !symmetry arrays
     integer :: nsym
@@ -1477,6 +1483,7 @@ contains
     integer :: dimens(4), fh_eigv_in, fh_eigv_out
     character(len=256) :: filemode, filename
     integer :: mpistatus(MPI_STATUS_SIZE)
+    logical :: l_exist ! logical to check if eigenvector file exists
     double complex, allocatable :: rveig_out(:,:,:,:,:),&
                                  & rveig_in(:,:,:,:),   &
                                  & rveig_out_impcls(:), &
@@ -1593,6 +1600,8 @@ contains
     write(filename,'(A,A)') filename_eigvect, filemode_int
     dimens = (/ inc%lmmaxso,inc%natypd,inc%ndegen, nsqa /)
     itmp1(1) = nkpts_out
+    inquire(file=trim(filename), exist=l_exist)
+    if(.not.l_exist) stop 'Error: eigenvector file (int) not present but needed for scattering calculations'
     call open_mpifile_setview( trim(filename), 'read', 4, dimens, itmp1, MPI_DOUBLE_COMPLEX, &
                              & 0, 1 , MPI_COMM_WORLD, fh_eigv_out                            )
     ihelp = product(dimens)*nkpts_out
@@ -1607,6 +1616,8 @@ contains
 
     write(filename,'(A,A)') filename_eigvect, trim(filemode)
     dimens = (/ inc%lmmaxso,inc%natypd,inc%ndegen, nsqa /)
+    inquire(file=trim(filename), exist=l_exist)
+    if(.not.l_exist) stop 'Error: eigenvector file (vis) not present but needed for scattering calculations'
     call open_mpifile_setview( trim(filename), 'read', 4, dimens, ntot_pT, MPI_DOUBLE_COMPLEX, &
                              & myrank, nranks, MPI_COMM_WORLD, fh_eigv_in                      )
 
@@ -1620,6 +1631,35 @@ contains
     allocate( taukinv(inc%ndegen*inc%ndegen*nsqa,nkpts_in), STAT=ierr )
     if(ierr/=0) stop 'Problem allocating taukinv'
     taukinv  = 0d0
+
+    !masked integration:
+    if(sca%maskint==1) then
+       ! allocate second array
+       allocate( taukinv_masked(inc%ndegen*inc%ndegen*nsqa,nkpts_in), STAT=ierr )
+       if(ierr/=0) stop 'Problem allocating taukinv_masked'
+       taukinv_masked  = 0d0
+       ! allocate and read in integration mask from file
+       allocate( intmask(nkpts_out), STAT=ierr )
+       if(ierr/=0) stop 'Problem allocating intmask'
+       intmask  = 0
+       if(myrank==master) then
+          ! check if file exists
+          inquire(file=filename_intmask, exist=l_maskfile)
+          if(.not.l_maskfile) then
+             write(*,'(3A)') 'Error: file "',filename_intmask,'" not found! Please provide file for masked integration.'
+             stop
+          endif
+          ! read file
+          open(998877, file=filename_intmask, form='formatted')
+          do istore=1,nkpts_out
+             read(998877, *) intmask(istore)
+          end do
+          close(998877)
+       endif!myrank==master
+       !Bcast intmask to all processors
+       call MPI_Bcast(intmask, nkpts_out, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+       if(ierr/=MPI_SUCCESS) stop 'Error in MPI_Bcast for intmask'
+    endif
 
     !calculate Pkk' and sum it up
     printstep = nkpt/50
@@ -1658,6 +1698,12 @@ contains
               ! Pkk' = |Tkk'|^2
               taukinv(istore,ikpi) = taukinv(istore,ikpi) + (dble(Tkk_tmp)**2 + aimag(Tkk_tmp)**2)*weights_out(ikpo)
 
+              !masked integration:
+              if(sca%maskint==1) then
+                 ! integrate only those kpts where intmask==1
+                 if(intmask(ikpo)==1) taukinv_masked(istore,ikpi) = taukinv_masked(istore,ikpi) + (dble(Tkk_tmp)**2 + aimag(Tkk_tmp)**2)*weights_out(ikpo)
+              endif
+
             end do!ispino
           end do!ikpo
 
@@ -1681,6 +1727,12 @@ contains
                        & taukinv, recvcounts, displs, MPI_DOUBLE_PRECISION, &
                        & MPI_COMM_WORLD, ierr )
 
+    if(sca%maskint==1) then
+       call MPI_Allgatherv( taukinv_masked, ihelp*nkpt, MPI_DOUBLE_PRECISION,         &
+                          & taukinv_masked, recvcounts, displs, MPI_DOUBLE_PRECISION, &
+                          & MPI_COMM_WORLD, ierr )
+    endif
+
 
 
     !==========================!
@@ -1698,6 +1750,10 @@ contains
     !=== Save results   ===!
     !======================!
     if(myrank==master) call save_lifetime(trim(filemode), nkpts_in, nsqa, inc%ndegen, taukinv, nsym, isym, fac, fsRyunit)
+    if(sca%maskint==1) then
+       write(filename,'(A,A)') trim(filemode), '.masked'
+       if(myrank==master) call save_lifetime(trim(filename), nkpts_in, nsqa, inc%ndegen, taukinv_masked, nsym, isym, fac, fsRyunit)
+    endif
 
     !======================!
     !=== Visualize data ===!
@@ -2291,6 +2347,17 @@ contains
         endif
       end if!ierr
 
+
+      if(sca%llifetime==1) then
+         call IoInput('MASKINT   ',uio,1,7,ierr)
+         if(ierr==0) then
+            read(unit=uio,fmt=*) sca%maskint
+         else
+            sca%maskint = 0
+            write(unit=*,fmt=*) 'Warning: MASKINT not found in inputcard. Take default value:', sca%maskint
+         end if
+      end if
+
     end if!myrank==master
 
 #ifdef CPP_MPI
@@ -2335,6 +2402,7 @@ contains
     call MPI_Get_address(sca%gammaval,      disp1(14), ierr)
     call MPI_Get_address(sca%impconc,       disp1(15), ierr)
     call MPI_Get_address(sca%subarr_inp,    disp1(16), ierr)
+    call MPI_Get_address(sca%maskint,       disp1(17), ierr)
 
     base  = disp1(1)
     disp1 = disp1 - base
@@ -2343,10 +2411,12 @@ contains
     blocklen1(13)   =6
     blocklen1(14:15)=1
     blocklen1(16)   =2
+    blocklen1(17)   =1
 
     etype1(1:12) = MPI_INTEGER
     etype1(13:15)   = MPI_DOUBLE_PRECISION
     etype1(16)   = MPI_INTEGER
+    etype1(17)   = MPI_INTEGER ! maskint
 
     call MPI_Type_create_struct(sca%N1, blocklen1, disp1, etype1, myMPItype1, ierr)
     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_sca_1'
