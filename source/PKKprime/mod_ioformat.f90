@@ -57,6 +57,8 @@ module mod_ioformat
     character(len=*), parameter :: filename_lifetime = 'lifetime'
     character(len=*), parameter :: filename_scattmat = 'scatteringmatrix'
 
+    character(len=*), parameter :: filename_intmask = 'maskint'
+
 ! old files - delete when coding done
     character(len=*), parameter :: filename_cubes_IBZ     = 'cubes_irrbz'
     character(len=*), parameter :: filename_kpoints       = 'FSpts_points'
