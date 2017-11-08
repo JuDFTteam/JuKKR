@@ -126,7 +126,7 @@ ifeq ($(PLATFORM),jureca)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -ipo -O2 -xHost 
+		FCFLAGS += -O2 -xHost 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
