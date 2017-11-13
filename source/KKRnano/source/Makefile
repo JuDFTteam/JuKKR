@@ -119,7 +119,7 @@ ifeq ($(PLATFORM),jureca)
 	else ifeq ($(TYPE),debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
 	else ifeq ($(TYPE),mtradii)
-		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
+		FCFLAGS += -O2 -xHost 
 		PPFLAGS += -D USE_MTRADII 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else ifeq ($(TYPE),debug_mtradii)
@@ -135,7 +135,7 @@ ifeq ($(PLATFORM),jureca)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else
-		FCFLAGS += -ipo -O2 -no-prec-div -fp-model fast=2 -xHost 
+		FCFLAGS += -O2 -xHost 
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
@@ -184,6 +184,51 @@ ifeq ($(PLATFORM),jureca_knl)
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
+# ================== HAZEL HEN ======================
+# module swap PrgEnv-cray/5.2.82 PrgEnv-intel
+# module unload cray-libsci
+# module load numlib/intel/mkl/2018.0
+# Remarks: - Bad GGA performance -> Use LDA!
+#  	   - Home directory slow -> Use Workspace (see HLRS wiki)
+ifeq ($(PLATFORM),hazelhen)
+	FC = ftn
+	FC90 = ftn
+	# -module <path> specifies where to put .mod files
+  	ifeq ($(SMP),openmp)
+ 		FCFLAGS += -qopenmp 
+        endif
+	FCFLAGS += -module $(BUILDDIR)
+	FCFLAGS += -I $(BUILDDIR) #-I${MKLROOT}/include
+	# PPFLAGS += -D TASKLOCAL_FILES
+	FCFLAGS += -g -mkl
+	LDFLAGS += -g -mkl -lm  
+	ifeq ($(TYPE),debug_light)
+		FCFLAGS += -O0 -g
+	else ifeq ($(TYPE),debug)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+	else ifeq ($(TYPE),mtradii)
+		FCFLAGS += -O2
+		PPFLAGS += -D USE_MTRADII 
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else ifeq ($(TYPE),debug_mtradii)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
+		PPFLAGS += -D USE_MTRADII
+ 	else ifeq ($(TYPE),voronoi_mesh)
+		FCFLAGS += -O2
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+ 	else ifeq ($(TYPE),voronoi_mesh_debug)
+		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+ 	else ifeq ($(TYPE),voronoi_mesh_debug_light)
+		FCFLAGS += -O0 -g
+		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
+	else
+		FCFLAGS += -O2  
+		PPFLAGS += -D NOLOGGING
+	endif
+endif
+
+
 
 # ================== QPACE3 ======================
 ifeq ($(PLATFORM),qpace3)
