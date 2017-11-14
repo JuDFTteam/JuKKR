@@ -81,6 +81,8 @@ LIBS=-L../ -lblas
 # RWTH cluster:
 rwth: LIBS= -mkl
 jureca: LIBS= -mkl
+MACLLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
+mac:    LIBS=$(MACLLIBS)
 
 # standard compile flags
 FFLAGS=-O2 -r8 -traceback -i8 #-heap-arrays -mcmodel=large
@@ -92,15 +94,7 @@ debug: FFLAGS=-v -O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -
 # Do stuff                                         #
 ####################################################
 
-.PHONY: getversion
-.PHONY: clear
-.PHONY: clean
-.PHONY: compile
-.PHONY: debug
-.PHONY: rwth
-.PHONY: jureca
-.PHONY: serial
-.PHONY: install
+.PHONY: getversion clear clean compile debug rwth jureca serial mac install
 
 getversion:
 	@echo "Wrinting Version file: "; git describe;\
@@ -125,5 +119,5 @@ debug: compile
 rwth: compile
 install: clean serial
 jureca: compile
-
+mac: compile
 

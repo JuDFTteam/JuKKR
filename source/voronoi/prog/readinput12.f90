@@ -152,6 +152,7 @@
       CALL IoInput('NAEZ            ',UIO,1,7,IER)
       IF (IER.EQ.0) THEN
          READ (UNIT=UIO,FMT=*) NAEZ
+         WRITE(*,*) 'NAEZ=', NAEZ
       ELSE
          WRITE(*,*) 'readinput12: NAEZ not found, stopping.'
          STOP 'readinput12: NAEZ not found, stopping.'
@@ -163,10 +164,24 @@
       ENDIF
 
 
+      ! Basis atoms
+      WRITE(111,FMT='(A16)') '<RBASIS>        '
       DO I=1,NAEZ
-          CALL IoInput('RBASIS          ',UIO,I,7,IER)
-          IF (IER.NE.0) STOP 'RBASIS not found, stopping.'
-          READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
+         CALL IoInput('<RBASIS>        ',UIO,I,7,IER)
+         IF (IER.EQ.0) THEN
+            READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
+            WRITE(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
+         ELSE
+            IER=0
+            CALL IoInput('RBASIS          ',UIO,I,7,IER)
+            IF (IER.EQ.0) THEN
+               READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
+               WRITE(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
+            ELSE
+               WRITE(*,*) 'RINPUT13: Keyword <RBASIS> or RBASIS not found. Stopping.'
+               STOP 'RINPUT13: RBASIS'
+            ENDIF
+         ENDIF
       ENDDO                         ! I=1,NAEZ
 
       NFACELIM = NFACED   ! Upper limit of allowed number of faces can be smaller than dimension for speedup
