@@ -37,16 +37,9 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    !     .. Scalar arguments ..
    INTEGER  KREL,LMAXD,LPOTD,NSPIND,NAEZD,NATYPD,NEMBD,NPRINCD,IRMD,IRNSD,NREFD
 
-   !     .. Local Arrays ..
-   character(len=4), dimension(3) :: TSPIN
-   character(len=8), dimension(3) :: TKWS
-   character(len=2), dimension(-2:-1) :: SOCII
-   character(len=43), dimension(0:3) :: TINS
-   character(len=43), dimension(0:3) :: TKCOR
-   character(len=43), dimension(0:2) :: TVREL
-   ! NOTE of VP : there should be some crosscheck of competing optons
-   !              e.g., XCPL and CONDUCT cannot be done simultaneously
-   !              neither SOC1 and SOC2 manipulation etc.
+   !> @note VP : there should be some crosscheck of competing options
+   !>            e.g., XCPL and CONDUCT cannot be done simultaneously
+   !>            neither SOC1 and SOC2 manipulation etc.
    !     ..
    !     .. External Subroutines ..
    EXTERNAL RCSTOP
@@ -54,25 +47,113 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    !     .. Intrinsic Functions ..
    INTRINSIC MIN
    !     ..
+   !     .. Scalar Arguments ..
+   integer, intent(inout) :: KTE
+   integer, intent(inout) :: IGF      !< Do not print or print (0/1) the KKRFLEX_* files
+   integer, intent(inout) :: IRM      !< Maximum number of radial points
+   integer, intent(inout) :: KXC      !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+   integer, intent(inout) :: LLY      !< LLY <> 0 : apply Lloyds formula
+   integer, intent(inout) :: ICC      !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+   integer, intent(inout) :: INS      !< 0 (MT), 1(ASA), 2(Full Potential)
+   integer, intent(inout) :: KWS      !< 0 (MT), 1(ASA)
+   integer, intent(inout) :: IPE      !< Not real used, IPFE should be 0
+   integer, intent(inout) :: IPF      !< Not real used, IPFE should be 0
+   integer, intent(inout) :: IPFE     !< Not real used, IPFE should be 0
+   integer, intent(inout) :: ICST     !< Number of Born approximation
+   integer, intent(inout) :: IMIX     !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
+   integer, intent(inout) :: LPOT     !< Maximum l component in potential expansion
+   integer, intent(inout) :: NAEZ     !< Number of atoms in unit cell
+   integer, intent(inout) :: NEMB     !< Number of 'embedding' positions
+   integer, intent(inout) :: NREF     !< Number of diff. ref. potentials
+   integer, intent(inout) :: NCLS     !< Number of reference clusters
+   integer, intent(inout) :: NPOL     !< Number of Matsubara Pols (EMESHT)
+   integer, intent(inout) :: LMAX     !< Maximum l component in wave function expansion
+   integer, intent(inout) :: KCOR
+   integer, intent(inout) :: KEFG
+   integer, intent(inout) :: KHYP
+   integer, intent(inout) :: KPRE
+   integer, intent(inout) :: KVMAD
+   integer, intent(inout) :: LMMAX
+   integer, intent(inout) :: LMPOT
+   integer, intent(inout) :: NCHEB    !< Number of Chebychev pannels for the new solver
+   integer, intent(inout) :: NLEFT    !< Number of repeated basis for left host to get converged  electrostatic potentials
+   integer, intent(inout) :: IFILE    !< Unit specifier for potential card
+   integer, intent(inout) :: KVREL    !< 0,1 : non / scalar relat. calculation
+   integer, intent(inout) :: NSPIN    !< Counter for spin directions
+   integer, intent(inout) :: NATYP    !< Number of kinds of atoms in unit cell
+   integer, intent(inout) :: NINEQ    !< Number of ineq. positions in unit cell
+   integer, intent(inout) :: NPNT1    !< number of E points (EMESHT) for the contour integration
+   integer, intent(inout) :: NPNT2    !< number of E points (EMESHT) for the contour integration
+   integer, intent(inout) :: NPNT3    !< number of E points (EMESHT) for the contour integration
+   integer, intent(inout) :: KFROZN
+   integer, intent(inout) :: ISHIFT
+   integer, intent(inout) :: N1SEMI   !< Number of energy points for the semicore contour
+   integer, intent(inout) :: N2SEMI   !< Number of energy points for the semicore contour
+   integer, intent(inout) :: N3SEMI   !< Number of energy points for the semicore contour
+   integer, intent(inout) :: NSTEPS   !< number of iterations
+   integer, intent(inout) :: INSREF   !< INS for reference pot. (usual 0)
+   integer, intent(inout) :: KSHAPE   !< Exact treatment of WS cell
+   integer, intent(inout) :: ITDBRY   !< Number of SCF steps to remember for the Broyden mixing
+   integer, intent(inout) :: NRIGHT   !< Number of repeated basis for right host to get converged  electrostatic potentials
+   integer, intent(inout) :: KFORCE   !< Calculation of the forces
+   integer, intent(inout) :: IVSHIFT
+   integer, intent(inout) :: KHFIELD  !< 0,1: no / yes external magnetic field
+   integer, intent(inout) :: NLBASIS  !< Number of basis layers of left host (repeated units)
+   integer, intent(inout) :: NRBASIS  !< Number of basis layers of right host (repeated units)
+   integer, intent(inout) :: INTERVX  !< Number of intervals in x-direction for k-net in IB of the BZ
+   integer, intent(inout) :: INTERVY  !< Number of intervals in y-direction for k-net in IB of the BZ
+   integer, intent(inout) :: INTERVZ  !< Number of intervals in z-direction for k-net in IB of the BZ
+   integer, intent(inout) :: NPAN_EQ  !< Variables for the pannels for the new solver
+   integer, intent(inout) :: NPAN_LOG !< Variables for the pannels for the new solver
+   integer, intent(inout) :: NPOLSEMI !< Number of poles for the semicore contour
+   double precision, intent(inout) :: TK      !< Temperature
+   double precision, intent(inout) :: FCM
+   double precision, intent(inout) :: EMIN    !< Minimum energy of the energy contour
+   double precision, intent(inout) :: EMAX    !< Maximum energy of the energy contour
+   double precision, intent(inout) :: RMAX    !< Ewald summation cutoff parameter for real space summation
+   double precision, intent(inout) :: GMAX    !< Ewald summation cutoff parameter for reciprocal space summation
+   double precision, intent(inout) :: ALAT    !< Lattice constant (in a.u.)
+   double precision, intent(inout) :: R_LOG
+   double precision, intent(inout) :: RCUTZ   !< Parameter for the screening cluster along the z-direction
+   double precision, intent(inout) :: RCUTXY  !< Parameter for the screening cluster along the x-y plane
+   double precision, intent(inout) :: ESHIFT
+   double precision, intent(inout) :: QBOUND  !< Convergence parameter for the potential
+   double precision, intent(inout) :: HFIELD  !< External magnetic field, for initial potential shift in spin polarised case
+   double precision, intent(inout) :: MIXING  !< Magnitude of the mixing parameter
+   double precision, intent(inout) :: ABASIS  !< Scaling factors for rbasis
+   double precision, intent(inout) :: BBASIS  !< Scaling factors for rbasis
+   double precision, intent(inout) :: CBASIS  !< Scaling factors for rbasis
+   double precision, intent(inout) :: VCONST  !< Potential shift
+   double precision, intent(inout) :: TKSEMI
+   double precision, intent(inout) :: TOLRDIF !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+   double precision, intent(inout) :: EMUSEMI
+   double precision, intent(inout) :: EBOTSEMI
+   double precision, intent(inout) :: FSEMICORE
+   double precision, intent(inout) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
+   double complex, intent(inout) :: DELTAE      !< LLY Energy difference for numerical derivative
+   logical, intent(inout) :: LRHOSYM
+   logical, intent(inout) :: LINIPOL    !< True: Initial spin polarization; false: no initial spin polarization
+   logical, intent(inout) :: LCARTESIAN !< True: Basis in cartesian coords; false: in internal coords
+   logical, intent(inout) :: LINTERFACE !< If True a matching with semi-inifinite surfaces must be performed
    !     .. Array Arguments ..
-   integer, dimension(:), allocatable, intent(inout) :: CLS !< Cluster around atomic sites
+   integer, dimension(:), allocatable, intent(inout) :: CLS    !< Cluster around atomic sites
    integer, dimension(:), allocatable, intent(inout) :: LMXC
-   integer, dimension(:), allocatable, intent(inout) :: IRNS !< Position of atoms in the unit cell in units of bravais vectors
+   integer, dimension(:), allocatable, intent(inout) :: IRNS   !< Position of atoms in the unit cell in units of bravais vectors
    integer, dimension(:), allocatable, intent(inout) :: NTCELL !< Index for WS cell
    integer, dimension(:), allocatable, intent(inout) :: REFPOT !< Ref. pot. card  at position
    integer, dimension(:), allocatable, intent(inout) :: INIPOL !< Initial spin polarisation
    integer, dimension(:), allocatable, intent(inout) :: IXIPOL !< Constraint of spin pol.
    integer, dimension(:,:), allocatable, intent(inout) :: KFG
-   double precision, dimension(2), intent(inout) :: VBC !< Potential constants
-   double precision, dimension(3), intent(inout) :: ZPERLEFT !< Vector to define how to repeat the basis of the left host
-   double precision, dimension(3), intent(inout) :: ZPERIGHT !< Vector to define how to repeat the basis of the right host
-   double precision, dimension(3,3), intent(inout) :: BRAVAIS !< Bravais lattice vectors
-   double precision, dimension(:), allocatable, intent(inout) :: ZAT !< Nuclear charge
-   double precision, dimension(:), allocatable, intent(inout) :: MTFAC !< Scaling factor for radius MT
-   double precision, dimension(:), allocatable, intent(inout) :: RMTREF !< Muffin-tin radius of reference system
+   double precision, dimension(2), intent(inout) :: VBC        !< Potential constants
+   double precision, dimension(3), intent(inout) :: ZPERLEFT   !< Vector to define how to repeat the basis of the left host
+   double precision, dimension(3), intent(inout) :: ZPERIGHT   !< Vector to define how to repeat the basis of the right host
+   double precision, dimension(3,3), intent(inout) :: BRAVAIS  !< Bravais lattice vectors
+   double precision, dimension(:), allocatable, intent(inout) :: ZAT      !< Nuclear charge
+   double precision, dimension(:), allocatable, intent(inout) :: MTFAC    !< Scaling factor for radius MT
+   double precision, dimension(:), allocatable, intent(inout) :: RMTREF   !< Muffin-tin radius of reference system
    double precision, dimension(:), allocatable, intent(inout) :: RMTREFAT
    double precision, dimension(:), allocatable, intent(inout) :: FPRADIUS !< R point at which full-potential treatment starts
-   double precision, dimension(:,:), allocatable, intent(inout) :: TLEFT !< Vectors of the basis for the left host
+   double precision, dimension(:,:), allocatable, intent(inout) :: TLEFT  !< Vectors of the basis for the left host
    double precision, dimension(:,:), allocatable, intent(inout) :: TRIGHT !< vectors of the basis for the right host
    double precision, dimension(:,:), allocatable, intent(inout) :: RBASIS !< Position of atoms in the unit cell in units of bravais vectors
    !     variables for spin-orbit/speed of light scaling
@@ -82,106 +163,82 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    character(len=10) :: SOLVER
    character(len=40) :: I12,I13,I19,I25,I40
    character(len=256) :: UIO  ! NCOLIO=256
-   character(len=124), dimension(6) :: TXC
-   !     ..
-   !     .. Scalar Arguments ..
-   integer :: LLY
-   integer :: NINEQ
-   integer :: NSTEPS
-   integer, intent(inout) :: NAEZ !< Number of atoms in unit cell
-   integer, intent(inout) :: NEMB !< Number of 'embedding' positions
-   integer :: NPOLSEMI,N1SEMI,N2SEMI,N3SEMI
-   integer, intent(inout) :: INTERVX !< Number of intervals in x-direction for k-net in IB of the BZ
-   integer, intent(inout) :: INTERVY !< Number of intervals in y-direction for k-net in IB of the BZ
-   integer, intent(inout) :: INTERVZ !< Number of intervals in z-direction for k-net in IB of the BZ
-   integer, intent(inout) :: NREF !< Number of diff. ref. potentials
-   integer, intent(inout) :: NCLS !< Number of reference clusters
-   integer, intent(inout) :: NLBASIS !< Number of basis layers of left host (repeated units)
-   integer, intent(inout) :: NRBASIS !< Number of basis layers of right host (repeated units)
-   integer, intent(inout) :: NLEFT !< Number of repeated basis for left host to get converged  electrostatic potentials
-   integer, intent(inout)  :: NRIGHT !< Number of repeated basis for right host to get converged  electrostatic potentials
-   integer :: NDIM
-   integer :: ICC,ICST
-   integer, intent(inout) :: IFILE !< Unit specifier for potential card
-   integer :: IGF,IMIX,INS,INSREF,IPE,IPF,IPFE,&
-      &        IRM,ISHIFT,ITDBRY,KCOR,&
-      &        KEFG,KFROZN,KHFIELD,KHYP,KPRE,KSHAPE,KTE,KVMAD,&
-      &        KVREL,KWS,KXC,LMMAX,LMPOT,LPOT,KFORCE,&
-      &        NPNT1,NPNT2,NPNT3
-   integer, intent(inout) :: NATYP !< Number of kinds of atoms in unit cell
-   integer, intent(inout) :: LMAX !< Maximum l component in wave function expansion
-   integer, intent(inout) :: NPOL !< Number of Matsubara Pols (EMESHT)
-   integer, intent(inout) :: NSPIN !< Counter for spin directions
-   integer :: NPAN_LOG,NPAN_EQ,NCHEB
-   double precision, intent(inout) :: ALAT !< Lattice constant (in a.u.)
-   double precision :: FSEMICORE,EBOTSEMI,EMUSEMI,TKSEMI,R_LOG
-   double precision :: EMIN,EMAX,ESHIFT,FCM,HFIELD,MIXING,QBOUND
-   double precision, intent(inout) :: TK !< Temperature
-   double precision :: VCONST,ABASIS,BBASIS,CBASIS,RCUTZ,RCUTXY,LAMBDA_XC,TOLRDIF,RMAX,GMAX
-   double complex :: DELTAE  ! LLY Energy difference for numerical derivative
-   logical :: LINIPOL,LRHOSYM,LINTERFACE,LCARTESIAN,LNEW,LATOMINFO
-   !----------------------------------------------------------------
-   !     CPA variables. Routine has been modified to look for
-   !     the token ATOMINFOC and only afterwards, if not found, for the
-   !     old token ATOMINFO. The only necessary extra information
-   !     required is the site IQAT(IATOM) on which the atom IATOM
-   !     is located and the occupancy (concentration) CONC(IATOM).
-   !     The rest of CPA variables are deduced from these two.
-   !     The tolerance for the CPA-cycle and the number of CPA iterations
-   !     can be modified adding the token <CPAINFO> in the input file.
-   !
-   integer :: NCPA     !< ncpa = 0/1 CPA flag
-   integer :: ITCPAMAX !< max. number of CPA iterations
-   double precision  :: CPATOL                !< convergency tolerance for CPA-cycle
-   integer, dimension(:), allocatable :: NOQ  !< number of diff. atom types located
-   integer, dimension(:), allocatable :: IQAT !< the site on which an atom is located on a given site
-   integer, dimension(:), allocatable :: ICPA !< icpa = 0/1 site-dependent CPA flag
-   integer, dimension(:,:), allocatable :: KAOEZ !< atom types located at a given site
-   double precision, dimension(:), allocatable :: CONC !< concentration of a given atom
+   character(len=124), dimension(6), intent(inout) :: TXC
+   !----------------------------------------------------------------------------
+   !> @note CPA variables. Routine has been modified to look for
+   !>     the token ATOMINFOC and only afterwards, if not found, for the
+   !>     old token ATOMINFO. The only necessary extra information
+   !>     required is the site IQAT(IATOM) on which the atom IATOM
+   !>     is located and the occupancy (concentration) CONC(IATOM).
+   !>     The rest of CPA variables are deduced from these two.
+   !>     The tolerance for the CPA-cycle and the number of CPA iterations
+   !>     can be modified adding the token <CPAINFO> in the input file.
+   !----------------------------------------------------------------------------
+   integer, intent(inout) :: NCPA             !< ncpa = 0/1 CPA flag
+   integer, intent(inout) :: ITCPAMAX         !< max. number of CPA iterations
+   double precision, intent(inout)  :: CPATOL !< convergency tolerance for CPA-cycle
+   integer, dimension(:), allocatable, intent(inout) :: NOQ  !< number of diff. atom types located
+   integer, dimension(:), allocatable, intent(inout) :: IQAT !< the site on which an atom is located on a given site
+   integer, dimension(:), allocatable, intent(inout) :: ICPA !< icpa = 0/1 site-dependent CPA flag
+   integer, dimension(:,:), allocatable, intent(inout) :: KAOEZ !< atom types located at a given site
+   double precision, dimension(:), allocatable, intent(inout) :: CONC !< concentration of a given atom
 
    integer :: IO,IA,IQ,IPRINT
    double precision :: SUM
    character(len=3), dimension(0:1) :: CPAFLAG
-   !-----------------------------------------------------------------------
-   !     Variables storing the magnetization direction information.
-   !     QMTET/QMPHI(NAEZD) give the angles to which the magnetic moment
-   !     on a given site is rotated against the z-axis. Default values
-   !     0.0 and 0.0, i.e., magnetic moment parallel to the z-axis.
-   !     The angles are read in after the token RBASISANG is found
-   !     (sought in input file prior to RBASIS token)
-   !
-   !   *  KMROT                                                           *
-   !   *  0: no rotation of the magnetisation                             *
-   !   *  1: individual rotation of the magnetisation for every site      *
-   !   ( see also the routine < FINDGROUP > and ff)
-   !
-   integer :: KMROT !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-   double precision, dimension(:), allocatable :: QMTET
-   double precision, dimension(:), allocatable :: QMPHI
-   ! ----------------------------------------------------------------------
+   !----------------------------------------------------------------------------
+   !> @note Variables storing the magnetization direction information.
+   !>     QMTET/QMPHI(NAEZD) give the angles to which the magnetic moment
+   !>     on a given site is rotated against the z-axis. Default values
+   !>     0.0 and 0.0, i.e., magnetic moment parallel to the z-axis.
+   !>     The angles are read in after the token RBASISANG is found
+   !>     (sought in input file prior to RBASIS token)
+   !>
+   !>   *  KMROT                                                           *
+   !>   *  0: no rotation of the magnetisation                             *
+   !>   *  1: individual rotation of the magnetisation for every site      *
+   !>   ( see also the routine < FINDGROUP > and ff)
+   !----------------------------------------------------------------------------
+   integer, intent(inout) :: KMROT !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+   double precision, dimension(:), allocatable, intent(inout) :: QMTET !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+   double precision, dimension(:), allocatable, intent(inout) :: QMPHI !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+   ! ---------------------------------------------------------------------------
    ! LDA+U
-   integer :: KREADLDAU
-   integer, dimension(:), allocatable :: LOPT
-   double precision, dimension(:), allocatable :: EREFLDAU
-   double precision, dimension(:), allocatable :: UEFF
-   double precision, dimension(:), allocatable :: JEFF
+   integer, intent(inout) :: KREADLDAU !< LDA+U arrays available
+   integer, dimension(:), allocatable, intent(inout) :: LOPT !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+   double precision, dimension(:), allocatable, intent(inout) :: UEFF !< input U parameter for each atom
+   double precision, dimension(:), allocatable, intent(inout) :: JEFF !< input J parameter for each atom
+   double precision, dimension(:), allocatable, intent(inout) :: EREFLDAU !< the energies of the projector's wave functions (REAL)
    ! LDA+U
-   ! ----------------------------------------------------------------------
+   ! ---------------------------------------------------------------------------
+
+   !----------------------------------------------------------------------------
+   ! Local variables
+   !----------------------------------------------------------------------------
    ! IVSHIFT test option
-   integer :: IVSHIFT
    logical :: TEST,OPT
    EXTERNAL TEST,OPT
    !     ..
    !     .. Local Scalars ..
+   integer :: NDIM !< Dimension for the Bravais lattice for slab or bulk (2/3)
    integer :: I,IL,J,IER,IER2,I1,II,IR,IDOSEMICORE
-   integer :: ierr
    double precision :: SOSCALE,CTLSCALE
    double precision :: BRYMIX,STRMIX,TX,TY,TZ
    character(len=43) :: TSHAPE
-   logical :: MANSOC,MANCTL
-   double precision, dimension(10) :: DVEC
+   logical :: LNEW !< Logical variable for old/new treatment of left and right host
+   logical :: MANSOC
+   logical :: MANCTL
+   logical :: LATOMINFO !< Logical variable for old/new treatment of the ATOMINFO
+   !     .. Local Arrays ..
    integer, dimension(:), allocatable :: NASOC
    integer, dimension(:), allocatable :: IMANSOC
+   double precision, dimension(10) :: DVEC
+   character(len=4), dimension(3) :: TSPIN
+   character(len=8), dimension(3) :: TKWS
+   character(len=2), dimension(-2:-1) :: SOCII
+   character(len=43), dimension(0:3) :: TINS
+   character(len=43), dimension(0:3) :: TKCOR
+   character(len=43), dimension(0:2) :: TVREL
    !     ..
    !     .. Data statements ..
    DATA TSPIN/'non-','    ','    '/
@@ -662,8 +719,8 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    !  if (ierr/=0) stop '[rinput13] Error allocating SOCSCALE'
    !  allocate(FPRADIUS(NATYP),stat=ierr)
    !  if (ierr/=0) stop '[rinput13] Error allocating FPRADIUS'
-   allocate(KFG(4,NATYP),stat=ierr)
-   if (ierr/=0) stop '[rinput13] Error allocating KFG'
+   !  allocate(KFG(4,NATYP),stat=ierr)
+   !  if (ierr/=0) stop '[rinput13] Error allocating KFG'
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End of NATYP array allocation
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1978,8 +2035,8 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !  allocate(SOCSCL(KREL*LMAX+1,KREL*NATYP+(1-KREL)),stat=ierr)
       !  if (ierr/=0) stop '[rinput13] Error allocating SOCSCL'
-      allocate(CSCL(KREL*LMAX+1,KREL*NATYP+(1-KREL)),stat=ierr)
-      if (ierr/=0) stop '[rinput13] Error allocating CSCL'
+      !  allocate(CSCL(KREL*LMAX+1,KREL*NATYP+(1-KREL)),stat=ierr)
+      !  if (ierr/=0) stop '[rinput13] Error allocating CSCL'
       !  allocate(IMANSOC(NATYP),stat=ierr)
       !  if (ierr/=0) stop '[rinput13] Error allocating IMANSOC'
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

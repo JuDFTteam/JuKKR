@@ -254,79 +254,108 @@ C parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
       PARAMETER (MAXMSHD=30)
 C     ..
 C     .. Local Scalars ..
-      double precision :: ALAT !< Lattice constant in a.u.
-      double precision :: ALATNEW
+      double precision :: C
+      double precision :: PI
+      double precision :: TK     !< Temperature
+      double precision :: E1     !< Energies needed in EMESHT
+      double precision :: E2     !< Energies needed in EMESHT
+      double precision :: FCM
+      double precision :: E2IN
+      double precision :: ALAT   !< Lattice constant in a.u.
+      double precision :: RMAX   !< Ewald summation cutoff parameter for real space summation
+      double precision :: GMAX   !< Ewald summation cutoff parameter for reciprocal space summation
+      double precision :: RCUTZ  !< Parameter for the screening cluster along the z-direction
+      double precision :: RCUTXY !< Parameter for the screening cluster along the x-y plane
+      double precision :: QBOUND !< Convergence parameter for the potential
+      double precision :: VCONST !< Potential shift
+      double precision :: HFIELD !< External magnetic field, for initial potential shift in spin polarised case
+      double precision :: MIXING !< Magnitude of the mixing parameter
       double precision :: ABASIS !< Scaling factors for rbasis
       double precision :: BBASIS !< Scaling factors for rbasis
       double precision :: CBASIS !< Scaling factors for rbasis
-      double precision :: C
-      double precision :: E1 !< Energies needed in EMESHT
-      double precision :: E2 !< Energies needed in EMESHT
-      double precision :: E2IN
       double precision :: EFERMI
-      double precision :: ESHIFT,FCM
-      double precision :: HFIELD !< External magnetic field, for initial potential shift in spin polarised case
-      double precision :: MIXING !< Magnitude of the mixing parameter
-      double precision :: PI,QBOUND,RCUTXY,RCUTZ
-      double precision :: TK !< Temperature
-      double precision :: VCONST !< Potential shift
-      double precision :: VOLUME0,LAMBDA_XC,RMAX,GMAX
-      integer :: I,I1
-      integer :: ICC !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-      integer :: ICST !< Number of Born approximation
-      integer :: IE,IELAST
-      integer :: IEND !< Number of nonzero gaunt coefficients
-      integer :: IFILE !< Unit specifier for potential card
-      integer :: IGF
-      integer :: IMIX !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
-      integer :: INS !< 0 (MT), 1(ASA), 2(Full Potential)
-      integer :: INSREF !< INS for reference pot. (usual 0)
-      integer :: INTERVX !< Number of intervals in x-direction for k-net in IB of the BZ
-      integer :: INTERVY !< Number of intervals in y-direction for k-net in IB of the BZ
-      integer :: INTERVZ !< Number of intervals in z-direction for k-net in IB of the BZ
-      integer :: INVMOD
-      integer :: IPE,IPF,IPFE !< Not real used, IPFE should be 0
-      integer :: IRM,ISHIFT
-      integer :: ITDBRY !< Number of SCF steps to remember for the Broyden mixing
-      integer :: KCOR,KEFG,KFROZN
-      integer :: KHFELD !< 0,1: no / yes external magnetic field
-      integer :: KHYP,KPRE
-      integer :: KSHAPE !< Exact treatment of WS cell
-      integer :: KTE,KVMAD
-      integer :: KVREL !< 0,1 : non / scalar relat. calculation
-      integer :: KWS !< 0 (MT), 1(ASA)
-      integer :: KXC,LM
-      integer :: LMAX !< Maximum l component in wave function expansion
-      integer :: LMMAX
-      integer :: LMPOT
-      integer :: LPOT !< Maximum l component in potential expansion
-      integer :: MAXMESH
-      integer :: NAEZ !< Number of atoms in unit cell
-      integer :: NATOMIMP,NVIRT
-      integer :: NATYP !< Number of kinds of atoms in unit cell
-      integer :: NCLS
-      integer :: NEMB !< Number of 'embedding' positions
-      integer :: NINEQ !< Number of ineq. positions in  unit cell
-      integer :: NLAYER !< Number of principal layer
-      integer :: NLBASIS !< Number of basis layers of left host (repeated units)
-      integer :: NRBASIS !< Number of basis layers of right host (repeated units)
-      integer :: NLEFT  !< Number of repeated basis for left host to get converged electrostatic potentials
-      integer :: NRIGHT !< number of repeated basis for right host to get converged electrostatic potentials
-      integer :: NPNT1,NPNT2,NPNT3 !< number of E points (EMESHT) for the contour integration
-      integer :: NPOL !< Number of Matsubara Poles (EMESHT)
+      double precision :: ESHIFT
+      double precision :: ALATNEW
+      double precision :: VOLUME0
+      double precision :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+      integer :: I
+      integer :: I1
+      integer :: IE
+      integer :: LM
       integer :: NR
-      integer :: NREF !< Number of diff. ref. potentials
-      integer :: NSPIN !< Counter for spin directions
+      integer :: NS
+      integer :: KTE
+      integer :: KWS      !< 0 (MT), 1(ASA)
+      integer :: KXC      !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+      integer :: IGF      !< Do not print or print (0/1) the KKRFLEX_* files
+      integer :: ICC      !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+      integer :: INS      !< 0 (MT), 1(ASA), 2(Full Potential)
+      integer :: IRM      !< Maximum number of radial points
+      integer :: IPE      !< Not real used, IPFE should be 0
+      integer :: IPF      !< Not real used, IPFE should be 0
+      integer :: IPFE     !< Not real used, IPFE should be 0
+      integer :: KCOR
+      integer :: KEFG
+      integer :: KHYP
+      integer :: KPRE
       integer :: NSRA
-      integer :: NSYMAT
-      integer :: NOFGIJ !< number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
-      integer :: NQCALC
-      integer :: NPAN_LOG,NPAN_EQ,NCHEB
-      integer :: NS, LRECABMAD, IREC
+      integer :: LPOT     !< Maximum l component in potential expansion
+      integer :: IMIX     !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
+      integer :: IEND     !< Number of nonzero gaunt coefficients
+      integer :: ICST     !< Number of Born approximation
+      integer :: NAEZ     !< Number of atoms in unit cell
+      integer :: NEMB     !< Number of 'embedding' positions
+      integer :: LMAX     !< Maximum l component in wave function expansion
+      integer :: NCLS     !< number of reference clusters
+      integer :: IREC
+      integer :: NREF     !< Number of diff. ref. potentials
+      integer :: NPOL     !< Number of Matsubara Poles (EMESHT)
+      integer :: NPNT1    !< number of E points (EMESHT) for the contour integration
+      integer :: NPNT2    !< number of E points (EMESHT) for the contour integration
+      integer :: NPNT3    !< number of E points (EMESHT) for the contour integration
+      integer :: LMMAX
+      integer :: NVIRT
+      integer :: LMPOT
+      integer :: KVMAD
       integer :: ITSCF
+      integer :: NCHEB    !< Number of Chebychev pannels for the new solver
+      integer :: NINEQ    !< Number of ineq. positions in unit cell
+      integer :: NATYP    !< Number of kinds of atoms in unit cell
+      integer :: IFILE    !< Unit specifier for potential card
+      integer :: KVREL    !< 0,1 : non / scalar relat. calculation
+      integer :: NSPIN    !< Counter for spin directions
+      integer :: NLEFT    !< Number of repeated basis for left host to get converged electrostatic potentials
+      integer :: NRIGHT   !< number of repeated basis for right host to get converged electrostatic potentials
+      integer :: INVMOD
+      integer :: KHFELD   !< 0,1: no / yes external magnetic field
+      integer :: ITDBRY   !< Number of SCF steps to remember for the Broyden mixing
+      integer :: INSREF   !< INS for reference pot. (usual 0)
+      integer :: KSHAPE   !< Exact treatment of WS cell
+      integer :: IELAST
+      integer :: ISHIFT
+      integer :: KFROZN
+      integer :: NSYMAT
+      integer :: NOFGIJ   !< number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
+      integer :: NQCALC
+      integer :: KFORCE   !< Calculation of the forces
+      integer :: N1SEMI   !< Number of energy points for the semicore contour
+      integer :: N2SEMI   !< Number of energy points for the semicore contour
+      integer :: N3SEMI   !< Number of energy points for the semicore contour
+      integer :: NLAYER   !< Number of principal layer
+      integer :: NLBASIS  !< Number of basis layers of left host (repeated units)
+      integer :: NRBASIS  !< Number of basis layers of right host (repeated units)
+      integer :: INTERVX  !< Number of intervals in x-direction for k-net in IB of the BZ
+      integer :: INTERVY  !< Number of intervals in y-direction for k-net in IB of the BZ
+      integer :: INTERVZ  !< Number of intervals in z-direction for k-net in IB of the BZ
+      integer :: MAXMESH
+      integer :: NPAN_EQ  !< Variables for the pannels for the new solver
+      integer :: NPAN_LOG !< Variables for the pannels for the new solver
+      integer :: NATOMIMP
+      integer :: NPOLSEMI !< Number of poles for the semicore contour
       integer :: SCFSTEPS !< number of scf iterations
-      integer :: KFORCE
-      integer :: IESEMICORE,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IDOSEMICORE
+      integer :: LRECABMAD
+      integer :: IESEMICORE
+      integer :: IDOSEMICORE
 C     ..
 C     .. Local Arrays ..
       double complex, dimension(:), allocatable :: EZ
@@ -336,16 +365,19 @@ C     .. Local Arrays ..
       double complex, dimension(:,:), allocatable :: DSYMLL1
       double complex, dimension(:,:,:,:,:), allocatable :: LEFTTINVLL
       double complex, dimension(:,:,:,:,:), allocatable :: RIGHTTINVLL
-      double precision :: TOLRDIF
+      double precision :: R_LOG
+      double precision :: TKSEMI
+      double precision :: TOLRDIF !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+      double precision :: EMUSEMI
+      double precision :: EBOTSEMI
       double precision :: FSEMICORE
-      double precision :: EBOTSEMI,EMUSEMI,TKSEMI,R_LOG
-      double precision, dimension(2) :: VBC !< Potential constants
-      double precision, dimension(3) :: ZPERIGHT !< Vector to define how to repeat the basis of the right host
-      double precision, dimension(3) :: ZPERLEFT !< Vector to define how to repeat the basis of the left host
-      double precision, dimension(3,3) :: RECBV  !< Reciprocal basis vectors
+      double precision, dimension(2) :: VBC       !< Potential constants
+      double precision, dimension(3) :: ZPERIGHT  !< Vector to define how to repeat the basis of the right host
+      double precision, dimension(3) :: ZPERLEFT  !< Vector to define how to repeat the basis of the left host
+      double precision, dimension(3,3) :: RECBV   !< Reciprocal basis vectors
       double precision, dimension(3,3) :: BRAVAIS !< Bravais lattice vectors
       double precision, dimension(64,3,3) :: RSYMAT
-      double precision, dimension(:), allocatable :: A !< Contants for exponential R mesh
+      double precision, dimension(:), allocatable :: A !< Constants for exponential R mesh
       double precision, dimension(:), allocatable :: B
       double precision, dimension(:), allocatable :: WG !< Integr. weights for Legendre polynomials
       double precision, dimension(:), allocatable :: GSH
@@ -365,7 +397,7 @@ C     .. Local Arrays ..
       double precision, dimension(:,:), allocatable :: DRDI !< Derivative dr/di
       double precision, dimension(:,:), allocatable :: DROR
       double precision, dimension(:,:), allocatable :: CLEB !< GAUNT coefficients (GAUNT)
-      double precision, dimension(:,:), allocatable :: VISP
+      double precision, dimension(:,:), allocatable :: VISP !< Spherical part of the potential
       double precision, dimension(:,:), allocatable :: CSCL
       double precision, dimension(:,:), allocatable :: RNEW
       double precision, dimension(:,:), allocatable :: RATOM
@@ -378,14 +410,14 @@ C     .. Local Arrays ..
       double precision, dimension(:,:), allocatable :: CMOMHOST !< Charge moments of each atom of the (left/right) host
       double precision, dimension(:,:), allocatable :: RPAN_INTERVALL
       double precision, dimension(:,:,:), allocatable :: RS
-      double precision, dimension(:,:,:), allocatable :: YRG !< Spherical harmonics (GAUNT2)
-      double precision, dimension(:,:,:), allocatable :: VINS
+      double precision, dimension(:,:,:), allocatable :: YRG  !< Spherical harmonics (GAUNT2)
+      double precision, dimension(:,:,:), allocatable :: VINS !< Non-spherical part of the potential
       double precision, dimension(:,:,:), allocatable :: RCLS !< Real space position of atom in cluster
       double precision, dimension(:,:,:), allocatable :: RROT
       integer, dimension(NSYMAXD) :: ISYMINDEX
-      integer, dimension(:), allocatable :: CLS !< Cluster around atomic sites
-      integer, dimension(:), allocatable :: IRC !< R point for potential cutting
-      integer, dimension(:), allocatable :: IMT !< R point at MT radius
+      integer, dimension(:), allocatable :: CLS  !< Cluster around atomic sites
+      integer, dimension(:), allocatable :: IRC  !< R point for potential cutting
+      integer, dimension(:), allocatable :: IMT  !< R point at MT radius
       integer, dimension(:), allocatable :: NFU
       integer, dimension(:), allocatable :: NSH1 !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
       integer, dimension(:), allocatable :: NSH2 !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
@@ -394,10 +426,10 @@ C     .. Local Arrays ..
       integer, dimension(:), allocatable :: IRNS !< Position of atoms in the unit cell in units of bravais vectors
       integer, dimension(:), allocatable :: IRWS !< R point at WS radius
       integer, dimension(:), allocatable :: KMESH
-      integer, dimension(:), allocatable :: IRMIN !< Max R for spherical treatment
-      integer, dimension(:), allocatable :: LOFLM !< l of lm=(l,m) (GAUNT)
-      integer, dimension(:), allocatable :: NACLS !< Number of atoms in cluster
-      integer, dimension(:), allocatable :: NCORE !< Number of core states
+      integer, dimension(:), allocatable :: IRMIN  !< Max R for spherical treatment
+      integer, dimension(:), allocatable :: LOFLM  !< l of lm=(l,m) (GAUNT)
+      integer, dimension(:), allocatable :: NACLS  !< Number of atoms in cluster
+      integer, dimension(:), allocatable :: NCORE  !< Number of core states
       integer, dimension(:), allocatable :: IMAXSH
       integer, dimension(:), allocatable :: NSHELL !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
       integer, dimension(:), allocatable :: ICHECK
@@ -434,8 +466,10 @@ C     .. Local Arrays ..
       integer, dimension(:,:), allocatable :: ITITLE
       integer, dimension(:,:), allocatable :: IPAN_INTERVALL
       integer, dimension(:,:,:), allocatable :: JEND !< Pointer array for icleb()
-      logical :: LCARTESIAN
-      logical :: LINIPOL,LINTERFACE,LRHOSYM
+      logical :: LRHOSYM
+      logical :: LINIPOL    !< True: Initial spin polarization; false: no initial spin polarization
+      logical :: LCARTESIAN !< True: Basis in cartesian coords; false: in internal coords
+      logical :: LINTERFACE !< If True a matching with semi-inifinite surfaces must be performed
       logical, dimension(2) :: VACFLAG
       character(len=10) :: SOLVER
       character(len=40) :: I12,I13,I19,I25,I40
@@ -445,8 +479,8 @@ C=======================================================================
 C     Magnetisation angles -- description see RINPUT13
 C
       integer :: KMROT !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-      double precision, dimension(:), allocatable :: QMTET
-      double precision, dimension(:), allocatable :: QMPHI
+      double precision, dimension(:), allocatable :: QMTET !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+      double precision, dimension(:), allocatable :: QMPHI !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
 C     CPA variables
       integer :: NCPA !< ! NCPA = 0/1 CPA flag
       integer :: ITCPAMAX !< Max. number of CPA iterations
@@ -479,8 +513,8 @@ C-----------------------------------------------------------------------
       double complex, dimension(:,:,:), allocatable :: DROTQ !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
       integer :: J
       integer :: ISVATOM,NVATOM
-      integer, dimension(:), allocatable :: ZREL !< atomic number (cast integer)
-      integer, dimension(:), allocatable :: JWSREL !< index of the WS radius
+      integer, dimension(:), allocatable :: ZREL    !< atomic number (cast integer)
+      integer, dimension(:), allocatable :: JWSREL  !< index of the WS radius
       integer, dimension(:), allocatable :: IRSHIFT !< shift of the REL radial mesh with respect no NREL
       integer, dimension(:,;), allocatable :: NRREL
       integer, dimension(:,:,;), allocatable :: IRREL
@@ -490,7 +524,7 @@ C-----------------------------------------------------------------------
       double precision, dimension(:,:), allocatable :: BTREL !< magnetic field
       double precision, dimension(:,:), allocatable :: RMREL !< radial mesh
       double precision, dimension(:,:), allocatable :: DRDIREL !< derivative of radial mesh
-      double precision, dimension(:,:), allocatable :: R2DRDIREL !< r**2 * drdi
+      double precision, dimension(:,:), allocatable :: R2DRDIREL !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
       double precision, dimension(:,:,:), allocatable :: THESME
       logical :: PARA
       logical, dimension(NSYMAXD) :: SYMUNITARY !< unitary/antiunitary symmetry flag
