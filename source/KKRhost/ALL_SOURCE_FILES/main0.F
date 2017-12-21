@@ -1,3 +1,9 @@
+      !-------------------------------------------------------------------------
+      ! MODULE: MOD_MAIN0
+      !> @brief Wrapper module for the reading and setup of the JM-KKR program
+      !> @author Philipp Russman, Phivos Marvopoulous, R. Zeller, Bernd Zimmermann
+      !> and many others ...
+      !-------------------------------------------------------------------------
       module MOD_MAIN0
 #ifdef CPP_HYBRID
 #  define cpp_ompstuff
@@ -12,7 +18,7 @@
       use mod_timing
 #endif
       use mod_create_newmesh
-
+      use memoryhandling
       implicit none
 
       contains
@@ -222,14 +228,15 @@ C ======================================================================VINS()
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
-C     .. Parameters ..
-C parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
+!     .. Parameters ..
+!> @note parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
+!
       INTEGER NEMBD1
       PARAMETER (NEMBD1=NEMBD+1)
       INTEGER NPOTD
-      PARAMETER (NPOTD= (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYPD)
+      PARAMETER (NPOTD =(2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYPD)
       INTEGER LMMAXD
-      PARAMETER (LMMAXD= (KREL+KORBIT+1)*(LMAXD+1)**2)
+      PARAMETER (LMMAXD=(KREL+KORBIT+1)*(LMAXD+1)**2)
       INTEGER NSPINDD
       PARAMETER (NSPINDD=NSPIND-KORBIT)
       INTEGER LMGF0D
@@ -252,8 +259,8 @@ C parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
       PARAMETER (NSYMAXD=48)
       INTEGER MAXMSHD
       PARAMETER (MAXMSHD=30)
-C     ..
-C     .. Local Scalars ..
+      !..
+      !.. Local Scalars ..
       double precision :: C
       double precision :: PI
       double precision :: TK     !< Temperature
@@ -356,13 +363,13 @@ C     .. Local Scalars ..
       integer :: LRECABMAD
       integer :: IESEMICORE
       integer :: IDOSEMICORE
-C     ..
-C     .. Local Arrays ..
+      !..
+      !.. Local Arrays ..
       double complex, dimension(:), allocatable :: EZ
       double complex, dimension(:), allocatable :: DEZ
       double complex, dimension(:), allocatable :: WEZ
-      double complex, dimension(:,:), allocatable :: DSYMLL
-      double complex, dimension(:,:), allocatable :: DSYMLL1
+      double complex, dimension(:,:,:), allocatable :: DSYMLL
+      double complex, dimension(:,:,:), allocatable :: DSYMLL1
       double complex, dimension(:,:,:,:,:), allocatable :: LEFTTINVLL
       double complex, dimension(:,:,:,:,:), allocatable :: RIGHTTINVLL
       double precision :: R_LOG
@@ -390,7 +397,7 @@ C     .. Local Arrays ..
       double precision, dimension(:), allocatable :: RMTREF !< Muffin-tin radius of reference system
       double precision, dimension(:), allocatable :: RMTREFAT
       double precision, dimension(:), allocatable :: FPRADIUS !< R point at which full-potential treatment starts
-      double precision, dimension(:), allocatable :: SOCSCALE
+      double precision, dimension(:), allocatable :: SOCSCALE !< Spin-orbit scaling
       double precision, dimension(:,:), allocatable :: R !< Radial mesh ( in units a Bohr)
       double precision, dimension(:,:), allocatable :: S
       double precision, dimension(:,:), allocatable :: RR !< Set of real space vectors (in a.u.)
@@ -398,7 +405,7 @@ C     .. Local Arrays ..
       double precision, dimension(:,:), allocatable :: DROR
       double precision, dimension(:,:), allocatable :: CLEB !< GAUNT coefficients (GAUNT)
       double precision, dimension(:,:), allocatable :: VISP !< Spherical part of the potential
-      double precision, dimension(:,:), allocatable :: CSCL
+      double precision, dimension(:,:), allocatable :: CSCL !< Speed of light scaling
       double precision, dimension(:,:), allocatable :: RNEW
       double precision, dimension(:,:), allocatable :: RATOM
       double precision, dimension(:,:), allocatable :: ECORE !< Core energies
@@ -424,7 +431,7 @@ C     .. Local Arrays ..
       integer, dimension(:), allocatable :: LMXC
       integer, dimension(:), allocatable :: IPAN !< Number of panels in non-MT-region
       integer, dimension(:), allocatable :: IRNS !< Position of atoms in the unit cell in units of bravais vectors
-      integer, dimension(:), allocatable :: IRWS !< R point at WS radius
+      integer, dimension(:), allocatable :: IRWS   !< R point at WS radius
       integer, dimension(:), allocatable :: KMESH
       integer, dimension(:), allocatable :: IRMIN  !< Max R for spherical treatment
       integer, dimension(:), allocatable :: LOFLM  !< l of lm=(l,m) (GAUNT)
@@ -432,7 +439,6 @@ C     .. Local Arrays ..
       integer, dimension(:), allocatable :: NCORE  !< Number of core states
       integer, dimension(:), allocatable :: IMAXSH
       integer, dimension(:), allocatable :: NSHELL !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
-      integer, dimension(:), allocatable :: ICHECK
       integer, dimension(:), allocatable :: INIPOL !< Initial spin polarisation
       integer, dimension(:), allocatable :: IXIPOL !< Constraint of spin pol.
       integer, dimension(:), allocatable :: REFPOT !< Ref. pot. card  at position
@@ -441,7 +447,7 @@ C     .. Local Arrays ..
       integer, dimension(:), allocatable :: IOFGIJ !< Linear pointers, similar to NSH1/NSH2 but giving the actual index of sites I,J = 1,NATOMIMP in the cluster
       integer, dimension(:), allocatable :: JOFGIJ !< Linear pointers, similar to NSH1/NSH2 but giving the actual index of sites I,J = 1,NATOMIMP in the cluster
       integer, dimension(:), allocatable :: ATOMIMP
-      integer, dimension(:), allocatable :: IJTABSH !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
+      integer, dimension(:), allocatable :: IJTABSH  !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
       integer, dimension(:), allocatable :: IJTABSYM !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
       integer, dimension(:), allocatable :: NPAN_TOT
       integer, dimension(:), allocatable :: IJTABCALC !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
@@ -464,6 +470,7 @@ C     .. Local Arrays ..
       integer, dimension(:,:), allocatable :: IFUNM
       integer, dimension(:,:), allocatable :: IFUNM1
       integer, dimension(:,:), allocatable :: ITITLE
+      integer, dimension(:,:), allocatable :: ICHECK
       integer, dimension(:,:), allocatable :: IPAN_INTERVALL
       integer, dimension(:,:,:), allocatable :: JEND !< Pointer array for icleb()
       logical :: LRHOSYM
@@ -474,38 +481,38 @@ C     .. Local Arrays ..
       character(len=10) :: SOLVER
       character(len=40) :: I12,I13,I19,I25,I40
       character(len=124), dimension(6) :: TXC
-C
-C=======================================================================
-C     Magnetisation angles -- description see RINPUT13
-C
+!
+!-------------------------------------------------------------------------------
+!     Magnetisation angles -- description see RINPUT13
+!
       integer :: KMROT !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
       double precision, dimension(:), allocatable :: QMTET !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
       double precision, dimension(:), allocatable :: QMPHI !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
-C     CPA variables
-      integer :: NCPA !< ! NCPA = 0/1 CPA flag
+!-------------------------------------------------------------------------------
+!     CPA variables
+      integer :: NCPA     !< ! NCPA = 0/1 CPA flag
       integer :: ITCPAMAX !< Max. number of CPA iterations
-      integer, dimension(:), allocatable :: NOQ !< Number of diff. atom types located
+      integer, dimension(:), allocatable :: NOQ  !< Number of diff. atom types located
       integer, dimension(:), allocatable :: IQAT !< The site on which an atom is located on a given site
       integer, dimension(:), allocatable :: ICPA !< ICPA = 0/1 site-dependent CPA flag
-C
-C=======================================================================
-C     ITERMDIR running option introduced Apr 2003 -- Munich
-C              (H. Ebert + V. Popescu) allows a self-consistent
-C              determination of the magnetic configuration in REL mode
-C
+!
+!-------------------------------------------------------------------------------
+!> @note ITERMDIR running option introduced Apr 2003 -- Munich
+!>              (H. Ebert + V. Popescu) allows a self-consistent
+!>              determination of the magnetic configuration in REL mode
+!-------------------------------------------------------------------------------
       double precision, dimension(:), allocatable :: QMGAM
       double precision, dimension(:,:), allocatable :: QMGAMTAB
       double precision, dimension(:,:), allocatable :: QMPHITAB
       double precision, dimension(:,:), allocatable :: QMTETTAB
-C=======================================================================
-C
-C     changes for impurity 20/02/2004 -- v.popescu according to
-C                                        n.papanikolaou VINS()
-C
+!-------------------------------------------------------------------------------
+!> @note changes for impurity 20/02/2004 -- v.popescu according to
+!>                                          n.papanikolaou VINS()
+!-------------------------------------------------------------------------------
       integer, dimension(:), allocatable :: HOSTIMP
       double precision :: CPATOL !< Convergency tolerance for CPA-cycle
       double precision, dimension(:), allocatable :: CONC !< Concentration of a given atom
-C-----------------------------------------------------------------------
+!-------------------------------------------------------------------------------
       double complex, dimension(:,:), allocatable :: RC !< NREL REAL spher. harm. >  CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
       double complex, dimension(:,:), allocatable :: CREL !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
       double complex, dimension(:,:), allocatable :: RREL !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
@@ -516,8 +523,8 @@ C-----------------------------------------------------------------------
       integer, dimension(:), allocatable :: ZREL    !< atomic number (cast integer)
       integer, dimension(:), allocatable :: JWSREL  !< index of the WS radius
       integer, dimension(:), allocatable :: IRSHIFT !< shift of the REL radial mesh with respect no NREL
-      integer, dimension(:,;), allocatable :: NRREL
-      integer, dimension(:,:,;), allocatable :: IRREL
+      integer, dimension(:,:), allocatable :: NRREL
+      integer, dimension(:,:,:), allocatable :: IRREL
       double precision :: ZATTEMP
       double precision, dimension(0:100) :: FACT
       double precision, dimension(:,:), allocatable :: VTREL !< potential (spherical part)
@@ -528,29 +535,31 @@ C-----------------------------------------------------------------------
       double precision, dimension(:,:,:), allocatable :: THESME
       logical :: PARA
       logical, dimension(NSYMAXD) :: SYMUNITARY !< unitary/antiunitary symmetry flag
-C
-C-----------------------------------------------------------------------
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-C LDA+U LDA+U LDA+U     ph. mavropoulos according to Munich SPR-KKR
-C                       h. ebert
-C      input:
-C            UEFF, JEFF : input U,J parameters for each atom
-C            EREFLDAU(1..NATYPD) : the energies of the projector's wave
-C                                  functions (REAL)
-C            LOPT(1..NATYPD): angular momentum QNUM for the atoms on
-C                             which LDA+U should be applied (-1 to
-C                             switch it OFF)
-C      iteration index ITRUNLDAU
-C      integer flag perform LDA+U IDOLDAU
-C      integer flag LDA+U arrays available KREADLDAU
-C      NTLDAU - number of atoms on which LDA+U is applied (<=NATYP)
-C      arrays: ULDAU - calculated Coulomb matrix elements (EREFLDAU)
-C              WLDAU - potential matrix
-C              ITLDAU - integer pointer connecting the NTLDAU atoms to
-C                       their corresponding index in the unit cell
-C
-      integer :: NTLDAU  !< number of atoms on which LDA+U is applied
-      integer :: IDOLDAU !< flag to perform LDA+U
+!
+!-------------------------------------------------------------------------------
+! LDA+U LDA+U LDA+U
+!-------------------------------------------------------------------------------
+!> @note ph. mavropoulos according to Munich SPR-KKR
+!>       h. ebert
+!>      input:
+!>            UEFF, JEFF : input U,J parameters for each atom
+!>            EREFLDAU(1..NATYPD) : the energies of the projector's wave
+!>                                  functions (REAL)
+!>            LOPT(1..NATYPD): angular momentum QNUM for the atoms on
+!>                             which LDA+U should be applied (-1 to
+!>                             switch it OFF)
+!>      iteration index ITRUNLDAU
+!>      integer flag perform LDA+U IDOLDAU
+!>      integer flag LDA+U arrays available KREADLDAU
+!>      NTLDAU - number of atoms on which LDA+U is applied (<=NATYP)
+!>      arrays: ULDAU - calculated Coulomb matrix elements (EREFLDAU)
+!>              WLDAU - potential matrix
+!>              ITLDAU - integer pointer connecting the NTLDAU atoms to
+!>                       their corresponding index in the unit cell
+!
+!-------------------------------------------------------------------------------
+      integer :: NTLDAU    !< number of atoms on which LDA+U is applied
+      integer :: IDOLDAU   !< flag to perform LDA+U
       integer :: ITRUNLDAU !< iteration index
       integer :: KREADLDAU !< LDA+U arrays available
       integer, dimension(:), allocatable :: LOPT !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
@@ -558,46 +567,49 @@ C
       double precision, dimension(:), allocatable :: UEFF !< input U parameter for each atom
       double precision, dimension(:), allocatable :: JEFF !< input J parameter for each atom
       double precision, dimension(:), allocatable :: EREFLDAU !< the energies of the projector's wave functions (REAL)
-C     ..
-C     .. distinguish between spin-dependent and spin-independent
-C     .. quantities
+      !..
+      !.. distinguish between spin-dependent and spin-independent
+      !.. quantities
       double precision, dimension(:,:,:,:), allocatable :: WLDAU !< potential matrix
       double precision, dimension(:,:,:,:,:), allocatable :: ULDAU !< calculated Coulomb matrix elements (EREFLDAU)
       double complex, dimension(:,:), allocatable :: PHILDAU
-C LDA+U LDA+U LDA+U
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+!-------------------------------------------------------------------------------
+! LDA+U LDA+U LDA+U
+!-------------------------------------------------------------------------------
 ! Lloyds formula
       integer :: LLY !< LLY <> 0 : apply Lloyds formula
       double complex :: DELTAE  !< Energy difference for numerical derivative
 
-C
-C ruess: IVSHIFT test option
+!
+! ruess: IVSHIFT test option
       integer :: IVSHIFT
 
       !allocations:
       double precision, dimension(:,:,:), allocatable :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
       double precision, dimension(:,:,:), allocatable :: THETASNEW
-      integer :: ierr
+      integer :: ierr,i_stat
 
 #ifdef cpp_ompstuff
 !     .. OMP ..
       integer nth, ith          ! total number of threads, thread number
 #endif
 
-C     ..
-C     .. External Functions ..
+!     ..
+!     .. External Functions ..
       logical :: OPT,TEST
       external :: OPT,TEST
-C     ..
-C     .. External Subroutines ..
+!     ..
+!     .. External Subroutines ..
       external :: BZKINT0,CINIT,CLSGEN_TB,DECIOPT,EPATHTB,GAUNT,GAUNT2,
      +         GFMASK,LATTIX99,RINIT,RINPUT13,SCALEVEC,
      +         STARTB1,STARTLDAU,TESTDIM,SHAPE
-C     ..
-C     .. Intrinsic Functions ..
+
+      external :: allocate_potential
+!     ..
+!     .. Intrinsic Functions ..
       intrinsic :: ATAN,DABS,DBLE,DIMAG,LOG,MAX,SQRT
-C     ..
-C     ..
+!     ..
+!     ..
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 !Write version info:
       WRITE(*,2004) 'Screened Korringa-Kohn-Rostoker ',
@@ -656,8 +668,10 @@ C
       IDOLDAU = 0
       NOFGIJ = 0
       ! allocate and initialize testc and optc in t_params for run and test options
-      ALLOCATE(t_params%TESTC(32),t_params%OPTC(32), stat=ierr) !CHARACTER*8
-      if(ierr/=0) stop '[main0] Error allocating testc etc.'
+      allocate(t_params%OPTC(32), stat=i_stat) !CHARACTER*8
+      call memocc(i_stat,product(shape(t_params%OPTC))*kind(t_params%OPTC),'t_params%OPTC','main0')
+      ALLOCATE(t_params%TESTC(32), stat=i_stat)
+      call memocc(i_stat,product(shape(t_params%TESTC))*kind(t_params%TESTC),'t_params%TESTC','main0')
       t_params%OPTC(1:32) =  '        '
       t_params%TESTC(1:32) = '        '
 C
@@ -687,6 +701,62 @@ C
      &              LCARTESIAN,BRAVAIS,RMAX,GMAX)
 C
 C ================================================ deal with the lattice
+
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! Allocation calls
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !> @note Jonathan Chico: The main idea here is to allocate all the needed arrays so that the inc.p
+      !> file becomes irrelevant. In principle the philosophy would be to modularize
+      !> the code such that each module has its own global variables and allocation routine
+      !> e.g. a module called CPA_control could have defined all the needed CPA variables
+      !> as well as the allocation calls, this module would be used in the needed routines
+      !> and the arrays would only be allocated if a CPA calculation is actually performed
+      !> in the current way ALL arrays are allocated which could cause an unnecessary memory
+      !> consumption
+      !
+      ! Call to allocate the arrays associated with the potential
+      allocate_potential(1,NAEZ,NEMB,IRMD,NATYP,NPOTD,IPAND,NFUND,
+     &   LMXSPD,LMPOTD,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,
+     &   LMSP,LMSP1,IRCUT,LCORE,LLMSP,ITITLE,FPRADIUS,
+     &   VISP,ECORE,VINS)
+      ! Call to allocate the arrays associated with the LDA+U potential
+      call allocate_ldau_potential(1,IRMD,NATYP,MMAXD,NSPIN,ITLDAU,
+     & WLDAU,ULDAU,PHILDAU)
+      ! Call to allocate the arrays associated with the energy
+      call allocate_energies(1,IEMXD,EZ,DEZ,WEZ)
+      ! Call to allocate the arrays associated with the relativistic corrections
+      call allocate_relativistic(1,KREL,IRMD,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,
+     &   VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,QMGAM,QMGAMTAB,QMPHITAB,
+     &   QMTETTAB)
+      ! Call to allocate the arrays associated with the relativistic transformations
+      call allocate_rel_transformations(1,LMMAXD,NRREL,IRREL,RC,CREL,RREL,SRREL)
+      ! Call to allocate the arrays associated with the clusters
+      call allocate_clusters(1,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,
+     &   LMPOTD,NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,
+     &   ICLEB,JEND,RATOM,
+     &   RCLSIMP,CMOMHOST,RCLS)
+      ! Call to allocate the arrays associated with the expansion of the Green function
+      call allocate_expansion(1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,
+     &   NCHEBD,LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
+      ! Call to allocate the arrays associated with the integration mesh
+      call allocate_mesh(1,IRMD,NATYP,A,B,R,DRDI)
+      ! Call to allocate the arrays associated with the pannels for the new solver
+      call allocate_pannels(1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQNEW,NPAN_LOGNEW,
+     &   IPAN_INTERVALL,RPAN_INTERVALL)
+      ! Call to allocate misc arrays
+      call allocate_misc(1,NRD,IRMD,IRID,LMAX,NAEZ,NATYP,NFUND,NREFD,IEMXD,
+     &   NTOTD,NSHELD,LMMAXD,NEMBD1,NCHEBD,NCELLD,LMXSPD,NSPINDD,
+     &   NSYMAXD,NPRINCD,IFUNM,
+     &   IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,
+     &   DSYMLL1,LEFTTINVLL,
+     &   RIGHTTINVLL)
+      ! Call to allocate the arrays associated with the Green function
+      call allocate_green(flag,NAEZ,IEMXD,NGSHD,NSHELD,LMPOTD,NOFGIJD,ISH,JSH,
+     &   KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM,GSH)
+
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! End of allocation calls
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       CALL LATTIX99(LINTERFACE,ALAT,NATYP,NAEZ,CONC,RWS,BRAVAIS,
      &              RECBV,VOLUME0,RR,NR,NRD,NATYPD)
@@ -1305,13 +1375,40 @@ C
  9070 FORMAT (5X,'INFO:  Output of cluster Green function at E Fermi')
  9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
 
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! deallocate unused arrays
-      deallocate(thetas, thetasnew, thesme, vins, stat=ierr)
-      if(ierr/=0) stop '[main0] Error deallocating thetas etc.'
-      deallocate(LEFTTINVLL, RIGHTTINVLL, stat=ierr)
-      if(ierr/=0) stop '[main0] Error deallocating lefttinvll etc.'
-      deallocate(ISH, JSH, stat=ierr)
-      if(ierr/=0) stop '[main0] Error deallocating ISH and JSH'
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      i_all=-product(shape(THETAS))*kind(THETAS)
+      deallocate(THETAS,stat=i_stat)
+      call memocc(i_stat,i_all,'THETAS','main0')
+
+      i_all=-product(shape(THETASNEW))*kind(THETASNEW)
+      deallocate(THETASNEW,stat=i_stat)
+      call memocc(i_stat,i_all,'THETASNEW','main0')
+
+      i_all=-product(shape(VINS))*kind(VINS)
+      deallocate(VINS,stat=i_stat)
+      call memocc(i_stat,i_all,'VINS','main0')
+
+      i_all=-product(shape(THETASME))*kind(THETASME)
+      deallocate(THETASME,stat=i_stat)
+      call memocc(i_stat,i_all,'THETASME','main0')
+
+      i_all=-product(shape(LEFTTINVLL))*kind(LEFTTINVLL)
+      deallocate(LEFTTINVLL,stat=i_stat)
+      call memocc(i_stat,i_all,'LEFTTINVLL','main0')
+
+      i_all=-product(shape(RIGHTTINVLL))*kind(RIGHTTINVLL)
+      deallocate(LEFTTINVLL,stat=i_stat)
+      call memocc(i_stat,i_all,'RIGHTTINVLL','main0')
+
+      i_all=-product(shape(ISH))*kind(ISH)
+      deallocate(ISH,stat=i_stat)
+      call memocc(i_stat,i_all,'ISH','main0')
+
+      i_all=-product(shape(JSH))*kind(JSH)
+      deallocate(JSH,stat=i_stat)
+      call memocc(i_stat,i_all,'JSH','main0')
 
       END SUBROUTINE !MAIN0
 

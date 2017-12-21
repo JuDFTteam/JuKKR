@@ -28,6 +28,8 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    use mod_wunfiles, only: t_params
    use mod_save_wavefun, only: t_wavefunctions
    use mod_version_info
+   use memoryhandling
+   use Profiling
    implicit none
    !     ..
    !     .. Parameters
@@ -157,8 +159,8 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    double precision, dimension(:,:), allocatable, intent(inout) :: TRIGHT !< vectors of the basis for the right host
    double precision, dimension(:,:), allocatable, intent(inout) :: RBASIS !< Position of atoms in the unit cell in units of bravais vectors
    !     variables for spin-orbit/speed of light scaling
-   double precision, dimension(:), allocatable, intent(inout) :: SOCSCALE
-   double precision, dimension(:,:), allocatable, intent(inout) :: CSCL
+   double precision, dimension(:), allocatable, intent(inout) :: SOCSCALE !< Spin-orbit scaling
+   double precision, dimension(:,:), allocatable, intent(inout) :: CSCL   !< Speed of light scaling
    double precision, dimension(:,:), allocatable, intent(inout) :: SOCSCL
    character(len=10) :: SOLVER
    character(len=40) :: I12,I13,I19,I25,I40
@@ -405,68 +407,9 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       WRITE(111,*) 'Default CARTESIAN= ',LCARTESIAN
    ENDIF
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Allocate NAEZ dependent variables
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !  allocate(QMTET(NAEZ),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating QMTET'
-   !  allocate(QMPHI(NAEZ),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating QMPHI'
-   !  allocate(RMTREF(NAEZ),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating RMTREF'
-   !  allocate(RBASIS(3,NAEZ),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating RBASIS'
-   !  RMTREF(:) = -1.D0
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! End of NAEZ dependent variables
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-   ! Basis atoms
-   WRITE(111,FMT='(A16)') '<RBASIS>        '
-   DO I=1,NAEZ
-      CALL IoInput('<RBASIS>        ',UIO,I,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
-         WRITE(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
-      ELSE
-         IER=0
-         CALL IoInput('RBASIS          ',UIO,I,7,IER)
-         IF (IER.EQ.0) THEN
-            READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
-            WRITE(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
-         ELSE
-            WRITE(*,*) 'RINPUT13: Keyword <RBASIS> or RBASIS not found. Stopping.'
-            STOP 'RINPUT13: RBASIS'
-         ENDIF
-      ENDIF
-   ENDDO                         ! I=1,NAEZ
-   CALL IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
-
-   DVEC(1:3) = 1.D0
-   CALL IoInput('BASISCALE       ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) (DVEC(I),I=1,3)
-      WRITE(111,FMT='(A10,3E12.4)') 'BASISCALE=',DVEC(1:3)
-   ELSE
-      WRITE(111,FMT='(A18,3E12.4)') 'Default BASISCALE=',DVEC(1:3)
-   ENDIF
-
-   CALL IDREALS(DVEC(1),3,IPRINT)
-   ABASIS = DVEC(1)
-   BBASIS = DVEC(2)
-   CBASIS = DVEC(3)
-
-   WRITE(1337,2019) ABASIS,BBASIS,CBASIS
-   WRITE(1337,2107)
-   WRITE(1337,2014) ALAT
-
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Begin read left- and right-host information in 2d-case.
-   ! Set up the embeding positions
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+   ! This call needs to be done before the rest as one needs to find out the value
+   ! of NEMB to be able to allocate several arrays
    IF (LINTERFACE) THEN
-
       WRITE(1337,9410)
 
       NRIGHT = 10
@@ -519,6 +462,13 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
 
       NEMB = NLBASIS + NRBASIS
       WRITE(1337,*) 'Number of embedded atoms NEMB=NLBASIS + NRBASIS=',NEMB
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! Allocate the right and left hosts for slab calculation
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      call allocate_semi_inf_host(flag,NEMB,TLEFT,TRIGHT)
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! End of allocation of the right and left hosts for slab calculation
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       IF(NEMB.GT.NEMBD) THEN
          write(6,*) 'Please, increase the parameter nembd (',nembd,') in inc.p to',nemb
          STOP 'ERROR in NEMBD.'
@@ -551,30 +501,68 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
          WRITE(*,*) 'rinput13: RIGHBASIS or <RBRIGHT> not found in inputcard'
          STOP 'rinput13: RIGHBASIS or <RBRIGHT> not found in inputcard'
       ENDIF
+   ENDIF
 
-      ! In leftbasis and rightbasis, kaoez is used only in decimation case.
-      ! Then it indicates the correspondence of the atom-coordinate given
-      ! by leftbasis and rightbasis to the left- and right-host t-matrix read in
-      ! by decimaread. For the slab case, kaoez is not used in the embedded positions.
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Allocate arrays that depend on NEMB
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !    allocate(CLS(NAEZ+NEMB),stat=ierr)
-      !    if (ierr/=0) stop '[rinput13] Error allocating CLS'
-      !    allocate(REFPOT(NAEZ+NEMB),stat=ierr)
-      !    if (ierr/=0) stop '[rinput13] Error allocating REFPOT'
-      !    allocate(RMTREFAT(NAEZ+NEMB),stat=ierr)
-      !    if (ierr/=0) stop '[rinput13] Error allocating RMTREFAT'
-      !    allocate(TLEFT(3,NEMB+1),stat=ierr)
-      !    if (ierr/=0) stop '[rinput13] Error allocating TLEFT'
-      !    allocate(TRIGHT(3,NEMB+1),stat=ierr)
-      !    if (ierr/=0) stop '[rinput13] Error allocating TRIGHT'
-      !    allocate(KAOEZ(NATYP,NAEZ+NEMB),stat=ierr)
-      !    if (ierr/=0) stop '[rinput13] Error allocating KAOEZ'
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End of allocation of NEMB dependet arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !    RMTREFAT(:) = -1.D0 ! Signals the need for later calculation
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Allocate the unit cell arrays
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   call allocate_cell(flag=1,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,&
+      KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS)
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! End of allocation of the unit cell arrays
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+   ! Basis atoms
+   WRITE(111,FMT='(A16)') '<RBASIS>        '
+   DO I=1,NAEZ
+      CALL IoInput('<RBASIS>        ',UIO,I,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
+         WRITE(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
+      ELSE
+         IER=0
+         CALL IoInput('RBASIS          ',UIO,I,7,IER)
+         IF (IER.EQ.0) THEN
+            READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
+            WRITE(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
+         ELSE
+            WRITE(*,*) 'RINPUT13: Keyword <RBASIS> or RBASIS not found. Stopping.'
+            STOP 'RINPUT13: RBASIS'
+         ENDIF
+      ENDIF
+   ENDDO                         ! I=1,NAEZ
+   CALL IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
+
+   DVEC(1:3) = 1.D0
+   CALL IoInput('BASISCALE       ',UIO,1,7,IER)
+   IF (IER.EQ.0) THEN
+      READ (UNIT=UIO,FMT=*) (DVEC(I),I=1,3)
+      WRITE(111,FMT='(A10,3E12.4)') 'BASISCALE=',DVEC(1:3)
+   ELSE
+      WRITE(111,FMT='(A18,3E12.4)') 'Default BASISCALE=',DVEC(1:3)
+   ENDIF
+
+   CALL IDREALS(DVEC(1),3,IPRINT)
+   ABASIS = DVEC(1)
+   BBASIS = DVEC(2)
+   CBASIS = DVEC(3)
+
+   WRITE(1337,2019) ABASIS,BBASIS,CBASIS
+   WRITE(1337,2107)
+   WRITE(1337,2014) ALAT
+
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Begin read left- and right-host information in 2d-case.
+   ! Set up the embeding positions
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+   IF (LINTERFACE) THEN
+      !-------------------------------------------------------------------------
+      !> @note In leftbasis and rightbasis, kaoez is used only in decimation case.
+      !> Then it indicates the correspondence of the atom-coordinate given
+      !> by leftbasis and rightbasis to the left- and right-host t-matrix read in
+      !> by decimaread. For the slab case, kaoez is not used in the embedded positions.
+      !-------------------------------------------------------------------------
       IF (LNEW) THEN
 
          WRITE(111,FMT='(A82)') '<RBLEFT>                                                      <RMTREFL>   <KAOEZL>'
@@ -691,52 +679,6 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    ! End read left- and right-host information in 2d-case.
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! End lattice structure definition
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Begin atom type information
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Allocate NATYP dependent arrays
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !  allocate(ZAT(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating ZAT'
-   !  allocate(LMXC(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating LMXC'
-   !  allocate(IRNS(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating IRNS'
-   !  allocate(MTFAC(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating MTFAC'
-   !  allocate(INIPOL(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating INIPOL'
-   !  allocate(IXIPOL(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating IXIPOL'
-   !  allocate(NTCELL(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating NTCELL'
-   !  allocate(SOCSCALE(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating SOCSCALE'
-   !  allocate(FPRADIUS(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating FPRADIUS'
-   !  allocate(KFG(4,NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating KFG'
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! End of NATYP array allocation
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! NATYP Array initialization
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !  ZAT(1:NATYP) = -1.D0      ! Negative value signals read-in from pot-file
-   !  IRNS(1:NATYP) = -1        ! Negative value signals to use FPRADIUS
-   !  SOCSCALE(1:NATYP) = 1.D0  ! Spin-orbit scaling
-   !  FPRADIUS(1:NATYP) = -1.D0 ! Negative value signals to use IRNS from pot-file (sub. startb1)
-   !  INIPOL(1:NATYP) = 0
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! End of NATYP array initialization
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
    ! although NSPIND is fixed to 1 in REL mode,
    ! NSPIN should be used as 1 or 2 at this stage
    ! to indicate a non- or spin-polarised potential
@@ -770,17 +712,19 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       WRITE(111,*) 'zatom will be read in from pot-file'
    ENDIF
 
+   ! Angular momentum cutoff
+   CALL IoInput('LMAX            ',UIO,1,7,IER)
+   IF (IER.EQ.0) THEN
+      READ (UNIT=UIO,FMT=*) LMAX
+      WRITE(111,*) 'LMAX=',LMAX
+   ELSE
+      STOP 'LMAX not found'
+   ENDIF
+
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Allocation of CPA arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !  allocate(NOQ(NAEZ),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating NOQ'
-   !  allocate(ICPA(NAEZ),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating ICPA'
-   !  allocate(IQAT(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating IQAT'
-   !  allocate(CONC(NATYP),stat=ierr)
-   !  if (ierr/0) stop '[rinput13] Error allocating CONC'
+   call allocate_cpa(flag,NAEZ,NEMB,NATYP,NOQ,ICPA,IQAT,HOSTIMP,CONC)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End of allocation of CPA arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -863,7 +807,13 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    ELSE
       WRITE(111,*) 'Default KVREL= ',KVREL
    ENDIF
-
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Allocation of SOC arrays
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   call allocate_SOC(flag=1,KREL,NATYP,LMAX,NASOC,IMANSOC,SOCSCALE,CSCL,SOCSCL)
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! End of allocation of SOC arrays
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    IF (OPT('NEWSOSOL')) THEN ! Spin-orbit
       IF ( OPT('NEWSOSOL') .AND. (NSPIN.NE.2) ) STOP ' set NSPIN = 2 for SOC solver in inputcard'
       NPAN_LOG = 30
@@ -992,25 +942,11 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Allocate the LDA+U arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !  allocate(LOPT(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating LOPT'
-   !  allocate(UEFF(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating UEFF'
-   !  allocate(JEFF(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating JEFF'
-   !  allocate(NASOC(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating NASOC'
-   !  allocate(EREFLDAU(NATYP),stat=ierr)
-   !  if (ierr/=0) stop '[rinput13] Error allocating EREFLDAU'
+   call allocate_ldau(flag=1,NATYP,LOPT,NASOC,UEFF,JEFF,EREFLDAU)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End of LDA+U array allocation
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   ! -> Initialise UEFF,JEFF,LOPT,EREFLDAU for all atoms
-   !  LOPT(1:NATYP) = -1        !  not perform lda+u (default)
-   !  UEFF(1:NATYP) = 0.D0
-   !  JEFF(1:NATYP) = 0.D0
-   !  EREFLDAU(1:NATYP) = 0.5D0
    IF (OPT('LDA+U   ')) THEN
 
       !Check for LDA+U consistency -- if INS=0 suppress it
@@ -1108,6 +1044,15 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       WRITE(111,*) 'Default: LINIPOL= ',LINIPOL
    ENDIF
 
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Allocate magnetization arrays
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   call allocate_magnetization(flag,NAEZ,NATYP,LMMAXD,INIPOL,IXIPOL,QMTET,&
+      QMPHI,DROTQ)
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! End of allocation of magnetization arrays
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
    IF (LINIPOL) THEN
       INIPOL(1:NATYPD) = 1
       CALL IoInput('XINIPOL         ',UIO,1,7,IER)
@@ -1166,14 +1111,6 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Begin accuracy parameters
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Angular momentum cutoff
-   CALL IoInput('LMAX            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) LMAX
-      WRITE(111,*) 'LMAX=',LMAX
-   ELSE
-      STOP 'LMAX not found'
-   ENDIF
 
    ! Brilloun zone mesh
    INTERVX = 10
@@ -2030,19 +1967,6 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Initialise SOLVER, SOC and CTL parameters in REL case
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Allocate SOC arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !  allocate(SOCSCL(KREL*LMAX+1,KREL*NATYP+(1-KREL)),stat=ierr)
-      !  if (ierr/=0) stop '[rinput13] Error allocating SOCSCL'
-      !  allocate(CSCL(KREL*LMAX+1,KREL*NATYP+(1-KREL)),stat=ierr)
-      !  if (ierr/=0) stop '[rinput13] Error allocating CSCL'
-      !  allocate(IMANSOC(NATYP),stat=ierr)
-      !  if (ierr/=0) stop '[rinput13] Error allocating IMANSOC'
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End of SOC array allocations
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !  SOCSCL(1:LMAXD+1,1:NATYP) = 1.D0
       CSCL(1:LMAXD+1,1:NATYP) = CVLIGHT
       MANSOC=.FALSE.
       MANCTL=.FALSE.
@@ -2169,8 +2093,8 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       ! ================================================================ LDA+U
 
       IF(OPT('qdos    ')) THEN
-         allocate(t_params%qdos_atomselect(NATYP), stat=ier) !INTEGER
-         if(ier/=0) stop '[rinput13] Error alloc qdos_atomselect'
+         allocate(t_params%qdos_atomselect(NATYP), stat=i_stat) !INTEGER
+         call memocc(i_stat,product(shape(t_params%qdos_atomselect))*kind(t_params%qdos_atomselect),'t_params%qdos_atomselect','rinput13')
 
          t_params%qdos_atomselect(1:NATYPD) = 1
          !for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.

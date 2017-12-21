@@ -4,14 +4,17 @@
 ! DESCRIPTION:
 !> @brief Subroutine to handle allocation/deallocation of arrays
 !> @details Module to handle the allocation of arrays to be later distributed
-!> it aims to bring modularity to the memory management as well as allowing one to
-!> track the memory consumption by making use of the memocc() subroutine
+!> it aims to bring modularity to the memory management
 !
 !> @author
 !> Jonathan Chico
 !> @date 14.11.2017
+!> @todo The number of arrays in the misc section should be reduced, and they should
+!> be located in the appropriate routines
 !-------------------------------------------------------------------------------
 module memoryhandling
+
+   use Profiling
 
    implicit none
 
@@ -28,8 +31,8 @@ contains
    !> Jonathan Chico
    !> @date 14.11.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_cell(flag,NAEZ,NEMB,IMT,IRWS,IRNS,NTCELL,KFG,RMT,ZAT,RWS,&
-      MTFAC,RMTREF,RMTNEW,TLEFT,TRIGHT,RBASIS)
+   subroutine allocate_cell(flag,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,&
+      KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS)
 
       implicit none
 
@@ -37,25 +40,39 @@ contains
       integer, intent(in) :: NAEZ !< number of atoms in unit cell
       integer, intent(in) :: NEMB !< number of 'embedding' positions
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
+      integer, dimension(:), allocatable, intent(inout) :: CLS !< Cluster around atomic sites
       integer, dimension(:), allocatable, intent(inout) :: IMT !< R point at MT radius
       integer, dimension(:), allocatable, intent(inout) :: IRWS !< R point at WS radius
       integer, dimension(:), allocatable, intent(inout) :: IRNS !< Position of atoms in the unit cell in units of bravais vectors
       integer, dimension(:), allocatable, intent(inout) :: NTCELL !< Index for WS cell
+      integer, dimension(:), allocatable, intent(inout) :: REFPOT !< Ref. pot. card  at position
       integer, dimension(:,:), allocatable, intent(inout) :: KFG
+      integer, dimension(:,:), allocatable, intent(inout) :: KAOEZ !< atom types located at a given site
       double precision, dimension(:), allocatable, intent(inout) :: RMT !< Muffin-tin radius of true system
       double precision, dimension(:), allocatable, intent(inout) :: ZAT !< Nuclear charge
       double precision, dimension(:), allocatable, intent(inout) :: RWS !< Wigner Seitz radius
       double precision, dimension(:), allocatable, intent(inout) :: MTFAC  !< Scaling factor for radius MT
       double precision, dimension(:), allocatable, intent(inout) :: RMTREF !< Muffin-tin radius of reference system
+      double precision, dimension(:), allocatable, intent(inout) :: RMTREFAT
       double precision, dimension(:), allocatable, intent(inout) :: RMTNEW !< Adapted muffin-tin radius
-      double precision, dimension(:,:), allocatable, intent(inout) :: TLEFT !< Vectors of the basis for the left host
-      double precision, dimension(:,:), allocatable, intent(inout) :: TRIGHT !< Vectors of the basis for the right host
       double precision, dimension(:,:), allocatable, intent(inout) :: RBASIS !< Position of atoms in the unit cell in units of bravais vectors
 
       !.. Local variables
       integer :: i_stat, i_all
 
       if (flag>0) then
+         allocate(REFPOT(NAEZ+NEMB),stat=i_stat)
+         call memocc(i_stat,product(shape(REFPOT))*kind(REFPOT),'REFPOT','allocate_cell')
+         REFPOT = 0
+         allocate(RMTREFAT(NAEZ+NEMB),stat=i_stat)
+         call memocc(i_stat,product(shape(RMTREFAT))*kind(RMTREFAT),'RMTREFAT','allocate_cell')
+         RMTREFAT = -1.D0 ! Signals the need for later calculation
+         allocate(KAOEZ(NATYP,NAEZ+NEMB),stat=i_stat)
+         call memocc(i_stat,product(shape(KAOEZ))*kind(KAOEZ),'KAOEZ','allocate_cell')
+         KAOEZ = 0
+         allocate(CLS(NAEZ+NEMB),stat=i_stat)
+         call memocc(i_stat,product(shape(CLS))*kind(CLS),'CLS','allocate_cell')
+         CLS = 1
          allocate(RBASIS(3,NAEZ),stat=i_stat)
          call memocc(i_stat,product(shape(RBASIS))*kind(RBASIS),'RBASIS','allocate_cell')
          RBASIS = 0.D0
@@ -71,12 +88,6 @@ contains
          allocate(RMTREF(NAEZ),stat=i_stat)
          call memocc(i_stat,product(shape(RMTREF))*kind(RMTREF),'RMTREF','allocate_cell')
          RMTREF = -1.D0
-         allocate(TLEFT(3,NEMB+1),stat=i_stat)
-         call memocc(i_stat,product(shape(TLEFT))*kind(TLEFT),'TLEFT','allocate_cell')
-         TLEFT = 0.D0
-         allocate(TRIGHT(3,NEMB+1),stat=i_stat)
-         call memocc(i_stat,product(shape(TRIGHT))*kind(TRIGHT),'TRIGHT','allocate_cell')
-         TRIGHT = 0.D0
          allocate(IRNS(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(IRNS))*kind(IRNS),'IRNS','allocate_cell')
          IRNS = -1        ! Negative value signals to use FPRADIUS
@@ -120,16 +131,6 @@ contains
             deallocate(RMTREF,stat=i_stat)
             call memocc(i_stat,i_all,'RMTREF','allocate_cell')
          endif
-         if (allocated(TLEFT)) then
-            i_all=-product(shape(TLEFT))*kind(TLEFT)
-            deallocate(TLEFT,stat=i_stat)
-            call memocc(i_stat,i_all,'TLEFT','allocate_cell')
-         endif
-         if (allocated(TRIGHT)) then
-            i_all=-product(shape(TRIGHT))*kind(TRIGHT)
-            deallocate(TRIGHT,stat=i_stat)
-            call memocc(i_stat,i_all,'TRIGHT','allocate_cell')
-         endif
          if (allocated(IRNS)) then
             i_all=-product(shape(IRNS))*kind(IRNS)
             deallocate(IRNS,stat=i_stat)
@@ -165,10 +166,72 @@ contains
             deallocate(KFG,stat=i_stat)
             call memocc(i_stat,i_all,'KFG','allocate_cell')
          endif
+         if(allocated(KAOEZ)) then
+            i_all=-product(shape(KAOEZ))*kind(KAOEZ)
+            deallocate(KAOEZ,stat=i_stat)
+            call memocc(i_stat,i_all,'KAOEZ','allocate_cell')
+         endif
+         if (allocated(REFPOT)) then
+            i_all=-product(shape(REFPOT))*kind(REFPOT)
+            deallocate(REFPOT,stat=i_stat)
+            call memocc(i_stat,i_all,'REFPOT','allocate_cell')
+         endif
+         if (allocated(RMTREFAT)) then
+            i_all=-product(shape(RMTREFAT))*kind(RMTREFAT)
+            deallocate(RMTREFAT,stat=i_stat)
+            call memocc(i_stat,i_all,'RMTREFAT','allocate_cell')
+         endif
 
       endif
 
    end subroutine allocate_cell
+
+   !-----------------------------------------------------------------------------
+   ! SUBROUTINE: allocate_semi_inf_host
+   !
+   ! DESCRIPTION:
+   !> @brief subroutine handling the allocation/deallocation of arrays that
+   !> describe the left and right host for the calculation of slabs
+   !
+   !> @author
+   !> Jonathan Chico
+   !> @date 20.12.2017
+   !-----------------------------------------------------------------------------
+   subroutine allocate_semi_inf_host(flag,NEMB,TLEFT,TRIGHT)
+
+      implicit none
+
+      integer, intent(in) :: flag ! Allocate/deallocate (1/-1) arrays
+      integer, intent(in) :: NEMB !< number of 'embedding' positions
+      double precision, dimension(:,:), allocatable, intent(inout) :: TLEFT  !< Vectors of the basis for the left host
+      double precision, dimension(:,:), allocatable, intent(inout) :: TRIGHT !< vectors of the basis for the right host
+
+      !.. Local variables
+      integer :: i_stat, i_all
+
+      if (flag>0) then
+
+         allocate(TLEFT(3,NEMB+1),stat=i_stat)
+         call memocc(i_stat,product(shape(TLEFT))*kind(TLEFT),'TLEFT','allocate_cell')
+         TLEFT = 0.D0
+         allocate(TRIGHT(3,NEMB+1),stat=i_stat)
+         call memocc(i_stat,product(shape(TRIGHT))*kind(TRIGHT),'TRIGHT','allocate_cell')
+         TRIGHT = 0.D0
+      else
+         if (allocated(TLEFT)) then
+            i_all=-product(shape(TLEFT))*kind(TLEFT)
+            deallocate(TLEFT,stat=i_stat)
+            call memocc(i_stat,i_all,'TLEFT','allocate_cell')
+         endif
+         if (allocated(TRIGHT)) then
+            i_all=-product(shape(TRIGHT))*kind(TRIGHT)
+            deallocate(TRIGHT,stat=i_stat)
+            call memocc(i_stat,i_all,'TRIGHT','allocate_cell')
+         endif
+      endif
+
+
+   end subroutine allocate_semi_inf_host
 
    !-----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_potential
@@ -181,9 +244,9 @@ contains
    !> Jonathan Chico
    !> @date 14.11.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_potential(flag,NAEZ,NEMB,IRMD,NATYP,NPOTD,IPAND,LMXSPD,LMPOTD,&
-      IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,REFPOT,LMSP,LMSP1,IRCUT,LCORE,LLMSP,&
-      ITITLE,RMTREFAT,FPRADIUS,VISP,ECORE,VINS)
+   subroutine allocate_potential(flag,NAEZ,NEMB,IRMD,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
+      LMPOTD,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,&
+      ITITLE,FPRADIUS,VISP,ECORE,VINS)
 
       implicit none
 
@@ -194,6 +257,7 @@ contains
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
       integer, intent(in) :: NPOTD !< 2*NATYPD
       integer, intent(in) :: IPAND
+      integer, intent(in) :: NFUND
       integer, intent(in) :: LMXSPD
       integer, intent(in) :: LMPOTD
       integer, intent(in) :: IRMIND
@@ -203,14 +267,12 @@ contains
       integer, dimension(:), allocatable, intent(inout) :: LMXC
       integer, dimension(:), allocatable, intent(inout) :: NCORE !< Number of core states
       integer, dimension(:), allocatable, intent(inout) :: IRMIN !< Max R for spherical treatment
-      integer, dimension(:), allocatable, intent(inout) :: REFPOT !< Ref. pot. card  at position
       integer, dimension(:,:), allocatable, intent(inout) :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
       integer, dimension(:,:), allocatable, intent(inout) :: LMSP1
       integer, dimension(:,:), allocatable, intent(inout) :: IRCUT !< R points of panel borders
       integer, dimension(:,:), allocatable, intent(inout) :: LCORE !< Angular momentum of core states
       integer, dimension(:,:), allocatable, intent(inout) :: LLMSP !< lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
       integer, dimension(:,:), allocatable, intent(inout) :: ITITLE
-      double precision, dimension(:), allocatable, intent(inout) :: RMTREFAT
       double precision, dimension(:), allocatable, intent(inout) :: FPRADIUS !< R point at which full-potential treatment starts
       double precision, dimension(:,:), allocatable, intent(inout) :: VISP   !< Spherical part of the potential
       double precision, dimension(:,:), allocatable, intent(inout) :: ECORE  !< Core energies
@@ -221,12 +283,6 @@ contains
 
       if (flag>0) then
 
-         allocate(REFPOT(NAEZ+NEMB),stat=i_stat)
-         call memocc(i_stat,product(shape(REFPOT))*kind(REFPOT),'REFPOT','allocate_potential')
-         REFPOT = 0
-         allocate(RMTREFAT(NAEZ+NEMB),stat=i_stat)
-         call memocc(i_stat,product(shape(RMTREFAT))*kind(RMTREFAT),'RMTREFAT','allocate_potential')
-         RMTREFAT = -1.D0 ! Signals the need for later calculation
          allocate(FPRADIUS(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(FPRADIUS))*kind(FPRADIUS),'FPRADIUS','allocate_potential')
          FPRADIUS = -1.D0 ! Negative value signals to use IRNS from pot-file (sub. startb1)
@@ -239,7 +295,7 @@ contains
          allocate(IRCUT(0:IPAND,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(IRCUT))*kind(IRCUT),'IRCUT','allocate_potential')
          IRCUT = 0
-         allocate(IRMIN(NATYP)stat=i_stat)
+         allocate(IRMIN(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(IRMIN))*kind(IRMIN),'IRMIN','allocate_potential')
          IRMIN = 0
          allocate(LCORE(20,NPOTD),stat=i_stat)
@@ -274,16 +330,6 @@ contains
          VISP = 0.D0
 
       else
-         if (allocated(REFPOT)) then
-            i_all=-product(shape(REFPOT))*kind(REFPOT)
-            deallocate(REFPOT,stat=i_stat)
-            call memocc(i_stat,i_all,'REFPOT','allocate_potential')
-         endif
-         if (allocated(RMTREFAT)) then
-            i_all=-product(shape(RMTREFAT))*kind(RMTREFAT)
-            deallocate(RMTREFAT,stat=i_stat)
-            call memocc(i_stat,i_all,'RMTREFAT','allocate_potential')
-         endif
          if (allocated(FPRADIUS)) then
             i_all=-product(shape(FPRADIUS))*kind(FPRADIUS)
             deallocate(FPRADIUS,stat=i_stat)
@@ -365,7 +411,7 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_cpa(flag,NAEZ,NEMB,NATYP,NOQ,ICPA,IQAT,HOSTIMP,KAOEZ,CONC)
+   subroutine allocate_cpa(flag,NAEZ,NEMB,NATYP,NOQ,ICPA,IQAT,HOSTIMP,CONC)
 
       implicit none
 
@@ -378,7 +424,6 @@ contains
       integer, dimension(:), allocatable, intent(inout) :: ICPA !< ICPA = 0/1 site-dependent CPA flag
       integer, dimension(:), allocatable, intent(inout) :: IQAT !< the site on which an atom is located on a given site
       integer, dimension(:), allocatable, intent(inout) :: HOSTIMP
-      integer, dimension(:,:), allocatable, intent(inout) :: KAOEZ !< atom types located at a given site
       double precision, dimension(:), allocatable, intent(inout) :: CONC !< concentration of a given atom
 
       ! .. Local variables
@@ -399,9 +444,6 @@ contains
          allocate(CONC(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(CONC))*kind(CONC),'CONC','allocate_cpa')
          CONC = 1.D0
-         allocate(KAOEZ(NATYP,NAEZ+NEMB),stat=i_stat)
-         call memocc(i_stat,product(shape(KAOEZ))*kind(KAOEZ),'KAOEZ','allocate_cpa')
-         KAOEZ = 0
          allocate(HOSTIMP(0:NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(HOSTIMP))*kind(HOSTIMP),'HOSTIMP','allocate_cpa')
          HOSTIMP = 0
@@ -427,11 +469,6 @@ contains
             i_all=-product(shape(CONC))*kind(CONC)
             deallocate(CONC,stat=i_stat)
             call memocc(i_stat,i_all,'CONC','allocate_cpa')
-         endif
-         if(allocated(KAOEZ)) then
-            i_all=-product(shape(KAOEZ))*kind(KAOEZ)
-            deallocate(KAOEZ,stat=i_stat)
-            call memocc(i_stat,i_all,'KAOEZ','allocate_cpa')
          endif
          if(allocated(HOSTIMP)) then
             i_all=-product(shape(HOSTIMP))*kind(HOSTIMP)
@@ -554,7 +591,7 @@ contains
          allocate(ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(ULDAU))*kind(ULDAU),'ULDAU','allocate_ldau_potential')
          ULDAU = 0.D0
-         allocate(WLDAU(MMAXD,MMAXD,NSPIND,NATYP) ,stat=i_stat)
+         allocate(WLDAU(MMAXD,MMAXD,NSPIN,NATYP) ,stat=i_stat)
          call memocc(i_stat,product(shape(WLDAU))*kind(WLDAU),'WLDAU','allocate_ldau_potential')
          WLDAU =  0.D0
          allocate(PHILDAU(IRMD,NATYP),stat=i_stat)
@@ -598,8 +635,8 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_magnetization(flag,NAEZ,NATYP,LMMAXD,IXIPOL,QMTET,QMPHI,&
-      DROTQ)
+   subroutine allocate_magnetization(flag,NAEZ,NATYP,LMMAXD,INIPOL,IXIPOL,QMTET,&
+      QMPHI,DROTQ)
 
       implicit none
 
@@ -607,6 +644,7 @@ contains
       integer, intent(in) :: NAEZ !< number of atoms in unit cell
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
       integer, intent(in) :: LMMAXD
+      integer, dimension(:), allocatable, intent(inout) :: INIPOL !< Initial spin polarisation
       integer, dimension(:), allocatable, intent(inout) :: IXIPOL !< Constraint of spin pol.
       double precision, dimension(:), allocatable, intent(inout) :: QMTET
       double precision, dimension(:), allocatable, intent(inout) :: QMPHI
@@ -683,8 +721,8 @@ contains
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
       integer, dimension(:), allocatable, intent(inout) :: NASOC
       integer, dimension(:), allocatable, intent(inout) :: IMANSOC
-      double precision, dimension(:), allocatable, intent(inout) :: SOCSCALE
-      double precision, dimension(:,:), allocatable, intent(inout) :: CSCL
+      double precision, dimension(:), allocatable, intent(inout) :: SOCSCALE !< Spin-orbit scaling
+      double precision, dimension(:,:), allocatable, intent(inout) :: CSCL !< Speed of light scaling
       double precision, dimension(:,:), allocatable, intent(inout) :: SOCSCL
 
       !.. Local variables
@@ -804,7 +842,7 @@ contains
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
    subroutine allocate_relativistic(flag,KREL,IRMD,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,&
-      VTREL,BTREL,DRDIREL,R2DRDIREL,QMGAM,QMGAMTAB,QMPHITAB,QMTETTAB)
+      VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,QMGAM,QMGAMTAB,QMPHITAB,QMTETTAB)
 
       implicit none
 
@@ -950,8 +988,8 @@ contains
 
       integer, intent(in) :: flag ! Allocate/deallocate (1/-1) arrays
       integer, intent(in) :: LMMAXD
-      integer, dimension(:,;), allocatable, intent(inout) :: NRREL
-      integer, dimension(:,:,;), allocatable, intent(inout) :: IRREL
+      integer, dimension(:,:), allocatable, intent(inout) :: NRREL
+      integer, dimension(:,:,:), allocatable, intent(inout) :: IRREL
       double complex, dimension(:,:), allocatable, intent(inout) :: RC !< NREL REAL spher. harm. >  CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
       double complex, dimension(:,:), allocatable, intent(inout) :: CREL !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
       double complex, dimension(:,:), allocatable, intent(inout) :: RREL !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
@@ -1027,14 +1065,13 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_clusters(flag,NEMBD,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,&
-      NACLSD,LMPOTD,NATOMIMPD,CLS,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,&
-      JEND,RATOM,RCLSIMP,CMOMHOST,RCLS)
+   subroutine allocate_clusters(flag,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,&
+      LMPOTD,NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,JEND,RATOM,&
+      RCLSIMP,CMOMHOST,RCLS)
 
       implicit none
 
       integer, intent(in) :: flag ! Allocate/deallocate (1/-1) arrays
-      integer, intent(in) :: NEMB !< number of 'embedding' positions
       integer, intent(in) :: NAEZ !< number of atoms in unit cell
       integer, intent(in) :: LMAX !< Maximum l component in wave function expansion
       integer, intent(in) :: NCLEB
@@ -1044,7 +1081,6 @@ contains
       integer, intent(in) :: NACLSD
       integer, intent(in) :: LMPOTD
       integer, intent(in) :: NATOMIMPD
-      integer, dimension(:), allocatable, intent(inout) :: CLS !< Cluster around atomic sites
       integer, dimension(:), allocatable, intent(inout) :: NSH1 !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
       integer, dimension(:), allocatable, intent(inout) :: NSH2 !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
       integer, dimension(:), allocatable, intent(inout) :: NACLS !< Number of atoms in cluster
@@ -1075,13 +1111,10 @@ contains
          allocate(RCLSIMP(3,NATOMIMPD),stat=i_stat)
          call memocc(i_stat,product(shape(RCLSIMP))*kind(RCLSIMP),'RCLSIMP','allocate_clusters')
          RCLSIMP = 0.D0
-         allocate(CLS(NAEZ+NEMB),stat=i_stat)
-         call memocc(i_stat,product(shape(CLS))*kind(CLS),'CLS','allocate_clusters')
-         CLS = 0
          allocate(NACLS(NCLSD),stat=i_stat)
          call memocc(i_stat,product(shape(NACLS))*kind(NACLS),'NACLS','allocate_clusters')
          NACLS = 0
-         allocate(EZOA(NACLSD,NAEZD),stat=i_stat)
+         allocate(EZOA(NACLSD,NAEZ),stat=i_stat)
          call memocc(i_stat,product(shape(EZOA))*kind(EZOA),'EZOA','allocate_clusters')
          EZOA = 0
          allocate(ATOMIMP(NATOMIMPD),stat=i_stat)
@@ -1126,11 +1159,6 @@ contains
             i_all=-product(shape(RCLSIMP))*kind(RCLSIMP)
             deallocate(RCLSIMP,stat=i_stat)
             call memocc(i_stat,i_all,'RCLSIMP','allocate_clusters')
-         endif
-         if (allocated(CLS)) then
-            i_all=-product(shape(CLS))*kind(CLS)
-            deallocate(CLS,stat=i_stat)
-            call memocc(i_stat,i_all,'CLS','allocate_clusters')
          endif
          if (allocated(NACLS)) then
             i_all=-product(shape(NACLS))*kind(NACLS)
@@ -1302,16 +1330,16 @@ contains
 
       if (flag>0) then
 
-         allocate(DRDI(IRMD,NATYPD),stat=i_stat)
+         allocate(DRDI(IRMD,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(DRDI))*kind(DRDI),'DRDI','allocate_mesh')
          DRDI = 0.D0
-         allocate(R(IRMD,NATYPD),stat=i_stat)
+         allocate(R(IRMD,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(R))*kind(R),'R','allocate_mesh')
          R = 0.D0
-         allocate(A(NATYPD),stat=i_stat)
+         allocate(A(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(A))*kind(A),'A','allocate_mesh')
          A = 0.D0
-         allocate(B(NATYPD),stat=i_stat)
+         allocate(B(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(B))*kind(B),'B','allocate_mesh')
          B = 0.D0
 
@@ -1436,18 +1464,26 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_misc(flag,IRMD,LMAX,NAEZ,NATYP,IEMXD,NEMBD1,NCHEBD,NCELLD,&
-      LMXSPD,NSPINDD,NSYMAXD,NPRINCD,ICHECK,IFUNM,IFUNM1,VREF,S,RR,DROR,RNEW,RS,&
-      RROT,THESME,DSYMLL,DSYMLL1,LEFTTINVLL,RIGHTTINVLL)
+   subroutine allocate_misc(flag,NRD,IRMD,IRID,LMAX,NAEZ,NATYP,NFUND,NREFD,IEMXD,&
+      NTOTD,NSHELD,LMMAXD,NEMBD1,NCHEBD,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM,&
+      IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,DSYMLL1,LEFTTINVLL,&
+      RIGHTTINVLL)
 
       implicit none
 
+      integer, intent(in) :: NRD
       integer, intent(in) :: flag ! Allocate/deallocate (1/-1) arrays
       integer, intent(in) :: IRMD
+      integer, intent(in) :: IRID
       integer, intent(in) :: LMAX !< Maximum l component in wave function expansion
       integer, intent(in) :: NAEZ !< number of atoms in unit cell
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
+      integer, intent(in) :: NFUND
+      integer, intent(in) :: NREFD
       integer, intent(in) :: IEMXD
+      integer, intent(in) :: NTOTD
+      integer, intent(in) :: LMMAXD
+      integer, intent(in) :: NSHELD
       integer, intent(in) :: NEMBD1
       integer, intent(in) :: NCHEBD
       integer, intent(in) :: NCELLD
@@ -1455,9 +1491,9 @@ contains
       integer, intent(in) :: NSPINDD
       integer, intent(in) :: NSYMAXD
       integer, intent(in) :: NPRINCD
-      integer, dimension(:), allocatable, intent(inout) :: ICHECK
       integer, dimension(:,:), allocatable, intent(inout) :: IFUNM
       integer, dimension(:,:), allocatable, intent(inout) :: IFUNM1
+      integer, dimension(:,:), allocatable, intent(inout) :: ICHECK
       double precision, dimension(:), allocatable, intent(inout) :: VREF
       double precision, dimension(:,:), allocatable, intent(inout) :: S
       double precision, dimension(:,:), allocatable, intent(inout) :: RR !< Set of real space vectors (in a.u.)
@@ -1466,8 +1502,8 @@ contains
       double precision, dimension(:,:,:), allocatable, intent(inout) :: RS
       double precision, dimension(:,:,:), allocatable, intent(inout) :: RROT
       double precision, dimension(:,:,:), allocatable, intent(inout) :: THESME
-      double complex, dimension(:,:), allocatable, intent(inout) :: DSYMLL
-      double complex, dimension(:,:), allocatable, intent(inout) :: DSYMLL1
+      double complex, dimension(:,:,:), allocatable, intent(inout) :: DSYMLL
+      double complex, dimension(:,:,:), allocatable, intent(inout) :: DSYMLL1
       double complex, dimension(:,:,:,:,:), allocatable, intent(inout) :: LEFTTINVLL
       double complex, dimension(:,:,:,:,:), allocatable, intent(inout) :: RIGHTTINVLL
 
@@ -1481,7 +1517,7 @@ contains
          allocate(VREF(NREFD),stat=i_stat)
          call memocc(i_stat,product(shape(VREF))*kind(VREF),'VREF','allocate_misc')
          VREF = 0.D0
-         allocate(DROR(IRM,NATYP),stat=i_stat)
+         allocate(DROR(IRMD,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(DROR))*kind(DROR),'DROR','allocate_misc')
          DROR = 0.D0
          allocate(S(0:LMAX,NATYP),stat=i_stat)
@@ -1613,8 +1649,8 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_green(flag,NAEZ,IEMXD,NGSHD,NOFGIJD,ISH,JSH,KMESH,IMAXSH,&
-      IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM,GSH)
+   subroutine allocate_green(flag,NAEZ,IEMXD,NGSHD,NSHELD,LMPOTD,NOFGIJD,ISH,JSH,&
+      KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM,GSH)
 
       implicit none
 
@@ -1622,6 +1658,8 @@ contains
       integer, intent(in) :: NAEZ !< number of atoms in unit cell
       integer, intent(in) :: IEMXD
       integer, intent(in) :: NGSHD
+      integer, intent(in) :: NSHELD
+      integer, intent(in) :: LMPOTD
       integer, intent(in) :: NOFGIJD
       integer, dimension(:,:), allocatable, intent(inout) :: ISH
       integer, dimension(:,:), allocatable, intent(inout) :: JSH
@@ -1650,7 +1688,7 @@ contains
          allocate(ILM(NGSHD,3),stat=i_stat)
          call memocc(i_stat,product(shape(ILM))*kind(ILM),'ILM','allocate_green')
          ILM = 0
-         allocate(IQCALC(NAEZD),stat=i_stat)
+         allocate(IQCALC(NAEZ),stat=i_stat)
          call memocc(i_stat,product(shape(IQCALC))*kind(IQCALC),'IQCALC','allocate_green')
          IQCALC = 0
          allocate(JOFGIJ(NOFGIJD),stat=i_stat)
@@ -1751,136 +1789,5 @@ contains
       endif
 
    end subroutine allocate_green
-
-   !control the memory occupation by calculating the overall size in bytes of the allocated arrays
-   !usage:
-   ! when allocating allocating an array "stuff" of dimension n in the routine "dosome"
-   ! allocate(stuff(n),stat=i_stat)
-   ! call memocc(i_stat,product(shape(stuff))*kind(stuff),'stuff','dosome')
-   ! when deallocating
-   ! i_all=-product(shape(stuff))*kind(stuff)
-   ! deallocate(stuff,stat=i_stat)
-   ! call memocc(i_stat,i_all,'stuff','dosome')
-   ! the counters are initialized with
-   ! call memocc(0,iproc,'count','start') (iproc = mpi rank, nproc=mpi size)
-   ! and stopped with
-   ! call memocc(0,0,'count','stop')
-   ! at the end of the calculation a short report is printed on the screen
-   ! some information can be also written on disk following the needs
-   ! This file is distributed under the terms of the
-   ! GNU General Public License, see http://www.gnu.org/copyleft/gpl.txt .
-   ! Copyright (C) Luigi Genovese, CEA Grenoble, France, 2007
-   !> Memory profiling routine
-   subroutine memocc(istat,isize,array,routine)
-      implicit none
-      character(len=*), intent(in) :: array
-      character(len=*), intent(in) :: routine
-      integer, intent(in) :: istat
-      integer, intent(in) :: isize
-
-      ! Local variables
-      character(len=36) :: maxroutine,locroutine
-      character(len=36) :: maxarray,locarray
-      integer :: nalloc,ndealloc,locpeak,locmemory,iproc
-      integer :: dblsize
-      integer(kind=8) :: memory,maxmemory
-      character(len=1) :: allocationflag
-
-      save :: memory,nalloc,ndealloc,maxroutine,maxarray,maxmemory
-      save :: locroutine,locarray,locpeak,locmemory,iproc
-
-
-      dblsize=1
-      !print *,'MEMOCC',isize,array
-      !
-      select case(array)
-      case('count')
-         if (routine=='start') then
-            memory=0
-            maxmemory=0
-            nalloc=0
-            ndealloc=0
-            locroutine='routine'
-            locarray='array'
-            locmemory=0
-            locpeak=0
-            iproc=isize
-            !open the writing file for the root process
-            if (iproc == 0) then
-               open(unit=mfileno,file='meminfo',status='unknown')
-               write(mfileno,'(a32,1x,a20,3(1x,a12))')&
-                  '(Data in kB)             Routine','    Peak Array',&
-                  'Routine Mem','Total Mem','Action'
-            end if
-         else if (routine=='stop' .and. iproc==0) then
-            !write(mfileno,'(a32,a16,4(1x,i12))')&
-            !     trim(locroutine),trim(locarray),locmemory/1024,locpeak/1024,memory/1024,&
-            !     (memory+locpeak-locmemory)/1024
-            !close(mfileno)
-            write(*,'(1x,a)')&
-               '-------------------MEMORY CONSUMPTION REPORT-----------------------'
-            write(*,'(1x,2(i0,a),i0)')&
-               nalloc,' allocations and ',ndealloc,' deallocations, remaining memory(B):',memory
-            write(*,'(1x,a,i0,a)') 'Memory occupation peak: ',maxmemory/1024,' kB'
-            write(*,'(1x,5(a))') 'For the array: "',trim(maxarray),'" in routine "',trim(maxroutine),'"'
-            write(*,'(1x,a)')&
-               '-----------------END MEMORY CONSUMPTION REPORT---------------------'
-         end if
-
-      case default
-         !control of the allocation/deallocation status
-         if (istat/=0) then
-            if (isize>=0) then
-               write(*,*)' subroutine ',routine,': problem of allocation of array ',array
-               stop
-            else if (isize<0) then
-               write(*,*)' subroutine ',routine,': problem of deallocation of array ',array
-               stop
-            end if
-         end if
-         select case(iproc)
-         case (0)
-            ! To be used for inspecting an array which is not deallocated
-            if (isize>0) then
-               allocationflag = 'A'
-            elseif (isize<0) then
-               allocationflag = 'D'
-            else
-               allocationflag = '?'
-            end if
-
-            write(mfileno,'(a32,1x,a20,3(1x,i12),1x,a12)')trim(routine),trim(array),isize*dblsize,memory,maxmemory,allocationflag
-            if (trim(locroutine) /= routine) then
-               !          write(mfileno,'(a32,a14,4(1x,i12))')&
-               !               trim(locroutine),trim(locarray),locmemory/1024,locpeak/1024,memory/1024,&
-               !               (memory+locpeak-locmemory)/1024
-               locroutine=routine
-               locmemory=isize*dblsize
-               locpeak=isize*dblsize
-            else
-               locmemory=locmemory+isize*dblsize
-               if (locmemory > locpeak) then
-                  locpeak=locmemory
-               end if
-            end if
-            locarray=array
-            memory=memory+isize*dblsize
-            if (memory > maxmemory) then
-               maxmemory=memory
-               maxroutine=routine
-               maxarray=array
-            end if
-            if (isize>0) then
-               nalloc=nalloc+1
-            else if (isize<0) then
-               ndealloc=ndealloc+1
-            end if
-         case default
-            return
-         end select
-
-      end select
-
-   end subroutine memocc
 
 end module memoryhandling
