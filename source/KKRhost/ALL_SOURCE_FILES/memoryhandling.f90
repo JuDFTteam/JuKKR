@@ -565,7 +565,7 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_ldau_potential(flag,IRMD,NATYP,MMAXD,NSPIN,ITLDAU,WLDAU,&
+   subroutine allocate_ldau_potential(flag,IRMD,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,&
       ULDAU,PHILDAU)
 
       implicit none
@@ -574,7 +574,7 @@ contains
       integer, intent(in) :: IRMD
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
       integer, intent(in) :: MMAXD
-      integer, intent(in) :: NSPIN !< Counter for spin directions
+      integer, intent(in) :: NSPIND !< Counter for spin directions (KREL+(1-KREL)*(KSP+1))
       integer, dimension(:), allocatable, intent(inout) :: ITLDAU !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
       double precision, dimension(:,:,:,:), allocatable, intent(inout) :: WLDAU !< potential matrix
       double precision, dimension(:,:,:,:,:), allocatable, intent(inout) :: ULDAU !< calculated Coulomb matrix elements (EREFLDAU)
@@ -591,12 +591,12 @@ contains
          allocate(ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(ULDAU))*kind(ULDAU),'ULDAU','allocate_ldau_potential')
          ULDAU = 0.D0
-         allocate(WLDAU(MMAXD,MMAXD,NSPIN,NATYP) ,stat=i_stat)
+         allocate(WLDAU(MMAXD,MMAXD,NSPIND,NATYP) ,stat=i_stat)
          call memocc(i_stat,product(shape(WLDAU))*kind(WLDAU),'WLDAU','allocate_ldau_potential')
          WLDAU =  0.D0
          allocate(PHILDAU(IRMD,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(PHILDAU))*kind(PHILDAU),'PHILDAU','allocate_ldau_potential')
-         PHILDAU=0.D0
+         PHILDAU=(0.D0,0.D0)
 
       else
          if (allocated(ITLDAU)) then
@@ -668,7 +668,7 @@ contains
          IXIPOL = 0
          allocate(DROTQ(LMMAXD,LMMAXD,NAEZ),stat=i_stat)
          call memocc(i_stat,product(shape(DROTQ))*kind(DROTQ),'DROTQ','allocate_magnetization')
-         DROTQ = 0.D0
+         DROTQ = (0.D0,0.D0)
       else
          if (allocated(QMTET)) then
             i_all=-product(shape(QMTET))*kind(QMTET)
@@ -802,13 +802,13 @@ contains
       if (flag>0) then
          allocate(EZ(IEMXD),stat=i_stat)
          call memocc(i_stat,product(shape(EZ))*kind(EZ),'EZ','allocate_energies')
-         EZ = 0.D0
+         EZ = (0.D0,0.D0)
          allocate(DEZ(IEMXD),stat=i_stat)
          call memocc(i_stat,product(shape(DEZ))*kind(DEZ),'DEZ','allocate_energies')
-         DEZ = 0.D0
+         DEZ = (0.D0,0.D0)
          allocate(WEZ(IEMXD),stat=i_stat)
          call memocc(i_stat,product(shape(WEZ))*kind(WEZ),'WEZ','allocate_energies')
-         WEZ = 0.D0
+         WEZ = (0.D0,0.D0)
       else
          if (allocated(EZ)) then
             i_all=-product(shape(EZ))*kind(EZ)
@@ -1002,10 +1002,10 @@ contains
 
          allocate(RREL(LMMAXD,LMMAXD),stat=i_stat)
          call memocc(i_stat,product(shape(RREL))*kind(RREL),'RREL','allocate_rel_transformations')
-         RREL = 0.D0
+         RREL = (0.D0,0.D0)
          allocate(SRREL(2,2,LMMAXD),stat=i_stat)
          call memocc(i_stat,product(shape(SRREL))*kind(SRREL),'SRREL','allocate_rel_transformations')
-         SRREL = 0.D0
+         SRREL = (0.D0,0.D0)
          allocate(IRREL(2,2,LMMAXD),stat=i_stat)
          call memocc(i_stat,product(shape(IRREL))*kind(IRREL),'IRREL','allocate_rel_transformations')
          IRREL = 0
@@ -1014,10 +1014,10 @@ contains
          NRREL = 0
          allocate(CREL(LMMAXD,LMMAXD),stat=i_stat)
          call memocc(i_stat,product(shape(CREL))*kind(CREL),'CREL','allocate_rel_transformations')
-         CREL = 0.D0
+         CREL = (0.D0,0.D0)
          allocate(RC(LMMAXD,LMMAXD),stat=i_stat)
          call memocc(i_stat,product(shape(RC))*kind(RC),'RC','allocate_rel_transformations')
-         RC = 0.D0
+         RC = (0.D0,0.D0)
       else
          if (allocated(RREL)) then
             i_all=-product(shape(RREL))*kind(RREL)
@@ -1543,19 +1543,19 @@ contains
          RNEW = 0.D0
          allocate(DSYMLL(LMMAXD,LMMAXD,NSYMAXD),stat=i_stat)
          call memocc(i_stat,product(shape(DSYMLL))*kind(DSYMLL),'DSYMLL','allocate_misc')
-         DSYMLL = 0.D0
+         DSYMLL = (0.D0,0.D0)
          allocate(DSYMLL1(LMMAXD,LMMAXD,NSYMAXD),stat=i_stat)
          call memocc(i_stat,product(shape(DSYMLL1))*kind(DSYMLL1),'DSYMLL1','allocate_misc')
-         DSYMLL1 = 0.D0
+         DSYMLL1 = (0.D0,0.D0)
          allocate(ICHECK(NAEZ/NPRINCD,NAEZ/NPRINCD),stat=i_stat)
          call memocc(i_stat,product(shape(ICHECK))*kind(ICHECK),'ICHECK','allocate_misc')
          ICHECK = 0
          allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), stat=i_stat)
          call memocc(i_stat,product(shape(LEFTTINVLL))*kind(LEFTTINVLL),'LEFTTINVLL','allocate_misc')
-         LEFTTINVLL = 0.D0
+         LEFTTINVLL = (0.D0,0.D0)
          allocate(RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), stat=i_stat)
          call memocc(i_stat,product(shape(RIGHTTINVLL))*kind(RIGHTTINVLL),'RIGHTTINVLL','allocate_misc')
-         RIGHTTINVLL = 0.D0
+         RIGHTTINVLL = (0.D0,0.D0)
 
       else
          if (allocated(RR)) then

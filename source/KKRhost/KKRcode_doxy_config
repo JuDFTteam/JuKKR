@@ -195,6 +195,12 @@ OPTIMIZE_OUTPUT_FOR_C  = NO
 
 OPTIMIZE_OUTPUT_JAVA   = NO
 
+# Set the OPTIMIZE_FOR_FORTRAN tag to YES if your project consists of Fortran
+# sources. Doxygen will then generate output that is tailored for Fortran.
+# The default value is: NO.
+
+OPTIMIZE_FOR_FORTRAN   = YES
+
 # If you use STL classes (i.e. std::string, std::vector, etc.) but do not want to 
 # include (a tag file for) the STL sources as input, then you should 
 # set this tag to YES in order to let doxygen match functions declarations and 

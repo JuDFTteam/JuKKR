@@ -1,3 +1,12 @@
+!-------------------------------------------------------------------------------
+! SUBROUTINE: RINPUT13
+!> @brief Routine to read the information from the input file
+!> @author Bernd Zimmermann
+!> @todo Jonathan Chico Need to add calls for the different parameters options,
+!> that are being changed from the inc.p to now the reader. Of this way if there
+!> is a problem the user only has to add a line or change a value of the inc.p
+!> not recompile the code
+!-------------------------------------------------------------------------------
 SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       &           EMIN,EMAX,TK,NPOL,NPNT1,NPNT2,NPNT3,&
       &           EBOTSEMI,EMUSEMI,TKSEMI,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,&
@@ -20,8 +29,8 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       &           KFORCE,KMROT,QMTET,QMPHI,NCPA,ICPA,ITCPAMAX,CPATOL,&
       &           NOQ,IQAT,CONC,SOLVER,SOCSCL,CSCL,KREL,SOCSCALE,&
       &           LOPT,UEFF,JEFF,EREFLDAU,KREADLDAU,&
-      &           LMAXD,LPOTD,NSPIND,NAEZD,NATYPD,NEMBD,NPRINCD,&
-      &           IRMD,IRNSD,NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,IVSHIFT,&
+      &           LMAX,LPOT,NSPIND,NAEZ,NATYP,NEMB,NPRINCD,&
+      &           IRM,IRNSD,NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,IVSHIFT,&
       &           TOLRDIF,LLY,DELTAE,&
       &           LCARTESIAN,BRAVAIS,RMAX,GMAX)
 
@@ -30,6 +39,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    use mod_version_info
    use memoryhandling
    use Profiling
+
    implicit none
    !     ..
    !     .. Parameters
@@ -37,7 +47,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    parameter (CVLIGHT=274.0720442D0)
    !     ..
    !     .. Scalar arguments ..
-   INTEGER  KREL,LMAXD,LPOTD,NSPIND,NAEZD,NATYPD,NEMBD,NPRINCD,IRMD,IRNSD,NREFD
+   INTEGER  NPRINCD,IRNSD
 
    !> @note VP : there should be some crosscheck of competing options
    !>            e.g., XCPL and CONDUCT cannot be done simultaneously
@@ -50,7 +60,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    INTRINSIC MIN
    !     ..
    !     .. Scalar Arguments ..
-   integer, intent(inout) :: KTE
+   integer, intent(inout) :: KTE      !< Calculation of the total energy On/Off (1/0)
    integer, intent(inout) :: IGF      !< Do not print or print (0/1) the KKRFLEX_* files
    integer, intent(inout) :: IRM      !< Maximum number of radial points
    integer, intent(inout) :: KXC      !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
@@ -70,6 +80,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    integer, intent(inout) :: NCLS     !< Number of reference clusters
    integer, intent(inout) :: NPOL     !< Number of Matsubara Pols (EMESHT)
    integer, intent(inout) :: LMAX     !< Maximum l component in wave function expansion
+   integer, intent(inout) :: KREL     !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
    integer, intent(inout) :: KCOR
    integer, intent(inout) :: KEFG
    integer, intent(inout) :: KHYP
@@ -87,6 +98,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    integer, intent(inout) :: NPNT1    !< number of E points (EMESHT) for the contour integration
    integer, intent(inout) :: NPNT2    !< number of E points (EMESHT) for the contour integration
    integer, intent(inout) :: NPNT3    !< number of E points (EMESHT) for the contour integration
+   integer, intent(inout) :: KORBIT   !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
    integer, intent(inout) :: KFROZN
    integer, intent(inout) :: ISHIFT
    integer, intent(inout) :: N1SEMI   !< Number of energy points for the semicore contour
@@ -126,7 +138,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    double precision, intent(inout) :: BBASIS  !< Scaling factors for rbasis
    double precision, intent(inout) :: CBASIS  !< Scaling factors for rbasis
    double precision, intent(inout) :: VCONST  !< Potential shift
-   double precision, intent(inout) :: TKSEMI
+   double precision, intent(inout) :: TKSEMI  !< Temperature for semi-core contour
    double precision, intent(inout) :: TOLRDIF !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
    double precision, intent(inout) :: EMUSEMI
    double precision, intent(inout) :: EBOTSEMI
@@ -162,9 +174,12 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    double precision, dimension(:), allocatable, intent(inout) :: SOCSCALE !< Spin-orbit scaling
    double precision, dimension(:,:), allocatable, intent(inout) :: CSCL   !< Speed of light scaling
    double precision, dimension(:,:), allocatable, intent(inout) :: SOCSCL
-   character(len=10) :: SOLVER
-   character(len=40) :: I12,I13,I19,I25,I40
-   character(len=256) :: UIO  ! NCOLIO=256
+   character(len=10), intent(inout) :: SOLVER !< Type of solver
+   character(len=40), intent(inout) :: I12 !< File identifiers
+   character(len=40), intent(inout) :: I13 !< Potential file name
+   character(len=40), intent(inout) :: I19 !< Shape function file name
+   character(len=40), intent(inout) :: I25 !< Scoef file name
+   character(len=40), intent(inout) :: I40 !< File identifiers
    character(len=124), dimension(6), intent(inout) :: TXC
    !----------------------------------------------------------------------------
    !> @note CPA variables. Routine has been modified to look for
@@ -185,12 +200,9 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    integer, dimension(:,:), allocatable, intent(inout) :: KAOEZ !< atom types located at a given site
    double precision, dimension(:), allocatable, intent(inout) :: CONC !< concentration of a given atom
 
-   integer :: IO,IA,IQ,IPRINT
-   double precision :: SUM
-   character(len=3), dimension(0:1) :: CPAFLAG
    !----------------------------------------------------------------------------
    !> @note Variables storing the magnetization direction information.
-   !>     QMTET/QMPHI(NAEZD) give the angles to which the magnetic moment
+   !>     QMTET/QMPHI(NAEZ) give the angles to which the magnetic moment
    !>     on a given site is rotated against the z-axis. Default values
    !>     0.0 and 0.0, i.e., magnetic moment parallel to the z-axis.
    !>     The angles are read in after the token RBASISANG is found
@@ -227,10 +239,16 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    double precision :: SOSCALE,CTLSCALE
    double precision :: BRYMIX,STRMIX,TX,TY,TZ
    character(len=43) :: TSHAPE
+   character(len=256) :: UIO  ! NCOLIO=256
    logical :: LNEW !< Logical variable for old/new treatment of left and right host
    logical :: MANSOC
    logical :: MANCTL
    logical :: LATOMINFO !< Logical variable for old/new treatment of the ATOMINFO
+   !.. Local CPA variables
+   integer :: IO,IA,IQ,IPRINT
+   double precision :: SUM
+   character(len=3), dimension(0:1) :: CPAFLAG
+
    !     .. Local Arrays ..
    integer, dimension(:), allocatable :: NASOC
    integer, dimension(:), allocatable :: IMANSOC
@@ -377,6 +395,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       STOP ' in < RINPUT13 > '
    END IF
 
+   NREF=NAEZ
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Read the atom types, if no CPA NATYP=NAEZ
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -407,8 +426,8 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       WRITE(111,*) 'Default CARTESIAN= ',LCARTESIAN
    ENDIF
 
-   ! This call needs to be done before the rest as one needs to find out the value
-   ! of NEMB to be able to allocate several arrays
+   ! Jonathan Chico: This call needs to be done before the rest as one needs to
+   ! find out the value of NEMB to be able to allocate several arrays
    IF (LINTERFACE) THEN
       WRITE(1337,9410)
 
@@ -604,8 +623,8 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
          END DO
       ENDIF
 
-      CALL IDREALS(TLEFT,3*(NEMBD+1),IPRINT)
-      CALL IDREALS(TRIGHT,3*(NEMBD+1),IPRINT)
+      CALL IDREALS(TLEFT,3*(NEMB+1),IPRINT)
+      CALL IDREALS(TRIGHT,3*(NEMB+1),IPRINT)
 
 
       ! Put The additional atoms in the "embeding" positions
@@ -616,7 +635,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       DO I=1,NRBASIS
          RBASIS(1:3,NAEZ+NLBASIS+I) = TRIGHT(1:3,I)
       END DO
-      !cccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      !-------------------------------------------------------------------------
       ! In RBASIS we have first the basis atoms or the interface
       ! atoms then the left host then the right host the host
       ! goes in the NEMB positions
@@ -625,7 +644,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       ! CPA medium, that is, there is only one kind of atom
       ! occupying a crystallographic site.
       !
-      !ccccccccccccccccccccccccccccccccccccccccccccccccccccc
+      !-------------------------------------------------------------------------
       CALL IoInput('ZPERIODL        ',UIO,1,7,IER)
       IF (IER.NE.0) THEN
          WRITE(*,*) 'rimput13: ZPERIODL not found in inputcard'
@@ -679,7 +698,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    ! End read left- and right-host information in 2d-case.
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   ! although NSPIND is fixed to 1 in REL mode,
+   ! although NSPIN is fixed to 1 in REL mode,
    ! NSPIN should be used as 1 or 2 at this stage
    ! to indicate a non- or spin-polarised potential
    ! that has to be read in. NSPIN is set to 1 before
@@ -807,6 +826,16 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    ELSE
       WRITE(111,*) 'Default KVREL= ',KVREL
    ENDIF
+
+   CALL IoInput('KORBIT          ',UIO,1,7,IER)
+   IF (IER.EQ.0) THEN
+      READ (UNIT=UIO,FMT=*) KORBIT
+      WRITE(111,*) 'KORBIT= ',KORBIT
+   ELSE
+      WRITE(111,*) 'Default KORBIT= ',KORBIT
+   ENDIF
+
+   LMMAXD=(KREL+KORBIT+1)*(LMAX+1)**2)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Allocation of SOC arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1047,14 +1076,14 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Allocate magnetization arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   call allocate_magnetization(flag,NAEZ,NATYP,LMMAXD,INIPOL,IXIPOL,QMTET,&
+   call allocate_magnetization(flag=1,NAEZ,NATYP,LMMAXD,INIPOL,IXIPOL,QMTET,&
       QMPHI,DROTQ)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End of allocation of magnetization arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    IF (LINIPOL) THEN
-      INIPOL(1:NATYPD) = 1
+      INIPOL(1:NATYP) = 1
       CALL IoInput('XINIPOL         ',UIO,1,7,IER)
       IF (IER.EQ.0) THEN
          READ (UNIT=UIO,FMT=*) (inipol(I),I=1,natyp)
@@ -1658,7 +1687,6 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
    ENDIF
 
    ESHIFT = 0.D0
-   IRM = IRMD                ! never used
    INSREF = 0
    KWS = 2
    KHYP = 0
@@ -1967,7 +1995,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Initialise SOLVER, SOC and CTL parameters in REL case
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      CSCL(1:LMAXD+1,1:NATYP) = CVLIGHT
+      CSCL(1:LMAX+1,1:NATYP) = CVLIGHT
       MANSOC=.FALSE.
       MANCTL=.FALSE.
 
@@ -1999,7 +2027,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
                      SOLVER       = 'ABM-SOC-II'
                      MANSOC=.TRUE.
                      DO I=1,NATYP
-                        SOCSCL(1:LMAXD+1,I) = SOSCALE
+                        SOCSCL(1:LMAX+1,I) = SOSCALE
                      END DO
                      WRITE(1337,99010) SOCII(NINT(SOSCALE))
                   END IF
@@ -2040,7 +2068,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
                WRITE(1337,2100)
                DO I=1,NATYP
                   IF (IMANSOC(I).EQ.1) THEN
-                     SOCSCL(1:LMAXD+1,I)=SOSCALE
+                     SOCSCL(1:LMAX+1,I)=SOSCALE
                   END IF
                END DO
                WRITE(1337,99004)
@@ -2080,7 +2108,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
             END IF
 
             IF (MANCTL) THEN
-               CSCL(1:LMAXD+1,1:NATYP) = CSCL(1:LMAXD+1,1:NATYP)/DSQRT(CTLSCALE)
+               CSCL(1:LMAX+1,1:NATYP) = CSCL(1:LMAX+1,1:NATYP)/DSQRT(CTLSCALE)
                WRITE(1337,99012)
                WRITE(1337,99005)
                WRITE(1337,99009) 1.D0/DSQRT(CTLSCALE)
@@ -2096,7 +2124,7 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
          allocate(t_params%qdos_atomselect(NATYP), stat=i_stat) !INTEGER
          call memocc(i_stat,product(shape(t_params%qdos_atomselect))*kind(t_params%qdos_atomselect),'t_params%qdos_atomselect','rinput13')
 
-         t_params%qdos_atomselect(1:NATYPD) = 1
+         t_params%qdos_atomselect(1:NATYP) = 1
          !for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.
          !          CALL IoInput('qdosatoms       ',UIO,1,7,IER)
          !          IF (IER.EQ.0) THEN
@@ -2111,12 +2139,12 @@ SUBROUTINE RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,&
 
       END IF
 
-      ! ============================================================= fswrt
-      IF (OPT('FERMIOUT').AND.(NSTEPS/=1))THEN           ! fswrt
-         WRITE(6,2012)                                    ! fswrt
-         NSTEPS = 1                                       ! fswrt
-      END IF                                             ! fswrt
-      ! ============================================================= fswrt
+      !-------------------------------------------------------------------------
+      IF (OPT('FERMIOUT').AND.(NSTEPS/=1))THEN                                  ! fswrt
+         WRITE(6,2012)                                                          ! fswrt
+         NSTEPS = 1                                                             ! fswrt
+      END IF                                                                    ! fswrt
+      !-------------------------------------------------------------------------
 
       ! ============================================================= WF_SAVE
       CALL IOInput('MEMWFSAVE       ',UIO,0,7,IER)

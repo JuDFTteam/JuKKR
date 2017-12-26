@@ -86,7 +86,7 @@ OBJECTS1c= $(OBJ)/main1c.o $(OBJ)/rhoval.o $(OBJ)/rhoval0.o $(OBJ)/rhocore.o $(O
 OBJECTS2 = $(OBJ)/main2.o $(OBJ)/vmadelblk.o $(OBJ)/vinterface.o $(OBJ)/etotb1.o $(OBJ)/rhototb.o $(OBJ)/brydbm.o $(OBJ)/brysh1.o $(OBJ)/brysh2.o $(OBJ)/brysh3.o $(OBJ)/convol.o $(OBJ)/ecoub.o $(OBJ)/epotinb.o $(OBJ)/espcb.o $(OBJ)/force.o $(OBJ)/forceh.o $(OBJ)/forcxc.o $(OBJ)/mixstr.o $(OBJ)/mtzero.o $(OBJ)/reg2.o $(OBJ)/rhosymm.o $(OBJ)/rites.o $(OBJ)/sinwk.o $(OBJ)/vintras.o $(OBJ)/corlsd.o $(OBJ)/cpw91.o $(OBJ)/cylm02.o $(OBJ)/exch91.o $(OBJ)/gcor91.o $(OBJ)/gradr.o $(OBJ)/gradrl.o $(OBJ)/gxcpt.o $(OBJ)/mkxcpe.o $(OBJ)/spher.o $(OBJ)/sphere_gga.o $(OBJ)/sphere_nogga.o $(OBJ)/trarea.o $(OBJ)/vosko.o $(OBJ)/vxcdrv.o $(OBJ)/vxcgga.o $(OBJ)/vxclm.o $(OBJ)/vxcspo.o $(OBJ)/lebedev.o $(OBJ)/mkxcpe2.o $(OBJ)/mdirnewang.o $(OBJ)/scfiterang.o $(OBJ)/writekkrflex.o
 
 # only these conatin explicit !$omp statements:
-$(OBJ)/main0.o: $(SRC)/main0.F
+$(OBJ)/main0.o: $(SRC)/main0.F90
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
 $(OBJ)/rhoval.o: $(SRC)/rhoval.F
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
