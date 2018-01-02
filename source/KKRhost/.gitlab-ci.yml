@@ -7,37 +7,47 @@ before_script:
 
 stages:
   - build
-  - test
+  - run
+  - verify
 
 build:intel:
   stage: build
   script:
-    - echo 'starting build'
-    - pwd
+    # compile code
     - cp tests/inc.p .
     - make 
-    - mkdir tests/test_run/
-    - cd tests/test_run/
-    - ln -s ../../kkr.x ../potential ../shapefun ../inputcard .
   artifacts:
     paths:
       - kkr.x
-      - tests/test_run
     expire_in: 1 day
 
-test:intel:
-  stage: test
+run:intel:
+  stage: run
   script:
-    - cd tests/test_run
-    - echo 'starting test_run'
-    - pwd
-    - ls -ltr
+    # set environment variables to avoind stack size issue
     - export OMP_NUM_THREADS=1
     - export OMP_STACKSIZE=1g
     - ulimit -s unlimited
+    # prepare files and directories for test run (save only necessary files, discard *.o files)
+    - mkdir tests/test_run/
+    - cd tests/test_run/
+    - ln -s ../../kkr.x ../potential ../shapefun ../inputcard .
+    # run calculation
     - ./kkr.x | tee out_kkr
   artifacts:
     paths:
       - tests/test_run
     expire_in: 2 days
+
+verify:intel:
+  stage: verify
+  script:
+    # install pip
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    # use pip to install pytest
+    - pip install numpy pytest
+    # prepare and execute verification using pytest
+    - cd tests
+    - pytest -v
 
