@@ -36,4 +36,8 @@ test:intel:
     - export OMP_STACKSIZE=1g
     - ulimit -s unlimited
     - ./kkr.x | tee out_kkr
+  artifacts:
+    paths:
+      - tests/test_run
+    expire_in: 2 days
 
