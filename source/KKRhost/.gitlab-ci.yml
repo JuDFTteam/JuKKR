@@ -32,5 +32,8 @@ test:intel:
     - echo 'starting test_run'
     - pwd
     - ls -ltr
+    - export OMP_NUM_THREADS=1
+    - export OMP_STACKSIZE=1g
+    - ulimit -s unlimited
     - ./kkr.x | tee out_kkr
 
