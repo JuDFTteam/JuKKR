@@ -12,6 +12,8 @@ stages:
 build:intel:
   stage: build
   script:
+    - echo 'starting build'
+    - pwd
     - cp tests/inc.p .
     - make 
     - mkdir tests/test_run/
