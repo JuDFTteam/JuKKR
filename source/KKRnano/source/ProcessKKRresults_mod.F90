@@ -322,6 +322,18 @@ module ProcessKKRresults_mod
        enddo
     endif
 
+    if (params%constrain_moment) then
+       do ila = 1, num_local_atoms
+          atomdata => getAtomData(calc, ila)
+          mesh => atomdata%mesh_ptr
+          imt_local = mesh%imt
+          if (atomdata%atom_index == params%constrain_moment_site) then
+             atomdata%potential%vons(1:imt_local,1,2) = atomdata%potential%vons(1:imt_local,1,1)
+          endif
+       enddo
+    endif
+
+
   endfunction ! mix_potential
 
   !------------------------------------------------------------------------------

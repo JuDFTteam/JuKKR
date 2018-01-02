@@ -50,6 +50,8 @@ module InputParams_mod
     logical :: ldau
     logical :: b_field
     double precision :: b_field_val
+    logical :: constrain_moment
+    integer :: constrain_moment_site
     integer :: nsra
     integer :: kte
     logical :: jij
@@ -382,6 +384,24 @@ integer function getValues(filename, self) result(ierror)
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for b_field_val."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "constrain_moment", self%constrain_moment , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for constrain_moment. Set constrain_moment to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for constrain_moment."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "constrain_moment_site", self%constrain_moment_site , def=1)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for constrain_moment_site. Set constrain_moment_site to 1"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for constrain_moment_site."
     destroy_and_return
   endif
 
