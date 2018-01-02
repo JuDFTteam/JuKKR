@@ -17,7 +17,7 @@ build:intel:
     - mkdir tests/test_run/
     - cd tests/test_run/
     - ln -s ../../kkr.x ../potential ../shapefun ../inputcard .
-  artifact:
+  artifacts:
     paths:
       - tests/test_run
     expire_in: 1 day
