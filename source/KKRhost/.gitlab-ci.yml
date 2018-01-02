@@ -19,9 +19,6 @@ build:intel:
   artifacts:
     paths:
       - kkr.x
-      - potential
-      - shapefun
-      - inputcard
     expire_in: 1 day
 
 run:intel:
@@ -52,6 +49,5 @@ verify:intel:
     - pip install numpy pytest
     # prepare and execute verification using pytest
     - cd tests
-    - ln -s tools/* .
-    - pytest
+    - pytest -v
 
