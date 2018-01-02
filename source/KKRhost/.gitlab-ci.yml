@@ -1,0 +1,43 @@
+# docker image containing Developlement Tools and the current Intel compilers based on CentOS 7
+image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
+
+before_script:
+  # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
+  - set +e && source compilervars.sh intel64 && set -e
+
+stages:
+  - build
+  - test
+
+build:intel:
+  stage: build
+  script:
+    - echo 'starting build'
+    - pwd
+    - cp tests/inc.p .
+    - make 
+    - mkdir tests/test_run/
+    - cd tests/test_run/
+    - ln -s ../../kkr.x ../potential ../shapefun ../inputcard .
+  artifacts:
+    paths:
+      - kkr.x
+      - tests/test_run
+    expire_in: 1 day
+
+test:intel:
+  stage: test
+  script:
+    - cd tests/test_run
+    - echo 'starting test_run'
+    - pwd
+    - ls -ltr
+    - export OMP_NUM_THREADS=1
+    - export OMP_STACKSIZE=1g
+    - ulimit -s unlimited
+    - ./kkr.x | tee out_kkr
+  artifacts:
+    paths:
+      - tests/test_run
+    expire_in: 2 days
+
