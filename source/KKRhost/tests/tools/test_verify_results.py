@@ -11,6 +11,7 @@ def test_verify_results():
     print_all = False
 
     print 'running tests for', path0
+    print os.path.listdir(path0)
    
     success, parser_msgs, out_dict = parse_kkr_outputfile({}, path0+'out_kkr', path0+'output.0.txt', path0+'output.000.txt', path0+'out_timing.000.txt', path0+'out_potential', path0+'nonco_angle_out.dat')
    
