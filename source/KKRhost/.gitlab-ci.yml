@@ -48,7 +48,7 @@ verify:intel:
     - curl -O https://bootstrap.pypa.io/get-pip.py 
     - python get-pip.py 
     # use pip to install pytest
-    - pip install pytest
+    - pip install numpy pytest
     # prepare and execute verification using pytest
     - cd tests
     - ln -s tools/* .
