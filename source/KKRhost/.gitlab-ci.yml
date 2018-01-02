@@ -21,7 +21,7 @@ build:intel:
   artifacts:
     paths:
       - kkr.x
-      - tests
+      - tests/*
     expire_in: 1 day
 
 run:intel:
@@ -34,7 +34,7 @@ run:intel:
     - ./kkr.x | tee out_kkr
   artifacts:
     paths:
-      - tests
+      - tests/*
     expire_in: 2 days
 
 verify:intel:
