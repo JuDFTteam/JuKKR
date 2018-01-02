@@ -14,16 +14,17 @@ build:intel:
   script:
     - cp tests/inc.p .
     - make 
+    - mkdir tests/test_run/
     - cd tests/test_run/
     - ln -s ../../kkr.x ../potential ../shapefun ../inputcard .
+  artifact:
+    paths:
+      - tests/test_run
+    expire_in: 1 day
 
 test:intel:
   stage: test
   script:
     - cd tests/test_run
     - ./kkr.x | tee out_kkr
-  artifact:
-    paths:
-      - tests/test_run
-    expire_in: 1 day
 
