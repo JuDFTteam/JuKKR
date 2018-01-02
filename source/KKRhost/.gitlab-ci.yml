@@ -21,6 +21,7 @@ build:intel:
     - ln -s ../../kkr.x ../potential ../shapefun ../inputcard .
   artifacts:
     paths:
+      - kkr.x
       - tests/test_run
     expire_in: 1 day
 
@@ -30,7 +31,6 @@ test:intel:
     - cd tests/test_run
     - echo 'starting test_run'
     - pwd
-    - ls
-    - ln -s ../../kkr.x .
+    - ls -ltr
     - ./kkr.x | tee out_kkr
 
