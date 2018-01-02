@@ -27,7 +27,7 @@ build:intel:
     expire_in: 1 day
 
 run:intel:
-  stage: test
+  stage: run
   script:
     - cd tests/test_run
     - echo 'starting test_run'
