@@ -24,6 +24,7 @@ build:intel:
     paths:
       - kkr.x
       - tests/test_run
+      - tests/tools
     expire_in: 1 day
 
 run:intel:
@@ -40,9 +41,10 @@ run:intel:
   artifacts:
     paths:
       - tests/test_run
+      - tests/tools
     expire_in: 2 days
 
-verigy:intel:
+verify:intel:
   stage: verify
   script:
     - cd tests/test_run
