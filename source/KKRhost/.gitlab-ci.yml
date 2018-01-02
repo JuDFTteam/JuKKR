@@ -28,5 +28,9 @@ test:intel:
   stage: test
   script:
     - cd tests/test_run
+    - echo 'starting test_run'
+    - pwd
+    - ls
+    - ln -s ../../kkr.x .
     - ./kkr.x | tee out_kkr
 
