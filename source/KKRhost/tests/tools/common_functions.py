@@ -90,7 +90,7 @@ def get_version_info(outfile):
 
 def get_corestates_from_potential(potfile='potential'):
     """Read core states from potential file"""
-    from scipy import zeros
+    from numpy import zeros
     txt = open(potfile).readlines()
 
     #get start of each potential part
