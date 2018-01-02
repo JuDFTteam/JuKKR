@@ -7,7 +7,8 @@ before_script:
 
 stages:
   - build
-  - test
+  - run
+  - verify
 
 build:intel:
   stage: build
@@ -25,7 +26,7 @@ build:intel:
       - tests/test_run
     expire_in: 1 day
 
-test:intel:
+run:intel:
   stage: test
   script:
     - cd tests/test_run
@@ -39,5 +40,18 @@ test:intel:
   artifacts:
     paths:
       - tests/test_run
+    expire_in: 2 days
+
+verigy:intel:
+  stage: verify
+  script:
+    - cd tests/test_run
+    - echo 'veryfing result'
+    - pwd
+    - ls -ltr
+    - ../tools/verify_test.py . printall | tee output_verifier.txt
+  artifacts:
+    paths:
+      - tests/test_run/output_verifier.txt
     expire_in: 2 days
 

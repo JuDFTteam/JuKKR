@@ -18,3 +18,5 @@ compver
 inc.p
 */out_timing.*.txt
 */output.*.txt
+*.pyc
+tests/test_run/
