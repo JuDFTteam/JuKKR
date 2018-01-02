@@ -20,3 +20,4 @@ inc.p
 */output.*.txt
 *.pyc
 tests/test_run/
+.cache/

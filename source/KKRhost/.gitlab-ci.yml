@@ -13,8 +13,6 @@ stages:
 build:intel:
   stage: build
   script:
-    - echo 'starting build'
-    - pwd
     - cp tests/inc.p .
     - make 
     - mkdir tests/test_run/
@@ -23,37 +21,29 @@ build:intel:
   artifacts:
     paths:
       - kkr.x
-      - tests/test_run
-      - tests/tools
+      - tests
     expire_in: 1 day
 
 run:intel:
   stage: run
   script:
     - cd tests/test_run
-    - echo 'starting test_run'
-    - pwd
-    - ls -ltr
     - export OMP_NUM_THREADS=1
     - export OMP_STACKSIZE=1g
     - ulimit -s unlimited
     - ./kkr.x | tee out_kkr
   artifacts:
     paths:
-      - tests/test_run
-      - tests/tools
+      - tests
     expire_in: 2 days
 
 verify:intel:
   stage: verify
   script:
-    - cd tests/test_run
-    - echo 'veryfing result'
-    - pwd
-    - ls -ltr
-    - ../tools/verify_test.py . printall | tee output_verifier.txt
-  artifacts:
-    paths:
-      - tests/test_run/output_verifier.txt
-    expire_in: 2 days
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    - pip install pytest
+    - cd tests
+    - ln -s tools/* .
+    - pytest
 
