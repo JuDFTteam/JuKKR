@@ -1,0 +1,13 @@
+# serial: kkrjm_v2.2-22-g4f8f5ff_openmp-mac_20180102101655
+ main0                                       0.305300000000000     
+ main1a - tbref                               4.31700000000000     
+ main1a                                       29.0842000000000     
+ main1b - calctref13                          5.20310000000000     
+ main1b_inversion                             2.27770000000040     
+ main1b - kloopz                              14.7322000000000     
+ main1b                                       14.7549000000000     
+ main1c - rhovalnew                           49.7159000000000     
+ main1c - serial part                        1.800000000000000E-003
+ main1c                                       49.7331000000000     
+ main2                                       0.106900000000000     
+ Time in Iteration                            93.6793000000000     

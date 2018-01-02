@@ -1,0 +1,42 @@
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !!! Most output written to output.myrank.txt files !!!
+ !!! please check these files as well               !!!
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+*******************************************************************************
+          Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                           for Bulk and Interfaces
+          Juelich-Munich 2001 - 2016
+
+ Code version: v2.2-22-g4f8f5ff
+ Compile options: openmp-mac
+-O2 -r8 -module ./OBJ -sox -traceback
+-mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
+
+ serial number for files:kkrjm_v2.2-22-g4f8f5ff_openmp-mac_20180102101655
+*******************************************************************************
+
+ Number of OpenMP threads used:    1
+
+*******************************************************************************
+
+ Calling MADELUNG3D
+ Exited MADELUNG3D
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ +++            SCF ITERATIONS START                +++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+started on 2018/ 1/ 2 at 10:16:55
+    memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:           9.75MB)  <==
+    Number of saved wavefunctions per atom and energy:  1; save rll: T; save sll: F; save rllleft: F; save sllleft: F
+               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
+          TOT************************  ********  ************************
+      ITERATION   1 charge neutrality in unit cell = ************
+                    TOTAL mag. moment in unit cell = ************
+                new E FERMI   0.5686610324  DOS(E_F) = ************
+      ITERATION   1 average rms-error : v+ + v- =  2.1387D+07
+                                        v+ - v- =  2.6597D+01
+TOTAL ENERGY in ryd. : *************************
+
+            ++++++ NUMBER OF SCF STEPS EXHAUSTED ++++++
+*******************************************************************************
+Iteration finished on 2018/ 1/ 2 at 10:18:29
