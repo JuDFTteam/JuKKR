@@ -4,7 +4,6 @@ import pytest
 
 def test_verify_results():
     import os
-    os.system('../tools/verify_test.py . printall | tee output_verifier.txt')
     from kkrparser_functions import *
     from pprint import pprint
    

@@ -13,8 +13,10 @@ stages:
 build:intel:
   stage: build
   script:
+    # compile code
     - cp tests/inc.p .
     - make 
+    # prepare files and directories for test run (save only necessary files, discard *.o files)
     - mkdir tests/test_run/
     - cd tests/test_run/
     - ln -s ../../kkr.x ../potential ../shapefun ../inputcard .
@@ -27,10 +29,12 @@ build:intel:
 run:intel:
   stage: run
   script:
-    - cd tests/test_run
+    # set environment variables to avoind stack size issue
     - export OMP_NUM_THREADS=1
     - export OMP_STACKSIZE=1g
     - ulimit -s unlimited
+    # run calculation
+    - cd tests/test_run
     - ./kkr.x | tee out_kkr
   artifacts:
     paths:
@@ -40,9 +44,12 @@ run:intel:
 verify:intel:
   stage: verify
   script:
+    # install pip
     - curl -O https://bootstrap.pypa.io/get-pip.py 
     - python get-pip.py 
+    # use pip to install pytest
     - pip install pytest
+    # prepare and execute verification using pytest
     - cd tests
     - ln -s tools/* .
     - pytest
