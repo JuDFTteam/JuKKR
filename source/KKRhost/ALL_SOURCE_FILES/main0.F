@@ -203,7 +203,7 @@ C Note: IRMD-dimension depends on KREL to save space
 C ======================================================================VINS()
 
       use mod_types
-#ifdef CPP_OMP
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
       use omp_lib        ! necessary for omp functions
 #endif
 #ifdef CPP_MPI
@@ -416,7 +416,7 @@ C ruess: IVSHIFT test option
       double precision, allocatable :: THETAS(:,:,:), THETASNEW(:,:,:)
       integer :: ierr
       
-#ifdef CPP_OMP
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
 !     .. OMP ..
       integer nth, ith          ! total number of threads, thread number
 #endif
