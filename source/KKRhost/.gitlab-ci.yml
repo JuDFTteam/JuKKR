@@ -7,7 +7,6 @@ before_script:
   # install pip
   - curl -O https://bootstrap.pypa.io/get-pip.py 
   - python get-pip.py 
-  - pip install subprocess
   - pip install numpy
 
 stages:
