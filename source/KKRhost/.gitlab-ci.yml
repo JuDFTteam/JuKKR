@@ -28,7 +28,7 @@ build:intel:
     - cp tests/inc.p .
     - make clean; make serial; cp kkr.x kkr.x_serial
     - make clean; make mpi; cp kkr.x kkr.x_mpi
-    - make clean; make omp; cp kkr.x kkr.x_omp
+    - make clean; make openmp; cp kkr.x kkr.x_omp
     - make clean; make hybrid; cp kkr.x kkr.x_hybrid
   artifacts:
     paths:
