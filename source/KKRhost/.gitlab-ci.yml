@@ -4,21 +4,38 @@ image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
   - set +e && source compilervars.sh intel64 && set -e
+  # install pip
+  - curl -O https://bootstrap.pypa.io/get-pip.py 
+  - python get-pip.py 
+  - pip install subprocess
+  - pip install numpy
 
 stages:
   - build
+  - test
   - run
   - verify
+
+test:intel:
+  stage: test
+  script:
+    # test if dependencies are working
 
 build:intel:
   stage: build
   script:
     # compile code
     - cp tests/inc.p .
-    - make 
+    - make clean; make serial; cp kkr.x kkr.x_serial
+    - make clean; make mpi; cp kkr.x kkr.x_mpi
+    - make clean; make omp; cp kkr.x kkr.x_omp
+    - make clean; make hybrid; cp kkr.x kkr.x_hybrid
   artifacts:
     paths:
-      - kkr.x
+      - kkr.x_serial
+      - kkr.x_mpi
+      - kkr.x_omp
+      - kkr.x_hybrid
     expire_in: 1 day
 
 run:intel:
@@ -38,11 +55,8 @@ run:intel:
 verify:intel:
   stage: verify
   script:
-    # install pip
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
     # use pip to install pytest
-    - pip install numpy pytest
+    - pip install pytest
     # prepare and execute verification using pytest
     - cd tests
     - pytest -v

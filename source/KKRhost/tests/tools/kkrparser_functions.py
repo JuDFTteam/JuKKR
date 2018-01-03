@@ -321,34 +321,6 @@ def get_ewald(outfile_0init):
         rsum = float(tmpval[2]), int(tmpval[0]), int(tmpval[1])
         tmpval = tmptxt[itmp+14].split()[2:]
         gsum = float(tmpval[2]), int(tmpval[0]), int(tmpval[1])
-    '''
-     < LATTICE3D > : generating direct/reciprocal lattice vectors
-
-          R max = 71.84100 (a.u.)
-          G max =  6.33343 (1/a.u.)
-
-                         vectors  shells  max. R 
-                         ------------------------------
-          Direct  lattice   5747      92   71.84100
-          Recipr. lattice   1211      38    6.33282
-                         ------------------------------
-
-     < LATTICE2D > : generating direct/reciprocal lattice vectors
-
-          R max =  27.10000 (a.u.)
-          G max =   9.22509 (1/a.u.)
-
- Real space...
-...sorting       81 vectors...
- ...done.
- Reciprocal space...
-...sorting      193 vectors...
- ...done.
-                         vectors  shells  max. R 
-                         ------------------------------
-          Direct  lattice     81      14   27.10000
-          Recipr. lattice    193      29    9.05410
-    '''
     return rsum, gsum, info
 
 
@@ -708,7 +680,7 @@ def parse_kkr_outputfile(out_dict, outfile, outfile_0init, outfile_000, timing_f
         msg_list.append(msg)
         
     if not doscalc: # in case of dos calculation no ewald summation is done
-        if 1:#try:
+        try:
             rsum, gsum, info = get_ewald(outfile_0init)
             tmp_dict = {}
             tmp_dict['ewald_summation_mode'] = info
@@ -721,9 +693,9 @@ def parse_kkr_outputfile(out_dict, outfile, outfile_0init, outfile_000, timing_f
             tmp_dict['gsum_number_of_shells'] = gsum[2]
             tmp_dict['gsum_cutoff_unit'] = '1/a_Bohr'
             out_dict['ewald_sum_group'] = tmp_dict
-        #except:
-        #    msg = "Error parsing output of KKR: ewald summation for madelung potential"
-        #    msg_list.append(msg)
+        except:
+            msg = "Error parsing output of KKR: ewald summation for madelung poterntial"
+            msg_list.append(msg)
             
         
     #convert arrays to lists
