@@ -49,6 +49,39 @@ class Test_check_test_runs():
         if cmp_values['rms'] != []:
             assert std(cmp_values['rms']) < 10**-8
 
+    def test_verify4_Jijs_noSOC(self):
+        paths = 'test_run4_serial_1_1/ test_run4_mpi_1_4/ test_run4_hybrid_1_4/'.split()
+        path0 = 'test_inputs/test_4_Jijs_Fe_slab_lmax2_noSOC/ref/'
+        for path in paths:
+           files = 'Jij.atom00002 Jij.atom00003'.split()
+           for fname in files:
+              num, text = read_file(path+fname)
+              num_ref, text_ref = read_file(path0+fname)
+              assert std(num-num_ref)<10**-10
+              assert set(text)-set(text_ref)==set()
+
+    def test_verify5_kkrflex(self):
+        paths = 'test_run5_serial_1_1/ test_run5_mpi_1_4/ test_run5_hybrid_1_4/'.split()
+        path0 = 'test_inputs/test_5_Silicon_lloyd_kkrflex_output_lmax2_noSOC/ref/'
+        for path in paths:
+           files = 'kkrflex_atominfo kkrflex_hoststructure.dat kkrflex_intercell_cmoms kkrflex_intercell_ref kkrflex_tmat'.split()
+           for fname in files:
+              num, text = read_file(path+fname)
+              num_ref, text_ref = read_file(path0+fname)
+              assert std(num-num_ref)<10**-10
+              assert set(text)-set(text_ref)==set()
+
+    def test_verify6_FERMIOUT(self):
+        paths = 'test_run6_serial_1_1/ test_run6_mpi_1_4/ test_run6_hybrid_1_4/'.split()
+        path0 = 'test_inputs/test_6_Silicon_lloyd_FERMIOUT_output_lmax2_noSOC/ref/'
+        for path in paths:
+           files = 'TBkkr_container.txt  TBkkr_params.txt'.split()
+           for fname in files:
+              num, text = read_file(path+fname)
+              num_ref, text_ref = read_file(path0+fname)
+              assert std(num-num_ref)<10**-10
+              assert set(text)-set(text_ref)==set()
+
         
 # helper functions
 
@@ -76,4 +109,17 @@ def cmp_modes(cmplist, path00):
             cmp_values['charges'].append(out_dict['charge_valence_states_per_atom'])
     pprint.pprint(cmp_values)
     return cmp_values  
+
+def read_file(path):
+   txt = open(path).readlines()
+   numbers, text = [], []
+   for line in txt:
+       if line[0] != '#':
+          for i in line.split():
+             try:
+               tmp = float(i)
+               numbers.append(tmp)
+             except:
+               text.append(i)
+   return array(numbers), text
 
