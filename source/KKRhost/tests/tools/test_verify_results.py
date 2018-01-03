@@ -28,21 +28,27 @@ class Test_check_test_runs():
         path00 = 'test_run1_'
         cmp_values = cmp_modes(cmplist, path00)
         if cmp_values['rms'] != []:
-            assert std(cmp_values['rms'])<10**-8
+            assert std(cmp_values['rms']) < 10**-8
 
     def test_compare_modes2(self):
         cmplist = ['serial_1_1', 'omp_1_1', 'omp_4_1', 'mpi_1_1' ,'mpi_1_4', 'hybrid_1_1', 'hybrid_1_4', 'hybrid_4_1', 'hybrid_2_2']
         path00 = 'test_run2_'
         cmp_values = cmp_modes(cmplist, path00)
         if cmp_values['rms'] != []:
-            assert std(cmp_values['rms'])<10**-8
+            s_rms = std(cmp_values['rms'])
+            pprint.pprint('std_rms= {}'.format(s_rms))
+            max_s_charges = max(std(cmp_values['charges'], axis=0))
+            pprint.pprint('max_std_charges= {}'.format(max_s_charges))
+            assert s_rms < 10**-8
+            assert max_s_charges < 10**-8
+        assert 1==2
 
     def test_compare_modes3(self):
         cmplist = ['serial_1_1', 'omp_1_1', 'omp_4_1', 'mpi_1_1' ,'mpi_1_4', 'hybrid_1_1', 'hybrid_1_4', 'hybrid_4_1', 'hybrid_2_2']
         path00 = 'test_run3_'
         cmp_values = cmp_modes(cmplist, path00)
         if cmp_values['rms'] != []:
-            assert std(cmp_values['rms'])<10**-8
+            assert std(cmp_values['rms']) < 10**-8
 
         
 # helper functions
@@ -65,9 +71,10 @@ def cmp_modes(cmplist, path00):
             success, parser_msgs, out_dict = parse_kkr_outputfile({}, path0+'out_kkr', path0+'output.0.txt', path0+'output.000.txt', path0+'out_timing.000.txt', path0+'out_potential', path0+'nonco_angle_out.dat')
             print path0
             pprint.pprint(parser_msgs)
+            #pprint.pprint(out_dict)
             assert success
             cmp_values['rms'].append(out_dict['convergence_group']['rms'])
-            cmp_values['charges'].append(out_dict['total_charge_per_atom'])
+            cmp_values['charges'].append(out_dict['charge_valence_states_per_atom'])
     pprint.pprint(cmp_values)
     return cmp_values  
 

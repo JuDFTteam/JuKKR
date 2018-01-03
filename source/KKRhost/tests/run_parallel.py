@@ -14,15 +14,15 @@ else:
     test_coverage = 0
 
 # some global settings
-modes = ['serial', 'omp',  'mpi', 'hybrid']
+modes = ['omp',  'mpi', 'hybrid']  #['serial', 'omp',  'mpi', 'hybrid']
 npara_pairs = [[1,1], [1,4], [4,1], [2,2]] # first entry is OMP_NUM_THREADS second number of MPI ranks
 global_options = '' #'source /usr/local/bin/compilervars-12.sh intel64; source /usr/local/intel/mkl/bin/mklvars.sh intel64'
 
-test_systems = ['test_run1', 'test_run2', 'test_run3']
+test_systems = ['test_run1', 'test_run2', 'test_run3', 'test_run4', 'test_run5', 'test_run6']
 
 # define masks of test_systes for exgensive (i.e. non-serial) tests
 # key is the test_coverage that enters as input via sys.argv command line argument
-test_coverages = {0:[0], 1:[1], 2:[2]}
+test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5]}
 
 # loop over all combinations
 for mode in modes:

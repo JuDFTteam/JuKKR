@@ -70,7 +70,7 @@ build:intel:serial:
     expire_in: 1 day
 
 
-run:intel:
+run:intel:serial1:
   stage: run
   script:
     # set environment variables to avoind stack size issue
@@ -78,7 +78,49 @@ run:intel:
     - export OMP_STACKSIZE=1g
     - ulimit -s unlimited
     - cd tests
-    - ./run_all.py 1
+    - ./run_serial.py 1
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:serial2:
+  stage: run
+  script:
+    # set environment variables to avoind stack size issue
+    - export OMP_NUM_THREADS=1
+    - export OMP_STACKSIZE=1g
+    - ulimit -s unlimited
+    - cd tests
+    - ./run_serial.py 2
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:serial3:
+  stage: run
+  script:
+    # set environment variables to avoind stack size issue
+    - export OMP_NUM_THREADS=1
+    - export OMP_STACKSIZE=1g
+    - ulimit -s unlimited
+    - cd tests
+    - ./run_serial.py 3
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:parallel2:
+  stage: run
+  script:
+    # set environment variables to avoind stack size issue
+    - export OMP_NUM_THREADS=1
+    - export OMP_STACKSIZE=1g
+    - ulimit -s unlimited
+    - cd tests
+    - ./run_parallel.py 2
   artifacts:
     paths:
       - tests/test_run*
