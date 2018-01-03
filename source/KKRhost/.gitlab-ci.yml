@@ -12,8 +12,8 @@ before_script:
 
 
 stages:
-  - build
   - test
+  - build
   - run
   - verify
 

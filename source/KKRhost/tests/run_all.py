@@ -16,7 +16,7 @@ else:
 # some global settings
 modes = ['serial', 'omp',  'mpi', 'hybrid']
 npara_pairs = [[1,1], [1,4], [4,1], [2,2]] # first entry is OMP_NUM_THREADS second number of MPI ranks
-global_options = 'source /usr/local/bin/compilervars-12.sh intel64; source /usr/local/intel/mkl/bin/mklvars.sh intel64'
+global_options = '' #'source /usr/local/bin/compilervars-12.sh intel64; source /usr/local/intel/mkl/bin/mklvars.sh intel64'
 
 test_systems = ['test_run1', 'test_run2', 'test_run3']
 
