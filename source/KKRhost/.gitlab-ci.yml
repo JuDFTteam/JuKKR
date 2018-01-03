@@ -1,6 +1,7 @@
 # docker image containing Developlement Tools and the current Intel compilers based on CentOS 7
 image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
 
+
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
   - set +e && source compilervars.sh intel64 && set -e
@@ -9,11 +10,13 @@ before_script:
   - python get-pip.py 
   - pip install numpy
 
+
 stages:
   - build
   - test
   - run
   - verify
+
 
 test:intel:
   stage: test
@@ -21,22 +24,51 @@ test:intel:
     # test if dependencies are working
     - echo 'do some tests here'
 
-build:intel:
+
+build:intel:hybrid:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make hybrid; cp kkr.x kkr.x_hybrid
+  artifacts:
+    paths:
+      - kkr.x_hybrid
+    expire_in: 1 day
+
+build:intel:omp:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make openmp; cp kkr.x kkr.x_omp
+  artifacts:
+    paths:
+      - kkr.x_omp
+    expire_in: 1 day
+
+build:intel:mpi:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make mpi; cp kkr.x kkr.x_mpi
+  artifacts:
+    paths:
+      - kkr.x_mpi
+    expire_in: 1 day
+
+build:intel:serial:
   stage: build
   script:
     # compile code
     - cp tests/inc.p .
     - make clean; make serial; cp kkr.x kkr.x_serial
-    - make clean; make mpi; cp kkr.x kkr.x_mpi
-    - make clean; make openmp; cp kkr.x kkr.x_omp
-    - make clean; make hybrid; cp kkr.x kkr.x_hybrid
   artifacts:
     paths:
       - kkr.x_serial
-      - kkr.x_mpi
-      - kkr.x_omp
-      - kkr.x_hybrid
     expire_in: 1 day
+
 
 run:intel:
   stage: run
@@ -51,6 +83,7 @@ run:intel:
     paths:
       - tests/test_run*
     expire_in: 2 days
+
 
 verify:intel:
   stage: verify
