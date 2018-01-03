@@ -75,11 +75,11 @@ C =====================================================================
 C ---------------------------------------------------------------------
 C     general settings
       PARAMETER ( KREL = 0 )   ! 0 for scalar-relativistic, 1 for full relativistic
-      PARAMETER ( KORBIT = 1 ) ! 0 for old solver (noSOC), 1 for newsolver, needed for NEWSOSOL RUNOPT
+      PARAMETER ( KORBIT = 0 ) ! 0 for old solver (noSOC), 1 for newsolver, needed for NEWSOSOL RUNOPT
       PARAMETER ( KNOCO= 0 )
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )
-      PARAMETER ( LMAXD = 3 )  ! lmax cutoff, set according to LMAX in inputcard
+      PARAMETER ( LMAXD = 2 )  ! lmax cutoff, set according to LMAX in inputcard
       PARAMETER ( IEMXD = 101 )
       PARAMETER ( IRMD = 900, IRNSD = 890 )
 !      PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
@@ -88,7 +88,7 @@ C     general settings
       PARAMETER ( NTREFD = 0 )
 C ---------------------------------------------------------------------
 C     structure-dependent
-      PARAMETER ( NAEZD = 1  )      ! number of atoms in unit cell, set to NATYP value of inputcard
+      PARAMETER ( NAEZD = 4  )      ! number of atoms in unit cell, set to NATYP value of inputcard
       PARAMETER ( NATYPD = NAEZD )  ! number of atom types, in case of CPA set to a different number then NATYPD
       PARAMETER ( NSHELD = NATYPD + 300)
 !      PARAMETER ( NSHELD = NATYPD +1000)

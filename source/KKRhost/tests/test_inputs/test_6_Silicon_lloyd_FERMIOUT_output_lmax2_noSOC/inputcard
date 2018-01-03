@@ -1,68 +1,70 @@
 ***** Input file for TB-KKR code *****
       ***Running options*** 
 RUNOPT 
-GENPOT  NEWSOSOL..     ...
+FERMIOUTLLOYD   ...     ...     ...
 +-------+-------+-------+-------+-------+
       ***test options*** (2 lines) 
 TESTOPT
 ie      RMESH   clusters 
-.....   fullBZ   
+....    .....   
 +-------+-------+-------+-------+-------+ 
-  LMAX=3   NSPIN=2   NATYP=1
+  LMAX=2    NSPIN=1   NATYP=4 
 --------------------------------------------
  ** Description of lattice**
-ALATBASIS= 7.70973    1.0      1.0        lattice constants
+ALATBASIS= 10.263    1.0      1.0        lattice constants
 BASISCALE= 1.0     1.0      1.0        scaling factor
 LATTICE=1
 BRAVAIS 
-   0.5                     0.5                     0.0
-   0.0                     0.5                     0.5
-   0.5                     0.0                     0.5 
+  0.0   0.5   0.5
+  0.5   0.0   0.5
+  0.5   0.5   0.0
 ----------------------------------------------------------------------
-NAEZ=1   NEMB=0   NEMBZ=0  KAOEZ=1
+NAEZ=4   NEMB=0   NEMBZ=0  KAOEZ=1
 CARTESIAN= f
 RBASIS                             
-	0.00000              0.00000              0.00000	
+        0.00000    0.00000    0.00000    
+        0.25000    0.25000    0.25000    
+        0.50000    0.50000    0.50000    
+        0.75000    0.75000    0.75000    
 SCALING=  1.0        1.0        1.0
 ----------------------------------------------------------------------
 INTERFACE= F
 NRIGHTHO=  10    NLBASIS=  1
 NLEFTHOS=  10    NRBASIS=  1
-LEFTBASIS    X                 Y                       Z              REFPOT
-  -0.666666666666666666 -0.666666666666666666 -0.57735026918962576450    1   1
+LEFTBASIS    X         Y         Z     REFPOT
+          0.50000000   0.50000000  -0.50000     1
 RIGHBASIS
-   0.666666666666666666  0.666666666666666666  9.23760430703401169694    1   1  
+          0.00000000   0.00000000   3.00000     1
 ---------------------------------------
-ZPERIODL= -0.666666666666666666 -0.666666666666666666 -0.57735026918962576450
-ZPERIODR=  0.666666666666666666 0.666666666666666666   0.57735026918962576450
+ZPERIODL= 0.50000000  0.50000000  -0.50000000
+ZPERIODR= 0.50000000  0.50000000   0.50000000
 ----------------------------------------------------------------------
 Parameters for the clusters    (if same spherical cluster else cylindrical)
-RCLUSTZ=1.60d0       RCLUSTXY=1.60d0
+RCLUSTZ=1.20d0       RCLUSTXY=1.20d0
 ----------------------------------------------------------------------
 ATOMINFO
-Z     LMXC    KFG     CLS   REFPOT   NTC    FAC    IRNS   RMT     WGHT		
-79.0   3    5 5 4 4    1      1       1     1.00    208   2.3d0   1	
+Z     LMXC    KFG     CLS   REFPOT   NTC    FAC    IRNS   RMT     WGHT
+14.0   3    2 1 0 0    1      1       1     1.00   208    2.2d0   1.0d0
+14.0   3    2 1 0 0    1      1       1     1.00   208    2.2d0   1.0d0
+ 0.0   0    0 0 0 0    1      1       1     1.00   208    2.2d0   1.0d0
+ 0.0   0    0 0 0 0    1      1       1     1.00   208    2.2d0   1.0d0
 ----------------------------------------------------------------------
-EMIN      EMAX       TEMPR      NPOL      NPT1    NPT2     NPT3
--0.40     1.2         400.d0      5         3       20       2
- 0.535    0.575        50.d0      0         0       5        0
- 0.50     0.9          50.d0      0         0      100       0
- 0.00     2.0          50.d0      0         0      100       0
+EMIN      EMAX       TEMPR      NPOL      NPT1    NPT2     NPT3  
+0.71000   0.71000     0.0         0         0       1        0
 ----------------------------------------------------------------------
-  IRNUMX= 10    2TCCOR= 40    IPRCOR= 0    IFILE= 13      IPE= 0
+  IRNUMX= 10    ITCCOR= 40    IPRCOR= 0    IFILE= 13      IPE= 0
      KMT= 3        KWS= 2    
   KSHAPE= 2        IRM= 484      INS= 1     ICST= 2    INSREF= 0  
-    KCOR= 1      KVREL= 1     KEXCOR= 2   ITCCOR= 50
- KHYPERF= 0    KHFELD= 0       KEFG= 0   KFORCE= 0
+    KCOR= 1      KVREL= 1     KEXCOR= 2    NITER= 5
+ KHYPERF= 0     KHFELD= 0       KEFG= 0   KFORCE= 0
      KTE= 1       KPRE= 1      KVMAD= 0   KSCOEF= 0      
- IPOTOUT= 1  IGREENFUN= 0       ICC= 0   ISHIFT= 0
- NPAN_LOG= 15  NPAN_EQ= 5      NCHEB= 12   R_LOG= 1.0d0
+ IPOTOUT= 1  IGREENFUN= 0        ICC= 0   ISHIFT= 0
   HFIELD= 0.0   VCONST= 0.0d0 
             
-BZDIVIDE= 30 30 30
+BZDIVIDE= 30 30 30 
 ----------------------------------------------------------------------
 NSTEPS     IMIX    STRMIX       FCM       QBOUND    BRYMIX      ITDBRY
- 1          5      0.010        20.0      1.D-8      0.04        20
+  1         5      0.010        20.0      1.D-8      0.06        20
 ----------------------------------------------------------------------
 LINIPOL= f      LRHOSYM=f    LCOMPLEX= f
 Center of inversion :      NZ=1     LCENTER= t
@@ -99,6 +101,6 @@ fedeci.fp1                                  left (up) host
 fedeci.fp2                                  right (down) host
 ----------------------------------------|40---------------------------
 Parameters for ewald sums
-RMAX=7.0d0     GMAX=65.0d0     (bcc 5  50)
+RMAX=7.0d0     GMAX=65.0d0     (fcc 7  65)
 ----------------------------------------------------------------------
 

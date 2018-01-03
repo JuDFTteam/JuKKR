@@ -1,3 +1,4 @@
+# files that are build or temporary
 *.mod
 *.x
 *.exe
@@ -5,19 +6,36 @@
 */*~
 *.o
 ALL_SOURCE_FILES/inc.p
-*.png
-all_incp_incudes.txt
-/doc/
-/test/
-*.py
-!getversion.py
 version
 version.f90
 compver
-/benchmark/
+*.pyc
+
+# some array dimensions
 inc.p
+
+# files that might only be useful during development
+*.png
+all_incp_incudes.txt
+/test/
+*.py
+!getversion.py
+/benchmark/
 */out_timing.*.txt
 */output.*.txt
-*.pyc
-tests/test_run/
+
+# doxygen files
+/doc/
+
+# automatic tests
 .cache/
+tests/test_run*
+
+# Code coverage report
+*.dyn
+CODE_COVERAGE.HTML
+CodeCoverage/
+pgopti.dpi
+pgopti.dpi.lock
+pgopti.spi
+pgopti.spl
