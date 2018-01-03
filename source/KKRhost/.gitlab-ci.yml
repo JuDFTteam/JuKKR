@@ -20,6 +20,7 @@ test:intel:
   stage: test
   script:
     # test if dependencies are working
+    - echo 'do some tests here'
 
 build:intel:
   stage: build
