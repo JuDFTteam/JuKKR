@@ -46,7 +46,7 @@ run:intel:
     - export OMP_STACKSIZE=1g
     - ulimit -s unlimited
     - cd tests
-    - ./run_all.sh
+    - ./run_all.py 1
   artifacts:
     paths:
       - tests/test_run*
