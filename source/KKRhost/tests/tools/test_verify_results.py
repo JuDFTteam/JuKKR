@@ -41,7 +41,6 @@ class Test_check_test_runs():
             pprint.pprint('max_std_charges= {}'.format(max_s_charges))
             assert s_rms < 10**-8
             assert max_s_charges < 10**-8
-        assert 1==2
 
     def test_compare_modes3(self):
         cmplist = ['serial_1_1', 'omp_1_1', 'omp_4_1', 'mpi_1_1' ,'mpi_1_4', 'hybrid_1_1', 'hybrid_1_4', 'hybrid_4_1', 'hybrid_2_2']
