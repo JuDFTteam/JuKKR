@@ -1,4 +1,4 @@
-      SUBROUTINE SHAPE(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,W,YR,
+      SUBROUTINE SHAPE_CORR(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,W,YR,
      &                 LASSLD,LMPOTD,NATYPD,NGSHD)
 C **********************************************************************
 C *  Prepares shape corrections using gaussian quadrature as given by  *
@@ -49,14 +49,14 @@ C mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
 C
                   LM3 = L3*L3 + L3 + M3 + 1
                   ISUM = 0
-C     
+C
                   DO IAT = 1,NATYP
                      ICELL = NTCELL(IAT)
-!                      write(*,*) 'test icell=ntcell(iat) in shape.f',
+!                      write(*,*) 'test icell=ntcell(iat) in shape_corr.f',
 !      +                icell,iat
                      ISUM = ISUM + LMSP(ICELL,LM3)
                   END DO
-C     
+C
 C ======================================================================
                   IF ( ISUM.GT.0 ) THEN
                      DO L2 = 0,LPOT
@@ -89,7 +89,7 @@ C
 C ......................................................................
                                  IF (FACTOR.NE.0.0D0) THEN
 C
-                                    IF ( M1S*M2S.NE.1 .OR. M2S*M3S.NE.1 
+                                    IF ( M1S*M2S.NE.1 .OR. M2S*M3S.NE.1
      &                               .OR.M1S*M3S.NE.1 ) FACTOR = -FACTOR
 C
                                     S = 0.0D0

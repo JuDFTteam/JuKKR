@@ -3,6 +3,14 @@
 !> @brief Wrapper module for the reading and setup of the JM-KKR program
 !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
 !> and many others ...
+!> @todo JC: NATOMIMP and NATOMIMPD seem to be the same variable, however, right
+!> now find no way to eliminate one of them.
+!> @todo JC: There seem to be several repeated variables doing the same, e.g. INS,
+!> KNOSPH, KWS and KSHAPE, all seem to dictate whether one has ASA or FP.
+!> Maybe it would be good to consolidate and eliminate any unnecessary variables.
+!> @todo JC: Several variables such as IRMD and IRNSD are actually determined in
+!> the startb1 subroutine, maybe change the allocations such that they are done
+!> there instead
 !-------------------------------------------------------------------------------
 module mod_main0
 
@@ -29,106 +37,139 @@ module mod_main0
    parameter (MAXMSHD=30)
 
 
-   integer :: NR       !< Number of real space vectors rr
-   integer :: KTE      !< Calculation of the total energy On/Off (1/0)
-   integer :: KWS      !< 0 (MT), 1(ASA)
-   integer :: KXC      !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
-   integer :: IGF      !< Do not print or print (0/1) the KKRFLEX_* files
-   integer :: ICC      !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-   integer :: INS      !< 0 (MT), 1(ASA), 2(Full Potential)
-   integer :: IRM      !< Maximum number of radial points
-   integer :: IPE      !< Not real used, IPFE should be 0
-   integer :: IPF      !< Not real used, IPFE should be 0
-   integer :: IPFE     !< Not real used, IPFE should be 0
-   integer :: KREL     !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+   integer :: NR        !< Number of real space vectors rr
+   integer :: KTE       !< Calculation of the total energy On/Off (1/0)
+   integer :: KWS       !< 0 (MT), 1(ASA)
+   integer :: KXC       !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+   integer :: IGF       !< Do not print or print (0/1) the KKRFLEX_* files
+   integer :: ICC       !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+   integer :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
+   integer :: IRM       !< Maximum number of radial points
+   integer :: IPE       !< Not real used, IPFE should be 0
+   integer :: IPF       !< Not real used, IPFE should be 0
+   integer :: IPFE      !< Not real used, IPFE should be 0
+   integer :: KREL      !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
    integer :: KCOR
    integer :: KEFG
    integer :: KHYP
    integer :: KPRE
    integer :: NSRA
-   integer :: LPOT     !< Maximum l component in potential expansion
-   integer :: IMIX     !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
-   integer :: IEND     !< Number of nonzero gaunt coefficients
-   integer :: ICST     !< Number of Born approximation
-   integer :: NAEZ     !< Number of atoms in unit cell
-   integer :: NEMB     !< Number of 'embedding' positions
-   integer :: LMAX     !< Maximum l component in wave function expansion
-   integer :: NCLS     !< number of reference clusters
+   integer :: IRID      !< Shape functions parameters in non-spherical part
+   integer :: LPOT      !< Maximum l component in potential expansion
+   integer :: IMIX      !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
+   integer :: IEND      !< Number of nonzero gaunt coefficients
+   integer :: ICST      !< Number of Born approximation
+   integer :: NAEZ      !< Number of atoms in unit cell
+   integer :: NEMB      !< Number of 'embedding' positions
+   integer :: LMAX      !< Maximum l component in wave function expansion
+   integer :: NCLS      !< Number of reference clusters
    integer :: IREC
-   integer :: NREF     !< Number of diff. ref. potentials
-   integer :: NPOL     !< Number of Matsubara Poles (EMESHT)
-   integer :: NPNT1    !< number of E points (EMESHT) for the contour integration
-   integer :: NPNT2    !< number of E points (EMESHT) for the contour integration
-   integer :: NPNT3    !< number of E points (EMESHT) for the contour integration
-   integer :: KNOCO    !< (0/1) Collinear/Non-collinear magnetism (even in non-relativistic non-spin-orbit case)
-   integer :: LMMAX    !< 2 * (LMAX+1)^2
+   integer :: LM2D      !< (2*LMAX+1)**2
+   integer :: NREF      !< Number of diff. ref. potentials
+   integer :: NPOL      !< Number of Matsubara Poles (EMESHT)
+   integer :: NPNT1     !< number of E points (EMESHT) for the contour integration
+   integer :: NPNT2     !< number of E points (EMESHT) for the contour integration
+   integer :: NPNT3     !< number of E points (EMESHT) for the contour integration
+   integer :: KNOCO     !< (0/1) Collinear/Non-collinear magnetism (even in non-relativistic non-spin-orbit case)
+   integer :: LMMAX     !< (LMAX+1)^2
+   integer :: IRNSD
+   integer :: NCLSD     !< Maximum number of different TB-clusters
+   integer :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+   integer :: NCLEB     !< Number of Clebsch-Gordon coefficients
    integer :: NVIRT
-   integer :: LMPOT
+   integer :: NFUND     !< Shape functions parameters in non-spherical part
+   integer :: LMPOT     !< (LPOT+1)**2
    integer :: KVMAD
    integer :: ITSCF
-   integer :: IPAND    !< Number of panels in non-spherical part
-   integer :: NCHEB    !< Number of Chebychev pannels for the new solver
-   integer :: NINEQ    !< Number of ineq. positions in unit cell
-   integer :: NATYP    !< Number of kinds of atoms in unit cell
-   integer :: IFILE    !< Unit specifier for potential card
-   integer :: KVREL    !< 0,1 : non / scalar relat. calculation
-   integer :: NSPIN    !< Counter for spin directions
-   integer :: NLEFT    !< Number of repeated basis for left host to get converged electrostatic potentials
-   integer :: NRIGHT   !< number of repeated basis for right host to get converged electrostatic potentials
-   integer :: INVMOD   !< Inversion scheme
-   integer :: NCELLD   !< Number of cells (shapes) in non-spherical part
-   integer :: KORBIT   !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
-   integer :: KHFELD   !< 0,1: no / yes external magnetic field
-   integer :: ITDBRY   !< Number of SCF steps to remember for the Broyden mixing
-   integer :: INSREF   !< INS for reference pot. (usual 0)
-   integer :: KSHAPE   !< Exact treatment of WS cell
+   integer :: ISHLD     !< Paremeters for the Ewald summations
+   integer :: NMAXD     !< Paremeters for the Ewald summations
+   integer :: IPAND     !< Number of panels in non-spherical part
+   integer :: NCHEB     !< Number of Chebychev pannels for the new solver
+   integer :: NINEQ     !< Number of ineq. positions in unit cell
+   integer :: NATYP     !< Number of kinds of atoms in unit cell
+   integer :: IFILE     !< Unit specifier for potential card
+   integer :: KVREL     !< 0,1 : non / scalar relat. calculation
+   integer :: NTOTD
+   integer :: IEMXD     !< Dimension for energy-dependent arrays
+   integer :: NGSHD     !< Shape functions parameters in non-spherical part
+   integer :: NSPIN     !< Counter for spin directions
+   integer :: MMAXD     !< 2*LMAX+1
+   integer :: NLEFT     !< Number of repeated basis for left host to get converged electrostatic potentials
+   integer :: NRIGHT    !< Number of repeated basis for right host to get converged electrostatic potentials
+   integer :: NTPERD    !< Parameter in broyden subroutines
+   integer :: NACLSD    !< Maximum number of atoms in a TB-cluster
+   integer :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
+   integer :: NEMBD1    !< NEMB+1
+   integer :: NTREFD    !< parameter in broyden subroutine MUST BE 0 for the host program
+   integer :: NSPOTD    !< Number of potentials for storing non-sph. potentials
+   integer :: NSPIND    !< KREL+(1-KREL)*(NSPIN+1)
+   integer :: NSHELD    !< Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
+   integer :: INVMOD    !< Inversion scheme
+   integer :: NCELLD    !< Number of cells (shapes) in non-spherical part
+   integer :: KORBIT    !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
+   integer :: KHFELD    !< 0,1: no / yes external magnetic field
+   integer :: ITDBRY    !< Number of SCF steps to remember for the Broyden mixing
+   integer :: INSREF    !< INS for reference pot. (usual 0)
+   integer :: KSHAPE    !< Exact treatment of WS cell
    integer :: IELAST
    integer :: ISHIFT
    integer :: KFROZN
    integer :: NSYMAT
-   integer :: NOFGIJ   !< number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
+   integer :: KNOSPH    !< switch for spherical/non-spherical (0/1) program.
+   integer :: LMGF0D    !< (LMAX+1)**2
+   integer :: NOFGIJ    !< number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
+   integer :: LMXSPD    !< (2*LPOT+1)**2
+   integer :: LASSLD    !< 4*LMAX
+   integer :: KPOIBZ    !< Number of reciprocal space vectors
    integer :: NQCALC
-   integer :: KFORCE   !< Calculation of the forces
-   integer :: N1SEMI   !< Number of energy points for the semicore contour
-   integer :: N2SEMI   !< Number of energy points for the semicore contour
-   integer :: N3SEMI   !< Number of energy points for the semicore contour
-   integer :: NLAYER   !< Number of principal layer
-   integer :: NLBASIS  !< Number of basis layers of left host (repeated units)
-   integer :: NRBASIS  !< Number of basis layers of right host (repeated units)
-   integer :: INTERVX  !< Number of intervals in x-direction for k-net in IB of the BZ
-   integer :: INTERVY  !< Number of intervals in y-direction for k-net in IB of the BZ
-   integer :: INTERVZ  !< Number of intervals in z-direction for k-net in IB of the BZ
+   integer :: KFORCE    !< Calculation of the forces
+   integer :: N1SEMI    !< Number of energy points for the semicore contour
+   integer :: N2SEMI    !< Number of energy points for the semicore contour
+   integer :: N3SEMI    !< Number of energy points for the semicore contour
+   integer :: NLAYER    !< Number of principal layer
+   integer :: IRMIND    !< IRM-IRNSD
+   integer :: WLENGTH   !< Word length for direct access files, compiler dependent ifort/others (1/4)
+   integer :: NSATYPD   !< (NATYPD-1)*KNOSPH+1
+   integer :: NSPINDD   !< NSPIND-KORBIT
+   integer :: NLAYERD   !< Number of principal layers (NAEZD/NPRINCD) used in the inversion routines (independent on NATYPD)
+   integer :: NPRINCD   !< Number of principle layers, set to a number >= NRPINC in output of main0
+   integer :: NLBASIS   !< Number of basis layers of left host (repeated units)
+   integer :: NRBASIS   !< Number of basis layers of right host (repeated units)
+   integer :: INTERVX   !< Number of intervals in x-direction for k-net in IB of the BZ
+   integer :: INTERVY   !< Number of intervals in y-direction for k-net in IB of the BZ
+   integer :: INTERVZ   !< Number of intervals in z-direction for k-net in IB of the BZ
    integer :: MAXMESH
-   integer :: NPAN_EQ  !< Variables for the pannels for the new solver
-   integer :: NPAN_LOG !< Variables for the pannels for the new solver
-   integer :: NATOMIMP
-   integer :: NPOLSEMI !< Number of poles for the semicore contour
-   integer :: SCFSTEPS !< number of scf iterations
+   integer :: NPAN_EQ   !< Variables for the pannels for the new solver
+   integer :: NPAN_LOG  !< Variables for the pannels for the new solver
+   integer :: NPOLSEMI  !< Number of poles for the semicore contour
+   integer :: SCFSTEPS  !< number of scf iterations
+   integer :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+   integer :: NATOMIMPD !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
    integer :: LRECABMAD
    integer :: IESEMICORE
    integer :: IDOSEMICORE
-   double precision :: TK     !< Temperature
+   double precision :: TK        !< Temperature
    double precision :: FCM
    double precision :: E2IN
-   double precision :: EMIN   !< Energies needed in EMESHT
-   double precision :: EMAX   !< Energies needed in EMESHT
-   double precision :: ALAT   !< Lattice constant in a.u.
-   double precision :: RMAX   !< Ewald summation cutoff parameter for real space summation
-   double precision :: GMAX   !< Ewald summation cutoff parameter for reciprocal space summation
+   double precision :: EMIN      !< Energies needed in EMESHT
+   double precision :: EMAX      !< Energies needed in EMESHT
+   double precision :: ALAT      !< Lattice constant in a.u.
+   double precision :: RMAX      !< Ewald summation cutoff parameter for real space summation
+   double precision :: GMAX      !< Ewald summation cutoff parameter for reciprocal space summation
    double precision :: R_LOG
-   double precision :: RCUTZ  !< Parameter for the screening cluster along the z-direction
-   double precision :: RCUTXY !< Parameter for the screening cluster along the x-y plane
-   double precision :: QBOUND !< Convergence parameter for the potential
-   double precision :: VCONST !< Potential shift
-   double precision :: HFIELD !< External magnetic field, for initial potential shift in spin polarised case
-   double precision :: MIXING !< Magnitude of the mixing parameter
-   double precision :: ABASIS !< Scaling factors for rbasis
-   double precision :: BBASIS !< Scaling factors for rbasis
-   double precision :: CBASIS !< Scaling factors for rbasis
-   double precision :: EFERMI !< Fermi energy
+   double precision :: RCUTZ     !< Parameter for the screening cluster along the z-direction
+   double precision :: RCUTXY    !< Parameter for the screening cluster along the x-y plane
+   double precision :: QBOUND    !< Convergence parameter for the potential
+   double precision :: VCONST    !< Potential shift
+   double precision :: HFIELD    !< External magnetic field, for initial potential shift in spin polarised case
+   double precision :: MIXING    !< Magnitude of the mixing parameter
+   double precision :: ABASIS    !< Scaling factors for rbasis
+   double precision :: BBASIS    !< Scaling factors for rbasis
+   double precision :: CBASIS    !< Scaling factors for rbasis
+   double precision :: EFERMI    !< Fermi energy
    double precision :: ESHIFT
-   double precision :: TKSEMI !< Temperature of semi-core contour
-   double precision :: TOLRDIF !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+   double precision :: TKSEMI    !< Temperature of semi-core contour
+   double precision :: TOLRDIF   !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
    double precision :: ALATNEW
    double precision :: VOLUME0
    double precision :: EMUSEMI
@@ -136,11 +177,12 @@ module mod_main0
    double precision :: FSEMICORE
    double precision :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
    character(len=10) :: SOLVER   !< Type of solver
-   character(len=40) :: I12 !< File identifiers
-   character(len=40) :: I13 !< Potential file name
-   character(len=40) :: I19 !< Shape function file name
-   character(len=40) :: I25 !< Scoef file name
-   character(len=40) :: I40 !< File identifiers
+   character(len=40) :: I12      !< File identifiers
+   character(len=40) :: I13      !< Potential file name
+   character(len=40) :: I19      !< Shape function file name
+   character(len=40) :: I25      !< Scoef file name
+   character(len=40) :: I40      !< File identifiers
+   logical :: LNC        !< Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
    logical :: LRHOSYM
    logical :: LINIPOL    !< True: Initial spin polarization; false: no initial spin polarization
    logical :: LCARTESIAN !< True: Basis in cartesian coords; false: in internal coords
@@ -149,15 +191,15 @@ module mod_main0
    !..
    !.. Local Arrays ..
    integer, dimension(NSYMAXD) :: ISYMINDEX
-   integer, dimension(:), allocatable :: CLS  !< Cluster around atomic sites
-   integer, dimension(:), allocatable :: IRC  !< R point for potential cutting
-   integer, dimension(:), allocatable :: IMT  !< R point at MT radius
+   integer, dimension(:), allocatable :: CLS    !< Cluster around atomic sites
+   integer, dimension(:), allocatable :: IRC    !< R point for potential cutting
+   integer, dimension(:), allocatable :: IMT    !< R point at MT radius
    integer, dimension(:), allocatable :: NFU
-   integer, dimension(:), allocatable :: NSH1 !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-   integer, dimension(:), allocatable :: NSH2 !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(:), allocatable :: NSH1   !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(:), allocatable :: NSH2   !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
    integer, dimension(:), allocatable :: LMXC
-   integer, dimension(:), allocatable :: IPAN !< Number of panels in non-MT-region
-   integer, dimension(:), allocatable :: IRNS !< Position of atoms in the unit cell in units of bravais vectors
+   integer, dimension(:), allocatable :: IPAN   !< Number of panels in non-MT-region
+   integer, dimension(:), allocatable :: IRNS   !< Position of atoms in the unit cell in units of bravais vectors
    integer, dimension(:), allocatable :: IRWS   !< R point at WS radius
    integer, dimension(:), allocatable :: KMESH
    integer, dimension(:), allocatable :: IRMIN  !< Max R for spherical treatment
@@ -174,8 +216,8 @@ module mod_main0
    integer, dimension(:), allocatable :: IOFGIJ !< Linear pointers, similar to NSH1/NSH2 but giving the actual index of sites I,J = 1,NATOMIMP in the cluster
    integer, dimension(:), allocatable :: JOFGIJ !< Linear pointers, similar to NSH1/NSH2 but giving the actual index of sites I,J = 1,NATOMIMP in the cluster
    integer, dimension(:), allocatable :: ATOMIMP
-   integer, dimension(:), allocatable :: IJTABSH  !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
-   integer, dimension(:), allocatable :: IJTABSYM !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
+   integer, dimension(:), allocatable :: IJTABSH   !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
+   integer, dimension(:), allocatable :: IJTABSYM  !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
    integer, dimension(:), allocatable :: NPAN_TOT
    integer, dimension(:), allocatable :: IJTABCALC !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
    integer, dimension(:), allocatable :: NPAN_EQNEW
@@ -185,15 +227,15 @@ module mod_main0
    integer, dimension(:,:), allocatable :: JSH
    integer, dimension(:,:), allocatable :: ILM
    integer, dimension(:,:), allocatable :: KFG
-   integer, dimension(:,:), allocatable :: ATOM !< Atom at site in cluster
-   integer, dimension(:,:), allocatable :: EZOA !< EZ of atom at site in cluster
-   integer, dimension(:,:), allocatable :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
-   integer, dimension(:,:), allocatable :: LCORE !< Angular momentum of core states
-   integer, dimension(:,:), allocatable :: ICLEB !< Pointer array
-   integer, dimension(:,:), allocatable :: IRCUT !< R points of panel borders
-   integer, dimension(:,:), allocatable :: LLMSP !< lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
+   integer, dimension(:,:), allocatable :: ATOM    !< Atom at site in cluster
+   integer, dimension(:,:), allocatable :: EZOA    !< EZ of atom at site in cluster
+   integer, dimension(:,:), allocatable :: LMSP    !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+   integer, dimension(:,:), allocatable :: LCORE   !< Angular momentum of core states
+   integer, dimension(:,:), allocatable :: ICLEB   !< Pointer array
+   integer, dimension(:,:), allocatable :: IRCUT   !< R points of panel borders
+   integer, dimension(:,:), allocatable :: LLMSP   !< lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
    integer, dimension(:,:), allocatable :: LMSP1
-   integer, dimension(:,:), allocatable :: KAOEZ !< Kind of atom at site in elem. cell
+   integer, dimension(:,:), allocatable :: KAOEZ   !< Kind of atom at site in elem. cell
    integer, dimension(:,:), allocatable :: IFUNM
    integer, dimension(:,:), allocatable :: IFUNM1
    integer, dimension(:,:), allocatable :: ITITLE
@@ -206,9 +248,9 @@ module mod_main0
    double precision, dimension(3,3) :: RECBV   !< Reciprocal basis vectors
    double precision, dimension(3,3) :: BRAVAIS !< Bravais lattice vectors
    double precision, dimension(64,3,3) :: RSYMAT
-   double precision, dimension(:), allocatable :: A !< Constants for exponential R mesh
-   double precision, dimension(:), allocatable :: B !< Constants for exponential R mesh
-   double precision, dimension(:), allocatable :: WG !< Integr. weights for Legendre polynomials
+   double precision, dimension(:), allocatable :: A   !< Constants for exponential R mesh
+   double precision, dimension(:), allocatable :: B   !< Constants for exponential R mesh
+   double precision, dimension(:), allocatable :: WG  !< Integr. weights for Legendre polynomials
    double precision, dimension(:), allocatable :: GSH
    double precision, dimension(:), allocatable :: ZAT !< Nuclear charge
    double precision, dimension(:), allocatable :: RMT !< Muffin-tin radius of true system
@@ -220,9 +262,9 @@ module mod_main0
    double precision, dimension(:), allocatable :: RMTREFAT
    double precision, dimension(:), allocatable :: FPRADIUS !< R point at which full-potential treatment starts
    double precision, dimension(:), allocatable :: SOCSCALE !< Spin-orbit scaling
-   double precision, dimension(:,:), allocatable :: R !< Radial mesh ( in units a Bohr)
+   double precision, dimension(:,:), allocatable :: R    !< Radial mesh ( in units a Bohr)
    double precision, dimension(:,:), allocatable :: S
-   double precision, dimension(:,:), allocatable :: RR !< Set of real space vectors (in a.u.)
+   double precision, dimension(:,:), allocatable :: RR   !< Set of real space vectors (in a.u.)
    double precision, dimension(:,:), allocatable :: DRDI !< Derivative dr/di
    double precision, dimension(:,:), allocatable :: DROR
    double precision, dimension(:,:), allocatable :: CLEB !< GAUNT coefficients (GAUNT)
@@ -230,11 +272,11 @@ module mod_main0
    double precision, dimension(:,:), allocatable :: CSCL !< Speed of light scaling
    double precision, dimension(:,:), allocatable :: RNEW
    double precision, dimension(:,:), allocatable :: RATOM
-   double precision, dimension(:,:), allocatable :: ECORE !< Core energies
-   double precision, dimension(:,:), allocatable :: TLEFT !< Vectors of the basis for the left host
-   double precision, dimension(:,:), allocatable :: TRIGHT !< Vectors of the basis for the right host
+   double precision, dimension(:,:), allocatable :: ECORE   !< Core energies
+   double precision, dimension(:,:), allocatable :: TLEFT   !< Vectors of the basis for the left host
+   double precision, dimension(:,:), allocatable :: TRIGHT  !< Vectors of the basis for the right host
    double precision, dimension(:,:), allocatable :: SOCSCL
-   double precision, dimension(:,:), allocatable :: RBASIS !< Position of atoms in the unit cell in units of bravais vectors
+   double precision, dimension(:,:), allocatable :: RBASIS  !< Position of atoms in the unit cell in units of bravais vectors
    double precision, dimension(:,:), allocatable :: RCLSIMP
    double precision, dimension(:,:), allocatable :: CMOMHOST !< Charge moments of each atom of the (left/right) host
    double precision, dimension(:,:), allocatable :: RPAN_INTERVALL
@@ -312,7 +354,7 @@ module mod_main0
    !>       h. ebert
    !>      input:
    !>            UEFF, JEFF : input U,J parameters for each atom
-   !>            EREFLDAU(1..NATYP) : the energies of the projector's wave
+   !>            EREFLDAU(1..NATYP) : the energies of ggthe projector's wave
    !>                                  functions (REAL)
    !>            LOPT(1..NATYP): angular momentum QNUM for the atoms on
    !>                             which LDA+U should be applied (-1 to
@@ -329,7 +371,7 @@ module mod_main0
    !-------------------------------------------------------------------------
    integer :: NTLDAU    !< number of atoms on which LDA+U is applied
    integer :: IDOLDAU   !< flag to perform LDA+U
-   integer :: ITRUNLDAU !< iteration index
+   integer :: ITRUNLDAU !< Iteration index for LDA+U
    integer :: KREADLDAU !< LDA+U arrays available
    integer, dimension(:), allocatable :: LOPT !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
    integer, dimension(:), allocatable :: ITLDAU !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
@@ -486,7 +528,7 @@ contains
       !                              : of non-spherical potential
       !     LLMSP(NATYP,NFUND)       : lm=(l,m) of 'nfund'th nonvanishing
       !                              : component of non-spherical pot.
-      !     JEND(LMPOTD),            : pointer array for icleb()
+      !     JEND(LMPOT),            : pointer array for icleb()
       !     LOFLM(LM2D),             : l of lm=(l,m) (GAUNT)
       !     NTCELL(NATYP),           : index for WS cell
       !     REFPOT(NATYP+NEMBD)      : ref. pot. card  at position
@@ -518,8 +560,8 @@ contains
       !  zperight(3)          : vector to define how to repeat the basis
       !                         of the right host
       !  cmomhost
-      !  (lmpotd,1..nlbasis)   : charge moments of each atom of the left host
-      !  (lmpotd,nlbasis+1,..) : charge moments of each atom of the right host
+      !  (lmpot,1..nlbasis)   : charge moments of each atom of the left host
+      !  (lmpot,nlbasis+1,..) : charge moments of each atom of the right host
       !-------------------------------------------------------------------------
       ! RELativistic mode
       !-------------------------------------------------------------------------
@@ -579,30 +621,18 @@ contains
       !     .. Parameters ..
       !> @note parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
       !
-      INTEGER NEMBD1
-      PARAMETER (NEMBD1=NEMB+1)
-      INTEGER NPOTD
-      PARAMETER (NPOTD =(2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-      INTEGER LMMAXD
-      PARAMETER (LMMAXD=(KREL+KORBIT+1)*(LMAX+1)**2)
-      INTEGER NSPINDD
-      PARAMETER (NSPINDD=NSPIND-KORBIT)
-      INTEGER LMGF0D
-      PARAMETER (LMGF0D= (LMAX+1)**2)
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOT+1)**2)
-      INTEGER LMXSPD
-      PARAMETER (LMXSPD= (2*LPOT+1)**2)
-      INTEGER LASSLD
-      PARAMETER (LASSLD=4*LMAX)
-      INTEGER MMAXD
-      PARAMETER (MMAXD = 2*LMAX+1)
-      INTEGER LM2D
-      PARAMETER (LM2D= (2*LMAX+1)**2)
-      INTEGER IRMIN
-      PARAMETER (IRMIN=IRM-IRNS)
-      INTEGER NOFGIJD
-      PARAMETER (NOFGIJD = NATOMIMPD*NATOMIMPD+1)
+      !PARAMETER (LM2D = (2*LMAX+1)**2)
+      !PARAMETER (MMAXD = 2*LMAX+1)
+      !PARAMETER (NPOTD = (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+      !PARAMETER (LMGF0D = (LMAX+1)**2)
+      !PARAMETER (LMXSPD = (2*LPOT+1)**2)
+      !PARAMETER (LASSLD = 4*LMAX)
+      !PARAMETER (LMMAXD = (KREL+KORBIT+1)*(LMAX+1)**2)
+      !PARAMETER (NEMBD1 = NEMB+1)
+      !PARAMETER (IRMIND = IRM-IRNSD)
+      !PARAMETER (NSPINDD = NSPIND-KORBIT)
+      !INTEGER NOFGIJD
+      !PARAMETER (NOFGIJD = NATOMIMPD*NATOMIMPD+1)
       !..
       !.. Local Scalars ..
       integer :: I
@@ -630,23 +660,23 @@ contains
       !     .. External Subroutines ..
       external :: BZKINT0,CINIT,CLSGEN_TB,DECIOPT,EPATHTB,GAUNT,GAUNT2
       external :: GFMASK,LATTIX99,RINIT,RINPUT13,SCALEVEC
-      external :: STARTB1,STARTLDAU,TESTDIM,SHAPE
+      external :: STARTB1,STARTLDAU,TESTDIM,SHAPE_CORR
       !     ..
       !     .. Intrinsic Functions ..
-      intrinsic :: ATAN,DABS,DBLE,DIMAG,LOG,MAX,SQRT
+      intrinsic :: ATAN,DABS,DBLE,DIMAG,LOG,MAX,SQRT,product,shape
       !     ..
       !     ..
       !-------------------------------------------------------------------------
       ! Write version info:
       !-------------------------------------------------------------------------
-      WRITE(*,2004)  'Screened Korringa-Kohn-Rostoker ',                   &
-                     'Electronic Structure Code',                          &
-                     'for Bulk and Interfaces',                            &
-                     'Juelich-Munich 2001 - 2016',                         &
-                     ' Code version: ',trim(version1),                     &
-                     ' Compile options:', trim(version2), trim(version3),  &
-                        trim(version4),                                    &
-                     ' serial number for files:', serialnr
+      WRITE(*,2004)     'Screened Korringa-Kohn-Rostoker ',                   &
+                        'Electronic Structure Code',                          &
+                        'for Bulk and Interfaces',                            &
+                        'Juelich-Munich 2001 - 2016',                         &
+                        ' Code version: ',trim(version1),                     &
+                        ' Compile options:', trim(version2), trim(version3),  &
+                           trim(version4),                                    &
+                        ' serial number for files:', serialnr
       WRITE(1337,2004)  'Screened Korringa-Kohn-Rostoker ',                   &
                         'Electronic Structure Code',                          &
                         'for Bulk and Interfaces',                            &
@@ -724,31 +754,27 @@ contains
       call memocc(i_stat,product(shape(t_params%TESTC))*kind(t_params%TESTC),'t_params%TESTC','main0')
       t_params%TESTC(1:32) = '        '
       !
-      CALL RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,             &
-                    EMIN,EMAX,TK,NPOL,NPNT1,NPNT2,NPNT3,                   &
-                    EBOTSEMI,EMUSEMI,TKSEMI,NPOLSEMI,N1SEMI,N2SEMI,        &
-                    N3SEMI,FSEMICORE,ESHIFT,                               &
-                    SCFSTEPS,IMIX,MIXING,QBOUND,FCM,                       &
-                    ITDBRY,IRNS,FPRADIUS,NTCELL,NAEZ,NEMB,KAOEZ,IRM,ZAT,   &
-                    NINEQ,NREF,NREF,ICST,IFILE,IGF,INS,INSREF,IPE,IPF,     &
-                    IPFE,KCOR,KEFG,KFROZN,KHFELD,KHYP,KPRE,KSHAPE,KTE,     &
-                    KFG,KVMAD,KVREL,KWS,KXC,LAMBDA_XC,LMAX,LMMAX,LMPOT,    &
-                    LPOT,NATYP,NSPIN,LMXC,TXC,ICC,REFPOT,                  &
-                    ISHIFT,INTERVX,INTERVY,INTERVZ,                        &
-                    HFIELD,MTFAC,VBC,VCONST,LINIPOL,INIPOL,                &
-                    IXIPOL,LRHOSYM,                                        &
-                    I12,I13,I19,I25,I40,                                   &
-                    NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,                 &
-                    ZPERIGHT,TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,         &
-                    RMTREF,RMTREFAT,KFORCE,                                &
-                    KMROT,QMTET,QMPHI,NCPA,ICPA,ITCPAMAX,CPATOL,NOQ,       &
-                    IQAT,CONC,SOLVER,SOCSCL,CSCL,KREL,SOCSCALE,            &
-                    LOPT,UEFF,JEFF,EREFLDAU,KREADLDAU,                     &
-                    LMAX,LPOT,NSPIND,NAEZ,NATYP,NEMBD,NPRINCD,             &
-                    IRM,IRNS,NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,IVSHIFT,         &
-                    TOLRDIF,LLY,DELTAE,                                    &
-                    LCARTESIAN,BRAVAIS,RMAX,GMAX)
-
+      !-------------------------------------------------------------------------
+      ! Reading of the inputcard, and allocation of several arrays
+      !> @note JC: have added reading calls for the parameters that used to be in
+      !> the inc.p and can now be modified via the inputcard directly
+      !-------------------------------------------------------------------------
+      call RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,            &
+         IMIX,LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KREL,KCOR,KEFG,KHYP,KPRE,IRID,IRNSD,     &
+         NCLSD,MMAXD,NCLEB,IPAND,NFUND,NGSHD,NPOTD,KVMAD,LMMAX,LMPOT,IEMXD,NMAXD,ISHLD,   &
+         KNOCO,NCHEB,NLEFT,IFILE,KVREL,NSPIN,NATYP,NINEQ,NPNT1,NPNT2,NPNT3,KORBIT,        &
+         NSPIND,LMXSPD,LMMAXD,LMGF0D,LASSLD,NEMBD1,IRMIND,NOFGIJ,NTPERD,NSPOTD,NACLSD,    &
+         KFROZN,ISHIFT,N1SEMI,N2SEMI,N3SEMI,SCFSTEPS,INSREF,KSHAPE,ITDBRY,NRIGHT,KFORCE,  &
+         NSHELD,KNOSPH,KPOIBZ,NTREFD,NSPINDD,NSATYPD,NPRINCD,WLENGTH,IVSHIFT,KHFELD,      &
+         NLBASIS,NRBASIS,INTERVX,INTERVY,INTERVZ,NPAN_EQ,NPAN_LOG,NPOLSEMI,NATOMIMPD,     &
+         TK,FCM,EMIN,EMAX,RMAX,GMAX,ALAT,R_LOG,RCUTZ,RCUTXY,ESHIFT,QBOUND,HFIELD,         &
+         MIXING,ABASIS,BBASIS,CBASIS,VCONST,TKSEMI,TOLRDIF,EMUSEMI,EBOTSEMI,FSEMICORE,    &
+         LAMBDA_XC,DELTAE,LNC,LRHOSYM,LINIPOL,LCARTESIAN,LINTERFACE,IMT,CLS,LMXC,IRNS,    &
+         IRWS,NTCELL,REFPOT,INIPOL,IXIPOL,HOSTIMP,KFG,VBC,ZPERLEFT,ZPERIGHT,BRAVAIS,      &
+         RMT,ZAT,RWS,MTFAC,RMTREF,RMTNEW,RMTREFAT,FPRADIUS,TLEFT,TRIGHT,RBASIS,           &
+         SOCSCALE,CSCL,SOCSCL,SOLVER,I12,I13,I19,I25,I40,TXC,DROTQ,NCPA,ITCPAMAX,         &
+         CPATOL,NOQ,IQAT,ICPA,KAOEZ,CONC,KMROT,QMTET,QMPHI,KREADLDAU,LOPT,UEFF,JEFF,      &
+         EREFLDAU)
 
       ! Set that
       NCELLD=NAEZ
@@ -765,8 +791,8 @@ contains
       !> consumption
       !
       ! Call to allocate the arrays associated with the potential
-      call allocate_potential(1,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
-         LMPOTD,IRMIN,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,&
+      call allocate_potential(1,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,    &
+         LMPOT,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,    &
          LLMSP,ITITLE,FPRADIUS,VISP,ECORE,VINS)
       ! Call to allocate the arrays associated with the LDA+U potential
       call allocate_ldau_potential(1,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,ULDAU,&
@@ -779,11 +805,11 @@ contains
       ! Call to allocate the arrays associated with the relativistic transformations
       call allocate_rel_transformations(1,LMMAXD,NRREL,IRREL,RC,CREL,RREL,SRREL)
       ! Call to allocate the arrays associated with the clusters
-      call allocate_clusters(1,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,LMPOTD,&
+      call allocate_clusters(1,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,LMPOT, &
          NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,JEND,RATOM,    &
          RCLSIMP,CMOMHOST,RCLS)
       ! Call to allocate the arrays associated with the expansion of the Green function
-      call allocate_expansion(1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,NCHEBD,&
+      call allocate_expansion(1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,NCHEB,&
          LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
       ! Call to allocate the arrays associated with the integration mesh
       call allocate_mesh(1,IRM,NATYP,A,B,R,DRDI)
@@ -792,11 +818,11 @@ contains
          IPAN_INTERVALL,RPAN_INTERVALL)
       ! Call to allocate misc arrays
       call allocate_misc(1,NR,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREF,IEMXD,NTOTD,   &
-         NSHELD,LMMAXD,NEMBD1,NCHEBD,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM,&
+         NSHELD,LMMAXD,NEMBD1,NCHEB,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM, &
          IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,DSYMLL1,        &
          LEFTTINVLL,RIGHTTINVLL)
       ! Call to allocate the arrays associated with the Green function
-      call allocate_green(flag,NAEZ,IEMXD,NGSHD,NSHELD,LMPOTD,NOFGIJD,ISH,JSH,&
+      call allocate_green(1,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJ,ISH,JSH,     &
          KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,        &
          IJTABCALC_I,ILM,GSH)
 
@@ -815,22 +841,21 @@ contains
       CALL SCALEVEC(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,       &
             NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,       &
             TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,KAOEZ,NOQ,  &
-            NAEZ,NATYP,NEMBD)
+            NAEZ,NATYP,NEMB)
       ! After SCALEVEC all basis positions are in cartesian coords.
 
       NVIRT = 0
       IF ( OPT('VIRATOMS') ) THEN
          WRITE(1337,*) 'Calling ADDVIRATOMS'
-         CALL ADDVIRATOMS14(LINTERFACE,NVIRT,NAEZ,NAEZ,NATYP,NEMB,NEMBD,    &
-            RBASIS,.TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,  &
-            I25)
+         CALL ADDVIRATOMS14(LINTERFACE,NVIRT,NAEZ,NAEZ,NATYP,NEMB,NEMB,RBASIS,   &
+         .TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,I25)
       ENDIF
 
 
       CALL CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,   &
          ATOM,EZOA,NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,      &
          TRIGHT,RMTREF,RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,&
-         ALAT,NAEZ,NATYP,NEMBD,NPRINCD,NR,NACLSD,NCLSD,NREF)
+         ALAT,NAEZ,NATYP,NEMB,NPRINCD,NR,NACLSD,NCLSD,NREF)
 
       ! Now the clusters, reference potentials and muffin-tin radii have been set.
       !-------------------------------------------------------------------------
@@ -854,8 +879,8 @@ contains
       IF (KVREL.GE.2) NSRA = 3
       !
       CALL TESTDIM(NSPIN,NAEZ,NEMB,NATYP,LMAX,IRM,INS,INSREF,NREF,IRNS,NCLS,  &
-         NLAYER,KREL,LMAX,NSPIND,NAEZ,NATYP,NREF,NCLSD,NEMBD,NPRINCD,         &
-         KNOSPH,IRM,IRNS,KORBIT)
+         NLAYER,KREL,LMAX,NSPIND,NAEZ,NATYP,NREF,NCLSD,NEMB,NPRINCD,KNOSPH,   &
+         IRM,IRNS,KORBIT)
       !
       IF ( INS.GT.0 )    OPEN (19,FILE=I19,STATUS='old',FORM='formatted')
       IF ( IFILE.EQ.13 ) OPEN (IFILE,FILE=I13,STATUS='old',FORM='formatted')
@@ -864,8 +889,8 @@ contains
       CALL STARTB1(IFILE,1337,1337,IPE,KVREL,KWS,LMAX,1,NATYP,ALATNEW,RMTNEW, &
          RMT,ITITLE,IMT,IRC,VCONST,INS,IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,   &
          KSHAPE,NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,VBC,C,     &
-         DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,1,LMPOTD,   &
-         IRMIN,IRM,LMXSPD,IPAND,IRID,IRNS,LMAX,NATYP,NCELLD,NFUND,NSPOTD,&
+         DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,1,LMPOT,    &
+         IRMIND,IRM,LMXSPD,IPAND,IRID,IRNS,LMAX,NATYP,NCELLD,NFUND,NSPOTD,    &
          IVSHIFT)
 
 
@@ -880,14 +905,14 @@ contains
       IF ( TEST('Vspher  ') ) THEN
          WRITE(1337,*) 'TEST OPTION Vspher,',&
             'keeping only spherical component of potential.'
-         VINS(IRMIN:IRM,2:LMPOTD,1:NSPOTD) = 0.D0
+         VINS(IRMIND:IRM,2:LMPOT,1:NSPOTD) = 0.D0
       ENDIF
 
 
       IF (OPT('zeropot ').OR.TEST('zeropot ')) THEN
          WRITE(1337,*) 'Using OPT zeropot, setting potential to zero.'
          WRITE(1337,*) 'Using OPT zeropot, setting nuclear charge to zero.'
-         VINS(IRMIN:IRM,1:LMPOTD,1:NSPOTD) = 0.D0
+         VINS(IRMIND:IRM,1:LMPOT,1:NSPOTD) = 0.D0
          VISP(1:IRM,1:NPOTD) = 0.D0
          ZAT(1:NATYP) = 0.D0
       ENDIF
@@ -917,7 +942,7 @@ contains
          REWIND(3)
          CALL GENERALPOT(3,1,NATYP,NSPIN,ZAT,ALAT,RMT,RMTNEW,RWS,R,DRDI,VISP, &
             IRWS,A,B,INS,IRNS,LPOT,VINS,QBOUND,IRC,KSHAPE,E2IN,VBC,ECORE,     &
-            LCORE,NCORE,LMPOTD,IRM,IRMIN)
+            LCORE,NCORE,LMPOT,IRM,IRMIND)
          CLOSE(3)
       END IF
       !-------------------------------------------------------------------------
@@ -926,8 +951,9 @@ contains
       !     from startb1 moved here
       IF (KHFELD.EQ.1) THEN
          !---> maybe apply a magnetic field
-         call BSHIFT_NS(VISP,VINS,NATYP,NSPIN,IRCUT,IRC,IRMIN,NTCELL,IMAXSH,&
-            ILM,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,R,KSHAPE,HFIELD,INIPOL)
+         call bshift_ns(IRM,IRID,IPAND,LMPOT,NPOTD,NATYP,NSPIN,NGSHD,NFUND,NCELLD,  &
+            IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM,LMSP,IFUNM,IRCUT,     &
+            HFIELD,GSH,R,THESME,THETAS,VISP,VINS)
       END IF
       if ( TEST('vpotout ') ) then !ruess
          open(unit=54633163,file='test_vpotout_bshift')
@@ -1029,15 +1055,15 @@ contains
       !
       CALL GAUNT2(WG,YRG,4*LMAX)
       CALL GAUNT(LMAX,LPOT,WG,YRG,CLEB,LOFLM,ICLEB,IEND,JEND,NCLEB,LMAX,&
-         LMGF0D,LMPOTD)
+         LMGF0D,LMPOT)
       !
       !-------------------------------------------------------------------------
       ! --> set up of GAUNT coefficients C(l,m;l',m';l'',m'') for all
       !     nonvanishing (l'',m'')-components of the shape functions THETAS
       !-------------------------------------------------------------------------
       if (KSHAPE.NE.0) then
-         CALL SHAPE(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,LASSLD,&
-            LMPOTD,NATYP,NGSHD)
+         CALL SHAPE_CORR(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,LASSLD,&
+            LMPOT,NATYP,NGSHD)
       endif
 
       !-------------------------------------------------------------------------
@@ -1059,7 +1085,7 @@ contains
             !-------------------------------------------------------------------
             CALL MADELUNG2D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,BRAVAIS,RECBV,RBASIS,  &
                RMAX,GMAX,NLBASIS,NLEFT,ZPERLEFT,TLEFT,NRBASIS,NRIGHT,ZPERIGHT,   &
-               TRIGHT,LMXSPD,LASSLD,LPOT,LMPOTD,NMAXD,ISHLD,NEMBD1,WLENGTH)
+               TRIGHT,LMXSPD,LASSLD,LPOT,LMPOT,NMAXD,ISHLD,NEMBD1,WLENGTH)
             WRITE(*,*) 'Exited MADELUNG2D'
          ELSE
             !-------------------------------------------------------------------
@@ -1071,8 +1097,8 @@ contains
 
                WRITE(*,*) 'Calling MADELUNG3D'
                CALL MADELUNG3D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,BRAVAIS,RECBV,&
-                  RBASIS,RMAX,GMAX,NAEZ,LMXSPD,LASSLD,LPOT,LMPOTD,NMAXD, &
-                  ISHLD,NEMBD,WLENGTH)
+                  RBASIS,RMAX,GMAX,NAEZ,LMXSPD,LASSLD,LPOT,LMPOT,NMAXD,    &
+                  ISHLD,NEMB,WLENGTH)
                WRITE(*,*) 'Exited MADELUNG3D'
             end if
          END IF
@@ -1081,8 +1107,8 @@ contains
       ELSE !NPOL==0
          ! write dummy files
 
-         !DOUBLE PRECISION AVMAD(LMPOTD,LMPOTD),BVMAD(LMPOTD)
-         LRECABMAD = WLENGTH*2*LMPOTD*LMPOTD + WLENGTH*2*LMPOTD
+         !DOUBLE PRECISION AVMAD(LMPOT,LMPOT),BVMAD(LMPOT)
+         LRECABMAD = WLENGTH*2*LMPOT*LMPOT + WLENGTH*2*LMPOT
          OPEN (69,ACCESS='direct',RECL=LRECABMAD,FILE='abvmad.unformatted', &
             FORM='unformatted')
          DO I = 1,NAEZ
@@ -1115,16 +1141,16 @@ contains
 
       CALL BZKINT0(NSHELL,NAEZ,NATYP,NOQ,RBASIS,KAOEZ,ICC,BRAVAIS,RECBV,   &
          ATOMIMP,RSYMAT,ISYMINDEX,NSYMAT,I25,NATOMIMP,NSH1,NSH2,RCLSIMP,   &
-         RATOM,IJTABSYM,IJTABSH,IJTABCALC,OFGIJ,JOFGIJ,NOFGIJ,ISH,JSH,RROT,&
+         RATOM,IJTABSYM,IJTABSH,IJTABCALC,IOFGIJ,JOFGIJ,NOFGIJ,ISH,JSH,RROT,&
          DSYMLL1,PARA,QMTET,QMPHI,SYMUNITARY,HOSTIMP,INTERVX,INTERVY,      &
          INTERVZ,IELAST,EZ,KMESH,MAXMESH,MAXMSHD,NSYMAXD,KREL+KORBIT,LMAX, &
-         LMMAXD,KPOIBZ,NAEZ,NATYP,NATOMIMPD,NSHELD,NEMBD)
+         LMMAXD,KPOIBZ,NAEZ,NATYP,NATOMIMPD,NSHELD,NEMB)
       !
       !-------------------------------------------------------------------------
       !
       IF ( OPT('KKRFLEX ') ) THEN
 
-         CALL WRITEHOSTSTRUCTURE(BRAVAIS,NATYP,RBASIS,NAEZ,NEMBD)
+         CALL WRITEHOSTSTRUCTURE(BRAVAIS,NATYP,RBASIS,NAEZ,NEMB)
 
          OPEN (58,FILE='kkrflex_atominfo',FORM='FORMATTED')
          call version_print_header(58,&
@@ -1247,8 +1273,8 @@ contains
          CALL DECIOPT(ALAT,INS,KREL+KORBIT,KVREL,KMROT,NSPIN,NAEZ,LMMAX,   &
             BRAVAIS,TK,NPOL,NPNT1,NPNT2,NPNT3,EZ,IELAST,KAOEZ,LEFTTINVLL,  &
             RIGHTTINVLL,VACFLAG,NLBASIS,NRBASIS,CMOMHOST,VREF,RMTREF,NREF, &
-            REFPOT(NAEZ),LMAX,LMGF0D,LMMAXD,LM2D,NEMBD1,IEMXD,NSPINDD,    &
-            LMPOTD,NATYP,IRM,IPAND)
+            REFPOT(NAEZ),LMAX,LMGF0D,LMMAXD,LM2D,NEMBD1,IEMXD,NSPINDD,     &
+            LMPOT,NATYP,IRM,IPAND)
       endif
       !-------------------------------------------------------------------------
 
@@ -1277,7 +1303,7 @@ contains
       !
       if (OPT('LDA+U   ')) then
          CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU,  &
-            NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,IRWS,NTLDAU,ITLDAU,IRM,NATYP,   &
+            NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,IRWS,NTLDAU,ITLDAU,IRM,NATYP,     &
             NSPIND,MMAXD)
       end if
       !-------------------------------------------------------------------------
@@ -1290,39 +1316,36 @@ contains
       !
       ! new solver for full-potential, spin-orbit, initialise
       if (OPT('NEWSOSOL')) THEN
-         CALL CREATE_NEWMESH(NATYP,LMAX,LPOT,IRM,IRNS,IPAND,IRID,NTOTD,  &
-            NFUND,NCHEBD,NTOTD*(NCHEBD+1),NSPIN,R,IRMIN,IPAN,IRCUT,R_LOG,     &
+         CALL CREATE_NEWMESH(NATYP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,      &
+            NFUND,NCHEB,NTOTD*(NCHEB+1),NSPIN,R,IRMIN,IPAN,IRCUT,R_LOG,       &
             NPAN_LOG,NPAN_EQ,NCHEB,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,RNEW,      &
             RPAN_INTERVALL,IPAN_INTERVALL,NCELLD,NTCELL,THETAS,THETASNEW)
 
       end if
 
-      CALL WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,EMIN,EMAX,EZ,WEZ,EFERMI,  &
-         NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,TKSEMI,EBOTSEMI,EMUSEMI, &
-         FSEMICORE,VINS,VISP,VBC,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ZREL, &
-         JWSREL,IRSHIFT,ITSCF,SCFSTEPS,CMOMHOST,ECORE,LCORE,NCORE,QMTET,   &
-         QMPHI,QMPHITAB,QMTETTAB,QMGAMTAB,DROTQ,NSRA,INS,NATYP,NAEZ,NINEQ, &
-         NREF,NSPIN,LMAX,NCLS,ICST,IPAN,IRCUT,ALAT,ZAT,R,DRDI,REFPOT,      &
-         RMTREF,VREF,IEND,JEND,CLEB,ICLEB,ATOM,CLS,RCLS,NACLS,LOFLM,SOLVER,&
-         SOCSCL,CSCL,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,    &
-         RBASIS,RR,EZOA,NSHELL,NSH1,NSH2,IJTABCALC,IJTABCALC_I,ISH,JSH,    &
-         IJTABSYM,IJTABSH,NOFGIJ,NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,  &
-         KMESH,MAXMESH,NSYMAT,SYMUNITARY,RROT,DSYMLL,INVMOD,ICHECK,        &
-         NATOMIMP,RATOM,ATOMIMP,RC,CREL,RREL,SRREL,NRREL,IRREL,LEFTTINVLL, &
-         RIGHTTINVLL,VACFLAG,A,B,IFUNM,IFUNM1,INTERVX,INTERVY,INTERVZ,     &
-         ITITLE,LMSP1,NTCELL,THETAS,LPOT,LMPOT,NRIGHT,NLEFT,LINTERFACE,    &
-         IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD,KXC,     &
-         LAMBDA_XC,TXC,ISHIFT,IXIPOL,LRHOSYM,KFORCE,LMSP,LLMSP,RMT,RMTNEW, &
-         RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM,IMAXSH,IDOLDAU,        &
-         ITRUNLDAU,NTLDAU,LOPT,ITLDAU,UEFF,JEFF,EREFLDAU,ULDAU,WLDAU,      &
-         PHILDAU,IEMXD,IRMIN,IRM,LMPOTD,NSPOTD,NPOTD,NATYP,NEMBD1,      &
-         LMMAXD,NAEZ,IPAND,NAEZ+NEMBD,NREF,LMAX,NCLEB,NACLSD,NCLSD,       &
-         LM2D,LMAX+1,MMAXD,NR,NSHELD,NSYMAXD,NAEZ/NPRINCD,NATOMIMPD,      &
-         NOFGIJD,NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,NTOTD,NCHEBD,  &
-         NPAN_LOG,NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,NCHEB,R_LOG,NPAN_TOT,RNEW,&
-         RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF, &
-         LLY,DELTAE,RCLSIMP)
-
+      call WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,EMIN,EMAX,EZ,WEZ,EFERMI, &
+         NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,TKSEMI,EBOTSEMI,EMUSEMI,    &
+         FSEMICORE,VINS,VISP,VBC,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ZREL,    &
+         JWSREL,IRSHIFT,ITSCF,SCFSTEPS,CMOMHOST,ECORE,LCORE,NCORE,QMTET,QMPHI,&
+         QMPHITAB,QMTETTAB,QMGAMTAB,DROTQ,NSRA,INS,NATYP,NAEZ,NINEQ,NREF,     &
+         NSPIN,NCLS,ICST,IPAN,IRCUT,ALAT,ZAT,R,DRDI,REFPOT,RMTREF,VREF,IEND,  &
+         JEND,CLEB,ICLEB,ATOM,CLS,RCLS,NACLS,LOFLM,SOLVER,SOCSCL,CSCL,ICC,IGF,&
+         NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,&
+         NSH2,IJTABCALC,IJTABCALC_I,ISH,JSH,IJTABSYM,IJTABSH,NOFGIJ,NQCALC,   &
+         IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,KMESH,MAXMESH,NSYMAT,SYMUNITARY,    &
+         RROT,DSYMLL,INVMOD,ICHECK,NATOMIMP,RATOM,ATOMIMP,RC,CREL,RREL,SRREL, &
+         NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,A,B,IFUNM,IFUNM1,INTERVX, &
+         INTERVY,INTERVZ,ITITLE,LMSP1,NTCELL,THETAS,LPOT,LMPOT,NRIGHT,NLEFT,  &
+         LINTERFACE,IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD, &
+         KXC,LAMBDA_XC,TXC,ISHIFT,IXIPOL,LRHOSYM,KFORCE,LMSP,LLMSP,RMT,RMTNEW,&
+         RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM,IMAXSH,IDOLDAU,ITRUNLDAU, &
+         NTLDAU,LOPT,ITLDAU,UEFF,JEFF,EREFLDAU,ULDAU,WLDAU,PHILDAU,IEMXD,     &
+         IRMIND,IRM,NSPOTD,NPOTD,NEMBD1,LMMAXD,IPAND,NAEZ+NEMB,LMAX,NCLEB,    &
+         NACLSD,NCLSD,LM2D,LMAX+1,MMAXD,NR,NSHELD,NSYMAXD,NAEZ/NPRINCD,       &
+         NATOMIMPD,NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,NTOTD,NCHEB,    &
+         NPAN_LOG,NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,R_LOG,NPAN_TOT,RNEW,         &
+         RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF,LLY,&
+         DELTAE,RCLSIMP)
 
       IF (OPT('FERMIOUT'))THEN                                                ! fswrt
          CALL WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,ALAT,&   ! fswrt
@@ -1332,8 +1355,8 @@ contains
 
       IF (OPT('GREENIMP')) THEN                                               ! GREENIMP
          ! fill array dimensions and allocate arrays in t_imp                 ! GREENIMP
-         call init_params_t_imp(t_imp,IPAND,NATYP,IRM,IRID,NFUND,NSPIN,&    ! GREENIMP
-            IRMIN,LMPOTD)                                                    ! GREENIMP
+         call init_params_t_imp(t_imp,IPAND,NATYP,IRM,IRID,NFUND,NSPIN,&      ! GREENIMP
+            IRMIND,LMPOT)                                                    ! GREENIMP
          call init_t_imp(t_inc,t_imp)                                         ! GREENIMP
                                                                               ! GREENIMP
          ! next read impurity potential and shapefunction                     ! GREENIMP
@@ -1384,9 +1407,9 @@ contains
       deallocate(VINS,stat=i_stat)
       call memocc(i_stat,i_all,'VINS','main0')
 
-      i_all=-product(shape(THETASME))*kind(THETASME)
-      deallocate(THETASME,stat=i_stat)
-      call memocc(i_stat,i_all,'THETASME','main0')
+      i_all=-product(shape(THESME))*kind(THESME)
+      deallocate(THESME,stat=i_stat)
+      call memocc(i_stat,i_all,'THESME','main0')
 
       i_all=-product(shape(LEFTTINVLL))*kind(LEFTTINVLL)
       deallocate(LEFTTINVLL,stat=i_stat)
@@ -1410,32 +1433,38 @@ contains
    ! SUBROUTINE: BSHIFT_NS
    !> @brief Adds a constant (=VSHIFT) to the potentials of atoms
    !----------------------------------------------------------------------------
-   subroutine bshift_ns(VISP,VINS,NATYP,NSPIN,IRCUT,IRC,IRMIN,NTCELL,IMAXSH,&
-      ILM,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,RMESH,KSHAPE,HFIELD,INIPOL)
+   subroutine bshift_ns(IRM,IRID,IPAND,LMPOT,NPOTD,NATYP,NSPIN,NGSHD,NFUND,NCELLD,  &
+      IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM,LMSP,IFUNM,IRCUT,     &
+      HFIELD,GSH,RMESH,THESME,THETAS,VISP,VINS)
 
       implicit none
 
       ! Adds a constant (=VSHIFT) to the potentials of atoms
       !
       ! Parameters:
-      integer :: NPOTD,LMPOTD,LMXSPD,IRMIN
-      PARAMETER (NPOTD=NSPIND*NATYP,LMPOTD= (LPOT+1)**2)
-      PARAMETER (LMXSPD= (2*LPOT+1)**2,IRMIN=IRM-IRNSD)
       ! Input
+      integer, intent(in) :: IRM
+      integer, intent(in) :: IRID
+      integer, intent(in) :: IPAND
       integer, intent(in) :: LMPOT
+      integer, intent(in) :: NPOTD
       integer, intent(in) :: NATYP !< Number of kinds of atoms in unit cell
       integer, intent(in) :: NSPIN !< Counter for spin directions
+      integer, intent(in) :: NGSHD
+      integer, intent(in) :: NFUND
+      integer, intent(in) :: NCELLD
+      integer, intent(in) :: IRMIND
+      integer, intent(in) :: LMXSPD
       integer, intent(in) :: KSHAPE !< exact treatment of WS cell
       integer, dimension(NATYP), intent(in) :: IRC !< r point for potential cutting
       integer, dimension(NATYP), intent(in) :: IRMIN !< max r for spherical treatment
       integer, dimension(NATYP), intent(in) :: INIPOL !< initial spin polarisation
       integer, dimension(NATYP), intent(in) :: NTCELL !< index for WS cell
-      integer, dimension(0:LMPOTD), intent(in) :: IMAXSH
+      integer, dimension(0:LMPOT), intent(in) :: IMAXSH
       integer, dimension(NGSHD,3), intent(in) :: ILM
       integer, dimension(NATYP,LMXSPD), intent(in) :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
       integer, dimension(NATYP,LMXSPD), intent(in) :: IFUNM
       integer, dimension(0:IPAND,NATYP), intent(in) :: IRCUT !< r points of panel borders
-      double precision, intent(in) :: VSHIFT
       double precision, intent(in) :: HFIELD !< External magnetic field, for initial potential shift in spin polarised case
       double precision, dimension(NGSHD), intent(in) :: GSH
       double precision, dimension(IRM,NATYP), intent(in) :: RMESH
@@ -1444,13 +1473,13 @@ contains
 
       ! Input/Output:
       double precision, dimension(IRM,NPOTD), intent(inout) :: VISP !< Spherical part of the potential
-      double precision, dimension(IRMIN:IRM,LMPOTD,NSPOTD), intent(inout) :: VINS !< Non-spherical part of the potential
+      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS !< Non-spherical part of the potential
 
       ! Inside
       integer :: ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
-      double precision  :: RFPI
+      double precision  :: RFPI, VSHIFT
       double precision, dimension(IRM) :: PSHIFTR
-      double precision, dimension(IRM,LMPOTD) :: PSHIFTLMR
+      double precision, dimension(IRM,LMPOT) :: PSHIFTLMR
 
       RFPI = SQRT(16.0D0*ATAN(1.0D0))
 
@@ -1468,7 +1497,7 @@ contains
                'spin',ispin,' BY', VSHIFT, 'RY.'
             IPOT = NSPIN * (IH-1) + ISPIN
 
-            CALL RINIT(IRM*LMPOTD,PSHIFTLMR)
+            CALL RINIT(IRM*LMPOT,PSHIFTLMR)
             CALL RINIT(IRM,PSHIFTR)
             DO IR = 1,IRC1
                PSHIFTLMR(IR,1) = VSHIFT
@@ -1555,6 +1584,7 @@ contains
 
          implicit none
 
+         KREL        = 1      ! Switch for non-relativistic/relativistic program (0/1) or relativistic. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
          KVREL       = 1      ! Scalar-relativistic calculation
          KORBIT      = 0      ! No spin-orbit coupling
          LNC         = .True. ! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
@@ -1575,8 +1605,9 @@ contains
 
          NCLSD       = 2                                          ! NAEZD + NEMBD maximum number of different TB-clusters
          NACLSD      = 500                                        ! Maximum number of atoms in a TB-cluster
-         NOFGIJD     = 22501                                      ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJ
-         NATOMIMP    = 150
+         NOFGIJ      = 2                                          ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
+         NATOMIMP    = 1                                          ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+         NATOMIMPD   = 1                                          ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
          I25         = 'scoef                                   ' ! Default name of scoef file
 
       end subroutine init_cluster_variables
@@ -1641,7 +1672,6 @@ contains
 
          implicit none
 
-         NEMBD       = 20        ! Number of basis atoms on left & right host side, set to NHOSTL+NHOSTR
          NLEFT       = 1
          NRIGHT      = 1
          NLAYER      = 1         ! Number of principal layer
@@ -1756,8 +1786,8 @@ contains
          KNOSPH      = 0         ! Switch for spherical/non-spherical(0/1) program. Same obs. as for KREL applies.
          KSHAPE      = 0         ! ASA calculation
          NCELLD      = 1         ! Number of cells (shapes) in non-spherical part
-         NSATYPD     = 1         ! (NATYPD-1)*KNOSPH+1
          NSPOTD      = 2         ! Number of potentials for storing non-sph. potentials (2*KREL+(1-KREL)*NSPIND)*NSATYPD
+         NSATYPD     = 1         ! (NATYPD-1)*KNOSPH+1
          VCONST      = 0.D0      ! Potential shift
          LAMBDA_XC   = 1.0D0     ! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
          I13         = 'potential                               ' ! Default name of potential file

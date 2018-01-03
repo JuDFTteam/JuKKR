@@ -24,8 +24,9 @@ program kkrcode
    use Profiling
 
 #ifdef CPP_MPI
-   use mod_mympi, only: mympi_init, myrank, nranks, master,find_dims_2d, distribute_linear_on_tasks, &
-      &create_newcomms_group_ie, MPIatom , MPIadapt, check_communication_pattern
+   use mod_mympi, only: mympi_init, myrank, nranks, master,find_dims_2d,      &
+                        distribute_linear_on_tasks, create_newcomms_group_ie, &
+                        MPIatom , MPIadapt, check_communication_pattern
    use mod_save_wavefun, only: t_wavefunctions, bcast_params_savewf
 #else
    use mod_mympi, only: mympi_init, myrank, nranks, master, MPIatom, MPIadapt
@@ -40,15 +41,14 @@ program kkrcode
 
    integer :: ierr,i_stat,i_all
 #ifdef CPP_MPI
-   integer :: myMPI_comm_at, myMPI_comm_ie, nranks_at, myrank_at, myrank_ie, nranks_ie, nranks_atcomm, myrank_atcomm
-   integer :: dims(2)
+   integer :: myMPI_comm_at, myMPI_comm_ie, nranks_at, myrank_at
+   integer :: myrank_ie, nranks_ie, nranks_atcomm, myrank_atcomm
+   integer, dimension(2) :: dims
 #endif
    character(len=3) :: ctemp !name for output file
    ! needed to use test('xxxxxxxx'):
    logical :: test
    external :: test
-
-
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! initialize MPI >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -111,8 +111,6 @@ program kkrcode
       t_tgmat%gref_to_file = .true.
    end if
 #endif
-
-
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! distribute stuff from main0 >>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -208,8 +206,6 @@ program kkrcode
    !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
    !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< distribute stuff from main0 !!!!!!!!!!!!!!!!!!!!!!!!!!!
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! SCF-ITERATION >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

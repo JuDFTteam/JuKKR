@@ -245,7 +245,7 @@ contains
    !> @date 14.11.2017
    !-----------------------------------------------------------------------------
    subroutine allocate_potential(flag,NAEZ,NEMB,IRMD,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
-      LMPOTD,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,&
+      LMPOT,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,&
       ITITLE,FPRADIUS,VISP,ECORE,VINS)
 
       implicit none
@@ -259,7 +259,7 @@ contains
       integer, intent(in) :: IPAND
       integer, intent(in) :: NFUND
       integer, intent(in) :: LMXSPD
-      integer, intent(in) :: LMPOTD
+      integer, intent(in) :: LMPOT
       integer, intent(in) :: IRMIND
       integer, intent(in) :: NSPOTD
       integer, dimension(:), allocatable, intent(inout) :: NFU
@@ -322,7 +322,7 @@ contains
          allocate(NFU(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(NFU))*kind(NFU),'NFU','allocate_potential')
          NFU = 0
-         allocate(VINS(IRMIND:IRMD,LMPOTD,NSPOTD), stat=i_stat)
+         allocate(VINS(IRMIND:IRMD,LMPOT,NSPOTD), stat=i_stat)
          call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','allocate_misc')
          VINS = 0.D0
          allocate(VISP(IRMD,NPOTD),stat=i_stat)
@@ -491,7 +491,7 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_ldau(flag,NATYP,LOPT,NASOC,UEFF,JEFF,EREFLDAU)
+   subroutine allocate_ldau(flag,NATYP,LOPT,UEFF,JEFF,EREFLDAU)
 
       implicit none
 
@@ -499,7 +499,6 @@ contains
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
 
       integer, dimension(:), allocatable, intent(inout) :: LOPT !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-      integer, dimension(:), allocatable, intent(inout) :: NASOC
       double precision, dimension(:), allocatable, intent(inout) :: UEFF !< input U parameter for each atom
       double precision, dimension(:), allocatable, intent(inout) :: JEFF !< input J parameter for each atom
       double precision, dimension(:), allocatable, intent(inout) :: EREFLDAU !< the energies of the projector's wave functions (REAL)
@@ -517,9 +516,6 @@ contains
          allocate(JEFF(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(JEFF))*kind(JEFF),'JEFF','allocate_ldau')
          JEFF = 0.D0
-         allocate(NASOC(NATYP),stat=i_stat)
-         call memocc(i_stat,product(shape(NASOC))*kind(NASOC),'NASOC','allocate_ldau')
-         NASOC = 0
          allocate(EREFLDAU(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(EREFLDAU))*kind(EREFLDAU),'EREFLDAU','allocate_ldau')
          EREFLDAU = 0.5D0
@@ -538,11 +534,6 @@ contains
             i_all=-product(shape(JEFF))*kind(JEFF)
             deallocate(JEFF,stat=i_stat)
             call memocc(i_stat,i_all,'JEFF','allocate_ldau')
-         endif
-         if (allocated(NASOC)) then
-            i_all=-product(shape(NASOC))*kind(NASOC)
-            deallocate(NASOC,stat=i_stat)
-            call memocc(i_stat,i_all,'NASOC','allocate_ldau')
          endif
          if (allocated(EREFLDAU)) then
             i_all=-product(shape(EREFLDAU))*kind(EREFLDAU)
@@ -711,7 +702,7 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_SOC(flag,KREL,NATYP,LMAX,NASOC,IMANSOC,SOCSCALE,CSCL,SOCSCL)
+   subroutine allocate_SOC(flag,KREL,NATYP,LMAX,IMANSOC,SOCSCALE,CSCL,SOCSCL)
 
       implicit none
 
@@ -719,7 +710,6 @@ contains
       integer, intent(in) :: KREL
       integer, intent(in) :: LMAX !< Maximum l component in wave function expansion
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
-      integer, dimension(:), allocatable, intent(inout) :: NASOC
       integer, dimension(:), allocatable, intent(inout) :: IMANSOC
       double precision, dimension(:), allocatable, intent(inout) :: SOCSCALE !< Spin-orbit scaling
       double precision, dimension(:,:), allocatable, intent(inout) :: CSCL !< Speed of light scaling
@@ -729,9 +719,6 @@ contains
       integer :: i_stat, i_all
 
       if (flag>0) then
-         allocate(NASOC(NATYP),stat=i_stat)
-         call memocc(i_stat,product(shape(NASOC))*kind(NASOC),'NASOC','allocate_SOC')
-         NASOC = 0
          allocate(SOCSCL(KREL*LMAX+1,KREL*NATYP+(1-KREL)),stat=i_stat)
          call memocc(i_stat,product(shape(SOCSCL))*kind(SOCSCL),'SOCSCL','allocate_SOC')
          SOCSCL = 1.D0
@@ -745,11 +732,6 @@ contains
          call memocc(i_stat,product(shape(SOCSCALE))*kind(SOCSCALE),'SOCSCALE','allocate_SOC')
          SOCSCALE = 1.D0  ! Spin-orbit scaling
       else
-         if (allocated(NASOC)) then
-            i_all=-product(shape(NASOC))*kind(NASOC)
-            deallocate(NASOC,stat=i_stat)
-            call memocc(i_stat,i_all,'NASOC','allocate_SOC')
-         endif
          if (allocated(SOCSCL)) then
             i_all=-product(shape(SOCSCL))*kind(SOCSCL)
             deallocate(SOCSCL,stat=i_stat)
@@ -1066,7 +1048,7 @@ contains
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
    subroutine allocate_clusters(flag,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,&
-      LMPOTD,NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,JEND,RATOM,&
+      LMPOT,NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,JEND,RATOM,&
       RCLSIMP,CMOMHOST,RCLS)
 
       implicit none
@@ -1079,7 +1061,7 @@ contains
       integer, intent(in) :: NEMBD1
       integer, intent(in) :: NSHELD
       integer, intent(in) :: NACLSD
-      integer, intent(in) :: LMPOTD
+      integer, intent(in) :: LMPOT
       integer, intent(in) :: NATOMIMPD
       integer, dimension(:), allocatable, intent(inout) :: NSH1 !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
       integer, dimension(:), allocatable, intent(inout) :: NSH2 !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
@@ -1132,10 +1114,10 @@ contains
          allocate(NSHELL(0:NSHELD),stat=i_stat)
          call memocc(i_stat,product(shape(NSHELL))*kind(NSHELL),'NSHELL','allocate_clusters')
          NSHELL = 0
-         allocate(CMOMHOST(LMPOTD,NEMBD1),stat=i_stat)
+         allocate(CMOMHOST(LMPOT,NEMBD1),stat=i_stat)
          call memocc(i_stat,product(shape(CMOMHOST))*kind(CMOMHOST),'CMOMHOST','allocate_clusters')
          CMOMHOST = 0.D0
-         allocate(JEND(LMPOTD,0:LMAX,0:LMAX),stat=i_stat)
+         allocate(JEND(LMPOT,0:LMAX,0:LMAX),stat=i_stat)
          call memocc(i_stat,product(shape(JEND))*kind(JEND),'JEND','allocate_clusters')
          JEND = 0
 
@@ -1649,7 +1631,7 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !-----------------------------------------------------------------------------
-   subroutine allocate_green(flag,NAEZ,IEMXD,NGSHD,NSHELD,LMPOTD,NOFGIJD,ISH,JSH,&
+   subroutine allocate_green(flag,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJD,ISH,JSH,&
       KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM,GSH)
 
       implicit none
@@ -1659,7 +1641,7 @@ contains
       integer, intent(in) :: IEMXD
       integer, intent(in) :: NGSHD
       integer, intent(in) :: NSHELD
-      integer, intent(in) :: LMPOTD
+      integer, intent(in) :: LMPOT
       integer, intent(in) :: NOFGIJD
       integer, dimension(:,:), allocatable, intent(inout) :: ISH
       integer, dimension(:,:), allocatable, intent(inout) :: JSH
@@ -1697,7 +1679,7 @@ contains
          allocate(IOFGIJ(NOFGIJD),stat=i_stat)
          call memocc(i_stat,product(shape(IOFGIJ))*kind(IOFGIJ),'IOFGIJ','allocate_green')
          IOFGIJ = 0
-         allocate(IMAXSH(0:LMPOTD),stat=i_stat)
+         allocate(IMAXSH(0:LMPOT),stat=i_stat)
          call memocc(i_stat,product(shape(IMAXSH))*kind(IMAXSH),'IMAXSH','allocate_green')
          IMAXSH = 0
          allocate(IJTABSH(NOFGIJD),stat=i_stat)
