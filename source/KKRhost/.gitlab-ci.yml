@@ -28,15 +28,11 @@ run:intel:
     - export OMP_NUM_THREADS=1
     - export OMP_STACKSIZE=1g
     - ulimit -s unlimited
-    # prepare files and directories for test run (save only necessary files, discard *.o files)
-    - mkdir tests/test_run/
-    - cd tests/test_run/
-    - ln -s ../../kkr.x ../potential ../shapefun ../inputcard .
-    # run calculation
-    - ./kkr.x | tee out_kkr
+    - cd tests
+    - ./run_all.sh
   artifacts:
     paths:
-      - tests/test_run
+      - tests/test_run*
     expire_in: 2 days
 
 verify:intel:

@@ -49,6 +49,7 @@ ompdebug:  COMPVER ='openmpdebug'
 mac:       COMPVER ='serial-mac'
 macmpi:    COMPVER ='mpi-mac'
 macomp:    COMPVER ='openmp-mac'
+macompprof:    COMPVER ='openmp-mac-prof'
 rwth:      COMPVER ='serial-rwth'
 rwthmpi:   COMPVER ='mpi-rwth'
 rwthomp:   COMPVER ='openmp-rwth'
@@ -131,6 +132,7 @@ JURECALIBS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
 mac:    LLIBS=$(MACLLIBS)
 macmpi: LLIBS=$(MACLLIBS)
 macomp: LLIBS=$(MACLLIBS)
+macompprof: LLIBS=$(MACLLIBS)
 
 rwth:          LLIBS=$(RWTHLLIBS)
 rwthmpi:       LLIBS=$(RWTHLLIBS)
@@ -150,6 +152,7 @@ RWTHLLIBSOMP = $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 -lmkl_intel_thread -liomp5
 mac:    LLIBSOPENMP=$(MACLLIBSOPENMP)
 macmpi: LLIBSOPENMP=$(MACLLIBSOPENMP)
 macomp: LLIBSOPENMP=$(MACLLIBSOPENMP)
+macompprof: LLIBSOPENMP=$(MACLLIBSOPENMP)
 
 rwth:          LLIBSOPENMP=$(RWTHLLIBSOMP)
 rwthmpi:       LLIBSOPENMP=$(RWTHLLIBSOMP)
@@ -177,6 +180,7 @@ mpidebug: CPP = -D CPP_MPI -D CPP_TIMING
 mpi:      CPP = -D CPP_MPI -D CPP_TIMING
 macmpi:   CPP = -D CPP_MPI -D CPP_TIMING
 macomp:   CPP = -D CPP_OMP -D CPP_TIMING
+macompprof:   CPP = -D CPP_OMP -D CPP_TIMING
 rwthmpi:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
@@ -206,6 +210,8 @@ ompdebug: OPENMPFLAGS = -openmp
 rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 
+macompprof: FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback -prof-gen:srcpos
+
 macmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g -sox
 macompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g -sox
 rwthmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g -sox
@@ -221,7 +227,7 @@ rwthhybrid: OPENMPFLAGS = -openmp
 ####################################################
 # helper                                           #
 ####################################################
-.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid jureca
+.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp macompprof rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid jureca
 
 getversion:
 	@echo "Wrinting Version file: "; git describe;\
@@ -280,6 +286,7 @@ install: clean mpi
 mac:    compile
 macmpi: compile
 macomp: compile
+macompprof: compile
 rwth:    compile
 rwthmpi: compile
 rwthomp: compile
