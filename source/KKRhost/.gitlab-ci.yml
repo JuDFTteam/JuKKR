@@ -147,6 +147,26 @@ run:intel:FERMIOUT6:
       - tests/test_run*
     expire_in: 2 days
 
+run:intel:MPIatom7:
+  stage: run
+  script:
+    - cd tests
+    - ./run_parallel.py -7
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:MPIenerg8:
+  stage: run
+  script:
+    - cd tests
+    - ./run_parallel.py -7
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
 
 verify:intel:
   stage: verify
