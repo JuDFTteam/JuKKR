@@ -27,7 +27,7 @@ test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5]}
 
 # use mpi only if test_coverage option is set to negative value
 if test_coverage<0:
-    npara_pairs = [[1,4]]
+    npara_pairs = [[1,2], [1,3], [1,4]]
     model = ['mpi']
     test_coverage = -test_coverage
 
