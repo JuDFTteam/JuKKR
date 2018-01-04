@@ -80,12 +80,12 @@ class Test_check_test_runs():
 
     def test_verify7_8_mpiatom_mpienerg(self):
         # compare mpiatom and mpienerg parallelisation scheme
-        cmplist = ['test_run7_mpi_1_2/', 'test_run7_hybrid_1_2/', 
-		   'test_run7_mpi_1_3/', 'test_run7_hybrid_1_3/',
-		   'test_run7_mpi_1_4/', 'test_run7_hybrid_1_4/',
-                   'test_run8_mpi_1_2/', 'test_run8_hybrid_1_2/', 
-		   'test_run8_mpi_1_3/', 'test_run8_hybrid_1_3/',
-		   'test_run8_mpi_1_4/', 'test_run8_hybrid_1_4/']
+        cmplist = ['test_run7_mpi_1_2', 'test_run7_hybrid_1_2', 
+		   'test_run7_mpi_1_3', 'test_run7_hybrid_1_3',
+		   'test_run7_mpi_1_4', 'test_run7_hybrid_1_4',
+                   'test_run8_mpi_1_2', 'test_run8_hybrid_1_2', 
+		   'test_run8_mpi_1_3', 'test_run8_hybrid_1_3',
+		   'test_run8_mpi_1_4', 'test_run8_hybrid_1_4']
         cmp_modes(cmplist, '')
 
         
