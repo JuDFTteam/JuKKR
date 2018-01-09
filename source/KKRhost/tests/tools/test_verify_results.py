@@ -32,6 +32,7 @@ class Test_check_test_runs():
 
     def test_compare_parallel_modes2(self):
         cmplist = ['serial_1_1', 'omp_1_1', 'omp_4_1', 'mpi_1_1' ,'mpi_1_4', 'hybrid_1_1', 'hybrid_1_4', 'hybrid_4_1', 'hybrid_2_2']
+        #cmplist = ['serial_1_1', 'omp_1_1', 'omp_4_1', 'mpi_1_1' ,'mpi_1_4', 'hybrid_1_1', 'hybrid_1_4', 'hybrid_4_1', 'hybrid_2_2']
         path00 = 'test_run2_'
         cmp_modes(cmplist, path00)
 
