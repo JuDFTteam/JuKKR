@@ -31,8 +31,20 @@ class Test_check_test_runs():
     """
 
     def test_compare_parallel_modes2(self):
-        cmplist = ['serial_1_1', 'omp_1_1', 'omp_4_1', 'mpi_1_1' ,'mpi_1_4', 'hybrid_1_1', 'hybrid_1_4', 'hybrid_4_1', 'hybrid_2_2']
-        #cmplist = ['serial_1_1', 'omp_1_1', 'omp_4_1', 'mpi_1_1' ,'mpi_1_4', 'hybrid_1_1', 'hybrid_1_4', 'hybrid_4_1', 'hybrid_2_2']
+        cmplist = ['serial_', 'omp_', 'mpi_', 'hybrid_']
+        l_para = [1,2,4,8]
+        for ipara in l_para:
+            for jpara in l_para:
+                for irun in cmplist:
+                    if 'serial' in irun and ipara in [1] and jpara in [1]:
+                        cmplist_new = [irun+str(ipara)+'_'+str(jpara)]
+                    elif 'omp' in irun and jpara in [1] and ipara in l_para:
+                        cmplist_new.append(irun+str(ipara)+'_'+str(jpara))
+                    elif 'mpi' in irun and ipara in [1] and jpara in l_para:
+                        cmplist_new.append(irun+str(ipara)+'_'+str(jpara))
+                    elif 'hybrid' in irun and ipara in l_para and jpara in l_para and ipara*jpara<=8:
+                        cmplist_new.append(irun+str(ipara)+'_'+str(jpara))
+        cmplist = cmplist_new
         path00 = 'test_run2_'
         cmp_modes(cmplist, path00)
 
@@ -87,6 +99,10 @@ class Test_check_test_runs():
                    'test_run8_mpi_1_2', 'test_run8_hybrid_1_2', 
 		   'test_run8_mpi_1_3', 'test_run8_hybrid_1_3',
 		   'test_run8_mpi_1_4', 'test_run8_hybrid_1_4']
+        cmplist+= ['test_run7_mpi_1_7', 'test_run7_hybrid_1_7', 
+		   'test_run7_mpi_1_8', 'test_run7_hybrid_1_8',
+		   'test_run8_mpi_1_7', 'test_run8_hybrid_1_7',
+		   'test_run8_mpi_1_8', 'test_run8_hybrid_1_8']
         cmp_modes(cmplist, '')
 
         
