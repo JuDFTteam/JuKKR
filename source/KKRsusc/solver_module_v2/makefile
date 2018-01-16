@@ -63,7 +63,8 @@ GS       = $(OBJ)/save_rho2ns.o $(OBJ)/read_rho2ns.o $(OBJ)/update_rho2ns.o \
            $(OBJ)/density_of_states.o $(OBJ)/get_xc2.o $(OBJ)/vxc_vwn.o \
            $(OBJ)/density_matrix.o $(OBJ)/current_density.o \
            $(OBJ)/current_soc.o $(OBJ)/current_zeeman.o \
-           $(OBJ)/current_interpolation.o $(OBJ)/rho_interpolation.o
+           $(OBJ)/current_interpolation.o $(OBJ)/rho_interpolation.o \
+           $(OBJ)/current_induced_bfield.o
 
 CORRDIR  = corrections
 CORR     = $(OBJ)/build_selfe.o $(OBJ)/build_zeeman.o $(OBJ)/build_vscfb.o \
@@ -432,6 +433,9 @@ $(OBJ)/density_matrix.o: $(GSDIR)/density_matrix.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 $(OBJ)/rho_interpolation.o: $(GSDIR)/rho_interpolation.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+
+$(OBJ)/current_density.o: $(GSDIR)/current_induced_bfield.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 ########################################################################

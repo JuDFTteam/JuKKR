@@ -233,6 +233,7 @@
   logical           :: lcurrentzeeman = .false.
   logical           :: lcurrentint = .false.
   logical           :: lcurrentoutput = .false.
+  logical           :: lcurrentbfield = .false.
 !-----------------------------------------------------------------------
 !                       Atom-dependent parameters     
 !-----------------------------------------------------------------------

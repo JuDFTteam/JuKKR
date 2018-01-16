@@ -402,6 +402,12 @@
   end if
   
 ! #############################################################
+! calculate current induced magnetic fields
+  if(lcurrentbfield) then
+    call current_induced_bfield(curr_lm(0,:,:,:),nr,ia,lmmaxJ,numpan,numrcut)
+  end if
+  
+! #############################################################
 ! calculate the divergence of the current
 ! first the radial derivative of j_lm is calculated, then the P matrix for the divergence
   
