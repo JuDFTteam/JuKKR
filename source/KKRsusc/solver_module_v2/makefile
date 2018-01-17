@@ -435,7 +435,7 @@ $(OBJ)/density_matrix.o: $(GSDIR)/density_matrix.F90
 $(OBJ)/rho_interpolation.o: $(GSDIR)/rho_interpolation.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
-$(OBJ)/current_density.o: $(GSDIR)/current_induced_bfield.F90
+$(OBJ)/current_induced_bfield.o: $(GSDIR)/current_induced_bfield.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 ########################################################################

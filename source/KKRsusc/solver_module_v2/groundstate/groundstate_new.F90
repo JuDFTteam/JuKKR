@@ -49,6 +49,7 @@
     end if
     if(lcurrentbfield) then
       open(unit=777,file="current_induced_bfield.dat")
+      write(777,'("# curr_r and curr_r_r")')
     end if
 !   Net currents of each atom
     open(unit=330,file="current_net_0.dat")
@@ -96,7 +97,6 @@
 ! Current density
     if(lcurrent) then
 ! Header for output files
-      if(lcurrentbfield) write(777,,'("# curr_r and curr_r_r")')
       nr=nrpts(ia)
       call current_density(ia,nr,gfsum,curr_sum,morb_non_loc_sum,npanat(ia),ircutat(:,ia))
     end if
