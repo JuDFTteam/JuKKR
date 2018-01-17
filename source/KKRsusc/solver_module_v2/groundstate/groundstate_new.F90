@@ -47,6 +47,10 @@
       open(unit=222,file="current_int_tot_2.dat")
       open(unit=223,file="current_int_tot_3.dat")
     end if
+    if(lcurrentbfield) then
+      open(unit=777,file="current_induced_bfield.dat")
+      write(777,'("# curr_r and curr_r_r")')
+    end if
 !   Net currents of each atom
     open(unit=330,file="current_net_0.dat")
     write(330,'("# positions jx jy jz")')
@@ -92,6 +96,7 @@
     call charge_density(ia,gfsum)
 ! Current density
     if(lcurrent) then
+! Header for output files
       nr=nrpts(ia)
       call current_density(ia,nr,gfsum,curr_sum,morb_non_loc_sum,npanat(ia),ircutat(:,ia))
     end if
@@ -118,7 +123,7 @@
   if(lcurrent) then
     close(220); close(221); close(222); close(223)
     close(330); close(331); close(332); close(333)
-    close(440)
+    close(440); close(777)
   end if
   write(*,'(" qe    tot=",f16.8)') tcharge
   write(*,'(" mspin tot=",3f16.8)') tmspin
