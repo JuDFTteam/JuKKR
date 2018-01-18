@@ -84,8 +84,7 @@ c        write(6,*) CHARKEY(1:ILEN-1),ILEN,IKLEN
 c
        DO i=1,NPT       ! loop in all line
          STRING1 = '   ' // STRING(I)     ! shift by 2 characters   
-          IPOS = INDEX(STRING1,CHARKEY(1:ILEN-1)) 
-             ! return the position of occurence
+          IPOS = INDEX(STRING1,CHARKEY(1:ILEN-1)) ! return the position of occurence
              if (ipos.ne.0) then
                  if (ipos.lt.4) then 
                   write(6,*) 'CONSISTENCY ERROR IOINPUT!'
@@ -93,8 +92,7 @@ c
                  end if
 c                write(6,*) 'ipos is not zero',CHARKEY//'=','**'
                 ipos1= INDEX(STRING1,CHARKEY(1:ILEN-1)//ACHAR(61))
-                if (IPOS1.NE.0) then
-                   ! return the string after 'CHARKEY=' 
+                if (IPOS1.NE.0) then        ! return the string after 'CHARKEY=' 
                    CHAR = STRING1(ipos1+ilen:)
 c                    write(6,*) CHARKEY,CHAR ! test 
                    close(IFILE)

@@ -13,8 +13,8 @@ C
       character*8      STRING   ,TESTC                              
 C                                                                       
       TEST=.FALSE.                                                    
-      DO 1 I=1,32                                                    
+      DO I=1,32
         IF(STRING.EQ.TESTC(I)) TEST=.TRUE.                         
- 1    END DO
+      END DO
       RETURN                                                       
       END                                                         

@@ -38,43 +38,15 @@ C     .. Intrinsic Functions ..
 C     ..
 C     .. External Subroutines ..
       EXTERNAL RCSTOP
-!       
-!       A   = 0.0d0
-!       CD  = 0.0d0
-!       CPH = 0.0d0
-!       CTH = 0.0d0
-!       FAC = 0.0d0
-!       FPI = 0.0d0
-!       PI  = 0.0d0
-!       RTWO= 0.0d0
-!       SGM = 0.0d0
-!       SPH = 0.0d0
-!       STH = 0.0d0
-!       T   = 0.0d0
-!       XY  = 0.0d0
-!       XYZ = 0.0d0
-!       I   = 0
-!       L   = 0
-!       M   = 0
-! 
-!       C(0:LMAX)= 0.0d0
-!       P(0:LMAX,0:LMAX)= 0.0d0
-!       S(0:LMAX)= 0.0d0
-!       
-!       
-!       
-!       
 C     ..
       PI = 4.D0*ATAN(1.D0)
       FPI = 4.D0*PI
       RTWO = SQRT(2.0D0)
-      
 c
 c--->    calculate sin and cos of theta and phi
 c
       XY = V1**2 + V2**2
       XYZ = XY + V3**2
-!       write(*,'(A,4ES15.7)')'ymy input', V1,V2,V3, XYZ
 c
       R = SQRT(XYZ)
       IF (XYZ.LE.0.0D0) THEN

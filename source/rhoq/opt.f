@@ -13,10 +13,9 @@ C
       character*8      STRING   ,OPTC      
       integer i
 C                                                                  
-C                                                                      
       OPT=.FALSE.                                                     
-      DO 1 I=1,32                                                     
+      DO I=1,32
         IF(STRING.EQ.OPTC(I)) OPT=.TRUE.
- 1    END DO
+      END DO
       RETURN                                                       
       END                                                         
