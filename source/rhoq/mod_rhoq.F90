@@ -38,7 +38,7 @@ type type_rhoq
   logical :: Ghost_k_memsave ! logical switch which determines if Ghost_k is stored in a file or kept in memory
 !   double complex, allocatable :: Ghost(:,:,:) ! (Nlayer,lmmaxso,lmmaxso) 
 !   double complex, allocatable :: Ghost_k(:,:,:,:) ! (Nlayer,nkpt,lmmaxso,lmmaxso) 
-  double complex, allocatable :: G0tauG0_excl(:,:,:) ! (Nexcl, lmmaxso, lmmaxso), precalculated maxtrix sum_jk G0ij.tau_jk.G0_ki where j,k in imp cluster and i in exclude cluster
+  double complex, allocatable :: G0tauG0_excl(:,:,:) ! (2*Nexcl, lmmaxso, lmmaxso), precalculated maxtrix sum_jk G0ij.tau_jk.G0_ki where j,k in imp cluster and i in exclude cluster
 
   ! these are used later on (not included in Bcast with Narrays parameter)
   double complex, allocatable :: Dt(:,:)   ! (Nscoef*lmmaxso,Nscoef*lmmaxso) 
@@ -446,7 +446,7 @@ subroutine start_excl(t_rhoq)
      mu_cls = t_rhoq%ilay_scoef(ilayer)
      
      do ilayer=1,t_rhoq%Nexcl
-       write(*,'(I,9F)') ilayer, t_rhoq%r_excl(:,ilayer), t_rhoq%r_basis(:,mu_cls), t_rhoq%r_basis(:,ilay_excl(ilayer+t_rhoq%Nscoef))
+       !write(*,'(I,9F)') ilayer, t_rhoq%r_excl(:,ilayer), t_rhoq%r_basis(:,mu_cls), t_rhoq%r_basis(:,ilay_excl(ilayer+t_rhoq%Nscoef))
        t_rhoq%r_excl(:,ilayer) = t_rhoq%r_excl(:,ilayer)!-t_rhoq%r_basis(:,ilay_excl(ilayer+t_rhoq%Nscoef))  !+t_rhoq%r_basis(:,mu_cls)-
        write(*,'(I,3F)') ilayer, t_rhoq%r_excl(:,ilayer)
      end do
@@ -499,22 +499,27 @@ subroutine start_excl(t_rhoq)
      if(ierr/=0) stop '[read_excl] error allocating G0ijexcl'
      if(.not.allocated(G0jiexcl)) allocate(G0jiexcl(t_rhoq%Nscoef*t_rhoq%lmmaxso,t_rhoq%Nexcl*t_rhoq%lmmaxso), stat=ierr)
      if(ierr/=0) stop '[read_excl] error allocating G0jiexcl'
+     G0ijexcl = C0
+     G0jiexcl = C0
      write(*,*) 'fill G0ijexcl'
-     do icls1=1,t_rhoq%Nexcl*t_rhoq%lmmaxso
-       do icls2=1,t_rhoq%Nscoef*t_rhoq%lmmaxso
-         itmp1 = icls1
-         itmp2 = icls2 + t_rhoq%Nexcl*t_rhoq%lmmaxso
+     do icls1=1,t_rhoq%Nexcl
+       do icls2=1,t_rhoq%Nscoef
+         itmp1 = (icls1-1)*t_rhoq%lmmaxso+1
+         itmp2 = (icls2-1)*t_rhoq%lmmaxso+1
+         N1 = (icls1+t_rhoq%Nscoef-1)*t_rhoq%lmmaxso+1
+         N2 = (icls2-1)*t_rhoq%lmmaxso+1
          !write(*,*) 'G0ijexcl',icls1,icls2,itmp1,itmp2
-         G0ijexcl(icls1,icls2) = Gll0(itmp1,itmp2)
+         G0ijexcl(itmp1:itmp1-1+t_rhoq%lmmaxso,itmp2:itmp2-1+t_rhoq%lmmaxso) = Gll0(N1:N1+t_rhoq%lmmaxso-1,N2:N2+t_rhoq%lmmaxso-1)
        end do !icls2
      end do !icls1
      write(*,*) 'fill G0jiexcl'
-     do icls1=1,t_rhoq%Nexcl*t_rhoq%lmmaxso
-       do icls2=1,t_rhoq%Nscoef*t_rhoq%lmmaxso
-         itmp1 = icls1 + t_rhoq%Nscoef*t_rhoq%lmmaxso
-         itmp2 = icls2
-         !write(*,*) 'G0jiexcl',icls2,icls1,itmp1,itmp2
-         G0jiexcl(icls2,icls1) = Gll0(itmp1,itmp2)
+     do icls1=1,t_rhoq%Nscoef
+       do icls2=1,t_rhoq%Nexcl
+         itmp1 = (icls1-1)*t_rhoq%lmmaxso+1
+         itmp2 = (icls2-1)*t_rhoq%lmmaxso+1
+         N1 = (icls1-1)*t_rhoq%lmmaxso+1
+         N2 = (icls2+t_rhoq%Nscoef-1)*t_rhoq%lmmaxso+1
+         G0jiexcl(itmp1:itmp1-1+t_rhoq%lmmaxso,itmp2:itmp2-1+t_rhoq%lmmaxso) = Gll0(N1:N1+t_rhoq%lmmaxso-1,N2:N2+t_rhoq%lmmaxso-1)
        end do !icls2
      end do !icls1
      
@@ -525,7 +530,7 @@ subroutine start_excl(t_rhoq)
      ! Now calculate sum_jk [ G0_ij(E) tau_jk G0_ki(E) ]
      ! this prefactor is used in C_M calculation
      
-     if(.not.allocated(t_rhoq%G0tauG0_excl)) allocate(t_rhoq%G0tauG0_excl(t_rhoq%Nexcl,t_rhoq%lmmaxso,t_rhoq%lmmaxso)) 
+     if(.not.allocated(t_rhoq%G0tauG0_excl)) allocate(t_rhoq%G0tauG0_excl(2*t_rhoq%Nexcl,t_rhoq%lmmaxso,t_rhoq%lmmaxso)) 
      if(ierr/=0) stop '[precalc_G0tauG0] Error allocating t_rhoq%G0tauG0_excl'
      
      ! matrix sizes
@@ -551,7 +556,38 @@ subroutine start_excl(t_rhoq)
      do icls1=1,t_rhoq%Nexcl
         N1 = (icls1-1)*t_rhoq%lmmaxso+1
         N2 = icls1*t_rhoq%lmmaxso
+        write(*,*) 'restruc1', icls1, n1,n2
         t_rhoq%G0tauG0_excl(icls1,:,:) = temp2(N1:N2,N1:N2)
+        do lm1 = 1, t_rhoq%lmmaxso
+         do lm2 = 1, t_rhoq%lmmaxso
+          write(7894521,'(3i5,2f14.7)') icls1,lm1, lm2, t_rhoq%G0tauG0_excl(icls1,lm1,lm2)
+         end do
+        end do
+     end do
+
+
+     ! matrix sizes
+     N1 = t_rhoq%Nscoef*t_rhoq%lmmaxso
+     N2 = t_rhoq%Nexcl*t_rhoq%lmmaxso
+
+     ! temp = G0ij^*.tau^*
+     call ZGEMM('n','n',N2,N1,N1,C1,dconjg(G0ijexcl),N2,dconjg(t_rhoq%tau),N1,C0,temp,N2)
+     
+     ! sum_jk [...] = Gij^*.tau^*.Gji^*
+     !              = temp.Gji^*
+     call ZGEMM('n','n',N2,N2,N1,C1,temp,N2,dconjg(G0jiexcl),N1,C0,temp2,N2)
+
+     ! now restructure (take only diagonal lm-blocks)
+     do icls1=1,t_rhoq%Nexcl
+        N1 = (icls1-1)*t_rhoq%lmmaxso+1
+        N2 = icls1*t_rhoq%lmmaxso
+        write(*,*) 'restruc2', icls1, n1,n2
+        t_rhoq%G0tauG0_excl(icls1+t_rhoq%Nexcl,:,:) = temp2(N1:N2,N1:N2)
+        do lm1 = 1, t_rhoq%lmmaxso
+         do lm2 = 1, t_rhoq%lmmaxso
+          write(7894521,'(3i5,2f14.7)') icls1+t_rhoq%Nexcl,lm1, lm2, t_rhoq%G0tauG0_excl(icls1+t_rhoq%Nexcl,lm1,lm2)
+         end do
+        end do
      end do
      
      deallocate(temp,temp2)
@@ -561,12 +597,12 @@ subroutine start_excl(t_rhoq)
 #ifdef CPP_MPI
   ! allocate for myrank/=master and broadcast data from master
   call MPI_Bcast(t_rhoq%Nexcl, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
-  if(.not.allocated(t_rhoq%G0tauG0_excl)) allocate(t_rhoq%G0tauG0_excl(t_rhoq%Nexcl,t_rhoq%lmmaxso,t_rhoq%lmmaxso)) 
+  if(.not.allocated(t_rhoq%G0tauG0_excl)) allocate(t_rhoq%G0tauG0_excl(t_rhoq%Nexcl*2,t_rhoq%lmmaxso,t_rhoq%lmmaxso)) 
   if(ierr/=0) stop '[precalc_G0tauG0] Error allocating t_rhoq%G0tauG0_excl'
   if(.not.allocated(t_rhoq%r_excl)) allocate(t_rhoq%r_excl(3,t_rhoq%Nexcl), stat=ierr)
   if(ierr/=0) stop '[read_excl] error allocating r_excl in read_excl'
   call MPI_Bcast(t_rhoq%r_excl, 3*t_rhoq%Nexcl, MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
-  call MPI_Bcast(t_rhoq%G0tauG0_excl, t_rhoq%Nexcl*t_rhoq%lmmaxso*t_rhoq%lmmaxso, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%G0tauG0_excl, 2*t_rhoq%Nexcl*t_rhoq%lmmaxso*t_rhoq%lmmaxso, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
 #endif
 
 end subroutine start_excl
@@ -1728,7 +1764,6 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
      !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< k-loop <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      
-!           eiqr_lm(:,:) = C1
 
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  eiqr  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1784,6 +1819,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         
      else
      
+        ! q==0 case: set to zero instead of one since this is anyways cut out
         eiqr_lm(:,:) = C0
         
      end if !(dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)>=eps)
@@ -1854,7 +1890,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
      !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> C_M(iq) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
      ! calculate trace of Q^mu times k-kpoint integral
 
-     ! C_M(q) = sum_j exp(-iq*(R_j+Chi_nu)) *  q_mu^*.(G0_ji.tau_ii'.G0_i'j) (all are matrices in lms-space; i,i' are in imp cluster and j in exclude cluster)
+     ! C_M(q) = sum_j exp(-iq*(R_j+Chi_nu)) * q_mu.(G0_ji.tau_ii'.G0_i'j) (all are matrices in lms-space; i,i' are in imp cluster and j in exclude cluster)
      tmp = C0
      do i=1,t_rhoq%Nexcl
         tmpk(:) = Qvec(:,q)
@@ -1862,6 +1898,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
         kweight = exp(-2.0d0*pi*Ci*QdotL) !/alat)
         call ZGEMM('n','n',N,N,N,kweight,q_mu(1:N,1:N),N,t_rhoq%G0tauG0_excl(i,1:N,1:N),N,C1,tmp(1:N,1:N),N)
+        !tmp(1:N,1:N) = tmp(1:N,1:N)+q_mu(1:N,1:N)!t_rhoq%G0tauG0_excl(i,1:N,1:N)
+        !tmp(1,1) = tmp(1,1)+kweight
      end do
            
      ! take trace
@@ -1870,14 +1908,16 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
        tr_tmpsum1 = tr_tmpsum1 + tmp(i,i)
      end do
 
-     ! C_M^*(-q) = sum_j exp(iq*(R_j+Chi_nu)) *  q_mu^*.(G0_ji.tau_ii'.G0_i'j)^* (all are matrices in lms-space; i,i' are in imp cluster and j in exclude cluster)
+     ! C_M^*(-q) = sum_j exp(-iq*(R_j+Chi_nu)) *  q_mu^*.(G0_ji.tau_ii'.G0_i'j)^* (all are matrices in lms-space; i,i' are in imp cluster and j in exclude cluster)
      tmp = C0
      do i=1,t_rhoq%Nexcl
         tmpk(:) = -Qvec(:,q)
         tmpr(:) = t_rhoq%r_excl(:,i)
         QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
         kweight = exp(2.0d0*pi*Ci*QdotL) !/alat)
-        call ZGEMM('n','n',N,N,N,kweight,dconjg(q_mu(1:N,1:N)),N,dconjg(t_rhoq%G0tauG0_excl(i,1:N,1:N)),N,C1,tmp(1:N,1:N),N)
+        call ZGEMM('n','n',N,N,N,kweight,dconjg(q_mu(1:N,1:N)),N,t_rhoq%G0tauG0_excl(i+t_rhoq%Nexcl,1:N,1:N),N,C1,tmp(1:N,1:N),N)
+        !tmp(1:N,1:N) = tmp(1:N,1:N)+dconjg(q_mu(1:N,1:N))!t_rhoq%G0tauG0_excl(i+t_rhoq%Nexcl,1:N,1:N)
+        !tmp(1,1) = tmp(1,1)+kweight
      end do
            
      ! take trace
