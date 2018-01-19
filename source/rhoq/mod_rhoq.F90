@@ -410,7 +410,11 @@ subroutine start_excl(t_rhoq)
   double complex, allocatable :: G0jiexcl(:,:) ! (Nexcl*lmmaxso,Nscoef*lmmaxso), like G0ijexcl but propagator from imp cluster to exclude region
   double precision :: dEimag
   double complex :: energy(3), dE1, dE2, ctmp1, ctmp2
-  double precision, parameter :: eps = 1.0D-6 ! small epsilon -> threashold
+  double precision, parameter :: eps = 1.0D-6 ! small epsilon -> threshold
+
+  logical :: l_exist
+  double precision :: r_offset(3)
+
 
 
   ! read in etc on master rank only and distribute result
@@ -444,12 +448,25 @@ subroutine start_excl(t_rhoq)
        if(dsqrt(sum(t_rhoq%r_scoef(:,ilayer)**2))<eps) irun = 0
      end do
      mu_cls = t_rhoq%ilay_scoef(ilayer)
+
+     inquire(file='r_offset.dat', exist=l_exist)
+     if(l_exist) then
+         write(*,*) 'found r_offset.dat file'
+         open(unit=1283, file='r_offset.dat', form='formatted')
+         read(1283, *) r_offset(1), r_offset(2), r_offset(3)
+         close(1283)
+         write(*,*) r_offset
+     else
+         r_offset(:) = 0.
+     end if
      
      do ilayer=1,t_rhoq%Nexcl
        !write(*,'(I,9F)') ilayer, t_rhoq%r_excl(:,ilayer), t_rhoq%r_basis(:,mu_cls), t_rhoq%r_basis(:,ilay_excl(ilayer+t_rhoq%Nscoef))
-       t_rhoq%r_excl(:,ilayer) = t_rhoq%r_excl(:,ilayer)!-t_rhoq%r_basis(:,ilay_excl(ilayer+t_rhoq%Nscoef))  !+t_rhoq%r_basis(:,mu_cls)-
+       t_rhoq%r_excl(:,ilayer) = t_rhoq%r_excl(:,ilayer) + r_offset -t_rhoq%r_basis(:,ilay_excl(ilayer+t_rhoq%Nscoef))  +t_rhoq%r_basis(:,mu_cls)
+       !t_rhoq%r_excl(:,ilayer) = t_rhoq%r_excl(:,ilayer) + r_offset! -t_rhoq%r_basis(:,ilay_excl(ilayer+t_rhoq%Nscoef))  !+t_rhoq%r_basis(:,mu_cls)-
        write(*,'(I,3F)') ilayer, t_rhoq%r_excl(:,ilayer)
      end do
+     write(*,*) t_rhoq%r_basis(:,mu_cls), r_offset
      
      ! deallocate unused arrays
      deallocate(ratomimp, ilay_excl)
@@ -1703,7 +1720,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
          ! read kweight from memory
          kweight = dcmplx(t_rhoq%volcub(k), 0.0d0) ! complex number needed for zgemm later on
          
-         ! kweight = kweight * exp(i q*L_i)
+         ! kweight = kweight * exp(i q*L_i) (exp factor is explicityl included into exG0 in the following)
          
          do i=1,t_rhoq%Nscoef
            do j=1,t_rhoq%Nscoef
@@ -1712,7 +1729,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
              
              ! collect phase factors
              ! exG0 = G0*exp(-i(k+q)*L_i)
-             tmpk(:) = Qvec(:,q)+kpt(:,k)
+             tmpk(:) = kpt(:,kpq) !Qvec(:,q)+kpt(:,k)
              tmpr(:) = L_i(:,i)
              QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
              ! exG0 = exG0*exp(+ik*L_j) -> G0tauG0*exp(-[(k+q)*L_i - k*L_j])
@@ -1734,7 +1751,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
              
              ! collect phase factors
              ! exG0 = G0*exp(-i(k+q)*L_j)
-             tmpk(:) = Qvec(:,q)+kpt(:,k)
+             tmpk(:) = kpt(:,kpq) !Qvec(:,q)+kpt(:,k)
              tmpr(:) = L_i(:,j)
              QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
              ! exG0 = exG0*exp(+ik*L_i) -> G0tauG0*exp(-[(k+q)*L_j - k*L_i])
@@ -1890,7 +1907,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
      !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> C_M(iq) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
      ! calculate trace of Q^mu times k-kpoint integral
 
-     ! C_M(q) = sum_j exp(-iq*(R_j+Chi_nu)) * q_mu.(G0_ji.tau_ii'.G0_i'j) (all are matrices in lms-space; i,i' are in imp cluster and j in exclude cluster)
+     ! C_M(q) = sum_j exp(-i*q*(R_j+Chi_nu)) * q_mu.(G0_ji.tau_ii'.G0_i'j) (all are matrices in lms-space; i,i' are in imp cluster and j in exclude cluster)
      tmp = C0
      do i=1,t_rhoq%Nexcl
         tmpk(:) = Qvec(:,q)
@@ -1908,7 +1925,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
        tr_tmpsum1 = tr_tmpsum1 + tmp(i,i)
      end do
 
-     ! C_M^*(-q) = sum_j exp(-iq*(R_j+Chi_nu)) *  q_mu^*.(G0_ji.tau_ii'.G0_i'j)^* (all are matrices in lms-space; i,i' are in imp cluster and j in exclude cluster)
+     ! C_M^*(-q) = sum_j exp(i*(-q)*(R_j+Chi_nu)) *  q_mu^*.(G0_ji.tau_ii'.G0_i'j)^* (all are matrices in lms-space; i,i' are in imp cluster and j in exclude cluster)
      tmp = C0
      do i=1,t_rhoq%Nexcl
         tmpk(:) = -Qvec(:,q)
