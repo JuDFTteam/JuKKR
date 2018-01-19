@@ -73,7 +73,7 @@ OBJECTS2 = $(OBJECTS_TYPE) $(OBJECTS_MATH) $(OBJECTS_DIRAC2) $(OBJECTS_LDAU) $(O
 ####################################################
 
 # standart libs
-LLIBS = -llapack_ifort -lblas_ifort  -L/usr/local/intel/lib/intel64 -lifcore -limf  -Wl,-rpath,/usr/local/intel/lib/intel64
+LLIBS = -mkl
 # Aachen cluster
 ### for sequential libraries (no hybrid parallelisation) use this
 LLIBSRWTH = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
@@ -133,7 +133,7 @@ pg:       FFLAGS = -C
 debug:    FFLAGS = -CB -check all -traceback -g
 #debug:    FFLAGS = -debug all -fno-omit-frame-pointer -ftrapuv -check all -traceback  -O0
 mpidebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g
-hybrid:   FFLAGS = -O2 -openmp
+hybrid:   FFLAGS = -O2 -qopenmp
 rwthhybrid:   FFLAGS = -O2 -qopenmp
 ####################################################
 # Linking                                          #
