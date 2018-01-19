@@ -110,7 +110,7 @@ run:intel:hybrid_2_4:
   script:
     - cd tests/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_2_4
-    - cd test_run_hybrid_1_4/
+    - cd test_run_hybrid_2_4/
     - ln -s ../../../../SOURCE/kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=2; mpirun -np 4 ./kkrflex.exe | tee out
   artifacts:
