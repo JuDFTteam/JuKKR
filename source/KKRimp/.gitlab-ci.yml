@@ -51,7 +51,7 @@ run:intel:mpi_1:
     - cp -r test_run_template/ test_run_mpi_1
     - cd test_run_mpi_1/
     - ln -s ../../../../SOURCE/kkrflex.exe_mpi kkrflex.exe
-    - kkrflex.exe | tee out
+    - ./kkrflex.exe | tee out
   artifacts:
     paths:
       - tests/test_case_kkrflex_host_in_host/imp/test_run_mpi_1
