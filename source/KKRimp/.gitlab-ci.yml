@@ -1,0 +1,70 @@
+# docker image containing Developlement Tools and the current Intel compilers based on CentOS 7
+image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
+
+
+before_script:
+  # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
+  - set +e && source compilervars.sh intel64 && set -e
+  # install pip
+  - curl -O https://bootstrap.pypa.io/get-pip.py 
+  - python get-pip.py 
+  - pip install numpy
+  # set environment variables to avoind stack size issue
+  - export OMP_NUM_THREADS=1
+  - export OMP_STACKSIZE=1g
+  - ulimit -s unlimited
+
+
+stages:
+  - build
+  - run
+#  - verify
+
+
+build:intel:hybrid:
+  stage: build
+  script:
+    # compile code
+    - cd SOURCE
+    - make clean; make hybrid; cp kkrflex.exe kkrflex.exe_hybrid
+  artifacts:
+    paths:
+      - SOURCE/kkrflex.exe_hybrid
+    expire_in: 1 day
+
+build:intel:mpi:
+  stage: build
+  script:
+    # compile code
+    - cd SOURCE
+    - make clean; make mpi; cp kkrflex.exe kkrflex.exe_mpi
+  artifacts:
+    paths:
+      - SOURCE/kkrflex.exe_mpi
+    expire_in: 1 day
+
+
+run:intel:mpi_1:
+  stage: run
+  script:
+    - cd tests/test_case_kkrflex_host_in_host/imp/
+    - cp -r test_run_template/ test_run_mpi_1
+    - cd test_run_mpi_1/
+    - ln -s ../../../../SOURCE/kkrflex.exe_mpi kkrflex.exe
+    - kkrflex.exe | tee out
+  artifacts:
+    paths:
+      - tests/test_case_kkrflex_host_in_host/imp/test_run_mpi_1
+    expire_in: 2 days
+
+
+#verify:intel:
+#  stage: verify
+#  script:
+#    - echo 'do some tests here ... not implemented yet'
+#    # use pip to install pytest
+#    - pip install pytest
+#    # prepare and execute verification using pytest
+#    - cd tests
+#    - pytest -v
+
