@@ -33,7 +33,7 @@ class Tests_scf_host_in_host_bccFe_bulk_FP_noSOC_lmax2():
 
 def standard_scf_test(path):
    from numpy import array, mean, sum
-   d = open(path+'/out').readlines()
+   d = open('test_case_kkrflex_host_in_host/imp/'+path+'/out').readlines()
    charges, spins = [], []
    for i in d:
       if 'charge in WS-cell =' in i:
