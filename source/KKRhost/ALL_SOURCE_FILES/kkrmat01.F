@@ -789,11 +789,10 @@ c            DEALLOCATE(GLLKE0)
      &                 LLY_GRTR + LLY_GRTR_K * VOLCUB(KPT) * NSYMAT ! LLY Lloyd Integration
          
 
-<<<<<<< HEAD
          !update statusbar
 #ifdef CPP_MPI
-         if( (((i1_end-k_start)/50)==0 .or. 
-     &       mod(KPT-k_start,(i1_end-k_start)/50)==0) .and.
+         if( (((k_end-k_start)/50)==0 .or. 
+     &       mod(KPT-k_start,(k_end-k_start)/50)==0) .and.
      &       t_inc%i_write>0 ) write(1337,FMT=200)
 #else
          if( ((NOFKS/50)==0 .or. 

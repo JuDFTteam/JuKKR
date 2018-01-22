@@ -1064,45 +1064,6 @@ subroutine write_rllsll_test_input(ncheb, npan, lmsize, nvec, nrmax, lbessel, us
 end subroutine write_rllsll_test_input
 #endif
 
-<<<<<<< HEAD
-#ifdef test_prep
-subroutine write_rllsll_test_input(ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1, gmatprefactor, cmoderll, cmodesll, cmodetest, hlk, jlk, hlk2, jlk2, jlk_index, rpanbound, rmesh, sll, rll, tllp, vll, alphaget)
-   implicit none
-   
-   integer :: ir
-   
-   integer, intent(in) :: ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1
-   double complex, intent(in) :: gmatprefactor 
-   character(len=1), intent(in) :: cmoderll,cmodesll,cmodetest
-   
-   double complex, intent(in) :: hlk(lbessel,nrmax), jlk(lbessel,nrmax), hlk2(lbessel,nrmax), jlk2(lbessel,nrmax) 
-   integer, intent(in) :: jlk_index(2*lmsize)
-   double precision, intent(in) :: rpanbound(0:npan), rmesh(nrmax)
-   double complex, intent(in) ::  sll(nvec*lmsize,lmsize,nrmax), rll(nvec*lmsize,lmsize,nrmax), tllp(lmsize,lmsize), vll(lmsize*nvec,lmsize*nvec,nrmax)
-   double complex, intent(in) :: alphaget(lmsize, lmsize)
-   
-   
-   write(*,'(A)') '  === starting writeout routine for rllsll ==='
-   
-   open(1234, file='data_rllsll.txt')
-   write(1234, '(7i9)') lbessel, nrmax, lmsize, nvec, npan, ncheb, use_sratrick1
-   write(1234, '(3a5)') cmoderll, cmodesll, cmodetest
-   
-   write(*,'(A)') '  writing arrays ...'
-   
-   write(1234, '(1ES25.15)') gmatprefactor
-   write(1234, '(1000ES25.15)') hlk(1:lbessel,1:nrmax), jlk(1:lbessel,1:nrmax), hlk2(1:lbessel,1:nrmax), jlk2(1:lbessel,1:nrmax)
-   write(1234, '(1000i9)') jlk_index(1:2*lmsize)
-   write(1234, '(10000ES25.15)') rmesh(1:nrmax)
-   write(1234, '(10000ES25.15)') rpanbound(0:npan)
-   
-   do ir=1, nrmax
-     write(1234, '(10000ES25.15)') vll(1:nvec*lmsize, 1:nvec*lmsize, ir)
-   end do
-   close(1234)
-   
-end subroutine write_rllsll_test_input
-=======
 ! preprocessor options:
 ! choose between interface for impurity and host code (different calling lists)
 #ifndef hostcode
@@ -1325,7 +1286,6 @@ if ( lmsize==1 ) then
 else
   use_sratrick=use_sratrick1
 end if
->>>>>>> master
 #endif
 
 #ifdef hostcode

@@ -772,7 +772,7 @@ c ------------------------------------------------------------------------
 #ifdef CPP_TIMING
         if(.not.OPT('GREENIMP')) then
            if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-           if(t_inc%i_time>0) call timing_stop('main1b - fourier')
+           if(t_inc%i_time>0) call timing_pause('main1b - fourier')
            if(t_inc%i_time>0) call timing_stop('main1b - inversion')
            if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
         endif
@@ -833,6 +833,7 @@ C
          if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
            call timing_start('time_1b_ie')
          end if
+#endif
 
        ! write energy into green_host file
        IF (OPT('WRTGREEN') .and. myrank==master) THEN
@@ -1130,7 +1131,7 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 #ifdef CPP_TIMING
         if(.not.OPT('GREENIMP')) then
            if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-           if(t_inc%i_time>0) call timing_stop('main1b - fourier')
+           if(t_inc%i_time>0) call timing_pause('main1b - fourier')
            if(t_inc%i_time>0) call timing_stop('main1b - inversion')
            if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
         endif
