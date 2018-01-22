@@ -411,12 +411,24 @@ cc calculate the tmat and wavefunctions
 
 cc right solutions
          TMATLL=CZERO
+C faster calculation of RLL.
+C no irregular solutions SLL are needed in self-consistent iterations
+C because the density depends only on RLL, RLLLEFT and SLLLEFT
+        IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+        CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+     +              RLL(:,:,:,ith),TMATLL,
+     +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
+     +          IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
+     +              HLK2(:,:,ith),JLK2(:,:,ith),
+     +              GMATPREFACTOR,'1',USE_SRATRICK,ALPHALL)
+        ELSE
          CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLL(:,:,:,ith),SLL(:,:,:,ith),TMATLL,
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
      +          IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
      +              HLK2(:,:,ith),JLK2(:,:,ith),
      +              GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
+        ENDIF
          IF (NSRA.EQ.2) THEN
           RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
@@ -481,12 +493,28 @@ cc calculate the tmat and wavefunctions
 cc left solutions
 c notice that exchange the order of left and right hankel/bessel functions
          TMATTEMP=CZERO
+C faster calculation of RLLLEFT and SLLLEFT.
+        IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+        CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+     +              RLLLEFT(:,:,:,ith),TMATTEMP,
+     +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
+     +        IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
+     +              HLK(:,:,ith),JLK(:,:,ith),
+     +              GMATPREFACTOR,'1',USE_SRATRICK,ALPHALL)
+        CALL sll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+     +              SLLLEFT(:,:,:,ith),
+     +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
+     +        IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
+     +              HLK(:,:,ith),JLK(:,:,ith),
+     +              GMATPREFACTOR,'1',USE_SRATRICK,ALPHALL)
+        ELSE
          CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),TMATTEMP,
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
      +        IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
      +              HLK(:,:,ith),JLK(:,:,ith),
      +              GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
+        END IF
          IF (NSRA.EQ.2) THEN
           RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
@@ -593,6 +621,12 @@ c get charge at the Fermi energy (IELAST)
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),R2NEFC_loop(:,:,:,ith),0,
      +                GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL)
+!      SUBROUTINE RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL,EK,LMPOTD,
+!      +                      DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
+!      +                      IRMDNEW,THETASNEW,IFUNM,IMT1,
+!      +                      LMSP,RLL,RLLLEFT,SLLLEFT,
+!      +                      CDEN,CDENLM,CDENNS,RHO2NSC,CORBITAL,
+!      +                      GFLLE_PART,RPAN_INTERVALL,IPAN_INTERVALL)
        ENDIF
 
 
@@ -774,7 +808,12 @@ c    write qdos.nn.s.dat                                                    ! co
        call timing_start('main1c - communication')
 #endif
        ! reset NQDOS to avoid endless communication
-       NQDOS=1
+       If( .not.OPT('lmdos    ')) THEN
+          NQDOS=1
+       ELSE
+          if(myrank==master) write(*,*) 'lmlm-dos option, communcation 
+     &might take a while!', IEMXD,NQDOS
+       ENDIF
        ! set these arrays to zero to avoid double counting in cases where extra ranks are used
        if ( t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1) ) then
 !          write(*,*) myrank, t_mpi_c_grid%myrank_ie, t_mpi_c_grid%dims

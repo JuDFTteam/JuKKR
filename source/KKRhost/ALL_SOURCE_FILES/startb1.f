@@ -115,6 +115,14 @@ c
         ISHAPE = 1
         READ (19,FMT=9000) NCELL
         WRITE (1337,FMT=*) '  ncell : ',NCELL,NCELLD
+!       check consistency with shape numbers from inputcard
+        IF(maxval(NTCELL(1:NATYPD))>NCELL) then
+          write(*,*) 'Found ',NCELL,'shapes in shapefun file but need',
+     +               maxval(NTCELL(1:NATYPD)),
+     +               'according to inputcard/default values'
+          write(*,*) 'Did you set <SHAPE> correctly in inputcard?'
+          stop 'Error consistency shapes from input/shapefun file' 
+        ENDIF
 c
         IF(NCELL.GT.NCELLD) THEN
           WRITE(6,*) 'Please, change the parameter ncelld (',NCELLD,

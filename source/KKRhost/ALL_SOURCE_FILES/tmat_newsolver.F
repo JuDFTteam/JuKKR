@@ -83,7 +83,7 @@
 !       integer :: mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
-      integer :: ie_end, ie_num, ie_start
+      integer :: ie_end, ie_num, ie_start, ierr
       
       !rhoqtest
       logical, external :: test, opt
@@ -350,12 +350,25 @@ cc calculate the tmat and wavefunctions
 cc right solutions
         TMAT0=CZERO
         ALPHA0=CZERO ! LLY
+C faster calculation of RLL.
+C no irregular solutions are needed in self-consistent iterations
+C because the t-matrix depends only on RLL
+        IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+        CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+     +              RLL(:,:,:,ith),TMAT0(:,:),NCHEB,
+     +              NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
+     +              NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
+     +              HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,
+     +              '1',USE_SRATRICK,ALPHA0(:,:))
+        ELSE
         CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLL(:,:,:,ith),SLL(:,:,:,ith),TMAT0(:,:),NCHEB,
      +              NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
      +              NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
      +              HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,
      +              '1','1','0',USE_SRATRICK,ALPHA0(:,:))
+        END IF
+
         ! devide small component by cvlight so that it actually is small
         IF (NSRA.EQ.2) THEN
           RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
@@ -426,6 +439,7 @@ c add spherical contribution of tmatrix
         ENDIF ! LLY
 
 
+<<<<<<< HEAD
         if(test('rhoqtest') .and. ie==2) then
            ! read in mu0 atom index
            open(9999,file='mu0')
@@ -439,6 +453,13 @@ c add spherical contribution of tmatrix
      &          (t_wavefunctions%save_rllleft .or.
      &           t_wavefunctions%save_sllleft) )
      &    .or. ((test('rhoqtest') .and. ie==2).and.(i1==mu0)) !rhoqtest
+=======
+! Calculate additional t-matrices for Jij-tensor calculation
+        if(t_dtmatJij_at%calculate .or.
+     &     ( t_wavefunctions%isave_wavefun(i1, ie)>0 .and. 
+     &      (t_wavefunctions%save_rllleft .or.
+     &       t_wavefunctions%save_sllleft) )
+>>>>>>> master
      &     ) then
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -498,18 +519,32 @@ cc       left solutions
 c        notice that exchange the order of left and right hankel/bessel functions
          TMAT0=CZERO
          ALPHA0=CZERO ! LLY
+<<<<<<< HEAD
+=======
+C faster calculation of RLL.
+C no left solutions are needed in self-consistent iterations
+C because the t-matrix depends only on RLL
+         IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+         ! do nothing
+         ELSE
+>>>>>>> master
          CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),TMAT0,NCHEB,
      +             NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
      +             NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
      +             HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,
      +             '1','1','0',USE_SRATRICK,ALPHA0)
+<<<<<<< HEAD
+=======
+         END IF
+>>>>>>> master
          IF (NSRA.EQ.2) THEN
           RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
           SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
          ENDIF
+<<<<<<< HEAD
          
          
        
@@ -562,6 +597,13 @@ c        notice that exchange the order of left and right hankel/bessel function
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
        
+=======
+
+c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+
+
+>>>>>>> master
         end if!t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
         
         
@@ -613,6 +655,10 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
                 end if     
                            
             WRITE(69,REC=IREC) TMATLL(:,:)
+<<<<<<< HEAD
+=======
+            ! human readable writeout if test option is hit
+>>>>>>> master
             if(test('fileverb')) then
                WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
             end if
@@ -657,12 +703,15 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #endif
 
 
+<<<<<<< HEAD
 190     FORMAT('                 |'$)   ! status bar
 200     FORMAT('|'$)                    ! status bar
         if(test('rhoqtest').and.i1==t_params%natyp) write(6,*) ! status bar
         ! finished kpts status bar
 
 
+=======
+>>>>>>> master
        DEALLOCATE(VINS, VNSPLL0, VNSPLL1, VNSPLL, stat=ierr)
        if(ierr/=0) stop '[tmat_newsolver] Error dellocating vins etc.'
        DEALLOCATE(HLK, JLK, HLK2, JLK2, stat=ierr)

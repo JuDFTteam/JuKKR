@@ -133,21 +133,21 @@ end module mod_md5sums
 
 
 
-! !TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST
-! #ifdef test
-! program test
-! 
-!   use mod_md5sums
-!   implicit none
-!  
-!   call get_md5sums(1, 'potential', 'shapefun')
-!  
-!   write(*,*) 'md5sum for potential file:'
-!   write(*,'(A)') md5sum_potential
-!  
-!   write(*,*) 'md5sum for shapefun file:'
-!   write(*,'(A)') md5sum_shapefun
-! 
-! end program test
-! #endif
-! !TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST
+!TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST
+#ifdef test
+program test
+
+  use mod_md5sums
+  implicit none
+ 
+  call get_md5sums(1, 'potential', 'shapefun')
+ 
+  write(*,*) 'md5sum for potential file:'
+  write(*,'(A)') md5sum_potential
+ 
+  write(*,*) 'md5sum for shapefun file:'
+  write(*,'(A)') md5sum_shapefun
+
+end program test
+#endif
+!TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST

@@ -107,7 +107,6 @@ C **********************************************************************
 !$omp& private(LM, NSTART, IT, NRS, NGS, NRE, NGE, I, R1, R2)
 !$omp& private(R3 , R, YLM, ALPHA, G, L, RFAC, M, G1, G2)
 !$omp& private(G3, GA, BETA, EXPBSQ, DQDOTG, BFAC, S, I1, I2)
-#endif
       DO I1 = 1,NAEZ
          DO I2 = 1,NAEZ
 C======================================================================

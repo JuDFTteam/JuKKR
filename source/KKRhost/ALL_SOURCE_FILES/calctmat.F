@@ -104,10 +104,9 @@ C     .. Local Arrays ..
       INTEGER IPIV(LMMAXD) ! LLY
       CHARACTER*9 TXTS(2)
 #ifdef CPP_MPI
-      integer :: ie_start
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
-      integer :: ie_end, ie_num
+      integer :: ie_end, ie_num, ie_start
 C     ..
 C     .. External Functions ..
       LOGICAL TEST
@@ -172,23 +171,24 @@ C EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
         ! now initialize arrays for tmat, gmat, and gref
         call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
         if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
-
-
-       DO ie_num=1,ie_end
-       
-         IE = ie_start+ie_num
-         
-         !start timing measurement for this pair of ie and i1, needed for MPIadapt
-         call timing_start('time_1a_ieiatom')
 #else
       ! now initialize arrays for tmat, gmat, and gref
       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
       if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
 
-      DO IE = 1,IELAST
-         ie_num = IE
-         ie_end = IELAST
+      ie_start = 0
+      ie_end = IELAST
 #endif
+
+      DO ie_num=1,ie_end
+
+         IE = ie_num+ie_start
+
+#ifdef CPP_MPI
+         !start timing measurement for this pair of ie and i1, needed for MPIadapt
+         if(MPIadapt) call timing_start('time_1a_ieiatom')
+#endif
+
          if(t_inc%i_write>0) WRITE(1337,*)'CALCTMAT: IE=',IE,' ATOM:',I1
 
          TMATLL(:,:) = CZERO

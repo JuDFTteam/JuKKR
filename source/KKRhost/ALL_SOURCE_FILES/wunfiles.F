@@ -3,10 +3,10 @@
       implicit none
       
          
-   !define type that replace wunfiles here, later define bcast routine
+      !define type that replace wunfiles here, later define bcast routine
       type :: type_params
    
-      integer :: Nscalars = 124
+      integer :: Nscalars = 126
 
 !     .. Scalars
       INTEGER IEMXD,IRMIND,IRMD,LMPOTD,NSPOTD,NPOTD,NATYPD,NEMBD1,       &
@@ -22,7 +22,7 @@
      &        KSHAPE,KTE,KVMAD,KXC,ISHIFT,KFORCE,                        &
      &        IDOLDAU,ITRUNLDAU,NTLDAU,I1,ITAB,KPOIBZ,                   &
      &        NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,                  &
-     &        ITMPDIR,ILTMP,NCHEB,NTOTD,NCHEBD
+     &        ITMPDIR,ILTMP,NCHEB,NTOTD,NCHEBD,NPAN_LOG,NPAN_EQ
       DOUBLE PRECISION EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,R_LOG,          &
      &                 E1,E2,TK,EFERMI,ALAT,CPATOL,LASTERR,              &
      &                 MIXING,QBOUND,FCM,LAMBDA_XC,TOLRDIF,EFOLD,CHRGOLD &
@@ -84,7 +84,7 @@
      &        LLMSP(:,:),LMSP(:,:),IMT(:),                               &
      &        IRC(:),IRMIN(:),IRWS(:),NFU(:),                            &
      &        HOSTIMP(:),ILM(:,:),IMAXSH(:),                             &
-     &        NPAN_LOG(:),NPAN_EQ(:),                                    &
+     &        NPAN_LOGNEW(:),NPAN_EQNEW(:),                              &
      &        NPAN_TOT(:),                                               &
      &        IPAN_INTERVALL(:,:),NKCORE(:,:),KAPCORE(:,:),              &
      &        qdos_atomselect(:)
@@ -137,9 +137,9 @@
      &                    NSHELD,NSYMAXD,NAEZDPD,NATOMIMPD,NOFGIJD,
      &                    NSPIND,IRID,NFUND,NCELLD,LMXSPD,
      &                    NGSHD,KREL,NTOTD,NCHEBD,NPAN_LOG,NPAN_EQ,
-     &                    NCHEB,R_LOG,NPAN_TOT,RNEW,RPAN_INTERVALL,
-     &                    IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,
-     &                    TOLRDIF,LLY,DELTAE,RCLSIMP)
+     &                    NPAN_LOGNEW,NPAN_EQNEW,NCHEB,R_LOG,NPAN_TOT,
+     &                    RNEW,RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,
+     &                    THETASNEW,SOCSCALE,TOLRDIF,LLY,DELTAE,RCLSIMP)
 C **********************************************************************
 C *                                                                    *
 C *  This subroutine is part of the MAIN0 program in the tbkkr package *
@@ -227,14 +227,14 @@ C     ..
       INTEGER LLMSP(NATYPD,NFUND),LMSP(NATYPD,LMXSPD),IMT(NATYPD),
      &        IRC(NATYPD),IRMIN(NATYPD),IRWS(NATYPD),NFU(NATYPD),
      &        HOSTIMP(0:NATYPD),ILM(NGSHD,3),IMAXSH(0:LMPOTD)
-      INTEGER NTOTD,NCHEBD,NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),
-     +        NCHEB,NPAN_TOT(NATYPD)
+      INTEGER NTOTD,NCHEBD,NPAN_LOGNEW(NATYPD),NPAN_EQNEW(NATYPD),
+     +        NCHEB,NPAN_TOT(NATYPD),NPAN_LOG,NPAN_EQ
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      &                 RNEW(NTOTD*(NCHEBD+1),NATYPD),
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*124 TXC(5)
+      CHARACTER*124 TXC(6)
       CHARACTER*80 TMPDIR
       INTEGER ITMPDIR,ILTMP      
 C     ..
@@ -399,14 +399,14 @@ C                                  meant for simpler passing of basic parameter 
       ! so far changing does not work yet, so turn this off:
       MPIadapt = 0
 
-      if(opt('FERMIOUT')) then                                          ! fswrt
+      if(opt('FERMIOUT') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) then! fswrt
          MPIatom = .true.                                               ! fswrt
          if(SCFSTEPS>1) then                                            ! fswrt
             write(*,*) 'Warning: Setting SCFSTEPS=1 for FERMIOUT option'! fswrt
             SCFSTEPS = 1                                                ! fswrt
          end if                                                         ! fswrt
          if (nranks>NATYP) then                                         ! fswrt
-            write(*,*) 'FERMIOUT option chosen'                         ! fswrt
+            write(*,*) 'FERMIOUT/WRTGREEN/GREENIMP option chosen'       ! fswrt
             write(*,*) 'Nranks>NATYP', nranks, NATYP                    ! fswrt
             stop 'Please choose Nranks<=NATYP'                          ! fswrt
          end if                                                         ! fswrt
@@ -463,8 +463,8 @@ C                                  meant for simpler passing of basic parameter 
      &       IJTABSYM,IJTABSH,ISH,JSH,IQCALC,ICHECK,ATOMIMP,REFPOT,IRREL
      &      ,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,
      &       LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,
-     &       NPAN_EQ,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG,TXC,
-     &       RCLSIMP)
+     &       NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,IPAN_INTERVALL,
+     &       SYMUNITARY,VACFLAG,TXC,RCLSIMP)
      
       ! save information about the energy mesh
       call save_emesh(IELAST,EZ,WEZ,E1,E2,IESEMICORE,FSEMICORE,NPOL,TK,
@@ -623,8 +623,8 @@ C ======================================================================
      &t_params%HOSTIMP(0:t_params%NATYPD),
      &t_params%ILM(t_params%NGSHD,3),
      &t_params%IMAXSH(0:t_params%LMPOTD),
-     &t_params%NPAN_LOG(t_params%NATYPD),
-     &t_params%NPAN_EQ(t_params%NATYPD),
+     &t_params%NPAN_LOGNEW(t_params%NATYPD),
+     &t_params%NPAN_EQNEW(t_params%NATYPD),
      &t_params%NPAN_TOT(t_params%NATYPD),
      &t_params%IPAN_INTERVALL(0:t_params%NTOTD,t_params%NATYPD),
      &t_params%NKCORE(20,t_params%NATYPD),
@@ -640,7 +640,7 @@ C ======================================================================
      &         t_params%VACFLAG(2), stat=ierr)
       if(ierr/=0) stop '[init_t_params] Error allocating logicals'
      
-      ALLOCATE(t_params%TXC(5), stat=ierr) !CHARACTER*124
+      ALLOCATE(t_params%TXC(6), stat=ierr) !CHARACTER*124
       if(ierr/=0) stop '[init_t_params] Error allocating txc'
       
       if(.not.allocated(t_params%TESTC)) then
@@ -811,6 +811,9 @@ C ======================================================================
       call MPI_Get_address(t_params%LASTERR,      disp1(122), ierr)
       call MPI_Get_address(t_params%DENEF,        disp1(123), ierr)
       call MPI_Get_address(t_params%CHRGSEMICORE, disp1(124), ierr)
+      !INTEGER
+      call MPI_Get_address(t_params%NPAN_LOG    , disp1(125), ierr)
+      call MPI_Get_address(t_params%NPAN_EQ     , disp1(126), ierr)
 
       base  = disp1(1)
       disp1 = disp1 - base
@@ -818,7 +821,7 @@ C ======================================================================
       blocklen1(1:116)=1
       blocklen1(117)=10
       blocklen1(118)=80
-      blocklen1(119:124)=1
+      blocklen1(119:126)=1
 
       etype1(1:95) = MPI_INTEGER
       etype1(96:113) = MPI_DOUBLE_PRECISION
@@ -827,6 +830,7 @@ C ======================================================================
       etype1(117:118) = MPI_CHARACTER
       etype1(119:121) = MPI_INTEGER
       etype1(122:124) = MPI_DOUBLE_PRECISION
+      etype1(125:126) = MPI_INTEGER
 
       call MPI_Type_create_struct(t_params%Nscalars, blocklen1, disp1,
      &                            etype1, myMPItype1, ierr)
@@ -1129,9 +1133,9 @@ C ======================================================================
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%IMAXSH,((t_params%LMPOTD+1)),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
-      call MPI_Bcast(t_params%NPAN_LOG,(t_params%NATYPD),
+      call MPI_Bcast(t_params%NPAN_LOGNEW,(t_params%NATYPD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
-      call MPI_Bcast(t_params%NPAN_EQ,(t_params%NATYPD),
+      call MPI_Bcast(t_params%NPAN_EQNEW,(t_params%NATYPD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%NPAN_TOT,(t_params%NATYPD),
      &          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
@@ -1152,7 +1156,7 @@ C ======================================================================
      &          MPI_COMM_WORLD,ierr)
 
       !CHARACTER
-      call MPI_Bcast(t_params%TXC,5*124, !5 entries of length 24
+      call MPI_Bcast(t_params%TXC,6*124, !5 entries of length 24
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*24
       call MPI_Bcast(t_params%TESTC,32*8, !32 entries of length 8
      &          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
@@ -1419,14 +1423,14 @@ C     ..
       INTEGER LLMSP(NATYPD,NFUND),LMSP(NATYPD,LMXSPD),IMT(NATYPD),
      &        IRC(NATYPD),IRMIN(NATYPD),IRWS(NATYPD),NFU(NATYPD),
      &        HOSTIMP(0:NATYPD),ILM(NGSHD,3),IMAXSH(0:LMPOTD)
-      INTEGER NPAN_LOG(NATYPD),NPAN_EQ(NATYPD),
-     +        NPAN_TOT(NATYPD)
+      INTEGER NPAN_LOGNEW(NATYPD),NPAN_EQNEW(NATYPD),
+     +        NPAN_TOT(NATYPD),NPAN_LOG,NPAN_EQ
       DOUBLE PRECISION RPAN_INTERVALL(0:NTOTD,NATYPD),
      &                 RNEW(NTOTD*(NCHEBD+1),NATYPD),
      &                 THETASNEW(NTOTD*(NCHEBD+1),NFUND,NCELLD)
       INTEGER          IPAN_INTERVALL(0:NTOTD,NATYPD)
       LOGICAL SYMUNITARY(NSYMAXD),VACFLAG(2)
-      CHARACTER*124 TXC(5)  
+      CHARACTER*124 TXC(6)  
 C     ..
       !fill arrays:
       t_params%EZ             = EZ             
@@ -1541,6 +1545,8 @@ C     ..
       t_params%IMAXSH         = IMAXSH         
       t_params%NPAN_LOG       = NPAN_LOG       
       t_params%NPAN_EQ        = NPAN_EQ        
+      t_params%NPAN_LOGNEW    = NPAN_LOGNEW    
+      t_params%NPAN_EQNEW     = NPAN_EQNEW     
       t_params%NPAN_TOT       = NPAN_TOT       
       t_params%IPAN_INTERVALL = IPAN_INTERVALL 
       t_params%SYMUNITARY     = SYMUNITARY     
@@ -1652,8 +1658,8 @@ C ......................................................................
       TMPDIR         = t_params%TMPDIR        
       ITMPDIR        = t_params%ITMPDIR        
       ILTMP          = t_params%ILTMP         
-      NPAN_LOG       = t_params%NPAN_LOG       
-      NPAN_EQ        = t_params%NPAN_EQ       
+      NPAN_LOG       = t_params%NPAN_LOGNEW    
+      NPAN_EQ        = t_params%NPAN_EQNEW    
       NCHEB          = t_params%NCHEB         
       R_LOG          = t_params%R_LOG         
       NPAN_TOT       = t_params%NPAN_TOT      
@@ -2029,8 +2035,8 @@ C ......................................................................
       TMPDIR         = t_params%TMPDIR        
       ITMPDIR        = t_params%ITMPDIR       
       ILTMP          = t_params%ILTMP         
-      NPAN_LOG       = t_params%NPAN_LOG      
-      NPAN_EQ        = t_params%NPAN_EQ       
+      NPAN_LOG       = t_params%NPAN_LOGNEW   
+      NPAN_EQ        = t_params%NPAN_EQNEW    
       NCHEB          = t_params%NCHEB         
       R_LOG          = t_params%R_LOG         
       NPAN_TOT       = t_params%NPAN_TOT      

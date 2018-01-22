@@ -63,7 +63,7 @@
       DOUBLE PRECISION SOCSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
       DOUBLE PRECISION SOCSCALE(NATYPD)
       DOUBLE PRECISION CSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
-      CHARACTER*124 TXC(5)
+      CHARACTER*124 TXC(6)
       CHARACTER*256 UIO  ! NCOLIO=256
       CHARACTER*10 SOLVER
       CHARACTER*40 I12,I13,I19,I25,I40
@@ -176,6 +176,7 @@
       TXC(3) = ' Vosko,Wilk,Nusair       #serial: ' // serialnr
       TXC(4) = ' GGA PW91                #serial: ' // serialnr
       TXC(5) = ' GGA PBE                 #serial: ' // serialnr
+      TXC(6) = ' GGA PBEsol              #serial: ' // serialnr
 
       IPRINT = 0
 
@@ -246,9 +247,17 @@
       NDIM = 3
       IF (LINTERFACE) NDIM = 2
       IF (.NOT.LINTERFACE.AND..NOT.OPT('SUPRCELL')) THEN 
-         WRITE(*,*) '3D-calculation, adding run-option "full inv" for full inversion.'
+         WRITE(1337,*) '3D-calculation, adding run-option "full inv" for full inversion.'
          CALL ADDOPT('full inv')
       ENDIF
+
+      IF (OPT('WRTGREEN')) THEN 
+         WRITE(1337,*) 'WRTGREEN option found'
+         WRITE(1337,*) 'adding run-opt "full inv" for full inversion.'
+         WRITE(1337,*) 'adding run-opt "fix mesh"'
+         CALL ADDOPT('full inv')
+         CALL ADDOPT('fix mesh')
+      END IF
 
 
       WRITE(111,*) 'Bravais vectors in units of ALAT'
@@ -714,8 +723,16 @@
       SOCSCALE(1:NATYPD) = 1.D0   ! Spin-orbit scaling
       CALL IoInput('<SOCSCL>        ',UIO,1,7,IER)
       IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)
-         WRITE(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
+         WRITE(111,'(A10)') '<SOCSCL>  '
+         DO I = 1,NATYP
+            CALL IoInput('<SOCSCL>        ',UIO,I,7,IER)
+            IF (IER.EQ.0) THEN
+               READ (UNIT=UIO,FMT=*) SOCSCALE(I)
+               WRITE(111,FMT='(F6.3)') SOCSCALE(I)
+            ENDIF
+         ENDDO
+!        READ (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)                       !Bernd - old way
+!        WRITE(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP) !Bernd - old way
       ELSE
          WRITE(111,FMT='(A18,50E10.2)') 'Default <SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
       ENDIF
@@ -953,7 +970,10 @@
       ELSE
          WRITE(111,*) 'Default IGREENFUN= ',IGF
       ENDIF
-      IF (OPT('KKRFLEX ')) IGF = 1
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) THEN
+         write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP options'
+         IGF = 1
+      END IF
 
       ICC = 0
       CALL IoInput('ICC             ',UIO,1,7,IER)
@@ -963,7 +983,10 @@
       ELSE
          WRITE(111,*) 'Default ICC= ',ICC
       ENDIF
-      IF (OPT('KKRFLEX ')) ICC = 1
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) THEN
+         write(1337,*) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP options'
+         ICC = 1
+      END IF
       IF ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1
 
       IF ( ICC.NE.0 .AND. IGF.EQ.0 ) IGF = 1
@@ -999,6 +1022,14 @@
       WRITE(1337,2104)
       WRITE(1337,2015) INTERVX,INTERVY,INTERVZ 
       WRITE(1337,2102)
+
+      IF(OPT('GREENIMP')) THEN
+         write(*,*) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+         write(1337,*) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+         INTERVX = 1
+         INTERVY = 1
+         INTERVZ = 1
+      ENDIF
 
 
       ! Energy contour

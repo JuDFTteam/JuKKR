@@ -79,8 +79,8 @@ C     .. MPI ..
       integer :: ie_num, ierr
 C     ..
 C     .. External Functions ..
-      LOGICAL TEST
-      EXTERNAL TEST
+      LOGICAL TEST,OPT
+      EXTERNAL TEST,OPT
 C     ..
 C     .. External Subroutines ..
       EXTERNAL CALCTREF13,GLL13
@@ -154,8 +154,18 @@ C
 #ifdef CPP_TIMING
          call timing_start('main1a - tbref - calctref13')
 #endif
+         !skip this part with GREENIMP option
+         if(opt('GREENIMP')) then
+            if(myrank==master) write(*,*) 
+     +  'Skipping atom loop in tbref for energy point',ie,'of',ielast
+            i1_start = 1
+            i1_end = 0
+         else
+            i1_start = 1
+            i1_end = NREF
+         end if
          ERYD = EZ(IE)
-         DO I1 = 1,NREF
+         DO I1 = i1_start, i1_end!1,NREF
             CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,              ! LLY Lloyd
      &                    TREFLL(1,1,I1),DTREFLL(1,1,I1),                   ! LLY Lloyd
      &                    ALPHAREF(0,I1),DALPHAREF(0,I1),LMAXD+1,LMGF0D)    ! LLY Lloyd
@@ -194,6 +204,12 @@ C ----------------------------------------------------------------------
 #ifdef CPP_TIMING
          call timing_start('main1a - tbref - gll13')
 #endif
+         !skip this part with GREENIMP option
+         if(opt('GREENIMP')) then
+            i1_start = 1
+            i1_end = 0
+         end if
+
          DO ICLS=i1_start,i1_end
             I1 = 1
             IC = 0

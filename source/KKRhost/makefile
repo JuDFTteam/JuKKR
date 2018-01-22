@@ -49,6 +49,7 @@ ompdebug:  COMPVER ='openmpdebug'
 mac:       COMPVER ='serial-mac'
 macmpi:    COMPVER ='mpi-mac'
 macomp:    COMPVER ='openmp-mac'
+macompprof:    COMPVER ='openmp-mac-prof'
 rwth:      COMPVER ='serial-rwth'
 rwthmpi:   COMPVER ='mpi-rwth'
 rwthomp:   COMPVER ='openmp-rwth'
@@ -71,9 +72,9 @@ INCR = ./sprkkr_rmesh.dim
 
 FILENAME0 = kkr.x
 
-MODULES = $(OBJ)/mod_version.o $(OBJ)/mod_version_info.o  $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJ)/mod_wunfiles.o $(OBJ)/mod_md5sums.o $(OBJ)/mod_jijhelp.o $(OBJ)/initabjij.o $(OBJ)/tbxccpljij.o $(OBJ)/tbxccpljijdij.o
+MODULES = $(OBJ)/mod_version.o $(OBJ)/mod_version_info.o  $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJ)/mod_wunfiles.o $(OBJ)/mod_md5sums.o $(OBJ)/mod_jijhelp.o $(OBJ)/initabjij.o $(OBJ)/tbxccpljij.o $(OBJ)/tbxccpljijdij.o $(OBJ)/create_newmesh.o
 
-OBJECTS0 = $(OBJ)/getbr3.o $(OBJ)/write_tbkkr_files.o $(OBJ)/gaunt.o $(OBJ)/main0.o	$(OBJ)/rinput13.o $(OBJ)/symtaumat.o $(OBJ)/taustruc.o $(OBJ)/bzkint0.o $(OBJ)/findgroup.o $(OBJ)/calcrotmat.o $(OBJ)/errortrap.o $(OBJ)/bzkmesh.o $(OBJ)/bzirr3d.o $(OBJ)/madelung3d.o $(OBJ)/madelung2d.o $(OBJ)/madelout.o $(OBJ)/idreals.o $(OBJ)/deciopt.o $(OBJ)/impcheck.o $(OBJ)/impcoefs.o $(OBJ)/setgijtab.o $(OBJ)/gijxcpl.o $(OBJ)/gijcond.o $(OBJ)/calctref.o $(OBJ)/getclusnxyz.o $(OBJ)/decitset.o    $(OBJ)/decitmat.o $(OBJ)/outpothost.o  $(OBJ)/decipothead.o $(OBJ)/getscratch.o $(OBJ)/decipotbas.o  $(OBJ)/outtmathost.o $(OBJ)/lngstring.o $(OBJ)/startldau.o   $(OBJ)/readldaupot.o $(OBJ)/epathtb.o $(OBJ)/addvirtual14.o  $(OBJ)/create_newmesh.o $(OBJ)/interpolspline.o $(OBJ)/spline_real.o $(OBJ)/splint_real.o $(OBJ)/calrmt.o     $(OBJ)/clsgen_tb.o   $(OBJ)/clustcomp.o $(OBJ)/cmomsread.o $(OBJ)/crospr.o $(OBJ)/cross.o $(OBJ)/crtstar.o $(OBJ)/ddet33.o $(OBJ)/ddot1.o $(OBJ)/dscal1.o $(OBJ)/dsort.o $(OBJ)/dswap1.o $(OBJ)/emesht.o $(OBJ)/erfcex.o $(OBJ)/errmsg.o $(OBJ)/gamfc.o $(OBJ)/gaufd.o  $(OBJ)/gauleg.o $(OBJ)/gaunt2.o $(OBJ)/gfmask.o $(OBJ)/gfshells.o $(OBJ)/grule.o $(OBJ)/ioinput.o $(OBJ)/lattice2d.o $(OBJ)/lattice3d.o $(OBJ)/lattix99.o $(OBJ)/latvec.o $(OBJ)/length.o $(OBJ)/nrmliz.o $(OBJ)/opt.o $(OBJ)/pointgrp.o $(OBJ)/potcut.o $(OBJ)/rcstop.o $(OBJ)/rinit.o $(OBJ)/decimaread.o $(OBJ)/rrgen.o $(OBJ)/scalevec.o $(OBJ)/cinit.o $(OBJ)/scalpr.o $(OBJ)/shellgen2k.o $(OBJ)/sname.o $(OBJ)/spatpr.o $(OBJ)/strmat.o $(OBJ)/test.o $(OBJ)/generalpot.o $(OBJ)/ymy.o $(OBJ)/veq.o $(OBJ)/vadd.o $(OBJ)/vmul.o $(OBJ)/testdim.o $(OBJ)/startb1.o $(OBJ)/madelcoef.o $(OBJ)/madelgaunt.o $(OBJ)/ewald2d.o $(OBJ)/fplaneg.o $(OBJ)/fplaner.o $(OBJ)/shape.o $(OBJ)/wfmesh.o $(OBJ)/regsol.o $(OBJ)/beshan.o $(OBJ)/drvbastrans.o $(OBJ)/relpotcvt.o $(OBJ)/drvreltmat.o $(OBJ)/calccgc.o $(OBJ)/ikmlin.o $(OBJ)/strsmat.o $(OBJ)/bastrmat.o $(OBJ)/ikapmue.o $(OBJ)/cmatstr.o $(OBJ)/checkrmat.o $(OBJ)/rinvgj.o $(OBJ)/ssite.o $(OBJ)/cintabr.o $(OBJ)/sumupint.o $(OBJ)/dirac_bs.o $(OBJ)/dirbslag.o $(OBJ)/dirbsmid.o $(OBJ)/dirbsrad.o $(OBJ)/dirbsrze.o $(OBJ)/dirbsstp.o $(OBJ)/cjlz.o $(OBJ)/cnlz.o $(OBJ)/cdjlzdz.o $(OBJ)/cdnlzdz.o $(OBJ)/cint4pts.o $(OBJ)/cinthff.o $(OBJ)/ylag.o $(OBJ)/rnuctab.o $(OBJ)/dirac_bi.o $(OBJ)/dirac_op.o $(OBJ)/dirac_soc.o $(OBJ)/dirac_soc2.o $(OBJ)/changerep.o $(OBJ)/writehoststructure.o
+OBJECTS0 = $(OBJ)/getbr3.o $(OBJ)/write_tbkkr_files.o $(OBJ)/gaunt.o $(OBJ)/main0.o	$(OBJ)/rinput13.o $(OBJ)/symtaumat.o $(OBJ)/taustruc.o $(OBJ)/bzkint0.o $(OBJ)/findgroup.o $(OBJ)/calcrotmat.o $(OBJ)/errortrap.o $(OBJ)/bzkmesh.o $(OBJ)/bzirr3d.o $(OBJ)/madelung3d.o $(OBJ)/madelung2d.o $(OBJ)/madelout.o $(OBJ)/idreals.o $(OBJ)/deciopt.o $(OBJ)/impcheck.o $(OBJ)/impcoefs.o $(OBJ)/setgijtab.o $(OBJ)/gijxcpl.o $(OBJ)/gijcond.o $(OBJ)/calctref.o $(OBJ)/getclusnxyz.o $(OBJ)/decitset.o    $(OBJ)/decitmat.o $(OBJ)/outpothost.o  $(OBJ)/decipothead.o $(OBJ)/getscratch.o $(OBJ)/decipotbas.o  $(OBJ)/outtmathost.o $(OBJ)/lngstring.o $(OBJ)/startldau.o   $(OBJ)/readldaupot.o $(OBJ)/epathtb.o $(OBJ)/addvirtual14.o   $(OBJ)/interpolspline.o $(OBJ)/spline_real.o $(OBJ)/splint_real.o $(OBJ)/calrmt.o     $(OBJ)/clsgen_tb.o   $(OBJ)/clustcomp.o $(OBJ)/cmomsread.o $(OBJ)/crospr.o $(OBJ)/cross.o $(OBJ)/crtstar.o $(OBJ)/ddet33.o $(OBJ)/ddot1.o $(OBJ)/dscal1.o $(OBJ)/dsort.o $(OBJ)/dswap1.o $(OBJ)/emesht.o $(OBJ)/erfcex.o $(OBJ)/errmsg.o $(OBJ)/gamfc.o $(OBJ)/gaufd.o  $(OBJ)/gauleg.o $(OBJ)/gaunt2.o $(OBJ)/gfmask.o $(OBJ)/gfshells.o $(OBJ)/grule.o $(OBJ)/ioinput.o $(OBJ)/lattice2d.o $(OBJ)/lattice3d.o $(OBJ)/lattix99.o $(OBJ)/latvec.o $(OBJ)/length.o $(OBJ)/nrmliz.o $(OBJ)/opt.o $(OBJ)/pointgrp.o $(OBJ)/potcut.o $(OBJ)/rcstop.o $(OBJ)/rinit.o $(OBJ)/decimaread.o $(OBJ)/rrgen.o $(OBJ)/scalevec.o $(OBJ)/cinit.o $(OBJ)/scalpr.o $(OBJ)/shellgen2k.o $(OBJ)/sname.o $(OBJ)/spatpr.o $(OBJ)/strmat.o $(OBJ)/test.o $(OBJ)/generalpot.o $(OBJ)/ymy.o $(OBJ)/veq.o $(OBJ)/vadd.o $(OBJ)/vmul.o $(OBJ)/testdim.o $(OBJ)/startb1.o $(OBJ)/madelcoef.o $(OBJ)/madelgaunt.o $(OBJ)/ewald2d.o $(OBJ)/fplaneg.o $(OBJ)/fplaner.o $(OBJ)/shape.o $(OBJ)/wfmesh.o $(OBJ)/regsol.o $(OBJ)/beshan.o $(OBJ)/drvbastrans.o $(OBJ)/relpotcvt.o $(OBJ)/drvreltmat.o $(OBJ)/calccgc.o $(OBJ)/ikmlin.o $(OBJ)/strsmat.o $(OBJ)/bastrmat.o $(OBJ)/ikapmue.o $(OBJ)/cmatstr.o $(OBJ)/checkrmat.o $(OBJ)/rinvgj.o $(OBJ)/ssite.o $(OBJ)/cintabr.o $(OBJ)/sumupint.o $(OBJ)/dirac_bs.o $(OBJ)/dirbslag.o $(OBJ)/dirbsmid.o $(OBJ)/dirbsrad.o $(OBJ)/dirbsrze.o $(OBJ)/dirbsstp.o $(OBJ)/cjlz.o $(OBJ)/cnlz.o $(OBJ)/cdjlzdz.o $(OBJ)/cdnlzdz.o $(OBJ)/cint4pts.o $(OBJ)/cinthff.o $(OBJ)/ylag.o $(OBJ)/rnuctab.o $(OBJ)/dirac_bi.o $(OBJ)/dirac_op.o $(OBJ)/dirac_soc.o $(OBJ)/dirac_soc2.o $(OBJ)/changerep.o $(OBJ)/writehoststructure.o $(OBJ)/readimppot.o $(OBJ)/tmatimp_newsolver.o $(OBJ)/greenimp.o
 
 OBJECTS1a= $(OBJ)/main1a.o $(OBJ)/calctmat.o $(OBJ)/initldau.o $(OBJ)/phicalc.o $(OBJ)/tmat_newsolver.o $(OBJ)/cheb.o $(OBJ)/interpolate_poten.o $(OBJ)/vllmat.o $(OBJ)/rotatespinframe.o $(OBJ)/spinorbit_ham.o $(OBJ)/spin_orbit.o $(OBJ)/spin_orbit_compl.o $(OBJ)/vllmatsra.o $(OBJ)/beshank.o $(OBJ)/rllsllsourceterms.o $(OBJ)/calcsph.o $(OBJ)/rllsll.o $(OBJ)/chebint.o $(OBJ)/csum.o $(OBJ)/gfree.o $(OBJ)/gll95.o $(OBJ)/grefsy.o $(OBJ)/ioben.o $(OBJ)/mapblock.o $(OBJ)/cradwf.o $(OBJ)/csinwd.o $(OBJ)/csout.o $(OBJ)/hankel.o $(OBJ)/irwsol.o $(OBJ)/regns.o $(OBJ)/tbref.o $(OBJ)/wfint.o $(OBJ)/wfint0.o $(OBJ)/wftsca.o $(OBJ)/pnstmat.o $(OBJ)/vllns.o $(OBJ)/simpk.o $(OBJ)/soutk.o $(OBJ)/ssum.o
 
@@ -104,16 +105,6 @@ $(OBJ)/ymy.o: $(SRC)/ymy.f
 $(OBJ)/gfree.o: $(SRC)/gfree.f
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) -c -o $@ $<
 
-$(OBJ)/mod_%.o: $(SRC)/%.f
-	$(FC) $(FFLAGS)  -c -o $@ $<
-$(OBJ)/mod_%.o: $(SRC)/%.f90
-	$(FC) $(FFLAGS)  -c -o $@ $<
-$(OBJ)/mod_%.o: $(SRC)/%.F
-	$(FC) $(FFLAGS)  $(CPP) -c -o $@ $<
-$(OBJ)/mod_%.o: $(SRC)/%.F90
-	$(FC) $(FFLAGS)  $(CPP) -c -o $@ $<
-
-
 $(OBJ)/%.o: $(SRC)/%.f
 	$(FC) $(FFLAGS)   -c -o $@ $<
 $(OBJ)/%.o: $(SRC)/%.f90
@@ -140,6 +131,7 @@ JURECALIBS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
 mac:    LLIBS=$(MACLLIBS)
 macmpi: LLIBS=$(MACLLIBS)
 macomp: LLIBS=$(MACLLIBS)
+macompprof: LLIBS=$(MACLLIBS)
 
 rwth:          LLIBS=$(RWTHLLIBS)
 rwthmpi:       LLIBS=$(RWTHLLIBS)
@@ -159,6 +151,7 @@ RWTHLLIBSOMP = $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 -lmkl_intel_thread -liomp5
 mac:    LLIBSOPENMP=$(MACLLIBSOPENMP)
 macmpi: LLIBSOPENMP=$(MACLLIBSOPENMP)
 macomp: LLIBSOPENMP=$(MACLLIBSOPENMP)
+macompprof: LLIBSOPENMP=$(MACLLIBSOPENMP)
 
 rwth:          LLIBSOPENMP=$(RWTHLLIBSOMP)
 rwthmpi:       LLIBSOPENMP=$(RWTHLLIBSOMP)
@@ -186,22 +179,22 @@ mpidebug: CPP = -D CPP_MPI -D CPP_TIMING
 mpi:      CPP = -D CPP_MPI -D CPP_TIMING
 macmpi:   CPP = -D CPP_MPI -D CPP_TIMING
 macomp:   CPP = -D CPP_OMP -D CPP_TIMING
+macompprof:   CPP = -D CPP_OMP -D CPP_TIMING
 rwthmpi:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
-rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
-hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid
-hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_hybrid -D CPP_NOMD5
+rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
+hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
+hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID -D CPP_NOMD5
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 
 ####################################################
 # Compiler flags                                   #
 ####################################################
 # Default:
-FFLAGS       =  -O2 -r8 -traceback -module $(OBJ) -sox
-#FFLAGS       =  -r8 -module $(OBJ) -O3 -ip -axAVX,SSE4.2,SSE4.1 -fp-model fast=2
-# -opt-report5 -vec-report -opt-report-file=stdout
-
+FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback
+# -xHost 
+# flags for ifort: optimization, default 8 bytes, trackeback to line, compiled module files in $(OBJ), save compiler version info in executable
 # Change to if flag is matched:
 debug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
 hybriddebug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
@@ -209,12 +202,14 @@ mpidebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -wa
 ompdebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
 
 OPENMPFLAGS = 
-hybrid: OPENMPFLAGS = -openmp
+hybrid: OPENMPFLAGS = -qopenmp
 hybriddebug: OPENMPFLAGS = -openmp
 openmp: OPENMPFLAGS = -openmp
 ompdebug: OPENMPFLAGS = -openmp
 rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
+
+macompprof: FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback -prof-gen:srcpos
 
 macmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g -sox
 macompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g -sox
@@ -231,7 +226,7 @@ rwthhybrid: OPENMPFLAGS = -openmp
 ####################################################
 # helper                                           #
 ####################################################
-.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid jureca
+.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp macompprof rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid jureca
 
 getversion:
 	@echo "Wrinting Version file: "; git describe;\
@@ -290,6 +285,7 @@ install: clean mpi
 mac:    compile
 macmpi: compile
 macomp: compile
+macompprof: compile
 rwth:    compile
 rwthmpi: compile
 rwthomp: compile
