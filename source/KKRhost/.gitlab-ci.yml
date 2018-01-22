@@ -39,11 +39,12 @@ build:intel:debug:
     - cp tests/inc.p .
     - make clean; make debug
 
-build:intel:mpi_debug:
-  stage: build
-  script:
-    - cp tests/inc.p .
-    - make clean; make mpidebug
+# somehow this results in a segmentation fault while compilation
+#build:intel:mpi_debug:
+#  stage: build
+#  script:
+#    - cp tests/inc.p .
+#    - make clean; make mpidebug
 
 build:intel:openmp_debug:
   stage: build
@@ -51,11 +52,12 @@ build:intel:openmp_debug:
     - cp tests/inc.p .
     - make clean; make ompdebug
 
-build:intel:hybrid_debug:
-  stage: build
-  script:
-    - cp tests/inc.p .
-    - make clean; make hybriddebug
+# also here a seg fault, maybe has somethig to do with MPI?
+#build:intel:hybrid_debug:
+#  stage: build
+#  script:
+#    - cp tests/inc.p .
+#    - make clean; make hybriddebug
 
 ## 1.2 production versions ##
 
