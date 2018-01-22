@@ -1310,9 +1310,10 @@ call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 
 #ifdef CPP_HYBRID
 !$OMP PARALLEL DEFAULT (PRIVATE) &
-!$OMP&  SHARED(tau,npan,drpan2,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,yrf, &
-!$OMP&  zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
-!$OMP&  cmoderll,use_sratrick, rmesh)
+!$OMP& SHARED(tau,npan,drpan2,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,yrf) &
+!$OMP& SHARED(zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll) &
+!$OMP& SHARED(gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum) &
+!$OMP& SHARED(cmoderll,use_sratrick, rmesh)
 
 thread_id = omp_get_thread_num()
 #endif

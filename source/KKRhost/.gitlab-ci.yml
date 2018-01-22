@@ -5,10 +5,6 @@ image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
   - set +e && source compilervars.sh intel64 && set -e
-  # install pip
-  - curl -O https://bootstrap.pypa.io/get-pip.py 
-  - python get-pip.py 
-  - pip install numpy
   # set environment variables to avoind stack size issue
   - export OMP_NUM_THREADS=1
   - export OMP_STACKSIZE=1g
@@ -16,7 +12,7 @@ before_script:
 
 
 stages:
-  - test
+  #- test
   - build
   - run
   - verify
@@ -26,8 +22,42 @@ test:intel:
   stage: test
   script:
     # test if dependencies are working
+    # install pip
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    - pip install numpy
     - echo 'do some tests here'
 
+
+### 1. compile code in different versions ###
+
+## 1.1 debug versions ##
+
+build:intel:hybrid_debug:
+  stage: build
+  script:
+    - cp tests/inc.p .
+    - make clean; make hybriddebug
+
+build:intel:hybrid_debug:
+  stage: build
+  script:
+    - cp tests/inc.p .
+    - make clean; make hybriddebug
+
+build:intel:hybrid_debug:
+  stage: build
+  script:
+    - cp tests/inc.p .
+    - make clean; make hybriddebug
+
+build:intel:hybrid_debug:
+  stage: build
+  script:
+    - cp tests/inc.p .
+    - make clean; make hybriddebug
+
+## 1.2 production versions ##
 
 build:intel:hybrid:
   stage: build
@@ -73,6 +103,8 @@ build:intel:serial:
       - kkr.x_serial
     expire_in: 1 day
 
+
+### 2. run tests with compiled versions ###
 
 run:intel:serial1:
   stage: run
@@ -148,10 +180,16 @@ run:intel:FERMIOUT6:
     expire_in: 2 days
 
 
+### 3. check outcome of the test runs ###
+
 verify:intel:
   stage: verify
   script:
-    # use pip to install pytest
+    # install pip
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    # install numpy and pytest unsing pip
+    - pip install numpy
     - pip install pytest
     # prepare and execute verification using pytest
     - cd tests
