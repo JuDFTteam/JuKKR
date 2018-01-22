@@ -111,6 +111,9 @@ build:intel:serial:
 run:intel:serial1:
   stage: run
   script:
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    - pip install numpy
     - cd tests
     - ./run_serial.py 1
   artifacts:
@@ -121,6 +124,9 @@ run:intel:serial1:
 run:intel:serial2:
   stage: run
   script:
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    - pip install numpy
     - cd tests
     - ./run_serial.py 2
   artifacts:
@@ -131,6 +137,9 @@ run:intel:serial2:
 run:intel:serial3:
   stage: run
   script:
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    - pip install numpy
     - cd tests
     - ./run_serial.py 3
   artifacts:
@@ -141,6 +150,9 @@ run:intel:serial3:
 run:intel:parallel2:
   stage: run
   script:
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    - pip install numpy
     - cd tests
     - ./run_parallel.py 2
   artifacts:
@@ -151,6 +163,9 @@ run:intel:parallel2:
 run:intel:Jijs4:
   stage: run
   script:
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    - pip install numpy
     - cd tests
     - ./run_serial.py 4
     - ./run_parallel.py -4
@@ -162,6 +177,9 @@ run:intel:Jijs4:
 run:intel:kkrflex5:
   stage: run
   script:
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    - pip install numpy
     - cd tests
     - ./run_serial.py 5
     - ./run_parallel.py -5
@@ -173,6 +191,9 @@ run:intel:kkrflex5:
 run:intel:FERMIOUT6:
   stage: run
   script:
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    - pip install numpy
     - cd tests
     - ./run_serial.py 6
     - ./run_parallel.py -6
