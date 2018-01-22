@@ -33,23 +33,23 @@ stages:
 
 ## 1.1 debug versions ##
 
-build:intel:hybrid_debug:
+build:intel:debug:
   stage: build
   script:
     - cp tests/inc.p .
-    - make clean; make hybriddebug
+    - make clean; make debug
 
-build:intel:hybrid_debug:
+build:intel:mpi_debug:
   stage: build
   script:
     - cp tests/inc.p .
-    - make clean; make hybriddebug
+    - make clean; make mpidebug
 
-build:intel:hybrid_debug:
+build:intel:openmp_debug:
   stage: build
   script:
     - cp tests/inc.p .
-    - make clean; make hybriddebug
+    - make clean; make ompdebug
 
 build:intel:hybrid_debug:
   stage: build
