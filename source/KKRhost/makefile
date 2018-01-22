@@ -213,7 +213,7 @@ mpidebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -wa
 ompdebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
 
 OPENMPFLAGS = 
-hybrid: OPENMPFLAGS = -qopenmp
+hybrid: OPENMPFLAGS = -openmp
 hybriddebug: OPENMPFLAGS = -openmp
 openmp: OPENMPFLAGS = -openmp
 ompdebug: OPENMPFLAGS = -openmp

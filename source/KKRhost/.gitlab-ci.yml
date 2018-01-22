@@ -18,15 +18,15 @@ stages:
   - verify
 
 
-test:intel:
-  stage: test
-  script:
-    # test if dependencies are working
-    # install pip
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
-    - pip install numpy
-    - echo 'do some tests here'
+#test:intel:
+#  stage: test
+#  script:
+#    # test if dependencies are working
+#    # install pip
+#    - curl -O https://bootstrap.pypa.io/get-pip.py 
+#    - python get-pip.py 
+#    - pip install numpy
+#    - echo 'do some tests here'
 
 
 ### 1. compile code in different versions ###
