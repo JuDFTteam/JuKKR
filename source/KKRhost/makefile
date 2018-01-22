@@ -105,6 +105,17 @@ $(OBJ)/ymy.o: $(SRC)/ymy.f
 $(OBJ)/gfree.o: $(SRC)/gfree.f
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) -c -o $@ $<
 
+# wildcards for module files
+$(OBJ)/mod_%.o: $(SRC)/%.f
+	$(FC) $(FFLAGS)  -c -o $@ $<
+$(OBJ)/mod_%.o: $(SRC)/%.f90
+	$(FC) $(FFLAGS)  -c -o $@ $<
+$(OBJ)/mod_%.o: $(SRC)/%.F
+	$(FC) $(FFLAGS)  $(CPP) -c -o $@ $<
+$(OBJ)/mod_%.o: $(SRC)/%.F90
+	$(FC) $(FFLAGS)  $(CPP) -c -o $@ $<
+
+# wildcards for normal .o files
 $(OBJ)/%.o: $(SRC)/%.f
 	$(FC) $(FFLAGS)   -c -o $@ $<
 $(OBJ)/%.o: $(SRC)/%.f90
