@@ -119,7 +119,7 @@ run:intel:serial1:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 day
 
 run:intel:serial2:
   stage: run
@@ -132,7 +132,7 @@ run:intel:serial2:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 day
 
 run:intel:serial3:
   stage: run
@@ -145,7 +145,7 @@ run:intel:serial3:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 day
 
 run:intel:parallel2:
   stage: run
@@ -158,7 +158,7 @@ run:intel:parallel2:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 day
 
 run:intel:Jijs4:
   stage: run
@@ -172,7 +172,7 @@ run:intel:Jijs4:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 day
 
 run:intel:kkrflex5:
   stage: run
@@ -186,7 +186,7 @@ run:intel:kkrflex5:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 day
 
 run:intel:FERMIOUT6:
   stage: run
@@ -200,7 +200,7 @@ run:intel:FERMIOUT6:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 day
 
 
 ### 3. check outcome of the test runs ###
@@ -217,4 +217,8 @@ verify:intel:
     # prepare and execute verification using pytest
     - cd tests
     - pytest -v
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
 
