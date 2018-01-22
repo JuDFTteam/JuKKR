@@ -264,6 +264,7 @@ c energy loop
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)
 !$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)
 !$omp& shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)
+!$omp& shared(nscoef, mu0, t_params, ifinished)
 #endif
        DO ie_num=1,ie_end
        

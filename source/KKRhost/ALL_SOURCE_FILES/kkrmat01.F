@@ -811,8 +811,9 @@ c            DEALLOCATE(GLLKE0)
          
       if(test('rhoqtest')) then
 !#ifdef CPP_hybrid
+#ifdef CPP_TIMING
         call timing_start('main1b - kkrmat01 - writeout_rhoq')
-!#endif
+#endif
         
         write(*,*)                      ! status bar
         write(*,*) 'rhoq: write-out loop'
