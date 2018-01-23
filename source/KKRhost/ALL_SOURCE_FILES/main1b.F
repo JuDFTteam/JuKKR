@@ -465,7 +465,7 @@ C
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
-         ie_start = 1
+         ie_start = 0
          ie_end = ielast
 #endif
          
