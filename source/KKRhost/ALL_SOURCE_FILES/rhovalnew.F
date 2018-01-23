@@ -132,11 +132,7 @@
 C      ..
        LOGICAL TEST,OPT
        EXTERNAL TEST,OPT
-#ifndef CPP_OMP
-       ! test
-       integer :: mu0
-       ! test
-#endif
+
 ! determine if omp is used
        ith = 0
        nth = 1

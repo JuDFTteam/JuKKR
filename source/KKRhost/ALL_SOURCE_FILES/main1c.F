@@ -189,7 +189,6 @@ C     .. qdos and lmlm-dos ..
       DOUBLE COMPLEX DENTOT ! qdos
 #endif
       DOUBLE PRECISION, allocatable :: QVEC(:,:)
-      INTEGER LM1,LM2
 #ifdef CPP_MPI
       integer :: ntot1
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)

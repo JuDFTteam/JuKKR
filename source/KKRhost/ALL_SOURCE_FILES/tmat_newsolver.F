@@ -80,18 +80,14 @@
 !     .. OMP ..
       integer nth,ith         ! total number of threads and thread id
 #ifdef CPP_MPI
-!       integer :: mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
       integer :: ie_end, ie_num, ie_start, ierr
       
       !rhoqtest
       logical, external :: test, opt
-      integer :: mu0, nscoef, ifinished!, lmgf0d
-!       double complex, allocatable :: rllleft(:,:,:,:),sllleft(:,:,:,:)
+      integer :: mu0, nscoef
       
-      ! initialize inifished
-      ifinished = 0
 
 #ifdef CPP_OMP
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
@@ -264,7 +260,7 @@ c energy loop
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)
 !$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)
 !$omp& shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)
-!$omp& shared(nscoef, mu0, t_params, ifinished)
+!$omp& shared(mu0, nscoef)
 #endif
        DO ie_num=1,ie_end
        
@@ -534,49 +530,48 @@ C because the t-matrix depends only on RLL
          
        
          if(test('rhoqtest')) then
-           !
-           open(9999, file='params.txt')
-           write(9999,*) lmmaxso, t_params%natyp
-           write(9999,*) t_params%naez, t_params%nclsd, t_params%nrd, 
-     &                   t_params%nembd1-1, t_params%lmax
-           write(9999,*) t_params%alat
-           close(9999)
-           !
-           open(9999, file='host.txt')
-           write(9999,*) t_params%rbasis(1:3,1:t_params%natyp)
-           write(9999,*) t_params%rcls(1:3,1:t_params%nclsd,
-     &                                 1:t_params%nclsd), 
-     &                   t_params%rr(1:3,0:t_params%nrd), 
-     &                   t_params%atom(1:t_params%nclsd,
-     &                              1:t_params%naez+t_params%nembd1-1)
-!      
-!      &t_params%ATOM(t_params%NACLSD,t_params%NEMBD2),
-!      
-         write(9999,*) t_params%cls(1:t_params%naez+t_params%nembd1-1), 
-     &                   t_params%ezoa(1:t_params%nclsd,
-     &                              1:t_params%naez+t_params%nembd1-1), 
-     &                   t_params%nacls(1:t_params%nclsd)
-           close(9999)
-           !
-           open(9999, file='wavefunctions.txt')
-           write(9999,'(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
-           write(9999,'(1000E26.17)') rnew(1:irmdnew)
-!            write(*,*) ntotd, npan_tot, ncheb, nsra, irmdnew, lmmaxso, ie
-           do ir=1,irmdnew
-             do lm1=1,nsra*lmmaxso
-               do lm2=1,lmmaxso
-                  write(9999,'(20000E16.7)') Rll(lm1, lm2, ir, ith), 
-     &                                       Rllleft(lm1, lm2, ir, ith)
-               end do
-             end do
-           enddo
-           do lm1=0,npan_tot
-             write(9999,'(E16.7,I9)') rpan_intervall(lm1),
-     &                                ipan_intervall(lm1)
-           enddo
-           close(9999)
-           !
-           ifinished = 1
+#ifdef CPP_OMP
+          write(*,*) 'rhoqtest does not work in OMP version!!'
+          write(*,*) 'please use hybrid compilation mode'
+          stop
+#else
+          open(9999, file='params.txt')
+          write(9999,*) lmmaxso, t_params%natyp
+          write(9999,*) t_params%naez, t_params%nclsd, t_params%nrd, 
+     &                  t_params%nembd1-1, t_params%lmax
+          write(9999,*) t_params%alat
+          close(9999)
+
+          open(9999, file='host.txt')
+          write(9999,*) t_params%rbasis(1:3,1:t_params%natyp)
+          write(9999,*) t_params%rcls(1:3,1:t_params%nclsd,
+     &                                1:t_params%nclsd), 
+     &                  t_params%rr(1:3,0:t_params%nrd), 
+     &                  t_params%atom(1:t_params%nclsd,
+     &                             1:t_params%naez+t_params%nembd1-1)
+          write(9999,*) t_params%cls(1:t_params%naez+t_params%nembd1-1),
+     &                  t_params%ezoa(1:t_params%nclsd,
+     &                             1:t_params%naez+t_params%nembd1-1), 
+     &                  t_params%nacls(1:t_params%nclsd)
+          close(9999)
+
+          open(9999, file='wavefunctions.txt')
+          write(9999,'(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
+          write(9999,'(1000E26.17)') rnew(1:irmdnew)
+          do ir=1,irmdnew
+            do lm1=1,nsra*lmmaxso
+              do lm2=1,lmmaxso
+                 write(9999,'(20000E16.7)') Rll(lm1, lm2, ir, ith), 
+     &                                      Rllleft(lm1, lm2, ir, ith)
+              end do
+            end do
+          enddo
+          do lm1=0,npan_tot
+            write(9999,'(E16.7,I9)') rpan_intervall(lm1),
+     &                               ipan_intervall(lm1)
+          enddo
+          close(9999)
+#endif
          end if ! test('rhoqtest')
         
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -606,9 +601,9 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #endif
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
+#ifndef CPP_OMP        
                 if(test('rhoqtest')) then
-!                 write(*,*) 'writing tmat', irec, lmmaxso
-
+                  
                   if(ie_num==1.and.i1==1) then
                     write(*,*)                      ! status bar
                     write(*,*) 'rhoq: write-out t-mat', 
@@ -629,7 +624,8 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 !                 write(*,*) 'rotating with', theta, phi
 !             LMGF0D= (LMAXD+1)**2
 !             CALL ROTATEMATRIX(TMATLL,THETA,PHI,LMGF0D,0)
-                end if     
+                end if    ! test('rhoqtest') 
+#endif
                            
             WRITE(69,REC=IREC) TMATLL(:,:)
             ! human readable writeout if test option is hit
