@@ -614,11 +614,13 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
                     write(*,FMT=190) !beginning of statusbar
                   endif
                   
-                  if(t_params%NATYP*ie_end>=50) then
-                    if(mod( I1+t_params%natyp*(ie_num-1),
+                  if(myrank==master) then
+                    if(t_params%NATYP*ie_end>=50) then
+                      if(mod( I1+t_params%natyp*(ie_num-1),
      &                 (t_params%NATYP*ie_end/50))==0 ) write(6,FMT=200)
-                  else
-                    write(6,FMT=200)
+                    else
+                      write(6,FMT=200)
+                    end if
                   end if
                            
 !                 write(*,*) 'rotating with', theta, phi
@@ -675,7 +677,8 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 
 190     FORMAT('                 |'$)   ! status bar
 200     FORMAT('|'$)                    ! status bar
-        if(test('rhoqtest').and.i1==t_params%natyp) write(6,*) ! status bar
+        if(test('rhoqtest').and.i1==t_params%natyp.and.myrank==master) 
+     &       write(6,*) ! status bar
         ! finished kpts status bar
 
        DEALLOCATE(VINS, VNSPLL0, VNSPLL1, VNSPLL, stat=ierr)

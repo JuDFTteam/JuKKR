@@ -228,14 +228,11 @@ C -------------------------------------------------------------- input1b
      &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,
      &       RCLSIMP)
      
-       if(test('rhoqtest')) then
-        write(*,*) myrank ,'open tau0', lmmaxd, (LMMAXD*LMMAXD+1)*4
-      open(9889, access='direct', file='tau0_k', 
-     &form='unformatted', recl=(LMMAXD*LMMAXD+1)*4) ! lm blocks
-!      &form='unformatted', recl=(LMMAXD*LMMAXD)*4*4) ! lm blocks
-!      &form='unformatted', recl=(LMMAXD*LMMAXD+2)*4) ! lm blocks
-
-       end if
+      if(test('rhoqtest')) then
+        !write(*,*) myrank ,'open tau0', lmmaxd, (LMMAXD*LMMAXD+1)*4
+         open(9889, access='direct', file='tau0_k', 
+     &        form='unformatted', recl=(LMMAXD*LMMAXD+1)*4) ! lm blocks
+      end if
      
      
       IF (TEST('gmatasci'))
@@ -772,7 +769,7 @@ c ------------------------------------------------------------------------
 #ifdef CPP_TIMING
         if(.not.OPT('GREENIMP')) then
            if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-           if(t_inc%i_time>0) call timing_pause('main1b - fourier')
+           if(t_inc%i_time>0) call timing_stop('main1b - fourier')
            if(t_inc%i_time>0) call timing_stop('main1b - inversion')
            if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
         endif
@@ -883,12 +880,12 @@ c construct t matrix for reference system (now is always double matrix)
               write(99991,'(2I9)') NREF, NATYP
               write(99991, '(1000I9)') refpot(1:NATYP)
               close(99991)
-              write(*,*) myrank, 'opening tref', WLENGTH*4*lmmaxd**2
+              !write(*,*) myrank, 'opening tref', WLENGTH*4*lmmaxd**2
               open(99992, file='tref', access='direct', 
      &             recl=WLENGTH*4*lmmaxd**2, form='unformatted')
               end if
               irec = ie + ielast*(i1-1)
-              write(*,*) 'writeing tref', myrank, i1, ie, irec
+              !write(*,*) 'writeing tref', myrank, i1, ie, irec
               write(99992, rec=irec) trefll(:,:,i1)
               
               !write(999,'(2ES15.7)') trefll(:,:,i1)
@@ -1131,7 +1128,7 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 #ifdef CPP_TIMING
         if(.not.OPT('GREENIMP')) then
            if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-           if(t_inc%i_time>0) call timing_pause('main1b - fourier')
+           if(t_inc%i_time>0) call timing_stop('main1b - fourier')
            if(t_inc%i_time>0) call timing_stop('main1b - inversion')
            if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
         endif
@@ -1331,13 +1328,13 @@ C     kpoint (defined in qvec.dat)
          call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 #endif
          close(9889) ! tau0_k file
-      
-#ifdef CPP_MPI
-         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-#endif
          close(99992)
          call timing_stop('Time in Iteration')
          if (myrank==master) call print_time_and_date('Done w. rhoq!!!')
+#ifdef CPP_MPI
+         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+         call MPI_FINALIZE(ierr)
+#endif
          stop 'finished with rhoq output'
       
       end if

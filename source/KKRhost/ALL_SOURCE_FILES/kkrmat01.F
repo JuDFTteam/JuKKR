@@ -47,6 +47,9 @@
       use mod_mympi, only: myrank, nranks, master 
 #endif
       use mod_types, only: t_inc
+#ifdef CPP_HYBRID
+      use omp_lib
+#endif
 #ifdef CPP_TIMING
       use mod_timing
 #endif
@@ -144,8 +147,11 @@
       double precision, allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts
       DOUBLE PRECISION RECBV(3,3)
       logical, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
+      logical :: kmask_info
+      integer :: kmask_mode
+      double precision :: k_mask_bounds(4)
 !#endif
-! #ifdef CPP_hybrid
+! #ifdef CPP_HYBRID
       integer :: mythread
 ! #endif
 !     ..
@@ -224,11 +230,144 @@
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ K-points loop
 
-#ifdef CPP_MPI
-! MPI:     
-      ntot1 = NOFKS
+      if(test('rhoqtest')) then
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if (myrank==master) then
+          !read recbv  
+          open(8888, file='kpts.txt', form='formatted')
+          read(8888,*)
+          read(8888,*)
+          do kpt=1,nofks
+            read(8888,*) 
+          end do
+          read(8888,'(100E16.7)') RECBV(1:3,1:3)
+          close(8888)
+          
+          allocate(kmask(nofks))
 
-      if(myrank==master) write(1337,*) 'kkrmat k loop:', NOFKS, 
+          ! determine kmask parameters
+          inquire(file='kmask_info.txt', exist=kmask_info)
+          if (kmask_info) then
+            write(*,*) "found 'kmask_info.txt' file, start reading..."
+            open(8888, file='kmask_info.txt', form='formatted')
+            read(8888,*) kmask_mode
+            if (kmask_mode==1) then ! read R0=(x,y), then R1 and R2 (outer and inner radius around R0)
+              write(*,*) "kmask_mode is 1: spherical region"
+              read(8888,*) k_mask_bounds(1), k_mask_bounds(2)
+              write(*,*) "R0=", k_mask_bounds(1), k_mask_bounds(2)
+              read(8888,*) k_mask_bounds(3)
+              write(*,*) "R1=", k_mask_bounds(3)
+              read(8888,*) k_mask_bounds(4)
+              write(*,*) "R2=", k_mask_bounds(4)
+            elseif (kmask_mode==2) then ! read xmin, xmax, ymin, ymax of kmask_box
+              write(*,*) "kmask_mode is 2: box"
+              read(8888,*) k_mask_bounds(1)
+              read(8888,*) k_mask_bounds(2)
+              read(8888,*) k_mask_bounds(3)
+              read(8888,*) k_mask_bounds(4)
+              write(*,*) "xmin=", k_mask_bounds(1)
+              write(*,*) "xmax=", k_mask_bounds(2)
+              write(*,*) "ymin=", k_mask_bounds(3)
+              write(*,*) "ymax=", k_mask_bounds(4)
+            end if ! kmask_mode 1 or 2
+            ! close kmask_info.txt
+            close(8888)
+          else
+            kmask_mode = 0
+          end if !kmask_info.txt file found
+         
+          if (kmask_mode==3) then ! read kmask from file
+            write(*,*) "kmask_mode is 3: read 'kpts_mask.txt' file"
+            open(8888, file='kpts_mask.txt', form='formatted')
+          end if
+          
+          ! use these as counters
+          k_start = 1
+          k_end = 0
+          
+          ! find kmask and number points in box
+          do kpt=1,nofks
+            !findig kmask
+            ! default is take all
+            kmask(kpt) = .true.
+            if (kmask_mode==1) then ! sph mode
+              kmask(kpt)=.false.
+              do i=-1,1,1
+                do j=-1,1,1
+                  kp(1:3) = bzkp(1:3,kpt)+i*recbv(1:3,1)+j*recbv(1:3,2)
+                  ! first shift kpt to be centered around R0
+                  kp(1) = kp(1) - k_mask_bounds(1)
+                  kp(2) = kp(2) - k_mask_bounds(2)
+                  ! then apply rules concerning inner and outer radius
+                  if(dsqrt(kp(1)**2+kp(2)**2)<k_mask_bounds(3)) 
+     &      kmask(kpt)=.true.
+                  if(dsqrt(kp(1)**2+kp(2)**2)<k_mask_bounds(4)) 
+     &      kmask(kpt)=.false.
+                end do ! j
+              end do ! i
+            elseif (kmask_mode==2) then ! box mode
+              do i=-1,1,1
+                do j=-1,1,1
+                  kp(1:3) = bzkp(1:3,kpt)+i*recbv(1:3,1)+j*recbv(1:3,2)
+                  if (kp(1)<k_mask_bounds(1)) kmask(kpt)=.false.
+                  if (kp(1)>k_mask_bounds(2)) kmask(kpt)=.false.
+                  if (kp(2)<k_mask_bounds(3)) kmask(kpt)=.false.
+                  if (kp(2)>k_mask_bounds(4)) kmask(kpt)=.false.
+                end do ! j
+              end do ! i
+            elseif (kmask_mode==3) then ! read kmask from file
+              read(8888, *) kmask(kpt)
+            end if ! kmask_mode
+            ! count number of kpts in reduced part
+            if(kmask(kpt)) k_end = k_end+1
+          end do ! kpt loop
+         
+          ! close kmask file
+          if (kmask_mode==3)then ! read kmask from file
+            close(8888)
+          end if
+          
+          ! fill rhoq_kmask (on reduced set of kpts)
+          allocate(rhoq_kmask(1:4,k_end))
+          do kpt=1, nofks
+            if(kmask(kpt)) then
+              rhoq_kmask(1:3,k_start) = bzkp(1:3,kpt)
+              rhoq_kmask(4,k_start) = dfloat(kpt)
+              k_start = k_start+1
+            end if
+          end do
+
+          write(*,*) 'found ', k_end,  'kpoints'
+        end if !(myrank==master)
+
+        ! communicate kmask stuff from master to all others
+        call MPI_BCAST(k_start, 1, MPI_INTEGER, master, 
+     &                 MPI_COMM_WORLD, ierr)
+        call MPI_BCAST(k_end, 1, MPI_INTEGER, master, 
+     &                 MPI_COMM_WORLD, ierr)
+        if (myrank .ne. master) then
+          allocate(kmask(nofks))
+          allocate(rhoq_kmask(1:4,k_end))
+        end if
+        call MPI_BCAST(kmask, nofks, MPI_LOGICAL, master,
+     &                 MPI_COMM_WORLD, ierr)
+        call MPI_BCAST(rhoq_kmask, 4*k_end, MPI_DOUBLE_PRECISION,
+     &                 master, MPI_COMM_WORLD, ierr)
+        
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        
+        ! reset k_start to 1 (was used as a counter in the loop above)
+        k_start = 1
+      end if !test('rhoqtest')
+
+#ifdef CPP_MPI
+      if(test('rhoqtest')) then
+        ntot1 = k_end
+      else
+        ntot1 = NOFKS
+      endif
+
+      if(myrank==master) write(1337,*) 'kkrmat k loop:', ntot1, 
      &                          t_mpi_c_grid%nranks_ie
       call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
      &                 t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
@@ -241,71 +380,10 @@
 
       t_mpi_c_grid%ntot_pT1 = ntot_pT
       t_mpi_c_grid%ioff_pT1 = ioff_pT
-      
-!       if(test('rhoqtest')) then
-!          k_start = 1
-!          k_end = NOFKS
-!       end if
-      
 #else
       k_start = 1
-      k_end = NOFKS 
+      if(.not.test('rhoqtest')) k_end = NOFKS 
 #endif
-
-      !print header of statusbar
-      if(test('rhoqtest')) then
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        !read recbv  
-        open(8888, file='kpts.txt', form='formatted')
-        read(8888,*)
-        read(8888,*)
-        do kpt=1,nofks
-          read(8888,*) 
-        end do
-        read(8888,'(100E16.7)') RECBV(1:3,1:3)
-        close(8888)
-        
-        allocate(kmask(nofks))
-        
-        ! use these as counters
-        k_start = 1
-        k_end = 0
-        
-        ! find kmask and number points in box
-        do kpt=1,nofks
-          !findig kmask
-          kmask(kpt) = .false.
-          do i=-1,1,1
-            do j=-1,1,1
-              kp(1:3) = bzkp(1:3,kpt)+i*recbv(1:3,1)+j*recbv(1:3,2)
-              if(dsqrt(kp(1)**2+kp(2)**2)<0.4d0) kmask(kpt)=.true.
-              if(dsqrt(kp(1)**2+kp(2)**2)<0.05d0) kmask(kpt)=.false.
-!              ! for MoTe2, EF<E<EF+100: |kx|<0.3 and |ky|<0.15
-!              if(dabs(kp(1))<0.3 .and. dabs(kp(2))<0.15) 
-!     &                                     kmask(kpt) = .true.
-            end do
-          end do
-          ! end finding kmask
-          !kmask(kpt) = .true.
-          ! count number of kpts in reduced part
-          if(kmask(kpt)) k_end = k_end+1
-        end do
-        
-        ! fill rhoq_kmask (on reduced set of kpts)
-        allocate(rhoq_kmask(1:4,k_end))
-        do kpt=1, nofks
-          if(kmask(kpt)) then
-            rhoq_kmask(1:3,k_start) = bzkp(1:3,kpt)
-            rhoq_kmask(4,k_start) = dfloat(kpt)
-            k_start = k_start+1
-          end if
-        end do
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        
-        ! reset k_start to 1 (was used as a counter in the loop above)
-        k_start = 1
-        
-      end if !test('rhoqtest')
         
       ! k-loop not needed for GREENIMP-case
       if(opt('GREENIMP')) then
@@ -322,16 +400,16 @@
       endif
       
       mythread = 0
-! #ifdef CPP_hybrid
-! !$omp parallel default(shared)
-! !$omp& private(kpt, ns, i, j, isym, carg, i1, zktr, i2, iq1, iq2, ioff1)
-! !$omp& private(ioff2, joff1, joff2, ikm1, ikm2, csum1, is, n1, n2)
-! !$omp& private(j1, csum2, j2, il1, il2, lm1, lm2, gaux1, gaux2)
-! !$omp& private(jl1, jl2, gaux3, ilm, jlm, mythread )
-! !$omp& reduction(+:trace)
-! 
-!       mythread = omp_get_thread_num()
-! #endif
+#ifdef CPP_HYBRID
+!$omp parallel default(shared)
+!$omp& private(kpt, ns, i, j, isym, carg, i1, zktr, i2, iq1, iq2, ioff1)
+!$omp& private(ioff2, joff1, joff2, ikm1, ikm2, csum1, is, n1, n2)
+!$omp& private(j1, csum2, j2, il1, il2, lm1, lm2, gaux1, gaux2)
+!$omp& private(jl1, jl2, gaux3, ilm, jlm, mythread )
+!$omp& reduction(+:trace)
+
+      mythread = omp_get_thread_num()
+#endif
 
 
       
@@ -348,9 +426,9 @@
  
          ! --> first NAEZ/NATYP elements of GS() are site-diagonal
 
-! #ifdef CPP_hybrid
-! !$omp do
-! #endif
+#ifdef CPP_HYBRID
+!$omp do
+#endif
          DO NS = NSDIA+1,NSHELL
             I = NSH1(NS)
             J = NSH2(NS)
@@ -364,9 +442,9 @@
                ETAIKR(ISYM,NS) = ETAIKR(ISYM,NS) * EXP(CARG*CITPI)
             END DO
          END DO
-! #ifdef CPP_hybrid
-! !$omp end do
-! #endif
+#ifdef CPP_HYBRID
+!$omp end do
+#endif
  
          BZKPK(1:3) = KP(1:3)
          BZKPK(4:6) = 0.D0
@@ -452,9 +530,9 @@
                ENDDO
 
                ! bigger GLLKE matrix and rearrange with atom block
-! #ifdef CPP_hybrid
-! !$omp do
-! #endif
+#ifdef CPP_HYBRID
+!$omp do
+#endif
                DO IQ1=1,NAEZ
                   DO IQ2=1,NAEZ
 
@@ -480,9 +558,9 @@
 
                   ENDDO
                ENDDO
-! #ifdef CPP_hybrid
-! !$omp end do
-! #endif
+#ifdef CPP_HYBRID
+!$omp end do
+#endif
  
             ENDIF               ! (.NOT.OPT('NEWSOSOL'))
             !-----------------------------------------------------------------------
@@ -527,9 +605,9 @@
             !    ==> GLLKE
 
             ! ======================================================================
-! #ifdef CPP_hybrid
-! !$omp do
-! #endif
+#ifdef CPP_HYBRID
+!$omp do
+#endif
             DO IQ1=1,NAEZ
                DO IQ2=1,NAEZ   
                   IOFF1 = LMMAXD*(IQ1-1)
@@ -565,9 +643,9 @@
                   ! ----------------------------------------------------------------------
                END DO
             END DO
-! #ifdef CPP_hybrid
-! !$omp end do
-! #endif
+#ifdef CPP_HYBRID
+!$omp end do
+#endif
             !-----------------------------------------------------------------------
             if(mythread==0) then
             DEALLOCATE(GLLKE0,GLLKE0M,STAT=IU)
@@ -745,8 +823,10 @@ c            DEALLOCATE(GLLKE0)
 
                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                !>>>>>>>>>>>>>>>>>>>>>> rhoqtest >>>>>>>>>>>>>>>>>>>>>>>>
+#ifdef CPP_HYBRID
+!$omp critical
+#endif
                if(test('rhoqtest')) then
-
                  irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1) + 
      &                  (nscoef*2)*nofks*(IE-1-1)
                  if( ((i==mu) .and. any(j==iatomimp(1:nscoef))) ) then
@@ -774,8 +854,10 @@ c            DEALLOCATE(GLLKE0)
                    irec = irec + jx
                    write(9889,rec=irec) kp(1:2), g(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
                  end if ! iii==mu ...
-
                end if ! rhoqtest
+#ifdef CPP_HYBRID
+!$omp end critical
+#endif
                !<<<<<<<<<<<<<<<<<<<<<< rhoqtest <<<<<<<<<<<<<<<<<<<<<<<<
                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
            
@@ -790,7 +872,7 @@ c            DEALLOCATE(GLLKE0)
          
 
          !update statusbar
-#ifdef CPP_MPI
+#if defined(CPP_MPI) || defined(CPP_HYBRID)
          if( (((k_end-k_start)/50)==0 .or. 
      &       mod(KPT-k_start,(k_end-k_start)/50)==0) .and.
      &       t_inc%i_write>0 ) write(1337,FMT=200)
@@ -805,16 +887,19 @@ c            DEALLOCATE(GLLKE0)
 200   FORMAT('|'$)                       ! status bar
       IF(t_inc%i_write>0) write(1337,*)  ! finalize status bar
 
-! #ifdef CPP_hybrid
-!       !$omp end parallel
-! #endif
+#ifdef CPP_HYBRID
+      !$omp end parallel
+#endif
          
       if(test('rhoqtest')) then
-!#ifdef CPP_hybrid
+!#ifdef CPP_HYBRID
 #ifdef CPP_TIMING
         call timing_start('main1b - kkrmat01 - writeout_rhoq')
 #endif
         
+#ifdef CPP_HYBRID
+        if(myrank==master) then
+#endif
         write(*,*)                      ! status bar
         write(*,*) 'rhoq: write-out loop'
         write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')
@@ -880,7 +965,11 @@ c            DEALLOCATE(GLLKE0)
       
         write(6,*)                      ! status bar
 #ifdef CPP_TIMING
-        call timing_pause('main1b - kkrmat01 - writeout_rhoq')
+        call timing_stop('main1b - kkrmat01 - writeout_rhoq')
+#endif
+#ifdef CPP_HYBRID
+        end if !myrank==master
+        call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 #endif
       end if !test('rhoqtest')
 

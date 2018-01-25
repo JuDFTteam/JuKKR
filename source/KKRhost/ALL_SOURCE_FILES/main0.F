@@ -678,6 +678,21 @@ C
          write(9999,'(A)') '# R_LOG, NPAN_LOG, NPAN_EQ'
          write(9999,'(E22.15,2I9)') R_LOG, NPAN_LOG, NPAN_EQ
          close(9999)            
+
+         ! check consistency
+         if (OPT('GREENIMP') .or. OPT('WRTGREEN')) then
+            write(*,*) 'warning! rhoqtest cannot be used together with '
+            write(*,*) "'GREENIMP' or 'WRTGREEN' options"
+            stop
+         end if
+
+         ! enforce MPIatom here
+         if (TEST('MPIenerg')) stop 'rhoqtest assumes MPIatom'
+         CALL ADDTEST('MPIatom')
+         
+         if (nranks>NATYP) stop 
+     &                  'cannot use more than NATYP ranks for rhoqtest' 
+
       ENDIF
 
       IF ( TEST('Vspher  ') ) THEN

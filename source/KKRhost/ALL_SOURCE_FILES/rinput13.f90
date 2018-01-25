@@ -2277,3 +2277,31 @@ IF (.NOT.OPT(STRING)) THEN
 ENDIF
 
 END SUBROUTINE ADDOPT
+
+SUBROUTINE ADDTEST(STRING)
+use mod_wunfiles, only: t_params
+IMPLICIT NONE
+INTEGER NTESTD
+PARAMETER (NTESTD=64)
+CHARACTER*8 STRING
+INTEGER II
+LOGICAL TEST
+EXTERNAL TEST
+
+IF (.NOT.TEST('        ')) THEN
+   WRITE(*,*) 'Error in ADDTEST for ',STRING,' : No free slots in array TESTC.'
+   STOP 'Error in ADDTEST: No free slots in array TESTC.'
+ENDIF
+
+IF (.NOT.TEST(STRING)) THEN
+   II = 1
+   DO WHILE (II.LE.NTESTD)
+      IF (t_params%TESTC(II).EQ.'        ') THEN
+         t_params%TESTC(II) = STRING
+         II = NTESTD + 1
+      ENDIF
+      II = II + 1
+   ENDDO
+ENDIF
+
+END SUBROUTINE ADDTEST
