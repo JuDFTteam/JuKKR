@@ -44,6 +44,9 @@ type type_rhoq
   double complex, allocatable :: Dt(:,:)   ! (Nscoef*lmmaxso,Nscoef*lmmaxso) 
   double complex, allocatable :: Gimp(:,:) ! (Nscoef*lmmaxso,Nscoef*lmmaxso) 
   double complex, allocatable :: tau(:,:)  ! (Nscoef*lmmaxso,Nscoef*lmmaxso) 
+
+  ! logical switches
+  logical :: exclude_only ! flag to determin if dry run (i.e. without q-loop) should be performed to get only C_M contribution
   
 end type type_rhoq
 
@@ -77,6 +80,7 @@ subroutine bcast_scalars_rhoq(t_rhoq)
   call MPI_Bcast(t_rhoq%lmmaxso, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
   call MPI_Bcast(t_rhoq%volbz, 1, MPI_DOUBLE_PRECISION, master, MPI_COMM_WORLD, ierr)
   call MPI_Bcast(t_rhoq%Ghost_k_memsave, 1, MPI_LOGICAL, master, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(t_rhoq%exclude_only, 1, MPI_LOGICAL, master, MPI_COMM_WORLD, ierr)
 
 end subroutine bcast_scalars_rhoq
 #endif
@@ -256,7 +260,16 @@ subroutine read_input_rhoq(t_rhoq, uio)
     t_rhoq%qbox(1) = 0.8d0
     t_rhoq%qbox(2) = 0.8d0
     t_rhoq%qbox(3) = 0.0d0
-    write(*,*) 'rhoq_qbox keyword not found, taking default value for qbox:',t_rhoq%qbox
+    write(*,*) 'rhoq_qbox keyword not found, taking default value for qbox:', t_rhoq%qbox
+  endif
+
+  call ioinput('exclude_only    ',uio,1,7,ier)
+  if (ier.eq.0) then
+    read (unit=uio,fmt=*) t_rhoq%exclude_only
+    write(*,*) 'Compute exclude region only? ', t_rhoq%exclude_only
+  else
+    t_rhoq%exclude_only = .false.
+    write(*,*) 'exclude_only keyword not found, taking default value:', t_rhoq%exclude_only
   endif
   
 end subroutine read_input_rhoq
@@ -575,11 +588,11 @@ subroutine start_excl(t_rhoq)
         N2 = icls1*t_rhoq%lmmaxso
         write(*,*) 'restruc1', icls1, n1,n2
         t_rhoq%G0tauG0_excl(icls1,:,:) = temp2(N1:N2,N1:N2)
-        do lm1 = 1, t_rhoq%lmmaxso
-         do lm2 = 1, t_rhoq%lmmaxso
-          write(7894521,'(3i5,2f14.7)') icls1,lm1, lm2, t_rhoq%G0tauG0_excl(icls1,lm1,lm2)
-         end do
-        end do
+        !do lm1 = 1, t_rhoq%lmmaxso
+        ! do lm2 = 1, t_rhoq%lmmaxso
+        !  write(7894521,'(3i5,2f14.7)') icls1,lm1, lm2, t_rhoq%G0tauG0_excl(icls1,lm1,lm2)
+        ! end do
+        !end do
      end do
 
 
@@ -600,11 +613,11 @@ subroutine start_excl(t_rhoq)
         N2 = icls1*t_rhoq%lmmaxso
         write(*,*) 'restruc2', icls1, n1,n2
         t_rhoq%G0tauG0_excl(icls1+t_rhoq%Nexcl,:,:) = temp2(N1:N2,N1:N2)
-        do lm1 = 1, t_rhoq%lmmaxso
-         do lm2 = 1, t_rhoq%lmmaxso
-          write(7894521,'(3i5,2f14.7)') icls1+t_rhoq%Nexcl,lm1, lm2, t_rhoq%G0tauG0_excl(icls1+t_rhoq%Nexcl,lm1,lm2)
-         end do
-        end do
+        !do lm1 = 1, t_rhoq%lmmaxso
+        ! do lm2 = 1, t_rhoq%lmmaxso
+        !  write(7894521,'(3i5,2f14.7)') icls1+t_rhoq%Nexcl,lm1, lm2, t_rhoq%G0tauG0_excl(icls1+t_rhoq%Nexcl,lm1,lm2)
+        ! end do
+        !end do
      end do
      
      deallocate(temp,temp2)
@@ -1257,119 +1270,128 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
     write(556677, '(A)') '# first half is from G0ij_k, second half G0ji_k'
     write(556677, '(A)') '# ik, iscoef, kx, ky, tr(G0ij_k(:,:,iscoef, ik)'
 
-    ! calculate tau
-    write(*,*) 'calculate G0_k from tau0_k'
-    write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
-    write(*,FMT=190) !beginning of statusbar
-    do k=1,Nkp
-      ! find exG0_i(k) vector of lm-blocks (i is one component)
-
-      do i=1,t_rhoq%Nscoef
+    if(.not.t_rhoq%exclude_only) then
+      ! calculate tau
+      write(*,*) 'calculate G0_k from tau0_k'
+      write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
+      write(*,FMT=190) !beginning of statusbar
+      do k=1,Nkp
+        ! find exG0_i(k) vector of lm-blocks (i is one component)
       
-        ! set mu, mu_i to calculate G0ij_k
-        mu = imin !t_rhoq%ilay_scoef(t_rhoq%Nlayer)
-        mu_i = t_rhoq%ilay_scoef(i)
+        do i=1,t_rhoq%Nscoef
         
-        ! read in tau0(k0) from file
-        ie = 2 ! maybe interpolation to real axis?
-        irec = ((t_rhoq%Nlayer-1)*2)*(k-1) + ((t_rhoq%Nlayer-1)*2)*Nkp*(ie-1-1)
-        ix = mu_i - mu + 1
-        ! first mu_0,mu_i element
-        irec = irec + ix + (t_rhoq%Nlayer-1)
-        read(998899,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
-        q = k
-
-
-        ! set kmask
-        if(dsqrt(dreal(tau0_k(1,1))**2+dimag(tau0_k(1,1))**2)<eps) then
-          kmask(q) = .false.
-          G0ij_k(1:N,1:N,i,q) = C0
-          G0ji_k(1:N,1:N,i,q) = C0
-          if(i==1) lm2 = lm2+1
-        else
-          kmask(q) = .true.
-          if(i==1) lm1 = lm1+1
-        end if      
-
-        
-        if(kmask(q)) then
-          ! find G0ij_k from tau0_k and tinv
-          call calc_G0_k(tau0_k, tinv(1:N,1:N,t_rhoq%Nscoef+1), tinv(1:N,1:N,i), tmpG0(1:N,1:N), t_rhoq%mu_0, mu_i, N)
-          G0ij_k(1:N,1:N,i,q) = tmpG0(1:N,1:N)
-
-          !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
-          ! writeout trace of tau_0ij_k and tau_0ji_k
-          tmpG0(1,1) = 0.0d0
-          do ix=1,N
-             tmpG0(1,1) = tmpG0(1,1) + tau0_k(ix, ix)
-          end do
-          write(776655, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
-          !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
-
-        end if !(kmask(q))
-        
-        ! now mu_i,mu_0 element
-        irec = ((t_rhoq%Nlayer-1)*2)*(k-1) + ((t_rhoq%Nlayer-1)*2)*Nkp*(ie-1-1)
-        ix = mu_i - mu + 1
-        irec = irec + ix
-        read(998888,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
-        
-        if(kmask(q)) then
-
-          !find G0ji_k from tau0_k and tinv
-          call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tinv(1:N,1:N,t_rhoq%Nscoef+1), tmpG0(1:N,1:N), mu_i, t_rhoq%mu_0, N)
-          G0ji_k(1:N,1:N,i,q) = tmpG0(1:N,1:N)
-
-          !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
-          ! writeout trace of tau_0ij_k and tau_0ji_k
-          tmpG0(1,1) = 0.0d0
-          do ix=1,N
-             tmpG0(1,1) = tmpG0(1,1) + tau0_k(ix, ix)
-          end do
-          write(776655, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
-          !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
-
-          !FSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFS
-          ! writeout trace of G0ij_k and G0ji_k
-          tmpG0(1,1) = 0.0d0
-          do ix=1,N
-             tmpG0(1,1) = tmpG0(1,1) + G0ij_k(ix, ix, i, q)
-          end do
-          write(556677, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
-          tmpG0(1,1) = 0.0d0
-          do ix=1,N
-             tmpG0(1,1) = tmpG0(1,1) + G0ji_k(ix, ix, i, q)
-          end do
-          write(556677, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
-          !FSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFS
-
-        end if
-        
-      end do ! i
+          ! set mu, mu_i to calculate G0ij_k
+          mu = imin !t_rhoq%ilay_scoef(t_rhoq%Nlayer)
+          mu_i = t_rhoq%ilay_scoef(i)
+          
+          ! read in tau0(k0) from file
+          ie = 2 ! maybe interpolation to real axis?
+          irec = ((t_rhoq%Nlayer-1)*2)*(k-1) + ((t_rhoq%Nlayer-1)*2)*Nkp*(ie-1-1)
+          ix = mu_i - mu + 1
+          ! first mu_0,mu_i element
+          irec = irec + ix + (t_rhoq%Nlayer-1)
+          read(998899,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
+          q = k
       
-      !update statusbar
-      if(Nkp>=50.and.mod(k,Nkp/50)==0) write(*,FMT=200)
       
-    end do ! k
+          ! set kmask
+          if(dsqrt(dreal(tau0_k(1,1))**2+dimag(tau0_k(1,1))**2)<eps) then
+            kmask(q) = .false.
+            G0ij_k(1:N,1:N,i,q) = C0
+            G0ji_k(1:N,1:N,i,q) = C0
+            if(i==1) lm2 = lm2+1
+          else
+            kmask(q) = .true.
+            if(i==1) lm1 = lm1+1
+          end if      
+      
+          
+          if(kmask(q)) then
+            ! find G0ij_k from tau0_k and tinv
+            call calc_G0_k(tau0_k, tinv(1:N,1:N,t_rhoq%Nscoef+1), tinv(1:N,1:N,i), tmpG0(1:N,1:N), t_rhoq%mu_0, mu_i, N)
+            G0ij_k(1:N,1:N,i,q) = tmpG0(1:N,1:N)
+      
+            !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
+            ! writeout trace of tau_0ij_k and tau_0ji_k
+            tmpG0(1,1) = 0.0d0
+            do ix=1,N
+               tmpG0(1,1) = tmpG0(1,1) + tau0_k(ix, ix)
+            end do
+            write(776655, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
+            !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
+      
+          end if !(kmask(q))
+          
+          ! now mu_i,mu_0 element
+          irec = ((t_rhoq%Nlayer-1)*2)*(k-1) + ((t_rhoq%Nlayer-1)*2)*Nkp*(ie-1-1)
+          ix = mu_i - mu + 1
+          irec = irec + ix
+          read(998888,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
+          
+          if(kmask(q)) then
+      
+            !find G0ji_k from tau0_k and tinv
+            call calc_G0_k(tau0_k, tinv(1:N,1:N,i), tinv(1:N,1:N,t_rhoq%Nscoef+1), tmpG0(1:N,1:N), mu_i, t_rhoq%mu_0, N)
+            G0ji_k(1:N,1:N,i,q) = tmpG0(1:N,1:N)
+      
+            !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
+            ! writeout trace of tau_0ij_k and tau_0ji_k
+            tmpG0(1,1) = 0.0d0
+            do ix=1,N
+               tmpG0(1,1) = tmpG0(1,1) + tau0_k(ix, ix)
+            end do
+            write(776655, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
+            !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
+      
+            !FSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFS
+            ! writeout trace of G0ij_k and G0ji_k
+            tmpG0(1,1) = 0.0d0
+            do ix=1,N
+               tmpG0(1,1) = tmpG0(1,1) + G0ij_k(ix, ix, i, q)
+            end do
+            write(556677, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
+            tmpG0(1,1) = 0.0d0
+            do ix=1,N
+               tmpG0(1,1) = tmpG0(1,1) + G0ji_k(ix, ix, i, q)
+            end do
+            write(556677, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
+            !FSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFS
+      
+          end if
+          
+        end do ! i
+        
+        !update statusbar
+        if(Nkp>=50.and.mod(k,Nkp/50)==0) write(*,FMT=200)
+        
+      end do ! k
+      
+      !FSqdos_rhoq.txt writeout
+      close(556677)
+      
+!       close(998899)
+!       close(998888)
+      deallocate(tmpG0, tau0_k, stat=ierr)
+      if(ierr/=0) stop '[calc_rhoq] error deallocating tmpG0 etc'
+      
+      write(*,*) !status bar
+      write(*,*) 'kmask info (inside/outside):', lm1, lm2
 
-    !FSqdos_rhoq.txt writeout
-    close(556677)
-    
-!     close(998899)
-!     close(998888)
-    deallocate(tmpG0, tau0_k, stat=ierr)
-    if(ierr/=0) stop '[calc_rhoq] error deallocating tmpG0 etc'
-
-    write(*,*) !status bar
-    write(*,*) 'kmask info (inside/outside):', lm1, lm2
+    else
+      ! set kmask to False to prevent rhoq calculation
+      kmask(:) = .false.
+    end if ! .not. t_rhoq%exclude_only
   
   endif !myrank==master
 
 #ifdef CPP_MPI
+  if(myrank==master) write(*,*) 'bcast kmask', Nkp
   call MPI_Bcast(kmask, Nkp, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
   if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting kmask in t_rhoq'
+  if(myrank==master) write(*,*) 'bcast G0ji_k', N, t_rhoq%Nscoef, shape(G0ji_k)
   call MPI_Bcast(G0ji_k, N*N*t_rhoq%Nscoef*Nkp, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
   if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting G0ji_k in t_rhoq'
+  if(myrank==master) write(*,*) 'bcast G0ij_k', N, t_rhoq%Nscoef, shape(G0ij_k)
   call MPI_Bcast(G0ij_k, N*N*t_rhoq%Nscoef*Nkp, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
   if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting G0ij_k in t_rhoq'
 #endif
@@ -2016,6 +2038,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   call timing_start('calc rhoq - writeout')
   
 #ifdef CPP_MPI
+  if(myrank==master) write(*,*) 'MPI communication ...'
   !Gather results on master
   allocate(tmp(Nqpt,1), stat=ierr)
   if(ierr/=0) stop 'Error allocating tmp for REDUCE of rhoq'
@@ -2037,11 +2060,15 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
 #endif
   
   if(myrank==master) then
+    write(*,'("writeout loop:   |",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
+    write(*,FMT=190) !beginning of statusbar
     open(9999, file='out_rhoq.txt', form='formatted')
     do q=1,Nqpt
        write(9999,'(7E15.7)') Qvec(:,q),rhoq(q),rhoq_excl(q)
+       if( (Nqpt>=50.and.mod(q,Nqpt/50)==0) .or. (Nqpt<50) ) write(*,FMT=200)
     end do
     close(9999)
+    write(*,*) '' ! finish statusbar
   end if
   
   call timing_stop('calc rhoq - writeout')
