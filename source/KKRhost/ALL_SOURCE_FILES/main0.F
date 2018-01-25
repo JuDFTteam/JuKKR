@@ -208,8 +208,8 @@ C ======================================================================VINS()
 #endif
 #ifdef CPP_MPI
       use mpi
-      use mod_mympi, only: nranks
 #endif
+      use mod_mympi, only: nranks
       use mod_version
       use mod_version_info
       use mod_md5sums

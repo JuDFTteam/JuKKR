@@ -340,6 +340,7 @@
           write(*,*) 'found ', k_end,  'kpoints'
         end if !(myrank==master)
 
+#if defined(CPP_MPI) || defined(CPP_HYBRID)
         ! communicate kmask stuff from master to all others
         call MPI_BCAST(k_start, 1, MPI_INTEGER, master, 
      &                 MPI_COMM_WORLD, ierr)
@@ -353,6 +354,7 @@
      &                 MPI_COMM_WORLD, ierr)
         call MPI_BCAST(rhoq_kmask, 4*k_end, MPI_DOUBLE_PRECISION,
      &                 master, MPI_COMM_WORLD, ierr)
+#endif
         
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         
