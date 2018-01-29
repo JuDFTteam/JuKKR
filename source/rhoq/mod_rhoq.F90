@@ -1278,6 +1278,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
       no_kmask_given = .not. no_kmask_given
       if(.not. no_kmask_given) open(8888, file='kpts_mask.txt', form='formatted')
 
+      write(*,*) 'found kpts_mask.txt?', no_kmask_given
+
       ! calculate tau
       write(*,*) 'calculate G0_k from tau0_k'
       write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
@@ -1286,7 +1288,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         ! find exG0_i(k) vector of lm-blocks (i is one component)
       
         if(no_kmask_given) then
-          kmask_tmp = 0
+          kmask_tmp = 1
         else
           read(8888, *) kmask_tmp
         end if
@@ -1393,7 +1395,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
       
       !FSqdos_rhoq.txt writeout
       close(556677)
-      close(8888)
+      if(.not. no_kmask_given) close(8888)
       
 !       close(998899)
 !       close(998888)

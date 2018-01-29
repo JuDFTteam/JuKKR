@@ -44,7 +44,7 @@ mpi:      CPP = -D CPP_MPI
 # use -mcmodel=medium -shared-intel if you get the error message 
 # '...relocation truncated to fit...' when trying to compile, 
 # this happens for example for natyp>=75, iemxd>=101, KORBIT=1
-FFLAGS       =  -O3 -openmp -xhost -g -traceback
+FFLAGS       =  -O3 -qopenmp -xhost -g -traceback
 #-vec-report1 -xhost
 #-vec-report5
 # -qopt-report=5 -qopt-report-phase=loop,vec -qopt-report-file=stdout
