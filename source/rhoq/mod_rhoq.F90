@@ -1181,6 +1181,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   integer, allocatable :: ifunm(:), lmsp(:), ntcell(:) ! shape functions
   double precision, allocatable :: thetasnew(:,:) ! shape functions in Chebychev mesh (new mesh)
   logical, allocatable :: kmask(:)
+  integer :: kmask_tmp
+  logical :: no_kmask_given
 
   ! parameters
   double complex, parameter :: C0=(0.0d0, 0.0d0), Ci=(0.0d0, 1.0d0), C1=(1.0d0, 0.0d0)
@@ -1271,6 +1273,11 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
     write(556677, '(A)') '# ik, iscoef, kx, ky, tr(G0ij_k(:,:,iscoef, ik)'
 
     if(.not.t_rhoq%exclude_only) then
+
+      inquire(file='kpts_mask.txt', exist=no_kmask_given)
+      no_kmask_given = .not. no_kmask_given
+      if(.not. no_kmask_given) open(8888, file='kpts_mask.txt', form='formatted')
+
       ! calculate tau
       write(*,*) 'calculate G0_k from tau0_k'
       write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
@@ -1278,6 +1285,12 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
       do k=1,Nkp
         ! find exG0_i(k) vector of lm-blocks (i is one component)
       
+        if(no_kmask_given) then
+          kmask_tmp = 0
+        else
+          read(8888, *) kmask_tmp
+        end if
+
         do i=1,t_rhoq%Nscoef
         
           ! set mu, mu_i to calculate G0ij_k
@@ -1290,12 +1303,19 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
           ix = mu_i - mu + 1
           ! first mu_0,mu_i element
           irec = irec + ix + (t_rhoq%Nlayer-1)
-          read(998899,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
+
+          if (kmask_tmp>0 .or. no_kmask_given) then
+             read(998899,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
+          else
+             tau0_k(1:N,1:N) = C0
+             read(998899, *) tmpk(1:2)
+          end if
+
           q = k
       
       
           ! set kmask
-          if(dsqrt(dreal(tau0_k(1,1))**2+dimag(tau0_k(1,1))**2)<eps) then
+          if( kmask_tmp==0 .or. (no_kmask_given .and. dsqrt(dreal(tau0_k(1,1))**2+dimag(tau0_k(1,1))**2)<eps) ) then
             kmask(q) = .false.
             G0ij_k(1:N,1:N,i,q) = C0
             G0ji_k(1:N,1:N,i,q) = C0
@@ -1317,7 +1337,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
             do ix=1,N
                tmpG0(1,1) = tmpG0(1,1) + tau0_k(ix, ix)
             end do
-            write(776655, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
+            write(776655, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)/kmask_tmp
             !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
       
           end if !(kmask(q))
@@ -1326,7 +1346,12 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
           irec = ((t_rhoq%Nlayer-1)*2)*(k-1) + ((t_rhoq%Nlayer-1)*2)*Nkp*(ie-1-1)
           ix = mu_i - mu + 1
           irec = irec + ix
-          read(998888,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
+          if (kmask(q)) then
+             read(998888,'(10000ES15.7)') tmpk(1:2), tau0_k(1:N,1:N)
+          else
+             tau0_k(1:N,1:N) = C0
+             read(998888, *) tmpk(1:2)
+          end if
           
           if(kmask(q)) then
       
@@ -1340,7 +1365,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
             do ix=1,N
                tmpG0(1,1) = tmpG0(1,1) + tau0_k(ix, ix)
             end do
-            write(776655, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
+            write(776655, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)/kmask_tmp
             !FStauFStauFStauFStauFStauFStauFStauFStauFStauFStauFS
       
             !FSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFS
@@ -1357,7 +1382,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
             write(556677, '(2i9,100ES15.7)') q, i, tmpk(1:2), tmpG0(1,1)
             !FSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFSFS
       
-          end if
+          end if !kmask
           
         end do ! i
         
@@ -1368,6 +1393,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
       
       !FSqdos_rhoq.txt writeout
       close(556677)
+      close(8888)
       
 !       close(998899)
 !       close(998888)
@@ -1377,7 +1403,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
       write(*,*) !status bar
       write(*,*) 'kmask info (inside/outside):', lm1, lm2
 
-    else
+    else ! t_rhoq%exclude_only
       ! set kmask to False to prevent rhoq calculation
       kmask(:) = .false.
     end if ! .not. t_rhoq%exclude_only
@@ -1385,13 +1411,16 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   endif !myrank==master
 
 #ifdef CPP_MPI
-  if(myrank==master) write(*,*) 'bcast kmask', Nkp
+  !if(myrank==master) write(*,*) 'bcast kmask', Nkp
+  write(*,'(A,10I)') 'bcast kmask', myrank, Nkp
   call MPI_Bcast(kmask, Nkp, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
   if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting kmask in t_rhoq'
-  if(myrank==master) write(*,*) 'bcast G0ji_k', N, t_rhoq%Nscoef, shape(G0ji_k)
+  !if(myrank==master) write(*,*) 'bcast G0ji_k', N, t_rhoq%Nscoef, shape(G0ji_k)
+  write(*,'(A,10I)') 'bcast G0ji_k', myrank, N, t_rhoq%Nscoef, shape(G0ji_k)
   call MPI_Bcast(G0ji_k, N*N*t_rhoq%Nscoef*Nkp, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
   if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting G0ji_k in t_rhoq'
-  if(myrank==master) write(*,*) 'bcast G0ij_k', N, t_rhoq%Nscoef, shape(G0ij_k)
+  !if(myrank==master) write(*,*) 'bcast G0ij_k', N, t_rhoq%Nscoef, shape(G0ij_k)
+  write(*,'(A,10I)') 'bcast G0ij_k', myrank, N, t_rhoq%Nscoef, shape(G0ij_k)
   call MPI_Bcast(G0ij_k, N*N*t_rhoq%Nscoef*Nkp, MPI_DOUBLE_COMPLEX, master, MPI_COMM_WORLD, ierr)
   if(ierr/=MPI_SUCCESS) stop '[calc_rhoq] error brodcasting G0ij_k in t_rhoq'
 #endif
