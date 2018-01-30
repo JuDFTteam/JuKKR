@@ -795,7 +795,7 @@ subroutine calc_tau_rhoq(t_rhoq)
   if(ierr/=0) stop '[calc_tau_rhoq] error allocating tau in rhoq'
 
   ! tau = Dt + Dt.Gimp.Dt
-  !     = tau + Dt.temp
+  !     = tau + tau.temp using tau=Dt and temp=Gimp.Dt
   t_rhoq%tau = t_rhoq%Dt
   call ZGEMM('n','n',N,N,N,C1,t_rhoq%Dt,N,temp,N,C1,t_rhoq%tau,N)
   
@@ -1841,11 +1841,11 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
           
      !eiqr_lm generation: exp(-iq*r) = j_l(qr)*Y_L(-q)
      eiqr_lm(:,:) = C0
-     if(dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)>=eps) then
+     Rq = dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)
+     if(Rq>=eps) then
 
         Ylm = 0.0d0
         cYlm = C0
-        Rq = dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)
         costheta = -Qvec(3,q)/Rq ! =cos(theta)
         phi = datan2(Qvec(2,q), Qvec(1,q)) + pi
         
@@ -1877,7 +1877,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         
         ! construct exp(-i q.r)_L
         do ir=1,irmdnew
-          Z = dcmplx(Rq*rnew(ir)/alat*2.0d0*pi, 0.0d0)
+          Z = dcmplx(Rq*rnew(ir), 0.0d0)!/alat*2.0d0*pi, 0.0d0)
           call CALC_JLK(jl, Z, LMAX_2)
           do l1=0,lmax_2
             do m1=-l1, l1
@@ -1892,7 +1892,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         ! q==0 case: set to zero instead of one since this is anyways cut out
         eiqr_lm(:,:) = C0
         
-     end if !(dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)>=eps)
+     end if !(Rq>=eps)
      
      
      if(mythread==0) call timing_pause('calc rhoq - q>eiqr')
