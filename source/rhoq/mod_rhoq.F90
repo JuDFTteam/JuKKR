@@ -1201,6 +1201,10 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   integer, allocatable :: ntot_pT(:), ioff_pT(:)
 #endif
   integer :: q_start, q_end
+  integer, allocatable :: q_rand(:)
+  integer, parameter :: Nrandomize=1000
+  integer :: tmp_int, iq
+  double precision :: rand_num
   
   ! allocate kpoint arrays
   ierr = 0
@@ -1714,9 +1718,32 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   
   !$omp end parallel
   
+  allocate(q_rand(Nqpt), stat=ierr)
+  if (ierr/=0) stop 'Error allocating q_rand'
+  if(myrank==master) then
+    !initialize q_rand with initial sequence of inttgers from 1 to Nqpt
+    do k=1, Nqpt
+      q_rand(k) = k
+    end do
+    ! randomize q_rand by Nrandomize swapping two elements at random
+    do k=1, Nrandomize*Nqpt
+      call random_number(rand_num)
+      ikx = int(rand_num*Nqpt)+1
+      call random_number(rand_num)
+      iky = int(rand_num*Nqpt)+1
+      tmp_int = q_rand(ikx)
+      q_rand(ikx) = q_rand(iky)
+      q_rand(iky) = tmp_int
+    end do
+  end if ! myrank==master
   
 #ifdef CPP_MPI
+  !communicate q_rand to all other ranks
+  call MPI_Bcast(q_rand, Nqpt, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
+  if(ierr/=0) stop 'Error communicating q_rand'
 
+
+  ! distribute work over ranks
   allocate(ntot_pT(0:nranks-1), ioff_pT(0:nranks-1), stat=ierr)
   if(ierr/=0) stop 'Error allocating ntot_pT etc.'
   
@@ -1744,7 +1771,10 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   if(myrank==master .and. mythread==master) write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
   if(myrank==master .and. mythread==master) write(*,FMT=190) !beginning of statusbar
   !$omp do schedule(dynamic,1)
-  do q=q_start,q_end !q-loop
+  do iq=q_start,q_end !q-loop
+
+     ! take q from randomized array to minimize load imbalance betwee ranks
+     q = q_rand(iq)
      
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> k-loop >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
