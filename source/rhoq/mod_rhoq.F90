@@ -1846,6 +1846,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
 
         Ylm = 0.0d0
         cYlm = C0
+        ! maybe here a factor 2*pi/alat is missing in determination of cos(theta) and phi?
+        ! probably this is not the case since Qvec and Rq are in the same units and everything is determined by deviding numbers
         costheta = -Qvec(3,q)/Rq ! =cos(theta)
         phi = datan2(Qvec(2,q), Qvec(1,q)) + pi
         
