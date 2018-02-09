@@ -114,6 +114,26 @@ run:intel:parallel2:
       - tests/test_run*
     expire_in: 2 days
 
+run:intel:multi_node:
+  image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
+  stage: run
+  services:
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c1
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c2
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c3
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c4
+  script:
+    - cd tests
+    - ./run_parallel.py 2
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
 run:intel:Jijs4:
   stage: run
   script:
