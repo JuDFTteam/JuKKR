@@ -105,6 +105,14 @@ class Test_check_test_runs():
 		   'test_run8_mpi_1_8', 'test_run8_hybrid_1_8']
         cmp_modes(cmplist, '')
 
+    def test_verify11_multinode(self):
+        # compare mpi and hybrid runs forparallelization across multiple nodes
+        cmplist = ['test_run11_mpi_1_32', 
+		   'test_run11_hybrid_1_32',
+		   'test_run11_hybrid_4_8',
+		   'test_run11_hybrid_8_4']
+        cmp_modes(cmplist, '')
+
         
 # helper functions
 
