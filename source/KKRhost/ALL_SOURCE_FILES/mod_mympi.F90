@@ -354,20 +354,38 @@ contains
     nranks_at = ne    
     myrank_at = myg-1
 
-  elseif((ne*nat)==nranks) then ! .and. (ne>1 .and. nat>1)) then
+  elseif((ne*nat)==nranks .and. (ne>1 .and. nat>1)) then
 
     rest = 0
 
+    if(myrank==0) write(1337,*) 'create cartesian grid:', ne, nat, nranks
     call MPI_Cart_create( MPI_COMM_WORLD, 2, (/ ne, nat /), (/ .false., .false. /), (/ .true., .true. /), myMPI_comm_grid, ierr )
 
+    if(myrank==0) write(1337,*) 'MPI_Cart_sub'
     call MPI_Cart_sub( myMPI_comm_grid, (/ .true., .false. /), myMPI_comm_at, ierr ) ! row communicator
     call MPI_Cart_sub( myMPI_comm_grid, (/ .false., .true. /), myMPI_comm_ie, ierr ) ! col communicator
 
+    if(myrank==0) write(1337,*) 'MPI_Comm_rank'
     call MPI_Comm_rank( myMPI_comm_ie, myrank_ie, ierr )
     call MPI_Comm_rank( myMPI_comm_at, myrank_at, ierr )
     
+    if(myrank==0) write(1337,*) 'MPI_Comm_size'
     call MPI_Comm_size ( myMPI_comm_ie, nranks_ie, ierr )
     call MPI_Comm_size ( myMPI_comm_at, nranks_at, ierr )
+    
+    myrank_atcomm = myrank_at
+    nranks_atcomm = nranks_at
+
+  elseif(ne==1 .and. nat==nranks) then
+  
+    rest = 0
+
+    mympi_comm_ie = MPI_COMM_WORLD
+    myrank_ie     = myrank
+    nranks_ie     = nranks
+    mympi_comm_at = MPI_COMM_SELF
+    myrank_at     = 0
+    nranks_at     = 1
     
     myrank_atcomm = myrank_at
     nranks_atcomm = nranks_at
@@ -394,6 +412,7 @@ contains
     write(1337,'(A)') '=================================================='  
     write(1337,'(A,I5,A)') '    MPI parallelization: use',nranks,' ranks'
     write(1337,'(A,I3,A,I4)') '    create processor array of size (nat x ne) ',nat,' x',ne
+    write(1337,'(A,I5,A,I5)') '    nranks_at: ',nranks_at,', nranks_ie:', nranks_ie
     if(rest>0) write(1337,'(A,I3)') '                                   with rest',rest
     if(rest>0) write(1337,'(A,10I3)') '    divide rest onto last energy points (k,l,m):',ktake
     write(1337,'(A)') '                N_E'

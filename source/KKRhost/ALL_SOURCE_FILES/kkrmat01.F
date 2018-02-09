@@ -146,7 +146,7 @@
       
       double precision, allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts
       DOUBLE PRECISION RECBV(3,3)
-      logical, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
+      integer, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
       logical :: kmask_info
       integer :: kmask_mode
       double precision :: k_mask_bounds(4)
@@ -289,9 +289,9 @@
           do kpt=1,nofks
             !findig kmask
             ! default is take all
-            kmask(kpt) = .true.
+            kmask(kpt) = 1
             if (kmask_mode==1) then ! sph mode
-              kmask(kpt)=.false.
+              kmask(kpt)= 0
               do i=-1,1,1
                 do j=-1,1,1
                   kp(1:3) = bzkp(1:3,kpt)+i*recbv(1:3,1)+j*recbv(1:3,2)
@@ -300,26 +300,26 @@
                   kp(2) = kp(2) - k_mask_bounds(2)
                   ! then apply rules concerning inner and outer radius
                   if(dsqrt(kp(1)**2+kp(2)**2)<k_mask_bounds(3)) 
-     &      kmask(kpt)=.true.
+     &      kmask(kpt)= 1
                   if(dsqrt(kp(1)**2+kp(2)**2)<k_mask_bounds(4)) 
-     &      kmask(kpt)=.false.
+     &      kmask(kpt)= 0
                 end do ! j
               end do ! i
             elseif (kmask_mode==2) then ! box mode
               do i=-1,1,1
                 do j=-1,1,1
                   kp(1:3) = bzkp(1:3,kpt)+i*recbv(1:3,1)+j*recbv(1:3,2)
-                  if (kp(1)<k_mask_bounds(1)) kmask(kpt)=.false.
-                  if (kp(1)>k_mask_bounds(2)) kmask(kpt)=.false.
-                  if (kp(2)<k_mask_bounds(3)) kmask(kpt)=.false.
-                  if (kp(2)>k_mask_bounds(4)) kmask(kpt)=.false.
+                  if (kp(1)<k_mask_bounds(1)) kmask(kpt)= 0
+                  if (kp(1)>k_mask_bounds(2)) kmask(kpt)= 0
+                  if (kp(2)<k_mask_bounds(3)) kmask(kpt)= 0
+                  if (kp(2)>k_mask_bounds(4)) kmask(kpt)= 0
                 end do ! j
               end do ! i
             elseif (kmask_mode==3) then ! read kmask from file
               read(8888, *) kmask(kpt)
             end if ! kmask_mode
             ! count number of kpts in reduced part
-            if(kmask(kpt)) k_end = k_end+1
+            if(kmask(kpt)>0) k_end = k_end+1
           end do ! kpt loop
          
           ! close kmask file
@@ -328,16 +328,25 @@
           end if
           
           ! fill rhoq_kmask (on reduced set of kpts)
-          allocate(rhoq_kmask(1:4,k_end))
+          allocate(rhoq_kmask(1:5,k_end))
           do kpt=1, nofks
-            if(kmask(kpt)) then
+            if(kmask(kpt)>0) then
               rhoq_kmask(1:3,k_start) = bzkp(1:3,kpt)
               rhoq_kmask(4,k_start) = dfloat(kpt)
+              rhoq_kmask(5,k_start) = dfloat(kmask(kpt))
               k_start = k_start+1
             end if
           end do
 
           write(*,*) 'found ', k_end,  'kpoints'
+
+          open(8888, file='rhoq_kmask.test', form='formatted')
+          do kpt=1, k_end
+            write(8888, '(5F14.7)') rhoq_kmask(1:3,kpt), 
+     &                              rhoq_kmask(4,kpt),rhoq_kmask(5,kpt)
+          end do
+          close(8888)
+          
         end if !(myrank==master)
 
 #if defined(CPP_MPI) || defined(CPP_HYBRID)
@@ -348,11 +357,11 @@
      &                 MPI_COMM_WORLD, ierr)
         if (myrank .ne. master) then
           allocate(kmask(nofks))
-          allocate(rhoq_kmask(1:4,k_end))
+          allocate(rhoq_kmask(1:5,k_end))
         end if
-        call MPI_BCAST(kmask, nofks, MPI_LOGICAL, master,
+        call MPI_BCAST(kmask, nofks, MPI_INTEGER, master,
      &                 MPI_COMM_WORLD, ierr)
-        call MPI_BCAST(rhoq_kmask, 4*k_end, MPI_DOUBLE_PRECISION,
+        call MPI_BCAST(rhoq_kmask, 5*k_end, MPI_DOUBLE_PRECISION,
      &                 master, MPI_COMM_WORLD, ierr)
 #endif
         
@@ -840,7 +849,8 @@ c            DEALLOCATE(GLLKE0)
                      lm1 = lm1 + 1
                    end do
                    irec = irec + nscoef + ix
-                   write(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+                   write(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)! * 
+!     *                                           rhoq_kmask(5,kpt)
                  end if
                
                  irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1) + 
@@ -854,7 +864,8 @@ c            DEALLOCATE(GLLKE0)
                      lm1 = lm1 + 1
                    end do
                    irec = irec + jx
-                   write(9889,rec=irec) kp(1:2), g(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+                   write(9889,rec=irec) kp(1:2), g(1:LMMAXD,1:LMMAXD)! * !*ETAIKR(ISYM,NS) not this factor because it is dealt with explicitly in rhoq module
+!     *                                           rhoq_kmask(5,kpt)
                  end if ! iii==mu ...
                end if ! rhoqtest
 #ifdef CPP_HYBRID
@@ -925,14 +936,15 @@ c            DEALLOCATE(GLLKE0)
                   lm1 = lm1 + 1
                 end do
                 irec = irec + nscoef + ix 
-                if(kmask(kpt)) then
+                if(kmask(kpt)>0) then
                    read(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)
                 else
                    KP(1:3) = bzkp(1:3,kpt)
                    G(1:LMMAXD,1:LMMAXD) = CZERO
                 end if
                 write(998899,'(10000ES15.7)') KP(1:2), 
-     &             G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+     &             G(1:LMMAXD,1:LMMAXD) * dfloat(kmask(kpt))
+!     &             G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
               end if
               irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
               if( ((j==mu) .and. any(i==iatomimp(1:nscoef))) ) then
@@ -944,14 +956,14 @@ c            DEALLOCATE(GLLKE0)
                   lm1 = lm1 + 1
                 end do
                 irec = irec + jx
-                if(kmask(kpt)) then
+                if(kmask(kpt)>0) then
                    read(9889,rec=irec) KP(1:2), G(1:LMMAXD,1:LMMAXD)
                 else
                    KP(1:3) = bzkp(1:3,kpt)
                    G(1:LMMAXD,1:LMMAXD) = CZERO
                 end if
                 write(998888,'(10000ES15.7)') KP(1:2), 
-     &             G(1:LMMAXD,1:LMMAXD)!*ETAIKR(ISYM,NS)
+     &             G(1:LMMAXD,1:LMMAXD) * dfloat(kmask(kpt))
               end if ! iii==mu ...
             END DO ! ISYM = 1,NSYMAT
           END DO !NS = 1,NSHELL
@@ -970,6 +982,7 @@ c            DEALLOCATE(GLLKE0)
         call timing_stop('main1b - kkrmat01 - writeout_rhoq')
 #endif
 #ifdef CPP_HYBRID
+        deallocate(kmask)
         end if !myrank==master
         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 #endif
