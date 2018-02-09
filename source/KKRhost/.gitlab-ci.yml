@@ -128,7 +128,7 @@ run:intel:multi_node:
        alias: c4
   script:
     - cd tests
-    - ./run_parallel.py 2
+    - ./run_multi_node.py
   artifacts:
     paths:
       - tests/test_run*
