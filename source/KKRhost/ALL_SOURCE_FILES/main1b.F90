@@ -3,8 +3,13 @@
 !> @brief Module concerning gmat
 !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
 !> and many others ...
+!> @note
+!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 module MOD_MAIN1B
+
+   use Profiling
+   use Constants
 
    implicit none
 
@@ -16,7 +21,14 @@ contains
    !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
    !> and many others ...
    !----------------------------------------------------------------------------
-   subroutine main1b()
+   subroutine main1b(NR,LLY,ICC,IGF,INS,NPOL,LMAX,NREF,NSRA,NCLS,NCPA,NEMB,   &
+      NAEZ,NATYP,NCLSD,NSPIN,IEMXD,KMROT,NSHELD,NSPIND,LMMAXD,KPOIBZ,IELAST,  &
+      INVMOD,NACLSD,NSYMAT,NEMBD1,LMGF0D,NOFGIJ,NQCALC,NPRINCD,NSPINDD,       &
+      NLBASIS,NRBASIS,MAXMESH,WLENGTH,NATOMIMP,ITCPAMAX,ALAT,CPATOL,NOQ,CLS,  &
+      IQAT,NSH1,NSH2,ICPA,NACLS,NSHELL,REFPOT,ATOMIMP,EZOA,ATOM,KAOEZ,ICHECK, &
+      CONC,RMTREF,RR,RATOM,RBASIS,RROT,RCLS,SYMUNITARY,KMESH,IQCALC,IJTABSH,  &
+      IJTABSYM,IJTABCALC,IJTABCALC_I,ISH,JSH,NRREL,IRREL,VREF,RCLSIMP,RC,RREL,&
+      CREL,SRREL,DROTQ,DSYMLL,LEFTTINVLL,RIGHTTINVLL)
 
       use mod_timing
       use mod_types, only: t_tgmat,t_inc,t_lloyd,t_cpa,init_t_cpa,t_imp
@@ -40,140 +52,192 @@ contains
 ! *********************************************************************
 ! * For KREL = 1 (relativistic mode)                                  *
 ! *                                                                   *
-! *  NPOTD = 2 * NATYPD                                               *
-! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
+! *  NPOTD = 2 * NATYP                                                *
+! *  LMMAXD = 2 * (LMAX+1)^2                                         *
 ! *  NSPIND = 1                                                       *
-! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
+! *  LMGF0D = (LMAX+1)^2 dimension of the reference system Green     *
 ! *          function, set up in the spin-independent non-relativstic *
 ! *          (l,m_l)-representation                                   *
 ! *                                                                   *
 ! *********************************************************************
-!     ..
-!     .. Parameters ..
-      INTEGER LMGF0D
-      PARAMETER (LMGF0D= (LMAXD+1)**2)
-      INTEGER LMMAXD
-      PARAMETER (LMMAXD= (KREL+KORBIT+1)* (LMAXD+1)**2)
-      INTEGER NSPINDD
-      PARAMETER (NSPINDD=NSPIND-KORBIT)
-!     ..
-! parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
-      INTEGER NEMBD1
-      PARAMETER (NEMBD1=NEMBD+1)
-      INTEGER NSYMAXD
-      PARAMETER (NSYMAXD=48)
-      INTEGER NOFGIJD
-      PARAMETER (NOFGIJD = NATOMIMPD*NATOMIMPD+1)
-      INTEGER MAXMSHD
-      PARAMETER (MAXMSHD=30)
-      INTEGER LRECGRF,LRECTMT,LRECGREEN
-      PARAMETER (LRECGRF=WLENGTH*4*NACLSD*LMGF0D*LMGF0D*NCLSD) ! 4 words = 16 bytes / complex number (in ifort 4; in gfort 16)
-!        word/byte distiction moved to subroutine opendafile to be the same for all unformatted files
-      PARAMETER (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
-      PARAMETER (LRECGREEN=WLENGTH*2*NATOMIMPD*LMMAXD*NATOMIMPD*LMMAXD)
-      INTEGER LRECTRA ! LLY Lloyd
-      PARAMETER (LRECTRA=WLENGTH*4) ! LLY Lloyd
-!     ..
-      DOUBLE COMPLEX CZERO
-      PARAMETER (CZERO=(0.0D0,0.0D0))
-      DOUBLE COMPLEX CONE
-      PARAMETER (CONE=(1.0D0,0.0D0))
-      DOUBLE PRECISION CVLIGHT
-      PARAMETER (CVLIGHT = 274.0720442D0 )
-!     ..
-!     .. Local Scalars ..
-      integer NLBASIS,NRBASIS
-      integer IELAST,NPOL,INS,LMAX,NATYP,NREF,NSPIN,NSRA
-      integer KMROT,INVMOD,ICC,IGF,IPRINT,IDECI
-      integer MAXMESH,NAEZ,I,ISPIN,I1,IE,IREC,L,LM1,LM2,L1,RECLENGTH
-      integer NATOMIMP,NSYMAT,NCPA,NCPAFAIL,ICPAFLAG,ITCPAMAX
-      integer NMESH,NOFGIJ,NQCALC
-      integer ITMPDIR,ILTMP
-      integer IQ,NQDOS ! qdos ruess:number of qdos points
-      integer IX,ISITE ! qdos ruess
-      integer IQDOSRUN ! qdos ruess: counter to organise qdos run
-      integer NCLS,NACLSMAX,IC,LRECGRF1
-      double complex TREAD ! qdos ruess
-!     rfctor=a/(2*pi) conversion factor to p.u.
-      double precision CPATOL,ALAT,RFCTOR,THETA,PHI
-      double precision PI,THETAS(NATYPD),PHIS(NATYPD)
-      double precision RCLSIMP(3,NATOMIMPD)
-      double complex ERYD,CFCTOR,CFCTORINV
-      LOGICAL OPT,TEST,LCPAIJ
+      !    ..
+      ! .. Input variables
+      integer, intent(in) :: NR           !< Number of real space vectors rr
+      integer, intent(in) :: LLY          !< LLY <> 0 : apply Lloyd's formula
+      integer, intent(in) :: ICC          !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+      integer, intent(in) :: IGF          !< Do not print or print (0/1) the KKRFLEX_* files
+      integer, intent(in) :: INS          !< 0 (MT), 1(ASA), 2(Full Potential)
+      integer, intent(in) :: NPOL         !< Number of Matsubara Poles (EMESHT)
+      integer, intent(in) :: LMAX         !< Maximum l component in wave function expansion
+      integer, intent(in) :: NREF         !< Number of diff. ref. potentials
+      integer, intent(in) :: NSRA
+      integer, intent(in) :: NCLS         !< Number of reference clusters
+      integer, intent(in) :: NCPA         !< NCPA = 0/1 CPA flag
+      integer, intent(in) :: NEMB         !< Number of 'embedding' positions
+      integer, intent(in) :: NAEZ         !< Number of atoms in unit cell
+      integer, intent(in) :: NATYP        !< Number of kinds of atoms in unit cell
+      integer, intent(in) :: NCLSD        !< Maximum number of different TB-clusters
+      integer, intent(in) :: NSPIN        !< Counter for spin directions
+      integer, intent(in) :: IEMXD        !< Dimension for energy-dependent arrays
+      integer, intent(in) :: KMROT        !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+      integer, intent(in) :: NSHELD       !< Number of blocks of the GF matrix that need to be calculated (NATYP + off-diagonals in case of impurity)
+      integer, intent(in) :: NSPIND       !< KREL+(1-KREL)*(NSPIN+1)
+      integer, intent(in) :: LMMAXD       !< (KREL+KORBIT+1)(LMAX+1)^2
+      integer, intent(in) :: KPOIBZ       !< Number of reciprocal space vectors
+      integer, intent(in) :: IELAST
+      integer, intent(in) :: INVMOD       !< Inversion scheme
+      integer, intent(in) :: NACLSD       !< Maximum number of atoms in a TB-cluster
+      integer, intent(in) :: NSYMAT
+      integer, intent(in) :: NEMBD1       !< NEMB+1
+      integer, intent(in) :: LMGF0D       !< (LMAX+1)**2
+      integer, intent(in) :: NOFGIJ       !< number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
+      integer, intent(in) :: NQCALC
+      integer, intent(in) :: NPRINCD      !< Number of principle layers, set to a number >= NRPINC in output of main0
+      integer, intent(in) :: NSPINDD      !< NSPIND-KORBIT
+      integer, intent(in) :: NLBASIS      !< Number of basis layers of left host (repeated units)
+      integer, intent(in) :: NRBASIS      !< Number of basis layers of right host (repeated units)
+      integer, intent(in) :: MAXMESH
+      integer, intent(in) :: WLENGTH      !< Word length for direct access files, compiler dependent ifort/others (1/4)
+      integer, intent(in) :: NATOMIMP     !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+      integer, intent(in) :: ITCPAMAX     !< Max. number of CPA iterations
+      double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
+      double precision, intent(in) :: CPATOL    !< Convergency tolerance for CPA-cycle
+      integer, dimension(NAEZ), intent(in)      :: NOQ         !< Number of diff. atom types located
+      integer, dimension(NAEZ+NEMB), intent(in) :: CLS         !< Cluster around atomic sites
+      integer, dimension(NATYP), intent(in)     :: IQAT        !< The site on which an atom is located on a given site
+      integer, dimension(NSHELD), intent(in)    :: NSH1        !< Corresponding index of the sites I/J in (NSH1/2) in the unit cell in a shell
+      integer, dimension(NSHELD), intent(in)    :: NSH2        !< Corresponding index of the sites I/J in (NSH1/2) in the unit cell in a shell
+      integer, dimension(NAEZ), intent(in)      :: ICPA        !< ICPA = 0/1 site-dependent CPA flag
+      integer, dimension(NCLSD), intent(in)     :: NACLS       !< Number of atoms in cluster
+      integer, dimension(0:NSHELD), intent(in)  :: NSHELL      !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+      integer, dimension(NAEZ+NEMB), intent(in) :: REFPOT      !< Ref. pot. card  at position
+      integer, dimension(NATOMIMP), intent(in)  :: ATOMIMP
+      integer, dimension(NACLSD,NAEZ+NEMB), intent(in)            :: EZOA  !< EZ of atom at site in cluster
+      integer, dimension(NACLSD,NAEZ+NEMB), intent(in)            :: ATOM  !< Atom at site in cluster
+      integer, dimension(NATYP,NAEZ+NEMB), intent(in)             :: KAOEZ !< Kind of atom at site in elem. cell
+      integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(in)   :: ICHECK
+      double precision, dimension(NATYP), intent(in)              :: CONC     !< Concentration of a given atom
+      double precision, dimension(NREF), intent(in)               :: RMTREF   !< Muffin-tin radius of reference system
+      double precision, dimension(3,0:NR), intent(in)             :: RR       !< Set of real space vectors (in a.u.)
+      double precision, dimension(3,NSHELD), intent(in)           :: RATOM
+      double precision, dimension(3,NAEZ+NEMB), intent(in)        :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
+      double precision, dimension(48,3,NSHELD), intent(in)        :: RROT
+      double precision, dimension(3,NACLSD,NCLSD), intent(in)     :: RCLS  !< Real space position of atom in cluster
+      logical, dimension(NSYMAXD), intent(in) :: SYMUNITARY !< unitary/antiunitary symmetry flag
+
+      ! .. In/Out variables
+      integer, dimension(IEMXD), intent(inout)  :: KMESH
+      integer, dimension(NAEZ), intent(inout)   :: IQCALC
+      integer, dimension(NOFGIJ), intent(inout) :: IJTABSH    !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
+      integer, dimension(NOFGIJ), intent(inout) :: IJTABSYM   !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
+      integer, dimension(NOFGIJ), intent(inout) :: IJTABCALC  !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
+      integer, dimension(NOFGIJ), intent(inout) :: IJTABCALC_I
+      integer, dimension(NSHELD,NOFGIJ), intent(inout)   :: ISH
+      integer, dimension(NSHELD,NOFGIJ), intent(inout)   :: JSH
+      integer, dimension(2,LMMAXD), intent(inout)        :: NRREL
+      integer, dimension(2,2,LMMAXD), intent(inout)      :: IRREL
+      double precision, dimension(NREF), intent(inout)         :: VREF
+      double precision, dimension(3,NATOMIMPD), intent(inout)  :: RCLSIMP
+
+      double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: RC    !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+      double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: RREL  !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+      double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: CREL  !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+      double complex, dimension(2,2,LMMAXD), intent(inout)              :: SRREL
+      double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(inout)      :: DROTQ !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+      double complex, dimension(LMMAXD,LMMAXD,NSYMAXD), intent(inout)   :: DSYMLL
+      double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(inout) :: LEFTTINVLL
+      double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(inout) :: RIGHTTINVLL
+      ! ..
+      ! .. Local variables
+      integer :: L
+      integer :: I
+      integer :: I1
+      integer :: IE
+      integer :: IQ
+      integer :: IX
+      integer :: IC
+      integer :: L1
+      integer :: ILM
+      integer :: LM1
+      integer :: LM2
+      integer :: IREC
+      integer :: ILTMP
+      integer :: NMESH
+      integer :: NQDOS ! qdos ruess:number of qdos points
+      integer :: ISITE ! qdos ruess
+      integer :: IDECI
+      integer :: ISPIN
+      integer :: IPRINT
+      integer :: ITMPDIR
+      integer :: LRECGRF
+      integer :: LRECTMT
+      integer :: LRECTRA   ! LLY Lloyd
+      integer :: IQDOSRUN  ! qdos ruess: counter to organise qdos run
+      integer :: NACLSMAX
+      integer :: LRECGRF1
+      integer :: NCPAFAIL
+      integer :: ICPAFLAG
+      integer :: RECLENGTH
+      integer :: LRECGREEN
+      double precision :: PHI
+      double precision :: THETA
+      double precision :: RFCTOR !< rfctor=a/(2*pi) conversion factor to p.u.
+      double complex :: ERYD
+      double complex :: TREAD ! qdos ruess
+      double complex :: CFCTOR
+      double complex :: TRALPHA1 ! LLY Lloyd
+      double complex :: CFCTORINV
+      logical :: OPT
+      logical :: TEST
+      logical :: LCPAIJ
+
       character(len=80) :: TMPDIR
 #ifndef CPP_MPI
       character(len=80) :: TEXT !qdos ruess
 #endif
-!     ..
-!     .. Local Arrays
-      INTEGER NSHELL(0:NSHELD),REFPOT(NAEZD+NEMBD),ATOMIMP(NATOMIMPD)
-      INTEGER KAOEZ(NATYPD,NAEZD+NEMBD)
-      DOUBLE PRECISION QVEC(:,:)       ! qdos ruess, q-vectors for qdos
-      ALLOCATABLE QVEC                 ! qdos ruess
-      DOUBLE COMPLEX TQDOS(LMMAXD,LMMAXD,NAEZD)  ! qdos ruess
-!     .. TB-Cluster arrays
-      INTEGER ATOM(NACLSD,NAEZD+NEMBD),CLS(NAEZD+NEMBD),NACLS(NCLSD),
-     +        EZOA(NACLSD,NAEZD+NEMBD)
-!     ..
-      DOUBLE PRECISION RMTREF(NREFD),VREF(NREFD),RBASIS(3,NAEZD+NEMBD),
-     +                 RCLS(3,NACLSD,NCLSD),RR(3,0:NRD)
-!     ..
-!     .. GMATLL = diagonal elements of the G matrix (system)
-!     .. GINP   = cluster GF (ref. syst.)
-      DOUBLE COMPLEX EZ(IEMXD),WEZ(IEMXD)
-      DOUBLE COMPLEX
-     +     GMATLL(LMMAXD,LMMAXD,NSHELD),GMAT0(LMMAXD,LMMAXD)
-      DOUBLE COMPLEX,ALLOCATABLE::
-     &     GINP(:,:,:), ! cluster GF (ref syst.)              ! GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
-     &     DGINP(:,:,:) ! LLY Lloyd Energy derivative of GINP ! DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
-      DOUBLE COMPLEX TMAT(LMMAXD,LMMAXD),TSST(LMMAXD,LMMAXD,NATYPD),
-     +               TREFLL(LMMAXD,LMMAXD,NREFD),
-     &               DTREFLL(LMMAXD,LMMAXD,NREFD),  ! LLY Lloyd dtref/dE
-     &               DTMATLL(LMMAXD,LMMAXD,NAEZD),  ! LLY Lloyd  dt/dE
-     &               LLY_GRTR(IEMXD,NSPIND),        ! LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
-     &               LLY_G0TR(IEMXD),               ! LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
-     &               TRALPHA(IEMXD,NSPIND),TRALPHA1,                   ! LLY Lloyd
-     &               TRACET(IEMXD,NSPIND), ! Tr[ (t-tref)^-1 d(t-tref)/dE ]  ! LLY Lloyd
-     &               ALPHAREF(0:LMAXD,NREFD),DALPHAREF(0:LMAXD,NREFD), ! LLY Lloyd Alpha matrix and deriv.
-     &               TRALPHAREF(IEMXD),                                ! LLY Lloyd
-     &               CDOS_LLY(IEMXD,NSPIND),CDOSREF_LLY(IEMXD)         ! LLY Lloyd
-      DOUBLE COMPLEX, allocatable :: DTMTRX(:,:) ! for GREENIMP
+      ! .. Local arrays
+      integer, dimension(MAXMSHD)   :: NOFKS
+      integer, dimension(IEMXD)     :: IECPAFAIL
+      integer, dimension(NATYP,NAEZ) :: ITOQ
+      double precision, dimension(NATYP)     :: PHIS
+      double precision, dimension(MAXMSHD)   :: VOLBZ
+      double precision, dimension(NATYP)     :: THETAS
+      double precision, dimension(KPOIBZ,MAXMSHD) :: VOLCUB
+      double complex, dimension(IEMXD) :: EZ
+      double complex, dimension(IEMXD) :: WEZ
+      double complex, dimension(IEMXD) :: LLY_G0TR             !< LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
+      double complex, dimension(IEMXD) :: TRALPHAREF           ! LLY Lloyd
+      double complex, dimension(IEMXD) :: CDOSREF_LLY          ! LLY Lloyd
+      double complex, dimension(LMMAXD,LMMAXD)  :: W1
+      double complex, dimension(LMGF0D,LMGF0D)  :: WN1
+      double complex, dimension(LMGF0D,LMGF0D)  :: WN2         ! LLY
+      double complex, dimension(LMMAXD,LMMAXD)  :: TMAT
+      double complex, dimension(LMMAXD,LMMAXD)  :: GMAT0
+      double complex, dimension(LMMAXD,LMMAXD)  :: FACTL
+      double complex, dimension(IEMXD,NSPIND)   :: TRACET      !< Tr[ (t-tref)^-1 d(t-tref)/dE ]  ! LLY Lloyd
+      double complex, dimension(IEMXD,NSPIND)   :: TRALPHA
+      double complex, dimension(IEMXD,NSPIND)   :: LLY_GRTR    !< LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
+      double complex, dimension(IEMXD,NSPIND)   :: CDOS_LLY
+      double complex, dimension(0:LMAX,NREF)    :: ALPHAREF
+      double complex, dimension(0:LMAX,NREF)    :: DALPHAREF   !< LLY Lloyd Alpha matrix and deriv.
+      double complex, dimension(LMMAXD,LMMAXD,NATYP)  :: MSST
+      double complex, dimension(LMMAXD,LMMAXD,NATYP)  :: TSST
+      double complex, dimension(LMMAXD,LMMAXD,NAEZ)   :: TQDOS  ! qdos ruess
+      double complex, dimension(LMMAXD,LMMAXD,NREF)   :: TREFLL
+      double complex, dimension(LMMAXD,LMMAXD,NSHELD) :: GMATLL   !< GMATLL = diagonal elements of the G matrix (system)
+      double complex, dimension(LMMAXD,LMMAXD,NREF)   :: DTREFLL  !< LLY Lloyd dtref/dE
+      double complex, dimension(LMMAXD,LMMAXD,NAEZ)   :: DTMATLL  !< LLY Lloyd  dt/dE
+      complex*8, dimension(LMMAXD*LMMAXD) :: GIMP !<  Cluster GF (ref. syst.)
+      logical, dimension(2), intent(inout) :: VACFLAG
+      character(len=35), dimension(0:2) :: INVALG
 
-!     .. effective (site-dependent) Delta_t^(-1) matrix ..
-      DOUBLE COMPLEX WN2(LMGF0D,LMGF0D)                  ! LLY
-      DOUBLE COMPLEX MSST(LMMAXD,LMMAXD,NATYPD)
-      double complex, allocatable :: LEFTTINVLL(:,:,:,:,:),
-     +                               RIGHTTINVLL(:,:,:,:,:)
-      DOUBLE COMPLEX W1(LMMAXD,LMMAXD),WN1(LMGF0D,LMGF0D)
-      DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,NSYMAXD)
-      DOUBLE COMPLEX FACTL(LMMAXD,LMMAXD)
-      DOUBLE PRECISION RATOM(3,NSHELD),RROT(48,3,NSHELD)
-      INTEGER NSH1(NSHELD),NSH2(NSHELD)
-      INTEGER IJTABCALC(NOFGIJD),IJTABCALC_I(NOFGIJD)!,
-!      &        ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD)
-      INTEGER, ALLOCATABLE :: ISH(:,:),JSH(:,:)
-      INTEGER IJTABSYM(NOFGIJD),IJTABSH(NOFGIJD),IQCALC(NAEZD)
-      DOUBLE COMPLEX CREL(LMMAXD,LMMAXD),RC(LMMAXD,LMMAXD),
-     &               RREL(LMMAXD,LMMAXD),SRREL(2,2,LMMAXD)
-      INTEGER IRREL(2,2,LMMAXD),NRREL(2,LMMAXD)
-      INTEGER ICPA(NAEZD),IECPAFAIL(IEMXD)
-      INTEGER NOQ(NAEZD),IQAT(NATYPD),ITOQ(NATYPD,NAEZD)
-      DOUBLE PRECISION CONC(NATYPD)
-      COMPLEX*8 GIMP(LMMAXD*LMMAXD)
-      INTEGER ILM
-      INTEGER LLY ! LLY <> 0 : apply Lloyd's formula
-!     ..
-!     .. relativistic mode
-!     .. rotation matrices, unitary/antiunitary symmetry flag
-      DOUBLE COMPLEX DROTQ(LMMAXD,LMMAXD,NAEZD)
-      LOGICAL SYMUNITARY(NSYMAXD)
-!     ..
-      LOGICAL VACFLAG(2)
-      INTEGER KMESH(IEMXD),NOFKS(MAXMSHD)
-      DOUBLE PRECISION, allocatable :: BZKP(:,:,:)
-      DOUBLE PRECISION VOLCUB(KPOIBZ,MAXMSHD),VOLBZ(MAXMSHD)
-      INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)
-      CHARACTER*35 INVALG(0:2)
+      ! .. Allocatable local arrays
+      double precision, dimension(:,:), allocatable   :: QVEC     !< qdos ruess, q-vectors for qdos
+      double precision, dimension(:,:,:), allocatable :: BZKP
+      double complex, dimension(:,:), allocatable     :: DTMTRX   !< For GREENIMP
+      double complex, dimension(:,:,:), allocatable   :: GINP     !< Cluster GF (ref syst.) GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
+      double complex, dimension(:,:,:), allocatable   :: DGINP    !< LLY Lloyd Energy derivative of GINP DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
+
 #ifdef CPP_MPI
       integer :: ie_start
 #endif
@@ -185,7 +249,13 @@ contains
       !     INTEGER IATCONDL(NCPAIRD),IATCONDR(NCPAIRD),NCONDPAIR
       !-------------------------------------------------------------------------
       !     .. Intrinsic Functions ..
-      INTRINSIC ATAN
+      intrinsic ATAN
+
+      !.. Set the parameters
+      parameter (LRECTRA=WLENGTH*4) ! LLY Lloyd
+      parameter (LRECGRF=WLENGTH*4*NACLSD*LMGF0D*LMGF0D*NCLSD) ! 4 words = 16 bytes / complex number (in ifort 4; in gfort 16) word/byte distiction moved to subroutine opendafile to be the same for all unformatted files
+      parameter (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
+      parameter (LRECGREEN=WLENGTH*2*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD)
       !     ..
       !     .. Data statements
       DATA INVALG /'FULL MATRIX                        ',   &
@@ -196,29 +266,20 @@ contains
       if(t_inc%i_write>0) IPRINT=1
 
       ! allocatable arrays
-      allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),stat=i_stat)
-      call memocc(i_stat,product(shape(LEFTTINVLL))*kind(LEFTTINVLL),'LEFTTINVLL','main1b')
-      allocate(RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD),stat=i_stat)
-      call memocc(i_stat,product(shape(RIGHTTINVLL))*kind(RIGHTTINVLL),'RIGHTTINVLL','main1b')
       allocate(BZKP(3,KPOIBZ,MAXMSHD), stat=i_stat)
       call memocc(i_stat,product(shape(BZKP))*kind(BZKP),'BZKP','main1b')
-      allocate(ISH(NSHELD,NOFGIJD),stat=i_stat)
-      call memocc(i_stat,product(shape(ISH))*kind(ISH),'ISH','main1b')
-      allocate(JSH(NSHELD,NOFGIJD),stat=i_stat)
-      call memocc(i_stat,product(shape(JSH))*kind(JSH),'JSH','main1b')
 
       !Consistency check
-      if ( (KREL.LT.0) .OR. (KREL.GT.1) ) stop ' set KREL=0/1 (non/fully) relativistic mode in inc.p'
-      if ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) stop ' set NSPIND = 1 for KREL = 1 in inc.p'
+      if ( (KREL.LT.0) .OR. (KREL.GT.1) ) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
+      if ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
 
-      PI = 4.D0*DATAN(1.D0)
       !-------------------------------------------------------------------------
       ! This routine previously used to read from unformatted files created by
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1b(t_params,NATYPD,NACLSD,IELAST,NPOL,         &
-         NCLSD,NREFD,NEMBD,NAEZD,NSRA,INS,NAEZ,NATYP,                &
+      call get_params_1b(t_params,NATYP,NACLSD,IELAST,NPOL,         &
+         NCLSD,NREF,NEMB,NAEZ,NSRA,INS,NAEZ,NATYP,                &
          NSPIN,LMAX,NCLS,NREF,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,     &
          ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,           &
          NSHELD,NPRINCD,KPOIBZ,ATOMIMP,NATOMIMPD,                    &
@@ -292,7 +353,7 @@ contains
             ITOQ(L,I) = KAOEZ(L,I)
          end do
       end do
-      RFCTOR = ALAT/(8.D0*ATAN(1.0D0))           ! = ALAT/(2*PI)
+      RFCTOR = ALAT/(2*PI)           ! = ALAT/(2*PI)
       CFCTOR = CONE*RFCTOR
       CFCTORINV = CONE/RFCTOR
 
@@ -495,27 +556,25 @@ contains
 #endif
                if ( KREL.EQ.0 ) then
                   do I1 = 1,NREF
-                     call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1, &
-                        TREFLL(1,1,I1),DTREFLL(1,1,I1),                 &  ! LLY Lloyd
-                        ALPHAREF(0,I1),DALPHAREF(0,I1),LMAXD+1,LMMAXD)     ! LLY Lloyd
+                     call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1, &  ! LLY Lloyd
+                        TREFLL(1,1,I1),DTREFLL(1,1,I1),ALPHAREF(0,I1),  &  ! LLY Lloyd
+                        DALPHAREF(0,I1),LMAX+1,LMMAXD)                    ! LLY Lloyd
                   end do
                else
                   do I1 = 1,NREF
-                     call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1, &
-                        WN1,WN2,                                        &  ! LLY Lloyd
-                        ALPHAREF(0,I1),DALPHAREF(0,I1),                 &  ! LLY Lloyd
-                        LMAXD+1,LMGF0D)
+                     call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1, &        ! LLY Lloyd
+                        WN1,WN2,ALPHAREF(0,I1),DALPHAREF(0,I1),LMAX+1,LMGF0D)   ! LLY Lloyd
                         !-------------------------------------------------------
                         ! add second spin-block for relativistic calculation and transform
                         ! from NREL to REL representation
                         !-------------------------------------------------------
-                     CALL CINIT(LMMAXD*LMMAXD,W1)
-                     IF (LMMAXD.NE.LM1*2) STOP 'LMMAXD <> LM1*2 '
-                     DO I=1,LM1
+                     call CINIT(LMMAXD*LMMAXD,W1)
+                     if (LMMAXD.NE.LM1*2) stop 'LMMAXD <> LM1*2 '
+                     do I=1,LM1
                         W1(I,I) = WN1(I,I)
                         W1(LM1+I,LM1+I) = WN1(I,I)
-                     END DO
-                     CALL CHANGEREP(W1,'RLM>REL',TREFLL(1,1,I1),LMMAXD,&
+                     end do
+                     call CHANGEREP(W1,'RLM>REL',TREFLL(1,1,I1),LMMAXD,&
                         LMMAXD,RC,CREL,RREL,'TREFLL',0)
                   end do
                end if
@@ -833,10 +892,8 @@ contains
             call timing_start('main1b - calctref13')
 #endif
             do I1 = 1,NREF
-               call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1, &
-                  WN1,WN2,                                        & ! LLY
-                  ALPHAREF(0,I1),DALPHAREF(0,I1),                 & ! LLY
-                  LMAXD+1,LMGF0D)
+               call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,WN1,WN2,  &  ! LLY
+                  ALPHAREF(0,I1),DALPHAREF(0,I1),LMAX+1,LMGF0D)              ! LLY
                do I=1,LM1
                   TREFLL(I,I,I1) = WN1(I,I)
                   TREFLL(LM1+I,LM1+I,I1) = WN1(I,I)
@@ -851,7 +908,7 @@ contains
             TRALPHAREF(IE)=CZERO
             ! read in t matrix
 
-            do I1 = 1,NATYPD
+            do I1 = 1,NATYP
 
                ! read in theta and phi for noncolinear
                THETA = THETAS(I1)
@@ -1083,8 +1140,7 @@ contains
                write(1337,*)
                write(1337,'(1X,79(''*''),/)')
                write(1337,99019) CPATOL, NCPAFAIL,    &
-               (IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),&
-               IE=1,NCPAFAIL)
+                  (IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),IE=1,NCPAFAIL)
                write(1337,'(1X,79(''*''),/)')
                write(1337,*)
             endif
@@ -1122,10 +1178,10 @@ contains
 #ifdef CPP_MPI
                ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
                ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-               do 789 ie_num=1,ie_end
+               do ie_num=1,ie_end
                   IE = ie_start+ie_num
 #else
-               do 789 IE = 1,IELAST                                         ! LLY
+               do IE = 1,IELAST                                         ! LLY
                   ie_num = ie
 #endif
                   if (t_lloyd%cdos_diff_lly_to_file) then
@@ -1134,7 +1190,7 @@ contains
                   else
                      t_lloyd%cdos(ie_num,ISPIN) = CDOS_LLY(IE,ISPIN)
                   end if
-               789 continue                                                ! LLY
+               enddo ! IE                                                  ! LLY
             enddo                                                          ! LLY
          else
 #ifdef CPP_MPI
@@ -1199,10 +1255,10 @@ contains
                ITOQ,IQAT,NSHELL,NATOMIMP,ATOMIMP,RATOM,                    &
                NOFGIJ,NQCALC,IQCALC,IJTABCALC,                             &
                IJTABSYM,IJTABSH,ISH,JSH,                                   &
-               DSYMLL,IPRINT,NATYPD,NSHELD,LMMAXD,                         &
+               DSYMLL,IPRINT,NATYP,NSHELD,LMMAXD,                         &
                NPOL)
          else !.NOT.OPT('NEWSOSOL'))
-            call TBXCCPLJIJDIJ(naezd,natypd,lmmaxd,lmgf0d,natomimpd, &
+            call TBXCCPLJIJDIJ(naez,natyp,lmmaxd,lmgf0d,natomimpd, &
                nsymaxd,iemxd,thetas,phis,                            &
                natomimp,atomimp,nofgijD,iqat,rclsimp,                &
                ijtabcalc,ijtabcalc_I,ijtabsh,                        &
@@ -1319,7 +1375,6 @@ contains
          close(9999)
       endif
 
-
       ! clean up allocations
       i_all=-product(shape(LEFTTINVLL))*kind(LEFTTINVLL)
       deallocate(LEFTTINVLL,stat=i_stat)
@@ -1347,8 +1402,6 @@ contains
 2100 FORMAT('(/,79(1H=),/,5X," Inversion algorithm used : ",A,/,79(1H=),/)')
 99019 FORMAT('(/,1X,79(*),/," tolerance for CPA-cycle:",F15.7,/," CPA not converged for",I3," energies:",/,3(" E:",I3,F7.4,:,2X))')
 99020 FORMAT('(/,1X,79(*),/,25X,"no problems with","  CPA-cycle ",/,1X,79(*),/)')
-
-
 
    end subroutine main1b
 

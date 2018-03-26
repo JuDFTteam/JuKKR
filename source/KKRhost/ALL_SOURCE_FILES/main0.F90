@@ -11,6 +11,8 @@
 !> @todo JC: Several variables such as IRMD and IRNSD are actually determined in
 !> the startb1 subroutine, maybe change the allocations such that they are done
 !> there instead
+!> @note
+!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 module mod_main0
 
@@ -28,14 +30,9 @@ module mod_main0
 #endif
    use mod_create_newmesh
    use memoryhandling
+   use Constants
 
    implicit none
-
-   integer :: NSYMAXD
-   parameter (NSYMAXD=48)
-   integer :: MAXMSHD
-   parameter (MAXMSHD=30)
-
 
    integer :: NR        !< Number of real space vectors rr
    integer :: KTE       !< Calculation of the total energy On/Off (1/0)
@@ -112,6 +109,7 @@ module mod_main0
    integer :: INSREF    !< INS for reference pot. (usual 0)
    integer :: KSHAPE    !< Exact treatment of WS cell
    integer :: IELAST
+   integer :: NRMAXD    !< NTOTD*(NCHEBD+1)
    integer :: ISHIFT
    integer :: KFROZN
    integer :: NSYMAT
@@ -139,8 +137,8 @@ module mod_main0
    integer :: INTERVY   !< Number of intervals in y-direction for k-net in IB of the BZ
    integer :: INTERVZ   !< Number of intervals in z-direction for k-net in IB of the BZ
    integer :: MAXMESH
-   integer :: NPAN_EQ   !< Variables for the pannels for the new solver
-   integer :: NPAN_LOG  !< Variables for the pannels for the new solver
+   integer :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
+   integer :: NPAN_LOG  !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
    integer :: NPOLSEMI  !< Number of poles for the semicore contour
    integer :: SCFSTEPS  !< number of scf iterations
    integer :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
@@ -149,18 +147,18 @@ module mod_main0
    integer :: IESEMICORE
    integer :: IDOSEMICORE
    double precision :: TK        !< Temperature
-   double precision :: FCM
+   double precision :: FCM       !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
    double precision :: E2IN
-   double precision :: EMIN      !< Energies needed in EMESHT
-   double precision :: EMAX      !< Energies needed in EMESHT
+   double precision :: EMIN      !< Lower value (in Ryd) for the energy contour
+   double precision :: EMAX      !< Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
    double precision :: ALAT      !< Lattice constant in a.u.
    double precision :: RMAX      !< Ewald summation cutoff parameter for real space summation
    double precision :: GMAX      !< Ewald summation cutoff parameter for reciprocal space summation
-   double precision :: R_LOG
+   double precision :: R_LOG     !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
    double precision :: RCUTZ     !< Parameter for the screening cluster along the z-direction
    double precision :: RCUTXY    !< Parameter for the screening cluster along the x-y plane
    double precision :: QBOUND    !< Convergence parameter for the potential
-   double precision :: VCONST    !< Potential shift
+   double precision :: VCONST    !< Potential shift in the first iteration
    double precision :: HFIELD    !< External magnetic field, for initial potential shift in spin polarised case
    double precision :: MIXING    !< Magnitude of the mixing parameter
    double precision :: ABASIS    !< Scaling factors for rbasis
@@ -169,12 +167,12 @@ module mod_main0
    double precision :: EFERMI    !< Fermi energy
    double precision :: ESHIFT
    double precision :: TKSEMI    !< Temperature of semi-core contour
-   double precision :: TOLRDIF   !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+   double precision :: TOLRDIF   !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
    double precision :: ALATNEW
    double precision :: VOLUME0
-   double precision :: EMUSEMI
-   double precision :: EBOTSEMI
-   double precision :: FSEMICORE
+   double precision :: EMUSEMI   !< Top of semicore contour in Ryd.
+   double precision :: EBOTSEMI  !< Bottom of semicore contour in Ryd
+   double precision :: FSEMICORE !< Initial normalization factor for semicore states (approx. 1.)
    double precision :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
    character(len=10) :: SOLVER   !< Type of solver
    character(len=40) :: I12      !< File identifiers
@@ -194,7 +192,7 @@ module mod_main0
    integer, dimension(:), allocatable :: CLS    !< Cluster around atomic sites
    integer, dimension(:), allocatable :: IRC    !< R point for potential cutting
    integer, dimension(:), allocatable :: IMT    !< R point at MT radius
-   integer, dimension(:), allocatable :: NFU
+   integer, dimension(:), allocatable :: NFU    !< number of shape function components in cell 'icell'
    integer, dimension(:), allocatable :: NSH1   !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
    integer, dimension(:), allocatable :: NSH2   !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
    integer, dimension(:), allocatable :: LMXC
@@ -643,8 +641,6 @@ contains
       integer :: NS
       integer :: ISVATOM,NVATOM
       integer :: i_stat,i_all
-      double precision :: C
-      double precision :: PI
       double precision :: ZATTEMP
 
 #ifdef cpp_ompstuff
@@ -669,7 +665,7 @@ contains
       !-------------------------------------------------------------------------
       ! Write version info:
       !-------------------------------------------------------------------------
-      WRITE(*,2004)     'Screened Korringa-Kohn-Rostoker ',                   &
+      write(*,2004)     'Screened Korringa-Kohn-Rostoker ',                   &
                         'Electronic Structure Code',                          &
                         'for Bulk and Interfaces',                            &
                         'Juelich-Munich 2001 - 2016',                         &
@@ -677,7 +673,7 @@ contains
                         ' Compile options:', trim(version2), trim(version3),  &
                            trim(version4),                                    &
                         ' serial number for files:', serialnr
-      WRITE(1337,2004)  'Screened Korringa-Kohn-Rostoker ',                   &
+      write(1337,2004)  'Screened Korringa-Kohn-Rostoker ',                   &
                         'Electronic Structure Code',                          &
                         'for Bulk and Interfaces',                            &
                         'Juelich-Munich 2001 - 2016',                         &
@@ -685,7 +681,7 @@ contains
                         ' Compile options:', trim(version2), trim(version3),  &
                            trim(version4),                                    &
                         ' serial number for files: ', serialnr
-      2004  FORMAT('(/79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)//2A/79(1H*)/)' )
+      2004  format('(/79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)//2A/79(1H*)/)' )
 
 !#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
 #ifdef cpp_ompstuff
@@ -693,29 +689,26 @@ contains
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
       if(ith==0) then
-         WRITE(*,'(1X,A,I5//79(1H*)/)') 'Number of OpenMP threads used:',nth
-         WRITE(1337,'(1X,A,I5//79(1H*)/)') 'Number of OpenMP threads used:',nth
+         write(*,'(1X,A,I5//79(1H*)/)') 'Number of OpenMP threads used:',nth
+         write(1337,'(1X,A,I5//79(1H*)/)') 'Number of OpenMP threads used:',nth
       endif
 !$omp end parallel
 #endif
 
 #ifdef CPP_MPI
-      WRITE(*,'(1X,A,I5//79(1H*)/)') 'Number of MPI ranks used:',nranks
-      WRITE(1337,'(1X,A,I5//79(1H*)/)') 'Number of MPI ranks used:',nranks
+      write(*,'(1X,A,I5//79(1H*)/)') 'Number of MPI ranks used:',nranks
+      write(1337,'(1X,A,I5//79(1H*)/)') 'Number of MPI ranks used:',nranks
 #endif
       !-------------------------------------------------------------------------
       ! End write version info
       !-------------------------------------------------------------------------
 
       !Consistency check
-      IF ( (KREL.LT.0) .OR. (KREL.GT.1) ) &
-         STOP ' set KREL=0/1 (non/fully) relativistic mode in inc.p'
-      IF ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) )&
-         STOP ' set NSPIND = 1 for KREL = 1 in inc.p'
+      if ( (KREL.lt.0) .OR. (KREL.gt.1) ) &
+         stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
+      if ( (KREL.eq.1) .and. (NSPIND.eq.2) )&
+         stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
       !
-
-      PI = 4.0D0*ATAN(1.0D0)
-
       ! Set the default values for the I/O variables
       call init_io_variables()
       ! Set the defaults values for the CPA variables
@@ -776,8 +769,10 @@ contains
          CPATOL,NOQ,IQAT,ICPA,KAOEZ,CONC,KMROT,QMTET,QMPHI,KREADLDAU,LOPT,UEFF,JEFF,      &
          EREFLDAU)
 
-      ! Set that
+      ! Set the calculation of several parameters
+      NTOTD=IPAND+30
       NCELLD=NAEZ
+      NRMAXD=NTOTD*(NCHEB+1)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Allocation calls
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -834,25 +829,24 @@ contains
       ! Deal with the lattice
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      CALL LATTIX99(LINTERFACE,ALAT,NATYP,NAEZ,CONC,RWS,BRAVAIS,  &
+      call LATTIX99(LINTERFACE,ALAT,NATYP,NAEZ,CONC,RWS,BRAVAIS,  &
             RECBV,VOLUME0,RR,NR,NR,NATYP)
 
 
-      CALL SCALEVEC(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,       &
+      call SCALEVEC(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,       &
             NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,       &
             TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,KAOEZ,NOQ,  &
             NAEZ,NATYP,NEMB)
       ! After SCALEVEC all basis positions are in cartesian coords.
 
       NVIRT = 0
-      IF ( OPT('VIRATOMS') ) THEN
-         WRITE(1337,*) 'Calling ADDVIRATOMS'
-         CALL ADDVIRATOMS14(LINTERFACE,NVIRT,NAEZ,NAEZ,NATYP,NEMB,NEMB,RBASIS,   &
+      if ( OPT('VIRATOMS') ) then
+         write(1337,*) 'Calling ADDVIRATOMS'
+         call ADDVIRATOMS14(LINTERFACE,NVIRT,NAEZ,NAEZ,NATYP,NEMB,NEMB,RBASIS,   &
          .TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,I25)
-      ENDIF
+      endif
 
-
-      CALL CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,   &
+      call CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,   &
          ATOM,EZOA,NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,      &
          TRIGHT,RMTREF,RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,&
          ALAT,NAEZ,NATYP,NEMB,NPRINCD,NR,NACLSD,NCLSD,NREF)
@@ -861,34 +855,34 @@ contains
       !-------------------------------------------------------------------------
       ! Consistency check
       !-------------------------------------------------------------------------
-      IF ( (KREL.EQ.1) .AND. (INS.NE.0) ) THEN
-         WRITE(6,*)' FULL-POTENTIAL RELATIVISTIC mode not implemented '
-         STOP ' set INS = 0 in the input'
-      END IF
+      if ( (KREL.EQ.1) .AND. (INS.NE.0) ) then
+         write(6,*)' FULL-POTENTIAL RELATIVISTIC mode not implemented '
+         stop ' set INS = 0 in the input'
+      end if
       !
-      IF ( KVREL.LE.1 ) THEN
-         IF ( KREL.EQ.1 ) STOP ' KVREL <= 1 in input, but relativistic program used'
-      ELSE
-         IF ( KREL.EQ.0 ) STOP ' KVREL > 1 in input, but non-relativistic program used'
-      END IF
+      if ( KVREL.LE.1 ) then
+         if ( KREL.EQ.1 ) stop ' KVREL <= 1 in input, but relativistic program used'
+      else
+         if ( KREL.EQ.0 ) stop ' KVREL > 1 in input, but non-relativistic program used'
+      end if
       !-------------------------------------------------------------------------
       !
       E2IN = EMAX
       NSRA = 1
-      IF (KVREL.GE.1) NSRA = 2
-      IF (KVREL.GE.2) NSRA = 3
+      if (KVREL.GE.1) NSRA = 2
+      if (KVREL.GE.2) NSRA = 3
       !
-      CALL TESTDIM(NSPIN,NAEZ,NEMB,NATYP,LMAX,IRM,INS,INSREF,NREF,IRNS,NCLS,  &
+      call TESTDIM(NSPIN,NAEZ,NEMB,NATYP,LMAX,IRM,INS,INSREF,NREF,IRNS,NCLS,  &
          NLAYER,KREL,LMAX,NSPIND,NAEZ,NATYP,NREF,NCLSD,NEMB,NPRINCD,KNOSPH,   &
          IRM,IRNS,KORBIT)
       !
-      IF ( INS.GT.0 )    OPEN (19,FILE=I19,STATUS='old',FORM='formatted')
-      IF ( IFILE.EQ.13 ) OPEN (IFILE,FILE=I13,STATUS='old',FORM='formatted')
-      IF ( ICC.GT.0 )    OPEN (25,FILE=I25,STATUS='unknown',FORM='formatted')
+      if ( INS.GT.0 )    open (19,FILE=I19,STATUS='old',FORM='formatted')
+      if ( IFILE.EQ.13 ) open (IFILE,FILE=I13,STATUS='old',FORM='formatted')
+      if ( ICC.GT.0 )    open (25,FILE=I25,STATUS='unknown',FORM='formatted')
       !
-      CALL STARTB1(IFILE,1337,1337,IPE,KVREL,KWS,LMAX,1,NATYP,ALATNEW,RMTNEW, &
+      call STARTB1(IFILE,1337,1337,IPE,KVREL,KWS,LMAX,1,NATYP,ALATNEW,RMTNEW, &
          RMT,ITITLE,IMT,IRC,VCONST,INS,IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,   &
-         KSHAPE,NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,VBC,C,     &
+         KSHAPE,NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,VBC,       &
          DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,1,LMPOT,    &
          IRMIND,IRM,LMXSPD,IPAND,IRID,IRNS,LMAX,NATYP,NCELLD,NFUND,NSPOTD,    &
          IVSHIFT)
@@ -901,60 +895,58 @@ contains
          write(1337,'(A,A)') 'Doing calculation with shapefun: ',md5sum_shapefun
       end if
 
-
-      IF ( TEST('Vspher  ') ) THEN
-         WRITE(1337,*) 'TEST OPTION Vspher,',&
-            'keeping only spherical component of potential.'
+      if ( TEST('Vspher  ') ) then
+         write(1337,*) 'TEST OPTION Vspher,',&
+         'keeping only spherical component of potential.'
          VINS(IRMIND:IRM,2:LMPOT,1:NSPOTD) = 0.D0
-      ENDIF
+      endif
 
-
-      IF (OPT('zeropot ').OR.TEST('zeropot ')) THEN
-         WRITE(1337,*) 'Using OPT zeropot, setting potential to zero.'
-         WRITE(1337,*) 'Using OPT zeropot, setting nuclear charge to zero.'
+      if (OPT('zeropot ').OR.TEST('zeropot ')) then
+         write(1337,*) 'Using OPT zeropot, setting potential to zero.'
+         write(1337,*) 'Using OPT zeropot, setting nuclear charge to zero.'
          VINS(IRMIND:IRM,1:LMPOT,1:NSPOTD) = 0.D0
          VISP(1:IRM,1:NPOTD) = 0.D0
          ZAT(1:NATYP) = 0.D0
-      ENDIF
+      endif
       !
-      DO I1 = 1,NATYP
-         DO LM = 1,LMXSPD
+      do I1 = 1,NATYP
+         do LM = 1,LMXSPD
             IFUNM1(LM,I1) = IFUNM(I1,LM)
             LMSP1(LM,I1) = LMSP(I1,LM)
-         END DO
-      END DO
+         end do
+      end do
       !-------------------------------------------------------------------------
       ! update Fermi energy, adjust energy window according to running options
       !-------------------------------------------------------------------------
-      IF ( NPOL.EQ.0 ) EFERMI = E2IN
-      IF ( OPT('GF-EF   ') .OR. OPT('DOS-EF  ') ) THEN
+      if ( NPOL.EQ.0 ) EFERMI = E2IN
+      if ( OPT('GF-EF   ') .OR. OPT('DOS-EF  ') ) then
          EMIN = E2IN
-         IF ( OPT('GF-EF   ') ) THEN
-            WRITE (1337,FMT=9070)
-         ELSE
-            WRITE (1337,FMT=9080)
-         END IF
-      END IF
+         if ( OPT('GF-EF   ') ) then
+            write (1337,FMT=9070)
+         else
+            write (1337,FMT=9080)
+         end if
+      end if
 
-      IF ( DABS(E2IN-EMAX).GT.1D-10 .AND. NPOL.NE.0 ) EMAX = E2IN
+      if ( DABS(E2IN-EMAX).GT.1D-10 .AND. NPOL.NE.0 ) EMAX = E2IN
       !-------------------------------------------------------------------------
-      IF (OPT('GENPOT  ')) THEN
-         REWIND(3)
-         CALL GENERALPOT(3,1,NATYP,NSPIN,ZAT,ALAT,RMT,RMTNEW,RWS,R,DRDI,VISP, &
+      if (OPT('GENPOT  ')) then
+         rewind(3)
+         call GENERALPOT(3,1,NATYP,NSPIN,ZAT,ALAT,RMT,RMTNEW,RWS,R,DRDI,VISP, &
             IRWS,A,B,INS,IRNS,LPOT,VINS,QBOUND,IRC,KSHAPE,E2IN,VBC,ECORE,     &
             LCORE,NCORE,LMPOT,IRM,IRMIND)
-         CLOSE(3)
-      END IF
+         close(3)
+      end if
       !-------------------------------------------------------------------------
       ! --> Apply external magnetic field
       !-------------------------------------------------------------------------
       !     from startb1 moved here
-      IF (KHFELD.EQ.1) THEN
+      if (KHFELD.eq.1) then
          !---> maybe apply a magnetic field
          call bshift_ns(IRM,IRID,IPAND,LMPOT,NPOTD,NATYP,NSPIN,NGSHD,NFUND,NCELLD,  &
             IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM,LMSP,IFUNM,IRCUT,     &
             HFIELD,GSH,R,THESME,THETAS,VISP,VINS)
-      END IF
+      end if
       if ( TEST('vpotout ') ) then !ruess
          open(unit=54633163,file='test_vpotout_bshift')
          do i1=1,natyp*nspin
@@ -968,88 +960,88 @@ contains
          close(54633163)
       end if
       !-------------------------------------------------------------------------
-      ! -->  deal with the potential in the RELATIVISTIC CASE
+      ! Deal with the potential in the RELATIVISTIC CASE
       !-------------------------------------------------------------------------
       PARA = .TRUE.
-      IF (KREL+KORBIT.EQ.1) THEN
+      if (KREL+KORBIT.eq.1) then
          !----------------------------------------------------------------------
-         IF (NSPIN.EQ.1) THEN
+         if (NSPIN.eq.1) then
             !-------------------------------------------------------------------
-            ! --> for paramagnetic (NSPIN=1) input potential fill up also the
-            !     V(DOWN), ECORE(DOWN), LCORE(DOWN), NCORE(DOWN) and ITITLE(DOWN)
-            !     arrays (needed)
+            ! for paramagnetic (NSPIN=1) input potential fill up also the
+            ! V(DOWN), ECORE(DOWN), LCORE(DOWN), NCORE(DOWN) and ITITLE(DOWN)
+            ! arrays (needed)
             !-------------------------------------------------------------------
-            DO I = NATYP,1,-1
+            do I = NATYP,1,-1
                J = 2*I - 1
-               CALL DCOPY(IRM,VISP(1,I),1,VISP(1,J),1)
-               CALL DCOPY(IRM,VISP(1,J),1,VISP(1,J+1),1)
+               call DCOPY(IRM,VISP(1,I),1,VISP(1,J),1)
+               call DCOPY(IRM,VISP(1,J),1,VISP(1,J+1),1)
                !
-               CALL DCOPY(20,ECORE(1,I),1,ECORE(1,J),1)
-               CALL DCOPY(20,ECORE(1,J),1,ECORE(1,J+1),1)
+               call DCOPY(20,ECORE(1,I),1,ECORE(1,J),1)
+               call DCOPY(20,ECORE(1,J),1,ECORE(1,J+1),1)
                !
                NCORE(J) = NCORE(I)
                NCORE(J+1) = NCORE(J)
                !
-               DO I1=1,20
+               do I1=1,20
                   LCORE(I1,J) = LCORE(I1,I)
                   LCORE(I1,J+1) = LCORE(I1,J)
                   ITITLE(I1,J ) = ITITLE(I1,I)
                   ITITLE(I1,J+1) = ITITLE(I1,J)
-               END DO
-            END DO
+               end do
+            end do
             !-------------------------------------------------------------------
-         ELSE !NSPIN.EQ.1
+         else !NSPIN.eq.1
             !-------------------------------------------------------------------
             ! --> check whether, although NSPIN=2 at input, the system is
             !     paramagnetic (useful for symmetry cosiderations)
             !-------------------------------------------------------------------
-            DO I = 1,2*NATYP-1,2
-               DO J=1,IRM
-                  IF (ABS(VISP(J,I)-VISP(J,I+1)).GT.1D-5) PARA = .FALSE.
-               END DO
-            END DO
-            IF (PARA) THEN
-               DO I=1,2*NATYP-1,2
-                  CALL DCOPY(IRM,VISP(1,I),1,VISP(1,I+1),1)
-               END DO
-            END IF
+            do I = 1,2*NATYP-1,2
+               do J=1,IRM
+                  if (ABS(VISP(J,I)-VISP(J,I+1)).GT.1D-5) PARA = .FALSE.
+               end do
+            end do
+            if (PARA) then
+               do I=1,2*NATYP-1,2
+                  call DCOPY(IRM,VISP(1,I),1,VISP(1,I+1),1)
+               end do
+            end if
 
-         END IF !NSPIN.EQ.1
+         end if !NSPIN.eq.1
          !----------------------------------------------------------------------
-         ! --> finally, convert input potential to the internal relativistic
-         !     form VTREL,BTREL. Set up auxiliary arrays (needed in the REL
-         !     routines) ZREL, JWSREL, RMREL, DRDIREL, R2DRDIREL, IRSHIFT
+         ! finally, convert input potential to the internal relativistic
+         ! form VTREL,BTREL. Set up auxiliary arrays (needed in the REL
+         ! routines) ZREL, JWSREL, RMREL, DRDIREL, R2DRDIREL, IRSHIFT
          !----------------------------------------------------------------------
-         IF(KREL.eq.1) then
+         if(KREL.eq.1) then
             ! call this only if relativisitic solver is used
-            CALL RELPOTCVT(1,VISP,ZAT,R,DRDI,IRCUT,VTREL,BTREL,ZREL,RMREL,&
+            call RELPOTCVT(1,VISP,ZAT,R,DRDI,IRCUT,VTREL,BTREL,ZREL,RMREL,&
                JWSREL,DRDIREL,R2DRDIREL,IRSHIFT,IPAND,IRM,NPOTD,NATYP)
          endif
-      END IF !KREL+KORBIT.EQ.1
+      end if !KREL+KORBIT.EQ.1
       !-------------------------------------------------------------------------
-      ! --> set up energy contour
+      ! set up energy contour
       !-------------------------------------------------------------------------
       IDOSEMICORE = 0
-      IF ( OPT('SEMICORE') ) IDOSEMICORE = 1
+      if ( OPT('SEMICORE') ) IDOSEMICORE = 1
       !
-      CALL EPATHTB(EZ,DEZ,E2IN,IELAST,IESEMICORE,IDOSEMICORE,EMIN,EMAX,TK,NPOL,  &
+      call EPATHTB(EZ,DEZ,E2IN,IELAST,IESEMICORE,IDOSEMICORE,EMIN,EMAX,TK,NPOL,  &
          NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,NPOLSEMI,N1SEMI,N2SEMI,       &
          N3SEMI,IEMXD)
-      DO IE = 1,IELAST
+      do IE = 1,IELAST
          WEZ(IE) = -2.D0/PI*DEZ(IE)
-         IF ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
-      END DO
+         if ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
+      end do
       !-------------------------------------------------------------------------
-      ! --> update energy contour for Fermi-surface generation    ! fswrt=fermi-surface write
+      ! update energy contour for Fermi-surface generation                       ! fswrt=fermi-surface write
       !-------------------------------------------------------------------------
-      IF (OPT('FERMIOUT'))THEN                                                  ! fswrt
-         IF(AIMAG(EZ(1))>0d0) STOP 'E has imaginary part'                       ! fswrt
-         IELAST=3                                                               ! fswrt
-         EZ(2) = EZ(1) + CMPLX(1.0D-03,0.0D0)                                   ! fswrt
-         EZ(3) = EZ(1) - CMPLX(1.0D-03,0.0D0)                                   ! fswrt
-      END IF                                                                    ! fswrt
+      if (OPT('FERMIOUT'))then                                                   ! fswrt
+         if(AIMAG(EZ(1))>0d0) stop 'E has imaginary part'                        ! fswrt
+         IELAST=3                                                                ! fswrt
+         EZ(2) = EZ(1) + CMPLX(1.0D-03,0.0D0)                                    ! fswrt
+         EZ(3) = EZ(1) - CMPLX(1.0D-03,0.0D0)                                    ! fswrt
+      end if                                                                     ! fswrt
       !-------------------------------------------------------------------------
-      ! --> update the value of NSPIN to be consistent with REL mode
+      ! update the value of NSPIN to be consistent with REL mode
       !-------------------------------------------------------------------------
       IF (KREL.EQ.1) NSPIN = 1
       !
@@ -1058,19 +1050,18 @@ contains
          LMGF0D,LMPOT)
       !
       !-------------------------------------------------------------------------
-      ! --> set up of GAUNT coefficients C(l,m;l',m';l'',m'') for all
-      !     nonvanishing (l'',m'')-components of the shape functions THETAS
+      ! set up of GAUNT coefficients C(l,m;l',m';l'',m'') for all
+      ! nonvanishing (l'',m'')-components of the shape functions THETAS
       !-------------------------------------------------------------------------
       if (KSHAPE.NE.0) then
          CALL SHAPE_CORR(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,LASSLD,&
             LMPOT,NATYP,NGSHD)
       endif
-
       !-------------------------------------------------------------------------
-      ! --> calculate Madelung constants (needed only for SCF calculations)
+      ! calculate Madelung constants (needed only for SCF calculations)
       !-------------------------------------------------------------------------
       !fivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
-      IF (NPOL.NE.0) THEN  ! No madelung calculation in case of DOS.
+      if (NPOL.NE.0) then  ! No madelung calculation in case of DOS.
          !OPEN(99,FILE='madelinfo.txt')
 
          !> @note Use option 'ewald2d' if the madelung summation is to be carried out in
@@ -1078,48 +1069,48 @@ contains
          !> slab mode.
          !> Reason: the 2d-mode gives wrong results sometimes [e.g. in diamond
          !> structure (110)].
-         IF (LINTERFACE.AND.( OPT('ewald2d ').OR.OPT('DECIMATE'))) THEN ! ewald2d
-            WRITE(*,*) 'Calling MADELUNG2D'
+         if (LINTERFACE.AND.( OPT('ewald2d ').OR.OPT('DECIMATE'))) then ! ewald2d
+            write(*,*) 'Calling MADELUNG2D'
             !-------------------------------------------------------------------
             ! 2D case
             !-------------------------------------------------------------------
-            CALL MADELUNG2D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,BRAVAIS,RECBV,RBASIS,  &
+            call MADELUNG2D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,BRAVAIS,RECBV,RBASIS,  &
                RMAX,GMAX,NLBASIS,NLEFT,ZPERLEFT,TLEFT,NRBASIS,NRIGHT,ZPERIGHT,   &
                TRIGHT,LMXSPD,LASSLD,LPOT,LMPOT,NMAXD,ISHLD,NEMBD1,WLENGTH)
-            WRITE(*,*) 'Exited MADELUNG2D'
-         ELSE
+            write(*,*) 'Exited MADELUNG2D'
+         else
             !-------------------------------------------------------------------
             ! 3D case
             !-------------------------------------------------------------------
             if ( LINTERFACE ) then
-               CALL GETBR3(NEMBD1,NLBASIS,ALAT,TLEFT,NRBASIS,TRIGHT,BRAVAIS,&
+               call GETBR3(NEMBD1,NLBASIS,ALAT,TLEFT,NRBASIS,TRIGHT,BRAVAIS,&
                   RECBV,VOLUME0)
 
-               WRITE(*,*) 'Calling MADELUNG3D'
-               CALL MADELUNG3D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,BRAVAIS,RECBV,&
+               write(*,*) 'Calling MADELUNG3D'
+               call MADELUNG3D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,BRAVAIS,RECBV,&
                   RBASIS,RMAX,GMAX,NAEZ,LMXSPD,LASSLD,LPOT,LMPOT,NMAXD,    &
                   ISHLD,NEMB,WLENGTH)
-               WRITE(*,*) 'Exited MADELUNG3D'
+               write(*,*) 'Exited MADELUNG3D'
             end if
-         END IF
+         end if
 
          !CLOSE(99)
-      ELSE !NPOL==0
+      else !NPOL==0
          ! write dummy files
 
          !DOUBLE PRECISION AVMAD(LMPOT,LMPOT),BVMAD(LMPOT)
          LRECABMAD = WLENGTH*2*LMPOT*LMPOT + WLENGTH*2*LMPOT
-         OPEN (69,ACCESS='direct',RECL=LRECABMAD,FILE='abvmad.unformatted', &
+         open (69,ACCESS='direct',RECL=LRECABMAD,FILE='abvmad.unformatted', &
             FORM='unformatted')
-         DO I = 1,NAEZ
-            DO J = 1,NAEZ
+         do I = 1,NAEZ
+            do J = 1,NAEZ
                IREC = J + NAEZ*(I-1)
-               WRITE (69,REC=IREC) 0.0d0, 0.0d0!AVMAD,BVMAD
-            END DO
-         END DO
-         CLOSE(69)
+               write (69,REC=IREC) 0.0d0, 0.0d0!AVMAD,BVMAD
+            end do
+         end do
+         close(69)
 
-      ENDIF !NPOL==0
+      endif !npol==0
       !-------------------------------------------------------------------------
       !fivos      END IF
       !-------------------------------------------------------------------------
@@ -1128,7 +1119,7 @@ contains
       ! Set up I,J pairs for ICC = -1
       !-------------------------------------------------------------------------
       if ( ICC.LT.0 ) then
-         CALL SETGIJTAB(LINTERFACE,ICC,NAEZ,IQAT,RBASIS,BRAVAIS,NATOMIMP,  &
+         call SETGIJTAB(LINTERFACE,ICC,NAEZ,IQAT,RBASIS,BRAVAIS,NATOMIMP,  &
             ATOMIMP,RCLSIMP,NOFGIJ,IJTABCALC,IOFGIJ,JOFGIJ,NQCALC,IQCALC,  &
             NATOMIMPD,IJTABCALC_I)
       endif
@@ -1138,8 +1129,7 @@ contains
       DSYMLL=(0d0,0d0)
       DSYMLL1=(0d0,0d0)
 
-
-      CALL BZKINT0(NSHELL,NAEZ,NATYP,NOQ,RBASIS,KAOEZ,ICC,BRAVAIS,RECBV,   &
+      call BZKINT0(NSHELL,NAEZ,NATYP,NOQ,RBASIS,KAOEZ,ICC,BRAVAIS,RECBV,   &
          ATOMIMP,RSYMAT,ISYMINDEX,NSYMAT,I25,NATOMIMP,NSH1,NSH2,RCLSIMP,   &
          RATOM,IJTABSYM,IJTABSH,IJTABCALC,IOFGIJ,JOFGIJ,NOFGIJ,ISH,JSH,RROT,&
          DSYMLL1,PARA,QMTET,QMPHI,SYMUNITARY,HOSTIMP,INTERVX,INTERVY,      &
@@ -1148,40 +1138,40 @@ contains
       !
       !-------------------------------------------------------------------------
       !
-      IF ( OPT('KKRFLEX ') ) THEN
+      if ( OPT('KKRFLEX ') ) then
 
-         CALL WRITEHOSTSTRUCTURE(BRAVAIS,NATYP,RBASIS,NAEZ,NEMB)
+         call WRITEHOSTSTRUCTURE(BRAVAIS,NATYP,RBASIS,NAEZ,NEMB)
 
-         OPEN (58,FILE='kkrflex_atominfo',FORM='FORMATTED')
+         open (58,FILE='kkrflex_atominfo',FORM='FORMATTED')
          call version_print_header(58,&
             '; '//md5sum_potential//'; '//md5sum_shapefun)
          NVATOM=0
-         DO I = 1,NATOMIMP
-            IF (KAOEZ(1,ATOMIMP(I))==-1) NVATOM=NVATOM+1
-         END DO
-         WRITE (58,'(500A)') '#NATOM   NTOTATOM'
-         WRITE (58,*) NATOMIMP,NATOMIMP-NVATOM
-         WRITE (58,'(500A)') '#Impurity positions x,y,z|Core Charge|Virtual Atom?|Remove Atom?|LMAX'
-         DO I = 1,NATOMIMP
-            IF (KAOEZ(1,ATOMIMP(I))==-1) THEN
+         do I = 1,NATOMIMP
+            if (KAOEZ(1,ATOMIMP(I))==-1) NVATOM=NVATOM+1
+         end do
+         write (58,'(500A)') '#NATOM   NTOTATOM'
+         write (58,*) NATOMIMP,NATOMIMP-NVATOM
+         write (58,'(500A)') '#Impurity positions x,y,z|Core Charge|Virtual Atom?|Remove Atom?|LMAX'
+         do I = 1,NATOMIMP
+            if (KAOEZ(1,ATOMIMP(I))==-1) then
                ZATTEMP=0.D0
                ISVATOM=1
                NVATOM=NVATOM+1
-            ELSE
+            else
                ISVATOM=0
                ZATTEMP=ZAT(KAOEZ(1,ATOMIMP(I)))
-            END IF
-            WRITE (58,'(3F14.7,F6.2,3I5)') (RCLSIMP(J,I),J=1,3), &
+            end if
+            write (58,'(3F14.7,F6.2,3I5)') (RCLSIMP(J,I),J=1,3), &
                ZATTEMP,ISVATOM,0,LMAX
-         END DO
-         CLOSE (58)
-      END IF
+         end do
+         close (58)
+      end if
       !
       !-------------------------------------------------------------------------
       ! fivos: write out nshell and nsh1,nsh2 into standard output and in file shells.dat
       !-------------------------------------------------------------------------
-      IF (ICC.NE.0 .and. .not.OPT('KKRFLEX ')) THEN
-         OPEN(58,FILE='shells.dat')
+      if (ICC.NE.0 .and. .not.OPT('KKRFLEX ')) then
+         open(58,FILE='shells.dat')
          write(1337,*) 'Writing out shells (also in shells.dat):' ! fivos
          write(1337,*) 'itype,jtype,iat,jat,r(iat),r(jat)'        ! fivos
          write(1337,*) NSHELL(0), 'NSHELL(0)'                     ! fivos
@@ -1213,39 +1203,39 @@ contains
             enddo                                                 ! fivos
          enddo                                                    ! fivos
          write(1337,*) '###################'
-         CLOSE(58)
-      ENDIF
+         close(58)
+      endif
       !-------------------------------------------------------------------------
       ! end fivos
       !-------------------------------------------------------------------------
 
-      CALL GFMASK(LINTERFACE,ICHECK,ICC,INVMOD,NSH1,NSH2,NAEZ,NSHELL(0),NAEZ,&
+      call GFMASK(LINTERFACE,ICHECK,ICC,INVMOD,NSH1,NSH2,NAEZ,NSHELL(0),NAEZ,&
          NPRINCD)
       !-------------------------------------------------------------------------
       ! set up transformation matrices between REL/NREL representations
       !-------------------------------------------------------------------------
       if((KREL+KORBIT).EQ.1) then
-         CALL DRVBASTRANS(RC,CREL,RREL,SRREL,NRREL,IRREL,LMAX+1,LMMAXD,&
+         call DRVBASTRANS(RC,CREL,RREL,SRREL,NRREL,IRREL,LMAX+1,LMMAXD,&
             2*(LMAX+1),LMMAXD+2*(LMAX+1),MMAXD,2*(LMAX+1)*MMAXD)
       endif
-      IF (OPT('NEWSOSOL')) THEN
-         DO NS=1,NSYMAT
-            CALL CHANGEREP(DSYMLL1(1,1,NS),'REL>RLM',DSYMLL(1,1,NS),LMMAXD,&
+      if (OPT('NEWSOSOL')) then
+         do NS=1,NSYMAT
+            call CHANGEREP(DSYMLL1(1,1,NS),'REL>RLM',DSYMLL(1,1,NS),LMMAXD,&
                LMMAXD,RC,CREL,RREL,'DSYMLL',0)
-         ENDDO
+         enddo
          !       DSYMLL(:,:,:)=DSYMLL1(:,:,:)
-      ELSE
+      else
          DSYMLL(:,:,:)=DSYMLL1(:,:,:)
-      ENDIF
+      endif
       !
       !-------------------------------------------------------------------------
       !  for the case that the magnetisation is rotated with respect to
       !  the (001)-direction (KMROT<>0) calculate the rotation matrices
       !  to switch between the CRYSTAL and LOCAL frames of reference
       !-------------------------------------------------------------------------
-      CALL CINIT(LMMAXD*LMMAXD*NAEZ,DROTQ)
+      call CINIT(LMMAXD*LMMAXD*NAEZ,DROTQ)
 
-      IF (KMROT.NE.0) THEN
+      if (KMROT.NE.0) then
          FACT(0) = 1.0D0
          DO I = 1,100
             FACT(I) = FACT(I-1)*DBLE(I)

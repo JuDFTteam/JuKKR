@@ -1,6 +1,6 @@
 !-------------------------------------------------------------------------------
 ! PROGRAM: kkrcode
-!> @brief Main wrapper for the JM-KKR
+!> @brief Main program for the JM-KKR
 !> @details The JM-KKR code is a Density Functional Theory software package,
 !> based on the Green function Korringa-Kohn-Rostocker approach.
 !> The package allows the calculation of 3D and 2D systems, as well as the
@@ -9,6 +9,8 @@
 !> needed information for the treatment of TD-DFT calculations based in the linear
 !> response approach (KKRSusc code).
 !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller, and many others ...
+!< @note
+!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 program kkrcode
 
@@ -21,6 +23,7 @@ program kkrcode
    use mod_timing
    use mod_version_info
    use mod_md5sums
+   use memoryhandling
    use Profiling
 
 #ifdef CPP_MPI
@@ -235,30 +238,72 @@ program kkrcode
 
       call timing_start('Time in Iteration')
 
-      ! calculate tmat and gref
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! Calculate tmat and gref
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main1a')
-      call main1a()
+      call main1a(INS,LLY,IRM,LM2D,ICST,IEND,NCLS,LMAX,NREF,NSRA,KREL,NEMB,         &
+         NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,IEMXD,LMPOT,NCLEB,IPAND,NINEQ,    &
+         NSPIN,NCHEB,NSPIND,LMMAXD,IELAST,NACLSD,NRMAXD,IRMIND,NSPOTD,WLENGTH,      &
+         NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS,IQAT,IRWS,NACLS,REFPOT,ATOM,ZAT,    &
+         VREF,RMTREF,RCLS,SOLVER,SOCSCL,SOCSCALE,CSCL,NTLDAU,IDOLDAU,ITLDAU,UEFF,   &
+         JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,ICLEB,IRCUT,IPAN_INTERVALL,PHI,THETA,CLEB,   &
+         VISP,DRDI,RNEW,RMESH,RPAN_INTERVALL,VINS,ZREL,JWSREL,VTREL,BTREL,RMREL,    &
+         DRDIREL,R2DRDIREL,ITRUNLDAU,LOPT,EREFLDAU,WLDAU,ULDAU,PHILDAU)
       call timing_stop('main1a')
 
-      ! calculate gmat
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! Calculate gmat
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main1b')
-      call main1b()
+      call main1b(NR,LLY,ICC,IGF,INS,NPOL,LMAX,NREF,NSRA,NCLS,NCPA,NEMB,         &
+         NAEZ,NATYP,NCLSD,NSPIN,IEMXD,KMROT,NSHELD,NSPIND,LMMAXD,KPOIBZ,IELAST,  &
+         INVMOD,NACLSD,NSYMAT,NEMBD1,LMGF0D,NOFGIJ,NQCALC,NPRINCD,NSPINDD,       &
+         NLBASIS,NRBASIS,MAXMESH,WLENGTH,NATOMIMP,ITCPAMAX,ALAT,CPATOL,NOQ,CLS,  &
+         IQAT,NSH1,NSH2,ICPA,NACLS,NSHELL,REFPOT,ATOMIMP,EZOA,ATOM,KAOEZ,ICHECK, &
+         CONC,RMTREF,RR,RATOM,RBASIS,RROT,RCLS,SYMUNITARY,KMESH,IQCALC,IJTABSH,  &
+         IJTABSYM,IJTABCALC,IJTABCALC_I,ISH,JSH,NRREL,IRREL,VREF,RCLSIMP,RC,RREL,&
+         CREL,SRREL,DROTQ,DSYMLL,LEFTTINVLL,RIGHTTINVLL)
       call timing_stop('main1b')
       if(test('STOP1B  '))then
 #ifdef CPP_MPI
          call MPI_Finalize(ierr)
 #endif
          stop 'Stop after main1b'
-      end if!test
+      end if !test
 
-      ! calculate density
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! Calculate density
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main1c')
-      call main1c()
+      call main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LMAX,KREL,NCLEB,       &
+         NFUND,IPAND,NTOTD,MMAXD,NATYP,NPOTD,KMROT,NSPIN,NCHEB,LMPOT,IEMXD,   &
+         NSPIND,LMXSPD,IELAST,LMMAXD,NRMAXD,IRMIND,INTERVX,INTERVY,INTERVZ,   &
+         WLENGTH,IESEMICORE,TK,EMIN,EMAX,ALAT,EFERMI,SOLVER,IQAT,ZREL,IPAN,   &
+         IRWS,NCORE,JWSREL,NTCELL,ITITLE,CSCL,ZAT,CONC,SOCSCALE,NTLDAU,       &
+         IDOLDAU,ITRUNLDAU,ITLDAU,UEFF,JEFF,IEND,NFU,LOFLM,IRMIN,IRSHIFT,     &
+         ICLEB,LCORE,IRCUT,IFUNM1,LMSP1,LLMSP,JEND,A,B,QMTET,QMPHI,CLEB,DRDI, &
+         ECORE,RMREL,SOCSCL,R2DRDIREL,VINS,VTREL,BTREL,DRDIREL,EZ,WEZ,LOPT,   &
+         EREFLDAU,WLDAU,ULDAU,PHILDAU,R_LOG,NPAN_EQ,NPAN_LOG,NPAN_TOT,        &
+         IPAN_INTERVALL,VISP,RNEW,RPAN_INTERVALL,THETAS,THETASNEW)
       call timing_stop('main1c')
 
-      ! calculate DFT stuff (potential from density, exc-potential, calculate total energy, ...)
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! Calculate DFT stuff (potential from density, exc-potential, calculate total energy, ...)
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main2')
-      if (myrank==master) call main2()
+      if (myrank==master) then
+         call main2(LLY,ICC,INS,IPF,KTE,KXC,LPOT,IMIX,NAEZ,NSRA,LMAX,KPRE,NPOL,        &
+            NPNT1,NPNT2,NPNT3,NATYP,NSPIN,ITSCF,KVMAD,LMPOT,NPOTD,NLEFT,NRIGHT,LMXSPD, &
+            IELAST,ISHIFT,ITDBRY,KSHAPE,KFORCE,IRMIND,NEMBD1,LMMAXD,IDOLDAU,NLBASIS,   &
+            NRBASIS,SCFSTEPS,NATOMIMP,TK,FCM,ALAT,MIXING,QBOUND,LAMBDA_XC,OPT,TEST,    &
+            LRHOSYM,LINTERFACE,NOQ,IMT,IQAT,IPAN,ZREL,IRNS,IRWS,KAOEZ,JWSREL,NTCELL,   &
+            ITITLE,NSHELL,ZAT,RMT,RWS,CONC,RMTNEW,TXC,EMIN,EMAX,TKSEMI,EMUSEMI,        &
+            EBOTSEMI,FSEMICORE,IRC,NFU,LOPT,NCORE,IRMIN,IXIPOL,IMAXSH,IRSHIFT,ATOMIMP, &
+            HOSTIMP,ILM,LMSP,LCORE,IRCUT,IFUNM,A,B,VBC,GSH,FACT,QMGAM,QMTET,QMPHI,R,   &
+            ECORE,DRDI,VISP,VTREL,BTREL,RMREL,DRDIREL,CMOMHOST,R2DRDIREL,VINS,THETAS,  &
+            THESME,EZ,DEZ,WEZ)
+      endif
       call timing_stop('main2')
 
 
@@ -790,6 +835,39 @@ program kkrcode
    end if
 #endif
 
+   ! Deallocation of input arrays
+   call allocate_cell(-1,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,&
+      KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS)
+   call allocate_semi_inf_host(-1,NEMB,TLEFT,TRIGHT)
+   call allocate_potential(-1,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
+      LMPOT,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,&
+      ITITLE,FPRADIUS,VISP,ECORE,VINS)
+   call allocate_cpa(-1,NAEZ,NEMB,NATYP,NOQ,ICPA,IQAT,HOSTIMP,CONC)
+   call allocate_ldau(-1,NATYP,LOPT,UEFF,JEFF,EREFLDAU)
+   call allocate_ldau_potential(-1,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,&
+      ULDAU,PHILDAU)
+   call allocate_magnetization(-1,NAEZ,NATYP,LMMAXD,INIPOL,IXIPOL,QMTET,&
+      QMPHI,DROTQ)
+   call allocate_SOC(-1,KREL,NATYP,LMAX,IMANSOC,SOCSCALE,CSCL,SOCSCL)
+   call allocate_energies(-1,IEMXD,EZ,DEZ,WEZ)
+   call allocate_relativistic(-1,KREL,IRM,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,&
+      VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,QMGAM,QMGAMTAB,QMPHITAB,QMTETTAB)
+   call allocate_rel_transformations(-1,LMMAXD,NRREL,IRREL,RC,CREL,RREL,SRREL)
+   call allocate_clusters(-1,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,&
+      LMPOT,NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,JEND,RATOM,&
+      RCLSIMP,CMOMHOST,RCLS)
+   call allocate_expansion(-1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,&
+      NCHEBD,LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
+   call allocate_mesh(-1,IRM,NATYP,A,B,R,DRDI)
+   call allocate_pannels(-1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQNEW,NPAN_LOGNEW,&
+      IPAN_INTERVALL,RPAN_INTERVALL)
+   call allocate_misc(-1,NR,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREFD,IEMXD,&
+      NTOTD,NSHELD,LMMAXD,NEMBD1,NCHEBD,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM,&
+      IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,DSYMLL1,LEFTTINVLL,&
+      RIGHTTINVLL)
+   call allocate_green(-1,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJD,ISH,JSH,&
+      KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM,GSH)
+   ! End of deallocation
 
 #ifdef CPP_MPI
    ! finalize MPI

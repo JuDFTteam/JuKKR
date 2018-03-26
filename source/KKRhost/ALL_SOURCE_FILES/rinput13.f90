@@ -29,12 +29,9 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    use mod_version_info
    use memoryhandling
    use Profiling
+   use Constants
 
    implicit none
-   !     ..
-   !     .. Parameters
-   double precision :: CVLIGHT
-   parameter (CVLIGHT=274.0720442D0)
    !     ..
    !> @note VP : there should be some crosscheck of competing options
    !>            e.g., XCPL and CONDUCT cannot be done simultaneously
@@ -86,6 +83,7 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    integer, intent(inout) :: KVMAD
    integer, intent(inout) :: LMMAX
    integer, intent(inout) :: LMPOT
+   integer, intent(inout) :: NTOTD     !< NTOTD = IPAND+30
    integer, intent(inout) :: IEMXD     !< Dimension for energy-dependent arrays
    integer, intent(inout) :: NMAXD     !< Paremeters for the Ewald summations
    integer, intent(inout) :: ISHLD     !< Paremeters for the Ewald summations
@@ -127,9 +125,9 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    integer, intent(inout) :: KNOSPH    !< Switch for spherical/non-spherical program (0/1).
    integer, intent(inout) :: KPOIBZ    !< Number of reciprocal space vectors
    integer, intent(inout) :: NTREFD    !< Parameter in broyden subroutine MUST BE 0 for the host program
-   integer, intent(inout) :: NSPINDD
-   integer, intent(inout) :: NSATYPD
-   integer, intent(inout) :: NPRINCD
+   integer, intent(inout) :: NSPINDD   !< !< NSPIND-KORBIT
+   integer, intent(inout) :: NSATYPD   !< (NATYPD-1)*KNOSPH+1
+   integer, intent(inout) :: NPRINCD   !< Number of principle layers, set to a number >= NRPINC in output of main0
    integer, intent(inout) :: WLENGTH   !< Word length for direct access files, compiler dependent ifort/other compilers (1/4)
    integer, intent(inout) :: IVSHIFT
    integer, intent(inout) :: KHFIELD   !< 0,1: no / yes external magnetic field
@@ -138,18 +136,18 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    integer, intent(inout) :: INTERVX   !< Number of intervals in x-direction for k-net in IB of the BZ
    integer, intent(inout) :: INTERVY   !< Number of intervals in y-direction for k-net in IB of the BZ
    integer, intent(inout) :: INTERVZ   !< Number of intervals in z-direction for k-net in IB of the BZ
-   integer, intent(inout) :: NPAN_EQ   !< Variables for the pannels for the new solver
-   integer, intent(inout) :: NPAN_LOG  !< Variables for the pannels for the new solver
+   integer, intent(inout) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
+   integer, intent(inout) :: NPAN_LOG  !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
    integer, intent(inout) :: NPOLSEMI  !< Number of poles for the semicore contour
    integer, intent(inout) :: NATOMIMPD !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
    double precision, intent(inout) :: TK      !< Temperature
-   double precision, intent(inout) :: FCM
-   double precision, intent(inout) :: EMIN    !< Minimum energy of the energy contour
-   double precision, intent(inout) :: EMAX    !< Maximum energy of the energy contour
+   double precision, intent(inout) :: FCM     !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
+   double precision, intent(inout) :: EMIN    !< Lower value (in Ryd) for the energy contour
+   double precision, intent(inout) :: EMAX    !< Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
    double precision, intent(inout) :: RMAX    !< Ewald summation cutoff parameter for real space summation
    double precision, intent(inout) :: GMAX    !< Ewald summation cutoff parameter for reciprocal space summation
    double precision, intent(inout) :: ALAT    !< Lattice constant (in a.u.)
-   double precision, intent(inout) :: R_LOG
+   double precision, intent(inout) :: R_LOG   !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
    double precision, intent(inout) :: RCUTZ   !< Parameter for the screening cluster along the z-direction
    double precision, intent(inout) :: RCUTXY  !< Parameter for the screening cluster along the x-y plane
    double precision, intent(inout) :: ESHIFT
@@ -159,12 +157,12 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    double precision, intent(inout) :: ABASIS  !< Scaling factors for rbasis
    double precision, intent(inout) :: BBASIS  !< Scaling factors for rbasis
    double precision, intent(inout) :: CBASIS  !< Scaling factors for rbasis
-   double precision, intent(inout) :: VCONST  !< Potential shift
+   double precision, intent(inout) :: VCONST  !< Potential shift in the first iteration
    double precision, intent(inout) :: TKSEMI  !< Temperature for semi-core contour
-   double precision, intent(inout) :: TOLRDIF !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
-   double precision, intent(inout) :: EMUSEMI
-   double precision, intent(inout) :: EBOTSEMI
-   double precision, intent(inout) :: FSEMICORE
+   double precision, intent(inout) :: TOLRDIF !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
+   double precision, intent(inout) :: EMUSEMI   !< Top of semicore contour in Ryd.
+   double precision, intent(inout) :: EBOTSEMI  !< Bottom of semicore contour in Ryd
+   double precision, intent(inout) :: FSEMICORE !< Initial normalization factor for semicore states (approx. 1.)
    double precision, intent(inout) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
    double complex, intent(inout) :: DELTAE      !< LLY Energy difference for numerical derivative
    logical, intent(inout) :: LNC
@@ -1034,6 +1032,13 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
       WRITE(111,*) 'Default NACLSD= ',NACLSD
    ENDIF
 
+   CALL IoInput('NTOTD           ',UIO,1,7,IER)
+   IF (IER.EQ.0) THEN
+      READ (UNIT=UIO,FMT=*) NTOTD
+      WRITE(111,*) 'NTOTD= ',NTOTD
+   ELSE
+      WRITE(111,*) 'Default NTOTD= ',NTOTD
+   ENDIF
    !----------------------------------------------------------------------------
    ! End of variables that used to be in the inc.
    !----------------------------------------------------------------------------
@@ -1539,24 +1544,24 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    ! Begin screening cluster information
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    RCUTZ = 11.D0/ALAT  ! Default 11 Bohr radii
-   CALL IoInput('RCLUSTZ         ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) RCUTZ
-      WRITE(111,*) 'RCLUSTZ=',RCUTZ
-   ELSE
-      WRITE(111,*) 'Default RCLUSTZ=',RCUTZ
-   ENDIF
+   call IoInput('RCLUSTZ         ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) RCUTZ
+      write(111,*) 'RCLUSTZ=',RCUTZ
+   else
+      write(111,*) 'Default RCLUSTZ=',RCUTZ
+   endif
 
    RCUTXY = RCUTZ
-   CALL IoInput('RCLUSTXY        ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) RCUTXY
-      WRITE(111,*) 'RCLUSTXY=',RCUTXY
-   ELSE
-      WRITE(111,*) 'Default RCLUSTXY=',RCUTXY
-   ENDIF
+   call IoInput('RCLUSTXY        ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) RCUTXY
+      write(111,*) 'RCLUSTXY=',RCUTXY
+   else
+      write(111,*) 'Default RCLUSTXY=',RCUTXY
+   endif
 
-   WRITE(1337,*) 'Parameters used for the cluster calculation'
+   write(1337,*) 'Parameters used for the cluster calculation'
    if (abs(rcutz-rcutxy).lt.1.d-4) then
       write(1337,*) 'Clusters inside spheres with radius R = ',rcutz
    else
@@ -1568,23 +1573,23 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    write(1337,2101)
    do i=1,naez
       write(1337,2025) i,(rbasis(j,i),j=1,3),&
-         &       QMTET(I),QMPHI(I),ICPA(I),NOQ(I),(KAOEZ(J,I),J=1,NOQ(I))
+         QMTET(I),QMPHI(I),ICPA(I),NOQ(I),(KAOEZ(J,I),J=1,NOQ(I))
    enddo
 
-   DO I=1,NAEZ
-      CALL IoInput('<RMTREF>        ',UIO,I,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) RMTREFAT(I)
-      ENDIF
-   ENDDO
-   IF (IER.EQ.0) THEN
-      WRITE(111,FMT='(A18)') '        <RMTREF>  '
-   ELSE
-      WRITE(111,FMT='(A18)') 'Default <RMTREF>  '
-   ENDIF
-   DO I=1,NAEZ
-      WRITE(111,FMT='(9X,F9.6)') RMTREFAT(I)
-   ENDDO
+   do I=1,NAEZ
+      call IoInput('<RMTREF>        ',UIO,I,7,IER)
+      if (IER.EQ.0) then
+         read (UNIT=UIO,FMT=*) RMTREFAT(I)
+      endif
+   enddo
+   if (IER.EQ.0) then
+      write(111,FMT='(A18)') '        <RMTREF>  '
+   else
+      write(111,FMT='(A18)') 'Default <RMTREF>  '
+   endif
+   do I=1,NAEZ
+      write(111,FMT='(9X,F9.6)') RMTREFAT(I)
+   enddo
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End screening cluster information

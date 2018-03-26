@@ -20,7 +20,7 @@ module memoryhandling
 
 contains
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_cell
    !
    ! DESCRIPTION:
@@ -30,7 +30,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 14.11.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_cell(flag,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,&
       KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS)
 
@@ -186,7 +186,7 @@ contains
 
    end subroutine allocate_cell
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_semi_inf_host
    !
    ! DESCRIPTION:
@@ -196,7 +196,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 20.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_semi_inf_host(flag,NEMB,TLEFT,TRIGHT)
 
       implicit none
@@ -233,7 +233,7 @@ contains
 
    end subroutine allocate_semi_inf_host
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_potential
    !
    ! DESCRIPTION:
@@ -243,8 +243,8 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 14.11.2017
-   !-----------------------------------------------------------------------------
-   subroutine allocate_potential(flag,NAEZ,NEMB,IRMD,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
+   !----------------------------------------------------------------------------
+   subroutine allocate_potential(flag,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
       LMPOT,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,&
       ITITLE,FPRADIUS,VISP,ECORE,VINS)
 
@@ -253,9 +253,9 @@ contains
       integer, intent(in) :: flag ! Allocate/deallocate (1/-1) arrays
       integer, intent(in) :: NAEZ !< number of atoms in unit cell
       integer, intent(in) :: NEMB !< number of 'embedding' positions
-      integer, intent(in) :: IRMD
+      integer, intent(in) :: IRM
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
-      integer, intent(in) :: NPOTD !< 2*NATYPD
+      integer, intent(in) :: NPOTD !< 2*NATYP
       integer, intent(in) :: IPAND
       integer, intent(in) :: NFUND
       integer, intent(in) :: LMXSPD
@@ -322,10 +322,10 @@ contains
          allocate(NFU(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(NFU))*kind(NFU),'NFU','allocate_potential')
          NFU = 0
-         allocate(VINS(IRMIND:IRMD,LMPOT,NSPOTD), stat=i_stat)
+         allocate(VINS(IRMIND:IRM,LMPOT,NSPOTD), stat=i_stat)
          call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','allocate_misc')
          VINS = 0.D0
-         allocate(VISP(IRMD,NPOTD),stat=i_stat)
+         allocate(VISP(IRM,NPOTD),stat=i_stat)
          call memocc(i_stat,product(shape(VISP))*kind(VISP),'VISP','allocate_misc')
          VISP = 0.D0
 
@@ -400,7 +400,7 @@ contains
 
    end subroutine allocate_potential
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_cpa
    !
    ! DESCRIPTION:
@@ -410,7 +410,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_cpa(flag,NAEZ,NEMB,NATYP,NOQ,ICPA,IQAT,HOSTIMP,CONC)
 
       implicit none
@@ -480,7 +480,7 @@ contains
 
    end subroutine allocate_cpa
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_ldau
    !
    ! DESCRIPTION:
@@ -490,7 +490,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_ldau(flag,NATYP,LOPT,UEFF,JEFF,EREFLDAU)
 
       implicit none
@@ -545,7 +545,7 @@ contains
 
    end subroutine allocate_ldau
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_ldau_potential
    !
    ! DESCRIPTION:
@@ -555,14 +555,14 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
-   subroutine allocate_ldau_potential(flag,IRMD,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,&
+   !----------------------------------------------------------------------------
+   subroutine allocate_ldau_potential(flag,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,&
       ULDAU,PHILDAU)
 
       implicit none
 
       integer, intent(in) :: flag ! Allocate/deallocate (1/-1) arrays
-      integer, intent(in) :: IRMD
+      integer, intent(in) :: IRM
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
       integer, intent(in) :: MMAXD
       integer, intent(in) :: NSPIND !< Counter for spin directions (KREL+(1-KREL)*(KSP+1))
@@ -585,7 +585,7 @@ contains
          allocate(WLDAU(MMAXD,MMAXD,NSPIND,NATYP) ,stat=i_stat)
          call memocc(i_stat,product(shape(WLDAU))*kind(WLDAU),'WLDAU','allocate_ldau_potential')
          WLDAU =  0.D0
-         allocate(PHILDAU(IRMD,NATYP),stat=i_stat)
+         allocate(PHILDAU(IRM,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(PHILDAU))*kind(PHILDAU),'PHILDAU','allocate_ldau_potential')
          PHILDAU=(0.D0,0.D0)
 
@@ -615,7 +615,7 @@ contains
 
    end subroutine allocate_ldau_potential
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_magnetization
    !
    ! DESCRIPTION:
@@ -625,7 +625,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_magnetization(flag,NAEZ,NATYP,LMMAXD,INIPOL,IXIPOL,QMTET,&
       QMPHI,DROTQ)
 
@@ -691,7 +691,7 @@ contains
 
    end subroutine allocate_magnetization
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_SOC
    !
    ! DESCRIPTION:
@@ -701,7 +701,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_SOC(flag,KREL,NATYP,LMAX,IMANSOC,SOCSCALE,CSCL,SOCSCL)
 
       implicit none
@@ -756,7 +756,7 @@ contains
 
    end subroutine allocate_SOC
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_energies
    !
    ! DESCRIPTION:
@@ -766,7 +766,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_energies(flag,IEMXD,EZ,DEZ,WEZ)
 
       implicit none
@@ -812,7 +812,7 @@ contains
 
    end subroutine allocate_energies
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_relativistic
    !
    ! DESCRIPTION:
@@ -822,15 +822,15 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
-   subroutine allocate_relativistic(flag,KREL,IRMD,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,&
+   !----------------------------------------------------------------------------
+   subroutine allocate_relativistic(flag,KREL,IRM,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,&
       VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,QMGAM,QMGAMTAB,QMPHITAB,QMTETTAB)
 
       implicit none
 
       integer, intent(in) :: flag ! Allocate/deallocate (1/-1) arrays
       integer, intent(in) :: KREL
-      integer, intent(in) :: IRMD
+      integer, intent(in) :: IRM
       integer, intent(in) :: NAEZ !< number of atoms in unit cell
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
       integer, dimension(:), allocatable, intent(inout) :: ZREL !< atomic number (cast integer)
@@ -850,19 +850,19 @@ contains
       integer :: i_stat, i_all
 
       if (flag>0) then
-         allocate(VTREL(IRMD*KREL+(1-KREL),NATYP),stat=i_stat)
+         allocate(VTREL(IRM*KREL+(1-KREL),NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(VTREL))*kind(VTREL),'VTREL','allocate_relativistic')
          VTREL = 0.D0
-         allocate(BTREL(IRMD*KREL+(1-KREL),NATYP),stat=i_stat)
+         allocate(BTREL(IRM*KREL+(1-KREL),NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(BTREL))*kind(BTREL),'BTREL','allocate_relativistic')
          BTREL= 0.D0
-         allocate(DRDIREL(IRMD*KREL+(1-KREL),NATYP),stat=i_stat)
+         allocate(DRDIREL(IRM*KREL+(1-KREL),NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(DRDIREL))*kind(DRDIREL),'DRDIREL','allocate_relativistic')
          DRDIREL = 0.D0
-         allocate(R2DRDIREL(IRMD*KREL+(1-KREL),NATYP),stat=i_stat)
+         allocate(R2DRDIREL(IRM*KREL+(1-KREL),NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(R2DRDIREL))*kind(R2DRDIREL),'R2DRDIREL','allocate_relativistic')
          R2DRDIREL =0.D0
-         allocate(RMREL(IRMD*KREL+(1-KREL),NATYP),stat=i_stat)
+         allocate(RMREL(IRM*KREL+(1-KREL),NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(RMREL))*kind(RMREL),'RMREL','allocate_relativistic')
          RMREL = 0.D0
          allocate(IRSHIFT(NATYP),stat=i_stat)
@@ -953,7 +953,7 @@ contains
 
    end subroutine allocate_relativistic
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_rel_transformations
    !
    ! DESCRIPTION:
@@ -963,7 +963,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_rel_transformations(flag,LMMAXD,NRREL,IRREL,RC,CREL,RREL,SRREL)
 
       implicit none
@@ -1036,7 +1036,7 @@ contains
 
    end subroutine allocate_rel_transformations
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_clusters
    !
    ! DESCRIPTION:
@@ -1046,7 +1046,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_clusters(flag,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,&
       LMPOT,NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,JEND,RATOM,&
       RCLSIMP,CMOMHOST,RCLS)
@@ -1192,7 +1192,7 @@ contains
 
    end subroutine allocate_clusters
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_expansion
    !
    ! DESCRIPTION:
@@ -1202,7 +1202,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_expansion(flag,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,&
       NCHEBD,LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
 
@@ -1284,7 +1284,7 @@ contains
 
    end subroutine allocate_expansion
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_mesh
    !
    ! DESCRIPTION:
@@ -1294,13 +1294,13 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
-   subroutine allocate_mesh(flag,IRMD,NATYP,A,B,R,DRDI)
+   !----------------------------------------------------------------------------
+   subroutine allocate_mesh(flag,IRM,NATYP,A,B,R,DRDI)
 
       implicit none
 
       integer, intent(in) :: flag ! Allocate/deallocate (1/-1) arrays
-      integer, intent(in) :: IRMD
+      integer, intent(in) :: IRM
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
       double precision, dimension(:), allocatable, intent(inout) :: A !< Constants for exponential R mesh
       double precision, dimension(:), allocatable, intent(inout) :: B
@@ -1312,10 +1312,10 @@ contains
 
       if (flag>0) then
 
-         allocate(DRDI(IRMD,NATYP),stat=i_stat)
+         allocate(DRDI(IRM,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(DRDI))*kind(DRDI),'DRDI','allocate_mesh')
          DRDI = 0.D0
-         allocate(R(IRMD,NATYP),stat=i_stat)
+         allocate(R(IRM,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(R))*kind(R),'R','allocate_mesh')
          R = 0.D0
          allocate(A(NATYP),stat=i_stat)
@@ -1351,7 +1351,7 @@ contains
 
    end subroutine allocate_mesh
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_pannels
    !
    ! DESCRIPTION:
@@ -1361,7 +1361,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_pannels(flag,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQNEW,NPAN_LOGNEW,&
       IPAN_INTERVALL,RPAN_INTERVALL)
 
@@ -1436,7 +1436,7 @@ contains
 
    end subroutine allocate_pannels
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_misc
    !
    ! DESCRIPTION:
@@ -1445,17 +1445,17 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
-   subroutine allocate_misc(flag,NRD,IRMD,IRID,LMAX,NAEZ,NATYP,NFUND,NREFD,IEMXD,&
+   !----------------------------------------------------------------------------
+   subroutine allocate_misc(flag,NRD,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREFD,IEMXD,&
       NTOTD,NSHELD,LMMAXD,NEMBD1,NCHEBD,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM,&
       IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,DSYMLL1,LEFTTINVLL,&
       RIGHTTINVLL)
 
       implicit none
 
-      integer, intent(in) :: NRD
+      integer, intent(in) :: NR
       integer, intent(in) :: flag ! Allocate/deallocate (1/-1) arrays
-      integer, intent(in) :: IRMD
+      integer, intent(in) :: IRM
       integer, intent(in) :: IRID
       integer, intent(in) :: LMAX !< Maximum l component in wave function expansion
       integer, intent(in) :: NAEZ !< number of atoms in unit cell
@@ -1493,13 +1493,13 @@ contains
       integer :: i_stat, i_all
 
       if (flag>0) then
-         allocate(RR(3,0:NRD),stat=i_stat)
+         allocate(RR(3,0:NR),stat=i_stat)
          call memocc(i_stat,product(shape(RR))*kind(RR),'RR','allocate_misc')
          RR = 0.D0
          allocate(VREF(NREFD),stat=i_stat)
          call memocc(i_stat,product(shape(VREF))*kind(VREF),'VREF','allocate_misc')
          VREF = 0.D0
-         allocate(DROR(IRMD,NATYP),stat=i_stat)
+         allocate(DROR(IRM,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(DROR))*kind(DROR),'DROR','allocate_misc')
          DROR = 0.D0
          allocate(S(0:LMAX,NATYP),stat=i_stat)
@@ -1514,7 +1514,7 @@ contains
          allocate(IFUNM1(LMXSPD,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(IFUNM1))*kind(IFUNM1),'IFUNM1','allocate_misc')
          IFUNM1 = 0
-         allocate(RS(IRMD,0:LMAX,NATYP),stat=i_stat)
+         allocate(RS(IRM,0:LMAX,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(RS))*kind(RS),'RS','allocate_misc')
          RS = 0.D0
          allocate(THESME(IRID,NFUND,NCELLD),stat=i_stat)
@@ -1620,7 +1620,7 @@ contains
 
    end subroutine allocate_misc
 
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    ! SUBROUTINE: allocate_green
    !
    ! DESCRIPTION:
@@ -1630,7 +1630,7 @@ contains
    !> @author
    !> Jonathan Chico
    !> @date 19.12.2017
-   !-----------------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    subroutine allocate_green(flag,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJD,ISH,JSH,&
       KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM,GSH)
 

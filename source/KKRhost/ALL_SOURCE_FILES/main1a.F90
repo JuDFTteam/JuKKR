@@ -6,10 +6,13 @@
 !> t_params and passes them to local variables
 !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
 !> and many others ...
+!> @note
+!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 module MOD_MAIN1A
 
    use Profiling
+   use Constants
 
    implicit none
 
@@ -21,7 +24,14 @@ contains
    !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
    !> and many others ...
    !----------------------------------------------------------------------------
-   subroutine main1a()
+   subroutine main1a(INS,LLY,IRM,LM2D,ICST,IEND,NCLS,LMAX,NREF,NSRA,KREL,NEMB,   &
+      NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,IEMXD,LMPOT,NCLEB,IPAND,NINEQ,    &
+      NSPIN,NCHEB,NSPIND,LMMAXD,IELAST,NACLSD,NRMAXD,IRMIND,NSPOTD,WLENGTH,      &
+      NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS,IQAT,IRWS,NACLS,REFPOT,ATOM,ZAT,    &
+      VREF,RMTREF,RCLS,SOLVER,SOCSCL,SOCSCALE,CSCL,NTLDAU,IDOLDAU,ITLDAU,UEFF,   &
+      JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,ICLEB,IRCUT,IPAN_INTERVALL,PHI,THETA,CLEB,   &
+      VISP,DRDI,RNEW,RMESH,RPAN_INTERVALL,VINS,ZREL,JWSREL,VTREL,BTREL,RMREL,    &
+      DRDIREL,R2DRDIREL,ITRUNLDAU,LOPT,EREFLDAU,WLDAU,ULDAU,PHILDAU)
 
 #ifdef CPP_MPI
       use mpi
@@ -50,130 +60,140 @@ contains
       ! * For KREL = 1 (relativistic mode)                                  *
       ! *                                                                   *
       ! *  NPOTD = 2 * NATYPD                                               *
-      ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
+      ! *  LMMAXD = 2 * (LMAX+1)^2                                         *
       ! *  NSPIND = 1                                                       *
-      ! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
+      ! *  LMGF0D = (LMAX+1)^2 dimension of the reference system Green     *
       ! *          function, set up in the spin-independent non-relativstic *
       ! *          (l,m_l)-representation                                   *
       ! *                                                                   *
       ! *********************************************************************
-      !     .. Parameters ..
-      INTEGER LMMAXD,LMPOTD
-      PARAMETER (LMMAXD= (KREL+KORBIT+1) * (LMAXD+1)**2)
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER MMAXD
-      PARAMETER (MMAXD = 2*LMAXD+1)
-      INTEGER LM2D
-      PARAMETER (LM2D= (2*LMAXD+1)**2)
-      INTEGER NPOTD
-      PARAMETER (NPOTD= (2*(KREL+KORBIT) +(1-(KREL+KORBIT))*NSPIND)*NATYPD)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
-      INTEGER NRMAXD
-      PARAMETER (NRMAXD=NTOTD*(NCHEBD+1))
-      INTEGER LRECTMT
-      PARAMETER (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
-      INTEGER LRECTRA
-      PARAMETER (LRECTRA=WLENGTH*4)
       !     ..
-      !     .. Local Scalars ..
-      integer :: I1
-      integer :: INS
-      integer :: LLY ! LLY <> 0: apply Lloyds formula
-      integer :: ICST
-      integer :: IEND
-      integer :: IPOT
-      integer :: NCLS
-      integer :: LMAX
-      integer :: NREF
-      integer :: NSRA
-      integer :: NAEZ
-      integer :: NATYP
-      integer :: ISPIN
-      integer :: ITSCF
-      integer :: NINEQ
-      integer :: NSPIN
-      integer :: NCHEB
-      integer :: IELAST
-      double precision :: PI
-      double precision :: ALAT
-      double precision :: R_LOG
-      double precision :: TOLRDIF
-      double complex :: DELTAE  ! Energy difference for numerical derivative
-      integer, dimension(NATYP) :: NPAN_EQ
-      integer, dimension(NATYP) :: NPAN_LOG
-      integer, dimension(NATYP) :: NPAN_TOT
-      integer, dimension(0:NTOTD,NATYP) :: IPAN_INTERVALL
-      double precision, dimension(NATYP) :: PHI
-      double precision, dimension(NATYP) :: THETA
-      double precision, dimension(NRMAXD,NATYP) :: RNEW
-      double precision, dimension(0:NTOTD,NATYP) :: RPAN_INTERVALL
-      double precision, dimension(:,:,:), allocatable :: VINSNEW
-      !     ..
-      !     .. Local Arrays ..
-      integer, dimension(NAEZ+NEMB) :: CLS
-      integer, dimension(NATYP) :: IPAN
-      integer, dimension(NATYP) :: IRWS
-      integer, dimension(NATYP) :: IRMIN
-      integer, dimension(LM2D) :: LOFLM
-      integer, dimension(NCLSD) :: NACLS
-      integer, dimension(NAEZ+NEMB) :: REFPOT
-      integer, dimension(NACLSD,NAEZ+NEMB) :: ATOM
-      integer, dimension(NCLEB,4) :: ICLEB
-      integer, dimension(0:IPAND,NATYP) :: IRCUT
-      double precision, dimension(NATYP) :: ZAT
-      double precision, dimension(NREF) :: VREF
-      double precision, dimension(NREF) :: RMTREF
-      double precision, dimension(NCLEB,2) :: CLEB
-      double precision, dimension(IRM,NPOTD) :: VISP
-      double precision, dimension(IRM,NATYP) :: DRDI
-      double precision, dimension(IRM,NATYP) :: RMESH
-      double precision, dimension(3,NACLSD,NCLSD) :: RCLS
-      double precision, dimension(:,:,:), allocatable :: VINS
-      double complex, dimension(IEMXD) :: EZ
+      !     .. Input variables
+      integer, intent(in) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
+      integer, intent(in) :: LLY       !< LLY <> 0: apply Lloyds formula
+      integer, intent(in) :: IRM       !< Maximum number of radial points
+      integer, intent(in) :: LM2D      !< (2*LMAX+1)**2
+      integer, intent(in) :: ICST      !< Number of Born approximation
+      integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
+      integer, intent(in) :: NCLS      !< Number of reference clusters
+      integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
+      integer, intent(in) :: NREF      !< Number of diff. ref. potentials
+      integer, intent(in) :: NSRA
+      integer, intent(in) :: KREL      !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+      integer, intent(in) :: NEMB      !< Number of 'embedding' positions
+      integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
+      integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
+      integer, intent(in) :: NCLSD     !< Maximum number of different TB-clusters
+      integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+      integer, intent(in) :: ITSCF
+      integer, intent(in) :: NTOTD
+      integer, intent(in) :: MMAXD     !< 2*LMAX+1
+      integer, intent(in) :: IEMXD     !< Dimension for energy-dependent arrays
+      integer, intent(in) :: LMPOT     !< (LPOT+1)**2
+      integer, intent(in) :: NCLEB     !< Number of Clebsch-Gordon coefficients
+      integer, intent(in) :: IPAND     !< Number of panels in non-spherical part
+      integer, intent(in) :: NINEQ     !< Number of ineq. positions in unit cell
+      integer, intent(in) :: NSPIN     !< Counter for spin directions
+      integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
+      integer, intent(in) :: NSPIND    !< KREL+(1-KREL)*(NSPIN+1)
+      integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
+      integer, intent(in) :: IELAST
+      integer, intent(in) :: NACLSD    !< Maximum number of atoms in a TB-cluster
+      integer, intent(in) :: NRMAXD    !< NTOTD*(NCHEB+1)
+      integer, intent(in) :: IRMIND    !< IRM-IRNSD
+      integer, intent(in) :: NSPOTD    !< Number of potentials for storing non-sph. potentials
+      integer, intent(in) :: WLENGTH   !< Word length for direct access files, compiler dependent ifort/others (1/4)
+      integer, intent(in) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+      double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
+      double precision, intent(in) :: R_LOG     !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
+      double precision, intent(in) :: TOLRDIF   !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
+      double complex, intent(in) :: DELTAE  !< Energy difference for numerical derivative
+      integer, dimension(NAEZ+NEMB), intent(in)          :: CLS   !< Cluster around atomic sites
+      integer, dimension(NATYP), intent(in)              :: IQAT  !< The site on which an atom is located on a given site
+      integer, dimension(NATYP), intent(in)              :: IRWS  !< R point at WS radius
+      integer, dimension(NCLSD), intent(in)              :: NACLS !< Number of atoms in cluster
+      integer, dimension(NAEZ+NEMB), intent(in)          :: REFPOT   !< Ref. pot. card  at position
+      integer, dimension(NACLSD,NAEZ+NEMB), intent(in)   :: ATOM  !< Atom at site in cluster
+      double precision, dimension(NATYP), intent(in)  :: ZAT      !< Nuclear charge
+      double precision, dimension(NREF), intent(in)   :: VREF
+      double precision, dimension(NREF), intent(in)   :: RMTREF   !< Muffin-tin radius of reference system
+      double precision, dimension(3,NACLSD,NCLSD), intent(in) :: RCLS   !< Real space position of atom in cluster
+
       !-------------------------------------------------------------------------
       !     RELATIVISTIC MODE
       !-------------------------------------------------------------------------
+      character(len=10), intent(in) :: SOLVER   !< Type of solver
+      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(in)   :: SOCSCL
+      double precision, dimension(NATYP), intent(in)                             :: SOCSCALE    !< Spin-orbit scaling
+      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(in)   :: CSCL        !< Speed of light scaling
+      !-------------------------------------------------------------------------
+      ! LDA+U
+      !-------------------------------------------------------------------------
+      integer, intent(in) :: NTLDAU    !< number of atoms on which LDA+U is applied
+      integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
+      integer, dimension(NATYP), intent(in) :: ITLDAU !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
+      double precision, dimension(NATYP), intent(in) :: UEFF   !< input U parameter for each atom
+      double precision, dimension(NATYP), intent(in) :: JEFF   !< input J parameter for each atom
+
+      ! .. In/out Variables
+      integer, dimension(NATYP), intent(inout)                             :: IPAN !< Number of panels in non-MT-region
+      integer, dimension(LM2D), intent(inout)                              :: LOFLM !< l of lm=(l,m) (GAUNT)
+      integer, dimension(NATYP), intent(inout)                             :: IRMIN !< Max R for spherical treatment
+      integer, dimension(NATOMIMP), intent(inout)                          :: ATOMIMP
+      integer, dimension(NCLEB,4), intent(inout)                           :: ICLEB !< Pointer array
+      integer, dimension(0:IPAND,NATYP), intent(inout)                     :: IRCUT !< R points of panel borders
+      integer, dimension(0:NTOTD,NATYP), intent(inout)                     :: IPAN_INTERVALL
+      double precision, dimension(NATYP), intent(inout)                    :: PHI
+      double precision, dimension(NATYP), intent(inout)                    :: THETA
+      double precision, dimension(NCLEB,2), intent(inout)                  :: CLEB  !< GAUNT coefficients (GAUNT)
+      double precision, dimension(IRM,NPOTD), intent(inout)                :: VISP  !< Spherical part of the potential
+      double precision, dimension(IRM,NATYP), intent(inout)                :: DRDI  !< Derivative dr/di
+      double precision, dimension(NRMAXD,NATYP), intent(inout)             :: RNEW
+      double precision, dimension(IRM,NATYP), intent(inout)                :: RMESH !< Radial mesh ( in units a Bohr)
+      double precision, dimension(0:NTOTD,NATYP), intent(inout)            :: RPAN_INTERVALL
+      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)  :: VINS !< Non-spherical part of the potential
+      double complex, dimension(IEMXD), intent(inout) :: EZ
+      !-------------------------------------------------------------------------
+      !     RELATIVISTIC MODE
+      !-------------------------------------------------------------------------
+      integer, dimension(NATYP), intent(inout) :: ZREL      !< atomic number (cast integer)
+      integer, dimension(NATYP), intent(inout) :: JWSREL    !< index of the WS radius
+      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: VTREL       !< potential (spherical part)
+      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: BTREL       !< magnetic field
+      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: RMREL       !< radial mesh
+      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: DRDIREL     !< derivative of radial mesh
+      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      !-------------------------------------------------------------------------
+      ! LDA+U
+      !-------------------------------------------------------------------------
+      integer, intent(inout) :: ITRUNLDAU !< Iteration index for LDA+U
+      integer, dimension(NATYP), intent(inout) :: LOPT   !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+      double precision, dimension(NATYP), intent(inout) :: EREFLDAU  !< the energies of the projector's wave functions (REAL)
+      double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(inout) :: WLDAU !< potential matrix
+      double precision, dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(inout) :: ULDAU  !< calculated Coulomb matrix elements (EREFLDAU)
+      double complex, dimension(IRM,NATYP), intent(inout) :: PHILDAU
+
+      ! .. Local variables
+      integer :: I1
+      integer :: IPOT
       integer :: ILTMP
+      integer :: ISPIN
       integer :: ITMPDIR
-      character(len=10) :: SOLVER
       character(len=80) :: TMPDIR
       logical :: OPT
       logical :: TEST
       logical :: LREFSYS
-      integer, dimension(NATYP) :: ZREL
-      integer, dimension(NATYP) :: JWSREL
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)) :: SOCSCL
-      double precision, dimension(NATYP) :: SOCSCALE
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)) :: CSCL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP) :: VTREL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP) :: BTREL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP) :: RMREL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP) :: DRDIREL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP) :: R2DRDIREL
-      !-------------------------------------------------------------------------
-      ! LDA+U
-      !-------------------------------------------------------------------------
-      integer :: NTLDAU
-      integer :: IDOLDAU
-      integer :: ITRUNLDAU
-      integer, dimension(NATYP) :: LOPT
-      integer, dimension(NATYP) :: ITLDAU
-      double precision, dimension(NATYP) :: UEFF
-      double precision, dimension(NATYP) :: JEFF
-      double precision, dimension(NATYP) :: EREFLDAU
-      double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP) :: WLDAU
-      double precision, dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP) :: ULDAU
-      double complex, dimension(IRM,NATYP) :: PHILDAU
-      !-------------------------------------------------------------------------
-      ! LDA+U
-      !-------------------------------------------------------------------------
-      integer :: NATOMIMP
-      integer, dimension(NATYP) :: IQAT
-      integer, dimension(NATOMIMPD) :: ATOMIMP
+      integer :: LRECTMT
+      integer :: LRECTRA
+      ! .. Local arrays
+      integer, dimension(NATYP) :: NPAN_EQ
+      integer, dimension(NATYP) :: NPAN_LOG
+      integer, dimension(NATYP) :: NPAN_TOT
+      double precision, dimension(:,:,:), allocatable :: VINSNEW
 
       ! Assignment of values to parameters
-      PARAMETER  (PI=4.d0*datan(1.d0))
+      parameter (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
+      parameter (LRECTRA=WLENGTH*4)
 
 #ifdef CPP_MPI
       integer :: ntot1, mytot, ii
@@ -187,42 +207,41 @@ contains
       !-------------------------------------------------------------------------
       !     .. External Subroutines ..
       !-------------------------------------------------------------------------
-      EXTERNAL TBREF,CALCTMAT,OPT
+      external TBREF,CALCTMAT,OPT
       !-------------------------------------------------------------------------
       !     .. Intrinsic Functions ..
       !-------------------------------------------------------------------------
-      INTRINSIC ATAN,MOD
+      intrinsic ATAN,MOD
       !     ..
-      DATA TOLRDIF /1.5D0/ ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
-      DATA LLY /0/
+      data TOLRDIF /1.5D0/ ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
+      data LLY /0/
       !
 
-      allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD),stat=i_stat)
+      allocate(VINSNEW(NRMAXD,LMPOT,NSPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','main1a')
-      allocate(VINS(IRMIND:IRM,LMPOTD,NSPOTD),stat=i_stat)
-      call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','main1a')
+      VINSNEW=0.0D0
 
       ! Consistency check
-      IF ( (KREL.LT.0) .OR. (KREL.GT.1) ) STOP ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
-      IF ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) STOP ' set NSPIN = 1 for KREL = 1 in the inputcard'
+      if ( (KREL.lt.0) .or. (KREL.gt.1) ) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
+      if ( (KREL.eq.1) .and. (NSPIND.eq.2) ) stop ' set NSPIN = 1 for KREL = 1 in the inputcard'
       !-------------------------------------------------------------------------
       ! This routine previously used to read from unformatted files created by
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1a(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,   &
-         NCLSD,NREFD,NCLEB,NEMBD,NAEZD,LM2D,NSRA,INS,NAEZ,NATYP,     &
+      call get_params_1a(t_params,IPAND,NATYP,IRM,NACLSD,IELAST,   &
+         NCLSD,NREF,NCLEB,NEMB,NAEZ,LM2D,NSRA,INS,NAEZ,NATYP,     &
          NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,NINEQ,NREF,IDOLDAU,LLY,     &
          KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,IEND,EZ,VINS,   &
          IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,VISP,    &
          RMTREF,VREF,CLEB,CSCL,SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,   &
          SOLVER,TMPDIR,DELTAE,tolrdif,NPAN_LOG,NPAN_EQ,              &
-         NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,LMAXD,    &
+         NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,LMAX,    &
          NTOTD,NRMAXD,R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,  &
-         R2DRDIREL,RMREL,IRMIND,LMPOTD,NSPOTD,NPOTD,JWSREL,ZREL,     &
+         R2DRDIREL,RMREL,IRMIND,LMPOT,NSPOTD,NPOTD,JWSREL,ZREL,     &
          ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
       !
-      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
+      if ( TEST('Vspher  ') ) VINS(IRMIND:IRM,2:LMPOT,1:NSPOTD) = 0.D0
 
       !-------------------------------------------------------------------------
       !                       End read in variables
@@ -230,21 +249,20 @@ contains
       !-------------------------------------------------------------------------
       ! LDA+U treatment
       !-------------------------------------------------------------------------
-      IF ( IDOLDAU.EQ.1 ) THEN
-         OPEN (67,FILE='ldau.unformatted',FORM='unformatted')
-         READ (67) ITRUNLDAU,WLDAU,ULDAU,PHILDAU
-         CLOSE(67)
+      if ( IDOLDAU.eq.1 ) then
+         open (67,FILE='ldau.unformatted',FORM='unformatted')
+         read (67) ITRUNLDAU,WLDAU,ULDAU,PHILDAU
+         close(67)
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          ! Calculate Coulomb matrix ULDAU it calculates U matrix only once.
          ! Remove the next IF statement to have U calculated for each iteration anew.
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
          !!!!!!!! IF ( ITRUNLDAU.LE.0 ) THEN
-         CALL INITLDAU(NSRA,NTLDAU,ITLDAU,LOPT,UEFF,JEFF,EREFLDAU,&
-            VISP,NSPIN,RMESH,DRDI,ZAT,IPAN,IRCUT,                 &
-            PHILDAU,ULDAU)
+         call INITLDAU(NSRA,NTLDAU,ITLDAU,LOPT,UEFF,JEFF,EREFLDAU,VISP,NSPIN, &
+            RMESH,DRDI,ZAT,IPAN,IRCUT,PHILDAU,ULDAU)
          !!!!!!!! END IF
-      END IF
+      end if
       !-------------------------------------------------------------------------
       ! End of LDA+U setup
       !-------------------------------------------------------------------------
@@ -257,25 +275,25 @@ contains
       !-------------------------------------------------------------------------
       ! ITSCF is initialised to 0 in main0
       LREFSYS = .TRUE.
-      IF (  OPT('DECIMATE').AND.(ITSCF.GT.0) ) LREFSYS = .FALSE.
-      IF (  OPT('rigid-ef').AND.(ITSCF.GT.0) ) LREFSYS = .FALSE.
-      IF ( TEST('no-neutr').AND.(ITSCF.GT.0) ) LREFSYS = .FALSE.
-      IF (  OPT('no-neutr').AND.(ITSCF.GT.0) ) LREFSYS = .FALSE.
-      IF ( TEST('lrefsysf').OR.OPT('lrefsysf') ) LREFSYS = .FALSE.
+      if (  OPT('DECIMATE').and.(ITSCF.gt.0) ) LREFSYS = .FALSE.
+      if (  OPT('rigid-ef').and.(ITSCF.gt.0) ) LREFSYS = .FALSE.
+      if ( TEST('no-neutr').and.(ITSCF.gt.0) ) LREFSYS = .FALSE.
+      if (  OPT('no-neutr').and.(ITSCF.gt.0) ) LREFSYS = .FALSE.
+      if ( TEST('lrefsysf').or.OPT('lrefsysf') ) LREFSYS = .FALSE.
       !
 
       if (t_tgmat%tmat_to_file) then
-         CALL OPENDAFILE(69,'tmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
+         call OPENDAFILE(69,'tmat',4,LRECTMT,TMPDIR,ITMPDIR,ILTMP)
       end if
 
-      IF (LLY.NE.0) THEN
+      if (LLY.ne.0) then
          if(t_lloyd%dtmat_to_file) then
-            CALL OPENDAFILE(691,'dtmatde',7,LRECTMT,TMPDIR,ITMPDIR,ILTMP) ! LLY
+            call OPENDAFILE(691,'dtmatde',7,LRECTMT,TMPDIR,ITMPDIR,ILTMP) ! LLY
          end if
          if(t_lloyd%tralpha_to_file) then
-            CALL OPENDAFILE(692,'tralpha',7,LRECTRA,TMPDIR,ITMPDIR,ILTMP) ! LLY
+            call OPENDAFILE(692,'tralpha',7,LRECTRA,TMPDIR,ITMPDIR,ILTMP) ! LLY
          end if
-      ENDIF
+      endif
       !
 
 #ifdef CPP_MPI
@@ -287,7 +305,7 @@ contains
       i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+ntot_pT(t_mpi_c_grid%myrank_ie)
       t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 
-      if (.not. (allocated(t_mpi_c_grid%ntot_pT1) .and.   &
+      if (.not. (allocated(t_mpi_c_grid%ntot_pT1) .and.  &
          allocated(t_mpi_c_grid%ioff_pT1))) then
          allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),stat=i_stat)
          call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT1))*kind(t_mpi_c_grid%ntot_pT1),&
@@ -310,64 +328,51 @@ contains
          i1_end = 1
       end if
 
-      IF (.NOT.OPT('NEWSOSOL')) THEN
-         DO I1 = i1_start,i1_end
-            DO ISPIN = 1,NSPIN
+      if (.not.OPT('NEWSOSOL')) then
+         do I1 = i1_start,i1_end
+            do ISPIN = 1,NSPIN
                IPOT=NSPIN*(I1-1)+ispin
                !
-               CALL CALCTMAT(ICST,INS,IELAST,                  &
-                     NSRA,ISPIN,NSPIN,                         &
-                     I1,EZ,                                    &
-                     DRDI(1,I1),RMESH(1,I1),                   &
-                     VINS(IRMIND,1,KNOSPH*IPOT+(1-KNOSPH)),    &
-                     VISP(1,IPOT),ZAT(I1),IRMIN(I1),IPAN(I1),  &   ! Added IRMIN 1.7.2014
-                     IRCUT(0,I1),CLEB,LOFLM,ICLEB,IEND,SOLVER, &
-                     SOCSCL(1,KREL*I1+(1-KREL)),               &
-                     CSCL(1,KREL*I1+(1-KREL)),                 &
-                     VTREL(1,I1),BTREL(1,I1),                  &
-                     RMREL(1,I1),DRDIREL(1,I1),R2DRDIREL(1,I1),&
-                     ZREL(I1),JWSREL(I1),                      &
-                     IDOLDAU,LOPT(I1),WLDAU(1,1,1,I1),         &
-                     LLY,DELTAE) ! LLY
+               call CALCTMAT(ICST,INS,IELAST,NSRA,ISPIN,NSPIN,I1,EZ,DRDI(1,I1),  &
+                  RMESH(1,I1),VINS(IRMIND,1,KNOSPH*IPOT+(1-KNOSPH)),             &
+                  VISP(1,IPOT),ZAT(I1),IRMIN(I1),IPAN(I1),IRCUT(0,I1),CLEB,      &
+                  LOFLM,ICLEB,IEND,SOLVER,SOCSCL(1,KREL*I1+(1-KREL)),            &
+                  CSCL(1,KREL*I1+(1-KREL)),VTREL(1,I1),BTREL(1,I1),RMREL(1,I1),  &
+                  DRDIREL(1,I1),R2DRDIREL(1,I1),ZREL(I1),JWSREL(I1),IDOLDAU,     &
+                  LOPT(I1),WLDAU(1,1,1,I1),LLY,DELTAE) ! LLY
                !
-            END DO
-         END DO
+            end do
+         end do
 
-      ELSE
+      else
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          ! For calculation of Jij-tensor: create array for additional t-matrices and
          ! set atom-dependent flags which indicate if t-matrix is needed
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          call init_t_dtmatJij(t_inc,t_dtmatJij)
-         IF(OPT('XCPL    '))THEN
+         if(OPT('XCPL    '))then
             call set_Jijcalc_flags(t_dtmatJij,NATYPD,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
-         END IF!OPT('XCPL')
+         end if !OPT('XCPL')
 
          ! nonco angles: defined in mod_wunfiles
          call read_angles(t_params,NATYP,THETA,PHI)
 
          ! Interpolate potential
-         CALL INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATYPD,IPAND, &
-            NSPOTD,NTOTD,NCHEBD,NTOTD*(NCHEBD+1),              &
-            NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,                 &
-            VISP,NPAN_LOG,NPAN_EQ,NPAN_TOT,                    &
-            RNEW,IPAN_INTERVALL,                               &
-            VINSNEW)
+         call INTERPOLATE_POTEN(LPOTD,IRM,IRNSD,NATYPD,IPAND,NSPOTD,NTOTD,   &
+            NCHEBD,NTOTD*(NCHEBD+1),NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,VISP,   &
+            NPAN_LOG,NPAN_EQ,NPAN_TOT,RNEW,IPAN_INTERVALL,VINSNEW)
 
-         DO I1=i1_start,i1_end
+         do I1=i1_start,i1_end
 
             IPOT=NSPIN*(I1-1)+1
 
-            CALL TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT(I1),  &
-               SOCSCALE(I1),EZ,NSRA,CLEB(1,1),ICLEB,IEND,   &
-               NCHEB,NPAN_TOT(I1),                          &
-               RPAN_INTERVALL(0,I1),IPAN_INTERVALL(0,I1),   &
-               RNEW(1,I1),VINSNEW,THETA(I1),PHI(I1),I1,IPOT,&
-               LLY,DELTAE,                                  &  !LLY
-               IDOLDAU,LOPT(I1),WLDAU(1,1,1,I1),            &  ! LDAU
-               t_dtmatJij(I1))
+            call TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT(I1),SOCSCALE(I1),EZ, &
+               NSRA,CLEB(1,1),ICLEB,IEND,NCHEB,NPAN_TOT(I1),               &
+               RPAN_INTERVALL(0,I1),IPAN_INTERVALL(0,I1),RNEW(1,I1),       &
+               VINSNEW,THETA(I1),PHI(I1),I1,IPOT,LLY,DELTAE,IDOLDAU,       &
+               LOPT(I1),WLDAU(1,1,1,I1),t_dtmatJij(I1))
 
-         ENDDO !I1, atom loop
+         enddo !I1, atom loop
 
          !      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
          !      TTTTTTTTTTTTT TESTOUTPUT   Dij-implementation TTTTTTTTTTTTTTTTTT
@@ -393,20 +398,20 @@ contains
          !      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
          !      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
-      ENDIF !NEWSOSOL
+      endif !NEWSOSOL
       !
-      IF ( IDOLDAU.EQ.1 ) THEN
-         OPEN (67,FILE='ldau.unformatted',FORM='unformatted')
-         WRITE (67) ITRUNLDAU,WLDAU,ULDAU,PHILDAU
-         CLOSE(67)
-      END IF
+      if ( IDOLDAU.eq.1 ) then
+         open (67,FILE='ldau.unformatted',FORM='unformatted')
+         write (67) ITRUNLDAU,WLDAU,ULDAU,PHILDAU
+         close(67)
+      end if
       !
-      CLOSE (69)
+      close (69)
 
-      IF (LLY.NE.0) THEN
-         if(t_lloyd%dtmat_to_file) CLOSE(691)
-         if(t_lloyd%tralpha_to_file) CLOSE(692)
-      ENDIF
+      if (LLY.ne.0) then
+         if(t_lloyd%dtmat_to_file) close(691)
+         if(t_lloyd%tralpha_to_file) close(692)
+      endif
 
 
 #ifdef CPP_MPI
@@ -449,9 +454,9 @@ contains
                i_all=-product(shape(work_jij))*kind(work_jij)
                deallocate(work_jij, stat=i_stat)
                call memocc(i_stat,i_all,'work_jij','main1a')
-            end if!t_dtmatJij(I1)%calculate
+            end if !t_dtmatJij(I1)%calculate
 
-         end do!I1=1,t_inc%NATYP
+         end do !I1=1,t_inc%NATYP
          !      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
          !      TTTTTTTTTTTTT TESTOUTPUT   Dij-implementation TTTTTTTTTTTTTTTTTT
          !      DO I1=1,t_inc%NATYP
@@ -477,7 +482,7 @@ contains
          !      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
          !      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
-      end if!OPT('XCPL    ').and.OPT('NEWSOSOL')
+      end if !OPT('XCPL    ').and.OPT('NEWSOSOL')
       !-------------------------------------------------------------------------
       ! End of calculation of Jij-tensor
       !-------------------------------------------------------------------------
@@ -488,11 +493,9 @@ contains
       call timing_start('main1a - tbref')
 #endif
       if ( LREFSYS ) then
-         call TBREF(EZ,IELAST,ALAT,VREF,IEND,LMAX,NCLS,  &
-            NINEQ,NREF,CLEB,RCLS,ATOM,CLS,ICLEB,         &
-            LOFLM,NACLS,REFPOT,RMTREF,TOLRDIF,           &
-            TMPDIR,ITMPDIR,ILTMP,                        &
-            NAEZ,LLY) ! LLY Lloyd
+         call TBREF(EZ,IELAST,ALAT,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,  &
+            ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,RMTREF,TOLRDIF,TMPDIR,ITMPDIR,  &
+            ILTMP,NAEZ,LLY) ! LLY Lloyd
       endif
 #ifdef CPP_TIMING
       call timing_stop('main1a - tbref')
@@ -501,13 +504,6 @@ contains
       if(t_inc%i_write>0) write (1337,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
 
       ! Deallocate leftover arrays
-      !> @note JC: These arrays are allocated here, but referenced in the main0
-      !> and then in the other modules, why?
-      if (allocated(VINS)) then
-         i_all=-product(shape(VINS))*kind(VINS)
-         deallocate(VINS,stat=i_stat)
-         call memocc(i_stat,i_all,'VINS','main1a')
-      endif
       if (allocated(VINSNEW)) then
          i_all=-product(shape(VINSNEW))*kind(VINSNEW)
          deallocate(VINSNEW,stat=i_stat)
