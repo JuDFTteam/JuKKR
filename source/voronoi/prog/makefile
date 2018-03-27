@@ -81,7 +81,7 @@ version.o: version.f90
 
 # standard libs
 # serial:
-LIBS=-L../ -lblas
+LIBS = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
 # RWTH cluster:
 rwth: LIBS= -mkl
 jureca: LIBS= -mkl
