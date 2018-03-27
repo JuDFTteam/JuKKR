@@ -71,6 +71,10 @@ ${newsubs}:	inc.geometry
 %.o: %.F90
 	$(FC) $(CPP) -c $(FFLAGS)  $<
 
+# only these conatin explicit !$omp statements:
+version.o: version.f90
+	$(FC) $(FFLAGS) -c -o $@ $<
+
 ####################################################
 # Libraries and compile flags                      #
 ####################################################
