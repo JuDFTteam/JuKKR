@@ -3,5 +3,5 @@ voronoi
 False
 kkr.voro
 slurmcontrol
-voronoi/voronoi.exe
+/builds/kkr/kkrjm/voronoi/voronoi.exe
 
