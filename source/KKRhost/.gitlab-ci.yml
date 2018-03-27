@@ -83,6 +83,8 @@ run:intel:aiida-kkr:
     - verdi code list
     - verdi code show 2
     - echo 'run simple calculation'
+    - git clone https://github.com/broeder-j/aiida-kkr
+    - cd aiida-kkr && git checkout develop && pip install -e . && cd ..
     - pip freeze
     - tests/tools/aiida_simple_test.py
 
