@@ -88,7 +88,7 @@ C     general settings
       PARAMETER ( NTREFD = 0 )
 C ---------------------------------------------------------------------
 C     structure-dependent
-      PARAMETER ( NAEZD = 2  )      ! number of atoms in unit cell, set to NATYP value of inputcard
+      PARAMETER ( NAEZD = 1  )      ! number of atoms in unit cell, set to NATYP value of inputcard
       PARAMETER ( NATYPD = NAEZD )  ! number of atom types, in case of CPA set to a different number then NATYPD
       PARAMETER ( NSHELD = NATYPD + 300)
 !      PARAMETER ( NSHELD = NATYPD +1000)
