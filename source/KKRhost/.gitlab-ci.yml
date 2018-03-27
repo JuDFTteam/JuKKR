@@ -28,7 +28,7 @@ test:intel:
     # test if dependencies are working
     - echo 'do some tests here'
 
-
+: '
 build:intel:hybrid:
   stage: build
   script:
@@ -50,7 +50,7 @@ build:intel:omp:
     paths:
       - kkr.x_omp
     expire_in: 1 day
-
+'
 build:intel:mpi:
   stage: build
   script:
@@ -61,7 +61,7 @@ build:intel:mpi:
     paths:
       - kkr.x_mpi
     expire_in: 1 day
-
+: '
 build:intel:serial:
   stage: build
   script:
@@ -196,4 +196,14 @@ verify:intel:
     # prepare and execute verification using pytest
     - cd tests
     - pytest -v
+'
 
+run:intel:aiida-kkr:
+  stage: run
+  script:
+    - echo 'some aiida tests ...'
+
+verify:intel:
+  stage: verify
+  script:
+    - echo 'implement tests ...'
