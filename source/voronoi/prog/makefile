@@ -109,7 +109,7 @@ clear:
 clean:
 	rm -f *.o ../voronoi.exe *.mod *__genmod.*
 
-compile: ${dir}/getversion ${dir}/version.o ${dir}/version_info.o ${dir}/${voronoi} ${dir}/${newsubs}
+compile: getversion ${dir}/version.o ${dir}/version_info.o ${dir}/${voronoi} ${dir}/${newsubs}
 	${FC} ${dir}/version.o ${dir}/version_info.o ${voronoi} ${newsubs} ${LIBS}  -o ../voronoi.exe
 
 
