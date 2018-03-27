@@ -1,6 +1,7 @@
 # files that are build or temporary
 *.mod
 *.x
+kkr.x*
 *.exe
 *~
 */*~
@@ -39,3 +40,4 @@ pgopti.dpi
 pgopti.dpi.lock
 pgopti.spi
 pgopti.spl
+HTML

@@ -94,7 +94,7 @@ C     structure-dependent
 !      PARAMETER ( NSHELD = NATYPD +1000)
       PARAMETER ( NATOMIMPD = 150)
       PARAMETER ( NREFD = NAEZD )
-      PARAMETER ( NPRINCD = 2 )  ! Number of principle layers, set to a number >= NRPINC in output of main0
+      PARAMETER ( NPRINCD = 4 )  ! Number of principle layers, set to a number >= NRPINC in output of main0
       PARAMETER ( NEMBD = 20)    ! Number of basis atoms on left & right host side, set to NHOSTL+NHOSTR
 C ---------------------------------------------------------------------
 C     non-spherical potential 
