@@ -73,7 +73,7 @@ run:intel:aiida-kkr:
     - verdi code show 1
     - echo 'add voronoi code'
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@iffgit.fz-juelich.de/kkr/voronoi.git voronoi
-    - cd voronoi/prog/ && make
+    - cd voronoi/prog/ && make && cd ../../
     - verdi code setup < "tests/tools/setup_voronoi_aiida.txt" 
     - echo 'check voronoi code setup'
     - echo 'check codes'
