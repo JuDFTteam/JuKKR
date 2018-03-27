@@ -1,0 +1,7 @@
+voronoi
+
+False
+kkr.voro
+slurmcontrol
+voronoi/voronoi.exe
+
