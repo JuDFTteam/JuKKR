@@ -60,12 +60,23 @@ run:intel:aiida-kkr:
     POSTGRES_PASSWORD: password
   script:
     #- cp tests/kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
+    - echo 'check status of aiida daemon'
+    - verdi daemon status
+    - echo 'check computer configuration'
     - verdi computer list
     - verdi computer show slurmcontrol
     - verdi computer test slurmcontrol
+    - echo 'check calculation plugins'
     - verdi calculation plugins
+    - echo 'check codes'
     - verdi code list
     - verdi code show 1
+    - echo 'add voronoi code'
+    - echo '... to be done ...'
+    - echo 'check voronoi code setup'
+    - echo '... to be done ...'
+    - echo 'run simple calculation'
+    - echo '... to be done ...'
 
 
 verify:intel:
