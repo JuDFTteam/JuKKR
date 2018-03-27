@@ -33,7 +33,7 @@ build:intel:mpi:
   script:
     # compile code
     - cp tests/inc.p .
-    - make clean; make mpi; cp kkr.x kkr.x_mpi
+    - # make clean; make mpi; cp kkr.x kkr.x_mpi
   artifacts:
     paths:
       - kkr.x_mpi
@@ -44,6 +44,30 @@ run:intel:aiida-kkr:
   stage: run
   script:
     - echo 'some aiida tests ...'
+
+test:
+  image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
+  stage: run
+  services:
+    - name: postgres:latest
+      alias: db
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c1
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c2
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c3
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c4
+  variables:
+    POSTGRES_USER: aiida
+    POSTGRES_DB: aiida_default
+    POSTGRES_PASSWORD: password
+  script:
+    - # cp tests/kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
+    - verdi code list
+    - verdi computer list
+    - verdi calculation plugins
 
 
 verify:intel:
