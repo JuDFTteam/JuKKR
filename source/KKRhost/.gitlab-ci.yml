@@ -33,7 +33,8 @@ build:intel:mpi:
   script:
     # compile code
     - cp tests/inc.p_1 inc.p
-    - make clean; make mpi; cp kkr.x kkr.x_mpi
+    #- make clean; make mpi; cp kkr.x kkr.x_mpi
+    - cp inc.p kkr.x_mpi
   artifacts:
     paths:
       - kkr.x_mpi
@@ -59,6 +60,7 @@ run:intel:aiida-kkr:
     POSTGRES_DB: aiida_default
     POSTGRES_PASSWORD: password
   script:
+    - pwd && ls -ltr
     - cp kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
     - echo 'check status of aiida daemon'
     - verdi daemon status
