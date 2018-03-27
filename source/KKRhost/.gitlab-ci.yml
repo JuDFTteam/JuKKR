@@ -41,11 +41,6 @@ build:intel:mpi:
 
 
 run:intel:aiida-kkr:
-  stage: run
-  script:
-    - echo 'some aiida tests ...'
-
-test:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
   stage: run
   services:
@@ -65,9 +60,12 @@ test:
     POSTGRES_PASSWORD: password
   script:
     #- cp tests/kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
-    - verdi code list
     - verdi computer list
+    - verdi computer show slurmcontrol
+    - verdi computer test slurmcontrol
     - verdi calculation plugins
+    - verdi code list
+    - verdi code show 1
 
 
 verify:intel:
