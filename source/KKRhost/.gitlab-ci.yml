@@ -61,6 +61,10 @@ run:intel:aiida-kkr:
     POSTGRES_PASSWORD: password
   script:
     - pwd && ls -ltr
+    - ls /
+    - ls /opt/
+    - ls /opt/KKRcode/
+    - ls /opt/KKRcode/kkr.x
     - cp kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
     - echo 'check status of aiida daemon'
     - verdi daemon status
