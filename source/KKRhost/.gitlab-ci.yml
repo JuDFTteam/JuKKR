@@ -33,7 +33,7 @@ build:intel:mpi:
   script:
     # compile code
     - cp tests/inc.p .
-    - # make clean; make mpi; cp kkr.x kkr.x_mpi
+    #- make clean; make mpi; cp kkr.x kkr.x_mpi
   artifacts:
     paths:
       - kkr.x_mpi
@@ -64,7 +64,7 @@ test:
     POSTGRES_DB: aiida_default
     POSTGRES_PASSWORD: password
   script:
-    - # cp tests/kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
+    #- cp tests/kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
     - verdi code list
     - verdi computer list
     - verdi calculation plugins
