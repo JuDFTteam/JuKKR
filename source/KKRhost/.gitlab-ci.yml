@@ -99,7 +99,8 @@ run:intel:aiida-kkr:
     - ls /scratch/root/aiida_run{/,/*/,/*/*/,/*/*/*/}
   artifacts:
     paths:
-      - /scratch/root/aiida_run/*/*/*/*
+      - /scratch/root/aiida_run/*/*/*/inputcard
+      - /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh
     expire_in: 1 day
 
 
