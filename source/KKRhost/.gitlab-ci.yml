@@ -23,22 +23,19 @@ stages:
 
 
 test:intel:
-  image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
   stage: test
   script:
     # test if dependencies are working
     - echo 'do some tests here'
-    # print installed python packages list:
-    - pip freeze
 
 build:intel:mpi:
   stage: build
   script:
     # compile code
     - cp tests/inc.p_1 inc.p
-    #- make clean; make mpi; cp kkr.x kkr.x_mpi
+    - make clean; make mpi; cp kkr.x kkr.x_mpi
     # dummy copy 
-    - cp inc.p kkr.x_mpi
+    #- cp inc.p kkr.x_mpi
   artifacts:
     paths:
       - kkr.x_mpi
