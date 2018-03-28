@@ -34,6 +34,8 @@ build:intel:mpi:
     # compile code
     - cp tests/inc.p_1 inc.p
     #- make clean; make mpi; cp kkr.x kkr.x_mpi
+    # dummy copy 
+    - cp inc.p kkr.x_mpi
   artifacts:
     paths:
       - kkr.x_mpi
