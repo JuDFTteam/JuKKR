@@ -63,7 +63,8 @@ run:intel:aiida-kkr:
   script:
     - mkdir /opt/KKRcode
     - cp kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
-    - echo 'check status of aiida daemon'
+    - echo 'startt daemon and check status of aiida daemon'
+    - verdi daemon start
     - verdi daemon status
     - echo 'check computer configuration'
     - verdi computer list
