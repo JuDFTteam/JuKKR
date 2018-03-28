@@ -63,9 +63,10 @@ run:intel:aiida-kkr:
   script:
     - mkdir /opt/KKRcode
     - cp kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
-    - echo 'startt daemon and check status of aiida daemon'
+    - echo 'start daemon and check status of aiida daemon'
     - verdi daemon start
     - verdi daemon status
+    - cat /root/.aiida/daemon/log/celery.log
     - echo 'check computer configuration'
     - verdi computer list
     - verdi computer show slurmcontrol
@@ -88,6 +89,7 @@ run:intel:aiida-kkr:
     - echo 'run simple calculation'
     - pip freeze
     - verdi daemon status
+    - cat /root/.aiida/daemon/log/celery.log
     - tests/tools/aiida_simple_test.py
   artifacts:
     paths:
