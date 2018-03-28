@@ -23,6 +23,7 @@ stages:
 
 
 test:intel:
+  image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
   stage: test
   script:
     # test if dependencies are working
