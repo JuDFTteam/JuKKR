@@ -87,6 +87,7 @@ run:intel:aiida-kkr:
     - verdi code show 2
     - echo 'run simple calculation'
     - pip freeze
+    - verdi daemon status
     - tests/tools/aiida_simple_test.py
   artifacts:
     paths:
