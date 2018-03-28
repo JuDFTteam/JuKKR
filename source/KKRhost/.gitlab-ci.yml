@@ -87,6 +87,10 @@ run:intel:aiida-kkr:
     - echo 'run simple calculation'
     - pip freeze
     - tests/tools/aiida_simple_test.py
+  artifacts:
+    paths:
+      - /scratch/*
+    expire_in: 1 day
 
 
 verify:intel:

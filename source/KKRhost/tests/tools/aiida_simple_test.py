@@ -45,7 +45,17 @@ print(Cu)
 
 # here we create a parameter node for the workflow input (workflow specific parameter) and adjust the convergence criterion.
 wfd = kkr_scf_wc.get_wf_defaults()
-wfd['convergence_criterion'] = 10**-6
+
+wfd['convergence_criterion'] = 10**-4
+wfd['check_dos'] = False 
+wfd['kkr_runmax'] = 2
+wfd['nsteps'] = 20 
+wfd['queue_name'] = ''
+wfd['resources']['num_machines'] = 1 
+
+wfd['num_rerun'] = 2
+wfd['natom_in_cls_min'] = 20
+
 KKRscf_wf_parameters = ParameterData(dict=wfd)
 
 # The scf-workflow needs also the voronoi and KKR codes to be able to run the calulations
