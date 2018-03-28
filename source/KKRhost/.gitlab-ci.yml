@@ -99,7 +99,7 @@ run:intel:aiida-kkr:
     - ls /scratch/
   artifacts:
     paths:
-      - /scratch/*
+      - /scratch/root/aiida_run
     expire_in: 1 day
 
 
