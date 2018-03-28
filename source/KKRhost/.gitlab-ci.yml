@@ -92,6 +92,9 @@ run:intel:aiida-kkr:
     - verdi daemon status
     - cat /root/.aiida/daemon/log/celery.log
     - tests/tools/aiida_simple_test.py
+    - verdi work list -a
+    - verdi calculation list -a
+    - verdi work report 6
   artifacts:
     paths:
       - /scratch/*

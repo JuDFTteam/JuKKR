@@ -67,7 +67,10 @@ ParaNode = ParameterData(dict=kkrparams(LMAX=2, RMAX=7, GMAX=65, NSPIN=1, RCLUST
 
 label = 'KKR-scf for Cu bulk'
 descr = 'KKR self-consistency workflow for Cu bulk'
-run(kkr_scf_wc, structure=Cu, calc_parameters=ParaNode, voronoi=VoroCode, 
-    kkr=KKRCode, wf_parameters=KKRscf_wf_parameters, _label=label, _description=descr)
+try:
+   run(kkr_scf_wc, structure=Cu, calc_parameters=ParaNode, voronoi=VoroCode, 
+       kkr=KKRCode, wf_parameters=KKRscf_wf_parameters, _label=label, _description=descr)
+except:
+   print 'some Error occured in run of kkr_scf_wc'
 
 
