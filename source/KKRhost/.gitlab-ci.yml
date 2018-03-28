@@ -95,6 +95,7 @@ run:intel:aiida-kkr:
     - verdi work list -a
     - verdi calculation list -a
     - verdi work report 6
+    - verdi calculation logshow 11
   artifacts:
     paths:
       - /scratch/*
