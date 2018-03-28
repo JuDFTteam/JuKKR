@@ -27,6 +27,8 @@ test:intel:
   script:
     # test if dependencies are working
     - echo 'do some tests here'
+    # print installed python packages list:
+    - pip freeze
 
 build:intel:mpi:
   stage: build
