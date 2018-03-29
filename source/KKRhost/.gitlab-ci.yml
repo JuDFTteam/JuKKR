@@ -112,7 +112,7 @@ run:intel:aiida-kkr:
     #- ls
     - sbatch _aiidasubmit.sh
     - squeue -u root && sleep 15 && squeue -u root
-    - ls && cat out_voronoi
+    - ls -ls . && cat out_voronoi
     # - sacct -u root
   artifacts:
     paths:
