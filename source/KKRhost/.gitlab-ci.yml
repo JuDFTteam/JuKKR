@@ -103,7 +103,7 @@ run:intel:aiida-kkr:
     - sbatch --test-only _aiidasubmit.sh
     - sbatch _aiidasubmit.sh
     - squeue -u root && sleep 15 && squeue -u root
-    - ls && pwd
+    - ls -la . && pwd && cat out_voronoi
     - cat _aiidasubmit.sh
     - cd $( dirname /SCRATCH/root/aiida_run/*/*/*/_aiidasubmit.sh)
     - pwd
