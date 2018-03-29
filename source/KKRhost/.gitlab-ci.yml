@@ -65,6 +65,8 @@ run:intel:aiida-kkr:
     #- cat /etc/shells
     #- chsh -s /bin/bash root  
     #- find /SCRATCH -type d -exec chmod 777 {} \;
+    - umask
+    - umask 000
     - mkdir -m777 /SCRATCH && mkdir -m777 /SCRATCH/root && mkdir -m777 /SCRATCH/root/aiida_run
     #- chmod -R 777 /SCRATCH/
     - mkdir /opt/KKRcode
