@@ -61,7 +61,9 @@ run:intel:aiida-kkr:
     POSTGRES_DB: aiida_default
     POSTGRES_PASSWORD: password
   script:
-    - export 
+    - export | grep -i shell
+    - cat /etc/shells
+    - chsh -s /bin/bash root  
     - mkdir /opt/KKRcode
     - cp kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
     - echo 'start daemon and check status of aiida daemon'
