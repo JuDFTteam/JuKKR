@@ -101,8 +101,11 @@ run:intel:aiida-kkr:
     - cat /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh
     - cp /scratch/root/aiida_run/*/*/*/{inputcard,_aiidasubmit.sh} .
     - ln -s voronoi/ElementDataBase .
+    - sbatch --test-only _aiidasubmit.sh
     - sbatch _aiidasubmit.sh
-    - ls && sleep 1 && ls
+    - ls && sleep 15 && ls
+    - squeue -u root
+    - sacct -u root --format=JobID,JobName,MaxRSS,Elapsed
     - cat out_voronoi
   artifacts:
     paths:
