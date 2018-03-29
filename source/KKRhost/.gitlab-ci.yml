@@ -99,13 +99,13 @@ run:intel:aiida-kkr:
     - verdi calculation logshow 11
     - verdi daemon status
     - cat /root/.aiida/daemon/log/celery.log
-    - cp /scratch/root/aiida_run/*/*/*/{inputcard,_aiidasubmit.sh} .
+    - cp /SCRATCH/root/aiida_run/*/*/*/{inputcard,_aiidasubmit.sh} .
     - sbatch --test-only _aiidasubmit.sh
     - sbatch _aiidasubmit.sh
     - squeue -u root && sleep 15 && squeue -u root
     - ls && pwd
     - cat _aiidasubmit.sh
-    - cd $( dirname /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh)
+    - cd $( dirname /SCRATCH/root/aiida_run/*/*/*/_aiidasubmit.sh)
     - pwd
     #- sbatch '_aiidasubmit.sh'
     #- squeue -u root && sleep 15 && squeue -u root
@@ -116,8 +116,8 @@ run:intel:aiida-kkr:
     # - sacct -u root
   artifacts:
     paths:
-      - /scratch/root/aiida_run/*/*/*/inputcard
-      - /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh
+      - /SCRATCH/root/aiida_run/*/*/*/inputcard
+      - /SCRATCH/root/aiida_run/*/*/*/_aiidasubmit.sh
       - /root/.aiida/daemon/log/celery.log
     expire_in: 1 day
 
