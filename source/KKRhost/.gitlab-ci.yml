@@ -105,7 +105,6 @@ run:intel:aiida-kkr:
     - sbatch _aiidasubmit.sh
     - ls && sleep 15 && ls
     - squeue -u root
-    - sacct -u root --format=JobID,JobName,MaxRSS,Elapsed
     - cat out_voronoi
   artifacts:
     paths:
