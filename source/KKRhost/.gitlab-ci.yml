@@ -66,7 +66,7 @@ run:intel:aiida-kkr:
     #- chsh -s /bin/bash root  
     #- find /SCRATCH -type d -exec chmod 777 {} \;
     #- umask
-    #- umask 000
+    - umask 000
     #- mkdir -m777 /SCRATCH && mkdir -m777 /SCRATCH/root && mkdir -m777 /SCRATCH/root/aiida_run
     #- chmod -R 777 /SCRATCH/
     - mkdir "${KKR_EXECUTABLE_DIR}"
@@ -122,12 +122,13 @@ run:intel:aiida-kkr:
     #- ls
     #- sbatch _aiidasubmit.sh
     #- squeue -u root && sleep 15 && squeue -u root
-    - ls -la . && ls -la /SCRATCH/root/aiida_run && ls -la /SCRATCH && cat out_voronoi
+    #- ls -la . && ls -la /SCRATCH/root/aiida_run && ls -la /SCRATCH && cat out_voronoi
+    - ls -la . && cat out_voronoi
     # - sacct -u root
   artifacts:
     paths:
-      - /SCRATCH/root/aiida_run/*/*/*/inputcard
-      - /SCRATCH/root/aiida_run/*/*/*/_aiidasubmit.sh
+      - /builds/aiida_run/*/*/*/inputcard
+      - /builds/aiida_run/*/*/*/_aiidasubmit.sh
       - /root/.aiida/daemon/log/celery.log
     expire_in: 1 day
 
