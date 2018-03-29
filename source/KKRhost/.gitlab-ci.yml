@@ -110,6 +110,10 @@ run:intel:aiida-kkr:
     - squeue -u root && sleep 15 && squeue -u root
     - ls -la . && pwd && cat out_voronoi
     - cat _aiidasubmit.sh
+    - mkdir /test_scratch && cp /SCRATCH/root/aiida_run/*/*/*/{inputcard,_aiidasubmit.sh} /test_scratch/ && cd /test_scratch
+    - sbatch _aiidasubmit.sh
+    - squeue -u root && sleep 15 && squeue -u root
+    - ls -la . && pwd && cat out_voronoi
     - cd $( dirname /SCRATCH/root/aiida_run/*/*/*/_aiidasubmit.sh)
     - pwd
     #- sbatch '_aiidasubmit.sh'
