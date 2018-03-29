@@ -103,15 +103,15 @@ run:intel:aiida-kkr:
     - cd $( dirname /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh)
     - pwd
     - sbatch --test-only _aiidasubmit.sh
-    - sbatch '_aiidasubmit.sh'
-    - squeue -u root && sleep 15 && squeue -u root
-    - ls
+    #- sbatch '_aiidasubmit.sh'
+    #- squeue -u root && sleep 15 && squeue -u root
+    #- ls
     - sbatch _aiidasubmit.sh
     - squeue -u root && sleep 15 && squeue -u root
     - cp _aiidasubmit.sh inputcard ~/ && cd ~/
     - sbatch _aiidasubmit.sh
     - squeue -u root && sleep 15 && squeue -u root
-    - sacct -u root
+    # - sacct -u root
     - ls && cat out_voronoi
   artifacts:
     paths:
