@@ -99,9 +99,11 @@ run:intel:aiida-kkr:
     - verdi calculation logshow 11
     - ls /scratch/root/aiida_run{/,/*/,/*/*/,/*/*/*/}
     - cat /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh
-    - cp /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh .
+    - cp /scratch/root/aiida_run/*/*/*/{inputcard,_aiidasubmit.sh} .
+    - ln -s voronoi/ElementDataBase .
     - sbatch _aiidasubmit.sh
     - ls && sleep 1 && ls
+    - cat out_voronoi
   artifacts:
     paths:
       - /scratch/root/aiida_run/*/*/*/inputcard
