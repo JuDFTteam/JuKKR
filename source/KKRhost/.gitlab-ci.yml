@@ -105,7 +105,10 @@ run:intel:aiida-kkr:
     - sbatch --test-only _aiidasubmit.sh
     - sbatch '_aiidasubmit.sh'
     - squeue -u root && sleep 15 && squeue -u root
-    - cat out_voronoi
+    - ls
+    - sbatch _aiidasubmit.sh
+    - squeue -u root && sleep 15 && squeue -u root
+    - ls && cat out_voronoi
   artifacts:
     paths:
       - /scratch/root/aiida_run/*/*/*/inputcard
