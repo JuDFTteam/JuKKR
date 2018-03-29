@@ -33,9 +33,9 @@ build:intel:mpi:
   script:
     # compile code
     - cp tests/inc.p_1 inc.p
-    - make clean; make mpi; cp kkr.x kkr.x_mpi
+    #- make clean; make mpi; cp kkr.x kkr.x_mpi
     # dummy copy 
-    #- cp inc.p kkr.x_mpi
+    - cp inc.p kkr.x_mpi
   artifacts:
     paths:
       - kkr.x_mpi
@@ -99,6 +99,9 @@ run:intel:aiida-kkr:
     - verdi calculation logshow 11
     - ls /scratch/root/aiida_run{/,/*/,/*/*/,/*/*/*/}
     - cat /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh
+    - cp /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh .
+    - sbatch _aiidasubmit.sh
+    - ls && sleep 1 && ls
   artifacts:
     paths:
       - /scratch/root/aiida_run/*/*/*/inputcard
