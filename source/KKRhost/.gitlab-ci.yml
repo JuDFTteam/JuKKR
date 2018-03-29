@@ -67,38 +67,38 @@ run:intel:aiida-kkr:
     - export C_FORCE_ROOT='true'
     - verdi daemon restart
     - verdi daemon status
-    - cat /root/.aiida/daemon/log/celery.log
-    - echo 'check computer configuration'
-    - verdi computer list
-    - verdi computer show slurmcontrol
-    - verdi computer test slurmcontrol
-    - echo 'check calculation plugins'
-    - verdi calculation plugins
-    - echo 'check codes'
-    - verdi code list
-    - verdi code show 1
+    #- cat /root/.aiida/daemon/log/celery.log
+    #- echo 'check computer configuration'
+    #- verdi computer list
+    #- verdi computer show slurmcontrol
+    #- verdi computer test slurmcontrol
+    #- echo 'check calculation plugins'
+    #- verdi calculation plugins
+    #- echo 'check codes'
+    #- verdi code list
+    #- verdi code show 1
     - echo 'add voronoi code'
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@iffgit.fz-juelich.de/kkr/voronoi.git voronoi
     - cd voronoi/prog/ && make && cd ../../
-    - pwd
-    - ls voronoi/voronoi.exe
+    #- pwd
+    #- ls voronoi/voronoi.exe
     - verdi code setup < "tests/tools/setup_voronoi_aiida.txt" 
     - echo 'check voronoi code setup'
     - echo 'check codes'
     - verdi code list
     - verdi code show 2
     - echo 'run simple calculation'
-    - pip freeze
-    - verdi daemon status
-    - cat /root/.aiida/daemon/log/celery.log
+    #- pip freeze
+    #- verdi daemon status
+    #- cat /root/.aiida/daemon/log/celery.log
     - tests/tools/aiida_simple_test.py
     - verdi work list -a
     - verdi calculation list -a
     - verdi work report 6
     - verdi calculation show 11
     - verdi calculation logshow 11
-    - ls /scratch/root/aiida_run{/,/*/,/*/*/,/*/*/*/}
-    - cat /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh
+    #- ls /scratch/root/aiida_run{/,/*/,/*/*/,/*/*/*/}
+    #- cat /scratch/root/aiida_run/*/*/*/_aiidasubmit.sh
     - cp /scratch/root/aiida_run/*/*/*/{inputcard,_aiidasubmit.sh} .
     - ln -s voronoi/ElementDataBase .
     - sbatch --test-only _aiidasubmit.sh
