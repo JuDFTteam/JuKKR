@@ -65,6 +65,8 @@ run:intel:aiida-kkr:
     - cp kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
     - echo 'start daemon and check status of aiida daemon'
     - export C_FORCE_ROOT='true'
+    - verdi devel setproperty logging.celery_loglevel INFO
+    - verdi devel setproperty logging.aiida_loglevel INFO
     - verdi daemon restart
     - verdi daemon status
     #- cat /root/.aiida/daemon/log/celery.log
