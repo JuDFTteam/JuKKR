@@ -64,7 +64,8 @@ run:intel:aiida-kkr:
     #- export
     #- cat /etc/shells
     #- chsh -s /bin/bash root  
-    - find /SCRATCH -type d -exec chmod 777 {} \;
+    #- find /SCRATCH -type d -exec chmod 777 {} \;
+    - chmod -R 777 /SCRATCH/
     - mkdir /opt/KKRcode
     - cp kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
     - echo 'start daemon and check status of aiida daemon'
