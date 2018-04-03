@@ -116,9 +116,11 @@ run:intel:aiida-kkr:
     #- squeue -u root && sleep 15 && squeue -u root
     #- ls -la . && pwd && cat out_voronoi
     - mkdir /builds/kkr/kkrjm/aiida_run && cp /builds/aiida_run/*/*/*/{_aiidasubmit.sh,inputcard} /builds/kkr/kkrjm/aiida_run && cd /builds/kkr/kkrjm/aiida_run
-    - sbatch '_aiidasubmit.sh'
-    - squeue -u root && sleep 15 && squeue -u root
-    - ls -la . && pwd
+    - sbatch '_aiidasubmit.sh' && squeue -u root && sleep 15 && squeue -u root && ls -la . && pwd
+    - mkdir /builds/kkr/aiida_run && cp /builds/aiida_run/*/*/*/{_aiidasubmit.sh,inputcard} /builds/kkr/aiida_run && cd /builds/kkr/aiida_run
+    - sbatch '_aiidasubmit.sh' && squeue -u root && sleep 15 && squeue -u root && ls -la . && pwd
+    - mkdir /builds/aida_run && cp /builds/aiida_run/*/*/*/{_aiidasubmit.sh,inputcard} /builds/aida_run && cd /builds/aida_run
+    - sbatch '_aiidasubmit.sh' && squeue -u root && sleep 15 && squeue -u root && ls -la . && pwd
     - cd $( dirname /builds/aiida_run/*/*/*/_aiidasubmit.sh)
     - pwd
     - sbatch '_aiidasubmit.sh'
