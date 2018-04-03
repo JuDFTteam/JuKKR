@@ -115,6 +115,6 @@ verify:intel:aiida:
     - verdi work list -a
     - verdi calculation list -a
     - verdi work report 6
-    - verdi calculation show 11
-    - verdi calculation logshow 11
+    - verdi calculation show 20 #11
+    - verdi calculation logshow 20 #11
     - verdi daemon status
