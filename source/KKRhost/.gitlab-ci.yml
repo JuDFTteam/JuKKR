@@ -85,14 +85,35 @@ run:intel:aiida-kkr:
     - tar -zcvf aiida_run.tar.gz /builds/kkr/aiida_run/
   artifacts:
     paths:
-      - /builds/kkr/aiida_run/
-      - ../aiida_run/
       - aiida_run.tar.gz
       - celery.log
     expire_in: 1 day
 
 
-verify:intel:
+verify:intel:aiida:
+  image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
   stage: verify
+  services:
+    - name: postgres:latest
+      alias: db
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c1
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c2
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c3
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c4
+  variables:
+    POSTGRES_USER: aiida
+    POSTGRES_DB: aiida_default
+    POSTGRES_PASSWORD: password
   script:
     - echo 'implement tests ...'
+    # check some output of the calculation
+    - verdi work list -a
+    - verdi calculation list -a
+    - verdi work report 6
+    - verdi calculation show 11
+    - verdi calculation logshow 11
+    - verdi daemon status
