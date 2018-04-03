@@ -80,11 +80,13 @@ run:intel:aiida-kkr:
     - verdi calculation logshow 11
     - verdi daemon status
     # copy log file to include in artifacts
-    - cp /root/.aiida/daemon/log/celery.log . && cat celery.log
+    - cp /root/.aiida/daemon/log/celery.log .
+    - tar -zcvf aiida_run.tar.gz builds/kkr/aiida_run/
   artifacts:
     paths:
-      - /builds/kkr/aiida_run/*/*/*/inputcard
-      - /builds/kkr/aiida_run/*/*/*/_aiidasubmit.sh
+      - /builds/kkr/aiida_run/
+      - ../aiida_run/
+      - aiida_run.tar.gz
       - celery.log
     expire_in: 1 day
 
