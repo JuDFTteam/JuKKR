@@ -429,30 +429,30 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 #endif
 
 
-c ------------------------------------------------------------------------
-c determine the spin operator, torque operator and spin flux operator
-c ------------------------------------------------------------------------
-      if (OPT('OPERATOR')) then
-
-         WRITE(*,*) 'Computing spin operator'
-         CALL NORMCOEFF_SO(IRMINSO,IRCUT,LMAX,
-     +                   LMMAX,PNSSO,THETAS,NTCELL,
-     +                   IFUNM,IPAN,LMSP,KVREL,CLEB,ICLEB,IEND,DRDI,
-     +                   IRWS,LINTERFACE,ISP,IMPLAYER,NSPOH)
-
-         WRITE(*,*) 'Computing torq operator'
-         CALL NORMCOEFF_SO_TORQ(IRMINSO,IRCUT,LMAX,
-     +                LMMAX,PNSSO,THETAS,NTCELL,
-     +                IFUNM,IPAN,LMSP,KVREL,CLEB,ICLEB,IEND,DRDI,
-     +                IRWS,VISP,NSPIN,VINS,IRMIN)
-
-         WRITE(*,*) 'Computing spinflux operator'
-         CALL NORMCOEFF_SO_SPINFLUX(IRMINSO,IRCUT,LMAX,
-     +                LMMAX,PNSSO,THETAS,NTCELL,
-     +                IFUNM,IPAN,LMSP,KVREL,CLEB,ICLEB,IEND,DRDI,
-     +                IRWS)
-
-      end if ! OPERATOR
+!c ------------------------------------------------------------------------
+!c determine the spin operator, torque operator and spin flux operator
+!c ------------------------------------------------------------------------
+!      if (OPT('OPERATOR')) then
+!
+!         WRITE(*,*) 'Computing spin operator'
+!         CALL NORMCOEFF_SO(IRMINSO,IRCUT,LMAX,
+!     +                   LMMAX,PNSSO,THETAS,NTCELL,
+!     +                   IFUNM,IPAN,LMSP,KVREL,CLEB,ICLEB,IEND,DRDI,
+!     +                   IRWS,LINTERFACE,ISP,IMPLAYER,NSPOH)
+!
+!         WRITE(*,*) 'Computing torq operator'
+!         CALL NORMCOEFF_SO_TORQ(IRMINSO,IRCUT,LMAX,
+!     +                LMMAX,PNSSO,THETAS,NTCELL,
+!     +                IFUNM,IPAN,LMSP,KVREL,CLEB,ICLEB,IEND,DRDI,
+!     +                IRWS,VISP,NSPIN,VINS,IRMIN)
+!
+!         WRITE(*,*) 'Computing spinflux operator'
+!         CALL NORMCOEFF_SO_SPINFLUX(IRMINSO,IRCUT,LMAX,
+!     +                LMMAX,PNSSO,THETAS,NTCELL,
+!     +                IFUNM,IPAN,LMSP,KVREL,CLEB,ICLEB,IEND,DRDI,
+!     +                IRWS)
+!
+!      end if ! OPERATOR
 
 
 #ifdef CPP_TIMING
