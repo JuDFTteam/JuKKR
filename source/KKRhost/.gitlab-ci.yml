@@ -109,7 +109,7 @@ verify:intel:aiida:
     POSTGRES_DB: aiida_default
     POSTGRES_PASSWORD: password
   script:
-    - echo 'implement tests ...'
+    - echo 'implement tests ... '
     # check some output of the calculation
     - verdi work list -a
     - verdi calculation list -a
