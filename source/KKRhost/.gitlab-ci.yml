@@ -61,7 +61,7 @@ run:intel:aiida-kkr:
   script:
     # prepararion
     - umask 000 # needed to ensure that all subdirs created by aiida have the right permissions
-    - mkdir "${KKR_EXECUTABLE_DIR}"
+    #- mkdir "${KKR_EXECUTABLE_DIR}"
     - cp kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
     - ls -la "${KKR_EXECUTABLE_DIR}"
     - export C_FORCE_ROOT='true' # needed since root process executes aiida
