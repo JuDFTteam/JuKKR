@@ -33,9 +33,7 @@ build:intel:mpi:
   script:
     # compile code
     - cp tests/inc.p_1 inc.p
-    #- make clean; make mpi; cp kkr.x kkr.x_mpi
-    # dummy copy 
-    - cp inc.p kkr.x_mpi
+    - make clean; make mpi; cp kkr.x kkr.x_mpi
   artifacts:
     paths:
       - kkr.x_mpi
@@ -61,50 +59,33 @@ run:intel:aiida-kkr:
     POSTGRES_DB: aiida_default
     POSTGRES_PASSWORD: password
   script:
-    - umask 000
-    - mkdir "${KKR_EXECUTABLE_DIR}"
-    - cp kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
-    - echo 'start daemon and check status of aiida daemon'
-    - export C_FORCE_ROOT='true'
+    # prepararion
+    - umask 000 # needed to ensure that all subdirs created by aiida have the right permissions
+    - mkdir "${KKR_EXECUTABLE_DIR}" && cp kkr.x_mpi "${KKR_EXECUTABLE_PATH}"
+    - export C_FORCE_ROOT='true' # needed since root process executes aiida
     - verdi devel setproperty logging.celery_loglevel INFO
     - verdi devel setproperty logging.aiida_loglevel INFO
-    - verdi daemon restart
-    #- verdi daemon status
-    #- cat /root/.aiida/daemon/log/celery.log
-    #- echo 'check computer configuration'
-    #- verdi computer list
-    #- verdi computer show slurmcontrol
-    #- verdi computer test slurmcontrol
-    #- echo 'check calculation plugins'
-    #- verdi calculation plugins
-    #- echo 'check codes'
-    #- verdi code list
-    #- verdi code show 1
-    - echo 'add voronoi code'
+    - verdi daemon restart # start aiida daemon with increased loglevel
+    # compile latest voronoi version and add to aiida
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@iffgit.fz-juelich.de/kkr/voronoi.git voronoi
     - cd voronoi/prog/ && make && cd ../../
     - verdi code setup < "tests/tools/setup_voronoi_aiida.txt" 
-    #- echo 'check voronoi code setup'
-    #- echo 'check codes'
-    #- verdi code list
-    #- verdi code show 2
-    - echo 'run simple calculation'
+    # finally run simple test case
     - tests/tools/aiida_simple_test.py
+    # check some output of the calculation
     - verdi work list -a
     - verdi calculation list -a
     - verdi work report 6
     - verdi calculation show 11
     - verdi calculation logshow 11
     - verdi daemon status
-    - cat /root/.aiida/daemon/log/celery.log
-    - cd $( dirname /builds/kkr/aiida_run/*/*/*/_aiidasubmit.sh)
-    - pwd
-    - ls -la . && cat out_voronoi
+    # copy log file to include in artifacts
+    - cp /root/.aiida/daemon/log/celery.log . && cat celery.log
   artifacts:
     paths:
       - /builds/kkr/aiida_run/*/*/*/inputcard
       - /builds/kkr/aiida_run/*/*/*/_aiidasubmit.sh
-      - /root/.aiida/daemon/log/celery.log
+      - celery.log
     expire_in: 1 day
 
 
