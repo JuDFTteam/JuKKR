@@ -81,7 +81,7 @@ run:intel:aiida-kkr:
     - verdi daemon status
     # copy log file to include in artifacts
     - cp /root/.aiida/daemon/log/celery.log .
-    - tar -zcvf aiida_run.tar.gz builds/kkr/aiida_run/
+    - tar -zcvf aiida_run.tar.gz /builds/kkr/aiida_run/
   artifacts:
     paths:
       - /builds/kkr/aiida_run/
