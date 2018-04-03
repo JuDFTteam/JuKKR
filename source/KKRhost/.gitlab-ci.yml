@@ -115,13 +115,13 @@ run:intel:aiida-kkr:
     #- sbatch _aiidasubmit.sh
     #- squeue -u root && sleep 15 && squeue -u root
     #- ls -la . && pwd && cat out_voronoi
-    - mkdir /builds/kkr/kkrjm/aiida_run && cp /builds/aiida_run/*/*/*/{_aiidasubmit.sh,inputcard} /builds/kkr/kkrjm/aiida_run && cd /builds/kkr/kkrjm/aiida_run
+    - mkdir /builds/kkr/kkrjm/aiida_run && cp /builds/kkr/aiida_run/*/*/*/{_aiidasubmit.sh,inputcard} /builds/kkr/kkrjm/aiida_run && cd /builds/kkr/kkrjm/aiida_run
     - sbatch '_aiidasubmit.sh' && squeue -u root && sleep 15 && squeue -u root && ls -la . && pwd
-    - mkdir /builds/kkr/aiida_run && cp /builds/aiida_run/*/*/*/{_aiidasubmit.sh,inputcard} /builds/kkr/aiida_run && cd /builds/kkr/aiida_run
+    - mkdir /builds/kkr/aiida_run && cp /builds/kkr/aiida_run/*/*/*/{_aiidasubmit.sh,inputcard} /builds/kkr/aiida_run && cd /builds/kkr/aiida_run
     - sbatch '_aiidasubmit.sh' && squeue -u root && sleep 15 && squeue -u root && ls -la . && pwd
-    - mkdir /builds/aida_run && cp /builds/aiida_run/*/*/*/{_aiidasubmit.sh,inputcard} /builds/aida_run && cd /builds/aida_run
+    - mkdir /builds/aida_run && cp /builds/kkr/aiida_run/*/*/*/{_aiidasubmit.sh,inputcard} /builds/aida_run && cd /builds/aida_run
     - sbatch '_aiidasubmit.sh' && squeue -u root && sleep 15 && squeue -u root && ls -la . && pwd
-    - cd $( dirname /builds/aiida_run/*/*/*/_aiidasubmit.sh)
+    - cd $( dirname /builds/kkr/aiida_run/*/*/*/_aiidasubmit.sh)
     - pwd
     - sbatch '_aiidasubmit.sh'
     - squeue -u root && sleep 15 && squeue -u root
@@ -133,8 +133,8 @@ run:intel:aiida-kkr:
     # - sacct -u root
   artifacts:
     paths:
-      - /builds/aiida_run/*/*/*/inputcard
-      - /builds/aiida_run/*/*/*/_aiidasubmit.sh
+      - /builds/kkr/aiida_run/*/*/*/inputcard
+      - /builds/kkr/aiida_run/*/*/*/_aiidasubmit.sh
       - /root/.aiida/daemon/log/celery.log
     expire_in: 1 day
 
