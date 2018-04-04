@@ -459,6 +459,7 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
         ALLOCATE(RLLLEFT(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
         ALLOCATE(SLLLEFT(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
         ALLOCATE(PNS_SO(LMMAXD,LMMAXD,IRMD,2))
+        ALLOCATE(PNS_SO_ALL(LMMAXD,LMMAXD,IRMD,2,NATYP))
 
 
 
@@ -512,8 +513,8 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
             ENDDO
            ENDDO
            CALL CHEB2OLDGRID(IRWS(I1),t_inc%IRMDNEW,LMMAXD,RMESH(:,I1),
-     &                       NCHEB, NPAN_TOT,RPAN_INTERVALL,
-     &                       IPAN_INTERVALL, RLLTEMP,PNSTEMP,IRMD)
+     &                       NCHEB, NPAN_TOT(I1),RPAN_INTERVALL(:,I1),
+     &                       IPAN_INTERVALL(:,I1),RLLTEMP,PNSTEMP,IRMD)
            DO IR=1,IRWS(I1)
             DO LM2=1,LMMAXD
              PNS_SO(LM1,LM2,IR,1)=PNSTEMP(IR,LM2)
@@ -531,8 +532,8 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
              ENDDO
             ENDDO
             CALL CHEB2OLDGRID(IRWS(I1),t_inc%IRMDNEW,LMMAXD,RMESH(:,I1),
-     &                        NCHEB, NPAN_TOT,RPAN_INTERVALL,
-     &                        IPAN_INTERVALL, RLLTEMP,PNSTEMP,IRMD)
+     &                        NCHEB, NPAN_TOT(I1),RPAN_INTERVALL(:,I1),
+     &                        IPAN_INTERVALL(:,I1),RLLTEMP,PNSTEMP,IRMD)
             DO IR=1,IRWS(I1)
              DO LM2=1,LMMAXD
               PNS_SO(LM1,LM2,IR,2)=PNSTEMP(IR,LM2)
@@ -568,22 +569,20 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
         ! done with preparations, call normcoeff routines that construct operators
 
         WRITE(*,*) 'Computing spin operator'
-        CALL NORMCOEFF_SO(1,IRCUT,LMAX,LMMAXD,PNS_SO_ALL,
+        CALL NORMCOEFF_SO(IRCUT,LMMAXD/2,PNS_SO_ALL,
      +         t_params%THETAS,t_params%NTCELL,t_params%IFUNM,IPAN,
      +         t_params%LMSP,t_params%KREL,CLEB,t_params%ICLEB,IEND,
-     +         DRDI,IRWS,t_params%LINTERFACE,1+KORBIT)
+     +         DRDI,IRWS,1+KORBIT)
 
         WRITE(*,*) 'Computing torq operator'
-        CALL NORMCOEFF_SO_TORQ(1,IRCUT,LMAX,LMMAXD,PNS_SO_ALL,
-     +         t_params%THETAS,t_params%NTCELL,t_params%IFUNM,IPAN,
+        CALL NORMCOEFF_SO_TORQ(IRCUT,LMMAXD/2,PNS_SO_ALL,
+     +         t_params%NTCELL,t_params%IFUNM,IPAN,
      +         t_params%LMSP,t_params%KREL,CLEB,t_params%ICLEB,IEND,
      +         DRDI,IRWS,VISP,NSPIN,VINS,IRMIN)
 
         WRITE(*,*) 'Computing spinflux operator'
-        CALL NORMCOEFF_SO_SPINFLUX(1,IRCUT,LMAX,LMMAXD,PNS_SO_ALL,
-     +         t_params%THETAS,t_params%NTCELL,t_params%IFUNM,IPAN,
-     +         t_params%LMSP,t_params%KREL,CLEB,t_params%ICLEB,IEND,
-     +         DRDI,IRWS)
+        CALL NORMCOEFF_SO_SPINFLUX(IRCUT,LMMAXD/2,PNS_SO_ALL,
+     +         t_params%KREL,DRDI)
 
 #ifdef CPP_TIMING
         call timing_stop('main1a - operator')

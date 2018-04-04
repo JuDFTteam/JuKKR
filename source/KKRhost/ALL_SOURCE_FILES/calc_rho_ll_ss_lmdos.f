@@ -1,5 +1,5 @@
-      SUBROUTINE CALC_RHO_LL_SS_LMDOS(LMAX,LMMAX,RLL,IRCUT,IPAN,ICELL,
-     +         THETAS,CLEB,ICLEB,IEND,IFUNM,LMSP,IRMINSO,IRWS,DRDI,DENS,
+      SUBROUTINE CALC_RHO_LL_SS_LMDOS(RLL,IRCUT,IPAN,ICELL,
+     +         THETAS,CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS,DRDI,DENS,
      +         LMDOS)
 
       IMPLICIT NONE
@@ -13,17 +13,16 @@
       PARAMETER        (IRMIND=IRMD-IRNSD)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER          IEND,LMAX,LMMAX,IRWS,LMDOS!,LM1,LM2
+      INTEGER          IEND,IRWS,LMDOS!,LM1,LM2
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   RLL(IRMD,LMMAXD,LMMAXD),   ! non-sph. eigen states of single pot 
      +                 DENS
       DOUBLE PRECISION CLEB(*),
      +                 THETAS(IRID,NFUND,*),
-     +                 DRDI(IRMD),                            ! derivative dr/di
-     +                 RM(IRMD,NATYPD)
+     +                 DRDI(IRMD)                            ! derivative dr/di
       INTEGER          ICLEB(NCLEB,4),IFUNM(NATYPD,LMPOTD),
-     +                 LMSP(NATYPD,*),IRMINSO,IRCUT(0:IPAND),IPAN,
+     +                 LMSP(NATYPD,*),IRCUT(0:IPAND),IPAN,
      +                 ICELL,IFUN
 
 
@@ -54,11 +53,9 @@ c      WRITE(6,*) "In rho ll"
       RSP=0d0
       RGES=0d0
       
-c      DO LM1P = 1,LMMAX
         DO IR=1,IRMD
           RSP(IR)=RSP(IR)+RLL(IR,LMDOS,LMDOS)
         END DO
-c      END DO
       
       DO 60 IR = 1,IRCUT(IPAN)
         RGES(IR) = RSP(IR)

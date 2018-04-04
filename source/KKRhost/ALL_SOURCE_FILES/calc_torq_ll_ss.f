@@ -4,8 +4,8 @@ c     CALC_RHO_LL_SS subroutine, but the spin dependent part, i.e., the exhange
 c     field, replaces the shape function in the integration.
 c
 c                                     Guillaume Geranton, September 2014
-      SUBROUTINE CALC_TORQ_LL_SS(LMAX,LMMAX,RLL,IRCUT,IPAN,ICELL,THETAS,
-     +                CLEB,ICLEB,IEND,IFUNM,LMSP,IRMINSO,IRWS,DRDI,DENS,
+      SUBROUTINE CALC_TORQ_LL_SS(LMMAX,RLL,IRCUT,IPAN,ICELL,
+     +                CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS,DRDI,DENS,
      +                VISP,NSPIN,IATOM,VINS,IRMIN)
 c     +                LM1,LM2)
 
@@ -20,19 +20,17 @@ c     +                LM1,LM2)
       PARAMETER        (IRMIND=IRMD-IRNSD)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER          IEND,LMAX,LMMAX,IRWS,NSPIN,IATOM,IRMIN!,LM1,LM2
+      INTEGER          IEND,LMMAX,IRWS,NSPIN,IATOM,IRMIN!,LM1,LM2
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   RLL(IRMD,LMMAXD,LMMAXD),   ! non-sph. eigen states of single pot 
      +                 DENS
       DOUBLE PRECISION CLEB(*),
-     +                 THETAS(IRID,NFUND,*),
      +                 DRDI(IRMD),                            ! derivative dr/di
-     +                 RM(IRMD,NATYPD),
      +                 VISP(IRMD,*), !              spherical part of the potential
      +                 VINS(IRMIND:IRMD,LMPOTD,*) ! non-sph. part of the potential
       INTEGER          ICLEB(NCLEB,4),IFUNM(NATYPD,LMPOTD),
-     +                 LMSP(NATYPD,*),IRMINSO,IRCUT(0:IPAND),IPAN,
+     +                 LMSP(NATYPD,*),IRCUT(0:IPAND),IPAN,
      +                 ICELL,IFUN
 
 

@@ -1,8 +1,7 @@
 c 05.10.10 ***************************************************************
-      SUBROUTINE NORMCOEFF_SO_SPINFLUX(IRMINSO,IRCUT,LMAX,
-     +                   LMMAX,PNS,THETAS,NTCELL,
-     +                   IFUNM,IPAN,LMSP,KSRA,CLEB,ICLEB,IEND,DRDI,
-     +                   IRWS)
+      SUBROUTINE NORMCOEFF_SO_SPINFLUX(IRCUT,
+     +                   LMMAX,PNS,
+     +                   KSRA,DRDI)
 c ************************************************************************
 c     Calculates the KKR matrix elements for the spin flux operator, i.e.,
 c     
@@ -27,23 +26,16 @@ C     .. Parameters ..
       INTEGER, PARAMETER :: NSPD=NSPIND
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER          IEND,LMAX,LMMAX,KSRA,IRWS(*)
+      INTEGER          LMMAX,KSRA
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)
-      DOUBLE PRECISION CLEB(*),
-     +                 THETAS(IRID,NFUND,*),
-     +                 DRDI(IRMD,NATYPD),
-     +                 THETA,PHI,THETA_TMP,PHI_TMP,
-     +                 SQA(3)
-c     +                 SQA(3),ALAT
-      INTEGER          ICLEB(NCLEB,4),IFUNM(NATYPD,LMPOTD),
-     +                 LMSP(NATYPD,*),IRMINSO,IRCUT(0:IPAND,NATYPD),
-     +                 IPAN(NATYPD),NTCELL(*)
+      DOUBLE PRECISION DRDI(IRMD,NATYPD)
+      INTEGER          IRCUT(0:IPAND,NATYPD)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE COMPLEX   CONE,CZERO,NORM
-      INTEGER          LM1,LM2,LM1P,LM2P,
+      DOUBLE COMPLEX   CZERO
+      INTEGER          LM1,LM2,LM1P,
      +                 IR,I1,I1SP1,I1SP2,
      +                 LMSP1,LMSP2,ISIGMA,I2SP1,I2SP2,INSRA,NSRA
       INTEGER          LMMAXSO
@@ -55,7 +47,7 @@ C     .. Intrinsic Functions ..
       INTRINSIC        DATAN,DIMAG,DSQRT
 C     ..
 C     .. Save statement ..
-      SAVE             CZERO,CONE
+      SAVE             CZERO
 C     ..
 C     ..Local Arrays..
       DOUBLE COMPLEX, ALLOCATABLE  ::   SPINFLUX(:,:,:,:),
@@ -66,7 +58,6 @@ C     ..Local Arrays..
 C     ..
 C     .. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
-      DATA CONE/ (1.0D0,0.0D0)/
 C     ..
 c
       LMMAXSO=2*LMMAXD
@@ -98,7 +89,7 @@ c    rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
       DO I1=1,NATYPD
 
         DO INSRA=1,NSRA
-          DO IR=IRMINSO,IRMD
+          DO IR=1,IRMD
 
             DO I1SP1=1,2
               DO I1SP2=1,2

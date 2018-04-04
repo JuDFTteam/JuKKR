@@ -203,10 +203,10 @@ mpidebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -wa
 ompdebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
 
 OPENMPFLAGS = 
-hybrid: OPENMPFLAGS = -openmp 
-hybriddebug: OPENMPFLAGS = -openmp
-openmp: OPENMPFLAGS = -openmp
-ompdebug: OPENMPFLAGS = -openmp
+hybrid: OPENMPFLAGS = -qopenmp 
+hybriddebug: OPENMPFLAGS = -qopenmp
+openmp: OPENMPFLAGS = -qopenmp
+ompdebug: OPENMPFLAGS = -qopenmp
 rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 
@@ -218,9 +218,9 @@ rwthmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g -sox
 rwthompdebug: FFLAGS = -O2 -r8 -traceback -module $(OBJ) -g -sox
 #rwthompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
 
-rwthomp: OPENMPFLAGS = -openmp
-rwthompdebug: OPENMPFLAGS = -openmp
-rwthhybrid: OPENMPFLAGS = -openmp
+rwthomp: OPENMPFLAGS = -qopenmp
+rwthompdebug: OPENMPFLAGS = -qopenmp
+rwthhybrid: OPENMPFLAGS = -qopenmp
 
 
 

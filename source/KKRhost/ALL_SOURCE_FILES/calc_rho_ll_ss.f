@@ -1,5 +1,5 @@
-      SUBROUTINE CALC_RHO_LL_SS(LMAX,LMMAX,RLL,IRCUT,IPAN,ICELL,THETAS,
-     +                CLEB,ICLEB,IEND,IFUNM,LMSP,IRMINSO,IRWS,DRDI,DENS)
+      SUBROUTINE CALC_RHO_LL_SS(LMMAX,RLL,IRCUT,IPAN,ICELL,THETAS,
+     +                CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS,DRDI,DENS)
 c     +                LM1,LM2)
 
       IMPLICIT NONE
@@ -13,17 +13,16 @@ c     +                LM1,LM2)
       PARAMETER        (IRMIND=IRMD-IRNSD)
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER          IEND,LMAX,LMMAX,IRWS!,LM1,LM2
+      INTEGER          IEND,LMMAX,IRWS!,LM1,LM2
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   RLL(IRMD,LMMAXD,LMMAXD),   ! non-sph. eigen states of single pot 
      +                 DENS
       DOUBLE PRECISION CLEB(*),
      +                 THETAS(IRID,NFUND,*),
-     +                 DRDI(IRMD),                            ! derivative dr/di
-     +                 RM(IRMD,NATYPD)
+     +                 DRDI(IRMD)                            ! derivative dr/di
       INTEGER          ICLEB(NCLEB,4),IFUNM(NATYPD,LMPOTD),
-     +                 LMSP(NATYPD,*),IRMINSO,IRCUT(0:IPAND),IPAN,
+     +                 LMSP(NATYPD,*),IRCUT(0:IPAND),IPAN,
      +                 ICELL,IFUN
 
 

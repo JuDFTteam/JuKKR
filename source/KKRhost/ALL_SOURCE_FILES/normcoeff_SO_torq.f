@@ -1,6 +1,6 @@
 c 12.05.2016 *************************************************************
-      SUBROUTINE NORMCOEFF_SO_TORQ(IRMINSO,IRCUT,LMAX,
-     +                   LMMAX,PNS,THETAS,NTCELL,
+      SUBROUTINE NORMCOEFF_SO_TORQ(IRCUT,
+     +                   LMMAX,PNS,NTCELL,
      +                   IFUNM,IPAN,LMSP,KSRA,CLEB,ICLEB,IEND,DRDI,
      +                   IRWS,VISP,NSPIN,VINS,IRMIN)
 c ************************************************************************
@@ -27,23 +27,22 @@ C     .. Parameters ..
       INTEGER, PARAMETER :: NSPD=NSPIND
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER          IEND,LMAX,LMMAX,KSRA,IRWS(*),NSPIN,IRMIN(*)
+      INTEGER          IEND,LMMAX,KSRA,IRWS(*),NSPIN,IRMIN(*)
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)
       DOUBLE PRECISION CLEB(*),
-     +                 THETAS(IRID,NFUND,*),
      +                 DRDI(IRMD,NATYPD),
      +                 VISP(IRMD,*),              ! spherical part of the potential
      +                 VINS(IRMIND:IRMD,LMPOTD,*), ! non-spher. part of the potential
      +                 THETA,PHI,THETA_TMP,PHI_TMP,
      +                 SQA(3)
       INTEGER          ICLEB(NCLEB,4),IFUNM(NATYPD,LMPOTD),
-     +                 LMSP(NATYPD,*),IRMINSO,IRCUT(0:IPAND,NATYPD),
+     +                 LMSP(NATYPD,*),IRCUT(0:IPAND,NATYPD),
      +                 IPAN(NATYPD),NTCELL(*)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE COMPLEX   CONE,CZERO,NORM
+      DOUBLE COMPLEX   CZERO,NORM
       INTEGER          LM1,LM2,LM1P,LM2P,
      +                 IR,I1,I1SP1,I1SP2,
      +                 LMSP1,LMSP2,ISIGMA,I2SP1,I2SP2,INSRA,NSRA
@@ -56,7 +55,7 @@ C     .. Intrinsic Functions ..
       INTRINSIC        DATAN,DIMAG,DSQRT
 C     ..
 C     .. Save statement ..
-      SAVE             CZERO,CONE
+      SAVE             CZERO
 C     ..
 C     ..Local Arrays..
       DOUBLE COMPLEX, ALLOCATABLE  ::   TORQ(:,:,:,:),
@@ -66,7 +65,6 @@ C     ..Local Arrays..
 C     ..
 C     .. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
-      DATA CONE/ (1.0D0,0.0D0)/
 C     ..
 c
       LMMAXSO=2*LMMAXD
@@ -99,7 +97,7 @@ c    rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
       DO I1=1,NATYPD
 
         DO INSRA=1,NSRA
-          DO IR=IRMINSO,IRMD
+          DO IR=1,IRMD
 
             DO I1SP1=1,2
               DO I1SP2=1,2
@@ -144,9 +142,9 @@ c set up the array R*_L1L2 R_L3L4
                         END DO         !LM2P
                       END DO           !LM1P
 
-                       CALL CALC_TORQ_LL_SS(LMAX,LMMAX,RLL_12,
-     +                     IRCUT(0:IPAND,I1),IPAN(I1),NTCELL(I1),THETAS,
-     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRMINSO,IRWS(I1),
+                       CALL CALC_TORQ_LL_SS(LMMAX,RLL_12,
+     +                     IRCUT(0:IPAND,I1),IPAN(I1),NTCELL(I1),
+     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS(I1),
      +                    DRDI(:,I1),NORM,VISP,NSPIN,I1,VINS,IRMIN(I1))
 
                        DENS(LM1,LM2,I1SP1,I1SP2,I2SP1,I2SP2,I1) =

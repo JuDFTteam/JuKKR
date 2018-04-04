@@ -1,7 +1,7 @@
-      SUBROUTINE NORMCOEFF_SO(IRMINSO,IRCUT,LMAX,
+      SUBROUTINE NORMCOEFF_SO(IRCUT,
      +                   LMMAX,PNS,THETAS,NTCELL,
      +                   IFUNM,IPAN,LMSP,KSRA,CLEB,ICLEB,IEND,DRDI,
-     +                   IRWS,INTERF,NSPOH)
+     +                   IRWS,NSPOH)
 c ************************************************************************
 c
 c     calculates the norm of the wavefunctions with full potential and
@@ -24,27 +24,25 @@ C     .. Parameters ..
       INTEGER, PARAMETER :: NSPD=NSPIND
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER      ::   IEND,LMAX,LMMAX,KSRA,IRWS(*),ISP,LMMAXSO
-      LOGICAL      ::   INTERF
+      INTEGER      ::   IEND,LMMAX,KSRA,IRWS(*),LMMAXSO
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)   ! non-sph. eigen states of single pot 
       DOUBLE PRECISION CLEB(*),THETAS(IRID,NFUND,*),
      +                 DRDI(IRMD,NATYPD)                            ! derivative dr/di
       INTEGER          ICLEB(NCLEB,4),IFUNM(NATYPD,LMPOTD),
-     +                 LMSP(NATYPD,*),IRMINSO,IRCUT(0:IPAND,NATYPD),
+     +                 LMSP(NATYPD,*),IRCUT(0:IPAND,NATYPD),
      +                 IPAN(NATYPD),NTCELL(*)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE COMPLEX   CONE,CZERO,PROD,NORM,SZHILF,NORM1
+      DOUBLE COMPLEX   CZERO,NORM
       DOUBLE PRECISION PI
-      INTEGER          I,IFUN,IR,J,LM1,LM2,LM3,LM1P,LM2P,ICELL,ENT,
-     +                 I1,LM3P,I1SP1,I1SP2,I1SP,
+      INTEGER          IR,LM1,LM2,LM1P,LM2P,
+     +                 I1,I1SP1,I1SP2,I1SP,
      +                 LMSP1,LMSP2,I2SP1,I2SP2,INSRA,NSRA,
-     +                 NBET,NA,NSPOH,
+     +                 NSPOH,
      +                 LMDOS,ISIGMA
-      INTEGER STATUS_READ
-      LOGICAL          OPT,TEST
+      LOGICAL          TEST
 C     .. External Subroutines ..
       EXTERNAL         ZGEMM
 C     ..
@@ -60,7 +58,6 @@ c     +                RLL_12(IRMD,LMMAX,LMMAX)
 C     ..
 C     .. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
-      DATA CONE/ (0.0D0,1.0D0)/
 C     ..
 c
       PI=4.d0*DATAN(1.d0)
@@ -88,7 +85,7 @@ c    rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
        WRITE(6,*) 'ATOM',I1
 
         DO INSRA=1,NSRA
-          DO IR=IRMINSO,IRMD
+          DO IR=1,IRMD
 
             DO I1SP1=1,NSPOH
               DO I1SP2=1,NSPOH
@@ -135,9 +132,9 @@ c set up the array R*_L1L2 R_L3L4
                       END DO           !LM1P
 
 
-                      CALL CALC_RHO_LL_SS(LMAX,LMMAX,RLL_12,
+                      CALL CALC_RHO_LL_SS(LMMAX,RLL_12,
      +                     IRCUT(0:IPAND,I1),IPAN(I1),NTCELL(I1),THETAS,
-     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRMINSO,IRWS(I1),
+     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS(I1),
      +                    DRDI(:,I1),NORM)
                       DENS(LM1,LM2,I1SP1,I1SP2,I2SP1,I2SP2,I1)=
      +                DENS(LM1,LM2,I1SP1,I1SP2,I2SP1,I2SP2,I1) + NORM
@@ -182,9 +179,9 @@ c     +                            RLL(IR,LM2P,LM2,I2SP1,I2SP2,INSRA,I1)
                       END DO           !LM1P
 
                       DO LMDOS=1,LMMAX
-c                      CALL CALC_RHO_LL_SS_LMDOS(LMAX,LMMAX,RLL_12,
+c                      CALL CALC_RHO_LL_SS_LMDOS(RLL_12,
 c     +                     IRCUT(0:IPAND,I1),IPAN(I1),NTCELL(I1),THETAS,
-c     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRMINSO,IRWS(I1),
+c     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS(I1),
 c     +                    DRDI(:,I1),NORM1,LMDOS)
           
 c                      DENS1(LMDOS,LM1,LM2,I1SP1,I1SP,I1)=
