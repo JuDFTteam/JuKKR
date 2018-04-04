@@ -15,7 +15,7 @@
 #endif
       
       use mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatJij,
-     &                     init_t_dtmatJij,init_t_dtmatJij_at
+     &                     init_t_dtmatJij, init_t_dtmatJij_at
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_lly_dtmat,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
@@ -31,6 +31,7 @@
 #endif
       use mod_wunfiles
       use mod_jijhelp, only: set_Jijcalc_flags
+      use mod_save_wavefun, only: t_wavefunctions, read_wavefunc
      
       INCLUDE 'inc.p'
 C
@@ -66,6 +67,7 @@ C
       PARAMETER (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
       INTEGER LRECTRA
       PARAMETER (LRECTRA=WLENGTH*4)
+      DOUBLE COMPLEX, PARAMETER :: CZERO=(0.0d0, 0.0d0)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION ALAT,PI
@@ -120,6 +122,18 @@ C LDA+U
 C LDA+U
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       INTEGER NATOMIMP, ATOMIMP(NATOMIMPD), IQAT(NATYPD)
+
+      ! read in wavefunctions 
+      logical :: rll_was_read_in, sll_was_read_in,  
+     &           rllleft_was_read_in, sllleft_was_read_in
+      ! for normcoeff (OPERATOR option) stuff
+      DOUBLE COMPLEX, ALLOCATABLE :: RLL(:,:,:,:),SLL(:,:,:,:),
+     &                               RLLLEFT(:,:,:,:),SLLLEFT(:,:,:,:),
+     &                               RLLTEMP(:,:), PNSTEMP(:,:),
+     &                               PNS_SO(:,:,:,:),
+     &                               PNS_SO_ALL(:,:,:,:,:) 
+      INTEGER :: ith, nth, ie, ie_start, ie_end, ie_num, lm1, lm2, ir
+
 #ifdef CPP_MPI
       integer :: ntot1, mytot, ii
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
@@ -427,6 +441,154 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
       end if!OPT('XCPL    ').and.OPT('NEWSOSOL')
 #endif
+
+
+! ------------------------------------------------------------------------
+! determine the spin operator, torque operator and spin flux operator
+! ------------------------------------------------------------------------
+      if (OPT('OPERATOR')) then
+#ifdef CPP_TIMING
+        call timing_start('main1a - operator')
+#endif
+
+        ! no omp here:
+        nth = 0
+
+        ALLOCATE(RLL(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
+        ALLOCATE(SLL(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
+        ALLOCATE(RLLLEFT(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
+        ALLOCATE(SLLLEFT(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
+        ALLOCATE(PNS_SO(LMMAXD,LMMAXD,IRMD,2))
+
+
+
+#ifdef CPP_MPI
+        i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)+1
+        i1_end   = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)+
+     &             t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
+#else
+        i1_start = 1
+        i1_end   = NATYP
+#endif
+
+        DO I1=i1_start, i1_end
+
+          if(myrank==master.and.t_inc%i_write>0) then
+            WRITE(1337,*) 'atom: ',I1
+          end if
+#ifdef CPP_MPI
+          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+          ie_start = 0 ! offset
+          ie_end   = IELAST
+#endif
+
+          ith = 0
+
+          DO ie_num=1,ie_end
+
+            IE = ie_start+ie_num
+       
+            if(t_wavefunctions%Nwfsavemax>0) then ! read wavefunctions?
+              ! read in wavefunction from memory
+              call read_wavefunc(t_wavefunctions,rll,rllleft,sll,
+     &                       sllleft,i1,ie,NSRA,LMMAXD,t_inc%IRMDNEW,
+     &                       ith,nth,rll_was_read_in,sll_was_read_in, 
+     &                       rllleft_was_read_in,sllleft_was_read_in)
+            end if ! t_wavefunctions%Nwfsavemax
+
+          END DO !ie_num=1,ie_end
+
+          ! transform radial wavefunction back to old mesh
+          ALLOCATE(RLLTEMP(t_inc%IRMDNEW,LMMAXD))
+          ALLOCATE(PNSTEMP(IRWS(I1),LMMAXD))
+          DO LM1=1,LMMAXD
+           RLLTEMP=CZERO
+           PNSTEMP=CZERO
+           DO IR=1,t_inc%IRMDNEW
+            DO LM2=1,LMMAXD
+             RLLTEMP(IR,LM2)=RLL(LM1,LM2,IR,ith)
+            ENDDO
+           ENDDO
+           CALL CHEB2OLDGRID(IRWS(I1),t_inc%IRMDNEW,LMMAXD,RMESH(:,I1),
+     &                       NCHEB, NPAN_TOT,RPAN_INTERVALL,
+     &                       IPAN_INTERVALL, RLLTEMP,PNSTEMP,IRMD)
+           DO IR=1,IRWS(I1)
+            DO LM2=1,LMMAXD
+             PNS_SO(LM1,LM2,IR,1)=PNSTEMP(IR,LM2)
+            ENDDO
+           ENDDO
+          ENDDO ! LM1
+          ! for small component
+          IF (NSRA.EQ.2) THEN
+           DO LM1=1,LMMAXD
+            RLLTEMP=CZERO
+            PNSTEMP=CZERO
+            DO IR=1,t_inc%IRMDNEW
+             DO LM2=1,LMMAXD
+              RLLTEMP(IR,LM2)=RLL(LM1+LMMAXD,LM2,IR,ith)
+             ENDDO
+            ENDDO
+            CALL CHEB2OLDGRID(IRWS(I1),t_inc%IRMDNEW,LMMAXD,RMESH(:,I1),
+     &                        NCHEB, NPAN_TOT,RPAN_INTERVALL,
+     &                        IPAN_INTERVALL, RLLTEMP,PNSTEMP,IRMD)
+            DO IR=1,IRWS(I1)
+             DO LM2=1,LMMAXD
+              PNS_SO(LM1,LM2,IR,2)=PNSTEMP(IR,LM2)
+             ENDDO
+            ENDDO
+           ENDDO ! LM1
+          ENDIF ! NSRA.EQ.2
+          DEALLOCATE(RLL)
+          DEALLOCATE(RLLTEMP)
+          DEALLOCATE(PNSTEMP)
+          
+          ! rotate radial wavefunction to global frame
+          DO IR=1,IRMD
+            CALL ROTATEMATRIX(PNS_SO(1,1,IR,1), THETA(I1), PHI(I1),
+     &                        LMMAXD/2,0)
+            CALL ROTATEMATRIX(PNS_SO(1,1,IR,2), THETA(I1), PHI(I1),
+     &                        LMMAXD/2,0)
+          ENDDO
+
+          ! finally collect wavefuncitons in global frame and old mesh for all atoms to be used in normcoeff-routines below
+          PNS_SO_ALL(:,:,:,:,i1) = PNS_SO(:,:,:,:)
+
+        END DO ! I1=i1_start, i1_end
+
+!#ifdef CPP_MPI
+        ! finally gather PNS_SO_ALL on master in case of MPI run
+!        call MPI_GATHER(PNS_SO_ALL, int sendcount, MPI_DOUBLE_COMPLEX,
+!               MPI_INPLACE, int recvcount, MPI_DOUBLE_COMPLEX,
+!               master, atcomm)
+!#endif
+
+
+        ! done with preparations, call normcoeff routines that construct operators
+
+        WRITE(*,*) 'Computing spin operator'
+        CALL NORMCOEFF_SO(1,IRCUT,LMAX,LMMAXD,PNS_SO_ALL,
+     +         t_params%THETAS,t_params%NTCELL,t_params%IFUNM,IPAN,
+     +         t_params%LMSP,t_params%KREL,CLEB,t_params%ICLEB,IEND,
+     +         DRDI,IRWS,t_params%LINTERFACE,1+KORBIT)
+
+        WRITE(*,*) 'Computing torq operator'
+        CALL NORMCOEFF_SO_TORQ(1,IRCUT,LMAX,LMMAXD,PNS_SO_ALL,
+     +         t_params%THETAS,t_params%NTCELL,t_params%IFUNM,IPAN,
+     +         t_params%LMSP,t_params%KREL,CLEB,t_params%ICLEB,IEND,
+     +         DRDI,IRWS,VISP,NSPIN,VINS,IRMIN)
+
+        WRITE(*,*) 'Computing spinflux operator'
+        CALL NORMCOEFF_SO_SPINFLUX(1,IRCUT,LMAX,LMMAXD,PNS_SO_ALL,
+     +         t_params%THETAS,t_params%NTCELL,t_params%IFUNM,IPAN,
+     +         t_params%LMSP,t_params%KREL,CLEB,t_params%ICLEB,IEND,
+     +         DRDI,IRWS)
+
+#ifdef CPP_TIMING
+        call timing_stop('main1a - operator')
+#endif
+      end if ! OPERATOR
 
 
 #ifdef CPP_TIMING
