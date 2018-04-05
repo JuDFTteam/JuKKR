@@ -210,10 +210,10 @@ gfort: FFLAGS= -O3 -ffree-line-length-none -fopenmp -fdefault-real-8
 #gfort: FFLAGS= -O0 -ffree-line-length-none -fdefault-real-8 -J $(OBJ) -Wall -Wextra -pedantic -fimplicit-none -fcheck=all -fbacktrace
 
 OPENMPFLAGS =
-hybrid: OPENMPFLAGS = -openmp
-hybriddebug: OPENMPFLAGS = -openmp
-openmp: OPENMPFLAGS = -openmp
-ompdebug: OPENMPFLAGS = -openmp
+hybrid: OPENMPFLAGS = -qopenmp
+hybriddebug: OPENMPFLAGS = -qopenmp
+openmp: OPENMPFLAGS = -qopenmp
+ompdebug: OPENMPFLAGS = -qopenmp
 rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 
@@ -225,9 +225,9 @@ rwthmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g -sox
 rwthompdebug: FFLAGS = -O2 -r8 -traceback -module $(OBJ) -g -sox
 #rwthompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
 
-rwthomp: OPENMPFLAGS = -openmp
-rwthompdebug: OPENMPFLAGS = -openmp
-rwthhybrid: OPENMPFLAGS = -openmp
+rwthomp: OPENMPFLAGS = -qopenmp
+rwthompdebug: OPENMPFLAGS = -qopenmp
+rwthhybrid: OPENMPFLAGS = -qopenmp
 
 
 
