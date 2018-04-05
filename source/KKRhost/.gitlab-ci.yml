@@ -1,0 +1,199 @@
+# docker image containing Developlement Tools and the current Intel compilers based on CentOS 7
+image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
+
+
+before_script:
+  # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
+  - set +e && source compilervars.sh intel64 && set -e
+  # install pip
+  - curl -O https://bootstrap.pypa.io/get-pip.py 
+  - python get-pip.py 
+  - pip install numpy
+  # set environment variables to avoind stack size issue
+  - export OMP_NUM_THREADS=1
+  - export OMP_STACKSIZE=1g
+  - ulimit -s unlimited
+
+
+stages:
+  - test
+  - build
+  - run
+  - verify
+
+
+test:intel:
+  stage: test
+  script:
+    # test if dependencies are working
+    - echo 'do some tests here'
+
+
+build:intel:hybrid:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make hybrid; cp kkr.x kkr.x_hybrid
+  artifacts:
+    paths:
+      - kkr.x_hybrid
+    expire_in: 1 day
+
+build:intel:omp:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make openmp; cp kkr.x kkr.x_omp
+  artifacts:
+    paths:
+      - kkr.x_omp
+    expire_in: 1 day
+
+build:intel:mpi:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make mpi; cp kkr.x kkr.x_mpi
+  artifacts:
+    paths:
+      - kkr.x_mpi
+    expire_in: 1 day
+
+build:intel:serial:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make serial; cp kkr.x kkr.x_serial
+  artifacts:
+    paths:
+      - kkr.x_serial
+    expire_in: 1 day
+
+
+run:intel:serial1:
+  stage: run
+  script:
+    - cd tests
+    - ./run_serial.py 1
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:serial2:
+  stage: run
+  script:
+    - cd tests
+    - ./run_serial.py 2
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:serial3:
+  stage: run
+  script:
+    - cd tests
+    - ./run_serial.py 3
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:parallel2:
+  stage: run
+  script:
+    - cd tests
+    - ./run_parallel.py 2
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:multi_node:
+  image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
+  stage: run
+  services:
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c1
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c2
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c3
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c4
+  script:
+    - cd tests
+    - ./run_multi_node.py
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:Jijs4:
+  stage: run
+  script:
+    - cd tests
+    - ./run_serial.py 4
+    - ./run_parallel.py -4
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:kkrflex5:
+  stage: run
+  script:
+    - cd tests
+    - ./run_serial.py 5
+    - ./run_parallel.py -5
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:FERMIOUT6:
+  stage: run
+  script:
+    - cd tests
+    - ./run_serial.py 6
+    - ./run_parallel.py -6
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:MPIatom7:
+  stage: run
+  script:
+    - cd tests
+    - ./run_parallel.py -7
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:MPIenerg8:
+  stage: run
+  script:
+    - cd tests
+    - ./run_parallel.py -8
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+
+verify:intel:
+  stage: verify
+  script:
+    # use pip to install pytest
+    - pip install pytest
+    # prepare and execute verification using pytest
+    - cd tests
+    - pytest -v
+

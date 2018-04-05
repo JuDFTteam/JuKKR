@@ -582,11 +582,12 @@ c            DEALLOCATE(GLLKE0)
 
          !update statusbar
 #ifdef CPP_MPI
-         if( ((i1_end-i1_start)/50)>0 .and. 
-     &       mod(KPT-i1_start,(i1_end-i1_start)/50)==0 .and.
+         if( (((i1_end-i1_start)/50)==0 .or. 
+     &       mod(KPT-i1_start,(i1_end-i1_start)/50)==0) .and.
      &       t_inc%i_write>0 ) write(1337,FMT=200)
 #else
-         if( mod(KPT,NOFKS/50)==0 .and.
+         if( ((NOFKS/50)==0 .or. 
+     &       mod(KPT,NOFKS/50)==0) .and.
      &                          t_inc%i_write>0 ) write(1337,FMT=200)
 #endif
 
