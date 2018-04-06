@@ -28,9 +28,10 @@ module mod_main0
 #ifdef CPP_TIMING
    use mod_timing
 #endif
-   use mod_create_newmesh
-   use memoryhandling
    use Constants
+   use memoryhandling
+   use global_variables
+   use mod_create_newmesh
 
    implicit none
 
@@ -45,13 +46,11 @@ module mod_main0
    integer :: IPE       !< Not real used, IPFE should be 0
    integer :: IPF       !< Not real used, IPFE should be 0
    integer :: IPFE      !< Not real used, IPFE should be 0
-   integer :: KREL      !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
    integer :: KCOR
    integer :: KEFG
    integer :: KHYP
    integer :: KPRE
    integer :: NSRA
-   integer :: IRID      !< Shape functions parameters in non-spherical part
    integer :: LPOT      !< Maximum l component in potential expansion
    integer :: IMIX      !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
    integer :: IEND      !< Number of nonzero gaunt coefficients
@@ -67,43 +66,26 @@ module mod_main0
    integer :: NPNT1     !< number of E points (EMESHT) for the contour integration
    integer :: NPNT2     !< number of E points (EMESHT) for the contour integration
    integer :: NPNT3     !< number of E points (EMESHT) for the contour integration
-   integer :: KNOCO     !< (0/1) Collinear/Non-collinear magnetism (even in non-relativistic non-spin-orbit case)
    integer :: LMMAX     !< (LMAX+1)^2
-   integer :: IRNSD
    integer :: NCLSD     !< Maximum number of different TB-clusters
    integer :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-   integer :: NCLEB     !< Number of Clebsch-Gordon coefficients
    integer :: NVIRT
-   integer :: NFUND     !< Shape functions parameters in non-spherical part
    integer :: LMPOT     !< (LPOT+1)**2
    integer :: KVMAD
    integer :: ITSCF
-   integer :: ISHLD     !< Paremeters for the Ewald summations
-   integer :: NMAXD     !< Paremeters for the Ewald summations
-   integer :: IPAND     !< Number of panels in non-spherical part
    integer :: NCHEB     !< Number of Chebychev pannels for the new solver
    integer :: NINEQ     !< Number of ineq. positions in unit cell
    integer :: NATYP     !< Number of kinds of atoms in unit cell
    integer :: IFILE     !< Unit specifier for potential card
    integer :: KVREL     !< 0,1 : non / scalar relat. calculation
    integer :: NTOTD
-   integer :: IEMXD     !< Dimension for energy-dependent arrays
-   integer :: NGSHD     !< Shape functions parameters in non-spherical part
    integer :: NSPIN     !< Counter for spin directions
    integer :: MMAXD     !< 2*LMAX+1
    integer :: NLEFT     !< Number of repeated basis for left host to get converged electrostatic potentials
    integer :: NRIGHT    !< Number of repeated basis for right host to get converged electrostatic potentials
-   integer :: NTPERD    !< Parameter in broyden subroutines
-   integer :: NACLSD    !< Maximum number of atoms in a TB-cluster
    integer :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
    integer :: NEMBD1    !< NEMB+1
-   integer :: NTREFD    !< parameter in broyden subroutine MUST BE 0 for the host program
-   integer :: NSPOTD    !< Number of potentials for storing non-sph. potentials
-   integer :: NSPIND    !< KREL+(1-KREL)*(NSPIN+1)
-   integer :: NSHELD    !< Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
    integer :: INVMOD    !< Inversion scheme
-   integer :: NCELLD    !< Number of cells (shapes) in non-spherical part
-   integer :: KORBIT    !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
    integer :: KHFELD    !< 0,1: no / yes external magnetic field
    integer :: ITDBRY    !< Number of SCF steps to remember for the Broyden mixing
    integer :: INSREF    !< INS for reference pot. (usual 0)
@@ -113,12 +95,10 @@ module mod_main0
    integer :: ISHIFT
    integer :: KFROZN
    integer :: NSYMAT
-   integer :: KNOSPH    !< switch for spherical/non-spherical (0/1) program.
    integer :: LMGF0D    !< (LMAX+1)**2
    integer :: NOFGIJ    !< number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
    integer :: LMXSPD    !< (2*LPOT+1)**2
    integer :: LASSLD    !< 4*LMAX
-   integer :: KPOIBZ    !< Number of reciprocal space vectors
    integer :: NQCALC
    integer :: KFORCE    !< Calculation of the forces
    integer :: N1SEMI    !< Number of energy points for the semicore contour
@@ -126,11 +106,8 @@ module mod_main0
    integer :: N3SEMI    !< Number of energy points for the semicore contour
    integer :: NLAYER    !< Number of principal layer
    integer :: IRMIND    !< IRM-IRNSD
-   integer :: WLENGTH   !< Word length for direct access files, compiler dependent ifort/others (1/4)
    integer :: NSATYPD   !< (NATYPD-1)*KNOSPH+1
    integer :: NSPINDD   !< NSPIND-KORBIT
-   integer :: NLAYERD   !< Number of principal layers (NAEZD/NPRINCD) used in the inversion routines (independent on NATYPD)
-   integer :: NPRINCD   !< Number of principle layers, set to a number >= NRPINC in output of main0
    integer :: NLBASIS   !< Number of basis layers of left host (repeated units)
    integer :: NRBASIS   !< Number of basis layers of right host (repeated units)
    integer :: INTERVX   !< Number of intervals in x-direction for k-net in IB of the BZ
@@ -142,7 +119,6 @@ module mod_main0
    integer :: NPOLSEMI  !< Number of poles for the semicore contour
    integer :: SCFSTEPS  !< number of scf iterations
    integer :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-   integer :: NATOMIMPD !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
    integer :: LRECABMAD
    integer :: IESEMICORE
    integer :: IDOSEMICORE
@@ -180,7 +156,6 @@ module mod_main0
    character(len=40) :: I19      !< Shape function file name
    character(len=40) :: I25      !< Scoef file name
    character(len=40) :: I40      !< File identifiers
-   logical :: LNC        !< Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
    logical :: LRHOSYM
    logical :: LINIPOL    !< True: Initial spin polarization; false: no initial spin polarization
    logical :: LCARTESIAN !< True: Basis in cartesian coords; false: in internal coords
@@ -413,195 +388,6 @@ contains
    !> file. 22.12.2017
    !----------------------------------------------------------------------------
    subroutine main0()
-      !
-      ! *********************************************************************
-      ! * For KREL = 1 (relativistic mode)                                  *
-      ! *                                                                   *
-      ! *  NPOTD = 2 * NATYP                                                *
-      ! *  LMMAXD = 2 * (LMAX+1)^2                                          *
-      ! *  NSPIND = 1                                                       *
-      ! *                                                                   *
-      ! *********************************************************************
-      !
-      ! Explanation of most variables follows below
-      !
-      !     ALAT                     : lattice constant (in a.u.)
-      !     ABASIS,BBASIS,CBASIS,    : scaling factors for rbasis
-      !     EMIN,EMAX,               : energies needed in EMESHT
-      !     HFIELD                   : external magnetic field, for
-      !                              : initial potential shift in
-      !                              : spin polarised case
-      !     TK,                      : temperature
-      !     VCONST,                  : potential shift
-      !     BRAVAIS(3,3),            : bravais lattice vectors
-      !     RECBV(3,3),              : reciprocal basis vectors
-      !     MTFAC(NATYP),            : scaling factor for radius MT
-      !     CLEB(NCLEB,2),           : GAUNT coefficients (GAUNT)
-      !     RMTREF(NREF),            : muffin-tin radius of reference system
-      !     RBASIS(3,NAEZ+NEMB),     : position of atoms in the unit cell
-      !                              : in units of bravais vectors
-      !     RCLS(3,NACLSD,NCLSD),    : real space position of atom in cluster
-      !     RR(3,0:NR)               : set of real space vectors (in a.u.)
-      !     VBC(2),                  : potential constants
-      !     WG(LASSLD),              : integr. weights for Legendre polynomials
-      !     YRG(LASSLD,0:LASSLD)     : spherical harmonics (GAUNT2)
-      !     ZAT(NATYP)               : nuclear charge
-      !     INTERVX,INTERVY,INTERVZ, : number of intervals in x,y,z-direction
-      !                              : for k-net in IB of the BZ
-      !     ICC,                     : enables the calculation of off-diagonal
-      !                              : elements of the GF.
-      !              = 0             : for SCF/DOS etc calc.
-      !              = 1             : writes out Gij for a cluster; cluster
-      !                              : data is expected to be in the file I25
-      !              = -1            : writes out Gij for customised pairs
-      !                              : i,j that need to be set up elsewhere
-      !     NSHELL(0:NSHELD)         : index of atoms/pairs per shell
-      !                              : (ij-pairs); nshell(0) = number of shells
-      !     NSH1(1..NSHELL(0))       : corresponding index of the sites I/J
-      !     NSH2(1..NSHELL(0))       : (NSH1/2) in the unit cell in a shell
-      !                              :
-      !     IJTABCALC                : linear pointer, specifying whether
-      !                              : the block (i,j) has to be calculated
-      !                              : needs set up for ICC=-1,
-      !                              : not used for ICC=1
-      !     IJTABSH                  : linear pointer, assigns pair (i,j) to
-      !                              : a shell in the array GS(*,*,*,NSHELD)
-      !     IJTABSYM                 : linear pointer, assigns pair (i,j) to
-      !                              : the rotation bringing GS into Gij
-      !     ISH,JSH                  :
-      !     NOFGIJ                   : number of GF pairs IJ to be calculated
-      !                              : as determined from IJTABCALC<>0
-      !     IOFGIJ,JOFGIJ            : linear pointers, similar to NSH1/NSH2
-      !                              : but giving the actual index of sites
-      !                              : I,J = 1,NATOMIMP in the cluster
-      !     ICST,                    : number of Born approximation
-      !     IEND,                    : number of nonzero gaunt coeffizients
-      !     IFILE,                   : unit specifier for potential card
-      !     INS,                     : 0 (MT), 1(ASA), 2(Full Potential)
-      !     INSREF,                  : INS for reference pot. (usual 0)
-      !     IPE,IPF,IPFE,            : not real used, IPFE should be 0
-      !     KSCOEF,                  : 0,1: read shell structure from
-      !                              :      file 25
-      !     KHFELD,                  : 0,1: no / yes external magnetic field
-      !     KSHAPE,                  : exact treatment of WS cell
-      !     KVREL,                   : 0,1 : non / scalar relat. calculation
-      !     KWS,                     : 0 (MT), 1(ASA)
-      !     LMAX,                    : maximum l component in
-      !                              : wave function expansion
-      !     LPOT,                    : maximum l component in
-      !                              : potential expansion
-      !     NAEZ,                    : number of atoms in unit cell
-      !     NATYP,                   : number of kinds of atoms in unit cell
-      !     NCLS,                    : number of reference clusters
-      !     NEMB,                    : number of 'embedding' positions
-      !     NINEQ,                   : number of ineq. positions in  unit cell
-      !     NLAYER,                  : number of principal layer
-      !     NPNT1,NPNT2,NPNT3,       : number of E points (EMESHT)
-      !     NPOL,                    : number of Matsubara Pols (EMESHT)
-      !     NR,                      : number of real space vectors rr
-      !     NREF,                    : number of diff. ref. potentials
-      !     NSPIN,                   : counter for spin directions
-      !     SCFSTEPS                 : number of scf iterations
-      !     INIPOL(NATYP),           : initial spin polarisation
-      !     IXIPOL(NATYP),           : constraint of spin pol.
-      !     KAOEZ(NATYP,NAEZ+NEMBD)  : kind of atom at site in elem. cell
-      !
-      !     ATOM(NACLSD,NAEZ),       : atom at site in cluster
-      !     CLS(NAEZ),               : cluster around atomic sites
-      !     NACLS(NCLSD),            : number of atoms in cluster
-      !     EZOA(NACLSD,NAEZ),       : EZ of atom at site in cluster
-      !     ICLEB(NCLEB,4),          : pointer array
-      !     RMT(NATYP)               : muffin-tin radius of true system
-      !     RMTNEW(NATYP)            : adapted muffin-tin radius
-      !     RWS(NATYP)               : Wigner Seitz radius
-      !     IMT(NATYP),              : r point at MT radius
-      !     IPAN(NATYP),             : number of panels in non-MT-region
-      !     IRC(NATYP),              : r point for potential cutting
-      !     IRCUT(0:IPAND,NATYP),    : r points of panel borders
-      !     IRMIN(NATYP),            : max r for spherical treatment
-      !     IRNS(NATYP)              : number r points for non spher. treatm.
-      !     IRWS(NATYP),             : r point at WS radius
-      !     FPRADIUS(NATYP)          : r point at which full-potential treatment starts
-      !     LMSP(NATYP,LMXSPD)       : 0,1 : non/-vanishing lm=(l,m) component
-      !                              : of non-spherical potential
-      !     LLMSP(NATYP,NFUND)       : lm=(l,m) of 'nfund'th nonvanishing
-      !                              : component of non-spherical pot.
-      !     JEND(LMPOT),            : pointer array for icleb()
-      !     LOFLM(LM2D),             : l of lm=(l,m) (GAUNT)
-      !     NTCELL(NATYP),           : index for WS cell
-      !     REFPOT(NATYP+NEMBD)      : ref. pot. card  at position
-      !     A(NATYP),B(NATYP)        : contants for exponential r mesh
-      !     R(IRM,NATYP)             : radial mesh ( in units a Bohr)
-      !     DRDI(IRM,NATYP)          : derivative dr/di
-      !     THETAS(IRID,NFUND,NCELLD): shape function
-      !                              :         ( 0 outer space
-      !                              : THETA = (
-      !                              :         ( 1 inside WS cell
-      !                              : in spherical harmonics expansion
-      !     ECORE(20,NPOTD)          : core energies
-      !     LCORE(20,NPOTD)          : angular momentum of core states
-      !     NCORE(NPOTD)             : number of core states
-      !-------------------------------------------------------------------------
-      !  nlbasis              : number of basis layers of left
-      !                         host (repeated units)
-      !  nleft                : number of repeated basis for left host
-      !                         to get converged  electrostatic potentials
-      !  tleft(3,nlbasis)     : vectors of the basis for the left host
-      !  zperleft(3)          : vector to define how to repeat the basis
-      !                         of the left host
-      !
-      !  nrbasis              : number of basis layers of right
-      !                         host (repeated units)
-      !  nright               : number of repeated basis for right host
-      !                         to get converged electrostatic potentials
-      !  tright(3,nlbasis)    : vectors of the basis for the right host
-      !  zperight(3)          : vector to define how to repeat the basis
-      !                         of the right host
-      !  cmomhost
-      !  (lmpot,1..nlbasis)   : charge moments of each atom of the left host
-      !  (lmpot,nlbasis+1,..) : charge moments of each atom of the right host
-      !-------------------------------------------------------------------------
-      ! RELativistic mode
-      !-------------------------------------------------------------------------
-      ! Matrices to change from NON-RELATIVISTIC to RELATIVISTIC
-      ! representations or back
-      !
-      !  RREL(LMMAXD,LMMAXD)   : non-relat. REAL spher. harm.  >   (kappa,mue)
-      !                        : (kappa,mue)  > non-relat. REAL spher. harm.
-      !  CREL(LMMAXD,LMMAXD)   : non-relat. CMPLX. spher. harm. > (kappa,mue)
-      !                        : (kappa,mue)  > non-relat. CMPLX. spher. harm.
-      !  RC(LMMAXD,LMMAXD)     : NREL REAL spher. harm. >  CMPLX. spher. harm.
-      !                        : NREL CMPLX. spher. harm. > REAL spher. harm.
-      ! to use the above matrices, the non-relat. representations have to
-      ! include the  spin index (i.e. should have the same dimension
-      ! LMMAXD = 2*(LMAX+1)**2 as the relativistic matrices)
-      !
-      ! alternatively, SRREL can be used combined with the pointer arrays
-      !  IRREL/NRREL
-      !  SRREL(2,2,LMMAXD)
-      !  IRREL(2,2,LMMAXD),NRREL(2,LMMAXD)
-      !
-      !-------------------------------------------------------------------------
-      !  DROTQ(LMMAXD,LMMAXD,NAEZ) : rotation matrices to change between
-      !                             : LOCAL/GLOBAL frame of reference for
-      !                             : magnetisation <> Oz or noncollinearity
-      !  SYMUNITARY(NSYMAXD)        : unitary/antiunitary symmetry flag
-      !
-      !-------------------------------------------------------------------------
-      ! internally used potential and mesh variables for the relativistic
-      ! routines
-      !  VTREL(IRM*KREL+(1-KREL),NATYP)     : potential (spherical part)
-      !  BTREL(IRM*KREL+(1-KREL),NATYP)     : magnetic field
-      !  RMREL(IRM*KREL+(1-KREL),NATYP)     : radial mesh
-      !  DRDIREL(IRM*KREL+(1-KREL),NATYP)   : derivative of radial mesh
-      !  R2DRDIREL(IRM*KREL+(1-KREL),NATYP) : r**2 * drdi
-      !  JWSREL(NATYP)                       : index of the WS radius
-      !  IRSHIFT(NATYP)                      : shift of the REL radial mesh
-      !                                       : with respect no NREL
-      !  ZREL(NATYP)                         : atomic number (cast integer)
-      !
-      ! Note: IRM-dimension depends on KREL to save space
-      !-------------------------------------------------------------------------
 
       use mod_types
 #ifdef cpp_ompstuff
@@ -616,22 +402,6 @@ contains
       use mod_md5sums
 
       implicit none
-      !     .. Parameters ..
-      !> @note parameter nembd1 avoids zero sized arrays.(2.1.01 R.Zeller)
-      !
-      !PARAMETER (LM2D = (2*LMAX+1)**2)
-      !PARAMETER (MMAXD = 2*LMAX+1)
-      !PARAMETER (NPOTD = (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-      !PARAMETER (LMGF0D = (LMAX+1)**2)
-      !PARAMETER (LMXSPD = (2*LPOT+1)**2)
-      !PARAMETER (LASSLD = 4*LMAX)
-      !PARAMETER (LMMAXD = (KREL+KORBIT+1)*(LMAX+1)**2)
-      !PARAMETER (NEMBD1 = NEMB+1)
-      !PARAMETER (IRMIND = IRM-IRNSD)
-      !PARAMETER (NSPINDD = NSPIND-KORBIT)
-      !INTEGER NOFGIJD
-      !PARAMETER (NOFGIJD = NATOMIMPD*NATOMIMPD+1)
-      !..
       !.. Local Scalars ..
       integer :: I
       integer :: J
@@ -647,7 +417,6 @@ contains
       !     .. OMP ..
       integer nth, ith          ! total number of threads, thread number
 #endif
-
       !     ..
       !     .. External Functions ..
       logical :: OPT,TEST
@@ -752,22 +521,20 @@ contains
       !> @note JC: have added reading calls for the parameters that used to be in
       !> the inc.p and can now be modified via the inputcard directly
       !-------------------------------------------------------------------------
-      call RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,            &
-         IMIX,LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KREL,KCOR,KEFG,KHYP,KPRE,IRID,IRNSD,     &
-         NCLSD,MMAXD,NCLEB,IPAND,NFUND,NGSHD,NPOTD,KVMAD,LMMAX,LMPOT,IEMXD,NMAXD,ISHLD,   &
-         KNOCO,NCHEB,NLEFT,IFILE,KVREL,NSPIN,NATYP,NINEQ,NPNT1,NPNT2,NPNT3,KORBIT,        &
-         NSPIND,LMXSPD,LMMAXD,LMGF0D,LASSLD,NEMBD1,IRMIND,NOFGIJ,NTPERD,NSPOTD,NACLSD,    &
-         KFROZN,ISHIFT,N1SEMI,N2SEMI,N3SEMI,SCFSTEPS,INSREF,KSHAPE,ITDBRY,NRIGHT,KFORCE,  &
-         NSHELD,KNOSPH,KPOIBZ,NTREFD,NSPINDD,NSATYPD,NPRINCD,WLENGTH,IVSHIFT,KHFELD,      &
-         NLBASIS,NRBASIS,INTERVX,INTERVY,INTERVZ,NPAN_EQ,NPAN_LOG,NPOLSEMI,NATOMIMPD,     &
-         TK,FCM,EMIN,EMAX,RMAX,GMAX,ALAT,R_LOG,RCUTZ,RCUTXY,ESHIFT,QBOUND,HFIELD,         &
-         MIXING,ABASIS,BBASIS,CBASIS,VCONST,TKSEMI,TOLRDIF,EMUSEMI,EBOTSEMI,FSEMICORE,    &
-         LAMBDA_XC,DELTAE,LNC,LRHOSYM,LINIPOL,LCARTESIAN,LINTERFACE,IMT,CLS,LMXC,IRNS,    &
-         IRWS,NTCELL,REFPOT,INIPOL,IXIPOL,HOSTIMP,KFG,VBC,ZPERLEFT,ZPERIGHT,BRAVAIS,      &
-         RMT,ZAT,RWS,MTFAC,RMTREF,RMTNEW,RMTREFAT,FPRADIUS,TLEFT,TRIGHT,RBASIS,           &
-         SOCSCALE,CSCL,SOCSCL,SOLVER,I12,I13,I19,I25,I40,TXC,DROTQ,NCPA,ITCPAMAX,         &
-         CPATOL,NOQ,IQAT,ICPA,KAOEZ,CONC,KMROT,QMTET,QMPHI,KREADLDAU,LOPT,UEFF,JEFF,      &
-         EREFLDAU)
+      call RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,IMIX, &
+         LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KCOR,KEFG,KHYP,KPRE,NCLSD,MMAXD,NPOTD,  &
+         KVMAD,LMMAX,LMPOT,NCHEB,NLEFT,IFILE,KVREL,NSPIN,NATYP,NINEQ,NPNT1,NPNT2,   &
+         NPNT3,LMXSPD,LMMAXD,LMGF0D,LASSLD,NEMBD1,IRMIND,NOFGIJ,KFROZN,ISHIFT,      &
+         N1SEMI,N2SEMI,N3SEMI,SCFSTEPS,INSREF,KSHAPE,ITDBRY,NRIGHT,KFORCE,NSPINDD,  &
+         NSATYPD,IVSHIFT,KHFELD,NLBASIS,NRBASIS,INTERVX,INTERVY,INTERVZ,NPAN_EQ,    &
+         NPAN_LOG,NPOLSEMI,TK,FCM,EMIN,EMAX,RMAX,GMAX,ALAT,R_LOG,RCUTZ,RCUTXY,      &
+         ESHIFT,QBOUND,HFIELD,MIXING,ABASIS,BBASIS,CBASIS,VCONST,TKSEMI,TOLRDIF,    &
+         EMUSEMI,EBOTSEMI,FSEMICORE,LAMBDA_XC,DELTAE,LRHOSYM,LINIPOL,LCARTESIAN,    &
+         LINTERFACE,IMT,CLS,LMXC,IRNS,IRWS,NTCELL,REFPOT,INIPOL,IXIPOL,HOSTIMP,KFG, &
+         VBC,ZPERLEFT,ZPERIGHT,BRAVAIS,RMT,ZAT,RWS,MTFAC,RMTREF,RMTNEW,RMTREFAT,    &
+         FPRADIUS,TLEFT,TRIGHT,RBASIS,SOCSCALE,CSCL,SOCSCL,SOLVER,I12,I13,I19,I25,  &
+         I40,TXC,DROTQ,NCPA,ITCPAMAX,CPATOL,NOQ,IQAT,ICPA,KAOEZ,CONC,KMROT,QMTET,   &
+         QMPHI,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU)
 
       ! Set the calculation of several parameters
       NTOTD=IPAND+30

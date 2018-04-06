@@ -7,29 +7,27 @@
 !> is a problem the user only has to add a line or change a value of the inc.p
 !> not recompile the code
 !-------------------------------------------------------------------------------
-SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,   &
-   IMIX,LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KREL,KCOR,KEFG,KHYP,KPRE,IRID,IRNSD,  &
-   NCLSD,MMAXD,NCLEB,IPAND,NFUND,NGSHD,NPOTD,KVMAD,LMMAX,LMPOT,IEMXD,NMAXD,ISHLD,&
-   KNOCO,NCHEB,NLEFT,IFILE,KVREL,NSPIN,NATYP,NINEQ,NPNT1,NPNT2,NPNT3,KORBIT,     &
-   NSPIND,LMXSPD,LMMAXD,LMGF0D,LASSLD,NEMBD1,IRMIND,NOFGIJ,NTPERD,NSPOTD,NACLSD, &
-   KFROZN,ISHIFT,N1SEMI,N2SEMI,N3SEMI,NSTEPS,INSREF,KSHAPE,ITDBRY,NRIGHT,KFORCE, &
-   NSHELD,KNOSPH,KPOIBZ,NTREFD,NSPINDD,NSATYPD,NPRINCD,WLENGTH,IVSHIFT,KHFIELD,  &
-   NLBASIS,NRBASIS,INTERVX,INTERVY,INTERVZ,NPAN_EQ,NPAN_LOG,NPOLSEMI,NATOMIMPD,  &
-   TK,FCM,EMIN,EMAX,RMAX,GMAX,ALAT,R_LOG,RCUTZ,RCUTXY,ESHIFT,QBOUND,HFIELD,      &
-   MIXING,ABASIS,BBASIS,CBASIS,VCONST,TKSEMI,TOLRDIF,EMUSEMI,EBOTSEMI,FSEMICORE, &
-   LAMBDA_XC,DELTAE,LNC,LRHOSYM,LINIPOL,LCARTESIAN,LINTERFACE,IMT,CLS,LMXC,IRNS, &
-   IRWS,NTCELL,REFPOT,INIPOL,IXIPOL,HOSTIMP,KFG,VBC,ZPERLEFT,ZPERIGHT,BRAVAIS,   &
-   RMT,ZAT,RWS,MTFAC,RMTREF,RMTNEW,RMTREFAT,FPRADIUS,TLEFT,TRIGHT,RBASIS,        &
-   SOCSCALE,CSCL,SOCSCL,SOLVER,I12,I13,I19,I25,I40,TXC,DROTQ,NCPA,ITCPAMAX,      &
-   CPATOL,NOQ,IQAT,ICPA,KAOEZ,CONC,KMROT,QMTET,QMPHI,KREADLDAU,LOPT,UEFF,JEFF,   &
-   EREFLDAU)
+subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,   &
+   IMIX,LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KCOR,KEFG,KHYP,KPRE,NCLSD,MMAXD,NPOTD,&
+   KVMAD,LMMAX,LMPOT,NCHEB,NLEFT,IFILE,KVREL,NSPIN,NATYP,NINEQ,NPNT1,NPNT2,NPNT3,&
+   LMXSPD,LMMAXD,LMGF0D,LASSLD,NEMBD1,IRMIND,NOFGIJ,KFROZN,ISHIFT,N1SEMI,N2SEMI, &
+   N3SEMI,NSTEPS,INSREF,KSHAPE,ITDBRY,NRIGHT,KFORCE,NSPINDD,NSATYPD,IVSHIFT,     &
+   KHFIELD,NLBASIS,NRBASIS,INTERVX,INTERVY,INTERVZ,NPAN_EQ,NPAN_LOG,NPOLSEMI,TK, &
+   FCM,EMIN,EMAX,RMAX,GMAX,ALAT,R_LOG,RCUTZ,RCUTXY,ESHIFT,QBOUND,HFIELD,MIXING,  &
+   ABASIS,BBASIS,CBASIS,VCONST,TKSEMI,TOLRDIF,EMUSEMI,EBOTSEMI,FSEMICORE,        &
+   LAMBDA_XC,DELTAE,LRHOSYM,LINIPOL,LCARTESIAN,LINTERFACE,IMT,CLS,LMXC,IRNS,IRWS,&
+   NTCELL,REFPOT,INIPOL,IXIPOL,HOSTIMP,KFG,VBC,ZPERLEFT,ZPERIGHT,BRAVAIS,RMT,ZAT,&
+   RWS,MTFAC,RMTREF,RMTNEW,RMTREFAT,FPRADIUS,TLEFT,TRIGHT,RBASIS,SOCSCALE,CSCL,  &
+   SOCSCL,SOLVER,I12,I13,I19,I25,I40,TXC,DROTQ,NCPA,ITCPAMAX,CPATOL,NOQ,IQAT,    &
+   ICPA,KAOEZ,CONC,KMROT,QMTET,QMPHI,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU)
 
-   use mod_wunfiles, only: t_params
-   use mod_save_wavefun, only: t_wavefunctions
-   use mod_version_info
-   use memoryhandling
    use Profiling
    use Constants
+   use mod_wunfiles, only: t_params
+   use memoryhandling
+   use global_variables
+   use mod_version_info
+   use mod_save_wavefun, only: t_wavefunctions
 
    implicit none
    !     ..
@@ -66,28 +64,18 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    integer, intent(inout) :: NCLS      !< Number of reference clusters
    integer, intent(inout) :: NPOL      !< Number of Matsubara Pols (EMESHT)
    integer, intent(inout) :: LMAX      !< Maximum l component in wave function expansion
-   integer, intent(inout) :: KREL      !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
    integer, intent(inout) :: KCOR
    integer, intent(inout) :: KEFG
    integer, intent(inout) :: KHYP
    integer, intent(inout) :: KPRE
-   integer, intent(inout) :: IRID      !< Number of panels in non-spherical part
-   integer, intent(inout) :: IRNSD     !< Number of radial mesh points in (RMT,...,RWS)
    integer, intent(inout) :: NCLSD     !< Maximum number of different TB-clusters
    integer, intent(inout) :: MMAXD
-   integer, intent(inout) :: NCLEB     !< Number of Clebsch-Gordon coefficients
-   integer, intent(inout) :: IPAND     !< Number of panels in non-spherical part
-   integer, intent(inout) :: NFUND     !< Number of panels in non-spherical part
-   integer, intent(inout) :: NGSHD     !< Shape functions parameters in non-spherical part
    integer, intent(inout) :: NPOTD
    integer, intent(inout) :: KVMAD
    integer, intent(inout) :: LMMAX
    integer, intent(inout) :: LMPOT
    integer, intent(inout) :: NTOTD     !< NTOTD = IPAND+30
-   integer, intent(inout) :: IEMXD     !< Dimension for energy-dependent arrays
-   integer, intent(inout) :: NMAXD     !< Paremeters for the Ewald summations
    integer, intent(inout) :: ISHLD     !< Paremeters for the Ewald summations
-   integer, intent(inout) :: KNOCO     !< (0/1) Collinear/Non-collinear magnetism (even in non-relativistic non-spin-orbit case)
    integer, intent(inout) :: NCHEB     !< Number of Chebychev pannels for the new solver
    integer, intent(inout) :: NLEFT     !< Number of repeated basis for left host to get converged  electrostatic potentials
    integer, intent(inout) :: IFILE     !< Unit specifier for potential card
@@ -98,8 +86,6 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    integer, intent(inout) :: NPNT1     !< number of E points (EMESHT) for the contour integration
    integer, intent(inout) :: NPNT2     !< number of E points (EMESHT) for the contour integration
    integer, intent(inout) :: NPNT3     !< number of E points (EMESHT) for the contour integration
-   integer, intent(inout) :: KORBIT    !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
-   integer, intent(inout) :: NSPIND
    integer, intent(inout) :: LMXSPD    !< (2*LPOT+1)**2
    integer, intent(inout) :: LMMAXD
    integer, intent(inout) :: LMGF0D
@@ -107,9 +93,6 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    integer, intent(inout) :: NEMBD1
    integer, intent(inout) :: IRMIND
    integer, intent(inout) :: NOFGIJ
-   integer, intent(inout) :: NTPERD    !< Parameter in broyden subroutines
-   integer, intent(inout) :: NSPOTD    !< Number of potentials for storing non-sph. potentials
-   integer, intent(inout) :: NACLSD    !< Maximum number of atoms in a TB-cluster
    integer, intent(inout) :: KFROZN
    integer, intent(inout) :: ISHIFT
    integer, intent(inout) :: N1SEMI    !< Number of energy points for the semicore contour
@@ -121,14 +104,8 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    integer, intent(inout) :: ITDBRY    !< Number of SCF steps to remember for the Broyden mixing
    integer, intent(inout) :: NRIGHT    !< Number of repeated basis for right host to get converged  electrostatic potentials
    integer, intent(inout) :: KFORCE    !< Calculation of the forces
-   integer, intent(inout) :: NSHELD    !< Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
-   integer, intent(inout) :: KNOSPH    !< Switch for spherical/non-spherical program (0/1).
-   integer, intent(inout) :: KPOIBZ    !< Number of reciprocal space vectors
-   integer, intent(inout) :: NTREFD    !< Parameter in broyden subroutine MUST BE 0 for the host program
    integer, intent(inout) :: NSPINDD   !< !< NSPIND-KORBIT
    integer, intent(inout) :: NSATYPD   !< (NATYPD-1)*KNOSPH+1
-   integer, intent(inout) :: NPRINCD   !< Number of principle layers, set to a number >= NRPINC in output of main0
-   integer, intent(inout) :: WLENGTH   !< Word length for direct access files, compiler dependent ifort/other compilers (1/4)
    integer, intent(inout) :: IVSHIFT
    integer, intent(inout) :: KHFIELD   !< 0,1: no / yes external magnetic field
    integer, intent(inout) :: NLBASIS   !< Number of basis layers of left host (repeated units)
@@ -139,7 +116,6 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    integer, intent(inout) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
    integer, intent(inout) :: NPAN_LOG  !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
    integer, intent(inout) :: NPOLSEMI  !< Number of poles for the semicore contour
-   integer, intent(inout) :: NATOMIMPD !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
    double precision, intent(inout) :: TK      !< Temperature
    double precision, intent(inout) :: FCM     !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
    double precision, intent(inout) :: EMIN    !< Lower value (in Ryd) for the energy contour
@@ -165,7 +141,6 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    double precision, intent(inout) :: FSEMICORE !< Initial normalization factor for semicore states (approx. 1.)
    double precision, intent(inout) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
    double complex, intent(inout) :: DELTAE      !< LLY Energy difference for numerical derivative
-   logical, intent(inout) :: LNC
    logical, intent(inout) :: LRHOSYM
    logical, intent(inout) :: LINIPOL    !< True: Initial spin polarization; false: no initial spin polarization
    logical, intent(inout) :: LCARTESIAN !< True: Basis in cartesian coords; false: in internal coords
@@ -366,10 +341,6 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
       WRITE(*,*) 'rinput13: ALATBASIS not found in inputcard'
       STOP 'rinput13: ALATBASIS not found in inputcard'
    ENDIF
-   ! move this writeout back to line 330 where A,B,CBASIS is set
-   !WRITE(6,2019) ABASIS,BBASIS,CBASIS
-   !WRITE(6,2107)
-   !WRITE(6,2014) ALAT
 
    ! Set 2-d or 3-d geometry
    LINTERFACE = .FALSE.
@@ -1924,8 +1895,6 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    INSREF = 0
    KWS = 2
    KHYP = 0
-   !      CALL IoInput('KHYPERF   ',UIO,1,7,IER)
-   !                      READ (UNIT=UIO,FMT=*) khyp
 
    TOLRDIF = 0.5D0 ! Set free GF to zero for r<tolrdif (a.u.)(vir. atoms)
    CALL IoInput('<TOLRDIF>       ',UIO,1,7,IER)
@@ -2056,514 +2025,499 @@ SUBROUTINE RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
 
    WRITE (1337,FMT=9020) LMAX,LMAX,NATYP,NATYP,IRM,IRM,NSPIN,NSPIND
 
-   IF (INS.GT.0) THEN
-      WRITE (1337,FMT=9130)
-      WRITE (1337,FMT=9140)
-      DO 20 I = 1,NATYP
-         WRITE (1337,FMT=9150) I,IRNS(I),IRNSD
+   if (INS.GT.0) then
+      write (1337,FMT=9130)
+      write (1337,FMT=9140)
+      do I = 1,NATYP
+         write (1337,FMT=9150) I,IRNS(I),IRNSD
+         if (IRNS(I).GT.IRNSD) call RCSTOP('19      ')
+      enddo
+   end if
 
-         IF (IRNS(I).GT.IRNSD) CALL RCSTOP('19      ')
+   WRITE (1337,FMT=9130)
 
-         20   CONTINUE
+   IF (KHFIELD.EQ.1) WRITE (1337,FMT=9030) HFIELD
+   IF (KVREL.LE.1 ) THEN
+      WRITE (1337,FMT=9050) TSPIN(NSPIN)
+   ELSE
+      WRITE (1337,FMT=9050) TSPIN(NSPIN+1)
+   END IF
+   WRITE (1337,FMT=9170) TVREL(KVREL)
+   WRITE (1337,FMT=9170) TKCOR(KFROZN)
+   IF (KSHAPE.EQ.0) THEN
+      WRITE (1337,FMT=9070) TKWS(KWS+1)
+   ELSE
+      WRITE (1337,FMT=9170) TSHAPE
+   END IF
 
-         !IF (LMAX.NE.LMAXD) THEN
-         !   WRITE (1337,FMT=9120)
-         !   CALL RCSTOP('20      ')
-         !END IF
-      END IF
+   WRITE (1337,FMT=9100) TXC(KXC+1)
+   IF (INS.GT.0) WRITE (1337,FMT=9160) TINS(INS),ICST
+   WRITE (1337,FMT=9080)
 
-      WRITE (1337,FMT=9130)
+   VBC(1) = VCONST
+   VBC(2) = VBC(1)
 
-      IF (KHFIELD.EQ.1) WRITE (1337,FMT=9030) HFIELD
-      IF (KVREL.LE.1 ) THEN
-         WRITE (1337,FMT=9050) TSPIN(NSPIN)
-      ELSE
-         WRITE (1337,FMT=9050) TSPIN(NSPIN+1)
-      END IF
-      WRITE (1337,FMT=9170) TVREL(KVREL)
-      WRITE (1337,FMT=9170) TKCOR(KFROZN)
-      IF (KSHAPE.EQ.0) THEN
-         WRITE (1337,FMT=9070) TKWS(KWS+1)
-      ELSE
-         WRITE (1337,FMT=9170) TSHAPE
-      END IF
+   LRHOSYM = .FALSE.
+   CALL IoInput('LRHOSYM         ',UIO,1,7,IER)
+   IF (IER.EQ.0) THEN
+      READ (UNIT=UIO,FMT=*) lrhosym
+      WRITE(111,*) 'LRHOSYM= ',LRHOSYM
+   ELSE
+      WRITE(111,*) 'Default LRHOSYM= ',LRHOSYM
+   ENDIF
 
-      WRITE (1337,FMT=9100) TXC(KXC+1)
-      IF (INS.GT.0) WRITE (1337,FMT=9160) TINS(INS),ICST
-      WRITE (1337,FMT=9080)
-
-      VBC(1) = VCONST
-      VBC(2) = VBC(1)
-
+   IF ( (NCPA.NE.0).AND.LRHOSYM ) THEN
+      WRITE(1337,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
+      WRITE(1337,*) '        YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
+      WRITE(111,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
+      WRITE(111,*) '    YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
       LRHOSYM = .FALSE.
-      CALL IoInput('LRHOSYM         ',UIO,1,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) lrhosym
-         WRITE(111,*) 'LRHOSYM= ',LRHOSYM
-      ELSE
-         WRITE(111,*) 'Default LRHOSYM= ',LRHOSYM
+   END IF
+
+   IF (LRHOSYM) THEN
+      CALL IoInput('IXIPOL          ',UIO,1,7,IER)
+      READ (UNIT=UIO,FMT=*) (ixipol(I),I=1,natyp)
+      write (1337,2022) (ixipol(i),i=1,natyp)
+      write (1337,2103)
+      DO I=1,NATYP
+         IF ( IXIPOL(I).NE.0 .AND. ABS(IXIPOL(ABS(IXIPOL(I)))).NE.I) THEN
+            write(6,*) 'Error in IXIPOL at atom ',I,'.'
+            stop 'IXIPOL'
+         END IF
+      END DO
+   ELSE
+      DO I=1,NATYP
+         IXIPOL(I) = 0
+      END DO
+      write (1337,2022) (ixipol(i),i=1,natyp)
+      write (1337,2103)
+   END IF
+   write(1337,2023) NAEZ,NEMB
+   write(1337,2110)
+
+   NINEQ = NAEZ
+   WRITE(1337,2016) NCLS,NREF,NINEQ
+   WRITE(1337,2110)
+   WRITE(1337,2103)
+
+   !----------------------------------------------------------------------
+   KMROT = 0
+
+   DO I=1,NAEZ
+      ! --->  atoms equivalent by inversional symmetry
+      QMTET(I)=0D0
+      QMPHI(I)=0D0
+      IER = 0
+      CALL IoInput('RBASISANG       ',UIO,I,7,IER)
+
+      IF( IER.EQ.0 ) THEN
+         READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3),QMTET(I),QMPHI(I)
+         IF( ABS(QMTET(I)) .GT. 1D-6 ) KMROT = 1
+         IF( ABS(QMPHI(I)) .GT. 1D-6 ) KMROT = 1
       ENDIF
+   ENDDO                         ! I=1,NAEZ
+   CALL IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
+   !-------------------------------------------------------------
 
-      IF ( (NCPA.NE.0).AND.LRHOSYM ) THEN
-         WRITE(1337,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
-         WRITE(1337,*) '        YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
-         WRITE(111,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
-         WRITE(111,*) '    YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
-         LRHOSYM = .FALSE.
-      END IF
+   if (nemb.gt.0) write(1337,*)
+   write(1337,2031) ((rbasis(j,i),j=1,3),i,refpot(i),i=naez+1,naez+nemb)
 
-      IF (LRHOSYM) THEN
-
-         CALL IoInput('IXIPOL          ',UIO,1,7,IER)
-         READ (UNIT=UIO,FMT=*) (ixipol(I),I=1,natyp)
-         write (1337,2022) (ixipol(i),i=1,natyp)
-         write (1337,2103)
-         DO I=1,NATYP
-            IF ( IXIPOL(I).NE.0 .AND. ABS(IXIPOL(ABS(IXIPOL(I)))).NE.I) THEN
-               write(6,*) 'Error in IXIPOL at atom ',I,'.'
-               stop 'IXIPOL'
-            END IF
-         END DO
-      ELSE
-         DO I=1,NATYP
-            IXIPOL(I) = 0
-         END DO
-         write (1337,2022) (ixipol(i),i=1,natyp)
-         write (1337,2103)
-      END IF
-      write(1337,2023) NAEZ,NEMB
-      write(1337,2110)
-
-      NINEQ = NAEZ
-      WRITE(1337,2016) NCLS,NREF,NINEQ
-      WRITE(1337,2110)
-      WRITE(1337,2103)
-
-      !----------------------------------------------------------------------
-      KMROT = 0
-
+   ! ------------------------------------------------------------------------
+   IF ( .not. OPT('VIRATOMS') ) THEN
       DO I=1,NAEZ
-         ! --->  atoms equivalent by inversional symmetry
-         QMTET(I)=0D0
-         QMPHI(I)=0D0
-         IER = 0
-         CALL IoInput('RBASISANG       ',UIO,I,7,IER)
-
-         IF( IER.EQ.0 ) THEN
-            READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3),QMTET(I),QMPHI(I)
-            IF( ABS(QMTET(I)) .GT. 1D-6 ) KMROT = 1
-            IF( ABS(QMPHI(I)) .GT. 1D-6 ) KMROT = 1
-         ENDIF
-      ENDDO                         ! I=1,NAEZ
-      CALL IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
-      !-------------------------------------------------------------
-
-      if (nemb.gt.0) write(1337,*)
-      write(1337,2031) ((rbasis(j,i),j=1,3),i,refpot(i),i=naez+1,naez+nemb)
-
-      ! ------------------------------------------------------------------------
-      IF ( .not. OPT('VIRATOMS') ) THEN
-         DO I=1,NAEZ
-            DO IO=1,NOQ(I)
-               IF (KAOEZ(IO,I).LT.1) STOP 'Error in KAOEZ'
-            END DO
-         ENDDO
-      END IF
-      ! ------------------------------------------------------------------------
-      WRITE(1337,2111)
-
-      !Check for DECIMATE consistency
-
-      IF (OPT('DECIMATE')) THEN
-         IF ( MOD(NPRINCD,NLBASIS).NE.0 ) THEN
-            WRITE(6,*) ' Decimation cannot continue '
-            WRITE(6,*) 'NPRINCD=',NPRINCD,' NLBASIS=',NLBASIS
-            STOP
-         END IF
-         IF ( MOD(NPRINCD,NRBASIS).NE.0 )  THEN
-            WRITE(6,*) ' Decimation cannot continue '
-            WRITE(6,*) 'NPRINCD=',NPRINCD,' NRBASIS=',NRBASIS
-            STOP
-         END IF
-      END IF
-
-      !Check for ITERMDIR consistency -- if KMROT=0 suppress it
-
-      IF ( (OPT('ITERMDIR')).AND.(KMROT.EQ.0) ) THEN
-         WRITE (1337,*)
-         WRITE (1337,*)&
-            &        ' WARNING: ITERMDIR running option used with collinear/',&
-            &        'parallel Oz starting'
-         WRITE (1337,*)&
-            &        '          system (KMROT = 0 ). Please check token',&
-            &        ' RBASISANG in your input'
-         WRITE (1337,*) ' Running option ITERMDIR will be ignored'
-         WRITE (1337,*)
-         DO I=1,32
-            IF (t_params%OPTC(I)(1:8).EQ.'ITERMDIR') t_params%OPTC(I)='        '
+         DO IO=1,NOQ(I)
+            IF (KAOEZ(IO,I).LT.1) STOP 'Error in KAOEZ'
          END DO
+      ENDDO
+   END IF
+   ! ------------------------------------------------------------------------
+   WRITE(1337,2111)
+
+   !Check for DECIMATE consistency
+
+   IF (OPT('DECIMATE')) THEN
+      IF ( MOD(NPRINCD,NLBASIS).NE.0 ) THEN
+         WRITE(6,*) ' Decimation cannot continue '
+         WRITE(6,*) 'NPRINCD=',NPRINCD,' NLBASIS=',NLBASIS
+         STOP
+      END IF
+      IF ( MOD(NPRINCD,NRBASIS).NE.0 )  THEN
+         WRITE(6,*) ' Decimation cannot continue '
+         WRITE(6,*) 'NPRINCD=',NPRINCD,' NRBASIS=',NRBASIS
+         STOP
+      END IF
+   END IF
+
+   !Check for ITERMDIR consistency -- if KMROT=0 suppress it
+
+   IF ( (OPT('ITERMDIR')).AND.(KMROT.EQ.0) ) THEN
+      WRITE (1337,*)
+      WRITE (1337,*)' WARNING: ITERMDIR running option used with collinear/',&
+         &        'parallel Oz starting'
+      WRITE (1337,*)'          system (KMROT = 0 ). Please check token',&
+         &        ' RBASISANG in your input'
+      WRITE (1337,*) ' Running option ITERMDIR will be ignored'
+      WRITE (1337,*)
+      DO I=1,32
+         IF (t_params%OPTC(I)(1:8).EQ.'ITERMDIR') t_params%OPTC(I)='        '
+      END DO
+   END IF
+
+   !Check for XCPL consistency
+
+   MANCTL = ( KMROT.EQ.0 ).AND.( KREL.EQ.0 ).AND.( NSPIN.GT.1 )
+   IF ( (OPT('XCPL    ') ).AND.( .NOT.MANCTL ) ) THEN
+      WRITE (1337,*)
+      WRITE (1337,*)' WARNING: XCPL running option requires collinear ',&
+         &        'magnetic systems'
+      WRITE (1337,*)' in a NON/SCALAR/SCALAR+SOC relativistic mode (KREL=0)'
+      WRITE (1337,*) ' Running option XCPL will be ignored'
+      WRITE (1337,*)
+      DO I=1,32
+         IF (t_params%OPTC(I)(1:8).EQ.'XCPL    ') t_params%OPTC(I)='        '
+      END DO
+   END IF
+
+   WRITE(1337,62) (t_params%OPTC(I),I=1,8)
+   62   FORMAT(79('-')/' EXECUTION OPTIONS:'/1X,A8,7('//',A8)/79('-'))
+   WRITE(1337,52) (t_params%TESTC(I),I=1,16)
+   52   FORMAT(79('-')/' TEST OPTIONS:'/2(1X,A8,7('//',A8)/)/79('-'))
+   980  FORMAT(8A8)
+
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Initialise SOLVER, SOC and CTL parameters in REL case
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   CSCL(1:LMAX+1,1:NATYP) = CVLIGHT
+   MANSOC=.FALSE.
+   MANCTL=.FALSE.
+
+   IF (KREL.EQ.1) THEN
+      SOLVER='BS        '
+      CALL IoInput('SOLVER          ',UIO,0,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) SOLVER
+         IF ( SOLVER(1:2) .EQ. 'BS' ) THEN
+            SOLVER = 'BS        '
+         ELSE
+            IF( SOLVER .NE. 'ABM-OP    ' ) SOLVER='ABM-OP    '
+         END IF
       END IF
 
-      !Check for XCPL consistency
+      ! ============================================================= SOC-MAN
+      ! For Dirac-ASA
 
-      MANCTL = ( KMROT.EQ.0 ).AND.( KREL.EQ.0 ).AND.( NSPIN.GT.1 )
-      IF ( (OPT('XCPL    ') ).AND.( .NOT.MANCTL ) ) THEN
-         WRITE (1337,*)
-         WRITE (1337,*)&
-            &        ' WARNING: XCPL running option requires collinear ',&
-            &        'magnetic systems'
-         WRITE (1337,*)&
-            &        ' in a NON/SCALAR/SCALAR+SOC relativistic mode (KREL=0)'
-         WRITE (1337,*) ' Running option XCPL will be ignored'
-         WRITE (1337,*)
-         DO I=1,32
-            IF (t_params%OPTC(I)(1:8).EQ.'XCPL    ') t_params%OPTC(I)='        '
-         END DO
-      END IF
-
-      WRITE(1337,62) (t_params%OPTC(I),I=1,8)
-      62   FORMAT(79('-')/' EXECUTION OPTIONS:'/1X,A8,7('//',A8)/79('-'))
-      WRITE(1337,52) (t_params%TESTC(I),I=1,16)
-      52   FORMAT(79('-')/' TEST OPTIONS:'/2(1X,A8,7('//',A8)/)/79('-'))
-      980  FORMAT(8A8)
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Initialise SOLVER, SOC and CTL parameters in REL case
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      CSCL(1:LMAX+1,1:NATYP) = CVLIGHT
-      MANSOC=.FALSE.
-      MANCTL=.FALSE.
-
-      IF (KREL.EQ.1) THEN
-         SOLVER='BS        '
-
-         CALL IoInput('SOLVER          ',UIO,0,7,IER)
+      IF (OPT('SOC     ')) THEN
+         CALL IOInput('SOSCALE         ',UIO,0,7,IER)
          IF (IER.EQ.0) THEN
-            READ (UNIT=UIO,FMT=*) SOLVER
-            IF ( SOLVER(1:2) .EQ. 'BS' ) THEN
-               SOLVER = 'BS        '
-            ELSE
-               IF( SOLVER .NE. 'ABM-OP    ' ) SOLVER='ABM-OP    '
-            END IF
-         END IF
-
-         ! ============================================================= SOC-MAN
-         ! For Dirac-ASA
-
-         IF (OPT('SOC     ')) THEN
-            CALL IOInput('SOSCALE         ',UIO,0,7,IER)
-            IF (IER.EQ.0) THEN
-               READ (UNIT=UIO,FMT=*) SOSCALE
-               IF (SOSCALE.GT.-2.5D0) THEN
-                  IF (SOSCALE.GE.0.0D0) THEN           ! SOC-I
-                     SOLVER='ABM-SOC   '
-                     MANSOC=.TRUE.
-                  ELSE                                  ! SOC-II
-                     SOLVER       = 'ABM-SOC-II'
-                     MANSOC=.TRUE.
-                     DO I=1,NATYP
-                        SOCSCL(1:LMAX+1,I) = SOSCALE
-                     END DO
-                     WRITE(1337,99010) SOCII(NINT(SOSCALE))
-                  END IF
-               ELSE
-                  WRITE(1337,99001) '< SOC >'
-                  WRITE(1337,99003)
+            READ (UNIT=UIO,FMT=*) SOSCALE
+            IF (SOSCALE.GT.-2.5D0) THEN
+               IF (SOSCALE.GE.0.0D0) THEN           ! SOC-I
+                  SOLVER='ABM-SOC   '
+                  MANSOC=.TRUE.
+               ELSE                                  ! SOC-II
+                  SOLVER       = 'ABM-SOC-II'
+                  MANSOC=.TRUE.
+                  DO I=1,NATYP
+                     SOCSCL(1:LMAX+1,I) = SOSCALE
+                  END DO
+                  WRITE(1337,99010) SOCII(NINT(SOSCALE))
                END IF
             ELSE
-               WRITE(1337,99002) '< SOC >'
+               WRITE(1337,99001) '< SOC >'
                WRITE(1337,99003)
             END IF
-
-            IF ( MANSOC .AND. (SOSCALE.GE.0D0) ) THEN
-               IMANSOC(1:NATYP) = 1
-               ! ---> now look for a possible include/exclude list (SOCLIST= +/- NASOC)
-               ! ---> if SOCLIST is not found, ALL the atoms will have SOC modified with
-               ! ---> SOSCALE (+NASOC=only NASOC atoms, -NASOC=all but these NASOC atoms)
-               !      Note that this is allowed only for SOC-I manipulation
-               !
-               CALL IOInput('SOCLIST         ',UIO,0,7,IER)
-               IF (IER.EQ.0) THEN
-                  READ(UNIT=UIO,FMT=*) NASOC,(ISP(I),I=1,ABS(NASOC))
-
-                  IF (NASOC.NE.0) THEN
-                     IF (NASOC.LT.0) THEN ! exclude this atoms
-                        DO I=1,-NASOC
-                           IMANSOC(ISP(I)) = 0
-                        END DO
-                     ELSE
-                        IMANSOC(1:NATYP) = 0
-                        DO I=1,NASOC
-                           IMANSOC(ISP(I)) = 1
-                        END DO
-                     END IF
-                  END IF
-               END IF
-
-               WRITE(1337,2100)
-               DO I=1,NATYP
-                  IF (IMANSOC(I).EQ.1) THEN
-                     SOCSCL(1:LMAX+1,I)=SOSCALE
-                  END IF
-               END DO
-               WRITE(1337,99004)
-               IF (NASOC.EQ.0) WRITE(1337,99005)
-               IF (NASOC.GT.0) THEN
-                  WRITE(1337,99006)
-                  WRITE(1337,99008) (ISP(I),I=1,NASOC)
-               END IF
-               IF (NASOC.LT.0) THEN
-                  WRITE(1337,99007)
-                  WRITE(1337,99008) (ISP(I),I=1,ABS(NASOC))
-               END IF
-               WRITE(1337,99009) SOSCALE
-               WRITE(1337,2100)
-            END IF
+         ELSE
+            WRITE(1337,99002) '< SOC >'
+            WRITE(1337,99003)
          END IF
-         ! ============================================================= SOC-MAN
 
-         WRITE(1337,'('' SOLVER used for the DIRAC equation : '',2X,A)') SOLVER
-         WRITE(1337,2100)
-
-         ! ============================================================= CTL-MAN
-
-         IF (OPT('CSCALE  ')) THEN
-            CALL IOInput('CTLSCALE        ',UIO,0,7,IER)
+         IF ( MANSOC .AND. (SOSCALE.GE.0D0) ) THEN
+            IMANSOC(1:NATYP) = 1
+            ! ---> now look for a possible include/exclude list (SOCLIST= +/- NASOC)
+            ! ---> if SOCLIST is not found, ALL the atoms will have SOC modified with
+            ! ---> SOSCALE (+NASOC=only NASOC atoms, -NASOC=all but these NASOC atoms)
+            !      Note that this is allowed only for SOC-I manipulation
+            !
+            CALL IOInput('SOCLIST         ',UIO,0,7,IER)
             IF (IER.EQ.0) THEN
-               READ (UNIT=UIO,FMT=*) CTLSCALE
-               IF (CTLSCALE.GE.1D-12) THEN
-                  MANCTL=.TRUE.
-               ELSE
-                  WRITE(1337,99001) '< CSCALE >'
-                  WRITE(1337,99011)
+               READ(UNIT=UIO,FMT=*) NASOC,(ISP(I),I=1,ABS(NASOC))
+
+               IF (NASOC.NE.0) THEN
+                  IF (NASOC.LT.0) THEN ! exclude this atoms
+                     DO I=1,-NASOC
+                        IMANSOC(ISP(I)) = 0
+                     END DO
+                  ELSE
+                     IMANSOC(1:NATYP) = 0
+                     DO I=1,NASOC
+                        IMANSOC(ISP(I)) = 1
+                     END DO
+                  END IF
                END IF
-            ELSE
-               WRITE(1337,99002) '< CSCALE >'
-               WRITE(1337,99011)
             END IF
 
-            IF (MANCTL) THEN
-               CSCL(1:LMAX+1,1:NATYP) = CSCL(1:LMAX+1,1:NATYP)/DSQRT(CTLSCALE)
-               WRITE(1337,99012)
-               WRITE(1337,99005)
-               WRITE(1337,99009) 1.D0/DSQRT(CTLSCALE)
+            WRITE(1337,2100)
+            DO I=1,NATYP
+               IF (IMANSOC(I).EQ.1) THEN
+                  SOCSCL(1:LMAX+1,I)=SOSCALE
+               END IF
+            END DO
+            WRITE(1337,99004)
+            IF (NASOC.EQ.0) WRITE(1337,99005)
+            IF (NASOC.GT.0) THEN
+               WRITE(1337,99006)
+               WRITE(1337,99008) (ISP(I),I=1,NASOC)
             END IF
+            IF (NASOC.LT.0) THEN
+               WRITE(1337,99007)
+               WRITE(1337,99008) (ISP(I),I=1,ABS(NASOC))
+            END IF
+            WRITE(1337,99009) SOSCALE
             WRITE(1337,2100)
          END IF
-
-         ! ============================================================= CTL-MAN
       END IF
-      ! ================================================================ LDA+U
+      ! ============================================================= SOC-MAN
 
-      IF(OPT('qdos    ')) THEN
-         allocate(t_params%qdos_atomselect(NATYP), stat=i_stat) !INTEGER
-         call memocc(i_stat,product(shape(t_params%qdos_atomselect))*kind(t_params%qdos_atomselect),'t_params%qdos_atomselect','rinput13')
-
-         t_params%qdos_atomselect(1:NATYP) = 1
-         !for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.
-         !          CALL IoInput('qdosatoms       ',UIO,1,7,IER)
-         !          IF (IER.EQ.0) THEN
-         !            READ (UNIT=UIO,FMT=*) (t_params%qdos_atomselect(I),I=1,NATYP)
-         !            WRITE(111,FMT='(A10,80I2)') 'qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
-         !          ELSE
-         !            WRITE(111,FMT='(A18,80I2)') 'Default qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
-         !          ENDIF
-         !
-         !          WRITE (1337,'(A)') 'atom selective writeout for qdos:'
-         !          WRITE (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
-
-      END IF
-
-      !-------------------------------------------------------------------------
-      IF (OPT('FERMIOUT').AND.(NSTEPS/=1))THEN                                  ! fswrt
-         WRITE(6,2012)                                                          ! fswrt
-         NSTEPS = 1                                                             ! fswrt
-      END IF                                                                    ! fswrt
-      !-------------------------------------------------------------------------
-
-      ! ============================================================= WF_SAVE
-      CALL IOInput('MEMWFSAVE       ',UIO,0,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_number
-         WRITE(1337,*) '< MEMWFSAVE >', t_wavefunctions%maxmem_number
-         WRITE(111,*) 'MEMWFSAVE=',t_wavefunctions%maxmem_number
-      ELSE
-         t_wavefunctions%maxmem_number = 0
-         WRITE(1337,*) '< MEMWFSAVE >, use default:', t_wavefunctions%maxmem_number
-         WRITE(111,*) 'Default MEMWFSAVE= ',t_wavefunctions%maxmem_number
-      END IF
-      CALL IOInput('UNITMEMWFSAVE   ',UIO,0,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_units
-         WRITE(1337,*) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
-         WRITE(111,*) 'UNITMEMWFSAVE=',t_wavefunctions%maxmem_units
-      ELSE
-         t_wavefunctions%maxmem_units = 2
-         WRITE(1337,*) '< UNITMEMWFSAVE >, use default:', t_wavefunctions%maxmem_units, '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
-         WRITE(111,*) 'Default UNITMEMWFSAVE= ',t_wavefunctions%maxmem_units, '(MB)'
-      END IF
-
-      !default flags: save only rll from main1a>tmatnewsolver since left solutions can be calculated always in main1c>rhovalnew and sll is not used
-      t_wavefunctions%save_rll     = .true.
-      t_wavefunctions%save_sll     = .false.
-      t_wavefunctions%save_rllleft = .false.
-      t_wavefunctions%save_sllleft = .false.
-      ! ============================================================= WF_SAVE
-
-
-
+      WRITE(1337,'('' SOLVER used for the DIRAC equation : '',2X,A)') SOLVER
       WRITE(1337,2100)
-      WRITE(1337,2040) KMROT
-      WRITE(1337,2110)
-      WRITE(1337,*) ' >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< '
 
+      ! ============================================================= CTL-MAN
 
-      CLOSE(111) ! Close file inputcard_generated.txt
+      IF (OPT('CSCALE  ')) THEN
+         CALL IOInput('CTLSCALE        ',UIO,0,7,IER)
+         IF (IER.EQ.0) THEN
+            READ (UNIT=UIO,FMT=*) CTLSCALE
+            IF (CTLSCALE.GE.1D-12) THEN
+               MANCTL=.TRUE.
+            ELSE
+               WRITE(1337,99001) '< CSCALE >'
+               WRITE(1337,99011)
+            END IF
+         ELSE
+            WRITE(1337,99002) '< CSCALE >'
+            WRITE(1337,99011)
+         END IF
 
-      RETURN
-      ! *********************************************Input-End ********
-      1029 FORMAT((F4.0,I4,4x,4I1,3I4,F8.4,I4,I5,1x,f8.5))
-      ! ------------------------------------------------------------------------
-      2010 FORMAT(' NSPIN '/I4)
-      2011 FORMAT(' NSTEPS'/I4)
-      2012 FORMAT(' WARINING: Setting NSTEPS to 1 for runoption FERMOUT')
-      2014 FORMAT('          ALAT = ',F15.8)
-      2015 FORMAT('   INTERVX   INTERVY   INTERVZ'/3I10)
-      2016 FORMAT('    NCLS    NREF   NINEQ'/,3I8)
-      2018 FORMAT(' RBASIS'/,&
-         &     'SITE                BASIS VECTORS                 ',&
-         &     'THETA   PHI CPA OCC KAOEZ')
-      2019 FORMAT('         ABASIS         BBASIS         CBASIS'/3F15.8)
-      2021 FORMAT(' INIPOL'/,(10I4))
-      2022 FORMAT(' IXIPOL'/,(10I4))
-      2023 FORMAT('    NAEZ    NEMB  '/,2I8)
-      2025 FORMAT((i4,3F15.8,2F6.1,2(1x,I3),4I3))
-      2028 FORMAT(' NATYP '/,I4/,&
-         &     '   Z lmx     KFG cls pot ntc  MTFAC irns SITE  CONC')
-      2031 FORMAT((3F15.8,2I6))
-      2032 FORMAT(' NTCELLR'/,(10I4))
-      2040 FORMAT(' KMROT'/,4I8)
-      ! ------------------------------------------------------------------------
-      2100 FORMAT(79(1H-))
-      2101 format(   3(1H-),1H+  , 3(14(1H-),1H+),  30(1H-))
-      2102 format( 3(9(1H-),1H+) ,49(1H-))
-      2103 FORMAT(10(3(1H-),1H+) ,39(1H-))
-      2104 format(   3(1H-),1H+  ,75(1H-))
-      2107 format( 3(14(1H-),1H+),34(1H-))
-      2108 format( 2(3(1H-),1H+),  7(1H-),1H+,      3(3(1H-),1H+),&
-         &          7(1H-),1H+,   3(1H-),1H+,      39(1H-))
-      2110 format( 3(7(1H-),1H+) ,55(1H-))
-      2111 format( 7(7(1H-),1H+) ,23(1H-))
-      9020 FORMAT (/,33x,'check of dimension-data consistency',/,33x,&
-         &       35 ('-'),/,40x,'lmax   : (',i6,',',i6,')',/,40x,&
-         &       'natyp  : (',i6,',',i6,')',/,40x,'irm    : (',i6,',',i6,&
-         &       ')',/,40x,'nspin  : (',i6,',',i6,')',/)
-      9030 FORMAT (1x,10 ('*'),' external magnetic field applied hfield=',&
-         &       f8.5)
-      9050 FORMAT (20x,a4,'spin polarized calculation')
-      9070 FORMAT (1x,20x,' calculation with',a8,'-potential')
-      9080 FORMAT (1x,79 ('*'))
-      9090 FORMAT (' mixing factor used           :',f15.6,/,&
-         &        ' convergence quality required :',1p,d15.2)
-      9091 FORMAT (' make use of CPA algorithm    :',1x,a14)
-      9092 FORMAT ('         max. iterations      :',i15,/,&
-         &        '         req. CPA convergency :',1p,d15.2)
-      9100 FORMAT (1x,20x,a24,'exchange-correlation potential')
-      9110 FORMAT (/,20x,'broyden"s method # :',i3,&
-         &       ' is used up to iteration-      ',/,20x,'depth :',i3,&
-         &       '  then jacobian is fixed and potential      ',/,20x,&
-         &       'is updated using that jacobian')
-      9120 FORMAT (13x,' in case of calculating non - spherical wavefcts ',&
-         &       'the parameter lmaxd has to be set equal lmax ')
-      9130 FORMAT (/)
-      9140 FORMAT (20x,'full potential calculation ',&
-         &       '- cut off of non spherical potential',/,' >',/)
-      9150 FORMAT (31x,'representive atom no.',i3,' irns :',i5,' irnsd :',i5)
-      9160 FORMAT (21x,a43,/,21x,' using',i3,'-th. born approximation ')
-      9170 FORMAT (21x,a43)
-      9210 FORMAT (' lmax'/,i4)
-      9220 FORMAT ('          EMIN        EMAX        TK'/,3f12.6)
-      9230 FORMAT ('   NPOL  NPNT1  NPNT2  NPNT3'/,4i7)
-      9250 FORMAT ('  IFILE    IPE ISHIFT ESHIFT'/,3i7,f12.6)
-      9260 FORMAT (' KSHAPE    IRM    INS   ICST INSREF'/,5i7)
-      9270 FORMAT ('   KCOR  KVREL    KWS   KHYP KHFIELD   KXC'/,6i7)
-      9280 FORMAT (' external magnetic hfield     :',f15.4/,&
-         &        ' VCONST                       :',f15.6)
-      9290 FORMAT ('   IMIX    IGF    ICC'/,3i7)
-      9300 FORMAT (' ITDBRY'/,i7)
-      9310 FORMAT ('      STRMIX        FCM       QBOUND'/,3f12.6)
-      9320 FORMAT ('      BRYMIX'/,f12.6)
-      9330 FORMAT ('    KTE   KPRE   KEFG  KVMAD '/,5i7)
-      9301 format(   3(1H-),1H+  ,75(1H-))
-      9302 format( 3(11(1H-),1H+),43(1H-))
-      9303 format(3(6(1H-),1H+) ,58(1H-))
-      9304 format(4(6(1H-),1H+) ,51(1H-))
-      9305 format(3(6(1H-),1H+),11(1H-),1H+ ,46(1H-))
-      9306 format(6(6(1H-),1H+) ,37(1H-))
-      9307 format(6(1H-),1H+,72(1H-))
-      9308 format(11(1H-),1H+,67(1H-))
-      9309 format(5(6(1H-),1H+) ,44(1H-))
-      9410 format('*** SLAB - INTERFACE CALCULATION ***'/)
-      9420 format(I5,3F14.8,I5)
-      9430 format('Number of LEFT  Host Layers : ',I5,' with ',I5,' basis')
-      9440 format('Number of RIGHT Host Layers : ',I5,' with ',I5,' basis')
-      9450 format('Left  side periodicity : ',3F10.5)
-      9460 format('Right side periodicity : ',3F10.5)
-      9465 format('    Geommetry used : '/,&
-         &       ' ATOM       TX          TY          TZ ')
-      9470 format('--------------- Left  Host -------------- ')
-      9475 format('---------------   S L A B  -------------- ')
-      9480 format('--------------- Right Host -------------- ')
-      99001 FORMAT(/,1X,&
-         &     "WARNING: Option ",A," used with an INVALID ",&
-         &     "scaling parameter.")
-      99002 FORMAT(/,1X,&
-         &     "WARNING: Option ",A," found but NO value given for the",&
-         &     " scaling parameter.")
-      99003 FORMAT(15X,'++++++++++   SOC option will be IGNORED   ++++++++++',&
-         &     /,1X,'Please use SOCSCALE= XXX (real>-2.5) in the inputcard',&
-         &     ' to make your option valid ',/)
-      99004 FORMAT(1X,'The SOC will be SCALED',$)
-      99005 FORMAT(' for ALL the atoms in the unit cell.')
-      99006 FORMAT(' for the FOLLOWING atoms in the unit cell :')
-      99007 FORMAT(' for all the atoms in the unit cell EXCLUDING :')
-      99008 FORMAT(1X,6(2X,I3))
-      99009 FORMAT(1X,'Scaling factor = ',1P,D9.2)
-      99010 FORMAT(1X,'The SOC is manipulated',' -- part of the SOC kept: ',A)
-      99011 FORMAT(15X,'+++++++++  CSCALE option will be IGNORED  ++++++++++',&
-         &     /,1X,'Please use CTLSCALE= X (real>=1D-12) in the inputcard',&
-         &     ' to make your option valid ',/)
-      99012 FORMAT(1X,'The CLIGHT will be SCALED',$)
+         IF (MANCTL) THEN
+            CSCL(1:LMAX+1,1:NATYP) = CSCL(1:LMAX+1,1:NATYP)/DSQRT(CTLSCALE)
+            WRITE(1337,99012)
+            WRITE(1337,99005)
+            WRITE(1337,99009) 1.D0/DSQRT(CTLSCALE)
+         END IF
+         WRITE(1337,2100)
+      END IF
 
-   END SUBROUTINE RINPUT13
-   !---------------------------------------------------------------------
-   !---------------------------------------------------------------------
+      ! ============================================================= CTL-MAN
+   END IF
+   ! ================================================================ LDA+U
 
-   SUBROUTINE ADDOPT(STRING)
-      use mod_wunfiles, only: t_params
-      IMPLICIT NONE
+   IF(OPT('qdos    ')) THEN
+      allocate(t_params%qdos_atomselect(NATYP), stat=i_stat) !INTEGER
+      call memocc(i_stat,product(shape(t_params%qdos_atomselect))*kind(t_params%qdos_atomselect),'t_params%qdos_atomselect','rinput13')
 
-      integer :: NOPTD
-      parameter (NOPTD=32)
-      character(len=8) :: STRING
-      integer :: II
-      logical :: OPT
-      EXTERNAL OPT
+      t_params%qdos_atomselect(1:NATYP) = 1
+      !for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.
+      !          CALL IoInput('qdosatoms       ',UIO,1,7,IER)
+      !          IF (IER.EQ.0) THEN
+      !            READ (UNIT=UIO,FMT=*) (t_params%qdos_atomselect(I),I=1,NATYP)
+      !            WRITE(111,FMT='(A10,80I2)') 'qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
+      !          ELSE
+      !            WRITE(111,FMT='(A18,80I2)') 'Default qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
+      !          ENDIF
+      !
+      !          WRITE (1337,'(A)') 'atom selective writeout for qdos:'
+      !          WRITE (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
 
-      IF (.NOT.OPT('        ')) THEN
-         WRITE(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
-         STOP 'Error in ADDOPT: No free slots in array OPTC.'
-      ENDIF
+   END IF
 
-      IF (.NOT.OPT(STRING)) THEN
-         II = 1
-         DO WHILE (II.LE.NOPTD)
-            IF (t_params%OPTC(II).EQ.'        ') THEN
-               t_params%OPTC(II) = STRING
-               II = NOPTD + 1
-            ENDIF
-            II = II + 1
-         ENDDO
-      ENDIF
+   !-------------------------------------------------------------------------
+   IF (OPT('FERMIOUT').AND.(NSTEPS/=1))THEN                                  ! fswrt
+      WRITE(6,2012)                                                          ! fswrt
+      NSTEPS = 1                                                             ! fswrt
+   END IF                                                                    ! fswrt
+   !-------------------------------------------------------------------------
 
-   END SUBROUTINE ADDOPT
+   ! ============================================================= WF_SAVE
+   CALL IOInput('MEMWFSAVE       ',UIO,0,7,IER)
+   IF (IER.EQ.0) THEN
+      READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_number
+      WRITE(1337,*) '< MEMWFSAVE >', t_wavefunctions%maxmem_number
+      WRITE(111,*) 'MEMWFSAVE=',t_wavefunctions%maxmem_number
+   ELSE
+      t_wavefunctions%maxmem_number = 0
+      WRITE(1337,*) '< MEMWFSAVE >, use default:', t_wavefunctions%maxmem_number
+      WRITE(111,*) 'Default MEMWFSAVE= ',t_wavefunctions%maxmem_number
+   END IF
+   CALL IOInput('UNITMEMWFSAVE   ',UIO,0,7,IER)
+   IF (IER.EQ.0) THEN
+      READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_units
+      WRITE(1337,*) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
+      WRITE(111,*) 'UNITMEMWFSAVE=',t_wavefunctions%maxmem_units
+   ELSE
+      t_wavefunctions%maxmem_units = 2
+      WRITE(1337,*) '< UNITMEMWFSAVE >, use default:', t_wavefunctions%maxmem_units, '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
+      WRITE(111,*) 'Default UNITMEMWFSAVE= ',t_wavefunctions%maxmem_units, '(MB)'
+   END IF
+
+   !default flags: save only rll from main1a>tmatnewsolver since left solutions can be calculated always in main1c>rhovalnew and sll is not used
+   t_wavefunctions%save_rll     = .true.
+   t_wavefunctions%save_sll     = .false.
+   t_wavefunctions%save_rllleft = .false.
+   t_wavefunctions%save_sllleft = .false.
+   ! ============================================================= WF_SAVE
+
+   WRITE(1337,2100)
+   WRITE(1337,2040) KMROT
+   WRITE(1337,2110)
+   WRITE(1337,*) ' >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< '
+
+   CLOSE(111) ! Close file inputcard_generated.txt
+
+   RETURN
+   ! *********************************************Input-End ********
+   1029 FORMAT((F4.0,I4,4x,4I1,3I4,F8.4,I4,I5,1x,f8.5))
+   ! ------------------------------------------------------------------------
+   2010 FORMAT(' NSPIN '/I4)
+   2011 FORMAT(' NSTEPS'/I4)
+   2012 FORMAT(' WARINING: Setting NSTEPS to 1 for runoption FERMOUT')
+   2014 FORMAT('          ALAT = ',F15.8)
+   2015 FORMAT('   INTERVX   INTERVY   INTERVZ'/3I10)
+   2016 FORMAT('    NCLS    NREF   NINEQ'/,3I8)
+   2018 FORMAT(' RBASIS'/,&
+      &     'SITE                BASIS VECTORS                 ',&
+      &     'THETA   PHI CPA OCC KAOEZ')
+   2019 FORMAT('         ABASIS         BBASIS         CBASIS'/3F15.8)
+   2021 FORMAT(' INIPOL'/,(10I4))
+   2022 FORMAT(' IXIPOL'/,(10I4))
+   2023 FORMAT('    NAEZ    NEMB  '/,2I8)
+   2025 FORMAT((i4,3F15.8,2F6.1,2(1x,I3),4I3))
+   2028 FORMAT(' NATYP '/,I4/,&
+      &     '   Z lmx     KFG cls pot ntc  MTFAC irns SITE  CONC')
+   2031 FORMAT((3F15.8,2I6))
+   2032 FORMAT(' NTCELLR'/,(10I4))
+   2040 FORMAT(' KMROT'/,4I8)
+   ! ------------------------------------------------------------------------
+   2100 FORMAT(79(1H-))
+   2101 format(   3(1H-),1H+  , 3(14(1H-),1H+),  30(1H-))
+   2102 format( 3(9(1H-),1H+) ,49(1H-))
+   2103 FORMAT(10(3(1H-),1H+) ,39(1H-))
+   2104 format(   3(1H-),1H+  ,75(1H-))
+   2107 format( 3(14(1H-),1H+),34(1H-))
+   2108 format( 2(3(1H-),1H+),  7(1H-),1H+,      3(3(1H-),1H+),&
+      &          7(1H-),1H+,   3(1H-),1H+,      39(1H-))
+   2110 format( 3(7(1H-),1H+) ,55(1H-))
+   2111 format( 7(7(1H-),1H+) ,23(1H-))
+   9020 FORMAT (/,33x,'check of dimension-data consistency',/,33x,&
+      &       35 ('-'),/,40x,'lmax   : (',i6,',',i6,')',/,40x,&
+      &       'natyp  : (',i6,',',i6,')',/,40x,'irm    : (',i6,',',i6,&
+      &       ')',/,40x,'nspin  : (',i6,',',i6,')',/)
+   9030 FORMAT (1x,10 ('*'),' external magnetic field applied hfield=',&
+      &       f8.5)
+   9050 FORMAT (20x,a4,'spin polarized calculation')
+   9070 FORMAT (1x,20x,' calculation with',a8,'-potential')
+   9080 FORMAT (1x,79 ('*'))
+   9090 FORMAT (' mixing factor used           :',f15.6,/,&
+      &        ' convergence quality required :',1p,d15.2)
+   9091 FORMAT (' make use of CPA algorithm    :',1x,a14)
+   9092 FORMAT ('         max. iterations      :',i15,/,&
+      &        '         req. CPA convergency :',1p,d15.2)
+   9100 FORMAT (1x,20x,a24,'exchange-correlation potential')
+   9110 FORMAT (/,20x,'broyden"s method # :',i3,&
+      &       ' is used up to iteration-      ',/,20x,'depth :',i3,&
+      &       '  then jacobian is fixed and potential      ',/,20x,&
+      &       'is updated using that jacobian')
+   9120 FORMAT (13x,' in case of calculating non - spherical wavefcts ',&
+      &       'the parameter lmaxd has to be set equal lmax ')
+   9130 FORMAT (/)
+   9140 FORMAT (20x,'full potential calculation ',&
+      &       '- cut off of non spherical potential',/,' >',/)
+   9150 FORMAT (31x,'representive atom no.',i3,' irns :',i5,' irnsd :',i5)
+   9160 FORMAT (21x,a43,/,21x,' using',i3,'-th. born approximation ')
+   9170 FORMAT (21x,a43)
+   9210 FORMAT (' lmax'/,i4)
+   9220 FORMAT ('          EMIN        EMAX        TK'/,3f12.6)
+   9230 FORMAT ('   NPOL  NPNT1  NPNT2  NPNT3'/,4i7)
+   9250 FORMAT ('  IFILE    IPE ISHIFT ESHIFT'/,3i7,f12.6)
+   9260 FORMAT (' KSHAPE    IRM    INS   ICST INSREF'/,5i7)
+   9270 FORMAT ('   KCOR  KVREL    KWS   KHYP KHFIELD   KXC'/,6i7)
+   9280 FORMAT (' external magnetic hfield     :',f15.4/,&
+      &        ' VCONST                       :',f15.6)
+   9290 FORMAT ('   IMIX    IGF    ICC'/,3i7)
+   9300 FORMAT (' ITDBRY'/,i7)
+   9310 FORMAT ('      STRMIX        FCM       QBOUND'/,3f12.6)
+   9320 FORMAT ('      BRYMIX'/,f12.6)
+   9330 FORMAT ('    KTE   KPRE   KEFG  KVMAD '/,5i7)
+   9301 format(   3(1H-),1H+  ,75(1H-))
+   9302 format( 3(11(1H-),1H+),43(1H-))
+   9303 format(3(6(1H-),1H+) ,58(1H-))
+   9304 format(4(6(1H-),1H+) ,51(1H-))
+   9305 format(3(6(1H-),1H+),11(1H-),1H+ ,46(1H-))
+   9306 format(6(6(1H-),1H+) ,37(1H-))
+   9307 format(6(1H-),1H+,72(1H-))
+   9308 format(11(1H-),1H+,67(1H-))
+   9309 format(5(6(1H-),1H+) ,44(1H-))
+   9410 format('*** SLAB - INTERFACE CALCULATION ***'/)
+   9420 format(I5,3F14.8,I5)
+   9430 format('Number of LEFT  Host Layers : ',I5,' with ',I5,' basis')
+   9440 format('Number of RIGHT Host Layers : ',I5,' with ',I5,' basis')
+   9450 format('Left  side periodicity : ',3F10.5)
+   9460 format('Right side periodicity : ',3F10.5)
+   9465 format('    Geommetry used : '/,&
+      &       ' ATOM       TX          TY          TZ ')
+   9470 format('--------------- Left  Host -------------- ')
+   9475 format('---------------   S L A B  -------------- ')
+   9480 format('--------------- Right Host -------------- ')
+   99001 FORMAT(/,1X,&
+      &     "WARNING: Option ",A," used with an INVALID ",&
+      &     "scaling parameter.")
+   99002 FORMAT(/,1X,&
+      &     "WARNING: Option ",A," found but NO value given for the",&
+      &     " scaling parameter.")
+   99003 FORMAT(15X,'++++++++++   SOC option will be IGNORED   ++++++++++',&
+      &     /,1X,'Please use SOCSCALE= XXX (real>-2.5) in the inputcard',&
+      &     ' to make your option valid ',/)
+   99004 FORMAT(1X,'The SOC will be SCALED',$)
+   99005 FORMAT(' for ALL the atoms in the unit cell.')
+   99006 FORMAT(' for the FOLLOWING atoms in the unit cell :')
+   99007 FORMAT(' for all the atoms in the unit cell EXCLUDING :')
+   99008 FORMAT(1X,6(2X,I3))
+   99009 FORMAT(1X,'Scaling factor = ',1P,D9.2)
+   99010 FORMAT(1X,'The SOC is manipulated',' -- part of the SOC kept: ',A)
+   99011 FORMAT(15X,'+++++++++  CSCALE option will be IGNORED  ++++++++++',&
+      &     /,1X,'Please use CTLSCALE= X (real>=1D-12) in the inputcard',&
+      &     ' to make your option valid ',/)
+   99012 FORMAT(1X,'The CLIGHT will be SCALED',$)
+
+end subroutine RINPUT13
+!---------------------------------------------------------------------
+!---------------------------------------------------------------------
+
+subroutine ADDOPT(STRING)
+   use mod_wunfiles, only: t_params
+
+   implicit none
+
+   integer :: NOPTD
+   parameter (NOPTD=32)
+   character(len=8) :: STRING
+   integer :: II
+   logical :: OPT
+   EXTERNAL :: OPT
+
+   IF (.NOT.OPT('        ')) THEN
+      WRITE(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
+      STOP 'Error in ADDOPT: No free slots in array OPTC.'
+   ENDIF
+
+   IF (.NOT.OPT(STRING)) THEN
+      II = 1
+      DO WHILE (II.LE.NOPTD)
+         IF (t_params%OPTC(II).EQ.'        ') THEN
+            t_params%OPTC(II) = STRING
+            II = NOPTD + 1
+         ENDIF
+         II = II + 1
+      ENDDO
+   ENDIF
+
+end subroutine ADDOPT

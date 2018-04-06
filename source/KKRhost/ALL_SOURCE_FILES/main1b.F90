@@ -10,6 +10,7 @@ module MOD_MAIN1B
 
    use Profiling
    use Constants
+   use global_variables
 
    implicit none
 
@@ -21,16 +22,14 @@ contains
    !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
    !> and many others ...
    !----------------------------------------------------------------------------
-   subroutine main1b(NR,LLY,ICC,IGF,INS,NPOL,LMAX,NREF,NSRA,NCLS,NCPA,NEMB,   &
-      NAEZ,NATYP,NCLSD,NSPIN,IEMXD,KMROT,NSHELD,NSPIND,LMMAXD,KPOIBZ,IELAST,  &
-      INVMOD,NACLSD,NSYMAT,NEMBD1,LMGF0D,NOFGIJ,NQCALC,NPRINCD,NSPINDD,       &
-      NLBASIS,NRBASIS,MAXMESH,WLENGTH,NATOMIMP,ITCPAMAX,ALAT,CPATOL,NOQ,CLS,  &
-      IQAT,NSH1,NSH2,ICPA,NACLS,NSHELL,REFPOT,ATOMIMP,EZOA,ATOM,KAOEZ,ICHECK, &
-      CONC,RMTREF,RR,RATOM,RBASIS,RROT,RCLS,SYMUNITARY,KMESH,IQCALC,IJTABSH,  &
-      IJTABSYM,IJTABCALC,IJTABCALC_I,ISH,JSH,NRREL,IRREL,VREF,RCLSIMP,RC,RREL,&
+   subroutine main1b(NR,LLY,ICC,IGF,INS,NPOL,LMAX,NREF,NSRA,NCLS,NCPA,NEMB,NAEZ, &
+      NATYP,NCLSD,NSPIN,KMROT,LMMAXD,IELAST,INVMOD,NSYMAT,NEMBD1,LMGF0D,NOFGIJ,  &
+      NQCALC,NSPINDD,NLBASIS,NRBASIS,MAXMESH,NATOMIMP,ITCPAMAX,ALAT,CPATOL,NOQ,  &
+      CLS,IQAT,NSH1,NSH2,ICPA,NACLS,NSHELL,REFPOT,ATOMIMP,EZOA,ATOM,KAOEZ,ICHECK,&
+      CONC,RMTREF,RR,RATOM,RBASIS,RROT,RCLS,SYMUNITARY,KMESH,IQCALC,IJTABSH,     &
+      IJTABSYM,IJTABCALC,IJTABCALC_I,ISH,JSH,NRREL,IRREL,VREF,RCLSIMP,RC,RREL,   &
       CREL,SRREL,DROTQ,DSYMLL,LEFTTINVLL,RIGHTTINVLL)
 
-      use mod_timing
       use mod_types, only: t_tgmat,t_inc,t_lloyd,t_cpa,init_t_cpa,t_imp
 #ifdef CPP_MPI
       use mod_types, only: t_mpi_c_grid, save_t_mpi_c_grid,          &
@@ -42,24 +41,27 @@ contains
 #ifdef CPP_MPI
       use mod_mympi, only: find_dims_2d,distribute_linear_on_tasks, MPIadapt
 #endif
+      use mod_timing
       use mod_wunfiles
       use mod_tbxccpljij, only: tbxccpljij
-      use mod_tbxccpljijdij, only: tbxccpljijdij
       use mod_version_info
+      use global_variables
+      use mod_tbxccpljijdij, only: tbxccpljijdij
+
 
       implicit none
-!
-! *********************************************************************
-! * For KREL = 1 (relativistic mode)                                  *
-! *                                                                   *
-! *  NPOTD = 2 * NATYP                                                *
-! *  LMMAXD = 2 * (LMAX+1)^2                                         *
-! *  NSPIND = 1                                                       *
-! *  LMGF0D = (LMAX+1)^2 dimension of the reference system Green     *
-! *          function, set up in the spin-independent non-relativstic *
-! *          (l,m_l)-representation                                   *
-! *                                                                   *
-! *********************************************************************
+      !
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! For KREL = 1 (relativistic mode)
+      !
+      !  NPOTD = 2 * NATYP
+      !  LMMAXD = 2 * (LMAX+1)^2
+      !  NSPIND = 1
+      !  LMGF0D = (LMAX+1)^2 dimension of the reference system Green
+      !          function, set up in the spin-independent non-relativstic
+      !          (l,m_l)-representation
+      !
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !    ..
       ! .. Input variables
       integer, intent(in) :: NR           !< Number of real space vectors rr
@@ -78,26 +80,19 @@ contains
       integer, intent(in) :: NATYP        !< Number of kinds of atoms in unit cell
       integer, intent(in) :: NCLSD        !< Maximum number of different TB-clusters
       integer, intent(in) :: NSPIN        !< Counter for spin directions
-      integer, intent(in) :: IEMXD        !< Dimension for energy-dependent arrays
       integer, intent(in) :: KMROT        !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-      integer, intent(in) :: NSHELD       !< Number of blocks of the GF matrix that need to be calculated (NATYP + off-diagonals in case of impurity)
-      integer, intent(in) :: NSPIND       !< KREL+(1-KREL)*(NSPIN+1)
       integer, intent(in) :: LMMAXD       !< (KREL+KORBIT+1)(LMAX+1)^2
-      integer, intent(in) :: KPOIBZ       !< Number of reciprocal space vectors
       integer, intent(in) :: IELAST
       integer, intent(in) :: INVMOD       !< Inversion scheme
-      integer, intent(in) :: NACLSD       !< Maximum number of atoms in a TB-cluster
       integer, intent(in) :: NSYMAT
       integer, intent(in) :: NEMBD1       !< NEMB+1
       integer, intent(in) :: LMGF0D       !< (LMAX+1)**2
       integer, intent(in) :: NOFGIJ       !< number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
       integer, intent(in) :: NQCALC
-      integer, intent(in) :: NPRINCD      !< Number of principle layers, set to a number >= NRPINC in output of main0
       integer, intent(in) :: NSPINDD      !< NSPIND-KORBIT
       integer, intent(in) :: NLBASIS      !< Number of basis layers of left host (repeated units)
       integer, intent(in) :: NRBASIS      !< Number of basis layers of right host (repeated units)
       integer, intent(in) :: MAXMESH
-      integer, intent(in) :: WLENGTH      !< Word length for direct access files, compiler dependent ifort/others (1/4)
       integer, intent(in) :: NATOMIMP     !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
       integer, intent(in) :: ITCPAMAX     !< Max. number of CPA iterations
       double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
@@ -1213,37 +1208,6 @@ contains
          endif ! .NOT.OPT('NEWSOSOL')                                    ! LLY
          if(t_lloyd%cdos_diff_lly_to_file) close(701)                    ! LLY
       endif                                                              ! LLY
-!
-! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-!           write(15860,*) 'next- IPRINT',  IPRINT
-!           write(15860,*) 'next- NOFGIJ',  NOFGIJ
-!           write(15860,*) 'next- IELAST',  IELAST
-!           write(15860,*) 'next- NSPIN',   NSPIN
-!           write(15860,*) 'next- NCPA',    NCPA
-!           write(15860,*) 'next- LMMAXD,NSYMAXD', LMMAXD, NSYMAXD
-!           write(15860,*) 'next- NAEZ, NATYP', NAEZ, NATYP
-!           write(15860,*) 'next- NSHELD',  NSHELD
-!           write(15860,*) 'next- NSHELL', NSHELL
-!           write(15860,*) 'next- NOQ', NOQ
-!           write(15860,*) 'next- ITOQ', ITOQ
-!           write(15860,*) 'next- IQAT', IQAT
-!           write(15860,*) 'next- NATOMIMP', NATOMIMP
-!           write(15860,*) 'next- ATOMIMP', ATOMIMP
-!           write(15860,*) 'next- RATOM', RATOM
-!           write(15860,*) 'next- FACTL', FACTL
-!           write(15860,*) 'next- NQCALC',  NQCALC
-!           write(15860,*) 'next- IQCALC',  IQCALC
-!           write(15860,*) 'next- IJTABCALC',  IJTABCALC
-!           write(1500+myrank,*) 'next- IJTABCALC_I',  IJTABCALC_I
-!           write(15860,*) 'next- IJTABSYM',  IJTABSYM
-!           write(15860,*) 'next- IJTABSH',  IJTABSH
-!           write(15860,*) 'next- ISH',  ISH
-!           write(15860,*) 'next- JSH',  JSH
-!           write(15860,*) 'next- DSYMLL',  DSYMLL
-!           write(15860,*) 'next- EZ', EZ
-!           write(15860,*) 'next- WEZ', WEZ
-! XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
 
       if ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) then
 #ifdef CPP_TIMING

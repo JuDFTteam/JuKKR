@@ -13,6 +13,7 @@ MODULE MOD_MAIN2
 
    use Profiling
    use Constants
+   use global_variables
 
    implicit none
 

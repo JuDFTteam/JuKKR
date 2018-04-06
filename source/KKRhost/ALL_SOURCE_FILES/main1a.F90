@@ -13,6 +13,7 @@ module MOD_MAIN1A
 
    use Profiling
    use Constants
+   use global_variables
 
    implicit none
 
@@ -25,13 +26,13 @@ contains
    !> and many others ...
    !----------------------------------------------------------------------------
    subroutine main1a(INS,LLY,IRM,LM2D,ICST,IEND,NCLS,LMAX,NREF,NSRA,KREL,NEMB,   &
-      NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,IEMXD,LMPOT,NCLEB,IPAND,NINEQ,    &
-      NSPIN,NCHEB,NSPIND,LMMAXD,IELAST,NACLSD,NRMAXD,IRMIND,NSPOTD,WLENGTH,      &
-      NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS,IQAT,IRWS,NACLS,REFPOT,ATOM,ZAT,    &
-      VREF,RMTREF,RCLS,SOLVER,SOCSCL,SOCSCALE,CSCL,NTLDAU,IDOLDAU,ITLDAU,UEFF,   &
-      JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,ICLEB,IRCUT,IPAN_INTERVALL,PHI,THETA,CLEB,   &
-      VISP,DRDI,RNEW,RMESH,RPAN_INTERVALL,VINS,ZREL,JWSREL,VTREL,BTREL,RMREL,    &
-      DRDIREL,R2DRDIREL,ITRUNLDAU,LOPT,EREFLDAU,WLDAU,ULDAU,PHILDAU)
+      NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,LMPOT,IPAND,NINEQ,NSPIN,NCHEB,    &
+      LMMAXD,IELAST,NRMAXD,IRMIND,NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS,IQAT,   &
+      IRWS,NACLS,REFPOT,ATOM,ZAT,VREF,RMTREF,RCLS,SOLVER,SOCSCL,SOCSCALE,CSCL,   &
+      NTLDAU,IDOLDAU,ITLDAU,UEFF,JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,ICLEB,IRCUT,      &
+      IPAN_INTERVALL,PHI,THETA,CLEB,VISP,DRDI,RNEW,RMESH,RPAN_INTERVALL,VINS,    &
+      ZREL,JWSREL,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ITRUNLDAU,LOPT,EREFLDAU,   &
+      WLDAU,ULDAU,PHILDAU)
 
 #ifdef CPP_MPI
       use mpi
@@ -56,17 +57,17 @@ contains
       use mod_wunfiles
       use mod_jijhelp, only: set_Jijcalc_flags
 
-      ! *********************************************************************
-      ! * For KREL = 1 (relativistic mode)                                  *
-      ! *                                                                   *
-      ! *  NPOTD = 2 * NATYPD                                               *
-      ! *  LMMAXD = 2 * (LMAX+1)^2                                         *
-      ! *  NSPIND = 1                                                       *
-      ! *  LMGF0D = (LMAX+1)^2 dimension of the reference system Green     *
-      ! *          function, set up in the spin-independent non-relativstic *
-      ! *          (l,m_l)-representation                                   *
-      ! *                                                                   *
-      ! *********************************************************************
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! For KREL = 1 (relativistic mode)
+      !
+      !  NPOTD = 2 * NATYPD
+      !  LMMAXD = 2 * (LMAX+1)^2
+      !  NSPIND = 1
+      !  LMGF0D = (LMAX+1)^2 dimension of the reference system Green
+      !          function, set up in the spin-independent non-relativstic
+      !          (l,m_l)-representation
+      !
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !     ..
       !     .. Input variables
       integer, intent(in) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
@@ -88,21 +89,15 @@ contains
       integer, intent(in) :: ITSCF
       integer, intent(in) :: NTOTD
       integer, intent(in) :: MMAXD     !< 2*LMAX+1
-      integer, intent(in) :: IEMXD     !< Dimension for energy-dependent arrays
       integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-      integer, intent(in) :: NCLEB     !< Number of Clebsch-Gordon coefficients
       integer, intent(in) :: IPAND     !< Number of panels in non-spherical part
       integer, intent(in) :: NINEQ     !< Number of ineq. positions in unit cell
       integer, intent(in) :: NSPIN     !< Counter for spin directions
       integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
-      integer, intent(in) :: NSPIND    !< KREL+(1-KREL)*(NSPIN+1)
       integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
       integer, intent(in) :: IELAST
-      integer, intent(in) :: NACLSD    !< Maximum number of atoms in a TB-cluster
       integer, intent(in) :: NRMAXD    !< NTOTD*(NCHEB+1)
       integer, intent(in) :: IRMIND    !< IRM-IRNSD
-      integer, intent(in) :: NSPOTD    !< Number of potentials for storing non-sph. potentials
-      integer, intent(in) :: WLENGTH   !< Word length for direct access files, compiler dependent ifort/others (1/4)
       integer, intent(in) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
       double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
       double precision, intent(in) :: R_LOG     !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
@@ -374,30 +369,6 @@ contains
 
          enddo !I1, atom loop
 
-         !      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-         !      TTTTTTTTTTTTT TESTOUTPUT   Dij-implementation TTTTTTTTTTTTTTTTTT
-         !      DO I1=i1_start,i1_end
-         !       ie_start=t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-         !       ie_end  =t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-         !       DO ie_num=1,ie_end
-         !        IE = ie_start+ie_num
-         !        DO II=1,3
-         !       write(filename,'(A,I3.3,A,I3.3,A,I1,A)') 'test_dtmat_iat=',I1,
-         !    +                                                  '_ie=',IE,
-         !    +                                                  'xyz=',II
-         !       write(*,*) 'writing testfile:', trim(filename)
-         !       if(allocated(t_dtmatJij(I1)%dtmat_xyz))then
-         !       open(unit=13626,file=trim(filename), action='write',
-         !    +       form='formatted')
-         !      write(13626,'(2ES25.16)') t_dtmatJij(I1)%dtmat_xyz(:,:,II,ie_num)
-         !       close(13626)
-         !       end if
-         !        ENDDO!II
-         !       ENDDO!IE
-         !      ENDDO !I1, atom loop
-         !      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-         !      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-
       endif !NEWSOSOL
       !
       if ( IDOLDAU.eq.1 ) then
@@ -457,30 +428,6 @@ contains
             end if !t_dtmatJij(I1)%calculate
 
          end do !I1=1,t_inc%NATYP
-         !      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-         !      TTTTTTTTTTTTT TESTOUTPUT   Dij-implementation TTTTTTTTTTTTTTTTTT
-         !      DO I1=1,t_inc%NATYP
-         !       ie_start=t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-         !       ie_end  =t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-         !       DO ie_num=1,ie_end
-         !        IE = ie_start+ie_num
-         !        DO II=1,3
-         !       write(filename,'(A,I3.3,A,I3.3,A,I1,A,I2)') 'test_dtmat_iat=',I1
-         !    +                                                  ,'_ie=',IE,
-         !    +                                                  'xyz=',II,
-         !    +                                               'myrank=',myrank
-         !       write(*,*) 'writing testfile:', trim(filename)
-         !       if(allocated(t_dtmatJij(I1)%dtmat_xyz))then
-         !       open(unit=13626,file=trim(filename), action='write',
-         !    +       form='formatted')
-         !      write(13626,'(2ES25.16)') t_dtmatJij(I1)%dtmat_xyz(:,:,II,ie_num)
-         !       close(13626)
-         !       end if
-         !        ENDDO!II
-         !       ENDDO!IE
-         !      ENDDO !I1, atom loop
-         !      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-         !      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
       end if !OPT('XCPL    ').and.OPT('NEWSOSOL')
       !-------------------------------------------------------------------------

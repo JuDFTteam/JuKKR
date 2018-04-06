@@ -1,4 +1,3 @@
-!*==vmadelblk.f    processed by SPAG 6.05Rc at 13:42 on  1 Feb 2002
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: VMADELBLK
 !> @brief Calculate the madelung potentials and add these to the potential \f$V\f$

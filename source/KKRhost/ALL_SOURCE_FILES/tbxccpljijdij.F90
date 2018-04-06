@@ -25,12 +25,11 @@ contains
     use mod_mympi, only: myrank, master
     use mod_version_info
     use mod_md5sums
+    use Constants
 
     implicit none
 
-    !parameters
-    double complex, parameter :: cone  = (1d0,0d0), &
-                               & czero = (0d0,0d0)
+    ! parameters
     integer, parameter :: nalpha = 2
 
     !various
@@ -82,7 +81,7 @@ contains
     integer :: nstore
     integer :: isort(2*natomimp), istoretmp(2*natomimp)
     double precision :: rdiff(3), rsh, dists(2*natomimp)
-    double precision, parameter :: fpi= 16d0*atan(1d0) !=4*pi
+    double precision, parameter :: fpi= 4.0d0*PI
     double complex :: csum, jtmp(4)
     character(len=1) :: cnt
     character(len=22) :: fmt2
@@ -114,7 +113,7 @@ contains
        nn = (i1-1)*natomimp+i2 !key for the pair (i,j)
        kk = (i2-1)*natomimp+i1 !key for the pair (j,i)
        if(ijtabcalc_I(nn)==1 .and. i1/=i2)then
-        !cross-check if also the block g(ji) was calculated 
+        !cross-check if also the block g(ji) was calculated
         if(ijtabcalc(kk)/=1) then
            write(1337,'(A,I0,",",I0)') 'Gji not calculated for (i,j)=(',i1,i2,') calculated'
           stop 'Blocks not consistent in TBXCCPLJIJDIJ'
@@ -339,7 +338,7 @@ contains
              indxarr(3,istore) = i1
              indxarr(4,istore) = i2
 
-!            -------> perform substraction instead of addition 
+!            -------> perform substraction instead of addition
 !                     because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
              ! Write out energy-resorved integrand and integral
              ! Phivos Mavropoulos 24.10.2012
@@ -425,7 +424,7 @@ contains
               ncount = ncount+1
               rdiff = rclsimp(:,i2)-rclsimp(:,i1)
               rsh   = sqrt(sum(rdiff**2))
-              dists(ncount) = rsh 
+              dists(ncount) = rsh
               istoretmp(ncount) = istore
             end if
           end do!istore

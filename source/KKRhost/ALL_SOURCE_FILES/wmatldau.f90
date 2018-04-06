@@ -1,4 +1,3 @@
-!*==wmatldau.f    processed by SPAG 6.05Rc at 16:58 on 22 Dec 2004
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: WMATLDAU
 !> @brief Calculation of Coulomb interaction potential in LDA+U non-relativistic case

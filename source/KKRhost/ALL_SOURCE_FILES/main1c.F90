@@ -13,6 +13,7 @@ module MOD_MAIN1C
 
    use Profiling
    use Constants
+   use global_variables
 
    implicit none
 
@@ -24,16 +25,15 @@ contains
    !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
    !> and many others ...
    !----------------------------------------------------------------------------
-   subroutine main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LMAX,KREL,NCLEB, &
-      NFUND,IPAND,NTOTD,MMAXD,NATYP,NPOTD,KMROT,NSPIN,NCHEB,LMPOT,IEMXD,   &
-      NSPIND,LMXSPD,IELAST,LMMAXD,NRMAXD,IRMIND,INTERVX,INTERVY,INTERVZ,   &
-      WLENGTH,IESEMICORE,TK,EMIN,EMAX,ALAT,EFERMI,SOLVER,IQAT,ZREL,IPAN,   &
-      IRWS,NCORE,JWSREL,NTCELL,ITITLE,CSCL,ZAT,CONC,SOCSCALE,NTLDAU,       &
-      IDOLDAU,ITRUNLDAU,ITLDAU,UEFF,JEFF,IEND,NFU,LOFLM,IRMIN,IRSHIFT,     &
-      ICLEB,LCORE,IRCUT,IFUNM1,LMSP1,LLMSP,JEND,A,B,QMTET,QMPHI,CLEB,DRDI, &
-      ECORE,RMREL,SOCSCL,R2DRDIREL,VINS,VTREL,BTREL,DRDIREL,EZ,WEZ,LOPT,   &
-      EREFLDAU,WLDAU,ULDAU,PHILDAU,R_LOG,NPAN_EQ,NPAN_LOG,NPAN_TOT,        &
-      IPAN_INTERVALL,VISP,RNEW,RPAN_INTERVALL,THETAS,THETASNEW)
+   subroutine main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LMAX,NTOTD,MMAXD,NATYP,&
+      NPOTD,KMROT,NSPIN,NCHEB,LMPOT,LMXSPD,IELAST,LMMAXD,NRMAXD,IRMIND,INTERVX,  &
+      INTERVY,INTERVZ,IESEMICORE,TK,EMIN,EMAX,ALAT,EFERMI,SOLVER,IQAT,ZREL,IPAN, &
+      IRWS,NCORE,JWSREL,NTCELL,ITITLE,CSCL,ZAT,CONC,SOCSCALE,NTLDAU,IDOLDAU,     &
+      ITRUNLDAU,ITLDAU,UEFF,JEFF,IEND,NFU,LOFLM,IRMIN,IRSHIFT,ICLEB,LCORE,IRCUT, &
+      IFUNM1,LMSP1,LLMSP,JEND,A,B,QMTET,QMPHI,CLEB,DRDI,ECORE,RMREL,SOCSCL,      &
+      R2DRDIREL,VINS,VTREL,BTREL,DRDIREL,EZ,WEZ,LOPT,EREFLDAU,WLDAU,ULDAU,       &
+      PHILDAU,R_LOG,NPAN_EQ,NPAN_LOG,NPAN_TOT,IPAN_INTERVALL,VISP,RNEW,          &
+      RPAN_INTERVALL,THETAS,THETASNEW)
 
 #ifdef CPP_MPI
       use mpi
@@ -53,17 +53,17 @@ contains
 #endif
       use mod_wunfiles
       use mod_version_info
-      ! *********************************************************************
-      ! * For KREL = 1 (relativistic mode)                                  *
-      ! *                                                                   *
-      ! *  NPOTD = 2 * NATYP                                               *
-      ! *  LMMAXD = 2 * (LMAX+1)^2                                         *
-      ! *  NSPIND = 1                                                       *
-      ! *  LMGF0D = (LMAX+1)^2 dimension of the reference system Green     *
-      ! *          function, set up in the spin-independent non-relativstic *
-      ! *          (l,m_l)-representation                                   *
-      ! *                                                                   *
-      ! *********************************************************************
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! For KREL = 1 (relativistic mode)
+      !
+      !  NPOTD = 2 * NATYP
+      !  LMMAXD = 2 * (LMAX+1)^2
+      !  NSPIND = 1
+      !  LMGF0D = (LMAX+1)^2 dimension of the reference system Green
+      !          function, set up in the spin-independent non-relativstic
+      !          (l,m_l)-representation
+      !
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! .. Input variables
       integer, intent(in) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
       integer, intent(in) :: LLY       !< LLY <> 0 : apply Lloyd's formula
@@ -74,10 +74,6 @@ contains
       integer, intent(in) :: NPOL      !< Number of Matsubara Poles (EMESHT)
       integer, intent(in) :: NSRA
       integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
-      integer, intent(in) :: KREL      !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
-      integer, intent(in) :: NCLEB     !< Number of Clebsch-Gordon coefficients
-      integer, intent(in) :: NFUND
-      integer, intent(in) :: IPAND     !< Number of panels in non-spherical part
       integer, intent(in) :: NTOTD
       integer, intent(in) :: MMAXD     !< 2*LMAX+1
       integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
@@ -86,8 +82,6 @@ contains
       integer, intent(in) :: NSPIN     !< Counter for spin directions
       integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
       integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-      integer, intent(in) :: IEMXD     !< Dimension for energy-dependent arrays
-      integer, intent(in) :: NSPIND    !< KREL+(1-KREL)*(NSPIN+1)
       integer, intent(in) :: LMXSPD    !< (2*LPOT+1)**2
       integer, intent(in) :: IELAST
       integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
@@ -96,7 +90,6 @@ contains
       integer, intent(in) :: INTERVX   !< Number of intervals in x-direction for k-net in IB of the BZ
       integer, intent(in) :: INTERVY   !< Number of intervals in y-direction for k-net in IB of the BZ
       integer, intent(in) :: INTERVZ   !< Number of intervals in z-direction for k-net in IB of the BZ
-      integer, intent(in) :: WLENGTH   !< Word length for direct access files, compiler dependent ifort/others (1/4)
       integer, intent(in) :: IESEMICORE
       double precision, intent(in) :: TK        !< Temperature
       double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
