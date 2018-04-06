@@ -399,7 +399,8 @@ C                                  meant for simpler passing of basic parameter 
       ! so far changing does not work yet, so turn this off:
       MPIadapt = 0
 
-      if(opt('FERMIOUT') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) then! fswrt
+      if(opt('FERMIOUT') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or.
+     &   opt('OPERATOR') ) then                                         ! fswrt
          MPIatom = .true.                                               ! fswrt
          if(SCFSTEPS>1) then                                            ! fswrt
             write(*,*) 'Warning: Setting SCFSTEPS=1 for FERMIOUT option'! fswrt
@@ -409,6 +410,11 @@ C                                  meant for simpler passing of basic parameter 
             write(*,*) 'FERMIOUT/WRTGREEN/GREENIMP option chosen'       ! fswrt
             write(*,*) 'Nranks>NATYP', nranks, NATYP                    ! fswrt
             stop 'Please choose Nranks<=NATYP'                          ! fswrt
+         end if                                                         ! fswrt
+         if(test('MPIenerg')) then                                      ! fswrt
+            write(*,*) 'FERMIOUT/WRTGREEN/GREENIMP option chosen'       ! fswrt
+            write(*,*) 'found unsupported test option MPIenerg'         ! fswrt
+            stop 'Please choose MPIatom'                                ! fswrt
          end if                                                         ! fswrt
       end if                                                            ! fswrt
       

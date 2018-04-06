@@ -227,7 +227,9 @@ c energy loop
             call find_isave_wavefun(t_wavefunctions)
             ! reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
             ! to prevent unnessesary storing of wavefunctions
-            if(test('STOP1B  ')) t_wavefunctions%Nwfsavemax = 0
+            if(test('STOP1B  ') .and. .not. opt('OPERATOR')) then
+               t_wavefunctions%Nwfsavemax = 0
+            end if
        endif
          
 

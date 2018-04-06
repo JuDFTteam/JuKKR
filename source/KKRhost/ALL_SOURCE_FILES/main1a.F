@@ -141,6 +141,9 @@ C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       ! communication of dtmat in case of lloyd
       integer :: iwork
       DOUBLE COMPLEX, allocatable :: work_jij(:,:,:,:)
+      ! communcate PNS_SO_ALL for OPERATOR option
+      integer :: ihelp
+      double complex, allocatable :: work(:,:,:,:,:)
 #endif
       integer :: i1_start, i1_end, ierr
 
@@ -155,6 +158,7 @@ C     ..
       DATA TOLRDIF /1.5D0/ ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
       DATA LLY /0/
 C
+
 
       allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD),
      &         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
@@ -452,16 +456,9 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 #endif
 
         ! no omp here:
-        nth = 0
+        nth = 1
 
-        ALLOCATE(RLL(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
-        ALLOCATE(SLL(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
-        ALLOCATE(RLLLEFT(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
-        ALLOCATE(SLLLEFT(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
-        ALLOCATE(PNS_SO(LMMAXD,LMMAXD,IRMD,2))
         ALLOCATE(PNS_SO_ALL(LMMAXD,LMMAXD,IRMD,2,NATYP))
-
-
 
 #ifdef CPP_MPI
         i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)+1
@@ -473,6 +470,12 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 #endif
 
         DO I1=i1_start, i1_end
+
+          ALLOCATE(RLL(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
+          ALLOCATE(SLL(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
+          ALLOCATE(RLLLEFT(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
+          ALLOCATE(SLLLEFT(NSRA*LMMAXD,LMMAXD,t_inc%IRMDNEW,0:nth-1))
+          ALLOCATE(PNS_SO(LMMAXD,LMMAXD,IRMD,2))
 
           if(myrank==master.and.t_inc%i_write>0) then
             WRITE(1337,*) 'atom: ',I1
@@ -490,16 +493,28 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
           DO ie_num=1,ie_end
 
             IE = ie_start+ie_num
-       
-            if(t_wavefunctions%Nwfsavemax>0) then ! read wavefunctions?
-              ! read in wavefunction from memory
-              call read_wavefunc(t_wavefunctions,rll,rllleft,sll,
-     &                       sllleft,i1,ie,NSRA,LMMAXD,t_inc%IRMDNEW,
-     &                       ith,nth,rll_was_read_in,sll_was_read_in, 
-     &                       rllleft_was_read_in,sllleft_was_read_in)
-            end if ! t_wavefunctions%Nwfsavemax
+
+            ! make sure only calculated at the Fermi level
+            if(ie_end==1 .or. ie==2) then
+    
+               write(*,*) 'ie,iat', ie,i1
+             
+               if(t_wavefunctions%Nwfsavemax>0) then ! read wavefunctions?
+                 ! read in wavefunction from memory
+                 call read_wavefunc(t_wavefunctions,rll,rllleft,sll,
+     &                          sllleft,i1,ie,NSRA,LMMAXD,t_inc%IRMDNEW,
+     &                          ith,nth,rll_was_read_in,sll_was_read_in, 
+     &                          rllleft_was_read_in,sllleft_was_read_in)
+               end if ! t_wavefunctions%Nwfsavemax
+
+            end if ! ie_end==1 .or. ie==2
 
           END DO !ie_num=1,ie_end
+
+       !if (I1==1) then
+       !  write(*,*) 'write RLL before transform'
+       !  write(7770,*) RLL
+       !endif
 
           ! transform radial wavefunction back to old mesh
           ALLOCATE(RLLTEMP(t_inc%IRMDNEW,LMMAXD))
@@ -507,6 +522,8 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
           DO LM1=1,LMMAXD
            RLLTEMP=CZERO
            PNSTEMP=CZERO
+           IR = 0
+           write(*,*) t_inc%IRMDNEW, IR
            DO IR=1,t_inc%IRMDNEW
             DO LM2=1,LMMAXD
              RLLTEMP(IR,LM2)=RLL(LM1,LM2,IR,ith)
@@ -541,9 +558,11 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
             ENDDO
            ENDDO ! LM1
           ENDIF ! NSRA.EQ.2
-          DEALLOCATE(RLL)
-          DEALLOCATE(RLLTEMP)
-          DEALLOCATE(PNSTEMP)
+
+       !if (I1==1) then
+       !  write(*,*) 'write PNSSO before transform'
+       !  write(7771,*) PNS_SO
+       !endif
           
           ! rotate radial wavefunction to global frame
           DO IR=1,IRMD
@@ -553,36 +572,74 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
      &                        LMMAXD/2,0)
           ENDDO
 
+       !if (I1==1) then
+       !  write(*,*) 'write PNSSO after transform'
+       !  write(7772,*) PNS_SO
+       !endif
+
           ! finally collect wavefuncitons in global frame and old mesh for all atoms to be used in normcoeff-routines below
           PNS_SO_ALL(:,:,:,:,i1) = PNS_SO(:,:,:,:)
 
+          DEALLOCATE(RLL,SLL,RLLLEFT,SLLLEFT,PNS_SO)
+          DEALLOCATE(RLLTEMP)
+          DEALLOCATE(PNSTEMP)
+
         END DO ! I1=i1_start, i1_end
 
-!#ifdef CPP_MPI
+#ifdef CPP_MPI
         ! finally gather PNS_SO_ALL on master in case of MPI run
-!        call MPI_GATHER(PNS_SO_ALL, int sendcount, MPI_DOUBLE_COMPLEX,
-!               MPI_INPLACE, int recvcount, MPI_DOUBLE_COMPLEX,
-!               master, atcomm)
-!#endif
+        allocate(work(LMMAXD,LMMAXD,IRMD,2,NATYP), stat=ierr)
+        if(ierr.ne.0) stop 
+     &    'Error allocating work for MPI comm of PNS_SO_ALL in main1a'
+        ihelp = LMMAXD*LMMAXD*IRMD*2*NATYP
+        call MPI_REDUCE(PNS_SO_ALL, work, ihelp, MPI_DOUBLE_COMPLEX,
+     &                  MPI_SUM, master,t_mpi_c_grid%myMPI_comm_at,ierr)
+        if(ierr.ne.MPI_SUCCESS) stop 
+     &    'Error in MPI comm of PNS_SO_ALL in main1a'
+        deallocate(work, stat=ierr)
+        if(ierr.ne.0) stop 
+     &    'Error deallocating work for MPI comm of PNS_SO_ALL in main1a'
+#endif
 
+        if(myrank==master) then
 
-        ! done with preparations, call normcoeff routines that construct operators
+           ! done with preparations, call normcoeff routines that construct operators
+           !open(888, file='inp_normcoeff.txt', form='formatted')
+           !write(8881 ,*) 'IRCUT',IRCUT
+           !write(8882 ,*) 'LMMAXD',LMMAXD/2
+           !write(8883 ,*) 'PNS_SO',shape(PNS_SO_ALL),PNS_SO_ALL
+           !write(8884 ,*) 'THETAS',shape(t_params%THETAS), t_params%THETAS
+           !write(8885 ,*) 'NTCELL',t_params%NTCELL
+           !write(8886 ,*) 'IFUNM',t_params%IFUNM
+           !write(8887 ,*) 'IPAN',IPAN
+           !write(8888 ,*) 'LMSP',t_params%LMSP
+           !write(8889 ,*) 'KVREL',KORBIT !t_params%KREL
+           !write(88810,*) 'CLEB',CLEB
+           !write(88811,*) 'ICLEB',t_params%ICLEB
+           !write(88812,*) 'IEND',IEND
+           !write(88813,*) 'DRDI',DRDI
+           !write(88814,*) 'IRWS',IRWS
+           !write(88815,*) 'NSPOH',1+KORBIT
+           !close(888)
+           
+           WRITE(*,*) 'Computing spin operator'
+           CALL NORMCOEFF_SO(IRCUT,LMMAXD/2,PNS_SO_ALL,
+     +            t_params%THETAS,t_params%NTCELL,t_params%IFUNM,IPAN,
+     +            t_params%LMSP,t_inc%KVREL,CLEB,t_params%ICLEB,IEND,
+     +            DRDI,IRWS,1+KORBIT)
+           
+           WRITE(*,*) 'Computing torq operator'
+           CALL NORMCOEFF_SO_TORQ(IRCUT,LMMAXD/2,PNS_SO_ALL,
+     +            t_params%NTCELL,t_params%IFUNM,IPAN,
+     +            t_params%LMSP,t_inc%KVREL,CLEB,t_params%ICLEB,IEND,
+     +            DRDI,IRWS,VISP,NSPIN,VINS,IRMIN)
+           
+           WRITE(*,*) 'Computing spinflux operator'
+           CALL NORMCOEFF_SO_SPINFLUX(IRCUT,LMMAXD/2,PNS_SO_ALL,
+     +            t_inc%KVREL,DRDI)
 
-        WRITE(*,*) 'Computing spin operator'
-        CALL NORMCOEFF_SO(IRCUT,LMMAXD/2,PNS_SO_ALL,
-     +         t_params%THETAS,t_params%NTCELL,t_params%IFUNM,IPAN,
-     +         t_params%LMSP,t_params%KREL,CLEB,t_params%ICLEB,IEND,
-     +         DRDI,IRWS,1+KORBIT)
-
-        WRITE(*,*) 'Computing torq operator'
-        CALL NORMCOEFF_SO_TORQ(IRCUT,LMMAXD/2,PNS_SO_ALL,
-     +         t_params%NTCELL,t_params%IFUNM,IPAN,
-     +         t_params%LMSP,t_params%KREL,CLEB,t_params%ICLEB,IEND,
-     +         DRDI,IRWS,VISP,NSPIN,VINS,IRMIN)
-
-        WRITE(*,*) 'Computing spinflux operator'
-        CALL NORMCOEFF_SO_SPINFLUX(IRCUT,LMMAXD/2,PNS_SO_ALL,
-     +         t_params%KREL,DRDI)
+        end if ! myrank==master
+        call MPI_BARRIER(t_mpi_c_grid%myMPI_comm_at,ierr)
 
 #ifdef CPP_TIMING
         call timing_stop('main1a - operator')

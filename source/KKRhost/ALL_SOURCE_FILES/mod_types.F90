@@ -44,7 +44,7 @@ implicit none
 
    type :: type_inc
    
-      integer :: Nparams = 21   ! number of parameters in type_inc, excluding allocatable array KMESH
+      integer :: Nparams = 22   ! number of parameters in type_inc, excluding allocatable array KMESH
       integer :: LMMAXD  = -1
       integer :: NSPIN   = -1
       integer :: IELAST  = -1
@@ -66,6 +66,7 @@ implicit none
       integer :: NSRA    = -1
       integer :: LMMAXSO = -1
       integer :: IRMDNEW = -1
+      integer :: KVREL   = -1
       
       integer, allocatable :: KMESH(:), KMESH_ie(:)
          
@@ -463,12 +464,13 @@ contains
     call MPI_Get_address(t_inc%NSRA,         disp1(19), ierr)
     call MPI_Get_address(t_inc%LMMAXSO,      disp1(20), ierr)
     call MPI_Get_address(t_inc%IRMDNEW,      disp1(21), ierr)
+    call MPI_Get_address(t_inc%KVREL,        disp1(22), ierr)
     base  = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:21)=1
+    blocklen1(1:22)=1
 
-    etype1(1:21) = MPI_INTEGER
+    etype1(1:22) = MPI_INTEGER
     etype1(15:16) = MPI_LOGICAL
 
     call MPI_Type_create_struct(t_inc%Nparams, blocklen1, disp1, etype1, myMPItype1, ierr)
