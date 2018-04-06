@@ -593,9 +593,11 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
      &    'Error allocating work for MPI comm of PNS_SO_ALL in main1a'
         ihelp = LMMAXD*LMMAXD*IRMD*2*NATYP
         call MPI_REDUCE(PNS_SO_ALL, work, ihelp, MPI_DOUBLE_COMPLEX,
-     &                  MPI_SUM, master,t_mpi_c_grid%myMPI_comm_at,ierr)
+     &                  MPI_SUM, master,MPI_COMM_WORLD,ierr)
+!     &                  MPI_SUM, master,t_mpi_c_grid%myMPI_comm_at,ierr)
         if(ierr.ne.MPI_SUCCESS) stop 
      &    'Error in MPI comm of PNS_SO_ALL in main1a'
+        PNS_SO_ALL(:,:,:,:,:) = work(:,:,:,:,:)
         deallocate(work, stat=ierr)
         if(ierr.ne.0) stop 
      &    'Error deallocating work for MPI comm of PNS_SO_ALL in main1a'
@@ -639,7 +641,9 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
      +            t_inc%KVREL,DRDI)
 
         end if ! myrank==master
+#ifdef CPP_MPI
         call MPI_BARRIER(t_mpi_c_grid%myMPI_comm_at,ierr)
+#endif
 
 #ifdef CPP_TIMING
         call timing_stop('main1a - operator')
