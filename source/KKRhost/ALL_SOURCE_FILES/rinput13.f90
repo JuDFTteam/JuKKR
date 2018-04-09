@@ -2122,6 +2122,13 @@
       t_wavefunctions%save_sll     = .false.
       t_wavefunctions%save_rllleft = .false.
       t_wavefunctions%save_sllleft = .false.
+
+      if(opt('OPERATOR')) then
+         write(1337,*) 'Found option "OPERATOR"'
+         write(1337,*) 'Overwrite MEMWFSAVE with big numbers'
+         t_wavefunctions%maxmem_number = 5
+         t_wavefunctions%maxmem_units = 3
+      end if
 ! ============================================================= WF_SAVE
 
 

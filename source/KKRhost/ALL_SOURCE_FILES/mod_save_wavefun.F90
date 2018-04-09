@@ -286,7 +286,7 @@ contains
       if(isave>0) then
          
          if(t_wavefunctions%save_rll    ) then
-            write(*,*) 'read in rll', ie, iat
+!            write(*,*) 'read in rll', ie, iat
            rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%rll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
            read_in_rll     = .true.
          endif

@@ -508,19 +508,19 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
      &                          0,1,rll_was_read_in,sll_was_read_in, 
      &                          rllleft_was_read_in,sllleft_was_read_in)
                end if ! t_wavefunctions%Nwfsavemax
-               write(*,*) 'read rll? ', ie, i1, rll_was_read_in
-               write(*,*) 'read sll? ', ie, i1, sll_was_read_in
-               write(*,*) 'read rlll?', ie, i1, rllleft_was_read_in
-               write(*,*) 'read slll?', ie, i1, sllleft_was_read_in
+               !write(*,*) 'read rll? ', ie, i1, rll_was_read_in
+               !write(*,*) 'read sll? ', ie, i1, sll_was_read_in
+               !write(*,*) 'read rlll?', ie, i1, rllleft_was_read_in
+               !write(*,*) 'read slll?', ie, i1, sllleft_was_read_in
 
             end if ! ie==1
 
           END DO !ie_num=1,ie_end
 
-       if (I1==1) then
-         write(*,*) 'write RLL before transform'
-         write(7770,*) RLL
-       endif
+       !if (I1==1) then
+       !  write(*,*) 'write RLL before transform'
+       !  write(7770,*) RLL
+       !endif
 
           ! transform radial wavefunction back to old mesh
           ALLOCATE(RLLTEMP(t_inc%IRMDNEW,LMMAXD))
@@ -565,10 +565,10 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
            ENDDO ! LM1
           ENDIF ! NSRA.EQ.2
 
-       if (I1==1) then
-         write(*,*) 'write PNSSO before transform'
-         write(7771,*) PNS_SO
-       endif
+       !if (I1==1) then
+       !  write(*,*) 'write PNSSO before transform'
+       !  write(7771,*) PNS_SO
+       !endif
           
           ! rotate radial wavefunction to global frame
           DO IR=1,IRMD
@@ -578,10 +578,10 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
      &                        LMMAXD/2,0)
           ENDDO
 
-       if (I1==1) then
-         write(*,*) 'write PNSSO after transform'
-         write(7772,*) PNS_SO
-       endif
+       !if (I1==1) then
+       !  write(*,*) 'write PNSSO after transform'
+       !  write(7772,*) PNS_SO
+       !endif
 
           ! finally collect wavefuncitons in global frame and old mesh for all atoms to be used in normcoeff-routines below
           PNS_SO_ALL(:,:,:,:,i1) = PNS_SO(:,:,:,:)
@@ -614,19 +614,19 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
  
         ! done with preparations, call normcoeff routines that construct operators
         !open(888, file='inp_normcoeff.txt', form='formatted')
-        write(8881 ,*) 'IRCUT',shape(IRCUT),IRCUT
+        !write(8881 ,*) 'IRCUT',shape(IRCUT),IRCUT
         !write(8882 ,*) 'LMMAXD',LMMAXD/2
-        write(8883 ,*) 'PNS_SO',shape(PNS_SO_ALL),PNS_SO_ALL
-        write(8884 ,*) 'THETAS',shape(t_params%THETAS), t_params%THETAS
+        !write(8883 ,*) 'PNS_SO',shape(PNS_SO_ALL),PNS_SO_ALL
+        !write(8884 ,*) 'THETAS',shape(t_params%THETAS), t_params%THETAS
         !write(8885 ,*) 'NTCELL',t_params%NTCELL
         !write(8886 ,*) 'IFUNM',t_params%IFUNM
         !write(8887 ,*) 'IPAN',IPAN
         !write(8888 ,*) 'LMSP',t_params%LMSP
-        write(8889 ,*) 'KVREL',KORBIT !t_params%KREL
-        write(88810,*) 'CLEB',CLEB
+        !write(8889 ,*) 'KVREL',KORBIT !t_params%KREL
+        !write(88810,*) 'CLEB',CLEB
         !write(88811,*) 'ICLEB',t_params%ICLEB
         !write(88812,*) 'IEND',IEND
-        write(88813,*) 'DRDI',DRDI
+        !write(88813,*) 'DRDI',DRDI
         !write(88814,*) 'IRWS',IRWS
         !write(88815,*) 'NSPOH',1+KORBIT
         !close(888)!ith preparations, call normcoeff routines that construct operators

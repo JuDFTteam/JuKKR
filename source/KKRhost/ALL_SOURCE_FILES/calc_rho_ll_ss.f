@@ -65,16 +65,16 @@ c      WRITE(6,*) "In rho ll"
            
       IF (IPAN.GT.1) THEN
         DO 100 IR = IRCUT(1)+1,IRCUT(IPAN)
-          WRITE(56,"((I5),(2e17.9))") IR,THETAS(IR-IRCUT(1),1,ICELL)
+          !WRITE(56,"((I5),(2e17.9))") IR,THETAS(IR-IRCUT(1),1,ICELL)
           RGES(IR) = RSP(IR)*C0LL*THETAS(IR-IRCUT(1),1,ICELL)
   100   CONTINUE
       END IF
 
 c      STOP " "
-      WRITE(6,*) "IRCUT(1)",IRCUT(1)
-      WRITE(6,*) "IRCUT(IPAN)",IRCUT(IPAN)
-      WRITE(6,*) "IRCUT(IPAN)-IRMIND",IRCUT(IPAN)-IRMIND
-      WRITE(6,*) "IRMIND",IRMIND
+      !WRITE(6,*) "IRCUT(1)",IRCUT(1)
+      !WRITE(6,*) "IRCUT(IPAN)",IRCUT(IPAN)
+      !WRITE(6,*) "IRCUT(IPAN)-IRMIND",IRCUT(IPAN)-IRMIND
+      !WRITE(6,*) "IRMIND",IRMIND
 
       DO 160 J = 1,IEND
         LM1P = ICLEB(J,1)
@@ -86,7 +86,7 @@ c---> calculate the non spherically symmetric contribution
  
         IF (IPAN.GT.1 .AND. LMSP(ICELL,LM3P).GT.0) THEN
           IFUN = IFUNM(ICELL,LM3P)
-          WRITE(156,*) "IFUN",IFUN
+          !WRITE(156,*) "IFUN",IFUN
           IF (LM1P == LM2P ) THEN
             DO 150 IR = IRCUT(1)+1,IRCUT(IPAN)
              RGES(IR) = RGES(IR)+RLL(IR,LM2P,LM1P)*

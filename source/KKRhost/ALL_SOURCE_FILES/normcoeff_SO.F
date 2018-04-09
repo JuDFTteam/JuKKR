@@ -178,7 +178,7 @@ c
       if(ierr.ne.0) stop 
      &  'Error allocating work for MPI comm of PNS_SO_ALL in main1a'
       ihelp = LMMAXD*LMMAXD*NSPD*NSPD*NSPD*NSPD*NATYPD
-      write(*,*) 'comm dens', myrank, ihelp, shape(dens),shape(work)
+      !write(*,*) 'comm dens', myrank, ihelp, shape(dens),shape(work)
       call MPI_REDUCE(DENS, work, ihelp, MPI_DOUBLE_COMPLEX,
 !     &                MPI_SUM, master, MPI_COMM_WORLD,ierr)
      &                MPI_SUM, master,t_mpi_c_grid%myMPI_comm_ie,ierr)
