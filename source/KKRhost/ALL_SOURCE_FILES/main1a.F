@@ -633,7 +633,6 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
            
         if(myrank==master) WRITE(*,*) 'Computing spin operator'
-        call MPI_BARRIER(t_mpi_c_grid%myMPI_comm_ie,ierr)
         CALL NORMCOEFF_SO(IRCUT,LMMAXD/2,PNS_SO_ALL,
      +         t_params%THETAS,t_params%NTCELL,t_params%IFUNM,IPAN,
      +         t_params%LMSP,t_inc%KVREL,CLEB,t_params%ICLEB,IEND,
