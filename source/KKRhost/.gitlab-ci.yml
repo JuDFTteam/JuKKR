@@ -187,6 +187,34 @@ run:intel:MPIenerg8:
       - tests/test_run*
     expire_in: 2 days
 
+run:intel:OPERATOR12:
+  image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
+  stage: run
+  services:
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c1
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c2
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c3
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c4
+  script:
+    - cp tests/inc.p_72 inc.p
+    - make clean; make mpi; cp kkr.x kkr.x_72
+    - cd tests
+    - mkdir test_12_mpi_1_32
+    - cd test_12_mpi_1_32
+    -  test_12_mpi_1_32
+    - ln -s ../test_inputs/test_12_*/* .; ln -s ../../kkr.x_72 kkr.x
+    - mpirun -np 32 ./kkr.x | tee out_kkr
+    - rm -f gmat tmat gref *for* inputcard_generated.txt
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+
 
 verify:intel:
   stage: verify

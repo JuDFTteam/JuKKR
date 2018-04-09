@@ -1,7 +1,7 @@
 ***** Input file for TB-KKR code *****
       ***Running options*** 
 RUNOPT 
-NEWSOSOLfull invFERMcOUTOPERATOR 
+NEWSOSOLfull invFERMIOUTOPERATOR 
 +-------+-------+-------+-------+-------+
       ***test options*** (2 lines) 
 TESTOPT
@@ -272,6 +272,3 @@ fedeci.fp2                                  right (down) host
 Parameters for ewald sums
 RMAX=10.0d0     GMAX=600.d0     (fcc 7  65)
 ----------------------------------------------------------------------
-
-MEMWFSAVE= 4000
-UNITMEMWFSAVE= 2 (MB)
