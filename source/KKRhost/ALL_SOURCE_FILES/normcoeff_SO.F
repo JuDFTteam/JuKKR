@@ -13,6 +13,14 @@ c                   (see subroutine gaunt)
 c
 c-----------------------------------------------------------------------
 C     .. Parameters ..
+#ifdef CPP_MPI
+      use mpi
+#endif
+      use mod_mympi, only: myrank, master
+#ifdef CPP_MPI
+      use mod_types, only: t_mpi_c_grid
+#endif
+      
       IMPLICIT NONE
 
       include 'inc.p'
@@ -43,6 +51,8 @@ C     .. Local Scalars ..
      +                 NSPOH,
      +                 LMDOS,ISIGMA
       LOGICAL          TEST
+!     MPI stuff
+      INTEGER :: ierr, ihelp, i1_start, i1_end
 C     .. External Subroutines ..
       EXTERNAL         ZGEMM
 C     ..
@@ -53,8 +63,8 @@ C     ..Local Arrays..
       DOUBLE COMPLEX, ALLOCATABLE  ::   RLL_12(:,:,:),
      +                                  RLL(:,:,:,:,:,:,:),
      +                                  RHOD(:,:,:,:)
-c      DOUBLE COMPLEX RLL(IRMD,LMMAX,LMMAX,NSPD,NSPD,NSPD,NATYPD),
-c     +                RLL_12(IRMD,LMMAX,LMMAX)
+!     MPI stuff
+      DOUBLE COMPLEX, ALLOCATABLE  :: work(:,:,:,:,:,:,:)
 C     ..
 C     .. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
@@ -62,27 +72,35 @@ C     ..
 c
       PI=4.d0*DATAN(1.d0)
       LMMAXSO=2*LMMAXD
-      WRITE(6,*) "KSRA",KSRA
+      if(myrank==master) WRITE(6,*) "KSRA",KSRA
       IF (KSRA.GE.1) THEN    ! previously this was .GT. which is wrong for kvrel=1
          NSRA = 2
       ELSE
          NSRA = 1
       END IF
-c      NSRA=1
-      WRITE(6,*) "NSRA",NSRA
+      if(myrank==master) WRITE(6,*) "NSRA",NSRA
 
       ALLOCATE(RLL(IRMD,LMMAX,LMMAX,NSPOH,NSPOH,NSPOH,NATYPD))
       ALLOCATE(RLL_12(IRMD,LMMAX,LMMAX))
       ALLOCATE(DENS(LMMAXD,LMMAXD,NSPD,NSPD,NSPD,NSPD,NATYPD))
-c      ALLOCATE(DENS1(LMMAXD,LMMAXD,LMMAXD,2,8,NATYPD))
 
       RLL=CZERO
       DENS=CZERO
-c      DENS1=CZERO
 
-c    rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
-      DO I1=1,NATYPD
-       WRITE(6,*) 'ATOM',I1
+
+      ! determine MPI work division for loop over atoms
+#ifdef CPP_MPI
+      i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie) + 1
+      i1_end   = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie) +
+     &           t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
+#else
+      i1_start = 1
+      i1_end   = NATYPD
+#endif
+
+      ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
+      DO I1=i1_start, i1_end
+       WRITE(6,*) 'ATOM',I1, i1_start, i1_end, myrank
 
         DO INSRA=1,NSRA
           DO IR=1,IRMD
@@ -104,8 +122,7 @@ c    rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
         END DO      !INSRA
 
 
-c set up the array R*_L1L2 R_L3L4 
-
+        ! set up the array R*_L1L2 R_L3L4 
         DO I1SP1=1,NSPOH
           DO I1SP2=1,NSPOH
             DO I2SP1=1,NSPOH
@@ -135,7 +152,8 @@ c set up the array R*_L1L2 R_L3L4
                       CALL CALC_RHO_LL_SS(LMMAX,RLL_12,
      +                     IRCUT(0:IPAND,I1),IPAN(I1),NTCELL(I1),THETAS,
      +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS(I1),
-     +                    DRDI(:,I1),NORM)
+     +                     DRDI(:,I1),NORM)
+
                       DENS(LM1,LM2,I1SP1,I1SP2,I2SP1,I2SP2,I1)=
      +                DENS(LM1,LM2,I1SP1,I1SP2,I2SP1,I2SP2,I1) + NORM
                     END DO   !NSRA
@@ -149,63 +167,36 @@ c set up the array R*_L1L2 R_L3L4
           END DO         !I1SP2
         END DO           !I1SP1 
 
-c      IF (TEST('LMDOS   ').AND.I1.EQ.IMPLAYER) THEN
-      IF (TEST('LMDOS   ')) THEN
-        DO I1SP1=1,2
-           I1SP=0
-          DO I1SP2=1,NSPOH
-            DO I2SP1=1,NSPOH
-               DO I2SP2=1,NSPOH
-                 I1SP=I1SP+1
-
-                DO LM1 = 1,LMMAX
-                  DO LM2 = 1,LMMAX
-         
-                    DO INSRA=1,NSRA
- 
-                    RLL_12=CZERO
-         
-                      DO LM1P = 1,LMMAX
-                        DO LM2P = 1,LMMAX
-           
-                          DO IR=1,IRMD
-           
-c                            RLL_12(IR,LM1P,LM2P)=
-c     +                    DCONJG(RLL(IR,LM1P,LM1,I1SP1,I1SP2,INSRA,I1))*
-c     +                            RLL(IR,LM2P,LM2,I2SP1,I2SP2,INSRA,I1)
-                          END DO       !IR
-           
-                        END DO         !LM2P
-                      END DO           !LM1P
-
-                      DO LMDOS=1,LMMAX
-c                      CALL CALC_RHO_LL_SS_LMDOS(RLL_12,
-c     +                     IRCUT(0:IPAND,I1),IPAN(I1),NTCELL(I1),THETAS,
-c     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS(I1),
-c     +                    DRDI(:,I1),NORM1,LMDOS)
-          
-c                      DENS1(LMDOS,LM1,LM2,I1SP1,I1SP,I1)=
-c     +                DENS1(LMDOS,LM1,LM2,I1SP1,I1SP,I1) + NORM1
-                      ENDDO
-                    END DO   !NSRA
-
-                  END DO         !LM2
-                END DO           !LM1
-              END DO            !I2SP2
-            END DO              !I2SP1
-
-          END DO         !I1SP2
-        END DO           !I1SP1 
-
-      ENDIF
-
-
       END DO             !I1
       DEALLOCATE(RLL)
       DEALLOCATE(RLL_12) 
 
-c calculate rho
-      ALLOCATE(RHOD(LMMAXSO,LMMAXSO,NATYPD,4))
+#ifdef CPP_MPI
+      ! finally gather DENS on master in case of MPI run
+      allocate(work(LMMAXD,LMMAXD,NSPD,NSPD,NSPD,NSPD,NATYPD), 
+     &         stat=ierr)
+      if(ierr.ne.0) stop 
+     &  'Error allocating work for MPI comm of PNS_SO_ALL in main1a'
+      ihelp = LMMAXD*LMMAXD*NSPD*NSPD*NSPD*NSPD*NATYPD
+      write(*,*) 'comm dens', myrank, ihelp, shape(dens),shape(work)
+      call MPI_REDUCE(DENS, work, ihelp, MPI_DOUBLE_COMPLEX,
+!     &                MPI_SUM, master, MPI_COMM_WORLD,ierr)
+     &                MPI_SUM, master,t_mpi_c_grid%myMPI_comm_ie,ierr)
+      if(ierr.ne.MPI_SUCCESS) stop 
+     &  'Error in MPI comm of DENS in normcoeff_SO'
+      DENS(:,:,:,:,:,:,:) = work(:,:,:,:,:,:,:)
+      deallocate(work, stat=ierr)
+      if(ierr.ne.0) stop 
+     &  'Error deallocating work for MPI comm of DENS in normcoeff_SO'
+#endif
+
+
+      if(myrank==master) then ! do last part and writeout only on master
+
+        write(*,*) 'collect terms and writeout'
+
+        ! calculate rho
+        ALLOCATE(RHOD(LMMAXSO,LMMAXSO,NATYPD,4))
         IF (NSPOH.NE.1) THEN
           DO ISIGMA=1,4
            DO I1=1,NATYPD
@@ -239,8 +230,6 @@ c calculate rho
                DO LM1=1,LMMAX
                 DO LM2=1,LMMAX
           RHOD((I1SP2-1)*LMMAX+LM2,(I1SP1-1)*LMMAX+LM1,I1,ISIGMA)=
-c     +          (0D0,1D0)*(DENS(LM2,LM1,2,I1SP2,1,I1SP1,I1)- 
-c     +                     DENS(LM2,LM1,1,I1SP2,2,I1SP1,I1)) 
      +          -(0D0,1D0)*(DENS(LM2,LM1,2,I1SP2,1,I1SP1,I1)-
      +                     DENS(LM2,LM1,1,I1SP2,2,I1SP1,I1)) 
                  ENDDO
@@ -253,8 +242,6 @@ c     +                     DENS(LM2,LM1,1,I1SP2,2,I1SP1,I1))
                 DO LM1=1,LMMAX
                  DO LM2=1,LMMAX
           RHOD((I1SP2-1)*LMMAX+LM2,(I1SP1-1)*LMMAX+LM1,I1,ISIGMA)=
-c     +            DENS(LM2,LM1,1,I1SP2,1,I1SP1,I1)- 
-c     +            DENS(LM2,LM1,2,I1SP2,2,I1SP1,I1) 
      +           -DENS(LM2,LM1,1,I1SP2,1,I1SP1,I1)+
      +            DENS(LM2,LM1,2,I1SP2,2,I1SP1,I1) 
                  ENDDO
@@ -265,8 +252,8 @@ c     +            DENS(LM2,LM1,2,I1SP2,2,I1SP1,I1)
             ENDDO
            ENDDO
 
-c write to the file
-        OPEN(UNIT=12,FILE='TBkkr_rhod.txt',FORM='formatted',
+          ! write to the file
+          OPEN(UNIT=12,FILE='TBkkr_rhod.txt',FORM='formatted',
      +       ACTION='write')
           DO ISIGMA=1,4
            DO I1=1,NATYPD
@@ -277,12 +264,13 @@ c write to the file
             ENDDO
            ENDDO
           ENDDO        
-        CLOSE(12)
-       ENDIF
-      DEALLOCATE(DENS)
-      DEALLOCATE(RHOD)
-      END
+          CLOSE(12)
 
+        ENDIF ! NSPOH!=1
+        DEALLOCATE(DENS)
+        DEALLOCATE(RHOD)
 
+      end if !(myrank==master)
 
+      END SUBROUTINE NORMCOEFF_SO
 

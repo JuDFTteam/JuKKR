@@ -25,6 +25,7 @@
      &           TOLRDIF,LLY,DELTAE,&
      &           LCARTESIAN,BRAVAIS,RMAX,GMAX)
       use mod_wunfiles, only: t_params
+      use mod_types, only: t_inc
       use mod_save_wavefun, only: t_wavefunctions
       use mod_version_info
       IMPLICIT NONE
@@ -698,6 +699,8 @@
       ELSE
          WRITE(111,*) 'Default KVREL= ',KVREL
       ENDIF
+      ! store KVREL to be used later on
+      t_inc%KVREL = KVREL
 
 
       IF (OPT('NEWSOSOL')) THEN ! Spin-orbit
