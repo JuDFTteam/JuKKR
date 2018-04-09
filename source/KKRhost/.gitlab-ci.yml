@@ -205,7 +205,6 @@ run:intel:OPERATOR12:
     - cd tests
     - mkdir test_12_mpi_1_32
     - cd test_12_mpi_1_32
-    -  test_12_mpi_1_32
     - ln -s ../test_inputs/test_12_*/* .; ln -s ../../kkr.x_72 kkr.x
     - mpirun -np 32 ./kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt
