@@ -3,7 +3,7 @@
 import pytest
 import os, pprint
 from kkrparser_functions import parse_kkr_outputfile
-from numpy import std, array
+from numpy import mean, std, array
 
 
 class Test_check_test_runs():
@@ -112,6 +112,19 @@ class Test_check_test_runs():
 		   'test_run11_hybrid_4_8',
 		   'test_run11_hybrid_8_4']
         cmp_modes(cmplist, '')
+
+    def test_verify12_OPERATOR(self):
+        path  = 'test_run12_mpi_1_24/'
+        path0 = 'test_run12_mpi_1_24/ref/'
+        # compare TBkkr_rhod.txt file with reference (in path0)
+        fname = 'TBkkr_rhod.txt'
+        num, text = read_file(path+fname)
+        num_ref, text_ref = read_file(path0+fname)
+        assert std(abs(num-num_ref))<10**-14
+        assert mean(abs(num-num_ref))<10**-14
+        assert abs(num-num_ref).max()<5*10**-13
+        assert set(text)-set(text_ref)==set()
+
 
         
 # helper functions
