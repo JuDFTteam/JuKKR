@@ -188,25 +188,28 @@ run:intel:MPIenerg8:
     expire_in: 2 days
 
 run:intel:OPERATOR12:
-  image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
+  #image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
   stage: run
-  services:
-     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
-       alias: c1
-     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
-       alias: c2
-     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
-       alias: c3
-     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
-       alias: c4
+  #services:
+  #   - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+  #     alias: c1
+  #   - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+  #     alias: c2
+  #   - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+  #     alias: c3
+  #   - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+  #     alias: c4
   script:
     - cp tests/inc.p_72 inc.p
     - make clean; make mpi; cp kkr.x kkr.x_72
     - cd tests
-    - mkdir test_12_mpi_1_24
-    - cd test_12_mpi_1_24
+    - mkdir test_12_mpi_1_8
+    - cd test_12_mpi_1_8
+    #- mkdir test_12_mpi_1_24
+    #- cd test_12_mpi_1_24
     - ln -s ../test_inputs/test_12_*/* .; ln -s ../../kkr.x_72 kkr.x
-    - srun --nodes=4 --ntasks-per-node=6 ./kkr.x || tail -n20 output.{0,000}.txt
+    #- srun --nodes=4 --ntasks-per-node=6 ./kkr.x || tail -n20 output.{0,000}.txt
+    - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt
   artifacts:
     paths:

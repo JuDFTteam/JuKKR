@@ -114,8 +114,10 @@ class Test_check_test_runs():
         cmp_modes(cmplist, '')
 
     def test_verify12_OPERATOR(self):
-        path  = 'test_run12_mpi_1_24/'
-        path0 = 'test_run12_mpi_1_24/ref/'
+        #path  = 'test_run12_mpi_1_24/'
+        #path0 = 'test_run12_mpi_1_24/ref/'
+        path  = 'test_run12_mpi_1_8/'
+        path0 = 'test_run12_mpi_1_8/ref/'
         # compare TBkkr_rhod.txt file with reference (in path0)
         fname = 'TBkkr_rhod.txt'
         num, text = read_file(path+fname)
