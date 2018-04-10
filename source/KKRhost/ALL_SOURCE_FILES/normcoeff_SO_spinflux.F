@@ -18,7 +18,9 @@ c-----------------------------------------------------------------------
 #endif
       use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
-      use mod_types, only: t_mpi_c_grid
+      use mod_types, only: t_mpi_c_grid, t_inc
+#else
+      use mod_types, only: t_inc
 #endif
 
       IMPLICIT NONE
@@ -74,18 +76,18 @@ C     ..
 c
       LMMAXSO=2*LMMAXD
 
-      if(myrank==master) WRITE(6,*) "KSRA",KSRA
+      if(t_inc%i_write) WRITE(1337,*) "KSRA",KSRA
       IF (KSRA.GE.1) THEN    ! previously this was .GT. which is wrong for kvrel=1
          NSRA = 2
       ELSE
          NSRA = 1
       END IF
 
-      if (myrank==master) then
-        WRITE(6,*) "NSRA",NSRA
-        WRITE(6,*) "LMMAX",LMMAX
-        WRITE(6,*) "LMMAXD",LMMAXD
-        WRITE(6,*) "LMMAXSO",LMMAXSO
+      if (t_inc%i_write) then
+        WRITE(1337,*) "NSRA",NSRA
+        WRITE(1337,*) "LMMAX",LMMAX
+        WRITE(1337,*) "LMMAXD",LMMAXD
+        WRITE(1337,*) "LMMAXSO",LMMAXSO
       end if
 
 
@@ -110,7 +112,7 @@ c
 
       ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
       DO I1=i1_start, i1_end
-        WRITE(6,*) 'ATOM',I1, i1_start, i1_end, myrank
+        if(t_inc%i_write) WRITE(1337,*) 'ATOM',I1, i1_start, i1_end
 
         DO INSRA=1,NSRA
           DO IR=1,IRMD

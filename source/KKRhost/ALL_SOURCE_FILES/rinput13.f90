@@ -2088,12 +2088,17 @@
       END IF
 
 
-! ============================================================= fswrt
-      IF (OPT('FERMIOUT').AND.(NSTEPS/=1))THEN           ! fswrt
-        WRITE(6,2012)                                    ! fswrt
-        NSTEPS = 1                                       ! fswrt
-      END IF                                             ! fswrt
-! ============================================================= fswrt
+! =============================================================         ! fswrt
+! check and correct some settings automatically for FERMIOUT writeout   ! fswrt
+      IF(OPT('FERMIOUT').or.OPT('OPERATOR')) THEN                       ! fswrt
+        if (NSTEPS/=1) then                                             ! fswrt
+          WRITE(6,2012)                                                 ! fswrt
+          NSTEPS = 1                                                    ! fswrt
+        end if                                                          ! fswrt
+        if (.not.TEST('STOP1B  ')) CALL ADDTEST('STOP1B  ')             ! fswrt
+        if (.not.TEST('STOP1B  ')) stop 'addtest failed for STOP1B'     ! fswrt
+      END IF                                                            ! fswrt
+! =============================================================         ! fswrt
 
 ! ============================================================= WF_SAVE
       CALL IOInput('MEMWFSAVE       ',UIO,0,7,IER)
@@ -2261,29 +2266,64 @@
 !---------------------------------------------------------------------
 
 SUBROUTINE ADDOPT(STRING)
-use mod_wunfiles, only: t_params
-IMPLICIT NONE
-INTEGER NOPTD
-PARAMETER (NOPTD=32)
-CHARACTER*8 STRING
-INTEGER II
-LOGICAL OPT
-EXTERNAL OPT
+  use mod_wunfiles, only: t_params
+  use mod_types, only: t_inc
+  IMPLICIT NONE
+  INTEGER NOPTD
+  PARAMETER (NOPTD=32)
+  CHARACTER*8 STRING
+  INTEGER II
+  LOGICAL OPT
+  EXTERNAL OPT
 
-IF (.NOT.OPT('        ')) THEN
-   WRITE(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
-   STOP 'Error in ADDOPT: No free slots in array OPTC.'
-ENDIF
-
-IF (.NOT.OPT(STRING)) THEN
-   II = 1
-   DO WHILE (II.LE.NOPTD)
-      IF (t_params%OPTC(II).EQ.'        ') THEN
-         t_params%OPTC(II) = STRING
-         II = NOPTD + 1
-      ENDIF
-      II = II + 1
-   ENDDO
-ENDIF
+  if(t_inc%i_write) write(1337, *) 'in ADDOPT: adding option ', STRING
+ 
+  IF (.NOT.OPT('        ')) THEN
+    WRITE(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
+    STOP 'Error in ADDOPT: No free slots in array OPTC.'
+  ENDIF
+ 
+  IF (.NOT.OPT(STRING)) THEN
+    II = 1
+    DO WHILE (II.LE.NOPTD)
+       IF (t_params%OPTC(II).EQ.'        ') THEN
+          t_params%OPTC(II) = STRING
+          II = NOPTD + 1
+       ENDIF
+       II = II + 1
+    ENDDO
+  ENDIF
 
 END SUBROUTINE ADDOPT
+
+
+SUBROUTINE ADDTEST(STRING)
+  use mod_types, only: t_inc
+  use mod_wunfiles, only: t_params
+  IMPLICIT NONE
+  INTEGER NTSTD
+  PARAMETER (NTSTD=64)
+  CHARACTER*8 STRING
+  INTEGER II
+  LOGICAL TEST
+  EXTERNAL TEST
+   
+  if(t_inc%i_write) write(1337, *) 'in ADDTEST: adding option ', STRING
+
+  IF (.NOT.TEST('        ')) THEN
+    WRITE(*,*) 'Error in ADDTEST for ',STRING,' : No free slots in array TESTC.'
+    STOP 'Error in ADDTEST: No free slots in array TESTC.'
+  ENDIF
+   
+  IF (.NOT.TEST(STRING)) THEN
+    II = 1
+    DO WHILE (II.LE.NTSTD)
+       IF (t_params%TESTC(II).EQ.'        ') THEN
+          t_params%TESTC(II) = STRING
+          II = NTSTD + 1
+       ENDIF
+       II = II + 1
+    ENDDO
+  ENDIF
+ 
+END SUBROUTINE ADDTEST
