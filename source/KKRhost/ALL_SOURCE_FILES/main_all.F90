@@ -235,7 +235,7 @@ do while ( (t_inc%i_iteration.lt.t_inc%N_iteration) .and. (t_inc%N_iteration.ne.
 #ifdef CPP_MPI
     call MPI_Finalize(ierr)
 #endif
-    stop 'Stop after main1b'
+    if (myrank==master) stop 'Stop after main1b'
   end if!test
 
   ! calculate density
