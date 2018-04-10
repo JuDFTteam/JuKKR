@@ -14,9 +14,17 @@ c     This subroutine was adapted from NORMCOEFF_SO.
 c
 c                                            Guillaume Géranton, 2016
 c-----------------------------------------------------------------------
-C     .. Parameters ..
+#ifdef CPP_MPI
+      use mpi
+#endif
+      use mod_mympi, only: myrank, master
+#ifdef CPP_MPI
+      use mod_types, only: t_mpi_c_grid
+#endif
+      
       IMPLICIT NONE
 
+C     .. Parameters ..
       include 'inc.p'
       INTEGER          LMMAXD
       PARAMETER        (LMMAXD= (LMAXD+1)**2)
@@ -47,6 +55,8 @@ C     .. Local Scalars ..
      +                 IR,I1,I1SP1,I1SP2,
      +                 LMSP1,LMSP2,ISIGMA,I2SP1,I2SP2,INSRA,NSRA
       INTEGER          LMMAXSO
+!     MPI stuff
+      INTEGER :: ierr, ihelp, i1_start, i1_end
 C     ..
 C     .. External Subroutines ..
       EXTERNAL         ZGEMM
@@ -62,6 +72,8 @@ C     ..Local Arrays..
      +                                  RLL_12(:,:,:),
      +                                  DENS(:,:,:,:,:,:,:),
      +                                  RLL(:,:,:,:,:,:,:)
+!     MPI stuff
+      DOUBLE COMPLEX, ALLOCATABLE  :: work(:,:,:,:,:,:,:)
 C     ..
 C     .. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
@@ -69,22 +81,22 @@ C     ..
 c
       LMMAXSO=2*LMMAXD
 
-      WRITE(6,*) "KSRA",KSRA
+      if(myrank==master) WRITE(6,*) "KSRA",KSRA
       IF (KSRA.GE.1) THEN    ! previously this was .GT. which is wrong for kvrel=1
          NSRA = 2
       ELSE
          NSRA = 1
       END IF
 
-      WRITE(6,*) "NSRA",NSRA
-
-      WRITE(6,*) "LMMAX",LMMAX
-      WRITE(6,*) "LMMAXD",LMMAXD
-      WRITE(6,*) "LMMAXSO",LMMAXSO
+      if(myrank==master) then
+        WRITE(6,*) "NSRA",NSRA
+        WRITE(6,*) "LMMAX",LMMAX
+        WRITE(6,*) "LMMAXD",LMMAXD
+        WRITE(6,*) "LMMAXSO",LMMAXSO
+      end if
 
 
       ALLOCATE(RLL(IRMD,LMMAX,LMMAX,2,2,2,NATYPD))
-
       ALLOCATE(RLL_12(IRMD,LMMAX,LMMAX))
       ALLOCATE(DENS(LMMAXD,LMMAXD,2,2,2,2,NATYPD))
       ALLOCATE(TORQ(LMMAXSO,LMMAXSO,NATYPD,3))
@@ -92,9 +104,20 @@ c
       RLL =CZERO
       DENS=CZERO
 
-c    rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
 
-      DO I1=1,NATYPD
+      ! determine MPI work division for loop over atoms
+#ifdef CPP_MPI
+      i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie) + 1
+      i1_end   = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie) +
+     &           t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
+#else
+      i1_start = 1
+      i1_end   = NATYPD
+#endif
+
+      ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
+      DO I1=i1_start, i1_end
+       WRITE(6,*) 'ATOM',I1, i1_start, i1_end, myrank
 
         DO INSRA=1,NSRA
           DO IR=1,IRMD
@@ -161,89 +184,112 @@ c set up the array R*_L1L2 R_L3L4
 
       END DO             !I1
 
+#ifdef CPP_MPI
+      ! finally gather DENS on master in case of MPI run
+      allocate(work(LMMAXD,LMMAXD,2,2,2,2,NATYPD), 
+     &         stat=ierr)
+      if(ierr.ne.0) stop 
+     &  'Error allocating work for MPI comm of DENS in normcoeff_torq'
+      ihelp = LMMAXD*LMMAXD*2*2*2*2*NATYPD
+      call MPI_REDUCE(DENS, work, ihelp, MPI_DOUBLE_COMPLEX,
+     &                MPI_SUM, master,t_mpi_c_grid%myMPI_comm_ie,ierr)
+      if(ierr.ne.MPI_SUCCESS) stop 
+     &  'Error in MPI comm of DENS in normcoeff_torq'
+      DENS(:,:,:,:,:,:,:) = work(:,:,:,:,:,:,:)
+      deallocate(work, stat=ierr)
+      if(ierr.ne.0) stop 
+     &  'Error deallocating work for MPI comm of DENS in normcoeff_torq'
+#endif
 
-c reads spin quantization axis from file
-      OPEN(UNIT=11,FILE='nonco_angle.dat',FORM='FORMATTED')
 
-      DO I1=1,NATYPD 
-        READ(11,*) THETA_TMP,PHI_TMP
-        IF ( I1 > 1) THEN
-          IF ((THETA_TMP .ne. THETA ) .or. (PHI_TMP .ne. PHI))
-     +      stop "It seems you want to compute the torque 
-     +      in a non-colinear system. This is not implemented yet."
-        END IF        
-        THETA = THETA_TMP
-        PHI = PHI_TMP
-      END DO
-      CLOSE(11)
+      if(myrank==master) then ! do last part and writeout only on master
 
-      SQA(1) = sin(THETA)*cos(PHI)
-      SQA(2) = sin(THETA)*sin(PHI)
-      SQA(3) = cos(THETA)      
+        write(*,*) 'collect terms and writeout'
 
-      TORQ=CZERO
 
-      DO ISIGMA=1,3  !ISIGMA == 1 --> T_x
-                     !ISIGMA == 2 --> T_y
-                     !ISIGMA == 3 --> T_z
+      ! reads spin quantization axis from file
+        OPEN(UNIT=11,FILE='nonco_angle.dat',FORM='FORMATTED')
 
-        WRITE(6,*) "ISIGMA",ISIGMA
-        DO I1=1,NATYPD
+        DO I1=1,NATYPD 
+          READ(11,*) THETA_TMP,PHI_TMP
+          IF ( I1 > 1) THEN
+            IF ((THETA_TMP .ne. THETA ) .or. (PHI_TMP .ne. PHI))
+     +        stop "It seems you want to compute the torque 
+     +        in a non-colinear system. This is not implemented yet."
+          END IF        
+          THETA = THETA_TMP
+          PHI = PHI_TMP
+        END DO
+        CLOSE(11)
 
-c       TEMPORARY IMPLEMENTATION OF THE TORQUE OPERATOR FOR B // z
-          IF (ISIGMA==1) THEN  !T_x 
+        SQA(1) = sin(THETA)*cos(PHI)
+        SQA(2) = sin(THETA)*sin(PHI)
+        SQA(3) = cos(THETA)      
 
-            DO I1SP1=1,2
-              DO I1SP2=1,2
-                DO LM1=1,LMMAX
-                  DO LM2=1,LMMAX
+        TORQ=CZERO
+
+        DO ISIGMA=1,3  !ISIGMA == 1 --> T_x
+                       !ISIGMA == 2 --> T_y
+                       !ISIGMA == 3 --> T_z
+
+          WRITE(6,*) "ISIGMA",ISIGMA
+          DO I1=1,NATYPD
+
+          ! TEMPORARY IMPLEMENTATION OF THE TORQUE OPERATOR FOR B // z
+            IF (ISIGMA==1) THEN  !T_x 
+
+              DO I1SP1=1,2
+                DO I1SP2=1,2
+                  DO LM1=1,LMMAX
+                    DO LM2=1,LMMAX
                TORQ((I1SP2-1)*LMMAX+LM2,(I1SP1-1)*LMMAX+LM1,I1,ISIGMA)=
      +               (0d0,1d0)*(DENS(LM2,LM1,1,I1SP2,2,I1SP1,I1)-
      +                          DENS(LM2,LM1,2,I1SP2,1,I1SP1,I1))*SQA(3)
      +                       -(-DENS(LM2,LM1,1,I1SP2,1,I1SP1,I1)+
      +                          DENS(LM2,LM1,2,I1SP2,2,I1SP1,I1))*SQA(2)
-                  END DO !LM2
-                END DO !LM1
-              END DO !I1SP2
-            END DO !I1SP1
+                    END DO !LM2
+                  END DO !LM1
+                END DO !I1SP2
+              END DO !I1SP1
 
-          ELSE IF (ISIGMA==2) THEN !T_y
+            ELSE IF (ISIGMA==2) THEN !T_y
 
-            DO I1SP1=1,2
-              DO I1SP2=1,2
-                DO LM1=1,LMMAX
-                  DO LM2=1,LMMAX
+              DO I1SP1=1,2
+                DO I1SP2=1,2
+                  DO LM1=1,LMMAX
+                    DO LM2=1,LMMAX
                TORQ((I1SP2-1)*LMMAX+LM2,(I1SP1-1)*LMMAX+LM1,I1,ISIGMA)=
      +                        (-DENS(LM2,LM1,1,I1SP2,1,I1SP1,I1)+
      +                          DENS(LM2,LM1,2,I1SP2,2,I1SP1,I1))*SQA(1)
      +                        -(DENS(LM2,LM1,2,I1SP2,1,I1SP1,I1)+
      +                          DENS(LM2,LM1,1,I1SP2,2,I1SP1,I1))*SQA(3)
-                  END DO !LM2
-                END DO !LM1
-              END DO !I1SP2
-            END DO !I1SP1
+                    END DO !LM2
+                  END DO !LM1
+                END DO !I1SP2
+              END DO !I1SP1
 
-          ELSE IF (ISIGMA==3) THEN !T_z
+            ELSE IF (ISIGMA==3) THEN !T_z
 
-            DO I1SP1=1,2
-              DO I1SP2=1,2
-                DO LM1=1,LMMAX
-                  DO LM2=1,LMMAX
+              DO I1SP1=1,2
+                DO I1SP2=1,2
+                  DO LM1=1,LMMAX
+                    DO LM2=1,LMMAX
             TORQ((I1SP2-1)*LMMAX+LM2,(I1SP1-1)*LMMAX+LM1,I1,ISIGMA)=
      +                         (DENS(LM2,LM1,2,I1SP2,1,I1SP1,I1)+
      +                          DENS(LM2,LM1,1,I1SP2,2,I1SP1,I1))*SQA(2)
      +             -(0d0,1d0)*(-DENS(LM2,LM1,2,I1SP2,1,I1SP1,I1)+
      +                          DENS(LM2,LM1,1,I1SP2,2,I1SP1,I1))*SQA(1)
-                  END DO !LM2
-                END DO !LM1
-              END DO !I1SP2
-            END DO !I1SP1
+                    END DO !LM2
+                  END DO !LM1
+                END DO !I1SP2
+              END DO !I1SP1
 
-          END IF
+            END IF ! (ISIGMA=1,2,3)
 
-        END DO  !I1
-      END DO    !ISIGMA
+          END DO  !I1
+        END DO    !ISIGMA
 
+        ! writeout
         open(unit=12, file='TBkkr_torq.txt',
      +     form='formatted',action='write')
         DO ISIGMA=1,3
@@ -256,6 +302,8 @@ c       TEMPORARY IMPLEMENTATION OF THE TORQUE OPERATOR FOR B // z
           END DO
         END DO
         close(12)
+
+      end if !(myrank==master)
 
       DEALLOCATE(RLL)
       DEALLOCATE(DENS)

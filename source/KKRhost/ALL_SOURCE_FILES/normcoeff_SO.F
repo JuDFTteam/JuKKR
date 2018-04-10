@@ -12,7 +12,6 @@ c     attention : the gaunt coeffients are stored in index array
 c                   (see subroutine gaunt)
 c
 c-----------------------------------------------------------------------
-C     .. Parameters ..
 #ifdef CPP_MPI
       use mpi
 #endif
@@ -23,6 +22,7 @@ C     .. Parameters ..
       
       IMPLICIT NONE
 
+C     .. Parameters ..
       include 'inc.p'
       INTEGER          LMMAXD
       PARAMETER        (LMMAXD= (LMAXD+1)**2)
@@ -176,11 +176,9 @@ c
       allocate(work(LMMAXD,LMMAXD,NSPD,NSPD,NSPD,NSPD,NATYPD), 
      &         stat=ierr)
       if(ierr.ne.0) stop 
-     &  'Error allocating work for MPI comm of PNS_SO_ALL in main1a'
+     &  'Error allocating work for MPI comm of DENS in normcoeff_SO'
       ihelp = LMMAXD*LMMAXD*NSPD*NSPD*NSPD*NSPD*NATYPD
-      !write(*,*) 'comm dens', myrank, ihelp, shape(dens),shape(work)
       call MPI_REDUCE(DENS, work, ihelp, MPI_DOUBLE_COMPLEX,
-!     &                MPI_SUM, master, MPI_COMM_WORLD,ierr)
      &                MPI_SUM, master,t_mpi_c_grid%myMPI_comm_ie,ierr)
       if(ierr.ne.MPI_SUCCESS) stop 
      &  'Error in MPI comm of DENS in normcoeff_SO'
