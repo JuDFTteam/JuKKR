@@ -203,10 +203,10 @@ run:intel:OPERATOR12:
     - cp tests/inc.p_72 inc.p
     - make clean; make mpi; cp kkr.x kkr.x_72
     - cd tests
-    - mkdir test_12_mpi_1_32
-    - cd test_12_mpi_1_32
+    - mkdir test_12_mpi_1_24
+    - cd test_12_mpi_1_24
     - ln -s ../test_inputs/test_12_*/* .; ln -s ../../kkr.x_72 kkr.x
-    - srun --nodes=4 --ntasks-per-node=8 ./kkr.x | tee out_kkr
+    - srun --nodes=4 --ntasks-per-node=6 ./kkr.x || tail -n20 output.{0,000}.txt
     - rm -f gmat tmat gref *for* inputcard_generated.txt
   artifacts:
     paths:
