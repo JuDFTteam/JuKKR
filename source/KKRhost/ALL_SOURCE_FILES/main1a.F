@@ -430,21 +430,6 @@ c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 #endif
 
 
-! ------------------------------------------------------------------------
-! determine the spin operator, torque operator and spin flux operator
-! ------------------------------------------------------------------------
-      if (OPT('OPERATOR')) then
-#ifdef CPP_TIMING
-        call timing_start('main1a - operator')
-#endif
-
-        call operators_for_FScode(KORBIT)
-
-#ifdef CPP_TIMING
-        call timing_stop('main1a - operator')
-#endif
-      end if ! OPERATOR
-
 
 #ifdef CPP_TIMING
         call timing_start('main1a - tbref')

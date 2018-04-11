@@ -4,6 +4,14 @@
      +                     NATOMIMP,RCLSIMP,ATOMIMP,IHOST,HOSTIMP,RIMP,
      +                     ZIMP,IRWSIMP,IPANIMP,IRCUTIMP,IRMINIMP,
      +                     VINSIMP,VM2ZIMP,DTMTRX)
+c-----------------------------------------------------------------
+c calculate and write down impurity tmatrix and delta matrix
+c first calculate t-matrix for the host corresponding to imp. cluster
+c N. H. Long, Juelich, 05.2013
+c adapted to new routines (mainly changed interfaces) to work in KKRcode
+c also added MPI parallelization
+c P.R., Juelich, 09.2017
+c-----------------------------------------------------------------
 #ifdef CPP_MPI
        use mpi
        use mod_mympi, only: myrank, master, nranks,
@@ -16,14 +24,6 @@
        use mod_version_info
        use mod_wunfiles, only: t_params
        IMPLICIT NONE
-c-----------------------------------------------------------------
-c calculate and write down impurity tmatrix and delta matrix
-c first calculate t-matrix for the host corresponding to imp. cluster
-c N. H. Long, Juelich, 05.2013
-c adapted to new routines (mainly changed interfaces) to work in KKRcode
-c also added MPI parallelization
-c P.R., Juelich, 09.2017
-c-----------------------------------------------------------------
        include 'inc.p'
        INTEGER NSPIN,IELAST,IRMIN(NATYPD),IPAN(NATYPD),IRWS(NATYPD),
      +         KSRA,LMAX,IEND
