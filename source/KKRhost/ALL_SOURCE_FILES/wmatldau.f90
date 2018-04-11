@@ -5,33 +5,15 @@
 !> @details Uses the Coulomb matrix U (array ULDAU), the density matrix \f$n\f$
 !> (array DENMAT) and the occupation numbers dentot (total) and \f$n_s\f$  (array DENTOTS) (per spin).
 !> The expression evaluated (array VLDAU) is
-!> \f$V_{m1,s,m2,s'} = \delta_{ss'} \sum_{s'',m3,m4} U_{m1,m2,m3,m4} n_{m3,s'',m4,s''} - \sum_{m3,m4} U_{m1,m4,m3,m2} n_{m3,s',m4,s} - [Ueff (dentot-1/2) - Jeff (n_s - 1/2)] delta_{ss'} \delta_{m1,m2} \f$
+!>
+!> \f$V_{m1,s,m2,s'} = \delta_{ss'} \sum_{s^{''},m3,m4} U_{m1,m2,m3,m4} n_{m3,s'',m4,s^{''}} - \sum_{m3,m4} U_{m1,m4,m3,m2} n_{m3,s',m4,s}-\left[Ueff (dentot-1/2) - Jeff (n_s - 1/2)\right]\delta_{ss'} \delta_{m1,m2} \f$
 !> @author Ph. Mavropoulos, H. Ebert (Munich)
 !> @date 2002-2004
 !> @note Modifications by N. Long Xmas Juelich 2015
 !-------------------------------------------------------------------------------
 subroutine WMATLDAU(NTLDAU,ITLDAU,NSPIN,DENMATC,LOPT, &
       UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD,NATYP,NSPIND)
-   !**********************************************************************
-   !*                                                                    *
-   !* Calculation of Coulomb interaction potential in LDA+U              *
-   !* non-relativistic case -- otherwise matrices DENMAT and VLDAU must  *
-   !*                          have double dimension                     *
-   !*                                                                    *
-   !* Uses the Coulomb matrix U (array ULDAU), the density matrix n      *
-   !* (array DENMAT) and the occupation numbers dentot (total) and n_s   *
-   !* (array DENTOTS) (per spin).                                        *
-   !*                                                                    *
-   !* The expression evaluated (array VLDAU) is                          *
-   !*                                                                    *
-   !*       V_{m1,s,m2,s'} =                                             *
-   !* delta_{ss'} Sum_{s'',m3,m4} U_{m1,m2,m3,m4} n_{m3,s'',m4,s''}      *
-   !* - Sum_{m3,m4} U_{m1,m4,m3,m2} n_{m3,s',m4,s}                       *
-   !* - [Ueff (dentot-1/2) - Jeff (n_s - 1/2)] delta_{ss'} delta_{m1,m2} *
-   !*                                                                    *
-   !*                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
-   !*                  n.long, Xmas Juelich 2015                         *
-   !**********************************************************************
+
    use Constants
 
    implicit none
@@ -303,7 +285,6 @@ subroutine WMATLDAU(NTLDAU,ITLDAU,NSPIN,DENMATC,LOPT, &
    99006 format(27X,A,/)
 end subroutine WMATLDAU
 
-   !*==rwrite.f    processed by SPAG 6.05Rc at 16:58 on 22 Dec 2004
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: RWRITE
 !> @brief Auxiliary subroutine to write the entries of the different potentials

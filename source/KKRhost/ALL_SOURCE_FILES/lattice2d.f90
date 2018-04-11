@@ -1,10 +1,12 @@
-!*==lattice2d.f90    processed by SPAG 6.05Rc at 20:22 on 18 May 2004
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: lattice2d
 !> @brief Generates the lattice vectors of direct and reciprocal space from
 !> basic translation vectors for a 2D system
-!> @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
+!> @note - V. Popescu May 2004: The routine has been brought to a form which is very similar to
+!> LATTICE2D -- from which it has been originally derived. Dimension of arrays GN,RM
+!> changed from (4,*) to (2,*), the 4th one it is used only locally (GNR/RMR) -- only GN/RM(2,*) are
+!> actually needed in EWALD2D
+!> @note - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 subroutine LATTICE2D(ALAT,BRAVAIS,RECBV,NGMAX,NRMAX,NSHLG,NSHLR,  &
    NSG,NSR,GN,RM,RMAX,GMAX,IPRINT,NMAXD,ISHLD)

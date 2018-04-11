@@ -38,11 +38,12 @@ C **********************************************************************
 #ifdef cpp_ompstuff
       use omp_lib
 #endif
+
+      use Constants
+
       IMPLICIT NONE
 C     ..
 C     .. Parameters ..
-      DOUBLE COMPLEX CI
-      PARAMETER ( CI = (0D0,1D0) )
       DOUBLE PRECISION BOUND
       PARAMETER ( BOUND=1D-8 )
 C     ..
@@ -58,7 +59,7 @@ C     ..
 C     .. Local scalars ..
       DOUBLE COMPLEX BFAC
       DOUBLE PRECISION ALPHA,BETA,DQ1,DQ2,DQ3,DQDOTG,EXPBSQ,FPI,
-     +                 G1,G2,G3,GA,LAMDA,PI,R,R1,R2,R3,RFAC,S
+     +                 G1,G2,G3,GA,LAMDA,R,R1,R2,R3,RFAC,S
       DOUBLE PRECISION DBLE
       INTEGER I,I1,I2,IT,L,LM,LMX,LMXSP,LFMT,M,NGE,NGS,NRE,NRS,NSTART
       CHARACTER*80 FMT
@@ -76,7 +77,6 @@ C     ..................................................................
 C
       LMX = 2*LPOT
       LMXSP = (LMX+1)*(LMX+1)
-      PI = 4.0D0*ATAN(1.0D0)
       FPI = 4.0D0*PI
 C
 C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT

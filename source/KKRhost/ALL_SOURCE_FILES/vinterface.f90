@@ -25,10 +25,10 @@
 !>
 !> - Jonathan Chico Feb. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NLAYERS,NATYP,V,ZAT,&
-      R,IRWS,IRCUT,IPAN,KSHAPE,NOQ,KAOEZ,IQAT,&
-      CONC,CATOM,ICC,HOSTIMP,&
-      NLBASIS,NLEFT,NRBASIS,NRIGHT,&
+subroutine VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NLAYERS,NATYP,V,ZAT, &
+      R,IRWS,IRCUT,IPAN,KSHAPE,NOQ,KAOEZ,IQAT,                    &
+      CONC,CATOM,ICC,HOSTIMP,                                     &
+      NLBASIS,NLEFT,NRBASIS,NRIGHT,                               &
       CMOMHOST,CHRGNT,VINTERS)
 
    use Constants

@@ -1,10 +1,10 @@
-!*==lattice3d.f    processed by SPAG 6.05Rc at 19:02 on 18 May 2004
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: LATTICE3D
 !> @brief Generates the lattice vectors of direct and reciprocal space from
 ! basic translation vectors for a 3D system
-!> @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
+!> @note - V. Popescu May 2004: Dimension of arrays GN,RM changed from (4,*) to (3,*), the 4th
+!> one it is used only locally (GNR/RMR)
+!> @note - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 subroutine LATTICE3D(ALAT,BRAVAIS,RECBV,NGMAX,NRMAX,NSHLG,NSHLR,  &
    NSG,NSR,GN,RM,RMAX,GMAX,IPRINT,NMAXD,ISHLD)

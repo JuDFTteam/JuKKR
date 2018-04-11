@@ -28,46 +28,7 @@ subroutine STARTB1(IFILE,IPF,IPFE,IPE,KREL,KWS,LMAX,  &
    ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,             &
    IINFO,LMPOT,IRMIND,IRM,LMXSPD,IPAND,IRID,          &
    IRNSD,LMAX,NATYP,NCELLD,NFUND,NSPOTD,IVSHIFT)
-   !----------------------------------------------------------------------------
-   !   reads the input potentials
-   !
-   !    units :       ry - units for energy
-   !                  the lattice constant and all other lengths
-   !                                           given in bohr units
-   !                  the planck constant h/2pi=1
-   !                  the electron charge e=sqrt(2)
-   !                  the electron mass m=1/2
-   !                  the speed of light c = 2/alpha = 274.0720442
-   !                      with the fine structure constant alpha
-   !
-   !    remember that the input potentials do not include the electro-
-   !             static contribution of the nucleus of the cell itself
-   !             this has to be added explicitly !
-   !
-   !   as input is used: lmax=maximum angular momentum
-   !                    nbeg .. nend=number of different atoms
-   !
-   !
-   !     in case of shape corrections this routine  reads from unit 19
-   !     a suitable radial  mesh 'xrn',its derivate 'drn' and the shape
-   !     functions 'thetas' .          thus, the region from the muffin
-   !     tin to the circumscribed  sphere radii is divided  into  'npan'
-   !     pannels, each one containing 'nm(ipan)' points in order to take
-   !     care of the  discontinuities of the shape-function  derivative.
-   !     at the output one obtains :
-   !            llmsp (icell,ifun)       = integer array giving the com-
-   !                                       posite  index  lm=l*(l+1)+m+1
-   !                                       of the ifun-th shape function
-   !            lmsp  (icell,lm)         = (0,1)  if the lm-th component
-   !                                       is vanishing or not
-   !            nfu   (icell)            = number  of   shape   function
-   !                                       components in cell 'icell'
-   !
-   !
-   !     modified for bandstructure code
-   !
-   !                                 b.drittler nov. 1989
-   ! **********************************************************************
+
    use Constants
 
    implicit none
@@ -136,7 +97,6 @@ subroutine STARTB1(IFILE,IPF,IPFE,IPE,KREL,KWS,LMAX,  &
    double precision, dimension(IRM,0:LMAX,NATYP), intent(inout)         :: RS
    double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)  :: VINS   !< Non-spherical part of the potential
    double precision, dimension(IRID,NFUND,NCELLD), intent(inout)        :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-
    ! ..
    ! .. Local Scalars ..
    integer :: INSLPD,LMSHAPEMAX
