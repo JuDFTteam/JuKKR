@@ -1,7 +1,7 @@
 ***** Input file for TB-KKR code *****
       ***Running options*** 
 RUNOPT 
-NEWSOSOLfull invFERMIOUTOPERATOR 
+NEWSOSOLfull invOPERATOR 
 +-------+-------+-------+-------+-------+
       ***test options*** (2 lines) 
 TESTOPT
@@ -230,7 +230,7 @@ EMIN      EMAX       TEMPR      NPOL      NPT1    NPT2     NPT3
  NPAN_LOG= 15  NPAN_EQ= 5      NCHEB= 12   R_LOG= 1.0d0
  IMPLAYER= 7   ILAYERS= 60
             
-BZDIVIDE= 30 30 1   500 500 1   30 30 1   20 20 1  
+BZDIVIDE= 1 1 1 30 30 1   500 500 1   30 30 1   20 20 1  
 ----------------------------------------------------------------------
 NSTEPS     IMIX    STRMIX       FCM       QBOUND    BRYMIX      ITDBRY
   1         5      0.0010       20.0      1.D-7      0.02        30
