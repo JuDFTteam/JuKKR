@@ -13,12 +13,13 @@ subroutine operators_for_FScode(KORBIT)
 # ifdef CPP_MPI
   use mod_types, only: t_inc, t_mpi_c_grid
   use mpi
+  use mod_mympi, only: nranks, master, myrank, distribute_linear_on_tasks
 # else
   use mod_types, only: t_inc
+  use mod_mympi, only: nranks, master, myrank
 # endif
   use mod_wunfiles, only: t_params
   use mod_save_wavefun, only: t_wavefunctions, read_wavefunc
-  use mod_mympi, only: nranks, master, myrank
 
   implicit none
 
@@ -44,6 +45,7 @@ subroutine operators_for_FScode(KORBIT)
 # ifdef CPP_MPI
   ! communcate PNS_SO_ALL for OPERATOR option
   integer :: ihelp
+  integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
   double complex, allocatable :: work(:,:,:,:,:)
 # endif
 
@@ -75,8 +77,12 @@ subroutine operators_for_FScode(KORBIT)
   PNS_SO_ALL = CZERO
 
 # ifdef CPP_MPI
-  i1_start = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie) + 1
-  i1_end   = t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie) + t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
+  call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master,natyp,ntot_pT,ioff_pT,.true.)
+  i1_start = ioff_pT(t_mpi_c_grid%myrank_ie) + 1
+  i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie) + ntot_pT(t_mpi_c_grid%myrank_ie)
+  t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+  t_mpi_c_grid%ntot_pT1 = ntot_pT
+  t_mpi_c_grid%ioff_pT1 = ioff_pT
 # else
   i1_start = 1
   i1_end   = NATYP
