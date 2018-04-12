@@ -233,6 +233,7 @@ subroutine operators_for_FScode(KORBIT)
   if(myrank==master) WRITE(*,*) 'Computing impurity spinflux operator'
   CALL NORMCOEFF_SO_SPINFLUX_imp(t_imp%IRCUTIMP,t_params%LMMAXD/2,PNS_SO_ALL_IMP,t_inc%KVREL,t_imp%DRDIIMP)
   
+!check!!!!!!!!!!!!!!!!!!!!
 
 
 end subroutine operators_for_FScode
