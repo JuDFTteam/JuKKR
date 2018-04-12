@@ -30,7 +30,7 @@ contains
       LMMAXD,IELAST,NRMAXD,IRMIND,NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS,IQAT,   &
       IRWS,NACLS,REFPOT,ATOM,ZAT,VREF,RMTREF,RCLS,SOLVER,SOCSCL,SOCSCALE,CSCL,   &
       NTLDAU,IDOLDAU,ITLDAU,UEFF,JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,ICLEB,IRCUT,      &
-      IPAN_INTERVALL,PHI,THETA,CLEB,VISP,DRDI,RNEW,RMESH,RPAN_INTERVALL,VINS,    &
+      IPAN_INTERVALL,PHI,THETA,CLEB,VISP,DRDI,RNEW,RMESH,RPAN_INTERVALL,VINS,EZ, &
       ZREL,JWSREL,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ITRUNLDAU,LOPT,EREFLDAU,   &
       WLDAU,ULDAU,PHILDAU)
 
@@ -101,7 +101,7 @@ contains
       integer, intent(in) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
       double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
       double precision, intent(in) :: R_LOG     !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
-      double precision, intent(in) :: TOLRDIF   !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
+      double precision, intent(inout) :: TOLRDIF   !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
       double complex, intent(in) :: DELTAE  !< Energy difference for numerical derivative
       integer, dimension(NAEZ+NEMB), intent(in)          :: CLS   !< Cluster around atomic sites
       integer, dimension(NATYP), intent(in)              :: IQAT  !< The site on which an atom is located on a given site

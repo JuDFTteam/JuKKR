@@ -1,3 +1,7 @@
+!-------------------------------------------------------------------------------
+! MODULE: mod_tbxccpljijdij
+!> @author Bernd Zimmermann
+!-------------------------------------------------------------------------------
 module mod_tbxccpljijdij
    implicit none
 
@@ -6,14 +10,17 @@ module mod_tbxccpljijdij
 
 contains
 
-
-   subroutine tbxccpljijdij( naezd,natypd,lmmaxd,lmgf0d,natomimpd,nsymaxd,iemxd, & !dimensions
-      & thetas, phis,&
-      & natomimp,atomimp,nofgijD,iqat,rclsimp,& !imp-cluser
-      & ijtabcalc,ijtabcalc_I,ijtabsh,ijtabsym,  & !shells
-      & ielast,ez,wez,npol, & !energies
-      & dsymll, & !symmetries
-      & noq,itoq, ncpa) !CPA
+   !----------------------------------------------------------------------------
+   ! SUBROUTINE: tbxccpljijdij
+   !> @author Bernd Zimmermann
+   !----------------------------------------------------------------------------
+   subroutine tbxccpljijdij( naezd,natypd,lmmaxd,lmgf0d,natomimpd,iemxd,   & !dimensions
+      thetas, phis,                                                        &
+      natomimp,atomimp,nofgijD,iqat,rclsimp,                               & !imp-cluser
+      ijtabcalc,ijtabcalc_I,ijtabsh,ijtabsym,                              & !shells
+      ielast,ez,wez,npol,                                                  & !energies
+      dsymll,                                                              & !symmetries
+      noq,itoq, ncpa)                                                        !CPA
       !   ********************************************************************
       !   * Bernd: add description here
       !   ********************************************************************
@@ -26,6 +33,7 @@ contains
       use mod_version_info
       use mod_md5sums
       use Constants
+      use Profiling
 
       implicit none
 
@@ -33,12 +41,12 @@ contains
       integer, parameter :: nalpha = 2
 
       ! various
-      integer,          intent(in) :: lmmaxd, lmgf0d, naezd, natypd
+      integer, intent(in) :: lmmaxd, lmgf0d, naezd, natypd
       double precision, dimension(natypd), intent(in) :: phis
       double precision, dimension(natypd), intent(in) :: thetas
 
       ! Energy contour
-      integer,        intent(in) :: ielast, iemxd, npol
+      integer, intent(in) :: ielast, iemxd, npol
       double complex, dimension(iemxd), intent(in) :: ez
       double complex, dimension(iemxd), intent(in) :: wez
       integer :: ie, ie_end, ie_num
@@ -59,7 +67,6 @@ contains
       double precision, dimension(3,natomimpd), intent(in) :: rclsimp
 
       ! Symmetries
-      integer, intent(in) :: nsymaxd
       double complex, dimension(lmmaxd,lmmaxd,nsymaxd), intent(in) :: dsymll
 
       ! CPA arrays
@@ -68,24 +75,33 @@ contains
       integer, dimension(natypd,naezd), intent(in) :: itoq
 
       !Green functions and GF-work arrays of size LMSxLMS
-      double complex, allocatable :: w1(:,:), w2(:,:), gij(:,:), gji(:,:),&
-      & gij_proj(:,:), gji_proj(:,:),&
-      & Tik(:,:), Tjl(:,:), w3(:,:)
-
+      double complex, dimension(:,:), allocatable :: w1
+      double complex, dimension(:,:), allocatable :: w2
+      double complex, dimension(:,:), allocatable :: w3
+      double complex, dimension(:,:), allocatable :: Tik
+      double complex, dimension(:,:), allocatable :: Tjl
+      double complex, dimension(:,:), allocatable :: gij
+      double complex, dimension(:,:), allocatable :: gji
+      double complex, dimension(:,:), allocatable :: gij_proj
+      double complex, dimension(:,:), allocatable :: gji_proj
       !
-      double complex, allocatable :: Jijmat(:,:,:,:), jxcijint(:,:)
+      double complex, dimension(:,:), allocatable :: jxcijint
+      double complex, dimension(:,:,:,:), allocatable :: Jijmat
 #ifdef CPP_MPI
-      double complex, allocatable :: Jijmat_tmp(:,:,:,:)
+      double complex, dimension(:,:,:,:), allocatable :: Jijmat_tmp
 #endif
-      integer, allocatable :: indxarr(:,:)
+      integer, dimension(:,:), allocatable :: indxarr
 
       integer :: i1,i2,nn,kk,ish,isym,iq,jq,iJ1,iI1,jt,it,kalpha,lalpha
       integer :: irec,ierr,lm1,lm2,lm3,istore,ncount
-      integer :: nstore
-      integer :: isort(2*natomimp), istoretmp(2*natomimp)
-      double precision :: rdiff(3), rsh, dists(2*natomimp)
+      integer :: nstore,i_stat,i_all
+      double precision :: rsh
+      double complex :: csum
+      integer, dimension(2*natomimp) :: isort, istoretmp
+      double precision, dimension(3) :: rdiff
+      double precision, dimension(2*natomimp) :: dists
+      double complex, dimension(4) :: jtmp
       double precision, parameter :: fpi= 4.0d0*PI
-      double complex :: csum, jtmp(4)
       character(len=1) :: cnt
       character(len=22) :: fmt2
       character(len=13) :: jfnam
@@ -94,19 +110,24 @@ contains
       logical :: test
       external :: test
 
-      allocate( w1(lmmaxd,lmmaxd),        &
-      & w2(lmmaxd,lmmaxd),        &
-      & w3(lmmaxd,lmmaxd),        &
-      & gij(lmmaxd,lmmaxd),       &
-      & gji(lmmaxd,lmmaxd),       &
-      & gij_proj(lmmaxd,lmmaxd),  &
-      & gji_proj(lmmaxd,lmmaxd),  &
-      & Tik(lmmaxd,lmmaxd),       &
-      & Tjl(lmmaxd,lmmaxd),       &
-      !           & DMATTS(LMMAXD,LMMAXD,NATYP),& !correct dimension? --> erased last dimension (NSPIN) w.r.t. TBXCCPLJIJ.F --> check later
-      !           & DTILTS(LMMAXD,LMMAXD,NATYP),&
-      & STAT=ierr                 )
-      if(ierr/=0) stop 'Error in allocating arrays in tbxccpljijdij'
+      allocate(w1(lmmaxd,lmmaxd),stat=i_stat)
+      call memocc(i_stat,product(shape(w1))*kind(w1),'w1','tbxccpljijdij')
+      allocate(w2(lmmaxd,lmmaxd),stat=i_stat)
+      call memocc(i_stat,product(shape(w2))*kind(w2),'w2','tbxccpljijdij')
+      allocate(w3(lmmaxd,lmmaxd),stat=i_stat)
+      call memocc(i_stat,product(shape(w3))*kind(w3),'w3','tbxccpljijdij')
+      allocate(gij(lmmaxd,lmmaxd),stat=i_stat)
+      call memocc(i_stat,product(shape(gij))*kind(gij),'gij','tbxccpljijdij')
+      allocate(gji(lmmaxd,lmmaxd),stat=i_stat)
+      call memocc(i_stat,product(shape(gji))*kind(gji),'gji','tbxccpljijdij')
+      allocate(Tik(lmmaxd,lmmaxd),stat=i_stat)
+      call memocc(i_stat,product(shape(Tik))*kind(Tik),'Tik','tbxccpljijdij')
+      allocate(Tjl(lmmaxd,lmmaxd),stat=i_stat)
+      call memocc(i_stat,product(shape(Tjl))*kind(Tjl),'Tjl','tbxccpljijdij')
+      allocate(gij_proj(lmmaxd,lmmaxd),stat=i_stat)
+      call memocc(i_stat,product(shape(gij_proj))*kind(gij_proj),'gij_proj','tbxccpljijdij')
+      allocate(gji_proj(lmmaxd,lmmaxd),stat=i_stat)
+      call memocc(i_stat,product(shape(gji_proj))*kind(gji_proj),'gji_proj','tbxccpljijdij')
 
       !get nstore = dimension of storage array
       nstore=0
@@ -135,10 +156,10 @@ contains
          end do !i2
       end do !i1
 
-      allocate( Jijmat(nalpha,nalpha,nstore,ielast),&
-      & indxarr(4,nstore),&
-      & STAT=ierr)
-      if(ierr/=0) stop 'problem allocating Jijmat'
+      allocate(Jijmat(nalpha,nalpha,nstore,ielast),stat=i_stat)
+      call memocc(i_stat,product(shape(Jijmat))*kind(Jijmat),'Jijmat','tbxccpljijdij')
+      allocate(indxarr(4,nstore),stat=i_stat)
+      call memocc(i_stat,product(shape(indxarr))*kind(indxarr),'indxarr','tbxccpljijdij')
       Jijmat(:,:,:,:) = czero
 
       !   write(*,'(A)') ' k, l,it,jt,i1,i2,ie'
@@ -283,27 +304,31 @@ contains
       ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       !   MPI Communication
 #ifdef CPP_MPI
-      allocate(Jijmat_tmp(nalpha,nalpha,nstore,ielast),STAT=ierr)
-      if(ierr/=0) stop 'problem allocating Jijmat_tmp'
+      allocate(Jijmat_tmp(nalpha,nalpha,nstore,ielast),stat=i_stat)
+      call memocc(i_stat,product(shape(Jijmat_tmp))*kind(Jijmat_tmp),'Jijmat_tmp','tbxccpljijdij')
       Jijmat_tmp(:,:,:,:) = czero
 
       lm1 = nalpha*nalpha*nstore*ielast
       call MPI_REDUCE( Jijmat,Jijmat_tmp,lm1,MPI_DOUBLE_COMPLEX, &
-      & MPI_SUM,master,t_mpi_c_grid%myMPI_comm_at,ierr)
+         MPI_SUM,master,t_mpi_c_grid%myMPI_comm_at,ierr)
       if(ierr/=MPI_SUCCESS)then
          write(*,*) 'Problem in MPI_REDUCE(Jijmat)'
          stop 'TBXCCPLJIJDIJ'
       end if
 
       Jijmat = Jijmat_tmp
-      deallocate(Jijmat_tmp)
+      i_all=-product(shape(Jijmat_tmp))*kind(Jijmat_tmp)
+      deallocate(Jijmat_tmp,stat=i_stat)
+      call memocc(i_stat,i_all,'Jijmat_tmp','tbxccpljijdij')
+
 #endif
       ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
       ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
       !   Perform energy integration and output
       if(myrank==master)then
-         allocate(jxcijint(4,nstore))
+         allocate(jxcijint(4,nstore),stat=i_stat)
+         call memocc(i_stat,product(shape(jxcijint))*kind(jxcijint),'jxcijint','tbxccpljijdij')
 
          jxcijint = czero
 

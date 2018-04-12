@@ -534,7 +534,7 @@ contains
          VBC,ZPERLEFT,ZPERIGHT,BRAVAIS,RMT,ZAT,RWS,MTFAC,RMTREF,RMTNEW,RMTREFAT,    &
          FPRADIUS,TLEFT,TRIGHT,RBASIS,SOCSCALE,CSCL,SOCSCL,SOLVER,I12,I13,I19,I25,  &
          I40,TXC,DROTQ,NCPA,ITCPAMAX,CPATOL,NOQ,IQAT,ICPA,KAOEZ,CONC,KMROT,QMTET,   &
-         QMPHI,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU)
+         QMPHI,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU,NTOTD)
 
       ! Set the calculation of several parameters
       NTOTD=IPAND+30
@@ -651,8 +651,8 @@ contains
          RMT,ITITLE,IMT,IRC,VCONST,INS,IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,   &
          KSHAPE,NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,VBC,       &
          DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,1,LMPOT,    &
-         IRMIND,IRM,LMXSPD,IPAND,IRID,IRNS,LMAX,NATYP,NCELLD,NFUND,NSPOTD,    &
-         IVSHIFT)
+         IRMIND,IRM,LMXSPD,IPAND,IRID,IRNS,NATYP,NCELLD,NFUND,NSPOTD,IVSHIFT, &
+         NPOTD)
 
 
       ! find md5sums for potential and shapefunction
@@ -1073,11 +1073,10 @@ contains
       !
       ! new solver for full-potential, spin-orbit, initialise
       if (OPT('NEWSOSOL')) THEN
-         CALL CREATE_NEWMESH(NATYP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,      &
-            NFUND,NCHEB,NTOTD*(NCHEB+1),NSPIN,R,IRMIN,IPAN,IRCUT,R_LOG,       &
-            NPAN_LOG,NPAN_EQ,NCHEB,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,RNEW,      &
-            RPAN_INTERVALL,IPAN_INTERVALL,NCELLD,NTCELL,THETAS,THETASNEW)
-
+         call CREATE_NEWMESH(NATYP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,NFUND,&
+            NCHEB,NTOTD*(NCHEB+1),NSPIN,R,IRMIN,IPAN,IRCUT,R_LOG,NPAN_LOG,    &
+            NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,RNEW,RPAN_INTERVALL,      &
+            IPAN_INTERVALL,NCELLD,NTCELL,THETAS,THETASNEW)
       end if
 
       call WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,EMIN,EMAX,EZ,WEZ,EFERMI, &
@@ -1104,10 +1103,11 @@ contains
          RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF,LLY,&
          DELTAE,RCLSIMP)
 
-      IF (OPT('FERMIOUT'))THEN                                                ! fswrt
-         CALL WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,ALAT,&   ! fswrt
-            BRAVAIS,RECBV,RBASIS,CLS,NACLS,RCLS,EZOA,ATOM,RR,NSPIN)           ! fswrt
-      END IF                                                                  ! fswrt
+      IF (OPT('FERMIOUT'))THEN                                                   ! fswrt
+         CALL WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,ALAT,    &  ! fswrt
+            BRAVAIS,RECBV,RBASIS,CLS,NACLS,RCLS,EZOA,ATOM,RR,NSPIN,NR,KORBIT, &  ! fswrt
+            NCLSD,NACLSD)                                                        ! fswrt
+      END IF                                                                     ! fswrt
 
 
       IF (OPT('GREENIMP')) THEN                                               ! GREENIMP

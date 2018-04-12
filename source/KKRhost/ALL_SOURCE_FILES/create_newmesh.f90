@@ -59,7 +59,7 @@ contains
       double precision, dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(inout), optional :: THETASNEW
 
       ! .. Local variables
-      integer :: NPAN_INST,i_stat
+      integer :: NPAN_INST,i_stat,i_all
       integer :: I1,IPOT,IPOTM,IR2,IP,ICELL
       integer :: IMIN,IMAX,IMINNEW,IMAXNEW,LM1
       integer :: ISHIFT,ILOGPANSHIFT,ILINPANSHIFT,NPAN_LOGTEMP
@@ -72,7 +72,7 @@ contains
 
 
       ! checks for optional arguments
-      if(present(NTCELL).and..not.present(THETAS).or..not.present(THETASNEW))) then
+      if(present(NTCELL).and..not.present(THETAS).or..not.present(THETASNEW)) then
          write(*,*) 'Error in create_newmesh:'
          write(*,*) 'List of optional arguments not complete'
          stop
@@ -194,7 +194,7 @@ contains
       do I=1,NPAN
          do K=0,NCHEB
             IK=I*NCHEB+I-K
-            TAU=DCOS(((2*K+1)*PI)/(2*(NCHEB+1)))
+            TAU=COS(((2*K+1)*PI)/(2*(NCHEB+1)))
             TAU=0.5d0*((RI(I)-RI(I-1))*TAU+RI(I)+RI(I-1))
             RO(IK)=TAU
          enddo

@@ -1281,22 +1281,26 @@ contains
 
             ! find DTMTRX (written out for IELAST==1), parallelized with
             ! mpi over atoms
-            call TMATIMP_NEWSOLVER(t_params%NSPIN,                         &
-               t_params%LMAX,t_params%R,t_params%ZAT,t_params%IELAST,      &
-               EZ(IE),NSRA-1,t_params%IRWS,t_params%IPAN,                  &
-               t_params%IRCUT,t_params%IRMIN,CVLIGHT,                      &
-               t_params%CLEB(1,1),t_params%ICLEB,t_params%IEND,            &
-               t_params%NPAN_LOG,t_params%NPAN_EQ,t_params%NCHEB,          &
-               t_params%R_LOG,t_params%VINS,t_params%VISP,t_imp%NATOMIMP,  &
-               t_params%RCLSIMP,t_params%ATOMIMP(1:t_imp%NATOMIMP),        &
-               t_imp%IHOST,t_imp%HOSTIMP(1:t_imp%NATOMIMP),                &
-               t_imp%RIMP(1:t_params%IRMD,1:t_imp%NATOMIMP),               &
-               t_imp%ZIMP(1:t_imp%NATOMIMP),                               &
-               t_imp%IRWSIMP(1:t_imp%NATOMIMP),                            &
+            call TMATIMP_NEWSOLVER(IRM,NSRA-1,t_params%LMAX,t_params%IEND, &
+               t_params%IRID,t_params%LPOT,t_params%NATYP,t_params%NCLEB,  &
+               t_params%IPAND,t_params%IRNSD,t_params%NFUND,t_imp%IHOST,   &
+               t_params%NSPIN,t_params%NTOTD,t_params%LMPOT,t_params%NCHEB,&
+               t_params%LMMAXD,t_params%KORBIT,t_params%NSPOTD,            &
+               t_params%IELAST,t_params%IRMIND,t_params%NPAN_EQ,           &
+               t_params%NPAN_LOG,t_imp%NATOMIMP,CVLIGHT,t_params%R_LOG,    &
+               t_params%IPAN,t_params%IRWS,t_params%IRMIN,                 &
+               t_imp%HOSTIMP(1:t_imp%NATOMIMP),                            &
                t_imp%IPANIMP(1:t_imp%NATOMIMP),                            &
+               t_imp%IRWSIMP(1:t_imp%NATOMIMP),                            &
+               t_params%ATOMIMP(1:t_imp%NATOMIMP),                         &
+               t_imp%IRMINIMP(1:t_imp%NATOMIMP),t_params%ICLEB,            &
+               t_params%IRCUT,                                             &
                t_imp%IRCUTIMP(0:t_params%IPAND,1:t_imp%NATOMIMP),          &
-               t_imp%IRMINIMP(1:t_imp%NATOMIMP),t_imp%VINSIMP,             &
-               t_imp%VISPIMP,DTMTRX)
+               t_params%R,t_params%ZAT,t_imp%ZIMP(1:t_imp%NATOMIMP),       &
+               t_params%R,t_params%CLEB(1,1),                              &
+               t_imp%RIMP(1:t_params%IRMD,1:t_imp%NATOMIMP),               &
+               t_params%RCLSIMP,EZ(IE),t_params%VISP,t_imp%VISPIMP,        &
+               t_params%VINS,t_imp%VINSIMP,DTMTRX)
 
             ! compute GMATLL_GES, on master rank only
             if (IELAST.EQ.3 .and. myrank==master) then

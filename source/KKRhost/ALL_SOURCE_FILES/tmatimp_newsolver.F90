@@ -9,12 +9,12 @@
 !> also added MPI parallelization. Philipp Rüssmann, Juelich, 09.2017
 !> - Jonathan Chico Feb. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !----------------------------------------------------------------------------
-subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
-      IRWS,IPAN,IRCUT,IRMIN,C,CLEB,ICLEB,IEND,&
-      NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,VINS,VM2Z,&
-      NATOMIMP,RCLSIMP,ATOMIMP,IHOST,HOSTIMP,RIMP,&
-      ZIMP,IRWSIMP,IPANIMP,IRCUTIMP,IRMINIMP,&
-      VINSIMP,VM2ZIMP,DTMTRX)
+subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNSD,NFUND,  &
+   IHOST,NTOTD,NSPIN,LMPOT,NCHEB,LMMAXD,KORBIT,NSPOTD,IELAST,IRMIND,NPAN_EQ,NPAN_LOG,      &
+   NATOMIMP,C,R_LOG,IPAN,IRWS,IRMIN,HOSTIMP,IPANIMP,IRWSIMP,ATOMIMP,IRMINIMP,       &
+   ICLEB,IRCUT,IRCUTIMP,ZAT,ZIMP,R,CLEB,RIMP,RCLSIMP,E,VM2Z,VM2ZIMP,VINS,VINSIMP,   &
+   DTMTRX)
+
 #ifdef CPP_MPI
    use mpi
    use mod_mympi, only: myrank, master, nranks,distribute_linear_on_tasks
@@ -35,10 +35,19 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
    integer, intent(in) :: KSRA
    integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
    integer, intent(in) :: IEND
+   integer, intent(in) :: IRID
+   integer, intent(in) :: LPOT      !< Maximum l component in potential expansion
+   integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
+   integer, intent(in) :: NCLEB     !< Number of Clebsch-Gordon coefficients
+   integer, intent(in) :: IPAND     !< Number of panels in non-spherical part
+   integer, intent(in) :: IRNSD
+   integer, intent(in) :: NFUND     !< Shape functions parameters in non-spherical part
+   integer, intent(in) :: NTOTD
    integer, intent(in) :: IHOST
    integer, intent(in) :: NSPIN     !< Counter for spin directions
    integer, intent(in) :: LMPOT     !< (LPOT+1)**2
    integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
+   integer, intent(in) :: KORBIT    !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
    integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
    integer, intent(in) :: NSPOTD    !< Number of potentials for storing non-sph. potentials
    integer, intent(in) :: IELAST
@@ -65,7 +74,6 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
    double precision, dimension(NCLEB,2), intent(in)      :: CLEB     !< GAUNT coefficients (GAUNT)
    double precision, dimension(IRM,NATOMIMP), intent(in) :: RIMP
    double precision, dimension(3,NATOMIMP), intent(in)   :: RCLSIMP
-
    ! .. In/Out variables
    double complex, intent(inout) :: E
    double precision, dimension(IRM,NSPOTD), intent(inout) :: VM2Z
@@ -75,10 +83,10 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
    double complex, dimension((KORBIT+1)*LMMAXD*NATOMIMP,(KORBIT+1)*LMMAXD*NATOMIMP), intent(inout) :: DTMTRX
    ! .. Parameters
    integer :: LMMAXSO
-   parameter (LMMAXSO=2*LMMAXD)
    ! .. Local variables
    integer :: ipot
    integer :: I1,IR,NSRA,USE_SRATRICK,NVEC,LM1,LM2,ISPIN,I2,IL1,IL2,IRMDNEWD
+   integer :: i_stat, i_all
    double precision :: THETA,PHI
    double complex :: GMATPREFACTOR
    integer, dimension(NATYP) :: NPAN_TOT
@@ -98,7 +106,7 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
    integer, dimension(:), allocatable :: JLK_INDEX
    integer, dimension(:,:), allocatable :: IPAN_INTERVALL
    double precision, dimension(:,:), allocatable :: RNEW,RPAN_INTERVALL
-   double precision, dimension(:,:,:) allocatable :: VINSNEW
+   double precision, dimension(:,:,:), allocatable :: VINSNEW
    double complex, dimension(:), allocatable :: DELTATMP
    double complex, dimension(:,:), allocatable :: HLK,JLK,HLK2,JLK2
    double complex, dimension(:,:), allocatable :: RADIALHOST,RADIALIMP
@@ -106,12 +114,12 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
    double complex, dimension(:,:,:), allocatable :: VNSIMP
    double complex, dimension(:,:,:), allocatable :: RLL,SLL
    double complex, dimension(:,:,:), allocatable :: DELTABG,DELTASM
-   double complex, dimension(:,:,:), allocatable :: MATLLIMP,DELTAMTR
+   double complex, dimension(:,:,:), allocatable :: TMATLLIMP,DELTAMTR
    double complex, dimension(:,:,:), allocatable :: VNSPLL0,VNSPLL,VNSPLL1
    double complex, dimension(:,:,:,:), allocatable :: RLLHOST
    double complex, dimension(:,:,:,:), allocatable :: VNSHOST
    ! .. Parallelization variables
-   INTEGER :: ierr, i1_start, i1_end, i1_start_imp, i1_end_imp
+   integer :: i1_start, i1_end, i1_start_imp, i1_end_imp
 #ifdef CPP_MPI
    integer, dimension(0:nranks-1) :: ntot_pT, ioff_pT
    double complex, dimension(:,:,:),allocatable :: temp
@@ -124,6 +132,8 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
    else
       NSRA=1
    endif
+
+   LMMAXSO=2*LMMAXD
 
    allocate(JLK_INDEX(2*LMMAXSO),stat=i_stat)
    call memocc(i_stat,product(shape(JLK_INDEX))*kind(JLK_INDEX),'JLK_INDEX','tmatimp_newsolver')
@@ -148,7 +158,7 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
    if(myrank==master) then
       ! read angles from nonco_ange files
       open(UNIT=12,FILE='nonco_angle.dat',FORM='FORMATTED')
-      do I1=1,NATYPD
+      do I1=1,NATYP
          read(12,*) THETAhost(i1),PHIhost(i1)
          THETAhost(i1)=THETAhost(i1)/360.0D0*2.0D0*PI
          PHIhost(i1)=PHIhost(i1)/360.0D0*2.0D0*PI
@@ -166,9 +176,9 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
 #ifdef CPP_MPI
    ! broadcast read-in values to all ranks (MPI_COMM_WORLD since
    ! atom dimension is solely used without energy parallelization)
-   call MPI_Bcast(THETAhost, NATYPD, MPI_DOUBLE_PRECISION, master,MPI_COMM_WORLD,ierr)
+   call MPI_Bcast(THETAhost, NATYP, MPI_DOUBLE_PRECISION, master,MPI_COMM_WORLD,ierr)
    if(ierr/=0) stop 'Error MPI_Bcast THETAhost in tmatimp'
-   call MPI_Bcast(PHIhost, NATYPD, MPI_DOUBLE_PRECISION, master,MPI_COMM_WORLD,ierr)
+   call MPI_Bcast(PHIhost, NATYP, MPI_DOUBLE_PRECISION, master,MPI_COMM_WORLD,ierr)
    if(ierr/=0) stop 'Error MPI_Bcast PHIhost in tmatimp'
    call MPI_Bcast(THETAimp, NATOMIMP, MPI_DOUBLE_PRECISION, master,MPI_COMM_WORLD,ierr)
    if(ierr/=0) stop 'Error MPI_Bcast THETAimp in tmatimp'
@@ -200,7 +210,7 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
    allocate(irmdnew(natyp), stat=i_stat)
    call memocc(i_stat,product(shape(irmdnew))*kind(irmdnew),'irmdnew','tmatimp_newsolver')
    IRMDNEWD = 0
-   do I1=1,NATYPD
+   do I1=1,NATYP
       NPAN_INST(I1)= IPAN(I1)-1
       NPAN_TOT(I1)= NPAN_LOG+NPAN_EQ+NPAN_INST(I1)
       if(NPAN_TOT(I1)*(NCHEB+1)>IRMDNEWD) then
@@ -215,25 +225,14 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
    call memocc(i_stat,product(shape(RPAN_INTERVALL))*kind(RPAN_INTERVALL),'RPAN_INTERVALL','tmatimp_newsolver')
    allocate(IPAN_INTERVALL(0:NTOTD,NATYP),stat=i_stat)
    call memocc(i_stat,product(shape(IPAN_INTERVALL))*kind(IPAN_INTERVALL),'IPAN_INTERVALL','tmatimp_newsolver')
-   allocate(VINSNEW(IRMDNEWD,LMPOTD,NSPOTD),stat=i_stat) !NSPIND*max(NATYPD,NATOMIMP)))
+   allocate(VINSNEW(IRMDNEWD,LMPOT,NSPOTD),stat=i_stat) !NSPIND*max(NATYP,NATOMIMP)))
    call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','tmatimp_newsolver')
 
-   call CREATE_NEWMESH(NATYPD,LMAXD,LPOTD,IRMD,IRNSD,IPAND, &
-      IRID,NTOTD,NFUND,NCHEB,IRMDNEWD,                      &
-      NSPIN,R(:,:),IRMIN(:),IPAN(:),                        &
-      IRCUT(0:IPAND,:),                                     &
-      R_LOG,NPAN_LOG,NPAN_EQ,NCHEB,                         &
-      NPAN_LOGNEW(:),NPAN_EQNEW(:),                         &
-      NPAN_TOT(:),RNEW(:,:),                                &
-      RPAN_INTERVALL(0:NTOTD,:),                            &
-      IPAN_INTERVALL(0:NTOTD,:), 1)
-
-   ! In second step interpolate potential (gain atom by atom with NATYPD==1)
-   call INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATYPD,IPAND,NSPOTD,&
-      NTOTD,NCHEBD,IRMDNEWD,NSPIN,R(:,:),IRMIN(:),IRWS(:),     &
-      IRCUT(0:IPAND,:),VINS(IRMIND:IRMD,1:LMPOTD,:),           &
-      VM2Z(1:IRMD,:),NPAN_LOGNEW(:),NPAN_EQNEW(:),             &
-      NPAN_TOT(:),RNEW(:,:),IPAN_INTERVALL(0:NTOTD,:),VINSNEW)
+   ! In second step interpolate potential (gain atom by atom with NATYP==1)
+   call CREATE_NEWMESH(NATYP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,NFUND,&
+      NCHEB,IRMDNEWD,NSPIN,R(:,:),IRMIN(:),IPAN(:),IRCUT(0:IPAND,:),    &
+      R_LOG,NPAN_LOG,NPAN_EQ,NPAN_LOGNEW(:),NPAN_EQNEW(:),NPAN_TOT(:),  &
+      RNEW(:,:),RPAN_INTERVALL(0:NTOTD,:),IPAN_INTERVALL(0:NTOTD,:),1)
 
    ! calculate tmat and radial wavefunctions of host atoms
    ! parallelized with MPI over atoms
@@ -262,15 +261,15 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
       VNSPLL1=CZERO
 
       call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,     &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOTD,IPOT:IPOT+NSPIN-1),             &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),             &
          CLEB,ICLEB,IEND,NSPIN,                                         &
          ZAT(I1),RNEW(1:IRMDNEW(I1),I1),USE_SRATRICK)
 
       ! contruct the spin-orbit coupling hamiltonian and add to potential
       call SPINORBIT_HAM(LMAX,LMMAXD,                                &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOTD,IPOT:IPOT+NSPIN-1),          &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
          RNEW(1:IRMDNEW(I1),I1),E,ZAT(I1),C,t_params%SOCSCALE(I1),   &
-         NSPIN,LMPOTD,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
+         NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
          RPAN_INTERVALL(0:NTOTD,I1),NPAN_TOT(I1),NCHEB,              &
          IRMDNEW(I1),IRMDNEW(I1),VNSPLL0,                            &
          VNSPLL1,'1')
@@ -313,8 +312,8 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
       ! using spherical potential as reference
       if (USE_SRATRICK.EQ.1) then
          call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZAT(I1),C,E, &
-            LMPOTD,LMMAXSO,RNEW(1:IRMDNEW(I1),I1),                         &
-            VINSNEW(1:IRMDNEW(I1),1:LMPOTD,IPOT:IPOT+NSPIN-1),             &
+            LMPOT,LMMAXSO,RNEW(1:IRMDNEW(I1),I1),                         &
+            VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),             &
             NCHEB,NPAN_TOT(I1),                                            &
             RPAN_INTERVALL(0:NTOTD,I1),JLK_INDEX,HLK,JLK,HLK2,             &
             JLK2,GMATPREFACTOR,TMATSPH,dummy_alpha,USE_SRATRICK)
@@ -368,15 +367,15 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
       VNSPLL0=CZERO
       VNSPLL1=CZERO
       call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,  &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOTD,IPOT:IPOT+NSPIN-1),          &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
          CLEB,ICLEB,IEND,NSPIN,ZAT(I1),RNEW(1:IRMDNEW(I1),I1),0)
       !     +             CLEB,ICLEB,IEND,NSPIN,Z(I1),RNEW(:,I1),USE_SRATRICK)
 
       ! contruct the spin-orbit coupling hamiltonian and add to potential
       call SPINORBIT_HAM(LMAX,LMMAXD,                                &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOTD,IPOT:IPOT+NSPIN-1),          &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
          RNEW(1:IRMDNEW(I1),I1),E,ZAT(I1),C,t_params%SOCSCALE(I1),   &
-         NSPIN,LMPOTD,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
+         NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
          RPAN_INTERVALL(0:NTOTD,I1),NPAN_TOT(I1),NCHEB,              &
          IRMDNEW(I1),IRMDNEW(I1),VNSPLL0,                            &
          VNSPLL1,'1')
@@ -526,33 +525,28 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
    call memocc(i_stat,product(shape(RPAN_INTERVALL))*kind(RPAN_INTERVALL),'RPAN_INTERVALL','tmatimp_newsolver')
    allocate(IPAN_INTERVALL(0:NTOTD,NATOMIMP),stat=i_stat)
    call memocc(i_stat,product(shape(IPAN_INTERVALL))*kind(IPAN_INTERVALL),'IPAN_INTERVALL','tmatimp_newsolver')
-   allocate(VINSNEW(IRMDNEWD,LMPOTD,NSPOTD),stat=i_stat)
+   allocate(VINSNEW(IRMDNEWD,LMPOT,NSPOTD),stat=i_stat)
    call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','tmatimp_newsolver')
 
    ! initialize with zeros
    TMATLLIMP = CZERO
    TMATSPH = CZERO
 
-   call CREATE_NEWMESH(NATOMIMP,LMAXD,LPOTD,IRMD,IRNSD,IPAND,  &
-      IRID,NTOTD,NFUND,NCHEB,IRMDNEWD,                         &
-      NSPIN,RIMP(:,1:NATOMIMP),                                &
-      IRMINIMP(1:NATOMIMP),IPANIMP(1:NATOMIMP),                &
-      IRCUTIMP(0:IPAND,1:NATOMIMP),                            &
-      R_LOG,NPAN_LOG,NPAN_EQ,NCHEB,                            &
-      NPAN_LOGNEW(1:NATOMIMP),                                 &
-      NPAN_EQNEW(1:NATOMIMP),                                  &
-      NPAN_TOT(1:NATOMIMP),RNEW(1:IRMDNEWD,1:NATOMIMP),        &
-      RPAN_INTERVALL(0:NTOTD,1:NATOMIMP),                      &
-      IPAN_INTERVALL(0:NTOTD,1:NATOMIMP), 1)
+   call CREATE_NEWMESH(NATOMIMP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,NFUND,&
+      NCHEB,IRMDNEWD,NSPIN,RIMP(:,1:NATOMIMP),IRMINIMP(1:NATOMIMP),        &
+      IPANIMP(1:NATOMIMP),IRCUTIMP(0:IPAND,1:NATOMIMP),R_LOG,NPAN_LOG,     &
+      NPAN_EQ,NPAN_LOGNEW(1:NATOMIMP),NPAN_EQNEW(1:NATOMIMP),              &
+      NPAN_TOT(1:NATOMIMP),RNEW(1:IRMDNEWD,1:NATOMIMP),                    &
+      RPAN_INTERVALL(0:NTOTD,1:NATOMIMP),IPAN_INTERVALL(0:NTOTD,1:NATOMIMP),1)
 
    ! In second step interpolate potential
-   call INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATOMIMP,IPAND,NSPOTD, &
-      NTOTD,NCHEBD,IRMDNEWD,                                      &
+   call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATOMIMP,IPAND,NSPOTD, &
+      NTOTD,NCHEB,IRMDNEWD,                                      &
       NSPIN,RIMP(:,1:NATOMIMP),IRMINIMP(1:NATOMIMP),              &
       IRWSIMP(1:NATOMIMP),                                        &
       IRCUTIMP(0:IPAND,1:NATOMIMP),                               &
-      VINSIMP(IRMIND:IRMD,1:LMPOTD,1:NATOMIMP),                   &
-      VM2ZIMP(1:IRMD,1:NATOMIMP),NPAN_LOGNEW(1:NATOMIMP),         &
+      VINSIMP(IRMIND:IRM,1:LMPOT,1:NATOMIMP),                   &
+      VM2ZIMP(1:IRM,1:NATOMIMP),NPAN_LOGNEW(1:NATOMIMP),         &
       NPAN_EQNEW(1:NATOMIMP),NPAN_TOT(1:NATOMIMP),                &
       RNEW(1:IRMDNEWD,1:NATOMIMP),                                &
       IPAN_INTERVALL(0:NTOTD,1:NATOMIMP),VINSNEW)
@@ -583,15 +577,15 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
       VNSPLL1=CZERO
 
       call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,  &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOTD,IPOT:IPOT+NSPIN-1),          &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
          CLEB,ICLEB,IEND,NSPIN,                                      &
          ZIMP(I1),RNEW(1:IRMDNEW(I1),I1),USE_SRATRICK)
 
       ! Contruct the spin-orbit coupling hamiltonian and add to potential
       call SPINORBIT_HAM(LMAX,LMMAXD,                                &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOTD,IPOT:IPOT+NSPIN-1),          &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
          RNEW(1:IRMDNEW(I1),I1),E,ZIMP(I1),C,t_params%SOCSCALE(I1),  &
-         NSPIN,LMPOTD,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
+         NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
          RPAN_INTERVALL(0:NTOTD,I1),NPAN_TOT(I1),NCHEB,              &
          IRMDNEW(I1),IRMDNEW(I1),VNSPLL0,                            &
          VNSPLL1,'1')
@@ -637,8 +631,8 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
       ! using spherical potential as reference
       if (USE_SRATRICK.EQ.1) then
          call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZIMP(I1),C,  &
-            E,LMPOTD,LMMAXSO,RNEW(1:IRMDNEW(I1),I1),                       &
-            VINSNEW(1:IRMDNEW(I1),1:LMPOTD,IPOT:IPOT+NSPIN-1),             &
+            E,LMPOT,LMMAXSO,RNEW(1:IRMDNEW(I1),I1),                       &
+            VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),             &
             NCHEB,NPAN_TOT(I1),RPAN_INTERVALL(0:NTOTD,I1),                 &
             JLK_INDEX,HLK,JLK,HLK2,JLK2,                                   &
             GMATPREFACTOR,TMATSPH,dummy_alpha,USE_SRATRICK)
@@ -683,16 +677,16 @@ subroutine TMATIMP_NEWSOLVER(NSPIN,LMAX,R,ZAT,IELAST,E,KSRA,&
       ! set up the non-spherical ll' matrix for potential VLL'
       VNSPLL0=CZERO
       call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,  &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOTD,IPOT:IPOT+NSPIN-1),          &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
          CLEB,ICLEB,IEND,NSPIN,                                      &
          ZIMP(I1),RNEW(1:IRMDNEW(I1),I1),0)
       !     +             ZIMP(I1),RNEW(:,I1),USE_SRATRICK)
 
       ! contruct the spin-orbit coupling hamiltonian and add to potential
       call SPINORBIT_HAM(LMAX,LMMAXD,                                &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOTD,IPOT:IPOT+NSPIN-1),          &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
          RNEW(1:IRMDNEW(I1),I1),E,ZIMP(I1),C,t_params%SOCSCALE(I1),  &
-         NSPIN,LMPOTD,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
+         NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
          RPAN_INTERVALL(0:NTOTD,I1),NPAN_TOT(I1),NCHEB,              &
          IRMDNEW(I1),IRMDNEW(I1),VNSPLL0,                            &
          VNSPLL1,'1')

@@ -19,7 +19,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    NTCELL,REFPOT,INIPOL,IXIPOL,HOSTIMP,KFG,VBC,ZPERLEFT,ZPERIGHT,BRAVAIS,RMT,ZAT,&
    RWS,MTFAC,RMTREF,RMTNEW,RMTREFAT,FPRADIUS,TLEFT,TRIGHT,RBASIS,SOCSCALE,CSCL,  &
    SOCSCL,SOLVER,I12,I13,I19,I25,I40,TXC,DROTQ,NCPA,ITCPAMAX,CPATOL,NOQ,IQAT,    &
-   ICPA,KAOEZ,CONC,KMROT,QMTET,QMPHI,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU)
+   ICPA,KAOEZ,CONC,KMROT,QMTET,QMPHI,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU,NTOTD)
 
    use Profiling
    use Constants
@@ -75,7 +75,6 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    integer, intent(inout) :: LMMAX
    integer, intent(inout) :: LMPOT
    integer, intent(inout) :: NTOTD     !< NTOTD = IPAND+30
-   integer, intent(inout) :: ISHLD     !< Paremeters for the Ewald summations
    integer, intent(inout) :: NCHEB     !< Number of Chebychev pannels for the new solver
    integer, intent(inout) :: NLEFT     !< Number of repeated basis for left host to get converged  electrostatic potentials
    integer, intent(inout) :: IFILE     !< Unit specifier for potential card

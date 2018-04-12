@@ -6,12 +6,14 @@
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 subroutine WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,   &
-      ALAT,BRAVAIS,RECBV,RBASIS,CLS,NACLS,RCLS,EZOA,ATOM,RR,NSPIN)
+      ALAT,BRAVAIS,RECBV,RBASIS,CLS,NACLS,RCLS,EZOA,ATOM,RR,NSPIN,NR,KORBIT,&
+      NCLSD,NACLSD)
 
    use mod_version_info, only: serialnr
 
    implicit none
    !interface
+   integer, intent(in) :: NR        !< Number of real space vectors rr
    integer, intent(in) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
    integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
    integer, intent(in) :: NEMB      !< Number of 'embedding' positions
@@ -19,7 +21,10 @@ subroutine WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,   &
    integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
    integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
    integer, intent(in) :: NSPIN     !< Counter for spin directions
+   integer, intent(in) :: NCLSD     !< Maximum number of different TB-clusters
+   integer, intent(in) :: NACLSD    !< Maximum number of atoms in a TB-cluster
    integer, intent(in) :: IELAST
+   integer, intent(in) :: KORBIT    !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
    double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
    double precision, dimension(3,3), intent(in) :: RECBV   !< Reciprocal basis vectors
    double precision, dimension(3,3), intent(in) :: BRAVAIS !< Bravais lattice vectors
@@ -43,10 +48,10 @@ subroutine WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,   &
 
    open(934,FILE='TBkkr_params.txt',FORM='formatted')
    write(934,'(A,A)') '#FILEVERSION= 2'//'   # serial: ',serialnr
-   write(934,'(I8,4X,A)') LMAXD, 'lmaxd',   LMAX, 'lmax',         &
+   write(934,'(I8,4X,A)') LMAX , 'lmaxd',   LMAX, 'lmax',         &
                           KORBIT, 'korbit',                       &
                           NSPIN, 'nspin, used as nspind',         &  ! write nspin instead of npsind for program to work with nspin==1 case
-                          NR, 'nrd',
+                          NR, 'nrd',                              &
                           NEMB, 'nembd',   NEMB, 'nemb',          &
                           NCLS, 'ncls once again, used as nclsd', &
                           NCLS, 'ncls',                           &  ! ncls instead of nclsd for smaller files (see kloopz writeout)
@@ -67,11 +72,11 @@ subroutine WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,   &
    write(935,'(A)') 'recbv:'
    write(935,'(3ES25.16)') ((RECBV(I1,I2),I1=1,3),I2=1,3)
    write(935,'(A)') 'RBASIS:'
-   write(935,'(3ES25.16)') ((RBASIS(J,I1), J=1,3),I1=1,NAEZD+NEMBD)
+   write(935,'(3ES25.16)') ((RBASIS(J,I1), J=1,3),I1=1,NAEZ+NEMB)
 
    !write out cluster information
    write(935,'(A)') 'CLS:'
-   write(935,'(1I8)') (CLS(I1),I1=1,NATYPD)
+   write(935,'(1I8)') (CLS(I1),I1=1,NATYP)
    write(935,'(A)') 'NACLS:'
    write(935,'(1I8)') (NACLS(I1), I1=1,NCLS)
    write(935,'(A)') 'RCLS:'
@@ -81,11 +86,11 @@ subroutine WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,   &
       end do
    end do
    write(935,'(A)') 'EZOA:'
-   write(935,'(1I8)') ((EZOA(I1,I2),I1=1,NACLSMAX),I2=1,NAEZD)
+   write(935,'(1I8)') ((EZOA(I1,I2),I1=1,NACLSMAX),I2=1,NAEZ)
    write(935,'(A)') 'ATOM:'
-   write(935,'(1I8)') ((ATOM(I1,I2),I1=1,NACLSMAX),I2=1,NAEZD)
+   write(935,'(1I8)') ((ATOM(I1,I2),I1=1,NACLSMAX),I2=1,NAEZ)
    write(935,'(A)') 'RR:'
-   do I1=0,NRD
+   do I1=0,NR
       write(935,'(3ES25.16)') RR(:,I1)
    end do
 

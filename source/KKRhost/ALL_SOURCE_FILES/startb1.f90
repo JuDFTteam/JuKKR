@@ -27,7 +27,7 @@ subroutine STARTB1(IFILE,IPF,IPFE,IPE,KREL,KWS,LMAX,  &
    LMSP,EFERMI,VBC,DROR,RS,S,VM2Z,RWS,                &
    ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,             &
    IINFO,LMPOT,IRMIND,IRM,LMXSPD,IPAND,IRID,          &
-   IRNSD,LMAX,NATYP,NCELLD,NFUND,NSPOTD,IVSHIFT)
+   IRNSD,NATYP,NCELLD,NFUND,NSPOTD,IVSHIFT,NPOTD)
 
    use Constants
 
@@ -46,6 +46,7 @@ subroutine STARTB1(IFILE,IPF,IPFE,IPE,KREL,KWS,LMAX,  &
    integer, intent(in) :: NBEG   !< Starting number for reading the potential
    integer, intent(in) :: NEND   !< Final number for reading the potential
    integer, intent(in) :: KREL   !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+   integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
    integer, intent(in) :: NSPIN  !< Counter for spin directions
    integer, intent(in) :: IPAND  !< Number of panels in non-spherical part
    integer, intent(in) :: IRNSD
@@ -60,15 +61,13 @@ subroutine STARTB1(IFILE,IPF,IPFE,IPE,KREL,KWS,LMAX,  &
    integer, intent(in) :: NSPOTD !< Number of potentials for storing non-sph. potentials
    integer, intent(in) :: KSHAPE !< Exact treatment of WS cell
    integer, intent(in) :: IVSHIFT
-   double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
-   double precision, intent(in) :: EFERMI    !< Fermi energy
    double precision, intent(in) :: VCONST    !< Potential shift
-   integer, dimension(NATYP), intent(in) :: NFU !< number of shape function components in cell 'icell'
    integer, dimension(NATYP), intent(in) :: NTCELL !< Index for WS cell
-   double precision, dimension(NATYP), intent(in) :: ZAT       !< Nuclear charge
    double precision, dimension(NATYP), intent(in) :: FPRADIUS  !< R point at which full-potential treatment starts
-   ! ..
-   ! .. Array Arguments ..
+   ! .. In/Out variables
+   double precision, intent(inout) :: ALAT      !< Lattice constant in a.u.
+   double precision, intent(inout) :: EFERMI    !< Fermi energy
+   integer, dimension(NATYP), intent(inout) :: NFU !< number of shape function components in cell 'icell'
    integer, dimension(NATYP), intent(inout) :: IMT !< R point at MT radius
    integer, dimension(NATYP), intent(inout) :: IRC !< R point for potential cutting
    integer, dimension(NATYP), intent(inout) :: IPAN !< Number of panels in non-MT-region
@@ -84,6 +83,7 @@ subroutine STARTB1(IFILE,IPF,IPFE,IPE,KREL,KWS,LMAX,  &
    integer, dimension(20,NPOTD), intent(inout)        :: ITITLE !< Titles of the potential card
    double precision, dimension(NATYP), intent(inout)  :: A      !< Constants for exponential R mesh
    double precision, dimension(NATYP), intent(inout)  :: B      !< Constants for exponential R mesh
+   double precision, dimension(NATYP), intent(inout)  :: ZAT    !< Nuclear charge
    double precision, dimension(2), intent(inout)      :: VBC    !< Potential constants
    double precision, dimension(NATYP), intent(inout)  :: RMT    !< Muffin-tin radius of true system
    double precision, dimension(NATYP), intent(inout)  :: RWS    !< Wigner Seitz radius
@@ -97,10 +97,9 @@ subroutine STARTB1(IFILE,IPF,IPFE,IPE,KREL,KWS,LMAX,  &
    double precision, dimension(IRM,0:LMAX,NATYP), intent(inout)         :: RS
    double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)  :: VINS   !< Non-spherical part of the potential
    double precision, dimension(IRID,NFUND,NCELLD), intent(inout)        :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-   ! ..
-   ! .. Local Scalars ..
+   ! .. Local Scalars
    integer :: INSLPD,LMSHAPEMAX
-   integer :: J,L,LM,LM1,LMPOT,LMPOTP,N,NCELL,NFUN,NR
+   integer :: J,L,LM,LM1,LMPOTP,N,NCELL,NFUN,NR
    integer :: IRMINM,IRMINP,IRNS1P,IRT1P,IRWS1,ISAVE,ISPIN,ISUM
    integer :: I,IA,ICELL,ICORE,IFUN,IH,IMT1,INEW,IO,IPAN1,IR,IRC1,IRI
    double precision :: A1,B1,EA,EFNEW,S1,Z1
@@ -125,7 +124,7 @@ subroutine STARTB1(IFILE,IPF,IPFE,IPE,KREL,KWS,LMAX,  &
    ! ..
    ! .. Data statement ..
    integer :: ISHAPE
-   data :: ISHAPE / 0 /
+   data ISHAPE / 0 /
    !----------------------------------------------------------------------------
    ! Output of radial mesh information
    !----------------------------------------------------------------------------
@@ -134,7 +133,6 @@ subroutine STARTB1(IFILE,IPF,IPFE,IPE,KREL,KWS,LMAX,  &
    !----------------------------------------------------------------------------
    ! Set speed of light
    !----------------------------------------------------------------------------
-   CVLIGHT = 274.0720442D0
    INSLPD= (IRNSD+1) * LMPOT * NSPOTD
    LMSHAPEMAX = (4*LMAX+1)**2
    call RINIT(INSLPD,VINS(IRMIND,1,1))
@@ -278,7 +276,7 @@ subroutine STARTB1(IFILE,IPF,IPFE,IPE,KREL,KWS,LMAX,  &
             if (NR.GT.IRM) then
                write(6,*) 'Increase parameter IRM in the inputcard ', &
                ' to a value .ge. ',NR,' (= IRWS(',IH,')).'
-               topTOP 'STARTB1 - IRWS'
+               stop 'STARTB1 - IRWS'
             end if
             !-------------------------------------------------------------------
             ! Read the different core states : l and energy

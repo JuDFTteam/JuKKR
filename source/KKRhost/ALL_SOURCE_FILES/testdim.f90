@@ -5,13 +5,12 @@
 !> inc.p
 !-------------------------------------------------------------------------------
 subroutine TESTDIM(NSPIN,NAEZ,NEMB,NATYP,LMAX,IRM,INS,INSREF,NREF,IRNS,    &
-      NCLS,NLAYER,KREL,LMAXD,NSPIND,NCLSD,NPRINCD,KNOSPH,IRM,IRNSD,KORBIT)
+      NCLS,NLAYER,KREL,NSPIND,NCLSD,NPRINCD,KNOSPH,IRNSD,KORBIT)
 
    implicit none
 
    integer, intent(in) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
    integer, intent(in) :: IRM       !< Maximum number of radial points
-   integer, intent(in) :: NEMB      !< Number of 'embedding' positions
    integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
    integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
    integer, intent(in) :: NREF      !< Number of diff. ref. potentials
@@ -21,13 +20,15 @@ subroutine TESTDIM(NSPIN,NAEZ,NEMB,NATYP,LMAX,IRM,INS,INSREF,NREF,IRNS,    &
    integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
    integer, intent(in) :: NCLSD     !< Maximum number of different TB-clusters
    integer, intent(in) :: IRNSD
-   integer, intent(in) :: NLAYER    !< Number of principal layer
    integer, intent(in) :: INSREF    !< INS for reference pot. (usual 0)
    integer, intent(in) :: KNOSPH    !< switch for spherical/non-spherical (0/1) program.
    integer, intent(in) :: KORBIT    !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
    integer, intent(in) :: NSPIND    !< KREL+(1-KREL)*(NSPIN+1)
    integer, intent(in) :: NPRINCD   !< Number of principle layers, set to a number >= NRPINC in output of main0
-   integer, dimension(NATYP), intent(in) :: IRNS   !< Position of atoms in the unit cell in units of bravais vectors
+   ! .. In/Out variables
+   integer, intent(inout) :: NEMB      !< Number of 'embedding' positions
+   integer, intent(inout) :: NLAYER    !< Number of principal layer
+   integer, dimension(NATYP), intent(inout) :: IRNS   !< Position of atoms in the unit cell in units of bravais vectors
    !
    integer :: STOP_MARK
    integer :: I,J
@@ -59,7 +60,7 @@ subroutine TESTDIM(NSPIN,NAEZ,NEMB,NATYP,LMAX,IRM,INS,INSREF,NREF,IRNS,    &
       J = 1
    end if
    !
-   if (J.gt.IRSND) then
+   if (J.gt.IRNSD) then
       write(6,*) 'Please, change the parameter irnsd in',' the inputcard to',j
       stop_mark=1
    endif

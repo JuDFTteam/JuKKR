@@ -38,10 +38,6 @@ subroutine LATTICE2D(ALAT,BRAVAIS,RECBV,NGMAX,NRMAX,NSHLG,NSHLR,  &
    implicit none
    ! ..
    ! .. Input variables
-   integer, intent(in) :: NGMAX  !< Number of reciprocal space vectors
-   integer, intent(in) :: NRMAX  !< Number of real space vectors rr
-   integer, intent(in) :: NSHLG  !< Shells in reciprocal space
-   integer, intent(in) :: NSHLR  !< Shells in real space
    integer, intent(in) :: NMAXD  !< Paremeters for the Ewald summations
    integer, intent(in) :: ISHLD  !< Paremeters for the Ewald summations
    integer, intent(in) :: IPRINT
@@ -56,6 +52,11 @@ subroutine LATTICE2D(ALAT,BRAVAIS,RECBV,NGMAX,NRMAX,NSHLG,NSHLR,  &
    integer, dimension(ISHLD), intent(inout) :: NSR
    double precision, dimension(2,NMAXD), intent(inout) :: GN   !< x,y,z   of reciprocal lattice vectors
    double precision, dimension(2,NMAXD), intent(inout) :: RM   !< x,y,z  of real space vectors
+   ! .. Output variables
+   integer, intent(out) :: NSHLR  !< Shells in real space
+   integer, intent(out) :: NSHLG  !< Shells in reciprocal space
+   integer, intent(out) :: NRMAX  !< Number of real space vectors rr
+   integer, intent(out) :: NGMAX  !< Number of reciprocal space vectors
    ! ..
    ! .. Local scalars ..
    integer :: IDINT

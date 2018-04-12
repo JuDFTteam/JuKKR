@@ -1347,22 +1347,20 @@ contains
       etype1(122:124) = MPI_DOUBLE_PRECISION
       etype1(125:126) = MPI_INTEGER
 
-      call MPI_Type_create_struct(t_params%Nscalars, blocklen1, disp1,
-      &                            etype1, myMPItype1, ierr)
+      call MPI_Type_create_struct(t_params%Nscalars, blocklen1, disp1,  &
+         etype1, myMPItype1, ierr)
       if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_t_params'
 
       call MPI_Type_commit(myMPItype1, ierr)
       if(ierr/=MPI_SUCCESS) stop 'error comiting create_mpimsk_t_params'
 
-      call MPI_Bcast(t_params%Nscalars, 1, myMPItype1, master,
-      &                          MPI_COMM_WORLD, ierr)
+      call MPI_Bcast(t_params%Nscalars, 1, myMPItype1, master,MPI_COMM_WORLD, ierr)
       if(ierr/=MPI_SUCCESS) stop 'error brodcasting t_params'
 
       call MPI_Type_free(myMPItype1, ierr)
 
       ! somehow this parameter gets overlooked in the communication, possibly a but somewhere, but for now this workaround does the job
-      call MPI_Bcast(t_params%NCHEB, 1, MPI_INTEGER, master,
-      &               MPI_COMM_WORLD, ierr)
+      call MPI_Bcast(t_params%NCHEB, 1, MPI_INTEGER, master,MPI_COMM_WORLD, ierr)
 
    end subroutine bcast_t_params_scalars
 

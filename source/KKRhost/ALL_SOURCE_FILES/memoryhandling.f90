@@ -1446,7 +1446,7 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !----------------------------------------------------------------------------
-   subroutine allocate_misc(flag,NRD,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREFD,IEMXD,&
+   subroutine allocate_misc(flag,NR,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREFD,IEMXD,&
       NTOTD,NSHELD,LMMAXD,NEMBD1,NCHEBD,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM,&
       IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,DSYMLL1,LEFTTINVLL,&
       RIGHTTINVLL)
