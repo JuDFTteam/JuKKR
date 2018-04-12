@@ -1329,7 +1329,7 @@ C     kpoint (defined in qvec.dat)
 
         ! done with GREENIMP option, stopping now
 #ifdef CPP_MPI
-        call MPI_FINALIZE(ierr)
+        if(.not.OPT('OPERATOR')) call MPI_FINALIZE(ierr)
 #endif
         if(myrank==master .and. .not. OPT('OPERATOR')) then
           write(*,*) 'done with GREENIMP, stop here!'

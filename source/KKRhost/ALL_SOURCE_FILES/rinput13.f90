@@ -973,8 +973,8 @@
       ELSE
          WRITE(111,*) 'Default IGREENFUN= ',IGF
       ENDIF
-      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) THEN
-         write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP options'
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. OPT('OPERATOR')) THEN
+         write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR options'
          IGF = 1
       END IF
 
@@ -986,8 +986,8 @@
       ELSE
          WRITE(111,*) 'Default ICC= ',ICC
       ENDIF
-      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) THEN
-         write(1337,*) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP options'
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. OPT('OPERATOR')) THEN
+         write(1337,*) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR  options'
          ICC = 1
       END IF
       IF ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1

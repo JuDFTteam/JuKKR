@@ -20,6 +20,7 @@ subroutine operators_for_FScode(KORBIT)
 # endif
   use mod_wunfiles, only: t_params
   use mod_save_wavefun, only: t_wavefunctions, read_wavefunc
+  use mod_types, only: t_imp
 
   implicit none
 
@@ -49,6 +50,10 @@ subroutine operators_for_FScode(KORBIT)
   double complex, allocatable :: work(:,:,:,:,:)
 # endif
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Part 1: operators for host wavefunctions
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   ! first fill scalar and array parameters that are used here
   !  call get_params_operators(lmmaxd, irmd, natyp, nsra, ncheb, ntot, irws, 
   ! scalars
@@ -72,6 +77,10 @@ subroutine operators_for_FScode(KORBIT)
   allocate(theta(natyp), phi(natyp))
   theta = t_params%theta
   phi = t_params%phi
+
+
+  ! now get the radial wavefunctions in the correct (i.e. old) radial mesh
+  ! called PNS_SO_ALL
 
   ALLOCATE(PNS_SO_ALL(LMMAXD,LMMAXD,IRMD,2,NATYP))
   PNS_SO_ALL = CZERO
@@ -204,5 +213,26 @@ subroutine operators_for_FScode(KORBIT)
 
   ! deallocate temporary arrays
   deallocate(irws, rmesh, npan_tot, rpan_intervall, ipan_intervall, theta, phi)
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! Part 2: operators for imp. wavefunctions
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! interpolate impurity wavefunctions to old radial mesh and global spin frame
+
+  ! ... => PNS_SO_ALL_IMP
+
+  ! construct impurity operators using impurity wavefunctions
+  if(myrank==master) WRITE(*,*) 'Computing impurity spin operator'
+  CALL NORMCOEFF_SO_imp(t_imp%IRCUTIMP,t_params%LMMAXD/2,PNS_SO_ALL_IMP,t_imp%THETASIMP,t_imp%NTCELLIMP,t_imp%IFUNMIMP,t_imp%IPANIMP,t_imp%LMSPIMP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_imp%DRDIIMP,t_imp%IRWSIMP,1+KORBIT)
+     
+  if(myrank==master) WRITE(*,*) 'Computing impurity torq operator'
+  CALL NORMCOEFF_SO_TORQ_imp(t_imp%IRCUTIMP,t_params%LMMAXD/2,PNS_SO_ALL_IMP,t_imp%NTCELLIMP,t_imp%IFUNMIMP,t_imp%IPANIMP,t_imp%LMSPIMP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_imp%DRDIIMP,t_imp%IRWSIMP,t_imp%VISPIMP,t_inc%NSPIN,t_imp%VINSIMP,t_imp%IRMINIMP)
+
+  if(myrank==master) WRITE(*,*) 'Computing impurity spinflux operator'
+  CALL NORMCOEFF_SO_SPINFLUX_imp(t_imp%IRCUTIMP,t_params%LMMAXD/2,PNS_SO_ALL_IMP,t_inc%KVREL,t_imp%DRDIIMP)
+  
+
 
 end subroutine operators_for_FScode

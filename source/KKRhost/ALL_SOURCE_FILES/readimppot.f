@@ -61,6 +61,7 @@ C     .. Intrinsic Functions ..
 C     ..
 c-----------------------------------------------------------------------
       WRITE(1337,*) 'in readimppot'
+      write(*,*) shape(vinsimp)
       VINSIMP=0d0
 c-----------------------------------------------------------------------
 c read data from shapefun_imp file
