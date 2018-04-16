@@ -129,10 +129,7 @@ class Test_check_test_runs():
         path  = 'test_run13_mpi_1_8/'
         path0 = 'test_run13_mpi_1_8/ref/'
         for f in 'DTMTRX GMATLL_GES green_host'.split():
-           if 'green_host' not in f:
-              fname =f+'/'+f 
-           else:
-              fname = f
+           fname = f
            num, text = read_file(path+fname)
            num_ref, text_ref = read_file(path0+fname.split('/')[0])
            assert std(abs(num-num_ref))<10**-14

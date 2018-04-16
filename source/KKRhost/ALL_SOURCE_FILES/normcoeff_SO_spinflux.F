@@ -270,8 +270,13 @@ c
         END DO    !ISIGMA
         
         ! write to file
-        open(unit=12, file='TBkkr_spinflux.txt', form='formatted',
-     +       action='write')
+        if(mode==0) then
+          open(unit=12, file='TBkkr_spinflux.txt',
+     +       form='formatted',action='write')
+        else ! mode==1
+          open(unit=12, file='TBkkr_spinflux_imp.txt',
+     +       form='formatted',action='write')
+        end if
         DO ISIGMA=1,3
           DO I1=1,NATOM
             DO LM2=1,LMMAXSO
