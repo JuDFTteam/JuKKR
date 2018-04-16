@@ -3,7 +3,7 @@
 import pytest
 import os, pprint
 from kkrparser_functions import parse_kkr_outputfile
-from numpy import mean, std, array
+from numpy import mean, std, array, loadtxt
 
 
 class Test_check_test_runs():
