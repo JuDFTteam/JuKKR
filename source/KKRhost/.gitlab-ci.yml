@@ -190,9 +190,10 @@ run:intel:MPIenerg8:
 run:intel:OPERATOR12:
   stage: run
   script:
-    - cp tests/inc.p_72 inc.p && make clean && make mpi && cp kkr.x kkr.x_72
-    - mkdir tests/test_run12_mpi_1_8 && cd tests/test_run12_mpi_1_8 && ln -s ../test_inputs/test_12_*/* . && ln -s ../../kkr.x_72 kkr.x
-    - export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
+    - cp tests/inc.p_72 inc.p && make clean && make mpi && cp kkr.x kkr.x_72 && mkdir tests/test_run12_mpi_1_8 && cd tests/test_run12_mpi_1_8 && ln -s ../test_inputs/test_12_*/* . && ln -s ../../kkr.x_72 kkr.x && export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
+    - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
+    # run calculation with impurity wavefunctions
+    - cd tests/test_run12_mpi_1_8 && rm inputcard && ln -s imp/* . &&  export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
   artifacts:
     paths:
@@ -206,13 +207,15 @@ run:intel:DTM_GMATLL13:
     - mkdir tests/test_run13_mpi_1_8 && cd tests/test_run13_mpi_1_8 && ln -s ../test_inputs/test_13_*/* . && ln -s ../../kkr.x_16 kkr.x
     - export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
-    - cd DTMTRX && export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
+    - cd DTM && export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
-    - cd ../GMATLL_GES && export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
+    - cd ../GMAT && export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
   artifacts:
     paths:
       - tests/test_run*
+      - tests/test_run13*/DTM/DTMTRX
+      - tests/test_run13*/GMAT/GMATLL_GES
     expire_in: 2 days
 
 

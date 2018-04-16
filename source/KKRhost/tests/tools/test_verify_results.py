@@ -124,6 +124,21 @@ class Test_check_test_runs():
         assert mean(abs(num-num_ref))<10**-14
         assert abs(num-num_ref).max()<5*10**-13
         assert set(text)-set(text_ref)==set()
+        # compare output of OPERATOR for host and for impurity wavefunctions
+        for filename in 'TBkkr_rhod.txt TBkkr_torq.txt TBkkr_spinflux.txt'.split():
+          d = loadtxt(path+filename)
+          d0 = loadtxt(path+filename.replace('.txt', '_imp.txt'))
+          nsigma = 3
+          if 'rhod' in filename:
+             nsigma +=1
+          d1 = d[:,0].reshape(nsigma,72, 32, 32); d1 = d1[:,36:48,:,:]; d01 = d0[:,0].reshape(nsigma,12,32,32)
+          d2 = d[:,1].reshape(nsigma,72, 32, 32); d2 = d2[:,36:48,:,:]; d02 = d0[:,1].reshape(nsigma,12,32,32)
+          d1 = d1.reshape(-1); d2 = d2.reshape(-1); d01 = d01.reshape(-1); d02 = d02.reshape(-1)
+          diff1 = d01-d1; diff2 = d02-d2
+          assert mean(diff1) < 10**-15
+          assert abs(diff1).max() < 10**-15
+          assert mean(diff2) < 10**-15
+          assert abs(diff2).max() < 10**-15
 
     def test_verify13_DTM_GMAT(self):
         path  = 'test_run13_mpi_1_8/'
@@ -136,7 +151,6 @@ class Test_check_test_runs():
            assert mean(abs(num-num_ref))<10**-14
            assert abs(num-num_ref).max()<5*10**-13
            assert set(text)-set(text_ref)==set()
-
 
         
 # helper functions

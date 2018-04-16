@@ -427,6 +427,11 @@ C                                  meant for simpler passing of basic parameter 
             stop 'Please correct energy contour'                        ! fswrt
          end if                                                         ! fswrt
       end if                                                            ! fswrt
+      if(.not.OPT('OPERATOR') .and. TEST('IMP_ONLY')) then
+         write(*,*) 'test option "IMP_ONLY" can only be used'
+         write(*,*) 'in combination with option "OPERATOR"'
+         stop
+      end if
       
       if(test('MPIatom ') .and. test('MPIenerg')) then
          stop "[wunfiles] Found test options 'MPIenerg' and 'MPIatom'

@@ -253,7 +253,7 @@ C
 #endif
 
       !skip this part with GREENIMP option
-      if(opt('GREENIMP')) then
+      if(opt('GREENIMP') .or. TEST('IMP_ONLY')) then
          if(myrank==master) write(*,*) 'Skipping atom loop in main1a'
          i1_start = 1
          i1_end = 0
@@ -338,7 +338,7 @@ C
 
 #ifdef CPP_MPI
       !skip this part with GREENIMP option
-      if(.not.opt('GREENIMP')) then
+      if(.not.(opt('GREENIMP').or.TEST('IMP_ONLY'))) then
 
          if(.not.t_tgmat%tmat_to_file) then 
             do ii=0,t_mpi_c_grid%nranks_ie-1
