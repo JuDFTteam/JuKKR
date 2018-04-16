@@ -1126,7 +1126,7 @@ C new solver for full-potential, spin-orbit, initialise
      &                          NSPIN,IRMIND,LMPOTD)                   ! GREENIMP
          call init_t_imp(t_inc,t_imp)                                  ! GREENIMP
 
-         write(*,*) NATOMIMP
+         write(*,*) NATOMIMP, allocated(t_imp%VINSIMP)
                                                                        ! GREENIMP
          ! next read impurity potential and shapefunction              ! GREENIMP
          CALL READIMPPOT(NATOMIMP,INS,1337,0,0,2,NSPIN,LPOT,           ! GREENIMP

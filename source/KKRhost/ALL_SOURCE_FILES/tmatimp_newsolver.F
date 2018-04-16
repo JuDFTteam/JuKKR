@@ -19,7 +19,7 @@
 #else
        use mod_mympi, only: myrank, master, nranks
 #endif
-       use mod_types, only: t_inc
+       use mod_types, only: t_inc, t_imp
        use mod_create_newmesh
        use mod_version_info
        use mod_wunfiles, only: t_params
@@ -89,83 +89,83 @@
 #endif
        LOGICAL, EXTERNAL :: OPT
 
-       if(OPT('GREENIMP')) then
-
-         PI=4.0D0*DATAN(1.0D0)
-         if(myrank==master) WRITE(6,*) 'in tmatimp'
-         IF (KSRA.GE.1) THEN
-          NSRA=2
-         ELSE
-          NSRA=1
-         ENDIF
-         ALLOCATE(RLLHOST(NSRA*LMMAXSO,LMMAXSO,
-     &                   IHOST,NTOTD*(NCHEB+1)))
-         ALLOCATE(VNSHOST(NSRA*LMMAXSO,NSRA*LMMAXSO,
-     &                    IHOST,NTOTD*(NCHEB+1)))
-         ALLOCATE(DELTAV(LMMAXSO,LMMAXSO))
-         ALLOCATE(TMATLLIMP(LMMAXSO,LMMAXSO,NATOMIMP))
-         ALLOCATE(DELTAMTR(LMMAXSO,LMMAXSO,NATOMIMP))
-         TMATLL    = CZERO
-         RLLHOST   = CZERO
-         VNSHOST   = CZERO
-         TMATLLIMP = CZERO
-         DELTAMTR  = CZERO
-         DELTAV    = CZERO
-         TMATSPH   = CZERO
-         
-         
-         if(myrank==master) then
-           ! read angles from nonco_ange files
-           OPEN(UNIT=12,FILE='nonco_angle.dat',FORM='FORMATTED')
-           DO I1=1,NATYPD
-              READ(12,*) THETAhost(i1),PHIhost(i1)
-              THETAhost(i1)=THETAhost(i1)/360.0D0*2.0D0*PI
-              PHIhost(i1)=PHIhost(i1)/360.0D0*2.0D0*PI
-           ENDDO
-           CLOSE(12)
-           OPEN(UNIT=13,FILE='nonco_angle_imp.dat',FORM='FORMATTED')
-           DO I1=1,NATOMIMP
-              READ(13,*) THETAimp(i1),PHIimp(i1)
-              THETAimp(i1)=THETAimp(i1)/360.0D0*2.0D0*PI
-              PHIimp(i1)=PHIimp(i1)/360.0D0*2.0D0*PI
-           ENDDO
-           CLOSE(13)
-         endif
-         
-         
-#ifdef   CPP_MPI
-         ! broadcast read-in values to all ranks (MPI_COMM_WORLD since
-         ! atom dimension is solely used without energy parallelization)
-         call MPI_Bcast(THETAhost, NATYPD, MPI_DOUBLE_PRECISION, master,
-     &                  MPI_COMM_WORLD,ierr)
-         if(ierr/=0) stop 'Error MPI_Bcast THETAhost in tmatimp'
-         call MPI_Bcast(PHIhost, NATYPD, MPI_DOUBLE_PRECISION, master,
-     &                  MPI_COMM_WORLD,ierr)
-         if(ierr/=0) stop 'Error MPI_Bcast PHIhost in tmatimp'
-         call MPI_Bcast(THETAimp, NATOMIMP, MPI_DOUBLE_PRECISION,master,
-     &                  MPI_COMM_WORLD,ierr)
-         if(ierr/=0) stop 'Error MPI_Bcast THETAimp in tmatimp'
-         call MPI_Bcast(PHIimp, NATOMIMP, MPI_DOUBLE_PRECISION, master,
-     &                  MPI_COMM_WORLD,ierr)
-         if(ierr/=0) stop 'Error MPI_Bcast PHIimp in tmatimp'
-         
-         ! set start/end of parallel atom loops
-         if(t_inc%i_write>0) write(1337, *) 'Parallelization host atoms'
-         call distribute_linear_on_tasks(nranks, myrank, master, IHOST, 
-     &                                    ntot_pT,ioff_pT,.true.)
-         i1_start = ioff_pT(myrank) + 1
-         i1_end   = ioff_pT(myrank) + ntot_pT(myrank)
-         if(t_inc%i_write>0) write(1337, *) 'Parallelization imp. atoms'
-         call distribute_linear_on_tasks(nranks,myrank,master,NATOMIMP,
-     &                                    ntot_pT,ioff_pT,.true.)
-         i1_start_imp = ioff_pT(myrank) + 1
-         i1_end_imp   = ioff_pT(myrank) + ntot_pT(myrank)
-#else    
-         i1_start = 1
-         i1_end = IHOST
-         i1_start_imp = 1
-         i1_end_imp = NATOMIMP
+       PI=4.0D0*DATAN(1.0D0)
+       if(myrank==master) WRITE(6,*) 'in tmatimp'
+       IF (KSRA.GE.1) THEN
+        NSRA=2
+       ELSE
+        NSRA=1
+       ENDIF
+       ALLOCATE(RLLHOST(NSRA*LMMAXSO,LMMAXSO,
+     &                 IHOST,NTOTD*(NCHEB+1)))
+       ALLOCATE(VNSHOST(NSRA*LMMAXSO,NSRA*LMMAXSO,
+     &                  IHOST,NTOTD*(NCHEB+1)))
+       ALLOCATE(DELTAV(LMMAXSO,LMMAXSO))
+       ALLOCATE(TMATLLIMP(LMMAXSO,LMMAXSO,NATOMIMP))
+       ALLOCATE(DELTAMTR(LMMAXSO,LMMAXSO,NATOMIMP))
+       TMATLL    = CZERO
+       RLLHOST   = CZERO
+       VNSHOST   = CZERO
+       TMATLLIMP = CZERO
+       DELTAMTR  = CZERO
+       DELTAV    = CZERO
+       TMATSPH   = CZERO
+       
+       
+       if(myrank==master) then
+         ! read angles from nonco_ange files
+         OPEN(UNIT=12,FILE='nonco_angle.dat',FORM='FORMATTED')
+         DO I1=1,NATYPD
+            READ(12,*) THETAhost(i1),PHIhost(i1)
+            THETAhost(i1)=THETAhost(i1)/360.0D0*2.0D0*PI
+            PHIhost(i1)=PHIhost(i1)/360.0D0*2.0D0*PI
+         ENDDO
+         CLOSE(12)
+         OPEN(UNIT=13,FILE='nonco_angle_imp.dat',FORM='FORMATTED')
+         DO I1=1,NATOMIMP
+            READ(13,*) THETAimp(i1),PHIimp(i1)
+            THETAimp(i1)=THETAimp(i1)/360.0D0*2.0D0*PI
+            PHIimp(i1)=PHIimp(i1)/360.0D0*2.0D0*PI
+         ENDDO
+         CLOSE(13)
+       endif
+       
+       
+#ifdef CPP_MPI
+       ! broadcast read-in values to all ranks (MPI_COMM_WORLD since
+       ! atom dimension is solely used without energy parallelization)
+       call MPI_Bcast(THETAhost, NATYPD, MPI_DOUBLE_PRECISION, master,
+     &                MPI_COMM_WORLD,ierr)
+       if(ierr/=0) stop 'Error MPI_Bcast THETAhost in tmatimp'
+       call MPI_Bcast(PHIhost, NATYPD, MPI_DOUBLE_PRECISION, master,
+     &                MPI_COMM_WORLD,ierr)
+       if(ierr/=0) stop 'Error MPI_Bcast PHIhost in tmatimp'
+       call MPI_Bcast(THETAimp, NATOMIMP, MPI_DOUBLE_PRECISION,master,
+     &                MPI_COMM_WORLD,ierr)
+       if(ierr/=0) stop 'Error MPI_Bcast THETAimp in tmatimp'
+       call MPI_Bcast(PHIimp, NATOMIMP, MPI_DOUBLE_PRECISION, master,
+     &                MPI_COMM_WORLD,ierr)
+       if(ierr/=0) stop 'Error MPI_Bcast PHIimp in tmatimp'
+       
+       ! set start/end of parallel atom loops
+       if(t_inc%i_write>0) write(1337, *) 'Parallelization host atoms'
+       call distribute_linear_on_tasks(nranks, myrank, master, IHOST, 
+     &                                  ntot_pT,ioff_pT,.true.)
+       i1_start = ioff_pT(myrank) + 1
+       i1_end   = ioff_pT(myrank) + ntot_pT(myrank)
+       if(t_inc%i_write>0) write(1337, *) 'Parallelization imp. atoms'
+       call distribute_linear_on_tasks(nranks,myrank,master,NATOMIMP,
+     &                                  ntot_pT,ioff_pT,.true.)
+       i1_start_imp = ioff_pT(myrank) + 1
+       i1_end_imp   = ioff_pT(myrank) + ntot_pT(myrank)
+#else  
+       i1_start = 1
+       i1_end = IHOST
+       i1_start_imp = 1
+       i1_end_imp = NATOMIMP
 #endif
+
+       if(OPT('GREENIMP')) then
 
          !11111111111111111111111111111111111111111111111111111111111111111111
          ! calculate tmat and radial wavefunctions of host atoms     
@@ -419,9 +419,15 @@
             ENDIF
          end if
          
+         deallocate(irmdnew)
+
          !111 end 11111 end 11111 end 11111 end 11111 end 11111 end 11111 end 
          ! calculate tmat and radial wavefunctions of host atoms     
          !111 end 11111 end 11111 end 11111 end 11111 end 11111 end 11111 end 
+
+       elseif(myrank==master) then
+
+         write(*,*) 'skipping host atom loop in tmatimp_newsolver'
 
        end if ! (OPT('GREENIMP'))
 
@@ -432,7 +438,6 @@
 
        ! create new mesh before loop starts
        ! data for the new mesh
-       deallocate(irmdnew)
        allocate(irmdnew(natomimp), stat=ierr)
        if(ierr/=0) stop 'Error allocating irmdnew'
        IRMDNEWD = 0

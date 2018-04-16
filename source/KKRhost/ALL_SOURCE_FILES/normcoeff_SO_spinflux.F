@@ -1,7 +1,7 @@
 c 05.10.10 ***************************************************************
-      SUBROUTINE NORMCOEFF_SO_SPINFLUX(IRCUT,
+      SUBROUTINE NORMCOEFF_SO_SPINFLUX(NATYP, IRCUT,
      +                   LMMAX,PNS,
-     +                   KSRA,DRDI)
+     +                   KSRA,DRDI, mode)
 c ************************************************************************
 c     Calculates the KKR matrix elements for the spin flux operator, i.e.,
 c     
@@ -18,9 +18,9 @@ c-----------------------------------------------------------------------
 #endif
       use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
-      use mod_types, only: t_mpi_c_grid, t_inc
+      use mod_types, only: t_mpi_c_grid, t_inc, t_imp
 #else
-      use mod_types, only: t_inc
+      use mod_types, only: t_inc, t_imp
 #endif
 
       IMPLICIT NONE
@@ -36,7 +36,7 @@ C     .. Parameters ..
       INTEGER, PARAMETER :: NSPD=NSPIND
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER          LMMAX,KSRA
+      INTEGER          NATYP, mode, LMMAX,KSRA
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)

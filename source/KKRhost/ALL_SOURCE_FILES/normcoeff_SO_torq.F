@@ -1,8 +1,8 @@
 c 12.05.2016 *************************************************************
-      SUBROUTINE NORMCOEFF_SO_TORQ(IRCUT,
+      SUBROUTINE NORMCOEFF_SO_TORQ(NATYP, IRCUT,
      +                   LMMAX,PNS,NTCELL,
      +                   IFUNM,IPAN,LMSP,KSRA,CLEB,ICLEB,IEND,DRDI,
-     +                   IRWS,VISP,NSPIN,VINS,IRMIN)
+     +                   IRWS,VISP,NSPIN,VINS,IRMIN,mode)
 c ************************************************************************
 c     Calculates the KKR matrix elements for the torque operator, i.e.,
 c     
@@ -19,9 +19,9 @@ c-----------------------------------------------------------------------
 #endif
       use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
-      use mod_types, only: t_mpi_c_grid, t_inc
+      use mod_types, only: t_mpi_c_grid, t_inc, t_imp
 #else
-      use mod_types, only: t_inc
+      use mod_types, only: t_inc, t_imp
 #endif
       
       IMPLICIT NONE
@@ -37,7 +37,8 @@ C     .. Parameters ..
       INTEGER, PARAMETER :: NSPD=NSPIND
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER          IEND,LMMAX,KSRA,IRWS(*),NSPIN,IRMIN(*)
+      INTEGER          NATYP, mode, IEND, LMMAX, KSRA,
+     &                 IRWS(*),NSPIN,IRMIN(*)
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)

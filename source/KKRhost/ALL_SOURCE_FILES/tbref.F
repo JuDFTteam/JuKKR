@@ -125,25 +125,25 @@ C
 C ======================================================================
 #ifdef CPP_MPI
       if(t_inc%i_write>0) write(1337,*) myrank, 'start tbref e-loop'
-      !ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-      !ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
-     &           t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &           master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
-     
-       ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
-       ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
-
-       t_mpi_c_grid%ntot2=ie_end   !t_mpi_c_grid%dims(1)
-       if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
-     &           allocated(t_mpi_c_grid%ioff_pT2))) 
-     &    allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),
-     &             t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1))
-       t_mpi_c_grid%ntot_pT2 = ntot_pT
-       t_mpi_c_grid%ioff_pT2 = ioff_pT
-
-       ! now initialize arrays for tmat, gmat, and gref
-       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+!      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
+!     &           t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+!     &           master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
+!     
+!       ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
+!       ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
+!
+!       t_mpi_c_grid%ntot2=ie_end   !t_mpi_c_grid%dims(1)
+!       if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
+!     &           allocated(t_mpi_c_grid%ioff_pT2))) 
+!     &    allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),
+!     &             t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1))
+!       t_mpi_c_grid%ntot_pT2 = ntot_pT
+!       t_mpi_c_grid%ioff_pT2 = ioff_pT
+!
+!       ! now initialize arrays for tmat, gmat, and gref
+!       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
 #else
       ie_start = 0
       ie_end = IELAST

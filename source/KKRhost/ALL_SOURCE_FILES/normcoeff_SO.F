@@ -1,7 +1,7 @@
-      SUBROUTINE NORMCOEFF_SO(IRCUT,
+      SUBROUTINE NORMCOEFF_SO(NATYP, IRCUT,
      +                   LMMAX,PNS,THETAS,NTCELL,
      +                   IFUNM,IPAN,LMSP,KSRA,CLEB,ICLEB,IEND,DRDI,
-     +                   IRWS,NSPOH)
+     +                   IRWS,NSPOH, mode)
 c ************************************************************************
 c
 c     calculates the norm of the wavefunctions with full potential and
@@ -17,9 +17,9 @@ c-----------------------------------------------------------------------
 #endif
       use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
-      use mod_types, only: t_mpi_c_grid, t_inc
+      use mod_types, only: t_mpi_c_grid, t_inc, t_imp
 #else
-      use mod_types, only: t_inc
+      use mod_types, only: t_inc, t_imp
 #endif
       
       IMPLICIT NONE
@@ -34,7 +34,7 @@ C     .. Parameters ..
       INTEGER, PARAMETER :: NSPD=NSPIND
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER      ::   IEND,LMMAX,KSRA,IRWS(*),LMMAXSO
+      INTEGER      ::   NATYP, mode, IEND,LMMAX,KSRA,IRWS(*),LMMAXSO
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)   ! non-sph. eigen states of single pot 
@@ -82,7 +82,7 @@ c
       END IF
       if(t_inc%i_write) WRITE(1337,*) "NSRA",NSRA
 
-      ALLOCATE(RLL(IRMD,LMMAX,LMMAX,NSPOH,NSPOH,NSPOH,NATYPD))
+      ALLOCATE(RLL(IRMD,LMMAX,LMMAX,NSPOH,NSPOH,NSPOH,NATYP))
       ALLOCATE(RLL_12(IRMD,LMMAX,LMMAX))
       ALLOCATE(DENS(LMMAXD,LMMAXD,NSPD,NSPD,NSPD,NSPD,NATYPD))
 

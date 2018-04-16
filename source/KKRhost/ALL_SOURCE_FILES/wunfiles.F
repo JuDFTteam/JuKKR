@@ -416,6 +416,12 @@ C                                  meant for simpler passing of basic parameter 
             write(*,*) 'found unsupported test option MPIenerg'         ! fswrt
             stop 'Please choose MPIatom'                                ! fswrt
          end if                                                         ! fswrt
+         if(opt('OPERATOR') .and. ielast.ne.1) then                     ! fswrt
+            write(*,*) 'OPERATOR option chosen'                         ! fswrt
+            write(*,*) 'energy contour should contain a single point'   ! fswrt
+            write(*,*) 'on the real axis only'                          ! fswrt
+            stop 'Please correct energy contour'                        ! fswrt
+         end if                                                         ! fswrt
       end if                                                            ! fswrt
       
       if(test('MPIatom ') .and. test('MPIenerg')) then

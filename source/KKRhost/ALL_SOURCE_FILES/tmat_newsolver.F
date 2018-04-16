@@ -553,8 +553,8 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #else
             irec = ie_num + ie_end * (i1-1)
 #endif
-            write(*,*) irec, ie_num, ie_end, i1, 
-     &                 t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)
+!            write(*,*) irec, ie_num, ie_end, i1, 
+!     &                 t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)
             t_tgmat%tmat(:,:,irec) = TMATLL(:,:)
          end if
          IF (LLY.NE.0) THEN
