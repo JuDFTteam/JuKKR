@@ -199,7 +199,7 @@ run:intel:OPERATOR12:
       - tests/test_run*
     expire_in: 2 days
 
-run:intel:OPERATOR13:
+run:intel:DTM_GMATLL13:
   stage: run
   script:
     - cp tests/inc.p_16 inc.p && make clean && make mpi && cp kkr.x kkr.x_16

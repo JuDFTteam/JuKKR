@@ -1,5 +1,5 @@
 c 12.05.2016 *************************************************************
-      SUBROUTINE NORMCOEFF_SO_TORQ(NATYP, IRCUT,
+      SUBROUTINE NORMCOEFF_SO_TORQ(NATOM, IRCUT,
      +                   LMMAX,PNS,NTCELL,
      +                   IFUNM,IPAN,LMSP,KSRA,CLEB,ICLEB,IEND,DRDI,
      +                   IRWS,VISP,NSPIN,VINS,IRMIN,mode)
@@ -37,8 +37,8 @@ C     .. Parameters ..
       INTEGER, PARAMETER :: NSPD=NSPIND
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER          NATYP, mode, IEND, LMMAX, KSRA,
-     &                 IRWS(*),NSPIN,IRMIN(*)
+      INTEGER          NATOM, mode, IEND, LMMAX, KSRA,
+     &                 IRWS(*),NSPIN,IRMIN(*), I2
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)
@@ -99,10 +99,10 @@ c
       end if
 
 
-      ALLOCATE(RLL(IRMD,LMMAX,LMMAX,2,2,2,NATYPD))
+      ALLOCATE(RLL(IRMD,LMMAX,LMMAX,2,2,2,NATOM))
       ALLOCATE(RLL_12(IRMD,LMMAX,LMMAX))
-      ALLOCATE(DENS(LMMAXD,LMMAXD,2,2,2,2,NATYPD))
-      ALLOCATE(TORQ(LMMAXSO,LMMAXSO,NATYPD,3))
+      ALLOCATE(DENS(LMMAXD,LMMAXD,2,2,2,2,NATOM))
+      ALLOCATE(TORQ(LMMAXSO,LMMAXSO,NATOM,3))
 
       RLL =CZERO
       DENS=CZERO
@@ -115,12 +115,18 @@ c
      &           t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
 #else
       i1_start = 1
-      i1_end   = NATYPD
+      i1_end   = NATOM
 #endif
 
       ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
       DO I1=i1_start, i1_end
         if(t_inc%i_write) WRITE(1337,*) 'ATOM',I1, i1_start, i1_end
+        ! use I2 as index to map for mode==1 each impurity position to the corresponding layer index of the host
+        if (mode==1) then
+           I2 = t_imp%ATOMIMP(I1)
+        else ! for mode==0 I2 and I1 are the same
+           I2 = I1
+        end if
 
         DO INSRA=1,NSRA
           DO IR=1,IRMD
@@ -169,9 +175,9 @@ c set up the array R*_L1L2 R_L3L4
                       END DO           !LM1P
 
                        CALL CALC_TORQ_LL_SS(LMMAX,RLL_12,
-     +                     IRCUT(0:IPAND,I1),IPAN(I1),NTCELL(I1),
-     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS(I1),
-     +                    DRDI(:,I1),NORM,VISP,NSPIN,I1,VINS,IRMIN(I1))
+     +                     IRCUT(0:IPAND,I2),IPAN(I2),NTCELL(I2),
+     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS(I2),
+     +                    DRDI(:,I2),NORM,VISP,NSPIN,I1,VINS,IRMIN(I2))
 
                        DENS(LM1,LM2,I1SP1,I1SP2,I2SP1,I2SP2,I1) =
      +                 DENS(LM1,LM2,I1SP1,I1SP2,I2SP1,I2SP2,I1) + NORM
@@ -189,11 +195,11 @@ c set up the array R*_L1L2 R_L3L4
 
 #ifdef CPP_MPI
       ! finally gather DENS on master in case of MPI run
-      allocate(work(LMMAXD,LMMAXD,2,2,2,2,NATYPD), 
+      allocate(work(LMMAXD,LMMAXD,2,2,2,2,NATOM), 
      &         stat=ierr)
       if(ierr.ne.0) stop 
      &  'Error allocating work for MPI comm of DENS in normcoeff_torq'
-      ihelp = LMMAXD*LMMAXD*2*2*2*2*NATYPD
+      ihelp = LMMAXD*LMMAXD*2*2*2*2*NATOM
       call MPI_REDUCE(DENS, work, ihelp, MPI_DOUBLE_COMPLEX,
      &                MPI_SUM, master,t_mpi_c_grid%myMPI_comm_ie,ierr)
       if(ierr.ne.MPI_SUCCESS) stop 
@@ -213,7 +219,7 @@ c set up the array R*_L1L2 R_L3L4
       ! reads spin quantization axis from file
         OPEN(UNIT=11,FILE='nonco_angle.dat',FORM='FORMATTED')
 
-        DO I1=1,NATYPD 
+        DO I1=1,NATOM 
           READ(11,*) THETA_TMP,PHI_TMP
           IF ( I1 > 1) THEN
             IF ((THETA_TMP .ne. THETA ) .or. (PHI_TMP .ne. PHI))
@@ -236,7 +242,7 @@ c set up the array R*_L1L2 R_L3L4
                        !ISIGMA == 3 --> T_z
 
           WRITE(6,*) "ISIGMA",ISIGMA
-          DO I1=1,NATYPD
+          DO I1=1,NATOM
 
           ! TEMPORARY IMPLEMENTATION OF THE TORQUE OPERATOR FOR B // z
             IF (ISIGMA==1) THEN  !T_x 
@@ -293,10 +299,15 @@ c set up the array R*_L1L2 R_L3L4
         END DO    !ISIGMA
 
         ! writeout
-        open(unit=12, file='TBkkr_torq.txt',
-     +     form='formatted',action='write')
+        if(mode==0) then
+          open(unit=12, file='TBkkr_torq.txt',
+     +       form='formatted',action='write')
+        else ! mode==1
+          open(unit=12, file='TBkkr_torq_imp.txt',
+     +       form='formatted',action='write')
+        end if
         DO ISIGMA=1,3
-          DO I1=1,NATYPD
+          DO I1=1,NATOM
             DO LM2=1,LMMAXSO
               DO LM1=1,LMMAXSO
                 WRITE(12,'(2ES25.16)') TORQ(LM1,LM2,I1,ISIGMA)

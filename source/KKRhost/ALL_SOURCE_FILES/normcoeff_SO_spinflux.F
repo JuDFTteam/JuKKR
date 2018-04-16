@@ -1,5 +1,5 @@
 c 05.10.10 ***************************************************************
-      SUBROUTINE NORMCOEFF_SO_SPINFLUX(NATYP, IRCUT,
+      SUBROUTINE NORMCOEFF_SO_SPINFLUX(NATOM, IRCUT,
      +                   LMMAX,PNS,
      +                   KSRA,DRDI, mode)
 c ************************************************************************
@@ -36,10 +36,10 @@ C     .. Parameters ..
       INTEGER, PARAMETER :: NSPD=NSPIND
 C     ..
 C     .. Scalar Arguments ..
-      INTEGER          NATYP, mode, LMMAX,KSRA
+      INTEGER          NATOM, mode, LMMAX,KSRA
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)
+      DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATOM)
       DOUBLE PRECISION DRDI(IRMD,NATYPD)
       INTEGER          IRCUT(0:IPAND,NATYPD)
 C     ..
@@ -48,7 +48,7 @@ C     .. Local Scalars ..
       INTEGER          LM1,LM2,LM1P,
      +                 IR,I1,I1SP1,I1SP2,
      +                 LMSP1,LMSP2,ISIGMA,I2SP1,I2SP2,INSRA,NSRA
-      INTEGER          LMMAXSO
+      INTEGER          LMMAXSO, I2
       DOUBLE COMPLEX :: DELTA1, DELTA2
 !     MPI stuff
       INTEGER :: ierr, ihelp, i1_start, i1_end
@@ -91,10 +91,10 @@ c
       end if
 
 
-      ALLOCATE(RLL(IRMD,LMMAX,LMMAX,2,2,2,NATYPD))
+      ALLOCATE(RLL(IRMD,LMMAX,LMMAX,2,2,2,NATOM))
       ALLOCATE(RLL_12(LMMAX))
-      ALLOCATE(DENS(LMMAXD,LMMAXD,2,2,2,2,NATYPD))
-      ALLOCATE(SPINFLUX(LMMAXSO,LMMAXSO,NATYPD,3))
+      ALLOCATE(DENS(LMMAXD,LMMAXD,2,2,2,2,NATOM))
+      ALLOCATE(SPINFLUX(LMMAXSO,LMMAXSO,NATOM,3))
 
       RLL =CZERO
       DENS=CZERO
@@ -107,12 +107,19 @@ c
      &           t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
 #else
       i1_start = 1
-      i1_end   = NATYPD
+      i1_end   = NATOM
 #endif
 
       ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
       DO I1=i1_start, i1_end
         if(t_inc%i_write) WRITE(1337,*) 'ATOM',I1, i1_start, i1_end
+
+        ! use I2 as index to map for mode==1 each impurity position to the corresponding layer index of the host
+        if (mode==1) then
+           I2 = t_imp%ATOMIMP(I1)
+        else ! for mode==0 I2 and I1 are the same
+           I2 = I1
+        end if
 
         DO INSRA=1,NSRA
           DO IR=1,IRMD
@@ -149,19 +156,19 @@ c
 
                       DO LM1P = 1,LMMAX
 
-                        DELTA1=(RLL(IRCUT(1,I1),LM1P,LM2,I2SP1,
-     +                          I2SP2,INSRA,I1)-RLL(IRCUT(1,I1)-1,
+                        DELTA1=(RLL(IRCUT(1,I2),LM1P,LM2,I2SP1,
+     +                          I2SP2,INSRA,I1)-RLL(IRCUT(1,I2)-1,
      +                          LM1P,LM2,I2SP1,I2SP2,INSRA,I1))
-     +                          /DRDI(IRCUT(1,I1),I1)
-                        DELTA2=(RLL(IRCUT(1,I1),LM1P,LM1,I1SP1,
-     +                          I1SP2,INSRA,I1)-RLL(IRCUT(1,I1)-1,
+     +                          /DRDI(IRCUT(1,I2),I2)
+                        DELTA2=(RLL(IRCUT(1,I2),LM1P,LM1,I1SP1,
+     +                          I1SP2,INSRA,I1)-RLL(IRCUT(1,I2)-1,
      +                          LM1P,LM1,I1SP1,I1SP2,INSRA,I1))
-     +                          /DRDI(IRCUT(1,I1),I1)
+     +                          /DRDI(IRCUT(1,I2),I2)
 
                         RLL_12(LM1P)=
-     +                  DCONJG(RLL(IRCUT(1,I1)-1,LM1P,LM1,I1SP1,I1SP2,
+     +                  DCONJG(RLL(IRCUT(1,I2)-1,LM1P,LM1,I1SP1,I1SP2,
      +                  INSRA,I1))*DELTA1-
-     +                  RLL(IRCUT(1,I1)-1,LM1P,LM2,I2SP1,I2SP2,INSRA,I1)
+     +                  RLL(IRCUT(1,I2)-1,LM1P,LM2,I2SP1,I2SP2,INSRA,I1)
      +                  *DCONJG(DELTA2)
 
                       END DO!LM1P
@@ -186,11 +193,11 @@ c
 
 #ifdef CPP_MPI
       ! finally gather DENS on master in case of MPI run
-      allocate(work(LMMAXD,LMMAXD,2,2,2,2,NATYPD), 
+      allocate(work(LMMAXD,LMMAXD,2,2,2,2,NATOM), 
      &         stat=ierr)
       if(ierr.ne.0) stop 
      &  'Error allocating work for MPI comm of DENS in normcoeff_spinf'
-      ihelp = LMMAXD*LMMAXD*2*2*2*2*NATYPD
+      ihelp = LMMAXD*LMMAXD*2*2*2*2*NATOM
       call MPI_REDUCE(DENS, work, ihelp, MPI_DOUBLE_COMPLEX,
      &                MPI_SUM, master,t_mpi_c_grid%myMPI_comm_ie,ierr)
       if(ierr.ne.MPI_SUCCESS) stop 
@@ -213,7 +220,7 @@ c
                        !ISIGMA == 3 --> Q_z
         
           WRITE(6,*) "ISIGMA",ISIGMA
-          DO I1=1,NATYPD
+          DO I1=1,NATOM
         
             IF (ISIGMA==1) THEN  !Q_x 
         
@@ -266,7 +273,7 @@ c
         open(unit=12, file='TBkkr_spinflux.txt', form='formatted',
      +       action='write')
         DO ISIGMA=1,3
-          DO I1=1,NATYPD
+          DO I1=1,NATOM
             DO LM2=1,LMMAXSO
               DO LM1=1,LMMAXSO
                    !minus sign to get the spin flux into the sphere :
