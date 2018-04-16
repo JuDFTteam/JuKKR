@@ -2,7 +2,7 @@ RUNOPT
 WRTGREENNEWSOSOLLLOYD   
 
 TESTOPT
-MPIatom 
+STOP1B  MPIatom 
 
 
 +-------+-------+-------+-------+-------+
@@ -35,13 +35,14 @@ RBASIS                     <ZATOM>
   0.5   0.58447   0.75383     0       
   0.5   0.08447   0.76042     0       
 
-BZDIVIDE= 60 60 60
+# WARNING: for this test case the k-point mesh is set to a small value to speed up the test calculation
+BZDIVIDE= 10 10 10
 ICST= 2
 
-
-NPAN_LOG=   15
-NPAN_EQ=     5
-NCHEB=      12
+# WARNING: for this test the radial mesh points are decreased 
+NPAN_LOG=   10
+NPAN_EQ=     4
+NCHEB=       8
 R_LOG=   0.600000000000000     
 
 
@@ -55,7 +56,7 @@ EMIN         EMAX         TEMPR   NPOL      NPT1     NPT2    NPT3
 -1.0         0.8          800.0    9         4        18       2
 -1.0         1.0          800.0    0         0       101       0
 -----------------------------------------
-NSTEPS=   1
+NSTEPS=   200
 IMIX=     5
 STRMIX=   0.01    
 ITDBRY=   20
@@ -64,4 +65,5 @@ QBOUND=   1.0E-05
 BRYMIX=   0.01                 
 -----------------------------------------
 RMAX= 7.0d0   GMAX= 100.0d0
-RCLUSTZ= 3.0
+# WARNING: for this test the cluster radius is decreased 
+RCLUSTZ= 1.5

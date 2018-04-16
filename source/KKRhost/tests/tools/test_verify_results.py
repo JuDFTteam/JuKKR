@@ -128,14 +128,17 @@ class Test_check_test_runs():
     def test_verify13_DTM_GMAT(self):
         path  = 'test_run13_mpi_1_8/'
         path0 = 'test_run13_mpi_1_8/ref/'
-        # compare TBkkr_rhod.txt file with reference (in path0)
-        fname = 'DTMTRX/DTMTRX'
-        num, text = read_file(path+fname)
-        num_ref, text_ref = read_file(path0+fname)
-        assert std(abs(num-num_ref))<10**-14
-        assert mean(abs(num-num_ref))<10**-14
-        assert abs(num-num_ref).max()<5*10**-13
-        assert set(text)-set(text_ref)==set()
+        for f in 'DTMTRX GMATLL_GES green_host'.split():
+           if 'green_host' not in f:
+              fname =f+'/'+f 
+           else:
+              fname = f
+           num, text = read_file(path+fname)
+           num_ref, text_ref = read_file(path0+fname.split('/')[0])
+           assert std(abs(num-num_ref))<10**-14
+           assert mean(abs(num-num_ref))<10**-14
+           assert abs(num-num_ref).max()<5*10**-13
+           assert set(text)-set(text_ref)==set()
 
 
         
