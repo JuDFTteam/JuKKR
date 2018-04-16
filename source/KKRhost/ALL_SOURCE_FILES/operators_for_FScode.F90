@@ -312,7 +312,7 @@ subroutine operators_for_FScode(KORBIT)
 
 
 # ifdef CPP_MPI
-  ! finally gather PNS_SO_ALL on master in case of MPI run
+  ! finally gather PNS_SO_IMP on master in case of MPI run
   allocate(work(LMMAXD,LMMAXD,IRMD,2,NATOMIMP), stat=ierr)
   if(ierr.ne.0) stop 'Error allocating work for MPI comm of PNS_SO_ALL in main1a'
   ihelp = LMMAXD*LMMAXD*IRMD*2*NATOMIMP
@@ -323,17 +323,16 @@ subroutine operators_for_FScode(KORBIT)
   deallocate(work, stat=ierr)
   if(ierr.ne.0) stop 'Error deallocating work for MPI comm of PNS_SO_ALL in main1a'
 # endif
-  ! ... => PNS_SO_ALL_IMP
 
   ! construct impurity operators using impurity wavefunctions
-  !if(myrank==master) WRITE(*,*) 'Computing impurity spin operator'
-  !CALL NORMCOEFF_SO_imp(NATOMIMP, t_imp%IRCUTIMP,t_params%LMMAXD/2,PNS_SO_IMP,t_imp%THETASIMP,t_imp%NTCELLIMP,t_imp%IFUNMIMP,t_imp%IPANIMP,t_imp%LMSPIMP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_imp%DRDIIMP,t_imp%IRWSIMP,1+KORBIT)
+  if(myrank==master) WRITE(*,*) 'Computing impurity spin operator'
+  CALL NORMCOEFF_SO(NATOMIMP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_IMP,t_params%THETAS,t_params%NTCELL,t_params%IFUNM,t_params%IPAN,t_params%LMSP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_params%DRDI,t_params%IRWS,1+KORBIT, 1)
      
-  !if(myrank==master) WRITE(*,*) 'Computing impurity torq operator'
-  !CALL NORMCOEFF_SO_TORQ_imp(NATOMIMP, t_imp%IRCUTIMP,t_params%LMMAXD/2,PNS_SO_IMP,t_imp%NTCELLIMP,t_imp%IFUNMIMP,t_imp%IPANIMP,t_imp%LMSPIMP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_imp%DRDIIMP,t_imp%IRWSIMP,t_imp%VISPIMP,t_inc%NSPIN,t_imp%VINSIMP,t_imp%IRMINIMP)
+  if(myrank==master) WRITE(*,*) 'Computing impurity torq operator'
+  CALL NORMCOEFF_SO_TORQ(NATOMIMP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_IMP,t_params%NTCELL,t_params%IFUNM,t_params%IPAN,t_params%LMSP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_params%DRDI,t_params%IRWS,t_imp%VISPIMP,t_inc%NSPIN,t_imp%VINSIMP,t_params%IRMIN, 1)
 
-  !if(myrank==master) WRITE(*,*) 'Computing impurity spinflux operator'
-  !CALL NORMCOEFF_SO_SPINFLUX_imp(NATOMIMP, t_imp%IRCUTIMP,t_params%LMMAXD/2,PNS_SO_IMP,t_inc%KVREL,t_imp%DRDIIMP)
+  if(myrank==master) WRITE(*,*) 'Computing impurity spinflux operator'
+  CALL NORMCOEFF_SO_SPINFLUX(NATOMIMP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_IMP,t_inc%KVREL,t_params%DRDI, 1)
   
 !check!!!!!!!!!!!!!!!!!!!!
 

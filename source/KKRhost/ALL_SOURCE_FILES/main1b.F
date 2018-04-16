@@ -1257,6 +1257,8 @@ C     kpoint (defined in qvec.dat)
         if (.not.lexist) operator_imp = .false.
         inquire(file='shapefun_imp', exist=lexist)
         if (.not.lexist) operator_imp = .false.
+        inquire(file='scoef', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
       ELSE
         operator_imp = .false.
       ENDIF

@@ -113,6 +113,10 @@
       CHARACTER*3 CPAFLAG(0:1)
       REAL*8 SUM
       INTEGER IO,IA,IQ,IPRINT
+
+      ! for OPERATOR option
+      logical :: lexist, operator_imp
+
 !-----------------------------------------------------------------------
 !     Variables storing the magnetization direction information.
 !     QMTET/QMPHI(NAEZD) give the angles to which the magnetic moment
@@ -973,7 +977,21 @@
       ELSE
          WRITE(111,*) 'Default IGREENFUN= ',IGF
       ENDIF
-      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. OPT('OPERATOR')) THEN
+      
+      IF (OPT('OPERATOR')) THEN
+        ! check if impurity files are present (otherwise no imp.
+        ! wavefunctions can be calculated)
+        operator_imp = .true.
+        inquire(file='potential_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='shapefun_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='scoef', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+      ELSE
+        operator_imp = .false.
+      END IF
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. operator_imp) THEN
          write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR options'
          IGF = 1
       END IF
@@ -986,7 +1004,7 @@
       ELSE
          WRITE(111,*) 'Default ICC= ',ICC
       ENDIF
-      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. OPT('OPERATOR')) THEN
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. operator_imp) THEN
          write(1337,*) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR  options'
          ICC = 1
       END IF

@@ -1,17 +1,22 @@
-      SUBROUTINE NORMCOEFF_SO(NATYP, IRCUT,
+      SUBROUTINE NORMCOEFF_SO(NATOM, IRCUT,
      +                   LMMAX,PNS,THETAS,NTCELL,
      +                   IFUNM,IPAN,LMSP,KSRA,CLEB,ICLEB,IEND,DRDI,
      +                   IRWS,NSPOH, mode)
-c ************************************************************************
-c
-c     calculates the norm of the wavefunctions with full potential and
-c     spin orbit coupling. this is needed for the normalization of the
-c     coefficients c_Lks .
-c
-c     attention : the gaunt coeffients are stored in index array
-c                   (see subroutine gaunt)
-c
-c-----------------------------------------------------------------------
+! ************************************************************************
+!
+!     calculates the norm of the wavefunctions with full potential and
+!     spin orbit coupling. this is needed for the normalization of the
+!     coefficients c_Lks .
+!
+!     attention : the gaunt coeffients are stored in index array
+!                   (see subroutine gaunt)
+!
+!     Added mode (can be 0/1) to determine if operator is written out using
+!     host/impurity wavefunctions. In case of mode==1 the index array 
+!     t_imp%atomimp is used to determine which position in the host 
+!     corresponds to each impurity poisition (i.e. layer index)
+!
+!-----------------------------------------------------------------------
 #ifdef CPP_MPI
       use mpi
 #endif
@@ -24,7 +29,7 @@ c-----------------------------------------------------------------------
       
       IMPLICIT NONE
 
-C     .. Parameters ..
+      !.. Parameters ..
       include 'inc.p'
       INTEGER          LMMAXD
       PARAMETER        (LMMAXD= (LMAXD+1)**2)
@@ -32,46 +37,46 @@ C     .. Parameters ..
       PARAMETER        (LMPOTD= (LPOTD+1)**2)
       INTEGER, PARAMETER :: NSPOD=1+KORBIT
       INTEGER, PARAMETER :: NSPD=NSPIND
-C     ..
-C     .. Scalar Arguments ..
-      INTEGER      ::   NATYP, mode, IEND,LMMAX,KSRA,IRWS(*),LMMAXSO
-C     ..
-C     .. Array Arguments ..
-      DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)   ! non-sph. eigen states of single pot 
+      !..
+      !.. Scalar Arguments ..
+      INTEGER      ::   NATOM, mode, IEND,LMMAX,KSRA,IRWS(*),LMMAXSO
+      !..
+      !.. Array Arguments ..
+      DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATOM)   ! non-sph. eigen states of single pot 
       DOUBLE PRECISION CLEB(*),THETAS(IRID,NFUND,*),
      +                 DRDI(IRMD,NATYPD)                            ! derivative dr/di
       INTEGER          ICLEB(NCLEB,4),IFUNM(NATYPD,LMPOTD),
      +                 LMSP(NATYPD,*),IRCUT(0:IPAND,NATYPD),
      +                 IPAN(NATYPD),NTCELL(*)
-C     ..
-C     .. Local Scalars ..
+      !..
+      !.. Local Scalars ..
       DOUBLE COMPLEX   CZERO,NORM
       DOUBLE PRECISION PI
       INTEGER          IR,LM1,LM2,LM1P,LM2P,
      +                 I1,I1SP1,I1SP2,I1SP,
      +                 LMSP1,LMSP2,I2SP1,I2SP2,INSRA,NSRA,
      +                 NSPOH,
-     +                 LMDOS,ISIGMA
+     +                 LMDOS,ISIGMA, I2
       LOGICAL          TEST
-!     MPI stuff
+      ! MPI stuff
       INTEGER :: ierr, ihelp, i1_start, i1_end
-C     .. External Subroutines ..
+      !.. External Subroutines ..
       EXTERNAL         ZGEMM
-C     ..
-C     .. Intrinsic Functions ..
+      !..
+      !.. Intrinsic Functions ..
       INTRINSIC        DATAN,DIMAG,DSQRT
-C     ..Local Arrays..
+      !..Local Arrays..
       DOUBLE COMPLEX, ALLOCATABLE  :: DENS(:,:,:,:,:,:,:)
       DOUBLE COMPLEX, ALLOCATABLE  ::   RLL_12(:,:,:),
      +                                  RLL(:,:,:,:,:,:,:),
      +                                  RHOD(:,:,:,:)
-!     MPI stuff
+      ! MPI stuff
       DOUBLE COMPLEX, ALLOCATABLE  :: work(:,:,:,:,:,:,:)
-C     ..
-C     .. Data statements ..
+      !..
+      !.. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
-C     ..
-c
+      !..
+
       PI=4.d0*DATAN(1.d0)
       LMMAXSO=2*LMMAXD
       if(t_inc%i_write) WRITE(1337,*) "KSRA",KSRA
@@ -82,9 +87,9 @@ c
       END IF
       if(t_inc%i_write) WRITE(1337,*) "NSRA",NSRA
 
-      ALLOCATE(RLL(IRMD,LMMAX,LMMAX,NSPOH,NSPOH,NSPOH,NATYP))
+      ALLOCATE(RLL(IRMD,LMMAX,LMMAX,NSPOH,NSPOH,NSPOH,NATOM))
       ALLOCATE(RLL_12(IRMD,LMMAX,LMMAX))
-      ALLOCATE(DENS(LMMAXD,LMMAXD,NSPD,NSPD,NSPD,NSPD,NATYPD))
+      ALLOCATE(DENS(LMMAXD,LMMAXD,NSPD,NSPD,NSPD,NSPD,NATOM))
 
       RLL=CZERO
       DENS=CZERO
@@ -97,12 +102,19 @@ c
      &           t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
 #else
       i1_start = 1
-      i1_end   = NATYPD
+      i1_end   = NATOM
 #endif
 
       ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
       DO I1=i1_start, i1_end
         if(t_inc%i_write) WRITE(1337,*) 'ATOM',I1, i1_start, i1_end
+
+        ! use I2 as index to map for mode==1 each impurity position to the corresponding layer index of the host
+        if (mode==1) then
+           I2 = t_imp%ATOMIMP(I1)
+        else ! for mode==0 I2 and I1 are the same
+           I2 = I1
+        end if
 
         DO INSRA=1,NSRA
           DO IR=1,IRMD
@@ -152,9 +164,9 @@ c
 
 
                       CALL CALC_RHO_LL_SS(LMMAX,RLL_12,
-     +                     IRCUT(0:IPAND,I1),IPAN(I1),NTCELL(I1),THETAS,
-     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS(I1),
-     +                     DRDI(:,I1),NORM)
+     +                     IRCUT(0:IPAND,I2),IPAN(I2),NTCELL(I2),THETAS,
+     +                     CLEB,ICLEB,IEND,IFUNM,LMSP,IRWS(I2),
+     +                     DRDI(:,I2),NORM)
 
                       DENS(LM1,LM2,I1SP1,I1SP2,I2SP1,I2SP2,I1)=
      +                DENS(LM1,LM2,I1SP1,I1SP2,I2SP1,I2SP2,I1) + NORM
@@ -175,11 +187,11 @@ c
 
 #ifdef CPP_MPI
       ! finally gather DENS on master in case of MPI run
-      allocate(work(LMMAXD,LMMAXD,NSPD,NSPD,NSPD,NSPD,NATYPD), 
+      allocate(work(LMMAXD,LMMAXD,NSPD,NSPD,NSPD,NSPD,NATOM), 
      &         stat=ierr)
       if(ierr.ne.0) stop 
      &  'Error allocating work for MPI comm of DENS in normcoeff_SO'
-      ihelp = LMMAXD*LMMAXD*NSPD*NSPD*NSPD*NSPD*NATYPD
+      ihelp = LMMAXD*LMMAXD*NSPD*NSPD*NSPD*NSPD*NATOM
       call MPI_REDUCE(DENS, work, ihelp, MPI_DOUBLE_COMPLEX,
      &                MPI_SUM, master,t_mpi_c_grid%myMPI_comm_ie,ierr)
       if(ierr.ne.MPI_SUCCESS) stop 
@@ -196,10 +208,10 @@ c
         write(*,*) 'collect terms and writeout'
 
         ! calculate rho
-        ALLOCATE(RHOD(LMMAXSO,LMMAXSO,NATYPD,4))
+        ALLOCATE(RHOD(LMMAXSO,LMMAXSO,NATOM,4))
         IF (NSPOH.NE.1) THEN
           DO ISIGMA=1,4
-           DO I1=1,NATYPD
+           DO I1=1,NATOM
             IF (ISIGMA.EQ.1) THEN
              DO I1SP1=1,NSPOD
               DO I1SP2=1,NSPOD
@@ -253,10 +265,15 @@ c
            ENDDO
 
           ! write to the file
-          OPEN(UNIT=12,FILE='TBkkr_rhod.txt',FORM='formatted',
-     +       ACTION='write')
+          if (mode==0) then
+             OPEN(UNIT=12,FILE='TBkkr_rhod.txt',FORM='formatted',
+     +          ACTION='write')
+          else ! mode == 1
+             OPEN(UNIT=12,FILE='TBkkr_rhod_imp.txt',FORM='formatted',
+     +          ACTION='write')
+          end if
           DO ISIGMA=1,4
-           DO I1=1,NATYPD
+           DO I1=1,NATOM
             DO LM2=1,LMMAXSO
              DO LM1=1,LMMAXSO
               WRITE(12,'(2ES25.16)') RHOD(LM1,LM2,I1,ISIGMA)
