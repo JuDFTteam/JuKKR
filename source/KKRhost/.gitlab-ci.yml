@@ -81,6 +81,7 @@ run:intel:aiida-kkr:
     - verdi calculation show 11
     - verdi calculation logshow 11
     - verdi daemon status
+    - verdi export create -n 1 -n 2 -n 3 -n 4 -n 5 -n 6 -a tar.gz test_export.aiida.tar.gz && cp test_export.aiida.tar.gz /builds/kkr/aiida_run/
     # copy log file to include in artifacts
     - cp /root/.aiida/daemon/log/celery.log .
     - tar -zcvf aiida_run.tar.gz /builds/kkr/aiida_run/
@@ -88,6 +89,7 @@ run:intel:aiida-kkr:
     paths:
       - aiida_run.tar.gz
       - celery.log
+      - test_export.aiida.tar.gz
     expire_in: 1 day
 
 
