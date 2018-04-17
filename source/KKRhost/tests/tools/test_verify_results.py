@@ -143,13 +143,18 @@ class Test_check_test_runs():
     def test_verify13_DTM_GMAT(self):
         path  = 'test_run13_mpi_1_8/'
         path0 = 'test_run13_mpi_1_8/ref/'
-        for f in 'DTMTRX GMATLL_GES green_host'.split():
+        for f in 'DTMTRX green_host GMATLL_GES'.split():
            fname = f
            num, text = read_file(path+fname)
            num_ref, text_ref = read_file(path0+fname.split('/')[0])
-           assert std(abs(num-num_ref))<10**-14
-           assert mean(abs(num-num_ref))<10**-14
-           assert abs(num-num_ref).max()<5*10**-13
+           print fname
+           print std(abs(num-num_ref))
+           print mean(abs(num-num_ref))
+           print abs(num-num_ref).max()
+           print set(text)-set(text_ref)==set()
+           assert std(abs(num-num_ref))<5*10**-11
+           assert mean(abs(num-num_ref))<10**-12
+           assert abs(num-num_ref).max()<2*10**-8
            assert set(text)-set(text_ref)==set()
 
         
