@@ -205,12 +205,12 @@ run:intel:DTM_GMATLL13:
   stage: run
   script:
     - cp tests/inc.p_16 inc.p && make clean && make mpi && cp kkr.x kkr.x_16
-    - mkdir tests/test_run13_mpi_1_8 && cd tests/test_run13_mpi_1_8 && ln -s ../test_inputs/test_13_*/* . && ln -s ../../kkr.x_16 kkr.x
+    - mkdir tests/test_run13_mpi_1_8 && cd tests/test_run13_mpi_1_8 && ln -s ../test_inputs/test_13_*/* . && rm DTM GMAT && cp -r ../test_inputs/test_13_*/{DTM,GMAT} . && ln -s ../../kkr.x_16 kkr.x
     - export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt
-    - cd DTM && mpirun -np 8 ../../../../kkr.x_16 | tee out_kkr
+    - cd DTM && pwd && ls && ls -ltr .. && mpirun -np 8 ../kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt
-    - cd ../GMAT && mpirun -np 8 ../../../../kkr.x_16 | tee out_kkr
+    - cd ../GMAT && mpirun -np 8 ../kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
   artifacts:
     paths:
