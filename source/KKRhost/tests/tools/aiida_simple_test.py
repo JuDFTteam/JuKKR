@@ -52,7 +52,7 @@ wfd['kkr_runmax'] = 5
 wfd['nsteps'] = 50 
 wfd['queue_name'] = ''
 wfd['resources']['num_machines'] = 1 
-wfd['use_mpi'] = True
+wfd['use_mpi'] = False #True
 
 wfd['num_rerun'] = 2
 wfd['natom_in_cls_min'] = 20
