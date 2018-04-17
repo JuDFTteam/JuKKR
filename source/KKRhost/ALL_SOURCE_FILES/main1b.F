@@ -1304,11 +1304,11 @@ C     kpoint (defined in qvec.dat)
         end do ! ie-loop
 
         ! done with GREENIMP option, stopping now
+        if(.not. OPT('OPERATOR')) then
+          if(myrank==master) write(*,*) 'done with GREENIMP, stop here!'
 #ifdef CPP_MPI
-        if(.not.OPT('OPERATOR')) call MPI_FINALIZE(ierr)
+          call MPI_FINALIZE(ierr)
 #endif
-        if(myrank==master .and. .not. OPT('OPERATOR')) then
-          write(*,*) 'done with GREENIMP, stop here!'
           stop
         end if
 
