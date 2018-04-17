@@ -117,4 +117,5 @@ verify:intel:aiida:
     # check some output of the calculation
     - verdi import test_export.aiida.tar.gz
     - verdi node show 10
+    - python tests/tools/aiida_check_results.py
     
