@@ -48,10 +48,11 @@ wfd = kkr_scf_wc.get_wf_defaults()
 
 wfd['convergence_criterion'] = 10**-4
 wfd['check_dos'] = False 
-wfd['kkr_runmax'] = 2
-wfd['nsteps'] = 20 
+wfd['kkr_runmax'] = 5
+wfd['nsteps'] = 50 
 wfd['queue_name'] = ''
 wfd['resources']['num_machines'] = 1 
+wfd['use_mpi'] = True
 
 wfd['num_rerun'] = 2
 wfd['natom_in_cls_min'] = 20

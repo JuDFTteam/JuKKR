@@ -116,19 +116,5 @@ verify:intel:aiida:
     - echo 'implement tests ... '
     # check some output of the calculation
     - verdi import test_export.aiida.tar.gz
-    - verdi work list -a
-    - verdi calculation list -a
-    - verdi work report 6
-    - verdi calculation show 20 #11
-    - verdi calculation logshow 20 #11
-    - verdi daemon status
-    - verdi node show 1
-    - verdi node show 2
-    - verdi node show 3
-    - verdi node show 4
-    - verdi node show 5
-    - verdi node show 6
-    - verdi node show 7
-    - verdi node show 8
-    - verdi node show 9
     - verdi node show 10
+    
