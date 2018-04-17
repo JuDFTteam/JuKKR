@@ -1,0 +1,69 @@
+RUNOPT
+WRTGREENNEWSOSOLLLOYD   
+
+TESTOPT
+STOP1B  MPIatom 
+
+
++-------+-------+-------+-------+-------+
+ALATBASIS= 6.570580354    # a = 3.477 Angstr. (in-plane lattice constant)
+NSPIN= 2
+LMAX= 3    
+-----------------------------------------
+BRAVAIS
+1.   0.                      0.                            
+0.   1.82197296519988495829  0.                             b= 6.335 Angstr
+0.   0.                      3.99280989358642507909         c=13.883 Angstr.
+-----------------------------------------
+NAEZ=      16
+CARTESIAN= .FALSE.
+RBASIS                     <ZATOM>     
+  0.0   0.60520   0.50034    42       
+  0.0   0.03010   0.01474    42       
+  0.0   0.86257   0.65574    52       
+  0.0   0.64045   0.11246    52       
+  0.0   0.28997   0.85934    52       
+  0.0   0.21601   0.40272    52       
+  0.0   0.41553   0.25383     0       
+  0.0   0.91553   0.26042     0       
+  0.5   0.39480   0.00034    42       
+  0.5   0.96990   0.51474    42       
+  0.5   0.13743   0.15574    52       
+  0.5   0.35955   0.61246    52       
+  0.5   0.71003   0.35934    52       
+  0.5   0.78399   0.90272    52       
+  0.5   0.58447   0.75383     0       
+  0.5   0.08447   0.76042     0       
+
+# WARNING: for this test case the k-point mesh is set to a small value to speed up the test calculation
+BZDIVIDE= 10 10 10
+ICST= 2
+
+# WARNING: for this test the radial mesh points are decreased 
+NPAN_LOG=   10
+NPAN_EQ=     4
+NCHEB=       8
+R_LOG=   0.600000000000000     
+
+
+MEMWFSAVE=       1000
+
+-----------------------------------------
+EMIN         EMAX         TEMPR   NPOL      NPT1     NPT2    NPT3
+0.5236007373 0.5276007373 100.0    0         0        3        0
+0.5256007373 0.5256007373 000.0    0         0        1        0   #EF
+-1.0         0.8          800.0    9         8        36       4
+-1.0         0.8          800.0    9         4        18       2
+-1.0         1.0          800.0    0         0       101       0
+-----------------------------------------
+NSTEPS=   200
+IMIX=     5
+STRMIX=   0.01    
+ITDBRY=   20
+FCM=      20.     
+QBOUND=   1.0E-05
+BRYMIX=   0.01                 
+-----------------------------------------
+RMAX= 7.0d0   GMAX= 100.0d0
+# WARNING: for this test the cluster radius is decreased 
+RCLUSTZ= 1.5

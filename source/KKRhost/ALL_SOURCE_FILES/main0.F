@@ -426,6 +426,9 @@ C ruess: IVSHIFT test option
       integer nth, ith          ! total number of threads, thread number
 #endif
 
+      ! for OPERATOR option
+      logical :: lexist, operator_imp
+
 C     ..
 C     .. External Functions ..
       LOGICAL OPT,TEST
@@ -1167,8 +1170,21 @@ C new solver for full-potential, spin-orbit, initialise
      +                         RCLS,EZOA,ATOM,RR,NSPIN)               ! fswrt
       END IF                                                          ! fswrt
 
+      IF(OPT('OPERATOR')) THEN
+        ! check if impurity files are present (otherwise no imp.
+        ! wavefunctions can be calculated)
+        operator_imp = .true.
+        inquire(file='potential_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='shapefun_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='scoef', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+      ELSE
+        operator_imp = .false.
+      ENDIF
 
-      IF (OPT('GREENIMP')) THEN                                        ! GREENIMP
+      IF (OPT('GREENIMP') .or. operator_imp) THEN                      ! GREENIMP
          ! fill array dimensions and allocate arrays in t_imp          ! GREENIMP
          call init_params_t_imp(t_imp,IPAND,NATYPD,IRMD,IRID,NFUND,    ! GREENIMP
      &                          NSPIN,IRMIND,LMPOTD)                   ! GREENIMP

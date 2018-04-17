@@ -44,8 +44,12 @@ C
          END DO
       ELSE
          DO I = 1,IELAST
-            N = INT(1.001D0 + 
+            if (DIMAG(EZ(IELAST)).ne.0) then
+               N = INT(1.001D0 + 
      &              LOG(DIMAG(EZ(I))/DIMAG(EZ(IELAST)))/LOG(2.0D0))
+            else
+               N = 1
+            end if
             KMESH(I) = N
             MAXMESH = MAX(MAXMESH,N)
             IF ( KMESH(I).LT.1 ) KMESH(I) = 1

@@ -171,6 +171,9 @@ C     ..
       integer :: ie_start
 #endif
       integer :: ie_num, ie_end, ierr
+
+      ! for OPERATOR option
+      logical :: lexist, operator_imp
 C     ..
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C     for conductivity calculation
@@ -1171,37 +1174,6 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
          if(t_lloyd%cdos_diff_lly_to_file) CLOSE(701)                    ! LLY
       ENDIF                                                              ! LLY
 C
-C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-c           write(15860,*) 'next- IPRINT',  IPRINT
-c           write(15860,*) 'next- NOFGIJ',  NOFGIJ
-c           write(15860,*) 'next- IELAST',  IELAST
-c           write(15860,*) 'next- NSPIN',   NSPIN
-c           write(15860,*) 'next- NCPA',    NCPA
-c           write(15860,*) 'next- LMMAXD,NSYMAXD', LMMAXD, NSYMAXD
-c           write(15860,*) 'next- NAEZ, NATYP', NAEZ, NATYP
-c           write(15860,*) 'next- NSHELD',  NSHELD
-c           write(15860,*) 'next- NSHELL', NSHELL
-c           write(15860,*) 'next- NOQ', NOQ
-c           write(15860,*) 'next- ITOQ', ITOQ
-c           write(15860,*) 'next- IQAT', IQAT
-c           write(15860,*) 'next- NATOMIMP', NATOMIMP 
-c           write(15860,*) 'next- ATOMIMP', ATOMIMP
-c           write(15860,*) 'next- RATOM', RATOM
-c           write(15860,*) 'next- FACTL', FACTL
-c           write(15860,*) 'next- NQCALC',  NQCALC
-c           write(15860,*) 'next- IQCALC',  IQCALC
-c           write(15860,*) 'next- IJTABCALC',  IJTABCALC
-c           write(1500+myrank,*) 'next- IJTABCALC_I',  IJTABCALC_I
-c           write(15860,*) 'next- IJTABSYM',  IJTABSYM
-c           write(15860,*) 'next- IJTABSH',  IJTABSH
-c           write(15860,*) 'next- ISH',  ISH
-c           write(15860,*) 'next- JSH',  JSH
-c           write(15860,*) 'next- DSYMLL',  DSYMLL
-c           write(15860,*) 'next- EZ', EZ
-c           write(15860,*) 'next- WEZ', WEZ
-C XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-
       IF ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) THEN
 #ifdef CPP_TIMING
          call timing_start('main1b - tbxccpl')
@@ -1246,8 +1218,30 @@ C     kpoint (defined in qvec.dat)
 
 
 
-      !Do stuff for GREENIMP option (previously done in zulapi code)
-      IF (OPT('GREENIMP')) THEN
+      IF(OPT('OPERATOR') .and. myrank==master) THEN
+        ! check if impurity files are present (otherwise no imp.
+        ! wavefunctions can be calculated)
+        operator_imp = .true.
+        inquire(file='potential_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='shapefun_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='scoef', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+      ELSE
+        operator_imp = .false.
+      ENDIF
+#ifdef CPP_MPI
+      call MPI_Bcast(operator_imp, 1, MPI_LOGICAL, master, 
+     &               MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'error broadcasting operator_imp'
+#endif
+
+      ! Do stuff for GREENIMP option (previously done in zulapi code)
+      ! run for OPERATOR option to precalculate impurity wavefunctions
+      ! that are then stored in t_imp (used only if potential_imp,
+      ! scoef, shapefun_imp)
+      IF (OPT('GREENIMP') .or. operator_imp) THEN
 
         ! consistency checks
         if(.not.(ielast==1.or.ielast==3)) stop 
@@ -1264,15 +1258,17 @@ C     kpoint (defined in qvec.dat)
         ! that are not the master
         call bcast_t_imp_scalars(t_imp)
         if(myrank/=master) call init_t_imp(t_inc,t_imp)
-        call bcast_t_imp_arrays(t_imp)
+        call bcast_t_imp_arrays(t_imp, t_inc)
 #endif
         
         do ie=1,ielast ! big ie loop (use only for GMATLL output)
 
-          IF (IELAST.EQ.3 .and. ie==1 .and. myrank==master) then
-             OPEN(UNIT=59,FILE='GMATLL_GES',FORM='FORMATTED')
-             OPEN(UNIT=60,FILE='green_host',FORM='FORMATTED')
-          ENDIF
+          IF (OPT('GREENIMP')) THEN
+             IF (IELAST.EQ.3 .and. ie==1 .and. myrank==master) then
+                OPEN(UNIT=59,FILE='GMATLL_GES',FORM='FORMATTED')
+                OPEN(UNIT=60,FILE='green_host',FORM='FORMATTED')
+             ENDIF
+          ENDIF ! OPT('GREENIMP')
           ALLOCATE(DTMTRX(LMMAXD*t_imp%NATOMIMP,LMMAXD*t_imp%NATOMIMP), 
      &             stat=ierr)
           if(ierr/=0) stop 'Error allocating DTMTRX'
@@ -1298,7 +1294,7 @@ C     kpoint (defined in qvec.dat)
      +       t_imp%VISPIMP,DTMTRX)
 
          ! compute GMATLL_GES, on master rank only
-          IF (IELAST.EQ.3 .and. myrank==master) THEN
+          IF (OPT('GREENIMP').and.IELAST.EQ.3.and.myrank==master) THEN
            CALL GREENIMP(t_imp%NATOMIMP,DTMTRX,t_params%EZ(IE))
           ENDIF
           
@@ -1308,13 +1304,33 @@ C     kpoint (defined in qvec.dat)
         end do ! ie-loop
 
         ! done with GREENIMP option, stopping now
+        if(.not. OPT('OPERATOR')) then
+          if(myrank==master) write(*,*) 'done with GREENIMP, stop here!'
 #ifdef CPP_MPI
-        call MPI_FINALIZE(ierr)
+          call MPI_FINALIZE(ierr)
 #endif
-        if(myrank==master) write(*,*) 'done with GREENIMP, stop here!'
-        STOP
+          stop
+        end if
 
-      ENDIF ! GREENIMP
+      ENDIF ! GREENIMP .or. OPERATOR
+
+! ------------------------------------------------------------------------
+! determine the spin operator, torque operator and spin flux operator
+! used in FScode do compute spin expectation values etc. within Boltzmann
+! formalism
+! ------------------------------------------------------------------------
+      if (OPT('OPERATOR')) then
+#ifdef CPP_TIMING
+        call timing_start('main1b - operator')
+#endif
+
+        call operators_for_FScode(KORBIT, operator_imp)
+
+#ifdef CPP_TIMING
+        call timing_stop('main1b - operator')
+#endif
+      end if ! OPERATOR
+
 
 C ----------------------------------------------------------------------
 C
@@ -1341,7 +1357,7 @@ C
       endif
 
 
-      ! clean up allocations
+      ! clean up allocations before exiting
       deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP, stat=ierr)
       if(ierr/=0) stop '[main1b] Error deallocating leftinvll etc.'
       if(opt('qdos    ')) then
@@ -1355,6 +1371,7 @@ C
 
       if(t_inc%i_write>0) 
      &   WRITE (1337,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
+
 
  2100 FORMAT(/,79(1H=),/,5X,' Inversion algorithm used : ',A,/,
      &     79(1H=),/)

@@ -27,6 +27,7 @@ test:intel:
   script:
     # test if dependencies are working
     - echo 'do some tests here'
+    # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
 
 
 build:intel:hybrid:
@@ -83,7 +84,7 @@ run:intel:serial1:
     paths:
       - tests/test_run*
     expire_in: 2 days
-
+ 
 run:intel:serial2:
   stage: run
   script:
@@ -93,7 +94,7 @@ run:intel:serial2:
     paths:
       - tests/test_run*
     expire_in: 2 days
-
+ 
 run:intel:serial3:
   stage: run
   script:
@@ -103,7 +104,7 @@ run:intel:serial3:
     paths:
       - tests/test_run*
     expire_in: 2 days
-
+ 
 run:intel:parallel2:
   stage: run
   script:
@@ -113,7 +114,7 @@ run:intel:parallel2:
     paths:
       - tests/test_run*
     expire_in: 2 days
-
+ 
 run:intel:multi_node:
   image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
   stage: run
@@ -133,7 +134,7 @@ run:intel:multi_node:
     paths:
       - tests/test_run*
     expire_in: 2 days
-
+ 
 run:intel:Jijs4:
   stage: run
   script:
@@ -176,7 +177,7 @@ run:intel:MPIatom7:
     paths:
       - tests/test_run*
     expire_in: 2 days
-
+ 
 run:intel:MPIenerg8:
   stage: run
   script:
@@ -186,6 +187,36 @@ run:intel:MPIenerg8:
     paths:
       - tests/test_run*
     expire_in: 2 days
+ 
+run:intel:OPERATOR12:
+  stage: run
+  script:
+    - cp tests/inc.p_72 inc.p && make clean && make mpi && cp kkr.x kkr.x_72 && mkdir tests/test_run12_mpi_1_8 && cd tests/test_run12_mpi_1_8 && ln -s ../test_inputs/test_12_*/* . && ln -s ../../kkr.x_72 kkr.x && export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
+    - rm -f gmat tmat gref *for* inputcard_generated.txt
+    # run calculation with impurity wavefunctions
+    - rm inputcard && ln -s imp/* . &&  export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
+    - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:DTM_GMATLL13:
+  stage: run
+  script:
+    - cp tests/inc.p_16 inc.p && make clean && make mpi && cp kkr.x kkr.x_16
+    - mkdir tests/test_run13_mpi_1_8 && cd tests/test_run13_mpi_1_8 && ln -s ../test_inputs/test_13_*/* . && rm DTM GMAT && cp -r ../test_inputs/test_13_*/{DTM,GMAT} . && ln -s ../../kkr.x_16 kkr.x
+    - export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
+    - rm -f gmat tmat gref *for* inputcard_generated.txt
+    - cd DTM && pwd && ls && ls -ltr .. && mpirun -np 8 ../kkr.x | tee out_kkr
+    - rm -f gmat tmat gref *for* inputcard_generated.txt
+    - cd ../GMAT && mpirun -np 8 ../kkr.x | tee out_kkr
+    - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
 
 
 verify:intel:
