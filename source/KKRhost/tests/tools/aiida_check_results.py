@@ -5,7 +5,7 @@ from aiida.orm import load_node
 
 n = load_node(10)
 n.get_outputs()
-n = n.get_outputs()[-1]
+n = n.get_outputs()[-2]
 out = n.get_dict()
 
 print 'voronoi_step_success', out['voronoi_step_success']
