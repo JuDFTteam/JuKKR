@@ -81,9 +81,10 @@ run:intel:aiida-kkr:
     - verdi calculation show 11
     - verdi calculation logshow 11
     - verdi daemon status
-    - verdi export create -n 1 -n 2 -n 3 -n 4 -n 5 -n 6 -a tar.gz test_export.aiida.tar.gz && cp test_export.aiida.tar.gz /builds/kkr/aiida_run/
+    - verdi export create -n 6 -a tar.gz test_export.aiida.tar.gz
     # copy log file to include in artifacts
     - cp /root/.aiida/daemon/log/celery.log .
+    - cp test_export.aiida.tar.gz /builds/kkr/aiida_run/
     - tar -zcvf aiida_run.tar.gz /builds/kkr/aiida_run/
   artifacts:
     paths:
@@ -114,9 +115,20 @@ verify:intel:aiida:
   script:
     - echo 'implement tests ... '
     # check some output of the calculation
+    - verdi import test_export.aiida.tar.gz
     - verdi work list -a
     - verdi calculation list -a
     - verdi work report 6
     - verdi calculation show 20 #11
     - verdi calculation logshow 20 #11
     - verdi daemon status
+    - verdi node show 1
+    - verdi node show 2
+    - verdi node show 3
+    - verdi node show 4
+    - verdi node show 5
+    - verdi node show 6
+    - verdi node show 7
+    - verdi node show 8
+    - verdi node show 9
+    - verdi node show 10
