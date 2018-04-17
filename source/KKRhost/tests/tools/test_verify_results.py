@@ -143,10 +143,10 @@ class Test_check_test_runs():
     def test_verify13_DTM_GMAT(self):
         path  = 'test_run13_mpi_1_8/'
         path0 = 'test_run13_mpi_1_8/ref/'
-        for f in 'DTMTRX green_host GMATLL_GES'.split():
+        for f in 'DTM/DTMTRX ./green_host GMAT/GMATLL_GES'.split():
            fname = f
            num, text = read_file(path+fname)
-           num_ref, text_ref = read_file(path0+fname.split('/')[0])
+           num_ref, text_ref = read_file(path0+fname.split('/')[1])
            print fname
            print std(abs(num-num_ref))
            print mean(abs(num-num_ref))
