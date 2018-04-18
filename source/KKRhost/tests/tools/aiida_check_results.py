@@ -7,7 +7,7 @@ from aiida.orm import load_node
 from pprint import pprint
 
 # load node of workflow
-n = load_node(10)
+n = load_node(11)
 
 print '\noutputs of workflow\n-------------------------------------------------'
 pprint(n.get_outputs_dict())
