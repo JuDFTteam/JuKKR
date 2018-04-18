@@ -22,12 +22,18 @@ stages:
   - verify
 
 
+###############################################################################
+
+
 test:intel:
   stage: test
   script:
     # test if dependencies are working
     - echo 'do some tests here'
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
+
+
+###############################################################################
 
 
 build:intel:hybrid:
@@ -84,6 +90,9 @@ build:intel:mpi-aiida:
     paths:
       - kkr.x_1_mpi
     expire_in: 1 day
+
+
+###############################################################################
 
 
 run:intel:serial1:
@@ -273,6 +282,10 @@ run:intel:aiida-kkr:
       - test_export.aiida.tar.gz
     expire_in: 2 day
 
+
+###############################################################################
+
+
 verify:intel:
   stage: verify
   script:
@@ -280,7 +293,7 @@ verify:intel:
     - pip install pytest
     # prepare and execute verification using pytest
     - cd tests
-    - pytest -v
+    - pytest -v --ignore=tools/aiida_simple_test.py 
 
 verify:intel:aiida:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
