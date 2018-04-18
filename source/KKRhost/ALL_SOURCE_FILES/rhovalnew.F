@@ -414,7 +414,8 @@ cc right solutions
 C faster calculation of RLL.
 C no irregular solutions SLL are needed in self-consistent iterations
 C because the density depends only on RLL, RLLLEFT and SLLLEFT
-        IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+        IF(OPT('RLL-SLL ') .and. 
+     &     .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) THEN
         CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLL(:,:,:,ith),TMATLL,
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
@@ -494,7 +495,8 @@ cc left solutions
 c notice that exchange the order of left and right hankel/bessel functions
          TMATTEMP=CZERO
 C faster calculation of RLLLEFT and SLLLEFT.
-        IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+        IF(OPT('RLL-SLL ') .and. 
+     &     .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) THEN
         CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLLLEFT(:,:,:,ith),TMATTEMP,
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),

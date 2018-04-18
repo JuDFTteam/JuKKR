@@ -3,7 +3,7 @@
 import pytest
 import os, pprint
 from kkrparser_functions import parse_kkr_outputfile
-from numpy import std, array
+from numpy import mean, std, array, loadtxt
 
 
 class Test_check_test_runs():
@@ -112,6 +112,50 @@ class Test_check_test_runs():
 		   'test_run11_hybrid_4_8',
 		   'test_run11_hybrid_8_4']
         cmp_modes(cmplist, '')
+
+    def test_verify12_OPERATOR(self):
+        path  = 'test_run12_mpi_1_8/'
+        path0 = 'test_run12_mpi_1_8/ref/'
+        # compare TBkkr_rhod.txt file with reference (in path0)
+        fname = 'TBkkr_rhod.txt'
+        num, text = read_file(path+fname)
+        num_ref, text_ref = read_file(path0+fname)
+        assert std(abs(num-num_ref))<10**-14
+        assert mean(abs(num-num_ref))<10**-14
+        assert abs(num-num_ref).max()<5*10**-13
+        assert set(text)-set(text_ref)==set()
+        # compare output of OPERATOR for host and for impurity wavefunctions
+        for filename in 'TBkkr_rhod.txt TBkkr_torq.txt TBkkr_spinflux.txt'.split():
+          d = loadtxt(path+filename)
+          d0 = loadtxt(path+filename.replace('.txt', '_imp.txt'))
+          nsigma = 3
+          if 'rhod' in filename:
+             nsigma +=1
+          d1 = d[:,0].reshape(nsigma,72, 32, 32); d1 = d1[:,36:48,:,:]; d01 = d0[:,0].reshape(nsigma,12,32,32)
+          d2 = d[:,1].reshape(nsigma,72, 32, 32); d2 = d2[:,36:48,:,:]; d02 = d0[:,1].reshape(nsigma,12,32,32)
+          d1 = d1.reshape(-1); d2 = d2.reshape(-1); d01 = d01.reshape(-1); d02 = d02.reshape(-1)
+          diff1 = d01-d1; diff2 = d02-d2
+          assert mean(diff1) < 10**-15
+          assert abs(diff1).max() < 10**-15
+          assert mean(diff2) < 10**-15
+          assert abs(diff2).max() < 10**-15
+
+    def test_verify13_DTM_GMAT(self):
+        path  = 'test_run13_mpi_1_8/'
+        path0 = 'test_run13_mpi_1_8/ref/'
+        for f in 'DTM/DTMTRX ./green_host GMAT/GMATLL_GES'.split():
+           fname = f
+           num, text = read_file(path+fname)
+           num_ref, text_ref = read_file(path0+fname.split('/')[1])
+           print fname
+           print std(abs(num-num_ref))
+           print mean(abs(num-num_ref))
+           print abs(num-num_ref).max()
+           print set(text)-set(text_ref)==set()
+           assert std(abs(num-num_ref))<5*10**-11
+           assert mean(abs(num-num_ref))<10**-12
+           assert abs(num-num_ref).max()<2*10**-8
+           assert set(text)-set(text_ref)==set()
 
         
 # helper functions

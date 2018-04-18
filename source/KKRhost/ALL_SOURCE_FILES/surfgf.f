@@ -145,7 +145,7 @@ c     eps_new = cc - beta * aa
 
       IF (ITER.GT.ITERMAX) THEN
         WRITE (6,FMT='('' itermax too small.  iter='',i3)') ITER
-        write(6,'('' Surfgf:  iter='',i4,''  error='',d12.7)') iter,err
+        write(6,'('' Surfgf:  iter='',i4,''  error='',d14.7)') iter,err
       END IF
       IF (ICHCK.EQ.0) RETURN
 c       write(6,'('' Surfgf:  iter='',i4,''  error='',d12.7)') iter,err

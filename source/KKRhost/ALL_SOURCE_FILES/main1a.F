@@ -10,12 +10,9 @@
 #ifdef CPP_MPI
       use mpi
 #endif
-#ifdef CPP_TIMING
-      use mod_timing
-#endif
       
       use mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatJij,
-     &                     init_t_dtmatJij,init_t_dtmatJij_at
+     &                     init_t_dtmatJij, init_t_dtmatJij_at
 #ifdef CPP_MPI
      &                     ,gather_tmat, gather_lly_dtmat,
      &                      t_mpi_c_grid, save_t_mpi_c_grid,
@@ -31,6 +28,7 @@
 #endif
       use mod_wunfiles
       use mod_jijhelp, only: set_Jijcalc_flags
+      use mod_save_wavefun, only: t_wavefunctions, read_wavefunc
      
       INCLUDE 'inc.p'
 C
@@ -66,6 +64,7 @@ C
       PARAMETER (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
       INTEGER LRECTRA
       PARAMETER (LRECTRA=WLENGTH*4)
+      DOUBLE COMPLEX, PARAMETER :: CZERO=(0.0d0, 0.0d0)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION ALAT,PI
@@ -120,6 +119,7 @@ C LDA+U
 C LDA+U
 C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
       INTEGER NATOMIMP, ATOMIMP(NATOMIMPD), IQAT(NATYPD)
+
 #ifdef CPP_MPI
       integer :: ntot1, mytot, ii
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1),
@@ -141,6 +141,7 @@ C     ..
       DATA TOLRDIF /1.5D0/ ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
       DATA LLY /0/
 C
+
 
       allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD),
      &         VINS(IRMIND:IRMD,LMPOTD,NSPOTD))
@@ -252,10 +253,10 @@ C
 #endif
 
       !skip this part with GREENIMP option
-      if(opt('GREENIMP')) then
+      if(opt('GREENIMP') .or. TEST('IMP_ONLY')) then
          if(myrank==master) write(*,*) 'Skipping atom loop in main1a'
          i1_start = 1
-         i1_end = 1
+         i1_end = 0
       end if
 
       IF (.NOT.OPT('NEWSOSOL')) THEN
@@ -319,30 +320,6 @@ c interpolate potential
        ENDDO !I1, atom loop
 
 
-c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-c      TTTTTTTTTTTTT TESTOUTPUT   Dij-implementation TTTTTTTTTTTTTTTTTT
-!      DO I1=i1_start,i1_end
-!       ie_start=t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-!       ie_end  =t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-!       DO ie_num=1,ie_end
-!        IE = ie_start+ie_num
-!        DO II=1,3
-!       write(filename,'(A,I3.3,A,I3.3,A,I1,A)') 'test_dtmat_iat=',I1,
-!    +                                                  '_ie=',IE,
-!    +                                                  'xyz=',II
-!       write(*,*) 'writing testfile:', trim(filename)
-!       if(allocated(t_dtmatJij(I1)%dtmat_xyz))then
-!       open(unit=13626,file=trim(filename), action='write',
-!    +       form='formatted')
-!      write(13626,'(2ES25.16)') t_dtmatJij(I1)%dtmat_xyz(:,:,II,ie_num)
-!       close(13626)
-!       end if
-!        ENDDO!II
-!       ENDDO!IE
-!      ENDDO !I1, atom loop
-!      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-
       ENDIF !NEWSOSOL
 C
       IF ( IDOLDAU.EQ.1 ) THEN 
@@ -360,99 +337,56 @@ C
 
 
 #ifdef CPP_MPI
-      if(.not.t_tgmat%tmat_to_file) then 
-         do ii=0,t_mpi_c_grid%nranks_ie-1
-          ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
-          ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
-         end do
-         mytot = t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
-         call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,
-     &        mytot,t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
-      end if
-      
-      if(lly/=0 .and. .not.t_lloyd%dtmat_to_file) then
-         call gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, 
-     &                         t_mpi_c_grid%mympi_comm_ie)
-      endif
-               
-      !for calculation of Jij-tensor
-      if(OPT('XCPL    ').and.OPT('NEWSOSOL'))then
-        DO I1=1,t_inc%NATYP
-          !initialize t_dtmatJij on other tasks
-          !   t_dtmatJij was already allocated for certain atoms within the atom loop
-          !   (in tmat_newsolver). This initialization cannot be made before tmat_newsolver,
-          !   because the division of the enegry loop (done in there) influences t_dtmatJij.
-          call init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij(I1))
+      !skip this part with GREENIMP option
+      if(.not.(opt('GREENIMP').or.TEST('IMP_ONLY'))) then
 
-          !communicate
-          if(t_dtmatJij(I1)%calculate)then
-            iwork = product(shape(t_dtmatJij(I1)%dtmat_xyz))
-            allocate(work_jij(iwork,1,1,1),STAT=ierr)
-            if(ierr/=0) stop 
-     & 'Error allocating work in main1a for communication of dtmat_xyz'
-            call MPI_ALLREDUCE(t_dtmatJij(I1)%dtmat_xyz,work_jij,
-     &                         iwork,MPI_DOUBLE_COMPLEX,MPI_SUM,
-     &                         t_mpi_c_grid%mympi_comm_ie,IERR)
-            if(ierr/=MPI_SUCCESS) stop 'error communicating t_dtmatJij'
-            CALL ZCOPY(iwork,work_jij,1,t_dtmatJij(I1)%dtmat_xyz,1)
-            deallocate(work_jij, stat=ierr)
-         if(ierr/=0) stop '[main1a] Error deallocating work_jij'
-          end if!t_dtmatJij(I1)%calculate
+         if(.not.t_tgmat%tmat_to_file) then 
+            do ii=0,t_mpi_c_grid%nranks_ie-1
+             ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
+             ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
+            end do
+            mytot = t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
+            call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,
+     &                       ioff_all, mytot,t_mpi_c_grid%mympi_comm_ie,
+     &                       t_mpi_c_grid%nranks_ie)
+         end if
+         
+         if(lly/=0 .and. .not.t_lloyd%dtmat_to_file) then
+            call gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, 
+     &                            t_mpi_c_grid%mympi_comm_ie)
+         endif
+                  
+         !for calculation of Jij-tensor
+         if(OPT('XCPL    ').and.OPT('NEWSOSOL'))then
+           DO I1=1,t_inc%NATYP
+             !initialize t_dtmatJij on other tasks
+             !   t_dtmatJij was already allocated for certain atoms within the atom loop
+             !   (in tmat_newsolver). This initialization cannot be made before tmat_newsolver,
+             !   because the division of the enegry loop (done in there) influences t_dtmatJij.
+             call init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij(I1))
+         
+             !communicate
+             if(t_dtmatJij(I1)%calculate)then
+               iwork = product(shape(t_dtmatJij(I1)%dtmat_xyz))
+               allocate(work_jij(iwork,1,1,1),STAT=ierr)
+               if(ierr/=0) stop 
+     &      'Error allocating work in main1a for MPI comm. of dtmat_xyz'
+               call MPI_ALLREDUCE(t_dtmatJij(I1)%dtmat_xyz,work_jij,
+     &                            iwork,MPI_DOUBLE_COMPLEX,MPI_SUM,
+     &                            t_mpi_c_grid%mympi_comm_ie,IERR)
+               if(ierr/=MPI_SUCCESS) stop 'error MPI comm. t_dtmatJij'
+               CALL ZCOPY(iwork,work_jij,1,t_dtmatJij(I1)%dtmat_xyz,1)
+               deallocate(work_jij, stat=ierr)
+            if(ierr/=0) stop '[main1a] Error deallocating work_jij'
+             end if!t_dtmatJij(I1)%calculate
+         
+           END DO!I1=1,t_inc%NATYP
 
-        END DO!I1=1,t_inc%NATYP
-c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-c      TTTTTTTTTTTTT TESTOUTPUT   Dij-implementation TTTTTTTTTTTTTTTTTT
-!      DO I1=1,t_inc%NATYP
-!       ie_start=t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-!       ie_end  =t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-!       DO ie_num=1,ie_end
-!        IE = ie_start+ie_num
-!        DO II=1,3
-!       write(filename,'(A,I3.3,A,I3.3,A,I1,A,I2)') 'test_dtmat_iat=',I1
-!    +                                                  ,'_ie=',IE,
-!    +                                                  'xyz=',II,
-!    +                                               'myrank=',myrank
-!       write(*,*) 'writing testfile:', trim(filename)
-!       if(allocated(t_dtmatJij(I1)%dtmat_xyz))then
-!       open(unit=13626,file=trim(filename), action='write',
-!    +       form='formatted')
-!      write(13626,'(2ES25.16)') t_dtmatJij(I1)%dtmat_xyz(:,:,II,ie_num)
-!       close(13626)
-!       end if
-!        ENDDO!II
-!       ENDDO!IE
-!      ENDDO !I1, atom loop
-!      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-c      TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+         end if!OPT('XCPL    ').and.OPT('NEWSOSOL')
 
-      end if!OPT('XCPL    ').and.OPT('NEWSOSOL')
+      end if ! .not.opt('GREENIMP')
+      ! end skip this part with GREENIMP option
 #endif
-
-
-!c ------------------------------------------------------------------------
-!c determine the spin operator, torque operator and spin flux operator
-!c ------------------------------------------------------------------------
-!      if (OPT('OPERATOR')) then
-!
-!         WRITE(*,*) 'Computing spin operator'
-!         CALL NORMCOEFF_SO(IRMINSO,IRCUT,LMAX,
-!     +                   LMMAX,PNSSO,THETAS,NTCELL,
-!     +                   IFUNM,IPAN,LMSP,KVREL,CLEB,ICLEB,IEND,DRDI,
-!     +                   IRWS,LINTERFACE,ISP,IMPLAYER,NSPOH)
-!
-!         WRITE(*,*) 'Computing torq operator'
-!         CALL NORMCOEFF_SO_TORQ(IRMINSO,IRCUT,LMAX,
-!     +                LMMAX,PNSSO,THETAS,NTCELL,
-!     +                IFUNM,IPAN,LMSP,KVREL,CLEB,ICLEB,IEND,DRDI,
-!     +                IRWS,VISP,NSPIN,VINS,IRMIN)
-!
-!         WRITE(*,*) 'Computing spinflux operator'
-!         CALL NORMCOEFF_SO_SPINFLUX(IRMINSO,IRCUT,LMAX,
-!     +                LMMAX,PNSSO,THETAS,NTCELL,
-!     +                IFUNM,IPAN,LMSP,KVREL,CLEB,ICLEB,IEND,DRDI,
-!     +                IRWS)
-!
-!      end if ! OPERATOR
 
 
 #ifdef CPP_TIMING
