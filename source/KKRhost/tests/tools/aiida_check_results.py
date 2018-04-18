@@ -1,12 +1,25 @@
+#!/usr/bin/env python
+
 from aiida import is_dbenv_loaded, load_dbenv
 if not is_dbenv_loaded():
     load_dbenv()
 from aiida.orm import load_node
+from pprint import pprint
 
+# load node of workflow
 n = load_node(10)
-n.get_outputs()
-n = n.get_outputs()[-2]
+
+print '\noutputs of workflow\n-------------------------------------------------'
+pprint(n.get_outputs_dict())
+
+# get output dictionary
+n = n.get_outputs()[-1]
 out = n.get_dict()
+print '\n\noutput dictionary:\n-------------------------------------------------'
+pprint(out)
+
+# finally check some output
+print '\n\ncheck values ...\n-------------------------------------------------'
 
 print 'voronoi_step_success', out['voronoi_step_success']
 assert out['voronoi_step_success']
