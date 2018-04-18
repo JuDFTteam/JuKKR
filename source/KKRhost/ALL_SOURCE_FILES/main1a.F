@@ -389,7 +389,6 @@ C
 #endif
 
 
-
 #ifdef CPP_TIMING
         call timing_start('main1a - tbref')
 #endif
