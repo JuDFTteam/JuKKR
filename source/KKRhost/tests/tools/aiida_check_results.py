@@ -47,3 +47,5 @@ assert abs(out['charge_neutrality']) < 5*10**-4
 
 print 'used_higher_accuracy', out['used_higher_accuracy']
 assert out['used_higher_accuracy']
+
+print '\ndone with checks\n'
