@@ -2,12 +2,12 @@
 ! SUBROUTINE: RHOOUTNEW
 !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL,EK,LMPOTD,&
+subroutine RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL,EK,LMPOT,&
    DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,                          &
    IRMDNEW,THETASNEW,IFUNM,IMT1,                               &
    LMSP,RLL,RLLLEFT,SLLLEFT,                                   &
    CDEN,CDENLM,CDENNS,RHO2NSC,CORBITAL,                        &
-   GFLLE_PART,RPAN_INTERVALL,IPAN_INTERVALL)
+   GFLLE_PART,RPAN_INTERVALL,IPAN_INTERVALL,NTOTD)
 
    use Constants
    use Profiling
@@ -35,7 +35,7 @@ subroutine RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL,EK,LMPOTD,&
    integer, dimension(NCLEB,4), intent(in)   :: ICLEB   !< Pointer array
    double precision, dimension(*), intent(in)         :: CLEB !< GAUNT coefficients (GAUNT)
    double precision, dimension(0:NTOTD), intent(in)   :: RPAN_INTERVALL
-   double precision, dimension(NTOTD*(NCHEBD+1),NFUND), intent(in) :: THETASNEW
+   double precision, dimension(NTOTD*(NCHEB+1),NFUND), intent(in) :: THETASNEW
    double complex, dimension(LMMAXSO,LMMAXSO), intent(in) :: GMATLL  !< GMATLL = diagonal elements of the G matrix (system)
    ! Note that SLL is not needed for calculation of density, only needed for calculation of Green function
    double complex, dimension(NSRA*LMMAXSO,LMMAXSO,IRMDNEW), intent(in) :: RLL
@@ -49,10 +49,11 @@ subroutine RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL,EK,LMPOTD,&
    double complex, dimension(IRMDNEW,LMMAXD,4), intent(out) :: CDENLM
 
    ! .. In/Out variables
-   double complex, dimension(IRMDNEW,LMPOTD,4), intent(inout) :: RHO2NSC
+   double complex, dimension(IRMDNEW,LMPOT,4), intent(inout) :: RHO2NSC
 
    ! .. Local variables
    integer :: IR,JSPIN,LM1,LM2,LM3,M1,L1,J,IFUN
+   integer :: i_stat, i_all
    double precision :: C0LL
    double complex :: CLTDF
    integer, dimension(4) :: LMSHIFT1
@@ -97,7 +98,7 @@ subroutine RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL,EK,LMPOTD,&
 
    ! for orbital moment
    if (CORBITAL.NE.0) then
-      call CALC_ORBITALMOMENT(LMAXD,LMMAXSO,LOPERATOR)
+      call CALC_ORBITALMOMENT(LMAX,LMMAXSO,LOPERATOR)
    endif
 
    C0LL=1d0/SQRT(16d0*ATAN(1d0))

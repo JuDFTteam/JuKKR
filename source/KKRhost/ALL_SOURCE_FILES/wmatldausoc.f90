@@ -9,7 +9,7 @@
 !> @date 04.2016
 !-------------------------------------------------------------------------------
 subroutine WMATLDAUSOC(NTLDAU,ITLDAU,NSPIN,DENMATN,LOPT,UEFF,JEFF,   &
-   ULDAU,WLDAU,EU,EDC,MMAXD,NATYP,NSPIND)
+   ULDAU,WLDAU,EU,EDC,MMAXD,NATYP,NSPIND,LMAX)
    ! **********************************************************************
    ! *                                                                    *
    ! * Calculation of Coulomb interaction potential in LDA+U              *
@@ -27,10 +27,11 @@ subroutine WMATLDAUSOC(NTLDAU,ITLDAU,NSPIN,DENMATN,LOPT,UEFF,JEFF,   &
    ! *                  n.long,  April 2016, Juelich                      *
    ! **********************************************************************
    use Constants
-   
+
    implicit none
    !
    ! .. Input variables
+   integer, intent(in) :: LMAX   !< Maximum l component in wave function expansion
    integer, intent(in) :: NATYP  !< Number of kinds of atoms in unit cell
    integer, intent(in) :: NSPIN  !< Counter for spin directions
    integer, intent(in) :: MMAXD  !< 2*LMAX+1
@@ -87,7 +88,7 @@ subroutine WMATLDAUSOC(NTLDAU,ITLDAU,NSPIN,DENMATN,LOPT,UEFF,JEFF,   &
             ! Convert DENMATC and DENMAT to complex spherical harmonics.
             !-------------------------------------------------------------------
             do JS = 1,NSPIN
-               call RCLM(1,LOPT(I1),LMAXD,DENMATN(1,1,JS,IS,I1))
+               call RCLM(1,LOPT(I1),LMAX,DENMATN(1,1,JS,IS,I1))
             end do ! js
          end do ! is
          !----------------------------------------------------------------------
@@ -238,7 +239,7 @@ subroutine WMATLDAUSOC(NTLDAU,ITLDAU,NSPIN,DENMATN,LOPT,UEFF,JEFF,   &
             ! 5.  Transform VLDAU into real spherical harmonics basis
             !-------------------------------------------------------------------
             do JS=1,NSPIN
-               call RCLM(2,LOPT(I1),LMAXD,VLDAU(1,1,JS,IS))
+               call RCLM(2,LOPT(I1),LMAX,VLDAU(1,1,JS,IS))
                !----------------------------------------------------------------
                ! Copy transformed VLDAU to real WLDAU
                ! Apply damping to the interaction matrix WLDAU ? Here not.

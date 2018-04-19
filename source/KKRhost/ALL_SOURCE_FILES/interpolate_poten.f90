@@ -5,14 +5,13 @@
 !> inc.p import and to be able to use routine for different number of atoms
 !-------------------------------------------------------------------------------
 subroutine INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATYP,IPAND,LMPOT,    &
-      NSPOTD,NTOTD,NCHEBD,IRMDNEW,NSPIN,R,IRMIND,IRWS,IRCUT,VINS, &
+      NSPOTD,NTOTD,NCHEB,IRMDNEW,NSPIN,R,IRMIND,IRMIN,IRWS,IRCUT,VINS, &
       VISP,NPAN_LOG,NPAN_EQ,NPAN_TOT,RNEW,IPAN_INTERVALL,VINSNEW)
 
    implicit none
 
    integer, intent(in) :: IRM    !< Maximum number of radial points
    integer, intent(in) :: LPOT   !< Maximum l component in potential expansion
-   integer, intent(in) :: LMPOT  !< (LPOT+1)**2
    integer, intent(in) :: IRNSD
    integer, intent(in) :: NTOTD
    integer, intent(in) :: NCHEB  !< Number of Chebychev pannels for the new solver

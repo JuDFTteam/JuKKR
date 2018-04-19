@@ -89,13 +89,13 @@ OBJECTS2 = $(OBJ)/main2.o $(OBJ)/vmadelblk.o $(OBJ)/vinterface.o $(OBJ)/etotb1.o
 # only these conatin explicit !$omp statements:
 $(OBJ)/main0.o: $(SRC)/main0.F90
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
-$(OBJ)/rhoval.o: $(SRC)/rhoval.F
+$(OBJ)/rhoval.o: $(SRC)/rhoval.F90
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
-$(OBJ)/rhovalnew.o: $(SRC)/rhovalnew.F
+$(OBJ)/rhovalnew.o: $(SRC)/rhovalnew.F90
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
 $(OBJ)/strmat.o: $(SRC)/strmat.F
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
-$(OBJ)/tmat_newsolver.o: $(SRC)/tmat_newsolver.F
+$(OBJ)/tmat_newsolver.o: $(SRC)/tmat_newsolver.F90
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
 
 $(OBJ)/mod_%.o: $(SRC)/%.f

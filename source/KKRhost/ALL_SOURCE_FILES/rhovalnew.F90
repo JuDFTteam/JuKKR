@@ -2,7 +2,8 @@
 ! SUBROUTINE: RHOVALNEW
 !> @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
+subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
+   NPOTD,NRMAXD,LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,       &
    SOCSCALE,CLEB,ICLEB,IEND,IFUNM,LMSP,NCHEB,                     &
    NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,                          &
    RPAN_INTERVALL,IPAN_INTERVALL,                                 &
@@ -38,6 +39,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
    IMPLICIT NONE
 
    integer, intent(in) :: I1
+   integer, intent(in) :: IRM       !< Maximum number of radial points
    integer, intent(in) :: NSRA
    integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
    integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
@@ -49,10 +51,12 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
    integer, intent(in) :: LMPOT     !< (LPOT+1)**2
    integer, intent(in) :: MMAXD     !< 2*LMAX+1
    integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+   integer, intent(in) :: NTOTD
    integer, intent(in) :: IELAST
    integer, intent(in) :: NRMAXD    !< NTOTD*(NCHEBD+1)
    integer, intent(in) :: LMXSPD    !< (2*LPOT+1)**2
    integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
+   integer, intent(in) :: LMMAXSO   !< 2*LMMAXD
    integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
    integer, intent(in) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
    integer, intent(in) :: NPAN_TOT
@@ -64,35 +68,30 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
    integer, dimension(LMXSPD), intent(in)    :: IFUNM
    integer, dimension(0:NTOTD), intent(in)   :: IPAN_INTERVALL
    integer, dimension(NCLEB,4), intent(in)   :: ICLEB
-   double precision, dimension(*), intent(in)      :: CLEB !< GAUNT coefficients (GAUNT)
-   double precision, dimension(IRMD), intent(in)   :: RMESH
+   double precision, dimension(*), intent(in)   :: CLEB !< GAUNT coefficients (GAUNT)
+   double precision, dimension(IRM), intent(in) :: RMESH
    double precision, dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix
-   double complex, dimension(IRMD), intent(in) :: PHILDAU
-
-   ! .. Parameters
-   integer :: LMAXD1
-   parameter (LMAXD1= LMAXD+1)
-   integer :: LMMAXSO
-   parameter (LMMAXSO=2*LMMAXD)
+   double complex, dimension(IRM), intent(in) :: PHILDAU
 
    ! .. In/Out variables
    double precision, intent(inout) :: PHI
    double precision, intent(inout) :: THETA
    double precision, dimension(NRMAXD), intent(inout)       :: RNEW
    double precision, dimension(0:NTOTD), intent(inout)      :: RPAN_INTERVALL
-   double precision, dimension(0:LMAXD1+1,3), intent(inout) :: MUORB
+   double precision, dimension(0:LMAX+1,3), intent(inout)   :: MUORB
    double precision, dimension(NRMAXD,NFUND), intent(inout) :: THETASNEW
-   double precision, dimension(NRMAXD,LMPOTD,NSPOTD), intent(inout) :: VINSNEW  !< Non-spherical part of the potential
+   double precision, dimension(NRMAXD,LMPOT,NSPOTD), intent(inout) :: VINSNEW  !< Non-spherical part of the potential
    double complex, dimension(IEMXD), intent(inout) :: EZ
    double complex, dimension(IEMXD), intent(inout) :: WEZ
    ! .. Output variables
    double precision, dimension(2), intent(out)              :: angles_new
-   double precision, dimension(0:LMAXD1,2), intent(out)     :: ESPV
-   double precision, dimension(IRMD,LMPOTD,4), intent(out)  :: R2NEF
-   double precision, dimension(IRMD,LMPOTD,4), intent(out)  :: RHO2NS
-   double complex, dimension(0:LMAXD1,IEMXD,2), intent(out) :: DEN_out
+   double precision, dimension(0:LMAX+1,2), intent(out)     :: ESPV
+   double precision, dimension(IRM,LMPOT,4), intent(out)    :: R2NEF
+   double precision, dimension(IRM,LMPOT,4), intent(out)    :: RHO2NS
+   double complex, dimension(0:LMAX+1,IEMXD,2), intent(out) :: DEN_out
 
    ! .. Local variables
+   integer :: LMAXD1
    integer :: IR,IREC,USE_SRATRICK,NVEC,LM1,LM2,IE,IRMDNEW,IMT1,JSPIN,IDIM,IORB, L1
    integer :: i_stat, i_all
    integer :: IQ, NQDOS             ! qdos ruess: number of qdos points
@@ -101,22 +100,23 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
    integer :: IX,M1       ! qdos ruess
 
    double precision :: THETANEW,PHINEW
+   double precision :: TOTMOMENT
+   double precision :: TOTXYMOMENT
    double complex :: EK
    double complex :: DF
    double complex :: ERYD
    double complex :: TEMP1
    double complex :: DENTEMP
-   double complex :: TOTMOMENT
-   double complex :: TOTXYMOMENT
    double complex :: GMATPREFACTOR
    integer, dimension(4)         :: LMSHIFT1
    integer, dimension(4)         :: LMSHIFT2
    integer, dimension(2*LMMAXSO) :: JLK_INDEX
    double precision, dimension(3) :: MOMENT
+   double precision, dimension(3) :: DENORBMOM
    double precision, dimension(3) :: DENORBMOMNS
    double precision, dimension(2,4) :: ENORBMOMSP
    double precision, dimension(2,4) :: DENORBMOMSP
-   double precision, dimension(0:LMAXD,3) :: DENORBMOMLM
+   double precision, dimension(0:LMAX,3) :: DENORBMOMLM
    double complex, dimension(4)                       :: RHO2
    double complex, dimension(4)                       :: RHO2INT
    double complex, dimension(2*(LMAX+1))              :: ALPHASPH
@@ -193,12 +193,15 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
    !$omp end parallel
 #endif
 
+   ! .. Parameters
+   LMAXD1= LMAX+1
+
    IRMDNEW= NPAN_TOT*(NCHEB+1)
    IMT1=IPAN_INTERVALL(NPAN_LOG+NPAN_EQ)+1
-   allocate(VINS(IRMDNEW,LMPOTD,NSPIN),stat=i_stat)
+   allocate(VINS(IRMDNEW,LMPOT,NSPIN),stat=i_stat)
    call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','RHOVALNEW')
    VINS=0d0
-   do LM1=1,LMPOTD
+   do LM1=1,LMPOT
       do IR=1,IRMDNEW
          VINS(IR,LM1,1)=VINSNEW(IR,LM1,IPOT)
          VINS(IR,LM1,NSPIN)=VINSNEW(IR,LM1,IPOT+NSPIN-1)
@@ -218,7 +221,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
    call memocc(i_stat,product(shape(VNSPLL1))*kind(VNSPLL1),'VNSPLL1','RHOVALNEW')
    VNSPLL0=CZERO
    !
-   call VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,CLEB,ICLEB,IEND,&
+   call VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,LMPOT,CLEB,ICLEB,IEND,&
       NSPIN,ZAT,RNEW,USE_SRATRICK)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! LDAU
@@ -266,25 +269,25 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
    call memocc(i_stat,product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','RHOVALNEW')
    allocate(SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','RHOVALNEW')
-   allocate(CDEN(IRMDNEW,0:LMAXD,4,0:nth-1),stat=i_stat)
+   allocate(CDEN(IRMDNEW,0:LMAX,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(CDEN))*kind(CDEN),'CDEN','RHOVALNEW')
    allocate(CDENLM(IRMDNEW,LMMAXD,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(CDENLM))*kind(CDENLM),'CDENLM','RHOVALNEW')
    allocate(CDENNS(IRMDNEW,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(CDENNS))*kind(CDENNS),'CDENNS','RHOVALNEW')
-   allocate(RHO2NSC(IRMDNEW,LMPOTD,4),stat=i_stat)
+   allocate(RHO2NSC(IRMDNEW,LMPOT,4),stat=i_stat)
    call memocc(i_stat,product(shape(RHO2NSC))*kind(RHO2NSC),'RHO2NSC','RHOVALNEW')
-   allocate(RHO2NSC_loop(IRMDNEW,LMPOTD,4,ielast),stat=i_stat)
+   allocate(RHO2NSC_loop(IRMDNEW,LMPOT,4,ielast),stat=i_stat)
    call memocc(i_stat,product(shape(RHO2NSC_loop))*kind(RHO2NSC_loop),'RHO2NSC_loop','RHOVALNEW')
-   allocate(RHO2NSNEW(IRMD,LMPOTD,4),stat=i_stat)
+   allocate(RHO2NSNEW(IRM,LMPOT,4),stat=i_stat)
    call memocc(i_stat,product(shape(RHO2NSNEW))*kind(RHO2NSNEW),'RHO2NSNEW','RHOVALNEW')
-   allocate(R2NEFC(IRMDNEW,LMPOTD,4),stat=i_stat)
+   allocate(R2NEFC(IRMDNEW,LMPOT,4),stat=i_stat)
    call memocc(i_stat,product(shape(R2NEFC))*kind(R2NEFC),'R2NEFC','RHOVALNEW')
-   allocate(R2NEFC_loop(IRMDNEW,LMPOTD,4,0:nth-1),stat=i_stat)
+   allocate(R2NEFC_loop(IRMDNEW,LMPOT,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(R2NEFC_loop))*kind(R2NEFC_loop),'R2NEFC_loop','RHOVALNEW')
-   allocate(R2NEFNEW(IRMD,LMPOTD,4),stat=i_stat)
+   allocate(R2NEFNEW(IRM,LMPOT,4),stat=i_stat)
    call memocc(i_stat,product(shape(R2NEFNEW))*kind(R2NEFNEW),'R2NEFNEW','RHOVALNEW')
-   allocate(R2ORBC(IRMDNEW,LMPOTD,4,0:nth-1),stat=i_stat)
+   allocate(R2ORBC(IRMDNEW,LMPOT,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(R2ORBC))*kind(R2ORBC),'R2ORBC','RHOVALNEW')
    allocate(CDENTEMP(IRMDNEW,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(CDENTEMP))*kind(CDENTEMP),'CDENTEMP','RHOVALNEW')
@@ -446,7 +449,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
       call SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,    &
-         ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,LMPOTD,   &
+         ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,LMPOT,   &
          THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,  &
          NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,            &
          VNSPLL0,VNSPLL1(:,:,:,ith),'1')
@@ -456,10 +459,10 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
       if (NSRA.EQ.2) then
          if (USE_SRATRICK.EQ.0) then
             call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-               IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
+               IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0')
          elseif (USE_SRATRICK.EQ.1) then
             call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-               IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+               IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph')
          endif
       else
          VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
@@ -484,7 +487,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
          ! using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
             call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,  &
-               LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,     &
+               LMPOT,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,     &
                JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),          &
                JLK2(:,:,ith),GMATPREFACTOR,TMATSPH(:,ith),                 &
                ALPHASPH,USE_SRATRICK)
@@ -531,7 +534,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
          .or. (t_wavefunctions%Nwfsavemax==0)) then
          ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
          call SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT, &
-            CVLIGHT,SOCSCALE,NSPIN,LMPOTD,THETA,PHI,        &
+            CVLIGHT,SOCSCALE,NSPIN,LMPOT,THETA,PHI,        &
             IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,   &
             IRMDNEW,NRMAXD,VNSPLL0,VNSPLL1(:,:,:,ith),      &
             'transpose')
@@ -540,10 +543,10 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
          if (NSRA.EQ.2) then
             if (USE_SRATRICK.EQ.0) then
                call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                  IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
-            elseif (USE_SRATRICK.EQ.1) thne
+                  IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0')
+            elseif (USE_SRATRICK.EQ.1) then
                call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                  IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+                  IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph')
             endif
          else
             VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
@@ -566,7 +569,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
          ! notice that exchange the order of left and right hankel/bessel functions
          if (USE_SRATRICK.EQ.1) then
             call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,  &
-               LMPOTD,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,     &
+               LMPOT,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,     &
                JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),                      &
                HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,                    &
                ALPHASPH,TMATSPH(:,ith),USE_SRATRICK)
@@ -633,13 +636,13 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
          enddo
          ! calculate density
          call RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
-            LMPOTD,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,                &
+            LMPOT,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,                &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
             CDEN(:,:,:,ith),CDENLM(:,:,:,ith),                       &
             CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,                &
-            GFLLE(:,:,IE,IQ),RPAN_INTERVALL,IPAN_INTERVALL)
+            GFLLE(:,:,IE,IQ),RPAN_INTERVALL,IPAN_INTERVALL,NTOTD)
 
 #ifndef CPP_OMP
          if( test('rhoqtest')) then
@@ -720,7 +723,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (IE.EQ.IELAST.AND.LDORHOEF) then
          call RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
-            LMPOTD,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,              &
+            LMPOT,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,              &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
@@ -734,7 +737,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       do IORB=1,3
          call RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
-            LMPOTD,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,              &
+            LMPOT,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,              &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
@@ -776,7 +779,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
 
    ! omp: move sum from rhooutnew here after parallel calculation
    do IR=1,IRMDNEW
-      do LM1=1,LMPOTD
+      do LM1=1,LMPOT
          do JSPIN=1,4
             do IE=1,IELAST
                RHO2NSC(IR,LM1,JSPIN) = RHO2NSC(IR,LM1,JSPIN) +RHO2NSC_loop(IR,LM1,JSPIN,IE)
@@ -903,7 +906,8 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
    endif      ! OPT('qdos    ')                                                  ! qdos
 #endif
 
-#ifdef CPP_MPI ! do communication only when compiled with MPI
+#ifdef CPP_MPI
+   ! do communication only when compiled with MPI
 #ifdef CPP_TIMING
    call timing_start('main1c - communication')
 #endif
@@ -928,7 +932,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
       denorbmomlm = 0.0d0
       denorbmomns = 0.0d0
    endif
-   call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,&
+   call mympi_main1c_comm_newsosol(IRMDNEW,LMPOT,LMAX,LMAXD1,&
       LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,                       &
       den,denlm,gflle,rho2nsc,r2nefc,                          &
       rho2int,espv,muorb,denorbmom,                            &
@@ -940,7 +944,8 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
 
    !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
    if(t_mpi_c_grid%myrank_at==master) then
-#endif ! CPP_MPI
+#endif
+! CPP_MPI
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! LDAU
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -980,16 +985,16 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
                IQ=1                                                              ! lm-dos
                if (IE.EQ.1) then                                                 ! lm-dos
                   if(t_inc%NATYP.ge.100) then                                    ! lm-dos
-                     open(29,                                                    ! lm-dos
+                     open(29,                               &                    ! lm-dos
                         FILE="lmdos."//char(48+I1/100)//    &                    ! lm-dos
                         char(48+mod(I1/10,10))//            &                    ! lm-dos
                         char(48+mod(I1,10))//"."//char(48+1)//".dat")            ! lm-dos
-                     open(30,                                                    ! lm-dos
+                     open(30,                               &                    ! lm-dos
                         FILE="lmdos."//char(48+I1/100)//    &                    ! lm-dos
                         char(48+mod(I1/10,10))//            &                    ! lm-dos
                         char(48+mod(I1,10))//"."//char(48+2)//".dat")            ! lm-dos
                   else                                                           ! lm-dos
-                     open(29,                                                    ! lm-dos
+                     open(29,                                  &                 ! lm-dos
                         FILE="lmdos."//char(48+I1/10)//        &                 ! lm-dos
                         char(48+mod(I1,10))//"."//char(48+1)//".dat")            ! lm-dos
                      open(30,FILE="lmdos."//char(48+I1/10)//   &                 ! lm-dos
@@ -1018,22 +1023,22 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
          write(91,REC=I1) GFLLE                                                  ! lmlm-dos
       endif                                                                      ! lmlm-dos
       !
-      allocate(RHOTEMP(IRMDNEW,LMPOTD),stat=i_stat)
+      allocate(RHOTEMP(IRMDNEW,LMPOT),stat=i_stat)
       call memocc(i_stat,product(shape(RHOTEMP))*kind(RHOTEMP),'RHOTEMP','RHOVALNEW')
-      allocate(RHONEWTEMP(IRWS,LMPOTD),stat=i_stat)
+      allocate(RHONEWTEMP(IRWS,LMPOT),stat=i_stat)
       call memocc(i_stat,product(shape(RHONEWTEMP))*kind(RHONEWTEMP),'RHONEWTEMP','RHOVALNEW')
       !
       do JSPIN=1,4
          RHOTEMP=CZERO
          RHONEWTEMP=CZERO
-         do LM1=1,LMPOTD
+         do LM1=1,LMPOT
             do IR=1,IRMDNEW
                RHOTEMP(IR,LM1)=RHO2NSC(IR,LM1,JSPIN)
             enddo
          enddo
-         call CHEB2OLDGRID(IRWS,IRMDNEW,LMPOTD,RMESH,NCHEB,NPAN_TOT,&
-            RPAN_INTERVALL,IPAN_INTERVALL,RHOTEMP,RHONEWTEMP,IRMD)
-         do LM1=1,LMPOTD
+         call CHEB2OLDGRID(IRWS,IRMDNEW,LMPOT,RMESH,NCHEB,NPAN_TOT,&
+            RPAN_INTERVALL,IPAN_INTERVALL,RHOTEMP,RHONEWTEMP,IRM)
+         do LM1=1,LMPOT
             do IR=1,IRWS
                RHO2NSNEW(IR,LM1,JSPIN)=RHONEWTEMP(IR,LM1)
             enddo
@@ -1041,14 +1046,14 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
 
          RHOTEMP=CZERO
          RHONEWTEMP=CZERO
-         do LM1=1,LMPOTD
+         do LM1=1,LMPOT
             do IR=1,IRMDNEW
                RHOTEMP(IR,LM1)=R2NEFC(IR,LM1,JSPIN)
             enddo
          enddo
-         call CHEB2OLDGRID(IRWS,IRMDNEW,LMPOTD,RMESH,NCHEB,NPAN_TOT,&
-            RPAN_INTERVALL,IPAN_INTERVALL,RHOTEMP,RHONEWTEMP,IRMD)
-         do LM1=1,LMPOTD
+         call CHEB2OLDGRID(IRWS,IRMDNEW,LMPOT,RMESH,NCHEB,NPAN_TOT,&
+            RPAN_INTERVALL,IPAN_INTERVALL,RHOTEMP,RHONEWTEMP,IRM)
+         do LM1=1,LMPOT
             do IR=1,IRWS
                R2NEFNEW(IR,LM1,JSPIN)=RHONEWTEMP(IR,LM1)
             enddo
@@ -1101,16 +1106,16 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
          !only on master different from zero:
          angles_new(1) = THETANEW
          angles_new(2) = PHINEW
-         call ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOTD,THETANEW,PHINEW,&
-            THETA,PHI,IRMD)
-         call ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,LMPOTD,THETANEW,PHINEW,  &
-            THETA,PHI,IRMD)
+         call ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOT,THETANEW,PHINEW,&
+            THETA,PHI,IRM)
+         call ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,LMPOT,THETANEW,PHINEW,  &
+            THETA,PHI,IRM)
       else
          RHO2NS(:,:,:)=DIMAG(RHO2NSNEW(:,:,:))
          R2NEF(:,:,:)=DIMAG(R2NEFNEW(:,:,:))
       endif
       !
-      IDIM = IRMD*LMPOTD
+      IDIM = IRM*LMPOT
       call DSCAL(IDIM,2.D0,RHO2NS(1,1,1),1)
       call DAXPY(IDIM,-0.5D0,RHO2NS(1,1,1),1,RHO2NS(1,1,2),1)
       call DAXPY(IDIM,1.0D0,RHO2NS(1,1,2),1,RHO2NS(1,1,1),1)
@@ -1133,7 +1138,7 @@ subroutine RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,  &
    endif !(myrank==master)
 
    ! communicate den_out to all processors with the same atom number
-   IDIM = (LMAXD+2)*IEMXD*2
+   IDIM = (LMAX+2)*IEMXD*2
    call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master,&
       t_mpi_c_grid%myMPI_comm_at, ierr)
    if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'

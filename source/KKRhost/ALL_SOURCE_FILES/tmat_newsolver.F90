@@ -5,7 +5,7 @@
 !-------------------------------------------------------------------------------
 subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    IEND,NCHEB,NPAN_TOT,RPAN_INTERVALL,IPAN_INTERVALL,RNEW,VINSNEW,THETA,PHI,  &
-   I1,IPOT,LLY,DELTAE,IDOLDAU,LOPT,WLDAU,t_dtmatJij_at)
+   I1,IPOT,NTOTD,LMPOT,MMAXD,NRMAXD,LMMAXD,LLY,DELTAE,IDOLDAU,LOPT,WLDAU,t_dtmatJij_at)
 
 #ifdef CPP_OMP
    use omp_lib        ! necessary for omp functions
@@ -36,6 +36,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    integer, intent(in) :: NSRA
    integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
    integer, intent(in) :: IPOT
+   integer, intent(in) :: NTOTD
    integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
    integer, intent(in) :: NSPIN     !< Counter for spin directions
    integer, intent(in) :: LMPOT     !< (LPOT+1)**2
@@ -68,7 +69,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    double complex, dimension(2*(LMAX+1)) :: ALPHASPH
    ! .. Parameters
    integer :: LMMAXSO
-   parameter (LMMAXSO=2*LMMAXD)
+   !parameter (LMMAXSO=2*LMMAXD)
    ! .. Local allocatable arrays
    integer, dimension(:), allocatable :: JLK_INDEX
    double precision, dimension(:,:,:), allocatable :: VINS  !< Non-spherical part of the potential
@@ -109,6 +110,8 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    ! test and run options
    logical :: test, opt
    external :: test, opt
+
+   LMMAXSO=2*LMMAXD
 
    ! .. Allocation of local arrays
    allocate(AUX(LMMAXSO,LMMAXSO),stat=i_stat)
@@ -178,7 +181,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    VNSPLL1=CZERO
 
    VNSPLL0=CZERO
-   call VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,CLEB,ICLEB,&
+   call VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,LMPOT,CLEB,ICLEB,&
       IEND,NSPIN,ZAT,RNEW,USE_SRATRICK)
    ! LDAU
    if (IDOLDAU.EQ.1) then
@@ -371,7 +374,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
 
          ! Contruct the spin-orbit coupling hamiltonian and add to potential
          call SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,CVLIGHT,SOCSCALE,  &
-            NSPIN,LMPOTD,THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,    &
+            NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,    &
             NCHEB,IRMDNEW,NRMAXD,VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),'1')
          ! extend matrix for the SRA treatment
          VNSPLL(:,:,:,ith)=CZERO
@@ -379,10 +382,10 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          if (NSRA.EQ.2) then
             if (USE_SRATRICK.EQ.0) then
                call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                  IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
+                  IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0')
             elseif (USE_SRATRICK.EQ.1) then
                call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                  IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+                  IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph')
             endif
          else
             VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
@@ -401,7 +404,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          ! Using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
             TMATSPH(:,ith)=CZERO
-            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,LMPOTD, &
+            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,LMPOT, &
                LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,JLK_INDEX,        &
                HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),            &
                GMATPREFACTOR,TMATSPH(:,ith),ALPHASPH,USE_SRATRICK)
@@ -410,7 +413,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          RLL(:,:,:,ith)=CZERO
          SLL(:,:,:,ith)=CZERO
 
-         cc right solutions
+         ! Right solutions
          TMAT0=CZERO
          ALPHA0=CZERO ! LLY
          ! faster calculation of RLL.
@@ -502,7 +505,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          !
          ! Contruct the spin-orbit coupling hamiltonian and add to potential
          call SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,  &
-            LMPOTD,THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW,  &
+            LMPOT,THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW,  &
             NRMAXD,VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),'transpose')
 
          ! Extend matrix for the SRA treatment
@@ -510,10 +513,10 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          if (NSRA.EQ.2) then
             if (USE_SRATRICK.EQ.0) then
                call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                  IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=0')
+                  IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0')
             elseif (USE_SRATRICK.EQ.1) then
                call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                  IRMDNEW,NRMAXD,ERYD,CVLIGHT,LMAX,0,'Ref=Vsph')
+                  IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph')
             endif
          else
             VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
@@ -534,7 +537,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          ! notice that exchange the order of left and right hankel/bessel functions
          if (USE_SRATRICK.EQ.1) then
             TMATSPH(:,ith)=CZERO
-            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,LMPOTD, &
+            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,LMPOT, &
                LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,JLK_INDEX,        &
                HLK2(:,:,ith),JLK2(:,:,ith),HLK(:,:,ith),JLK(:,:,ith),            &
                GMATPREFACTOR,ALPHASPH,TMATSPH(:,ith),USE_SRATRICK)
@@ -577,7 +580,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
       end if
 
       if(t_dtmatJij_at%calculate) then
-         call calc_dtmatJij(LMMAXD,LMMAXSO,LMPOTD,NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,  &
+         call calc_dtmatJij(LMMAXD,LMMAXSO,LMPOT,NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,  &
             VINS,RLLLEFT(:,:,:,ith),RLL(:,:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL,   &
             NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,t_dtmatJij_at%dtmat_xyz(:,:,:,ie_num))
 

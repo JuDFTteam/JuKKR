@@ -261,10 +261,9 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       VNSPLL1=CZERO
 
       call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,     &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),             &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),LMPOT,        &
          CLEB,ICLEB,IEND,NSPIN,                                         &
          ZAT(I1),RNEW(1:IRMDNEW(I1),I1),USE_SRATRICK)
-
       ! contruct the spin-orbit coupling hamiltonian and add to potential
       call SPINORBIT_HAM(LMAX,LMMAXD,                                &
          VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
@@ -279,10 +278,10 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          call memocc(i_stat,product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','tmatimp_newsolver')
          if (USE_SRATRICK.EQ.0) then
             call VLLMATSRA(VNSPLL1,VNSPLL,RNEW(1:IRMDNEW(I1),I1),LMMAXSO,  &
-               IRMDNEW(I1),IRMDNEW(I1),E,C,LMAX,0,'Ref=0')
+               IRMDNEW(I1),IRMDNEW(I1),E,LMAX,0,'Ref=0')
          elseif (USE_SRATRICK.EQ.1) then
             call VLLMATSRA(VNSPLL1,VNSPLL,RNEW(1:IRMDNEW(I1),I1),LMMAXSO,  &
-               IRMDNEW(I1),IRMDNEW(I1),E,C,LMAX,0,'Ref=Vsph')
+               IRMDNEW(I1),IRMDNEW(I1),E,LMAX,0,'Ref=Vsph')
          endif
       else
          allocate(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW(I1)),stat=i_stat)
@@ -367,7 +366,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       VNSPLL0=CZERO
       VNSPLL1=CZERO
       call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,  &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
+         LMPOT,VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
          CLEB,ICLEB,IEND,NSPIN,ZAT(I1),RNEW(1:IRMDNEW(I1),I1),0)
       !     +             CLEB,ICLEB,IEND,NSPIN,Z(I1),RNEW(:,I1),USE_SRATRICK)
 
@@ -540,9 +539,9 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       RPAN_INTERVALL(0:NTOTD,1:NATOMIMP),IPAN_INTERVALL(0:NTOTD,1:NATOMIMP),1)
 
    ! In second step interpolate potential
-   call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATOMIMP,IPAND,NSPOTD, &
+   call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATOMIMP,IPAND,LMPOT,NSPOTD, &
       NTOTD,NCHEB,IRMDNEWD,                                      &
-      NSPIN,RIMP(:,1:NATOMIMP),IRMINIMP(1:NATOMIMP),              &
+      NSPIN,RIMP(:,1:NATOMIMP),IRMIND,IRMINIMP(1:NATOMIMP),              &
       IRWSIMP(1:NATOMIMP),                                        &
       IRCUTIMP(0:IPAND,1:NATOMIMP),                               &
       VINSIMP(IRMIND:IRM,1:LMPOT,1:NATOMIMP),                   &
@@ -577,7 +576,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       VNSPLL1=CZERO
 
       call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,  &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
+         LMPOT,VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
          CLEB,ICLEB,IEND,NSPIN,                                      &
          ZIMP(I1),RNEW(1:IRMDNEW(I1),I1),USE_SRATRICK)
 
@@ -597,11 +596,11 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          if (USE_SRATRICK.EQ.0) then
             call VLLMATSRA(VNSPLL1,VNSPLL,                  &
                RNEW(1:IRMDNEW(I1),I1),LMMAXSO,IRMDNEW(I1),  &
-               IRMDNEW(I1),E,C,LMAX,0,'Ref=0')
+               IRMDNEW(I1),E,LMAX,0,'Ref=0')
          elseif (USE_SRATRICK.EQ.1) then
             call VLLMATSRA(VNSPLL1,VNSPLL,                  &
                RNEW(1:IRMDNEW(I1),I1),LMMAXSO,IRMDNEW(I1),  &
-               IRMDNEW(I1),E,C,LMAX,0,'Ref=Vsph')
+               IRMDNEW(I1),E,LMAX,0,'Ref=Vsph')
          endif
       else
          allocate(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW(I1)),stat=i_stat)
@@ -677,7 +676,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       ! set up the non-spherical ll' matrix for potential VLL'
       VNSPLL0=CZERO
       call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,  &
-         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
+         LMPOT,VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
          CLEB,ICLEB,IEND,NSPIN,                                      &
          ZIMP(I1),RNEW(1:IRMDNEW(I1),I1),0)
       !     +             ZIMP(I1),RNEW(:,I1),USE_SRATRICK)

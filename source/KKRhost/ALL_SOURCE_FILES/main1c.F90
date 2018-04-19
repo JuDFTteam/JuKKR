@@ -25,7 +25,7 @@ contains
    !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
    !> and many others ...
    !----------------------------------------------------------------------------
-   subroutine main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LMAX,NTOTD,MMAXD,NATYP,&
+   subroutine main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LPOT,LMAX,NTOTD,MMAXD,NATYP,&
       NPOTD,KMROT,NSPIN,NCHEB,LMPOT,LMXSPD,IELAST,LMMAXD,NRMAXD,IRMIND,INTERVX,  &
       INTERVY,INTERVZ,IESEMICORE,TK,EMIN,EMAX,ALAT,EFERMI,SOLVER,IQAT,ZREL,IPAN, &
       IRWS,NCORE,JWSREL,NTCELL,ITITLE,CSCL,ZAT,CONC,SOCSCALE,NTLDAU,IDOLDAU,     &
@@ -64,57 +64,62 @@ contains
       !          (l,m_l)-representation
       !
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! .. Parameters
+      integer :: NMVECMAX
+      parameter (NMVECMAX = 4)
+
       ! .. Input variables
-      integer, intent(in) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
-      integer, intent(in) :: LLY       !< LLY <> 0 : apply Lloyd's formula
-      integer, intent(in) :: IRM       !< Maximum number of radial points
-      integer, intent(in) :: LM2D      !< (2*LMAX+1)**2
-      integer, intent(in) :: ICST      !< Number of Born approximation
-      integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
-      integer, intent(in) :: NPOL      !< Number of Matsubara Poles (EMESHT)
-      integer, intent(in) :: NSRA
-      integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
-      integer, intent(in) :: NTOTD
-      integer, intent(in) :: MMAXD     !< 2*LMAX+1
-      integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
-      integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-      integer, intent(in) :: KMROT     !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-      integer, intent(in) :: NSPIN     !< Counter for spin directions
-      integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
-      integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-      integer, intent(in) :: LMXSPD    !< (2*LPOT+1)**2
-      integer, intent(in) :: IELAST
-      integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-      integer, intent(in) :: NRMAXD    !< NTOTD*(NCHEB+1)
-      integer, intent(in) :: IRMIND    !< IRM-IRNSD
-      integer, intent(in) :: INTERVX   !< Number of intervals in x-direction for k-net in IB of the BZ
-      integer, intent(in) :: INTERVY   !< Number of intervals in y-direction for k-net in IB of the BZ
-      integer, intent(in) :: INTERVZ   !< Number of intervals in z-direction for k-net in IB of the BZ
-      integer, intent(in) :: IESEMICORE
-      double precision, intent(in) :: TK        !< Temperature
-      double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
-      character(len=10), intent(in) ::  SOLVER  !< Type of solver
-      integer, dimension(NATYP), intent(in) :: IQAT      !< The site on which an atom is located on a given site
-      integer, dimension(NATYP), intent(in) :: ZREL      !< atomic number (cast integer)
-      integer, dimension(NATYP), intent(in) :: IPAN      !< Number of panels in non-MT-region
-      integer, dimension(NATYP), intent(in) :: IRWS      !< R point at WS radius
-      integer, dimension(NPOTD), intent(in) :: NCORE     !< Number of core states
-      integer, dimension(NATYP), intent(in) :: JWSREL    !< index of the WS radius
-      integer, dimension(NATYP), intent(in) :: NTCELL    !< Index for WS cell
-      integer, dimension(20,NPOTD), intent(in) :: ITITLE
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(in) :: CSCL !< Speed of light scaling
-      double precision, dimension(NATYP), intent(in) :: ZAT       !< Nuclear charge
-      double precision, dimension(NATYP), intent(in) :: CONC      !< Concentration of a given atom
-      double precision, dimension(NATYP), intent(in) :: SOCSCALE  !< Spin-orbit scaling
+      integer, intent(inout) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
+      integer, intent(inout) :: LLY       !< LLY <> 0 : apply Lloyd's formula
+      integer, intent(inout) :: IRM       !< Maximum number of radial points
+      integer, intent(inout) :: LM2D      !< (2*LMAX+1)**2
+      integer, intent(inout) :: ICST      !< Number of Born approximation
+      integer, intent(inout) :: NAEZ      !< Number of atoms in unit cell
+      integer, intent(inout) :: NPOL      !< Number of Matsubara Poles (EMESHT)
+      integer, intent(inout) :: NSRA
+      integer, intent(inout) :: LMAX      !< Maximum l component in wave function expansion
+      integer, intent(inout) :: LPOT      !< Maximum l component in potential expansion
+      integer, intent(inout) :: NTOTD
+      integer, intent(inout) :: MMAXD     !< 2*LMAX+1
+      integer, intent(inout) :: NATYP     !< Number of kinds of atoms in unit cell
+      integer, intent(inout) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+      integer, intent(inout) :: KMROT     !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+      integer, intent(inout) :: NSPIN     !< Counter for spin directions
+      integer, intent(inout) :: NCHEB     !< Number of Chebychev pannels for the new solver
+      integer, intent(inout) :: LMPOT     !< (LPOT+1)**2
+      integer, intent(inout) :: LMXSPD    !< (2*LPOT+1)**2
+      integer, intent(inout) :: IELAST
+      integer, intent(inout) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
+      integer, intent(inout) :: NRMAXD    !< NTOTD*(NCHEB+1)
+      integer, intent(inout) :: IRMIND    !< IRM-IRNSD
+      integer, intent(inout) :: INTERVX   !< Number of intervals in x-direction for k-net in IB of the BZ
+      integer, intent(inout) :: INTERVY   !< Number of intervals in y-direction for k-net in IB of the BZ
+      integer, intent(inout) :: INTERVZ   !< Number of intervals in z-direction for k-net in IB of the BZ
+      integer, intent(inout) :: IESEMICORE
+      double precision, intent(inout) :: TK        !< Temperature
+      double precision, intent(inout) :: ALAT      !< Lattice constant in a.u.
+      character(len=10), intent(inout) ::  SOLVER  !< Type of solver
+      integer, dimension(NATYP), intent(inout) :: IQAT      !< The site on which an atom is located on a given site
+      integer, dimension(NATYP), intent(inout) :: ZREL      !< atomic number (cast integer)
+      integer, dimension(NATYP), intent(inout) :: IPAN      !< Number of panels in non-MT-region
+      integer, dimension(NATYP), intent(inout) :: IRWS      !< R point at WS radius
+      integer, dimension(NPOTD), intent(inout) :: NCORE     !< Number of core states
+      integer, dimension(NATYP), intent(inout) :: JWSREL    !< index of the WS radius
+      integer, dimension(NATYP), intent(inout) :: NTCELL    !< Index for WS cell
+      integer, dimension(20,NPOTD), intent(inout) :: ITITLE
+      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: CSCL !< Speed of light scaling
+      double precision, dimension(NATYP), intent(inout) :: ZAT       !< Nuclear charge
+      double precision, dimension(NATYP), intent(inout) :: CONC      !< Concentration of a given atom
+      double precision, dimension(NATYP), intent(inout) :: SOCSCALE  !< Spin-orbit scaling
       !-------------------------------------------------------------------------
       ! LDA+U
       !-------------------------------------------------------------------------
-      integer, intent(in) :: NTLDAU    !< number of atoms on which LDA+U is applied
-      integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
-      integer, intent(in) :: ITRUNLDAU !< Iteration index for LDA+U
-      integer, dimension(NATYP), intent(in) :: ITLDAU    !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
-      double precision, dimension(NATYP), intent(in) :: UEFF   !< input U parameter for each atom
-      double precision, dimension(NATYP), intent(in) :: JEFF   !< input J parameter for each atom
+      integer, intent(inout) :: NTLDAU    !< number of atoms on which LDA+U is applied
+      integer, intent(inout) :: IDOLDAU   !< flag to perform LDA+U
+      integer, intent(inout) :: ITRUNLDAU !< Iteration index for LDA+U
+      integer, dimension(NATYP), intent(inout) :: ITLDAU    !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
+      double precision, dimension(NATYP), intent(inout) :: UEFF   !< input U parameter for each atom
+      double precision, dimension(NATYP), intent(inout) :: JEFF   !< input J parameter for each atom
 
       ! .. Input/Output variables
       integer, intent(inout) :: IEND  !< Number of nonzero gaunt coefficients
@@ -181,9 +186,8 @@ contains
       integer :: LMMAXSO
       integer :: ITMPDIR
       integer :: NSPINPOT
-      integer :: NMVECMAX
 
-      integer :: i1_start, i1_end
+      integer :: i1_start, i1_end,i_stat,i_all
       integer :: ie_start, ie_end, ie_num
       integer :: L,I1,IE,IR,IS,LM,IQ,LM1,LM2,ierr,IPOT
       integer :: ICELL,IPOT1,ISPIN,IHOST,ILTMP
@@ -236,12 +240,12 @@ contains
       double precision, dimension(IRM*KREL + (1-KREL),NATYP) :: RHOORB   !< orbital density
       double precision, dimension(0:LMAX+1+1,3,NATYP) :: MUORB           !< orbital magnetic moment
       ! ----------------------------------------------------------------------
-      !  R2NEF (IRMD,LMPOT,NATYP,2)  ! rho at FERMI energy
-      !  RHO2NS(IRMD,LMPOT,NATYP,2)  ! radial density
+      !  R2NEF (IRM,LMPOT,NATYP,2)  ! rho at FERMI energy
+      !  RHO2NS(IRM,LMPOT,NATYP,2)  ! radial density
       !   nspin=1            : (*,*,*,1) radial charge density
       !   nspin=2 or krel=1  : (*,*,*,1) rho(2) + rho(1) -> charge
       !                               (*,*,*,2) rho(2) - rho(1) -> mag. moment
-      !  RHOC(IRMD,NPOTD)              ! core charge density
+      !  RHOC(IRM,NPOTD)              ! core charge density
       ! ----------------------------------------------------------------------
       double precision, dimension(IRM,NPOTD)    :: RHOC   !< core charge density
       double precision, dimension(IRM,LMPOT,4) :: RHO2M1
@@ -271,13 +275,6 @@ contains
       double complex, dimension(:,:,:,:), allocatable :: workc
 #endif
 
-      ! .. Calculate parameters
-      parameter (LMMAXSO = 2*LMMAXD)
-      parameter (LMAXD1=LMAX+1)
-      parameter (LMMAXD1=LMMAXD+1)
-      parameter (NMVECMAX = 4)
-      parameter (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
-
       ! .. Intrinsic Functions ..
       intrinsic ATAN,DBLE,DIMAG,DREAL
       ! .. External Functions ..
@@ -290,6 +287,13 @@ contains
       DATA TEXTNS/' ns ='/
       DATA LDORHOEF/.TRUE./
       DATA IHOST / 1 /          ! this is the host program
+
+      ! .. Calculate parameters
+      LMMAXSO = 2*LMMAXD
+      LMAXD1=LMAX+1
+      LMMAXD1=LMMAXD+1
+      LRECTMT=WLENGTH*4*LMMAXD*LMMAXD
+
 
       ! Allocate arrays
       allocate(VINSNEW(NRMAXD,LMPOT,NSPOTD),stat=i_stat)
@@ -322,19 +326,20 @@ contains
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
       call get_params_1c(t_params,KREL,NAEZ,NATYP,NCLEB,LM2D,   &
-         NCHEBD,IPAND,LMPOT,LMAX,LMXSPD,NFUND,NPOTD,            &
-         NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NATYP,NAEZ,NSPIN,NACLS1, &
-         ICST,KMROT,IQAT,IDOLDAU,LMAX,IRWS,IPAN,IRCUT,IEND,ICLEB, &
+         NCHEB,IPAND,LMPOT,LMAX,LMXSPD,NFUND,NPOTD,            &
+         NTOTD,MMAXD,IEMXD,IRM,NSRA,INS,NSPIN,NACLS1, &
+         ICST,KMROT,IQAT,IDOLDAU,IRWS,IPAN,IRCUT,IEND,ICLEB, &
          LOFLM,JEND,IFUNM1,LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,    &
          IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,LLY,ITMPDIR,        &
-         ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NCHEB,NPAN_TOT,    &
+         ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NPAN_TOT,    &
          NTLDAU,LOPT,ITLDAU,IELAST,IESEMICORE,NPOL,IRSHIFT,JWSREL,&
          ZREL,ITRUNLDAU,QMTET,QMPHI,CONC,ALAT,ZAT,DRDI,RMESH,A,B, &
          CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,RNEW,SOCSCL,    &
-         THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,EMIN,EMAX,TK,VINS,VISP,  &gg
+         THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,EMIN,EMAX,TK,VINS,VISP, &
          ECORE,DRDIREL,R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ,&
          WEZ,PHILDAU,TMPDIR,SOLVER,NSPIND,NSPOTD,                 &
          IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
+
       ! Initialization needed due to merging to one executable
       ESPV(:,:)      = 0.d0
       RHO2N1(:,:,:)  = 0.d0
@@ -421,7 +426,7 @@ contains
             do IE = 1,IELAST                                                     ! LLY Lloyd
                call RHOVAL0(EZ(IE),DRDI(1,I1),RMESH(1,I1),IPAN(I1),  &           ! LLY Lloyd
                   IRCUT(0,I1),IRWS(I1),THETAS(1,1,ICELL),CDOSAT0(IE),&           ! LLY Lloyd
-                  CDOSAT1(IE))                                                   ! LLY Lloyd
+                  CDOSAT1(IE),IRM,LMAX)                                          ! LLY Lloyd
 
                ! calculate contribution from free space
 
@@ -629,7 +634,8 @@ contains
                   RMREL(1,I1),DRDIREL(1,I1),R2DRDIREL(1,I1),ZREL(I1),         &
                   JWSREL(I1),IRSHIFT(I1),LMOMVEC,QMTET(IQ),QMPHI(IQ),MVEVIL1, &
                   MVEVIL2,NMVECMAX,IDOLDAU,LOPT(I1),PHILDAU(1,I1),            &
-                  WLDAU(1,1,1,I1),DENMATC(1,1,IPOT),NATYP,NQDOS)
+                  WLDAU(1,1,1,I1),DENMATC(1,1,IPOT),NATYP,NQDOS,LMAX,LMMAXD,  &
+                  IRM,MMAXD,LMXSPD,IRMIND,LM2D)
 #ifdef CPP_TIMING
                call timing_pause('main1c - rhoval')
 #endif
@@ -640,7 +646,7 @@ contains
             IPOT1 = (I1-1)*NSPINPOT + 1
             !
             do LM = 1,LMPOT
-               do IR = 1,IRMD
+               do IR = 1,IRM
                   RHO2NS(IR,LM,I1,1) = RHO2N1(IR,LM,IPOT1)
                   R2NEF(IR,LM,I1,1)  = RHO2N2(IR,LM,IPOT1)
                end do
@@ -862,10 +868,12 @@ contains
             call CINIT(MMAXD*MMAXD*4*NATYP,DENMATN(1,1,1,1,1))
          endif
 
-         call INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATYP,IPAND, &
-            NSPOTD,NTOTD,NCHEBD,NTOTD*(NCHEBD+1),NSPIN,RMESH,  &
-            IRMIN,IRWS,IRCUT,VINS,VISP,NPAN_LOG,NPAN_EQ,       &
+         call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATYP,IPAND,       &
+            LMPOT,NSPOTD,NTOTD,NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH, &
+            IRMIND,IRMIN,IRWS,IRCUT,VINS,VISP,NPAN_LOG,NPAN_EQ,   &
             NPAN_TOT,RNEW,IPAN_INTERVALL,VINSNEW)
+
+
 #ifdef CPP_MPI
          ntot1 = t_inc%NATYP
 
@@ -920,7 +928,8 @@ contains
             call timing_start('main1c - rhovalnew')
 #endif
 
-            call RHOVALNEW(LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,      &
+            call RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
+               NPOTD,NRMAXD,LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,     &
                ZAT(I1),SOCSCALE(I1),CLEB(1,1),ICLEB,IEND,               &
                IFUNM1(1,ICELL),LMSP1(1,ICELL),                          &
                NCHEB,NPAN_TOT(I1),NPAN_LOG(I1),                         &
@@ -1088,10 +1097,10 @@ contains
             !-------------------------------------------------------------------
             if (.not.OPT('NEWSOSOL')) then
                call WMATLDAU(NTLDAU,ITLDAU,NSPINPOT,DENMATC,LOPT,UEFF,JEFF,   &
-                  ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD)
+                  ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD,LMAX)
             else
                call WMATLDAUSOC(NTLDAU,ITLDAU,NSPINPOT,DENMATN,LOPT,UEFF,JEFF,&
-                  ULDAU,WLDAU,EU,EDC,MMAXD)
+                  ULDAU,WLDAU,EU,EDC,MMAXD,LMAX)
             endif
             ! -> Mix old and new LDA+U interaction matrices
             call MIXLDAU(MMAXD,NSPIND,NATYP,NATYP,NSPIN,LOPT,WLDAUOLD,WLDAU)
@@ -1106,7 +1115,7 @@ contains
             ! Write full lda+u information in ascii file ldaupot_new
             !-------------------------------------------------------------------
             call WRLDAUPOT(ITRUNLDAU,LOPT,UEFF,JEFF,EREFLDAU,NATYP,WLDAU,  &
-               ULDAU,PHILDAU,IRMD,NATYP,NSPIND,MMAXD,IRWS)
+               ULDAU,PHILDAU,IRM,NATYP,NSPIND,MMAXD,IRWS)
          end if
          !----------------------------------------------------------------------
          ! LDA+U

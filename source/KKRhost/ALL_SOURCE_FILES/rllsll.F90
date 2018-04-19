@@ -9,20 +9,18 @@
 ! write out files for test runs
 !#define test_prep
 
-
 ! choose between interface for impurity and host code (different calling lists)
 #ifndef hostcode
-MODULE MOD_RLLSLL
+module MOD_RLLSLL
 
-   use Constants
+contains
 
-CONTAINS
-   SUBROUTINE RLLSLL(RPANBOUND,RMESH,VLL,RLL,SLL,TLLP, &
+   subroutine RLLSLL(RPANBOUND,RMESH,VLL,RLL,SLL,TLLP, &
       NCHEB,NPAN,LMSIZE,LMSIZE2,NRMAX, &
       nvec,jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR, &
       cmoderll,cmodesll,cmodetest,idotime)
 #else
-   SUBROUTINE RLLSLL(RPANBOUND,RMESH,VLL,RLL,SLL,TLLP, &
+   subroutine RLLSLL(RPANBOUND,RMESH,VLL,RLL,SLL,TLLP, &
          NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX,NRMAXD, &
          NVEC,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
          CMODERLL,CMODESLL,CMODETEST,USE_SRATRICK1,      &
@@ -115,6 +113,8 @@ CONTAINS
       use omp_lib ! omp functions
 #endif
 
+      use Constants
+   
       implicit none
       integer :: ncheb                               ! number of chebyshev nodes
       integer :: npan                                ! number of panels
@@ -210,7 +210,7 @@ CONTAINS
       integer,parameter  :: directsolv=1
 #ifdef hostcode
       DOUBLE COMPLEX ALPHAGET(LMSIZE,LMSIZE) ! LLY
-      #endif
+#endif
 
 #ifdef CPP_HYBRID
       !     openMP variable --sacin 23/04/2015
@@ -905,6 +905,7 @@ END MODULE MOD_RLLSLL
 program test_rllsll
 
    use mod_timing
+   use Constants
 
    implicit none
 
@@ -920,8 +921,6 @@ program test_rllsll
    double precision, allocatable :: rpanbound(:), rmesh(:)
    double complex, allocatable ::  sll(:,:,:), rll(:,:,:), tllp(:,:), vll(:,:,:)
    double complex, allocatable :: alphaget(:,:) ! lly
-
-   double complex, parameter :: C0=(0.0d0, 0.0d0)
 
    call timing_init(0)
    call timing_start('read-in')
@@ -950,9 +949,9 @@ program test_rllsll
    allocate(alphaget(lmsize, lmsize))
 
    ! initialize to 0
-   rll = C0
-   sll = C0
-   tllp = C0
+   rll = CZERO
+   sll = CZERO
+   tllp = CZERO
 
    read(1234, '(1ES25.15)') gmatprefactor
    read(1234, '(1000ES25.15)') hlk(1:lbessel,1:nrmax), jlk(1:lbessel,1:nrmax), hlk2(1:lbessel,1:nrmax), jlk2(1:lbessel,1:nrmax)
@@ -1066,12 +1065,12 @@ end subroutine write_rllsll_test_input
 ! preprocessor options:
 ! choose between interface for impurity and host code (different calling lists)
 #ifndef hostcode
-SUBROUTINE rll_global_solutions(RPANBOUND,RMESH,VLL,RLL,TLLP, &
+subroutine rll_global_solutions(RPANBOUND,RMESH,VLL,RLL,TLLP, &
       NCHEB,NPAN,LMSIZE,LMSIZE2,NRMAX, &
       nvec,jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR, &
       cmoderll,idotime)
 #else
-SUBROUTINE rll_global_solutions(RPANBOUND,RMESH,VLL,RLL,TLLP, &
+subroutine rll_global_solutions(RPANBOUND,RMESH,VLL,RLL,TLLP, &
       NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX,NRMAXD, &
       NVEC,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
       CMODERLL,USE_SRATRICK1,      &

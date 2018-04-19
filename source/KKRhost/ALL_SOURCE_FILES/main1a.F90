@@ -26,8 +26,8 @@ contains
    !> and many others ...
    !----------------------------------------------------------------------------
    subroutine main1a(INS,LLY,IRM,LM2D,ICST,IEND,NCLS,LMAX,NREF,NSRA,KREL,NEMB,   &
-      NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,LMPOT,IPAND,NINEQ,NSPIN,NCHEB,    &
-      LMMAXD,IELAST,NRMAXD,IRMIND,NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS,IQAT,   &
+      LPOT,NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,LMPOT,IPAND,NINEQ,NSPIN,NCHEB,    &
+      LMGF0D,LMMAXD,IELAST,NRMAXD,IRMIND,NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS,IQAT,   &
       IRWS,NACLS,REFPOT,ATOM,ZAT,VREF,RMTREF,RCLS,SOLVER,SOCSCL,SOCSCALE,CSCL,   &
       NTLDAU,IDOLDAU,ITLDAU,UEFF,JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,ICLEB,IRCUT,      &
       IPAN_INTERVALL,PHI,THETA,CLEB,VISP,DRDI,RNEW,RMESH,RPAN_INTERVALL,VINS,EZ, &
@@ -60,7 +60,7 @@ contains
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! For KREL = 1 (relativistic mode)
       !
-      !  NPOTD = 2 * NATYPD
+      !  NPOTD = 2 * NATYP
       !  LMMAXD = 2 * (LMAX+1)^2
       !  NSPIND = 1
       !  LMGF0D = (LMAX+1)^2 dimension of the reference system Green
@@ -70,65 +70,67 @@ contains
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !     ..
       !     .. Input variables
-      integer, intent(in) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
-      integer, intent(in) :: LLY       !< LLY <> 0: apply Lloyds formula
-      integer, intent(in) :: IRM       !< Maximum number of radial points
-      integer, intent(in) :: LM2D      !< (2*LMAX+1)**2
-      integer, intent(in) :: ICST      !< Number of Born approximation
-      integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
-      integer, intent(in) :: NCLS      !< Number of reference clusters
-      integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
-      integer, intent(in) :: NREF      !< Number of diff. ref. potentials
-      integer, intent(in) :: NSRA
-      integer, intent(in) :: KREL      !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
-      integer, intent(in) :: NEMB      !< Number of 'embedding' positions
-      integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
-      integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
-      integer, intent(in) :: NCLSD     !< Maximum number of different TB-clusters
-      integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-      integer, intent(in) :: ITSCF
-      integer, intent(in) :: NTOTD
-      integer, intent(in) :: MMAXD     !< 2*LMAX+1
-      integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-      integer, intent(in) :: IPAND     !< Number of panels in non-spherical part
-      integer, intent(in) :: NINEQ     !< Number of ineq. positions in unit cell
-      integer, intent(in) :: NSPIN     !< Counter for spin directions
-      integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
-      integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-      integer, intent(in) :: IELAST
-      integer, intent(in) :: NRMAXD    !< NTOTD*(NCHEB+1)
-      integer, intent(in) :: IRMIND    !< IRM-IRNSD
-      integer, intent(in) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-      double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
-      double precision, intent(in) :: R_LOG     !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
+      integer, intent(inout) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
+      integer, intent(inout) :: LLY       !< LLY <> 0: apply Lloyds formula
+      integer, intent(inout) :: IRM       !< Maximum number of radial points
+      integer, intent(inout) :: LM2D      !< (2*LMAX+1)**2
+      integer, intent(inout) :: ICST      !< Number of Born approximation
+      integer, intent(inout) :: IEND      !< Number of nonzero gaunt coefficients
+      integer, intent(inout) :: NCLS      !< Number of reference clusters
+      integer, intent(inout) :: LMAX      !< Maximum l component in wave function expansion
+      integer, intent(inout) :: NREF      !< Number of diff. ref. potentials
+      integer, intent(inout) :: NSRA
+      integer, intent(inout) :: KREL      !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+      integer, intent(inout) :: NEMB      !< Number of 'embedding' positions
+      integer, intent(inout) :: NAEZ      !< Number of atoms in unit cell
+      integer, intent(inout) :: LPOT      !< Maximum l component in potential expansion
+      integer, intent(inout) :: NATYP     !< Number of kinds of atoms in unit cell
+      integer, intent(inout) :: NCLSD     !< Maximum number of different TB-clusters
+      integer, intent(inout) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+      integer, intent(inout) :: ITSCF
+      integer, intent(inout) :: NTOTD
+      integer, intent(inout) :: MMAXD     !< 2*LMAX+1
+      integer, intent(inout) :: LMPOT     !< (LPOT+1)**2
+      integer, intent(inout) :: IPAND     !< Number of panels in non-spherical part
+      integer, intent(inout) :: NINEQ     !< Number of ineq. positions in unit cell
+      integer, intent(inout) :: NSPIN     !< Counter for spin directions
+      integer, intent(inout) :: NCHEB     !< Number of Chebychev pannels for the new solver
+      integer, intent(inout) :: LMGF0D    !< (LMAX+1)**2
+      integer, intent(inout) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
+      integer, intent(inout) :: IELAST
+      integer, intent(inout) :: NRMAXD    !< NTOTD*(NCHEB+1)
+      integer, intent(inout) :: IRMIND    !< IRM-IRNSD
+      integer, intent(inout) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+      double precision, intent(inout) :: ALAT      !< Lattice constant in a.u.
+      double precision, intent(inout) :: R_LOG     !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
       double precision, intent(inout) :: TOLRDIF   !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
-      double complex, intent(in) :: DELTAE  !< Energy difference for numerical derivative
-      integer, dimension(NAEZ+NEMB), intent(in)          :: CLS   !< Cluster around atomic sites
-      integer, dimension(NATYP), intent(in)              :: IQAT  !< The site on which an atom is located on a given site
-      integer, dimension(NATYP), intent(in)              :: IRWS  !< R point at WS radius
-      integer, dimension(NCLSD), intent(in)              :: NACLS !< Number of atoms in cluster
-      integer, dimension(NAEZ+NEMB), intent(in)          :: REFPOT   !< Ref. pot. card  at position
-      integer, dimension(NACLSD,NAEZ+NEMB), intent(in)   :: ATOM  !< Atom at site in cluster
-      double precision, dimension(NATYP), intent(in)  :: ZAT      !< Nuclear charge
-      double precision, dimension(NREF), intent(in)   :: VREF
-      double precision, dimension(NREF), intent(in)   :: RMTREF   !< Muffin-tin radius of reference system
-      double precision, dimension(3,NACLSD,NCLSD), intent(in) :: RCLS   !< Real space position of atom in cluster
+      double complex, intent(inout) :: DELTAE  !< Energy difference for numerical derivative
+      integer, dimension(NAEZ+NEMB), intent(inout)          :: CLS   !< Cluster around atomic sites
+      integer, dimension(NATYP), intent(inout)              :: IQAT  !< The site on which an atom is located on a given site
+      integer, dimension(NATYP), intent(inout)              :: IRWS  !< R point at WS radius
+      integer, dimension(NCLSD), intent(inout)              :: NACLS !< Number of atoms in cluster
+      integer, dimension(NAEZ+NEMB), intent(inout)          :: REFPOT   !< Ref. pot. card  at position
+      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout)   :: ATOM  !< Atom at site in cluster
+      double precision, dimension(NATYP), intent(inout)  :: ZAT      !< Nuclear charge
+      double precision, dimension(NREF), intent(inout)   :: VREF
+      double precision, dimension(NREF), intent(inout)   :: RMTREF   !< Muffin-tin radius of reference system
+      double precision, dimension(3,NACLSD,NCLSD), intent(inout) :: RCLS   !< Real space position of atom in cluster
 
       !-------------------------------------------------------------------------
       !     RELATIVISTIC MODE
       !-------------------------------------------------------------------------
-      character(len=10), intent(in) :: SOLVER   !< Type of solver
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(in)   :: SOCSCL
-      double precision, dimension(NATYP), intent(in)                             :: SOCSCALE    !< Spin-orbit scaling
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(in)   :: CSCL        !< Speed of light scaling
+      character(len=10), intent(inout) :: SOLVER   !< Type of solver
+      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout)   :: SOCSCL
+      double precision, dimension(NATYP), intent(inout)                             :: SOCSCALE    !< Spin-orbit scaling
+      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout)   :: CSCL        !< Speed of light scaling
       !-------------------------------------------------------------------------
       ! LDA+U
       !-------------------------------------------------------------------------
-      integer, intent(in) :: NTLDAU    !< number of atoms on which LDA+U is applied
-      integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
-      integer, dimension(NATYP), intent(in) :: ITLDAU !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
-      double precision, dimension(NATYP), intent(in) :: UEFF   !< input U parameter for each atom
-      double precision, dimension(NATYP), intent(in) :: JEFF   !< input J parameter for each atom
+      integer, intent(inout) :: NTLDAU    !< number of atoms on which LDA+U is applied
+      integer, intent(inout) :: IDOLDAU   !< flag to perform LDA+U
+      integer, dimension(NATYP), intent(inout) :: ITLDAU !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
+      double precision, dimension(NATYP), intent(inout) :: UEFF   !< input U parameter for each atom
+      double precision, dimension(NATYP), intent(inout) :: JEFF   !< input J parameter for each atom
 
       ! .. In/out Variables
       integer, dimension(NATYP), intent(inout)                             :: IPAN !< Number of panels in non-MT-region
@@ -187,8 +189,8 @@ contains
       double precision, dimension(:,:,:), allocatable :: VINSNEW
 
       ! Assignment of values to parameters
-      parameter (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
-      parameter (LRECTRA=WLENGTH*4)
+      !parameter (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
+      !parameter (LRECTRA=WLENGTH*4)
 
 #ifdef CPP_MPI
       integer :: ntot1, mytot, ii
@@ -202,15 +204,19 @@ contains
       !-------------------------------------------------------------------------
       !     .. External Subroutines ..
       !-------------------------------------------------------------------------
-      external TBREF,CALCTMAT,OPT
+      external :: TBREF,CALCTMAT,OPT
       !-------------------------------------------------------------------------
       !     .. Intrinsic Functions ..
       !-------------------------------------------------------------------------
-      intrinsic ATAN,MOD
+      intrinsic :: ATAN,MOD
       !     ..
-      data TOLRDIF /1.5D0/ ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
-      data LLY /0/
+      !data TOLRDIF /1.5D0/ ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
+      !data LLY /0/
       !
+      LLY=0
+      TOLRDIF=1.5d0
+      LRECTMT=WLENGTH*4*LMMAXD*LMMAXD
+      LRECTRA=WLENGTH*4
 
       allocate(VINSNEW(NRMAXD,LMPOT,NSPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','main1a')
@@ -224,17 +230,15 @@ contains
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1a(t_params,IPAND,NATYP,IRM,NACLSD,IELAST,   &
-         NCLSD,NREF,NCLEB,NEMB,NAEZ,LM2D,NSRA,INS,NAEZ,NATYP,     &
-         NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,NINEQ,NREF,IDOLDAU,LLY,     &
-         KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,IEND,EZ,VINS,   &
-         IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,VISP,    &
-         RMTREF,VREF,CLEB,CSCL,SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,   &
-         SOLVER,TMPDIR,DELTAE,tolrdif,NPAN_LOG,NPAN_EQ,              &
-         NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,LMAX,    &
-         NTOTD,NRMAXD,R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,  &
-         R2DRDIREL,RMREL,IRMIND,LMPOT,NSPOTD,NPOTD,JWSREL,ZREL,     &
-         ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
+      call get_params_1a(t_params,IPAND,NATYP,IRM,NACLSD,IELAST,NCLSD,NREF,&
+         NCLEB,NEMB,NAEZ,LM2D,NSRA,INS,NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,    &
+         NINEQ,IDOLDAU,LLY,KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,    &
+         IEND,EZ,VINS,IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,  &
+         VISP,RMTREF,VREF,CLEB,CSCL,SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,    &
+         SOLVER,TMPDIR,DELTAE,TOLRDIF,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,     &
+         IPAN_INTERVALL,RPAN_INTERVALL,RNEW,NTOTD,NRMAXD,R_LOG,NTLDAU,     &
+         ITLDAU,LOPT,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,IRMIND,LMPOT,     &
+         NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
       !
       if ( TEST('Vspher  ') ) VINS(IRMIND:IRM,2:LMPOT,1:NSPOTD) = 0.D0
 
@@ -346,15 +350,15 @@ contains
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          call init_t_dtmatJij(t_inc,t_dtmatJij)
          if(OPT('XCPL    '))then
-            call set_Jijcalc_flags(t_dtmatJij,NATYPD,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
+            call set_Jijcalc_flags(t_dtmatJij,NATYP,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
          end if !OPT('XCPL')
 
          ! nonco angles: defined in mod_wunfiles
          call read_angles(t_params,NATYP,THETA,PHI)
 
          ! Interpolate potential
-         call INTERPOLATE_POTEN(LPOTD,IRM,IRNSD,NATYPD,IPAND,NSPOTD,NTOTD,   &
-            NCHEBD,NTOTD*(NCHEBD+1),NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,VISP,   &
+         call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATYP,IPAND,NSPOTD,NTOTD,   &
+            NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH,IRMIND,IRMIN,IRWS,IRCUT,VINS,VISP,   &
             NPAN_LOG,NPAN_EQ,NPAN_TOT,RNEW,IPAN_INTERVALL,VINSNEW)
 
          do I1=i1_start,i1_end
@@ -364,7 +368,7 @@ contains
             call TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT(I1),SOCSCALE(I1),EZ, &
                NSRA,CLEB(1,1),ICLEB,IEND,NCHEB,NPAN_TOT(I1),               &
                RPAN_INTERVALL(0,I1),IPAN_INTERVALL(0,I1),RNEW(1,I1),       &
-               VINSNEW,THETA(I1),PHI(I1),I1,IPOT,LLY,DELTAE,IDOLDAU,       &
+               VINSNEW,THETA(I1),PHI(I1),I1,IPOT,NTOTD,LLY,LMPOT,MMAXD,NRMAXD,LMMAXD,DELTAE,IDOLDAU, &
                LOPT(I1),WLDAU(1,1,1,I1),t_dtmatJij(I1))
 
          enddo !I1, atom loop
@@ -442,7 +446,7 @@ contains
       if ( LREFSYS ) then
          call TBREF(EZ,IELAST,ALAT,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,  &
             ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,RMTREF,TOLRDIF,TMPDIR,ITMPDIR,  &
-            ILTMP,NAEZ,LLY) ! LLY Lloyd
+            ILTMP,NAEZ,LLY,LM2D,LMGF0D,NEMB,NCLSD) ! LLY Lloyd
       endif
 #ifdef CPP_TIMING
       call timing_stop('main1a - tbref')

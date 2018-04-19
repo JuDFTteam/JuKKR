@@ -36,7 +36,7 @@ subroutine VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND,IRM,NCLEB,LMPOT,IRMIND,LMMAXD)
    ! ..
    do LM1 = 1,LMMAXD
       do LM2 = 1,LM1
-         do IR = IRMIND,IRMD
+         do IR = IRMIND,IRM
             VNSPLL(LM1,LM2,IR) = 0.0D0
          enddo
       enddo
@@ -46,7 +46,7 @@ subroutine VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND,IRM,NCLEB,LMPOT,IRMIND,LMMAXD)
       LM1 = ICLEB(J,1)
       LM2 = ICLEB(J,2)
       LM3 = ICLEB(J,3)
-      do  IR = IRMIND,IRMD
+      do  IR = IRMIND,IRM
          VNSPLL(LM1,LM2,IR) = VNSPLL(LM1,LM2,IR) +CLEB(J,1)*VINS(IR,LM3)
       enddo
    enddo
@@ -55,14 +55,14 @@ subroutine VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND,IRM,NCLEB,LMPOT,IRMIND,LMMAXD)
    !----------------------------------------------------------------------------
    do LM1 = 1,LMMAXD
       do LM2 = 1,LM1 - 1
-         do IR = IRMIND,IRMD
+         do IR = IRMIND,IRM
             VNSPLL(LM2,LM1,IR) = VNSPLL(LM1,LM2,IR)
          enddo
       enddo
    enddo
 
    do LM1 = 1,LMMAXD
-      do IR = IRMIND,IRMD
+      do IR = IRMIND,IRM
          VNSPLL(LM1,LM1,IR) = VNSPLL(LM1,LM1,IR) + VINS(IR,1)
       end do
    end do

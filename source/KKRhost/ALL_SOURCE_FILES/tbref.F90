@@ -3,7 +3,8 @@
 !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM,  &
-   CLS,ICLEB,LOFLM,NACLS,REFPOT,RMTREF,TOLRDIF,TMPDIR,ITMPDIR,ILTMP,NAEZ,LLY) ! LLY Lloyd
+   CLS,ICLEB,LOFLM,NACLS,REFPOT,RMTREF,TOLRDIF,TMPDIR,ITMPDIR,ILTMP,NAEZ,LLY,    & ! LLY Lloyd
+   LM2D,LMGF0D,NEMB,NCLSD)
 
    use mod_mympi, only: myrank, nranks, master
    use mod_types, only: t_tgmat, t_lloyd, t_inc
@@ -30,6 +31,7 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    integer, intent(in) :: NCLS   !< Number of reference clusters
    integer, intent(in) :: NREF   !< Number of diff. ref. potentials
    integer, intent(in) :: NAEZ   !< Number of atoms in unit cell
+   integer, intent(in) :: NEMB   !< Number of 'embedding' positions
    integer, intent(in) :: NINEQ  !< Number of ineq. positions in unit cell
    integer, intent(in) :: NCLSD  !< Maximum number of different TB-clusters
    integer, intent(in) :: IELAST
@@ -52,18 +54,17 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    character(len=80), intent(inout) :: TMPDIR
    double complex, dimension(IEMXD), intent(inout) :: EZ
    ! .. Local variables
-   integer :: I1,IC,ICLS,IE,LM1,NACLSMAX,LRECGRF1
+   integer :: I1,IC,ICLS,IE,LM1,NACLSMAX,LRECGRF1, i_stat,i_all
    double complex :: ERYD
    double complex :: LLY_G0TR_IE    ! LLY
    double complex :: lly_g0tr_dum   ! LLY dummy variable used if no LLY is chosen to save memory
    ! .. Parameters
    integer :: LRECGRF
-   PARAMETER (LRECGRF=WLENGTH*4*NACLSD*LMGF0D*LMGF0D*NCLSD)
    ! .. Local Arrays
-   double complex, dimension(0:LMAXD,NREFD) :: ALPHAREF  ! LLY Lloyd Alpha matrix
-   double complex, dimension(0:LMAXD,NREFD) :: DALPHAREF ! LLY Derivative of the Lloyd Alpha matrix
-   double complex, dimension(LMGF0D,LMGF0D,NREFD) :: TREFLL    ! LLY
-   double complex, dimension(LMGF0D,LMGF0D,NREFD) :: DTREFLL   ! LLY
+   double complex, dimension(0:LMAX,NREF) :: ALPHAREF  ! LLY Lloyd Alpha matrix
+   double complex, dimension(0:LMAX,NREF) :: DALPHAREF ! LLY Derivative of the Lloyd Alpha matrix
+   double complex, dimension(LMGF0D,LMGF0D,NREF) :: TREFLL    ! LLY
+   double complex, dimension(LMGF0D,LMGF0D,NREF) :: DTREFLL   ! LLY
 
    ! .. Local allocatable arrays
    double complex, dimension(:,:), allocatable :: LLY_G0TR  ! LLY
@@ -82,11 +83,11 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    integer :: ie_num, ierr
    !     ..
    !     .. External Functions ..
-   LOGICAL TEST,OPT
-   EXTERNAL TEST,OPT
+   logical :: TEST,OPT
+   external :: TEST,OPT
    !     ..
    !     .. External Subroutines ..
-   EXTERNAL CALCTREF13,GLL13
+   external :: CALCTREF13,GLL13
    !     ..
 
    NACLSMAX = 1
@@ -94,6 +95,7 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
       if (NACLS(IC).GT.NACLSMAX) NACLSMAX = NACLS(IC)
    enddo
    LRECGRF1 = WLENGTH*4*NACLSMAX*LMGF0D*LMGF0D*NCLS
+   LRECGRF=WLENGTH*4*NACLSD*LMGF0D*LMGF0D*NCLSD
 
    ! allocate and initialize ginp
    allocate(GINP(NACLSMAX*LMGF0D,LMGF0D,NCLS), stat=i_stat)
@@ -160,9 +162,9 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
       end if
       ERYD = EZ(IE)
       DO I1 = i1_start, i1_end!1,NREF
-         CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,              ! LLY Lloyd
-         &                    TREFLL(1,1,I1),DTREFLL(1,1,I1),                   ! LLY Lloyd
-         &                    ALPHAREF(0,I1),DALPHAREF(0,I1),LMAXD+1,LMGF0D)    ! LLY Lloyd
+         CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,&              ! LLY Lloyd
+            TREFLL(1,1,I1),DTREFLL(1,1,I1),                &   ! LLY Lloyd
+            ALPHAREF(0,I1),DALPHAREF(0,I1),LMAX+1,LMGF0D)    ! LLY Lloyd
 
          IF (TEST('flow    ').and.(t_inc%i_write>0))WRITE (1337,FMT=*) 'tll(ref),  i1 = ',I1
       END DO

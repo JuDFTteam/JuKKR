@@ -1,4 +1,4 @@
-subroutine vllmatsra(vll0,vll,rmesh,lmsize,nrmaxd,eryd,cvlight,lmax,lval_in,cmode)
+subroutine vllmatsra(vll0,vll,rmesh,lmsize,nrmax,eryd,lmax,lval_in,cmode)
 
    use Constants
    !************************************************************************************
@@ -10,7 +10,6 @@ subroutine vllmatsra(vll0,vll,rmesh,lmsize,nrmaxd,eryd,cvlight,lmax,lval_in,cmod
    integer, intent(in)           :: nrmax !< NTOTD*(NCHEBD+1)
    integer, intent(in)           :: lmsize
    integer, intent(in)           :: lval_in
-   double precision, intent(in)  :: cvlight !< Speed of light divided by the fine structure constant
    double complex, intent(in)    :: eryd
    character(len=*), intent(in)  :: cmode
 

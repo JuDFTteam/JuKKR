@@ -2,7 +2,7 @@
 ! SUBROUTINE: VLLMAT
 !> @brief
 !-------------------------------------------------------------------------------
-subroutine VLLMAT(IRMIN,NRMAXD,IRC,LMMAX,LMMAXSO,VNSPLL0,VINS, &
+subroutine VLLMAT(IRMIN,NRMAXD,IRC,LMMAX,LMMAXSO,VNSPLL0,VINS,LMPOT, &
       CLEB,ICLEB,IEND,NSPIN,Z,RNEW,USE_SRATRICK,NCLEB)
 
    implicit none

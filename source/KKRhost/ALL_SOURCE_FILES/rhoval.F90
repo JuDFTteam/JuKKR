@@ -21,7 +21,8 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    ZREL,JWSREL,IRSHIFT,ITERMVDIR,QMTET,QMPHI,            &
    MVEVIL,MVEVILEF,NMVECMAX,                             &
    IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATC,                   &
-   NATYP,NQDOS)
+   NATYP,NQDOS,LMAX,LMMAXD,IRM,MMAXD,LMXSPD,IRMIND,LMPOT,&
+   LM2D)
    !
 #ifdef CPP_MPI
    use mpi
@@ -42,6 +43,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    integer, intent(in) :: I1
    integer, intent(in) :: INS
    integer, intent(in) :: IRM       !< Maximum number of radial points
+   integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
    integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
    integer, intent(in) :: IPAN      !< Number of panels in non-MT-region
    integer, intent(in) :: ICST      !< Number of Born approximation
@@ -57,7 +59,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    integer, intent(in) :: IRMIN     !< Max R for spherical treatment
    integer, intent(in) :: LMXSPD    !< (2*LPOT+1)**2
    integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-   integer, intent(in) :: LMPOTD    !< (LPOT+1)**2
+   integer, intent(in) :: LMPOT    !< (LPOT+1)**2
    integer, intent(in) :: IRMIND    !< IRM-IRNSD
    integer, intent(in) :: IELAST
    integer, intent(in) :: JWSREL    !< index of the WS radius
@@ -69,26 +71,23 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    logical, intent(in) :: LDORHOEF
    character(len=10), intent(in) :: SOLVER
    double precision, dimension(IRM), intent(in)          :: R
-   double precision, dimension(KREL*LMAXD+1), intent(in) :: CTL
+   double precision, dimension(KREL*LMAX+1), intent(in)  :: CTL
    double precision, dimension(IRM), intent(in)          :: DRDI  !< Derivative dr/di
    double precision, dimension(IRM), intent(in)          :: VISP  !< Spherical part of the potential
    double precision, dimension(IRM*KREL+(1-KREL)), intent(in) :: VTREL       !< potential (spherical part)
    double precision, dimension(IRM*KREL+(1-KREL)), intent(in) :: BTREL       !< magnetic field
    double precision, dimension(IRM*KREL+(1-KREL)), intent(in) :: RMREL       !< radial mesh
-   double precision, dimension(KREL*LMAXD+1), intent(in)      :: SOCTL
+   double precision, dimension(KREL*LMAX+1), intent(in)       :: SOCTL
    double precision, dimension(IRM*KREL+(1-KREL)), intent(in) :: DRDIREL     !< derivative of radial mesh
    double precision, dimension(IRM*KREL+(1-KREL)), intent(in) :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-   double precision, dimension(IRMIND:IRM,LMPOTD), intent(in) :: VINS        !< Non-spherical part of the potential
+   double precision, dimension(IRMIND:IRM,LMPOT), intent(in) :: VINS        !< Non-spherical part of the potential
    double precision, dimension(NCLEB,2), intent(in)           :: CLEB        !< GAUNT coefficients (GAUNT)
    double precision, dimension(IRID,NFUND), intent(in)        :: THETAS      !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
    double complex, dimension(IEMXD), intent(in) :: EZ
    double complex, dimension(IEMXD), intent(in) :: WEZ
    double complex, dimension(IRM), intent(in)  :: PHILDAU
-   double complex, dimension(0:LMAXD+1,IEMXD*(1+KREL),NQDOS), intent(in)   :: DEN
-   double complex, dimension(LMMAXD,IEMXD*(1+KREL),NQDOS), intent(in)      :: DENLM
-   ! .. Parameters
-   integer :: LMAXD1
-   parameter (LMAXD1= LMAXD+1)
+   double complex, dimension(0:LMAX+1,IEMXD*(1+KREL),NQDOS), intent(in) :: DEN
+   double complex, dimension(LMMAXD,IEMXD*(1+KREL),NQDOS), intent(in)   :: DENLM
    ! .. In/Out variables
    integer, intent(inout) :: NQDOS
    double precision, dimension(MMAXD,MMAXD,NSPIND), intent(inout) :: WLDAU !< potential matrix
@@ -97,11 +96,11 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    !     IHOST <> 1  < --                 called by the IMPURITY program
    !---------------------------------------------------------------------------
    ! .. Output variables
-   double precision, dimension(IRM*KREL+(1-KREL)), intent(out)    :: RHOORB
-   double precision, dimension(0:LMAXD1+1,3), intent(out)         :: MUORB    !< orbital magnetic moment
-   double precision, dimension(0:LMAXD1,2), intent(out)           :: ESPV     !< changed for REL case
-   double precision, dimension(IRM,LMPOTD,2), intent(out)         :: R2NEF    !< rho at FERMI energy
-   double precision, dimension(IRM,LMPOTD,2), intent(out)         :: RHO2NS   !< radial density
+   double precision, dimension(IRM*KREL+(1-KREL)), intent(out) :: RHOORB
+   double precision, dimension(0:LMAX+1+1,3), intent(out)      :: MUORB    !< orbital magnetic moment
+   double precision, dimension(0:LMAX+1,2), intent(out)        :: ESPV     !< changed for REL case
+   double precision, dimension(IRM,LMPOT,2), intent(out)       :: R2NEF    !< rho at FERMI energy
+   double precision, dimension(IRM,LMPOT,2), intent(out)       :: RHO2NS   !< radial density
    double complex, dimension(MMAXD,MMAXD), intent(out) :: DENMATC
    !----------------------------------------------------------------------------
    !      ITERMDIR variables
@@ -109,8 +108,8 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    logical, intent(in) :: ITERMVDIR
    double precision, intent(in) :: QMTET  !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
    double precision, intent(in) :: QMPHI  !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
-   double complex, dimension(0:LMAXD,3,NMVECMAX), intent(out) :: MVEVIL ! OUTPUT
-   double complex, dimension(0:LMAXD,3,NMVECMAX), intent(out) :: MVEVILEF ! OUTPUT
+   double complex, dimension(0:LMAX,3,NMVECMAX), intent(out) :: MVEVIL ! OUTPUT
+   double complex, dimension(0:LMAX,3,NMVECMAX), intent(out) :: MVEVILEF ! OUTPUT
    !----------------------------------------------------------------------------
    !      ITERMDIR variables
    !----------------------------------------------------------------------------
@@ -119,8 +118,11 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    integer, dimension(0:IPAND), intent(in)   :: IRCUT    !< R points of panel borders
    integer, dimension(LM2D), intent(in)      :: LOFLM    !< l of lm=(l,m) (GAUNT)
    integer, dimension(NCLEB,4), intent(in)   :: ICLEB    !< Pointer array
-   integer, dimension(LMPOTD,0:LMAXD,0:LMAXD), intent(in) :: JEND !< Pointer array for icleb()
+   integer, dimension(LMPOT,0:LMAX,0:LMAX), intent(in) :: JEND !< Pointer array for icleb()
    ! .. Local Scalars
+   ! .. Parameters
+   integer :: LMAXD1
+   integer :: i_stat, i_all
    double precision :: WLDAUAV
    double complex :: DF,ERYD,EK
 #ifndef CPP_MPI
@@ -134,18 +136,18 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    integer, dimension(4) :: LMSHIFT2 ! lmlm-dos
 
    ! .. Local Arrays
-   double precision, dimension(0:LMAXD)   :: S
+   double precision, dimension(0:LMAX)    :: S
    double precision, dimension(IRM)       :: CUTOFF
-   double precision, dimension(IRM,0:LMAXD) :: RS
-   double complex, dimension(0:LMAXD)  :: EKL
-   double complex, dimension(0:LMAXD)  :: TMAT
-   double complex, dimension(0:LMAXD)  :: ALPHA
-   double complex, dimension(0:LMAXD1) :: DENDUM
+   double precision, dimension(IRM,0:LMAX) :: RS
+   double complex, dimension(0:LMAX)   :: EKL
+   double complex, dimension(0:LMAX)   :: TMAT
+   double complex, dimension(0:LMAX)   :: ALPHA
+   double complex, dimension(0:LMAX+1) :: DENDUM
    double complex, dimension(LMMAXD)   :: DUM_DENLM
-   double complex, dimension(IRM,0:LMAXD)    :: QZ
-   double complex, dimension(IRM,0:LMAXD)    :: SZ
-   double complex, dimension(IRM,0:LMAXD)    :: PZ
-   double complex, dimension(IRM,0:LMAXD)    :: FZ
+   double complex, dimension(IRM,0:LMAX)     :: QZ
+   double complex, dimension(IRM,0:LMAX)     :: SZ
+   double complex, dimension(IRM,0:LMAX)     :: PZ
+   double complex, dimension(IRM,0:LMAX)     :: FZ
    double complex, dimension(LMMAXD,LMMAXD)  :: AR
    double complex, dimension(LMMAXD,LMMAXD)  :: CR
    double complex, dimension(LMMAXD,LMMAXD)  :: DR
@@ -155,14 +157,13 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    double complex, dimension(LMMAXD,LMMAXD,IRMIND:IRM,2) :: QNS
    !     .. first 2 indices in dmuorb are the spin-resolved contributions,
    !     .. the 3rd one should be the sum of them
-   double complex, dimension(0:KREL*LMAXD+(1-KREL),3) :: DMUORB
+   double complex, dimension(0:KREL*LMAX+(1-KREL),3) :: DMUORB
    ! .. Local allocatable arrays
    double complex, dimension(:,:), allocatable :: QVEC   !< qdos, q-vectors for qdos
    double complex, dimension(:,:), allocatable :: GLDAU
    double complex, dimension(:,:), allocatable :: DUM_GFLLE ! lmlm-dos
    double complex, dimension(:,:,:,:), allocatable :: GFLLE ! qdos
 
-   !.. Parameters
    ! This routine needs irregular wavefunctions
    logical :: LIRRSOL
    parameter ( LIRRSOL = .TRUE. )
@@ -178,6 +179,8 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    ! .. External Functions
    logical :: OPT,TEST                          ! qdos
    external :: OPT,TEST                         ! qdos
+
+   LMAXD1= LMAX+1
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! LDAU
@@ -212,7 +215,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    ! Initialise variables
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    if ( KREL.EQ.0 ) then
-      do LM1 = 1,LMPOTD
+      do LM1 = 1,LMPOT
          do IR = 1,IRM
             RHO2NS(IR,LM1,ISPIN) = 0.0D0
          end do
@@ -225,7 +228,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    else
       !-------------------------------------------------------------------------
       do ISPINPOT = 1,2
-         do LM1 = 1,LMPOTD
+         do LM1 = 1,LMPOT
             do IR = 1,IRM
                RHO2NS(IR,LM1,ISPINPOT) = 0.0D0
                R2NEF(IR,LM1,ISPINPOT)  = 0.0D0
@@ -243,7 +246,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
       end do
       !
       do IR = 1,3
-         do L = 0,LMAXD
+         do L = 0,LMAX
             DMUORB(L,IR) = CZERO
          end do
       end do
@@ -253,7 +256,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
       if (ITERMVDIR) then
          do LM1 = 1,3
             do LM2 = 1, NMVECMAX
-               do L = 0, LMAXD
+               do L = 0, LMAX
                   MVEVIL(L,LM1,LM2) = CZERO
                   MVEVILEF(L,LM1,LM2) = CZERO
                end do
@@ -306,7 +309,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
       end if                                                                     ! complex qdos
       call version_print_header(3031)                                            ! complex qdos
       write (3031,'(A)') '# lmax, natyp, nspin, nqdos, ielast:'                  ! complex qdos
-      write (3031,'(5I9)') lmaxd, natyp, nspin, nqdos, ielast                    ! complex qdos
+      write (3031,'(5I9)') lmax, natyp, nspin, nqdos, ielast                    ! complex qdos
       write (3031,'(7(A,3X))') '#   Re(E)','Im(E)',&                             ! complex qdos
          'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'                               ! complex qdos
    endif                                                                         ! qdos
@@ -356,7 +359,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
 ! !$omp parallel do default(none)
 ! !$omp& private(eryd,ie,ir,irec,lm1,lm2)
 ! !$omp& private(jlk_index,tmatll,ith)
-! !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmaxd)
+! !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
 ! !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
 ! !$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
 ! !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
@@ -382,7 +385,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
       ! non/scalar-relativistic OR relativistic
       !-------------------------------------------------------------------------
       if ( KREL.EQ.0 ) then
-         call WFMESH(ERYD,EK,CVLIGHT,NSRA,ZAT,R,S,RS,IRCUT(IPAN),IRM,LMAXD)
+         call WFMESH(ERYD,EK,CVLIGHT,NSRA,ZAT,R,S,RS,IRCUT(IPAN),IRM,LMAX)
          call CRADWF(ERYD,EK,NSRA,ALPHA,IPAN,IRCUT,CVLIGHT,RS,S,PZ,FZ,QZ,SZ,&
             TMAT,VISP,DRDI,R,ZAT,LIRRSOL,IDOLDAU,LOPT,WLDAUAV,CUTOFF)
          !-----------------------------------------------------------------------
@@ -391,12 +394,12 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
          if (INS.GT.0) then
             call PNSQNS(AR,CR,DR,DRDI,EK,ICST,PZ,QZ,FZ,SZ,  &
                PNS,QNS,NSRA,VINS,IPAN,IRMIN,IRCUT,          & ! Added IRMIN 1.7.2014
-               CLEB,ICLEB,IEND,LOFLM,LMAXD,                 &
+               CLEB,ICLEB,IEND,LOFLM,LMAX,                  &
                IDOLDAU,LOPT,LMLO,LMHI,                      &
                WLDAU(1,1,ISPIN),WLDAUAV,CUTOFF)
          endif
          !
-         do L = 0,LMAXD
+         do L = 0,LMAX
             EKL(L) = EK*DBLE(2*L+1)
          end do
          !
@@ -451,9 +454,9 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
                do L = 0,LMAXD1                                                   ! qdos
                   DENTOT = DENTOT + DEN(L,IE,IQ)                                 ! qdos
                enddo                                                             ! qdos
-               write(30,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),             ! lmdos
+               write(30,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),       &     ! lmdos
                   -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)       ! lmdos
-               write(31,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),             ! qdos
+               write(31,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),       &     ! qdos
                   -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)       ! qdos
                9000 format(5F10.6,40E16.8)                                       ! qdos
                ! writeout complex qdos for interpolation                         ! complex qdos
@@ -501,7 +504,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
             GMATLL,VTREL,BTREL,RMREL,DRDIREL,                     &
             R2DRDIREL,ZREL,JWSREL,IRSHIFT,SOLVER,SOCTL,CTL,       &
             QMTET,QMPHI,ITERMVDIR,MVEVIL,MVEVILEF,LMMAXD,         &
-            LMAXD,IRM,LMPOTD,IEMXD,NMVECMAX,
+            LMAX,IRM,LMPOT,IEMXD,NMVECMAX,                        &
             I1,NQDOS)                                                            ! qdos
          !
          do L = 0,LMAXD1
@@ -510,7 +513,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
          end do
          !
          do IR = 1,3
-            do L = 0,LMAXD
+            do L = 0,LMAX
                MUORB(L,IR) = MUORB(L,IR) + DIMAG(DMUORB(L,IR)*DF)
             end do
          end do
@@ -550,7 +553,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
          LRECGFLLE = WLENGTH*4*LMMAXD*LMMAXD*IELAST*NQDOS                        ! lmlm-dos
          open(96,ACCESS='direct',RECL=LRECGFLLE,FILE="gflle",FORM='unformatted') ! lmlm-dos
       endif                                                                      ! lmlm-dos
-      IREC = I1 + NATYPD * (ISPIN-1)                                             ! lmlm-dos
+      IREC = I1 + NATYP * (ISPIN-1)                                             ! lmlm-dos
       write(96,REC=IREC) GFLLE(:,:,:,:)                                          ! lmlm-dos
    endif
    !
@@ -571,7 +574,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
    !
    ! Transformation of ISPIN=1,2 from (spin-down,spin-up) to (charge-density,spin-density)
    if (ISPIN.EQ.2) then
-      IDIM = IRM*LMPOTD
+      IDIM = IRM*LMPOT
       call DSCAL(IDIM,2.D0,RHO2NS(1,1,1),1)
       call DAXPY(IDIM,-0.5D0,RHO2NS(1,1,1),1,RHO2NS(1,1,2),1)
       call DAXPY(IDIM,1.0D0,RHO2NS(1,1,2),1,RHO2NS(1,1,1),1)

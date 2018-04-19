@@ -8,7 +8,7 @@
 !>
 !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine SURFGF(ML,M0,MR,X,ITERMAX,ERRMAX,ICHCK)
+subroutine SURFGF(NDIM,ML,M0,MR,X,ITERMAX,ERRMAX,ICHCK,LMMAXD)
 
    use Constants
    use Profiling
@@ -28,13 +28,11 @@ subroutine SURFGF(ML,M0,MR,X,ITERMAX,ERRMAX,ICHCK)
    !
    !-------------------------------------------------------------------------------
    ! .. Input variables
+   integer, intent(in) :: NDIM
    integer, intent(in) :: ICHCK
    integer, intent(in) :: LMMAXD       !< (KREL+KORBIT+1)(LMAX+1)^2
    integer, intent(in) :: ITERMAX
    double precision, intent(in) :: ERRMAX
-   ! .. Parameter
-   integer :: NDIM
-   parameter (NDIM=LMMAXD*NPRINCD)
    ! .. Input arrays
    double complex, dimension(NDIM,NDIM), intent(in) :: M0
    double complex, dimension(NDIM,NDIM), intent(in) :: ML

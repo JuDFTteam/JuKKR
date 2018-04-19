@@ -12,12 +12,13 @@
 !> @note Modifications by N. Long Xmas Juelich 2015
 !-------------------------------------------------------------------------------
 subroutine WMATLDAU(NTLDAU,ITLDAU,NSPIN,DENMATC,LOPT, &
-      UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD,NATYP,NSPIND)
+      UEFF,JEFF,ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD,NATYP,NSPIND,LMAX)
 
    use Constants
 
    implicit none
    ! .. Input variables
+   integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
    integer, intent(in) :: NSPIN  !< Counter for spin directions
    integer, intent(in) :: MMAXD  !< 2*LMAX+1
    integer, intent(in) :: NPOTD  !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
@@ -40,7 +41,7 @@ subroutine WMATLDAU(NTLDAU,ITLDAU,NSPIN,DENMATC,LOPT, &
    double precision :: FACTOR
    double precision :: DENTOT
    character(len=15) :: STR15
-   couble complex :: CSUM,CSUM2
+   double complex :: CSUM,CSUM2
    double precision, dimension(NSPIND) :: DENTOTS
    double precision, dimension(MMAXD,MMAXD,NSPIND) :: DENMAT
    double complex, dimension(MMAXD,MMAXD,NSPIND) :: VLDAU
@@ -76,7 +77,7 @@ subroutine WMATLDAU(NTLDAU,ITLDAU,NSPIN,DENMATC,LOPT, &
             !-------------------------------------------------------------------
             ! Convert DENMATC and DENMAT to complex spherical harmonics.
             !-------------------------------------------------------------------
-            call RCLM(1,LOPT(I1),LMAXD,DENMATC(1,1,IPOT))
+            call RCLM(1,LOPT(I1),LMAX,DENMATC(1,1,IPOT))
          end do
          !----------------------------------------------------------------------
          if ( IPRINT.GT.1 )   then
@@ -236,7 +237,7 @@ subroutine WMATLDAU(NTLDAU,ITLDAU,NSPIN,DENMATC,LOPT, &
             !-------------------------------------------------------------------
             ! 5.  Transform VLDAU into real spherical harmonics basis
             !-------------------------------------------------------------------
-            call RCLM(2,LOPT(I1),LMAXD,VLDAU(1,1,IS))
+            call RCLM(2,LOPT(I1),LMAX,VLDAU(1,1,IS))
             !-------------------------------------------------------------------
             ! Copy transformed VLDAU to real WLDAU
             !
