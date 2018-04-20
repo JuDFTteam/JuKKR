@@ -376,7 +376,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    write(111,FMT='(A7)') 'BRAVAIS'
    do I = 1,NDIM
       write(111,*) (BRAVAIS(J,I),J=1,NDIM)
-   ENDDO
+   enddo
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Read the number of atoms in the unit cell
@@ -528,6 +528,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Allocate the unit cell arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   write(*,*) NAEZ,NEMB,NATYP
    call allocate_cell(1,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,&
       KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -552,7 +553,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
             stop 'RINPUT13: RBASIS'
          endif
       endif
-   ENDDO                         ! I=1,NAEZ
+   enddo                         ! I=1,NAEZ
    call IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
 
    DVEC(1:3) = 1.D0
@@ -597,7 +598,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
             call IoInput('<RMTREFL>       ',UIO,I,7,IER)
             if (IER.EQ.0) read (UNIT=UIO,FMT=*) RMTREFAT(NAEZ+I)
             write (111,FMT='(3E20.12,3X,F9.6,3X,I5)') (TLEFT(I1,I),I1=1,3),RMTREFAT(NAEZ+I),KAOEZ(1,NAEZ+I)
-         ENDDO
+         enddo
          write(111,FMT='(A82)') '<RBRIGHT>                                                     <RMTREFR>   <KAOEZL>'
          do I=1,NRBASIS
             call IoInput('<RBRIGHT>       ',UIO,I,7,IER)
@@ -608,7 +609,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
             call IoInput('<RMTREFR>       ',UIO,I,7,IER)
             if (IER.EQ.0) read (UNIT=UIO,FMT=*) RMTREFAT(NAEZ+NLBASIS+I)
             write (111,FMT='(3E20.12,3X,F9.6,3X,I5)') (TRIGHT(I1,I),I1=1,3),RMTREFAT(NAEZ+NLBASIS+I),KAOEZ(1,NAEZ+NLBASIS+I)
-         ENDDO
+         enddo
 
       else ! (LNEW) now old-style input
 
@@ -729,7 +730,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
             read (UNIT=UIO,FMT=*) ZAT(I)
             write(111,FMT='(F6.3)') ZAT(I)
          endif
-      ENDDO
+      enddo
    else
       write(111,*) 'zatom will be read in from pot-file'
    endif
@@ -759,7 +760,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    do I = 1,NAEZ
       KAOEZ(1,I) = I       ! default
       IQAT(I) = I          ! Basis-Site of atom I
-   ENDDO
+   enddo
    if (NATYP.EQ.NAEZ) CONC(1:NATYP) = 1.D0
 
    ! CPA calculation, read concentrations
@@ -783,14 +784,14 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
             call IoInput('<CPA-CONC>      ',UIO,I,7,IER)
             read (UNIT=UIO,FMT=*) CONC(I)
             write(111,FMT='(I5,4X,E16.8)') IQAT(I),CONC(I)
-         ENDDO
+         enddo
 
          do I = 1,NATYP
             IQ = IQAT(I)
             NOQ(IQ) = NOQ(IQ) + 1
             if ( NOQ(IQ) .GT. 1 ) ICPA(IQ) = 1
             KAOEZ(NOQ(IQ),IQ) = I
-         ENDDO
+         enddo
 
          do IQ=1,NAEZ
             SUM = 0D0
@@ -1079,7 +1080,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
             read (UNIT=UIO,FMT=*) SOCSCALE(I)
             write(111,FMT='(F6.3)') SOCSCALE(I)
          endif
-      ENDDO
+      enddo
       !        read (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)                       !Bernd - old way
       !        write(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP) !Bernd - old way
    else
@@ -1103,7 +1104,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
             read (UNIT=UIO,FMT=*) FPRADIUS(I)
          endif
          write(111,FMT='(F6.3)') FPRADIUS(I)
-      ENDDO
+      enddo
    else
       write(111,*) 'fpradius will be read in from pot-file'
    endif
@@ -1144,7 +1145,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
          read (UNIT=UIO,FMT=*) NTCELL(I)
          write(111,FMT='(I6)') NTCELL(I)
       endif
-   ENDDO
+   enddo
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End cell control
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1219,7 +1220,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
             read (UNIT=UIO,FMT=*) I1,LOPT(I1),UEFF(I1),JEFF(I1),EREFLDAU(I1)
             IL = IL + 1
          end if
-      ENDDO
+      enddo
       if ( IL.NE.NASOC ) then
          write(6,*) ' ERROR: LDA+U invoked for ',NASOC,' atoms'
          write(6,*) '        Some (all) parameters are missing in the input-file'
@@ -1663,7 +1664,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    if (LATOMINFO.AND.LINTERFACE.AND..NOT.LNEW) then
       do I = NAEZ + 1,NAEZ + NEMB
          RMTREFAT(I) = RMTREF(REFPOT(I))
-      ENDDO
+      enddo
    endif
 
    NCLS = 0
@@ -1672,12 +1673,12 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    ! Determine total number of clusters
    do I=1,NATYP
       NCLS = MAX(NCLS,CLS(IQAT(I)))
-   ENDDO
+   enddo
 
    ! Determine total number of different reference potentials
    do I=1,NAEZ + NEMB
       NREF = MAX(NREF,REFPOT(I))
-   ENDDO
+   enddo
 
    !in line 1792  this is done: NINEQ = NAEZ, so here NINEQ is still undefinded
    !so we move this writeout back
@@ -2119,7 +2120,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
          if( ABS(QMTET(I)) .GT. 1D-6 ) KMROT = 1
          if( ABS(QMPHI(I)) .GT. 1D-6 ) KMROT = 1
       endif
-   ENDDO                         ! I=1,NAEZ
+   enddo                         ! I=1,NAEZ
    call IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
    !----------------------------------------------------------------------------
 
@@ -2132,7 +2133,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
          do IO=1,NOQ(I)
             if (KAOEZ(IO,I).LT.1) stop 'Error in KAOEZ'
          end do
-      ENDDO
+      enddo
    end if
    ! ------------------------------------------------------------------------
    write(1337,2111)
@@ -2548,7 +2549,7 @@ subroutine ADDOPT(STRING)
             II = NOPTD + 1
          endif
          II = II + 1
-      ENDDO
+      enddo
    endif
 
 end subroutine ADDOPT
