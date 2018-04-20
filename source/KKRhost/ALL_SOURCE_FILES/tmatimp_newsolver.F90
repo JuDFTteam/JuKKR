@@ -86,7 +86,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    ! .. Local variables
    integer :: ipot
    integer :: I1,IR,NSRA,USE_SRATRICK,NVEC,LM1,LM2,ISPIN,I2,IL1,IL2,IRMDNEWD
-   integer :: i_stat, i_all
+   integer :: i_stat, i_all,ierr
    double precision :: THETA,PHI
    double complex :: GMATPREFACTOR
    integer, dimension(NATYP) :: NPAN_TOT

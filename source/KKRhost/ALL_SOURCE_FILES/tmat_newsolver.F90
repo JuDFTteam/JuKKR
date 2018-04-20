@@ -314,25 +314,25 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    endif
 
 #ifdef CPP_OMP
-   !$omp parallel do default(none)
-   !$omp& private(eryd,ie,ir,nvec,lm1,lm2,gmatprefactor)
-   !$omp& private(jlk_index,tmatll,ith,irec, ie_num)
-   !$omp& private(tralpha, aux, ideriv, ipiv)
-   !$omp& private(alpha0)
-   !$omp& private(alphall)
-   !$omp& private(tmat0)
-   !$omp& private(alphasph)
-   !$omp& private(dtmatll)
-   !$omp& private(dalphall)
-   !$omp& shared(t_inc)
-   !!$omp& firstprivate(t_inc)
-   !$omp& shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb)
-   !$omp& shared(zat,socscale,ez,cleb,rnew,nth)
-   !$omp& shared(rpan_intervall,vinsnew,ipan_intervall)
-   !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
-   !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)
-   !$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)
-   !$omp& shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)
+   !$omp parallel do default(none)                                            &
+   !$omp private(eryd,ie,ir,nvec,lm1,lm2,gmatprefactor)                       &
+   !$omp private(jlk_index,tmatll,ith,irec, ie_num)                           &
+   !$omp private(tralpha, aux, ideriv, ipiv)                                  &
+   !$omp private(alpha0)                                                      &
+   !$omp private(alphall)                                                     &
+   !$omp private(tmat0)                                                       &
+   !$omp private(alphasph)                                                    &
+   !$omp private(dtmatll)                                                     &
+   !$omp private(dalphall)                                                    &
+   !$omp shared(t_inc)                                                        &
+   !!$omp firstprivate(t_inc)                                                 &
+   !$omp shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb)              &
+   !$omp shared(zat,socscale,ez,cleb,rnew,nth)                                &
+   !$omp shared(rpan_intervall,vinsnew,ipan_intervall)                        &
+   !$omp shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)                  &
+   !$omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)     &
+   !$omp shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)     &
+   !$omp shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)
 #endif
 
    do ie_num=1,ie_end
