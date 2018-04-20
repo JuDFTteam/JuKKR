@@ -326,9 +326,9 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    !$omp private(dalphall)                                                    &
    !$omp shared(t_inc)                                                        &
    !!$omp firstprivate(t_inc)                                                 &
-   !$omp shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb)              &
-   !$omp shared(zat,socscale,ez,cleb,rnew,nth)                                &
-   !$omp shared(rpan_intervall,vinsnew,ipan_intervall)                        &
+   !$omp shared(nspin,nsra,lmax,LMMAXD,iend,ipot,ielast,npan_tot,ncheb)       &
+   !$omp shared(zat,socscale,ez,cleb,rnew,nth,LMPOT,NRMAXD,LMMAXSO,NTOTD)     &
+   !$omp shared(rpan_intervall,vinsnew,ipan_intervall,NCLEB)                  &
    !$omp shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)                  &
    !$omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)     &
    !$omp shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)     &

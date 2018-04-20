@@ -858,7 +858,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
                            FILE="cqdos."//char(48+I1/100)//                   &  ! complex qdos
                            char(48+mod(I1/10,10))//char(48+mod(I1,10))//"."   &  ! complex qdos
                            //char(48+1)//".dat")                                 ! complex qdos
-                        open(32,                                                 ! complex qdos
+                        open(32,                                              &  ! complex qdos
                            FILE="cqdos."//char(48+I1/100)//                   &  ! complex qdos
                            char(48+mod(I1/10,10))//char(48+mod(I1,10))//"."   &  ! complex qdos
                            //char(48+2)//".dat")                                 ! complex qdos
@@ -871,14 +871,14 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
                      call version_print_header(31)                               ! complex qdos
                      write(31,*) ' '                                             ! complex qdos
                      write(31,'(A)') '#   lmax, natyp, nspin, nqdos, ielast:'    ! complex qdos
-                     write(31,'(5I9)') lmax, natypd, nspin, nqdos, ielast        ! complex qdos
+                     write(31,'(5I9)') lmax, natyp, nspin, nqdos, ielast         ! complex qdos
                      write(31,'(7(A,3X))') '#   Re(E)','Im(E)',   &              ! complex qdos
                         'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'                ! complex qdos
                      if(NSPIN.gt.1) then                                         ! complex qdos
                         call version_print_header(32)                            ! complex qdos
                         write(32,*) ' '                                          ! complex qdos
                         write(32,'(A)') '# lmax, natyp, nspin, nqdos, ielast:'   ! complex qdos
-                        write(32,'(5I9)') lmax, natypd, nspin, nqdos, ielast     ! complex qdos
+                        write(32,'(5I9)') lmax, natyp, nspin, nqdos, ielast      ! complex qdos
                         write(32,'(7(A,3X))') '#   Re(E)','Im(E)',   &           ! complex qdos
                            'k_x','k_y','k_z','DEN_tot','DEN_s,p,...'             ! complex qdos
                      end if                                                      ! complex qdos
@@ -916,15 +916,15 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    endif
    ! set these arrays to zero to avoid double counting in cases where extra ranks are used
    if ( t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1) ) then
-      den = CZERO
-      denlm = CZERO
-      gflle = CZERO
-      r2nefc = CZERO
-      rho2nsc = CZERO
-      rho2int = CZERO
-      muorb = 0.0d0
-      espv = 0.0d0
-      denorbmom = 0.0d0
+      den         = CZERO
+      denlm       = CZERO
+      gflle       = CZERO
+      r2nefc      = CZERO
+      rho2nsc     = CZERO
+      rho2int     = CZERO
+      muorb       = 0.0d0
+      espv        = 0.0d0
+      denorbmom   = 0.0d0
       denorbmomsp = 0.0d0
       denorbmomlm = 0.0d0
       denorbmomns = 0.0d0
