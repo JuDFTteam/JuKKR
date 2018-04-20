@@ -24,10 +24,11 @@
 !> same way as the charge density.
 !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB, &
-   Z,DRDI,IRWS,                                             &
-   IRCUT,LPOT,NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,          &
-   CHRGNT,ITC,NSHELL,NOQ,CONC,KAOEZ,CATOM)
+subroutine RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB,Z,DRDI,IRWS,IRCUT, &
+   LPOT,NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,CHRGNT,ITC,NSHELL,NOQ,CONC,KAOEZ, &
+   CATOM,IRM,NEMB,LMPOT)
+
+   use global_variables
 
    implicit none
 
@@ -65,13 +66,13 @@ subroutine RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB, &
    double precision, dimension(IRM,LMPOT,NATYP,*), intent(inout) :: RHO2NS
    ! .. Output variables
    double precision, intent(out) :: CHRGNT
-   double precision, dimension(NATYP,2*KREL+(1-KREL)*NSPIND), intent(out) :: CATOM
+   double precision, dimension(NATYP,2*KREL+(1-KREL)*NSPIN), intent(out) :: CATOM
    ! .. Local variables
    integer :: I,I1,IATYP,ICELL,IFUN,IPAN1,IPOTD,IPOTU,IRC1,IRS1,ISPIN,LM,IQEZ,IOEZ
    double precision :: DIFF,FACTOR,RFPI,SUM,TOTSMOM,TOTOMOM,SUMO
    double precision, dimension(NATYP)                       :: OMOM   !< Orbital moment
    double precision, dimension(IRM)                         :: RHO
-   double precision, dimension(NAEZ,2*KREL+(1-KREL)*NSPIND) :: CSITE
+   double precision, dimension(NAEZ,2*KREL+(1-KREL)*NSPIN)  :: CSITE
    double precision, dimension(KREL*NAEZ+(1-KREL))          :: MUOSITE
    !
    logical :: OPT
@@ -264,7 +265,7 @@ subroutine RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB, &
          write ( 6 ,FMT=9030) TOTSMOM+TOTOMOM
          write ( 6 ,FMT=9031) TOTSMOM
          write ( 6 ,FMT=9032) TOTOMOM
-      end IFUN
+      end if
    end if
    write (IPF,*)
 
@@ -276,14 +277,10 @@ subroutine RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB, &
    9050 format (7X,'spin moment in wigner seitz sphere =',f10.6)
    9051 format (7X,'orb. moment in wigner seitz sphere =',f10.6)
    9052 format (7X,'total magnetic moment in WS sphere =',f10.6)
-   9020 format ('      ITERATION',I4,  &
-   ' charge neutrality in unit cell = ',f12.6)
-   9030 format ('                   ', &
-   ' TOTAL mag. moment in unit cell = ',f12.6)
-   9031 format ('                   ', &
-   '           spin magnetic moment = ',f12.6)
-   9032 format ('                   ', &
-   '        orbital magnetic moment = ',f12.6)
+   9020 format ('      ITERATION',I4,' charge neutrality in unit cell = ',f12.6)
+   9030 format ('                   ',' TOTAL mag. moment in unit cell = ',f12.6)
+   9031 format ('                   ','           spin magnetic moment = ',f12.6)
+   9032 format ('                   ','        orbital magnetic moment = ',f12.6)
    9071 format ('      Site ',i3,' total charge =',f10.6)
    9072 format ('         ',' total spin moment =',f10.6)
    9073 format ('         ',' total orb. moment =',f10.6)

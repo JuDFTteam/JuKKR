@@ -12,17 +12,12 @@
 !> @note -LDA+U implementation Mar. 2002-Dec.2004 Ph. Mavropoulos, H. Ebert, V. Popescu
 !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
-   ISPIN,NSPIN,NSPINPOT,                                 &
-   I1,EZ,WEZ,DRDI,R,VINS,VISP,ZAT,IPAN,IRCUT,IRMIN,      &
-   THETAS,IFUNM,LMSP,RHO2NS,R2NEF,RHOORB,DEN,DENLM,      &
-   MUORB,ESPV,CLEB,LOFLM,ICLEB,IEND,JEND,SOLVER,         &
-   SOCTL,CTL,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,        &
-   ZREL,JWSREL,IRSHIFT,ITERMVDIR,QMTET,QMPHI,            &
-   MVEVIL,MVEVILEF,NMVECMAX,                             &
-   IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATC,                   &
-   NATYP,NQDOS,LMAX,LMMAXD,IRM,MMAXD,LMXSPD,IRMIND,LMPOT,&
-   LM2D)
+subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ,&
+   WEZ,DRDI,R,VINS,VISP,ZAT,IPAN,IRCUT,IRMIN,THETAS,IFUNM,LMSP,RHO2NS,R2NEF,     &
+   RHOORB,DEN,DENLM,MUORB,ESPV,CLEB,LOFLM,ICLEB,IEND,JEND,SOLVER,SOCTL,CTL,VTREL,&
+   BTREL,RMREL,DRDIREL,R2DRDIREL,ZREL,JWSREL,IRSHIFT,ITERMVDIR,QMTET,QMPHI,      &
+   MVEVIL,MVEVILEF,NMVECMAX,IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATC,NATYP,NQDOS,LMAX, &
+   LMMAXD,IRM,MMAXD,LMXSPD,IRMIND,LMPOT,LM2D)
    !
 #ifdef CPP_MPI
    use mpi
@@ -396,7 +391,8 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,   &
                PNS,QNS,NSRA,VINS,IPAN,IRMIN,IRCUT,          & ! Added IRMIN 1.7.2014
                CLEB,ICLEB,IEND,LOFLM,LMAX,                  &
                IDOLDAU,LOPT,LMLO,LMHI,                      &
-               WLDAU(1,1,ISPIN),WLDAUAV,CUTOFF)
+               WLDAU(1,1,ISPIN),WLDAUAV,CUTOFF,MMAXD,LMPOT, &
+               IRMIND,LMMAXD,IRM,LMAX)
          endif
          !
          do L = 0,LMAX

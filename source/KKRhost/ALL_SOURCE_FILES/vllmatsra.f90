@@ -1,4 +1,4 @@
-subroutine vllmatsra(vll0,vll,rmesh,lmsize,nrmax,eryd,lmax,lval_in,cmode)
+subroutine vllmatsra(vll0,vll,rmesh,lmsize,nrmax,nrmaxd,eryd,lmax,lval_in,cmode)
 
    use Constants
    !************************************************************************************
@@ -8,12 +8,13 @@ subroutine vllmatsra(vll0,vll,rmesh,lmsize,nrmax,eryd,lmax,lval_in,cmode)
 
    integer, intent(in)           :: lmax !< Maximum l component in wave function expansion
    integer, intent(in)           :: nrmax !< NTOTD*(NCHEBD+1)
+   integer, intent(in)           :: nrmaxd
    integer, intent(in)           :: lmsize
    integer, intent(in)           :: lval_in
    double complex, intent(in)    :: eryd
    character(len=*), intent(in)  :: cmode
 
-   double precision, dimension(nrmax), intent(in)              :: rmesh
+   double precision, dimension(nrmaxd), intent(in)             :: rmesh
    double complex, dimension(lmsize,lmsize,nrmax), intent(in)  :: VLL0
    ! .. Output variables
    double complex, dimension(2*lmsize,2*lmsize,nrmax), intent(out) :: VLL
@@ -56,7 +57,7 @@ subroutine vllmatsra(vll0,vll,rmesh,lmsize,nrmax,eryd,lmax,lval_in,cmode)
       stop '[vllmatsra] error'
    end if
 
-   vll=(0.0D0,0d0)
+   vll=CZERO
 
    if (cmode=='Ref=0') then
       vll(1:lmsize,1:lmsize,:)= vll0 !/cvlight

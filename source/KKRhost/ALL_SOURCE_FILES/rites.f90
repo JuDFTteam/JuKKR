@@ -14,20 +14,24 @@
 !> @note modified by B. Drittler  aug. 1988
 !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RITES(IFILE,NATPS,NATYP,NSPIN,Z,ALAT,RMT,RMTNEW,RWS,&
-   ITITLE,R,DRDI,VM2Z,IRWS,A,B,TXC,KXC,INS,IRNS,               &
-   LPOT,VINS,QBOUND,IRC,KSHAPE,EFERMI,VBC,ECORE,               &
-   LCORE,NCORE,ECOREREL,NKCORE,KAPCORE)
+subroutine RITES(IFILE,NATPS,NATYP,NSPIN,Z,ALAT,RMT,RMTNEW,RWS,ITITLE,R,DRDI,    &
+   VM2Z,IRWS,A,B,TXC,KXC,INS,IRNS,LPOT,VINS,QBOUND,IRC,KSHAPE,EFERMI,VBC,ECORE,  &
+   LCORE,NCORE,ECOREREL,NKCORE,KAPCORE,IRM,IRMIND,LMPOT)
+
+   use global_variables
 
    ! .. Scalar Arguments
    integer, intent(in) :: INS    !< 0 (MT), 1(ASA), 2(Full Potential)
+   integer, intent(in) :: IRM    !< Maximum number of radial points
    integer, intent(in) :: KXC    !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
    integer, intent(in) :: LPOT   !< Maximum l component in potential expansion
+   integer, intent(in) :: LMPOT  !< (LPOT+1)**2
    integer, intent(in) :: IFILE  !< Unit specifier for potential card
    integer, intent(in) :: NATPS
    integer, intent(in) :: NATYP  !< Number of kinds of atoms in unit cell
    integer, intent(in) :: NSPIN  !< Counter for spin directions
    integer, intent(in) :: KSHAPE !< Exact treatment of WS cell
+   integer, intent(in) :: IRMIND    !< IRM-IRNSD
    double precision, intent(in) :: ALAT   !< Lattice constant in a.u.
    double precision, intent(in) :: QBOUND !< Convergence parameter for the potential
    double precision, intent(in) :: EFERMI !< Fermi energy
@@ -39,11 +43,11 @@ subroutine RITES(IFILE,NATPS,NATYP,NSPIN,Z,ALAT,RMT,RMTNEW,RWS,&
    double precision, dimension(2), intent(in) :: VBC     !< Potential constants
    double precision, dimension(*), intent(in) :: RMT     !< Muffin-tin radius of true system
    double precision, dimension(*), intent(in) :: RMTNEW  !< Adapted muffin-tin radius
-   double precision, dimension(IRMD,*), intent(in) :: R  !< Radial mesh ( in units a Bohr)
-   double precision, dimension(IRMD,*), intent(in) :: VM2Z
-   double precision, dimension(IRMD,*), intent(in) :: DRDI     !< Derivative dr/di
-   double precision, dimension(20,*), intent(in)   :: ECORE    !< Core energies !(2), 22.5,2000
-   double precision, dimension(IRMIND:IRMD,LMPOTD,*), intent(in) :: VINS   !< Non-spherical part of the potential
+   double precision, dimension(IRM,*), intent(in) :: R  !< Radial mesh ( in units a Bohr)
+   double precision, dimension(IRM,*), intent(in) :: VM2Z
+   double precision, dimension(IRM,*), intent(in) :: DRDI     !< Derivative dr/di
+   double precision, dimension(20,*), intent(in)  :: ECORE    !< Core energies !(2), 22.5,2000
+   double precision, dimension(IRMIND:IRM,LMPOT,*), intent(in) :: VINS   !< Non-spherical part of the potential
    !----------------------------------------------------------------------------
    integer, dimension(20,NATYP), intent(in) :: NKCORE
    integer, dimension(20,2*NATYP), intent(in) :: KAPCORE
@@ -57,14 +61,14 @@ subroutine RITES(IFILE,NATPS,NATYP,NSPIN,Z,ALAT,RMT,RMTNEW,RWS,&
    integer, dimension(20,*), intent(in) :: LCORE   !< Angular momentum of core states
    character(len=124), dimension(*), intent(in) :: TXC
    ! .. Local Scalars
-   integer :: I,ICORE,IH,INEW,IP,IR,IRMIN,IRNS1,IS,ISAVE,J,LM,LMNR,LMPOT,NCORE1,NR
+   integer :: I,ICORE,IH,INEW,IP,IR,IRMIN,IRNS1,IS,ISAVE,J,LM,LMNR,NCORE1,NR
    double precision :: A1,B1,RMAX,RMT1,RMTNW1,RV,SIGN,SUM,Z1
    ! .. Local Arrays
    integer, dimension(20) :: LCORE1
-   double precision, dimension(20) :: ECORE1
-   double precision, dimension(IRMD) :: DRADI
-   double precision, dimension(IRMD) :: RA
-   double precision, dimension(IRMD) :: VM2ZA
+   double precision, dimension(20)  :: ECORE1
+   double precision, dimension(IRM) :: DRADI
+   double precision, dimension(IRM) :: RA
+   double precision, dimension(IRM) :: VM2ZA
    double precision, dimension(20,2) :: ECORE2
    character(len=3), dimension(4) :: TXTK
    character(len=1), dimension(0:3) :: TXTL
@@ -77,7 +81,6 @@ subroutine RITES(IFILE,NATPS,NATYP,NSPIN,Z,ALAT,RMT,RMTNEW,RWS,&
    INEW  = 1
    !
    !
-   LMPOT = (LPOT+1)* (LPOT+1)
    do IH = 1,NATYP
       do IS = 1,NSPIN
          if (IS.EQ.NSPIN) then

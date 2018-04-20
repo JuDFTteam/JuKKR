@@ -9,12 +9,13 @@
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 subroutine writekkrflex(NATOMIMP,NSPIN,IELAST,LMPOT,LMMAXD,ALAT,NATYP,&
-      KSHAPE,VBC,ATOMIMP,HOSTIMP,NOQ,ZAT,KAOEZ,CONC,CMOM,CMINST,VINTERS)
+      KSHAPE,VBC,ATOMIMP,HOSTIMP,NOQ,ZAT,KAOEZ,CONC,CMOM,CMINST,VINTERS,NEMB,NAEZ,LMGF0D)
 
    use mod_types, only: t_tgmat
    use mod_wunfiles, only: t_params, read_angles
    use mod_version_info
    use mod_md5sums
+   use global_variables
 
    implicit none
 
@@ -24,7 +25,6 @@ subroutine writekkrflex(NATOMIMP,NSPIN,IELAST,LMPOT,LMMAXD,ALAT,NATYP,&
    integer, intent(in) :: LMPOT     !< (LPOT+1)**2
    integer, intent(in) :: NSPIN     !< Counter for spin directions
    integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
-   integer, intent(in) :: LMPOT     !< (LPOT+1)**2
    integer, intent(in) :: KSHAPE    !< Exact treatment of WS cell
    integer, intent(in) :: IELAST
    integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2

@@ -24,10 +24,12 @@
 !> @date May 1987
 !-----------------------------------------------------------------------
 
-subroutine VINTRAS(CMOM,CMINST,LMAX,NSPIN,NSTART,NEND,RHO2NS,V,R, &
-      DRDI,IRWS,IRCUT,IPAN,KSHAPE,NTCELL,ILM,IFUNM,IMAXSH,GSH,THETAS,LMSP)
+subroutine VINTRAS(CMOM,CMINST,LMAX,NSPIN,NSTART,NEND,RHO2NS,V,R,DRDI,IRWS,IRCUT,&
+   IPAN,KSHAPE,NTCELL,ILM,IFUNM,IMAXSH,GSH,THETAS,LMSP,IRM,LMPOT,NATYP,LMXSPD,   &
+   NPOTD)
 
    use Constants
+   use global_variables
 
    implicit none
 
@@ -35,14 +37,11 @@ subroutine VINTRAS(CMOM,CMINST,LMAX,NSPIN,NSTART,NEND,RHO2NS,V,R, &
    integer, intent(in) :: IRM   !< Maximum number of radial points
    integer, intent(in) :: LMAX   !< Maximum l component in wave function expansion
    integer, intent(in) :: NEND
-   integer, intent(in) :: NFUND
    integer, intent(in) :: NSPIN  !< Counter for spin directions
    integer, intent(in) :: LMPOT  !< (LPOT+1)**2
-   integer, intent(in) :: IPAND  !< Number of panels in non-spherical part
    integer, intent(in) :: NATYP  !< Number of kinds of atoms in unit cell
-   integer, intent(in) :: NGSHD  !< Shape functions parameters in non-spherical part
+   integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
    integer, intent(in) :: NSTART
-   integer, intent(in) :: NCELLD !< Number of cells (shapes) in non-spherical part
    integer, intent(in) :: LMXSPD !< (2*LPOT+1)**2
    integer, intent(in) :: KSHAPE !< Exact treatment of WS cell
    integer, dimension(NATYP), intent(in)     :: IRWS !< R point at WS radius
@@ -53,18 +52,15 @@ subroutine VINTRAS(CMOM,CMINST,LMAX,NSPIN,NSTART,NEND,RHO2NS,V,R, &
    integer, dimension(NATYP,LMXSPD), intent(in)    :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
    integer, dimension(NATYP,LMXSPD), intent(in)    :: IFUNM
    integer, dimension(0:IPAND,NATYP), intent(in)   :: IRCUT   !< R points of panel borders
-
    double precision, dimension(NGSHD), intent(in) :: GSH
    double precision, dimension(IRM,NATYP), intent(in) :: R !< Radial mesh ( in units a Bohr)
    double precision, dimension(IRM,NATYP), intent(in) :: DRDI !< Derivative dr/di
    double precision, dimension(IRID,NFUND,NCELLD), intent(in) :: THETAS  !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
    double precision, dimension(IRM,LMPOT,NATYP,2), intent(in) :: RHO2NS   !< radial density
-
    ! .. Output variables
    double precision, dimension(LMPOT,NATYP), intent(out) :: CMOM   !< LM moment of total charge
    double precision, dimension(LMPOT,NATYP), intent(out) :: CMINST
    double precision, dimension(IRM,LMPOT,NPOTD), intent(out) :: V
-
    ! .. Local Variables
    double precision :: FAC,RL
    integer :: I,IATYP,ICELL,IEND,IFUN,IPOT,IRC1,IRS1,ISTART,J,L,LM,LM2,LM3,M

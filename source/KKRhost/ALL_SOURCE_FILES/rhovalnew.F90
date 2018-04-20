@@ -2,14 +2,11 @@
 ! SUBROUTINE: RHOVALNEW
 !> @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
-   NPOTD,NRMAXD,LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,       &
-   SOCSCALE,CLEB,ICLEB,IEND,IFUNM,LMSP,NCHEB,                     &
-   NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,                          &
-   RPAN_INTERVALL,IPAN_INTERVALL,                                 &
-   RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,                      &
-   DEN_out,ESPV,RHO2NS,R2NEF,MUORB,angles_new,                    &
-   IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATN)
+subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,   &
+   LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,SOCSCALE,CLEB,ICLEB,IEND,IFUNM,    &
+   LMSP,NCHEB,NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,RPAN_INTERVALL,IPAN_INTERVALL,&
+   RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,DEN_out,ESPV,RHO2NS,R2NEF,MUORB,     &
+   angles_new,IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATN)
 
 #ifdef CPP_OMP
    use omp_lib
@@ -222,7 +219,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
    VNSPLL0=CZERO
    !
    call VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,LMPOT,CLEB,ICLEB,IEND,&
-      NSPIN,ZAT,RNEW,USE_SRATRICK)
+      NSPIN,ZAT,RNEW,USE_SRATRICK,NCLEB)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! LDAU
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -449,7 +446,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
       call SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,    &
-         ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,LMPOT,   &
+         ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,LMPOT,    &
          THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,  &
          NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,            &
          VNSPLL0,VNSPLL1(:,:,:,ith),'1')
@@ -487,7 +484,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
          ! using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
             call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,  &
-               LMPOT,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,     &
+               LMPOT,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,      &
                JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),          &
                JLK2(:,:,ith),GMATPREFACTOR,TMATSPH(:,ith),                 &
                ALPHASPH,USE_SRATRICK)
@@ -534,7 +531,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
          .or. (t_wavefunctions%Nwfsavemax==0)) then
          ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
          call SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT, &
-            CVLIGHT,SOCSCALE,NSPIN,LMPOT,THETA,PHI,        &
+            CVLIGHT,SOCSCALE,NSPIN,LMPOT,THETA,PHI,         &
             IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,   &
             IRMDNEW,NRMAXD,VNSPLL0,VNSPLL1(:,:,:,ith),      &
             'transpose')
@@ -569,7 +566,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
          ! notice that exchange the order of left and right hankel/bessel functions
          if (USE_SRATRICK.EQ.1) then
             call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,  &
-               LMPOT,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,     &
+               LMPOT,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,      &
                JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),                      &
                HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,                    &
                ALPHASPH,TMATSPH(:,ith),USE_SRATRICK)
@@ -636,7 +633,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
          enddo
          ! calculate density
          call RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
-            LMPOT,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,                &
+            LMPOT,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,                 &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
@@ -723,7 +720,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (IE.EQ.IELAST.AND.LDORHOEF) then
          call RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
-            LMPOT,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,              &
+            LMPOT,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,               &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
@@ -737,7 +734,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       do IORB=1,3
          call RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
-            LMPOT,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,              &
+            LMPOT,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,               &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
@@ -932,7 +929,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
       denorbmomlm = 0.0d0
       denorbmomns = 0.0d0
    endif
-   call mympi_main1c_comm_newsosol(IRMDNEW,LMPOT,LMAX,LMAXD1,&
+   call mympi_main1c_comm_newsosol(IRMDNEW,LMPOT,LMAX,LMAXD1,  &
       LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,                       &
       den,denlm,gflle,rho2nsc,r2nefc,                          &
       rho2int,espv,muorb,denorbmom,                            &

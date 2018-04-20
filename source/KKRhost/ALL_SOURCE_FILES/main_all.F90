@@ -14,6 +14,7 @@
 !-------------------------------------------------------------------------------
 program kkrcode
 
+   use Constants
    use Profiling
    use mod_main0
    use mod_main1a
@@ -136,7 +137,9 @@ program kkrcode
 #endif
 
    ! in case of deci-out run everything only serially to write decifile correctly. This will be fixed in a later version when we get rid of the decifile
-   if(t_inc%deci_out .and. t_mpi_c_grid%nranks_at>1) stop 'deci-out option chosen. Please run code serially in energy dimension!'
+   if(t_inc%deci_out .and. t_mpi_c_grid%nranks_at>1) then
+      stop 'deci-out option chosen. Please run code serially in energy dimension!'
+   endif
 
    ! call myMPI_distribute_ranks(MPIatom, MPIadapt, t_inc, timings_1a, timings_1b, load_imbalance, nranks, myrank, initial=1)
    ! create 2d matrix for processors so that more processors than energy points can be used.
@@ -225,7 +228,9 @@ program kkrcode
 
       ! reset files for t_inc%i_write<2
       ! first copy lat output to output.2.txt so that all information of the precious iteration can be accessed while the next iteration runs
-      if (t_inc%i_write<2 .and. t_inc%i_write>0 .and. myrank==master .and. t_inc%i_iteration>1) call SYSTEM('cp output.000.txt output.2.txt')
+      if (t_inc%i_write<2.and.t_inc%i_write>0.and.myrank==master.and.t_inc%i_iteration>1) then
+         call SYSTEM('cp output.000.txt output.2.txt')
+      endif
       ! rewind output.xxx.txt
       if (t_inc%i_write<2 .and. t_inc%i_write>0) then
          rewind(1337)
@@ -243,28 +248,26 @@ program kkrcode
       ! Calculate tmat and gref
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main1a')
-      call main1a(INS,LLY,IRM,LM2D,ICST,IEND,NCLS,LMAX,NREF,NSRA,NEMB,LPOT,NAEZ,NATYP,&
-         NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,LMPOT,NINEQ,NSPIN,NCHEB,LMMAXD,IELAST,    &
-         LMGF0D,NRMAXD,IRMIND,NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS,IQAT,IRWS,NACLS,   &
-         REFPOT,ATOM,ZAT,VREF,RMTREF,RCLS,SOLVER,SOCSCL,SOCSCALE,CSCL,NTLDAU,    &
-         IDOLDAU,ITLDAU,UEFF,JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,ICLEB,IRCUT,          &
-         IPAN_INTERVALL,PHI,THETA,CLEB,VISP,DRDI,RNEW,RMESH,RPAN_INTERVALL,VINS,EZ,&
-         ZREL,JWSREL,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ITRUNLDAU,LOPT,EREFLDAU,&
-         WLDAU,ULDAU,PHILDAU)
+      call main1a(INS,LLY,IRM,LM2D,ICST,IEND,NCLS,LMAX,NREF,NSRA,KREL,NEMB,LPOT,    &
+         NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,LMPOT,IPAND,NINEQ,NSPIN,NCHEB,    &
+         LMGF0D,LMMAXD,IELAST,NRMAXD,IRMIND,NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS, &
+         IQAT,IRWS,NACLS,REFPOT,ATOM,ZAT,VREF,RMTREF,RCLS,SOLVER,SOCSCL,SOCSCALE,   &
+         CSCL,NTLDAU,IDOLDAU,ITLDAU,UEFF,JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,ICLEB,IRCUT, &
+         IPAN_INTERVALL,CLEB,VISP,DRDI,RNEW,R,RPAN_INTERVALL,VINS,EZ,ZREL,JWSREL,   &
+         VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ITRUNLDAU,LOPT,EREFLDAU,WLDAU,ULDAU,   &
+         PHILDAU)
       call timing_stop('main1a')
-
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Calculate gmat
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main1b')
-      call main1b(NR,IRM,LLY,ICC,IGF,INS,NPOL,LMAX,NREF,NSRA,NCLS,NCPA,NEMB,NAEZ,    &
-         NATYP,NCLSD,NSPIN,KMROT,LMMAXD,IELAST,INVMOD,NSYMAT,NEMBD1,LMGF0D,      &
-         NOFGIJ,NQCALC,NSPINDD,NLBASIS,NRBASIS,MAXMESH,NATOMIMP,ITCPAMAX,ALAT,   &
-         CPATOL,NOQ,CLS,IQAT,NSH1,NSH2,ICPA,NACLS,NSHELL,REFPOT,ATOMIMP,EZOA,    &
-         ATOM,KAOEZ,ICHECK,CONC,RMTREF,RR,RATOM,RBASIS,RROT,RCLS,SYMUNITARY,     &
-         KMESH,IQCALC,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,NRREL,IRREL,&
-         VREF,RCLSIMP,RC,RREL,CREL,SRREL,DROTQ,DSYMLL,    &
-         VACFLAG)
+      call main1b(NR,IRM,LLY,ICC,IGF,INS,NPOL,LMAX,NREF,NSRA,NCLS,NCPA,NEMB,NAEZ,   &
+         NATYP,NCLSD,NSPIN,KMROT,LMMAXD,IELAST,INVMOD,NSYMAT,NEMBD1,LMGF0D,NOFGIJ,  &
+         NQCALC,NSPINDD,NLBASIS,NRBASIS,MAXMESH,NATOMIMP,ITCPAMAX,ALAT,CPATOL,NOQ,  &
+         CLS,IQAT,NSH1,NSH2,ICPA,NACLS,NSHELL,REFPOT,ATOMIMP,EZOA,ATOM,KAOEZ,ICHECK,&
+         CONC,RMTREF,RR,RATOM,RBASIS,RROT,RCLS,SYMUNITARY,KMESH,IQCALC,IJTABSH,     &
+         IJTABSYM,IJTABCALC,IJTABCALC_I,NRREL,IRREL,VREF,RCLSIMP,RC,RREL,CREL,SRREL,&
+         DROTQ,DSYMLL,VACFLAG)
       call timing_stop('main1b')
       if(test('STOP1B  '))then
 #ifdef CPP_MPI
@@ -277,15 +280,16 @@ program kkrcode
       ! Calculate density
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main1c')
-      call main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LPOT,LMAX,NTOTD,MMAXD,NATYP,   &
-         NPOTD,KMROT,NSPIN,NCHEB,LMPOT,LMXSPD,IELAST,LMMAXD,NRMAXD,IRMIND,       &
-         INTERVX,INTERVY,INTERVZ,IESEMICORE,TK,EMIN,EMAX,ALAT,EFERMI,SOLVER,IQAT,&
-         ZREL,IPAN,IRWS,NCORE,JWSREL,NTCELL,ITITLE,CSCL,ZAT,CONC,SOCSCALE,NTLDAU,&
-         IDOLDAU,ITRUNLDAU,ITLDAU,UEFF,JEFF,IEND,NFU,LOFLM,IRMIN,IRSHIFT,ICLEB,  &
-         LCORE,IRCUT,IFUNM1,LMSP1,LLMSP,JEND,A,B,QMTET,QMPHI,CLEB,DRDI,ECORE,    &
-         RMREL,SOCSCL,R2DRDIREL,VINS,VTREL,BTREL,DRDIREL,EZ,WEZ,LOPT,EREFLDAU,   &
-         WLDAU,ULDAU,PHILDAU,R_LOG,NPAN_EQ,NPAN_LOG,NPAN_TOT,IPAN_INTERVALL,VISP,&
-         RNEW,RPAN_INTERVALL,THETAS,THETASNEW)
+
+      call main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LPOT,LMAX,NTOTD,MMAXD,NATYP, &
+         NPOTD,KMROT,NSPIN,NCHEB,LMPOT,LMXSPD,IELAST,LMMAXD,NRMAXD,IRMIND,INTERVX,  &
+         INTERVY,INTERVZ,IESEMICORE,TK,EMIN,EMAX,ALAT,EFERMI,SOLVER,IQAT,ZREL,IPAN, &
+         IRWS,NCORE,JWSREL,NTCELL,ITITLE,CSCL,ZAT,CONC,SOCSCALE,NTLDAU,IDOLDAU,     &
+         ITRUNLDAU,ITLDAU,UEFF,JEFF,IEND,NFU,LOFLM,IRMIN,IRSHIFT,ICLEB,LCORE,IRCUT, &
+         IFUNM1,LMSP1,LLMSP,JEND,A,B,QMTET,QMPHI,CLEB,DRDI,ECORE,RMREL,SOCSCL,      &
+         R2DRDIREL,VINS,VTREL,BTREL,DRDIREL,EZ,WEZ,LOPT,EREFLDAU,WLDAU,ULDAU,       &
+         PHILDAU,R_LOG,NPAN_EQNEW,NPAN_LOGNEW,NPAN_TOT,IPAN_INTERVALL,VISP,RNEW,    &
+         RPAN_INTERVALL,THETAS,THETASNEW)
       call timing_stop('main1c')
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -293,24 +297,25 @@ program kkrcode
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main2')
       if (myrank==master) then
-         call main2(LLY,ICC,INS,IPF,KTE,KXC,LPOT,IMIX,NAEZ,NSRA,LMAX,KPRE,NPOL,  &
-            NPNT1,NPNT2,NPNT3,NATYP,NSPIN,ITSCF,KVMAD,LMPOT,NPOTD,NLEFT,NRIGHT,  &
-            LMXSPD,IELAST,ISHIFT,ITDBRY,KSHAPE,KFORCE,IRMIND,NEMBD1,LMMAXD,      &
-            IDOLDAU,NLBASIS,NRBASIS,SCFSTEPS,NATOMIMP,TK,FCM,ALAT,MIXING,QBOUND, &
-            LAMBDA_XC,OPT,TEST,LRHOSYM,LINTERFACE,NOQ,IMT,IQAT,IPAN,ZREL,IRNS,   &
-            IRWS,KAOEZ,JWSREL,NTCELL,ITITLE,NSHELL,ZAT,RMT,RWS,CONC,RMTNEW,TXC,  &
-            EMIN,EMAX,TKSEMI,EMUSEMI,EBOTSEMI,FSEMICORE,IRC,NFU,LOPT,NCORE,IRMIN,&
-            IXIPOL,IMAXSH,IRSHIFT,ATOMIMP,HOSTIMP,ILM,LMSP,LCORE,IRCUT,IFUNM,A,B,&
-            VBC,GSH,FACT,QMGAM,QMTET,QMPHI,R,ECORE,DRDI,VISP,VTREL,BTREL,RMREL,  &
-            DRDIREL,CMOMHOST,R2DRDIREL,VINS,THETAS,THESME,EZ,DEZ,WEZ)
+         call main2(LLY,ICC,INS,IPF,KTE,KXC,LPOT,IMIX,NAEZ,NSRA,LMAX,KPRE,NPOL,     &
+            NPNT1,NPNT2,NPNT3,NATYP,NSPIN,ITSCF,KVMAD,LMPOT,NPOTD,NLEFT,NRIGHT,     &
+            LMXSPD,IELAST,ISHIFT,ITDBRY,KSHAPE,KFORCE,IRMIND,NEMBD1,LMMAXD,IDOLDAU, &
+            NLBASIS,NRBASIS,SCFSTEPS,NATOMIMP,TK,FCM,ALAT,MIXING,QBOUND,LAMBDA_XC,  &
+            LRHOSYM,LINTERFACE,NOQ,IMT,IQAT,IPAN,ZREL,IRNS,IRWS,KAOEZ,JWSREL,NTCELL,&
+            ITITLE,NSHELL,ZAT,RMT,RWS,CONC,RMTNEW,TXC,EMIN,EMAX,TKSEMI,EMUSEMI,     &
+            EBOTSEMI,FSEMICORE,IRC,NFU,LOPT,NCORE,IRMIN,IXIPOL,IMAXSH,IRSHIFT,      &
+            ATOMIMP,HOSTIMP,ILM,LMSP,LCORE,IRCUT,IFUNM,A,B,VBC,GSH,FACT,QMGAM,QMTET,&
+            QMPHI,R,ECORE,DRDI,VISP,VTREL,BTREL,RMREL,DRDIREL,CMOMHOST,R2DRDIREL,EZ,&
+            DEZ,WEZ,NEMB,IRM,N1SEMI,N2SEMI,N3SEMI,NPOLSEMI,IESEMICORE,IDOSEMICORE,  &
+            LLMSP,LMGF0D)
       endif
       call timing_stop('main2')
 
       ! reset arrays for next iteration
       if(t_params%LLY/=0) then
-         if(.not.t_lloyd%dtmat_to_file) t_lloyd%dtmat = (0.0d0, 0.0d0)
-         if(.not.t_lloyd%tralpha_to_file) t_lloyd%tralpha = (0.0d0, 0.0d0)
-         if(.not.t_lloyd%g0tr_to_file) t_lloyd%g0tr= (0.0d0, 0.0d0)
+         if (.not.t_lloyd%dtmat_to_file) t_lloyd%dtmat = CZERO
+         if (.not.t_lloyd%tralpha_to_file) t_lloyd%tralpha = CZERO
+         if (.not.t_lloyd%g0tr_to_file) t_lloyd%g0tr = CZERO
       end if
 
 #ifdef CPP_MPI
@@ -327,7 +332,8 @@ program kkrcode
       ! find out if MPI_communication pattern should be modified: (with test option 'MPIadapt' the program will be forced to change the communication grid after the first iteration and then compares the timings
       !   call myMPI_distribute_ranks(t_inc, MPIatom, MPIadapt, timings_1a, timings_1b, load_imbalance, nranks, myrank, initial=0)
       if(MPIadapt==1 .and. t_inc%i_iteration>1) then
-         call check_communication_pattern(MPIatom, MPIadapt, timings_1a, timings_1b, load_imbalance, t_inc%nkmesh, t_inc%kmesh_ie)
+         call check_communication_pattern(MPIatom, MPIadapt,timings_1a,timings_1b,  &
+            load_imbalance,t_inc%nkmesh,t_inc%kmesh_ie)
       end if
       ! adapt MPI communicator grid to tackle load imbalance better
       if(MPIadapt>0) then
@@ -337,11 +343,12 @@ program kkrcode
          t_mpi_c_grid%dims = dims
 
          ! create communicator for atom/energy matrix (load_imbalance instead of t_inc%kmesh in callig list)
-         call create_newcomms_group_ie( nranks,myrank,dims(1),dims(2),t_inc%nkmesh,load_imbalance,mympi_comm_ie,  &
-            myrank_ie,nranks_ie,mympi_comm_at,myrank_at,nranks_at, myrank_atcomm,nranks_atcomm)
+         call create_newcomms_group_ie( nranks,myrank,dims(1),dims(2),t_inc%nkmesh, &
+            load_imbalance,mympi_comm_ie,myrank_ie,nranks_ie,mympi_comm_at,         &
+            myrank_at,nranks_at, myrank_atcomm,nranks_atcomm)
          ! save grid info in type 't_mpi_c_grid'
-         call save_t_mpi_c_grid(t_mpi_c_grid,dims, myMPI_comm_ie, myMPI_comm_at, myrank_ie, myrank_at,            &
-            myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
+         call save_t_mpi_c_grid(t_mpi_c_grid,dims, myMPI_comm_ie, myMPI_comm_at,    &
+            myrank_ie, myrank_at,myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
       end if
 
       if(myrank==master) call timing_stop('MPI 2')
@@ -621,7 +628,7 @@ program kkrcode
    i_all=-product(shape(t_params%DSYMLL))*kind(t_params%DSYMLL)
    deallocate(t_params%DSYMLL,stat=i_stat)
    call memocc(i_stat,i_all,'t_params%DSYMLL','main_all')
-   i_all=-product(shape(t_params%ITLDAU))*kind(t_params%ITLADU)
+   i_all=-product(shape(t_params%ITLDAU))*kind(t_params%ITLDAU)
    deallocate(t_params%ITLDAU,stat=i_stat)
    call memocc(i_stat,i_all,'t_params%ITLDAU','main_all')
    i_all=-product(shape(t_params%JWSREL))*kind(t_params%JWSREL)
@@ -833,37 +840,39 @@ program kkrcode
 #endif
 
    ! Deallocation of input arrays
-   call allocate_cell(-1,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,&
+   call allocate_cell(-1,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,  &
       KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS)
    call allocate_semi_inf_host(-1,NEMB,TLEFT,TRIGHT)
    call allocate_potential(-1,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
-      LMPOT,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,&
-      ITITLE,FPRADIUS,VISP,ECORE,VINS)
+      LMPOT,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE, &
+      LLMSP,ITITLE,FPRADIUS,VISP,ECORE,VINS)
    call allocate_cpa(-1,NAEZ,NEMB,NATYP,NOQ,ICPA,IQAT,HOSTIMP,CONC)
    call allocate_ldau(-1,NATYP,LOPT,UEFF,JEFF,EREFLDAU)
-   call allocate_ldau_potential(-1,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,&
+   call allocate_ldau_potential(-1,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,    &
       ULDAU,PHILDAU)
-   call allocate_magnetization(-1,NAEZ,NATYP,LMMAXD,INIPOL,IXIPOL,QMTET,&
+   call allocate_magnetization(-1,NAEZ,NATYP,LMMAXD,INIPOL,IXIPOL,QMTET,   &
       QMPHI,DROTQ)
-   call allocate_SOC(-1,KREL,NATYP,LMAX,IMANSOC,SOCSCALE,CSCL,SOCSCL)
+   call allocate_SOC(-1,KREL,NATYP,LMAX,SOCSCALE,CSCL,SOCSCL)
    call allocate_energies(-1,IEMXD,EZ,DEZ,WEZ)
-   call allocate_relativistic(-1,KREL,IRM,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,&
+   call allocate_relativistic(-1,KREL,IRM,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,  &
       VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,QMGAM,QMGAMTAB,QMPHITAB,QMTETTAB)
-   call allocate_rel_transformations(-1,LMMAXD,NRREL,IRREL,RC,CREL,RREL,SRREL)
-   call allocate_clusters(-1,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,&
-      LMPOT,NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,JEND,RATOM,&
-      RCLSIMP,CMOMHOST,RCLS)
-   call allocate_expansion(-1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,&
-      NCHEBD,LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
+   call allocate_rel_transformations(-1,LMMAXD,NRREL,IRREL,RC,CREL,RREL,   &
+      SRREL)
+   call allocate_clusters(-1,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,   &
+      LMPOT,NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,JEND, &
+      RATOM,RCLSIMP,CMOMHOST,RCLS)
+   call allocate_expansion(-1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,   &
+      NCHEB,LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
    call allocate_mesh(-1,IRM,NATYP,A,B,R,DRDI)
-   call allocate_pannels(-1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQNEW,NPAN_LOGNEW,&
-      IPAN_INTERVALL,RPAN_INTERVALL)
-   call allocate_misc(-1,NR,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREFD,IEMXD,&
-      NTOTD,NSHELD,LMMAXD,NEMBD1,NCHEBD,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM,&
-      IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,DSYMLL1,LEFTTINVLL,&
-      RIGHTTINVLL)
-   call allocate_green(-1,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJD,ISH,JSH,&
-      KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM,GSH)
+   call allocate_pannels(-1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQNEW,          &
+      NPAN_LOGNEW,IPAN_INTERVALL,RPAN_INTERVALL)
+   call allocate_misc(-1,NR,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREF,IEMXD,     &
+      NTOTD,NSHELD,LMMAXD,NEMBD1,NCHEB,NCELLD,LMXSPD,NSPINDD,NSYMAXD,      &
+      NPRINCD,IFUNM,IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,      &
+      DSYMLL,DSYMLL1,LEFTTINVLL,RIGHTTINVLL)
+   call allocate_green(-1,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJ,ISH,JSH,    &
+      KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,        &
+      IJTABCALC_I,ILM,GSH)
    ! End of deallocation
 
 #ifdef CPP_MPI
@@ -873,7 +882,5 @@ program kkrcode
    !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
    !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< close allocated arrays and finalize MPI !!!!!!!!!!!!!!!
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
 
 end program

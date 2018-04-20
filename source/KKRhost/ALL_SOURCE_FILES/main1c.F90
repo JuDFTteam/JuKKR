@@ -25,13 +25,13 @@ contains
    !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
    !> and many others ...
    !----------------------------------------------------------------------------
-   subroutine main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LPOT,LMAX,NTOTD,MMAXD,NATYP,&
-      NPOTD,KMROT,NSPIN,NCHEB,LMPOT,LMXSPD,IELAST,LMMAXD,NRMAXD,IRMIND,INTERVX,  &
-      INTERVY,INTERVZ,IESEMICORE,TK,EMIN,EMAX,ALAT,EFERMI,SOLVER,IQAT,ZREL,IPAN, &
-      IRWS,NCORE,JWSREL,NTCELL,ITITLE,CSCL,ZAT,CONC,SOCSCALE,NTLDAU,IDOLDAU,     &
-      ITRUNLDAU,ITLDAU,UEFF,JEFF,IEND,NFU,LOFLM,IRMIN,IRSHIFT,ICLEB,LCORE,IRCUT, &
-      IFUNM1,LMSP1,LLMSP,JEND,A,B,QMTET,QMPHI,CLEB,DRDI,ECORE,RMREL,SOCSCL,      &
-      R2DRDIREL,VINS,VTREL,BTREL,DRDIREL,EZ,WEZ,LOPT,EREFLDAU,WLDAU,ULDAU,       &
+   subroutine main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LPOT,LMAX,NTOTD,MMAXD, &
+      NATYP,NPOTD,KMROT,NSPIN,NCHEB,LMPOT,LMXSPD,IELAST,LMMAXD,NRMAXD,IRMIND,    &
+      INTERVX,INTERVY,INTERVZ,IESEMICORE,TK,EMIN,EMAX,ALAT,EFERMI,SOLVER,IQAT,   &
+      ZREL,IPAN,IRWS,NCORE,JWSREL,NTCELL,ITITLE,CSCL,ZAT,CONC,SOCSCALE,NTLDAU,   &
+      IDOLDAU,ITRUNLDAU,ITLDAU,UEFF,JEFF,IEND,NFU,LOFLM,IRMIN,IRSHIFT,ICLEB,     &
+      LCORE,IRCUT,IFUNM1,LMSP1,LLMSP,JEND,A,B,QMTET,QMPHI,CLEB,DRDI,ECORE,RMREL, &
+      SOCSCL,R2DRDIREL,VINS,VTREL,BTREL,DRDIREL,EZ,WEZ,LOPT,EREFLDAU,WLDAU,ULDAU,&
       PHILDAU,R_LOG,NPAN_EQ,NPAN_LOG,NPAN_TOT,IPAN_INTERVALL,VISP,RNEW,          &
       RPAN_INTERVALL,THETAS,THETASNEW)
 
@@ -53,21 +53,10 @@ contains
 #endif
       use mod_wunfiles
       use mod_version_info
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! For KREL = 1 (relativistic mode)
-      !
-      !  NPOTD = 2 * NATYP
-      !  LMMAXD = 2 * (LMAX+1)^2
-      !  NSPIND = 1
-      !  LMGF0D = (LMAX+1)^2 dimension of the reference system Green
-      !          function, set up in the spin-independent non-relativstic
-      !          (l,m_l)-representation
-      !
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
       ! .. Parameters
       integer :: NMVECMAX
       parameter (NMVECMAX = 4)
-
       ! .. Input variables
       integer, intent(inout) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
       integer, intent(inout) :: LLY       !< LLY <> 0 : apply Lloyd's formula
@@ -325,20 +314,16 @@ contains
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1c(t_params,KREL,NAEZ,NATYP,NCLEB,LM2D,   &
-         NCHEB,IPAND,LMPOT,LMAX,LMXSPD,NFUND,NPOTD,            &
-         NTOTD,MMAXD,IEMXD,IRM,NSRA,INS,NSPIN,NACLS1, &
-         ICST,KMROT,IQAT,IDOLDAU,IRWS,IPAN,IRCUT,IEND,ICLEB, &
-         LOFLM,JEND,IFUNM1,LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,    &
-         IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,LLY,ITMPDIR,        &
-         ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NPAN_TOT,    &
-         NTLDAU,LOPT,ITLDAU,IELAST,IESEMICORE,NPOL,IRSHIFT,JWSREL,&
-         ZREL,ITRUNLDAU,QMTET,QMPHI,CONC,ALAT,ZAT,DRDI,RMESH,A,B, &
-         CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,RNEW,SOCSCL,    &
-         THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,EMIN,EMAX,TK,VINS,VISP, &
-         ECORE,DRDIREL,R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ,&
-         WEZ,PHILDAU,TMPDIR,SOLVER,NSPIND,NSPOTD,                 &
-         IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
+      call get_params_1c(t_params,KREL,NAEZ,NATYP,NCLEB,LM2D,NCHEB,IPAND,LMPOT,  &
+         LMAX,LMXSPD,NFUND,NPOTD,NTOTD,MMAXD,IEMXD,IRM,NSRA,INS,NSPIN,NACLS1,    &
+         ICST,KMROT,IQAT,IDOLDAU,IRWS,IPAN,IRCUT,IEND,ICLEB, LOFLM,JEND,IFUNM1,  &
+         LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,&
+         LLY,ITMPDIR,ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NPAN_TOT,NTLDAU,LOPT, &
+         ITLDAU,IELAST,IESEMICORE,NPOL,IRSHIFT,JWSREL,ZREL,ITRUNLDAU,QMTET,QMPHI,&
+         CONC,ALAT,ZAT,DRDI,RMESH,A,B,CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,  &
+         RNEW,SOCSCL,THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,EMIN,EMAX,TK,VINS,VISP, &
+         ECORE,DRDIREL,R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ,WEZ,PHILDAU,   &
+         TMPDIR,SOLVER,NSPIND,NSPOTD,IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
 
       ! Initialization needed due to merging to one executable
       ESPV(:,:)      = 0.d0
@@ -356,16 +341,16 @@ contains
       endif
 
       NQDOS=1
-      if (OPT('qdos    ')) then                         ! qdos
-         !        Read BZ path for qdos calculation:
-         open(67,FILE='qvec.dat')                       ! qdos
-         read(67,*) NQDOS                               ! qdos
-         allocate(QVEC(3,NQDOS),stat=i_stat)            ! qdos
-         call memocc(i_stat,product(shape(QVEC))*kind(QVEC),'QVEC','main1c')
-         do IQ = 1,NQDOS                                ! qdos
-            read(67,*) (QVEC(I1,IQ),I1=1,3)             ! qdos
-         enddo                                          ! qdos
-         close(67)                                      ! qdos
+      if (OPT('qdos    ')) then                                                  ! qdos
+         !        Read BZ path for qdos calculation:                             ! qdos
+         open(67,FILE='qvec.dat')                                                ! qdos
+         read(67,*) NQDOS                                                        ! qdos
+         allocate(QVEC(3,NQDOS),stat=i_stat)                                     ! qdos
+         call memocc(i_stat,product(shape(QVEC))*kind(QVEC),'QVEC','main1c')     ! qdos
+         do IQ = 1,NQDOS                                                         ! qdos
+            read(67,*) (QVEC(I1,IQ),I1=1,3)                                      ! qdos
+         enddo                                                                   ! qdos
+         close(67)                                                               ! qdos
       end if
 
       allocate(DEN(0:LMAXD1,IEMXD,NQDOS,NPOTD),stat=i_stat)
@@ -398,17 +383,17 @@ contains
       endif
 
       !    write parameters file that contains passed parameters for further treatment of gflle
-      if (OPT('lmlm-dos')) then                                            ! lmlm-dos
-         QDOSOPT = 'n'                                                     ! lmlm-dos
-         if (OPT('qdos    ')) then                                         ! lmlm-dos qdos
-            QDOSOPT = 'y'                                                  ! lmlm-dos qdos
-         endif                                                             ! lmlm-dos qdos
-         open(67,FORM='formatted',FILE='parameters.gflle')                 ! lmlm-dos
-         DF(:)=WEZ(:)/DBLE(NSPIN)                                          ! lmlm-dos
-         write(67,*) IELAST,IEMXD,NATYP,NSPIN,LMAX,QDOSOPT,DF(1:IELAST), & ! lmlm-dos
-            EZ(1:IELAST),KORBIT                                            ! lmlm-dos
-         close(67)                                                         ! lmlm-dos
-      endif  ! OPT('lmlm-dos')                                             ! lmlm-dos
+      if (OPT('lmlm-dos')) then                                                  ! lmlm-dos
+         QDOSOPT = 'n'                                                           ! lmlm-dos
+         if (OPT('qdos    ')) then                                               ! lmlm-dos qdos
+            QDOSOPT = 'y'                                                        ! lmlm-dos qdos
+         endif                                                                   ! lmlm-dos qdos
+         open(67,FORM='formatted',FILE='parameters.gflle')                       ! lmlm-dos
+         DF(:)=WEZ(:)/DBLE(NSPIN)                                                ! lmlm-dos
+         write(67,*) IELAST,IEMXD,NATYP,NSPIN,LMAX,QDOSOPT,DF(1:IELAST), &       ! lmlm-dos
+            EZ(1:IELAST),KORBIT                                                  ! lmlm-dos
+         close(67)                                                               ! lmlm-dos
+      endif  ! OPT('lmlm-dos')                                                   ! lmlm-dos
 
       ! ------------------------------------------------------------------------
       ! LLY Lloyd
@@ -525,11 +510,11 @@ contains
          else !NEWSOSOL
 
             if(t_lloyd%cdos_diff_lly_to_file) then
-               open (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')            ! LLY
-               do IE = 1,IELAST                                               ! LLY
-                  read(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,1)             ! LLY
-               enddo                                                          ! LLY
-               close(701)                                                     ! LLY
+               open (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY
+               do IE = 1,IELAST                                                  ! LLY
+                  read(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,1)                ! LLY
+               enddo                                                             ! LLY
+               close(701)                                                        ! LLY
             else  !(t_lloyd%cdos_diff_lly_to_file)
 #ifdef CPP_MPI
                ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
@@ -814,14 +799,14 @@ contains
          call timing_start('main1c - communication')
 #endif
          call mympi_main1c_comm(IRM,LMPOT,NATYP,LMAX,LMAXD1,LMMAXD, &
-            NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,               &
-            NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,         &
-            denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,            &
+            NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,           &
+            NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,     &
+            denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,        &
             t_mpi_c_grid%mympi_comm_ie)
          call mympi_main1c_comm(IRM,LMPOT,NATYP,LMAX,LMAXD1,LMMAXD, &
-            NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,               &
-            NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,         &
-            denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,            &
+            NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,           &
+            NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,     &
+            denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,        &
             t_mpi_c_grid%mympi_comm_at)
 #ifdef CPP_TIMING
          call timing_stop('main1c - communication')
@@ -905,8 +890,7 @@ contains
             t_mpi_c_grid%ntot1  = ntot_pT(myrank_ie_tmp)
          endif
 
-         if(.not. (allocated(t_mpi_c_grid%ntot_pT1) .and.   &
-            allocated(t_mpi_c_grid%ioff_pT1))) then
+         if(.not.(allocated(t_mpi_c_grid%ntot_pT1).and.allocated(t_mpi_c_grid%ioff_pT1))) then
             allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),stat=i_stat)
             call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT1))*kind(t_mpi_c_grid%ntot_pT1),'t_mpi_c_grid%ntot_pT1','main1c')
             allocate(t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1),stat=i_stat)
@@ -989,8 +973,8 @@ contains
 #ifdef CPP_MPI
          !reset NQDOS to 1 to avoid endless communication
          NQDOS = 1
-         call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,          &
-            NPOTD,NATYP,LMPOT,IRM,MMAXD,den, denlm, muorb, espv, r2nef,    &
+         call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,    &
+            NPOTD,NATYP,LMPOT,IRM,MMAXD,den, denlm, muorb, espv, r2nef, &
             rho2ns, denefat, denef,denmatn,angles_new,t_mpi_c_grid%mympi_comm_ie)
 #endif
 

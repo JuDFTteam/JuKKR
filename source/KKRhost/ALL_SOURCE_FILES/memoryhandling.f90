@@ -702,7 +702,7 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !----------------------------------------------------------------------------
-   subroutine allocate_SOC(flag,KREL,NATYP,LMAX,IMANSOC,SOCSCALE,CSCL,SOCSCL)
+   subroutine allocate_SOC(flag,KREL,NATYP,LMAX,SOCSCALE,CSCL,SOCSCL)
 
       implicit none
 
@@ -710,7 +710,6 @@ contains
       integer, intent(in) :: KREL
       integer, intent(in) :: LMAX !< Maximum l component in wave function expansion
       integer, intent(in) :: NATYP !< number of kinds of atoms in unit cell
-      integer, dimension(:), allocatable, intent(inout) :: IMANSOC
       double precision, dimension(:), allocatable, intent(inout) :: SOCSCALE !< Spin-orbit scaling
       double precision, dimension(:,:), allocatable, intent(inout) :: CSCL !< Speed of light scaling
       double precision, dimension(:,:), allocatable, intent(inout) :: SOCSCL
@@ -725,9 +724,6 @@ contains
          allocate(CSCL(KREL*LMAX+1,KREL*NATYP+(1-KREL)),stat=i_stat)
          call memocc(i_stat,product(shape(CSCL))*kind(CSCL),'CSCL','allocate_SOC')
          CSCL = 0.D0
-         allocate(IMANSOC(NATYP),stat=i_stat)
-         call memocc(i_stat,product(shape(IMANSOC))*kind(IMANSOC),'IMANSOC','allocate_SOC')
-         IMANSOC = 0
          allocate(SOCSCALE(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(SOCSCALE))*kind(SOCSCALE),'SOCSCALE','allocate_SOC')
          SOCSCALE = 1.D0  ! Spin-orbit scaling
@@ -736,11 +732,6 @@ contains
             i_all=-product(shape(SOCSCL))*kind(SOCSCL)
             deallocate(SOCSCL,stat=i_stat)
             call memocc(i_stat,i_all,'SOCSCL','allocate_SOC')
-         endif
-         if (allocated(IMANSOC)) then
-            i_all=-product(shape(IMANSOC))*kind(IMANSOC)
-            deallocate(IMANSOC,stat=i_stat)
-            call memocc(i_stat,i_all,'IMANSOC','allocate_SOC')
          endif
          if (allocated(SOCSCALE)) then
             i_all=-product(shape(SOCSCALE))*kind(SOCSCALE)

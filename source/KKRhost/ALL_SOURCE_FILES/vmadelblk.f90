@@ -18,11 +18,11 @@
 !> - Impurity-program adopted feb. 2004 (according to N. Papanikalou)
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine VMADELBLK(CMOM,CMINST,LMAX,NSPIN,NAEZ,V,ZAT,R, &
-      IRWS,IRCUT,IPAN,KSHAPE,NOQ,KAOEZ,&
-      CONC,CATOM,ICC,HOSTIMP,VINTERS,IRM,NEMB,LMPOT,NPOTD,LMMAXD,WLENGTH)
+subroutine VMADELBLK(CMOM,CMINST,LMAX,NSPIN,NAEZ,V,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE, &
+   NOQ,KAOEZ,CONC,CATOM,ICC,HOSTIMP,VINTERS,IRM,NEMB,LMPOT,NPOTD,LMMAXD,NATYP)
 
    use Constants
+   use global_variables
 
    implicit none
 
@@ -32,12 +32,12 @@ subroutine VMADELBLK(CMOM,CMINST,LMAX,NSPIN,NAEZ,V,ZAT,R, &
    integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
    integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
    integer, intent(in) :: NEMB      !< Number of 'embedding' positions
+   integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
    integer, intent(in) :: NSPIN     !< Counter for spin directions
    integer, intent(in) :: LMPOT     !< (LPOT+1)**2
    integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
    integer, intent(in) :: KSHAPE    !< Exact treatment of WS cell
    integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-   integer, intent(in) :: WLENGTH   !< Word length for direct access files, compiler dependent ifort/others (1/4)
    ! .. Array Arguments
    integer, dimension(NAEZ), intent(in)            :: NOQ      !< Number of diff. atom types located
    integer, dimension(NATYP), intent(in)           :: IRWS     !< Position of atoms in the unit cell in units of bravais vectors
@@ -70,14 +70,14 @@ subroutine VMADELBLK(CMOM,CMINST,LMAX,NSPIN,NAEZ,V,ZAT,R, &
    write(1337,FMT=99001)
    write(1337,FMT=99002)
    !
-   LRECABMAD = WLENGTH*2*LMPOTD*LMPOTD + WLENGTH*2*LMPOTD
+   LRECABMAD = WLENGTH*2*LMPOT*LMPOT + WLENGTH*2*LMPOT
    open (69,ACCESS='direct',RECL=LRECABMAD,FILE='abvmad.unformatted',FORM='unformatted')
    !
    LMMAX = (LMAX+1)*(LMAX+1)
    !
    if (ICC.NE.0) then
-      do IQ1=1,NAEZD
-         do LM=1,LMPOTD
+      do IQ1=1,NAEZ
+         do LM=1,LMPOT
             VINTERS(LM,IQ1) = 0D0
          end do
       end do

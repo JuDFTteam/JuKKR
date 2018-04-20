@@ -3,7 +3,10 @@ subroutine CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,Z,C,E,LMPOTD,&
    JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR,TMAT,             &
    ALPHA,USE_SRATRICK)
 
-   IMPLICIT NONE
+   use Constants
+   use Profiling
+
+   implicit none
    ! construct wavefunctions for spherical potentials
    INTEGER NSRA,IRMDNEW,NRMAXD,NSPIN,LMAX,LMPOTD,LMMAXSO
    INTEGER NCHEB,NPAN_TOT
@@ -83,7 +86,7 @@ subroutine CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,Z,C,E,LMPOTD,&
             VLL0(LMSIZE,LMSIZE,IR)=VINS(IR,1,ISPIN)-2d0*Z/RNEW(IR)
          ENDDO
          IF (NSRA.EQ.2) THEN
-            CALL VLLMATSRA(VLL0,VLL,RNEW,LMSIZE,NRMAXD,E,LMAX,LVAL,'Ref=0')
+            CALL VLLMATSRA(VLL0,VLL,RNEW,LMSIZE,IRMDNEW,NRMAXD,E,LMAX,LVAL,'Ref=0')
          ELSE
             VLL(:,:,:)=VLL0(:,:,:)
          ENDIF

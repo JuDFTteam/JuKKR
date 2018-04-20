@@ -9,7 +9,7 @@
 !< @note
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-MODULE MOD_MAIN2
+module MOD_MAIN2
 
    use Profiling
    use Constants
@@ -29,13 +29,13 @@ contains
    subroutine main2(LLY,ICC,INS,IPF,KTE,KXC,LPOT,IMIX,NAEZ,NSRA,LMAX,KPRE,NPOL,  &
       NPNT1,NPNT2,NPNT3,NATYP,NSPIN,ITSCF,KVMAD,LMPOT,NPOTD,NLEFT,NRIGHT,LMXSPD, &
       IELAST,ISHIFT,ITDBRY,KSHAPE,KFORCE,IRMIND,NEMBD1,LMMAXD,IDOLDAU,NLBASIS,   &
-      NRBASIS,SCFSTEPS,NATOMIMP,TK,FCM,ALAT,MIXING,QBOUND,LAMBDA_XC,OPT,TEST,    &
-      LRHOSYM,LINTERFACE,NOQ,IMT,IQAT,IPAN,ZREL,IRNS,IRWS,KAOEZ,JWSREL,NTCELL,   &
-      ITITLE,NSHELL,ZAT,RMT,RWS,CONC,RMTNEW,TXC,EMIN,EMAX,TKSEMI,EMUSEMI,        &
-      EBOTSEMI,FSEMICORE,IRC,NFU,LOPT,NCORE,IRMIN,IXIPOL,IMAXSH,IRSHIFT,ATOMIMP, &
-      HOSTIMP,ILM,LMSP,LCORE,IRCUT,IFUNM,A,B,VBC,GSH,FACT,QMGAM,QMTET,QMPHI,R,   &
-      ECORE,DRDI,VISP,VTREL,BTREL,RMREL,DRDIREL,CMOMHOST,R2DRDIREL,VINS,THETAS,  &
-      THESME,EZ,DEZ,WEZ)
+      NRBASIS,SCFSTEPS,NATOMIMP,TK,FCM,ALAT,MIXING,QBOUND,LAMBDA_XC,LRHOSYM,     &
+      LINTERFACE,NOQ,IMT,IQAT,IPAN,ZREL,IRNS,IRWS,KAOEZ,JWSREL,NTCELL,ITITLE,    &
+      NSHELL,ZAT,RMT,RWS,CONC,RMTNEW,TXC,EMIN,EMAX,TKSEMI,EMUSEMI,EBOTSEMI,      &
+      FSEMICORE,IRC,NFU,LOPT,NCORE,IRMIN,IXIPOL,IMAXSH,IRSHIFT,ATOMIMP,HOSTIMP,  &
+      ILM,LMSP,LCORE,IRCUT,IFUNM,A,B,VBC,GSH,FACT,QMGAM,QMTET,QMPHI,R,ECORE,DRDI,&
+      VISP,VTREL,BTREL,RMREL,DRDIREL,CMOMHOST,R2DRDIREL,EZ,DEZ,WEZ,NEMB,IRM,     &
+      N1SEMI,N2SEMI,N3SEMI,NPOLSEMI,IESEMICORE,IDOSEMICORE,LLMSP,LMGF0D)
 
       use mod_types, only: t_inc
       use mod_wunfiles
@@ -46,90 +46,85 @@ contains
 
       implicit none
 
-      ! *********************************************************************
-      ! * For KREL = 1 (relativistic mode)                                  *
-      ! *                                                                   *
-      ! *  NPOTD = 2 * NATYP                                               *
-      ! *  LMMAXD = 2 * (LMAX+1)^2                                         *
-      ! *  NSPIND = 1                                                       *
-      ! *  LMGF0D = (LMAX+1)^2 dimension of the reference system Green     *
-      ! *          function, set up in the spin-independent non-relativstic *
-      ! *          (l,m_l)-representation                                   *
-      ! *                                                                   *
-      ! *********************************************************************
-      !     ..
-      INTEGER IOBROY
-      PARAMETER ( IOBROY = 20 )
-      INTEGER NMVECMAX
-      PARAMETER (NMVECMAX = 4)
+      integer :: IOBROY
+      parameter ( IOBROY = 20 )
+      integer :: NMVECMAX
+      parameter (NMVECMAX = 4)
       ! ..
       ! .. Input variables
-      integer, intent(in) :: LLY       !< LLY <> 0 : apply Lloyd's formula
-      integer, intent(in) :: ICC       !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-      integer, intent(in) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
-      integer, intent(in) :: IPF       !< Not real used, IPFE should be 0
-      integer, intent(in) :: KTE       !< Calculation of the total energy On/Off (1/0)
-      integer, intent(in) :: KXC       !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
-      integer, intent(in) :: LPOT      !< Maximum l component in potential expansion
-      integer, intent(in) :: IMIX      !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
-      integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
-      integer, intent(in) :: NSRA
-      integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
-      integer, intent(in) :: KPRE
-      integer, intent(in) :: NPOL      !< Number of Matsubara Poles (EMESHT)
-      integer, intent(in) :: NPNT1     !< number of E points (EMESHT) for the contour integration
-      integer, intent(in) :: NPNT2     !< number of E points (EMESHT) for the contour integration
-      integer, intent(in) :: NPNT3     !< number of E points (EMESHT) for the contour integration
-      integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
-      integer, intent(in) :: NSPIN     !< Counter for spin directions
-      integer, intent(in) :: ITSCF
-      integer, intent(in) :: KVMAD
-      integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-      integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-      integer, intent(in) :: NLEFT     !< Number of repeated basis for left host to get converged electrostatic potentials
-      integer, intent(in) :: NRIGHT    !< Number of repeated basis for right host to get converged electrostatic potentials
-      integer, intent(in) :: LMXSPD    !< (2*LPOT+1)**2
-      integer, intent(in) :: IELAST
-      integer, intent(in) :: ISHIFT
-      integer, intent(in) :: ITDBRY    !< Number of SCF steps to remember for the Broyden mixing
-      integer, intent(in) :: KSHAPE    !< Exact treatment of WS cell
-      integer, intent(in) :: KFORCE    !< Calculation of the forces
-      integer, intent(in) :: IRMIND    !< IRM-IRNSD
-      integer, intent(in) :: NEMBD1    !< NEMB+1
-      integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-      integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
-      integer, intent(in) :: NLBASIS   !< Number of basis layers of left host (repeated units)
-      integer, intent(in) :: NRBASIS   !< Number of basis layers of right host (repeated units)
-      integer, intent(in) :: SCFSTEPS  !< number of scf iterations
-      integer, intent(in) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-      double precision, intent(in) :: TK        !< Temperature
-      double precision, intent(in) :: FCM       !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
-      double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
-      double precision, intent(in) :: MIXING    !< Magnitude of the mixing parameter
-      double precision, intent(in) :: QBOUND    !< Convergence parameter for the potential
-      double precision, intent(in) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-      logical, intent(in) :: OPT
-      logical, intent(in) :: TEST
-      logical, intent(in) :: LRHOSYM
-      logical, intent(in) :: LINTERFACE   !< If True a matching with semi-inifinite surfaces must be performed
-      integer, dimension(NAEZ), intent(in)                  :: NOQ         !< Number of diff. atom types located
-      integer, dimension(NATYP), intent(in)                 :: IMT         !< R point at MT radius
-      integer, dimension(NATYP), intent(in)                 :: IQAT        !< The site on which an atom is located on a given site
-      integer, dimension(NATYP), intent(in)                 :: IPAN        !< Number of panels in non-MT-region
-      integer, dimension(NATYP), intent(in)                 :: ZREL        !< atomic number (cast integer)
-      integer, dimension(NATYP), intent(in)                 :: IRNS        !< Position of atoms in the unit cell in units of bravais vectors
-      integer, dimension(NATYP), intent(in)                 :: IRWS        !< R point at WS radius
-      integer, dimension(NATYP,NAEZ+NEMB), intent(in)       :: KAOEZ       !< Kind of atom at site in elem. cell
-      integer, dimension(NATYP), intent(in)                 :: JWSREL      !< index of the WS radius
-      integer, dimension(NATYP), intent(in)                 :: NTCELL      !< Index for WS cell
-      integer, dimension(20,NPOTD), intent(in)              :: ITITLE
-      integer, dimension(0:NSHELD), intent(in)              :: NSHELL      !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
-      double precision, dimension(NATYP), intent(in)        :: ZAT         !< Nuclear charge
-      double precision, dimension(NATYP), intent(in)        :: RMT         !< Muffin-tin radius of true system
-      double precision, dimension(NATYP), intent(in)        :: RWS         !< Wigner Seitz radius
-      double precision, dimension(NATYP), intent(in)        :: CONC        !< Concentration of a given atom
-      double precision, dimension(NATYP), intent(in)        :: RMTNEW      !< Adapted muffin-tin radius
-      character(len=124), dimension(6), intent(in) :: TXC
+      integer, intent(inout) :: IRM       !< Maximum number of radial points
+      integer, intent(inout) :: LLY       !< LLY <> 0 : apply Lloyd's formula
+      integer, intent(inout) :: ICC       !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+      integer, intent(inout) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
+      integer, intent(inout) :: IPF       !< Not real used, IPFE should be 0
+      integer, intent(inout) :: KTE       !< Calculation of the total energy On/Off (1/0)
+      integer, intent(inout) :: KXC       !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+      integer, intent(inout) :: LPOT      !< Maximum l component in potential expansion
+      integer, intent(inout) :: IMIX      !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
+      integer, intent(inout) :: NAEZ      !< Number of atoms in unit cell
+      integer, intent(inout) :: NSRA
+      integer, intent(inout) :: NEMB      !< Number of 'embedding' positions
+      integer, intent(inout) :: LMAX      !< Maximum l component in wave function expansion
+      integer, intent(inout) :: KPRE
+      integer, intent(inout) :: NPOL      !< Number of Matsubara Poles (EMESHT)
+      integer, intent(inout) :: NPNT1     !< number of E points (EMESHT) for the contour integration
+      integer, intent(inout) :: NPNT2     !< number of E points (EMESHT) for the contour integration
+      integer, intent(inout) :: NPNT3     !< number of E points (EMESHT) for the contour integration
+      integer, intent(inout) :: NATYP     !< Number of kinds of atoms in unit cell
+      integer, intent(inout) :: NSPIN     !< Counter for spin directions
+      integer, intent(inout) :: ITSCF
+      integer, intent(inout) :: KVMAD
+      integer, intent(inout) :: LMPOT     !< (LPOT+1)**2
+      integer, intent(inout) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+      integer, intent(inout) :: NLEFT     !< Number of repeated basis for left host to get converged electrostatic potentials
+      integer, intent(inout) :: NRIGHT    !< Number of repeated basis for right host to get converged electrostatic potentials
+      integer, intent(inout) :: LMGF0D    !< (LMAX+1)**2
+      integer, intent(inout) :: LMXSPD    !< (2*LPOT+1)**2
+      integer, intent(inout) :: IELAST
+      integer, intent(inout) :: ISHIFT
+      integer, intent(inout) :: ITDBRY    !< Number of SCF steps to remember for the Broyden mixing
+      integer, intent(inout) :: KSHAPE    !< Exact treatment of WS cell
+      integer, intent(inout) :: KFORCE    !< Calculation of the forces
+      integer, intent(inout) :: IRMIND    !< IRM-IRNSD
+      integer, intent(inout) :: NEMBD1    !< NEMB+1
+      integer, intent(inout) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
+      integer, intent(inout) :: N1SEMI    !< Number of energy points for the semicore contour
+      integer, intent(inout) :: N2SEMI    !< Number of energy points for the semicore contour
+      integer, intent(inout) :: N3SEMI    !< Number of energy points for the semicore contour
+      integer, intent(inout) :: IDOLDAU   !< flag to perform LDA+U
+      integer, intent(inout) :: NLBASIS   !< Number of basis layers of left host (repeated units)
+      integer, intent(inout) :: NRBASIS   !< Number of basis layers of right host (repeated units)
+      integer, intent(inout) :: NPOLSEMI  !< Number of poles for the semicore contour
+      integer, intent(inout) :: SCFSTEPS  !< number of scf iterations
+      integer, intent(inout) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+      integer, intent(inout) :: IESEMICORE
+      integer, intent(inout) :: IDOSEMICORE
+      double precision, intent(inout) :: TK        !< Temperature
+      double precision, intent(inout) :: FCM       !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
+      double precision, intent(inout) :: ALAT      !< Lattice constant in a.u.
+      double precision, intent(inout) :: MIXING    !< Magnitude of the mixing parameter
+      double precision, intent(inout) :: QBOUND    !< Convergence parameter for the potential
+      double precision, intent(inout) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+      logical, intent(inout) :: LRHOSYM
+      logical, intent(inout) :: LINTERFACE   !< If True a matching with semi-inifinite surfaces must be performed
+      integer, dimension(NAEZ), intent(inout)                  :: NOQ         !< Number of diff. atom types located
+      integer, dimension(NATYP), intent(inout)                 :: IMT         !< R point at MT radius
+      integer, dimension(NATYP), intent(inout)                 :: IQAT        !< The site on which an atom is located on a given site
+      integer, dimension(NATYP), intent(inout)                 :: IPAN        !< Number of panels in non-MT-region
+      integer, dimension(NATYP), intent(inout)                 :: ZREL        !< atomic number (cast integer)
+      integer, dimension(NATYP), intent(inout)                 :: IRNS        !< Position of atoms in the unit cell in units of bravais vectors
+      integer, dimension(NATYP), intent(inout)                 :: IRWS        !< R point at WS radius
+      integer, dimension(NATYP,NAEZ+NEMB), intent(inout)       :: KAOEZ       !< Kind of atom at site in elem. cell
+      integer, dimension(NATYP), intent(inout)                 :: JWSREL      !< index of the WS radius
+      integer, dimension(NATYP), intent(inout)                 :: NTCELL      !< Index for WS cell
+      integer, dimension(20,NPOTD), intent(inout)              :: ITITLE
+      integer, dimension(0:NSHELD), intent(inout)              :: NSHELL      !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+      double precision, dimension(NATYP), intent(inout)        :: ZAT         !< Nuclear charge
+      double precision, dimension(NATYP), intent(inout)        :: RMT         !< Muffin-tin radius of true system
+      double precision, dimension(NATYP), intent(inout)        :: RWS         !< Wigner Seitz radius
+      double precision, dimension(NATYP), intent(inout)        :: CONC        !< Concentration of a given atom
+      double precision, dimension(NATYP), intent(inout)        :: RMTNEW      !< Adapted muffin-tin radius
+      character(len=124), dimension(6), intent(inout) :: TXC
       ! .. Input/Output variables
       double precision, intent(inout) :: EMIN      !< Energies needed in EMESHT
       double precision, intent(inout) :: EMAX      !< Energies needed in EMESHT
@@ -171,9 +166,6 @@ contains
       double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: DRDIREL     !< derivative of radial mesh
       double precision, dimension(LMPOT,NEMBD1), intent(inout)             :: CMOMHOST    !< Charge moments of each atom of the (left/right) host
       double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)  :: VINS   !< Non-spherical part of the potential
-      double precision, dimension(IRID,NFUND,NCELLD), intent(inout)        :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-      double precision, dimension(IRID,NFUND,NCELLD), intent(inout)        :: THESME
       double complex, dimension(IEMXD), intent(inout) :: EZ
       double complex, dimension(IEMXD), intent(inout) :: DEZ
       double complex, dimension(IEMXD), intent(inout) :: WEZ
@@ -224,7 +216,7 @@ contains
       double precision, dimension(2)               :: VMT_INIT
       double precision, dimension(IRM,NPOTD)       :: RHOC     !< core charge density
       double precision, dimension(LMPOT,LMPOT)     :: AVMAD
-      double precision, dimension(0:LPOTD,NATYP)   :: EXCNM    !< Scale magn. part of xc-potential
+      double precision, dimension(0:LPOT,NATYP)    :: EXCNM    !< Scale magn. part of xc-potential
       double precision, dimension(LMPOT,NAEZ)      :: VINTERS
       double precision, dimension(IRM,NPOTD)       :: VSPSMDUM
       logical, dimension(NATYP,LMPOT)              :: LPOTSYMM
@@ -237,13 +229,12 @@ contains
       double complex, dimension(NATYP,3,NMVECMAX) :: MVEVI
       double complex, dimension(NATYP,3,NMVECMAX) :: MVEVIEF
       !-------------------------------------------------------------------------
-      !   ECOU(0:LPOTD,NATYP)    ! Coulomb energy
-      !   EPOTIN(NATYP),         ! energy of input potential (EPOTINB
+      !   ECOU(0:LPOT,NATYP)      ! Coulomb energy
+      !   EPOTIN(NATYP),          ! energy of input potential (EPOTINB
       !   ESPC(0:3,NPOTD),        ! energy single particle core
       !   ESPV(0:LMAXD1,NPOTD)    ! energy single particle valence
-      !                           ! both changed for the relativistic
-      !                           ! case
-      !   EXC(0:LPOTD,NATYP),    ! E_xc
+      !                           ! both changed for the relativistic case
+      !   EXC(0:LPOT,NATYP),      ! E_xc
       !-------------------------------------------------------------------------
       double precision, dimension(NATYP)           :: EPOTIN   !< energy of input potential (EPOTINB
       double precision, dimension(0:3,NPOTD)       :: ESPC     !< energy single particle core
@@ -251,7 +242,7 @@ contains
       double precision, dimension(0:LPOT,NATYP)    :: ECOU     !< Coulomb energy
       double precision, dimension(0:LMAX+1,NPOTD)  :: ESPV     !< energy single particle valence both changed for the relativistic case
       double precision, dimension(IRM*KREL+(1-KREL),NATYP)  :: RHOORB
-      double precision, dimension(KREL*20+(1-KREL),NPOT)    :: ECOREREL
+      double precision, dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL
       !-------------------------------------------------------------------------
       !  CMINST(LMPOT,NATYP)            ! charge moment of interstitial
       !  CMOM(LMPOT,NATYP)              ! LM moment of total charge
@@ -273,6 +264,10 @@ contains
 
       ! .. Allocatable arrays
       double precision, dimension(:,:,:), allocatable :: VONS !< output potential (nonspherical VONS)
+      double precision, dimension(:,:,:), allocatable :: VINS !< Non-spherical part of the potential
+      double precision, dimension(:,:,:), allocatable :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+      double precision, dimension(:,:,:), allocatable :: THESME
+
       !-------------------------------------------------------------------------
       !  R2NEF (IRM,LMPOT,NATYP,2)  ! rho at FERMI energy
       !  RHO2NS(IRM,LMPOT,NATYP,2)  ! radial density
@@ -290,6 +285,8 @@ contains
       double precision, dimension(:,:,:,:), allocatable  :: RHO2NSNM
 
       ! .. External Subroutines
+      logical :: OPT
+      logical :: TEST
       external :: BRYDBM,CONVOL,DAXPY,DCOPY,ECOUB,EPATHTB,EPOTINB,ESPCB
       external :: ETOTB1,FORCE,FORCEH,FORCXC,MDIRNEWANG,MIXSTR,MTZERO,OPT
       external :: RELPOTCVT,RHOSYMM,RHOTOTB,RINIT,RITES,SCFITERANG
@@ -298,8 +295,14 @@ contains
       intrinsic :: DABS,ATAN,DMIN1,DSIGN,SQRT,MAX,DBLE
 
       ! Allocations
+      allocate(THETAS(IRID,NFUND,NCELLD),stat=i_stat)
+      call memocc(i_stat,product(shape(THETAS))*kind(THETAS),'THETAS','main2')
+      allocate(THESME(IRID,NFUND,NCELLD),stat=i_stat)
+      call memocc(i_stat,product(shape(THESME))*kind(THESME),'THESME','main2')
       allocate(VONS(IRM,LMPOT,NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(VONS))*kind(VONS),'VONS','main2')
+      allocate(VINS(IRMIND:IRM,LMPOT,NSPOTD),stat=i_stat)
+      call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','main2')
       allocate(VXCM(IRM,LMPOT,NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(VXCM))*kind(VXCM),'VXCM','main2')
       allocate(VXCNM(IRM,LMPOT,NPOTD),stat=i_stat)
@@ -319,26 +322,24 @@ contains
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_2(t_params,KREL,NATYP,IPAND,NPOTD,NATOMIMPD,     &
-         LMXSPD,NFUND,LMPOT,NCELLD,IRM,NEMBD1,NEMB,                   &
-         IRMIND,NSRA,INS,NATYP,NAEZ,NSPIN,IPAN,IRCUT,LCORE,NCORE,LMAX,  &
-         NTCELL,LPOT,LMPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,NATOMIMP,       &
-         ATOMIMP,IMIX,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD,KXC, &
-         ICC,ISHIFT,IXIPOL,KFORCE,IFUNM,LMSP,IMT,IRC,IRMIN,IRWS,LLMSP,  &
-         ITITLE,NFU,HOSTIMP,ILM,IMAXSH,IELAST,NPOL,NPNT1,NPNT2,NPNT3,   &
-         ITSCF,SCFSTEPS,IESEMICORE,KAOEZ,IQAT,NOQ,LLY,NPOLSEMI,N1SEMI,  &
-         N2SEMI,N3SEMI,ZREL,JWSREL,IRSHIFT,MIXING,LAMBDA_XC,A,B,THETAS, &
-         DRDI,R,ZAT,RMT,RMTNEW,RWS,EMIN,EMAX,TK,ALAT,EFOLD,CHRGOLD,     &
-         CMOMHOST,CONC,GSH,EBOTSEMI,EMUSEMI,TKSEMI,VINS,VISP,RMREL,     &
-         DRDIREL,VBC,FSOLD,R2DRDIREL,ECORE,EZ,WEZ,TXC,                  &
-         LINTERFACE,LRHOSYM,NGSHD,NAEZ,IRID,NSPOTD,IEMXD)
+      call get_params_2(t_params,KREL,NATYP,IPAND,NPOTD,NATOMIMPD,LMXSPD,NFUND,  &
+         LMPOT,NCELLD,IRM,NEMBD1,NEMB,IRMIND,NSRA,INS,NSPIN,IPAN,IRCUT,LCORE,    &
+         NCORE,LMAX,NTCELL,LPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,NATOMIMP,ATOMIMP,   &
+         IMIX,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD,KXC, ICC,ISHIFT,      &
+         IXIPOL,KFORCE,IFUNM,LMSP,IMT,IRC,IRMIN,IRWS,LLMSP,ITITLE,NFU,HOSTIMP,   &
+         ILM,IMAXSH,IELAST,NPOL,NPNT1,NPNT2,NPNT3,ITSCF,SCFSTEPS,IESEMICORE,     &
+         KAOEZ,IQAT,NOQ,LLY,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,ZREL,JWSREL,IRSHIFT,   &
+         MIXING,LAMBDA_XC,A,B,THETAS, DRDI,R,ZAT,RMT,RMTNEW,RWS,EMIN,EMAX,TK,    &
+         ALAT,EFOLD,CHRGOLD,CMOMHOST,CONC,GSH,EBOTSEMI,EMUSEMI,TKSEMI,VINS,VISP, &
+         RMREL,DRDIREL,VBC,FSOLD,R2DRDIREL,ECORE,EZ,WEZ,TXC,LINTERFACE,LRHOSYM,  &
+         NGSHD,NAEZ,IRID,NSPOTD,IEMXD)
+
       !-------------------------------------------------------------------------
       ! Reading the density parameters stored in t_params
       !-------------------------------------------------------------------------
-      call read_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT, &
-         ESPV,ECORE,IDOLDAU,LOPT,EU,EDC,                          &
-         CHRGSEMICORE,RHOORB,ECOREREL,NKCORE,KAPCORE,             &
-         KREL,NATYP,NPOTD,IRM,LMPOT,LMAXD1)
+      call read_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,ESPV,ECORE,  &
+         IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE,RHOORB,ECOREREL,NKCORE,KAPCORE,KREL,&
+         NATYP,NPOTD,IRM,LMPOT,LMAXD1)
       !-------------------------------------------------------------------------
       ! End read in variables
       !-------------------------------------------------------------------------
@@ -365,8 +366,7 @@ contains
       t_inc%i_iteration = ITSCF
       !
       write(1337,'(/,79(1H*))')
-      write(1337,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',   &
-         ITSCF,' OUT OF ',SCFSTEPS,' ******'
+      write(1337,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',ITSCF,' OUT OF ',SCFSTEPS,' ******'
       write(1337,'(79(1H*),/)')
       !
       if (IMIX.ge.3) then
@@ -384,10 +384,9 @@ contains
       ! Determine total charge density expanded in spherical harmonics
       !-------------------------------------------------------------------------
       if(TEST('flow    ')) write(1337,*) '>>> RHOTOTB'
-      call RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB, &
-         ZAT,DRDI,IRWS,IRCUT,                               &
-         LPOT,NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,CHRGNT,   &
-         ITSCF,NSHELL,NOQ,CONC,KAOEZ,CHRGATOM)
+      call RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB,ZAT,DRDI,IRWS,IRCUT,  &
+         LPOT,NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,CHRGNT,ITSCF,NSHELL,NOQ,CONC,  &
+         KAOEZ,CHRGATOM,IRM,NEMB,LMPOT)
 
       if(TEST('flow    ')) write(1337,*) '<<< RHOTOTB'
 
@@ -404,7 +403,7 @@ contains
       ! Determine new Fermi level due to valence charge up to old Fermi level
       ! EMAX and density of states DENEF
       !-------------------------------------------------------------------------
-      if ( ITSCF.gt.1 .and. CHRGNT*CHRGOLD .lt. 0.D0 .and.ABS(CHRGNT) .gt. 5.D-2) then
+      if (ITSCF.gt.1.and.CHRGNT*CHRGOLD.lt.0.D0.and.ABS(CHRGNT).gt.5.D-2) then
          E2SHIFT = CHRGNT/(CHRGNT-CHRGOLD)*(EMAX-EFOLD)
       else
          E2SHIFT = CHRGNT/DENEF
@@ -522,7 +521,8 @@ contains
       ! POTENTIAL PART
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (LRHOSYM) then
-         call RHOSYMM(LMPOT,NSPIN,1,NATYP,RHO2NS,IXIPOL,IRWS,IRCUT,IPAN,KSHAPE)
+         call RHOSYMM(LMPOT,NSPIN,1,NATYP,RHO2NS,IXIPOL,IRWS,IRCUT,IPAN,KSHAPE,&
+            NATYP,IRM)
       endif
 
       CMINST(:,:) = 0.d0
@@ -530,7 +530,7 @@ contains
       VONS(:,:,:) = 0.d0
       call VINTRAS(CMOM,CMINST,LPOT,NSPIN,1,NATYP,RHO2NS,VONS,       &
          R,DRDI,IRWS,IRCUT,IPAN,KSHAPE,NTCELL,ILM,IFUNM,IMAXSH,GSH,  &
-         THETAS,LMSP)
+         THETAS,LMSP,IRM,LMPOT,NATYP,LMXSPD,NPOTD)
 
       if ( TEST('vintrasp') ) then !Bauer
          open(unit=786785,file='test_vintraspot')
@@ -546,24 +546,22 @@ contains
       !fivos     &     .OR. (ICC .GT. 0 ) )THEN
       !-------------------------------------------------------------------------
       if ( LINTERFACE ) then
-         call VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NAEZ, &
-            NATYP,VONS,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE,  &
-            NOQ,KAOEZ,IQAT,CONC,CHRGATOM(1,1),        &
-            ICC,HOSTIMP,NLBASIS,NLEFT,NRBASIS,NRIGHT, &
-            CMOMHOST,CHRGNT,VINTERS)
+         call VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NAEZ,NATYP,VONS,ZAT,R,IRWS,IRCUT,&
+            IPAN,KSHAPE,NOQ,KAOEZ,IQAT,CONC,CHRGATOM(1,1),ICC,HOSTIMP,NLBASIS,   &
+            NLEFT,NRBASIS,NRIGHT,CMOMHOST,CHRGNT,VINTERS,IRM,NAEZ,LMPOT,NPOTD,   &
+            NEMBD1)
          !----------------------------------------------------------------------
       else
          !----------------------------------------------------------------------
-         call VMADELBLK(CMOM,CMINST,LPOT,NSPIN,NAEZ,  &
-            VONS,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE,        &
-            NOQ,KAOEZ,CONC,CHRGATOM(1,1),             &
-            ICC,HOSTIMP,VINTERS)
+         call VMADELBLK(CMOM,CMINST,LPOT,NSPIN,NAEZ,VONS,ZAT,R,IRWS,IRCUT,IPAN,  &
+            KSHAPE,NOQ,KAOEZ,CONC,CHRGATOM(1,1),ICC,HOSTIMP,VINTERS,IRM,NEMB,    &
+            LMPOT,NPOTD,LMMAXD,NATYP)
       end if
 
       if (OPT('KKRFLEX ')) then
-         call WRITEKKRFLEX(NATOMIMP,NSPIN,IELAST,(LPOT+1)**2,LMMAXD, &
-            ALAT,NATYP,KSHAPE,VBC,ATOMIMP,HOSTIMP,NOQ,ZAT,           &
-            KAOEZ,CONC,CMOM,CMINST,VINTERS)
+         call WRITEKKRFLEX(NATOMIMP,NSPIN,IELAST,(LPOT+1)**2,LMMAXD,ALAT,NATYP,  &
+            KSHAPE,VBC,ATOMIMP,HOSTIMP,NOQ,ZAT,KAOEZ,CONC,CMOM,CMINST,VINTERS,   &
+            NEMB,NAEZ,LMGF0D)
       end if
 
       !-------------------------------------------------------------------------
@@ -645,7 +643,8 @@ contains
       !-------------------------------------------------------------------------
       VXCM(:,:,:) = 0.D0
       call VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,1,NATYP,RHO2NS,VXCM,R,DRDI, &
-         A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM,IMAXSH,IFUNM,THETAS,LMSP)
+         A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM,IMAXSH,IFUNM,THETAS,LMSP,NPOTD,&
+         LMPOT,LMXSPD,IRM,NATYP,LMMAXD)
 
       if ( TEST('Vspher  ') ) VONS(1:IRM,2:LMPOT,1:NPOTD) = 0.D0
 
@@ -716,7 +715,8 @@ contains
          ! Shift old potential to initial muffin-tin zero for correct mixing     ! fxf
          VSHIFT = - VBC(1)                                                       ! fxf
          call POTENSHIFT(VISP,VINS,NATYP,NSPIN,IRCUT,IRC,IRMIN,NTCELL,  &        ! fxf
-            IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,RFPI,R,KSHAPE,VSHIFT)  ! fxf
+            IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,RFPI,R,KSHAPE,&        ! fxf
+            VSHIFT,IRM,NPOTD,IRMIND,LMXSPD)                                      ! fxf
       else if (ISHIFT.EQ.1) then
          ! Shift new potential to old MT-zero for correct mixing
          ! (convolution with shapes is done later)
@@ -931,15 +931,16 @@ contains
          VBC(1) = VBC(1) + E2SHIFT                                               ! fxf
          VBC(2) = VBC(1)                                                         ! fxf
          VSHIFT = VBC(1)                                                         ! fxf
-         call POTENSHIFT(VISP,VINS,NATYP,NSPIN,IRCUT,IRC,IRMIN,NTCELL, &         ! fxf
-            IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,RFPI,R,KSHAPE,VSHIFT)  ! fxf
+         call POTENSHIFT(VISP,VINS,NATYP,NSPIN,IRCUT,IRC,IRMIN,NTCELL,  &        ! fxf
+            IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,RFPI,R,KSHAPE,&        ! fxf
+            VSHIFT,IRM,NPOTD,IRMIND,LMXSPD)                                      ! fxf
          write(1337,*) 'New VMT ZERO:',VBC(1)                                    ! fxf
       end if                                                                     ! fxf
       !
       call RITES(11,1,NATYP,NSPIN,ZAT,ALAT,RMT,RMTNEW,RWS,ITITLE, &
          R,DRDI,VISP,IRWS,A,B,TXC,KXC,INS,IRNS,LPOT,VINS,         &
          QBOUND,IRC,KSHAPE,EFNEW,VBC,ECORE,LCORE,NCORE,           &
-         ECOREREL,NKCORE,KAPCORE)
+         ECOREREL,NKCORE,KAPCORE,IRM,IRMIND,LMPOT)
       close (11)
       !-------------------------------------------------------------------------
       ! ENERGIES calculation
@@ -1070,24 +1071,18 @@ contains
    ! SUBROUTINE: POTENSHIFT
    !> @brief Adds a constant (=VSHIFT) to the potentials of atoms
    !----------------------------------------------------------------------------
-   subroutine POTENSHIFT(VISP,VINS,NATYP,NSPIN, &
-         IRCUT,IRC,IRMIN,NTCELL,IMAXSH,ILM,IFUNM,LMSP,LMPOT,GSH,&
-         THETAS,THESME,RFPI,RMESH,KSHAPE,VSHIFT)
+   subroutine POTENSHIFT(VISP,VINS,NATYP,NSPIN, IRCUT,IRC,IRMIN,NTCELL,IMAXSH,   &
+      ILM,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,RFPI,RMESH,KSHAPE,VSHIFT,IRM,NPOTD, &
+      IRMIND,LMXSPD)
+
       implicit none
-      ! Adds a constant (=VSHIFT) to the potentials of atoms
       !
       ! .. Input variables
       integer, intent(in) :: IRM       !< Maximum number of radial points
-      integer, intent(in) :: IRID      !< Shape functions parameters in non-spherical part
-      integer, intent(in) :: IPAND     !< Number of panels in non-spherical part
       integer, intent(in) :: LMPOT     !< (LPOT+1)**2
       integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
       integer, intent(in) :: NSPIN     !< Counter for spin directions
       integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-      integer, intent(in) :: NFUND
-      integer, intent(in) :: NGSHD     !< Shape functions parameters in non-spherical part
-      integer, intent(in) :: NSPOTD    !< Number of potentials for storing non-sph. potentials
-      integer, intent(in) :: NCELLD    !< Number of cells (shapes) in non-spherical part
       integer, intent(in) :: LMXSPD    !< (2*LPOT+1)**2
       integer, intent(in) :: IRMIND    !< IRM-IRNSD
       integer, intent(in) :: KSHAPE    !< Exact treatment of WS cell
@@ -1105,49 +1100,41 @@ contains
       double precision, dimension(IRM,NATYP), intent(in)          :: RMESH    !< Radial mesh ( in units a Bohr)
       double precision, dimension(IRID,NFUND,NCELLD), intent(in)  :: THESME
       double precision, dimension(IRID,NFUND,NCELLD), intent(in)  :: THETAS   !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-
       ! .. Input/Output:
       double precision, dimension(IRM,NPOTD), intent(inout) :: VISP  !< Spherical part of the potential
       double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS   !< Non-spherical part of the potential
-
-      ! Local variables
+      ! .. Local variables
       integer :: ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
       double precision, dimension(IRM) :: PSHIFTR
       double precision, dimension(IRM,LMPOT) :: PSHIFTLMR
 
       do IH = 1,NATYP
-
          IMT1 = IRCUT(1,IH)
          IRC1 = IRC(IH)
          IRMIN1 = IRMIN(IH)
-
          do ISPIN = 1,NSPIN
-
             write (1337,*) 'SHIFTING OF THE POTENTIALS OF ATOM',IH,' BY', VSHIFT, 'RY.'
             IPOT = NSPIN * (IH-1) + ISPIN
-
+            !
             call RINIT(IRM*LMPOT,PSHIFTLMR)
             call RINIT(IRM,PSHIFTR)
             do IR = 1,IRC1
                PSHIFTLMR(IR,1) = VSHIFT
             enddo
-
+            !
             if (KSHAPE.EQ.0) then ! ASA
-
                do IR = 1,IRC1
                   VISP(IR,IPOT) = VISP(IR,IPOT) + PSHIFTLMR(IR,1)
                end do
-
             else                ! Full-potential
-
                call CONVOL(IMT1,IRC1,NTCELL(IH),IMAXSH(LMPOT),ILM,IFUNM,   &
                   LMPOT,GSH,THETAS,THESME,0.d0,RFPI,RMESH(1,IH),PSHIFTLMR, &
                   PSHIFTR,LMSP)
-
+               !
                do IR = 1,IRC1
                   VISP(IR,IPOT) = VISP(IR,IPOT) + PSHIFTLMR(IR,1)
                enddo
-
+               !
                do LM = 2,LMPOT
                   do IR = IRMIN1,IRC1
                      VINS(IR,LM,IPOT)=VINS(IR,LM,IPOT)+PSHIFTLMR(IR,LM)*RFPI

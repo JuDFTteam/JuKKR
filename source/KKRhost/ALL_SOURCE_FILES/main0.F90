@@ -372,7 +372,6 @@ module mod_main0
    double precision, dimension(:,:,:), allocatable :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
    double precision, dimension(:,:,:), allocatable :: THETASNEW
 
-   private
    public :: main0, bshift_ns
 
 contains
@@ -557,12 +556,12 @@ contains
          LMPOT,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,    &
          LLMSP,ITITLE,FPRADIUS,VISP,ECORE,VINS)
       ! Call to allocate the arrays associated with the LDA+U potential
-      call allocate_ldau_potential(1,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,ULDAU,&
+      call allocate_ldau_potential(1,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,ULDAU,  &
          PHILDAU)
       ! Call to allocate the arrays associated with the energy
       call allocate_energies(1,IEMXD,EZ,DEZ,WEZ)
       ! Call to allocate the arrays associated with the relativistic corrections
-      call allocate_relativistic(1,KREL,IRM,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,&
+      call allocate_relativistic(1,KREL,IRM,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,      &
          VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,QMGAM,QMGAMTAB,QMPHITAB,QMTETTAB)
       ! Call to allocate the arrays associated with the relativistic transformations
       call allocate_rel_transformations(1,LMMAXD,NRREL,IRREL,RC,CREL,RREL,SRREL)
@@ -571,12 +570,12 @@ contains
          NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,JEND,RATOM,    &
          RCLSIMP,CMOMHOST,RCLS)
       ! Call to allocate the arrays associated with the expansion of the Green function
-      call allocate_expansion(1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,NCHEB,&
+      call allocate_expansion(1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,NCHEB, &
          LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
       ! Call to allocate the arrays associated with the integration mesh
       call allocate_mesh(1,IRM,NATYP,A,B,R,DRDI)
       ! Call to allocate the arrays associated with the pannels for the new solver
-      call allocate_pannels(1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQNEW,NPAN_LOGNEW,&
+      call allocate_pannels(1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQNEW,NPAN_LOGNEW,  &
          IPAN_INTERVALL,RPAN_INTERVALL)
       ! Call to allocate misc arrays
       call allocate_misc(1,NR,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREF,IEMXD,NTOTD,   &
@@ -584,9 +583,9 @@ contains
          IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,DSYMLL1,        &
          LEFTTINVLL,RIGHTTINVLL)
       ! Call to allocate the arrays associated with the Green function
-      call allocate_green(1,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJ,ISH,JSH,     &
-         KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,        &
-         IJTABCALC_I,ILM,GSH)
+      call allocate_green(1,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJ,ISH,JSH,KMESH,  &
+         IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM, &
+         GSH)
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! End of allocation calls
@@ -596,14 +595,12 @@ contains
       ! Deal with the lattice
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      call LATTIX99(LINTERFACE,ALAT,NATYP,NAEZ,CONC,RWS,BRAVAIS,  &
-            RECBV,VOLUME0,RR,NR,NR,NATYP)
+      call LATTIX99(LINTERFACE,ALAT,NATYP,NAEZ,CONC,RWS,BRAVAIS,RECBV,VOLUME0,RR,&
+         NR,NR,NATYP)
 
-
-      call SCALEVEC(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,       &
-            NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,       &
-            TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,KAOEZ,NOQ,  &
-            NAEZ,NATYP,NEMB)
+      call SCALEVEC(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,NLBASIS,NRBASIS,NLEFT,&
+         NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,     &
+         KAOEZ,NOQ,NAEZ,NATYP,NEMB)
       ! After SCALEVEC all basis positions are in cartesian coords.
 
       NVIRT = 0
@@ -613,10 +610,10 @@ contains
          .TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,I25)
       endif
 
-      call CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,   &
-         ATOM,EZOA,NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,      &
-         TRIGHT,RMTREF,RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,&
-         ALAT,NAEZ,NATYP,NEMB,NPRINCD,NR,NACLSD,NCLSD,NREF)
+      call CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,ATOM, &
+         EZOA,NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,RMTREF,&
+         RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,NAEZ,NATYP, &
+         NEMB,NPRINCD,NR,NACLSD,NCLSD,NREF)
 
       ! Now the clusters, reference potentials and muffin-tin radii have been set.
       !-------------------------------------------------------------------------
@@ -711,8 +708,8 @@ contains
       if (KHFELD.eq.1) then
          !---> maybe apply a magnetic field
          call bshift_ns(IRM,IRID,IPAND,LMPOT,NPOTD,NATYP,NSPIN,NGSHD,NFUND,NCELLD,  &
-            IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM,LMSP,IFUNM,IRCUT,     &
-            HFIELD,GSH,R,THESME,THETAS,VISP,VINS)
+            IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM,LMSP,IFUNM,     &
+            IRCUT,HFIELD,GSH,R,THESME,THETAS,VISP,VINS)
       end if
       if ( TEST('vpotout ') ) then !ruess
          open(unit=54633163,file='test_vpotout_bshift')
@@ -896,12 +893,12 @@ contains
       DSYMLL=(0d0,0d0)
       DSYMLL1=(0d0,0d0)
 
-      call BZKINT0(NSHELL,NAEZ,NATYP,NOQ,RBASIS,KAOEZ,ICC,BRAVAIS,RECBV,   &
-         ATOMIMP,RSYMAT,ISYMINDEX,NSYMAT,I25,NATOMIMP,NSH1,NSH2,RCLSIMP,   &
-         RATOM,IJTABSYM,IJTABSH,IJTABCALC,IOFGIJ,JOFGIJ,NOFGIJ,ISH,JSH,RROT,&
-         DSYMLL1,PARA,QMTET,QMPHI,SYMUNITARY,HOSTIMP,INTERVX,INTERVY,      &
-         INTERVZ,IELAST,EZ,KMESH,MAXMESH,MAXMSHD,NSYMAXD,KREL+KORBIT,LMAX, &
-         LMMAXD,KPOIBZ,NAEZ,NATYP,NATOMIMPD,NSHELD,NEMB)
+      call BZKINT0(NSHELL,NAEZ,NATYP,NOQ,RBASIS,KAOEZ,ICC,BRAVAIS,RECBV,ATOMIMP, &
+         RSYMAT,ISYMINDEX,NSYMAT,I25,NATOMIMP,NSH1,NSH2,RCLSIMP,RATOM,IJTABSYM,  &
+         IJTABSH,IJTABCALC,IOFGIJ,JOFGIJ,NOFGIJ,ISH,JSH,RROT,DSYMLL1,PARA,QMTET, &
+         QMPHI,SYMUNITARY,HOSTIMP,INTERVX,INTERVY,INTERVZ,IELAST,EZ,KMESH,       &
+         MAXMESH,MAXMSHD,NSYMAXD,KREL+KORBIT,LMAX,LMMAXD,KPOIBZ,NAEZ,NATYP,      &
+         NATOMIMPD,NSHELD,NEMB)
       !
       !-------------------------------------------------------------------------
       !
@@ -939,36 +936,28 @@ contains
       !-------------------------------------------------------------------------
       if (ICC.NE.0 .and. .not.OPT('KKRFLEX ')) then
          open(58,FILE='shells.dat')
-         write(1337,*) 'Writing out shells (also in shells.dat):' ! fivos
-         write(1337,*) 'itype,jtype,iat,jat,r(iat),r(jat)'        ! fivos
-         write(1337,*) NSHELL(0), 'NSHELL(0)'                     ! fivos
-         write(58,*) NSHELL(0), 'NSHELL(0)'                       ! fivos
-         do i1 = 1,NSHELL(0)                                      ! fivos
-            write(1337,*) i1,NSHELL(i1),  &
-               'No. of shell, No. of atoms in shell'              ! fivos
-            write(58,*) i1,NSHELL(i1),    &
-               'No. of shell, No. of atoms in shell'              ! fivos
-            do lm = 1,NSHELL(i1)                                  ! fivos
+         write(1337,*) 'Writing out shells (also in shells.dat):'                ! fivos
+         write(1337,*) 'itype,jtype,iat,jat,r(iat),r(jat)'                       ! fivos
+         write(1337,*) NSHELL(0), 'NSHELL(0)'                                    ! fivos
+         write(58,*) NSHELL(0), 'NSHELL(0)'                                      ! fivos
+         do i1 = 1,NSHELL(0)                                                     ! fivos
+            write(1337,*) i1,NSHELL(i1),'No. of shell, No. of atoms in shell'    ! fivos
+            write(58,*) i1,NSHELL(i1),'No. of shell, No. of atoms in shell'      ! fivos
+            do lm = 1,NSHELL(i1)                                                 ! fivos
                write(1337,*) 'ish(i1,lm)',ish(i1,lm)
-               if(ISH(i1,lm)>0 .and. JSH(i1,lm)>0) then           ! fix bernd
-                  write(1337,8614) NSH1(i1),NSH2(i1),    &        ! fivos
-                     ISH(i1,lm),JSH(i1,lm),              &        ! fivos
-                     (RCLSIMP(i,ISH(i1,lm)),i=1,3),      &        ! fivos
-                     (RCLSIMP(i,JSH(i1,lm)),i=1,3)                ! fivos
-                  write(58,8614) NSH1(i1),NSH2(i1),      &        ! fivos
-                     ISH(i1,lm),JSH(i1,lm),              &        ! fivos
-                     (RCLSIMP(i,ISH(i1,lm)),i=1,3),      &        ! fivos
-                     (RCLSIMP(i,JSH(i1,lm)),i=1,3)                ! fivos
-               else                                               ! fix bernd
-                  write(1337,8615) NSH1(i1),NSH2(i1),    &        ! fix bernd
-                     ISH(i1,lm),JSH(i1,lm)                        ! fix bernd
-                  write(58,8615) NSH1(i1),NSH2(i1),      &        ! fix bernd
-                     ISH(i1,lm),JSH(i1,lm)                        ! fix bernd
-               end if                                             ! fix bernd
-               8614          format(4i5,6f16.6)                   ! fivos
-               8615          format(4i5)                          ! fix bernd
-            enddo                                                 ! fivos
-         enddo                                                    ! fivos
+               if(ISH(i1,lm)>0 .and. JSH(i1,lm)>0) then                          ! fix bernd
+                  write(1337,8614) NSH1(i1),NSH2(i1),ISH(i1,lm),JSH(i1,lm),&     ! fivos
+                     (RCLSIMP(i,ISH(i1,lm)),i=1,3),(RCLSIMP(i,JSH(i1,lm)),i=1,3) ! fivos
+                  write(58,8614) NSH1(i1),NSH2(i1),ISH(i1,lm),JSH(i1,lm),  &     ! fivos
+                     (RCLSIMP(i,ISH(i1,lm)),i=1,3),(RCLSIMP(i,JSH(i1,lm)),i=1,3) ! fivos
+               else                                                              ! fix bernd
+                  write(1337,8615) NSH1(i1),NSH2(i1),ISH(i1,lm),JSH(i1,lm)       ! fix bernd
+                  write(58,8615) NSH1(i1),NSH2(i1),ISH(i1,lm),JSH(i1,lm)         ! fix bernd
+               end if                                                            ! fix bernd
+               8614          format(4i5,6f16.6)                                  ! fivos
+               8615          format(4i5)                                         ! fix bernd
+            enddo                                                                ! fivos
+         enddo                                                                   ! fivos
          write(1337,*) '###################'
          close(58)
       endif
@@ -1103,51 +1092,50 @@ contains
          RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF,LLY,&
          DELTAE,RCLSIMP)
 
-      IF (OPT('FERMIOUT'))THEN                                                   ! fswrt
-         CALL WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,ALAT,    &  ! fswrt
+      if (OPT('FERMIOUT'))then                                                   ! fswrt
+         call WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,ALAT,    &  ! fswrt
             BRAVAIS,RECBV,RBASIS,CLS,NACLS,RCLS,EZOA,ATOM,RR,NSPIN,NR,KORBIT, &  ! fswrt
             NCLSD,NACLSD)                                                        ! fswrt
-      END IF                                                                     ! fswrt
-
-
-      IF (OPT('GREENIMP')) THEN                                               ! GREENIMP
-         ! fill array dimensions and allocate arrays in t_imp                 ! GREENIMP
-         call init_params_t_imp(t_imp,IPAND,NATYP,IRM,IRID,NFUND,NSPIN,&      ! GREENIMP
-            IRMIND,LMPOT)                                                    ! GREENIMP
-         call init_t_imp(t_inc,t_imp)                                         ! GREENIMP
-                                                                              ! GREENIMP
-         ! next read impurity potential and shapefunction                     ! GREENIMP
-         CALL READIMPPOT(NATOMIMP,INS,1337,0,0,2,NSPIN,LPOT,t_imp%IPANIMP, &  ! GREENIMP
-            t_imp%THETASIMP,t_imp%IRCUTIMP,t_imp%IRWSIMP,KHFELD,HFIELD,    &  ! GREENIMP
-            t_imp%VINSIMP,t_imp%VISPIMP,t_imp%IRMINIMP,t_imp%RIMP,t_imp%ZIMP) ! GREENIMP
-      END IF                                                                  ! GREENIMP
-
-
-      IF (ISHIFT.EQ.2) THEN                                           ! fxf
-         OPEN (67,FILE='vmtzero',FORM='formatted')                    ! fxf
-         WRITE (67,9090) VBC(1)                                       ! fxf
-         CLOSE(67)                                                    ! fxf
-         9090    FORMAT(D20.12)                                       ! fxf
-      END IF                                                          ! fxf
-
+      end if                                                                     ! fswrt
+      !
+      !
+      if (OPT('GREENIMP')) then                                                  ! GREENIMP
+         ! fill array dimensions and allocate arrays in t_imp                    ! GREENIMP
+         call init_params_t_imp(t_imp,IPAND,NATYP,IRM,IRID,NFUND,NSPIN,&         ! GREENIMP
+            IRMIND,LMPOT)                                                        ! GREENIMP
+         call init_t_imp(t_inc,t_imp)                                            ! GREENIMP
+                                                                                 ! GREENIMP
+         ! next read impurity potential and shapefunction                        ! GREENIMP
+         call READIMPPOT(NATOMIMP,INS,1337,0,0,2,NSPIN,LPOT,t_imp%IPANIMP, &     ! GREENIMP
+            t_imp%THETASIMP,t_imp%IRCUTIMP,t_imp%IRWSIMP,KHFELD,HFIELD,    &     ! GREENIMP
+            t_imp%VINSIMP,t_imp%VISPIMP,t_imp%IRMINIMP,t_imp%RIMP,t_imp%ZIMP)    ! GREENIMP
+      end if                                                                     ! GREENIMP
+      !
+      !
+      if (ISHIFT.EQ.2) then                                                      ! fxf
+         open (67,FILE='vmtzero',FORM='formatted')                               ! fxf
+         write (67,9090) VBC(1)                                                  ! fxf
+         close(67)                                                               ! fxf
+         9090    format(D20.12)                                                  ! fxf
+      end if                                                                     ! fxf
+      !
       ! Check for inputcard consistency in case of qdos option
-      IF (OPT('qdos    ')) THEN
+      if (OPT('qdos    ')) then
          write(1337,*)
          write(1337,*) '     < QDOS > : consistency check '
-         IF ((NPOL.NE.0).AND.(NPNT1.EQ.0).AND.(NPNT3.EQ.0)) THEN
-            STOP 'For qdos calculation change enery contour to dos path'
-         ENDIF
-         IF (TK.GT.50.d0) write(*,*) 'WARNING:  high energy smearing due to high value of TEMPR for energy contour integration could not be of advantage. Consider changeing ''TEMPR'' to lower value'
-         IF (TK.GT.50.d0) write(1337,*) 'WARNING:  high energy smearing due to high value of TEMPR for energy contour integration could not be of advantage. Consider changeing ''TEMPR'' to lower value'
+         if ((NPOL.NE.0).AND.(NPNT1.EQ.0).AND.(NPNT3.EQ.0)) then
+            stop 'For qdos calculation change enery contour to dos path'
+         endif
+         if (TK.GT.50.d0) write(*,*) 'WARNING:  high energy smearing due to high value of TEMPR for energy contour integration could not be of advantage. Consider changeing ''TEMPR'' to lower value'
+         if (TK.GT.50.d0) write(1337,*) 'WARNING:  high energy smearing due to high value of TEMPR for energy contour integration could not be of advantage. Consider changeing ''TEMPR'' to lower value'
          write(1337,*) '       QDOS: consistecy check complete'
-      ENDIF
-
-
+      endif
+      !
       !-------------------------------------------------------------------------
       !
-      WRITE (1337,'(79(1H=),/,31X,"< KKR0 finished >",/,79(1H=),/)')
-      9070 FORMAT (5X,'INFO:  Output of cluster Green function at E Fermi')
-      9080 FORMAT (5X,'INFO:  Determination of DOS at E Fermi')
+      write (1337,'(79(1H=),/,31X,"< KKR0 finished >",/,79(1H=),/)')
+      9070 format (5X,'INFO:  Output of cluster Green function at E Fermi')
+      9080 format (5X,'INFO:  Determination of DOS at E Fermi')
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! deallocate unused arrays
@@ -1240,53 +1228,48 @@ contains
 
       RFPI = SQRT(16.0D0*ATAN(1.0D0))
 
-      DO IH = 1,NATYP
+      do IH = 1,NATYP
 
          IMT1 = IRCUT(1,IH)
          IRC1 = IRC(IH)
          IRMIN1 = IRMIN(IH)
 
-         DO ISPIN = 1,NSPIN
+         do ISPIN = 1,NSPIN
             ! shift potential spin dependent
             VSHIFT = -DBLE(2*ISPIN-3)*HFIELD*INIPOL(IH)
 
-            WRITE (1337,*) 'SHIFTING OF THE POTENTIALS OF ATOM',IH,  &
+            write (1337,*) 'SHIFTING OF THE POTENTIALS OF ATOM',IH,  &
                'spin',ispin,' BY', VSHIFT, 'RY.'
             IPOT = NSPIN * (IH-1) + ISPIN
 
-            CALL RINIT(IRM*LMPOT,PSHIFTLMR)
-            CALL RINIT(IRM,PSHIFTR)
-            DO IR = 1,IRC1
+            call RINIT(IRM*LMPOT,PSHIFTLMR)
+            call RINIT(IRM,PSHIFTR)
+            do IR = 1,IRC1
                PSHIFTLMR(IR,1) = VSHIFT
-            ENDDO
+            enddo
 
-            IF (KSHAPE.EQ.0) THEN ! ASA
-
-               DO IR = 1,IRC1
+            if (KSHAPE.EQ.0) then ! ASA
+               do IR = 1,IRC1
                   VISP(IR,IPOT) = VISP(IR,IPOT) + PSHIFTLMR(IR,1)
-               END DO
-
-            ELSE                ! Full-potential
+               end do
+            else                ! Full-potential
                !
-               CALL CONVOL(IMT1,IRC1,NTCELL(IH),IMAXSH(LMPOT),ILM,IFUNM,LMPOT,&
+               call CONVOL(IMT1,IRC1,NTCELL(IH),IMAXSH(LMPOT),ILM,IFUNM,LMPOT,&
                   GSH,THETAS,THESME,0.d0,RFPI,RMESH(1,IH),PSHIFTLMR,PSHIFTR,  &
                   LMSP)
-
-               DO IR = 1,IRC1
+               !
+               do IR = 1,IRC1
                   VISP(IR,IPOT) = VISP(IR,IPOT) + PSHIFTLMR(IR,1)
-               ENDDO
-
-               DO LM = 2,LMPOT
-                  DO IR = IRMIN1,IRC1
+               enddo
+               !
+               do LM = 2,LMPOT
+                  do IR = IRMIN1,IRC1
                      VINS(IR,LM,IPOT)=VINS(IR,LM,IPOT)+PSHIFTLMR(IR,LM)*RFPI
-                  ENDDO
-               ENDDO
-
-            END IF              ! (KSHAPE.EQ.0)
-
-         END DO
-
-      END DO
+                  enddo
+               enddo
+            end if              ! (kshape.eq.0)
+         end do
+      end do
 
       end subroutine bshift_ns
 

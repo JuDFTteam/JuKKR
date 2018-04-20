@@ -30,27 +30,28 @@
 !> - R. Zeller 23/6/1996: cor error
 !> - Jonathan Chico: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,&
-      IRWS,IRCUT,IPAN,KSHAPE,GSH,ILM,IMAXSH,&
-      IFUNM,THETAS,YR,WTYR,IJEND,LMSP,NGSHD,LMPOT,NFUND,LMXSPD)
+subroutine VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,IRWS,IRCUT,IPAN,   &
+   KSHAPE,GSH,ILM,IMAXSH,IFUNM,THETAS,YR,WTYR,IJEND,LMSP,LMPOT,LMXSPD,LMMAX,IRM, &
+   LPOT,NATYP)
 
    use Constants
+   use global_variables
 
    implicit none
 
    ! .. Scalar Arguments
+   integer, intent(in) :: IRM    !< Maximum number of radial points
    integer, intent(in) :: KTE    !< Calculation of the total energy On/Off (1/0)
    integer, intent(in) :: KXC    !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
    integer, intent(in) :: LMAX   !< Maximum l component in wave function expansion
    integer, intent(in) :: IRWS   !< IATYP Entry in the IRWS array with the R point at WS radius
    integer, intent(in) :: IPAN   !< IATYP Entry in the IPAN array with the number of panels in non-MT-region
+   integer, intent(in) :: LPOT   !< Maximum l component in potential expansion
+   integer, intent(in) :: NATYP  !< Number of kinds of atoms in unit cell
    integer, intent(in) :: IATYP
    integer, intent(in) :: IJEND
-   integer, intent(in) :: NGSHD  !< Shape functions parameters in non-spherical part
    integer, intent(in) :: LMPOT  !< (LPOT+1)**2
-   integer, intent(in) :: NFUND
    integer, intent(in) :: NSPIN  !< Counter for spin directions
-   integer, intent(in) :: IPAND  !< Number of panels in non-spherical part
    integer, intent(in) :: LMMAX  !< (LMAX+1)^2
    integer, intent(in) :: KSHAPE !< Exact treatment of WS cell
    integer, intent(in) :: LMXSPD !< (2*LPOT+1)**2

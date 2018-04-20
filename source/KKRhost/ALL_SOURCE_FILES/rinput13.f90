@@ -238,7 +238,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !     .. Local Scalars ..
    integer :: NDIM !< Dimension for the Bravais lattice for slab or bulk (2/3)
    integer :: NASOC
-   integer :: I,IL,J,IER,IER2,I1,II,IR,IDOSEMICORE,i_stat
+   integer :: I,IL,J,IER,IER2,I1,II,IR,IDOSEMICORE,i_stat,i_all
    double precision :: SOSCALE,CTLSCALE
    double precision :: BRYMIX,STRMIX,TX,TY,TZ
    character(len=43) :: TSHAPE
@@ -1043,7 +1043,10 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Allocation of SOC arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   call allocate_SOC(1,KREL,NATYP,LMAX,IMANSOC,SOCSCALE,CSCL,SOCSCL)
+   call allocate_SOC(1,KREL,NATYP,LMAX,SOCSCALE,CSCL,SOCSCL)
+   allocate(IMANSOC(NATYP),stat=i_stat)
+   call memocc(i_stat,product(shape(IMANSOC))*kind(IMANSOC),'IMANSOC','rinput13')
+   IMANSOC = 0
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End of allocation of SOC arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2371,6 +2374,12 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    WRITE(1337,*) ' >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< '
 
    CLOSE(111) ! Close file inputcard_generated.txt
+
+   if (allocated(IMANSOC)) then
+      i_all=-product(shape(IMANSOC))*kind(IMANSOC)
+      deallocate(IMANSOC,stat=i_stat)
+      call memocc(i_stat,i_all,'IMANSOC','rinput13')
+   endif
 
    RETURN
    ! *********************************************Input-End ********

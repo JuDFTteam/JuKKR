@@ -315,44 +315,27 @@ contains
    !> reducing I/O and allowing for MPI communication.
    !> @author Philipp Rüssmann and many others ...
    !----------------------------------------------------------------------------
-   subroutine WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,EMIN,EMAX,EZ,WEZ,   &
-         EFERMI,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,                          &
-         IESEMICORE,TKSEMI,EBOTSEMI,EMUSEMI,                            &
-         FSEMICORE,VINS,VISP,VBC,VTREL,BTREL,RMREL,                     &
-         DRDIREL,R2DRDIREL,ZREL,JWSREL,IRSHIFT,                         &
-         ITSCF,SCFSTEPS,CMOMHOST,ECORE,LCORE,NCORE,                     &
-         QMTET,QMPHI,QMPHITAB,QMTETTAB,QMGAMTAB,DROTQ,                  &
-         NSRA,INS,NATYP,NAEZ,NINEQ,NREF,NSPIN,                     &
-         NCLS,ICST,IPAN,IRCUT,ALAT,ZAT,R,DRDI,                          &
-         REFPOT,RMTREF,VREF,IEND,JEND,CLEB,ICLEB,                       &
-         ATOM,CLS,RCLS,NACLS,LOFLM,SOLVER,SOCSCL,CSCL,                  &
-         ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,                    &
-         CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,NSH2,                        &
-         IJTABCALC,IJTABCALC_I,ISH,JSH,IJTABSYM,IJTABSH,                &
-         NOFGIJ,NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,                &
-         KMESH,MAXMESH,NSYMAT,SYMUNITARY,RROT,                          &
-         DSYMLL,INVMOD,ICHECK,                                          &
-         NATOMIMP,RATOM,ATOMIMP,                                        &
-         RC,CREL,RREL,SRREL,NRREL,IRREL,                                &
-         LEFTTINVLL,RIGHTTINVLL,VACFLAG,                                &
-         A,B,IFUNM,IFUNM1,INTERVX,INTERVY,INTERVZ,                      &
-         ITITLE,LMSP1,NTCELL,THETAS,                                    &
-         LPOT,LMPOT,NRIGHT,NLEFT,LINTERFACE,                            &
-         IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,                       &
-         KSHAPE,KTE,KVMAD,KXC,LAMBDA_XC,TXC,ISHIFT,                     &
-         IXIPOL,LRHOSYM,KFORCE,LMSP,LLMSP,RMT,RMTNEW,                   &
-         RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM,                    &
-         IMAXSH,IDOLDAU,ITRUNLDAU,NTLDAU,LOPT,ITLDAU,                   &
-         UEFF,JEFF,EREFLDAU,ULDAU,WLDAU,PHILDAU,                        &
-         IEMXD,IRMIND,IRM,NSPOTD,NPOTD,                  &
-         NEMBD1,LMMAXD,IPAND,NEMBD2,LMAX,                  &
-         NCLEB,NACLSD,NCLSD,LM2D,LMAXD1,MMAXD,NR,                      &
-         NSHELD,NSYMAXD,NAEZDPD,NATOMIMPD,                      &
-         NSPIND,IRID,NFUND,NCELLD,LMXSPD,                               &
-         NGSHD,KREL,NTOTD,NCHEB,NPAN_LOG,NPAN_EQ,                      &
-         NPAN_LOGNEW,NPAN_EQNEW,R_LOG,NPAN_TOT,                   &
-         RNEW,RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,                    &
-         THETASNEW,SOCSCALE,TOLRDIF,LLY,DELTAE,RCLSIMP)
+   subroutine WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,EMIN,EMAX,EZ,WEZ,EFERMI, &
+      NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,TKSEMI,EBOTSEMI,EMUSEMI,FSEMICORE,&
+      VINS,VISP,VBC,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ZREL,JWSREL,IRSHIFT,     &
+      ITSCF,SCFSTEPS,CMOMHOST,ECORE,LCORE,NCORE,QMTET,QMPHI,QMPHITAB,QMTETTAB,   &
+      QMGAMTAB,DROTQ,NSRA,INS,NATYP,NAEZ,NINEQ,NREF,NSPIN,NCLS,ICST,IPAN,IRCUT,  &
+      ALAT,ZAT,R,DRDI,REFPOT,RMTREF,VREF,IEND,JEND,CLEB,ICLEB,ATOM,CLS,RCLS,     &
+      NACLS,LOFLM,SOLVER,SOCSCL,CSCL,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX, &
+      CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,NSH2,IJTABCALC,IJTABCALC_I,ISH,JSH,      &
+      IJTABSYM,IJTABSH,NOFGIJ,NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,KMESH,     &
+      MAXMESH,NSYMAT,SYMUNITARY,RROT,DSYMLL,INVMOD,ICHECK,NATOMIMP,RATOM,ATOMIMP,&
+      RC,CREL,RREL,SRREL,NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,A,B,IFUNM,   &
+      IFUNM1,INTERVX,INTERVY,INTERVZ,ITITLE,LMSP1,NTCELL,THETAS,LPOT,LMPOT,      &
+      NRIGHT,NLEFT,LINTERFACE,IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,&
+      KVMAD,KXC,LAMBDA_XC,TXC,ISHIFT,IXIPOL,LRHOSYM,KFORCE,LMSP,LLMSP,RMT,RMTNEW,&
+      RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM,IMAXSH,IDOLDAU,ITRUNLDAU,NTLDAU,&
+      LOPT,ITLDAU,UEFF,JEFF,EREFLDAU,ULDAU,WLDAU,PHILDAU,IEMXD,IRMIND,IRM,NSPOTD,&
+      NPOTD,NEMBD1,LMMAXD,IPAND,NEMBD2,LMAX,NCLEB,NACLSD,NCLSD,LM2D,LMAXD1,MMAXD,&
+      NR,NSHELD,NSYMAXD,NAEZDPD,NATOMIMPD,NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD, &
+      KREL,NTOTD,NCHEB,NPAN_LOG,NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,R_LOG,NPAN_TOT,   &
+      RNEW,RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF,LLY, &
+      DELTAE,RCLSIMP)
       ! **********************************************************************
       ! *                                                                    *
       ! *  This subroutine is part of the MAIN0 program in the tbkkr package *
@@ -482,134 +465,131 @@ contains
       !     .. Array arguments
       double complex, dimension(IEMXD), intent(in) :: EZ
       double complex, dimension(IEMXD), intent(in) :: WEZ
-      double complex, dimension(LMMAXD,LMMAXD), intent(in) :: RC           !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-      double complex, dimension(LMMAXD,LMMAXD), intent(in) :: CREL         !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-      double complex, dimension(LMMAXD,LMMAXD), intent(in) :: RREL         !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
-      double complex, dimension(IRM,NATYP), intent(in) :: PHILDAU
+      double complex, dimension(LMMAXD,LMMAXD), intent(in)  :: RC           !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+      double complex, dimension(LMMAXD,LMMAXD), intent(in)  :: CREL         !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+      double complex, dimension(LMMAXD,LMMAXD), intent(in)  :: RREL         !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+      double complex, dimension(IRM,NATYP), intent(in)      :: PHILDAU
 
-      double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(in) :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-      double complex, dimension(LMMAXD,LMMAXD,NSYMAXD), intent(in) :: DSYMLL
-      double complex, dimension(2,2,LMMAXD), intent(in) :: SRREL
+      double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(in)      :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+      double complex, dimension(LMMAXD,LMMAXD,NSYMAXD), intent(in)   :: DSYMLL
+      double complex, dimension(2,2,LMMAXD), intent(in)              :: SRREL
       double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(in) :: LEFTTINVLL
       double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(in) :: RIGHTTINVLL
-      double precision, dimension(NATYP), intent(in) :: A               !< Constants for exponential R mesh
-      double precision, dimension(NATYP), intent(in) :: B               !< Constants for exponential R mesh
-      double precision, dimension(2), intent(in) :: VBC                 !< Potential constants
-      double precision, dimension(NATYP), intent(in) :: ZAT             !< Nuclear charge
-      double precision, dimension(NATYP), intent(in) :: RMT             !< Muffin-tin radius of true system
-      double precision, dimension(NATYP), intent(in) :: RWS             !< Wigner Seitz radius
-      double precision, dimension(NGSHD), intent(in) :: GSH
-      double precision, dimension(NATYP), intent(in) :: CONC            !< Concentration of a given atom
-      double precision, dimension(NREF), intent(in) :: VREF
-      double precision, dimension(NATYP), intent(in) :: UEFF            !< input U parameter for each atom
-      double precision, dimension(NATYP), intent(in) :: JEFF            !< input J parameter for each atom
-      double precision, dimension(NAEZ), intent(in) :: QMTET            !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(NAEZ), intent(in) :: QMPHI            !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(NREF), intent(in) :: RMTREF           !< Muffin-tin radius of reference system
-      double precision, dimension(NATYP), intent(in) :: RMTNEW          !< Adapted muffin-tin radius
-      double precision, dimension(NATYP), intent(in) :: EREFLDAU        !< the energies of the projector's wave functions (REAL)
-      double precision, dimension(NATYP), intent(in) :: SOCSCALE        !< Spin-orbit scaling
-      double precision, dimension(IRM,NATYP), intent(in) :: R           !< Radial mesh ( in units a Bohr)
-      double precision, dimension(3,0:NR), intent(in) :: RR
-      double precision, dimension(IRM,NATYP), intent(in) :: DRDI        !< Derivative dr/di
-      double precision, dimension(NCLEB,2), intent(in) :: CLEB          !< GAUNT coefficients (GAUNT)
-      double precision, dimension(LMAXD1,NATYP), intent(in) :: CSCL     !< Speed of light scaling
+      double precision, dimension(NATYP), intent(in)  :: A        !< Constants for exponential R mesh
+      double precision, dimension(NATYP), intent(in)  :: B        !< Constants for exponential R mesh
+      double precision, dimension(2), intent(in)      :: VBC      !< Potential constants
+      double precision, dimension(NATYP), intent(in)  :: ZAT      !< Nuclear charge
+      double precision, dimension(NATYP), intent(in)  :: RMT      !< Muffin-tin radius of true system
+      double precision, dimension(NATYP), intent(in)  :: RWS      !< Wigner Seitz radius
+      double precision, dimension(NGSHD), intent(in)  :: GSH
+      double precision, dimension(NATYP), intent(in)  :: CONC     !< Concentration of a given atom
+      double precision, dimension(NREF), intent(in)   :: VREF
+      double precision, dimension(NATYP), intent(in)  :: UEFF     !< input U parameter for each atom
+      double precision, dimension(NATYP), intent(in)  :: JEFF     !< input J parameter for each atom
+      double precision, dimension(NAEZ), intent(in)   :: QMTET    !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+      double precision, dimension(NAEZ), intent(in)   :: QMPHI    !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+      double precision, dimension(NREF), intent(in)   :: RMTREF   !< Muffin-tin radius of reference system
+      double precision, dimension(NATYP), intent(in)  :: RMTNEW   !< Adapted muffin-tin radius
+      double precision, dimension(NATYP), intent(in)  :: EREFLDAU !< the energies of the projector's wave functions (REAL)
+      double precision, dimension(NATYP), intent(in)  :: SOCSCALE !< Spin-orbit scaling
+      double precision, dimension(IRM,NATYP), intent(in)             :: R        !< Radial mesh ( in units a Bohr)
+      double precision, dimension(3,0:NR), intent(in)                :: RR
+      double precision, dimension(IRM,NATYP), intent(in)             :: DRDI     !< Derivative dr/di
+      double precision, dimension(NCLEB,2), intent(in)               :: CLEB     !< GAUNT coefficients (GAUNT)
+      double precision, dimension(LMAXD1,NATYP), intent(in)          :: CSCL     !< Speed of light scaling
       double precision, dimension(NTOTD*(NCHEB+1),NATYP), intent(in) :: RNEW
-      double precision, dimension(IRM,NPOTD), intent(in) :: VISP        !< Spherical part of the potential
-      double precision, dimension(IRM,NATYP), intent(in) :: VTREL       !< potential (spherical part)
-      double precision, dimension(IRM,NATYP), intent(in) :: BTREL       !< magnetic field
-      double precision, dimension(IRM,NATYP), intent(in) :: RMREL       !< radial mesh
-      double precision, dimension(3,NSHELD), intent(in) :: RATOM
-      double precision, dimension(20,NPOTD), intent(in) :: ECORE        !< Core energies
-      double precision, dimension(3,NEMBD2), intent(in) :: RBASIS       !< Position of atoms in the unit cell in units of bravais vectors
-      double precision, dimension(LMAXD1,NATYP), intent(in) :: SOCSCL
-      double precision, dimension(IRM,NATYP), intent(in) :: DRDIREL     !< derivative of radial mesh
-      double precision, dimension(NAEZ,3), intent(in) :: QMPHITAB
-      double precision, dimension(NAEZ,3), intent(in) :: QMTETTAB
-      double precision, dimension(NAEZ,3), intent(in) :: QMGAMTAB
-      double precision, dimension(3,NATOMIMPD), intent(in) :: RCLSIMP
-      double precision, dimension(LMPOT,NEMBD1), intent(in) :: CMOMHOST !< Charge moments of each atom of the (left/right) host
-      double precision, dimension(IRM,NATYP), intent(in) :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-      double precision, dimension(0:NTOTD,NATYP), intent(in) :: RPAN_INTERVALL
-      double precision, dimension(48,3,NSHELD), intent(in) :: RROT
-      double precision, dimension(3,NACLSD,NCLSD), intent(in) :: RCLS            !< Real space position of atom in cluster
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(in) :: VINS   !< Non-spherical part of the potential
-      double precision, dimension(IRID,NFUND,NCELLD), intent(in) :: THETAS       !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-      double precision, dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(in) :: THETASNEW
-      double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(in) :: WLDAU       !< potential matrix
-      double precision, dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(in) :: ULDAU  !< calculated Coulomb matrix elements (EREFLDAU)
+      double precision, dimension(IRM,NPOTD), intent(in)             :: VISP     !< Spherical part of the potential
+      double precision, dimension(IRM,NATYP), intent(in)             :: VTREL    !< potential (spherical part)
+      double precision, dimension(IRM,NATYP), intent(in)             :: BTREL    !< magnetic field
+      double precision, dimension(IRM,NATYP), intent(in)             :: RMREL    !< radial mesh
+      double precision, dimension(3,NSHELD), intent(in)              :: RATOM
+      double precision, dimension(20,NPOTD), intent(in)              :: ECORE    !< Core energies
+      double precision, dimension(3,NEMBD2), intent(in)              :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
+      double precision, dimension(LMAXD1,NATYP), intent(in)          :: SOCSCL
+      double precision, dimension(IRM,NATYP), intent(in)             :: DRDIREL  !< derivative of radial mesh
+      double precision, dimension(NAEZ,3), intent(in)                :: QMPHITAB
+      double precision, dimension(NAEZ,3), intent(in)                :: QMTETTAB
+      double precision, dimension(NAEZ,3), intent(in)                :: QMGAMTAB
+      double precision, dimension(3,NATOMIMPD), intent(in)           :: RCLSIMP
+      double precision, dimension(LMPOT,NEMBD1), intent(in)          :: CMOMHOST !< Charge moments of each atom of the (left/right) host
+      double precision, dimension(IRM,NATYP), intent(in)             :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      double precision, dimension(0:NTOTD,NATYP), intent(in)         :: RPAN_INTERVALL
+      double precision, dimension(48,3,NSHELD), intent(in)              :: RROT
+      double precision, dimension(3,NACLSD,NCLSD), intent(in)           :: RCLS   !< Real space position of atom in cluster
+      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(in)  :: VINS   !< Non-spherical part of the potential
+      double precision, dimension(IRID,NFUND,NCELLD), intent(in)        :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+      double precision, dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(in)   :: THETASNEW
+      double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(in)       :: WLDAU  !< potential matrix
+      double precision, dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(in)  :: ULDAU  !< calculated Coulomb matrix elements (EREFLDAU)
       !     ..
-      integer, dimension(NAEZ), intent(in) :: NOQ        !< Number of diff. atom types located
-      integer, dimension(NATYP), intent(in) :: IMT       !< R point at MT radius
-      integer, dimension(NATYP), intent(in) :: IRC       !< R point for potential cutting
-      integer, dimension(NATYP), intent(in) :: NFU
-      integer, dimension(NEMBD2), intent(in) :: CLS      !< Cluster around atomic sites
-      integer, dimension(NAEZ), intent(in) :: ICPA       !< ICPA = 0/1 site-dependent CPA flag
-      integer, dimension(NATYP), intent(in) :: IPAN      !< Number of panels in non-MT-region
-      integer, dimension(NATYP), intent(in) :: ZREL      !< atomic number (cast integer)
-      integer, dimension(NATYP), intent(in) :: IQAT      !< The site on which an atom is located on a given site
-      integer, dimension(NATYP), intent(in) :: LOPT      !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-      integer, dimension(NATYP), intent(in) :: IRNS      !< Position of atoms in the unit cell in units of bravais vectors
-      integer, dimension(NSHELD), intent(in) :: NSH1     !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-      integer, dimension(NSHELD), intent(in) :: NSH2     !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-      integer, dimension(NATYP), intent(in) :: IRWS      !< R point at WS radius
-      integer, dimension(LM2D), intent(in) :: LOFLM      !< l of lm=(l,m) (GAUNT)
-      integer, dimension(NCLSD), intent(in) :: NACLS     !< Number of atoms in cluster
-      integer, dimension(IEMXD), intent(in) :: KMESH
-      integer, dimension(NPOTD), intent(in) :: NCORE     !< Number of core states
-      integer, dimension(NAEZ), intent(in) :: IQCALC
-      integer, dimension(NATYP), intent(in) :: IRMIN     !< Max R for spherical treatment
-      integer, dimension(NATYP), intent(in) :: NTCELL    !< Index for WS cell
-      integer, dimension(NATYP), intent(in) :: IXIPOL    !< Constraint of spin pol.
-      integer, dimension(NATYP), intent(in) :: JWSREL    !< index of the WS radius
-      integer, dimension(NATYP), intent(in) :: ITLDAU    !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cel
-      integer, dimension(NEMBD2), intent(in) :: REFPOT   !< Ref. pot. card  at position
-      integer, dimension(0:LMPOT), intent(in) :: IMAXSH
-      integer, dimension(0:NSHELD), intent(in) :: NSHELL !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
-      integer, dimension(0:NATYP), intent(in) :: HOSTIMP
-      integer, dimension(NATYP), intent(in) :: IRSHIFT   !< shift of the REL radial mesh with respect no NREL
-      integer, dimension(NOFGIJ), intent(in) :: IJTABSH  !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
+      integer, dimension(NAEZ), intent(in)      :: NOQ       !< Number of diff. atom types located
+      integer, dimension(NATYP), intent(in)     :: IMT       !< R point at MT radius
+      integer, dimension(NATYP), intent(in)     :: IRC       !< R point for potential cutting
+      integer, dimension(NATYP), intent(in)     :: NFU
+      integer, dimension(NEMBD2), intent(in)    :: CLS       !< Cluster around atomic sites
+      integer, dimension(NAEZ), intent(in)      :: ICPA      !< ICPA = 0/1 site-dependent CPA flag
+      integer, dimension(NATYP), intent(in)     :: IPAN      !< Number of panels in non-MT-region
+      integer, dimension(NATYP), intent(in)     :: ZREL      !< atomic number (cast integer)
+      integer, dimension(NATYP), intent(in)     :: IQAT      !< The site on which an atom is located on a given site
+      integer, dimension(NATYP), intent(in)     :: LOPT      !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+      integer, dimension(NATYP), intent(in)     :: IRNS      !< Position of atoms in the unit cell in units of bravais vectors
+      integer, dimension(NSHELD), intent(in)    :: NSH1      !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+      integer, dimension(NSHELD), intent(in)    :: NSH2      !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+      integer, dimension(NATYP), intent(in)     :: IRWS      !< R point at WS radius
+      integer, dimension(LM2D), intent(in)      :: LOFLM     !< l of lm=(l,m) (GAUNT)
+      integer, dimension(NCLSD), intent(in)     :: NACLS     !< Number of atoms in cluster
+      integer, dimension(IEMXD), intent(in)     :: KMESH
+      integer, dimension(NPOTD), intent(in)     :: NCORE     !< Number of core states
+      integer, dimension(NAEZ), intent(in)      :: IQCALC
+      integer, dimension(NATYP), intent(in)     :: IRMIN     !< Max R for spherical treatment
+      integer, dimension(NATYP), intent(in)     :: NTCELL    !< Index for WS cell
+      integer, dimension(NATYP), intent(in)     :: IXIPOL    !< Constraint of spin pol.
+      integer, dimension(NATYP), intent(in)     :: JWSREL    !< index of the WS radius
+      integer, dimension(NATYP), intent(in)     :: ITLDAU    !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cel
+      integer, dimension(NEMBD2), intent(in)    :: REFPOT    !< Ref. pot. card  at position
+      integer, dimension(0:LMPOT), intent(in)   :: IMAXSH
+      integer, dimension(0:NSHELD), intent(in)  :: NSHELL    !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+      integer, dimension(0:NATYP), intent(in)   :: HOSTIMP
+      integer, dimension(NATYP), intent(in)     :: IRSHIFT   !< shift of the REL radial mesh with respect no NREL
+      integer, dimension(NOFGIJ), intent(in)    :: IJTABSH   !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
       integer, dimension(NATOMIMPD), intent(in) :: ATOMIMP
-      integer, dimension(NATYP), intent(in) :: NPAN_TOT
-      integer, dimension(NOFGIJ), intent(in) :: IJTABSYM  !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
-      integer, dimension(NOFGIJ), intent(in) :: IJTABCALC !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
-      integer, dimension(NATYP), intent(in) :: NPAN_EQNEW
-      integer, dimension(NATYP), intent(in) :: NPAN_LOGNEW
-      integer, dimension(NOFGIJ), intent(in) :: IJTABCALC_I
-      integer, dimension(NGSHD,3), intent(in) :: ILM
-      integer, dimension(NSHELD,NOFGIJ), intent(in) :: ISH
-      integer, dimension(NSHELD,NOFGIJ), intent(in) :: JSH
-      integer, dimension(NACLSD,NEMBD2), intent(in) :: ATOM          !< Atom at site in cluster
-      integer, dimension(NACLSD,NEMBD2), intent(in) :: EZOA          !< EZ of atom at site in cluster
-      integer, dimension(NATYP,LMXSPD), intent(in) :: LMSP           !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
-      integer, dimension(NATYP,NFUND), intent(in) :: LLMSP           !< lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
-      integer, dimension(LMXSPD,NATYP), intent(in) :: LMSP1
-      integer, dimension(NATYP,LMXSPD), intent(in) :: IFUNM
-      integer, dimension(NATYP,NEMBD2), intent(in) :: KAOEZ          !< Kind of atom at site in elem. cell
-      integer, dimension(0:IPAND,NATYP), intent(in) :: IRCUT         !< R points of panel borders
-      integer, dimension(NCLEB,4), intent(in) :: ICLEB               !< Pointer array
-      integer, dimension(20,NPOTD), intent(in) :: LCORE              !< Angular momentum of core states
-      integer, dimension(2,LMMAXD), intent(in) :: NRREL
+      integer, dimension(NATYP), intent(in)     :: NPAN_TOT
+      integer, dimension(NOFGIJ), intent(in)    :: IJTABSYM  !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
+      integer, dimension(NOFGIJ), intent(in)    :: IJTABCALC !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
+      integer, dimension(NATYP), intent(in)     :: NPAN_EQNEW
+      integer, dimension(NATYP), intent(in)     :: NPAN_LOGNEW
+      integer, dimension(NOFGIJ), intent(in)    :: IJTABCALC_I
+      integer, dimension(NGSHD,3), intent(in)         :: ILM
+      integer, dimension(NSHELD,NOFGIJ), intent(in)   :: ISH
+      integer, dimension(NSHELD,NOFGIJ), intent(in)   :: JSH
+      integer, dimension(NACLSD,NEMBD2), intent(in)   :: ATOM   !< Atom at site in cluster
+      integer, dimension(NACLSD,NEMBD2), intent(in)   :: EZOA   !< EZ of atom at site in cluster
+      integer, dimension(NATYP,LMXSPD), intent(in)    :: LMSP   !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+      integer, dimension(NATYP,NFUND), intent(in)     :: LLMSP  !< lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
+      integer, dimension(LMXSPD,NATYP), intent(in)    :: LMSP1
+      integer, dimension(NATYP,LMXSPD), intent(in)    :: IFUNM
+      integer, dimension(NATYP,NEMBD2), intent(in)    :: KAOEZ  !< Kind of atom at site in elem. cell
+      integer, dimension(0:IPAND,NATYP), intent(in)   :: IRCUT  !< R points of panel borders
+      integer, dimension(NCLEB,4), intent(in)         :: ICLEB  !< Pointer array
+      integer, dimension(20,NPOTD), intent(in)        :: LCORE  !< Angular momentum of core states
+      integer, dimension(2,LMMAXD), intent(in)        :: NRREL
       integer, dimension(NAEZDPD,NAEZDPD), intent(in) :: ICHECK
-      integer, dimension(LMXSPD,NATYP), intent(in) :: IFUNM1
-      integer, dimension(20,NPOTD), intent(in) :: ITITLE
-      integer, dimension(0:NTOTD,NATYP), intent(in) :: IPAN_INTERVALL
-      integer, dimension(LMPOT,0:LMAX,0:LMAX), intent(in) :: JEND    !< Pointer array for icleb()
-      integer, dimension(2,2,LMMAXD), intent(in) :: IRREL
-      logical, dimension(2), intent(in) :: VACFLAG
-      logical, dimension(NSYMAXD), intent(in) :: SYMUNITARY          !< unitary/antiunitary symmetry flag
+      integer, dimension(LMXSPD,NATYP), intent(in)    :: IFUNM1
+      integer, dimension(20,NPOTD), intent(in)        :: ITITLE
+      integer, dimension(0:NTOTD,NATYP), intent(in)   :: IPAN_INTERVALL
+      integer, dimension(LMPOT,0:LMAX,0:LMAX), intent(in)   :: JEND    !< Pointer array for icleb()
+      integer, dimension(2,2,LMMAXD), intent(in)            :: IRREL
+      logical, dimension(2), intent(in)         :: VACFLAG
+      logical, dimension(NSYMAXD), intent(in)   :: SYMUNITARY          !< unitary/antiunitary symmetry flag
       character(len=124), dimension(6), intent(in) :: TXC
-   !     ..
-      !     .. Local scalars
+      ! .. Local scalars
       integer :: I1
-      integer :: IC, NACLSMAX, NQDOS, IRMDNEW  !variables for t_inc filling
+      integer :: IC, NACLSMAX, NQDOS, IRMDNEW  ! variables for t_inc filling
       integer :: ITMPDIR,ILTMP
       double precision, dimension(NATYP) :: PHI
       double precision, dimension(NATYP) :: THETA
       character(len=80) :: TMPDIR
-
-      !     ..
-      !     .. External Functions ..
+      ! .. External Functions
       LOGICAL OPT,TEST
       EXTERNAL OPT,TEST
       !
@@ -778,50 +758,44 @@ contains
 
       ! all parameters are stored in t_params fomr mod_wunfiles
       ! first fill scalar values
-      call fill_t_params_scalars(IEMXD,IRMIND,IRM,LMPOT,NSPOTD,NPOTD,   &
-         NATYP,NEMBD1,LMMAXD,NAEZ,IPAND,NEMBD2,NREF,LMAX,NCLEB,NACLSD,  &
-         NCLSD,LM2D,LMAXD1,NR,NSHELD,NSYMAXD,NAEZDPD,NATOMIMPD,NOFGIJ,  &
-         NSPIND,NSPINDD,IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,MMAXD,      &
-         IELAST,NPOL,NPNT1,NPNT2,NPNT3,ITSCF,SCFSTEPS,LLY,              &
-         NSRA,INS,NINEQ,NSPIN,              &
-         NCLS,ICST,IEND,ICC,IGF,NLBASIS,NRBASIS,NCPA,ITCPAMAX,          &
-         KMROT,MAXMESH,NSYMAT,NATOMIMP,INVMOD,NQCALC,INTERVX,           &
-         INTERVY,INTERVZ,LPOT,NRIGHT,NLEFT,IMIX,ITDBRY,KPRE,      &
-         KSHAPE,KTE,KVMAD,KXC,ISHIFT,KFORCE,IDOLDAU,ITRUNLDAU,          &
-         NTLDAU,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,               &
-         EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,R_LOG,EMIN,EMAX,TK,EFERMI,   &
-         ALAT,CPATOL,MIXING,QBOUND,FCM,LAMBDA_XC,TOLRDIF,               &
-         LINTERFACE,LRHOSYM,SOLVER,TMPDIR,ITMPDIR,ILTMP,                &
-         NTOTD,NCHEB,DELTAE,t_params)
+      call fill_t_params_scalars(IEMXD,IRMIND,IRM,LMPOT,NSPOTD,NPOTD,NATYP,   &
+         NEMBD1,LMMAXD,NAEZ,IPAND,NEMBD2,NREF,LMAX,NCLEB,NACLSD,NCLSD,LM2D,   &
+         LMAXD1,NR,NSHELD,NSYMAXD,NAEZDPD,NATOMIMPD,NOFGIJ,NSPIND,NSPINDD,    &
+         IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,MMAXD,IELAST,NPOL,NPNT1,NPNT2,   &
+         NPNT3,ITSCF,SCFSTEPS,LLY,NSRA,INS,NINEQ,NSPIN,NCLS,ICST,IEND,ICC,IGF,&
+         NLBASIS,NRBASIS,NCPA,ITCPAMAX,KMROT,MAXMESH,NSYMAT,NATOMIMP,INVMOD,  &
+         NQCALC,INTERVX,INTERVY,INTERVZ,LPOT,NRIGHT,NLEFT,IMIX,ITDBRY,KPRE,   &
+         KSHAPE,KTE,KVMAD,KXC,ISHIFT,KFORCE,IDOLDAU,ITRUNLDAU,NTLDAU,NPOLSEMI,&
+         N1SEMI,N2SEMI,N3SEMI,IESEMICORE,EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,   &
+         R_LOG,EMIN,EMAX,TK,EFERMI,ALAT,CPATOL,MIXING,QBOUND,FCM,LAMBDA_XC,   &
+         TOLRDIF,LINTERFACE,LRHOSYM,SOLVER,TMPDIR,ITMPDIR,ILTMP,NTOTD,NCHEB,  &
+         DELTAE,t_params)
 
       ! initialize allocatable arrays
       call init_t_params(t_params)
 
       ! now fill arrays that have just been allocated
-      call fill_t_params_arrays(t_params,IEMXD,LMMAXD,NAEZ,NSYMAXD,     &
-         NEMBD1,NSPINDD,IRMIND,IRM,LMPOT,NSPOTD,NPOTD,NATYP,NR,         &
-         NEMBD2,NREF,NCLEB,NCLSD,NACLSD,NSHELD,NGSHD,NFUND,IRID,        &
-         NCELLD,MMAXD,LM2D,LMXSPD,LMAXD1,NSPIND,NTOTD,NCHEB,IPAND,      &
-         LMAX,NOFGIJ,NAEZDPD,NATOMIMPD,EZ,WEZ,DROTQ,DSYMLL,LEFTTINVLL,  &
-         RIGHTTINVLL,CREL,RC,RREL,SRREL,PHILDAU,VINS,VISP,VBC,VTREL,    &
-         BTREL,SOCSCALE,DRDIREL,R2DRDIREL,RMREL,CMOMHOST,ECORE,QMTET,   &
-         QMPHI,QMPHITAB,QMTETTAB,QMGAMTAB,ZAT,R,DRDI,RMTREF,VREF,       &
-         CLEB,RCLS,SOCSCL,CSCL,RBASIS,RR,CONC,RROT,RATOM,A,B,THETAS,    &
-         RMT,RMTNEW,RWS,GSH,EREFLDAU,UEFF,JEFF,ULDAU,WLDAU,             &
-         RPAN_INTERVALL,RNEW,THETASNEW,LOPT,ITLDAU,IRSHIFT,JWSREL,      &
-         ZREL,LCORE,NCORE,IPAN,IRCUT,JEND,ICLEB,ATOM,CLS,NACLS,LOFLM,   &
-         EZOA,KAOEZ,IQAT,ICPA,NOQ,KMESH,NSHELL,NSH1,NSH2,IJTABCALC,     &
-         IJTABCALC_I,                                                   &
-         IJTABSYM,IJTABSH,ISH,JSH,IQCALC,ICHECK,ATOMIMP,REFPOT,IRREL,   &
-         NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,      &
-         LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,       &
-         NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,IPAN_INTERVALL,        &
-         SYMUNITARY,VACFLAG,TXC,RCLSIMP)
+      call fill_t_params_arrays(t_params,IEMXD,LMMAXD,NAEZ,NSYMAXD,NEMBD1,    &
+         NSPINDD,IRMIND,IRM,LMPOT,NSPOTD,NPOTD,NATYP,NR,NEMBD2,NREF,NCLEB,    &
+         NCLSD,NACLSD,NSHELD,NGSHD,NFUND,IRID,NCELLD,MMAXD,LM2D,LMXSPD,LMAXD1,&
+         NSPIND,NTOTD,NCHEB,IPAND,LMAX,NOFGIJ,NAEZDPD,NATOMIMPD,EZ,WEZ,DROTQ, &
+         DSYMLL,LEFTTINVLL,RIGHTTINVLL,CREL,RC,RREL,SRREL,PHILDAU,VINS,VISP,  &
+         VBC,VTREL,BTREL,SOCSCALE,DRDIREL,R2DRDIREL,RMREL,CMOMHOST,ECORE,     &
+         QMTET,QMPHI,QMPHITAB,QMTETTAB,QMGAMTAB,ZAT,R,DRDI,RMTREF,VREF,CLEB,  &
+         RCLS,SOCSCL,CSCL,RBASIS,RR,CONC,RROT,RATOM,A,B,THETAS,RMT,RMTNEW,RWS,&
+         GSH,EREFLDAU,UEFF,JEFF,ULDAU,WLDAU,RPAN_INTERVALL,RNEW,THETASNEW,    &
+         LOPT,ITLDAU,IRSHIFT,JWSREL,ZREL,LCORE,NCORE,IPAN,IRCUT,JEND,ICLEB,   &
+         ATOM,CLS,NACLS,LOFLM,EZOA,KAOEZ,IQAT,ICPA,NOQ,KMESH,NSHELL,NSH1,NSH2,&
+         IJTABCALC,IJTABCALC_I,IJTABSYM,IJTABSH,ISH,JSH,IQCALC,ICHECK,ATOMIMP,&
+         REFPOT,IRREL,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,     &
+         LLMSP,LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,       &
+         NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,   &
+         VACFLAG,TXC,RCLSIMP)
 
       ! save information about the energy mesh
       call save_emesh(IELAST,EZ,WEZ,EMIN,EMAX,IESEMICORE,FSEMICORE,NPOL,TK,   &
-         NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,                           &
-         NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IEMXD,t_params)
+         NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,NPOLSEMI,N1SEMI,N2SEMI,    &
+         N3SEMI,IEMXD,t_params)
 
    end subroutine WUNFILES
 
@@ -1698,20 +1672,16 @@ contains
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
    subroutine fill_t_params_scalars(IEMXD,IRMIND,IRM,LMPOT,NSPOTD,NPOTD,NATYP,   &
-      NEMBD1,LMMAXD,NAEZ,IPAND,NEMBD2,NREF,LMAX,NCLEB,NACLSD,NCLSD,              &
-      LM2D,LMAXD1,NR,NSHELD,NSYMAXD,NAEZDPD,NATOMIMPD,NOFGIJ,                    &
-      NSPIND,NSPINDD,IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,MMAXD,                  &
-      IELAST,NPOL,NPNT1,NPNT2,NPNT3,ITSCF,SCFSTEPS,LLY,                          &
-      NSRA,INS,NINEQ,NSPIN,                          &
-      NCLS,ICST,IEND,ICC,IGF,NLBASIS,NRBASIS,NCPA,ITCPAMAX,                      &
-      KMROT,MAXMESH,NSYMAT,NATOMIMP,INVMOD,NQCALC,INTERVX,                       &
-      INTERVY,INTERVZ,LPOT,NRIGHT,NLEFT,IMIX,ITDBRY,KPRE,                  &
-      KSHAPE,KTE,KVMAD,KXC,ISHIFT,KFORCE,IDOLDAU,ITRUNLDAU,                      &
-      NTLDAU,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,                           &
-      EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,R_LOG,EMIN,EMAX,TK,EFERMI,               &
-      ALAT,CPATOL,MIXING,QBOUND,FCM,LAMBDA_XC,TOLRDIF,                           &
-      LINTERFACE,LRHOSYM,SOLVER,TMPDIR,ITMPDIR,ILTMP,                            &
-      NTOTD,NCHEB,DELTAE,t_params)
+      NEMBD1,LMMAXD,NAEZ,IPAND,NEMBD2,NREF,LMAX,NCLEB,NACLSD,NCLSD,LM2D,LMAXD1,  &
+      NR,NSHELD,NSYMAXD,NAEZDPD,NATOMIMPD,NOFGIJ,NSPIND,NSPINDD,IRID,NFUND,      &
+      NCELLD,LMXSPD,NGSHD,KREL,MMAXD,IELAST,NPOL,NPNT1,NPNT2,NPNT3,ITSCF,        &
+      SCFSTEPS,LLY,NSRA,INS,NINEQ,NSPIN,NCLS,ICST,IEND,ICC,IGF,NLBASIS,NRBASIS,  &
+      NCPA,ITCPAMAX,KMROT,MAXMESH,NSYMAT,NATOMIMP,INVMOD,NQCALC,INTERVX,INTERVY, &
+      INTERVZ,LPOT,NRIGHT,NLEFT,IMIX,ITDBRY,KPRE,KSHAPE,KTE,KVMAD,KXC,ISHIFT,    &
+      KFORCE,IDOLDAU,ITRUNLDAU,NTLDAU,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,  &
+      EBOTSEMI,EMUSEMI,TKSEMI,FSEMICORE,R_LOG,EMIN,EMAX,TK,EFERMI,ALAT,CPATOL,   &
+      MIXING,QBOUND,FCM,LAMBDA_XC,TOLRDIF,LINTERFACE,LRHOSYM,SOLVER,TMPDIR,      &
+      ITMPDIR,ILTMP,NTOTD,NCHEB,DELTAE,t_params)
       ! fill scalars into t_params
       implicit none
 
@@ -1957,27 +1927,21 @@ contains
    !> @brief Set the values of the t_params arrays with the input values of the arrays
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine fill_t_params_arrays(t_params,IEMXD,LMMAXD,NAEZ,     &
-      NSYMAXD,NEMBD1,NSPINDD,IRMIND,IRM,                           &
-      LMPOT,NSPOTD,NPOTD,NATYP,NR,NEMBD2,NREF,NCLEB,NCLSD,         &
-      NACLSD,NSHELD,NGSHD,NFUND,IRID,NCELLD,MMAXD,LM2D,LMXSPD,     &
-      LMAXD1,NSPIND,NTOTD,NCHEB,IPAND,LMAX,NOFGIJ,NAEZDPD,         &
-      NATOMIMPD,                                                   &
-      EZ,WEZ,DROTQ,DSYMLL,LEFTTINVLL,                              &
-      RIGHTTINVLL,CREL,RC,RREL,SRREL,PHILDAU,VINS,VISP,VBC,VTREL,  &
-      BTREL,SOCSCALE,DRDIREL,R2DRDIREL,RMREL,CMOMHOST,ECORE,QMTET, &
-      QMPHI,QMPHITAB,QMTETTAB,QMGAMTAB,ZAT,R,DRDI,RMTREF,VREF,     &
-      CLEB,RCLS,SOCSCL,CSCL,RBASIS,RR,CONC,RROT,RATOM,A,B,THETAS,  &
-      RMT,RMTNEW,RWS,GSH,EREFLDAU,UEFF,JEFF,ULDAU,WLDAU,           &
-      RPAN_INTERVALL,RNEW,THETASNEW,LOPT,ITLDAU,IRSHIFT,JWSREL,    &
-      ZREL,LCORE,NCORE,IPAN,IRCUT,JEND,ICLEB,ATOM,CLS,NACLS,LOFLM, &
-      EZOA,KAOEZ,IQAT,ICPA,NOQ,KMESH,NSHELL,NSH1,NSH2,IJTABCALC,   &
-      IJTABCALC_I,                                                 &
-      IJTABSYM,IJTABSH,ISH,JSH,IQCALC,ICHECK,ATOMIMP,REFPOT,IRREL, &
-      NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,LLMSP,    &
-      LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,     &
-      NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,IPAN_INTERVALL,      &
-      SYMUNITARY,VACFLAG,TXC,RCLSIMP)
+   subroutine fill_t_params_arrays(t_params,IEMXD,LMMAXD,NAEZ,NSYMAXD,NEMBD1,    &
+      NSPINDD,IRMIND,IRM,LMPOT,NSPOTD,NPOTD,NATYP,NR,NEMBD2,NREF,NCLEB,NCLSD,    &
+      NACLSD,NSHELD,NGSHD,NFUND,IRID,NCELLD,MMAXD,LM2D,LMXSPD,LMAXD1,NSPIND,     &
+      NTOTD,NCHEB,IPAND,LMAX,NOFGIJ,NAEZDPD,NATOMIMPD,EZ,WEZ,DROTQ,DSYMLL,       &
+      LEFTTINVLL,RIGHTTINVLL,CREL,RC,RREL,SRREL,PHILDAU,VINS,VISP,VBC,VTREL,     &
+      BTREL,SOCSCALE,DRDIREL,R2DRDIREL,RMREL,CMOMHOST,ECORE,QMTET,QMPHI,QMPHITAB,&
+      QMTETTAB,QMGAMTAB,ZAT,R,DRDI,RMTREF,VREF,CLEB,RCLS,SOCSCL,CSCL,RBASIS,RR,  &
+      CONC,RROT,RATOM,A,B,THETAS,RMT,RMTNEW,RWS,GSH,EREFLDAU,UEFF,JEFF,ULDAU,    &
+      WLDAU,RPAN_INTERVALL,RNEW,THETASNEW,LOPT,ITLDAU,IRSHIFT,JWSREL,ZREL,LCORE, &
+      NCORE,IPAN,IRCUT,JEND,ICLEB,ATOM,CLS,NACLS,LOFLM,EZOA,KAOEZ,IQAT,ICPA,NOQ, &
+      KMESH,NSHELL,NSH1,NSH2,IJTABCALC,IJTABCALC_I,IJTABSYM,IJTABSH,ISH,JSH,     &
+      IQCALC,ICHECK,ATOMIMP,REFPOT,IRREL,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,&
+      IRNS,IFUNM,LLMSP,LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,  &
+      NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG, &
+      TXC,RCLSIMP)
       ! fill arrays after they have been allocated in init_t_params
       !     ..
       implicit none
@@ -2278,17 +2242,14 @@ contains
    !> @note JC: NPAN_EQ seems to have been passed here as an array, while in the
    !> rest of the routines it is an scalar. Why?
    !----------------------------------------------------------------------------
-   subroutine get_params_1a(t_params,IPAND,NATYP,IRM,NACLSD,IELAST,  &
-      NCLSD,NREF,NCLEB,NEMB,NAEZ,LM2D,NSRA,INS,           &
-      NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,NINEQ,IDOLDAU,LLY,        &
-      KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,IEND,EZ,VINS,      &
-      IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,VISP,       &
-      RMTREF,VREF,CLEB,CSCL,SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,      &
-      SOLVER,TMPDIR,DELTAE,TOLRDIF,NPAN_LOG,NPAN_EQ,                 &
-      NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,        &
-      NTOTD,NRMAXD,R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,     &
-      R2DRDIREL,RMREL,IRMIND,LMPOT,NSPOTD,NPOTD,JWSREL,ZREL,         &
-      ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
+   subroutine get_params_1a(t_params,IPAND,NATYP,IRM,NACLSD,IELAST,NCLSD,NREF,   &
+      NCLEB,NEMB,NAEZ,LM2D,NSRA,INS,NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,NINEQ,       &
+      IDOLDAU,LLY,KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,IEND,EZ,VINS,IRMIN,&
+      ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,VISP,RMTREF,VREF,CLEB,CSCL,   &
+      SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,SOLVER,TMPDIR,DELTAE,TOLRDIF,NPAN_LOG,  &
+      NPAN_EQ,NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,NTOTD,NRMAXD,    &
+      R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,IRMIND,LMPOT, &
+      NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
       ! get relevant parameters from t_params
       !     ..
       implicit none
@@ -2492,20 +2453,15 @@ contains
    !> so that they can be passed between different control modules, specifically for main1b
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine get_params_1b(t_params,NATYP,NACLSD,IELAST,         &
-      NPOL,NCLSD,NREF,NEMB,NAEZ,NSRA,INS,              &
-      NSPIN,LMAX,NCLS,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,     &
-      ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,           &
-      NSHELD,NPRINCD,KPOIBZ,ATOMIMP,NATOMIMPD,                    &
-      ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NR,       &
-      IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,  &
-      NOQ,IQAT,NOFGIJ,NATOMIMP,CONC,KMESH,MAXMESH,NSYMAT,  &
-      NQCALC,RATOM,RROT,DROTQ,IJTABCALC,IJTABCALC_I,IJTABSYM,     &
-      IJTABSH,IQCALC,                                             &
-      DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,         &
-      NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,     &
-      BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,      &
-      RCLSIMP)
+   subroutine get_params_1b(t_params,NATYP,NACLSD,IELAST,NPOL,NCLSD,NREF,NEMB,   &
+      NAEZ,NSRA,INS,NSPIN,LMAX,NCLS,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,ITMPDIR,   &
+      ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,NSHELD,NPRINCD,KPOIBZ,ATOMIMP,    &
+      NATOMIMPD,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NR,IDECI,      &
+      RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,NOQ,IQAT,NOFGIJ,       &
+      NATOMIMP,CONC,KMESH,MAXMESH,NSYMAT,NQCALC,RATOM,RROT,DROTQ,IJTABCALC,      &
+      IJTABCALC_I,IJTABSYM,IJTABSH,IQCALC,DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,    &
+      CREL,RREL,SRREL,NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,    &
+      BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,RCLSIMP)
       ! get relevant parameters from t_params
       !     ..
       implicit none
@@ -2554,58 +2510,57 @@ contains
       integer, intent(inout) :: NATOMIMP
       integer, intent(inout) :: ITCPAMAX
       integer, dimension(NAEZ+NEMB), intent(inout) :: CLS
-      integer, dimension(NAEZ), intent(inout) :: NOQ
-      integer, dimension(NAEZ), intent(inout) :: ICPA
-      integer, dimension(NATYP), intent(inout) :: IQAT
-      integer, dimension(NSHELD), intent(inout) :: NSH1
-      integer, dimension(NSHELD), intent(inout) :: NSH2
-      integer, dimension(IEMXD), intent(inout) :: KMESH
-      integer, dimension(NCLSD), intent(inout) :: NACLS
-      integer, dimension(MAXMSHD), intent(inout) :: NOFKS
-      integer, dimension(0:NSHELD), intent(inout) :: NSHELL
-      integer, dimension(NAEZ), intent(inout) :: IQCALC
+      integer, dimension(NAEZ), intent(inout)      :: NOQ
+      integer, dimension(NAEZ), intent(inout)      :: ICPA
+      integer, dimension(NATYP), intent(inout)     :: IQAT
+      integer, dimension(NSHELD), intent(inout)    :: NSH1
+      integer, dimension(NSHELD), intent(inout)    :: NSH2
+      integer, dimension(IEMXD), intent(inout)     :: KMESH
+      integer, dimension(NCLSD), intent(inout)     :: NACLS
+      integer, dimension(MAXMSHD), intent(inout)   :: NOFKS
+      integer, dimension(0:NSHELD), intent(inout)  :: NSHELL
+      integer, dimension(NAEZ), intent(inout)      :: IQCALC
       integer, dimension(NAEZ+NEMB), intent(inout) :: REFPOT
       integer, dimension(NATOMIMPD), intent(inout) :: ATOMIMP
-      integer, dimension(NOFGIJ), intent(inout) :: IJTABSH
-      integer, dimension(NOFGIJ), intent(inout) :: IJTABSYM
-      integer, dimension(NOFGIJ), intent(inout) :: IJTABCALC
-      integer, dimension(NOFGIJ), intent(inout) :: IJTABCALC_I
-      integer, dimension(NSHELD,NOFGIJ), intent(inout) :: ISH
-      integer, dimension(NSHELD,NOFGIJ), intent(inout) :: JSH
-      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout) :: EZOA
-      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout) :: ATOM
-      integer, dimension(2,2,LMMAXD), intent(inout) :: IRREL
-      integer, dimension(2,LMMAXD), intent(inout) :: NRREL
-      integer, dimension(NATYP,NAEZ+NEMB), intent(inout) :: KAOEZ
+      integer, dimension(NOFGIJ), intent(inout)    :: IJTABSH
+      integer, dimension(NOFGIJ), intent(inout)    :: IJTABSYM
+      integer, dimension(NOFGIJ), intent(inout)    :: IJTABCALC
+      integer, dimension(NOFGIJ), intent(inout)    :: IJTABCALC_I
+      integer, dimension(NSHELD,NOFGIJ), intent(inout)      :: ISH
+      integer, dimension(NSHELD,NOFGIJ), intent(inout)      :: JSH
+      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout)   :: EZOA
+      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout)   :: ATOM
+      integer, dimension(2,LMMAXD), intent(inout)           :: NRREL
+      integer, dimension(NATYP,NAEZ+NEMB), intent(inout)    :: KAOEZ
       integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(inout) :: ICHECK
+      integer, dimension(2,2,LMMAXD), intent(inout) :: IRREL
       double precision, intent(inout) :: ALAT
       double precision, intent(inout) :: CPATOL
-      double precision, dimension(NREF), intent(inout) :: VREF
-      double precision, dimension(NATYP), intent(inout) :: CONC
-      double precision, dimension(NREF), intent(inout) :: RMTREF
-      double precision, dimension(MAXMSHD), intent(inout) :: VOLBZ
-      double precision, dimension(3,0:NR), intent(inout) :: RR
-      double precision, dimension(3,NSHELD), intent(inout) :: RATOM
-      double precision, dimension(3,NAEZ+NEMB), intent(inout) :: RBASIS
-      double precision, dimension(KPOIBZ,MAXMSHD), intent(inout) :: VOLCUB
-      double precision, dimension(3,NATOMIMPD), intent(inout) :: RCLSIMP
-      double precision, dimension(48,3,NSHELD), intent(inout) :: RROT
-      double precision, dimension(3,NACLSD,NCLSD), intent(inout) :: RCLS
-      double precision, dimension(3,KPOIBZ,MAXMSHD), intent(inout) :: BZKP
-
+      double precision, dimension(NREF), intent(inout)      :: VREF
+      double precision, dimension(NATYP), intent(inout)     :: CONC
+      double precision, dimension(NREF), intent(inout)      :: RMTREF
+      double precision, dimension(MAXMSHD), intent(inout)   :: VOLBZ
+      double precision, dimension(3,0:NR), intent(inout)          :: RR
+      double precision, dimension(3,NSHELD), intent(inout)        :: RATOM
+      double precision, dimension(3,NAEZ+NEMB), intent(inout)     :: RBASIS
+      double precision, dimension(KPOIBZ,MAXMSHD), intent(inout)  :: VOLCUB
+      double precision, dimension(3,NATOMIMPD), intent(inout)     :: RCLSIMP
+      double precision, dimension(48,3,NSHELD), intent(inout)        :: RROT
+      double precision, dimension(3,NACLSD,NCLSD), intent(inout)     :: RCLS
+      double precision, dimension(3,KPOIBZ,MAXMSHD), intent(inout)   :: BZKP
       double complex, dimension(IEMXD), intent(inout) :: EZ
       double complex, dimension(IEMXD), intent(inout) :: WEZ
       double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: RC
       double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: CREL
       double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: RREL
-      double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(inout) :: DROTQ
-      double complex, dimension(LMMAXD,LMMAXD,NSYMAXD), intent(inout) :: DSYMLL
-      double complex, dimension(2,2,LMMAXD), intent(inout) :: SRREL
+      double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(inout)      :: DROTQ
+      double complex, dimension(LMMAXD,LMMAXD,NSYMAXD), intent(inout)   :: DSYMLL
+      double complex, dimension(2,2,LMMAXD), intent(inout)              :: SRREL
       double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(inout) :: LEFTTINVLL
       double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(inout) :: RIGHTTINVLL
       character(len=80), intent(inout) :: TMPDIR
-      logical, dimension(2), intent(inout) :: VACFLAG
-      logical, dimension(NSYMAXD), intent(inout) :: SYMUNITARY
+      logical, dimension(2), intent(inout)         :: VACFLAG
+      logical, dimension(NSYMAXD), intent(inout)   :: SYMUNITARY
 
       integer :: i,l,id
 
@@ -2764,20 +2719,16 @@ contains
    !> so that they can be passed between different control modules, specifically for main1c
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine get_params_1c(t_params,KREL,NAEZ,NATYP,NCLEB,LM2D,     &
-      NCHEB,IPAND,LMPOT,LMAX,LMXSPD,NFUND,NPOTD,                     &
-      NTOTD,MMAXD,IEMXD,IRM,NSRA,INS,NSPIN,NACLS1,        &
-      ICST,KMROT,IQAT,IDOLDAU,IRWS,IPAN,IRCUT,IEND,ICLEB,       &
-      LOFLM,JEND,IFUNM1,LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,          &
-      IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,LLY,ITMPDIR,              &
-      ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NPAN_TOT,          &
-      NTLDAU,LOPT,ITLDAU,IELAST,IESEMICORE,NPOL,IRSHIFT,JWSREL,      &
-      ZREL,ITRUNLDAU,QMTET,QMPHI,CONC,ALAT,ZAT,DRDI,RMESH,A,B,       &
-      CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,RNEW,SOCSCL,          &
-      THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,EMIN,EMAX,TK,VINS,VISP,    &
-      ECORE,DRDIREL,R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ,      &
-      WEZ,PHILDAU,TMPDIR,SOLVER,NSPIND,NSPOTD,                       &
-      IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
+   subroutine get_params_1c(t_params,KREL,NAEZ,NATYP,NCLEB,LM2D,NCHEB,IPAND,     &
+      LMPOT,LMAX,LMXSPD,NFUND,NPOTD,NTOTD,MMAXD,IEMXD,IRM,NSRA,INS,NSPIN,NACLS1, &
+      ICST,KMROT,IQAT,IDOLDAU,IRWS,IPAN,IRCUT,IEND,ICLEB,LOFLM,JEND,IFUNM1,LMSP1,&
+      NFU,LLMSP,LCORE,NCORE,NTCELL,IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,LLY,     &
+      ITMPDIR,ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NPAN_TOT,NTLDAU,LOPT,ITLDAU, &
+      IELAST,IESEMICORE,NPOL,IRSHIFT,JWSREL,ZREL,ITRUNLDAU,QMTET,QMPHI,CONC,ALAT,&
+      ZAT,DRDI,RMESH,A,B,CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,RNEW,SOCSCL,   &
+      THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,EMIN,EMAX,TK,VINS,VISP,ECORE,DRDIREL,  &
+      R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ,WEZ,PHILDAU,TMPDIR,SOLVER,      &
+      NSPIND,NSPOTD,IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
       ! get relevant parameters from t_params
       !     ..
       implicit none
@@ -2841,15 +2792,15 @@ contains
       integer, dimension(NATYP), intent(inout) :: IRSHIFT
       integer, dimension(NATYP), intent(inout) :: NPAN_LOG
       integer, dimension(NATYP), intent(inout) :: NPAN_TOT
-      integer, dimension(LMPOT,0:LMAX,0:LMAX), intent(inout) :: JEND
-      integer, dimension(0:IPAND,NATYP), intent(inout) :: IRCUT
-      integer, dimension(NCLEB,4), intent(inout) :: ICLEB
-      integer, dimension(LMXSPD,NATYP), intent(inout) :: LMSP1
-      integer, dimension(NATYP,NFUND), intent(inout) :: LLMSP
-      integer, dimension(20,NPOTD), intent(inout) :: LCORE
-      integer, dimension(LMXSPD,NATYP), intent(inout) :: IFUNM1
-      integer, dimension(20,NPOTD), intent(inout) :: ITITLE
-      integer, dimension(0:NTOTD,NATYP), intent(inout) :: IPAN_INTERVALL
+      integer, dimension(LMPOT,0:LMAX,0:LMAX), intent(inout)   :: JEND
+      integer, dimension(0:IPAND,NATYP), intent(inout)         :: IRCUT
+      integer, dimension(NCLEB,4), intent(inout)               :: ICLEB
+      integer, dimension(LMXSPD,NATYP), intent(inout)          :: LMSP1
+      integer, dimension(NATYP,NFUND), intent(inout)           :: LLMSP
+      integer, dimension(20,NPOTD), intent(inout)              :: LCORE
+      integer, dimension(LMXSPD,NATYP), intent(inout)          :: IFUNM1
+      integer, dimension(20,NPOTD), intent(inout)              :: ITITLE
+      integer, dimension(0:NTOTD,NATYP), intent(inout)         :: IPAN_INTERVALL
 
       double precision, intent(inout) :: TK
       double precision, intent(inout) :: EMIN
@@ -2858,33 +2809,33 @@ contains
       double precision, intent(inout) :: R_LOG
       double precision, intent(inout) :: EFERMI
 
-      double precision, dimension(NATYP), intent(inout) :: A
-      double precision, dimension(NATYP), intent(inout) :: B
-      double precision, dimension(NATYP), intent(inout) :: ZAT
-      double precision, dimension(NATYP), intent(inout) :: CONC
-      double precision, dimension(NATYP), intent(inout) :: UEFF
-      double precision, dimension(NATYP), intent(inout) :: JEFF
-      double precision, dimension(NAEZ), intent(inout) :: QMPHI
-      double precision, dimension(NAEZ), intent(inout) :: QMTET
-      double precision, dimension(NATYP), intent(inout) :: SOCSCALE
-      double precision, dimension(NATYP), intent(inout) :: EREFLDAU
-      double precision, dimension(IRM,NATYP), intent(inout) :: DRDI
-      double precision, dimension(IRM,NATYP), intent(inout) :: RMESH
-      double precision, dimension(NCLEB,2), intent(inout) :: CLEB
-      double precision, dimension(LMAXD1,NATYP), intent(inout) :: CSCL
-      double precision, dimension(IRM,NPOTD), intent(inout) :: VISP
+      double precision, dimension(NATYP), intent(inout)  :: A
+      double precision, dimension(NATYP), intent(inout)  :: B
+      double precision, dimension(NATYP), intent(inout)  :: ZAT
+      double precision, dimension(NATYP), intent(inout)  :: CONC
+      double precision, dimension(NATYP), intent(inout)  :: UEFF
+      double precision, dimension(NATYP), intent(inout)  :: JEFF
+      double precision, dimension(NAEZ), intent(inout)   :: QMPHI
+      double precision, dimension(NAEZ), intent(inout)   :: QMTET
+      double precision, dimension(NATYP), intent(inout)  :: SOCSCALE
+      double precision, dimension(NATYP), intent(inout)  :: EREFLDAU
+      double precision, dimension(IRM,NATYP), intent(inout)             :: DRDI
+      double precision, dimension(IRM,NATYP), intent(inout)             :: RMESH
+      double precision, dimension(NCLEB,2), intent(inout)               :: CLEB
+      double precision, dimension(LMAXD1,NATYP), intent(inout)          :: CSCL
+      double precision, dimension(IRM,NPOTD), intent(inout)             :: VISP
       double precision, dimension(NTOTD*(NCHEB+1),NATYP), intent(inout) :: RNEW
-      double precision, dimension(IRM,NATYP), intent(inout) :: RMREL
-      double precision, dimension(IRM,NATYP), intent(inout) :: VTREL
-      double precision, dimension(IRM,NATYP), intent(inout) :: BTREL
-      double precision, dimension(20,NPOTD), intent(inout) :: ECORE
-      double precision, dimension(LMAXD1,NATYP), intent(inout) :: SOCSCL
-      double precision, dimension(IRM,NATYP), intent(inout) :: DRDIREL
-      double precision, dimension(IRM,NATYP), intent(inout) :: R2DRDIREL
-      double precision, dimension(0:NTOTD,NATYP), intent(inout) :: RPAN_INTERVALL
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS
-      double precision, dimension(IRID,NFUND,NCELLD), intent(inout) :: THETAS
-      double precision, dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(inout) :: THETASNEW
+      double precision, dimension(IRM,NATYP), intent(inout)             :: RMREL
+      double precision, dimension(IRM,NATYP), intent(inout)             :: VTREL
+      double precision, dimension(IRM,NATYP), intent(inout)             :: BTREL
+      double precision, dimension(20,NPOTD), intent(inout)              :: ECORE
+      double precision, dimension(LMAXD1,NATYP), intent(inout)          :: SOCSCL
+      double precision, dimension(IRM,NATYP), intent(inout)             :: DRDIREL
+      double precision, dimension(IRM,NATYP), intent(inout)             :: R2DRDIREL
+      double precision, dimension(0:NTOTD,NATYP), intent(inout)         :: RPAN_INTERVALL
+      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)        :: VINS
+      double precision, dimension(IRID,NFUND,NCELLD), intent(inout)              :: THETAS
+      double precision, dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(inout)   :: THETASNEW
       double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(inout) :: WLDAU
       double precision, dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(inout) :: ULDAU
       double complex, dimension(IEMXD), intent(inout) :: EZ
@@ -3033,19 +2984,16 @@ contains
    !> so that they can be passed between different control modules, specifically for main2
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine get_params_2(t_params,KREL,NATYP,IPAND,NPOTD,NATOMIMPD,   &
-      LMXSPD,NFUND,LMPOT,NCELLD,IRM,NEMBD1,NEMB,                        &
-      IRMIND,NSRA,INS,NSPIN,IPAN,IRCUT,LCORE,NCORE,LMAX,     &
-      NTCELL,LPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,NATOMIMP,          &
-      ATOMIMP,IMIX,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD,KXC,    &
-      ICC,ISHIFT,IXIPOL,KFORCE,IFUNM,LMSP,IMT,IRC,IRMIN,IRWS,LLMSP,     &
-      ITITLE,NFU,HOSTIMP,ILM,IMAXSH,IELAST,NPOL,NPNT1,NPNT2,NPNT3,      &
-      ITSCF,SCFSTEPS,IESEMICORE,KAOEZ,IQAT,NOQ,LLY,NPOLSEMI,N1SEMI,     &
-      N2SEMI,N3SEMI,ZREL,JWSREL,IRSHIFT,MIXING,LAMBDA_XC,A,B,THETAS,    &
-      DRDI,R,ZAT,RMT,RMTNEW,RWS,EMIN,EMAX,TK,ALAT,EFOLD,CHRGOLD,        &
-      CMOMHOST,CONC,GSH,EBOTSEMI,EMUSEMI,TKSEMI,VINS,VISP,RMREL,        &
-      DRDIREL,VBC,FSOLD,R2DRDIREL,ECORE,EZ,WEZ,TXC,                     &
-      LINTERFACE,LRHOSYM,NGSHD,NAEZ,IRID,NSPOTD,IEMXD)
+   subroutine get_params_2(t_params,KREL,NATYP,IPAND,NPOTD,NATOMIMPD,LMXSPD,     &
+      NFUND,LMPOT,NCELLD,IRM,NEMBD1,NEMB,IRMIND,NSRA,INS,NSPIN,IPAN,IRCUT,LCORE, &
+      NCORE,LMAX,NTCELL,LPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,NATOMIMP,ATOMIMP,IMIX, &
+      QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD,KXC,ICC,ISHIFT,IXIPOL,KFORCE, &
+      IFUNM,LMSP,IMT,IRC,IRMIN,IRWS,LLMSP,ITITLE,NFU,HOSTIMP,ILM,IMAXSH,IELAST,  &
+      NPOL,NPNT1,NPNT2,NPNT3,ITSCF,SCFSTEPS,IESEMICORE,KAOEZ,IQAT,NOQ,LLY,       &
+      NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,ZREL,JWSREL,IRSHIFT,MIXING,LAMBDA_XC,A,B,    &
+      THETAS,DRDI,R,ZAT,RMT,RMTNEW,RWS,EMIN,EMAX,TK,ALAT,EFOLD,CHRGOLD,CMOMHOST, &
+      CONC,GSH,EBOTSEMI,EMUSEMI,TKSEMI,VINS,VISP,RMREL,DRDIREL,VBC,FSOLD,        &
+      R2DRDIREL,ECORE,EZ,WEZ,TXC,LINTERFACE,LRHOSYM,NGSHD,NAEZ,IRID,NSPOTD,IEMXD)
       ! get relevant parameters from t_params
       !     ..
       IMPLICIT NONE
@@ -3102,32 +3050,32 @@ contains
       integer, intent(inout) :: SCFSTEPS
       integer, intent(inout) :: NPOLSEMI
       integer, intent(inout) :: IESEMICORE
-      integer, dimension(NAEZ), intent(inout) :: NOQ
-      integer, dimension(NATYP), intent(inout) :: IMT
-      integer, dimension(NATYP), intent(inout) :: IRC
-      integer, dimension(NATYP), intent(inout) :: NFU
-      integer, dimension(NATYP), intent(inout) :: IQAT
-      integer, dimension(NATYP), intent(inout) :: ZREL
-      integer, dimension(NATYP), intent(inout) :: IRWS
-      integer, dimension(NATYP), intent(inout) :: IPAN
-      integer, dimension(NATYP), intent(inout) :: IRNS
-      integer, dimension(NPOTD), intent(inout) :: NCORE
-      integer, dimension(NATYP), intent(inout) :: IRMIN
-      integer, dimension(0:LMPOT), intent(inout) :: IMAXSH
-      integer, dimension(NATYP), intent(inout) :: JWSREL
-      integer, dimension(NATYP), intent(inout) :: IXIPOL
-      integer, dimension(NATYP), intent(inout) :: NTCELL
-      integer, dimension(0:NATYP), intent(inout) :: HOSTIMP
-      integer, dimension(NATYP), intent(inout) :: IRSHIFT
+      integer, dimension(NAEZ), intent(inout)      :: NOQ
+      integer, dimension(NATYP), intent(inout)     :: IMT
+      integer, dimension(NATYP), intent(inout)     :: IRC
+      integer, dimension(NATYP), intent(inout)     :: NFU
+      integer, dimension(NATYP), intent(inout)     :: IQAT
+      integer, dimension(NATYP), intent(inout)     :: ZREL
+      integer, dimension(NATYP), intent(inout)     :: IRWS
+      integer, dimension(NATYP), intent(inout)     :: IPAN
+      integer, dimension(NATYP), intent(inout)     :: IRNS
+      integer, dimension(NPOTD), intent(inout)     :: NCORE
+      integer, dimension(NATYP), intent(inout)     :: IRMIN
+      integer, dimension(0:LMPOT), intent(inout)   :: IMAXSH
+      integer, dimension(NATYP), intent(inout)     :: JWSREL
+      integer, dimension(NATYP), intent(inout)     :: IXIPOL
+      integer, dimension(NATYP), intent(inout)     :: NTCELL
+      integer, dimension(0:NATYP), intent(inout)   :: HOSTIMP
+      integer, dimension(NATYP), intent(inout)     :: IRSHIFT
       integer, dimension(NATOMIMPD), intent(inout) :: ATOMIMP
-      integer, dimension(NGSHD,3), intent(inout) :: ILM
-      integer, dimension(NATYP,LMXSPD), intent(inout) :: LMSP
-      integer, dimension(20,NPOTD), intent(inout) :: LCORE
-      integer, dimension(NATYP,NFUND), intent(inout) :: LLMSP
-      integer, dimension(NATYP,LMXSPD), intent(inout) :: IFUNM
+      integer, dimension(NGSHD,3), intent(inout)         :: ILM
+      integer, dimension(NATYP,LMXSPD), intent(inout)    :: LMSP
+      integer, dimension(20,NPOTD), intent(inout)        :: LCORE
+      integer, dimension(NATYP,NFUND), intent(inout)     :: LLMSP
+      integer, dimension(NATYP,LMXSPD), intent(inout)    :: IFUNM
       integer, dimension(NATYP,NAEZ+NEMB), intent(inout) :: KAOEZ
-      integer, dimension(0:IPAND,NATYP), intent(inout) :: IRCUT
-      integer, dimension(20,NPOTD), intent(inout) :: ITITLE
+      integer, dimension(0:IPAND,NATYP), intent(inout)   :: IRCUT
+      integer, dimension(20,NPOTD), intent(inout)        :: ITITLE
       double precision, intent(inout) :: TK
       double precision, intent(inout) :: FCM
       double precision, intent(inout) :: EMIN
@@ -3142,25 +3090,25 @@ contains
       double precision, intent(inout) :: EMUSEMI
       double precision, intent(inout) :: EBOTSEMI
       double precision, intent(inout) :: LAMBDA_XC
-      double precision, dimension(NATYP), intent(inout) :: A
-      double precision, dimension(NATYP), intent(inout) :: B
-      double precision, dimension(2), intent(inout) :: VBC
-      double precision, dimension(NATYP), intent(inout) :: RWS
-      double precision, dimension(NGSHD), intent(inout) :: GSH
-      double precision, dimension(NATYP), intent(inout) :: ZAT
-      double precision, dimension(NATYP), intent(inout) :: RMT
-      double precision, dimension(NATYP), intent(inout) :: CONC
-      double precision, dimension(NATYP), intent(inout) :: RMTNEW
-      double precision, dimension(IRM,NATYP), intent(inout) :: R
-      double precision, dimension(IRM,NATYP), intent(inout) :: DRDI
-      double precision, dimension(IRM,NPOTD), intent(inout) :: VISP
-      double precision, dimension(20,NPOTD), intent(inout) :: ECORE
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: RMREL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: DRDIREL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: R2DRDIREL
-      double precision, dimension(LMPOT,NEMBD1), intent(inout) :: CMOMHOST
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS
-      double precision, dimension(IRID,NFUND,NCELLD), intent(inout) :: THETAS
+      double precision, dimension(NATYP), intent(inout)  :: A
+      double precision, dimension(NATYP), intent(inout)  :: B
+      double precision, dimension(2), intent(inout)      :: VBC
+      double precision, dimension(NATYP), intent(inout)  :: RWS
+      double precision, dimension(NGSHD), intent(inout)  :: GSH
+      double precision, dimension(NATYP), intent(inout)  :: ZAT
+      double precision, dimension(NATYP), intent(inout)  :: RMT
+      double precision, dimension(NATYP), intent(inout)  :: CONC
+      double precision, dimension(NATYP), intent(inout)  :: RMTNEW
+      double precision, dimension(IRM,NATYP), intent(inout)                :: R
+      double precision, dimension(IRM,NATYP), intent(inout)                :: DRDI
+      double precision, dimension(IRM,NPOTD), intent(inout)                :: VISP
+      double precision, dimension(20,NPOTD), intent(inout)                 :: ECORE
+      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: RMREL
+      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: DRDIREL
+      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: R2DRDIREL
+      double precision, dimension(LMPOT,NEMBD1), intent(inout)             :: CMOMHOST
+      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)  :: VINS
+      double precision, dimension(IRID,NFUND,NCELLD), intent(inout)        :: THETAS
       double complex, dimension(IEMXD), intent(inout) :: EZ
       double complex, dimension(IEMXD), intent(inout) :: WEZ
       character(len=124), dimension(5), intent(inout) :: TXC
@@ -3302,10 +3250,9 @@ contains
    !> in the t_params data types
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine save_emesh(IELAST,EZ,WEZ,EMIN,EMAX,IESEMICORE,FSEMICORE,   &
-      NPOL,TK,                                                           &
-      NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,                         &
-      NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IEMXD,t_params)
+   subroutine save_emesh(IELAST,EZ,WEZ,EMIN,EMAX,IESEMICORE,FSEMICORE,NPOL,TK,   &
+      NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,   &
+      IEMXD,t_params)
       ! save information of energy mesh in t_params
       implicit none
 
@@ -3360,11 +3307,9 @@ contains
    !> in the t_params data types
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine save_scfinfo(t_params,VINS,VISP,ECORE,VBC,RMREL,DRDIREL,  &
-      R2DRDIREL,ZREL,JWSREL,IRSHIFT,VTREL,BTREL,                        &
-      ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST,KREL,                       &
-      IRMIND,IRM,LMPOT,NSPOTD,NATYP,NPOTD,                              &
-      NEMBD1)
+   subroutine save_scfinfo(t_params,VINS,VISP,ECORE,VBC,RMREL,DRDIREL,R2DRDIREL, &
+      ZREL,JWSREL,IRSHIFT,VTREL,BTREL,ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST,KREL,&
+      IRMIND,IRM,LMPOT,NSPOTD,NATYP,NPOTD,NEMBD1)
       ! save information that is needed in next iteration and that is changeing, i.e. potential etc.
       implicit none
 
@@ -3423,11 +3368,9 @@ contains
    !> in the t_params data types
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine save_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT, &
-      ESPV,ECORE,IDOLDAU,LOPT,EU,EDC,                                &
-      CHRGSEMICORE,RHOORB,ECOREREL,NKCORE,                           &
-      KAPCORE,KREL,NATYP,NPOTD,IRM,LMPOT,                            &
-      LMAXD1)
+   subroutine save_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,ESPV,ECORE,  &
+      IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE,RHOORB,ECOREREL,NKCORE,KAPCORE,KREL,NATYP,&
+      NPOTD,IRM,LMPOT,LMAXD1)
       ! save density after it has been calculated in main1c, is further processed in main2
       implicit none
 
@@ -3483,11 +3426,9 @@ contains
    !> density in local variables
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine read_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT, &
-      ESPV,ECORE,IDOLDAU,LOPT,EU,EDC,                                &
-      CHRGSEMICORE,RHOORB,ECOREREL,NKCORE,                           &
-      KAPCORE,KREL,NATYP,NPOTD,IRM,LMPOT,                            &
-      LMAXD1)
+   subroutine read_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,ESPV,ECORE,  &
+      IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE,RHOORB,ECOREREL,NKCORE,KAPCORE,KREL,NATYP,&
+      NPOTD,IRM,LMPOT,LMAXD1)
       ! read density in main2
       implicit none
 
@@ -3610,6 +3551,5 @@ contains
       endif
 
    end subroutine read_angles
-
 
 end module mod_wunfiles

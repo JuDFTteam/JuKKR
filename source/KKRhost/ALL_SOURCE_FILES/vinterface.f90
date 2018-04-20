@@ -1,4 +1,3 @@
-!*==vinterface.f    processed by SPAG 6.05Rc at 16:57 on  1 Feb 2002
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: VINTERFACE
 !> @brief This is calculating the intra-atomic contibution of the potential in
@@ -25,13 +24,12 @@
 !>
 !> - Jonathan Chico Feb. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NLAYERS,NATYP,V,ZAT, &
-      R,IRWS,IRCUT,IPAN,KSHAPE,NOQ,KAOEZ,IQAT,                    &
-      CONC,CATOM,ICC,HOSTIMP,                                     &
-      NLBASIS,NLEFT,NRBASIS,NRIGHT,                               &
-      CMOMHOST,CHRGNT,VINTERS)
+subroutine VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NLAYERS,NATYP,V,ZAT,R,IRWS,IRCUT,   &
+   IPAN,KSHAPE,NOQ,KAOEZ,IQAT,CONC,CATOM,ICC,HOSTIMP,NLBASIS,NLEFT,NRBASIS,      &
+   NRIGHT,CMOMHOST,CHRGNT,VINTERS,IRM,NAEZ,LMPOT,NPOTD,NEMBD1)
 
    use Constants
+   use global_variables
 
    implicit none
 
@@ -72,7 +70,7 @@ subroutine VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NLAYERS,NATYP,V,ZAT, &
    ! .. Local variables
    integer :: ILEFT,IRIGHT
    integer :: I,IATOM,IB,IH1,ILAY1,ILAY2,IO2
-   integer :: IPOT,IRS1,ISPIN,IT1,IT2,L,LM,LM2,LMPOT,M
+   integer :: IPOT,IRS1,ISPIN,IT1,IT2,L,LM,LM2,M
    integer :: LRECAMAD,IREC,NLEFTOFF,NRIGHTOFF,NLEFTALL,NRIGHTALL
    double precision :: CM1,FPI
    logical :: OPT,TEST,LREAD
@@ -92,10 +90,10 @@ subroutine VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NLAYERS,NATYP,V,ZAT, &
    inquire(FILE='avmad.unformatted',EXIST=LREAD) ! ewald2d
 
    if (LREAD) then
-      LRECAMAD = WLENGTH*2*LMPOTD*LMPOTD
+      LRECAMAD = WLENGTH*2*LMPOT*LMPOT
       open (69,ACCESS='direct',RECL=LRECAMAD,FILE='avmad.unformatted',FORM='unformatted')
    else
-      LRECAMAD = WLENGTH*2*LMPOTD*LMPOTD + WLENGTH*2*LMPOTD
+      LRECAMAD = WLENGTH*2*LMPOT*LMPOT + WLENGTH*2*LMPOT
       open (69,ACCESS='direct',RECL=LRECAMAD,FILE='abvmad.unformatted',FORM='unformatted')
    endif
 
@@ -103,7 +101,6 @@ subroutine VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NLAYERS,NATYP,V,ZAT, &
    write(1337,FMT=99002)
 
    FPI = 4.D0*PI
-   LMPOT = (LPOT+1)**2
 
    if ( OPT('DECIMATE') ) then
       !-------------------------------------------------------------------------
@@ -290,7 +287,7 @@ subroutine VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NLAYERS,NATYP,V,ZAT, &
       !-------------------------------------------------------------------------
       if ( ICC.GT.0  .or. OPT('KKRFLEX ')) then
          do L = 0,LPOT
-            so M = -L,L
+            do M = -L,L
                LM = L*L + L + M + 1
                VINTERS(LM,ILAY1) = AC(LM)
             end do

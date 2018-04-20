@@ -26,13 +26,13 @@ contains
    !> and many others ...
    !----------------------------------------------------------------------------
    subroutine main1a(INS,LLY,IRM,LM2D,ICST,IEND,NCLS,LMAX,NREF,NSRA,KREL,NEMB,   &
-      LPOT,NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,LMPOT,IPAND,NINEQ,NSPIN,NCHEB,    &
-      LMGF0D,LMMAXD,IELAST,NRMAXD,IRMIND,NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS,IQAT,   &
-      IRWS,NACLS,REFPOT,ATOM,ZAT,VREF,RMTREF,RCLS,SOLVER,SOCSCL,SOCSCALE,CSCL,   &
-      NTLDAU,IDOLDAU,ITLDAU,UEFF,JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,ICLEB,IRCUT,      &
-      IPAN_INTERVALL,PHI,THETA,CLEB,VISP,DRDI,RNEW,RMESH,RPAN_INTERVALL,VINS,EZ, &
-      ZREL,JWSREL,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ITRUNLDAU,LOPT,EREFLDAU,   &
-      WLDAU,ULDAU,PHILDAU)
+      LPOT,NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,LMPOT,IPAND,NINEQ,NSPIN,     &
+      NCHEB,LMGF0D,LMMAXD,IELAST,NRMAXD,IRMIND,NATOMIMP,ALAT,R_LOG,TOLRDIF,      &
+      DELTAE,CLS,IQAT,IRWS,NACLS,REFPOT,ATOM,ZAT,VREF,RMTREF,RCLS,SOLVER,SOCSCL, &
+      SOCSCALE,CSCL,NTLDAU,IDOLDAU,ITLDAU,UEFF,JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,    &
+      ICLEB,IRCUT,IPAN_INTERVALL,CLEB,VISP,DRDI,RNEW,RMESH,            &
+      RPAN_INTERVALL,VINS,EZ,ZREL,JWSREL,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,    &
+      ITRUNLDAU,LOPT,EREFLDAU,WLDAU,ULDAU,PHILDAU)
 
 #ifdef CPP_MPI
       use mpi
@@ -57,19 +57,7 @@ contains
       use mod_wunfiles
       use mod_jijhelp, only: set_Jijcalc_flags
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! For KREL = 1 (relativistic mode)
-      !
-      !  NPOTD = 2 * NATYP
-      !  LMMAXD = 2 * (LMAX+1)^2
-      !  NSPIND = 1
-      !  LMGF0D = (LMAX+1)^2 dimension of the reference system Green
-      !          function, set up in the spin-independent non-relativstic
-      !          (l,m_l)-representation
-      !
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !     ..
-      !     .. Input variables
+      ! .. Input variables
       integer, intent(inout) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
       integer, intent(inout) :: LLY       !< LLY <> 0: apply Lloyds formula
       integer, intent(inout) :: IRM       !< Maximum number of radial points
@@ -140,8 +128,6 @@ contains
       integer, dimension(NCLEB,4), intent(inout)                           :: ICLEB !< Pointer array
       integer, dimension(0:IPAND,NATYP), intent(inout)                     :: IRCUT !< R points of panel borders
       integer, dimension(0:NTOTD,NATYP), intent(inout)                     :: IPAN_INTERVALL
-      double precision, dimension(NATYP), intent(inout)                    :: PHI
-      double precision, dimension(NATYP), intent(inout)                    :: THETA
       double precision, dimension(NCLEB,2), intent(inout)                  :: CLEB  !< GAUNT coefficients (GAUNT)
       double precision, dimension(IRM,NPOTD), intent(inout)                :: VISP  !< Spherical part of the potential
       double precision, dimension(IRM,NATYP), intent(inout)                :: DRDI  !< Derivative dr/di
@@ -186,11 +172,9 @@ contains
       integer, dimension(NATYP) :: NPAN_EQ
       integer, dimension(NATYP) :: NPAN_LOG
       integer, dimension(NATYP) :: NPAN_TOT
+      double precision, dimension(NATYP) :: PHI
+      double precision, dimension(NATYP) :: THETA
       double precision, dimension(:,:,:), allocatable :: VINSNEW
-
-      ! Assignment of values to parameters
-      !parameter (LRECTMT=WLENGTH*4*LMMAXD*LMMAXD)
-      !parameter (LRECTRA=WLENGTH*4)
 
 #ifdef CPP_MPI
       integer :: ntot1, mytot, ii

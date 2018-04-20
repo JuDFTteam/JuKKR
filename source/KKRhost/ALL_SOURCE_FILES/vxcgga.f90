@@ -30,28 +30,28 @@
 !> - R. Zeller 23/6/1996: cor error
 !> - Jonathan Chico: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,&
-      IRWS,IRCUT,IPAN,KSHAPE,GSH,ILM,IMAXSH,&
-      IFUNM,THETAS,WTYR,IJEND,LMSP,THET,YLM,DYLMT1,&
-      DYLMT2,DYLMF1,DYLMF2,DYLMTF,NGSHD,LMPOT,NFUND,LMXSPD)
+subroutine VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,IRWS,IRCUT,IPAN,&
+   KSHAPE,GSH,ILM,IMAXSH,IFUNM,THETAS,WTYR,IJEND,LMSP,THET,YLM,DYLMT1,DYLMT2,    &
+   DYLMF1,DYLMF2,DYLMTF,LMPOT,LMXSPD,LMMAX,IRM,LPOT,NATYP)
 
    use Constants
+   use global_variables
 
    implicit none
 
    ! .. Input variables
+   integer, intent(in) :: IRM    !< Maximum number of radial points
    integer, intent(in) :: KTE    !< Calculation of the total energy On/Off (1/0)
    integer, intent(in) :: KXC    !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
    integer, intent(in) :: LMAX   !< Maximum l component in wave function expansion
    integer, intent(in) :: IRWS   !< IATYP Entry in the IRWS array with the R point at WS radius
    integer, intent(in) :: IPAN   !< IATYP Entry in the IPAN array with the number of panels in non-MT-region
+   integer, intent(in) :: LPOT   !< Maximum l component in potential expansion
+   integer, intent(in) :: NATYP  !< Number of kinds of atoms in unit cell
    integer, intent(in) :: IATYP
    integer, intent(in) :: IJEND
-   integer, intent(in) :: NGSHD  !< Shape functions parameters in non-spherical part
    integer, intent(in) :: LMPOT  !< (LPOT+1)**2
-   integer, intent(in) :: NFUND
    integer, intent(in) :: NSPIN  !< Counter for spin directions
-   integer, intent(in) :: IPAND  !< Number of panels in non-spherical part
    integer, intent(in) :: LMMAX  !< (LMAX+1)^2
    integer, intent(in) :: KSHAPE !< Exact treatment of WS cell
    integer, intent(in) :: LMXSPD !< (2*LPOT+1)**2
@@ -60,7 +60,7 @@ subroutine VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,&
    integer, dimension(LMXSPD), intent(in)    :: LMSP  !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
    integer, dimension(0:IPAND), intent(in)   :: IRCUT !< R points of panel borders
    integer, dimension(LMXSPD), intent(in)    :: IFUNM
-   integer, dimension(0:LMPOTD), intent(in)  :: IMAXSH
+   integer, dimension(0:LMPOT), intent(in)   :: IMAXSH
    integer, dimension(NGSHD,3), intent(in)   :: ILM
    double precision, dimension(IRM), intent(in)    :: R  !< IATYP entry of the radial mesh ( in units a Bohr)
    double precision, dimension(NGSHD), intent(in)  :: GSH
@@ -81,7 +81,7 @@ subroutine VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,&
    ! .. Local Scalars
    double precision :: VXC1,VXC2,VXC3,ZERO,ZERO1
    double precision :: CHGDEN,DX,ELMXC,FPI,R1,R2,RPOINT,SPIDEN,VLMXC
-   integer :: LM2,LMMAX,M,MESH,NSPIN2
+   integer :: LM2,M,MESH,NSPIN2
    integer :: IFUN,IPAN1,IPOT,IR,IRC0,IRC1,IRH,IRS1,ISPIN,J,L,L1MAX,LM
    ! .. Local Arrays
    double precision, dimension(IJEND) :: EXCIJ
@@ -185,7 +185,7 @@ subroutine VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,&
    end if
 
    call GRADRL(NSPIN,MESH,L1MAX,DX,RHOL,R,DRDI,IPAN1,IPAND,IRCUT, &
-      DRRL,DDRRL,DRRUL,DDRRUL,IRMD,LMPOTD)
+      DRRL,DDRRL,DRRUL,DDRRUL,IRM,LMPOT)
 
    !----------------------------------------------------------------------------
    ! Loop over radial mesh
@@ -209,17 +209,17 @@ subroutine VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,&
       if(KXC.EQ.3)then
          call MKXCPE(NSPIN2,IR,IJEND,L1MAX,RPOINT,RHOLM,VXC,EXCIJ,   &
             THET,YLM,DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF,DRRL,        &
-            DDRRL,DRRUL,DDRRUL,IRMD,LMPOTD)
+            DDRRL,DRRUL,DDRRUL,IRM,LMPOT)
       ! PBE functional
       elseif(KXC.EQ.4)then
          CALL MKXCPE2(IR,IJEND,RPOINT,RHOLM,VXC,EXCIJ,YLM,DYLMT1, &
             DYLMF1,DYLMF2,DYLMTF,DRRL,DDRRL,DRRUL,DDRRUL,         &
-            IRMD,LMPOTD,LMMAX,.false.)
+            IRM,LMPOT,LMMAX,.false.)
       ! PBEsol functional
       elseif(KXC.EQ.5)then
          call MKXCPE2(IR,IJEND,RPOINT,RHOLM,VXC,EXCIJ,YLM,DYLMT1, &
             DYLMF1,DYLMF2,DYLMTF,DRRL,DDRRL,DRRUL,DDRRUL,         &
-            IRMD,LMPOTD,LMMAX,.true.)
+            IRM,LMPOT,LMMAX,.true.)
       else
          write(1337,*) ' KXC ???'
          stop
