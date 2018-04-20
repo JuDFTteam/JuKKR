@@ -923,7 +923,7 @@ contains
                DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),      &
                angles_new(:,i1),                                        &
                IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),          &  ! LDAU
-               DENMATN(1,1,1,1,I1))                                        ! LDAU
+               DENMATN(1,1,1,1,I1),NATYP)                                  ! LDAU
 
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhovalnew')

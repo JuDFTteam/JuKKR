@@ -6,7 +6,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,SOCSCALE,CLEB,ICLEB,IEND,IFUNM,    &
    LMSP,NCHEB,NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,RPAN_INTERVALL,IPAN_INTERVALL,&
    RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,DEN_out,ESPV,RHO2NS,R2NEF,MUORB,     &
-   angles_new,IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATN)
+   angles_new,IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATN,NATYP)
 
 #ifdef CPP_OMP
    use omp_lib
@@ -43,6 +43,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    integer, intent(in) :: IPOT
    integer, intent(in) :: IRWS      !< R point at WS radius for a given atom
    integer, intent(in) :: LOPT      !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+   integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
    integer, intent(in) :: NSPIN     !< Counter for spin directions
    integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
    integer, intent(in) :: LMPOT     !< (LPOT+1)**2
@@ -390,27 +391,27 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
 
 #ifdef CPP_OMP
    ! omp: start parallel region here
-   !$omp parallel do default(none)
-   !$omp& private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)
-   !$omp& private(jlk_index,tmatll,ith)
-   !$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
-   !$omp& private(rho2ns_temp,rho2,temp1,jspin)
-   !$omp& private(alphasph,alphall,ie_num)
-   !$omp& private(rll_was_read_in, sll_was_read_in)
-   !$omp$ private(rllleft_was_read_in, sllleft_was_read_in)
-   !!$omp& firstprivate(t_inc)
-   !$omp& shared(t_inc)
-   !$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
-   !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
-   !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
-   !$omp& shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)
-   !$omp& shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)
-   !$omp& shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)
-   !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)
-   !$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
-   !$omp& shared(t_tgmat,ie_end, ie_start, t_wavefunctions)
-   !$omp& reduction(+:rho2int,espv) reduction(-:muorb)
-   !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
+   !$omp parallel do default(none)                                         &
+   !$omp private(eryd,ie,ir,irec,lm1,lm2,gmatprefactor,nvec)               &
+   !$omp private(jlk_index,tmatll,ith)                                     &
+   !$omp private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)              &
+   !$omp private(rho2ns_temp,rho2,temp1,jspin)                             &
+   !$omp private(alphasph,alphall,ie_num)                                  &
+   !$omp private(rll_was_read_in, sll_was_read_in)                         &
+   !$omp private(rllleft_was_read_in, sllleft_was_read_in)                 &
+   !!$omp firstprivate(t_inc)                                              &
+   !$omp shared(t_inc)                                                     &
+   !$omp shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)      &
+   !$omp shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)             &
+   !$omp shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)           &
+   !$omp shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)    &
+   !$omp shared(rpan_intervall,vinsnew,ipan_intervall,r2nefc_loop)         &
+   !$omp shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)               &
+   !$omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)         &
+   !$omp shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)        &
+   !$omp shared(t_tgmat,ie_end, ie_start, t_wavefunctions)                 &
+   !$omp reduction(+:rho2int,espv) reduction(-:muorb)                      &
+   !$omp reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
 #endif
    do ie_num=1,ie_end
       IE = ie_start+ie_num
