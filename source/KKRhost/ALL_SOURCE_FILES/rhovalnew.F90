@@ -410,6 +410,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    !$omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)         &
    !$omp shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)        &
    !$omp shared(t_tgmat,ie_end, ie_start, t_wavefunctions)                 &
+   !$omp shared(LMMAXSO,LMMAXD,LMPOT,NRMAXD,NTOTD,LMAXD1)                  &
    !$omp reduction(+:rho2int,espv) reduction(-:muorb)                      &
    !$omp reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
 #endif
