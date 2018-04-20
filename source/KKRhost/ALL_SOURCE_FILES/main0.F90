@@ -449,7 +449,7 @@ contains
                         ' Compile options:', trim(version2), trim(version3),  &
                            trim(version4),                                    &
                         ' serial number for files: ', serialnr
-      2004  format('(/79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)//2A/79(1H*)/)' )
+      2004  format(/79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A/)//2A/79(1H*)/)
 
 !#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
 #ifdef cpp_ompstuff
