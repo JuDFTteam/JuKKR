@@ -14,6 +14,7 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    use mod_mympi, only: myrank, nranks, master,find_dims_2d,distribute_linear_on_tasks
 #endif
    use Constants
+   use Profiling
    use global_variables
 
    implicit  none

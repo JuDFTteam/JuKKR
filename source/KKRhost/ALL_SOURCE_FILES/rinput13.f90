@@ -297,7 +297,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
 
    IPRINT = 0
 
-   OPEN(111,FILE='inputcard_generated.txt') ! Write out found or assumed values
+   open(111,FILE='inputcard_generated.txt') ! Write out found or assumed values
    call version_print_header(111)
 
    NEMB = 0
@@ -305,115 +305,115 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Read RUNNING options
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   CALL IoInput('RUNOPT          ',UIO,1,7,IER)
-   IF (IER.NE.0) THEN
-      WRITE(111,*) 'RUNOPT not found'
-   ELSE
-      READ (UNIT=UIO,FMT=980)(t_params%OPTC(I),I=1,8)
-      WRITE(111,FMT='(A6)') 'RUNOPT'
-      WRITE(111,FMT=980)  (t_params%OPTC(I),I=1,8)
-   ENDIF
+   call IoInput('RUNOPT          ',UIO,1,7,IER)
+   if (IER.NE.0) then
+      write(111,*) 'RUNOPT not found'
+   else
+      read (UNIT=UIO,FMT=980)(t_params%OPTC(I),I=1,8)
+      write(111,FMT='(A6)') 'RUNOPT'
+      write(111,FMT=980)  (t_params%OPTC(I),I=1,8)
+   endif
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Read TEST options
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   CALL IoInput('TESTOPT         ',UIO,1,7,IER)
-   IF (IER.NE.0) THEN
-      WRITE(111,*) 'TESTOPT not found'
-   ELSE
-      READ(UNIT=UIO,FMT=980)(t_params%TESTC(i),i=1,8)
-      CALL IoInput('TESTOPT         ',UIO,2,7,IER)
-      READ(UNIT=UIO,FMT=980)(t_params%TESTC(8+i),i=1,8)
-      WRITE(111,FMT='(A7)') 'TESTOPT'
-      WRITE(111,FMT=980)(t_params%TESTC(i),i=1,8)
-      WRITE(111,FMT=980)(t_params%TESTC(8+i),i=1,8)
-   ENDIF
+   call IoInput('TESTOPT         ',UIO,1,7,IER)
+   if (IER.NE.0) then
+      write(111,*) 'TESTOPT not found'
+   else
+      read(UNIT=UIO,FMT=980)(t_params%TESTC(i),i=1,8)
+      call IoInput('TESTOPT         ',UIO,2,7,IER)
+      read(UNIT=UIO,FMT=980)(t_params%TESTC(8+i),i=1,8)
+      write(111,FMT='(A7)') 'TESTOPT'
+      write(111,FMT=980)(t_params%TESTC(i),i=1,8)
+      write(111,FMT=980)(t_params%TESTC(8+i),i=1,8)
+   endif
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Begin lattice structure definition
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   CALL IoInput('ALATBASIS       ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) ALAT
-      WRITE(111,*) 'ALATBASIS=',ALAT
-   ELSE
-      WRITE(111,*) 'ALATBASIS not found in inputcard'
-      WRITE(*,*) 'rinput13: ALATBASIS not found in inputcard'
-      STOP 'rinput13: ALATBASIS not found in inputcard'
-   ENDIF
+   call IoInput('ALATBASIS       ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) ALAT
+      write(111,*) 'ALATBASIS=',ALAT
+   else
+      write(111,*) 'ALATBASIS not found in inputcard'
+      write(*,*) 'rinput13: ALATBASIS not found in inputcard'
+      stop 'rinput13: ALATBASIS not found in inputcard'
+   endif
 
    ! Set 2-d or 3-d geometry
    LINTERFACE = .FALSE.
-   CALL IoInput('INTERFACE       ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) LINTERFACE
-      WRITE(111,*) 'INTERFACE=',LINTERFACE
-   ELSE
-      WRITE(111,*) 'Default INTERFACE= ',LINTERFACE
-   ENDIF
+   call IoInput('INTERFACE       ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) LINTERFACE
+      write(111,*) 'INTERFACE=',LINTERFACE
+   else
+      write(111,*) 'Default INTERFACE= ',LINTERFACE
+   endif
 
    NDIM = 3
-   IF (LINTERFACE) NDIM = 2
-   IF (.NOT.LINTERFACE.AND..NOT.OPT('SUPRCELL')) THEN
-      WRITE(1337,*) '3D-calculation, adding run-option "full inv" for full inversion.'
-      CALL ADDOPT('full inv')
-   ENDIF
+   if (LINTERFACE) NDIM = 2
+   if (.NOT.LINTERFACE.AND..NOT.OPT('SUPRCELL')) then
+      write(1337,*) '3D-calculation, adding run-option "full inv" for full inversion.'
+      call ADDOPT('full inv')
+   endif
 
-   IF (OPT('WRTGREEN')) THEN
-      WRITE(1337,*) 'WRTGREEN option found'
-      WRITE(1337,*) 'adding run-opt "full inv" for full inversion.'
-      WRITE(1337,*) 'adding run-opt "fix mesh"'
-      CALL ADDOPT('full inv')
-      CALL ADDOPT('fix mesh')
-   END IF
+   if (OPT('WRTGREEN')) then
+      write(1337,*) 'WRTGREEN option found'
+      write(1337,*) 'adding run-opt "full inv" for full inversion.'
+      write(1337,*) 'adding run-opt "fix mesh"'
+      call ADDOPT('full inv')
+      call ADDOPT('fix mesh')
+   end if
 
-   WRITE(111,*) 'Bravais vectors in units of ALAT'
+   write(111,*) 'Bravais vectors in units of ALAT'
    BRAVAIS(1:3,1:3) = 0D0
-   DO I = 1,NDIM
-      CALL IOINPUT('BRAVAIS         ',UIO,I,7,IER)
-      IF (IER.NE.0) STOP 'RINPUT: BRAVAIS NOT FOUND'
-      READ (UNIT=UIO,FMT=*) (BRAVAIS(J,I),J=1,NDIM)
-   END DO
-   WRITE(111,FMT='(A7)') 'BRAVAIS'
-   DO I = 1,NDIM
-      WRITE(111,*) (BRAVAIS(J,I),J=1,NDIM)
+   do I = 1,NDIM
+      call IOINPUT('BRAVAIS         ',UIO,I,7,IER)
+      if (IER.NE.0) stop 'RINPUT: BRAVAIS NOT FOUND'
+      read (UNIT=UIO,FMT=*) (BRAVAIS(J,I),J=1,NDIM)
+   end do
+   write(111,FMT='(A7)') 'BRAVAIS'
+   do I = 1,NDIM
+      write(111,*) (BRAVAIS(J,I),J=1,NDIM)
    ENDDO
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Read the number of atoms in the unit cell
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   CALL IoInput('NAEZ            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NAEZ
-      WRITE(111,*) 'NAEZ=',NAEZ
-   ELSE
-      WRITE(111,*) 'NAEZ not found'
-      STOP 'NAEZ not found in <RINPUT13>'
-   ENDIF
-   !IF (NAEZ.GT.NAEZD) THEN
-   !   WRITE(6,*) ' set NAEZD to at least ',NAEZ
-   !   STOP ' in < RINPUT13 > '
-   !END IF
+   call IoInput('NAEZ            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NAEZ
+      write(111,*) 'NAEZ=',NAEZ
+   else
+      write(111,*) 'NAEZ not found'
+      stop 'NAEZ not found in <RINPUT13>'
+   endif
+   !if (NAEZ.GT.NAEZD) then
+   !   write(6,*) ' set NAEZD to at least ',NAEZ
+   !   stop ' in < RINPUT13 > '
+   !end if
 
    NREF=NAEZ
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Read the atom types, if no CPA NATYP=NAEZ
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    NATYP = NAEZ
-   CALL IoInput('NATYP           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NATYP
-      WRITE(111,*) 'NATYP=',NATYP
-   ELSE
-      WRITE(111,*) 'Default NATYP= ',NAEZ
-   ENDIF
-   !IF (NATYP.GT.NATYPD) THEN
-   !   WRITE(6,*) 'RINPUT13: NATYP > NATYPD',NATYP,NATYPD
-   !   STOP ' IN < RINPUT13 > '
-   !END IF
-   IF (NATYP.LT.NAEZ) THEN
-      WRITE(6,*) 'RINPUT13: NATYP < NAEZ ',NATYP,NAEZ
-      STOP ' IN < RINPUT13 > '
-   END IF
+   call IoInput('NATYP           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NATYP
+      write(111,*) 'NATYP=',NATYP
+   else
+      write(111,*) 'Default NATYP= ',NAEZ
+   endif
+   !if (NATYP.GT.NATYPD) then
+   !   write(6,*) 'RINPUT13: NATYP > NATYPD',NATYP,NATYPD
+   !   stop ' IN < RINPUT13 > '
+   !end if
+   if (NATYP.LT.NAEZ) then
+      write(6,*) 'RINPUT13: NATYP < NAEZ ',NATYP,NAEZ
+      stop ' IN < RINPUT13 > '
+   end if
 
    allocate(ISP(NATYP),stat=i_stat)
    call memocc(i_stat,product(shape(ISP))*kind(ISP),'ISP','rinput13')
@@ -421,69 +421,69 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
 
    LCARTESIAN = .FALSE.
    IER = 0
-   CALL IOINPUT('CARTESIAN       ',UIO,1,7,IER)
-   IF ( IER.EQ.0 ) THEN
-      READ (UNIT=UIO,FMT=*) LCARTESIAN
-      WRITE(111,*) 'CARTESIAN= ',LCARTESIAN
-   ELSE
-      WRITE(111,*) 'Default CARTESIAN= ',LCARTESIAN
-   ENDIF
+   call IOINPUT('CARTESIAN       ',UIO,1,7,IER)
+   if ( IER.EQ.0 ) then
+      read (UNIT=UIO,FMT=*) LCARTESIAN
+      write(111,*) 'CARTESIAN= ',LCARTESIAN
+   else
+      write(111,*) 'Default CARTESIAN= ',LCARTESIAN
+   endif
 
    ! Jonathan Chico: This call needs to be done before the rest as one needs to
    ! find out the value of NEMB to be able to allocate several arrays
-   IF (LINTERFACE) THEN
-      WRITE(1337,9410)
+   if (LINTERFACE) then
+      write(1337,9410)
 
       NRIGHT = 10
-      CALL IoInput('NRIGHTHO        ',UIO,1,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) NRIGHT
-         WRITE(111,*) 'NRIGHTHO=',NRIGHT
-      ELSE
-         WRITE(111,*) 'Default NRIGHTHO=',NRIGHT
-      ENDIF
+      call IoInput('NRIGHTHO        ',UIO,1,7,IER)
+      if (IER.EQ.0) then
+         read (UNIT=UIO,FMT=*) NRIGHT
+         write(111,*) 'NRIGHTHO=',NRIGHT
+      else
+         write(111,*) 'Default NRIGHTHO=',NRIGHT
+      endif
 
       NLEFT = 10
-      CALL IoInput('NLEFTHOS        ',UIO,1,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) NLEFT
-         WRITE(111,*) 'NLEFTHOS=',NLEFT
-      ELSE
-         WRITE(111,*) 'Default NLEFTHOS=',NLEFT
-      ENDIF
+      call IoInput('NLEFTHOS        ',UIO,1,7,IER)
+      if (IER.EQ.0) then
+         read (UNIT=UIO,FMT=*) NLEFT
+         write(111,*) 'NLEFTHOS=',NLEFT
+      else
+         write(111,*) 'Default NLEFTHOS=',NLEFT
+      endif
 
-      CALL IoInput('<NLBASIS>       ',UIO,1,7,IER)
-      IF (IER.NE.0) THEN
-         WRITE(1337,*) 'rinput13: <NLBASIS> not found in inputcard'
+      call IoInput('<NLBASIS>       ',UIO,1,7,IER)
+      if (IER.NE.0) then
+         write(1337,*) 'rinput13: <NLBASIS> not found in inputcard'
          IER = 0
-         CALL IoInput('NLBASIS         ',UIO,1,7,IER)
-         IF (IER.NE.0) THEN
-            WRITE(*,*) 'rinput13: NLBASIS also not found in inputcard'
-            STOP 'rinput13: NLBASIS not found in inputcard'
-         ENDIF
-      ENDIF
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) NLBASIS
-         WRITE(111,*) '<NLBASIS>=',NLBASIS
-      ENDIF
+         call IoInput('NLBASIS         ',UIO,1,7,IER)
+         if (IER.NE.0) then
+            write(*,*) 'rinput13: NLBASIS also not found in inputcard'
+            stop 'rinput13: NLBASIS not found in inputcard'
+         endif
+      endif
+      if (IER.EQ.0) then
+         read (UNIT=UIO,FMT=*) NLBASIS
+         write(111,*) '<NLBASIS>=',NLBASIS
+      endif
 
-      CALL IoInput('<NRBASIS>       ',UIO,1,7,IER)
-      IF (IER.NE.0) THEN
-         WRITE(1337,*) 'rinput13: <NRBASIS> not found in inputcard'
+      call IoInput('<NRBASIS>       ',UIO,1,7,IER)
+      if (IER.NE.0) then
+         write(1337,*) 'rinput13: <NRBASIS> not found in inputcard'
          IER = 0
-         CALL IoInput('NRBASIS         ',UIO,1,7,IER)
-         IF (IER.NE.0) THEN
-            WRITE(*,*) 'rinput13: NRBASIS also not found in inputcard'
-            STOP 'rinput13: NRBASIS not found in inputcard'
-         ENDIF
-      ENDIF
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) NRBASIS
-         WRITE(111,*) '<NRBASIS>=',NRBASIS
-      ENDIF
+         call IoInput('NRBASIS         ',UIO,1,7,IER)
+         if (IER.NE.0) then
+            write(*,*) 'rinput13: NRBASIS also not found in inputcard'
+            stop 'rinput13: NRBASIS not found in inputcard'
+         endif
+      endif
+      if (IER.EQ.0) then
+         read (UNIT=UIO,FMT=*) NRBASIS
+         write(111,*) '<NRBASIS>=',NRBASIS
+      endif
 
       NEMB = NLBASIS + NRBASIS
-      WRITE(1337,*) 'Number of embedded atoms NEMB=NLBASIS + NRBASIS=',NEMB
+      write(1337,*) 'Number of embedded atoms NEMB=NLBASIS + NRBASIS=',NEMB
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Allocate the right and left hosts for slab calculation
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -491,39 +491,39 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! End of allocation of the right and left hosts for slab calculation
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !IF(NEMB.GT.NEMBD) THEN
+      !if(NEMB.GT.NEMBD) then
       !   write(6,*) 'Please, increase the parameter nembd (',nembd,') in inc.p to',nemb
-      !   STOP 'ERROR in NEMBD.'
-      !ENDIF
+      !   stop 'ERROR in NEMBD.'
+      !endif
 
       IER = 0
       ! Check if the keywords exist for old/new treatment of left and right host
-      CALL IoInput('LEFTBASIS       ',UIO,1,7,IER)
-      IF (IER.EQ.0) THEN
+      call IoInput('LEFTBASIS       ',UIO,1,7,IER)
+      if (IER.EQ.0) then
          LNEW = .FALSE.
-      ELSE
+      else
          LNEW = .TRUE.
          IER = 0
-         CALL IoInput('<RBLEFT>        ',UIO,1,7,IER)
-      ENDIF
-      IF (IER.NE.0) THEN
-         WRITE(*,*) 'rinput13: LEFTBASIS or <RBLEFT> not found in inputcard'
-         STOP 'rinput13: LEFTBASIS or <RBLEFT> not found in inputcard'
-      ENDIF
+         call IoInput('<RBLEFT>        ',UIO,1,7,IER)
+      endif
+      if (IER.NE.0) then
+         write(*,*) 'rinput13: LEFTBASIS or <RBLEFT> not found in inputcard'
+         stop 'rinput13: LEFTBASIS or <RBLEFT> not found in inputcard'
+      endif
       IER = 0
-      CALL IoInput('RIGHBASIS       ',UIO,1,7,IER)
-      IF (IER.EQ.0) THEN
+      call IoInput('RIGHBASIS       ',UIO,1,7,IER)
+      if (IER.EQ.0) then
          LNEW = .FALSE.
-      ELSE
+      else
          LNEW = .TRUE.
          IER = 0
-         CALL IoInput('<RBRIGHT>       ',UIO,1,7,IER)
-      ENDIF
-      IF (IER.NE.0) THEN
-         WRITE(*,*) 'rinput13: RIGHBASIS or <RBRIGHT> not found in inputcard'
-         STOP 'rinput13: RIGHBASIS or <RBRIGHT> not found in inputcard'
-      ENDIF
-   ENDIF
+         call IoInput('<RBRIGHT>       ',UIO,1,7,IER)
+      endif
+      if (IER.NE.0) then
+         write(*,*) 'rinput13: RIGHBASIS or <RBRIGHT> not found in inputcard'
+         stop 'rinput13: RIGHBASIS or <RBRIGHT> not found in inputcard'
+      endif
+   endif
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Allocate the unit cell arrays
@@ -535,109 +535,109 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    ! Basis atoms
-   WRITE(111,FMT='(A16)') '<RBASIS>        '
-   DO I=1,NAEZ
-      CALL IoInput('<RBASIS>        ',UIO,I,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
-         WRITE(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
-      ELSE
+   write(111,FMT='(A16)') '<RBASIS>        '
+   do I=1,NAEZ
+      call IoInput('<RBASIS>        ',UIO,I,7,IER)
+      if (IER.EQ.0) then
+         read (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
+         write(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
+      else
          IER=0
-         CALL IoInput('RBASIS          ',UIO,I,7,IER)
-         IF (IER.EQ.0) THEN
-            READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
-            WRITE(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
-         ELSE
-            WRITE(*,*) 'RINPUT13: Keyword <RBASIS> or RBASIS not found. Stopping.'
-            STOP 'RINPUT13: RBASIS'
-         ENDIF
-      ENDIF
+         call IoInput('RBASIS          ',UIO,I,7,IER)
+         if (IER.EQ.0) then
+            read (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
+            write(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
+         else
+            write(*,*) 'RINPUT13: Keyword <RBASIS> or RBASIS not found. Stopping.'
+            stop 'RINPUT13: RBASIS'
+         endif
+      endif
    ENDDO                         ! I=1,NAEZ
-   CALL IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
+   call IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
 
    DVEC(1:3) = 1.D0
-   CALL IoInput('BASISCALE       ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) (DVEC(I),I=1,3)
-      WRITE(111,FMT='(A10,3E12.4)') 'BASISCALE=',DVEC(1:3)
-   ELSE
-      WRITE(111,FMT='(A18,3E12.4)') 'Default BASISCALE=',DVEC(1:3)
-   ENDIF
+   call IoInput('BASISCALE       ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) (DVEC(I),I=1,3)
+      write(111,FMT='(A10,3E12.4)') 'BASISCALE=',DVEC(1:3)
+   else
+      write(111,FMT='(A18,3E12.4)') 'Default BASISCALE=',DVEC(1:3)
+   endif
 
-   CALL IDREALS(DVEC(1),3,IPRINT)
+   call IDREALS(DVEC(1),3,IPRINT)
    ABASIS = DVEC(1)
    BBASIS = DVEC(2)
    CBASIS = DVEC(3)
 
-   WRITE(1337,2019) ABASIS,BBASIS,CBASIS
-   WRITE(1337,2107)
-   WRITE(1337,2014) ALAT
+   write(1337,2019) ABASIS,BBASIS,CBASIS
+   write(1337,2107)
+   write(1337,2014) ALAT
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Begin read left- and right-host information in 2d-case.
    ! Set up the embeding positions
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   IF (LINTERFACE) THEN
+   if (LINTERFACE) then
       !-------------------------------------------------------------------------
       !> @note In leftbasis and rightbasis, kaoez is used only in decimation case.
       !> Then it indicates the correspondence of the atom-coordinate given
       !> by leftbasis and rightbasis to the left- and right-host t-matrix read in
       !> by decimaread. For the slab case, kaoez is not used in the embedded positions.
       !-------------------------------------------------------------------------
-      IF (LNEW) THEN
+      if (LNEW) then
 
-         WRITE(111,FMT='(A82)') '<RBLEFT>                                                      <RMTREFL>   <KAOEZL>'
-         DO I=1,NLBASIS
-            CALL IoInput('<RBLEFT>        ',UIO,I,7,IER)
-            READ (UNIT=UIO,FMT=*) (TLEFT(I1,I),I1=1,3)
+         write(111,FMT='(A82)') '<RBLEFT>                                                      <RMTREFL>   <KAOEZL>'
+         do I=1,NLBASIS
+            call IoInput('<RBLEFT>        ',UIO,I,7,IER)
+            read (UNIT=UIO,FMT=*) (TLEFT(I1,I),I1=1,3)
             KAOEZ(1,NAEZ+I) = I            ! Default
-            CALL IoInput('<KAOEZL>        ',UIO,I,7,IER)
-            IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) KAOEZ(1,NAEZ+I)
-            CALL IoInput('<RMTREFL>       ',UIO,I,7,IER)
-            IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) RMTREFAT(NAEZ+I)
-            WRITE (111,FMT='(3E20.12,3X,F9.6,3X,I5)') (TLEFT(I1,I),I1=1,3),RMTREFAT(NAEZ+I),KAOEZ(1,NAEZ+I)
+            call IoInput('<KAOEZL>        ',UIO,I,7,IER)
+            if (IER.EQ.0) read (UNIT=UIO,FMT=*) KAOEZ(1,NAEZ+I)
+            call IoInput('<RMTREFL>       ',UIO,I,7,IER)
+            if (IER.EQ.0) read (UNIT=UIO,FMT=*) RMTREFAT(NAEZ+I)
+            write (111,FMT='(3E20.12,3X,F9.6,3X,I5)') (TLEFT(I1,I),I1=1,3),RMTREFAT(NAEZ+I),KAOEZ(1,NAEZ+I)
          ENDDO
-         WRITE(111,FMT='(A82)') '<RBRIGHT>                                                     <RMTREFR>   <KAOEZL>'
-         DO I=1,NRBASIS
-            CALL IoInput('<RBRIGHT>       ',UIO,I,7,IER)
-            READ (UNIT=UIO,FMT=*) (TRIGHT(I1,I),I1=1,3)
+         write(111,FMT='(A82)') '<RBRIGHT>                                                     <RMTREFR>   <KAOEZL>'
+         do I=1,NRBASIS
+            call IoInput('<RBRIGHT>       ',UIO,I,7,IER)
+            read (UNIT=UIO,FMT=*) (TRIGHT(I1,I),I1=1,3)
             KAOEZ(1,NAEZ+NLBASIS+I) = I     ! Default
-            CALL IoInput('<KAOEZR>        ',UIO,I,7,IER)
-            IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) KAOEZ(1,NAEZ+NLBASIS+I)
-            CALL IoInput('<RMTREFR>       ',UIO,I,7,IER)
-            IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) RMTREFAT(NAEZ+NLBASIS+I)
-            WRITE (111,FMT='(3E20.12,3X,F9.6,3X,I5)') (TRIGHT(I1,I),I1=1,3),RMTREFAT(NAEZ+NLBASIS+I),KAOEZ(1,NAEZ+NLBASIS+I)
+            call IoInput('<KAOEZR>        ',UIO,I,7,IER)
+            if (IER.EQ.0) read (UNIT=UIO,FMT=*) KAOEZ(1,NAEZ+NLBASIS+I)
+            call IoInput('<RMTREFR>       ',UIO,I,7,IER)
+            if (IER.EQ.0) read (UNIT=UIO,FMT=*) RMTREFAT(NAEZ+NLBASIS+I)
+            write (111,FMT='(3E20.12,3X,F9.6,3X,I5)') (TRIGHT(I1,I),I1=1,3),RMTREFAT(NAEZ+NLBASIS+I),KAOEZ(1,NAEZ+NLBASIS+I)
          ENDDO
 
-      ELSE ! (LNEW) now old-style input
+      else ! (LNEW) now old-style input
 
-         DO I=1,NLBASIS
-            CALL IoInput('LEFTBASIS       ',UIO,I,7,IER)
-            READ (UNIT=UIO,FMT=*) (TLEFT(I1,I),I1=1,3),II,IR
+         do I=1,NLBASIS
+            call IoInput('LEFTBASIS       ',UIO,I,7,IER)
+            read (UNIT=UIO,FMT=*) (TLEFT(I1,I),I1=1,3),II,IR
             KAOEZ(1,NAEZ+I) = II    ! changed 1.11.99
             REFPOT(NAEZ+I) = IR
-         END DO
-         DO I=1,NRBASIS
-            CALL IoInput('RIGHBASIS       ',UIO,I,7,IER)
-            READ (UNIT=UIO,FMT=*) (TRIGHT(I1,I),I1=1,3),II,IR
+         end do
+         do I=1,NRBASIS
+            call IoInput('RIGHBASIS       ',UIO,I,7,IER)
+            read (UNIT=UIO,FMT=*) (TRIGHT(I1,I),I1=1,3),II,IR
             KAOEZ(1,NAEZ+NLBASIS+I) = II  ! changed 1.11.99
             REFPOT(NAEZ+NLBASIS+I) = IR
-         END DO
-      ENDIF
+         end do
+      endif
 
-      CALL IDREALS(TLEFT,3*(NEMB+1),IPRINT)
-      CALL IDREALS(TRIGHT,3*(NEMB+1),IPRINT)
+      call IDREALS(TLEFT,3*(NEMB+1),IPRINT)
+      call IDREALS(TRIGHT,3*(NEMB+1),IPRINT)
 
 
       ! Put The additional atoms in the "embeding" positions
 
-      DO I=1,NLBASIS
+      do I=1,NLBASIS
          RBASIS(1:3,NAEZ+I) = TLEFT(1:3,I)
-      END DO
-      DO I=1,NRBASIS
+      end do
+      do I=1,NRBASIS
          RBASIS(1:3,NAEZ+NLBASIS+I) = TRIGHT(1:3,I)
-      END DO
+      end do
       !-------------------------------------------------------------------------
       ! In RBASIS we have first the basis atoms or the interface
       ! atoms then the left host then the right host the host
@@ -648,55 +648,55 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
       ! occupying a crystallographic site.
       !
       !-------------------------------------------------------------------------
-      CALL IoInput('ZPERIODL        ',UIO,1,7,IER)
-      IF (IER.NE.0) THEN
-         WRITE(*,*) 'rimput13: ZPERIODL not found in inputcard'
-         STOP 'rimput13: ZPERIODL not found in inputcard'
-      ELSE
-         READ (UNIT=UIO,FMT=*) (ZPERLEFT(I1),I1=1,3)
-         WRITE(111,FMT='(A9,3E20.12)') 'ZPERIODL=',(ZPERLEFT(I1),I1=1,3)
-      ENDIF
-      CALL IDREALS(ZPERLEFT(1),3,IPRINT)
+      call IoInput('ZPERIODL        ',UIO,1,7,IER)
+      if (IER.NE.0) then
+         write(*,*) 'rimput13: ZPERIODL not found in inputcard'
+         stop 'rimput13: ZPERIODL not found in inputcard'
+      else
+         read (UNIT=UIO,FMT=*) (ZPERLEFT(I1),I1=1,3)
+         write(111,FMT='(A9,3E20.12)') 'ZPERIODL=',(ZPERLEFT(I1),I1=1,3)
+      endif
+      call IDREALS(ZPERLEFT(1),3,IPRINT)
 
-      CALL IoInput('ZPERIODR        ',UIO,1,7,IER)
-      IF (IER.NE.0) THEN
-         WRITE(*,*) 'rimput13: ZPERIODR not found in inputcard'
-         STOP 'rimput13: ZPERIODR not found in inputcard'
-      ELSE
-         READ (UNIT=UIO,FMT=*) (ZPERIGHT(I1),I1=1,3)
-         WRITE(111,FMT='(A9,3E20.12)') 'ZPERIODR=',(ZPERIGHT(I1),I1=1,3)
-      ENDIF
-      CALL IDREALS(ZPERIGHT(1),3,IPRINT)
+      call IoInput('ZPERIODR        ',UIO,1,7,IER)
+      if (IER.NE.0) then
+         write(*,*) 'rimput13: ZPERIODR not found in inputcard'
+         stop 'rimput13: ZPERIODR not found in inputcard'
+      else
+         read (UNIT=UIO,FMT=*) (ZPERIGHT(I1),I1=1,3)
+         write(111,FMT='(A9,3E20.12)') 'ZPERIODR=',(ZPERIGHT(I1),I1=1,3)
+      endif
+      call IDREALS(ZPERIGHT(1),3,IPRINT)
 
-      WRITE(1337,9430) NLEFT,NLBASIS
-      WRITE(1337,9440) NRIGHT,NRBASIS
-      WRITE(1337,9450) (ZPERLEFT(i1),I1=1,3)
-      WRITE(1337,9460) (ZPERIGHT(i1),I1=1,3)
-      WRITE(1337,9465)
-      WRITE(1337,9470)
-      DO I=NLEFT,1,-1
-         DO I1=NLBASIS,1,-1
+      write(1337,9430) NLEFT,NLBASIS
+      write(1337,9440) NRIGHT,NRBASIS
+      write(1337,9450) (ZPERLEFT(i1),I1=1,3)
+      write(1337,9460) (ZPERIGHT(i1),I1=1,3)
+      write(1337,9465)
+      write(1337,9470)
+      do I=NLEFT,1,-1
+         do I1=NLBASIS,1,-1
             tx = TLEFT(1,i1) + (I-1)*ZPERLEFT(1)
             ty = TLEFT(2,i1) + (I-1)*ZPERLEFT(2)
             tz = TLEFT(3,i1) + (I-1)*ZPERLEFT(3)
-            WRITE(1337,9420) (I-1)*NLBASIS+i1, tx,ty,tz,KAOEZ(1,I1)
-         END DO
-      END DO
-      WRITE(1337,9475)
-      DO I=1,NAEZ
-         WRITE(1337,9420) I, (RBASIS(I1,I),I1=1,3)
-      END DO
-      WRITE(1337,9480)
-      DO I=1,NRIGHT
-         DO I1=1,NRBASIS
+            write(1337,9420) (I-1)*NLBASIS+i1, tx,ty,tz,KAOEZ(1,I1)
+         end do
+      end do
+      write(1337,9475)
+      do I=1,NAEZ
+         write(1337,9420) I, (RBASIS(I1,I),I1=1,3)
+      end do
+      write(1337,9480)
+      do I=1,NRIGHT
+         do I1=1,NRBASIS
             tx = TRIGHT(1,i1) + (I-1)*ZPERIGHT(1)
             ty = TRIGHT(2,i1) + (I-1)*ZPERIGHT(2)
             tz = TRIGHT(3,i1) + (I-1)*ZPERIGHT(3)
-            WRITE(1337,9420) (I-1)*NRBASIS+i1,tx,ty,tz,KAOEZ(1,I1)
-         END DO
-      END DO
+            write(1337,9420) (I-1)*NRBASIS+i1,tx,ty,tz,KAOEZ(1,I1)
+         end do
+      end do
 
-   END IF ! LINTERFACE
+   end if ! LINTERFACE
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End read left- and right-host information in 2d-case.
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -707,41 +707,41 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    ! that has to be read in. NSPIN is set to 1 before
    ! being passed to the subsequent programs.
    ! < TESTDIM > has been accordingly modified
-   CALL IoInput('NSPIN           ',UIO,1,7,IER)
-   IF (IER.NE.0) THEN
-      WRITE(111,*) 'NSPIN not found'
-      STOP 'NSPIN not found'
-   ELSE
-      READ (UNIT=UIO,FMT=*) NSPIN
-      WRITE(111,*) 'NSPIN=',NSPIN
-   ENDIF
+   call IoInput('NSPIN           ',UIO,1,7,IER)
+   if (IER.NE.0) then
+      write(111,*) 'NSPIN not found'
+      stop 'NSPIN not found'
+   else
+      read (UNIT=UIO,FMT=*) NSPIN
+      write(111,*) 'NSPIN=',NSPIN
+   endif
 
-   WRITE(1337,2010) NSPIN
-   WRITE(1337,2104)
+   write(1337,2010) NSPIN
+   write(1337,2104)
 
    ! Atomic number
-   CALL IoInput('<ZATOM>         ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      WRITE(111,'(A10)') '<ZATOM>   '
-      DO I = 1,NATYP
-         CALL IoInput('<ZATOM>         ',UIO,I,7,IER)
-         IF (IER.EQ.0) THEN
-            READ (UNIT=UIO,FMT=*) ZAT(I)
-            WRITE(111,FMT='(F6.3)') ZAT(I)
-         ENDIF
+   call IoInput('<ZATOM>         ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      write(111,'(A10)') '<ZATOM>   '
+      do I = 1,NATYP
+         call IoInput('<ZATOM>         ',UIO,I,7,IER)
+         if (IER.EQ.0) then
+            read (UNIT=UIO,FMT=*) ZAT(I)
+            write(111,FMT='(F6.3)') ZAT(I)
+         endif
       ENDDO
-   ELSE
-      WRITE(111,*) 'zatom will be read in from pot-file'
-   ENDIF
+   else
+      write(111,*) 'zatom will be read in from pot-file'
+   endif
 
    ! Angular momentum cutoff
-   CALL IoInput('LMAX            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) LMAX
-      WRITE(111,*) 'LMAX=',LMAX
-   ELSE
-      STOP 'LMAX not found'
-   ENDIF
+   call IoInput('LMAX            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) LMAX
+      write(111,*) 'LMAX=',LMAX
+   else
+      stop 'LMAX not found'
+   endif
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Allocation of CPA arrays
@@ -750,66 +750,66 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End of allocation of CPA arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   DO I=1,NAEZ
+   do I=1,NAEZ
       ICPA(I) = 0
       NOQ(I) = 1
-   END DO
+   end do
    NCPA = 0
 
-   DO I = 1,NAEZ
+   do I = 1,NAEZ
       KAOEZ(1,I) = I       ! default
       IQAT(I) = I          ! Basis-Site of atom I
    ENDDO
-   IF (NATYP.EQ.NAEZ) CONC(1:NATYP) = 1.D0
+   if (NATYP.EQ.NAEZ) CONC(1:NATYP) = 1.D0
 
    ! CPA calculation, read concentrations
-   IF (NATYP.GT.NAEZ) THEN
+   if (NATYP.GT.NAEZ) then
 
       NCPA = 1
       NOQ(1:NAEZ) = 0 ! re-initialize
 
       IER = 0
       IER2 = 0
-      CALL IoInput('<SITE>          ',UIO,1,7,IER)
-      CALL IoInput('<CPA-CONC>      ',UIO,1,7,IER2)
-      IF (IER.NE.0.OR.IER2.NE.0) THEN
-         WRITE(1337,*) '<SITE> or <CPA-CONC> not found, will search for ATOMINFOC'
-      ELSE
+      call IoInput('<SITE>          ',UIO,1,7,IER)
+      call IoInput('<CPA-CONC>      ',UIO,1,7,IER2)
+      if (IER.NE.0.OR.IER2.NE.0) then
+         write(1337,*) '<SITE> or <CPA-CONC> not found, will search for ATOMINFOC'
+      else
 
-         WRITE(111,FMT='(A18)') '<SITE>  <CPA-CONC>'
-         DO I = 1,NATYP
-            CALL IoInput('<SITE>          ',UIO,I,7,IER)
-            READ (UNIT=UIO,FMT=*) IQAT(I)
-            CALL IoInput('<CPA-CONC>      ',UIO,I,7,IER)
-            READ (UNIT=UIO,FMT=*) CONC(I)
-            WRITE(111,FMT='(I5,4X,E16.8)') IQAT(I),CONC(I)
+         write(111,FMT='(A18)') '<SITE>  <CPA-CONC>'
+         do I = 1,NATYP
+            call IoInput('<SITE>          ',UIO,I,7,IER)
+            read (UNIT=UIO,FMT=*) IQAT(I)
+            call IoInput('<CPA-CONC>      ',UIO,I,7,IER)
+            read (UNIT=UIO,FMT=*) CONC(I)
+            write(111,FMT='(I5,4X,E16.8)') IQAT(I),CONC(I)
          ENDDO
 
-         DO I = 1,NATYP
+         do I = 1,NATYP
             IQ = IQAT(I)
             NOQ(IQ) = NOQ(IQ) + 1
-            IF ( NOQ(IQ) .GT. 1 ) ICPA(IQ) = 1
+            if ( NOQ(IQ) .GT. 1 ) ICPA(IQ) = 1
             KAOEZ(NOQ(IQ),IQ) = I
          ENDDO
 
-         DO IQ=1,NAEZ
+         do IQ=1,NAEZ
             SUM = 0D0
-            IF (NOQ(IQ).LT.1) THEN
-               WRITE(6,*) 'RINPUT13: CPA: SITE',IQ,'HAS NO ASSIGNED ATOM'
-               STOP 'RINPUT13: CPA'
-            ENDIF
-            DO IO=1,NOQ(IQ)
+            if (NOQ(IQ).LT.1) then
+               write(6,*) 'RINPUT13: CPA: SITE',IQ,'HAS NO ASSIGNED ATOM'
+               stop 'RINPUT13: CPA'
+            endif
+            do IO=1,NOQ(IQ)
                SUM = SUM + CONC(KAOEZ(IO,IQ))
-            END DO
-            IF ( ABS(SUM-1.D0).GT.1D-6) THEN
-               WRITE(6,*) ' SITE ', IQ, ' CONCENTRATION <> 1.0 !'
-               WRITE(6,*) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
-               STOP       ' IN <RINPUT99>'
-            END IF
-         END DO
+            end do
+            if ( ABS(SUM-1.D0).GT.1D-6) then
+               write(6,*) ' SITE ', IQ, ' CONCENTRATION <> 1.0 !'
+               write(6,*) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
+               stop       ' IN <RINPUT99>'
+            end if
+         end do
 
-      ENDIF
-   ENDIF ! (NATYP.GT.NAEZ)
+      endif
+   endif ! (NATYP.GT.NAEZ)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End atom type information
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -818,17 +818,17 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    ! Begin relativistic treatment information
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    KCOR = 2
-   !      CALL IoInput('KCOR      ',UIO,1,7,IER)
-   !                      READ (UNIT=UIO,FMT=*) kcor
+   !      call IoInput('KCOR      ',UIO,1,7,IER)
+   !                      read (UNIT=UIO,FMT=*) kcor
 
    KVREL = 1   ! 0=Schroedinger / 1=SRA / 2=Dirac
-   CALL IoInput('KVREL           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) kvrel
-      WRITE(111,*) 'KVREL= ',KVREL
-   ELSE
-      WRITE(111,*) 'Default KVREL= ',KVREL
-   ENDIF
+   call IoInput('KVREL           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) kvrel
+      write(111,*) 'KVREL= ',KVREL
+   else
+      write(111,*) 'Default KVREL= ',KVREL
+   endif
 
    ! Set KREL value depending on KVREL
    if (KVREL.ne.0) then
@@ -837,178 +837,178 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
       KREL=0
    endif
 
-   CALL IoInput('KORBIT          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) KORBIT
-      WRITE(111,*) 'KORBIT= ',KORBIT
-   ELSE
-      WRITE(111,*) 'Default KORBIT= ',KORBIT
-   ENDIF
+   call IoInput('KORBIT          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) KORBIT
+      write(111,*) 'KORBIT= ',KORBIT
+   else
+      write(111,*) 'Default KORBIT= ',KORBIT
+   endif
 
    !----------------------------------------------------------------------------
    ! Start of the reading of variables that used to be in the inc.p
    !----------------------------------------------------------------------------
    !> @note JC: Read the IRM value from the inputcard. This in principle can be determined from
    !> the potential file, hence maybe it is best to do it that way instead
-   CALL IoInput('IRM             ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) IRM
-      WRITE(111,*) 'IRM= ',IRM
-   ELSE
-      WRITE(111,*) 'Default IRM= ',IRM
-   ENDIF
+   call IoInput('IRM             ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) IRM
+      write(111,*) 'IRM= ',IRM
+   else
+      write(111,*) 'Default IRM= ',IRM
+   endif
 
-   CALL IoInput('IRNSD           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) IRNSD
-      WRITE(111,*) 'IRNSD= ',IRNSD
-   ELSE
-      WRITE(111,*) 'Default IRNSD= ',IRNSD
-   ENDIF
+   call IoInput('IRNSD           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) IRNSD
+      write(111,*) 'IRNSD= ',IRNSD
+   else
+      write(111,*) 'Default IRNSD= ',IRNSD
+   endif
 
-   CALL IoInput('NSHELD          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NSHELD
-      WRITE(111,*) 'NSHELD= ',NSHELD
-   ELSE
-      WRITE(111,*) 'Default NSHELD= ',NSHELD
-   ENDIF
+   call IoInput('NSHELD          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NSHELD
+      write(111,*) 'NSHELD= ',NSHELD
+   else
+      write(111,*) 'Default NSHELD= ',NSHELD
+   endif
 
-   CALL IoInput('KNOSPH          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) KNOSPH
-      WRITE(111,*) 'KNOSPH= ',KNOSPH
-   ELSE
-      WRITE(111,*) 'Default KNOSPH= ',KNOSPH
-   ENDIF
+   call IoInput('KNOSPH          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) KNOSPH
+      write(111,*) 'KNOSPH= ',KNOSPH
+   else
+      write(111,*) 'Default KNOSPH= ',KNOSPH
+   endif
 
-   CALL IoInput('IEMXD           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) IEMXD
-      WRITE(111,*) 'IEMXD= ',IEMXD
-   ELSE
-      WRITE(111,*) 'Default IEMXD= ',IEMXD
-   ENDIF
+   call IoInput('IEMXD           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) IEMXD
+      write(111,*) 'IEMXD= ',IEMXD
+   else
+      write(111,*) 'Default IEMXD= ',IEMXD
+   endif
 
-   CALL IoInput('NR              ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NR
-      WRITE(111,*) 'NR= ',NR
-   ELSE
-      WRITE(111,*) 'Default NR= ',NR
-   ENDIF
+   call IoInput('NR              ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NR
+      write(111,*) 'NR= ',NR
+   else
+      write(111,*) 'Default NR= ',NR
+   endif
 
-   CALL IoInput('KPOIBZ          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) KPOIBZ
-      WRITE(111,*) 'KPOIBZ= ',KPOIBZ
-   ELSE
-      WRITE(111,*) 'Default KPOIBZ= ',KPOIBZ
-   ENDIF
+   call IoInput('KPOIBZ          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) KPOIBZ
+      write(111,*) 'KPOIBZ= ',KPOIBZ
+   else
+      write(111,*) 'Default KPOIBZ= ',KPOIBZ
+   endif
 
-   CALL IoInput('NMAXD           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NMAXD
-      WRITE(111,*) 'NMAXD= ',NMAXD
-   ELSE
-      WRITE(111,*) 'Default NMAXD= ',NMAXD
-   ENDIF
+   call IoInput('NMAXD           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NMAXD
+      write(111,*) 'NMAXD= ',NMAXD
+   else
+      write(111,*) 'Default NMAXD= ',NMAXD
+   endif
 
-   CALL IoInput('ISHLD           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) ISHLD
-      WRITE(111,*) 'ISHLD= ',ISHLD
-   ELSE
-      WRITE(111,*) 'Default ISHLD= ',ISHLD
-   ENDIF
+   call IoInput('ISHLD           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) ISHLD
+      write(111,*) 'ISHLD= ',ISHLD
+   else
+      write(111,*) 'Default ISHLD= ',ISHLD
+   endif
 
-   CALL IoInput('KNOCO           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) KNOCO
-      WRITE(111,*) 'KNOCO= ',KNOCO
-   ELSE
-      WRITE(111,*) 'Default KNOCO= ',KNOCO
-   ENDIF
+   call IoInput('KNOCO           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) KNOCO
+      write(111,*) 'KNOCO= ',KNOCO
+   else
+      write(111,*) 'Default KNOCO= ',KNOCO
+   endif
 
-   CALL IoInput('NTREFD          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NTREFD
-      WRITE(111,*) 'NTREFD= ',NTREFD
-   ELSE
-      WRITE(111,*) 'Default NTREFD= ',NTREFD
-   ENDIF
+   call IoInput('NTREFD          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NTREFD
+      write(111,*) 'NTREFD= ',NTREFD
+   else
+      write(111,*) 'Default NTREFD= ',NTREFD
+   endif
 
-   CALL IoInput('NATOMIMPD       ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NATOMIMPD
-      WRITE(111,*) 'NATOMIMPD= ',NATOMIMPD
-   ELSE
-      WRITE(111,*) 'Default NATOMIMPD= ',NATOMIMPD
-   ENDIF
+   call IoInput('NATOMIMPD       ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NATOMIMPD
+      write(111,*) 'NATOMIMPD= ',NATOMIMPD
+   else
+      write(111,*) 'Default NATOMIMPD= ',NATOMIMPD
+   endif
 
-   CALL IoInput('NPRINCD         ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NPRINCD
-      WRITE(111,*) 'NPRINCD= ',NPRINCD
-   ELSE
-      WRITE(111,*) 'Default NPRINCD= ',NPRINCD
-   ENDIF
+   call IoInput('NPRINCD         ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NPRINCD
+      write(111,*) 'NPRINCD= ',NPRINCD
+   else
+      write(111,*) 'Default NPRINCD= ',NPRINCD
+   endif
 
-   CALL IoInput('IPAND           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) IPAND
-      WRITE(111,*) 'IPAND= ',IPAND
-   ELSE
-      WRITE(111,*) 'Default IPAND= ',IPAND
-   ENDIF
+   call IoInput('IPAND           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) IPAND
+      write(111,*) 'IPAND= ',IPAND
+   else
+      write(111,*) 'Default IPAND= ',IPAND
+   endif
 
-   CALL IoInput('NFUND           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NFUND
-      WRITE(111,*) 'NFUND= ',NFUND
-   ELSE
-      WRITE(111,*) 'Default NFUND= ',NFUND
-   ENDIF
+   call IoInput('NFUND           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NFUND
+      write(111,*) 'NFUND= ',NFUND
+   else
+      write(111,*) 'Default NFUND= ',NFUND
+   endif
 
-   CALL IoInput('IRID            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) IRID
-      WRITE(111,*) 'IRID= ',IRID
-   ELSE
-      WRITE(111,*) 'Default IRID= ',IRID
-   ENDIF
+   call IoInput('IRID            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) IRID
+      write(111,*) 'IRID= ',IRID
+   else
+      write(111,*) 'Default IRID= ',IRID
+   endif
 
-   CALL IoInput('NGSHD           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NGSHD
-      WRITE(111,*) 'NGHSD= ',NGSHD
-   ELSE
-      WRITE(111,*) 'Default NGSHD= ',NGSHD
-   ENDIF
+   call IoInput('NGSHD           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NGSHD
+      write(111,*) 'NGHSD= ',NGSHD
+   else
+      write(111,*) 'Default NGSHD= ',NGSHD
+   endif
 
-   CALL IoInput('WLENGTH         ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) WLENGTH
-      WRITE(111,*) 'WLENGTH= ',WLENGTH
-   ELSE
-      WRITE(111,*) 'Default WLENGTH= ',WLENGTH
-   ENDIF
+   call IoInput('WLENGTH         ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) WLENGTH
+      write(111,*) 'WLENGTH= ',WLENGTH
+   else
+      write(111,*) 'Default WLENGTH= ',WLENGTH
+   endif
 
-   CALL IoInput('NACLSD          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NACLSD
-      WRITE(111,*) 'NACLSD= ',NACLSD
-   ELSE
-      WRITE(111,*) 'Default NACLSD= ',NACLSD
-   ENDIF
+   call IoInput('NACLSD          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NACLSD
+      write(111,*) 'NACLSD= ',NACLSD
+   else
+      write(111,*) 'Default NACLSD= ',NACLSD
+   endif
 
-   CALL IoInput('NTOTD           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NTOTD
-      WRITE(111,*) 'NTOTD= ',NTOTD
-   ELSE
-      WRITE(111,*) 'Default NTOTD= ',NTOTD
-   ENDIF
+   call IoInput('NTOTD           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NTOTD
+      write(111,*) 'NTOTD= ',NTOTD
+   else
+      write(111,*) 'Default NTOTD= ',NTOTD
+   endif
    !----------------------------------------------------------------------------
    ! End of variables that used to be in the inc.
    !----------------------------------------------------------------------------
@@ -1050,41 +1050,41 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End of allocation of SOC arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   IF (OPT('NEWSOSOL')) THEN ! Spin-orbit
-      IF ( OPT('NEWSOSOL') .AND. (NSPIN.NE.2) ) STOP ' set NSPIN = 2 for SOC solver in inputcard'
+   if (OPT('NEWSOSOL')) then ! Spin-orbit
+      if ( OPT('NEWSOSOL') .AND. (NSPIN.NE.2) ) stop ' set NSPIN = 2 for SOC solver in inputcard'
       NPAN_LOG = 30
       NPAN_EQ = 30
       NCHEB = 10
       R_LOG = 0.1D0
-      CALL IoInput('NPAN_LOG        ',UIO,1,7,IER)
-      IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) NPAN_LOG
-      CALL IoInput('NPAN_EQ         ',UIO,1,7,IER)
-      IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) NPAN_EQ
-      CALL IoInput('NCHEB           ',UIO,1,7,IER)
-      IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) NCHEB
-      CALL IoInput('R_LOG           ',UIO,1,7,IER)
-      IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) R_LOG
-      WRITE(111,*) 'NPAN_LOG= ',NPAN_LOG
-      WRITE(111,*) 'NPAN_EQ= ',NPAN_EQ
-      WRITE(111,*) 'NCHEB= ',NCHEB
-      WRITE(111,*) 'R_LOG= ',R_LOG
-   ENDIF
+      call IoInput('NPAN_LOG        ',UIO,1,7,IER)
+      if (IER.EQ.0) read (UNIT=UIO,FMT=*) NPAN_LOG
+      call IoInput('NPAN_EQ         ',UIO,1,7,IER)
+      if (IER.EQ.0) read (UNIT=UIO,FMT=*) NPAN_EQ
+      call IoInput('NCHEB           ',UIO,1,7,IER)
+      if (IER.EQ.0) read (UNIT=UIO,FMT=*) NCHEB
+      call IoInput('R_LOG           ',UIO,1,7,IER)
+      if (IER.EQ.0) read (UNIT=UIO,FMT=*) R_LOG
+      write(111,*) 'NPAN_LOG= ',NPAN_LOG
+      write(111,*) 'NPAN_EQ= ',NPAN_EQ
+      write(111,*) 'NCHEB= ',NCHEB
+      write(111,*) 'R_LOG= ',R_LOG
+   endif
 
-   CALL IoInput('<SOCSCL>        ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      WRITE(111,'(A10)') '<SOCSCL>  '
-      DO I = 1,NATYP
-         CALL IoInput('<SOCSCL>        ',UIO,I,7,IER)
-         IF (IER.EQ.0) THEN
-            READ (UNIT=UIO,FMT=*) SOCSCALE(I)
-            WRITE(111,FMT='(F6.3)') SOCSCALE(I)
-         ENDIF
+   call IoInput('<SOCSCL>        ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      write(111,'(A10)') '<SOCSCL>  '
+      do I = 1,NATYP
+         call IoInput('<SOCSCL>        ',UIO,I,7,IER)
+         if (IER.EQ.0) then
+            read (UNIT=UIO,FMT=*) SOCSCALE(I)
+            write(111,FMT='(F6.3)') SOCSCALE(I)
+         endif
       ENDDO
-      !        READ (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)                       !Bernd - old way
-      !        WRITE(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP) !Bernd - old way
-   ELSE
-      WRITE(111,FMT='(A18,50E10.2)') 'Default <SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
-   ENDIF
+      !        read (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)                       !Bernd - old way
+      !        write(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP) !Bernd - old way
+   else
+      write(111,FMT='(A18,50E10.2)') 'Default <SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
+   endif
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End relativistic treatment information
@@ -1094,56 +1094,56 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    ! Begin cell control
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   CALL IoInput('<FPRADIUS>      ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      WRITE(111,'(A10)') '<FPRADIUS>'
-      DO I = 1,NATYP
-         CALL IoInput('<FPRADIUS>      ',UIO,I,7,IER)
-         IF (IER.EQ.0) THEN
-            READ (UNIT=UIO,FMT=*) FPRADIUS(I)
-         ENDIF
-         WRITE(111,FMT='(F6.3)') FPRADIUS(I)
+   call IoInput('<FPRADIUS>      ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      write(111,'(A10)') '<FPRADIUS>'
+      do I = 1,NATYP
+         call IoInput('<FPRADIUS>      ',UIO,I,7,IER)
+         if (IER.EQ.0) then
+            read (UNIT=UIO,FMT=*) FPRADIUS(I)
+         endif
+         write(111,FMT='(F6.3)') FPRADIUS(I)
       ENDDO
-   ELSE
-      WRITE(111,*) 'fpradius will be read in from pot-file'
-   ENDIF
+   else
+      write(111,*) 'fpradius will be read in from pot-file'
+   endif
 
    !
    INS = 1
-   CALL IoInput('INS             ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) ins
-      WRITE(111,*) 'INS= ',INS
-   ELSE
-      WRITE(111,*) 'Default INS= ',INS
-   ENDIF
+   call IoInput('INS             ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) ins
+      write(111,*) 'INS= ',INS
+   else
+      write(111,*) 'Default INS= ',INS
+   endif
 
    KSHAPE = 2
-   IF (INS.EQ.0) KSHAPE = 0
-   CALL IoInput('KSHAPE          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) KSHAPE
-      WRITE(111,*) 'KSHAPE= ',KSHAPE
-   ELSE
-      WRITE(111,*) 'Default KSHAPE= ',KSHAPE
-   ENDIF
+   if (INS.EQ.0) KSHAPE = 0
+   call IoInput('KSHAPE          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) KSHAPE
+      write(111,*) 'KSHAPE= ',KSHAPE
+   else
+      write(111,*) 'Default KSHAPE= ',KSHAPE
+   endif
 
-   IF ( (KREL.EQ.1).AND.(KSHAPE.NE.0) ) THEN
-      WRITE(1337,*) ' WARNING : KSHAPE set to ZERO for REL case'
-      WRITE(111,*) ' WARNING : kshape set to ZERO for REL case'
+   if ( (KREL.EQ.1).AND.(KSHAPE.NE.0) ) then
+      write(1337,*) ' WARNING : KSHAPE set to ZERO for REL case'
+      write(111,*) ' WARNING : kshape set to ZERO for REL case'
       KSHAPE = 0
-   END IF
+   end if
 
    ! Read cell information
-   WRITE(1337,*) 'Cell information <SHAPE>:'
-   WRITE(111,FMT='(A16)') '<SHAPE>         '
-   DO I = 1,NATYP
+   write(1337,*) 'Cell information <SHAPE>:'
+   write(111,FMT='(A16)') '<SHAPE>         '
+   do I = 1,NATYP
       NTCELL(I) = IQAT(I) ! Default: Different shape function per atom
-      CALL IoInput('<SHAPE>         ',UIO,I,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) NTCELL(I)
-         WRITE(111,FMT='(I6)') NTCELL(I)
-      ENDIF
+      call IoInput('<SHAPE>         ',UIO,I,7,IER)
+      if (IER.EQ.0) then
+         read (UNIT=UIO,FMT=*) NTCELL(I)
+         write(111,FMT='(I6)') NTCELL(I)
+      endif
    ENDDO
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End cell control
@@ -1154,23 +1154,23 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    KXC = 2 ! 0=vBH 1=MJW 2=VWN 3=PW91
-   CALL IoInput('KEXCOR          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) kxc
-      WRITE(111,*) 'KEXCOR= ',KXC
-   ELSE
-      WRITE(111,*) 'Default KEXCOR= ',KXC
-   ENDIF
+   call IoInput('KEXCOR          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) kxc
+      write(111,*) 'KEXCOR= ',KXC
+   else
+      write(111,*) 'Default KEXCOR= ',KXC
+   endif
 
    ! Scale magnetic moment (0 < Lambda_XC < 1,  0=zero moment, 1= full moment)
    LAMBDA_XC = 1.D0
-   CALL IoInput('LAMBDA_XC       ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) LAMBDA_XC
-      WRITE(111,*) 'LAMBDA_XC= ',LAMBDA_XC
-   ELSE
-      WRITE(111,*) 'Default LAMBDA_XC= ',LAMBDA_XC
-   ENDIF
+   call IoInput('LAMBDA_XC       ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) LAMBDA_XC
+      write(111,*) 'LAMBDA_XC= ',LAMBDA_XC
+   else
+      write(111,*) 'Default LAMBDA_XC= ',LAMBDA_XC
+   endif
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! LDA+U treatment
@@ -1183,54 +1183,54 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    ! End of LDA+U array allocation
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   IF (OPT('LDA+U   ')) THEN
+   if (OPT('LDA+U   ')) then
 
       !Check for LDA+U consistency -- if INS=0 suppress it
-      IF ((INS.EQ.0) ) THEN
-         WRITE (1337,*)
-         WRITE (1337,*)&
+      if ((INS.EQ.0) ) then
+         write (1337,*)
+         write (1337,*)&
             &        ' WARNING: LDA+U should be used only in NON-SPHERICAL',&
             &        ' case (INS=1) '
-         WRITE (1337,*) ' Running option LDA+U will be ignored'
-         WRITE (1337,*)
-         DO I=1,32
-            IF (t_params%OPTC(I)(1:8).EQ.'LDA+U   ') t_params%OPTC(I)='        '
-         END DO
-      END IF
+         write (1337,*) ' Running option LDA+U will be ignored'
+         write (1337,*)
+         do I=1,32
+            if (t_params%OPTC(I)(1:8).EQ.'LDA+U   ') t_params%OPTC(I)='        '
+         end do
+      end if
 
       ! -> get number of atoms for lda+u:
 
       IER = 0
-      CALL IoInput('NAT_LDAU        ',UIO,1,7,IER)
-      IF ( IER.NE.0 ) THEN
+      call IoInput('NAT_LDAU        ',UIO,1,7,IER)
+      if ( IER.NE.0 ) then
          NASOC = NATYP
-      ELSE
-         READ (UNIT=UIO,FMT=*) NASOC
-         IF ( NASOC.GT.NATYP ) STOP ' main0: NAT_LDAU > NATYP'
-      END IF
+      else
+         read (UNIT=UIO,FMT=*) NASOC
+         if ( NASOC.GT.NATYP ) stop ' main0: NAT_LDAU > NATYP'
+      end if
 
       ! -> read in UEFF,JEFF,LOPT,EREFLDAU for the desired atoms
 
       IL = 0
-      DO I=1,NASOC
+      do I=1,NASOC
          IER = 0
-         CALL IoInput('LDAU_PARA       ',UIO,I,7,IER)
-         IF ( IER.EQ.0 ) THEN
-            READ (UNIT=UIO,FMT=*) I1,LOPT(I1),UEFF(I1),JEFF(I1),EREFLDAU(I1)
+         call IoInput('LDAU_PARA       ',UIO,I,7,IER)
+         if ( IER.EQ.0 ) then
+            read (UNIT=UIO,FMT=*) I1,LOPT(I1),UEFF(I1),JEFF(I1),EREFLDAU(I1)
             IL = IL + 1
-         END IF
+         end if
       ENDDO
-      IF ( IL.NE.NASOC ) THEN
-         WRITE(6,*) ' ERROR: LDA+U invoked for ',NASOC,' atoms'
-         WRITE(6,*) '        Some (all) parameters are missing in the input-file'
-         STOP
-      END IF
+      if ( IL.NE.NASOC ) then
+         write(6,*) ' ERROR: LDA+U invoked for ',NASOC,' atoms'
+         write(6,*) '        Some (all) parameters are missing in the input-file'
+         stop
+      end if
       KREADLDAU = 0
       IER = 0
-      CALL IoInput('KREADLDAU       ',UIO,1,7,IER)
-      IF ( IER.EQ.0 ) READ (UNIT=UIO,FMT=*) KREADLDAU
+      call IoInput('KREADLDAU       ',UIO,1,7,IER)
+      if ( IER.EQ.0 ) read (UNIT=UIO,FMT=*) KREADLDAU
 
-   END IF
+   end if
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End exchange correlation treatment information
@@ -1241,44 +1241,44 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    KHFIELD = 0
    HFIELD = 0.D0
-   CALL IoInput('HFIELD          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) HFIELD
-      IF (HFIELD.NE.0.D0) THEN
+   call IoInput('HFIELD          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) HFIELD
+      if (HFIELD.NE.0.D0) then
          KHFIELD = 1
          write(*,*) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'
          write(1337,*) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'
-      END IF
-      WRITE(111,*) 'HFIELD= ',HFIELD
-   ELSE
-      WRITE(111,*) 'Default HFIELD= ',HFIELD
-   ENDIF
+      end if
+      write(111,*) 'HFIELD= ',HFIELD
+   else
+      write(111,*) 'Default HFIELD= ',HFIELD
+   endif
 
    VCONST = 0.D0
-   CALL IoInput('VCONST          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) vconst
-      WRITE(111,*) 'VCONST= ',VCONST
-   ELSE
-      WRITE(111,*) 'Default VCONST= ',VCONST
-   ENDIF
+   call IoInput('VCONST          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) vconst
+      write(111,*) 'VCONST= ',VCONST
+   else
+      write(111,*) 'Default VCONST= ',VCONST
+   endif
 
 
-   IF (TEST('atptshft')) THEN
-      WRITE(1337,*) 'READ IN IVSHIFT'
-      CALL IoInput('IVSHIFT         ',UIO,1,7,IER)
-      READ (UNIT=UIO,FMT=*) ivshift
-   ENDIF
+   if (TEST('atptshft')) then
+      write(1337,*) 'read IN IVSHIFT'
+      call IoInput('IVSHIFT         ',UIO,1,7,IER)
+      read (UNIT=UIO,FMT=*) ivshift
+   endif
 
    ! Initial polarization
    LINIPOL = .FALSE.
-   CALL IoInput('LINIPOL         ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) LINIPOL
-      WRITE(111,*) 'LINIPOL= ',LINIPOL
-   ELSE
-      WRITE(111,*) 'Default: LINIPOL= ',LINIPOL
-   ENDIF
+   call IoInput('LINIPOL         ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) LINIPOL
+      write(111,*) 'LINIPOL= ',LINIPOL
+   else
+      write(111,*) 'Default: LINIPOL= ',LINIPOL
+   endif
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Allocate magnetization arrays
@@ -1289,20 +1289,20 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    ! End of allocation of magnetization arrays
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   IF (LINIPOL) THEN
+   if (LINIPOL) then
       INIPOL(1:NATYP) = 1
-      CALL IoInput('XINIPOL         ',UIO,1,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) (inipol(I),I=1,natyp)
-         WRITE(111,FMT='(A10,80I2)') 'XINIPOL=  ',(INIPOL(I),I=1,NATYP)
-      ELSE
-         WRITE(111,FMT='(A18,80I2)') 'Default XINIPOL=  ',(INIPOL(I),I=1,NATYP)
-      ENDIF
-   ENDIF
+      call IoInput('XINIPOL         ',UIO,1,7,IER)
+      if (IER.EQ.0) then
+         read (UNIT=UIO,FMT=*) (inipol(I),I=1,natyp)
+         write(111,FMT='(A10,80I2)') 'XINIPOL=  ',(INIPOL(I),I=1,NATYP)
+      else
+         write(111,FMT='(A18,80I2)') 'Default XINIPOL=  ',(INIPOL(I),I=1,NATYP)
+      endif
+   endif
 
 
-   WRITE (1337,2021) (INIPOL(I),I=1,NATYP)
-   WRITE(1337,2103)
+   write (1337,2021) (INIPOL(I),I=1,NATYP)
+   write(1337,2103)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End external field control
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1312,34 +1312,34 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    IGF = 0
-   CALL IoInput('IGREENFUN       ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) igf
-      WRITE(111,*) 'IGREENFUN= ',IGF
-   ELSE
-      WRITE(111,*) 'Default IGREENFUN= ',IGF
-   ENDIF
-   IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) THEN
+   call IoInput('IGREENFUN       ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) igf
+      write(111,*) 'IGREENFUN= ',IGF
+   else
+      write(111,*) 'Default IGREENFUN= ',IGF
+   endif
+   if (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) then
       write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP options'
       IGF = 1
-   END IF
+   end if
 
    ICC = 0
-   CALL IoInput('ICC             ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) ICC
-      WRITE(111,*) 'ICC= ',ICC
-   ELSE
-      WRITE(111,*) 'Default ICC= ',ICC
-   ENDIF
-   IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) THEN
+   call IoInput('ICC             ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) ICC
+      write(111,*) 'ICC= ',ICC
+   else
+      write(111,*) 'Default ICC= ',ICC
+   endif
+   if (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) then
       write(1337,*) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP options'
       ICC = 1
-   END IF
-   IF ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1
+   end if
+   if ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1
 
-   IF ( ICC.NE.0 .AND. IGF.EQ.0 ) IGF = 1
-   IF ( ICC.EQ.0 .AND. IGF.NE.0 ) ICC = -1
+   if ( ICC.NE.0 .AND. IGF.EQ.0 ) IGF = 1
+   if ( ICC.EQ.0 .AND. IGF.NE.0 ) ICC = -1
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End Green function calculation control (diag./non-diag)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1352,96 +1352,96 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    INTERVX = 10
    INTERVY = 10
    INTERVZ = 10
-   CALL IoInput('BZDIVIDE        ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) INTERVX,INTERVY,INTERVZ
-      WRITE(111,FMT='(A9,3I5)') 'BZDIVIDE=',INTERVX,INTERVY,INTERVZ
-   ELSE
-      WRITE(111,FMT='(A17,3I5)') 'Default BZDIVIDE=',INTERVX,INTERVY,INTERVZ
-   ENDIF
-   WRITE(1337,2104)
-   WRITE(1337,2015) INTERVX,INTERVY,INTERVZ
-   WRITE(1337,2102)
+   call IoInput('BZDIVIDE        ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) INTERVX,INTERVY,INTERVZ
+      write(111,FMT='(A9,3I5)') 'BZDIVIDE=',INTERVX,INTERVY,INTERVZ
+   else
+      write(111,FMT='(A17,3I5)') 'Default BZDIVIDE=',INTERVX,INTERVY,INTERVZ
+   endif
+   write(1337,2104)
+   write(1337,2015) INTERVX,INTERVY,INTERVZ
+   write(1337,2102)
 
-   IF(OPT('GREENIMP')) THEN
+   if(OPT('GREENIMP')) then
       write(*,*) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
       write(1337,*) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
       INTERVX = 1
       INTERVY = 1
       INTERVZ = 1
-   ENDIF
+   endif
 
    ! Energy contour
    NPOL = 7
-   !      IF (OPT('dos     ').OR.OPT('DOS     ')) NPOL = 0
-   CALL IoInput('NPOL            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NPOL
-      WRITE(111,*) 'NPOL=',NPOL
-   ELSE
-      WRITE(111,*) 'Default NPOL=',NPOL
-   ENDIF
+   !      if (OPT('dos     ').OR.OPT('DOS     ')) NPOL = 0
+   call IoInput('NPOL            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NPOL
+      write(111,*) 'NPOL=',NPOL
+   else
+      write(111,*) 'Default NPOL=',NPOL
+   endif
 
-   CALL IoInput('EMIN            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) EMIN
-      WRITE(111,*) 'EMIN= ',EMIN
-   ELSE IF (NPOL.EQ.0) THEN
+   call IoInput('EMIN            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) EMIN
+      write(111,*) 'EMIN= ',EMIN
+   else if (NPOL.EQ.0) then
       EMIN = -1.D0
-      WRITE(111,*) 'Default for DOS: EMIN= ',EMIN
-   ELSE
-      WRITE(1337,*) 'Error in rinput13: EMIN not found'
-      WRITE(111,*) 'Error in rinput13: EMIN not found'
-      STOP 'Error in rinput13: EMIN not found'
-   ENDIF
+      write(111,*) 'Default for DOS: EMIN= ',EMIN
+   else
+      write(1337,*) 'Error in rinput13: EMIN not found'
+      write(111,*) 'Error in rinput13: EMIN not found'
+      stop 'Error in rinput13: EMIN not found'
+   endif
 
    EMAX = 1.D0
-   CALL IoInput('EMAX            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) EMAX
-      WRITE(111,*) ' EMAX=',EMAX
-   ELSE
-      WRITE(111,*) 'Default  EMAX=',EMAX
-   ENDIF
+   call IoInput('EMAX            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) EMAX
+      write(111,*) ' EMAX=',EMAX
+   else
+      write(111,*) 'Default  EMAX=',EMAX
+   endif
 
    TK = 800.D0
-   CALL IoInput('TEMPR           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) TK
-      WRITE(111,*) 'TEMPR=',TK
-   ELSE
-      WRITE(111,*) 'Default TEMPR=',TK
-   ENDIF
+   call IoInput('TEMPR           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) TK
+      write(111,*) 'TEMPR=',TK
+   else
+      write(111,*) 'Default TEMPR=',TK
+   endif
 
    NPNT1 = 3
-   IF (NPOL.EQ.0) NPNT1 = 0
-   CALL IoInput('NPT1            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NPNT1
-      WRITE(111,*) ' NPT1=',NPNT1
-   ELSE
-      WRITE(111,*) 'Default  NPT1=',NPNT1
-   ENDIF
+   if (NPOL.EQ.0) NPNT1 = 0
+   call IoInput('NPT1            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NPNT1
+      write(111,*) ' NPT1=',NPNT1
+   else
+      write(111,*) 'Default  NPT1=',NPNT1
+   endif
 
    NPNT2 = NINT((EMAX-EMIN)*20.D0) ! 20 pts/Ryd
-   IF (NPOL.EQ.0) NPNT2 = NINT((EMAX-EMIN)*100.D0) ! For dos, 100 pts/Ryd
-   CALL IoInput('NPT2            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NPNT2
-      WRITE(111,*) ' NPT2=',NPNT2
-   ELSE
-      WRITE(111,*) 'Default  NPT2=',NPNT2
-   ENDIF
+   if (NPOL.EQ.0) NPNT2 = NINT((EMAX-EMIN)*100.D0) ! For dos, 100 pts/Ryd
+   call IoInput('NPT2            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NPNT2
+      write(111,*) ' NPT2=',NPNT2
+   else
+      write(111,*) 'Default  NPT2=',NPNT2
+   endif
 
    NPNT3 = 3
-   IF (NPOL.EQ.0) NPNT3 = 0
-   CALL IoInput('NPT3            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) NPNT3
-      WRITE(111,*) ' NPT3=',NPNT3
-   ELSE
-      WRITE(111,*) 'Default  NPT3=',NPNT3
-   ENDIF
+   if (NPOL.EQ.0) NPNT3 = 0
+   call IoInput('NPT3            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) NPNT3
+      write(111,*) ' NPT3=',NPNT3
+   else
+      write(111,*) 'Default  NPT3=',NPNT3
+   endif
 
    ! -> semicore
    ! initialise variables
@@ -1455,63 +1455,63 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    FSEMICORE = 1.D0
 
    IER = 0
-   IF ( OPT('SEMICORE') ) THEN
-      CALL IoInput('EBOTSEMI        ',UIO,1,7,IER)
-      IF ( IER.NE.0 ) GOTO 99800
-      READ (UNIT=UIO,FMT=*) EBOTSEMI
-      CALL IoInput('EMUSEMI         ',UIO,1,7,IER)
-      IF ( IER.NE.0 ) GOTO 99800
-      READ (UNIT=UIO,FMT=*) EMUSEMI
+   if ( OPT('SEMICORE') ) then
+      call IoInput('EBOTSEMI        ',UIO,1,7,IER)
+      if ( IER.NE.0 ) GOTO 99800
+      read (UNIT=UIO,FMT=*) EBOTSEMI
+      call IoInput('EMUSEMI         ',UIO,1,7,IER)
+      if ( IER.NE.0 ) GOTO 99800
+      read (UNIT=UIO,FMT=*) EMUSEMI
 
       ! -> EMUSEMI < EBOT
-      IF ( EMUSEMI.GE.EMIN ) GOTO 99800
-      CALL IoInput('TKSEMI          ',UIO,1,7,IER)
-      IF ( IER.NE.0 ) GOTO 99800
-      READ (UNIT=UIO,FMT=*) TKSEMI
+      if ( EMUSEMI.GE.EMIN ) GOTO 99800
+      call IoInput('TKSEMI          ',UIO,1,7,IER)
+      if ( IER.NE.0 ) GOTO 99800
+      read (UNIT=UIO,FMT=*) TKSEMI
 
-      CALL IoInput('NPOLSEMI        ',UIO,1,7,IER)
-      IF ( IER.NE.0 ) GOTO 99800
-      READ (UNIT=UIO,FMT=*) NPOLSEMI
-      CALL IoInput('N1SEMI          ',UIO,1,7,IER)
-      IF ( IER.NE.0 ) GOTO 99800
-      READ (UNIT=UIO,FMT=*) N1SEMI
-      CALL IoInput('N2SEMI          ',UIO,1,7,IER)
-      IF ( IER.NE.0 ) GOTO 99800
-      READ (UNIT=UIO,FMT=*) N2SEMI
-      CALL IoInput('N3SEMI          ',UIO,1,7,IER)
-      IF ( IER.NE.0 ) GOTO 99800
-      READ (UNIT=UIO,FMT=*) N3SEMI
-      CALL IoInput('FSEMICORE       ',UIO,1,7,IER)
-      IF ( IER.NE.0 ) GOTO 99800
-      READ (UNIT=UIO,FMT=*) FSEMICORE
+      call IoInput('NPOLSEMI        ',UIO,1,7,IER)
+      if ( IER.NE.0 ) GOTO 99800
+      read (UNIT=UIO,FMT=*) NPOLSEMI
+      call IoInput('N1SEMI          ',UIO,1,7,IER)
+      if ( IER.NE.0 ) GOTO 99800
+      read (UNIT=UIO,FMT=*) N1SEMI
+      call IoInput('N2SEMI          ',UIO,1,7,IER)
+      if ( IER.NE.0 ) GOTO 99800
+      read (UNIT=UIO,FMT=*) N2SEMI
+      call IoInput('N3SEMI          ',UIO,1,7,IER)
+      if ( IER.NE.0 ) GOTO 99800
+      read (UNIT=UIO,FMT=*) N3SEMI
+      call IoInput('FSEMICORE       ',UIO,1,7,IER)
+      if ( IER.NE.0 ) GOTO 99800
+      read (UNIT=UIO,FMT=*) FSEMICORE
       IDOSEMICORE = 1
-      99800    CONTINUE
-      IF ( IDOSEMICORE.EQ.0 ) THEN
-         WRITE (1337,*)
-         WRITE (1337,*) ' WARNING: SEMICORE used',&
+      99800    continue
+      if ( IDOSEMICORE.EQ.0 ) then
+         write (1337,*)
+         write (1337,*) ' WARNING: SEMICORE used',&
             &           ' with incomplete/incorrect contour description'
-         WRITE (1337,*) ' Running option SEMICORE will be ignored'
-         WRITE (111,*)
-         WRITE (111,*) ' WARNING: SEMICORE used',&
+         write (1337,*) ' Running option SEMICORE will be ignored'
+         write (111,*)
+         write (111,*) ' WARNING: SEMICORE used',&
             &           ' with incomplete/incorrect contour description'
-         WRITE (111,*) ' Running option SEMICORE will be ignored'
-         DO I=1,32
-            IF (t_params%OPTC(I)(1:8).EQ.'SEMICORE') t_params%OPTC(I)='        '
-         END DO
-      END IF
-   END IF
+         write (111,*) ' Running option SEMICORE will be ignored'
+         do I=1,32
+            if (t_params%OPTC(I)(1:8).EQ.'SEMICORE') t_params%OPTC(I)='        '
+         end do
+      end if
+   end if
 
    ! CPA convergence parameters
    CPATOL = 1D-4
    ITCPAMAX = 20
-   CALL IOINPUT('CPAINFO         ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) CPATOL,ITCPAMAX
-   ELSE
-      WRITE(111,*) 'Default cpainfo:'
-   ENDIF
-   WRITE(111,FMT='(A7)') 'CPAINFO'
-   WRITE(111,FMT='(E12.4,I5)') CPATOL,ITCPAMAX
+   call IOINPUT('CPAINFO         ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) CPATOL,ITCPAMAX
+   else
+      write(111,*) 'Default cpainfo:'
+   endif
+   write(111,FMT='(A7)') 'CPAINFO'
+   write(111,FMT='(E12.4,I5)') CPATOL,ITCPAMAX
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Begin screening cluster information
@@ -1569,34 +1569,34 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Number of Born iterations
    ICST = 2
-   CALL IoInput('ICST            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) ICST
-      WRITE(111,*) 'ICST=',ICST
-   ELSE
-      WRITE(111,*) 'Default ICST=',ICST
-   ENDIF
+   call IoInput('ICST            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) ICST
+      write(111,*) 'ICST=',ICST
+   else
+      write(111,*) 'Default ICST=',ICST
+   endif
 
    ! Usage of Lloyd's formula
    LLY = 0 ! LLY Default=0 : do not apply Lloyds formula
-   IF (OPT('LLOYD   ').OR.OPT('Lloyd   ').OR.OPT('lloyd   ')) LLY = 1
-   CALL IoInput('<LLOYD>         ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) LLY
-      WRITE(111,*) '<LLOYD>=',LLY
-   ELSE
-      WRITE(111,*) 'Default <LLOYD>=',LLY
-   ENDIF
-   IF (LLY.NE.0) WRITE(1337,*) 'Applying Lloyds formula, LLY=',LLY
+   if (OPT('LLOYD   ').OR.OPT('Lloyd   ').OR.OPT('lloyd   ')) LLY = 1
+   call IoInput('<LLOYD>         ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) LLY
+      write(111,*) '<LLOYD>=',LLY
+   else
+      write(111,*) 'Default <LLOYD>=',LLY
+   endif
+   if (LLY.NE.0) write(1337,*) 'Applying Lloyds formula, LLY=',LLY
 
    DELTAE = (1.D-5,0.D0) ! Difference for numer. derivative in Lloyds formula
-   CALL IoInput('<DELTAE>        ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) DELTAE
-      WRITE(111,*) '<DELTAE>=',DELTAE
-   ELSE
-      WRITE(111,*) 'Default <DELTAE>=',DELTAE
-   ENDIF
+   call IoInput('<DELTAE>        ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) DELTAE
+      write(111,*) '<DELTAE>=',DELTAE
+   else
+      write(111,*) 'Default <DELTAE>=',DELTAE
+   endif
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End accuracy parameters
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1607,225 +1607,225 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    LATOMINFO = .FALSE.
    ! Initialize all clusters to 1
    CLS(1:NAEZ+NEMB) = 1
-   WRITE(1337,*) 'ATOMINFOC or ATOMINFO:'
-   DO I=1,NATYP
-      CALL IoInput('ATOMINFOC       ',UIO,I+1,7,IER)
+   write(1337,*) 'ATOMINFOC or ATOMINFO:'
+   do I=1,NATYP
+      call IoInput('ATOMINFOC       ',UIO,I+1,7,IER)
       IA = 1
-      IF ( IER.EQ.0 ) THEN
+      if ( IER.EQ.0 ) then
          LATOMINFO = .TRUE.
-         READ (UNIT=UIO,FMT=*)    ZAT(I),&
-            &                        LMXC(I),&
-            &                        (KFG(J,I),J=1,4),&
-            &                        J,&
-            &                        IER,&
-            &                        NTCELL(I),&
-            &                        MTFAC(I),&
-            &                        IRNS(I),&
-            &                        RMTREF(IER),IQAT(I),CONC(I)
+         read (UNIT=UIO,FMT=*)   ZAT(I),           &
+                                 LMXC(I),          &
+                                 (KFG(J,I),J=1,4), &
+                                 J,                &
+                                 IER,              &
+                                 NTCELL(I),        &
+                                 MTFAC(I),         &
+                                 IRNS(I),          &
+                                 RMTREF(IER),IQAT(I),CONC(I)
          IQ = IQAT(I)
          REFPOT(IQ) = IER
          RMTREFAT(I) = RMTREF(IER)
          CLS(IQ) = J
          NOQ(IQ) = NOQ(IQ) + 1
-         IF ( NOQ(IQ) .GT. 1 ) THEN
+         if ( NOQ(IQ) .GT. 1 ) then
             ICPA(IQ) = 1
             NCPA = 1
-         END IF
+         end if
          KAOEZ(NOQ(IQ),IQ) = I
-      ELSE
+      else
          IER = 0
-         CALL IoInput('ATOMINFO        ',UIO,I+1,7,IER)
-         IF (IER.EQ.0) THEN
+         call IoInput('ATOMINFO        ',UIO,I+1,7,IER)
+         if (IER.EQ.0) then
             LATOMINFO = .TRUE.
-            READ (UNIT=UIO,FMT=*)    ZAT(I),&
-               &                        LMXC(I),&
-               &                        (KFG(J,I),J=1,4),&
-               &                        J,&
-               &                        REFPOT(I),&
-               &                        NTCELL(I),&
-               &                        MTFAC(I),&
-               &                        IRNS(I),&
-               &                        RMTREF(REFPOT(I))
+            read (UNIT=UIO,FMT=*)   ZAT(I),           &
+                                    LMXC(I),          &
+                                    (KFG(J,I),J=1,4), &
+                                    J,                &
+                                    REFPOT(I),        &
+                                    NTCELL(I),        &
+                                    MTFAC(I),         &
+                                    IRNS(I),          &
+                                    RMTREF(REFPOT(I))
             IQAT(I) = I
             RMTREFAT(I) = RMTREF(REFPOT(I))
             CLS(I) = J
             CONC(I) = 1.D0
             NOQ(I) = 1
             KAOEZ(1,I) = I
-         ENDIF
-      END IF
-   END DO
+         endif
+      end if
+   end do
 
    ! If old-style ATOMINFO is present, and if a 2-dim calculation is performed,
    ! and also if the RMTREF of the "outside region" is not read in explicitly
    ! (LNEW is false) then assign the RMTREF of the outside region according to
    ! the already-read-in REFPOT under LEFTBASIS  and RIGHBASIS.
-   IF (LATOMINFO.AND.LINTERFACE.AND..NOT.LNEW) THEN
-      DO I = NAEZ + 1,NAEZ + NEMB
+   if (LATOMINFO.AND.LINTERFACE.AND..NOT.LNEW) then
+      do I = NAEZ + 1,NAEZ + NEMB
          RMTREFAT(I) = RMTREF(REFPOT(I))
       ENDDO
-   ENDIF
+   endif
 
    NCLS = 0
    NREF = 0
 
    ! Determine total number of clusters
-   DO I=1,NATYP
+   do I=1,NATYP
       NCLS = MAX(NCLS,CLS(IQAT(I)))
    ENDDO
 
    ! Determine total number of different reference potentials
-   DO I=1,NAEZ + NEMB
+   do I=1,NAEZ + NEMB
       NREF = MAX(NREF,REFPOT(I))
    ENDDO
 
    !in line 1792  this is done: NINEQ = NAEZ, so here NINEQ is still undefinded
    !so we move this writeout back
    !
-   !WRITE(6,2016) NCLS,NREF,NINEQ
-   !WRITE(6,2110)
-   !WRITE(6,2103)
+   !write(6,2016) NCLS,NREF,NINEQ
+   !write(6,2110)
+   !write(6,2103)
 
-   DO IQ=1,NAEZ
+   do IQ=1,NAEZ
       SUM = 0D0
-      IF (NOQ(IQ).LT.1) THEN
-         WRITE(6,*) 'RINPUT13: CPA: SITE',IQ,'HAS NO ASSIGNED ATOM'
-         STOP 'RINPUT13: CPA'
-      ENDIF
-      DO IO=1,NOQ(IQ)
+      if (NOQ(IQ).LT.1) then
+         write(6,*) 'RINPUT13: CPA: SITE',IQ,'HAS NO ASSIGNED ATOM'
+         stop 'RINPUT13: CPA'
+      endif
+      do IO=1,NOQ(IQ)
          SUM = SUM + CONC(KAOEZ(IO,IQ))
-      END DO
-      IF ( ABS(SUM-1.D0).GT.1D-6) THEN
-         WRITE(6,*) ' SITE ', IQ, ' CONCENTRATION <> 1.0 !'
-         WRITE(6,*) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
-         STOP       ' IN <RINPUT99>'
-      END IF
-   END DO
+      end do
+      if ( ABS(SUM-1.D0).GT.1D-6) then
+         write(6,*) ' SITE ', IQ, ' CONCENTRATION <> 1.0 !'
+         write(6,*) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
+         stop       ' IN <RINPUT99>'
+      end if
+   end do
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End old-type of ATOMINFO
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    ! Write out atominfo
-   WRITE(1337,2028) NATYP
-   WRITE(1337,2104)
-   WRITE(1337,1029) ( &
-      &     ZAT(I),&
-      &     LMXC(I),&
-      &     (KFG(J,I),J=1,4),&
-      &     CLS(IQAT(I)),&
-      &     REFPOT(IQAT(I)),&
-      &     NTCELL(I),&
-      &     MTFAC(I),&
-      &     IRNS(I),&
-      &     IQAT(I),CONC(I),I=1,NATYP)
-   WRITE(1337,2108)
-   WRITE(1337,2104)
+   write(1337,2028) NATYP
+   write(1337,2104)
+   write(1337,1029) (                     &
+                        ZAT(I),           &
+                        LMXC(I),          &
+                        (KFG(J,I),J=1,4), &
+                        CLS(IQAT(I)),     &
+                        REFPOT(IQAT(I)),  &
+                        NTCELL(I),        &
+                        MTFAC(I),         &
+                        IRNS(I),          &
+                        IQAT(I),CONC(I),I=1,NATYP)
+   write(1337,2108)
+   write(1337,2104)
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Begin SCF convergence control
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    NSTEPS = 1
-   CALL IoInput('NSTEPS          ',UIO,1,7,IER)
-   IF (IER.NE.0) THEN
-      WRITE(111,*) 'Default NSTEPS=',NSTEPS
-   ELSE
-      READ (UNIT=UIO,FMT=*) NSTEPS
-   ENDIF
-   IF (NPOL.EQ.0) THEN
+   call IoInput('NSTEPS          ',UIO,1,7,IER)
+   if (IER.NE.0) then
+      write(111,*) 'Default NSTEPS=',NSTEPS
+   else
+      read (UNIT=UIO,FMT=*) NSTEPS
+   endif
+   if (NPOL.EQ.0) then
       NSTEPS = 1
-      WRITE(1337,*) 'NPOL=0, setting NSTEPS to 1'
-   ENDIF
-   IF (IGF.NE.0) THEN
+      write(1337,*) 'NPOL=0, setting NSTEPS to 1'
+   endif
+   if (IGF.NE.0) then
       NSTEPS = 1
-      WRITE(1337,*) 'IGF.NE.0, setting NSTEPS to 1'
-   ENDIF
-   IF (ICC.NE.0) THEN
+      write(1337,*) 'IGF.NE.0, setting NSTEPS to 1'
+   endif
+   if (ICC.NE.0) then
       NSTEPS = 1
-      WRITE(1337,*) 'ICC.NE.0, setting NSTEPS to 1'
-   ENDIF
-   IF (OPT('XCPL    ')) THEN
+      write(1337,*) 'ICC.NE.0, setting NSTEPS to 1'
+   endif
+   if (OPT('XCPL    ')) then
       NSTEPS = 1
-      WRITE(1337,*) 'RUNOPT XCPL used, setting NSTEPS to 1'
-   ENDIF
-   IF (OPT('KKRFLEX ')) THEN
+      write(1337,*) 'RUNOPT XCPL used, setting NSTEPS to 1'
+   endif
+   if (OPT('KKRFLEX ')) then
       NSTEPS = 1
-      WRITE(1337,*) 'RUNOPT KKRFLEX used, setting NSTEPS to 1'
-   ENDIF
+      write(1337,*) 'RUNOPT KKRFLEX used, setting NSTEPS to 1'
+   endif
 
-   WRITE(1337,2011) NSTEPS
-   WRITE(1337,2104)
+   write(1337,2011) NSTEPS
+   write(1337,2104)
 
    IMIX = 0
-   CALL IoInput('IMIX            ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) imix
-      WRITE(111,*) 'IMIX= ',IMIX
-   ELSE
-      WRITE(111,*) 'Default IMIX= ',IMIX
-   ENDIF
-   IF (NPOL.EQ.0) THEN
-      WRITE(1337,*) 'NPOL=0, setting IMIX= 0'
+   call IoInput('IMIX            ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) imix
+      write(111,*) 'IMIX= ',IMIX
+   else
+      write(111,*) 'Default IMIX= ',IMIX
+   endif
+   if (NPOL.EQ.0) then
+      write(1337,*) 'NPOL=0, setting IMIX= 0'
       IMIX = 0
-   ENDIF
+   endif
 
    STRMIX = 0.01D0
-   CALL IoInput('STRMIX          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) STRMIX
-      WRITE(111,*) 'STRMIX= ',STRMIX
-   ELSE
-      WRITE(111,*) 'Default STRMIX= ',STRMIX
-   ENDIF
-   IF (NPOL.EQ.0) THEN
-      WRITE(1337,*) 'NPOL=0, setting STRMIX= 0.'
+   call IoInput('STRMIX          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) STRMIX
+      write(111,*) 'STRMIX= ',STRMIX
+   else
+      write(111,*) 'Default STRMIX= ',STRMIX
+   endif
+   if (NPOL.EQ.0) then
+      write(1337,*) 'NPOL=0, setting STRMIX= 0.'
       STRMIX = 0
-   ENDIF
+   endif
 
    ITDBRY = 40
-   CALL IoInput('ITDBRY          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) itdbry
-      WRITE(111,*) 'ITDBRY= ',ITDBRY
-   ELSE
-      WRITE(111,*) 'Default ITDBRY= ',ITDBRY
-   ENDIF
+   call IoInput('ITDBRY          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) itdbry
+      write(111,*) 'ITDBRY= ',ITDBRY
+   else
+      write(111,*) 'Default ITDBRY= ',ITDBRY
+   endif
 
    FCM = 20.D0
-   CALL IoInput('FCM             ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) fcm
-      WRITE(111,*) 'FCM= ',FCM
-   ELSE
-      WRITE(111,*) 'Default FCM= ',FCM
-   ENDIF
+   call IoInput('FCM             ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) fcm
+      write(111,*) 'FCM= ',FCM
+   else
+      write(111,*) 'Default FCM= ',FCM
+   endif
 
    QBOUND = 1.D-7
-   CALL IoInput('QBOUND          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) qbound
-      WRITE(111,*) 'QBOUND= ',QBOUND
-   ELSE
-      WRITE(111,*) 'Default QBOUND= ',QBOUND
-   ENDIF
+   call IoInput('QBOUND          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) qbound
+      write(111,*) 'QBOUND= ',QBOUND
+   else
+      write(111,*) 'Default QBOUND= ',QBOUND
+   endif
 
    BRYMIX = 0.01D0
-   CALL IoInput('BRYMIX          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) brymix
-      WRITE(111,*) 'BRYMIX= ',BRYMIX
-   ELSE
-      WRITE(111,*) 'Default BRYMIX= ',BRYMIX
-   ENDIF
+   call IoInput('BRYMIX          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) brymix
+      write(111,*) 'BRYMIX= ',BRYMIX
+   else
+      write(111,*) 'Default BRYMIX= ',BRYMIX
+   endif
 
-   CALL IOINPUT('RMAX            ',UIO,1,7,IER)
-   IF ( IER.NE.0 ) STOP 'rinput13: RMAX not in the inputcard'
-   READ (UNIT=UIO,FMT=*) RMAX
-   WRITE(111,*) 'RMAX= ',RMAX
+   call IOINPUT('RMAX            ',UIO,1,7,IER)
+   if ( IER.NE.0 ) stop 'rinput13: RMAX not in the inputcard'
+   read (UNIT=UIO,FMT=*) RMAX
+   write(111,*) 'RMAX= ',RMAX
 
-   CALL IOINPUT('GMAX            ',UIO,1,7,IER)
-   IF ( IER.NE.0 ) STOP 'rinput13: GMAX not in the inputcard'
-   READ (UNIT=UIO,FMT=*) GMAX
-   WRITE(111,*) 'GMAX= ',GMAX
+   call IOINPUT('GMAX            ',UIO,1,7,IER)
+   if ( IER.NE.0 ) stop 'rinput13: GMAX not in the inputcard'
+   read (UNIT=UIO,FMT=*) GMAX
+   write(111,*) 'GMAX= ',GMAX
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End SCF convergence control
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1834,64 +1834,64 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    ! Begin file name definitions
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    IL=1
-   CALL IoInput('FILES           ',UIO,IL,7,IER)
-   IF (IER.EQ.0) THEN
-      CALL IoInput('FILES           ',UIO,IL,7,IER)
-      READ (UNIT=UIO,FMT='(A40)')  I12
-      CALL IoInput('FILES           ',UIO,IL+1,7,IER)
-      READ (UNIT=UIO,FMT='(A40)')  I13
-      CALL IoInput('FILES           ',UIO,IL+2,7,IER)
-      READ (UNIT=UIO,FMT='(A40)')  I40
-      CALL IoInput('FILES           ',UIO,IL+3,7,IER)
-      READ (UNIT=UIO,FMT='(A40)')  I19
-      CALL IoInput('FILES           ',UIO,IL+4,7,IER)
-      READ (UNIT=UIO,FMT='(A40)')  I25
-   ELSE
+   call IoInput('FILES           ',UIO,IL,7,IER)
+   if (IER.EQ.0) then
+      call IoInput('FILES           ',UIO,IL,7,IER)
+      read (UNIT=UIO,FMT='(A40)')  I12
+      call IoInput('FILES           ',UIO,IL+1,7,IER)
+      read (UNIT=UIO,FMT='(A40)')  I13
+      call IoInput('FILES           ',UIO,IL+2,7,IER)
+      read (UNIT=UIO,FMT='(A40)')  I40
+      call IoInput('FILES           ',UIO,IL+3,7,IER)
+      read (UNIT=UIO,FMT='(A40)')  I19
+      call IoInput('FILES           ',UIO,IL+4,7,IER)
+      read (UNIT=UIO,FMT='(A40)')  I25
+   else
       I13 = 'potential                               ' ! 40 chars
       I19 = 'shapefun                                ' ! 40 chars
       I25 = 'scoef                                   ' ! 40 chars
       I12 = '                                        ' ! 40 chars (not used)
       I40 = '                                        ' ! 40 chars (not used)
-   ENDIF
+   endif
 
-   WRITE(1337,*) 'I12="',I12,'"'
-   WRITE(1337,*) 'I13="',I13,'"'
-   WRITE(1337,*) 'I40="',I40,'"'
-   WRITE(1337,*) 'I19="',I19,'"'
-   WRITE(1337,*) 'I25="',I25,'"'
+   write(1337,*) 'I12="',I12,'"'
+   write(1337,*) 'I13="',I13,'"'
+   write(1337,*) 'I40="',I40,'"'
+   write(1337,*) 'I19="',I19,'"'
+   write(1337,*) 'I25="',I25,'"'
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! End file name definitions
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    IFILE = 13
-   CALL IoInput('<IFILE>         ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) ifile
-      WRITE(111,*) '<IFILE>= ',IFILE
-   ELSE
-      WRITE(111,*) 'Default <IFILE>= ',IFILE
-   ENDIF
+   call IoInput('<IFILE>         ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) ifile
+      write(111,*) '<IFILE>= ',IFILE
+   else
+      write(111,*) 'Default <IFILE>= ',IFILE
+   endif
 
    IPE = 1    ! Used to print out in calrmt
    ISHIFT = 0
-   CALL IoInput('ISHIFT          ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) ishift
-      WRITE(111,*) 'ISHIFT= ',ISHIFT
-   ELSE
-      WRITE(111,*) 'Default ISHIFT= ',ISHIFT
-   ENDIF
-   IF (  OPT('rigid-ef').OR. OPT('DECIMATE') ) THEN
+   call IoInput('ISHIFT          ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) ishift
+      write(111,*) 'ISHIFT= ',ISHIFT
+   else
+      write(111,*) 'Default ISHIFT= ',ISHIFT
+   endif
+   if (  OPT('rigid-ef').OR. OPT('DECIMATE') ) then
       ISHIFT = 2
-      WRITE(1337,*) ' Rigid Fermi Energy, ISHIFT is set to ',ISHIFT
-      WRITE(111,*) ' Rigid Fermi Energy, ishift is set to ',ISHIFT
-   END IF
-   IF ( TEST('no-neutr').OR.OPT('no-neutr') )   THEN
+      write(1337,*) ' Rigid Fermi Energy, ISHIFT is set to ',ISHIFT
+      write(111,*) ' Rigid Fermi Energy, ishift is set to ',ISHIFT
+   end if
+   if ( TEST('no-neutr').OR.OPT('no-neutr') )   then
       ISHIFT = 1
-      WRITE(1337,*) 'No charge neutrality required, ISHIFT is set to',ISHIFT
-      WRITE(111,*) 'No charge neutrality required, ISHIFT is set to',ISHIFT
-   ENDIF
+      write(1337,*) 'No charge neutrality required, ISHIFT is set to',ISHIFT
+      write(111,*) 'No charge neutrality required, ISHIFT is set to',ISHIFT
+   endif
 
    ESHIFT = 0.D0
    INSREF = 0
@@ -1899,125 +1899,125 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    KHYP = 0
 
    TOLRDIF = 0.5D0 ! Set free GF to zero for r<tolrdif (a.u.)(vir. atoms)
-   CALL IoInput('<TOLRDIF>       ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) TOLRDIF
-      WRITE(111,*) '<TOLRDIF>=',TOLRDIF
-   ELSE
-      WRITE(111,*) 'Default <TOLRDIF>=',TOLRDIF
-   ENDIF
+   call IoInput('<TOLRDIF>       ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) TOLRDIF
+      write(111,*) '<TOLRDIF>=',TOLRDIF
+   else
+      write(111,*) 'Default <TOLRDIF>=',TOLRDIF
+   endif
 
    ! -------------------------------------------------
    KTE = 1
-   !     CALL IoInput('KTE       ',UIO,1,7,IER)
-   !                      READ (UNIT=UIO,FMT=*) kte
+   !     call IoInput('KTE       ',UIO,1,7,IER)
+   !                      read (UNIT=UIO,FMT=*) kte
 
    KPRE = 1
-   !     CALL IoInput('KPRE      ',UIO,1,7,IER)
-   !                      READ (UNIT=UIO,FMT=*) kpre
+   !     call IoInput('KPRE      ',UIO,1,7,IER)
+   !                      read (UNIT=UIO,FMT=*) kpre
 
    KEFG = 0
-   !     CALL IoInput('KEFG      ',UIO,1,7,IER)
-   !                      READ (UNIT=UIO,FMT=*) kefg
+   !     call IoInput('KEFG      ',UIO,1,7,IER)
+   !                      read (UNIT=UIO,FMT=*) kefg
 
    KVMAD = 0
-   CALL IoInput('KVMAD           ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) kvmad
-      WRITE(111,*) 'KVMAD= ',KVMAD
-   ELSE
-      WRITE(111,*) 'Default KVMAD= ',KVMAD
-   ENDIF
+   call IoInput('KVMAD           ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) kvmad
+      write(111,*) 'KVMAD= ',KVMAD
+   else
+      write(111,*) 'Default KVMAD= ',KVMAD
+   endif
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! --> determination of properties at Fermi level
+   ! Determination of properties at Fermi level
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   IF ( OPT('GF-EF   ') ) THEN
+   if ( OPT('GF-EF   ') ) then
       IGF = 1
-      IF (NPOL.GT.0) NPOL = 0
-      IF (NPOL.LT.0) THEN
+      if (NPOL.GT.0) NPOL = 0
+      if (NPOL.LT.0) then
          NPNT1 = 0
          NPNT3 = 0
-      END IF
+      end if
       NPNT2 = 1
-   END IF
+   end if
 
-   IF (OPT('DOS-EF  ')) THEN
+   if (OPT('DOS-EF  ')) then
       NPOL = 0
       NPNT2 = 1
-   END IF
+   end if
    ! ----------------------------------------------------------------------
    ! ---------------------------------------------------------------------
    !
    KFORCE = 0
-   IF (INS.GT.0) THEN
-      CALL IoInput('KFORCE          ',UIO,1,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) KFORCE
-         WRITE(111,*) 'KFORCE= ',KFORCE
-      ELSE
-         WRITE(111,*) 'Default KFORCE= ',KFORCE
-      ENDIF
-   END IF
+   if (INS.GT.0) then
+      call IoInput('KFORCE          ',UIO,1,7,IER)
+      if (IER.EQ.0) then
+         read (UNIT=UIO,FMT=*) KFORCE
+         write(111,*) 'KFORCE= ',KFORCE
+      else
+         write(111,*) 'Default KFORCE= ',KFORCE
+      endif
+   end if
 
    KFROZN = KCOR
-   IF (KCOR.EQ.0) KCOR = 2
+   if (KCOR.EQ.0) KCOR = 2
 
    ! ------------------------------------------------------------------------
-   WRITE (1337,9210) LMAX
-   WRITE (1337,9301)
-   WRITE (1337,9220) EMIN,EMAX,TK
-   WRITE (1337,9302)
-   WRITE (1337,9230) NPOL,NPNT1,NPNT2,NPNT3
-   WRITE (1337,9304)
-   WRITE (1337,9303)
-   WRITE (1337,9250) IFILE,IPE,ISHIFT,ESHIFT
-   WRITE (1337,9305)
-   WRITE (1337,9260) KSHAPE,IRM,INS,ICST,INSREF
-   WRITE (1337,9309)
-   WRITE (1337,9270) KCOR,KVREL,KWS,KHYP,KHFIELD,KXC
-   WRITE (1337,9306)
-   WRITE (1337,9330) KTE,KPRE,KEFG,KVMAD
-   WRITE (1337,9309)
-   WRITE (1337,9290) IMIX,IGF,ICC
-   WRITE (1337,9304)
-   WRITE (1337,9300) ITDBRY
-   WRITE (1337,9307)
-   WRITE (1337,9310) STRMIX,FCM,QBOUND
-   WRITE (1337,9302)
-   WRITE (1337,9320) BRYMIX
-   WRITE (1337,9308)
-   WRITE (1337,9280) HFIELD,VCONST
+   write (1337,9210) LMAX
+   write (1337,9301)
+   write (1337,9220) EMIN,EMAX,TK
+   write (1337,9302)
+   write (1337,9230) NPOL,NPNT1,NPNT2,NPNT3
+   write (1337,9304)
+   write (1337,9303)
+   write (1337,9250) IFILE,IPE,ISHIFT,ESHIFT
+   write (1337,9305)
+   write (1337,9260) KSHAPE,IRM,INS,ICST,INSREF
+   write (1337,9309)
+   write (1337,9270) KCOR,KVREL,KWS,KHYP,KHFIELD,KXC
+   write (1337,9306)
+   write (1337,9330) KTE,KPRE,KEFG,KVMAD
+   write (1337,9309)
+   write (1337,9290) IMIX,IGF,ICC
+   write (1337,9304)
+   write (1337,9300) ITDBRY
+   write (1337,9307)
+   write (1337,9310) STRMIX,FCM,QBOUND
+   write (1337,9302)
+   write (1337,9320) BRYMIX
+   write (1337,9308)
+   write (1337,9280) HFIELD,VCONST
    ! ------------------------------------------------------------------------
 
    ! ------------------------------------------------------------------------
    IPF = 1337
    IPFE = IPF + 3
 
-   IF (OPT('SEARCHEF')) THEN
+   if (OPT('SEARCHEF')) then
       IMIX=0
       MIXING=0.0d0
       STRMIX=MIXING
       ITDBRY=1
       QBOUND=1.0d-10
-      WRITE(1337,'(1X,A)') 'Option SEARCHEF used overriding INPUT for'
-      WRITE(1337,'(1X,A)') 'IMIX,MIX,QBOUND,ITDBRY: 0, 0.0, 1E-10, 1'
-      WRITE(1337,*)
-   ENDIF
+      write(1337,'(1X,A)') 'Option SEARCHEF used overriding INPUT for'
+      write(1337,'(1X,A)') 'IMIX,MIX,QBOUND,ITDBRY: 0, 0.0, 1E-10, 1'
+      write(1337,*)
+   endif
 
-   IF (IMIX.GT.2) THEN
+   if (IMIX.GT.2) then
       FCM = 1.0D0
       MIXING = BRYMIX
-   ELSE
+   else
       MIXING = STRMIX
-   END IF
+   end if
 
-   IF (IMIX.GE.6) WRITE (1337,FMT=9110) (IMIX-5),ITDBRY - 1
+   if (IMIX.GE.6) write (1337,FMT=9110) (IMIX-5),ITDBRY - 1
 
-   WRITE (1337,FMT=9090) MIXING,QBOUND
+   write (1337,FMT=9090) MIXING,QBOUND
    !--------------------------------------------------------
-   WRITE (1337,FMT=9091) CPAFLAG(NCPA)
-   IF (NCPA.NE.0) WRITE(1337,9092) ITCPAMAX,CPATOL
+   write (1337,FMT=9091) CPAFLAG(NCPA)
+   if (NCPA.NE.0) write(1337,9092) ITCPAMAX,CPATOL
    !--------------------------------------------------------
 
    LMMAX = (LMAX+1)**2
@@ -2025,7 +2025,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    LMPOT = (LPOT+1)*(LPOT+1)
    LMXSPD = (2*LPOT+1)**2
 
-   WRITE (1337,FMT=9020) LMAX,LMAX,NATYP,NATYP,IRM,IRM,NSPIN,NSPIND
+   write (1337,FMT=9020) LMAX,LMAX,NATYP,NATYP,IRM,IRM,NSPIN,NSPIND
 
    if (INS.GT.0) then
       write (1337,FMT=9130)
@@ -2036,155 +2036,161 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
       enddo
    end if
 
-   WRITE (1337,FMT=9130)
+   write (1337,FMT=9130)
 
-   IF (KHFIELD.EQ.1) WRITE (1337,FMT=9030) HFIELD
-   IF (KVREL.LE.1 ) THEN
-      WRITE (1337,FMT=9050) TSPIN(NSPIN)
-   ELSE
-      WRITE (1337,FMT=9050) TSPIN(NSPIN+1)
-   END IF
-   WRITE (1337,FMT=9170) TVREL(KVREL)
-   WRITE (1337,FMT=9170) TKCOR(KFROZN)
-   IF (KSHAPE.EQ.0) THEN
-      WRITE (1337,FMT=9070) TKWS(KWS+1)
-   ELSE
-      WRITE (1337,FMT=9170) TSHAPE
-   END IF
+   if (KHFIELD.EQ.1) write (1337,FMT=9030) HFIELD
+   if (KVREL.LE.1 ) then
+      write (1337,FMT=9050) TSPIN(NSPIN)
+   else
+      write (1337,FMT=9050) TSPIN(NSPIN+1)
+   end if
+   write (1337,FMT=9170) TVREL(KVREL)
+   write (1337,FMT=9170) TKCOR(KFROZN)
+   if (KSHAPE.EQ.0) then
+      write (1337,FMT=9070) TKWS(KWS+1)
+   else
+      write (1337,FMT=9170) TSHAPE
+   end if
 
-   WRITE (1337,FMT=9100) TXC(KXC+1)
-   IF (INS.GT.0) WRITE (1337,FMT=9160) TINS(INS),ICST
-   WRITE (1337,FMT=9080)
+   write (1337,FMT=9100) TXC(KXC+1)
+   if (INS.GT.0) write (1337,FMT=9160) TINS(INS),ICST
+   write (1337,FMT=9080)
 
    VBC(1) = VCONST
    VBC(2) = VBC(1)
 
    LRHOSYM = .FALSE.
-   CALL IoInput('LRHOSYM         ',UIO,1,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) lrhosym
-      WRITE(111,*) 'LRHOSYM= ',LRHOSYM
-   ELSE
-      WRITE(111,*) 'Default LRHOSYM= ',LRHOSYM
-   ENDIF
+   call IoInput('LRHOSYM         ',UIO,1,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) lrhosym
+      write(111,*) 'LRHOSYM= ',LRHOSYM
+   else
+      write(111,*) 'Default LRHOSYM= ',LRHOSYM
+   endif
 
-   IF ( (NCPA.NE.0).AND.LRHOSYM ) THEN
-      WRITE(1337,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
-      WRITE(1337,*) '        YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
-      WRITE(111,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
-      WRITE(111,*) '    YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
+   if ( (NCPA.NE.0).AND.LRHOSYM ) then
+      write(1337,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
+      write(1337,*) '        YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
+      write(111,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
+      write(111,*) '    YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
       LRHOSYM = .FALSE.
-   END IF
+   end if
 
-   IF (LRHOSYM) THEN
-      CALL IoInput('IXIPOL          ',UIO,1,7,IER)
-      READ (UNIT=UIO,FMT=*) (ixipol(I),I=1,natyp)
+   if (LRHOSYM) then
+      call IoInput('IXIPOL          ',UIO,1,7,IER)
+      read (UNIT=UIO,FMT=*) (ixipol(I),I=1,natyp)
       write (1337,2022) (ixipol(i),i=1,natyp)
       write (1337,2103)
-      DO I=1,NATYP
-         IF ( IXIPOL(I).NE.0 .AND. ABS(IXIPOL(ABS(IXIPOL(I)))).NE.I) THEN
+      do I=1,NATYP
+         if ( IXIPOL(I).NE.0 .AND. ABS(IXIPOL(ABS(IXIPOL(I)))).NE.I) then
             write(6,*) 'Error in IXIPOL at atom ',I,'.'
             stop 'IXIPOL'
-         END IF
-      END DO
-   ELSE
-      DO I=1,NATYP
+         end if
+      end do
+   else
+      do I=1,NATYP
          IXIPOL(I) = 0
-      END DO
+      end do
       write (1337,2022) (ixipol(i),i=1,natyp)
       write (1337,2103)
-   END IF
+   end if
    write(1337,2023) NAEZ,NEMB
    write(1337,2110)
 
    NINEQ = NAEZ
-   WRITE(1337,2016) NCLS,NREF,NINEQ
-   WRITE(1337,2110)
-   WRITE(1337,2103)
+   write(1337,2016) NCLS,NREF,NINEQ
+   write(1337,2110)
+   write(1337,2103)
 
-   !----------------------------------------------------------------------
+   !----------------------------------------------------------------------------
    KMROT = 0
 
-   DO I=1,NAEZ
-      ! --->  atoms equivalent by inversional symmetry
+   do I=1,NAEZ
+      !-------------------------------------------------------------------------
+      ! Atoms equivalent by inversional symmetry
+      !-------------------------------------------------------------------------
       QMTET(I)=0D0
       QMPHI(I)=0D0
       IER = 0
-      CALL IoInput('RBASISANG       ',UIO,I,7,IER)
+      call IoInput('RBASISANG       ',UIO,I,7,IER)
 
-      IF( IER.EQ.0 ) THEN
-         READ (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3),QMTET(I),QMPHI(I)
-         IF( ABS(QMTET(I)) .GT. 1D-6 ) KMROT = 1
-         IF( ABS(QMPHI(I)) .GT. 1D-6 ) KMROT = 1
-      ENDIF
+      if( IER.EQ.0 ) then
+         read (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3),QMTET(I),QMPHI(I)
+         if( ABS(QMTET(I)) .GT. 1D-6 ) KMROT = 1
+         if( ABS(QMPHI(I)) .GT. 1D-6 ) KMROT = 1
+      endif
    ENDDO                         ! I=1,NAEZ
-   CALL IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
-   !-------------------------------------------------------------
+   call IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
+   !----------------------------------------------------------------------------
 
    if (nemb.gt.0) write(1337,*)
    write(1337,2031) ((rbasis(j,i),j=1,3),i,refpot(i),i=naez+1,naez+nemb)
 
    ! ------------------------------------------------------------------------
-   IF ( .not. OPT('VIRATOMS') ) THEN
-      DO I=1,NAEZ
-         DO IO=1,NOQ(I)
-            IF (KAOEZ(IO,I).LT.1) STOP 'Error in KAOEZ'
-         END DO
+   if ( .not. OPT('VIRATOMS') ) then
+      do I=1,NAEZ
+         do IO=1,NOQ(I)
+            if (KAOEZ(IO,I).LT.1) stop 'Error in KAOEZ'
+         end do
       ENDDO
-   END IF
+   end if
    ! ------------------------------------------------------------------------
-   WRITE(1337,2111)
+   write(1337,2111)
 
-   !Check for DECIMATE consistency
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Check for DECIMATE consistency
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   if (OPT('DECIMATE')) then
+      if ( MOD(NPRINCD,NLBASIS).NE.0 ) then
+         write(6,*) ' Decimation cannot continue '
+         write(6,*) 'NPRINCD=',NPRINCD,' NLBASIS=',NLBASIS
+         stop
+      end if
+      if ( MOD(NPRINCD,NRBASIS).NE.0 )  then
+         write(6,*) ' Decimation cannot continue '
+         write(6,*) 'NPRINCD=',NPRINCD,' NRBASIS=',NRBASIS
+         stop
+      end if
+   end if
 
-   IF (OPT('DECIMATE')) THEN
-      IF ( MOD(NPRINCD,NLBASIS).NE.0 ) THEN
-         WRITE(6,*) ' Decimation cannot continue '
-         WRITE(6,*) 'NPRINCD=',NPRINCD,' NLBASIS=',NLBASIS
-         STOP
-      END IF
-      IF ( MOD(NPRINCD,NRBASIS).NE.0 )  THEN
-         WRITE(6,*) ' Decimation cannot continue '
-         WRITE(6,*) 'NPRINCD=',NPRINCD,' NRBASIS=',NRBASIS
-         STOP
-      END IF
-   END IF
-
-   !Check for ITERMDIR consistency -- if KMROT=0 suppress it
-
-   IF ( (OPT('ITERMDIR')).AND.(KMROT.EQ.0) ) THEN
-      WRITE (1337,*)
-      WRITE (1337,*)' WARNING: ITERMDIR running option used with collinear/',&
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Check for ITERMDIR consistency -- if KMROT=0 suppress it
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   if ( (OPT('ITERMDIR')).AND.(KMROT.EQ.0) ) then
+      write (1337,*)
+      write (1337,*)' WARNING: ITERMDIR running option used with collinear/',&
          &        'parallel Oz starting'
-      WRITE (1337,*)'          system (KMROT = 0 ). Please check token',&
+      write (1337,*)'          system (KMROT = 0 ). Please check token',&
          &        ' RBASISANG in your input'
-      WRITE (1337,*) ' Running option ITERMDIR will be ignored'
-      WRITE (1337,*)
-      DO I=1,32
-         IF (t_params%OPTC(I)(1:8).EQ.'ITERMDIR') t_params%OPTC(I)='        '
-      END DO
-   END IF
+      write (1337,*) ' Running option ITERMDIR will be ignored'
+      write (1337,*)
+      do I=1,32
+         if (t_params%OPTC(I)(1:8).EQ.'ITERMDIR') t_params%OPTC(I)='        '
+      end do
+   end if
 
-   !Check for XCPL consistency
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Check for XCPL consistency
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    MANCTL = ( KMROT.EQ.0 ).AND.( KREL.EQ.0 ).AND.( NSPIN.GT.1 )
-   IF ( (OPT('XCPL    ') ).AND.( .NOT.MANCTL ) ) THEN
-      WRITE (1337,*)
-      WRITE (1337,*)' WARNING: XCPL running option requires collinear ',&
+   if ( (OPT('XCPL    ') ).AND.( .NOT.MANCTL ) ) then
+      write (1337,*)
+      write (1337,*)' WARNING: XCPL running option requires collinear ',&
          &        'magnetic systems'
-      WRITE (1337,*)' in a NON/SCALAR/SCALAR+SOC relativistic mode (KREL=0)'
-      WRITE (1337,*) ' Running option XCPL will be ignored'
-      WRITE (1337,*)
-      DO I=1,32
-         IF (t_params%OPTC(I)(1:8).EQ.'XCPL    ') t_params%OPTC(I)='        '
-      END DO
-   END IF
+      write (1337,*)' in a NON/SCALAR/SCALAR+SOC relativistic mode (KREL=0)'
+      write (1337,*) ' Running option XCPL will be ignored'
+      write (1337,*)
+      do I=1,32
+         if (t_params%OPTC(I)(1:8).EQ.'XCPL    ') t_params%OPTC(I)='        '
+      end do
+   end if
 
-   WRITE(1337,62) (t_params%OPTC(I),I=1,8)
-   62   FORMAT(79('-')/' EXECUTION OPTIONS:'/1X,A8,7('//',A8)/79('-'))
-   WRITE(1337,52) (t_params%TESTC(I),I=1,16)
-   52   FORMAT(79('-')/' TEST OPTIONS:'/2(1X,A8,7('//',A8)/)/79('-'))
-   980  FORMAT(8A8)
+   write(1337,62) (t_params%OPTC(I),I=1,8)
+   62   format(79('-')/' EXECUTION OPTIONS:'/1X,A8,7('//',A8)/79('-'))
+   write(1337,52) (t_params%TESTC(I),I=1,16)
+   52   format(79('-')/' TEST OPTIONS:'/2(1X,A8,7('//',A8)/)/79('-'))
+   980  format(8A8)
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Initialise SOLVER, SOC and CTL parameters in REL case
@@ -2193,187 +2199,202 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    MANSOC=.FALSE.
    MANCTL=.FALSE.
 
-   IF (KREL.EQ.1) THEN
+   if (KREL.EQ.1) then
       SOLVER='BS        '
-      CALL IoInput('SOLVER          ',UIO,0,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) SOLVER
-         IF ( SOLVER(1:2) .EQ. 'BS' ) THEN
+      call IoInput('SOLVER          ',UIO,0,7,IER)
+      if (IER.EQ.0) then
+         read (UNIT=UIO,FMT=*) SOLVER
+         if ( SOLVER(1:2) .EQ. 'BS' ) then
             SOLVER = 'BS        '
-         ELSE
-            IF( SOLVER .NE. 'ABM-OP    ' ) SOLVER='ABM-OP    '
-         END IF
-      END IF
+         else
+            if( SOLVER .NE. 'ABM-OP    ' ) SOLVER='ABM-OP    '
+         end if
+      end if
 
-      ! ============================================================= SOC-MAN
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! SOC-MAN
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! For Dirac-ASA
-
-      IF (OPT('SOC     ')) THEN
-         CALL IOInput('SOSCALE         ',UIO,0,7,IER)
-         IF (IER.EQ.0) THEN
-            READ (UNIT=UIO,FMT=*) SOSCALE
-            IF (SOSCALE.GT.-2.5D0) THEN
-               IF (SOSCALE.GE.0.0D0) THEN           ! SOC-I
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      if (OPT('SOC     ')) then
+         call IOInput('SOSCALE         ',UIO,0,7,IER)
+         if (IER.EQ.0) then
+            read (UNIT=UIO,FMT=*) SOSCALE
+            if (SOSCALE.GT.-2.5D0) then
+               if (SOSCALE.GE.0.0D0) then           ! SOC-I
                   SOLVER='ABM-SOC   '
                   MANSOC=.TRUE.
-               ELSE                                  ! SOC-II
+               else                                  ! SOC-II
                   SOLVER       = 'ABM-SOC-II'
                   MANSOC=.TRUE.
-                  DO I=1,NATYP
+                  do I=1,NATYP
                      SOCSCL(1:LMAX+1,I) = SOSCALE
-                  END DO
-                  WRITE(1337,99010) SOCII(NINT(SOSCALE))
-               END IF
-            ELSE
-               WRITE(1337,99001) '< SOC >'
-               WRITE(1337,99003)
-            END IF
-         ELSE
-            WRITE(1337,99002) '< SOC >'
-            WRITE(1337,99003)
-         END IF
+                  end do
+                  write(1337,99010) SOCII(NINT(SOSCALE))
+               end if
+            else
+               write(1337,99001) '< SOC >'
+               write(1337,99003)
+            end if
+         else
+            write(1337,99002) '< SOC >'
+            write(1337,99003)
+         end if
 
-         IF ( MANSOC .AND. (SOSCALE.GE.0D0) ) THEN
+         if ( MANSOC .AND. (SOSCALE.GE.0D0) ) then
             IMANSOC(1:NATYP) = 1
-            ! ---> now look for a possible include/exclude list (SOCLIST= +/- NASOC)
-            ! ---> if SOCLIST is not found, ALL the atoms will have SOC modified with
-            ! ---> SOSCALE (+NASOC=only NASOC atoms, -NASOC=all but these NASOC atoms)
-            !      Note that this is allowed only for SOC-I manipulation
-            !
-            CALL IOInput('SOCLIST         ',UIO,0,7,IER)
-            IF (IER.EQ.0) THEN
-               READ(UNIT=UIO,FMT=*) NASOC,(ISP(I),I=1,ABS(NASOC))
+            !-------------------------------------------------------------------
+            ! Now look for a possible include/exclude list (SOCLIST= +/- NASOC)
+            ! if SOCLIST is not found, ALL the atoms will have SOC modified with
+            ! SOSCALE (+NASOC=only NASOC atoms, -NASOC=all but these NASOC atoms)
+            ! Note that this is allowed only for SOC-I manipulation
+            !-------------------------------------------------------------------
+            call IOInput('SOCLIST         ',UIO,0,7,IER)
+            if (IER.EQ.0) then
+               read(UNIT=UIO,FMT=*) NASOC,(ISP(I),I=1,ABS(NASOC))
 
-               IF (NASOC.NE.0) THEN
-                  IF (NASOC.LT.0) THEN ! exclude this atoms
-                     DO I=1,-NASOC
+               if (NASOC.NE.0) then
+                  if (NASOC.LT.0) then ! exclude this atoms
+                     do I=1,-NASOC
                         IMANSOC(ISP(I)) = 0
-                     END DO
-                  ELSE
+                     end do
+                  else
                      IMANSOC(1:NATYP) = 0
-                     DO I=1,NASOC
+                     do I=1,NASOC
                         IMANSOC(ISP(I)) = 1
-                     END DO
-                  END IF
-               END IF
-            END IF
+                     end do
+                  end if
+               end if
+            end if
 
-            WRITE(1337,2100)
-            DO I=1,NATYP
-               IF (IMANSOC(I).EQ.1) THEN
+            write(1337,2100)
+            do I=1,NATYP
+               if (IMANSOC(I).EQ.1) then
                   SOCSCL(1:LMAX+1,I)=SOSCALE
-               END IF
-            END DO
-            WRITE(1337,99004)
-            IF (NASOC.EQ.0) WRITE(1337,99005)
-            IF (NASOC.GT.0) THEN
-               WRITE(1337,99006)
-               WRITE(1337,99008) (ISP(I),I=1,NASOC)
-            END IF
-            IF (NASOC.LT.0) THEN
-               WRITE(1337,99007)
-               WRITE(1337,99008) (ISP(I),I=1,ABS(NASOC))
-            END IF
-            WRITE(1337,99009) SOSCALE
-            WRITE(1337,2100)
-         END IF
-      END IF
-      ! ============================================================= SOC-MAN
+               end if
+            end do
+            write(1337,99004)
+            if (NASOC.EQ.0) write(1337,99005)
+            if (NASOC.GT.0) then
+               write(1337,99006)
+               write(1337,99008) (ISP(I),I=1,NASOC)
+            end if
+            if (NASOC.LT.0) then
+               write(1337,99007)
+               write(1337,99008) (ISP(I),I=1,ABS(NASOC))
+            end if
+            write(1337,99009) SOSCALE
+            write(1337,2100)
+         end if
+      end if
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! SOC-MAN
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      WRITE(1337,'('' SOLVER used for the DIRAC equation : '',2X,A)') SOLVER
-      WRITE(1337,2100)
+      write(1337,'('' SOLVER used for the DIRAC equation : '',2X,A)') SOLVER
+      write(1337,2100)
 
-      ! ============================================================= CTL-MAN
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! CTL-MAN
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      IF (OPT('CSCALE  ')) THEN
-         CALL IOInput('CTLSCALE        ',UIO,0,7,IER)
-         IF (IER.EQ.0) THEN
-            READ (UNIT=UIO,FMT=*) CTLSCALE
-            IF (CTLSCALE.GE.1D-12) THEN
+      if (OPT('CSCALE  ')) then
+         call IOInput('CTLSCALE        ',UIO,0,7,IER)
+         if (IER.EQ.0) then
+            read (UNIT=UIO,FMT=*) CTLSCALE
+            if (CTLSCALE.GE.1D-12) then
                MANCTL=.TRUE.
-            ELSE
-               WRITE(1337,99001) '< CSCALE >'
-               WRITE(1337,99011)
-            END IF
-         ELSE
-            WRITE(1337,99002) '< CSCALE >'
-            WRITE(1337,99011)
-         END IF
+            else
+               write(1337,99001) '< CSCALE >'
+               write(1337,99011)
+            end if
+         else
+            write(1337,99002) '< CSCALE >'
+            write(1337,99011)
+         end if
 
-         IF (MANCTL) THEN
+         if (MANCTL) then
             CSCL(1:LMAX+1,1:NATYP) = CSCL(1:LMAX+1,1:NATYP)/DSQRT(CTLSCALE)
-            WRITE(1337,99012)
-            WRITE(1337,99005)
-            WRITE(1337,99009) 1.D0/DSQRT(CTLSCALE)
-         END IF
-         WRITE(1337,2100)
-      END IF
+            write(1337,99012)
+            write(1337,99005)
+            write(1337,99009) 1.D0/DSQRT(CTLSCALE)
+         end if
+         write(1337,2100)
+      end if
 
-      ! ============================================================= CTL-MAN
-   END IF
-   ! ================================================================ LDA+U
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! CTL-MAN
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   end if
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! LDA+U
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   IF(OPT('qdos    ')) THEN
+   if(OPT('qdos    ')) then
       allocate(t_params%qdos_atomselect(NATYP), stat=i_stat) !INTEGER
       call memocc(i_stat,product(shape(t_params%qdos_atomselect))*kind(t_params%qdos_atomselect),'t_params%qdos_atomselect','rinput13')
 
       t_params%qdos_atomselect(1:NATYP) = 1
       !for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.
-      !          CALL IoInput('qdosatoms       ',UIO,1,7,IER)
-      !          IF (IER.EQ.0) THEN
-      !            READ (UNIT=UIO,FMT=*) (t_params%qdos_atomselect(I),I=1,NATYP)
-      !            WRITE(111,FMT='(A10,80I2)') 'qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
-      !          ELSE
-      !            WRITE(111,FMT='(A18,80I2)') 'Default qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
-      !          ENDIF
+      !          call IoInput('qdosatoms       ',UIO,1,7,IER)
+      !          if (IER.EQ.0) then
+      !            read (UNIT=UIO,FMT=*) (t_params%qdos_atomselect(I),I=1,NATYP)
+      !            write(111,FMT='(A10,80I2)') 'qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
+      !          else
+      !            write(111,FMT='(A18,80I2)') 'Default qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
+      !          endif
       !
-      !          WRITE (1337,'(A)') 'atom selective writeout for qdos:'
-      !          WRITE (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
+      !          write (1337,'(A)') 'atom selective writeout for qdos:'
+      !          write (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
 
-   END IF
+   end if
 
    !-------------------------------------------------------------------------
-   IF (OPT('FERMIOUT').AND.(NSTEPS/=1))THEN                                  ! fswrt
-      WRITE(6,2012)                                                          ! fswrt
+   if (OPT('FERMIOUT').AND.(NSTEPS/=1))then                                  ! fswrt
+      write(6,2012)                                                          ! fswrt
       NSTEPS = 1                                                             ! fswrt
-   END IF                                                                    ! fswrt
+   end if                                                                    ! fswrt
    !-------------------------------------------------------------------------
 
-   ! ============================================================= WF_SAVE
-   CALL IOInput('MEMWFSAVE       ',UIO,0,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_number
-      WRITE(1337,*) '< MEMWFSAVE >', t_wavefunctions%maxmem_number
-      WRITE(111,*) 'MEMWFSAVE=',t_wavefunctions%maxmem_number
-   ELSE
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! WF_SAVE
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   call IOInput('MEMWFSAVE       ',UIO,0,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_number
+      write(1337,*) '< MEMWFSAVE >', t_wavefunctions%maxmem_number
+      write(111,*) 'MEMWFSAVE=',t_wavefunctions%maxmem_number
+   else
       t_wavefunctions%maxmem_number = 0
-      WRITE(1337,*) '< MEMWFSAVE >, use default:', t_wavefunctions%maxmem_number
-      WRITE(111,*) 'Default MEMWFSAVE= ',t_wavefunctions%maxmem_number
-   END IF
-   CALL IOInput('UNITMEMWFSAVE   ',UIO,0,7,IER)
-   IF (IER.EQ.0) THEN
-      READ (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_units
-      WRITE(1337,*) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
-      WRITE(111,*) 'UNITMEMWFSAVE=',t_wavefunctions%maxmem_units
-   ELSE
+      write(1337,*) '< MEMWFSAVE >, use default:', t_wavefunctions%maxmem_number
+      write(111,*) 'Default MEMWFSAVE= ',t_wavefunctions%maxmem_number
+   end if
+   call IOInput('UNITMEMWFSAVE   ',UIO,0,7,IER)
+   if (IER.EQ.0) then
+      read (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_units
+      write(1337,*) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
+      write(111,*) 'UNITMEMWFSAVE=',t_wavefunctions%maxmem_units
+   else
       t_wavefunctions%maxmem_units = 2
-      WRITE(1337,*) '< UNITMEMWFSAVE >, use default:', t_wavefunctions%maxmem_units, '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
-      WRITE(111,*) 'Default UNITMEMWFSAVE= ',t_wavefunctions%maxmem_units, '(MB)'
-   END IF
+      write(1337,*) '< UNITMEMWFSAVE >, use default:', t_wavefunctions%maxmem_units, '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
+      write(111,*) 'Default UNITMEMWFSAVE= ',t_wavefunctions%maxmem_units, '(MB)'
+   end if
 
    !default flags: save only rll from main1a>tmatnewsolver since left solutions can be calculated always in main1c>rhovalnew and sll is not used
    t_wavefunctions%save_rll     = .true.
    t_wavefunctions%save_sll     = .false.
    t_wavefunctions%save_rllleft = .false.
    t_wavefunctions%save_sllleft = .false.
-   ! ============================================================= WF_SAVE
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! WF_SAVE
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   WRITE(1337,2100)
-   WRITE(1337,2040) KMROT
-   WRITE(1337,2110)
-   WRITE(1337,*) ' >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< '
+   write(1337,2100)
+   write(1337,2040) KMROT
+   write(1337,2110)
+   write(1337,*) ' >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< '
 
-   CLOSE(111) ! Close file inputcard_generated.txt
+   close(111) ! Close file inputcard_generated.txt
 
    if (allocated(IMANSOC)) then
       i_all=-product(shape(IMANSOC))*kind(IMANSOC)
@@ -2381,80 +2402,82 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
       call memocc(i_stat,i_all,'IMANSOC','rinput13')
    endif
 
-   RETURN
-   ! *********************************************Input-End ********
-   1029 FORMAT((F4.0,I4,4x,4I1,3I4,F8.4,I4,I5,1x,f8.5))
+   return
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! INPUT END
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   1029 format((F4.0,I4,4x,4I1,3I4,F8.4,I4,I5,1x,f8.5))
    ! ------------------------------------------------------------------------
-   2010 FORMAT(' NSPIN '/I4)
-   2011 FORMAT(' NSTEPS'/I4)
-   2012 FORMAT(' WARINING: Setting NSTEPS to 1 for runoption FERMOUT')
-   2014 FORMAT('          ALAT = ',F15.8)
-   2015 FORMAT('   INTERVX   INTERVY   INTERVZ'/3I10)
-   2016 FORMAT('    NCLS    NREF   NINEQ'/,3I8)
-   2018 FORMAT(' RBASIS'/,&
+   2010 format(' NSPIN '/I4)
+   2011 format(' NSTEPS'/I4)
+   2012 format(' WARINING: Setting NSTEPS to 1 for runoption FERMOUT')
+   2014 format('          ALAT = ',F15.8)
+   2015 format('   INTERVX   INTERVY   INTERVZ'/3I10)
+   2016 format('    NCLS    NREF   NINEQ'/,3I8)
+   2018 format(' RBASIS'/,&
       &     'SITE                BASIS VECTORS                 ',&
       &     'THETA   PHI CPA OCC KAOEZ')
-   2019 FORMAT('         ABASIS         BBASIS         CBASIS'/3F15.8)
-   2021 FORMAT(' INIPOL'/,(10I4))
-   2022 FORMAT(' IXIPOL'/,(10I4))
-   2023 FORMAT('    NAEZ    NEMB  '/,2I8)
-   2025 FORMAT((i4,3F15.8,2F6.1,2(1x,I3),4I3))
-   2028 FORMAT(' NATYP '/,I4/,&
+   2019 format('         ABASIS         BBASIS         CBASIS'/3F15.8)
+   2021 format(' INIPOL'/,(10I4))
+   2022 format(' IXIPOL'/,(10I4))
+   2023 format('    NAEZ    NEMB  '/,2I8)
+   2025 format((i4,3F15.8,2F6.1,2(1x,I3),4I3))
+   2028 format(' NATYP '/,I4/,&
       &     '   Z lmx     KFG cls pot ntc  MTFAC irns SITE  CONC')
-   2031 FORMAT((3F15.8,2I6))
-   2032 FORMAT(' NTCELLR'/,(10I4))
-   2040 FORMAT(' KMROT'/,4I8)
+   2031 format((3F15.8,2I6))
+   2032 format(' NTCELLR'/,(10I4))
+   2040 format(' KMROT'/,4I8)
    ! ------------------------------------------------------------------------
-   2100 FORMAT(79(1H-))
+   2100 format(79(1H-))
    2101 format(   3(1H-),1H+  , 3(14(1H-),1H+),  30(1H-))
    2102 format( 3(9(1H-),1H+) ,49(1H-))
-   2103 FORMAT(10(3(1H-),1H+) ,39(1H-))
+   2103 format(10(3(1H-),1H+) ,39(1H-))
    2104 format(   3(1H-),1H+  ,75(1H-))
    2107 format( 3(14(1H-),1H+),34(1H-))
    2108 format( 2(3(1H-),1H+),  7(1H-),1H+,      3(3(1H-),1H+),&
       &          7(1H-),1H+,   3(1H-),1H+,      39(1H-))
    2110 format( 3(7(1H-),1H+) ,55(1H-))
    2111 format( 7(7(1H-),1H+) ,23(1H-))
-   9020 FORMAT (/,33x,'check of dimension-data consistency',/,33x,&
+   9020 format (/,33x,'check of dimension-data consistency',/,33x,&
       &       35 ('-'),/,40x,'lmax   : (',i6,',',i6,')',/,40x,&
       &       'natyp  : (',i6,',',i6,')',/,40x,'irm    : (',i6,',',i6,&
       &       ')',/,40x,'nspin  : (',i6,',',i6,')',/)
-   9030 FORMAT (1x,10 ('*'),' external magnetic field applied hfield=',&
+   9030 format (1x,10 ('*'),' external magnetic field applied hfield=',&
       &       f8.5)
-   9050 FORMAT (20x,a4,'spin polarized calculation')
-   9070 FORMAT (1x,20x,' calculation with',a8,'-potential')
-   9080 FORMAT (1x,79 ('*'))
-   9090 FORMAT (' mixing factor used           :',f15.6,/,&
+   9050 format (20x,a4,'spin polarized calculation')
+   9070 format (1x,20x,' calculation with',a8,'-potential')
+   9080 format (1x,79 ('*'))
+   9090 format (' mixing factor used           :',f15.6,/,&
       &        ' convergence quality required :',1p,d15.2)
-   9091 FORMAT (' make use of CPA algorithm    :',1x,a14)
-   9092 FORMAT ('         max. iterations      :',i15,/,&
+   9091 format (' make use of CPA algorithm    :',1x,a14)
+   9092 format ('         max. iterations      :',i15,/,&
       &        '         req. CPA convergency :',1p,d15.2)
-   9100 FORMAT (1x,20x,a24,'exchange-correlation potential')
-   9110 FORMAT (/,20x,'broyden"s method # :',i3,&
+   9100 format (1x,20x,a24,'exchange-correlation potential')
+   9110 format (/,20x,'broyden"s method # :',i3,&
       &       ' is used up to iteration-      ',/,20x,'depth :',i3,&
       &       '  then jacobian is fixed and potential      ',/,20x,&
       &       'is updated using that jacobian')
-   9120 FORMAT (13x,' in case of calculating non - spherical wavefcts ',&
+   9120 format (13x,' in case of calculating non - spherical wavefcts ',&
       &       'the parameter lmaxd has to be set equal lmax ')
-   9130 FORMAT (/)
-   9140 FORMAT (20x,'full potential calculation ',&
+   9130 format (/)
+   9140 format (20x,'full potential calculation ',&
       &       '- cut off of non spherical potential',/,' >',/)
-   9150 FORMAT (31x,'representive atom no.',i3,' irns :',i5,' irnsd :',i5)
-   9160 FORMAT (21x,a43,/,21x,' using',i3,'-th. born approximation ')
-   9170 FORMAT (21x,a43)
-   9210 FORMAT (' lmax'/,i4)
-   9220 FORMAT ('          EMIN        EMAX        TK'/,3f12.6)
-   9230 FORMAT ('   NPOL  NPNT1  NPNT2  NPNT3'/,4i7)
-   9250 FORMAT ('  IFILE    IPE ISHIFT ESHIFT'/,3i7,f12.6)
-   9260 FORMAT (' KSHAPE    IRM    INS   ICST INSREF'/,5i7)
-   9270 FORMAT ('   KCOR  KVREL    KWS   KHYP KHFIELD   KXC'/,6i7)
-   9280 FORMAT (' external magnetic hfield     :',f15.4/,&
+   9150 format (31x,'representive atom no.',i3,' irns :',i5,' irnsd :',i5)
+   9160 format (21x,a43,/,21x,' using',i3,'-th. born approximation ')
+   9170 format (21x,a43)
+   9210 format (' lmax'/,i4)
+   9220 format ('          EMIN        EMAX        TK'/,3f12.6)
+   9230 format ('   NPOL  NPNT1  NPNT2  NPNT3'/,4i7)
+   9250 format ('  IFILE    IPE ISHIFT ESHIFT'/,3i7,f12.6)
+   9260 format (' KSHAPE    IRM    INS   ICST INSREF'/,5i7)
+   9270 format ('   KCOR  KVREL    KWS   KHYP KHFIELD   KXC'/,6i7)
+   9280 format (' external magnetic hfield     :',f15.4/,&
       &        ' VCONST                       :',f15.6)
-   9290 FORMAT ('   IMIX    IGF    ICC'/,3i7)
-   9300 FORMAT (' ITDBRY'/,i7)
-   9310 FORMAT ('      STRMIX        FCM       QBOUND'/,3f12.6)
-   9320 FORMAT ('      BRYMIX'/,f12.6)
-   9330 FORMAT ('    KTE   KPRE   KEFG  KVMAD '/,5i7)
+   9290 format ('   IMIX    IGF    ICC'/,3i7)
+   9300 format (' ITDBRY'/,i7)
+   9310 format ('      STRMIX        FCM       QBOUND'/,3f12.6)
+   9320 format ('      BRYMIX'/,f12.6)
+   9330 format ('    KTE   KPRE   KEFG  KVMAD '/,5i7)
    9301 format(   3(1H-),1H+  ,75(1H-))
    9302 format( 3(11(1H-),1H+),43(1H-))
    9303 format(3(6(1H-),1H+) ,58(1H-))
@@ -2475,26 +2498,26 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    9470 format('--------------- Left  Host -------------- ')
    9475 format('---------------   S L A B  -------------- ')
    9480 format('--------------- Right Host -------------- ')
-   99001 FORMAT(/,1X,&
+   99001 format(/,1X,&
       &     "WARNING: Option ",A," used with an INVALID ",&
       &     "scaling parameter.")
-   99002 FORMAT(/,1X,&
+   99002 format(/,1X,&
       &     "WARNING: Option ",A," found but NO value given for the",&
       &     " scaling parameter.")
-   99003 FORMAT(15X,'++++++++++   SOC option will be IGNORED   ++++++++++',&
+   99003 format(15X,'++++++++++   SOC option will be IGNORED   ++++++++++',&
       &     /,1X,'Please use SOCSCALE= XXX (real>-2.5) in the inputcard',&
       &     ' to make your option valid ',/)
-   99004 FORMAT(1X,'The SOC will be SCALED',$)
-   99005 FORMAT(' for ALL the atoms in the unit cell.')
-   99006 FORMAT(' for the FOLLOWING atoms in the unit cell :')
-   99007 FORMAT(' for all the atoms in the unit cell EXCLUDING :')
-   99008 FORMAT(1X,6(2X,I3))
-   99009 FORMAT(1X,'Scaling factor = ',1P,D9.2)
-   99010 FORMAT(1X,'The SOC is manipulated',' -- part of the SOC kept: ',A)
-   99011 FORMAT(15X,'+++++++++  CSCALE option will be IGNORED  ++++++++++',&
+   99004 format(1X,'The SOC will be SCALED',$)
+   99005 format(' for ALL the atoms in the unit cell.')
+   99006 format(' for the FOLLOWING atoms in the unit cell :')
+   99007 format(' for all the atoms in the unit cell EXCLUDING :')
+   99008 format(1X,6(2X,I3))
+   99009 format(1X,'Scaling factor = ',1P,D9.2)
+   99010 format(1X,'The SOC is manipulated',' -- part of the SOC kept: ',A)
+   99011 format(15X,'+++++++++  CSCALE option will be IGNORED  ++++++++++',&
       &     /,1X,'Please use CTLSCALE= X (real>=1D-12) in the inputcard',&
       &     ' to make your option valid ',/)
-   99012 FORMAT(1X,'The CLIGHT will be SCALED',$)
+   99012 format(1X,'The CLIGHT will be SCALED',$)
 
 end subroutine RINPUT13
 !---------------------------------------------------------------------
@@ -2512,20 +2535,20 @@ subroutine ADDOPT(STRING)
    logical :: OPT
    EXTERNAL :: OPT
 
-   IF (.NOT.OPT('        ')) THEN
-      WRITE(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
-      STOP 'Error in ADDOPT: No free slots in array OPTC.'
-   ENDIF
+   if (.NOT.OPT('        ')) then
+      write(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
+      stop 'Error in ADDOPT: No free slots in array OPTC.'
+   endif
 
-   IF (.NOT.OPT(STRING)) THEN
+   if (.NOT.OPT(STRING)) then
       II = 1
-      DO WHILE (II.LE.NOPTD)
-         IF (t_params%OPTC(II).EQ.'        ') THEN
+      do WHILE (II.LE.NOPTD)
+         if (t_params%OPTC(II).EQ.'        ') then
             t_params%OPTC(II) = STRING
             II = NOPTD + 1
-         ENDIF
+         endif
          II = II + 1
       ENDDO
-   ENDIF
+   endif
 
 end subroutine ADDOPT
