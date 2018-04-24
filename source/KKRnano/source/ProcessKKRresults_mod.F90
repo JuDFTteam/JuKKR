@@ -1160,7 +1160,7 @@ module ProcessKKRresults_mod
   subroutine calcChargesLres(charge, den, ielast, lmaxd1, nspin, wez, iemxd)
     double precision, intent(out) :: charge(0:lmaxd1,2)
     double complex, intent(in) :: den(0:lmaxd1,iemxd,nspin)
-    doublecomplex, intent(in) :: wez(iemxd)
+    double complex, intent(in) :: wez(iemxd)
 
     integer, intent(in) :: iemxd, nspin, lmaxd1, ielast
 
@@ -1188,7 +1188,7 @@ module ProcessKKRresults_mod
     double precision, intent(out) :: charge(0:lmaxd1,2)
     double precision, intent(out) :: chrgsemicore
     double complex, intent(in) :: den(0:lmaxd1,iemxd,nspin)
-    doublecomplex, intent(in) :: wez(iemxd)
+    double complex, intent(in) :: wez(iemxd)
 
     integer, intent(in) :: iemxd
     integer, intent(in) :: nspin

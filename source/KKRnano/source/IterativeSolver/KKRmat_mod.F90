@@ -910,7 +910,11 @@ module KKRmat_mod
 #endif
 
               smat(:lmmaxd,:lmmaxd,Aind,iLly) = smat(:lmmaxd,:lmmaxd,Aind,iLly) + eikRR(0,c%ezoa(iacls,isa)) * YEStranspose(Ginp(:,:,iLly,iacls))
+              if (lmmaxd /= lmsd) then ! NOCO, duplicate G_ref along the diagonal (first quadrant -> fourth quadrant)
+                smat(lmmaxd+1:lmsd,lmmaxd+1:lmsd,Aind,iLly) = smat(1:lmmaxd,1:lmmaxd,Aind,iLly) 
+              endif ! lmmaxd /= lmsd
             endif ! ita == jCol
+
           enddo ! in0
 
           do in0 = 1,  c%numn0(ita) ! loop over the set of inequivalent atoms in the reference cluster around target atom ita
@@ -921,7 +925,11 @@ module KKRmat_mod
               Aind = sparse%RowStart(ita) - 1 + in0
               assert( jCol == sparse%ColIndex(Aind) )
               smat(:lmmaxd,:lmmaxd,Aind,iLly) = smat(:lmmaxd,:lmmaxd,Aind,iLly) + eikRR(1,c%ezoa(iacls,isa)) * NONtranspose(Ginp(:,:,iLly,iacls))
+              if (lmmaxd /= lmsd) then ! NOCO, duplicate G_ref along the diagonal (first quadrant -> fourth quadrant)
+                smat(lmmaxd+1:lmsd,lmmaxd+1:lmsd,Aind,iLly) = smat(1:lmmaxd,1:lmmaxd,Aind,iLly) 
+              endif ! lmmaxd /= lmsd
             endif ! isa == jCol
+
           enddo ! in0
 
         endif ! ita > 0
@@ -930,9 +938,6 @@ module KKRmat_mod
 
     enddo ! iLly
 
-    if (lmmaxd /= lmsd) then ! NOCO, duplicate G_ref along the diagonal (first quadrant -> fourth quadrant)
-      smat(lmmaxd+1:lmsd,lmmaxd+1:lmsd,:,:) = smat(1:lmmaxd,1:lmmaxd,:,:) 
-    endif ! lmmaxd /= lmsd
   endsubroutine ! dlke0_smat
 
 endmodule ! KKRmat_mod

@@ -34,7 +34,7 @@ ifeq ($(PLATFORM),ifort)
 	FC90 = mpiifort -warn all
 	# -module <path> specifies where to put .mod files
   	ifeq ($(SMP),openmp)
- 		FCFLAGS += -qopenmp
+ 		FCFLAGS += -openmp
         endif
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
@@ -185,9 +185,8 @@ ifeq ($(PLATFORM),jureca_knl)
 	endif
 endif
 # ================== HAZEL HEN ======================
-# module swap PrgEnv-cray/5.2.82 PrgEnv-intel
+# module swap PrgEnv-cray PrgEnv-intel
 # module unload cray-libsci
-# module load numlib/intel/mkl/2018.0
 # Remarks: - Bad GGA performance -> Use LDA!
 #  	   - Home directory slow -> Use Workspace (see HLRS wiki)
 ifeq ($(PLATFORM),hazelhen)

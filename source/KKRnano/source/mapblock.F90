@@ -93,7 +93,7 @@
 #ifdef __GFORTRAN__
 #define PR(VAR) "  $=",VAR
 #else
-#define PR(VAR) "  ",#VAR," =",VAR
+#define PR(VAR) "  "//",#VAR,"//" ="//",VAR"
 #endif
         write (6, fmt='(99(3a,i0))') PR(mapblock) ! result
         write (6, fmt='(99(3a,i0))') PR(itercurr),PR(iterfirst),PR(iterlast),PR(iterstep),PR(nodefirst),PR(nodelast) ! arguments
