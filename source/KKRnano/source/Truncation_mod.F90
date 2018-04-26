@@ -164,7 +164,7 @@ module Truncation_mod
 
     !! warning, this operation is N^2 in the total number of atoms !!
 
-!$OMP PARALLEL DO PRIVATE(ii, d2, il) schedule(static, 1)
+!$NOMP PARALLEL DO PRIVATE(ii, d2, il) schedule(static, 1)
     do ii = 1, size(rbasis, 2) ! loop over all atoms
       lmax_atom(ii) = -1 ! init as truncated
       d2 = distance2_pbc(rbasis(1:3,ii), center(1:3), bravais)
@@ -178,7 +178,7 @@ module Truncation_mod
       enddo ! l
 
     enddo ! ii
-!$OMP END PARALLEL DO
+!$NOMP END PARALLEL DO
 
   endsubroutine ! calc
   
