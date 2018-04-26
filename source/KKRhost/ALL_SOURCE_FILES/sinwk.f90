@@ -10,13 +10,13 @@
 !> @date Oct. 1989
 !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-SUBROUTINE SINWK(F,FINT,IPAN,IRCUT)
+subroutine SINWK(F,FINT,IPAN,IRCUT)
 
    use global_variables
    ! .. Scalar Arguments
    integer, intent(in) :: IPAN   !< Number of panels in non-MT-region
    ! .. Array Arguments
-   INTEGER, dimension(0:IPAND), intent(in) :: IRCUT   !< R points of panel borders
+   integer, dimension(0:IPAND), intent(in) :: IRCUT   !< R points of panel borders
    double precision, dimension(*), intent(in) :: F
    ! .. Output variables
    double precision, dimension(*), intent(out) :: FINT

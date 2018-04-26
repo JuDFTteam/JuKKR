@@ -145,36 +145,36 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    logical, intent(inout) :: LCARTESIAN !< True: Basis in cartesian coords; false: in internal coords
    logical, intent(inout) :: LINTERFACE !< If True a matching with semi-inifinite surfaces must be performed
    !     .. Array Arguments ..
-   integer, dimension(:), allocatable, intent(inout) :: IMT    !< R point at MT radius
-   integer, dimension(:), allocatable, intent(inout) :: CLS    !< Cluster around atomic sites
-   integer, dimension(:), allocatable, intent(inout) :: LMXC
-   integer, dimension(:), allocatable, intent(inout) :: IRNS   !< Position of atoms in the unit cell in units of bravais vectors
-   integer, dimension(:), allocatable, intent(inout) :: IRWS   !< R point at WS radius
-   integer, dimension(:), allocatable, intent(inout) :: NTCELL !< Index for WS cell
-   integer, dimension(:), allocatable, intent(inout) :: REFPOT !< Ref. pot. card  at position
-   integer, dimension(:), allocatable, intent(inout) :: INIPOL !< Initial spin polarisation
-   integer, dimension(:), allocatable, intent(inout) :: IXIPOL !< Constraint of spin pol.
-   integer, dimension(:), allocatable, intent(inout) :: HOSTIMP
-   integer, dimension(:,:), allocatable, intent(inout) :: KFG
+   integer, dimension(:), allocatable, intent(out) :: IMT    !< R point at MT radius
+   integer, dimension(:), allocatable, intent(out) :: CLS    !< Cluster around atomic sites
+   integer, dimension(:), allocatable, intent(out) :: LMXC
+   integer, dimension(:), allocatable, intent(out) :: IRNS   !< Position of atoms in the unit cell in units of bravais vectors
+   integer, dimension(:), allocatable, intent(out) :: IRWS   !< R point at WS radius
+   integer, dimension(:), allocatable, intent(out) :: NTCELL !< Index for WS cell
+   integer, dimension(:), allocatable, intent(out) :: REFPOT !< Ref. pot. card  at position
+   integer, dimension(:), allocatable, intent(out) :: INIPOL !< Initial spin polarisation
+   integer, dimension(:), allocatable, intent(out) :: IXIPOL !< Constraint of spin pol.
+   integer, dimension(:), allocatable, intent(out) :: HOSTIMP
+   integer, dimension(:,:), allocatable, intent(out) :: KFG
    double precision, dimension(2), intent(inout) :: VBC        !< Potential constants
    double precision, dimension(3), intent(inout) :: ZPERLEFT   !< Vector to define how to repeat the basis of the left host
    double precision, dimension(3), intent(inout) :: ZPERIGHT   !< Vector to define how to repeat the basis of the right host
    double precision, dimension(3,3), intent(inout) :: BRAVAIS  !< Bravais lattice vectors
-   double precision, dimension(:), allocatable, intent(inout) :: RMT      !< Muffin-tin radius of true system
-   double precision, dimension(:), allocatable, intent(inout) :: ZAT      !< Nuclear charge
-   double precision, dimension(:), allocatable, intent(inout) :: RWS      !< Wigner Seitz radius
-   double precision, dimension(:), allocatable, intent(inout) :: MTFAC    !< Scaling factor for radius MT
-   double precision, dimension(:), allocatable, intent(inout) :: RMTREF   !< Muffin-tin radius of reference system
-   double precision, dimension(:), allocatable, intent(inout) :: RMTNEW   !< Adapted muffin-tin radius
-   double precision, dimension(:), allocatable, intent(inout) :: RMTREFAT
-   double precision, dimension(:), allocatable, intent(inout) :: FPRADIUS !< R point at which full-potential treatment starts
-   double precision, dimension(:,:), allocatable, intent(inout) :: TLEFT  !< Vectors of the basis for the left host
-   double precision, dimension(:,:), allocatable, intent(inout) :: TRIGHT !< vectors of the basis for the right host
-   double precision, dimension(:,:), allocatable, intent(inout) :: RBASIS !< Position of atoms in the unit cell in units of bravais vectors
+   double precision, dimension(:), allocatable, intent(out) :: RMT      !< Muffin-tin radius of true system
+   double precision, dimension(:), allocatable, intent(out) :: ZAT      !< Nuclear charge
+   double precision, dimension(:), allocatable, intent(out) :: RWS      !< Wigner Seitz radius
+   double precision, dimension(:), allocatable, intent(out) :: MTFAC    !< Scaling factor for radius MT
+   double precision, dimension(:), allocatable, intent(out) :: RMTREF   !< Muffin-tin radius of reference system
+   double precision, dimension(:), allocatable, intent(out) :: RMTNEW   !< Adapted muffin-tin radius
+   double precision, dimension(:), allocatable, intent(out) :: RMTREFAT
+   double precision, dimension(:), allocatable, intent(out) :: FPRADIUS !< R point at which full-potential treatment starts
+   double precision, dimension(:,:), allocatable, intent(out) :: TLEFT  !< Vectors of the basis for the left host
+   double precision, dimension(:,:), allocatable, intent(out) :: TRIGHT !< vectors of the basis for the right host
+   double precision, dimension(:,:), allocatable, intent(out) :: RBASIS !< Position of atoms in the unit cell in units of bravais vectors
    !     variables for spin-orbit/speed of light scaling
-   double precision, dimension(:), allocatable, intent(inout) :: SOCSCALE !< Spin-orbit scaling
-   double precision, dimension(:,:), allocatable, intent(inout) :: CSCL   !< Speed of light scaling
-   double precision, dimension(:,:), allocatable, intent(inout) :: SOCSCL
+   double precision, dimension(:), allocatable, intent(out) :: SOCSCALE !< Spin-orbit scaling
+   double precision, dimension(:,:), allocatable, intent(out) :: CSCL   !< Speed of light scaling
+   double precision, dimension(:,:), allocatable, intent(out) :: SOCSCL
    character(len=10), intent(inout) :: SOLVER !< Type of solver
    character(len=40), intent(inout) :: I12 !< File identifiers
    character(len=40), intent(inout) :: I13 !< Potential file name
@@ -182,7 +182,7 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    character(len=40), intent(inout) :: I25 !< Scoef file name
    character(len=40), intent(inout) :: I40 !< File identifiers
    character(len=124), dimension(6), intent(inout) :: TXC
-   double complex, dimension(:,:,:), allocatable, intent(inout) :: DROTQ !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+   double complex, dimension(:,:,:), allocatable, intent(out) :: DROTQ !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
    !----------------------------------------------------------------------------
    !> @note CPA variables. Routine has been modified to look for
    !>     the token ATOMINFOC and only afterwards, if not found, for the
@@ -196,11 +196,11 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    integer, intent(inout) :: NCPA             !< ncpa = 0/1 CPA flag
    integer, intent(inout) :: ITCPAMAX         !< max. number of CPA iterations
    double precision, intent(inout)  :: CPATOL !< convergency tolerance for CPA-cycle
-   integer, dimension(:), allocatable, intent(inout) :: NOQ  !< number of diff. atom types located
-   integer, dimension(:), allocatable, intent(inout) :: IQAT !< the site on which an atom is located on a given site
-   integer, dimension(:), allocatable, intent(inout) :: ICPA !< icpa = 0/1 site-dependent CPA flag
-   integer, dimension(:,:), allocatable, intent(inout) :: KAOEZ !< atom types located at a given site
-   double precision, dimension(:), allocatable, intent(inout) :: CONC !< concentration of a given atom
+   integer, dimension(:), allocatable, intent(out) :: NOQ  !< number of diff. atom types located
+   integer, dimension(:), allocatable, intent(out) :: IQAT !< the site on which an atom is located on a given site
+   integer, dimension(:), allocatable, intent(out) :: ICPA !< icpa = 0/1 site-dependent CPA flag
+   integer, dimension(:,:), allocatable, intent(out) :: KAOEZ !< atom types located at a given site
+   double precision, dimension(:), allocatable, intent(out) :: CONC !< concentration of a given atom
 
    !----------------------------------------------------------------------------
    !> @note Variables storing the magnetization direction information.
@@ -216,15 +216,15 @@ subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,  
    !>   ( see also the routine < FINDGROUP > and ff)
    !----------------------------------------------------------------------------
    integer, intent(inout) :: KMROT !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-   double precision, dimension(:), allocatable, intent(inout) :: QMTET !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-   double precision, dimension(:), allocatable, intent(inout) :: QMPHI !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+   double precision, dimension(:), allocatable, intent(out) :: QMTET !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+   double precision, dimension(:), allocatable, intent(out) :: QMPHI !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
    ! ---------------------------------------------------------------------------
    ! LDA+U
    integer, intent(inout) :: KREADLDAU !< LDA+U arrays available
    integer, dimension(:), allocatable, intent(inout) :: LOPT !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-   double precision, dimension(:), allocatable, intent(inout) :: UEFF !< input U parameter for each atom
-   double precision, dimension(:), allocatable, intent(inout) :: JEFF !< input J parameter for each atom
-   double precision, dimension(:), allocatable, intent(inout) :: EREFLDAU !< the energies of the projector's wave functions (REAL)
+   double precision, dimension(:), allocatable, intent(out) :: UEFF !< input U parameter for each atom
+   double precision, dimension(:), allocatable, intent(out) :: JEFF !< input J parameter for each atom
+   double precision, dimension(:), allocatable, intent(out) :: EREFLDAU !< the energies of the projector's wave functions (REAL)
    ! LDA+U
    ! ---------------------------------------------------------------------------
 
