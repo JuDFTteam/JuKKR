@@ -189,6 +189,7 @@ endif
 # module unload cray-libsci
 # Remarks: - Bad GGA performance -> Use LDA!
 #  	   - Home directory slow -> Use Workspace (see HLRS wiki)
+#  	   - If 'seg 0' error occurs, add 'module unload craype-hugepages16M' to job file
 ifeq ($(PLATFORM),hazelhen)
 	FC = ftn
 	FC90 = ftn
@@ -196,11 +197,11 @@ ifeq ($(PLATFORM),hazelhen)
   	ifeq ($(SMP),openmp)
  		FCFLAGS += -qopenmp 
         endif
-	FCFLAGS += -module $(BUILDDIR)
-	FCFLAGS += -I $(BUILDDIR) #-I${MKLROOT}/include
+	FCFLAGS += -I $(BUILDDIR) 
+	FCFLAGS += -I . 
 	# PPFLAGS += -D TASKLOCAL_FILES
-	FCFLAGS += -g -mkl
-	LDFLAGS += -g -mkl -lm  
+	FCFLAGS += -g
+	LDFLAGS += -g 
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
