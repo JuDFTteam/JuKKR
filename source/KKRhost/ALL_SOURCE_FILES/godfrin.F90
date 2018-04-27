@@ -20,7 +20,10 @@
 
 ! Only the driver is made public
   private
-  public :: sparse_inverse, t_godfrin, bcast_params_godfrin
+  public :: sparse_inverse, t_godfrin
+#ifdef CPP_MPI
+  public :: bcast_params_godfrin
+#endif
 
 
 !-----------------------------------------------------------------------
@@ -364,7 +367,7 @@
 ! Corner blocks?
   logical,        intent(in)    :: periodic
 ! -------------------------------
-  integer :: i, i0, n, j, m
+  integer :: i, i0, n, m
 
 
 ! ----------------------------------------------------------------------

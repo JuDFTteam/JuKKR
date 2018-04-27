@@ -2094,17 +2094,19 @@
 
 ! Begin Godfrin inversion scheme control                       ! GODFRIN Flaviano
 !==========================================================
-      WRITE(111 ,*) 'Godfrin inversion scheme parameters'
-      WRITE(1337,*) 'Godfrin inversion scheme parameters'
+      IF(OPT('godfrin ')) THEN
+         WRITE(111 ,*) 'Godfrin inversion scheme parameters'
+         WRITE(1337,*) 'Godfrin inversion scheme parameters'
 
-      t_godfrin%na = NAEZD
-      CALL IOINPUT('GODFRIN         ',UIO,2,7,IER)
-      IF (IER.NE.0) STOP 'RINPUT: GODFRIN not found!'
-      READ (UNIT=UIO,FMT=*) t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+         t_godfrin%na = NAEZD
+         CALL IOINPUT('GODFRIN         ',UIO,2,7,IER)
+         IF (IER.NE.0) STOP 'RINPUT: GODFRIN not found!'
+         READ (UNIT=UIO,FMT=*) t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
 
-      CALL IOINPUT('GODFRIN         ',UIO,4,7,IER)
-      ALLOCATE(t_godfrin%bdims(t_godfrin%nb))
-      READ (UNIT=UIO,FMT=*) t_godfrin%bdims(:)
+         CALL IOINPUT('GODFRIN         ',UIO,4,7,IER)
+         ALLOCATE(t_godfrin%bdims(t_godfrin%nb))
+         READ (UNIT=UIO,FMT=*) t_godfrin%bdims(:)
+      END IF
 
       !Inconsistency check
       write(*,*) t_godfrin%na
