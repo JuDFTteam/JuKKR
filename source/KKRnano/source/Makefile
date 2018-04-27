@@ -185,6 +185,7 @@ ifeq ($(PLATFORM),jureca_knl)
 	endif
 endif
 # ================== HAZEL HEN ======================
+# Usage of Intel compiler and Intel MKL seems to give best results:
 # module swap PrgEnv-cray PrgEnv-intel
 # module unload cray-libsci
 # Remarks: - Bad GGA performance -> Use LDA!
@@ -202,6 +203,7 @@ ifeq ($(PLATFORM),hazelhen)
 	# PPFLAGS += -D TASKLOCAL_FILES
 	FCFLAGS += -g
 	LDFLAGS += -g 
+	LDFLAGS += -mkl # use Intel MKL library
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
