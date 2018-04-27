@@ -6,7 +6,7 @@
       use mod_mympi, only: myrank, nranks, master
       use mod_types, only: t_tgmat, t_lloyd, t_inc
 #ifdef CPP_MPI
-     &                    ,t_mpi_c_grid
+     &                    ,t_mpi_c_grid, init_tgmat, init_tlloyd
       use mpi
       use mod_mympi, only: myrank, nranks, master
      &                     ,find_dims_2d,
@@ -76,8 +76,8 @@ C     .. MPI ..
       integer :: ie_num, ierr
 C     ..
 C     .. External Functions ..
-      LOGICAL TEST
-      EXTERNAL TEST
+      LOGICAL TEST,OPT
+      EXTERNAL TEST,OPT
 C     ..
 C     .. External Subroutines ..
       EXTERNAL CALCTREF13,GLL13
@@ -125,8 +125,24 @@ C
 C ======================================================================
 #ifdef CPP_MPI
       if(t_inc%i_write>0) write(1337,*) myrank, 'start tbref e-loop'
-      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at, 
+     &           t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &           master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
+     
+       ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
+       ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
+
+       t_mpi_c_grid%ntot2=ie_end   !t_mpi_c_grid%dims(1)
+       if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
+     &           allocated(t_mpi_c_grid%ioff_pT2))) 
+     &    allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),
+     &             t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1))
+       t_mpi_c_grid%ntot_pT2 = ntot_pT
+       t_mpi_c_grid%ioff_pT2 = ioff_pT
+
+       ! now initialize arrays for tmat, gmat, and gref
+       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+       if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
 #else
       ie_start = 0
       ie_end = IELAST
@@ -148,8 +164,18 @@ C ======================================================================
          endif
          
 C
+         !skip this part with GREENIMP option
+         if(opt('GREENIMP')) then
+            if(myrank==master) write(*,*) 
+     +  'Skipping atom loop in tbref for energy point',ie,'of',ielast
+            i1_start = 1
+            i1_end = 0
+         else
+            i1_start = 1
+            i1_end = NREF
+         end if
          ERYD = EZ(IE)
-         DO I1 = 1,NREF
+         DO I1 = i1_start, i1_end!1,NREF
             CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,              ! LLY Lloyd
      &                    TREFLL(1,1,I1),DTREFLL(1,1,I1),                   ! LLY Lloyd
      &                    ALPHAREF(0,I1),DALPHAREF(0,I1),LMAXD+1,LMGF0D)    ! LLY Lloyd
@@ -182,6 +208,12 @@ C ----------------------------------------------------------------------
          i1_end   = NCLS
          
 #endif
+         !skip this part with GREENIMP option
+         if(opt('GREENIMP')) then
+            i1_start = 1
+            i1_end = 0
+         end if
+
          DO ICLS=i1_start,i1_end
             I1 = 1
             IC = 0
@@ -248,14 +280,19 @@ C ----------------------------------------------------------------------
            if(t_mpi_c_grid%myrank_ie==0) then
               WRITE (68,REC=IE) GINP                 ! Gref
            end if !if(t_mpi_c_grid%myrank_ie==0) then
-!            ! test writeout
-!            do i1=0,nranks-1
-!              if(myrank==i1) then
-!               write(686868+myrank,'(2i9,200000F15.7)') myrank, ie, ginp
-!              endif
-!              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie,ierr)
-!            end do
-!            ! end test writeout
+
+           ! human readable writeout if test option is hit
+           if(test('fileverb')) then
+             ! test writeout
+             do i1=0,nranks-1
+               if(myrank==i1) then
+                write(686868+myrank,*) myrank,ie,ginp
+                !write(686868+myrank,'(2i9,200000F15.7)') myrank,ie,ginp
+              endif
+              call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie,ierr)
+             end do
+             ! end test writeout
+           end if
 #else
            WRITE (68,REC=IE) GINP                 ! Gref
 #endif

@@ -1,10 +1,11 @@
       module MOD_MAIN0 
       
       use mod_wunfiles
-
+      use mod_types, only: t_imp
 #ifdef CPP_TIMING
       use mod_timing
 #endif
+      use mod_create_newmesh
       
       implicit none
       
@@ -202,7 +203,7 @@ C Note: IRMD-dimension depends on KREL to save space
 C ======================================================================VINS()
 
       use mod_types
-#ifdef CPP_OMP
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
       use omp_lib        ! necessary for omp functions
 #endif
 #ifdef CPP_MPI
@@ -322,7 +323,7 @@ C     .. Local Arrays ..
       INTEGER KMESH(IEMXD)
       INTEGER ITSCF,SCFSTEPS,KFORCE
       LOGICAL VACFLAG(2)
-      CHARACTER*124 TXC(5)
+      CHARACTER*124 TXC(6)
       INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD)
       DOUBLE PRECISION GSH(NGSHD)
       DOUBLE PRECISION TOLRDIF
@@ -407,6 +408,11 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       INTEGER LLY ! LLY <> 0 : apply Lloyds formula
       DOUBLE COMPLEX DELTAE  ! Energy difference for numerical derivative
 
+
+      ! SUSC (BEGIN: modifications by Manuel and Benedikt)             ! susc
+      ! LOGICAL THAT CHECKS WHETHER ENERGY MESH FILE EXISTS            ! susc
+      logical        :: emeshfile                                      ! susc
+      ! SUSC (END:   modifications by Manuel and Benedikt)             ! susc
 C
 C ruess: IVSHIFT test option
       INTEGER IVSHIFT
@@ -415,10 +421,13 @@ C ruess: IVSHIFT test option
       double precision, allocatable :: THETAS(:,:,:), THETASNEW(:,:,:)
       integer :: ierr
       
-#ifdef CPP_OMP
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
 !     .. OMP ..
       integer nth, ith          ! total number of threads, thread number
 #endif
+
+      ! for OPERATOR option
+      logical :: lexist, operator_imp
 
 C     ..
 C     .. External Functions ..
@@ -755,6 +764,63 @@ C
       CALL EPATHTB(EZ,DEZ,E2IN,IELAST,IESEMICORE,IDOSEMICORE,
      &             E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,
      &             TKSEMI,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IEMXD)
+
+      ! SUSC (BEGIN: modifications by Manuel and Benedikt)             ! susc
+      !                                                                ! susc
+      if ( opt('EMESH   ') ) then                                      ! susc
+      ! write out the energy mesh and the corresponding                ! susc
+      ! weights to a file called 'emesh.scf'                           ! susc
+        write(*,'("main0: Runflag emesh is set.")')                    ! susc
+        write(*,'("       File emesh.scf will be written!")')          ! susc
+        write(*,*) 'writing emesh.scf file...'                         ! susc
+        open(file='emesh.scf',unit=12111984,status='replace')          ! susc
+          write(12111984,'(5x,i0)') ielast                             ! susc
+          do ie = 1,ielast                                             ! susc
+             write(12111984,'(4es16.8)') ez(ie),dez(ie)                ! susc
+          end do                                                       ! susc
+        close(12111984)                                                ! susc
+        write(*,'("       Finished writing file emesh.scf.")')         ! susc
+      end if                                                           ! susc
+      !                                                                ! susc
+      !                                                                ! susc
+      if ( opt('KKRSUSC ') ) then                                      ! susc
+      ! read in 'emesh.dat' with new energy mesh-points                ! susc
+        inquire(file='emesh.dat',exist=emeshfile)                      ! susc
+        write(*,'("main0: Runflag KKRSUSC is set.")')                  ! susc
+        if (emeshfile) then                                            ! susc
+          write(*,'("main0: File emesh.dat exists and will "$)')       ! susc
+          write(*,                            '("be read in.")')       ! susc
+          write(*,'("       Energy contour from inputcard "$)')        ! susc
+          write(*,                 '("will be overwritten!")')         ! susc
+          open(file='emesh.dat',unit=50)                               ! susc
+            read(50,*) ielast                                          ! susc
+            if (ielast > iemxd) stop 'ielast > iemxd!'                 ! susc
+            do ie=1,ielast                                             ! susc
+              read(50,'(4es16.8)') ez(ie), dez(ie)                     ! susc
+              write(*,'(i8,4es16.8)') ie, ez(ie), dez(ie)              ! susc
+            end do                                                     ! susc
+          close(50)                                                    ! susc
+          write(*,'("       Finished reading in file emesh.dat.")')    ! susc
+        else                                                           ! susc
+          stop'main0: Runflag KKRSUSC but cannot find file emesh.dat!' ! susc
+        end if                                                         ! susc
+      end if                                                           ! susc
+      !                                                                ! susc
+      !                                                                ! susc
+      ! still missing: check here whether scfsteps is > 1              ! susc
+      !   if scfsteps>1 --> option a) stop program here                ! susc
+      !                     option b) set it to 1 and continue         ! susc
+      if ( opt('KKRSUSC ') .and. scfsteps>1 ) then                     ! susc
+        write(*,'("main0: Runflag KKRSUSC is set ")')                  ! susc
+        write(*,            '("but scfsteps = ",i0)') scfsteps         ! susc
+        write(*,'("       Here we enforce scfsteps = 1")')             ! susc
+      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! susc
+        scfsteps = 1                                                   ! susc
+      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! susc
+      end if                                                           ! susc
+      !                                                                ! susc
+
+      ! SUSC (END:   modifications by Manuel and Benedikt)             ! susc
       DO IE = 1,IELAST
         WEZ(IE) = -2.D0/PI*DEZ(IE)
         IF ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
@@ -1049,11 +1115,13 @@ C
 C new solver for full-potential, spin-orbit, initialise
        IF (OPT('NEWSOSOL')) THEN
 
-        CALL CREATE_NEWMESH(NSPIN,R,IRMIN,IPAN,IRCUT,
+        CALL CREATE_NEWMESH(NATYPD,LMAXD,LPOTD,IRMD,IRNSD,IPAND,
+     +                      IRID,NTOTD,NFUND,NCHEBD,NTOTD*(NCHEBD+1),
+     +                      NSPIN,R,IRMIN,IPAN,IRCUT,
      +                      R_LOG,NPAN_LOG,NPAN_EQ,NCHEB,
      +                      NPAN_LOGNEW,NPAN_EQNEW,
      +                      NPAN_TOT,RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
-     +                      NTCELL,THETAS,THETASNEW)
+     +                      NCELLD,NTCELL,THETAS,THETASNEW)
 
       ENDIF
 
@@ -1090,16 +1158,46 @@ C new solver for full-potential, spin-orbit, initialise
      &              NCLEB,NACLSD,NCLSD,LM2D,LMAXD+1,MMAXD,NRD,NSHELD,
      &              NSYMAXD,NAEZD/NPRINCD,NATOMIMPD,NOFGIJD,
      &              NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,NTOTD,
-     &              NCHEBD,NPAN_LOGNEW,NPAN_EQNEW,NCHEB,R_LOG,NPAN_TOT,
-     &              RNEW,RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,
-     &              THETASNEW,SOCSCALE,TOLRDIF,LLY,DELTAE,RCLSIMP)
+     &              NCHEBD,NPAN_LOG,NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,
+     &              NCHEB,R_LOG,NPAN_TOT,RNEW,RPAN_INTERVALL,
+     &              IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF,
+     &              LLY,DELTAE,RCLSIMP)
 
 
       IF (OPT('FERMIOUT'))THEN                                        ! fswrt
         CALL WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,  ! fswrt
      +                         ALAT,BRAVAIS,RECBV,RBASIS,CLS,NACLS,   ! fswrt
-     +                         RCLS,EZOA,ATOM,RR,NSPIN)                     ! fswrt
+     +                         RCLS,EZOA,ATOM,RR,NSPIN)               ! fswrt
       END IF                                                          ! fswrt
+
+      IF(OPT('OPERATOR')) THEN
+        ! check if impurity files are present (otherwise no imp.
+        ! wavefunctions can be calculated)
+        operator_imp = .true.
+        inquire(file='potential_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='shapefun_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='scoef', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+      ELSE
+        operator_imp = .false.
+      ENDIF
+
+      IF (OPT('GREENIMP') .or. operator_imp) THEN                      ! GREENIMP
+         ! fill array dimensions and allocate arrays in t_imp          ! GREENIMP
+         call init_params_t_imp(t_imp,IPAND,NATYPD,IRMD,IRID,NFUND,    ! GREENIMP
+     &                          NSPIN,IRMIND,LMPOTD)                   ! GREENIMP
+         call init_t_imp(t_inc,t_imp)                                  ! GREENIMP
+                                                                       ! GREENIMP
+         ! next read impurity potential and shapefunction              ! GREENIMP
+         CALL READIMPPOT(NATOMIMP,INS,1337,0,0,2,NSPIN,LPOT,           ! GREENIMP
+     &                   t_imp%IPANIMP,t_imp%THETASIMP,t_imp%IRCUTIMP, ! GREENIMP
+     &                   t_imp%IRWSIMP,KHFELD,HFIELD,t_imp%VINSIMP,    ! GREENIMP
+     &                   t_imp%VISPIMP,t_imp%IRMINIMP,                 ! GREENIMP
+     &                   t_imp%RIMP,t_imp%ZIMP)                        ! GREENIMP
+      END IF                                                           ! GREENIMP
+
 
       IF (ISHIFT.EQ.2) THEN                                           ! fxf
          OPEN (67,FILE='vmtzero',FORM='formatted')                    ! fxf

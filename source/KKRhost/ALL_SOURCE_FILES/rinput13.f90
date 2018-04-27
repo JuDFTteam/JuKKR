@@ -25,6 +25,7 @@
      &           TOLRDIF,LLY,DELTAE,&
      &           LCARTESIAN,BRAVAIS,RMAX,GMAX)
       use mod_wunfiles, only: t_params
+      use mod_types, only: t_inc
       use mod_save_wavefun, only: t_wavefunctions
       use mod_version_info
       use godfrin, only: t_godfrin ! GODFRIN Flaviano
@@ -65,7 +66,7 @@
       DOUBLE PRECISION SOCSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
       DOUBLE PRECISION SOCSCALE(NATYPD)
       DOUBLE PRECISION CSCL(KREL*LMAXD+1,KREL*NATYPD+(1-KREL))
-      CHARACTER*124 TXC(5)
+      CHARACTER*124 TXC(6)
       CHARACTER*256 UIO  ! NCOLIO=256
       CHARACTER*10 SOLVER
       CHARACTER*40 I12,I13,I19,I25,I40
@@ -114,6 +115,10 @@
       CHARACTER*3 CPAFLAG(0:1)
       REAL*8 SUM1
       INTEGER IO,IA,IQ,IPRINT
+
+      ! for OPERATOR option
+      logical :: lexist, operator_imp
+
 !-----------------------------------------------------------------------
 !     Variables storing the magnetization direction information.
 !     QMTET/QMPHI(NAEZD) give the angles to which the magnetic moment
@@ -178,6 +183,7 @@
       TXC(3) = ' Vosko,Wilk,Nusair       #serial: ' // serialnr
       TXC(4) = ' GGA PW91                #serial: ' // serialnr
       TXC(5) = ' GGA PBE                 #serial: ' // serialnr
+      TXC(6) = ' GGA PBEsol              #serial: ' // serialnr
 
       IPRINT = 0
 
@@ -248,9 +254,17 @@
       NDIM = 3
       IF (LINTERFACE) NDIM = 2
       IF (.NOT.LINTERFACE.AND..NOT.OPT('SUPRCELL')) THEN 
-         WRITE(*,*) '3D-calculation, adding run-option "full inv" for full inversion.'
+         WRITE(1337,*) '3D-calculation, adding run-option "full inv" for full inversion.'
          CALL ADDOPT('full inv')
       ENDIF
+
+      IF (OPT('WRTGREEN')) THEN 
+         WRITE(1337,*) 'WRTGREEN option found'
+         WRITE(1337,*) 'adding run-opt "full inv" for full inversion.'
+         WRITE(1337,*) 'adding run-opt "fix mesh"'
+         CALL ADDOPT('full inv')
+         CALL ADDOPT('fix mesh')
+      END IF
 
 
       WRITE(111,*) 'Bravais vectors in units of ALAT'
@@ -691,6 +705,8 @@
       ELSE
          WRITE(111,*) 'Default KVREL= ',KVREL
       ENDIF
+      ! store KVREL to be used later on
+      t_inc%KVREL = KVREL
 
 
       IF (OPT('NEWSOSOL')) THEN ! Spin-orbit
@@ -716,8 +732,16 @@
       SOCSCALE(1:NATYPD) = 1.D0   ! Spin-orbit scaling
       CALL IoInput('<SOCSCL>        ',UIO,1,7,IER)
       IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)
-         WRITE(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
+         WRITE(111,'(A10)') '<SOCSCL>  '
+         DO I = 1,NATYP
+            CALL IoInput('<SOCSCL>        ',UIO,I,7,IER)
+            IF (IER.EQ.0) THEN
+               READ (UNIT=UIO,FMT=*) SOCSCALE(I)
+               WRITE(111,FMT='(F6.3)') SOCSCALE(I)
+            ENDIF
+         ENDDO
+!        READ (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)                       !Bernd - old way
+!        WRITE(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP) !Bernd - old way
       ELSE
          WRITE(111,FMT='(A18,50E10.2)') 'Default <SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
       ENDIF
@@ -955,7 +979,24 @@
       ELSE
          WRITE(111,*) 'Default IGREENFUN= ',IGF
       ENDIF
-      IF (OPT('KKRFLEX ')) IGF = 1
+      
+      IF (OPT('OPERATOR')) THEN
+        ! check if impurity files are present (otherwise no imp.
+        ! wavefunctions can be calculated)
+        operator_imp = .true.
+        inquire(file='potential_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='shapefun_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='scoef', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+      ELSE
+        operator_imp = .false.
+      END IF
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. operator_imp) THEN
+         write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR options'
+         IGF = 1
+      END IF
 
       ICC = 0
       CALL IoInput('ICC             ',UIO,1,7,IER)
@@ -965,7 +1006,10 @@
       ELSE
          WRITE(111,*) 'Default ICC= ',ICC
       ENDIF
-      IF (OPT('KKRFLEX ')) ICC = 1
+      IF (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. operator_imp) THEN
+         write(1337,*) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR  options'
+         ICC = 1
+      END IF
       IF ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1
 
       IF ( ICC.NE.0 .AND. IGF.EQ.0 ) IGF = 1
@@ -1001,6 +1045,14 @@
       WRITE(1337,2104)
       WRITE(1337,2015) INTERVX,INTERVY,INTERVZ 
       WRITE(1337,2102)
+
+      IF(OPT('GREENIMP')) THEN
+         write(*,*) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+         write(1337,*) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+         INTERVX = 1
+         INTERVY = 1
+         INTERVZ = 1
+      ENDIF
 
 
       ! Energy contour
@@ -2056,12 +2108,17 @@
       END IF
 
 
-! ============================================================= fswrt
-      IF (OPT('FERMIOUT').AND.(NSTEPS/=1))THEN           ! fswrt
-        WRITE(6,2012)                                    ! fswrt
-        NSTEPS = 1                                       ! fswrt
-      END IF                                             ! fswrt
-! ============================================================= fswrt
+! =============================================================         ! fswrt
+! check and correct some settings automatically for FERMIOUT writeout   ! fswrt
+      IF(OPT('FERMIOUT').or.OPT('OPERATOR')) THEN                       ! fswrt
+        if (NSTEPS/=1) then                                             ! fswrt
+          WRITE(6,2012)                                                 ! fswrt
+          NSTEPS = 1                                                    ! fswrt
+        end if                                                          ! fswrt
+        if (.not.TEST('STOP1B  ')) CALL ADDTEST('STOP1B  ')             ! fswrt
+        if (.not.TEST('STOP1B  ')) stop 'addtest failed for STOP1B'     ! fswrt
+      END IF                                                            ! fswrt
+! =============================================================         ! fswrt
 
 ! ============================================================= WF_SAVE
       CALL IOInput('MEMWFSAVE       ',UIO,0,7,IER)
@@ -2090,6 +2147,13 @@
       t_wavefunctions%save_sll     = .false.
       t_wavefunctions%save_rllleft = .false.
       t_wavefunctions%save_sllleft = .false.
+
+      if(opt('OPERATOR')) then
+         write(1337,*) 'Found option "OPERATOR"'
+         write(1337,*) 'Overwrite MEMWFSAVE with big numbers'
+         t_wavefunctions%maxmem_number = 5
+         t_wavefunctions%maxmem_units = 3
+      end if
 ! ============================================================= WF_SAVE
 
 ! Begin Godfrin inversion scheme control                       ! GODFRIN Flaviano
@@ -2262,29 +2326,64 @@
 !---------------------------------------------------------------------
 
 SUBROUTINE ADDOPT(STRING)
-use mod_wunfiles, only: t_params
-IMPLICIT NONE
-INTEGER NOPTD
-PARAMETER (NOPTD=32)
-CHARACTER*8 STRING
-INTEGER II
-LOGICAL OPT
-EXTERNAL OPT
+  use mod_wunfiles, only: t_params
+  use mod_types, only: t_inc
+  IMPLICIT NONE
+  INTEGER NOPTD
+  PARAMETER (NOPTD=32)
+  CHARACTER*8 STRING
+  INTEGER II
+  LOGICAL OPT
+  EXTERNAL OPT
 
-IF (.NOT.OPT('        ')) THEN
-   WRITE(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
-   STOP 'Error in ADDOPT: No free slots in array OPTC.'
-ENDIF
-
-IF (.NOT.OPT(STRING)) THEN
-   II = 1
-   DO WHILE (II.LE.NOPTD)
-      IF (t_params%OPTC(II).EQ.'        ') THEN
-         t_params%OPTC(II) = STRING
-         II = NOPTD + 1
-      ENDIF
-      II = II + 1
-   ENDDO
-ENDIF
+  if(t_inc%i_write) write(1337, *) 'in ADDOPT: adding option ', STRING
+ 
+  IF (.NOT.OPT('        ')) THEN
+    WRITE(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
+    STOP 'Error in ADDOPT: No free slots in array OPTC.'
+  ENDIF
+ 
+  IF (.NOT.OPT(STRING)) THEN
+    II = 1
+    DO WHILE (II.LE.NOPTD)
+       IF (t_params%OPTC(II).EQ.'        ') THEN
+          t_params%OPTC(II) = STRING
+          II = NOPTD + 1
+       ENDIF
+       II = II + 1
+    ENDDO
+  ENDIF
 
 END SUBROUTINE ADDOPT
+
+
+SUBROUTINE ADDTEST(STRING)
+  use mod_types, only: t_inc
+  use mod_wunfiles, only: t_params
+  IMPLICIT NONE
+  INTEGER NTSTD
+  PARAMETER (NTSTD=64)
+  CHARACTER*8 STRING
+  INTEGER II
+  LOGICAL TEST
+  EXTERNAL TEST
+   
+  if(t_inc%i_write) write(1337, *) 'in ADDTEST: adding option ', STRING
+
+  IF (.NOT.TEST('        ')) THEN
+    WRITE(*,*) 'Error in ADDTEST for ',STRING,' : No free slots in array TESTC.'
+    STOP 'Error in ADDTEST: No free slots in array TESTC.'
+  ENDIF
+   
+  IF (.NOT.TEST(STRING)) THEN
+    II = 1
+    DO WHILE (II.LE.NTSTD)
+       IF (t_params%TESTC(II).EQ.'        ') THEN
+          t_params%TESTC(II) = STRING
+          II = NTSTD + 1
+       ENDIF
+       II = II + 1
+    ENDDO
+  ENDIF
+ 
+END SUBROUTINE ADDTEST

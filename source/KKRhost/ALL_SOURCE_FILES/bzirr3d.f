@@ -163,7 +163,7 @@ C
               END DO
               CALL DGEMV('N',3,3,1D0,BGINV,3,BV,1,0D0,CF,1)
 C     
-              DO J = 1,3
+              DO J = 1,NDIM
                   IF ( ABS(NINT(CF(J))-CF(J)).GT.1D-8 ) 
      &                 WRITE (1337,99006) I,J,CF(J)
                   NBGP(J,I,IS) = NINT(CF(J))

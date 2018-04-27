@@ -227,7 +227,9 @@ c energy loop
             call find_isave_wavefun(t_wavefunctions)
             ! reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
             ! to prevent unnessesary storing of wavefunctions
-            if(test('STOP1B  ')) t_wavefunctions%Nwfsavemax = 0
+            if(test('STOP1B  ') .and. .not. opt('OPERATOR')) then
+               t_wavefunctions%Nwfsavemax = 0
+            end if
        endif
          
 
@@ -336,12 +338,26 @@ cc calculate the tmat and wavefunctions
 cc right solutions
         TMAT0=CZERO
         ALPHA0=CZERO ! LLY
+C faster calculation of RLL.
+C no irregular solutions are needed in self-consistent iterations
+C because the t-matrix depends only on RLL
+        IF(OPT('RLL-SLL ') .and. 
+     &     .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) THEN
+        CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
+     +              RLL(:,:,:,ith),TMAT0(:,:),NCHEB,
+     +              NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
+     +              NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
+     +              HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,
+     +              '1',USE_SRATRICK,ALPHA0(:,:))
+        ELSE
         CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLL(:,:,:,ith),SLL(:,:,:,ith),TMAT0(:,:),NCHEB,
      +              NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
      +              NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),
      +              HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,
      +              '1','1','0',USE_SRATRICK,ALPHA0(:,:))
+        END IF
+
         IF (NSRA.EQ.2) THEN
           RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
@@ -415,7 +431,7 @@ c add spherical contribution of tmatrix
         if(t_dtmatJij_at%calculate .or.
      &     ( t_wavefunctions%isave_wavefun(i1, ie)>0 .and. 
      &      (t_wavefunctions%save_rllleft .or.
-     &       t_wavefunctions%save_rllleft) )
+     &       t_wavefunctions%save_sllleft) )
      &     ) then
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -475,48 +491,30 @@ cc       left solutions
 c        notice that exchange the order of left and right hankel/bessel functions
          TMAT0=CZERO
          ALPHA0=CZERO ! LLY
+C faster calculation of RLL.
+C no left solutions are needed in self-consistent iterations
+C because the t-matrix depends only on RLL
+         IF(OPT('RLL-SLL ') .and. 
+     &      .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) THEN
+         ! do nothing
+         ELSE
          CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),TMAT0,NCHEB,
      +             NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
      +             NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),
      +             HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,
      +             '1','1','0',USE_SRATRICK,ALPHA0)
+         END IF
          IF (NSRA.EQ.2) THEN
           RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
           SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
          ENDIF
-c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 
-!        write(filename,'(A,I0,A)') 'callinglist_rank=',myrank,'.txt'
-!        open(65161,file=trim(filename),action='write',form='formatted')
-!        write(65161,'(3I8)') LMAXD,LMMAXD,LMMAXSO,
-!    +                        LMPOTD,NTOTD,NRMAXD,
-!    +                        NSRA,IRMDNEW,NSPIN,
-!    +                        NPAN_TOT,NCHEB,IEND,
-!    +                        NCLEB
-!        write(65161,'(A)')         'VINS -next' 
-!        write(65161,'(10ES25.16)')  VINS
-!        write(65161,'(A)')         'RLLLEFT -next' 
-!        write(65161,'(10ES25.16)')  RLLLEFT(:,:,:,ith)
-!        write(65161,'(A)')         'RLL -next' 
-!        write(65161,'(10ES25.16)')  RLL(:,:,:,ith)
-!        write(65161,'(A)')         'RPAN_INTERVALL -next' 
-!        write(65161,'(10ES25.16)')  RPAN_INTERVALL
-!        write(65161,'(A)')         'IPAN_INTERVALL -next' 
-!        write(65161,'(10I8)')       IPAN_INTERVALL
-!        write(65161,'(A)')         'ICLEB -next' 
-!        write(65161,'(10I8)')       ICLEB
-!        write(65161,'(A)')         'RNEW -next' 
-!        write(65161,'(10ES25.16)')  RNEW
-!        close(65161)
-
-!        write(*,*) allocated(t_dtmatJij_at%dtmat_xyz),
-!    +              shape(t_dtmatJij_at%dtmat_xyz)
 
         end if!t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
         
@@ -544,7 +542,10 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
             WRITE(69,REC=IREC) TMATLL(:,:)
-!             WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
+            ! human readable writeout if test option is hit
+            if(test('fileverb')) then
+               WRITE(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
+            end if
          else
 #ifdef CPP_MPI
             irec = ie_num +
@@ -552,6 +553,8 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #else
             irec = ie_num + ie_end * (i1-1)
 #endif
+!            write(*,*) irec, ie_num, ie_end, i1, 
+!     &                 t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)
             t_tgmat%tmat(:,:,irec) = TMATLL(:,:)
          end if
          IF (LLY.NE.0) THEN
