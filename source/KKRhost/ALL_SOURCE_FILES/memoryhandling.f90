@@ -32,7 +32,7 @@ contains
    !> @date 14.11.2017
    !----------------------------------------------------------------------------
    subroutine allocate_cell(flag,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,&
-      KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS)
+      KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS,LMXC)
 
       implicit none
 
@@ -44,6 +44,7 @@ contains
       integer, dimension(:), allocatable, intent(inout) :: IMT !< R point at MT radius
       integer, dimension(:), allocatable, intent(inout) :: IRWS !< R point at WS radius
       integer, dimension(:), allocatable, intent(inout) :: IRNS !< Position of atoms in the unit cell in units of bravais vectors
+      integer, dimension(:), allocatable, intent(inout) :: LMXC
       integer, dimension(:), allocatable, intent(inout) :: NTCELL !< Index for WS cell
       integer, dimension(:), allocatable, intent(inout) :: REFPOT !< Ref. pot. card  at position
       integer, dimension(:,:), allocatable, intent(inout) :: KFG
@@ -109,6 +110,9 @@ contains
          allocate(KFG(4,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(KFG))*kind(KFG),'KFG','allocate_cell')
          IMT = 0
+         allocate(LMXC(NATYP),stat=i_stat)
+         call memocc(i_stat,product(shape(LMXC))*kind(LMXC),'LMXC','allocate_cell')
+         LMXC = 0
       else
          if (allocated(ZAT)) then
             i_all=-product(shape(ZAT))*kind(ZAT)
@@ -180,7 +184,11 @@ contains
             deallocate(RMTREFAT,stat=i_stat)
             call memocc(i_stat,i_all,'RMTREFAT','allocate_cell')
          endif
-
+         if (allocated(LMXC)) then
+            i_all=-product(shape(LMXC))*kind(LMXC)
+            deallocate(LMXC,stat=i_stat)
+            call memocc(i_stat,i_all,'LMXC','allocate_cell')
+         endif
       endif
 
    end subroutine allocate_cell
@@ -243,9 +251,9 @@ contains
    !> Jonathan Chico
    !> @date 14.11.2017
    !----------------------------------------------------------------------------
-   subroutine allocate_potential(flag,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
-      LMPOT,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,&
-      ITITLE,FPRADIUS,VISP,ECORE,VINS)
+   subroutine allocate_potential(flag,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD, &
+      LMPOT,IRMIND,NSPOTD,NFU,IRC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,ITITLE,  &
+      FPRADIUS,VISP,ECORE,VINS)
 
       implicit none
 
@@ -263,7 +271,6 @@ contains
       integer, intent(in) :: NSPOTD
       integer, dimension(:), allocatable, intent(inout) :: NFU
       integer, dimension(:), allocatable, intent(inout) :: IRC !< R point for potential cutting
-      integer, dimension(:), allocatable, intent(inout) :: LMXC
       integer, dimension(:), allocatable, intent(inout) :: NCORE !< Number of core states
       integer, dimension(:), allocatable, intent(inout) :: IRMIN !< Max R for spherical treatment
       integer, dimension(:,:), allocatable, intent(inout) :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
@@ -285,9 +292,6 @@ contains
          allocate(FPRADIUS(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(FPRADIUS))*kind(FPRADIUS),'FPRADIUS','allocate_potential')
          FPRADIUS = -1.D0 ! Negative value signals to use IRNS from pot-file (sub. startb1)
-         allocate(LMXC(NATYP),stat=i_stat)
-         call memocc(i_stat,product(shape(LMXC))*kind(LMXC),'LMXC','allocate_potential')
-         LMXC = 0
          allocate(IRC(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(IRC))*kind(IRC),'IRC','allocate_potential')
          IRC = 0
@@ -333,11 +337,6 @@ contains
             i_all=-product(shape(FPRADIUS))*kind(FPRADIUS)
             deallocate(FPRADIUS,stat=i_stat)
             call memocc(i_stat,i_all,'FPRADIUS','allocate_potential')
-         endif
-         if (allocated(LMXC)) then
-            i_all=-product(shape(LMXC))*kind(LMXC)
-            deallocate(LMXC,stat=i_stat)
-            call memocc(i_stat,i_all,'LMXC','allocate_potential')
          endif
          if (allocated(IRC)) then
             i_all=-product(shape(IRC))*kind(IRC)

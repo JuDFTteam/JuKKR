@@ -32,6 +32,7 @@ module mod_main0
    use memoryhandling
    use global_variables
    use mod_create_newmesh
+   use rinput
 
    implicit none
 
@@ -423,7 +424,7 @@ contains
       !     ..
       !     .. External Subroutines ..
       external :: BZKINT0,CINIT,CLSGEN_TB,DECIOPT,EPATHTB,GAUNT,GAUNT2
-      external :: GFMASK,LATTIX99,RINIT,RINPUT13,SCALEVEC
+      external :: GFMASK,LATTIX99,RINIT,SCALEVEC
       external :: STARTB1,STARTLDAU,TESTDIM,SHAPE_CORR
       !     ..
       !     .. Intrinsic Functions ..
@@ -553,8 +554,8 @@ contains
       !
       ! Call to allocate the arrays associated with the potential
       call allocate_potential(1,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,    &
-         LMPOT,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,    &
-         LLMSP,ITITLE,FPRADIUS,VISP,ECORE,VINS)
+         LMPOT,IRMIND,NSPOTD,NFU,IRC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,   &
+         ITITLE,FPRADIUS,VISP,ECORE,VINS)
       ! Call to allocate the arrays associated with the LDA+U potential
       call allocate_ldau_potential(1,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,ULDAU,  &
          PHILDAU)

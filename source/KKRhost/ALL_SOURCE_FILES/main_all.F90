@@ -842,11 +842,11 @@ program kkrcode
 
    ! Deallocation of input arrays
    call allocate_cell(-1,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,  &
-      KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS)
+      KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS,LMXC)
    call allocate_semi_inf_host(-1,NEMB,TLEFT,TRIGHT)
    call allocate_potential(-1,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
-      LMPOT,IRMIND,NSPOTD,NFU,IRC,LMXC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE, &
-      LLMSP,ITITLE,FPRADIUS,VISP,ECORE,VINS)
+      LMPOT,IRMIND,NSPOTD,NFU,IRC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,&
+      ITITLE,FPRADIUS,VISP,ECORE,VINS)
    call allocate_cpa(-1,NAEZ,NEMB,NATYP,NOQ,ICPA,IQAT,HOSTIMP,CONC)
    call allocate_ldau(-1,NATYP,LOPT,UEFF,JEFF,EREFLDAU)
    call allocate_ldau_potential(-1,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,    &
@@ -885,5 +885,5 @@ program kkrcode
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    call memocc(0,0,'count','stop')
-   
+
 end program

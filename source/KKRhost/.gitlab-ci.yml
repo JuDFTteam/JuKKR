@@ -6,8 +6,8 @@ before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
   - set +e && source compilervars.sh intel64 && set -e
   # install pip
-  - curl -O https://bootstrap.pypa.io/get-pip.py 
-  - python get-pip.py 
+  - curl -O https://bootstrap.pypa.io/get-pip.py
+  - python get-pip.py
   - pip install numpy
   # set environment variables to avoind stack size issue
   - export OMP_NUM_THREADS=1
@@ -197,3 +197,24 @@ verify:intel:
     - cd tests
     - pytest -v
 
+build:intel:debug:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make debug; cp kkr.x kkr.x_debug
+  artifacts:
+    paths:
+      - kkr.x_debug
+    expire_in: 1 day
+
+build:intel:mpidebug:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make mpidebug; cp kkr.x kkr.x_mpidebug
+  artifacts:
+    paths:
+      - kkr.x_mpidebug
+    expire_in: 1 day
