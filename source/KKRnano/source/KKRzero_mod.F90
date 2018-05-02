@@ -128,6 +128,11 @@ module KKRzero_mod
       warn(6,'Kpoint allocation insufficient. KPOIBZ is increased to ' + params%bzdivide(1)*params%bzdivide(2)*params%bzdivide(3)) 
     endif
 
+    if (params%soc) then
+      write(*,'(A,F4.2)') 'Spin-orbit coupling is scaled with socscale=', params%socscale
+      write(*,*) 'test=', params%socscale
+    endif
+
     dims%iemxd = getEnergyMeshSize(params%npol, [params%npnt1, params%npnt2, params%npnt3], params%npntsemi)
     call create(emesh, dims%iemxd)
 
