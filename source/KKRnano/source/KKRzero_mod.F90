@@ -256,7 +256,7 @@ module KKRzero_mod
     integer, intent(inout) :: naez !< if naez < 1 (auto) it will be modified to the number of atoms on exit
     
     double precision, allocatable  :: pos(:,:)
-    character(len=9), parameter :: version = "Dez  2015"
+    character(len=9), parameter :: version = "May  2018"
     integer :: ist, naez_xyz
 
 !------------ array set up and definition of input parameter -----------
