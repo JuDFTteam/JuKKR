@@ -1,2 +1,5 @@
 \contentsline {section}{\numberline {1}Introduction}{3}{section.1}
-\contentsline {section}{\numberline {2}Scientific Results}{3}{section.2}
+\contentsline {section}{\numberline {2}Numerical Methods and Algorithms}{3}{section.2}
+\contentsline {section}{\numberline {3}Scientific Results}{4}{section.3}
+\contentsline {section}{\numberline {4}Parallelization Scheme of KKRnano}{6}{section.4}
+\contentsline {section}{\numberline {5}Benchmark Results on HazelHen}{9}{section.5}
