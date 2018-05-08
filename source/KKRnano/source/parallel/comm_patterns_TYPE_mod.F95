@@ -192,6 +192,7 @@ module comm_patterns_TYPE_mod
 
     tag = sender
 
+    ierr = 0
     if (sender /= receiver) then
 
       if (my_world_rank == sender) &
