@@ -346,13 +346,23 @@ B20 materials \cite{chizhikov_multishell_2013}.
 A series of caluclations is conducted ranging from an SOC that is not altered, i.e. $f_{\text{SOC}}=1.0$ to
 an enhancement of the SOC potential by a
 factor of $f_{\text{SOC}}=4.0$ (see \Cref{fig:MnGe_ferro_bp_socscale}).
+\begin{figure}[h]
+\begin{center}
+ \includegraphics[width=\textwidth]{Figures/kkrnano_MnGe_ferro_bp_socscale/MnGe_ferro_bp.pdf}
+\end{center}
+\caption{Effect of increased SOC on B20-\ce{MnGe} in a 6x6x6 supercell.
+	Top: Total energy difference between (relaxed) Bloch point and (relaxed) ferromagnet.
+	Bottom: Magnetic moment of ferromagnet and Bloch point.
+	}
+\label{fig:MnGe_ferro_bp_socscale}
+\end{figure}
 As can be expected from the comparison of non-trivial magnetic textures 
 in \Cref{fig:MnGe_ferro_1q}, where $f_{\text{SOC}}=1.0$, 
 the BP state is energetically not preferred over the FM state for a small
 scaling of SOC.
 When SOC is increased by $f_{\text{SOC}}=3.5$,
 both states are energetically more or less equivalent.
-Above 3.5 KKRnano clearly prefers the BP state over the FM state with
+For $f_{\text{SOC}} \leq 3.5$ KKRnano clearly prefers the BP state over the FM state with
 an energy difference of up to 4 meV/f.u.
 The most beneficial scaling value is found to be $f_{\text{SOC}}=4.0$.
 The effect of SOC scaling on the magnetic moment can be deemed negligible. Over the whole
@@ -367,17 +377,6 @@ The reason for this is currently under investigation.
 
 
 
-
-\begin{figure}[h]
-\begin{center}
- \includegraphics[width=\textwidth]{Figures/kkrnano_MnGe_ferro_bp_socscale/MnGe_ferro_bp.pdf}
-\end{center}
-\caption{Effect of increased SOC on B20-\ce{MnGe} in a 6x6x6 supercell.
-	Top: Total energy difference between (relaxed) Bloch point and (relaxed) ferromagnet.
-	Bottom: Magnetic moment of ferromagnet and Bloch point.
-	}
-\label{fig:MnGe_ferro_bp_socscale}
-\end{figure}
 
 
 %\FLoatBarrier
@@ -557,14 +556,89 @@ The corresponding linear equation system reads
 \eeq
 , where an additional index $\gamma$ is introduced that runs over $N_{\text{loc}}$. 
 
-\section{Benchmark Results on HazelHen}
+\section{Performance on HazelHen}
 
 \begin{itemize}
-	\item Benchmarks for 6,8,10,12,18,24 MnGe
+	\item Benchmarks for 6,12,18 MnGe
 	\item Potentially benchmarks for larger systems obtained during the workshop at HLRS
 	\item 50 iterations in each run leads to approx. 8 hours of walltime
 	\item Total runtimes and time consumption of multiple-scattering and other important routines
 \end{itemize}
+
+\begin{itemize}
+	\item 
+\end{itemize}
+In this section we present performance results of KKRnano that were obtained on Hazel Hen.
+A runtime analysis of the parts that are related to the specific physical problems is given
+which is followed by an analysis of how much time is spent in
+classes of routines, e.g. library calls and MPI communication.\\
+
+The weak-scaling benchmarks on HazelHen are performed for B20-\ce{MnGe} with non-collinear
+treatment and including spin-orbit interaction.
+In this study KKRnano is compiled with the Intel Fortran compiler
+with optimization level O2 and linked to the Intel Math Kernel (MKL) library.
+The runs are conducted with a task distribution of 24 MPI processes per node. The OpenMP threads 
+are reserved for the multi-threaded MKL library.
+We choose three atomic supercells containing 1728, 13824 and 46656 atoms 
+and perform one iteration for each system.
+We solely empoly the MPI parallelization level over atoms and do not use the ones over spins and energies.
+Since Each MPI task is assigned to one atom 72, 576 and 1944 nodes
+are needed for the three benchmark calculations. 
+\\
+Each MPI process reads four shared binary direct-access
+files before commencing the self-consistency iterations.
+Two of them are index-files of the size of a few hundred kByte while the other two can grow with system size
+up to several GByte. The combined size of all files that are 
+read in is roughly $N$ $\times$ 0.5 MBytes, where $N$ is the number of atoms. After the single iteration 
+the potential is written out. 
+This and the read-in of the four files mentioned above accounts for most of the time spent in I/O.
+
+\begin{figure}[h]
+\begin{center}
+ \includegraphics[width=1.0\textwidth]{Figures/runtime_benchmarks/MnGe_benchmarks.pdf}
+\end{center}
+	\caption{Runtime of a single KKRnano iteration for different B20-\ce{MnGe} supercell sizes. 
+	The total runtime is given alongside the individual runtimes for the single-cell solver,
+	the multiple-scattering solver and the electrostatics solver.
+	}
+\label{fig:MnGe_6x6x6_benchmark}
+\end{figure}
+
+\Cref{fig:MnGe_6x6x6_benchmark}
+shows the total runtime of a single self-consistency iteration and how much time is spent
+on solving the individual physical problems.
+The remaining time
+can be mainly attributed to Fortran direct-access I/O which does not scale well on a Lustre file system.
+The observation of an increase in total runtime for larger systems is a strong hint to this as the amount of
+file accesses is proportional to the number of MPI processes.
+The implementation of a more suitable I/O library (e.g., MPI I/O or SIONlib) is likely to solve this issue.
+\\
+The multiple-scattering solver, i.e. the TFQMR solver, 
+and the solution of the relativistic single-site problem are
+expected to account for most of the computational work in KKRnano which 
+is why linear scaling is of particular importance in these parts of the code.
+Our results show that both parts scale indeed linearly.
+\\
+In the KKR formalism, the electron density and the potential are connected via the Poisson equation. 
+For very large systems the Poisson solver contributes more considerably to the overall runtime.
+This is expected since the algorithm used in KKRnano scales
+quadratically with the number of atoms but does not have a major impact when mid-sized systems are investigated. 
+However, there are ideas on how to restructure the Poisson solver towards a more favorable scaling behavior.
+This is very likely planned for the near future.\\
+
+In another calculation we did a performance analysis on the level of individual routines instead of
+physical problems.
+The Cray Performance Tools package provides a helfpul collection of tools to gather this data.
+It allows to sample the time that is spent within each routine and can therefore give a good
+picture of which routines are performance-critical and should be considered for further optimization.
+\\
+The routines are grouped according to their origin. The \textit{BLAS} group comprises
+library-based linear algebra operations. 
+All external routines for which no source file was given at compile time are subsumed
+in \textit{ETC}. These are usually library calls.
+The \textit{USER} group accounts for all routines from the KKRnano source code, i.e. our own routines.
+Finally, \textit{MPI} contains all the routines that are needed for communication and synchronization
+between the MPI tasks. 
 
 \begin{figure}[h]
 \begin{center}
@@ -572,13 +646,21 @@ The corresponding linear equation system reads
 \end{center}
 	\caption{Runtime results from Cray Performance Measurement Tool for a single KKRnano iteration 
 	for a 6x6x6 supercell of B20-\ce{MnGe} (1728 atoms). 72 HazelHen nodes are used with 1728 MPI processes.
-	The runtimes are divied into four subgroups: BLAS for library-based linear algebra operations, 
-	ETC for ??, USER for ?? and MPI contains all the time that is spent on communication and synchronization
-	measures between the tasks.
+	The runtimes are divied into four subgroups which are described in the text.
+	The fraction of the total runtime in each subgroup that is spent in
+	routines of Intel's highly-optimized MKL library is highlighted in blue.
 	}
 \label{fig:MnGe_6x6x6_crayreport}
 \end{figure}
 
+
+\section{Conclusions}
+
+\begin{itemize}
+	\item Performance improvement during the
+		\textit{Optimization of Scaling and Node-level Performance on Hazel Hen} workshop
+	\item Would be good to have relatively small jobs (72 nodes) launch quicker than they currently do.
+\end{itemize}
 
 \newpage
 
