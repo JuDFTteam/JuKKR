@@ -2,5 +2,5 @@
 \contentsline {section}{\numberline {2}Numerical Methods and Algorithms}{3}{section.2}
 \contentsline {section}{\numberline {3}Complex Magnetic Textures in B20-\ce {MnGe}}{4}{section.3}
 \contentsline {section}{\numberline {4}Parallelization Scheme of KKRnano}{8}{section.4}
-\contentsline {section}{\numberline {5}Performance of KKRnano on HazelHen}{11}{section.5}
+\contentsline {section}{\numberline {5}Performance of KKRnano on Hazel Hen}{11}{section.5}
 \contentsline {section}{\numberline {6}Conclusions}{13}{section.6}

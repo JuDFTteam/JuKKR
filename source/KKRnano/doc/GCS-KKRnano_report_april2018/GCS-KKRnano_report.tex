@@ -213,7 +213,7 @@ Solving this equation scales quadratically with system size.
    \label{fig:mnge_3q}
 \end{subfigure}
 	\caption{Magnetic textures that are found experimentally in B20-\ce{MnGe}:  (a) Helical
-	spin spiral that propagates in (001) direction. Figure is raken from \cite{rybakov_new_2016} b) 
+	spin spiral that propagates in (001) direction. Figure is taken from \cite{rybakov_new_2016} b) 
 	Magnetic anti-hedgehog texture that is wrapped around a magnetic monopole at the center.
 	Figure is taken from \cite{zhang_electric_2016}.}
 \label{fig:mnge_spiral_and_3q}
@@ -257,7 +257,7 @@ lattice constant is varied.
 \caption{
 	Comparison of Ferromagnetic (FM), helical spiral (1Q) and hedgehog lattice (3Q) state with KKRnano.
 	Top: Difference of total energies with the FM state as reference state for different lattice constants. 
-	The experimental lattice constant is $a = 4.80$ \AA. 1Q and 3Q state are energetically preferrable 
+	The experimental lattice constant is $a = 4.80$ \AA. 1Q and 3Q state are energetically preferable 
 	for $a > 5.0$ \AA. Bottom: Magnetic moment per Mn atom increases with lattice constant. 
 	High-spin/Low-spin transition is clearly visible between $a = 4.60$ and $a = 4.70$ \AA.
 	Experimentally, the magnetic moment is measured to be $\approx 2 \mu_{B}$.
@@ -279,7 +279,7 @@ A crucial transition point is found around $a=5.0$ \AA,
 where by imposing the 1Q or 3Q state the energy can be made smaller than for the ferromagnetic state.
 In general, for $a>5.0$ \AA \, both helical states are favored over the ferromagnet.
 \\
-Obviously, an artifical increase of the lattice constant by
+Obviously, an artificial increase of the lattice constant by
 $0.2$ \AA \, ($\approx 4 \%$) or more is fairly large.
 However, probes in experiment are seldom if ever perfectly clean and
 impurities in the sample need to be considered as a source of error in the
@@ -300,7 +300,7 @@ which is reported by experimentalists \cite{yaouanc_magnetic_2017}.
 A high-spin/low-spin transition as reported in \cite{rosler_ab_2012}
 is recognizable between $a=4.60$ and $a=4.70$ \AA.
 \\
-Furhtermore, the magnetic moment increases, when the lattice constant is increased.
+Furthermore, the magnetic moment increases, when the lattice constant is increased.
 This is a common behaviour in DFT for metallic systems.
 For larger lattice constants the magnetic moments of the three different
 magnetic textures differ more than for the smaller lattice constants.
@@ -319,7 +319,7 @@ artificially stronger. \\
 	into the center. Figure provided by Nikolai Kiselev.}\label{fig:blochpoint}}
 {\includegraphics[width=0.6\textwidth]{Figures/blochpoint.png}}
 \end{figure}
-On HazelHen we perform a comparison of the magnetic Bloch point (BP) (see \Cref{fig:blochpoint}) 
+On Hazel Hen we perform a comparison of the magnetic Bloch point (BP) (see \Cref{fig:blochpoint}) 
 state and the familiar ferromagnetic (FM) state
 with the same supercell size of 6x6x6 as before but with a denser k-point-mesh of 2x2x2 points.
 As exchange-correlation functional we choose LDA and keep the lattice constant fixed to $a=4.80$ \AA.
@@ -327,7 +327,7 @@ We allow the magnetic moments to relax during the convergence process.
 This leads to a small canting of the moments which is a known effect in
 B20 materials \cite{chizhikov_multishell_2013}.
 \\
-A series of caluclations is conducted ranging from an SOC that is not altered, i.e. $f_{\text{SOC}}=1.0$ to
+A series of calculations is conducted ranging from an SOC that is not altered, i.e. $f_{\text{SOC}}=1.0$ to
 an enhancement of the SOC potential by a
 factor of $f_{\text{SOC}}=4.0$ (see \Cref{fig:MnGe_ferro_bp_socscale}).
 \begin{figure}[h]
@@ -544,7 +544,7 @@ The corresponding linear equation system reads
 \eeq
 , where an additional index $\gamma$ is introduced that runs over $N_{\text{loc}}$. 
 
-\section{Performance of KKRnano on HazelHen}
+\section{Performance of KKRnano on Hazel Hen}
 \label{sec:performance}
 %\begin{itemize}
 %	\item Benchmarks for 6,12,18 MnGe
@@ -561,11 +561,11 @@ A runtime analysis of the parts that are related to the specific physical proble
 which is followed by an overview of how much time is spent in distinct
 classes of routines, e.g. library calls and MPI communication.\\
 
-The weak-scaling benchmarks on HazelHen are performed for B20-\ce{MnGe} 
+The weak-scaling benchmarks on Hazel Hen are performed for B20-\ce{MnGe} 
 with the magnetic moments being treated as
 non-collinear.
 \\
-Frr this KKRnano is compiled with the Intel Fortran compiler
+For this KKRnano is compiled with the Intel Fortran compiler
 with optimization level O2 and linked to the Intel Math Kernel (MKL) library which handles all BLAS calls.
 The runs are conducted with a task distribution of 24 MPI processes per node. The OpenMP threads 
 are reserved for the multi-threaded MKL library.
@@ -622,7 +622,7 @@ However, there are ideas on how to restructure the Poisson solver towards a more
 This is very likely planned for the near future.\\
 
 Next, we conduct a performance analysis on the level of individual routines.
-The Cray Performance Tools package provides a helfpul collection of tools to gather data for this purpose.
+The Cray Performance Tools package provides a helpful collection of tools to gather data for this purpose.
 It allows to sample the time that is spent within each routine and can therefore give a good
 picture of which routines are performance-critical and should be considered for further optimization.
 \\
@@ -631,8 +631,8 @@ picture of which routines are performance-critical and should be considered for 
  \includegraphics[width=0.8\textwidth]{Figures/cray_report/MnGe_6x6x6_crayreport.pdf}
 \end{center}
 	\caption{Runtime results from Cray Performance Measurement Tool for a single KKRnano iteration 
-	for a 6x6x6 supercell of B20-\ce{MnGe} (1728 atoms). 72 HazelHen nodes are used with 1728 MPI processes.
-	The runtimes are divied into four subgroups which are described in the text.
+	for a 6x6x6 supercell of B20-\ce{MnGe} (1728 atoms). 72 Hazel Hen nodes are used with 1728 MPI processes.
+	The runtimes are divided into four subgroups which are described in the text.
 	The fraction of the total runtime in each subgroup that is spent in
 	routines of Intel's highly-optimized MKL library is highlighted in blue.
 	}
@@ -682,7 +682,7 @@ Further optimization for standard calculations with a few thousand atoms
 is difficult since no other obvious bottlenecks could be detected.
 \\
 We conclude with a request with regards to the job scheduling on Hazel Hen:
-For our purposes it would be benificial, if relatively small jobs with an allocation of
+For our purposes it would be beneficial, if relatively small jobs with an allocation of
 about 100 nodes 
 were scheduled with higher priority than they currently are.
 
