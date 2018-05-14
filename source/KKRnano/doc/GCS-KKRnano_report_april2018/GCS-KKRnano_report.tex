@@ -17,6 +17,7 @@
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage[version=4]{mhchem}
+%\usepackage[doi=true]{biblatex}
 \usepackage{tikz}
 \usetikzlibrary{decorations.markings}
 \usetikzlibrary{shapes.misc,shapes.geometric,arrows,positioning,automata, patterns}
@@ -33,6 +34,7 @@
 \setlength{\oddsidemargin}{0.1 cm}
 \setlength{\itemsep}{10pt}
 \bibliographystyle{gcs}
+%\bibliographystyle{IEEEtran}
 
 \DeclareUnicodeCharacter{2212}{-}
 \newcommand{\matr}[1]{\bm{#1}}  
@@ -62,13 +64,13 @@
 \textbf{Project title}\\
 \phantom{MM}\textit{KKRnano: Quantum description of skyrmions in chiral B20 magnets}
 
-\bigskip
-\textbf{Type of project}\\
-\phantom{MM} \textit{new project}
-
 %\bigskip
-%\textbf{Project ID}\\
-%\phantom{MM} \textit{Please provide in case of a project extension}
+%\textbf{Type of project}\\
+%\phantom{MM} \textit{new project}
+
+\bigskip
+\textbf{Project ID}\\
+\phantom{MM} \textit{44129}
 
 \bigskip
 \textbf{Principal investigator}\\
@@ -146,7 +148,7 @@ linear scaling is achieved.
 Our first results on Hazel Hen for B20-\ce{MnGe} are presented in \Cref{sec:mnge}.
 In \Cref{sec:par_scheme} and \Cref{sec:performance} the focus is on code-specific issues. 
 The parallelization scheme of KKRnano
-is described in detail an a performance analysis of our code on Hazel Hen is conducted.
+is described in detail and a performance analysis of our code on Hazel Hen is conducted.
 
 \section{Numerical Methods and Algorithms}
 \label{sec:methods_algorithms}
@@ -177,13 +179,13 @@ The given problem is identical to solving a complex linear matrix equation of th
 	\label{eq:axb}
 	\matr{A} \vec{x} = \vec{b}
 \end{equation}
-As is well known this problem scales as $O(N^3)$, where $N$ denotes the dimension of the $N \times N$
+As is well known, this problem scales as $O(N^3)$, where $N$ denotes the dimension of the $N \times N$
 matrix $\matr{A}$. Standard solving schemes therefore severely limit the system size that can
 be calculated.
-However, by choosing a reference system of repulsive potentials
-$\matr{A}$ can be made sparse and this can again be exploited
+However, by choosing a reference system of repulsive potentials,
+$\matr{A}$ can be made sparse and this can be exploited
 by using customized iterative algorithms for solving linear sparse matrix equations.
-Our method uses the transpose free quasi minimal residual (TFQMR) algorithm \cite{freund_qmr:_1991}
+Our method uses the transpose-free quasi-minimal-residual (TFQMR) algorithm \cite{freund_qmr:_1991}
 which enables us to achieve $O(N^2)$ scaling. 
 Convergence of the TFQMR iterations is achieved by working in the complex energy plane. Both concepts,
 the repulsive reference system and application of complex energy, were
@@ -196,7 +198,7 @@ In most applications the TFQMR solver accounts for the major part of the computa
 For super-large-scale calculations (above 100,000 atoms) the electrostatics solver begins
 to require an amount of computing resources that is not negligible anymore. 
 The electrostatic problem is given in terms of a Poisson equation that connects electric field and potential. 
-Solving this equation scales quadratically with system size. 
+Solving this equation scales quadratically with system size, a drawback which will be removed in the future. 
 
 \section{Complex Magnetic Textures in B20-\ce{MnGe}}
 \label{sec:mnge}
@@ -241,12 +243,12 @@ in which 1Q and 3Q state with their wavelengths of
 \\
 We begin by setting up a 6x6x6 B20-\ce{MnGe} supercell (1728 atoms), where we use PBEsol 
 as exchange-correlation functional
-and include only a single k-point, i.e. the $\gamma$-point.
-In this initial comparison of ferromagnetic, 1Q and 3Q state using the equilibrium lattice constant
-$a=4.80$ \AA \, the ferromagnet is predicted to be the ground state.
+and include only a single k-point, i.e. the $\Gamma$-point.
+In this initial comparison of the ferromagnetic, 1Q and 3Q states using the equilibrium lattice constant
+$a=4.80$ \AA \,, the ferromagnet is predicted to be the ground state.
 As this contradicts experimental observations we take into consideration that
 in experiment the crystal structure might inadvertently differ from the ideal structure.
-Such discrepancies can be caused e.g. by strain.
+Such discrepancies can be caused, e.g. by strain.
 \\
 Therefore, it is reasonable to check whether a material's properties change, when the
 lattice constant is varied.
@@ -257,7 +259,7 @@ lattice constant is varied.
 \caption{
 	Comparison of Ferromagnetic (FM), helical spiral (1Q) and hedgehog lattice (3Q) state with KKRnano.
 	Top: Difference of total energies with the FM state as reference state for different lattice constants. 
-	The experimental lattice constant is $a = 4.80$ \AA. 1Q and 3Q state are energetically preferable 
+	The experimental lattice constant is $a = 4.80$ \AA. 1Q and 3Q states are energetically preferable 
 	for $a > 5.0$ \AA. Bottom: Magnetic moment per Mn atom increases with lattice constant. 
 	High-spin/Low-spin transition is clearly visible between $a = 4.60$ and $a = 4.70$ \AA.
 	Experimentally, the magnetic moment is measured to be $\approx 2 \mu_{B}$.
@@ -265,7 +267,7 @@ lattice constant is varied.
 \label{fig:MnGe_ferro_1q}
 \end{figure}
 Such a variation is performed in the upper part of \Cref{fig:MnGe_ferro_1q}, where
-the total energy is evaluated for FM, 1Q and 3Q state.
+the total energy is evaluated for the FM, 1Q and 3Q states.
 Clearly, neither the 1Q nor the 3Q state constitutes the ground state,
 when the experimental lattice constant is assumed.
 Yet, by increasing or decreasing the lattice constant the energetic difference can be made
@@ -532,18 +534,18 @@ With these definitions we return to \cref{eq:dyson2}, where $A$ is of dimension
 $N_{\text{cl}} (l_{\text{max}}+1)^2 \times N_{\text{tr}} (l_{\text{max}}+1)^2$,
 $b$ usually has the
 negative local $\Delta t$ as diagonal elements
-and $X$ has dimension $N_{\text{cl}} (l_{\text{max}}+1)^2 \times (l_{\text{max}}+1)^2$.
+and $X$ has dimension $N_{\text{tr}} (l_{\text{max}}+1)^2 \times (l_{\text{max}}+1)^2$.
 $A$ is a matrix of blocks of size ${(l_{\text{max}}+1)}^2 \times {(l_{\text{max}}+1)}^2$
 while $X$ and $b$ are vectors
 of such blocks. For more than a single atom per task $x$ and $b$ can also take a matrix form
 with dimension $N_{\text{cl}} (l_{\text{max}}+1)^2 \times N_{\text{loc}} (l_{\text{max}}+1)^2$, where
 $N_{\text{loc}}$ is the number of atoms treated by one MPI task of the atom parallelization level.
-The corresponding linear equation system reads
+The corresponding linear system of equations reads
 \beq
 \label{eq:dyson_equation_lap_multi}
-\sum_{\mu} \sum_{L'} A^{\nu \mu}_{LL'} X^{\mu \gamma}_{L'L''} = b_{L'L''}
+\sum_{\mu} \sum_{L'} A^{\nu \mu}_{LL'} X^{\mu \gamma}_{L'L''} = b^{\gamma}_{L'L''},
 \eeq
-, where an additional index $\gamma$ is introduced that runs over $N_{\text{loc}}$. 
+where an additional index $\gamma$ is introduced that runs over $N_{\text{loc}}$. 
 
 \section{Performance of KKRnano on Hazel Hen}
 \label{sec:performance}
@@ -574,10 +576,10 @@ We choose three atomic supercells containing 1728, 13824 and 46656 atoms
 and perform one iteration for each system.
 We solely activate the MPI parallelization level over atoms and do not use the ones over spins and energies.
 Then, 72, 576 and 1944 nodes
-are needed for the three benchmark calculations, since Each MPI task is assigned to one atom. 
+are needed for the three benchmark calculations, since each MPI task is assigned to one atom. 
 \\
 Each MPI process reads four shared binary direct-access
-files before commencing the self-consistency iterations.
+files before commencing the self-consistency step.
 Two of them are index-files of the size of a few hundred kByte while the other two can grow with system size
 up to several GByte. The combined size of all files that are 
 read in is roughly $N$ $\times$ 0.5 MBytes, where $N$ is the number of atoms. After the single iteration 
@@ -588,9 +590,10 @@ This and the read-in of the four files mentioned above accounts for most of the 
 \begin{center}
  \includegraphics[width=1.0\textwidth]{Figures/runtime_benchmarks/MnGe_benchmarks.pdf}
 \end{center}
-	\caption{Runtime of a single KKRnano iteration for different B20-\ce{MnGe} supercell sizes. 
-	The total runtime is given alongside the individual runtimes for the single-cell solver,
-	the multiple-scattering solver and the electrostatics solver.
+	\caption{Runtime of a single DFT self-consistency step
+	for different B20-\ce{MnGe} supercell sizes with KKRnano. 
+	The total runtime and the individual runtimes for the single-cell solver,
+	the multiple-scattering solver and the electrostatics solver are given.
 	}
 \label{fig:MnGe_6x6x6_benchmark}
 \end{figure}
@@ -616,7 +619,7 @@ takes less than five minutes which is a good value, especially when considering 
 the magnetic moments are allowed to be non-collinear.
 \\
 In the KKR formalism, the electron density and the potential are connected via the Poisson equation. 
-For very large systems the Poisson solver contributes more considerably to the overall runtime.
+For very large systems the Poisson solver contributes considerably to the overall runtime.
 This is expected since the algorithm used in KKRnano scales
 quadratically with the number of atoms. Its impact when mid-sized systems are investigated is negligible. 
 However, there are ideas on how to restructure the Poisson solver towards a more favorable scaling behavior.
@@ -641,10 +644,12 @@ picture of which routines are performance-critical and should be considered for 
 \end{figure}
 \Cref{fig:MnGe_6x6x6_crayreport} shows the sampling results for a 6x6x6 supercell calculation
 of B20-\ce{MnGe} using 1728 MPI tasks on 72 nodes.
-The routines are grouped according to their origin. The \textit{BLAS} group comprises
+The routines are grouped according to their origin. The \textit{BLAS} group comprises the kernels of
 library-based linear algebra operations. 
 All external routines for which no source file was given at compile time are subsumed
-in \textit{ETC}. These are usually library calls.
+in \textit{ETC}. Such routines are e.g. Fortran I/O routines and MKL helper routines
+that are indispensable for BLAS but are not directly related
+to the MKL kernel.
 The \textit{USER} group accounts for all routines from the KKRnano source code, i.e. our self-written routines.
 Finally, \textit{MPI} contains all the routines that are needed for communication and synchronization
 between the MPI tasks. 
@@ -658,7 +663,7 @@ that are already highly optimized.
 The only group of routines that can benefit from source code tuning is the \textit{USER} group.
 However, a hypothetical performance improvement by a factor of two would lead to
 an overall performance increase of merely 10 \% as the share of this group in the total runtime is only 20 \%.
-MPI routines are not crucial to performance in this calculation as they amount to only 15 \% of the total
+MPI routines are not crucial to performance as they amount to only 15 \% of the total
 computational effort.
 \section{Conclusions}
 In this report we introduced an extended Korringa-Kohn-Rostoker method as the foundation of our large-scale
@@ -668,8 +673,8 @@ by applying KKRnano to the material B20-\ce{MnGe}.
 Those results are promising and suggest further investigation
 of complex magnetic textures in this particular compound.
 The high-clocked Intel Xeon processors of Hazel Hen
-make a single iteration for a supercell of 1728 atoms feasible within 
-less than five minutes which enables us
+make a single DFT self-consistency step for a supercell of 1728 atoms feasible within 
+less than five minutes
 to obtain results in a timely manner.\\
 
 During the
