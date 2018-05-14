@@ -436,7 +436,7 @@ In practice one MPI task handles 1-16 atoms.
 The reference Green functions are calculated by each task
 for the atoms it is responsible for and are then sent to other tasks that require them. 
 The reference t-matrices for the atoms inside the respective reference cluster are not communicated 
-but calculated by each task individually as it takes less time to re-compute them than communicating them.
+but calculated by each task individually as it takes less time to re-compute them rather than communicating them.
 In any case the $\Delta t$-matrices of the actual systems need to be communicated.
 After the necessary information is distributed, the Dyson equation can be solved independently by each task.
 The calculation of the local charge density can also be conducted locally since only the diagonal
@@ -450,7 +450,8 @@ If the system of interest is a collinear magnet, the two spin channels can be ha
 MPI tasks since the
 magnetic Kohn-Sham equations are separable.
 Due to the relatively small additional MPI communication effort
-this yields an almost ideal speed-up by a factor of 2.
+this yields an almost ideal speed-up by a factor of 2 in the important
+multiple-scattering part of the calculation.
 \\
 It should be noted that in the non-collinear KKR formalism such a 
 separation of spin channels is no longer possible because 
@@ -485,8 +486,8 @@ A correct load-balancing is of outmost importance to the effectiveness of this M
 all tasks need to have finished before the program can move on to the solution of the electrostatic problem,
 i.e. the Poisson equation.
 Due to the challenge that load-balancing can pose, parallelization over energy points should only be used, 
-if plenty of processor cores are available and
-ought to be utilized.
+if plenty of processor cores
+ought to be utilized and the Poisson solver is well-scaling.
 
 \subsubsection*{OpenMP parallelization}
 
@@ -502,7 +503,7 @@ have their own built-in SMT support.
 Therefore, the available SMT threads must be partitioned between the explicit OpenMP 
 parallel regions in the code and the implicit parallelization of the BLAS library.
 Here, the optimal partitioning is highly architecture-dependent and a general recommendation cannot
-be given. On Hazel Hen the best performance is achieved, when the threads are used by the BLAS library.
+be given. On Hazel Hen the best performance is achieved, when all threads are used by the BLAS library.
 
 
 \subsubsection*{Multiple Atoms per MPI Task}
@@ -565,7 +566,7 @@ The weak-scaling benchmarks on Hazel Hen are performed for B20-\ce{MnGe}
 with the magnetic moments being treated as
 non-collinear.
 \\
-For this KKRnano is compiled with the Intel Fortran compiler
+For this, KKRnano is compiled with the Intel Fortran compiler
 with optimization level O2 and linked to the Intel Math Kernel (MKL) library which handles all BLAS calls.
 The runs are conducted with a task distribution of 24 MPI processes per node. The OpenMP threads 
 are reserved for the multi-threaded MKL library.
@@ -619,7 +620,7 @@ For very large systems the Poisson solver contributes more considerably to the o
 This is expected since the algorithm used in KKRnano scales
 quadratically with the number of atoms. Its impact when mid-sized systems are investigated is negligible. 
 However, there are ideas on how to restructure the Poisson solver towards a more favorable scaling behavior.
-This is very likely planned for the near future.\\
+This is planned for the near future.\\
 
 Next, we conduct a performance analysis on the level of individual routines.
 The Cray Performance Tools package provides a helpful collection of tools to gather data for this purpose.
@@ -660,10 +661,11 @@ an overall performance increase of merely 10 \% as the share of this group in th
 MPI routines are not crucial to performance in this calculation as they amount to only 15 \% of the total
 computational effort.
 \section{Conclusions}
-At the beginning of this report we shortly introduce the method that KKRnano is based on. 
-This is followed by a presentation of the initial results on Hazel Hen that were obtained 
-with KKRnano for the material B20-\ce{MnGe}. 
-They are promising and suggest further investigation
+In this report we introduced an extended Korringa-Kohn-Rostoker method as the foundation of our large-scale
+Density Functional Theory application KKRnano. 
+Consecutively, we presented results that were obtained on Hazel Hen 
+by applying KKRnano to the material B20-\ce{MnGe}.
+Those results are promising and suggest further investigation
 of complex magnetic textures in this particular compound.
 The high-clocked Intel Xeon processors of Hazel Hen
 make a single iteration for a supercell of 1728 atoms feasible within 
@@ -672,14 +674,15 @@ to obtain results in a timely manner.\\
 
 During the
 \textit{Optimization of Scaling and Node-level Performance on Hazel Hen} workshop at HLRS this year we were
-given the chance to further optimize our code, where we could identify a computational bottleneck and
+given the chance to further optimize our code, where we were able to identify a computational bottleneck and
 improve the performance of KKRnano on Hazel Hen by resolving it. The bottleneck was
 connected to unnecessary copying of a large complex-valued array, when the magnetic moments are allowed to be
-non-collinear..
+non-collinear.
 All results in \Cref{sec:performance} were
 obtained with this optimized version.
 Further optimization for standard calculations with a few thousand atoms 
-is difficult since no other obvious bottlenecks could be detected.
+is difficult since only 20 \% of the runtime is spent in hand-written code. The remaining 80 \% is spent in
+library calls that are aleady highly tuned, in particular MKL-BLAS and MPI communication.
 \\
 We conclude with a request with regards to the job scheduling on Hazel Hen:
 For our purposes it would be beneficial, if relatively small jobs with an allocation of
