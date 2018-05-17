@@ -81,6 +81,7 @@
        DOUBLE COMPLEX TMATSPH(2*(LMAX+1)), dummy_alpha(2*(LMAX+1))
        INTEGER JLK_INDEX(2*LMMAXSO),ipot,
      &         NPAN_LOGNEW(NATYPD),NPAN_EQNEW(NATYPD)
+       LOGICAL :: lexist
        !parallelization:
        INTEGER :: ierr, i1_start, i1_end, i1_start_imp, i1_end_imp
 #ifdef CPP_MPI
@@ -114,20 +115,30 @@
        
        if(myrank==master) then
          ! read angles from nonco_ange files
-         OPEN(UNIT=12,FILE='nonco_angle.dat',FORM='FORMATTED')
-         DO I1=1,NATYPD
-            READ(12,*) THETAhost(i1),PHIhost(i1)
-            THETAhost(i1)=THETAhost(i1)/360.0D0*2.0D0*PI
-            PHIhost(i1)=PHIhost(i1)/360.0D0*2.0D0*PI
-         ENDDO
-         CLOSE(12)
-         OPEN(UNIT=13,FILE='nonco_angle_imp.dat',FORM='FORMATTED')
-         DO I1=1,NATOMIMP
-            READ(13,*) THETAimp(i1),PHIimp(i1)
-            THETAimp(i1)=THETAimp(i1)/360.0D0*2.0D0*PI
-            PHIimp(i1)=PHIimp(i1)/360.0D0*2.0D0*PI
-         ENDDO
-         CLOSE(13)
+         THETAhost(:) = 0.0d0
+         PHIhost(:) = 0.0d0
+         inquire(file='nonco_angle.dat', exist=lexist)
+         if(lexist) then
+           OPEN(UNIT=12,FILE='nonco_angle.dat',FORM='FORMATTED')
+           DO I1=1,NATYPD
+              READ(12,*) THETAhost(i1),PHIhost(i1)
+              THETAhost(i1)=THETAhost(i1)/360.0D0*2.0D0*PI
+              PHIhost(i1)=PHIhost(i1)/360.0D0*2.0D0*PI
+           ENDDO
+           CLOSE(12)
+         end if
+         THETAimp(:) = 0.0d0
+         PHIimp(:) = 0.0d0
+         inquire(file='nonco_angle_imp.dat', exist=lexist)
+         if(lexist) then
+           OPEN(UNIT=13,FILE='nonco_angle_imp.dat',FORM='FORMATTED')
+           DO I1=1,NATOMIMP
+              READ(13,*) THETAimp(i1),PHIimp(i1)
+              THETAimp(i1)=THETAimp(i1)/360.0D0*2.0D0*PI
+              PHIimp(i1)=PHIimp(i1)/360.0D0*2.0D0*PI
+           ENDDO
+           CLOSE(13)
+         end if
        endif
        
        

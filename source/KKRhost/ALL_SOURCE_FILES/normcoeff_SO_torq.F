@@ -58,6 +58,7 @@ C     .. Local Scalars ..
      +                 IR,I1,I1SP1,I1SP2,
      +                 LMSP1,LMSP2,ISIGMA,I2SP1,I2SP2,INSRA,NSRA
       INTEGER          LMMAXSO
+      LOGICAL          lexist
 !     MPI stuff
       INTEGER :: ierr, ihelp, i1_start, i1_end
 C     ..
@@ -217,19 +218,22 @@ c set up the array R*_L1L2 R_L3L4
 
 
       ! reads spin quantization axis from file
-        OPEN(UNIT=11,FILE='nonco_angle.dat',FORM='FORMATTED')
+        inquire(file='nonco_angle.dat', exist=lexist)
+        if(lexist) then
+          OPEN(UNIT=11,FILE='nonco_angle.dat',FORM='FORMATTED')
 
-        DO I1=1,NATOM 
-          READ(11,*) THETA_TMP,PHI_TMP
-          IF ( I1 > 1) THEN
-            IF ((THETA_TMP .ne. THETA ) .or. (PHI_TMP .ne. PHI))
-     +        stop "It seems you want to compute the torque 
-     +        in a non-colinear system. This is not implemented yet."
-          END IF        
-          THETA = THETA_TMP
-          PHI = PHI_TMP
-        END DO
-        CLOSE(11)
+          DO I1=1,NATOM 
+            READ(11,*) THETA_TMP,PHI_TMP
+            IF ( I1 > 1) THEN
+              IF ((THETA_TMP .ne. THETA ) .or. (PHI_TMP .ne. PHI))
+     +          stop "It seems you want to compute the torque 
+     +          in a non-colinear system. This is not implemented yet."
+            END IF        
+            THETA = THETA_TMP
+            PHI = PHI_TMP
+          END DO
+          CLOSE(11)
+        end if
 
         SQA(1) = sin(THETA)*cos(PHI)
         SQA(2) = sin(THETA)*sin(PHI)
