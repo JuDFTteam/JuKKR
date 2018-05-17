@@ -235,6 +235,7 @@ do while ( (t_inc%i_iteration.lt.t_inc%N_iteration) .and. (t_inc%N_iteration.ne.
 #ifdef CPP_MPI
     call MPI_Finalize(ierr)
 #endif
+    if(.not. OPT('WRTGREEN')) write(*,*) 'done with WRTGREEN step'
     if(myrank==master) write(*,*) 'Stop after main1b'
     stop
   end if!test
