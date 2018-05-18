@@ -414,9 +414,12 @@ C                                  meant for simpler passing of basic parameter 
          end if                                                         ! fswrt
          naclsmin = minval(t_params%NACLS(1:t_params%NCLS))             ! fswrt
          if(.not.OPT('GREENIMP') .and. naclsmin<150) then               ! fswrt
+            write(*,*) ''                                               ! fswrt
+            write(*,*) '         WARNING'                               ! fswrt
+            write(*,*) ''                                               ! fswrt
             write(*,*) 'FERMIOUT/WRTGREEN option chosen'                ! fswrt
             write(*,*) 'minimal cluster size smaller than 150 atoms!!!' ! fswrt
-            stop 'Please increase cluster size to least 200-300 atoms'  ! fswrt
+            write(*,*) 'should be increased to least 200-300 atoms'     ! fswrt
          end if                                                         ! fswrt
          if(test('MPIenerg')) then                                      ! fswrt
             write(*,*) 'FERMIOUT/WRTGREEN/GREENIMP option chosen'       ! fswrt

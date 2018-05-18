@@ -32,8 +32,8 @@ integer :: dims(2)
 #endif
 character(len=3) :: ctemp !name for output file
 ! needed to use test('xxxxxxxx'):
-logical :: test
-external :: test
+logical :: test, opt
+external :: test, opt
 
 
 
