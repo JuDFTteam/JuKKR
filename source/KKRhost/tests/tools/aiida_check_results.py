@@ -1,43 +1,37 @@
 #!/usr/bin/env python
 
+# connect to db
 from aiida import is_dbenv_loaded, load_dbenv
 if not is_dbenv_loaded():
     load_dbenv()
+# load aiida stuff
 from aiida.orm import load_node
-from pprint import pprint
-
-# load node of workflow
-try:
-   n = load_node(11)
-   print '\noutputs of workflow\n-------------------------------------------------'
-   pprint(n.get_outputs_dict())
-   n = n.get_outputs()[-1]
-except:
-   n = load_node(10)
-   print '\noutputs of workflow\n-------------------------------------------------'
-   pprint(n.get_outputs_dict())
-   n = n.get_outputs()[-1]
-
-# get output dictionary
-out = n.get_dict()
-print '\n\noutput dictionary:\n-------------------------------------------------'
-pprint(out)
-
-
-Cu.label = 'Cu_bulk_simple_test'
-from aiida.orm.QueryBuilder import QueryBuilder
 from aiida.orm  import QueryBuilder
 from aiida.orm import DataFactory
+from aiida.orm import WorkCalculation
+# for nicer printing
+from pprint import pprint
+
+# get output dictionary quering in imported database (find structure first and then extract workflow results node)
 StructureData = DataFactory('structure')
 qb = QueryBuilder()
 qb.append(StructureData, tag = 'struc')
 qb.add_filter('struc', {'label': 'Cu_bulk_simple_test'})
 structure_node = qb.get_results_dict()[0].get('struc').values()[0]
-from aiida.orm import WorkCalculation
 pk0 = structure_node.get_outputs(node_type=WorkCalculation)[0].pk
-print 'pk= pk0'
+print 'found structure node:', structure_node
+print 'Workflow pk=', pk0
+# extract results node and get out dict
+n = load_node(pk0)
+for node in n.get_outputs():
+    if node.label=='kkr_scf_wc_results':
+        break
+out = node.get_dict()
+print '\n\noutput dictionary:\n-------------------------------------------------'
+pprint(out)
 
-# finally check some output
+
+# finally check some outputs
 print '\n\ncheck values ...\n-------------------------------------------------'
 
 print 'voronoi_step_success', out['voronoi_step_success']
