@@ -967,10 +967,10 @@ contains
             !-------------------------------------------------------------------
             if (.not.OPT('NEWSOSOL')) then
                call WMATLDAU(NTLDAU,ITLDAU,NSPINPOT,DENMATC,LOPT,UEFF,JEFF,   &
-                  ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD,LMAX)
+                  ULDAU,WLDAU,EU,EDC,MMAXD,NPOTD,NATYP,NSPIN,LMAX)
             else
                call WMATLDAUSOC(NTLDAU,ITLDAU,NSPINPOT,DENMATN,LOPT,UEFF,JEFF,&
-                  ULDAU,WLDAU,EU,EDC,MMAXD,LMAX)
+                  ULDAU,WLDAU,EU,EDC,MMAXD,NATYP, NSPIN, LMAX)
             endif
             ! -> Mix old and new LDA+U interaction matrices
             call MIXLDAU(MMAXD,NSPIND,NATYP,NATYP,NSPIN,LOPT,WLDAUOLD,WLDAU)

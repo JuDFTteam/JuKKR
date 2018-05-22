@@ -37,7 +37,7 @@ subroutine PNSQNS(AR,CR,DR,DRDI,EK,ICST,PZ,QZ,FZ,SZ,PNS,QNS,NSRA, &
    double precision, dimension(IRM), intent(in) :: DRDI  !< Derivative dr/di
    double precision, dimension(IRM), intent(in) :: CUTOFF
    double precision, dimension(NCLEB,2), intent(in)         :: CLEB  !< GAUNT coefficients (GAUNT)
-   double precision, dimension(IRMIN:IRM,LMPOT), intent(in) :: VINS  !< Non-spherical part of the potential
+   double precision, dimension(IRMIND:IRM,LMPOT), intent(in) :: VINS  !< Non-spherical part of the potential
    double precision, dimension(MMAXD,MMAXD), intent(in)     :: WLDAU !< potential matrix
    double complex, dimension(IRM,0:LMAX), intent(in)     :: FZ
    double complex, dimension(IRM,0:LMAX), intent(in)     :: QZ
@@ -46,20 +46,20 @@ subroutine PNSQNS(AR,CR,DR,DRDI,EK,ICST,PZ,QZ,FZ,SZ,PNS,QNS,NSRA, &
    double complex, dimension(LMMAXD,LMMAXD), intent(in)  :: DR
    double complex, dimension(LMMAXD,LMMAXD), intent(in)  :: AR
    double complex, dimension(LMMAXD,LMMAXD), intent(in)  :: CR
-   double complex, dimension(LMMAXD,LMMAXD,IRMIN:IRM,2), intent(in) :: PNS
-   double complex, dimension(LMMAXD,LMMAXD,IRMIN:IRM,2), intent(in) :: QNS
+   double complex, dimension(LMMAXD,LMMAXD,IRMIND:IRM,2), intent(in) :: PNS
+   double complex, dimension(LMMAXD,LMMAXD,IRMIND:IRM,2), intent(in) :: QNS
    ! .. Local Scalars
    integer :: I,LM1,LM2,LMMKONV,M1,M2,IR,IRMAX
    ! .. Local Arrays
-   double precision, dimension(LMMAXD,LMMAXD,IRMIN:IRM) :: VNSPLL
+   double precision, dimension(LMMAXD,LMMAXD,IRMIND:IRM) :: VNSPLL
    double complex, dimension(LMMAXD) :: EFAC
    double complex, dimension(LMMAXD,LMMAXD) :: TMATLL
-   double complex, dimension(LMMAXD,LMMAXD,IRMIN:IRM) :: DMAT
-   double complex, dimension(LMMAXD,LMMAXD,IRMIN:IRM) :: CMAT
-   double complex, dimension(LMMAXD,IRMIN:IRM,2)      :: PZLM
-   double complex, dimension(LMMAXD,IRMIN:IRM,2)      :: QZLM
-   double complex, dimension(LMMAXD,IRMIN:IRM,2)      :: PZEKDR
-   double complex, dimension(LMMAXD,IRMIN:IRM,2)      :: QZEKDR
+   double complex, dimension(LMMAXD,LMMAXD,IRMIND:IRM) :: DMAT
+   double complex, dimension(LMMAXD,LMMAXD,IRMIND:IRM) :: CMAT
+   double complex, dimension(LMMAXD,IRMIND:IRM,2)      :: PZLM
+   double complex, dimension(LMMAXD,IRMIND:IRM,2)      :: QZLM
+   double complex, dimension(LMMAXD,IRMIND:IRM,2)      :: PZEKDR
+   double complex, dimension(LMMAXD,IRMIND:IRM,2)      :: QZEKDR
    ! .. External Subroutines
    external :: IRWNS,REGNS,VLLNS,WFTSCA
    !
