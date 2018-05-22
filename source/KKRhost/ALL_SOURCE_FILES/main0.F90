@@ -365,7 +365,11 @@ module mod_main0
    integer :: LLY !< LLY <> 0 : apply Lloyds formula
    double complex :: DELTAE  !< Energy difference for numerical derivative
 
-   !
+   ! SUSC (BEGIN: modifications by Manuel and Benedikt)             ! susc
+   ! LOGICAL THAT CHECKS WHETHER ENERGY MESH FILE EXISTS            ! susc
+   logical        :: emeshfile                                      ! susc
+   ! SUSC (END:   modifications by Manuel and Benedikt)             ! susc
+
    ! ruess: IVSHIFT test option
    integer :: IVSHIFT
 
@@ -412,6 +416,8 @@ contains
       integer :: ISVATOM,NVATOM
       integer :: i_stat,i_all
       double precision :: ZATTEMP
+      ! for OPERATOR option
+      logical :: lexist, operator_imp
 
 #ifdef cpp_ompstuff
       !     .. OMP ..
@@ -426,6 +432,7 @@ contains
       external :: BZKINT0,CINIT,CLSGEN_TB,DECIOPT,EPATHTB,GAUNT,GAUNT2
       external :: GFMASK,LATTIX99,RINIT,SCALEVEC
       external :: STARTB1,STARTLDAU,TESTDIM,SHAPE_CORR
+      external :: readimppot
       !     ..
       !     .. Intrinsic Functions ..
       intrinsic :: ATAN,DABS,DBLE,DIMAG,LOG,MAX,SQRT,product,shape
@@ -792,6 +799,63 @@ contains
       call EPATHTB(EZ,DEZ,E2IN,IELAST,IESEMICORE,IDOSEMICORE,EMIN,EMAX,TK,NPOL,  &
          NPNT1,NPNT2,NPNT3,EBOTSEMI,EMUSEMI,TKSEMI,NPOLSEMI,N1SEMI,N2SEMI,       &
          N3SEMI,IEMXD)
+
+      ! SUSC (BEGIN: modifications by Manuel and Benedikt)             ! susc
+      !                                                                ! susc
+      if ( opt('EMESH   ') ) then                                      ! susc
+      ! write out the energy mesh and the corresponding                ! susc
+      ! weights to a file called 'emesh.scf'                           ! susc
+        write(*,'("main0: Runflag emesh is set.")')                    ! susc
+        write(*,'("       File emesh.scf will be written!")')          ! susc
+        write(*,*) 'writing emesh.scf file...'                         ! susc
+        open(file='emesh.scf',unit=12111984,status='replace')          ! susc
+          write(12111984,'(5x,i0)') ielast                             ! susc
+          do ie = 1,ielast                                             ! susc
+             write(12111984,'(4es16.8)') ez(ie),dez(ie)                ! susc
+          end do                                                       ! susc
+        close(12111984)                                                ! susc
+        write(*,'("       Finished writing file emesh.scf.")')         ! susc
+      end if                                                           ! susc
+      !                                                                ! susc
+      !                                                                ! susc
+      if ( opt('KKRSUSC ') ) then                                      ! susc
+      ! read in 'emesh.dat' with new energy mesh-points                ! susc
+        inquire(file='emesh.dat',exist=emeshfile)                      ! susc
+        write(*,'("main0: Runflag KKRSUSC is set.")')                  ! susc
+        if (emeshfile) then                                            ! susc
+          write(*,'("main0: File emesh.dat exists and will "$)')       ! susc
+          write(*,                            '("be read in.")')       ! susc
+          write(*,'("       Energy contour from inputcard "$)')        ! susc
+          write(*,                 '("will be overwritten!")')         ! susc
+          open(file='emesh.dat',unit=50)                               ! susc
+            read(50,*) ielast                                          ! susc
+            if (ielast > iemxd) stop 'ielast > iemxd!'                 ! susc
+            do ie=1,ielast                                             ! susc
+              read(50,'(4es16.8)') ez(ie), dez(ie)                     ! susc
+              write(*,'(i8,4es16.8)') ie, ez(ie), dez(ie)              ! susc
+            end do                                                     ! susc
+          close(50)                                                    ! susc
+          write(*,'("       Finished reading in file emesh.dat.")')    ! susc
+        else                                                           ! susc
+          stop'main0: Runflag KKRSUSC but cannot find file emesh.dat!' ! susc
+        end if                                                         ! susc
+      end if                                                           ! susc
+      !                                                                ! susc
+      !                                                                ! susc
+      ! still missing: check here whether scfsteps is > 1              ! susc
+      !   if scfsteps>1 --> option a) stop program here                ! susc
+      !                     option b) set it to 1 and continue         ! susc
+      if ( opt('KKRSUSC ') .and. scfsteps>1 ) then                     ! susc
+        write(*,'("main0: Runflag KKRSUSC is set ")')                  ! susc
+        write(*,            '("but scfsteps = ",i0)') scfsteps         ! susc
+        write(*,'("       Here we enforce scfsteps = 1")')             ! susc
+      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! susc
+        scfsteps = 1                                                   ! susc
+      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! susc
+      end if                                                           ! susc
+      !                                                                ! susc
+      ! SUSC (END:   modifications by Manuel and Benedikt)             ! susc
+
       do IE = 1,IELAST
          WEZ(IE) = -2.D0/PI*DEZ(IE)
          if ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
@@ -1099,18 +1163,33 @@ contains
             NCLSD,NACLSD)                                                        ! fswrt
       end if                                                                     ! fswrt
       !
+      if (OPT('OPERATOR')) then
+        ! check if impurity files are present (otherwise no imp.
+        ! wavefunctions can be calculated)
+        operator_imp = .true.
+        inquire(file='potential_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='shapefun_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='scoef', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+      else
+        operator_imp = .false.
+      endif
       !
-      if (OPT('GREENIMP')) then                                                  ! GREENIMP
-         ! fill array dimensions and allocate arrays in t_imp                    ! GREENIMP
-         call init_params_t_imp(t_imp,IPAND,NATYP,IRM,IRID,NFUND,NSPIN,&         ! GREENIMP
-            IRMIND,LMPOT)                                                        ! GREENIMP
-         call init_t_imp(t_inc,t_imp)                                            ! GREENIMP
-                                                                                 ! GREENIMP
-         ! next read impurity potential and shapefunction                        ! GREENIMP
-         call READIMPPOT(NATOMIMP,INS,1337,0,0,2,NSPIN,LPOT,t_imp%IPANIMP, &     ! GREENIMP
-            t_imp%THETASIMP,t_imp%IRCUTIMP,t_imp%IRWSIMP,KHFELD,HFIELD,    &     ! GREENIMP
-            t_imp%VINSIMP,t_imp%VISPIMP,t_imp%IRMINIMP,t_imp%RIMP,t_imp%ZIMP)    ! GREENIMP
-      end if                                                                     ! GREENIMP
+      if (OPT('GREENIMP') .or. operator_imp) then                      ! GREENIMP
+         ! fill array dimensions and allocate arrays in t_imp          ! GREENIMP
+         call init_params_t_imp(t_imp,IPAND,NATYP,IRM,IRID,NFUND,   &! GREENIMP
+                                NSPIN,IRMIND,LMPOT)                   ! GREENIMP
+         call init_t_imp(t_inc,t_imp)                                  ! GREENIMP
+                                                                       ! GREENIMP
+         ! next read impurity potential and shapefunction              ! GREENIMP
+         call readimppot(NATOMIMP,INS,1337,0,0,2,NSPIN,LPOT,          &! GREENIMP
+                         t_imp%IPANIMP,t_imp%THETASIMP,t_imp%IRCUTIMP,&! GREENIMP
+                         t_imp%IRWSIMP,KHFELD,HFIELD,t_imp%VINSIMP,   &! GREENIMP
+                         t_imp%VISPIMP,t_imp%IRMINIMP,                &! GREENIMP
+                         t_imp%RIMP,t_imp%ZIMP)                       &! GREENIMP
+      end if                                                           ! GREENIMP
       !
       !
       if (ISHIFT.EQ.2) then                                                      ! fxf

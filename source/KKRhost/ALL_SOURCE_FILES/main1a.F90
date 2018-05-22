@@ -305,10 +305,10 @@ contains
 #endif
 
       !skip this part with GREENIMP option
-      if(opt('GREENIMP')) then
+      if(opt('GREENIMP') .or. TEST('IMP_ONLY')) then
          if(myrank==master) write(*,*) 'Skipping atom loop in main1a'
          i1_start = 1
-         i1_end = 1
+         i1_end = 0
       end if
 
       if (.not.OPT('NEWSOSOL')) then
@@ -374,54 +374,60 @@ contains
 
 
 #ifdef CPP_MPI
-      if(.not.t_tgmat%tmat_to_file) then
-         do ii=0,t_mpi_c_grid%nranks_ie-1
-            ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
-            ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
-         end do
-         mytot = t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
-         call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,mytot,&
-            t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
-      end if
+      !skip this part with GREENIMP option
+      if(.not.(opt('GREENIMP').or.TEST('IMP_ONLY'))) then
 
-      if(lly/=0 .and. .not.t_lloyd%dtmat_to_file) then
-         call gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd,t_mpi_c_grid%mympi_comm_ie)
-      endif
+         if(.not.t_tgmat%tmat_to_file) then
+            do ii=0,t_mpi_c_grid%nranks_ie-1
+               ntot_all(ii) = t_mpi_c_grid%ntot_pT1(ii)
+               ioff_all(ii) = t_mpi_c_grid%ioff_pT1(ii)
+            end do
+            mytot = t_mpi_c_grid%ntot_pT1(t_mpi_c_grid%myrank_ie)
+            call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,mytot,&
+               t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
+         end if
+         
+         if(lly/=0 .and. .not.t_lloyd%dtmat_to_file) then
+            call gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd,t_mpi_c_grid%mympi_comm_ie)
+         endif
+         
+         !-------------------------------------------------------------------------
+         !for calculation of Jij-tensor
+         !-------------------------------------------------------------------------
+         if(OPT('XCPL    ').and.OPT('NEWSOSOL'))then
+            do I1=1,t_inc%NATYP
+               !initialize t_dtmatJij on other tasks
+               !   t_dtmatJij was already allocated for certain atoms within the atom loop
+               !   (in tmat_newsolver). This initialization cannot be made before tmat_newsolver,
+               !   because the division of the enegry loop (done in there) influences t_dtmatJij.
+               call init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij(I1))
+         
+               !communicate
+               if(t_dtmatJij(I1)%calculate)then
+                  iwork = product(shape(t_dtmatJij(I1)%dtmat_xyz))
+                  allocate(work_jij(iwork,1,1,1),stat=i_stat)
+                  call memocc(i_stat,product(shape(work_jij))*kind(work_jij),'work_jij','main1a')
+         
+                  call MPI_ALLREDUCE(t_dtmatJij(I1)%dtmat_xyz,work_jij, &
+                     iwork,MPI_DOUBLE_COMPLEX,MPI_SUM,                  &
+                     t_mpi_c_grid%mympi_comm_ie,IERR)
+                  if(ierr/=MPI_SUCCESS) stop 'error communicating t_dtmatJij'
+                  call ZCOPY(iwork,work_jij,1,t_dtmatJij(I1)%dtmat_xyz,1)
+                  i_all=-product(shape(work_jij))*kind(work_jij)
+                  deallocate(work_jij, stat=i_stat)
+                  call memocc(i_stat,i_all,'work_jij','main1a')
+               end if !t_dtmatJij(I1)%calculate
+         
+            end do !I1=1,t_inc%NATYP
+         
+         end if !OPT('XCPL    ').and.OPT('NEWSOSOL')
 
-      !-------------------------------------------------------------------------
-      !for calculation of Jij-tensor
-      !-------------------------------------------------------------------------
-      if(OPT('XCPL    ').and.OPT('NEWSOSOL'))then
-         do I1=1,t_inc%NATYP
-            !initialize t_dtmatJij on other tasks
-            !   t_dtmatJij was already allocated for certain atoms within the atom loop
-            !   (in tmat_newsolver). This initialization cannot be made before tmat_newsolver,
-            !   because the division of the enegry loop (done in there) influences t_dtmatJij.
-            call init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij(I1))
-
-            !communicate
-            if(t_dtmatJij(I1)%calculate)then
-               iwork = product(shape(t_dtmatJij(I1)%dtmat_xyz))
-               allocate(work_jij(iwork,1,1,1),stat=i_stat)
-               call memocc(i_stat,product(shape(work_jij))*kind(work_jij),'work_jij','main1a')
-
-               call MPI_ALLREDUCE(t_dtmatJij(I1)%dtmat_xyz,work_jij, &
-                  iwork,MPI_DOUBLE_COMPLEX,MPI_SUM,                  &
-                  t_mpi_c_grid%mympi_comm_ie,IERR)
-               if(ierr/=MPI_SUCCESS) stop 'error communicating t_dtmatJij'
-               call ZCOPY(iwork,work_jij,1,t_dtmatJij(I1)%dtmat_xyz,1)
-               i_all=-product(shape(work_jij))*kind(work_jij)
-               deallocate(work_jij, stat=i_stat)
-               call memocc(i_stat,i_all,'work_jij','main1a')
-            end if !t_dtmatJij(I1)%calculate
-
-         end do !I1=1,t_inc%NATYP
-
-      end if !OPT('XCPL    ').and.OPT('NEWSOSOL')
+      end if ! .not.opt('GREENIMP')
+      ! end skip this part with GREENIMP option
+#endif
       !-------------------------------------------------------------------------
       ! End of calculation of Jij-tensor
       !-------------------------------------------------------------------------
-#endif
 
 
 #ifdef CPP_TIMING

@@ -723,8 +723,8 @@ contains
 
                      ! writeout of host green function for impurity code for single-atom cluster (not captured in rotgll)
                      if ( NATOMIMP==1 ) then
+                        I1=ATOMIMP(1)
                         if ( OPT('KKRFLEX ') ) then
-                           I1=ATOMIMP(1)
                            irec = ielast*(ispin-1)+ ie+1
                            ILM=0
                            GIMP=(0.e0,0.e0) !complex*8
@@ -1061,25 +1061,27 @@ contains
                      enddo
                   endif
 
-                  if ( NATOMIMP==1 .and. OPT('KKRFLEX ') ) then
+                  if ( NATOMIMP==1 ) THEN
                      I1=ATOMIMP(1)
-                     IREC = IE+1
-                     ILM=0
-                     GIMP=(0.e0,0.e0) ! complex*8
-                     do LM2=1,LMMAXD
-                        do LM1=1,LMMAXD
-                           ILM=ILM+1
-                           GIMP(ILM)=GMATLL(LM1,LM2,I1)
-                        enddo
-                     enddo
-                     write(888,REC=IREC) GIMP
-                     if (OPT('WRTGREEN') .and. myrank==master) then
-                        do LM2=1,LMMAXD
-                           do LM1=1,LMMAXD
-                              ! writeout of green_host for WRTGREEN option
-                              write(58,'((2I5),(2e17.9))') LM2, LM1,GMATLL(LM1,LM2,I1)
-                           end do
-                        end do
+                     if(OPT('KKRFLEX')) THEN
+                       IREC = IE+1
+                       ILM=0
+                       GIMP=(0.e0,0.e0) ! complex*8
+                       do LM2=1,LMMAXD
+                          do LM1=1,LMMAXD
+                             ILM=ILM+1
+                             GIMP(ILM)=GMATLL(LM1,LM2,I1)
+                          enddo
+                       enddo
+                       write(888,REC=IREC) GIMP
+                     endif
+                     if (OPT('WRTGREEN') .and. myrank==master) THEN
+                       do LM2=1,LMMAXD
+                         do LM1=1,LMMAXD
+                           ! writeout of green_host for WRTGREEN option
+                           write(58,'((2I5),(2e17.9))') LM2, LM1, GMATLL(LM1,LM2,I1)
+                         enddo
+                       enddo
                      endif ! WRTGREEN
                   endif
 

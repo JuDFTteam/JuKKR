@@ -310,7 +310,9 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
       call find_isave_wavefun(t_wavefunctions)
       ! Reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
       ! to prevent unnessesary storing of wavefunctions
-      if(test('STOP1B  ')) t_wavefunctions%Nwfsavemax = 0
+      if(test('STOP1B  ') .and. .not. opt('OPERATOR')) then
+         t_wavefunctions%Nwfsavemax = 0
+      endif
    endif
 
 #ifdef CPP_OMP
@@ -419,7 +421,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          ! faster calculation of RLL.
          ! no irregular solutions are needed in self-consistent iterations
          ! because the t-matrix depends only on RLL
-         if(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) then
+         if( OPT('RLL-SLL ') .and. .not.(OPT('XCPL    ').or.OPT('OPERATOR')) ) then
             call rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),  &
                RLL(:,:,:,ith),TMAT0(:,:),NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO, &
                4*(LMAX+1),IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),         &
@@ -554,7 +556,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          ! faster calculation of RLL.
          ! no left solutions are needed in self-consistent iterations
          ! because the t-matrix depends only on RLL
-         if (OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) then
+         if( OPT('RLL-SLL ') .and. .not.(OPT('XCPL    ').or.OPT('OPERATOR')) ) then
             ! do nothing
          else
             call RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),RLLLEFT(:,:,:,ith),      &

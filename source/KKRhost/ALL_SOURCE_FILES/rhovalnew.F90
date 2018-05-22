@@ -503,7 +503,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
          ! faster calculation of RLL.
          ! no irregular solutions SLL are needed in self-consistent iterations
          ! because the density depends only on RLL, RLLLEFT and SLLLEFT
-         if(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) then
+         if(OPT('RLL-SLL ') .and.  .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) then
             call rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),  &
                RLL(:,:,:,ith),TMATLL,                                         &
                NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),                &
@@ -582,7 +582,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
          ! notice that exchange the order of left and right hankel/bessel functions
          TMATTEMP=CZERO
          ! faster calculation of RLLLEFT and SLLLEFT.
-         if(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) then
+         if(OPT('RLL-SLL ') .and.  .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) then
             call rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),  &
                RLLLEFT(:,:,:,ith),TMATTEMP,                                   &
                NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),                &

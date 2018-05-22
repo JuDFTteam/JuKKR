@@ -134,7 +134,7 @@ subroutine SURFGF(NDIM,ML,M0,MR,X,ITERMAX,ERRMAX,ICHCK,LMMAXD)
 
    if (ITER.GT.ITERMAX) then
       write (6,FMT='('' itermax too small.  iter='',i3)') ITER
-      write(6,'('' Surfgf:  iter='',i4,''  error='',d12.7)') iter,err
+      write(6,'('' Surfgf:  iter='',i4,''  error='',d14.7)') iter,err
    end if
    if (ICHCK.EQ.0) return
    !      write(6,'('' Surfgf:  iter='',i4,''  error='',d12.7)') iter,err

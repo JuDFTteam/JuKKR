@@ -31,8 +31,9 @@ contains
       use mod_wunfiles, only: t_params
       use memoryhandling
       use global_variables
-      use mod_version_info
+      use mod_types, only: t_inc
       use mod_save_wavefun, only: t_wavefunctions
+      use mod_version_info
 
       implicit none
       !     ..
@@ -236,6 +237,8 @@ contains
       !----------------------------------------------------------------------------
       ! Local variables
       !----------------------------------------------------------------------------
+      ! for OPERATOR option
+      logical :: lexist, operator_imp
       ! IVSHIFT test option
       logical :: TEST,OPT
       EXTERNAL TEST,OPT
@@ -903,6 +906,17 @@ contains
          write(111,*) 'Default NR= ',NR
       endif
 
+      KVREL = 1   ! 0=Schroedinger / 1=SRA / 2=Dirac
+      CALL IoInput('KVREL           ',UIO,1,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) kvrel
+         WRITE(111,*) 'KVREL= ',KVREL
+      ELSE
+         WRITE(111,*) 'Default KVREL= ',KVREL
+      ENDIF
+      ! store KVREL to be used later on
+      t_inc%KVREL = KVREL
+
       call IoInput('KPOIBZ          ',UIO,1,7,IER)
       if (IER.EQ.0) then
          read (UNIT=UIO,FMT=*) KPOIBZ
@@ -1324,8 +1338,22 @@ contains
       else
          write(111,*) 'Default IGREENFUN= ',IGF
       endif
-      if (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) then
-         write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP options'
+      
+      IF (OPT('OPERATOR')) THEN
+        ! check if impurity files are present (otherwise no imp.
+        ! wavefunctions can be calculated)
+        operator_imp = .true.
+        inquire(file='potential_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='shapefun_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='scoef', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+      ELSE
+        operator_imp = .false.
+      END IF
+      if (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. operator_imp) then
+         write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR options'
          IGF = 1
       end if
 
@@ -1337,8 +1365,8 @@ contains
       else
          write(111,*) 'Default ICC= ',ICC
       endif
-      if (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) then
-         write(1337,*) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP options'
+      if (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. operator_imp) then
+         write(1337,*) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR  options'
          ICC = 1
       end if
       if ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1
@@ -2354,12 +2382,17 @@ contains
 
       end if
 
-      !-------------------------------------------------------------------------
-      if (OPT('FERMIOUT').AND.(NSTEPS/=1))then                                  ! fswrt
-         write(6,2012)                                                          ! fswrt
-         NSTEPS = 1                                                             ! fswrt
-      end if                                                                    ! fswrt
-      !-------------------------------------------------------------------------
+      ! =============================================================         ! fswrt
+      ! check and correct some settings automatically for FERMIOUT writeout   ! fswrt
+           if(OPT('FERMIOUT').or.OPT('OPERATOR')) then                       ! fswrt
+             if (NSTEPS/=1) then                                             ! fswrt
+               write(6,2012)                                                 ! fswrt
+               NSTEPS = 1                                                    ! fswrt
+             end if                                                          ! fswrt
+             if (.not.TEST('STOP1B  ')) CALL ADDTEST('STOP1B  ')             ! fswrt
+             if (.not.TEST('STOP1B  ')) stop 'addtest failed for STOP1B'     ! fswrt
+           end if                                                            ! fswrt
+      ! =============================================================         ! fswrt
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! WF_SAVE
@@ -2390,6 +2423,13 @@ contains
       t_wavefunctions%save_sll     = .false.
       t_wavefunctions%save_rllleft = .false.
       t_wavefunctions%save_sllleft = .false.
+
+      if(opt('OPERATOR')) then
+         write(1337,*) 'Found option "OPERATOR"'
+         write(1337,*) 'Overwrite MEMWFSAVE with big numbers'
+         t_wavefunctions%maxmem_number = 5
+         t_wavefunctions%maxmem_units = 3
+      end if
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! WF_SAVE
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2533,22 +2573,20 @@ contains
 
       implicit none
 
-      integer :: NOPTD
-      parameter (NOPTD=32)
+      integer, parameter :: NOPTD=32
       character(len=8) :: STRING
       integer :: II
-      logical :: OPT
-      EXTERNAL :: OPT
+      logical, external :: OPT
 
-      if (.NOT.OPT('        ')) then
+      if (.not.OPT('        ')) then
          write(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
          stop 'Error in ADDOPT: No free slots in array OPTC.'
       endif
 
-      if (.NOT.OPT(STRING)) then
+      if (.not.OPT(STRING)) then
          II = 1
-         do WHILE (II.LE.NOPTD)
-            if (t_params%OPTC(II).EQ.'        ') then
+         do while (II.le.NOPTD)
+            if (t_params%OPTC(II).eq.'        ') then
                t_params%OPTC(II) = STRING
                II = NOPTD + 1
             endif
@@ -2557,5 +2595,34 @@ contains
       endif
 
    end subroutine ADDOPT
+
+   subroutine ADDTEST(STRING)
+      use mod_types, only: t_inc
+      use mod_wunfiles, only: t_params
+      implicit none
+      integer, parameter :: NTSTD=64
+      character(len=8) :: STRING
+      integer :: II
+      logical, external :: TEST
+       
+      if(t_inc%i_write) write(1337, *) 'in ADDTEST: adding option ', STRING
+    
+      if (.not.TEST('        ')) then
+        write(*,*) 'Error in ADDTEST for ',STRING,' : No free slots in array TESTC.'
+        stop 'Error in ADDTEST: No free slots in array TESTC.'
+      endif
+       
+      if (.not.TEST(STRING)) then
+        II = 1
+        do while (II.le.NTSTD)
+           if (t_params%TESTC(II).eq.'        ') then
+              t_params%TESTC(II) = STRING
+              II = NTSTD + 1
+           endif
+           II = II + 1
+        enddo
+      endif
+     
+   end subroutine ADDTEST
 
 end module rinput

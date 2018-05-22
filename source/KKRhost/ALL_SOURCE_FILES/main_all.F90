@@ -52,8 +52,8 @@ program kkrcode
 #endif
    character(len=3) :: ctemp !name for output file
    ! needed to use test('xxxxxxxx'):
-   logical :: test
-   external :: test
+   logical :: test, opt
+   external :: test, opt
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! initialize MPI >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -274,8 +274,10 @@ program kkrcode
 #ifdef CPP_MPI
          call MPI_Finalize(ierr)
 #endif
-         stop 'Stop after main1b'
-      end if !test
+        if(.not. OPT('WRTGREEN')) write(*,*) 'done with WRTGREEN step'
+        if(myrank==master) write(*,*) 'Stop after main1b'
+        stop
+      end if!test
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Calculate density
