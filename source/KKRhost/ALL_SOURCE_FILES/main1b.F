@@ -677,50 +677,50 @@ C           Skip this part if first part of the qdos is running
               ENDIF
 
 
-            ! writeout of host green function for impurity code for single-atom cluster (not captured in rotgll)
-            IF ( NATOMIMP==1 ) THEN
-              IF ( OPT('KKRFLEX ') ) THEN
+              ! writeout of host green function for impurity code for single-atom cluster (not captured in rotgll)
+              IF ( NATOMIMP==1 ) THEN
                 I1=ATOMIMP(1)
-                irec = ielast*(ispin-1)+ ie+1
-                ILM=0
-                GIMP=(0.e0,0.e0) !complex*8
-                DO LM2=1,LMMAXD
+                IF ( OPT('KKRFLEX ') ) THEN
+                  irec = ielast*(ispin-1)+ ie+1
+                  ILM=0
+                  GIMP=(0.e0,0.e0) !complex*8
+                  DO LM2=1,LMMAXD
+                      DO LM1=1,LMMAXD
+                        ILM=ILM+1
+                        GIMP(ILM)=GMATLL(LM1,LM2,I1)
+                      ENDDO
+                  ENDDO
+                  irec = ielast*(ispin-1)+ ie+1
+                  WRITE(888,REC=irec) GIMP
+                  IF ( OPT('GPLAIN  ') ) THEN
+                    WRITE(8888,'(50000E)') GIMP
+                  END IF
+                ENDIF ! KKRFLEX
+                IF (OPT('WRTGREEN') .and. myrank==master) THEN
+                  DO LM2=1,LMMAXD
                     DO LM1=1,LMMAXD
-                      ILM=ILM+1
-                      GIMP(ILM)=GMATLL(LM1,LM2,I1)
-                    ENDDO
-                ENDDO
-                irec = ielast*(ispin-1)+ ie+1
-                WRITE(888,REC=irec) GIMP
-                IF ( OPT('GPLAIN  ') ) THEN
-                  WRITE(8888,'(50000E)') GIMP
-                END IF
-              ENDIF ! KKRFLEX
-              IF (OPT('WRTGREEN') .and. myrank==master) THEN
-                DO LM2=1,LMMAXD
-                  DO LM1=1,LMMAXD
-                    ! writeout of green_host for WRTGREEN option
-                    WRITE(58,'((2I5),(2e17.9))') LM2, LM1,
-     &                                     GMATLL(LM1,LM2,I1)
+                      ! writeout of green_host for WRTGREEN option
+                      WRITE(58,'((2I5),(2e17.9))') LM2, LM1,
+     &                                       GMATLL(LM1,LM2,I1)
+                    END DO
                   END DO
-                END DO
-              ENDIF ! WRTGREEN
-            END IF !( NATOMIMP==1 )
-
-            IF ( LCPAIJ ) THEN
-             if(t_cpa%dmatproj_to_file) then
-               DO I1 = 1,NATYP
-                  GMAT0(:,:) = TSST(:,:,I1)
-                  W1(:,:)    = MSST(:,:,I1)
-                  IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN*(I1-1)
-                  WRITE (71,REC=IREC) GMAT0,W1
-               END DO
-             else!t_cpa%dmatproj_to_file
-               irec = ie_num + ie_end*(ISPIN-1)
-               t_cpa%dmatts(:,:,:,irec) = TSST(:,:,:)
-               t_cpa%dtilts(:,:,:,irec) = MSST(:,:,:)
-             end if!t_cpa%dmatproj_to_file
-            END IF  ! ( LCPAIJ )
+                ENDIF ! WRTGREEN
+              END IF !( NATOMIMP==1 )
+              
+              IF ( LCPAIJ ) THEN
+               if(t_cpa%dmatproj_to_file) then
+                 DO I1 = 1,NATYP
+                    GMAT0(:,:) = TSST(:,:,I1)
+                    W1(:,:)    = MSST(:,:,I1)
+                    IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN*(I1-1)
+                    WRITE (71,REC=IREC) GMAT0,W1
+                 END DO
+               else!t_cpa%dmatproj_to_file
+                 irec = ie_num + ie_end*(ISPIN-1)
+                 t_cpa%dmatts(:,:,:,irec) = TSST(:,:,:)
+                 t_cpa%dtilts(:,:,:,irec) = MSST(:,:,:)
+               end if!t_cpa%dmatproj_to_file
+              END IF  ! ( LCPAIJ )
 C
             ENDIF    ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
  200        CONTINUE ! IQ = 1,NQDOS                                       ! qdos ruess
@@ -1015,18 +1015,20 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                  ENDDO
                ENDIF
 
-               IF ( NATOMIMP==1 .and. OPT('KKRFLEX ') ) THEN
+               IF ( NATOMIMP==1 ) THEN
                   I1=ATOMIMP(1)
-                  IREC = IE+1
-                  ILM=0
-                  GIMP=(0.e0,0.e0) ! complex*8
-                  DO LM2=1,LMMAXD
-                     DO LM1=1,LMMAXD
-                        ILM=ILM+1
-                        GIMP(ILM)=GMATLL(LM1,LM2,I1)
-                     ENDDO
-                  ENDDO
-                  WRITE(888,REC=IREC) GIMP
+                  IF(OPT('KKRFLEX')) THEN
+                    IREC = IE+1
+                    ILM=0
+                    GIMP=(0.e0,0.e0) ! complex*8
+                    DO LM2=1,LMMAXD
+                       DO LM1=1,LMMAXD
+                          ILM=ILM+1
+                          GIMP(ILM)=GMATLL(LM1,LM2,I1)
+                       ENDDO
+                    ENDDO
+                    WRITE(888,REC=IREC) GIMP
+                  ENDIF
                   IF (OPT('WRTGREEN') .and. myrank==master) THEN
                     DO LM2=1,LMMAXD
                       DO LM1=1,LMMAXD
