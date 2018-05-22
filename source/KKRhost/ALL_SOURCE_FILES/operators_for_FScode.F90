@@ -75,7 +75,7 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   allocate(irws(natyp))
   irws = t_params%irws
   allocate(rmesh(irmd, natyp))
-  rmesh = t_params%r
+  rmesh = t_params%rmesh
   allocate(npan_tot(natyp))
   npan_tot = t_params%npan_tot
   allocate(rpan_intervall(0:ntotd, natyp))

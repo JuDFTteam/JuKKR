@@ -249,26 +249,13 @@ program kkrcode
       ! Calculate tmat and gref
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main1a')
-      call main1a(INS,LLY,IRM,LM2D,ICST,IEND,NCLS,LMAX,NREF,NSRA,KREL,NEMB,LPOT,    &
-         NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,LMPOT,IPAND,NINEQ,NSPIN,NCHEB,    &
-         LMGF0D,LMMAXD,IELAST,NRMAXD,IRMIND,NATOMIMP,ALAT,R_LOG,TOLRDIF,DELTAE,CLS, &
-         IQAT,IRWS,NACLS,REFPOT,ATOM,ZAT,VREF,RMTREF,RCLS,SOLVER,SOCSCL,SOCSCALE,   &
-         CSCL,NTLDAU,IDOLDAU,ITLDAU,UEFF,JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,ICLEB,IRCUT, &
-         IPAN_INTERVALL,CLEB,VISP,DRDI,RNEW,R,RPAN_INTERVALL,VINS,EZ,ZREL,JWSREL,   &
-         VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ITRUNLDAU,LOPT,EREFLDAU,WLDAU,ULDAU,   &
-         PHILDAU)
+      call main1a()
       call timing_stop('main1a')
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Calculate gmat
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main1b')
-      call main1b(NR,IRM,LLY,ICC,IGF,INS,NPOL,LMAX,NREF,NSRA,NCLS,NCPA,NEMB,NAEZ,   &
-         NATYP,NCLSD,NSPIN,KMROT,LMMAXD,IELAST,INVMOD,NSYMAT,NEMBD1,LMGF0D,NOFGIJ,  &
-         NQCALC,NSPINDD,NLBASIS,NRBASIS,MAXMESH,NATOMIMP,ITCPAMAX,ALAT,CPATOL,NOQ,  &
-         CLS,IQAT,NSH1,NSH2,ICPA,NACLS,NSHELL,REFPOT,ATOMIMP,EZOA,ATOM,KAOEZ,ICHECK,&
-         CONC,RMTREF,RR,RATOM,RBASIS,RROT,RCLS,SYMUNITARY,KMESH,IQCALC,IJTABSH,     &
-         IJTABSYM,IJTABCALC,IJTABCALC_I,NRREL,IRREL,VREF,RCLSIMP,RC,RREL,CREL,SRREL,&
-         DROTQ,DSYMLL,VACFLAG)
+      call main1b()
       call timing_stop('main1b')
       if(test('STOP1B  '))then
 #ifdef CPP_MPI
@@ -283,16 +270,7 @@ program kkrcode
       ! Calculate density
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main1c')
-
-      call main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LPOT,LMAX,NTOTD,MMAXD,NATYP, &
-         NPOTD,KMROT,NSPIN,NCHEB,LMPOT,LMXSPD,IELAST,LMMAXD,NRMAXD,IRMIND,INTERVX,  &
-         INTERVY,INTERVZ,IESEMICORE,TK,EMIN,EMAX,ALAT,EFERMI,SOLVER,IQAT,ZREL,IPAN, &
-         IRWS,NCORE,JWSREL,NTCELL,ITITLE,CSCL,ZAT,CONC,SOCSCALE,NTLDAU,IDOLDAU,     &
-         ITRUNLDAU,ITLDAU,UEFF,JEFF,IEND,NFU,LOFLM,IRMIN,IRSHIFT,ICLEB,LCORE,IRCUT, &
-         IFUNM1,LMSP1,LLMSP,JEND,A,B,QMTET,QMPHI,CLEB,DRDI,ECORE,RMREL,SOCSCL,      &
-         R2DRDIREL,VINS,VTREL,BTREL,DRDIREL,EZ,WEZ,LOPT,EREFLDAU,WLDAU,ULDAU,       &
-         PHILDAU,R_LOG,NPAN_EQNEW,NPAN_LOGNEW,NPAN_TOT,IPAN_INTERVALL,VISP,RNEW,    &
-         RPAN_INTERVALL,THETAS,THETASNEW)
+      call main1c()
       call timing_stop('main1c')
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -300,17 +278,7 @@ program kkrcode
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       call timing_start('main2')
       if (myrank==master) then
-         call main2(LLY,ICC,INS,IPF,KTE,KXC,LPOT,IMIX,NAEZ,NSRA,LMAX,KPRE,NPOL,     &
-            NPNT1,NPNT2,NPNT3,NATYP,NSPIN,ITSCF,KVMAD,LMPOT,NPOTD,NLEFT,NRIGHT,     &
-            LMXSPD,IELAST,ISHIFT,ITDBRY,KSHAPE,KFORCE,IRMIND,NEMBD1,LMMAXD,IDOLDAU, &
-            NLBASIS,NRBASIS,SCFSTEPS,NATOMIMP,TK,FCM,ALAT,MIXING,QBOUND,LAMBDA_XC,  &
-            LRHOSYM,LINTERFACE,NOQ,IMT,IQAT,IPAN,ZREL,IRNS,IRWS,KAOEZ,JWSREL,NTCELL,&
-            ITITLE,NSHELL,ZAT,RMT,RWS,CONC,RMTNEW,TXC,EMIN,EMAX,TKSEMI,EMUSEMI,     &
-            EBOTSEMI,FSEMICORE,IRC,NFU,LOPT,NCORE,IRMIN,IXIPOL,IMAXSH,IRSHIFT,      &
-            ATOMIMP,HOSTIMP,ILM,LMSP,LCORE,IRCUT,IFUNM,A,B,VBC,GSH,FACT,QMGAM,QMTET,&
-            QMPHI,R,ECORE,DRDI,VISP,VTREL,BTREL,RMREL,DRDIREL,CMOMHOST,R2DRDIREL,EZ,&
-            DEZ,WEZ,NEMB,IRM,N1SEMI,N2SEMI,N3SEMI,NPOLSEMI,IESEMICORE,IDOSEMICORE,  &
-            LLMSP,LMGF0D)
+         call main2()
       endif
       call timing_stop('main2')
 
@@ -376,9 +344,9 @@ program kkrcode
    i_all=-product(shape(t_params%B))*kind(t_params%B)
    deallocate(t_params%B,stat=i_stat)
    call memocc(i_stat,i_all,'t_params%B','main_all')
-   i_all=-product(shape(t_params%R))*kind(t_params%R)
-   deallocate(t_params%R,stat=i_stat)
-   call memocc(i_stat,i_all,'t_params%R','main_all')
+   i_all=-product(shape(t_params%RMESH))*kind(t_params%RMESH)
+   deallocate(t_params%RMESH,stat=i_stat)
+   call memocc(i_stat,i_all,'t_params%RMESH','main_all')
    i_all=-product(shape(t_params%RR))*kind(t_params%RR)
    deallocate(t_params%RR,stat=i_stat)
    call memocc(i_stat,i_all,'t_params%RR','main_all')
@@ -433,9 +401,9 @@ program kkrcode
    i_all=-product(shape(t_params%NFU))*kind(t_params%NFU)
    deallocate(t_params%NFU,stat=i_stat)
    call memocc(i_stat,i_all,'t_params%NFU','main_all')
-   i_all=-product(shape(t_params%ILM))*kind(t_params%ILM)
-   deallocate(t_params%ILM,stat=i_stat)
-   call memocc(i_stat,i_all,'t_params%ILM','main_all')
+   i_all=-product(shape(t_params%ILM_MAP))*kind(t_params%ILM_MAP)
+   deallocate(t_params%ILM_MAP,stat=i_stat)
+   call memocc(i_stat,i_all,'t_params%ILM_MAP','main_all')
    i_all=-product(shape(t_params%PHI))*kind(t_params%PHI)
    deallocate(t_params%PHI,stat=i_stat)
    call memocc(i_stat,i_all,'t_params%PHI','main_all')
@@ -760,9 +728,9 @@ program kkrcode
    i_all=-product(shape(t_params%R2DRDIREL))*kind(t_params%R2DRDIREL)
    deallocate(t_params%R2DRDIREL,stat=i_stat)
    call memocc(i_stat,i_all,'t_params%R2DRDIREL','main_all')
-   i_all=-product(shape(t_params%NPAN_EQNEW))*kind(t_params%NPAN_EQNEW)
-   deallocate(t_params%NPAN_EQNEW,stat=i_stat)
-   call memocc(i_stat,i_all,'t_params%NPAN_EQNEW','main_all')
+   i_all=-product(shape(t_params%NPAN_EQ_AT))*kind(t_params%NPAN_EQ_AT)
+   deallocate(t_params%NPAN_EQ_AT,stat=i_stat)
+   call memocc(i_stat,i_all,'t_params%NPAN_EQ_AT','main_all')
    i_all=-product(shape(t_params%SYMUNITARY))*kind(t_params%SYMUNITARY)
    deallocate(t_params%SYMUNITARY,stat=i_stat)
    call memocc(i_stat,i_all,'t_params%SYMUNITARY','main_all')
@@ -772,9 +740,9 @@ program kkrcode
    i_all=-product(shape(t_params%RIGHTTINVLL))*kind(t_params%RIGHTTINVLL)
    deallocate(t_params%RIGHTTINVLL,stat=i_stat)
    call memocc(i_stat,i_all,'t_params%RIGHTTTINVLL','main_all')
-   i_all=-product(shape(t_params%NPAN_LOGNEW))*kind(t_params%NPAN_LOGNEW)
-   deallocate(t_params%NPAN_LOGNEW,stat=i_stat)
-   call memocc(i_stat,i_all,'t_params%NPAN_LOGNEW','main_all')
+   i_all=-product(shape(t_params%NPAN_LOG_AT))*kind(t_params%NPAN_LOG_AT)
+   deallocate(t_params%NPAN_LOG_AT,stat=i_stat)
+   call memocc(i_stat,i_all,'t_params%NPAN_LOG_AT','main_all')
    i_all=-product(shape(t_params%IJTABCALC_I))*kind(t_params%IJTABCALC_I)
    deallocate(t_params%IJTABCALC_I,stat=i_stat)
    call memocc(i_stat,i_all,'t_params%IJTABCALC_I','main_all')
@@ -866,16 +834,16 @@ program kkrcode
       RATOM,RCLSIMP,CMOMHOST,RCLS)
    call allocate_expansion(-1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,   &
       NCHEB,LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
-   call allocate_mesh(-1,IRM,NATYP,A,B,R,DRDI)
-   call allocate_pannels(-1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQNEW,          &
-      NPAN_LOGNEW,IPAN_INTERVALL,RPAN_INTERVALL)
+   call allocate_mesh(-1,IRM,NATYP,A,B,RMESH,DRDI)
+   call allocate_pannels(-1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQ_AT,          &
+      NPAN_LOG_AT,IPAN_INTERVALL,RPAN_INTERVALL)
    call allocate_misc(-1,NR,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREF,IEMXD,     &
       NTOTD,NSHELD,LMMAXD,NEMBD1,NCHEB,NCELLD,LMXSPD,NSPINDD,NSYMAXD,      &
       NPRINCD,IFUNM,IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,      &
       DSYMLL,DSYMLL1,LEFTTINVLL,RIGHTTINVLL)
    call allocate_green(-1,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJ,ISH,JSH,    &
       KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,        &
-      IJTABCALC_I,ILM,GSH)
+      IJTABCALC_I,ILM_MAP,GSH)
    ! End of deallocation
 
 #ifdef CPP_MPI

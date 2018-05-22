@@ -25,14 +25,7 @@ contains
    !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
    !> and many others ...
    !----------------------------------------------------------------------------
-   subroutine main1a(INS,LLY,IRM,LM2D,ICST,IEND,NCLS,LMAX,NREF,NSRA,KREL,NEMB,   &
-      LPOT,NAEZ,NATYP,NCLSD,NPOTD,ITSCF,NTOTD,MMAXD,LMPOT,IPAND,NINEQ,NSPIN,     &
-      NCHEB,LMGF0D,LMMAXD,IELAST,NRMAXD,IRMIND,NATOMIMP,ALAT,R_LOG,TOLRDIF,      &
-      DELTAE,CLS,IQAT,IRWS,NACLS,REFPOT,ATOM,ZAT,VREF,RMTREF,RCLS,SOLVER,SOCSCL, &
-      SOCSCALE,CSCL,NTLDAU,IDOLDAU,ITLDAU,UEFF,JEFF,IPAN,LOFLM,IRMIN,ATOMIMP,    &
-      ICLEB,IRCUT,IPAN_INTERVALL,CLEB,VISP,DRDI,RNEW,RMESH,            &
-      RPAN_INTERVALL,VINS,EZ,ZREL,JWSREL,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,    &
-      ITRUNLDAU,LOPT,EREFLDAU,WLDAU,ULDAU,PHILDAU)
+   subroutine main1a()
 
 #ifdef CPP_MPI
       use mpi
@@ -57,104 +50,7 @@ contains
       use mod_wunfiles
       use mod_jijhelp, only: set_Jijcalc_flags
 
-      ! .. Input variables
-      integer, intent(inout) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
-      integer, intent(inout) :: LLY       !< LLY <> 0: apply Lloyds formula
-      integer, intent(inout) :: IRM       !< Maximum number of radial points
-      integer, intent(inout) :: LM2D      !< (2*LMAX+1)**2
-      integer, intent(inout) :: ICST      !< Number of Born approximation
-      integer, intent(inout) :: IEND      !< Number of nonzero gaunt coefficients
-      integer, intent(inout) :: NCLS      !< Number of reference clusters
-      integer, intent(inout) :: LMAX      !< Maximum l component in wave function expansion
-      integer, intent(inout) :: NREF      !< Number of diff. ref. potentials
-      integer, intent(inout) :: NSRA
-      integer, intent(inout) :: KREL      !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
-      integer, intent(inout) :: NEMB      !< Number of 'embedding' positions
-      integer, intent(inout) :: NAEZ      !< Number of atoms in unit cell
-      integer, intent(inout) :: LPOT      !< Maximum l component in potential expansion
-      integer, intent(inout) :: NATYP     !< Number of kinds of atoms in unit cell
-      integer, intent(inout) :: NCLSD     !< Maximum number of different TB-clusters
-      integer, intent(inout) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-      integer, intent(inout) :: ITSCF
-      integer, intent(inout) :: NTOTD
-      integer, intent(inout) :: MMAXD     !< 2*LMAX+1
-      integer, intent(inout) :: LMPOT     !< (LPOT+1)**2
-      integer, intent(inout) :: IPAND     !< Number of panels in non-spherical part
-      integer, intent(inout) :: NINEQ     !< Number of ineq. positions in unit cell
-      integer, intent(inout) :: NSPIN     !< Counter for spin directions
-      integer, intent(inout) :: NCHEB     !< Number of Chebychev pannels for the new solver
-      integer, intent(inout) :: LMGF0D    !< (LMAX+1)**2
-      integer, intent(inout) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-      integer, intent(inout) :: IELAST
-      integer, intent(inout) :: NRMAXD    !< NTOTD*(NCHEB+1)
-      integer, intent(inout) :: IRMIND    !< IRM-IRNSD
-      integer, intent(inout) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-      double precision, intent(inout) :: ALAT      !< Lattice constant in a.u.
-      double precision, intent(inout) :: R_LOG     !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
-      double precision, intent(inout) :: TOLRDIF   !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
-      double complex, intent(inout) :: DELTAE  !< Energy difference for numerical derivative
-      integer, dimension(NAEZ+NEMB), intent(inout)          :: CLS   !< Cluster around atomic sites
-      integer, dimension(NATYP), intent(inout)              :: IQAT  !< The site on which an atom is located on a given site
-      integer, dimension(NATYP), intent(inout)              :: IRWS  !< R point at WS radius
-      integer, dimension(NCLSD), intent(inout)              :: NACLS !< Number of atoms in cluster
-      integer, dimension(NAEZ+NEMB), intent(inout)          :: REFPOT   !< Ref. pot. card  at position
-      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout)   :: ATOM  !< Atom at site in cluster
-      double precision, dimension(NATYP), intent(inout)  :: ZAT      !< Nuclear charge
-      double precision, dimension(NREF), intent(inout)   :: VREF
-      double precision, dimension(NREF), intent(inout)   :: RMTREF   !< Muffin-tin radius of reference system
-      double precision, dimension(3,NACLSD,NCLSD), intent(inout) :: RCLS   !< Real space position of atom in cluster
-
-      !-------------------------------------------------------------------------
-      !     RELATIVISTIC MODE
-      !-------------------------------------------------------------------------
-      character(len=10), intent(inout) :: SOLVER   !< Type of solver
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout)   :: SOCSCL
-      double precision, dimension(NATYP), intent(inout)                             :: SOCSCALE    !< Spin-orbit scaling
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout)   :: CSCL        !< Speed of light scaling
-      !-------------------------------------------------------------------------
-      ! LDA+U
-      !-------------------------------------------------------------------------
-      integer, intent(inout) :: NTLDAU    !< number of atoms on which LDA+U is applied
-      integer, intent(inout) :: IDOLDAU   !< flag to perform LDA+U
-      integer, dimension(NATYP), intent(inout) :: ITLDAU !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
-      double precision, dimension(NATYP), intent(inout) :: UEFF   !< input U parameter for each atom
-      double precision, dimension(NATYP), intent(inout) :: JEFF   !< input J parameter for each atom
-
-      ! .. In/out Variables
-      integer, dimension(NATYP), intent(inout)                             :: IPAN !< Number of panels in non-MT-region
-      integer, dimension(LM2D), intent(inout)                              :: LOFLM !< l of lm=(l,m) (GAUNT)
-      integer, dimension(NATYP), intent(inout)                             :: IRMIN !< Max R for spherical treatment
-      integer, dimension(NATOMIMP), intent(inout)                          :: ATOMIMP
-      integer, dimension(NCLEB,4), intent(inout)                           :: ICLEB !< Pointer array
-      integer, dimension(0:IPAND,NATYP), intent(inout)                     :: IRCUT !< R points of panel borders
-      integer, dimension(0:NTOTD,NATYP), intent(inout)                     :: IPAN_INTERVALL
-      double precision, dimension(NCLEB,2), intent(inout)                  :: CLEB  !< GAUNT coefficients (GAUNT)
-      double precision, dimension(IRM,NPOTD), intent(inout)                :: VISP  !< Spherical part of the potential
-      double precision, dimension(IRM,NATYP), intent(inout)                :: DRDI  !< Derivative dr/di
-      double precision, dimension(NRMAXD,NATYP), intent(inout)             :: RNEW
-      double precision, dimension(IRM,NATYP), intent(inout)                :: RMESH !< Radial mesh ( in units a Bohr)
-      double precision, dimension(0:NTOTD,NATYP), intent(inout)            :: RPAN_INTERVALL
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)  :: VINS !< Non-spherical part of the potential
-      double complex, dimension(IEMXD), intent(inout) :: EZ
-      !-------------------------------------------------------------------------
-      !     RELATIVISTIC MODE
-      !-------------------------------------------------------------------------
-      integer, dimension(NATYP), intent(inout) :: ZREL      !< atomic number (cast integer)
-      integer, dimension(NATYP), intent(inout) :: JWSREL    !< index of the WS radius
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: VTREL       !< potential (spherical part)
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: BTREL       !< magnetic field
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: RMREL       !< radial mesh
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: DRDIREL     !< derivative of radial mesh
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout) :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-      !-------------------------------------------------------------------------
-      ! LDA+U
-      !-------------------------------------------------------------------------
-      integer, intent(inout) :: ITRUNLDAU !< Iteration index for LDA+U
-      integer, dimension(NATYP), intent(inout) :: LOPT   !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-      double precision, dimension(NATYP), intent(inout) :: EREFLDAU  !< the energies of the projector's wave functions (REAL)
-      double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(inout) :: WLDAU !< potential matrix
-      double precision, dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(inout) :: ULDAU  !< calculated Coulomb matrix elements (EREFLDAU)
-      double complex, dimension(IRM,NATYP), intent(inout) :: PHILDAU
+      use mod_main0
 
       ! .. Local variables
       integer :: I1
@@ -169,9 +65,6 @@ contains
       integer :: LRECTMT
       integer :: LRECTRA
       ! .. Local arrays
-      integer, dimension(NATYP) :: NPAN_EQ
-      integer, dimension(NATYP) :: NPAN_LOG
-      integer, dimension(NATYP) :: NPAN_TOT
       double precision, dimension(NATYP) :: PHI
       double precision, dimension(NATYP) :: THETA
       double precision, dimension(:,:,:), allocatable :: VINSNEW
@@ -219,7 +112,7 @@ contains
          NINEQ,IDOLDAU,LLY,KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,    &
          IEND,EZ,VINS,IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,  &
          VISP,RMTREF,VREF,CLEB,CSCL,SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,    &
-         SOLVER,TMPDIR,DELTAE,TOLRDIF,NPAN_LOG,NPAN_EQ,NCHEB,NPAN_TOT,     &
+         SOLVER,TMPDIR,DELTAE,TOLRDIF,NPAN_LOG_AT,NPAN_EQ_AT,NCHEB,NPAN_TOT,     &
          IPAN_INTERVALL,RPAN_INTERVALL,RNEW,NTOTD,NRMAXD,R_LOG,NTLDAU,     &
          ITLDAU,LOPT,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,IRMIND,LMPOT,     &
          NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
@@ -343,7 +236,7 @@ contains
          ! Interpolate potential
          call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATYP,IPAND,NSPOTD,NTOTD,   &
             NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH,IRMIND,IRMIN,IRWS,IRCUT,VINS,VISP,   &
-            NPAN_LOG,NPAN_EQ,NPAN_TOT,RNEW,IPAN_INTERVALL,VINSNEW)
+            NPAN_LOG_AT,NPAN_EQ_AT,NPAN_TOT,RNEW,IPAN_INTERVALL,VINSNEW)
 
          do I1=i1_start,i1_end
 

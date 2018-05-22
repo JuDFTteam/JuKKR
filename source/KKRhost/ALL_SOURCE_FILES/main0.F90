@@ -14,14 +14,14 @@
 !> @note
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-module mod_main0
-
 #ifdef CPP_HYBRID
 #define cpp_ompstuff
 #endif
 #ifdef CPP_OMP
 #define cpp_ompstuff
 #endif
+
+module mod_main0
 
    use mod_wunfiles
    use mod_types, only: t_imp
@@ -60,7 +60,6 @@ module mod_main0
    integer :: NEMB      !< Number of 'embedding' positions
    integer :: LMAX      !< Maximum l component in wave function expansion
    integer :: NCLS      !< Number of reference clusters
-   integer :: IREC
    integer :: LM2D      !< (2*LMAX+1)**2
    integer :: NREF      !< Number of diff. ref. potentials
    integer :: NPOL      !< Number of Matsubara Poles (EMESHT)
@@ -120,7 +119,6 @@ module mod_main0
    integer :: NPOLSEMI  !< Number of poles for the semicore contour
    integer :: SCFSTEPS  !< number of scf iterations
    integer :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-   integer :: LRECABMAD
    integer :: IESEMICORE
    integer :: IDOSEMICORE
    double precision :: TK        !< Temperature
@@ -194,12 +192,12 @@ module mod_main0
    integer, dimension(:), allocatable :: IJTABSYM  !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
    integer, dimension(:), allocatable :: NPAN_TOT
    integer, dimension(:), allocatable :: IJTABCALC !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
-   integer, dimension(:), allocatable :: NPAN_EQNEW
-   integer, dimension(:), allocatable :: NPAN_LOGNEW
+   integer, dimension(:), allocatable :: NPAN_EQ_AT
+   integer, dimension(:), allocatable :: NPAN_LOG_AT
    integer, dimension(:), allocatable :: IJTABCALC_I
    integer, dimension(:,:), allocatable :: ISH
    integer, dimension(:,:), allocatable :: JSH
-   integer, dimension(:,:), allocatable :: ILM
+   integer, dimension(:,:), allocatable :: ILM_MAP
    integer, dimension(:,:), allocatable :: KFG
    integer, dimension(:,:), allocatable :: ATOM    !< Atom at site in cluster
    integer, dimension(:,:), allocatable :: EZOA    !< EZ of atom at site in cluster
@@ -236,7 +234,7 @@ module mod_main0
    double precision, dimension(:), allocatable :: RMTREFAT
    double precision, dimension(:), allocatable :: FPRADIUS !< R point at which full-potential treatment starts
    double precision, dimension(:), allocatable :: SOCSCALE !< Spin-orbit scaling
-   double precision, dimension(:,:), allocatable :: R    !< Radial mesh ( in units a Bohr)
+   double precision, dimension(:,:), allocatable :: RMESH    !< Radial mesh ( in units a Bohr)
    double precision, dimension(:,:), allocatable :: S
    double precision, dimension(:,:), allocatable :: RR   !< Set of real space vectors (in a.u.)
    double precision, dimension(:,:), allocatable :: DRDI !< Derivative dr/di
@@ -415,6 +413,8 @@ contains
       integer :: NS
       integer :: ISVATOM,NVATOM
       integer :: i_stat,i_all
+      integer :: IREC
+      integer :: LRECABMAD
       double precision :: ZATTEMP
       ! for OPERATOR option
       logical :: lexist, operator_imp
@@ -580,9 +580,9 @@ contains
       call allocate_expansion(1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,NCHEB, &
          LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
       ! Call to allocate the arrays associated with the integration mesh
-      call allocate_mesh(1,IRM,NATYP,A,B,R,DRDI)
+      call allocate_mesh(1,IRM,NATYP,A,B,RMESH,DRDI)
       ! Call to allocate the arrays associated with the pannels for the new solver
-      call allocate_pannels(1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQNEW,NPAN_LOGNEW,  &
+      call allocate_pannels(1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQ_AT,NPAN_LOG_AT,  &
          IPAN_INTERVALL,RPAN_INTERVALL)
       ! Call to allocate misc arrays
       call allocate_misc(1,NR,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREF,IEMXD,NTOTD,   &
@@ -591,7 +591,7 @@ contains
          LEFTTINVLL,RIGHTTINVLL)
       ! Call to allocate the arrays associated with the Green function
       call allocate_green(1,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJ,ISH,JSH,KMESH,  &
-         IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM, &
+         IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM_MAP, &
          GSH)
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -654,7 +654,7 @@ contains
       call STARTB1(IFILE,1337,1337,IPE,KREL,KWS,LMAX,1,NATYP,ALATNEW,RMTNEW, &
          RMT,ITITLE,IMT,IRC,VCONST,INS,IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,   &
          KSHAPE,NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,VBC,       &
-         DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,1,LMPOT,    &
+         DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,RMESH,ZAT,A,B,IRWS,1,LMPOT,    &
          IRMIND,IRM,LMXSPD,IPAND,IRID,IRNSD,NATYP,NCELLD,NFUND,NSPOTD,IVSHIFT, &
          NPOTD)
 
@@ -703,7 +703,7 @@ contains
       !-------------------------------------------------------------------------
       if (OPT('GENPOT  ')) then
          rewind(3)
-         call GENERALPOT(3,1,NATYP,NSPIN,ZAT,ALAT,RMT,RMTNEW,RWS,R,DRDI,VISP, &
+         call GENERALPOT(3,1,NATYP,NSPIN,ZAT,ALAT,RMT,RMTNEW,RWS,RMESH,DRDI,VISP, &
             IRWS,A,B,INS,IRNS,LPOT,VINS,QBOUND,IRC,KSHAPE,E2IN,VBC,ECORE,     &
             LCORE,NCORE,LMPOT,IRM,IRMIND)
          close(3)
@@ -715,8 +715,8 @@ contains
       if (KHFELD.eq.1) then
          !---> maybe apply a magnetic field
          call bshift_ns(IRM,IRID,IPAND,LMPOT,NPOTD,NATYP,NSPIN,NGSHD,NFUND,NCELLD,  &
-            IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM,LMSP,IFUNM,     &
-            IRCUT,HFIELD,GSH,R,THESME,THETAS,VISP,VINS)
+            IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM_MAP,LMSP,IFUNM,     &
+            IRCUT,HFIELD,GSH,RMESH,THESME,THETAS,VISP,VINS)
       end if
       if ( TEST('vpotout ') ) then !ruess
          open(unit=54633163,file='test_vpotout_bshift')
@@ -785,7 +785,7 @@ contains
          !----------------------------------------------------------------------
          if(KREL.eq.1) then
             ! call this only if relativisitic solver is used
-            call RELPOTCVT(1,VISP,ZAT,R,DRDI,IRCUT,VTREL,BTREL,ZREL,RMREL,&
+            call RELPOTCVT(1,VISP,ZAT,RMESH,DRDI,IRCUT,VTREL,BTREL,ZREL,RMREL,&
                JWSREL,DRDIREL,R2DRDIREL,IRSHIFT,IPAND,IRM,NPOTD,NATYP)
          endif
       end if !KREL+KORBIT.EQ.1
@@ -882,7 +882,7 @@ contains
       ! nonvanishing (l'',m'')-components of the shape functions THETAS
       !-------------------------------------------------------------------------
       if (KSHAPE.NE.0) then
-         CALL SHAPE_CORR(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,WG,YRG,LASSLD,&
+         CALL SHAPE_CORR(LPOT,NATYP,GSH,ILM_MAP,IMAXSH,LMSP,NTCELL,WG,YRG,LASSLD,&
             LMPOT,NATYP,NGSHD)
       endif
       !-------------------------------------------------------------------------
@@ -1073,7 +1073,7 @@ contains
       if ( OPT('deci-pot') ) then
          CALL OUTPOTHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,NATYP,E2IN, &
             BRAVAIS,RBASIS,QMTET,QMPHI,NOQ,KAOEZ,IQAT,ZAT,CONC,IPAN,IRCUT, &
-            SOLVER,SOCSCL,CSCL,IRWS,RMTNEW,RWS,R,DRDI,VISP,IRSHIFT,RMREL,  &
+            SOLVER,SOCSCL,CSCL,IRWS,RMTNEW,RWS,RMESH,DRDI,VISP,IRSHIFT,RMREL,  &
             DRDIREL,VTREL,BTREL,LMAX,NATYP,NAEZ,IPAND,IRM)
       endif
       if ( OPT('deci-out') ) then
@@ -1128,8 +1128,8 @@ contains
       ! new solver for full-potential, spin-orbit, initialise
       if (OPT('NEWSOSOL')) THEN
          call CREATE_NEWMESH(NATYP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,NFUND,&
-            NCHEB,NTOTD*(NCHEB+1),NSPIN,R,IRMIN,IPAN,IRCUT,R_LOG,NPAN_LOG,    &
-            NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,RNEW,RPAN_INTERVALL,      &
+            NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH,IRMIN,IPAN,IRCUT,R_LOG,NPAN_LOG,    &
+            NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,NPAN_TOT,RNEW,RPAN_INTERVALL,      &
             IPAN_INTERVALL,NCELLD,NTCELL,THETAS,THETASNEW)
       end if
 
@@ -1138,7 +1138,7 @@ contains
          FSEMICORE,VINS,VISP,VBC,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ZREL,    &
          JWSREL,IRSHIFT,ITSCF,SCFSTEPS,CMOMHOST,ECORE,LCORE,NCORE,QMTET,QMPHI,&
          QMPHITAB,QMTETTAB,QMGAMTAB,DROTQ,NSRA,INS,NATYP,NAEZ,NINEQ,NREF,     &
-         NSPIN,NCLS,ICST,IPAN,IRCUT,ALAT,ZAT,R,DRDI,REFPOT,RMTREF,VREF,IEND,  &
+         NSPIN,NCLS,ICST,IPAN,IRCUT,ALAT,ZAT,RMESH,DRDI,REFPOT,RMTREF,VREF,IEND,  &
          JEND,CLEB,ICLEB,ATOM,CLS,RCLS,NACLS,LOFLM,SOLVER,SOCSCL,CSCL,ICC,IGF,&
          NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,&
          NSH2,IJTABCALC,IJTABCALC_I,ISH,JSH,IJTABSYM,IJTABSH,NOFGIJ,NQCALC,   &
@@ -1148,12 +1148,12 @@ contains
          INTERVY,INTERVZ,ITITLE,LMSP1,NTCELL,THETAS,LPOT,LMPOT,NRIGHT,NLEFT,  &
          LINTERFACE,IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD, &
          KXC,LAMBDA_XC,TXC,ISHIFT,IXIPOL,LRHOSYM,KFORCE,LMSP,LLMSP,RMT,RMTNEW,&
-         RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM,IMAXSH,IDOLDAU,ITRUNLDAU, &
+         RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM_MAP,IMAXSH,IDOLDAU,ITRUNLDAU, &
          NTLDAU,LOPT,ITLDAU,UEFF,JEFF,EREFLDAU,ULDAU,WLDAU,PHILDAU,IEMXD,     &
          IRMIND,IRM,NSPOTD,NPOTD,NEMBD1,LMMAXD,IPAND,NAEZ+NEMB,LMAX,NCLEB,    &
          NACLSD,NCLSD,LM2D,LMAX+1,MMAXD,NR,NSHELD,NSYMAXD,NAEZ/NPRINCD,       &
          NATOMIMPD,NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,NTOTD,NCHEB,    &
-         NPAN_LOG,NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,R_LOG,NPAN_TOT,RNEW,         &
+         NPAN_LOG,NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,R_LOG,NPAN_TOT,RNEW,         &
          RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF,LLY,&
          DELTAE,RCLSIMP)
 
@@ -1217,41 +1217,6 @@ contains
       9070 format (5X,'INFO:  Output of cluster Green function at E Fermi')
       9080 format (5X,'INFO:  Determination of DOS at E Fermi')
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! deallocate unused arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      i_all=-product(shape(THETAS))*kind(THETAS)
-      deallocate(THETAS,stat=i_stat)
-      call memocc(i_stat,i_all,'THETAS','main0')
-
-      i_all=-product(shape(THETASNEW))*kind(THETASNEW)
-      deallocate(THETASNEW,stat=i_stat)
-      call memocc(i_stat,i_all,'THETASNEW','main0')
-
-      i_all=-product(shape(VINS))*kind(VINS)
-      deallocate(VINS,stat=i_stat)
-      call memocc(i_stat,i_all,'VINS','main0')
-
-      i_all=-product(shape(THESME))*kind(THESME)
-      deallocate(THESME,stat=i_stat)
-      call memocc(i_stat,i_all,'THESME','main0')
-
-      i_all=-product(shape(LEFTTINVLL))*kind(LEFTTINVLL)
-      deallocate(LEFTTINVLL,stat=i_stat)
-      call memocc(i_stat,i_all,'LEFTTINVLL','main0')
-
-      i_all=-product(shape(RIGHTTINVLL))*kind(RIGHTTINVLL)
-      deallocate(RIGHTTINVLL,stat=i_stat)
-      call memocc(i_stat,i_all,'RIGHTTINVLL','main0')
-
-      i_all=-product(shape(ISH))*kind(ISH)
-      deallocate(ISH,stat=i_stat)
-      call memocc(i_stat,i_all,'ISH','main0')
-
-      i_all=-product(shape(JSH))*kind(JSH)
-      deallocate(JSH,stat=i_stat)
-      call memocc(i_stat,i_all,'JSH','main0')
-
    end subroutine main0
 
    !----------------------------------------------------------------------------
@@ -1259,7 +1224,7 @@ contains
    !> @brief Adds a constant (=VSHIFT) to the potentials of atoms
    !----------------------------------------------------------------------------
    subroutine bshift_ns(IRM,IRID,IPAND,LMPOT,NPOTD,NATYP,NSPIN,NGSHD,NFUND,NCELLD,  &
-      IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM,LMSP,IFUNM,IRCUT,     &
+      IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM_MAP,LMSP,IFUNM,IRCUT,     &
       HFIELD,GSH,RMESH,THESME,THETAS,VISP,VINS)
 
       implicit none
@@ -1286,7 +1251,7 @@ contains
       integer, dimension(NATYP), intent(in) :: INIPOL !< initial spin polarisation
       integer, dimension(NATYP), intent(in) :: NTCELL !< index for WS cell
       integer, dimension(0:LMPOT), intent(in) :: IMAXSH
-      integer, dimension(NGSHD,3), intent(in) :: ILM
+      integer, dimension(NGSHD,3), intent(in) :: ILM_MAP
       integer, dimension(NATYP,LMXSPD), intent(in) :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
       integer, dimension(NATYP,LMXSPD), intent(in) :: IFUNM
       integer, dimension(0:IPAND,NATYP), intent(in) :: IRCUT !< r points of panel borders
@@ -1334,7 +1299,7 @@ contains
                end do
             else                ! Full-potential
                !
-               call CONVOL(IMT1,IRC1,NTCELL(IH),IMAXSH(LMPOT),ILM,IFUNM,LMPOT,&
+               call CONVOL(IMT1,IRC1,NTCELL(IH),IMAXSH(LMPOT),ILM_MAP,IFUNM,LMPOT,&
                   GSH,THETAS,THESME,0.d0,RFPI,RMESH(1,IH),PSHIFTLMR,PSHIFTR,  &
                   LMSP)
                !
@@ -1374,7 +1339,6 @@ contains
       KPRE        = 0
       NSRA        = 1
       IEND        = 1
-      IREC        = 0
       NVIRT       = 0
       KVMAD       = 0
       ITSCF       = 0
@@ -1386,7 +1350,6 @@ contains
       NSYMAT      = 0
       NQCALC      = 0
       KFORCE      = 0   ! Calculation of the forces
-      LRECABMAD   = 0
       PARA        = .True.
       LRHOSYM     = .False.
 

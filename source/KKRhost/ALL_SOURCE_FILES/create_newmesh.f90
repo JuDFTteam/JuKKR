@@ -20,7 +20,7 @@ contains
    !----------------------------------------------------------------------------
    subroutine CREATE_NEWMESH(NATYP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,   &
       NFUND,NCHEB,IRMDNEW,NSPIN,R,IRMIN,IPAN,IRCUT,R_LOG,NPAN_LOG,NPAN_EQ, &
-      NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,RNEW,RPAN_INTERVALL,IPAN_INTERVALL,  &
+      NPAN_LOG_AT,NPAN_EQ_AT,NPAN_TOT,RNEW,RPAN_INTERVALL,IPAN_INTERVALL,  &
       NCELLD,NTCELL,THETAS,THETASNEW) !< optional arguments
 
       implicit none
@@ -48,8 +48,8 @@ contains
       double precision, dimension(IRM,NATYP), intent(in) :: R   !< Radial mesh ( in units a Bohr)
       ! .. Input/Output variables
       integer, dimension(NATYP), intent(inout)  :: NPAN_TOT
-      integer, dimension(NATYP), intent(inout)  :: NPAN_EQNEW
-      integer, dimension(NATYP), intent(inout)  :: NPAN_LOGNEW
+      integer, dimension(NATYP), intent(inout)  :: NPAN_EQ_AT
+      integer, dimension(NATYP), intent(inout)  :: NPAN_LOG_AT
       integer, dimension(0:NTOTD,NATYP), intent(inout) :: IPAN_INTERVALL
       double precision, dimension(IRMDNEW,NATYP), intent(inout):: RNEW
       double precision, dimension(0:NTOTD,NATYP), intent(inout) :: RPAN_INTERVALL
@@ -141,8 +141,8 @@ contains
             IPAN_INTERVALL(NPAN_LOG+NPAN_EQ+IP,I1)=(NPAN_LOG+NPAN_EQ+IP)*(NCHEB+1)
          enddo ! NPAN_INST
 
-         NPAN_EQNEW(I1)=NPAN_EQ+NPAN_LOG-NPAN_LOGTEMP
-         NPAN_LOGNEW(I1)=NPAN_LOGTEMP
+         NPAN_EQ_AT(I1)=NPAN_EQ+NPAN_LOG-NPAN_LOGTEMP
+         NPAN_LOG_AT(I1)=NPAN_LOGTEMP
 
          call CHEBMESH(NPAN_TOT(I1),NCHEB,RPAN_INTERVALL(0:,I1),RNEW(1,I1))
 
@@ -154,7 +154,7 @@ contains
             do LM1=1,NFUND
                THETASIN(:,LM1,ICELL)=THETAS(:,LM1,ICELL)
                IR2=0
-               do IP=NPAN_LOGNEW(I1)+NPAN_EQNEW(I1)+1,NPAN_TOT(I1)
+               do IP=NPAN_LOG_AT(I1)+NPAN_EQ_AT(I1)+1,NPAN_TOT(I1)
                   IR2=IR2+1
                   IMIN=IRCUT(IR2,I1)+1
                   IMAX=IRCUT(IR2+1,I1)

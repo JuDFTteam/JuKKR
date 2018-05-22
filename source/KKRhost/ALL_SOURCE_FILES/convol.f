@@ -1,5 +1,5 @@
 c ************************************************************************
-      SUBROUTINE CONVOL(IMT1,IRC1,ICELL,IMAXSH,ILM,IFUNM,LMPOT,GSH,
+      SUBROUTINE CONVOL(IMT1,IRC1,ICELL,IMAXSH,ILM_MAP,IFUNM,LMPOT,GSH,
      +                  THETAS,THESME,Z,RFPI,R,VONS,VSPSMO,LMSP)
 c ************************************************************************
 C     .. Parameters ..
@@ -14,7 +14,7 @@ C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION GSH(*),R(*),THETAS(IRID,NFUND,*),VONS(IRMD,*),
      &                 THESME(IRID,NFUND,*),VSPSMO(IRMD)
-      INTEGER IFUNM(NATYPD,*),ILM(NGSHD,3),LMSP(NATYPD,*)
+      INTEGER IFUNM(NATYPD,*),ILM_MAP(NGSHD,3),LMSP(NATYPD,*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION ZZOR
@@ -37,9 +37,9 @@ C     ..
    30 CONTINUE
 
       DO 50 I = 1,IMAXSH
-        LM1 = ILM(I,1)
-        LM2 = ILM(I,2)
-        LM3 = ILM(I,3)
+        LM1 = ILM_MAP(I,1)
+        LM2 = ILM_MAP(I,2)
+        LM3 = ILM_MAP(I,3)
         IF (LMSP(ICELL,LM3).GT.0) THEN
           IFUN = IFUNM(ICELL,LM3)
           DO 40 IR = IMT1 + 1,IRC1

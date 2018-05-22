@@ -91,8 +91,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    double complex :: GMATPREFACTOR
    integer, dimension(NATYP) :: NPAN_TOT
    integer, dimension(NATYP) :: NPAN_INST
-   integer, dimension(NATYP) :: NPAN_EQNEW
-   integer, dimension(NATYP) :: NPAN_LOGNEW
+   integer, dimension(NATYP) :: NPAN_EQ_AT
+   integer, dimension(NATYP) :: NPAN_LOG_AT
    double precision, dimension(NATOMIMP)  :: PHIimp
    double precision, dimension(NATYP)     :: PHIhost
    double precision, dimension(NATOMIMP)  :: THETAimp
@@ -235,7 +235,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       ! In second step interpolate potential (gain atom by atom with NATYP==1)
       call CREATE_NEWMESH(NATYP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,NFUND,&
          NCHEB,IRMDNEWD,NSPIN,R(:,:),IRMIN(:),IPAN(:),IRCUT(0:IPAND,:),    &
-         R_LOG,NPAN_LOG,NPAN_EQ,NPAN_LOGNEW(:),NPAN_EQNEW(:),NPAN_TOT(:),  &
+         R_LOG,NPAN_LOG,NPAN_EQ,NPAN_LOG_AT(:),NPAN_EQ_AT(:),NPAN_TOT(:),  &
          RNEW(:,:),RPAN_INTERVALL(0:NTOTD,:),IPAN_INTERVALL(0:NTOTD,:),1)
    
       ! calculate tmat and radial wavefunctions of host atoms
@@ -543,7 +543,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    call CREATE_NEWMESH(NATOMIMP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,NFUND,&
       NCHEB,IRMDNEWD,NSPIN,RIMP(:,1:NATOMIMP),IRMINIMP(1:NATOMIMP),        &
       IPANIMP(1:NATOMIMP),IRCUTIMP(0:IPAND,1:NATOMIMP),R_LOG,NPAN_LOG,     &
-      NPAN_EQ,NPAN_LOGNEW(1:NATOMIMP),NPAN_EQNEW(1:NATOMIMP),              &
+      NPAN_EQ,NPAN_LOG_AT(1:NATOMIMP),NPAN_EQ_AT(1:NATOMIMP),              &
       NPAN_TOT(1:NATOMIMP),RNEW(1:IRMDNEWD,1:NATOMIMP),                    &
       RPAN_INTERVALL(0:NTOTD,1:NATOMIMP),IPAN_INTERVALL(0:NTOTD,1:NATOMIMP),1)
 
@@ -554,8 +554,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       IRWSIMP(1:NATOMIMP),                                        &
       IRCUTIMP(0:IPAND,1:NATOMIMP),                               &
       VINSIMP(IRMIND:IRM,1:LMPOT,1:NATOMIMP),                   &
-      VM2ZIMP(1:IRM,1:NATOMIMP),NPAN_LOGNEW(1:NATOMIMP),         &
-      NPAN_EQNEW(1:NATOMIMP),NPAN_TOT(1:NATOMIMP),                &
+      VM2ZIMP(1:IRM,1:NATOMIMP),NPAN_LOG_AT(1:NATOMIMP),         &
+      NPAN_EQ_AT(1:NATOMIMP),NPAN_TOT(1:NATOMIMP),                &
       RNEW(1:IRMDNEWD,1:NATOMIMP),                                &
       IPAN_INTERVALL(0:NTOTD,1:NATOMIMP),VINSNEW)
 

@@ -1,7 +1,7 @@
 c 13.10.95 ***************************************************************
       SUBROUTINE ECOUB(CMOM,ECOU,LMAX,NSPIN,NATYP,RHO2NS,VM2Z,Z,R,DRDI,
-     +                 IRWS,KVMAD,KSHAPE,IRCUT,IPAN,IMAXSH,IFUNM,ILM,
-     +                 NTCELL,GSH,THETAS,LMSP)
+     +                 IRWS,KVMAD,KSHAPE,IRCUT,IPAN,IMAXSH,IFUNM,
+     +                 ILM_MAP,NTCELL,GSH,THETAS,LMSP)
 c ************************************************************************
 c
 c     attention : energy zero ---> electro static zero
@@ -63,7 +63,7 @@ C     .. Array Arguments ..
       DOUBLE PRECISION CMOM(LMPOTD,*),DRDI(IRMD,*),ECOU(0:LPOTD,*),
      +                 GSH(*),R(IRMD,*),RHO2NS(IRMD,LMPOTD,NATYPD,*),
      +                 THETAS(IRID,NFUND,*),VM2Z(IRMD,LMPOTD,*),Z(*)
-      INTEGER IFUNM(NATYPD,*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
+      INTEGER IFUNM(NATYPD,*),ILM_MAP(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
      +        IRCUT(0:IPAND,*),IRWS(*),NTCELL(*),LMSP(NATYPD,*)
 C     ..
 C     .. Local Scalars ..
@@ -127,9 +127,9 @@ c
 c--->           convolute with shape function
 c
                 DO 50 J = IMAXSH(LM-1) + 1,IMAXSH(LM)
-                  LM2 = ILM(J,2)
-                IF (LMSP(ICELL,ILM(J,3)).GT.0) THEN
-                  IFUN = IFUNM(ICELL,ILM(J,3))
+                  LM2 = ILM_MAP(J,2)
+                IF (LMSP(ICELL,ILM_MAP(J,3)).GT.0) THEN
+                  IFUN = IFUNM(ICELL,ILM_MAP(J,3))
 
                   IF (LM2.EQ.1) THEN
                     DO 30 IR = IRS1 + 1,IRC1

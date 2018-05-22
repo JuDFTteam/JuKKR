@@ -25,15 +25,7 @@ contains
    !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
    !> and many others ...
    !----------------------------------------------------------------------------
-   subroutine main1c(INS,LLY,IRM,LM2D,ICST,NAEZ,NPOL,NSRA,LPOT,LMAX,NTOTD,MMAXD, &
-      NATYP,NPOTD,KMROT,NSPIN,NCHEB,LMPOT,LMXSPD,IELAST,LMMAXD,NRMAXD,IRMIND,    &
-      INTERVX,INTERVY,INTERVZ,IESEMICORE,TK,EMIN,EMAX,ALAT,EFERMI,SOLVER,IQAT,   &
-      ZREL,IPAN,IRWS,NCORE,JWSREL,NTCELL,ITITLE,CSCL,ZAT,CONC,SOCSCALE,NTLDAU,   &
-      IDOLDAU,ITRUNLDAU,ITLDAU,UEFF,JEFF,IEND,NFU,LOFLM,IRMIN,IRSHIFT,ICLEB,     &
-      LCORE,IRCUT,IFUNM1,LMSP1,LLMSP,JEND,A,B,QMTET,QMPHI,CLEB,DRDI,ECORE,RMREL, &
-      SOCSCL,R2DRDIREL,VINS,VTREL,BTREL,DRDIREL,EZ,WEZ,LOPT,EREFLDAU,WLDAU,ULDAU,&
-      PHILDAU,R_LOG,NPAN_EQ,NPAN_LOG,NPAN_TOT,IPAN_INTERVALL,VISP,RNEW,          &
-      RPAN_INTERVALL,THETAS,THETASNEW)
+   subroutine main1c()
 
 #ifdef CPP_MPI
       use mpi
@@ -54,116 +46,11 @@ contains
       use mod_wunfiles
       use mod_version_info
 
+      use mod_main0
+
       ! .. Parameters
       integer :: NMVECMAX
       parameter (NMVECMAX = 4)
-      ! .. Input variables
-      integer, intent(inout) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
-      integer, intent(inout) :: LLY       !< LLY <> 0 : apply Lloyd's formula
-      integer, intent(inout) :: IRM       !< Maximum number of radial points
-      integer, intent(inout) :: LM2D      !< (2*LMAX+1)**2
-      integer, intent(inout) :: ICST      !< Number of Born approximation
-      integer, intent(inout) :: NAEZ      !< Number of atoms in unit cell
-      integer, intent(inout) :: NPOL      !< Number of Matsubara Poles (EMESHT)
-      integer, intent(inout) :: NSRA
-      integer, intent(inout) :: LMAX      !< Maximum l component in wave function expansion
-      integer, intent(inout) :: LPOT      !< Maximum l component in potential expansion
-      integer, intent(inout) :: NTOTD
-      integer, intent(inout) :: MMAXD     !< 2*LMAX+1
-      integer, intent(inout) :: NATYP     !< Number of kinds of atoms in unit cell
-      integer, intent(inout) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-      integer, intent(inout) :: KMROT     !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-      integer, intent(inout) :: NSPIN     !< Counter for spin directions
-      integer, intent(inout) :: NCHEB     !< Number of Chebychev pannels for the new solver
-      integer, intent(inout) :: LMPOT     !< (LPOT+1)**2
-      integer, intent(inout) :: LMXSPD    !< (2*LPOT+1)**2
-      integer, intent(inout) :: IELAST
-      integer, intent(inout) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-      integer, intent(inout) :: NRMAXD    !< NTOTD*(NCHEB+1)
-      integer, intent(inout) :: IRMIND    !< IRM-IRNSD
-      integer, intent(inout) :: INTERVX   !< Number of intervals in x-direction for k-net in IB of the BZ
-      integer, intent(inout) :: INTERVY   !< Number of intervals in y-direction for k-net in IB of the BZ
-      integer, intent(inout) :: INTERVZ   !< Number of intervals in z-direction for k-net in IB of the BZ
-      integer, intent(inout) :: IESEMICORE
-      double precision, intent(inout) :: TK        !< Temperature
-      double precision, intent(inout) :: ALAT      !< Lattice constant in a.u.
-      character(len=10), intent(inout) ::  SOLVER  !< Type of solver
-      integer, dimension(NATYP), intent(inout) :: IQAT      !< The site on which an atom is located on a given site
-      integer, dimension(NATYP), intent(inout) :: ZREL      !< atomic number (cast integer)
-      integer, dimension(NATYP), intent(inout) :: IPAN      !< Number of panels in non-MT-region
-      integer, dimension(NATYP), intent(inout) :: IRWS      !< R point at WS radius
-      integer, dimension(NPOTD), intent(inout) :: NCORE     !< Number of core states
-      integer, dimension(NATYP), intent(inout) :: JWSREL    !< index of the WS radius
-      integer, dimension(NATYP), intent(inout) :: NTCELL    !< Index for WS cell
-      integer, dimension(20,NPOTD), intent(inout) :: ITITLE
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: CSCL !< Speed of light scaling
-      double precision, dimension(NATYP), intent(inout) :: ZAT       !< Nuclear charge
-      double precision, dimension(NATYP), intent(inout) :: CONC      !< Concentration of a given atom
-      double precision, dimension(NATYP), intent(inout) :: SOCSCALE  !< Spin-orbit scaling
-      !-------------------------------------------------------------------------
-      ! LDA+U
-      !-------------------------------------------------------------------------
-      integer, intent(inout) :: NTLDAU    !< number of atoms on which LDA+U is applied
-      integer, intent(inout) :: IDOLDAU   !< flag to perform LDA+U
-      integer, intent(inout) :: ITRUNLDAU !< Iteration index for LDA+U
-      integer, dimension(NATYP), intent(inout) :: ITLDAU    !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
-      double precision, dimension(NATYP), intent(inout) :: UEFF   !< input U parameter for each atom
-      double precision, dimension(NATYP), intent(inout) :: JEFF   !< input J parameter for each atom
-
-      ! .. Input/Output variables
-      integer, intent(inout) :: IEND  !< Number of nonzero gaunt coefficients
-      double precision, intent(inout) :: EMIN      !< Lower value (in Ryd) for the energy contour
-      double precision, intent(inout) :: EMAX      !< Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
-      double precision, intent(inout) :: EFERMI    !< Fermi energy
-      integer, dimension(NATYP), intent(inout)                        :: NFU     !< number of shape function components in cell 'icell'
-      integer, dimension(LM2D), intent(inout)                         :: LOFLM   !< l of lm=(l,m) (GAUNT)
-      integer, dimension(NATYP), intent(inout)                        :: IRMIN   !< Max R for spherical treatment
-      integer, dimension(NATYP), intent(inout)                        :: IRSHIFT !< shift of the REL radial mesh with respect no NREL
-      integer, dimension(NCLEB,4), intent(inout)                      :: ICLEB   !< Pointer array
-      integer, dimension(20,NPOTD), intent(inout)                     :: LCORE   !< Angular momentum of core states
-      integer, dimension(0:IPAND,NATYP), intent(inout)                :: IRCUT   !< R points of panel borders
-      integer, dimension(LMXSPD,NATYP), intent(inout)                 :: IFUNM1
-      integer, dimension(LMXSPD,NATYP), intent(inout)                 :: LMSP1
-      integer, dimension(NATYP,NFUND), intent(inout)                  :: LLMSP   !< lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
-      integer, dimension(LMPOT,0:LMAX,0:LMAX), intent(inout)          :: JEND    !< Pointer array for icleb()
-      double precision, dimension(NATYP), intent(inout)                             :: A           !< Constants for exponential R mesh
-      double precision, dimension(NATYP), intent(inout)                             :: B           !< Constants for exponential R mesh
-      double precision, dimension(NAEZ), intent(inout)                              :: QMTET       !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(NAEZ), intent(inout)                              :: QMPHI       !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(NCLEB,2), intent(inout)                           :: CLEB        !< GAUNT coefficients (GAUNT)
-      double precision, dimension(IRM,NATYP), intent(inout)                         :: DRDI        !< Derivative dr/di
-      double precision, dimension(20,NPOTD), intent(inout)                          :: ECORE       !< Core energies
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)           :: RMREL       !< radial mesh
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout)   :: SOCSCL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)           :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)           :: VINS        !< Non-spherical part of the potential
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)           :: VTREL       !< potential (spherical part)
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)           :: BTREL       !< magnetic field
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)           :: DRDIREL     !< derivative of radial mesh
-      double complex, dimension(IEMXD), intent(inout) :: EZ
-      double complex, dimension(IEMXD), intent(inout) :: WEZ
-      !-------------------------------------------------------------------------
-      ! LDA+U
-      !-------------------------------------------------------------------------
-      integer, dimension(NATYP), intent(inout) :: LOPT   !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-      double precision, dimension(NATYP), intent(inout) :: EREFLDAU  !< the energies of the projector's wave functions (REAL)
-      double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(inout) :: WLDAU !< potential matrix
-      double precision, dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(inout) :: ULDAU !< calculated Coulomb matrix elements (EREFLDAU)
-      double complex, dimension(IRM,NATYP), intent(inout) :: PHILDAU
-      !-------------------------------------------------------------------------
-      ! For new spin-orbit solver
-      !-------------------------------------------------------------------------
-      double precision, intent(inout) :: R_LOG  !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
-      integer, dimension(NATYP), intent(inout)           :: NPAN_EQ
-      integer, dimension(NATYP), intent(inout)           :: NPAN_LOG
-      integer, dimension(NATYP), intent(inout)           :: NPAN_TOT
-      integer, dimension(0:NTOTD,NATYP), intent(inout)   :: IPAN_INTERVALL
-      double precision, dimension(IRM,NPOTD), intent(inout)             :: VISP  !< Spherical part of the potential
-      double precision, dimension(NRMAXD,NATYP), intent(inout)          :: RNEW
-      double precision, dimension(0:NTOTD,NATYP), intent(inout)         :: RPAN_INTERVALL
-      double precision, dimension(IRID,NFUND,NCELLD), intent(inout)     :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-      double precision, dimension(NRMAXD,NFUND,NCELLD), intent(inout)   :: THETASNEW
-
       !     ..
       ! .. Local variables
       integer :: NQDOS
@@ -199,7 +86,6 @@ contains
       double precision, dimension(NATYP)                    :: DENEFAT
       double precision, dimension(NSPIND)                   :: CHARGE_LLY  ! LLY
       double precision, dimension(0:LMAX+1,NPOTD)           :: ESPV
-      double precision, dimension(IRM,NATYP)                :: RMESH
       double precision, dimension(0:LMAX+1,2)               :: ESPV1
       double precision, dimension(0:LMAX+1,2)               :: DOSTOT
       double precision, dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL !< for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
@@ -318,7 +204,7 @@ contains
          LMAX,LMXSPD,NFUND,NPOTD,NTOTD,MMAXD,IEMXD,IRM,NSRA,INS,NSPIN,NACLS1,    &
          ICST,KMROT,IQAT,IDOLDAU,IRWS,IPAN,IRCUT,IEND,ICLEB, LOFLM,JEND,IFUNM1,  &
          LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,&
-         LLY,ITMPDIR,ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NPAN_TOT,NTLDAU,LOPT, &
+         LLY,ITMPDIR,ILTMP,NPAN_EQ_AT,IPAN_INTERVALL,NPAN_LOG_AT,NPAN_TOT,NTLDAU,LOPT, &
          ITLDAU,IELAST,IESEMICORE,NPOL,IRSHIFT,JWSREL,ZREL,ITRUNLDAU,QMTET,QMPHI,&
          CONC,ALAT,ZAT,DRDI,RMESH,A,B,CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,  &
          RNEW,SOCSCL,THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,EMIN,EMAX,TK,VINS,VISP, &
@@ -855,7 +741,7 @@ contains
 
          call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATYP,IPAND,       &
             LMPOT,NSPOTD,NTOTD,NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH, &
-            IRMIND,IRMIN,IRWS,IRCUT,VINS,VISP,NPAN_LOG,NPAN_EQ,   &
+            IRMIND,IRMIN,IRWS,IRCUT,VINS,VISP,NPAN_LOG_AT,NPAN_EQ_AT,   &
             NPAN_TOT,RNEW,IPAN_INTERVALL,VINSNEW)
 
 
@@ -916,8 +802,8 @@ contains
                NPOTD,NRMAXD,LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,     &
                ZAT(I1),SOCSCALE(I1),CLEB(1,1),ICLEB,IEND,               &
                IFUNM1(1,ICELL),LMSP1(1,ICELL),                          &
-               NCHEB,NPAN_TOT(I1),NPAN_LOG(I1),                         &
-               NPAN_EQ(I1),RMESH(1,I1),IRWS(I1),RPAN_INTERVALL(0,I1),   &
+               NCHEB,NPAN_TOT(I1),NPAN_LOG_AT(I1),                         &
+               NPAN_EQ_AT(I1),RMESH(1,I1),IRWS(I1),RPAN_INTERVALL(0,I1),   &
                IPAN_INTERVALL(0,I1),RNEW(1,I1),VINSNEW,                 &
                THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,          &
                DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),      &
@@ -1243,28 +1129,6 @@ contains
 #ifdef CPP_MPI
       end if !myrank==master
 #endif
-
-      i_all=-product(shape(den))*kind(den)
-      deallocate(den,stat=i_stat)
-      call memocc(i_stat,i_all,'den','main1c')
-      i_all=-product(shape(denlm))*kind(denlm)
-      deallocate(denlm,stat=i_stat)
-      call memocc(i_stat,i_all,'denlm','main1c')
-      i_all=-product(shape(vinsnew))*kind(vinsnew)
-      deallocate(vinsnew,stat=i_stat)
-      call memocc(i_stat,i_all,'vinsnew','main1c')
-      i_all=-product(shape(RHO2N1))*kind(RHO2N1)
-      deallocate(RHO2N1,stat=i_stat)
-      call memocc(i_stat,i_all,'RHO2N1','main1c')
-      i_all=-product(shape(RHO2NS))*kind(RHO2NS)
-      deallocate(RHO2NS,stat=i_stat)
-      call memocc(i_stat,i_all,'RHO2NS','main1c')
-      i_all=-product(shape(RHO2N2))*kind(RHO2N2)
-      deallocate(RHO2N2,stat=i_stat)
-      call memocc(i_stat,i_all,'RHO2N2','main1c')
-      i_all=-product(shape(R2NEF))*kind(R2NEF)
-      deallocate(R2NEF,stat=i_stat)
-      call memocc(i_stat,i_all,'R2NEF','main1c')
 
    end subroutine main1c
 

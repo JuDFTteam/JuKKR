@@ -25,7 +25,7 @@
 !-----------------------------------------------------------------------
 
 subroutine VINTRAS(CMOM,CMINST,LMAX,NSPIN,NSTART,NEND,RHO2NS,V,R,DRDI,IRWS,IRCUT,&
-   IPAN,KSHAPE,NTCELL,ILM,IFUNM,IMAXSH,GSH,THETAS,LMSP,IRM,LMPOT,NATYP,LMXSPD,   &
+   IPAN,KSHAPE,NTCELL,ILM_MAP,IFUNM,IMAXSH,GSH,THETAS,LMSP,IRM,LMPOT,NATYP,LMXSPD,   &
    NPOTD)
 
    use Constants
@@ -48,7 +48,7 @@ subroutine VINTRAS(CMOM,CMINST,LMAX,NSPIN,NSTART,NEND,RHO2NS,V,R,DRDI,IRWS,IRCUT
    integer, dimension(NATYP), intent(in)     :: IPAN   !< Number of panels in non-MT-region
    integer, dimension(NATYP), intent(in)     :: NTCELL !< Index for WS cell
    integer, dimension(0:LMPOT), intent(in)   :: IMAXSH
-   integer, dimension(NGSHD,3), intent(in)         :: ILM
+   integer, dimension(NGSHD,3), intent(in)         :: ILM_MAP
    integer, dimension(NATYP,LMXSPD), intent(in)    :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
    integer, dimension(NATYP,LMXSPD), intent(in)    :: IFUNM
    integer, dimension(0:IPAND,NATYP), intent(in)   :: IRCUT   !< R points of panel borders
@@ -118,8 +118,8 @@ subroutine VINTRAS(CMOM,CMINST,LMAX,NSPIN,NSTART,NEND,RHO2NS,V,R,DRDI,IRWS,IRCUT
                ISTART = IMAXSH(LM-1) + 1
                IEND = IMAXSH(LM)
                do J = ISTART,IEND
-                  LM2 = ILM(J,2)
-                  LM3 = ILM(J,3)
+                  LM2 = ILM_MAP(J,2)
+                  LM3 = ILM_MAP(J,3)
                   if (LMSP(ICELL,LM3).GT.0) then
                      IFUN = IFUNM(ICELL,LM3)
                      do I = IRS1 + 1,IRC1

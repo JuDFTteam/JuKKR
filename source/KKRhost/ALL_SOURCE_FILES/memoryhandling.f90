@@ -1351,7 +1351,7 @@ contains
    !> Jonathan Chico
    !> @date 19.12.2017
    !----------------------------------------------------------------------------
-   subroutine allocate_pannels(flag,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQNEW,NPAN_LOGNEW,&
+   subroutine allocate_pannels(flag,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQ_AT,NPAN_LOG_AT,&
       IPAN_INTERVALL,RPAN_INTERVALL)
 
       implicit none
@@ -1361,8 +1361,8 @@ contains
       integer, intent(in) :: NTOTD
       integer, dimension(:), allocatable, intent(inout) :: IPAN !< Number of panels in non-MT-region
       integer, dimension(:), allocatable, intent(inout) :: NPAN_TOT
-      integer, dimension(:), allocatable, intent(inout) :: NPAN_EQNEW
-      integer, dimension(:), allocatable, intent(inout) :: NPAN_LOGNEW
+      integer, dimension(:), allocatable, intent(inout) :: NPAN_EQ_AT
+      integer, dimension(:), allocatable, intent(inout) :: NPAN_LOG_AT
       integer, dimension(:,:), allocatable, intent(inout) :: IPAN_INTERVALL
       double precision, dimension(:,:), allocatable, intent(inout) :: RPAN_INTERVALL
 
@@ -1376,12 +1376,12 @@ contains
          allocate(NPAN_TOT(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(NPAN_TOT))*kind(NPAN_TOT),'NPAN_TOT','allocate_pannels')
          NPAN_TOT = 0
-         allocate(NPAN_EQNEW(NATYP),stat=i_stat)
-         call memocc(i_stat,product(shape(NPAN_EQNEW))*kind(NPAN_EQNEW),'NPAN_EQNEW','allocate_pannels')
-         NPAN_EQNEW = 0
-         allocate(NPAN_LOGNEW(NATYP),stat=i_stat)
-         call memocc(i_stat,product(shape(NPAN_LOGNEW))*kind(NPAN_LOGNEW),'NPAN_LOGNEW','allocate_pannels')
-         NPAN_LOGNEW = 0
+         allocate(NPAN_EQ_AT(NATYP),stat=i_stat)
+         call memocc(i_stat,product(shape(NPAN_EQ_AT))*kind(NPAN_EQ_AT),'NPAN_EQ_AT','allocate_pannels')
+         NPAN_EQ_AT = 0
+         allocate(NPAN_LOG_AT(NATYP),stat=i_stat)
+         call memocc(i_stat,product(shape(NPAN_LOG_AT))*kind(NPAN_LOG_AT),'NPAN_LOG_AT','allocate_pannels')
+         NPAN_LOG_AT = 0
          allocate(RPAN_INTERVALL(0:NTOTD,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(RPAN_INTERVALL))*kind(RPAN_INTERVALL),'RPAN_INTERVALL','allocate_pannels')
          RPAN_INTERVALL = 0.D0
@@ -1400,15 +1400,15 @@ contains
             deallocate(NPAN_TOT,stat=i_stat)
             call memocc(i_stat,i_all,'NPAN_TOT','allocate_pannels')
          endif
-         if (allocated(NPAN_EQNEW)) then
-            i_all=-product(shape(NPAN_EQNEW))*kind(NPAN_EQNEW)
-            deallocate(NPAN_EQNEW,stat=i_stat)
-            call memocc(i_stat,i_all,'NPAN_EQNEW','allocate_pannels')
+         if (allocated(NPAN_EQ_AT)) then
+            i_all=-product(shape(NPAN_EQ_AT))*kind(NPAN_EQ_AT)
+            deallocate(NPAN_EQ_AT,stat=i_stat)
+            call memocc(i_stat,i_all,'NPAN_EQ_AT','allocate_pannels')
          endif
-         if (allocated(NPAN_LOGNEW)) then
-            i_all=-product(shape(NPAN_LOGNEW))*kind(NPAN_LOGNEW)
-            deallocate(NPAN_LOGNEW,stat=i_stat)
-            call memocc(i_stat,i_all,'NPAN_LOGNEW','allocate_pannels')
+         if (allocated(NPAN_LOG_AT)) then
+            i_all=-product(shape(NPAN_LOG_AT))*kind(NPAN_LOG_AT)
+            deallocate(NPAN_LOG_AT,stat=i_stat)
+            call memocc(i_stat,i_all,'NPAN_LOG_AT','allocate_pannels')
          endif
          if (allocated(RPAN_INTERVALL)) then
             i_all=-product(shape(RPAN_INTERVALL))*kind(RPAN_INTERVALL)
@@ -1621,7 +1621,7 @@ contains
    !> @date 19.12.2017
    !----------------------------------------------------------------------------
    subroutine allocate_green(flag,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJD,ISH,JSH,&
-      KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM,GSH)
+      KMESH,IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM_MAP,GSH)
 
       implicit none
 
@@ -1643,7 +1643,7 @@ contains
       integer, dimension(:), allocatable, intent(inout) :: IJTABSYM !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
       integer, dimension(:), allocatable, intent(inout) :: IJTABCALC !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
       integer, dimension(:), allocatable, intent(inout) :: IJTABCALC_I
-      integer, dimension(:,:), allocatable, intent(inout) :: ILM
+      integer, dimension(:,:), allocatable, intent(inout) :: ILM_MAP
       double precision, dimension(:), allocatable, intent(inout) :: GSH
 
       integer :: i_stat, i_all
@@ -1656,9 +1656,9 @@ contains
          allocate(KMESH(IEMXD),stat=i_stat)
          call memocc(i_stat,product(shape(KMESH))*kind(KMESH),'KMESH','allocate_green')
          KMESH = 0
-         allocate(ILM(NGSHD,3),stat=i_stat)
-         call memocc(i_stat,product(shape(ILM))*kind(ILM),'ILM','allocate_green')
-         ILM = 0
+         allocate(ILM_MAP(NGSHD,3),stat=i_stat)
+         call memocc(i_stat,product(shape(ILM_MAP))*kind(ILM_MAP),'ILM_MAP','allocate_green')
+         ILM_MAP = 0
          allocate(IQCALC(NAEZ),stat=i_stat)
          call memocc(i_stat,product(shape(IQCALC))*kind(IQCALC),'IQCALC','allocate_green')
          IQCALC = 0
@@ -1702,10 +1702,10 @@ contains
             deallocate(KMESH,stat=i_stat)
             call memocc(i_stat,i_all,'KMESH','allocate_misc')
          endif
-         if (allocated(ILM)) then
-            i_all=-product(shape(ILM))*kind(ILM)
-            deallocate(ILM,stat=i_stat)
-            call memocc(i_stat,i_all,'ILM','allocate_misc')
+         if (allocated(ILM_MAP)) then
+            i_all=-product(shape(ILM_MAP))*kind(ILM_MAP)
+            deallocate(ILM_MAP,stat=i_stat)
+            call memocc(i_stat,i_all,'ILM_MAP','allocate_misc')
          endif
          if (allocated(IQCALC)) then
             i_all=-product(shape(IQCALC))*kind(IQCALC)

@@ -1,5 +1,5 @@
-      SUBROUTINE SHAPE_CORR(LPOT,NATYP,GSH,ILM,IMAXSH,LMSP,NTCELL,W,YR,
-     &                 LASSLD,LMPOTD,NATYPD,NGSHD)
+      SUBROUTINE SHAPE_CORR(LPOT,NATYP,GSH,ILM_MAP,IMAXSH,LMSP,NTCELL,
+     &                      W,YR,LASSLD,LMPOTD,NATYPD,NGSHD)
 C **********************************************************************
 C *  Prepares shape corrections using gaussian quadrature as given by  *
 C *  m. abramowitz and i.a. stegun, handbook of mathematical functions *
@@ -17,7 +17,7 @@ C     .. Scalar Arguments ..
 C     ..
 C     .. Array Arguments ..
       DOUBLE PRECISION GSH(*),W(LASSLD),YR(LASSLD,0:LASSLD,0:LASSLD)
-      INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),LMSP(NATYPD,*),NTCELL(*)
+      INTEGER ILM_MAP(NGSHD,3),IMAXSH(0:LMPOTD),LMSP(NATYPD,*),NTCELL(*)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION FACTOR,GAUNT,S
@@ -101,9 +101,9 @@ C
                                     GAUNT = S*FACTOR
                                     IF ( ABS(GAUNT).GT.1D-10 ) THEN
                                        GSH(I) = GAUNT
-                                       ILM(I,1) = LM1
-                                       ILM(I,2) = LM2
-                                       ILM(I,3) = LM3
+                                       ILM_MAP(I,1) = LM1
+                                       ILM_MAP(I,2) = LM2
+                                       ILM_MAP(I,3) = LM3
                                        I = I + 1
                                     END IF
                                  END IF

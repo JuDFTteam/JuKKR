@@ -194,7 +194,7 @@ module mod_wunfiles
       double precision, dimension(:), allocatable :: EREFLDAU        !< the energies of the projector's wave functions (REAL)
       double precision, dimension(:), allocatable :: SOCSCALE        !< Spin-orbit scaling
       double precision, dimension(:,:,:), allocatable :: VINS        !< Non-spherical part of the potential
-      double precision, dimension(:,:), allocatable :: R             !< Radial mesh ( in units a Bohr)
+      double precision, dimension(:,:), allocatable :: RMESH         !< Radial mesh ( in units a Bohr)
       double precision, dimension(:,:), allocatable :: RR
       double precision, dimension(:,:), allocatable :: DRDI          !< Derivative dr/di
       double precision, dimension(:,:), allocatable :: CSCL          !< Speed of light scaling
@@ -268,13 +268,13 @@ module mod_wunfiles
       integer, dimension(:), allocatable :: NPAN_TOT
       integer, dimension(:), allocatable :: IJTABSYM  !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
       integer, dimension(:), allocatable :: IJTABCALC !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
-      integer, dimension(:), allocatable :: NPAN_EQNEW
-      integer, dimension(:), allocatable :: NPAN_LOGNEW
+      integer, dimension(:), allocatable :: NPAN_EQ_AT
+      integer, dimension(:), allocatable :: NPAN_LOG_AT
       integer, dimension(:), allocatable :: IJTABCALC_I
       integer, dimension(:), allocatable :: qdos_atomselect
       integer, dimension(:,:), allocatable :: ISH
       integer, dimension(:,:), allocatable :: JSH
-      integer, dimension(:,:), allocatable :: ILM
+      integer, dimension(:,:), allocatable :: ILM_MAP
       integer, dimension(:,:), allocatable :: EZOA       !< EZ of atom at site in cluster
       integer, dimension(:,:), allocatable :: ATOM       !< Atom at site in cluster
       integer, dimension(:,:), allocatable :: LMSP       !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
@@ -329,11 +329,11 @@ contains
       IFUNM1,INTERVX,INTERVY,INTERVZ,ITITLE,LMSP1,NTCELL,THETAS,LPOT,LMPOT,      &
       NRIGHT,NLEFT,LINTERFACE,IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,&
       KVMAD,KXC,LAMBDA_XC,TXC,ISHIFT,IXIPOL,LRHOSYM,KFORCE,LMSP,LLMSP,RMT,RMTNEW,&
-      RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM,IMAXSH,IDOLDAU,ITRUNLDAU,NTLDAU,&
+      RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM_MAP,IMAXSH,IDOLDAU,ITRUNLDAU,NTLDAU,&
       LOPT,ITLDAU,UEFF,JEFF,EREFLDAU,ULDAU,WLDAU,PHILDAU,IEMXD,IRMIND,IRM,NSPOTD,&
       NPOTD,NEMBD1,LMMAXD,IPAND,NEMBD2,LMAX,NCLEB,NACLSD,NCLSD,LM2D,LMAXD1,MMAXD,&
       NR,NSHELD,NSYMAXD,NAEZDPD,NATOMIMPD,NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD, &
-      KREL,NTOTD,NCHEB,NPAN_LOG,NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,R_LOG,NPAN_TOT,   &
+      KREL,NTOTD,NCHEB,NPAN_LOG,NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,R_LOG,NPAN_TOT,   &
       RNEW,RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF,LLY, &
       DELTAE,RCLSIMP)
       ! **********************************************************************
@@ -556,10 +556,10 @@ contains
       integer, dimension(NATYP), intent(in)     :: NPAN_TOT
       integer, dimension(NOFGIJ), intent(in)    :: IJTABSYM  !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
       integer, dimension(NOFGIJ), intent(in)    :: IJTABCALC !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
-      integer, dimension(NATYP), intent(in)     :: NPAN_EQNEW
-      integer, dimension(NATYP), intent(in)     :: NPAN_LOGNEW
+      integer, dimension(NATYP), intent(in)     :: NPAN_EQ_AT
+      integer, dimension(NATYP), intent(in)     :: NPAN_LOG_AT
       integer, dimension(NOFGIJ), intent(in)    :: IJTABCALC_I
-      integer, dimension(NGSHD,3), intent(in)         :: ILM
+      integer, dimension(NGSHD,3), intent(in)         :: ILM_MAP
       integer, dimension(NSHELD,NOFGIJ), intent(in)   :: ISH
       integer, dimension(NSHELD,NOFGIJ), intent(in)   :: JSH
       integer, dimension(NACLSD,NEMBD2), intent(in)   :: ATOM   !< Atom at site in cluster
@@ -817,8 +817,8 @@ contains
          ATOM,CLS,NACLS,LOFLM,EZOA,KAOEZ,IQAT,ICPA,NOQ,KMESH,NSHELL,NSH1,NSH2,&
          IJTABCALC,IJTABCALC_I,IJTABSYM,IJTABSH,ISH,JSH,IQCALC,ICHECK,ATOMIMP,&
          REFPOT,IRREL,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,     &
-         LLMSP,LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,       &
-         NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,   &
+         LLMSP,LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM_MAP,IMAXSH,NPAN_LOG,       &
+         NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,   &
          VACFLAG,TXC,RCLSIMP)
 
       ! save information about the energy mesh
@@ -911,8 +911,8 @@ contains
       call memocc(i_stat,product(shape(t_params%QMGAMTAB))*kind(t_params%QMGAMTAB),'t_params%QMGAMTAB','init_t_params')
       allocate(t_params%ZAT(t_params%NATYP),stat=i_stat)
       call memocc(i_stat,product(shape(t_params%ZAT))*kind(t_params%ZAT),'t_params%ZAT','init_t_params')
-      allocate(t_params%R(t_params%IRM,t_params%NATYP),stat=i_stat)
-      call memocc(i_stat,product(shape(t_params%R))*kind(t_params%R),'t_params%R','init_t_params')
+      allocate(t_params%RMESH(t_params%IRM,t_params%NATYP),stat=i_stat)
+      call memocc(i_stat,product(shape(t_params%RMESH))*kind(t_params%RMESH),'t_params%RMESH','init_t_params')
       allocate(t_params%DRDI(t_params%IRM,t_params%NATYP),stat=i_stat)
       call memocc(i_stat,product(shape(t_params%DRDI))*kind(t_params%DRDI),'t_params%DRDI','init_t_params')
       allocate(t_params%RMTREF(t_params%NREF),stat=i_stat)
@@ -1108,16 +1108,16 @@ contains
       call memocc(i_stat,product(shape(t_params%NFU))*kind(t_params%NFU),'t_params%NFU','init_t_params')
       allocate(t_params%HOSTIMP(0:t_params%NATYP),stat=i_stat)
       call memocc(i_stat,product(shape(t_params%HOSTIMP))*kind(t_params%HOSTIMP),'t_params%HOSTIMP','init_t_params')
-      allocate(t_params%ILM(t_params%NGSHD,3),stat=i_stat)
-      call memocc(i_stat,product(shape(t_params%ILM))*kind(t_params%ILM),'t_params%ILM','init_t_params')
+      allocate(t_params%ILM_MAP(t_params%NGSHD,3),stat=i_stat)
+      call memocc(i_stat,product(shape(t_params%ILM_MAP))*kind(t_params%ILM_MAP),'t_params%ILM_MAP','init_t_params')
       allocate(t_params%IMAXSH(0:t_params%LMPOT),stat=i_stat)
       call memocc(i_stat,product(shape(t_params%IMAXSH))*kind(t_params%IMAXSH),'t_params%IMAXSH','init_t_params')
-      allocate(t_params%NPAN_LOGNEW(t_params%NATYP),stat=i_stat)
-      call memocc(i_stat,product(shape(t_params%NPAN_LOGNEW))*kind(t_params%NPAN_LOGNEW),'t_params%NPAN_LOGNEW','init_t_params')
-      allocate(t_params%NPAN_EQNEW(t_params%NATYP),stat=i_stat)
-      call memocc(i_stat,product(shape(t_params%NPAN_EQNEW))*kind(t_params%NPAN_EQNEW),'t_params%NPAN_EQNEW','init_t_params')
+      allocate(t_params%NPAN_LOG_AT(t_params%NATYP),stat=i_stat)
+      call memocc(i_stat,product(shape(t_params%NPAN_LOG_AT))*kind(t_params%NPAN_LOG_AT),'t_params%NPAN_LOG_AT','init_t_params')
+      allocate(t_params%NPAN_EQ_AT(t_params%NATYP),stat=i_stat)
+      call memocc(i_stat,product(shape(t_params%NPAN_EQ_AT))*kind(t_params%NPAN_EQ_AT),'t_params%NPAN_EQ_AT','init_t_params')
       allocate(t_params%NPAN_TOT(t_params%NATYP),stat=i_stat)
-      call memocc(i_stat,product(shape(t_params%NPAN_TOT))*kind(t_params%NPAN_TOT),'t_params%NPAN_EQNEW','init_t_params')
+      call memocc(i_stat,product(shape(t_params%NPAN_TOT))*kind(t_params%NPAN_TOT),'t_params%NPAN_EQ_AT','init_t_params')
       allocate(t_params%IPAN_INTERVALL(0:t_params%NTOTD,t_params%NATYP),stat=i_stat)
       call memocc(i_stat,product(shape(t_params%IPAN_INTERVALL))*kind(t_params%IPAN_INTERVALL),'t_params%IPAN_INTERVALL','init_t_params')
       allocate(t_params%NKCORE(20,t_params%NATYP),stat=i_stat)
@@ -1445,7 +1445,7 @@ contains
          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%ZAT,(t_params%NATYP),&
          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
-      call MPI_Bcast(t_params%R,(t_params%IRM*t_params%NATYP),&
+      call MPI_Bcast(t_params%RMESH,(t_params%IRM*t_params%NATYP),&
          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%DRDI,(t_params%IRM*t_params%NATYP),&
          MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr)
@@ -1643,13 +1643,13 @@ contains
          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%HOSTIMP,((t_params%NATYP+1)),&
          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
-      call MPI_Bcast(t_params%ILM,(t_params%NGSHD*3),&
+      call MPI_Bcast(t_params%ILM_MAP,(t_params%NGSHD*3),&
          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%IMAXSH,((t_params%LMPOT+1)),&
          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
-      call MPI_Bcast(t_params%NPAN_LOGNEW,(t_params%NATYP),&
+      call MPI_Bcast(t_params%NPAN_LOG_AT,(t_params%NATYP),&
          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
-      call MPI_Bcast(t_params%NPAN_EQNEW,(t_params%NATYP),&
+      call MPI_Bcast(t_params%NPAN_EQ_AT,(t_params%NATYP),&
          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%NPAN_TOT,(t_params%NATYP),&
          MPI_INTEGER,master,MPI_COMM_WORLD,ierr)
@@ -1968,8 +1968,8 @@ contains
       NCORE,IPAN,IRCUT,JEND,ICLEB,ATOM,CLS,NACLS,LOFLM,EZOA,KAOEZ,IQAT,ICPA,NOQ, &
       KMESH,NSHELL,NSH1,NSH2,IJTABCALC,IJTABCALC_I,IJTABSYM,IJTABSH,ISH,JSH,     &
       IQCALC,ICHECK,ATOMIMP,REFPOT,IRREL,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,&
-      IRNS,IFUNM,LLMSP,LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM,IMAXSH,NPAN_LOG,  &
-      NPAN_EQ,NPAN_LOGNEW,NPAN_EQNEW,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG, &
+      IRNS,IFUNM,LLMSP,LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM_MAP,IMAXSH,NPAN_LOG,  &
+      NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG, &
       TXC,RCLSIMP)
       ! fill arrays after they have been allocated in init_t_params
       !     ..
@@ -2111,10 +2111,10 @@ contains
       integer, dimension(NOFGIJ), intent(in)    :: IJTABSYM   !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
       integer, dimension(NATYP), intent(in)     :: NPAN_TOT
       integer, dimension(NOFGIJ), intent(in)    :: IJTABCALC  !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
-      integer, dimension(NATYP), intent(in)     :: NPAN_EQNEW
-      integer, dimension(NATYP), intent(in)     :: NPAN_LOGNEW
+      integer, dimension(NATYP), intent(in)     :: NPAN_EQ_AT
+      integer, dimension(NATYP), intent(in)     :: NPAN_LOG_AT
       integer, dimension(NOFGIJ), intent(in)    :: IJTABCALC_I
-      integer, dimension(NGSHD,3), intent(in)         :: ILM
+      integer, dimension(NGSHD,3), intent(in)         :: ILM_MAP
       integer, dimension(NSHELD,NOFGIJ), intent(in)   :: ISH
       integer, dimension(NSHELD,NOFGIJ), intent(in)   :: JSH
       integer, dimension(NATYP,LMXSPD), intent(in)    :: LMSP     !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
@@ -2168,7 +2168,7 @@ contains
       t_params%QMTETTAB       = QMTETTAB
       t_params%QMGAMTAB       = QMGAMTAB
       t_params%ZAT            = ZAT
-      t_params%R              = R
+      t_params%RMESH          = R
       t_params%DRDI           = DRDI
       t_params%RMTREF         = RMTREF
       t_params%VREF           = VREF
@@ -2248,12 +2248,12 @@ contains
       t_params%IRWS           = IRWS
       t_params%NFU            = NFU
       t_params%HOSTIMP        = HOSTIMP
-      t_params%ILM            = ILM
+      t_params%ILM_MAP            = ILM_MAP
       t_params%IMAXSH         = IMAXSH
       t_params%NPAN_LOG       = NPAN_LOG
       t_params%NPAN_EQ        = NPAN_EQ
-      t_params%NPAN_LOGNEW    = NPAN_LOGNEW
-      t_params%NPAN_EQNEW     = NPAN_EQNEW
+      t_params%NPAN_LOG_AT    = NPAN_LOG_AT
+      t_params%NPAN_EQ_AT     = NPAN_EQ_AT
       t_params%NPAN_TOT       = NPAN_TOT
       t_params%IPAN_INTERVALL = IPAN_INTERVALL
       t_params%SYMUNITARY     = SYMUNITARY
@@ -2404,7 +2404,7 @@ contains
       ALAT           = t_params%ALAT
       ZAT            = t_params%ZAT
       DRDI           = t_params%DRDI
-      RMESH          = t_params%R
+      RMESH          = t_params%RMESH
       RMTREF         = t_params%RMTREF
       VREF           = t_params%VREF
       IEND           = t_params%IEND
@@ -2424,8 +2424,8 @@ contains
       TMPDIR         = t_params%TMPDIR
       ITMPDIR        = t_params%ITMPDIR
       ILTMP          = t_params%ILTMP
-      NPAN_LOG       = t_params%NPAN_LOGNEW
-      NPAN_EQ        = t_params%NPAN_EQNEW
+      NPAN_LOG       = t_params%NPAN_LOG_AT
+      NPAN_EQ        = t_params%NPAN_EQ_AT
       NCHEB          = t_params%NCHEB
       R_LOG          = t_params%R_LOG
       NPAN_TOT       = t_params%NPAN_TOT
@@ -2910,7 +2910,7 @@ contains
       ALAT           = t_params%ALAT
       ZAT            = t_params%ZAT
       DRDI           = t_params%DRDI
-      RMESH          = t_params%R
+      RMESH          = t_params%RMESH
       A              = t_params%A
       B              = t_params%B
       IEND           = t_params%IEND
@@ -2937,8 +2937,8 @@ contains
       TMPDIR         = t_params%TMPDIR
       ITMPDIR        = t_params%ITMPDIR
       ILTMP          = t_params%ILTMP
-      NPAN_LOG       = t_params%NPAN_LOGNEW
-      NPAN_EQ        = t_params%NPAN_EQNEW
+      NPAN_LOG       = t_params%NPAN_LOG_AT
+      NPAN_EQ        = t_params%NPAN_EQ_AT
       NCHEB          = t_params%NCHEB
       R_LOG          = t_params%R_LOG
       NPAN_TOT       = t_params%NPAN_TOT
@@ -3017,7 +3017,7 @@ contains
       NFUND,LMPOT,NCELLD,IRM,NEMBD1,NEMB,IRMIND,NSRA,INS,NSPIN,IPAN,IRCUT,LCORE, &
       NCORE,LMAX,NTCELL,LPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,NATOMIMP,ATOMIMP,IMIX, &
       QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD,KXC,ICC,ISHIFT,IXIPOL,KFORCE, &
-      IFUNM,LMSP,IMT,IRC,IRMIN,IRWS,LLMSP,ITITLE,NFU,HOSTIMP,ILM,IMAXSH,IELAST,  &
+      IFUNM,LMSP,IMT,IRC,IRMIN,IRWS,LLMSP,ITITLE,NFU,HOSTIMP,ILM_MAP,IMAXSH,IELAST,  &
       NPOL,NPNT1,NPNT2,NPNT3,ITSCF,SCFSTEPS,IESEMICORE,KAOEZ,IQAT,NOQ,LLY,       &
       NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,ZREL,JWSREL,IRSHIFT,MIXING,LAMBDA_XC,A,B,    &
       THETAS,DRDI,R,ZAT,RMT,RMTNEW,RWS,EMIN,EMAX,TK,ALAT,EFOLD,CHRGOLD,CMOMHOST, &
@@ -3097,7 +3097,7 @@ contains
       integer, dimension(0:NATYP), intent(inout)   :: HOSTIMP
       integer, dimension(NATYP), intent(inout)     :: IRSHIFT
       integer, dimension(NATOMIMPD), intent(inout) :: ATOMIMP
-      integer, dimension(NGSHD,3), intent(inout)         :: ILM
+      integer, dimension(NGSHD,3), intent(inout)         :: ILM_MAP
       integer, dimension(NATYP,LMXSPD), intent(inout)    :: LMSP
       integer, dimension(20,NPOTD), intent(inout)        :: LCORE
       integer, dimension(NATYP,NFUND), intent(inout)     :: LLMSP
@@ -3202,7 +3202,7 @@ contains
       A         = t_params%A
       B         = t_params%B
       DRDI      = t_params%DRDI
-      R         = t_params%R
+      R         = t_params%RMESH
       THETAS    = t_params%THETAS
       ZAT       = t_params%ZAT
       IFUNM     = t_params%IFUNM
@@ -3224,7 +3224,7 @@ contains
       NOQ       = t_params%NOQ
       CONC      = t_params%CONC
       GSH       = t_params%GSH
-      ILM       = t_params%ILM
+      ILM_MAP       = t_params%ILM_MAP
       IMAXSH    = t_params%IMAXSH
       LLY       = t_params%LLY
       !-------------------------------------------------------------------------

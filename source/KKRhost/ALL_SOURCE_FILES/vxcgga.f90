@@ -31,7 +31,7 @@
 !> - Jonathan Chico: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 subroutine VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,IRWS,IRCUT,IPAN,&
-   KSHAPE,GSH,ILM,IMAXSH,IFUNM,THETAS,WTYR,IJEND,LMSP,THET,YLM,DYLMT1,DYLMT2,    &
+   KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNM,THETAS,WTYR,IJEND,LMSP,THET,YLM,DYLMT1,DYLMT2,    &
    DYLMF1,DYLMF2,DYLMTF,LMPOT,LMXSPD,LMMAX,IRM,LPOT,NATYP)
 
    use Constants
@@ -61,7 +61,7 @@ subroutine VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,IRWS,IRCUT,IPAN
    integer, dimension(0:IPAND), intent(in)   :: IRCUT !< R points of panel borders
    integer, dimension(LMXSPD), intent(in)    :: IFUNM
    integer, dimension(0:LMPOT), intent(in)   :: IMAXSH
-   integer, dimension(NGSHD,3), intent(in)   :: ILM
+   integer, dimension(NGSHD,3), intent(in)   :: ILM_MAP
    double precision, dimension(IRM), intent(in)    :: R  !< IATYP entry of the radial mesh ( in units a Bohr)
    double precision, dimension(NGSHD), intent(in)  :: GSH
    double precision, dimension(IRM), intent(in)    :: DRDI !< IATYP entry of the derivative dr/di
@@ -284,9 +284,9 @@ subroutine VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A,IRWS,IRCUT,IPAN
                ! Convolute with shape function
                !----------------------------------------------------------------
                do J = IMAXSH(LM-1) + 1,IMAXSH(LM)
-                  LM2 = ILM(J,2)
-                  if (LMSP(ILM(J,3)).GT.0) then
-                     IFUN = IFUNM(ILM(J,3))
+                  LM2 = ILM_MAP(J,2)
+                  if (LMSP(ILM_MAP(J,3)).GT.0) then
+                     IFUN = IFUNM(ILM_MAP(J,3))
                      do IR = IRS1 + 1,IRC1
                         IRH = IR - IRS1
                         ER(IR,L) = ER(IR,L) + RHO2NS(IR,LM,1)*GSH(J)*   &

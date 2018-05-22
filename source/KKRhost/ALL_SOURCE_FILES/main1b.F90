@@ -22,13 +22,7 @@ contains
    !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
    !> and many others ...
    !----------------------------------------------------------------------------
-   subroutine main1b(NR,IRM,LLY,ICC,IGF,INS,NPOL,LMAX,NREF,NSRA,NCLS,NCPA,NEMB,  &
-      NAEZ,NATYP,NCLSD,NSPIN,KMROT,LMMAXD,IELAST,INVMOD,NSYMAT,NEMBD1,LMGF0D,    &
-      NOFGIJ,NQCALC,NSPINDD,NLBASIS,NRBASIS,MAXMESH,NATOMIMP,ITCPAMAX,ALAT,      &
-      CPATOL,NOQ,CLS,IQAT,NSH1,NSH2,ICPA,NACLS,NSHELL,REFPOT,ATOMIMP,EZOA,ATOM,  &
-      KAOEZ,ICHECK,CONC,RMTREF,RR,RATOM,RBASIS,RROT,RCLS,SYMUNITARY,KMESH,IQCALC,&
-      IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,NRREL,IRREL,VREF,RCLSIMP,RC,RREL,   &
-      CREL,SRREL,DROTQ,DSYMLL,VACFLAG)
+   subroutine main1b()
 
       use mod_types, only: t_tgmat,t_inc,t_lloyd,t_cpa,init_t_cpa,t_imp
 #ifdef CPP_MPI
@@ -48,6 +42,7 @@ contains
       use global_variables
       use mod_tbxccpljijdij, only: tbxccpljijdij
 
+      use mod_main0
 
       implicit none
       !
@@ -62,83 +57,6 @@ contains
       !          (l,m_l)-representation
       !
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !    ..
-      ! .. Input variables
-      integer, intent(inout) :: NR           !< Number of real space vectors rr
-      integer, intent(inout) :: IRM          !< Maximum number of radial points
-      integer, intent(inout) :: LLY          !< LLY <> 0 : apply Lloyd's formula
-      integer, intent(inout) :: ICC          !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-      integer, intent(inout) :: IGF          !< Do not print or print (0/1) the KKRFLEX_* files
-      integer, intent(inout) :: INS          !< 0 (MT), 1(ASA), 2(Full Potential)
-      integer, intent(inout) :: NPOL         !< Number of Matsubara Poles (EMESHT)
-      integer, intent(inout) :: LMAX         !< Maximum l component in wave function expansion
-      integer, intent(inout) :: NREF         !< Number of diff. ref. potentials
-      integer, intent(inout) :: NSRA
-      integer, intent(inout) :: NCLS         !< Number of reference clusters
-      integer, intent(inout) :: NCPA         !< NCPA = 0/1 CPA flag
-      integer, intent(inout) :: NEMB         !< Number of 'embedding' positions
-      integer, intent(inout) :: NAEZ         !< Number of atoms in unit cell
-      integer, intent(inout) :: NATYP        !< Number of kinds of atoms in unit cell
-      integer, intent(inout) :: NCLSD        !< Maximum number of different TB-clusters
-      integer, intent(inout) :: NSPIN        !< Counter for spin directions
-      integer, intent(inout) :: KMROT        !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-      integer, intent(inout) :: LMMAXD       !< (KREL+KORBIT+1)(LMAX+1)^2
-      integer, intent(inout) :: IELAST
-      integer, intent(inout) :: INVMOD       !< Inversion scheme
-      integer, intent(inout) :: NSYMAT
-      integer, intent(inout) :: NEMBD1       !< NEMB+1
-      integer, intent(inout) :: LMGF0D       !< (LMAX+1)**2
-      integer, intent(inout) :: NOFGIJ       !< number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
-      integer, intent(inout) :: NQCALC
-      integer, intent(inout) :: NSPINDD      !< NSPIND-KORBIT
-      integer, intent(inout) :: NLBASIS      !< Number of basis layers of left host (repeated units)
-      integer, intent(inout) :: NRBASIS      !< Number of basis layers of right host (repeated units)
-      integer, intent(inout) :: MAXMESH
-      integer, intent(inout) :: NATOMIMP     !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-      integer, intent(inout) :: ITCPAMAX     !< Max. number of CPA iterations
-      double precision, intent(inout) :: ALAT      !< Lattice constant in a.u.
-      double precision, intent(inout) :: CPATOL    !< Convergency tolerance for CPA-cycle
-      integer, dimension(NAEZ), intent(inout)      :: NOQ         !< Number of diff. atom types located
-      integer, dimension(NAEZ+NEMB), intent(inout) :: CLS         !< Cluster around atomic sites
-      integer, dimension(NATYP), intent(inout)     :: IQAT        !< The site on which an atom is located on a given site
-      integer, dimension(NSHELD), intent(inout)    :: NSH1        !< Corresponding index of the sites I/J in (NSH1/2) in the unit cell in a shell
-      integer, dimension(NSHELD), intent(inout)    :: NSH2        !< Corresponding index of the sites I/J in (NSH1/2) in the unit cell in a shell
-      integer, dimension(NAEZ), intent(inout)      :: ICPA        !< ICPA = 0/1 site-dependent CPA flag
-      integer, dimension(NCLSD), intent(inout)     :: NACLS       !< Number of atoms in cluster
-      integer, dimension(0:NSHELD), intent(inout)  :: NSHELL      !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
-      integer, dimension(NAEZ+NEMB), intent(inout) :: REFPOT      !< Ref. pot. card  at position
-      integer, dimension(NATOMIMP), intent(inout)  :: ATOMIMP
-      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout)            :: EZOA  !< EZ of atom at site in cluster
-      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout)            :: ATOM  !< Atom at site in cluster
-      integer, dimension(NATYP,NAEZ+NEMB), intent(inout)             :: KAOEZ !< Kind of atom at site in elem. cell
-      integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(inout)   :: ICHECK
-      double precision, dimension(NATYP), intent(inout)              :: CONC     !< Concentration of a given atom
-      double precision, dimension(NREF), intent(inout)               :: RMTREF   !< Muffin-tin radius of reference system
-      double precision, dimension(3,0:NR), intent(inout)             :: RR       !< Set of real space vectors (in a.u.)
-      double precision, dimension(3,NSHELD), intent(inout)           :: RATOM
-      double precision, dimension(3,NAEZ+NEMB), intent(inout)        :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
-      double precision, dimension(48,3,NSHELD), intent(inout)        :: RROT
-      double precision, dimension(3,NACLSD,NCLSD), intent(inout)     :: RCLS  !< Real space position of atom in cluster
-      logical, dimension(2), intent(inout) :: VACFLAG
-      logical, dimension(NSYMAXD), intent(inout) :: SYMUNITARY !< unitary/antiunitary symmetry flag
-      integer, dimension(IEMXD), intent(inout)  :: KMESH
-      integer, dimension(NAEZ), intent(inout)   :: IQCALC
-      integer, dimension(NOFGIJ), intent(inout) :: IJTABSH    !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
-      integer, dimension(NOFGIJ), intent(inout) :: IJTABSYM   !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
-      integer, dimension(NOFGIJ), intent(inout) :: IJTABCALC  !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
-      integer, dimension(NOFGIJ), intent(inout) :: IJTABCALC_I
-      integer, dimension(2,LMMAXD), intent(inout)        :: NRREL
-      integer, dimension(2,2,LMMAXD), intent(inout)      :: IRREL
-      double precision, dimension(NREF), intent(inout)         :: VREF
-      double precision, dimension(3,NATOMIMPD), intent(inout)  :: RCLSIMP
-
-      double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: RC    !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-      double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: RREL  !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
-      double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: CREL  !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-      double complex, dimension(2,2,LMMAXD), intent(inout)              :: SRREL
-      double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(inout)      :: DROTQ !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-      double complex, dimension(LMMAXD,LMMAXD,NSYMAXD), intent(inout)   :: DSYMLL
-      ! ..
       ! .. Local variables
       integer :: L
       integer :: I
@@ -190,12 +108,10 @@ contains
       integer, dimension(MAXMSHD)   :: NOFKS
       integer, dimension(IEMXD)     :: IECPAFAIL
       integer, dimension(NATYP,NAEZ) :: ITOQ
-      double precision, dimension(NATYP)     :: PHIS
+      double precision, dimension(NATYP)     :: PHI_AT
       double precision, dimension(MAXMSHD)   :: VOLBZ
-      double precision, dimension(NATYP)     :: THETAS
+      double precision, dimension(NATYP)     :: THETA_AT
       double precision, dimension(KPOIBZ,MAXMSHD) :: VOLCUB
-      double complex, dimension(IEMXD) :: EZ
-      double complex, dimension(IEMXD) :: WEZ
       double complex, dimension(IEMXD) :: LLY_G0TR             !< LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
       double complex, dimension(IEMXD) :: TRALPHAREF           ! LLY Lloyd
       double complex, dimension(IEMXD) :: CDOSREF_LLY          ! LLY Lloyd
@@ -219,18 +135,16 @@ contains
       double complex, dimension(LMMAXD,LMMAXD,NREF)   :: DTREFLL  !< LLY Lloyd dtref/dE
       double complex, dimension(LMMAXD,LMMAXD,NAEZ)   :: DTMATLL  !< LLY Lloyd  dt/dE
       complex*8, dimension(LMMAXD*LMMAXD) :: GIMP !<  Cluster GF (ref. syst.)
-      character(len=35), dimension(0:2) :: INVALG
+      character(len=35), dimension(0:2), parameter :: INVALG=(/'FULL MATRIX',   &
+                                                               'BANDED MATRIX (slab)               ',    &
+                                                               'BANDED + CORNERS MATRIX (supercell)' /)
 
       ! .. Allocatable local arrays
-      integer, dimension(:,:), allocatable :: ISH
-      integer, dimension(:,:), allocatable :: JSH
       double precision, dimension(:,:), allocatable   :: QVEC     !< qdos ruess, q-vectors for qdos
       double precision, dimension(:,:,:), allocatable :: BZKP
       double complex, dimension(:,:), allocatable     :: DTMTRX   !< For GREENIMP
       double complex, dimension(:,:,:), allocatable   :: GINP     !< Cluster GF (ref syst.) GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
       double complex, dimension(:,:,:), allocatable   :: DGINP    !< LLY Lloyd Energy derivative of GINP DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
-      double complex, dimension(:,:,:,:,:), allocatable :: LEFTTINVLL
-      double complex, dimension(:,:,:,:,:), allocatable :: RIGHTTINVLL
 
 #ifdef CPP_MPI
       integer :: ie_start
@@ -252,9 +166,6 @@ contains
       LRECGREEN=WLENGTH*2*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD
       !     ..
       !     .. Data statements
-      DATA INVALG /'FULL MATRIX                        ',   &
-                  'BANDED MATRIX (slab)               ',    &
-                  'BANDED + CORNERS MATRIX (supercell)' /
       DATA IPRINT / 0 /
       !     ..
       if(t_inc%i_write>0) IPRINT=1
@@ -262,14 +173,6 @@ contains
       ! allocatable arrays
       allocate(BZKP(3,KPOIBZ,MAXMSHD), stat=i_stat)
       call memocc(i_stat,product(shape(BZKP))*kind(BZKP),'BZKP','main1b')
-      allocate(LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), stat=i_stat)
-      call memocc(i_stat,product(shape(LEFTTINVLL))*kind(LEFTTINVLL),'LEFTTINVLL','main1b')
-      allocate(RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), stat=i_stat)
-      call memocc(i_stat,product(shape(RIGHTTINVLL))*kind(RIGHTTINVLL),'RIGHTTINVLL','main1b')
-      allocate(ISH(NSHELD,NOFGIJ), stat=i_stat)
-      call memocc(i_stat,product(shape(ISH))*kind(ISH),'ISH','main1b')
-      allocate(JSH(NSHELD,NOFGIJ), stat=i_stat)
-      call memocc(i_stat,product(shape(JSH))*kind(JSH),'JSH','main1b')
       !Consistency check
       if ( (KREL.LT.0) .OR. (KREL.GT.1) ) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
       if ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
@@ -355,8 +258,12 @@ contains
       CFCTORINV = CONE/RFCTOR
 
       call SETFACTL(FACTL,LMAX,KREL,LMMAXD)
-      !
-      if(t_inc%i_write>0) write(1337,2100) INVALG(INVMOD)
+
+      if(t_inc%i_write>0) then
+         write(1337, '(79(1H=))')
+         write(1337, '(2A)') "      Inversion algorithm used : ", INVALG(INVMOD)
+         write(1337, '(79(1H=))')
+      end if
 
       NACLSMAX = 1
       do IC = 1,NCLS
@@ -840,7 +747,7 @@ contains
       else ! NEW SOC SOLVER
 
          ! nonco angles
-         call read_angles(t_params,NATYP,THETAS,PHIS)
+         call read_angles(t_params,NATYP,THETA_AT,PHI_AT)
 
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          ! SOC
@@ -910,8 +817,8 @@ contains
             do I1 = 1,NATYP
 
                ! read in theta and phi for noncolinear
-               THETA = THETAS(I1)
-               PHI   = PHIS(I1)
+               THETA = THETA_AT(I1)
+               PHI   = PHI_AT(I1)
 
                ! read in t-matrix from file
                IREC = IE + IELAST*(I1-1)
@@ -1230,7 +1137,7 @@ contains
                NPOL)
          else !.NOT.OPT('NEWSOSOL'))
             call TBXCCPLJIJDIJ(naez,natyp,lmmaxd,lmgf0d,natomimpd, &
-               iemxd,thetas,phis,                            &
+               iemxd,THETA_AT,PHI_AT,                            &
                natomimp,atomimp,nofgij,iqat,rclsimp,                &
                ijtabcalc,ijtabcalc_I,ijtabsh,                        &
                ijtabsym,                                             &
@@ -1304,7 +1211,7 @@ contains
                t_params%IRCUT,                                             &
                t_imp%IRCUTIMP(0:t_params%IPAND,1:t_imp%NATOMIMP),          &
                t_params%ZAT,t_imp%ZIMP(1:t_imp%NATOMIMP),       &
-               t_params%R,t_params%CLEB(1,1),                              &
+               t_params%RMESH,t_params%CLEB(1,1),                              &
                t_imp%RIMP(1:t_params%IRM,1:t_imp%NATOMIMP),               &
                t_params%RCLSIMP,EZ(IE),t_params%VISP,t_imp%VISPIMP,        &
                t_params%VINS,t_imp%VINSIMP,DTMTRX)
@@ -1350,31 +1257,8 @@ contains
          close(9999)
       endif
 
-      ! clean up allocations
-      i_all=-product(shape(LEFTTINVLL))*kind(LEFTTINVLL)
-      deallocate(LEFTTINVLL,stat=i_stat)
-      call memocc(i_stat,i_all,'LEFTTINVLL','main1b')
-      i_all=-product(shape(RIGHTTINVLL))*kind(RIGHTTINVLL)
-      deallocate(RIGHTTINVLL,stat=i_stat)
-      call memocc(i_stat,i_all,'RIGHTTINVLL','main1b')
-      i_all=-product(shape(BZKP))*kind(BZKP)
-      deallocate(BZKP,stat=i_stat)
-      call memocc(i_stat,i_all,'BZKP','main1b')
-      if(opt('qdos    ')) then
-         i_all=-product(shape(qvec))*kind(qvec)
-         deallocate(qvec, stat=i_stat)
-         call memocc(i_stat,i_all,'qvec','main1b')
-      end if
-      i_all=-product(shape(ISH))*kind(ISH)
-      deallocate(ISH,stat=i_stat)
-      call memocc(i_stat,i_all,'ISH','main1b')
-      i_all=-product(shape(JSH))*kind(JSH)
-      deallocate(JSH,stat=i_stat)
-      call memocc(i_stat,i_all,'JSH','main1b')
-
       if(t_inc%i_write>0) write (1337,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
 
-2100 FORMAT('(/,79(1H=),/,5X," Inversion algorithm used : ",A,/,79(1H=),/)')
 99019 FORMAT('(/,1X,79(*),/," tolerance for CPA-cycle:",F15.7,/," CPA not converged for",I3," energies:",/,3(" E:",I3,F7.4,:,2X))')
 99020 FORMAT('(/,1X,79(*),/,25X,"no problems with","  CPA-cycle ",/,1X,79(*),/)')
 

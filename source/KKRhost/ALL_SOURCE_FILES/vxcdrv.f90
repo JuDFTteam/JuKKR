@@ -6,7 +6,7 @@
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 subroutine VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,NSTART,NEND,RHO2NS,VONS,R,DRDI,A,IRWS,  &
-   IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM,IMAXSH,IFUNM,THETAS,LMSP,NPOTD,LMPOT,LMXSPD, &
+   IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP,NPOTD,LMPOT,LMXSPD, &
    IRM,NATYP,LMMAXD)
 
    use global_variables
@@ -38,7 +38,7 @@ subroutine VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,NSTART,NEND,RHO2NS,VONS,R,DRDI,A,IRWS, 
    integer, dimension(NATYP), intent(in)           :: IPAN   !< Number of panels in non-MT-region
    integer, dimension(NATYP), intent(in)           :: NTCELL !< index for WS cell
    integer, dimension(0:LMPOT), intent(in)         :: IMAXSH
-   integer, dimension(NGSHD,3), intent(in)         :: ILM
+   integer, dimension(NGSHD,3), intent(in)         :: ILM_MAP
    integer, dimension(NATYP,LMXSPD), intent(in)    :: LMSP   !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
    integer, dimension(NATYP,LMXSPD), intent(in)    :: IFUNM
    integer, dimension(0:IPAND,NATYP), intent(in)   :: IRCUT  !< r points of panel borders
@@ -89,7 +89,7 @@ subroutine VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,NSTART,NEND,RHO2NS,VONS,R,DRDI,A,IRWS, 
       if (KXC.LT.3) then
          call VXCLM(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2IAT,VONS(1,1,IPOT),      &
             R(1,IATYP),DRDI(1,IATYP), IRWS(IATYP),IRCUT(0,IATYP),IPAN(IATYP), &
-            KSHAPE,GSH,ILM,IMAXSH,IFUNMIAT,THETAS(1,1,ICELL), YR,WTYR,IJD,    &
+            KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNMIAT,THETAS(1,1,ICELL), YR,WTYR,IJD,    &
             LMSPIAT,LMPOT,LMXSPD,LMMAXD,IRM,LPOT,NATYP)
       else
          !----------------------------------------------------------------------
@@ -97,7 +97,7 @@ subroutine VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,NSTART,NEND,RHO2NS,VONS,R,DRDI,A,IRWS, 
          !----------------------------------------------------------------------
          call VXCGGA(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2IAT,VONS(1,1,IPOT),     &
             R(1,IATYP),DRDI(1,IATYP),A(IATYP),IRWS(IATYP),IRCUT(0,IATYP),     &
-            IPAN(IATYP),KSHAPE,GSH,ILM,IMAXSH,IFUNMIAT,THETAS(1,1,ICELL),WTYR,&
+            IPAN(IATYP),KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNMIAT,THETAS(1,1,ICELL),WTYR,&
             IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF,LMPOT,    &
             LMXSPD,LMMAXD,IRM,LPOT,NATYP)
       end if

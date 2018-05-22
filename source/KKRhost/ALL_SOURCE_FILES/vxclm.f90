@@ -31,7 +31,7 @@
 !> - Jonathan Chico: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 subroutine VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,IRWS,IRCUT,IPAN,   &
-   KSHAPE,GSH,ILM,IMAXSH,IFUNM,THETAS,YR,WTYR,IJEND,LMSP,LMPOT,LMXSPD,LMMAX,IRM, &
+   KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNM,THETAS,YR,WTYR,IJEND,LMSP,LMPOT,LMXSPD,LMMAX,IRM, &
    LPOT,NATYP)
 
    use Constants
@@ -60,7 +60,7 @@ subroutine VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,IRWS,IRCUT,IPAN,  
    integer, dimension(0:IPAND), intent(in)   :: IRCUT !< R points of panel borders
    integer, dimension(LMXSPD), intent(in)    :: IFUNM
    integer, dimension(0:LMPOT), intent(in)   :: IMAXSH
-   integer, dimension(NGSHD,3), intent(in)   :: ILM
+   integer, dimension(NGSHD,3), intent(in)   :: ILM_MAP
    double precision, dimension(IRM), intent(in)          :: R        !< Radial mesh ( in units a Bohr)
    double precision, dimension(IJEND,LMPOT), intent(in)  :: YR
    double precision, dimension(NGSHD), intent(in)        :: GSH
@@ -217,9 +217,9 @@ subroutine VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,IRWS,IRCUT,IPAN,  
                ! Convolute with shape function
                !----------------------------------------------------------------
                do J = IMAXSH(LM-1) + 1,IMAXSH(LM)
-                  LM2 = ILM(J,2)
-                  if (LMSP(ILM(J,3)).GT.0) then
-                     IFUN = IFUNM(ILM(J,3))
+                  LM2 = ILM_MAP(J,2)
+                  if (LMSP(ILM_MAP(J,3)).GT.0) then
+                     IFUN = IFUNM(ILM_MAP(J,3))
                      do IR = IRS1 + 1,IRC1
                         IRH = IR - IRS1
                         ER(IR,L) = ER(IR,L) + RHO2NS(IR,LM,1)*GSH(J)*   &
