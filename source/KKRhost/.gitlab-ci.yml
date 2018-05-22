@@ -102,6 +102,17 @@ build:intel:debug:
       - kkr.x_debug
     expire_in: 1 day
 
+build:intel:ompdebug:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make ompdebug; cp kkr.x kkr.x_ompdebug
+  artifacts:
+    paths:
+      - kkr.x_ompdebug
+    expire_in: 1 day
+
 build:intel:mpidebug:
   stage: build
   script:
@@ -113,6 +124,16 @@ build:intel:mpidebug:
       - kkr.x_mpidebug
     expire_in: 1 day
 
+build:intel:hybriddebug:
+  stage: build
+  script:
+    # compile code
+    - cp tests/inc.p .
+    - make clean; make hybriddebug; cp kkr.x kkr.x_hybriddebug
+  artifacts:
+    paths:
+      - kkr.x_hybriddebug
+    expire_in: 1 day
 
 ###############################################################################
 

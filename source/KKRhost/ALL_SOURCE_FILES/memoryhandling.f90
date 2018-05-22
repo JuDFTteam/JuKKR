@@ -109,7 +109,7 @@ contains
          IMT = 0
          allocate(KFG(4,NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(KFG))*kind(KFG),'KFG','allocate_cell')
-         IMT = 0
+         KFG = 0
          allocate(LMXC(NATYP),stat=i_stat)
          call memocc(i_stat,product(shape(LMXC))*kind(LMXC),'LMXC','allocate_cell')
          LMXC = 0

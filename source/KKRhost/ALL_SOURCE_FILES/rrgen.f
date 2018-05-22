@@ -105,7 +105,7 @@ C
 C
                   IF ( NR.GT.NRD ) THEN
                      WRITE (6,*) 'Dimension ERROR. Please, change the ',
-     &                           'parameter NRD in inc.p to ',NR
+     &                           'parameter NRD in inc.p to ',NR, NRD
                      STOP
                   END IF
 C

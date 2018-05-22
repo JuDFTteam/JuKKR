@@ -838,13 +838,6 @@ contains
          write(111,*) 'Default KVREL= ',KVREL
       endif
 
-      ! Set KREL value depending on KVREL
-      if (KVREL.ne.0) then
-         KREL=1
-      else
-         KREL=0
-      endif
-
       call IoInput('KORBIT          ',UIO,1,7,IER)
       if (IER.EQ.0) then
          read (UNIT=UIO,FMT=*) KORBIT

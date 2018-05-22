@@ -36,7 +36,7 @@ module mod_main0
 
    implicit none
 
-   integer :: NR        !< Number of real space vectors rr
+   integer :: NR, NRD        !< Number of real space vectors rr
    integer :: KTE       !< Calculation of the total energy On/Off (1/0)
    integer :: KWS       !< 0 (MT), 1(ASA)
    integer :: KXC       !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
@@ -478,12 +478,6 @@ contains
       !-------------------------------------------------------------------------
       ! End write version info
       !-------------------------------------------------------------------------
-
-      !Consistency check
-      if ( (KREL.lt.0) .OR. (KREL.gt.1) ) &
-         stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
-      if ( (KREL.eq.1) .and. (NSPIND.eq.2) )&
-         stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
       !
       ! Set the default values for the I/O variables
       call init_io_variables()
@@ -514,7 +508,6 @@ contains
       ! Set the default values for the angular momentum related variables
       call init_angular_momentum_variables()
 
-      !CALL RINIT(NAEZ,QMGAM) ! This is now handled in the allocation routine
       ! allocate and initialize testc and optc in t_params for run and test options
       allocate(t_params%OPTC(32), stat=i_stat) !CHARACTER*8
       call memocc(i_stat,product(shape(t_params%OPTC))*kind(t_params%OPTC),'t_params%OPTC','main0')
@@ -542,6 +535,12 @@ contains
          FPRADIUS,TLEFT,TRIGHT,RBASIS,SOCSCALE,CSCL,SOCSCL,SOLVER,I12,I13,I19,I25,  &
          I40,TXC,DROTQ,NCPA,ITCPAMAX,CPATOL,NOQ,IQAT,ICPA,KAOEZ,CONC,KMROT,QMTET,   &
          QMPHI,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU,NTOTD)
+
+      !Some consistency checks
+      if ( (KREL.lt.0) .OR. (KREL.gt.1) ) &
+         stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
+      if ( (KREL.eq.1) .and. (NSPIND.eq.2) )&
+         stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
 
       ! Set the calculation of several parameters
       NTOTD=IPAND+30
@@ -603,8 +602,9 @@ contains
       ! Deal with the lattice
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+      NRD = NR ! needed otherwise array dimension is overwritten
       call LATTIX99(LINTERFACE,ALAT,NATYP,NAEZ,CONC,RWS,BRAVAIS,RECBV,VOLUME0,RR,&
-         NR,NR,NATYP)
+         NR,NRD,NATYP)
 
       call SCALEVEC(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,NLBASIS,NRBASIS,NLEFT,&
          NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,     &
@@ -618,10 +618,11 @@ contains
          .TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,I25)
       endif
 
+      write(*,*) 'CLSGEN_TB', NAEZ, NEMB, NVIRT, NR, ZAT, CLS, NCLS, NACLS, NLBASIS, NRBASIS, NLEFT, NRIGHT, NREF, LINTERFACE, NAEZ, NATYP, NEMB, NPRINCD, NRD, NACLSD, NCLSD, NREF
       call CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,ATOM, &
          EZOA,NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,RMTREF,&
          RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,NAEZ,NATYP, &
-         NEMB,NPRINCD,NR,NACLSD,NCLSD,NREF)
+         NEMB,NPRINCD,NRD,NACLSD,NCLSD,NREF)
 
       ! Now the clusters, reference potentials and muffin-tin radii have been set.
       !-------------------------------------------------------------------------
@@ -1351,370 +1352,370 @@ contains
          end do
       end do
 
-      end subroutine bshift_ns
+   end subroutine bshift_ns
 
-      !-------------------------------------------------------------------------
-      ! SUBROUTINE: init_misc_variables
-      !> @brief Set default values for misc variables for the calculation
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 22.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_misc_variables()
+   !-------------------------------------------------------------------------
+   ! SUBROUTINE: init_misc_variables
+   !> @brief Set default values for misc variables for the calculation
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 22.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_misc_variables()
 
-         implicit none
+      implicit none
 
-         IPE         = 0
-         IPF         = 0
-         IPFE        = 0
-         KCOR        = 0
-         KEFG        = 0
-         KHYP        = 0
-         KPRE        = 0
-         NSRA        = 1
-         IEND        = 1
-         IREC        = 0
-         NVIRT       = 0
-         KVMAD       = 0
-         ITSCF       = 0
-         NSHELD      = 301 ! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
-         INVMOD      = 2   ! Corner band matrix inversion scheme
-         IELAST      = 0
-         ISHIFT      = 0
-         KFROZN      = 0
-         NSYMAT      = 0
-         NQCALC      = 0
-         KFORCE      = 0   ! Calculation of the forces
-         LRECABMAD   = 0
-         PARA        = .True.
-         LRHOSYM     = .False.
+      IPE         = 0
+      IPF         = 0
+      IPFE        = 0
+      KCOR        = 0
+      KEFG        = 0
+      KHYP        = 0
+      KPRE        = 0
+      NSRA        = 1
+      IEND        = 1
+      IREC        = 0
+      NVIRT       = 0
+      KVMAD       = 0
+      ITSCF       = 0
+      NSHELD      = 301 ! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
+      INVMOD      = 2   ! Corner band matrix inversion scheme
+      IELAST      = 0
+      ISHIFT      = 0
+      KFROZN      = 0
+      NSYMAT      = 0
+      NQCALC      = 0
+      KFORCE      = 0   ! Calculation of the forces
+      LRECABMAD   = 0
+      PARA        = .True.
+      LRHOSYM     = .False.
 
-      end subroutine init_misc_variables
+   end subroutine init_misc_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_relativistic_variables
-      !> @brief set default values for the relativistic variables
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 26.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_relativistic_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_relativistic_variables
+   !> @brief set default values for the relativistic variables
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 26.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_relativistic_variables()
 
-         implicit none
+      implicit none
 
-         KREL        = 1      ! Switch for non-relativistic/relativistic program (0/1) or relativistic. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
-         KVREL       = 1      ! Scalar-relativistic calculation
-         KORBIT      = 0      ! No spin-orbit coupling
-         LNC         = .True. ! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
+      KREL        = 0      ! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+      KVREL       = 1      ! Scalar-relativistic calculation
+      KORBIT      = 0      ! No spin-orbit coupling
+      LNC         = .True. ! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
 
-      end subroutine init_relativistic_variables
+   end subroutine init_relativistic_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_cluster_variables
-      !> @brief set default values for the cluster variables
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 26.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_cluster_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_cluster_variables
+   !> @brief set default values for the cluster variables
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 26.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_cluster_variables()
 
-         implicit none
+      implicit none
 
-         NCLSD       = 2                                          ! NAEZD + NEMBD maximum number of different TB-clusters
-         NACLSD      = 500                                        ! Maximum number of atoms in a TB-cluster
-         NOFGIJ      = 2                                          ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
-         NATOMIMP    = 1                                          ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-         NATOMIMPD   = 1                                          ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-         I25         = 'scoef                                   ' ! Default name of scoef file
+      NCLSD       = 2                                          ! NAEZD + NEMBD maximum number of different TB-clusters
+      NACLSD      = 500                                        ! Maximum number of atoms in a TB-cluster
+      NOFGIJ      = 2                                          ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
+      NATOMIMP    = 1                                          ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+      NATOMIMPD   = 1                                          ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+      I25         = 'scoef                                   ' ! Default name of scoef file
 
-      end subroutine init_cluster_variables
+   end subroutine init_cluster_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_io_variables
-      !> @brief set default values for the I/O variables
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 26.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_io_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_io_variables
+   !> @brief set default values for the I/O variables
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 26.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_io_variables()
 
-         implicit none
+      implicit none
 
-         IGF         = 0   ! Not printing the Green functions
-         ICC         = 0   ! Not printing the Green functions
-         WLENGTH     = 1   ! Word length for direct access files, compiler dependent ifort/others (1/4)
-         I12         = '                                        '
-         I40         = '                                        '
+      IGF         = 0   ! Not printing the Green functions
+      ICC         = 0   ! Not printing the Green functions
+      WLENGTH     = 1   ! Word length for direct access files, compiler dependent ifort/others (1/4)
+      I12         = '                                        '
+      I40         = '                                        '
 
-      end subroutine init_io_variables
+   end subroutine init_io_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_cell_variables
-      !> @brief set default values for the unit cell variables
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 26.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_cell_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_cell_variables
+   !> @brief set default values for the unit cell variables
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 26.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_cell_variables()
 
-         implicit none
+      implicit none
 
-         NAEZ        = 1         ! Number of atoms in the unit cell
-         NEMB        = 1         ! Number of embedded atoms
-         NCLS        = 1         ! Number of clusters
-         NATYP       = 1         ! Number of kinds of atoms in the unit cell
-         NINEQ       = 1
-         ALAT        = 1.0D0     ! Lattice constant in a.u.
-         ABASIS      = 1.0D0     ! Scaling factors for rbasis
-         BBASIS      = 1.0D0     ! Scaling factors for rbasis
-         CBASIS      = 1.0D0     ! Scaling factors for rbasis
-         ALATNEW     = 1.0D0
-         VOLUME0     = 1.0D0
-         LCARTESIAN  = .False.   ! True: Basis in cartesian coords; false: in internal coords
-         LINTERFACE  = .False.   ! If True a matching with semi-inifinite surfaces must be performed
+      NAEZ        = 1         ! Number of atoms in the unit cell
+      NEMB        = 1         ! Number of embedded atoms
+      NCLS        = 1         ! Number of clusters
+      NATYP       = 1         ! Number of kinds of atoms in the unit cell
+      NINEQ       = 1
+      ALAT        = 1.0D0     ! Lattice constant in a.u.
+      ABASIS      = 1.0D0     ! Scaling factors for rbasis
+      BBASIS      = 1.0D0     ! Scaling factors for rbasis
+      CBASIS      = 1.0D0     ! Scaling factors for rbasis
+      ALATNEW     = 1.0D0
+      VOLUME0     = 1.0D0
+      LCARTESIAN  = .False.   ! True: Basis in cartesian coords; false: in internal coords
+      LINTERFACE  = .False.   ! If True a matching with semi-inifinite surfaces must be performed
 
-      end subroutine init_cell_variables
+   end subroutine init_cell_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_slab_variables
-      !> @brief set default values for the slab calculation variables
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 26.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_slab_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_slab_variables
+   !> @brief set default values for the slab calculation variables
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 26.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_slab_variables()
 
-         implicit none
+      implicit none
 
-         NLEFT       = 1
-         NRIGHT      = 1
-         NLAYER      = 1         ! Number of principal layer
-         NLBASIS     = 0         ! Number of basis layers of left host (repeated units)
-         NRBASIS     = 0         ! Number of basis layers of right host (repeated units)
-         NPRINCD     = 1         ! Number of principle layers, set to a number >= NRPINC in output of main0
-         NLAYERD     = 1         !(NAEZD/NPRINCD)
+      NLEFT       = 1
+      NRIGHT      = 1
+      NLAYER      = 1         ! Number of principal layer
+      NLBASIS     = 0         ! Number of basis layers of left host (repeated units)
+      NRBASIS     = 0         ! Number of basis layers of right host (repeated units)
+      NPRINCD     = 1         ! Number of principle layers, set to a number >= NRPINC in output of main0
+      NLAYERD     = 1         !(NAEZD/NPRINCD)
 
-      end subroutine init_slab_variables
+   end subroutine init_slab_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_energy_variables
-      !> @brief set default values for the energy variables
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 26.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_energy_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_energy_variables
+   !> @brief set default values for the energy variables
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 26.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_energy_variables()
 
-         implicit none
+      implicit none
 
-         LLY         = 0         ! No Lloyds formula
-         KTE         = 1         ! Calculate the total energy
-         NPOL        = 7         ! Number of poles
-         IEMXD       = 101       ! Dimension for energy-dependent arrays
-         NPNT1       = 7         ! Number of points in the energy contour
-         NPNT2       = 7         ! Number of points in the energy contour
-         NPNT3       = 7         ! Number of points in the energy contour
-         N1SEMI      = 0         ! Number of energy points for the semicore contour
-         N2SEMI      = 0         ! Number of energy points for the semicore contour
-         N3SEMI      = 0         ! Number of energy points for the semicore contour
-         IVSHIFT     = 0
-         NPOLSEMI    = 0
-         IESEMICORE  = 0
-         IDOSEMICORE = 0
-         TK          = 800.D0    ! Temperature
-         FCM         = 20.0D0
-         E2IN        = 0.0D0
-         EMIN        = -0.30D0   ! Energies needed in EMESHT
-         EMAX        = 0.70D0    ! Energies needed in EMESHT
-         EFERMI      = 0.D0      ! Setting the Fermi energy to zero
-         ESHIFT      = 0.D0
-         TKSEMI      = 800.D0    ! Temperature for the semi-core contour
-         EMUSEMI     = 0.0D0
-         EBOTSEMI    = -0.5D0
-         FSEMICORE   = 0.0D0
-         DELTAE      = (1.D-5,0.D0)
+      LLY         = 0         ! No Lloyds formula
+      KTE         = 1         ! Calculate the total energy
+      NPOL        = 7         ! Number of poles
+      IEMXD       = 101       ! Dimension for energy-dependent arrays
+      NPNT1       = 7         ! Number of points in the energy contour
+      NPNT2       = 7         ! Number of points in the energy contour
+      NPNT3       = 7         ! Number of points in the energy contour
+      N1SEMI      = 0         ! Number of energy points for the semicore contour
+      N2SEMI      = 0         ! Number of energy points for the semicore contour
+      N3SEMI      = 0         ! Number of energy points for the semicore contour
+      IVSHIFT     = 0
+      NPOLSEMI    = 0
+      IESEMICORE  = 0
+      IDOSEMICORE = 0
+      TK          = 800.D0    ! Temperature
+      FCM         = 20.0D0
+      E2IN        = 0.0D0
+      EMIN        = -0.30D0   ! Energies needed in EMESHT
+      EMAX        = 0.70D0    ! Energies needed in EMESHT
+      EFERMI      = 0.D0      ! Setting the Fermi energy to zero
+      ESHIFT      = 0.D0
+      TKSEMI      = 800.D0    ! Temperature for the semi-core contour
+      EMUSEMI     = 0.0D0
+      EBOTSEMI    = -0.5D0
+      FSEMICORE   = 0.0D0
+      DELTAE      = (1.D-5,0.D0)
 
-      end subroutine init_energy_variables
+   end subroutine init_energy_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_convergence_variables
-      !> @brief set default values for the convergence and solver variables
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 26.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_convergence_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_convergence_variables
+   !> @brief set default values for the convergence and solver variables
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 26.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_convergence_variables()
 
-         implicit none
+      implicit none
 
-         IMIX        = 0            ! Straight mixing
-         ISHLD       = 200000       ! Paremeters for the Ewald summations
-         NMAXD       = 2000000      ! Paremeters for the Ewald summations
-         NCHEB       = 10           ! Number of Chebychev pannels for the new solver
-         ITDBRY      = 10
-         NTREFD      = 0            ! Parameter in broyden subroutine MUST BE 0 for the host program
-         NTPERD      = 1            ! Parameter in broyden subroutines
-         NPAN_EQ     = 30
-         NPAN_LOG    = 30
-         SCFSTEPS    = 100          ! Number of SCF steps
-         RMAX        = 7.0D0        ! Ewald summation cutoff parameter for real space summation
-         GMAX        = 100.D0       ! Ewald summation cutoff parameter for reciprocal space summation
-         R_LOG       = 0.1D0
-         RCUTZ       = 2.30D0       ! Parameter for the screening cluster along the z-direction
-         RCUTXY      = 2.30D0       ! Parameter for the screening cluster along the x-y plane
-         QBOUND      = 1.D-7        ! Convergence parameter for the potential
-         MIXING      = 0.001D0      ! Magnitude of the mixing parameter
-         TOLRDIF     = 1.0D0        ! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
-         SOLVER      = 'BS        ' ! Set the BS-solver as default
+      IMIX        = 0            ! Straight mixing
+      ISHLD       = 200000       ! Paremeters for the Ewald summations
+      NMAXD       = 2000000      ! Paremeters for the Ewald summations
+      NCHEB       = 10           ! Number of Chebychev pannels for the new solver
+      ITDBRY      = 10
+      NTREFD      = 0            ! Parameter in broyden subroutine MUST BE 0 for the host program
+      NTPERD      = 1            ! Parameter in broyden subroutines
+      NPAN_EQ     = 30
+      NPAN_LOG    = 30
+      SCFSTEPS    = 100          ! Number of SCF steps
+      RMAX        = 7.0D0        ! Ewald summation cutoff parameter for real space summation
+      GMAX        = 100.D0       ! Ewald summation cutoff parameter for reciprocal space summation
+      R_LOG       = 0.1D0
+      RCUTZ       = 2.30D0       ! Parameter for the screening cluster along the z-direction
+      RCUTXY      = 2.30D0       ! Parameter for the screening cluster along the x-y plane
+      QBOUND      = 1.D-7        ! Convergence parameter for the potential
+      MIXING      = 0.001D0      ! Magnitude of the mixing parameter
+      TOLRDIF     = 1.0D0        ! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+      SOLVER      = 'BS        ' ! Set the BS-solver as default
 
-      end subroutine init_convergence_variables
+   end subroutine init_convergence_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_potential_variables
-      !> @brief set default values for the potential variables
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 26.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_potential_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_potential_variables
+   !> @brief set default values for the potential variables
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 26.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_potential_variables()
 
-         implicit none
+      implicit none
 
-         KWS         = 1         ! ASA potential
-         KXC         = 2         ! VWN potential
-         INS         = 1         ! ASA calculation
-         ICST        = 2         ! Number of Born approximation
-         IRID        = 350       ! Shape functions parameters in non-spherical part
-         NREF        = 1         ! Number of reference potentilas
-         LPOT        = 3         ! Maximum l for expansion of the potential
-         NFUND       = 289       ! Shape functions parameters in non-spherical part
-         NGSHD       = 60000     ! Shape functions parameters in non-spherical part
-         IPAND       = 50        ! Number of panels in non-spherical part
-         NTOTD       = 80        ! IPAND+30
-         IFILE       = 13        ! File identifier of the potential file
-         LMPOT       = 16        ! (LPOT+1)**2
-         INSREF      = 0         ! INS For reference potential
-         KNOSPH      = 0         ! Switch for spherical/non-spherical(0/1) program. Same obs. as for KREL applies.
-         KSHAPE      = 0         ! ASA calculation
-         NCELLD      = 1         ! Number of cells (shapes) in non-spherical part
-         NSPOTD      = 2         ! Number of potentials for storing non-sph. potentials (2*KREL+(1-KREL)*NSPIND)*NSATYPD
-         NSATYPD     = 1         ! (NATYPD-1)*KNOSPH+1
-         VCONST      = 0.D0      ! Potential shift
-         LAMBDA_XC   = 1.0D0     ! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-         I13         = 'potential                               ' ! Default name of potential file
-         I19         = 'shapefun                                ' ! Default name of shapefunction file
+      KWS         = 1         ! FP/ASA potential ()
+      KXC         = 2         ! VWN potential
+      INS         = 1         ! FP/ASA calculation ()
+      ICST        = 2         ! Number of Born approximation
+      IRID        = 350       ! Shape functions parameters in non-spherical part
+      NREF        = 1         ! Number of reference potentials
+      LPOT        = 3         ! Maximum l for expansion of the potential
+      NFUND       = 289       ! Shape functions parameters in non-spherical part
+      NGSHD       = 60000     ! Shape functions parameters in non-spherical part
+      IPAND       = 50        ! Number of panels in non-spherical part
+      NTOTD       = 80        ! IPAND+30
+      IFILE       = 13        ! File identifier of the potential file
+      LMPOT       = 16        ! (LPOT+1)**2
+      INSREF      = 0         ! INS For reference potential
+      KNOSPH      = 0         ! Switch for spherical/non-spherical(0/1) program. Same obs. as for KREL applies.
+      KSHAPE      = 2         ! FP/ASA calculation (2/0)
+      NCELLD      = 1         ! Number of cells (shapes) in non-spherical part
+      NSPOTD      = 2         ! Number of potentials for storing non-sph. potentials (2*KREL+(1-KREL)*NSPIND)*NSATYPD
+      NSATYPD     = 1         ! (NATYPD-1)*KNOSPH+1
+      VCONST      = 0.D0      ! Potential shift
+      LAMBDA_XC   = 1.0D0     ! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+      I13         = 'potential                               ' ! Default name of potential file
+      I19         = 'shapefun                                ' ! Default name of shapefunction file
 
-      end subroutine init_potential_variables
+   end subroutine init_potential_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_angular_momentum_variables
-      !> @brief set default values for the angular momentum variables
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 26.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_angular_momentum_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_angular_momentum_variables
+   !> @brief set default values for the angular momentum variables
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 26.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_angular_momentum_variables()
 
-         implicit none
+      implicit none
 
-         LMAX        = 3   ! Maximum l for expansion
-         NCLEB       = 784 ! (LMAX*2+1)**2 * (LMAX+1)**2
-         LMMAX       = 16  ! (LMAX+1)**2
-         LMMAXD      = 32  ! (KREL+KORBIT+1)*(LMAX+1)**2
+      LMAX        = 3   ! Maximum l for expansion
+      NCLEB       = 784 ! (LMAX*2+1)**2 * (LMAX+1)**2
+      LMMAX       = 16  ! (LMAX+1)**2
+      LMMAXD      = 32  ! (KREL+KORBIT+1)*(LMAX+1)**2
 
-      end subroutine init_angular_momentum_variables
+   end subroutine init_angular_momentum_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_magnetization_variables
-      !> @brief set default values for the magnetisation variables for the calculation
-      !> @details the idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 22.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_magnetization_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_magnetization_variables
+   !> @brief set default values for the magnetisation variables for the calculation
+   !> @details the idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 22.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_magnetization_variables()
 
-         implicit none
+      implicit none
 
-         KMROT    = 0         ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-         KNOCO    = 0         ! Collinear calculation
-         NSPIN    = 2         ! Spin polarised calculation
-         NSPIND   = 1         ! KREL+(1-KREL)*(NSPIN+1)
-         KHFELD   = 0         ! No external magnetic field
-         NSPINDD  = 1         ! NSPIND-KORBIT
-         HFIELD   = 0.D0      ! External magnetic field, for initial potential shift in spin polarised case
-         LINIPOL  = .False.   ! True: Initial spin polarization; false: no initial spin polarization
+      KMROT    = 0         ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+      KNOCO    = 0         ! Collinear calculation
+      NSPIN    = 2         ! Spin polarised calculation
+      NSPIND   = 2         ! KREL+(1-KREL)*(NSPIN+1)
+      KHFELD   = 0         ! No external magnetic field
+      NSPINDD  = 1         ! NSPIND-KORBIT
+      HFIELD   = 0.D0      ! External magnetic field, for initial potential shift in spin polarised case
+      LINIPOL  = .False.   ! True: Initial spin polarization; false: no initial spin polarization
 
-      end subroutine init_magnetization_variables
+   end subroutine init_magnetization_variables
 
-      !-------------------------------------------------------------------------
-      ! SUBROUTINE: init_CPA_variables
-      !> @brief Set default values for the CPA variables for the calculation
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 22.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_CPA_variables()
+   !-------------------------------------------------------------------------
+   ! SUBROUTINE: init_CPA_variables
+   !> @brief Set default values for the CPA variables for the calculation
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 22.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_CPA_variables()
 
-         implicit none
+      implicit none
 
-         NCPA     = 0      ! NCPA = 0/1 CPA flag
-         ITCPAMAX = 0      ! Max. number of CPA iterations
-         CPATOL   = 1D-4   ! Convergency tolerance for CPA-cycle
+      NCPA     = 0      ! NCPA = 0/1 CPA flag
+      ITCPAMAX = 0      ! Max. number of CPA iterations
+      CPATOL   = 1D-4   ! Convergency tolerance for CPA-cycle
 
-      end subroutine init_CPA_variables
+   end subroutine init_CPA_variables
 
-      !-------------------------------------------------------------------------
-      ! SUBROUTINE: init_CPA_variables
-      !> @brief Set default values for the LDA+U variables for the calculation
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 22.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_LDAU_variables()
+   !-------------------------------------------------------------------------
+   ! SUBROUTINE: init_CPA_variables
+   !> @brief Set default values for the LDA+U variables for the calculation
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 22.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_LDAU_variables()
 
-         implicit none
+      implicit none
 
-         NTLDAU      = 0   ! number of atoms on which LDA+U is applied
-         IDOLDAU     = 0   ! flag to perform LDA+U
-         ITRUNLDAU   = 0   ! iteration index
-         KREADLDAU   = 0   ! LDA+U arrays available
+      NTLDAU      = 0   ! number of atoms on which LDA+U is applied
+      IDOLDAU     = 0   ! flag to perform LDA+U
+      ITRUNLDAU   = 0   ! iteration index
+      KREADLDAU   = 0   ! LDA+U arrays available
 
-      end subroutine init_LDAU_variables
+   end subroutine init_LDAU_variables
 
-      !-------------------------------------------------------------------------
-      ! subroutine: init_mesh_variables
-      !> @brief set default values for the mesh variables
-      !> @details The idea behind this kind of routine is to separate the initialization
-      !> of variables such that one can use this to modularize the code
-      !> @author Jonathan Chico
-      !> @date 26.12.2017
-      !-------------------------------------------------------------------------
-      subroutine init_mesh_variables()
+   !-------------------------------------------------------------------------
+   ! subroutine: init_mesh_variables
+   !> @brief set default values for the mesh variables
+   !> @details The idea behind this kind of routine is to separate the initialization
+   !> of variables such that one can use this to modularize the code
+   !> @author Jonathan Chico
+   !> @date 26.12.2017
+   !-------------------------------------------------------------------------
+   subroutine init_mesh_variables()
 
-         implicit none
+      implicit none
 
-         NR          = 20000     ! Number of real space
-         IRM         = 900       ! Number of radial mesh points in (0,...,RWS)
-         IRNSD       = 890       ! Number of radial mesh points in (RMT,...,RWS)
-         KPOIBZ      = 250000    ! Number of reciprocal space vectors
-         INTERVX     = 0         ! Number of intervals in x-direction for k-net in IB of the BZ
-         INTERVY     = 0         ! Number of intervals in y-direction for k-net in IB of the BZ
-         INTERVZ     = 0         ! Number of intervals in z-direction for k-net in IB of the BZ
-         MAXMESH     = 1
+      NR          = 20000     ! Number of real space
+      IRM         = 900       ! Number of radial mesh points in (0,...,RWS)
+      IRNSD       = 890       ! Number of radial mesh points in (RMT,...,RWS)
+      KPOIBZ      = 250000    ! Number of reciprocal space vectors
+      INTERVX     = 0         ! Number of intervals in x-direction for k-net in IB of the BZ
+      INTERVY     = 0         ! Number of intervals in y-direction for k-net in IB of the BZ
+      INTERVZ     = 0         ! Number of intervals in z-direction for k-net in IB of the BZ
+      MAXMESH     = 1
 
-      end subroutine init_mesh_variables
+   end subroutine init_mesh_variables
 
-   end module mod_main0
+end module mod_main0
