@@ -1179,8 +1179,8 @@ contains
       !
       if (OPT('GREENIMP') .or. operator_imp) then                      ! GREENIMP
          ! fill array dimensions and allocate arrays in t_imp          ! GREENIMP
-         call init_params_t_imp(t_imp,IPAND,NATYP,IRM,IRID,NFUND,   &! GREENIMP
-                                NSPIN,IRMIND,LMPOT)                   ! GREENIMP
+         call init_params_t_imp(t_imp,IPAND,NATYP,IRM,IRID,NFUND,     &! GREENIMP
+                                NSPIN,IRMIND,LMPOT)                    ! GREENIMP
          call init_t_imp(t_inc,t_imp)                                  ! GREENIMP
                                                                        ! GREENIMP
          ! next read impurity potential and shapefunction              ! GREENIMP
@@ -1188,7 +1188,7 @@ contains
                          t_imp%IPANIMP,t_imp%THETASIMP,t_imp%IRCUTIMP,&! GREENIMP
                          t_imp%IRWSIMP,KHFELD,HFIELD,t_imp%VINSIMP,   &! GREENIMP
                          t_imp%VISPIMP,t_imp%IRMINIMP,                &! GREENIMP
-                         t_imp%RIMP,t_imp%ZIMP)                       &! GREENIMP
+                         t_imp%RIMP,t_imp%ZIMP, IRM, IRNSD,IRID,NFUND,NTOTD,IPAND) ! GREENIMP
       end if                                                           ! GREENIMP
       !
       !

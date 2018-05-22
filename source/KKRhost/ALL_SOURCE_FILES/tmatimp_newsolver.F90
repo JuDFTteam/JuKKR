@@ -21,7 +21,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
 #else
    use mod_mympi, only: myrank, master, nranks
 #endif
-   use mod_types, only: t_inc
+   use mod_types, only: t_inc, t_imp
    use mod_create_newmesh
    use mod_version_info
    use mod_wunfiles, only: t_params
@@ -125,6 +125,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    double complex, dimension(:,:,:),allocatable :: temp
    double complex, dimension(:,:,:,:),allocatable :: temp2 ! needed for MPI communication
 #endif
+   logical, external :: OPT
+   logical, external :: TEST
 
    if(myrank==master) write(6,*) 'in tmatimp'
    if (KSRA.GE.1) then

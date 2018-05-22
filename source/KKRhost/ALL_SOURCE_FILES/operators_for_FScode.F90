@@ -66,8 +66,8 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   !  call get_params_operators(lmmaxd, irmd, natyp, nsra, ncheb, ntot, irws, 
   ! scalars
   lmmaxd = t_inc%lmmaxd
-  irmd = t_params%irmd
-  natyp = t_params%natypd
+  irmd = t_params%irm
+  natyp = t_params%natyp
   nsra = t_params%nsra 
   ncheb = t_params%ncheb 
   ntotd = t_params%ntotd
