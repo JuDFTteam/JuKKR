@@ -112,7 +112,6 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    double precision, dimension(3) :: MOMENT
    double precision, dimension(3) :: DENORBMOM
    double precision, dimension(3) :: DENORBMOMNS
-   double precision, dimension(2,4) :: ENORBMOMSP
    double precision, dimension(2,4) :: DENORBMOMSP
    double precision, dimension(0:LMAX,3) :: DENORBMOMLM
    double complex, dimension(4)                       :: RHO2
@@ -728,7 +727,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
             CDEN(:,:,:,ith),CDENLM(:,:,:,ith),                       &
             CDENNS(:,:,ith),R2NEFC_loop(:,:,:,ith),0,                &
-            GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL)
+            GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL, NTOTD)
       endif
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -742,7 +741,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
             CDEN(:,:,:,ith),CDENLM(:,:,:,ith),                       &
             CDENNS(:,:,ith),R2ORBC(:,:,:,ith),IORB,                  &
-            GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL)
+            GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL, NTOTD)
          do JSPIN=1,4
             if (JSPIN.LE.2) then
                do LM1=0,LMAX

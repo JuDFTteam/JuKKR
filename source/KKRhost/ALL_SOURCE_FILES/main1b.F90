@@ -1273,7 +1273,7 @@ contains
         ! that are not the master
         call bcast_t_imp_scalars(t_imp)
         if(myrank/=master) call init_t_imp(t_inc,t_imp)
-        call bcast_t_imp_arrays(t_imp)
+        call bcast_t_imp_arrays(t_imp, t_inc)
 #endif
 
         do ie=1,ielast ! big ie loop (use only for GMATLL output)

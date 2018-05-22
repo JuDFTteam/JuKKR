@@ -620,7 +620,7 @@ contains
                   JWSREL(I1),IRSHIFT(I1),LMOMVEC,QMTET(IQ),QMPHI(IQ),MVEVIL1, &
                   MVEVIL2,NMVECMAX,IDOLDAU,LOPT(I1),PHILDAU(1,I1),            &
                   WLDAU(1,1,1,I1),DENMATC(1,1,IPOT),NATYP,NQDOS,LMAX,LMMAXD,  &
-                  IRM,MMAXD,LMXSPD,IRMIND,LM2D)
+                  IRM,MMAXD,LMXSPD,IRMIND,LMPOT, LM2D)
 #ifdef CPP_TIMING
                call timing_pause('main1c - rhoval')
 #endif
