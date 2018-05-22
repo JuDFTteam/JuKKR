@@ -618,7 +618,6 @@ contains
          .TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,I25)
       endif
 
-      write(*,*) 'CLSGEN_TB', NAEZ, NEMB, NVIRT, NR, ZAT, CLS, NCLS, NACLS, NLBASIS, NRBASIS, NLEFT, NRIGHT, NREF, LINTERFACE, NAEZ, NATYP, NEMB, NPRINCD, NRD, NACLSD, NCLSD, NREF
       call CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,ATOM, &
          EZOA,NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,RMTREF,&
          RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,NAEZ,NATYP, &
@@ -646,18 +645,17 @@ contains
       if (KVREL.GE.2) NSRA = 3
       !
       call TESTDIM(NSPIN,NAEZ,NEMB,NATYP,LMAX,IRM,INS,INSREF,NREF,IRNS,NCLS,  &
-         NLAYER,KREL,LMAX,NSPIND,NAEZ,NATYP,NREF,NCLSD,NEMB,NPRINCD,KNOSPH,   &
-         IRM,IRNS,KORBIT)
+         NLAYER,KREL,NSPIND,NCLSD,NPRINCD,KNOSPH,IRNSD,KORBIT)
       !
       if ( INS.GT.0 )    open (19,FILE=I19,STATUS='old',FORM='formatted')
       if ( IFILE.EQ.13 ) open (IFILE,FILE=I13,STATUS='old',FORM='formatted')
       if ( ICC.GT.0 )    open (25,FILE=I25,STATUS='unknown',FORM='formatted')
       !
-      call STARTB1(IFILE,1337,1337,IPE,KVREL,KWS,LMAX,1,NATYP,ALATNEW,RMTNEW, &
+      call STARTB1(IFILE,1337,1337,IPE,KREL,KWS,LMAX,1,NATYP,ALATNEW,RMTNEW, &
          RMT,ITITLE,IMT,IRC,VCONST,INS,IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,   &
          KSHAPE,NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,VBC,       &
          DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,IRWS,1,LMPOT,    &
-         IRMIND,IRM,LMXSPD,IPAND,IRID,IRNS,NATYP,NCELLD,NFUND,NSPOTD,IVSHIFT, &
+         IRMIND,IRM,LMXSPD,IPAND,IRID,IRNSD,NATYP,NCELLD,NFUND,NSPOTD,IVSHIFT, &
          NPOTD)
 
 
@@ -891,6 +889,7 @@ contains
       ! calculate Madelung constants (needed only for SCF calculations)
       !-------------------------------------------------------------------------
       !fivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
+      write(*,*) 'madel', NPOL, LINTERFACE
       if (NPOL.NE.0) then  ! No madelung calculation in case of DOS.
          !OPEN(99,FILE='madelinfo.txt')
 
@@ -915,13 +914,13 @@ contains
             if ( LINTERFACE ) then
                call GETBR3(NEMBD1,NLBASIS,ALAT,TLEFT,NRBASIS,TRIGHT,BRAVAIS,&
                   RECBV,VOLUME0)
-
-               write(*,*) 'Calling MADELUNG3D'
-               call MADELUNG3D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,BRAVAIS,RECBV,&
-                  RBASIS,RMAX,GMAX,NAEZ,LMXSPD,LASSLD,LPOT,LMPOT,NMAXD,    &
-                  ISHLD,NEMB,WLENGTH)
-               write(*,*) 'Exited MADELUNG3D'
             end if
+
+            write(*,*) 'Calling MADELUNG3D'
+            call MADELUNG3D(LPOT,YRG,WG,NAEZ,ALAT,VOLUME0,BRAVAIS,RECBV,&
+               RBASIS,RMAX,GMAX,NAEZ,LMXSPD,LASSLD,LPOT,LMPOT,NMAXD,    &
+               ISHLD,NEMB,WLENGTH)
+            write(*,*) 'Exited MADELUNG3D'
          end if
 
          !CLOSE(99)
@@ -1242,7 +1241,7 @@ contains
       call memocc(i_stat,i_all,'LEFTTINVLL','main0')
 
       i_all=-product(shape(RIGHTTINVLL))*kind(RIGHTTINVLL)
-      deallocate(LEFTTINVLL,stat=i_stat)
+      deallocate(RIGHTTINVLL,stat=i_stat)
       call memocc(i_stat,i_all,'RIGHTTINVLL','main0')
 
       i_all=-product(shape(ISH))*kind(ISH)
@@ -1604,7 +1603,7 @@ contains
       IFILE       = 13        ! File identifier of the potential file
       LMPOT       = 16        ! (LPOT+1)**2
       INSREF      = 0         ! INS For reference potential
-      KNOSPH      = 0         ! Switch for spherical/non-spherical(0/1) program. Same obs. as for KREL applies.
+      KNOSPH      = 1         ! Switch for spherical/non-spherical(0/1) program. Same obs. as for KREL applies.
       KSHAPE      = 2         ! FP/ASA calculation (2/0)
       NCELLD      = 1         ! Number of cells (shapes) in non-spherical part
       NSPOTD      = 2         ! Number of potentials for storing non-sph. potentials (2*KREL+(1-KREL)*NSPIND)*NSATYPD

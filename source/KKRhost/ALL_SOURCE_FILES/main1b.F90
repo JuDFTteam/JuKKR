@@ -1008,10 +1008,10 @@ contains
 #ifdef CPP_TIMING
                call timing_start('main1b - kloopz')
 #endif
-               call KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ,  &
+               call KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ,  &
                   NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH),               &
-                  VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,NCLS,RR,RBASIS,       &
-                  EZOA,ATOM,RCLS,ICC,GINP,IDECI,                           &
+                  VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,NCLS,RR,              &
+                  RBASIS,EZOA,ATOM,RCLS,ICC,GINP,IDECI,                    &
                   LEFTTINVLL(1,1,1,1,IE),RIGHTTINVLL(1,1,1,1,IE),          &
                   VACFLAG,NLBASIS,NRBASIS,FACTL,NATOMIMP,NSYMAT,           &
                   DSYMLL,RATOM,RROT,NSH1,NSH2,IJTABSYM,IJTABSH,            &
@@ -1021,7 +1021,8 @@ contains
                   CPATOL,NOQ,IQAT,ITOQ,CONC,IPRINT,ICPAFLAG,               &
                   1,NSPINDD,                                               &
                   TQDOS,IQDOSRUN,                                          &  ! qdos
-                  DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,1),TRACET(IE,1),LLY)      ! LLY Lloyd
+                  DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,ISPIN),                &  ! LLY Lloyd
+                  TRACET(IE,ISPIN),LLY)                                       ! LLY Lloyd
 #ifdef CPP_TIMING
                call timing_pause('main1b - kloopz')
 #endif

@@ -2221,7 +2221,7 @@ contains
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Initialise SOLVER, SOC and CTL parameters in REL case
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      CSCL(1:LMAX+1,1:NATYP) = CVLIGHT
+      CSCL(:,:) = CVLIGHT
       MANSOC=.FALSE.
       MANCTL=.FALSE.
 
@@ -2340,7 +2340,7 @@ contains
             end if
 
             if (MANCTL) then
-               CSCL(1:LMAX+1,1:NATYP) = CSCL(1:LMAX+1,1:NATYP)/DSQRT(CTLSCALE)
+               CSCL(:,:) = CSCL(:,:)/DSQRT(CTLSCALE)
                write(1337,99012)
                write(1337,99005)
                write(1337,99009) 1.D0/DSQRT(CTLSCALE)
