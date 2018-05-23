@@ -58,6 +58,9 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   ! for TEST options
   logical, external :: TEST
 
+  if(t_inc%i_write>0) write(1337,*) 'start computing Operators'
+  if(t_inc%i_write>0) write(*,*) 'start computing Operators'
+
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! Part 1: operators for host wavefunctions
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -89,6 +92,9 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
 
   if(.not.TEST('IMP_ONLY')) then ! test option to disable costly recalculation of host operators
 
+    if(t_inc%i_write>0) write(1337,*) 'Operators using host wavefunctions'
+    if(t_inc%i_write>0) write(*,*) 'Operators using host wavefunctions'
+    
     ! now get the radial wavefunctions in the correct (i.e. old) radial mesh
     ! called PNS_SO_ALL
     
@@ -212,13 +218,13 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
 #   endif
     
     ! done with preparations, call normcoeff routines that construct operators
-    if(myrank==master) WRITE(*,*) 'Computing spin operator'
+    if(myrank==master) write(*,*) 'Computing spin operator'
     CALL NORMCOEFF_SO(NATYP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_ALL,t_params%THETAS,t_params%NTCELL,t_params%IFUNM,t_params%IPAN,t_params%LMSP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_params%DRDI,t_params%IRWS,1+KORBIT, 0)
        
-    if(myrank==master) WRITE(*,*) 'Computing torq operator'
+    if(myrank==master) write(*,*) 'Computing torq operator'
     CALL NORMCOEFF_SO_TORQ(NATYP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_ALL,t_params%NTCELL,t_params%IFUNM,t_params%IPAN,t_params%LMSP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_params%DRDI,t_params%IRWS,t_params%VISP,t_inc%NSPIN,t_params%VINS,t_params%IRMIN,0)
     
-    if(myrank==master) WRITE(*,*) 'Computing spinflux operator'
+    if(myrank==master) write(*,*) 'Computing spinflux operator'
     CALL NORMCOEFF_SO_SPINFLUX(NATYP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_ALL,t_inc%KVREL,t_params%DRDI,0)
 
   end if ! .not. TEST('IMP_ONLY')
@@ -230,6 +236,9 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   if(operator_imp) then
     
+    if(t_inc%i_write>0) write(1337,*) 'Operators using impurity wavefunctions'
+    if(t_inc%i_write>0) write(*,*) 'Operators using impurity wavefunctions'
+
     ! interpolate impurity wavefunctions to old radial mesh and global spin frame
     
     NATOMIMP = t_imp%natomimp
@@ -334,16 +343,18 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
 #   endif
     
     ! construct impurity operators using impurity wavefunctions
-    if(myrank==master) WRITE(*,*) 'Computing impurity spin operator'
+    if(myrank==master) write(*,*) 'Computing impurity spin operator'
     CALL NORMCOEFF_SO(NATOMIMP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_IMP,t_params%THETAS,t_params%NTCELL,t_params%IFUNM,t_params%IPAN,t_params%LMSP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_params%DRDI,t_params%IRWS,1+KORBIT, 1)
        
-    if(myrank==master) WRITE(*,*) 'Computing impurity torq operator'
+    if(myrank==master) write(*,*) 'Computing impurity torq operator'
     CALL NORMCOEFF_SO_TORQ(NATOMIMP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_IMP,t_params%NTCELL,t_params%IFUNM,t_params%IPAN,t_params%LMSP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_params%DRDI,t_params%IRWS,t_imp%VISPIMP,t_inc%NSPIN,t_imp%VINSIMP,t_params%IRMIN, 1)
     
-    if(myrank==master) WRITE(*,*) 'Computing impurity spinflux operator'
+    if(myrank==master) write(*,*) 'Computing impurity spinflux operator'
     CALL NORMCOEFF_SO_SPINFLUX(NATOMIMP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_IMP,t_inc%KVREL,t_params%DRDI, 1)
 
   end if !operator_imp
 
+  if(t_inc%i_write>0) write(1337,*) 'Done with Operators'
+  if(t_inc%i_write>0) write(*,*) 'Done with Operators'
 
 end subroutine operators_for_FScode

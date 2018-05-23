@@ -2148,7 +2148,7 @@
 
       if(opt('OPERATOR')) then
          write(1337,*) 'Found option "OPERATOR"'
-         write(1337,*) 'Overwrite MEMWFSAVE with big numbers'
+         write(1337,*) 'Overwrite MEMWFSAVE input with big numbers'
          t_wavefunctions%maxmem_number = 5
          t_wavefunctions%maxmem_units = 3
       end if
