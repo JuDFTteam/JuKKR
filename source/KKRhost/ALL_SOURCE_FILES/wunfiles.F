@@ -412,7 +412,7 @@ C                                  meant for simpler passing of basic parameter 
             write(*,*) 'Nranks>NATYP', nranks, NATYP                    ! fswrt
             stop 'Please choose Nranks<=NATYP'                          ! fswrt
          end if                                                         ! fswrt
-         naclsmin = minval(t_params%NACLS(1:t_params%NCLS))             ! fswrt
+         naclsmin = minval(NACLS(1:NCLS))                               ! fswrt
          if(.not.OPT('GREENIMP') .and. naclsmin<150) then               ! fswrt
             write(*,*) ''                                               ! fswrt
             write(*,*) '         WARNING'                               ! fswrt
