@@ -724,10 +724,6 @@ C ================================================================ NATYP
         !communication only needed if qdos option was not chosen
         !reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
         NQDOS=1
-      
-#ifdef CPP_TIMING
-        call timing_start('main1c - communication')
-#endif
         !MPI: reduce these arrays, so that master processor has the results (MPI_REDUCE)
 #ifdef CPP_TIMING
         call timing_start('main1c - communication')
@@ -778,9 +774,9 @@ C ================================================================ NATYP
            END DO !I1                                                     ! lm-dos
          ENDIF  ! lmdos option                                            ! lm-dos
         end if ! myrank==master                                           ! lm-dos
-#endif
 
       endif !(.not.opt('qdos    '))
+#endif
 
       ELSE ! new spin-orbit solver
 
@@ -1076,10 +1072,10 @@ C   RHO_core is calculated only if also RHO_valence was
 C
       IF (NPOL.NE.0) THEN 
          if(t_inc%i_write>0) then
-         WRITE (1337,*)
-         WRITE (1337,'(78(1H#))')
-         WRITE (1337,'(33X,A)') 'CORE  STATES'
-         WRITE (1337,'(78(1H#))')
+            WRITE (1337,*)
+            WRITE (1337,'(78(1H#))')
+            WRITE (1337,'(33X,A)') 'CORE  STATES'
+            WRITE (1337,'(78(1H#))')
          endif
          DO I1 = 1,NATYP
             DO ISPIN = 1,NSPIN
@@ -1101,9 +1097,9 @@ C
             END DO
          END DO
          if(t_inc%i_write>0) then
-         WRITE (1337,*)
-         WRITE (1337,'(78(1H#))')
-         WRITE (1337,*)
+            WRITE (1337,*)
+            WRITE (1337,'(78(1H#))')
+            WRITE (1337,*)
          endif
       END IF
 C

@@ -157,6 +157,27 @@ class Test_check_test_runs():
            assert abs(num-num_ref).max()<2*10**-8
            assert set(text)-set(text_ref)==set()
 
+    def test_verify14_qdos(self):
+        path  = 'test_run14_mpi_1_8/'
+        path0 = 'test_run14_mpi_1_8/ref/'
+        for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
+           fname = f
+           num, text = read_file(path+fname)
+           num_ref, text_ref = read_file(path0+fname.split('/')[1])
+           # remove line with serial number
+           text = text[1:]
+           text_ref = text_ref[1:]
+           # now compare
+           print fname
+           print std(abs(num-num_ref))
+           print mean(abs(num-num_ref))
+           print abs(num-num_ref).max()
+           print set(text)-set(text_ref)==set()
+           assert std(abs(num-num_ref))<5*10**-16
+           assert mean(abs(num-num_ref))<10**-14
+           assert abs(num-num_ref).max()<2*10**-12
+           assert set(text)-set(text_ref)==set()
+
         
 # helper functions
 

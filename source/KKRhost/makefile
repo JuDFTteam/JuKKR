@@ -206,7 +206,7 @@ OPENMPFLAGS =
 hybrid: OPENMPFLAGS = -qopenmp 
 hybriddebug: OPENMPFLAGS = -qopenmp
 openmp: OPENMPFLAGS = -qopenmp
-ompdebug: OPENMPFLAGS = -qopenmp
+ompdebug: OPENMPFLAGS = -openmp
 rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 
