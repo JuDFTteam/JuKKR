@@ -17,7 +17,7 @@
      &                      bcast_t_imp_scalars, bcast_t_imp_arrays
       use mpi
 #endif
-      use mod_mympi, only: myrank, master
+      use mod_mympi, only: myrank, master, nranks
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks, MPIadapt

@@ -19,18 +19,19 @@ npara_pairs = [[1,1], [1,2], [2,1], [1,8], [8,1], [1,4], [4,1], [2,4], [4,2], [2
 global_options = ''
 #global_options = 'source /usr/local/bin/compilervars-12.sh intel64; source /usr/local/intel/mkl/bin/mklvars.sh intel64'
 
-test_systems = ['test_run'+str(i) for i in range(1,9)]
+test_systems = ['test_run'+str(i) for i in range(1,15)]
 
 # define masks of test_systes for exgensive (i.e. non-serial) tests
 # key is the test_coverage that enters as input via sys.argv command line argument
-test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5], 7:[6], 8:[7]}
+test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5], 7:[6], 8:[7], 14:[13]}
 
 # use mpi only if test_coverage option is set to negative value
 if test_coverage<0:
     npara_pairs = [[1,2], [1,3], [1,4], [1,7], [1,8]]
-    model = ['mpi']
+    if test_coverage in [-14]:
+        npara_pairs = [[1,8]]
+    modes = ['mpi']
     test_coverage = -test_coverage
-
 
 # loop over all combinations
 for mode in modes:
@@ -55,14 +56,14 @@ for mode in modes:
                 path = testcase+'_'+mode+'_'+str(npara[0])+'_'+str(npara[1])
                 job = 'mkdir '+path
                 print job
-                call(job, shell=True)
+                #call(job, shell=True)
                 job = 'cd '+path+'; '
                 job+= 'ln -s ../test_inputs/test_%s_*/* .; ln -s ../../kkr.x_%s kkr.x; '%(testcase.replace('test_run',''), mode)
                 if global_options != '':
                     job+= global_options+'; '
                 job+= 'export OMP_NUM_THREADS=%i; mpirun -np %i ./kkr.x | tee out_kkr'%(npara[0], npara[1])
                 print job
-                call(job, shell=True)
+                #call(job, shell=True)
                 job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'
                 print job
-                call(job, shell=True)
+                #call(job, shell=True)

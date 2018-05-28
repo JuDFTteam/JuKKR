@@ -2102,6 +2102,11 @@
 ! 
 !          WRITE (1337,'(A)') 'atom selective writeout for qdos:'
 !          WRITE (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
+
+         if(.not.test('MPIatom ')) then
+            ! enforce MPIenerg since this is usually faster for qdos option
+            call addtest('MPIenerg')
+         end if
          
       END IF
 
