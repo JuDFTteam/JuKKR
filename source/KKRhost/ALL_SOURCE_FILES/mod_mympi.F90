@@ -145,7 +145,7 @@ contains
   integer, intent(in) :: kmesh(nkmesh)
   integer, intent(out) :: mympi_comm_ie, mympi_comm_at, nranks_atcomm, nranks_at, nranks_ie, myrank_ie, myrank_at, myrank_atcomm
   
-  integer :: rest, k(nkmesh-1), ktake(nkmesh-1), myg, ie, iat, ierr, ik, i1,i2,i3
+  integer :: rest, k(nkmesh-1), ktake(nkmesh), myg, ie, iat, ierr, ik, i1,i2,i3
   double precision :: f(nkmesh-1), q, qmin
   integer, allocatable :: groups(:,:), mygroup(:)
   integer :: mympi_group_ie, mympi_group_world, myMPI_comm_grid
@@ -160,84 +160,87 @@ contains
   
     if(nkmesh<=1) then
        if(myrank==master) write(*,'(A,2I7)') 'no load imbalance found (all energy points have the same k-mesh), please use regular grid to not waste any resources. #E, #atoms = ', ne, nat
-       call MPI_Finalize(ierr)
-       stop
+!      call MPI_Finalize(ierr)
+!      stop
     end if
   
     rest = nranks-int(nranks/(ne*nat))*ne*nat
     if(myrank==0) write(1337,*) 'rest:',rest,ne,nat,nranks
     if(myrank==0) write(1337,*) 'kmesh:',kmesh
    
-    !find fraction of k:l:m
-    do ik=1,nkmesh-1
-      k(ik) = int(real(kmesh(1))/real(kmesh(nkmesh-ik+1))-1.)
-      if(k(ik)==0) k(ik) = 1
-    end do
-    
-    do ik=1,nkmesh-2
-      f(ik) = real(k(ik+1))/real(k(ik))
-    end do
-    f(nkmesh-1) = real(k(nkmesh-1))/real(k(1))
-    
-    if(myrank==0) write(1337,*) 'set k,i:',k,'f',f
+    if(rest>0 .and. nkmesh>1) then
+      !find fraction of k:l:m
+      do ik=1,nkmesh-1
+        k(ik) = int(real(kmesh(1))/real(kmesh(nkmesh-ik+1))-1.)
+        if(k(ik)==0) k(ik) = 1
+      end do
+      
+      do ik=1,nkmesh-2
+        f(ik) = real(k(ik+1))/real(k(ik))
+      end do
+      f(nkmesh-1) = real(k(nkmesh-1))/real(k(1))
+      
+      if(myrank==0) write(1337,*) 'set k,i:',k,'f',f
 
-    !brute force look for optimal division of rest ranks after N_E*N_at are already
-    !assigned to rectangular part of processor matrix:
-    !                  N_E=8
-    !            <--------------->
-    !          ^ ( | | | | | | | )    example for 49 processors,
-    !          | ( | | | | | | | )    devided according to:
-    !  N_at=5  | ( | | | | | | | )         N_E = 8, N_at = 5 
-    !          | ( | | | | | | | )        rest = 9 = 5+3+1
-    !          v ( | | | | | | | )                   k+l+m  
-    !                 ^    ( | | ) m=1  ^
-    !             l=3 |      ( | )      |
-    !                 v      ( | )      | k=5
-    !                          ( )      |
-    !                          ( )      v
-    if(rest>0) then
+      !brute force look for optimal division of rest ranks after N_E*N_at are already
+      !assigned to rectangular part of processor matrix:
+      !                  N_E=8
+      !            <--------------->
+      !          ^ ( | | | | | | | )    example for 49 processors,
+      !          | ( | | | | | | | )    devided according to:
+      !  N_at=5  | ( | | | | | | | )         N_E = 8, N_at = 5 
+      !          | ( | | | | | | | )        rest = 9 = 5+3+1
+      !          v ( | | | | | | | )                   k+l+m  
+      !                 ^    ( | | ) m=1  ^
+      !             l=3 |      ( | )      |
+      !                 v      ( | )      | k=5
+      !                          ( )      |
+      !                          ( )      v
 
-    if(nkmesh==4) then
-     ktake(:) = 0
-     do i1=1,rest
-      do i2=0,rest-i1
-        i3 = rest-i1-i2
-        if (i1>=i2 .and. i2>=i3) then
-           if(i3==0 .and. i2==0) then
-             q = sqrt((f(1)-real(i2)/real(i1))**2+(f(2)-1.)**2+(f(3)-real(i3)/real(i1))**2)
-           else
-             q = sqrt((f(1)-real(i2)/real(i1))**2+(f(2)-real(i3)/real(i2))**2+(f(3)-real(i3)/real(i1))**2)
-           endif
-           if(q<qmin .or. qmin==-1) then
-               ktake = (/ i1,i2,i3 /)
-               qmin = q
-           end if
-        end if
-      enddo
-     enddo
-    elseif(nkmesh==3) then
-     ktake(:) = 0
-     do i1=1,rest
-        i2 = rest-i1
-        if (i1>=i2) then
-           q = sqrt((f(1)-real(i2)/real(i1))**2)
-           if(q<qmin .or. qmin==-1) then
-               ktake = (/ i1,i2 /)
-               qmin = q
-           end if
-        end if
-     enddo
-    elseif(nkmesh==2) then
-     ktake(1) = rest
-    else
-     stop 'ERROR: nkmesh>4 not implemented yet'
-    end if
-    
-    ! special case when only one additional rank
-    if(rest==1) ktake(1) = rest
+      if(nkmesh==4) then
+       ktake(:) = 0
+       do i1=1,rest
+        do i2=0,rest-i1
+          i3 = rest-i1-i2
+          if (i1>=i2 .and. i2>=i3) then
+             if(i3==0 .and. i2==0) then
+               q = sqrt((f(1)-real(i2)/real(i1))**2+(f(2)-1.)**2+(f(3)-real(i3)/real(i1))**2)
+             else
+               q = sqrt((f(1)-real(i2)/real(i1))**2+(f(2)-real(i3)/real(i2))**2+(f(3)-real(i3)/real(i1))**2)
+             endif
+             if(q<qmin .or. qmin==-1) then
+                 ktake = (/ i1,i2,i3 /)
+                 qmin = q
+             end if
+          end if
+        enddo
+       enddo
+      elseif(nkmesh==3) then
+       ktake(:) = 0
+       do i1=1,rest
+          i2 = rest-i1
+          if (i1>=i2) then
+             q = sqrt((f(1)-real(i2)/real(i1))**2)
+             if(q<qmin .or. qmin==-1) then
+                 ktake = (/ i1,i2 /)
+                 qmin = q
+             end if
+          end if
+       enddo
+      elseif(nkmesh==2) then
+       ktake(1) = rest
+      else
+       stop 'ERROR: nkmesh>4 not implemented yet'
+      end if
+      
+      ! special case when only one additional rank
+      if(rest==1) ktake(1) = rest
+  
+      if(myrank==0) write(1337,*) 'found ktake',ktake,'with',qmin
 
-    if(myrank==0) write(1337,*) 'found ktake',ktake,'with',qmin
-    end if
+    elseif(rest>0)then
+      ktake(1) = rest
+    end if!if(rest>0 .and. nkmesh>1)
    
     !find processor groups according to non-uniform division
     allocate(groups(ne+1,2))
@@ -248,7 +251,7 @@ contains
       groups(ie,1) = nat+ktake(3)
      elseif(ie==ne-1 .and. nkmesh>2) then
       groups(ie,1) = nat+ktake(2)
-     elseif(ie==ne-0 .and. nkmesh>1) then
+     elseif(ie==ne-0 .and. nkmesh>=1) then
       groups(ie,1) = nat+ktake(1)
      else
       groups(ie,1) = nat
@@ -289,19 +292,65 @@ contains
 
     !create new communicator from group
     call MPI_COMM_GROUP(MPI_COMM_WORLD,mympi_group_world,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_GROUP with code ', ierr
+      write(*,*) 'Error in MPI_COMM_GROUP with code ', ierr
+      stop 'Error in MPI_COMM_GROUP'
+    end if
+      
     call MPI_GROUP_INCL(mympi_group_world,groups(myg,1),mygroup,mympi_group_ie,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_GROUP_INCL with code ', ierr
+      write(*,*) 'Error in MPI_GROUP_INCL with code ', ierr
+      stop 'Error in MPI_GROUP_INCL'
+    end if
     call MPI_COMM_CREATE(MPI_COMM_WORLD,mympi_group_ie,mympi_comm_ie,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_CREATE with code ', ierr
+      write(*,*) 'Error in MPI_COMM_CREATE with code ', ierr
+      stop 'Error in MPI_COMM_CREATE'
+    end if
     call MPI_GROUP_FREE(mympi_group_ie,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_GROUP_FREE with code ', ierr
+      write(*,*) 'Error in MPI_GROUP_FREE with code ', ierr
+      stop 'Error in MPI_GROUP_FREE'
+    end if
    
     !get rank and size in new communicator
     call MPI_COMM_RANK(mympi_comm_ie,myrank_ie,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_RANK(ie) with code ', ierr
+      write(*,*) 'Error in MPI_COMM_RANK(ie) with code ', ierr
+      stop 'Error in MPI_COMM_RANK(ie)'
+    end if
     call MPI_COMM_SIZE(mympi_comm_ie,nranks_ie,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_SIZE(ie) with code ', ierr
+      write(*,*) 'Error in MPI_COMM_SIZE(ie) with code ', ierr
+      stop 'Error in MPI_COMM_SIZE(ie)'
+    end if
    
     !create communicator to communicate between differen energies (i.e. different groups)
     call MPI_COMM_SPLIT(MPI_COMM_WORLD,myrank_ie,myg,mympi_comm_at,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_SPLIT', ierr
+      write(*,*) 'Error in MPI_COMM_SPLIT ', ierr
+      stop 'Error in MPI_COMM_SPLIT'
+    end if
     call MPI_COMM_RANK(mympi_comm_at,myrank_atcomm,ierr)
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_RANK(at) with code ', ierr
+      write(*,*) 'Error in MPI_COMM_RANK(at) with code ', ierr
+      stop 'Error in MPI_COMM_RANK(at)'
+    end if
     call MPI_COMM_SIZE(mympi_comm_at,nranks_atcomm,ierr)
-    
+    if(ierr/=MPI_SUCCESS) then
+      write(*,*) 'Error in MPI_COMM_SIZE(at) with code ', ierr
+      write(*,*) 'Error in MPI_COMM_SIZE(at) with code ', ierr
+      stop 'Error in MPI_COMM_SIZE(at)'
+    end if
+
     nranks_at = ne    
     myrank_at = myg-1
 
@@ -344,7 +393,7 @@ contains
   if(myrank==0) then
     write(1337,'(A)') '=================================================='  
     write(1337,'(A,I5,A)') '    MPI parallelization: use',nranks,' ranks'
-    write(1337,'(A,I3,A,I4)') '    create processor array of size',nat,' x',ne
+    write(1337,'(A,I3,A,I4)') '    create processor array of size (nat x ne) ',nat,' x',ne
     if(rest>0) write(1337,'(A,I3)') '                                   with rest',rest
     if(rest>0) write(1337,'(A,10I3)') '    divide rest onto last energy points (k,l,m):',ktake
     write(1337,'(A)') '                N_E'

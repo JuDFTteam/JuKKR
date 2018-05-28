@@ -44,7 +44,7 @@ implicit none
 
    type :: type_inc
    
-      integer :: Nparams = 21   ! number of parameters in type_inc, excluding allocatable array KMESH
+      integer :: Nparams = 22   ! number of parameters in type_inc, excluding allocatable array KMESH
       integer :: LMMAXD  = -1
       integer :: NSPIN   = -1
       integer :: IELAST  = -1
@@ -66,6 +66,7 @@ implicit none
       integer :: NSRA    = -1
       integer :: LMMAXSO = -1
       integer :: IRMDNEW = -1
+      integer :: KVREL   = -1
       
       integer, allocatable :: KMESH(:), KMESH_ie(:)
          
@@ -96,7 +97,7 @@ implicit none
 
    type :: type_lloyd
 
-       ! logical switches to control if matrices are stored in memory or written to files
+      ! logical switches to control if matrices are stored in memory or written to files
       logical :: dtmat_to_file = .false.          ! unit 691
       logical :: tralpha_to_file = .false.        ! unit 692
       logical :: cdos_diff_lly_to_file = .false.  ! unit 701
@@ -115,12 +116,41 @@ implicit none
    end type type_lloyd
 
 
+   type :: type_imp
+
+      integer :: N1 = 12     ! number of scalars for mpi bcast + 2 (for N1,N2)
+      integer :: N2 = 16     ! number of arrays for mpi bcast + 1 (for N2)
+      integer :: NATOMIMP = -1 ! number of atoms in impurity cluster
+      integer :: IHOST    = -1 ! number of different host atoms (layer indices)
+      integer :: IPAND, NATYPD, IRMD, IRID, NFUND, NSPIN, IRMIND, LMPOTD ! array dimensions. can be read from t_params
+      
+      ! allocatable arrays
+      integer, allocatable :: IPANIMP(:)          ! radial mesh, Panel mesh for impurities,    IPANIMP(NATOMIMP)
+      integer, allocatable :: IRCUTIMP(:,:)       ! radial mesh, RCUT for imps,                IRCUTIMP(0:IPAND,NATOMIMP)
+      integer, allocatable :: IRMINIMP(:)         ! radial mesh, IRMIN for imps,               IRMINIMP(NATOMIMP))
+      integer, allocatable :: IRWSIMP(:)          ! radial mesh, IRWS for imps,                IRWSIMP(NATOMIMP)
+      integer, allocatable :: HOSTIMP(:)          ! layer index of host atoms,                 HOSTIMP(NATYPD)
+      integer, allocatable :: ATOMIMP(:)          ! layer index of imp atoms,                  ATOMIMP(NATOMIMP)
+      double precision, allocatable :: RIMP(:,:)        ! Rmesh of imps,                       RIMP(IRMD,NATOMIMP)
+      double precision, allocatable :: ZIMP(:)          ! atom charge of imps,                 ZIMP(NATOMIMP)
+      double precision, allocatable :: THETASIMP(:,:,:) ! shape functions of imps,             THETASIMP(IRID,NFUND,NATOMIMP)
+      double precision, allocatable :: VISPIMP(:,:)     ! impurity potential,                  VISPIMP(IRMD,NATOMIMP*NSPIN)
+      double precision, allocatable :: VINSIMP(:,:,:)   ! impurity potential,                  VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN)
+      double precision, allocatable :: RCLSIMP(:,:)     ! impurity positions(scoef file),      RCLSIMP(3,NATOMIMPD)
+      double precision, allocatable :: THETAIMP(:)      ! theta of nonco_angle of impurity     THETAIMP(NATOMIMP)
+      double precision, allocatable :: PHIIMP(:)        ! phi of nonco_angle of impurity       PHIIMP(NATOMIMP)
+      double complex, allocatable :: RLLIMP(:,:,:,:)    ! impurity wavefunctions,              RLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEW(I1))
+
+   end type type_imp
+
+
    type (type_inc), save :: t_inc
    type (type_tgmatices), save :: t_tgmat
    type (type_mpi_cartesian_grid_info), save :: t_mpi_c_grid
    type (type_lloyd), save :: t_lloyd
    type (type_dtmatJijDij), allocatable, save :: t_dtmatJij(:) !dimensions I1=1,...,NATYP 
    type (type_cpa), save :: t_cpa
+   type (type_imp), save :: t_imp
 
 contains
 
@@ -299,6 +329,119 @@ contains
       endif
 
    end subroutine init_t_dtmatJij_at
+
+   
+   subroutine init_params_t_imp(t_imp,IPAND,NATYPD,IRMD,IRID,NFUND,NSPIN,IRMIND,LMPOTD)
+
+      implicit none
+
+      type(type_imp), intent(inout) :: t_imp
+      integer, intent(in) :: IPAND,NATYPD,IRMD,IRID,NFUND,NSPIN,IRMIND,LMPOTD
+
+      t_imp%IPAND    = IPAND
+      t_imp%NATYPD   = NATYPD
+      t_imp%IRMD     = IRMD
+      t_imp%IRID     = IRID
+      t_imp%NFUND    = NFUND
+      t_imp%NSPIN    = NSPIN
+      t_imp%IRMIND   = IRMIND
+      t_imp%LMPOTD   = LMPOTD
+
+   end subroutine init_params_t_imp
+
+   
+   subroutine init_t_imp(t_inc,t_imp)
+
+      implicit none
+
+      type(type_inc), intent(in) :: t_inc
+      type(type_imp), intent(inout) :: t_imp
+      ! local
+      integer :: ierr, NATOMIMP,IPAND,NATYPD,IRMD,IRID,NFUND,NSPIN,IRMIND,LMPOTD
+
+      ! so far only with SOC implemented
+      if(.not.t_inc%NEWSOSOL) stop 'in init_t_imp: should only be called with NEWSOSOL'
+
+      ! for convenience define this parameter locally
+      NATOMIMP = t_imp%NATOMIMP
+      IPAND    = t_imp%IPAND
+      NATYPD   = t_imp%NATYPD
+      IRMD     = t_imp%IRMD
+      IRID     = t_imp%IRID
+      NFUND    = t_imp%NFUND
+      NSPIN    = t_imp%NSPIN
+      IRMIND   = t_imp%IRMIND
+      LMPOTD   = t_imp%LMPOTD
+
+      ! integer arrays
+      if (.not. allocated(t_imp%IPANIMP)) then
+         allocate(t_imp%IPANIMP(NATOMIMP), STAT=ierr)
+         if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
+         !initialize with zeros
+         t_imp%ipanimp = 0
+      endif
+      if (.not. allocated(t_imp%IRCUTIMP)) then
+         allocate(t_imp%IRCUTIMP(0:IPAND,NATOMIMP), STAT=ierr)
+         t_imp%ircutimp = 0
+      endif
+      if (.not. allocated(t_imp%IRMINIMP)) then
+         allocate(t_imp%IRMINIMP(NATOMIMP), STAT=ierr)
+         t_imp%irminimp = 0
+      endif
+      if (.not. allocated(t_imp%IRWSIMP)) then
+         allocate(t_imp%IRWSIMP(NATOMIMP), STAT=ierr)
+         t_imp%irwsimp = 0
+      endif
+      if (.not. allocated(t_imp%HOSTIMP)) then
+         allocate(t_imp%HOSTIMP(NATYPD), STAT=ierr)
+         t_imp%hostimp = 0
+      endif
+      if (.not. allocated(t_imp%ATOMIMP)) then
+         allocate(t_imp%ATOMIMP(NATOMIMP), STAT=ierr)
+         t_imp%atomimp = 0
+      endif
+
+      ! double precision arrays
+      if (.not. allocated(t_imp%RIMP)) then
+         allocate(t_imp%RIMP(IRMD,NATOMIMP), STAT=ierr)
+         t_imp%rimp = 0.d0
+      endif
+      if (.not. allocated(t_imp%ZIMP)) then
+         allocate(t_imp%ZIMP(NATOMIMP), STAT=ierr)
+         t_imp%zimp = 0.d0
+      endif
+      if (.not. allocated(t_imp%THETASIMP)) then
+         allocate(t_imp%THETASIMP(IRID,NFUND,NATOMIMP), STAT=ierr)
+         t_imp%thetasimp = 0.d0
+      endif
+      if (.not. allocated(t_imp%VISPIMP)) then
+         allocate(t_imp%VISPIMP(IRMD,NATOMIMP*NSPIN), STAT=ierr)
+         t_imp%vispimp = 0.d0
+      endif
+      if (.not. allocated(t_imp%VINSIMP)) then
+         allocate(t_imp%VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN), STAT=ierr)
+         t_imp%vinsimp = 0.d0
+      endif
+      if (.not. allocated(t_imp%RCLSIMP)) then
+         allocate(t_imp%RCLSIMP(3,NATOMIMP), STAT=ierr)
+         t_imp%rclsimp = 0.d0
+      endif
+      if (.not. allocated(t_imp%THETAIMP)) then
+         allocate(t_imp%THETAIMP(NATOMIMP), STAT=ierr)
+         t_imp%thetaimp = 0.d0
+      endif
+      if (.not. allocated(t_imp%PHIIMP)) then
+         allocate(t_imp%PHIIMP(NATOMIMP), STAT=ierr)
+         t_imp%phiimp = 0.d0
+      endif
+
+      ! double complex arrays
+      if (.not. allocated(t_imp%RLLIMP)) then
+         allocate(t_imp%RLLIMP(t_inc%nsra*t_inc%lmmaxso, t_inc%lmmaxso, t_inc%irmdnew, NATOMIMP), STAT=ierr)
+         t_imp%rllimp = (0.0d0, 0.0d0)
+      endif
+
+   end subroutine init_t_imp
    
 
 
@@ -343,12 +486,13 @@ contains
     call MPI_Get_address(t_inc%NSRA,         disp1(19), ierr)
     call MPI_Get_address(t_inc%LMMAXSO,      disp1(20), ierr)
     call MPI_Get_address(t_inc%IRMDNEW,      disp1(21), ierr)
+    call MPI_Get_address(t_inc%KVREL,        disp1(22), ierr)
     base  = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:21)=1
+    blocklen1(1:22)=1
 
-    etype1(1:21) = MPI_INTEGER
+    etype1(1:22) = MPI_INTEGER
     etype1(15:16) = MPI_LOGICAL
 
     call MPI_Type_create_struct(t_inc%Nparams, blocklen1, disp1, etype1, myMPItype1, ierr)
@@ -746,5 +890,121 @@ contains
 
    end subroutine gather_gmat
 #endif
+
+
+#ifdef CPP_MPI
+   subroutine bcast_t_imp_scalars(t_imp)
+
+    use mpi
+    use mod_mympi,   only: master
+    implicit none
+
+    type(type_imp), intent(inout) :: t_imp
+
+    integer :: blocklen1(t_imp%N1), etype1(t_imp%N1), myMPItype1 ! for scalars from t_imp
+    integer :: ierr
+    integer(kind=MPI_ADDRESS_KIND) :: disp1(t_imp%N1), base
+
+    ! scalars
+    call MPI_Get_address(t_imp%N1,          disp1(1), ierr)
+    call MPI_Get_address(t_imp%N2,          disp1(2), ierr)
+    call MPI_Get_address(t_imp%NATOMIMP,    disp1(3), ierr)
+    call MPI_Get_address(t_imp%IHOST,       disp1(4), ierr)
+    call MPI_Get_address(t_imp%IPAND,       disp1(5), ierr)
+    call MPI_Get_address(t_imp%NATYPD,      disp1(6), ierr)
+    call MPI_Get_address(t_imp%IRMD,        disp1(7), ierr)
+    call MPI_Get_address(t_imp%IRID,        disp1(8), ierr)
+    call MPI_Get_address(t_imp%NFUND,       disp1(9), ierr)
+    call MPI_Get_address(t_imp%NSPIN,      disp1(10), ierr)
+    call MPI_Get_address(t_imp%IRMIND,     disp1(11), ierr)
+    call MPI_Get_address(t_imp%LMPOTD,     disp1(12), ierr)
+    
+    base  = disp1(1)
+    disp1 = disp1 - base
+
+    blocklen1(:)=1
+    
+    etype1(:) = MPI_INTEGER
+
+    call MPI_Type_create_struct(t_imp%N1, blocklen1, disp1, etype1, myMPItype1, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_tgmat_logicals'
+    call MPI_Type_commit(myMPItype1, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_tgmat_logicals'
+    call MPI_Bcast(t_imp%N1, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_tgmat'
+    call MPI_Type_free(myMPItype1, ierr)
+
+   end subroutine bcast_T_imp_scalars
+
+
+   subroutine bcast_t_imp_arrays(t_imp, t_inc)
+
+    use mpi
+    use mod_mympi,   only: master
+    implicit none
+
+    type(type_imp), intent(inout) :: t_imp
+    type(type_inc), intent(in) :: t_inc
+
+    integer :: blocklen2(t_imp%N2), etype2(t_imp%N2), myMPItype2 ! for arrays from t_imp
+    integer :: ierr
+    integer(kind=MPI_ADDRESS_KIND) :: disp2(t_imp%N2), base
+
+    ! arrays
+    call MPI_Get_address(t_imp%N2,          disp2(1), ierr)
+    call MPI_Get_address(t_imp%IPANIMP,     disp2(2), ierr)
+    call MPI_Get_address(t_imp%IRCUTIMP,    disp2(3), ierr)
+    call MPI_Get_address(t_imp%IRMINIMP,    disp2(4), ierr)
+    call MPI_Get_address(t_imp%IRWSIMP,     disp2(5), ierr)
+    call MPI_Get_address(t_imp%HOSTIMP,     disp2(6), ierr)
+    call MPI_Get_address(t_imp%RIMP,        disp2(7), ierr)
+    call MPI_Get_address(t_imp%ZIMP,        disp2(8), ierr)
+    call MPI_Get_address(t_imp%THETASIMP,   disp2(9), ierr)
+    call MPI_Get_address(t_imp%VISPIMP,    disp2(10), ierr)
+    call MPI_Get_address(t_imp%VINSIMP,    disp2(11), ierr)
+    call MPI_Get_address(t_imp%RCLSIMP,    disp2(12), ierr)
+    call MPI_Get_address(t_imp%RLLIMP,     disp2(13), ierr)
+    call MPI_Get_address(t_imp%ATOMIMP,    disp2(14), ierr)
+    call MPI_Get_address(t_imp%THETAIMP,   disp2(15), ierr)
+    call MPI_Get_address(t_imp%PHIIMP,     disp2(16), ierr)
+
+
+    base  = disp2(1)
+    disp2 = disp2 - base
+
+    blocklen2(1)=1
+    blocklen2(2)=t_imp%NATOMIMP
+    blocklen2(3)=(1+t_imp%IPAND)*t_imp%NATOMIMP
+    blocklen2(4)=t_imp%NATOMIMP
+    blocklen2(5)=t_imp%NATOMIMP
+    blocklen2(6)=t_imp%NATYPD
+    blocklen2(7)=t_imp%IRMD*t_imp%NATOMIMP
+    blocklen2(8)=t_imp%NATOMIMP
+    blocklen2(9)=t_imp%IRID*t_imp%NFUND*t_imp%NATOMIMP
+    blocklen2(10)=t_imp%IRMD*t_imp%NATOMIMP*t_imp%NSPIN
+    blocklen2(11)=(t_imp%IRMD-t_imp%IRMIND+1)*t_imp%LMPOTD*t_imp%NATOMIMP*t_imp%NSPIN
+    blocklen2(12)=3*t_imp%NATOMIMP
+    blocklen2(13)=t_inc%nsra*t_inc%lmmaxso*t_inc%lmmaxso*t_inc%irmdnew*t_imp%NATOMIMP
+    blocklen2(14)=t_imp%NATOMIMP
+    blocklen2(15)=t_imp%NATOMIMP
+    blocklen2(16)=t_imp%NATOMIMP
+
+    etype2(1:6) = MPI_INTEGER
+    etype2(7:12) = MPI_DOUBLE_PRECISION
+    etype2(13) = MPI_DOUBLE_COMPLEX
+    etype2(14) = MPI_INTEGER
+    etype2(15:16) = MPI_DOUBLE_PRECISION
+
+    call MPI_Type_create_struct(t_imp%N2, blocklen2, disp2, etype2, myMPItype2, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_tgmat_logicals'
+    call MPI_Type_commit(myMPItype2, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_tgmat_logicals'
+    call MPI_Bcast(t_imp%N2, 1, myMPItype2, master, MPI_COMM_WORLD, ierr)
+    if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_tgmat'
+    call MPI_Type_free(myMPItype2, ierr)
+
+   end subroutine bcast_t_imp_arrays
+#endif
+
 
 end module

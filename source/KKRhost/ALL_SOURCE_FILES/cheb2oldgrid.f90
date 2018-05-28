@@ -17,8 +17,8 @@ double precision :: Cinvmatrix(0:ncheb,0:ncheb)
 double precision,allocatable :: CCmatrix(:,:)
 double complex :: alphaparams(0:ncheb,lmmaxpot)
 double precision  :: rmeshnorm(nrmax)
-double precision halfsum,halfdiffinv,tol!,rshift
-parameter(tol=1.d-11)
+double precision tol
+parameter(tol=1.d-09)
 
 ! divide the mesh into subintervals
 intsub(1,:)=0
@@ -34,13 +34,13 @@ do while (ir.LE.nrmax .and. in.LE.npan_tot)
     it=1
     ir=ir+1
     in=in+1
-  elseif (((rmesh(ir)-rpan_intervall(in).LT.-1d-10) ) .and. &
-          ((rmesh(ir)-rpan_intervall(in-1)).GT.-1d-10) ) then
-  intsub(it,in)=ir
-  intsub(2,in)=ir
-  it=2
-  ir=ir+1
-  elseif ((rmesh(ir)-rpan_intervall(in-1)).LT.-1d-10)  then
+  elseif (((rmesh(ir)-rpan_intervall(in).LT.-tol) ) .and. &
+          ((rmesh(ir)-rpan_intervall(in-1)).GT.-tol) ) then
+    intsub(it,in)=ir
+    intsub(2,in)=ir
+    it=2
+    ir=ir+1
+  elseif ((rmesh(ir)-rpan_intervall(in-1)).LT.-tol)  then
     intsub(1,in)=0
     intsub(2,in)=-1
     it=1
@@ -53,8 +53,6 @@ end do
 if (abs(rmesh(nrmax)- rpan_intervall(npan_tot))>tol) then
    write(*,*) rmesh(nrmax),rpan_intervall(npan_tot),rmesh(nrmax)-rpan_intervall(npan_tot)
   stop 'error with the new and old mesh'
-else
-  
 end if
 
 
@@ -75,15 +73,22 @@ do while (in<=npan_tot)
 
   ! Transform to normalized coordinates between [-1,1]
   ! Shift upper & lower end to be centered around zero
-  halfsum = 0.5d0 * (rpan_intervall(in) + rpan_intervall(in-1)) ! 0.5 * (upper + lower)
-  halfdiffinv = 1.d0/(rpan_intervall(in) - halfsum)               ! 1. / (0.5*(upper - lower))  ! change Long 1
+! halfsum = 0.5d0 * (rpan_intervall(in) + rpan_intervall(in-1)) ! 0.5 * (upper + lower)
+! halfdiffinv = 1.d0/(rpan_intervall(in) - halfsum)               ! 1. / (0.5*(upper - lower))  ! change Long 1
 
   do ir=intsub(1,in),intsub(2,in)
     ir2=ir+1-intsub(1,in)
-    rmeshnorm(ir2)=(2*rmesh(ir)-(rpan_intervall(in)+rpan_intervall(in-1))) &
+    rmeshnorm(ir2)=(2d0*rmesh(ir)-(rpan_intervall(in)+rpan_intervall(in-1))) &
                                     /(rpan_intervall(in)-rpan_intervall(in-1))
-    if (abs(rmeshnorm(ir2))>1.0D0 .and. abs(abs(rmeshnorm(ir2))-1.0D0)<tol) then
-      rmeshnorm(ir2)=sign(1.0D0,rmeshnorm(ir2))
+    if (abs(rmeshnorm(ir2))>1.0D0) then
+      if(abs(abs(rmeshnorm(ir2))-1.0D0)<tol) then
+        rmeshnorm(ir2)=sign(1.0D0,rmeshnorm(ir2))
+      else
+        write(*,*) 'ir, rmeshnorm(ir2)', ir, rmeshnorm(ir2)
+        write(*,*) 'rmeshnorm not in interval [-1,1] in cheb2oldgrid'
+        write(*,*) 'Check radial mesh (panels) or increase tolerance.'
+        stop 'rmeshnorm not in interval [-1,1] in cheb2oldgrid'
+      end if
     end if
    enddo
 !  do ir=intsub(1,in),intsub(2,in)

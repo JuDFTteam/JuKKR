@@ -231,7 +231,8 @@ C     .. Data statements ..
       VINS = 0.0d0
       RHO2NS = 0.0d0
       R2NEF = 0.0d0
-      
+      angles_new = 0.0d0
+      MUORB = 0.0d0
 C     ..
 C
 Consistency check
@@ -621,8 +622,8 @@ C ----------------------------------------------------------------------
       END DO
 C ================================================================ NATYP
 #ifdef CPP_TIMING
-      call timing_stop('main1c - rhoval')
-!       if(ie_end>=ie_start) call timing_stop('main1c - rhoval')
+!     call timing_stop('main1c - rhoval')
+      if(i1_end>=i1_start) call timing_stop('main1c - rhoval')
 #endif
       CLOSE (69) !gmat file
 #ifndef CPP_MPI   
@@ -791,7 +792,9 @@ c interpolate potential
       IF ( IDOLDAU.EQ.1 ) 
      +           CALL CINIT(MMAXD*MMAXD*4*NATYPD,DENMATN(1,1,1,1,1))
 
-       CALL INTERPOLATE_POTEN(NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,
+       CALL INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATYPD,IPAND,
+     +                        NSPOTD,NTOTD,NCHEBD,NTOTD*(NCHEBD+1),
+     +                        NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,
      +                        VISP,NPAN_LOG,NPAN_EQ,NPAN_TOT,
      +                        RNEW,IPAN_INTERVALL,
      +                        VINSNEW)
@@ -836,9 +839,6 @@ c interpolate potential
       i1_start = 1
       i1_end   = NATYP
 #endif
-
-      !initialize output nonco angles
-      angles_new = 0.0d0
 
       DO I1 = i1_start,i1_end
       
@@ -920,7 +920,8 @@ c interpolate potential
 #endif
       
 #ifdef CPP_TIMING
-      call timing_stop('main1c - rhovalnew')
+      !call timing_stop('main1c - rhovalnew')
+      if(i1_end>=i1_start) call timing_stop('main1c - rhovalnew')
 #endif
 
       CLOSE (69)

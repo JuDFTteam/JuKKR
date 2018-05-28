@@ -36,6 +36,7 @@ c     eim=pi*Kb*Tk
       OPEN (49,FILE='complex.dos',FORM='formatted')
       OPEN (50,FILE='new3.dos',FORM='formatted')
       OPEN (51,FILE='new3_eV_EF.dos',FORM='formatted')
+      READ (49,*) TEXT2 !dummy readin of header, may be replaced later
       READ (49,*) NPOT
       READ (49,*) IEMAX
       READ (49,*) LMAX

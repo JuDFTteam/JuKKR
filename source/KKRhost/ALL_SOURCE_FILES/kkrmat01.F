@@ -124,8 +124,8 @@
 #ifdef CPP_MPI
       integer :: ntot1
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
-      integer :: i1_start, i1_end
 #endif
+      integer :: i1_start, i1_end
 
 
       LOGICAL TEST,OPT
@@ -176,6 +176,7 @@
 !-----------------------------------------------------------------------
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ K-points loop
+
 #ifdef CPP_MPI
 ! MPI:     
       if(.not.opt('qdos    ')) then
@@ -205,10 +206,25 @@
       
       
       
-      DO KPT = i1_start,i1_end
 #else
-      DO KPT = 1,NOFKS 
+      i1_start = 1
+      i1_end = NOFKS
 #endif
+      ! k-loop not needed for GREENIMP-case
+      if(opt('GREENIMP')) then
+         if(myrank==master) write(*,*) 'Skipping kloop in kkrmat' 
+         i1_start = 1
+         i1_end = 0
+      end if
+
+      !print header of statusbar for k-loop
+      if(t_inc%i_write>0) then
+      write(1337,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')
+     &    0, 20, 40, 60, 80, 100
+      write(1337,FMT=190) !beginning of statusbar
+      endif
+
+      DO KPT = i1_start,i1_end
          GLLKE(:,:) = CZERO
          IF (LLY.NE.0) DGLLKE(:,:) = CZERO
          KP(1:3) = BZKP(1:3,KPT)
@@ -575,8 +591,21 @@ c            DEALLOCATE(GLLKE0)
      &                 LLY_GRTR + LLY_GRTR_K * VOLCUB(KPT) * NSYMAT ! LLY Lloyd Integration
          
 
+         !update statusbar
+#ifdef CPP_MPI
+         if( (((i1_end-i1_start)/50)==0 .or. 
+     &       mod(KPT-i1_start,(i1_end-i1_start)/50)==0) .and.
+     &       t_inc%i_write>0 ) write(1337,FMT=200)
+#else
+         if( ((NOFKS/50)==0 .or. 
+     &       mod(KPT,NOFKS/50)==0) .and.
+     &                          t_inc%i_write>0 ) write(1337,FMT=200)
+#endif
 
       END DO ! KPT = 1,NOFKS   end K-points loop
+190   FORMAT('                 |'$)      ! status bar
+200   FORMAT('|'$)                       ! status bar
+      IF(t_inc%i_write>0) write(1337,*)  ! finalize status bar
 
       TRACET = CZERO
       IF (LLY.EQ.2) THEN 

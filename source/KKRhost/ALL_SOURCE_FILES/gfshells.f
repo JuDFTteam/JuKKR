@@ -15,6 +15,7 @@ C * have to be calculated, NSH1(I),NSH2(I) the sites connected for     *
 C * the block I, I = 1,NSHELL(0)                                       *
 C *                                                                    *
 C **********************************************************************
+      use mod_types, only: t_imp
       IMPLICIT NONE
       INTEGER  LMAXD,LMMAXD,NAEZD,NATYPD,NATOMIMPD,NEMBD,NSHELD
 C     ..
@@ -36,7 +37,7 @@ C     ..
       DOUBLE PRECISION RSYMAT(64,3,3)
 C     .. 
 C     .. Local scalars
-      INTEGER NB,I,J,POS,II,IO,NS,IN,NDIM,NSIZE
+      INTEGER NB,I,J,POS,II,IO,NS,IN,NDIM,NSIZE,IHOST,IERR
       CHARACTER*9 STR9
       LOGICAL LSURF,OPT
 C     ..
@@ -135,7 +136,32 @@ C
              READ (25,FMT=*) (RCLSIMP(J,I),J=1,3),ATOMIMP(I)
              ATOMIMP(I) = ATOMIMP(I) + ICC - 1
           ENDDO
-       END IF
+
+          IF (OPT('GREENIMP') .or. OPT('OPERATOR')) THEN         
+            IHOST=0
+            DO 125 I=1,NATYPD
+              DO J=1,NATOMIMP
+                IF (ATOMIMP(J).EQ.I) THEN
+                  IHOST=IHOST+1 
+                  HOSTIMP(IHOST)=ATOMIMP(J)
+                  GO TO 125
+                ENDIF
+              ENDDO
+  125       CONTINUE
+
+            ! save stuff to t_imp for later use
+            t_imp%IHOST = IHOST
+            t_imp%NATOMIMP = NATOMIMP
+            allocate(t_imp%HOSTIMP(IHOST), stat=ierr)
+            if(ierr/=0) stop 'Error allocating t_imp%HOSTIMP'
+            t_imp%HOSTIMP(1:IHOST) = HOSTIMP(1:IHOST)
+            allocate(t_imp%ATOMIMP(NATOMIMP), stat=ierr)
+            if(ierr/=0) stop 'Error allocating t_imp%ATOMIMP'
+            t_imp%ATOMIMP(1:NATOMIMP) = ATOMIMP(1:NATOMIMP)
+
+          ENDIF!GREENIMP
+
+       END IF ! ICC>=0
 C **********************************************************************
 C          
        CALL IMPCHECK(ATOMIMP,NATOMIMP,NAEZ,RCLSIMP,RBASIS,BRAVAIS,NDIM)

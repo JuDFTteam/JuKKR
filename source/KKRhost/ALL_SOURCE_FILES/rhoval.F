@@ -238,9 +238,9 @@ C
                DMUORB(L,IR) = (0.0D0,0.0D0)
             END DO
 C
-            DO L = 0,LMAXD1 + 1
-               MUORB(L,IR) = 0.0D0
-            END DO
+C           DO L = 0,LMAXD1 + 1       !zimmer: initialization shifted to main1c
+C              MUORB(L,IR) = 0.0D0
+C           END DO
          END DO
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC

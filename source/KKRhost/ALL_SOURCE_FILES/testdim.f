@@ -199,10 +199,13 @@ c
         NLAYER=NAEZ/NPRINCD
         WRITE(1337,2020) NPRINCD,NLAYER
         WRITE(1337,2112)
-        IF (NLAYER*NPRINCD.NE.NAEZ) THEN
-          write(6,*) 'NLAYER*NPRINCD ( = ',NLAYER*NPRINCD,
-     +         ').NE.NAEZ ( = ',NAEZ,')'
-          stop_mark=1
+        ! ignore this test if full inversion is done
+        IF ( .not.OPT('full inv') ) THEN
+           IF (NLAYER*NPRINCD.NE.NAEZ) THEN
+             write(6,*) 'NLAYER*NPRINCD ( = ',NLAYER*NPRINCD,
+     +            ').NE.NAEZ ( = ',NAEZ,')'
+             stop_mark=1
+           END IF
         END IF
 
       END IF
