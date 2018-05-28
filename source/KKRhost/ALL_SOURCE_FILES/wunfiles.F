@@ -241,6 +241,7 @@ C     ..
 C     .. Local scalars
       INTEGER I1
       integer ic, naclsmax, nqdos, irmdnew  !variables for t_inc filling
+      integer naclsmin
       double precision phi(natyp),theta(natyp)
 C     ..
 C     .. External Functions ..
@@ -399,7 +400,8 @@ C                                  meant for simpler passing of basic parameter 
       ! so far changing does not work yet, so turn this off:
       MPIadapt = 0
 
-      if(opt('FERMIOUT') .or. OPT('WRTGREEN') .or. OPT('GREENIMP')) then! fswrt
+      if(opt('FERMIOUT') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. ! fswrt
+     &   opt('OPERATOR') ) then                                         ! fswrt
          MPIatom = .true.                                               ! fswrt
          if(SCFSTEPS>1) then                                            ! fswrt
             write(*,*) 'Warning: Setting SCFSTEPS=1 for FERMIOUT option'! fswrt
@@ -410,6 +412,35 @@ C                                  meant for simpler passing of basic parameter 
             write(*,*) 'Nranks>NATYP', nranks, NATYP                    ! fswrt
             stop 'Please choose Nranks<=NATYP'                          ! fswrt
          end if                                                         ! fswrt
+         naclsmin = minval(NACLS(1:NCLS))                               ! fswrt
+         if(.not.OPT('GREENIMP') .and. naclsmin<150) then               ! fswrt
+            write(*,*) ''                                               ! fswrt
+            write(*,*) '         WARNING'                               ! fswrt
+            write(*,*) ''                                               ! fswrt
+            write(*,*) 'FERMIOUT/WRTGREEN option chosen'                ! fswrt
+            write(*,*) 'minimal cluster size smaller than 150 atoms!!!' ! fswrt
+            write(*,*) 'should be increased to least 200-300 atoms'     ! fswrt
+         end if                                                         ! fswrt
+         if(test('MPIenerg')) then                                      ! fswrt
+            write(*,*) 'FERMIOUT/WRTGREEN/GREENIMP option chosen'       ! fswrt
+            write(*,*) 'found unsupported test option MPIenerg'         ! fswrt
+            stop 'Please choose MPIatom instead'                        ! fswrt
+         end if                                                         ! fswrt
+         if(opt('OPERATOR') .and. opt('FERMIOUT')) then                 ! fswrt
+            write(*,*) 'OPERATOR and FERMIOUT cannot be used together'  ! fswrt
+            stop 'Please chose only one of the two'                     ! fswrt
+         end if                                                         ! fswrt
+         if(opt('OPERATOR') .and. ielast.ne.1) then                     ! fswrt
+            write(*,*) 'OPERATOR option chosen'                         ! fswrt
+            write(*,*) 'energy contour should contain a single point'   ! fswrt
+            write(*,*) 'on the real axis only'                          ! fswrt
+            stop 'Please correct energy contour'                        ! fswrt
+         end if                                                         ! fswrt
+      end if                                                            ! fswrt
+      if(.not.OPT('OPERATOR') .and. TEST('IMP_ONLY')) then              ! fswrt
+         write(*,*) 'test option "IMP_ONLY" can only be used'           ! fswrt
+         write(*,*) 'in combination with option "OPERATOR"'             ! fswrt
+         stop                                                           ! fswrt
       end if                                                            ! fswrt
       
       if(test('MPIatom ') .and. test('MPIenerg')) then

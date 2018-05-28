@@ -314,7 +314,6 @@ c energy loop
 !$omp& private(alphasph,alphall,ie_num)
 !$omp& private(rll_was_read_in, sll_was_read_in)
 !$omp$ private(rllleft_was_read_in, sllleft_was_read_in)
-!!$omp& firstprivate(t_inc)
 !$omp& shared(t_inc)
 !$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
 !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
@@ -415,7 +414,8 @@ cc right solutions
 C faster calculation of RLL.
 C no irregular solutions SLL are needed in self-consistent iterations
 C because the density depends only on RLL, RLLLEFT and SLLLEFT
-        IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+        IF(OPT('RLL-SLL ') .and. 
+     &     .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) THEN
         CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLL(:,:,:,ith),TMATLL,
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),
@@ -495,7 +495,8 @@ cc left solutions
 c notice that exchange the order of left and right hankel/bessel functions
          TMATTEMP=CZERO
 C faster calculation of RLLLEFT and SLLLEFT.
-        IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+        IF(OPT('RLL-SLL ') .and. 
+     &     .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) THEN
         CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLLLEFT(:,:,:,ith),TMATTEMP,
      +              NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),

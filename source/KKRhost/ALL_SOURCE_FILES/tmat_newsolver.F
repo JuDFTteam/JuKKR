@@ -227,7 +227,9 @@ c energy loop
             call find_isave_wavefun(t_wavefunctions)
             ! reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
             ! to prevent unnessesary storing of wavefunctions
-            if(test('STOP1B  ')) t_wavefunctions%Nwfsavemax = 0
+            if(test('STOP1B  ') .and. .not. opt('OPERATOR')) then
+               t_wavefunctions%Nwfsavemax = 0
+            end if
        endif
          
 
@@ -243,7 +245,6 @@ c energy loop
 !$omp& private(dtmatll) 
 !$omp& private(dalphall) 
 !$omp& shared(t_inc)
-!!$omp& firstprivate(t_inc)
 !$omp& shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb) 
 !$omp& shared(zat,socscale,ez,cleb,rnew,nth) 
 !$omp& shared(rpan_intervall,vinsnew,ipan_intervall) 
@@ -340,7 +341,8 @@ cc right solutions
 C faster calculation of RLL.
 C no irregular solutions are needed in self-consistent iterations
 C because the t-matrix depends only on RLL
-        IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+        IF(OPT('RLL-SLL ') .and. 
+     &     .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) THEN
         CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLL(:,:,:,ith),TMAT0(:,:),NCHEB,
      +              NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
@@ -492,7 +494,8 @@ c        notice that exchange the order of left and right hankel/bessel function
 C faster calculation of RLL.
 C no left solutions are needed in self-consistent iterations
 C because the t-matrix depends only on RLL
-         IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+         IF(OPT('RLL-SLL ') .and. 
+     &      .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) THEN
          ! do nothing
          ELSE
          CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
@@ -550,6 +553,8 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #else
             irec = ie_num + ie_end * (i1-1)
 #endif
+!            write(*,*) irec, ie_num, ie_end, i1, 
+!     &                 t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)
             t_tgmat%tmat(:,:,irec) = TMATLL(:,:)
          end if
          IF (LLY.NE.0) THEN

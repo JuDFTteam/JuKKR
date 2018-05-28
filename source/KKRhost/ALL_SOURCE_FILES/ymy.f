@@ -13,16 +13,18 @@ c
 c     converted to real spherical harmonics .
 c                                  b.drittler 1987
 c-----------------------------------------------------------------------
+      IMPLICIT NONE
 C     .. Parameters ..
       DOUBLE PRECISION SZERO
       PARAMETER (SZERO=1.0D-20)
 C     ..
 C     .. Scalar Arguments ..
-      DOUBLE PRECISION R,V1,V2,V3
-      INTEGER LMAX
+      DOUBLE PRECISION, intent(out) :: R
+      DOUBLE PRECISION, intent(in) :: V1,V2,V3
+      INTEGER, intent(in) :: LMAX
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION YLM(*)
+      DOUBLE PRECISION, intent(out) :: YLM((2*LMAX+1)**2)
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A,CD,CPH,CTH,FAC,FPI,PI,RTWO,SGM,SPH,STH,T,XY,XYZ
@@ -48,6 +50,7 @@ c
 c
       R = SQRT(XYZ)
       IF (XYZ.LE.0.0D0) THEN
+        write(*,*) xyz
         CALL RCSTOP('ylm=0   ')
 
       ELSE

@@ -137,7 +137,7 @@ C
              ATOMIMP(I) = ATOMIMP(I) + ICC - 1
           ENDDO
 
-          IF (OPT('GREENIMP')) THEN         
+          IF (OPT('GREENIMP') .or. OPT('OPERATOR')) THEN         
             IHOST=0
             DO 125 I=1,NATYPD
               DO J=1,NATOMIMP
@@ -153,8 +153,11 @@ C
             t_imp%IHOST = IHOST
             t_imp%NATOMIMP = NATOMIMP
             allocate(t_imp%HOSTIMP(IHOST), stat=ierr)
-            if(ierr/=0) stop 'Error allocating t_inc%HOSTIMP'
+            if(ierr/=0) stop 'Error allocating t_imp%HOSTIMP'
             t_imp%HOSTIMP(1:IHOST) = HOSTIMP(1:IHOST)
+            allocate(t_imp%ATOMIMP(NATOMIMP), stat=ierr)
+            if(ierr/=0) stop 'Error allocating t_imp%ATOMIMP'
+            t_imp%ATOMIMP(1:NATOMIMP) = ATOMIMP(1:NATOMIMP)
 
           ENDIF!GREENIMP
 

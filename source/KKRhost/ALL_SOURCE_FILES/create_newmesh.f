@@ -85,8 +85,13 @@ c log panel
        ENDIF 
   
        IF (ILINPANSHIFT.EQ.1) THEN
-        STOP 'non-spherical part of the potential needs to be inside 
-     +        the log panel'
+         write(*,*) 'ERORR: non-spherical part of the potential needs'
+         write(*,*) 'to be inside the log panel'
+         write(*,*) 'atom (I1):', I1
+         write(*,*) 'R_LOG', R_LOG
+         write(*,*) 'R(IRMIN(I1), I1)', R(IRMIN(I1),I1)
+         write(*,*) 'IRMIN(I1)', IRMIN(I1)
+         STOP 'Error creating newmesh' 
        ENDIF
       
        DO IP=0,NPAN_LOG-ILOGPANSHIFT

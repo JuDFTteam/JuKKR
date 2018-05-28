@@ -32,8 +32,8 @@ integer :: dims(2)
 #endif
 character(len=3) :: ctemp !name for output file
 ! needed to use test('xxxxxxxx'):
-logical :: test
-external :: test
+logical :: test, opt
+external :: test, opt
 
 
 
@@ -235,7 +235,9 @@ do while ( (t_inc%i_iteration.lt.t_inc%N_iteration) .and. (t_inc%N_iteration.ne.
 #ifdef CPP_MPI
     call MPI_Finalize(ierr)
 #endif
-    stop 'Stop after main1b'
+    if(.not. OPT('WRTGREEN')) write(*,*) 'done with WRTGREEN step'
+    if(myrank==master) write(*,*) 'Stop after main1b'
+    stop
   end if!test
 
   ! calculate density

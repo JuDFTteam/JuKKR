@@ -31,7 +31,7 @@ contains
 #ifdef CPP_OMP
       use omp_lib
 #endif
-      use mod_mympi, only: myrank, master
+      use mod_mympi, only: myrank, nranks, master
       use mod_types, only: t_inc, t_mpi_c_grid
       
       implicit none
@@ -105,27 +105,30 @@ contains
            t_wavefunctions%Nwfsavemax=0
         end if
         
+        ! avoid unnessesary large allocations of arrays
+        if( t_wavefunctions%Nwfsavemax > nat_myrank*ne_myrank ) then
+           t_wavefunctions%Nwfsavemax = nat_myrank*ne_myrank
+           if(t_inc%i_write>0) write(1337,'(A,I5,A,I9)') '  rank',myrank,' reset Nwfsavemax to maximal needed number for this thread:',t_wavefunctions%Nwfsavemax
+        end if
+        
+        ! write out info about allocation for wf storage
         if(myrank==master) then
         
            write(message,"(A)") '   ==> find_isave_wavefun '
            write(1337, '(A)') trim(message)
            if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
-           write(message,"(A,F15.2,A)") '   (maxmem given for storage:',dfloat((1024**(t_wavefunctions%maxmem_units-2))*t_wavefunctions%maxmem_number), 'MB'
+           write(message,"(A,F15.2,A)") '   (maxmem given per rank for storage:',dfloat((1024**(t_wavefunctions%maxmem_units-2))*t_wavefunctions%maxmem_number), 'MB'
            write(1337, '(A)') trim(message)
            if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
-           write(message,"(A,I11)") '    number of wavefunctions that fit in:',t_wavefunctions%Nwfsavemax
+           write(message,"(A,I11)") '    number of wavefunctions that fit in:', t_wavefunctions%Nwfsavemax
+           write(1337, '(A)') trim(message)
+           if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
+           write(message,"(A,F15.2,A)") '    total memory needed for storage:', nranks*t_wavefunctions%Nwfsavemax*delta_mem, 'MB'
            write(1337, '(A)') trim(message)
            if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
            write(message,"(A,I11,A,I11,A)") '    Ne=',ne,', Nat=',nat,''
            write(1337, '(A)') trim(message)
            if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
-           
-!            write(message,"(A,/A,F15.2,A,/A,I11,/A,I11,A,I11,A)") '   ==> find_isave_wavefun ', &
-!            &'   (maxmem given for storage:',dfloat((1024**(t_wavefunctions%maxmem_units-2))*t_wavefunctions%maxmem_number), 'MB', &
-!            &'    number of wavefunctions that fit in:',t_wavefunctions%Nwfsavemax, &
-!            &'    Ne=',ne,', Nat=',nat,''
-!            write(1337, '(A)') trim(message)
-!            write(*, '(A)') trim(message)
            
            write(message,'(A,F15.2,A)') '    memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:', delta_mem, 'MB)  <=='
            write(1337, '(A)') trim(message)
@@ -136,21 +139,14 @@ contains
            write(*, '(A)') trim(message)
            
         end if
-        
-        ! avoid unnessesary large allocations of arrays
-        if( t_wavefunctions%Nwfsavemax > nat_myrank*ne_myrank ) then
-           t_wavefunctions%Nwfsavemax = nat_myrank*ne_myrank
-           if(t_inc%i_write>0) write(1337,'(A,I5,A,I9)') '  rank',myrank,' reset Nwfsavemax to maximal needed number for this thread:',t_wavefunctions%Nwfsavemax
-        end if
 
-        
+        ! allocate store arrays in t_wavefunctions
         if(t_wavefunctions%Nwfsavemax>0) then
-           ! allocate store arrays int t_wavefunctions
            if(t_wavefunctions%save_rll) then
              allocate(t_wavefunctions%rll(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
+             if(ierr/=0) stop '[find_isave_wavefun] Error allocating rll'
            end if
            if(t_wavefunctions%save_sll) then
-             if(ierr/=0) stop '[find_isave_wavefun] Error allocating rll'
              allocate(t_wavefunctions%rllleft(t_wavefunctions%Nwfsavemax, t_inc%NSRA*t_inc%LMMAXSO, t_inc%LMMAXSO, t_inc%IRMDNEW, 0:nth-1), stat=ierr)
              if(ierr/=0) stop '[find_isave_wavefun] Error allocating rllleft'
            end if
@@ -240,7 +236,7 @@ contains
       if(isave>0) then
          
          if(t_wavefunctions%save_rll    ) then
-!             write(*,*) 'write out rll', ie, iat
+!             write(*,*) 'save rll', ie, iat
             t_wavefunctions%rll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
          endif
          
