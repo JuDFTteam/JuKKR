@@ -1074,7 +1074,7 @@ C
      &        '  NZERO set to  (NRC-1) =',I4)
 99004 FORMAT (//,'  STOP IN <<CORE>>',/,'  IT=',I2,' NQN=',I2,' L=',I2,
      &        /,'  no matching-radius found for  EC=',F10.3)
-99005 FORMAT (' LOOP    =  ',I3,' BSCL=',F10.5,/,' E=',F21.14,' VAR  ',
+99005 FORMAT (' LOOP    =  ',I3,' BSCL=',F10.5,/,' E=',F25.16,' VAR  ',
      &        4E11.4,/,17X,' CORR ',4E11.4,/,17X,' ERR  ',4E11.4)
 99006 FORMAT (' iteration not converged after',I3,' steps !',/,
      &        ' parameters:',4E18.10,/,' last corr.:',4E18.10,/,

@@ -692,11 +692,11 @@ c
         open(unit=54633163,file='test_vpotout_bshift')
         do i1=1,natyp*nspin
             write(54633163,*) '# visp of atom ',i1
-            write(54633163,'(50000E21.14)') visp(:,i1)
+            write(54633163,'(50000E25.16)') visp(:,i1)
         end do !iatom
         do i1=1,natyp*nspin
             write(54633163,*) '# vins of atom ',i1
-            write(54633163,'(50000E21.14)') vins(:,:,i1)
+            write(54633163,'(50000E25.16)') vins(:,:,i1)
         end do !iatom
         close(54633163)
       end if
@@ -973,7 +973,7 @@ C
             ISVATOM=0
             ZATTEMP=ZAT(KAOEZ(1,ATOMIMP(I)))
           END IF
-          WRITE (58,'(3F21.14,F6.2,3I5)') (RCLSIMP(J,I),J=1,3), ZATTEMP,
+          WRITE (58,'(3F25.16,F6.2,3I5)') (RCLSIMP(J,I),J=1,3), ZATTEMP,
      +                  ISVATOM,0,LMAXD
         END DO
         CLOSE (58)
