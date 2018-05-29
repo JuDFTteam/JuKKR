@@ -56,14 +56,14 @@ for mode in modes:
                 path = testcase+'_'+mode+'_'+str(npara[0])+'_'+str(npara[1])
                 job = 'mkdir '+path
                 print job
-                #call(job, shell=True)
+                call(job, shell=True)
                 job = 'cd '+path+'; '
                 job+= 'ln -s ../test_inputs/test_%s_*/* .; ln -s ../../kkr.x_%s kkr.x; '%(testcase.replace('test_run',''), mode)
                 if global_options != '':
                     job+= global_options+'; '
                 job+= 'export OMP_NUM_THREADS=%i; mpirun -np %i ./kkr.x | tee out_kkr'%(npara[0], npara[1])
                 print job
-                #call(job, shell=True)
+                call(job, shell=True)
                 job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'
                 print job
-                #call(job, shell=True)
+                call(job, shell=True)
