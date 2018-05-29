@@ -22,7 +22,7 @@
       INTEGER IESTART,IEEND,IELAST             ! Starting and ending energy point for renormalization
       INTEGER IRCUT(0:IPAND,NATYPD),IPAN(NATYPD) ! Mesh info
       DOUBLE PRECISION CONC(NATYPD)                      ! Concentration (for cpa)
-      DOUBLE COMPLEX CDEN(0:LMAXD1,IEMXD,NPOTD)    ! Non-renormalized density per atom (density=-cden/pi)
+      DOUBLE COMPLEX CDEN(0:LMAXD1,IELAST,NPOTD)    ! Non-renormalized density per atom (density=-cden/pi)
       DOUBLE COMPLEX CDOS_LLY(IEMXD,NSPIND)        ! DOS according to Lloyd's formula
       DOUBLE COMPLEX WEZ(IEMXD),EZ(IEMXD)
       DOUBLE PRECISION ZAT(NATYPD)
