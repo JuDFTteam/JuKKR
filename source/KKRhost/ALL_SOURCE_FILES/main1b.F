@@ -394,7 +394,7 @@ C    &             FILE='green',FORM='unformatted')                             
      &                NATOMIMP, LMMAXD, KORBIT,
      &             (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
               IF ( ( OPT('GPLAIN  ') ) ) THEN
-                WRITE(8888,'(5I5,50000F14.7)') IELAST,NSPIN,NATOMIMP,
+                WRITE(8888,'(5I5,50000F21.14)') IELAST,NSPIN,NATOMIMP,
      &               NATOMIMP, (LMAX+1)**2,
      &               (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
               END IF
@@ -722,7 +722,7 @@ C           Skip this part if first part of the qdos is running
                   irec = ielast*(ispin-1)+ ie+1
                   WRITE(888,REC=irec) GIMP
                   IF ( OPT('GPLAIN  ') ) THEN
-                    WRITE(8888,'(50000E14.7)') GIMP
+                    WRITE(8888,'(50000E21.14)') GIMP
                   END IF
                 ENDIF ! KKRFLEX
                 IF (OPT('WRTGREEN') .and. myrank==master) THEN
