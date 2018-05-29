@@ -22,35 +22,35 @@ C
 C
 C PARAMETER definitions
 C
-      COMPLEX*16 CI,C1,C0
+      DOUBLE COMPLEX CI,C1,C0
       PARAMETER (CI=(0.0D0,1.0D0),C1=(1.0D0,0.0D0),C0=(0.0D0,0.0D0))
 C
 C Dummy arguments
 C
       INTEGER IPRINT,KREL,NKMMAX,NL,NQ,NQMAX,NSYM,NSYMAXD
-      COMPLEX*16 DROT(NKMMAX,NKMMAX,48)
+      DOUBLE COMPLEX DROT(NKMMAX,NKMMAX,48)
       INTEGER ISYMINDEX(NSYMAXD)
       DOUBLE PRECISION ROTMAT(64,3,3)
-      CHARACTER*10 ROTNAME(64)
+      CHARACTER (len=10) :: ROTNAME(64)
       LOGICAL SYMUNITARY(48)
 C
 C Local variables
 C
-      REAL*8 A,B,CO1,CO2,CO3,DET,FACT(0:100),PI,RJ,RMJ,SI1,SI2,SI3,SK,
-     &       SYMEULANG(3,48),TET1,TET2,TET3
+      double precision  A,B,CO1,CO2,CO3,DET,FACT(0:100),PI,
+     &        SI1,SI2,SI3,SK,SYMEULANG(3,48),TET1,TET2,TET3
       LOGICAL CHECKRMAT
       DOUBLE PRECISION DBLE
-      REAL*8 DDET33
+      double precision  DDET33
       COMPLEX*16 DINV(NKMMAX,NKMMAX),DTIM(NKMMAX,NKMMAX),
      &           RC(NKMMAX,NKMMAX),W1(NKMMAX,NKMMAX),W2(NKMMAX,NKMMAX)
       LOGICAL EQUAL
       INTEGER I,I1,I2,IND0Q(NQMAX),INVFLAG(48),IQ,IREL,IRELEFF,ISYM,
-     &        ITOP,J,K,L,LOOP,M,N,NK,NKEFF,NKM,NLM,NOK,NS
+     &        ITOP,J,K,L,LOOP,M,N,NK,NKEFF,NKM,NLM,NOK,NS,RJ,RMJ
       INTEGER NINT
       DOUBLE PRECISION RMAT(3,3)
-      REAL*8 W
+      double precision  W
 C
-      EQUAL(A,B) = (ABS(A-B).LT.1D-7)
+      EQUAL(A,B) = (DABS(A-B).LT.1D-7)
 C
       WRITE (1337,99001)
 C
@@ -133,7 +133,7 @@ C----------------------------------------------------------------------
          IF ( LOOP.EQ.1 ) TET2 = -TET2
          SI2 = SIN(TET2)
 C
-         IF ( EQUAL(CO2,1D0) ) THEN
+         IF ( EQUAL(CO2,1.0D0) ) THEN
             TET1 = ACOS(RMAT(1,1))
             IF ( .NOT.EQUAL(RMAT(1,2),SIN(TET1)) ) THEN
                TET1 = -TET1
@@ -297,8 +297,8 @@ C
             ELSE
                SK = +1D0
             END IF
-            RJ = L + SK*0.5D0
-            DO RMJ = -RJ, + RJ
+            RJ = NINT(L + SK*0.5D0)
+            DO RMJ = -RJ, + RJ, 1
                I1 = NINT(2*L*(RJ+0.5D0)+RJ+RMJ+1)
                I2 = NINT(2*L*(RJ+0.5D0)+RJ-RMJ+1)
                DTIM(I1,I2) = SK*(-1)**NINT(RMJ+0.5D0)

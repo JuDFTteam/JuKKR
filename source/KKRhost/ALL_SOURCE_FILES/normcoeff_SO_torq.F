@@ -85,14 +85,14 @@ C     ..
 c
       LMMAXSO=2*LMMAXD
 
-      if(t_inc%i_write) WRITE(1337,*) "KSRA",KSRA
+      if(t_inc%i_write>0) WRITE(1337,*) "KSRA",KSRA
       IF (KSRA.GE.1) THEN    ! previously this was .GT. which is wrong for kvrel=1
          NSRA = 2
       ELSE
          NSRA = 1
       END IF
 
-      if(t_inc%i_write) then
+      if(t_inc%i_write>0) then
         WRITE(1337,*) "NSRA",NSRA
         WRITE(1337,*) "LMMAX",LMMAX
         WRITE(1337,*) "LMMAXD",LMMAXD
@@ -121,7 +121,7 @@ c
 
       ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
       DO I1=i1_start, i1_end
-        if(t_inc%i_write) WRITE(1337,*) 'ATOM',I1, i1_start, i1_end
+        if(t_inc%i_write>0) WRITE(1337,*) 'ATOM',I1, i1_start, i1_end
         ! use I2 as index to map for mode==1 each impurity position to the corresponding layer index of the host
         if (mode==1) then
            I2 = t_imp%ATOMIMP(I1)

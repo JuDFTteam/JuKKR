@@ -20,7 +20,7 @@ C
 C
 C Local variables
 C
-      REAL*8 A,B
+      DOUBLE PRECISION A,B
       LOGICAL EQUAL
       LOGICAL RESULT
 C

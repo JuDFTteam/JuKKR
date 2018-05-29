@@ -76,7 +76,7 @@ C ======================================================================
      +               GN2,RM2,RMAX,GMAX,IPRINT,NMAXD,ISHLD)
 C ======================================================================
 C
-      LRECAMAD = WLENGTH*2*LMPOTD*LMPOTD
+      LRECAMAD = WLENGTH*4*LMPOTD*LMPOTD
       OPEN (69,ACCESS='direct',RECL=LRECAMAD,FILE='avmad.unformatted',
      +     FORM='unformatted')
 C

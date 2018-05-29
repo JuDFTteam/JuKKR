@@ -172,23 +172,24 @@ c Parameters:
       parameter (lmaxd=4,l4maxd=4*lmaxd)
 c Input:
       integer lmax  ! up to which l to calculate
-      real*8 v1,v2,v3 ! vector where Ylm etc are calculated (not necessarily normalized)
+      double precision v1,v2,v3 ! vector where Ylm etc are calculated (not necessarily normalized)
 c Output:
 c Y[l,m], dY/dth, dY/dfi, d(dY/dth)/dth, d(dY/dfi)/dfi, d(dY/dth)/dfi
-      real*8 Ylm(*),dYdth(*),dYdfi(*),d2Ydth2(*),d2Ydfi2(*),d2Ydthdfi(*)
-      real*8 Rabs  ! Norm of input vector (V1,V2,V3)
+      double precision Ylm(*),dYdth(*),dYdfi(*),d2Ydth2(*),d2Ydfi2(*),
+     &                 d2Ydthdfi(*)
+      double precision Rabs  ! Norm of input vector (V1,V2,V3)
 c Inside:
-      real*8 cth,sth,cfi,sfi  ! cos and sin of th and fi
-      real*8 pi,fpi,rtwo   ! pi (what else?), 4*pi, sqrt(2)
-      real*8 fac      ! factor in construction of polynomials.
-      real*8 Plm(0:l4maxd,0:l4maxd)  ! Legendre polynomials
-      real*8 Qlm((l4maxd+1)**2)      ! Ylm/cos(m*fi) (m>0) and Ylm/sin(m*fi) (m<0)
-      real*8 cmfi(0:l4maxd),smfi(0:l4maxd) ! cos(m*fi) and sin(m*fi)
-      real*8 xy,xyz,sgm,sgmm,fi
-      real*8 aux
-      real*8 tiny
+      double precision cth,sth,cfi,sfi  ! cos and sin of th and fi
+      double precision pi,fpi,rtwo   ! pi (what else?), 4*pi, sqrt(2)
+      double precision fac      ! factor in construction of polynomials.
+      double precision Plm(0:l4maxd,0:l4maxd)  ! Legendre polynomials
+      double precision Qlm((l4maxd+1)**2)      ! Ylm/cos(m*fi) (m>0) and Ylm/sin(m*fi) (m<0)
+      double precision cmfi(0:l4maxd),smfi(0:l4maxd) ! cos(m*fi) and sin(m*fi)
+      double precision xy,xyz,sgm,sgmm,fi
+      double precision aux
+      double precision tiny
       parameter(tiny=1.d-20)  ! if th < tiny set th=0
-      real*8 tt,aa,cd  ! factors in calcul. of Ylm
+      double precision tt,aa,cd  ! factors in calcul. of Ylm
       integer ll,mm,ii   ! l and m indexes
       integer lmmax      ! (lmax+1)**2, total number of spher. harmonics.
       integer imm,ipm,lpm,lmm,lpmp1,lmmp1 ! i-m,i+m,l+m,l-m,l+m+1,l-m-1

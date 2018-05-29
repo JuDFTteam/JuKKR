@@ -1,4 +1,10 @@
       module MOD_MAIN0 
+#ifdef CPP_HYBRID
+#  define cpp_ompstuff
+#endif
+#ifdef CPP_OMP
+#  define cpp_ompstuff
+#endif
       
       use mod_wunfiles
       use mod_types, only: t_imp
@@ -203,7 +209,7 @@ C Note: IRMD-dimension depends on KREL to save space
 C ======================================================================VINS()
 
       use mod_types
-#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+#ifdef cpp_ompstuff
       use omp_lib        ! necessary for omp functions
 #endif
 #ifdef CPP_MPI
@@ -421,7 +427,7 @@ C ruess: IVSHIFT test option
       double precision, allocatable :: THETAS(:,:,:), THETASNEW(:,:,:)
       integer :: ierr
       
-#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+#ifdef cpp_ompstuff
 !     .. OMP ..
       integer nth, ith          ! total number of threads, thread number
 #endif
@@ -460,19 +466,21 @@ C     ..
      &              'Electronic Structure Code',
      &              'for Bulk and Interfaces',
      &              'Juelich-Munich 2001 - 2016',
-     &             ' Code version: ',trim(version(1)),
-     &             ' Compile options:',(trim(version(i)),i=2,4),
+     &             ' Code version: ',trim(version1),
+     &             ' Compile options:', trim(version2), trim(version3),
+     &                                  trim(version4),
      &             ' serial number for files:', serialnr
       WRITE(1337,2004) 'Screened Korringa-Kohn-Rostoker ',
      &              'Electronic Structure Code',
      &              'for Bulk and Interfaces',
      &              'Juelich-Munich 2001 - 2016',
-     &             ' Code version: ',trim(version(1)),
-     &             ' Compile options:',(trim(version(i)),i=2,4),
+     &             ' Code version: ',trim(version1),
+     &             ' Compile options:', trim(version2), trim(version3),
+     &                                  trim(version4),
      &             ' serial number for files: ', serialnr
  2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)//2A/79(1H*)/ )
 
-#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+#ifdef cpp_ompstuff
 !$omp parallel shared(nth) private(ith)
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
@@ -684,11 +692,11 @@ c
         open(unit=54633163,file='test_vpotout_bshift')
         do i1=1,natyp*nspin
             write(54633163,*) '# visp of atom ',i1
-            write(54633163,'(50000E)') visp(:,i1)
+            write(54633163,'(50000E14.7)') visp(:,i1)
         end do !iatom
         do i1=1,natyp*nspin
             write(54633163,*) '# vins of atom ',i1
-            write(54633163,'(50000E)') vins(:,:,i1)
+            write(54633163,'(50000E14.7)') vins(:,:,i1)
         end do !iatom
         close(54633163)
       end if
@@ -965,7 +973,7 @@ C
             ISVATOM=0
             ZATTEMP=ZAT(KAOEZ(1,ATOMIMP(I)))
           END IF
-          WRITE (58,'(3F,F6.2,3I)') (RCLSIMP(J,I),J=1,3), ZATTEMP,
+          WRITE (58,'(3F14.7,F6.2,3I5)') (RCLSIMP(J,I),J=1,3), ZATTEMP,
      +                  ISVATOM,0,LMAXD
         END DO
         CLOSE (58)

@@ -26,9 +26,9 @@
 !     .. arguments
 !
       INTEGER NAEZD,NATYPD,NEMBD,NPRINCD,NRD,NACLSD,NCLSD,NREFD
-      REAL*8       ALAT         ! lattice constant A
-      REAL*8       RCUT,RCUTXY
-      REAL*8      
+      DOUBLE PRECISION       ALAT         ! lattice constant A
+      DOUBLE PRECISION       RCUT,RCUTXY
+      DOUBLE PRECISION      
      +     RBASIS(3,*),             ! pos. of basis atoms in EZ
      +     RCLS(3,NACLSD,*),        ! real space position of atom in cluster
      +     RR(3,0:NRD),             ! set of lattice vectors
@@ -63,20 +63,21 @@
      +     ISORT(NACLSD),ICOUPLMAT(NAEZD,NAEZD),
      &     IREP(NCLSD) ! representative atom of cluster (inverse of CLS)
       INTEGER IREFPOT(NAEZD+NEMBD),NREFPOT
-      REAL*8 RMTREFAT(NAEZD+NEMBD),RMTREF1(NAEZD+NEMBD)
-      REAL*8 VREFAT(NAEZD+NEMBD),VREF1(NAEZD+NEMBD),VREF(NREFD)
+      DOUBLE PRECISION RMTREFAT(NAEZD+NEMBD),RMTREF1(NAEZD+NEMBD)
+      DOUBLE PRECISION VREFAT(NAEZD+NEMBD),VREF1(NAEZD+NEMBD),
+     &                 VREF(NREFD)
 
 
-      REAL*8        
+      DOUBLE PRECISION        
      +     R2,EPSSHL,TOL,TOL2,DISTMIN,
      +     RCLS1(3,NACLSD),
      +     RG(3,NACLSD),TMP(3),RSORT(NACLSD)
       INTEGER NLBASIS,NRBASIS,                    
      +        NLEFT,NRIGHT           
-      REAL*8                                   
+      DOUBLE PRECISION                                   
      +        ZPERLEFT(3),ZPERIGHT(3),            
      +        TLEFT(3,*),TRIGHT(3,*)
-      REAL*8       RCUT2,RCUTXY2,RXY2,DIST
+      DOUBLE PRECISION       RCUT2,RCUTXY2,RXY2,DIST
 
       LOGICAL LFOUND
       LOGICAL  L2DIM,CLUSTCOMP_TB

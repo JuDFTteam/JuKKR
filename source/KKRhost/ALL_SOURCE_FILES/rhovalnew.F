@@ -315,7 +315,7 @@ c energy loop
 !$omp& private(alphasph,alphall,ie_num)
 !$omp& private(rll_was_read_in, sll_was_read_in)
 !$omp$ private(rllleft_was_read_in, sllleft_was_read_in)
-!$omp& firstprivate(t_inc)
+!$omp& shared(t_inc)
 !$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
 !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
 !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
@@ -827,7 +827,8 @@ c    write qdos.nn.s.dat                                                    ! co
        ENDIF      ! OPT('qdos    ')                                       ! qdos
 #endif
        
-#ifdef CPP_MPI ! do communication only when compiled with MPI
+! do communication only when compiled with MPI
+#ifdef CPP_MPI
 #ifdef CPP_TIMING
        call timing_start('main1c - communication')
 #endif
@@ -869,7 +870,8 @@ c    write qdos.nn.s.dat                                                    ! co
       
       !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
       if(t_mpi_c_grid%myrank_at==master) then
-#endif ! CPP_MPI
+#endif
+! CPP_MPI
 
 ! LDAU
       IF (IDOLDAU.EQ.1) THEN
