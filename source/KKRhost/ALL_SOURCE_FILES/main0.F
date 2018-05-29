@@ -575,7 +575,7 @@ C ================================================ deal with the lattice
      &               NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,
      &               TLEFT,TRIGHT,RMTREF,RMTREFAT,VREF,
      &               REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,
-     &               NAEZD,NATYPD,NEMBD,NPRINCD,NRD,NACLSD,NCLSD,NREFD)
+     &               NAEZD,NATYPD,NEMBD,NRD,NACLSD,NCLSD,NREFD)
 
 ! Now the clusters, reference potentials and muffin-tin radii have been set.
 C ......................................................................

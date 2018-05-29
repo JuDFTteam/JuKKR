@@ -4,7 +4,7 @@
      &                   NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,
      &                   TLEFT,TRIGHT,RMTREF,RMTREFAT,VREF,
      &                   IREFPOT,NREFPOT,RCLS,RCUT,RCUTXY,L2DIM,ALAT,
-     &                NAEZD,NATYPD,NEMBD,NPRINCD,NRD,NACLSD,NCLSD,NREFD)
+     &                NAEZD,NATYPD,NEMBD,NRD,NACLSD,NCLSD,NREFD)
       use mod_version_info
       implicit none
 ! ************************************************************************
@@ -25,7 +25,7 @@
 !
 !     .. arguments
 !
-      INTEGER NAEZD,NATYPD,NEMBD,NPRINCD,NRD,NACLSD,NCLSD,NREFD
+      INTEGER NAEZD,NATYPD,NEMBD,NRD,NACLSD,NCLSD,NREFD
       DOUBLE PRECISION       ALAT         ! lattice constant A
       DOUBLE PRECISION       RCUT,RCUTXY
       DOUBLE PRECISION      

@@ -1,6 +1,6 @@
 c 13.10.95 ***************************************************************
       SUBROUTINE RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB,
-     +                   Z,DRDI,IRWS,
+     +                   ZAT,DRDI,IRWS,
      +                   IRCUT,LPOT,NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,
      +                   CHRGNT,ITC,NSHELL,NOQ,CONC,KAOEZ,CATOM)
       implicit none
@@ -33,14 +33,19 @@ C     .. Parameters ..
       include 'inc.p'
       INTEGER LMPOTD
       PARAMETER (LMPOTD= (LPOTD+1)**2)
+      INTEGER NPOTD
+      PARAMETER (NPOTD=(2*(KREL+KORBIT) + 
+     +           (1-(KREL+KORBIT))*NSPIND)*NATYPD)
 C     ..
 C     .. Scalar Arguments ..
       DOUBLE PRECISION CHRGNT
       INTEGER ITC,IPF,KSHAPE,LPOT,NATYP,NSPIN,NAEZ
 C     ..
 C     .. Array Arguments ..
-      DOUBLE PRECISION DRDI(IRMD,*),RHO2NS(IRMD,LMPOTD,NATYPD,NSPIN),
-     +                 RHOC(IRMD,*),THETAS(IRID,NFUND,*),Z(*)
+      DOUBLE PRECISION DRDI(IRMD,NATYP),
+     +                 RHO2NS(IRMD,LMPOTD,NATYPD,NSPIN),
+     +                 RHOC(IRMD,NPOTD),THETAS(IRID,NFUND,NCELLD),
+     +                 ZAT(NATYP)
       DOUBLE PRECISION CATOM(NATYPD,2*KREL+(1-KREL)*NSPIND)
       DOUBLE PRECISION CONC(NATYPD)
 C----------------------------------- orbital density and moment
@@ -48,8 +53,9 @@ C----------------------------------- orbital density and moment
       DOUBLE PRECISION  OMOM(NATYPD)
 C----------------------------------------------------------
 
-      INTEGER IPAN(*),IRCUT(0:IPAND,*),IRWS(*),LLMSP(NATYPD,*),NFU(*),
-     +        NSHELL(0:NSHELD),NTCELL(*),KAOEZ(NATYPD,NAEZD+NEMBD),
+      INTEGER IPAN(NATYP),IRCUT(0:IPAND,NATYP),IRWS(NATYP),
+     +        LLMSP(NATYP,NFUND),NFU(NATYP),
+     +        NSHELL(0:NSHELD),NTCELL(NATYP),KAOEZ(NATYPD,NAEZD+NEMBD),
      +        NOQ(NAEZD)
 
 C     ..
@@ -252,7 +258,7 @@ C ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       CHRGNT = 0.0D0
       DO I1 = 1,NATYP
         CHRGNT = CHRGNT 
-     &           + DBLE(NSHELL(I1))*(CATOM(I1,1) - Z(I1))*CONC(I1)
+     &           + DBLE(NSHELL(I1))*(CATOM(I1,1) - ZAT(I1))*CONC(I1)
       END DO
 
       WRITE(IPF,'(79(1H+))')

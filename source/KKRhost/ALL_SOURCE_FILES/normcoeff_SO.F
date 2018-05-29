@@ -53,11 +53,10 @@
       DOUBLE COMPLEX   CZERO,NORM
       DOUBLE PRECISION PI
       INTEGER          IR,LM1,LM2,LM1P,LM2P,
-     +                 I1,I1SP1,I1SP2,I1SP,
+     +                 I1,I1SP1,I1SP2,
      +                 LMSP1,LMSP2,I2SP1,I2SP2,INSRA,NSRA,
      +                 NSPOH,
-     +                 LMDOS,ISIGMA, I2
-      LOGICAL          TEST
+     +                 ISIGMA, I2
       ! MPI stuff
       INTEGER :: ierr, ihelp, i1_start, i1_end
       !.. External Subroutines ..
