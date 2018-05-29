@@ -163,7 +163,7 @@ class Test_check_test_runs():
         for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
            fname = f
            num, text = read_file(path+fname)
-           num_ref, text_ref = read_file(path0+fname.split('/')[1])
+           num_ref, text_ref = read_file(path0+fname)
            # remove line with serial number
            text = text[1:]
            text_ref = text_ref[1:]

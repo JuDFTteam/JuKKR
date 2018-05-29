@@ -30,7 +30,7 @@ if test_coverage<0:
     npara_pairs = [[1,2], [1,3], [1,4], [1,7], [1,8]]
     if test_coverage in [-14]:
         npara_pairs = [[1,8]]
-    modes = ['mpi']
+        modes = ['mpi']
     test_coverage = -test_coverage
 
 # loop over all combinations
