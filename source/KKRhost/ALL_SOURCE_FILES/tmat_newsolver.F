@@ -237,7 +237,9 @@ c energy loop
             call find_isave_wavefun(t_wavefunctions)
             ! reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
             ! to prevent unnessesary storing of wavefunctions
-            if(test('STOP1B  ')) t_wavefunctions%Nwfsavemax = 0
+            if(test('STOP1B  ') .and. .not. opt('OPERATOR')) then
+               t_wavefunctions%Nwfsavemax = 0
+            end if
        endif
          
 
@@ -350,7 +352,8 @@ cc right solutions
 C faster calculation of RLL.
 C no irregular solutions are needed in self-consistent iterations
 C because the t-matrix depends only on RLL
-        IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+        IF(OPT('RLL-SLL ') .and. 
+     &     .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) THEN
         CALL rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),
      +              RLL(:,:,:,ith),TMAT0(:,:),NCHEB,
      +              NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW,
@@ -511,7 +514,8 @@ c        notice that exchange the order of left and right hankel/bessel function
 C faster calculation of RLL.
 C no left solutions are needed in self-consistent iterations
 C because the t-matrix depends only on RLL
-         IF(OPT('RLL-SLL ') .and. .not.OPT('XCPL    ')) THEN
+         IF(OPT('RLL-SLL ') .and. 
+     &      .not. ( OPT('XCPL    ').or.OPT('OPERATOR') ) ) THEN
          ! do nothing
          ELSE
          CALL RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),

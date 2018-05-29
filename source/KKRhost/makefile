@@ -78,7 +78,7 @@ OBJECTS0 = $(OBJ)/getbr3.o $(OBJ)/write_tbkkr_files.o $(OBJ)/gaunt.o $(OBJ)/main
 
 OBJECTS1a= $(OBJ)/main1a.o $(OBJ)/calctmat.o $(OBJ)/initldau.o $(OBJ)/phicalc.o $(OBJ)/tmat_newsolver.o $(OBJ)/cheb.o $(OBJ)/interpolate_poten.o $(OBJ)/vllmat.o $(OBJ)/rotatespinframe.o $(OBJ)/spinorbit_ham.o $(OBJ)/spin_orbit.o $(OBJ)/spin_orbit_compl.o $(OBJ)/vllmatsra.o $(OBJ)/beshank.o $(OBJ)/rllsllsourceterms.o $(OBJ)/calcsph.o $(OBJ)/rllsll.o $(OBJ)/chebint.o $(OBJ)/csum.o $(OBJ)/gfree.o $(OBJ)/gll95.o $(OBJ)/grefsy.o $(OBJ)/ioben.o $(OBJ)/mapblock.o $(OBJ)/cradwf.o $(OBJ)/csinwd.o $(OBJ)/csout.o $(OBJ)/hankel.o $(OBJ)/irwsol.o $(OBJ)/regns.o $(OBJ)/tbref.o $(OBJ)/wfint.o $(OBJ)/wfint0.o $(OBJ)/wftsca.o $(OBJ)/pnstmat.o $(OBJ)/vllns.o $(OBJ)/simpk.o $(OBJ)/soutk.o $(OBJ)/ssum.o $(OBJ)/rll_local_solutions.o $(OBJ)/sll_local_solutions.o $(OBJ)/rll_global_solutions.o $(OBJ)/sll_global_solutions.o
 
-OBJECTS1b= $(OBJ)/cmatmul.o $(OBJ)/main1b.o $(OBJ)/kloopz1.o  $(OBJ)/mssinit.o $(OBJ)/kkrmat01.o $(OBJ)/decimate.o $(OBJ)/rotgll.o $(OBJ)/setfactl.o $(OBJ)/gijdmat.o $(OBJ)/symetrmat.o $(OBJ)/projtau.o $(OBJ)/cpamillsx.o $(OBJ)/rotate.o $(OBJ)/getdmat.o $(OBJ)/bofm.o $(OBJ)/btom.o $(OBJ)/dlke0.o $(OBJ)/dlke1.o $(OBJ)/inversion.o $(OBJ)/invslab.o $(OBJ)/invsupercell.o $(OBJ)/surfgf.o
+OBJECTS1b= $(OBJ)/cmatmul.o $(OBJ)/main1b.o $(OBJ)/kloopz1.o  $(OBJ)/mssinit.o $(OBJ)/kkrmat01.o $(OBJ)/decimate.o $(OBJ)/rotgll.o $(OBJ)/setfactl.o $(OBJ)/gijdmat.o $(OBJ)/symetrmat.o $(OBJ)/projtau.o $(OBJ)/cpamillsx.o $(OBJ)/rotate.o $(OBJ)/getdmat.o $(OBJ)/bofm.o $(OBJ)/btom.o $(OBJ)/dlke0.o $(OBJ)/dlke1.o $(OBJ)/inversion.o $(OBJ)/invslab.o $(OBJ)/invsupercell.o $(OBJ)/surfgf.o $(OBJ)/calc_rho_ll_ss.o $(OBJ)/calc_rho_ll_ss_lmdos.o $(OBJ)/normcoeff_SO.o $(OBJ)/normcoeff_SO_spinflux.o $(OBJ)/normcoeff_SO_torq.o $(OBJ)/calc_torq_ll_ss.o $(OBJ)/operators_for_FScode.o
 
 OBJECTS1c= $(OBJ)/main1c.o $(OBJ)/rhoval.o $(OBJ)/rhoval0.o $(OBJ)/rhocore.o $(OBJ)/wrldos.o $(OBJ)/wrmoms.o $(OBJ)/wrmomssoc.o $(OBJ)/densitymat.o $(OBJ)/wrldaupot.o $(OBJ)/overlap.o $(OBJ)/wmatldau.o $(OBJ)/mixldau.o $(OBJ)/rclm.o $(OBJ)/rhovalnew.o $(OBJ)/rhooutnew.o $(OBJ)/intcheb_cell.o $(OBJ)/cheb2oldgrid.o $(OBJ)/orbitalmoment.o $(OBJ)/wmatldausoc.o $(OBJ)/corel.o $(OBJ)/csimpk.o $(OBJ)/intcor.o $(OBJ)/intin.o $(OBJ)/intout.o $(OBJ)/irwns.o $(OBJ)/pnsqns.o $(OBJ)/rhoin.o $(OBJ)/rholm.o $(OBJ)/rhons.o $(OBJ)/rhoout.o $(OBJ)/renorm_lly.o $(OBJ)/simp3.o $(OBJ)/drvcore.o $(OBJ)/drvrho.o $(OBJ)/scfchrdns.o $(OBJ)/calcgf.o $(OBJ)/rintsimp.o $(OBJ)/core.o $(OBJ)/coredir.o $(OBJ)/hffcore.o $(OBJ)/corehff.o $(OBJ)/coreerr.o $(OBJ)/rint4pts.o $(OBJ)/calcmvec.o $(OBJ)/amemagvec.o $(OBJ)/rmatstr.o $(OBJ)/mvecglobal.o
 
@@ -226,8 +226,8 @@ macompprof: FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback -prof-gen:srcpos
 
 # openmp flags
 OPENMPFLAGS = 
-hybrid: OPENMPFLAGS = -openmp
-openmp: OPENMPFLAGS = -openmp
+hybrid: OPENMPFLAGS = -qopenmp
+openmp: OPENMPFLAGS = -qopenmp
 rwthomp: OPENMPFLAGS = -qopenmp
 rwthhybrid: OPENMPFLAGS = -qopenmp
 
@@ -244,9 +244,9 @@ macompdebug: FFLAGS = $(DEBUGFLAGS)
 rwthmpidebug: FFLAGS = $(DEBUGFLAGS)
 rwthompdebug: FFLAGS = $(DEBUGFLAGS)
 
-hybriddebug: OPENMPFLAGS = -openmp
-ompdebug: OPENMPFLAGS = -openmp
-rwthompdebug: OPENMPFLAGS = -openmp
+hybriddebug: OPENMPFLAGS = -qopenmp
+ompdebug: OPENMPFLAGS = -qopenmp
+rwthompdebug: OPENMPFLAGS = -qopenmp
 
 
 
