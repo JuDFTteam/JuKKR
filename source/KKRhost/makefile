@@ -205,9 +205,8 @@ debug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -wa
 hybriddebug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
 mpidebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox -check noarg_temp_created
 ompdebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
-gfort: FFLAGS= -O3 -ffree-line-length-none -fopenmp -fdefault-real-8
-# -J$(OBJ)
-#gfort: FFLAGS= -O0 -ffree-line-length-none -fdefault-real-8 -J $(OBJ) -Wall -Wextra -pedantic -fimplicit-none -fcheck=all -fbacktrace
+#gfort: FFLAGS= -O3 -ffree-line-length-none -fopenmp -fdefault-real-8 -J$(OBJ) -fimplicit-none -fcheck=all -fbacktrace
+gfort: FFLAGS= -O0 -ffree-line-length-none -fdefault-real-8 -J $(OBJ) -Wall -Wextra -pedantic -fimplicit-none -fcheck=all -fbacktrace
 
 OPENMPFLAGS = 
 hybrid: OPENMPFLAGS = -qopenmp 

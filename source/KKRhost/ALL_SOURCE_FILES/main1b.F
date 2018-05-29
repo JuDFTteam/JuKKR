@@ -693,28 +693,15 @@ C           Skip this part if first part of the qdos is running
                   irec = ielast*(ispin-1)+ ie+1
                   WRITE(888,REC=irec) GIMP
                   IF ( OPT('GPLAIN  ') ) THEN
-                    WRITE(8888,'(50000E)') GIMP
+                    WRITE(8888,'(50000E14.7)') GIMP
                   END IF
                 ENDIF ! KKRFLEX
                 IF (OPT('WRTGREEN') .and. myrank==master) THEN
                   DO LM2=1,LMMAXD
                     DO LM1=1,LMMAXD
-                      ILM=ILM+1
-                      GIMP(ILM)=GMATLL(LM1,LM2,I1)
-                    ENDDO
-                ENDDO
-                irec = ielast*(ispin-1)+ ie+1
-                WRITE(888,REC=irec) GIMP
-                IF ( OPT('GPLAIN  ') ) THEN
-                  WRITE(8888,'(50000E14.7)') GIMP
-                END IF
-              ENDIF ! KKRFLEX
-              IF (OPT('WRTGREEN') .and. myrank==master) THEN
-                DO LM2=1,LMMAXD
-                  DO LM1=1,LMMAXD
-                    ! writeout of green_host for WRTGREEN option
-                    WRITE(58,'((2I5),(2e17.9))') LM2, LM1,
-     &                                     GMATLL(LM1,LM2,I1)
+                      ! writeout of green_host for WRTGREEN option
+                      WRITE(58,'((2I5),(2e17.9))') LM2, LM1,
+     &                                       GMATLL(LM1,LM2,I1)
                     END DO
                   END DO
                 ENDIF ! WRTGREEN
@@ -1262,9 +1249,9 @@ C     kpoint (defined in qvec.dat)
         if(.not.(ielast==1.or.ielast==3)) stop 
      + 'Error: GREENIMP option only possible with 1 () or 3 () energy
      +  points in contour'
-        if(ielast==1 .and.dabs(dimag(ez(1)))>10**-10) stop 
+        if(ielast==1 .and.dabs(dimag(ez(1)))>1E-10) stop 
      + 'Error: T>0 for GREENIMP (DTMTRX writeout, IELAST==3)'
-        if(ielast==3 .and.dabs(dimag(ez(1)))<10**-10) stop 
+        if(ielast==3 .and.dabs(dimag(ez(1)))<1E-10) stop 
      + 'Error: T==0 for GREENIMP (GMATLL_GES writeout, IELAST==3)'
         ! end consistency checks
 

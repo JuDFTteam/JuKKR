@@ -832,7 +832,8 @@ c    write qdos.nn.s.dat                                                    ! co
        ENDIF      ! OPT('qdos    ')                                       ! qdos
 #endif
        
-#ifdef CPP_MPI ! do communication only when compiled with MPI
+! do communication only when compiled with MPI
+#ifdef CPP_MPI
 #ifdef CPP_TIMING
        call timing_start('main1c - communication')
 #endif
@@ -872,7 +873,8 @@ c    write qdos.nn.s.dat                                                    ! co
       
       !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
       if(t_mpi_c_grid%myrank_at==master) then
-#endif ! CPP_MPI
+#endif
+! CPP_MPI
 
 ! LDAU
       IF (IDOLDAU.EQ.1) THEN

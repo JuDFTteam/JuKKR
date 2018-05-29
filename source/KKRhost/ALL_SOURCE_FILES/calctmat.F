@@ -317,6 +317,7 @@ C
          TMAT0(:,:) = TMATLL(:,:)
          IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN* (I1-1)
          if (t_tgmat%tmat_to_file) then
+            write(*,*) shape(tmat0), LMMAXD
             WRITE(69,REC=IREC) TMAT0
          else
 #ifdef CPP_MPI

@@ -2294,7 +2294,7 @@ SUBROUTINE ADDOPT(STRING)
   LOGICAL OPT
   EXTERNAL OPT
 
-  if(t_inc%i_write) write(1337, *) 'in ADDOPT: adding option ', STRING
+  if(t_inc%i_write>0) write(1337, *) 'in ADDOPT: adding option ', STRING
  
   IF (.NOT.OPT('        ')) THEN
     WRITE(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
@@ -2326,7 +2326,7 @@ SUBROUTINE ADDTEST(STRING)
   LOGICAL TEST
   EXTERNAL TEST
    
-  if(t_inc%i_write) write(1337, *) 'in ADDTEST: adding option ', STRING
+  if(t_inc%i_write>0) write(1337, *) 'in ADDTEST: adding option ', STRING
 
   IF (.NOT.TEST('        ')) THEN
     WRITE(*,*) 'Error in ADDTEST for ',STRING,' : No free slots in array TESTC.'
