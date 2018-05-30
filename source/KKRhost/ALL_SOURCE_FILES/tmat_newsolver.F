@@ -254,7 +254,7 @@ c energy loop
 !$omp& private(alphasph) 
 !$omp& private(dtmatll) 
 !$omp& private(dalphall) 
-!$omp& firstprivate(t_inc)
+!$omp& shared(t_inc)
 !$omp& shared(nspin,nsra,lmax,iend,ipot,ielast,npan_tot,ncheb) 
 !$omp& shared(zat,socscale,ez,cleb,rnew,nth) 
 !$omp& shared(rpan_intervall,vinsnew,ipan_intervall) 

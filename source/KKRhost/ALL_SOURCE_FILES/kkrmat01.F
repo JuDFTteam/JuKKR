@@ -372,25 +372,38 @@
       end if !test('rhoqtest')
 
 #ifdef CPP_MPI
-      if(test('rhoqtest')) then
-        ntot1 = k_end
-      else
-        ntot1 = NOFKS
-      endif
+! MPI:     
+      if(.not.opt('qdos    ')) then
+      
+        if(test('rhoqtest')) then
+          ntot1 = k_end
+        else
+          ntot1 = NOFKS
+        endif
 
-      if(myrank==master) write(1337,*) 'kkrmat k loop:', ntot1, 
-     &                          t_mpi_c_grid%nranks_ie
-      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
-     &                 t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                           master,ntot1,ntot_pT,ioff_pT,.true.)
+        if(myrank==master) write(1337,*) 'kkrmat k loop:', NOFKS, 
+     &                            t_mpi_c_grid%nranks_ie
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
 
-      k_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-      k_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
-     &           ntot_pT(t_mpi_c_grid%myrank_ie)
-      t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &             ntot_pT(t_mpi_c_grid%myrank_ie)
+        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 
-      t_mpi_c_grid%ntot_pT1 = ntot_pT
-      t_mpi_c_grid%ioff_pT1 = ioff_pT
+        t_mpi_c_grid%ntot_pT1 = ntot_pT
+        t_mpi_c_grid%ioff_pT1 = ioff_pT
+      
+      else !.not.opt('qdos    ')
+      
+        i1_start = 1
+        i1_end = NOFKS
+      
+      end if !.not.opt('qdos    ')
+      
+      
+      
 #else
       k_start = 1
       if(.not.test('rhoqtest')) k_end = NOFKS 
@@ -1016,33 +1029,31 @@ c            DEALLOCATE(GLLKE0)
 !-----------------------------------------------------------------------
 ! 
 #ifdef CPP_MPI
-      allocate(WORK(LMMAXD,LMMAXD,NSYMAXD, nshell), stat=ierr)
-      if(ierr/=0) stop 'Error allocating work for communication of GS'
-      
-      IWORK = LMMAXD*LMMAXD*NSYMAXD*NSHELL
-      CALL MPI_ALLREDUCE(GS(1,1,1,1),WORK,IWORK,
-     +                   MPI_DOUBLE_COMPLEX,MPI_SUM,
-     +                   t_mpi_c_grid%mympi_comm_ie,IERR)
-      CALL ZCOPY(IWORK,WORK,1,GS(1,1,1,1),1)
-        
-      IF (LLY.NE.0) then
-        IWORK = 1
-        CALL MPI_ALLREDUCE(LLY_GRTR,WORK(1,1,1,1),IWORK,
-     +                     MPI_DOUBLE_COMPLEX,MPI_SUM,
-     +                     t_mpi_c_grid%mympi_comm_ie,IERR)
-        CALL ZCOPY(IWORK,WORK(1,1,1,1),1,LLY_GRTR,1)
-      endif
-        
-      if(lly.eq.2) then
-        IWORK = 1
-        CALL MPI_ALLREDUCE(TRACET,WORK(1,1,1,1),IWORK,
-     +                     MPI_DOUBLE_COMPLEX,MPI_SUM,
-     +                     t_mpi_c_grid%mympi_comm_ie,IERR)
-        CALL ZCOPY(IWORK,WORK(1,1,1,1),1,TRACET,1)
-      endif
-      
-      deallocate(WORK, stat=ierr)
-      if(ierr/=0) stop 'Error deallocating work for communication of GS'
+      IF(.not.opt('qdos    ')) then
+        DO NS = 1,NSHELL
+          IWORK = LMMAXD*LMMAXD*NSYMAXD
+          CALL MPI_ALLREDUCE(GS(1,1,1,NS),WORK,IWORK,
+     +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
+     +                       t_mpi_c_grid%mympi_comm_ie,IERR)
+          CALL ZCOPY(IWORK,WORK,1,GS(1,1,1,NS),1)
+        END DO
+          
+        IF (LLY.NE.0) then
+          IWORK = 1
+          CALL MPI_ALLREDUCE(LLY_GRTR,WORK(1,1,1),IWORK,
+     +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
+     +                       t_mpi_c_grid%mympi_comm_ie,IERR)
+          CALL ZCOPY(IWORK,WORK(1,1,1),1,LLY_GRTR,1)
+        endif
+          
+        if(lly.eq.2) then
+          IWORK = 1
+          CALL MPI_ALLREDUCE(TRACET,WORK(1,1,1),IWORK,
+     +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
+     +                       t_mpi_c_grid%mympi_comm_ie,IERR)
+          CALL ZCOPY(IWORK,WORK(1,1,1),1,TRACET,1)
+        endif
+      ENDIF !.not.opt('qdos    ')
 #endif
 
       IF ( TEST('flow    ') .and. (t_inc%i_write>0)) 

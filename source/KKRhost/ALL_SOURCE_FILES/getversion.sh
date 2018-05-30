@@ -31,16 +31,23 @@ function write_version {
 
 
 # gather version info
-printf "character(len=*), dimension(4), parameter ::" > tmpver
-printf " version=(/ '" >> tmpver
+#printf "character(len=*), dimension(4), parameter ::" > tmpver
+printf "character(len=*), parameter ::" > tmpver
+#printf " version=(/ '" >> tmpver
+printf "character(len=*), parameter ::" > tmpver
+printf " version1='" >> tmpver
 write_version
-printf "', '" >> tmpver
+#printf "', '" >> tmpver
+printf "', version2='" >> tmpver
 cat compver >> tmpver
-printf "', '" >> tmpver
+#printf "', '" >> tmpver
+printf "', version3='" >> tmpver
 cat compflag >> tmpver
-printf "', '" >> tmpver
+#printf "', '" >> tmpver
+printf "', version4='" >> tmpver
 cat complib >> tmpver
-printf "' /)" >> tmpver
+#printf "' /)" >> tmpver
+printf "'" >> tmpver
 
 # delete newlines
 tr '\n ' ' ' < tmpver > tmpver_2
@@ -50,7 +57,8 @@ printf "module mod_version\n" > tmpver
 printf "\n">> tmpver
 printf "implicit none\n">> tmpver
 printf "private\n">> tmpver
-printf "public version\n">> tmpver
+#printf "public version\n">> tmpver
+printf "public version1, version2, version3, version4\n">> tmpver
 printf "\n">> tmpver
 cat tmpver_2 >> tmpver
 printf "\n">> tmpver

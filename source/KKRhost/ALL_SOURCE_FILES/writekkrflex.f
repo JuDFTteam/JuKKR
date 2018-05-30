@@ -72,7 +72,7 @@ C     .. External Functions ..
               ELSE
                  TMAT0=(0.0D0,0.0D0)
               END IF 
-              WRITE(6699,'(4I,50000E)') IATOM,ISPIN,IE,0,TMAT0
+              WRITE(6699,'(4I8,50000E25.16)') IATOM,ISPIN,IE,0,TMAT0
           END DO !IE=1,IELAST
         END DO !ISPIN=1,NSPIN
         ELSEIF (KORBIT.EQ.1) THEN
@@ -87,7 +87,7 @@ C     .. External Functions ..
           ELSE
            TMAT0=(0d0,0d0)
           ENDIF
-          WRITE(6699,'(4I,50000E)') IATOM,ISPIN,IE,0,TMAT0         
+          WRITE(6699,'(4I8,50000E25.16)') IATOM,ISPIN,IE,0,TMAT0         
          ENDDO
         ENDIF
         END DO
@@ -103,12 +103,12 @@ C     .. External Functions ..
         WRITE(91,*) '# lmpot',lmpot
         WRITE(91,*) '# KSHAPE',KSHAPE
         WRITE(91,*) '# NATOMIMP, lmpot, ALAT VBC(1), VBC(2)'
-        WRITE(91,'(2I,10F)') NATOMIMP,lmpot,ALAT,VBC(1),VBC(2)
+        WRITE(91,'(2I5,10F25.16)') NATOMIMP,lmpot,ALAT,VBC(1),VBC(2)
         DO IATOM = 1,NATOMIMP      ! Bauer 2011-10-11
           I=ATOMIMP(IATOM)         !
          write(1337,*) 'ac2',I,HOSTIMP(I),lmpot,
      +                (VINTERS(LM,I),LM=1,lmpot)
-          WRITE(91,'(5000G)') (VINTERS(LM,I),LM=1,lmpot)
+          WRITE(91,'(5000F25.16)') (VINTERS(LM,I),LM=1,lmpot)
         END DO
         CLOSE(91)
 
@@ -130,14 +130,14 @@ C     .. External Functions ..
           IF (NOQ(I)/=1 .and. NOQ(I)/=0) 
      +      stop '[vmadelblk] VIRATOMS: NOQ/=1'
           IF (NOQ(I)==0) then
-            WRITE(91,'(5000G)') 0.0D0,(0.0D0,LM=1,lmpot)
+            WRITE(91,'(5000F25.16)') 0.0D0,(0.0D0,LM=1,lmpot)
           ELSE
             IF ( KSHAPE.NE.0 ) THEN
-              WRITE(91,'(5000G)') ZAT(I1), 
+              WRITE(91,'(5000F25.16)') ZAT(I1), 
      +                          ((CMOM(LM,I1) 
      +             + CMINST(LM,I1))*CONC(I1),LM=1,lmpot)
             ELSE
-              WRITE(91,'(5000G)') ZAT(I1), 
+              WRITE(91,'(5000F25.16)') ZAT(I1), 
      +            (CMOM(LM,I1)*CONC(I1),LM=1,lmpot)
             END IF 
           END IF

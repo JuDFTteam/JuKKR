@@ -53,11 +53,10 @@
       DOUBLE COMPLEX   CZERO,NORM
       DOUBLE PRECISION PI
       INTEGER          IR,LM1,LM2,LM1P,LM2P,
-     +                 I1,I1SP1,I1SP2,I1SP,
+     +                 I1,I1SP1,I1SP2,
      +                 LMSP1,LMSP2,I2SP1,I2SP2,INSRA,NSRA,
      +                 NSPOH,
-     +                 LMDOS,ISIGMA, I2
-      LOGICAL          TEST
+     +                 ISIGMA, I2
       ! MPI stuff
       INTEGER :: ierr, ihelp, i1_start, i1_end
       !.. External Subroutines ..
@@ -79,13 +78,13 @@
 
       PI=4.d0*DATAN(1.d0)
       LMMAXSO=2*LMMAXD
-      if(t_inc%i_write) WRITE(1337,*) "KSRA",KSRA
+      if(t_inc%i_write>0) WRITE(1337,*) "KSRA",KSRA
       IF (KSRA.GE.1) THEN    ! previously this was .GT. which is wrong for kvrel=1
          NSRA = 2
       ELSE
          NSRA = 1
       END IF
-      if(t_inc%i_write) WRITE(1337,*) "NSRA",NSRA
+      if(t_inc%i_write>0) WRITE(1337,*) "NSRA",NSRA
 
       ALLOCATE(RLL(IRMD,LMMAX,LMMAX,NSPOH,NSPOH,NSPOH,NATOM))
       ALLOCATE(RLL_12(IRMD,LMMAX,LMMAX))
@@ -107,7 +106,7 @@
 
       ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
       DO I1=i1_start, i1_end
-        if(t_inc%i_write) WRITE(1337,*) 'ATOM',I1, i1_start, i1_end
+        if(t_inc%i_write>0) WRITE(1337,*) 'ATOM',I1, i1_start, i1_end
 
         ! use I2 as index to map for mode==1 each impurity position to the corresponding layer index of the host
         if (mode==1) then

@@ -22,7 +22,7 @@ call version_print_header(3463453, '; '//md5sum_potential//'; '//md5sum_shapefun
 write(3463453,'(100A)') '[bravais]'
 write(3463453,'(100A)') '#   x   y   z - component'
 do iatom=1,3
-  write(3463453,'(3F)') BRAVAIS(:,iatom)
+  write(3463453,'(3F21.16)') BRAVAIS(:,iatom)
 end do !nbasis
 write(3463453,'(100A)') '[basis]'
 write(3463453,*) nrbasis
@@ -34,7 +34,7 @@ do iatom=1,nrbasis
   ELSE
      wght = 1.d0
   ENDIF
-  write(3463453,'(4F)') RBASIS(:,iatom),wght
+  write(3463453,'(4F21.16)') RBASIS(:,iatom),wght
 end do !nbasis
 
 close(3463453)

@@ -123,7 +123,7 @@ build:intel:mpi-aiida:
 
 ### 2. run tests with compiled versions ###
 
-run:intel:serial1:
+run:intel:serial_1:
   stage: run
   script:
     - curl -O https://bootstrap.pypa.io/get-pip.py 
@@ -136,7 +136,7 @@ run:intel:serial1:
       - tests/test_run*
     expire_in: 2 days
 
-run:intel:serial2:
+run:intel:serial_2:
   stage: run
   script:
     - curl -O https://bootstrap.pypa.io/get-pip.py 
@@ -149,7 +149,7 @@ run:intel:serial2:
       - tests/test_run*
     expire_in: 2 days
 
-run:intel:serial3:
+run:intel:serial_3:
   stage: run
   script:
     - curl -O https://bootstrap.pypa.io/get-pip.py 
@@ -162,7 +162,7 @@ run:intel:serial3:
       - tests/test_run*
     expire_in: 2 days
 
-run:intel:parallel2:
+run:intel:parallel_2:
   stage: run
   script:
     - curl -O https://bootstrap.pypa.io/get-pip.py 
@@ -195,7 +195,7 @@ run:intel:multi_node:
       - tests/test_run*
     expire_in: 2 days
  
-run:intel:Jijs4:
+run:intel:Jijs_4:
   stage: run
   script:
     - curl -O https://bootstrap.pypa.io/get-pip.py 
@@ -209,7 +209,7 @@ run:intel:Jijs4:
       - tests/test_run*
     expire_in: 1 day
 
-run:intel:kkrflex5:
+run:intel:kkrflex_5:
   stage: run
   script:
     - curl -O https://bootstrap.pypa.io/get-pip.py 
@@ -223,7 +223,7 @@ run:intel:kkrflex5:
       - tests/test_run*
     expire_in: 1 day
 
-run:intel:FERMIOUT6:
+run:intel:FERMIOUT_6:
   stage: run
   script:
     - curl -O https://bootstrap.pypa.io/get-pip.py 
@@ -238,7 +238,7 @@ run:intel:FERMIOUT6:
     expire_in: 1 day
 
 
-run:intel:MPIatom7:
+run:intel:MPIatom_7:
   stage: run
   script:
     - cd tests
@@ -248,7 +248,7 @@ run:intel:MPIatom7:
       - tests/test_run*
     expire_in: 2 days
  
-run:intel:MPIenerg8:
+run:intel:MPIenerg_8:
   stage: run
   script:
     - cd tests
@@ -258,7 +258,7 @@ run:intel:MPIenerg8:
       - tests/test_run*
     expire_in: 2 days
  
-run:intel:OPERATOR12:
+run:intel:OPERATOR_12:
   stage: run
   script:
     - cp tests/inc.p_72 inc.p && make clean && make mpi && cp kkr.x kkr.x_72 && mkdir tests/test_run12_mpi_1_8 && cd tests/test_run12_mpi_1_8 && ln -s ../test_inputs/test_12_*/* . && ln -s ../../kkr.x_72 kkr.x && export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
@@ -271,7 +271,7 @@ run:intel:OPERATOR12:
       - tests/test_run*
     expire_in: 2 days
 
-run:intel:DTM_GMATLL13:
+run:intel:DTM_GMATLL_13:
   stage: run
   script:
     - cp tests/inc.p_16 inc.p && make clean && make mpi && cp kkr.x kkr.x_16
@@ -282,6 +282,16 @@ run:intel:DTM_GMATLL13:
     - rm -f gmat tmat gref *for* inputcard_generated.txt
     - cd ../GMAT && mpirun -np 8 ../kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
+run:intel:qdos_14:
+  stage: run
+  script:
+    - cd tests
+    - ./run_parallel.py -14
   artifacts:
     paths:
       - tests/test_run*

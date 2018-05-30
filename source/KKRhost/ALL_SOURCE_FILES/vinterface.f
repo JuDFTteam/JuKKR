@@ -282,7 +282,7 @@ C
       CLOSE (69)
       WRITE(1337,'(15X,45(1H-),/)')
       WRITE(1337,'(79(1H=))')
-      IF ( ICC.EQ.0 .and. OPT('KKRFLEX ')==.false.) RETURN
+      IF ( (ICC==0) .and. (.not.OPT('KKRFLEX ')) ) RETURN
 C
 C ######################################################################
 C
