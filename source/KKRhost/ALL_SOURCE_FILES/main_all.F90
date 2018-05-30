@@ -150,8 +150,6 @@ t_mpi_c_grid%dims = dims
 ! create communicator for atom/energy matrix
 call create_newcomms_group_ie( nranks,myrank,dims(1),dims(2),t_inc%nkmesh,t_inc%kmesh,mympi_comm_ie,  &
                                & myrank_ie,nranks_ie,mympi_comm_at,myrank_at,nranks_at, myrank_atcomm,nranks_atcomm)
-
-if(t_inc%i_write>0 .and. myrank.ne.master) write(1337,*) 'after create_newcomms_ie', dims, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm
 ! save grid info in type 't_mpi_c_grid'
 call save_t_mpi_c_grid(t_mpi_c_grid,dims, myMPI_comm_ie, myMPI_comm_at, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
 if(myrank==master) call timing_stop('MPI 1')

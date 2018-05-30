@@ -301,10 +301,9 @@ allocate( work(lmsize,lmsize) )
 
 #ifdef CPP_HYBRID
 !$OMP PARALLEL DEFAULT (PRIVATE) &
-!$OMP& SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf) &
-!$OMP& SHARED(zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor) &
-!$OMP& SHARED(hlk,hlk2,cslc1,csrc1,slc1sum) &
-!$OMP& SHARED(cmoderll,cmodesll,cmodetest,use_sratrick, rmesh)
+!$OMP&  SHARED(tau,npan,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,mihvy,mihvz,mijvy,mijvz,yif,yrf, &
+!$OMP&  zif,zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum, &
+!$OMP&  cmoderll,cmodesll,cmodetest,use_sratrick, rmesh)
 
 thread_id = omp_get_thread_num()
 #endif

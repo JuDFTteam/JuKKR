@@ -4,7 +4,7 @@
      &                    NSH1,NSH2,GINP,RBASIS,RCLS,
      &                    TINVBUP,TINVBDOWN,VACFLAG,NLBASIS,NRBASIS,
      &                    FACTL,ICHECK,INVMOD,IDECI,SRREL,IRREL,NRREL,
-     &     DTREFLL,DTMATLL,DGINP,REFPOT,LLY_GRTR,TRACET,CFCTOR,LLY, ie)   ! LLY
+     &          DTREFLL,DTMATLL,DGINP,REFPOT,LLY_GRTR,TRACET,CFCTOR,LLY)   ! LLY
 ! **********************************************************************
 ! * Performs k-space integration, determines scattering path operator  *
 ! *                tau = (g(k,e)-t**-1)**-1                            *

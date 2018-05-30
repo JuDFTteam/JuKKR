@@ -536,9 +536,6 @@ C
       t_params%OPTC(1:32) =  '        '
       t_params%TESTC(1:32) = '        '
 C
-#ifdef CPP_TIMING
-      call timing_start('main0 - rinput')
-#endif
       CALL RINPUT13(ALAT,RBASIS,ABASIS,BBASIS,CBASIS,CLS,NCLS,
      +              E1,E2,TK,NPOL,NPNT1,NPNT2,NPNT3,
      +              EBOTSEMI,EMUSEMI,TKSEMI,NPOLSEMI,N1SEMI,N2SEMI,
@@ -563,33 +560,18 @@ C
      &              IRMD,IRNSD,NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,IVSHIFT,
      &              TOLRDIF,LLY,DELTAE,
      &              LCARTESIAN,BRAVAIS,RMAX,GMAX)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - rinput')
-#endif
 c
 C ================================================ deal with the lattice
 
-#ifdef CPP_TIMING
-      call timing_start('main0 - lattix99')
-#endif
       CALL LATTIX99(LINTERFACE,ALAT,NATYP,NAEZ,CONC,RWS,BRAVAIS,
      &              RECBV,VOLUME0,RR,NR,NRD,NATYPD)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - lattix99')
-#endif
 
 
-#ifdef CPP_TIMING
-      call timing_start('main0 - scalevec')
-#endif
       CALL SCALEVEC(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,
      +              NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,
      +              TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,KAOEZ,NOQ,
      &              NAEZD,NATYPD,NEMBD)
       ! After SCALEVEC all basis positions are in cartesian coords.
-#ifdef CPP_TIMING
-      call timing_stop('main0 - scalevec')
-#endif
 
       NVIRT = 0
       IF ( OPT('VIRATOMS') ) THEN
@@ -602,18 +584,12 @@ C ================================================ deal with the lattice
 
 
 
-#ifdef CPP_TIMING
-      call timing_start('main0 - clsgen_tb')
-#endif
       CALL CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,
      &               NACLS,ATOM,EZOA, 
      &               NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,
      &               TLEFT,TRIGHT,RMTREF,RMTREFAT,VREF,
      &               REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,
      &               NAEZD,NATYPD,NEMBD,NRD,NACLSD,NCLSD,NREFD)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - clsgen_tb')
-#endif
 
 ! Now the clusters, reference potentials and muffin-tin radii have been set.
 C ......................................................................
@@ -651,9 +627,6 @@ C
       IF ( ICC.GT.0 )    OPEN (25,FILE=I25,STATUS='unknown',
      &                         FORM='formatted')
 C
-#ifdef CPP_TIMING
-      call timing_start('main0 - startb1')
-#endif
       CALL STARTB1(IFILE,1337,1337,IPE,KVREL,KWS,LMAX,1,NATYP,
      +             ALATNEW,RMTNEW,RMT,ITITLE,IMT,IRC,VCONST,INS,
      +             IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,KSHAPE,NTCELL,
@@ -661,13 +634,10 @@ C
      +             DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,R,ZAT,A,B,
      +             IRWS,1,LMPOTD,IRMIND,IRMD,LMXSPD,IPAND,IRID,
      +             IRNSD,LMAXD,NATYPD,NCELLD,NFUND,NSPOTD,IVSHIFT)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - startb1')
-#endif
-
+     
+     
       ! find md5sums for potential and shapefunction
       call get_md5sums(INS, I13, I19)
-
       write(1337,'(A,A)') 
      &'Doing calculation with potential: ',md5sum_potential
       if(INS>0) then
@@ -709,7 +679,7 @@ C
          if (nranks>NATYP) stop 
      &                  'cannot use more than NATYP ranks for rhoqtest' 
 
-      ENDIF
+      ENDIF ! TEST('rhoqtest')
 
       IF ( TEST('Vspher  ') ) THEN
          WRITE(1337,*) 'TEST OPTION Vspher,', 
@@ -941,9 +911,6 @@ C
 C ----------------------------------------------------------------------
 C --> calculate Madelung constants (needed only for SCF calculations)
 C ----------------------------------------------------------------------
-#ifdef CPP_TIMING
-      call timing_start('main0 - madelung')
-#endif
 cfivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
       IF (NPOL.NE.0) THEN  ! No madelung calculation in case of DOS.
          !OPEN(99,FILE='madelinfo.txt')
@@ -1002,18 +969,11 @@ C
 C
 C ======================================== set up I,J pairs for ICC = -1
 C
-      IF ( ICC.LT.0 ) THEN
-#ifdef CPP_TIMING
-           call timing_start('main0 - setgijtab')
-#endif
-           CALL SETGIJTAB(LINTERFACE,ICC,NAEZ,IQAT,RBASIS,BRAVAIS,
+      IF ( ICC.LT.0 ) 
+     &     CALL SETGIJTAB(LINTERFACE,ICC,NAEZ,IQAT,RBASIS,BRAVAIS,
      &                    NATOMIMP,ATOMIMP,RCLSIMP,
      &                    NOFGIJ,IJTABCALC,IOFGIJ,JOFGIJ,NQCALC,IQCALC,
      &                    NATOMIMPD,IJTABCALC_I)
-#ifdef CPP_TIMING
-           call timing_stop('main0 - setgijtab')
-#endif
-      ENDIF ! ICC.LT.0
 C
 C ======================================================================
 C
@@ -1024,9 +984,6 @@ C
       ALLOCATE(ISH(NSHELD,NOFGIJD),JSH(NSHELD,NOFGIJD), stat=ierr)
       if(ierr/=0) stop '[main0] Error allocating ISH, JSH'
 
-#ifdef CPP_TIMING
-      call timing_start('main0 - bzkint')
-#endif
       CALL BZKINT0(NSHELL,NAEZ,NATYP,NOQ,
      +             RBASIS,KAOEZ,ICC,BRAVAIS,RECBV,ATOMIMP,
      +             RSYMAT,ISYMINDEX,NSYMAT,I25,NATOMIMP,
@@ -1038,16 +995,10 @@ C
      +             IELAST,EZ,KMESH,MAXMESH,MAXMSHD,
      +             NSYMAXD,KREL+KORBIT,LMAXD,LMMAXD,KPOIBZ,NAEZD,NATYPD,
      +             NATOMIMPD,NSHELD,NEMBD)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - bzkint')
-#endif
 C
 C ======================================================================
 C
       IF ( OPT('KKRFLEX ') ) THEN
-#ifdef CPP_TIMING
-      call timing_start('main0 - kkrflex')
-#endif
 
       CALL WRITEHOSTSTRUCTURE(BRAVAIS,NATYP,RBASIS,NAEZD,NEMBD)
 
@@ -1075,9 +1026,6 @@ C
      +                  ISVATOM,0,LMAXD
         END DO
         CLOSE (58)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - kkrflex')
-#endif
       END IF
 C
 C ======================================================================
@@ -1121,14 +1069,8 @@ C
       ENDIF
 ! end fivos
 
-#ifdef CPP_TIMING
-      call timing_start('main0 - gfmask')
-#endif
       CALL GFMASK(LINTERFACE,ICHECK,ICC,INVMOD,NSH1,NSH2,NAEZ,
      +            NSHELL(0),NAEZD,NPRINCD)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - gfmask')
-#endif
 C
 C======================================================================
 C set up transformation matrices between REL/NREL representations
@@ -1168,48 +1110,27 @@ C
       END IF
 C =========================================== treat decimation I/O cases
 C
-      IF ( OPT('deci-pot') ) THEN
-#ifdef CPP_TIMING
-      call timing_start('main0 - outpothost')
-#endif
-       CALL OUTPOTHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,NATYP,E2IN,
+      IF ( OPT('deci-pot') ) 
+     & CALL OUTPOTHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,NATYP,E2IN,
      &                 BRAVAIS,RBASIS,QMTET,QMPHI,NOQ,KAOEZ,IQAT,
      &                 ZAT,CONC,IPAN,IRCUT,SOLVER,SOCSCL,CSCL,
      &                 IRWS,RMTNEW,RWS,R,DRDI,VISP,
      &                 IRSHIFT,RMREL,DRDIREL,VTREL,BTREL,
      &                 LMAXD,NATYPD,NAEZD,IPAND,IRMD)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - outpothost')
-#endif
-      ENDIF
 C
-      IF ( OPT('deci-out') ) THEN
-#ifdef CPP_TIMING
-      call timing_start('main0 - outtmathost')
-#endif
-        CALL OUTTMATHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,LMMAX,
+      IF ( OPT('deci-out') ) 
+     &  CALL OUTTMATHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,LMMAX,
      &                   BRAVAIS,RBASIS,QMTET,QMPHI,E2IN,TK,
      &                   NPOL,NPNT1,NPNT2,NPNT3)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - outtmathost')
-#endif
-      ENDIF
 C
-      IF ( OPT('DECIMATE') ) THEN
-#ifdef CPP_TIMING
-      call timing_start('main0 - deciopt')
-#endif
-        CALL DECIOPT(ALAT,INS,KREL+KORBIT,KVREL,KMROT,NSPIN,NAEZ,LMMAX,
+      IF ( OPT('DECIMATE') ) 
+     &  CALL DECIOPT(ALAT,INS,KREL+KORBIT,KVREL,KMROT,NSPIN,NAEZ,LMMAX,
      &               BRAVAIS,TK,NPOL,NPNT1,NPNT2,NPNT3,
      &               EZ,IELAST,KAOEZ,
      &               LEFTTINVLL,RIGHTTINVLL,VACFLAG,NLBASIS,NRBASIS,
      &               CMOMHOST,VREF,RMTREF,NREF,REFPOT(NAEZ),
      &               LMAXD,LMGF0D,LMMAXD,LM2D,NEMBD1,IEMXD,
      &               NSPINDD,LMPOTD,NATYPD,IRMD,IPAND)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - deciopt')
-#endif
-      ENDIF
 C
 C ======================================================================
 C
@@ -1236,15 +1157,9 @@ C ======================================================================
 C LDA+U -- initialise 
 C
       IF (OPT('LDA+U   ')) then
-#ifdef CPP_TIMING
-           call timing_start('main0 - startldau')
-#endif
            CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,
      &                    EREFLDAU,NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,IRWS,
      &                    NTLDAU,ITLDAU,IRMD,NATYPD,NSPIND,MMAXD)
-#ifdef CPP_TIMING
-           call timing_stop('main0 - startldau')
-#endif
       END IF
 C
 C LDA+U
@@ -1256,9 +1171,7 @@ C ======================================================================
 C
 C new solver for full-potential, spin-orbit, initialise
        IF (OPT('NEWSOSOL')) THEN
-#ifdef CPP_TIMING
-        call timing_start('main0 - create_newmesh')
-#endif
+
         CALL CREATE_NEWMESH(NATYPD,LMAXD,LPOTD,IRMD,IRNSD,IPAND,
      +                      IRID,NTOTD,NFUND,NCHEBD,NTOTD*(NCHEBD+1),
      +                      NSPIN,R,IRMIN,IPAN,IRCUT,
@@ -1266,14 +1179,9 @@ C new solver for full-potential, spin-orbit, initialise
      +                      NPAN_LOGNEW,NPAN_EQNEW,
      +                      NPAN_TOT,RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
      +                      NCELLD,NTCELL,THETAS,THETASNEW)
-#ifdef CPP_TIMING
-      call timing_stop('main0 - create_newmesh')
-#endif
+
       ENDIF
 
-#ifdef CPP_TIMING
-      call timing_start('main0 - wunfiles')
-#endif
       CALL WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,E1,E2,EZ,WEZ,
      &              EFERMI,NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,
      &              TKSEMI,EBOTSEMI,EMUSEMI,FSEMICORE,
@@ -1346,6 +1254,7 @@ C new solver for full-potential, spin-orbit, initialise
      &                   t_imp%VISPIMP,t_imp%IRMINIMP,                 ! GREENIMP
      &                   t_imp%RIMP,t_imp%ZIMP)                        ! GREENIMP
       END IF                                                           ! GREENIMP
+
 
       IF (ISHIFT.EQ.2) THEN                                           ! fxf
          OPEN (67,FILE='vmtzero',FORM='formatted')                    ! fxf

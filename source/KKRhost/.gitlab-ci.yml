@@ -5,6 +5,10 @@ image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
   - set +e && source compilervars.sh intel64 && set -e
+  # install pip
+  - curl -O https://bootstrap.pypa.io/get-pip.py 
+  - python get-pip.py 
+  - pip install numpy
   # set environment variables to avoind stack size issue
   - export OMP_NUM_THREADS=1
   - export OMP_STACKSIZE=1g
@@ -126,9 +130,6 @@ build:intel:mpi-aiida:
 run:intel:serial_1:
   stage: run
   script:
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
-    - pip install numpy
     - cd tests
     - ./run_serial.py 1
   artifacts:
@@ -139,9 +140,6 @@ run:intel:serial_1:
 run:intel:serial_2:
   stage: run
   script:
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
-    - pip install numpy
     - cd tests
     - ./run_serial.py 2
   artifacts:
@@ -152,9 +150,6 @@ run:intel:serial_2:
 run:intel:serial_3:
   stage: run
   script:
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
-    - pip install numpy
     - cd tests
     - ./run_serial.py 3
   artifacts:
@@ -165,9 +160,6 @@ run:intel:serial_3:
 run:intel:parallel_2:
   stage: run
   script:
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
-    - pip install numpy
     - cd tests
     - ./run_parallel.py 2
   artifacts:
@@ -198,9 +190,6 @@ run:intel:multi_node:
 run:intel:Jijs_4:
   stage: run
   script:
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
-    - pip install numpy
     - cd tests
     - ./run_serial.py 4
     - ./run_parallel.py -4
@@ -212,9 +201,6 @@ run:intel:Jijs_4:
 run:intel:kkrflex_5:
   stage: run
   script:
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
-    - pip install numpy
     - cd tests
     - ./run_serial.py 5
     - ./run_parallel.py -5
@@ -226,9 +212,6 @@ run:intel:kkrflex_5:
 run:intel:FERMIOUT_6:
   stage: run
   script:
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
-    - pip install numpy
     - cd tests
     - ./run_serial.py 6
     - ./run_parallel.py -6
@@ -349,11 +332,7 @@ run:intel:aiida-kkr:
 verify:intel:
   stage: verify
   script:
-    # install pip
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
-    # install numpy and pytest unsing pip
-    - pip install numpy
+    # use pip to install pytest
     - pip install pytest
     # prepare and execute verification using pytest
     - cd tests

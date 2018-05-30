@@ -67,11 +67,6 @@ C     ..
       NGD1 = NACLSMAX*LMGF0D
       NDIM = LMGF0D*NATOM
 
-      
-!     ! !ALLOCATE(GREF(NGD1,NGD1),GLL(LMGF0D,LMGF0D),DGLLDE(LMGF0D,LMGF0D),
-!     !&        GTREF(NGD1,LMGF0D),DGTDE(NGD1,LMGF0D),IPVT(NGD1),STAT=LM1)
-
-
       ALLOCATE( GTREF(NGD1,LMGF0D),DGTDE(NGD1,LMGF0D), stat=lm1)
       IF(LM1/=0) stop 'Error allocating gtref etc. <GLL95>'
       GTREF(:,:) = CZERO
@@ -243,9 +238,3 @@ c ----------------------------------------------------------------------
          IF ( LM1.NE.0 ) STOP ' [gll13] dealloc'
       END IF
       END
-
-
-
-
-
-
