@@ -174,7 +174,7 @@ C     ..
       integer :: ihelp
       double complex, allocatable :: work(:,:)
 #endif
-      integer :: ie_num, ie_end, ierr
+      integer :: ie_num, ie_start, ie_end, ierr
 
       ! for OPERATOR option
       logical :: lexist, operator_imp
