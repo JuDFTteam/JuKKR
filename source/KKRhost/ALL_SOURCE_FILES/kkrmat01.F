@@ -387,8 +387,8 @@
      &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
      &                             master,ntot1,ntot_pT,ioff_pT,.true.)
 
-        i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-        i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+        k_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+        k_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
      &             ntot_pT(t_mpi_c_grid%myrank_ie)
         t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
 
@@ -397,8 +397,8 @@
       
       else !.not.opt('qdos    ')
       
-        i1_start = 1
-        i1_end = NOFKS
+        k_start = 1
+        k_end = NOFKS
       
       end if !.not.opt('qdos    ')
       
@@ -898,7 +898,8 @@ c            DEALLOCATE(GLLKE0)
          
 
          !update statusbar
-#if defined(CPP_MPI) || defined(CPP_HYBRID)
+        if(mythread==0) then
+#ifdef CPP_MPI
          if( (((k_end-k_start)/50)==0 .or. 
      &       mod(KPT-k_start,(k_end-k_start)/50)==0) .and.
      &       t_inc%i_write>0 ) write(1337,FMT=200)
@@ -907,6 +908,7 @@ c            DEALLOCATE(GLLKE0)
      &       mod(KPT,NOFKS/50)==0) .and.
      &                          t_inc%i_write>0 ) write(1337,FMT=200)
 #endif
+        end if ! mythread==0
 
       END DO ! KPT = 1,NOFKS   end K-points loop
 190   FORMAT('                 |'$)      ! status bar
