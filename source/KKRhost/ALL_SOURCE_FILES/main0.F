@@ -12,6 +12,7 @@
       use mod_timing
 #endif
       use mod_create_newmesh
+      use mod_rhoqtools, only: rhoq_save_rmesh
       
       implicit none
       
@@ -647,23 +648,8 @@ C
       
       
       IF(TEST('rhoqtest')) THEN
-         !read mu_0
-         open(9999, file='mu0', form='formatted')
-         read(9999,*) i1
-         close(9999)
-         ! write out corresponding mesh information
-         open(9999, file='rmesh_mu0.txt', form='formatted')
-         write(9999,'(A)') '# mu_0, IRMIN, IRWS, IPAN'
-         write(9999,'(4I9)') i1,IRMIN(i1), IRWS(i1), IPAN(i1)
-         write(9999,'(A)') '# R(1:IRWS)'
-         write(9999,'(1000E22.15)') R(1:IRWS(i1),i1)
-         write(9999,'(A)') '# NTCELL(1:NATYP)'
-         write(9999,'(1000I9)') NTCELL(1:NATYP)
-         write(9999,'(A)') '# IRCUT(1:IPAN)'
-         write(9999,'(1000I9)') IRCUT(1:IPAN(i1),i1)
-         write(9999,'(A)') '# R_LOG, NPAN_LOG, NPAN_EQ'
-         write(9999,'(E22.15,2I9)') R_LOG, NPAN_LOG, NPAN_EQ
-         close(9999)            
+         call rhoq_save_rmesh(natyp,irmd,ipand,irmin,irws,ipan,r,ntcell,
+     &                        ircut,r_log,npan_log,npan_eq)
 
          ! check consistency
          if (OPT('GREENIMP') .or. OPT('WRTGREEN')) then

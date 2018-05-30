@@ -26,6 +26,7 @@
       use mod_tbxccpljij, only: tbxccpljij
       use mod_tbxccpljijdij, only: tbxccpljijdij
       use mod_version_info
+      use mod_rhoqtools, only: rhoq_save_refpot
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
@@ -891,44 +892,21 @@ c construct t matrix for reference system (now is always double matrix)
        call timing_start('main1b - calctref13')
 #endif
        DO I1 = 1,NREF
-        CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
-     +                WN1,WN2,                                ! LLY
-     &                ALPHAREF(0,I1),DALPHAREF(0,I1),         ! LLY 
-     &                LMAXD+1,LMGF0D)
-        DO I=1,LM1
-         TREFLL(I,I,I1) = WN1(I,I)
-         TREFLL(LM1+I,LM1+I,I1) = WN1(I,I)
-         DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
-         DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
-        ENDDO
-        
-     
-     
-
-!             
-            if(test('rhoqtest')) then
-              if(i1==1) then
-              open(99991, file='refinfo')
-              write(99991,'(2I9)') NREF, NATYP
-              write(99991, '(1000I9)') refpot(1:NATYP)
-              close(99991)
-              !write(*,*) myrank, 'opening tref', WLENGTH*4*lmmaxd**2
-              open(99992, file='tref', access='direct', 
-     &             recl=WLENGTH*4*lmmaxd**2, form='unformatted')
-              end if
-              irec = ie + ielast*(i1-1)
-              !write(*,*) 'writeing tref', myrank, i1, ie, irec
-              write(99992, rec=irec) trefll(:,:,i1)
-              
-              !write(999,'(2ES15.7)') trefll(:,:,i1)
-              
-!               if(i1==nref) then
-!                 call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-!                 close(99992)
-!                 stop 'finished with rhoq output'
-!               end if
-            end if ! rhoqtest
-!             
+          CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
+     +                  WN1,WN2,                                ! LLY
+     &                  ALPHAREF(0,I1),DALPHAREF(0,I1),         ! LLY 
+     &                  LMAXD+1,LMGF0D)
+          DO I=1,LM1
+             TREFLL(I,I,I1) = WN1(I,I)
+             TREFLL(LM1+I,LM1+I,I1) = WN1(I,I)
+             DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
+             DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
+          ENDDO
+          
+          if(test('rhoqtest')) then
+             call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),
+     &                             wlength,lmmaxd,ie,trefll)
+          end if ! rhoqtest
         
        ENDDO ! I1
 #ifdef CPP_TIMING
@@ -1193,26 +1171,6 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
         endif
 #endif
 !EEEEEEEEEEEEEEEEEEEEEEEEEEEE  SOC  EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-
-         IF( NCPAFAIL .NE. 0 ) THEN
-            if(t_inc%i_write>0) then
-            WRITE(1337,*)
-            WRITE(1337,'(1X,79(''*''),/)')
-            WRITE(1337,99019) CPATOL, NCPAFAIL,
-     &           (IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),
-     &           IE=1,NCPAFAIL)
-            WRITE(1337,'(1X,79(''*''),/)')
-            WRITE(1337,*)
-            endif
-         ELSE
-            IF( NCPA .NE. 0 ) THEN
-               if(t_inc%i_write>0) then
-               WRITE(1337,*)
-               WRITE(1337,99020)
-               WRITE(1337,*)
-               endif
-            END IF
-         END IF
 
          IF( NCPAFAIL .NE. 0 ) THEN
             if(t_inc%i_write>0) then
