@@ -76,7 +76,7 @@ module mod_rhoqtools
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   subroutine rhoq_find_kmask(nscoef, mu, imin, iatomimp, nofks, k_end, bzkp, kmask, rhoq_kmask)
+   subroutine rhoq_find_kmask(nofks, k_end, bzkp, kmask, rhoq_kmask)
 
 #ifdef CPP_MPI
       use mpi
@@ -85,8 +85,7 @@ module mod_rhoqtools
 
       implicit none
 
-      integer, intent(in) :: nscoef, mu, imin, nofks
-      integer, intent(in) :: iatomimp(nscoef)
+      integer, intent(in) :: nofks
       integer, intent(out) :: k_end
       integer, allocatable, intent(out) :: kmask(:)
       double precision, intent(in) :: bzkp(3, nofks)
@@ -95,6 +94,9 @@ module mod_rhoqtools
       integer :: i, j, kpt, kmask_mode, k_start
       logical :: kmask_info
       double precision :: k_mask_bounds(4), recbv(3,3), kp(3)
+#ifdef CPP_MPI
+      integer :: ierr
+#endif
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (myrank==master) then

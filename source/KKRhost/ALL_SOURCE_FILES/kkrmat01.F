@@ -144,11 +144,10 @@
 !#ifdef CPP_MPI
       DOUBLE COMPLEX WORK(LMMAXD,LMMAXD,NSYMAXD)
       INTEGER IERR,IWORK
-      integer :: ix,jx, mu, irec, nscoef, imin, ie
+      integer :: mu, nscoef, imin, ie
       integer, allocatable :: iatomimp(:)
       
       double precision, allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts
-      DOUBLE PRECISION RECBV(3,3)
       integer, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
 !#endif
 ! #ifdef CPP_HYBRID
@@ -192,8 +191,8 @@
 
       if(test('rhoqtest')) then
          call rhoq_read_mu0_scoef(iatomimp, mu, nscoef, imin)
-         call rhoq_find_kmask(nscoef, mu, imin, iatomimp, nofks, 
-     +                        k_end,bzkp(1:3,1:nofks),kmask,rhoq_kmask)
+         call rhoq_find_kmask(nofks,k_end,bzkp(1:3,1:nofks),kmask,
+     &                        rhoq_kmask)
       end if !test('rhoqtest')
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ K-points loop
