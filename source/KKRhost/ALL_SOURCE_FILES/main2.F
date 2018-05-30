@@ -329,8 +329,8 @@ C
         DO I1 = 1,NATYP
           open(unit=324234,file='out_rhotot')
           WRITE(324234,*) '#IATOM',I1
-          write(324234,'(50000F)') RHO2NS(:,:,I1,1)
-          IF (NSPIN==2) write(324234,'(50000F)') RHO2NS(:,:,I1,2)
+          write(324234,'(50000F25.16)') RHO2NS(:,:,I1,1)
+          IF (NSPIN==2) write(324234,'(50000F25.16)') RHO2NS(:,:,I1,2)
         END DO
       END IF
 
@@ -480,7 +480,7 @@ C
         open(unit=786785,file='test_vintraspot')
         do i1=1,nspin*natyp
           write(786785,*) '# atom/spin index ',i1
-          write(786785,'(50000E)') vons(:,:,i1)
+          write(786785,'(50000E25.16)') vons(:,:,i1)
         end do !iatom
         close(786785)
       end if !
@@ -522,7 +522,7 @@ C =====================================================================
           open(unit=54633163,file='test_vpotout_inter')
           do i1=1,natyp*nspin
               write(54633163,*) '# atom ',i1
-              write(54633163,'(50000E)') vons(:,:,i1)
+              write(54633163,'(50000E25.16)') vons(:,:,i1)
           end do !iatom
           close(54633163)
         end if ! config_testflag('write_gmatonsite')
@@ -638,7 +638,7 @@ C =====================================================================
           open(unit=57633263,file='test_vpotout_xc')
           do i1=1,natyp*nspin
               write(57633263,*) '# atom ',i1
-              write(57633263,'(50000E)') vons(:,:,i1)
+              write(57633263,'(50000E25.16)') vons(:,:,i1)
           end do !iatom
           close(57633263)
         end if ! config_testflag('write_gmatonsite')
@@ -721,7 +721,7 @@ C
           open(unit=12633269,file='test_vpotout_shift')
           do i1=1,natyp*nspin
               write(12633269,*) '# atom ',i1
-              write(12633269,'(50000E)') vons(:,:,i1)
+              write(12633269,'(50000E25.16)') vons(:,:,i1)
           end do !iatom
           close(12633269)
         end if ! config_testflag('write_gmatonsite')
@@ -758,7 +758,7 @@ C
           open(unit=57633269,file='test_vpotout_conv')
           do i1=1,natyp*nspin
               write(57633269,*) '# atom ',i1
-              write(57633269,'(50000E)') vons(:,:,i1)
+              write(57633269,'(50000E25.16)') vons(:,:,i1)
           end do !iatom
           close(57633269)
         end if ! config_testflag('write_gmatonsite')
@@ -826,7 +826,7 @@ C ..................
           open(unit=54633563,file='test_vpotout')
           do i1=1,natyp*nspin
               write(54633563,*) '# atom ',i1
-              write(54633563,'(50000E)') vons(:,:,i1)
+              write(54633563,'(50000E25.16)') vons(:,:,i1)
           end do !iatom
           close(54633563)
         end if ! config_testflag('write_gmatonsite')
@@ -1066,17 +1066,17 @@ c Input
       INTEGER IRCUT(0:IPAND,NATYPD),IRC(NATYPD),NTCELL(NATYPD)
      &     ,IMAXSH(0:LMPOTD),ILM(NGSHD,3),IFUNM(NATYPD,LMXSPD)
      &     ,LMSP(NATYPD,LMXSPD),IRMIN(NATYPD)
-      REAL*8 GSH(NGSHD),THETAS(IRID,NFUND,NCELLD),RFPI
+      DOUBLE PRECISION GSH(NGSHD),THETAS(IRID,NFUND,NCELLD),RFPI
      &     ,RMESH(IRMD,NATYPD)
-      REAL*8 THESME(IRID,NFUND,NCELLD)
-      REAL*8 VSHIFT
+      DOUBLE PRECISION THESME(IRID,NFUND,NCELLD)
+      DOUBLE PRECISION VSHIFT
 
 
 c Input/Output:
-      REAL*8 VISP(IRMD,NPOTD),VINS(IRMIND:IRMD,LMPOTD,NSPOTD)
+      DOUBLE PRECISION VISP(IRMD,NPOTD),VINS(IRMIND:IRMD,LMPOTD,NSPOTD)
 
 c Inside
-      REAL*8 PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
+      DOUBLE PRECISION PSHIFTLMR(IRMD,LMPOTD),PSHIFTR(IRMD)
       INTEGER ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
 
 

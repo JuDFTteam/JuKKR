@@ -183,7 +183,7 @@ C
 #endif
            WRITE(888,REC=IREC) GCLUST
            IF ( ( OPT('GPLAIN  ') ) ) THEN
-             WRITE(8888,'(50000E)') GCLUST
+             WRITE(8888,'(50000E25.16)') GCLUST
            END IF
          END IF
 

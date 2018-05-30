@@ -2090,7 +2090,7 @@
          allocate(t_params%qdos_atomselect(NATYP), stat=ier) !INTEGER
          if(ier/=0) stop '[rinput13] Error alloc qdos_atomselect'
 
-         t_params%qdos_atomselect(1:NATYPD) = 1
+         t_params%qdos_atomselect(:) = 1
          !for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.
 !          CALL IoInput('qdosatoms       ',UIO,1,7,IER)
 !          IF (IER.EQ.0) THEN
@@ -2102,6 +2102,11 @@
 ! 
 !          WRITE (1337,'(A)') 'atom selective writeout for qdos:'
 !          WRITE (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
+
+         if(.not.test('MPIatom ')) then
+            ! enforce MPIenerg since this is usually faster for qdos option
+            call addtest('MPIenerg')
+         end if
          
       END IF
 
@@ -2294,7 +2299,7 @@ SUBROUTINE ADDOPT(STRING)
   LOGICAL OPT
   EXTERNAL OPT
 
-  if(t_inc%i_write) write(1337, *) 'in ADDOPT: adding option ', STRING
+  if(t_inc%i_write>0) write(1337, *) 'in ADDOPT: adding option ', STRING
  
   IF (.NOT.OPT('        ')) THEN
     WRITE(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
@@ -2326,7 +2331,7 @@ SUBROUTINE ADDTEST(STRING)
   LOGICAL TEST
   EXTERNAL TEST
    
-  if(t_inc%i_write) write(1337, *) 'in ADDTEST: adding option ', STRING
+  if(t_inc%i_write>0) write(1337, *) 'in ADDTEST: adding option ', STRING
 
   IF (.NOT.TEST('        ')) THEN
     WRITE(*,*) 'Error in ADDTEST for ',STRING,' : No free slots in array TESTC.'

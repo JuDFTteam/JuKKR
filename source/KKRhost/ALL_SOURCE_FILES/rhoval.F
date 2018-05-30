@@ -74,9 +74,9 @@ C     IHOST <> 1  < --                 called by the IMPURITY program
 C
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD*(1+KREL),NQDOS),EZ(IEMXD),
+      DOUBLE COMPLEX DEN(0:LMAXD1,IELAST*(1+KREL),NQDOS),EZ(IEMXD),
      +               WEZ(IEMXD),DENMATC(MMAXD,MMAXD),
-     +               DENLM(LMMAXD,IEMXD*(1+KREL),NQDOS),
+     +               DENLM(LMMAXD,IELAST*(1+KREL),NQDOS),
      &               DUM_DENLM(LMMAXD)
 C     .. first 2 indices in dmuorb are the spin-resolved contributions,
 C     .. the 3rd one should be the sum of them 

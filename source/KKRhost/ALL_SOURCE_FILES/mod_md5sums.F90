@@ -26,15 +26,25 @@ module mod_md5sums
     integer :: istat
 
     logical :: reorder, skipread
+#ifndef CPP_NOMD5
     integer :: SYSTEM
     external :: SYSTEM
+#endif
     
     reorder  = .false.
     skipread = .false.
     ! create md5 checksum for potential
+#ifndef CPP_NOMD5
     istat = SYSTEM('md5 '//trim(filename_pot)//' > tmp_md5sum_pot')
+#else
+    istat=-1
+#endif
     if(istat/=0)then
+#ifndef CPP_NOMD5
       istat = SYSTEM('md5sum '//trim(filename_pot)//' > tmp_md5sum_pot')
+#else
+      istat = -1
+#endif
       reorder=.true.
       if(istat/=0)then
         skipread=.true.
@@ -62,9 +72,17 @@ module mod_md5sums
       reorder  = .false.
       skipread = .false.
       ! create md5 checksum for shapefun
+#ifndef CPP_NOMD5
       istat = SYSTEM('md5 '//trim(filename_shape)//' > tmp_md5sum_shape')
+#else
+      istat=-1
+#endif
       if(istat/=0)then
+#ifndef CPP_NOMD5
         istat = SYSTEM('md5sum '//trim(filename_shape)//' > tmp_md5sum_shape')
+#else
+        istat=-1
+#endif
         reorder=.true.
         if(istat/=0)then
           skipread=.true.

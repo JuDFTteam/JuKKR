@@ -189,8 +189,8 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
       END DO
       WRITE(1337,99005)
 99000 FORMAT (5X,'< FINDGROUP > : Finding symmetry operations',/)
-99001 FORMAT (8X,'3D symmetries',$)
-99002 FORMAT (8X,'surface symmetries',$)
+99001 FORMAT (8X,'3D symmetries:')
+99002 FORMAT (8X,'surface symmetries:')
 99003 FORMAT(' found for this lattice: ',I2,/,8X,60(1H-))
 99004 FORMAT(8X,5(A10,2X))
 99005 FORMAT(8X,60(1H-),/)

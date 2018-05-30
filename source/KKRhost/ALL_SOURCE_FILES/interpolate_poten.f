@@ -1,5 +1,5 @@
        SUBROUTINE INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATYPD,IPAND,
-     +                              NSPOTD,NTOTD,NCHEBD,IRMDNEW,
+     +                              NSPOTD,NTOTD,IRMDNEW,
      +                              NSPIN,R,IRMIN,IRWS,IRCUT,VINS,
      +                              VISP,NPAN_LOG,NPAN_EQ,
      +                              NPAN_TOT,RNEW,
@@ -10,7 +10,7 @@
        !inc.p import and to be able to use routine for different number
        !of atoms
        integer, intent(in) :: LPOTD,IRMD,IRNSD,NATYPD,IPAND,
-     +                        NSPOTD,NTOTD,NCHEBD
+     +                        NSPOTD,NTOTD
        INTEGER LMPOTD
        INTEGER IRMIND
        INTEGER NSPIN,IRMIN(NATYPD),IRWS(NATYPD),IRMDNEW

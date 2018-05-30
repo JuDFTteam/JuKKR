@@ -17,7 +17,7 @@
      &                      bcast_t_imp_scalars, bcast_t_imp_arrays
       use mpi
 #endif
-      use mod_mympi, only: myrank, master
+      use mod_mympi, only: myrank, master, nranks
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks, MPIadapt
@@ -96,7 +96,10 @@ C     RFCTOR=A/(2*PI) conversion factor to p.u.
       CHARACTER*80 TMPDIR
 #ifndef CPP_MPI
       CHARACTER*80 TEXT !qdos ruess
+#else
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
+      INTEGER iq_start, iq_end ! qdos
 C     .. 
 C     .. Local Arrays
       INTEGER NSHELL(0:NSHELD),REFPOT(NAEZD+NEMBD),ATOMIMP(NATOMIMPD)
@@ -391,7 +394,7 @@ C    &             FILE='green',FORM='unformatted')                             
      &                NATOMIMP, LMMAXD, KORBIT,
      &             (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
               IF ( ( OPT('GPLAIN  ') ) ) THEN
-                WRITE(8888,'(5I,50000F)') IELAST,NSPIN,NATOMIMP,
+                WRITE(8888,'(5I5,50000F25.16)') IELAST,NSPIN,NATOMIMP,
      &               NATOMIMP, (LMAX+1)**2,
      &               (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
               END IF
@@ -588,6 +591,11 @@ C --> setting up of Delta_t moved to < KLOOPZ1 >
 C
             IF (OPT('readcpa ').OR.
      &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
+#ifdef CPP_MPI
+               ! Barrier needed because i first run only tmatrix is witten out and only in second run the q loop is done which is parallel
+               call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
+               if(ierr/=0) stop '[main1b] Error in MPI Barrier'
+#endif
                DO ISITE = 1,NAEZ                              ! qdos ruess
                   TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
 #ifdef CPP_MPI
@@ -617,7 +625,28 @@ C
                ENDDO                                          ! qdos ruess
             END IF                                            ! qdos ruess
 C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
-            DO 200 IQ = 1,NQDOS                               ! qdos ruess
+
+            iq_start = 1
+            iq_end   = NQDOS
+#ifdef CPP_MPI
+            IF (OPT('qdos    ')) THEN
+              if(myrank==master) write(1337,*) 'q loop:', NQDOS, 
+     &                                  t_mpi_c_grid%nranks_ie
+              call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                   master,NQDOS,ntot_pT,ioff_pT,.true.)
+
+              iq_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+              iq_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &                   ntot_pT(t_mpi_c_grid%myrank_ie)
+              t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+              t_mpi_c_grid%ntot_pT1 = ntot_pT
+              t_mpi_c_grid%ioff_pT1 = ioff_pT
+            END IF !(OPT('qdos    '))
+#endif
+
+            DO 200 IQ = iq_start,iq_end                       ! qdos ruess
             IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
 C
 #ifdef CPP_TIMING
@@ -693,7 +722,7 @@ C           Skip this part if first part of the qdos is running
                   irec = ielast*(ispin-1)+ ie+1
                   WRITE(888,REC=irec) GIMP
                   IF ( OPT('GPLAIN  ') ) THEN
-                    WRITE(8888,'(50000E)') GIMP
+                    WRITE(8888,'(50000E25.16)') GIMP
                   END IF
                 ENDIF ! KKRFLEX
                 IF (OPT('WRTGREEN') .and. myrank==master) THEN
@@ -927,6 +956,11 @@ c rotate t-matrix from local to global frame
 c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS
             IF (OPT('readcpa ').OR.
      &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
+#ifdef CPP_MPI
+               ! Barrier needed because i first run only tmatrix is witten out and only in second run the q loop is done which is parallel
+               call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
+               if(ierr/=0) stop '[main1b] Error in MPI Barrier'
+#endif
                DO ISITE = 1,NAEZ                              ! qdos ruess
                   TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
 #ifdef CPP_MPI
@@ -955,7 +989,27 @@ c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDO
                ENDDO                                          ! qdos ruess
             END IF                                            ! qdos ruess
 C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
-            DO 220 IQ = 1,NQDOS                               ! qdos ruess
+            iq_start = 1
+            iq_end   = NQDOS
+#ifdef CPP_MPI
+            IF (OPT('qdos    ')) THEN
+              if(myrank==master) write(1337,*) 'q loop:', NQDOS, 
+     &                                  t_mpi_c_grid%nranks_ie
+              call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                   master,NQDOS,ntot_pT,ioff_pT,.true.)
+
+              iq_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+              iq_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &                   ntot_pT(t_mpi_c_grid%myrank_ie)
+              t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+              t_mpi_c_grid%ntot_pT1 = ntot_pT
+              t_mpi_c_grid%ioff_pT1 = ioff_pT
+            END IF !(OPT('qdos    '))
+#endif
+
+            DO 220 IQ = iq_start,iq_end                       ! qdos ruess
             IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
 
 #ifdef CPP_TIMING
@@ -1249,9 +1303,9 @@ C     kpoint (defined in qvec.dat)
         if(.not.(ielast==1.or.ielast==3)) stop 
      + 'Error: GREENIMP option only possible with 1 () or 3 () energy
      +  points in contour'
-        if(ielast==1 .and.dabs(dimag(ez(1)))>10**-10) stop 
+        if(ielast==1 .and.dabs(dimag(ez(1)))>1E-10) stop 
      + 'Error: T>0 for GREENIMP (DTMTRX writeout, IELAST==3)'
-        if(ielast==3 .and.dabs(dimag(ez(1)))<10**-10) stop 
+        if(ielast==3 .and.dabs(dimag(ez(1)))<1E-10) stop 
      + 'Error: T==0 for GREENIMP (GMATLL_GES writeout, IELAST==3)'
         ! end consistency checks
 

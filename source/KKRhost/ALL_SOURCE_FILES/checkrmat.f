@@ -7,7 +7,7 @@ C   *  Euler angles TET1, TET2, TET3 are consistent with the           *
 C   *  rotation matrix   RMAT                                          *
 C   *                                                                  *
 C   ********************************************************************
-      IMPLICIT REAL*8(A-H,O-Z)
+      IMPLICIT NONE
 C
 C*** Start of declarations rewritten by SPAG
 C
@@ -20,7 +20,7 @@ C
 C
 C Local variables
 C
-      REAL*8 A,B
+      DOUBLE PRECISION A,B
       LOGICAL EQUAL
       LOGICAL RESULT
 C

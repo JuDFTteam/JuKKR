@@ -213,7 +213,7 @@
          
          !in second step interpolate potential (gain atom by atom with NATYPD==1)
          CALL INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATYPD,IPAND,NSPOTD,
-     &          NTOTD,NCHEBD,IRMDNEWD,NSPIN,R(:,:),IRMIN(:),IRWS(:),
+     &          NTOTD,IRMDNEWD,NSPIN,R(:,:),IRMIN(:),IRWS(:),
      &          IRCUT(0:IPAND,:),VINS(IRMIND:IRMD,1:LMPOTD,:),
      &          VM2Z(1:IRMD,:),NPAN_LOGNEW(:),NPAN_EQNEW(:),
      &          NPAN_TOT(:),RNEW(:,:),IPAN_INTERVALL(0:NTOTD,:),VINSNEW)
@@ -484,7 +484,7 @@
 
        !in second step interpolate potential 
        CALL INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATOMIMP,IPAND,NSPOTD,
-     &            NTOTD,NCHEBD,IRMDNEWD,
+     &            NTOTD,IRMDNEWD,
      &            NSPIN,RIMP(:,1:NATOMIMP),IRMINIMP(1:NATOMIMP),
      &            IRWSIMP(1:NATOMIMP),
      &            IRCUTIMP(0:IPAND,1:NATOMIMP),

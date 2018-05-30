@@ -91,7 +91,8 @@
      +   R2NEFC_loop(:,:,:,:)
        DOUBLE PRECISION RHO2NS(IRMD,LMPOTD,4),R2NEF(IRMD,LMPOTD,4)
        DOUBLE COMPLEX, ALLOCATABLE:: DEN(:,:,:,:),DENLM(:,:,:,:)
-       DOUBLE COMPLEX RHO2(4),RHO2INT(4),TEMP1,DEN_out(0:LMAXD1,IEMXD,2)
+       DOUBLE COMPLEX RHO2(4), RHO2INT(4), TEMP1, 
+     +                DEN_out(0:LMAXD1,IELAST,2)
        DOUBLE PRECISION ESPV(0:LMAXD1,2)
        DOUBLE COMPLEX RHO2NS_TEMP(2,2),DENTEMP
        DOUBLE PRECISION MOMENT(3),TOTMOMENT,TOTXYMOMENT
@@ -222,7 +223,7 @@ c initial allocate
        ALLOCATE(CDENTEMP(IRMDNEW,0:nth-1))
        ALLOCATE(GFLLE_PART(LMMAXSO,LMMAXSO,0:nth-1))
        ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IELAST,1))
-       ALLOCATE(DEN(0:LMAXD1,IEMXD,1,2),DENLM(LMMAXD,IEMXD,1,2))
+       ALLOCATE(DEN(0:LMAXD1,IELAST,1,2),DENLM(LMMAXD,IELAST,1,2))
        RHO2NSC=CZERO
        RHO2NSC_loop=CZERO
        R2NEFC=CZERO
@@ -274,8 +275,8 @@ C        Read BZ path for qdos calculation:                             ! qdos r
 C        Change allocation for GFLLE to be suitabel for qdos run        ! qdos ruess
          DEALLOCATE(GFLLE,DEN,DENLM)                                    ! qdos ruess
          ALLOCATE(GFLLE(LMMAXSO,LMMAXSO,IELAST,NQDOS))                  ! qdos ruess
-         ALLOCATE(DEN(0:LMAXD1,IEMXD,NQDOS,2),
-     +            DENLM(LMMAXD,IEMXD,NQDOS,2))
+         ALLOCATE(DEN(0:LMAXD1,IELAST,NQDOS,2),
+     +            DENLM(LMMAXD,IELAST,NQDOS,2))
 3000  IF (IERR.NE.0) STOP 'ERROR READING ''qvec.dat'''                  ! qdos ruess
       END IF  ! OPT('qdos    ')                                         ! qdos ruess
 
@@ -314,7 +315,7 @@ c energy loop
 !$omp& private(alphasph,alphall,ie_num)
 !$omp& private(rll_was_read_in, sll_was_read_in)
 !$omp$ private(rllleft_was_read_in, sllleft_was_read_in)
-!$omp& firstprivate(t_inc)
+!$omp& shared(t_inc)
 !$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
 !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
 !$omp& shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)
@@ -650,12 +651,6 @@ c get charge at the Fermi energy (IELAST)
      +                CDEN(:,:,:,ith),CDENLM(:,:,:,ith),
      +                CDENNS(:,:,ith),R2NEFC_loop(:,:,:,ith),0,
      +                GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL)
-!      SUBROUTINE RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL,EK,LMPOTD,
-!      +                      DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,
-!      +                      IRMDNEW,THETASNEW,IFUNM,IMT1,
-!      +                      LMSP,RLL,RLLLEFT,SLLLEFT,
-!      +                      CDEN,CDENLM,CDENNS,RHO2NSC,CORBITAL,
-!      +                      GFLLE_PART,RPAN_INTERVALL,IPAN_INTERVALL)
        ENDIF
 
 
@@ -722,8 +717,8 @@ c get orbital moment
 #ifdef CPP_MPI
        IF (OPT('qdos    ')) THEN                                          ! qdos
          ! first communicate den array to write out qdos files            ! qdos
-         IDIM = (LMAXD1+1)*IEMXD*2*NQDOS                                  ! qdos
-         allocate(workc(0:LMAXD1,IEMXD,2,NQDOS))                          ! qdos
+         IDIM = (LMAXD1+1)*IELAST*2*NQDOS                                 ! qdos
+         allocate(workc(0:LMAXD1,IELAST,2,NQDOS))                         ! qdos
          workc = (0.d0, 0.d0)                                             ! qdos
          CALL MPI_REDUCE(DEN, workc, IDIM, MPI_DOUBLE_COMPLEX, MPI_SUM,   ! qdos
      &                      master, t_mpi_c_grid%myMPI_comm_at, IERR)     ! qdos
@@ -832,7 +827,8 @@ c    write qdos.nn.s.dat                                                    ! co
        ENDIF      ! OPT('qdos    ')                                       ! qdos
 #endif
        
-#ifdef CPP_MPI ! do communication only when compiled with MPI
+! do communication only when compiled with MPI
+#ifdef CPP_MPI
 #ifdef CPP_TIMING
        call timing_start('main1c - communication')
 #endif
@@ -858,13 +854,15 @@ c    write qdos.nn.s.dat                                                    ! co
          denorbmomsp = 0.0d0
          denorbmomlm = 0.0d0
          denorbmomns = 0.0d0
-      endif
-       call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
-     &                            LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,
+       endif
+       if(.not.opt('qdos    ')) then
+         call mympi_main1c_comm_newsosol(IRMDNEW,LMPOTD,LMAXD,LMAXD1,
+     &                            LMMAXD,LMMAXSO,IELAST,NQDOS,
      &                            den,denlm,gflle,rho2nsc,r2nefc,
      &                            rho2int,espv,muorb,denorbmom,
      &                            denorbmomsp,denorbmomlm,denorbmomns,
      &                            t_mpi_c_grid%myMPI_comm_at)
+       end if
 #ifdef CPP_TIMING
        call timing_pause('main1c - communication')
 #endif
@@ -872,7 +870,8 @@ c    write qdos.nn.s.dat                                                    ! co
       
       !MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
       if(t_mpi_c_grid%myrank_at==master) then
-#endif ! CPP_MPI
+#endif
+! CPP_MPI
 
 ! LDAU
       IF (IDOLDAU.EQ.1) THEN
@@ -1050,7 +1049,7 @@ C
        CALL DAXPY(IDIM,1.0D0,R2NEF(1,1,2),1,R2NEF(1,1,1),1)
 
        DO LM1=0,LMAXD1
-         DO IE=1,IEMXD
+         DO IE=1,IELAST
            DO JSPIN=1,NSPIN
              DEN_out(LM1,IE,JSPIN) =  DEN(LM1,IE,1,JSPIN)
            ENDDO
@@ -1088,6 +1087,7 @@ C
        if(ierr/=0) stop '[rhovalnew] Error deallocating R2ORBC etc.'
        DEALLOCATE(DEN, DENLM, stat=ierr)
        if(ierr/=0) stop '[rhovalnew] Error deallocating DEN etc.'
+       
        
        END 
 

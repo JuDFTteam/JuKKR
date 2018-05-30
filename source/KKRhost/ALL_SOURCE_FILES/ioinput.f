@@ -33,18 +33,18 @@ c *
 c * The error handler is not working yet in all cases ....
 c * In this version only files 5000 lines long can be read in
 c *******************************************************
-      implicit none
-      INTEGER NCHAR,NABC,NCOLIO,NLINIO
-      PARAMETER(NCHAR=16,NABC=40,NCOLIO=256,NLINIO=5000)
-      CHARACTER CHARKEY*NCHAR
-      CHARACTER CHAR*NCOLIO
-      INTEGER ILINE,IERROR,IFILE
-      integer i,ios,ier,npt,ilen,ipos,ipos1,iklen
-      CHARACTER STRING(NLINIO)*NCOLIO
-      CHARACTER STRING1*NCOLIO
-      CHARACTER ABC*NABC
-      CHARACTER ATEST
-      DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
+       implicit none
+       INTEGER NCHAR,NABC,NCOLIO,NLINIO
+       PARAMETER(NCHAR=16,NABC=40,NCOLIO=256,NLINIO=5000)
+       CHARACTER (len=nchar) CHARKEY !*NCHAR
+       CHARACTER (len=ncolio) CHAR !*NCOLIO
+       INTEGER ILINE,IERROR,IFILE
+       integer i,ios,ier,npt,ilen,ipos,ipos1,iklen
+       CHARACTER (len=ncolio) STRING(NLINIO) !*NCOLIO
+       CHARACTER (len=ncolio) STRING1 !*NCOLIO
+       CHARACTER (len=nabc) ABC !*NABC
+       CHARACTER ATEST
+       DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
 c
       IERROR = 0
       IER = 0
@@ -84,7 +84,8 @@ c        write(6,*) CHARKEY(1:ILEN-1),ILEN,IKLEN
 c
        DO i=1,NPT       ! loop in all line
          STRING1 = '   ' // STRING(I)     ! shift by 2 characters   
-          IPOS = INDEX(STRING1,CHARKEY(1:ILEN-1)) ! return the position of occurence
+          IPOS = INDEX(STRING1,CHARKEY(1:ILEN-1)) 
+             ! return the position of occurence
              if (ipos.ne.0) then
                  if (ipos.lt.4) then 
                   write(6,*) 'CONSISTENCY ERROR IOINPUT!'
@@ -92,7 +93,8 @@ c
                  end if
 c                write(6,*) 'ipos is not zero',CHARKEY//'=','**'
                 ipos1= INDEX(STRING1,CHARKEY(1:ILEN-1)//ACHAR(61))
-                if (IPOS1.NE.0) then        ! return the string after 'CHARKEY=' 
+                if (IPOS1.NE.0) then
+                   ! return the string after 'CHARKEY=' 
                    CHAR = STRING1(ipos1+ilen:)
 c                    write(6,*) CHARKEY,CHAR ! test 
                    close(IFILE)
@@ -138,14 +140,13 @@ Cccc       end if
 c This sub returns the position of the first space character
 c in ipos2, and the position of the first letter in the string
 c STR1
-c
-        INTEGER NCHAR,NABC
-        CHARACTER STR1*NCHAR
-        CHARACTER ABC*NABC
-        CHARACTER CHAR*1
-        integer ipos,ipos1,ipos2,i,j
-!        DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
-         ipos2 =0
+         INTEGER NCHAR,NABC
+         CHARACTER (len=nchar) STR1 !*NCHAR
+         CHARACTER (len=nabc) ABC !*NABC
+         CHARACTER (len=1) CHAR !*1
+         integer ipos,ipos1,ipos2,i,j
+ !        DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
+          ipos2 =0
 c
          ipos1 = INDEX(STR1,' ')
          do j=1,10

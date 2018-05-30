@@ -44,7 +44,7 @@ def get_rms(outfile, outfile2):
     res = parse_array_float(outfile, 'average rms-error', [2, '=', 1, 0], ['D', 'E'])
     res2 = parse_array_float(outfile2, 'rms-error for atom', [2, '=', 1, 0], ['D', 'E'])
     niter = len(res) # number of iterations
-    natoms = len(res2)/niter # number of atoms in system, needed to take only atom resolved rms of last iteration
+    natoms = int(len(res2)/niter) # number of atoms in system, needed to take only atom resolved rms of last iteration
     return res, res2[-natoms:]
 
 
@@ -97,22 +97,28 @@ def extract_timings(outfile):
     f.close()
     itmp = 0
     res = []
-    search_keys = ['main0               ', 'main1a - tbref      ', 
-                   'main1a              ', 'main1b - calctref13 ', 
-                   'main1b              ', 'main1c - serial part', 
-                   'main1c              ', 'main2               ', 
-                   'Time in Iteration   ']
+    search_keys = ['main0', 
+                   'main1a - tbref', 
+                   'main1a  ', # two spaces to differentiate from following key
+                   'main1b - calctref13', 
+                   'main1b  ', # two spaces!
+                   'main1c - serial part', 
+                   'main1c  ',# two spaces!
+                   'main2', 
+                   'Time in Iteration']
     while itmp>=0:
         tmpvals = []
         for isearch in search_keys:
             itmp = search_string(isearch, tmptxt)
             if itmp>=0:
-                tmpval = float(tmptxt.pop(itmp).split()[-1])
+                tmpval = [isearch, float(tmptxt.pop(itmp).split()[-1])]
                 tmpvals.append(tmpval)
         if len(tmpvals)>0:
             res.append(tmpvals)
-    res = array(res)[-1]
-    return [[search_keys[i].strip(), res[i]] for i in range(len(res))]
+    #print(res)
+    res = array(res[0])
+    #print(dict(res))
+    return dict(res)
 
 
 def get_charges_per_atom(outfile_000):
@@ -283,14 +289,20 @@ def get_symmetries(outfile_0init):
     f = open(outfile_0init)
     tmptxt = f.readlines()
     f.close()
-    itmp = search_string('symmetries found for this lattice:', tmptxt)
-    nsym = int(tmptxt[itmp].split(':')[1].split()[0])
+    try:
+        itmp = search_string('symmetries found for this lattice:', tmptxt)
+        nsym = int(tmptxt[itmp].split(':')[1].split()[0])
+    except IndexError:
+        itmp = search_string('< FINDGROUP > : Finding symmetry operations', tmptxt)
+        tmptxt2 = tmptxt[itmp:]
+        itmp = search_string('found for this lattice:', tmptxt2)
+        nsym = int(tmptxt2[itmp].split(':')[1].split()[0])
     itmp = search_string('symmetries will be used', tmptxt)
     nsym_used = int(tmptxt[itmp].split()[3])
     itmp = search_string('<SYMTAUMAT>', tmptxt)
     tmpdict = {}
     for isym in range(nsym_used):
-        tmpval = tmptxt[itmp+5+isym].split()
+        tmpval = tmptxt[itmp+5+isym].replace('0-', '0 -').replace('1-', '1 -').split() # bugfix for -120 degree euler angle
         desc = tmpval[1]
         inversion = int(tmpval[2])
         euler = [float(tmpval[3]), float(tmpval[4]), float(tmpval[5])]
@@ -419,7 +431,33 @@ def get_orbmom(outfile, natom):
     return array(result)#, vec, angles
 
 
-def parse_kkr_outputfile(out_dict, outfile, outfile_0init, outfile_000, timing_file, potfile_out, nonco_out_file):
+def get_lattice_vectors(outfile_0init):
+    """
+    read direct and reciprocal lattice vectors in internal units (useful for qdos generation)
+    """
+    f = open(outfile_0init)
+    tmptxt = f.readlines()
+    f.close()
+    vecs, rvecs = [], []
+    tmpvecs = []
+    for search_txt in ['a_1: ', 'a_2: ', 'a_3: ', 'b_1: ', 'b_2: ', 'b_3: ']:
+        itmp = search_string(search_txt, tmptxt)
+        if itmp>=0:
+            tmpvec = tmptxt[itmp].split(':')[1].split()
+            tmpvecs.append([float(tmpvec[0]), float(tmpvec[1]), float(tmpvec[1])])
+        if search_txt in ['a_3: ', 'b_3: '] and itmp<0:
+            # reset vecs for 2D case 
+            tmpvecs[0] = tmpvecs[0][:2]
+            tmpvecs[1] = tmpvecs[1][:2]
+        if search_txt=='a_3: ':
+            vecs = tmpvecs
+            tmpvecs = []
+        elif search_txt=='b_3: ':
+            rvecs = tmpvecs
+    return vecs, rvecs
+
+    
+def parse_kkr_outputfile(out_dict, outfile, outfile_0init, outfile_000, timing_file, potfile_out, nonco_out_file, outfile_2='output.2.txt'):
     """
     Parser method for the kkr outfile. It returns a dictionary with results
     """
@@ -534,7 +572,9 @@ def parse_kkr_outputfile(out_dict, outfile, outfile_0init, outfile_000, timing_f
     try:
         result = get_EF(outfile)
         out_dict['fermi_energy'] = result[-1]
+        out_dict['fermi_energy_units'] = 'Ry'
         out_dict['convergence_group']['fermi_energy_all_iterations'] = result
+        out_dict['convergence_group']['fermi_energy_all_iterations_units'] = 'Ry'
     except:
         msg = "Error parsing output of KKR: EF"
         msg_list.append(msg)
@@ -587,7 +627,7 @@ def parse_kkr_outputfile(out_dict, outfile, outfile_0init, outfile_000, timing_f
     try:
         result_WS, result_tot, result_C = get_charges_per_atom(outfile_000)
         niter = len(out_dict['convergence_group']['rms_all_iterations'])
-        natyp = len(result_tot)/niter
+        natyp = int(len(result_tot)/niter)
         out_dict['total_charge_per_atom'] = result_tot[-natyp:]
         out_dict['charge_core_states_per_atom'] = result_C[-natyp:]
         # this check deals with the DOS case where output is slightly different
@@ -642,7 +682,10 @@ def parse_kkr_outputfile(out_dict, outfile, outfile_0init, outfile_000, timing_f
         msg_list.append(msg)
         
     try:
-        niter, nitermax, converged, nmax_reached, mixinfo = get_scfinfo(outfile_0init, outfile_000, outfile)
+        try:
+            niter, nitermax, converged, nmax_reached, mixinfo = get_scfinfo(outfile_0init, outfile_000, outfile)
+        except IndexError:
+            niter, nitermax, converged, nmax_reached, mixinfo = get_scfinfo(outfile_0init, outfile_2, outfile)
         out_dict['convergence_group']['number_of_iterations'] = niter
         out_dict['convergence_group']['number_of_iterations_max'] = nitermax
         out_dict['convergence_group']['calculation_converged'] = converged
@@ -697,6 +740,16 @@ def parse_kkr_outputfile(out_dict, outfile, outfile_0init, outfile_000, timing_f
             msg = "Error parsing output of KKR: ewald summation for madelung poterntial"
             msg_list.append(msg)
             
+    try:
+        bv, recbv = get_lattice_vectors(outfile_0init)
+        out_dict['direct_bravais_matrix'] = bv
+        out_dict['reciprocal_bravais_matrix'] = recbv
+        out_dict['direct_bravais_matrix_unit'] = 'alat'
+        out_dict['reciprocal_bravais_matrix_unit'] = '2*pi / alat'
+    except:
+        msg = "Error parsing output of KKR: lattice vectors (direct/reciprocal)"
+        msg_list.append(msg)
+            
         
     #convert arrays to lists
     from numpy import ndarray
@@ -726,12 +779,9 @@ def check_error_category(err_cat, err_msg, out_dict):
     
     :returns: True/False if message is an error or warning
     """
-    if err_cat == 1:
-        return True
-    
     # check special cases:
     # 1. nonco_angle_file not present, but newsosol==False anyways
-    if 'NONCO_ANGELS_OUT' in err_msg:
+    if 'NONCO_ANGLES_OUT' in err_msg:
         if "use_newsosol" in out_dict.keys():
             if out_dict["use_newsosol"]:
                 return True
@@ -739,19 +789,12 @@ def check_error_category(err_cat, err_msg, out_dict):
                 return False
         else:
             return True
+            
+    # default behavior
+    if err_cat == 1:
+        return True
+    else:
+        return False
+    
         
   
-"""
-path0 = '../tests/files/kkr/kkr_run_dos_output/' #'../tests/files/kkr/kkr_run_slab_soc_mag/'
-outfile = path0+'out_kkr'
-outfile_0init = path0+'output.0.txt'
-outfile_000 = path0+'output.000.txt'
-timing_file = path0+'out_timing.000.txt'
-potfile_out = path0+'out_potential'
-nonco_out_file = path0+'nonco_angle_out.dat'
-out_dict = {}
-success, msg_list, out_dict = parse_kkr_outputfile(out_dict, outfile, outfile_0init, outfile_000, timing_file, potfile_out, nonco_out_file)
-out_dict['parser_warnings'] = msg_list
-print success
-print msg_list
-#"""

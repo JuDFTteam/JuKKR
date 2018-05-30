@@ -98,10 +98,10 @@ c-----------------------------------------------------------------------
 
       IL=0
       IL2=IL+LMAX+1
-      NL(IL2)=PREFAC * (ZVAL* -NL(IL+1) )
-      JL(IL2)=PREFAC * (ZVAL* -JL(IL+1) )
+      NL(IL2)=PREFAC * (ZVAL* (-NL(IL+1)) )
+      JL(IL2)=PREFAC * (ZVAL* (-JL(IL+1)) )
 !       HL(IL2)=JL(IL2)+ CI*NL(IL2)
-      HL(IL2)=PREFAC * (ZVAL* -HL(IL+1) )
+      HL(IL2)=PREFAC * (ZVAL* (-HL(IL+1)) )
 !       write(*,'(5000E)') tau,HL(IL2),JL(IL2)+ (0.0D0,1.0D0)*NL(IL2)
 !       write(*,'(5000E)') tau,HL(0),JL(0)+ (0.0D0,1.0D0)*NL(0)
 
