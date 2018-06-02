@@ -802,8 +802,8 @@ c ------------------------------------------------------------------------
 #ifdef CPP_TIMING
         if(.not.OPT('GREENIMP')) then
            if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-           if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-           if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+           if(t_inc%i_time>0) call timing_pause('main1b - fourier')
+           if(t_inc%i_time>0) call timing_stop('main1b - inversion')
            if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
         endif
         if(t_inc%i_time>0 .and.test('rhoqtest')) then
@@ -1165,8 +1165,8 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 #ifdef CPP_TIMING
         if(.not.OPT('GREENIMP')) then
            if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-           if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-           if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+           if(t_inc%i_time>0) call timing_pause('main1b - fourier')
+           if(t_inc%i_time>0) call timing_stop('main1b - inversion')
            if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
         endif
 #endif
