@@ -193,9 +193,9 @@ class Test_check_test_runs():
         print(mean(abs(num-num_ref)))
         print(abs(num-num_ref).max())
         print(set(text)-set(text_ref)==set())
-        assert std(abs(num-num_ref))<5*10**-16
-        assert mean(abs(num-num_ref))<10**-14
-        assert abs(num-num_ref).max()<2*10**-12
+        assert std(abs(num-num_ref))<5*10**-9
+        assert mean(abs(num-num_ref))<10**-10
+        assert abs(num-num_ref).max()<2*10**-7
         assert set(text)-set(text_ref)==set()
 
         
