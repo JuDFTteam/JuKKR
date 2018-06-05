@@ -658,12 +658,15 @@ C
             stop
          end if
 
-         ! enforce MPIatom here
-         if (TEST('MPIenerg')) stop 'rhoqtest assumes MPIatom'
-         CALL ADDTEST('MPIatom')
+         !! enforce MPIatom here
+         !if (TEST('MPIenerg')) stop 'rhoqtest assumes MPIatom'
+         !CALL ADDTEST('MPIatom')
          
-         if (nranks>NATYP) stop 
-     &                  'cannot use more than NATYP ranks for rhoqtest' 
+         if (nranks>1) then
+            write(*,*) 'at the moment rhoqtest does not work with MPI.'
+            write(*,*) 'compile hybrid version and use OMP level only.'
+            stop
+         end if 
 
       ENDIF ! TEST('rhoqtest')
 
