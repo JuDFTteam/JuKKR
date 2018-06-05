@@ -11,6 +11,9 @@ c     (modified version of GLL91 by P. Zahn, Sept. 95)
 !     (modified by Phivos Mavropoulos to apply Lloyds formula
 !      ported from KKRnano, Oct. 2013)
 c ----------------------------------------------------------------------
+#ifdef CPP_hybrid
+      use omp_lib
+#endif
       use mod_types, only: t_inc
       IMPLICIT NONE
 C     .. Parameters ..
@@ -57,26 +60,25 @@ C     .. External Functions ..
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ABS,DBLE
+#ifdef CPP_hybrid
+      INTEGER thread_id
+#endif
 C     ..
       NGD1 = NACLSMAX*LMGF0D
-      ALLOCATE(GREF(NGD1,NGD1),GLL(LMGF0D,LMGF0D),DGLLDE(LMGF0D,LMGF0D),
-     &        GTREF(NGD1,LMGF0D),DGTDE(NGD1,LMGF0D),IPVT(NGD1),STAT=LM1)
-      IF ( LM1.NE.0 ) THEN
-         WRITE(6,99001) 'GREF/GLL/DGLLDE/GTREF'
-         STOP '           < GLL95 > '
-      END IF
-      GREF(:,:) = CZERO
-      GLL(:,:) = CZERO
-      DGLLDE(:,:) = CZERO
+      NDIM = LMGF0D*NATOM
+
+      ALLOCATE( GTREF(NGD1,LMGF0D),DGTDE(NGD1,LMGF0D), stat=lm1)
+      IF(LM1/=0) stop 'Error allocating gtref etc. <GLL95>'
       GTREF(:,:) = CZERO
       DGTDE(:,:) = CZERO
+      
+      ALLOCATE(GREF(NGD1,NGD1),IPVT(NGD1),STAT=LM1)
+      IF(LM1/=0) stop 'Error allocating gref etc. <GLL95>'
+      GREF(:,:) = CZERO
       IPVT(:) = 0
       IF (LLY.NE.0) THEN
          ALLOCATE ( DGTDE0(NGD1,NGD1) , DGDE(NGD1,NGD1), STAT=LM1 )
-         IF ( LM1.NE.0 ) THEN
-            WRITE(6,99001) 'DGTDE/DGTDE0/DGDE'
-            STOP '           < GLL95 > '
-         END IF
+         IF(LM1/=0) stop 'Error allocating dgtde0 etc. <GLL95>'
          DGTDE0(:,:) = CZERO
          DGTDE(:,:) = CZERO
       ENDIF
@@ -84,38 +86,60 @@ C     ..
       IF (TEST('flow    ').and.(t_inc%i_write>0)) 
      &    WRITE (1337,FMT=*) '>>> GLL95'
 
-      NDIM = LMGF0D*NATOM
+
+#ifdef CPP_hybrid
+!$omp parallel default(shared)
+!$omp& private(n1, n2, rdiff, absrdiff, lm2, lm1, nlm2, nlm1, GLL)
+!$omp& private(thread_id, gtref, dgtde, DGLLDE)
+      thread_id = omp_get_thread_num()
+#endif
+      ! allocate here, inside omp parallel region
+      ALLOCATE(GLL(LMGF0D,LMGF0D),DGLLDE(LMGF0D,LMGF0D), stat=lm1)
+      IF(LM1/=0) stop 'Error allocating gll etc. <GLL95>'
+      GLL(:,:) = CZERO
+      DGLLDE(:,:) = CZERO
+
 c
 c ---> construct free Green's function
 c
-      DO 70 N1 = 1,NATOM
-        DO 60 N2 = 1,NATOM
+# ifdef CPP_hybrid
+!$omp do
+#endif
+      DO N1 = 1,NATOM
+        DO N2 = 1,NATOM
            RDIFF(1:3) = - (RATOM(1:3,N1)-RATOM(1:3,N2))*ALAT
            ABSRDIFF=SQRT(RDIFF(1)**2+RDIFF(2)**2+RDIFF(3)**2)
 C
            IF (N1.NE.N2 .and. (ABSRDIFF.GT.TOLRDIF) ) THEN
               CALL GFREE13(RDIFF,EZ,GLL,DGLLDE,CLEB,ICLEB,LOFLM,IEND)
-              DO 30 LM2 = 1,LMGF0D
+              DO LM2 = 1,LMGF0D
                  NLM2 = (N2-1)*LMGF0D + LM2
-                 DO 20 LM1 = 1,LMGF0D
+                 DO LM1 = 1,LMGF0D
                     NLM1 = (N1-1)*LMGF0D + LM1
                     GREF(NLM1,NLM2) = GLL(LM1,LM2)
                     IF (LLY.NE.0) DGDE(NLM1,NLM2) = DGLLDE(LM1,LM2)
- 20              CONTINUE
- 30           CONTINUE
+                 END DO
+              END DO
            ELSE
-              DO 50 LM2 = 1,LMGF0D
+              DO LM2 = 1,LMGF0D
                  NLM2 = (N2-1)*LMGF0D + LM2
-                 DO 40 LM1 = 1,LMGF0D
+                 DO LM1 = 1,LMGF0D
                     NLM1 = (N1-1)*LMGF0D + LM1
                     GREF(NLM1,NLM2) = CZERO
                     IF (LLY.NE.0) DGDE(NLM1,NLM2) = CZERO
- 40              CONTINUE
- 50           CONTINUE
+                 END DO
+              END DO
            END IF
 
- 60     CONTINUE
- 70   CONTINUE
+        END DO
+      END DO
+#ifdef CPP_hybrid
+!$omp end do
+      ! deallocate in omp parallel region
+      DEALLOCATE( GLL, DGLLDE, STAT=LM1)
+      IF ( LM1.NE.0 ) STOP ' [gll13] dealloc'
+!$omp end parallel
+#endif
       IF (TEST('flow    ').and.(t_inc%i_write>0)) 
      &      WRITE (1337,FMT=*) 'GFREE o.k.'
 c ----------------------------------------------------------------------
@@ -151,9 +175,7 @@ c ----------------------------------------------------------------------
       END IF ! (LLY.NE.0)
 ! LLY Lloyd
 ! ----------------------------------------------------------------------
-
-
-      DO 80 N2 = 1,NATOM
+      DO N2 = 1,NATOM
          NLM2 = (N2-1)*LMGF0D + 1
          ! GTREF =  -g*t
          CALL ZGEMM('N','N',NDIM,LMGF0D,LMGF0D,-CONE,GREF(1,NLM2),
@@ -163,7 +185,7 @@ c ----------------------------------------------------------------------
          ! Now GREF =  -g*t
          IF (TEST('REFPOT  ').and.(t_inc%i_write>0)) WRITE (1337,FMT=*)
      &                         N2,REFPOT(ABS(ATOM(N2)))
-   80 CONTINUE
+      END DO
 
       IF (TEST('WAIT    ')) WRITE (6,FMT=*) 'Input I'
       IF (TEST('WAIT    ')) READ (5,FMT=*) I
@@ -203,11 +225,16 @@ c ----------------------------------------------------------------------
 ! ----------------------------------------------------------------------
 
 
-
       IF (TEST('flow    ').and.(t_inc%i_write>0)) 
      &      WRITE (1337,FMT=*) 'GREFSY o.k.'
 
       IF (OUT_WR.GT.0) WRITE (OUT_WR) ((GREF0(N,M),M=1,LMGF0D),N=1,NGD1)
-      DEALLOCATE (GREF,GLL,GTREF,DGTDE,IPVT)
-      IF (LLY.NE.0) DEALLOCATE (DGTDE0,DGDE)
+
+      ! deallocate arrays
+      DEALLOCATE( GTREF, DGTDE, GREF, IPVT, STAT=LM1)
+      IF ( LM1.NE.0 ) STOP ' [gll13] dealloc'
+      IF (LLY.NE.0) THEN
+         DEALLOCATE ( DGTDE0 , DGDE, STAT=LM1 )
+         IF ( LM1.NE.0 ) STOP ' [gll13] dealloc'
+      END IF
       END

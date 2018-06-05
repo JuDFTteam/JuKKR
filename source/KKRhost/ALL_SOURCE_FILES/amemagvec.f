@@ -23,14 +23,14 @@ C
 C
 C Local variables
 C
-      CHARACTER*1 CHPOL(3)
+      CHARACTER (len=1) :: CHPOL(3)
       DOUBLE PRECISION DBLE
       INTEGER I,IKM1,IKM2,IMKM,IMV,IMVEC,IPOL,J1P05,J2P05,K,K1,K2,KAP1,
-     &        KAP2,L,L1,L2,LB1,LB2,M2,MSM05,MUE1M05,MUE2M05,NK,NMVEC
+     &        KAP2,L,L1,L2,LB1,LB2,M2,MSM05,MUE1M05,MUE2M05,NK,NMVEC,IXM
       INTEGER IABS,NINT
-      CHARACTER*20 STR20
+      CHARACTER (len=20) :: STR20
       DOUBLE PRECISION SUM,XJ,XJM,XJP,XM,XYNORM
-      CHARACTER*4 TXTMVEC(4)
+      CHARACTER (len=4) :: TXTMVEC(4)
 C
       DATA CHPOL/'+','-','z'/
       DATA TXTMVEC/'spin','orb ','T_z ','B_hf'/
@@ -59,7 +59,9 @@ C
          ELSE
             XJ = L - 0.5D0
          END IF
-         DO XM = -XJ, + XJ
+         !DO XM = -XJ, + XJ
+         DO IXM = 1, 2*NINT(XJ)+1
+            XM = -XJ + DBLE(IXM-1)
             I = I + 1
             IKMLLIM1(I) = NINT(L*2*(XJM+0.5D0)+1)
             IKMLLIM2(I) = NINT(L*2*(XJP+0.5D0)+2*XJP+1)

@@ -104,8 +104,8 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
    double complex, dimension(LMMAXD,LMMAXD,*), intent(in)      :: DSYMLL
    double complex, dimension(LMMAXD,LMMAXD,NREF), intent(in)   :: DTREFLL !< LLY Lloyd dtref/dE
    double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DTMATLL  ! LLY  dt/dE (should be av.-tmatrix in CPA)
-   double complex, dimension(LMGF0D*NACLSMAX,LMGF0D,*), intent(in) :: GINP !< Cluster GF (ref syst.)
-   double complex, dimension(LMGF0D*NACLSMAX,LMGF0D,*), intent(in) :: DGINP !< LLY Lloyd Energy derivative of GINP
+   double complex, dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: GINP !< Cluster GF (ref syst.)
+   double complex, dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: DGINP !< LLY Lloyd Energy derivative of GINP
    double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPIN), intent(in) :: LEFTTINVLL
    double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPIN), intent(in) :: RIGHTTINVLL
    logical, dimension(2), intent(in) :: VACFLAG

@@ -41,6 +41,7 @@ contains
       use mod_version_info
       use global_variables
       use mod_tbxccpljijdij, only: tbxccpljijdij
+      use mod_rhoqtools, only: rhoq_save_refpot
 
       use mod_main0
 
@@ -147,9 +148,14 @@ contains
       double complex, dimension(:,:,:), allocatable   :: DGINP    !< LLY Lloyd Energy derivative of GINP DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
 
 #ifdef CPP_MPI
-      integer :: ie_start
+      integer :: ihelp
+      double complex, allocatable :: work(:,:)
 #endif
+      integer :: ie_start
       integer :: ie_num, ie_end, ierr, i_stat, i_all
+
+      ! for OPERATOR option
+      logical :: lexist, operator_imp
       !-------------------------------------------------------------------------
       !     for conductivity calculation
       !     INTEGER NCPAIRD
@@ -192,6 +198,11 @@ contains
          IQCALC,DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,NRREL,     &
          IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,BZKP,VOLCUB,WEZ,    &
          NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,RCLSIMP)
+     
+      if(test('rhoqtest')) then
+        !write(*,*) myrank ,'open tau0', lmmaxd, (LMMAXD*LMMAXD+1)*4
+         open(9889, access='direct', file='tau0_k', form='unformatted', recl=(LMMAXD*LMMAXD+1)*4) ! lm blocks
+      end if
 
 
       if (TEST('gmatasci')) open(298347,FILE='gmat.ascii',FORM='formatted')
@@ -418,18 +429,19 @@ contains
 #ifdef CPP_MPI
             ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
             ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+            ie_start = 0
+            ie_end = ielast
+#endif
 
             do 360 ie_num=1,ie_end
                IE = ie_start+ie_num
 
+#ifdef CPP_MPI
                !start timing measurement for this ie, needed for MPIadapt
                if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
-                  call timing_start('time_1b_ie')
+                 call timing_start('time_1b_ie')
                end if
-#else
-            do 360 IE = 1,IELAST
-               ie_num = ie
-               ie_end = ielast
 #endif
 
                ! write energy into green_host file
@@ -459,6 +471,7 @@ contains
 #ifdef CPP_TIMING
                call timing_start('main1b - calctref13')
 #endif
+               TREFLL(:,:,:) = CZERO
                if ( KREL.EQ.0 ) then
                   do I1 = 1,NREF
                      call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1, &  ! LLY Lloyd
@@ -713,9 +726,12 @@ contains
 #ifdef CPP_TIMING
             if(.not.OPT('GREENIMP')) then
                if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-               if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-               if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+               if(t_inc%i_time>0) call timing_pause('main1b - fourier')
+               if(t_inc%i_time>0) call timing_stop('main1b - inversion')
                if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
+            endif
+            if(t_inc%i_time>0 .and.test('rhoqtest')) then
+               call timing_stop('main1b - kkrmat01 - writeout_rhoq')
             endif
 #endif
             !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -755,19 +771,26 @@ contains
 #ifdef CPP_MPI
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+         ie_start = 0
+         ie_end = IELAST
+#endif
 
-         do 460 ie_num=1,ie_end
+
+         if(test('rhoqtest')) then
+            ie_start = 1
+            ie_end = 1
+         end if
+            
+   
+         DO 460 ie_num=1,ie_end
             IE = ie_start+ie_num
-
+      
+#ifdef CPP_MPI
             !start timing measurement for this ie, needed for MPIadapt
             if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
-               call timing_start('time_1b_ie')
+              call timing_start('time_1b_ie')
             end if
-
-#else
-         ie_end = IELAST
-         do 460 IE=1,IELAST
-            ie_num = ie
 #endif
 
             ! write energy into green_host file
@@ -806,6 +829,11 @@ contains
                   DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
                   DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
                enddo
+          
+               if(test('rhoqtest')) then
+                  call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),wlength,lmmaxd,ie,trefll)
+               end if ! rhoqtest
+          
             enddo ! I1
 #ifdef CPP_TIMING
             call timing_pause('main1b - calctref13')
@@ -1035,8 +1063,8 @@ contains
 #ifdef CPP_TIMING
          if(.not.OPT('GREENIMP')) then
             if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-            if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-            if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+            if(t_inc%i_time>0) call timing_pause('main1b - fourier')
+            if(t_inc%i_time>0) call timing_stop('main1b - inversion')
             if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
          endif
 #endif
@@ -1079,7 +1107,18 @@ contains
 
       if (LLY.NE.0) then                                                 ! LLY Lloyd
          if (t_lloyd%cdos_diff_lly_to_file) then
-            open (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
+            if(myrank==master) then
+               OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
+            endif
+#ifdef CPP_MPI
+            ihelp      = IELAST*NSPIN  !IELAST*NSPIN
+            allocate(work(ielast,nspin))
+            work = (0.d0, 0.d0)
+            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
+     &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
+            call zcopy(ihelp,work,1,cdos_lly,1)
+            deallocate(work)
+#endif
          end if
 
          if (.not.OPT('NEWSOSOL')) then
@@ -1087,12 +1126,12 @@ contains
 #ifdef CPP_MPI
                ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
                ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+               ie_start = 0
+               ie_end   = ielast
+#endif
                do ie_num=1,ie_end
                   IE = ie_start+ie_num
-#else
-               do IE = 1,IELAST                                         ! LLY
-                  ie_num = ie
-#endif
                   if (t_lloyd%cdos_diff_lly_to_file) then
                      write(701,FMT='(10E25.16)') EZ(IE),CDOS_LLY(IE,ISPIN),   &
                      TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN)                  ! LLY
@@ -1105,22 +1144,21 @@ contains
 #ifdef CPP_MPI
             ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
             ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-            do 879 ie_num=1,ie_end
-               IE = ie_start+ie_num
 #else
-            do 879 IE = 1,IELAST                                            ! LLY
-               ie_num = ie
-#endif
-               if(t_lloyd%cdos_diff_lly_to_file) then
-                 write(701,FMT='(10E25.16)') EZ(IE),CDOS_LLY(IE,1),  &
-                 TRALPHA(IE,1),LLY_GRTR(IE,1)   ! LLY
-              else
-                 t_lloyd%cdos(ie_num,1) = CDOS_LLY(IE,1)
-              end if
-
-            879 continue                                                 ! LLY
+            ie_start = 0
+            ie_end   = ielast
+#endif         
+            do ie_num=1,ie_end
+               IE = ie_start+ie_num
+               if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) then
+                  write(701,FMT='(10E25.16)') EZ(IE),CDOS_LLY(IE,1),  &
+                  TRALPHA(IE,1),LLY_GRTR(IE,1)   ! LLY
+               else
+                  t_lloyd%cdos(ie_num,1) = CDOS_LLY(IE,1)
+               end if
+             end do
          endif ! .NOT.OPT('NEWSOSOL')                                    ! LLY
-         if(t_lloyd%cdos_diff_lly_to_file) close(701)                    ! LLY
+         if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) close(701)                    ! LLY
       endif                                                              ! LLY
 
       if ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) then
@@ -1167,13 +1205,51 @@ contains
       if(t_lloyd%tralpha_to_file) close(692)
       if (IQDOSRUN.EQ.1) goto 210                 ! qdos ruess
 
-      !Do stuff for GREENIMP option (previously done in zulapi code)
-      if (OPT('GREENIMP')) then
+
+      if(test('rhoqtest')) then     
+#ifdef CPP_MPI
+         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+#endif
+         close(9889) ! tau0_k file
+         close(99992)
+         call timing_stop('Time in Iteration')
+         if (myrank==master) call print_time_and_date('Done w. rhoq!!!')
+#ifdef CPP_MPI
+         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+         call MPI_FINALIZE(ierr)
+#endif
+         stop 'finished with rhoq output'
+      
+      end if
+
+      IF(OPT('OPERATOR') .and. myrank==master) THEN
+        ! check if impurity files are present (otherwise no imp.
+        ! wavefunctions can be calculated)
+        operator_imp = .true.
+        inquire(file='potential_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='shapefun_imp', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+        inquire(file='scoef', exist=lexist)
+        if (.not.lexist) operator_imp = .false.
+      ELSE
+        operator_imp = .false.
+      ENDIF
+#ifdef CPP_MPI
+      call MPI_Bcast(operator_imp, 1, MPI_LOGICAL, master, MPI_COMM_WORLD, ierr)
+      if(ierr/=MPI_SUCCESS) stop 'error broadcasting operator_imp'
+#endif
+
+      ! Do stuff for GREENIMP option (previously done in zulapi code)
+      ! run for OPERATOR option to precalculate impurity wavefunctions
+      ! that are then stored in t_imp (used only if potential_imp,
+      ! scoef, shapefun_imp)
+      IF (OPT('GREENIMP') .or. operator_imp) THEN
 
         ! consistency checks
         if(.not.(ielast==1.or.ielast==3)) stop 'Error: GREENIMP option only possible with 1 () or 3 () energy points in contour'
-        if(ielast==1 .and.dabs(dimag(ez(1)))>10**(-10)) stop 'Error: T>0 for GREENIMP (DTMTRX writeout, IELAST==3)'
-        if(ielast==3 .and.dabs(dimag(ez(1)))<10**(-10)) stop 'Error: T==0 for GREENIMP (GMATLL_GES writeout, IELAST==3)'
+        if(ielast==1 .and.dabs(dimag(ez(1)))>1E-10) stop 'Error: T>0 for GREENIMP (DTMTRX writeout, IELAST==3)'
+        if(ielast==3 .and.dabs(dimag(ez(1)))<1E-10) stop 'Error: T==0 for GREENIMP (GMATLL_GES writeout, IELAST==3)'
         ! end consistency checks
 
 #ifdef CPP_MPI
@@ -1228,13 +1304,17 @@ contains
          end do ! ie-loop
 
          ! done with GREENIMP option, stopping now
-#ifdef CPP_MPI
-         call MPI_FINALIZE(ierr)
-#endif
-         if(myrank==master) write(*,*) 'done with GREENIMP, stop here!'
-         stop
 
-      endif ! GREENIMP
+        ! done with GREENIMP option, stopping now
+        if(.not. OPT('OPERATOR')) then
+          if(myrank==master) write(*,*) 'done with GREENIMP, stop here!'
+#ifdef CPP_MPI
+          call MPI_FINALIZE(ierr)
+#endif
+          stop
+        end if
+
+      ENDIF ! GREENIMP .or. OPERATOR
 
 ! ----------------------------------------------------------------------
 !

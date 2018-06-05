@@ -80,7 +80,7 @@ subroutine writekkrflex(NATOMIMP,NSPIN,IELAST,LMPOT,LMMAXD,ALAT,NATYP,&
                   else
                      TMAT0=(0.0D0,0.0D0)
                   end if
-                  write(6699,'(4I5,50000E14.7)') IATOM,ISPIN,IE,0,TMAT0
+                  write(6699,'(4I12,50000E25.16)') IATOM,ISPIN,IE,0,TMAT0
                end do !ie=1,ielast
             end do !ispin=1,nspin
          elseif (KORBIT.EQ.1) then
@@ -95,7 +95,7 @@ subroutine writekkrflex(NATOMIMP,NSPIN,IELAST,LMPOT,LMMAXD,ALAT,NATYP,&
                else
                   TMAT0=(0d0,0d0)
                endif
-               write(6699,'(4I5,50000E14.7)') IATOM,ISPIN,IE,0,TMAT0
+               write(6699,'(4I12,50000E25.16)') IATOM,ISPIN,IE,0,TMAT0
             enddo
          endif
       end do
@@ -110,11 +110,11 @@ subroutine writekkrflex(NATOMIMP,NSPIN,IELAST,LMPOT,LMMAXD,ALAT,NATYP,&
       write(91,*) '# lmpot',lmpot
       write(91,*) '# KSHAPE',KSHAPE
       write(91,*) '# NATOMIMP, lmpot, ALAT VBC(1), VBC(2)'
-      write(91,'(2I5,10F14.7)') NATOMIMP,lmpot,ALAT,VBC(1),VBC(2)
+      write(91,'(2I12,10F25.16)') NATOMIMP,lmpot,ALAT,VBC(1),VBC(2)
       do IATOM = 1,NATOMIMP      ! Bauer 2011-10-11
          I=ATOMIMP(IATOM)         !
          write(1337,*) 'ac2',I,HOSTIMP(I),lmpot,(VINTERS(LM,I),LM=1,lmpot)
-         write(91,'(5000F14.7)') (VINTERS(LM,I),LM=1,lmpot)
+         write(91,'(5000F25.16)') (VINTERS(LM,I),LM=1,lmpot)
       end do
       close(91)
 
@@ -134,13 +134,13 @@ subroutine writekkrflex(NATOMIMP,NSPIN,IELAST,LMPOT,LMMAXD,ALAT,NATYP,&
          write(1337,*) 'NOQ',I,NOQ(I)
          if (NOQ(I)/=1 .and. NOQ(I)/=0)stop '[vmadelblk] VIRATOMS: NOQ/=1'
          if (NOQ(I)==0) then
-           write(91,'(5000F14.7)') 0.0D0,(0.0D0,LM=1,lmpot)
+           write(91,'(5000F25.16)') 0.0D0,(0.0D0,LM=1,lmpot)
          else
             if ( KSHAPE.NE.0 ) then
-               write(91,'(5000F14.7)') ZAT(I1),  &
+               write(91,'(5000F25.16)') ZAT(I1),  &
                   ((CMOM(LM,I1)+ CMINST(LM,I1))*CONC(I1),LM=1,lmpot)
             else
-               write(91,'(5000F14.7)') ZAT(I1),(CMOM(LM,I1)*CONC(I1),LM=1,lmpot)
+               write(91,'(5000F25.16)') ZAT(I1),(CMOM(LM,I1)*CONC(I1),LM=1,lmpot)
             end if
          end if
       end do

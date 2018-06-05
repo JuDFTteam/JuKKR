@@ -106,9 +106,9 @@ C
       INTEGER IABS
       INTEGER IKAPMUE
       DOUBLE PRECISION RNUCTAB
-      CHARACTER*10 TXTB(1:5)
-      CHARACTER*3 TXTK(4)
-      CHARACTER*1 TXTL(0:3)
+      CHARACTER (len=10) :: TXTB(1:5)
+      CHARACTER (len=3) :: TXTK(4)
+      CHARACTER (len=1) :: TXTL(0:3)
 C
 C*** End of declarations rewritten by SPAG
 C
@@ -1074,7 +1074,7 @@ C
      &        '  NZERO set to  (NRC-1) =',I4)
 99004 FORMAT (//,'  STOP IN <<CORE>>',/,'  IT=',I2,' NQN=',I2,' L=',I2,
      &        /,'  no matching-radius found for  EC=',F10.3)
-99005 FORMAT (' LOOP    =  ',I3,' BSCL=',F10.5,/,' E=',F14.7,' VAR  ',
+99005 FORMAT (' LOOP    =  ',I3,' BSCL=',F10.5,/,' E=',F25.16,' VAR  ',
      &        4E11.4,/,17X,' CORR ',4E11.4,/,17X,' ERR  ',4E11.4)
 99006 FORMAT (' iteration not converged after',I3,' steps !',/,
      &        ' parameters:',4E18.10,/,' last corr.:',4E18.10,/,

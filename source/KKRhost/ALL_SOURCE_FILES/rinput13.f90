@@ -2360,18 +2360,23 @@ contains
          allocate(t_params%qdos_atomselect(NATYP), stat=i_stat) !INTEGER
          call memocc(i_stat,product(shape(t_params%qdos_atomselect))*kind(t_params%qdos_atomselect),'t_params%qdos_atomselect','rinput13')
 
-         t_params%qdos_atomselect(1:NATYP) = 1
+         t_params%qdos_atomselect(:) = 1
          !for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.
-         !          call IoInput('qdosatoms       ',UIO,1,7,IER)
-         !          if (IER.EQ.0) then
-         !            read (UNIT=UIO,FMT=*) (t_params%qdos_atomselect(I),I=1,NATYP)
-         !            write(111,FMT='(A10,80I2)') 'qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
-         !          else
-         !            write(111,FMT='(A18,80I2)') 'Default qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
-         !          endif
-         !
-         !          write (1337,'(A)') 'atom selective writeout for qdos:'
-         !          write (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
+!          CALL IoInput('qdosatoms       ',UIO,1,7,IER)
+!          IF (IER.EQ.0) THEN
+!            READ (UNIT=UIO,FMT=*) (t_params%qdos_atomselect(I),I=1,NATYP)
+!            WRITE(111,FMT='(A10,80I2)') 'qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
+!          ELSE
+!            WRITE(111,FMT='(A18,80I2)') 'Default qdosatoms=  ', (t_params%qdos_atomselect(I),I=1,NATYP)
+!          ENDIF
+! 
+!          WRITE (1337,'(A)') 'atom selective writeout for qdos:'
+!          WRITE (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
+
+         if(.not.test('MPIatom ')) then
+            ! enforce MPIenerg since this is usually faster for qdos option
+            call addtest('MPIenerg')
+         end if
 
       end if
 
@@ -2419,7 +2424,7 @@ contains
 
       if(opt('OPERATOR')) then
          write(1337,*) 'Found option "OPERATOR"'
-         write(1337,*) 'Overwrite MEMWFSAVE with big numbers'
+         write(1337,*) 'Overwrite MEMWFSAVE input with big numbers'
          t_wavefunctions%maxmem_number = 5
          t_wavefunctions%maxmem_units = 3
       end if

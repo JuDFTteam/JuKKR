@@ -36,6 +36,10 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
 #ifdef CPP_TIMING
    use mod_timing
 #endif
+#ifdef CPP_HYBRID
+      use omp_lib
+#endif
+      use mod_rhoqtools, only: rhoq_find_kmask, rhoq_saveG, rhoq_write_tau0, rhoq_read_mu0_scoef
 
    use global_variables
    use Constants
@@ -125,7 +129,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    integer :: ntot1
    integer, dimension(0:nranks-1) :: ntot_pT, ioff_pT
 #endif
-   integer :: i1_start, i1_end
+   integer :: k_start, k_end
    ! ..
    logical :: TEST,OPT
    ! .. External subroutines ..
@@ -133,10 +137,16 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    ! .. Intrinsic functions ..
    intrinsic :: ATAN,EXP
    !     ..
-#ifdef CPP_MPI
+!#ifdef CPP_MPI
    double complex, dimension(LMMAXD,LMMAXD,NSYMAXD) :: WORK
    integer :: IERR,IWORK
-#endif
+!#endif
+   integer :: mu, nscoef, imin, ie
+   integer, allocatable :: iatomimp(:)
+   
+   double precision, allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts
+   integer, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
+   integer :: mythread
 
    !      NDIM=LMGF0D*NAEZ
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -188,31 +198,46 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    !  K-points loop
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+   if(test('rhoqtest')) then
+         call rhoq_read_mu0_scoef(iatomimp, mu, nscoef, imin)
+         call rhoq_find_kmask(nofks, k_end, bzkp(1:3,1:nofks), kmask, rhoq_kmask)
+   end if !test('rhoqtest')
+
 #ifdef CPP_MPI
    ! MPI:
-   ntot1 = NOFKS
+   if(.not.opt('qdos    ')) then
+   
+     if(test('rhoqtest')) then
+       ntot1 = k_end
+     else
+       ntot1 = NOFKS
+     endif
 
-   if(myrank==master) write(1337,*) 'kkrmat k loop:', NOFKS,t_mpi_c_grid%nranks_ie
-   call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie,  &
-      t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,        &
-      master,ntot1,ntot_pT,ioff_pT,.true.)
+     if(myrank==master) write(1337,*) 'kkrmat k loop:', NOFKS, t_mpi_c_grid%nranks_ie
+     call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master,ntot1,ntot_pT,ioff_pT,.true.)
 
-   i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-   i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+ntot_pT(t_mpi_c_grid%myrank_ie)
-   t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
-
-   t_mpi_c_grid%ntot_pT1 = ntot_pT
-   t_mpi_c_grid%ioff_pT1 = ioff_pT
-
+     k_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+     k_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+ntot_pT(t_mpi_c_grid%myrank_ie)
+     t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+     t_mpi_c_grid%ntot_pT1 = ntot_pT
+     t_mpi_c_grid%ioff_pT1 = ioff_pT
+      
+   else !.not.opt('qdos    ')
+      
+     k_start = 1
+     k_end = NOFKS
+      
+   end if !.not.opt('qdos    ')
 #else
-   i1_start = 1
-   i1_end = NOFKS
+   k_start = 1
+   if(.not.test('rhoqtest')) k_end = NOFKS 
 #endif
+
    ! k-loop not needed for GREENIMP-case
    if(opt('GREENIMP')) then
       if(myrank==master) write(*,*) 'Skipping kloop in kkrmat'
-      i1_start = 1
-      i1_end = 0
+      k_start = 1
+      k_end = 0
    end if
 
    ! Print header of statusbar for k-loop
@@ -222,15 +247,35 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
       write(1337,FMT=190) ! Beginning of statusbar
    endif
 
-   do KPT = i1_start,i1_end
+
+#ifdef CPP_HYBRID
+   !$omp parallel default(shared)
+   !$omp& private(kpt, ns, i, j, isym, carg, i1, zktr, i2, iq1, iq2, ioff1)
+   !$omp& private(ioff2, joff1, joff2, ikm1, ikm2, csum1, is, n1, n2)
+   !$omp& private(j1, csum2, j2, il1, il2, lm1, lm2, gaux1, gaux2)
+   !$omp& private(jl1, jl2, gaux3, ilm, jlm, mythread )
+   !$omp& reduction(+:trace)
+   mythread = omp_get_thread_num()
+#else
+   mythread = 0
+#endif
+
+   ! kpts loop
+   do KPT = k_start,k_end
       GLLKE(:,:) = CZERO
       if (LLY.NE.0) DGLLKE(:,:) = CZERO
       KP(1:3) = BZKP(1:3,KPT)
+
+      ! overwrite kpt in case of rhoqtest (take only reduced set of kpts)
+      if(test('rhoqtest')) kp(1:3) = rhoq_kmask(1:3,kpt)
 
       ETAIKR(1:NSYMAT,1:NSHELL) = VOLCUB(KPT)
       !-------------------------------------------------------------------------
       ! First NAEZ/NATYP elements of GS() are site-diagonal
       !-------------------------------------------------------------------------
+#ifdef CPP_HYBRID
+      !$omp do
+#endif
       do NS = NSDIA+1,NSHELL
          I = NSH1(NS)
          J = NSH2(NS)
@@ -244,6 +289,9 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
             ETAIKR(ISYM,NS) = ETAIKR(ISYM,NS) * EXP(CARG*CITPI)
          end do
       end do
+#ifdef CPP_HYBRID
+      !$omp end do
+#endif
 
       BZKPK(1:3) = KP(1:3)
       BZKPK(4:6) = 0.D0
@@ -252,7 +300,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
       ! Fourier transformation
       !-------------------------------------------------------------------------
 #ifdef CPP_TIMING
-      if(t_inc%i_time>0) call timing_start('main1b_fourier')
+      if(mythread==0 .and. t_inc%i_time>0) call timing_start('main1b - fourier')
 #endif
 
       RRM(1:3,1:NR) = -RR(1:3,1:NR)
@@ -262,15 +310,19 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
       if (KREL.EQ.0) then
 
          !----------------------------------------------------------------------
-         allocate(GLLKEN(ALMGF0,ALMGF0),stat=i_stat)
-         call memocc(i_stat,product(shape(GLLKEN))*kind(GLLKEN),'GLLKEN','kkrmat01')
-         GLLKEN(:,:) = CZERO
+         if(mythread==0) then
+           allocate(GLLKEN(ALMGF0,ALMGF0),stat=i_stat)
+           call memocc(i_stat,product(shape(GLLKEN))*kind(GLLKEN),'GLLKEN','kkrmat01')
+           GLLKEN(:,:) = CZERO
+         end if
          !----------------------------------------------------------------------
          call DLKE0(GLLKEN,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,BZKPK,RCLS,GINP)
          !----------------------------------------------------------------------
-         allocate(GLLKEM(ALMGF0,ALMGF0),stat=i_stat)
-         call memocc(i_stat,product(shape(GLLKEM))*kind(GLLKEM),'GLLKEM','kkrmat01')
-         GLLKEM(:,:) = CZERO
+         if(mythread==0) then
+           allocate(GLLKEM(ALMGF0,ALMGF0),stat=i_stat)
+           call memocc(i_stat,product(shape(GLLKEM))*kind(GLLKEM),'GLLKEM','kkrmat01')
+           GLLKEM(:,:) = CZERO
+         end if
          !----------------------------------------------------------------------
          call DLKE0(GLLKEM,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,EZOA,ATOM,BZKPK,RCLS,GINP)
          !----------------------------------------------------------------------
@@ -280,15 +332,19 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
          !----------------------------------------------------------------------
          IF (LLY.NE.0) THEN
             !-------------------------------------------------------------------
-            allocate(DGLLKEN(ALMGF0,ALMGF0),stat=i_stat)
-            call memocc(i_stat,product(shape(DGLLKEN))*kind(DGLLKEN),'DGLLKEN','kkrmat01')
-            DGLLKEN(:,:) = CZERO
+            if(mythread==0) then
+              allocate(DGLLKEN(ALMGF0,ALMGF0),stat=i_stat)
+              call memocc(i_stat,product(shape(DGLLKEN))*kind(DGLLKEN),'DGLLKEN','kkrmat01')
+              DGLLKEN(:,:) = CZERO
+            end if
             !-------------------------------------------------------------------
             call DLKE0(DGLLKEN,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,BZKPK,RCLS,DGINP)
             !-------------------------------------------------------------------
-            allocate(DGLLKEM(ALMGF0,ALMGF0),stat=i_stat)
-            call memocc(i_stat,product(shape(DGLLKEM))*kind(DGLLKEM),'DGLLKEM','kkrmat01')
-            DGLLKEM(:,:) = CZERO
+            if(mythread==0) then
+              allocate(DGLLKEM(ALMGF0,ALMGF0),stat=i_stat)
+              call memocc(i_stat,product(shape(DGLLKEM))*kind(DGLLKEM),'DGLLKEM','kkrmat01')
+              DGLLKEM(:,:) = CZERO
+            end if
             !-------------------------------------------------------------------
             call DLKE0(DGLLKEM,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,EZOA,ATOM,BZKPK,RCLS,DGINP)
          endif
@@ -314,6 +370,9 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
                enddo
             enddo
             ! bigger GLLKE matrix and rearrange with atom block
+#ifdef CPP_HYBRID
+            !$omp do
+#endif
             do IQ1=1,NAEZ
                do IQ2=1,NAEZ
                   IOFF1 = LMMAXD*(IQ1-1)
@@ -336,22 +395,27 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
                   enddo
                enddo
             enddo
+#ifdef CPP_HYBRID
+            !$omp end do
+#endif
          endif               ! (.NOT.OPT('NEWSOSOL'))
          !----------------------------------------------------------------------
-         i_all=-product(shape(GLLKEM))*kind(GLLKEM)
-         deallocate(GLLKEM, stat=i_stat)
-         call memocc(i_stat,i_all,'GLLKEM','kkrmat01')
-         i_all=-product(shape(GLLKEM))*kind(GLLKEM)
-         deallocate(GLLKEN, stat=i_stat)
-         call memocc(i_stat,i_all,'GLLKEN','kkrmat01')
-         if (LLY.NE.0) then
-            i_all=-product(shape(DGLLKEM))*kind(DGLLKEM)
-            deallocate(DGLLKEM, stat=i_stat)
-            call memocc(i_stat,i_all,'DGLLKEM','kkrmat01')
-            i_all=-product(shape(DGLLKEN))*kind(DGLLKEN)
-            deallocate(DGLLKEN, stat=i_stat)
-            call memocc(i_stat,i_all,'DGLLKEN','kkrmat01')
-         endif
+         if(mythread==0) then
+           i_all=-product(shape(GLLKEM))*kind(GLLKEM)
+           deallocate(GLLKEM, stat=i_stat)
+           call memocc(i_stat,i_all,'GLLKEM','kkrmat01')
+           i_all=-product(shape(GLLKEM))*kind(GLLKEM)
+           deallocate(GLLKEN, stat=i_stat)
+           call memocc(i_stat,i_all,'GLLKEN','kkrmat01')
+           if (LLY.NE.0) then
+              i_all=-product(shape(DGLLKEM))*kind(DGLLKEM)
+              deallocate(DGLLKEM, stat=i_stat)
+              call memocc(i_stat,i_all,'DGLLKEM','kkrmat01')
+              i_all=-product(shape(DGLLKEN))*kind(DGLLKEN)
+              deallocate(DGLLKEN, stat=i_stat)
+              call memocc(i_stat,i_all,'DGLLKEN','kkrmat01')
+           endif
+         end if
          !----------------------------------------------------------------------
          ! LLY Lloyd At this point DGLLKE contains the Fourier transform of the dGref/dE
          !----------------------------------------------------------------------
@@ -359,10 +423,12 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
          !----------------------------------------------------------------------
          ! LLY Lloyd Not implementing Lloyds formula for KREL=1 (Dirac ASA)
          !----------------------------------------------------------------------
-         allocate(GLLKE0(ALMGF0,ALMGF0),stat=i_stat)
-         call memocc(i_stat,product(shape(GLLKE0))*kind(GLLKE0),'GLLKE0','kkrmat01')
-         allocate(GLLKE0M(ALMGF0,ALMGF0),stat=i_stat)
-         call memocc(i_stat,product(shape(GLLKE0M))*kind(GLLKE0M),'GLLKE0M','kkrmat01')
+         if(mythread==0) then
+           allocate(GLLKE0(ALMGF0,ALMGF0),stat=i_stat)
+           call memocc(i_stat,product(shape(GLLKE0))*kind(GLLKE0),'GLLKE0','kkrmat01')
+           allocate(GLLKE0M(ALMGF0,ALMGF0),stat=i_stat)
+           call memocc(i_stat,product(shape(GLLKE0M))*kind(GLLKE0M),'GLLKE0M','kkrmat01')
+         end if
          !----------------------------------------------------------------------
          call DLKE0(GLLKE0,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,BZKPK,RCLS,GINP)
          call DLKE0(GLLKE0M,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,EZOA,ATOM,BZKPK,RCLS,GINP)
@@ -376,6 +442,9 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
          ! Double the GLLKE0 matrix and transform to the REL representation
          !    ==> GLLKE
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef CPP_HYBRID
+         !$omp do
+#endif
          do IQ1=1,NAEZ
             do IQ2=1,NAEZ
                IOFF1 = LMMAXD*(IQ1-1)
@@ -405,17 +474,22 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
                !----------------------------------------------------------------
             end do
          end do
+#ifdef CPP_HYBRID
+         !$omp end do
+#endif
          !-----------------------------------------------------------------------
-         i_all=-product(shape(GLLKE0))*kind(GLLKE0)
-         deallocate(GLLKE0, stat=i_stat)
-         call memocc(i_stat,i_all,'GLLKE0','kkrmat01')
-         i_all=-product(shape(GLLKE0))*kind(GLLKE0)
-         deallocate(GLLKE0M, stat=i_stat)
-         call memocc(i_stat,i_all,'GLLKE0M','kkrmat01')
+         if(mythread==0) then
+           i_all=-product(shape(GLLKE0))*kind(GLLKE0)
+           deallocate(GLLKE0, stat=i_stat)
+           call memocc(i_stat,i_all,'GLLKE0','kkrmat01')
+           i_all=-product(shape(GLLKE0))*kind(GLLKE0)
+           deallocate(GLLKE0M, stat=i_stat)
+           call memocc(i_stat,i_all,'GLLKE0M','kkrmat01')
+         end if
          !----------------------------------------------------------------------
       end if !  (KREL.EQ.0)
 #ifdef CPP_TIMING
-      if(t_inc%i_time>0) call timing_pause('main1b_fourier')
+      if(mythread==0 .and. t_inc%i_time>0) call timing_pause('main1b - fourier')
 #endif
       !
       if (LLY.NE.0) GREFLLKE(1:ALM,1:ALM) = GLLKE(1:ALM,1:ALM) ! LLY Save k-dependent Gref
@@ -440,7 +514,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
          enddo
          !
 #ifdef CPP_TIMING
-         if(t_inc%i_time>0) call timing_start('main1b_inversion')
+         if(mythread==0 .and. t_inc%i_time>0) call timing_start('main1b - inversion')
 #endif
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          ! Perform the inversion of matrix M
@@ -453,7 +527,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
             call INVERSION(GLLKE,INVMOD,ICHECK)
          endif
 #ifdef CPP_TIMING
-         if(t_inc%i_time>0) call timing_pause('main1b_inversion')
+         if(mythread==0 .and. t_inc%i_time>0) call timing_pause('main1b - inversion')
 #endif
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          ! LLY Lloyd
@@ -558,6 +632,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
       !-------------------------------------------------------------------------
       ! Global sum on array gs
       !-------------------------------------------------------------------------
+      ! no omp at this loop because of rhoq output
       do NS = 1,NSHELL
          I = NSH1(NS)
          J = NSH2(NS)
@@ -574,9 +649,12 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
                   GS(LM1,LM2,ISYM,NS) = GS(LM1,LM2,ISYM,NS)+ ETAIKR(ISYM,NS) * G(LM1,LM2)
                end do
             end do
-         end do
+            if(test('rhoqtest')) then
+               call rhoq_saveG(nscoef,rhoq_kmask,kpt,nofks,k_end,kp,i,j,mu,imin,iatomimp,lmmaxd,G)
+            end if
+         end do ! isym
          ! ----------------------------------------------------------------------
-      end do
+      end do ! ns
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! LLY Lloyd Integration
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -585,18 +663,34 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
       endif
       !
       ! Update statusbar
+      if(mythread==0) then
 #ifdef CPP_MPI
-      if( (((i1_end-i1_start)/50)==0 .or. &
-      mod(KPT-i1_start,(i1_end-i1_start)/50)==0) .and. &
-      t_inc%i_write>0 ) write(1337,FMT=200)
+        if( (((k_end-k_start)/50)==0 .or. &
+        mod(KPT-k_start,(k_end-k_start)/50)==0) .and. &
+        t_inc%i_write>0 ) write(1337,FMT=200)
 #else
-      if( ((NOFKS/50)==0 .or.mod(KPT,NOFKS/50)==0) .and.t_inc%i_write>0 ) write(1337,FMT=200)
+        if( ((NOFKS/50)==0 .or.mod(KPT,NOFKS/50)==0) .and.t_inc%i_write>0 ) write(1337,FMT=200)
 #endif
+      end if ! mythread==0
    !
    end do ! KPT = 1,NOFKS   end K-points loop
    190 format('                 |'$)      ! status bar
    200 format('|'$)                       ! status bar
    if(t_inc%i_write>0) write(1337,*)      ! finalize status bar
+   !
+#ifdef CPP_HYBRID
+   !$omp end parallel
+#endif
+         
+   if(test('rhoqtest')) then
+#ifdef CPP_TIMING
+     call timing_start('main1b - kkrmat01 - writeout_rhoq')
+#endif
+      call rhoq_write_tau0(nofks,nshell,nsh1,nsh2,nsymat,nscoef,mu,iatomimp,kmask,lmmaxd,bzkp,imin)
+#ifdef CPP_TIMING
+     call timing_stop('main1b - kkrmat01 - writeout_rhoq')
+#endif
+   end if !test('rhoqtest')
    !
    TRACET = CZERO
    if (LLY.EQ.2) then
@@ -632,29 +726,34 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    !----------------------------------------------------------------------------
    !
 #ifdef CPP_MPI
-   do NS = 1,NSHELL
-      IWORK = LMMAXD*LMMAXD*NSYMAXD
-      call MPI_ALLREDUCE(GS(1,1,1,NS),WORK,IWORK,  &
-         MPI_DOUBLE_COMPLEX,MPI_SUM,               &
-         t_mpi_c_grid%mympi_comm_ie,IERR)
-      call ZCOPY(IWORK,WORK,1,GS(1,1,1,NS),1)
-   end do
-   !
-   if (LLY.NE.0) then
-      IWORK = 1
-      call MPI_ALLREDUCE(LLY_GRTR,WORK(1,1,1),IWORK,  &
-         MPI_DOUBLE_COMPLEX,MPI_SUM,                  &
-         t_mpi_c_grid%mympi_comm_ie,IERR)
-      call ZCOPY(IWORK,WORK(1,1,1),1,LLY_GRTR,1)
-   endif
-   !
-   if(lly.eq.2) then
-      IWORK = 1
-      call MPI_ALLREDUCE(TRACET,WORK(1,1,1),IWORK, &
-         MPI_DOUBLE_COMPLEX,MPI_SUM,               &
-         t_mpi_c_grid%mympi_comm_ie,IERR)
-      call ZCOPY(IWORK,WORK(1,1,1),1,TRACET,1)
-   endif
+   IF(.not.opt('qdos    ')) then
+     do NS = 1,NSHELL
+        IWORK = LMMAXD*LMMAXD*NSYMAXD
+        WORK = CZERO
+        call MPI_ALLREDUCE(GS(1,1,1,NS),WORK,IWORK,  &
+           MPI_DOUBLE_COMPLEX,MPI_SUM,               &
+           t_mpi_c_grid%mympi_comm_ie,IERR)
+        call ZCOPY(IWORK,WORK,1,GS(1,1,1,NS),1)
+     end do
+     !
+     if (LLY.NE.0) then
+        IWORK = 1
+        WORK = CZERO
+        call MPI_ALLREDUCE(LLY_GRTR,WORK,IWORK,  &
+           MPI_DOUBLE_COMPLEX,MPI_SUM,                  &
+           t_mpi_c_grid%mympi_comm_ie,IERR)
+        call ZCOPY(IWORK,WORK(1,1,1),1,LLY_GRTR,1)
+     endif
+     !
+     if(lly.eq.2) then
+        IWORK = 1
+        WORK = CZERO
+        call MPI_ALLREDUCE(TRACET,WORK,IWORK, &
+           MPI_DOUBLE_COMPLEX,MPI_SUM,               &
+           t_mpi_c_grid%mympi_comm_ie,IERR)
+        call ZCOPY(IWORK,WORK,1,TRACET,1)
+     endif
+   end if! .not.opt('qdos    ')
 #endif
 
    if ( TEST('flow    ') .and. (t_inc%i_write>0)) write(1337,*) '<<< KKRMAT1'

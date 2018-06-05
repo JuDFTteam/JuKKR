@@ -32,6 +32,7 @@ module mod_main0
    use memoryhandling
    use global_variables
    use mod_create_newmesh
+   use mod_rhoqtools, only: rhoq_save_rmesh
    use rinput
 
    implicit none
@@ -397,8 +398,8 @@ contains
 #endif
 #ifdef CPP_MPI
       use mpi
-      use mod_mympi, only: nranks
 #endif
+      use mod_mympi, only: nranks
       use mod_version
       use mod_version_info
       use mod_md5sums
@@ -412,7 +413,7 @@ contains
       integer :: LM
       integer :: NS
       integer :: ISVATOM,NVATOM
-      integer :: i_stat,i_all
+      integer :: i_stat
       integer :: IREC
       integer :: LRECABMAD
       double precision :: ZATTEMP
@@ -665,6 +666,28 @@ contains
       if(INS>0) then
          write(1337,'(A,A)') 'Doing calculation with shapefun: ',md5sum_shapefun
       end if
+
+      IF(TEST('rhoqtest')) THEN
+         call rhoq_save_rmesh(natyp,irm,ipand,irmin,irws,ipan,rmesh,ntcell,ircut,r_log,npan_log,npan_eq)
+
+         ! check consistency
+         if (OPT('GREENIMP') .or. OPT('WRTGREEN')) then
+            write(*,*) 'warning! rhoqtest cannot be used together with '
+            write(*,*) "'GREENIMP' or 'WRTGREEN' options"
+            stop
+         end if
+
+         !! enforce MPIatom here
+         !if (TEST('MPIenerg')) stop 'rhoqtest assumes MPIatom'
+         !CALL ADDTEST('MPIatom')
+         
+         if (nranks>1) then
+            write(*,*) 'at the moment rhoqtest does not work with MPI.'
+            write(*,*) 'compile hybrid version and use OMP level only.'
+            stop
+         end if 
+
+      ENDIF ! TEST('rhoqtest')
 
       if ( TEST('Vspher  ') ) then
          write(1337,*) 'TEST OPTION Vspher,',&
