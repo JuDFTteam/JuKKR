@@ -25,7 +25,6 @@ stages:
 run:intel:rhoq_15:
   stage: run
   script:
-    - cd tests
     - mkdir tests/test_run15 && cd tests/test_run15 && ln -s ../test_inputs/test_15_*/* .
     - ./prepare.sh
     - ./run.sh
