@@ -669,7 +669,7 @@ c            DEALLOCATE(GLLKE0)
 
                if(test('rhoqtest')) then
                   call rhoq_saveG(nscoef,rhoq_kmask,kpt,nofks,k_end,kp,
-     &                            ie,i,j,mu,imin,iatomimp,lmmaxd,G)
+     &                            i,j,mu,imin,iatomimp,lmmaxd,G)
                end if
            
             END DO ! ISYM = 1,NSYMAT
@@ -709,7 +709,7 @@ c            DEALLOCATE(GLLKE0)
         call timing_start('main1b - kkrmat01 - writeout_rhoq')
 #endif
          call rhoq_write_tau0(nofks,nshell,nsh1,nsh2,nsymat,nscoef,
-     &                        ie,mu,iatomimp,kmask,lmmaxd,bzkp,imin)
+     &                        mu,iatomimp,kmask,lmmaxd,bzkp,imin)
 #ifdef CPP_TIMING
         call timing_stop('main1b - kkrmat01 - writeout_rhoq')
 #endif

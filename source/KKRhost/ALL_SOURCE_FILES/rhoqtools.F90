@@ -228,7 +228,7 @@ module mod_rhoqtools
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   subroutine rhoq_saveG(nscoef, rhoq_kmask, kpt, nofks, k_end, kp, ie, i, j, mu, imin, iatomimp, lmmaxd, G)
+   subroutine rhoq_saveG(nscoef, rhoq_kmask, kpt, nofks, k_end, kp, i, j, mu, imin, iatomimp, lmmaxd, G)
 
 #ifdef CPP_HYBRID
       use omp_lib
@@ -236,7 +236,7 @@ module mod_rhoqtools
 
       implicit none
 
-      integer, intent(in) :: i, j, ie, mu, imin, lmmaxd, nscoef, nofks, k_end, kpt
+      integer, intent(in) :: i, j, mu, imin, lmmaxd, nscoef, nofks, k_end, kpt
       integer, intent(in) :: iatomimp(nscoef)
       double precision, intent(in) :: rhoq_kmask(5, k_end), kp(3)
       double complex, intent(in) :: G(lmmaxd, lmmaxd)
@@ -246,7 +246,7 @@ module mod_rhoqtools
 #ifdef CPP_HYBRID
      !$omp critical
 #endif
-     irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1) + (nscoef*2)*nofks*(IE-2)
+     irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1)
      if( ((i==mu) .and. any(j==iatomimp(1:nscoef))) ) then
        ix=0
        jx=0
@@ -260,7 +260,7 @@ module mod_rhoqtools
 !                                     rhoq_kmask(5,kpt)
      end if
      
-     irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1) + (nscoef*2)*nofks*(IE-2)
+     irec = (nscoef*2)*(int(rhoq_kmask(4,kpt))-1)
      if( ((j==mu) .and. any(i==iatomimp(1:nscoef))) ) then
        ix=0
        jx=0
@@ -281,7 +281,7 @@ module mod_rhoqtools
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   subroutine rhoq_write_tau0(nofks, nshell, nsh1, nsh2, nsymat, nscoef, ie, mu, iatomimp, kmask, lmmaxd, bzkp, imin)
+   subroutine rhoq_write_tau0(nofks, nshell, nsh1, nsh2, nsymat, nscoef, mu, iatomimp, kmask, lmmaxd, bzkp, imin)
 
    use mod_mympi, only: myrank, master
 
@@ -289,7 +289,7 @@ module mod_rhoqtools
 
    double complex, parameter :: CZERO = (0.0d0, 0.0d0)
 
-   integer, intent(in) :: nofks, nshell, nsymat, nscoef, ie, mu, lmmaxd, imin
+   integer, intent(in) :: nofks, nshell, nsymat, nscoef, mu, lmmaxd, imin
    integer, intent(in) :: nsh1(nshell), nsh2(nshell), iatomimp(nscoef)
    double precision, intent(in) :: bzkp(3, nofks)
    integer, allocatable, intent(inout) :: kmask(:)
@@ -311,7 +311,7 @@ module mod_rhoqtools
           I = NSH1(NS)
           J = NSH2(NS)
           DO ISYM = 1,NSYMAT
-            irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
+            irec = (nscoef*2)*(kpt-1)
             if( ((i==mu) .and. any(j==iatomimp(1:nscoef))) ) then
               ix=0
               jx=0
@@ -329,7 +329,7 @@ module mod_rhoqtools
               end if
               write(998899,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD) * dfloat(kmask(kpt))
             end if
-            irec = (nscoef*2)*(kpt-1) + (nscoef*2)*nofks*(IE-1-1)
+            irec = (nscoef*2)*(kpt-1)
             if( ((j==mu) .and. any(i==iatomimp(1:nscoef))) ) then
               ix=0
               jx=0
