@@ -233,10 +233,10 @@ macompprof: FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback -prof-gen:srcpos
 
 # openmp flags
 OPENMPFLAGS = 
-hybrid: OPENMPFLAGS = -qopenmp
-openmp: OPENMPFLAGS = -qopenmp
-rwthomp: OPENMPFLAGS = -qopenmp
-rwthhybrid: OPENMPFLAGS = -qopenmp
+hybrid: OPENMPFLAGS = -openmp
+openmp: OPENMPFLAGS = -openmp
+rwthomp: OPENMPFLAGS = -openmp
+rwthhybrid: OPENMPFLAGS = -openmp
 
 
 # standard debug flags
@@ -251,9 +251,9 @@ macompdebug: FFLAGS = $(DEBUGFLAGS)
 rwthmpidebug: FFLAGS = $(DEBUGFLAGS)
 rwthompdebug: FFLAGS = $(DEBUGFLAGS)
 
-hybriddebug: OPENMPFLAGS = -qopenmp
-ompdebug: OPENMPFLAGS = -qopenmp
-rwthompdebug: OPENMPFLAGS = -qopenmp
+hybriddebug: OPENMPFLAGS = -openmp
+ompdebug: OPENMPFLAGS = -openmp
+rwthompdebug: OPENMPFLAGS = -openmp
 
 
 
