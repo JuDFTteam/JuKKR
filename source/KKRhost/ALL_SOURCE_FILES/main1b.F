@@ -26,6 +26,7 @@
       use mod_tbxccpljij, only: tbxccpljij
       use mod_tbxccpljijdij, only: tbxccpljijdij
       use mod_version_info
+      use mod_rhoqtools, only: rhoq_save_refpot
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
@@ -171,9 +172,10 @@ C     ..
       INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)
       CHARACTER*35 INVALG(0:2)
 #ifdef CPP_MPI
-      integer :: ie_start
+      integer :: ihelp
+      double complex, allocatable :: work(:,:)
 #endif
-      integer :: ie_num, ie_end, ierr
+      integer :: ie_num, ie_start, ie_end, ierr
 
       ! for OPERATOR option
       logical :: lexist, operator_imp
@@ -232,6 +234,12 @@ C -------------------------------------------------------------- input1b
      &       NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,
      &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,
      &       RCLSIMP)
+     
+      if(test('rhoqtest')) then
+        !write(*,*) myrank ,'open tau0', lmmaxd, (LMMAXD*LMMAXD+1)*4
+         open(9889, access='direct', file='tau0_k', 
+     &        form='unformatted', recl=(LMMAXD*LMMAXD+1)*4) ! lm blocks
+      end if
      
      
       IF (TEST('gmatasci'))
@@ -460,18 +468,19 @@ C
 #ifdef CPP_MPI         
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+         ie_start = 0
+         ie_end = ielast
+#endif
          
          DO 360 ie_num=1,ie_end
             IE = ie_start+ie_num
             
+#ifdef CPP_MPI
             !start timing measurement for this ie, needed for MPIadapt
             if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
               call timing_start('time_1b_ie')
             end if
-#else
-         DO 360 IE = 1,IELAST
-            ie_num = ie
-            ie_end = ielast
 #endif
 C
             ! write energy into green_host file
@@ -502,6 +511,7 @@ C
 #ifdef CPP_TIMING
         call timing_start('main1b - calctref13')
 #endif
+            TREFLL(:,:,:) = CZERO
             IF ( KREL.EQ.0 ) THEN
                DO I1 = 1,NREF
                   CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
@@ -792,9 +802,12 @@ c ------------------------------------------------------------------------
 #ifdef CPP_TIMING
         if(.not.OPT('GREENIMP')) then
            if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-           if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-           if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+           if(t_inc%i_time>0) call timing_pause('main1b - fourier')
+           if(t_inc%i_time>0) call timing_stop('main1b - inversion')
            if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
+        endif
+        if(t_inc%i_time>0 .and.test('rhoqtest')) then
+           call timing_stop('main1b - kkrmat01 - writeout_rhoq')
         endif
 #endif
 !EEEEEEEEEEEEEEEEEEEEEEEEE  NO-SOC EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
@@ -831,19 +844,25 @@ C
 #ifdef CPP_MPI
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+      ie_start = 0
+      ie_end = IELAST
+#endif
+
+      if(test('rhoqtest')) then
+         ie_start = 1
+         ie_end = 1
+      end if
+         
 
       DO 460 ie_num=1,ie_end
          IE = ie_start+ie_num
    
+#ifdef CPP_MPI
          !start timing measurement for this ie, needed for MPIadapt
          if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
            call timing_start('time_1b_ie')
          end if
-
-#else
-      ie_end = IELAST
-      DO 460 IE=1,IELAST
-         ie_num = ie
 #endif
 
        ! write energy into green_host file
@@ -873,16 +892,22 @@ c construct t matrix for reference system (now is always double matrix)
        call timing_start('main1b - calctref13')
 #endif
        DO I1 = 1,NREF
-        CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
-     +                WN1,WN2,                                ! LLY
-     &                ALPHAREF(0,I1),DALPHAREF(0,I1),         ! LLY 
-     &                LMAXD+1,LMGF0D)
-        DO I=1,LM1
-         TREFLL(I,I,I1) = WN1(I,I)
-         TREFLL(LM1+I,LM1+I,I1) = WN1(I,I)
-         DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
-         DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
-        ENDDO
+          CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
+     +                  WN1,WN2,                                ! LLY
+     &                  ALPHAREF(0,I1),DALPHAREF(0,I1),         ! LLY 
+     &                  LMAXD+1,LMGF0D)
+          DO I=1,LM1
+             TREFLL(I,I,I1) = WN1(I,I)
+             TREFLL(LM1+I,LM1+I,I1) = WN1(I,I)
+             DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
+             DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
+          ENDDO
+          
+          if(test('rhoqtest')) then
+             call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),
+     &                             wlength,lmmaxd,ie,trefll)
+          end if ! rhoqtest
+        
        ENDDO ! I1
 #ifdef CPP_TIMING
        call timing_pause('main1b - calctref13')
@@ -1140,8 +1165,8 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 #ifdef CPP_TIMING
         if(.not.OPT('GREENIMP')) then
            if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-           if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-           if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+           if(t_inc%i_time>0) call timing_pause('main1b - fourier')
+           if(t_inc%i_time>0) call timing_stop('main1b - inversion')
            if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
         endif
 #endif
@@ -1185,7 +1210,18 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
 
       IF (LLY.NE.0) THEN                                                 ! LLY Lloyd
          if(t_lloyd%cdos_diff_lly_to_file) then
-            OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
+            if(myrank==master) then
+               OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
+            endif
+#ifdef CPP_MPI
+            ihelp      = IELAST*NSPIN  !IELAST*NSPIN
+            allocate(work(ielast,nspin))
+            work = (0.d0, 0.d0)
+            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
+     &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
+            call zcopy(ihelp,work,1,cdos_lly,1)
+            deallocate(work)
+#endif
          end if
          
          IF (.NOT.OPT('NEWSOSOL')) THEN
@@ -1199,7 +1235,7 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
            DO IE = 1,IELAST                                              ! LLY
             ie_num = ie
 #endif
-            if(t_lloyd%cdos_diff_lly_to_file) then
+            if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) then
                WRITE(701,FMT='(10E25.16)') EZ(IE),
      &          CDOS_LLY(IE,ISPIN),
      &          TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN)                     ! LLY
@@ -1218,7 +1254,7 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
            DO IE = 1,IELAST                                              ! LLY
             ie_num = ie
 #endif
-            if(t_lloyd%cdos_diff_lly_to_file) then
+            if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) then
               WRITE(701,FMT='(10E25.16)') EZ(IE),CDOS_LLY(IE,1),     
      &                                    TRALPHA(IE,1),LLY_GRTR(IE,1)   ! LLY
             else
@@ -1273,6 +1309,21 @@ C     kpoint (defined in qvec.dat)
       IF (IQDOSRUN.EQ.1) GO TO 210                 ! qdos ruess
 
 
+      if(test('rhoqtest')) then     
+#ifdef CPP_MPI
+         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+#endif
+         close(9889) ! tau0_k file
+         close(99992)
+         call timing_stop('Time in Iteration')
+         if (myrank==master) call print_time_and_date('Done w. rhoq!!!')
+#ifdef CPP_MPI
+         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+         call MPI_FINALIZE(ierr)
+#endif
+         stop 'finished with rhoq output'
+      
+      end if
 
       IF(OPT('OPERATOR') .and. myrank==master) THEN
         ! check if impurity files are present (otherwise no imp.
@@ -1412,7 +1463,6 @@ C
         close(9999)
       endif
 
-
       ! clean up allocations before exiting
       deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP, stat=ierr)
       if(ierr/=0) stop '[main1b] Error deallocating leftinvll etc.'
@@ -1424,10 +1474,8 @@ C
       if(ierr/=0) stop '[main1b] Error deallocating ISH and JSH'
 
 
-
       if(t_inc%i_write>0) 
      &   WRITE (1337,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
-
 
  2100 FORMAT(/,79(1H=),/,5X,' Inversion algorithm used : ',A,/,
      &     79(1H=),/)

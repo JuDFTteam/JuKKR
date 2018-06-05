@@ -72,7 +72,7 @@ C     .. External Functions ..
               ELSE
                  TMAT0=(0.0D0,0.0D0)
               END IF 
-              WRITE(6699,'(4I8,50000E25.16)') IATOM,ISPIN,IE,0,TMAT0
+              WRITE(6699,'(4I12,50000E25.16)') IATOM,ISPIN,IE,0,TMAT0
           END DO !IE=1,IELAST
         END DO !ISPIN=1,NSPIN
         ELSEIF (KORBIT.EQ.1) THEN
@@ -87,7 +87,7 @@ C     .. External Functions ..
           ELSE
            TMAT0=(0d0,0d0)
           ENDIF
-          WRITE(6699,'(4I8,50000E25.16)') IATOM,ISPIN,IE,0,TMAT0         
+          WRITE(6699,'(4I12,50000E25.16)') IATOM,ISPIN,IE,0,TMAT0         
          ENDDO
         ENDIF
         END DO

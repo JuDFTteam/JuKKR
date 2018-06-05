@@ -36,6 +36,36 @@ test:intel:
 ###############################################################################
 
 
+### 1. compile code in different versions ###
+
+## 1.1 debug versions ##
+
+build:intel:debug:
+  stage: build
+  script:
+    - cp tests/inc.p .
+    - make clean; make debug
+
+build:intel:mpi_debug:
+  stage: build
+  script:
+    - cp tests/inc.p .
+    - make clean; make mpidebug
+
+build:intel:openmp_debug:
+  stage: build
+  script:
+    - cp tests/inc.p .
+    - make clean; make ompdebug
+
+build:intel:hybrid_debug:
+  stage: build
+  script:
+    - cp tests/inc.p .
+    - make clean; make hybriddebug
+
+## 1.2 production versions ##
+
 build:intel:hybrid:
   stage: build
   script:
@@ -95,6 +125,8 @@ build:intel:mpi-aiida:
 ###############################################################################
 
 
+### 2. run tests with compiled versions ###
+
 run:intel:serial_1:
   stage: run
   script:
@@ -104,7 +136,7 @@ run:intel:serial_1:
     paths:
       - tests/test_run*
     expire_in: 2 days
- 
+
 run:intel:serial_2:
   stage: run
   script:
@@ -114,7 +146,7 @@ run:intel:serial_2:
     paths:
       - tests/test_run*
     expire_in: 2 days
- 
+
 run:intel:serial_3:
   stage: run
   script:
@@ -124,7 +156,7 @@ run:intel:serial_3:
     paths:
       - tests/test_run*
     expire_in: 2 days
- 
+
 run:intel:parallel_2:
   stage: run
   script:
@@ -134,7 +166,7 @@ run:intel:parallel_2:
     paths:
       - tests/test_run*
     expire_in: 2 days
- 
+
 run:intel:multi_node:
   image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
   stage: run
@@ -164,7 +196,7 @@ run:intel:Jijs_4:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 day
 
 run:intel:kkrflex_5:
   stage: run
@@ -175,7 +207,7 @@ run:intel:kkrflex_5:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 day
 
 run:intel:FERMIOUT_6:
   stage: run
@@ -186,7 +218,8 @@ run:intel:FERMIOUT_6:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 day
+
 
 run:intel:MPIatom_7:
   stage: run
@@ -247,6 +280,17 @@ run:intel:qdos_14:
       - tests/test_run*
     expire_in: 2 days
 
+run:intel:rhoq_15:
+  stage: run
+  script:
+    - mkdir tests/test_run15 && cd tests/test_run15 && ln -s ../test_inputs/test_15_*/* .
+    - ./prepare.sh
+    - ./run.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+
 
 run:intel:aiida-kkr:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
@@ -294,7 +338,7 @@ run:intel:aiida-kkr:
 
 
 ###############################################################################
-
+### 3. check outcome of the test runs ###
 
 verify:intel:
   stage: verify

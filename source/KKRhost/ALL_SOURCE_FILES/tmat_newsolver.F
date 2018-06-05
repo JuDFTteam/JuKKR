@@ -18,6 +18,7 @@
        use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,
      &                     t_lloyd,init_tlloyd, type_dtmatJijDij,
      &                     init_t_dtmatJij_at
+       use mod_wunfiles, only: t_params
        use mod_jijhelp, only: calc_dtmatJij
        use mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun,
      &                             save_wavefunc
@@ -79,14 +80,14 @@
 !     .. OMP ..
       integer nth,ith         ! total number of threads and thread id
 #ifdef CPP_MPI
-!       integer :: mytot
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
       integer :: ie_end, ie_num, ie_start, ierr
-!       character(len=80) :: filename
-      ! test and run options
-      logical :: test, opt
-      external :: test, opt
+      
+      !rhoqtest
+      logical, external :: test, opt
+      integer :: mu0, nscoef
+      
 
 #ifdef CPP_OMP
 ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
@@ -169,7 +170,8 @@ c initial allocate
        
        !left regular and irregular wavefunctions (used here only in case of XCPL or saving of left wavefunctions)
        if( opt('XCPL    ') .or. (t_wavefunctions%save_rllleft
-     &                         .or.t_wavefunctions%save_sllleft) ) then
+     &                         .or.t_wavefunctions%save_sllleft)
+     &                      .or.test('rhoqtest')) then
           ALLOCATE(RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),
      &             SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),
      &             stat=ierr)
@@ -203,6 +205,14 @@ c energy loop
        ! now initialize arrays for tmat, gmat, and gref
        call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
        if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+       
+       
+       if(test('rhoqtest')) then
+          if(ielast/=3) stop 'Error: wrong energy contour for rhoqtest'
+          ie_start=1
+          ie_end=1
+       end if
+       
 #else
        if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. 
      &           allocated(t_mpi_c_grid%ioff_pT2))) 
@@ -252,6 +262,7 @@ c energy loop
 !$omp& shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)
 !$omp& shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)
 !$omp& shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)
+!$omp& shared(mu0, nscoef)
 #endif
        DO ie_num=1,ie_end
        
@@ -358,6 +369,7 @@ C because the t-matrix depends only on RLL
      +              '1','1','0',USE_SRATRICK,ALPHA0(:,:))
         END IF
 
+        ! devide small component by cvlight so that it actually is small
         IF (NSRA.EQ.2) THEN
           RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
@@ -427,11 +439,19 @@ c add spherical contribution of tmatrix
         ENDIF ! LLY
 
 
+        if(test('rhoqtest') .and. ie==2) then
+           ! read in mu0 atom index
+           open(9999,file='mu0')
+           read(9999,*) mu0, nscoef
+           close(9999)
+        end if
+
 ! Calculate additional t-matrices for Jij-tensor calculation
-        if(t_dtmatJij_at%calculate .or.
-     &     ( t_wavefunctions%isave_wavefun(i1, ie)>0 .and. 
-     &      (t_wavefunctions%save_rllleft .or.
-     &       t_wavefunctions%save_sllleft) )
+        if(t_dtmatJij_at%calculate 
+     &    .or. ( t_wavefunctions%isave_wavefun(i1, ie)>0 .and. 
+     &          (t_wavefunctions%save_rllleft .or.
+     &           t_wavefunctions%save_sllleft) )
+     &    .or. ((test('rhoqtest') .and. ie==2).and.(i1==mu0)) !rhoqtest
      &     ) then
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -511,11 +531,55 @@ C because the t-matrix depends only on RLL
           SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=
      +            SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
          ENDIF
+         
+       
+         if(test('rhoqtest')) then
+#ifdef CPP_OMP
+          write(*,*) 'rhoqtest does not work in OMP version!!'
+          write(*,*) 'please use hybrid compilation mode'
+          stop
+#else
+          open(9999, file='params.txt')
+          write(9999,*) lmmaxso, t_params%natyp
+          write(9999,*) t_params%naez, t_params%nclsd, t_params%nrd, 
+     &                  t_params%nembd1-1, t_params%lmax
+          write(9999,*) t_params%alat
+          close(9999)
 
+          open(9999, file='host.txt')
+          write(9999,*) t_params%rbasis(1:3,1:t_params%natyp)
+          write(9999,*) t_params%rcls(1:3,1:t_params%nclsd,
+     &                                1:t_params%nclsd), 
+     &                  t_params%rr(1:3,0:t_params%nrd), 
+     &                  t_params%atom(1:t_params%nclsd,
+     &                             1:t_params%naez+t_params%nembd1-1)
+          write(9999,*) t_params%cls(1:t_params%naez+t_params%nembd1-1),
+     &                  t_params%ezoa(1:t_params%nclsd,
+     &                             1:t_params%naez+t_params%nembd1-1), 
+     &                  t_params%nacls(1:t_params%nclsd)
+          close(9999)
+
+          open(9999, file='wavefunctions.txt')
+          write(9999,'(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
+          write(9999,'(1000E26.17)') rnew(1:irmdnew)
+          do ir=1,irmdnew
+            do lm1=1,nsra*lmmaxso
+              do lm2=1,lmmaxso
+                 write(9999,'(20000E16.7)') Rll(lm1, lm2, ir, ith), 
+     &                                      Rllleft(lm1, lm2, ir, ith)
+              end do
+            end do
+          enddo
+          do lm1=0,npan_tot
+            write(9999,'(E16.7,I9)') rpan_intervall(lm1),
+     &                               ipan_intervall(lm1)
+          enddo
+          close(9999)
+#endif
+         end if ! test('rhoqtest')
+        
 c        LLLLLLLLLLL Calculate the left-hand side solution LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-
-
         end if!t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
         
         
@@ -541,6 +605,34 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #endif
          if (t_tgmat%tmat_to_file) then
             IREC = IE + IELAST*(I1-1)
+#ifndef CPP_OMP        
+                if(test('rhoqtest')) then
+                  
+                  if(ie_num==1.and.i1==1) then
+                    write(*,*)                      ! status bar
+                    write(*,*) 'rhoq: write-out t-mat', 
+     &                               ie_end, t_params%natyp
+                    write(*,
+     &   '("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")')
+     &                          0, 20, 40, 60, 80, 100
+                    write(*,FMT=190) !beginning of statusbar
+                  endif
+                  
+                  if(myrank==master) then
+                    if(t_params%NATYP*ie_end>=50) then
+                      if(mod( I1+t_params%natyp*(ie_num-1),
+     &                 (t_params%NATYP*ie_end/50))==0 ) write(6,FMT=200)
+                    else
+                      write(6,FMT=200)
+                    end if
+                  end if
+                           
+!                 write(*,*) 'rotating with', theta, phi
+!             LMGF0D= (LMAXD+1)**2
+!             CALL ROTATEMATRIX(TMATLL,THETA,PHI,LMGF0D,0)
+                end if    ! test('rhoqtest') 
+#endif
+                           
             WRITE(69,REC=IREC) TMATLL(:,:)
             ! human readable writeout if test option is hit
             if(test('fileverb')) then
@@ -553,8 +645,6 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 #else
             irec = ie_num + ie_end * (i1-1)
 #endif
-!            write(*,*) irec, ie_num, ie_end, i1, 
-!     &                 t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)
             t_tgmat%tmat(:,:,irec) = TMATLL(:,:)
          end if
          IF (LLY.NE.0) THEN
@@ -588,6 +678,12 @@ c        LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 !$omp end parallel do
 #endif
 
+
+190     FORMAT('                 |'$)   ! status bar
+200     FORMAT('|'$)                    ! status bar
+        if(test('rhoqtest').and.i1==t_params%natyp.and.myrank==master) 
+     &       write(6,*) ! status bar
+        ! finished kpts status bar
 
        DEALLOCATE(VINS, VNSPLL0, VNSPLL1, VNSPLL, stat=ierr)
        if(ierr/=0) stop '[tmat_newsolver] Error dellocating vins etc.'

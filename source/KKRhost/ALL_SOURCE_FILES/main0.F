@@ -12,6 +12,7 @@
       use mod_timing
 #endif
       use mod_create_newmesh
+      use mod_rhoqtools, only: rhoq_save_rmesh
       
       implicit none
       
@@ -214,8 +215,8 @@ C ======================================================================VINS()
 #endif
 #ifdef CPP_MPI
       use mpi
-      use mod_mympi, only: nranks
 #endif
+      use mod_mympi, only: nranks
       use mod_version
       use mod_version_info
       use mod_md5sums
@@ -485,9 +486,11 @@ C     ..
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
       if(ith==0) then
-      WRITE(*,'(1X,A,I5//79(1H*)/)')
-     &              'Number of OpenMP threads used:',nth
-      WRITE(1337,'(1X,A,I5//79(1H*)/)')
+#ifdef CPP_OMP      
+         WRITE(*,'(1X,A,I5//79(1H*)/)')
+#else         
+         WRITE(*,'(1X,A,I5/)')
+#endif         
      &              'Number of OpenMP threads used:',nth
       endif
 !$omp end parallel
@@ -498,6 +501,18 @@ C     ..
      &              'Number of MPI ranks used:',nranks
       WRITE(1337,'(1X,A,I5//79(1H*)/)')
      &              'Number of MPI ranks used:',nranks
+#ifdef CPP_hybrid
+!$omp parallel shared(nth,ith)
+      nth = omp_get_num_threads()
+      ith = omp_get_thread_num()
+      if(ith==0) then
+         WRITE(*,'(1X,A,I5//79(1H*)/)')
+     &              'Number of OpenMP threads used per rank:',nth
+         WRITE(1337,'(1X,A,I5//79(1H*)/)')
+     &              'Number of OpenMP threads used per rank:',nth
+      endif
+!$omp end parallel
+#endif
 #endif
 !End write version info
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -630,7 +645,30 @@ C
          write(1337,'(A,A)') 
      &   'Doing calculation with shapefun: ',md5sum_shapefun
       end if
+      
+      
+      IF(TEST('rhoqtest')) THEN
+         call rhoq_save_rmesh(natyp,irmd,ipand,irmin,irws,ipan,r,ntcell,
+     &                        ircut,r_log,npan_log,npan_eq)
 
+         ! check consistency
+         if (OPT('GREENIMP') .or. OPT('WRTGREEN')) then
+            write(*,*) 'warning! rhoqtest cannot be used together with '
+            write(*,*) "'GREENIMP' or 'WRTGREEN' options"
+            stop
+         end if
+
+         !! enforce MPIatom here
+         !if (TEST('MPIenerg')) stop 'rhoqtest assumes MPIatom'
+         !CALL ADDTEST('MPIatom')
+         
+         if (nranks>1) then
+            write(*,*) 'at the moment rhoqtest does not work with MPI.'
+            write(*,*) 'compile hybrid version and use OMP level only.'
+            stop
+         end if 
+
+      ENDIF ! TEST('rhoqtest')
 
       IF ( TEST('Vspher  ') ) THEN
          WRITE(1337,*) 'TEST OPTION Vspher,', 

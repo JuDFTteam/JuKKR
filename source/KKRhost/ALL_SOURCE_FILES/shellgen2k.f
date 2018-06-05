@@ -294,7 +294,7 @@ C OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
          AI = (I-1)*NATOM + J
          DO J = 1,NATOM
             IJ = AI + J
-            IF ( IJTABCALC(IJ).NE.0 ) 
+            IF ( IJTABCALC(IJ)>0 ) 
      &           WRITE(1337,99004) I,J,IJTABSH(IJ),IJTABSYM(IJ),
      &                          ROTNAME(IJTABSYM(IJ))
          END DO

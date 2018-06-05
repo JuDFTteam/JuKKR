@@ -4,6 +4,8 @@
      
       use mod_types, only: t_inc
       use mod_wunfiles, only: t_params
+      use mod_rhoqtools, only: rhoq_write_kmesh
+
       IMPLICIT NONE
 C     ..
 C     .. Scalar Arguments ..
@@ -121,10 +123,8 @@ C
       IF(TEST('kptsfile')) WRITE(52,FMT='(I8,F15.10,/,(3F12.8,D20.10))')
      +        NOFKS,VOLBZ,((BZKP(ID,I),ID=1,3),VOLCUB(I),I=1,NOFKS)
         IF( TEST('rhoqtest') .and. (L==1) ) THEN
-           open(9999, file='kpoints.txt')
-           write(9999,*) nofks
-           write(9999,*) volbz, bzkp(1:3,1:nofks)
-           close(9999)
+           call rhoq_write_kmesh(nofks,nxyz,volbz,bzkp,volcub,recbv,
+     +                          bravais)
         ENDIF
 !       WRITE(52,FMT='(I8,F15.10,/,(3F12.8,D20.10))')
 !      +        NOFKS,VOLBZ,((BZKP(ID,I),ID=1,3),VOLCUB(I),I=1,NOFKS)

@@ -13,6 +13,9 @@
      &                     distribute_linear_on_tasks
 
 #endif
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
       
       IMPLICIT NONE
 C     .. Parameters ..
@@ -164,6 +167,9 @@ C ======================================================================
          endif
          
 C
+#ifdef CPP_TIMING
+         call timing_start('main1a - tbref - calctref13')
+#endif
          !skip this part with GREENIMP option
          if(opt('GREENIMP')) then
             if(myrank==master) write(*,*) 
@@ -183,6 +189,9 @@ C
             IF (TEST('flow    ').and.(t_inc%i_write>0)) 
      &         WRITE (1337,FMT=*) 'tll(ref),  i1 = ',I1
          END DO
+#ifdef CPP_TIMING
+         call timing_pause('main1a - tbref - calctref13')
+#endif
 C
          IF (TEST('flow    ') .and. (t_inc%i_write>0)) 
      &         WRITE (1337,FMT=*) 't-mat(Ref) o.k.', IE
@@ -207,6 +216,9 @@ C ----------------------------------------------------------------------
          i1_start = 1
          i1_end   = NCLS
          
+#endif
+#ifdef CPP_TIMING
+         call timing_start('main1a - tbref - gll13')
 #endif
          !skip this part with GREENIMP option
          if(opt('GREENIMP')) then
@@ -239,6 +251,9 @@ C
             end if
             
          END DO !icls
+#ifdef CPP_TIMING
+         call timing_pause('main1a - tbref - gll13')
+#endif
          
 
 #ifdef CPP_MPI
@@ -319,6 +334,12 @@ C ======================================================================
       if (t_tgmat%gref_to_file) then
          CLOSE (68)
       end if
+      
+      
+#ifdef CPP_TIMING
+      call timing_stop('main1a - tbref - calctref13')
+      call timing_stop('main1a - tbref - gll13')
+#endif
 
       IF (LLY.NE.0 .and. t_lloyd%dgref_to_file) CLOSE (681)
       IF (LLY.NE.0 .and. t_lloyd%g0tr_to_file) CLOSE (682)

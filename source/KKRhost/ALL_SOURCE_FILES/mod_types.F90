@@ -444,8 +444,6 @@ contains
    end subroutine init_t_imp
    
 
-
-
 #ifdef CPP_MPI
    subroutine bcast_t_inc_tgmat(t_inc,t_tgmat,t_cpa)
     !ruess: after myBcast_impcls from Pkkr_sidebranch2D_2014_12_16 by Bernd Zimmermann

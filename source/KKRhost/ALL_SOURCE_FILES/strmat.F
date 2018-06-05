@@ -110,9 +110,9 @@ C
 C **********************************************************************
 #ifdef cpp_ompstuff
 !$omp parallel do default(shared) private(DQ1, DQ2, DQ3, STEST)
-!$omp& private(LM, NSTART, IT, NRS, NGS, NRE, NGE, I, R1 , R2)
+!$omp& private(LM, NSTART, IT, NRS, NGS, NRE, NGE, I, R1, R2)
 !$omp& private(R3 , R, YLM, ALPHA, G, L, RFAC, M, G1, G2)
-!$omp& private(G3, GA, BETA, EXPBSQ, DQDOTG, BFAC, S)
+!$omp& private(G3, GA, BETA, EXPBSQ, DQDOTG, BFAC, S, I1, I2)
 #endif
       DO I1 = 1,NAEZ
          DO I2 = 1,NAEZ
@@ -218,12 +218,18 @@ C ---------------------------------------------------------------------
 C
 C --> test convergence
 C
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+                  !$omp critical
+#endif
                   DO LM = 1,LMXSP
                      S = DBLE(STEST(LM))
                      SMAT(LM,I1,I2) = SMAT(LM,I1,I2) + S
                      IF ( ABS(S).GT.BOUND ) WRITE (6,FMT=99001) I1,I2,
      &                    LM,ABS(S)
                   END DO
+#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+                  !$omp end critical
+#endif
                END IF
 C ---------------------------------------------------------------------
             END DO

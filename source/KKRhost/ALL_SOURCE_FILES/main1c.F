@@ -189,7 +189,6 @@ C     .. qdos and lmlm-dos ..
       DOUBLE COMPLEX DENTOT ! qdos
 #endif
       DOUBLE PRECISION, allocatable :: QVEC(:,:)
-      INTEGER LM1,LM2
 #ifdef CPP_MPI
       integer :: ntot1
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
@@ -372,22 +371,28 @@ c calculate contribution from free space
          CDOS_LLY(1:ielast,1:NSPIN) = CZERO                                ! LLY Lloyd
          IF (.NOT.OPT('NEWSOSOL')) THEN
          if(t_lloyd%cdos_diff_lly_to_file) then
-            OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
-            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
-               DO IE = 1,IELAST                                               ! LLY Lloyd
-                  READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,ISPIN)         ! LLY Lloyd
-               ENDDO                                                          ! LLY Lloyd
-            ENDDO                                                             ! LLY Lloyd
-            CLOSE(701)                                                        ! LLY Lloyd
-         else   !(t_lloyd%cdos_diff_lly_to_file)
-            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
+            if(myrank==master) then
+              OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
+              DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
+                 DO IE = 1,IELAST                                               ! LLY Lloyd
+                    READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,ISPIN)         ! LLY Lloyd
+                 ENDDO                                                          ! LLY Lloyd
+              ENDDO                                                             ! LLY Lloyd
+              CLOSE(701)                                                        ! LLY Lloyd
+            end if
 #ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-#else
-               ie_start = 0
-               ie_end = IELAST
+            call MPI_Bcast(CDOS_LLY, ielast*nspin, MPI_DOUBLE_COMPLEX,
+     &                     master, t_mpi_c_grid%myMPI_comm_at, ierr)
 #endif
+         else   !(t_lloyd%cdos_diff_lly_to_file)
+#ifdef CPP_MPI
+            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+            ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+            ie_start = 0
+            ie_end = IELAST
+#endif
+            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
                DO ie_num=1,ie_end
                   IE = ie_start+ie_num
                   CDOS_LLY(IE,ISPIN) = t_lloyd%cdos(ie_num,ispin)             ! LLY Lloyd
@@ -448,11 +453,11 @@ c calculate contribution from free space
             CLOSE(701)                                                     ! LLY
           else  !(t_lloyd%cdos_diff_lly_to_file)
 #ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+            ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
-               ie_start = 0
-               ie_end = IELAST
+            ie_start = 0
+            ie_end = IELAST
 #endif
             DO ie_num=1,ie_end
                IE = ie_start+ie_num
@@ -622,8 +627,9 @@ C ----------------------------------------------------------------------
       END DO
 C ================================================================ NATYP
 #ifdef CPP_TIMING
-!     call timing_stop('main1c - rhoval')
-      if(i1_end>=i1_start) call timing_stop('main1c - rhoval')
+!       call timing_stop('main1c - rhoval')
+      if(i1_end>=i1_start .and. t_inc%i_time>0) 
+     &                   call timing_stop('main1c - rhoval')
 #endif
       CLOSE (69) !gmat file
 #ifndef CPP_MPI   
@@ -1141,46 +1147,6 @@ C
 #ifdef CPP_TIMING
       call timing_stop('main1c - serial part')
 #endif
-      if(test('rhoqtest')) then
-
-        open(9999, file='cleb_shapefun.txt')
-        write(9999,*) 'params'
-        write(9999,*) t_params%ncleb, t_params%lm2d, t_params%lmaxd,
-     &                t_params%iend, t_params%nfund, t_params%lmxspd,
-     &                nrmaxd
-        write(9999,*) 'cleb'
-        do lm1=1,t_params%ncleb
-          write(9999,'(E16.7,4I9)') t_params%cleb(lm1,1), 
-     &                              t_params%icleb(lm1,1:4)
-        end do
-        write(9999,*) 'loflm'
-        do lm1=1,t_params%lm2d
-          write(9999,'(I9)') t_params%loflm(lm1)
-        end do
-        open(8888, file='mu0')
-        read(8888,*) i1
-        close(8888)
-        ICELL = NTCELL(I1)
-        write(9999,*) 'ifunm'
-        do lm1=1,lmxspd
-          write(9999,'(I9)') ifunm1(lm1,icell)
-        end do
-        write(9999,*) 'lmsp'
-        do lm1=1,lmxspd
-          write(9999,'(I9)') LMSP1(LM1,icell)
-        end do
-        write(9999,*) 'thetasnew',nrmaxd,nfund
-        do lm1=1,nrmaxd
-          do lm2=1,nfund
-            write(9999,'(E16.7)') thetasnew(lm1,lm2,icell)
-          end do
-        end do
-        close(9999)
-        open(987987, file='shapefun_test')
-        write(987987,*) thetasnew
-        close(987987)
-
-      endif
 #ifdef CPP_MPI
       end if !myrank==master
 #endif
