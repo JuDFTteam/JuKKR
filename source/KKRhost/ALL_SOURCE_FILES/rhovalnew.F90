@@ -901,7 +901,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
       denorbmomns = 0.0d0
    endif
    call mympi_main1c_comm_newsosol(IRMDNEW,LMPOT,LMAX,LMAXD1,  &
-      LMMAXD,LMMAXSO,IEMXD,IELAST,NQDOS,                       &
+      LMMAXD,LMMAXSO,IELAST,NQDOS,                       &
       den,denlm,gflle,rho2nsc,r2nefc,                          &
       rho2int,espv,muorb,denorbmom,                            &
       denorbmomsp,denorbmomlm,denorbmomns,                     &

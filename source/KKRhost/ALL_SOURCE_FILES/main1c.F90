@@ -334,8 +334,7 @@ contains
                   close(701)                                                        ! LLY Lloyd
                end if
 #ifdef CPP_MPI
-               call MPI_Bcast(CDOS_LLY, ielast*nspin, MPI_DOUBLE_COMPLEX,
-     &                     master, t_mpi_c_grid%myMPI_comm_at, ierr)
+               call MPI_Bcast(CDOS_LLY, ielast*nspin, MPI_DOUBLE_COMPLEX, master, t_mpi_c_grid%myMPI_comm_at, ierr)
 #endif
             else   !(t_lloyd%cdos_diff_lly_to_file)
 #ifdef CPP_MPI

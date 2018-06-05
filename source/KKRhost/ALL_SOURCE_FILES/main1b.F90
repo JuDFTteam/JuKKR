@@ -1114,8 +1114,7 @@ contains
             ihelp      = IELAST*NSPIN  !IELAST*NSPIN
             allocate(work(ielast,nspin))
             work = (0.d0, 0.d0)
-            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
-     &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
+            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
             call zcopy(ihelp,work,1,cdos_lly,1)
             deallocate(work)
 #endif
