@@ -34,6 +34,8 @@ rwthhybrid: FC=$(MPIFC)
 jureca: FC = mpif90
 # $(MPIFC)
 gfort: FC = gfortran
+###  hazelhen  ###
+hazelhen:   FC = ftn
 
 
 # information for version-tracking in executable:
@@ -57,6 +59,7 @@ rwthomp:   COMPVER ='openmp-rwth'
 rwthmpidebug: COMPVER ='mpidebug-rwth'
 rwthhybrid:   COMPVER ='hybrid-rwth'
 jureca   : COMPVER='jureca'
+hazelhen   : COMPVER='hazelhen'
 gfort   : COMPVER='gfort'
 
 
@@ -151,6 +154,8 @@ MACLLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
 RWTHLLIBS = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 # JURECA:
 JURECALIBS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
+# HazelHen:
+HAZELHENLIBS = -mkl
 
 mac:    LLIBS=$(MACLLIBS)
 macmpi: LLIBS=$(MACLLIBS)
@@ -162,6 +167,8 @@ rwthmpi:       LLIBS=$(RWTHLLIBS)
 rwthmpidebug:  LLIBS=$(RWTHLLIBS)
 
 jureca: LLIBS=$(JURECALIBS)
+hazelhen: LLIBS=$(HAZELHENLIBS)
+
 
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
@@ -211,6 +218,7 @@ rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
 hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
 hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID -D CPP_NOMD5
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
+hazelhen: CPP = -D CPP_MPI -D CPP_TIMING
 gfort: CPP = -D CPP_TIMING -D CPP_NOMD5
 
 ####################################################
@@ -260,7 +268,7 @@ rwthompdebug: OPENMPFLAGS = -qopenmp
 ####################################################
 # helper                                           #
 ####################################################
-.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp macompprof rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid jureca
+.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp macompprof rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid print_rwthwarn jureca hazelhen print_hazelwarn
 
 getversion:
 	@echo "Wrinting Version file: "; git describe;\
@@ -268,6 +276,19 @@ getversion:
 	echo $(FFLAGS) $(OPENMPFLAGS)>compflag; \
 	echo $(LLIBS) >complib; \
 	$(SRC)/getversion.sh
+print_rwthwarn:
+	@echo "****************************************\n"; \
+	echo "!!!Warning!!!"; \
+	echo "run 'module switch openmpi intelmpi'"; \
+	echo "in the terminal before compiling and running the code!\n"; \
+	echo "****************************************\n"
+print_hazelwarn:
+	@echo "****************************************\n"; \
+	echo "!!!Warning!!!"; \
+	echo "run 'module swap PrgEnv-cray PrgEnv-intel'"; \
+	echo "and 'module unload cray-libsci'"; \
+	echo "in the terminal before compiling and running the code!\n"; \
+	echo "****************************************\n"
 mkdirobj:
 	@if test ! -d $(OBJ); \
 	then mkdir $(OBJ); fi
@@ -320,11 +341,12 @@ mac:    compile
 macmpi: compile
 macomp: compile
 macompprof: compile
-rwth:    compile
-rwthmpi: compile
-rwthomp: compile
-rwthmpidebug: compile
-rwthompdebug: compile
-rwthhybrid:   compile
+rwth:    print_rwthwarn compile
+rwthmpi: print_rwthwarn compile
+rwthomp: print_rwthwarn compile
+rwthmpidebug: print_rwthwarn compile
+rwthompdebug: print_rwthwarn compile
+rwthhybrid:   print_rwthwarn compile
 jureca: compile
+hazelhen: print_hazelwarn compile
 gfort: compile
