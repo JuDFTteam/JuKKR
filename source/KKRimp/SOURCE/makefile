@@ -35,6 +35,7 @@ pg:         FC = pgf90
 hybrid:     FC= mpiifort
 rwthhybrid: FC= $(MPIFC) 
 jureca:     FC = mpif90
+hazelhen:   FC = ftn # run 'module swap PrgEnv-cray PrgEnv-intel' and 'module unload cray-libsci' in terminal before compiling
 
 
 # default
@@ -49,6 +50,7 @@ pg:        COMPVER = 'pg'
 hybrid:    COMPVER = 'hybrid'
 rwthhybrid:    COMPVER = 'rwthhybrid'
 jureca   : COMPVER='jureca'
+hazelhen   : COMPVER='hazelhen'
 
 ####################################################
 # Objects to compile                               #
@@ -96,6 +98,8 @@ LLIBSMAC  =  -mkl #-L/usr/local/Library/Frameworks/Intel_MKL.framework/Libraries
 # JURECA:
 JURECALIBS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
 
+# HazelHen:
+HAZELHENLIBS = -mkl
 
 # set library paths according to compile option
 hybrid: LLIBS=$(LLIBSOPENMP)
@@ -106,6 +110,7 @@ gfort: LLIBS=$(LLIBSGFORT)
 rwthmpi: LLIBS=$(LLIBSRWTH)
 mac: LLIBS=$(LLIBSMAC)
 jureca: LLIBS=$(JURECALIBS)
+hazelhen: LLIBS=$(HAZELHENLIBS)
 
 ####################################################
 # C preprocessor options                           #
@@ -121,6 +126,7 @@ gfort:         CPP = -D GFORT
 hybrid:        CPP = -D MPI -D CPP_HYBRID
 rwthhybrid:    CPP = -D MPI -D CPP_HYBRID
 jureca:        CPP = -D MPI
+hazelhen:      CPP = -D MPI
 
 ####################################################
 # Compiler flags                                   #
@@ -152,6 +158,8 @@ SOURCEDIR = .
 .PHONY: mpidebug
 .PHONY: mac
 .PHONY: getversion
+.PHONY: print_rwthwarn
+.PHONY: print_hazelwarn
 
 getversion:
 	@echo "Wrinting Version file: "; git describe;\
@@ -160,25 +168,41 @@ getversion:
 	echo $(LLIBS) >complib; \
 	$(SOURCEDIR)/getversion.sh
 
+print_rwthwarn:
+	@echo "****************************************\n"; \
+	echo "!!!Warning!!!"; \
+	echo "run 'module switch openmpi intelmpi'"; \
+	echo "in the terminal before compiling and running the code!\n"; \
+	echo "****************************************\n"
+
+print_hazelwarn:
+	@echo "****************************************\n"; \
+	echo "!!!Warning!!!"; \
+	echo "run 'module swap PrgEnv-cray PrgEnv-intel'"; \
+	echo "and 'module unload cray-libsci'"; \
+	echo "in the terminal before compiling and running the code!\n"; \
+	echo "****************************************\n"
+
 
 compile: getversion $(OBJECTS)
 	$(FC)     -o $(FILENAME) $(OBJECTS2)  $(LLIBS)
 
 # compile code
-cbg: compile
-hybrid: compile
-rwthhybrid: compile
-rwth: compile
-openmp: compile
-debug: compile
-pg: compile
-gfort: compile
-mpi: compile
-rwthmpi: compile
-mpitrace: compile
-mpidebug: compile
-mac: compile
-jureca: compile
+cbg:        compile
+hybrid:     compile
+openmp:     compile
+debug:      compile
+mpi:        compile
+mpitrace:   compile
+mpidebug:   compile
+rwthhybrid: print_rwthwarn compile
+rwth:       print_rwthwarn compile
+rwthmpi:    print_rwthwarn compile
+pg:         compile
+gfort:      compile
+mac:        compile
+jureca:     compile
+hazelhen:   print_hazelwarn compile
 
 install: clean mpi
 
