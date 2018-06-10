@@ -3,7 +3,7 @@ SUBROUTINE clsgen_tb(naez,nemb,nvirt,rr,nr,rbasis,kaoez,zat,  &
     cls,ncls,nacls,atom,ezoa, nlbasis,nrbasis,nleft,nright,zperleft,zperight,  &
     tleft,tright,rmtref,rmtrefat,vref,  &
     irefpot,nrefpot,rcls,rcut,rcutxy,l2dim,alat,  &
-    naezd,natypd,nembd,nrd,naclsd,nclsd,nrefd)
+    naezd,natyp,nembd,nrd,naclsd,nclsd,nrefd)
 ! ************************************************************************
 ! This subroutine is used to create the clusters around each atom
 ! (Based on clsgen99.f). Also the reference potential height and radius is set
@@ -22,14 +22,14 @@ SUBROUTINE clsgen_tb(naez,nemb,nvirt,rr,nr,rbasis,kaoez,zat,  &
       use mod_version_info
 implicit none
 !.. arguments
-INTEGER NAEZD,NATYPD,NEMBD,NRD,NACLSD,NCLSD,NREFD
+INTEGER NAEZD,NATYP,NEMBD,NRD,NACLSD,NCLSD,NREFD
 DOUBLE PRECISION       ALAT         ! lattice constant A
 DOUBLE PRECISION       RCUT,RCUTXY
-DOUBLE PRECISION  RBASIS(3,*),     &        ! pos. of basis atoms in EZ
-     RCLS(3,NACLSD,*),&        ! real space position of atom in cluster
-     RR(3,0:NRD),     &        ! set of lattice vectors
-     ZAT(*),          &        ! nucleus charge
-     RMTREF(*)
+DOUBLE PRECISION  RBASIS(3,naez+nembd),     &        ! pos. of basis atoms in EZ
+     RCLS(3,NACLSD,ncls),&        ! real space position of atom in cluster
+     RR(3,0:NR),     &        ! set of lattice vectors
+     ZAT(natyp),          &        ! nucleus charge
+     RMTREF(nrefd)
 !     RWS(*),
 !     BBOX(3)                  ! bounding box for povray plots
 
@@ -41,22 +41,22 @@ INTEGER NAEZ,         &           ! number of atoms in EZ
      NVIRT,        &           ! Number of virtual atoms
      NPRINC                   ! Calculated number of layers in a principal layer
 
-INTEGER CLS(*),                   & ! type of cluster around atom
-     KAOEZ(NATYPD,NAEZD+NEMBD),& ! type of atom at position in EZ
-     NACLS(*),                 & ! number of atoms in cluster
-     ATOM(NACLSD,*),           & ! index to atom in elem/cell at site in cluster
-     EZOA (NACLSD,*)             ! index to bravais lattice  at site in cluster
+INTEGER CLS(naez+nembd),                   & ! type of cluster around atom
+     KAOEZ(NATYP,NAEZ+NEMBD),& ! type of atom at position in EZ
+     NACLS(natyp),                 & ! number of atoms in cluster
+     ATOM(NACLSD,naez+nembd),           & ! index to atom in elem/cell at site in cluster
+     EZOA (NACLSD,naez+nembd)             ! index to bravais lattice  at site in cluster
 
 !.. locals
 INTEGER ILAY,N1,IR,ISITE,JSITE,IAT1, &
      NA,NUMBER,MAXNUMBER, & !IX,
      POS,IA,IN,IB,II,JATOM,ICU,IC,IAT,I1,ICLUSTER,NCLSALL
 INTEGER IATOM(NACLSD),IEZOA(NACLSD), &
-     ISORT(NACLSD),ICOUPLMAT(NAEZD,NAEZD), &
-     IREP(NCLSD) ! representative atom of cluster (inverse of CLS)
-INTEGER IREFPOT(NAEZD+NEMBD),NREFPOT
-DOUBLE PRECISION RMTREFAT(NAEZD+NEMBD),RMTREF1(NAEZD+NEMBD)
-DOUBLE PRECISION VREFAT(NAEZD+NEMBD),VREF1(NAEZD+NEMBD), &
+     ISORT(NACLSD),ICOUPLMAT(NAEZ,NAEZ), &
+     IREP(NCLS) ! representative atom of cluster (inverse of CLS)
+INTEGER IREFPOT(NAEZ+NEMBD),NREFPOT
+DOUBLE PRECISION RMTREFAT(NAEZ+NEMBD),RMTREF1(NAEZ+NEMBD)
+DOUBLE PRECISION VREFAT(NAEZ+NEMBD),VREF1(NAEZ+NEMBD), &
                  VREF(NREFD)
 
 
@@ -66,7 +66,7 @@ DOUBLE PRECISION R2,EPSSHL,TOL,TOL2,DISTMIN,&
 INTEGER NLBASIS,NRBASIS,                    &
         NLEFT,NRIGHT           
 DOUBLE PRECISION ZPERLEFT(3),ZPERIGHT(3),            &
-        TLEFT(3,*),TRIGHT(3,*)
+        TLEFT(3,nlbasis),TRIGHT(3,nrbasis)
 DOUBLE PRECISION       RCUT2,RCUTXY2,RXY2,DIST
 
 LOGICAL LFOUND

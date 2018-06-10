@@ -1031,7 +1031,7 @@ contains
       NCLSD    = NAEZ + NEMB
       MMAXD    = 2*LMAX+1
       NCLEB    = (LMAX*2+1)**2 * (LMAX+1)**2
-      NSPIND   = KREL+(1-KREL)*(NSPIN+1)
+      NSPIND   = KREL+(1-KREL)*2 ! (KSP+1) where KSP is always 1
       NPOTD    = (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP
       LMMAXD   = (KREL+KORBIT+1)*(LMAX+1)**2
       LMGF0D   = (LMAX+1)**2

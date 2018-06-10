@@ -621,7 +621,7 @@ contains
       call CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,ATOM, &
          EZOA,NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,RMTREF,&
          RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,NAEZ,NATYP, &
-         NEMB,NPRINCD,NRD,NACLSD,NCLSD,NREF)
+         NEMB,NPRINCD,NR,NACLSD,NCLS,NREF)
 
       ! Now the clusters, reference potentials and muffin-tin radii have been set.
       !-------------------------------------------------------------------------

@@ -266,21 +266,11 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
      naez=naeznew
      write(1337,*) 'updating rbasis array with virtual basis sites'
 
-
-
     do ibasis = 1, naeznew+nemb
        write(1337,*) 'REFPOT',REFPOT(ibasis)
        write(1337,*) 'NOQ',   NOQ(ibasis)
        write(1337,*) 'KAOEZ', KAOEZ(1,ibasis)
     end do
-
-
-
-
-
-
-
-
 
 !    stop 'end of ADDVIRTUAL'
 !   deallocate(rbasislist,ratomimp,atomimp)
@@ -288,7 +278,7 @@ subroutine ADDVIRATOMS14(LINTERFACE,NVIRT,naez, naezd, natypd,NEMB,NEMBD,RBASIS,
    DEALLOCATE(BRAVAISINV)
    DEALLOCATE(RCLSNEW)
    DEALLOCATE(RBASISNEW1)
- contains
+end subroutine ADDVIRATOMS14
 
 logical function vec_in_list(vec,veclist,bound)
   ! --------------------------
@@ -315,11 +305,11 @@ subroutine rtobasis(bravais,rpos,rbasis,ndim)
   ! such that rbasis = bravais * n with n in [0,1]^ndim
   ! --------------------------
   implicit none
-  real*8              :: bravais(3,3)
+  real*8, intent(in)  :: bravais(3,3)
+  real*8, intent(in)  :: rpos(3)
+  integer, intent(in) :: ndim
+  real*8, intent(out) :: rbasis(3)
   real*8              :: bravais_inv(ndim,ndim)
-  integer             :: ndim
-  real*8              :: rpos(3)
-  real*8              :: rbasis(3)
   
   real*8              :: ncoeffreal(ndim)
   integer             :: ncoeffint(ndim)
@@ -373,6 +363,3 @@ subroutine inverse_d1(mat)
   call dgetrf(n,n,mat,n,ipiv,info)      ; if(info.ne.0) stop 'inverse_d1: dpotrf failed.'
   call dgetri(n,mat,n,ipiv,work,n,info) ; if(info.ne.0) stop 'inverse_d1: dpotri failed.'
 end subroutine inverse_d1
-
-
-end subroutine ADDVIRATOMS14
