@@ -213,7 +213,7 @@ module mod_rhoqtools
         
       end if !(myrank==master)
 
-#if defined(CPP_MPI)
+#ifdef CPP_MPI
       ! communicate kmask stuff from master to all others
       call MPI_BCAST(k_end, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
       if (myrank .ne. master) then

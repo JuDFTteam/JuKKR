@@ -280,9 +280,9 @@ C **********************************************************************
 C
 c***********************************************************************
       SUBROUTINE SPLINE(NMAX,X,Y,N,YP1,YPN,Y2) 
-      IMPLICIT NONE
-      INTEGER N,NMAX 
-      DOUBLE PRECISION YP1,YPN,X(NMAX),Y(NMAX),Y2(NMAX) 
+      implicit none
+      integer n,nmax 
+      double precision yp1,ypn,x(nmax),y(nmax),y2(nmax) 
 c Given arrays x(1:n) and  y(1:n) containing a tabulated function, 
 c i.e., y i = f(xi), with x1<x2<...<xN , and given values yp1 and ypn 
 c for the rst derivative of the interpolating function at points 

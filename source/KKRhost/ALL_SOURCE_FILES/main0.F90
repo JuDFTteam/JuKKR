@@ -15,10 +15,10 @@
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 #ifdef CPP_HYBRID
-#define cpp_ompstuff
+#define CPP_OMPSTUFF
 #endif
 #ifdef CPP_OMP
-#define cpp_ompstuff
+#define CPP_OMPSTUFF
 #endif
 
 module mod_main0
@@ -393,7 +393,7 @@ contains
    subroutine main0()
 
       use mod_types
-#ifdef cpp_ompstuff
+#ifdef CPP_OMPSTUFF
       use omp_lib        ! necessary for omp functions
 #endif
 #ifdef CPP_MPI
@@ -420,7 +420,7 @@ contains
       ! for OPERATOR option
       logical :: lexist, operator_imp
 
-#ifdef cpp_ompstuff
+#ifdef CPP_OMPSTUFF
       !     .. OMP ..
       integer nth, ith          ! total number of threads, thread number
 #endif
@@ -460,8 +460,7 @@ contains
                         ' serial number for files: ', serialnr
       2004  format(/79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A/)//2A/79(1H*)/)
 
-!#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
-#ifdef cpp_ompstuff
+#ifdef CPP_OMPSTUFF
 !$omp parallel shared(nth) private(ith)
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()

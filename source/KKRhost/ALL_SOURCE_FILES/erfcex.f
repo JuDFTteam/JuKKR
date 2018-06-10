@@ -6,6 +6,7 @@ c     calculates complementary errorfunction times sqrt(pi)
 c      times exp(z*z)  by continued fractions
 c
 c-----------------------------------------------------------------------
+      implicit none
 c     .. scalar arguments ..
       double precision z
 c     ..

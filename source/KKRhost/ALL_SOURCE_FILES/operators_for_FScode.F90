@@ -10,14 +10,14 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-# ifdef CPP_MPI
+#ifdef CPP_MPI
   use mod_types, only: t_inc, t_mpi_c_grid
   use mpi
   use mod_mympi, only: nranks, master, myrank, distribute_linear_on_tasks
-# else
+#else
   use mod_types, only: t_inc
   use mod_mympi, only: nranks, master, myrank
-# endif
+#endif
   use mod_wunfiles, only: t_params
   use mod_save_wavefun, only: t_wavefunctions, read_wavefunc
   use mod_types, only: t_imp
@@ -48,12 +48,12 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   double complex, allocatable :: PNS_SO_IMP(:,:,:,:,:) 
   integer :: i1_imp, natomimp
 
-# ifdef CPP_MPI
+#ifdef CPP_MPI
   ! communcate PNS_SO_ALL for OPERATOR option
   integer :: ihelp
   integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
   double complex, allocatable :: work(:,:,:,:,:)
-# endif
+#endif
 
   ! for TEST options
   logical, external :: TEST
@@ -101,17 +101,17 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
     ALLOCATE(PNS_SO_ALL(LMMAXD,LMMAXD,IRMD,2,NATYP))
     PNS_SO_ALL = CZERO
     
-#   ifdef CPP_MPI
+#ifdef CPP_MPI
     call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master,natyp,ntot_pT,ioff_pT,.true.)
     i1_start = ioff_pT(t_mpi_c_grid%myrank_ie) + 1
     i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie) + ntot_pT(t_mpi_c_grid%myrank_ie)
     t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
     t_mpi_c_grid%ntot_pT1 = ntot_pT
     t_mpi_c_grid%ioff_pT1 = ioff_pT
-#   else
+#else
     i1_start = 1
     i1_end   = NATYP
-#   endif
+#endif
     
     DO I1=i1_start, i1_end
     
@@ -126,13 +126,13 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
       SLLLEFT = CZERO
       PNS_SO = CZERO
     
-#     ifdef CPP_MPI
+#ifdef CPP_MPI
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-#     else
+#else
       ie_start = 0 ! offset
       ie_end   = t_params%IELAST
-#     endif
+#endif
     
       DO ie_num=1,ie_end
     
@@ -204,7 +204,7 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
     
     END DO ! I1=i1_start, i1_end
     
-#   ifdef CPP_MPI
+#ifdef CPP_MPI
     ! finally gather PNS_SO_ALL on master in case of MPI run
     allocate(work(LMMAXD,LMMAXD,IRMD,2,NATYP), stat=ierr)
     if(ierr.ne.0) stop 'Error allocating work for MPI comm of PNS_SO_ALL in main1a'
@@ -215,7 +215,7 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
     PNS_SO_ALL(:,:,:,:,:) = work(:,:,:,:,:)
     deallocate(work, stat=ierr)
     if(ierr.ne.0) stop 'Error deallocating work for MPI comm of PNS_SO_ALL in main1a'
-#   endif
+#endif
     
     ! done with preparations, call normcoeff routines that construct operators
     if(myrank==master) write(*,*) 'Computing spin operator'
@@ -246,17 +246,17 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
     ALLOCATE(PNS_SO_IMP(LMMAXD,LMMAXD,IRMD,2,NATOMIMP))
     PNS_SO_IMP = CZERO
     
-#   ifdef CPP_MPI
+#ifdef CPP_MPI
     call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master,natomimp,ntot_pT,ioff_pT,.true.)
     i1_start = ioff_pT(t_mpi_c_grid%myrank_ie) + 1
     i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie) + ntot_pT(t_mpi_c_grid%myrank_ie)
     t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
     t_mpi_c_grid%ntot_pT1 = ntot_pT
     t_mpi_c_grid%ioff_pT1 = ioff_pT
-#   else
+#else
     i1_start = 1
     i1_end   = NATOMIMP
-#   endif
+#endif
     
     DO I1_imp=i1_start, i1_end
     
@@ -329,7 +329,7 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
     deallocate(irws, rmesh, npan_tot, rpan_intervall, ipan_intervall, theta, phi)
     
     
-#   ifdef CPP_MPI
+#ifdef CPP_MPI
     ! finally gather PNS_SO_IMP on master in case of MPI run
     allocate(work(LMMAXD,LMMAXD,IRMD,2,NATOMIMP), stat=ierr)
     if(ierr.ne.0) stop 'Error allocating work for MPI comm of PNS_SO_ALL in main1a'
@@ -340,7 +340,7 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
     PNS_SO_IMP(:,:,:,:,:) = work(:,:,:,:,:)
     deallocate(work, stat=ierr)
     if(ierr.ne.0) stop 'Error deallocating work for MPI comm of PNS_SO_ALL in main1a'
-#   endif
+#endif
     
     ! construct impurity operators using impurity wavefunctions
     if(myrank==master) write(*,*) 'Computing impurity spin operator'

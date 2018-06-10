@@ -2,13 +2,13 @@ c 01.06.99 *************************************************************
       SUBROUTINE DLKE1(GLLKE,ALAT,NACLS,NACLSMAX,RR,EZOA,
      +                 ATOM,BZKP,IC,GINP,RCLS)
      
-      use mod_types, only: t_inc
-      implicit none
 c **********************************************************************
 c
 c     Fourier transformation of the cluster Greens function GINP
 c
 c ----------------------------------------------------------------------
+      use mod_types, only: t_inc
+      implicit none
 C     .. Parameters ..
       include 'inc.p'
 C
