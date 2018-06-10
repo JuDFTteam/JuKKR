@@ -47,7 +47,7 @@ contains
       character(len=36) :: maxarray,locarray
       integer :: nalloc,ndealloc,locpeak,locmemory,iproc
       integer :: dblsize,mfileno
-      integer(kind=8) :: memory,maxmemory
+      integer*8 :: memory,maxmemory
       character(len=1) :: allocationflag
 
       save :: memory,nalloc,ndealloc,maxroutine,maxarray,maxmemory
