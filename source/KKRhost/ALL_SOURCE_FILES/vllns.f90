@@ -14,57 +14,59 @@
 !> - R. Zeller Sep. 2000: modified
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND,IRM,NCLEB,LMPOT,IRMIND,LMMAXD)
+subroutine vllns(vnspll, vins, cleb, icleb, iend, irm, ncleb, lmpot, irmind, &
+  lmmaxd)
 
-   implicit none
+  implicit none
 
-   ! .. Input variables
-   integer, intent(in) :: IRM       !< Maximum number of radial points
-   integer, intent(in) :: IEND
-   integer, intent(in) :: NCLEB     !< Number of Clebsch-Gordon coefficients
-   integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-   integer, intent(in) :: IRMIND    !< IRM-IRNSD
-   integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-   ! .. Array Arguments
-   integer, dimension(NCLEB,4), intent(in) :: ICLEB  !< Pointer array
-   double precision, dimension(NCLEB,2), intent(in) :: CLEB   !< GAUNT coefficients (GAUNT)
-   double precision, dimension(IRMIND:IRM,LMPOT), intent(in) :: VINS !< Non-spherical part of the potential
-   ! .. Output variables
-   double precision, dimension(LMMAXD,LMMAXD,IRMIND:IRM), intent(out) :: VNSPLL
-   ! .. Local Scalars
-   integer :: IR,J,LM1,LM2,LM3
-   ! ..
-   do LM1 = 1,LMMAXD
-      do LM2 = 1,LM1
-         do IR = IRMIND,IRM
-            VNSPLL(LM1,LM2,IR) = 0.0D0
-         enddo
-      enddo
-   enddo
-   !
-   do J = 1,IEND
-      LM1 = ICLEB(J,1)
-      LM2 = ICLEB(J,2)
-      LM3 = ICLEB(J,3)
-      do  IR = IRMIND,IRM
-         VNSPLL(LM1,LM2,IR) = VNSPLL(LM1,LM2,IR) +CLEB(J,1)*VINS(IR,LM3)
-      enddo
-   enddo
-   !----------------------------------------------------------------------------
-   ! Use symmetry of the gaunt coef.
-   !----------------------------------------------------------------------------
-   do LM1 = 1,LMMAXD
-      do LM2 = 1,LM1 - 1
-         do IR = IRMIND,IRM
-            VNSPLL(LM2,LM1,IR) = VNSPLL(LM1,LM2,IR)
-         enddo
-      enddo
-   enddo
-
-   do LM1 = 1,LMMAXD
-      do IR = IRMIND,IRM
-         VNSPLL(LM1,LM1,IR) = VNSPLL(LM1,LM1,IR) + VINS(IR,1)
+! .. Input variables
+  integer, intent (in) :: irm !< Maximum number of radial points
+  integer, intent (in) :: iend
+  integer, intent (in) :: ncleb !< Number of Clebsch-Gordon coefficients
+  integer, intent (in) :: lmpot !< (LPOT+1)**2
+  integer, intent (in) :: irmind !< IRM-IRNSD
+  integer, intent (in) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
+! .. Array Arguments
+  integer, dimension (ncleb, 4), intent (in) :: icleb !< Pointer array
+  double precision, dimension (ncleb, 2), intent (in) :: cleb !< GAUNT coefficients (GAUNT)
+  double precision, dimension (irmind:irm, lmpot), intent (in) :: vins !< Non-spherical part of the potential
+! .. Output variables
+  double precision, dimension (lmmaxd, lmmaxd, irmind:irm), &
+    intent (out) :: vnspll
+! .. Local Scalars
+  integer :: ir, j, lm1, lm2, lm3
+! ..
+  do lm1 = 1, lmmaxd
+    do lm2 = 1, lm1
+      do ir = irmind, irm
+        vnspll(lm1, lm2, ir) = 0.0d0
       end do
-   end do
+    end do
+  end do
+!
+  do j = 1, iend
+    lm1 = icleb(j, 1)
+    lm2 = icleb(j, 2)
+    lm3 = icleb(j, 3)
+    do ir = irmind, irm
+      vnspll(lm1, lm2, ir) = vnspll(lm1, lm2, ir) + cleb(j, 1)*vins(ir, lm3)
+    end do
+  end do
+!----------------------------------------------------------------------------
+! Use symmetry of the gaunt coef.
+!----------------------------------------------------------------------------
+  do lm1 = 1, lmmaxd
+    do lm2 = 1, lm1 - 1
+      do ir = irmind, irm
+        vnspll(lm2, lm1, ir) = vnspll(lm1, lm2, ir)
+      end do
+    end do
+  end do
 
-end subroutine VLLNS
+  do lm1 = 1, lmmaxd
+    do ir = irmind, irm
+      vnspll(lm1, lm1, ir) = vnspll(lm1, lm1, ir) + vins(ir, 1)
+    end do
+  end do
+
+end subroutine

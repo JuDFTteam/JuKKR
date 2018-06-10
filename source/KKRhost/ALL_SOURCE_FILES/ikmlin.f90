@@ -1,5 +1,5 @@
-SUBROUTINE ikmlin(iprint,nsollm,ikm1lin,ikm2lin,nlmax,nmuemax,  &
-        linmax,nl)
+subroutine ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, &
+  nl)
 !   ********************************************************************
 !   *                                                                  *
 !   * SETUP TABLE OF INDICES    IKM(INT)                               *
@@ -11,44 +11,44 @@ SUBROUTINE ikmlin(iprint,nsollm,ikm1lin,ikm2lin,nlmax,nmuemax,  &
 !   *  USED TO CALCULATE DOS ...                                       *
 !   *                                                                  *
 !   ********************************************************************
-use mod_types, only: t_inc
-IMPLICIT NONE
+  use :: mod_types, only: t_inc
+  implicit none
 
 
 ! Dummy arguments
-INTEGER IPRINT,LINMAX,NL,NLMAX,NMUEMAX
-INTEGER IKM1LIN(LINMAX),IKM2LIN(LINMAX),NSOLLM(NLMAX,NMUEMAX)
+  integer :: iprint, linmax, nl, nlmax, nmuemax
+  integer :: ikm1lin(linmax), ikm2lin(linmax), nsollm(nlmax, nmuemax)
 
 ! Local variables
-INTEGER I,IL,IMUE,K1,K2,KAP(2),L,LIN,MUEM05,NSOL
-INTEGER IKAPMUE
+  integer :: i, il, imue, k1, k2, kap(2), l, lin, muem05, nsol
+  integer :: ikapmue
 
-lin = 0
+  lin = 0
 
-DO il = 1,nl
-  l = il - 1
-  muem05 = -il - 1
-  kap(1) = -l - 1
-  kap(2) = +l
-  
-  DO imue = 1,2*il
-    muem05 = muem05 + 1
-    nsol = nsollm(il,imue)
-    
-    DO k2 = 1,nsol
-      DO k1 = 1,nsol
-        lin = lin + 1
-        ikm1lin(lin) = ikapmue(kap(k1),muem05)
-        ikm2lin(lin) = ikapmue(kap(k2),muem05)
-      END DO
-    END DO
-    
-  END DO
-END DO
+  do il = 1, nl
+    l = il - 1
+    muem05 = -il - 1
+    kap(1) = -l - 1
+    kap(2) = +l
 
-IF ( iprint < 2 ) RETURN
-IF(t_inc%i_write>0) THEN
-  WRITE (1337,FMT='('' INT='',I3,''  IKM=('',I3,'','',I3,'')'')')  &
-      (i,ikm1lin(i),ikm2lin(i),i=1,lin)
-END IF
-END SUBROUTINE ikmlin
+    do imue = 1, 2*il
+      muem05 = muem05 + 1
+      nsol = nsollm(il, imue)
+
+      do k2 = 1, nsol
+        do k1 = 1, nsol
+          lin = lin + 1
+          ikm1lin(lin) = ikapmue(kap(k1), muem05)
+          ikm2lin(lin) = ikapmue(kap(k2), muem05)
+        end do
+      end do
+
+    end do
+  end do
+
+  if (iprint<2) return
+  if (t_inc%i_write>0) then
+    write (1337, fmt='('' INT='',I3,''  IKM=('',I3,'','',I3,'')'')')(i, &
+      ikm1lin(i), ikm2lin(i), i=1, lin)
+  end if
+end subroutine

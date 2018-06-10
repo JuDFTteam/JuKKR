@@ -1,62 +1,61 @@
-SUBROUTINE wrldaupot(itrunldau,lopt,ueff,jeff,  &
-        erefldau,natyp,wldau,uldau,phildau,  &
-        irmd,natypd,nspind,mmaxd,irws)
+subroutine wrldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
+  uldau, phildau, irmd, natypd, nspind, mmaxd, irws)
 ! **********************************************************************
 ! *                                                                    *
 ! * Writes out LDA+U arrays into formatted file 'ldaupot'              *
 ! *                                                                    *
 ! **********************************************************************
-use mod_version_info
-IMPLICIT NONE
+  use :: mod_version_info
+  implicit none
 !..
-INTEGER IRMD,MMAXD,NATYPD,NSPIND,IRWS(NATYPD)
+  integer :: irmd, mmaxd, natypd, nspind, irws(natypd)
 !..
 !.. Arguments ..
-INTEGER ITRUNLDAU,NATYP
-INTEGER LOPT(NATYPD)
-DOUBLE PRECISION UEFF(NATYPD),JEFF(NATYPD),EREFLDAU(NATYPD)
-DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
-DOUBLE PRECISION ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) 
-DOUBLE COMPLEX PHILDAU(IRMD,NATYPD)
+  integer :: itrunldau, natyp
+  integer :: lopt(natypd)
+  double precision :: ueff(natypd), jeff(natypd), erefldau(natypd)
+  double precision :: wldau(mmaxd, mmaxd, nspind, natypd)
+  double precision :: uldau(mmaxd, mmaxd, mmaxd, mmaxd, natypd)
+  double complex :: phildau(irmd, natypd)
 !..
 !..  Locals 
-INTEGER IR,M1,M2,M3,M4,IT,IS
+  integer :: ir, m1, m2, m3, m4, it, is
 ! ======================================================================
 
-OPEN (67,FILE='ldaupot_new',FORM='FORMATTED')
-CALL version_print_header(67)
-WRITE(1337,99001)
-WRITE(67,99002) itrunldau,'    ITRUNLDAU'
-WRITE(67,99002) natyp,'    NATYP'
-WRITE(67,99003) natyp
-WRITE(67,99004) (lopt(it),it=1,natyp)
-WRITE(67,99005)
-DO it = 1,natyp
-  IF ( lopt(it)+1 /= 0 ) WRITE(67,99006) it,ueff(it),jeff(it),erefldau(it)
-END DO
-DO it = 1,natyp
-  IF ( lopt(it)+1 /= 0 ) THEN
-    WRITE(67,99002) it,'    WLDAU'
-    DO is = 1,nspind
-      DO m1 = 1,mmaxd
-        WRITE (67,99007) (wldau(m1,m2,is,it),m2=1,mmaxd)
-      END DO
-    END DO
-    WRITE(67,99002) it,'    ULDAU'
-    WRITE (67,99007) ((((uldau(m1,m2,m3,m4,it),m4=1,mmaxd),  &
-        m3=1,mmaxd),m2=1,mmaxd),m1=1,mmaxd)
-    WRITE(67,99002) it,'    PHILDAU'
-    WRITE (67,99007) (phildau(ir,it),ir=1,irws(it))
-  END IF
-END DO
-CLOSE (67)
+  open (67, file='ldaupot_new', form='FORMATTED')
+  call version_print_header(67)
+  write (1337, 100)
+  write (67, 110) itrunldau, '    ITRUNLDAU'
+  write (67, 110) natyp, '    NATYP'
+  write (67, 120) natyp
+  write (67, 130)(lopt(it), it=1, natyp)
+  write (67, 140)
+  do it = 1, natyp
+    if (lopt(it)+1/=0) write (67, 150) it, ueff(it), jeff(it), erefldau(it)
+  end do
+  do it = 1, natyp
+    if (lopt(it)+1/=0) then
+      write (67, 110) it, '    WLDAU'
+      do is = 1, nspind
+        do m1 = 1, mmaxd
+          write (67, 160)(wldau(m1,m2,is,it), m2=1, mmaxd)
+        end do
+      end do
+      write (67, 110) it, '    ULDAU'
+      write (67, 160)((((uldau(m1,m2,m3,m4,it),m4=1,mmaxd),m3=1, &
+        mmaxd),m2=1,mmaxd), m1=1, mmaxd)
+      write (67, 110) it, '    PHILDAU'
+      write (67, 160)(phildau(ir,it), ir=1, irws(it))
+    end if
+  end do
+  close (67)
 
-99001 FORMAT(/,5X,'< WRLDAUPOT > : ',  &
-    'Writing out LDA+U potential (file ldaupot_new)',/)
-99002 FORMAT(i6,a)
-99003 FORMAT('LOPT 1..',i3)
-99004 FORMAT(16I3)
-99005 FORMAT('IAT',6X,'UEFF',12X,'JEFF',12X,'EREF')
-99006 FORMAT(i3,3(1X,e15.8))
-99007 FORMAT(5E16.8)
-END SUBROUTINE wrldaupot
+100 format (/, 5x, '< WRLDAUPOT > : ', &
+    'Writing out LDA+U potential (file ldaupot_new)', /)
+110 format (i6, a)
+120 format ('LOPT 1..', i3)
+130 format (16i3)
+140 format ('IAT', 6x, 'UEFF', 12x, 'JEFF', 12x, 'EREF')
+150 format (i3, 3(1x,e15.8))
+160 format (5e16.8)
+end subroutine

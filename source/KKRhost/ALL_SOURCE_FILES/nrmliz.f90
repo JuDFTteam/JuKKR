@@ -1,4 +1,4 @@
-SUBROUTINE nrmliz(n,r,rn)
+subroutine nrmliz(n, r, rn)
 !-  normalizes a vector
 ! ----------------------------------------------------------------------
 !i Inputs
@@ -7,21 +7,21 @@ SUBROUTINE nrmliz(n,r,rn)
 !o Outputs:
 !o   rn    :normalized vector
 ! ----------------------------------------------------------------------
-      implicit none 
+  implicit none
 ! Passed parameters:                                                    
-      integer n 
-      double precision r(3,*),rn(3,*) 
+  integer :: n
+  double precision :: r(3, *), rn(3, *)
 ! Local parameters                                                      
-      integer i 
-      double precision d,d2 
+  integer :: i
+  double precision :: d, d2
 ! External calls                                                        
-      external dcopy,dscal 
+  external :: dcopy, dscal
 
-CALL dcopy(3*n,r,1,rn,1)
-DO i=1,n
-  d2=r(1,i)*r(1,i)+r(2,i)*r(2,i)+r(3,i)*r(3,i)
-  d=DSQRT(d2)
-  IF (d /= 0.d0) CALL dscal(3,1.d0/d,rn(1,i),1)
-END DO
+  call dcopy(3*n, r, 1, rn, 1)
+  do i = 1, n
+    d2 = r(1, i)*r(1, i) + r(2, i)*r(2, i) + r(3, i)*r(3, i)
+    d = dsqrt(d2)
+    if (d/=0.d0) call dscal(3, 1.d0/d, rn(1,i), 1)
+  end do
 
-END SUBROUTINE nrmliz
+end subroutine

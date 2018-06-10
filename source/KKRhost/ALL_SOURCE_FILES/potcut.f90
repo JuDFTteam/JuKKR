@@ -1,36 +1,37 @@
-SUBROUTINE potcut(imt1,irc1,ins,lmpot,r,vm2z,vspsme,vins,z1,  &
-        irmd,irmind)
+subroutine potcut(imt1, irc1, ins, lmpot, r, vm2z, vspsme, vins, z1, irmd, &
+  irmind)
 ! **********************************************************************
 ! * set potential equal zero between muffin-tin and outer sphere       *
 ! **********************************************************************
-IMPLICIT NONE
+  implicit none
 !     ..
 !     .. Scalar Arguments ..
-DOUBLE PRECISION :: z1
-INTEGER :: irmd,irmind
-INTEGER :: imt1,ins,irc1,lmpot
+  double precision :: z1
+  integer :: irmd, irmind
+  integer :: imt1, ins, irc1, lmpot
 !     ..
 !     .. Array Arguments ..
-DOUBLE PRECISION :: r(*),vins(irmind:irmd,*),vm2z(*),vspsme(*)
+  double precision :: r(*), vins(irmind:irmd, *), vm2z(*), vspsme(*)
 !     ..
 !     .. Local Scalars ..
-INTEGER :: ir,ist,lm
+  integer :: ir, ist, lm
 !     ..
 !     .. Intrinsic Functions ..
-INTRINSIC MAX
+  intrinsic :: max
 !     ..
-WRITE(1337,*) 'potcut: potential equal 2*Z/R between MT ', 'and outer sphere'
-DO ir = imt1 + 1,irc1
-  vm2z(ir) = 2.0D0*z1/r(ir)
-  vspsme(ir) = 2.0D0*z1/r(ir)
-END DO
+  write (1337, *) 'potcut: potential equal 2*Z/R between MT ', &
+    'and outer sphere'
+  do ir = imt1 + 1, irc1
+    vm2z(ir) = 2.0d0*z1/r(ir)
+    vspsme(ir) = 2.0d0*z1/r(ir)
+  end do
 
-IF (ins >= 1) THEN
-  ist = MAX(irmind,imt1+1)
-  DO ir = ist,irc1
-    DO lm = 2,lmpot
-      vins(ir,lm) = 0.0D0
-    END DO
-  END DO
-END IF
-END                           ! SUBROUTINE POTCUT
+  if (ins>=1) then
+    ist = max(irmind, imt1+1)
+    do ir = ist, irc1
+      do lm = 2, lmpot
+        vins(ir, lm) = 0.0d0
+      end do
+    end do
+  end if
+end subroutine ! SUBROUTINE POTCUT

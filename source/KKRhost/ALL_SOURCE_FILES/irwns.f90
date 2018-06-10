@@ -1,6 +1,6 @@
-SUBROUTINE irwns(cr,dr,efac,qns,vnspll,icst,ipan,ircut,nsra,  &
-        pzlm,qzlm,pzekdr,qzekdr,cder,cmat,dder,dmat,  &
-        irmind,irmd,irmin,irmax,ipand,lmmaxd)       ! Added IRMIN,IRMAX 1.7.2014
+subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra, pzlm, &
+  qzlm, pzekdr, qzekdr, cder, cmat, dder, dmat, irmind, irmd, irmin, irmax, &
+  ipand, lmmaxd) ! Added IRMIN,IRMAX 1.7.2014
 !-----------------------------------------------------------------------
 !     determines the irregular non spherical wavefunctions in the n-th.
 !       born approximation ( n given by input parameter icst ) .
@@ -42,80 +42,77 @@ SUBROUTINE irwns(cr,dr,efac,qns,vnspll,icst,ipan,ircut,nsra,  &
 !-----------------------------------------------------------------------
 !     modified by R. Zeller      Aug. 1994
 !-----------------------------------------------------------------------
-implicit none
+  implicit none
 !.. Parameters ..
-      DOUBLE COMPLEX CONE
-      PARAMETER (CONE= (1.D0,0.D0))
+  double complex :: cone
+  parameter (cone=(1.d0,0.d0))
 !..
 !.. Scalar Arguments ..
-      INTEGER ICST,IPAN,IPAND,IRMD,IRMIND,LMMAXD,NSRA,IRMIN,IRMAX
+  integer :: icst, ipan, ipand, irmd, irmind, lmmaxd, nsra, irmin, irmax
 !..
 !.. Array Arguments ..
-DOUBLE COMPLEX CDER(LMMAXD,LMMAXD,IRMIND:IRMD), &
-               CMAT(LMMAXD,LMMAXD,IRMIND:IRMD),CR(LMMAXD,LMMAXD), &
-               DDER(LMMAXD,LMMAXD,IRMIND:IRMD), &
-               DMAT(LMMAXD,LMMAXD,IRMIND:IRMD),DR(LMMAXD,LMMAXD), &
-               EFAC(LMMAXD),PZEKDR(LMMAXD,IRMIND:IRMD,2), &
-               PZLM(LMMAXD,IRMIND:IRMD,2), &
-               QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2), &
-               QZEKDR(LMMAXD,IRMIND:IRMD,2), &
-               QZLM(LMMAXD,IRMIND:IRMD,2)
-DOUBLE PRECISION VNSPLL(LMMAXD,LMMAXD,IRMIND:IRMD)
-INTEGER IRCUT(0:IPAND)
+  double complex :: cder(lmmaxd, lmmaxd, irmind:irmd), &
+    cmat(lmmaxd, lmmaxd, irmind:irmd), cr(lmmaxd, lmmaxd), &
+    dder(lmmaxd, lmmaxd, irmind:irmd), dmat(lmmaxd, lmmaxd, irmind:irmd), &
+    dr(lmmaxd, lmmaxd), efac(lmmaxd), pzekdr(lmmaxd, irmind:irmd, 2), &
+    pzlm(lmmaxd, irmind:irmd, 2), qns(lmmaxd, lmmaxd, irmind:irmd, 2), &
+    qzekdr(lmmaxd, irmind:irmd, 2), qzlm(lmmaxd, irmind:irmd, 2)
+  double precision :: vnspll(lmmaxd, lmmaxd, irmind:irmd)
+  integer :: ircut(0:ipand)
 !..
 !.. Local Scalars ..
-      DOUBLE COMPLEX EFAC2
-      INTEGER I,IR,IRC1,J,LM1,LM2
+  double complex :: efac2
+  integer :: i, ir, irc1, j, lm1, lm2
 !..
 !.. External Subroutines ..
-      EXTERNAL CSINWD,WFINT,WFINT0
+  external :: csinwd, wfint, wfint0
 !..
-irc1 = ircut(ipan)
-DO  i = 0,icst
+  irc1 = ircut(ipan)
+  do i = 0, icst
 !---> set up integrands for i-th born approximation
-  IF (i == 0) THEN
-    CALL wfint0(cder,dder,qzlm,qzekdr,pzekdr,vnspll,nsra,irmind,  &
-        irmd,lmmaxd,irmin,irmax)                         ! Added IRMIN,IRMAX 1.7.2014
-  ELSE
-    CALL wfint(qns,cder,dder,qzekdr,pzekdr,vnspll,nsra,irmind,  &
-        irmd,lmmaxd,irmin,irmax)                          ! Added IRMIN,IRMAX 1.7.2014
-  END IF
+    if (i==0) then
+      call wfint0(cder, dder, qzlm, qzekdr, pzekdr, vnspll, nsra, irmind, &
+        irmd, lmmaxd, irmin, irmax) ! Added IRMIN,IRMAX 1.7.2014
+    else
+      call wfint(qns, cder, dder, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, &
+        lmmaxd, irmin, irmax) ! Added IRMIN,IRMAX 1.7.2014
+    end if
 !---> call integration subroutines
-  CALL csinwd(cder,cmat,lmmaxd**2,irmind,irmd,irmin,ipan,ircut)     ! Added IRMIN 1.7.2014
-  CALL csinwd(dder,dmat,lmmaxd**2,irmind,irmd,irmin,ipan,ircut)     ! Added IRMIN 1.7.2014
-  DO  ir = irmin,irc1
-    DO  lm2 = 1,lmmaxd
-      dmat(lm2,lm2,ir) = dmat(lm2,lm2,ir) - cone
-    END DO
-  END DO
+    call csinwd(cder, cmat, lmmaxd**2, irmind, irmd, irmin, ipan, ircut) ! Added IRMIN 1.7.2014
+    call csinwd(dder, dmat, lmmaxd**2, irmind, irmd, irmin, ipan, ircut) ! Added IRMIN 1.7.2014
+    do ir = irmin, irc1
+      do lm2 = 1, lmmaxd
+        dmat(lm2, lm2, ir) = dmat(lm2, lm2, ir) - cone
+      end do
+    end do
 !---> calculate non sph. wft. in i-th born approximation
-  DO  j = 1,nsra
-    DO  ir = irmin,irc1
-      DO  lm1 = 1,lmmaxd
-        DO  lm2 = 1,lmmaxd
-          qns(lm1,lm2,ir,j) = cmat(lm1,lm2,ir)*pzlm(lm1,ir,j) -  &
-              dmat(lm1,lm2,ir)*qzlm(lm1,ir,j)
-        END DO
-      END DO
-    END DO
-  END DO
-END DO
-DO  lm2 = 1,lmmaxd
+    do j = 1, nsra
+      do ir = irmin, irc1
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            qns(lm1, lm2, ir, j) = cmat(lm1, lm2, ir)*pzlm(lm1, ir, j) - &
+              dmat(lm1, lm2, ir)*qzlm(lm1, ir, j)
+          end do
+        end do
+      end do
+    end do
+  end do
+  do lm2 = 1, lmmaxd
 !---> store c - and d - matrix
-  DO  lm1 = 1,lmmaxd
-    cr(lm1,lm2) = cmat(lm1,lm2,irmin)
-    dr(lm1,lm2) = -dmat(lm1,lm2,irmin)
-  END DO
-END DO
+    do lm1 = 1, lmmaxd
+      cr(lm1, lm2) = cmat(lm1, lm2, irmin)
+      dr(lm1, lm2) = -dmat(lm1, lm2, irmin)
+    end do
+  end do
 !---> rescale with efac
-DO  j = 1,nsra
-  DO  lm2 = 1,lmmaxd
-    efac2 = 1.d0/efac(lm2)
-    DO  ir = irmin,irc1
-      DO  lm1 = 1,lmmaxd
-        qns(lm1,lm2,ir,j) = qns(lm1,lm2,ir,j)*efac2
-      END DO
-    END DO
-  END DO
-END DO
-END SUBROUTINE irwns
+  do j = 1, nsra
+    do lm2 = 1, lmmaxd
+      efac2 = 1.d0/efac(lm2)
+      do ir = irmin, irc1
+        do lm1 = 1, lmmaxd
+          qns(lm1, lm2, ir, j) = qns(lm1, lm2, ir, j)*efac2
+        end do
+      end do
+    end do
+  end do
+end subroutine

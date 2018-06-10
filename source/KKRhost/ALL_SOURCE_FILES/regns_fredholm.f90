@@ -1,6 +1,6 @@
-SUBROUTINE regns(ar,br,efac,pns,vnspll,icst,ipan,ircut,pzlm,  &
-        qzlm,pzekdr,qzekdr,ek,ader,amat,bder,bmat,nsra,  &
-        irmind,irmd,ipand,lmmaxd)
+subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
+  pzekdr, qzekdr, ek, ader, amat, bder, bmat, nsra, irmind, irmd, ipand, &
+  lmmaxd)
 !-----------------------------------------------------------------------
 !     determines the regular non spherical wavefunctions , the
 !       alpha matrix and the t - matrix in the n-th. born appro-
@@ -46,80 +46,79 @@ SUBROUTINE regns(ar,br,efac,pns,vnspll,icst,ipan,ircut,pzlm,  &
 !     modified by R. Zeller      Aug. 1994
 !-----------------------------------------------------------------------
 !.. Scalar Arguments ..
-DOUBLE COMPLEX EK
-INTEGER ICST,IPAN,IPAND,IRMD,IRMIND,LMMAXD,NSRA
+  double complex :: ek
+  integer :: icst, ipan, ipand, irmd, irmind, lmmaxd, nsra
 !..
 !.. Array Arguments ..
-DOUBLE COMPLEX ADER(LMMAXD,LMMAXD,IRMIND:IRMD), &
-               AMAT(LMMAXD,LMMAXD,IRMIND:IRMD),AR(LMMAXD,LMMAXD), &
-               BDER(LMMAXD,LMMAXD,IRMIND:IRMD), &
-               BMAT(LMMAXD,LMMAXD,IRMIND:IRMD),BR(LMMAXD,LMMAXD), &
-               EFAC(*),PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2), &
-               PZEKDR(LMMAXD,IRMIND:IRMD,2), &
-               PZLM(LMMAXD,IRMIND:IRMD,2), &
-               QZEKDR(LMMAXD,IRMIND:IRMD,2), &
-               QZLM(LMMAXD,IRMIND:IRMD,2)
-DOUBLE PRECISION VNSPLL(LMMAXD,LMMAXD,IRMIND:IRMD)
-INTEGER IRCUT(0:IPAND)
+  double complex :: ader(lmmaxd, lmmaxd, irmind:irmd), &
+    amat(lmmaxd, lmmaxd, irmind:irmd), ar(lmmaxd, lmmaxd), &
+    bder(lmmaxd, lmmaxd, irmind:irmd), bmat(lmmaxd, lmmaxd, irmind:irmd), &
+    br(lmmaxd, lmmaxd), efac(*), pns(lmmaxd, lmmaxd, irmind:irmd, 2), &
+    pzekdr(lmmaxd, irmind:irmd, 2), pzlm(lmmaxd, irmind:irmd, 2), &
+    qzekdr(lmmaxd, irmind:irmd, 2), qzlm(lmmaxd, irmind:irmd, 2)
+  double precision :: vnspll(lmmaxd, lmmaxd, irmind:irmd)
+  integer :: ircut(0:ipand)
 !..
 !.. Local Scalars ..
-DOUBLE COMPLEX EFAC1,EFAC2
-INTEGER I,IR,IRC1,J,LM1,LM2
+  double complex :: efac1, efac2
+  integer :: i, ir, irc1, j, lm1, lm2
 !..
 !.. External Subroutines ..
-EXTERNAL CSINWD,CSOUT,WFINT,WFINT0
+  external :: csinwd, csout, wfint, wfint0
 !..
 !.. Parameters ..
-DOUBLE COMPLEX CONE
-PARAMETER (CONE= (1.0D0,0.0D0))
+  double complex :: cone
+  parameter (cone=(1.0d0,0.0d0))
 !..
-irc1 = ircut(ipan)
-DO  i = 0,icst
+  irc1 = ircut(ipan)
+  do i = 0, icst
 !---> set up integrands for i-th born approximation
-  IF (i == 0) THEN
-    CALL wfint0(ader,bder,pzlm,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
-  ELSE
-    CALL wfint(pns,ader,bder,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
-  END IF
+    if (i==0) then
+      call wfint0(ader, bder, pzlm, qzekdr, pzekdr, vnspll, nsra, irmind, &
+        irmd, lmmaxd)
+    else
+      call wfint(pns, ader, bder, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, &
+        lmmaxd)
+    end if
 !---> call integration subroutines
-  CALL csinwd(ader,amat,lmmaxd**2,irmind,irmd,ipan,ircut)
-  CALL csout(bder,bmat,lmmaxd**2,irmind,irmd,ipan,ircut)
-  DO  ir = irmind,irc1
-    DO  lm2 = 1,lmmaxd
-      amat(lm2,lm2,ir) = cone + amat(lm2,lm2,ir)
-    END DO
-  END DO
+    call csinwd(ader, amat, lmmaxd**2, irmind, irmd, ipan, ircut)
+    call csout(bder, bmat, lmmaxd**2, irmind, irmd, ipan, ircut)
+    do ir = irmind, irc1
+      do lm2 = 1, lmmaxd
+        amat(lm2, lm2, ir) = cone + amat(lm2, lm2, ir)
+      end do
+    end do
 !---> calculate non sph. wft. in i-th born approximation
-  DO  j = 1,nsra
-    DO  ir = irmind,irc1
-      DO  lm1 = 1,lmmaxd
-        DO  lm2 = 1,lmmaxd
-          pns(lm1,lm2,ir,j) = (amat(lm1,lm2,ir)*pzlm(lm1,ir,j)+  &
-              bmat(lm1,lm2,ir)*qzlm(lm1,ir,j))
-        END DO
-      END DO
-    END DO
-  END DO
-END DO
-DO  lm2 = 1,lmmaxd
-  efac2 = efac(lm2)
-!---> store alpha and t - matrix
-  DO  lm1 = 1,lmmaxd
-    efac1 = efac(lm1)
-    ar(lm1,lm2) = amat(lm1,lm2,irmind)
-!---> t-matrix
-    br(lm1,lm2) = bmat(lm1,lm2,irc1)*efac1*efac2/ek
-  END DO
-END DO
-!---> rescale with efac
-DO  j = 1,nsra
-  DO  lm2 = 1,lmmaxd
+    do j = 1, nsra
+      do ir = irmind, irc1
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            pns(lm1, lm2, ir, j) = (amat(lm1,lm2,ir)*pzlm(lm1,ir,j)+bmat(lm1, &
+              lm2,ir)*qzlm(lm1,ir,j))
+          end do
+        end do
+      end do
+    end do
+  end do
+  do lm2 = 1, lmmaxd
     efac2 = efac(lm2)
-    DO  ir = irmind,irc1
-      DO  lm1 = 1,lmmaxd
-        pns(lm1,lm2,ir,j) = pns(lm1,lm2,ir,j)*efac2
-      END DO
-    END DO
-  END DO
-END DO
-END SUBROUTINE regns
+!---> store alpha and t - matrix
+    do lm1 = 1, lmmaxd
+      efac1 = efac(lm1)
+      ar(lm1, lm2) = amat(lm1, lm2, irmind)
+!---> t-matrix
+      br(lm1, lm2) = bmat(lm1, lm2, irc1)*efac1*efac2/ek
+    end do
+  end do
+!---> rescale with efac
+  do j = 1, nsra
+    do lm2 = 1, lmmaxd
+      efac2 = efac(lm2)
+      do ir = irmind, irc1
+        do lm1 = 1, lmmaxd
+          pns(lm1, lm2, ir, j) = pns(lm1, lm2, ir, j)*efac2
+        end do
+      end do
+    end do
+  end do
+end subroutine

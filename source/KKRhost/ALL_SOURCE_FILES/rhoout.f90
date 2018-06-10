@@ -1,6 +1,6 @@
-      SUBROUTINE RHOOUT(CDEN,DF,GMAT,EK,PNS,QNS,RHO2NS,THETAS,IFUNM, &
-                 IPAN1,IMT1,IRMIN,IRMAX,LMSP,CDENNS,NSRA,CLEB,ICLEB,IEND &      ! Added IRMIN,IRMAX 1.7.2014
-                         ,CDENLM,CWR)   ! lm-dos
+subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm, ipan1, &
+  imt1, irmin, irmax, lmsp, cdenns, nsra, cleb, icleb, & ! Added IRMIN,IRMAX 1.7.2014
+  iend, cdenlm, cwr) ! lm-dos
 !-----------------------------------------------------------------------
 !
 !     calculates the charge density from r(irmin) to r(irc)
@@ -25,181 +25,179 @@
 !                               b.drittler   aug. 1988
 !-----------------------------------------------------------------------
 !     .. Parameters ..
-      IMPLICIT NONE
-      INCLUDE 'inc.p'
-!
-! *********************************************************************
-! * For KREL = 1 (relativistic mode)                                  *
-! *                                                                   *
+  implicit none
+  include 'inc.p'
 ! *  NPOTD = 2 * NATYPD                                               *
 ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
 ! *  NSPIND = 1                                                       *
 ! *                                                                   *
 ! *********************************************************************
 !
-      INTEGER LMMAXD
-      parameter (lmmaxd= (krel+1) * (lmaxd+1)**2)
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
 !     ..
 !     .. Scalar Arguments ..
-      DOUBLE COMPLEX DF,EK
-      INTEGER IEND,IMT1,IPAN1,NSRA,IRMIN,IRMAX
 !     ..
 !     .. Array Arguments ..
-DOUBLE COMPLEX CDEN(IRMD,0:*),CDENNS(*),GMAT(LMMAXD,LMMAXD), &
-               PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2), &
-              QNSI(LMMAXD,LMMAXD), &
-               QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2) &
-              ,CDENLM(IRMD,*),CWR(IRMD,LMMAXD,LMMAXD) ! lm-dos
-DOUBLE PRECISION CLEB(*),RHO2NS(IRMD,LMPOTD),THETAS(IRID,NFUND)
-INTEGER ICLEB(NCLEB,4),IFUNM(*),LMSP(*)
+  integer :: lmmaxd
+  parameter (lmmaxd=(krel+1)*(lmaxd+1)**2)
+  integer :: lmpotd
+  parameter (lmpotd=(lpotd+1)**2)
+  integer :: irmind
+  parameter (irmind=irmd-irnsd)
+! lm-dos
 !     ..
+  double complex :: df, ek
+  integer :: iend, imt1, ipan1, nsra, irmin, irmax
 !     .. Local Scalars ..
-      DOUBLE COMPLEX CLTDF,CONE,CZERO
-      DOUBLE PRECISION C0LL
-      INTEGER I,IFUN,IR,J,L1,LM1,LM2,LM3,M1
 !     ..
-!     .. Local Arrays ..
-DOUBLE COMPLEX WR(LMMAXD,LMMAXD,IRMIND:IRMD), &
-               WR2(LMMAXD,LMMAXD,IRMIND:IRMD)
+  double complex :: cden(irmd, 0:*), cdenns(*), gmat(lmmaxd, lmmaxd), &
+    pns(lmmaxd, lmmaxd, irmind:irmd, 2), qnsi(lmmaxd, lmmaxd), &
+    qns(lmmaxd, lmmaxd, irmind:irmd, 2), cdenlm(irmd, *), &
+    cwr(irmd, lmmaxd, lmmaxd) !     .. Local Arrays ..
+  double precision :: cleb(*), rho2ns(irmd, lmpotd), thetas(irid, nfund)
+  integer :: icleb(ncleb, 4), ifunm(*), lmsp(*)
 !     ..
 !     .. External Subroutines ..
-      EXTERNAL ZGEMM
+  double complex :: cltdf, cone, czero
+  double precision :: c0ll
+  integer :: i, ifun, ir, j, l1, lm1, lm2, lm3, m1
 !     ..
 !     .. Intrinsic Functions ..
-      INTRINSIC ATAN,DIMAG,SQRT
+  double complex :: wr(lmmaxd, lmmaxd, irmind:irmd), &
+    wr2(lmmaxd, lmmaxd, irmind:irmd)
 !     ..
 !     .. Save statement ..
-      SAVE
+  external :: zgemm
 !     ..
 !     .. Data statements ..
-      DATA CZERO/ (0.0D0,0.0D0)/
-      DATA CONE/ (1.0D0,0.0D0)/
-      LOGICAL OPT
+  intrinsic :: atan, dimag, sqrt
 !     ..
 !
+  save
 !     C0LL = 1/sqrt(4*pi)
-      C0LL = 1.0d0/SQRT(16.0D0*ATAN(1.0D0))
 !
+  data czero/(0.0d0, 0.0d0)/
+  data cone/(1.0d0, 0.0d0)/
+  logical :: opt
 !
 !---> initialize array for complex charge density
 !
-      CDEN(1:IRMD,0:LMAXD) = CZERO
-      CWR(:,:,:) = CZERO
+  c0ll = 1.0d0/sqrt(16.0d0*atan(1.0d0))
 !------------------------------------------------------------------
 !
 !---> set up array ek*qns(lm1,lm2) + { gmat(lm3,lm2)*pns(lm1,lm3) }
 !                                      summed over lm3
+  cden(1:irmd, 0:lmaxd) = czero
+  cwr(:, :, :) = czero
 !---> set up of wr(lm1,lm2) = { pns(lm1,lm3)*qns(lm2,lm3) }
 !                                               summed over lm3
-DO 50 IR = IRMIN + 1,IRMAX
-DO LM1=1,LMMAXD
-DO LM2=1,LMMAXD
-QNSI(LM1,LM2)=QNS(LM1,LM2,IR,1)
-ENDDO
-ENDDO
-  CALL ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,CONE,PNS(1,1,IR,1), &
-             LMMAXD,GMAT,LMMAXD,EK,QNSI,LMMAXD)
-  CALL ZGEMM('N','T',LMMAXD,LMMAXD,LMMAXD,CONE,PNS(1,1,IR,1), &
-             LMMAXD,QNSI,LMMAXD,CZERO,WR(1,1,IR),LMMAXD)
-  IF (NSRA.EQ.2) THEN
-DO LM1=1,LMMAXD
-DO LM2=1,LMMAXD
-QNSI(LM1,LM2)=QNS(LM1,LM2,IR,2)
-ENDDO
-ENDDO
-    CALL ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,CONE,PNS(1,1,IR,2), &
-               LMMAXD,GMAT,LMMAXD,EK,QNSI,LMMAXD)
-    CALL ZGEMM('N','T',LMMAXD,LMMAXD,LMMAXD,CONE,PNS(1,1,IR,2), &
-               LMMAXD,QNSI,LMMAXD,CONE,WR(1,1,IR),LMMAXD)
-  END IF
 
-  DO LM1 = 1,LMMAXD
-    DO LM2 = 1,LM1 - 1
-      WR(LM1,LM2,IR) = WR(LM1,LM2,IR) + WR(LM2,LM1,IR)
-    ENDDO ! LM2
-    DO LM2 = 1,LMMAXD
-       WR2(LM1,LM2,IR) = WR(LM1,LM2,IR)
-    ENDDO ! LM2
-  ENDDO ! LM1
- 50   CONTINUE  ! IR
-!
-!---> first calculate only the spherically symmetric contribution
-!
-DO 100 L1 = 0,LMAXD
-  DO 70 M1 = -L1,L1
-    LM1 = L1* (L1+1) + M1 + 1
-    DO 60 IR = IRMIN + 1,IRMAX
-!
+! LM2
+! LM2
+! LM1
+  do ir = irmin + 1, irmax
+    do lm1 = 1, lmmaxd
+      do lm2 = 1, lmmaxd
+        qnsi(lm1, lm2) = qns(lm1, lm2, ir, 1)
+      end do
+    end do
+    call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, pns(1,1,ir,1), lmmaxd, &
+      gmat, lmmaxd, ek, qnsi, lmmaxd)
+    call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pns(1,1,ir,1), lmmaxd, &
+      qnsi, lmmaxd, czero, wr(1,1,ir), lmmaxd)
+    if (nsra==2) then
+      do lm1 = 1, lmmaxd
+        do lm2 = 1, lmmaxd
+          qnsi(lm1, lm2) = qns(lm1, lm2, ir, 2)
+        end do
+      end do
+      call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, pns(1,1,ir,2), &
+        lmmaxd, gmat, lmmaxd, ek, qnsi, lmmaxd)
+      call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pns(1,1,ir,2), &
+        lmmaxd, qnsi, lmmaxd, cone, wr(1,1,ir), lmmaxd)
+    end if
+! IR
+    do lm1 = 1, lmmaxd
+      do lm2 = 1, lm1 - 1
+        wr(lm1, lm2, ir) = wr(lm1, lm2, ir) + wr(lm2, lm1, ir)
+      end do !
+      do lm2 = 1, lmmaxd
+        wr2(lm1, lm2, ir) = wr(lm1, lm2, ir)
+      end do !---> first calculate only the spherically symmetric contribution
+    end do !
+  end do !
 !---> fill array for complex density of states
 !
-      CDEN(IR,L1) = CDEN(IR,L1) + WR(LM1,LM1,IR)
-      CDENLM(IR,LM1) = WR(LM1,LM1,IR) ! lm-dos
-      DO 61 LM2 = 1,LMMAXD                    ! lmlm-dos
-         CWR(IR,LM1,LM2) = WR2(LM1,LM2,IR)    ! lmlm-dos
-   61       CONTINUE                                ! lmlm-dos
-   60     CONTINUE ! IR
-   70   CONTINUE ! M1
+! lm-dos
+  do l1 = 0, lmaxd
+    do m1 = -l1, l1
+      lm1 = l1*(l1+1) + m1 + 1
+      do ir = irmin + 1, irmax
+! lmlm-dos
+! lmlm-dos
+! lmlm-dos
+        cden(ir, l1) = cden(ir, l1) + wr(lm1, lm1, ir)
+        cdenlm(ir, lm1) = wr(lm1, lm1, ir) ! IR
+        do lm2 = 1, lmmaxd ! M1
+          cwr(ir, lm1, lm2) = wr2(lm1, lm2, ir) !
+        end do !---> remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
+      end do !
+    end do ! Implicit integration over energies
 !
-!---> remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
-!
-        DO 80 IR = IRMIN + 1,IRMAX
-          RHO2NS(IR,1) = RHO2NS(IR,1) + C0LL*DIMAG(CDEN(IR,L1)*DF)   ! Implicit integration over energies
-   80   CONTINUE
 !
 !
-!
-        IF (IPAN1.GT.1) THEN
-          DO 90 I = IMT1 + 1,IRMAX
-            CDEN(I,L1) = CDEN(I,L1)*THETAS(I-IMT1,1)*C0LL
+    do ir = irmin + 1, irmax
+      rho2ns(ir, 1) = rho2ns(ir, 1) + c0ll*dimag(cden(ir,l1)*df) 
+    end do
+! lm-dos
+! lm-dos
+! lm-dos
+    if (ipan1>1) then
+      do i = imt1 + 1, irmax
+        cden(i, l1) = cden(i, l1)*thetas(i-imt1, 1)*c0ll
+! lmlm-dos
+        do m1 = -l1, l1 ! lmlm-dos
+          lm1 = l1*(l1+1) + m1 + 1 ! if LDAU, integrate up to MT
+          cdenlm(i, lm1) = cdenlm(i, lm1)*thetas(i-imt1, 1)*c0ll ! LDAU
+          do lm2 = 1, lmmaxd ! LDAU
+            cwr(i, lm1, lm2) = cwr(i, lm1, lm2)*thetas(i-imt1, 1)*c0ll ! LDAU
+! lmlm-dos
+            if (opt('LDA+U   ')) then ! lm-dos
+              cwr(i, lm1, lm2) = czero 
+            end if 
+          end do ! L1
+        end do !
 
-            DO M1 = -L1,L1                                                   ! lm-dos
-               LM1 = L1* (L1+1) + M1 + 1                                     ! lm-dos
-               CDENLM(I,LM1) = CDENLM(I,LM1)*THETAS(I-IMT1,1)*C0LL           ! lm-dos
-               DO LM2 = 1,LMMAXD                                             ! lmlm-dos
-                  CWR(I,LM1,LM2) = CWR(I,LM1,LM2)*THETAS(I-IMT1,1)*C0LL      ! lmlm-dos
-! if LDAU, integrate up to MT
-                IF (OPT('LDA+U   ')) THEN         ! LDAU
-                 CWR(I,LM1,LM2) = CZERO           ! LDAU
-                ENDIF                             ! LDAU
-               ENDDO                                                         ! lmlm-dos
-            ENDDO                                                            ! lm-dos
-
-   90     CONTINUE
-        END IF
-
-  100 CONTINUE ! L1
+      end do
+    end if
 !
-      IF (IPAN1.GT.1) THEN
-         CDENNS(1:IRMD) = 0.0D0
-      END IF
-
-      DO 140 J = 1,IEND
-        LM1 = ICLEB(J,1)
-        LM2 = ICLEB(J,2)
-        LM3 = ICLEB(J,3)
-        CLTDF = DF*CLEB(J)
+  end do !---> calculate the non spherically symmetric contribution
 !
-!---> calculate the non spherically symmetric contribution
+  if (ipan1>1) then
+    cdenns(1:irmd) = 0.0d0
+  end if
 !
-        DO 120 IR = IRMIN + 1,IRMAX
-          RHO2NS(IR,LM3) = RHO2NS(IR,LM3) + DIMAG(CLTDF*WR(LM1,LM2,IR))
-  120   CONTINUE
-!
-        IF (IPAN1.GT.1 .AND. LMSP(LM3).GT.0) THEN
+  do j = 1, iend
+    lm1 = icleb(j, 1)
+    lm2 = icleb(j, 2)
+    lm3 = icleb(j, 3)
+    cltdf = df*cleb(j)
 !       IF (IPAN1.GT.1) THEN
-          IFUN = IFUNM(LM3)
-          DO 130 I = IMT1 + 1,IRMAX
-            CDENNS(I) = CDENNS(I) + CLEB(J)*WR(LM1,LM2,I)* &
-                  THETAS(I-IMT1,IFUN)
-  130     CONTINUE
-
-        END IF
-
-  140 CONTINUE
 
 
-      END
+    do ir = irmin + 1, irmax
+      rho2ns(ir, lm3) = rho2ns(ir, lm3) + dimag(cltdf*wr(lm1,lm2,ir))
+    end do
+
+    if (ipan1>1 .and. lmsp(lm3)>0) then
+
+      ifun = ifunm(lm3)
+      do i = imt1 + 1, irmax
+        cdenns(i) = cdenns(i) + cleb(j)*wr(lm1, lm2, i)*thetas(i-imt1, ifun)
+      end do
+! Added IRMIN,IRMAX 1.7.2014
+    end if
+! lm-dos
+  end do
+!-----------------------------------------------------------------------
+!
+end subroutine

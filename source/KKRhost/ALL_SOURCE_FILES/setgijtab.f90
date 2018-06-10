@@ -1,6 +1,6 @@
-SUBROUTINE setgijtab(linterface,icc,naez,iqat,rbasis,bravais,  &
-    natomimp,atomimp,rclsimp,nofgij,ijtabcalc,  &
-    iofgij,jofgij,nqcalc,iqcalc,natomimpd, ijtabcalc_i)
+subroutine setgijtab(linterface, icc, naez, iqat, rbasis, bravais, natomimp, &
+  atomimp, rclsimp, nofgij, ijtabcalc, iofgij, jofgij, nqcalc, iqcalc, &
+  natomimpd, ijtabcalc_i)
 ! **********************************************************************
 ! * Task-specific settings of Gij elements that need to be calculated  *
 ! * Subroutine (called for ICC=-1) sets up the arrays                  *
@@ -14,91 +14,93 @@ SUBROUTINE setgijtab(linterface,icc,naez,iqat,rbasis,bravais,  &
 ! * IOFGIJ      : I index in the list 1..NATOMIMP for pair I,J         *
 ! * JOFGIJ      : J index                                              *
 ! **********************************************************************
-IMPLICIT NONE
+  implicit none
 
 !Scalar arguments
-INTEGER ICC,NAEZ,NATOMIMP,NATOMIMPD,NOFGIJ,NQCALC
-LOGICAL LINTERFACE
- 
+  integer :: icc, naez, natomimp, natomimpd, nofgij, nqcalc
+  logical :: linterface
+
 !Array arguments
-INTEGER ATOMIMP(*),IJTABCALC(*),IJTABCALC_I(*),IOFGIJ(*),IQAT(*), &
-        IQCALC(*),JOFGIJ(*)
-DOUBLE PRECISION BRAVAIS(3,3),RBASIS(3,*),RCLSIMP(3,*)
+  integer :: atomimp(*), ijtabcalc(*), ijtabcalc_i(*), iofgij(*), iqat(*), &
+    iqcalc(*), jofgij(*)
+  double precision :: bravais(3, 3), rbasis(3, *), rclsimp(3, *)
 
 !Local scalars
-INTEGER I,IDO,II,J,JJ,NN
-LOGICAL OPT
+  integer :: i, ido, ii, j, jj, nn
+  logical :: opt
 
 !External subroutines
-EXTERNAL GIJCOND,GIJXCPL,OPT
+  external :: gijcond, gijxcpl, opt
 
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-WRITE (1337,'(79(1H=),/,15X,A)') 'SETGIJTAB: setting task-specific Gij pairs'
-WRITE (1337,'(79(1H=),/)')
+  write (1337, '(79(1H=),/,15X,A)') &
+    'SETGIJTAB: setting task-specific Gij pairs'
+  write (1337, '(79(1H=),/)')
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-ido = 0
+  ido = 0
 ! ======================================================================
-IF ( opt('CONDUCT ') ) CALL gijcond(ido,naez,rbasis,iqat,natomimp,  &
-    rclsimp,atomimp,ijtabcalc,natomimpd)
+  if (opt('CONDUCT ')) call gijcond(ido, naez, rbasis, iqat, natomimp, &
+    rclsimp, atomimp, ijtabcalc, natomimpd)
 ! ======================================================================
-IF ( opt('XCPL    ') ) CALL gijxcpl(ido,naez,rbasis,bravais,  &
-    linterface,nqcalc,iqcalc,natomimp,rclsimp,atomimp,ijtabcalc,  &
-    ijtabcalc_i,natomimpd)
+  if (opt('XCPL    ')) call gijxcpl(ido, naez, rbasis, bravais, linterface, &
+    nqcalc, iqcalc, natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, &
+    natomimpd)
 ! ======================================================================
-IF ( ido == 0 ) THEN
-  icc = 0
-  WRITE (6,99002)
-  RETURN
-END IF
+  if (ido==0) then
+    icc = 0
+    write (6, 110)
+    return
+  end if
 ! ======================================================================
-nofgij = 0
-DO i = 1,natomimp
-  nn = (i-1)*natomimp
-  DO j = 1,natomimp
-    IF ( ijtabcalc(nn+j) > 0 ) THEN
-      nofgij = nofgij + 1
-      IF ( nofgij > natomimpd*natomimpd ) THEN
-        WRITE (6,99001) 'NATOMIMPD',nofgij/natomimp
-        STOP
-      END IF
-      iofgij(nofgij) = i
-      jofgij(nofgij) = j
-    END IF
-  END DO
-END DO
-IF ( nofgij == 0 ) THEN
-  icc = 0
-  WRITE (6,99002)
-  RETURN
-END IF
+  nofgij = 0
+  do i = 1, natomimp
+    nn = (i-1)*natomimp
+    do j = 1, natomimp
+      if (ijtabcalc(nn+j)>0) then
+        nofgij = nofgij + 1
+        if (nofgij>natomimpd*natomimpd) then
+          write (6, 100) 'NATOMIMPD', nofgij/natomimp
+          stop
+        end if
+        iofgij(nofgij) = i
+        jofgij(nofgij) = j
+      end if
+    end do
+  end do
+  if (nofgij==0) then
+    icc = 0
+    write (6, 110)
+    return
+  end if
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-WRITE (1337,99003) natomimp,nofgij
-WRITE (1337,99004)
-WRITE (1337,99005)
-WRITE (1337,99004)
-DO i = 1,nofgij
-  ii = iofgij(i)
-  jj = jofgij(i)
-  WRITE (1337,99006) i,ii,atomimp(ii),(rclsimp(j,ii),j=1,3),jj,  &
-      atomimp(jj),(rclsimp(j,jj),j=1,3)
-END DO
-WRITE (1337,99004)
-WRITE (1337,*)
+  write (1337, 120) natomimp, nofgij
+  write (1337, 130)
+  write (1337, 140)
+  write (1337, 130)
+  do i = 1, nofgij
+    ii = iofgij(i)
+    jj = jofgij(i)
+    write (1337, 150) i, ii, atomimp(ii), (rclsimp(j,ii), j=1, 3), jj, &
+      atomimp(jj), (rclsimp(j,jj), j=1, 3)
+  end do
+  write (1337, 130)
+  write (1337, *)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-99001 FORMAT (6X,'brahim ERROR: please increase the global parameter'  &
-    ,/,6X,a,' to a value >=',i5,/)
-99002 FORMAT (6X,'WARNING: Subroutine entered with invalid task ',  &
-    'specification',/,6X,  &
-    '         ICC will be set to 0 - no Gij calculated - ', 'input check? ',/)
-99003 FORMAT (6X,'Number of different sites (NATOMIMP) :',i4,/,6X,  &
-    'Number of pairs set       (NOFGIJ)   :',i4)
-99004 FORMAT (8X,71('-'))
-99005 FORMAT (9X,'pair|',' I  IQ           position',9X,  &
+100 format (6x, 'brahim ERROR: please increase the global parameter', /, 6x, &
+    a, ' to a value >=', i5, /)
+110 format (6x, 'WARNING: Subroutine entered with invalid task ', &
+    'specification', /, 6x, &
+    '         ICC will be set to 0 - no Gij calculated - ', 'input check? ', &
+    /)
+120 format (6x, 'Number of different sites (NATOMIMP) :', i4, /, 6x, &
+    'Number of pairs set       (NOFGIJ)   :', i4)
+130 format (8x, 71('-'))
+140 format (9x, 'pair|', ' I  IQ           position', 9x, &
     'J  JQ           position')
-99006 FORMAT (9X,i3,' |',2(i3,1X),3F8.4,1X,2(i3,1X),3F8.4)
-99007 FORMAT (i5,2(i5,1X),3F10.6,1X,2(i5,1X),3F10.6)
-END SUBROUTINE setgijtab
+150 format (9x, i3, ' |', 2(i3,1x), 3f8.4, 1x, 2(i3,1x), 3f8.4)
+160 format (i5, 2(i5,1x), 3f10.6, 1x, 2(i5,1x), 3f10.6)
+end subroutine

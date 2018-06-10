@@ -1,121 +1,121 @@
 ! 04.10.95 *************************************************************
-SUBROUTINE dlke0(gllke,alat,naez,cls,nacls,naclsmax,rr,ezoa,atom,  &
-    bzkp,rcls,ginp)
+subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, &
+  bzkp, rcls, ginp)
 ! **********************************************************************
-IMPLICIT NONE
+  implicit none
 !     .. Parameters ..
-INCLUDE 'inc.p'
-! *********************************************************************
-! * For KREL = 1 (relativistic mode)                                  *
-! *                                                                   *
-! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
+  include 'inc.p'
 ! *          function, set up in the spin-independent non-relativstic *
 ! *          (l,m_l)-representation                                   *
 ! *                                                                   *
 ! *********************************************************************
 !     ..
-      INTEGER LMAX
-      PARAMETER (LMAX=LMAXD)
-      INTEGER LMGF0D
-      PARAMETER (LMGF0D= (LMAX+1)**2)
-      INTEGER ALMGF0
-      PARAMETER (ALMGF0=LMGF0D*NAEZD)
 !..
 !.. Scalar Arguments ..
-      DOUBLE PRECISION ALAT
-      INTEGER NAEZ,NACLSMAX
 !..
 !.. Array Arguments ..
+  integer :: lmax
+  parameter (lmax=lmaxd)
+  integer :: lmgf0d
+  parameter (lmgf0d=(lmax+1)**2)
+  integer :: almgf0
+  parameter (almgf0=lmgf0d*naezd)
 
 
-      DOUBLE COMPLEX GINP(LMGF0D*NACLSMAX,LMGF0D,*),GLLKE(ALMGF0,*)
-      DOUBLE PRECISION BZKP(*),RCLS(3,NACLSD,*),RR(3,0:NRD)
-      INTEGER ATOM(NACLSD,*),CLS(*),EZOA(NACLSD,*),NACLS(*)
+  double precision :: alat
+  integer :: naez, naclsmax
 !..
 !.. Local Scalars ..
-      INTEGER I,IC,IM,J,JN,M,N
 !..
 !.. Local Arrays ..
-      DOUBLE COMPLEX GLLKE1(ALMGF0,LMGF0D)
-      DOUBLE PRECISION KP(6)
+  double complex :: ginp(lmgf0d*naclsmax, lmgf0d, *), gllke(almgf0, *)
+  double precision :: bzkp(*), rcls(3, naclsd, *), rr(3, 0:nrd)
+  integer :: atom(naclsd, *), cls(*), ezoa(naclsd, *), nacls(*)
 !..
 !.. External Subroutines ..
-      EXTERNAL CINIT,DLKE1
+  integer :: i, ic, im, j, jn, m, n
 !..
 !.. Save statement ..
-      SAVE
+  double complex :: gllke1(almgf0, lmgf0d)
+  double precision :: kp(6)
 !      write(6,*) '>>> DLKE0 : Fourier-transforms the ',
 !     +           'GF of reference system'
+  external :: cinit, dlke1
 ! ----------------------------------------------------------------------
 
+  save
 !     .. External Functions ..
-LOGICAL :: opt
-EXTERNAL opt
 !     ..
-CALL cinit(almgf0*almgf0,gllke(1,1))
 
-DO  i = 1,naez
-  
-  
-  kp(1) = bzkp(1)
-  kp(2) = bzkp(2)
-  kp(3) = bzkp(3)
-  IF (opt('COMPLEX ')) THEN
-    kp(4) = bzkp(4)
-    kp(5) = bzkp(5)
-    kp(6) = bzkp(6)
-  END IF
-  
-  ic = cls(i)
-  CALL dlke1(gllke1,alat,nacls,naclsmax,rr,ezoa(1,i),atom(1,i),kp,  &
-      ic,ginp(1,1,ic),rcls(1,1,ic))
-  
-  DO  m = 1,lmgf0d
-    im = (i-1)*lmgf0d + m
-    DO  jn = 1,lmgf0d*naez
-      gllke(jn,im) = gllke(jn,im) + gllke1(jn,m)
-    END DO
-  END DO
-  
-  
-  
-END DO
 
-! ----------------------------------------------------------------------
-IF (opt('symG(k) ')) THEN
-  
-! -->   symmetrization
-  
-  DO  i = 1,naez
-    
-    kp(1) = -bzkp(1)
-    kp(2) = -bzkp(2)
-    kp(3) = -bzkp(3)
-    IF (opt('COMPLEX ')) THEN
-      kp(4) = -bzkp(4)
-      kp(5) = -bzkp(5)
-      kp(6) = -bzkp(6)
-    END IF
-    
+
+  logical :: opt
+  external :: opt
+
+  call cinit(almgf0*almgf0, gllke(1,1))
+
+  do i = 1, naez
+
+
+    kp(1) = bzkp(1)
+    kp(2) = bzkp(2)
+    kp(3) = bzkp(3)
+    if (opt('COMPLEX ')) then
+      kp(4) = bzkp(4)
+      kp(5) = bzkp(5)
+      kp(6) = bzkp(6)
+    end if
+
     ic = cls(i)
-    CALL dlke1(gllke1,alat,nacls,naclsmax,rr,ezoa(1,i),atom(1,i),  &
-        kp,ic,ginp(1,1,ic),rcls(1,1,ic))
-    
-    DO  j = 1,naez
-      DO  m = 1,lmgf0d
-        im = (i-1)*lmgf0d + m
-        DO  n = 1,lmgf0d
-          jn = (j-1)*lmgf0d + n
-          gllke(im,jn) = (gllke(im,jn)+gllke1(jn,m))/2.0D0
-        END DO
-      END DO
-    END DO
-    
-  END DO
-  
-END IF
+    call dlke1(gllke1, alat, nacls, naclsmax, rr, ezoa(1,i), atom(1,i), kp, &
+      ic, ginp(1,1,ic), rcls(1,1,ic))
+
+    do m = 1, lmgf0d
+      im = (i-1)*lmgf0d + m
+      do jn = 1, lmgf0d*naez
+        gllke(jn, im) = gllke(jn, im) + gllke1(jn, m)
+      end do
+    end do
 ! ----------------------------------------------------------------------
 
-RETURN
+! -->   symmetrization
+  end do
 
-END SUBROUTINE dlke0
+
+  if (opt('symG(k) ')) then
+
+
+
+    do i = 1, naez
+
+      kp(1) = -bzkp(1)
+      kp(2) = -bzkp(2)
+      kp(3) = -bzkp(3)
+      if (opt('COMPLEX ')) then
+        kp(4) = -bzkp(4)
+        kp(5) = -bzkp(5)
+        kp(6) = -bzkp(6)
+      end if
+! ----------------------------------------------------------------------
+      ic = cls(i)
+      call dlke1(gllke1, alat, nacls, naclsmax, rr, ezoa(1,i), atom(1,i), kp, &
+        ic, ginp(1,1,ic), rcls(1,1,ic))
+
+      do j = 1, naez
+        do m = 1, lmgf0d
+          im = (i-1)*lmgf0d + m
+          do n = 1, lmgf0d
+            jn = (j-1)*lmgf0d + n
+            gllke(im, jn) = (gllke(im,jn)+gllke1(jn,m))/2.0d0
+          end do
+        end do
+      end do
+
+    end do
+! 04.10.95 *************************************************************
+  end if
+! **********************************************************************
+!     .. Parameters ..
+  return
+! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
+end subroutine

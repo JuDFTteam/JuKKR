@@ -1,4 +1,4 @@
-SUBROUTINE dirbsmid(y,dydx,nv,xs,htot,nstep,yout,b,v,r,drdi,nmesh)
+subroutine dirbsmid(y, dydx, nv, xs, htot, nstep, yout, b, v, r, drdi, nmesh)
 !   ********************************************************************
 !   *                                                                  *
 !   *   modified midpoint step to support the  Burlisch-Stoer method   *
@@ -8,43 +8,43 @@ SUBROUTINE dirbsmid(y,dydx,nv,xs,htot,nstep,yout,b,v,r,drdi,nmesh)
 !   *                                                                  *
 !   ********************************************************************
 
-IMPLICIT NONE
+  implicit none
 
-INCLUDE 'sprkkr_rmesh.dim'
+  include 'sprkkr_rmesh.dim'
 
 ! Dummy arguments
-REAL*8 HTOT,XS
-INTEGER NMESH,NSTEP,NV
-REAL*8 B(NRMAX),DRDI(NRMAX),R(NRMAX),V(NRMAX)
-COMPLEX*16 DYDX(NV),Y(NV),YOUT(NV)
+  real *8 :: htot, xs
+  integer :: nmesh, nstep, nv
+  real *8 :: b(nrmax), drdi(nrmax), r(nrmax), v(nrmax)
+  complex *16 :: dydx(nv), y(nv), yout(nv)
 
 ! Local variables
-REAL*8 H,H2,X
-INTEGER I,N
-COMPLEX*16 SWAP,YM(NCFMAX),YN(NCFMAX)
+  real *8 :: h, h2, x
+  integer :: i, n
+  complex *16 :: swap, ym(ncfmax), yn(ncfmax)
 
-h = htot/nstep
-DO i = 1,nv
-  ym(i) = y(i)
-  yn(i) = y(i) + h*dydx(i)
-END DO
-x = xs + h
+  h = htot/nstep
+  do i = 1, nv
+    ym(i) = y(i)
+    yn(i) = y(i) + h*dydx(i)
+  end do
+  x = xs + h
 
-CALL dirbsrad(x,yn,yout,drdi,b,v,r,nmesh)
+  call dirbsrad(x, yn, yout, drdi, b, v, r, nmesh)
 
-h2 = 2.d0*h
-DO n = 2,nstep
-  DO i = 1,nv
-    swap = ym(i) + h2*yout(i)
-    ym(i) = yn(i)
-    yn(i) = swap
-  END DO
-  x = x + h
-  CALL dirbsrad(x,yn,yout,drdi,b,v,r,nmesh)
-END DO
-DO i = 1,nv
-  yout(i) = 0.5D0*(ym(i)+yn(i)+h*yout(i))
-  
-END DO
+  h2 = 2.d0*h
+  do n = 2, nstep
+    do i = 1, nv
+      swap = ym(i) + h2*yout(i)
+      ym(i) = yn(i)
+      yn(i) = swap
+    end do
+    x = x + h
+    call dirbsrad(x, yn, yout, drdi, b, v, r, nmesh)
+  end do
+  do i = 1, nv
+    yout(i) = 0.5d0*(ym(i)+yn(i)+h*yout(i))
 
-END SUBROUTINE dirbsmid
+  end do
+
+end subroutine

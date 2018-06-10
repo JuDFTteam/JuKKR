@@ -1,30 +1,30 @@
-SUBROUTINE coreerr(ERR,var,s,nsol,pow,qow,piw,qiw)
+subroutine coreerr(err, var, s, nsol, pow, qow, piw, qiw)
 !   ********************************************************************
 !   *                                                                  *
 !   *   CALCULATE THE MISMATCH OF THE RADIAL WAVE FUNCTIONS AT THE     *
 !   *   POINT  NMATCH  FOR OUT- AND INWARD INTEGRATION                 *
 !   *                                                                  *
 !   ********************************************************************
-      IMPLICIT NONE
+  implicit none
 ! Dummy arguments
-      INTEGER NSOL,S
-      REAL*8 ERR(4),PIW(2,2),POW(2,2),QIW(2,2),QOW(2,2),VAR(4)
+  integer :: nsol, s
+  real *8 :: err(4), piw(2, 2), pow(2, 2), qiw(2, 2), qow(2, 2), var(4)
 
 ! Local variables
-      INTEGER T
+  integer :: t
 
-ERR(1) = pow(s,s) - piw(s,s)*var(2)
-ERR(2) = qow(s,s) - qiw(s,s)*var(2)
+  err(1) = pow(s, s) - piw(s, s)*var(2)
+  err(2) = qow(s, s) - qiw(s, s)*var(2)
 
-IF ( nsol == 1 ) RETURN
+  if (nsol==1) return
 
-t = 3 - s
+  t = 3 - s
 
-ERR(1) = ERR(1) + pow(s,t)*var(3) - piw(s,t)*var(2)*var(4)
-ERR(2) = ERR(2) + qow(s,t)*var(3) - qiw(s,t)*var(2)*var(4)
-ERR(3) = pow(t,s) - piw(t,s)*var(2) + pow(t,t)*var(3) - piw(t,t)  &
-    *var(2)*var(4)
-ERR(4) = qow(t,s) - qiw(t,s)*var(2) + qow(t,t)*var(3) - qiw(t,t)  &
-    *var(2)*var(4)
+  err(1) = err(1) + pow(s, t)*var(3) - piw(s, t)*var(2)*var(4)
+  err(2) = err(2) + qow(s, t)*var(3) - qiw(s, t)*var(2)*var(4)
+  err(3) = pow(t, s) - piw(t, s)*var(2) + pow(t, t)*var(3) - &
+    piw(t, t)*var(2)*var(4)
+  err(4) = qow(t, s) - qiw(t, s)*var(2) + qow(t, t)*var(3) - &
+    qiw(t, t)*var(2)*var(4)
 
-END SUBROUTINE coreerr
+end subroutine

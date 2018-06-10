@@ -1,4 +1,4 @@
-SUBROUTINE rint4pts(y,jtop,z)
+subroutine rint4pts(y, jtop, z)
 !   ********************************************************************
 !   *                                                                  *
 !   *      perform the integral  Z(i)   =  INT   Y(i') di'             *
@@ -12,56 +12,55 @@ SUBROUTINE rint4pts(y,jtop,z)
 !   *                       REAL    - VERSION                          *
 !   *                                                                  *
 !   ********************************************************************
-IMPLICIT NONE
+  implicit none
 
 ! Dummy arguments
-INTEGER JTOP
-REAL*8 Y(JTOP),Z(JTOP)
+  integer :: jtop
+  real *8 :: y(jtop), z(jtop)
 ! Local variables
-INTEGER I,IG,J,K,M,N1,N2
-REAL*8 Q(5,5),Q5(5,5),S,SVN
-DATA Q5/0.D0,251.D0,232.D0,243.D0,224.D0,0.D0,646.D0,992.D0, &
-     918.D0,1024.D0,0.D0, - 264.D0,192.D0,648.D0,384.D0,0.D0, &
-     106.D0,32.D0,378.D0,1024.D0,0.D0, - 19.D0, - 8.D0, - 27.D0, &
-     224.D0/
+  integer :: i, ig, j, k, m, n1, n2
+  real *8 :: q(5, 5), q5(5, 5), s, svn
+  data q5/0.d0, 251.d0, 232.d0, 243.d0, 224.d0, 0.d0, 646.d0, 992.d0, 918.d0, &
+    1024.d0, 0.d0, -264.d0, 192.d0, 648.d0, 384.d0, 0.d0, 106.d0, 32.d0, &
+    378.d0, 1024.d0, 0.d0, -19.d0, -8.d0, -27.d0, 224.d0/
 
-DO i = 1,5
-  DO j = 1,5
-    q(i,j) = q5(i,j)/720.0D0
-  END DO
-END DO
+  do i = 1, 5
+    do j = 1, 5
+      q(i, j) = q5(i, j)/720.0d0
+    end do
+  end do
 
-z(1) = 0.0D0
-svn = z(1)
+  z(1) = 0.0d0
+  svn = z(1)
 
-DO ig = 1,jtop - 4,4
-  n1 = ig
-  n2 = ig + 4
-  DO m = n1 + 1,n2
-    i = m - n1 + 1
-    s = svn
-    DO k = n1,n2
-      j = k - n1 + 1
-      s = s + q(i,j)*y(k)
-    END DO
-    z(m) = s
-  END DO
-  svn = z(n2)
-END DO
+  do ig = 1, jtop - 4, 4
+    n1 = ig
+    n2 = ig + 4
+    do m = n1 + 1, n2
+      i = m - n1 + 1
+      s = svn
+      do k = n1, n2
+        j = k - n1 + 1
+        s = s + q(i, j)*y(k)
+      end do
+      z(m) = s
+    end do
+    svn = z(n2)
+  end do
 
-IF ( n2 /= jtop ) THEN
-  n1 = jtop - 4
-  n2 = jtop
-  svn = z(n1)
-  DO m = n1 + 1,n2
-    i = m - n1 + 1
-    s = svn
-    DO k = n1,n2
-      j = k - n1 + 1
-      s = s + q(i,j)*y(k)
-    END DO
-    z(m) = s
-  END DO
-END IF
+  if (n2/=jtop) then
+    n1 = jtop - 4
+    n2 = jtop
+    svn = z(n1)
+    do m = n1 + 1, n2
+      i = m - n1 + 1
+      s = svn
+      do k = n1, n2
+        j = k - n1 + 1
+        s = s + q(i, j)*y(k)
+      end do
+      z(m) = s
+    end do
+  end if
 
-END SUBROUTINE rint4pts
+end subroutine

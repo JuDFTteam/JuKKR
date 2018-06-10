@@ -1,19 +1,19 @@
 ! ************************************************************************
-INTEGER FUNCTION length(s,MAX)
+integer function length(s, max)
 ! ************************************************************************
 
-CHARACTER (LEN=1), INTENT(IN OUT)        :: s(*)
-INTEGER, INTENT(IN)                      :: MAX
+  character (len=1), intent (inout) :: s(*)
+  integer, intent (in) :: max
 
-INTEGER :: i
+  integer :: i
 ! ------------------------------------------------------------------------
-i = MAX
+  i = max
 
-DO  WHILE (s(i) == ' ')
-  i = i - 1
-END DO
+  do while (s(i)==' ')
+    i = i - 1
+  end do
 
-length = i
+  length = i
 
-RETURN
-END FUNCTION length
+  return
+end function

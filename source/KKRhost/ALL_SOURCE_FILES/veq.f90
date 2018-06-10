@@ -1,14 +1,14 @@
 ! ************************************************************************
-SUBROUTINE veq(a,b)
+subroutine veq(a, b)
 ! ************************************************************************
-implicit none
+  implicit none
 
-DOUBLE PRECISION :: a(*)
-DOUBLE PRECISION :: b(*)
+  double precision :: a(*)
+  double precision :: b(*)
 
-INTEGER :: i
+  integer :: i
 
-DO  i=1,3
-  b(i)=a(i)
-END DO
-END SUBROUTINE veq
+  do i = 1, 3
+    b(i) = a(i)
+  end do
+end subroutine

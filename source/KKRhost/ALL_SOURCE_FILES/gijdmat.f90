@@ -1,5 +1,5 @@
-SUBROUTINE gijdmat(tauq,tsst,mssq,dmat,dtil,cfctorinv,iprint,  &
-        ie,it,krel,lmmaxd)
+subroutine gijdmat(tauq, tsst, mssq, dmat, dtil, cfctorinv, iprint, ie, it, &
+  krel, lmmaxd)
 ! **********************************************************************
 ! * Subroutine to get the projection matrices                          *
 ! *                                                                    *
@@ -24,73 +24,73 @@ SUBROUTINE gijdmat(tauq,tsst,mssq,dmat,dtil,cfctorinv,iprint,  &
 ! *                                      v.popescu Oct. 2004           *
 ! **********************************************************************
 
-      IMPLICIT NONE
+  implicit none
 !..
 !.. Arguments ..
-INTEGER IPRINT,LMMAXD
-INTEGER IE,IT,KREL
-DOUBLE COMPLEX CFCTORINV
-DOUBLE COMPLEX TAUQ(LMMAXD,LMMAXD),TSST(LMMAXD,LMMAXD), &
-               MSSQ(LMMAXD,LMMAXD)
-DOUBLE COMPLEX DMAT(LMMAXD,LMMAXD),DTIL(LMMAXD,LMMAXD)
+  integer :: iprint, lmmaxd
+  integer :: ie, it, krel
+  double complex :: cfctorinv
+  double complex :: tauq(lmmaxd, lmmaxd), tsst(lmmaxd, lmmaxd), &
+    mssq(lmmaxd, lmmaxd)
+  double complex :: dmat(lmmaxd, lmmaxd), dtil(lmmaxd, lmmaxd)
 !..
 !.. Locals ..
-INTEGER IK,INFO,I1,I2
-INTEGER IPVT(LMMAXD)
-DOUBLE COMPLEX CONE,CZERO
-DOUBLE COMPLEX GLL(LMMAXD,LMMAXD),TSSQ(LMMAXD,LMMAXD), &
-               TPG(LMMAXD,LMMAXD),XC(LMMAXD,LMMAXD)
-CHARACTER*18 BANNER
+  integer :: ik, info, i1, i2
+  integer :: ipvt(lmmaxd)
+  double complex :: cone, czero
+  double complex :: gll(lmmaxd, lmmaxd), tssq(lmmaxd, lmmaxd), &
+    tpg(lmmaxd, lmmaxd), xc(lmmaxd, lmmaxd)
+  character (len=18) :: banner
 !..
 !.. Externals
-      EXTERNAL CMATSTR,GETDMAT,ZCOPY,ZGEMM,ZGETRF,ZGETRI,ZSCAL
+  external :: cmatstr, getdmat, zcopy, zgemm, zgetrf, zgetri, zscal
 !..
 !.. Data
-      DATA CONE / (1D0,0D0) /
-      DATA CZERO / (0D0,0D0) /
+  data cone/(1d0, 0d0)/
+  data czero/(0d0, 0d0)/
 ! --> get G(CPA) using the same procedure as for GMATLL in < KLOOPZ >
 !           G(CPA) = -MSSQ - MSSQ * TAUQ * MSSQ
 
-DO i2 = 1,lmmaxd
-  DO i1 = 1,lmmaxd
-    tpg(i1,i2) = -cone*tauq(i1,i2)
-  END DO
-END DO
+  do i2 = 1, lmmaxd
+    do i1 = 1, lmmaxd
+      tpg(i1, i2) = -cone*tauq(i1, i2)
+    end do
+  end do
 
-CALL zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,mssq,  &
-    lmmaxd,tpg,lmmaxd,czero,xc,lmmaxd)
+  call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, mssq, lmmaxd, tpg, &
+    lmmaxd, czero, xc, lmmaxd)
 
-CALL zcopy(lmmaxd*lmmaxd,mssq,1,gll,1)
+  call zcopy(lmmaxd*lmmaxd, mssq, 1, gll, 1)
 
-CALL zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,-cone,xc,lmmaxd,  &
-    mssq,lmmaxd,-cone,gll,lmmaxd)
+  call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, -cone, xc, lmmaxd, mssq, &
+    lmmaxd, -cone, gll, lmmaxd)
 
-CALL zscal(lmmaxd*lmmaxd,cfctorinv,gll,1)
+  call zscal(lmmaxd*lmmaxd, cfctorinv, gll, 1)
 
 ! --> invert MSSQ to get TSSQ
 
-DO i2 = 1,lmmaxd
-  DO i1 = 1,lmmaxd
-    tssq(i1,i2) = mssq(i1,i2) * cfctorinv
-  END DO
-END DO
-CALL zgetrf(lmmaxd,lmmaxd,tssq,lmmaxd,ipvt,info)
-CALL zgetri(lmmaxd,tssq,lmmaxd,ipvt,xc,lmmaxd*lmmaxd,info)
+  do i2 = 1, lmmaxd
+    do i1 = 1, lmmaxd
+      tssq(i1, i2) = mssq(i1, i2)*cfctorinv
+    end do
+  end do
+  call zgetrf(lmmaxd, lmmaxd, tssq, lmmaxd, ipvt, info)
+  call zgetri(lmmaxd, tssq, lmmaxd, ipvt, xc, lmmaxd*lmmaxd, info)
 
 ! --> get projection matrices from G(CPA)
 !     call getdmat with t,c for the local arg. c,t
 
-CALL getdmat(gll,dmat,dtil,xc,lmmaxd,tsst,tssq,lmmaxd)
+  call getdmat(gll, dmat, dtil, xc, lmmaxd, tsst, tssq, lmmaxd)
 
-IF ( iprint <= 1 ) RETURN
+  if (iprint<=1) return
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-ik = 2*krel + 1
-WRITE(banner,'("DMAT IE=",I3," IT=",I3)') ie,it
-CALL cmatstr(banner,18,dmat,lmmaxd,lmmaxd,ik,ik,0,1D-10,6)
+  ik = 2*krel + 1
+  write (banner, '("DMAT IE=",I3," IT=",I3)') ie, it
+  call cmatstr(banner, 18, dmat, lmmaxd, lmmaxd, ik, ik, 0, 1d-10, 6)
 
-WRITE(banner,'("DTIL IE=",I3," IT=",I3)') ie,it
-CALL cmatstr(banner,18,dtil,lmmaxd,lmmaxd,ik,ik,0,1D-10,6)
+  write (banner, '("DTIL IE=",I3," IT=",I3)') ie, it
+  call cmatstr(banner, 18, dtil, lmmaxd, lmmaxd, ik, ik, 0, 1d-10, 6)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 
-END SUBROUTINE gijdmat
+end subroutine

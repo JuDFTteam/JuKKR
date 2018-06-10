@@ -18,234 +18,240 @@
 !> - Impurity-program adopted feb. 2004 (according to N. Papanikalou)
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine VMADELBLK(CMOM,CMINST,LMAX,NSPIN,NAEZ,V,ZAT,R,IRWS,IRCUT,IPAN,KSHAPE, &
-   NOQ,KAOEZ,CONC,CATOM,ICC,HOSTIMP,VINTERS,IRM,NEMB,LMPOT,NPOTD,LMMAXD,NATYP)
+subroutine vmadelblk(cmom, cminst, lmax, nspin, naez, v, zat, r, irws, ircut, &
+  ipan, kshape, noq, kaoez, conc, catom, icc, hostimp, vinters, irm, nemb, &
+  lmpot, npotd, lmmaxd, natyp)
 
-   use Constants
-   use global_variables
+  use :: constants
+  use :: global_variables
 
-   implicit none
+  implicit none
 
-   ! .. Input variables
-   integer, intent(in) :: ICC       !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-   integer, intent(in) :: IRM       !< Maximum number of radial points
-   integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
-   integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
-   integer, intent(in) :: NEMB      !< Number of 'embedding' positions
-   integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
-   integer, intent(in) :: NSPIN     !< Counter for spin directions
-   integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-   integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-   integer, intent(in) :: KSHAPE    !< Exact treatment of WS cell
-   integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-   ! .. Array Arguments
-   integer, dimension(NAEZ), intent(in)            :: NOQ      !< Number of diff. atom types located
-   integer, dimension(NATYP), intent(in)           :: IRWS     !< Position of atoms in the unit cell in units of bravais vectors
-   integer, dimension(NATYP), intent(in)           :: IPAN     !< Number of panels in non-MT-region
-   integer, dimension(0:NATYP), intent(in)         :: HOSTIMP
-   integer, dimension(0:IPAND,NATYP), intent(in)   :: IRCUT    !< R points of panel borders
-   integer, dimension(NATYP,NAEZ+NEMB), intent(in) :: KAOEZ    !< Kind of atom at site in elem. cell
-   double precision, dimension(NATYP), intent(in)        :: ZAT      !< Nuclear charge
-   double precision, dimension(NATYP), intent(in)        :: CONC     !< Concentration of a given atom
-   double precision, dimension(NATYP), intent(in)        :: CATOM
-   double precision, dimension(IRM,NATYP), intent(in)    :: R        !< Radial mesh ( in units a Bohr)
-   double precision, dimension(LMPOT,NATYP), intent(in)  :: CMOM     !< LM moment of total charge
-   double precision, dimension(LMPOT,NATYP), intent(in)  :: CMINST   !< charge moment of interstitial
-   ! .. Input/Ouput variables
-   double precision, dimension(IRM,LMPOT,NPOTD), intent(inout) :: V
-   ! .. Output variables
-   double precision, dimension(LMPOT,NAEZ), intent(out) :: VINTERS
-   ! .. Local Scalars
-   integer :: LRECABMAD,IREC
-   integer :: I,L,LM,LM2,LMMAX,M,IO1,IO2,IPOT,IQ1,IQ2
-   integer :: IRS1,ISPIN,IT1,IT2,NOQVAL
-   double precision :: AC
-   ! .. Local Arrays
-   double precision, dimension(LMPOT) :: BVMAD  !< Structure dependent matrix
-   double precision, dimension(LMPOT,LMPOT) :: AVMAD  !< Structure dependent matrix
-   logical :: OPT
-   ! .. Intrinsic Functions ..
-   intrinsic :: SQRT
-   !----------------------------------------------------------------------------
-   write(1337,FMT=99001)
-   write(1337,FMT=99002)
-   !
-   LRECABMAD = WLENGTH*2*LMPOT*LMPOT + WLENGTH*2*LMPOT
-   open (69,ACCESS='direct',RECL=LRECABMAD,FILE='abvmad.unformatted',FORM='unformatted')
-   !
-   LMMAX = (LMAX+1)*(LMAX+1)
-   !
-   if (ICC.NE.0) then
-      do IQ1=1,NAEZ
-         do LM=1,LMPOT
-            VINTERS(LM,IQ1) = 0D0
-         end do
+! .. Input variables
+  integer, intent (in) :: icc !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+  integer, intent (in) :: irm !< Maximum number of radial points
+  integer, intent (in) :: naez !< Number of atoms in unit cell
+  integer, intent (in) :: lmax !< Maximum l component in wave function expansion
+  integer, intent (in) :: nemb !< Number of 'embedding' positions
+  integer, intent (in) :: natyp !< Number of kinds of atoms in unit cell
+  integer, intent (in) :: nspin !< Counter for spin directions
+  integer, intent (in) :: lmpot !< (LPOT+1)**2
+  integer, intent (in) :: npotd !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+  integer, intent (in) :: kshape !< Exact treatment of WS cell
+  integer, intent (in) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
+! .. Array Arguments
+  integer, dimension (naez), intent (in) :: noq !< Number of diff. atom types located
+  integer, dimension (natyp), intent (in) :: irws !< Position of atoms in the unit cell in units of bravais vectors
+  integer, dimension (natyp), intent (in) :: ipan !< Number of panels in non-MT-region
+  integer, dimension (0:natyp), intent (in) :: hostimp
+  integer, dimension (0:ipand, natyp), intent (in) :: ircut !< R points of panel borders
+  integer, dimension (natyp, naez+nemb), intent (in) :: kaoez !< Kind of atom at site in elem. cell
+  double precision, dimension (natyp), intent (in) :: zat !< Nuclear charge
+  double precision, dimension (natyp), intent (in) :: conc !< Concentration of a given atom
+  double precision, dimension (natyp), intent (in) :: catom
+  double precision, dimension (irm, natyp), intent (in) :: r !< Radial mesh ( in units a Bohr)
+  double precision, dimension (lmpot, natyp), intent (in) :: cmom !< LM moment of total charge
+  double precision, dimension (lmpot, natyp), intent (in) :: cminst !< charge moment of interstitial
+! .. Input/Ouput variables
+  double precision, dimension (irm, lmpot, npotd), intent (inout) :: v
+! .. Output variables
+  double precision, dimension (lmpot, naez), intent (out) :: vinters
+! .. Local Scalars
+  integer :: lrecabmad, irec
+  integer :: i, l, lm, lm2, lmmax, m, io1, io2, ipot, iq1, iq2
+  integer :: irs1, ispin, it1, it2, noqval
+  double precision :: ac
+! .. Local Arrays
+  double precision, dimension (lmpot) :: bvmad !< Structure dependent matrix
+  double precision, dimension (lmpot, lmpot) :: avmad !< Structure dependent matrix
+  logical :: opt
+! .. Intrinsic Functions ..
+  intrinsic :: sqrt
+!----------------------------------------------------------------------------
+  write (1337, fmt=100)
+  write (1337, fmt=110)
+!
+  lrecabmad = wlength*2*lmpot*lmpot + wlength*2*lmpot
+  open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', &
+    form='unformatted')
+!
+  lmmax = (lmax+1)*(lmax+1)
+!
+  if (icc/=0) then
+    do iq1 = 1, naez
+      do lm = 1, lmpot
+        vinters(lm, iq1) = 0d0
       end do
-   end if
-   !----------------------------------------------------------------------------
-   ! Loop over all types in unit cell
-   !----------------------------------------------------------------------------
-   do IQ1 = 1,NAEZ               ! added bauer 2/7/2012
-      NOQVAL=NOQ(IQ1)            ! added bauer 2/7/2012
-      if (NOQVAL<1) NOQVAL=1     ! added bauer 2/7/2012
-      do IO1 = 1,NOQVAL          ! added bauer 2/7/2012
-         IT1 = KAOEZ(IO1,IQ1)    ! added bauer 2/7/2012
+    end do
+  end if
+!----------------------------------------------------------------------------
+! Loop over all types in unit cell
+!----------------------------------------------------------------------------
+  do iq1 = 1, naez ! added bauer 2/7/2012
+    noqval = noq(iq1) ! added bauer 2/7/2012
+    if (noqval<1) noqval = 1 ! added bauer 2/7/2012
+    do io1 = 1, noqval ! added bauer 2/7/2012
+      it1 = kaoez(io1, iq1) ! added bauer 2/7/2012
 
-         !----------------------------------------------------------------------
-         ! Take a site occupied by atom IT1
-         !----------------------------------------------------------------------
-         if (IT1/=-1) then                ! added bauer 2/7/2012
-            if ( KSHAPE.NE.0 ) then
-               IRS1 = IRCUT(IPAN(IT1),IT1)
-            else
-               IRS1 = IRWS(IT1)
-            end if
-         end if                           ! added bauer 2/7/2012
-         !----------------------------------------------------------------------
-         do L = 0,LMAX
-            !-------------------------------------------------------------------
-            do M = -L,L
-               LM = L*L + L + M + 1
-               AC = 0.0D0
-               !----------------------------------------------------------------
-               if ( NAEZ.EQ.1 ) then
-                  IREC = IQ1 + NAEZ*(IQ1-1)
-                  read(69,REC=IREC) AVMAD,BVMAD
-                  !-------------------------------------------------------------
-                  ! Loop over all occupants of site IQ2=IQ1
-                  !-------------------------------------------------------------
-                  do IO2 = 1,NOQ(IQ1)
-                     IT2 = KAOEZ(IO2,IQ1)
-                     !----------------------------------------------------------
-                     ! lm = 1 component disappears if there is only one host atom
-                     ! take moments of sphere
-                     !----------------------------------------------------------
-                     do LM2 = 2,LMMAX
-                        AC = AC + AVMAD(LM,LM2)*CMOM(LM2,IT2)*CONC(IT2)
-                     end do
-                     !----------------------------------------------------------
-                     ! Add contribution of interstial in case of shapes
-                     !----------------------------------------------------------
-                     if ( KSHAPE.NE.0 ) then
-                        do LM2 = 2,LMMAX
-                           AC = AC + AVMAD(LM,LM2)*CMINST(LM2,IT2)*CONC(IT2)
-                        end do
-                     end if
-                  end do
-                  !-------------------------------------------------------------
-               else
-                  !-------------------------------------------------------------
-                  ! Loop over all sites
-                  !-------------------------------------------------------------
-                  do IQ2 = 1,NAEZ
-                     IREC = IQ2 + NAEZ*(IQ1-1)
-                     read(69,REC=IREC) AVMAD,BVMAD
-                     !----------------------------------------------------------
-                     ! Loop over all occupants of site IQ2
-                     !----------------------------------------------------------
-                     do IO2 = 1,NOQ(IQ2)
-                        !
-                        IT2 = KAOEZ(IO2,IQ2)
-                        AC = AC + BVMAD(LM)*ZAT(IT2)*CONC(IT2)
-                        !-------------------------------------------------------
-                        ! Take moments of sphere
-                        !-------------------------------------------------------
-                        do LM2 = 1,LMMAX
-                           AC = AC + AVMAD(LM,LM2)*CMOM(LM2,IT2)*CONC(IT2)
-                        end do
-                        !-------------------------------------------------------
-                        ! Add contribution of interstial in case of shapes
-                        !-------------------------------------------------------
-                        if ( KSHAPE.NE.0 ) then
-                           do LM2 = 1,LMMAX
-                              AC = AC + AVMAD(LM,LM2)*CMINST(LM2,IT2)*CONC(IT2)
-                           end do
-                        end if
-                     end do    ! IO2 = 1, NOQ(IQ2)
-                     !----------------------------------------------------------
-                  end do       ! IQ2 = 1, NAEZ
-                  !-------------------------------------------------------------
-               end if          ! NAEZ.GT.1
-               !----------------------------------------------------------------
-               if ( LM.eq.1 ) then
-                  write (1337,FMT=99003) IT1,(CATOM(IT1)-ZAT(IT1)),(AC/SQRT(4.D0*PI))
-               endif
-               !----------------------------------------------------------------
-               ! Add to v the intercell-potential
-               !----------------------------------------------------------------
-               !----------------------------------------------------------------
-               ! SPIN
-               !----------------------------------------------------------------
-               do ISPIN = 1,NSPIN
-                  !-------------------------------------------------------------
-                  ! Determine the right potential number
-                  !-------------------------------------------------------------
-                  IPOT = NSPIN*(IT1-1) + ISPIN
-                  !-------------------------------------------------------------
-                  ! In the case of l=0 : r(1)**l is not defined
-                  !-------------------------------------------------------------
-                  if (IT1/=-1) then                ! added bauer 2/7/2012
-                     if ( L.EQ.0 ) V(1,1,IPOT) = V(1,1,IPOT) + AC
-                     do I = 2,IRS1
-                        V(I,LM,IPOT) = V(I,LM,IPOT) + (-R(I,IT1))**L*AC
-                     end do
-                  end if
-               end do                              ! added bauer 2/7/2012
-               !----------------------------------------------------------------
-               ! SPIN
-               !----------------------------------------------------------------
-               if (ICC.NE.0 .or. OPT('KKRFLEX ')) then
-                  LM = L*L + L + M + 1
-                  write(1337,*) 'ac',iq1,lm,ac
-                  VINTERS(LM,IQ1) = AC
-               end if
-               !
+!----------------------------------------------------------------------
+! Take a site occupied by atom IT1
+!----------------------------------------------------------------------
+      if (it1/=-1) then ! added bauer 2/7/2012
+        if (kshape/=0) then
+          irs1 = ircut(ipan(it1), it1)
+        else
+          irs1 = irws(it1)
+        end if
+      end if ! added bauer 2/7/2012
+!----------------------------------------------------------------------
+      do l = 0, lmax
+!-------------------------------------------------------------------
+        do m = -l, l
+          lm = l*l + l + m + 1
+          ac = 0.0d0
+!----------------------------------------------------------------
+          if (naez==1) then
+            irec = iq1 + naez*(iq1-1)
+            read (69, rec=irec) avmad, bvmad
+!-------------------------------------------------------------
+! Loop over all occupants of site IQ2=IQ1
+!-------------------------------------------------------------
+            do io2 = 1, noq(iq1)
+              it2 = kaoez(io2, iq1)
+!----------------------------------------------------------
+! lm = 1 component disappears if there is only one host atom
+! take moments of sphere
+!----------------------------------------------------------
+              do lm2 = 2, lmmax
+                ac = ac + avmad(lm, lm2)*cmom(lm2, it2)*conc(it2)
+              end do
+!----------------------------------------------------------
+! Add contribution of interstial in case of shapes
+!----------------------------------------------------------
+              if (kshape/=0) then
+                do lm2 = 2, lmmax
+                  ac = ac + avmad(lm, lm2)*cminst(lm2, it2)*conc(it2)
+                end do
+              end if
             end do
-            !-------------------------------------------------------------------
-         end do
-         !----------------------------------------------------------------------
+!-------------------------------------------------------------
+          else
+!-------------------------------------------------------------
+! Loop over all sites
+!-------------------------------------------------------------
+            do iq2 = 1, naez
+              irec = iq2 + naez*(iq1-1)
+              read (69, rec=irec) avmad, bvmad
+!----------------------------------------------------------
+! Loop over all occupants of site IQ2
+!----------------------------------------------------------
+              do io2 = 1, noq(iq2)
+!
+                it2 = kaoez(io2, iq2)
+                ac = ac + bvmad(lm)*zat(it2)*conc(it2)
+!-------------------------------------------------------
+! Take moments of sphere
+!-------------------------------------------------------
+                do lm2 = 1, lmmax
+                  ac = ac + avmad(lm, lm2)*cmom(lm2, it2)*conc(it2)
+                end do
+!-------------------------------------------------------
+! Add contribution of interstial in case of shapes
+!-------------------------------------------------------
+                if (kshape/=0) then
+                  do lm2 = 1, lmmax
+                    ac = ac + avmad(lm, lm2)*cminst(lm2, it2)*conc(it2)
+                  end do
+                end if
+              end do ! IO2 = 1, NOQ(IQ2)
+!----------------------------------------------------------
+            end do ! IQ2 = 1, NAEZ
+!-------------------------------------------------------------
+          end if ! NAEZ.GT.1
+!----------------------------------------------------------------
+          if (lm==1) then
+            write (1337, fmt=120) it1, (catom(it1)-zat(it1)), &
+              (ac/sqrt(4.d0*pi))
+          end if
+!----------------------------------------------------------------
+! Add to v the intercell-potential
+!----------------------------------------------------------------
+!----------------------------------------------------------------
+! SPIN
+!----------------------------------------------------------------
+          do ispin = 1, nspin
+!-------------------------------------------------------------
+! Determine the right potential number
+!-------------------------------------------------------------
+            ipot = nspin*(it1-1) + ispin
+!-------------------------------------------------------------
+! In the case of l=0 : r(1)**l is not defined
+!-------------------------------------------------------------
+            if (it1/=-1) then ! added bauer 2/7/2012
+              if (l==0) v(1, 1, ipot) = v(1, 1, ipot) + ac
+              do i = 2, irs1
+                v(i, lm, ipot) = v(i, lm, ipot) + (-r(i,it1))**l*ac
+              end do
+            end if
+          end do ! added bauer 2/7/2012
+!----------------------------------------------------------------
+! SPIN
+!----------------------------------------------------------------
+          if (icc/=0 .or. opt('KKRFLEX ')) then
+            lm = l*l + l + m + 1
+            write (1337, *) 'ac', iq1, lm, ac
+            vinters(lm, iq1) = ac
+          end if
+!
+        end do
+!-------------------------------------------------------------------
       end do
-   end do
-   !----------------------------------------------------------------------------
-   close(69)
-   !----------------------------------------------------------------------------
-   write(1337,*) 'ICC in VMADELBLK',ICC
-   write(1337,'(25X,30(1H-),/)')
-   write(1337,'(79(1H=))')
-   !
-   if ( (ICC==0) .and. (.not.OPT('KKRFLEX ')) ) return
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Now Prepare output for Impurity calculation
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   open (91,FILE='intercell_ref',STATUS='unknown',FORM='formatted')
-   write(1337,*)
-   write(1337,*) '                     ','Writing intercell potential for impurity'
-   write(1337,'(/,20X,55(1H-))')
-   write(1337,99004) HOSTIMP(0),LMMAX
-   write(1337,'(20X,55(1H-),/,35X,"  i host lm  Vint")')
-   do I=1,HOSTIMP(0)
-      write(1337,*)
-      LM = 1
-      write(1337,'(35X,I4,I4,I3,1X,F10.6)') I, HOSTIMP(I),LM,VINTERS(LM,HOSTIMP(I))
-      do LM=2,9
-         write (1337,'(43X,I3,1X,F10.6)') LM,VINTERS(LM,HOSTIMP(I))
-      end do
-      write(1337,'(20X,55(1H-))')
-   end do
-   write(1337,'(79(1H=),/)')
-   !
-   write(91,99005) HOSTIMP(0),LMMAX
-   do I=1,HOSTIMP(0)
-      write(91,99006) (VINTERS(LM,HOSTIMP(I)),LM=1,LMMAX)
-   end do
-   close(91)
+!----------------------------------------------------------------------
+    end do
+  end do
+!----------------------------------------------------------------------------
+  close (69)
+!----------------------------------------------------------------------------
+  write (1337, *) 'ICC in VMADELBLK', icc
+  write (1337, '(25X,30(1H-),/)')
+  write (1337, '(79(1H=))')
+!
+  if ((icc==0) .and. (.not. opt('KKRFLEX '))) return
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Now Prepare output for Impurity calculation
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  open (91, file='intercell_ref', status='unknown', form='formatted')
+  write (1337, *)
+  write (1337, *) '                     ', &
+    'Writing intercell potential for impurity'
+  write (1337, '(/,20X,55(1H-))')
+  write (1337, 130) hostimp(0), lmmax
+  write (1337, '(20X,55(1H-),/,35X,"  i host lm  Vint")')
+  do i = 1, hostimp(0)
+    write (1337, *)
+    lm = 1
+    write (1337, '(35X,I4,I4,I3,1X,F10.6)') i, hostimp(i), lm, &
+      vinters(lm, hostimp(i))
+    do lm = 2, 9
+      write (1337, '(43X,I3,1X,F10.6)') lm, vinters(lm, hostimp(i))
+    end do
+    write (1337, '(20X,55(1H-))')
+  end do
+  write (1337, '(79(1H=),/)')
+!
+  write (91, 140) hostimp(0), lmmax
+  do i = 1, hostimp(0)
+    write (91, 150)(vinters(lm,hostimp(i)), lm=1, lmmax)
+  end do
+  close (91)
 
-   return
-   !
-   99001 format (79(1H=),/,18X,' MADELUNG POTENTIALS ','(spherically averaged) ')
-   99002 format (/,25X,' ATOM ','  Delta_Q  ','     VMAD',/,25X,30(1H-))
-   99003 format (25X,I4,2X,F10.6,1X,F12.6)
-   99004 format (22X,I4,' host atoms, LMPOT = ',I2,' output up to LM = 9')
-   99005 format (3I6)
-   99006 format (4D20.10)
-end subroutine VMADELBLK
+  return
+!
+100 format (79('='), /, 18x, ' MADELUNG POTENTIALS ', &
+    '(spherically averaged) ')
+110 format (/, 25x, ' ATOM ', '  Delta_Q  ', '     VMAD', /, 25x, 30('-'))
+120 format (25x, i4, 2x, f10.6, 1x, f12.6)
+130 format (22x, i4, ' host atoms, LMPOT = ', i2, ' output up to LM = 9')
+140 format (3i6)
+150 format (4d20.10)
+end subroutine

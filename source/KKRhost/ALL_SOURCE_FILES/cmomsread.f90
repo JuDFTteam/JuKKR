@@ -1,5 +1,5 @@
-SUBROUTINE cmomsread(nlbasis,nrbasis,naez,cmomhost,vacflag,kaoez,  &
-    natypd,nembd1,lmpotd)
+subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, &
+  nembd1, lmpotd)
 ! **********************************************************************
 ! *                                                                    *
 ! * This subroutine reads in the CMOMHOST from the decimation files    *
@@ -19,89 +19,90 @@ SUBROUTINE cmomsread(nlbasis,nrbasis,naez,cmomhost,vacflag,kaoez,  &
 ! *                                                  29.10.99          *
 ! *                                                  05.06.04          *
 ! **********************************************************************
-      IMPLICIT NONE
+  implicit none
 !..
 !.. Arguments
-      INTEGER LMPOTD,NATYPD,NEMBD1
-      INTEGER NAEZ,NLBASIS,NRBASIS
-      DOUBLE PRECISION CMOMHOST(LMPOTD,NEMBD1)
-      INTEGER KAOEZ(NATYPD,*)
-      LOGICAL VACFLAG(2)
+  integer :: lmpotd, natypd, nembd1
+  integer :: naez, nlbasis, nrbasis
+  double precision :: cmomhost(lmpotd, nembd1)
+  integer :: kaoez(natypd, *)
+  logical :: vacflag(2)
 !..
 !.. Local variables ..
-      DOUBLE PRECISION C00(LMPOTD)
-      CHARACTER*5 CHHOST(2)
-      INTEGER IH,IH1,IHL,IHOST,LM,LMPOTL,NAEZL,NATHOST
+  double precision :: c00(lmpotd)
+  character (len=5) :: chhost(2)
+  integer :: ih, ih1, ihl, ihost, lm, lmpotl, naezl, nathost
 !..
 !.. Data statements
-      DATA CHHOST/'LEFT ','RIGHT'/
+  data chhost/'LEFT ', 'RIGHT'/
 !..
-WRITE (1337,'(5X,A,/,8X,30(1H-),/,8X,3A6,A10,/,8X,30(1H-))')  &
-    'Reading in host charge moments ( SCFSTEPS > 1 )',  &
-    ' HOST ','  IBAS','  ATOM','   CMOM(1)'
+  write (1337, '(5X,A,/,8X,30(1H-),/,8X,3A6,A10,/,8X,30(1H-))') &
+    'Reading in host charge moments ( SCFSTEPS > 1 )', ' HOST ', '  IBAS', &
+    '  ATOM', '   CMOM(1)'
 ! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
-DO ihost = 1,2
-  nathost = nlbasis
-  IF ( ihost == 2 ) nathost = nrbasis
-  WRITE (1337,'(8X,A5,1X,$)') chhost(ihost)
+  do ihost = 1, 2
+    nathost = nlbasis
+    if (ihost==2) nathost = nrbasis
+    write (1337, '(8X,A5,1X,$)') chhost(ihost)
 ! ----------------------------------------------------------------------
-  IF ( vacflag(ihost) ) THEN
-    DO ih = 1,nlbasis
-      DO lm = 1,lmpotd
-        cmomhost(lm,(ihost-1)*nlbasis+ih) = 0.d0
+    if (vacflag(ihost)) then
+      do ih = 1, nlbasis
+        do lm = 1, lmpotd
+          cmomhost(lm, (ihost-1)*nlbasis+ih) = 0.d0
 ! mapping the CMOMHOST array, ordering is important
-      END DO
-    END DO
-    WRITE (1337,'(A)') ' Vacuum setting    0.000'
-    IF ( ihost == 1 ) THEN
-      WRITE (1337,'(14X,24(1H-))')
-    ELSE
-      WRITE (1337,'(8X,30(1H-))')
-    END IF
+        end do
+      end do
+      write (1337, '(A)') ' Vacuum setting    0.000'
+      if (ihost==1) then
+        write (1337, '(14X,24(1H-))')
+      else
+        write (1337, '(8X,30(1H-))')
+      end if
 ! ----------------------------------------------------------------------
-  ELSE
-    READ (36+ihost,99002) naezl,lmpotl
+    else
+      read (36+ihost, 110) naezl, lmpotl
 ! ......................................................................
-    IF ( naezl /= nathost ) THEN
-      WRITE (6,'(/,5X,2A)') 'ERROR: ', 'host not compatible with your input.'
-      WRITE (6,'(/,12X,A,I3,A,I3)') 'Charge moments tabulated for',naezl,  &
-          ' host atoms, input NBASIS =',nathost
-      STOP '       < CMOMSREAD > '
-    END IF
+      if (naezl/=nathost) then
+        write (6, '(/,5X,2A)') 'ERROR: ', &
+          'host not compatible with your input.'
+        write (6, '(/,12X,A,I3,A,I3)') 'Charge moments tabulated for', naezl, &
+          ' host atoms, input NBASIS =', nathost
+        stop '       < CMOMSREAD > '
+      end if
 ! ......................................................................
-    DO ih = 1,naezl
-      READ (36+ihost,*) ihl
-      IF ( ihl /= ih ) THEN
-        WRITE (6,'(/,5X,2A,/)') 'ERROR reading host file',  &
+      do ih = 1, naezl
+        read (36+ihost, *) ihl
+        if (ihl/=ih) then
+          write (6, '(/,5X,2A,/)') 'ERROR reading host file', &
             ' basis indexing wrong'
-        STOP '       < CMOMSREAD > '
-      END IF
-      READ (36+ihost,99001) (c00(lm),lm=1,lmpotl)
-      ih1 = kaoez(1,naez+(ihost-1)*nlbasis+ih)
-      
-      DO lm = 1,lmpotl
-        cmomhost(lm,(ihost-1)*nlbasis+ih) = c00(lm)
-! mapping the CMOMHOST array, ordering is important
-      END DO
-      
-      IF ( ih == 1 ) THEN
-        WRITE (1337,'(1X,2I6,D12.4)') ih,ih1,c00(1)
-      ELSE
-        WRITE (1337,'(14X,2I6,D12.4)') ih,ih1,c00(1)
-      END IF
-    END DO
-! ......................................................................
-    IF ( ihost == 1 ) THEN
-      WRITE (1337,'(14X,24(1H-))')
-    ELSE
-      WRITE (1337,'(8X,30(1H-))')
-    END IF
-  END IF
-! ----------------------------------------------------------------------
-END DO
-! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
-WRITE (1337,*)
+          stop '       < CMOMSREAD > '
+        end if
+        read (36+ihost, 100)(c00(lm), lm=1, lmpotl)
+        ih1 = kaoez(1, naez+(ihost-1)*nlbasis+ih)
 
-99001 FORMAT (4D22.14)
-99002 FORMAT (5X,2I6)
-END SUBROUTINE cmomsread
+        do lm = 1, lmpotl
+          cmomhost(lm, (ihost-1)*nlbasis+ih) = c00(lm)
+! mapping the CMOMHOST array, ordering is important
+        end do
+
+        if (ih==1) then
+          write (1337, '(1X,2I6,D12.4)') ih, ih1, c00(1)
+        else
+          write (1337, '(14X,2I6,D12.4)') ih, ih1, c00(1)
+        end if
+      end do
+! ......................................................................
+      if (ihost==1) then
+        write (1337, '(14X,24(1H-))')
+      else
+        write (1337, '(8X,30(1H-))')
+      end if
+    end if
+! ----------------------------------------------------------------------
+  end do
+! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
+  write (1337, *)
+
+100 format (4d22.14)
+110 format (5x, 2i6)
+end subroutine

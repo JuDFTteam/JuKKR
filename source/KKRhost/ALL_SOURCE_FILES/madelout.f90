@@ -1,211 +1,216 @@
 ! **********************************************************************
-SUBROUTINE madel2out(iprint,naez,lrecamad,lmpotd,  &
-    nleftoff,nrightoff,nleftall,nrightall)
-      IMPLICIT NONE
-      INTEGER IPRINT,NAEZ,LMPOTD
-      INTEGER LRECAMAD,NLEFTOFF,NRIGHTOFF,NLEFTALL,NRIGHTALL
+subroutine madel2out(iprint, naez, lrecamad, lmpotd, nleftoff, nrightoff, &
+  nleftall, nrightall)
+  implicit none
+  integer :: iprint, naez, lmpotd
+  integer :: lrecamad, nleftoff, nrightoff, nleftall, nrightall
 
-      INTEGER LFMT,IQ1,IQ2,LM1,LM2
-      DOUBLE PRECISION SMAT(6,6)
-      DOUBLE PRECISION SMAT1(6,200),SMAT2(6,200)
-      DOUBLE PRECISION AVMAD(LMPOTD,LMPOTD)
-      CHARACTER*80 FMT
-      INTEGER IREC
-
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-WRITE (1337,99001) 'A(1,1)',MIN(6,naez),'avmad.dat'
-
-FMT = ' '
-lfmt = 0
-DO iq1 = 1,MIN(6,naez)
-  FMT = FMT(1:lfmt)//'------------'
-  lfmt = lfmt + 12
-END DO
-WRITE (1337,'(4X,A,/,8X," Inside the slab ",/,4X,A)') (FMT(1:lfmt),iq1=1,2)
-
-OPEN (69,ACCESS='direct',RECL=lrecamad,FILE='avmad.unformatted',  &
-    FORM='unformatted')
-DO iq1 = 1,MIN(6,naez)
-  DO iq2 = 1,MIN(6,naez)
-    irec = iq2 + naez*(iq1-1)
-    READ(69,REC=irec) avmad
-    smat(iq1,iq2) = avmad(1,1)
-  END DO
-  DO iq2 = 1,MIN(200,nleftall)
-    irec = iq2 + nleftall*(iq1-1) + nleftoff
-    READ(69,REC=irec) avmad
-    smat1(iq1,iq2) = avmad(1,1)
-  END DO
-  DO iq2 = 1,MIN(200,nrightall)
-    irec = iq2 + nrightall*(iq1-1) + nrightoff
-    READ(69,REC=irec) avmad
-    smat2(iq1,iq2) = avmad(1,1)
-  END DO
-END DO
-CLOSE(69)
-
-DO iq1 = 1,MIN(6,naez)
-  WRITE (1337,99002) (smat(iq1,iq2),iq2=1,MIN(6,naez))
-END DO
-WRITE (1337,'(4X,A,/,8X," Slab - left host",/,4X,A)') (FMT(1:lfmt),iq1=1,2)
-DO iq2 = 1,MIN(200,nleftall)
-  WRITE (1337,99002) (smat1(iq1,iq2),iq1=1,MIN(6,naez))
-END DO
-WRITE (1337,'(4X,A,/,8X," Slab - right host",/,4X,A)') (FMT(1:lfmt),iq1=1,2)
-DO iq2 = 1,MIN(200,nrightall)
-  WRITE (1337,99002) (smat2(iq1,iq2),iq1=1,MIN(6,naez))
-END DO
-WRITE (1337,'(4X,A,/)') FMT(1:lfmt)
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-
-IF ( iprint < 3 ) RETURN
+  integer :: lfmt, iq1, iq2, lm1, lm2
+  double precision :: smat(6, 6)
+  double precision :: smat1(6, 200), smat2(6, 200)
+  double precision :: avmad(lmpotd, lmpotd)
+  character (len=80) :: fmt
+  integer :: irec
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-OPEN (78,FILE='avmad.dat',FORM='formatted')
-WRITE (78,99003) 'A(IQ1,IQ2,LM1,LM2) '
+  write (1337, 100) 'A(1,1)', min(6, naez), 'avmad.dat'
 
-OPEN (69,ACCESS='direct',RECL=lrecamad,FILE='avmad.unformatted',  &
-    FORM='unformatted')
+  fmt = ' '
+  lfmt = 0
+  do iq1 = 1, min(6, naez)
+    fmt = fmt(1:lfmt) // '------------'
+    lfmt = lfmt + 12
+  end do
+  write (1337, '(4X,A,/,8X," Inside the slab ",/,4X,A)')(fmt(1:lfmt), iq1=1, &
+    2)
 
-WRITE (78,99006) ' Inside the slab '
-DO iq1 = 1,naez
-  DO iq2 = 1,naez
-    WRITE (78,99004) iq1,iq2
-    
-    irec = iq2 + naez*(iq1-1)
-    READ (69,REC=irec) avmad
-    
-    DO lm1 = 1,lmpotd
-      DO lm2 = 1,lmpotd
-        IF ( ABS(avmad(lm1,lm2)) > 1D-10 )WRITE (78,99005)  &
-            lm1,lm2,avmad(lm1,lm2)
-      END DO
-    END DO
-    WRITE (78,'(33(1H-))')
-  END DO
-END DO
-WRITE (78,99006) ' Slab - Left Host '
-DO iq1 = 1,naez
-  DO iq2 = 1,nleftall
-    WRITE (78,99004) iq1,iq2
-    
-    irec = iq2 + nleftall*(iq1-1) + nleftoff
-    READ (69,REC=irec) avmad
-    
-    DO lm1 = 1,lmpotd
-      DO lm2 = 1,lmpotd
-        IF ( ABS(avmad(lm1,lm2)) > 1D-10 )WRITE (78,99005)  &
-            lm1,lm2,avmad(lm1,lm2)
-      END DO
-    END DO
-    WRITE (78,'(33(1H-))')
-  END DO
-END DO
-WRITE (78,99006) ' Slab - Right Host '
-DO iq1 = 1,naez
-  DO iq2 = 1,nrightall
-    WRITE (78,99004) iq1,iq2
-    
-    irec = iq2 + nrightall*(iq1-1) + nrightoff
-    READ (69,REC=irec) avmad
-    
-    DO lm1 = 1,lmpotd
-      DO lm2 = 1,lmpotd
-        IF ( ABS(avmad(lm1,lm2)) > 1D-10 )WRITE (78,99005)  &
-            lm1,lm2,avmad(lm1,lm2)
-      END DO
-    END DO
-    WRITE (78,'(33(1H-))')
-  END DO
-END DO
-CLOSE (69)
-CLOSE (78)
+  open (69, access='direct', recl=lrecamad, file='avmad.unformatted', &
+    form='unformatted')
+  do iq1 = 1, min(6, naez)
+    do iq2 = 1, min(6, naez)
+      irec = iq2 + naez*(iq1-1)
+      read (69, rec=irec) avmad
+      smat(iq1, iq2) = avmad(1, 1)
+    end do
+    do iq2 = 1, min(200, nleftall)
+      irec = iq2 + nleftall*(iq1-1) + nleftoff
+      read (69, rec=irec) avmad
+      smat1(iq1, iq2) = avmad(1, 1)
+    end do
+    do iq2 = 1, min(200, nrightall)
+      irec = iq2 + nrightall*(iq1-1) + nrightoff
+      read (69, rec=irec) avmad
+      smat2(iq1, iq2) = avmad(1, 1)
+    end do
+  end do
+  close (69)
+
+  do iq1 = 1, min(6, naez)
+    write (1337, 110)(smat(iq1,iq2), iq2=1, min(6,naez))
+  end do
+  write (1337, '(4X,A,/,8X," Slab - left host",/,4X,A)')(fmt(1:lfmt), iq1=1, &
+    2)
+  do iq2 = 1, min(200, nleftall)
+    write (1337, 110)(smat1(iq1,iq2), iq1=1, min(6,naez))
+  end do
+  write (1337, '(4X,A,/,8X," Slab - right host",/,4X,A)')(fmt(1:lfmt), iq1=1, &
+    2)
+  do iq2 = 1, min(200, nrightall)
+    write (1337, 110)(smat2(iq1,iq2), iq1=1, min(6,naez))
+  end do
+  write (1337, '(4X,A,/)') fmt(1:lfmt)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-99001 FORMAT (5X,'Madelung potential coefficients ',a,' up to NAEZ =',  &
-    i2,/,5X,'(full matrix (nonzeros) in file ',a, ' if IPRINT.GT.2)')
-99002 FORMAT (4X,6(d12.4))
-99003 FORMAT (' Madelung potential coefficients ',a,/)
-99004 FORMAT ('IQ1 =',i3,' IQ2 =',i3,/,17('-'),/,5X, '  LM1  LM2  A(LM1,LM2)')
-99005 FORMAT (5X,2I5,1P,d18.10)
-99006 FORMAT (70(1H*),/,10X,a,/,70(1H*))
-END SUBROUTINE madel2out
+  if (iprint<3) return
+
+! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+  open (78, file='avmad.dat', form='formatted')
+  write (78, 120) 'A(IQ1,IQ2,LM1,LM2) '
+
+  open (69, access='direct', recl=lrecamad, file='avmad.unformatted', &
+    form='unformatted')
+
+  write (78, 150) ' Inside the slab '
+  do iq1 = 1, naez
+    do iq2 = 1, naez
+      write (78, 130) iq1, iq2
+
+      irec = iq2 + naez*(iq1-1)
+      read (69, rec=irec) avmad
+
+      do lm1 = 1, lmpotd
+        do lm2 = 1, lmpotd
+          if (abs(avmad(lm1,lm2))>1d-10) write (78, 140) lm1, lm2, &
+            avmad(lm1, lm2)
+        end do
+      end do
+      write (78, '(33(1H-))')
+    end do
+  end do
+  write (78, 150) ' Slab - Left Host '
+  do iq1 = 1, naez
+    do iq2 = 1, nleftall
+      write (78, 130) iq1, iq2
+
+      irec = iq2 + nleftall*(iq1-1) + nleftoff
+      read (69, rec=irec) avmad
+
+      do lm1 = 1, lmpotd
+        do lm2 = 1, lmpotd
+          if (abs(avmad(lm1,lm2))>1d-10) write (78, 140) lm1, lm2, &
+            avmad(lm1, lm2)
+        end do
+      end do
+      write (78, '(33(1H-))')
+    end do
+  end do
+  write (78, 150) ' Slab - Right Host '
+  do iq1 = 1, naez
+    do iq2 = 1, nrightall
+      write (78, 130) iq1, iq2
+
+      irec = iq2 + nrightall*(iq1-1) + nrightoff
+      read (69, rec=irec) avmad
+
+      do lm1 = 1, lmpotd
+        do lm2 = 1, lmpotd
+          if (abs(avmad(lm1,lm2))>1d-10) write (78, 140) lm1, lm2, &
+            avmad(lm1, lm2)
+        end do
+      end do
+      write (78, '(33(1H-))')
+    end do
+  end do
+  close (69)
+  close (78)
+! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+
+100 format (5x, 'Madelung potential coefficients ', a, ' up to NAEZ =', i2, /, &
+    5x, '(full matrix (nonzeros) in file ', a, ' if IPRINT.GT.2)')
+110 format (4x, 6(d12.4))
+120 format (' Madelung potential coefficients ', a, /)
+130 format ('IQ1 =', i3, ' IQ2 =', i3, /, 17('-'), /, 5x, &
+    '  LM1  LM2  A(LM1,LM2)')
+140 format (5x, 2i5, 1p, d18.10)
+150 format (70('*'), /, 10x, a, /, 70('*'))
+end subroutine
 ! **********************************************************************
 
 ! **********************************************************************
 
-SUBROUTINE madel3out(iprint,naez,lrecabmad,smat1,smat2,lmpotd)
+subroutine madel3out(iprint, naez, lrecabmad, smat1, smat2, lmpotd)
 
-      IMPLICIT NONE
-      INTEGER IPRINT,NAEZ,LMPOTD
-      INTEGER LRECABMAD
-      INTEGER LFMT,IQ1,IQ2,LM1,LM2
-      DOUBLE PRECISION SMAT1(6,6),SMAT2(6,6)
-      DOUBLE PRECISION AVMAD(LMPOTD,LMPOTD),BVMAD(LMPOTD)
-      CHARACTER*80 FMT
-      INTEGER IREC
-
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-WRITE (1337,99001) 'A(1,1)',MIN(6,naez),'avmad.dat'
-
-FMT = ' '
-lfmt = 0
-DO iq1 = 1,MIN(6,naez)
-  FMT = FMT(1:lfmt)//'------------'
-  lfmt = lfmt + 12
-END DO
-WRITE (1337,'(4X,A)') FMT(1:lfmt)
-DO iq1 = 1,MIN(6,naez)
-  WRITE (1337,99002) (smat1(iq1,iq2),iq2=1,MIN(6,naez))
-END DO
-WRITE (1337,'(4X,A,/)') FMT(1:lfmt)
-WRITE (1337,99001) 'B(1,1)',MIN(6,naez),'bvmad.dat'
-WRITE (1337,'(4X,A)') FMT(1:lfmt)
-DO iq1 = 1,MIN(6,naez)
-  WRITE (1337,99002) (smat2(iq1,iq2),iq2=1,MIN(6,naez))
-END DO
-WRITE (1337,'(4X,A,/)') FMT(1:lfmt)
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-
-IF ( iprint < 3 ) RETURN
+  implicit none
+  integer :: iprint, naez, lmpotd
+  integer :: lrecabmad
+  integer :: lfmt, iq1, iq2, lm1, lm2
+  double precision :: smat1(6, 6), smat2(6, 6)
+  double precision :: avmad(lmpotd, lmpotd), bvmad(lmpotd)
+  character (len=80) :: fmt
+  integer :: irec
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-OPEN (78,FILE='avmad.dat',FORM='formatted')
-OPEN (79,FILE='bvmad.dat',FORM='formatted')
-WRITE (78,99003) 'A(IQ1,IQ2,LM1,LM2) '
-WRITE (79,99003) 'B(IQ1,IQ2,LM)'
+  write (1337, 100) 'A(1,1)', min(6, naez), 'avmad.dat'
 
-OPEN (69,ACCESS='direct',RECL=lrecabmad,FILE='abvmad.unformatted',  &
-    FORM='unformatted')
-DO iq1 = 1,naez
-  DO iq2 = 1,naez
-    WRITE (78,99004) iq1,iq2
-    WRITE (79,99005) iq1,iq2
-    
-    irec = iq2 + naez*(iq1-1)
-    READ (69,REC=irec) avmad,bvmad
-    DO lm1 = 1,lmpotd
-      DO lm2 = 1,lmpotd
-        IF ( ABS(avmad(lm1,lm2)) > 1D-10 ) WRITE (78,99006)  &
-            lm1,lm2,avmad(lm1,lm2)
-      END DO
-      IF ( ABS(bvmad(lm1)) > 1D-10 ) WRITE (79,99007) lm1,bvmad(lm1)
-    END DO
-    WRITE (78,'(33(1H-))')
-    WRITE (79,'(28(1H-))')
-  END DO
-END DO
-CLOSE (69)
-CLOSE (78)
-CLOSE (79)
+  fmt = ' '
+  lfmt = 0
+  do iq1 = 1, min(6, naez)
+    fmt = fmt(1:lfmt) // '------------'
+    lfmt = lfmt + 12
+  end do
+  write (1337, '(4X,A)') fmt(1:lfmt)
+  do iq1 = 1, min(6, naez)
+    write (1337, 110)(smat1(iq1,iq2), iq2=1, min(6,naez))
+  end do
+  write (1337, '(4X,A,/)') fmt(1:lfmt)
+  write (1337, 100) 'B(1,1)', min(6, naez), 'bvmad.dat'
+  write (1337, '(4X,A)') fmt(1:lfmt)
+  do iq1 = 1, min(6, naez)
+    write (1337, 110)(smat2(iq1,iq2), iq2=1, min(6,naez))
+  end do
+  write (1337, '(4X,A,/)') fmt(1:lfmt)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-99001 FORMAT (5X,'Madelung potential coefficients ',a,' up to NAEZ =',  &
-    i2,/,5X,'(full matrix (nonzeros) in file ',a, ' if IPRINT.GT.2)')
-99002 FORMAT (4X,6(d12.4))
-99003 FORMAT (' Madelung potential coefficients ',a,/)
-99004 FORMAT ('IQ1 =',i3,' IQ2 =',i3,/,17('-'),/,5X, '  LM1  LM2  A(LM1,LM2)')
-99005 FORMAT ('IQ1 =',i3,' IQ2 =',i3,/,17('-'),/,5X,'   LM  B(LM)')
-99006 FORMAT (5X,2I5,1P,d18.10)
-99007 FORMAT (5X,i5,1P,d18.10)
-END SUBROUTINE madel3out
+  if (iprint<3) return
+
+! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+  open (78, file='avmad.dat', form='formatted')
+  open (79, file='bvmad.dat', form='formatted')
+  write (78, 120) 'A(IQ1,IQ2,LM1,LM2) '
+  write (79, 120) 'B(IQ1,IQ2,LM)'
+
+  open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', &
+    form='unformatted')
+  do iq1 = 1, naez
+    do iq2 = 1, naez
+      write (78, 130) iq1, iq2
+      write (79, 140) iq1, iq2
+
+      irec = iq2 + naez*(iq1-1)
+      read (69, rec=irec) avmad, bvmad
+      do lm1 = 1, lmpotd
+        do lm2 = 1, lmpotd
+          if (abs(avmad(lm1,lm2))>1d-10) write (78, 150) lm1, lm2, &
+            avmad(lm1, lm2)
+        end do
+        if (abs(bvmad(lm1))>1d-10) write (79, 160) lm1, bvmad(lm1)
+      end do
+      write (78, '(33(1H-))')
+      write (79, '(28(1H-))')
+    end do
+  end do
+  close (69)
+  close (78)
+  close (79)
+! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+
+100 format (5x, 'Madelung potential coefficients ', a, ' up to NAEZ =', i2, /, &
+    5x, '(full matrix (nonzeros) in file ', a, ' if IPRINT.GT.2)')
+110 format (4x, 6(d12.4))
+120 format (' Madelung potential coefficients ', a, /)
+130 format ('IQ1 =', i3, ' IQ2 =', i3, /, 17('-'), /, 5x, &
+    '  LM1  LM2  A(LM1,LM2)')
+140 format ('IQ1 =', i3, ' IQ2 =', i3, /, 17('-'), /, 5x, '   LM  B(LM)')
+150 format (5x, 2i5, 1p, d18.10)
+160 format (5x, i5, 1p, d18.10)
+end subroutine

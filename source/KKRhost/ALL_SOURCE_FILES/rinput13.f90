@@ -1,2367 +1,2377 @@
 module rinput
 
-   implicit none
+  implicit none
 
 contains
-   !-------------------------------------------------------------------------------
-   ! SUBROUTINE: RINPUT13
-   !> @brief Routine to read the information from the input file
-   !> @author Bernd Zimmermann
-   !> @note Jonathan Chico: Added calls for the different parameters options,
-   !> that are being changed from the inc.p to now the reader. Of this way if there
-   !> is a problem the user only has to add a line or change a value of the inc.p
-   !> not recompile the code
-   !-------------------------------------------------------------------------------
-   subroutine RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,   &
-      IMIX,LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KCOR,KEFG,KHYP,KPRE,NCLSD,MMAXD,NPOTD,&
-      KVMAD,LMMAX,LMPOT,NCHEB,NLEFT,IFILE,KVREL,NSPIN,NATYP,NINEQ,NPNT1,NPNT2,NPNT3,&
-      LMXSPD,LMMAXD,LMGF0D,LASSLD,NEMBD1,IRMIND,NOFGIJ,KFROZN,ISHIFT,N1SEMI,N2SEMI, &
-      N3SEMI,NSTEPS,INSREF,KSHAPE,ITDBRY,NRIGHT,KFORCE,NSPINDD,NSATYPD,IVSHIFT,     &
-      KHFIELD,NLBASIS,NRBASIS,INTERVX,INTERVY,INTERVZ,NPAN_EQ,NPAN_LOG,NPOLSEMI,TK, &
-      FCM,EMIN,EMAX,RMAX,GMAX,ALAT,R_LOG,RCUTZ,RCUTXY,ESHIFT,QBOUND,HFIELD,MIXING,  &
-      ABASIS,BBASIS,CBASIS,VCONST,TKSEMI,TOLRDIF,EMUSEMI,EBOTSEMI,FSEMICORE,        &
-      LAMBDA_XC,DELTAE,LRHOSYM,LINIPOL,LCARTESIAN,LINTERFACE,IMT,CLS,LMXC,IRNS,IRWS,&
-      NTCELL,REFPOT,INIPOL,IXIPOL,HOSTIMP,KFG,VBC,ZPERLEFT,ZPERIGHT,BRAVAIS,RMT,ZAT,&
-      RWS,MTFAC,RMTREF,RMTNEW,RMTREFAT,FPRADIUS,TLEFT,TRIGHT,RBASIS,SOCSCALE,CSCL,  &
-      SOCSCL,SOLVER,I12,I13,I19,I25,I40,TXC,DROTQ,NCPA,ITCPAMAX,CPATOL,NOQ,IQAT,    &
-      ICPA,KAOEZ,CONC,KMROT,QMTET,QMPHI,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU,NTOTD)
+!-------------------------------------------------------------------------------
+! SUBROUTINE: RINPUT13
+!> @brief Routine to read the information from the input file
+!> @author Bernd Zimmermann
+!> @note Jonathan Chico: Added calls for the different parameters options,
+!> that are being changed from the inc.p to now the reader. Of this way if there
+!> is a problem the user only has to add a line or change a value of the inc.p
+!> not recompile the code
+!-------------------------------------------------------------------------------
+  subroutine rinput13(nr, kte, igf, irm, kxc, lly, icc, ins, kws, ipe, ipf, &
+    ipfe, icst, lm2d, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, &
+    kefg, khyp, kpre, nclsd, mmaxd, npotd, kvmad, lmmax, lmpot, ncheb, nleft, &
+    ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, lmxspd, lmmaxd, &
+    lmgf0d, lassld, nembd1, irmind, nofgij, kfrozn, ishift, n1semi, n2semi, &
+    n3semi, nsteps, insref, kshape, itdbry, nright, kforce, nspindd, nsatypd, &
+    ivshift, khfield, nlbasis, nrbasis, intervx, intervy, intervz, npan_eq, &
+    npan_log, npolsemi, tk, fcm, emin, emax, rmax, gmax, alat, r_log, rcutz, &
+    rcutxy, eshift, qbound, hfield, mixing, abasis, bbasis, cbasis, vconst, &
+    tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, &
+    linipol, lcartesian, linterface, imt, cls, lmxc, irns, irws, ntcell, &
+    refpot, inipol, ixipol, hostimp, kfg, vbc, zperleft, zperight, bravais, &
+    rmt, zat, rws, mtfac, rmtref, rmtnew, rmtrefat, fpradius, tleft, tright, &
+    rbasis, socscale, cscl, socscl, solver, i12, i13, i19, i25, i40, txc, &
+    drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, qmtet, &
+    qmphi, kreadldau, lopt, ueff, jeff, erefldau, ntotd)
 
-      use Profiling
-      use Constants
-      use mod_wunfiles, only: t_params
-      use memoryhandling
-      use global_variables
-      use mod_types, only: t_inc
-      use mod_save_wavefun, only: t_wavefunctions
-      use mod_version_info
+    use :: profiling
+    use :: constants
+    use :: mod_wunfiles, only: t_params
+    use :: memoryhandling
+    use :: global_variables
+    use :: mod_types, only: t_inc
+    use :: mod_save_wavefun, only: t_wavefunctions
+    use :: mod_version_info
 
-      implicit none
-      !     ..
-      !> @note VP : there should be some crosscheck of competing options
-      !>            e.g., XCPL and CONDUCT cannot be done simultaneously
-      !>            neither SOC1 and SOC2 manipulation etc.
-      !     ..
-      !     .. External Subroutines ..
-      EXTERNAL RCSTOP
-      !     ..
-      !     .. Intrinsic Functions ..
-      INTRINSIC MIN
-      !     ..
-      !     .. Scalar Arguments ..
-      integer, intent(inout) :: NR        !< Number of real space vectors rr
-      integer, intent(inout) :: KTE       !< Calculation of the total energy On/Off (1/0)
-      integer, intent(inout) :: IGF       !< Do not print or print (0/1) the KKRFLEX_* files
-      integer, intent(inout) :: IRM       !< Maximum number of radial points
-      integer, intent(inout) :: KXC       !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
-      integer, intent(inout) :: LLY       !< LLY <> 0 : apply Lloyds formula
-      integer, intent(inout) :: ICC       !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-      integer, intent(inout) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
-      integer, intent(inout) :: KWS       !< 0 (MT), 1(ASA)
-      integer, intent(inout) :: IPE       !< Not real used, IPFE should be 0
-      integer, intent(inout) :: IPF       !< Not real used, IPFE should be 0
-      integer, intent(inout) :: IPFE      !< Not real used, IPFE should be 0
-      integer, intent(inout) :: ICST      !< Number of Born approximation
-      integer, intent(inout) :: LM2D
-      integer, intent(inout) :: IMIX      !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
-      integer, intent(inout) :: LPOT      !< Maximum l component in potential expansion
-      integer, intent(inout) :: NAEZ      !< Number of atoms in unit cell
-      integer, intent(inout) :: NEMB      !< Number of 'embedding' positions
-      integer, intent(inout) :: NREF      !< Number of diff. ref. potentials
-      integer, intent(inout) :: NCLS      !< Number of reference clusters
-      integer, intent(inout) :: NPOL      !< Number of Matsubara Pols (EMESHT)
-      integer, intent(inout) :: LMAX      !< Maximum l component in wave function expansion
-      integer, intent(inout) :: KCOR
-      integer, intent(inout) :: KEFG
-      integer, intent(inout) :: KHYP
-      integer, intent(inout) :: KPRE
-      integer, intent(inout) :: NCLSD     !< Maximum number of different TB-clusters
-      integer, intent(inout) :: MMAXD
-      integer, intent(inout) :: NPOTD
-      integer, intent(inout) :: KVMAD
-      integer, intent(inout) :: LMMAX
-      integer, intent(inout) :: LMPOT
-      integer, intent(inout) :: NTOTD     !< NTOTD = IPAND+30
-      integer, intent(inout) :: NCHEB     !< Number of Chebychev pannels for the new solver
-      integer, intent(inout) :: NLEFT     !< Number of repeated basis for left host to get converged  electrostatic potentials
-      integer, intent(inout) :: IFILE     !< Unit specifier for potential card
-      integer, intent(inout) :: KVREL     !< 0,1 : non / scalar relat. calculation
-      integer, intent(inout) :: NSPIN     !< Counter for spin directions
-      integer, intent(inout) :: NATYP     !< Number of kinds of atoms in unit cell
-      integer, intent(inout) :: NINEQ     !< Number of ineq. positions in unit cell
-      integer, intent(inout) :: NPNT1     !< number of E points (EMESHT) for the contour integration
-      integer, intent(inout) :: NPNT2     !< number of E points (EMESHT) for the contour integration
-      integer, intent(inout) :: NPNT3     !< number of E points (EMESHT) for the contour integration
-      integer, intent(inout) :: LMXSPD    !< (2*LPOT+1)**2
-      integer, intent(inout) :: LMMAXD
-      integer, intent(inout) :: LMGF0D
-      integer, intent(inout) :: LASSLD
-      integer, intent(inout) :: NEMBD1
-      integer, intent(inout) :: IRMIND
-      integer, intent(inout) :: NOFGIJ
-      integer, intent(inout) :: KFROZN
-      integer, intent(inout) :: ISHIFT
-      integer, intent(inout) :: N1SEMI    !< Number of energy points for the semicore contour
-      integer, intent(inout) :: N2SEMI    !< Number of energy points for the semicore contour
-      integer, intent(inout) :: N3SEMI    !< Number of energy points for the semicore contour
-      integer, intent(inout) :: NSTEPS    !< number of iterations
-      integer, intent(inout) :: INSREF    !< INS for reference pot. (usual 0)
-      integer, intent(inout) :: KSHAPE    !< Exact treatment of WS cell
-      integer, intent(inout) :: ITDBRY    !< Number of SCF steps to remember for the Broyden mixing
-      integer, intent(inout) :: NRIGHT    !< Number of repeated basis for right host to get converged  electrostatic potentials
-      integer, intent(inout) :: KFORCE    !< Calculation of the forces
-      integer, intent(inout) :: NSPINDD   !< !< NSPIND-KORBIT
-      integer, intent(inout) :: NSATYPD   !< (NATYPD-1)*KNOSPH+1
-      integer, intent(inout) :: IVSHIFT
-      integer, intent(inout) :: KHFIELD   !< 0,1: no / yes external magnetic field
-      integer, intent(inout) :: NLBASIS   !< Number of basis layers of left host (repeated units)
-      integer, intent(inout) :: NRBASIS   !< Number of basis layers of right host (repeated units)
-      integer, intent(inout) :: INTERVX   !< Number of intervals in x-direction for k-net in IB of the BZ
-      integer, intent(inout) :: INTERVY   !< Number of intervals in y-direction for k-net in IB of the BZ
-      integer, intent(inout) :: INTERVZ   !< Number of intervals in z-direction for k-net in IB of the BZ
-      integer, intent(inout) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
-      integer, intent(inout) :: NPAN_LOG  !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
-      integer, intent(inout) :: NPOLSEMI  !< Number of poles for the semicore contour
-      double precision, intent(inout) :: TK      !< Temperature
-      double precision, intent(inout) :: FCM     !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
-      double precision, intent(inout) :: EMIN    !< Lower value (in Ryd) for the energy contour
-      double precision, intent(inout) :: EMAX    !< Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
-      double precision, intent(inout) :: RMAX    !< Ewald summation cutoff parameter for real space summation
-      double precision, intent(inout) :: GMAX    !< Ewald summation cutoff parameter for reciprocal space summation
-      double precision, intent(inout) :: ALAT    !< Lattice constant (in a.u.)
-      double precision, intent(inout) :: R_LOG   !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
-      double precision, intent(inout) :: RCUTZ   !< Parameter for the screening cluster along the z-direction
-      double precision, intent(inout) :: RCUTXY  !< Parameter for the screening cluster along the x-y plane
-      double precision, intent(inout) :: ESHIFT
-      double precision, intent(inout) :: QBOUND  !< Convergence parameter for the potential
-      double precision, intent(inout) :: HFIELD  !< External magnetic field, for initial potential shift in spin polarised case
-      double precision, intent(inout) :: MIXING  !< Magnitude of the mixing parameter
-      double precision, intent(inout) :: ABASIS  !< Scaling factors for rbasis
-      double precision, intent(inout) :: BBASIS  !< Scaling factors for rbasis
-      double precision, intent(inout) :: CBASIS  !< Scaling factors for rbasis
-      double precision, intent(inout) :: VCONST  !< Potential shift in the first iteration
-      double precision, intent(inout) :: TKSEMI  !< Temperature for semi-core contour
-      double precision, intent(inout) :: TOLRDIF !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
-      double precision, intent(inout) :: EMUSEMI   !< Top of semicore contour in Ryd.
-      double precision, intent(inout) :: EBOTSEMI  !< Bottom of semicore contour in Ryd
-      double precision, intent(inout) :: FSEMICORE !< Initial normalization factor for semicore states (approx. 1.)
-      double precision, intent(inout) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
-      double complex, intent(inout) :: DELTAE      !< LLY Energy difference for numerical derivative
-      logical, intent(inout) :: LRHOSYM
-      logical, intent(inout) :: LINIPOL    !< True: Initial spin polarization; false: no initial spin polarization
-      logical, intent(inout) :: LCARTESIAN !< True: Basis in cartesian coords; false: in internal coords
-      logical, intent(inout) :: LINTERFACE !< If True a matching with semi-inifinite surfaces must be performed
-      !     .. Array Arguments ..
-      integer, dimension(:), allocatable, intent(out) :: IMT    !< R point at MT radius
-      integer, dimension(:), allocatable, intent(out) :: CLS    !< Cluster around atomic sites
-      integer, dimension(:), allocatable, intent(out) :: LMXC
-      integer, dimension(:), allocatable, intent(out) :: IRNS   !< Position of atoms in the unit cell in units of bravais vectors
-      integer, dimension(:), allocatable, intent(out) :: IRWS   !< R point at WS radius
-      integer, dimension(:), allocatable, intent(out) :: NTCELL !< Index for WS cell
-      integer, dimension(:), allocatable, intent(out) :: REFPOT !< Ref. pot. card  at position
-      integer, dimension(:), allocatable, intent(out) :: INIPOL !< Initial spin polarisation
-      integer, dimension(:), allocatable, intent(out) :: IXIPOL !< Constraint of spin pol.
-      integer, dimension(:), allocatable, intent(out) :: HOSTIMP
-      integer, dimension(:,:), allocatable, intent(out) :: KFG
-      double precision, dimension(2), intent(inout) :: VBC        !< Potential constants
-      double precision, dimension(3), intent(inout) :: ZPERLEFT   !< Vector to define how to repeat the basis of the left host
-      double precision, dimension(3), intent(inout) :: ZPERIGHT   !< Vector to define how to repeat the basis of the right host
-      double precision, dimension(3,3), intent(inout) :: BRAVAIS  !< Bravais lattice vectors
-      double precision, dimension(:), allocatable, intent(out) :: RMT      !< Muffin-tin radius of true system
-      double precision, dimension(:), allocatable, intent(out) :: ZAT      !< Nuclear charge
-      double precision, dimension(:), allocatable, intent(out) :: RWS      !< Wigner Seitz radius
-      double precision, dimension(:), allocatable, intent(out) :: MTFAC    !< Scaling factor for radius MT
-      double precision, dimension(:), allocatable, intent(out) :: RMTREF   !< Muffin-tin radius of reference system
-      double precision, dimension(:), allocatable, intent(out) :: RMTNEW   !< Adapted muffin-tin radius
-      double precision, dimension(:), allocatable, intent(out) :: RMTREFAT
-      double precision, dimension(:), allocatable, intent(out) :: FPRADIUS !< R point at which full-potential treatment starts
-      double precision, dimension(:,:), allocatable, intent(out) :: TLEFT  !< Vectors of the basis for the left host
-      double precision, dimension(:,:), allocatable, intent(out) :: TRIGHT !< vectors of the basis for the right host
-      double precision, dimension(:,:), allocatable, intent(out) :: RBASIS !< Position of atoms in the unit cell in units of bravais vectors
-      !     variables for spin-orbit/speed of light scaling
-      double precision, dimension(:), allocatable, intent(out) :: SOCSCALE !< Spin-orbit scaling
-      double precision, dimension(:,:), allocatable, intent(out) :: CSCL   !< Speed of light scaling
-      double precision, dimension(:,:), allocatable, intent(out) :: SOCSCL
-      character(len=10), intent(inout) :: SOLVER !< Type of solver
-      character(len=40), intent(inout) :: I12 !< File identifiers
-      character(len=40), intent(inout) :: I13 !< Potential file name
-      character(len=40), intent(inout) :: I19 !< Shape function file name
-      character(len=40), intent(inout) :: I25 !< Scoef file name
-      character(len=40), intent(inout) :: I40 !< File identifiers
-      character(len=124), dimension(6), intent(inout) :: TXC
-      double complex, dimension(:,:,:), allocatable, intent(out) :: DROTQ !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-      !----------------------------------------------------------------------------
-      !> @note CPA variables. Routine has been modified to look for
-      !>     the token ATOMINFOC and only afterwards, if not found, for the
-      !>     old token ATOMINFO. The only necessary extra information
-      !>     required is the site IQAT(IATOM) on which the atom IATOM
-      !>     is located and the occupancy (concentration) CONC(IATOM).
-      !>     The rest of CPA variables are deduced from these two.
-      !>     The tolerance for the CPA-cycle and the number of CPA iterations
-      !>     can be modified adding the token <CPAINFO> in the input file.
-      !----------------------------------------------------------------------------
-      integer, intent(inout) :: NCPA             !< ncpa = 0/1 CPA flag
-      integer, intent(inout) :: ITCPAMAX         !< max. number of CPA iterations
-      double precision, intent(inout)  :: CPATOL !< convergency tolerance for CPA-cycle
-      integer, dimension(:), allocatable, intent(out) :: NOQ  !< number of diff. atom types located
-      integer, dimension(:), allocatable, intent(out) :: IQAT !< the site on which an atom is located on a given site
-      integer, dimension(:), allocatable, intent(out) :: ICPA !< icpa = 0/1 site-dependent CPA flag
-      integer, dimension(:,:), allocatable, intent(out) :: KAOEZ !< atom types located at a given site
-      double precision, dimension(:), allocatable, intent(out) :: CONC !< concentration of a given atom
+    implicit none
+!     ..
+!> @note VP : there should be some crosscheck of competing options
+!>            e.g., XCPL and CONDUCT cannot be done simultaneously
+!>            neither SOC1 and SOC2 manipulation etc.
+!     ..
+!     .. External Subroutines ..
+    external :: rcstop
+!     ..
+!     .. Intrinsic Functions ..
+    intrinsic :: min
+!     ..
+!     .. Scalar Arguments ..
+    integer, intent (inout) :: nr !< Number of real space vectors rr
+    integer, intent (inout) :: kte !< Calculation of the total energy On/Off (1/0)
+    integer, intent (inout) :: igf !< Do not print or print (0/1) the KKRFLEX_* files
+    integer, intent (inout) :: irm !< Maximum number of radial points
+    integer, intent (inout) :: kxc !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+    integer, intent (inout) :: lly !< LLY <> 0 : apply Lloyds formula
+    integer, intent (inout) :: icc !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+    integer, intent (inout) :: ins !< 0 (MT), 1(ASA), 2(Full Potential)
+    integer, intent (inout) :: kws !< 0 (MT), 1(ASA)
+    integer, intent (inout) :: ipe !< Not real used, IPFE should be 0
+    integer, intent (inout) :: ipf !< Not real used, IPFE should be 0
+    integer, intent (inout) :: ipfe !< Not real used, IPFE should be 0
+    integer, intent (inout) :: icst !< Number of Born approximation
+    integer, intent (inout) :: lm2d
+    integer, intent (inout) :: imix !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
+    integer, intent (inout) :: lpot !< Maximum l component in potential expansion
+    integer, intent (inout) :: naez !< Number of atoms in unit cell
+    integer, intent (inout) :: nemb !< Number of 'embedding' positions
+    integer, intent (inout) :: nref !< Number of diff. ref. potentials
+    integer, intent (inout) :: ncls !< Number of reference clusters
+    integer, intent (inout) :: npol !< Number of Matsubara Pols (EMESHT)
+    integer, intent (inout) :: lmax !< Maximum l component in wave function expansion
+    integer, intent (inout) :: kcor
+    integer, intent (inout) :: kefg
+    integer, intent (inout) :: khyp
+    integer, intent (inout) :: kpre
+    integer, intent (inout) :: nclsd !< Maximum number of different TB-clusters
+    integer, intent (inout) :: mmaxd
+    integer, intent (inout) :: npotd
+    integer, intent (inout) :: kvmad
+    integer, intent (inout) :: lmmax
+    integer, intent (inout) :: lmpot
+    integer, intent (inout) :: ntotd !< NTOTD = IPAND+30
+    integer, intent (inout) :: ncheb !< Number of Chebychev pannels for the new solver
+    integer, intent (inout) :: nleft !< Number of repeated basis for left host to get converged  electrostatic potentials
+    integer, intent (inout) :: ifile !< Unit specifier for potential card
+    integer, intent (inout) :: kvrel !< 0,1 : non / scalar relat. calculation
+    integer, intent (inout) :: nspin !< Counter for spin directions
+    integer, intent (inout) :: natyp !< Number of kinds of atoms in unit cell
+    integer, intent (inout) :: nineq !< Number of ineq. positions in unit cell
+    integer, intent (inout) :: npnt1 !< number of E points (EMESHT) for the contour integration
+    integer, intent (inout) :: npnt2 !< number of E points (EMESHT) for the contour integration
+    integer, intent (inout) :: npnt3 !< number of E points (EMESHT) for the contour integration
+    integer, intent (inout) :: lmxspd !< (2*LPOT+1)**2
+    integer, intent (inout) :: lmmaxd
+    integer, intent (inout) :: lmgf0d
+    integer, intent (inout) :: lassld
+    integer, intent (inout) :: nembd1
+    integer, intent (inout) :: irmind
+    integer, intent (inout) :: nofgij
+    integer, intent (inout) :: kfrozn
+    integer, intent (inout) :: ishift
+    integer, intent (inout) :: n1semi !< Number of energy points for the semicore contour
+    integer, intent (inout) :: n2semi !< Number of energy points for the semicore contour
+    integer, intent (inout) :: n3semi !< Number of energy points for the semicore contour
+    integer, intent (inout) :: nsteps !< number of iterations
+    integer, intent (inout) :: insref !< INS for reference pot. (usual 0)
+    integer, intent (inout) :: kshape !< Exact treatment of WS cell
+    integer, intent (inout) :: itdbry !< Number of SCF steps to remember for the Broyden mixing
+    integer, intent (inout) :: nright !< Number of repeated basis for right host to get converged  electrostatic potentials
+    integer, intent (inout) :: kforce !< Calculation of the forces
+    integer, intent (inout) :: nspindd !< !< NSPIND-KORBIT
+    integer, intent (inout) :: nsatypd !< (NATYPD-1)*KNOSPH+1
+    integer, intent (inout) :: ivshift
+    integer, intent (inout) :: khfield !< 0,1: no / yes external magnetic field
+    integer, intent (inout) :: nlbasis !< Number of basis layers of left host (repeated units)
+    integer, intent (inout) :: nrbasis !< Number of basis layers of right host (repeated units)
+    integer, intent (inout) :: intervx !< Number of intervals in x-direction for k-net in IB of the BZ
+    integer, intent (inout) :: intervy !< Number of intervals in y-direction for k-net in IB of the BZ
+    integer, intent (inout) :: intervz !< Number of intervals in z-direction for k-net in IB of the BZ
+    integer, intent (inout) :: npan_eq !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
+    integer, intent (inout) :: npan_log !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
+    integer, intent (inout) :: npolsemi !< Number of poles for the semicore contour
+    double precision, intent (inout) :: tk !< Temperature
+    double precision, intent (inout) :: fcm !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
+    double precision, intent (inout) :: emin !< Lower value (in Ryd) for the energy contour
+    double precision, intent (inout) :: emax !< Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
+    double precision, intent (inout) :: rmax !< Ewald summation cutoff parameter for real space summation
+    double precision, intent (inout) :: gmax !< Ewald summation cutoff parameter for reciprocal space summation
+    double precision, intent (inout) :: alat !< Lattice constant (in a.u.)
+    double precision, intent (inout) :: r_log !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
+    double precision, intent (inout) :: rcutz !< Parameter for the screening cluster along the z-direction
+    double precision, intent (inout) :: rcutxy !< Parameter for the screening cluster along the x-y plane
+    double precision, intent (inout) :: eshift
+    double precision, intent (inout) :: qbound !< Convergence parameter for the potential
+    double precision, intent (inout) :: hfield !< External magnetic field, for initial potential shift in spin polarised case
+    double precision, intent (inout) :: mixing !< Magnitude of the mixing parameter
+    double precision, intent (inout) :: abasis !< Scaling factors for rbasis
+    double precision, intent (inout) :: bbasis !< Scaling factors for rbasis
+    double precision, intent (inout) :: cbasis !< Scaling factors for rbasis
+    double precision, intent (inout) :: vconst !< Potential shift in the first iteration
+    double precision, intent (inout) :: tksemi !< Temperature for semi-core contour
+    double precision, intent (inout) :: tolrdif !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
+    double precision, intent (inout) :: emusemi !< Top of semicore contour in Ryd.
+    double precision, intent (inout) :: ebotsemi !< Bottom of semicore contour in Ryd
+    double precision, intent (inout) :: fsemicore !< Initial normalization factor for semicore states (approx. 1.)
+    double precision, intent (inout) :: lambda_xc !< Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
+    double complex, intent (inout) :: deltae !< LLY Energy difference for numerical derivative
+    logical, intent (inout) :: lrhosym
+    logical, intent (inout) :: linipol !< True: Initial spin polarization; false: no initial spin polarization
+    logical, intent (inout) :: lcartesian !< True: Basis in cartesian coords; false: in internal coords
+    logical, intent (inout) :: linterface !< If True a matching with semi-inifinite surfaces must be performed
+!     .. Array Arguments ..
+    integer, dimension (:), allocatable, intent (out) :: imt !< R point at MT radius
+    integer, dimension (:), allocatable, intent (out) :: cls !< Cluster around atomic sites
+    integer, dimension (:), allocatable, intent (out) :: lmxc
+    integer, dimension (:), allocatable, intent (out) :: irns !< Position of atoms in the unit cell in units of bravais vectors
+    integer, dimension (:), allocatable, intent (out) :: irws !< R point at WS radius
+    integer, dimension (:), allocatable, intent (out) :: ntcell !< Index for WS cell
+    integer, dimension (:), allocatable, intent (out) :: refpot !< Ref. pot. card  at position
+    integer, dimension (:), allocatable, intent (out) :: inipol !< Initial spin polarisation
+    integer, dimension (:), allocatable, intent (out) :: ixipol !< Constraint of spin pol.
+    integer, dimension (:), allocatable, intent (out) :: hostimp
+    integer, dimension (:, :), allocatable, intent (out) :: kfg
+    double precision, dimension (2), intent (inout) :: vbc !< Potential constants
+    double precision, dimension (3), intent (inout) :: zperleft !< Vector to define how to repeat the basis of the left host
+    double precision, dimension (3), intent (inout) :: zperight !< Vector to define how to repeat the basis of the right host
+    double precision, dimension (3, 3), intent (inout) :: bravais !< Bravais lattice vectors
+    double precision, dimension (:), allocatable, intent (out) :: rmt !< Muffin-tin radius of true system
+    double precision, dimension (:), allocatable, intent (out) :: zat !< Nuclear charge
+    double precision, dimension (:), allocatable, intent (out) :: rws !< Wigner Seitz radius
+    double precision, dimension (:), allocatable, intent (out) :: mtfac !< Scaling factor for radius MT
+    double precision, dimension (:), allocatable, intent (out) :: rmtref !< Muffin-tin radius of reference system
+    double precision, dimension (:), allocatable, intent (out) :: rmtnew !< Adapted muffin-tin radius
+    double precision, dimension (:), allocatable, intent (out) :: rmtrefat
+    double precision, dimension (:), allocatable, intent (out) :: fpradius !< R point at which full-potential treatment starts
+    double precision, dimension (:, :), allocatable, intent (out) :: tleft !< Vectors of the basis for the left host
+    double precision, dimension (:, :), allocatable, intent (out) :: tright !< vectors of the basis for the right host
+    double precision, dimension (:, :), allocatable, intent (out) :: rbasis !< Position of atoms in the unit cell in units of bravais vectors
+!     variables for spin-orbit/speed of light scaling
+    double precision, dimension (:), allocatable, intent (out) :: socscale !< Spin-orbit scaling
+    double precision, dimension (:, :), allocatable, intent (out) :: cscl !< Speed of light scaling
+    double precision, dimension (:, :), allocatable, intent (out) :: socscl
+    character (len=10), intent (inout) :: solver  !< Type of solver
 
-      !----------------------------------------------------------------------------
-      !> @note Variables storing the magnetization direction information.
-      !>     QMTET/QMPHI(NAEZ) give the angles to which the magnetic moment
-      !>     on a given site is rotated against the z-axis. Default values
-      !>     0.0 and 0.0, i.e., magnetic moment parallel to the z-axis.
-      !>     The angles are read in after the token RBASISANG is found
-      !>     (sought in input file prior to RBASIS token)
-      !>
-      !>   *  KMROT                                                           *
-      !>   *  0: no rotation of the magnetisation                             *
-      !>   *  1: individual rotation of the magnetisation for every site      *
-      !>   ( see also the routine < FINDGROUP > and ff)
-      !----------------------------------------------------------------------------
-      integer, intent(inout) :: KMROT !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-      double precision, dimension(:), allocatable, intent(out) :: QMTET !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(:), allocatable, intent(out) :: QMPHI !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
-      ! ---------------------------------------------------------------------------
-      ! LDA+U
-      integer, intent(inout) :: KREADLDAU !< LDA+U arrays available
-      integer, dimension(:), allocatable, intent(inout) :: LOPT !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-      double precision, dimension(:), allocatable, intent(out) :: UEFF !< input U parameter for each atom
-      double precision, dimension(:), allocatable, intent(out) :: JEFF !< input J parameter for each atom
-      double precision, dimension(:), allocatable, intent(out) :: EREFLDAU !< the energies of the projector's wave functions (REAL)
-      ! LDA+U
-      ! ---------------------------------------------------------------------------
+    character (len=40), intent (inout) :: i12  !< File identifiers
 
-      !----------------------------------------------------------------------------
-      ! Local variables
-      !----------------------------------------------------------------------------
-      ! for OPERATOR option
-      logical :: lexist, operator_imp
-      ! IVSHIFT test option
-      logical :: TEST,OPT
-      EXTERNAL TEST,OPT
-      !     ..
-      !     .. Local Scalars ..
-      integer :: NDIM !< Dimension for the Bravais lattice for slab or bulk (2/3)
-      integer :: NASOC
-      integer :: I,IL,J,IER,IER2,I1,II,IR,IDOSEMICORE,i_stat,i_all
-      double precision :: SOSCALE,CTLSCALE
-      double precision :: BRYMIX,STRMIX,TX,TY,TZ
-      character(len=43) :: TSHAPE
-      character(len=256) :: UIO  ! NCOLIO=256
-      logical :: LNEW !< Logical variable for old/new treatment of left and right host
-      logical :: MANSOC
-      logical :: MANCTL
-      logical :: LATOMINFO !< Logical variable for old/new treatment of the ATOMINFO
-      !.. Local CPA variables
-      integer :: IO,IA,IQ,IPRINT
-      double precision :: SUM
-      character(len=3), dimension(0:1) :: CPAFLAG
+    character (len=40), intent (inout) :: i13  !< Potential file name
 
-      !     .. Local Arrays ..
-      integer, dimension(:), allocatable :: ISP
-      integer, dimension(:), allocatable :: IMANSOC
-      double precision, dimension(10) :: DVEC
-      character(len=4), dimension(3) :: TSPIN
-      character(len=8), dimension(3) :: TKWS
-      character(len=2), dimension(-2:-1) :: SOCII
-      character(len=43), dimension(0:3) :: TINS
-      character(len=43), dimension(0:3) :: TKCOR
-      character(len=43), dimension(0:2) :: TVREL
-      !     ..
-      !     .. Data statements ..
-      DATA TSPIN/'non-','    ','    '/
-      DATA TSHAPE/' exact cell treatment (shape correction)  '/
-      DATA TVREL/&
-      &     ' non relativistic calculation              ',&
-      &     ' s.r.a. calculation                        ',&
-      &     ' fully relativistic calculation            '/
-      DATA TKCOR/&
-      &     ' frozen core approximation                 ',&
-      &     ' core relaxation s.r.a.                    ',&
-      &     ' core relaxation nonsra                    ',&
-      &     ' core relaxation                           '/
-      DATA TINS/' spherical averaged input potential        ',&
-      &     ' non spherical input potential for cluster ',&
-      &     ' non spherical input potential for cluster ',&
-      &     ' non spherical input potential             '/
-      DATA TKWS/' full mt','   ws   ',' full ws'/
-      !
-      DATA CPAFLAG/' NO','YES'/
-      DATA SOCII/'xy','zz'/
-      !     ..
-      !
-      !------------ array set up and definition of input parameter -----------
-      !
-      ! concatenate name & serial number
-      TXC(1) = ' Morruzi,Janak,Williams  #serial: ' // serialnr
-      TXC(2) = ' von Barth,Hedin         #serial: ' // serialnr
-      TXC(3) = ' Vosko,Wilk,Nusair       #serial: ' // serialnr
-      TXC(4) = ' GGA PW91                #serial: ' // serialnr
-      TXC(5) = ' GGA PBE                 #serial: ' // serialnr
-      TXC(6) = ' GGA PBEsol              #serial: ' // serialnr
+    character (len=40), intent (inout) :: i19  !< Shape function file name
 
-      IPRINT = 0
+    character (len=40), intent (inout) :: i25  !< Scoef file name
 
-      open(111,FILE='inputcard_generated.txt') ! Write out found or assumed values
-      call version_print_header(111)
+    character (len=40), intent (inout) :: i40  !< File identifiers
 
-      NEMB = 0
+    character (len=124), dimension (6), intent (inout) :: txc
+    double complex, dimension (:, :, :), allocatable, intent (out) :: drotq !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+!----------------------------------------------------------------------------
+!> @note CPA variables. Routine has been modified to look for
+!>     the token ATOMINFOC and only afterwards, if not found, for the
+!>     old token ATOMINFO. The only necessary extra information
+!>     required is the site IQAT(IATOM) on which the atom IATOM
+!>     is located and the occupancy (concentration) CONC(IATOM).
+!>     The rest of CPA variables are deduced from these two.
+!>     The tolerance for the CPA-cycle and the number of CPA iterations
+!>     can be modified adding the token <CPAINFO> in the input file.
+!----------------------------------------------------------------------------
+    integer, intent (inout) :: ncpa !< ncpa = 0/1 CPA flag
+    integer, intent (inout) :: itcpamax !< max. number of CPA iterations
+    double precision, intent (inout) :: cpatol !< convergency tolerance for CPA-cycle
+    integer, dimension (:), allocatable, intent (out) :: noq !< number of diff. atom types located
+    integer, dimension (:), allocatable, intent (out) :: iqat !< the site on which an atom is located on a given site
+    integer, dimension (:), allocatable, intent (out) :: icpa !< icpa = 0/1 site-dependent CPA flag
+    integer, dimension (:, :), allocatable, intent (out) :: kaoez !< atom types located at a given site
+    double precision, dimension (:), allocatable, intent (out) :: conc !< concentration of a given atom
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Read RUNNING options
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call IoInput('RUNOPT          ',UIO,1,7,IER)
-      if (IER.NE.0) then
-         write(111,*) 'RUNOPT not found'
+!----------------------------------------------------------------------------
+!> @note Variables storing the magnetization direction information.
+!>     QMTET/QMPHI(NAEZ) give the angles to which the magnetic moment
+!>     on a given site is rotated against the z-axis. Default values
+!>     0.0 and 0.0, i.e., magnetic moment parallel to the z-axis.
+!>     The angles are read in after the token RBASISANG is found
+!>     (sought in input file prior to RBASIS token)
+!>
+!>   *  KMROT                                                           *
+!>   *  0: no rotation of the magnetisation                             *
+!>   *  1: individual rotation of the magnetisation for every site      *
+!>   ( see also the routine < FINDGROUP > and ff)
+!----------------------------------------------------------------------------
+    integer, intent (inout) :: kmrot !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+    double precision, dimension (:), allocatable, intent (out) :: qmtet !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+    double precision, dimension (:), allocatable, intent (out) :: qmphi !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+! ---------------------------------------------------------------------------
+! LDA+U
+    integer, intent (inout) :: kreadldau !< LDA+U arrays available
+    integer, dimension (:), allocatable, intent (inout) :: lopt !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+    double precision, dimension (:), allocatable, intent (out) :: ueff !< input U parameter for each atom
+    double precision, dimension (:), allocatable, intent (out) :: jeff !< input J parameter for each atom
+    double precision, dimension (:), allocatable, intent (out) :: erefldau !< the energies of the projector's wave functions (REAL)
+! LDA+U
+! ---------------------------------------------------------------------------
+
+!----------------------------------------------------------------------------
+! Local variables
+!----------------------------------------------------------------------------
+! for OPERATOR option
+    logical :: lexist, operator_imp
+! IVSHIFT test option
+    logical :: test, opt
+    external :: test, opt
+!     ..
+!     .. Local Scalars ..
+    integer :: ndim !< Dimension for the Bravais lattice for slab or bulk (2/3)
+    integer :: nasoc
+    integer :: i, il, j, ier, ier2, i1, ii, ir, idosemicore, i_stat, i_all
+    double precision :: soscale, ctlscale
+    double precision :: brymix, strmix, tx, ty, tz
+    character (len=43) :: tshape
+    character (len=256) :: uio  ! NCOLIO=256
+
+    logical :: lnew !< Logical variable for old/new treatment of left and right host
+    logical :: mansoc
+    logical :: manctl
+    logical :: latominfo !< Logical variable for old/new treatment of the ATOMINFO
+!.. Local CPA variables
+    integer :: io, ia, iq, iprint
+    double precision :: sum
+    character (len=3), dimension (0:1) :: cpaflag
+
+!     .. Local Arrays ..
+    integer, dimension (:), allocatable :: isp
+    integer, dimension (:), allocatable :: imansoc
+    double precision, dimension (10) :: dvec
+    character (len=4), dimension (3) :: tspin
+    character (len=8), dimension (3) :: tkws
+    character (len=2), dimension (-2:-1) :: socii
+    character (len=43), dimension (0:3) :: tins
+    character (len=43), dimension (0:3) :: tkcor
+    character (len=43), dimension (0:2) :: tvrel
+!     ..
+!     .. Data statements ..
+    data tspin/'non-', '    ', '    '/
+    data tshape/' exact cell treatment (shape correction)  '/
+    data tvrel/' non relativistic calculation              ', &
+      ' s.r.a. calculation                        ', &
+      ' fully relativistic calculation            '/
+    data tkcor/' frozen core approximation                 ', &
+      ' core relaxation s.r.a.                    ', &
+      ' core relaxation nonsra                    ', &
+      ' core relaxation                           '/
+    data tins/' spherical averaged input potential        ', &
+      ' non spherical input potential for cluster ', &
+      ' non spherical input potential for cluster ', &
+      ' non spherical input potential             '/
+    data tkws/' full mt', '   ws   ', ' full ws'/
+!
+    data cpaflag/' NO', 'YES'/
+    data socii/'xy', 'zz'/
+!     ..
+!
+!------------ array set up and definition of input parameter -----------
+!
+! concatenate name & serial number
+    txc(1) = ' Morruzi,Janak,Williams  #serial: ' // serialnr
+    txc(2) = ' von Barth,Hedin         #serial: ' // serialnr
+    txc(3) = ' Vosko,Wilk,Nusair       #serial: ' // serialnr
+    txc(4) = ' GGA PW91                #serial: ' // serialnr
+    txc(5) = ' GGA PBE                 #serial: ' // serialnr
+    txc(6) = ' GGA PBEsol              #serial: ' // serialnr
+
+    iprint = 0
+
+    open (111, file='inputcard_generated.txt') ! Write out found or assumed values
+    call version_print_header(111)
+
+    nemb = 0
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Read RUNNING options
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call ioinput('RUNOPT          ', uio, 1, 7, ier)
+    if (ier/=0) then
+      write (111, *) 'RUNOPT not found'
+    else
+      read (unit=uio, fmt=130)(t_params%optc(i), i=1, 8)
+      write (111, fmt='(A6)') 'RUNOPT'
+      write (111, fmt=130)(t_params%optc(i), i=1, 8)
+    end if
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Read TEST options
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call ioinput('TESTOPT         ', uio, 1, 7, ier)
+    if (ier/=0) then
+      write (111, *) 'TESTOPT not found'
+    else
+      read (unit=uio, fmt=130)(t_params%testc(i), i=1, 8)
+      call ioinput('TESTOPT         ', uio, 2, 7, ier)
+      read (unit=uio, fmt=130)(t_params%testc(8+i), i=1, 8)
+      write (111, fmt='(A7)') 'TESTOPT'
+      write (111, fmt=130)(t_params%testc(i), i=1, 8)
+      write (111, fmt=130)(t_params%testc(8+i), i=1, 8)
+    end if
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin lattice structure definition
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call ioinput('ALATBASIS       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) alat
+      write (111, *) 'ALATBASIS=', alat
+    else
+      write (111, *) 'ALATBASIS not found in inputcard'
+      write (*, *) 'rinput13: ALATBASIS not found in inputcard'
+      stop 'rinput13: ALATBASIS not found in inputcard'
+    end if
+
+! Set 2-d or 3-d geometry
+    linterface = .false.
+    call ioinput('INTERFACE       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) linterface
+      write (111, *) 'INTERFACE=', linterface
+    else
+      write (111, *) 'Default INTERFACE= ', linterface
+    end if
+
+    ndim = 3
+    if (linterface) ndim = 2
+    if (.not. linterface .and. .not. opt('SUPRCELL')) then
+      write (1337, *) &
+        '3D-calculation, adding run-option "full inv" for full inversion.'
+      call addopt('full inv')
+    end if
+
+    if (opt('WRTGREEN')) then
+      write (1337, *) 'WRTGREEN option found'
+      write (1337, *) 'adding run-opt "full inv" for full inversion.'
+      write (1337, *) 'adding run-opt "fix mesh"'
+      call addopt('full inv')
+      call addopt('fix mesh')
+    end if
+
+    write (111, *) 'Bravais vectors in units of ALAT'
+    bravais(1:3, 1:3) = 0d0
+    do i = 1, ndim
+      call ioinput('BRAVAIS         ', uio, i, 7, ier)
+      if (ier/=0) stop 'RINPUT: BRAVAIS NOT FOUND'
+      read (unit=uio, fmt=*)(bravais(j,i), j=1, ndim)
+    end do
+    write (111, fmt='(A7)') 'BRAVAIS'
+    do i = 1, ndim
+      write (111, *)(bravais(j,i), j=1, ndim)
+    end do
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Read the number of atoms in the unit cell
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call ioinput('NAEZ            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) naez
+      write (111, *) 'NAEZ=', naez
+    else
+      write (111, *) 'NAEZ not found'
+      stop 'NAEZ not found in <RINPUT13>'
+    end if
+!if (NAEZ.GT.NAEZD) then
+!   write(6,*) ' set NAEZD to at least ',NAEZ
+!   stop ' in < RINPUT13 > '
+!end if
+
+    nref = naez
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Read the atom types, if no CPA NATYP=NAEZ
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    natyp = naez
+    call ioinput('NATYP           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) natyp
+      write (111, *) 'NATYP=', natyp
+    else
+      write (111, *) 'Default NATYP= ', naez
+    end if
+!if (NATYP.GT.NATYPD) then
+!   write(6,*) 'RINPUT13: NATYP > NATYPD',NATYP,NATYPD
+!   stop ' IN < RINPUT13 > '
+!end if
+    if (natyp<naez) then
+      write (6, *) 'RINPUT13: NATYP < NAEZ ', natyp, naez
+      stop ' IN < RINPUT13 > '
+    end if
+
+    allocate (isp(natyp), stat=i_stat)
+    call memocc(i_stat, product(shape(isp))*kind(isp), 'ISP', 'rinput13')
+    isp = 0
+
+    lcartesian = .false.
+    ier = 0
+    call ioinput('CARTESIAN       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) lcartesian
+      write (111, *) 'CARTESIAN= ', lcartesian
+    else
+      write (111, *) 'Default CARTESIAN= ', lcartesian
+    end if
+
+! Jonathan Chico: This call needs to be done before the rest as one needs to
+! find out the value of NEMB to be able to allocate several arrays
+    if (linterface) then
+      write (1337, 770)
+
+      nright = 10
+      call ioinput('NRIGHTHO        ', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) nright
+        write (111, *) 'NRIGHTHO=', nright
       else
-         read (UNIT=UIO,FMT=980)(t_params%OPTC(I),I=1,8)
-         write(111,FMT='(A6)') 'RUNOPT'
-         write(111,FMT=980)  (t_params%OPTC(I),I=1,8)
-      endif
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Read TEST options
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call IoInput('TESTOPT         ',UIO,1,7,IER)
-      if (IER.NE.0) then
-         write(111,*) 'TESTOPT not found'
-      else
-         read(UNIT=UIO,FMT=980)(t_params%TESTC(i),i=1,8)
-         call IoInput('TESTOPT         ',UIO,2,7,IER)
-         read(UNIT=UIO,FMT=980)(t_params%TESTC(8+i),i=1,8)
-         write(111,FMT='(A7)') 'TESTOPT'
-         write(111,FMT=980)(t_params%TESTC(i),i=1,8)
-         write(111,FMT=980)(t_params%TESTC(8+i),i=1,8)
-      endif
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin lattice structure definition
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call IoInput('ALATBASIS       ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) ALAT
-         write(111,*) 'ALATBASIS=',ALAT
-      else
-         write(111,*) 'ALATBASIS not found in inputcard'
-         write(*,*) 'rinput13: ALATBASIS not found in inputcard'
-         stop 'rinput13: ALATBASIS not found in inputcard'
-      endif
-
-      ! Set 2-d or 3-d geometry
-      LINTERFACE = .FALSE.
-      call IoInput('INTERFACE       ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) LINTERFACE
-         write(111,*) 'INTERFACE=',LINTERFACE
-      else
-         write(111,*) 'Default INTERFACE= ',LINTERFACE
-      endif
-
-      NDIM = 3
-      if (LINTERFACE) NDIM = 2
-      if (.NOT.LINTERFACE.AND..NOT.OPT('SUPRCELL')) then
-         write(1337,*) '3D-calculation, adding run-option "full inv" for full inversion.'
-         call ADDOPT('full inv')
-      endif
-
-      if (OPT('WRTGREEN')) then
-         write(1337,*) 'WRTGREEN option found'
-         write(1337,*) 'adding run-opt "full inv" for full inversion.'
-         write(1337,*) 'adding run-opt "fix mesh"'
-         call ADDOPT('full inv')
-         call ADDOPT('fix mesh')
+        write (111, *) 'Default NRIGHTHO=', nright
       end if
 
-      write(111,*) 'Bravais vectors in units of ALAT'
-      BRAVAIS(1:3,1:3) = 0D0
-      do I = 1,NDIM
-         call IOINPUT('BRAVAIS         ',UIO,I,7,IER)
-         if (IER.NE.0) stop 'RINPUT: BRAVAIS NOT FOUND'
-         read (UNIT=UIO,FMT=*) (BRAVAIS(J,I),J=1,NDIM)
+      nleft = 10
+      call ioinput('NLEFTHOS        ', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) nleft
+        write (111, *) 'NLEFTHOS=', nleft
+      else
+        write (111, *) 'Default NLEFTHOS=', nleft
+      end if
+
+      call ioinput('<NLBASIS>       ', uio, 1, 7, ier)
+      if (ier/=0) then
+        write (1337, *) 'rinput13: <NLBASIS> not found in inputcard'
+        ier = 0
+        call ioinput('NLBASIS         ', uio, 1, 7, ier)
+        if (ier/=0) then
+          write (*, *) 'rinput13: NLBASIS also not found in inputcard'
+          stop 'rinput13: NLBASIS not found in inputcard'
+        end if
+      end if
+      if (ier==0) then
+        read (unit=uio, fmt=*) nlbasis
+        write (111, *) '<NLBASIS>=', nlbasis
+      end if
+
+      call ioinput('<NRBASIS>       ', uio, 1, 7, ier)
+      if (ier/=0) then
+        write (1337, *) 'rinput13: <NRBASIS> not found in inputcard'
+        ier = 0
+        call ioinput('NRBASIS         ', uio, 1, 7, ier)
+        if (ier/=0) then
+          write (*, *) 'rinput13: NRBASIS also not found in inputcard'
+          stop 'rinput13: NRBASIS not found in inputcard'
+        end if
+      end if
+      if (ier==0) then
+        read (unit=uio, fmt=*) nrbasis
+        write (111, *) '<NRBASIS>=', nrbasis
+      end if
+
+      nemb = nlbasis + nrbasis
+      write (1337, *) 'Number of embedded atoms NEMB=NLBASIS + NRBASIS=', nemb
+!if(NEMB.GT.NEMBD) then
+!   write(6,*) 'Please, increase the parameter nembd (',nembd,') in inc.p to',nemb
+!   stop 'ERROR in NEMBD.'
+!endif
+
+      ier = 0
+! Check if the keywords exist for old/new treatment of left and right host
+      call ioinput('LEFTBASIS       ', uio, 1, 7, ier)
+      if (ier==0) then
+        lnew = .false.
+      else
+        lnew = .true.
+        ier = 0
+        call ioinput('<RBLEFT>        ', uio, 1, 7, ier)
+      end if
+      if (ier/=0) then
+        write (*, *) 'rinput13: LEFTBASIS or <RBLEFT> not found in inputcard'
+        stop 'rinput13: LEFTBASIS or <RBLEFT> not found in inputcard'
+      end if
+      ier = 0
+      call ioinput('RIGHBASIS       ', uio, 1, 7, ier)
+      if (ier==0) then
+        lnew = .false.
+      else
+        lnew = .true.
+        ier = 0
+        call ioinput('<RBRIGHT>       ', uio, 1, 7, ier)
+      end if
+      if (ier/=0) then
+        write (*, *) 'rinput13: RIGHBASIS or <RBRIGHT> not found in inputcard'
+        stop 'rinput13: RIGHBASIS or <RBRIGHT> not found in inputcard'
+      end if
+    end if
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Allocate the unit cell arrays
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call allocate_cell(1, naez, nemb, natyp, cls, imt, irws, irns, ntcell, &
+      refpot, kfg, kaoez, rmt, zat, rws, mtfac, rmtref, rmtrefat, rmtnew, &
+      rbasis, lmxc)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End of allocation of the unit cell arrays
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Allocate the right and left hosts for slab calculation
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call allocate_semi_inf_host(1, nemb, tleft, tright)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End of allocation of the right and left hosts for slab calculation
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! Basis atoms
+    write (111, fmt='(A16)') '<RBASIS>        '
+    do i = 1, naez
+      call ioinput('<RBASIS>        ', uio, i, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*)(rbasis(j,i), j=1, 3)
+        write (111, fmt='(3E24.12)')(rbasis(j,i), j=1, 3)
+      else
+        ier = 0
+        call ioinput('RBASIS          ', uio, i, 7, ier)
+        if (ier==0) then
+          read (unit=uio, fmt=*)(rbasis(j,i), j=1, 3)
+          write (111, fmt='(3E24.12)')(rbasis(j,i), j=1, 3)
+        else
+          write (*, *) &
+            'RINPUT13: Keyword <RBASIS> or RBASIS not found. Stopping.'
+          stop 'RINPUT13: RBASIS'
+        end if
+      end if
+    end do ! I=1,NAEZ
+    call idreals(rbasis(1,1), 3*naez, iprint)
+
+    dvec(1:3) = 1.d0
+    call ioinput('BASISCALE       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*)(dvec(i), i=1, 3)
+      write (111, fmt='(A10,3E12.4)') 'BASISCALE=', dvec(1:3)
+    else
+      write (111, fmt='(A18,3E12.4)') 'Default BASISCALE=', dvec(1:3)
+    end if
+
+    call idreals(dvec(1), 3, iprint)
+    abasis = dvec(1)
+    bbasis = dvec(2)
+    cbasis = dvec(3)
+
+    write (1337, 220) abasis, bbasis, cbasis
+    write (1337, 360)
+    write (1337, 180) alat
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin read left- and right-host information in 2d-case.
+! Set up the embeding positions
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    if (linterface) then
+!-------------------------------------------------------------------------
+!> @note In leftbasis and rightbasis, kaoez is used only in decimation case.
+!> Then it indicates the correspondence of the atom-coordinate given
+!> by leftbasis and rightbasis to the left- and right-host t-matrix read in
+!> by decimaread. For the slab case, kaoez is not used in the embedded positions.
+!-------------------------------------------------------------------------
+      if (lnew) then
+
+        write (111, fmt='(A82)') '<RBLEFT>                     &
+          &                                 <RMTREFL>   <KAOEZL>'
+        do i = 1, nlbasis
+          call ioinput('<RBLEFT>        ', uio, i, 7, ier)
+          read (unit=uio, fmt=*)(tleft(i1,i), i1=1, 3)
+          kaoez(1, naez+i) = i ! Default
+          call ioinput('<KAOEZL>        ', uio, i, 7, ier)
+          if (ier==0) read (unit=uio, fmt=*) kaoez(1, naez+i)
+          call ioinput('<RMTREFL>       ', uio, i, 7, ier)
+          if (ier==0) read (unit=uio, fmt=*) rmtrefat(naez+i)
+          write (111, fmt='(3E20.12,3X,F9.6,3X,I5)')(tleft(i1,i), i1=1, 3), &
+            rmtrefat(naez+i), kaoez(1, naez+i)
+        end do
+        write (111, fmt='(A82)') '<RBRIGHT>                    &
+          &                                 <RMTREFR>   <KAOEZL>'
+        do i = 1, nrbasis
+          call ioinput('<RBRIGHT>       ', uio, i, 7, ier)
+          read (unit=uio, fmt=*)(tright(i1,i), i1=1, 3)
+          kaoez(1, naez+nlbasis+i) = i ! Default
+          call ioinput('<KAOEZR>        ', uio, i, 7, ier)
+          if (ier==0) read (unit=uio, fmt=*) kaoez(1, naez+nlbasis+i)
+          call ioinput('<RMTREFR>       ', uio, i, 7, ier)
+          if (ier==0) read (unit=uio, fmt=*) rmtrefat(naez+nlbasis+i)
+          write (111, fmt='(3E20.12,3X,F9.6,3X,I5)')(tright(i1,i), i1=1, 3), &
+            rmtrefat(naez+nlbasis+i), kaoez(1, naez+nlbasis+i)
+        end do
+
+      else ! (LNEW) now old-style input
+
+        do i = 1, nlbasis
+          call ioinput('LEFTBASIS       ', uio, i, 7, ier)
+          read (unit=uio, fmt=*)(tleft(i1,i), i1=1, 3), ii, ir
+          kaoez(1, naez+i) = ii ! changed 1.11.99
+          refpot(naez+i) = ir
+        end do
+        do i = 1, nrbasis
+          call ioinput('RIGHBASIS       ', uio, i, 7, ier)
+          read (unit=uio, fmt=*)(tright(i1,i), i1=1, 3), ii, ir
+          kaoez(1, naez+nlbasis+i) = ii ! changed 1.11.99
+          refpot(naez+nlbasis+i) = ir
+        end do
+      end if
+
+      call idreals(tleft, 3*(nemb+1), iprint)
+      call idreals(tright, 3*(nemb+1), iprint)
+
+
+! Put The additional atoms in the "embeding" positions
+
+      do i = 1, nlbasis
+        rbasis(1:3, naez+i) = tleft(1:3, i)
       end do
-      write(111,FMT='(A7)') 'BRAVAIS'
-      do I = 1,NDIM
-         write(111,*) (BRAVAIS(J,I),J=1,NDIM)
-      enddo
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Read the number of atoms in the unit cell
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call IoInput('NAEZ            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NAEZ
-         write(111,*) 'NAEZ=',NAEZ
-      else
-         write(111,*) 'NAEZ not found'
-         stop 'NAEZ not found in <RINPUT13>'
-      endif
-      !if (NAEZ.GT.NAEZD) then
-      !   write(6,*) ' set NAEZD to at least ',NAEZ
-      !   stop ' in < RINPUT13 > '
-      !end if
-
-      NREF=NAEZ
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Read the atom types, if no CPA NATYP=NAEZ
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      NATYP = NAEZ
-      call IoInput('NATYP           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NATYP
-         write(111,*) 'NATYP=',NATYP
-      else
-         write(111,*) 'Default NATYP= ',NAEZ
-      endif
-      !if (NATYP.GT.NATYPD) then
-      !   write(6,*) 'RINPUT13: NATYP > NATYPD',NATYP,NATYPD
-      !   stop ' IN < RINPUT13 > '
-      !end if
-      if (NATYP.LT.NAEZ) then
-         write(6,*) 'RINPUT13: NATYP < NAEZ ',NATYP,NAEZ
-         stop ' IN < RINPUT13 > '
-      end if
-
-      allocate(ISP(NATYP),stat=i_stat)
-      call memocc(i_stat,product(shape(ISP))*kind(ISP),'ISP','rinput13')
-      ISP=0
-
-      LCARTESIAN = .FALSE.
-      IER = 0
-      call IOINPUT('CARTESIAN       ',UIO,1,7,IER)
-      if ( IER.EQ.0 ) then
-         read (UNIT=UIO,FMT=*) LCARTESIAN
-         write(111,*) 'CARTESIAN= ',LCARTESIAN
-      else
-         write(111,*) 'Default CARTESIAN= ',LCARTESIAN
-      endif
-
-      ! Jonathan Chico: This call needs to be done before the rest as one needs to
-      ! find out the value of NEMB to be able to allocate several arrays
-      if (LINTERFACE) then
-         write(1337,9410)
-
-         NRIGHT = 10
-         call IoInput('NRIGHTHO        ',UIO,1,7,IER)
-         if (IER.EQ.0) then
-            read (UNIT=UIO,FMT=*) NRIGHT
-            write(111,*) 'NRIGHTHO=',NRIGHT
-         else
-            write(111,*) 'Default NRIGHTHO=',NRIGHT
-         endif
-
-         NLEFT = 10
-         call IoInput('NLEFTHOS        ',UIO,1,7,IER)
-         if (IER.EQ.0) then
-            read (UNIT=UIO,FMT=*) NLEFT
-            write(111,*) 'NLEFTHOS=',NLEFT
-         else
-            write(111,*) 'Default NLEFTHOS=',NLEFT
-         endif
-
-         call IoInput('<NLBASIS>       ',UIO,1,7,IER)
-         if (IER.NE.0) then
-            write(1337,*) 'rinput13: <NLBASIS> not found in inputcard'
-            IER = 0
-            call IoInput('NLBASIS         ',UIO,1,7,IER)
-            if (IER.NE.0) then
-               write(*,*) 'rinput13: NLBASIS also not found in inputcard'
-               stop 'rinput13: NLBASIS not found in inputcard'
-            endif
-         endif
-         if (IER.EQ.0) then
-            read (UNIT=UIO,FMT=*) NLBASIS
-            write(111,*) '<NLBASIS>=',NLBASIS
-         endif
-
-         call IoInput('<NRBASIS>       ',UIO,1,7,IER)
-         if (IER.NE.0) then
-            write(1337,*) 'rinput13: <NRBASIS> not found in inputcard'
-            IER = 0
-            call IoInput('NRBASIS         ',UIO,1,7,IER)
-            if (IER.NE.0) then
-               write(*,*) 'rinput13: NRBASIS also not found in inputcard'
-               stop 'rinput13: NRBASIS not found in inputcard'
-            endif
-         endif
-         if (IER.EQ.0) then
-            read (UNIT=UIO,FMT=*) NRBASIS
-            write(111,*) '<NRBASIS>=',NRBASIS
-         endif
-
-         NEMB = NLBASIS + NRBASIS
-         write(1337,*) 'Number of embedded atoms NEMB=NLBASIS + NRBASIS=',NEMB
-         !if(NEMB.GT.NEMBD) then
-         !   write(6,*) 'Please, increase the parameter nembd (',nembd,') in inc.p to',nemb
-         !   stop 'ERROR in NEMBD.'
-         !endif
-
-         IER = 0
-         ! Check if the keywords exist for old/new treatment of left and right host
-         call IoInput('LEFTBASIS       ',UIO,1,7,IER)
-         if (IER.EQ.0) then
-            LNEW = .FALSE.
-         else
-            LNEW = .TRUE.
-            IER = 0
-            call IoInput('<RBLEFT>        ',UIO,1,7,IER)
-         endif
-         if (IER.NE.0) then
-            write(*,*) 'rinput13: LEFTBASIS or <RBLEFT> not found in inputcard'
-            stop 'rinput13: LEFTBASIS or <RBLEFT> not found in inputcard'
-         endif
-         IER = 0
-         call IoInput('RIGHBASIS       ',UIO,1,7,IER)
-         if (IER.EQ.0) then
-            LNEW = .FALSE.
-         else
-            LNEW = .TRUE.
-            IER = 0
-            call IoInput('<RBRIGHT>       ',UIO,1,7,IER)
-         endif
-         if (IER.NE.0) then
-            write(*,*) 'rinput13: RIGHBASIS or <RBRIGHT> not found in inputcard'
-            stop 'rinput13: RIGHBASIS or <RBRIGHT> not found in inputcard'
-         endif
-      endif
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Allocate the unit cell arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call allocate_cell(1,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,&
-      KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS,LMXC)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End of allocation of the unit cell arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Allocate the right and left hosts for slab calculation
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call allocate_semi_inf_host(1,NEMB,TLEFT,TRIGHT)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End of allocation of the right and left hosts for slab calculation
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      ! Basis atoms
-      write(111,FMT='(A16)') '<RBASIS>        '
-      do I=1,NAEZ
-         call IoInput('<RBASIS>        ',UIO,I,7,IER)
-         if (IER.EQ.0) then
-            read (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
-            write(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
-         else
-            IER=0
-            call IoInput('RBASIS          ',UIO,I,7,IER)
-            if (IER.EQ.0) then
-               read (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3)
-               write(111,FMT='(3E24.12)') (RBASIS(J,I), J=1,3)
-            else
-               write(*,*) 'RINPUT13: Keyword <RBASIS> or RBASIS not found. Stopping.'
-               stop 'RINPUT13: RBASIS'
-            endif
-         endif
-      enddo                         ! I=1,NAEZ
-      call IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
-
-      DVEC(1:3) = 1.D0
-      call IoInput('BASISCALE       ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) (DVEC(I),I=1,3)
-         write(111,FMT='(A10,3E12.4)') 'BASISCALE=',DVEC(1:3)
-      else
-         write(111,FMT='(A18,3E12.4)') 'Default BASISCALE=',DVEC(1:3)
-      endif
-
-      call IDREALS(DVEC(1),3,IPRINT)
-      ABASIS = DVEC(1)
-      BBASIS = DVEC(2)
-      CBASIS = DVEC(3)
-
-      write(1337,2019) ABASIS,BBASIS,CBASIS
-      write(1337,2107)
-      write(1337,2014) ALAT
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin read left- and right-host information in 2d-case.
-      ! Set up the embeding positions
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      if (LINTERFACE) then
-         !-------------------------------------------------------------------------
-         !> @note In leftbasis and rightbasis, kaoez is used only in decimation case.
-         !> Then it indicates the correspondence of the atom-coordinate given
-         !> by leftbasis and rightbasis to the left- and right-host t-matrix read in
-         !> by decimaread. For the slab case, kaoez is not used in the embedded positions.
-         !-------------------------------------------------------------------------
-         if (LNEW) then
-
-            write(111,FMT='(A82)') '<RBLEFT>                                                      <RMTREFL>   <KAOEZL>'
-            do I=1,NLBASIS
-               call IoInput('<RBLEFT>        ',UIO,I,7,IER)
-               read (UNIT=UIO,FMT=*) (TLEFT(I1,I),I1=1,3)
-               KAOEZ(1,NAEZ+I) = I            ! Default
-               call IoInput('<KAOEZL>        ',UIO,I,7,IER)
-               if (IER.EQ.0) read (UNIT=UIO,FMT=*) KAOEZ(1,NAEZ+I)
-               call IoInput('<RMTREFL>       ',UIO,I,7,IER)
-               if (IER.EQ.0) read (UNIT=UIO,FMT=*) RMTREFAT(NAEZ+I)
-               write (111,FMT='(3E20.12,3X,F9.6,3X,I5)') (TLEFT(I1,I),I1=1,3),RMTREFAT(NAEZ+I),KAOEZ(1,NAEZ+I)
-            enddo
-            write(111,FMT='(A82)') '<RBRIGHT>                                                     <RMTREFR>   <KAOEZL>'
-            do I=1,NRBASIS
-               call IoInput('<RBRIGHT>       ',UIO,I,7,IER)
-               read (UNIT=UIO,FMT=*) (TRIGHT(I1,I),I1=1,3)
-               KAOEZ(1,NAEZ+NLBASIS+I) = I     ! Default
-               call IoInput('<KAOEZR>        ',UIO,I,7,IER)
-               if (IER.EQ.0) read (UNIT=UIO,FMT=*) KAOEZ(1,NAEZ+NLBASIS+I)
-               call IoInput('<RMTREFR>       ',UIO,I,7,IER)
-               if (IER.EQ.0) read (UNIT=UIO,FMT=*) RMTREFAT(NAEZ+NLBASIS+I)
-               write (111,FMT='(3E20.12,3X,F9.6,3X,I5)') (TRIGHT(I1,I),I1=1,3),RMTREFAT(NAEZ+NLBASIS+I),KAOEZ(1,NAEZ+NLBASIS+I)
-            enddo
-
-         else ! (LNEW) now old-style input
-
-            do I=1,NLBASIS
-               call IoInput('LEFTBASIS       ',UIO,I,7,IER)
-               read (UNIT=UIO,FMT=*) (TLEFT(I1,I),I1=1,3),II,IR
-               KAOEZ(1,NAEZ+I) = II    ! changed 1.11.99
-               REFPOT(NAEZ+I) = IR
-            end do
-            do I=1,NRBASIS
-               call IoInput('RIGHBASIS       ',UIO,I,7,IER)
-               read (UNIT=UIO,FMT=*) (TRIGHT(I1,I),I1=1,3),II,IR
-               KAOEZ(1,NAEZ+NLBASIS+I) = II  ! changed 1.11.99
-               REFPOT(NAEZ+NLBASIS+I) = IR
-            end do
-         endif
-
-         call IDREALS(TLEFT,3*(NEMB+1),IPRINT)
-         call IDREALS(TRIGHT,3*(NEMB+1),IPRINT)
-
-
-         ! Put The additional atoms in the "embeding" positions
-
-         do I=1,NLBASIS
-            RBASIS(1:3,NAEZ+I) = TLEFT(1:3,I)
-         end do
-         do I=1,NRBASIS
-            RBASIS(1:3,NAEZ+NLBASIS+I) = TRIGHT(1:3,I)
-         end do
-         !-------------------------------------------------------------------------
-         ! In RBASIS we have first the basis atoms or the interface
-         ! atoms then the left host then the right host the host
-         ! goes in the NEMB positions
-         !
-         ! IN CASE OF CPA the host is treated as an effective
-         ! CPA medium, that is, there is only one kind of atom
-         ! occupying a crystallographic site.
-         !
-         !-------------------------------------------------------------------------
-         call IoInput('ZPERIODL        ',UIO,1,7,IER)
-         if (IER.NE.0) then
-            write(*,*) 'rimput13: ZPERIODL not found in inputcard'
-            stop 'rimput13: ZPERIODL not found in inputcard'
-         else
-            read (UNIT=UIO,FMT=*) (ZPERLEFT(I1),I1=1,3)
-            write(111,FMT='(A9,3E20.12)') 'ZPERIODL=',(ZPERLEFT(I1),I1=1,3)
-         endif
-         call IDREALS(ZPERLEFT(1),3,IPRINT)
-
-         call IoInput('ZPERIODR        ',UIO,1,7,IER)
-         if (IER.NE.0) then
-            write(*,*) 'rimput13: ZPERIODR not found in inputcard'
-            stop 'rimput13: ZPERIODR not found in inputcard'
-         else
-            read (UNIT=UIO,FMT=*) (ZPERIGHT(I1),I1=1,3)
-            write(111,FMT='(A9,3E20.12)') 'ZPERIODR=',(ZPERIGHT(I1),I1=1,3)
-         endif
-         call IDREALS(ZPERIGHT(1),3,IPRINT)
-
-         write(1337,9430) NLEFT,NLBASIS
-         write(1337,9440) NRIGHT,NRBASIS
-         write(1337,9450) (ZPERLEFT(i1),I1=1,3)
-         write(1337,9460) (ZPERIGHT(i1),I1=1,3)
-         write(1337,9465)
-         write(1337,9470)
-         do I=NLEFT,1,-1
-            do I1=NLBASIS,1,-1
-               tx = TLEFT(1,i1) + (I-1)*ZPERLEFT(1)
-               ty = TLEFT(2,i1) + (I-1)*ZPERLEFT(2)
-               tz = TLEFT(3,i1) + (I-1)*ZPERLEFT(3)
-               write(1337,9420) (I-1)*NLBASIS+i1, tx,ty,tz,KAOEZ(1,I1)
-            end do
-         end do
-         write(1337,9475)
-         do I=1,NAEZ
-            write(1337,9420) I, (RBASIS(I1,I),I1=1,3)
-         end do
-         write(1337,9480)
-         do I=1,NRIGHT
-            do I1=1,NRBASIS
-               tx = TRIGHT(1,i1) + (I-1)*ZPERIGHT(1)
-               ty = TRIGHT(2,i1) + (I-1)*ZPERIGHT(2)
-               tz = TRIGHT(3,i1) + (I-1)*ZPERIGHT(3)
-               write(1337,9420) (I-1)*NRBASIS+i1,tx,ty,tz,KAOEZ(1,I1)
-            end do
-         end do
-
-      end if ! LINTERFACE
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End read left- and right-host information in 2d-case.
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      ! Although NSPIN is fixed to 1 in REL mode,
-      ! NSPIN should be used as 1 or 2 at this stage
-      ! to indicate a non- or spin-polarised potential
-      ! that has to be read in. NSPIN is set to 1 before
-      ! being passed to the subsequent programs.
-      ! < TESTDIM > has been accordingly modified
-      call IoInput('NSPIN           ',UIO,1,7,IER)
-      if (IER.NE.0) then
-         write(111,*) 'NSPIN not found'
-         stop 'NSPIN not found'
-      else
-         read (UNIT=UIO,FMT=*) NSPIN
-         write(111,*) 'NSPIN=',NSPIN
-      endif
-
-      write(1337,2010) NSPIN
-      write(1337,2104)
-
-      ! Atomic number
-      call IoInput('<ZATOM>         ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         write(111,'(A10)') '<ZATOM>   '
-         do I = 1,NATYP
-            call IoInput('<ZATOM>         ',UIO,I,7,IER)
-            if (IER.EQ.0) then
-               read (UNIT=UIO,FMT=*) ZAT(I)
-               write(111,FMT='(F6.3)') ZAT(I)
-            endif
-         enddo
-      else
-         write(111,*) 'zatom will be read in from pot-file'
-      endif
-
-      ! Angular momentum cutoff
-      call IoInput('LMAX            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) LMAX
-         write(111,*) 'LMAX=',LMAX
-      else
-         stop 'LMAX not found'
-      endif
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Allocation of CPA arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call allocate_cpa(1,NAEZ,NEMB,NATYP,NOQ,ICPA,IQAT,HOSTIMP,CONC)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End of allocation of CPA arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      do I=1,NAEZ
-         ICPA(I) = 0
-         NOQ(I) = 1
+      do i = 1, nrbasis
+        rbasis(1:3, naez+nlbasis+i) = tright(1:3, i)
       end do
-      NCPA = 0
-
-      do I = 1,NAEZ
-         KAOEZ(1,I) = I       ! default
-         IQAT(I) = I          ! Basis-Site of atom I
-      enddo
-      if (NATYP.EQ.NAEZ) CONC(1:NATYP) = 1.D0
-
-      ! CPA calculation, read concentrations
-      if (NATYP.GT.NAEZ) then
-
-         NCPA = 1
-         NOQ(1:NAEZ) = 0 ! re-initialize
-
-         IER = 0
-         IER2 = 0
-         call IoInput('<SITE>          ',UIO,1,7,IER)
-         call IoInput('<CPA-CONC>      ',UIO,1,7,IER2)
-         if (IER.NE.0.OR.IER2.NE.0) then
-            write(1337,*) '<SITE> or <CPA-CONC> not found, will search for ATOMINFOC'
-         else
-
-            write(111,FMT='(A18)') '<SITE>  <CPA-CONC>'
-            do I = 1,NATYP
-               call IoInput('<SITE>          ',UIO,I,7,IER)
-               read (UNIT=UIO,FMT=*) IQAT(I)
-               call IoInput('<CPA-CONC>      ',UIO,I,7,IER)
-               read (UNIT=UIO,FMT=*) CONC(I)
-               write(111,FMT='(I5,4X,E16.8)') IQAT(I),CONC(I)
-            enddo
-
-            do I = 1,NATYP
-               IQ = IQAT(I)
-               NOQ(IQ) = NOQ(IQ) + 1
-               if ( NOQ(IQ) .GT. 1 ) ICPA(IQ) = 1
-               KAOEZ(NOQ(IQ),IQ) = I
-            enddo
-
-            do IQ=1,NAEZ
-               SUM = 0D0
-               if (NOQ(IQ).LT.1) then
-                  write(6,*) 'RINPUT13: CPA: SITE',IQ,'HAS NO ASSIGNED ATOM'
-                  stop 'RINPUT13: CPA'
-               endif
-               do IO=1,NOQ(IQ)
-                  SUM = SUM + CONC(KAOEZ(IO,IQ))
-               end do
-               if ( ABS(SUM-1.D0).GT.1D-6) then
-                  write(6,*) ' SITE ', IQ, ' CONCENTRATION <> 1.0 !'
-                  write(6,*) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
-                  stop       ' IN <RINPUT99>'
-               end if
-            end do
-
-         endif
-      endif ! (NATYP.GT.NAEZ)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End atom type information
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin relativistic treatment information
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      KCOR = 2
-      !      call IoInput('KCOR      ',UIO,1,7,IER)
-      !                      read (UNIT=UIO,FMT=*) kcor
-
-      KVREL = 1   ! 0=Schroedinger / 1=SRA / 2=Dirac
-      call IoInput('KVREL           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) kvrel
-         write(111,*) 'KVREL= ',KVREL
+!-------------------------------------------------------------------------
+! In RBASIS we have first the basis atoms or the interface
+! atoms then the left host then the right host the host
+! goes in the NEMB positions
+!
+! IN CASE OF CPA the host is treated as an effective
+! CPA medium, that is, there is only one kind of atom
+! occupying a crystallographic site.
+!
+!-------------------------------------------------------------------------
+      call ioinput('ZPERIODL        ', uio, 1, 7, ier)
+      if (ier/=0) then
+        write (*, *) 'rimput13: ZPERIODL not found in inputcard'
+        stop 'rimput13: ZPERIODL not found in inputcard'
       else
-         write(111,*) 'Default KVREL= ',KVREL
-      endif
-
-      call IoInput('KORBIT          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) KORBIT
-         write(111,*) 'KORBIT= ',KORBIT
-      else
-         write(111,*) 'Default KORBIT= ',KORBIT
-      endif
-
-      !----------------------------------------------------------------------------
-      ! Start of the reading of variables that used to be in the inc.p
-      !----------------------------------------------------------------------------
-      !> @note JC: Read the IRM value from the inputcard. This in principle can be determined from
-      !> the potential file, hence maybe it is best to do it that way instead
-      call IoInput('IRM             ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) IRM
-         write(111,*) 'IRM= ',IRM
-      else
-         write(111,*) 'Default IRM= ',IRM
-      endif
-
-      call IoInput('IRNSD           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) IRNSD
-         write(111,*) 'IRNSD= ',IRNSD
-      else
-         write(111,*) 'Default IRNSD= ',IRNSD
-      endif
-
-      call IoInput('NSHELD          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NSHELD
-         write(111,*) 'NSHELD= ',NSHELD
-      else
-         write(111,*) 'Default NSHELD= ',NSHELD
-      endif
-
-      call IoInput('KNOSPH          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) KNOSPH
-         write(111,*) 'KNOSPH= ',KNOSPH
-      else
-         write(111,*) 'Default KNOSPH= ',KNOSPH
-      endif
-
-      call IoInput('IEMXD           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) IEMXD
-         write(111,*) 'IEMXD= ',IEMXD
-      else
-         write(111,*) 'Default IEMXD= ',IEMXD
-      endif
-
-      call IoInput('NR              ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NR
-         write(111,*) 'NR= ',NR
-      else
-         write(111,*) 'Default NR= ',NR
-      endif
-
-      KVREL = 1   ! 0=Schroedinger / 1=SRA / 2=Dirac
-      CALL IoInput('KVREL           ',UIO,1,7,IER)
-      IF (IER.EQ.0) THEN
-         READ (UNIT=UIO,FMT=*) kvrel
-         WRITE(111,*) 'KVREL= ',KVREL
-      ELSE
-         WRITE(111,*) 'Default KVREL= ',KVREL
-      ENDIF
-      ! store KVREL to be used later on
-      t_inc%KVREL = KVREL
-
-      call IoInput('KPOIBZ          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) KPOIBZ
-         write(111,*) 'KPOIBZ= ',KPOIBZ
-      else
-         write(111,*) 'Default KPOIBZ= ',KPOIBZ
-      endif
-
-      call IoInput('NMAXD           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NMAXD
-         write(111,*) 'NMAXD= ',NMAXD
-      else
-         write(111,*) 'Default NMAXD= ',NMAXD
-      endif
-
-      call IoInput('ISHLD           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) ISHLD
-         write(111,*) 'ISHLD= ',ISHLD
-      else
-         write(111,*) 'Default ISHLD= ',ISHLD
-      endif
-
-      call IoInput('KNOCO           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) KNOCO
-         write(111,*) 'KNOCO= ',KNOCO
-      else
-         write(111,*) 'Default KNOCO= ',KNOCO
-      endif
-
-      call IoInput('NTREFD          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NTREFD
-         write(111,*) 'NTREFD= ',NTREFD
-      else
-         write(111,*) 'Default NTREFD= ',NTREFD
-      endif
-
-      call IoInput('NATOMIMPD       ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NATOMIMPD
-         write(111,*) 'NATOMIMPD= ',NATOMIMPD
-      else
-         write(111,*) 'Default NATOMIMPD= ',NATOMIMPD
-      endif
-
-      call IoInput('NPRINCD         ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NPRINCD
-         write(111,*) 'NPRINCD= ',NPRINCD
-      else
-         write(111,*) 'Default NPRINCD= ',NPRINCD
-      endif
-
-      call IoInput('IPAND           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) IPAND
-         write(111,*) 'IPAND= ',IPAND
-      else
-         write(111,*) 'Default IPAND= ',IPAND
-      endif
-
-      call IoInput('NFUND           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NFUND
-         write(111,*) 'NFUND= ',NFUND
-      else
-         write(111,*) 'Default NFUND= ',NFUND
-      endif
-
-      call IoInput('IRID            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) IRID
-         write(111,*) 'IRID= ',IRID
-      else
-         write(111,*) 'Default IRID= ',IRID
-      endif
-
-      call IoInput('NGSHD           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NGSHD
-         write(111,*) 'NGHSD= ',NGSHD
-      else
-         write(111,*) 'Default NGSHD= ',NGSHD
-      endif
-
-      call IoInput('WLENGTH         ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) WLENGTH
-         write(111,*) 'WLENGTH= ',WLENGTH
-      else
-         write(111,*) 'Default WLENGTH= ',WLENGTH
-      endif
-
-      call IoInput('NACLSD          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NACLSD
-         write(111,*) 'NACLSD= ',NACLSD
-      else
-         write(111,*) 'Default NACLSD= ',NACLSD
-      endif
-
-      call IoInput('NTOTD           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NTOTD
-         write(111,*) 'NTOTD= ',NTOTD
-      else
-         write(111,*) 'Default NTOTD= ',NTOTD
-      endif
-      !----------------------------------------------------------------------------
-      ! End of variables that used to be in the inc.
-      !----------------------------------------------------------------------------
-      !----------------------------------------------------------------------------
-      ! Calculate derived parameters
-      !----------------------------------------------------------------------------
-      LM2D     = (2*LMAX+1)**2
-      NCLSD    = NAEZ + NEMB
-      MMAXD    = 2*LMAX+1
-      NCLEB    = (LMAX*2+1)**2 * (LMAX+1)**2
-      NSPIND   = KREL+(1-KREL)*2 ! (KSP+1) where KSP is always 1
-      NPOTD    = (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP
-      LMMAXD   = (KREL+KORBIT+1)*(LMAX+1)**2
-      LMGF0D   = (LMAX+1)**2
-      LASSLD   = 4*LMAX
-      NEMBD1   = NEMB+1
-      IRMIND   = IRM-IRNSD
-      NOFGIJ   = NATOMIMPD**2+1
-      NTPERD   = NATYP-NTREFD
-      NSPINDD  = NSPIND-KORBIT
-      NSATYPD  = (NATYP-1)*KNOSPH+1
-      NSPOTD   = (2*KREL + (1-KREL)*NSPIND) * NSATYPD
-      if (KREL.NE.0.OR.KORBIT.NE.0.OR.KNOCO.NE.0) then
-         LNC=.true.
-      else
-         LNC=.false.
-      endif
-      !----------------------------------------------------------------------------
-      ! End of calculation of the derived parameters
-      !----------------------------------------------------------------------------
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Allocation of SOC arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call allocate_SOC(1,KREL,NATYP,LMAX,SOCSCALE,CSCL,SOCSCL)
-      allocate(IMANSOC(NATYP),stat=i_stat)
-      call memocc(i_stat,product(shape(IMANSOC))*kind(IMANSOC),'IMANSOC','rinput13')
-      IMANSOC = 0
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End of allocation of SOC arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (OPT('NEWSOSOL')) then ! Spin-orbit
-         if ( OPT('NEWSOSOL') .AND. (NSPIN.NE.2) ) stop ' set NSPIN = 2 for SOC solver in inputcard'
-         NPAN_LOG = 30
-         NPAN_EQ = 30
-         NCHEB = 10
-         R_LOG = 0.1D0
-         call IoInput('NPAN_LOG        ',UIO,1,7,IER)
-         if (IER.EQ.0) read (UNIT=UIO,FMT=*) NPAN_LOG
-         call IoInput('NPAN_EQ         ',UIO,1,7,IER)
-         if (IER.EQ.0) read (UNIT=UIO,FMT=*) NPAN_EQ
-         call IoInput('NCHEB           ',UIO,1,7,IER)
-         if (IER.EQ.0) read (UNIT=UIO,FMT=*) NCHEB
-         call IoInput('R_LOG           ',UIO,1,7,IER)
-         if (IER.EQ.0) read (UNIT=UIO,FMT=*) R_LOG
-         write(111,*) 'NPAN_LOG= ',NPAN_LOG
-         write(111,*) 'NPAN_EQ= ',NPAN_EQ
-         write(111,*) 'NCHEB= ',NCHEB
-         write(111,*) 'R_LOG= ',R_LOG
-      endif
-
-      call IoInput('<SOCSCL>        ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         write(111,'(A10)') '<SOCSCL>  '
-         do I = 1,NATYP
-            call IoInput('<SOCSCL>        ',UIO,I,7,IER)
-            if (IER.EQ.0) then
-               read (UNIT=UIO,FMT=*) SOCSCALE(I)
-               write(111,FMT='(F6.3)') SOCSCALE(I)
-            endif
-         enddo
-         !        read (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)                       !Bernd - old way
-         !        write(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP) !Bernd - old way
-      else
-         write(111,FMT='(A18,50E10.2)') 'Default <SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
-      endif
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End relativistic treatment information
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin cell control
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      call IoInput('<FPRADIUS>      ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         write(111,'(A10)') '<FPRADIUS>'
-         do I = 1,NATYP
-            call IoInput('<FPRADIUS>      ',UIO,I,7,IER)
-            if (IER.EQ.0) then
-               read (UNIT=UIO,FMT=*) FPRADIUS(I)
-            endif
-            write(111,FMT='(F6.3)') FPRADIUS(I)
-         enddo
-      else
-         write(111,*) 'fpradius will be read in from pot-file'
-      endif
-
-      !
-      INS = 1
-      call IoInput('INS             ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) ins
-         write(111,*) 'INS= ',INS
-      else
-         write(111,*) 'Default INS= ',INS
-      endif
-
-      KSHAPE = 2
-      if (INS.EQ.0) KSHAPE = 0
-      call IoInput('KSHAPE          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) KSHAPE
-         write(111,*) 'KSHAPE= ',KSHAPE
-      else
-         write(111,*) 'Default KSHAPE= ',KSHAPE
-      endif
-
-      if ( (KREL.EQ.1).AND.(KSHAPE.NE.0) ) then
-         write(1337,*) ' WARNING : KSHAPE set to ZERO for REL case'
-         write(111,*) ' WARNING : kshape set to ZERO for REL case'
-         KSHAPE = 0
+        read (unit=uio, fmt=*)(zperleft(i1), i1=1, 3)
+        write (111, fmt='(A9,3E20.12)') 'ZPERIODL=', (zperleft(i1), i1=1, 3)
       end if
+      call idreals(zperleft(1), 3, iprint)
 
-      ! Read cell information
-      write(1337,*) 'Cell information <SHAPE>:'
-      write(111,FMT='(A16)') '<SHAPE>         '
-      do I = 1,NATYP
-         NTCELL(I) = IQAT(I) ! Default: Different shape function per atom
-         call IoInput('<SHAPE>         ',UIO,I,7,IER)
-         if (IER.EQ.0) then
-            read (UNIT=UIO,FMT=*) NTCELL(I)
-            write(111,FMT='(I6)') NTCELL(I)
-         endif
-      enddo
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End cell control
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin exchange correlation treatment information
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      KXC = 2 ! 0=vBH 1=MJW 2=VWN 3=PW91
-      call IoInput('KEXCOR          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) kxc
-         write(111,*) 'KEXCOR= ',KXC
+      call ioinput('ZPERIODR        ', uio, 1, 7, ier)
+      if (ier/=0) then
+        write (*, *) 'rimput13: ZPERIODR not found in inputcard'
+        stop 'rimput13: ZPERIODR not found in inputcard'
       else
-         write(111,*) 'Default KEXCOR= ',KXC
-      endif
-
-      ! Scale magnetic moment (0 < Lambda_XC < 1,  0=zero moment, 1= full moment)
-      LAMBDA_XC = 1.D0
-      call IoInput('LAMBDA_XC       ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) LAMBDA_XC
-         write(111,*) 'LAMBDA_XC= ',LAMBDA_XC
-      else
-         write(111,*) 'Default LAMBDA_XC= ',LAMBDA_XC
-      endif
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! LDA+U treatment
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Allocate the LDA+U arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call allocate_ldau(1,NATYP,LOPT,UEFF,JEFF,EREFLDAU)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End of LDA+U array allocation
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      if (OPT('LDA+U   ')) then
-
-         !Check for LDA+U consistency -- if INS=0 suppress it
-         if ((INS.EQ.0) ) then
-            write (1337,*)
-            write (1337,*)&
-            &        ' WARNING: LDA+U should be used only in NON-SPHERICAL',&
-            &        ' case (INS=1) '
-            write (1337,*) ' Running option LDA+U will be ignored'
-            write (1337,*)
-            do I=1,32
-               if (t_params%OPTC(I)(1:8).EQ.'LDA+U   ') t_params%OPTC(I)='        '
-            end do
-         end if
-
-         ! -> get number of atoms for lda+u:
-
-         IER = 0
-         call IoInput('NAT_LDAU        ',UIO,1,7,IER)
-         if ( IER.NE.0 ) then
-            NASOC = NATYP
-         else
-            read (UNIT=UIO,FMT=*) NASOC
-            if ( NASOC.GT.NATYP ) stop ' main0: NAT_LDAU > NATYP'
-         end if
-
-         ! -> read in UEFF,JEFF,LOPT,EREFLDAU for the desired atoms
-
-         IL = 0
-         do I=1,NASOC
-            IER = 0
-            call IoInput('LDAU_PARA       ',UIO,I,7,IER)
-            if ( IER.EQ.0 ) then
-               read (UNIT=UIO,FMT=*) I1,LOPT(I1),UEFF(I1),JEFF(I1),EREFLDAU(I1)
-               IL = IL + 1
-            end if
-         enddo
-         if ( IL.NE.NASOC ) then
-            write(6,*) ' ERROR: LDA+U invoked for ',NASOC,' atoms'
-            write(6,*) '        Some (all) parameters are missing in the input-file'
-            stop
-         end if
-         KREADLDAU = 0
-         IER = 0
-         call IoInput('KREADLDAU       ',UIO,1,7,IER)
-         if ( IER.EQ.0 ) read (UNIT=UIO,FMT=*) KREADLDAU
-
+        read (unit=uio, fmt=*)(zperight(i1), i1=1, 3)
+        write (111, fmt='(A9,3E20.12)') 'ZPERIODR=', (zperight(i1), i1=1, 3)
       end if
+      call idreals(zperight(1), 3, iprint)
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End exchange correlation treatment information
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin external field control
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      KHFIELD = 0
-      HFIELD = 0.D0
-      call IoInput('HFIELD          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) HFIELD
-         if (HFIELD.NE.0.D0) then
-            KHFIELD = 1
-            write(*,*) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'
-            write(1337,*) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'
-         end if
-         write(111,*) 'HFIELD= ',HFIELD
-      else
-         write(111,*) 'Default HFIELD= ',HFIELD
-      endif
-
-      VCONST = 0.D0
-      call IoInput('VCONST          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) vconst
-         write(111,*) 'VCONST= ',VCONST
-      else
-         write(111,*) 'Default VCONST= ',VCONST
-      endif
-
-
-      if (TEST('atptshft')) then
-         write(1337,*) 'read IN IVSHIFT'
-         call IoInput('IVSHIFT         ',UIO,1,7,IER)
-         read (UNIT=UIO,FMT=*) ivshift
-      endif
-
-      ! Initial polarization
-      LINIPOL = .FALSE.
-      call IoInput('LINIPOL         ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) LINIPOL
-         write(111,*) 'LINIPOL= ',LINIPOL
-      else
-         write(111,*) 'Default: LINIPOL= ',LINIPOL
-      endif
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Allocate magnetization arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call allocate_magnetization(1,NAEZ,NATYP,LMMAXD,INIPOL,IXIPOL,QMTET,&
-      QMPHI,DROTQ)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End of allocation of magnetization arrays
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      if (LINIPOL) then
-         INIPOL(1:NATYP) = 1
-         call IoInput('XINIPOL         ',UIO,1,7,IER)
-         if (IER.EQ.0) then
-            read (UNIT=UIO,FMT=*) (inipol(I),I=1,natyp)
-            write(111,FMT='(A10,80I2)') 'XINIPOL=  ',(INIPOL(I),I=1,NATYP)
-         else
-            write(111,FMT='(A18,80I2)') 'Default XINIPOL=  ',(INIPOL(I),I=1,NATYP)
-         endif
-      endif
-
-
-      write (1337,2021) (INIPOL(I),I=1,NATYP)
-      write(1337,2103)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End external field control
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin Green function calculation control (diag./non-diag)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      IGF = 0
-      call IoInput('IGREENFUN       ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) igf
-         write(111,*) 'IGREENFUN= ',IGF
-      else
-         write(111,*) 'Default IGREENFUN= ',IGF
-      endif
-      
-      IF (OPT('OPERATOR')) THEN
-        ! check if impurity files are present (otherwise no imp.
-        ! wavefunctions can be calculated)
-        operator_imp = .true.
-        inquire(file='potential_imp', exist=lexist)
-        if (.not.lexist) operator_imp = .false.
-        inquire(file='shapefun_imp', exist=lexist)
-        if (.not.lexist) operator_imp = .false.
-        inquire(file='scoef', exist=lexist)
-        if (.not.lexist) operator_imp = .false.
-      ELSE
-        operator_imp = .false.
-      END IF
-      if (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. operator_imp) then
-         write(1337,*) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR options'
-         IGF = 1
-      end if
-
-      ICC = 0
-      call IoInput('ICC             ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) ICC
-         write(111,*) 'ICC= ',ICC
-      else
-         write(111,*) 'Default ICC= ',ICC
-      endif
-      if (OPT('KKRFLEX ') .or. OPT('WRTGREEN') .or. OPT('GREENIMP') .or. operator_imp) then
-         write(1337,*) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR  options'
-         ICC = 1
-      end if
-      if ( ( OPT('XCPL    ') ).OR.( OPT('CONDUCT ') ) ) ICC = -1
-
-      if ( ICC.NE.0 .AND. IGF.EQ.0 ) IGF = 1
-      if ( ICC.EQ.0 .AND. IGF.NE.0 ) ICC = -1
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End Green function calculation control (diag./non-diag)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin accuracy parameters
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      ! Brilloun zone mesh
-      INTERVX = 10
-      INTERVY = 10
-      INTERVZ = 10
-      call IoInput('BZDIVIDE        ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) INTERVX,INTERVY,INTERVZ
-         write(111,FMT='(A9,3I5)') 'BZDIVIDE=',INTERVX,INTERVY,INTERVZ
-      else
-         write(111,FMT='(A17,3I5)') 'Default BZDIVIDE=',INTERVX,INTERVY,INTERVZ
-      endif
-      write(1337,2104)
-      write(1337,2015) INTERVX,INTERVY,INTERVZ
-      write(1337,2102)
-
-      if(OPT('GREENIMP')) then
-         write(*,*) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
-         write(1337,*) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
-         INTERVX = 1
-         INTERVY = 1
-         INTERVZ = 1
-      endif
-
-      ! Energy contour
-      NPOL = 7
-      !      if (OPT('dos     ').OR.OPT('DOS     ')) NPOL = 0
-      call IoInput('NPOL            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NPOL
-         write(111,*) 'NPOL=',NPOL
-      else
-         write(111,*) 'Default NPOL=',NPOL
-      endif
-
-      call IoInput('EMIN            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) EMIN
-         write(111,*) 'EMIN= ',EMIN
-      else if (NPOL.EQ.0) then
-         EMIN = -1.D0
-         write(111,*) 'Default for DOS: EMIN= ',EMIN
-      else
-         write(1337,*) 'Error in rinput13: EMIN not found'
-         write(111,*) 'Error in rinput13: EMIN not found'
-         stop 'Error in rinput13: EMIN not found'
-      endif
-
-      EMAX = 1.D0
-      call IoInput('EMAX            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) EMAX
-         write(111,*) ' EMAX=',EMAX
-      else
-         write(111,*) 'Default  EMAX=',EMAX
-      endif
-
-      TK = 800.D0
-      call IoInput('TEMPR           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) TK
-         write(111,*) 'TEMPR=',TK
-      else
-         write(111,*) 'Default TEMPR=',TK
-      endif
-
-      NPNT1 = 3
-      if (NPOL.EQ.0) NPNT1 = 0
-      call IoInput('NPT1            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NPNT1
-         write(111,*) ' NPT1=',NPNT1
-      else
-         write(111,*) 'Default  NPT1=',NPNT1
-      endif
-
-      NPNT2 = NINT((EMAX-EMIN)*20.D0) ! 20 pts/Ryd
-      if (NPOL.EQ.0) NPNT2 = NINT((EMAX-EMIN)*100.D0) ! For dos, 100 pts/Ryd
-      call IoInput('NPT2            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NPNT2
-         write(111,*) ' NPT2=',NPNT2
-      else
-         write(111,*) 'Default  NPT2=',NPNT2
-      endif
-
-      NPNT3 = 3
-      if (NPOL.EQ.0) NPNT3 = 0
-      call IoInput('NPT3            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) NPNT3
-         write(111,*) ' NPT3=',NPNT3
-      else
-         write(111,*) 'Default  NPT3=',NPNT3
-      endif
-
-      ! -> semicore
-      ! initialise variables
-      IDOSEMICORE = 0
-      EBOTSEMI = EMIN
-      EMUSEMI = EBOTSEMI
-      NPOLSEMI = 0
-      N1SEMI = 0
-      N2SEMI = 0
-      N3SEMI = 0
-      FSEMICORE = 1.D0
-
-      IER = 0
-      if ( OPT('SEMICORE') ) then
-         call IoInput('EBOTSEMI        ',UIO,1,7,IER)
-         if ( IER.NE.0 ) GOTO 99800
-         read (UNIT=UIO,FMT=*) EBOTSEMI
-         call IoInput('EMUSEMI         ',UIO,1,7,IER)
-         if ( IER.NE.0 ) GOTO 99800
-         read (UNIT=UIO,FMT=*) EMUSEMI
-
-         ! -> EMUSEMI < EBOT
-         if ( EMUSEMI.GE.EMIN ) GOTO 99800
-         call IoInput('TKSEMI          ',UIO,1,7,IER)
-         if ( IER.NE.0 ) GOTO 99800
-         read (UNIT=UIO,FMT=*) TKSEMI
-
-         call IoInput('NPOLSEMI        ',UIO,1,7,IER)
-         if ( IER.NE.0 ) GOTO 99800
-         read (UNIT=UIO,FMT=*) NPOLSEMI
-         call IoInput('N1SEMI          ',UIO,1,7,IER)
-         if ( IER.NE.0 ) GOTO 99800
-         read (UNIT=UIO,FMT=*) N1SEMI
-         call IoInput('N2SEMI          ',UIO,1,7,IER)
-         if ( IER.NE.0 ) GOTO 99800
-         read (UNIT=UIO,FMT=*) N2SEMI
-         call IoInput('N3SEMI          ',UIO,1,7,IER)
-         if ( IER.NE.0 ) GOTO 99800
-         read (UNIT=UIO,FMT=*) N3SEMI
-         call IoInput('FSEMICORE       ',UIO,1,7,IER)
-         if ( IER.NE.0 ) GOTO 99800
-         read (UNIT=UIO,FMT=*) FSEMICORE
-         IDOSEMICORE = 1
-         99800    continue
-         if ( IDOSEMICORE.EQ.0 ) then
-            write (1337,*)
-            write (1337,*) ' WARNING: SEMICORE used',&
-            &           ' with incomplete/incorrect contour description'
-            write (1337,*) ' Running option SEMICORE will be ignored'
-            write (111,*)
-            write (111,*) ' WARNING: SEMICORE used',&
-            &           ' with incomplete/incorrect contour description'
-            write (111,*) ' Running option SEMICORE will be ignored'
-            do I=1,32
-               if (t_params%OPTC(I)(1:8).EQ.'SEMICORE') t_params%OPTC(I)='        '
-            end do
-         end if
-      end if
-
-      ! CPA convergence parameters
-      CPATOL = 1D-4
-      ITCPAMAX = 20
-      call IOINPUT('CPAINFO         ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) CPATOL,ITCPAMAX
-      else
-         write(111,*) 'Default cpainfo:'
-      endif
-      write(111,FMT='(A7)') 'CPAINFO'
-      write(111,FMT='(E12.4,I5)') CPATOL,ITCPAMAX
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin screening cluster information
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      RCUTZ = 11.D0/ALAT  ! Default 11 Bohr radii
-      call IoInput('RCLUSTZ         ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) RCUTZ
-         write(111,*) 'RCLUSTZ=',RCUTZ
-      else
-         write(111,*) 'Default RCLUSTZ=',RCUTZ
-      endif
-
-      RCUTXY = RCUTZ
-      call IoInput('RCLUSTXY        ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) RCUTXY
-         write(111,*) 'RCLUSTXY=',RCUTXY
-      else
-         write(111,*) 'Default RCLUSTXY=',RCUTXY
-      endif
-
-      write(1337,*) 'Parameters used for the cluster calculation'
-      if (abs(rcutz-rcutxy).lt.1.d-4) then
-         write(1337,*) 'Clusters inside spheres with radius R = ',rcutz
-      else
-         write(1337,*) 'Clusters inside cylinders with '
-         write(1337,*) 'Rz = ',rcutz,' Rxy = ',rcutxy
-      end if
-      write(1337,2104)
-      write(1337,2018)                 ! rbasis
-      write(1337,2101)
-      do i=1,naez
-         write(1337,2025) i,(rbasis(j,i),j=1,3),&
-         QMTET(I),QMPHI(I),ICPA(I),NOQ(I),(KAOEZ(J,I),J=1,NOQ(I))
-      enddo
-
-      do I=1,NAEZ
-         call IoInput('<RMTREF>        ',UIO,I,7,IER)
-         if (IER.EQ.0) then
-            read (UNIT=UIO,FMT=*) RMTREFAT(I)
-         endif
-      enddo
-      if (IER.EQ.0) then
-         write(111,FMT='(A18)') '        <RMTREF>  '
-      else
-         write(111,FMT='(A18)') 'Default <RMTREF>  '
-      endif
-      do I=1,NAEZ
-         write(111,FMT='(9X,F9.6)') RMTREFAT(I)
-      enddo
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End screening cluster information
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Number of Born iterations
-      ICST = 2
-      call IoInput('ICST            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) ICST
-         write(111,*) 'ICST=',ICST
-      else
-         write(111,*) 'Default ICST=',ICST
-      endif
-
-      ! Usage of Lloyd's formula
-      LLY = 0 ! LLY Default=0 : do not apply Lloyds formula
-      if (OPT('LLOYD   ').OR.OPT('Lloyd   ').OR.OPT('lloyd   ')) LLY = 1
-      call IoInput('<LLOYD>         ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) LLY
-         write(111,*) '<LLOYD>=',LLY
-      else
-         write(111,*) 'Default <LLOYD>=',LLY
-      endif
-      if (LLY.NE.0) write(1337,*) 'Applying Lloyds formula, LLY=',LLY
-
-      DELTAE = (1.D-5,0.D0) ! Difference for numer. derivative in Lloyds formula
-      call IoInput('<DELTAE>        ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) DELTAE
-         write(111,*) '<DELTAE>=',DELTAE
-      else
-         write(111,*) 'Default <DELTAE>=',DELTAE
-      endif
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End accuracy parameters
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin old-type of ATOMINFO
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      LATOMINFO = .FALSE.
-      ! Initialize all clusters to 1
-      CLS(1:NAEZ+NEMB) = 1
-      write(1337,*) 'ATOMINFOC or ATOMINFO:'
-      do I=1,NATYP
-         call IoInput('ATOMINFOC       ',UIO,I+1,7,IER)
-         IA = 1
-         if ( IER.EQ.0 ) then
-            LATOMINFO = .TRUE.
-            read (UNIT=UIO,FMT=*)   ZAT(I),           &
-            LMXC(I),          &
-            (KFG(J,I),J=1,4), &
-            J,                &
-            IER,              &
-            NTCELL(I),        &
-            MTFAC(I),         &
-            IRNS(I),          &
-            RMTREF(IER),IQAT(I),CONC(I)
-            IQ = IQAT(I)
-            REFPOT(IQ) = IER
-            RMTREFAT(I) = RMTREF(IER)
-            CLS(IQ) = J
-            NOQ(IQ) = NOQ(IQ) + 1
-            if ( NOQ(IQ) .GT. 1 ) then
-               ICPA(IQ) = 1
-               NCPA = 1
-            end if
-            KAOEZ(NOQ(IQ),IQ) = I
-         else
-            IER = 0
-            call IoInput('ATOMINFO        ',UIO,I+1,7,IER)
-            if (IER.EQ.0) then
-               LATOMINFO = .TRUE.
-               read (UNIT=UIO,FMT=*)   ZAT(I),           &
-               LMXC(I),          &
-               (KFG(J,I),J=1,4), &
-               J,                &
-               REFPOT(I),        &
-               NTCELL(I),        &
-               MTFAC(I),         &
-               IRNS(I),          &
-               RMTREF(REFPOT(I))
-               IQAT(I) = I
-               RMTREFAT(I) = RMTREF(REFPOT(I))
-               CLS(I) = J
-               CONC(I) = 1.D0
-               NOQ(I) = 1
-               KAOEZ(1,I) = I
-            endif
-         end if
+      write (1337, 790) nleft, nlbasis
+      write (1337, 800) nright, nrbasis
+      write (1337, 810)(zperleft(i1), i1=1, 3)
+      write (1337, 820)(zperight(i1), i1=1, 3)
+      write (1337, 830)
+      write (1337, 840)
+      do i = nleft, 1, -1
+        do i1 = nlbasis, 1, -1
+          tx = tleft(1, i1) + (i-1)*zperleft(1)
+          ty = tleft(2, i1) + (i-1)*zperleft(2)
+          tz = tleft(3, i1) + (i-1)*zperleft(3)
+          write (1337, 780)(i-1)*nlbasis + i1, tx, ty, tz, kaoez(1, i1)
+        end do
+      end do
+      write (1337, 850)
+      do i = 1, naez
+        write (1337, 780) i, (rbasis(i1,i), i1=1, 3)
+      end do
+      write (1337, 860)
+      do i = 1, nright
+        do i1 = 1, nrbasis
+          tx = tright(1, i1) + (i-1)*zperight(1)
+          ty = tright(2, i1) + (i-1)*zperight(2)
+          tz = tright(3, i1) + (i-1)*zperight(3)
+          write (1337, 780)(i-1)*nrbasis + i1, tx, ty, tz, kaoez(1, i1)
+        end do
       end do
 
-      ! If old-style ATOMINFO is present, and if a 2-dim calculation is performed,
-      ! and also if the RMTREF of the "outside region" is not read in explicitly
-      ! (LNEW is false) then assign the RMTREF of the outside region according to
-      ! the already-read-in REFPOT under LEFTBASIS  and RIGHBASIS.
-      if (LATOMINFO.AND.LINTERFACE.AND..NOT.LNEW) then
-         do I = NAEZ + 1,NAEZ + NEMB
-            RMTREFAT(I) = RMTREF(REFPOT(I))
-         enddo
-      endif
+    end if ! LINTERFACE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End read left- and right-host information in 2d-case.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      NCLS = 0
-      NREF = 0
+! Although NSPIN is fixed to 1 in REL mode,
+! NSPIN should be used as 1 or 2 at this stage
+! to indicate a non- or spin-polarised potential
+! that has to be read in. NSPIN is set to 1 before
+! being passed to the subsequent programs.
+! < TESTDIM > has been accordingly modified
+    call ioinput('NSPIN           ', uio, 1, 7, ier)
+    if (ier/=0) then
+      write (111, *) 'NSPIN not found'
+      stop 'NSPIN not found'
+    else
+      read (unit=uio, fmt=*) nspin
+      write (111, *) 'NSPIN=', nspin
+    end if
 
-      ! Determine total number of clusters
-      do I=1,NATYP
-         NCLS = MAX(NCLS,CLS(IQAT(I)))
-      enddo
+    write (1337, 150) nspin
+    write (1337, 350)
 
-      ! Determine total number of different reference potentials
-      do I=1,NAEZ + NEMB
-         NREF = MAX(NREF,REFPOT(I))
-      enddo
+! Atomic number
+    call ioinput('<ZATOM>         ', uio, 1, 7, ier)
+    if (ier==0) then
+      write (111, '(A10)') '<ZATOM>   '
+      do i = 1, natyp
+        call ioinput('<ZATOM>         ', uio, i, 7, ier)
+        if (ier==0) then
+          read (unit=uio, fmt=*) zat(i)
+          write (111, fmt='(F6.3)') zat(i)
+        end if
+      end do
+    else
+      write (111, *) 'zatom will be read in from pot-file'
+    end if
 
-      !in line 1792  this is done: NINEQ = NAEZ, so here NINEQ is still undefinded
-      !so we move this writeout back
-      !
-      !write(6,2016) NCLS,NREF,NINEQ
-      !write(6,2110)
-      !write(6,2103)
+! Angular momentum cutoff
+    call ioinput('LMAX            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) lmax
+      write (111, *) 'LMAX=', lmax
+    else
+      stop 'LMAX not found'
+    end if
 
-      do IQ=1,NAEZ
-         SUM = 0D0
-         if (NOQ(IQ).LT.1) then
-            write(6,*) 'RINPUT13: CPA: SITE',IQ,'HAS NO ASSIGNED ATOM'
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Allocation of CPA arrays
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call allocate_cpa(1, naez, nemb, natyp, noq, icpa, iqat, hostimp, conc)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End of allocation of CPA arrays
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    do i = 1, naez
+      icpa(i) = 0
+      noq(i) = 1
+    end do
+    ncpa = 0
+
+    do i = 1, naez
+      kaoez(1, i) = i ! default
+      iqat(i) = i ! Basis-Site of atom I
+    end do
+    if (natyp==naez) conc(1:natyp) = 1.d0
+
+! CPA calculation, read concentrations
+    if (natyp>naez) then
+
+      ncpa = 1
+      noq(1:naez) = 0 ! re-initialize
+
+      ier = 0
+      ier2 = 0
+      call ioinput('<SITE>          ', uio, 1, 7, ier)
+      call ioinput('<CPA-CONC>      ', uio, 1, 7, ier2)
+      if (ier/=0 .or. ier2/=0) then
+        write (1337, *) &
+          '<SITE> or <CPA-CONC> not found, will search for ATOMINFOC'
+      else
+
+        write (111, fmt='(A18)') '<SITE>  <CPA-CONC>'
+        do i = 1, natyp
+          call ioinput('<SITE>          ', uio, i, 7, ier)
+          read (unit=uio, fmt=*) iqat(i)
+          call ioinput('<CPA-CONC>      ', uio, i, 7, ier)
+          read (unit=uio, fmt=*) conc(i)
+          write (111, fmt='(I5,4X,E16.8)') iqat(i), conc(i)
+        end do
+
+        do i = 1, natyp
+          iq = iqat(i)
+          noq(iq) = noq(iq) + 1
+          if (noq(iq)>1) icpa(iq) = 1
+          kaoez(noq(iq), iq) = i
+        end do
+
+        do iq = 1, naez
+          sum = 0d0
+          if (noq(iq)<1) then
+            write (6, *) 'RINPUT13: CPA: SITE', iq, 'HAS NO ASSIGNED ATOM'
             stop 'RINPUT13: CPA'
-         endif
-         do IO=1,NOQ(IQ)
-            SUM = SUM + CONC(KAOEZ(IO,IQ))
-         end do
-         if ( ABS(SUM-1.D0).GT.1D-6) then
-            write(6,*) ' SITE ', IQ, ' CONCENTRATION <> 1.0 !'
-            write(6,*) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
-            stop       ' IN <RINPUT99>'
-         end if
+          end if
+          do io = 1, noq(iq)
+            sum = sum + conc(kaoez(io,iq))
+          end do
+          if (abs(sum-1.d0)>1d-6) then
+            write (6, *) ' SITE ', iq, ' CONCENTRATION <> 1.0 !'
+            write (6, *) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
+            stop ' IN <RINPUT99>'
+          end if
+        end do
+
+      end if
+    end if ! (NATYP.GT.NAEZ)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End atom type information
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin relativistic treatment information
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    kcor = 2
+!      call IoInput('KCOR      ',UIO,1,7,IER)
+!                      read (UNIT=UIO,FMT=*) kcor
+
+    kvrel = 1 ! 0=Schroedinger / 1=SRA / 2=Dirac
+    call ioinput('KVREL           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) kvrel
+      write (111, *) 'KVREL= ', kvrel
+    else
+      write (111, *) 'Default KVREL= ', kvrel
+    end if
+
+    call ioinput('KORBIT          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) korbit
+      write (111, *) 'KORBIT= ', korbit
+    else
+      write (111, *) 'Default KORBIT= ', korbit
+    end if
+
+!----------------------------------------------------------------------------
+! Start of the reading of variables that used to be in the inc.p
+!----------------------------------------------------------------------------
+!> @note JC: Read the IRM value from the inputcard. This in principle can be determined from
+!> the potential file, hence maybe it is best to do it that way instead
+    call ioinput('IRM             ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) irm
+      write (111, *) 'IRM= ', irm
+    else
+      write (111, *) 'Default IRM= ', irm
+    end if
+
+    call ioinput('IRNSD           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) irnsd
+      write (111, *) 'IRNSD= ', irnsd
+    else
+      write (111, *) 'Default IRNSD= ', irnsd
+    end if
+
+    call ioinput('NSHELD          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) nsheld
+      write (111, *) 'NSHELD= ', nsheld
+    else
+      write (111, *) 'Default NSHELD= ', nsheld
+    end if
+
+    call ioinput('KNOSPH          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) knosph
+      write (111, *) 'KNOSPH= ', knosph
+    else
+      write (111, *) 'Default KNOSPH= ', knosph
+    end if
+
+    call ioinput('IEMXD           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) iemxd
+      write (111, *) 'IEMXD= ', iemxd
+    else
+      write (111, *) 'Default IEMXD= ', iemxd
+    end if
+
+    call ioinput('NR              ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) nr
+      write (111, *) 'NR= ', nr
+    else
+      write (111, *) 'Default NR= ', nr
+    end if
+
+    kvrel = 1 ! 0=Schroedinger / 1=SRA / 2=Dirac
+    call ioinput('KVREL           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) kvrel
+      write (111, *) 'KVREL= ', kvrel
+    else
+      write (111, *) 'Default KVREL= ', kvrel
+    end if
+! store KVREL to be used later on
+    t_inc%kvrel = kvrel
+
+    call ioinput('KPOIBZ          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) kpoibz
+      write (111, *) 'KPOIBZ= ', kpoibz
+    else
+      write (111, *) 'Default KPOIBZ= ', kpoibz
+    end if
+
+    call ioinput('NMAXD           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) nmaxd
+      write (111, *) 'NMAXD= ', nmaxd
+    else
+      write (111, *) 'Default NMAXD= ', nmaxd
+    end if
+
+    call ioinput('ISHLD           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) ishld
+      write (111, *) 'ISHLD= ', ishld
+    else
+      write (111, *) 'Default ISHLD= ', ishld
+    end if
+
+    call ioinput('KNOCO           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) knoco
+      write (111, *) 'KNOCO= ', knoco
+    else
+      write (111, *) 'Default KNOCO= ', knoco
+    end if
+
+    call ioinput('NTREFD          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) ntrefd
+      write (111, *) 'NTREFD= ', ntrefd
+    else
+      write (111, *) 'Default NTREFD= ', ntrefd
+    end if
+
+    call ioinput('NATOMIMPD       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) natomimpd
+      write (111, *) 'NATOMIMPD= ', natomimpd
+    else
+      write (111, *) 'Default NATOMIMPD= ', natomimpd
+    end if
+
+    call ioinput('NPRINCD         ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) nprincd
+      write (111, *) 'NPRINCD= ', nprincd
+    else
+      write (111, *) 'Default NPRINCD= ', nprincd
+    end if
+
+    call ioinput('IPAND           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) ipand
+      write (111, *) 'IPAND= ', ipand
+    else
+      write (111, *) 'Default IPAND= ', ipand
+    end if
+
+    call ioinput('NFUND           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) nfund
+      write (111, *) 'NFUND= ', nfund
+    else
+      write (111, *) 'Default NFUND= ', nfund
+    end if
+
+    call ioinput('IRID            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) irid
+      write (111, *) 'IRID= ', irid
+    else
+      write (111, *) 'Default IRID= ', irid
+    end if
+
+    call ioinput('NGSHD           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) ngshd
+      write (111, *) 'NGHSD= ', ngshd
+    else
+      write (111, *) 'Default NGSHD= ', ngshd
+    end if
+
+    call ioinput('WLENGTH         ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) wlength
+      write (111, *) 'WLENGTH= ', wlength
+    else
+      write (111, *) 'Default WLENGTH= ', wlength
+    end if
+
+    call ioinput('NACLSD          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) naclsd
+      write (111, *) 'NACLSD= ', naclsd
+    else
+      write (111, *) 'Default NACLSD= ', naclsd
+    end if
+
+    call ioinput('NTOTD           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) ntotd
+      write (111, *) 'NTOTD= ', ntotd
+    else
+      write (111, *) 'Default NTOTD= ', ntotd
+    end if
+!----------------------------------------------------------------------------
+! End of variables that used to be in the inc.
+!----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
+! Calculate derived parameters
+!----------------------------------------------------------------------------
+    lm2d = (2*lmax+1)**2
+    nclsd = naez + nemb
+    mmaxd = 2*lmax + 1
+    ncleb = (lmax*2+1)**2*(lmax+1)**2
+    nspind = krel + (1-krel)*2 ! (KSP+1) where KSP is always 1
+    npotd = (2*(krel+korbit)+(1-(krel+korbit))*nspind)*natyp
+    lmmaxd = (krel+korbit+1)*(lmax+1)**2
+    lmgf0d = (lmax+1)**2
+    lassld = 4*lmax
+    nembd1 = nemb + 1
+    irmind = irm - irnsd
+    nofgij = natomimpd**2 + 1
+    ntperd = natyp - ntrefd
+    nspindd = nspind - korbit
+    nsatypd = (natyp-1)*knosph + 1
+    nspotd = (2*krel+(1-krel)*nspind)*nsatypd
+    if (krel/=0 .or. korbit/=0 .or. knoco/=0) then
+      lnc = .true.
+    else
+      lnc = .false.
+    end if
+!----------------------------------------------------------------------------
+! End of calculation of the derived parameters
+!----------------------------------------------------------------------------
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Allocation of SOC arrays
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call allocate_soc(1, krel, natyp, lmax, socscale, cscl, socscl)
+    allocate (imansoc(natyp), stat=i_stat)
+    call memocc(i_stat, product(shape(imansoc))*kind(imansoc), 'IMANSOC', &
+      'rinput13')
+    imansoc = 0
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End of allocation of SOC arrays
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if (opt('NEWSOSOL')) then ! Spin-orbit
+      if (opt('NEWSOSOL') .and. (nspin/=2)) stop &
+        ' set NSPIN = 2 for SOC solver in inputcard'
+      npan_log = 30
+      npan_eq = 30
+      ncheb = 10
+      r_log = 0.1d0
+      call ioinput('NPAN_LOG        ', uio, 1, 7, ier)
+      if (ier==0) read (unit=uio, fmt=*) npan_log
+      call ioinput('NPAN_EQ         ', uio, 1, 7, ier)
+      if (ier==0) read (unit=uio, fmt=*) npan_eq
+      call ioinput('NCHEB           ', uio, 1, 7, ier)
+      if (ier==0) read (unit=uio, fmt=*) ncheb
+      call ioinput('R_LOG           ', uio, 1, 7, ier)
+      if (ier==0) read (unit=uio, fmt=*) r_log
+      write (111, *) 'NPAN_LOG= ', npan_log
+      write (111, *) 'NPAN_EQ= ', npan_eq
+      write (111, *) 'NCHEB= ', ncheb
+      write (111, *) 'R_LOG= ', r_log
+    end if
+
+    call ioinput('<SOCSCL>        ', uio, 1, 7, ier)
+    if (ier==0) then
+      write (111, '(A10)') '<SOCSCL>  '
+      do i = 1, natyp
+        call ioinput('<SOCSCL>        ', uio, i, 7, ier)
+        if (ier==0) then
+          read (unit=uio, fmt=*) socscale(i)
+          write (111, fmt='(F6.3)') socscale(i)
+        end if
       end do
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End old-type of ATOMINFO
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!        read (UNIT=UIO,FMT=*) (SOCSCALE(I1),I1=1,NATYP)                       !Bernd - old way
+!        write(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP) !Bernd - old way
+    else
+      write (111, fmt='(A18,50E10.2)') 'Default <SOCSCL>= ', &
+        (socscale(i1), i1=1, natyp)
+    end if
 
-      ! Write out atominfo
-      write(1337,2028) NATYP
-      write(1337,2104)
-      write(1337,1029) (                     &
-      ZAT(I),           &
-      LMXC(I),          &
-      (KFG(J,I),J=1,4), &
-      CLS(IQAT(I)),     &
-      REFPOT(IQAT(I)),  &
-      NTCELL(I),        &
-      MTFAC(I),         &
-      IRNS(I),          &
-      IQAT(I),CONC(I),I=1,NATYP)
-      write(1337,2108)
-      write(1337,2104)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End relativistic treatment information
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin SCF convergence control
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      NSTEPS = 1
-      call IoInput('NSTEPS          ',UIO,1,7,IER)
-      if (IER.NE.0) then
-         write(111,*) 'Default NSTEPS=',NSTEPS
-      else
-         read (UNIT=UIO,FMT=*) NSTEPS
-      endif
-      if (NPOL.EQ.0) then
-         NSTEPS = 1
-         write(1337,*) 'NPOL=0, setting NSTEPS to 1'
-      endif
-      if (IGF.NE.0) then
-         NSTEPS = 1
-         write(1337,*) 'IGF.NE.0, setting NSTEPS to 1'
-      endif
-      if (ICC.NE.0) then
-         NSTEPS = 1
-         write(1337,*) 'ICC.NE.0, setting NSTEPS to 1'
-      endif
-      if (OPT('XCPL    ')) then
-         NSTEPS = 1
-         write(1337,*) 'RUNOPT XCPL used, setting NSTEPS to 1'
-      endif
-      if (OPT('KKRFLEX ')) then
-         NSTEPS = 1
-         write(1337,*) 'RUNOPT KKRFLEX used, setting NSTEPS to 1'
-      endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin cell control
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      write(1337,2011) NSTEPS
-      write(1337,2104)
+    call ioinput('<FPRADIUS>      ', uio, 1, 7, ier)
+    if (ier==0) then
+      write (111, '(A10)') '<FPRADIUS>'
+      do i = 1, natyp
+        call ioinput('<FPRADIUS>      ', uio, i, 7, ier)
+        if (ier==0) then
+          read (unit=uio, fmt=*) fpradius(i)
+        end if
+        write (111, fmt='(F6.3)') fpradius(i)
+      end do
+    else
+      write (111, *) 'fpradius will be read in from pot-file'
+    end if
 
-      IMIX = 0
-      call IoInput('IMIX            ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) imix
-         write(111,*) 'IMIX= ',IMIX
-      else
-         write(111,*) 'Default IMIX= ',IMIX
-      endif
-      if (NPOL.EQ.0) then
-         write(1337,*) 'NPOL=0, setting IMIX= 0'
-         IMIX = 0
-      endif
+!
+    ins = 1
+    call ioinput('INS             ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) ins
+      write (111, *) 'INS= ', ins
+    else
+      write (111, *) 'Default INS= ', ins
+    end if
 
-      STRMIX = 0.01D0
-      call IoInput('STRMIX          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) STRMIX
-         write(111,*) 'STRMIX= ',STRMIX
-      else
-         write(111,*) 'Default STRMIX= ',STRMIX
-      endif
-      if (NPOL.EQ.0) then
-         write(1337,*) 'NPOL=0, setting STRMIX= 0.'
-         STRMIX = 0
-      endif
+    kshape = 2
+    if (ins==0) kshape = 0
+    call ioinput('KSHAPE          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) kshape
+      write (111, *) 'KSHAPE= ', kshape
+    else
+      write (111, *) 'Default KSHAPE= ', kshape
+    end if
 
-      ITDBRY = 40
-      call IoInput('ITDBRY          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) itdbry
-         write(111,*) 'ITDBRY= ',ITDBRY
-      else
-         write(111,*) 'Default ITDBRY= ',ITDBRY
-      endif
+    if ((krel==1) .and. (kshape/=0)) then
+      write (1337, *) ' WARNING : KSHAPE set to ZERO for REL case'
+      write (111, *) ' WARNING : kshape set to ZERO for REL case'
+      kshape = 0
+    end if
 
-      FCM = 20.D0
-      call IoInput('FCM             ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) fcm
-         write(111,*) 'FCM= ',FCM
-      else
-         write(111,*) 'Default FCM= ',FCM
-      endif
-
-      QBOUND = 1.D-7
-      call IoInput('QBOUND          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) qbound
-         write(111,*) 'QBOUND= ',QBOUND
-      else
-         write(111,*) 'Default QBOUND= ',QBOUND
-      endif
-
-      BRYMIX = 0.01D0
-      call IoInput('BRYMIX          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) brymix
-         write(111,*) 'BRYMIX= ',BRYMIX
-      else
-         write(111,*) 'Default BRYMIX= ',BRYMIX
-      endif
-
-      call IOINPUT('RMAX            ',UIO,1,7,IER)
-      if ( IER.NE.0 ) stop 'rinput13: RMAX not in the inputcard'
-      read (UNIT=UIO,FMT=*) RMAX
-      write(111,*) 'RMAX= ',RMAX
-
-      call IOINPUT('GMAX            ',UIO,1,7,IER)
-      if ( IER.NE.0 ) stop 'rinput13: GMAX not in the inputcard'
-      read (UNIT=UIO,FMT=*) GMAX
-      write(111,*) 'GMAX= ',GMAX
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End SCF convergence control
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Begin file name definitions
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      IL=1
-      call IoInput('FILES           ',UIO,IL,7,IER)
-      if (IER.EQ.0) then
-         call IoInput('FILES           ',UIO,IL,7,IER)
-         read (UNIT=UIO,FMT='(A40)')  I12
-         call IoInput('FILES           ',UIO,IL+1,7,IER)
-         read (UNIT=UIO,FMT='(A40)')  I13
-         call IoInput('FILES           ',UIO,IL+2,7,IER)
-         read (UNIT=UIO,FMT='(A40)')  I40
-         call IoInput('FILES           ',UIO,IL+3,7,IER)
-         read (UNIT=UIO,FMT='(A40)')  I19
-         call IoInput('FILES           ',UIO,IL+4,7,IER)
-         read (UNIT=UIO,FMT='(A40)')  I25
-      else
-         I13 = 'potential                               ' ! 40 chars
-         I19 = 'shapefun                                ' ! 40 chars
-         I25 = 'scoef                                   ' ! 40 chars
-         I12 = '                                        ' ! 40 chars (not used)
-         I40 = '                                        ' ! 40 chars (not used)
-      endif
-
-      write(1337,*) 'I12="',I12,'"'
-      write(1337,*) 'I13="',I13,'"'
-      write(1337,*) 'I40="',I40,'"'
-      write(1337,*) 'I19="',I19,'"'
-      write(1337,*) 'I25="',I25,'"'
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! End file name definitions
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      IFILE = 13
-      call IoInput('<IFILE>         ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) ifile
-         write(111,*) '<IFILE>= ',IFILE
-      else
-         write(111,*) 'Default <IFILE>= ',IFILE
-      endif
-
-      IPE = 1    ! Used to print out in calrmt
-      ISHIFT = 0
-      call IoInput('ISHIFT          ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) ishift
-         write(111,*) 'ISHIFT= ',ISHIFT
-      else
-         write(111,*) 'Default ISHIFT= ',ISHIFT
-      endif
-      if (  OPT('rigid-ef').OR. OPT('DECIMATE') ) then
-         ISHIFT = 2
-         write(1337,*) ' Rigid Fermi Energy, ISHIFT is set to ',ISHIFT
-         write(111,*) ' Rigid Fermi Energy, ishift is set to ',ISHIFT
+! Read cell information
+    write (1337, *) 'Cell information <SHAPE>:'
+    write (111, fmt='(A16)') '<SHAPE>         '
+    do i = 1, natyp
+      ntcell(i) = iqat(i) ! Default: Different shape function per atom
+      call ioinput('<SHAPE>         ', uio, i, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) ntcell(i)
+        write (111, fmt='(I6)') ntcell(i)
       end if
-      if ( TEST('no-neutr').OR.OPT('no-neutr') )   then
-         ISHIFT = 1
-         write(1337,*) 'No charge neutrality required, ISHIFT is set to',ISHIFT
-         write(111,*) 'No charge neutrality required, ISHIFT is set to',ISHIFT
-      endif
+    end do
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End cell control
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      ESHIFT = 0.D0
-      INSREF = 0
-      KWS = 2
-      KHYP = 0
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin exchange correlation treatment information
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      TOLRDIF = 0.5D0 ! Set free GF to zero for r<tolrdif (a.u.)(vir. atoms)
-      call IoInput('<TOLRDIF>       ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) TOLRDIF
-         write(111,*) '<TOLRDIF>=',TOLRDIF
-      else
-         write(111,*) 'Default <TOLRDIF>=',TOLRDIF
-      endif
+    kxc = 2 ! 0=vBH 1=MJW 2=VWN 3=PW91
+    call ioinput('KEXCOR          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) kxc
+      write (111, *) 'KEXCOR= ', kxc
+    else
+      write (111, *) 'Default KEXCOR= ', kxc
+    end if
 
-      ! -------------------------------------------------
-      KTE = 1
-      !     call IoInput('KTE       ',UIO,1,7,IER)
-      !                      read (UNIT=UIO,FMT=*) kte
+! Scale magnetic moment (0 < Lambda_XC < 1,  0=zero moment, 1= full moment)
+    lambda_xc = 1.d0
+    call ioinput('LAMBDA_XC       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) lambda_xc
+      write (111, *) 'LAMBDA_XC= ', lambda_xc
+    else
+      write (111, *) 'Default LAMBDA_XC= ', lambda_xc
+    end if
 
-      KPRE = 1
-      !     call IoInput('KPRE      ',UIO,1,7,IER)
-      !                      read (UNIT=UIO,FMT=*) kpre
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! LDA+U treatment
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Allocate the LDA+U arrays
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call allocate_ldau(1, natyp, lopt, ueff, jeff, erefldau)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End of LDA+U array allocation
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      KEFG = 0
-      !     call IoInput('KEFG      ',UIO,1,7,IER)
-      !                      read (UNIT=UIO,FMT=*) kefg
+    if (opt('LDA+U   ')) then
 
-      KVMAD = 0
-      call IoInput('KVMAD           ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) kvmad
-         write(111,*) 'KVMAD= ',KVMAD
-      else
-         write(111,*) 'Default KVMAD= ',KVMAD
-      endif
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Determination of properties at Fermi level
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if ( OPT('GF-EF   ') ) then
-         IGF = 1
-         if (NPOL.GT.0) NPOL = 0
-         if (NPOL.LT.0) then
-            NPNT1 = 0
-            NPNT3 = 0
-         end if
-         NPNT2 = 1
+!Check for LDA+U consistency -- if INS=0 suppress it
+      if ((ins==0)) then
+        write (1337, *)
+        write (1337, *) ' WARNING: LDA+U should be used only in NON-SPHERICAL' &
+          , ' case (INS=1) '
+        write (1337, *) ' Running option LDA+U will be ignored'
+        write (1337, *)
+        do i = 1, 32
+          if (t_params%optc(i)(1:8)=='LDA+U   ') t_params%optc(i) = '        '
+        end do
       end if
 
-      if (OPT('DOS-EF  ')) then
-         NPOL = 0
-         NPNT2 = 1
-      end if
-      ! ----------------------------------------------------------------------
-      ! ---------------------------------------------------------------------
-      !
-      KFORCE = 0
-      if (INS.GT.0) then
-         call IoInput('KFORCE          ',UIO,1,7,IER)
-         if (IER.EQ.0) then
-            read (UNIT=UIO,FMT=*) KFORCE
-            write(111,*) 'KFORCE= ',KFORCE
-         else
-            write(111,*) 'Default KFORCE= ',KFORCE
-         endif
-      end if
+! -> get number of atoms for lda+u:
 
-      KFROZN = KCOR
-      if (KCOR.EQ.0) KCOR = 2
-
-      ! ------------------------------------------------------------------------
-      write (1337,9210) LMAX
-      write (1337,9301)
-      write (1337,9220) EMIN,EMAX,TK
-      write (1337,9302)
-      write (1337,9230) NPOL,NPNT1,NPNT2,NPNT3
-      write (1337,9304)
-      write (1337,9303)
-      write (1337,9250) IFILE,IPE,ISHIFT,ESHIFT
-      write (1337,9305)
-      write (1337,9260) KSHAPE,IRM,INS,ICST,INSREF
-      write (1337,9309)
-      write (1337,9270) KCOR,KVREL,KWS,KHYP,KHFIELD,KXC
-      write (1337,9306)
-      write (1337,9330) KTE,KPRE,KEFG,KVMAD
-      write (1337,9309)
-      write (1337,9290) IMIX,IGF,ICC
-      write (1337,9304)
-      write (1337,9300) ITDBRY
-      write (1337,9307)
-      write (1337,9310) STRMIX,FCM,QBOUND
-      write (1337,9302)
-      write (1337,9320) BRYMIX
-      write (1337,9308)
-      write (1337,9280) HFIELD,VCONST
-      ! ------------------------------------------------------------------------
-
-      ! ------------------------------------------------------------------------
-      IPF = 1337
-      IPFE = IPF + 3
-
-      if (OPT('SEARCHEF')) then
-         IMIX=0
-         MIXING=0.0d0
-         STRMIX=MIXING
-         ITDBRY=1
-         QBOUND=1.0d-10
-         write(1337,'(1X,A)') 'Option SEARCHEF used overriding INPUT for'
-         write(1337,'(1X,A)') 'IMIX,MIX,QBOUND,ITDBRY: 0, 0.0, 1E-10, 1'
-         write(1337,*)
-      endif
-
-      if (IMIX.GT.2) then
-         FCM = 1.0D0
-         MIXING = BRYMIX
+      ier = 0
+      call ioinput('NAT_LDAU        ', uio, 1, 7, ier)
+      if (ier/=0) then
+        nasoc = natyp
       else
-         MIXING = STRMIX
+        read (unit=uio, fmt=*) nasoc
+        if (nasoc>natyp) stop ' main0: NAT_LDAU > NATYP'
       end if
 
-      if (IMIX.GE.6) write (1337,FMT=9110) (IMIX-5),ITDBRY - 1
+! -> read in UEFF,JEFF,LOPT,EREFLDAU for the desired atoms
 
-      write (1337,FMT=9090) MIXING,QBOUND
-      !--------------------------------------------------------
-      write (1337,FMT=9091) CPAFLAG(NCPA)
-      if (NCPA.NE.0) write(1337,9092) ITCPAMAX,CPATOL
-      !--------------------------------------------------------
-
-      LMMAX = (LMAX+1)**2
-      LPOT  = 2*LMAX
-      LMPOT = (LPOT+1)*(LPOT+1)
-      LMXSPD = (2*LPOT+1)**2
-
-      write (1337,FMT=9020) LMAX,LMAX,NATYP,NATYP,IRM,IRM,NSPIN,NSPIND
-
-      if (INS.GT.0) then
-         write (1337,FMT=9130)
-         write (1337,FMT=9140)
-         do I = 1,NATYP
-            write (1337,FMT=9150) I,IRNS(I),IRNSD
-            if (IRNS(I).GT.IRNSD) call RCSTOP('19      ')
-         enddo
+      il = 0
+      do i = 1, nasoc
+        ier = 0
+        call ioinput('LDAU_PARA       ', uio, i, 7, ier)
+        if (ier==0) then
+          read (unit=uio, fmt=*) i1, lopt(i1), ueff(i1), jeff(i1), &
+            erefldau(i1)
+          il = il + 1
+        end if
+      end do
+      if (il/=nasoc) then
+        write (6, *) ' ERROR: LDA+U invoked for ', nasoc, ' atoms'
+        write (6, *) &
+          '        Some (all) parameters are missing in the input-file'
+        stop
       end if
+      kreadldau = 0
+      ier = 0
+      call ioinput('KREADLDAU       ', uio, 1, 7, ier)
+      if (ier==0) read (unit=uio, fmt=*) kreadldau
 
-      write (1337,FMT=9130)
+    end if
 
-      if (KHFIELD.EQ.1) write (1337,FMT=9030) HFIELD
-      if (KVREL.LE.1 ) then
-         write (1337,FMT=9050) TSPIN(NSPIN)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End exchange correlation treatment information
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin external field control
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    khfield = 0
+    hfield = 0.d0
+    call ioinput('HFIELD          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) hfield
+      if (hfield/=0.d0) then
+        khfield = 1
+        write (*, *) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'
+        write (1337, *) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'
+      end if
+      write (111, *) 'HFIELD= ', hfield
+    else
+      write (111, *) 'Default HFIELD= ', hfield
+    end if
+
+    vconst = 0.d0
+    call ioinput('VCONST          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) vconst
+      write (111, *) 'VCONST= ', vconst
+    else
+      write (111, *) 'Default VCONST= ', vconst
+    end if
+
+
+    if (test('atptshft')) then
+      write (1337, *) 'read IN IVSHIFT'
+      call ioinput('IVSHIFT         ', uio, 1, 7, ier)
+      read (unit=uio, fmt=*) ivshift
+    end if
+
+! Initial polarization
+    linipol = .false.
+    call ioinput('LINIPOL         ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) linipol
+      write (111, *) 'LINIPOL= ', linipol
+    else
+      write (111, *) 'Default: LINIPOL= ', linipol
+    end if
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Allocate magnetization arrays
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call allocate_magnetization(1, naez, natyp, lmmaxd, inipol, ixipol, qmtet, &
+      qmphi, drotq)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End of allocation of magnetization arrays
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    if (linipol) then
+      inipol(1:natyp) = 1
+      call ioinput('XINIPOL         ', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*)(inipol(i), i=1, natyp)
+        write (111, fmt='(A10,80I2)') 'XINIPOL=  ', (inipol(i), i=1, natyp)
       else
-         write (1337,FMT=9050) TSPIN(NSPIN+1)
+        write (111, fmt='(A18,80I2)') 'Default XINIPOL=  ', &
+          (inipol(i), i=1, natyp)
       end if
-      write (1337,FMT=9170) TVREL(KVREL)
-      write (1337,FMT=9170) TKCOR(KFROZN)
-      if (KSHAPE.EQ.0) then
-         write (1337,FMT=9070) TKWS(KWS+1)
+    end if
+
+
+    write (1337, 230)(inipol(i), i=1, natyp)
+    write (1337, 340)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End external field control
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin Green function calculation control (diag./non-diag)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    igf = 0
+    call ioinput('IGREENFUN       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) igf
+      write (111, *) 'IGREENFUN= ', igf
+    else
+      write (111, *) 'Default IGREENFUN= ', igf
+    end if
+
+    if (opt('OPERATOR')) then
+! check if impurity files are present (otherwise no imp.
+! wavefunctions can be calculated)
+      operator_imp = .true.
+      inquire (file='potential_imp', exist=lexist)
+      if (.not. lexist) operator_imp = .false.
+      inquire (file='shapefun_imp', exist=lexist)
+      if (.not. lexist) operator_imp = .false.
+      inquire (file='scoef', exist=lexist)
+      if (.not. lexist) operator_imp = .false.
+    else
+      operator_imp = .false.
+    end if
+    if (opt('KKRFLEX ') .or. opt('WRTGREEN') .or. opt('GREENIMP') .or. &
+      operator_imp) then
+      write (1337, *) &
+        'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR options'
+      igf = 1
+    end if
+
+    icc = 0
+    call ioinput('ICC             ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) icc
+      write (111, *) 'ICC= ', icc
+    else
+      write (111, *) 'Default ICC= ', icc
+    end if
+    if (opt('KKRFLEX ') .or. opt('WRTGREEN') .or. opt('GREENIMP') .or. &
+      operator_imp) then
+      write (1337, *) &
+        'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR  options'
+      icc = 1
+    end if
+    if ((opt('XCPL    ')) .or. (opt('CONDUCT '))) icc = -1
+
+    if (icc/=0 .and. igf==0) igf = 1
+    if (icc==0 .and. igf/=0) icc = -1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End Green function calculation control (diag./non-diag)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin accuracy parameters
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! Brilloun zone mesh
+    intervx = 10
+    intervy = 10
+    intervz = 10
+    call ioinput('BZDIVIDE        ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) intervx, intervy, intervz
+      write (111, fmt='(A9,3I5)') 'BZDIVIDE=', intervx, intervy, intervz
+    else
+      write (111, fmt='(A17,3I5)') 'Default BZDIVIDE=', intervx, intervy, &
+        intervz
+    end if
+    write (1337, 350)
+    write (1337, 190) intervx, intervy, intervz
+    write (1337, 330)
+
+    if (opt('GREENIMP')) then
+      write (*, *) &
+        'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+      write (1337, *) &
+        'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+      intervx = 1
+      intervy = 1
+      intervz = 1
+    end if
+
+! Energy contour
+    npol = 7
+!      if (OPT('dos     ').OR.OPT('DOS     ')) NPOL = 0
+    call ioinput('NPOL            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) npol
+      write (111, *) 'NPOL=', npol
+    else
+      write (111, *) 'Default NPOL=', npol
+    end if
+
+    call ioinput('EMIN            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) emin
+      write (111, *) 'EMIN= ', emin
+    else if (npol==0) then
+      emin = -1.d0
+      write (111, *) 'Default for DOS: EMIN= ', emin
+    else
+      write (1337, *) 'Error in rinput13: EMIN not found'
+      write (111, *) 'Error in rinput13: EMIN not found'
+      stop 'Error in rinput13: EMIN not found'
+    end if
+
+    emax = 1.d0
+    call ioinput('EMAX            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) emax
+      write (111, *) ' EMAX=', emax
+    else
+      write (111, *) 'Default  EMAX=', emax
+    end if
+
+    tk = 800.d0
+    call ioinput('TEMPR           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) tk
+      write (111, *) 'TEMPR=', tk
+    else
+      write (111, *) 'Default TEMPR=', tk
+    end if
+
+    npnt1 = 3
+    if (npol==0) npnt1 = 0
+    call ioinput('NPT1            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) npnt1
+      write (111, *) ' NPT1=', npnt1
+    else
+      write (111, *) 'Default  NPT1=', npnt1
+    end if
+
+    npnt2 = nint((emax-emin)*20.d0) ! 20 pts/Ryd
+    if (npol==0) npnt2 = nint((emax-emin)*100.d0) ! For dos, 100 pts/Ryd
+    call ioinput('NPT2            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) npnt2
+      write (111, *) ' NPT2=', npnt2
+    else
+      write (111, *) 'Default  NPT2=', npnt2
+    end if
+
+    npnt3 = 3
+    if (npol==0) npnt3 = 0
+    call ioinput('NPT3            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) npnt3
+      write (111, *) ' NPT3=', npnt3
+    else
+      write (111, *) 'Default  NPT3=', npnt3
+    end if
+
+! -> semicore
+! initialise variables
+    idosemicore = 0
+    ebotsemi = emin
+    emusemi = ebotsemi
+    npolsemi = 0
+    n1semi = 0
+    n2semi = 0
+    n3semi = 0
+    fsemicore = 1.d0
+
+    ier = 0
+    if (opt('SEMICORE')) then
+      call ioinput('EBOTSEMI        ', uio, 1, 7, ier)
+      if (ier/=0) go to 100
+      read (unit=uio, fmt=*) ebotsemi
+      call ioinput('EMUSEMI         ', uio, 1, 7, ier)
+      if (ier/=0) go to 100
+      read (unit=uio, fmt=*) emusemi
+
+! -> EMUSEMI < EBOT
+      if (emusemi>=emin) go to 100
+      call ioinput('TKSEMI          ', uio, 1, 7, ier)
+      if (ier/=0) go to 100
+      read (unit=uio, fmt=*) tksemi
+
+      call ioinput('NPOLSEMI        ', uio, 1, 7, ier)
+      if (ier/=0) go to 100
+      read (unit=uio, fmt=*) npolsemi
+      call ioinput('N1SEMI          ', uio, 1, 7, ier)
+      if (ier/=0) go to 100
+      read (unit=uio, fmt=*) n1semi
+      call ioinput('N2SEMI          ', uio, 1, 7, ier)
+      if (ier/=0) go to 100
+      read (unit=uio, fmt=*) n2semi
+      call ioinput('N3SEMI          ', uio, 1, 7, ier)
+      if (ier/=0) go to 100
+      read (unit=uio, fmt=*) n3semi
+      call ioinput('FSEMICORE       ', uio, 1, 7, ier)
+      if (ier/=0) go to 100
+      read (unit=uio, fmt=*) fsemicore
+      idosemicore = 1
+100   continue
+      if (idosemicore==0) then
+        write (1337, *)
+        write (1337, *) ' WARNING: SEMICORE used', &
+          ' with incomplete/incorrect contour description'
+        write (1337, *) ' Running option SEMICORE will be ignored'
+        write (111, *)
+        write (111, *) ' WARNING: SEMICORE used', &
+          ' with incomplete/incorrect contour description'
+        write (111, *) ' Running option SEMICORE will be ignored'
+        do i = 1, 32
+          if (t_params%optc(i)(1:8)=='SEMICORE') t_params%optc(i) = '        '
+        end do
+      end if
+    end if
+
+! CPA convergence parameters
+    cpatol = 1d-4
+    itcpamax = 20
+    call ioinput('CPAINFO         ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) cpatol, itcpamax
+    else
+      write (111, *) 'Default cpainfo:'
+    end if
+    write (111, fmt='(A7)') 'CPAINFO'
+    write (111, fmt='(E12.4,I5)') cpatol, itcpamax
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin screening cluster information
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    rcutz = 11.d0/alat ! Default 11 Bohr radii
+    call ioinput('RCLUSTZ         ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) rcutz
+      write (111, *) 'RCLUSTZ=', rcutz
+    else
+      write (111, *) 'Default RCLUSTZ=', rcutz
+    end if
+
+    rcutxy = rcutz
+    call ioinput('RCLUSTXY        ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) rcutxy
+      write (111, *) 'RCLUSTXY=', rcutxy
+    else
+      write (111, *) 'Default RCLUSTXY=', rcutxy
+    end if
+
+    write (1337, *) 'Parameters used for the cluster calculation'
+    if (abs(rcutz-rcutxy)<1.d-4) then
+      write (1337, *) 'Clusters inside spheres with radius R = ', rcutz
+    else
+      write (1337, *) 'Clusters inside cylinders with '
+      write (1337, *) 'Rz = ', rcutz, ' Rxy = ', rcutxy
+    end if
+    write (1337, 350)
+    write (1337, 210) ! rbasis
+    write (1337, 320)
+    do i = 1, naez
+      write (1337, 260) i, (rbasis(j,i), j=1, 3), qmtet(i), qmphi(i), icpa(i), &
+        noq(i), (kaoez(j,i), j=1, noq(i))
+    end do
+
+    do i = 1, naez
+      call ioinput('<RMTREF>        ', uio, i, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) rmtrefat(i)
+      end if
+    end do
+    if (ier==0) then
+      write (111, fmt='(A18)') '        <RMTREF>  '
+    else
+      write (111, fmt='(A18)') 'Default <RMTREF>  '
+    end if
+    do i = 1, naez
+      write (111, fmt='(9X,F9.6)') rmtrefat(i)
+    end do
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End screening cluster information
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Number of Born iterations
+    icst = 2
+    call ioinput('ICST            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) icst
+      write (111, *) 'ICST=', icst
+    else
+      write (111, *) 'Default ICST=', icst
+    end if
+
+! Usage of Lloyd's formula
+    lly = 0 ! LLY Default=0 : do not apply Lloyds formula
+    if (opt('LLOYD   ') .or. opt('Lloyd   ') .or. opt('lloyd   ')) lly = 1
+    call ioinput('<LLOYD>         ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) lly
+      write (111, *) '<LLOYD>=', lly
+    else
+      write (111, *) 'Default <LLOYD>=', lly
+    end if
+    if (lly/=0) write (1337, *) 'Applying Lloyds formula, LLY=', lly
+
+    deltae = (1.d-5, 0.d0) ! Difference for numer. derivative in Lloyds formula
+    call ioinput('<DELTAE>        ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) deltae
+      write (111, *) '<DELTAE>=', deltae
+    else
+      write (111, *) 'Default <DELTAE>=', deltae
+    end if
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End accuracy parameters
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin old-type of ATOMINFO
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    latominfo = .false.
+! Initialize all clusters to 1
+    cls(1:naez+nemb) = 1
+    write (1337, *) 'ATOMINFOC or ATOMINFO:'
+    do i = 1, natyp
+      call ioinput('ATOMINFOC       ', uio, i+1, 7, ier)
+      ia = 1
+      if (ier==0) then
+        latominfo = .true.
+        read (unit=uio, fmt=*) zat(i), lmxc(i), (kfg(j,i), j=1, 4), j, ier, &
+          ntcell(i), mtfac(i), irns(i), rmtref(ier), iqat(i), conc(i)
+        iq = iqat(i)
+        refpot(iq) = ier
+        rmtrefat(i) = rmtref(ier)
+        cls(iq) = j
+        noq(iq) = noq(iq) + 1
+        if (noq(iq)>1) then
+          icpa(iq) = 1
+          ncpa = 1
+        end if
+        kaoez(noq(iq), iq) = i
       else
-         write (1337,FMT=9170) TSHAPE
+        ier = 0
+        call ioinput('ATOMINFO        ', uio, i+1, 7, ier)
+        if (ier==0) then
+          latominfo = .true.
+          read (unit=uio, fmt=*) zat(i), lmxc(i), (kfg(j,i), j=1, 4), j, &
+            refpot(i), ntcell(i), mtfac(i), irns(i), rmtref(refpot(i))
+          iqat(i) = i
+          rmtrefat(i) = rmtref(refpot(i))
+          cls(i) = j
+          conc(i) = 1.d0
+          noq(i) = 1
+          kaoez(1, i) = i
+        end if
       end if
+    end do
 
-      write (1337,FMT=9100) TXC(KXC+1)
-      if (INS.GT.0) write (1337,FMT=9160) TINS(INS),ICST
-      write (1337,FMT=9080)
+! If old-style ATOMINFO is present, and if a 2-dim calculation is performed,
+! and also if the RMTREF of the "outside region" is not read in explicitly
+! (LNEW is false) then assign the RMTREF of the outside region according to
+! the already-read-in REFPOT under LEFTBASIS  and RIGHBASIS.
+    if (latominfo .and. linterface .and. .not. lnew) then
+      do i = naez + 1, naez + nemb
+        rmtrefat(i) = rmtref(refpot(i))
+      end do
+    end if
 
-      VBC(1) = VCONST
-      VBC(2) = VBC(1)
+    ncls = 0
+    nref = 0
 
-      LRHOSYM = .FALSE.
-      call IoInput('LRHOSYM         ',UIO,1,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) lrhosym
-         write(111,*) 'LRHOSYM= ',LRHOSYM
+! Determine total number of clusters
+    do i = 1, natyp
+      ncls = max(ncls, cls(iqat(i)))
+    end do
+
+! Determine total number of different reference potentials
+    do i = 1, naez + nemb
+      nref = max(nref, refpot(i))
+    end do
+
+!in line 1792  this is done: NINEQ = NAEZ, so here NINEQ is still undefinded
+!so we move this writeout back
+!
+!write(6,2016) NCLS,NREF,NINEQ
+!write(6,2110)
+!write(6,2103)
+
+    do iq = 1, naez
+      sum = 0d0
+      if (noq(iq)<1) then
+        write (6, *) 'RINPUT13: CPA: SITE', iq, 'HAS NO ASSIGNED ATOM'
+        stop 'RINPUT13: CPA'
+      end if
+      do io = 1, noq(iq)
+        sum = sum + conc(kaoez(io,iq))
+      end do
+      if (abs(sum-1.d0)>1d-6) then
+        write (6, *) ' SITE ', iq, ' CONCENTRATION <> 1.0 !'
+        write (6, *) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
+        stop ' IN <RINPUT99>'
+      end if
+    end do
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End old-type of ATOMINFO
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! Write out atominfo
+    write (1337, 270) natyp
+    write (1337, 350)
+    write (1337, 140)(zat(i), lmxc(i), (kfg(j,i),j=1,4), cls(iqat(i)), refpot( &
+      iqat(i)), ntcell(i), mtfac(i), irns(i), iqat(i), conc(i), i=1, natyp)
+    write (1337, 370)
+    write (1337, 350)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin SCF convergence control
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    nsteps = 1
+    call ioinput('NSTEPS          ', uio, 1, 7, ier)
+    if (ier/=0) then
+      write (111, *) 'Default NSTEPS=', nsteps
+    else
+      read (unit=uio, fmt=*) nsteps
+    end if
+    if (npol==0) then
+      nsteps = 1
+      write (1337, *) 'NPOL=0, setting NSTEPS to 1'
+    end if
+    if (igf/=0) then
+      nsteps = 1
+      write (1337, *) 'IGF.NE.0, setting NSTEPS to 1'
+    end if
+    if (icc/=0) then
+      nsteps = 1
+      write (1337, *) 'ICC.NE.0, setting NSTEPS to 1'
+    end if
+    if (opt('XCPL    ')) then
+      nsteps = 1
+      write (1337, *) 'RUNOPT XCPL used, setting NSTEPS to 1'
+    end if
+    if (opt('KKRFLEX ')) then
+      nsteps = 1
+      write (1337, *) 'RUNOPT KKRFLEX used, setting NSTEPS to 1'
+    end if
+
+    write (1337, 160) nsteps
+    write (1337, 350)
+
+    imix = 0
+    call ioinput('IMIX            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) imix
+      write (111, *) 'IMIX= ', imix
+    else
+      write (111, *) 'Default IMIX= ', imix
+    end if
+    if (npol==0) then
+      write (1337, *) 'NPOL=0, setting IMIX= 0'
+      imix = 0
+    end if
+
+    strmix = 0.01d0
+    call ioinput('STRMIX          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) strmix
+      write (111, *) 'STRMIX= ', strmix
+    else
+      write (111, *) 'Default STRMIX= ', strmix
+    end if
+    if (npol==0) then
+      write (1337, *) 'NPOL=0, setting STRMIX= 0.'
+      strmix = 0
+    end if
+
+    itdbry = 40
+    call ioinput('ITDBRY          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) itdbry
+      write (111, *) 'ITDBRY= ', itdbry
+    else
+      write (111, *) 'Default ITDBRY= ', itdbry
+    end if
+
+    fcm = 20.d0
+    call ioinput('FCM             ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) fcm
+      write (111, *) 'FCM= ', fcm
+    else
+      write (111, *) 'Default FCM= ', fcm
+    end if
+
+    qbound = 1.d-7
+    call ioinput('QBOUND          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) qbound
+      write (111, *) 'QBOUND= ', qbound
+    else
+      write (111, *) 'Default QBOUND= ', qbound
+    end if
+
+    brymix = 0.01d0
+    call ioinput('BRYMIX          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) brymix
+      write (111, *) 'BRYMIX= ', brymix
+    else
+      write (111, *) 'Default BRYMIX= ', brymix
+    end if
+
+    call ioinput('RMAX            ', uio, 1, 7, ier)
+    if (ier/=0) stop 'rinput13: RMAX not in the inputcard'
+    read (unit=uio, fmt=*) rmax
+    write (111, *) 'RMAX= ', rmax
+
+    call ioinput('GMAX            ', uio, 1, 7, ier)
+    if (ier/=0) stop 'rinput13: GMAX not in the inputcard'
+    read (unit=uio, fmt=*) gmax
+    write (111, *) 'GMAX= ', gmax
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End SCF convergence control
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Begin file name definitions
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    il = 1
+    call ioinput('FILES           ', uio, il, 7, ier)
+    if (ier==0) then
+      call ioinput('FILES           ', uio, il, 7, ier)
+      read (unit=uio, fmt='(A40)') i12
+      call ioinput('FILES           ', uio, il+1, 7, ier)
+      read (unit=uio, fmt='(A40)') i13
+      call ioinput('FILES           ', uio, il+2, 7, ier)
+      read (unit=uio, fmt='(A40)') i40
+      call ioinput('FILES           ', uio, il+3, 7, ier)
+      read (unit=uio, fmt='(A40)') i19
+      call ioinput('FILES           ', uio, il+4, 7, ier)
+      read (unit=uio, fmt='(A40)') i25
+    else
+      i13 = 'potential                               ' ! 40 chars
+      i19 = 'shapefun                                ' ! 40 chars
+      i25 = 'scoef                                   ' ! 40 chars
+      i12 = '                                        ' ! 40 chars (not used)
+      i40 = '                                        ' ! 40 chars (not used)
+    end if
+
+    write (1337, *) 'I12="', i12, '"'
+    write (1337, *) 'I13="', i13, '"'
+    write (1337, *) 'I40="', i40, '"'
+    write (1337, *) 'I19="', i19, '"'
+    write (1337, *) 'I25="', i25, '"'
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! End file name definitions
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    ifile = 13
+    call ioinput('<IFILE>         ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) ifile
+      write (111, *) '<IFILE>= ', ifile
+    else
+      write (111, *) 'Default <IFILE>= ', ifile
+    end if
+
+    ipe = 1 ! Used to print out in calrmt
+    ishift = 0
+    call ioinput('ISHIFT          ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) ishift
+      write (111, *) 'ISHIFT= ', ishift
+    else
+      write (111, *) 'Default ISHIFT= ', ishift
+    end if
+    if (opt('rigid-ef') .or. opt('DECIMATE')) then
+      ishift = 2
+      write (1337, *) ' Rigid Fermi Energy, ISHIFT is set to ', ishift
+      write (111, *) ' Rigid Fermi Energy, ishift is set to ', ishift
+    end if
+    if (test('no-neutr') .or. opt('no-neutr')) then
+      ishift = 1
+      write (1337, *) 'No charge neutrality required, ISHIFT is set to', &
+        ishift
+      write (111, *) 'No charge neutrality required, ISHIFT is set to', ishift
+    end if
+
+    eshift = 0.d0
+    insref = 0
+    kws = 2
+    khyp = 0
+
+    tolrdif = 0.5d0 ! Set free GF to zero for r<tolrdif (a.u.)(vir. atoms)
+    call ioinput('<TOLRDIF>       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) tolrdif
+      write (111, *) '<TOLRDIF>=', tolrdif
+    else
+      write (111, *) 'Default <TOLRDIF>=', tolrdif
+    end if
+
+! -------------------------------------------------
+    kte = 1
+!     call IoInput('KTE       ',UIO,1,7,IER)
+!                      read (UNIT=UIO,FMT=*) kte
+
+    kpre = 1
+!     call IoInput('KPRE      ',UIO,1,7,IER)
+!                      read (UNIT=UIO,FMT=*) kpre
+
+    kefg = 0
+!     call IoInput('KEFG      ',UIO,1,7,IER)
+!                      read (UNIT=UIO,FMT=*) kefg
+
+    kvmad = 0
+    call ioinput('KVMAD           ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) kvmad
+      write (111, *) 'KVMAD= ', kvmad
+    else
+      write (111, *) 'Default KVMAD= ', kvmad
+    end if
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Determination of properties at Fermi level
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if (opt('GF-EF   ')) then
+      igf = 1
+      if (npol>0) npol = 0
+      if (npol<0) then
+        npnt1 = 0
+        npnt3 = 0
+      end if
+      npnt2 = 1
+    end if
+
+    if (opt('DOS-EF  ')) then
+      npol = 0
+      npnt2 = 1
+    end if
+! ----------------------------------------------------------------------
+! ---------------------------------------------------------------------
+!
+    kforce = 0
+    if (ins>0) then
+      call ioinput('KFORCE          ', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) kforce
+        write (111, *) 'KFORCE= ', kforce
       else
-         write(111,*) 'Default LRHOSYM= ',LRHOSYM
-      endif
+        write (111, *) 'Default KFORCE= ', kforce
+      end if
+    end if
 
-      if ( (NCPA.NE.0).AND.LRHOSYM ) then
-         write(1337,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
-         write(1337,*) '        YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
-         write(111,*) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
-         write(111,*) '    YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
-         LRHOSYM = .FALSE.
+    kfrozn = kcor
+    if (kcor==0) kcor = 2
+
+! ------------------------------------------------------------------------
+    write (1337, 560) lmax
+    write (1337, 680)
+    write (1337, 570) emin, emax, tk
+    write (1337, 690)
+    write (1337, 580) npol, npnt1, npnt2, npnt3
+    write (1337, 710)
+    write (1337, 700)
+    write (1337, 590) ifile, ipe, ishift, eshift
+    write (1337, 720)
+    write (1337, 600) kshape, irm, ins, icst, insref
+    write (1337, 760)
+    write (1337, 610) kcor, kvrel, kws, khyp, khfield, kxc
+    write (1337, 730)
+    write (1337, 670) kte, kpre, kefg, kvmad
+    write (1337, 760)
+    write (1337, 630) imix, igf, icc
+    write (1337, 710)
+    write (1337, 640) itdbry
+    write (1337, 740)
+    write (1337, 650) strmix, fcm, qbound
+    write (1337, 690)
+    write (1337, 660) brymix
+    write (1337, 750)
+    write (1337, 620) hfield, vconst
+! ------------------------------------------------------------------------
+
+! ------------------------------------------------------------------------
+    ipf = 1337
+    ipfe = ipf + 3
+
+    if (opt('SEARCHEF')) then
+      imix = 0
+      mixing = 0.0d0
+      strmix = mixing
+      itdbry = 1
+      qbound = 1.0d-10
+      write (1337, '(1X,A)') 'Option SEARCHEF used overriding INPUT for'
+      write (1337, '(1X,A)') 'IMIX,MIX,QBOUND,ITDBRY: 0, 0.0, 1E-10, 1'
+      write (1337, *)
+    end if
+
+    if (imix>2) then
+      fcm = 1.0d0
+      mixing = brymix
+    else
+      mixing = strmix
+    end if
+
+    if (imix>=6) write (1337, fmt=490)(imix-5), itdbry - 1
+
+    write (1337, fmt=450) mixing, qbound
+!--------------------------------------------------------
+    write (1337, fmt=460) cpaflag(ncpa)
+    if (ncpa/=0) write (1337, 470) itcpamax, cpatol
+!--------------------------------------------------------
+
+    lmmax = (lmax+1)**2
+    lpot = 2*lmax
+    lmpot = (lpot+1)*(lpot+1)
+    lmxspd = (2*lpot+1)**2
+
+    write (1337, fmt=400) lmax, lmax, natyp, natyp, irm, irm, nspin, nspind
+
+    if (ins>0) then
+      write (1337, fmt=510)
+      write (1337, fmt=520)
+      do i = 1, natyp
+        write (1337, fmt=530) i, irns(i), irnsd
+        if (irns(i)>irnsd) call rcstop('19      ')
+      end do
+    end if
+
+    write (1337, fmt=510)
+
+    if (khfield==1) write (1337, fmt=410) hfield
+    if (kvrel<=1) then
+      write (1337, fmt=420) tspin(nspin)
+    else
+      write (1337, fmt=420) tspin(nspin+1)
+    end if
+    write (1337, fmt=550) tvrel(kvrel)
+    write (1337, fmt=550) tkcor(kfrozn)
+    if (kshape==0) then
+      write (1337, fmt=430) tkws(kws+1)
+    else
+      write (1337, fmt=550) tshape
+    end if
+
+    write (1337, fmt=480) txc(kxc+1)
+    if (ins>0) write (1337, fmt=540) tins(ins), icst
+    write (1337, fmt=440)
+
+    vbc(1) = vconst
+    vbc(2) = vbc(1)
+
+    lrhosym = .false.
+    call ioinput('LRHOSYM         ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) lrhosym
+      write (111, *) 'LRHOSYM= ', lrhosym
+    else
+      write (111, *) 'Default LRHOSYM= ', lrhosym
+    end if
+
+    if ((ncpa/=0) .and. lrhosym) then
+      write (1337, *) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
+      write (1337, *) '        YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
+      write (111, *) ' WARNING : CHARGE SYMMETRISATION NOT ALLOWED FOR CPA '
+      write (111, *) '    YOUR SETTING IN INPUT FILE IS OVERRIDDEN'
+      lrhosym = .false.
+    end if
+
+    if (lrhosym) then
+      call ioinput('IXIPOL          ', uio, 1, 7, ier)
+      read (unit=uio, fmt=*)(ixipol(i), i=1, natyp)
+      write (1337, 240)(ixipol(i), i=1, natyp)
+      write (1337, 340)
+      do i = 1, natyp
+        if (ixipol(i)/=0 .and. abs(ixipol(abs(ixipol(i))))/=i) then
+          write (6, *) 'Error in IXIPOL at atom ', i, '.'
+          stop 'IXIPOL'
+        end if
+      end do
+    else
+      do i = 1, natyp
+        ixipol(i) = 0
+      end do
+      write (1337, 240)(ixipol(i), i=1, natyp)
+      write (1337, 340)
+    end if
+    write (1337, 250) naez, nemb
+    write (1337, 380)
+
+    nineq = naez
+    write (1337, 200) ncls, nref, nineq
+    write (1337, 380)
+    write (1337, 340)
+
+!----------------------------------------------------------------------------
+    kmrot = 0
+
+    do i = 1, naez
+!-------------------------------------------------------------------------
+! Atoms equivalent by inversional symmetry
+!-------------------------------------------------------------------------
+      qmtet(i) = 0d0
+      qmphi(i) = 0d0
+      ier = 0
+      call ioinput('RBASISANG       ', uio, i, 7, ier)
+
+      if (ier==0) then
+        read (unit=uio, fmt=*)(rbasis(j,i), j=1, 3), qmtet(i), qmphi(i)
+        if (abs(qmtet(i))>1d-6) kmrot = 1
+        if (abs(qmphi(i))>1d-6) kmrot = 1
+      end if
+    end do ! I=1,NAEZ
+    call idreals(rbasis(1,1), 3*naez, iprint)
+!----------------------------------------------------------------------------
+
+    if (nemb>0) write (1337, *)
+    write (1337, 280)((rbasis(j,i),j=1,3), i, refpot(i), i=naez+1, naez+nemb)
+
+! ------------------------------------------------------------------------
+    if (.not. opt('VIRATOMS')) then
+      do i = 1, naez
+        do io = 1, noq(i)
+          if (kaoez(io,i)<1) stop 'Error in KAOEZ'
+        end do
+      end do
+    end if
+! ------------------------------------------------------------------------
+    write (1337, 390)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Check for DECIMATE consistency
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if (opt('DECIMATE')) then
+      if (mod(nprincd,nlbasis)/=0) then
+        write (6, *) ' Decimation cannot continue '
+        write (6, *) 'NPRINCD=', nprincd, ' NLBASIS=', nlbasis
+        stop
+      end if
+      if (mod(nprincd,nrbasis)/=0) then
+        write (6, *) ' Decimation cannot continue '
+        write (6, *) 'NPRINCD=', nprincd, ' NRBASIS=', nrbasis
+        stop
+      end if
+    end if
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Check for ITERMDIR consistency -- if KMROT=0 suppress it
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if ((opt('ITERMDIR')) .and. (kmrot==0)) then
+      write (1337, *)
+      write (1337, *) ' WARNING: ITERMDIR running option used with collinear/' &
+        , 'parallel Oz starting'
+      write (1337, *) '          system (KMROT = 0 ). Please check token', &
+        ' RBASISANG in your input'
+      write (1337, *) ' Running option ITERMDIR will be ignored'
+      write (1337, *)
+      do i = 1, 32
+        if (t_params%optc(i)(1:8)=='ITERMDIR') t_params%optc(i) = '        '
+      end do
+    end if
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Check for XCPL consistency
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    manctl = (kmrot==0) .and. (krel==0) .and. (nspin>1)
+    if ((opt('XCPL    ')) .and. (.not. manctl)) then
+      write (1337, *)
+      write (1337, *) ' WARNING: XCPL running option requires collinear ', &
+        'magnetic systems'
+      write (1337, *) ' in a NON/SCALAR/SCALAR+SOC relativistic mode (KREL=0)'
+      write (1337, *) ' Running option XCPL will be ignored'
+      write (1337, *)
+      do i = 1, 32
+        if (t_params%optc(i)(1:8)=='XCPL    ') t_params%optc(i) = '        '
+      end do
+    end if
+
+    write (1337, 110)(t_params%optc(i), i=1, 8)
+110 format (79('-'), /, ' EXECUTION OPTIONS:', /, 1x, a8, 7('//',a8), /, &
+      79('-'))
+    write (1337, 120)(t_params%testc(i), i=1, 16)
+120 format (79('-'), /, ' TEST OPTIONS:', /, 2(1x,a8,7('//', &
+      a8),/), /, 79('-'))
+130 format (8a8)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Initialise SOLVER, SOC and CTL parameters in REL case
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    cscl(:, :) = cvlight
+    mansoc = .false.
+    manctl = .false.
+
+    if (krel==1) then
+      solver = 'BS        '
+      call ioinput('SOLVER          ', uio, 0, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) solver
+        if (solver(1:2)=='BS') then
+          solver = 'BS        '
+        else
+          if (solver/='ABM-OP    ') solver = 'ABM-OP    '
+        end if
       end if
 
-      if (LRHOSYM) then
-         call IoInput('IXIPOL          ',UIO,1,7,IER)
-         read (UNIT=UIO,FMT=*) (ixipol(I),I=1,natyp)
-         write (1337,2022) (ixipol(i),i=1,natyp)
-         write (1337,2103)
-         do I=1,NATYP
-            if ( IXIPOL(I).NE.0 .AND. ABS(IXIPOL(ABS(IXIPOL(I)))).NE.I) then
-               write(6,*) 'Error in IXIPOL at atom ',I,'.'
-               stop 'IXIPOL'
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SOC-MAN
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! For Dirac-ASA
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      if (opt('SOC     ')) then
+        call ioinput('SOSCALE         ', uio, 0, 7, ier)
+        if (ier==0) then
+          read (unit=uio, fmt=*) soscale
+          if (soscale>-2.5d0) then
+            if (soscale>=0.0d0) then ! SOC-I
+              solver = 'ABM-SOC   '
+              mansoc = .true.
+            else ! SOC-II
+              solver = 'ABM-SOC-II'
+              mansoc = .true.
+              do i = 1, natyp
+                socscl(1:lmax+1, i) = soscale
+              end do
+              write (1337, 960) socii(nint(soscale))
             end if
-         end do
-      else
-         do I=1,NATYP
-            IXIPOL(I) = 0
-         end do
-         write (1337,2022) (ixipol(i),i=1,natyp)
-         write (1337,2103)
-      end if
-      write(1337,2023) NAEZ,NEMB
-      write(1337,2110)
+          else
+            write (1337, 870) '< SOC >'
+            write (1337, 890)
+          end if
+        else
+          write (1337, 880) '< SOC >'
+          write (1337, 890)
+        end if
 
-      NINEQ = NAEZ
-      write(1337,2016) NCLS,NREF,NINEQ
-      write(1337,2110)
-      write(1337,2103)
+        if (mansoc .and. (soscale>=0d0)) then
+          imansoc(1:natyp) = 1
+!-------------------------------------------------------------------
+! Now look for a possible include/exclude list (SOCLIST= +/- NASOC)
+! if SOCLIST is not found, ALL the atoms will have SOC modified with
+! SOSCALE (+NASOC=only NASOC atoms, -NASOC=all but these NASOC atoms)
+! Note that this is allowed only for SOC-I manipulation
+!-------------------------------------------------------------------
+          call ioinput('SOCLIST         ', uio, 0, 7, ier)
+          if (ier==0) then
+            read (unit=uio, fmt=*) nasoc, (isp(i), i=1, abs(nasoc))
 
-      !----------------------------------------------------------------------------
-      KMROT = 0
-
-      do I=1,NAEZ
-         !-------------------------------------------------------------------------
-         ! Atoms equivalent by inversional symmetry
-         !-------------------------------------------------------------------------
-         QMTET(I)=0D0
-         QMPHI(I)=0D0
-         IER = 0
-         call IoInput('RBASISANG       ',UIO,I,7,IER)
-
-         if( IER.EQ.0 ) then
-            read (UNIT=UIO,FMT=*) (RBASIS(J,I), J=1,3),QMTET(I),QMPHI(I)
-            if( ABS(QMTET(I)) .GT. 1D-6 ) KMROT = 1
-            if( ABS(QMPHI(I)) .GT. 1D-6 ) KMROT = 1
-         endif
-      enddo                         ! I=1,NAEZ
-      call IDREALS(RBASIS(1,1),3*NAEZ,IPRINT)
-      !----------------------------------------------------------------------------
-
-      if (nemb.gt.0) write(1337,*)
-      write(1337,2031) ((rbasis(j,i),j=1,3),i,refpot(i),i=naez+1,naez+nemb)
-
-      ! ------------------------------------------------------------------------
-      if ( .not. OPT('VIRATOMS') ) then
-         do I=1,NAEZ
-            do IO=1,NOQ(I)
-               if (KAOEZ(IO,I).LT.1) stop 'Error in KAOEZ'
-            end do
-         enddo
-      end if
-      ! ------------------------------------------------------------------------
-      write(1337,2111)
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Check for DECIMATE consistency
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (OPT('DECIMATE')) then
-         if ( MOD(NPRINCD,NLBASIS).NE.0 ) then
-            write(6,*) ' Decimation cannot continue '
-            write(6,*) 'NPRINCD=',NPRINCD,' NLBASIS=',NLBASIS
-            stop
-         end if
-         if ( MOD(NPRINCD,NRBASIS).NE.0 )  then
-            write(6,*) ' Decimation cannot continue '
-            write(6,*) 'NPRINCD=',NPRINCD,' NRBASIS=',NRBASIS
-            stop
-         end if
-      end if
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Check for ITERMDIR consistency -- if KMROT=0 suppress it
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if ( (OPT('ITERMDIR')).AND.(KMROT.EQ.0) ) then
-         write (1337,*)
-         write (1337,*)' WARNING: ITERMDIR running option used with collinear/',&
-         &        'parallel Oz starting'
-         write (1337,*)'          system (KMROT = 0 ). Please check token',&
-         &        ' RBASISANG in your input'
-         write (1337,*) ' Running option ITERMDIR will be ignored'
-         write (1337,*)
-         do I=1,32
-            if (t_params%OPTC(I)(1:8).EQ.'ITERMDIR') t_params%OPTC(I)='        '
-         end do
-      end if
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Check for XCPL consistency
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      MANCTL = ( KMROT.EQ.0 ).AND.( KREL.EQ.0 ).AND.( NSPIN.GT.1 )
-      if ( (OPT('XCPL    ') ).AND.( .NOT.MANCTL ) ) then
-         write (1337,*)
-         write (1337,*)' WARNING: XCPL running option requires collinear ',&
-         &        'magnetic systems'
-         write (1337,*)' in a NON/SCALAR/SCALAR+SOC relativistic mode (KREL=0)'
-         write (1337,*) ' Running option XCPL will be ignored'
-         write (1337,*)
-         do I=1,32
-            if (t_params%OPTC(I)(1:8).EQ.'XCPL    ') t_params%OPTC(I)='        '
-         end do
-      end if
-
-      write(1337,62) (t_params%OPTC(I),I=1,8)
-      62   format(79('-')/' EXECUTION OPTIONS:'/1X,A8,7('//',A8)/79('-'))
-      write(1337,52) (t_params%TESTC(I),I=1,16)
-      52   format(79('-')/' TEST OPTIONS:'/2(1X,A8,7('//',A8)/)/79('-'))
-      980  format(8A8)
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Initialise SOLVER, SOC and CTL parameters in REL case
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      CSCL(:,:) = CVLIGHT
-      MANSOC=.FALSE.
-      MANCTL=.FALSE.
-
-      if (KREL.EQ.1) then
-         SOLVER='BS        '
-         call IoInput('SOLVER          ',UIO,0,7,IER)
-         if (IER.EQ.0) then
-            read (UNIT=UIO,FMT=*) SOLVER
-            if ( SOLVER(1:2) .EQ. 'BS' ) then
-               SOLVER = 'BS        '
-            else
-               if( SOLVER .NE. 'ABM-OP    ' ) SOLVER='ABM-OP    '
+            if (nasoc/=0) then
+              if (nasoc<0) then ! exclude this atoms
+                do i = 1, -nasoc
+                  imansoc(isp(i)) = 0
+                end do
+              else
+                imansoc(1:natyp) = 0
+                do i = 1, nasoc
+                  imansoc(isp(i)) = 1
+                end do
+              end if
             end if
-         end if
+          end if
 
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         ! SOC-MAN
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         ! For Dirac-ASA
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         if (OPT('SOC     ')) then
-            call IOInput('SOSCALE         ',UIO,0,7,IER)
-            if (IER.EQ.0) then
-               read (UNIT=UIO,FMT=*) SOSCALE
-               if (SOSCALE.GT.-2.5D0) then
-                  if (SOSCALE.GE.0.0D0) then           ! SOC-I
-                     SOLVER='ABM-SOC   '
-                     MANSOC=.TRUE.
-                  else                                  ! SOC-II
-                     SOLVER       = 'ABM-SOC-II'
-                     MANSOC=.TRUE.
-                     do I=1,NATYP
-                        SOCSCL(1:LMAX+1,I) = SOSCALE
-                     end do
-                     write(1337,99010) SOCII(NINT(SOSCALE))
-                  end if
-               else
-                  write(1337,99001) '< SOC >'
-                  write(1337,99003)
-               end if
-            else
-               write(1337,99002) '< SOC >'
-               write(1337,99003)
+          write (1337, 310)
+          do i = 1, natyp
+            if (imansoc(i)==1) then
+              socscl(1:lmax+1, i) = soscale
             end if
-
-            if ( MANSOC .AND. (SOSCALE.GE.0D0) ) then
-               IMANSOC(1:NATYP) = 1
-               !-------------------------------------------------------------------
-               ! Now look for a possible include/exclude list (SOCLIST= +/- NASOC)
-               ! if SOCLIST is not found, ALL the atoms will have SOC modified with
-               ! SOSCALE (+NASOC=only NASOC atoms, -NASOC=all but these NASOC atoms)
-               ! Note that this is allowed only for SOC-I manipulation
-               !-------------------------------------------------------------------
-               call IOInput('SOCLIST         ',UIO,0,7,IER)
-               if (IER.EQ.0) then
-                  read(UNIT=UIO,FMT=*) NASOC,(ISP(I),I=1,ABS(NASOC))
-
-                  if (NASOC.NE.0) then
-                     if (NASOC.LT.0) then ! exclude this atoms
-                        do I=1,-NASOC
-                           IMANSOC(ISP(I)) = 0
-                        end do
-                     else
-                        IMANSOC(1:NATYP) = 0
-                        do I=1,NASOC
-                           IMANSOC(ISP(I)) = 1
-                        end do
-                     end if
-                  end if
-               end if
-
-               write(1337,2100)
-               do I=1,NATYP
-                  if (IMANSOC(I).EQ.1) then
-                     SOCSCL(1:LMAX+1,I)=SOSCALE
-                  end if
-               end do
-               write(1337,99004)
-               if (NASOC.EQ.0) write(1337,99005)
-               if (NASOC.GT.0) then
-                  write(1337,99006)
-                  write(1337,99008) (ISP(I),I=1,NASOC)
-               end if
-               if (NASOC.LT.0) then
-                  write(1337,99007)
-                  write(1337,99008) (ISP(I),I=1,ABS(NASOC))
-               end if
-               write(1337,99009) SOSCALE
-               write(1337,2100)
-            end if
-         end if
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         ! SOC-MAN
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-         write(1337,'('' SOLVER used for the DIRAC equation : '',2X,A)') SOLVER
-         write(1337,2100)
-
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         ! CTL-MAN
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-         if (OPT('CSCALE  ')) then
-            call IOInput('CTLSCALE        ',UIO,0,7,IER)
-            if (IER.EQ.0) then
-               read (UNIT=UIO,FMT=*) CTLSCALE
-               if (CTLSCALE.GE.1D-12) then
-                  MANCTL=.TRUE.
-               else
-                  write(1337,99001) '< CSCALE >'
-                  write(1337,99011)
-               end if
-            else
-               write(1337,99002) '< CSCALE >'
-               write(1337,99011)
-            end if
-
-            if (MANCTL) then
-               CSCL(:,:) = CSCL(:,:)/DSQRT(CTLSCALE)
-               write(1337,99012)
-               write(1337,99005)
-               write(1337,99009) 1.D0/DSQRT(CTLSCALE)
-            end if
-            write(1337,2100)
-         end if
-
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         ! CTL-MAN
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          end do
+          write (1337, 900)
+          if (nasoc==0) write (1337, 910)
+          if (nasoc>0) then
+            write (1337, 920)
+            write (1337, 940)(isp(i), i=1, nasoc)
+          end if
+          if (nasoc<0) then
+            write (1337, 930)
+            write (1337, 940)(isp(i), i=1, abs(nasoc))
+          end if
+          write (1337, 950) soscale
+          write (1337, 310)
+        end if
       end if
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! LDA+U
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! SOC-MAN
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      if(OPT('qdos    ')) then
-         allocate(t_params%qdos_atomselect(NATYP), stat=i_stat) !INTEGER
-         call memocc(i_stat,product(shape(t_params%qdos_atomselect))*kind(t_params%qdos_atomselect),'t_params%qdos_atomselect','rinput13')
+      write (1337, '('' SOLVER used for the DIRAC equation : '',2X,A)') solver
+      write (1337, 310)
 
-         t_params%qdos_atomselect(:) = 1
-         !for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CTL-MAN
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      if (opt('CSCALE  ')) then
+        call ioinput('CTLSCALE        ', uio, 0, 7, ier)
+        if (ier==0) then
+          read (unit=uio, fmt=*) ctlscale
+          if (ctlscale>=1d-12) then
+            manctl = .true.
+          else
+            write (1337, 870) '< CSCALE >'
+            write (1337, 970)
+          end if
+        else
+          write (1337, 880) '< CSCALE >'
+          write (1337, 970)
+        end if
+
+        if (manctl) then
+          cscl(:, :) = cscl(:, :)/dsqrt(ctlscale)
+          write (1337, 980)
+          write (1337, 910)
+          write (1337, 950) 1.d0/dsqrt(ctlscale)
+        end if
+        write (1337, 310)
+      end if
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! CTL-MAN
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    end if
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! LDA+U
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    if (opt('qdos    ')) then
+      allocate (t_params%qdos_atomselect(natyp), stat=i_stat) !INTEGER
+      call memocc(i_stat, product(shape(t_params%qdos_atomselect))*kind( &
+        t_params%qdos_atomselect), 't_params%qdos_atomselect', 'rinput13')
+
+      t_params%qdos_atomselect(:) = 1
+!for now this is not used. Later this should be used to speed up the qdos calculations if not all atoms are supposed to be calculated Then if fullinv was not chosen then tmatrix is only needed for the principle layer of the atom of interest and the calculation of G(k) can be done only on that subblock.
 !          CALL IoInput('qdosatoms       ',UIO,1,7,IER)
 !          IF (IER.EQ.0) THEN
 !            READ (UNIT=UIO,FMT=*) (t_params%qdos_atomselect(I),I=1,NATYP)
@@ -2373,254 +2383,257 @@ contains
 !          WRITE (1337,'(A)') 'atom selective writeout for qdos:'
 !          WRITE (1337,'(A,1000I5)') 'qdosatoms=',  (t_params%qdos_atomselect(I),I=1,NATYP)
 
-         if(.not.test('MPIatom ')) then
-            ! enforce MPIenerg since this is usually faster for qdos option
-            call addtest('MPIenerg')
-         end if
-
+      if (.not. test('MPIatom ')) then
+! enforce MPIenerg since this is usually faster for qdos option
+        call addtest('MPIenerg')
       end if
 
-      ! =============================================================         ! fswrt
-      ! check and correct some settings automatically for FERMIOUT writeout   ! fswrt
-           if(OPT('FERMIOUT').or.OPT('OPERATOR')) then                       ! fswrt
-             if (NSTEPS/=1) then                                             ! fswrt
-               write(6,2012)                                                 ! fswrt
-               NSTEPS = 1                                                    ! fswrt
-             end if                                                          ! fswrt
-             if (.not.TEST('STOP1B  ')) CALL ADDTEST('STOP1B  ')             ! fswrt
-             if (.not.TEST('STOP1B  ')) stop 'addtest failed for STOP1B'     ! fswrt
-           end if                                                            ! fswrt
-      ! =============================================================         ! fswrt
+    end if
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! WF_SAVE
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call IOInput('MEMWFSAVE       ',UIO,0,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_number
-         write(1337,*) '< MEMWFSAVE >', t_wavefunctions%maxmem_number
-         write(111,*) 'MEMWFSAVE=',t_wavefunctions%maxmem_number
-      else
-         t_wavefunctions%maxmem_number = 0
-         write(1337,*) '< MEMWFSAVE >, use default:', t_wavefunctions%maxmem_number
-         write(111,*) 'Default MEMWFSAVE= ',t_wavefunctions%maxmem_number
-      end if
-      call IOInput('UNITMEMWFSAVE   ',UIO,0,7,IER)
-      if (IER.EQ.0) then
-         read (UNIT=UIO,FMT=*) t_wavefunctions%maxmem_units
-         write(1337,*) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
-         write(111,*) 'UNITMEMWFSAVE=',t_wavefunctions%maxmem_units
-      else
-         t_wavefunctions%maxmem_units = 2
-         write(1337,*) '< UNITMEMWFSAVE >, use default:', t_wavefunctions%maxmem_units, '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
-         write(111,*) 'Default UNITMEMWFSAVE= ',t_wavefunctions%maxmem_units, '(MB)'
-      end if
+! =============================================================         ! fswrt
+! check and correct some settings automatically for FERMIOUT writeout   ! fswrt
+    if (opt('FERMIOUT') .or. opt('OPERATOR')) then ! fswrt
+      if (nsteps/=1) then ! fswrt
+        write (6, 170) ! fswrt
+        nsteps = 1 ! fswrt
+      end if ! fswrt
+      if (.not. test('STOP1B  ')) call addtest('STOP1B  ') ! fswrt
+      if (.not. test('STOP1B  ')) stop 'addtest failed for STOP1B' ! fswrt
+    end if ! fswrt
+! =============================================================         ! fswrt
 
-      !default flags: save only rll from main1a>tmatnewsolver since left solutions can be calculated always in main1c>rhovalnew and sll is not used
-      t_wavefunctions%save_rll     = .true.
-      t_wavefunctions%save_sll     = .false.
-      t_wavefunctions%save_rllleft = .false.
-      t_wavefunctions%save_sllleft = .false.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! WF_SAVE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call ioinput('MEMWFSAVE       ', uio, 0, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) t_wavefunctions%maxmem_number
+      write (1337, *) '< MEMWFSAVE >', t_wavefunctions%maxmem_number
+      write (111, *) 'MEMWFSAVE=', t_wavefunctions%maxmem_number
+    else
+      t_wavefunctions%maxmem_number = 0
+      write (1337, *) '< MEMWFSAVE >, use default:', &
+        t_wavefunctions%maxmem_number
+      write (111, *) 'Default MEMWFSAVE= ', t_wavefunctions%maxmem_number
+    end if
+    call ioinput('UNITMEMWFSAVE   ', uio, 0, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) t_wavefunctions%maxmem_units
+      write (1337, *) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, &
+        ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
+      write (111, *) 'UNITMEMWFSAVE=', t_wavefunctions%maxmem_units
+    else
+      t_wavefunctions%maxmem_units = 2
+      write (1337, *) '< UNITMEMWFSAVE >, use default:', &
+        t_wavefunctions%maxmem_units, &
+        '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
+      write (111, *) 'Default UNITMEMWFSAVE= ', t_wavefunctions%maxmem_units, &
+        '(MB)'
+    end if
 
-      if(opt('OPERATOR')) then
-         write(1337,*) 'Found option "OPERATOR"'
-         write(1337,*) 'Overwrite MEMWFSAVE input with big numbers'
-         t_wavefunctions%maxmem_number = 5
-         t_wavefunctions%maxmem_units = 3
-      end if
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! WF_SAVE
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!default flags: save only rll from main1a>tmatnewsolver since left solutions can be calculated always in main1c>rhovalnew and sll is not used
+    t_wavefunctions%save_rll = .true.
+    t_wavefunctions%save_sll = .false.
+    t_wavefunctions%save_rllleft = .false.
+    t_wavefunctions%save_sllleft = .false.
 
-      write(1337,2100)
-      write(1337,2040) KMROT
-      write(1337,2110)
-      write(1337,*) ' >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< '
+    if (opt('OPERATOR')) then
+      write (1337, *) 'Found option "OPERATOR"'
+      write (1337, *) 'Overwrite MEMWFSAVE input with big numbers'
+      t_wavefunctions%maxmem_number = 5
+      t_wavefunctions%maxmem_units = 3
+    end if
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! WF_SAVE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      close(111) ! Close file inputcard_generated.txt
+    write (1337, 310)
+    write (1337, 300) kmrot
+    write (1337, 380)
+    write (1337, *) ' >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< '
 
-      if (allocated(IMANSOC)) then
-         i_all=-product(shape(IMANSOC))*kind(IMANSOC)
-         deallocate(IMANSOC,stat=i_stat)
-         call memocc(i_stat,i_all,'IMANSOC','rinput13')
-      endif
+    close (111) ! Close file inputcard_generated.txt
 
-      return
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! INPUT END
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      1029 format((F4.0,I4,4x,4I1,3I4,F8.4,I4,I5,1x,f8.5))
-      ! ------------------------------------------------------------------------
-      2010 format(' NSPIN '/I4)
-      2011 format(' NSTEPS'/I4)
-      2012 format(' WARINING: Setting NSTEPS to 1 for runoption FERMOUT')
-      2014 format('          ALAT = ',F15.8)
-      2015 format('   INTERVX   INTERVY   INTERVZ'/3I10)
-      2016 format('    NCLS    NREF   NINEQ'/,3I8)
-      2018 format(' RBASIS'/,&
-      &     'SITE                BASIS VECTORS                 ',&
-      &     'THETA   PHI CPA OCC KAOEZ')
-      2019 format('         ABASIS         BBASIS         CBASIS'/3F15.8)
-      2021 format(' INIPOL'/,(10I4))
-      2022 format(' IXIPOL'/,(10I4))
-      2023 format('    NAEZ    NEMB  '/,2I8)
-      2025 format((i4,3F15.8,2F6.1,2(1x,I3),4I3))
-      2028 format(' NATYP '/,I4/,&
-      &     '   Z lmx     KFG cls pot ntc  MTFAC irns SITE  CONC')
-      2031 format((3F15.8,2I6))
-      2032 format(' NTCELLR'/,(10I4))
-      2040 format(' KMROT'/,4I8)
-      ! ------------------------------------------------------------------------
-      2100 format(79(1H-))
-      2101 format(   3(1H-),1H+  , 3(14(1H-),1H+),  30(1H-))
-      2102 format( 3(9(1H-),1H+) ,49(1H-))
-      2103 format(10(3(1H-),1H+) ,39(1H-))
-      2104 format(   3(1H-),1H+  ,75(1H-))
-      2107 format( 3(14(1H-),1H+),34(1H-))
-      2108 format( 2(3(1H-),1H+),  7(1H-),1H+,      3(3(1H-),1H+),&
-      &          7(1H-),1H+,   3(1H-),1H+,      39(1H-))
-      2110 format( 3(7(1H-),1H+) ,55(1H-))
-      2111 format( 7(7(1H-),1H+) ,23(1H-))
-      9020 format (/,33x,'check of dimension-data consistency',/,33x,&
-      &       35 ('-'),/,40x,'lmax   : (',i6,',',i6,')',/,40x,&
-      &       'natyp  : (',i6,',',i6,')',/,40x,'irm    : (',i6,',',i6,&
-      &       ')',/,40x,'nspin  : (',i6,',',i6,')',/)
-      9030 format (1x,10 ('*'),' external magnetic field applied hfield=',&
-      &       f8.5)
-      9050 format (20x,a4,'spin polarized calculation')
-      9070 format (1x,20x,' calculation with',a8,'-potential')
-      9080 format (1x,79 ('*'))
-      9090 format (' mixing factor used           :',f15.6,/,&
-      &        ' convergence quality required :',1p,d15.2)
-      9091 format (' make use of CPA algorithm    :',1x,a14)
-      9092 format ('         max. iterations      :',i15,/,&
-      &        '         req. CPA convergency :',1p,d15.2)
-      9100 format (1x,20x,a24,'exchange-correlation potential')
-      9110 format (/,20x,'broyden"s method # :',i3,&
-      &       ' is used up to iteration-      ',/,20x,'depth :',i3,&
-      &       '  then jacobian is fixed and potential      ',/,20x,&
-      &       'is updated using that jacobian')
-      9120 format (13x,' in case of calculating non - spherical wavefcts ',&
-      &       'the parameter lmaxd has to be set equal lmax ')
-      9130 format (/)
-      9140 format (20x,'full potential calculation ',&
-      &       '- cut off of non spherical potential',/,' >',/)
-      9150 format (31x,'representive atom no.',i3,' irns :',i5,' irnsd :',i5)
-      9160 format (21x,a43,/,21x,' using',i3,'-th. born approximation ')
-      9170 format (21x,a43)
-      9210 format (' lmax'/,i4)
-      9220 format ('          EMIN        EMAX        TK'/,3f12.6)
-      9230 format ('   NPOL  NPNT1  NPNT2  NPNT3'/,4i7)
-      9250 format ('  IFILE    IPE ISHIFT ESHIFT'/,3i7,f12.6)
-      9260 format (' KSHAPE    IRM    INS   ICST INSREF'/,5i7)
-      9270 format ('   KCOR  KVREL    KWS   KHYP KHFIELD   KXC'/,6i7)
-      9280 format (' external magnetic hfield     :',f15.4/,&
-      &        ' VCONST                       :',f15.6)
-      9290 format ('   IMIX    IGF    ICC'/,3i7)
-      9300 format (' ITDBRY'/,i7)
-      9310 format ('      STRMIX        FCM       QBOUND'/,3f12.6)
-      9320 format ('      BRYMIX'/,f12.6)
-      9330 format ('    KTE   KPRE   KEFG  KVMAD '/,5i7)
-      9301 format(   3(1H-),1H+  ,75(1H-))
-      9302 format( 3(11(1H-),1H+),43(1H-))
-      9303 format(3(6(1H-),1H+) ,58(1H-))
-      9304 format(4(6(1H-),1H+) ,51(1H-))
-      9305 format(3(6(1H-),1H+),11(1H-),1H+ ,46(1H-))
-      9306 format(6(6(1H-),1H+) ,37(1H-))
-      9307 format(6(1H-),1H+,72(1H-))
-      9308 format(11(1H-),1H+,67(1H-))
-      9309 format(5(6(1H-),1H+) ,44(1H-))
-      9410 format('*** SLAB - INTERFACE CALCULATION ***'/)
-      9420 format(I5,3F14.8,I5)
-      9430 format('Number of LEFT  Host Layers : ',I5,' with ',I5,' basis')
-      9440 format('Number of RIGHT Host Layers : ',I5,' with ',I5,' basis')
-      9450 format('Left  side periodicity : ',3F10.5)
-      9460 format('Right side periodicity : ',3F10.5)
-      9465 format('    Geommetry used : '/,&
-      &       ' ATOM       TX          TY          TZ ')
-      9470 format('--------------- Left  Host -------------- ')
-      9475 format('---------------   S L A B  -------------- ')
-      9480 format('--------------- Right Host -------------- ')
-      99001 format(/,1X,&
-      &     "WARNING: Option ",A," used with an INVALID ",&
-      &     "scaling parameter.")
-      99002 format(/,1X,&
-      &     "WARNING: Option ",A," found but NO value given for the",&
-      &     " scaling parameter.")
-      99003 format(15X,'++++++++++   SOC option will be IGNORED   ++++++++++',&
-      &     /,1X,'Please use SOCSCALE= XXX (real>-2.5) in the inputcard',&
-      &     ' to make your option valid ',/)
-      99004 format(1X,'The SOC will be SCALED',$)
-      99005 format(' for ALL the atoms in the unit cell.')
-      99006 format(' for the FOLLOWING atoms in the unit cell :')
-      99007 format(' for all the atoms in the unit cell EXCLUDING :')
-      99008 format(1X,6(2X,I3))
-      99009 format(1X,'Scaling factor = ',1P,D9.2)
-      99010 format(1X,'The SOC is manipulated',' -- part of the SOC kept: ',A)
-      99011 format(15X,'+++++++++  CSCALE option will be IGNORED  ++++++++++',&
-      &     /,1X,'Please use CTLSCALE= X (real>=1D-12) in the inputcard',&
-      &     ' to make your option valid ',/)
-      99012 format(1X,'The CLIGHT will be SCALED',$)
+    if (allocated(imansoc)) then
+      i_all = -product(shape(imansoc))*kind(imansoc)
+      deallocate (imansoc, stat=i_stat)
+      call memocc(i_stat, i_all, 'IMANSOC', 'rinput13')
+    end if
 
-   end subroutine RINPUT13
-   !---------------------------------------------------------------------
-   !---------------------------------------------------------------------
+    return
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! INPUT END
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+140 format ((f4.0,i4,4x,4i1,3i4,f8.4,i4,i5,1x,f8.5))
+! ------------------------------------------------------------------------
+150 format (' NSPIN ', /, i4)
+160 format (' NSTEPS', /, i4)
+170 format (' WARINING: Setting NSTEPS to 1 for runoption FERMOUT')
+180 format ('          ALAT = ', f15.8)
+190 format ('   INTERVX   INTERVY   INTERVZ', /, 3i10)
+200 format ('    NCLS    NREF   NINEQ', /, 3i8)
+210 format (' RBASIS', /, 'SITE                BASIS VECTORS                 ' &
+      , 'THETA   PHI CPA OCC KAOEZ')
+220 format ('         ABASIS         BBASIS         CBASIS', /, 3f15.8)
+230 format (' INIPOL', /, (10i4))
+240 format (' IXIPOL', /, (10i4))
+250 format ('    NAEZ    NEMB  ', /, 2i8)
+260 format ((i4,3f15.8,2f6.1,2(1x,i3),4i3))
+270 format (' NATYP ', /, i4, /, &
+      '   Z lmx     KFG cls pot ntc  MTFAC irns SITE  CONC')
+280 format ((3f15.8,2i6))
+290 format (' NTCELLR', /, (10i4))
+300 format (' KMROT', /, 4i8)
+! ------------------------------------------------------------------------
+310 format (79('-'))
+320 format (3('-'), '+', 3(14('-'),'+'), 30('-'))
+330 format (3(9('-'),'+'), 49('-'))
+340 format (10(3('-'),'+'), 39('-'))
+350 format (3('-'), '+', 75('-'))
+360 format (3(14('-'),'+'), 34('-'))
+370 format (2(3('-'),'+'), 7('-'), '+', 3(3('-'),'+'), 7('-'), '+', 3('-'), &
+      '+', 39('-'))
+380 format (3(7('-'),'+'), 55('-'))
+390 format (7(7('-'),'+'), 23('-'))
+400 format (/, 33x, 'check of dimension-data consistency', /, 33x, 35('-'), /, &
+      40x, 'lmax   : (', i6, ',', i6, ')', /, 40x, 'natyp  : (', i6, ',', i6, &
+      ')', /, 40x, 'irm    : (', i6, ',', i6, ')', /, 40x, 'nspin  : (', i6, &
+      ',', i6, ')', /)
+410 format (1x, 10('*'), ' external magnetic field applied hfield=', f8.5)
+420 format (20x, a4, 'spin polarized calculation')
+430 format (1x, 20x, ' calculation with', a8, '-potential')
+440 format (1x, 79('*'))
+450 format (' mixing factor used           :', f15.6, /, &
+      ' convergence quality required :', 1p, d15.2)
+460 format (' make use of CPA algorithm    :', 1x, a14)
+470 format ('         max. iterations      :', i15, /, &
+      '         req. CPA convergency :', 1p, d15.2)
+480 format (1x, 20x, a24, 'exchange-correlation potential')
+490 format (/, 20x, 'broyden"s method # :', i3, &
+      ' is used up to iteration-      ', /, 20x, 'depth :', i3, &
+      '  then jacobian is fixed and potential      ', /, 20x, &
+      'is updated using that jacobian')
+500 format (13x, ' in case of calculating non - spherical wavefcts ', &
+      'the parameter lmaxd has to be set equal lmax ')
+510 format (/)
+520 format (20x, 'full potential calculation ', &
+      '- cut off of non spherical potential', /, ' >', /)
+530 format (31x, 'representive atom no.', i3, ' irns :', i5, ' irnsd :', i5)
+540 format (21x, a43, /, 21x, ' using', i3, '-th. born approximation ')
+550 format (21x, a43)
+560 format (' lmax', /, i4)
+570 format ('          EMIN        EMAX        TK', /, 3f12.6)
+580 format ('   NPOL  NPNT1  NPNT2  NPNT3', /, 4i7)
+590 format ('  IFILE    IPE ISHIFT ESHIFT', /, 3i7, f12.6)
+600 format (' KSHAPE    IRM    INS   ICST INSREF', /, 5i7)
+610 format ('   KCOR  KVREL    KWS   KHYP KHFIELD   KXC', /, 6i7)
+620 format (' external magnetic hfield     :', f15.4, /, &
+      ' VCONST                       :', f15.6)
+630 format ('   IMIX    IGF    ICC', /, 3i7)
+640 format (' ITDBRY', /, i7)
+650 format ('      STRMIX        FCM       QBOUND', /, 3f12.6)
+660 format ('      BRYMIX', /, f12.6)
+670 format ('    KTE   KPRE   KEFG  KVMAD ', /, 5i7)
+680 format (3('-'), '+', 75('-'))
+690 format (3(11('-'),'+'), 43('-'))
+700 format (3(6('-'),'+'), 58('-'))
+710 format (4(6('-'),'+'), 51('-'))
+720 format (3(6('-'),'+'), 11('-'), '+', 46('-'))
+730 format (6(6('-'),'+'), 37('-'))
+740 format (6('-'), '+', 72('-'))
+750 format (11('-'), '+', 67('-'))
+760 format (5(6('-'),'+'), 44('-'))
+770 format ('*** SLAB - INTERFACE CALCULATION ***', /)
+780 format (i5, 3f14.8, i5)
+790 format ('Number of LEFT  Host Layers : ', i5, ' with ', i5, ' basis')
+800 format ('Number of RIGHT Host Layers : ', i5, ' with ', i5, ' basis')
+810 format ('Left  side periodicity : ', 3f10.5)
+820 format ('Right side periodicity : ', 3f10.5)
+830 format ('    Geommetry used : ', /, &
+      ' ATOM       TX          TY          TZ ')
+840 format ('--------------- Left  Host -------------- ')
+850 format ('---------------   S L A B  -------------- ')
+860 format ('--------------- Right Host -------------- ')
+870 format (/, 1x, 'WARNING: Option ', a, ' used with an INVALID ', &
+      'scaling parameter.')
+880 format (/, 1x, 'WARNING: Option ', a, ' found but NO value given for the', &
+      ' scaling parameter.')
+890 format (15x, '++++++++++   SOC option will be IGNORED   ++++++++++', /, &
+      1x, 'Please use SOCSCALE= XXX (real>-2.5) in the inputcard', &
+      ' to make your option valid ', /)
+900 format (1x, 'The SOC will be SCALED', $)
+910 format (' for ALL the atoms in the unit cell.')
+920 format (' for the FOLLOWING atoms in the unit cell :')
+930 format (' for all the atoms in the unit cell EXCLUDING :')
+940 format (1x, 6(2x,i3))
+950 format (1x, 'Scaling factor = ', 1p, d9.2)
+960 format (1x, 'The SOC is manipulated', ' -- part of the SOC kept: ', a)
+970 format (15x, '+++++++++  CSCALE option will be IGNORED  ++++++++++', /, &
+      1x, 'Please use CTLSCALE= X (real>=1D-12) in the inputcard', &
+      ' to make your option valid ', /)
+980 format (1x, 'The CLIGHT will be SCALED', $)
 
-   subroutine ADDOPT(STRING)
-      use mod_wunfiles, only: t_params
+  end subroutine
+!---------------------------------------------------------------------
+!---------------------------------------------------------------------
 
-      implicit none
+  subroutine addopt(string)
+    use :: mod_wunfiles, only: t_params
 
-      integer, parameter :: NOPTD=32
-      character(len=8) :: STRING
-      integer :: II
-      logical, external :: OPT
+    implicit none
 
-      if (.not.OPT('        ')) then
-         write(*,*) 'Error in ADDOPT for ',STRING,' : No free slots in array OPTC.'
-         stop 'Error in ADDOPT: No free slots in array OPTC.'
-      endif
+    integer, parameter :: noptd = 32
+    character (len=8) :: string
+    integer :: ii
+    logical, external :: opt
 
-      if (.not.OPT(STRING)) then
-         II = 1
-         do while (II.le.NOPTD)
-            if (t_params%OPTC(II).eq.'        ') then
-               t_params%OPTC(II) = STRING
-               II = NOPTD + 1
-            endif
-            II = II + 1
-         enddo
-      endif
+    if (.not. opt('        ')) then
+      write (*, *) 'Error in ADDOPT for ', string, &
+        ' : No free slots in array OPTC.'
+      stop 'Error in ADDOPT: No free slots in array OPTC.'
+    end if
 
-   end subroutine ADDOPT
+    if (.not. opt(string)) then
+      ii = 1
+      do while (ii<=noptd)
+        if (t_params%optc(ii)=='        ') then
+          t_params%optc(ii) = string
+          ii = noptd + 1
+        end if
+        ii = ii + 1
+      end do
+    end if
 
-   subroutine ADDTEST(STRING)
-      use mod_types, only: t_inc
-      use mod_wunfiles, only: t_params
-      implicit none
-      integer, parameter :: NTSTD=64
-      character(len=8) :: STRING
-      integer :: II
-      logical, external :: TEST
-       
-      if(t_inc%i_write) write(1337, *) 'in ADDTEST: adding option ', STRING
-    
-      if (.not.TEST('        ')) then
-        write(*,*) 'Error in ADDTEST for ',STRING,' : No free slots in array TESTC.'
-        stop 'Error in ADDTEST: No free slots in array TESTC.'
-      endif
-       
-      if (.not.TEST(STRING)) then
-        II = 1
-        do while (II.le.NTSTD)
-           if (t_params%TESTC(II).eq.'        ') then
-              t_params%TESTC(II) = STRING
-              II = NTSTD + 1
-           endif
-           II = II + 1
-        enddo
-      endif
-     
-   end subroutine ADDTEST
+  end subroutine
 
-end module rinput
+  subroutine addtest(string)
+    use :: mod_types, only: t_inc
+    use :: mod_wunfiles, only: t_params
+    implicit none
+    integer, parameter :: ntstd = 64
+    character (len=8) :: string
+    integer :: ii
+    logical, external :: test
+
+    if (t_inc%i_write) write (1337, *) 'in ADDTEST: adding option ', string
+
+    if (.not. test('        ')) then
+      write (*, *) 'Error in ADDTEST for ', string, &
+        ' : No free slots in array TESTC.'
+      stop 'Error in ADDTEST: No free slots in array TESTC.'
+    end if
+
+    if (.not. test(string)) then
+      ii = 1
+      do while (ii<=ntstd)
+        if (t_params%testc(ii)=='        ') then
+          t_params%testc(ii) = string
+          ii = ntstd + 1
+        end if
+        ii = ii + 1
+      end do
+    end if
+
+  end subroutine
+
+end module

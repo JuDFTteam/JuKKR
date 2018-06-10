@@ -1,8 +1,8 @@
-SUBROUTINE core(iprint,itprt,nt,ncort,ctl,vt,bt,z,nucleus,  &
-    r,r2drdi,drdi,jws,imt,rhochr,rhospn, ecortab,gcor,fcor,ecor,szcor,  &
-    kapcor,mm05cor,nkpcor,ikmcor,izero,ncxray,lcxray,  &
-    itxray,bcor,bcors,sdia,smdia,soff,smoff,qdia,qoff,  &
-    qmdia,qmoff,nkmmax,nmemax,ismqhfi,ntmax,nrmax, nmmax,ncstmax,nlmax)
+subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
+  drdi, jws, imt, rhochr, rhospn, ecortab, gcor, fcor, ecor, szcor, kapcor, &
+  mm05cor, nkpcor, ikmcor, izero, ncxray, lcxray, itxray, bcor, bcors, sdia, &
+  smdia, soff, smoff, qdia, qoff, qmdia, qmoff, nkmmax, nmemax, ismqhfi, &
+  ntmax, nrmax, nmmax, ncstmax, nlmax)
 !   ********************************************************************
 !   *                                                                  *
 !   *   SUBROUTINE TO CALCULATE THE RELATIVISTIC CORE WAVE             *
@@ -50,988 +50,984 @@ SUBROUTINE core(iprint,itprt,nt,ncort,ctl,vt,bt,z,nucleus,  &
 !   *        IPRINT values between 0 and 2                             *
 !   *        ITPRT  correct value of the atom-type index               *
 !   ********************************************************************
-use mod_types, only: t_inc
-implicit none
+  use :: mod_types, only: t_inc
+  implicit none
 
 
 ! PARAMETER definitions
-DOUBLE PRECISION UNEND,TOLVAR,TRYMIX,DVSTEP
-PARAMETER (UNEND=600.0D0,TOLVAR=1.0D-6,TRYMIX=0.01D0, &
-           DVSTEP=0.01D0)
-INTEGER ITERMAX,NLSHELLMAX
-PARAMETER (ITERMAX=200,NLSHELLMAX=15)
+  double precision :: unend, tolvar, trymix, dvstep
+  parameter (unend=600.0d0, tolvar=1.0d-6, trymix=0.01d0, dvstep=0.01d0)
+  integer :: itermax, nlshellmax
+  parameter (itermax=200, nlshellmax=15)
 
 ! Dummy arguments
-INTEGER IPRINT,ISMQHFI,ITPRT,ITXRAY,NCSTMAX,NKMMAX,NLMAX,NMEMAX, &
-        NMMAX,NRMAX,NT,NTMAX,NUCLEUS
-DOUBLE PRECISION BCOR(NTMAX),BCORS(NTMAX),BT(NRMAX,NTMAX), &
-       CTL(NTMAX,NLMAX), &
-       DRDI(NRMAX,NMMAX),ECOR(NCSTMAX),ECORTAB(120,NTMAX), &
-       FCOR(NRMAX,2,NCSTMAX),GCOR(NRMAX,2,NCSTMAX),QDIA(NKMMAX), &
-       QMDIA(NKMMAX),QMOFF(NKMMAX),QOFF(NKMMAX),R(NRMAX,NMMAX), &
-       R2DRDI(NRMAX,NMMAX),RHOCHR(NRMAX,NTMAX),RHOSPN(NRMAX,NTMAX) &
-       ,SDIA(NKMMAX),SMDIA(NKMMAX),SMOFF(NKMMAX),SOFF(NKMMAX), &
-       SZCOR(NCSTMAX),VT(NRMAX,NTMAX)
-INTEGER IKMCOR(NCSTMAX,2),IMT(NTMAX),IZERO(NCSTMAX),JWS(NMMAX), &
-        KAPCOR(NCSTMAX),LCXRAY(NTMAX),MM05COR(NCSTMAX), &
-        NCXRAY(NTMAX),NKPCOR(NCSTMAX),Z(NTMAX),NCORT(NTMAX)
+  integer :: iprint, ismqhfi, itprt, itxray, ncstmax, nkmmax, nlmax, nmemax, &
+    nmmax, nrmax, nt, ntmax, nucleus
+  double precision :: bcor(ntmax), bcors(ntmax), bt(nrmax, ntmax), &
+    ctl(ntmax, nlmax), drdi(nrmax, nmmax), ecor(ncstmax), ecortab(120, ntmax), &
+    fcor(nrmax, 2, ncstmax), gcor(nrmax, 2, ncstmax), qdia(nkmmax), &
+    qmdia(nkmmax), qmoff(nkmmax), qoff(nkmmax), r(nrmax, nmmax), &
+    r2drdi(nrmax, nmmax), rhochr(nrmax, ntmax), rhospn(nrmax, ntmax), &
+    sdia(nkmmax), smdia(nkmmax), smoff(nkmmax), soff(nkmmax), szcor(ncstmax), &
+    vt(nrmax, ntmax)
+  integer :: ikmcor(ncstmax, 2), imt(ntmax), izero(ncstmax), jws(nmmax), &
+    kapcor(ncstmax), lcxray(ntmax), mm05cor(ncstmax), ncxray(ntmax), &
+    nkpcor(ncstmax), z(ntmax), ncort(ntmax)
 
 ! Local variables
-DOUBLE PRECISION AUX,BB(NRMAX*2),BHF(2,2),BHF1(2,2),BHF2(2,2), &
-       BSH,BSOL,BSUM, &
-       CGD(2),CGMD(2),CGO,DEC,DEDV(4,4),DOVRC(NRMAX*2), &
-       DP(2,2,NRMAX*2),DQ(2,2,NRMAX*2),DRDIC(NRMAX*2), &
-       DROVRN(2*NRMAX),DV(4),DVDE(4,4),EC,ECC,ELIM,ERR(4), &
-       ERRNEW(4),FC(2,2,NRMAX*2),FCK(2,2,NRMAX*2),GC(2,2,NRMAX*2), &
-       GCK(2,2,NRMAX*2),MJ,NIW(2),NORM,NOW(2),PIW(2,2),POW(2,2), &
-       QIW(2,2),QOW(2,2),R2DRDIC(NRMAX*2),RAT,RATT,RC(NRMAX*2), &
-       RINT(NRMAX),RNUC,RR,SCALE,SHF(2,2,NMEMAX),SIMP, &
-       SPLIT(NMEMAX),SPLIT1(NMEMAX),SPLIT2(NMEMAX,NTMAX), &
-       SPLIT3(NMEMAX,NTMAX),SZ,VAL,VAR(4),VARNEW(4),VARTAB(4,20), &
-       VV(NRMAX*2),VZ,W,WP(2,2,NRMAX*2),WQ(2,2,NRMAX*2)
-LOGICAL CHECK,FERRO,SCALEB,SUPPRESSB, BNDSTACHK
-DOUBLE PRECISION DBLE,DSIGN
-INTEGER I,IC,IC1,IC2,ICST,IE,IFLAG,II,IL,ILC,ILSHELL,IM,IMIN,IN, &
-        INFO,IPIV(4),ISH,ISTART,IT,ITER,IV,J,JLIM,JTOP,JV,K,KAP(2) &
-        ,KAP1,KAP2,KC,L,LCP1,LLL,LOOP,LQNTAB(NLSHELLMAX),MUEM05,N, &
-        NLSHELL,NMATCH,NN,NODE,NQN,NQNTAB(NLSHELLMAX), &
-        NRC,NSH,NSOL,NVAR,NZERO,S,T
-INTEGER IABS
-INTEGER IKAPMUE
-DOUBLE PRECISION RNUCTAB
-CHARACTER (len=10) :: TXTB(1:5)
-CHARACTER (len=3) :: TXTK(4)
-CHARACTER (len=1) :: TXTL(0:3)
+  double precision :: aux, bb(nrmax*2), bhf(2, 2), bhf1(2, 2), bhf2(2, 2), &
+    bsh, bsol, bsum, cgd(2), cgmd(2), cgo, dec, dedv(4, 4), dovrc(nrmax*2), &
+    dp(2, 2, nrmax*2), dq(2, 2, nrmax*2), drdic(nrmax*2), drovrn(2*nrmax), &
+    dv(4), dvde(4, 4), ec, ecc, elim, err(4), errnew(4), fc(2, 2, nrmax*2), &
+    fck(2, 2, nrmax*2), gc(2, 2, nrmax*2), gck(2, 2, nrmax*2), mj, niw(2), &
+    norm, now(2), piw(2, 2), pow(2, 2), qiw(2, 2), qow(2, 2), &
+    r2drdic(nrmax*2), rat, ratt, rc(nrmax*2), rint(nrmax), rnuc, rr, scale, &
+    shf(2, 2, nmemax), simp, split(nmemax), split1(nmemax), &
+    split2(nmemax, ntmax), split3(nmemax, ntmax), sz, val, var(4), varnew(4), &
+    vartab(4, 20), vv(nrmax*2), vz, w, wp(2, 2, nrmax*2), wq(2, 2, nrmax*2)
+  logical :: check, ferro, scaleb, suppressb, bndstachk
+  double precision :: dble, dsign
+  integer :: i, ic, ic1, ic2, icst, ie, iflag, ii, il, ilc, ilshell, im, imin, &
+    in, info, ipiv(4), ish, istart, it, iter, iv, j, jlim, jtop, jv, k, &
+    kap(2), kap1, kap2, kc, l, lcp1, lll, loop, lqntab(nlshellmax), muem05, n, &
+    nlshell, nmatch, nn, node, nqn, nqntab(nlshellmax), nrc, nsh, nsol, nvar, &
+    nzero, s, t
+  integer :: iabs
+  integer :: ikapmue
+  double precision :: rnuctab
+  character (len=10) :: txtb(1:5)
+  character (len=3) :: txtk(4)
+  character (len=1) :: txtl(0:3)
 
-DATA TXTB/'B_nses','B_nseo','B_ssc ','B_sum ','B_tot '/
-DATA TXTL/'s','p','d','f'/
-DATA TXTK/'1/2','3/2','5/2','7/2'/
-DATA NQNTAB/1,2,2,3,3,3,4,4,4,5,5,4,5,6,6/
-DATA LQNTAB/0,0,1,0,1,2,0,1,2,0,1,3,2,0,1/
-DATA CHECK/.FALSE./
+  data txtb/'B_nses', 'B_nseo', 'B_ssc ', 'B_sum ', 'B_tot '/
+  data txtl/'s', 'p', 'd', 'f'/
+  data txtk/'1/2', '3/2', '5/2', '7/2'/
+  data nqntab/1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 4, 5, 6, 6/
+  data lqntab/0, 0, 1, 0, 1, 2, 0, 1, 2, 0, 1, 3, 2, 0, 1/
+  data check/.false./
 
-nrc = 2*nrmax
+  nrc = 2*nrmax
 
-CALL rinit(120*ntmax,ecortab)
-CALL rinit(4*20,vartab)
+  call rinit(120*ntmax, ecortab)
+  call rinit(4*20, vartab)
 
-IF( itxray < 0 ) THEN
-  itxray = ABS(itxray)
-  bndstachk = .true.
-ELSE
-  bndstachk = .false.
-END IF
+  if (itxray<0) then
+    itxray = abs(itxray)
+    bndstachk = .true.
+  else
+    bndstachk = .false.
+  end if
 
 ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-DO it = 1,nt
-  suppressb = .false.
-  scaleb = .false.
-  scale = 1D0
-  
-  im = imt(it)
-  jtop = jws(im)
-  
-  rat = r(nrmax,im)/r(nrmax-1,im)
-  DO n = 1,nrmax
-    rc(n) = r(n,im)
-    drdic(n) = drdi(n,im)
-    r2drdic(n) = r2drdi(n,im)
-    dovrc(n) = drdic(n)/rc(n)
-  END DO
-  DO n = (nrmax+1),nrc
-    rc(n) = rat*rc(n-1)
-    drdic(n) = (rat-1.0D0)*rc(n-1)
-    r2drdic(n) = rc(n)*rc(n)*drdic(n)
-    dovrc(n) = drdic(n)/rc(n)
-  END DO
-  IF ( nucleus /= 0 ) THEN
-    rnuc = rnuctab(z(it))
-    in = 1
-    DO WHILE ( rc(in) <= rnuc )
-      in = in + 1
-    END DO
+  do it = 1, nt
+    suppressb = .false.
+    scaleb = .false.
+    scale = 1d0
+
+    im = imt(it)
+    jtop = jws(im)
+
+    rat = r(nrmax, im)/r(nrmax-1, im)
+    do n = 1, nrmax
+      rc(n) = r(n, im)
+      drdic(n) = drdi(n, im)
+      r2drdic(n) = r2drdi(n, im)
+      dovrc(n) = drdic(n)/rc(n)
+    end do
+    do n = (nrmax+1), nrc
+      rc(n) = rat*rc(n-1)
+      drdic(n) = (rat-1.0d0)*rc(n-1)
+      r2drdic(n) = rc(n)*rc(n)*drdic(n)
+      dovrc(n) = drdic(n)/rc(n)
+    end do
+    if (nucleus/=0) then
+      rnuc = rnuctab(z(it))
+      in = 1
+      do while (rc(in)<=rnuc)
+        in = in + 1
+      end do
 !     INTEGRATION BOUNDARY FOR HYPERFINE FIELDS FOR FINITE NUCLEUS
 !     2 MESH POINTS MORE FOR EXECUTING APPROPRIATE INTERPOLATION
 !     TO REAL NUCLEAR RADIUS RNUC
-    jlim = in + 2
-    IF ( MOD(jlim,2) == 0 ) jlim = jlim - 1
-  END IF
-  DO i = 1,nrc
-    IF ( nucleus /= 0 ) drovrn(i) = (rc(i)/rnuc)**3*drdic(i)
-  END DO
-  
-  loop = 1
-  50      CONTINUE
-  bcor(it) = 0.0D0
-  bcors(it) = 0.0D0
-  DO i = 1,nmemax
-    split2(i,it) = 0.0D0
-    split3(i,it) = 0.0D0
-  END DO
-  bsum = 0.0D0
-  DO n = 1,nrmax
-    rhochr(n,it) = 0.0D0
-    rhospn(n,it) = 0.0D0
-  END DO
-  DO n = 1,jws(im)
-    vv(n) = vt(n,it)
-    bb(n) = bt(n,it)
-    bsum = bsum + ABS(bb(n))
-  END DO
-  
-  IF ( suppressb ) THEN
-    DO n = 1,jws(im)
-      bb(n) = 0.0D0
-    END DO
-    bsum = 0.0D0
-  END IF
-  
-  DO n = (jws(im)+1),nrc
-    vv(n) = 0.0D0
-    bb(n) = 0.0D0
-  END DO
-  
-  nlshell = 0
-  IF ( z(it) > 2 ) nlshell = 1
-  IF ( z(it) > 10 ) nlshell = 3
-  IF ( z(it) > 18 ) nlshell = 5
-  IF ( z(it) > 30 ) nlshell = 6
-  IF ( z(it) > 36 ) nlshell = 8
-  IF ( z(it) > 48 ) nlshell = 9
-  IF ( z(it) > 54 ) nlshell = 11
-  IF ( z(it) > 70 ) nlshell = 12
-  IF ( z(it) > 80 ) nlshell = 13
-  IF ( z(it) > 86 ) nlshell = 15
-  
-  IF( ncort(it) /= 0 ) THEN
+      jlim = in + 2
+      if (mod(jlim,2)==0) jlim = jlim - 1
+    end if
+    do i = 1, nrc
+      if (nucleus/=0) drovrn(i) = (rc(i)/rnuc)**3*drdic(i)
+    end do
+
+    loop = 1
+100 continue
+    bcor(it) = 0.0d0
+    bcors(it) = 0.0d0
+    do i = 1, nmemax
+      split2(i, it) = 0.0d0
+      split3(i, it) = 0.0d0
+    end do
+    bsum = 0.0d0
+    do n = 1, nrmax
+      rhochr(n, it) = 0.0d0
+      rhospn(n, it) = 0.0d0
+    end do
+    do n = 1, jws(im)
+      vv(n) = vt(n, it)
+      bb(n) = bt(n, it)
+      bsum = bsum + abs(bb(n))
+    end do
+
+    if (suppressb) then
+      do n = 1, jws(im)
+        bb(n) = 0.0d0
+      end do
+      bsum = 0.0d0
+    end if
+
+    do n = (jws(im)+1), nrc
+      vv(n) = 0.0d0
+      bb(n) = 0.0d0
+    end do
+
     nlshell = 0
-    n = 0
-    DO ilshell = 1,nlshellmax
-      l = lqntab(ilshell)
-      n = n + 2*(2*l+1)
-      IF( n == ncort(it) ) nlshell = ilshell
-    END DO
-    IF( nlshell == 0 ) THEN
-      WRITE(*,*) 'NLSHELL not found for IT=',it,' NCORT=', ncort(it)
-      STOP ' in <CORE>'
-    END IF
-  END IF
-  
-  IF ( bsum > 1.0D-8 ) THEN
-    ferro = .true.
-  ELSE
-    ferro = .false.
-    IF ( iprint >= 1 .AND. (t_inc%i_write>0)) WRITE (1337,99001)
-  END IF
-  
-  IF ( itxray == 0 .AND. iprint > 0 .AND. (t_inc%i_write>0))  &
-      WRITE (1337,99002) itprt,z(it)
-  
-  
+    if (z(it)>2) nlshell = 1
+    if (z(it)>10) nlshell = 3
+    if (z(it)>18) nlshell = 5
+    if (z(it)>30) nlshell = 6
+    if (z(it)>36) nlshell = 8
+    if (z(it)>48) nlshell = 9
+    if (z(it)>54) nlshell = 11
+    if (z(it)>70) nlshell = 12
+    if (z(it)>80) nlshell = 13
+    if (z(it)>86) nlshell = 15
+
+    if (ncort(it)/=0) then
+      nlshell = 0
+      n = 0
+      do ilshell = 1, nlshellmax
+        l = lqntab(ilshell)
+        n = n + 2*(2*l+1)
+        if (n==ncort(it)) nlshell = ilshell
+      end do
+      if (nlshell==0) then
+        write (*, *) 'NLSHELL not found for IT=', it, ' NCORT=', ncort(it)
+        stop ' in <CORE>'
+      end if
+    end if
+
+    if (bsum>1.0d-8) then
+      ferro = .true.
+    else
+      ferro = .false.
+      if (iprint>=1 .and. (t_inc%i_write>0)) write (1337, 170)
+    end if
+
+    if (itxray==0 .and. iprint>0 .and. (t_inc%i_write>0)) write (1337, 180) &
+      itprt, z(it)
+
+
 ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 !                   ---------------------------------------
 !                   INITIALIZE QUANTUM NUMBERS  NQN  AND  L
 !                   ---------------------------------------
-  ic = 0
-  DO ilshell = 1,nlshell
-    nqn = nqntab(ilshell)
-    l = lqntab(ilshell)
-    il = l + 1
-    ilc = MIN(nlmax,il)
-    nsh = 2*(2*l+1)
-    
+    ic = 0
+    do ilshell = 1, nlshell
+      nqn = nqntab(ilshell)
+      l = lqntab(ilshell)
+      il = l + 1
+      ilc = min(nlmax, il)
+      nsh = 2*(2*l+1)
+
 ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 !     SKIP SHELL IF NOT NEEDED IN A  XRAY - CALCULATION
 ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    IF ( itxray /= 0 ) THEN
-      IF ( it /= itxray ) GO TO 100
-      IF ( (nqn /= ncxray(it)) .OR. (l /= lcxray(it)) ) GO TO 100
-      DO icst = 1,ncstmax
-        DO kc = 1,2
-          DO n = 1,nrmax
-            gcor(n,kc,icst) = 0.0D0
-            fcor(n,kc,icst) = 0.0D0
-          END DO
-        END DO
-      END DO
-    END IF
+      if (itxray/=0) then
+        if (it/=itxray) go to 160
+        if ((nqn/=ncxray(it)) .or. (l/=lcxray(it))) go to 160
+        do icst = 1, ncstmax
+          do kc = 1, 2
+            do n = 1, nrmax
+              gcor(n, kc, icst) = 0.0d0
+              fcor(n, kc, icst) = 0.0d0
+            end do
+          end do
+        end do
+      end if
 ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    
-    ish = 0
-    bsh = 0.0D0
-    DO i = 1,nmemax
-      split1(i) = 0.0D0
-    END DO
+
+      ish = 0
+      bsh = 0.0d0
+      do i = 1, nmemax
+        split1(i) = 0.0d0
+      end do
 ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-    DO muem05 = -l - 1, + l
-      mj = muem05 + 0.5D0
-      
-      
-      kap1 = -l - 1
-      kap2 = l
-      kap(1) = kap1
-      kap(2) = kap2
-      
-      lll = l*(l+1)
-      IF ( ABS(mj) > l ) THEN
-        nsol = 1
-      ELSE
-        nsol = 2
-      END IF
-      
-      IF ( ferro ) THEN
-        nvar = 2*nsol
-      ELSE
-        nvar = 2
-      END IF
-      
+      do muem05 = -l - 1, +l
+        mj = muem05 + 0.5d0
+
+
+        kap1 = -l - 1
+        kap2 = l
+        kap(1) = kap1
+        kap(2) = kap2
+
+        lll = l*(l+1)
+        if (abs(mj)>l) then
+          nsol = 1
+        else
+          nsol = 2
+        end if
+
+        if (ferro) then
+          nvar = 2*nsol
+        else
+          nvar = 2
+        end if
+
 ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-      DO s = 1,nsol
-        ic = ic + 1
-        ish = ish + 1
-        t = 3 - s
+        do s = 1, nsol
+          ic = ic + 1
+          ish = ish + 1
+          t = 3 - s
 !                  ----------------------------------------
 !                   USE EC OF PREVIOUS RUNS AS START-VALUE
 !                   TAKE SPIN-ORBIT SPLITTING INTO ACCOUNT
 !                  ----------------------------------------
-        IF ( ish > 1 ) THEN
-          ec = ecortab(ic-1,it)
-          IF ( s == 2 ) ec = ecortab(ic-1,it)*1.1D0
-          IF ( ish >= 4 ) ec = ecortab(ic-2,it)
-          GO TO 65
-        END IF
-        
-        
+          if (ish>1) then
+            ec = ecortab(ic-1, it)
+            if (s==2) ec = ecortab(ic-1, it)*1.1d0
+            if (ish>=4) ec = ecortab(ic-2, it)
+            go to 130
+          end if
+
+
 !                                      --------------------
 !                                         FIND  E-LIMIT
 !                                      --------------------
-        IF ( lll == 0 ) THEN
-          elim = -2*DBLE(z(it)**2)/(1.5D0*nqn*nqn)
-        ELSE
-          elim = vv(1) + lll/rc(1)**2
-          DO n = 2,nrc
-            val = vv(n) + lll/rc(n)**2
-            IF ( val <= elim ) elim = val
-          END DO
-        END IF
-        
-        ec = -DBLE(z(it)**2)/(2.0D0*nqn*nqn)
-        
-        istart = 1
-        55               CONTINUE
-        IF ( ec <= elim ) ec = elim*0.7D0
-        
+          if (lll==0) then
+            elim = -2*dble(z(it)**2)/(1.5d0*nqn*nqn)
+          else
+            elim = vv(1) + lll/rc(1)**2
+            do n = 2, nrc
+              val = vv(n) + lll/rc(n)**2
+              if (val<=elim) elim = val
+            end do
+          end if
+
+          ec = -dble(z(it)**2)/(2.0d0*nqn*nqn)
+
+          istart = 1
+110       continue
+          if (ec<=elim) ec = elim*0.7d0
+
 !                                      --------------------
 !                                         FIND    NZERO
 !                                      --------------------
-        DO n = 1,(nrc-1)
-          IF ( (vv(n)-ec)*rc(n)**2 > unend ) THEN
-            IF ( MOD(n,2) == 0 ) THEN
-              nzero = n + 1
-            ELSE
-              nzero = n
-            END IF
-            GO TO 60
-          END IF
-        END DO
-        nzero = nrc - 1
-        WRITE (6,99003) itprt,nqn,l,(nrc-1)
-        STOP
+          do n = 1, (nrc-1)
+            if ((vv(n)-ec)*rc(n)**2>unend) then
+              if (mod(n,2)==0) then
+                nzero = n + 1
+              else
+                nzero = n
+              end if
+              go to 120
+            end if
+          end do
+          nzero = nrc - 1
+          write (6, 190) itprt, nqn, l, (nrc-1)
+          stop
 !                                      --------------------
 !                                         FIND    NMATCH
 !                                      --------------------
-        60               CONTINUE
-        n = nzero + 1
-        DO nn = 1,nzero
-          n = n - 1
-          IF ( (vv(n)+lll/rc(n)**2-ec) < 0.0 ) THEN
-            nmatch = n
-            GO TO 65
-          END IF
-        END DO
-        IF(t_inc%i_write>0) WRITE (1337,99004) itprt,nqn,l,ec
-        
-        65               CONTINUE
-        CALL coredir(it,ctl(it,ilc),ec,l,mj,'OUT',vv,bb,rc,  &
-            drdic,dovrc,nmatch,nzero,gc,fc,dp,dq,wp,  &
-            wq,pow,qow,piw,qiw,cgd,cgmd,cgo,nrc, z(it),nucleus)
-        
-        node = 0
-        DO n = 2,nmatch
-          IF ( gc(s,s,n)*gc(s,s,n-1) < 0.0 ) node = node + 1
-        END DO
-        
-        
-        IF ( iprint >= 2 .AND. (t_inc%i_write>0))  &
-            WRITE (1337,99016) itprt,nqn,l,  &
-            kap(s),(2*muem05+1),ic,ish,0,ec,nmatch,rc(nmatch),nzero,  &
-            rc(nzero),node,(gc(s,s,nmatch)/gc(s,s,nmatch-1))
-        
-        IF ( node /= (nqn-l-1) ) THEN
-          IF ( node > (nqn-l-1) ) THEN
-            ec = 1.2D0*ec
-          ELSE
-            ec = 0.8D0*ec
-          END IF
-          GO TO 55
-        ELSE IF ( (gc(s,s,nmatch)/gc(s,s,nmatch-1) <= 0.0)  &
-              .OR. (gc(s,s,nmatch)/gc(s,s,nmatch-1) >= 1.0) )  &
-              THEN
-          ec = 0.9D0*ec
-          GO TO 55
-        END IF
-        
-        
-        CALL coredir(it,ctl(it,ilc),ec,l,mj,'INW',vv,bb,rc,  &
-            drdic,dovrc,nmatch,nzero,gc,fc,dp,dq,wp,  &
-            wq,pow,qow,piw,qiw,cgd,cgmd,cgo,nrc, z(it),nucleus)
-        
+120       continue
+          n = nzero + 1
+          do nn = 1, nzero
+            n = n - 1
+            if ((vv(n)+lll/rc(n)**2-ec)<0.0) then
+              nmatch = n
+              go to 130
+            end if
+          end do
+          if (t_inc%i_write>0) write (1337, 200) itprt, nqn, l, ec
+
+130       continue
+          call coredir(it, ctl(it,ilc), ec, l, mj, 'OUT', vv, bb, rc, drdic, &
+            dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, piw, qiw, &
+            cgd, cgmd, cgo, nrc, z(it), nucleus)
+
+          node = 0
+          do n = 2, nmatch
+            if (gc(s,s,n)*gc(s,s,n-1)<0.0) node = node + 1
+          end do
+
+
+          if (iprint>=2 .and. (t_inc%i_write>0)) write (1337, 320) itprt, nqn, &
+            l, kap(s), (2*muem05+1), ic, ish, 0, ec, nmatch, rc(nmatch), &
+            nzero, rc(nzero), node, (gc(s,s,nmatch)/gc(s,s,nmatch-1))
+
+          if (node/=(nqn-l-1)) then
+            if (node>(nqn-l-1)) then
+              ec = 1.2d0*ec
+            else
+              ec = 0.8d0*ec
+            end if
+            go to 110
+          else if ((gc(s,s,nmatch)/gc(s,s,nmatch-1)<=0.0) .or. (gc(s,s, &
+              nmatch)/gc(s,s,nmatch-1)>=1.0)) then
+            ec = 0.9d0*ec
+            go to 110
+          end if
+
+
+          call coredir(it, ctl(it,ilc), ec, l, mj, 'INW', vv, bb, rc, drdic, &
+            dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, piw, qiw, &
+            cgd, cgmd, cgo, nrc, z(it), nucleus)
+
 !                                      --------------------
 !                                       START VALUES FOR
 !                                           PARAMETERS
 !                                      --------------------
-        
-        var(1) = ec
-        var(2) = pow(s,s)/piw(s,s)
-        
-        IF ( nsol /= 2 .OR. nvar == 2 ) THEN
-          DO iv = 3,4
-            ERR(iv) = 0.0D0
-            errnew(iv) = 0.0D0
-            var(iv) = 0.0D0
-            varnew(iv) = 0.0D0
-            dv(iv) = 0.0D0
-          END DO
-        ELSE IF ( ish >= 4 ) THEN
-          DO iv = 1,4
-            var(iv) = vartab(iv,ish-2)
-          END DO
-        ELSE
-          
-          DO j = 1,nsol
-            now(j) = 0.0D0
-          END DO
-          DO n = 1,nmatch - 1
-            rr = rc(n)**3
-            DO j = 1,nsol
-              now(j) = now(j) + gc(j,j,n)**2*rr
-            END DO
-          END DO
-          
-          DO j = 1,nsol
-            niw(j) = 0.0D0
-          END DO
-          DO n = nmatch,nzero - 1
-            rr = rc(n)**3
-            DO j = 1,nsol
-              niw(j) = niw(j) + gc(j,j,n)**2*rr
-            END DO
-          END DO
-          
-          ratt = pow(t,t)/piw(t,t)
-          var(3) = trymix*(now(s)+niw(s)*var(2)) /(now(t)+niw(t)*ratt)
-          var(4) = ratt*var(3)/var(2)
-        END IF
-        
-        
-        CALL coreerr(ERR,var,s,nsol,pow,qow,piw,qiw)
-        
-        DO iv = 1,nvar
-          dv(iv) = var(iv)
-        END DO
-        
-        iter = 0
+
+          var(1) = ec
+          var(2) = pow(s, s)/piw(s, s)
+
+          if (nsol/=2 .or. nvar==2) then
+            do iv = 3, 4
+              err(iv) = 0.0d0
+              errnew(iv) = 0.0d0
+              var(iv) = 0.0d0
+              varnew(iv) = 0.0d0
+              dv(iv) = 0.0d0
+            end do
+          else if (ish>=4) then
+            do iv = 1, 4
+              var(iv) = vartab(iv, ish-2)
+            end do
+          else
+
+            do j = 1, nsol
+              now(j) = 0.0d0
+            end do
+            do n = 1, nmatch - 1
+              rr = rc(n)**3
+              do j = 1, nsol
+                now(j) = now(j) + gc(j, j, n)**2*rr
+              end do
+            end do
+
+            do j = 1, nsol
+              niw(j) = 0.0d0
+            end do
+            do n = nmatch, nzero - 1
+              rr = rc(n)**3
+              do j = 1, nsol
+                niw(j) = niw(j) + gc(j, j, n)**2*rr
+              end do
+            end do
+
+            ratt = pow(t, t)/piw(t, t)
+            var(3) = trymix*(now(s)+niw(s)*var(2))/(now(t)+niw(t)*ratt)
+            var(4) = ratt*var(3)/var(2)
+          end if
+
+
+          call coreerr(err, var, s, nsol, pow, qow, piw, qiw)
+
+          do iv = 1, nvar
+            dv(iv) = var(iv)
+          end do
+
+          iter = 0
 ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-        70               CONTINUE
-        iter = iter + 1
-        
-        IF ( scaleb ) THEN
-          scale = MIN(1.0D0,0.1D0*iter)
-          IF ( nsol == 1 ) scale = 1.0D0
-          DO n = 1,jws(im)
-            bb(n) = bt(n,it)*scale
-          END DO
-        END IF
+140       continue
+          iter = iter + 1
+
+          if (scaleb) then
+            scale = min(1.0d0, 0.1d0*iter)
+            if (nsol==1) scale = 1.0d0
+            do n = 1, jws(im)
+              bb(n) = bt(n, it)*scale
+            end do
+          end if
 !                         ----------------------------------
 !                         CHECK WHETHER NUMBER OF NODES O.K.
 !                         ----------------------------------
-        IF ( iter > 1 ) THEN
-          node = 0
-          DO n = 2,(nmatch-1)
-            IF ( gc(s,s,n)*gc(s,s,n-1) < 0.0 ) node = node + 1
-          END DO
-          IF ( iprint >= 2 .AND. (t_inc%i_write>0))  &
-              WRITE (1337,99016) itprt,nqn,l,  &
-              kap(s),(2*muem05+1),ic,ish,iter,ec,nmatch,  &
-              rc(nmatch),nzero,rc(nzero),node, (gc(s,s,nmatch)/gc(s,s,nmatch-1))
-          
-          IF ( node /= (nqn-l-1) ) THEN
-            IF ( node > (nqn-l-1) ) THEN
-              ec = 1.2D0*ec
-            ELSE
-              ec = 0.8D0*ec
-            END IF
-            istart = istart + 1
-            IF ( istart < 20 ) GO TO 55
-          END IF
-        END IF
-        
-        DO iv = 2,nvar
-          DO jv = 1,nvar
+          if (iter>1) then
+            node = 0
+            do n = 2, (nmatch-1)
+              if (gc(s,s,n)*gc(s,s,n-1)<0.0) node = node + 1
+            end do
+            if (iprint>=2 .and. (t_inc%i_write>0)) write (1337, 320) itprt, &
+              nqn, l, kap(s), (2*muem05+1), ic, ish, iter, ec, nmatch, &
+              rc(nmatch), nzero, rc(nzero), node, (gc(s,s,nmatch)/gc(s,s, &
+              nmatch-1))
+
+            if (node/=(nqn-l-1)) then
+              if (node>(nqn-l-1)) then
+                ec = 1.2d0*ec
+              else
+                ec = 0.8d0*ec
+              end if
+              istart = istart + 1
+              if (istart<20) go to 110
+            end if
+          end if
+
+          do iv = 2, nvar
+            do jv = 1, nvar
+              varnew(jv) = var(jv)
+            end do
+            varnew(iv) = var(iv) + dv(iv)*dvstep
+
+            if (abs(var(iv))>1d-16) then
+              if (abs(dv(iv)/var(iv))<tolvar) varnew(iv) = var(iv)* &
+                (1.0d0+dsign(dvstep*tolvar,dv(iv)))
+            else if (ferro) then
+              if (t_inc%i_write>0) write (1337, 270) ' VAR(', iv, &
+                ') = 0 for (T,N,L,K,M;S,NSOL) ', itprt, nqn, l, kap(s), &
+                (2*muem05+1), '/2  ', s, nsol, '  --- suppress B'
+              loop = 2
+              suppressb = .true.
+              go to 100
+            else if (suppressb) then
+              write (6, *) 'suppressing B did not help !!'
+              stop 'in <CORE>'
+            end if
+
+            call coreerr(errnew, varnew, s, nsol, pow, qow, piw, qiw)
+
+            do ie = 1, nvar
+              if (abs(errnew(ie)-err(ie))<1d-16) then
+                dedv(ie, iv) = 0.0d0
+                if ((ie==iv) .and. .not. ferro) dedv(ie, iv) = 1.0d0
+              else
+                dedv(ie, iv) = (errnew(ie)-err(ie))/(varnew(iv)-var(iv))
+              end if
+            end do
+          end do
+
+          do jv = 1, nvar
             varnew(jv) = var(jv)
-          END DO
-          varnew(iv) = var(iv) + dv(iv)*dvstep
-          
-          IF ( ABS(var(iv)) > 1D-16 ) THEN
-            IF ( ABS(dv(iv)/var(iv)) < tolvar ) varnew(iv) = var(iv)  &
-                *(1.0D0+DSIGN(dvstep*tolvar,dv(iv)))
-          ELSE IF ( ferro ) THEN
-            IF(t_inc%i_write>0) WRITE(1337,99011) ' VAR(',iv,  &
-                ') = 0 for (T,N,L,K,M;S,NSOL) ',  &
-                itprt,nqn,l,kap(s),(2*muem05+1), '/2  ',s,nsol,'  --- suppress B'
-            loop = 2
-            suppressb = .true.
-            GO TO 50
-          ELSE IF ( suppressb ) THEN
-            WRITE (6,*) 'suppressing B did not help !!'
-            STOP 'in <CORE>'
-          END IF
-          
-          CALL coreerr(errnew,varnew,s,nsol,pow,qow,piw,qiw)
-          
-          DO ie = 1,nvar
-            IF ( ABS(errnew(ie)-ERR(ie)) < 1D-16 ) THEN
-              dedv(ie,iv) = 0.0D0
-              IF ( (ie == iv) .AND. .NOT.ferro ) dedv(ie,iv) = 1.0D0
-            ELSE
-              dedv(ie,iv) = (errnew(ie)-ERR(ie)) /(varnew(iv)-var(iv))
-            END IF
-          END DO
-        END DO
-        
-        DO jv = 1,nvar
-          varnew(jv) = var(jv)
-        END DO
-        varnew(1) = var(1) + dv(1)*dvstep
-        IF ( ABS(dv(1)/var(1)) < tolvar ) varnew(1) = var(1)  &
-            *(1.0D0+DSIGN(dvstep*tolvar,dv(1)))
-        CALL coredir(it,ctl(it,ilc),varnew(1),l,mj,'OUT',vv,  &
-            bb,rc,drdic,dovrc,nmatch,nzero,gc,fc,dp,  &
-            dq,wp,wq,pow,qow,piw,qiw,cgd,cgmd,cgo, nrc,z(it),nucleus)
-        CALL coredir(it,ctl(it,ilc),varnew(1),l,mj,'INW',vv,  &
-            bb,rc,drdic,dovrc,nmatch,nzero,gc,fc,dp,  &
-            dq,wp,wq,pow,qow,piw,qiw,cgd,cgmd,cgo, nrc,z(it),nucleus)
-        
-        CALL coreerr(errnew,varnew,s,nsol,pow,qow,piw,qiw)
-        
-        DO ie = 1,nvar
-          dedv(ie,1) = (errnew(ie)-ERR(ie)) /(varnew(1)-var(1))
-        END DO
-        
-        DO ie = 1,nvar
-          CALL dcopy(nvar,dedv(1,ie),1,dvde(1,ie),1)
-        END DO
-        CALL dgetrf(nvar,nvar,dvde,4,ipiv,info)
-        CALL dgetri(nvar,dvde,4,ipiv,dedv,4*4,info)
-        
-        DO iv = 1,nvar
-          dv(iv) = 0.0D0
-          DO ie = 1,nvar
-            dv(iv) = dv(iv) + dvde(iv,ie)*ERR(ie)
-          END DO
-          var(iv) = var(iv) - dv(iv)
-        END DO
-        
-        IF ( var(1) > 0.0D0 ) THEN
-          IF ( iprint >= 1 .AND. (t_inc%i_write>0)) WRITE (1337,*)  &
-              ' warning from <CORE> E=',var(1),it,nqn,l
-          var(1) = -0.2D0
-        END IF
-        
-        CALL coredir(it,ctl(it,ilc),var(1),l,mj,'OUT',vv,bb,  &
-            rc,drdic,dovrc,nmatch,nzero,gc,fc,dp,dq,  &
-            wp,wq,pow,qow,piw,qiw,cgd,cgmd,cgo,nrc, z(it),nucleus)
-        CALL coredir(it,ctl(it,ilc),var(1),l,mj,'INW',vv,bb,  &
-            rc,drdic,dovrc,nmatch,nzero,gc,fc,dp,dq,  &
-            wp,wq,pow,qow,piw,qiw,cgd,cgmd,cgo,nrc, z(it),nucleus)
-        
-        CALL coreerr(ERR,var,s,nsol,pow,qow,piw,qiw)
-        
-        ec = var(1)
-        
-        IF ( iprint >= 2 .AND. (t_inc%i_write>0))  &
-            WRITE (1337,99005) loop,scale,  &
-            var(1),(var(iv),iv=1,4),(dv(iv),iv=1,4),(ERR(ie),ie=1,4)
-        
+          end do
+          varnew(1) = var(1) + dv(1)*dvstep
+          if (abs(dv(1)/var(1))<tolvar) varnew(1) = var(1)* &
+            (1.0d0+dsign(dvstep*tolvar,dv(1)))
+          call coredir(it, ctl(it,ilc), varnew(1), l, mj, 'OUT', vv, bb, rc, &
+            drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+            piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+          call coredir(it, ctl(it,ilc), varnew(1), l, mj, 'INW', vv, bb, rc, &
+            drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+            piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+
+          call coreerr(errnew, varnew, s, nsol, pow, qow, piw, qiw)
+
+          do ie = 1, nvar
+            dedv(ie, 1) = (errnew(ie)-err(ie))/(varnew(1)-var(1))
+          end do
+
+          do ie = 1, nvar
+            call dcopy(nvar, dedv(1,ie), 1, dvde(1,ie), 1)
+          end do
+          call dgetrf(nvar, nvar, dvde, 4, ipiv, info)
+          call dgetri(nvar, dvde, 4, ipiv, dedv, 4*4, info)
+
+          do iv = 1, nvar
+            dv(iv) = 0.0d0
+            do ie = 1, nvar
+              dv(iv) = dv(iv) + dvde(iv, ie)*err(ie)
+            end do
+            var(iv) = var(iv) - dv(iv)
+          end do
+
+          if (var(1)>0.0d0) then
+            if (iprint>=1 .and. (t_inc%i_write>0)) write (1337, *) &
+              ' warning from <CORE> E=', var(1), it, nqn, l
+            var(1) = -0.2d0
+          end if
+
+          call coredir(it, ctl(it,ilc), var(1), l, mj, 'OUT', vv, bb, rc, &
+            drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+            piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+          call coredir(it, ctl(it,ilc), var(1), l, mj, 'INW', vv, bb, rc, &
+            drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+            piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+
+          call coreerr(err, var, s, nsol, pow, qow, piw, qiw)
+
+          ec = var(1)
+
+          if (iprint>=2 .and. (t_inc%i_write>0)) write (1337, 210) loop, &
+            scale, var(1), (var(iv), iv=1, 4), (dv(iv), iv=1, 4), &
+            (err(ie), ie=1, 4)
+
 !----------------------------------  check relative change in parameters
 ! ----------------------- parameters 3 and 4 = 0 for paramagnetic case !
-        IF ( iter < itermax ) THEN
-          DO iv = 1,nvar
-            vartab(iv,ish) = var(iv)
+          if (iter<itermax) then
+            do iv = 1, nvar
+              vartab(iv, ish) = var(iv)
 !           IF( ABS(VAR(IV)) .EQ. 0.0D0 ) THEN
-            IF ( (ABS(var(iv))+ABS(var(iv))) < 1.0D-30 ) THEN
-              IF ( ferro .AND. (t_inc%i_write>0))  &
-                  WRITE (1337,'(A,I3,A)') ' VAR ',iv,' = 0 ??????!!!!!'
-            ELSE IF ( ABS(dv(iv)/var(iv)) > tolvar ) THEN
-              GO TO 70
-            END IF
-          END DO
-        ELSE
-          IF( bndstachk ) THEN
-            itxray = -1
-            RETURN
-          END IF
-          IF(t_inc%i_write>0) WRITE (1337,99006) itermax,(var(iv),iv=1,4),  &
-              (dv(iv),iv=1,4),(ERR(ie),ie=1,4)
-        END IF
+              if ((abs(var(iv))+abs(var(iv)))<1.0d-30) then
+                if (ferro .and. (t_inc%i_write>0)) write (1337, '(A,I3,A)') &
+                  ' VAR ', iv, ' = 0 ??????!!!!!'
+              else if (abs(dv(iv)/var(iv))>tolvar) then
+                go to 140
+              end if
+            end do
+          else
+            if (bndstachk) then
+              itxray = -1
+              return
+            end if
+            if (t_inc%i_write>0) write (1337, 220) itermax, &
+              (var(iv), iv=1, 4), (dv(iv), iv=1, 4), (err(ie), ie=1, 4)
+          end if
 ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-        
+
 !                         ---------------------------------
 !                         NORMALIZE WAVEFUNCTIONS ACCORDING
 !                               TO MATCHING CONDITIONS
 !                         ---------------------------------
-        
+
 !                                    INWARD - SOLUTION
-        DO n = nmatch,nzero
-          DO j = 1,nsol
-            DO i = 1,nsol
-              gc(i,j,n) = gc(i,j,n)*var(2)
-              fc(i,j,n) = fc(i,j,n)*var(2)
-            END DO
-          END DO
-        END DO
-        
-        IF ( nsol == 2 ) THEN
+          do n = nmatch, nzero
+            do j = 1, nsol
+              do i = 1, nsol
+                gc(i, j, n) = gc(i, j, n)*var(2)
+                fc(i, j, n) = fc(i, j, n)*var(2)
+              end do
+            end do
+          end do
+
+          if (nsol==2) then
 !                                   OUTWARD - SOLUTION
-          DO n = 1,(nmatch-1)
-            DO i = 1,nsol
-              gc(i,t,n) = gc(i,t,n)*var(3)
-              fc(i,t,n) = fc(i,t,n)*var(3)
-            END DO
-          END DO
+            do n = 1, (nmatch-1)
+              do i = 1, nsol
+                gc(i, t, n) = gc(i, t, n)*var(3)
+                fc(i, t, n) = fc(i, t, n)*var(3)
+              end do
+            end do
 !                                    INWARD - SOLUTION
-          DO n = nmatch,nzero
-            DO i = 1,nsol
-              gc(i,t,n) = gc(i,t,n)*var(4)
-              fc(i,t,n) = fc(i,t,n)*var(4)
-            END DO
-          END DO
-        END IF
-        
+            do n = nmatch, nzero
+              do i = 1, nsol
+                gc(i, t, n) = gc(i, t, n)*var(4)
+                fc(i, t, n) = fc(i, t, n)*var(4)
+              end do
+            end do
+          end if
+
 !                                    SUM FOR EACH KAPPA
-        DO n = 1,nzero
-          DO k = 1,nsol
-            gck(k,s,n) = 0.0D0
-            fck(k,s,n) = 0.0D0
-            DO j = 1,nsol
-              gck(k,s,n) = gck(k,s,n) + gc(k,j,n)
-              fck(k,s,n) = fck(k,s,n) + fc(k,j,n)
-            END DO
-          END DO
-        END DO
-        
+          do n = 1, nzero
+            do k = 1, nsol
+              gck(k, s, n) = 0.0d0
+              fck(k, s, n) = 0.0d0
+              do j = 1, nsol
+                gck(k, s, n) = gck(k, s, n) + gc(k, j, n)
+                fck(k, s, n) = fck(k, s, n) + fc(k, j, n)
+              end do
+            end do
+          end do
+
 !                       -----------------------------------
 !                       CALCULATE  NORM  AND NORMALIZE TO 1
 !                       -----------------------------------
-        DO k = 1,nsol
-          norm = r2drdic(1)*(gck(k,s,1)**2+fck(k,s,1)**2)
-        END DO
-        
-        simp = -1.0D0
-        DO n = 2,nzero
-          simp = -simp
-          w = (3.0D0+simp)*r2drdic(n)
-          DO k = 1,nsol
-            norm = norm + w*(gck(k,s,n)**2+fck(k,s,n)**2)
-          END DO
-        END DO
-        
-        n = nzero
-        DO k = 1,nsol
-          norm = norm - r2drdic(n) *(gck(k,s,n)**2+fck(k,s,n)**2)
-        END DO
-        norm = norm/3.0D0
-        
-        DO k = 1,nsol
-          norm = norm + 0.5D0*r2drdic(1) *(gck(k,s,1)**2+fck(k,s,1)**2)
-        END DO
-        norm = 1.0D0/SQRT(norm)
-        
-        DO n = 1,nzero
-          DO k = 1,nsol
-            gck(k,s,n) = gck(k,s,n)*norm
-            fck(k,s,n) = fck(k,s,n)*norm
-          END DO
-        END DO
-        IF ( nzero < jtop ) THEN
-          DO n = (nzero+1),jtop
-            DO k = 1,nsol
-              gck(k,s,n) = 0.0D0
-              fck(k,s,n) = 0.0D0
-            END DO
-          END DO
-        END IF
-        
-        CALL rinit(nrmax,rint)
-        
-        DO n = 1,jtop
-          DO k = 1,nsol
-            rint(n) = rint(n) + r2drdi(n,im)  &
-                *(gck(k,s,n)*gck(k,s,n)+fck(k,s,n) *fck(k,s,n))
-          END DO
-        END DO
-        
-        CALL rintsimp(rint,jtop,aux)
-        
+          do k = 1, nsol
+            norm = r2drdic(1)*(gck(k,s,1)**2+fck(k,s,1)**2)
+          end do
+
+          simp = -1.0d0
+          do n = 2, nzero
+            simp = -simp
+            w = (3.0d0+simp)*r2drdic(n)
+            do k = 1, nsol
+              norm = norm + w*(gck(k,s,n)**2+fck(k,s,n)**2)
+            end do
+          end do
+
+          n = nzero
+          do k = 1, nsol
+            norm = norm - r2drdic(n)*(gck(k,s,n)**2+fck(k,s,n)**2)
+          end do
+          norm = norm/3.0d0
+
+          do k = 1, nsol
+            norm = norm + 0.5d0*r2drdic(1)*(gck(k,s,1)**2+fck(k,s,1)**2)
+          end do
+          norm = 1.0d0/sqrt(norm)
+
+          do n = 1, nzero
+            do k = 1, nsol
+              gck(k, s, n) = gck(k, s, n)*norm
+              fck(k, s, n) = fck(k, s, n)*norm
+            end do
+          end do
+          if (nzero<jtop) then
+            do n = (nzero+1), jtop
+              do k = 1, nsol
+                gck(k, s, n) = 0.0d0
+                fck(k, s, n) = 0.0d0
+              end do
+            end do
+          end if
+
+          call rinit(nrmax, rint)
+
+          do n = 1, jtop
+            do k = 1, nsol
+              rint(n) = rint(n) + r2drdi(n, im)*(gck(k,s,n)*gck(k,s,n)+fck(k,s &
+                ,n)*fck(k,s,n))
+            end do
+          end do
+
+          call rintsimp(rint, jtop, aux)
+
 ! ------------------------------ omit normalization for XRAY calculation
 ! ------------------------------ to recover old (errounous data) -------
-        IF ( itxray > 0 ) THEN
-          norm = 1.0D0
-        ELSE
-          norm = 1.0D0/SQRT(aux)
-        END IF
-        
-        DO n = 1,MAX(nzero,jtop)
-          DO k = 1,nsol
-            gck(k,s,n) = gck(k,s,n)*norm
-            fck(k,s,n) = fck(k,s,n)*norm
-          END DO
-        END DO
-        
+          if (itxray>0) then
+            norm = 1.0d0
+          else
+            norm = 1.0d0/sqrt(aux)
+          end if
+
+          do n = 1, max(nzero, jtop)
+            do k = 1, nsol
+              gck(k, s, n) = gck(k, s, n)*norm
+              fck(k, s, n) = fck(k, s, n)*norm
+            end do
+          end do
+
 !                       -----------------------------------
 !                       CALCULATE  CHARGE AND SPIN DENSITY
 !                       -----------------------------------
-        
-        DO n = 1,jws(im)
-          DO k = 1,nsol
-            rhochr(n,it) = rhochr(n,it) + (gck(k,s,n)**2+fck(k,s,n)**2)
-            rhospn(n,it) = rhospn(n,it) + (gck(k,s,n)**2*cgd(k)  &
-                -fck(k,s,n)**2*cgmd(k))
-          END DO
-        END DO
-        
-        IF ( nsol > 1 ) THEN
-          DO n = 1,jws(im)
-            rhospn(n,it) = rhospn(n,it) + gck(1,s,n) *gck(2,s,n)*cgo*2
-          END DO
-        END IF
-        
-        
+
+          do n = 1, jws(im)
+            do k = 1, nsol
+              rhochr(n, it) = rhochr(n, it) + (gck(k,s,n)**2+fck(k,s,n)**2)
+              rhospn(n, it) = rhospn(n, it) + (gck(k,s,n)**2*cgd(k)-fck(k,s,n) &
+                **2*cgmd(k))
+            end do
+          end do
+
+          if (nsol>1) then
+            do n = 1, jws(im)
+              rhospn(n, it) = rhospn(n, it) + gck(1, s, n)*gck(2, s, n)*cgo*2
+            end do
+          end if
+
+
 !                       -----------------------------------
 !                            CALCULATE  SPIN CHARACTER
 !                       -----------------------------------
-        
-        w = r2drdic(1)
-        sz = 0.0D0
-        DO k = 1,nsol
-          sz = sz + w*(gck(k,s,1)**2*cgd(k)+fck(k,s,1) **2*cgmd(k))
-        END DO
-        
-        simp = -1.0D0
-        DO n = 2,nzero
-          simp = -simp
-          w = (3.0D0+simp)*r2drdic(n)
-          DO k = 1,nsol
-            sz = sz + w*(gck(k,s,n)**2*cgd(k)+fck(k,s,n) **2*cgmd(k))
-          END DO
-        END DO
-        
-        n = nzero
-        w = r2drdic(n)
-        DO k = 1,nsol
-          sz = sz + w*(gck(k,s,n)**2*cgd(k)+fck(k,s,n) **2*cgmd(k))
-        END DO
-        
-        
-        IF ( nsol > 1 ) THEN
-          
+
           w = r2drdic(1)
-          sz = sz + w*gck(1,s,1)*gck(2,s,1)*cgo*2
-          
-          simp = -1.0D0
-          DO n = 2,nzero
+          sz = 0.0d0
+          do k = 1, nsol
+            sz = sz + w*(gck(k,s,1)**2*cgd(k)+fck(k,s,1)**2*cgmd(k))
+          end do
+
+          simp = -1.0d0
+          do n = 2, nzero
             simp = -simp
-            w = (3.0D0+simp)*r2drdic(n)
-            DO k = 1,nsol
-              sz = sz + w*gck(1,s,n)*gck(2,s,n)*cgo*2
-            END DO
-          END DO
-          
+            w = (3.0d0+simp)*r2drdic(n)
+            do k = 1, nsol
+              sz = sz + w*(gck(k,s,n)**2*cgd(k)+fck(k,s,n)**2*cgmd(k))
+            end do
+          end do
+
           n = nzero
           w = r2drdic(n)
-          sz = sz - w*gck(1,s,n)*gck(2,s,n)*cgo*2
-          
-        END IF
-        
-        sz = sz/3.0D0
-        
-        
+          do k = 1, nsol
+            sz = sz + w*(gck(k,s,n)**2*cgd(k)+fck(k,s,n)**2*cgmd(k))
+          end do
+
+
+          if (nsol>1) then
+
+            w = r2drdic(1)
+            sz = sz + w*gck(1, s, 1)*gck(2, s, 1)*cgo*2
+
+            simp = -1.0d0
+            do n = 2, nzero
+              simp = -simp
+              w = (3.0d0+simp)*r2drdic(n)
+              do k = 1, nsol
+                sz = sz + w*gck(1, s, n)*gck(2, s, n)*cgo*2
+              end do
+            end do
+
+            n = nzero
+            w = r2drdic(n)
+            sz = sz - w*gck(1, s, n)*gck(2, s, n)*cgo*2
+
+          end if
+
+          sz = sz/3.0d0
+
+
 !                         ------------------------------
 !                         CALCULATE   HYPERFINE - FIELD
 !                         ------------------------------
-        
-        CALL corehff(kap1,kap2,mj,s,nsol,bhf,gck,fck,rc,drdic,  &
-            0.0D0,nzero,nrc)
-        IF ( nucleus /= 0 ) THEN
-          CALL corehff(kap1,kap2,mj,s,nsol,bhf1,gck,fck,rc,  &
-              drdic,rnuc,jlim,nrc)
-          CALL corehff(kap1,kap2,mj,s,nsol,bhf2,gck,fck,rc,  &
-              drovrn,rnuc,jlim,nrc)
-          DO i = 1,nsol
-            DO j = 1,nsol
-              bhf(i,j) = bhf(i,j) - bhf1(i,j) + bhf2(i,j)
-            END DO
-          END DO
-        END IF        !end of nucleus.eq.0
-        
-        bsol = 0.0D0
-        DO j = 1,nsol
-          DO i = 1,nsol
-            bsol = bsol + bhf(i,j)
-            bsh = bsh + bhf(i,j)
-            bcor(it) = bcor(it) + bhf(i,j)
-          END DO
-        END DO
-        IF ( kap1 == -1 ) bcors(it) = bcors(it) + bhf(1,1)
-        
-        ecortab(ic,it) = ec
-        
+
+          call corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, &
+            0.0d0, nzero, nrc)
+          if (nucleus/=0) then
+            call corehff(kap1, kap2, mj, s, nsol, bhf1, gck, fck, rc, drdic, &
+              rnuc, jlim, nrc)
+            call corehff(kap1, kap2, mj, s, nsol, bhf2, gck, fck, rc, drovrn, &
+              rnuc, jlim, nrc)
+            do i = 1, nsol
+              do j = 1, nsol
+                bhf(i, j) = bhf(i, j) - bhf1(i, j) + bhf2(i, j)
+              end do
+            end do
+          end if !end of nucleus.eq.0
+
+          bsol = 0.0d0
+          do j = 1, nsol
+            do i = 1, nsol
+              bsol = bsol + bhf(i, j)
+              bsh = bsh + bhf(i, j)
+              bcor(it) = bcor(it) + bhf(i, j)
+            end do
+          end do
+          if (kap1==-1) bcors(it) = bcors(it) + bhf(1, 1)
+
+          ecortab(ic, it) = ec
+
 !     ------------------
 !     SPLIT HFF-FIELD
 !     ------------------
-        IF ( ismqhfi == 1 ) THEN
-          CALL hffcore(rnuc,nzero,kap1,kap2,nsol,mj,gck,fck,  &
-              nrc,shf,s,nmemax,nkmmax,rc,drdic,sdia,  &
-              smdia,soff,smoff,qdia,qoff,qmdia, qmoff,nucleus,jlim)
-          
-          DO k = 1,nmemax
-            split(k) = 0.0D0
-            DO j = 1,nsol
-              DO i = 1,nsol
-                split(k) = split(k) + shf(i,j,k)
-                split1(k) = split1(k) + shf(i,j,k)
-                split2(k,it) = split2(k,it) + shf(i,j,k)
-              END DO
-            END DO
-          END DO
-          DO k = 1,nmemax
-            IF ( kap1 == -1 ) split3(k,it) = split3(k,it) + shf(1,1,k)
-          END DO
-        END IF
+          if (ismqhfi==1) then
+            call hffcore(rnuc, nzero, kap1, kap2, nsol, mj, gck, fck, nrc, &
+              shf, s, nmemax, nkmmax, rc, drdic, sdia, smdia, soff, smoff, &
+              qdia, qoff, qmdia, qmoff, nucleus, jlim)
+
+            do k = 1, nmemax
+              split(k) = 0.0d0
+              do j = 1, nsol
+                do i = 1, nsol
+                  split(k) = split(k) + shf(i, j, k)
+                  split1(k) = split1(k) + shf(i, j, k)
+                  split2(k, it) = split2(k, it) + shf(i, j, k)
+                end do
+              end do
+            end do
+            do k = 1, nmemax
+              if (kap1==-1) split3(k, it) = split3(k, it) + shf(1, 1, k)
+            end do
+          end if
 !MBE
-        
+
 !---------------------------------------------------- l-shell UNCOMPLETE
-        IF ( ish >= nsh ) THEN
+          if (ish>=nsh) then
 !----------------------------------------------------- l-shell completed
-          IF ( itxray == 0 .AND. iprint > 0 .AND. (t_inc%i_write>0)) THEN
-            WRITE (1337,99012) itprt,nqn,txtl(l),  &
-                txtk(IABS(kap(s))),(2*muem05+1), kap(s),iter,ec,bsol*.001D0,  &
-                bsh*.001D0
-            IF ( ismqhfi == 1 ) THEN
-              DO k = 1,nmemax
-                WRITE (1337,99013) txtb(k),split(k)*.001D0 ,split1(k)*.001D0
-              END DO
-              WRITE (1337,99014) 'total error in %',  &
-                  100.0D0*(1.0D0-split(4)/split(5))
-            END IF
-          END IF
+            if (itxray==0 .and. iprint>0 .and. (t_inc%i_write>0)) then
+              write (1337, 280) itprt, nqn, txtl(l), txtk(iabs(kap(s))), &
+                (2*muem05+1), kap(s), iter, ec, bsol*.001d0, bsh*.001d0
+              if (ismqhfi==1) then
+                do k = 1, nmemax
+                  write (1337, 290) txtb(k), split(k)*.001d0, split1(k)*.001d0
+                end do
+                write (1337, 300) 'total error in %', &
+                  100.0d0*(1.0d0-split(4)/split(5))
+              end if
+            end if
 !                              ----------------------------
 !                              CHECK CONSISTENCY OF RESULTS
 !                              ----------------------------
-          IF ( l /= 0 ) THEN
-            ic1 = ic - nsh + 1
-            ic2 = ic
-            IF ( ecortab(ic2,it) >= ecortab(ic1,it) ) THEN
-              imin = ic1
-              vz = +1.0D0
-            ELSE
-              imin = ic2
-              vz = -1.0D0
-            END IF
-            iflag = 0
-            ii = 1
-            DO i = ic1 + 1,ic2,2
-              IF ( vz*(ecortab(i,it)-ecortab(i-ii,it))  < 0.0 ) iflag = 1
-              ii = 2
-            END DO
-            IF ( ecortab(ic1+2,it) > ecortab(imin,it) ) iflag = 1
-            DO i = ic1 + 4,ic2 - 1,2
-              IF ( ecortab(i,it) > ecortab(imin,it) ) iflag = 1
-              IF ( vz*(ecortab(i,it)-ecortab(i-ii,it))  > 0.0 ) iflag = 1
-            END DO
-            
-            IF ( ferro .AND. (iflag == 1) ) THEN
-              IF(t_inc%i_write>0) WRITE (1337,99007)
-              scaleb = .true.
-              IF ( loop == 1 ) THEN
-                loop = 2
-                IF(t_inc%i_write>0) WRITE(1337,99008) itprt
-                GO TO 50
-              END IF
-            END IF
-            
-          END IF
-        ELSE IF ( itxray == 0 .AND. iprint > 0 ) THEN
-          IF(t_inc%i_write>0) WRITE (1337,99012) itprt,nqn,  &
-              txtl(l),txtk(IABS(kap(s))), (2*muem05+1),kap(s),iter,ec,  &
-              bsol*.001D0
-          IF ( ismqhfi == 1 ) THEN
-            DO k = 1,nmemax
-              IF(t_inc%i_write>0) WRITE (1337,99013) txtb(k),split(k)*.001D0
-            END DO
-            IF(t_inc%i_write>0) WRITE (1337,99014) 'total error in %',  &
-                100.0D0*(1.0D0-split(4)/split(5) )
-          END IF
-        END IF
+            if (l/=0) then
+              ic1 = ic - nsh + 1
+              ic2 = ic
+              if (ecortab(ic2,it)>=ecortab(ic1,it)) then
+                imin = ic1
+                vz = +1.0d0
+              else
+                imin = ic2
+                vz = -1.0d0
+              end if
+              iflag = 0
+              ii = 1
+              do i = ic1 + 1, ic2, 2
+                if (vz*(ecortab(i,it)-ecortab(i-ii,it))<0.0) iflag = 1
+                ii = 2
+              end do
+              if (ecortab(ic1+2,it)>ecortab(imin,it)) iflag = 1
+              do i = ic1 + 4, ic2 - 1, 2
+                if (ecortab(i,it)>ecortab(imin,it)) iflag = 1
+                if (vz*(ecortab(i,it)-ecortab(i-ii,it))>0.0) iflag = 1
+              end do
+
+              if (ferro .and. (iflag==1)) then
+                if (t_inc%i_write>0) write (1337, 230)
+                scaleb = .true.
+                if (loop==1) then
+                  loop = 2
+                  if (t_inc%i_write>0) write (1337, 240) itprt
+                  go to 100
+                end if
+              end if
+
+            end if
+          else if (itxray==0 .and. iprint>0) then
+            if (t_inc%i_write>0) write (1337, 280) itprt, nqn, txtl(l), &
+              txtk(iabs(kap(s))), (2*muem05+1), kap(s), iter, ec, bsol*.001d0
+            if (ismqhfi==1) then
+              do k = 1, nmemax
+                if (t_inc%i_write>0) write (1337, 290) txtb(k), &
+                  split(k)*.001d0
+              end do
+              if (t_inc%i_write>0) write (1337, 300) 'total error in %', &
+                100.0d0*(1.0d0-split(4)/split(5))
+            end if
+          end if
 !-----------------------------------------------------------------------
-        
-        IF ( iprint >= 1 .AND. (t_inc%i_write>0)) WRITE (1337,99015)  &
-            ((bhf(i,j)*.001D0,i=1,nsol),j=1,nsol)
-        
-        
+
+          if (iprint>=1 .and. (t_inc%i_write>0)) write (1337, 310)((bhf(i, &
+            j)*.001d0,i=1,nsol), j=1, nsol)
+
+
 !                          --------------------------------
 !                            IF THE SWITCH CHECK IS SET:
 !                            RECALCULATE THE EIGENVALUE
 !                          USING THE CONVENTIONAL ALGORITHM
 !                          --------------------------------
-        IF ( check ) THEN
-          ecc = 0.95D0*ec
-          72                  CONTINUE
-          CALL coredir(it,ctl(it,ilc),ecc,l,mj,'OUT',vv,bb,  &
-              rc,drdic,dovrc,nmatch,nzero,gc,fc,dp,  &
-              dq,wp,wq,pow,qow,piw,qiw,cgd,cgmd,cgo, nrc,z(it),nucleus)
-          CALL coredir(it,ctl(it,ilc),ecc,l,mj,'INW',vv,bb,  &
-              rc,drdic,dovrc,nmatch,nzero,gc,fc,dp,  &
-              dq,wp,wq,pow,qow,piw,qiw,cgd,cgmd,cgo, nrc,z(it),nucleus)
-          
-          norm = pow(s,s)/piw(s,s)
-          DO n = nmatch,nzero
-            gc(s,s,n) = gc(s,s,n)*norm
-            fc(s,s,n) = fc(s,s,n)*norm
-          END DO
-          
-          norm = 0.0D0
-          DO n = 3,nzero,2
-            norm = norm + r2drdic(n) *(gc(s,s,n)**2+fc(s,s,n)**2)  &
-                + 4.d0*r2drdic(n-1) *(gc(s,s,n-1)**2+fc(s,s,n-1)**2)  &
-                + r2drdic(n-2) *(gc(s,s,n-2)**2+fc(s,s,n-2)**2)
-          END DO
-          norm = norm/3.0D0
-          
-          lcp1 = MIN(nlmax,l+1)
-          dec = pow(s,s) *(qow(s,s)-rc(nmatch)*ctl(it,lcp1)*fc(s,s,  &
-              nmatch))/norm
-          ecc = ecc + dec
-          IF ( ABS(dec/ecc) > tolvar ) GO TO 72
-          IF(t_inc%i_write>0)  &
-              WRITE (1337,'(7X,''CHECK-E:'',10X,F12.5,/)') ecc
-        END IF
-        
-        
+          if (check) then
+            ecc = 0.95d0*ec
+150         continue
+            call coredir(it, ctl(it,ilc), ecc, l, mj, 'OUT', vv, bb, rc, &
+              drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+              piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+            call coredir(it, ctl(it,ilc), ecc, l, mj, 'INW', vv, bb, rc, &
+              drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+              piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+
+            norm = pow(s, s)/piw(s, s)
+            do n = nmatch, nzero
+              gc(s, s, n) = gc(s, s, n)*norm
+              fc(s, s, n) = fc(s, s, n)*norm
+            end do
+
+            norm = 0.0d0
+            do n = 3, nzero, 2
+              norm = norm + r2drdic(n)*(gc(s,s,n)**2+fc(s,s,n)**2) + &
+                4.d0*r2drdic(n-1)*(gc(s,s,n-1)**2+fc(s,s,n-1)**2) + &
+                r2drdic(n-2)*(gc(s,s,n-2)**2+fc(s,s,n-2)**2)
+            end do
+            norm = norm/3.0d0
+
+            lcp1 = min(nlmax, l+1)
+            dec = pow(s, s)*(qow(s,s)-rc(nmatch)*ctl(it,lcp1)*fc(s,s,nmatch))/ &
+              norm
+            ecc = ecc + dec
+            if (abs(dec/ecc)>tolvar) go to 150
+            if (t_inc%i_write>0) write (1337, '(7X,''CHECK-E:'',10X,F12.5,/)') &
+              ecc
+          end if
+
+
 ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 !           STORE CORE WAVE FUNCTIONS IF REQUIRED
 ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        IF ( itxray /= 0 ) THEN
-          IF ( nsol == 2 ) THEN
-            IF ( s == 2 ) THEN
-              icst = l + 1 + muem05
-            ELSE
-              icst = l + 1 + muem05 + 2*l + 1
-            END IF
-          ELSE IF ( mj < 0 ) THEN
-            icst = 2*l + 1
-          ELSE
-            icst = 4*l + 2
-          END IF
-          
-          mm05cor(icst) = muem05
-          nkpcor(icst) = nsol
-          kapcor(icst) = kap(s)
-          ikmcor(icst,1) = ikapmue(kap(s),muem05)
-          izero(icst) = MIN(nzero,jws(im))
-          szcor(icst) = sz
-          ecor(icst) = ec
-          
-          DO n = 1,izero(icst)
-            gcor(n,1,icst) = gck(s,s,n)
-            fcor(n,1,icst) = fck(s,s,n)
-          END DO
-          IF ( nsol == 2 ) THEN
-            DO n = 1,izero(icst)
-              gcor(n,2,icst) = gck(t,s,n)
-              fcor(n,2,icst) = fck(t,s,n)
-            END DO
-            ikmcor(icst,2) = ikapmue(kap(t),muem05)
-          END IF
-        END IF
+          if (itxray/=0) then
+            if (nsol==2) then
+              if (s==2) then
+                icst = l + 1 + muem05
+              else
+                icst = l + 1 + muem05 + 2*l + 1
+              end if
+            else if (mj<0) then
+              icst = 2*l + 1
+            else
+              icst = 4*l + 2
+            end if
+
+            mm05cor(icst) = muem05
+            nkpcor(icst) = nsol
+            kapcor(icst) = kap(s)
+            ikmcor(icst, 1) = ikapmue(kap(s), muem05)
+            izero(icst) = min(nzero, jws(im))
+            szcor(icst) = sz
+            ecor(icst) = ec
+
+            do n = 1, izero(icst)
+              gcor(n, 1, icst) = gck(s, s, n)
+              fcor(n, 1, icst) = fck(s, s, n)
+            end do
+            if (nsol==2) then
+              do n = 1, izero(icst)
+                gcor(n, 2, icst) = gck(t, s, n)
+                fcor(n, 2, icst) = fck(t, s, n)
+              end do
+              ikmcor(icst, 2) = ikapmue(kap(t), muem05)
+            end if
+          end if
 ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        
-        
-      END DO
+
+
+        end do
 ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-      
-    END DO
+
+      end do
 ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-  100     END DO
+160 end do
 ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-  
-  
-  IF ( itxray == 0 .AND. iprint > 0 .AND. (t_inc%i_write>0))  &
-      WRITE (1337,99009) bcor(it)*.001D0,bcors(it)*.001D0
-  IF ( ismqhfi == 1 ) THEN
-    DO n = 1,nmemax
-      IF(t_inc%i_write>0) WRITE (1337,99010) split2(n,it)*.001D0,  &
-          split3(n,it)*.001D0
-    END DO
-    IF(t_inc%i_write>0) WRITE (1337,99014) 'total error',  &
-        100.0D0*(1.0D0-split2(4,it)/split2(5,it))
-    IF(t_inc%i_write>0) WRITE (1337,99014) 'total error',  &
-        100.0D0*(1.0D0-split3(4,it)/split3(5,it))
-  END IF
-  
-  IF ( (itxray == 0) .OR. (it == itxray) ) THEN
-    DO n = 1,jtop
-      rint(n) = rhochr(n,it)*r2drdi(n,im)
-    END DO
-    CALL rintsimp(rint,jtop,aux)
-    IF( iprint > -2 .AND. (t_inc%i_write>0))  &
-        WRITE (1337,99017) 'charge',itprt,aux
-    DO n = 1,jtop
-      rint(n) = rhospn(n,it)*r2drdi(n,im)
-    END DO
-    CALL rintsimp(rint,jtop,aux)
-    IF( iprint > -2 .AND. (t_inc%i_write>0))  &
-        WRITE (1337,99017) ' spin ',itprt,aux
-  END IF
-  
-END DO
+
+
+    if (itxray==0 .and. iprint>0 .and. (t_inc%i_write>0)) write (1337, 250) &
+      bcor(it)*.001d0, bcors(it)*.001d0
+    if (ismqhfi==1) then
+      do n = 1, nmemax
+        if (t_inc%i_write>0) write (1337, 260) split2(n, it)*.001d0, &
+          split3(n, it)*.001d0
+      end do
+      if (t_inc%i_write>0) write (1337, 300) 'total error', &
+        100.0d0*(1.0d0-split2(4,it)/split2(5,it))
+      if (t_inc%i_write>0) write (1337, 300) 'total error', &
+        100.0d0*(1.0d0-split3(4,it)/split3(5,it))
+    end if
+
+    if ((itxray==0) .or. (it==itxray)) then
+      do n = 1, jtop
+        rint(n) = rhochr(n, it)*r2drdi(n, im)
+      end do
+      call rintsimp(rint, jtop, aux)
+      if (iprint>-2 .and. (t_inc%i_write>0)) write (1337, 330) 'charge', &
+        itprt, aux
+      do n = 1, jtop
+        rint(n) = rhospn(n, it)*r2drdi(n, im)
+      end do
+      call rintsimp(rint, jtop, aux)
+      if (iprint>-2 .and. (t_inc%i_write>0)) write (1337, 330) ' spin ', &
+        itprt, aux
+    end if
+
+  end do
 ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
-99001 FORMAT (/,10X,'potential is not exchange split ')
-99002 FORMAT (/,'  ATOM   IT      : ',i5,/,'  ATOMIC NUMBER  : ',i5,//,  &
-    '  IT',10X,'MUE  KAP ITER    ENERGY       B  (k-Gauss)  ')
-99003 FORMAT ('  IT=',i2,' NQN=',i2,' L=',i2, '  NZERO set to  (NRC-1) =',i4)
-99004 FORMAT (//,'  STOP IN <<CORE>>',/,'  IT=',i2,' NQN=',i2,' L=',i2,  &
-    /,'  no matching-radius found for  EC=',f10.3)
-99005 FORMAT (' LOOP    =  ',i3,' BSCL=',f10.5,/,' E=',f25.16,' VAR  ',  &
-    4E11.4,/,17X,' CORR ',4E11.4,/,17X,' ERR  ',4E11.4)
-99006 FORMAT (' iteration not converged after',i3,' steps !',/,  &
-    ' parameters:',4E18.10,/,' last corr.:',4E18.10,/, ' last error:',4E18.10)
-99007 FORMAT (' >>> check data E(KAP,MJ) should be monotonous ',  &
-    ' and  E(+L,MJ) < E(-L-1,MJ) ',//)
-99008 FORMAT (' all core states for atom type ',i2,  &
-    ' will be recalculated ',/,  &
-    ' with the spin dependent exchange field gradually switched on' )
-99009 FORMAT (2X,57('-'),/,42X,f17.3,/,38X,'(S) ',f17.3,/,2X,57('*'),//)
-99010 FORMAT (2X,57('-'),/,37X,f17.3,/,33X,'(S) ',f17.3,/,2X,57('*'),//)
-99011 FORMAT (a,i1,a,5I3,a,2I2,a)
-99012 FORMAT (2I4,a1,a3,i3,'/2',2I4,2X,f15.8,f17.3,:,f17.3,/)
-99013 FORMAT (a,:,32X,f17.3,:,f17.3,/)
-99014 FORMAT (a,:,37X,f6.3)
-99015 FORMAT (37X,f17.3)
-99016 FORMAT (/,' IT=',i2,'  NQN=',i2,'  L=',i2,'  KAP=',i2,'  MJ=',i2,  &
-    '/2    IC=',i3,'  ISH=',i2,/,' E(',i2,')   =',f15.5,/,  &
-    ' NMATCH  =',i5,'    R=',f10.5,/,' NZERO   =',i5,'    R=',  &
-    f10.5,/,' NODES   =',i5,'  RAT=',e11.4)
-99017 FORMAT (' integrated core ',a,' density for atom type ',i4,':', f12.8)
-END SUBROUTINE core
+170 format (/, 10x, 'potential is not exchange split ')
+180 format (/, '  ATOM   IT      : ', i5, /, '  ATOMIC NUMBER  : ', i5, /, /, &
+    '  IT', 10x, 'MUE  KAP ITER    ENERGY       B  (k-Gauss)  ')
+190 format ('  IT=', i2, ' NQN=', i2, ' L=', i2, '  NZERO set to  (NRC-1) =', &
+    i4)
+200 format (/, /, '  STOP IN <<CORE>>', /, '  IT=', i2, ' NQN=', i2, ' L=', &
+    i2, /, '  no matching-radius found for  EC=', f10.3)
+210 format (' LOOP    =  ', i3, ' BSCL=', f10.5, /, ' E=', f25.16, ' VAR  ', &
+    4e11.4, /, 17x, ' CORR ', 4e11.4, /, 17x, ' ERR  ', 4e11.4)
+220 format (' iteration not converged after', i3, ' steps !', /, &
+    ' parameters:', 4e18.10, /, ' last corr.:', 4e18.10, /, ' last error:', &
+    4e18.10)
+230 format (' >>> check data E(KAP,MJ) should be monotonous ', &
+    ' and  E(+L,MJ) < E(-L-1,MJ) ', /, /)
+240 format (' all core states for atom type ', i2, ' will be recalculated ', &
+    /, ' with the spin dependent exchange field gradually switched on')
+250 format (2x, 57('-'), /, 42x, f17.3, /, 38x, '(S) ', f17.3, /, 2x, 57('*'), &
+    /, /)
+260 format (2x, 57('-'), /, 37x, f17.3, /, 33x, '(S) ', f17.3, /, 2x, 57('*'), &
+    /, /)
+270 format (a, i1, a, 5i3, a, 2i2, a)
+280 format (2i4, a1, a3, i3, '/2', 2i4, 2x, f15.8, f17.3, :, f17.3, /)
+290 format (a, :, 32x, f17.3, :, f17.3, /)
+300 format (a, :, 37x, f6.3)
+310 format (37x, f17.3)
+320 format (/, ' IT=', i2, '  NQN=', i2, '  L=', i2, '  KAP=', i2, '  MJ=', &
+    i2, '/2    IC=', i3, '  ISH=', i2, /, ' E(', i2, ')   =', f15.5, /, &
+    ' NMATCH  =', i5, '    R=', f10.5, /, ' NZERO   =', i5, '    R=', f10.5, &
+    /, ' NODES   =', i5, '  RAT=', e11.4)
+330 format (' integrated core ', a, ' density for atom type ', i4, ':', f12.8)
+end subroutine

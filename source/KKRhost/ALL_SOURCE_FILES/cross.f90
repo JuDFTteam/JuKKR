@@ -1,4 +1,4 @@
-SUBROUTINE cross(x1,x2,cr12)
+subroutine cross(x1, x2, cr12)
 !- Cross product cr12 = X1 cross X2
 ! ----------------------------------------------------------------------
 !i Inputs:
@@ -8,14 +8,14 @@ SUBROUTINE cross(x1,x2,cr12)
 !o   cr12  :cross product
 ! ----------------------------------------------------------------------
 
-IMPLICIT NONE
+  implicit none
 ! Passed parameters:
-DOUBLE PRECISION :: x1(3)
-DOUBLE PRECISION :: x2(3)
-DOUBLE PRECISION :: cr12(3)
+  double precision :: x1(3)
+  double precision :: x2(3)
+  double precision :: cr12(3)
 
-cr12(1) = x1(2)*x2(3) - x1(3)*x2(2)
-cr12(2) = x1(3)*x2(1) - x1(1)*x2(3)
-cr12(3) = x1(1)*x2(2) - x1(2)*x2(1)
+  cr12(1) = x1(2)*x2(3) - x1(3)*x2(2)
+  cr12(2) = x1(3)*x2(1) - x1(1)*x2(3)
+  cr12(3) = x1(1)*x2(2) - x1(2)*x2(1)
 
-END SUBROUTINE cross
+end subroutine

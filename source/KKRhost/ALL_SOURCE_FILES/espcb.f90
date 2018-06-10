@@ -1,5 +1,5 @@
 ! 13.10.95 ***************************************************************
-SUBROUTINE espcb(espc,nspin,natyp,ecore,lcore,lcoremax,ncore)
+subroutine espcb(espc, nspin, natyp, ecore, lcore, lcoremax, ncore)
 ! ************************************************************************
 !
 !     attention : energy zero ---> electro static zero
@@ -18,14 +18,10 @@ SUBROUTINE espcb(espc,nspin,natyp,ecore,lcore,lcoremax,ncore)
 !                               b.drittler   jan 1990
 !-----------------------------------------------------------------------
 
-implicit none
+  implicit none
 
 !     .. Parameters ..
-INCLUDE 'inc.p'
-! *********************************************************************
-! * For KREL = 1 (relativistic mode)                                  *
-! *                                                                   *
-! *  NPOTD = 2 * NATYPD                                               *
+  include 'inc.p'
 ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
 ! *  NSPIND = 1                                                       *
 ! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
@@ -34,46 +30,50 @@ INCLUDE 'inc.p'
 ! *                                                                   *
 ! *********************************************************************
 
-INTEGER NPOTD
-PARAMETER (NPOTD=(2*KREL + (1-KREL)*NSPIND)*NATYPD)
-INTEGER LMAXD1
-PARAMETER (LMAXD1= LMAXD+1)
 
 !.. Scalar Arguments ..
-INTEGER NATYP,NSPIN
 
 !.. Array Arguments ..
-DOUBLE PRECISION ECORE(20,*),ESPC(0:3,NPOTD)
-INTEGER LCORE(20,*),NCORE(*),LCOREMAX(*)
+  integer :: npotd
+  parameter (npotd=(2*krel+(1-krel)*nspind)*natypd)
+  integer :: lmaxd1
+  parameter (lmaxd1=lmaxd+1)
 
 !.. Local Scalars ..
-INTEGER I1,IPOT,IS,L,N
+  integer :: natyp, nspin
 
 !.. Intrinsic Functions ..
-INTRINSIC DBLE
+  double precision :: ecore(20, *), espc(0:3, npotd)
+  integer :: lcore(20, *), ncore(*), lcoremax(*)
 
 !loop over reference atoms
-DO I1 = 1,NATYP
-  LCOREMAX(I1) = 0
-  DO IS = 1,NSPIN
+  integer :: i1, ipot, is, l, n
 
 
-    ! determine correct potential indices
-    IPOT = NSPIN* (I1-1) + IS
+  intrinsic :: dble
+! determine correct potential indices
 
-    ! initialize espc
-    DO L = 0,3
-      ESPC(L,IPOT) = 0.0D0
-    END DO
+  do i1 = 1, natyp
+    lcoremax(i1) = 0
+    do is = 1, nspin
+! initialize espc
 
-    !loop over all core states
-    DO N = 1,NCORE(IPOT)
-      L = LCORE(N,IPOT)
-      LCOREMAX(I1) = MAX(LCOREMAX(I1),L)
-      write(1337,*) 'in espcb:',N,L,IPOT,I1
-      ESPC(L,IPOT) = ESPC(L,IPOT) + &
-                      ECORE(N,IPOT)*DBLE(2*L+1)*DBLE(3-NSPIN)
-    END DO
-  END DO
-END DO
-END
+!loop over all core states
+      ipot = nspin*(i1-1) + is
+! 13.10.95 ***************************************************************
+! ************************************************************************
+      do l = 0, 3
+        espc(l, ipot) = 0.0d0
+      end do
+!
+!     attention : energy zero ---> electro static zero
+      do n = 1, ncore(ipot)
+        l = lcore(n, ipot)
+        lcoremax(i1) = max(lcoremax(i1), l)
+        write (1337, *) 'in espcb:', n, l, ipot, i1
+        espc(l, ipot) = espc(l, ipot) + ecore(n, ipot)*dble(2*l+1)*dble(3- &
+          nspin)
+      end do
+    end do
+  end do
+end subroutine

@@ -14,198 +14,201 @@
 !> @note modified by B. Drittler  aug. 1988
 !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RITES(IFILE,NATPS,NATYP,NSPIN,Z,ALAT,RMT,RMTNEW,RWS,ITITLE,R,DRDI,    &
-   VM2Z,IRWS,A,B,TXC,KXC,INS,IRNS,LPOT,VINS,QBOUND,IRC,KSHAPE,EFERMI,VBC,ECORE,  &
-   LCORE,NCORE,ECOREREL,NKCORE,KAPCORE,IRM,IRMIND,LMPOT)
+subroutine rites(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
+  ititle, r, drdi, vm2z, irws, a, b, txc, kxc, ins, irns, lpot, vins, qbound, &
+  irc, kshape, efermi, vbc, ecore, lcore, ncore, ecorerel, nkcore, kapcore, &
+  irm, irmind, lmpot)
 
-   use global_variables
+  use :: global_variables
 
-   ! .. Scalar Arguments
-   integer, intent(in) :: INS    !< 0 (MT), 1(ASA), 2(Full Potential)
-   integer, intent(in) :: IRM    !< Maximum number of radial points
-   integer, intent(in) :: KXC    !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
-   integer, intent(in) :: LPOT   !< Maximum l component in potential expansion
-   integer, intent(in) :: LMPOT  !< (LPOT+1)**2
-   integer, intent(in) :: IFILE  !< Unit specifier for potential card
-   integer, intent(in) :: NATPS
-   integer, intent(in) :: NATYP  !< Number of kinds of atoms in unit cell
-   integer, intent(in) :: NSPIN  !< Counter for spin directions
-   integer, intent(in) :: KSHAPE !< Exact treatment of WS cell
-   integer, intent(in) :: IRMIND    !< IRM-IRNSD
-   double precision, intent(in) :: ALAT   !< Lattice constant in a.u.
-   double precision, intent(in) :: QBOUND !< Convergence parameter for the potential
-   double precision, intent(in) :: EFERMI !< Fermi energy
-   ! .. Array Arguments
-   double precision, dimension(*), intent(in) :: A       !< Constants for exponential R mesh
-   double precision, dimension(*), intent(in) :: B       !< Constants for exponential R mesh
-   double precision, dimension(*), intent(in) :: Z
-   double precision, dimension(*), intent(in) :: RWS     !< Wigner Seitz radius
-   double precision, dimension(2), intent(in) :: VBC     !< Potential constants
-   double precision, dimension(*), intent(in) :: RMT     !< Muffin-tin radius of true system
-   double precision, dimension(*), intent(in) :: RMTNEW  !< Adapted muffin-tin radius
-   double precision, dimension(IRM,*), intent(in) :: R  !< Radial mesh ( in units a Bohr)
-   double precision, dimension(IRM,*), intent(in) :: VM2Z
-   double precision, dimension(IRM,*), intent(in) :: DRDI     !< Derivative dr/di
-   double precision, dimension(20,*), intent(in)  :: ECORE    !< Core energies !(2), 22.5,2000
-   double precision, dimension(IRMIND:IRM,LMPOT,*), intent(in) :: VINS   !< Non-spherical part of the potential
-   !----------------------------------------------------------------------------
-   integer, dimension(20,NATYP), intent(in) :: NKCORE
-   integer, dimension(20,2*NATYP), intent(in) :: KAPCORE
-   double precision, dimension(KREL*20+(1-KREL),2*NATYP), intent(in) :: ECOREREL  ! relativistic core energies
-   !----------------------------------------------------------------------------
-   integer, dimension(*), intent(in) :: IRC     !< R point for potential cutting
-   integer, dimension(*), intent(in) :: IRNS    !< Position of atoms in the unit cell in units of bravais vectors
-   integer, dimension(*), intent(in) :: IRWS    !< R point at WS radius
-   integer, dimension(*), intent(in) :: NCORE   !< Number of core states
-   integer, dimension(20,*), intent(in) :: ITITLE
-   integer, dimension(20,*), intent(in) :: LCORE   !< Angular momentum of core states
-   character(len=124), dimension(*), intent(in) :: TXC
-   ! .. Local Scalars
-   integer :: I,ICORE,IH,INEW,IP,IR,IRMIN,IRNS1,IS,ISAVE,J,LM,LMNR,NCORE1,NR
-   double precision :: A1,B1,RMAX,RMT1,RMTNW1,RV,SIGN,SUM,Z1
-   ! .. Local Arrays
-   integer, dimension(20) :: LCORE1
-   double precision, dimension(20)  :: ECORE1
-   double precision, dimension(IRM) :: DRADI
-   double precision, dimension(IRM) :: RA
-   double precision, dimension(IRM) :: VM2ZA
-   double precision, dimension(20,2) :: ECORE2
-   character(len=3), dimension(4) :: TXTK
-   character(len=1), dimension(0:3) :: TXTL
-   !     ..
-   DATA TXTL/'s','p','d','f'/
-   DATA TXTK/'1/2','3/2','5/2','7/2'/
-   !     ..
-   ! -------------------------------------------------------------------
-   ISAVE = 1
-   INEW  = 1
-   !
-   !
-   do IH = 1,NATYP
-      do IS = 1,NSPIN
-         if (IS.EQ.NSPIN) then
-            SIGN = 1.0D0
-         else
-            SIGN = -1.0D0
-         end if
-         IP = NSPIN* (IH-1) + IS
+! .. Scalar Arguments
+  integer, intent (in) :: ins !< 0 (MT), 1(ASA), 2(Full Potential)
+  integer, intent (in) :: irm !< Maximum number of radial points
+  integer, intent (in) :: kxc !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+  integer, intent (in) :: lpot !< Maximum l component in potential expansion
+  integer, intent (in) :: lmpot !< (LPOT+1)**2
+  integer, intent (in) :: ifile !< Unit specifier for potential card
+  integer, intent (in) :: natps
+  integer, intent (in) :: natyp !< Number of kinds of atoms in unit cell
+  integer, intent (in) :: nspin !< Counter for spin directions
+  integer, intent (in) :: kshape !< Exact treatment of WS cell
+  integer, intent (in) :: irmind !< IRM-IRNSD
+  double precision, intent (in) :: alat !< Lattice constant in a.u.
+  double precision, intent (in) :: qbound !< Convergence parameter for the potential
+  double precision, intent (in) :: efermi !< Fermi energy
+! .. Array Arguments
+  double precision, dimension (*), intent (in) :: a !< Constants for exponential R mesh
+  double precision, dimension (*), intent (in) :: b !< Constants for exponential R mesh
+  double precision, dimension (*), intent (in) :: z
+  double precision, dimension (*), intent (in) :: rws !< Wigner Seitz radius
+  double precision, dimension (2), intent (in) :: vbc !< Potential constants
+  double precision, dimension (*), intent (in) :: rmt !< Muffin-tin radius of true system
+  double precision, dimension (*), intent (in) :: rmtnew !< Adapted muffin-tin radius
+  double precision, dimension (irm, *), intent (in) :: r !< Radial mesh ( in units a Bohr)
+  double precision, dimension (irm, *), intent (in) :: vm2z
+  double precision, dimension (irm, *), intent (in) :: drdi !< Derivative dr/di
+  double precision, dimension (20, *), intent (in) :: ecore !< Core energies !(2), 22.5,2000
+  double precision, dimension (irmind:irm, lmpot, *), intent (in) :: vins !< Non-spherical part of the potential
+!----------------------------------------------------------------------------
+  integer, dimension (20, natyp), intent (in) :: nkcore
+  integer, dimension (20, 2*natyp), intent (in) :: kapcore
+  double precision, dimension (krel*20+(1-krel), 2*natyp), &
+    intent (in) :: ecorerel ! relativistic core energies
+!----------------------------------------------------------------------------
+  integer, dimension (*), intent (in) :: irc !< R point for potential cutting
+  integer, dimension (*), intent (in) :: irns !< Position of atoms in the unit cell in units of bravais vectors
+  integer, dimension (*), intent (in) :: irws !< R point at WS radius
+  integer, dimension (*), intent (in) :: ncore !< Number of core states
+  integer, dimension (20, *), intent (in) :: ititle
+  integer, dimension (20, *), intent (in) :: lcore !< Angular momentum of core states
+  character (len=124), dimension (*), intent (in) :: txc
+! .. Local Scalars
+  integer :: i, icore, ih, inew, ip, ir, irmin, irns1, is, isave, j, lm, lmnr, &
+    ncore1, nr
+  double precision :: a1, b1, rmax, rmt1, rmtnw1, rv, sign, sum, z1
+! .. Local Arrays
+  integer, dimension (20) :: lcore1
+  double precision, dimension (20) :: ecore1
+  double precision, dimension (irm) :: dradi
+  double precision, dimension (irm) :: ra
+  double precision, dimension (irm) :: vm2za
+  double precision, dimension (20, 2) :: ecore2
+  character (len=3), dimension (4) :: txtk
+  character (len=1), dimension (0:3) :: txtl
+!     ..
+  data txtl/'s', 'p', 'd', 'f'/
+  data txtk/'1/2', '3/2', '5/2', '7/2'/
+!     ..
+! -------------------------------------------------------------------
+  isave = 1
+  inew = 1
+!
+!
+  do ih = 1, natyp
+    do is = 1, nspin
+      if (is==nspin) then
+        sign = 1.0d0
+      else
+        sign = -1.0d0
+      end if
+      ip = nspin*(ih-1) + is
 
-         RMT1 = RMT(IH)
-         RMTNW1 = RMTNEW(IH)
-         Z1 = Z(IH)
-         RMAX = RWS(IH)
-         if (KSHAPE.EQ.0) then
-            NR = IRWS(IH)
-         else
-            NR = IRC(IH)
-         end if
+      rmt1 = rmt(ih)
+      rmtnw1 = rmtnew(ih)
+      z1 = z(ih)
+      rmax = rws(ih)
+      if (kshape==0) then
+        nr = irws(ih)
+      else
+        nr = irc(ih)
+      end if
 
-         IRNS1 = IRNS(IH)
-         IRMIN = NR - IRNS1
-         A1 = A(IH)
-         B1 = B(IH)
-         NCORE1 = NCORE(IP)
-         !
-         do J = 1,NR
-            RA(J) = R(J,IH)
-            DRADI(J) = DRDI(J,IH)
-            !-------------------------------------------------------------------
-            ! Store only lm=1 component of the potential
-            !-------------------------------------------------------------------
-            VM2ZA(J) = VM2Z(J,IP)
-         enddo ! J
-         !
-         open(IFILE, FILE='out_potential', FORM='formatted')
-         write (IFILE,FMT=9000) (ITITLE(I,IP),I=1,7),TXC(KXC+1)
-         write (IFILE,FMT=9010) RMT1,ALAT,RMTNW1
-         write (IFILE,FMT=9020) Z1,RMAX,EFERMI,VBC(IS)
-         write (IFILE,FMT=9030) NR,A1,B1,NCORE1,INEW
-         !
-         if (NCORE1.GE.1) then
-            !
-            if (KREL.EQ.0) then
-               do J = 1,NCORE1
-                  LCORE1(J) = LCORE(J,IP)
-                  ECORE1(J) = ECORE(J,IP)
-               end do
-               write (IFILE,FMT=9040) (LCORE1(ICORE),ECORE1(ICORE),ICORE=1,NCORE1)
-            else
-               do J = 1,NCORE1
-                  LCORE1(J) = LCORE(J,IP)
-                  ECORE2(J,1) = ECOREREL(J,2*IH-1)
-                  ECORE2(J,2) = ECOREREL(J,2*IH)
-               end do
-               !----------------------------------------------------------------
-               ! independent of spin, the \mu-averaged relativistic core energies
-               ! are written out for \kappa = -l-1,l
-               ! format compatible with the non-(scalar) relativistic mode
-               ! however, the next read in has no meaning for the REL core-solver
-               ! a detailed output of the core energies is supplied by < CORE >
-               !----------------------------------------------------------------
-               do ICORE=1,NCORE1
-                  write (IFILE,FMT=9041) LCORE1(ICORE),     &
-                     (ECORE2(ICORE,I+1),TXTL(LCORE1(ICORE)),&
-                     TXTK(IABS(KAPCORE(ICORE,2*IH-1+I))),   &
-                     I=0,NKCORE(ICORE,IH)-1)
-               end do
+      irns1 = irns(ih)
+      irmin = nr - irns1
+      a1 = a(ih)
+      b1 = b(ih)
+      ncore1 = ncore(ip)
+!
+      do j = 1, nr
+        ra(j) = r(j, ih)
+        dradi(j) = drdi(j, ih)
+!-------------------------------------------------------------------
+! Store only lm=1 component of the potential
+!-------------------------------------------------------------------
+        vm2za(j) = vm2z(j, ip)
+      end do ! J
+!
+      open (ifile, file='out_potential', form='formatted')
+      write (ifile, fmt=100)(ititle(i,ip), i=1, 7), txc(kxc+1)
+      write (ifile, fmt=110) rmt1, alat, rmtnw1
+      write (ifile, fmt=120) z1, rmax, efermi, vbc(is)
+      write (ifile, fmt=130) nr, a1, b1, ncore1, inew
+!
+      if (ncore1>=1) then
+!
+        if (krel==0) then
+          do j = 1, ncore1
+            lcore1(j) = lcore(j, ip)
+            ecore1(j) = ecore(j, ip)
+          end do
+          write (ifile, fmt=140)(lcore1(icore), ecore1(icore), icore=1, &
+            ncore1)
+        else
+          do j = 1, ncore1
+            lcore1(j) = lcore(j, ip)
+            ecore2(j, 1) = ecorerel(j, 2*ih-1)
+            ecore2(j, 2) = ecorerel(j, 2*ih)
+          end do
+!----------------------------------------------------------------
+! independent of spin, the \mu-averaged relativistic core energies
+! are written out for \kappa = -l-1,l
+! format compatible with the non-(scalar) relativistic mode
+! however, the next read in has no meaning for the REL core-solver
+! a detailed output of the core energies is supplied by < CORE >
+!----------------------------------------------------------------
+          do icore = 1, ncore1
+            write (ifile, fmt=150) lcore1(icore), (ecore2(icore,i+1), txtl( &
+              lcore1(icore)), txtk(iabs(kapcore(icore,2*ih-1+i))), i=0, &
+              nkcore(icore,ih)-1)
+          end do
+        end if
+!
+      end if
+!
+      if (ins==0 .or. (ih<natps .and. ins<=2)) then
+!-------------------------------------------------------------------
+! store only the spherically averaged potential
+! (in mt or as - case)
+! this is done always for the host
+!-------------------------------------------------------------------
+        if (inew==0) then
+          write (ifile, fmt=160)(ra(ir), dradi(ir), vm2za(ir), ir=1, nr)
+        else
+          write (ifile, fmt=170)(vm2za(ir), ir=1, nr)
+        end if
+      else
+!-------------------------------------------------------------------
+! store the full potential , but the non spherical contribution
+! only from irns1 up to irws1 ;
+! remember that the lm = 1 contribution is multiplied
+! by a factor 1/sqrt(4 pi)
+!-------------------------------------------------------------------
+        write (ifile, fmt=180) nr, irns1, lmpot, isave
+        write (ifile, fmt=190)(vm2za(ir), ir=1, nr)
+        if (lpot>0) then
+          lmnr = 1
+          do lm = 2, lmpot
+            sum = 0.0d0
+            do ir = irmin, nr
+              rv = vins(ir, lm, ip)*ra(ir)
+              sum = sum + rv*rv*dradi(ir)
+            end do ! IR
+            if (sqrt(sum)>qbound) then
+              lmnr = lmnr + 1
+              write (ifile, fmt=180) lm
+              write (ifile, fmt=190)(vins(ir,lm,ip), ir=irmin, nr)
             end if
-            !
-         end if
-         !
-         if (INS.EQ.0 .OR. (IH.LT.NATPS.AND.INS.LE.2)) then
-            !-------------------------------------------------------------------
-            ! store only the spherically averaged potential
-            ! (in mt or as - case)
-            ! this is done always for the host
-            !-------------------------------------------------------------------
-            if (INEW.EQ.0) then
-               write (IFILE,FMT=9050)(RA(IR),DRADI(IR),VM2ZA(IR),IR=1,NR)
-            else
-               write (IFILE,FMT=9051) (VM2ZA(IR),IR=1,NR)
-            end if
-         else
-            !-------------------------------------------------------------------
-            ! store the full potential , but the non spherical contribution
-            ! only from irns1 up to irws1 ;
-            ! remember that the lm = 1 contribution is multiplied
-            ! by a factor 1/sqrt(4 pi)
-            !-------------------------------------------------------------------
-            write (IFILE,FMT=9060) NR,IRNS1,LMPOT,ISAVE
-            write (IFILE,FMT=9070) (VM2ZA(IR),IR=1,NR)
-            if (LPOT.GT.0) then
-               LMNR = 1
-               do LM = 2,LMPOT
-                  SUM = 0.0D0
-                  do IR = IRMIN,NR
-                     RV = VINS(IR,LM,IP)*RA(IR)
-                     SUM = SUM + RV*RV*DRADI(IR)
-                  enddo ! IR
-                  if (SQRT(SUM).GT.QBOUND) then
-                     LMNR = LMNR + 1
-                     write (IFILE,FMT=9060) LM
-                     write (IFILE,FMT=9070) (VINS(IR,LM,IP),IR=IRMIN,NR)
-                  end if
-               enddo !LM
-               !----------------------------------------------------------------
-               ! Write a one to mark the end
-               !----------------------------------------------------------------
-               if (LMNR.LT.LMPOT) write (IFILE,FMT=9060) ISAVE
-            end if
-         end if
-      enddo !IS
-   enddo !IH
+          end do !LM
+!----------------------------------------------------------------
+! Write a one to mark the end
+!----------------------------------------------------------------
+          if (lmnr<lmpot) write (ifile, fmt=180) isave
+        end if
+      end if
+    end do !IS
+  end do !IH
 
-   close(IFILE)
+  close (ifile)
 
-   9000 format (7a4,6x,'  exc:',a124,3x,a10)
-   9010 format (3f12.8)
-   ! 9010 FORMAT (3F) !f12.8) maybe change to higher accuracy in writeout?
-   9020 format (f10.5,/,f10.5,2f20.15)
-   9030 format (i3,/,2d15.8,/,2i2)
-   9040 format (i5,1p,d20.11)
-   9041 format (i5,2(1p,d20.11,2x,a1,a3))
-   9050 format (1p,2d15.6,1p,d15.8)
-   9051 format (1p,4d20.12)
-   9060 format (10i5)
-   9070 format (1p,4d20.13)
-end subroutine RITES
+100 format (7a4, 6x, '  exc:', a124, 3x, a10)
+110 format (3f12.8)
+! 9010 FORMAT (3F) !f12.8) maybe change to higher accuracy in writeout?
+120 format (f10.5, /, f10.5, 2f20.15)
+130 format (i3, /, 2d15.8, /, 2i2)
+140 format (i5, 1p, d20.11)
+150 format (i5, 2(1p,d20.11,2x,a1,a3))
+160 format (1p, 2d15.6, 1p, d15.8)
+170 format (1p, 4d20.12)
+180 format (10i5)
+190 format (1p, 4d20.13)
+end subroutine

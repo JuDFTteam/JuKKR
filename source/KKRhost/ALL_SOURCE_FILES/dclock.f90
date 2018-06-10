@@ -1,11 +1,11 @@
 ! **********************************************************************
-DOUBLE PRECISION FUNCTION dclock()
+double precision function dclock()
 ! **********************************************************************
 !     .. External Functions ..
-REAL :: etime,tarry(2)
-EXTERNAL etime
+  real :: etime, tarry(2)
+  external :: etime
 
 !     ..
-dclock = DBLE(etime(tarry))
-RETURN
-END FUNCTION dclock
+  dclock = dble(etime(tarry))
+  return
+end function

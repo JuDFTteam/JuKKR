@@ -1,4 +1,4 @@
-SUBROUTINE dirbslag(xi,y1i,y2i,y3i,y4i,y1,y2,y3,y4,ind1,n,imax)
+subroutine dirbslag(xi, y1i, y2i, y3i, y4i, y1, y2, y3, y4, ind1, n, imax)
 !   ********************************************************************
 !   *                                                                  *
 !   *      lagrangian interpolation of Y(X) at position XI             *
@@ -12,62 +12,62 @@ SUBROUTINE dirbslag(xi,y1i,y2i,y3i,y4i,y1,y2,y3,y4,ind1,n,imax)
 !   *      IMAX    max index of X/Y-arrays                             *
 !   *                                                                  *
 !   ********************************************************************
-IMPLICIT NONE
+  implicit none
 
 ! Dummy arguments
-INTEGER IMAX,IND1,N
-REAL*8 XI
-REAL*8 Y1I,Y2I,Y3I,Y4I
-REAL*8 Y1(IMAX),Y2(IMAX),Y3(IMAX),Y4(IMAX)
+  integer :: imax, ind1, n
+  real *8 :: xi
+  real *8 :: y1i, y2i, y3i, y4i
+  real *8 :: y1(imax), y2(imax), y3(imax), y4(imax)
 
 ! Local variables
-REAL*8 D,P,XD
-INTEGER I,IND,INL,INU,J
+  real *8 :: d, p, xd
+  integer :: i, ind, inl, inu, j
 
-ind = ind1
-IF ( ABS(xi-DBLE(ind)) < 1.0D-12 ) THEN
-  y1i = y1(ind)
-  y2i = y2(ind)
-  y3i = y3(ind)
-  y4i = y4(ind)
-  RETURN
-END IF
+  ind = ind1
+  if (abs(xi-dble(ind))<1.0d-12) then
+    y1i = y1(ind)
+    y2i = y2(ind)
+    y3i = y3(ind)
+    y4i = y4(ind)
+    return
+  end if
 ! ------------------------------------- shift IND for irregular solution
-IF ( xi > DBLE(ind) ) ind = ind + 1
+  if (xi>dble(ind)) ind = ind + 1
 
-inl = MAX(1,ind-(n+1)/2)
-inu = inl + n - 1
+  inl = max(1, ind-(n+1)/2)
+  inu = inl + n - 1
 
-IF ( inu > imax ) THEN
-  inl = imax - n + 1
-  inu = imax
-END IF
+  if (inu>imax) then
+    inl = imax - n + 1
+    inu = imax
+  end if
 
-y1i = 0.0D0
-y2i = 0.0D0
-y3i = 0.0D0
-y4i = 0.0D0
-p = 1.0D0
-DO j = inl,inu
-  p = p*(xi-DBLE(j))
-  d = 1.0D0
-  DO i = inl,inu
-    IF ( i /= j ) THEN
-      xd = DBLE(j)
-    ELSE
-      xd = xi
-    END IF
-    d = d*(xd-DBLE(i))
-  END DO
-  
-  y1i = y1i + y1(j)/d
-  y2i = y2i + y2(j)/d
-  y3i = y3i + y3(j)/d
-  y4i = y4i + y4(j)/d
-  
-END DO
-y1i = y1i*p
-y2i = y2i*p
-y3i = y3i*p
-y4i = y4i*p
-END SUBROUTINE dirbslag
+  y1i = 0.0d0
+  y2i = 0.0d0
+  y3i = 0.0d0
+  y4i = 0.0d0
+  p = 1.0d0
+  do j = inl, inu
+    p = p*(xi-dble(j))
+    d = 1.0d0
+    do i = inl, inu
+      if (i/=j) then
+        xd = dble(j)
+      else
+        xd = xi
+      end if
+      d = d*(xd-dble(i))
+    end do
+
+    y1i = y1i + y1(j)/d
+    y2i = y2i + y2(j)/d
+    y3i = y3i + y3(j)/d
+    y4i = y4i + y4(j)/d
+
+  end do
+  y1i = y1i*p
+  y2i = y2i*p
+  y3i = y3i*p
+  y4i = y4i*p
+end subroutine

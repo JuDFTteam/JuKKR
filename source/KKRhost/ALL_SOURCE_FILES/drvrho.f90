@@ -1,8 +1,7 @@
-SUBROUTINE drvrho_qdos(ldorhoef,rho2ns,r2nef,den,dmuorb,rhotborb,  &
-    iecurr,eryd,we,ielast, gmatll,vt,bt,r,drdi,r2drdi,zat,  &
-    jws,ishift,solver,soctl,ctl,qmtet,qmphi,  &
-    itermvdir,mvevil,mvevilef,lmmaxd,lmaxd,irmd, lmpotd,iemxd,nmvecmax,  &
-    i1,nqdos)                       ! qdos ruess
+subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
+  eryd, we, ielast, gmatll, vt, bt, r, drdi, r2drdi, zat, jws, ishift, solver, &
+  soctl, ctl, qmtet, qmphi, itermvdir, mvevil, mvevilef, lmmaxd, lmaxd, irmd, &
+  lmpotd, iemxd, nmvecmax, i1, nqdos) ! qdos ruess
 !   ********************************************************************
 !   *                                                                  *
 !   * driving routine to call relativistic routines                    *
@@ -11,429 +10,419 @@ SUBROUTINE drvrho_qdos(ldorhoef,rho2ns,r2nef,den,dmuorb,rhotborb,  &
 !   * v.popescu, munich, may 2004                                      *
 !   *                                                                  *
 !   ********************************************************************
-use mod_types, only: t_tgmat
-IMPLICIT NONE
+  use :: mod_types, only: t_tgmat
+  implicit none
 
 ! PARAMETER definitions
-INTEGER NRMAX
-PARAMETER ( NRMAX=900 )
-INTEGER NLAMAX,NQMAX,NTMAX,NMMAX
-PARAMETER (NLAMAX=1,NQMAX=1,NTMAX=1,NMMAX=1)
-INTEGER NLMAX,NKMMAX,NMUEMAX,NKMPMAX,NKMAX,LINMAX
-PARAMETER ( NLMAX = 5 ) ! this should be >= LMAXD + 1
-PARAMETER ( NKMMAX = 2*NLMAX**2, NKMAX = 2*NLMAX-1 )
-PARAMETER ( NKMPMAX = NKMMAX+2*NLMAX, NMUEMAX = 2*NLMAX)
-PARAMETER ( LINMAX = 2*NLMAX*(2*NLMAX-1) )
-COMPLEX*16 CONE,CZERO
-PARAMETER ( CONE=(1.0D0,0.0D0), CZERO = (0.0D0,0.0D0))
-DOUBLE PRECISION DZERO
-PARAMETER ( DZERO=0.0D0 )
+  integer :: nrmax
+  parameter (nrmax=900)
+  integer :: nlamax, nqmax, ntmax, nmmax
+  parameter (nlamax=1, nqmax=1, ntmax=1, nmmax=1)
+  integer :: nlmax, nkmmax, nmuemax, nkmpmax, nkmax, linmax
+  parameter (nlmax=5) ! this should be >= LMAXD + 1
+  parameter (nkmmax=2*nlmax**2, nkmax=2*nlmax-1)
+  parameter (nkmpmax=nkmmax+2*nlmax, nmuemax=2*nlmax)
+  parameter (linmax=2*nlmax*(2*nlmax-1))
+  complex *16 :: cone, czero
+  parameter (cone=(1.0d0,0.0d0), czero=(0.0d0,0.0d0))
+  double precision :: dzero
+  parameter (dzero=0.0d0)
 
 ! Dummy arguments
-INTEGER LMAXD,LMMAXD,IRMD,IELAST
-INTEGER ZAT(NTMAX),JWS(NMMAX),ISHIFT
-INTEGER LMPOTD,IEMXD,I1
-LOGICAL LDORHOEF
-COMPLEX*16 WE,ERYD
-DOUBLE PRECISION RHO2NS(IRMD,LMPOTD,2),R2NEF(IRMD,LMPOTD,2)
+  integer :: lmaxd, lmmaxd, irmd, ielast
+  integer :: zat(ntmax), jws(nmmax), ishift
+  integer :: lmpotd, iemxd, i1
+  logical :: ldorhoef
+  complex *16 :: we, eryd
+  double precision :: rho2ns(irmd, lmpotd, 2), r2nef(irmd, lmpotd, 2)
 !  DOUBLE PRECISION VT(NRMAX,NTMAX),BT(NRMAX,NTMAX)
-DOUBLE PRECISION VT(NRMAX),BT(NRMAX)
-DOUBLE PRECISION R(NRMAX,NMMAX),R2DRDI(NRMAX,NMMAX)
-DOUBLE PRECISION DRDI(NRMAX,NMMAX),SOCTL(NTMAX,NLMAX)
-DOUBLE PRECISION CTL(NTMAX,NLMAX)
-DOUBLE COMPLEX GMATLL(LMMAXD,LMMAXD,IEMXD), &
-     DEN(0:LMAXD+1,2*IELAST)
+  double precision :: vt(nrmax), bt(nrmax)
+  double precision :: r(nrmax, nmmax), r2drdi(nrmax, nmmax)
+  double precision :: drdi(nrmax, nmmax), soctl(ntmax, nlmax)
+  double precision :: ctl(ntmax, nlmax)
+  double complex :: gmatll(lmmaxd, lmmaxd, iemxd), den(0:lmaxd+1, 2*ielast)
 ! l-resolved orbital polarisation 
-COMPLEX*16 DMUORB(0:LMAXD,3)
+  complex *16 :: dmuorb(0:lmaxd, 3)
 ! orbital density
-REAL*8 RHOTBORB(IRMD)
+  real *8 :: rhotborb(irmd)
 
 ! Local variables
-REAL*8 AMEOPO(NKMMAX,NKMMAX,NLAMAX,3),AT(NRMAX,NLAMAX,3,NTMAX), &
-       BCOR(NTMAX),BCORS(NTMAX),CONC(NTMAX), &
-       DOS(NTMAX),DOSI(NTMAX), &
-       EFERMI,HFF(NTMAX), &
-       HFFI(NTMAX),MUEORB,MUESPN,NVALTOT,OMT(NTMAX),OMTI(NTMAX), &
-       QEL(NTMAX), &
-       RHOORB(NRMAX,NTMAX),RHOCHR(NRMAX,NTMAX),RHOSPN(NRMAX,NTMAX)
-REAL*8 SHFTEF,SMT(NTMAX),SMTI(NTMAX),PI,SQPI,TOTDOS
-COMPLEX*16 BZJ(LINMAX,NTMAX),BZZ(LINMAX,NTMAX), &
-           DOSINT(NLMAX,NTMAX),DOSL0(NLMAX,NTMAX), &
-           DOSM(NMUEMAX),DZJ(LINMAX,NTMAX), &
-           DZZ(LINMAX,NTMAX),EBAND,EBANDT(NTMAX), &
-           HFFINT(NLMAX,NTMAX),HFFL0(NLMAX,NTMAX),HFFM(NMUEMAX), &
-           MSST(NKMMAX,NKMMAX,NTMAX),OMTINT(NLMAX,NTMAX), &
-           OMTL0(NLMAX,NTMAX),OMTM(NMUEMAX),OZJ(LINMAX,NTMAX), &
-           OZZ(LINMAX,NTMAX),P, &
-           QZJ(LINMAX,NTMAX),QZZ(LINMAX,NTMAX), &
-           SMTINT(NLMAX,NTMAX),SMTL0(NLMAX,NTMAX),SMTM(NMUEMAX), &
-           SZJ(LINMAX,NTMAX),SZZ(LINMAX,NTMAX)
-COMPLEX*16 TAUT(NKMMAX,NKMMAX,NTMAX),OMTLS0(NLMAX,NTMAX,2)
-COMPLEX*16 OZZS(LINMAX,NTMAX,2),OZJS(LINMAX,NTMAX,2)
-COMPLEX*16 TAUTLIN(LINMAX,NTMAX), &
-           TSST(NKMMAX,NKMMAX,NTMAX),TSSTLIN(LINMAX,NTMAX), &
-           TZJ(LINMAX,NTMAX),TZZ(LINMAX,NTMAX)
-LOGICAL CALCINT,GETIRRSOL
-REAL*8 CGC(NKMPMAX,2)
-REAL*8 GDIA(NKMMAX),GMDIA(NKMMAX),GOFF(NKMMAX),GMOFF(NKMMAX)
-REAL*8 FDIA(NKMMAX),FMDIA(NKMMAX),FOFF(NKMMAX),FMOFF(NKMMAX)
-INTEGER I,IECURR,IHYPER,IKM1LIN(LINMAX),IKM2LIN(LINMAX),IL, &
-        IMT(NTMAX),IMUE,IP,IPRINT,IQ,IQAT(NQMAX,NTMAX),IREL, &
-        IT,IWRIRRWF,IWRREGWF,J,LIN,LOPT(NTMAX), &
-        MMAX,NAT(NTMAX),NETAB,NKM,NKMQ(NQMAX),NL, &
-        NLINQ(NQMAX),NLQ(NQMAX),NT,NUCLEUS
-INTEGER NFILCBWF,IOL
-INTEGER NSOLLM(NLMAX,NMUEMAX),LTAB(NMUEMAX),LBTAB(NMUEMAX), &
-     KAPTAB(NMUEMAX),NMUETAB(NMUEMAX)
-CHARACTER*10 SOLVER
-CHARACTER*4 TXTT(NTMAX)
-DOUBLE COMPLEX W1(LMMAXD,LMMAXD)
-INTEGER ICALL,IEC
+  real *8 :: ameopo(nkmmax, nkmmax, nlamax, 3), at(nrmax, nlamax, 3, ntmax), &
+    bcor(ntmax), bcors(ntmax), conc(ntmax), dos(ntmax), dosi(ntmax), efermi, &
+    hff(ntmax), hffi(ntmax), mueorb, muespn, nvaltot, omt(ntmax), omti(ntmax), &
+    qel(ntmax), rhoorb(nrmax, ntmax), rhochr(nrmax, ntmax), &
+    rhospn(nrmax, ntmax)
+  real *8 :: shftef, smt(ntmax), smti(ntmax), pi, sqpi, totdos
+  complex *16 :: bzj(linmax, ntmax), bzz(linmax, ntmax), dosint(nlmax, ntmax), &
+    dosl0(nlmax, ntmax), dosm(nmuemax), dzj(linmax, ntmax), &
+    dzz(linmax, ntmax), eband, ebandt(ntmax), hffint(nlmax, ntmax), &
+    hffl0(nlmax, ntmax), hffm(nmuemax), msst(nkmmax, nkmmax, ntmax), &
+    omtint(nlmax, ntmax), omtl0(nlmax, ntmax), omtm(nmuemax), &
+    ozj(linmax, ntmax), ozz(linmax, ntmax), p, qzj(linmax, ntmax), &
+    qzz(linmax, ntmax), smtint(nlmax, ntmax), smtl0(nlmax, ntmax), &
+    smtm(nmuemax), szj(linmax, ntmax), szz(linmax, ntmax)
+  complex *16 :: taut(nkmmax, nkmmax, ntmax), omtls0(nlmax, ntmax, 2)
+  complex *16 :: ozzs(linmax, ntmax, 2), ozjs(linmax, ntmax, 2)
+  complex *16 :: tautlin(linmax, ntmax), tsst(nkmmax, nkmmax, ntmax), &
+    tsstlin(linmax, ntmax), tzj(linmax, ntmax), tzz(linmax, ntmax)
+  logical :: calcint, getirrsol
+  real *8 :: cgc(nkmpmax, 2)
+  real *8 :: gdia(nkmmax), gmdia(nkmmax), goff(nkmmax), gmoff(nkmmax)
+  real *8 :: fdia(nkmmax), fmdia(nkmmax), foff(nkmmax), fmoff(nkmmax)
+  integer :: i, iecurr, ihyper, ikm1lin(linmax), ikm2lin(linmax), il, &
+    imt(ntmax), imue, ip, iprint, iq, iqat(nqmax, ntmax), irel, it, iwrirrwf, &
+    iwrregwf, j, lin, lopt(ntmax), mmax, nat(ntmax), netab, nkm, nkmq(nqmax), &
+    nl, nlinq(nqmax), nlq(nqmax), nt, nucleus
+  integer :: nfilcbwf, iol
+  integer :: nsollm(nlmax, nmuemax), ltab(nmuemax), lbtab(nmuemax), &
+    kaptab(nmuemax), nmuetab(nmuemax)
+  character (len=10) :: solver
+  character (len=4) :: txtt(ntmax)
+  double complex :: w1(lmmaxd, lmmaxd)
+  integer :: icall, iec
 !qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
-COMPLEX*16 GMAT0(LMMAXD,LMMAXD)                    !qdos ruess
-INTEGER NQDOS,IREC,IPOINT                          !qdos ruess 
+  complex *16 :: gmat0(lmmaxd, lmmaxd) !qdos ruess
+  integer :: nqdos, irec, ipoint !qdos ruess 
 !qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
-INTRINSIC ATAN,SQRT
+  intrinsic :: atan, sqrt
 
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 ! ITERMDIR
 
-LOGICAL ITERMVDIR,SPLITSS
-INTEGER NMVECMAXD,NMVECMAX
-PARAMETER (NMVECMAXD=4)
-REAL*8 AMEMVEC(NKMMAX,NKMMAX,3,NMVECMAXD),FACT(0:100)
-INTEGER IMKMTAB(NKMMAX),IKMLLIM1(NKMMAX),IKMLLIM2(NKMMAX)
-CHARACTER*1 TXTL(0:NLMAX)
-INTEGER IGRID(2),IEPATH,NEPATH
+  logical :: itermvdir, splitss
+  integer :: nmvecmaxd, nmvecmax
+  parameter (nmvecmaxd=4)
+  real *8 :: amemvec(nkmmax, nkmmax, 3, nmvecmaxd), fact(0:100)
+  integer :: imkmtab(nkmmax), ikmllim1(nkmmax), ikmllim2(nkmmax)
+  character (len=1) :: txtl(0:nlmax)
+  integer :: igrid(2), iepath, nepath
 
-REAL*8 QMTET,QMPHI        ! ARG. LIST
-REAL*8 QMPHILOC(NQMAX),QMTETLOC(NQMAX) ! DUMMY
+  real *8 :: qmtet, qmphi ! ARG. LIST
+  real *8 :: qmphiloc(nqmax), qmtetloc(nqmax) ! DUMMY
 
-COMPLEX*16 BMVEVDL0(NLMAX,NTMAX,3,NMVECMAX), &
-     BMVEVIL1(NLMAX,NTMAX,3,NMVECMAX), &
-     MVEVDL0(NLMAX,NTMAX,3,NMVECMAX), &
-     MVEVIL1(NLMAX,NTMAX,3,NMVECMAX)
-COMPLEX*16 MVEVIL(0:LMAXD,3,NMVECMAX) ! OUTPUT
-COMPLEX*16 MVEVILEF(0:LMAXD,3,NMVECMAX) ! OUTPUT
+  complex *16 :: bmvevdl0(nlmax, ntmax, 3, nmvecmax), &
+    bmvevil1(nlmax, ntmax, 3, nmvecmax), mvevdl0(nlmax, ntmax, 3, nmvecmax), &
+    mvevil1(nlmax, ntmax, 3, nmvecmax)
+  complex *16 :: mvevil(0:lmaxd, 3, nmvecmax) ! OUTPUT
+  complex *16 :: mvevilef(0:lmaxd, 3, nmvecmax) ! OUTPUT
 !.. dummy arrays
-COMPLEX*16 MEZJ(NKMMAX,NKMMAX,NTMAX,NMVECMAX), &
-           MEZZ(NKMMAX,NKMMAX,NTMAX,NMVECMAX)
+  complex *16 :: mezj(nkmmax, nkmmax, ntmax, nmvecmax), &
+    mezz(nkmmax, nkmmax, ntmax, nmvecmax)
 
 ! ITERMDIR
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 !..
 !.. External Subroutines ..
-EXTERNAL AMEMAGVEC,CALCCGC,CALCGF,CALCMVEC,CINIT,IKMLIN,RINIT, &
-         SCFCHRDNS,SSITE,ZCOPY,ZGEMM
+  external :: amemagvec, calccgc, calcgf, calcmvec, cinit, ikmlin, rinit, &
+    scfchrdns, ssite, zcopy, zgemm
 
-DATA ICALL / 0 /
+  data icall/0/
 
-SAVE ICALL,IKM1LIN,IKM2LIN,GDIA,GMDIA,GOFF,LOPT,NLQ,NKMQ, &
-     IQAT,IREL,BCOR,BCORS,QEL,NAT,CONC,TXTT,IMT,SHFTEF, &
-     NVALTOT,NKM,IHYPER,IPRINT,IT,IQ,NL,NT,NUCLEUS,CGC, &
-     IWRREGWF,IWRIRRWF,CALCINT,GETIRRSOL,NFILCBWF,PI,SQPI, &
-     AMEMVEC,IMKMTAB,IKMLLIM1,IKMLLIM2,FACT,SPLITSS, &
-     TXTL,IGRID,IEPATH,NEPATH
+  save :: icall, ikm1lin, ikm2lin, gdia, gmdia, goff, lopt, nlq, nkmq, iqat, &
+    irel, bcor, bcors, qel, nat, conc, txtt, imt, shftef, nvaltot, nkm, &
+    ihyper, iprint, it, iq, nl, nt, nucleus, cgc, iwrregwf, iwrirrwf, calcint, &
+    getirrsol, nfilcbwf, pi, sqpi, amemvec, imkmtab, ikmllim1, ikmllim2, fact, &
+    splitss, txtl, igrid, iepath, nepath
 
-icall = icall + 1
+  icall = icall + 1
 
 !=======================================================================
 !       initialise relativistic and dummy variables and SAVE them
 !=======================================================================
-IF ( icall == 1 ) THEN
-  
-  IF ( lmaxd > nlmax-1) THEN
-    WRITE(6,*) ' LMAXD = ',lmaxd, ' > NLMAX-1 = ',nlmax - 1
-    STOP  ' Increase NLMAX in < DRVRHO > '
-  END IF
-  
-  IF ( irmd > nrmax ) THEN
-    WRITE(6,*) ' IRMD = ',irmd, ' > NRMAX = ',nrmax
-    WRITE(6,*) ' Increase NRMAX in < sprkkr_rmesh.dim > '
-    STOP ' In < DRVRHO > '
-  END IF
-  
-  IF ( nmvecmax > nmvecmaxd ) THEN
-    WRITE (6,*) ' NMVECMAX = ',nmvecmax,' > NMVECMAXD ', nmvecmaxd
-    WRITE (6,*) ' Increase NVECMAXD in < DRVRHO > ',  &
+  if (icall==1) then
+
+    if (lmaxd>nlmax-1) then
+      write (6, *) ' LMAXD = ', lmaxd, ' > NLMAX-1 = ', nlmax - 1
+      stop ' Increase NLMAX in < DRVRHO > '
+    end if
+
+    if (irmd>nrmax) then
+      write (6, *) ' IRMD = ', irmd, ' > NRMAX = ', nrmax
+      write (6, *) ' Increase NRMAX in < sprkkr_rmesh.dim > '
+      stop ' In < DRVRHO > '
+    end if
+
+    if (nmvecmax>nmvecmaxd) then
+      write (6, *) ' NMVECMAX = ', nmvecmax, ' > NMVECMAXD ', nmvecmaxd
+      write (6, *) ' Increase NVECMAXD in < DRVRHO > ', &
         'or reduce NMVECMAX in < main1c > '
-    STOP ' In < DRVRHO > '
-  END IF
-  
-  iprint = 0
-  nl = lmaxd + 1
-  
-  DO i = 1,nmuemax
-    ltab(i) = i/2
-    IF( 2*ltab(i) == i ) THEN
-      lbtab(i)  = ltab(i) - 1
-      kaptab(i) = ltab(i)
-    ELSE
-      lbtab(i)  =  ltab(i) + 1
-      kaptab(i) = -ltab(i) - 1
-    END IF
-    nmuetab(i) = 2*ABS(kaptab(i))
-  END DO
-  
-  DO il = 1,nlmax
-    mmax = 2*il
-    DO imue = 1,mmax
-      IF ( (imue == 1) .OR. (imue == mmax) ) THEN
-        nsollm(il,imue) = 1
-      ELSE
-        nsollm(il,imue) = 2
-      END IF
-    END DO
-  END DO
-  
-  CALL ikmlin(iprint,nsollm,ikm1lin,ikm2lin,nlmax,nmuemax, linmax,nlmax)
-  
-  CALL calccgc(ltab,kaptab,nmuetab,cgc,nkmax,nmuemax,nkmpmax)
-  
-  CALL calcgf(nkmax,cgc,gdia,gmdia,goff,gmoff,fdia,fmdia,  &
-      foff,fmoff,ltab,lbtab,kaptab,nmuetab, nmuemax,nkmmax,nkmpmax)
-  
-  DO it = 1,ntmax
-    bcor(it) = 0D0
-    bcors(it) = 0D0
-    qel(it) = 0D0
-    nat(it) = 1
-    conc(it) = 1D0
-    txtt(it) = '    '
-    imt(it) = 1
-    lopt(it) = -1       ! this should change for Brooks' OP
-  END DO
-  
-  DO iq = 1,nqmax
-    nlq(iq) = nl
-    nkmq(iq) = lmmaxd
-    nlinq(iq) = 2*nlq(iq)*(2*nlq(iq)-1)
-    iqat(iq,1) = 1
-  END DO
-  
-  irel = 3
-  shftef = 0D0
-  efermi = 0D0
-  nvaltot = 0
-  pi = 4D0*ATAN(1D0)
-  sqpi = SQRT(pi)
-  
-  nkm = lmmaxd
-  ihyper = 0
-  it = 1
-  nt = 1
-  iq = 1
-  nucleus = 0
-  
-  iwrregwf = 1
-  iwrirrwf = 1
-  calcint = .true.
-  getirrsol = .true.
-  nfilcbwf = 87
+      stop ' In < DRVRHO > '
+    end if
+
+    iprint = 0
+    nl = lmaxd + 1
+
+    do i = 1, nmuemax
+      ltab(i) = i/2
+      if (2*ltab(i)==i) then
+        lbtab(i) = ltab(i) - 1
+        kaptab(i) = ltab(i)
+      else
+        lbtab(i) = ltab(i) + 1
+        kaptab(i) = -ltab(i) - 1
+      end if
+      nmuetab(i) = 2*abs(kaptab(i))
+    end do
+
+    do il = 1, nlmax
+      mmax = 2*il
+      do imue = 1, mmax
+        if ((imue==1) .or. (imue==mmax)) then
+          nsollm(il, imue) = 1
+        else
+          nsollm(il, imue) = 2
+        end if
+      end do
+    end do
+
+    call ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, &
+      nlmax)
+
+    call calccgc(ltab, kaptab, nmuetab, cgc, nkmax, nmuemax, nkmpmax)
+
+    call calcgf(nkmax, cgc, gdia, gmdia, goff, gmoff, fdia, fmdia, foff, &
+      fmoff, ltab, lbtab, kaptab, nmuetab, nmuemax, nkmmax, nkmpmax)
+
+    do it = 1, ntmax
+      bcor(it) = 0d0
+      bcors(it) = 0d0
+      qel(it) = 0d0
+      nat(it) = 1
+      conc(it) = 1d0
+      txtt(it) = '    '
+      imt(it) = 1
+      lopt(it) = -1 ! this should change for Brooks' OP
+    end do
+
+    do iq = 1, nqmax
+      nlq(iq) = nl
+      nkmq(iq) = lmmaxd
+      nlinq(iq) = 2*nlq(iq)*(2*nlq(iq)-1)
+      iqat(iq, 1) = 1
+    end do
+
+    irel = 3
+    shftef = 0d0
+    efermi = 0d0
+    nvaltot = 0
+    pi = 4d0*atan(1d0)
+    sqpi = sqrt(pi)
+
+    nkm = lmmaxd
+    ihyper = 0
+    it = 1
+    nt = 1
+    iq = 1
+    nucleus = 0
+
+    iwrregwf = 1
+    iwrirrwf = 1
+    calcint = .true.
+    getirrsol = .true.
+    nfilcbwf = 87
 !     Length in Bytes
-  iol = 8*4 + 3 + (16*4*nrmax)
-  OPEN (nfilcbwf,STATUS='SCRATCH',FORM='UNFORMATTED',  &
-      ACCESS='DIRECT',RECL=iol)
-  
+    iol = 8*4 + 3 + (16*4*nrmax)
+    open (nfilcbwf, status='SCRATCH', form='UNFORMATTED', access='DIRECT', &
+      recl=iol)
+
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 !      ITERMDIR
-  
-  IF ( itermvdir ) THEN
-    splitss = .false.
-    fact(0) = 1.0D0
-    DO i=1,100
-      fact(i) = fact(i-1)*DBLE(i)
-    END DO
-    
-    CALL amemagvec(irel,iprint+1,nkm,amemvec,ikmllim1,ikmllim2,  &
-        imkmtab,cgc,nlmax,nkmmax,nkmpmax,nmvecmax)
-    
-    DO i = 0,nlmax
-      txtl(i) = ' '
-    END DO
-    igrid(1) = 5
-    iepath = 1
-    nepath = 1
-  END IF
-  
+
+    if (itermvdir) then
+      splitss = .false.
+      fact(0) = 1.0d0
+      do i = 1, 100
+        fact(i) = fact(i-1)*dble(i)
+      end do
+
+      call amemagvec(irel, iprint+1, nkm, amemvec, ikmllim1, ikmllim2, &
+        imkmtab, cgc, nlmax, nkmmax, nkmpmax, nmvecmax)
+
+      do i = 0, nlmax
+        txtl(i) = ' '
+      end do
+      igrid(1) = 5
+      iepath = 1
+      nepath = 1
+    end if
+
 !      ITERMDIR
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-END IF                    ! ICALL.EQ.1
+  end if ! ICALL.EQ.1
 !=======================================================================
 
-CALL ssite(iwrregwf,iwrirrwf,nfilcbwf,calcint,getirrsol,soctl,ctl,  &
-    eryd,p,ihyper,iprint,ikm1lin,ikm2lin,nlq,nkmq,nlinq,nt,  &
-    nkm,iqat,tsst,msst,tsstlin,dzz,dzj,szz,szj,ozz,ozj,bzz,  &
-    bzj,qzz,qzj,tzz,tzj,vt,bt,at,zat,nucleus,r,drdi,r2drdi,  &
-    jws,imt,ameopo,lopt,solver,cgc,ozzs,ozjs,nlmax,nqmax,  &
-    linmax,nrmax,nmmax,ntmax,nkmmax,nkmpmax,nlamax)
+  call ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
+    eryd, p, ihyper, iprint, ikm1lin, ikm2lin, nlq, nkmq, nlinq, nt, nkm, &
+    iqat, tsst, msst, tsstlin, dzz, dzj, szz, szj, ozz, ozj, bzz, bzj, qzz, &
+    qzj, tzz, tzj, vt, bt, at, zat, nucleus, r, drdi, r2drdi, jws, imt, &
+    ameopo, lopt, solver, cgc, ozzs, ozjs, nlmax, nqmax, linmax, nrmax, nmmax, &
+    ntmax, nkmmax, nkmpmax, nlamax)
 
 !-----------------------------------------------------------------------
 !     get charge density
 !-----------------------------------------------------------------------
 
-netab = iecurr + 1
-iec = iecurr
+  netab = iecurr + 1
+  iec = iecurr
 
 ! Loop over all qdos points specified in qvec.dat
-DO  ipoint = 1,nqdos                                        ! qdos ruess
+  do ipoint = 1, nqdos ! qdos ruess
 !                                                                    ! qdos ruess
 ! Read in Green function; remember that for the rel. case, nspin = 1 ! qdos ruess
 ! (without qdos, IPOINT=NQDOS=1)                                     ! qdos ruess
-  irec = ipoint + nqdos * (iecurr-1) +  nqdos * ielast * (i1-1)  ! qdos ruess
-  IF (t_tgmat%gmat_to_file) THEN
-    READ(69,REC=irec) gmat0                                        ! qdos ruess
-  ELSE
-    gmat0(:,:) = t_tgmat%gmat(:,:,irec)
-  END IF
-  gmatll(:,:,iecurr) = gmat0(:,:)                                ! qdos ruess
+    irec = ipoint + nqdos*(iecurr-1) + nqdos*ielast*(i1-1) ! qdos ruess
+    if (t_tgmat%gmat_to_file) then
+      read (69, rec=irec) gmat0 ! qdos ruess
+    else
+      gmat0(:, :) = t_tgmat%gmat(:, :, irec)
+    end if
+    gmatll(:, :, iecurr) = gmat0(:, :) ! qdos ruess
 !                                                                    ! qdos ruess
-  
+
 !-------- GET TAU MATRIX ------------------------
 !         TAUT = t G t + t
-  
-! ---> taut = t
-  
-  DO j = 1,nkm
-    CALL zcopy(nkm,tsst(1,j,it),1,taut(1,j,it),1)
-  END DO
-  
-! ---> w1 = G * t
-  
-  CALL zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,gmatll(1,1,iecurr),  &
-      lmmaxd,tsst(1,1,it),nkmmax,czero,w1,lmmaxd)
-  
-! ---> taut = t * G * t + t = t * w1 + taut
-  
-  CALL zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,cone,tsst(1,1,it),nkmmax,  &
-      w1,lmmaxd,cone,taut(1,1,it),nkmmax)
-  
-! ---> store taut in linear array tautlin
-  
-  DO lin = 1,nlinq(iq)
-    tautlin(lin,it) = taut(ikm1lin(lin),ikm2lin(lin),it)
-  END DO
-  
-  CALL rinit(nrmax,rhochr(1,it))
-  CALL rinit(nrmax,rhospn(1,it))
-  CALL rinit(nrmax,rhoorb(1,it))
-  CALL cinit(nlmax,omtl0(1,it))
-  DO lin = 1,2
-    CALL cinit(nlmax,omtls0(1,it,lin))
-  END DO
-  
-  CALL scfchrdns(nfilcbwf,r2drdi,jws,imt,shftef,totdos,muespn,  &
-      mueorb,irel,iprint,nt,nl,nkm,eryd,we,efermi,iec,  &
-      netab,dos,smt,omt,hff,dosi,smti,omti,hffi,dosm,  &
-      dosl0,dosint,smtm,smtl0,smtint,omtm,omtl0,omtint,  &
-      hffm,hffl0,hffint,bcor,bcors,dzz,dzj,szz,szj,ozz,  &
-      ozj,bzz,bzj,ozzs,ozjs,omtls0,tautlin,nvaltot,txtt,  &
-      conc,nat,rhochr,rhospn,rhoorb,qel,gdia,gmdia,goff,  &
-      ntmax,nlmax,nmuemax,linmax,nrmax,nmmax,nkmmax, eband,ebandt)
-  
-  DO i = 1,ishift
-    rho2ns(i,1,1) = dzero
-    rho2ns(i,1,2) = dzero
-    rhotborb(i) = dzero
-  END DO
-  
-  DO i = 1,jws(it)
-    ip = i + ishift
-    rho2ns(ip,1,1) = rho2ns(ip,1,1)  &
-        - 0.5D0 * sqpi * rhochr(i,it) * (r(i,1)**2)
-    rho2ns(ip,1,2) = rho2ns(ip,1,2)  &
-        - 0.5D0 * sqpi * rhospn(i,it) * (r(i,1)**2)
-    rhotborb(ip) = rhotborb(ip) - 0.5D0 * sqpi * rhoorb(i,it) * (r(i,1)**2)
-  END DO
-  
-  DO il = 1,nl
-    den(il-1,iecurr+ielast) = -0.5D0 * (dosl0(il,it)+smtl0(il,it)) * pi
-    
-    den(il-1,iecurr) = -0.5D0 * (dosl0(il,it)-smtl0(il,it)) * pi
-    
-    DO i = 1,2
-      dmuorb(il-1,i) = -omtls0(il,it,i) * pi
-    END DO
-    
-    dmuorb(il-1,3) = -omtl0(il,it) * pi
-  END DO
-  den(nl,iecurr+ielast) = czero
-  den(nl,iecurr) = czero
-  
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-!      ITERMDIR
-  
-  IF ( itermvdir ) THEN
-    
-    qmphiloc(iq) = qmphi
-    qmtetloc(iq) = qmtet
-    
-    CALL cinit(nlmax*ntmax*3*nmvecmax,mvevdl0)
-    CALL cinit(nlmax*ntmax*3*nmvecmax,bmvevdl0)
-    CALL cinit(nlmax*ntmax*3*nmvecmax,mvevil1)
-    CALL cinit(nlmax*ntmax*3*nmvecmax,bmvevil1)
-    
-    CALL calcmvec(nfilcbwf,splitss,iepath,nepath,irel,  &
-        iprint,nt,nl,mezz,mezj,taut,tsst,iqat,nkmq,nkm,  &
-        iec,netab,igrid(iepath),we,mvevdl0, mvevil1,bmvevdl0,bmvevil1,  &
-        r2drdi,jws,imt,amemvec, ikmllim1,ikmllim2,imkmtab,ntmax,nlmax,nmuemax,  &
-        nqmax,nkmmax,nmmax,nmvecmax,nrmax)
-    
-    DO i=1,nmvecmax
-      DO j=1,3
-        DO il=1,nl
-          mvevil(il-1,j,i) = mvevil(il-1,j,i) - mvevdl0(il,it,j,i) * pi * we
-        END DO
-      END DO
-    END DO
-  END IF
-  
-!      ITERMDIR
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-  
-  enddo ! IPOINT = 1,NQDOS
 
-IF ( (iecurr /= ielast) .OR. (.NOT.ldorhoef) ) RETURN
+! ---> taut = t
+
+    do j = 1, nkm
+      call zcopy(nkm, tsst(1,j,it), 1, taut(1,j,it), 1)
+    end do
+
+! ---> w1 = G * t
+
+    call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, gmatll(1,1,iecurr), &
+      lmmaxd, tsst(1,1,it), nkmmax, czero, w1, lmmaxd)
+
+! ---> taut = t * G * t + t = t * w1 + taut
+
+    call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, tsst(1,1,it), nkmmax, &
+      w1, lmmaxd, cone, taut(1,1,it), nkmmax)
+
+! ---> store taut in linear array tautlin
+
+    do lin = 1, nlinq(iq)
+      tautlin(lin, it) = taut(ikm1lin(lin), ikm2lin(lin), it)
+    end do
+
+    call rinit(nrmax, rhochr(1,it))
+    call rinit(nrmax, rhospn(1,it))
+    call rinit(nrmax, rhoorb(1,it))
+    call cinit(nlmax, omtl0(1,it))
+    do lin = 1, 2
+      call cinit(nlmax, omtls0(1,it,lin))
+    end do
+
+    call scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, mueorb, &
+      irel, iprint, nt, nl, nkm, eryd, we, efermi, iec, netab, dos, smt, omt, &
+      hff, dosi, smti, omti, hffi, dosm, dosl0, dosint, smtm, smtl0, smtint, &
+      omtm, omtl0, omtint, hffm, hffl0, hffint, bcor, bcors, dzz, dzj, szz, &
+      szj, ozz, ozj, bzz, bzj, ozzs, ozjs, omtls0, tautlin, nvaltot, txtt, &
+      conc, nat, rhochr, rhospn, rhoorb, qel, gdia, gmdia, goff, ntmax, nlmax, &
+      nmuemax, linmax, nrmax, nmmax, nkmmax, eband, ebandt)
+
+    do i = 1, ishift
+      rho2ns(i, 1, 1) = dzero
+      rho2ns(i, 1, 2) = dzero
+      rhotborb(i) = dzero
+    end do
+
+    do i = 1, jws(it)
+      ip = i + ishift
+      rho2ns(ip, 1, 1) = rho2ns(ip, 1, 1) - 0.5d0*sqpi*rhochr(i, it)*(r(i,1)** &
+        2)
+      rho2ns(ip, 1, 2) = rho2ns(ip, 1, 2) - 0.5d0*sqpi*rhospn(i, it)*(r(i,1)** &
+        2)
+      rhotborb(ip) = rhotborb(ip) - 0.5d0*sqpi*rhoorb(i, it)*(r(i,1)**2)
+    end do
+
+    do il = 1, nl
+      den(il-1, iecurr+ielast) = -0.5d0*(dosl0(il,it)+smtl0(il,it))*pi
+
+      den(il-1, iecurr) = -0.5d0*(dosl0(il,it)-smtl0(il,it))*pi
+
+      do i = 1, 2
+        dmuorb(il-1, i) = -omtls0(il, it, i)*pi
+      end do
+
+      dmuorb(il-1, 3) = -omtl0(il, it)*pi
+    end do
+    den(nl, iecurr+ielast) = czero
+    den(nl, iecurr) = czero
+
+!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+!      ITERMDIR
+
+    if (itermvdir) then
+
+      qmphiloc(iq) = qmphi
+      qmtetloc(iq) = qmtet
+
+      call cinit(nlmax*ntmax*3*nmvecmax, mvevdl0)
+      call cinit(nlmax*ntmax*3*nmvecmax, bmvevdl0)
+      call cinit(nlmax*ntmax*3*nmvecmax, mvevil1)
+      call cinit(nlmax*ntmax*3*nmvecmax, bmvevil1)
+
+      call calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
+        mezz, mezj, taut, tsst, iqat, nkmq, nkm, iec, netab, igrid(iepath), &
+        we, mvevdl0, mvevil1, bmvevdl0, bmvevil1, r2drdi, jws, imt, amemvec, &
+        ikmllim1, ikmllim2, imkmtab, ntmax, nlmax, nmuemax, nqmax, nkmmax, &
+        nmmax, nmvecmax, nrmax)
+
+      do i = 1, nmvecmax
+        do j = 1, 3
+          do il = 1, nl
+            mvevil(il-1, j, i) = mvevil(il-1, j, i) - &
+              mvevdl0(il, it, j, i)*pi*we
+          end do
+        end do
+      end do
+    end if
+
+!      ITERMDIR
+!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+  end do ! IPOINT = 1,NQDOS
+
+  if ((iecurr/=ielast) .or. (.not. ldorhoef)) return
 
 ! ======================================================================
 !     get the charge at the Fermi energy (IELAST)
 !     call SCFCHRDNS with the energy weight CONE --> not overwrite WE
 
-CALL rinit(nrmax,rhochr(1,it))
-CALL rinit(nrmax,rhospn(1,it))
+  call rinit(nrmax, rhochr(1,it))
+  call rinit(nrmax, rhospn(1,it))
 
-CALL scfchrdns(nfilcbwf,r2drdi,jws,imt,shftef,totdos,muespn,  &
-    mueorb,irel,iprint,nt,nl,nkm,eryd,cone,efermi,iec,  &
-    netab,dos,smt,omt,hff,dosi,smti,omti,hffi,dosm,  &
-    dosl0,dosint,smtm,smtl0,smtint,omtm,omtl0,omtint,  &
-    hffm,hffl0,hffint,bcor,bcors,dzz,dzj,szz,szj,ozz,  &
-    ozj,bzz,bzj,ozzs,ozjs,omtls0,tautlin,nvaltot,txtt,  &
-    conc,nat,rhochr,rhospn,rhoorb,qel,gdia,gmdia,goff,  &
-    ntmax,nlmax,nmuemax,linmax,nrmax,nmmax,nkmmax, eband,ebandt)
+  call scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, mueorb, &
+    irel, iprint, nt, nl, nkm, eryd, cone, efermi, iec, netab, dos, smt, omt, &
+    hff, dosi, smti, omti, hffi, dosm, dosl0, dosint, smtm, smtl0, smtint, &
+    omtm, omtl0, omtint, hffm, hffl0, hffint, bcor, bcors, dzz, dzj, szz, szj, &
+    ozz, ozj, bzz, bzj, ozzs, ozjs, omtls0, tautlin, nvaltot, txtt, conc, nat, &
+    rhochr, rhospn, rhoorb, qel, gdia, gmdia, goff, ntmax, nlmax, nmuemax, &
+    linmax, nrmax, nmmax, nkmmax, eband, ebandt)
 
-DO i = 1,ishift
-  r2nef(i,1,1) = dzero
-  r2nef(i,1,2) = dzero
-END DO
+  do i = 1, ishift
+    r2nef(i, 1, 1) = dzero
+    r2nef(i, 1, 2) = dzero
+  end do
 
-DO i = 1,jws(it)
-  ip = i + ishift
-  r2nef(ip,1,1) = - 0.5D0 * sqpi * rhochr(i,it) * (r(i,1)**2)
-  r2nef(ip,1,2) = - 0.5D0 * sqpi * rhospn(i,it) * (r(i,1)**2)
-END DO
+  do i = 1, jws(it)
+    ip = i + ishift
+    r2nef(ip, 1, 1) = -0.5d0*sqpi*rhochr(i, it)*(r(i,1)**2)
+    r2nef(ip, 1, 2) = -0.5d0*sqpi*rhospn(i, it)*(r(i,1)**2)
+  end do
 
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 !      ITERMDIR
 
-IF( itermvdir ) THEN
-  DO i=1,nmvecmax
-    DO j=1,3
-      DO il=1,nl
-        mvevilef(il-1,j,i) = -mvevdl0(il,it,j,i) * pi
-      END DO
-    END DO
-  END DO
-END IF
+  if (itermvdir) then
+    do i = 1, nmvecmax
+      do j = 1, 3
+        do il = 1, nl
+          mvevilef(il-1, j, i) = -mvevdl0(il, it, j, i)*pi
+        end do
+      end do
+    end do
+  end if
 
 !      ITERMDIR
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -441,4 +430,4 @@ END IF
 
 ! ======================================================================
 
-END SUBROUTINE drvrho_qdos
+end subroutine

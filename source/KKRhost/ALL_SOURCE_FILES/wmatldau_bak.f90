@@ -1,5 +1,5 @@
-SUBROUTINE wmatldau(ntldau,itldau,nspin,denmatc,lopt,  &
-    ueff,jeff,uldau,wldau,eu,edc,mmaxd,npotd)
+subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
+  wldau, eu, edc, mmaxd, npotd)
 ! **********************************************************************
 ! *                                                                    *
 ! * Calculation of Coulomb interaction potential in LDA+U              *
@@ -19,253 +19,255 @@ SUBROUTINE wmatldau(ntldau,itldau,nspin,denmatc,lopt,  &
 ! *                                                                    *
 ! *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
 ! **********************************************************************
-IMPLICIT NONE
-INCLUDE 'inc.p'
-
-! PARAMETER definitions
-
-DOUBLE COMPLEX CZERO
-PARAMETER (CZERO=(0.0D0,0.0D0))
-
+  implicit none
+  include 'inc.p'
 ! Dummy arguments
 
-INTEGER NTLDAU,NSPIN,MMAXD,NPOTD
-INTEGER ITLDAU(NATYPD),LOPT(NATYPD)
-DOUBLE PRECISION &
-                 UEFF(NATYPD),JEFF(NATYPD),EDC(NATYPD),EU(NATYPD), &
-                 WLDAU(MMAXD,MMAXD,NSPIND,NATYPD)
-DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
-DOUBLE COMPLEX DENMATC(MMAXD,MMAXD,NPOTD)
 
+  double complex :: czero
+  parameter (czero=(0.0d0,0.0d0))
 ! Local variables
-DOUBLE COMPLEX CSUM,CSUM2,VLDAU(MMAXD,MMAXD,NSPIND)
-DOUBLE PRECISION DENMAT(MMAXD,MMAXD,NSPIND),DENTOT, &
-                 DENTOTS(NSPIND)
-INTEGER I1,IT,IPOT,IS,JS,M1,M2,M3,M4,MM,MMAX
-INTEGER IPRINT
-CHARACTER*15 STR15
 !..
-DATA IPRINT /1/
 !    ..
+  integer :: ntldau, nspin, mmaxd, npotd
+  integer :: itldau(natypd), lopt(natypd)
+  double precision :: ueff(natypd), jeff(natypd), edc(natypd), eu(natypd), &
+    wldau(mmaxd, mmaxd, nspind, natypd)
+  double precision, allocatable :: uldau(:, :, :, :, :)
+  double complex :: denmatc(mmaxd, mmaxd, npotd)
 
-WRITE (1337,'(/,79(1H#),/,16X,A,/,79(1H#))')  &
+
+  double complex :: csum, csum2, vldau(mmaxd, mmaxd, nspind)
+  double precision :: denmat(mmaxd, mmaxd, nspind), dentot, dentots(nspind)
+  integer :: i1, it, ipot, is, js, m1, m2, m3, m4, mm, mmax
+  integer :: iprint
+  character (len=15) :: str15
+
+  data iprint/1/
+! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+  write (1337, '(/,79(1H#),/,16X,A,/,79(1H#))') &
     'LDA+U: Calculating interaction potential VLDAU'
 
-allocate( uldau(mmaxd,mmaxd,mmaxd,mmaxd,natypd) )
-
-! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-DO it = 1,ntldau
-  i1 = itldau(it)
-! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-  IF ( lopt(i1) >= 0 ) THEN
-    CALL rinit(mmaxd*mmaxd*nspind,denmat(1,1,1))
-    mmax = 2*lopt(i1) + 1
-    WRITE (1337,99001) i1,lopt(i1)
-    
+  allocate (uldau(mmaxd,mmaxd,mmaxd,mmaxd,natypd))
 ! Result is in real Ylm basis.
 ! It must be converted to complex Ylm basis:
-    
-    IF ( iprint > 1 ) WRITE (1337,99002) 'Occupation matrix in REAL basis:'
+  do it = 1, ntldau
+    i1 = itldau(it)
+
+    if (lopt(i1)>=0) then
+      call rinit(mmaxd*mmaxd*nspind, denmat(1,1,1))
+      mmax = 2*lopt(i1) + 1
+      write (1337, 100) i1, lopt(i1)
 ! ----------------------------------------------------------------------
-    DO is = 1,nspin
-      ipot = (i1-1)*nspin + is
-      IF ( iprint > 1 ) THEN
-        WRITE (str15,'(4X,"> ",A,I1)') 'ISPIN = ',is
-        CALL cmatstr(str15,15,denmatc(1,1,ipot), mmaxd,mmax,0,0,0,1D-8,6)
-      END IF
-      
+
 ! -> Convert DENMATC and DENMAT to complex spherical harmonics.
-      
-      CALL rclm(1,lopt(i1),lmaxd,denmatc(1,1,ipot))
-    END DO
+
+      if (iprint>1) write (1337, 110) 'Occupation matrix in REAL basis:'
 ! ----------------------------------------------------------------------
-    IF ( iprint > 1 )  &
-        WRITE (1337,99002) 'Occupation matrix in COMPLEX basis:'
-    dentot = 0.d0
+      do is = 1, nspin
+        ipot = (i1-1)*nspin + is
+        if (iprint>1) then
+          write (str15, '(4X,"> ",A,I1)') 'ISPIN = ', is
+          call cmatstr(str15, 15, denmatc(1,1,ipot), mmaxd, mmax, 0, 0, 0, &
+            1d-8, 6)
+        end if
 ! ----------------------------------------------------------------------
-    DO is = 1,nspin
-      ipot = (i1-1)*nspin + is
-      IF ( iprint > 1 ) THEN
-        WRITE (str15,'(4X,"> ",A,I1)') 'ISPIN = ',is
-        CALL cmatstr(str15,15,denmatc(1,1,ipot), mmaxd,mmax,0,0,0,1D-8,6)
-      END IF
-      
+
 ! -> DENMAT is real: (imag(denmatc))
-      
-      DO m2 = 1,mmax
-        DO m1 = 1,mmax
-          denmat(m1,m2,is) = DIMAG(denmatc(m1,m2,ipot))
-        END DO
-      END DO
-      
+        call rclm(1, lopt(i1), lmaxd, denmatc(1,1,ipot))
+      end do
+
+      if (iprint>1) write (1337, 110) 'Occupation matrix in COMPLEX basis:'
+      dentot = 0.d0
+
+      do is = 1, nspin
+        ipot = (i1-1)*nspin + is
+        if (iprint>1) then
+          write (str15, '(4X,"> ",A,I1)') 'ISPIN = ', is
+          call cmatstr(str15, 15, denmatc(1,1,ipot), mmaxd, mmax, 0, 0, 0, &
+            1d-8, 6)
+        end if
 ! 2.  Calculate total occupation numbers:
 ! ntot_s = Sum_m n_{m,s,m,s}, ntot = n_1 + n_2
-      
-      dentots(is) = 0.d0
-      DO mm = 1,mmax
-        dentots(is) = dentots(is) + denmat(mm,mm,is)
-      END DO
-      dentot = dentot + dentots(is)
-    END DO
+
+        do m2 = 1, mmax
+          do m1 = 1, mmax
+            denmat(m1, m2, is) = dimag(denmatc(m1,m2,ipot))
+          end do
+        end do
 ! ----------------------------------------------------------------------
-    IF ( iprint > 0 ) THEN
-      WRITE (1337,99002) 'Occupation matrix (real):'
-      DO is = 1,nspin
-        WRITE(1337,99003) is
-        CALL rwrite(denmat(1,1,is),mmaxd,mmax,1337)
-        WRITE(1337,99004) 'Trace     =',dentots(is)
-      END DO
-      WRITE(1337,99005) 'Spins sum =',dentot
-    END IF
-    
+
 ! In paramagnetic case the spin degeneracy has been accounted
 ! for by the weight DF in tmatrho.
-    
+        dentots(is) = 0.d0
+        do mm = 1, mmax
+          dentots(is) = dentots(is) + denmat(mm, mm, is)
+        end do
+        dentot = dentot + dentots(is)
+      end do
+
+      if (iprint>0) then
+        write (1337, 110) 'Occupation matrix (real):'
+        do is = 1, nspin
+          write (1337, 120) is
+          call rwrite(denmat(1,1,is), mmaxd, mmax, 1337)
+          write (1337, 130) 'Trace     =', dentots(is)
+        end do
+        write (1337, 140) 'Spins sum =', dentot
+      end if
 ! ----------------------------------------------------------------------
-    CALL cinit(mmaxd*mmaxd*nspind,vldau(1,1,1))
-    DO is = 1,nspin
-      
+
 ! 3.  Use density matrix and Coulomb matrix ULDAU to calculate the
 ! interaction potential VLDAU
 ! 3a. First part (always diagonal in spin).
-      
-      DO m2 = 1,mmax
-        DO m1 = 1,mmax
-          csum = czero
-          DO m4 = 1,mmax
-            DO m3 = 1,mmax
-              csum2 = czero
-              DO js = 1,nspin
-                csum2 = csum2 + denmat(m3,m4,js)
-              END DO
-              csum = csum + uldau(m1,m2,m3,m4,i1)*csum2
-            END DO
-          END DO
-          vldau(m1,m2,is) = vldau(m1,m2,is) + csum
-        END DO
-      END DO
-      
+      call cinit(mmaxd*mmaxd*nspind, vldau(1,1,1))
+      do is = 1, nspin
+
+
 ! 3b. Second part (in fully rel. case not diagonal in spin; then this
 ! loop must be changed accordingly).
-      
-      DO m2 = 1,mmax
-        DO m1 = 1,mmax
-          csum = czero
-          DO m4 = 1,mmax
-            DO m3 = 1,mmax
-              csum = csum - uldau(m1,m4,m3,m2,i1)*denmat(m3,m4,is)
-            END DO
-          END DO
-          vldau(m1,m2,is) = vldau(m1,m2,is) + csum
-        END DO
-      END DO
-      
+
+        do m2 = 1, mmax
+          do m1 = 1, mmax
+            csum = czero
+            do m4 = 1, mmax
+              do m3 = 1, mmax
+                csum2 = czero
+                do js = 1, nspin
+                  csum2 = csum2 + denmat(m3, m4, js)
+                end do
+                csum = csum + uldau(m1, m2, m3, m4, i1)*csum2
+              end do
+            end do
+            vldau(m1, m2, is) = vldau(m1, m2, is) + csum
+          end do
+        end do
+
 ! 3c. Third part (always spin- and m-diagonal).
-      
-      DO m1 = 1,mmax
-        vldau(m1,m1,is) = vldau(m1,m1,is) - ueff(i1)*(dentot-0.5D0)  &
-            + jeff(i1)*(dentots(is)-0.5D0)
-      END DO
-      
+
+
+        do m2 = 1, mmax
+          do m1 = 1, mmax
+            csum = czero
+            do m4 = 1, mmax
+              do m3 = 1, mmax
+                csum = csum - uldau(m1, m4, m3, m2, i1)*denmat(m3, m4, is)
+              end do
+            end do
+            vldau(m1, m2, is) = vldau(m1, m2, is) + csum
+          end do
+        end do
 ! 4. Calculate total-energy corrections EU and EDC (double-counting).
 ! Then the correction is EU-EDC.
 ! Note: EU,EDC initialised outside the routine
-      
+        do m1 = 1, mmax
+          vldau(m1, m1, is) = vldau(m1, m1, is) - ueff(i1)*(dentot-0.5d0) + &
+            jeff(i1)*(dentots(is)-0.5d0)
+        end do
+
 ! Here VLDAU is assumed spin-diagonal (contrary to the spin-orbit case).
-      
-      DO m2 = 1,mmax
-        DO m1 = 1,mmax
-          eu(i1) = eu(i1) + denmat(m1,m2,is) * dreal(vldau(m1,m2,is))
-        END DO
-      END DO
-      edc(i1) = edc(i1) + jeff(i1)*dentots(is)*(dentots(is)-1.d0)
-    END DO
+
 ! ----------------------------------------------------------------------
-    IF ( iprint > 0 ) WRITE (1337,99002)  &
-        'Interaction potential in COMPLEX basis:'
 ! ----------------------------------------------------------------------
-    DO is = 1,nspin
-      IF ( iprint > 0 ) THEN
-        WRITE (str15,'(4X,"> ",A,I1)') 'ISPIN = ',is
-        CALL cmatstr(str15,15,vldau(1,1,is), mmaxd,mmax,0,0,0,1D-8,6)
-      END IF
-      
+
 ! 5.  Transform VLDAU into real spherical harmonics basis
-      
-      CALL rclm(2,lopt(i1),lmaxd,vldau(1,1,is))
-      
+        do m2 = 1, mmax
+          do m1 = 1, mmax
+            eu(i1) = eu(i1) + denmat(m1, m2, is)*dreal(vldau(m1,m2,is))
+          end do
+        end do
+        edc(i1) = edc(i1) + jeff(i1)*dentots(is)*(dentots(is)-1.d0)
+      end do
+
+      if (iprint>0) write (1337, 110) &
+        'Interaction potential in COMPLEX basis:'
+
+      do is = 1, nspin
+        if (iprint>0) then
+          write (str15, '(4X,"> ",A,I1)') 'ISPIN = ', is
+          call cmatstr(str15, 15, vldau(1,1,is), mmaxd, mmax, 0, 0, 0, 1d-8, &
+            6)
+        end if
 ! Copy transformed VLDAU to real WLDAU
-      
+
 ! Apply damping to the interaction matrix WLDAU ? Here not.
-      
-      
-      DO m2 = 1,mmax
-        DO m1 = 1,mmax
-          wldau(m1,m2,is,i1) = dreal(vldau(m1,m2,is))
-        END DO
-      END DO
-      
-    END DO
+        call rclm(2, lopt(i1), lmaxd, vldau(1,1,is))
+
+
+
 ! ----------------------------------------------------------------------
-    IF ( iprint > 0 ) THEN
-      WRITE (1337,99002) 'Interaction potential in REAL basis:'
-      DO is = 1,nspin
-        WRITE (str15,'(4X,"> ",A,I1)') 'ISPIN = ',is
-        CALL cmatstr(str15,15,vldau(1,1,is), mmaxd,mmax,0,0,0,1D-8,6)
-      END DO
-    END IF
 ! ----------------------------------------------------------------------
-    WRITE (1337,99002) 'Interaction potential (real):'
-    DO is = 1,nspin
-      WRITE(1337,99003) is
-      CALL rwrite(wldau(1,1,is,i1),mmaxd,mmax,1337)
-    END DO
-    WRITE(1337,*)
 ! ----------------------------------------------------------------------
-    
+        do m2 = 1, mmax
+          do m1 = 1, mmax
+            wldau(m1, m2, is, i1) = dreal(vldau(m1,m2,is))
+          end do
+        end do
+
+      end do
 ! Corrections in total energy:
-    
-    eu(i1) = 0.5D0*eu(i1)
-    edc(i1) = 0.5D0*(ueff(i1)*dentot*(dentot-1.d0)-edc(i1))
-    
+      if (iprint>0) then
+        write (1337, 110) 'Interaction potential in REAL basis:'
+        do is = 1, nspin
+          write (str15, '(4X,"> ",A,I1)') 'ISPIN = ', is
+          call cmatstr(str15, 15, vldau(1,1,is), mmaxd, mmax, 0, 0, 0, 1d-8, &
+            6)
+        end do
+      end if
+
+      write (1337, 110) 'Interaction potential (real):'
+      do is = 1, nspin
+        write (1337, 120) is
+        call rwrite(wldau(1,1,is,i1), mmaxd, mmax, 1337)
+      end do
+      write (1337, *)
+
 ! -> Write out corrections on energy:
 !    E[LDA+U] = E[LDA] + EU - EDC
-    
-    WRITE(1337,99002) 'Corrections to the total energy:'
-    WRITE(1337,*)
-    WRITE(1337,99004) 'EU  =',eu(i1)
-    WRITE(1337,99004) 'Edc =',edc(i1)
-    WRITE(1337,99006) 'E[LDA+U] = E[LDA] + EU - Edc'
-  END IF
+
+      eu(i1) = 0.5d0*eu(i1)
+      edc(i1) = 0.5d0*(ueff(i1)*dentot*(dentot-1.d0)-edc(i1))
 ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-END DO                    ! I1 = 1,NTLDAU
+! I1 = 1,NTLDAU
 ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-99001 FORMAT(/,6X,65(1H=),/,6X,'Atom :',i3,' (l =',i2,')',/,6X,18(1H=))
-99002 FORMAT(8X,'* ',a)
-99003 FORMAT(/,15X,'> ISPIN =',i1)
-99004 FORMAT(10X,a,f10.6)
-99005 FORMAT(10X,21(1H-),/,10X,a,f10.6,/,10X,60(1H-),/)
-99006 FORMAT(27X,a,/)
-END SUBROUTINE wmatldau
+! **********************************************************************
+      write (1337, 110) 'Corrections to the total energy:'
+      write (1337, *)
+      write (1337, 130) 'EU  =', eu(i1)
+      write (1337, 130) 'Edc =', edc(i1)
+      write (1337, 150) 'E[LDA+U] = E[LDA] + EU - Edc'
+    end if
+! *                                                                    *
+  end do ! * Calculation of Coulomb interaction potential in LDA+U              *
+! * non-relativistic case -- otherwise matrices DENMAT and VLDAU must  *
+100 format (/, 6x, 65('='), /, 6x, 'Atom :', i3, ' (l =', i2, ')', /, 6x, &
+    18('='))
+110 format (8x, '* ', a)
+120 format (/, 15x, '> ISPIN =', i1)
+130 format (10x, a, f10.6)
+140 format (10x, 21('-'), /, 10x, a, f10.6, /, 10x, 60('-'), /)
+150 format (27x, a, /)
+end subroutine
+
+
+subroutine rwrite(z, mmaxd, mmax, ifile)
+
+  double precision, intent (inout) :: z(mmaxd, mmaxd)
+  integer, intent (inout) :: mmaxd
+  integer, intent (in) :: mmax
+  integer, intent (inout) :: ifile
+  implicit none
 !*==rwrite.f    processed by SPAG 6.05Rc at 16:58 on 22 Dec 2004
 
-SUBROUTINE rwrite(z,mmaxd,mmax,ifile)
+  integer :: m1, m2
 
-DOUBLE PRECISION, INTENT(IN OUT)         :: z(mmaxd,mmaxd)
-INTEGER, INTENT(IN OUT)                  :: mmaxd
-INTEGER, INTENT(IN)                      :: mmax
-INTEGER, INTENT(IN OUT)                  :: ifile
-IMPLICIT NONE
+  write (ifile, 100)
 
-
-INTEGER :: m1,m2
-
-WRITE(ifile,99000)
-
-DO m2 = 1,mmax
-  WRITE (ifile,99001) (z(m1,m2),m1=1,MIN(mmax,7))
-END DO
-WRITE(ifile,99000)
-99000 FORMAT(10X,60(1H-))
-99001 FORMAT(10X,7F10.6)
-END SUBROUTINE rwrite
+  do m2 = 1, mmax
+    write (ifile, 110)(z(m1,m2), m1=1, min(mmax,7))
+  end do
+  write (ifile, 100)
+100 format (10x, 60('-'))
+110 format (10x, 7f10.6)
+end subroutine

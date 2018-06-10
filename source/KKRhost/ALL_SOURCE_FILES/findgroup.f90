@@ -1,7 +1,6 @@
-SUBROUTINE findgroup(bravais,recbv,rbasis,nbasis,  &
-        rsymat,rotname,isymindex,nsymat,  &
-        para,qmtet,qmphi,symunitary,  &
-        krel,naezd,nembd,nsymaxd)
+subroutine findgroup(bravais, recbv, rbasis, nbasis, rsymat, rotname, &
+  isymindex, nsymat, para, qmtet, qmphi, symunitary, krel, naezd, nembd, &
+  nsymaxd)
 ! **********************************************************
 ! This subroutine finds the rotation matrices that leave the
 ! real lattice unchanged.
@@ -27,168 +26,171 @@ SUBROUTINE findgroup(bravais,recbv,rbasis,nbasis,  &
 ! if the PARA(magnetic) flag is set to .FALSE.
 
 ! **********************************************************
-IMPLICIT NONE
-INTEGER KREL
-INTEGER NAEZD,NEMBD,NSYMAXD
+  implicit none
+  integer :: krel
+  integer :: naezd, nembd, nsymaxd
 !..
-INTEGER NBASIS,NSYMAT
-INTEGER ISYMINDEX(NSYMAXD)
-DOUBLE PRECISION BRAVAIS(3,3),RBASIS(3,NAEZD+NEMBD)
-DOUBLE PRECISION RSYMAT(64,3,3),RECBV(3,3)
-DOUBLE PRECISION QMTET(NAEZD), QMPHI(NAEZD)
-LOGICAL SYMUNITARY(NSYMAXD),PARA
+  integer :: nbasis, nsymat
+  integer :: isymindex(nsymaxd)
+  double precision :: bravais(3, 3), rbasis(3, naezd+nembd)
+  double precision :: rsymat(64, 3, 3), recbv(3, 3)
+  double precision :: qmtet(naezd), qmphi(naezd)
+  logical :: symunitary(nsymaxd), para
 !..
 !.. Local variables
-DOUBLE PRECISION R(3,4),ROTRBAS(3,NAEZD+NEMBD)
-DOUBLE PRECISION BRAVAIS1(3,3)
-INTEGER I,J,ISYM,NSYM,I0,IA
-DOUBLE PRECISION MDOTMP,MVECQ(3,NAEZD),MVECQP(3,NAEZD)
-DOUBLE PRECISION MROTR(3,3),SYMDET,SUMMDOTMP
-DOUBLE PRECISION STET,DDOT,DDET33,PI
-CHARACTER*10 ROTNAME(64)
-CHARACTER*10 CHAR(64)
-LOGICAL LLATBAS,LATVEC,LBULK
+  double precision :: r(3, 4), rotrbas(3, naezd+nembd)
+  double precision :: bravais1(3, 3)
+  integer :: i, j, isym, nsym, i0, ia
+  double precision :: mdotmp, mvecq(3, naezd), mvecqp(3, naezd)
+  double precision :: mrotr(3, 3), symdet, summdotmp
+  double precision :: stet, ddot, ddet33, pi
+  character (len=10) :: rotname(64)
+  character (len=10) :: char(64)
+  logical :: llatbas, latvec, lbulk
 !..................................................................
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-WRITE (1337,99000)
+  write (1337, 100)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-nsym = 0
-pi = 4.d0*ATAN(1.d0)
-DO isym = 1,nsymaxd
-  symunitary(isym) = .true.
-END DO
+  nsym = 0
+  pi = 4.d0*atan(1.d0)
+  do isym = 1, nsymaxd
+    symunitary(isym) = .true.
+  end do
 !     - ---------------------------------
-DO i=1,3
-  DO j=1,3
-    bravais1(j,i) = bravais(j,i)
-  END DO
-END DO
+  do i = 1, 3
+    do j = 1, 3
+      bravais1(j, i) = bravais(j, i)
+    end do
+  end do
 !     Check for surface mode. If so, set bravais1(3,3) very large, so
 !     that only the in-plane symmetries are found.
 !     not checked, be careful of z--> -z!
 
-lbulk=.true.
+  lbulk = .true.
 !     Now check the bravais vectors if they have a z component
-IF ((bravais(1,3) == 0.d0).AND.(bravais(2,3) == 0.d0).AND.  &
-      (bravais(3,3) == 0.d0)) THEN
-  lbulk=.false.
-END IF
+  if ((bravais(1,3)==0.d0) .and. (bravais(2,3)==0.d0) .and. (bravais(3, &
+    3)==0.d0)) then
+    lbulk = .false.
+  end if
 
-DO isym=1,64
-  
+  do isym = 1, 64
+
 !--------------------------------- store rotation matrix
-  
-  DO i=1,3
-    DO j=1,3
-      mrotr(i,j) = rsymat(isym,i,j)
-    END DO
-  END DO
-  
-  summdotmp = 0D0
-  
-  symdet = ddet33(mrotr)
-  
+
+    do i = 1, 3
+      do j = 1, 3
+        mrotr(i, j) = rsymat(isym, i, j)
+      end do
+    end do
+
+    summdotmp = 0d0
+
+    symdet = ddet33(mrotr)
+
 !     rotate bravais lattice vectors
-  
+
 !     In the case of slab/interface geometry look only for
 !     symmetry opperations that preserve the z axis..
-  
-  IF (lbulk .OR. (rsymat(isym,3,3) == 1) ) THEN
+
+    if (lbulk .or. (rsymat(isym,3,3)==1)) then
 !     do rotation only in case bulk or if slab and z axis is restored..
-    
-    
-    DO i=1,3            ! Loop on bravais vectors
-      DO j=1,3         ! Loop on coordinates
-        r(j,i) = rsymat(isym,j,1)*bravais1(1,i) +  &
-            rsymat(isym,j,2)*bravais1(2,i) + rsymat(isym,j,3)*bravais1(3,i)
-      END DO
-    END DO
-    
+
+
+      do i = 1, 3 ! Loop on bravais vectors
+        do j = 1, 3 ! Loop on coordinates
+          r(j, i) = rsymat(isym, j, 1)*bravais1(1, i) + &
+            rsymat(isym, j, 2)*bravais1(2, i) + rsymat(isym, j, 3)*bravais1(3, &
+            i)
+        end do
+      end do
+
 !     rotate the basis atoms p and take RSYMAT.p - p then
 !     find if R = (RSYMAT.bravais + RSYMAT.p - p) belongs to the
 !     lattice. This is done by function latvec by checking
 !     if R.q = integer (q reciprocal lattice vector)
-    
-    llatbas = .true.
-    DO ia=1,nbasis      ! Loop on basis atoms
-      DO j=1,3         ! Loop on coordinates
-        rotrbas(j,ia) = rsymat(isym,j,1)*rbasis(1,ia) +  &
-            rsymat(isym,j,2)*rbasis(2,ia) + rsymat(isym,j,3)*rbasis(3,ia)
-        
-        rotrbas(j,ia) = rotrbas(j,ia) - rbasis(j,ia)
-        r(j,4) = rotrbas(j,ia)
-      END DO
-      
-      IF (.NOT.latvec(4,recbv,r)) llatbas=.false.
-      
-      IF( (krel == 1) .AND. (.NOT.para) ) THEN
-        stet = SIN(qmtet(ia)*pi/180D0)
-        mvecq(1,ia) = stet*COS(qmphi(ia)*pi/180D0)
-        mvecq(2,ia) = stet*SIN(qmphi(ia)*pi/180D0)
-        mvecq(3,ia) = COS(qmtet(ia)*pi/180D0)
-        
-        CALL dgemv('N',3,3,1D0,mrotr,3,mvecq(1,ia),1,0D0, mvecqp(1,ia),1)
-        
-        CALL dscal(3,DBLE(symdet),mvecqp(1,ia),1)
-        
-        mdotmp = ddot(3,mvecq(1,ia),1,mvecqp(1,ia),1)
-        summdotmp = summdotmp + mdotmp
-        
-      END IF
-      
-    END DO               ! ia=1,nbasis
-    
-    IF( (krel == 1) .AND. (.NOT.para) ) THEN
-      IF( ABS(ABS(summdotmp)-nbasis) > 0.00001D0 ) THEN
-        llatbas=.false.
-      ELSE
-        IF( summdotmp > 0.00001D0 ) THEN
-          symunitary(nsym + 1) = .true.
-        ELSE
-          symunitary(nsym + 1) = .false.
-        END IF
-      END IF
-    END IF
-    
+
+      llatbas = .true.
+      do ia = 1, nbasis ! Loop on basis atoms
+        do j = 1, 3 ! Loop on coordinates
+          rotrbas(j, ia) = rsymat(isym, j, 1)*rbasis(1, ia) + &
+            rsymat(isym, j, 2)*rbasis(2, ia) + rsymat(isym, j, 3)*rbasis(3, ia &
+            )
+
+          rotrbas(j, ia) = rotrbas(j, ia) - rbasis(j, ia)
+          r(j, 4) = rotrbas(j, ia)
+        end do
+
+        if (.not. latvec(4,recbv,r)) llatbas = .false.
+
+        if ((krel==1) .and. (.not. para)) then
+          stet = sin(qmtet(ia)*pi/180d0)
+          mvecq(1, ia) = stet*cos(qmphi(ia)*pi/180d0)
+          mvecq(2, ia) = stet*sin(qmphi(ia)*pi/180d0)
+          mvecq(3, ia) = cos(qmtet(ia)*pi/180d0)
+
+          call dgemv('N', 3, 3, 1d0, mrotr, 3, mvecq(1,ia), 1, 0d0, &
+            mvecqp(1,ia), 1)
+
+          call dscal(3, dble(symdet), mvecqp(1,ia), 1)
+
+          mdotmp = ddot(3, mvecq(1,ia), 1, mvecqp(1,ia), 1)
+          summdotmp = summdotmp + mdotmp
+
+        end if
+
+      end do ! ia=1,nbasis
+
+      if ((krel==1) .and. (.not. para)) then
+        if (abs(abs(summdotmp)-nbasis)>0.00001d0) then
+          llatbas = .false.
+        else
+          if (summdotmp>0.00001d0) then
+            symunitary(nsym+1) = .true.
+          else
+            symunitary(nsym+1) = .false.
+          end if
+        end if
+      end if
+
 !     if llatbas=.true. the rotation does not change the lattice
-    
-    IF (llatbas) THEN
-      nsym = nsym + 1
-      isymindex(nsym) = isym
-    END IF
-  END IF                 ! (LBULK .OR. (RSYMAT(ISYM,3,3).EQ.1) )
-END DO                    ! isym=1,nmatd
+
+      if (llatbas) then
+        nsym = nsym + 1
+        isymindex(nsym) = isym
+      end if
+    end if ! (LBULK .OR. (RSYMAT(ISYM,3,3).EQ.1) )
+  end do ! isym=1,nmatd
 !     nsym symmetries were found
 !     the ISYMINDEX array has the numbers of the symmetries found
 
 
-nsymat = nsym
+  nsymat = nsym
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-WRITE(1337,'(8X,60(1H-))')
-IF ( lbulk ) THEN
-  WRITE(1337,99001)
-ELSE
-  WRITE(1337,99002)
-END IF
-WRITE(1337,99003) nsymat
-DO i=1,nsymat
-  i0 = isymindex(i)
-  CHAR(i) =  rotname(i0)
-END DO
-nsym = nsymat/5
-DO i=1,nsym + 1
-  i0 = (i-1)*5
-  isym = MIN(5,nsymat-i0)
-  WRITE(1337,99004) (CHAR(j),j=i0+1,i0+isym)
-END DO
-WRITE(1337,99005)
-99000 FORMAT (5X,'< FINDGROUP > : Finding symmetry operations',/)
-99001 FORMAT (8X,'3D symmetries:')
-99002 FORMAT (8X,'surface symmetries:')
-99003 FORMAT(' found for this lattice: ',i2,/,8X,60(1H-))
-99004 FORMAT(8X,5(a10,2X))
-99005 FORMAT(8X,60(1H-),/)
-END SUBROUTINE findgroup
+  write (1337, '(8X,60(1H-))')
+  if (lbulk) then
+    write (1337, 110)
+  else
+    write (1337, 120)
+  end if
+  write (1337, 130) nsymat
+  do i = 1, nsymat
+    i0 = isymindex(i)
+    char(i) = rotname(i0)
+  end do
+  nsym = nsymat/5
+  do i = 1, nsym + 1
+    i0 = (i-1)*5
+    isym = min(5, nsymat-i0)
+    write (1337, 140)(char(j), j=i0+1, i0+isym)
+  end do
+  write (1337, 150)
+100 format (5x, '< FINDGROUP > : Finding symmetry operations', /)
+110 format (8x, '3D symmetries:')
+120 format (8x, 'surface symmetries:')
+130 format (' found for this lattice: ', i2, /, 8x, 60('-'))
+140 format (8x, 5(a10,2x))
+150 format (8x, 60('-'), /)
+end subroutine

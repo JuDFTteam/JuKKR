@@ -1,4 +1,4 @@
-SUBROUTINE beshan(hl,jl,nl,z,lmax)
+subroutine beshan(hl, jl, nl, z, lmax)
 !-----------------------------------------------------------------------
 !  calculates spherical bessel, hankel and neumann functions
 !  for the orders l .le. lmax.
@@ -8,68 +8,68 @@ SUBROUTINE beshan(hl,jl,nl,z,lmax)
 !                            R. Zeller   Jan. 1990
 !-----------------------------------------------------------------------
 !     .. Parameters ..
-      DOUBLE COMPLEX CI
-      PARAMETER (CI= (0.0D0,1.0D0))
+  double complex :: ci
+  parameter (ci=(0.0d0,1.0d0))
 !..
 !.. Scalar Arguments ..
-      DOUBLE COMPLEX Z
-      INTEGER LMAX
+  double complex :: z
+  integer :: lmax
 !..
 !.. Array Arguments ..
-      DOUBLE COMPLEX HL(0:LMAX),JL(0:LMAX),NL(0:LMAX)
+  double complex :: hl(0:lmax), jl(0:lmax), nl(0:lmax)
 !..
 !.. Local Scalars ..
-      DOUBLE COMPLEX TERMJ,TERMN,Z2,ZJ,ZN
-      DOUBLE PRECISION RL,RN,RNM
-      INTEGER L,M,N
+  double complex :: termj, termn, z2, zj, zn
+  double precision :: rl, rn, rnm
+  integer :: l, m, n
 !..
 !.. Intrinsic Functions ..
-      INTRINSIC ABS,EXP
+  intrinsic :: abs, exp
 
 !     ..
-zj = 1.d0
-zn = 1.d0
-z2 = z*z
-IF (ABS(z) < lmax+1.d0) THEN
-  DO  l = 0,lmax
-    rl = l + l
-    termj = -0.5D0/ (rl+3.d0)*z2
-    termn = 0.5D0/ (rl-1.d0)*z2
-    jl(l) = 1.d0
-    nl(l) = 1.d0
-    DO  n = 2,25
-      jl(l) = jl(l) + termj
-      nl(l) = nl(l) + termn
-      rn = n + n
-      termj = -termj/ (rl+rn+1.d0)/rn*z2
-      termn = termn/ (rl-rn+1.d0)/rn*z2
-    END DO
-    jl(l) = jl(l)*zj
-    nl(l) = -nl(l)*zn/z
-    hl(l) = jl(l) + nl(l)*ci
-    
-    zj = zj*z/ (rl+3.d0)
-    zn = zn/z* (rl+1.d0)
-  END DO
-END IF
+  zj = 1.d0
+  zn = 1.d0
+  z2 = z*z
+  if (abs(z)<lmax+1.d0) then
+    do l = 0, lmax
+      rl = l + l
+      termj = -0.5d0/(rl+3.d0)*z2
+      termn = 0.5d0/(rl-1.d0)*z2
+      jl(l) = 1.d0
+      nl(l) = 1.d0
+      do n = 2, 25
+        jl(l) = jl(l) + termj
+        nl(l) = nl(l) + termn
+        rn = n + n
+        termj = -termj/(rl+rn+1.d0)/rn*z2
+        termn = termn/(rl-rn+1.d0)/rn*z2
+      end do
+      jl(l) = jl(l)*zj
+      nl(l) = -nl(l)*zn/z
+      hl(l) = jl(l) + nl(l)*ci
 
-DO  l = 0,lmax
-  IF (ABS(z) >= l+1.d0) THEN
-    hl(l) = 0.d0
-    nl(l) = 0.d0
-    rnm = 1.d0
-    DO  m = 0,l
-      hl(l) = hl(l) + rnm/ (-ci* (z+z))**m
-      nl(l) = nl(l) + rnm/ (ci* (z+z))**m
-      rnm = rnm* (l*l+l-m*m-m)/ (m+1.d0)
-    END DO
-    hl(l) = hl(l)* (-ci)**l*EXP(ci*z)/ (ci*z)
-    nl(l) = nl(l)*ci**l*EXP(-ci*z)/ (-ci*z)
-    jl(l) = (hl(l)+nl(l))*0.5D0
-    nl(l) = (hl(l)-jl(l))/ci
-  END IF
-END DO
+      zj = zj*z/(rl+3.d0)
+      zn = zn/z*(rl+1.d0)
+    end do
+  end if
 
-RETURN
+  do l = 0, lmax
+    if (abs(z)>=l+1.d0) then
+      hl(l) = 0.d0
+      nl(l) = 0.d0
+      rnm = 1.d0
+      do m = 0, l
+        hl(l) = hl(l) + rnm/(-ci*(z+z))**m
+        nl(l) = nl(l) + rnm/(ci*(z+z))**m
+        rnm = rnm*(l*l+l-m*m-m)/(m+1.d0)
+      end do
+      hl(l) = hl(l)*(-ci)**l*exp(ci*z)/(ci*z)
+      nl(l) = nl(l)*ci**l*exp(-ci*z)/(-ci*z)
+      jl(l) = (hl(l)+nl(l))*0.5d0
+      nl(l) = (hl(l)-jl(l))/ci
+    end if
+  end do
 
-END SUBROUTINE beshan
+  return
+
+end subroutine

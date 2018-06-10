@@ -24,266 +24,274 @@
 !> same way as the charge density.
 !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB,Z,DRDI,IRWS,IRCUT, &
-   LPOT,NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,CHRGNT,ITC,NSHELL,NOQ,CONC,KAOEZ, &
-   CATOM,IRM,NEMB,LMPOT)
+subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, &
+  irws, ircut, lpot, nfu, llmsp, thetas, ntcell, kshape, ipan, chrgnt, itc, &
+  nshell, noq, conc, kaoez, catom, irm, nemb, lmpot)
 
-   use global_variables
+  use :: global_variables
 
-   implicit none
+  implicit none
 
-   !     .. Parameters ..
-   ! .. Input variables
-   integer, intent(in) :: ITC
-   integer, intent(in) :: IPF
-   integer, intent(in) :: IRM    !< Maximum number of radial points
-   integer, intent(in) :: NEMB   !< Number of 'embedding' positions
-   integer, intent(in) :: LPOT   !< Maximum l component in potential expansion
-   integer, intent(in) :: NAEZ   !< Number of atoms in unit cell
-   integer, intent(in) :: NATYP  !< Number of kinds of atoms in unit cell
-   integer, intent(in) :: NSPIN  !< Counter for spin directions
-   integer, intent(in) :: LMPOT  !< (LPOT+1)**2
-   integer, intent(in) :: KSHAPE !< Exact treatment of WS cell
-   !     .. Array Arguments ..
-   integer, dimension(NAEZ), intent(in)      :: NOQ !< Number of diff. atom types located
-   integer, dimension(*), intent(in)         :: NFU  !< number of shape function components in cell 'icell'
-   integer, dimension(*), intent(in)         :: IPAN !< Number of panels in non-MT-region
-   integer, dimension(*), intent(in)         :: IRWS !< R point at WS radius
-   integer, dimension(0:NSHELD), intent(in)  :: NSHELL   !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
-   integer, dimension(*), intent(in)         :: NTCELL !< Index for WS cell
+!     .. Parameters ..
+! .. Input variables
+  integer, intent (in) :: itc
+  integer, intent (in) :: ipf
+  integer, intent (in) :: irm !< Maximum number of radial points
+  integer, intent (in) :: nemb !< Number of 'embedding' positions
+  integer, intent (in) :: lpot !< Maximum l component in potential expansion
+  integer, intent (in) :: naez !< Number of atoms in unit cell
+  integer, intent (in) :: natyp !< Number of kinds of atoms in unit cell
+  integer, intent (in) :: nspin !< Counter for spin directions
+  integer, intent (in) :: lmpot !< (LPOT+1)**2
+  integer, intent (in) :: kshape !< Exact treatment of WS cell
+!     .. Array Arguments ..
+  integer, dimension (naez), intent (in) :: noq !< Number of diff. atom types located
+  integer, dimension (*), intent (in) :: nfu !< number of shape function components in cell 'icell'
+  integer, dimension (*), intent (in) :: ipan !< Number of panels in non-MT-region
+  integer, dimension (*), intent (in) :: irws !< R point at WS radius
+  integer, dimension (0:nsheld), intent (in) :: nshell !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+  integer, dimension (*), intent (in) :: ntcell !< Index for WS cell
 
-   integer, dimension(0:IPAND,*), intent(in)          :: IRCUT !< R points of panel borders
-   integer, dimension(NATYP,*), intent(in)            :: LLMSP  !< lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
-   integer, dimension(NATYP,NAEZ+NEMB), intent(in)    :: KAOEZ !< Kind of atom at site in elem. cell
-   double precision, dimension(*), intent(in)      :: Z
-   double precision, dimension(NATYP), intent(in)  :: CONC  !< Concentration of a given atom
-   double precision, dimension(IRM,*), intent(in)  :: DRDI  !< Derivative dr/di
-   double precision, dimension(IRM,*), intent(in)  :: RHOC  !< core charge density
-   double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: RHOORB   !< Orbital density
-   double precision, dimension(IRID,NFUND,*), intent(in) :: THETAS   !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+  integer, dimension (0:ipand, *), intent (in) :: ircut !< R points of panel borders
+  integer, dimension (natyp, *), intent (in) :: llmsp !< lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
+  integer, dimension (natyp, naez+nemb), intent (in) :: kaoez !< Kind of atom at site in elem. cell
+  double precision, dimension (*), intent (in) :: z
+  double precision, dimension (natyp), intent (in) :: conc !< Concentration of a given atom
+  double precision, dimension (irm, *), intent (in) :: drdi !< Derivative dr/di
+  double precision, dimension (irm, *), intent (in) :: rhoc !< core charge density
+  double precision, dimension (irm*krel+(1-krel), natyp), &
+    intent (in) :: rhoorb !< Orbital density
+  double precision, dimension (irid, nfund, *), intent (in) :: thetas !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
 
-   ! .. In/Out variables
-   double precision, dimension(IRM,LMPOT,NATYP,*), intent(inout) :: RHO2NS
-   ! .. Output variables
-   double precision, intent(out) :: CHRGNT
-   double precision, dimension(NATYP,2*KREL+(1-KREL)*NSPIN), intent(out) :: CATOM
-   ! .. Local variables
-   integer :: I,I1,IATYP,ICELL,IFUN,IPAN1,IPOTD,IPOTU,IRC1,IRS1,ISPIN,LM,IQEZ,IOEZ
-   double precision :: DIFF,FACTOR,RFPI,SUM,TOTSMOM,TOTOMOM,SUMO
-   double precision, dimension(NATYP)                       :: OMOM   !< Orbital moment
-   double precision, dimension(IRM)                         :: RHO
-   double precision, dimension(NAEZ,2*KREL+(1-KREL)*NSPIN)  :: CSITE
-   double precision, dimension(KREL*NAEZ+(1-KREL))          :: MUOSITE
-   !
-   logical :: OPT
-   ! .. External Subroutines
-   external :: SIMP3,SIMPK,OPT
-   ! .. Intrinsic Functions
-   intrinsic :: ATAN,SQRT
-   ! .. Save statement
-   SAVE
-   !     ..
-   RFPI = SQRT(16.0D0*ATAN(1.0D0))
+! .. In/Out variables
+  double precision, dimension (irm, lmpot, natyp, *), intent (inout) :: rho2ns
+! .. Output variables
+  double precision, intent (out) :: chrgnt
+  double precision, dimension (natyp, 2*krel+(1-krel)*nspin), &
+    intent (out) :: catom
+! .. Local variables
+  integer :: i, i1, iatyp, icell, ifun, ipan1, ipotd, ipotu, irc1, irs1, &
+    ispin, lm, iqez, ioez
+  double precision :: diff, factor, rfpi, sum, totsmom, totomom, sumo
+  double precision, dimension (natyp) :: omom !< Orbital moment
+  double precision, dimension (irm) :: rho
+  double precision, dimension (naez, 2*krel+(1-krel)*nspin) :: csite
+  double precision, dimension (krel*naez+(1-krel)) :: muosite
+!
+  logical :: opt
+! .. External Subroutines
+  external :: simp3, simpk, opt
+! .. Intrinsic Functions
+  intrinsic :: atan, sqrt
+! .. Save statement
+  save
+!     ..
+  rfpi = sqrt(16.0d0*atan(1.0d0))
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! Loop over atomic sites
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   do IQEZ = 1, NAEZ
-      !-------------------------------------------------------------------------
-      ! Loop over atoms located on IQEZ
-      !-------------------------------------------------------------------------
-      do ISPIN=1,NSPIN
-         CSITE(IQEZ,ISPIN) = 0.0D0
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Loop over atomic sites
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  do iqez = 1, naez
+!-------------------------------------------------------------------------
+! Loop over atoms located on IQEZ
+!-------------------------------------------------------------------------
+    do ispin = 1, nspin
+      csite(iqez, ispin) = 0.0d0
+    end do
+
+    if (krel==1) muosite(iqez) = 0.0d0
+
+    do ioez = 1, noq(iqez)
+
+      iatyp = kaoez(ioez, iqez)
+!---------------------------------------------------------------------
+! Determine the right potential numbers for rhoc
+!---------------------------------------------------------------------
+      if (nspin==2) then
+        ipotd = 2*iatyp - 1
+        ipotu = 2*iatyp
+        factor = 1.0d0
+      else
+        ipotd = iatyp
+        ipotu = iatyp
+        factor = 0.5d0
+      end if
+
+      if (kshape/=0) then
+        ipan1 = ipan(iatyp)
+        irs1 = ircut(1, iatyp)
+        irc1 = ircut(ipan1, iatyp)
+      else
+        irs1 = irws(iatyp)
+        irc1 = irs1
+      end if
+!-----------------------------------------------------------------------
+      do i = 2, irs1
+!-------------------------------------------------------------------
+! Convert core density
+!-------------------------------------------------------------------
+        sum = (rhoc(i,ipotd)+rhoc(i,ipotu))*factor/rfpi
+        diff = (rhoc(i,ipotu)-rhoc(i,ipotd))/rfpi
+!-------------------------------------------------------------------
+! Add this to the lm=1 component of rho2ns
+!-------------------------------------------------------------------
+        rho2ns(i, 1, iatyp, 1) = rho2ns(i, 1, iatyp, 1) + sum
+        rho2ns(i, 1, iatyp, nspin) = rho2ns(i, 1, iatyp, nspin) + diff
       end do
+!----------------------------------------------------------------------
+! Calculate  charge and moment of the atom
+!----------------------------------------------------------------------
+      do ispin = 1, nspin
+!
+        if (kshape==0) then
+!----------------------------------------------------------------
+! Integrate over wigner seitz sphere - no shape correction
+!----------------------------------------------------------------
+          call simp3(rho2ns(1,1,iatyp,ispin), sum, 1, irs1, drdi(1,iatyp))
+!----------------------------------------------------------------
+! The result has to be multiplied by sqrt(4 pi)
+! (4 pi for integration over angle and 1/sqrt(4 pi) for
+! the spherical harmonic y(l=0))
+!----------------------------------------------------------------
+          sum = sum*rfpi
+        else ! (KSHAPE.EQ.0)
+!----------------------------------------------------------------
+! convolute charge density with shape function to get the
+! charge in the exact cell - if kshape .gt. 0
+!----------------------------------------------------------------
+          icell = ntcell(iatyp)
 
-      if (KREL.EQ.1) MUOSITE(IQEZ) = 0.0D0
-
-      do IOEZ =1, NOQ(IQEZ)
-
-         IATYP = KAOEZ(IOEZ,IQEZ)
-         !---------------------------------------------------------------------
-         ! Determine the right potential numbers for rhoc
-         !---------------------------------------------------------------------
-         if (NSPIN.EQ.2) then
-            IPOTD = 2*IATYP - 1
-            IPOTU = 2*IATYP
-            FACTOR = 1.0D0
-         else
-            IPOTD = IATYP
-            IPOTU = IATYP
-            FACTOR = 0.5D0
-         end if
-
-         if (KSHAPE.NE.0) then
-            IPAN1 = IPAN(IATYP)
-            IRS1 = IRCUT(1,IATYP)
-            IRC1 = IRCUT(IPAN1,IATYP)
-         else
-            IRS1 = IRWS(IATYP)
-            IRC1 = IRS1
-         end if
-         !-----------------------------------------------------------------------
-         do I = 2,IRS1
-            !-------------------------------------------------------------------
-            ! Convert core density
-            !-------------------------------------------------------------------
-            SUM = (RHOC(I,IPOTD)+RHOC(I,IPOTU))*FACTOR/RFPI
-            DIFF = (RHOC(I,IPOTU)-RHOC(I,IPOTD))/RFPI
-            !-------------------------------------------------------------------
-            ! Add this to the lm=1 component of rho2ns
-            !-------------------------------------------------------------------
-            RHO2NS(I,1,IATYP,1) = RHO2NS(I,1,IATYP,1) + SUM
-            RHO2NS(I,1,IATYP,NSPIN) = RHO2NS(I,1,IATYP,NSPIN) + DIFF
-         end do
-         !----------------------------------------------------------------------
-         ! Calculate  charge and moment of the atom
-         !----------------------------------------------------------------------
-         do ISPIN = 1,NSPIN
-            !
-            if (KSHAPE.EQ.0) then
-               !----------------------------------------------------------------
-               ! Integrate over wigner seitz sphere - no shape correction
-               !----------------------------------------------------------------
-               call SIMP3(RHO2NS(1,1,IATYP,ISPIN),SUM,1,IRS1,DRDI(1,IATYP))
-               !----------------------------------------------------------------
-               ! The result has to be multiplied by sqrt(4 pi)
-               ! (4 pi for integration over angle and 1/sqrt(4 pi) for
-               ! the spherical harmonic y(l=0))
-               !----------------------------------------------------------------
-               SUM = SUM*RFPI
-            else ! (KSHAPE.EQ.0)
-               !----------------------------------------------------------------
-               ! convolute charge density with shape function to get the
-               ! charge in the exact cell - if kshape .gt. 0
-               !----------------------------------------------------------------
-               ICELL = NTCELL(IATYP)
-
-               do I = 1,IRS1
-                  RHO(I) = RHO2NS(I,1,IATYP,ISPIN)*RFPI
-               end do
-               !
-               do I = IRS1 + 1,IRC1
-                  RHO(I) = 0.0D0
-               end do
-               !
-               do IFUN = 1,NFU(ICELL)
-                  LM = LLMSP(ICELL,IFUN)
-                  if (LM.LE.LMPOT) then
-                     do I = IRS1 + 1,IRC1
-                        RHO(I) = RHO(I) + RHO2NS(I,LM,IATYP,ISPIN)*  &
-                        THETAS(I-IRS1,IFUN,ICELL)
-                     end do
-                  end if
-               end do
-               !----------------------------------------------------------------
-               ! Integrate over circumscribed sphere
-               !----------------------------------------------------------------
-               call SIMPK(RHO,SUM,IPAN1,IRCUT(0,IATYP),DRDI(1,IATYP))
-            end if                    ! (KSHAPE.EQ.0)
-
-            CATOM(IATYP,ISPIN) = SUM
-            CSITE(IQEZ,ISPIN) = CSITE(IQEZ,ISPIN)+ CATOM(IATYP,ISPIN) *CONC(IATYP)
-
-            if (ISPIN.NE.1) then
-               !----------------------------------------------------------------
-               ! Calculate orbital moment (ASA) and add it to the total
-               !----------------------------------------------------------------
-               if ((KREL.EQ.1) .AND. (KSHAPE.EQ.0)) then
-                  call SIMP3(RHOORB(1,IATYP),SUMO,1,IRS1,DRDI(1,IATYP))
-                  SUMO = SUMO*RFPI
-                  OMOM(IATYP) = SUMO
-                  MUOSITE(IQEZ) = MUOSITE(IQEZ)+ OMOM(IATYP) * CONC(IATYP)
-               end if
-
-               if (KSHAPE.NE.0) then
-                  write (IPF,FMT=9010) SUM
-               else
-                  write (IPF,FMT=9050) SUM
-                  if (KREL.EQ.1) then
-                     write (IPF,FMT=9051) OMOM(IATYP)
-                     write (IPF,FMT=9052) SUM+OMOM(IATYP)
-                  end if
-               end if
-            else                      ! (ISPIN.NE.1)
-               if (KSHAPE.NE.0) then
-                  write (IPF,FMT=9000) IATYP,SUM
-               else
-                  write (IPF,FMT=9040) IATYP,SUM
-               end if
-            end if                    ! (ISPIN.NE.1)
-         end do                      ! ISPIN = 1,NSPIN
-         !----------------------------------------------------------------------
-         if (IOEZ.NE.NOQ(IQEZ)) write(IPF,'(2X,77(1H-))')
-      end do
-      !-------------------------------------------------------------------------
-      ! IOEZ = 1, NOQ(IQEZ)
-      !-------------------------------------------------------------------------
-      if (NOQ(IQEZ).GT.1) then
-         write(IPF,'(2X,77(1H=))')
-         write(IPF,FMT=9071) IQEZ,CSITE(IQEZ,1)
-         if (NSPIN.EQ.2) then
-            write(IPF,FMT=9072) CSITE(IQEZ,NSPIN)
-            if (KREL.EQ.1) then
-               write(IPF,FMT=9073) MUOSITE(IQEZ)
-               write(IPF,FMT=9074) CSITE(IQEZ,NSPIN)+MUOSITE(IQEZ)
+          do i = 1, irs1
+            rho(i) = rho2ns(i, 1, iatyp, ispin)*rfpi
+          end do
+!
+          do i = irs1 + 1, irc1
+            rho(i) = 0.0d0
+          end do
+!
+          do ifun = 1, nfu(icell)
+            lm = llmsp(icell, ifun)
+            if (lm<=lmpot) then
+              do i = irs1 + 1, irc1
+                rho(i) = rho(i) + rho2ns(i, lm, iatyp, ispin)*thetas(i-irs1, &
+                  ifun, icell)
+              end do
             end if
-         end if
-         if (IQEZ.NE.NAEZ) write(IPF,'(2X,77(1H=))')
-      else
-         if (IQEZ.NE.NAEZ) write(IPF,'(2X,77(1H=))')
+          end do
+!----------------------------------------------------------------
+! Integrate over circumscribed sphere
+!----------------------------------------------------------------
+          call simpk(rho, sum, ipan1, ircut(0,iatyp), drdi(1,iatyp))
+        end if ! (KSHAPE.EQ.0)
+
+        catom(iatyp, ispin) = sum
+        csite(iqez, ispin) = csite(iqez, ispin) + catom(iatyp, ispin)*conc( &
+          iatyp)
+
+        if (ispin/=1) then
+!----------------------------------------------------------------
+! Calculate orbital moment (ASA) and add it to the total
+!----------------------------------------------------------------
+          if ((krel==1) .and. (kshape==0)) then
+            call simp3(rhoorb(1,iatyp), sumo, 1, irs1, drdi(1,iatyp))
+            sumo = sumo*rfpi
+            omom(iatyp) = sumo
+            muosite(iqez) = muosite(iqez) + omom(iatyp)*conc(iatyp)
+          end if
+
+          if (kshape/=0) then
+            write (ipf, fmt=110) sum
+          else
+            write (ipf, fmt=130) sum
+            if (krel==1) then
+              write (ipf, fmt=140) omom(iatyp)
+              write (ipf, fmt=150) sum + omom(iatyp)
+            end if
+          end if
+        else ! (ISPIN.NE.1)
+          if (kshape/=0) then
+            write (ipf, fmt=100) iatyp, sum
+          else
+            write (ipf, fmt=120) iatyp, sum
+          end if
+        end if ! (ISPIN.NE.1)
+      end do ! ISPIN = 1,NSPIN
+!----------------------------------------------------------------------
+      if (ioez/=noq(iqez)) write (ipf, '(2X,77(1H-))')
+    end do
+!-------------------------------------------------------------------------
+! IOEZ = 1, NOQ(IQEZ)
+!-------------------------------------------------------------------------
+    if (noq(iqez)>1) then
+      write (ipf, '(2X,77(1H=))')
+      write (ipf, fmt=200) iqez, csite(iqez, 1)
+      if (nspin==2) then
+        write (ipf, fmt=210) csite(iqez, nspin)
+        if (krel==1) then
+          write (ipf, fmt=220) muosite(iqez)
+          write (ipf, fmt=230) csite(iqez, nspin) + muosite(iqez)
+        end if
       end if
-   end do
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! IQEZ = 1, NAEZ
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   write(IPF,*)
+      if (iqez/=naez) write (ipf, '(2X,77(1H=))')
+    else
+      if (iqez/=naez) write (ipf, '(2X,77(1H=))')
+    end if
+  end do
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! IQEZ = 1, NAEZ
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  write (ipf, *)
 
-   CHRGNT = 0.0D0
-   do I1 = 1,NATYP
-      CHRGNT = CHRGNT+ DBLE(NSHELL(I1))*(CATOM(I1,1) - Z(I1))*CONC(I1)
-   end do
+  chrgnt = 0.0d0
+  do i1 = 1, natyp
+    chrgnt = chrgnt + dble(nshell(i1))*(catom(i1,1)-z(i1))*conc(i1)
+  end do
 
-   write(IPF,'(79(1H+))')
-   write (IPF,FMT=9020) ITC,CHRGNT
-   write ( 6 ,FMT=9020) ITC,CHRGNT
+  write (ipf, '(79(1H+))')
+  write (ipf, fmt=160) itc, chrgnt
+  write (6, fmt=160) itc, chrgnt
 
-   if (NSPIN.EQ.2) then
-      TOTSMOM = 0.0D0
-      if (KREL.EQ.1) TOTOMOM = 0.0D0
-      do I1 = 1,NATYP
-         TOTSMOM = TOTSMOM+ DBLE(NSHELL(I1))*CATOM(I1,NSPIN)*CONC(I1)
-         if (KREL.EQ.1) TOTOMOM = TOTOMOM+ DBLE(NSHELL(I1))*OMOM(I1)*CONC(I1)
-      end do
+  if (nspin==2) then
+    totsmom = 0.0d0
+    if (krel==1) totomom = 0.0d0
+    do i1 = 1, natyp
+      totsmom = totsmom + dble(nshell(i1))*catom(i1, nspin)*conc(i1)
+      if (krel==1) totomom = totomom + dble(nshell(i1))*omom(i1)*conc(i1)
+    end do
 
-      if (KREL.EQ.0) then
-         write (IPF,FMT=9030) TOTSMOM
-         write ( 6 ,FMT=9030) TOTSMOM
-      else
-         write (IPF,FMT=9030) TOTSMOM+TOTOMOM
-         write (IPF,FMT=9031) TOTSMOM
-         write (IPF,FMT=9032) TOTOMOM
-         write ( 6 ,FMT=9030) TOTSMOM+TOTOMOM
-         write ( 6 ,FMT=9031) TOTSMOM
-         write ( 6 ,FMT=9032) TOTOMOM
-      end if
-   end if
-   write (IPF,*)
+    if (krel==0) then
+      write (ipf, fmt=170) totsmom
+      write (6, fmt=170) totsmom
+    else
+      write (ipf, fmt=170) totsmom + totomom
+      write (ipf, fmt=180) totsmom
+      write (ipf, fmt=190) totomom
+      write (6, fmt=170) totsmom + totomom
+      write (6, fmt=180) totsmom
+      write (6, fmt=190) totomom
+    end if
+  end if
+  write (ipf, *)
 
-   return
+  return
 
-   9000 format ('  Atom ',I4,' charge in wigner seitz cell =',f10.6)
-   9010 format (7X,'spin moment in wigner seitz cell =',f10.6)
-   9040 format ('  Atom ',I4,' charge in wigner seitz sphere =',f10.6)
-   9050 format (7X,'spin moment in wigner seitz sphere =',f10.6)
-   9051 format (7X,'orb. moment in wigner seitz sphere =',f10.6)
-   9052 format (7X,'total magnetic moment in WS sphere =',f10.6)
-   9020 format ('      ITERATION',I4,' charge neutrality in unit cell = ',f12.6)
-   9030 format ('                   ',' TOTAL mag. moment in unit cell = ',f12.6)
-   9031 format ('                   ','           spin magnetic moment = ',f12.6)
-   9032 format ('                   ','        orbital magnetic moment = ',f12.6)
-   9071 format ('      Site ',i3,' total charge =',f10.6)
-   9072 format ('         ',' total spin moment =',f10.6)
-   9073 format ('         ',' total orb. moment =',f10.6)
-   9074 format ('      total magnetic moment =',f10.6)
+100 format ('  Atom ', i4, ' charge in wigner seitz cell =', f10.6)
+110 format (7x, 'spin moment in wigner seitz cell =', f10.6)
+120 format ('  Atom ', i4, ' charge in wigner seitz sphere =', f10.6)
+130 format (7x, 'spin moment in wigner seitz sphere =', f10.6)
+140 format (7x, 'orb. moment in wigner seitz sphere =', f10.6)
+150 format (7x, 'total magnetic moment in WS sphere =', f10.6)
+160 format ('      ITERATION', i4, ' charge neutrality in unit cell = ', &
+    f12.6)
+170 format ('                   ', ' TOTAL mag. moment in unit cell = ', &
+    f12.6)
+180 format ('                   ', '           spin magnetic moment = ', &
+    f12.6)
+190 format ('                   ', '        orbital magnetic moment = ', &
+    f12.6)
+200 format ('      Site ', i3, ' total charge =', f10.6)
+210 format ('         ', ' total spin moment =', f10.6)
+220 format ('         ', ' total orb. moment =', f10.6)
+230 format ('      total magnetic moment =', f10.6)
 
-end subroutine RHOTOTB
+end subroutine

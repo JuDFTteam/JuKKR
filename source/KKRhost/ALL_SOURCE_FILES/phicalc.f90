@@ -1,5 +1,5 @@
-SUBROUTINE phicalc(iatom,lphi,visp,ipan,ircut,r,drdi,z,  &
-        erefldau,phi,nspin,nsra)
+subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
+  nspin, nsra)
 ! *********************************************************************
 ! *                                                                   *
 ! * Calculates test functions PHI for LDA+U.                          *
@@ -14,112 +14,113 @@ SUBROUTINE phicalc(iatom,lphi,visp,ipan,ircut,r,drdi,z,  &
 ! *                                                                   *
 ! *********************************************************************
 
-IMPLICIT NONE
-INCLUDE 'inc.p'
-INTEGER NPOTD
-PARAMETER (NPOTD= (2*KREL + (1-KREL)*NSPIND)*NATYPD)
-DOUBLE PRECISION CVLIGHT
-PARAMETER (CVLIGHT=274.0720442D0)
+  implicit none
+  include 'inc.p'
+  integer :: npotd
+  parameter (npotd=(2*krel+(1-krel)*nspind)*natypd)
+  double precision :: cvlight
+  parameter (cvlight=274.0720442d0)
 
-DOUBLE COMPLEX PHI(IRMD),PZ(IRMD,0:LMAXD),FZ(IRMD,0:LMAXD)
-DOUBLE COMPLEX HAMF(IRMD,0:LMAXD),MASS(IRMD),DLOGDP(0:LMAXD)
+  double complex :: phi(irmd), pz(irmd, 0:lmaxd), fz(irmd, 0:lmaxd)
+  double complex :: hamf(irmd, 0:lmaxd), mass(irmd), dlogdp(0:lmaxd)
 
-DOUBLE PRECISION R(IRMD,NATYPD),VISP(IRMD,NPOTD),Z(NATYPD)
-DOUBLE PRECISION DRDI(IRMD,NATYPD)
-DOUBLE PRECISION RS(IRMD,0:LMAXD),S(0:LMAXD),DROR(IRMD),VPOT(IRMD)
-DOUBLE PRECISION EREFLDAU
+  double precision :: r(irmd, natypd), visp(irmd, npotd), z(natypd)
+  double precision :: drdi(irmd, natypd)
+  double precision :: rs(irmd, 0:lmaxd), s(0:lmaxd), dror(irmd), vpot(irmd)
+  double precision :: erefldau
 
-INTEGER IPAN(NATYPD),IRCUT(0:IPAND,NATYPD) 
-INTEGER IATOM,IPOT1,NSRA,NSPIN,IRC1,IPAN1
-!.. l-value for LDA+U
-INTEGER LPHI
-
-INTEGER IR,L1
-DOUBLE PRECISION WINT(IRMD),WNORM,CUTOFF(IRMD)
-DOUBLE COMPLEX CNORM,EZ,CZERO
-
-czero = DCMPLX(0.d0,0.d0)
-ipan1 = ipan(iatom)
-irc1 = ircut(ipan1,iatom)
-
-ipot1 = (iatom-1)*nspin + 1 ! points at the correct potential,
+  integer :: ipan(natypd), ircut(0:ipand, natypd)
+  integer :: iatom, ipot1, nsra, nspin, irc1, ipan1
+! points at the correct potential,
+  integer :: lphi
 ! i.e., 1,3,5,.. for NSPIN=2.
+  integer :: ir, l1
+  double precision :: wint(irmd), wnorm, cutoff(irmd)
+  double complex :: cnorm, ez, czero
 
+  czero = dcmplx(0.d0, 0.d0)
+  ipan1 = ipan(iatom)
+  irc1 = ircut(ipan1, iatom)
 ! -> set VPOT = [ V(UP) + V(DN) ]/2  for IATOM
-!    only for the spherical part.
+  ipot1 = (iatom-1)*nspin + 1 !    only for the spherical part.
 
-CALL dcopy(irmd,visp(1,ipot1),1,vpot(1),1)
-IF ( nspin == 2 ) THEN
-  CALL daxpy(irmd,1.d0,visp(1,ipot1+1),1,vpot(1),1)
-  CALL dscal(irmd,0.5D0,vpot,1)
-END IF
 
 ! -> Prepare and call REGSOL
 
-DO l1 = 0,lmaxd
-  IF ( nsra == 2 ) THEN
-    s(l1) = DSQRT(DBLE(l1*l1+l1+1)-4.0D0*z(iatom)*z(iatom) /(cvlight*cvlight))
-    IF ( z(iatom) == 0.0D0 ) s(l1) = DBLE(l1)
-  ELSE
-    s(l1) = DBLE(l1)
-  END IF
-  rs(1,l1) = 0.0D0
-  DO ir = 2,irmd
-    rs(ir,l1) = r(ir,iatom)**s(l1)
-  END DO
-END DO
 
-DO ir = 2,irc1
-  dror(ir) = drdi(ir,iatom)/r(ir,iatom)
-END DO
-ez = DCMPLX(erefldau,0.d0)
+  call dcopy(irmd, visp(1,ipot1), 1, vpot(1), 1)
+  if (nspin==2) then
+    call daxpy(irmd, 1.d0, visp(1,ipot1+1), 1, vpot(1), 1)
+    call dscal(irmd, 0.5d0, vpot, 1)
+  end if
 
 ! --> this call of regsol within a non-lda+u calculation
 
-CALL regsol(cvlight,ez,nsra,dlogdp,fz,hamf,mass,pz,dror,  &
-    r(1,iatom),s,vpot,z(iatom),ipan(iatom),ircut(0,iatom),  &
-    0,-1,0D0,cutoff,irmd,ipand,lmaxd)
+  do l1 = 0, lmaxd
+    if (nsra==2) then
+      s(l1) = dsqrt(dble(l1*l1+l1+1)-4.0d0*z(iatom)*z(iatom)/(cvlight*cvlight) &
+        )
+      if (z(iatom)==0.0d0) s(l1) = dble(l1)
+    else
+      s(l1) = dble(l1)
+    end if
+    rs(1, l1) = 0.0d0
+    do ir = 2, irmd
+      rs(ir, l1) = r(ir, iatom)**s(l1)
+    end do
+  end do
 
+  do ir = 2, irc1
+    dror(ir) = drdi(ir, iatom)/r(ir, iatom)
+  end do
+  ez = dcmplx(erefldau, 0.d0)
 ! The result of regsol is (R*r)/r**l (in non-sra and similar in sra)
 
 
+  call regsol(cvlight, ez, nsra, dlogdp, fz, hamf, mass, pz, dror, r(1,iatom), &
+    s, vpot, z(iatom), ipan(iatom), ircut(0,iatom), 0, -1, 0d0, cutoff, irmd, &
+    ipand, lmaxd)
 ! --> set current angular momentum as LPHI
 
-IF ( nsra == 2 ) THEN
-  DO ir = 2,irc1
-    pz(ir,lphi) = pz(ir,lphi)*rs(ir,lphi)
-    fz(ir,lphi) = fz(ir,lphi)/cvlight*rs(ir,lphi)/cvlight
-  END DO
-ELSE
-  DO ir = 2,irc1
-    pz(ir,lphi) = pz(ir,lphi)*rs(ir,lphi)
-    fz(ir,lphi) = czero
-  END DO
-END IF
 
 ! -> Copy result to PHI (only large component)
 
-CALL zcopy(irmd,pz(1,lphi),1,phi(1),1)
 
+  if (nsra==2) then
+    do ir = 2, irc1
+      pz(ir, lphi) = pz(ir, lphi)*rs(ir, lphi)
+      fz(ir, lphi) = fz(ir, lphi)/cvlight*rs(ir, lphi)/cvlight
+    end do
+  else
+    do ir = 2, irc1
+      pz(ir, lphi) = pz(ir, lphi)*rs(ir, lphi)
+      fz(ir, lphi) = czero
+    end do
+  end if
 ! -> Normalise in sphere:
 !    Note: If we have normalised in cell instead of sphere, the choice
 !    M=0 would be arbitrary. One would have different normalisation for
+  call zcopy(irmd, pz(1,lphi), 1, phi(1), 1)
 !    each M, if the cell has no cubic symmetry.  Here we normalise in
 !    sphere, to avoid this inconsistency.
 
-DO ir = 1,irc1
-  wint(ir) = dreal( DCONJG(phi(ir)) * phi(ir) )
-END DO
 
 
 ! --> integrate, normalisation factor = WNORM
 
-CALL simpk(wint,wnorm,ipan1,ircut(0,iatom),drdi(1,iatom))
+  do ir = 1, irc1
+    wint(ir) = dreal(dconjg(phi(ir))*phi(ir))
+  end do
 
 ! --> normalise PZ,FZ to unit probability in WS cell
 
-cnorm = 1.d0/DSQRT(wnorm)
-CALL zscal(irc1,cnorm,phi,1)
 
-RETURN
-END SUBROUTINE phicalc
+  call simpk(wint, wnorm, ipan1, ircut(0,iatom), drdi(1,iatom))
+! *********************************************************************
+! *                                                                   *
+! * Calculates test functions PHI for LDA+U.                          *
+  cnorm = 1.d0/dsqrt(wnorm)
+  call zscal(irc1, cnorm, phi, 1)
+! * Only spherical part of the potential is used.                     *
+  return
+end subroutine

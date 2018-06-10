@@ -1,4 +1,4 @@
-SUBROUTINE cint4pts(y,jtop,z)
+subroutine cint4pts(y, jtop, z)
 !   ********************************************************************
 !   *                                                                  *
 !   *      perform the integral  Z(i)   =  INT   Y(i') di'             *
@@ -12,58 +12,58 @@ SUBROUTINE cint4pts(y,jtop,z)
 !   *                       COMPLEX - VERSION                          *
 !   *                                                                  *
 !   ********************************************************************
-IMPLICIT NONE
+  implicit none
 
 ! Dummy arguments
-INTEGER JTOP
-COMPLEX*16 Y(JTOP),Z(JTOP)
+  integer :: jtop
+  complex *16 :: y(jtop), z(jtop)
 
 ! Local variables
-INTEGER I,IG,J,K,M,N1,N2
-REAL*8 Q(5,5),Q5(5,5)
-COMPLEX*16 S,SVN
+  integer :: i, ig, j, k, m, n1, n2
+  real *8 :: q(5, 5), q5(5, 5)
+  complex *16 :: s, svn
 
-DATA q5/0.d0,251.d0,232.d0,243.d0,224.d0,0.d0,646.d0,992.d0,  &
-    918.d0,1024.d0,0.d0, - 264.d0,192.d0,648.d0,384.d0,0.d0,  &
-    106.d0,32.d0,378.d0,1024.d0,0.d0, - 19.d0, - 8.d0, - 27.d0, 224.d0/
+  data q5/0.d0, 251.d0, 232.d0, 243.d0, 224.d0, 0.d0, 646.d0, 992.d0, 918.d0, &
+    1024.d0, 0.d0, -264.d0, 192.d0, 648.d0, 384.d0, 0.d0, 106.d0, 32.d0, &
+    378.d0, 1024.d0, 0.d0, -19.d0, -8.d0, -27.d0, 224.d0/
 
-DO i = 1,5
-  DO j = 1,5
-    q(i,j) = q5(i,j)/720.0D0
-  END DO
-END DO
+  do i = 1, 5
+    do j = 1, 5
+      q(i, j) = q5(i, j)/720.0d0
+    end do
+  end do
 
-z(1) = DCMPLX(0.d0,0.d0)
-svn = z(1)
+  z(1) = dcmplx(0.d0, 0.d0)
+  svn = z(1)
 
-DO ig = 1,jtop - 4,4
-  n1 = ig
-  n2 = ig + 4
-  DO m = n1 + 1,n2
-    i = m - n1 + 1
-    s = svn
-    DO k = n1,n2
-      j = k - n1 + 1
-      s = s + q(i,j)*y(k)
-    END DO
-    z(m) = s
-  END DO
-  svn = z(n2)
-END DO
+  do ig = 1, jtop - 4, 4
+    n1 = ig
+    n2 = ig + 4
+    do m = n1 + 1, n2
+      i = m - n1 + 1
+      s = svn
+      do k = n1, n2
+        j = k - n1 + 1
+        s = s + q(i, j)*y(k)
+      end do
+      z(m) = s
+    end do
+    svn = z(n2)
+  end do
 
-IF ( n2 /= jtop ) THEN
-  n1 = jtop - 4
-  n2 = jtop
-  svn = z(n1)
-  DO m = n1 + 1,n2
-    i = m - n1 + 1
-    s = svn
-    DO k = n1,n2
-      j = k - n1 + 1
-      s = s + q(i,j)*y(k)
-    END DO
-    z(m) = s
-  END DO
-END IF
+  if (n2/=jtop) then
+    n1 = jtop - 4
+    n2 = jtop
+    svn = z(n1)
+    do m = n1 + 1, n2
+      i = m - n1 + 1
+      s = svn
+      do k = n1, n2
+        j = k - n1 + 1
+        s = s + q(i, j)*y(k)
+      end do
+      z(m) = s
+    end do
+  end if
 
-END SUBROUTINE cint4pts
+end subroutine

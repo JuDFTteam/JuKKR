@@ -1,5 +1,5 @@
-SUBROUTINE mdirnewang(it,nmvec,mvevi,mvphi,mvtet,mvgam,  &
-        natypd,lmaxd,nmvecmax)
+subroutine mdirnewang(it, nmvec, mvevi, mvphi, mvtet, mvgam, natypd, lmaxd, &
+  nmvecmax)
 !   ********************************************************************
 !   *                                                                  *
 !   *  this routine has been build up from the last part of the        *
@@ -9,94 +9,94 @@ SUBROUTINE mdirnewang(it,nmvec,mvevi,mvphi,mvtet,mvgam,  &
 !   *  LOCAL FRAME quantisation axis with respect to the GLOBAL FRAME  *
 !   *                                                                  *
 !   ********************************************************************
-IMPLICIT NONE
+  implicit none
 
 !Parameter definitions
-INTEGER LMAXDLOC
-PARAMETER (LMAXDLOC=8)
+  integer :: lmaxdloc
+  parameter (lmaxdloc=8)
 
 !Scalar Arguments
-INTEGER IT,NMVEC,NATYPD,LMAXD,NMVECMAX
+  integer :: it, nmvec, natypd, lmaxd, nmvecmax
 
 !Array Arguments
-DOUBLE COMPLEX MVEVI(NATYPD,3,NMVECMAX)
-DOUBLE PRECISION MVPHI(NATYPD,NMVECMAX),MVTET(NATYPD,NMVECMAX), &
-                 MVGAM(NATYPD,NMVECMAX)
+  double complex :: mvevi(natypd, 3, nmvecmax)
+  double precision :: mvphi(natypd, nmvecmax), mvtet(natypd, nmvecmax), &
+    mvgam(natypd, nmvecmax)
 
 !Local Scalars
-DOUBLE PRECISION MV,MVX,MVXY,MVY,MVZ,PI
-INTEGER I,IMV,ICALL
+  double precision :: mv, mvx, mvxy, mvy, mvz, pi
+  integer :: i, imv, icall
 
 !Local Arrays
-DOUBLE PRECISION MVGLO(3,NMVECMAX)
+  double precision :: mvglo(3, nmvecmax)
 
 !Intrinsic Functions
-INTRINSIC ABS,ATAN
+  intrinsic :: abs, atan
 
 !Data Statements
-DATA ICALL /0/
+  data icall/0/
 
 !Save Statements
-SAVE ICALL,PI
+  save :: icall, pi
 
-icall = icall + 1
+  icall = icall + 1
 !=======================================================================
-IF (icall == 1) THEN
-  
-  IF (lmaxd > lmaxdloc) THEN
-    WRITE (6,*)
-    WRITE (6,*) ' Please increase parameter LMAXDLOC to ',lmaxd
-    WRITE (6,*) ' in the < MVECGLOBAL > routine.'
-    STOP ' < TBKKR2 > '
-  END IF
-  
-  pi = 4.d0 * ATAN(1.d0)
-  
-END IF
+  if (icall==1) then
+
+    if (lmaxd>lmaxdloc) then
+      write (6, *)
+      write (6, *) ' Please increase parameter LMAXDLOC to ', lmaxd
+      write (6, *) ' in the < MVECGLOBAL > routine.'
+      stop ' < TBKKR2 > '
+    end if
+
+    pi = 4.d0*atan(1.d0)
+
+  end if
 !=======================================================================
 
-DO imv = 1,nmvec
-  
-  DO i = 1,3
-    mvglo(i,imv) = DIMAG(mvevi(it,i,imv))
-  END DO
-  
-  mvx = mvglo(1,imv)
-  mvy = mvglo(2,imv)
-  mvz = mvglo(3,imv)
-  
-  mv = SQRT(mvx**2+mvy**2+mvz**2)
+  do imv = 1, nmvec
+
+    do i = 1, 3
+      mvglo(i, imv) = dimag(mvevi(it,i,imv))
+    end do
+
+    mvx = mvglo(1, imv)
+    mvy = mvglo(2, imv)
+    mvz = mvglo(3, imv)
+
+    mv = sqrt(mvx**2+mvy**2+mvz**2)
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  IF ( mv < 1D-8 ) THEN
-    mvphi(it,imv) = 0D0
-    mvtet(it,imv) = 0D0
-    mvgam(it,imv) = 0D0
+    if (mv<1d-8) then
+      mvphi(it, imv) = 0d0
+      mvtet(it, imv) = 0d0
+      mvgam(it, imv) = 0d0
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  ELSE
+    else
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    mvxy = SQRT(mvx**2+mvy**2)
+      mvxy = sqrt(mvx**2+mvy**2)
 ! ----------------------------------------------------------------------
-    IF ( ABS(mvxy) < 1D-8 ) THEN
-      mvphi(it,imv) = 0D0
+      if (abs(mvxy)<1d-8) then
+        mvphi(it, imv) = 0d0
 ! ----------------------------------------------------------------------
-    ELSE
+      else
 ! ----------------------------------------------------------------------
-      IF ( mvy >= 0D0 ) THEN
-        mvphi(it,imv) = ACOS(mvx/mvxy)
-      ELSE IF ( mvx < 0D0 ) THEN
-        mvphi(it,imv) = pi + ACOS(-mvx/mvxy)
-      ELSE
-        mvphi(it,imv) = 2*pi - ACOS(mvx/mvxy)
-      END IF
-      mvphi(it,imv) = mvphi(it,imv)*180D0/pi
-      IF ( ABS(mvphi(it,imv)-360.0D0) < 1D-8 ) mvphi(it,imv) = 0D0
-    END IF
+        if (mvy>=0d0) then
+          mvphi(it, imv) = acos(mvx/mvxy)
+        else if (mvx<0d0) then
+          mvphi(it, imv) = pi + acos(-mvx/mvxy)
+        else
+          mvphi(it, imv) = 2*pi - acos(mvx/mvxy)
+        end if
+        mvphi(it, imv) = mvphi(it, imv)*180d0/pi
+        if (abs(mvphi(it,imv)-360.0d0)<1d-8) mvphi(it, imv) = 0d0
+      end if
 ! ----------------------------------------------------------------------
-    IF (mvphi(it,imv) >= 345.d0) mvphi(it,imv) = 360.d0 - mvphi(it,imv)
-    mvtet(it,imv) = ACOS(mvz/mv)*180D0/pi
-    mvgam(it,imv) = 0D0
-  END IF
+      if (mvphi(it,imv)>=345.d0) mvphi(it, imv) = 360.d0 - mvphi(it, imv)
+      mvtet(it, imv) = acos(mvz/mv)*180d0/pi
+      mvgam(it, imv) = 0d0
+    end if
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-END DO
+  end do
 !=======================================================================
-END SUBROUTINE mdirnewang
+end subroutine

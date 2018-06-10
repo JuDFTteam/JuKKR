@@ -1,4 +1,4 @@
-SUBROUTINE calccgc(ltab,kaptab,nmuetab,cgc,nkmax,nmuemax,nkmpmax)
+subroutine calccgc(ltab, kaptab, nmuetab, cgc, nkmax, nmuemax, nkmpmax)
 !   ********************************************************************
 !   *                                                                  *
 !   *   CLEBSCH-GORDON-COEFFICIENTS     CGC(IKM,IS)                    *
@@ -9,48 +9,48 @@ SUBROUTINE calccgc(ltab,kaptab,nmuetab,cgc,nkmax,nmuemax,nkmpmax)
 !   *                                                                  *
 !   ********************************************************************
 
-IMPLICIT NONE
+  implicit none
 
 ! Dummy arguments
-INTEGER NKMAX,NKMPMAX,NMUEMAX
-REAL*8 CGC(NKMPMAX,2)
-INTEGER KAPTAB(NMUEMAX),LTAB(NMUEMAX),NMUETAB(NMUEMAX)
+  integer :: nkmax, nkmpmax, nmuemax
+  real *8 :: cgc(nkmpmax, 2)
+  integer :: kaptab(nmuemax), ltab(nmuemax), nmuetab(nmuemax)
 
 ! Local variables
-INTEGER IKM,K,KAPPA,M
-REAL*8 J,L,MUE,TWOLP1
+  integer :: ikm, k, kappa, m
+  real *8 :: j, l, mue, twolp1
 
-ikm = 0
-DO k = 1,(nkmax+1)
-  l = ltab(k)
-  kappa = kaptab(k)
-  j = ABS(kappa) - 0.5D0
-  mue = -j - 1.0D0
-  twolp1 = 2.0D0*l + 1.0D0
-  
-  IF ( kappa < 0 ) THEN
-    
+  ikm = 0
+  do k = 1, (nkmax+1)
+    l = ltab(k)
+    kappa = kaptab(k)
+    j = abs(kappa) - 0.5d0
+    mue = -j - 1.0d0
+    twolp1 = 2.0d0*l + 1.0d0
+
+    if (kappa<0) then
+
 !     J = L + 1/2
-    DO m = 1,nmuetab(k)
-      
-      mue = mue + 1.0D0
-      ikm = ikm + 1
-      cgc(ikm,1) = DSQRT((l-mue+0.5D0)/twolp1)
-      cgc(ikm,2) = DSQRT((l+mue+0.5D0)/twolp1)
-    END DO
-  ELSE
-!     J = L - 1/2
-    DO m = 1,nmuetab(k)
-      
-      mue = mue + 1.0D0
-      ikm = ikm + 1
-      cgc(ikm,1) = DSQRT((l+mue+0.5D0)/twolp1)
-      cgc(ikm,2) = -DSQRT((l-mue+0.5D0)/twolp1)
-      
-    END DO
-  END IF
-  
-  
-END DO
+      do m = 1, nmuetab(k)
 
-END SUBROUTINE calccgc
+        mue = mue + 1.0d0
+        ikm = ikm + 1
+        cgc(ikm, 1) = dsqrt((l-mue+0.5d0)/twolp1)
+        cgc(ikm, 2) = dsqrt((l+mue+0.5d0)/twolp1)
+      end do
+    else
+!     J = L - 1/2
+      do m = 1, nmuetab(k)
+
+        mue = mue + 1.0d0
+        ikm = ikm + 1
+        cgc(ikm, 1) = dsqrt((l+mue+0.5d0)/twolp1)
+        cgc(ikm, 2) = -dsqrt((l-mue+0.5d0)/twolp1)
+
+      end do
+    end if
+
+
+  end do
+
+end subroutine

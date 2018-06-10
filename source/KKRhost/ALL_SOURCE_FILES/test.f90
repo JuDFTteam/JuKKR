@@ -1,22 +1,22 @@
 ! *********************************************************** 17.05.91 **
-LOGICAL FUNCTION test(string)
+logical function test(string)
 ! ***********************************************************************
 
 !     TEST = 'STRING  ' IS CONTAINED IN /TESTC/.
 
 ! ------------------------------------------------------------------------
-use mod_wunfiles, only: t_params
+  use :: mod_wunfiles, only: t_params
 
-IMPLICIT NONE
-CHARACTER (LEN=8), INTENT(IN)            :: string
-INTEGER :: i
-CHARACTER (LEN=8) :: testc(32)
+  implicit none
+  character (len=8), intent (in) :: string
+  integer :: i
+  character (len=8) :: testc(32)
 
-testc = t_params%testc
+  testc = t_params%testc
 
-test=.false.
-DO i=1,32
-  IF(string == testc(i)) test=.true.
-END DO
-RETURN
-END FUNCTION test
+  test = .false.
+  do i = 1, 32
+    if (string==testc(i)) test = .true.
+  end do
+  return
+end function

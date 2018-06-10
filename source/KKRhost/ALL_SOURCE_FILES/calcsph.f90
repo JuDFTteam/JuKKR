@@ -1,177 +1,178 @@
-subroutine CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,Z,C,E,LMPOTD,&
-   LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,            &
-   JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR,TMAT,             &
-   ALPHA,USE_SRATRICK)
+subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, z, c, e, lmpotd, &
+  lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk, jlk, &
+  hlk2, jlk2, gmatprefactor, tmat, alpha, use_sratrick)
 
-   use Constants
-   use Profiling
+  use :: constants
+  use :: profiling
 
-   implicit none
-   ! construct wavefunctions for spherical potentials
-   INTEGER NSRA,IRMDNEW,NRMAXD,NSPIN,LMAX,LMPOTD,LMMAXSO
-   INTEGER NCHEB,NPAN_TOT
-   INTEGER USE_SRATRICK
-   DOUBLE PRECISION Z,C
-   DOUBLE COMPLEX E,GMATPREFACTOR
-   DOUBLE PRECISION RNEW(NRMAXD),RPAN_INTERVALL(0:NPAN_TOT)
-   DOUBLE PRECISION VINS(IRMDNEW,LMPOTD,NSPIN)
-   DOUBLE COMPLEX :: HLK(1:4*(LMAX+1),IRMDNEW)
-   double complex :: JLK(1:4*(LMAX+1),IRMDNEW)
-   double complex :: HLK2(1:4*(LMAX+1),IRMDNEW)
-   double complex :: JLK2(1:4*(LMAX+1),IRMDNEW)
-   INTEGER JLK_INDEX(2*LMMAXSO)
+  implicit none
+! construct wavefunctions for spherical potentials
+  integer :: nsra, irmdnew, nrmaxd, nspin, lmax, lmpotd, lmmaxso
+  integer :: ncheb, npan_tot
+  integer :: use_sratrick
+  double precision :: z, c
+  double complex :: e, gmatprefactor
+  double precision :: rnew(nrmaxd), rpan_intervall(0:npan_tot)
+  double precision :: vins(irmdnew, lmpotd, nspin)
+  double complex :: hlk(1:4*(lmax+1), irmdnew)
+  double complex :: jlk(1:4*(lmax+1), irmdnew)
+  double complex :: hlk2(1:4*(lmax+1), irmdnew)
+  double complex :: jlk2(1:4*(lmax+1), irmdnew)
+  integer :: jlk_index(2*lmmaxso)
 
-   ! local
-   INTEGER LMSIZE,LMSIZE2,NVEC,NSPINTEMP
-   INTEGER IVEC,LVAL,IR,ISPIN,LSPIN,LSRA,I,L1,M1,LM1
-   INTEGER, ALLOCATABLE :: JLK_INDEXTEMP(:)
-   DOUBLE COMPLEX, ALLOCATABLE :: VLL0(:,:,:)
-   DOUBLE COMPLEX, ALLOCATABLE :: VLL(:,:,:)
-   DOUBLE COMPLEX, ALLOCATABLE :: RLLTEMP(:,:,:),SLLTEMP(:,:,:)
-   double complex, allocatable :: HLKTEMP(:,:),JLKTEMP(:,:)
-   double complex, allocatable :: HLK2TEMP(:,:),JLK2TEMP(:,:)
-   double complex, allocatable :: HLKNEW(:,:),JLKNEW(:,:)
-   DOUBLE COMPLEX, ALLOCATABLE :: TMATTEMP(:,:)
-   DOUBLE COMPLEX, ALLOCATABLE :: ALPHATEMP(:,:) ! LLY
-   DOUBLE COMPLEX TMAT(2*(LMAX+1))
-   DOUBLE COMPLEX ALPHA(2*(LMAX+1)) ! LLY
-   LMSIZE=1
-   IF (NSRA.EQ.2) THEN
-      LMSIZE2=2
-      NVEC=2
-   ELSE
-      LMSIZE2=1
-      NVEC=1
-   ENDIF
-   ALLOCATE (RLLTEMP(LMSIZE2,LMSIZE,IRMDNEW))
-   ALLOCATE (SLLTEMP(LMSIZE2,LMSIZE,IRMDNEW))
-   ALLOCATE (HLKTEMP(NVEC,IRMDNEW))
-   ALLOCATE (JLKTEMP(NVEC,IRMDNEW))
-   ALLOCATE (HLK2TEMP(NVEC,IRMDNEW))
-   ALLOCATE (JLK2TEMP(NVEC,IRMDNEW))
-   ALLOCATE (JLK_INDEXTEMP(LMSIZE2))
-   ALLOCATE (TMATTEMP(LMSIZE,LMSIZE))
-   ALLOCATE (ALPHATEMP(LMSIZE,LMSIZE)) ! LLY
-   ALLOCATE (HLKNEW(NVEC*NSPIN*(LMAX+1),IRMDNEW))
-   ALLOCATE (JLKNEW(NVEC*NSPIN*(LMAX+1),IRMDNEW))
+! local
+  integer :: lmsize, lmsize2, nvec, nspintemp
+  integer :: ivec, lval, ir, ispin, lspin, lsra, i, l1, m1, lm1
+  integer, allocatable :: jlk_indextemp(:)
+  double complex, allocatable :: vll0(:, :, :)
+  double complex, allocatable :: vll(:, :, :)
+  double complex, allocatable :: rlltemp(:, :, :), slltemp(:, :, :)
+  double complex, allocatable :: hlktemp(:, :), jlktemp(:, :)
+  double complex, allocatable :: hlk2temp(:, :), jlk2temp(:, :)
+  double complex, allocatable :: hlknew(:, :), jlknew(:, :)
+  double complex, allocatable :: tmattemp(:, :)
+  double complex, allocatable :: alphatemp(:, :) ! LLY
+  double complex :: tmat(2*(lmax+1))
+  double complex :: alpha(2*(lmax+1)) ! LLY
 
-   DO IVEC=1,NVEC
-      JLK_INDEXTEMP(IVEC)=IVEC
-   ENDDO
-   ALLOCATE(VLL0(LMSIZE,LMSIZE,IRMDNEW))
-   IF (NSRA.EQ.2) THEN
-      ALLOCATE(VLL(2*LMSIZE,2*LMSIZE,IRMDNEW))
-   ELSE
-      ALLOCATE(VLL(LMSIZE,LMSIZE,IRMDNEW))
-   ENDIF
+  lmsize = 1
+  if (nsra==2) then
+    lmsize2 = 2
+    nvec = 2
+  else
+    lmsize2 = 1
+    nvec = 1
+  end if
+  allocate (rlltemp(lmsize2,lmsize,irmdnew))
+  allocate (slltemp(lmsize2,lmsize,irmdnew))
+  allocate (hlktemp(nvec,irmdnew))
+  allocate (jlktemp(nvec,irmdnew))
+  allocate (hlk2temp(nvec,irmdnew))
+  allocate (jlk2temp(nvec,irmdnew))
+  allocate (jlk_indextemp(lmsize2))
+  allocate (tmattemp(lmsize,lmsize))
+  allocate (alphatemp(lmsize,lmsize)) ! LLY
+  allocate (hlknew(nvec*nspin*(lmax+1),irmdnew))
+  allocate (jlknew(nvec*nspin*(lmax+1),irmdnew))
 
-   ALPHA=CZERO
-   ! spin loop
-   NSPINTEMP=NSPIN
-   !       IF (NSRA.EQ.2) THEN
-   !         NSPINTEMP=NSPIN
-   !       ELSEIF (NSRA.EQ.1) THEN
-   !         NSPINTEMP=1
-   !       ENDIF
+  do ivec = 1, nvec
+    jlk_indextemp(ivec) = ivec
+  end do
+  allocate (vll0(lmsize,lmsize,irmdnew))
+  if (nsra==2) then
+    allocate (vll(2*lmsize,2*lmsize,irmdnew))
+  else
+    allocate (vll(lmsize,lmsize,irmdnew))
+  end if
 
-   DO ISPIN=1,NSPINTEMP
+  alpha = czero
+! spin loop
+  nspintemp = nspin
+!       IF (NSRA.EQ.2) THEN
+!         NSPINTEMP=NSPIN
+!       ELSEIF (NSRA.EQ.1) THEN
+!         NSPINTEMP=1
+!       ENDIF
 
-      LSPIN=(LMAX+1)*(ISPIN-1)
-      LSRA=(LMAX+1)*NVEC
-      ! each value of l, the Lippmann-Schwinger equation is solved using
-      ! the free-potential wavefunctions and potentials corresponding to l-value
-      DO LVAL=0,LMAX
+  do ispin = 1, nspintemp
 
-         DO IR=1,IRMDNEW
-            VLL0(LMSIZE,LMSIZE,IR)=VINS(IR,1,ISPIN)-2d0*Z/RNEW(IR)
-         ENDDO
-         IF (NSRA.EQ.2) THEN
-            CALL VLLMATSRA(VLL0,VLL,RNEW,LMSIZE,IRMDNEW,NRMAXD,E,LMAX,LVAL,'Ref=0')
-         ELSE
-            VLL(:,:,:)=VLL0(:,:,:)
-         ENDIF
+    lspin = (lmax+1)*(ispin-1)
+    lsra = (lmax+1)*nvec
+! each value of l, the Lippmann-Schwinger equation is solved using
+! the free-potential wavefunctions and potentials corresponding to l-value
+    do lval = 0, lmax
 
-         JLKTEMP(1,:)=JLK(LVAL+1,:)
-         HLKTEMP(1,:)=HLK(LVAL+1,:)
-         JLK2TEMP(1,:)=JLK2(LVAL+1,:)
-         HLK2TEMP(1,:)=HLK2(LVAL+1,:)
-         IF (NSRA.EQ.2) THEN
-            JLKTEMP(2,:)=JLK(LMAX+LVAL+2,:)
-            HLKTEMP(2,:)=HLK(LMAX+LVAL+2,:)
-            JLK2TEMP(2,:)=JLK2(LMAX+LVAL+2,:)
-            HLK2TEMP(2,:)=HLK2(LMAX+LVAL+2,:)
-         ENDIF
-         TMATTEMP=(0d0,0d0)
-         ALPHATEMP=(0d0,0d0)
-         CALL RLLSLL(RPAN_INTERVALL,RNEW,VLL,RLLTEMP,SLLTEMP,TMATTEMP,  &
-            NCHEB,NPAN_TOT,LMSIZE,LMSIZE2,NVEC,IRMDNEW,NRMAXD,NVEC,     &
-            JLK_INDEXTEMP,HLKTEMP,JLKTEMP,HLK2TEMP,JLK2TEMP,            &
-            GMATPREFACTOR,'1','1','0',USE_SRATRICK,                     &
-            ALPHATEMP) ! LLY
+      do ir = 1, irmdnew
+        vll0(lmsize, lmsize, ir) = vins(ir, 1, ispin) - 2d0*z/rnew(ir)
+      end do
+      if (nsra==2) then
+        call vllmatsra(vll0, vll, rnew, lmsize, irmdnew, nrmaxd, e, lmax, &
+          lval, 'Ref=0')
+      else
+        vll(:, :, :) = vll0(:, :, :)
+      end if
 
-         DO IR=1,IRMDNEW
-            HLKNEW(LSPIN+LVAL+1,IR)=SLLTEMP(1,1,IR)/RNEW(IR)
-            JLKNEW(LSPIN+LVAL+1,IR)=RLLTEMP(1,1,IR)/RNEW(IR)
-         ENDDO
-         IF (NSRA.EQ.2) THEN
-            DO IR=1,IRMDNEW
-               HLKNEW(LSPIN+LSRA+LVAL+1,IR)=SLLTEMP(2,1,IR)/RNEW(IR)
-               JLKNEW(LSPIN+LSRA+LVAL+1,IR)=RLLTEMP(2,1,IR)/RNEW(IR)
-            ENDDO
-         ENDIF
-         TMAT(LSPIN+LVAL+1)=TMATTEMP(1,1)
-         ALPHA(LSPIN+LVAL+1)=ALPHATEMP(1,1)      ! LLY
-      ENDDO ! LMAX
-   ENDDO ! NSPIN
+      jlktemp(1, :) = jlk(lval+1, :)
+      hlktemp(1, :) = hlk(lval+1, :)
+      jlk2temp(1, :) = jlk2(lval+1, :)
+      hlk2temp(1, :) = hlk2(lval+1, :)
+      if (nsra==2) then
+        jlktemp(2, :) = jlk(lmax+lval+2, :)
+        hlktemp(2, :) = hlk(lmax+lval+2, :)
+        jlk2temp(2, :) = jlk2(lmax+lval+2, :)
+        hlk2temp(2, :) = hlk2(lmax+lval+2, :)
+      end if
+      tmattemp = (0d0, 0d0)
+      alphatemp = (0d0, 0d0)
+      call rllsll(rpan_intervall, rnew, vll, rlltemp, slltemp, tmattemp, &
+        ncheb, npan_tot, lmsize, lmsize2, nvec, irmdnew, nrmaxd, nvec, &
+        jlk_indextemp, hlktemp, jlktemp, hlk2temp, jlk2temp, gmatprefactor, &
+        '1', '1', '0', use_sratrick, alphatemp) ! LLY
 
-   LM1=1
-   DO IVEC=1,NVEC
-      DO I=1,2
-         DO L1=0,LMAX
-            DO M1=-L1,L1
-               JLK_INDEX(LM1)=L1+(IVEC-1)*NSPINTEMP*(LMAX+1)+(I-1)*(LMAX+1)+1
-               LM1=LM1+1
-            ENDDO
-         ENDDO
-      ENDDO
-   ENDDO
-   DO IR=1,IRMDNEW
-      DO L1=1,NVEC*(LMAX+1)*NSPINTEMP
-         HLK(L1,IR)=HLKNEW(L1,IR)
-         JLK(L1,IR)=JLKNEW(L1,IR)
-      ENDDO
-   ENDDO
-   IF (NSRA.EQ.2) THEN
-      DO IR=1,IRMDNEW
-         DO L1=1,(LMAX+1)*NSPINTEMP
-            HLK2(L1,IR)=-HLKNEW(L1+LMAX+1,IR)
-            JLK2(L1,IR)=-JLKNEW(L1+LMAX+1,IR)
-         ENDDO
-         DO L1=NSPINTEMP*(LMAX+1)+1,NVEC*(LMAX+1)*NSPINTEMP
-            HLK2(L1,IR)=HLKNEW(L1-(LMAX+1)*NSPINTEMP,IR)
-            JLK2(L1,IR)=JLKNEW(L1-(LMAX+1)*NSPINTEMP,IR)
-         ENDDO
-      ENDDO
-   ELSE
-      DO IR=1,IRMDNEW
-         DO L1=1,NVEC*(LMAX+1)*NSPINTEMP
-            HLK2(L1,IR)=-HLKNEW(L1,IR)
-            JLK2(L1,IR)=-JLKNEW(L1,IR)
-         ENDDO
-      ENDDO
-   ENDIF
-   DEALLOCATE (RLLTEMP)
-   DEALLOCATE (SLLTEMP)
-   DEALLOCATE (HLKTEMP)
-   DEALLOCATE (JLKTEMP)
-   DEALLOCATE (HLK2TEMP)
-   DEALLOCATE (JLK2TEMP)
-   DEALLOCATE (JLK_INDEXTEMP)
-   DEALLOCATE (TMATTEMP)
-   DEALLOCATE (ALPHATEMP) ! LLY
-   DEALLOCATE (HLKNEW)
-   DEALLOCATE (JLKNEW)
-   DEALLOCATE (VLL0)
-   DEALLOCATE (VLL)
+      do ir = 1, irmdnew
+        hlknew(lspin+lval+1, ir) = slltemp(1, 1, ir)/rnew(ir)
+        jlknew(lspin+lval+1, ir) = rlltemp(1, 1, ir)/rnew(ir)
+      end do
+      if (nsra==2) then
+        do ir = 1, irmdnew
+          hlknew(lspin+lsra+lval+1, ir) = slltemp(2, 1, ir)/rnew(ir)
+          jlknew(lspin+lsra+lval+1, ir) = rlltemp(2, 1, ir)/rnew(ir)
+        end do
+      end if
+      tmat(lspin+lval+1) = tmattemp(1, 1)
+      alpha(lspin+lval+1) = alphatemp(1, 1) ! LLY
+    end do ! LMAX
+  end do ! NSPIN
 
-end subroutine CALCSPH
+  lm1 = 1
+  do ivec = 1, nvec
+    do i = 1, 2
+      do l1 = 0, lmax
+        do m1 = -l1, l1
+          jlk_index(lm1) = l1 + (ivec-1)*nspintemp*(lmax+1) + (i-1)*(lmax+1) + &
+            1
+          lm1 = lm1 + 1
+        end do
+      end do
+    end do
+  end do
+  do ir = 1, irmdnew
+    do l1 = 1, nvec*(lmax+1)*nspintemp
+      hlk(l1, ir) = hlknew(l1, ir)
+      jlk(l1, ir) = jlknew(l1, ir)
+    end do
+  end do
+  if (nsra==2) then
+    do ir = 1, irmdnew
+      do l1 = 1, (lmax+1)*nspintemp
+        hlk2(l1, ir) = -hlknew(l1+lmax+1, ir)
+        jlk2(l1, ir) = -jlknew(l1+lmax+1, ir)
+      end do
+      do l1 = nspintemp*(lmax+1) + 1, nvec*(lmax+1)*nspintemp
+        hlk2(l1, ir) = hlknew(l1-(lmax+1)*nspintemp, ir)
+        jlk2(l1, ir) = jlknew(l1-(lmax+1)*nspintemp, ir)
+      end do
+    end do
+  else
+    do ir = 1, irmdnew
+      do l1 = 1, nvec*(lmax+1)*nspintemp
+        hlk2(l1, ir) = -hlknew(l1, ir)
+        jlk2(l1, ir) = -jlknew(l1, ir)
+      end do
+    end do
+  end if
+  deallocate (rlltemp)
+  deallocate (slltemp)
+  deallocate (hlktemp)
+  deallocate (jlktemp)
+  deallocate (hlk2temp)
+  deallocate (jlk2temp)
+  deallocate (jlk_indextemp)
+  deallocate (tmattemp)
+  deallocate (alphatemp) ! LLY
+  deallocate (hlknew)
+  deallocate (jlknew)
+  deallocate (vll0)
+  deallocate (vll)
+
+end subroutine

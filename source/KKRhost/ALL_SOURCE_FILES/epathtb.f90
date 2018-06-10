@@ -1,7 +1,6 @@
-SUBROUTINE epathtb(ez,df,efermi,npnt,iesemicore,idosemicore,  &
-        ebotval,emuval,tkval,npolval,n1val,n2val,n3val,  &
-        ebotsem,emusem,tksem,npolsem,n1sem,n2sem,n3sem,  &
-        iemxd)
+subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, &
+  emuval, tkval, npolval, n1val, n2val, n3val, ebotsem, emusem, tksem, &
+  npolsem, n1sem, n2sem, n3sem, iemxd)
 ! **********************************************************************
 ! *                                                                    *
 ! * Generating the energy mesh.                                        *
@@ -13,52 +12,52 @@ SUBROUTINE epathtb(ez,df,efermi,npnt,iesemicore,idosemicore,  &
 ! *              ph. mavropoulos, v.popescu Juelich/Munich 2004        *
 ! *                                                                    *
 ! **********************************************************************
-      use mod_types, only: t_inc
-      IMPLICIT NONE
-      INTEGER IEMXD
-      DOUBLE COMPLEX EZ(*),DF(*),EZSEMI(IEMXD),DFSEMI(IEMXD)
-      DOUBLE COMPLEX EZVAL(IEMXD),DFVAL(IEMXD)
-      DOUBLE PRECISION EBOTSEM,EMUSEM,TKSEM,EBOTVAL,EMUVAL,TKVAL,EFERMI
-      INTEGER NPOLSEM,N1SEM,N2SEM,N3SEM
-      INTEGER NPOLVAL, N1VAL, N2VAL, N3VAL
-      INTEGER IESEMICORE,NPNT,NPNTSEMI,NPNTVAL
-      INTEGER IE,JE
-      INTEGER IDOSEMICORE
+  use :: mod_types, only: t_inc
+  implicit none
+  integer :: iemxd
+  double complex :: ez(*), df(*), ezsemi(iemxd), dfsemi(iemxd)
+  double complex :: ezval(iemxd), dfval(iemxd)
+  double precision :: ebotsem, emusem, tksem, ebotval, emuval, tkval, efermi
+  integer :: npolsem, n1sem, n2sem, n3sem
+  integer :: npolval, n1val, n2val, n3val
+  integer :: iesemicore, npnt, npntsemi, npntval
+  integer :: ie, je
+  integer :: idosemicore
 
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-IF(t_inc%i_write>0) THEN
-  WRITE (1337,*)
-  WRITE (1337,'(79(1H=))')
-  WRITE (1337,'(20X,A)') 'EPATHTB: generates a complex E contour'
-  WRITE (1337,'(79(1H=))')
-  WRITE (1337,*)
-END IF
+  if (t_inc%i_write>0) then
+    write (1337, *)
+    write (1337, '(79(1H=))')
+    write (1337, '(20X,A)') 'EPATHTB: generates a complex E contour'
+    write (1337, '(79(1H=))')
+    write (1337, *)
+  end if
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-iesemicore = 0
-IF ( idosemicore == 1 ) THEN
-  IF(t_inc%i_write>0) WRITE(1337,99001) 'semi-core contour'
-  CALL emesht(ezsemi,dfsemi,npntsemi,ebotsem,emusem,efermi,  &
-      tksem,-npolsem,n1sem,n2sem,n3sem,iemxd)
-  iesemicore = npntsemi
-  IF(t_inc%i_write>0) WRITE(1337,99001) 'valence contour'
-END IF
-CALL emesht(ezval,dfval,npntval,ebotval,emuval,efermi,tkval,  &
-    npolval,n1val,n2val,n3val,iemxd)
+  iesemicore = 0
+  if (idosemicore==1) then
+    if (t_inc%i_write>0) write (1337, 100) 'semi-core contour'
+    call emesht(ezsemi, dfsemi, npntsemi, ebotsem, emusem, efermi, tksem, &
+      -npolsem, n1sem, n2sem, n3sem, iemxd)
+    iesemicore = npntsemi
+    if (t_inc%i_write>0) write (1337, 100) 'valence contour'
+  end if
+  call emesht(ezval, dfval, npntval, ebotval, emuval, efermi, tkval, npolval, &
+    n1val, n2val, n3val, iemxd)
 
-npnt = iesemicore + npntval
+  npnt = iesemicore + npntval
 
-DO ie = 1,iesemicore
-  ez(ie) = ezsemi(ie)
-  df(ie) = dfsemi(ie)
-END DO
+  do ie = 1, iesemicore
+    ez(ie) = ezsemi(ie)
+    df(ie) = dfsemi(ie)
+  end do
 
-DO ie = iesemicore+1,npnt
-  je = ie - iesemicore
-  ez(ie) = ezval(je)
-  df(ie) = dfval(je)
-END DO
+  do ie = iesemicore + 1, npnt
+    je = ie - iesemicore
+    ez(ie) = ezval(je)
+    df(ie) = dfval(je)
+  end do
 
-99001 FORMAT(7X,'* ',a,/,7X,20(1H-),/)
-END SUBROUTINE epathtb
+100 format (7x, '* ', a, /, 7x, 20('-'), /)
+end subroutine

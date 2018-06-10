@@ -1,25 +1,25 @@
-INTEGER FUNCTION lngstring(string,lstrmax)
+integer function lngstring(string, lstrmax)
 !   ********************************************************************
 !   *                                                                  *
 !   *  find position of last non-blank character in STRING(1:LSTRMAX)  *
 !   *                                                                  *
 !   ********************************************************************
-IMPLICIT NONE
+  implicit none
 
 ! Dummy arguments
-INTEGER LSTRMAX
-CHARACTER*(*) STRING
+  integer :: lstrmax
+  character (len=*) :: string
 
 ! Local variables
-CHARACTER C
-INTEGER I,ICHAR
+  character c
+  integer :: i, ichar
 
-lngstring = 0
-DO i = lstrmax,1, - 1
-  c = string(i:i)
-  IF ( c /= ' ' .AND. ICHAR(c) > 0 ) THEN
-    lngstring = i
-    RETURN
-  END IF
-END DO
-END FUNCTION lngstring
+  lngstring = 0
+  do i = lstrmax, 1, -1
+    c = string(i:i)
+    if (c/=' ' .and. ichar(c)>0) then
+      lngstring = i
+      return
+    end if
+  end do
+end function

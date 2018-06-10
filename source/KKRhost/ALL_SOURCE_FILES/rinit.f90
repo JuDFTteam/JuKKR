@@ -1,33 +1,33 @@
-SUBROUTINE rinit(n,a)
+subroutine rinit(n, a)
 ! **********************************************************************
 ! * Setting the first N values of a double precision array A to zero   *
 ! **********************************************************************
 !..
 !.. Arguments ..
-      INTEGER N
-      DOUBLE PRECISION A(*)
+  integer :: n
+  double precision :: a(*)
 !..
 !.. Locals ..
-      INTEGER I,M,MP1
-      DOUBLE PRECISION DZERO
+  integer :: i, m, mp1
+  double precision :: dzero
 !..
-      DATA DZERO / 0.0D0 /
+  data dzero/0.0d0/
 !..
 !..
-m = MOD(n,5)
-IF ( m /= 0 ) THEN
-  DO i = 1,m
+  m = mod(n, 5)
+  if (m/=0) then
+    do i = 1, m
+      a(i) = dzero
+    end do
+    if (n<5) return
+  end if
+  mp1 = m + 1
+  do i = mp1, n, 5
     a(i) = dzero
-  END DO
-  IF ( n < 5 ) RETURN
-END IF
-mp1 = m + 1
-DO i = mp1,n,5
-  a(i  ) = dzero
-  a(i+1) = dzero
-  a(i+2) = dzero
-  a(i+3) = dzero
-  a(i+4) = dzero
-END DO
+    a(i+1) = dzero
+    a(i+2) = dzero
+    a(i+3) = dzero
+    a(i+4) = dzero
+  end do
 
-END SUBROUTINE rinit
+end subroutine

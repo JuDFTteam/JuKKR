@@ -1,4 +1,4 @@
-SUBROUTINE rintsimp(fx,jtop,cint)
+subroutine rintsimp(fx, jtop, cint)
 !   ********************************************************************
 !   *                                                                  *
 !   *  SIMPSON - INTERGRATION FOR  REAL   INTEGRAND  FX FROM 1 TO JTOP *
@@ -7,25 +7,25 @@ SUBROUTINE rintsimp(fx,jtop,cint)
 !   *                                                                  *
 !   ********************************************************************
 
-IMPLICIT NONE
+  implicit none
 
 ! Dummy arguments
-REAL*8 CINT
-INTEGER JTOP
-REAL*8 FX(JTOP)
+  real *8 :: cint
+  integer :: jtop
+  real *8 :: fx(jtop)
 
 ! Local variables
-INTEGER I
-REAL*8 SIMP
+  integer :: i
+  real *8 :: simp
 
-cint = fx(1)
-simp = -1.0D0
+  cint = fx(1)
+  simp = -1.0d0
 
-DO i = 2,jtop - 1
-  simp = -simp
-  cint = cint + (3.0D0+simp)*fx(i)
-END DO
+  do i = 2, jtop - 1
+    simp = -simp
+    cint = cint + (3.0d0+simp)*fx(i)
+  end do
 
-cint = (cint+fx(jtop))/3.0D0
+  cint = (cint+fx(jtop))/3.0d0
 
-END SUBROUTINE rintsimp
+end subroutine

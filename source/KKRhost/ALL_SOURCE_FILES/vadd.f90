@@ -1,15 +1,15 @@
 ! ************************************************************************
-SUBROUTINE vadd(a,b,c)
+subroutine vadd(a, b, c)
 ! ************************************************************************
 
-DOUBLE PRECISION, INTENT(IN)             :: a(*)
-DOUBLE PRECISION, INTENT(IN)             :: b(*)
-DOUBLE PRECISION, INTENT(OUT)            :: c(*)
+  double precision, intent (in) :: a(*)
+  double precision, intent (in) :: b(*)
+  double precision, intent (out) :: c(*)
 
-INTEGER :: i
+  integer :: i
 
-DO  i=1,3
-  c(i)=a(i)+b(i)
-END DO
-RETURN
-END SUBROUTINE vadd
+  do i = 1, 3
+    c(i) = a(i) + b(i)
+  end do
+  return
+end subroutine

@@ -8,348 +8,353 @@
 !> actually needed in EWALD2D
 !> @note - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine LATTICE2D(ALAT,BRAVAIS,RECBV,NGMAX,NRMAX,NSHLG,NSHLR,  &
-   NSG,NSR,GN,RM,RMAX,GMAX,IPRINT,NMAXD,ISHLD)
-   ! **********************************************************************
-   ! *                                                                    *
-   ! *  generate lattice vectors of direct and reciprocal space from      *
-   ! *  basic translation vectors br                                      *
-   ! *                                                                    *
-   ! *  alat            : lattice constant                                *
-   ! *  br(i,j)         : i=x,y,z j= 1,2,3 bravais vectors                *
-   ! *                    *** in a.u. ****                                *
-   ! *  rmax            : maximum radius in real space        (input)     *
-   ! *  gmax            : maximum radius in reciprocal space  (input)     *
-   ! *  ngmax           : Number of reciprocal lattice vectors            *
-   ! *  gn(2,nmaxd)     : x,y,z   of reciprocal lattice vectors           *
-   ! *  nrmax           : Number of real lattice vectors                  *
-   ! *  rm(2,nmaxd)     : x,y,z  of real space vectors                    *
-   ! *  nshlg           : shells in reciprocal space                      *
-   ! *  nshlr           : shells in real space                            *
-   ! *  nsg,nsr         : integer arrays, number of atoms in each shell   *
-   ! *                                                                    *
-   ! *  The routine has been brought to a form which is very similar to   *
-   ! *  LATTICE2D -- from which it has been originally derived            *
-   ! *  Dimension of arrays GN,RM changed from (4,*) to (2,*), the 4th    *
-   ! *  one it is used only locally (GNR/RMR) -- only GN/RM(2,*) are      *
-   ! *  actually needed in EWALD2D                  v.popescu May 2004    *
-   ! *                                                                    *
-   ! **********************************************************************
-   implicit none
-   ! ..
-   ! .. Input variables
-   integer, intent(in) :: NMAXD  !< Paremeters for the Ewald summations
-   integer, intent(in) :: ISHLD  !< Paremeters for the Ewald summations
-   integer, intent(in) :: IPRINT
-   double precision, intent(in) :: ALAT   !< Lattice constant in a.u.
-   double precision, dimension(3,3), intent(in) :: RECBV   !< Reciprocal basis vectors
-   double precision, dimension(3,3), intent(in) :: BRAVAIS  !< Bravais lattice vectors
-   ! ..
-   ! .. Input/Output variables
-   double precision, intent(inout) :: GMAX   !< Ewald summation cutoff parameter for reciprocal space summation
-   double precision, intent(inout) :: RMAX   !< Ewald summation cutoff parameter for real space summation
-   integer, dimension(ISHLD), intent(inout) :: NSG
-   integer, dimension(ISHLD), intent(inout) :: NSR
-   double precision, dimension(2,NMAXD), intent(inout) :: GN   !< x,y,z   of reciprocal lattice vectors
-   double precision, dimension(2,NMAXD), intent(inout) :: RM   !< x,y,z  of real space vectors
-   ! .. Output variables
-   integer, intent(out) :: NSHLR  !< Shells in real space
-   integer, intent(out) :: NSHLG  !< Shells in reciprocal space
-   integer, intent(out) :: NRMAX  !< Number of real space vectors rr
-   integer, intent(out) :: NGMAX  !< Number of reciprocal space vectors
-   ! ..
-   ! .. Local scalars ..
-   integer :: IDINT
-   integer :: I,K,L,M,N,N1,NG,NR,NSH,NSHL,NUMG,NUMGH,NUMR,NUMRH
-   double precision :: DBLE
-   double precision :: RX,RY,VMIN
-   double precision :: A,ABSGM,ABSRM,AG,AR,B,DA,DB,GX,GY,PI
-   ! ..
-   ! .. Local arrays ..
-   double precision, dimension(NMAXD)  :: GNR
-   double precision, dimension(NMAXD)  :: RMR
-   double precision, dimension(3)      :: ABSG
-   double precision, dimension(3)      :: ABSR
-   double precision, dimension(NMAXD)  :: LENGTH
-   double precision, dimension(3,3)       :: BG
-   double precision, dimension(3,3)       :: BR
-   double precision, dimension(4,NMAXD)   :: CJ
-   ! ..
-   ! .. Intrinsic functions ..
-   intrinsic ABS,ATAN,DBLE,IDINT,MAX,MOD,SQRT
-   ! ..
-   ! .. External subroutines ..
-   external IOINPUT
-   !----------------------------------------------------------------------------
-   PI = 4.0D0*ATAN(1.0D0)
-   !----------------------------------------------------------------------------
-   ! OUTPUT
-   !----------------------------------------------------------------------------
-   write (1337,'(5X,2A,/)') '< LATTICE2D > : ','generating direct/reciprocal lattice vectors'
-   !----------------------------------------------------------------------------
-   ! OUTPUT
-   !----------------------------------------------------------------------------
-   RMAX = RMAX*ALAT
-   GMAX = GMAX/ALAT
-   !----------------------------------------------------------------------------
-   ! OUTPUT
-   !----------------------------------------------------------------------------
-   write (1337,FMT=99001) RMAX,GMAX
-   !----------------------------------------------------------------------------
-   ! OUTPUT
-   !----------------------------------------------------------------------------
+subroutine lattice2d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
+  nsr, gn, rm, rmax, gmax, iprint, nmaxd, ishld)
+! **********************************************************************
+! *                                                                    *
+! *  generate lattice vectors of direct and reciprocal space from      *
+! *  basic translation vectors br                                      *
+! *                                                                    *
+! *  alat            : lattice constant                                *
+! *  br(i,j)         : i=x,y,z j= 1,2,3 bravais vectors                *
+! *                    *** in a.u. ****                                *
+! *  rmax            : maximum radius in real space        (input)     *
+! *  gmax            : maximum radius in reciprocal space  (input)     *
+! *  ngmax           : Number of reciprocal lattice vectors            *
+! *  gn(2,nmaxd)     : x,y,z   of reciprocal lattice vectors           *
+! *  nrmax           : Number of real lattice vectors                  *
+! *  rm(2,nmaxd)     : x,y,z  of real space vectors                    *
+! *  nshlg           : shells in reciprocal space                      *
+! *  nshlr           : shells in real space                            *
+! *  nsg,nsr         : integer arrays, number of atoms in each shell   *
+! *                                                                    *
+! *  The routine has been brought to a form which is very similar to   *
+! *  LATTICE2D -- from which it has been originally derived            *
+! *  Dimension of arrays GN,RM changed from (4,*) to (2,*), the 4th    *
+! *  one it is used only locally (GNR/RMR) -- only GN/RM(2,*) are      *
+! *  actually needed in EWALD2D                  v.popescu May 2004    *
+! *                                                                    *
+! **********************************************************************
+  implicit none
+! ..
+! .. Input variables
+  integer, intent (in) :: nmaxd !< Paremeters for the Ewald summations
+  integer, intent (in) :: ishld !< Paremeters for the Ewald summations
+  integer, intent (in) :: iprint
+  double precision, intent (in) :: alat !< Lattice constant in a.u.
+  double precision, dimension (3, 3), intent (in) :: recbv !< Reciprocal basis vectors
+  double precision, dimension (3, 3), intent (in) :: bravais !< Bravais lattice vectors
+! ..
+! .. Input/Output variables
+  double precision, intent (inout) :: gmax !< Ewald summation cutoff parameter for reciprocal space summation
+  double precision, intent (inout) :: rmax !< Ewald summation cutoff parameter for real space summation
+  integer, dimension (ishld), intent (inout) :: nsg
+  integer, dimension (ishld), intent (inout) :: nsr
+  double precision, dimension (2, nmaxd), intent (inout) :: gn !< x,y,z   of reciprocal lattice vectors
+  double precision, dimension (2, nmaxd), intent (inout) :: rm !< x,y,z  of real space vectors
+! .. Output variables
+  integer, intent (out) :: nshlr !< Shells in real space
+  integer, intent (out) :: nshlg !< Shells in reciprocal space
+  integer, intent (out) :: nrmax !< Number of real space vectors rr
+  integer, intent (out) :: ngmax !< Number of reciprocal space vectors
+! ..
+! .. Local scalars ..
+  integer :: idint
+  integer :: i, k, l, m, n, n1, ng, nr, nsh, nshl, numg, numgh, numr, numrh
+  double precision :: dble
+  double precision :: rx, ry, vmin
+  double precision :: a, absgm, absrm, ag, ar, b, da, db, gx, gy, pi
+! ..
+! .. Local arrays ..
+  double precision, dimension (nmaxd) :: gnr
+  double precision, dimension (nmaxd) :: rmr
+  double precision, dimension (3) :: absg
+  double precision, dimension (3) :: absr
+  double precision, dimension (nmaxd) :: length
+  double precision, dimension (3, 3) :: bg
+  double precision, dimension (3, 3) :: br
+  double precision, dimension (4, nmaxd) :: cj
+! ..
+! .. Intrinsic functions ..
+  intrinsic :: abs, atan, dble, idint, max, mod, sqrt
+! ..
+! .. External subroutines ..
+  external :: ioinput
+!----------------------------------------------------------------------------
+  pi = 4.0d0*atan(1.0d0)
+!----------------------------------------------------------------------------
+! OUTPUT
+!----------------------------------------------------------------------------
+  write (1337, '(5X,2A,/)') '< LATTICE2D > : ', &
+    'generating direct/reciprocal lattice vectors'
+!----------------------------------------------------------------------------
+! OUTPUT
+!----------------------------------------------------------------------------
+  rmax = rmax*alat
+  gmax = gmax/alat
+!----------------------------------------------------------------------------
+! OUTPUT
+!----------------------------------------------------------------------------
+  write (1337, fmt=100) rmax, gmax
+!----------------------------------------------------------------------------
+! OUTPUT
+!----------------------------------------------------------------------------
 
-   !----------------------------------------------------------------------------
-   ! Basic trans. vectors and basis vectors
-   !----------------------------------------------------------------------------
-   do I = 1,3
-      BR(1,I) = BRAVAIS(1,I)*ALAT
-      BR(2,I) = BRAVAIS(2,I)*ALAT
-   end do
-   !----------------------------------------------------------------------------
-   ! Generate primitive vectors BG of reciprocal space
-   !----------------------------------------------------------------------------
-   do I = 1,3
-      BG(1,I) = RECBV(1,I)*2D0*PI/ALAT
-      BG(2,I) = RECBV(2,I)*2D0*PI/ALAT
-   end do
-   !----------------------------------------------------------------------------
-   ! Estimate no. of lattice vectors
-   !----------------------------------------------------------------------------
-   do I = 1,3
-      ABSR(I) = SQRT(BR(1,I)**2+BR(2,I)**2)
-      ABSG(I) = SQRT(BG(1,I)**2+BG(2,I)**2)
-   end do
-   !
-   ABSRM = MAX(ABSR(1),ABSR(2))
-   ABSGM = MAX(ABSG(1),ABSG(2))
-   ABSRM = 2.0D0*PI/ABSRM
-   ABSGM = 2.0D0*PI/ABSGM
-   NUMR = 2*(IDINT(RMAX/ABSGM)+1) + 1
-   NUMG = 2*(IDINT(GMAX/ABSRM)+1) + 1
-   NUMRH = NUMR/2 + 1
-   NUMGH = NUMG/2 + 1
-   !
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !                 generate lattice vectors of real space
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !
-   write(1337,*) 'Real space...'
-   NR = 0
-   !----------------------------------------------------------------------------
-   do L = 1,NUMR
-      A = DBLE(L-NUMRH)
-     do M = 1,NUMR
-         B = DBLE(M-NUMRH)
-         !----------------------------------------------------------------------
-         RX = A*BR(1,1) + B*BR(1,2)
-         RY = A*BR(2,1) + B*BR(2,2)
-         AR = SQRT(RX*RX+RY*RY)
-         !----------------------------------------------------------------------
-         if ( AR.LE.RMAX ) then
-            NR = NR + 1
-            if ( NR.GT.NMAXD ) then
-               write (6,*) &
-                  'lattice2d: ERROR: Dimension NMAXD in the inputcard too small',&
-                  NR,NMAXD
-               stop 'lattice2d'
-            end if
-            CJ(1,NR) = RX
-            CJ(2,NR) = RY
-            CJ(3,NR) = 0D0
-            CJ(4,NR) = AR
-         end if
-      end do
-   end do
-   !----------------------------------------------------------------------------
-   NRMAX = NR
-   !----------------------------------------------------------------------------
-   ! Sort vectors in order of increasing absolute value
-   !----------------------------------------------------------------------------
-   write(1337,FMT='(A11,I8,A11)') '...sorting ',NRMAX,' vectors...'
-
-   DA = 1.D-06
-   NSH = 0
-   NSHL = -1
-   !----------------------------------------------------------------------------
-   do K = 1,NR
-      VMIN = RMAX + 1.0D0
-      do N = 1,NR
-         if ( CJ(4,N)-VMIN.LT.0D0 ) then
-            VMIN = CJ(4,N)
-            N1 = N
-         end if
-      end do
-      !
-      NSHL = NSHL + 1
-      RM(1,K) = CJ(1,N1)
-      RM(2,K) = CJ(2,N1)
-      RMR(K)  = CJ(4,N1)
-      DB = VMIN
-      !-------------------------------------------------------------------------
-      if ( DB.GT.DA+1.D-06 ) then
-         NSH = NSH + 1
-         if ( NSH.GT.ISHLD ) then
-            write (6,*) ' ERROR: Dimension ISHLD in the inputcard too small', &
-            NSH,ISHLD
-            stop 'lattice2d'
-         end if
-         !
-         NSR(NSH) = NSHL
-         NSHL = 0
-         DA = DB
+!----------------------------------------------------------------------------
+! Basic trans. vectors and basis vectors
+!----------------------------------------------------------------------------
+  do i = 1, 3
+    br(1, i) = bravais(1, i)*alat
+    br(2, i) = bravais(2, i)*alat
+  end do
+!----------------------------------------------------------------------------
+! Generate primitive vectors BG of reciprocal space
+!----------------------------------------------------------------------------
+  do i = 1, 3
+    bg(1, i) = recbv(1, i)*2d0*pi/alat
+    bg(2, i) = recbv(2, i)*2d0*pi/alat
+  end do
+!----------------------------------------------------------------------------
+! Estimate no. of lattice vectors
+!----------------------------------------------------------------------------
+  do i = 1, 3
+    absr(i) = sqrt(br(1,i)**2+br(2,i)**2)
+    absg(i) = sqrt(bg(1,i)**2+bg(2,i)**2)
+  end do
+!
+  absrm = max(absr(1), absr(2))
+  absgm = max(absg(1), absg(2))
+  absrm = 2.0d0*pi/absrm
+  absgm = 2.0d0*pi/absgm
+  numr = 2*(idint(rmax/absgm)+1) + 1
+  numg = 2*(idint(gmax/absrm)+1) + 1
+  numrh = numr/2 + 1
+  numgh = numg/2 + 1
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!                 generate lattice vectors of real space
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+  write (1337, *) 'Real space...'
+  nr = 0
+!----------------------------------------------------------------------------
+  do l = 1, numr
+    a = dble(l-numrh)
+    do m = 1, numr
+      b = dble(m-numrh)
+!----------------------------------------------------------------------
+      rx = a*br(1, 1) + b*br(1, 2)
+      ry = a*br(2, 1) + b*br(2, 2)
+      ar = sqrt(rx*rx+ry*ry)
+!----------------------------------------------------------------------
+      if (ar<=rmax) then
+        nr = nr + 1
+        if (nr>nmaxd) then
+          write (6, *) &
+            'lattice2d: ERROR: Dimension NMAXD in the inputcard too small', &
+            nr, nmaxd
+          stop 'lattice2d'
+        end if
+        cj(1, nr) = rx
+        cj(2, nr) = ry
+        cj(3, nr) = 0d0
+        cj(4, nr) = ar
       end if
-      !-------------------------------------------------------------------------
-      CJ(4,N1) = RMAX + 1.0D0
-   end do
-   !----------------------------------------------------------------------------
-   NSH = NSH + 1
-   NSHL = NSHL + 1
-   if ( NSH.GT.ISHLD ) then
-      write (6,*) ' ERROR: Dimension ISHLD in the inputcard too small',NSH,ISHLD
-      stop 'lattice2d'
-   end if
-   !
-   NSR(NSH) = NSHL
-   NSHLR = NSH
-   if ( NSHLR.LE.1 ) stop 'lattice2d: ERROR: cut-off radius RMAX too small '
-   write(1337,*) '...done.'
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    end do
+  end do
+!----------------------------------------------------------------------------
+  nrmax = nr
+!----------------------------------------------------------------------------
+! Sort vectors in order of increasing absolute value
+!----------------------------------------------------------------------------
+  write (1337, fmt='(A11,I8,A11)') '...sorting ', nrmax, ' vectors...'
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !                 generate lattice vectors of real space
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !
-   write(1337,*) 'Reciprocal space...'
-   NG = 0
-   !----------------------------------------------------------------------------
-   do L = 1,NUMG
-      A = DBLE(L-NUMGH)
-      do M = 1,NUMG
-         B = DBLE(M-NUMGH)
-         !----------------------------------------------------------------------
-         GX = A*BG(1,1) + B*BG(1,2)
-         GY = A*BG(2,1) + B*BG(2,2)
-         AG = SQRT(GX*GX+GY*GY)
-         !----------------------------------------------------------------------
-         if ( AG.LE.GMAX ) then
-            NG = NG + 1
-            if ( NG.GT.NMAXD ) then
-               write (6,*)' ERROR: Dimension NMAXD in the inputcard too small',&
-               NG,NMAXD
-               stop 'lattice2d'
-            end if
-            CJ(1,NG) = GX
-            CJ(2,NG) = GY
-            CJ(3,NG) = 0D0
-            CJ(4,NG) = AG
-         end if
-      end do
-   end do
-   !----------------------------------------------------------------------------
-   NGMAX = NG
-   !----------------------------------------------------------------------------
-
-   !----------------------------------------------------------------------------
-   ! Sort vectors in order of increasing abs. value
-   !----------------------------------------------------------------------------
-   write(1337,FMT='(A11,I8,A11)') '...sorting ',NGMAX,' vectors...'
-   do N = 1,NG
-      LENGTH(N) = CJ(4,N)
-   enddo
-   DA = 1.D-06
-   NSH = 0
-   NSHL = -1
-   !----------------------------------------------------------------------------
-   do K = 1,NG
-      VMIN = GMAX + 1.0D0
-      do N = 1,NG
-         if ( LENGTH(N).LT.VMIN ) then ! ( CJ(4,N).LT.VMIN ) THEN
-            VMIN = LENGTH(N) ! CJ(4,N)
-            N1 = N
-         end if
-      end do
-      !
-      NSHL = NSHL + 1
-      GN(1,K) = CJ(1,N1)
-      GN(2,K) = CJ(2,N1)
-      GNR(K)  = LENGTH(N1)  ! CJ(4,N1)
-      DB = VMIN
-      !-------------------------------------------------------------------------
-      if ( DB.GT.DA+1.D-07 ) then
-         NSH = NSH + 1      ! Number of shells of different length
-         if ( NSH.GT.ISHLD ) then
-            write (6,*) ' ERROR: Dimension ISHLD in the inputcard too small', &
-            NSH,ISHLD
-            stop 'lattice2d'
-         end if
-         !
-         NSG(NSH) = NSHL    ! Number of vectors in shell
-         NSHL = 0
-         DA = DB
+  da = 1.d-06
+  nsh = 0
+  nshl = -1
+!----------------------------------------------------------------------------
+  do k = 1, nr
+    vmin = rmax + 1.0d0
+    do n = 1, nr
+      if (cj(4,n)-vmin<0d0) then
+        vmin = cj(4, n)
+        n1 = n
       end if
-      !-------------------------------------------------------------------------
-      LENGTH(N1) = GMAX + 1.0D0 !  CJ(4,N1) = GMAX + 1.0D0
-   end do
-   !----------------------------------------------------------------------------
-   NSH = NSH + 1
-   NSHL = NSHL + 1
-   if ( NSH.GT.ISHLD ) then
-      write (6,*) ' ERROR: Dimension ISHLD in the inputcard too small',NSH,ISHLD
-      stop 'lattice2d'
-   end if
-   !
-   NSG(NSH) = NSHL
-   NSHLG = NSH
-   if ( NSHLG.LE.1 ) stop 'lattice2dERROR: cut-off radius GMAX too small '
+    end do
+!
+    nshl = nshl + 1
+    rm(1, k) = cj(1, n1)
+    rm(2, k) = cj(2, n1)
+    rmr(k) = cj(4, n1)
+    db = vmin
+!-------------------------------------------------------------------------
+    if (db>da+1.d-06) then
+      nsh = nsh + 1
+      if (nsh>ishld) then
+        write (6, *) ' ERROR: Dimension ISHLD in the inputcard too small', &
+          nsh, ishld
+        stop 'lattice2d'
+      end if
+!
+      nsr(nsh) = nshl
+      nshl = 0
+      da = db
+    end if
+!-------------------------------------------------------------------------
+    cj(4, n1) = rmax + 1.0d0
+  end do
+!----------------------------------------------------------------------------
+  nsh = nsh + 1
+  nshl = nshl + 1
+  if (nsh>ishld) then
+    write (6, *) ' ERROR: Dimension ISHLD in the inputcard too small', nsh, &
+      ishld
+    stop 'lattice2d'
+  end if
+!
+  nsr(nsh) = nshl
+  nshlr = nsh
+  if (nshlr<=1) stop 'lattice2d: ERROR: cut-off radius RMAX too small '
+  write (1337, *) '...done.'
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   write(1337,*) '...done.'
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! OUTPUT
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   write (1337,FMT=99002)
-   write (1337,FMT=99003) 'Direct  lattice',NRMAX,NSHLR,RMR(NRMAX)
-   write (1337,FMT=99003) 'Recipr. lattice',NGMAX,NSHLG,GNR(NGMAX)
-   write (1337,FMT=99004)
-   !
-   if ( IPRINT.LT.3 ) return
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   ! OUTPUT
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   !----------------------------------------------------------------------------
-   K = 0
-   write (1337,FMT=99005) 'real-space'
-   do L = 1,NSHLR
-      write (1337,99006) L,NSR(L),RMR(K+1),(RM(M,K+1),M=1,2)
-      do N = 2,NSR(L)
-         write (1337,FMT=99007) (RM(M,K+N),M=1,2)
-      end do
-      if ( L.NE.NSHLR ) write (1337,99008)
-      K = K + NSR(L)
-   end do
-   write (1337,99009)
-   K = 0
-   write (1337,FMT=99005) 'reciprocal'
-   do L = 1,NSHLG
-      write (1337,99006) L,NSG(L),GNR(K+1),(GN(M,K+1),M=1,2)
-      do N = 2,NSG(L)
-         write (1337,FMT=99007) (GN(M,K+N),M=1,2)
-      end do
-      if ( L.NE.NSHLG ) write (1337,99008)
-      K = K + NSG(L)
-   end do
-   write (1337,99009)
-   !----------------------------------------------------------------------------
-   !
-   99001 format (10X,'R max =',F10.5,' (a.u.)',/,10X,'G max =',F10.5,' (1/a.u.)',/)
-   99002 format (10X,'               vectors  shells  max. R ',/,10X,         &
-   '               ------------------------------')
-   99003 format (10X,A,I7,2X,I6,2X,F9.5)
-   99004 format (10X,'               ------------------------------',/)
-   99005 format (10X,45('+'),/,13X,'generated ',A,' lattice vectors',/,10X,   &
-   45('+'),/,10X,'shell Nvec    radius          x         y',/,10X,45('-'))
-   99006 format (10X,I5,I5,F12.6,2X,2F10.5)
-   99007 format (34X,2F10.5)
-   99008 format (13X,42('-'))
-   99009 format (10X,45('+'),/)
-end subroutine LATTICE2D
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!                 generate lattice vectors of real space
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+  write (1337, *) 'Reciprocal space...'
+  ng = 0
+!----------------------------------------------------------------------------
+  do l = 1, numg
+    a = dble(l-numgh)
+    do m = 1, numg
+      b = dble(m-numgh)
+!----------------------------------------------------------------------
+      gx = a*bg(1, 1) + b*bg(1, 2)
+      gy = a*bg(2, 1) + b*bg(2, 2)
+      ag = sqrt(gx*gx+gy*gy)
+!----------------------------------------------------------------------
+      if (ag<=gmax) then
+        ng = ng + 1
+        if (ng>nmaxd) then
+          write (6, *) ' ERROR: Dimension NMAXD in the inputcard too small', &
+            ng, nmaxd
+          stop 'lattice2d'
+        end if
+        cj(1, ng) = gx
+        cj(2, ng) = gy
+        cj(3, ng) = 0d0
+        cj(4, ng) = ag
+      end if
+    end do
+  end do
+!----------------------------------------------------------------------------
+  ngmax = ng
+!----------------------------------------------------------------------------
+
+!----------------------------------------------------------------------------
+! Sort vectors in order of increasing abs. value
+!----------------------------------------------------------------------------
+  write (1337, fmt='(A11,I8,A11)') '...sorting ', ngmax, ' vectors...'
+  do n = 1, ng
+    length(n) = cj(4, n)
+  end do
+  da = 1.d-06
+  nsh = 0
+  nshl = -1
+!----------------------------------------------------------------------------
+  do k = 1, ng
+    vmin = gmax + 1.0d0
+    do n = 1, ng
+      if (length(n)<vmin) then ! ( CJ(4,N).LT.VMIN ) THEN
+        vmin = length(n) ! CJ(4,N)
+        n1 = n
+      end if
+    end do
+!
+    nshl = nshl + 1
+    gn(1, k) = cj(1, n1)
+    gn(2, k) = cj(2, n1)
+    gnr(k) = length(n1) ! CJ(4,N1)
+    db = vmin
+!-------------------------------------------------------------------------
+    if (db>da+1.d-07) then
+      nsh = nsh + 1 ! Number of shells of different length
+      if (nsh>ishld) then
+        write (6, *) ' ERROR: Dimension ISHLD in the inputcard too small', &
+          nsh, ishld
+        stop 'lattice2d'
+      end if
+!
+      nsg(nsh) = nshl ! Number of vectors in shell
+      nshl = 0
+      da = db
+    end if
+!-------------------------------------------------------------------------
+    length(n1) = gmax + 1.0d0 !  CJ(4,N1) = GMAX + 1.0D0
+  end do
+!----------------------------------------------------------------------------
+  nsh = nsh + 1
+  nshl = nshl + 1
+  if (nsh>ishld) then
+    write (6, *) ' ERROR: Dimension ISHLD in the inputcard too small', nsh, &
+      ishld
+    stop 'lattice2d'
+  end if
+!
+  nsg(nsh) = nshl
+  nshlg = nsh
+  if (nshlg<=1) stop 'lattice2dERROR: cut-off radius GMAX too small '
+
+  write (1337, *) '...done.'
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! OUTPUT
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  write (1337, fmt=110)
+  write (1337, fmt=120) 'Direct  lattice', nrmax, nshlr, rmr(nrmax)
+  write (1337, fmt=120) 'Recipr. lattice', ngmax, nshlg, gnr(ngmax)
+  write (1337, fmt=130)
+!
+  if (iprint<3) return
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! OUTPUT
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!----------------------------------------------------------------------------
+  k = 0
+  write (1337, fmt=140) 'real-space'
+  do l = 1, nshlr
+    write (1337, 150) l, nsr(l), rmr(k+1), (rm(m,k+1), m=1, 2)
+    do n = 2, nsr(l)
+      write (1337, fmt=160)(rm(m,k+n), m=1, 2)
+    end do
+    if (l/=nshlr) write (1337, 170)
+    k = k + nsr(l)
+  end do
+  write (1337, 180)
+  k = 0
+  write (1337, fmt=140) 'reciprocal'
+  do l = 1, nshlg
+    write (1337, 150) l, nsg(l), gnr(k+1), (gn(m,k+1), m=1, 2)
+    do n = 2, nsg(l)
+      write (1337, fmt=160)(gn(m,k+n), m=1, 2)
+    end do
+    if (l/=nshlg) write (1337, 170)
+    k = k + nsg(l)
+  end do
+  write (1337, 180)
+!----------------------------------------------------------------------------
+!
+100 format (10x, 'R max =', f10.5, ' (a.u.)', /, 10x, 'G max =', f10.5, &
+    ' (1/a.u.)', /)
+110 format (10x, '               vectors  shells  max. R ', /, 10x, &
+    '               ------------------------------')
+120 format (10x, a, i7, 2x, i6, 2x, f9.5)
+130 format (10x, '               ------------------------------', /)
+140 format (10x, 45('+'), /, 13x, 'generated ', a, ' lattice vectors', /, 10x, &
+    45('+'), /, 10x, 'shell Nvec    radius          x         y', /, 10x, &
+    45('-'))
+150 format (10x, i5, i5, f12.6, 2x, 2f10.5)
+160 format (34x, 2f10.5)
+170 format (13x, 42('-'))
+180 format (10x, 45('+'), /)
+end subroutine

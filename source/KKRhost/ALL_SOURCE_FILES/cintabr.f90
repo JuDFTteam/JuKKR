@@ -1,4 +1,4 @@
-SUBROUTINE cintabr(ag,bg,agbg,af,bf,afbf,rpw,nka,nkb,jtop,nrmax)
+subroutine cintabr(ag, bg, agbg, af, bf, afbf, rpw, nka, nkb, jtop, nrmax)
 !   ********************************************************************
 !   *                                                                  *
 !   *  SIMPSON - INTERGRATION FOR COMPLEX INTEGRAND  FX FROM 1 TO JTOP *
@@ -9,45 +9,45 @@ SUBROUTINE cintabr(ag,bg,agbg,af,bf,afbf,rpw,nka,nkb,jtop,nrmax)
 !   *                                                                  *
 !   ********************************************************************
 
-IMPLICIT NONE
+  implicit none
 
 
 !Dummy arguments
-INTEGER JTOP,NKA,NKB,NRMAX
-COMPLEX*16 AF(NRMAX,2),AFBF(2,2),AG(NRMAX,2),AGBG(2,2),BF(NRMAX,2) &
-           ,BG(NRMAX,2)
-REAL*8 RPW(NRMAX)
+  integer :: jtop, nka, nkb, nrmax
+  complex *16 :: af(nrmax, 2), afbf(2, 2), ag(nrmax, 2), agbg(2, 2), &
+    bf(nrmax, 2), bg(nrmax, 2)
+  real *8 :: rpw(nrmax)
 
 !Local variables
-REAL*8 F,SIMP
-INTEGER I,KA,KB
+  real *8 :: f, simp
+  integer :: i, ka, kb
 
-DO kb = 1,nkb
-  DO ka = 1,nka
-    agbg(ka,kb) = ag(1,ka)*bg(1,kb)*rpw(1)
-    afbf(ka,kb) = af(1,ka)*bf(1,kb)*rpw(1)
-  END DO
-END DO
+  do kb = 1, nkb
+    do ka = 1, nka
+      agbg(ka, kb) = ag(1, ka)*bg(1, kb)*rpw(1)
+      afbf(ka, kb) = af(1, ka)*bf(1, kb)*rpw(1)
+    end do
+  end do
 
-IF ( MOD(jtop,2) == 0 ) STOP '<CINTABR>  JTOP is even !!!'
+  if (mod(jtop,2)==0) stop '<CINTABR>  JTOP is even !!!'
 
-simp = -1.0D0
-DO i = 2,jtop - 1
-  simp = -simp
-  f = (3.0D0+simp)*rpw(i)
-  DO kb = 1,nkb
-    DO ka = 1,nka
-      agbg(ka,kb) = agbg(ka,kb) + ag(i,ka)*bg(i,kb)*f
-      afbf(ka,kb) = afbf(ka,kb) + af(i,ka)*bf(i,kb)*f
-    END DO
-  END DO
-END DO
+  simp = -1.0d0
+  do i = 2, jtop - 1
+    simp = -simp
+    f = (3.0d0+simp)*rpw(i)
+    do kb = 1, nkb
+      do ka = 1, nka
+        agbg(ka, kb) = agbg(ka, kb) + ag(i, ka)*bg(i, kb)*f
+        afbf(ka, kb) = afbf(ka, kb) + af(i, ka)*bf(i, kb)*f
+      end do
+    end do
+  end do
 
-DO kb = 1,nkb
-  DO ka = 1,nka
-    agbg(ka,kb) = (agbg(ka,kb)+ag(jtop,ka)*bg(jtop,kb)*rpw(jtop) )/3.0D0
-    afbf(ka,kb) = (afbf(ka,kb)+af(jtop,ka)*bf(jtop,kb)*rpw(jtop) )/3.0D0
-  END DO
-END DO
+  do kb = 1, nkb
+    do ka = 1, nka
+      agbg(ka, kb) = (agbg(ka,kb)+ag(jtop,ka)*bg(jtop,kb)*rpw(jtop))/3.0d0
+      afbf(ka, kb) = (afbf(ka,kb)+af(jtop,ka)*bf(jtop,kb)*rpw(jtop))/3.0d0
+    end do
+  end do
 
-END SUBROUTINE cintabr
+end subroutine

@@ -1,5 +1,6 @@
-SUBROUTINE cpamillsx(itcpa,cpaerr,cpacorr,cpachng,iprint,icpa,nq,  &
-    nkmq,noq,itoq,conc,mssq,msst,tauq,dmssq, kmrot,drotq,ntmax,nqmax,nkmmax)
+subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
+  noq, itoq, conc, mssq, msst, tauq, dmssq, kmrot, drotq, ntmax, nqmax, &
+  nkmmax)
 !   ********************************************************************
 !   *                                                                  *
 !   *   perform  CPA-iteration according    MILLS's  algorithm         *
@@ -16,195 +17,195 @@ SUBROUTINE cpamillsx(itcpa,cpaerr,cpacorr,cpachng,iprint,icpa,nq,  &
 !   *                                                                  *
 !   * 15/12/03                                                         *
 !   ********************************************************************
-use mod_types, only: t_inc
-IMPLICIT COMPLEX*16(A-H,O-Z)
+  use :: mod_types, only: t_inc
+  implicit complex *16(a-h, o-z)
 
 ! PARAMETER definitions
-DOUBLE PRECISION TOL,SCLSTD
-PARAMETER (TOL=10D0,SCLSTD=1D0)
-DOUBLE COMPLEX C0,C1
-PARAMETER (C0=(0.0D0,0.0D0),C1=(1.0D0,0.0D0))
+  double precision :: tol, sclstd
+  parameter (tol=10d0, sclstd=1d0)
+  double complex :: c0, c1
+  parameter (c0=(0.0d0,0.0d0), c1=(1.0d0,0.0d0))
 
 ! Dummy arguments
-DOUBLE PRECISION CPACHNG,CPACORR,CPAERR
-INTEGER IPRINT,ITCPA,KMROT,NKMMAX,NQ,NQMAX,NTMAX
-DOUBLE PRECISION CONC(NTMAX)
-DOUBLE COMPLEX DROTQ(NKMMAX,NKMMAX,NQMAX), &
-     MSSQ(NKMMAX,NKMMAX,NQMAX),DMSSQ(NKMMAX,NKMMAX,NQMAX), &
-     MSST(NKMMAX,NKMMAX,NTMAX),TAUQ(NKMMAX,NKMMAX,NQMAX)
-INTEGER ICPA(NQMAX),ITOQ(NTMAX,NQMAX),NKMQ(NQMAX),NOQ(NQMAX)
+  double precision :: cpachng, cpacorr, cpaerr
+  integer :: iprint, itcpa, kmrot, nkmmax, nq, nqmax, ntmax
+  double precision :: conc(ntmax)
+  double complex :: drotq(nkmmax, nkmmax, nqmax), mssq(nkmmax, nkmmax, nqmax), &
+    dmssq(nkmmax, nkmmax, nqmax), msst(nkmmax, nkmmax, ntmax), &
+    tauq(nkmmax, nkmmax, nqmax)
+  integer :: icpa(nqmax), itoq(ntmax, nqmax), nkmq(nqmax), noq(nqmax)
 
 ! Local variables
-LOGICAL CHECK
-DOUBLE PRECISION CPACHNGL,CPACORRL,SCL
-DOUBLE COMPLEX CSUM
-DOUBLE COMPLEX DMAMC(NKMMAX,NKMMAX),DMATTG(NKMMAX,NKMMAX), &
-     DQ(NKMMAX,NQMAX), &
-     DTILTG(NKMMAX,NKMMAX),ERR(NKMMAX,NKMMAX), &
-     W1(NKMMAX,NKMMAX),W2(NKMMAX,NKMMAX)
-INTEGER I,ICPARUN,INFO,IO
-INTEGER IPIV(NKMMAX),IQ,IT,IW,IW0,J,M,N
-DOUBLE PRECISION P1,P2
-SAVE CPACHNGL,CPACORRL,SCL
+  logical :: check
+  double precision :: cpachngl, cpacorrl, scl
+  double complex :: csum
+  double complex :: dmamc(nkmmax, nkmmax), dmattg(nkmmax, nkmmax), &
+    dq(nkmmax, nqmax), dtiltg(nkmmax, nkmmax), err(nkmmax, nkmmax), &
+    w1(nkmmax, nkmmax), w2(nkmmax, nkmmax)
+  integer :: i, icparun, info, io
+  integer :: ipiv(nkmmax), iq, it, iw, iw0, j, m, n
+  double precision :: p1, p2
+  save :: cpachngl, cpacorrl, scl
 
-DATA ICPARUN/0/
+  data icparun/0/
 
-cpaerr = 0.0D0
-cpacorr = 0.0D0
-cpachng = 0.0D0
-check = .true.
-check = .false.
+  cpaerr = 0.0d0
+  cpacorr = 0.0d0
+  cpachng = 0.0d0
+  check = .true.
+  check = .false.
 
-IF ( itcpa == 1 ) THEN
-  scl = sclstd
-  cpachngl = 1D+20
-  cpacorrl = 1D+20
-  icparun = icparun + 1
-END IF
+  if (itcpa==1) then
+    scl = sclstd
+    cpachngl = 1d+20
+    cpacorrl = 1d+20
+    icparun = icparun + 1
+  end if
 
-DO iq = 1,nq
-  IF ( icpa(iq) /= 0 ) THEN
-    
-    m = nkmmax
-    n = nkmq(iq)
-    
-    DO j = 1,n
-      dq(j,iq) = -c1
-      CALL cinit(n,ERR(1,j))
-    END DO
-    
+  do iq = 1, nq
+    if (icpa(iq)/=0) then
+
+      m = nkmmax
+      n = nkmq(iq)
+
+      do j = 1, n
+        dq(j, iq) = -c1
+        call cinit(n, err(1,j))
+      end do
+
 !================================================================= IT ==
-    DO io = 1,noq(iq)
-      it = itoq(io,iq)
-      
+      do io = 1, noq(iq)
+        it = itoq(io, iq)
+
 ! ------------------------- rotate the single site m-matrix if necessary
-      IF ( kmrot /= 0 ) THEN
-        
-        CALL rotate(msst(1,1,it),'L->G',w1,n,drotq(1,1,iq),m)
-        
-        CALL getdmat(tauq(1,1,iq),dmattg,dtiltg,dmamc,n, mssq(1,1,iq),w1,m)
-        
-      ELSE
-        
-        CALL getdmat(tauq(1,1,iq),dmattg,dtiltg,dmamc,n,  &
-            mssq(1,1,iq),msst(1,1,it),m)
-        
-      END IF
-      
-      DO i = 1,n
-        dq(i,iq) = dq(i,iq) + conc(it)*dtiltg(i,i)
-      END DO
-      
+        if (kmrot/=0) then
+
+          call rotate(msst(1,1,it), 'L->G', w1, n, drotq(1,1,iq), m)
+
+          call getdmat(tauq(1,1,iq), dmattg, dtiltg, dmamc, n, mssq(1,1,iq), &
+            w1, m)
+
+        else
+
+          call getdmat(tauq(1,1,iq), dmattg, dtiltg, dmamc, n, mssq(1,1,iq), &
+            msst(1,1,it), m)
+
+        end if
+
+        do i = 1, n
+          dq(i, iq) = dq(i, iq) + conc(it)*dtiltg(i, i)
+        end do
+
 !     -------------------------------------------
 !            - E[a] = D~[a] * ( m[a] - m[c] )
 !     -------------------------------------------
-      CALL zgemm('N','N',n,n,n,c1,dtiltg(1,1),m,dmamc,m,c0,w1, m)
-      
+        call zgemm('N', 'N', n, n, n, c1, dtiltg(1,1), m, dmamc, m, c0, w1, m)
+
 !     -------------------------------------------
 !            E = SUM[a]  c[a] *  E[a]
 !     -------------------------------------------
-      DO j = 1,n
-        DO i = 1,n
-          ERR(i,j) = ERR(i,j) - conc(it)*w1(i,j)
-        END DO
-      END DO
-      
-    END DO
+        do j = 1, n
+          do i = 1, n
+            err(i, j) = err(i, j) - conc(it)*w1(i, j)
+          end do
+        end do
+
+      end do
 !================================================================= IT ==
-    
+
 !     -------------------------------------------
 !                   E * TAU
 !     -------------------------------------------
-    
-    CALL zgemm('N','N',n,n,n,c1,ERR,m,tauq(1,1,iq),m,c0,w2,m)
-    
+
+      call zgemm('N', 'N', n, n, n, c1, err, m, tauq(1,1,iq), m, c0, w2, m)
+
 !     -------------------------------------------
 !                1 + E * TAU
 !     -------------------------------------------
-    DO i = 1,n
-      w2(i,i) = c1 + w2(i,i)
-    END DO
-    
+      do i = 1, n
+        w2(i, i) = c1 + w2(i, i)
+      end do
+
 !     -------------------------------------------
 !               ( 1 + E * TAU )**(-1)
 !     -------------------------------------------
-    
-    CALL zgetrf(n,n,w2,m,ipiv,info)
-    CALL zgetri(n,w2,m,ipiv,w1,m*m,info)
-    
+
+      call zgetrf(n, n, w2, m, ipiv, info)
+      call zgetri(n, w2, m, ipiv, w1, m*m, info)
+
 !     -------------------------------------------
 !           ( 1 + E * TAU )**(-1) * E
 !     -------------------------------------------
-    
-    CALL zgemm('N','N',n,n,n,c1,w2,m,ERR,m,c0,w1,m)
-    
+
+      call zgemm('N', 'N', n, n, n, c1, w2, m, err, m, c0, w1, m)
+
 !     -------------------------------------------
 !           APPLY CORRECTION  TO  MEFF
 !     m{n+1} = m{n} -  ( 1 + E * TAU )**(-1) * E
 !     -------------------------------------------
-    DO j = 1,n
-      cpaerr = cpaerr + ABS(dreal(dq(j,iq))) + ABS(DIMAG(dq(j,iq)))
-      cpacorr = cpacorr + ABS(dreal(w1(j,j))) + ABS(DIMAG(w1(j,j)))
-      cpachng = MAX(cpachng,ABS(w1(j,j)/mssq(j,j,iq)))
-    END DO
-    cpachng = scl*cpachng
-    cpacorr = scl*cpacorr
-    
-    IF ( cpachng > tol*cpachngl .OR. cpacorr > cpacorrl ) THEN
-      WRITE (*,*) '############### CPA step back'
-      
-      p1 = 0.5D0   ! P1 = 0.05D0
-      p2 = 1D0 - p1
-      cpachng = p1*cpachngl
-      cpacorr = p1*cpacorrl
-      cpachng = cpachngl
-      cpacorr = cpacorrl
-      scl = p1
-      DO j = 1,n
-        DO i = 1,n
-          mssq(i,j,iq) = mssq(i,j,iq) + p2*dmssq(i,j,iq)
-          dmssq(i,j,iq) = dmssq(i,j,iq)*p1
-        END DO
-      END DO
-    ELSE
-      DO j = 1,n
-        DO i = 1,n
-          w1(i,j) = scl*w1(i,j)
-          mssq(i,j,iq) = mssq(i,j,iq) - w1(i,j)
-          dmssq(i,j,iq) = w1(i,j)
-        END DO
-      END DO
-    END IF
-    
-    cpaerr = cpachng
-    
-    IF ( iprint >= 2 .OR. check ) THEN
-      csum = c0
-      DO i = 1,n
-        csum = csum + mssq(i,i,iq)
-      END DO
-      IF(t_inc%i_write>0) THEN
-        WRITE (1337,99001) iq,cpaerr,cpacorr,csum
-      END IF
-    END IF
+      do j = 1, n
+        cpaerr = cpaerr + abs(dreal(dq(j,iq))) + abs(dimag(dq(j,iq)))
+        cpacorr = cpacorr + abs(dreal(w1(j,j))) + abs(dimag(w1(j,j)))
+        cpachng = max(cpachng, abs(w1(j,j)/mssq(j,j,iq)))
+      end do
+      cpachng = scl*cpachng
+      cpacorr = scl*cpacorr
+
+      if (cpachng>tol*cpachngl .or. cpacorr>cpacorrl) then
+        write (*, *) '############### CPA step back'
+
+        p1 = 0.5d0 ! P1 = 0.05D0
+        p2 = 1d0 - p1
+        cpachng = p1*cpachngl
+        cpacorr = p1*cpacorrl
+        cpachng = cpachngl
+        cpacorr = cpacorrl
+        scl = p1
+        do j = 1, n
+          do i = 1, n
+            mssq(i, j, iq) = mssq(i, j, iq) + p2*dmssq(i, j, iq)
+            dmssq(i, j, iq) = dmssq(i, j, iq)*p1
+          end do
+        end do
+      else
+        do j = 1, n
+          do i = 1, n
+            w1(i, j) = scl*w1(i, j)
+            mssq(i, j, iq) = mssq(i, j, iq) - w1(i, j)
+            dmssq(i, j, iq) = w1(i, j)
+          end do
+        end do
+      end if
+
+      cpaerr = cpachng
+
+      if (iprint>=2 .or. check) then
+        csum = c0
+        do i = 1, n
+          csum = csum + mssq(i, i, iq)
+        end do
+        if (t_inc%i_write>0) then
+          write (1337, 100) iq, cpaerr, cpacorr, csum
+        end if
+      end if
 !-----------------------------------------------------------------------
-    IF ( check ) THEN
-      IF ( icparun == 2 ) STOP 'CPA-iter written to for...'
-      iw0 = 100*iq
-      DO i = 1,n
-        iw = iw0 + i
-        WRITE (iw,'(I4,4E14.4)') itcpa,mssq(i,i,iq),w1(i,i)
-      END DO
-    END IF
+      if (check) then
+        if (icparun==2) stop 'CPA-iter written to for...'
+        iw0 = 100*iq
+        do i = 1, n
+          iw = iw0 + i
+          write (iw, '(I4,4E14.4)') itcpa, mssq(i, i, iq), w1(i, i)
+        end do
+      end if
 !-----------------------------------------------------------------------
-  END IF
-  
-END DO
+    end if
+
+  end do
 !================================================================= IQ ==
 
-cpachngl = cpachng
-cpacorrl = cpacorr
+  cpachngl = cpachng
+  cpacorrl = cpacorr
 
-99001 FORMAT (' CPA:  IQ',i3,'  ERR',f12.5,'  CORR',f13.5,'  M',  &
-    18(1X,2(1PE14.6)))
-END SUBROUTINE cpamillsx
+100 format (' CPA:  IQ', i3, '  ERR', f12.5, '  CORR', f13.5, '  M', 18(1x,2( &
+    1p,e14.6)))
+end subroutine

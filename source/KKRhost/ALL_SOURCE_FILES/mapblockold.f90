@@ -1,5 +1,5 @@
-INTEGER FUNCTION mapblockold(itercurr,iterfirst,iterlast,iterstep,  &
-        nodefirst,nodelast)
+integer function mapblockold(itercurr, iterfirst, iterlast, iterstep, &
+  nodefirst, nodelast)
 !-----------------------------------------------------------------------
 
 !     Maps loop iteration to nodes (once a call).
@@ -60,60 +60,60 @@ INTEGER FUNCTION mapblockold(itercurr,iterfirst,iterlast,iterstep,  &
 !                                           last update: February 1994
 !-----------------------------------------------------------------------
 !.. Scalar Arguments ..
-      INTEGER ITERCURR,ITERFIRST,ITERLAST,ITERSTEP,NODEFIRST,NODELAST
+  integer :: itercurr, iterfirst, iterlast, iterstep, nodefirst, nodelast
 !..
 !.. Intrinsic Functions ..
 
-      INTRINSIC DBLE,MAX
+  intrinsic :: dble, max
 !..
 !.. External Functions ..
-      INTEGER IOBEN
-      EXTERNAL IOBEN
+  integer :: ioben
+  external :: ioben
 !..
 !.. Local Scalars ..
-      INTEGER LITERCURR,LITERLAST,LNODELAST,NPRIME,Q,R
+  integer :: litercurr, literlast, lnodelast, nprime, q, r
 
 
 !---  normalize ranges
-literlast = MAX(0, (iterlast-iterfirst+iterstep)/iterstep)
-litercurr = ((itercurr-iterfirst)/iterstep) + 1
-lnodelast = nodelast - nodefirst + 1
+  literlast = max(0, (iterlast-iterfirst+iterstep)/iterstep)
+  litercurr = ((itercurr-iterfirst)/iterstep) + 1
+  lnodelast = nodelast - nodefirst + 1
 
 
 !---  calculate blocksize
-q = literlast/lnodelast
+  q = literlast/lnodelast
 
 !---    calculate iteration mapping
-IF (q*lnodelast == literlast) THEN
-  
+  if (q*lnodelast==literlast) then
+
 !---       equally sized blocks
-  mapblock = (nodefirst-1) + ioben(DBLE(litercurr)/DBLE(q))
-  
-ELSE
-  
+    mapblock = (nodefirst-1) + ioben(dble(litercurr)/dble(q))
+
+  else
+
 !---       unequal blocks
-  r = literlast - (q*lnodelast)
-  
+    r = literlast - (q*lnodelast)
+
 !---       up to nprime blocks of size (q+1)
-  nprime = (q+1)*r
-  
-  IF (litercurr <= nprime) THEN
-    
-    mapblock = (nodefirst-1) + ioben(DBLE(litercurr)/DBLE(q+1))
-    
-  ELSE
-    
-    mapblock = (nodefirst-1) + ioben(DBLE(litercurr-nprime)/ DBLE(q)+DBLE(r))
-  END IF
-  
-END IF
+    nprime = (q+1)*r
 
-IF ((mapblock < nodefirst) .OR. (mapblock > nodelast)) THEN
-  WRITE (6,FMT=*) 'internal error in mapblock'
-  WRITE (6,FMT=*) mapblock,itercurr,iterfirst,iterlast,iterstep,  &
-      nodefirst,nodelast,literlast,litercurr,lnodelast,q,r,nprime
-  STOP
-END IF
+    if (litercurr<=nprime) then
 
-RETURN
-END FUNCTION mapblockold
+      mapblock = (nodefirst-1) + ioben(dble(litercurr)/dble(q+1))
+
+    else
+
+      mapblock = (nodefirst-1) + ioben(dble(litercurr-nprime)/dble(q)+dble(r))
+    end if
+
+  end if
+
+  if ((mapblock<nodefirst) .or. (mapblock>nodelast)) then
+    write (6, fmt=*) 'internal error in mapblock'
+    write (6, fmt=*) mapblock, itercurr, iterfirst, iterlast, iterstep, &
+      nodefirst, nodelast, literlast, litercurr, lnodelast, q, r, nprime
+    stop
+  end if
+
+  return
+end function

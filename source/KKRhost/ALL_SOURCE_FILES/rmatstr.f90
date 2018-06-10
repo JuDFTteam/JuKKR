@@ -1,4 +1,4 @@
-SUBROUTINE rmatstr(str,lstr,a,n,m,mlin,mcol,tolp,nfil)
+subroutine rmatstr(str, lstr, a, n, m, mlin, mcol, tolp, nfil)
 !   ********************************************************************
 !   *                                                                  *
 !   *   writes structure of REAL      NxN   matrix   A                 *
@@ -10,215 +10,214 @@ SUBROUTINE rmatstr(str,lstr,a,n,m,mlin,mcol,tolp,nfil)
 !   *                                                                  *
 !   *                                                         03/01/96 *
 !   ********************************************************************
-IMPLICIT NONE
+  implicit none
 
-INTEGER, PARAMETER :: NDIFMAX =  250
-INTEGER, intent(in) :: lstr, m, n, mlin, mcol, nfil
-double precision, intent(in) :: tolp
+  integer, parameter :: ndifmax = 250
+  integer, intent (in) :: lstr, m, n, mlin, mcol, nfil
+  double precision, intent (in) :: tolp
 
-CHARACTER (len=LSTR) :: STR
-CHARACTER (len=150) :: FMT1,FMT2,FMT3,FMT4
-CHARACTER (len=1) :: CTAB(0:NDIFMAX), VZ(-1:+1)
-INTEGER    IW(M), ILSEP(20)
-INTEGER :: ICAUC , ICZUC, NATOZ, ICALC, ICILC, K, NK, NM, NM2, &
-           NM1, NM3, IC0, N3, N2, N1, LF, L3, MM, NSL, IL, I, &
-           NNON0, ND, NALF, J, ID, ICND, ISL
-double precision :: tol
-DOUBLE PRECISION     A(M,M), CNUM,CA,CB,DTAB(0:NDIFMAX)  
-LOGICAL  CSMALL, CSAME
+  character (len=lstr) :: str
+  character (len=150) :: fmt1, fmt2, fmt3, fmt4
+  character (len=1) :: ctab(0:ndifmax), vz(-1:+1)
+  integer :: iw(m), ilsep(20)
+  integer :: icauc, iczuc, natoz, icalc, icilc, k, nk, nm, nm2, nm1, nm3, ic0, &
+    n3, n2, n1, lf, l3, mm, nsl, il, i, nnon0, nd, nalf, j, id, icnd, isl
+  double precision :: tol
+  double precision :: a(m, m), cnum, ca, cb, dtab(0:ndifmax)
+  logical :: csmall, csame
 
-SAVE VZ
-DATA VZ / '-', ' ', ' ' /
+  save :: vz
+  data vz/'-', ' ', ' '/
 
-csmall(cnum) =   ABS(cnum*tol) < 1.0D0
+  csmall(cnum) = abs(cnum*tol) < 1.0d0
 
-csame(ca,cb) =   csmall(1.0D0 - ca/cb)
+  csame(ca, cb) = csmall(1.0d0-ca/cb)
 
-tol = 1.0D0 / tolp
+  tol = 1.0d0/tolp
 
-icauc = ICHAR('A')
-iczuc = ICHAR('Z')
-natoz = iczuc - icauc + 1
-icalc = ICHAR('a')
-icilc = ICHAR('i')
+  icauc = ichar('A')
+  iczuc = ichar('Z')
+  natoz = iczuc - icauc + 1
+  icalc = ichar('a')
+  icilc = ichar('i')
 
 !---------------------------------------------------------------- header
-ic0 = ICHAR('0')
-n3=n/100
-n2=n/10 - n3*10
-n1=n    - n2*10 - n3*100
+  ic0 = ichar('0')
+  n3 = n/100
+  n2 = n/10 - n3*10
+  n1 = n - n2*10 - n3*100
 
-fmt1='(8X,I3,''|'','
-fmt2='( 9X,''--|'','
-fmt3='( 9X,'' #|'','
-fmt4='( 9X,''  |'','
+  fmt1 = '(8X,I3,''|'','
+  fmt2 = '( 9X,''--|'','
+  fmt3 = '( 9X,'' #|'','
+  fmt4 = '( 9X,''  |'','
 
-lf  = 11
-l3  = 11
-IF( mcol == 0 ) THEN
-  fmt1=fmt1(1:lf)//CHAR(ic0+n3)//CHAR(ic0+n2)  &
-      //CHAR(ic0+n1)//'( 2A1),''|'',I3)'
-  fmt2=fmt2(1:lf)//CHAR(ic0+n3)//CHAR(ic0+n2)  &
-      //CHAR(ic0+n1)//'(''--''),''|'',I3)'
-  fmt3=fmt3(1:lf)//'60(2X,I2))'
-  fmt4=fmt4(1:lf)//'60(I2,2X))'
-  lf = 21
-ELSE
-  IF( mcol == 1 ) THEN
-    nk = nint(SQRT( DBLE(n) ))
-  ELSE IF( mcol == 2 ) THEN
-    nk = nint(SQRT( DBLE(n/2) ))
-  ELSE IF( mcol == 3 ) THEN
-    nk = 2*nint(SQRT( DBLE(n/2) )) - 1
-  END IF
-  DO k=1,nk
-    IF( mcol <= 2 ) THEN
-      nm = 2*k-1
-    ELSE
-      nm = 2*((k+1)/2)
-    END IF
-    nm2=nm/10
-    nm1=nm - nm2*10
-    nm3=nm/2
-    fmt1=fmt1(1:lf)//CHAR(ic0+nm2) //CHAR(ic0+nm1)//'( 2A1),''|'','
-    fmt2=fmt2(1:lf)//CHAR(ic0+nm2) //CHAR(ic0+nm1)//'(''--''),''|'','
-    
-    IF( mcol <= 2 ) THEN
-      DO mm=1,nm
-        IF( MOD(mm,2) == MOD(k,2) ) THEN
-          fmt3=fmt3(1:l3)//'2X,'
-          fmt4=fmt4(1:l3)//'I2,'
-        ELSE
-          fmt3=fmt3(1:l3)//'I2,'
-          fmt4=fmt4(1:l3)//'2X,'
-        END IF
-        l3=l3+3
-      END DO
-      fmt3=fmt3(1:l3)//'''|'','
-      fmt4=fmt4(1:l3)//'''|'','
-      l3=l3+4
-    ELSE
-      fmt3=fmt3(1:lf)//CHAR(ic0+nm3)//'(2X,I2),''|'','
-      fmt4=fmt4(1:lf)//CHAR(ic0+nm3)//'(I2,2X),''|'','
-      l3=l3+13
-    END IF
-    lf  = lf + 13
-  END DO
-  IF( mcol == 2 ) THEN
-    fmt1=fmt1(1:lf)//fmt1(12:lf)
-    fmt2=fmt2(1:lf)//fmt2(12:lf)
-    fmt3=fmt3(1:l3)//fmt4(12:l3)
-    fmt4=fmt4(1:l3)//fmt3(12:l3)
-    lf  = 2*lf - 11
-  END IF
-  fmt1=fmt1(1:lf)//'I3)'
-  fmt2=fmt2(1:lf)//'I3)'
-  fmt3=fmt3(1:l3)//'I3)'
-  fmt4=fmt4(1:l3)//'I3)'
-END IF
-IF( mlin == 0 ) THEN
-  nsl = 1
-  ilsep(1) = n
-ELSE IF( mlin == 1 ) THEN
-  nsl = nint(SQRT( DBLE(n) ))
-  DO il=1,nsl
-    ilsep(il) = il**2
-  END DO
-ELSE IF( mlin == 2 ) THEN
-  nsl = nint(SQRT( DBLE(n/2) ))
-  DO il=1,nsl
-    ilsep(il) = il**2
-  END DO
-  DO il=1,nsl
-    ilsep(nsl+il) = ilsep(nsl) + il**2
-  END DO
-  nsl = 2*nsl
-ELSE IF( mlin == 3 ) THEN
-  nsl = 2*nint(SQRT( DBLE(n/2) )) - 1
-  ilsep(1) = 2
-  DO k=2,nsl
-    ilsep(k) = ilsep(k-1) + 2*((k+1)/2)
-  END DO
-END IF
+  lf = 11
+  l3 = 11
+  if (mcol==0) then
+    fmt1 = fmt1(1:lf) // char(ic0+n3) // char(ic0+n2) // char(ic0+n1) // &
+      '( 2A1),''|'',I3)'
+    fmt2 = fmt2(1:lf) // char(ic0+n3) // char(ic0+n2) // char(ic0+n1) // &
+      '(''--''),''|'',I3)'
+    fmt3 = fmt3(1:lf) // '60(2X,I2))'
+    fmt4 = fmt4(1:lf) // '60(I2,2X))'
+    lf = 21
+  else
+    if (mcol==1) then
+      nk = nint(sqrt(dble(n)))
+    else if (mcol==2) then
+      nk = nint(sqrt(dble(n/2)))
+    else if (mcol==3) then
+      nk = 2*nint(sqrt(dble(n/2))) - 1
+    end if
+    do k = 1, nk
+      if (mcol<=2) then
+        nm = 2*k - 1
+      else
+        nm = 2*((k+1)/2)
+      end if
+      nm2 = nm/10
+      nm1 = nm - nm2*10
+      nm3 = nm/2
+      fmt1 = fmt1(1:lf) // char(ic0+nm2) // char(ic0+nm1) // '( 2A1),''|'','
+      fmt2 = fmt2(1:lf) // char(ic0+nm2) // char(ic0+nm1) // '(''--''),''|'','
+
+      if (mcol<=2) then
+        do mm = 1, nm
+          if (mod(mm,2)==mod(k,2)) then
+            fmt3 = fmt3(1:l3) // '2X,'
+            fmt4 = fmt4(1:l3) // 'I2,'
+          else
+            fmt3 = fmt3(1:l3) // 'I2,'
+            fmt4 = fmt4(1:l3) // '2X,'
+          end if
+          l3 = l3 + 3
+        end do
+        fmt3 = fmt3(1:l3) // '''|'','
+        fmt4 = fmt4(1:l3) // '''|'','
+        l3 = l3 + 4
+      else
+        fmt3 = fmt3(1:lf) // char(ic0+nm3) // '(2X,I2),''|'','
+        fmt4 = fmt4(1:lf) // char(ic0+nm3) // '(I2,2X),''|'','
+        l3 = l3 + 13
+      end if
+      lf = lf + 13
+    end do
+    if (mcol==2) then
+      fmt1 = fmt1(1:lf) // fmt1(12:lf)
+      fmt2 = fmt2(1:lf) // fmt2(12:lf)
+      fmt3 = fmt3(1:l3) // fmt4(12:l3)
+      fmt4 = fmt4(1:l3) // fmt3(12:l3)
+      lf = 2*lf - 11
+    end if
+    fmt1 = fmt1(1:lf) // 'I3)'
+    fmt2 = fmt2(1:lf) // 'I3)'
+    fmt3 = fmt3(1:l3) // 'I3)'
+    fmt4 = fmt4(1:l3) // 'I3)'
+  end if
+  if (mlin==0) then
+    nsl = 1
+    ilsep(1) = n
+  else if (mlin==1) then
+    nsl = nint(sqrt(dble(n)))
+    do il = 1, nsl
+      ilsep(il) = il**2
+    end do
+  else if (mlin==2) then
+    nsl = nint(sqrt(dble(n/2)))
+    do il = 1, nsl
+      ilsep(il) = il**2
+    end do
+    do il = 1, nsl
+      ilsep(nsl+il) = ilsep(nsl) + il**2
+    end do
+    nsl = 2*nsl
+  else if (mlin==3) then
+    nsl = 2*nint(sqrt(dble(n/2))) - 1
+    ilsep(1) = 2
+    do k = 2, nsl
+      ilsep(k) = ilsep(k-1) + 2*((k+1)/2)
+    end do
+  end if
 
 
-WRITE(nfil,9000) str(1:lstr)
-WRITE(nfil,fmt3) (i,i=2,n,2)
-WRITE(nfil,fmt4) (i,i=1,n,2)
-WRITE(nfil,FMT=fmt2)
+  write (nfil, 110) str(1:lstr)
+  write (nfil, fmt3)(i, i=2, n, 2)
+  write (nfil, fmt4)(i, i=1, n, 2)
+  write (nfil, fmt=fmt2)
 !------------------------------------------------------------ header end
-nnon0   = 0
-nd      = 0
-nalf    = 0
-ctab(0) = ' '
-dtab(0) = 9999D0
+  nnon0 = 0
+  nd = 0
+  nalf = 0
+  ctab(0) = ' '
+  dtab(0) = 9999d0
 
-DO  i=1,n
-  DO  j=1,n
-    IF( .NOT. csmall( a(i,j) ) ) THEN
-      nnon0 = nnon0 + 1
-      DO  id=1,nd
-        IF( csame(a(i,j),+dtab(id)) ) THEN
-          iw(j) = + id
-          GO TO 40
-        END IF
-        IF( csame(a(i,j),-dtab(id)) ) THEN
-          iw(j) = - id
-          GO TO 40
-        END IF
-      END DO
+  do i = 1, n
+    do j = 1, n
+      if (.not. csmall(a(i,j))) then
+        nnon0 = nnon0 + 1
+        do id = 1, nd
+          if (csame(a(i,j),+dtab(id))) then
+            iw(j) = +id
+            go to 100
+          end if
+          if (csame(a(i,j),-dtab(id))) then
+            iw(j) = -id
+            go to 100
+          end if
+        end do
 !----------------------------------------------------------- new element
-      nd = nd + 1
-      IF( nd > ndifmax ) THEN
-        WRITE(nfil,'('' TROUBLE IN <RMATSTR> !!!!'',/,  &
-            '' ND > ARRAY SIZE NDIFMAX='',I3)') ndifmax
-        STOP
-      END IF
-      iw(j)    = nd
-      dtab(nd) = a(i,j)
-      IF( ABS(dtab(nd)-1.0D0)*tol < 1.0D0 ) THEN
-        ctab(nd) = '1'
-      ELSE IF( ABS(dtab(nd)+1.0D0)*tol < 1.0D0 ) THEN
-        dtab(nd) = +1.0D0
-        ctab(nd) = '1'
-        iw(j) = - nd
-      ELSE
-        nalf = nalf + 1
-        IF( nalf <= natoz ) THEN
-          ctab(nd) = CHAR( icauc + nalf - 1 )
-        ELSE
-          icnd = icalc + nalf-natoz - 1
-          IF( icnd < icilc ) THEN
-            ctab(nd) = CHAR(icnd)
-          ELSE
-            ctab(nd) = CHAR(icnd+1)
-          END IF
-        END IF
-      END IF
-      40          CONTINUE
-    ELSE
-      iw(j) = 0
-    END IF
-  END DO
+        nd = nd + 1
+        if (nd>ndifmax) then
+          write (nfil, "('nd>array size ndifmax=', i3)") ndifmax
+          stop
+        end if
+        iw(j) = nd
+        dtab(nd) = a(i, j)
+        if (abs(dtab(nd)-1.0d0)*tol<1.0d0) then
+          ctab(nd) = '1'
+        else if (abs(dtab(nd)+1.0d0)*tol<1.0d0) then
+          dtab(nd) = +1.0d0
+          ctab(nd) = '1'
+          iw(j) = -nd
+        else
+          nalf = nalf + 1
+          if (nalf<=natoz) then
+            ctab(nd) = char(icauc+nalf-1)
+          else
+            icnd = icalc + nalf - natoz - 1
+            if (icnd<icilc) then
+              ctab(nd) = char(icnd)
+            else
+              ctab(nd) = char(icnd+1)
+            end if
+          end if
+        end if
+100     continue
+      else
+        iw(j) = 0
+      end if
+    end do
 !------------------------------------------------------------ write line
-  WRITE(nfil,FMT=fmt1) i,(vz(ISIGN(1,iw(j))),ctab(ABS(iw(j))),j=1,n),i
-  
-  
-  DO isl=1,nsl
-    IF( i == ilsep(isl) ) WRITE(nfil,FMT=fmt2)
-  END DO
-END DO
+    write (nfil, fmt=fmt1) i, (vz(isign(1,iw(j))), ctab(abs(iw(j))), j=1, n), &
+      i
+
+
+    do isl = 1, nsl
+      if (i==ilsep(isl)) write (nfil, fmt=fmt2)
+    end do
+  end do
 
 !------------------------------------------------------------------ foot
 
-WRITE(nfil,fmt4) (i,i=1,n,2)
-WRITE(nfil,fmt3) (i,i=2,n,2)
+  write (nfil, fmt4)(i, i=1, n, 2)
+  write (nfil, fmt3)(i, i=2, n, 2)
 
-WRITE(nfil,9030) (id,ctab(id),dtab(id),id=1,nd)
-WRITE(nfil,9040)  nnon0,n*n-nnon0
+  write (nfil, 120)(id, ctab(id), dtab(id), id=1, nd)
+  write (nfil, 130) nnon0, n*n - nnon0
 
-9000 FORMAT(/,8X,a,/)
-9030 FORMAT(/,8X,'symbols used:',/,(8X,i3,3X,a1,2X, f20.12) )
-9040 FORMAT(/,8X,'elements <> 0:',i4,/, 8X,'elements  = 0:',i4)
-RETURN
-END SUBROUTINE rmatstr
+110 format (/, 8x, a, /)
+120 format (/, 8x, 'symbols used:', /, (8x,i3,3x,a1,2x,f20.12))
+130 format (/, 8x, 'elements <> 0:', i4, /, 8x, 'elements  = 0:', i4)
+  return
+end subroutine

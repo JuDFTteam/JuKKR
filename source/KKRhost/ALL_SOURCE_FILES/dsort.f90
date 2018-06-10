@@ -1,5 +1,5 @@
 ! ************************************************************************
-SUBROUTINE dsort (w,ind,MAX,pos)
+subroutine dsort(w, ind, max, pos)
 ! ************************************************************************
 !     p.zahn, april 96
 !     W   is the original array returned unchanged
@@ -7,47 +7,47 @@ SUBROUTINE dsort (w,ind,MAX,pos)
 !     max number of ellements to be sorted
 !     pos the position where the first element is found
 ! ------------------------------------------------------------------------
-IMPLICIT NONE
-INTEGER MAX,POS
-DOUBLE PRECISION  W(*)
-INTEGER IND(*)
+  implicit none
+  integer :: max, pos
+  double precision :: w(*)
+  integer :: ind(*)
 
-INTEGER I,II,J,JJ,K
-DOUBLE PRECISION BOUND, DIFF
-DATA BOUND /1.0D-12/
+  integer :: i, ii, j, jj, k
+  double precision :: bound, diff
+  data bound/1.0d-12/
 ! ------------------------------------------------------------------------
-DO  i = 1,MAX
-  ind(i) = i
-END DO
+  do i = 1, max
+    ind(i) = i
+  end do
 
-j = MAX
-j = 1
-DO  WHILE (j < MAX/3)
-  j = 3*j+1
-END DO
+  j = max
+  j = 1
+  do while (j<max/3)
+    j = 3*j + 1
+  end do
 
-DO  WHILE (j > 1)
-  j = j/3
-  jj = 1
-  DO  WHILE (jj == 1)
-    jj = 0
-    DO  k=1,MAX-j
-      diff = ABS( w(ind(k)) - w(ind(k+j)) )
-      IF ( w(ind(k)) > w(ind(k+j)) .AND. diff > bound ) THEN
-        ii       = ind(k)
-        ind(k)   = ind(k+j)
-        ind(k+j) = ii
-        jj = 1
-      END IF
-    END DO                    ! K=1,MAX-J
-  END DO
-END DO                      ! WHILE (JJ.EQ.1)
+  do while (j>1)
+    j = j/3
+    jj = 1
+    do while (jj==1)
+      jj = 0
+      do k = 1, max - j
+        diff = abs(w(ind(k))-w(ind(k+j)))
+        if (w(ind(k))>w(ind(k+j)) .and. diff>bound) then
+          ii = ind(k)
+          ind(k) = ind(k+j)
+          ind(k+j) = ii
+          jj = 1
+        end if
+      end do ! K=1,MAX-J
+    end do
+  end do ! WHILE (JJ.EQ.1)
 
-DO  i=1,MAX
-  IF (ind(i) == 1) pos=i
-END DO
+  do i = 1, max
+    if (ind(i)==1) pos = i
+  end do
 
-RETURN
-END SUBROUTINE dsort
+  return
+end subroutine
 
 

@@ -1,4 +1,4 @@
-SUBROUTINE rotate(t1,mode,t2,n,rot,nkmmax)
+subroutine rotate(t1, mode, t2, n, rot, nkmmax)
 !   ********************************************************************
 !   *                                                                  *
 !   *   performs the rotation of the matrix  T1  using the rotation-   *
@@ -11,35 +11,35 @@ SUBROUTINE rotate(t1,mode,t2,n,rot,nkmmax)
 !   *                                                                  *
 !   * 01/11/00                                                         *
 !   ********************************************************************
-IMPLICIT NONE
+  implicit none
 
 ! PARAMETER definitions
-COMPLEX*16 C0,C1
-PARAMETER (C0=(0.0D0,0.0D0),C1=(1.0D0,0.0D0))
+  complex *16 :: c0, c1
+  parameter (c0=(0.0d0,0.0d0), c1=(1.0d0,0.0d0))
 
 ! Dummy arguments
-CHARACTER*4 MODE
-INTEGER N,NKMMAX
-COMPLEX*16 ROT(NKMMAX,NKMMAX),T1(NKMMAX,NKMMAX),T2(NKMMAX,NKMMAX)
+  character (len=4) :: mode
+  integer :: n, nkmmax
+  complex *16 :: rot(nkmmax, nkmmax), t1(nkmmax, nkmmax), t2(nkmmax, nkmmax)
 
 ! Local variables
-CHARACTER*1 FL1,FL2
-COMPLEX*16 W1(NKMMAX,NKMMAX)
+  character (len=1) :: fl1, fl2
+  complex *16 :: w1(nkmmax, nkmmax)
 
 
-IF ( mode == 'L->G' ) THEN
-  fl1 = 'N'
-  fl2 = 'C'
-ELSE IF ( mode == 'G->L' ) THEN
-  fl1 = 'C'
-  fl2 = 'N'
-ELSE
-  WRITE (*,*) ' MODE = ',mode
-  STOP 'in <ROTATE>  MODE not allowed'
-END IF
+  if (mode=='L->G') then
+    fl1 = 'N'
+    fl2 = 'C'
+  else if (mode=='G->L') then
+    fl1 = 'C'
+    fl2 = 'N'
+  else
+    write (*, *) ' MODE = ', mode
+    stop 'in <ROTATE>  MODE not allowed'
+  end if
 
-CALL zgemm(fl1,'N',n,n,n,c1,rot,nkmmax,t1,nkmmax,c0,w1,nkmmax)
+  call zgemm(fl1, 'N', n, n, n, c1, rot, nkmmax, t1, nkmmax, c0, w1, nkmmax)
 
-CALL zgemm('N',fl2,n,n,n,c1,w1,nkmmax,rot,nkmmax,c0,t2,nkmmax)
+  call zgemm('N', fl2, n, n, n, c1, w1, nkmmax, rot, nkmmax, c0, t2, nkmmax)
 
-END SUBROUTINE rotate
+end subroutine

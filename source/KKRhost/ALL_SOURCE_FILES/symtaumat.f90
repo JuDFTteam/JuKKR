@@ -1,5 +1,5 @@
-SUBROUTINE symtaumat(rotname,rotmat,drot,nsym,isymindex,  &
-    symunitary,nqmax,nkmmax,nq,nl,krel,iprint, nsymaxd)
+subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
+  nqmax, nkmmax, nq, nl, krel, iprint, nsymaxd)
 !   ********************************************************************
 !   *                                                                  *
 !   *  Find the symmetry matrices DROT that act on t, tau, ....        *
@@ -16,87 +16,87 @@ SUBROUTINE symtaumat(rotname,rotmat,drot,nsym,isymindex,  &
 !   *                                                                  *
 !   ********************************************************************
 
-IMPLICIT NONE
+  implicit none
 
 ! PARAMETER definitions
-DOUBLE COMPLEX CI,C1,C0
-PARAMETER (CI=(0.0D0,1.0D0),C1=(1.0D0,0.0D0),C0=(0.0D0,0.0D0))
+  double complex :: ci, c1, c0
+  parameter (ci=(0.0d0,1.0d0), c1=(1.0d0,0.0d0), c0=(0.0d0,0.0d0))
 
 ! Dummy arguments
-INTEGER IPRINT,KREL,NKMMAX,NL,NQ,NQMAX,NSYM,NSYMAXD
-DOUBLE COMPLEX DROT(NKMMAX,NKMMAX,48)
-INTEGER ISYMINDEX(NSYMAXD)
-DOUBLE PRECISION ROTMAT(64,3,3)
-CHARACTER (len=10) :: ROTNAME(64)
-LOGICAL SYMUNITARY(48)
+  integer :: iprint, krel, nkmmax, nl, nq, nqmax, nsym, nsymaxd
+  double complex :: drot(nkmmax, nkmmax, 48)
+  integer :: isymindex(nsymaxd)
+  double precision :: rotmat(64, 3, 3)
+  character (len=10) :: rotname(64)
+  logical :: symunitary(48)
 
 ! Local variables
-double precision  A,B,CO1,CO2,CO3,DET,FACT(0:100),PI, &
-        SI1,SI2,SI3,SK,SYMEULANG(3,48),TET1,TET2,TET3
-LOGICAL CHECKRMAT
-DOUBLE PRECISION DBLE
-double precision  DDET33
-DOUBLE COMPLEX DINV(NKMMAX,NKMMAX),DTIM(NKMMAX,NKMMAX), &
-           RC(NKMMAX,NKMMAX),W1(NKMMAX,NKMMAX),W2(NKMMAX,NKMMAX)
-LOGICAL EQUAL
-INTEGER I,I1,I2,IND0Q(NQMAX),INVFLAG(48),IQ,IREL,IRELEFF,ISYM, &
-        ITOP,J,K,L,LOOP,M,N,NK,NKEFF,NKM,NLM,NOK,NS,RJ,RMJ
-INTEGER NINT
-DOUBLE PRECISION RMAT(3,3)
-double precision  W
+  double precision :: a, b, co1, co2, co3, det, fact(0:100), pi, si1, si2, &
+    si3, sk, symeulang(3, 48), tet1, tet2, tet3
+  logical :: checkrmat
+  double precision :: dble
+  double precision :: ddet33
+  double complex :: dinv(nkmmax, nkmmax), dtim(nkmmax, nkmmax), &
+    rc(nkmmax, nkmmax), w1(nkmmax, nkmmax), w2(nkmmax, nkmmax)
+  logical :: equal
+  integer :: i, i1, i2, ind0q(nqmax), invflag(48), iq, irel, ireleff, isym, &
+    itop, j, k, l, loop, m, n, nk, nkeff, nkm, nlm, nok, ns, rj, rmj
+  integer :: nint
+  double precision :: rmat(3, 3)
+  double precision :: w
 
-equal(a,b) = (DABS(a-b) < 1D-7)
+  equal(a, b) = (dabs(a-b)<1d-7)
 
-WRITE (1337,99001)
+  write (1337, 110)
 
-pi = 4D0*ATAN(1D0)
+  pi = 4d0*atan(1d0)
 
-irel = krel*3
-nk = (1-krel)*nl + krel*(2*nl-1)
-nkm = (1+krel)*nl**2
+  irel = krel*3
+  nk = (1-krel)*nl + krel*(2*nl-1)
+  nkm = (1+krel)*nl**2
 
 !-----------------------------------------------------------------------
-fact(0) = 1.0D0
-DO i = 1,100
-  fact(i) = fact(i-1)*DBLE(i)
-END DO
+  fact(0) = 1.0d0
+  do i = 1, 100
+    fact(i) = fact(i-1)*dble(i)
+  end do
 !-----------------------------------------------------------------------
 
-ind0q(1) = 0
-DO iq = 2,nq
-  ind0q(iq) = ind0q(iq-1) + nkm
-END DO
+  ind0q(1) = 0
+  do iq = 2, nq
+    ind0q(iq) = ind0q(iq-1) + nkm
+  end do
 
 ! ----------------------------------------------------------------------
 !    RC  transforms from  REAL to  COMPLEX (L,M,S) - representation
 !                 |LC> = sum[LR] |LR> * RC(LR,LC)
 ! ----------------------------------------------------------------------
-IF ( krel == 0 ) THEN
-  nlm = nkm
-  
-  CALL cinit(nkmmax*nkmmax,rc)
-  
-  w = 1.0D0/SQRT(2.0D0)
-  
-  DO l = 0,(nl-1)
-    DO m = -l,l
-      i = l*(l+1) + m + 1
-      j = l*(l+1) - m + 1
-      
-      IF ( m < 0 ) THEN
-        rc(i,i) = -ci*w
-        rc(j,i) = w
-      END IF
-      IF ( m == 0 ) THEN
-        rc(i,i) = c1
-      END IF
-      IF ( m > 0 ) THEN
-        rc(i,i) = w*(-1.0D0)**m
-        rc(j,i) = ci*w*(-1.0D0)**m
-      END IF
-    END DO
-  END DO
-END IF
+  if (krel==0) then
+    nlm = nkm
+
+    call cinit(nkmmax*nkmmax, rc)
+
+    w = 1.0d0/sqrt(2.0d0)
+
+    do l = 0, (nl-1)
+      do m = -l, l
+        i = l*(l+1) + m + 1
+        j = l*(l+1) - m + 1
+
+        if (m<0) then
+          rc(i, i) = -ci*w
+          rc(j, i) = w
+        end if
+        if (m==0) then
+          rc(i, i) = c1
+        end if
+        if (m>0) then
+          rc(i, i) = w*(-1.0d0)**m
+          rc(j, i) = ci*w*(-1.0d0)**m
+        end if
+      end do
+    end do
+  end if
 
 !=======================================================================
 !     The routine determines first the Euler angles correponding
@@ -104,206 +104,208 @@ END IF
 !     inversion + rotation for this reason.
 !=======================================================================
 
-DO isym = 1,nsym
-  
-  DO i1 = 1,3
-    DO i2 = 1,3
-      rmat(i1,i2) = rotmat(isymindex(isym),i1,i2)
-    END DO
-  END DO
-  
-  det = ddet33(rmat)
-  
-  invflag(isym) = 0
-  IF ( det < 0D0 ) THEN
-    CALL dscal(9,-1.0D0,rmat,1)
-    invflag(isym) = 1
-  END IF
-  
+  do isym = 1, nsym
+
+    do i1 = 1, 3
+      do i2 = 1, 3
+        rmat(i1, i2) = rotmat(isymindex(isym), i1, i2)
+      end do
+    end do
+
+    det = ddet33(rmat)
+
+    invflag(isym) = 0
+    if (det<0d0) then
+      call dscal(9, -1.0d0, rmat, 1)
+      invflag(isym) = 1
+    end if
+
 !----------------------------------------------------------------------
-  co2 = rmat(3,3)
-  tet2 = ACOS(co2)
-  loop = 0
-  50      CONTINUE
-  IF ( loop == 1 ) tet2 = -tet2
-  si2 = SIN(tet2)
-  
-  IF ( equal(co2,1.0D0) ) THEN
-    tet1 = ACOS(rmat(1,1))
-    IF ( .NOT.equal(rmat(1,2),SIN(tet1)) ) THEN
-      tet1 = -tet1
-      IF ( .NOT.equal(rmat(1,2),SIN(tet1)) ) WRITE (1337,*)  &
+    co2 = rmat(3, 3)
+    tet2 = acos(co2)
+    loop = 0
+100 continue
+    if (loop==1) tet2 = -tet2
+    si2 = sin(tet2)
+
+    if (equal(co2,1.0d0)) then
+      tet1 = acos(rmat(1,1))
+      if (.not. equal(rmat(1,2),sin(tet1))) then
+        tet1 = -tet1
+        if (.not. equal(rmat(1,2),sin(tet1))) write (1337, *) &
           '>>>>>>>>>>>>>>> STRANGE 1'
-    END IF
-    tet2 = 0D0
-    tet3 = 0D0
-  ELSE IF ( equal(co2,-1D0) ) THEN
-    tet1 = ACOS(-rmat(1,1))
-    IF ( .NOT.equal(rmat(1,2),-SIN(tet1)) ) THEN
-      tet1 = -tet1
-      IF ( .NOT.equal(rmat(1,2),-SIN(tet1)) ) WRITE (1337,*)  &
+      end if
+      tet2 = 0d0
+      tet3 = 0d0
+    else if (equal(co2,-1d0)) then
+      tet1 = acos(-rmat(1,1))
+      if (.not. equal(rmat(1,2),-sin(tet1))) then
+        tet1 = -tet1
+        if (.not. equal(rmat(1,2),-sin(tet1))) write (1337, *) &
           '>>>>>>>>>>>>>>> STRANGE 2'
-    END IF
-    tet2 = pi
-    tet3 = 0D0
-  ELSE
-    tet1 = ACOS(rmat(3,1)/si2)
-    IF ( .NOT.equal(rmat(3,2),si2*SIN(tet1)) ) THEN
-      tet1 = -tet1
-      IF ( .NOT.equal(rmat(3,2),si2*SIN(tet1)) ) WRITE (1337,*)  &
+      end if
+      tet2 = pi
+      tet3 = 0d0
+    else
+      tet1 = acos(rmat(3,1)/si2)
+      if (.not. equal(rmat(3,2),si2*sin(tet1))) then
+        tet1 = -tet1
+        if (.not. equal(rmat(3,2),si2*sin(tet1))) write (1337, *) &
           '>>>>>>>>>>>>>>> STRANGE 3'
-    END IF
-    
-    tet3 = ACOS(-rmat(1,3)/si2)
-    IF ( .NOT.equal(rmat(2,3),si2*SIN(tet3)) ) THEN
-      tet3 = -tet3
-      IF ( .NOT.equal(rmat(2,3),si2*SIN(tet3)) ) WRITE (1337,*)  &
+      end if
+
+      tet3 = acos(-rmat(1,3)/si2)
+      if (.not. equal(rmat(2,3),si2*sin(tet3))) then
+        tet3 = -tet3
+        if (.not. equal(rmat(2,3),si2*sin(tet3))) write (1337, *) &
           '>>>>>>>>>>>>>>> STRANGE 4'
-    END IF
-    
-  END IF
-  
-  co1 = COS(tet1)
-  si1 = SIN(tet1)
-  co2 = COS(tet2)
-  si2 = SIN(tet2)
-  co3 = COS(tet3)
-  si3 = SIN(tet3)
-  
-  nok = 0
-  DO i1 = 1,3
-    DO i2 = 1,3
-      IF ( checkrmat(rmat,co1,si1,co2,si2,co3,si3,i1,i2) ) THEN
-        nok = nok + 1
-      ELSE IF ( loop < 1 ) THEN
-        loop = loop + 1
-        GO TO 50
-      END IF
-    END DO
-  END DO
-  
-  symeulang(1,isym) = tet1*(180D0/pi)
-  symeulang(2,isym) = tet2*(180D0/pi)
-  symeulang(3,isym) = tet3*(180D0/pi)
-  
-  IF ( nok /= 9 ) WRITE (1337,99009) nok
-  WRITE (1337,99008) isym,rotname(isymindex(isym)),invflag(isym),  &
-      (symeulang(i,isym),i=1,3),symunitary(isym)
-  
-END DO
-WRITE(1337,'(8X,57(1H-),/)')
+      end if
+
+    end if
+
+    co1 = cos(tet1)
+    si1 = sin(tet1)
+    co2 = cos(tet2)
+    si2 = sin(tet2)
+    co3 = cos(tet3)
+    si3 = sin(tet3)
+
+    nok = 0
+    do i1 = 1, 3
+      do i2 = 1, 3
+        if (checkrmat(rmat,co1,si1,co2,si2,co3,si3,i1,i2)) then
+          nok = nok + 1
+        else if (loop<1) then
+          loop = loop + 1
+          go to 100
+        end if
+      end do
+    end do
+
+    symeulang(1, isym) = tet1*(180d0/pi)
+    symeulang(2, isym) = tet2*(180d0/pi)
+    symeulang(3, isym) = tet3*(180d0/pi)
+
+    if (nok/=9) write (1337, 130) nok
+    write (1337, 120) isym, rotname(isymindex(isym)), invflag(isym), &
+      (symeulang(i,isym), i=1, 3), symunitary(isym)
+
+  end do
+  write (1337, '(8X,57(1H-),/)')
 
 !-----------------------------------------------------------------------
 !                    initialize all rotation matrices
 !-----------------------------------------------------------------------
 
-CALL cinit(nkmmax*nkmmax*nsym,drot)
+  call cinit(nkmmax*nkmmax*nsym, drot)
 
 !-----------------------------------------------------------------------
 !                       create rotation matrices
 !-----------------------------------------------------------------------
 
-IF ( irel <= 2 ) THEN
-  ireleff = 0
-  nkeff = nl
-ELSE
-  ireleff = 3
-  nkeff = nk
-END IF
+  if (irel<=2) then
+    ireleff = 0
+    nkeff = nl
+  else
+    ireleff = 3
+    nkeff = nk
+  end if
 
-DO isym = 1,nsym
-  
-  CALL calcrotmat(nkeff,ireleff,symeulang(1,isym),  &
-      symeulang(2,isym),symeulang(3,isym), drot(1,1,isym),fact,nkmmax)
-  
-END DO
+  do isym = 1, nsym
+
+    call calcrotmat(nkeff, ireleff, symeulang(1,isym), symeulang(2,isym), &
+      symeulang(3,isym), drot(1,1,isym), fact, nkmmax)
+
+  end do
 !-----------------------------------------------------------------------
 !                     create matrix for inversion
 !-----------------------------------------------------------------------
-CALL cinit(nkmmax*nkmmax,dinv)
+  call cinit(nkmmax*nkmmax, dinv)
 
-i = 0
-IF ( irel > 2 ) THEN
-  ns = 2
-ELSE
-  ns = 1
-END IF
-DO l = 0,(nl-1)
-  DO m = 1,ns*(2*l+1)
-    i = i + 1
-    dinv(i,i) = (-1.0D0)**l
-  END DO
-END DO
-itop = i
+  i = 0
+  if (irel>2) then
+    ns = 2
+  else
+    ns = 1
+  end if
+  do l = 0, (nl-1)
+    do m = 1, ns*(2*l+1)
+      i = i + 1
+      dinv(i, i) = (-1.0d0)**l
+    end do
+  end do
+  itop = i
 
 !-----------------------------------------------------------------------
 !                         include inversion
 !-----------------------------------------------------------------------
-DO isym = 1,nsym
-  IF ( invflag(isym) /= 0 ) THEN
-    
-    CALL zgemm('N','N',nkm,nkm,nkm,c1,drot(1,1,isym),nkmmax,  &
-        dinv,nkmmax,c0,w2,nkmmax)
-    
-    DO j = 1,nkm
-      CALL zcopy(nkm,w2(1,j),1,drot(1,j,isym),1)
-    END DO
-  END IF
-END DO
+  do isym = 1, nsym
+    if (invflag(isym)/=0) then
+
+      call zgemm('N', 'N', nkm, nkm, nkm, c1, drot(1,1,isym), nkmmax, dinv, &
+        nkmmax, c0, w2, nkmmax)
+
+      do j = 1, nkm
+        call zcopy(nkm, w2(1,j), 1, drot(1,j,isym), 1)
+      end do
+    end if
+  end do
 
 !-----------------------------------------------------------------------
 !            add second spin-diagonal block for  IREL=2
 !            spin off-diagonal blocks have been initialized before
 !-----------------------------------------------------------------------
-IF ( irel == 2 ) THEN
-  nlm = nkm/2
-  IF ( itop /= nlm ) CALL errortrap('SYMTAUMAT',11,1)
-  DO isym = 1,nsym
-    
-    DO j = 1,nlm
-      CALL zcopy(nlm,drot(1,j,isym),1,drot(nlm+1,nlm+j,isym),1)
-    END DO
-  END DO
-END IF
+  if (irel==2) then
+    nlm = nkm/2
+    if (itop/=nlm) call errortrap('SYMTAUMAT', 11, 1)
+    do isym = 1, nsym
+
+      do j = 1, nlm
+        call zcopy(nlm, drot(1,j,isym), 1, drot(nlm+1,nlm+j,isym), 1)
+      end do
+    end do
+  end if
 !-----------------------------------------------------------------------
 !            transform to real spherical representation for  KREL=0
 !-----------------------------------------------------------------------
-n = nkm
-m = nkmmax
-IF ( krel == 0 ) THEN
-  DO isym = 1,nsym
-    CALL zgemm('N','N',n,n,n,c1,rc,m,drot(1,1,isym),m,c0,w1,m)
-    CALL zgemm('N','C',n,n,n,c1,w1,m,rc,m,c0,drot(1,1,isym),m)
-  END DO
-END IF
+  n = nkm
+  m = nkmmax
+  if (krel==0) then
+    do isym = 1, nsym
+      call zgemm('N', 'N', n, n, n, c1, rc, m, drot(1,1,isym), m, c0, w1, m)
+      call zgemm('N', 'C', n, n, n, c1, w1, m, rc, m, c0, drot(1,1,isym), m)
+    end do
+  end if
 !-----------------------------------------------------------------------
 !                     create matrix for time reversal
 !-----------------------------------------------------------------------
-IF ( irel > 1 ) THEN
-  
-  CALL cinit(nkmmax*nkmmax,dtim)
-  
-  i = 0
-  DO k = 1,nk
-    l = k/2
-    IF ( l*2 == k ) THEN
-      sk = -1D0
-    ELSE
-      sk = +1D0
-    END IF
-    rj = nint(l + sk*0.5D0)
-    DO rmj = -rj, + rj, 1
-      i1 = nint(2*l*(rj+0.5D0)+rj+rmj+1)
-      i2 = nint(2*l*(rj+0.5D0)+rj-rmj+1)
-      dtim(i1,i2) = sk*(-1)**nint(rmj+0.5D0)
-    END DO
-  END DO
-  IF ( iprint > 0 ) THEN
-    CALL cmatstr('Inversion     MATRIX',20,dinv,nkm,nkmmax,3,3, 0,1D-8,6)
-    CALL cmatstr('Time reversal MATRIX',20,dtim,nkm,nkmmax,3,3, 0,1D-8,6)
-  END IF
-  
-END IF
+  if (irel>1) then
+
+    call cinit(nkmmax*nkmmax, dtim)
+
+    i = 0
+    do k = 1, nk
+      l = k/2
+      if (l*2==k) then
+        sk = -1d0
+      else
+        sk = +1d0
+      end if
+      rj = nint(l+sk*0.5d0)
+      do rmj = -rj, +rj, 1
+        i1 = nint(2*l*(rj+0.5d0)+rj+rmj+1)
+        i2 = nint(2*l*(rj+0.5d0)+rj-rmj+1)
+        dtim(i1, i2) = sk*(-1)**nint(rmj+0.5d0)
+      end do
+    end do
+    if (iprint>0) then
+      call cmatstr('Inversion     MATRIX', 20, dinv, nkm, nkmmax, 3, 3, 0, &
+        1d-8, 6)
+      call cmatstr('Time reversal MATRIX', 20, dtim, nkm, nkmmax, 3, 3, 0, &
+        1d-8, 6)
+    end if
+
+  end if
 !=======================================================================
 !            set up of transformation matrices completed
 !=======================================================================
@@ -311,17 +313,17 @@ END IF
 !=======================================================================
 !   include time reversal operation for anti-unitary transformations
 !=======================================================================
-DO isym = 1,nsym
-  IF ( .NOT.symunitary(isym) ) THEN
-    IF ( irel == 2 ) CALL errortrap('SYMTAUMAT',14,1)
-    
-    CALL zgemm('N','N',nkm,nkm,nkm,c1,drot(1,1,isym),nkmmax,  &
-        dtim,nkmmax,c0,w2,nkmmax)
-    DO j = 1,nkm
-      CALL zcopy(nkm,w2(1,j),1,drot(1,j,isym),1)
-    END DO
-  END IF
-END DO
+  do isym = 1, nsym
+    if (.not. symunitary(isym)) then
+      if (irel==2) call errortrap('SYMTAUMAT', 14, 1)
+
+      call zgemm('N', 'N', nkm, nkm, nkm, c1, drot(1,1,isym), nkmmax, dtim, &
+        nkmmax, c0, w2, nkmmax)
+      do j = 1, nkm
+        call zcopy(nkm, w2(1,j), 1, drot(1,j,isym), 1)
+      end do
+    end if
+  end do
 
 !-----------------------------------------------------------------------
 ! for testing
@@ -337,18 +339,18 @@ END DO
 
 !-----------------------------------------------------------------------
 
-IF ( iprint == 0 ) RETURN
+  if (iprint==0) return
 
 !=======================================================================
 !       find the structure of the site-diagonal TAU - matrices  TAUQ
 !=======================================================================
 
-CALL taustruct(drot,nsym,symunitary,nkm,nq,nqmax,nkmmax,iprint, irel)
+  call taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, irel)
 
-RETURN
-99001 FORMAT (5X,'<SYMTAUMAT> : rotation matrices acting on t/G/tau',//,  &
-    8X,57(1H-),/,8X,  &
-    'ISYM            INV          Euler angles      Unitarity',/, 8X,57(1H-))
-99008 FORMAT (8X,i2,3X,a,i3,3F10.5,3X,l1)
-99009 FORMAT (50('>'),' trouble in <SYMTAUMAT>',i3,f10.5)
-END SUBROUTINE symtaumat
+  return
+110 format (5x, '<SYMTAUMAT> : rotation matrices acting on t/G/tau', /, /, 8x, &
+    57('-'), /, 8x, 'ISYM            INV          Euler angles      Unitarity' &
+    , /, 8x, 57('-'))
+120 format (8x, i2, 3x, a, i3, 3f10.5, 3x, l1)
+130 format (50('>'), ' trouble in <SYMTAUMAT>', i3, f10.5)
+end subroutine

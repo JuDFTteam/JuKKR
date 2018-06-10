@@ -1,4 +1,4 @@
-INTEGER FUNCTION ioben(r)
+integer function ioben(r)
 !-----------------------------------------------------------------------
 
 !                             --   --
@@ -13,34 +13,34 @@ INTEGER FUNCTION ioben(r)
 !                                           last update: February 1994
 !-----------------------------------------------------------------------
 
-implicit none
+  implicit none
 
 !.. Scalar Arguments ..
 
-      DOUBLE PRECISION R
+  double precision :: r
 !..
 !.. Intrinsic Functions ..
-      INTRINSIC ABS,INT,NINT
+  intrinsic :: abs, int, nint
 !..
 
 !.. Parameters ..
-      DOUBLE PRECISION EPS
-      PARAMETER (EPS=1D-6)
+  double precision :: eps
+  parameter (eps=1d-6)
 !..
 
-IF ((nint(r)-r) < eps) THEN
-  IF (ABS(nint(r)-r) < eps) THEN
-    ioben = nint(r)
-  ELSE
-    ioben = nint(r+1.0)
-  END IF
-ELSE
-  IF (ABS(INT(r)-r) < eps) THEN
-    ioben = INT(r)
-  ELSE
-    ioben = INT(r+1.0)
-  END IF
-END IF
+  if ((nint(r)-r)<eps) then
+    if (abs(nint(r)-r)<eps) then
+      ioben = nint(r)
+    else
+      ioben = nint(r+1.0)
+    end if
+  else
+    if (abs(int(r)-r)<eps) then
+      ioben = int(r)
+    else
+      ioben = int(r+1.0)
+    end if
+  end if
 
-RETURN
-END FUNCTION ioben
+  return
+end function

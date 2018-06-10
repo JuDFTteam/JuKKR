@@ -1,6 +1,6 @@
 ! ************************************************************************
-SUBROUTINE calrmt(ipf,ipfe,ipe,imt,z,rmt,rws,rmtnew,alat,drdi,a,b,  &
-    irws,r,ifile,kshape)
+subroutine calrmt(ipf, ipfe, ipe, imt, z, rmt, rws, rmtnew, alat, drdi, a, b, &
+  irws, r, ifile, kshape)
 !***********************************************************************
 !     this subroutine calculates imt and rmt(cal-rmt)
 !                     and prints some informations about the used meshes
@@ -10,68 +10,69 @@ SUBROUTINE calrmt(ipf,ipfe,ipe,imt,z,rmt,rws,rmtnew,alat,drdi,a,b,  &
 !               mt-radius than every ather meshpoint
 !***********************************************************************
 !.. Scalar Arguments ..
-      DOUBLE PRECISION A,ALAT,B,RMT,RMTNEW,RWS,Z
-      INTEGER IFILE,IMT,IPE,IPF,IPFE,IRWS,KSHAPE
+  double precision :: a, alat, b, rmt, rmtnew, rws, z
+  integer :: ifile, imt, ipe, ipf, ipfe, irws, kshape
 !..
 !.. Array Arguments ..
-      DOUBLE PRECISION DRDI(*),R(*)
+  double precision :: drdi(*), r(*)
 !..
 !.. Local Scalars ..
-      DOUBLE PRECISION DRD1,DRDWS,RIMT,RIMTM1,RNUC
-      INTEGER IDELTA,IH,IMTL,IRWSM2
+  double precision :: drd1, drdws, rimt, rimtm1, rnuc
+  integer :: idelta, ih, imtl, irwsm2
 !..
 !.. Intrinsic Functions ..
-      INTRINSIC EXP,LOG,MOD,REAL
+  intrinsic :: exp, log, mod, real
 !..
 !.. External Subroutines ..
-      EXTERNAL RCSTOP
+  external :: rcstop
 !     ..
-IF (kshape == 0) THEN
-  rimt = LOG(rmt/b+1.d0)/a + 1.d0
-  imtl = rimt
-  irwsm2 = irws - 2
-  idelta = (rimt-imtl)*2
-  IF (idelta == 0) imt = imtl
-  IF (idelta > 0) imt = imtl + 1
-  rimtm1 = REAL(imt-1)
-  rmtnew = b*EXP(a*rimtm1) - b
-  
-  IF (imt > irwsm2) THEN
-    WRITE (ipf,FMT=9000)
-    CALL rcstop('calrmt  ')
-    
-  END IF
-  
-ELSE
-  
-  IF (MOD(imt,2) == 0) THEN
-    WRITE (ipf,FMT=*) ' error stop in calrmt - imt = ',imt,  &
+  if (kshape==0) then
+    rimt = log(rmt/b+1.d0)/a + 1.d0
+    imtl = rimt
+    irwsm2 = irws - 2
+    idelta = (rimt-imtl)*2
+    if (idelta==0) imt = imtl
+    if (idelta>0) imt = imtl + 1
+    rimtm1 = real(imt-1)
+    rmtnew = b*exp(a*rimtm1) - b
+
+    if (imt>irwsm2) then
+      write (ipf, fmt=100)
+      call rcstop('calrmt  ')
+
+    end if
+
+  else
+
+    if (mod(imt,2)==0) then
+      write (ipf, fmt=*) ' error stop in calrmt - imt = ', imt, &
         ' has to be odd to get proper core charge  '
-    CALL rcstop('29      ')
-    
-  END IF
-  
-END IF
+      call rcstop('29      ')
 
-ih = irws/2
-drd1 = drdi(1)
-drdws = drdi(irws)
+    end if
+
+  end if
+
+  ih = irws/2
+  drd1 = drdi(1)
+  drdws = drdi(irws)
 !----- nucleus radius rnuc in bohr's radii
-rnuc = 2.2677022D-5* (2.d0*z)** (1.0D0/3.0D0)
+  rnuc = 2.2677022d-5*(2.d0*z)**(1.0d0/3.0d0)
 !-----
-IF (ifile /= 0) THEN
-  WRITE (ipf,FMT=9010) z,a,b,rnuc,r(2),ih,r(ih),drd1,drdws
-  WRITE (ipf,FMT=9020) irws,imt,rws,rmt,rmtnew,alat
-  IF (ipe == 1) WRITE (ipfe,FMT=9010) z,a,b,rnuc,r(2),ih,r(ih), drd1,drdws
-  IF (ipe == 1) WRITE (ipfe,FMT=9020) irws,imt,rws,rmt,rmtnew, alat
-END IF
+  if (ifile/=0) then
+    write (ipf, fmt=110) z, a, b, rnuc, r(2), ih, r(ih), drd1, drdws
+    write (ipf, fmt=120) irws, imt, rws, rmt, rmtnew, alat
+    if (ipe==1) write (ipfe, fmt=110) z, a, b, rnuc, r(2), ih, r(ih), drd1, &
+      drdws
+    if (ipe==1) write (ipfe, fmt=120) irws, imt, rws, rmt, rmtnew, alat
+  end if
 
 
 
-9000 FORMAT (1X,'potentials need more meshpoints',/,50 ('*'))
-9010 FORMAT (' rmesh  z=',f5.2,'  a=',f7.4,'  b=',f9.6,'  rnuc=',f11.8,  &
-    '  r(2)=',f11.8,/,' r(',i3,')=',f7.4,'   drdi(1)=',f11.8,  &
-    '   drdi(irws)=',f9.6)
-9020 FORMAT (' irws=',i6,' imt=',i6,/,' rws=',f12.8,' rmt=',f12.8,  &
-    ' rmtnew=',f12.8,' alat=',f12.8)
-END SUBROUTINE calrmt
+100 format (1x, 'potentials need more meshpoints', /, 50('*'))
+110 format (' rmesh  z=', f5.2, '  a=', f7.4, '  b=', f9.6, '  rnuc=', f11.8, &
+    '  r(2)=', f11.8, /, ' r(', i3, ')=', f7.4, '   drdi(1)=', f11.8, &
+    '   drdi(irws)=', f9.6)
+120 format (' irws=', i6, ' imt=', i6, /, ' rws=', f12.8, ' rmt=', f12.8, &
+    ' rmtnew=', f12.8, ' alat=', f12.8)
+end subroutine

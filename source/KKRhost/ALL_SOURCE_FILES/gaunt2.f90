@@ -1,5 +1,5 @@
 !***********************************************************************
-SUBROUTINE gaunt2(w,yr,n)
+subroutine gaunt2(w, yr, n)
 ! ************************************************************************
 !     sets up values needed for gaunt
 !        m. weinert  january 1982
@@ -15,68 +15,67 @@ SUBROUTINE gaunt2(w,yr,n)
 !                 of RF=(4*pi)**(1/3)
 
 !-----------------------------------------------------------------------
-      IMPLICIT NONE
+  implicit none
 !.. Arguments
-      INTEGER N
-      DOUBLE PRECISION W(*),YR(N,0:N,0:N)
+  integer :: n
+  double precision :: w(*), yr(n, 0:n, 0:n)
 !..
 !.. Local Scalars ..
-      DOUBLE PRECISION A,CD,CTH,FAC,FPI,RF,STH,T
-      INTEGER K,L,LOMAX,M
+  double precision :: a, cd, cth, fac, fpi, rf, sth, t
+  integer :: k, l, lomax, m
 !..
 !.. Local Arrays ..
-      DOUBLE PRECISION P(0:N+1,0:N),X(N)
+  double precision :: p(0:n+1, 0:n), x(n)
 !..
 !.. External Subroutines ..
-      EXTERNAL GRULE
+  external :: grule
 !..
 !.. Intrinsic Functions ..
-      INTRINSIC ATAN,SQRT
+  intrinsic :: atan, sqrt
 !     ..
-fpi = 16D0*ATAN(1D0)
-rf = fpi**(1D0/3D0)
-lomax = n
+  fpi = 16d0*atan(1d0)
+  rf = fpi**(1d0/3d0)
+  lomax = n
 
 !--->    obtain gauss-legendre points and weights
 
-CALL grule(2*n,x,w)
+  call grule(2*n, x, w)
 
 !--->    generate associated legendre functions for m.ge.0
 
-DO k = 1,n
-  cth = x(k)
-  sth = SQRT(1.d0-cth*cth)
-  fac = 1.d0
-  
+  do k = 1, n
+    cth = x(k)
+    sth = sqrt(1.d0-cth*cth)
+    fac = 1.d0
+
 !--->    loop over m values
-  
-  DO m = 0,lomax
-    fac = - DBLE(2*m-1)*fac
-    p(m,m) = fac
-    p(m+1,m) = DBLE(2*m+1)*cth*fac
-    
+
+    do m = 0, lomax
+      fac = -dble(2*m-1)*fac
+      p(m, m) = fac
+      p(m+1, m) = dble(2*m+1)*cth*fac
+
 !--->    recurse upward in l
-    
-    DO l = m + 2,lomax
-      p(l,m) = ( DBLE(2*l-1)*cth*p(l-1,m)  &
-          - DBLE(l+m-1)    *p(l-2,m) ) / DBLE(l-m)
-    END DO
-    
-    fac = fac*sth
-  END DO
-  
+
+      do l = m + 2, lomax
+        p(l, m) = (dble(2*l-1)*cth*p(l-1,m)-dble(l+m-1)*p(l-2,m))/dble(l-m)
+      end do
+
+      fac = fac*sth
+    end do
+
 !--->    multiply in the normalization factors
-  
-  DO l = 0,lomax
-    a = rf*SQRT((2*l+1)/fpi)
-    cd = 1.d0
-    yr(k,l,0) = a*p(l,0)
-    
-    DO m = 1,l
-      t = DBLE( (l+1-m)* (l+m))
-      cd = cd/t
-      yr(k,l,m) = a*SQRT(2.d0*cd)*p(l,m)
-    END DO
-  END DO
-END DO
-END SUBROUTINE gaunt2
+
+    do l = 0, lomax
+      a = rf*sqrt((2*l+1)/fpi)
+      cd = 1.d0
+      yr(k, l, 0) = a*p(l, 0)
+
+      do m = 1, l
+        t = dble((l+1-m)*(l+m))
+        cd = cd/t
+        yr(k, l, m) = a*sqrt(2.d0*cd)*p(l, m)
+      end do
+    end do
+  end do
+end subroutine

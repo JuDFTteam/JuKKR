@@ -1,170 +1,169 @@
 ! 13.10.95 ***************************************************************
-SUBROUTINE mixstr(rmsavq,rmsavm,ins,lpot,lmpot,natref,nshell,  &
-    nstart,nend,conc,nspin,itc,rfpi,fpi,ipf,  &
-    mixing,fcm,irc,irmin,r,drdi,vons,visp,vins, vspsmo,vspsme,lsmear)
+subroutine mixstr(rmsavq, rmsavm, ins, lpot, lmpot, natref, nshell, nstart, &
+  nend, conc, nspin, itc, rfpi, fpi, ipf, mixing, fcm, irc, irmin, r, drdi, &
+  vons, visp, vins, vspsmo, vspsme, lsmear)
 ! ************************************************************************
 !.. Parameters ..
-      include 'inc.p'
-      INTEGER LMPOTD,IRMIND
-      PARAMETER (LMPOTD= (LPOTD+1)**2, &
-                IRMIND=IRMD-IRNSD)
-!..
-!.. Scalar Arguments ..
-      DOUBLE PRECISION FCM,FPI,MIXING,RFPI,RMSAVM,RMSAVQ
-      INTEGER INS,IPF,ITC,LMPOT,LPOT,NATREF,NEND,NSPIN,NSTART
-      INTEGER LSMEAR
-!..
-!.. Array Arguments ..
-      DOUBLE PRECISION DRDI(IRMD,NATYPD),R(IRMD,NATYPD), &
-                       VINS(IRMIND:IRMD,LMPOTD,*),VISP(IRMD,*), &
-                       VONS(IRMD,LMPOTD,*),CONC(NATYPD), &
-                       VSPSMO(IRMD,NSPOTD),VSPSME(IRMD,NSPOTD)
-      INTEGER IRC(NATYPD),IRMIN(NATYPD),NSHELL(0:NSHELD)
+  include 'inc.p'
+  integer :: lmpotd, irmind
+  parameter (lmpotd=(lpotd+1)**2, irmind=irmd-irnsd)
 !..
 !.. Local Scalars ..
-      DOUBLE PRECISION FAC,RMSERM,RMSERQ,VMN,VNM,VNP,VOLDM,VOLDP,VPN
-      DOUBLE PRECISION NATOM
-      INTEGER I,IH,IHP1,IRC1,IRMIN1,J,LM,NP
+  double precision :: fcm, fpi, mixing, rfpi, rmsavm, rmsavq
+  integer :: ins, ipf, itc, lmpot, lpot, natref, nend, nspin, nstart
+  integer :: lsmear
 !..
 !.. Intrinsic Functions ..
-      INTRINSIC MOD,REAL,SQRT
+  double precision :: drdi(irmd, natypd), r(irmd, natypd), &
+    vins(irmind:irmd, lmpotd, *), visp(irmd, *), vons(irmd, lmpotd, *), &
+    conc(natypd), vspsmo(irmd, nspotd), vspsme(irmd, nspotd)
+  integer :: irc(natypd), irmin(natypd), nshell(0:nsheld)
 !     ..
-rmsavq = 0.0D0
-rmsavm = 0.0D0
 
+  double precision :: fac, rmserm, rmserq, vmn, vnm, vnp, voldm, voldp, vpn
+  double precision :: natom
+  integer :: i, ih, ihp1, irc1, irmin1, j, lm, np
 !---> final construction of the potentials
 !     attention : the spherical averaged potential is the lm=1
+  intrinsic :: mod, real, sqrt
 !                     component of vons times sqrt(4 pi).
+  rmsavq = 0.0d0
+  rmsavm = 0.0d0
 
 !     first mixing scheme : straight mixing
 !---> determination of the root mean sqare error
 
-natom = 0.0D0
 
-DO  np = nstart,nend
-  
-  i = np - natref
-  natom = natom + DBLE(nshell(i))*conc(i)
-  
-  IF (nspin == 2) THEN
-    ih = 2*np - 1
-    ihp1 = ih + 1
-  ELSE
-    ih = np
-    ihp1 = ih
-  END IF
-  
-  irc1 = irc(np)
-  rmserq = 0.0D0
-  rmserm = 0.0D0
-  fac = 0.5D0/rfpi
-  
-  DO  j = 1,irc1
-    vnp = fac* (vons(j,1,ih)+vons(j,1,ihp1))
-    vnm = fac* (vons(j,1,ih)-vons(j,1,ihp1))
-    voldp = 0.5D0* (visp(j,ih)+visp(j,ihp1))
-    voldm = 0.5D0* (visp(j,ih)-visp(j,ihp1))
-    rmserq = rmserq + 2.0D0*REAL(1+MOD(j,2))*r(j,np)*r(j,np)*  &
-        drdi(j,np)* (vnp-voldp)* (vnp-voldp)
-    rmserm = rmserm + 2.0D0*REAL(1+MOD(j,2))*r(j,np)*r(j,np)*  &
-        drdi(j,np)* (vnm-voldm)* (vnm-voldm)
-    vpn = voldp + mixing* (vnp-voldp)
-    vmn = voldm + fcm*mixing* (vnm-voldm)
-    vons(j,1,ihp1) = vpn - vmn
-    vons(j,1,ih) = vpn + vmn
-  END DO
-  
+
+
+
+  natom = 0.0d0
+
+  do np = nstart, nend
+
+    i = np - natref
+    natom = natom + dble(nshell(i))*conc(i)
 ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-  IF ( lsmear >= 3 ) THEN
-    DO j = 1,irc1
-      vnp   = 0.5D0* (vspsmo(j,ih)+vspsmo(j,ihp1))
-      vnm   = 0.5D0* (vspsmo(j,ih)-vspsmo(j,ihp1))
-      voldp = 0.5D0* (vspsme(j,ih)+vspsme(j,ihp1))
-      voldm = 0.5D0* (vspsme(j,ih)-vspsme(j,ihp1))
-      vpn   = voldp + mixing* (vnp-voldp)
-      vmn   = voldm + fcm*mixing* (vnm-voldm)
-      vspsmo(j,ihp1) = vpn - vmn
-      vspsmo(j,ih)   = vpn + vmn
-    END DO
-  END IF
-  
-  IF ( (lsmear == 1) .OR. (lsmear == 2) ) THEN
-    DO j = 1,irc1
-      vspsme(j,ihp1) = vspsmo(j,ihp1)
-      vspsme(j,ih)   = vspsmo(j,ih)
-    END DO
-  END IF
+    if (nspin==2) then
+      ih = 2*np - 1
+      ihp1 = ih + 1
+    else
+      ih = np
+      ihp1 = ih
+    end if
+
+    irc1 = irc(np)
+    rmserq = 0.0d0
+    rmserm = 0.0d0
+    fac = 0.5d0/rfpi
 ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-  
-  rmserq = rmserq/ (r(irc1,np)**3)
-  rmserm = rmserm/ (r(irc1,np)**3)
-  rmsavq = rmsavq + rmserq*nshell(i)*conc(i)
-  rmsavm = rmsavm + rmserm*nshell(i)*conc(i)
-  
-  IF (nspin == 2) THEN
-    WRITE (ipf,FMT=9000) i,SQRT(rmserq),SQRT(rmserm)
-  ELSE
-    WRITE (ipf,FMT=9020) i,SQRT(rmserq)
-  END IF
-  
-  IF (ins /= 0 .AND. lpot > 0) THEN
-    
-    rmserq = 0.0D0
-    rmserm = 0.0D0
-    irmin1 = irmin(np)
-    DO  lm = 2,lmpot
-      DO  j = irmin1,irc1
-        vnp = 0.5D0* (vons(j,lm,ih)+vons(j,lm,ihp1))
-        vnm = 0.5D0* (vons(j,lm,ih)-vons(j,lm,ihp1))
-        voldp = 0.5D0* (vins(j,lm,ih)+vins(j,lm,ihp1))
-        voldm = 0.5D0* (vins(j,lm,ih)-vins(j,lm,ihp1))
-        rmserq = rmserq + 2.0D0*REAL(1+MOD(j,2))*r(j,np)*r(j,np)*  &
-            drdi(j,np)* (vnp-voldp)* (vnp-voldp)
-        rmserm = rmserm + 2.0D0*REAL(1+MOD(j,2))*r(j,np)*r(j,np)*  &
-            drdi(j,np)* (vnm-voldm)* (vnm-voldm)
-        vpn = voldp + mixing* (vnp-voldp)
-        vmn = voldm + fcm*mixing* (vnm-voldm)
-        vons(j,lm,ihp1) = vpn - vmn
-        vons(j,lm,ih) = vpn + vmn
-      END DO
-    END DO
-    rmserq = rmserq/ (r(irc1,np)**3)/fpi
-    rmserm = rmserm/ (r(irc1,np)**3)/fpi
+    do j = 1, irc1
+      vnp = fac*(vons(j,1,ih)+vons(j,1,ihp1))
+      vnm = fac*(vons(j,1,ih)-vons(j,1,ihp1))
+      voldp = 0.5d0*(visp(j,ih)+visp(j,ihp1))
+      voldm = 0.5d0*(visp(j,ih)-visp(j,ihp1))
+      rmserq = rmserq + 2.0d0*real(1+mod(j,2))*r(j, np)*r(j, np)*drdi(j, np)*( &
+        vnp-voldp)*(vnp-voldp)
+      rmserm = rmserm + 2.0d0*real(1+mod(j,2))*r(j, np)*r(j, np)*drdi(j, np)*( &
+        vnm-voldm)*(vnm-voldm)
+      vpn = voldp + mixing*(vnp-voldp)
+      vmn = voldm + fcm*mixing*(vnm-voldm)
+      vons(j, 1, ihp1) = vpn - vmn
+      vons(j, 1, ih) = vpn + vmn
+    end do
+
+
+    if (lsmear>=3) then
+      do j = 1, irc1
+        vnp = 0.5d0*(vspsmo(j,ih)+vspsmo(j,ihp1))
+        vnm = 0.5d0*(vspsmo(j,ih)-vspsmo(j,ihp1))
+        voldp = 0.5d0*(vspsme(j,ih)+vspsme(j,ihp1))
+        voldm = 0.5d0*(vspsme(j,ih)-vspsme(j,ihp1))
+        vpn = voldp + mixing*(vnp-voldp)
+        vmn = voldm + fcm*mixing*(vnm-voldm)
+        vspsmo(j, ihp1) = vpn - vmn
+        vspsmo(j, ih) = vpn + vmn
+      end do
+    end if
+
+    if ((lsmear==1) .or. (lsmear==2)) then
+      do j = 1, irc1
+        vspsme(j, ihp1) = vspsmo(j, ihp1)
+        vspsme(j, ih) = vspsmo(j, ih)
+      end do
+    end if
+
+
+    rmserq = rmserq/(r(irc1,np)**3)
+    rmserm = rmserm/(r(irc1,np)**3)
     rmsavq = rmsavq + rmserq*nshell(i)*conc(i)
     rmsavm = rmsavm + rmserm*nshell(i)*conc(i)
-    
-    IF (nspin == 2) THEN
-      WRITE (ipf,FMT=9010) i,SQRT(rmserq),SQRT(rmserm)
-    ELSE
-      WRITE (ipf,FMT=9030) i,SQRT(rmserq)
-    END IF
-    
-  END IF
-  
-END DO
 
+    if (nspin==2) then
+      write (ipf, fmt=100) i, sqrt(rmserq), sqrt(rmserm)
+    else
+      write (ipf, fmt=120) i, sqrt(rmserq)
+    end if
 
-rmsavq = SQRT(rmsavq/natom)
-rmsavm = SQRT(rmsavm/natom)
+    if (ins/=0 .and. lpot>0) then
 
-WRITE(1337,'(79(1H-),/)')
-IF (nspin == 2) THEN
-  WRITE (ipf,FMT=9040) itc,rmsavq,rmsavm
-  WRITE ( 6 ,FMT=9040) itc,rmsavq,rmsavm
-ELSE
-  WRITE (ipf,FMT=9050) itc,rmsavq
-  WRITE ( 6 ,FMT=9050) itc,rmsavq
-END IF
-WRITE(1337,'(79(1H-))')
+      rmserq = 0.0d0
+      rmserm = 0.0d0
+      irmin1 = irmin(np)
+      do lm = 2, lmpot
+        do j = irmin1, irc1
+          vnp = 0.5d0*(vons(j,lm,ih)+vons(j,lm,ihp1))
+          vnm = 0.5d0*(vons(j,lm,ih)-vons(j,lm,ihp1))
+          voldp = 0.5d0*(vins(j,lm,ih)+vins(j,lm,ihp1))
+          voldm = 0.5d0*(vins(j,lm,ih)-vins(j,lm,ihp1))
+          rmserq = rmserq + 2.0d0*real(1+mod(j,2))*r(j, np)*r(j, np)*drdi(j, &
+            np)*(vnp-voldp)*(vnp-voldp)
+          rmserm = rmserm + 2.0d0*real(1+mod(j,2))*r(j, np)*r(j, np)*drdi(j, &
+            np)*(vnm-voldm)*(vnm-voldm)
+          vpn = voldp + mixing*(vnp-voldp)
+          vmn = voldm + fcm*mixing*(vnm-voldm)
+          vons(j, lm, ihp1) = vpn - vmn
+          vons(j, lm, ih) = vpn + vmn
+        end do
+      end do
+      rmserq = rmserq/(r(irc1,np)**3)/fpi
+      rmserm = rmserm/(r(irc1,np)**3)/fpi
+      rmsavq = rmsavq + rmserq*nshell(i)*conc(i)
+      rmsavm = rmsavm + rmserm*nshell(i)*conc(i)
 
-9000 FORMAT (5X,' rms-error for atom',i3,1X,':','v+ + v- = ',1P,d11.4,  &
-    2X,',',2X,'v+ - v- = ',1P,d11.4)
-9010 FORMAT (5X,' rms-error non spherical contribution for atom ',i3,  &
-    1X,':','v+ + v- = ',1P,d11.4,02X,',',2X,'v+ - v- = ',1P, d11.4)
-9020 FORMAT (5X,' rms-error for atom',i3,1X,':','v+ + v- = ',1P,d11.4)
-9030 FORMAT (5X,' rms-error non spherical contribution for atom ',i3,  &
-    1X,':','v+ + v- = ',1P,d11.4)
-9040 FORMAT ('      ITERATION',i4,' average rms-error : v+ + v- = ',  &
-    1P,d11.4,/,39X,' v+ - v- = ',1P,d11.4)
-9050 FORMAT ('      ITERATION',i4,' average rms-error : v+ + v- = ', 1P,d11.4)
-END SUBROUTINE mixstr
+      if (nspin==2) then
+        write (ipf, fmt=110) i, sqrt(rmserq), sqrt(rmserm)
+      else
+        write (ipf, fmt=130) i, sqrt(rmserq)
+      end if
+
+    end if
+
+  end do
+! 13.10.95 ***************************************************************
+! ************************************************************************
+  rmsavq = sqrt(rmsavq/natom)
+  rmsavm = sqrt(rmsavm/natom)
+!.. Parameters ..
+  write (1337, '(79(1H-),/)')
+  if (nspin==2) then
+    write (ipf, fmt=140) itc, rmsavq, rmsavm
+    write (6, fmt=140) itc, rmsavq, rmsavm
+  else
+    write (ipf, fmt=150) itc, rmsavq
+    write (6, fmt=150) itc, rmsavq
+  end if
+  write (1337, '(79(1H-))')
+! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
+100 format (5x, ' rms-error for atom', i3, 1x, ':', 'v+ + v- = ', 1p, d11.4, &
+    2x, ',', 2x, 'v+ - v- = ', 1p, d11.4)
+110 format (5x, ' rms-error non spherical contribution for atom ', i3, 1x, &
+    ':', 'v+ + v- = ', 1p, d11.4, 02x, ',', 2x, 'v+ - v- = ', 1p, d11.4)
+120 format (5x, ' rms-error for atom', i3, 1x, ':', 'v+ + v- = ', 1p, d11.4)
+130 format (5x, ' rms-error non spherical contribution for atom ', i3, 1x, &
+    ':', 'v+ + v- = ', 1p, d11.4)
+140 format ('      ITERATION', i4, ' average rms-error : v+ + v- = ', 1p, &
+    d11.4, /, 39x, ' v+ - v- = ', 1p, d11.4)
+150 format ('      ITERATION', i4, ' average rms-error : v+ + v- = ', 1p, &
+    d11.4)
+end subroutine

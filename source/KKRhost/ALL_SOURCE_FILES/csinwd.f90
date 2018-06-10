@@ -1,4 +1,4 @@
-SUBROUTINE csinwd(f,fint,lmmsqd,irmind,irmd,irmin,ipan,ircut)
+subroutine csinwd(f, fint, lmmsqd, irmind, irmd, irmin, ipan, ircut)
 !-----------------------------------------------------------------------
 !     this subroutine does an inwards integration of llmax
 !     functions f with an extended 3-point-simpson :
@@ -30,50 +30,53 @@ SUBROUTINE csinwd(f,fint,lmmsqd,irmind,irmd,irmin,ipan,ircut)
 !-----------------------------------------------------------------------
 !     ..
 !.. Parameters ..
-      DOUBLE PRECISION A1,A2,A3
-      PARAMETER (A1=5.D0/12.D0,A2=8.D0/12.D0,A3=-1.D0/12.D0)
+  double precision :: a1, a2, a3
+  parameter (a1=5.d0/12.d0, a2=8.d0/12.d0, a3=-1.d0/12.d0)
 !..
 !.. Scalar Arguments ..
-      INTEGER IPAN,IRMD,IRMIND,LMMSQD,IRMIN
+  integer :: ipan, irmd, irmind, lmmsqd, irmin
 !..
 !.. Array Arguments ..
-      DOUBLE COMPLEX F(LMMSQD,IRMIND:IRMD),FINT(LMMSQD,IRMIND:IRMD)
-      INTEGER IRCUT(0:IPAN)
+  double complex :: f(lmmsqd, irmind:irmd), fint(lmmsqd, irmind:irmd)
+  integer :: ircut(0:ipan)
 !..
 !.. Local Scalars ..
-      INTEGER I,IEN,IP,IST,LL
+  integer :: i, ien, ip, ist, ll
 
 !---> loop over kinks
 
-DO  ip = ipan,1,-1
-  ist = ircut(ip)
-  ien = ircut(ip-1) + 1
-  IF (ip == 1) ien = irmin
-  
-  IF (ip == ipan) THEN
-    DO  ll = 1,lmmsqd
-      fint(ll,ist) = 0.0D0
-    END DO
-    
-  ELSE
-    DO  ll = 1,lmmsqd
-      fint(ll,ist) = fint(ll,ist+1)
-    END DO
-  END IF
-  
-!---> calculate fint with an extended 3-point-simpson
-  
-  DO  i = ist,ien+2,-2
-    DO  ll = 1,lmmsqd
-      fint(ll,i-1)=fint(ll,i) +f(ll,i)*a1+f(ll,i-1)*a2+f(ll,i-2)*a3
-      fint(ll,i-2)=fint(ll,i-1) +f(ll,i)*a3+f(ll,i-1)*a2+f(ll,i-2)*a1
-    END DO
-  END DO
-  IF(MOD(ist-ien,2) == 1)THEN
-    DO  ll=1,lmmsqd
-      fint(ll,ien)=fint(ll,ien+1) +f(ll,ien)*a1+f(ll,ien+1)*a2+f(ll,ien+2)*a3
-    END DO
-  END IF
-END DO
+  do ip = ipan, 1, -1
+    ist = ircut(ip)
+    ien = ircut(ip-1) + 1
+    if (ip==1) ien = irmin
 
-END SUBROUTINE csinwd
+    if (ip==ipan) then
+      do ll = 1, lmmsqd
+        fint(ll, ist) = 0.0d0
+      end do
+
+    else
+      do ll = 1, lmmsqd
+        fint(ll, ist) = fint(ll, ist+1)
+      end do
+    end if
+
+!---> calculate fint with an extended 3-point-simpson
+
+    do i = ist, ien + 2, -2
+      do ll = 1, lmmsqd
+        fint(ll, i-1) = fint(ll, i) + f(ll, i)*a1 + f(ll, i-1)*a2 + &
+          f(ll, i-2)*a3
+        fint(ll, i-2) = fint(ll, i-1) + f(ll, i)*a3 + f(ll, i-1)*a2 + &
+          f(ll, i-2)*a1
+      end do
+    end do
+    if (mod(ist-ien,2)==1) then
+      do ll = 1, lmmsqd
+        fint(ll, ien) = fint(ll, ien+1) + f(ll, ien)*a1 + f(ll, ien+1)*a2 + &
+          f(ll, ien+2)*a3
+      end do
+    end if
+  end do
+
+end subroutine

@@ -1,6 +1,6 @@
 ! 13.10.95 ***************************************************************
-SUBROUTINE epotinb(epotin,nspin,natyp,rho2ns,vm2z,r,drdi,ins,  &
-    irmin,irws,lpot,vins,ircut,ipan,z)
+subroutine epotinb(epotin, nspin, natyp, rho2ns, vm2z, r, drdi, ins, irmin, &
+  irws, lpot, vins, ircut, ipan, z)
 ! ************************************************************************
 
 !     attention : energy zero ---> electro static zero
@@ -50,134 +50,135 @@ SUBROUTINE epotinb(epotin,nspin,natyp,rho2ns,vm2z,r,drdi,ins,  &
 !                               b.drittler   oct. 1989
 !-----------------------------------------------------------------------
 !.. Parameters ..
-      include 'inc.p'
-!..
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
-!..
-!.. Scalar Arguments ..
-      INTEGER INS,LPOT,NATYP,NSPIN
-!..
+  include 'inc.p'
 !.. Array Arguments ..
-      DOUBLE PRECISION DRDI(IRMD,*),EPOTIN(*),R(IRMD,*), &
-                       RHO2NS(IRMD,LMPOTD,NATYPD,*), &
-                       VINS(IRMIND:IRMD,LMPOTD,*),VM2Z(IRMD,*),Z(*)
-      INTEGER IPAN(*),IRCUT(0:IPAND,*),IRMIN(*),IRWS(*)
+  integer :: lmpotd
+  parameter (lmpotd=(lpotd+1)**2)
+  integer :: irmind
+  parameter (irmind=irmd-irnsd)
 !..
 !.. Local Scalars ..
-      DOUBLE PRECISION PI,R2RHOD,R2RHOU,RFPI,TEMP,ZZOR
-      INTEGER I,IATYP,IC,IPAN1,IPOTD,IPOTU,IRC1,IRMIN1,IRS1,L1,LM,M1
+  integer :: ins, lpot, natyp, nspin
 !..
 !.. Local Arrays ..
-      DOUBLE PRECISION ENS(0:LPOTD,NATYPD),ER(IRMD)
-      INTEGER IRCUTM(0:IPAND)
+  double precision :: drdi(irmd, *), epotin(*), r(irmd, *), &
+    rho2ns(irmd, lmpotd, natypd, *), vins(irmind:irmd, lmpotd, *), &
+    vm2z(irmd, *), z(*)
+  integer :: ipan(*), ircut(0:ipand, *), irmin(*), irws(*)
 !..
 !.. External Subroutines ..
-      EXTERNAL SIMP3,SIMPK
+  double precision :: pi, r2rhod, r2rhou, rfpi, temp, zzor
+  integer :: i, iatyp, ic, ipan1, ipotd, ipotu, irc1, irmin1, irs1, l1, lm, m1
 !..
 !.. Intrinsic Functions ..
-      INTRINSIC ATAN,SQRT
+  double precision :: ens(0:lpotd, natypd), er(irmd)
+  integer :: ircutm(0:ipand)
 !     ..
-pi = 4.0D0*ATAN(1.0D0)
-rfpi = SQRT(4.0D0*pi)
 
-DO  iatyp = 1,natyp
-  
-  ipan1 = ipan(iatyp)
-  irc1 = ircut(ipan1,iatyp)
-  
-  IF (ipan1 > 1) THEN
-    irs1 = ircut(1,iatyp)
-  ELSE
-    irs1 = irws(iatyp)
-  END IF
-  
-  IF (nspin == 1) THEN
-    ipotu = iatyp
-    ipotd = iatyp
-  ELSE
-    ipotu = 2*iatyp - 1
-    ipotd = 2*iatyp
-  END IF
-  
-  DO  i = 1,irs1
-    
+  external :: simp3, simpk
+
+
+  intrinsic :: atan, sqrt
+
+  pi = 4.0d0*atan(1.0d0)
+  rfpi = sqrt(4.0d0*pi)
+
+  do iatyp = 1, natyp
+
+    ipan1 = ipan(iatyp)
+    irc1 = ircut(ipan1, iatyp)
 !---> calculate charge density times input potential
-    
-    r2rhou = (rho2ns(i,1,iatyp,1)-rho2ns(i,1,iatyp,nspin))/2.0D0
-    r2rhod = (rho2ns(i,1,iatyp,1)+rho2ns(i,1,iatyp,nspin))/2.0D0
-    er(i) = - (r2rhou*vm2z(i,ipotu)+r2rhod*vm2z(i,ipotd))*rfpi
-  END DO
-  
-!--->  remember the form of vm2z between mt sphere and rirc
-  
-  IF (ipan1 > 1) THEN
-    DO  i = irs1 + 1,irc1
-      r2rhou = (rho2ns(i,1,iatyp,1)-rho2ns(i,1,iatyp,nspin))/2.0D0
-      r2rhod = (rho2ns(i,1,iatyp,1)+rho2ns(i,1,iatyp,nspin))/2.0D0
-      zzor = 2.0D0*z(iatyp)/r(i,iatyp)
-      er(i) = - (r2rhou* (vm2z(i,ipotu)-zzor)+  &
-          r2rhod* (vm2z(i,ipotd)-zzor))*rfpi
-    END DO
-  END IF
-  
-!--->   now integrate er to get epotin
-  
-  IF (ipan1 > 1) THEN
-    CALL simpk(er,temp,ipan(iatyp),ircut(0,iatyp),drdi(1,iatyp))
-  ELSE
-    CALL simp3(er,temp,1,irs1,drdi(1,iatyp))
-  END IF
-  
-  epotin(iatyp) = temp
-  ens(0,iatyp) = temp
-  
-!--->   add non spher. contribution in case of non spher. input potential
-  
-  DO  l1 = 1,lpot
-    ens(l1,iatyp) = 0.0D0
-  END DO
-  
-  IF (ins /= 0) THEN
-    
-    irmin1 = irmin(iatyp)
-    IF (irmin1 <= irs1) THEN
-      
-      ircutm(0) = irmin1 - 1
-      DO  ic = 1,ipan1
-        ircutm(ic) = ircut(ic,iatyp)
-      END DO
-      
-      DO  l1 = 1,lpot
-        
-        DO  i = 1,irmd
-          er(i) = 0.0D0
-        END DO
-        
-        DO  m1 = -l1,l1
-          lm = l1* (l1+1) + m1 + 1
-          DO  i = irmin1,irc1
-            
-!---> calculate charge density times potential
-            
-            r2rhou = (rho2ns(i,lm,iatyp,1)- rho2ns(i,lm,iatyp,nspin))/2.0D0
-            r2rhod = (rho2ns(i,lm,iatyp,1)+ rho2ns(i,lm,iatyp,nspin))/2.0D0
-            er(i) = er(i) - r2rhou*vins(i,lm,ipotu) - r2rhod*vins(i,lm,ipotd)
-          END DO
-        END DO
-        CALL simpk(er,temp,ipan1,ircutm,drdi(1,iatyp))
-        
-        epotin(iatyp) = epotin(iatyp) + temp
-        ens(l1,iatyp) = temp
-      END DO
-      
-    END IF                    ! (IRMIN1.LE.IRS1)
-    
-  END IF                      ! (INS.NE.0)
-  
-END DO
+    if (ipan1>1) then
+      irs1 = ircut(1, iatyp)
+    else
+      irs1 = irws(iatyp)
+    end if
 
-RETURN
-END SUBROUTINE epotinb
+    if (nspin==1) then
+      ipotu = iatyp
+      ipotd = iatyp
+    else
+      ipotu = 2*iatyp - 1
+      ipotd = 2*iatyp
+    end if
+
+    do i = 1, irs1
+!--->  remember the form of vm2z between mt sphere and rirc
+
+
+      r2rhou = (rho2ns(i,1,iatyp,1)-rho2ns(i,1,iatyp,nspin))/2.0d0
+      r2rhod = (rho2ns(i,1,iatyp,1)+rho2ns(i,1,iatyp,nspin))/2.0d0
+      er(i) = -(r2rhou*vm2z(i,ipotu)+r2rhod*vm2z(i,ipotd))*rfpi
+    end do
+!--->   now integrate er to get epotin
+
+
+    if (ipan1>1) then
+      do i = irs1 + 1, irc1
+        r2rhou = (rho2ns(i,1,iatyp,1)-rho2ns(i,1,iatyp,nspin))/2.0d0
+        r2rhod = (rho2ns(i,1,iatyp,1)+rho2ns(i,1,iatyp,nspin))/2.0d0
+        zzor = 2.0d0*z(iatyp)/r(i, iatyp)
+        er(i) = -(r2rhou*(vm2z(i,ipotu)-zzor)+r2rhod*(vm2z(i, &
+          ipotd)-zzor))*rfpi
+      end do
+    end if
+
+!--->   add non spher. contribution in case of non spher. input potential
+
+    if (ipan1>1) then
+      call simpk(er, temp, ipan(iatyp), ircut(0,iatyp), drdi(1,iatyp))
+    else
+      call simp3(er, temp, 1, irs1, drdi(1,iatyp))
+    end if
+
+    epotin(iatyp) = temp
+    ens(0, iatyp) = temp
+
+
+
+    do l1 = 1, lpot
+      ens(l1, iatyp) = 0.0d0
+    end do
+
+    if (ins/=0) then
+
+      irmin1 = irmin(iatyp)
+      if (irmin1<=irs1) then
+
+        ircutm(0) = irmin1 - 1
+        do ic = 1, ipan1
+          ircutm(ic) = ircut(ic, iatyp)
+        end do
+!---> calculate charge density times potential
+        do l1 = 1, lpot
+
+          do i = 1, irmd
+            er(i) = 0.0d0
+          end do
+
+          do m1 = -l1, l1
+            lm = l1*(l1+1) + m1 + 1
+            do i = irmin1, irc1
+
+! (IRMIN1.LE.IRS1)
+
+              r2rhou = (rho2ns(i,lm,iatyp,1)-rho2ns(i,lm,iatyp,nspin))/2.0d0
+              r2rhod = (rho2ns(i,lm,iatyp,1)+rho2ns(i,lm,iatyp,nspin))/2.0d0
+              er(i) = er(i) - r2rhou*vins(i, lm, ipotu) - &
+                r2rhod*vins(i, lm, ipotd)
+            end do
+          end do
+          call simpk(er, temp, ipan1, ircutm, drdi(1,iatyp))
+! (INS.NE.0)
+          epotin(iatyp) = epotin(iatyp) + temp
+          ens(l1, iatyp) = temp
+        end do
+
+      end if 
+! 13.10.95 ***************************************************************
+    end if ! ************************************************************************
+
+  end do
+!     attention : energy zero ---> electro static zero
+  return
+end subroutine

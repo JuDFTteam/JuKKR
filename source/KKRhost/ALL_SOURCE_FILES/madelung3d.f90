@@ -1,6 +1,6 @@
-SUBROUTINE madelung3d(lpot,yrg,wg,naez,alat,volume0,  &
-    bravais,recbv,rbasis,rmax,gmax, naezd,lmxspd,lassld,lpotd,lmpotd,  &
-    nmaxd,ishld,nembd,wlength)
+subroutine madelung3d(lpot, yrg, wg, naez, alat, volume0, bravais, recbv, &
+  rbasis, rmax, gmax, naezd, lmxspd, lassld, lpotd, lmpotd, nmaxd, ishld, &
+  nembd, wlength)
 ! **********************************************************************
 ! *                                                                    *
 ! * This subroutine calculates the Madelung potential coefficients     *
@@ -9,85 +9,85 @@ SUBROUTINE madelung3d(lpot,yrg,wg,naez,alat,volume0,  &
 ! *                                                                    *
 ! **********************************************************************
 
-      IMPLICIT NONE
+  implicit none
 !..
 !.. Scalar Arguments ..
-      INTEGER LPOT,NAEZ,WLENGTH
-      INTEGER NAEZD,LMXSPD,LASSLD,LPOTD,LMPOTD,NMAXD,ISHLD,NEMBD
-      DOUBLE PRECISION ALAT,VOLUME0,RMAX,GMAX
+  integer :: lpot, naez, wlength
+  integer :: naezd, lmxspd, lassld, lpotd, lmpotd, nmaxd, ishld, nembd
+  double precision :: alat, volume0, rmax, gmax
 !..
 !.. Array Arguments ..
-      DOUBLE PRECISION YRG(LASSLD,0:LASSLD,0:LASSLD),WG(LASSLD)
-      DOUBLE PRECISION BRAVAIS(3,3),RECBV(3,3)
-      DOUBLE PRECISION RBASIS(3,NAEZD+NEMBD)
+  double precision :: yrg(lassld, 0:lassld, 0:lassld), wg(lassld)
+  double precision :: bravais(3, 3), recbv(3, 3)
+  double precision :: rbasis(3, naezd+nembd)
 !..
 !.. Local Scalars ..
-      INTEGER IEND,IPRINT,IQ1,IQ2,NCLEBD
-      INTEGER NGMAX,NRMAX,NSHLG,NSHLR
-      INTEGER LRECABMAD,IREC
+  integer :: iend, iprint, iq1, iq2, nclebd
+  integer :: ngmax, nrmax, nshlg, nshlr
+  integer :: lrecabmad, irec
 !..
 !.. Local Arrays ..
 !.. Attention: Dimension LMXSPD*LMPOTD appears sometimes as NCLEB1
-      DOUBLE PRECISION AVMAD(LMPOTD,LMPOTD),BVMAD(LMPOTD)
-      DOUBLE PRECISION CLEB(LMXSPD*LMPOTD)
-      DOUBLE PRECISION MADELSMAT(LMXSPD,NAEZD,NAEZD)
-      DOUBLE PRECISION SMAT1(6,6),SMAT2(6,6)
-      DOUBLE PRECISION GN(3,NMAXD),RM(3,NMAXD)
-      INTEGER ICLEB(LMXSPD*LMPOTD,3)
-      INTEGER NSG(ISHLD),NSR(ISHLD)
+  double precision :: avmad(lmpotd, lmpotd), bvmad(lmpotd)
+  double precision :: cleb(lmxspd*lmpotd)
+  double precision :: madelsmat(lmxspd, naezd, naezd)
+  double precision :: smat1(6, 6), smat2(6, 6)
+  double precision :: gn(3, nmaxd), rm(3, nmaxd)
+  integer :: icleb(lmxspd*lmpotd, 3)
+  integer :: nsg(ishld), nsr(ishld)
 !..
 !.. External subroutines
-      EXTERNAL LATTICE3D,STRMAT,MADELGAUNT,MADELCOEF
+  external :: lattice3d, strmat, madelgaunt, madelcoef
 ! ......................................................................
-iprint = 0
-nclebd = lmxspd*lmpotd
+  iprint = 0
+  nclebd = lmxspd*lmpotd
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-WRITE (1337,'(79(1H=))')
-WRITE (1337,'(18X,A)') 'MADELUNG3D: setting bulk Madelung coefficients'
-WRITE (1337,'(79(1H=))')
-WRITE (1337,*)
+  write (1337, '(79(1H=))')
+  write (1337, '(18X,A)') 'MADELUNG3D: setting bulk Madelung coefficients'
+  write (1337, '(79(1H=))')
+  write (1337, *)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
 ! ======================================================================
-CALL lattice3d(alat,bravais,recbv,ngmax,nrmax,nshlg,nshlr,nsg,nsr,  &
-    gn,rm,rmax,gmax,iprint,nmaxd,ishld)
+  call lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, &
+    gn, rm, rmax, gmax, iprint, nmaxd, ishld)
 
-CALL strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr,gn,rm,  &
-    rbasis,madelsmat,volume0,iprint,lassld,lmxspd,naezd)
+  call strmat(alat, lpot, naez, ngmax, nrmax, nsg, nsr, nshlg, nshlr, gn, rm, &
+    rbasis, madelsmat, volume0, iprint, lassld, lmxspd, naezd)
 ! ======================================================================
 
-lrecabmad = wlength*2*lmpotd*lmpotd + wlength*2*lmpotd
-OPEN (69,ACCESS='direct',RECL=lrecabmad,FILE='abvmad.unformatted',  &
-    FORM='unformatted')
+  lrecabmad = wlength*2*lmpotd*lmpotd + wlength*2*lmpotd
+  open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', &
+    form='unformatted')
 
 ! --> calculate the gaunt coefficients
 
-CALL madelgaunt(lpot,yrg,wg,cleb,icleb,iend,lassld,nclebd)
+  call madelgaunt(lpot, yrg, wg, cleb, icleb, iend, lassld, nclebd)
 
 ! --> calculate the madelung coefficients to be used for VMAD
 !     call MADELCOEF with first arg. .FALSE. = 3D case
 
-DO iq1 = 1,naez
-  DO iq2 = 1,naez
-    CALL madelcoef(.false.,lpot,avmad,bvmad,madelsmat(1,iq1,iq2)  &
-        ,cleb,icleb,iend,lpotd,lmpotd,lmxspd,nclebd)
-    
-    irec = iq2 + naez*(iq1-1)
-    WRITE (69,REC=irec) avmad,bvmad
-!-----------------------------------------------------------------------
-    IF ( (iq1 <= 6) .AND. (iq2 <= 6) ) THEN
-      smat1(iq1,iq2) = avmad(1,1)
-      smat2(iq1,iq2) = bvmad(1)
-    END IF
-!-----------------------------------------------------------------------
-  END DO
-END DO
-CLOSE (69)
+  do iq1 = 1, naez
+    do iq2 = 1, naez
+      call madelcoef(.false., lpot, avmad, bvmad, madelsmat(1,iq1,iq2), cleb, &
+        icleb, iend, lpotd, lmpotd, lmxspd, nclebd)
 
-IF ( iprint < 1 ) RETURN
+      irec = iq2 + naez*(iq1-1)
+      write (69, rec=irec) avmad, bvmad
+!-----------------------------------------------------------------------
+      if ((iq1<=6) .and. (iq2<=6)) then
+        smat1(iq1, iq2) = avmad(1, 1)
+        smat2(iq1, iq2) = bvmad(1)
+      end if
+!-----------------------------------------------------------------------
+    end do
+  end do
+  close (69)
+
+  if (iprint<1) return
 ! ======================================================================
 
-CALL madel3out(iprint,naez,lrecabmad,smat1,smat2,lmpotd)
+  call madel3out(iprint, naez, lrecabmad, smat1, smat2, lmpotd)
 
-END SUBROUTINE madelung3d
+end subroutine

@@ -1,5 +1,5 @@
-SUBROUTINE wfint(qns,cder,dder,qzekdr,pzekdr,vnspll,nsra,irmind,  &
-        irmd,lmmaxd,irmin,irmax)                          ! Added IRMIN,IRMAX 1.7.2014
+subroutine wfint(qns, cder, dder, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, &
+  lmmaxd, irmin, irmax) ! Added IRMIN,IRMAX 1.7.2014
 !-----------------------------------------------------------------------
 !      determines the integrands CDER, DDER or ADER, BDER in the
 !        integral equations for the non-spherical wavefunctions from
@@ -7,71 +7,69 @@ SUBROUTINE wfint(qns,cder,dder,qzekdr,pzekdr,vnspll,nsra,irmind,  &
 
 !      R. Zeller      Aug. 1994
 !-----------------------------------------------------------------------
-IMPLICIT NONE
+  implicit none
 !.. Scalar Arguments ..
-      INTEGER IRMD,IRMIND,LMMAXD,NSRA,IRMIN,IRMAX
+  integer :: irmd, irmind, lmmaxd, nsra, irmin, irmax
 !..
 !.. Array Arguments ..
-      DOUBLE COMPLEX CDER(LMMAXD,LMMAXD,IRMIND:IRMD), &
-                     DDER(LMMAXD,LMMAXD,IRMIND:IRMD), &
-                     PZEKDR(LMMAXD,IRMIND:IRMD,2), &
-                     QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2), &
-                     QZEKDR(LMMAXD,IRMIND:IRMD,2)
-      DOUBLE PRECISION VNSPLL(LMMAXD,LMMAXD,IRMIND:IRMD)
+  double complex :: cder(lmmaxd, lmmaxd, irmind:irmd), &
+    dder(lmmaxd, lmmaxd, irmind:irmd), pzekdr(lmmaxd, irmind:irmd, 2), &
+    qns(lmmaxd, lmmaxd, irmind:irmd, 2), qzekdr(lmmaxd, irmind:irmd, 2)
+  double precision :: vnspll(lmmaxd, lmmaxd, irmind:irmd)
 !..
 !.. Local Scalars ..
-      INTEGER IR,LM1,LM2
+  integer :: ir, lm1, lm2
 !..
 !.. External Subroutines ..
-      EXTERNAL DGEMM
+  external :: dgemm
 !..
 !.. Local Arrays ..
-      DOUBLE PRECISION QNSI(LMMAXD,LMMAXD),QNSR(LMMAXD,LMMAXD), &
-                       VTQNSI(LMMAXD,LMMAXD),VTQNSR(LMMAXD,LMMAXD)
+  double precision :: qnsi(lmmaxd, lmmaxd), qnsr(lmmaxd, lmmaxd), &
+    vtqnsi(lmmaxd, lmmaxd), vtqnsr(lmmaxd, lmmaxd)
 !..
 !.. Intrinsic Functions ..
-      INTRINSIC DCMPLX,DIMAG,DBLE
+  intrinsic :: dcmplx, dimag, dble
 !     ..
 
-DO  ir = irmin,irmax
-  DO  lm2 = 1,lmmaxd
-    DO  lm1 = 1,lmmaxd
-      qnsr(lm1,lm2) = DBLE(qns(lm1,lm2,ir,1))
-      qnsi(lm1,lm2) = DIMAG(qns(lm1,lm2,ir,1))
-    END DO
-  END DO
-  CALL dgemm('N','N',lmmaxd,lmmaxd,lmmaxd,1.d0,vnspll(1,1,ir),  &
-      lmmaxd,qnsr,lmmaxd,0.d0,vtqnsr,lmmaxd)
-  CALL dgemm('N','N',lmmaxd,lmmaxd,lmmaxd,1.d0,vnspll(1,1,ir),  &
-      lmmaxd,qnsi,lmmaxd,0.d0,vtqnsi,lmmaxd)
-  DO  lm1 = 1,lmmaxd
-    DO  lm2 = 1,lmmaxd
-      cder(lm1,lm2,ir) = qzekdr(lm1,ir,1)*  &
-          DCMPLX(vtqnsr(lm1,lm2),vtqnsi(lm1,lm2))
-      dder(lm1,lm2,ir) = pzekdr(lm1,ir,1)*  &
-          DCMPLX(vtqnsr(lm1,lm2),vtqnsi(lm1,lm2))
-    END DO
-  END DO
-  IF (nsra == 2) THEN
-    DO  lm2 = 1,lmmaxd
-      DO  lm1 = 1,lmmaxd
-        qnsr(lm1,lm2) = DBLE(qns(lm1,lm2,ir,2))
-        qnsi(lm1,lm2) = DIMAG(qns(lm1,lm2,ir,2))
-      END DO
-    END DO
-    CALL dgemm('N','N',lmmaxd,lmmaxd,lmmaxd,1.d0,vnspll(1,1,ir),  &
-        lmmaxd,qnsr,lmmaxd,0.d0,vtqnsr,lmmaxd)
-    CALL dgemm('N','N',lmmaxd,lmmaxd,lmmaxd,1.d0,vnspll(1,1,ir),  &
-        lmmaxd,qnsi,lmmaxd,0.d0,vtqnsi,lmmaxd)
-    DO  lm2 = 1,lmmaxd
-      DO  lm1 = 1,lmmaxd
-        cder(lm1,lm2,ir) = cder(lm1,lm2,ir) +  &
-            qzekdr(lm1,ir,2)*DCMPLX(vtqnsr(lm1, lm2),vtqnsi(lm1,lm2))
-        dder(lm1,lm2,ir) = dder(lm1,lm2,ir) +  &
-            pzekdr(lm1,ir,2)*DCMPLX(vtqnsr(lm1, lm2),vtqnsi(lm1,lm2))
-      END DO
-    END DO
-  END IF
-  
-END DO
-END SUBROUTINE wfint
+  do ir = irmin, irmax
+    do lm2 = 1, lmmaxd
+      do lm1 = 1, lmmaxd
+        qnsr(lm1, lm2) = dble(qns(lm1,lm2,ir,1))
+        qnsi(lm1, lm2) = dimag(qns(lm1,lm2,ir,1))
+      end do
+    end do
+    call dgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, 1.d0, vnspll(1,1,ir), lmmaxd, &
+      qnsr, lmmaxd, 0.d0, vtqnsr, lmmaxd)
+    call dgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, 1.d0, vnspll(1,1,ir), lmmaxd, &
+      qnsi, lmmaxd, 0.d0, vtqnsi, lmmaxd)
+    do lm1 = 1, lmmaxd
+      do lm2 = 1, lmmaxd
+        cder(lm1, lm2, ir) = qzekdr(lm1, ir, 1)*dcmplx(vtqnsr(lm1,lm2), vtqnsi &
+          (lm1,lm2))
+        dder(lm1, lm2, ir) = pzekdr(lm1, ir, 1)*dcmplx(vtqnsr(lm1,lm2), vtqnsi &
+          (lm1,lm2))
+      end do
+    end do
+    if (nsra==2) then
+      do lm2 = 1, lmmaxd
+        do lm1 = 1, lmmaxd
+          qnsr(lm1, lm2) = dble(qns(lm1,lm2,ir,2))
+          qnsi(lm1, lm2) = dimag(qns(lm1,lm2,ir,2))
+        end do
+      end do
+      call dgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, 1.d0, vnspll(1,1,ir), &
+        lmmaxd, qnsr, lmmaxd, 0.d0, vtqnsr, lmmaxd)
+      call dgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, 1.d0, vnspll(1,1,ir), &
+        lmmaxd, qnsi, lmmaxd, 0.d0, vtqnsi, lmmaxd)
+      do lm2 = 1, lmmaxd
+        do lm1 = 1, lmmaxd
+          cder(lm1, lm2, ir) = cder(lm1, lm2, ir) + qzekdr(lm1, ir, 2)*dcmplx( &
+            vtqnsr(lm1,lm2), vtqnsi(lm1,lm2))
+          dder(lm1, lm2, ir) = dder(lm1, lm2, ir) + pzekdr(lm1, ir, 2)*dcmplx( &
+            vtqnsr(lm1,lm2), vtqnsi(lm1,lm2))
+        end do
+      end do
+    end if
+
+  end do
+end subroutine

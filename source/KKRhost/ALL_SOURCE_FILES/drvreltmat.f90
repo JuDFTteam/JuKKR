@@ -1,5 +1,5 @@
-SUBROUTINE drvreltmat(eryd,tmatll,vt,bt,r,drdi,r2drdi,zat,jws,  &
-    solver,soctl,ctl,lmmaxd,lmaxd,irmd)
+subroutine drvreltmat(eryd, tmatll, vt, bt, r, drdi, r2drdi, zat, jws, solver, &
+  soctl, ctl, lmmaxd, lmaxd, irmd)
 !   ********************************************************************
 !   *                                                                  *
 !   * driving routine to call relativistic < SSITE > routine           *
@@ -8,144 +8,138 @@ SUBROUTINE drvreltmat(eryd,tmatll,vt,bt,r,drdi,r2drdi,zat,jws,  &
 !   *                                                                  *
 !   ********************************************************************
 
-IMPLICIT NONE
+  implicit none
 
 ! PARAMETER definitions
-INTEGER NRMAX
-PARAMETER ( NRMAX=900 )
-INTEGER NLAMAX,NQMAX,NTMAX,NMMAX
-PARAMETER (NLAMAX=1,NQMAX=1,NTMAX=1,NMMAX=1)
-INTEGER NLMAX,NKMMAX,NMUEMAX,NKMPMAX,NKMAX,LINMAX
-PARAMETER ( NLMAX = 5 ) ! this should be >= LMAXD + 1
-PARAMETER ( NKMMAX = 2*NLMAX**2, NKMAX = 2*NLMAX-1 )
-PARAMETER ( NKMPMAX = NKMMAX+2*NLMAX, NMUEMAX = 2*NLMAX)
-PARAMETER ( LINMAX = 2*NLMAX*(2*NLMAX-1) )
+  integer :: nrmax
+  parameter (nrmax=900)
+  integer :: nlamax, nqmax, ntmax, nmmax
+  parameter (nlamax=1, nqmax=1, ntmax=1, nmmax=1)
+  integer :: nlmax, nkmmax, nmuemax, nkmpmax, nkmax, linmax
+  parameter (nlmax=5) ! this should be >= LMAXD + 1
+  parameter (nkmmax=2*nlmax**2, nkmax=2*nlmax-1)
+  parameter (nkmpmax=nkmmax+2*nlmax, nmuemax=2*nlmax)
+  parameter (linmax=2*nlmax*(2*nlmax-1))
 
 ! Dummy arguments
-INTEGER LMAXD,LMMAXD,IRMD
-INTEGER ZAT(NTMAX),JWS(NMMAX)
-DOUBLE COMPLEX TMATLL(LMMAXD,LMMAXD)
-DOUBLE PRECISION SOCTL(NLMAX)
-DOUBLE PRECISION CTL(NLMAX)
-DOUBLE PRECISION VT(NRMAX),BT(NRMAX)
-DOUBLE PRECISION R(NRMAX,NMMAX),R2DRDI(NRMAX,NMMAX)
-DOUBLE PRECISION DRDI(NRMAX,NMMAX)
+  integer :: lmaxd, lmmaxd, irmd
+  integer :: zat(ntmax), jws(nmmax)
+  double complex :: tmatll(lmmaxd, lmmaxd)
+  double precision :: soctl(nlmax)
+  double precision :: ctl(nlmax)
+  double precision :: vt(nrmax), bt(nrmax)
+  double precision :: r(nrmax, nmmax), r2drdi(nrmax, nmmax)
+  double precision :: drdi(nrmax, nmmax)
 
 ! Local variables
-REAL*8 AMEOPO(NKMMAX,NKMMAX,NLAMAX,3),AT(NRMAX,NLAMAX,3,NTMAX)
-COMPLEX*16 BZJ(LINMAX,NTMAX),BZZ(LINMAX,NTMAX), &
-           DZJ(LINMAX,NTMAX), &
-           DZZ(LINMAX,NTMAX),ERYD, &
-           MSST(NKMMAX,NKMMAX,NTMAX), &
-           OZJ(LINMAX,NTMAX), &
-           OZZ(LINMAX,NTMAX),P, &
-           QZJ(LINMAX,NTMAX),QZZ(LINMAX,NTMAX), &
-           SZJ(LINMAX,NTMAX),SZZ(LINMAX,NTMAX)
-COMPLEX*16 TSST(NKMMAX,NKMMAX,NTMAX),TSSTLIN(LINMAX,NTMAX), &
-           TZJ(LINMAX,NTMAX),TZZ(LINMAX,NTMAX)
-COMPLEX*16 OZZS(LINMAX,NTMAX,2),OZJS(LINMAX,NTMAX,2)
-LOGICAL CALCINT,GETIRRSOL
-REAL*8 CGC(NKMPMAX,2)
-INTEGER I,IHYPER,IKM1LIN(LINMAX),IKM2LIN(LINMAX),IL, &
-        IMT(NTMAX),IMUE,IPRINT,IQ,IQAT(NQMAX,NTMAX), &
-        IT,IWRIRRWF,IWRREGWF,J,LOPT(NTMAX), &
-        MMAX,NKM,NKMQ(NQMAX),NL, &
-        NLINQ(NQMAX),NLQ(NQMAX),NT,NUCLEUS
-INTEGER NFILCBWF
-INTEGER NSOLLM(NLMAX,NMUEMAX),LTAB(NMUEMAX), &
-        KAPTAB(NMUEMAX),NMUETAB(NMUEMAX)
-CHARACTER*10 SOLVER
-INTEGER ICALL
+  real *8 :: ameopo(nkmmax, nkmmax, nlamax, 3), at(nrmax, nlamax, 3, ntmax)
+  complex *16 :: bzj(linmax, ntmax), bzz(linmax, ntmax), dzj(linmax, ntmax), &
+    dzz(linmax, ntmax), eryd, msst(nkmmax, nkmmax, ntmax), ozj(linmax, ntmax), &
+    ozz(linmax, ntmax), p, qzj(linmax, ntmax), qzz(linmax, ntmax), &
+    szj(linmax, ntmax), szz(linmax, ntmax)
+  complex *16 :: tsst(nkmmax, nkmmax, ntmax), tsstlin(linmax, ntmax), &
+    tzj(linmax, ntmax), tzz(linmax, ntmax)
+  complex *16 :: ozzs(linmax, ntmax, 2), ozjs(linmax, ntmax, 2)
+  logical :: calcint, getirrsol
+  real *8 :: cgc(nkmpmax, 2)
+  integer :: i, ihyper, ikm1lin(linmax), ikm2lin(linmax), il, imt(ntmax), &
+    imue, iprint, iq, iqat(nqmax, ntmax), it, iwrirrwf, iwrregwf, j, &
+    lopt(ntmax), mmax, nkm, nkmq(nqmax), nl, nlinq(nqmax), nlq(nqmax), nt, &
+    nucleus
+  integer :: nfilcbwf
+  integer :: nsollm(nlmax, nmuemax), ltab(nmuemax), kaptab(nmuemax), &
+    nmuetab(nmuemax)
+  character (len=10) :: solver
+  integer :: icall
 
-DATA ICALL / 0 /
+  data icall/0/
 
-SAVE ICALL,IKM1LIN,IKM2LIN,LOPT,NLQ,NKMQ, &
-     IQAT,IMT, &
-     NKM,IHYPER,IPRINT,IT,NT,NUCLEUS, &
-     IWRREGWF,IWRIRRWF,CALCINT,GETIRRSOL,NFILCBWF
+  save :: icall, ikm1lin, ikm2lin, lopt, nlq, nkmq, iqat, imt, nkm, ihyper, &
+    iprint, it, nt, nucleus, iwrregwf, iwrirrwf, calcint, getirrsol, nfilcbwf
 
-icall = icall + 1
+  icall = icall + 1
 
 !=======================================================================
 !       initialise relativistic and dummy variables and SAVE them
 !=======================================================================
-IF ( icall == 1 ) THEN
-  
-  IF ( lmaxd > nlmax-1) THEN
-    WRITE(6,*) ' LMAXD = ',lmaxd, ' > NLMAX-1 = ',nlmax - 1
-    STOP  ' Increase NLMAX in < DRVRELTMAT > '
-  END IF
-  
-  IF ( irmd > nrmax ) THEN
-    WRITE (6,*) ' IRMD = ',irmd,' > NRMAX = ',nrmax
-    WRITE (6,*) ' Increase NRMAX in < sprkkr_rmesh.dim > '
-    STOP ' and in < DRVRELTMAT > '
-  END IF
-  
-  nl = lmaxd+1           ! no need to save, used only here once
-  iprint = 0
-  
-  DO i = 1,nmuemax
-    ltab(i) = i/2
-    IF( 2*ltab(i) == i ) THEN
-      kaptab(i) =  ltab(i)
-    ELSE
-      kaptab(i) = -ltab(i) - 1
-    END IF
-    nmuetab(i) = 2*ABS(kaptab(i))
-  END DO
-  
-  DO il = 1,nlmax
-    mmax = 2*il
-    DO imue = 1,mmax
-      IF ( (imue == 1) .OR. (imue == mmax) ) THEN
-        nsollm(il,imue) = 1
-      ELSE
-        nsollm(il,imue) = 2
-      END IF
-    END DO
-  END DO
-  
-  CALL ikmlin(iprint,nsollm,ikm1lin,ikm2lin,nlmax,nmuemax, linmax,nlmax)
-  
-  CALL calccgc(ltab,kaptab,nmuetab,cgc,nkmax,nmuemax,nkmpmax)
-  
-  DO it = 1,ntmax
-    imt(it) = 1
-    lopt(it) = -1       ! this should change for Brooks' OP
-  END DO
-  
-  DO iq = 1,nqmax
-    nlq(iq) = nl
-    nkmq(iq) = lmmaxd
-    nlinq(iq) = 2*nlq(iq)*(2*nlq(iq)-1)
-    iqat(iq,1) = 1
-  END DO
-  
-  nkm = lmmaxd
-  ihyper = 0
-  nt = 1
-  it = 1
-  nucleus = 0
-  
-  iwrregwf = 0
-  iwrirrwf = 0
-  calcint = .false.
-  getirrsol = .false.
-  nfilcbwf = 0
-END IF                    ! ICALL.EQ.1
+  if (icall==1) then
+
+    if (lmaxd>nlmax-1) then
+      write (6, *) ' LMAXD = ', lmaxd, ' > NLMAX-1 = ', nlmax - 1
+      stop ' Increase NLMAX in < DRVRELTMAT > '
+    end if
+
+    if (irmd>nrmax) then
+      write (6, *) ' IRMD = ', irmd, ' > NRMAX = ', nrmax
+      write (6, *) ' Increase NRMAX in < sprkkr_rmesh.dim > '
+      stop ' and in < DRVRELTMAT > '
+    end if
+
+    nl = lmaxd + 1 ! no need to save, used only here once
+    iprint = 0
+
+    do i = 1, nmuemax
+      ltab(i) = i/2
+      if (2*ltab(i)==i) then
+        kaptab(i) = ltab(i)
+      else
+        kaptab(i) = -ltab(i) - 1
+      end if
+      nmuetab(i) = 2*abs(kaptab(i))
+    end do
+
+    do il = 1, nlmax
+      mmax = 2*il
+      do imue = 1, mmax
+        if ((imue==1) .or. (imue==mmax)) then
+          nsollm(il, imue) = 1
+        else
+          nsollm(il, imue) = 2
+        end if
+      end do
+    end do
+
+    call ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, &
+      nlmax)
+
+    call calccgc(ltab, kaptab, nmuetab, cgc, nkmax, nmuemax, nkmpmax)
+
+    do it = 1, ntmax
+      imt(it) = 1
+      lopt(it) = -1 ! this should change for Brooks' OP
+    end do
+
+    do iq = 1, nqmax
+      nlq(iq) = nl
+      nkmq(iq) = lmmaxd
+      nlinq(iq) = 2*nlq(iq)*(2*nlq(iq)-1)
+      iqat(iq, 1) = 1
+    end do
+
+    nkm = lmmaxd
+    ihyper = 0
+    nt = 1
+    it = 1
+    nucleus = 0
+
+    iwrregwf = 0
+    iwrirrwf = 0
+    calcint = .false.
+    getirrsol = .false.
+    nfilcbwf = 0
+  end if ! ICALL.EQ.1
 !=======================================================================
 
-CALL ssite(iwrregwf,iwrirrwf,nfilcbwf,calcint,getirrsol,soctl,ctl,  &
-    eryd,p,ihyper,iprint,ikm1lin,ikm2lin,nlq,nkmq,nlinq,nt,  &
-    nkm,iqat,tsst,msst,tsstlin,dzz,dzj,szz,szj,ozz,ozj,bzz,  &
-    bzj,qzz,qzj,tzz,tzj,vt,bt,at,zat,nucleus,r,drdi,r2drdi,  &
-    jws,imt,ameopo,lopt,solver,cgc,ozzs,ozjs,nlmax,nqmax,  &
-    linmax,nrmax,nmmax,ntmax,nkmmax,nkmpmax,nlamax)
+  call ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
+    eryd, p, ihyper, iprint, ikm1lin, ikm2lin, nlq, nkmq, nlinq, nt, nkm, &
+    iqat, tsst, msst, tsstlin, dzz, dzj, szz, szj, ozz, ozj, bzz, bzj, qzz, &
+    qzj, tzz, tzj, vt, bt, at, zat, nucleus, r, drdi, r2drdi, jws, imt, &
+    ameopo, lopt, solver, cgc, ozzs, ozjs, nlmax, nqmax, linmax, nrmax, nmmax, &
+    ntmax, nkmmax, nkmpmax, nlamax)
 
-DO j = 1,nkm
-  CALL zcopy(nkm,tsst(1,j,it),1,tmatll(1,j),1)
-END DO
+  do j = 1, nkm
+    call zcopy(nkm, tsst(1,j,it), 1, tmatll(1,j), 1)
+  end do
 
-RETURN
-END SUBROUTINE drvreltmat
+  return
+end subroutine

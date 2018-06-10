@@ -1,5 +1,5 @@
-SUBROUTINE gfmask(linterface,icheck,icc,invmod,nsh1,nsh2,naez,  &
-        nshell,naezd,nprincd)
+subroutine gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell, &
+  naezd, nprincd)
 ! **********************************************************************
 ! *                                                                    *
 ! * This subroutine prepares the ICHECK matrix that is used for        *
@@ -12,78 +12,79 @@ SUBROUTINE gfmask(linterface,icheck,icc,invmod,nsh1,nsh2,naez,  &
 ! *                                            29.02.2000              *
 ! *                                                                    *
 ! **********************************************************************
-      IMPLICIT NONE
+  implicit none
 !     ..
 !     .. Scalar arguments
-      INTEGER NAEZD,NPRINCD
-      INTEGER ICC,INVMOD,NLAYER,NAEZ,NSHELL
-      LOGICAL LINTERFACE
+  integer :: naezd, nprincd
+  integer :: icc, invmod, nlayer, naez, nshell
+  logical :: linterface
 !     ..
 !     .. Array arguments
-      INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)    
-      INTEGER NSH1(*),NSH2(*)
+  integer :: icheck(naezd/nprincd, naezd/nprincd)
+  integer :: nsh1(*), nsh2(*)
 !     .. Local variables
-      INTEGER ICOUPLE(NAEZD,NAEZD)
-      INTEGER I,J,K,II,ISTEP1,ILT1,ISTEP2,ILT2,IL2,IL1,LFCHK
-      CHARACTER*80 FMTCHK
-      CHARACTER*35 INVALG(0:2)
+  integer :: icouple(naezd, naezd)
+  integer :: i, j, k, ii, istep1, ilt1, istep2, ilt2, il2, il1, lfchk
+  character (len=80) :: fmtchk
+  character (len=35) :: invalg(0:2)
 !     ..
 !     .. External functions
-      LOGICAL OPT,TEST
-      EXTERNAL OPT,TEST
+  logical :: opt, test
+  external :: opt, test
 !     ..
 !     .. Data statements
-DATA invalg /'FULL MATRIX                        ',  &
-    'BANDED MATRIX (slab)               ', 'BANDED + CORNERS MATRIX (supercell)' /
+  data invalg/'FULL MATRIX                        ', &
+    'BANDED MATRIX (slab)               ', &
+    'BANDED + CORNERS MATRIX (supercell)'/
 
-WRITE (1337,99000)
+  write (1337, 100)
 
 ! --> set default inversion to SUPERCELL mode = banded matrix + corners
 
-invmod = 2
+  invmod = 2
 
 ! --> LINTERFACE = use band diagonal mode
 
-IF (linterface) invmod = 1
+  if (linterface) invmod = 1
 
 ! --> full inversion is performed ONLY BY EXPLICIT request
 
-IF ( opt('full inv') )  invmod = 0
+  if (opt('full inv')) invmod = 0
 
-IF ( ( invmod /= 0 ).AND. ( MOD(naez,nprincd) /= 0 ) ) THEN
-  WRITE(6,99001) naez,nprincd
-  STOP
-END IF
+  if ((invmod/=0) .and. (mod(naez,nprincd)/=0)) then
+    write (6, 110) naez, nprincd
+    stop
+  end if
 
-WRITE (1337,99002) invalg(invmod)
+  write (1337, 120) invalg(invmod)
 
-nlayer=naez/nprincd
+  nlayer = naez/nprincd
 ! ----------------------------------------------------------- INVMOD = 1
 !                                                   band-diagonal matrix
-IF (invmod == 1) THEN
-  DO i=1,nlayer
-    DO j=1,nlayer
-      IF (i == j) THEN
-        icheck(i,j)=1
-      ELSE
-        icheck(i,j)=0
-      END IF
-    END DO
-  END DO
-END IF
+  if (invmod==1) then
+    do i = 1, nlayer
+      do j = 1, nlayer
+        if (i==j) then
+          icheck(i, j) = 1
+        else
+          icheck(i, j) = 0
+        end if
+      end do
+    end do
+  end if
 ! ----------------------------------------------------------- INVMOD = 2
 !              band-diagonal matrix with corners (slab periodic along z)
-IF (invmod == 2) THEN
-  DO i=1,nlayer
-    DO j=1,nlayer
-      IF ( ( i == j ).OR. ( j == nlayer ) .OR. ( i == nlayer ) ) THEN
-        icheck(i,j)=1
-      ELSE
-        icheck(i,j)=0
-      END IF
-    END DO
-  END DO
-END IF
+  if (invmod==2) then
+    do i = 1, nlayer
+      do j = 1, nlayer
+        if ((i==j) .or. (j==nlayer) .or. (i==nlayer)) then
+          icheck(i, j) = 1
+        else
+          icheck(i, j) = 0
+        end if
+      end do
+    end do
+  end if
 ! ================================================= INVMOD = 1, ICC <> 0
 !                   band-diagonal matrix, off-diagonal G elements needed
 
@@ -91,17 +92,17 @@ END IF
 !     (atomic sites) that are needed
 
 ! ======================================================================
-IF ( ( icc /= 0 ) .AND. ( invmod == 1 ) ) THEN
-  DO i=1,naez
-    DO j=1,naez
-      icouple(i,j) = 0
-      
-      DO ii=1,nshell
-        IF ( ( ( nsh1(ii) == i ) .AND. ( nsh2(ii) == j ) )  &
-            .OR. ( ( nsh1(ii) == j ) .AND. ( nsh2(ii) == i ) ) ) icouple(i,j) = 1
-      END DO
-    END DO
-  END DO
+  if ((icc/=0) .and. (invmod==1)) then
+    do i = 1, naez
+      do j = 1, naez
+        icouple(i, j) = 0
+
+        do ii = 1, nshell
+          if (((nsh1(ii)==i) .and. (nsh2(ii)==j)) .or. ((nsh1(ii)== &
+            j) .and. (nsh2(ii)==i))) icouple(i, j) = 1
+        end do
+      end do
+    end do
 !cccC ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !cccC                                               conductivity calculation
 !ccc         IF (OPT('CONDUCT ')) THEN
@@ -123,99 +124,98 @@ IF ( ( icc /= 0 ) .AND. ( invmod == 1 ) ) THEN
 !ccc            ENDDO
 !ccc         END IF                 ! Conductivity calculation
 !cccC ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  
+
 ! ----------------------------------------------------------------------
 ! Now given the matrix ICOUPLE prepare the matrix ICHECK which has 1 in
 ! all principal-layer blocks that we need -- this will be used in the
 ! matrix inversion
 ! ----------------------------------------------------------------------
-  istep1=0
-  ilt1=1
+    istep1 = 0
+    ilt1 = 1
 ! ----------------------------------------------------------------------
-  DO il1=1,naez
-    istep1=istep1+1
-    
-    IF ( istep1 > nprincd ) THEN
-      ilt1=ilt1+1
-      istep1=1
-    END IF
-    
-    ilt2=1
-    istep2=0
+    do il1 = 1, naez
+      istep1 = istep1 + 1
+
+      if (istep1>nprincd) then
+        ilt1 = ilt1 + 1
+        istep1 = 1
+      end if
+
+      ilt2 = 1
+      istep2 = 0
 ! ......................................................................
-    DO il2=1,naez
-      istep2=istep2+1
-      
-      IF ( istep2 > nprincd ) THEN
-        ilt2=ilt2+1
-        istep2=1
-      END IF
-      
-      IF ( icouple(il1,il2) == 1 ) icheck(ilt1,ilt2)=1
-    END DO
+      do il2 = 1, naez
+        istep2 = istep2 + 1
+
+        if (istep2>nprincd) then
+          ilt2 = ilt2 + 1
+          istep2 = 1
+        end if
+
+        if (icouple(il1,il2)==1) icheck(ilt1, ilt2) = 1
+      end do
 ! ......................................................................
-  END DO
+    end do
 ! ----------------------------------------------------------------------
 ! in the case of calculation of single blocks it has to put the correct
 ! value to ICHECK in order to calculate all the elements also necessary
 ! to calculate that single block          ?????
 ! ----------------------------------------------------------------------
-  DO j=1,nlayer
-    
+    do j = 1, nlayer
+
 ! --> loop over the element ICHECK(I,J) with fixed J and I < J
-    
-    IF (j /= 1) THEN
-      DO i=1,j-1
-        IF (icheck(i,j) == 1) THEN
-          DO k=i+1,j
-            icheck(k,j)=1
-          END DO
-          DO k=j,nlayer
-            icheck(k,k)=1
-          END DO
-        END IF
-      END DO
-    END IF
-    
-    IF ( .NOT.opt('CONDUCT ') ) THEN
-      
+
+      if (j/=1) then
+        do i = 1, j - 1
+          if (icheck(i,j)==1) then
+            do k = i + 1, j
+              icheck(k, j) = 1
+            end do
+            do k = j, nlayer
+              icheck(k, k) = 1
+            end do
+          end if
+        end do
+      end if
+
+      if (.not. opt('CONDUCT ')) then
+
 ! --> loop over the element ICHECK(I,J) with fixed J and I > J
-      
-      IF (j /= nlayer) THEN
-        DO i=nlayer,j+1,-1
-          IF (icheck(i,j) == 1) THEN
-            DO k=i-1,j,-1
-              icheck(k,j)=1
-            END DO
-          END IF
-        END DO
-      END IF
-    END IF
-  END DO
+
+        if (j/=nlayer) then
+          do i = nlayer, j + 1, -1
+            if (icheck(i,j)==1) then
+              do k = i - 1, j, -1
+                icheck(k, j) = 1
+              end do
+            end if
+          end do
+        end if
+      end if
+    end do
 ! ----------------------------------------------------------------------
-END IF
+  end if
 ! ======================================================================
 
-IF ( test('ICHECK  ') ) THEN
-  
-  fmtchk=' '
-  lfchk = 1
-  DO i = 1,MIN(35,nlayer)
-    fmtchk=fmtchk(1:lfchk)//'--'
-    lfchk = lfchk+2
-  END DO
-  
-  WRITE (1337,'(8X,A,/,8X,A)') 'ICHECK matrix :',fmtchk(1:lfchk)
-  DO i=1,nlayer
-    WRITE (1337,'(9X,35I2)') (icheck(i,j),j=1,MIN(35,nlayer))
-  END DO
-  WRITE (1337,'(8X,A,/)') fmtchk(1:lfchk)
-END IF
+  if (test('ICHECK  ')) then
 
-99000 FORMAT (5X,'< GFMASK > : set KKR matrix inversion algorithm',/)
-99001 FORMAT(6X,"ERROR: Number of sites (NAEZ) =",i3,  &
-    " not an integer multiplier",/,6X,  &
-    "of principal layers (NPRINCD) =",i3,/,6X,  &
-    "Use ONLY  full inversion in this case")
-99002 FORMAT (8X,'INVERSION algorithm used : ',a35,/)
-END SUBROUTINE gfmask
+    fmtchk = ' '
+    lfchk = 1
+    do i = 1, min(35, nlayer)
+      fmtchk = fmtchk(1:lfchk) // '--'
+      lfchk = lfchk + 2
+    end do
+
+    write (1337, '(8X,A,/,8X,A)') 'ICHECK matrix :', fmtchk(1:lfchk)
+    do i = 1, nlayer
+      write (1337, '(9X,35I2)')(icheck(i,j), j=1, min(35,nlayer))
+    end do
+    write (1337, '(8X,A,/)') fmtchk(1:lfchk)
+  end if
+
+100 format (5x, '< GFMASK > : set KKR matrix inversion algorithm', /)
+110 format (6x, 'ERROR: Number of sites (NAEZ) =', i3, &
+    ' not an integer multiplier', /, 6x, 'of principal layers (NPRINCD) =', &
+    i3, /, 6x, 'Use ONLY  full inversion in this case')
+120 format (8x, 'INVERSION algorithm used : ', a35, /)
+end subroutine

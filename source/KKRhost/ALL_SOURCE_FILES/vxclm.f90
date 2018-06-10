@@ -30,217 +30,218 @@
 !> - R. Zeller 23/6/1996: cor error
 !> - Jonathan Chico: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,IRWS,IRCUT,IPAN,   &
-   KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNM,THETAS,YR,WTYR,IJEND,LMSP,LMPOT,LMXSPD,LMMAX,IRM, &
-   LPOT,NATYP)
+subroutine vxclm(exc, kte, kxc, lmax, nspin, iatyp, rho2ns, v, r, drdi, irws, &
+  ircut, ipan, kshape, gsh, ilm_map, imaxsh, ifunm, thetas, yr, wtyr, ijend, &
+  lmsp, lmpot, lmxspd, lmmax, irm, lpot, natyp)
 
-   use Constants
-   use global_variables
+  use :: constants
+  use :: global_variables
 
-   implicit none
+  implicit none
 
-   ! .. Scalar Arguments
-   integer, intent(in) :: IRM    !< Maximum number of radial points
-   integer, intent(in) :: KTE    !< Calculation of the total energy On/Off (1/0)
-   integer, intent(in) :: KXC    !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
-   integer, intent(in) :: LMAX   !< Maximum l component in wave function expansion
-   integer, intent(in) :: IRWS   !< IATYP Entry in the IRWS array with the R point at WS radius
-   integer, intent(in) :: IPAN   !< IATYP Entry in the IPAN array with the number of panels in non-MT-region
-   integer, intent(in) :: LPOT   !< Maximum l component in potential expansion
-   integer, intent(in) :: NATYP  !< Number of kinds of atoms in unit cell
-   integer, intent(in) :: IATYP
-   integer, intent(in) :: IJEND
-   integer, intent(in) :: LMPOT  !< (LPOT+1)**2
-   integer, intent(in) :: NSPIN  !< Counter for spin directions
-   integer, intent(in) :: LMMAX  !< (LMAX+1)^2
-   integer, intent(in) :: KSHAPE !< Exact treatment of WS cell
-   integer, intent(in) :: LMXSPD !< (2*LPOT+1)**2
-   ! .. Array Arguments
-   integer, dimension(LMXSPD), intent(in)    :: LMSP  !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
-   integer, dimension(0:IPAND), intent(in)   :: IRCUT !< R points of panel borders
-   integer, dimension(LMXSPD), intent(in)    :: IFUNM
-   integer, dimension(0:LMPOT), intent(in)   :: IMAXSH
-   integer, dimension(NGSHD,3), intent(in)   :: ILM_MAP
-   double precision, dimension(IRM), intent(in)          :: R        !< Radial mesh ( in units a Bohr)
-   double precision, dimension(IJEND,LMPOT), intent(in)  :: YR
-   double precision, dimension(NGSHD), intent(in)        :: GSH
-   double precision, dimension(IRM), intent(in)          :: DRDI     !< Derivative dr/di
-   double precision, dimension(IJEND,LMPOT), intent(in)  :: WTYR
-   double precision, dimension(IRID,NFUND), intent(in)   :: THETAS   !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-   double precision, dimension(IRM,LMPOT,2), intent(in)  :: RHO2NS   !< radial density
-   ! .. Input/Output variables
-   double precision, dimension(0:LPOT,NATYP), intent(inout) :: EXC !< exchange correlation energy
-   double precision, dimension(IRM,LMPOT,2), intent(inout)  :: V
-   ! .. Local Scalars
-   integer :: IFUN,IJ,IPOT,IR,IRC1,IRH,IRS1,IS,ISPIN,J,L,LM,LM2,M
-   double precision :: ELMXC,FPI,FPIPR2,VLMXC,VXC1,VXC2,VXC3,factor
-   ! .. Local Arrays
-   double precision, dimension(IJEND)        :: EXCIJ
-   double precision, dimension(IRM,0:LPOT)   :: ER
-   double precision, dimension(IJEND,2)      :: VXC
-   double precision, dimension(2:3,2)        :: VXCR
-   double precision, dimension(IJEND,2)      :: FPRHO
-   double precision, dimension(IRM,LMPOT)    :: ESTOR
-   ! .. External Functions
-   double precision :: DDOT
-   external :: DDOT
-   ! .. External Subroutines ..
-   external :: DAXPY,SIMP3,SIMPK,VOSKO,VXCSPO
-   ! ..
-   write(1337,*) 'Including cutoff of vxc for small density'
-   FPI = 4.0D0*PI
+! .. Scalar Arguments
+  integer, intent (in) :: irm !< Maximum number of radial points
+  integer, intent (in) :: kte !< Calculation of the total energy On/Off (1/0)
+  integer, intent (in) :: kxc !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+  integer, intent (in) :: lmax !< Maximum l component in wave function expansion
+  integer, intent (in) :: irws !< IATYP Entry in the IRWS array with the R point at WS radius
+  integer, intent (in) :: ipan !< IATYP Entry in the IPAN array with the number of panels in non-MT-region
+  integer, intent (in) :: lpot !< Maximum l component in potential expansion
+  integer, intent (in) :: natyp !< Number of kinds of atoms in unit cell
+  integer, intent (in) :: iatyp
+  integer, intent (in) :: ijend
+  integer, intent (in) :: lmpot !< (LPOT+1)**2
+  integer, intent (in) :: nspin !< Counter for spin directions
+  integer, intent (in) :: lmmax !< (LMAX+1)^2
+  integer, intent (in) :: kshape !< Exact treatment of WS cell
+  integer, intent (in) :: lmxspd !< (2*LPOT+1)**2
+! .. Array Arguments
+  integer, dimension (lmxspd), intent (in) :: lmsp !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+  integer, dimension (0:ipand), intent (in) :: ircut !< R points of panel borders
+  integer, dimension (lmxspd), intent (in) :: ifunm
+  integer, dimension (0:lmpot), intent (in) :: imaxsh
+  integer, dimension (ngshd, 3), intent (in) :: ilm_map
+  double precision, dimension (irm), intent (in) :: r !< Radial mesh ( in units a Bohr)
+  double precision, dimension (ijend, lmpot), intent (in) :: yr
+  double precision, dimension (ngshd), intent (in) :: gsh
+  double precision, dimension (irm), intent (in) :: drdi !< Derivative dr/di
+  double precision, dimension (ijend, lmpot), intent (in) :: wtyr
+  double precision, dimension (irid, nfund), intent (in) :: thetas !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+  double precision, dimension (irm, lmpot, 2), intent (in) :: rho2ns !< radial density
+! .. Input/Output variables
+  double precision, dimension (0:lpot, natyp), intent (inout) :: exc !< exchange correlation energy
+  double precision, dimension (irm, lmpot, 2), intent (inout) :: v
+! .. Local Scalars
+  integer :: ifun, ij, ipot, ir, irc1, irh, irs1, is, ispin, j, l, lm, lm2, m
+  double precision :: elmxc, fpi, fpipr2, vlmxc, vxc1, vxc2, vxc3, factor
+! .. Local Arrays
+  double precision, dimension (ijend) :: excij
+  double precision, dimension (irm, 0:lpot) :: er
+  double precision, dimension (ijend, 2) :: vxc
+  double precision, dimension (2:3, 2) :: vxcr
+  double precision, dimension (ijend, 2) :: fprho
+  double precision, dimension (irm, lmpot) :: estor
+! .. External Functions
+  double precision :: ddot
+  external :: ddot
+! .. External Subroutines ..
+  external :: daxpy, simp3, simpk, vosko, vxcspo
+! ..
+  write (1337, *) 'Including cutoff of vxc for small density'
+  fpi = 4.0d0*pi
 
-   !----------------------------------------------------------------------------
-   ! Loop over given representive atoms
-   !----------------------------------------------------------------------------
-   if (KSHAPE.NE.0) then
-      IRC1 = IRCUT(IPAN)
-      IRS1 = IRCUT(1)
-   else
-      IRC1 = IRWS
-      IRS1 = IRC1
-   end if
+!----------------------------------------------------------------------------
+! Loop over given representive atoms
+!----------------------------------------------------------------------------
+  if (kshape/=0) then
+    irc1 = ircut(ipan)
+    irs1 = ircut(1)
+  else
+    irc1 = irws
+    irs1 = irc1
+  end if
 
-   do ISPIN = 1,NSPIN
-      VXCR(2,ISPIN) = 0.0D0
-      VXCR(3,ISPIN) = 0.0D0
-   enddo ! ISPIN
-   !----------------------------------------------------------------------------
-   ! Initialize for ex.-cor. energy
-   !----------------------------------------------------------------------------
-   if (KTE.EQ.1) then
-      do L = 0,LMAX
-         EXC(L,IATYP) = 0.0D0
-         do IR = 1,IRC1
-            ER(IR,L) = 0.0D0
-         enddo ! IR
-      enddo ! L
-      !
-      do LM = 1,LMMAX
-         do IR = 1,IRC1
-            ESTOR(IR,LM) = 0.0D0
-         enddo ! IR
-      enddo ! LM
-   end if
-   !----------------------------------------------------------------------------
-   ! Loop over radial mesh
-   !----------------------------------------------------------------------------
-   do IR = 2,IRC1
-      !-------------------------------------------------------------------------
-      ! Generate the densities on an angular mesh
-      !-------------------------------------------------------------------------
-      do IS = 1,2
-         do IJ = 1,IJEND
-            FPRHO(IJ,IS) = 0.D0
-         enddo ! IJ
-      enddo ! IS
+  do ispin = 1, nspin
+    vxcr(2, ispin) = 0.0d0
+    vxcr(3, ispin) = 0.0d0
+  end do ! ISPIN
+!----------------------------------------------------------------------------
+! Initialize for ex.-cor. energy
+!----------------------------------------------------------------------------
+  if (kte==1) then
+    do l = 0, lmax
+      exc(l, iatyp) = 0.0d0
+      do ir = 1, irc1
+        er(ir, l) = 0.0d0
+      end do ! IR
+    end do ! L
+!
+    do lm = 1, lmmax
+      do ir = 1, irc1
+        estor(ir, lm) = 0.0d0
+      end do ! IR
+    end do ! LM
+  end if
+!----------------------------------------------------------------------------
+! Loop over radial mesh
+!----------------------------------------------------------------------------
+  do ir = 2, irc1
+!-------------------------------------------------------------------------
+! Generate the densities on an angular mesh
+!-------------------------------------------------------------------------
+    do is = 1, 2
+      do ij = 1, ijend
+        fprho(ij, is) = 0.d0
+      end do ! IJ
+    end do ! IS
 
-      FPIPR2 = FPI/R(IR)**2
-      do ISPIN = 1,NSPIN
-         do LM = 1,LMMAX
-            call DAXPY(IJEND,RHO2NS(IR,LM,ISPIN)*FPIPR2,YR(1,LM),1,FPRHO(1,ISPIN),1)
-         enddo ! LM
-      enddo
-      !-------------------------------------------------------------------------
-      ! Calculate the ex.-cor. potential
-      !-------------------------------------------------------------------------
-      if (KXC.LE.1) then
-         call VXCSPO(EXCIJ,FPRHO,VXC,KXC,IJEND,IJEND)
-      else
-         call VOSKO(EXCIJ,FPRHO,VXC,IJEND,IJEND)
-      end if
+    fpipr2 = fpi/r(ir)**2
+    do ispin = 1, nspin
+      do lm = 1, lmmax
+        call daxpy(ijend, rho2ns(ir,lm,ispin)*fpipr2, yr(1,lm), 1, &
+          fprho(1,ispin), 1)
+      end do ! LM
+    end do
+!-------------------------------------------------------------------------
+! Calculate the ex.-cor. potential
+!-------------------------------------------------------------------------
+    if (kxc<=1) then
+      call vxcspo(excij, fprho, vxc, kxc, ijend, ijend)
+    else
+      call vosko(excij, fprho, vxc, ijend, ijend)
+    end if
 
-      do IJ=1,IJEND
-         factor = (1.d0-dexp(-dabs(fprho(IJ,1))*1000.d0))
-         do ISPIN=1,NSPIN
-            VXC(IJ,ISPIN) =VXC(IJ,ISPIN) * factor  !cutoff
-         enddo ! ISPIN
-      enddo !IJ
-      !-------------------------------------------------------------------------
-      ! Expand the ex.-cor. potential into spherical harmonics ,
-      !   using the orthogonality
-      !-------------------------------------------------------------------------
-      do ISPIN = 1,NSPIN
-         !----------------------------------------------------------------------
-         ! Determine the corresponding potential number
-         !----------------------------------------------------------------------
-         IPOT = ISPIN
-         do LM = 1,LMMAX
-            VLMXC = DDOT(IJEND,VXC(1,ISPIN),1,WTYR(1,LM),1)
-            V(IR,LM,IPOT) = V(IR,LM,IPOT) + VLMXC
-            !-------------------------------------------------------------------
-            ! store the ex.-c. potential of ir=2 and =3 for the extrapolation
-            !-------------------------------------------------------------------
-            if (LM.EQ.1 .AND. (IR.EQ.2.OR.IR.EQ.3)) VXCR(IR,ISPIN) = VLMXC
-         enddo ! LM
-      enddo ! ISPIN
-      !-------------------------------------------------------------------------
-      ! File er in case of total energies
-      !-------------------------------------------------------------------------
-      if (KTE.EQ.1) then
-         !----------------------------------------------------------------------
-         ! expand ex.-cor. energy into spherical harmonics
-         !   using the orthogonality
-         !----------------------------------------------------------------------
-         do L = 0,LMAX
-            do M = -L,L
-               LM = L*L + L + M + 1
-               ELMXC = DDOT(IJEND,EXCIJ,1,WTYR(1,LM),1)
-               !----------------------------------------------------------------
-               ! multiply the lm-component of the ex.-cor. energy with the same
-               ! lm-component of the charge density times r**2 and sum over lm
-               ! this corresponds to a integration over the angular .
-               !----------------------------------------------------------------
-               if ((KSHAPE.NE.0) .AND. (IR.GT.IRS1)) then
-                  ESTOR(IR,LM) = ELMXC
-               else
-                  ER(IR,L) = ER(IR,L) + RHO2NS(IR,LM,1)*ELMXC
-               end if
-            enddo !M
-         enddo !L
-      end if
-   enddo !IR
+    do ij = 1, ijend
+      factor = (1.d0-dexp(-dabs(fprho(ij,1))*1000.d0))
+      do ispin = 1, nspin
+        vxc(ij, ispin) = vxc(ij, ispin)*factor !cutoff
+      end do ! ISPIN
+    end do !IJ
+!-------------------------------------------------------------------------
+! Expand the ex.-cor. potential into spherical harmonics ,
+!   using the orthogonality
+!-------------------------------------------------------------------------
+    do ispin = 1, nspin
+!----------------------------------------------------------------------
+! Determine the corresponding potential number
+!----------------------------------------------------------------------
+      ipot = ispin
+      do lm = 1, lmmax
+        vlmxc = ddot(ijend, vxc(1,ispin), 1, wtyr(1,lm), 1)
+        v(ir, lm, ipot) = v(ir, lm, ipot) + vlmxc
+!-------------------------------------------------------------------
+! store the ex.-c. potential of ir=2 and =3 for the extrapolation
+!-------------------------------------------------------------------
+        if (lm==1 .and. (ir==2 .or. ir==3)) vxcr(ir, ispin) = vlmxc
+      end do ! LM
+    end do ! ISPIN
+!-------------------------------------------------------------------------
+! File er in case of total energies
+!-------------------------------------------------------------------------
+    if (kte==1) then
+!----------------------------------------------------------------------
+! expand ex.-cor. energy into spherical harmonics
+!   using the orthogonality
+!----------------------------------------------------------------------
+      do l = 0, lmax
+        do m = -l, l
+          lm = l*l + l + m + 1
+          elmxc = ddot(ijend, excij, 1, wtyr(1,lm), 1)
+!----------------------------------------------------------------
+! multiply the lm-component of the ex.-cor. energy with the same
+! lm-component of the charge density times r**2 and sum over lm
+! this corresponds to a integration over the angular .
+!----------------------------------------------------------------
+          if ((kshape/=0) .and. (ir>irs1)) then
+            estor(ir, lm) = elmxc
+          else
+            er(ir, l) = er(ir, l) + rho2ns(ir, lm, 1)*elmxc
+          end if
+        end do !M
+      end do !L
+    end if
+  end do !IR
 
-   !----------------------------------------------------------------------------
-   ! Integrate er in case of total energies to get exc
-   !----------------------------------------------------------------------------
-   if (KTE.EQ.1) then
-      if (KSHAPE.EQ.0) then
-         do L = 0,LMAX
-            call SIMP3(ER(1,L),EXC(L,IATYP),1,IRS1,DRDI)
-         enddo !L
-      else
-         do L = 0,LMAX
-            do M = -L,L
-               LM = L*L + L + M + 1
-               !----------------------------------------------------------------
-               ! Convolute with shape function
-               !----------------------------------------------------------------
-               do J = IMAXSH(LM-1) + 1,IMAXSH(LM)
-                  LM2 = ILM_MAP(J,2)
-                  if (LMSP(ILM_MAP(J,3)).GT.0) then
-                     IFUN = IFUNM(ILM_MAP(J,3))
-                     do IR = IRS1 + 1,IRC1
-                        IRH = IR - IRS1
-                        ER(IR,L) = ER(IR,L) + RHO2NS(IR,LM,1)*GSH(J)*   &
-                                    THETAS(IRH,IFUN)*ESTOR(IR,LM2)
-                     enddo ! IR
-                  end if
-               enddo ! J
-            enddo ! M
-            call SIMPK(ER(1,L),EXC(L,IATYP),IPAN,IRCUT,DRDI)
-         enddo ! L
-      end if
-   end if
-   !----------------------------------------------------------------------------
-   ! Extrapolate ex.-cor potential to the origin only for lm=1
-   !----------------------------------------------------------------------------
-   do ISPIN = 1,NSPIN
-      IPOT = ISPIN
-      VXC2 = VXCR(2,ISPIN)
-      VXC3 = VXCR(3,ISPIN)
-      VXC1 = VXC2 - R(2)* (VXC3-VXC2)/ (R(3)-R(2))
-      V(1,1,IPOT) = V(1,1,IPOT) + VXC1
-   enddo ! ISPIN
-   !
-end subroutine VXCLM
+!----------------------------------------------------------------------------
+! Integrate er in case of total energies to get exc
+!----------------------------------------------------------------------------
+  if (kte==1) then
+    if (kshape==0) then
+      do l = 0, lmax
+        call simp3(er(1,l), exc(l,iatyp), 1, irs1, drdi)
+      end do !L
+    else
+      do l = 0, lmax
+        do m = -l, l
+          lm = l*l + l + m + 1
+!----------------------------------------------------------------
+! Convolute with shape function
+!----------------------------------------------------------------
+          do j = imaxsh(lm-1) + 1, imaxsh(lm)
+            lm2 = ilm_map(j, 2)
+            if (lmsp(ilm_map(j,3))>0) then
+              ifun = ifunm(ilm_map(j,3))
+              do ir = irs1 + 1, irc1
+                irh = ir - irs1
+                er(ir, l) = er(ir, l) + rho2ns(ir, lm, 1)*gsh(j)*thetas(irh, &
+                  ifun)*estor(ir, lm2)
+              end do ! IR
+            end if
+          end do ! J
+        end do ! M
+        call simpk(er(1,l), exc(l,iatyp), ipan, ircut, drdi)
+      end do ! L
+    end if
+  end if
+!----------------------------------------------------------------------------
+! Extrapolate ex.-cor potential to the origin only for lm=1
+!----------------------------------------------------------------------------
+  do ispin = 1, nspin
+    ipot = ispin
+    vxc2 = vxcr(2, ispin)
+    vxc3 = vxcr(3, ispin)
+    vxc1 = vxc2 - r(2)*(vxc3-vxc2)/(r(3)-r(2))
+    v(1, 1, ipot) = v(1, 1, ipot) + vxc1
+  end do ! ISPIN
+!
+end subroutine

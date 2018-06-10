@@ -1,4 +1,4 @@
-SUBROUTINE ioinput(charkey,CHAR,iline,ifile,ierror)
+subroutine ioinput(charkey, char, iline, ifile, ierror)
 ! *********************************************************
 ! *  This subroutine is responsible for the I/O
 ! *  with the input file.
@@ -33,132 +33,141 @@ SUBROUTINE ioinput(charkey,CHAR,iline,ifile,ierror)
 ! * The error handler is not working yet in all cases ....
 ! * In this version only files 5000 lines long can be read in
 ! *******************************************************
-       implicit none
-       INTEGER NCHAR,NABC,NCOLIO,NLINIO
-       PARAMETER(NCHAR=16,NABC=40,NCOLIO=256,NLINIO=5000)
-       CHARACTER (len=nchar) CHARKEY !*NCHAR
-       CHARACTER (len=ncolio) CHAR !*NCOLIO
-       INTEGER ILINE,IERROR,IFILE
-       integer i,ios,ier,npt,ilen,ipos,ipos1,iklen
-       CHARACTER (len=ncolio) STRING(NLINIO) !*NCOLIO
-       CHARACTER (len=ncolio) STRING1 !*NCOLIO
-       CHARACTER (len=nabc) ABC !*NABC
-       CHARACTER ATEST
-       DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
+  implicit none
+  integer :: nchar, nabc, ncolio, nlinio
+  parameter (nchar=16, nabc=40, ncolio=256, nlinio=5000)
+  character (len=nchar) :: charkey  !*NCHAR
 
-ierror = 0
-ier = 0
-CHAR(1:50)='                                                   '
-OPEN(UNIT=ifile,STATUS='OLD',FILE='inputcard',IOSTAT=ios, ERR=2000)
-IF (ios > 0) THEN
-  WRITE(6,*) "Error in reading the inputcard file"
-  STOP
-END IF
+  character (len=ncolio) :: char  !*NCOLIO
+
+  integer :: iline, ierror, ifile
+  integer :: i, ios, ier, npt, ilen, ipos, ipos1, iklen
+  character (len=ncolio) :: string(nlinio)  !*NCOLIO
+
+  character (len=ncolio) :: string1  !*NCOLIO
+
+  character (len=nabc) :: abc  !*NABC
+
+  character atest
+  data abc/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
+
+  ierror = 0
+  ier = 0
+  char(1:50) = '                                                   '
+  open (unit=ifile, status='OLD', file='inputcard', iostat=ios, err=100)
+  if (ios>0) then
+    write (6, *) 'Error in reading the inputcard file'
+    stop
+  end if
 
 
-npt = 1
-DO
-  READ(ifile,FMT='(A256)',IOSTAT=ios) string(npt)
-  IF(ios < 0.OR.npt >= nlinio) EXIT
-  npt = npt + 1
-END DO
-npt = npt - 1
+  npt = 1
+  do
+    read (ifile, fmt='(A256)', iostat=ios) string(npt)
+    if (ios<0 .or. npt>=nlinio) exit
+    npt = npt + 1
+  end do
+  npt = npt - 1
 !          write(6,*) 'LINES :',npt
-IF (npt >= nlinio) WRITE(1337,*)'Not all lines are read in from inputcard'
+  if (npt>=nlinio) write (1337, *) 'Not all lines are read in from inputcard'
 
 ! 2 lines below where changed
 !       ILEN = VERIFY(CHARKEY,ABC)
 !       IKLEN= VERIFY(CHARKEY,' ')
 ! for linux
-CALL verify77(nabc,abc,nchar,charkey,ilen,iklen)
+  call verify77(nabc, abc, nchar, charkey, ilen, iklen)
 ! for linux
 !        write(6,*) CHARKEY(1:ILEN-1),ILEN,IKLEN
-IF(ilen < 1) THEN
-  WRITE(1337,*) 'Input ERROR!'
-  WRITE(1337,*) 'Cannot evaluate : ',charkey
-  WRITE(1337,*) 'IoInput is returning no value! '
-  RETURN
-END IF
+  if (ilen<1) then
+    write (1337, *) 'Input ERROR!'
+    write (1337, *) 'Cannot evaluate : ', charkey
+    write (1337, *) 'IoInput is returning no value! '
+    return
+  end if
 
-DO i=1,npt       ! loop in all line
-  string1 = '   ' // string(i)     ! shift by 2 characters
-  ipos = INDEX(string1,charkey(1:ilen-1))
+  do i = 1, npt ! loop in all line
+    string1 = '   ' // string(i) ! shift by 2 characters
+    ipos = index(string1, charkey(1:ilen-1))
 ! return the position of occurence
-  IF (ipos /= 0) THEN
-    IF (ipos < 4) THEN
-      WRITE(6,*) 'CONSISTENCY ERROR IOINPUT!'
-      STOP
-    END IF
+    if (ipos/=0) then
+      if (ipos<4) then
+        write (6, *) 'CONSISTENCY ERROR IOINPUT!'
+        stop
+      end if
 !                write(6,*) 'ipos is not zero',CHARKEY//'=','**'
-    ipos1= INDEX(string1,charkey(1:ilen-1)//achar(61))
-    IF (ipos1 /= 0) THEN
+      ipos1 = index(string1, charkey(1:ilen-1)//achar(61))
+      if (ipos1/=0) then
 ! return the string after 'CHARKEY='
-      CHAR = string1(ipos1+ilen:)
+        char = string1(ipos1+ilen:)
 !                    write(6,*) CHARKEY,CHAR ! test
-      CLOSE(ifile)
-      RETURN
-    ELSE
+        close (ifile)
+        return
+      else
 ! return the ILINE line below this CHARKEY
-      IF (i+iline <= npt) THEN
+        if (i+iline<=npt) then
 !                    write(6,*) IPOS,ILEN
-        
-        CHAR = string(i+iline)(ipos-3:)
-        IF (ipos-4 > 0) THEN    ! Changed on 28.01.2000
-          atest= string(i+iline)(ipos-4:ipos-3)
-          IF (atest /= ' ') THEN
-            WRITE(1337,*) 'Possible ERROR !!!'
-            WRITE(1337,*) 'Parameter ',charkey, ' maybe read in incorrectrly'
-          END IF
-        END IF
+
+          char = string(i+iline)(ipos-3:)
+          if (ipos-4>0) then ! Changed on 28.01.2000
+            atest = string(i+iline)(ipos-4:ipos-3)
+            if (atest/=' ') then
+              write (1337, *) 'Possible ERROR !!!'
+              write (1337, *) 'Parameter ', charkey, &
+                ' maybe read in incorrectrly'
+            end if
+          end if
 !                   write(6,*) CHARKEY,CHAR ! test
-        CLOSE(ifile)
-        RETURN
-      ELSE
-        WRITE(1337,*) 'IoInput : No more lines in file '
-      END IF
-    END IF
-  END IF
-END DO  ! i=1,npt
-ier = 1
-ierror = ierror + ier
+          close (ifile)
+          return
+        else
+          write (1337, *) 'IoInput : No more lines in file '
+        end if
+      end if
+    end if
+  end do ! i=1,npt
+  ier = 1
+  ierror = ierror + ier
 !ccc       if (CHAR(1:20).eq.'                    ') then
 !ccc       write(6,*) 'Parameter ........ ',CHARKEY , ' NOT found'
 !ccc       write(6,*) 'Check your inputcard'
 !ccc       end if
-CLOSE(ifile)
-RETURN
-2000 WRITE(6,*) ' Error while reading..... ',charkey
-WRITE(6,*) ' Check your  inputcard ! '
-STOP
-END SUBROUTINE ioinput
+  close (ifile)
+  return
+100 write (6, *) ' Error while reading..... ', charkey
+  write (6, *) ' Check your  inputcard ! '
+  stop
+end subroutine
 
-SUBROUTINE verify77(nabc,abc,nchar,str1,ipos1,ipos2)
+subroutine verify77(nabc, abc, nchar, str1, ipos1, ipos2)
 ! This sub returns the position of the first space character
 ! in ipos2, and the position of the first letter in the string
 ! STR1
-        implicit none  
-         INTEGER NCHAR,NABC
-         CHARACTER (len=nchar) STR1 !*NCHAR
-         CHARACTER (len=nabc) ABC !*NABC
-         CHARACTER (len=1) CHAR !*1
-         integer ipos,ipos1,ipos2,i,j
-!        DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
-ipos2 =0
+  implicit none
+  integer :: nchar, nabc
+  character (len=nchar) :: str1  !*NCHAR
 
-ipos1 = INDEX(str1,' ')
-DO j=1,10
-  CHAR = str1(j:j+1)
+  character (len=nabc) :: abc  !*NABC
+
+  character (len=1) :: char  !*1
+
+  integer :: ipos, ipos1, ipos2, i, j
+!        DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
+  ipos2 = 0
+
+  ipos1 = index(str1, ' ')
+  do j = 1, 10
+    char = str1(j:j+1)
 !           write(6,*) 'char : ',j, char
-  ipos = 0
-  DO i=1,40
-    ipos = INDEX(CHAR,abc(i:i))
-    IF (ipos > 0) THEN
-      ipos2 = j
-      RETURN
-    END IF
-  END DO
-  
-END DO
-RETURN
-END SUBROUTINE verify77
+    ipos = 0
+    do i = 1, 40
+      ipos = index(char, abc(i:i))
+      if (ipos>0) then
+        ipos2 = j
+        return
+      end if
+    end do
+
+  end do
+  return
+end subroutine
 

@@ -1,51 +1,47 @@
 ! **********************************************************************
-SUBROUTINE gfree13(rdiff,e0,gmll,dgmll,cleb,icleb,loflm,iend)
+subroutine gfree13(rdiff, e0, gmll, dgmll, cleb, icleb, loflm, iend)
 ! **********************************************************************
 !     .. Parameters ..
-      IMPLICIT NONE
-      include 'inc.p'
-      INTEGER LMAX
-      PARAMETER (LMAX=LMAXD)
-      INTEGER LMGF0D
-      PARAMETER (LMGF0D= (LMAX+1)**2)
-      INTEGER LMAX2P,LMX2SQ
-      PARAMETER (LMAX2P=LMAX*2+1,LMX2SQ=LMAX2P**2)
-      DOUBLE COMPLEX CZERO,CI
-      PARAMETER (CZERO= (0.0D0,0.0D0),CI= (0.0D0,1.0D0))
+  implicit none
+  include 'inc.p'
+  integer :: lmax
+  parameter (lmax=lmaxd)
+  integer :: lmgf0d
+  parameter (lmgf0d=(lmax+1)**2)
+  integer :: lmax2p, lmx2sq
+  parameter (lmax2p=lmax*2+1, lmx2sq=lmax2p**2)
+  double complex :: czero, ci
+  parameter (czero=(0.0d0,0.0d0), ci=(0.0d0,1.0d0))
+! LLY
 !     ..
-!     .. Scalar Arguments ..
-      DOUBLE COMPLEX E0
-      INTEGER IEND
-!     ..
-!     .. Array Arguments ..
-      DOUBLE COMPLEX GMLL(LMGF0D,LMGF0D)
-      DOUBLE COMPLEX DGMLL(LMGF0D,LMGF0D) ! LLY
-      DOUBLE PRECISION CLEB(NCLEB),RDIFF(*)
-      INTEGER ICLEB(NCLEB,4),LOFLM(*)
-!     ..
+  double complex :: e0
+  integer :: iend
 !     .. Local Scalars ..
-      DOUBLE PRECISION FPI,PI,RABS,RFPI,X,Y,Z
-      INTEGER IFAC,J,LM1,LM2,LM3
 !     ..
-!     .. Local Arrays ..
-      DOUBLE COMPLEX BL(LMAX2P),HL(LMAX2P),HYL(LMX2SQ),NL(LMAX2P)
-      DOUBLE COMPLEX DHL(LMAX2P),DHYL(LMX2SQ) ! LLY
-      DOUBLE PRECISION YL(LMX2SQ)
-      INTEGER LF(LMX2SQ)
+  double complex :: gmll(lmgf0d, lmgf0d)
+  double complex :: dgmll(lmgf0d, lmgf0d) !     .. Local Arrays ..
+  double precision :: cleb(ncleb), rdiff(*)
+  integer :: icleb(ncleb, 4), loflm(*)
+! LLY
 !     ..
+  double precision :: fpi, pi, rabs, rfpi, x, y, z
+  integer :: ifac, j, lm1, lm2, lm3
 !     .. External Subroutines ..
-      EXTERNAL BESHAN,YMY
 !     ..
-!     .. Intrinsic Functions ..
-      INTRINSIC ATAN,SQRT
+  double complex :: bl(lmax2p), hl(lmax2p), hyl(lmx2sq), nl(lmax2p)
+  double complex :: dhl(lmax2p), dhyl(lmx2sq) !     .. Intrinsic Functions ..
+  double precision :: yl(lmx2sq)
+  integer :: lf(lmx2sq)
 !     ..
-pi = 4.d0*ATAN(1.d0)
-fpi = 4.d0*pi
-rfpi = SQRT(fpi)
 !-----------------------------------------------------------------------
+  external :: beshan, ymy
 !---- CALCULATION OF FREE ELECTRON GREEN'S FUNCTION :  G(M)LL'(E0)
 !-----------------------------------------------------------------------
+  intrinsic :: atan, sqrt
 !     Also:
+  pi = 4.d0*atan(1.d0)
+  fpi = 4.d0*pi
+  rfpi = sqrt(fpi)
 !---- derivative of free electron green function matrix elements
 !     returned in array DGMLL=dGMLL / dE
 !
@@ -64,50 +60,54 @@ rfpi = SQRT(fpi)
 !
 !     Ported from KKRnano by Phivos Mavropoulos 10.10.2013
 !-----------------------------------------------------------------------
-DO  lm1 = 1,lmx2sq
-  lf(lm1) = loflm(lm1) + 1
-END DO
-x = rdiff(1)
-y = rdiff(2)
-z = rdiff(3)
-CALL ymy(x,y,z,rabs,yl,lmax*2)
-CALL beshan(hl,bl,nl,SQRT(e0)*rabs,lmax*2)
 
 ! Derivatives of Hankel functions ! LLY
-dhl(1) = 0.5D0*ci*rabs*hl(1)
-DO lm1 = 2,lmax2p
-  dhl(lm1) = 0.5D0*(rabs*hl(lm1-1)-(lm1-1)*hl(lm1)/SQRT(e0))
-END DO
 
-DO  lm1 = 1,lmx2sq
-  hyl(lm1) = -fpi*ci*SQRT(e0)*yl(lm1)*hl(lf(lm1))
-  dhyl(lm1) = -fpi*ci*yl(lm1)*dhl(lf(lm1))   ! LLY
-END DO
+! LLY
+  do lm1 = 1, lmx2sq
+    lf(lm1) = loflm(lm1) + 1
+  end do
+  x = rdiff(1)
+  y = rdiff(2)
+  z = rdiff(3)
+  call ymy(x, y, z, rabs, yl, lmax*2)
+  call beshan(hl, bl, nl, sqrt(e0)*rabs, lmax*2)
 
 
-DO  lm1 = 1,lmgf0d
-  gmll(lm1,lm1) = hyl(1)/rfpi
-  dgmll(lm1,lm1) = dhyl(1)/rfpi  ! LLY
-  DO  lm2 = 1,lm1 - 1
-    gmll(lm1,lm2) = czero
-    dgmll(lm1,lm2) = czero    ! LLY
-  END DO
-END DO
+  dhl(1) = 0.5d0*ci*rabs*hl(1)
+  do lm1 = 2, lmax2p
+    dhl(lm1) = 0.5d0*(rabs*hl(lm1-1)-(lm1-1)*hl(lm1)/sqrt(e0))
+  end do
+! LLY
+  do lm1 = 1, lmx2sq
+    hyl(lm1) = -fpi*ci*sqrt(e0)*yl(lm1)*hl(lf(lm1))
+    dhyl(lm1) = -fpi*ci*yl(lm1)*dhl(lf(lm1)) ! LLY
+  end do
 
-DO  j = 1,iend
-  lm1 = icleb(j,1)
-  lm2 = icleb(j,2)
-  lm3 = icleb(j,3)
-  gmll(lm1,lm2) = gmll(lm1,lm2) + cleb(j)*hyl(lm3)
-  dgmll(lm1,lm2) = dgmll(lm1,lm2) + cleb(j)*dhyl(lm3)  ! LLY
-END DO
-DO  lm1 = 1,lmgf0d
-  DO  lm2 = 1,lm1 - 1
-    ifac = (-1)** (loflm(lm1)+loflm(lm2))
-    gmll(lm2,lm1) = ifac*gmll(lm1,lm2)
-    dgmll(lm2,lm1) = ifac*dgmll(lm1,lm2)  ! LLY
-  END DO
-END DO
-RETURN
-
-END SUBROUTINE gfree13
+! LLY
+  do lm1 = 1, lmgf0d
+    gmll(lm1, lm1) = hyl(1)/rfpi
+    dgmll(lm1, lm1) = dhyl(1)/rfpi ! LLY
+    do lm2 = 1, lm1 - 1
+      gmll(lm1, lm2) = czero
+      dgmll(lm1, lm2) = czero 
+    end do
+  end do
+! **********************************************************************
+  do j = 1, iend
+    lm1 = icleb(j, 1)
+    lm2 = icleb(j, 2)
+    lm3 = icleb(j, 3)
+    gmll(lm1, lm2) = gmll(lm1, lm2) + cleb(j)*hyl(lm3)
+    dgmll(lm1, lm2) = dgmll(lm1, lm2) + cleb(j)*dhyl(lm3) ! **********************************************************************
+  end do
+  do lm1 = 1, lmgf0d
+    do lm2 = 1, lm1 - 1
+      ifac = (-1)**(loflm(lm1)+loflm(lm2))
+      gmll(lm2, lm1) = ifac*gmll(lm1, lm2)
+      dgmll(lm2, lm1) = ifac*dgmll(lm1, lm2) !     .. Parameters ..
+    end do
+  end do
+  return
+! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
+end subroutine

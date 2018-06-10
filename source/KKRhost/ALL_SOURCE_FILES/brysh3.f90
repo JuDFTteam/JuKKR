@@ -1,6 +1,6 @@
 ! ************************************************************************
-SUBROUTINE brysh3(y,x,z,xsme,ins,irmin,irc,natps,  &
-    natyp,nspin,imap,lmpot,lsmear)
+subroutine brysh3(y, x, z, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
+  lmpot, lsmear)
 !*********************************************************************
 !     shifts the density or potential of all mt-cell into one single
 !     vector and projects out the coulomb part only.
@@ -9,52 +9,52 @@ SUBROUTINE brysh3(y,x,z,xsme,ins,irmin,irc,natps,  &
 
 ! ------------------------------------------------------------------------
 !.. Parameters ..
-      include 'inc.p'
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
-!..
-!.. Scalar Arguments ..
-      INTEGER IMAP,INS,LMPOT,NATPS,NATYP,NSPIN,LSMEAR
-!..
-!.. Array Arguments ..
-      DOUBLE PRECISION X(IRMD,*),Y(*),Z(IRMIND:IRMD,LMPOTD,*), &
-                       XSME(IRMD,*)
-      INTEGER IRC(*),IRMIN(*)
+  include 'inc.p'
+  integer :: lmpotd
+  parameter (lmpotd=(lpotd+1)**2)
+  integer :: irmind
+  parameter (irmind=irmd-irnsd)
 !..
 !.. Local Scalars ..
-      INTEGER IA,IP,IR,IRC1,IRMIN1,IS,LM
+  integer :: imap, ins, lmpot, natps, natyp, nspin, lsmear
 !     ..
-imap = 0
-DO  is = 1,nspin
-  DO  ia = natps,natyp
-    ip = nspin* (ia-1) + is
-    irc1 = irc(ia)
-    DO  ir = 1,irc1
-      imap = imap + 1
-      y(imap) = x(ir,ip)
-    END DO
-    
-!     SMEARed spherical potential
-    IF ( lsmear > 0 ) THEN
-      DO ir = 1,irc1
-        imap = imap + 1
-        y(imap) = xsme(ir,ip)
-      END DO
-    END IF
-    
-    IF (ins > 0 .AND. lmpot > 1) THEN
-      irmin1 = irmin(ia)
-      DO  lm = 2,lmpot
-        DO  ir = irmin1,irc1
-          imap = imap + 1
-          y(imap) = z(ir,lm,ip)
-        END DO
-      END DO
-    END IF
-    
-  END DO
-END DO
 
-END SUBROUTINE brysh3
+  double precision :: x(irmd, *), y(*), z(irmind:irmd, lmpotd, *), &
+    xsme(irmd, *)
+  integer :: irc(*), irmin(*)
+!     SMEARed spherical potential
+
+  integer :: ia, ip, ir, irc1, irmin1, is, lm
+
+  imap = 0
+  do is = 1, nspin
+    do ia = natps, natyp
+      ip = nspin*(ia-1) + is
+      irc1 = irc(ia)
+      do ir = 1, irc1
+        imap = imap + 1
+        y(imap) = x(ir, ip)
+      end do
+
+! ************************************************************************
+      if (lsmear>0) then
+        do ir = 1, irc1
+          imap = imap + 1
+          y(imap) = xsme(ir, ip)
+        end do
+      end if
+!*********************************************************************
+      if (ins>0 .and. lmpot>1) then
+        irmin1 = irmin(ia)
+        do lm = 2, lmpot
+          do ir = irmin1, irc1
+            imap = imap + 1
+            y(imap) = z(ir, lm, ip)
+          end do
+        end do
+      end if
+!     shifts the density or potential of all mt-cell into one single
+    end do
+  end do
+!     vector and projects out the coulomb part only.
+end subroutine

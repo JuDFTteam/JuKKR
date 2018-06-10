@@ -1,4 +1,4 @@
-SUBROUTINE gamfc(alpha,glh,lmax,r)
+subroutine gamfc(alpha, glh, lmax, r)
 !----------------------------------------------------------------------
 
 !      calculation of convergence function
@@ -14,44 +14,44 @@ SUBROUTINE gamfc(alpha,glh,lmax,r)
 !                              1..i..l
 
 !-----------------------------------------------------------------------
-implicit none
+  implicit none
 !     .. scalar arguments ..
-      double precision alpha,r
-      integer lmax
+  double precision :: alpha, r
+  integer :: lmax
 !     ..
 !     .. array arguments ..
-      double precision glh(0:lmax)
+  double precision :: glh(0:lmax)
 !     ..
 !     .. local scalars ..
-      double precision arg,facl,fex
-      integer l
+  double precision :: arg, facl, fex
+  integer :: l
 !     ..
 !     .. external functions ..
-      double precision erfcex
-      external erfcex
+  double precision :: erfcex
+  external :: erfcex
 !     ..
 !     .. intrinsic functions ..
-      intrinsic exp,real
+  intrinsic :: exp, real
 !     ..
-arg = alpha*alpha
-glh(0) = erfcex(alpha)
-facl = 2.0D0*alpha
+  arg = alpha*alpha
+  glh(0) = erfcex(alpha)
+  facl = 2.0d0*alpha
 
 !---> recursion
 
-DO  l = 1,lmax
-  glh(l) = glh(l-1) + facl
-  facl = facl*arg/ (REAL(l)+0.5D0)
-END DO
+  do l = 1, lmax
+    glh(l) = glh(l-1) + facl
+    facl = facl*arg/(real(l)+0.5d0)
+  end do
 
 !     changed 21/10/99
 !     if arg is to big then cannot calculate 1/exp(arg) !!
 
-fex = EXP(-arg)
+  fex = exp(-arg)
 
-DO  l = 0,lmax
-  fex = fex/r
-  glh(l) = glh(l)*fex
-END DO
+  do l = 0, lmax
+    fex = fex/r
+    glh(l) = glh(l)*fex
+  end do
 
-END SUBROUTINE gamfc
+end subroutine

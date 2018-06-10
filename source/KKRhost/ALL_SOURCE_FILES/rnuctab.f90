@@ -1,7 +1,7 @@
-REAL*8 FUNCTION rnuctab(z)
-INTEGER, INTENT(OUT)                     :: z
+real *8 function rnuctab(z)
+  integer, intent (out) :: z
 
-z = 0
-rnuctab = 0D0
-STOP ' < RNUCTAB > : NUCLEUS <> 0 not implemented '
-END FUNCTION rnuctab
+  z = 0
+  rnuctab = 0d0
+  stop ' < RNUCTAB > : NUCLEUS <> 0 not implemented '
+end function

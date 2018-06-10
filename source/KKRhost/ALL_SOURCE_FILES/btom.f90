@@ -1,34 +1,34 @@
 ! **********************************************************************
-SUBROUTINE btom(pl1,pl2,BLOCK,nsize,gin,almd,lsub)
+subroutine btom(pl1, pl2, block, nsize, gin, almd, lsub)
 !     This subroutine copies or subtracts a block to a matrix
 ! **********************************************************************
-      IMPLICIT NONE
+  implicit none
 !.. Scalar Arguments ..
-      INTEGER ALMD,NSIZE,PL1,PL2
-      LOGICAL LSUB
+  integer :: almd, nsize, pl1, pl2
+  logical :: lsub
 !..
 !.. Array Arguments ..
-      DOUBLE COMPLEX BLOCK(NSIZE,NSIZE),GIN(ALMD,ALMD)
+  double complex :: block(nsize, nsize), gin(almd, almd)
 !..
 !.. Local Scalars ..
-      INTEGER I1,I1S,I2,I2S
+  integer :: i1, i1s, i2, i2s
 !     ..
-i1s = (pl1-1)*nsize
-i2s = (pl2-1)*nsize
-IF (lsub) THEN
-  DO i1 = 1,nsize
-    DO i2 = 1,nsize
-      gin(i1s+i1,i2s+i2) = gin(i1s+i1,i2s+i2) - BLOCK(i1,i2)
-    END DO
-  END DO
-ELSE
-  DO i1 = 1,nsize
-    DO i2 = 1,nsize
-      gin(i1s+i1,i2s+i2) = BLOCK(i1,i2)
-    END DO
-  END DO
-END IF
+  i1s = (pl1-1)*nsize
+  i2s = (pl2-1)*nsize
+  if (lsub) then
+    do i1 = 1, nsize
+      do i2 = 1, nsize
+        gin(i1s+i1, i2s+i2) = gin(i1s+i1, i2s+i2) - block(i1, i2)
+      end do
+    end do
+  else
+    do i1 = 1, nsize
+      do i2 = 1, nsize
+        gin(i1s+i1, i2s+i2) = block(i1, i2)
+      end do
+    end do
+  end if
 
-RETURN
+  return
 
-END SUBROUTINE btom
+end subroutine

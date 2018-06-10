@@ -1,4 +1,4 @@
-SUBROUTINE scratchdir(tmpdir,itmpdir,iltmp)
+subroutine scratchdir(tmpdir, itmpdir, iltmp)
 ! **********************************************************************
 ! *                                                                    *
 ! *  This routine looks for a system variable SCRATCH which is used    *
@@ -7,25 +7,26 @@ SUBROUTINE scratchdir(tmpdir,itmpdir,iltmp)
 ! *                                                                    *
 ! **********************************************************************
 
-      IMPLICIT NONE
-      CHARACTER *(*) TMPDIR
-      INTEGER ITMPDIR,ILTMP,LNGSTRING
+  implicit none
+  character (len=*) :: tmpdir
+  integer :: itmpdir, iltmp, lngstring
 !     EXTERNAL GETENV
 
 !     CALL GETENV('SCRATCH',TMPDIR)  commented out 15.09.2006 by fivos for iff820 cluster (with gfortran)
-IF (tmpdir == ' ') THEN
-  itmpdir=0
-  iltmp=0
-ELSE
-  itmpdir=1
-  iltmp=lngstring(tmpdir,80)
-END IF
-RETURN
-END SUBROUTINE scratchdir
+  if (tmpdir==' ') then
+    itmpdir = 0
+    iltmp = 0
+  else
+    itmpdir = 1
+    iltmp = lngstring(tmpdir, 80)
+  end if
+  return
+end subroutine
 ! **********************************************************************
 
 
-SUBROUTINE opendafile(iunit,basename,lbasename,lrec,tmpdir, itmpdir,iltmp)
+subroutine opendafile(iunit, basename, lbasename, lrec, tmpdir, itmpdir, &
+  iltmp)
 ! **********************************************************************
 ! *                                                                    *
 ! * This routine is ment to open DA file BASENAME with prefix TMPDIR   *
@@ -33,18 +34,18 @@ SUBROUTINE opendafile(iunit,basename,lbasename,lrec,tmpdir, itmpdir,iltmp)
 ! * running directory will be used.                                    *
 ! *                                                                    *
 ! **********************************************************************
-      IMPLICIT NONE
-      INTEGER IUNIT,LBASENAME,LREC,ITMPDIR,ILTMP
-      character(len=ILTMP) :: TMPDIR
-      character(len=LBASENAME) :: BASENAME
+  implicit none
+  integer :: iunit, lbasename, lrec, itmpdir, iltmp
+  character (len=iltmp) :: tmpdir
+  character (len=lbasename) :: basename
 
 
-IF (itmpdir == 1) THEN
-  OPEN (iunit,ACCESS='direct',RECL=lrec,  &
-      FILE=tmpdir(1:iltmp)//basename(1:lbasename), FORM='unformatted')
-ELSE
-  OPEN (iunit,ACCESS='direct',RECL=lrec,  &
-      FILE=basename(1:lbasename),FORM='unformatted')
-END IF
-RETURN
-END SUBROUTINE opendafile
+  if (itmpdir==1) then
+    open (iunit, access='direct', recl=lrec, file=tmpdir(1:iltmp)//basename(1: &
+      lbasename), form='unformatted')
+  else
+    open (iunit, access='direct', recl=lrec, file=basename(1:lbasename), &
+      form='unformatted')
+  end if
+  return
+end subroutine

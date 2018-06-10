@@ -1,7 +1,5 @@
-SUBROUTINE DENSITYMAT(DF,PZ,QZ,PNS,QNS,AR,CR, &
-                      DR,GMATLL,IPAN,IRCUT,DRDI,EK, &
-                      IRMIN,LOPT,MMAX,LMSTART,LMEND,PHI,DENMATC &
-     ,den,ie) ! test fivos 19.9.08
+subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, &
+  drdi, ek, irmin, lopt, mmax, lmstart, lmend, phi, denmatc, den, ie) ! test fivos 19.9.08
 ! **********************************************************************
 ! *                                                                    *
 ! * Calculation of density matrix needed in evaluating the Coulomb     *
@@ -28,102 +26,95 @@ SUBROUTINE DENSITYMAT(DF,PZ,QZ,PNS,QNS,AR,CR, &
 ! *                                                                    *
 ! *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
 ! **********************************************************************
-IMPLICIT NONE
-INCLUDE 'inc.p'
-!
-! PARAMETER definitions
-
-INTEGER LMMAXD
-PARAMETER (LMMAXD= (KREL+1) * (LMAXD+1)**2)
-INTEGER MMAXD
-PARAMETER ( MMAXD = 2*LMAXD + 1 )
-INTEGER IRMIND
-PARAMETER (IRMIND=IRMD-IRNSD) 
-INTEGER LMPOTD
-PARAMETER (LMPOTD= (LPOTD+1)**2)
-
-DOUBLE COMPLEX CZERO,CONE
-PARAMETER (CZERO=(0.0D0,0.0D0),CONE=(1.D0,0.D0))
+  implicit none
+  include 'inc.p'
 !
 ! Dummy arguments
 
-DOUBLE COMPLEX DF,EK
-INTEGER IRMIN,LOPT
-INTEGER LMSTART,LMEND,MMAX
-DOUBLE COMPLEX AR(LMMAXD,LMMAXD),CR(LMMAXD,LMMAXD), &
-           DENMATC(MMAXD,MMAXD),DR(LMMAXD,LMMAXD), &
-           GMATLL(LMMAXD,LMMAXD),PHI(IRMD), &
-           PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),PZ(IRMD,0:LMAXD), &
-           QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),QZ(IRMD,0:LMAXD)
-DOUBLE PRECISION DRDI(IRMD)
-INTEGER IPAN,IRCUT(0:IPAND)
+  integer :: lmmaxd
+  parameter (lmmaxd=(krel+1)*(lmaxd+1)**2)
+  integer :: mmaxd
+  parameter (mmaxd=2*lmaxd+1)
+  integer :: irmind
+  parameter (irmind=irmd-irnsd)
+  integer :: lmpotd
+  parameter (lmpotd=(lpotd+1)**2)
 !
+  double complex :: czero, cone
+  parameter (czero=(0.0d0,0.0d0), cone=(1.d0,0.d0))
 ! Local variables
 
-DOUBLE COMPLEX DENMATC2(MMAXD,MMAXD),GTEMP(MMAXD,MMAXD), &
-               PHIQ(MMAXD,MMAXD),PHIR(MMAXD,MMAXD)
-INTEGER LM1,LM2,M1,M2
-INTEGER LMAXD1,IE ! test fivos 19.9.08
-PARAMETER (LMAXD1= LMAXD+1) ! test fivos 19.9.08
-DOUBLE COMPLEX DEN(0:LMAXD1,IEMXD*(1+KREL)) ! test fivos 19.9.08
-EXTERNAL CINIT,OVERLAP,RINIT
+! test fivos 19.9.08
+  double complex :: df, ek
+  integer :: irmin, lopt
+  integer :: lmstart, lmend, mmax
+  double complex :: ar(lmmaxd, lmmaxd), cr(lmmaxd, lmmaxd), &
+    denmatc(mmaxd, mmaxd), dr(lmmaxd, lmmaxd), gmatll(lmmaxd, lmmaxd), &
+    phi(irmd), pns(lmmaxd, lmmaxd, irmind:irmd, 2), pz(irmd, 0:lmaxd), &
+    qns(lmmaxd, lmmaxd, irmind:irmd, 2), qz(irmd, 0:lmaxd)
+  double precision :: drdi(irmd)
+  integer :: ipan, ircut(0:ipand)
+! test fivos 19.9.08
+! test fivos 19.9.08
 
-CALL CINIT(MMAXD*MMAXD,DENMATC2(1,1))
-! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-! 1.  Within implicit energy loop:
-! Calculate density matrix.
+  double complex :: denmatc2(mmaxd, mmaxd), gtemp(mmaxd, mmaxd), &
+    phiq(mmaxd, mmaxd), phir(mmaxd, mmaxd)
+  integer :: lm1, lm2, m1, m2
+  integer :: lmaxd1, ie ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  parameter (lmaxd1=lmaxd+1) ! 1.  Within implicit energy loop:
+  double complex :: den(0:lmaxd1, iemxd*(1+krel)) ! Calculate density matrix.
+  external :: cinit, overlap, rinit
 !
+  call cinit(mmaxd*mmaxd, denmatc2(1,1))
 ! 1a. Calculate overlap integral (inner product) with wavefunctions of
 ! current energy (Phi,R) (result: PHIR) and (Phi,Q) (result:PHIQ)
 ! Result is in real Ylm basis.
 !
-CALL CINIT(MMAXD*MMAXD,PHIR)
-CALL OVERLAP(PHIR,PHI,PZ,QZ,PNS,AR,DR,.FALSE.,IPAN,IRCUT,DRDI, &
-             IRMIN,LOPT,IPAND,LMAXD,LMMAXD,MMAXD, &
-             LMPOTD,IRMIND,IRMD)
 
-CALL CINIT(MMAXD*MMAXD,PHIQ)
-CALL OVERLAP(PHIQ,PHI,PZ,QZ,QNS,CR,DR,.TRUE.,IPAN,IRCUT,DRDI, &
-             IRMIN,LOPT,IPAND,LMAXD,LMMAXD,MMAXD, &
-             LMPOTD,IRMIND,IRMD)
 !
 ! 1b. Use overlap integrals and Green function matrix to find density 
 ! matrix (implicit integration)
+  call cinit(mmaxd*mmaxd, phir)
+  call overlap(phir, phi, pz, qz, pns, ar, dr, .false., ipan, ircut, drdi, &
+    irmin, lopt, ipand, lmaxd, lmmaxd, mmaxd, lmpotd, irmind, irmd)
 ! Result is in real Ylm basis.
+  call cinit(mmaxd*mmaxd, phiq)
+  call overlap(phiq, phi, pz, qz, qns, cr, dr, .true., ipan, ircut, drdi, &
+    irmin, lopt, ipand, lmaxd, lmmaxd, mmaxd, lmpotd, irmind, irmd)
 !
 ! Copy l-th subblock of G into Gtemp (Is this correct? qldau)
-      DO LM2 = LMSTART,LMEND
-         M2 = LM2 - LMSTART + 1
-         DO LM1 = LMSTART,LMEND
-            M1 = LM1 - LMSTART + 1
-            GTEMP(M1,M2) = GMATLL(LM1,LM2)
-         END DO
-      END DO
 !
 ! First step: PHIQ = G*PHIR+EK*PHIQ.
 ! (If phi=pz, the trace of this should be similar to the dos).
 !
-CALL ZGEMM('N','N',MMAX,MMAX,MMAX,CONE,GTEMP,MMAXD,PHIR,MMAXD,EK, &
-           PHIQ,MMAXD)
+  do lm2 = lmstart, lmend
+    m2 = lm2 - lmstart + 1
+    do lm1 = lmstart, lmend
+      m1 = lm1 - lmstart + 1
+      gtemp(m1, m2) = gmatll(lm1, lm2)
+    end do
+  end do
 ! Second step: DENMATC2 = PHIR*PHIQ
-CALL ZGEMM('T','N',MMAX,MMAX,MMAX,CONE,PHIR,MMAXD,PHIQ,MMAXD, &
-           CZERO,DENMATC2,MMAXD)
 !
 ! Third step: Integration step: DENMAT! = DF*DENMATC2 + DENMATC
 !
-CALL CINIT(MMAXD*MMAXD,DENMATC2(1,1)) ! test fivos 19.9.08
-do m1 = 1,mmax                         ! test fivos 19.9.08
-denmatc2(m1,m1) = den(lopt,ie)/dfloat(mmax) ! test fivos 19.9.08
-enddo                                 ! test fivos 19.9.08
-DO M2 = 1,MMAX
-   DO M1 = 1,MMAX
-      DENMATC(M1,M2) = DENMATC(M1,M2) + DF*DENMATC2(M1,M2)
-   END DO
-END DO
-! test fivos
-!         write(*,9001) denmatc(1,1),denmatc(2,2),denmatc(3,3),
-!    &        denmatc(4,4),denmatc(5,5),denmatc(6,6),denmatc(7,7)
-!        write(*,9001) -denmatc2(1,1)/3.14159,
+  call zgemm('N', 'N', mmax, mmax, mmax, cone, gtemp, mmaxd, phir, mmaxd, ek, &
+    phiq, mmaxd)
+! test fivos 19.9.08
+  call zgemm('T', 'N', mmax, mmax, mmax, cone, phir, mmaxd, phiq, mmaxd, &
+    czero, denmatc2, mmaxd)
+! test fivos 19.9.08
+! test fivos 19.9.08
+! test fivos 19.9.08
+  call cinit(mmaxd*mmaxd, denmatc2(1,1)) ! test fivos
+  do m1 = 1, mmax !         write(*,9001) denmatc(1,1),denmatc(2,2),denmatc(3,3),
+    denmatc2(m1, m1) = den(lopt, ie)/dfloat(mmax) !    &        denmatc(4,4),denmatc(5,5),denmatc(6,6),denmatc(7,7)
+  end do !        write(*,9001) -denmatc2(1,1)/3.14159,
+  do m2 = 1, mmax
+    do m1 = 1, mmax
+      denmatc(m1, m2) = denmatc(m1, m2) + df*denmatc2(m1, m2)
+    end do
+  end do
 !    &                 -denmatc2(2,2)/3.14159,
 !    &                 -denmatc2(3,3)/3.14159,
 !    &                 -denmatc2(4,4)/3.14159,
@@ -134,4 +125,8 @@ END DO
 !
 ! Energy loop ends
 ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-      END
+! test fivos 19.9.08
+! **********************************************************************
+! *                                                                    *
+! * Calculation of density matrix needed in evaluating the Coulomb     *
+end subroutine

@@ -1,5 +1,5 @@
-SUBROUTINE rholm(den,df,gmat,nsra,rho2ns,drdi,ipan,ircut,pz,fz,  &
-        qz,sz,cleb,icleb,iend,jend,ekl)
+subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
+  sz, cleb, icleb, iend, jend, ekl)
 !-----------------------------------------------------------------------
 !     calculate in the paramagnetic case (nspin=1) :
 !         the valence charge density times r**2 from the greensfunction
@@ -63,162 +63,162 @@ SUBROUTINE rholm(den,df,gmat,nsra,rho2ns,drdi,ipan,ircut,pz,fz,  &
 !                                   changed  dec 1988
 !-----------------------------------------------------------------------
 !     .. Parameters ..
-INCLUDE 'inc.p'
-
-! *********************************************************************
-! * For KREL = 1 (relativistic mode)                                  *
-! *                                                                   *
+  include 'inc.p'
 ! *  NPOTD = 2 * NATYPD                                               *
 ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
 ! *  NSPIND = 1                                                       *
 ! *                                                                   *
 ! *********************************************************************
-      INTEGER LMMAXD
-      parameter (lmmaxd= (krel+1) * (lmaxd+1)**2)
-      INTEGER LMAXD1
-      PARAMETER (LMAXD1= LMAXD+1)
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      DOUBLE COMPLEX CZERO
-      PARAMETER (CZERO= (0.0D0,0.0D0))
 !..
 !.. Scalar Arguments ..
-      DOUBLE COMPLEX DF
-      INTEGER IEND,IPAN,NSRA
 !..
 !.. Array Arguments ..
-DOUBLE COMPLEX DEN(0:LMAXD1),EKL(0:LMAXD),FZ(IRMD,0:LMAXD), &
-               GMAT(LMMAXD,LMMAXD),PZ(IRMD,0:LMAXD), &
-               QZ(IRMD,0:LMAXD),SZ(IRMD,0:LMAXD)
-DOUBLE PRECISION CLEB(*),DRDI(IRMD),RHO2NS(IRMD,LMPOTD)
-INTEGER ICLEB(NCLEB,4),IRCUT(0:IPAND),JEND(LMPOTD,0:LMAXD,0:LMAXD)
+  integer :: lmmaxd
+  parameter (lmmaxd=(krel+1)*(lmaxd+1)**2)
+  integer :: lmaxd1
+  parameter (lmaxd1=lmaxd+1)
+  integer :: lmpotd
+  parameter (lmpotd=(lpotd+1)**2)
+  double complex :: czero
+  parameter (czero=(0.0d0,0.0d0))
 !..
 !.. Local Scalars ..
-      DOUBLE COMPLEX FFZ,GMATL,PPZ
-      DOUBLE PRECISION C0LL,FACSYM,PI
-      INTEGER I,J,J0,J1,L,L1,L2,LM3,LM3MAX,LN1,LN2,LNE,LNS
+  double complex :: df
+  integer :: iend, ipan, nsra
 !..
 !.. Local Arrays ..
-      DOUBLE COMPLEX DENR(IRMD),WR(IRMD,0:LMAXD,0:LMAXD)
+  double complex :: den(0:lmaxd1), ekl(0:lmaxd), fz(irmd, 0:lmaxd), &
+    gmat(lmmaxd, lmmaxd), pz(irmd, 0:lmaxd), qz(irmd, 0:lmaxd), &
+    sz(irmd, 0:lmaxd)
+  double precision :: cleb(*), drdi(irmd), rho2ns(irmd, lmpotd)
+  integer :: icleb(ncleb, 4), ircut(0:ipand), jend(lmpotd, 0:lmaxd, 0:lmaxd)
 !..
 !.. External Subroutines ..
-      EXTERNAL CSIMPK
+  double complex :: ffz, gmatl, ppz
+  double precision :: c0ll, facsym, pi
+  integer :: i, j, j0, j1, l, l1, l2, lm3, lm3max, ln1, ln2, lne, lns
 !..
 !.. Intrinsic Functions ..
-      INTRINSIC ATAN,DIMAG,SQRT
+  double complex :: denr(irmd), wr(irmd, 0:lmaxd, 0:lmaxd)
 !..
 !.. Save statement ..
-      SAVE
+  external :: csimpk
 !..
-pi = 4.0D0*ATAN(1.0D0)
-c0ll = 1.0D0/SQRT(4.0D0*pi)
+
+  intrinsic :: atan, dimag, sqrt
 
 
-lm3max = icleb(iend,3)
+  save
 
-
+  pi = 4.0d0*atan(1.0d0)
+  c0ll = 1.0d0/sqrt(4.0d0*pi)
 !---> set up of wr(ir,l1,l2) = pz(ir,l1)*pz(ir,l2)
 
-IF (nsra == 2) THEN
-  DO  l1 = 0,lmaxd
-    DO  l2 = 0,l1
-      DO  i = 2,ircut(1)
-        wr(i,l1,l2) = pz(i,l1)*pz(i,l2) + fz(i,l1)*fz(i,l2)
-      END DO
-    END DO
-  END DO
-  
-ELSE
-  
-  DO  l1 = 0,lmaxd
-    DO  l2 = 0,l1
-      DO  i = 2,ircut(1)
-        wr(i,l1,l2) = pz(i,l1)*pz(i,l2)
-      END DO
-    END DO
-  END DO
-  
-END IF
+  lm3max = icleb(iend, 3)
 
+
+
+
+  if (nsra==2) then
+    do l1 = 0, lmaxd
+      do l2 = 0, l1
+        do i = 2, ircut(1)
+          wr(i, l1, l2) = pz(i, l1)*pz(i, l2) + fz(i, l1)*fz(i, l2)
+        end do
+      end do
+    end do
 !---> first calculate only the spherically symmetric contribution
+  else
 
-DO  l = 0,lmaxd
-  gmatl = czero
-  lns = l*l + 1
-  lne = lns + 2*l
-  DO  ln1 = lns,lne
-    gmatl = gmatl + gmat(ln1,ln1)
-  END DO
-  
+    do l1 = 0, lmaxd
+      do l2 = 0, l1
+        do i = 2, ircut(1)
+          wr(i, l1, l2) = pz(i, l1)*pz(i, l2)
+        end do
+      end do
+    end do
+
+  end if
 !---> remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
-  
-  denr(1) = czero
-  IF (nsra == 2) THEN
-    DO  i = 2,ircut(1)
-      ppz = pz(i,l)
-      ffz = fz(i,l)
-      denr(i) = ppz* (gmatl*ppz+ekl(l)*qz(i,l)) +  &
-          ffz* (gmatl*ffz+ekl(l)*sz(i,l))
-      rho2ns(i,1) = rho2ns(i,1) + c0ll*DIMAG(df*denr(i))
-    END DO
-    
-  ELSE
-    
-    DO  i = 2,ircut(1)
-      ppz = pz(i,l)
-      denr(i) = ppz* (gmatl*ppz+ekl(l)*qz(i,l))
-      rho2ns(i,1) = rho2ns(i,1) + c0ll*DIMAG(df*denr(i))
-    END DO
-  END IF
-  
-  
+
+
+  do l = 0, lmaxd
+    gmatl = czero
+    lns = l*l + 1
+    lne = lns + 2*l
+    do ln1 = lns, lne
+      gmatl = gmatl + gmat(ln1, ln1)
+    end do
+
+
+
+    denr(1) = czero
+    if (nsra==2) then
+      do i = 2, ircut(1)
+        ppz = pz(i, l)
+        ffz = fz(i, l)
+        denr(i) = ppz*(gmatl*ppz+ekl(l)*qz(i,l)) + ffz*(gmatl*ffz+ekl(l)*sz(i, &
+          l))
+        rho2ns(i, 1) = rho2ns(i, 1) + c0ll*dimag(df*denr(i))
+      end do
 !---> calculate density of states
-  
-  CALL csimpk(denr,den(l),ipan,ircut,drdi)
-END DO
-den(lmaxd1) = 0.0D0
+    else
+
+      do i = 2, ircut(1)
+        ppz = pz(i, l)
+        denr(i) = ppz*(gmatl*ppz+ekl(l)*qz(i,l))
+        rho2ns(i, 1) = rho2ns(i, 1) + c0ll*dimag(df*denr(i))
+      end do
+    end if
 
 !---> calculate the non spherically symmetric contribution
 !        to speed up the pointer jend generated in gaunt is used
 !        remember that the wavefunctions are l and not lm dependent
+    call csimpk(denr, den(l), ipan, ircut, drdi)
+  end do
+  den(lmaxd1) = 0.0d0
 
-j0 = 1
 
-DO  i = 1,ircut(1)
-  denr(i) = 0.0D0
-END DO
-DO  lm3 = 2,lm3max
-  DO  l1 = 0,lmaxd
-    DO  l2 = 0,l1
-      
-      j1 = jend(lm3,l1,l2)
-      
-      IF (j1 /= 0) THEN
-        
-        gmatl = czero
-        
+
+
+
+  j0 = 1
+
+  do i = 1, ircut(1)
+    denr(i) = 0.0d0
+  end do
+  do lm3 = 2, lm3max
+    do l1 = 0, lmaxd
+      do l2 = 0, l1
 !---> sum over m1,m2 for fixed lm3,l1,l2
-        
-        DO  j = j0,j1
-          facsym = 2.0D0
-          ln1 = icleb(j,1)
-          ln2 = icleb(j,2)
-          IF (ln1 == ln2) facsym = 1.0D0
-          gmatl = gmatl + facsym*cleb(j)*df*gmat(ln2,ln1)
-        END DO
-        
-        j0 = j1 + 1
-        
-        DO  i = 2,ircut(1)
-          rho2ns(i,lm3) = rho2ns(i,lm3) + DIMAG(gmatl*wr(i,l1,l2))
-        END DO
-        
-      END IF
-      
-    END DO
-    
-  END DO
-  
-END DO
+        j1 = jend(lm3, l1, l2)
 
-END SUBROUTINE rholm
+        if (j1/=0) then
+
+          gmatl = czero
+
+
+
+          do j = j0, j1
+            facsym = 2.0d0
+            ln1 = icleb(j, 1)
+            ln2 = icleb(j, 2)
+            if (ln1==ln2) facsym = 1.0d0
+            gmatl = gmatl + facsym*cleb(j)*df*gmat(ln2, ln1)
+          end do
+
+          j0 = j1 + 1
+
+          do i = 2, ircut(1)
+            rho2ns(i, lm3) = rho2ns(i, lm3) + dimag(gmatl*wr(i,l1,l2))
+          end do
+
+        end if
+!-----------------------------------------------------------------------
+      end do
+!     calculate in the paramagnetic case (nspin=1) :
+    end do
+!         the valence charge density times r**2 from the greensfunction
+  end do
+!     calculate in the spin-polarized case (nspin=2) :
+end subroutine

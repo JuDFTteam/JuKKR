@@ -1,32 +1,32 @@
 ! 20.07.96 ***************************************************************
-SUBROUTINE crtstar(ratom,nshell,nd,irot,isymindex,rrot)
+subroutine crtstar(ratom, nshell, nd, irot, isymindex, rrot)
 ! ************************************************************************
 !  THE SYMMETRY OPERATIONS OF THE SYMMETRY GROUP ARE APPLIED TO THE
 !  INPUT VECTOR RATOM
 ! ------------------------------------------------------------------------
-implicit none
-INTEGER IROT,NSHELL
-DOUBLE PRECISION ND(64,3,*),RATOM(3,*),RROT(48,3,*)
-INTEGER ISYMINDEX(*)
+  implicit none
+  integer :: irot, nshell
+  double precision :: nd(64, 3, *), ratom(3, *), rrot(48, 3, *)
+  integer :: isymindex(*)
 
-INTEGER I,ID,NS,K,J,ISYM
-LOGICAL TEST
-EXTERNAL TEST
+  integer :: i, id, ns, k, j, isym
+  logical :: test
+  external :: test
 ! ------------------------------------------------------------------------
 
-DO  ns = 1,nshell
-  DO  id = 1,irot
-    isym = isymindex(id)
-    DO  i = 1,3
-      rrot(id,i,ns) = nd(isym,i,1)*ratom(1,ns) + nd(isym,i,2)*ratom(2,ns) +  &
-          nd(isym,i,3)*ratom(3,ns)
-    END DO
-  END DO
-END DO
+  do ns = 1, nshell
+    do id = 1, irot
+      isym = isymindex(id)
+      do i = 1, 3
+        rrot(id, i, ns) = nd(isym, i, 1)*ratom(1, ns) + &
+          nd(isym, i, 2)*ratom(2, ns) + nd(isym, i, 3)*ratom(3, ns)
+      end do
+    end do
+  end do
 
-IF (test('ND      ')) WRITE(1337,FMT='((I3,3(/,3f6.2)))')  &
-    (k,((nd(k,i,j),j=1,3), i=1,3),k=1,irot)
+  if (test('ND      ')) write (1337, fmt='((I3,3(/,3f6.2)))')(k, ((nd(k,i,j), &
+    j=1,3),i=1,3), k=1, irot)
 
-RETURN
+  return
 
-END SUBROUTINE crtstar
+end subroutine

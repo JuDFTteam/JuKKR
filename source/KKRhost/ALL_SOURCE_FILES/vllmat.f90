@@ -2,80 +2,83 @@
 ! SUBROUTINE: VLLMAT
 !> @brief
 !-------------------------------------------------------------------------------
-subroutine VLLMAT(IRMIN,NRMAXD,IRC,LMMAX,LMMAXSO,VNSPLL0,VINS,LMPOT, &
-      CLEB,ICLEB,IEND,NSPIN,Z,RNEW,USE_SRATRICK,NCLEB)
+subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, &
+  cleb, icleb, iend, nspin, z, rnew, use_sratrick, ncleb)
 
-   implicit none
+  implicit none
 
-   !.. Input variables
-   integer, intent(in) :: IRC    !< r point for potential cutting
-   integer, intent(in) :: IEND
-   integer, intent(in) :: NCLEB  !< Number of Clebsch-Gordon coefficients
-   integer, intent(in) :: IRMIN  !< max r for spherical treatment
-   integer, intent(in) :: LMMAX  !< (LMAX+1)^2
-   integer, intent(in) :: NSPIN  !< Counter for spin directions
-   integer, intent(in) :: LMPOT  !< (LPOT+1)**2
-   integer, intent(in) :: NRMAXD !< NTOTD*(NCHEBD+1)
-   integer, intent(in) :: LMMAXSO
-   integer, intent(in) :: USE_SRATRICK
-   double precision, intent(in) :: Z
+!.. Input variables
+  integer, intent (in) :: irc !< r point for potential cutting
+  integer, intent (in) :: iend
+  integer, intent (in) :: ncleb !< Number of Clebsch-Gordon coefficients
+  integer, intent (in) :: irmin !< max r for spherical treatment
+  integer, intent (in) :: lmmax !< (LMAX+1)^2
+  integer, intent (in) :: nspin !< Counter for spin directions
+  integer, intent (in) :: lmpot !< (LPOT+1)**2
+  integer, intent (in) :: nrmaxd !< NTOTD*(NCHEBD+1)
+  integer, intent (in) :: lmmaxso
+  integer, intent (in) :: use_sratrick
+  double precision, intent (in) :: z
 
-   integer, dimension(NCLEB,4), intent(in) :: ICLEB
-   double precision, dimension(*), intent(in) :: CLEB !< GAUNT coefficients (GAUNT)
-   double precision, dimension(IRMIN:IRC,LMPOT,NSPIN), intent(in) :: VINS  !< Non-spherical part of the potential
-   double precision, dimension(IRMIN:NRMAXD), intent(in) ::  RNEW
-   double complex, dimension(LMMAXSO,LMMAXSO,IRMIN:IRC), intent(out) :: VNSPLL0
+  integer, dimension (ncleb, 4), intent (in) :: icleb
+  double precision, dimension (*), intent (in) :: cleb !< GAUNT coefficients (GAUNT)
+  double precision, dimension (irmin:irc, lmpot, nspin), intent (in) :: vins !< Non-spherical part of the potential
+  double precision, dimension (irmin:nrmaxd), intent (in) :: rnew
+  double complex, dimension (lmmaxso, lmmaxso, irmin:irc), &
+    intent (out) :: vnspll0
 
-   !.. Local variables
-   integer :: ISP
-   integer :: I,IR,J,LM1,LM2,LM3
-   double precision, dimension(LMMAX,LMMAX,IRMIN:IRC,NSPIN) ::  VNSPLL
+!.. Local variables
+  integer :: isp
+  integer :: i, ir, j, lm1, lm2, lm3
+  double precision, dimension (lmmax, lmmax, irmin:irc, nspin) :: vnspll
 
-   do ISP=1,NSPIN
-      do LM1 = 1,LMMAX
-         do LM2 = 1,LM1
-            do IR = IRMIN,IRC
-               VNSPLL(LM1,LM2,IR,ISP) = 0.0D0
-            enddo ! IR
-         enddo ! LM2
-      enddo ! LM11
+  do isp = 1, nspin
+    do lm1 = 1, lmmax
+      do lm2 = 1, lm1
+        do ir = irmin, irc
+          vnspll(lm1, lm2, ir, isp) = 0.0d0
+        end do ! IR
+      end do ! LM2
+    end do ! LM11
 
-      do J = 1,IEND
-         LM1 = ICLEB(J,1)
-         LM2 = ICLEB(J,2)
-         LM3 = ICLEB(J,3)
-         do I = IRMIN,IRC
-            VNSPLL(LM1,LM2,I,ISP) = VNSPLL(LM1,LM2,I,ISP) +CLEB(J)*VINS(I,LM3,ISP)
-         enddo ! I
-      enddo ! J
-      !-------------------------------------------------------------------------
-      ! Use symmetry of the gaunt coef.
-      !-------------------------------------------------------------------------
-      do LM1 = 1,LMMAX
-         do LM2 = 1,LM1 - 1
-            do I = IRMIN,IRC
-               VNSPLL(LM2,LM1,I,ISP) = VNSPLL(LM1,LM2,I,ISP)
-            enddo ! I
-         enddo ! LM2
-      enddo ! LM1
+    do j = 1, iend
+      lm1 = icleb(j, 1)
+      lm2 = icleb(j, 2)
+      lm3 = icleb(j, 3)
+      do i = irmin, irc
+        vnspll(lm1, lm2, i, isp) = vnspll(lm1, lm2, i, isp) + &
+          cleb(j)*vins(i, lm3, isp)
+      end do ! I
+    end do ! J
+!-------------------------------------------------------------------------
+! Use symmetry of the gaunt coef.
+!-------------------------------------------------------------------------
+    do lm1 = 1, lmmax
+      do lm2 = 1, lm1 - 1
+        do i = irmin, irc
+          vnspll(lm2, lm1, i, isp) = vnspll(lm1, lm2, i, isp)
+        end do ! I
+      end do ! LM2
+    end do ! LM1
 
-      if (USE_SRATRICK.EQ.0) then
-         do LM1=1,LMMAX
-            do I=IRMIN,IRC
-               VNSPLL(LM1,LM1,I,ISP)=VNSPLL(LM1,LM1,I,ISP)+VINS(I,1,ISP)-2d0*Z/RNEW(I)
-            enddo
-         enddo
-      endif
+    if (use_sratrick==0) then
+      do lm1 = 1, lmmax
+        do i = irmin, irc
+          vnspll(lm1, lm1, i, isp) = vnspll(lm1, lm1, i, isp) + &
+            vins(i, 1, isp) - 2d0*z/rnew(i)
+        end do
+      end do
+    end if
 
-   end do !NSPIN
+  end do !NSPIN
 
-   ! Set vnspll as twice as large
-   VNSPLL0(1:LMMAX,1:LMMAX,IRMIN:IRC)=&
-      cmplx(VNSPLL(1:LMMAX,1:LMMAX,IRMIN:IRC,1),0d0)
+! Set vnspll as twice as large
+  vnspll0(1:lmmax, 1:lmmax, irmin:irc) = cmplx(vnspll(1:lmmax,1:lmmax,irmin: &
+    irc,1), 0d0)
 
-   if(NSPIN==2)then! hack to make routine work for Bxc-field
-      VNSPLL0(LMMAX+1:LMMAXSO,LMMAX+1:LMMAXSO,IRMIN:IRC)=&
-         cmplx(VNSPLL(1:LMMAX,1:LMMAX,IRMIN:IRC,NSPIN),0d0)
-   end if
+  if (nspin==2) then ! hack to make routine work for Bxc-field
+    vnspll0(lmmax+1:lmmaxso, lmmax+1:lmmaxso, irmin:irc) &
+      = cmplx(vnspll(1:lmmax,1:lmmax,irmin:irc,nspin), 0d0)
+  end if
 
-end subroutine VLLMAT
+end subroutine

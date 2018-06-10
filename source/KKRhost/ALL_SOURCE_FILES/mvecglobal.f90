@@ -1,6 +1,5 @@
-SUBROUTINE mvecglobal(it,iq,natyp,qmphi,qmtet,  &
-        mvevi,mvevil,mvevief,  &
-        natypd,lmaxd,nmvecmax)
+subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
+  natypd, lmaxd, nmvecmax)
 !   ********************************************************************
 !   *                                                                  *
 !   *  this routine has been build up from the last part of the        *
@@ -9,83 +8,83 @@ SUBROUTINE mvecglobal(it,iq,natyp,qmphi,qmtet,  &
 !   *                                           frame of reference     *
 !   *                                                                  *
 !   ********************************************************************
-IMPLICIT NONE
+  implicit none
 
 !Parameter definitions
-INTEGER LMAXDLOC
-PARAMETER (LMAXDLOC=8)
-COMPLEX*16 CI,CZERO
-PARAMETER (CI = (0.0D0,1.0D0), CZERO = (0.0D0,0.0D0))
+  integer :: lmaxdloc
+  parameter (lmaxdloc=8)
+  complex *16 :: ci, czero
+  parameter (ci=(0.0d0,1.0d0), czero=(0.0d0,0.0d0))
 
 !Scalar Arguments
-INTEGER IT,IQ,NATYP,NATYPD,LMAXD,NMVECMAX
-DOUBLE PRECISION QMPHI,QMTET
+  integer :: it, iq, natyp, natypd, lmaxd, nmvecmax
+  double precision :: qmphi, qmtet
 
 !Array Arguments
-DOUBLE COMPLEX MVEVI(NATYPD,3,NMVECMAX), &
-           MVEVIL(0:LMAXD,NATYPD,3,NMVECMAX) 
-DOUBLE COMPLEX MVEVIEF(NATYPD,3,NMVECMAX)
+  double complex :: mvevi(natypd, 3, nmvecmax), mvevil(0:lmaxd, natypd, 3, &
+    nmvecmax)
+  double complex :: mvevief(natypd, 3, nmvecmax)
 
 !Local Scalars
-INTEGER ICALL,I,J,K,L,IMV,NMVEC
-DOUBLE COMPLEX CS
-DOUBLE COMPLEX AMIN,APLS
-DOUBLE PRECISION PI,MV,MVX,MVXY,MVY,MVZ,WSQ2
+  integer :: icall, i, j, k, l, imv, nmvec
+  double complex :: cs
+  double complex :: amin, apls
+  double precision :: pi, mv, mvx, mvxy, mvy, mvz, wsq2
 
 !Local Arrays
-DOUBLE COMPLEX USC(3,3),DROT4(4,4),W3X3(3,3)
-DOUBLE COMPLEX MVG(3,NMVECMAX),MVGEF(3,NMVECMAX)
-DOUBLE COMPLEX MVGL(0:LMAXD,3,NMVECMAX)
-DOUBLE PRECISION MROT(3,3),FACT(0:100)
-DOUBLE PRECISION MVGLO(3,NMVECMAX),MVGLOL(0:LMAXD,3,NMVECMAX)
-DOUBLE PRECISION MVPHI(NMVECMAX),MVTET(NMVECMAX)
-CHARACTER*1  TXTL(0:LMAXDLOC)
+  double complex :: usc(3, 3), drot4(4, 4), w3x3(3, 3)
+  double complex :: mvg(3, nmvecmax), mvgef(3, nmvecmax)
+  double complex :: mvgl(0:lmaxd, 3, nmvecmax)
+  double precision :: mrot(3, 3), fact(0:100)
+  double precision :: mvglo(3, nmvecmax), mvglol(0:lmaxd, 3, nmvecmax)
+  double precision :: mvphi(nmvecmax), mvtet(nmvecmax)
+  character (len=1) :: txtl(0:lmaxdloc)
 
 !Intrinsic Functions
-INTRINSIC ABS,ACOS,ATAN,DREAL,DIMAG,DCONJG
+  intrinsic :: abs, acos, atan, dreal, dimag, dconjg
 
 !External subroutines
-EXTERNAL CALCROTMAT      
+  external :: calcrotmat
 
 !Data Statements
-DATA ICALL /0/
+  data icall/0/
 
 !Save Statements
-SAVE ICALL,NMVEC,USC,FACT,TXTL,PI
+  save :: icall, nmvec, usc, fact, txtl, pi
 
-icall = icall + 1
+  icall = icall + 1
 !=======================================================================
-IF (icall == 1) THEN
-  
-  IF (lmaxd > lmaxdloc) THEN
-    WRITE (6,*)
-    WRITE (6,*) ' Please increase parameter LMAXDLOC to ',lmaxd
-    WRITE (6,*) ' in the < MVECGLOBAL > routine.'
-    STOP ' < TBKKR2 > '
-  END IF
-  
-  txtl(0) = 's'
-  txtl(1) = 'p'
-  txtl(2) = 'd'
-  IF( lmaxd >= 3 ) THEN
-    DO l=3,lmaxd
-      txtl(l) = CHAR( ICHAR('f') + l - 3 )
-    END DO
-  END IF
-  
-  WRITE (1337,'(78(1H#))')
-  WRITE (1337,99001)
-  WRITE (1337,'(78(1H#))')
-  WRITE (1337,*)
-  WRITE (1337,99002)
-  
-  nmvec = 2
-  pi = 4.d0 * ATAN(1.d0)
-  
-  fact(0) = 1.0D0
-  DO i=1,100
-    fact(i) = fact(i-1) * DBLE(i)
-  END DO
+  if (icall==1) then
+
+    if (lmaxd>lmaxdloc) then
+      write (6, *)
+      write (6, *) ' Please increase parameter LMAXDLOC to ', lmaxd
+      write (6, *) ' in the < MVECGLOBAL > routine.'
+      stop ' < TBKKR2 > '
+    end if
+
+    txtl(0) = 's'
+    txtl(1) = 'p'
+    txtl(2) = 'd'
+    if (lmaxd>=3) then
+      do l = 3, lmaxd
+        txtl(l) = char(ichar('f')+l-3)
+      end do
+    end if
+
+    write (1337, '(78(1H#))')
+    write (1337, 100)
+    write (1337, '(78(1H#))')
+    write (1337, *)
+    write (1337, 110)
+
+    nmvec = 2
+    pi = 4.d0*atan(1.d0)
+
+    fact(0) = 1.0d0
+    do i = 1, 100
+      fact(i) = fact(i-1)*dble(i)
+    end do
 !-----------------------------------------------------------------------
 !  create transformation matrix   U  cartesian/sperical ccordinates
 !-----------------------------------------------------------------------
@@ -95,29 +94,29 @@ IF (icall == 1) THEN
 !         RSP = MS  * RS                                 (4.37)
 !     MS(i,j) = D(j,i)                                   (4.42)
 !     D  rotation matrix for complex spherical harmonics
-  
+
 ! ordering of: m=-1,0,+1 >>> row 1 and 3 interchanged compared to (4.44)
-  
-  wsq2 = 1.0D0/SQRT(2.0D0)
-  
-  usc(1,1) = wsq2
-  usc(1,2) = -ci*wsq2
-  usc(1,3) = 0.0D0
-  usc(2,1) = 0.0D0
-  usc(2,2) = 0.0D0
-  usc(2,3) = 1.0D0
-  usc(3,1) = -wsq2
-  usc(3,2) = -ci*wsq2
-  usc(3,3) = 0.0D0
+
+    wsq2 = 1.0d0/sqrt(2.0d0)
+
+    usc(1, 1) = wsq2
+    usc(1, 2) = -ci*wsq2
+    usc(1, 3) = 0.0d0
+    usc(2, 1) = 0.0d0
+    usc(2, 2) = 0.0d0
+    usc(2, 3) = 1.0d0
+    usc(3, 1) = -wsq2
+    usc(3, 2) = -ci*wsq2
+    usc(3, 3) = 0.0d0
 !-----------------------------------------------------------------------
-END IF
+  end if
 !=======================================================================
 
 !-----------------------------------------------------------------------
 !   create the rotation matrices  DROT4 for complex spherical harmonics
 !-----------------------------------------------------------------------
 
-CALL calcrotmat(2,1,qmphi,qmtet,0.0D0,drot4,fact,4)
+  call calcrotmat(2, 1, qmphi, qmtet, 0.0d0, drot4, fact, 4)
 
 !-----------------------------------------------------------------------
 ! create the rotation matrix  MROT for vectors in cartesian coordinates
@@ -125,145 +124,147 @@ CALL calcrotmat(2,1,qmphi,qmtet,0.0D0,drot4,fact,4)
 !        for that reason  the transposed matrix is stored as  MROT(J,I)
 !-----------------------------------------------------------------------
 
-DO i = 1,3
-  DO j = 1,3
-    cs = 0.0D0
-    DO k = 1,3
-      cs = cs + drot4(k+1,i+1)*usc(k,j)
-    END DO
-    w3x3(i,j) = cs
-  END DO
-END DO
+  do i = 1, 3
+    do j = 1, 3
+      cs = 0.0d0
+      do k = 1, 3
+        cs = cs + drot4(k+1, i+1)*usc(k, j)
+      end do
+      w3x3(i, j) = cs
+    end do
+  end do
 
-DO i = 1,3
-  DO j = 1,3
-    cs = 0.0D0
-    DO k = 1,3
-      cs = cs + DCONJG(usc(k,i))*w3x3(k,j)
-    END DO
-    IF ( DIMAG(cs) > 1D-8 ) WRITE (*,*) ' MROT',i,j,cs, ' ???????????'
+  do i = 1, 3
+    do j = 1, 3
+      cs = 0.0d0
+      do k = 1, 3
+        cs = cs + dconjg(usc(k,i))*w3x3(k, j)
+      end do
+      if (dimag(cs)>1d-8) write (*, *) ' MROT', i, j, cs, ' ???????????'
 !     see above >> MROT(I,J) = DREAL(CS)
-    mrot(j,i) = dreal(cs)
-  END DO
-END DO
+      mrot(j, i) = dreal(cs)
+    end do
+  end do
 !-----------------------------------------------------------------------
 
 ! **********************************************************************
-DO imv = 1,nmvec
+  do imv = 1, nmvec
 !-----------------------------------------------------------------------
 !     transform from (+,-,z) to cartesian coordinates  (x,y,z)
 !     note the convention
 !-----------------------------------------------------------------------
-  apls = mvevi(it,1,imv)
-  amin = mvevi(it,2,imv)
-  mvevi(it,1,imv) = (amin+apls)*0.5D0
-  mvevi(it,2,imv) = (amin-apls)*0.5D0*ci
-  
-  apls = mvevief(it,1,imv)
-  amin = mvevief(it,2,imv)
-  mvevief(it,1,imv) = (amin+apls)*0.5D0
-  mvevief(it,2,imv) = (amin-apls)*0.5D0*ci
-  
-  DO l = 0,lmaxd
-    apls = mvevil(l,it,1,imv)
-    amin = mvevil(l,it,2,imv)
-    mvevil(l,it,1,imv) = (amin+apls)*0.5D0
-    mvevil(l,it,2,imv) = (amin-apls)*0.5D0*ci
-  END DO
+    apls = mvevi(it, 1, imv)
+    amin = mvevi(it, 2, imv)
+    mvevi(it, 1, imv) = (amin+apls)*0.5d0
+    mvevi(it, 2, imv) = (amin-apls)*0.5d0*ci
+
+    apls = mvevief(it, 1, imv)
+    amin = mvevief(it, 2, imv)
+    mvevief(it, 1, imv) = (amin+apls)*0.5d0
+    mvevief(it, 2, imv) = (amin-apls)*0.5d0*ci
+
+    do l = 0, lmaxd
+      apls = mvevil(l, it, 1, imv)
+      amin = mvevil(l, it, 2, imv)
+      mvevil(l, it, 1, imv) = (amin+apls)*0.5d0
+      mvevil(l, it, 2, imv) = (amin-apls)*0.5d0*ci
+    end do
 !-----------------------------------------------------------------------
 !     transform from LOCAL cartesian coordinates (x,y,z)
 !               to  GLOBAL cartesian coordinates
 !-----------------------------------------------------------------------
-  DO i = 1,3
-    mvg(i,imv) = czero
-    mvgef(i,imv) = czero
-    DO j = 1,3
-      mvg  (i,imv) = mvg  (i,imv) + mrot(i,j)*mvevi(it,j,imv)
-      mvgef(i,imv) = mvgef(i,imv) + mrot(i,j)*mvevief(it,j,imv)
-    END DO
-    mvglo(i,imv) = DIMAG(mvg(i,imv))
-    
-    DO l = 0,lmaxd
-      mvgl(l,i,imv) = czero
-      DO j = 1,3
-        mvgl(l,i,imv) = mvgl(l,i,imv) + mrot(i,j)*mvevil(l,it,j,imv)
-      END DO
-      mvglol(l,i,imv) = DIMAG(mvgl(l,i,imv))
-    END DO
-    
-  END DO
+    do i = 1, 3
+      mvg(i, imv) = czero
+      mvgef(i, imv) = czero
+      do j = 1, 3
+        mvg(i, imv) = mvg(i, imv) + mrot(i, j)*mvevi(it, j, imv)
+        mvgef(i, imv) = mvgef(i, imv) + mrot(i, j)*mvevief(it, j, imv)
+      end do
+      mvglo(i, imv) = dimag(mvg(i,imv))
+
+      do l = 0, lmaxd
+        mvgl(l, i, imv) = czero
+        do j = 1, 3
+          mvgl(l, i, imv) = mvgl(l, i, imv) + mrot(i, j)*mvevil(l, it, j, imv)
+        end do
+        mvglol(l, i, imv) = dimag(mvgl(l,i,imv))
+      end do
+
+    end do
 ! ......................................................................
-  DO i = 1,3
-    mvevi(it,i,imv)   = mvg  (i,imv)
-    mvevief(it,i,imv) = mvgef(i,imv)
-    
-    DO l = 0,lmaxd
-      mvevil(l,it,i,imv)   = mvgl  (l,i,imv)
-    END DO
-  END DO
+    do i = 1, 3
+      mvevi(it, i, imv) = mvg(i, imv)
+      mvevief(it, i, imv) = mvgef(i, imv)
+
+      do l = 0, lmaxd
+        mvevil(l, it, i, imv) = mvgl(l, i, imv)
+      end do
+    end do
 !-----------------------------------------------------------------------
 !        calculate the angles
 !-----------------------------------------------------------------------
-  mvx = mvglo(1,imv)
-  mvy = mvglo(2,imv)
-  mvz = mvglo(3,imv)
-  
-  mv = SQRT(mvx**2+mvy**2+mvz**2)
+    mvx = mvglo(1, imv)
+    mvy = mvglo(2, imv)
+    mvz = mvglo(3, imv)
+
+    mv = sqrt(mvx**2+mvy**2+mvz**2)
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  IF ( mv < 1D-8 ) THEN
-    mvphi(imv) = 0D0
-    mvtet(imv) = 0D0
+    if (mv<1d-8) then
+      mvphi(imv) = 0d0
+      mvtet(imv) = 0d0
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  ELSE
+    else
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    mvxy = SQRT(mvx**2+mvy**2)
+      mvxy = sqrt(mvx**2+mvy**2)
 ! ======================================================================
-    IF ( ABS(mvxy) < 1D-8 ) THEN
-      mvphi(imv) = 0D0
+      if (abs(mvxy)<1d-8) then
+        mvphi(imv) = 0d0
 ! ======================================================================
-    ELSE
+      else
 ! ======================================================================
-      IF ( mvy >= 0D0 ) THEN
-        mvphi(imv) = ACOS(mvx/mvxy)
-      ELSE IF ( mvx < 0D0 ) THEN
-        mvphi(imv) = pi + ACOS(-mvx/mvxy)
-      ELSE
-        mvphi(imv) = 2*pi - ACOS(mvx/mvxy)
-      END IF
-      mvphi(imv) = mvphi(imv)*180D0/pi
-      IF ( ABS(mvphi(imv)-360.0D0) < 1D-8 ) mvphi(imv) = 0D0
-    END IF
+        if (mvy>=0d0) then
+          mvphi(imv) = acos(mvx/mvxy)
+        else if (mvx<0d0) then
+          mvphi(imv) = pi + acos(-mvx/mvxy)
+        else
+          mvphi(imv) = 2*pi - acos(mvx/mvxy)
+        end if
+        mvphi(imv) = mvphi(imv)*180d0/pi
+        if (abs(mvphi(imv)-360.0d0)<1d-8) mvphi(imv) = 0d0
+      end if
 ! ======================================================================
-    IF (mvphi(imv) >= 345.d0) mvphi(imv) = 360.d0 - mvphi(imv)
-    mvtet(imv) = ACOS(mvz/mv)*180D0/pi
-  END IF
+      if (mvphi(imv)>=345.d0) mvphi(imv) = 360.d0 - mvphi(imv)
+      mvtet(imv) = acos(mvz/mv)*180d0/pi
+    end if
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !-----------------------------------------------------------------------
-END DO
+  end do
 ! **********************************************************************
 ! output vector components, in and out angles
 ! ----------------------------------------------------------------------
-l = 0
-WRITE (1337,99003) it,iq,txtl(l),((mvglol(l,i,imv),i=1,3),imv=1,2)
-WRITE (1337,99004) (txtl(l),((mvglol(l,i,imv),i=1,3),imv=1,2), l=1,lmaxd)
-WRITE (1337,99005) ((mvglo(i,imv),i=1,3),imv=1,2)
-WRITE (1337,99006) qmphi,qmtet,(mvphi(imv),mvtet(imv),imv=1,2)
+  l = 0
+  write (1337, 120) it, iq, txtl(l), ((mvglol(l,i,imv),i=1,3), imv=1, 2)
+  write (1337, 130)(txtl(l), ((mvglol(l,i,imv),i=1,3),imv=1,2), l=1, lmaxd)
+  write (1337, 140)((mvglo(i,imv),i=1,3), imv=1, 2)
+  write (1337, 150) qmphi, qmtet, (mvphi(imv), mvtet(imv), imv=1, 2)
 ! ----------------------------------------------------------------------
-IF ( it < natyp ) THEN
-  WRITE (1337,'(3X,75(1H=))')
-ELSE
-  WRITE (1337,*)
-  WRITE (1337,'(78(1H#))')
-END IF
+  if (it<natyp) then
+    write (1337, '(3X,75(1H=))')
+  else
+    write (1337, *)
+    write (1337, '(78(1H#))')
+  end if
 ! ----------------------------------------------------------------------
 
-99001 FORMAT (15X,'vectorial magnetic properties given with respect',/,  &
-    15X,'   to the GLOBAL (crystal) frame of reference')
-99002 FORMAT (29X,'m_spin',27X,'m_orb',/, 3X,'ATOM/SITE     ',  &
-    '    x         y         z',8X,'    x         y         z',/, 3X,75(1H=))
-99003 FORMAT (3X,i3,'/',i3,2X,a1,' =',3F10.5,3X,3F10.5)
-99004 FORMAT (12X,a1,' =',3F10.5,3X,3F10.5)
-99005 FORMAT (12X,66(1H-),/,12X,'sum',3F10.5,3X,3F10.5,/)
-99006 FORMAT (3X,'angles (IN)   TET =',f9.4,' PHI =',f9.4,/,  &
-    3X,'angles (calc) TET =',f9.4,' PHI =',f9.4, '   TET =',f9.4,' PHI =',f9.4)
-END SUBROUTINE mvecglobal
+100 format (15x, 'vectorial magnetic properties given with respect', /, 15x, &
+    '   to the GLOBAL (crystal) frame of reference')
+110 format (29x, 'm_spin', 27x, 'm_orb', /, 3x, 'ATOM/SITE     ', &
+    '    x         y         z', 8x, '    x         y         z', /, 3x, &
+    75('='))
+120 format (3x, i3, '/', i3, 2x, a1, ' =', 3f10.5, 3x, 3f10.5)
+130 format (12x, a1, ' =', 3f10.5, 3x, 3f10.5)
+140 format (12x, 66('-'), /, 12x, 'sum', 3f10.5, 3x, 3f10.5, /)
+150 format (3x, 'angles (IN)   TET =', f9.4, ' PHI =', f9.4, /, 3x, &
+    'angles (calc) TET =', f9.4, ' PHI =', f9.4, '   TET =', f9.4, ' PHI =', &
+    f9.4)
+end subroutine

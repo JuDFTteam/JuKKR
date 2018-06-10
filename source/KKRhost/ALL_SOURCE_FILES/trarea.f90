@@ -1,37 +1,37 @@
-SUBROUTINE trarea(a,b,lmax)
+subroutine trarea(a, b, lmax)
 ! from complex to real  (differenciated spherical harmonics)
 
 !.. Parameters ..
-DOUBLE PRECISION RTWO
-DOUBLE COMPLEX CI
-PARAMETER (RTWO=1.414213562373d0,CI= (0.d0,1.d0))
+  double precision :: rtwo
+  double complex :: ci
+  parameter (rtwo=1.414213562373d0, ci=(0.d0,1.d0))
 !..
 !.. Scalar Arguments ..
-INTEGER LMAX
+  integer :: lmax
 !..
 !.. Array Arguments ..
-DOUBLE COMPLEX A(*)
-DOUBLE PRECISION B(*)
+  double complex :: a(*)
+  double precision :: b(*)
 !..
 !.. Local Scalars ..
-DOUBLE PRECISION SGM
-INTEGER I,L,M
+  double precision :: sgm
+  integer :: i, l, m
 !..
 !.. Intrinsic Functions ..
-INTRINSIC CONJG,DBLE
+  intrinsic :: conjg, dble
 
 !    calculate real the spherical harmonics derivetived
-i = 0
-DO  l = 0,lmax
-  i = i + l + 1
-  b(i) = DBLE(a(i))
-  sgm = -1.d0
-  DO  m = 1,l
-    b(i-m) = DBLE(ci* (a(i-m)-CONJG(a(i-m))))/rtwo
-    b(i+m) = sgm*DBLE((a(i+m)+CONJG(a(i+m))))/rtwo
-    sgm = -sgm
-  END DO
-  i = i + l
-END DO
-RETURN
-END SUBROUTINE trarea
+  i = 0
+  do l = 0, lmax
+    i = i + l + 1
+    b(i) = dble(a(i))
+    sgm = -1.d0
+    do m = 1, l
+      b(i-m) = dble(ci*(a(i-m)-conjg(a(i-m))))/rtwo
+      b(i+m) = sgm*dble((a(i+m)+conjg(a(i+m))))/rtwo
+      sgm = -sgm
+    end do
+    i = i + l
+  end do
+  return
+end subroutine

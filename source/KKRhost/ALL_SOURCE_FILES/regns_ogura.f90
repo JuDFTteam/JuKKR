@@ -1,6 +1,6 @@
-SUBROUTINE regns(ar,br,efac,pns,vnspll,icst,ipan,ircut,pzlm,  &
-        qzlm,pzekdr,qzekdr,ek,ader,amat,bder,bmat,nsra,  &
-        irmind,irmd,ipand,lmmaxd)
+subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
+  pzekdr, qzekdr, ek, ader, amat, bder, bmat, nsra, irmind, irmd, ipand, &
+  lmmaxd)
 !-----------------------------------------------------------------------
 !     determines the regular non spherical wavefunctions , the
 !       alpha matrix and the t - matrix in the n-th. born appro-
@@ -49,47 +49,44 @@ SUBROUTINE regns(ar,br,efac,pns,vnspll,icst,ipan,ircut,pzlm,  &
 !     FRED: true -> use fredholm equation
 !           false -> volterra equation
 !-----------------------------------------------------------------------
-use mod_types, only: t_inc
-IMPLICIT NONE
+  use :: mod_types, only: t_inc
+  implicit none
 !.. Scalar Arguments ..
-DOUBLE COMPLEX EK
-INTEGER ICST,IPAN,IPAND,IRMD,IRMIND,LMMAXD,NSRA
+  double complex :: ek
+  integer :: icst, ipan, ipand, irmd, irmind, lmmaxd, nsra
 !..
 !.. Array Arguments ..
-DOUBLE COMPLEX ADER(LMMAXD,LMMAXD,IRMIND:IRMD), &
-               AMAT(LMMAXD,LMMAXD,IRMIND:IRMD),AR(LMMAXD,LMMAXD), &
-               BDER(LMMAXD,LMMAXD,IRMIND:IRMD), &
-               BMAT(LMMAXD,LMMAXD,IRMIND:IRMD),BR(LMMAXD,LMMAXD), &
-               EFAC(*),PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2), &
-               PZEKDR(LMMAXD,IRMIND:IRMD,2), &
-               PZLM(LMMAXD,IRMIND:IRMD,2), &
-               QZEKDR(LMMAXD,IRMIND:IRMD,2), &
-               QZLM(LMMAXD,IRMIND:IRMD,2)
-DOUBLE PRECISION VNSPLL(LMMAXD,LMMAXD,IRMIND:IRMD)
-INTEGER IRCUT(0:IPAND)
+  double complex :: ader(lmmaxd, lmmaxd, irmind:irmd), &
+    amat(lmmaxd, lmmaxd, irmind:irmd), ar(lmmaxd, lmmaxd), &
+    bder(lmmaxd, lmmaxd, irmind:irmd), bmat(lmmaxd, lmmaxd, irmind:irmd), &
+    br(lmmaxd, lmmaxd), efac(*), pns(lmmaxd, lmmaxd, irmind:irmd, 2), &
+    pzekdr(lmmaxd, irmind:irmd, 2), pzlm(lmmaxd, irmind:irmd, 2), &
+    qzekdr(lmmaxd, irmind:irmd, 2), qzlm(lmmaxd, irmind:irmd, 2)
+  double precision :: vnspll(lmmaxd, lmmaxd, irmind:irmd)
+  integer :: ircut(0:ipand)
 !..
 !.. Local Scalars ..
-DOUBLE COMPLEX EFAC1,EFAC2
-DOUBLE PRECISION ERR
-INTEGER I,IR,IRC1,J,LM1,LM2,LM3
+  double complex :: efac1, efac2
+  double precision :: err
+  integer :: i, ir, irc1, j, lm1, lm2, lm3
 !..
 !.. Local Arrays ..
-DOUBLE COMPLEX PNS0(LMMAXD,LMMAXD,IRMIND:IRMD,2), &
-               PNS1(LMMAXD,LMMAXD,IRMIND:IRMD)
-INTEGER IPIV(LMMAXD)
+  double complex :: pns0(lmmaxd, lmmaxd, irmind:irmd, 2), &
+    pns1(lmmaxd, lmmaxd, irmind:irmd)
+  integer :: ipiv(lmmaxd)
 !..
 !.. External Subroutines ..
-EXTERNAL CSINWD,CSOUT,WFINT,WFINT0,ZGEINV1
+  external :: csinwd, csout, wfint, wfint0, zgeinv1
 !..
 !.. Parameters ..
-DOUBLE COMPLEX CONE
-PARAMETER (CONE= (1.0D0,0.0D0))
+  double complex :: cone
+  parameter (cone=(1.0d0,0.0d0))
 !..
-LOGICAL FRED
-DATA FRED/.false./
+  logical :: fred
+  data fred/.false./
 !..
 !      write(*,*)ek
-irc1 = ircut(ipan)
+  irc1 = ircut(ipan)
 !      DO 1 J = 1,NSRA
 !        DO 2 IR = IRMIND,IRC1
 !          DO 3 LM1 = 1,LMMAXD
@@ -103,193 +100,201 @@ irc1 = ircut(ipan)
 ! 3        CONTINUE
 ! 2      CONTINUE
 ! 1    CONTINUE
-IF(fred)THEN
-  DO  i = 0,icst
+  if (fred) then
+    do i = 0, icst
 !---> set up integrands for i-th born approximation
-    IF (i == 0) THEN
-      CALL wfint0(ader,bder,pzlm,qzekdr,pzekdr,vnspll,nsra,irmind,  &
-          irmd,lmmaxd)
-    ELSE
-      CALL wfint(pns,ader,bder,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
-    END IF
+      if (i==0) then
+        call wfint0(ader, bder, pzlm, qzekdr, pzekdr, vnspll, nsra, irmind, &
+          irmd, lmmaxd)
+      else
+        call wfint(pns, ader, bder, qzekdr, pzekdr, vnspll, nsra, irmind, &
+          irmd, lmmaxd)
+      end if
 !---> call integration subroutines
-    CALL csinwd(ader,amat,lmmaxd**2,irmind,irmd,ipan,ircut)
-    CALL csout(bder,bmat,lmmaxd**2,irmind,irmd,ipan,ircut)
-    DO  ir = irmind,irc1
-      DO  lm2 = 1,lmmaxd
-        amat(lm2,lm2,ir) = cone + amat(lm2,lm2,ir)
-      END DO
-    END DO
+      call csinwd(ader, amat, lmmaxd**2, irmind, irmd, ipan, ircut)
+      call csout(bder, bmat, lmmaxd**2, irmind, irmd, ipan, ircut)
+      do ir = irmind, irc1
+        do lm2 = 1, lmmaxd
+          amat(lm2, lm2, ir) = cone + amat(lm2, lm2, ir)
+        end do
+      end do
 !---> calculate non sph. wft. in i-th born approximation
-    DO  j = 1,nsra
-      DO  ir = irmind,irc1
-        DO  lm1 = 1,lmmaxd
-          DO  lm2 = 1,lmmaxd
-            pns(lm1,lm2,ir,j) = (amat(lm1,lm2,ir)*pzlm(lm1,ir,j)+  &
-                bmat(lm1,lm2,ir)*qzlm(lm1,ir,j))
-          END DO
-        END DO
-      END DO
-    END DO
+      do j = 1, nsra
+        do ir = irmind, irc1
+          do lm1 = 1, lmmaxd
+            do lm2 = 1, lmmaxd
+              pns(lm1, lm2, ir, j) = (amat(lm1,lm2,ir)*pzlm(lm1,ir,j)+bmat(lm1 &
+                ,lm2,ir)*qzlm(lm1,ir,j))
+            end do
+          end do
+        end do
+      end do
 !-----------------------------------------------------------------------
 ! check convergence
-    DO  j = 1,nsra
-      DO  ir = irmind,irc1
-        DO  lm1 = 1,lmmaxd
-          DO  lm2 = 1,lmmaxd
-            pns0(lm1,lm2,ir,j) = pns0(lm1,lm2,ir,j)-pns(lm1,lm2,ir,j)
-          END DO
-        END DO
-      END DO
-    END DO
-    ERR=0D0
-    DO  j=1,nsra
-      CALL csout(pns0(1,1,irmind,j),pns1,lmmaxd**2,irmind,irmd,ipan, ircut)
-      DO  lm1=1,lmmaxd
-        DO  lm2=1,lmmaxd
-          ERR=MAX(ERR,ABS(pns1(lm1,lm2,irc1)))
-        END DO
-      END DO
-    END DO
-    IF(t_inc%i_write>0) WRITE(1337,*) 'Born_Fred',i,ERR
+      do j = 1, nsra
+        do ir = irmind, irc1
+          do lm1 = 1, lmmaxd
+            do lm2 = 1, lmmaxd
+              pns0(lm1, lm2, ir, j) = pns0(lm1, lm2, ir, j) - &
+                pns(lm1, lm2, ir, j)
+            end do
+          end do
+        end do
+      end do
+      err = 0d0
+      do j = 1, nsra
+        call csout(pns0(1,1,irmind,j), pns1, lmmaxd**2, irmind, irmd, ipan, &
+          ircut)
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            err = max(err, abs(pns1(lm1,lm2,irc1)))
+          end do
+        end do
+      end do
+      if (t_inc%i_write>0) write (1337, *) 'Born_Fred', i, err
 !      IF(I.EQ.ICST.AND.ERR.GT.1D-3)WRITE(*,*)'NOT CONVERGENT',ERR
-    DO  j = 1,nsra
-      DO  ir = irmind,irc1
-        DO  lm1 = 1,lmmaxd
-          DO  lm2 = 1,lmmaxd
-            pns0(lm1,lm2,ir,j) = pns(lm1,lm2,ir,j)
-          END DO
-        END DO
-      END DO
-    END DO
+      do j = 1, nsra
+        do ir = irmind, irc1
+          do lm1 = 1, lmmaxd
+            do lm2 = 1, lmmaxd
+              pns0(lm1, lm2, ir, j) = pns(lm1, lm2, ir, j)
+            end do
+          end do
+        end do
+      end do
 !-----------------------------------------------------------------------
-  END DO
-ELSE
+    end do
+  else
 !-----------------------------------------------------------------------
 ! Volterra equation
-  DO  i = 0,icst
+    do i = 0, icst
 !---> set up integrands for i-th born approximation
-    IF (i == 0) THEN
-      CALL wfint0(ader,bder,pzlm,qzekdr,pzekdr,vnspll,nsra,irmind,  &
-          irmd,lmmaxd)
-    ELSE
-      CALL wfint(pns,ader,bder,qzekdr,pzekdr,vnspll,nsra,irmind, irmd,lmmaxd)
-    END IF
+      if (i==0) then
+        call wfint0(ader, bder, pzlm, qzekdr, pzekdr, vnspll, nsra, irmind, &
+          irmd, lmmaxd)
+      else
+        call wfint(pns, ader, bder, qzekdr, pzekdr, vnspll, nsra, irmind, &
+          irmd, lmmaxd)
+      end if
 !---> call integration subroutines
-    CALL csout(ader,amat,lmmaxd**2,irmind,irmd,ipan,ircut)
-    CALL csout(bder,bmat,lmmaxd**2,irmind,irmd,ipan,ircut)
-    DO  ir = irmind,irc1
-      DO  lm1 = 1,lmmaxd
-        DO  lm2 = 1,lmmaxd
-          IF(lm1 == lm2)THEN
-            amat(lm1,lm2,ir) = cone - amat(lm1,lm2,ir)
-          ELSE
-            amat(lm1,lm2,ir) = - amat(lm1,lm2,ir)
-          END IF
-        END DO
-      END DO
-    END DO
+      call csout(ader, amat, lmmaxd**2, irmind, irmd, ipan, ircut)
+      call csout(bder, bmat, lmmaxd**2, irmind, irmd, ipan, ircut)
+      do ir = irmind, irc1
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            if (lm1==lm2) then
+              amat(lm1, lm2, ir) = cone - amat(lm1, lm2, ir)
+            else
+              amat(lm1, lm2, ir) = -amat(lm1, lm2, ir)
+            end if
+          end do
+        end do
+      end do
 !---> calculate non sph. wft. in i-th born approximation
-    DO  j = 1,nsra
-      DO  ir = irmind,irc1
-        DO  lm1 = 1,lmmaxd
-          DO  lm2 = 1,lmmaxd
-            pns(lm1,lm2,ir,j) =  amat(lm1,lm2,ir)*pzlm(lm1,ir,j)  &
-                +bmat(lm1,lm2,ir)*qzlm(lm1,ir,j)
-          END DO
-        END DO
-      END DO
-    END DO
+      do j = 1, nsra
+        do ir = irmind, irc1
+          do lm1 = 1, lmmaxd
+            do lm2 = 1, lmmaxd
+              pns(lm1, lm2, ir, j) = amat(lm1, lm2, ir)*pzlm(lm1, ir, j) + &
+                bmat(lm1, lm2, ir)*qzlm(lm1, ir, j)
+            end do
+          end do
+        end do
+      end do
 !-----------------------------------------------------------------------
 ! check convergence
-    DO  j = 1,nsra
-      DO  ir = irmind,irc1
-        DO  lm1 = 1,lmmaxd
-          DO  lm2 = 1,lmmaxd
-            pns0(lm1,lm2,ir,j) = pns0(lm1,lm2,ir,j)-pns(lm1,lm2,ir,j)
-          END DO
-        END DO
-      END DO
-    END DO
-    ERR=0D0
-    DO  j=1,nsra
-      CALL csout(pns0(1,1,irmind,j),pns1,lmmaxd**2,irmind,irmd,ipan, ircut)
-      DO  lm1=1,lmmaxd
-        DO  lm2=1,lmmaxd
-          ERR=MAX(ERR,ABS(pns1(lm1,lm2,irc1)))
-        END DO
-      END DO
-    END DO
-    IF(t_inc%i_write>0) WRITE(1337,*) 'Born',i,ERR
+      do j = 1, nsra
+        do ir = irmind, irc1
+          do lm1 = 1, lmmaxd
+            do lm2 = 1, lmmaxd
+              pns0(lm1, lm2, ir, j) = pns0(lm1, lm2, ir, j) - &
+                pns(lm1, lm2, ir, j)
+            end do
+          end do
+        end do
+      end do
+      err = 0d0
+      do j = 1, nsra
+        call csout(pns0(1,1,irmind,j), pns1, lmmaxd**2, irmind, irmd, ipan, &
+          ircut)
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            err = max(err, abs(pns1(lm1,lm2,irc1)))
+          end do
+        end do
+      end do
+      if (t_inc%i_write>0) write (1337, *) 'Born', i, err
 !      IF(I.EQ.ICST.AND.ERR.GT.1D-3)WRITE(*,*)'NOT CONVERGENT',ERR
-    DO  j = 1,nsra
-      DO  ir = irmind,irc1
-        DO  lm1 = 1,lmmaxd
-          DO  lm2 = 1,lmmaxd
-            pns0(lm1,lm2,ir,j) = pns(lm1,lm2,ir,j)
-          END DO
-        END DO
-      END DO
-    END DO
+      do j = 1, nsra
+        do ir = irmind, irc1
+          do lm1 = 1, lmmaxd
+            do lm2 = 1, lmmaxd
+              pns0(lm1, lm2, ir, j) = pns(lm1, lm2, ir, j)
+            end do
+          end do
+        end do
+      end do
 !-----------------------------------------------------------------------
-  END DO
-  CALL zgeinv1(amat(1,1,irc1),ar,br,ipiv,lmmaxd)
-  DO  lm1=1,lmmaxd
-    DO  lm2=1,lmmaxd
-      DO  ir=irmind,irc1
-        ader(lm1,lm2,ir)=(0D0,0D0)
-        bder(lm1,lm2,ir)=(0D0,0D0)
-      END DO
-      DO  lm3=1,lmmaxd
-        DO  ir=irmind,irc1
-          ader(lm1,lm2,ir)=ader(lm1,lm2,ir)+amat(lm1,lm3,ir)*ar(lm3,lm2)
-          bder(lm1,lm2,ir)=bder(lm1,lm2,ir)+bmat(lm1,lm3,ir)*ar(lm3,lm2)
-        END DO
-      END DO
-    END DO
-  END DO
-  DO  lm1=1,lmmaxd
-    DO  lm2=1,lmmaxd
-      DO  ir=irmind,irc1
-        amat(lm1,lm2,ir)=ader(lm1,lm2,ir)
-        bmat(lm1,lm2,ir)=bder(lm1,lm2,ir)
-      END DO
-    END DO
-  END DO
-  DO  j = 1,nsra
-    DO  ir = irmind,irc1
-      DO  lm1 = 1,lmmaxd
-        DO  lm2 = 1,lmmaxd
-          pns(lm1,lm2,ir,j) =  amat(lm1,lm2,ir)*pzlm(lm1,ir,j)  &
-              +bmat(lm1,lm2,ir)*qzlm(lm1,ir,j)
-        END DO
-      END DO
-    END DO
-  END DO
+    end do
+    call zgeinv1(amat(1,1,irc1), ar, br, ipiv, lmmaxd)
+    do lm1 = 1, lmmaxd
+      do lm2 = 1, lmmaxd
+        do ir = irmind, irc1
+          ader(lm1, lm2, ir) = (0d0, 0d0)
+          bder(lm1, lm2, ir) = (0d0, 0d0)
+        end do
+        do lm3 = 1, lmmaxd
+          do ir = irmind, irc1
+            ader(lm1, lm2, ir) = ader(lm1, lm2, ir) + &
+              amat(lm1, lm3, ir)*ar(lm3, lm2)
+            bder(lm1, lm2, ir) = bder(lm1, lm2, ir) + &
+              bmat(lm1, lm3, ir)*ar(lm3, lm2)
+          end do
+        end do
+      end do
+    end do
+    do lm1 = 1, lmmaxd
+      do lm2 = 1, lmmaxd
+        do ir = irmind, irc1
+          amat(lm1, lm2, ir) = ader(lm1, lm2, ir)
+          bmat(lm1, lm2, ir) = bder(lm1, lm2, ir)
+        end do
+      end do
+    end do
+    do j = 1, nsra
+      do ir = irmind, irc1
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            pns(lm1, lm2, ir, j) = amat(lm1, lm2, ir)*pzlm(lm1, ir, j) + &
+              bmat(lm1, lm2, ir)*qzlm(lm1, ir, j)
+          end do
+        end do
+      end do
+    end do
 ! Volterra equation
 !-----------------------------------------------------------------------
-END IF
-DO  lm2 = 1,lmmaxd
-  efac2 = efac(lm2)
-!---> store alpha and t - matrix
-  DO  lm1 = 1,lmmaxd
-    efac1 = efac(lm1)
-    ar(lm1,lm2) = amat(lm1,lm2,irmind)
-!---> t-matrix
-    br(lm1,lm2) = bmat(lm1,lm2,irc1)*efac1*efac2/ek
-  END DO
-END DO
-!---> rescale with efac
-DO  j = 1,nsra
-  DO  lm2 = 1,lmmaxd
+  end if
+  do lm2 = 1, lmmaxd
     efac2 = efac(lm2)
-    DO  ir = irmind,irc1
-      DO  lm1 = 1,lmmaxd
-        pns(lm1,lm2,ir,j) = pns(lm1,lm2,ir,j)*efac2
-      END DO
-    END DO
-  END DO
-END DO
+!---> store alpha and t - matrix
+    do lm1 = 1, lmmaxd
+      efac1 = efac(lm1)
+      ar(lm1, lm2) = amat(lm1, lm2, irmind)
+!---> t-matrix
+      br(lm1, lm2) = bmat(lm1, lm2, irc1)*efac1*efac2/ek
+    end do
+  end do
+!---> rescale with efac
+  do j = 1, nsra
+    do lm2 = 1, lmmaxd
+      efac2 = efac(lm2)
+      do ir = irmind, irc1
+        do lm1 = 1, lmmaxd
+          pns(lm1, lm2, ir, j) = pns(lm1, lm2, ir, j)*efac2
+        end do
+      end do
+    end do
+  end do
 !      if(dreal(ek).gt.3.96d-2.and.dreal(ek).lt.3.97d-2)then
 !      if(dimag(ek).gt.0.5018d0.and.dreal(ek).lt.0.5019d0)then
 !      write(*,*)ek
@@ -299,10 +304,10 @@ END DO
 ! 250  write(*,*)ir,dreal(pns(lm1,lm1,ir,1)),dimag(pns(lm1,lm1,ir,1))
 !      endif
 !      endif
-END SUBROUTINE regns
+end subroutine
 ! ************************************************************************
 
-SUBROUTINE zgeinv1(a,u,aux,ipiv,dim)
+subroutine zgeinv1(a, u, aux, ipiv, dim)
 ! ************************************************************************
 !   - inverts a general double complex matrix A,
 !   - the result is return in U,
@@ -311,31 +316,31 @@ SUBROUTINE zgeinv1(a,u,aux,ipiv,dim)
 !   - A,U and AUX are of dimension (DIM,DIM),
 ! ------------------------------------------------------------------------
 
-REAL, INTENT(IN OUT)                     :: a
-DOUBLE COMPLEX a(dim,*, INTENT(OUT)      :: u(dim,*)
-DOUBLE COMPLEX a(dim,*, INTENT(IN OUT)   :: aux(dim,*)
-INTEGER, INTENT(IN OUT)                  :: ipiv(*)
-INTEGER, INTENT(IN)                      :: dim
+  real, intent (inout) :: a
+  double complex :: a(dim, *, intent(out) :: u(dim,*)
+  double complex :: a(dim,*,intent(in out):: aux(dim,*)
+  integer,intent(inout):: ipiv(*)
+  integer,intent(in):: dim
 
-DOUBLE COMPLEX a(dim,*)
+  double complex :: a(dim,*)
 
 !     .. PARAMETER
 
-DOUBLE COMPLEX cone
-REAL, PARAMETER :: cone=(1.d0,0.d0)
+  double complex :: cone
+  real,parameter :: cone=(1.d0,0.d0)
 
-INTEGER :: lm1,info
-EXTERNAL zcopy,zgetrs,zgetrf
+  integer :: lm1,info
+  external :: zcopy,zgetrs,zgetrf
 ! ------------------------------------------------------------------------
-CALL cinit(dim*dim,u)
-DO  lm1=1,dim
-  u(lm1,lm1) = cone
-END DO
-END DO
+  call cinit(dim*dim,u)
+  do lm1=1,dim
+    u(lm1,lm1)=cone
+  end do
+end do
 
-CALL zcopy(dim*dim,a,1,aux,1)
-CALL zgetrf(dim,dim,aux,dim,ipiv,info)
-CALL zgetrs('N',dim,dim,aux,dim,ipiv,u,dim,info)
+call zcopy(dim*dim,a,1,aux,1)
+call zgetrf(dim,dim,aux,dim,ipiv,info)
+call zgetrs('N',dim,dim,aux,dim,ipiv,u,dim,info)
 
-RETURN
-END SUBROUTINE zgeinv1
+return
+end subroutine

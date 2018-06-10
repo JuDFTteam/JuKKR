@@ -1,25 +1,25 @@
-SUBROUTINE sumupint(sum,vg,g,wg,vf,f,wf,n)
+subroutine sumupint(sum, vg, g, wg, vf, f, wf, n)
 !   ********************************************************************
 !   *                                                                  *
 !   ********************************************************************
-IMPLICIT NONE
+  implicit none
 
 
 ! Dummy arguments
-INTEGER N
-COMPLEX*16 SUM
-REAL*8 VF,VG
-COMPLEX*16 F(2,2),G(2,2)
-REAL*8 WF(2,2),WG(2,2)
+  integer :: n
+  complex *16 :: sum
+  real *8 :: vf, vg
+  complex *16 :: f(2, 2), g(2, 2)
+  real *8 :: wf(2, 2), wg(2, 2)
 
 ! Local variables
-INTEGER I,J
+  integer :: i, j
 
-sum = 0.0D0
-DO j = 1,n
-  DO i = 1,n
-    sum = sum + vg*g(i,j)*wg(i,j) + vf*f(i,j)*wf(i,j)
-  END DO
-END DO
+  sum = 0.0d0
+  do j = 1, n
+    do i = 1, n
+      sum = sum + vg*g(i, j)*wg(i, j) + vf*f(i, j)*wf(i, j)
+    end do
+  end do
 
-END SUBROUTINE sumupint
+end subroutine

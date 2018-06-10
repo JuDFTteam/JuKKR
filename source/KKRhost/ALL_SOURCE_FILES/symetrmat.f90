@@ -1,5 +1,5 @@
-SUBROUTINE symetrmat(nsym,cpref,dsymll,symunitary,matq,  &
-        iqs,matsym,lmmaxd)
+subroutine symetrmat(nsym, cpref, dsymll, symunitary, matq, iqs, matsym, &
+  lmmaxd)
 ! **********************************************************************
 ! *                                                                    *
 ! *  Symmetrising the t/G matrix (or their inverses):                  *
@@ -18,50 +18,50 @@ SUBROUTINE symetrmat(nsym,cpref,dsymll,symunitary,matq,  &
 ! *                                                                    *
 ! *                                    v.popescu, munich nov. 2004     *
 ! **********************************************************************
-      IMPLICIT NONE
+  implicit none
 !..
 !.. Parameters ..
-      DOUBLE COMPLEX CZERO,CONE
-      PARAMETER ( CZERO = (0D0,0D0), CONE = (1D0,0D0) )
+  double complex :: czero, cone
+  parameter (czero=(0d0,0d0), cone=(1d0,0d0))
 !..
 !.. Arguments ..
-      INTEGER LMMAXD,NSYM
-      INTEGER IQS(*)
-      DOUBLE COMPLEX CPREF
-      LOGICAL SYMUNITARY(*)
-      DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,*),MATSYM(LMMAXD,LMMAXD), &
-                     MATQ(LMMAXD,LMMAXD,*)
+  integer :: lmmaxd, nsym
+  integer :: iqs(*)
+  double complex :: cpref
+  logical :: symunitary(*)
+  double complex :: dsymll(lmmaxd, lmmaxd, *), matsym(lmmaxd, lmmaxd), &
+    matq(lmmaxd, lmmaxd, *)
 !..
 !.. Locals ..
-      INTEGER ISYM,L1,L2
-      CHARACTER*1 CNT
-      DOUBLE COMPLEX W1(LMMAXD,LMMAXD),TS(LMMAXD,LMMAXD)
+  integer :: isym, l1, l2
+  character (len=1) :: cnt
+  double complex :: w1(lmmaxd, lmmaxd), ts(lmmaxd, lmmaxd)
 !..
-      EXTERNAL ZCOPY,ZGEMM
+  external :: zcopy, zgemm
 !..
 
-CALL zcopy(lmmaxd*lmmaxd,matq(1,1,iqs(1)),1,ts,1)
+  call zcopy(lmmaxd*lmmaxd, matq(1,1,iqs(1)), 1, ts, 1)
 
 ! ----------------------------------------------------------------------
-DO isym = 2,nsym
-  
+  do isym = 2, nsym
+
 ! --> look if the symmetry operation is unitary / anti-unitary
-  
-  cnt = 'N'
-  IF ( .NOT.symunitary(isym) ) cnt = 'T'
-  
-  CALL zgemm('N',cnt,lmmaxd,lmmaxd,lmmaxd,cone,dsymll(1,1,isym),  &
-      lmmaxd,matq(1,1,iqs(isym)),lmmaxd,czero,w1,lmmaxd)
-  
-  CALL zgemm('N','C',lmmaxd,lmmaxd,lmmaxd,cone,w1,  &
-      lmmaxd,dsymll(1,1,isym),lmmaxd,cone,ts,lmmaxd)
-END DO
+
+    cnt = 'N'
+    if (.not. symunitary(isym)) cnt = 'T'
+
+    call zgemm('N', cnt, lmmaxd, lmmaxd, lmmaxd, cone, dsymll(1,1,isym), &
+      lmmaxd, matq(1,1,iqs(isym)), lmmaxd, czero, w1, lmmaxd)
+
+    call zgemm('N', 'C', lmmaxd, lmmaxd, lmmaxd, cone, w1, lmmaxd, &
+      dsymll(1,1,isym), lmmaxd, cone, ts, lmmaxd)
+  end do
 ! ----------------------------------------------------------------------
 
-DO l2 = 1,lmmaxd
-  DO l1 = 1,lmmaxd
-    matsym(l1,l2) = cpref * ts(l1,l2)
-  END DO
-END DO
+  do l2 = 1, lmmaxd
+    do l1 = 1, lmmaxd
+      matsym(l1, l2) = cpref*ts(l1, l2)
+    end do
+  end do
 
-END SUBROUTINE symetrmat
+end subroutine

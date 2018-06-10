@@ -1,32 +1,32 @@
 ! 19.10.95 *************************************************************
-COMPLEX*16 FUNCTION csum(n,v,iv)
+complex *16 function csum(n, v, iv)
 ! **********************************************************************
 !        sum up the first N elements of the double complex
 !        array V(*) with a stepwidth of IV
 ! ----------------------------------------------------------------------
 !.. Scalar Arguments ..
-      INTEGER IV,N
+  integer :: iv, n
 !..
 !.. Array Arguments ..
-      DOUBLE COMPLEX V(*)
+  double complex :: v(*)
 !..
 !.. Local Scalars ..
-      DOUBLE COMPLEX VSUM
-      INTEGER I,IBOT,ITOP
+  double complex :: vsum
+  integer :: i, ibot, itop
 !..
-IF (iv >= 0) THEN
-  ibot = 1
-  itop = 1 + (n-1)*iv
-  
-ELSE
-  ibot = 1 - (n-1)*iv
-  itop = 1
-END IF
+  if (iv>=0) then
+    ibot = 1
+    itop = 1 + (n-1)*iv
 
-vsum = (0D0,0D0)
-DO  i = ibot,itop,iv
-  vsum = vsum + v(i)
-END DO
-csum = vsum
-RETURN
-END FUNCTION csum
+  else
+    ibot = 1 - (n-1)*iv
+    itop = 1
+  end if
+
+  vsum = (0d0, 0d0)
+  do i = ibot, itop, iv
+    vsum = vsum + v(i)
+  end do
+  csum = vsum
+  return
+end function

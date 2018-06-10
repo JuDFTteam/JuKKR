@@ -3,180 +3,180 @@
 !> @brief Decimation method
 !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine DECIMATE(GLLKE,NAEZ,TINVBUP,TINVBDOWN,VACFLAG,FACTL,NLBASIS,NRBASIS,&
-   ALM,NDIM,LMMAXD)
+subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, &
+  nrbasis, alm, ndim, lmmaxd)
 
-   use global_variables
+  use :: global_variables
 
-   implicit none
+  implicit none
 
-   !     .. Parameters ..
-   !
-   ! *********************************************************************
-   ! * For KREL = 1 (relativistic mode)                                  *
-   ! *                                                                   *
-   ! *  NPOTD = 2 * NATYPD                                               *
-   ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-   ! *  NSPIND = 1                                                       *
-   ! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
-   ! *          function, set up in the spin-independent non-relativstic *
-   ! *          (l,m_l)-representation                                   *
-   ! *                                                                   *
-   ! *********************************************************************
-   !
-   integer, intent(in) :: ALM       !< NAEZ*LMMAXD
-   integer, intent(in) :: NDIM      !< NPRINCD*LMMAXD
-   integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
-   integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-   integer, intent(in) :: NLBASIS   !< Number of basis layers of left host (repeated units)
-   integer, intent(in) :: NRBASIS   !< Number of basis layers of right host (repeated units)
-   logical, dimension(2), intent(in) :: VACFLAG
-   double complex, dimension(LMMAXD,LMMAXD), intent(in) :: FACTL
-   double complex, dimension(LMMAXD,LMMAXD,*), intent(in) :: TINVBUP
-   double complex, dimension(LMMAXD,LMMAXD,*), intent(in) :: TINVBDOWN
-   double complex, dimension(ALM,ALM), intent(inout) :: GLLKE
-   ! .. Local Scalars
-   integer :: LDI1,LDI1T,LDI2,LDI2T,LM1,LM2,NLAYER,ICALL
-   integer :: ICHCK,IHOST,II1,II2,IL1,IL2,IP1,IP1T,IP2,IP2T,ITERMAX
-   double precision :: ERRMAX
-   ! .. Local Arrays
-   double complex, dimension(NDIM,NDIM) :: A1,AN,B1,BN,C1,CN,X1,XN
-   ! ..
-   data ICALL /0/
-   ! .. External Subroutines
-   external :: BOFM,SURFGF
-   ! .. Save statement
-   SAVE ICALL,NLAYER,ITERMAX,ERRMAX,ICHCK
-   ! .. External Functions
-   logical :: OPT
-   external :: OPT
-   ! .. Intrinsic Functions
-   intrinsic :: MOD
-   !
-   ICALL = ICALL + 1
-   !----------------------------------------------------------------------------
-   if (ICALL.EQ.1) then
-      NLAYER = NAEZ/NPRINCD
-      ! Parameters for the "decimation" technique.
-      ITERMAX = 300
-      ERRMAX = 1.0D-180
-      ICHCK = 1
-   end if
-   !----------------------------------------------------------------------------
-   if ( .NOT.VACFLAG(1) ) then
-      !-------------------------------------------------------------------------
-      ! Get the matrix B1
-      !-------------------------------------------------------------------------
-      call BOFM(1,1,B1,NDIM,GLLKE,ALM)
+!     .. Parameters ..
+!
+! *********************************************************************
+! * For KREL = 1 (relativistic mode)                                  *
+! *                                                                   *
+! *  NPOTD = 2 * NATYPD                                               *
+! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
+! *  NSPIND = 1                                                       *
+! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
+! *          function, set up in the spin-independent non-relativstic *
+! *          (l,m_l)-representation                                   *
+! *                                                                   *
+! *********************************************************************
+!
+  integer, intent (in) :: alm !< NAEZ*LMMAXD
+  integer, intent (in) :: ndim !< NPRINCD*LMMAXD
+  integer, intent (in) :: naez !< Number of atoms in unit cell
+  integer, intent (in) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
+  integer, intent (in) :: nlbasis !< Number of basis layers of left host (repeated units)
+  integer, intent (in) :: nrbasis !< Number of basis layers of right host (repeated units)
+  logical, dimension (2), intent (in) :: vacflag
+  double complex, dimension (lmmaxd, lmmaxd), intent (in) :: factl
+  double complex, dimension (lmmaxd, lmmaxd, *), intent (in) :: tinvbup
+  double complex, dimension (lmmaxd, lmmaxd, *), intent (in) :: tinvbdown
+  double complex, dimension (alm, alm), intent (inout) :: gllke
+! .. Local Scalars
+  integer :: ldi1, ldi1t, ldi2, ldi2t, lm1, lm2, nlayer, icall
+  integer :: ichck, ihost, ii1, ii2, il1, il2, ip1, ip1t, ip2, ip2t, itermax
+  double precision :: errmax
+! .. Local Arrays
+  double complex, dimension (ndim, ndim) :: a1, an, b1, bn, c1, cn, x1, xn
+! ..
+  data icall/0/
+! .. External Subroutines
+  external :: bofm, surfgf
+! .. Save statement
+  save :: icall, nlayer, itermax, errmax, ichck
+! .. External Functions
+  logical :: opt
+  external :: opt
+! .. Intrinsic Functions
+  intrinsic :: mod
+!
+  icall = icall + 1
+!----------------------------------------------------------------------------
+  if (icall==1) then
+    nlayer = naez/nprincd
+! Parameters for the "decimation" technique.
+    itermax = 300
+    errmax = 1.0d-180
+    ichck = 1
+  end if
+!----------------------------------------------------------------------------
+  if (.not. vacflag(1)) then
+!-------------------------------------------------------------------------
+! Get the matrix B1
+!-------------------------------------------------------------------------
+    call bofm(1, 1, b1, ndim, gllke, alm)
 
-      ! Now Subtract t-mat of left host
-      do IP1 = 1,NPRINCD
-         IHOST = MOD(IP1-1,NLBASIS) + 1
-         do LM1 = 1,LMMAXD
-            do LM2 = 1,LMMAXD
-               IL1 = LMMAXD* (IP1-1) + LM1
-               IL2 = LMMAXD* (IP1-1) + LM2
-               B1(IL1,IL2) = (B1(IL1,IL2)-TINVBUP(LM1,LM2,IHOST))
-            end do
-         end do
+! Now Subtract t-mat of left host
+    do ip1 = 1, nprincd
+      ihost = mod(ip1-1, nlbasis) + 1
+      do lm1 = 1, lmmaxd
+        do lm2 = 1, lmmaxd
+          il1 = lmmaxd*(ip1-1) + lm1
+          il2 = lmmaxd*(ip1-1) + lm2
+          b1(il1, il2) = (b1(il1,il2)-tinvbup(lm1,lm2,ihost))
+        end do
+      end do
+    end do
+
+    call bofm(1, 2, c1, ndim, gllke, alm)
+    call bofm(2, 1, a1, ndim, gllke, alm)
+
+! It performs the 'space decimation' iterative procedure.
+    call surfgf(ndim, a1, b1, c1, x1, itermax, errmax, ichck, lmmaxd)
+! Adds to the matrix GLLKE the elements that couples the
+! interface to the two half-spaces.
+    do ip1 = 1, nprincd
+      do ip2 = 1, nprincd
+        ii1 = ip1
+        ii2 = ip2
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            ldi1 = lmmaxd*(ip1-1) + lm1
+            il1 = lmmaxd*(ii1-1) + lm1
+            ldi2 = lmmaxd*(ip2-1) + lm2
+            il2 = lmmaxd*(ii2-1) + lm2
+            gllke(il1, il2) = gllke(il1, il2) - x1(ldi1, ldi2)
+          end do
+        end do
+      end do
+    end do
+  end if
+
+  if (.not. vacflag(2)) then
+
+!  If 'ONEBULK' is activated then it calculates the xn decimated element
+!  from the x1 element: this is just in the case of equal bulks on the
+
+    if (.not. opt('ONEBULK ')) then
+
+!----------------------------------------------------------------------
+! Get the matrix BN
+!----------------------------------------------------------------------
+      call bofm(nlayer, nlayer, bn, ndim, gllke, alm)
+
+! Now Substract t-mat right host
+! Notes : the indexing is easier like that
+      do ip1 = 1, nprincd
+        ihost = nrbasis - mod(ip1, nrbasis)
+        ihost = mod(ip1-1, nrbasis) + 1
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            il1 = lmmaxd*(ip1-1) + lm1
+            il2 = lmmaxd*(ip1-1) + lm2
+            bn(il1, il2) = (bn(il1,il2)-tinvbdown(lm1,lm2,ihost))
+          end do
+        end do
       end do
 
-      call BOFM(1,2,C1,NDIM,GLLKE,ALM)
-      call BOFM(2,1,A1,NDIM,GLLKE,ALM)
+      call bofm(nlayer, nlayer-1, an, ndim, gllke, alm)
+      call bofm(nlayer-1, nlayer, cn, ndim, gllke, alm)
 
-      ! It performs the 'space decimation' iterative procedure.
-      call SURFGF(NDIM,A1,B1,C1,X1,ITERMAX,ERRMAX,ICHCK,LMMAXD)
-      ! Adds to the matrix GLLKE the elements that couples the
-      ! interface to the two half-spaces.
-      do IP1 = 1,NPRINCD
-         do IP2 = 1,NPRINCD
-            II1 = IP1
-            II2 = IP2
-            do LM1 = 1,LMMAXD
-               do LM2 = 1,LMMAXD
-                  LDI1 = LMMAXD* (IP1-1) + LM1
-                  IL1 = LMMAXD* (II1-1) + LM1
-                  LDI2 = LMMAXD* (IP2-1) + LM2
-                  IL2 = LMMAXD* (II2-1) + LM2
-                  GLLKE(IL1,IL2) = GLLKE(IL1,IL2) - X1(LDI1,LDI2)
-               end do
+! It performs the 'space decimation' iterative procedure.
+      call surfgf(ndim, cn, bn, an, xn, itermax, errmax, ichck, lmmaxd)
+!
+    else
+!
+      do ip1 = 1, nprincd
+        do ip2 = 1, nprincd
+          ip1t = (nprincd+1) - ip2
+          ip2t = (nprincd+1) - ip1
+          do lm1 = 1, lmmaxd
+            do lm2 = 1, lmmaxd
+              ldi1 = lmmaxd*(ip1-1) + lm1
+              ldi2 = lmmaxd*(ip2-1) + lm2
+              ldi1t = lmmaxd*(ip1t-1) + lm2
+              ldi2t = lmmaxd*(ip2t-1) + lm1
+              xn(ldi1t, ldi2t) = factl(lm1, lm2)*x1(ldi1, ldi2)
             end do
-         end do
+          end do
+        end do
       end do
-   end if
-
-   if ( .NOT.VACFLAG(2) ) then
-
-      !  If 'ONEBULK' is activated then it calculates the xn decimated element
-      !  from the x1 element: this is just in the case of equal bulks on the
-
-      if ( .NOT.OPT('ONEBULK ') ) then
-
-         !----------------------------------------------------------------------
-         ! Get the matrix BN
-         !----------------------------------------------------------------------
-         call BOFM(NLAYER,NLAYER,BN,NDIM,GLLKE,ALM)
-
-         ! Now Substract t-mat right host
-         ! Notes : the indexing is easier like that
-         do IP1 = 1,NPRINCD
-            IHOST = NRBASIS - MOD(IP1,NRBASIS)
-            IHOST = MOD(IP1-1,NRBASIS) + 1
-            do LM1 = 1,LMMAXD
-               do LM2 = 1,LMMAXD
-                  IL1 = LMMAXD* (IP1-1) + LM1
-                  IL2 = LMMAXD* (IP1-1) + LM2
-                  BN(IL1,IL2) = (BN(IL1,IL2)-TINVBDOWN(LM1,LM2,IHOST))
-               end do
-            end do
-         end do
-
-         call BOFM(NLAYER,NLAYER-1,AN,NDIM,GLLKE,ALM)
-         call BOFM(NLAYER-1,NLAYER,CN,NDIM,GLLKE,ALM)
-
-         ! It performs the 'space decimation' iterative procedure.
-         call SURFGF(NDIM,CN,BN,AN,XN,ITERMAX,ERRMAX,ICHCK,LMMAXD)
-         !
-      else
-         !
-         do IP1 = 1,NPRINCD
-            do IP2 = 1,NPRINCD
-               IP1T = (NPRINCD+1) - IP2
-               IP2T = (NPRINCD+1) - IP1
-               do LM1 = 1,LMMAXD
-                  do LM2 = 1,LMMAXD
-                     LDI1 = LMMAXD* (IP1-1) + LM1
-                     LDI2 = LMMAXD* (IP2-1) + LM2
-                     LDI1T = LMMAXD* (IP1T-1) + LM2
-                     LDI2T = LMMAXD* (IP2T-1) + LM1
-                     XN(LDI1T,LDI2T) = FACTL(LM1,LM2)*X1(LDI1,LDI2)
-                  end do
-               end do
-            end do
-         end do
-      end if
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !             Added on 1.02.2000
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Adds to the matrix GLLKE the elements that couples the
-      ! interface to the two half-spaces.
-      do IP1 = 1,NPRINCD
-         do IP2 = 1,NPRINCD
-            II1 = (NLAYER-1)*NPRINCD + IP1
-            II2 = (NLAYER-1)*NPRINCD + IP2
-            do LM1 = 1,LMMAXD
-               do LM2 = 1,LMMAXD
-                  LDI1 = LMMAXD* (IP1-1) + LM1
-                  IL1 = LMMAXD* (II1-1) + LM1
-                  LDI2 = LMMAXD* (IP2-1) + LM2
-                  IL2 = LMMAXD* (II2-1) + LM2
-                  GLLKE(IL1,IL2) = GLLKE(IL1,IL2) - XN(LDI1,LDI2)
-               end do
-            end do
-         end do
+    end if
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!             Added on 1.02.2000
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Adds to the matrix GLLKE the elements that couples the
+! interface to the two half-spaces.
+    do ip1 = 1, nprincd
+      do ip2 = 1, nprincd
+        ii1 = (nlayer-1)*nprincd + ip1
+        ii2 = (nlayer-1)*nprincd + ip2
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            ldi1 = lmmaxd*(ip1-1) + lm1
+            il1 = lmmaxd*(ii1-1) + lm1
+            ldi2 = lmmaxd*(ip2-1) + lm2
+            il2 = lmmaxd*(ii2-1) + lm2
+            gllke(il1, il2) = gllke(il1, il2) - xn(ldi1, ldi2)
+          end do
+        end do
       end do
-   end if
+    end do
+  end if
 
-   return
+  return
 
-end subroutine DECIMATE
+end subroutine

@@ -8,55 +8,55 @@
 !> @note Attention : Input \f$f\f$ is destroyed !
 !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine SIMPK(F,FINT,IPAN,IRCUT,DRDI)
+subroutine simpk(f, fint, ipan, ircut, drdi)
 
-   use global_variables
+  use :: global_variables
 
-   integer, intent(in) :: IPAN !< Number of panels in non-MT-region
-   integer, dimension(0:IPAND), intent(in) :: IRCUT !< R points of panel borders
-   double precision, dimension(*), intent(in) :: DRDI !< Derivative dr/di
-   ! .. Output variables
-   double precision, intent(out) :: FINT
-   ! .. In/Out variables
-   double precision, dimension(*), intent(inout) :: F
-   ! .. Local Scalars
-   integer :: I,IEN,IP,IST,N
-   double precision :: A1,A2
+  integer, intent (in) :: ipan !< Number of panels in non-MT-region
+  integer, dimension (0:ipand), intent (in) :: ircut !< R points of panel borders
+  double precision, dimension (*), intent (in) :: drdi !< Derivative dr/di
+! .. Output variables
+  double precision, intent (out) :: fint
+! .. In/Out variables
+  double precision, dimension (*), intent (inout) :: f
+! .. Local Scalars
+  integer :: i, ien, ip, ist, n
+  double precision :: a1, a2
 
-   ! .. External Functions
-   double precision :: SSUM
-   external :: SSUM
-   !     ..
-   A1 = 4.0D0/3.0D0
-   A2 = 2.0D0/3.0D0
-   FINT = 0.0D0
-   !
-   do IP = 1,IPAN
-      !-------------------------------------------------------------------------
-      ! Loop over kinks
-      !-------------------------------------------------------------------------
-      IST = IRCUT(IP-1) + 1
-      IEN = IRCUT(IP)
-      !
-      do I = IST,IEN
-         F(I) = F(I)*DRDI(I)
-      enddo ! I
-      if (MOD(IEN-IST,2).EQ.0) then
-         FINT = FINT + (F(IST)-F(IEN))/3.0D0
-         IST = IST + 1
-         N = (IEN-IST+1)/2
-      else
-         !----------------------------------------------------------------------
-         ! Four point Lagrange integration for the first step
-         !----------------------------------------------------------------------
-         FINT = FINT + (9.0D0*F(IST)+19.0D0*F(IST+1)-5.0D0*F(IST+2)+ &
-            F(IST+3))/24.0D0 + (F(IST+1)-F(IEN))/3.0D0
-         IST = IST + 2
-         N = (IEN-IST+1)/2
-      end if
-      !-------------------------------------------------------------------------
-      ! Calculate with an extended 3-point-simpson
-      !-------------------------------------------------------------------------
-      FINT = FINT + A1*SSUM(N,F(IST),2) + A2*SSUM(N,F(IST+1),2)
-   enddo ! IP
-end subroutine SIMPK
+! .. External Functions
+  double precision :: ssum
+  external :: ssum
+!     ..
+  a1 = 4.0d0/3.0d0
+  a2 = 2.0d0/3.0d0
+  fint = 0.0d0
+!
+  do ip = 1, ipan
+!-------------------------------------------------------------------------
+! Loop over kinks
+!-------------------------------------------------------------------------
+    ist = ircut(ip-1) + 1
+    ien = ircut(ip)
+!
+    do i = ist, ien
+      f(i) = f(i)*drdi(i)
+    end do ! I
+    if (mod(ien-ist,2)==0) then
+      fint = fint + (f(ist)-f(ien))/3.0d0
+      ist = ist + 1
+      n = (ien-ist+1)/2
+    else
+!----------------------------------------------------------------------
+! Four point Lagrange integration for the first step
+!----------------------------------------------------------------------
+      fint = fint + (9.0d0*f(ist)+19.0d0*f(ist+1)-5.0d0*f(ist+2)+f(ist+3))/ &
+        24.0d0 + (f(ist+1)-f(ien))/3.0d0
+      ist = ist + 2
+      n = (ien-ist+1)/2
+    end if
+!-------------------------------------------------------------------------
+! Calculate with an extended 3-point-simpson
+!-------------------------------------------------------------------------
+    fint = fint + a1*ssum(n, f(ist), 2) + a2*ssum(n, f(ist+1), 2)
+  end do ! IP
+end subroutine

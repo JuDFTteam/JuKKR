@@ -1,12 +1,7 @@
-SUBROUTINE gfshells(icc,natomimp,nsh1,nsh2,  &
-        ijtabsym,ijtabsh,ijtabcalc,  &
-        iofgij,jofgij,nofgij,ish,jsh,  &
-        nshell,naez,natyp,noq,rbasis,bravais,  &
-        ifilimp,ratom,rclsimp,  &
-        nsymat,isymindex,rsymat,  &
-        kaoez,atomimp,  &
-        rotname,hostimp,lmaxd,lmmaxd,  &
-        naezd,natypd,natomimpd,nembd,nsheld)
+subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
+  iofgij, jofgij, nofgij, ish, jsh, nshell, naez, natyp, noq, rbasis, bravais, &
+  ifilimp, ratom, rclsimp, nsymat, isymindex, rsymat, kaoez, atomimp, rotname, &
+  hostimp, lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld)
 ! **********************************************************************
 ! *                                                                    *
 ! * This subroutine constructs mainly the index arrays                 *
@@ -15,302 +10,302 @@ SUBROUTINE gfshells(icc,natomimp,nsh1,nsh2,  &
 ! * the block I, I = 1,NSHELL(0)                                       *
 ! *                                                                    *
 ! **********************************************************************
-      use mod_types, only: t_imp
-      IMPLICIT NONE
-      INTEGER  LMAXD,LMMAXD,NAEZD,NATYPD,NATOMIMPD,NEMBD,NSHELD
+  use :: mod_types, only: t_imp
+  implicit none
+  integer :: lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld
 !..
 !.. Scalar arguments
-      INTEGER ICC,NAEZ,NATOMIMP,NATYP,NSYMAT,NOFGIJ
-      CHARACTER*40 IFILIMP
+  integer :: icc, naez, natomimp, natyp, nsymat, nofgij
+  character (len=40) :: ifilimp
 !..
 !.. Array arguments
-      CHARACTER*10 ROTNAME(64)
+  character (len=10) :: rotname(64)
 !..
-      INTEGER ATOMIMP(NATOMIMPD),HOSTIMP(0:NATYPD)
-      INTEGER ISYMINDEX(*),KAOEZ(NATYPD,NAEZD+NEMBD)
-      INTEGER NOQ(NAEZD),NSH1(*),NSH2(*),NSHELL(0:NSHELD)
-      INTEGER ISH(NSHELD,*),JSH(NSHELD,*)
-      INTEGER IJTABSYM(*),IJTABSH(*),IJTABCALC(*),IOFGIJ(*),JOFGIJ(*)
+  integer :: atomimp(natomimpd), hostimp(0:natypd)
+  integer :: isymindex(*), kaoez(natypd, naezd+nembd)
+  integer :: noq(naezd), nsh1(*), nsh2(*), nshell(0:nsheld)
+  integer :: ish(nsheld, *), jsh(nsheld, *)
+  integer :: ijtabsym(*), ijtabsh(*), ijtabcalc(*), iofgij(*), jofgij(*)
 !..
-      DOUBLE PRECISION BRAVAIS(3,3),RATOM(3,NSHELD)
-      DOUBLE PRECISION RBASIS(3,*),RCLSIMP(3,NATOMIMPD)
-      DOUBLE PRECISION RSYMAT(64,3,3)
+  double precision :: bravais(3, 3), ratom(3, nsheld)
+  double precision :: rbasis(3, *), rclsimp(3, natomimpd)
+  double precision :: rsymat(64, 3, 3)
 !.. 
 !.. Local scalars
-      INTEGER NB,I,J,POS,II,IO,NS,IN,NDIM,NSIZE,IHOST,IERR
-      CHARACTER*9 STR9
-      LOGICAL LSURF,OPT
+  integer :: nb, i, j, pos, ii, io, ns, in, ndim, nsize, ihost, ierr
+  character (len=9) :: str9
+  logical :: lsurf, opt
 !..
 !.. External subroutines
-      EXTERNAL IMPCHECK,IMPCOEFS,SHELLGEN2K,OPT
+  external :: impcheck, impcoefs, shellgen2k, opt
 
-WRITE (1337,99000)
+  write (1337, 100)
 
-nsize = natomimpd*lmmaxd
+  nsize = natomimpd*lmmaxd
 
 ! **********************************************************************
 
 ! --> construction of ratom, nsh1 and nsh2 for a self-consistent
 !     calculation
 
-IF ( .NOT. opt('VIRATOMS') ) THEN
-  nshell(0) = natyp
-ELSE
-  nshell(0) = naez
-END IF !( .not. OPT('VIRATOMS') ) THEN
+  if (.not. opt('VIRATOMS')) then
+    nshell(0) = natyp
+  else
+    nshell(0) = naez
+  end if !( .not. OPT('VIRATOMS') ) THEN
 
-IF ( nshell(0) > nsheld ) THEN
-  WRITE(6,99001) 'NSHELD',nshell(0)
-  STOP
-END IF
+  if (nshell(0)>nsheld) then
+    write (6, 110) 'NSHELD', nshell(0)
+    stop
+  end if
 
-DO i=1,nshell(0)
-  ratom(1,i) = 0.0D0
-  ratom(2,i) = 0.0D0
-  ratom(3,i) = 0.0D0
-  nshell(i) = 0
-  
-  DO j=1,naez
-    DO io=1,noq(j)
-      IF (kaoez(io,j) == i) THEN
-        nshell(i) = nshell(i) + 1
-        IF (nshell(i) == 1) THEN
-          nsh1(i) = j
-          nsh2(i) = j
-        END IF
-      END IF
-    END DO
-  END DO
-  IF ( opt('VIRATOMS') ) THEN
-    nshell(i)=1
-    nsh1(i) = i
-    nsh2(i) = i
-  END IF
-  
-  
-  
-  IF (nshell(i) == 0) THEN
-    WRITE(6,99002)
-    STOP
-  END IF
-END DO
+  do i = 1, nshell(0)
+    ratom(1, i) = 0.0d0
+    ratom(2, i) = 0.0d0
+    ratom(3, i) = 0.0d0
+    nshell(i) = 0
 
-IF ( icc == 0 ) THEN
-  WRITE(1337,99003) nshell(0)
-  RETURN
-END IF
+    do j = 1, naez
+      do io = 1, noq(j)
+        if (kaoez(io,j)==i) then
+          nshell(i) = nshell(i) + 1
+          if (nshell(i)==1) then
+            nsh1(i) = j
+            nsh2(i) = j
+          end if
+        end if
+      end do
+    end do
+    if (opt('VIRATOMS')) then
+      nshell(i) = 1
+      nsh1(i) = i
+      nsh2(i) = i
+    end if
+
+
+
+    if (nshell(i)==0) then
+      write (6, 120)
+      stop
+    end if
+  end do
+
+  if (icc==0) then
+    write (1337, 130) nshell(0)
+    return
+  end if
 
 !      end of simple SCF-calculation part.
 ! **********************************************************************
 
 !heck if we are in surface mode
 
-lsurf = .false.
-IF ( bravais(1,3) == 0D0 .AND. bravais(2,3) == 0D0 .AND.  &
-    bravais(3,3) == 0D0 ) lsurf = .true.
-ndim = 3
-IF (lsurf) ndim = 2
+  lsurf = .false.
+  if (bravais(1,3)==0d0 .and. bravais(2,3)==0d0 .and. bravais(3,3)==0d0) &
+    lsurf = .true.
+  ndim = 3
+  if (lsurf) ndim = 2
 
 ! **********************************************************************
 !      NATOMIMP=0   ! BUG: This initialization breaks the shell generation for
 !                   ! ICC=-1, which is set by option XCPL.  B. Zimmermann
 
-IF (icc < 0) THEN
-  
+  if (icc<0) then
+
 ! --->  ICC.LT.1 all shells are (should be) prepared
-  
-  WRITE(1337,99011) natomimp
-ELSE
-  
+
+    write (1337, 210) natomimp
+  else
+
 ! --> read-in the cluster coordinates from an external file
-  
-  REWIND 25
-  READ (25,FMT=*) natomimp
-  
-  IF (natomimp > natomimpd ) THEN
-    WRITE(6,99001) 'NATOMIMPD',natomimp
-    STOP
-  END IF
-  WRITE(1337,99004) ifilimp,natomimp
-  
-  DO i=1,natomimp
-    READ (25,FMT=*) (rclsimp(j,i),j=1,3),atomimp(i)
-    atomimp(i) = atomimp(i) + icc - 1
-  END DO
-  
-  IF (opt('GREENIMP') .OR. opt('OPERATOR')) THEN
-    ihost=0
-    DO  i=1,natypd
-      DO j=1,natomimp
-        IF (atomimp(j) == i) THEN
-          ihost=ihost+1
-          hostimp(ihost)=atomimp(j)
-          CYCLE
-        END IF
-      END DO
-    END DO
-    
+
+    rewind 25
+    read (25, fmt=*) natomimp
+
+    if (natomimp>natomimpd) then
+      write (6, 110) 'NATOMIMPD', natomimp
+      stop
+    end if
+    write (1337, 140) ifilimp, natomimp
+
+    do i = 1, natomimp
+      read (25, fmt=*)(rclsimp(j,i), j=1, 3), atomimp(i)
+      atomimp(i) = atomimp(i) + icc - 1
+    end do
+
+    if (opt('GREENIMP') .or. opt('OPERATOR')) then
+      ihost = 0
+      do i = 1, natypd
+        do j = 1, natomimp
+          if (atomimp(j)==i) then
+            ihost = ihost + 1
+            hostimp(ihost) = atomimp(j)
+            cycle
+          end if
+        end do
+      end do
+
 ! save stuff to t_imp for later use
-    t_imp%ihost = ihost
-    t_imp%natomimp = natomimp
-    allocate(t_imp%hostimp(ihost), stat=ierr)
-    IF(ierr/=0) STOP 'Error allocating t_imp%HOSTIMP'
-    t_imp%hostimp(1:ihost) = hostimp(1:ihost)
-    allocate(t_imp%atomimp(natomimp), stat=ierr)
-    IF(ierr/=0) STOP 'Error allocating t_imp%ATOMIMP'
-    t_imp%atomimp(1:natomimp) = atomimp(1:natomimp)
-    
-  END IF!GREENIMP
-  
-END IF ! ICC>=0
+      t_imp%ihost = ihost
+      t_imp%natomimp = natomimp
+      allocate (t_imp%hostimp(ihost), stat=ierr)
+      if (ierr/=0) stop 'Error allocating t_imp%HOSTIMP'
+      t_imp%hostimp(1:ihost) = hostimp(1:ihost)
+      allocate (t_imp%atomimp(natomimp), stat=ierr)
+      if (ierr/=0) stop 'Error allocating t_imp%ATOMIMP'
+      t_imp%atomimp(1:natomimp) = atomimp(1:natomimp)
+
+    end if !GREENIMP
+
+  end if ! ICC>=0
 ! **********************************************************************
 
-CALL impcheck(atomimp,natomimp,naez,rclsimp,rbasis,bravais,ndim)
+  call impcheck(atomimp, natomimp, naez, rclsimp, rbasis, bravais, ndim)
 
 ! **********************************************************************
-IF ( icc > 0 ) THEN
-  WRITE(1337,99005)
-  
+  if (icc>0) then
+    write (1337, 150)
+
 ! --> set up the number of all (I,J)-pairs to be looked for,
 !     avoid considering again the diagonal elements
-  
-  nofgij = 0
-  DO i = 1,natomimp
-    nb = (i-1)*natomimp
-    DO j = 1,natomimp
-      ijtabcalc(nb+j) = 0
-    END DO
-    IF ( atomimp(i) >= 0 ) THEN
-      DO j = 1,natomimp
-        IF ( ( atomimp(j) >= 0 ).AND.( i /= j ) ) THEN
-          nofgij = nofgij + 1
-          IF ( nofgij > natomimpd*natomimpd ) THEN
-            WRITE(6,99001) 'NATOMIMPD',nofgij/natomimp
-            STOP
-          END IF
-          iofgij(nofgij) = i
-          jofgij(nofgij) = j
-          ijtabcalc(nb+j) = 1
-        END IF
-      END DO
-    END IF
-  END DO
-END IF
+
+    nofgij = 0
+    do i = 1, natomimp
+      nb = (i-1)*natomimp
+      do j = 1, natomimp
+        ijtabcalc(nb+j) = 0
+      end do
+      if (atomimp(i)>=0) then
+        do j = 1, natomimp
+          if ((atomimp(j)>=0) .and. (i/=j)) then
+            nofgij = nofgij + 1
+            if (nofgij>natomimpd*natomimpd) then
+              write (6, 110) 'NATOMIMPD', nofgij/natomimp
+              stop
+            end if
+            iofgij(nofgij) = i
+            jofgij(nofgij) = j
+            ijtabcalc(nb+j) = 1
+          end if
+        end do
+      end if
+    end do
+  end if
 ! **********************************************************************
 
-CALL shellgen2k(icc,natomimp,rclsimp(1,1),atomimp(1), nofgij,iofgij,jofgij,  &
-    nsymat,rsymat,isymindex,rotname, nshell,ratom(1,1),nsh1,nsh2,ish,jsh,  &
-    ijtabsym,ijtabsh,ijtabcalc,2,nsheld)
+  call shellgen2k(icc, natomimp, rclsimp(1,1), atomimp(1), nofgij, iofgij, &
+    jofgij, nsymat, rsymat, isymindex, rotname, nshell, ratom(1,1), nsh1, &
+    nsh2, ish, jsh, ijtabsym, ijtabsh, ijtabcalc, 2, nsheld)
 
 ! **********************************************************************
 
 ! --> now write out the impurity.coefs file for the impurity calculation
 !                                                         n.papanikolaou
 
-IF ( icc > 0 .OR. opt('KKRFLEX '))  &
-    CALL impcoefs(natomimp,naez,atomimp,rclsimp,nshell,  &
-    nsh1,nsh2,ratom,nsymat,isymindex,rotname, hostimp,natypd,lmaxd,nsheld,nsize)
+  if (icc>0 .or. opt('KKRFLEX ')) call impcoefs(natomimp, naez, atomimp, &
+    rclsimp, nshell, nsh1, nsh2, ratom, nsymat, isymindex, rotname, hostimp, &
+    natypd, lmaxd, nsheld, nsize)
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-WRITE(1337,99003) nshell(0)
-WRITE(1337,99006)
-nb = MAX(natyp,naez)
-DO ns = 1,nshell(0)
-  IF ( ns == nb+1 ) WRITE(1337,99012)
-  IF ( ns <= nb ) THEN
-    CALL setpairstr(nsh1(ns),nsh2(ns),str9)
-    WRITE(1337,99007) ns,nsh1(ns),nsh2(ns),(ratom(ii,ns),ii=1,3),  &
-        SQRT(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns)**2), str9
-  ELSE
-    WRITE(1337,99008) ns,nsh1(ns),nsh2(ns),(ratom(ii,ns),ii=1,3),  &
-        SQRT(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns)**2)
-    io = MIN(2,nshell(ns))
-    DO i = 1,io
-      CALL setpairstr(ish(ns,i),jsh(ns,i),str9)
-      WRITE(1337,'(A9,$)') str9
-    END DO
-    WRITE(1337,*)
-    pos = (nshell(ns)+1)/2
-    DO i = 2,pos
-      io = (i-1)*2
-      in = MIN(2,nshell(ns)-io)
-      WRITE(1337,99009)
-      DO j = 1,in
-        CALL setpairstr(ish(ns,io+j),jsh(ns,io+j),str9)
-        WRITE(1337,'(A9,$)') str9
-      END DO
-      WRITE(1337,*)
-    END DO
-  END IF
-END DO
-WRITE(1337,'(6X,72(1H-))')
-nb = 0
-DO ns=1,nshell(0)
-  nb = nb + nshell(ns)
-END DO
-WRITE(1337,99010) nb
+  write (1337, 130) nshell(0)
+  write (1337, 160)
+  nb = max(natyp, naez)
+  do ns = 1, nshell(0)
+    if (ns==nb+1) write (1337, 220)
+    if (ns<=nb) then
+      call setpairstr(nsh1(ns), nsh2(ns), str9)
+      write (1337, 170) ns, nsh1(ns), nsh2(ns), (ratom(ii,ns), ii=1, 3), &
+        sqrt(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns)**2), str9
+    else
+      write (1337, 180) ns, nsh1(ns), nsh2(ns), (ratom(ii,ns), ii=1, 3), &
+        sqrt(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns)**2)
+      io = min(2, nshell(ns))
+      do i = 1, io
+        call setpairstr(ish(ns,i), jsh(ns,i), str9)
+        write (1337, '(A9,$)') str9
+      end do
+      write (1337, *)
+      pos = (nshell(ns)+1)/2
+      do i = 2, pos
+        io = (i-1)*2
+        in = min(2, nshell(ns)-io)
+        write (1337, 190)
+        do j = 1, in
+          call setpairstr(ish(ns,io+j), jsh(ns,io+j), str9)
+          write (1337, '(A9,$)') str9
+        end do
+        write (1337, *)
+      end do
+    end if
+  end do
+  write (1337, '(6X,72(1H-))')
+  nb = 0
+  do ns = 1, nshell(0)
+    nb = nb + nshell(ns)
+  end do
+  write (1337, 200) nb
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
 ! ----------------------------------------------------------------------
-99000 FORMAT(5X,"< GFSHELLS > : setting up indices of the GF blocks",/)
-99001 FORMAT(6X,"Dimension ERROR: please increase the global parameter",  &
-    /,6X,a," to a value >=",i5,/)
-99002 FORMAT(6X,"ERROR: there are some inconsistencies in your input",/,  &
-    13X,"not all atoms defined by NATYP have been found",/)
-99003 FORMAT(8X,"Different shells for GF calculation : ",i3,/)
-99004 FORMAT(8X,"Reading in cluster impurity sites from file",/,  &
-    12X,"file name        : ",a,/,12X,"atoms in cluster : ",i3)
-99005 FORMAT(8X, "Preparing indexing for impurity GF",/,11X,  &
-    "- unsymmetrised GF is written out (v. 20.09.2001)",/,11X,  &
-    "- files that will be created: impurity.coefs",/,41X,  &
-    "intercell_ref",/,41X,"green",/)
-99006 FORMAT(6X,72(1H-),/,6X,"shell|"," IQ ",  &
-    " JQ"," | ",10X,"vec R_IJ ",11X,"R_IJ   | equiv. pairs",/, 6X,72(1H-))
-99007 FORMAT(5X,i5," |",i3,1X,i3," | ",3F9.4,f9.5,1X,"|",a9)
-99008 FORMAT(5X,i5," |",i3,1X,i3," | ",3F9.4,f9.5,1X,"|",$)
-99009 FORMAT(5X,5X," |",7X," | ",27X,9X,1X,"|",$)
-99010 FORMAT(8X,"Number of block elements to be calculated : ",i3,/)
-99011 FORMAT(8X,"Setting pairs for task-defined cluster sites ",  &
-    "and connections",/, 12X,"atoms in cluster : ",i3)
-99012 FORMAT(6X,72(1H:),/,  &
-    22X,"(impurity) cluster related data/indexing",/, 6X,72(1H:))
+100 format (5x, '< GFSHELLS > : setting up indices of the GF blocks', /)
+110 format (6x, 'Dimension ERROR: please increase the global parameter', /, &
+    6x, a, ' to a value >=', i5, /)
+120 format (6x, 'ERROR: there are some inconsistencies in your input', /, 13x, &
+    'not all atoms defined by NATYP have been found', /)
+130 format (8x, 'Different shells for GF calculation : ', i3, /)
+140 format (8x, 'Reading in cluster impurity sites from file', /, 12x, &
+    'file name        : ', a, /, 12x, 'atoms in cluster : ', i3)
+150 format (8x, 'Preparing indexing for impurity GF', /, 11x, &
+    '- unsymmetrised GF is written out (v. 20.09.2001)', /, 11x, &
+    '- files that will be created: impurity.coefs', /, 41x, 'intercell_ref', &
+    /, 41x, 'green', /)
+160 format (6x, 72('-'), /, 6x, 'shell|', ' IQ ', ' JQ', ' | ', 10x, &
+    'vec R_IJ ', 11x, 'R_IJ   | equiv. pairs', /, 6x, 72('-'))
+170 format (5x, i5, ' |', i3, 1x, i3, ' | ', 3f9.4, f9.5, 1x, '|', a9)
+180 format (5x, i5, ' |', i3, 1x, i3, ' | ', 3f9.4, f9.5, 1x, '|', $)
+190 format (5x, 5x, ' |', 7x, ' | ', 27x, 9x, 1x, '|', $)
+200 format (8x, 'Number of block elements to be calculated : ', i3, /)
+210 format (8x, 'Setting pairs for task-defined cluster sites ', &
+    'and connections', /, 12x, 'atoms in cluster : ', i3)
+220 format (6x, 72(':'), /, 22x, '(impurity) cluster related data/indexing', &
+    /, 6x, 72(':'))
 
-END SUBROUTINE gfshells
+end subroutine
 ! **********************************************************************
 
-SUBROUTINE setpairstr(i,j,str9)
-      IMPLICIT NONE
-      CHARACTER*9 STR9,STRD
-      INTEGER I,J,L,LSTR
-      CHARACTER*20 FMT1
+subroutine setpairstr(i, j, str9)
+  implicit none
+  character (len=9) :: str9, strd
+  integer :: i, j, l, lstr
+  character (len=20) :: fmt1
 !     ..
-fmt1 = '("(",I'
-fmt1 = fmt1(1:6)//'1'
-lstr = 4
-IF ( i >= 10 ) THEN
-  fmt1 = fmt1(1:6)//'2'
-  lstr = lstr + 1
-  IF (i >= 100 ) THEN
-    fmt1 = fmt1(1:6)//'3'
+  fmt1 = '("(",I'
+  fmt1 = fmt1(1:6) // '1'
+  lstr = 4
+  if (i>=10) then
+    fmt1 = fmt1(1:6) // '2'
     lstr = lstr + 1
-  END IF
-END IF
-fmt1 = fmt1(1:7)//',",",I'
-fmt1 = fmt1(1:13)//'1'
-lstr = lstr + 1
-IF ( j >= 10 ) THEN
-  fmt1 = fmt1(1:13)//'2'
+    if (i>=100) then
+      fmt1 = fmt1(1:6) // '3'
+      lstr = lstr + 1
+    end if
+  end if
+  fmt1 = fmt1(1:7) // ',",",I'
+  fmt1 = fmt1(1:13) // '1'
   lstr = lstr + 1
-  IF ( j >= 100 ) THEN
-    fmt1 = fmt1(1:13)//'3'
+  if (j>=10) then
+    fmt1 = fmt1(1:13) // '2'
     lstr = lstr + 1
-  END IF
-END IF
-fmt1 = fmt1(1:14)//',")")'
-WRITE(strd,fmt1) i,j
-DO l = 1,9-lstr
-  str9(l:l) = ' '
-END DO
-str9 = str9(1:9-lstr)//strd(1:lstr)
-END SUBROUTINE setpairstr
+    if (j>=100) then
+      fmt1 = fmt1(1:13) // '3'
+      lstr = lstr + 1
+    end if
+  end if
+  fmt1 = fmt1(1:14) // ',")")'
+  write (strd, fmt1) i, j
+  do l = 1, 9 - lstr
+    str9(l:l) = ' '
+  end do
+  str9 = str9(1:9-lstr) // strd(1:lstr)
+end subroutine
 ! **********************************************************************

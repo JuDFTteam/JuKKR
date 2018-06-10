@@ -24,314 +24,323 @@
 !>
 !> - Jonathan Chico Feb. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NLAYERS,NATYP,V,ZAT,R,IRWS,IRCUT,   &
-   IPAN,KSHAPE,NOQ,KAOEZ,IQAT,CONC,CATOM,ICC,HOSTIMP,NLBASIS,NLEFT,NRBASIS,      &
-   NRIGHT,CMOMHOST,CHRGNT,VINTERS,IRM,NAEZ,LMPOT,NPOTD,NEMBD1)
+subroutine vinterface(cmom, cminst, lpot, nspin, nlayers, natyp, v, zat, r, &
+  irws, ircut, ipan, kshape, noq, kaoez, iqat, conc, catom, icc, hostimp, &
+  nlbasis, nleft, nrbasis, nright, cmomhost, chrgnt, vinters, irm, naez, &
+  lmpot, npotd, nembd1)
 
-   use Constants
-   use global_variables
+  use :: constants
+  use :: global_variables
 
-   implicit none
+  implicit none
 
-   ! .. Input variables ..
-   integer, intent(in) :: ICC    !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-   integer, intent(in) :: IRM    !< Maximum number of radial points
-   integer, intent(in) :: LPOT   !< Maximum l component in potential expansion
-   integer, intent(in) :: NAEZ   !< Number of atoms in unit cell
-   integer, intent(in) :: LMPOT  !< (LPOT+1)**2
-   integer, intent(in) :: NSPIN  !< Counter for spin directions
-   integer, intent(in) :: NATYP  !< Number of kinds of atoms in unit cell
-   integer, intent(in) :: NPOTD  !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-   integer, intent(in) :: NLEFT  !< Number of repeated basis for left host to get converged electrostatic potentials
-   integer, intent(in) :: NEMBD1 !< NEMB+1
-   integer, intent(in) :: NRIGHT !< Number of repeated basis for right host to get converged electrostatic potentials
-   integer, intent(in) :: KSHAPE !< Exact treatment of WS cell
-   integer, intent(in) :: NLAYERS
-   integer, intent(in) :: NLBASIS   !< Number of basis layers of left host (repeated units)
-   integer, intent(in) :: NRBASIS   !< Number of basis layers of right host (repeated units)
-   double precision, intent(in) :: CHRGNT
-   integer, dimension(NAEZ), intent(in)      :: NOQ    !< Number of diff. atom types located
-   integer, dimension(NATYP), intent(in)     :: IRWS   !< R point at WS radius
-   integer, dimension(NATYP), intent(in)     :: IPAN   !< Number of panels in non-MT-region
-   integer, dimension(NATYP), intent(in)     :: IQAT   !< The site on which an atom is located on a given site
-   integer, dimension(0:NATYP), intent(in)   :: HOSTIMP
-   integer, dimension(0:IPAND,NATYP), intent(in)         :: IRCUT    !< R points of panel borders
-   integer, dimension(NATYP,NAEZ+NEMBD1-1), intent(in)   :: KAOEZ    !< Kind of atom at site in elem. cell
-   double precision, dimension(NATYP), intent(in) :: ZAT    !< Nuclear charge
-   double precision, dimension(NATYP), intent(in) :: CONC   !< Concentration of a given atom
-   double precision, dimension(NATYP), intent(in) :: CATOM
-   double precision, dimension(IRM,NATYP), intent(in)    :: R        !< Radial mesh ( in units a Bohr)
-   double precision, dimension(LMPOT,NATYP), intent(in)  :: CMOM     !< LM moment of total charge
-   double precision, dimension(LMPOT,NATYP), intent(in)  :: CMINST   !< charge moment of interstitial
-   double precision, dimension(LMPOT,NEMBD1), intent(in) :: CMOMHOST !< Charge moments of each atom of the (left/right) host
-   ! .. In/out variables
-   double precision, dimension(IRM,LMPOT,NPOTD), intent(inout) :: V
+! .. Input variables ..
+  integer, intent (in) :: icc !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+  integer, intent (in) :: irm !< Maximum number of radial points
+  integer, intent (in) :: lpot !< Maximum l component in potential expansion
+  integer, intent (in) :: naez !< Number of atoms in unit cell
+  integer, intent (in) :: lmpot !< (LPOT+1)**2
+  integer, intent (in) :: nspin !< Counter for spin directions
+  integer, intent (in) :: natyp !< Number of kinds of atoms in unit cell
+  integer, intent (in) :: npotd !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+  integer, intent (in) :: nleft !< Number of repeated basis for left host to get converged electrostatic potentials
+  integer, intent (in) :: nembd1 !< NEMB+1
+  integer, intent (in) :: nright !< Number of repeated basis for right host to get converged electrostatic potentials
+  integer, intent (in) :: kshape !< Exact treatment of WS cell
+  integer, intent (in) :: nlayers
+  integer, intent (in) :: nlbasis !< Number of basis layers of left host (repeated units)
+  integer, intent (in) :: nrbasis !< Number of basis layers of right host (repeated units)
+  double precision, intent (in) :: chrgnt
+  integer, dimension (naez), intent (in) :: noq !< Number of diff. atom types located
+  integer, dimension (natyp), intent (in) :: irws !< R point at WS radius
+  integer, dimension (natyp), intent (in) :: ipan !< Number of panels in non-MT-region
+  integer, dimension (natyp), intent (in) :: iqat !< The site on which an atom is located on a given site
+  integer, dimension (0:natyp), intent (in) :: hostimp
+  integer, dimension (0:ipand, natyp), intent (in) :: ircut !< R points of panel borders
+  integer, dimension (natyp, naez+nembd1-1), intent (in) :: kaoez !< Kind of atom at site in elem. cell
+  double precision, dimension (natyp), intent (in) :: zat !< Nuclear charge
+  double precision, dimension (natyp), intent (in) :: conc !< Concentration of a given atom
+  double precision, dimension (natyp), intent (in) :: catom
+  double precision, dimension (irm, natyp), intent (in) :: r !< Radial mesh ( in units a Bohr)
+  double precision, dimension (lmpot, natyp), intent (in) :: cmom !< LM moment of total charge
+  double precision, dimension (lmpot, natyp), intent (in) :: cminst !< charge moment of interstitial
+  double precision, dimension (lmpot, nembd1), intent (in) :: cmomhost !< Charge moments of each atom of the (left/right) host
+! .. In/out variables
+  double precision, dimension (irm, lmpot, npotd), intent (inout) :: v
 
-   ! .. Local variables
-   integer :: ILEFT,IRIGHT
-   integer :: I,IATOM,IB,IH1,ILAY1,ILAY2,IO2
-   integer :: IPOT,IRS1,ISPIN,IT1,IT2,L,LM,LM2,M
-   integer :: LRECAMAD,IREC,NLEFTOFF,NRIGHTOFF,NLEFTALL,NRIGHTALL
-   double precision :: CM1,FPI
-   logical :: OPT,TEST,LREAD
-   double precision, dimension(LMPOT)  :: AC
-   double precision, dimension(LMPOT)  :: CM
-   double precision, dimension(2)      :: CHARGE
-   double precision, dimension(NAEZ)   :: MONOPOL
-   double precision, dimension(LMPOT,LMPOT)  :: AVMAD
-   double precision, dimension(LMPOT,NAEZ)   :: VINTERS
-   ! .. Intrinsic Functions ..
-   intrinsic ATAN,SQRT
-   ! .. External Functions/Subroutines
-   external OPT,TEST
+! .. Local variables
+  integer :: ileft, iright
+  integer :: i, iatom, ib, ih1, ilay1, ilay2, io2
+  integer :: ipot, irs1, ispin, it1, it2, l, lm, lm2, m
+  integer :: lrecamad, irec, nleftoff, nrightoff, nleftall, nrightall
+  double precision :: cm1, fpi
+  logical :: opt, test, lread
+  double precision, dimension (lmpot) :: ac
+  double precision, dimension (lmpot) :: cm
+  double precision, dimension (2) :: charge
+  double precision, dimension (naez) :: monopol
+  double precision, dimension (lmpot, lmpot) :: avmad
+  double precision, dimension (lmpot, naez) :: vinters
+! .. Intrinsic Functions ..
+  intrinsic :: atan, sqrt
+! .. External Functions/Subroutines
+  external :: opt, test
 
-   if(TEST('flow    ')) write (1337,*) '>>>>>> Vinterface'
+  if (test('flow    ')) write (1337, *) '>>>>>> Vinterface'
 
-   inquire(FILE='avmad.unformatted',EXIST=LREAD) ! ewald2d
+  inquire (file='avmad.unformatted', exist=lread) ! ewald2d
 
-   if (LREAD) then
-      LRECAMAD = WLENGTH*2*LMPOT*LMPOT
-      open (69,ACCESS='direct',RECL=LRECAMAD,FILE='avmad.unformatted',FORM='unformatted')
-   else
-      LRECAMAD = WLENGTH*2*LMPOT*LMPOT + WLENGTH*2*LMPOT
-      open (69,ACCESS='direct',RECL=LRECAMAD,FILE='abvmad.unformatted',FORM='unformatted')
-   endif
+  if (lread) then
+    lrecamad = wlength*2*lmpot*lmpot
+    open (69, access='direct', recl=lrecamad, file='avmad.unformatted', &
+      form='unformatted')
+  else
+    lrecamad = wlength*2*lmpot*lmpot + wlength*2*lmpot
+    open (69, access='direct', recl=lrecamad, file='abvmad.unformatted', &
+      form='unformatted')
+  end if
 
-   write(1337,FMT=99001)
-   write(1337,FMT=99002)
+  write (1337, fmt=100)
+  write (1337, fmt=110)
 
-   FPI = 4.D0*PI
+  fpi = 4.d0*pi
 
-   if ( OPT('DECIMATE') ) then
-      !-------------------------------------------------------------------------
-      ! Setup the charges to put in the ghost layers in the case of
-      ! decimation technique to achieve charge neutrality
-      !-------------------------------------------------------------------------
-      CHARGE(1) = -CHRGNT/(2.D0*SQRT(FPI))
-      CHARGE(2) = -CHRGNT/(2.D0*SQRT(FPI))
-      !
-      NLEFTOFF = NLAYERS * NLAYERS                     ! record offsets
-      NRIGHTOFF = NLEFTOFF + NLAYERS * NLEFT * NLBASIS ! left and right
-      NLEFTALL = NLEFT * NLBASIS
-      NRIGHTALL = NRIGHT * NRBASIS
-   end if
-   !----------------------------------------------------------------------------
-   !                   START CALCULATION IN THE LAYERS
-   !----------------------------------------------------------------------------
-   !----------------------------------------------------------------------------
-   ! Loop over atoms in slab
-   !----------------------------------------------------------------------------
-   !
-   do IT1 = 1,NATYP
-      !-------------------------------------------------------------------------
-      ! Take a site occupied by IT1
-      !-------------------------------------------------------------------------
-      ILAY1 = IQAT(IT1)
-      !
-      if ( KSHAPE.NE.0 ) then
-         IRS1 = IRCUT(IPAN(IT1),IT1)
-      else
-         IRS1 = IRWS(IT1)
+  if (opt('DECIMATE')) then
+!-------------------------------------------------------------------------
+! Setup the charges to put in the ghost layers in the case of
+! decimation technique to achieve charge neutrality
+!-------------------------------------------------------------------------
+    charge(1) = -chrgnt/(2.d0*sqrt(fpi))
+    charge(2) = -chrgnt/(2.d0*sqrt(fpi))
+!
+    nleftoff = nlayers*nlayers ! record offsets
+    nrightoff = nleftoff + nlayers*nleft*nlbasis ! left and right
+    nleftall = nleft*nlbasis
+    nrightall = nright*nrbasis
+  end if
+!----------------------------------------------------------------------------
+!                   START CALCULATION IN THE LAYERS
+!----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
+! Loop over atoms in slab
+!----------------------------------------------------------------------------
+!
+  do it1 = 1, natyp
+!-------------------------------------------------------------------------
+! Take a site occupied by IT1
+!-------------------------------------------------------------------------
+    ilay1 = iqat(it1)
+!
+    if (kshape/=0) then
+      irs1 = ircut(ipan(it1), it1)
+    else
+      irs1 = irws(it1)
+    end if
+!
+    do lm = 1, lmpot
+      ac(lm) = 0.d0
+    end do
+!-------------------------------------------------------------------------
+! 1.  Summation in all layers in the slab
+!-------------------------------------------------------------------------
+    do ilay2 = 1, nlayers
+      irec = ilay2 + nlayers*(ilay1-1)
+      read (69, rec=irec) avmad
+
+!----------------------------------------------------------------------
+! Keep the monopole term -- Hoshino is doing (SMONOPOL(I) -SMONOPOL(0))
+!----------------------------------------------------------------------
+      if (ilay1==ilay2) monopol(ilay1) = avmad(1, 1)
+!----------------------------------------------------------------------
+! Loop over all occupants of site ILAY2
+!----------------------------------------------------------------------
+      do io2 = 1, noq(ilay2)
+        it2 = kaoez(io2, ilay2)
+!
+        do lm = 1, lmpot
+          cm(lm) = cmom(lm, it2)
+!----------------------------------------------------------------
+! Add contribution of interstial in case of shapes
+!----------------------------------------------------------------
+          if (kshape/=0) cm(lm) = cm(lm) + cminst(lm, it2)
+        end do
+        cm(1) = cm(1) - zat(it2)/sqrt(fpi)
+!
+        do lm = 1, lmpot
+          do lm2 = 1, lmpot
+            ac(lm) = ac(lm) + avmad(lm, lm2)*cm(lm2)*conc(it2)
+          end do
+        end do
+      end do
+!----------------------------------------------------------------------
+! Loop over all occupants of site ILAY2
+!----------------------------------------------------------------------
+    end do ! ILAY2 loop in all interface planes
+!-------------------------------------------------------------------------
+    do ilay2 = 1, nlayers
+!----------------------------------------------------------------------
+! Loop over all occupants of site ILAY2
+!----------------------------------------------------------------------
+      do io2 = 1, noq(ilay2)
+        it2 = kaoez(io2, ilay2)
+!
+        cm1 = cmom(1, it2)
+        if (kshape/=0) cm1 = cm1 + cminst(1, it2)
+!
+        cm1 = cm1 - zat(it2)/sqrt(fpi)
+        ac(1) = ac(1) - monopol(ilay1)*cm1*conc(it2)
+!
+      end do
+!----------------------------------------------------------------------
+! Loop over all occupants of site ILAY2
+!----------------------------------------------------------------------
+    end do
+!-------------------------------------------------------------------------
+! Correction: charge neutrality is imposed (see P. Lang)
+!-------------------------------------------------------------------------
+    if (opt('DECIMATE')) then
+!----------------------------------------------------------------------
+! 2.  Summation in the LEFT bulk side
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! Loop over all occupants of LEFT host
+!----------------------------------------------------------------------
+      ileft = 0
+      do ih1 = 1, nleft
+        do ib = 1, nlbasis
+          ileft = ileft + 1
+          irec = ileft + nleftall*(ilay1-1) + nleftoff
+          read (69, rec=irec) avmad
+!
+          iatom = ib
+          do lm = 1, lmpot
+            do lm2 = 1, lmpot
+              ac(lm) = ac(lm) + avmad(lm, lm2)*cmomhost(lm2, iatom)
+            end do
+          end do
+!
+          if ((ih1==1) .and. (ib==1)) then
+            ac(1) = ac(1) + (avmad(1,1)-monopol(ilay1))*charge(1)
+          end if
+        end do
+      end do
+!----------------------------------------------------------------------
+      if (ileft/=nleftall) then
+        write (6, *) ' < VINTERFACE > : index error ', &
+          'ILEFT <> NLEFT*NLBASIS'
+        stop
       end if
-      !
-      do LM = 1,LMPOT
-         AC(LM) = 0.D0
+!----------------------------------------------------------------------
+! 3.  Summation in the RIGHT bulk side
+!----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! Loop over all occupants of RIGHT host
+!----------------------------------------------------------------------
+      iright = 0
+      do ih1 = 1, nright
+        do ib = 1, nrbasis
+          iright = iright + 1
+          irec = iright + nrightall*(ilay1-1) + nrightoff
+          read (69, rec=irec) avmad
+!
+          iatom = nlbasis + ib
+          do lm = 1, lmpot
+            do lm2 = 1, lmpot
+              ac(lm) = ac(lm) + avmad(lm, lm2)*cmomhost(lm2, iatom)
+            end do
+          end do
+!
+          if ((ih1==1) .and. (ib==1)) then
+            ac(1) = ac(1) + (avmad(1,1)-monopol(ilay1))*charge(2)
+          end if
+        end do
       end do
-      !-------------------------------------------------------------------------
-      ! 1.  Summation in all layers in the slab
-      !-------------------------------------------------------------------------
-      do ILAY2 = 1,NLAYERS
-         IREC = ILAY2 + NLAYERS*(ILAY1-1)
-         read(69,REC=IREC) AVMAD
-
-         !----------------------------------------------------------------------
-         ! Keep the monopole term -- Hoshino is doing (SMONOPOL(I) -SMONOPOL(0))
-         !----------------------------------------------------------------------
-         if ( ILAY1.EQ.ILAY2 ) MONOPOL(ILAY1) = AVMAD(1,1)
-         !----------------------------------------------------------------------
-         ! Loop over all occupants of site ILAY2
-         !----------------------------------------------------------------------
-         do IO2 = 1,NOQ(ILAY2)
-            IT2 = KAOEZ(IO2,ILAY2)
-            !
-            do LM = 1,LMPOT
-               CM(LM) = CMOM(LM,IT2)
-               !----------------------------------------------------------------
-               ! Add contribution of interstial in case of shapes
-               !----------------------------------------------------------------
-               if ( KSHAPE.NE.0 ) CM(LM) = CM(LM) + CMINST(LM,IT2)
-            end do
-            CM(1) = CM(1) - ZAT(IT2)/SQRT(FPI)
-            !
-            do LM = 1,LMPOT
-               do LM2 = 1,LMPOT
-                  AC(LM) = AC(LM) + AVMAD(LM,LM2)*CM(LM2)*CONC(IT2)
-               end do
-            end do
-         end do
-         !----------------------------------------------------------------------
-         ! Loop over all occupants of site ILAY2
-         !----------------------------------------------------------------------
-      end do                 ! ILAY2 loop in all interface planes
-      !-------------------------------------------------------------------------
-      do ILAY2 = 1,NLAYERS
-         !----------------------------------------------------------------------
-         ! Loop over all occupants of site ILAY2
-         !----------------------------------------------------------------------
-         do IO2 = 1,NOQ(ILAY2)
-            IT2 = KAOEZ(IO2,ILAY2)
-            !
-            CM1 = CMOM(1,IT2)
-            if ( KSHAPE.NE.0 ) CM1 = CM1 + CMINST(1,IT2)
-            !
-            CM1 = CM1 - ZAT(IT2)/SQRT(FPI)
-            AC(1) = AC(1) - MONOPOL(ILAY1)*CM1*CONC(IT2)
-            !
-         end do
-         !----------------------------------------------------------------------
-         ! Loop over all occupants of site ILAY2
-         !----------------------------------------------------------------------
-      end do
-      !-------------------------------------------------------------------------
-      ! Correction: charge neutrality is imposed (see P. Lang)
-      !-------------------------------------------------------------------------
-      if ( OPT('DECIMATE') ) then
-         !----------------------------------------------------------------------
-         ! 2.  Summation in the LEFT bulk side
-         !----------------------------------------------------------------------
-         !----------------------------------------------------------------------
-         ! Loop over all occupants of LEFT host
-         !----------------------------------------------------------------------
-         ILEFT = 0
-         do IH1 = 1,NLEFT
-            do IB = 1,NLBASIS
-               ILEFT = ILEFT + 1
-               IREC = ILEFT + NLEFTALL*(ILAY1-1) + NLEFTOFF
-               read(69,REC=IREC) AVMAD
-               !
-               IATOM = IB
-               do LM = 1,LMPOT
-                  do LM2 = 1,LMPOT
-                     AC(LM) = AC(LM)+ AVMAD(LM,LM2)*CMOMHOST(LM2,IATOM)
-                  end do
-               end do
-               !
-               if ( (IH1.EQ.1) .AND. (IB.EQ.1) ) then
-                  AC(1) = AC(1) +(AVMAD(1,1)-MONOPOL(ILAY1))*CHARGE(1)
-               endif
-            end do
-         end do
-         !----------------------------------------------------------------------
-         if ( ILEFT.NE.NLEFTALL) then
-            write(6,*) ' < VINTERFACE > : index error ','ILEFT <> NLEFT*NLBASIS'
-            stop
-         end if
-         !----------------------------------------------------------------------
-         ! 3.  Summation in the RIGHT bulk side
-         !----------------------------------------------------------------------
-         !----------------------------------------------------------------------
-         ! Loop over all occupants of RIGHT host
-         !----------------------------------------------------------------------
-         IRIGHT = 0
-         do IH1 = 1,NRIGHT
-            do IB = 1,NRBASIS
-               IRIGHT = IRIGHT + 1
-               IREC = IRIGHT + NRIGHTALL*(ILAY1-1) + NRIGHTOFF
-               read(69,REC=IREC) AVMAD
-               !
-               IATOM = NLBASIS + IB
-               do LM = 1,LMPOT
-                  do LM2 = 1,LMPOT
-                     AC(LM) = AC(LM)+ AVMAD(LM,LM2)*CMOMHOST(LM2,IATOM)
-                  end do
-               end do
-               !
-               if ( (IH1.EQ.1) .AND. (IB.EQ.1) ) then
-                  AC(1) = AC(1) +(AVMAD(1,1)-MONOPOL(ILAY1))*CHARGE(2)
-               endif
-            end do
-         end do
-         !----------------------------------------------------------------------
-         if ( IRIGHT.NE.NRIGHTALL ) then
-            write(6,*) ' < VINTERFACE > : index error ','IRIGHT <> NRIGHT*NRBASIS'
-            stop
-         end if
-      end if                 ! (OPT(DECIMATE)
-      !-------------------------------------------------------------------------
-      write (1337,FMT=99003) IT1,(CATOM(IT1)-ZAT(IT1)),(AC(1)/SQRT(4.D0*PI)),(AC(3)/SQRT(4.D0*PI))
-      !-------------------------------------------------------------------------
-      ! Loop over spins of atom IT1
-      !-------------------------------------------------------------------------
-      do ISPIN = 1,NSPIN
-         !----------------------------------------------------------------------
-         ! Determine the right potential number
-         !----------------------------------------------------------------------
-         IPOT = NSPIN*(IT1-1) + ISPIN
-         !----------------------------------------------------------------------
-         ! In the case of l=0 : r(1)**l is not defined
-         !----------------------------------------------------------------------
-         V(1,1,IPOT) = V(1,1,IPOT) + AC(1)
-         !
-         do L = 0,LPOT
-            do M = -L,L
-               LM = L*L + L + M + 1
-               do I = 2,IRS1
-                  V(I,LM,IPOT) = V(I,LM,IPOT) + (-R(I,IT1))**L*AC(LM)
-               end do
-            end do
-         end do
-      end do
-      !-------------------------------------------------------------------------
-      ! This part (ICC.GT.0) should be presumably reconsidered for impurity
-      ! calculation in host-CPA case
-      !-------------------------------------------------------------------------
-      if ( ICC.GT.0  .or. OPT('KKRFLEX ')) then
-         do L = 0,LPOT
-            do M = -L,L
-               LM = L*L + L + M + 1
-               VINTERS(LM,ILAY1) = AC(LM)
-            end do
-         end do
+!----------------------------------------------------------------------
+      if (iright/=nrightall) then
+        write (6, *) ' < VINTERFACE > : index error ', &
+          'IRIGHT <> NRIGHT*NRBASIS'
+        stop
       end if
-      !-------------------------------------------------------------------------
-   end do
-   !----------------------------------------------------------------------------
-   close (69)
-   write(1337,'(15X,45(1H-),/)')
-   write(1337,'(79(1H=))')
-   if ( (ICC==0) .and. (.not.OPT('KKRFLEX ')) ) return
-   !----------------------------------------------------------------------------
-   ! Now Prepare output for Impurity calculation
-   !----------------------------------------------------------------------------
-   open (91,FILE='intercell_ref',STATUS='unknown',FORM='formatted')
-   write(1337,*)
-   write(1337,*) '                     ','Writing intercell potential for impurity'
-   write(1337,'(/,20X,55(1H-))')
-   write(1337,99004) HOSTIMP(0),LMPOT
-   write(1337,'(20X,55(1H-),/,35X,"  i host lm  Vint")')
-   do I=1,HOSTIMP(0)
-      write(1337,*)
-      LM = 1
-      write(1337,'(35X,I4,I4,I3,1X,F10.6)') I, HOSTIMP(I),LM,VINTERS(LM,HOSTIMP(I))
-      do LM=2,9
-         write (1337,'(43X,I3,1X,F10.6)') LM,VINTERS(LM,HOSTIMP(I))
+    end if ! (OPT(DECIMATE)
+!-------------------------------------------------------------------------
+    write (1337, fmt=120) it1, (catom(it1)-zat(it1)), (ac(1)/sqrt(4.d0*pi)), &
+      (ac(3)/sqrt(4.d0*pi))
+!-------------------------------------------------------------------------
+! Loop over spins of atom IT1
+!-------------------------------------------------------------------------
+    do ispin = 1, nspin
+!----------------------------------------------------------------------
+! Determine the right potential number
+!----------------------------------------------------------------------
+      ipot = nspin*(it1-1) + ispin
+!----------------------------------------------------------------------
+! In the case of l=0 : r(1)**l is not defined
+!----------------------------------------------------------------------
+      v(1, 1, ipot) = v(1, 1, ipot) + ac(1)
+!
+      do l = 0, lpot
+        do m = -l, l
+          lm = l*l + l + m + 1
+          do i = 2, irs1
+            v(i, lm, ipot) = v(i, lm, ipot) + (-r(i,it1))**l*ac(lm)
+          end do
+        end do
       end do
-      write(1337,'(20X,55(1H-))')
-   end do
-   write(1337,'(79(1H=),/)')
+    end do
+!-------------------------------------------------------------------------
+! This part (ICC.GT.0) should be presumably reconsidered for impurity
+! calculation in host-CPA case
+!-------------------------------------------------------------------------
+    if (icc>0 .or. opt('KKRFLEX ')) then
+      do l = 0, lpot
+        do m = -l, l
+          lm = l*l + l + m + 1
+          vinters(lm, ilay1) = ac(lm)
+        end do
+      end do
+    end if
+!-------------------------------------------------------------------------
+  end do
+!----------------------------------------------------------------------------
+  close (69)
+  write (1337, '(15X,45(1H-),/)')
+  write (1337, '(79(1H=))')
+  if ((icc==0) .and. (.not. opt('KKRFLEX '))) return
+!----------------------------------------------------------------------------
+! Now Prepare output for Impurity calculation
+!----------------------------------------------------------------------------
+  open (91, file='intercell_ref', status='unknown', form='formatted')
+  write (1337, *)
+  write (1337, *) '                     ', &
+    'Writing intercell potential for impurity'
+  write (1337, '(/,20X,55(1H-))')
+  write (1337, 130) hostimp(0), lmpot
+  write (1337, '(20X,55(1H-),/,35X,"  i host lm  Vint")')
+  do i = 1, hostimp(0)
+    write (1337, *)
+    lm = 1
+    write (1337, '(35X,I4,I4,I3,1X,F10.6)') i, hostimp(i), lm, &
+      vinters(lm, hostimp(i))
+    do lm = 2, 9
+      write (1337, '(43X,I3,1X,F10.6)') lm, vinters(lm, hostimp(i))
+    end do
+    write (1337, '(20X,55(1H-))')
+  end do
+  write (1337, '(79(1H=),/)')
 
-   write(91,99005) HOSTIMP(0),LMPOT
-   do I=1,HOSTIMP(0)
-      write(91,99006) (VINTERS(LM,HOSTIMP(I)),LM=1,LMPOT)
-   end do
-   close(91)
-   !
-   return
-   !
-   99001 format (79(1H=),/,25X,' INTERFACE MADELUNG POTENTIALS ')
-   99002 format (/,15X,' ATOM ','  Delta_Q  ','   MONOPOLE       DIPOLE',/,15X,45(1H-))
-   99003 format (15X,i4,2X,F10.6,1X,1P,D13.6,1X,1P,D13.6)
-   99004 format (22X,I4,' host atoms, LMPOT = ',I2,' output up to LM = 9')
-   99005 format (3I6)
-   99006 format (4D20.10)
-end subroutine VINTERFACE
+  write (91, 140) hostimp(0), lmpot
+  do i = 1, hostimp(0)
+    write (91, 150)(vinters(lm,hostimp(i)), lm=1, lmpot)
+  end do
+  close (91)
+!
+  return
+!
+100 format (79('='), /, 25x, ' INTERFACE MADELUNG POTENTIALS ')
+110 format (/, 15x, ' ATOM ', '  Delta_Q  ', '   MONOPOLE       DIPOLE', /, &
+    15x, 45('-'))
+120 format (15x, i4, 2x, f10.6, 1x, 1p, d13.6, 1x, 1p, d13.6)
+130 format (22x, i4, ' host atoms, LMPOT = ', i2, ' output up to LM = 9')
+140 format (3i6)
+150 format (4d20.10)
+end subroutine

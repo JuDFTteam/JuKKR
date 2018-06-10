@@ -1,25 +1,25 @@
 ! **********************************************************************
-SUBROUTINE bofm(pl1,pl2,BLOCK,nsize,gin,almd)
+subroutine bofm(pl1, pl2, block, nsize, gin, almd)
 ! **********************************************************************
 
-IMPLICIT NONE
+  implicit none
 !.. Scalar Arguments ..
-INTEGER ALMD,NSIZE,PL1,PL2
+  integer :: almd, nsize, pl1, pl2
 !..
 !.. Array Arguments ..
-DOUBLE COMPLEX BLOCK(NSIZE,NSIZE),GIN(ALMD,ALMD)
+  double complex :: block(nsize, nsize), gin(almd, almd)
 !..
 !.. Local Scalars ..
-INTEGER I1,I1S,I2,I2S
+  integer :: i1, i1s, i2, i2s
 !..
-i1s = (pl1-1)*nsize
-i2s = (pl2-1)*nsize
-DO i1 = 1,nsize
-  DO i2 = 1,nsize
-    BLOCK(i1,i2) = gin(i1s+i1,i2s+i2)
-  END DO
-END DO
+  i1s = (pl1-1)*nsize
+  i2s = (pl2-1)*nsize
+  do i1 = 1, nsize
+    do i2 = 1, nsize
+      block(i1, i2) = gin(i1s+i1, i2s+i2)
+    end do
+  end do
 
-RETURN
+  return
 
-END SUBROUTINE bofm
+end subroutine

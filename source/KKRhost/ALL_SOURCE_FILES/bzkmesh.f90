@@ -1,155 +1,155 @@
-SUBROUTINE bzkmesh(nbxin,nbyin,nbzin,maxmesh,lirr,bravais,recbv,  &
-        nsymat,rsymat,isymindex,symunitary,  &
-        ielast,ez,kmesh,iprint,krel,kpoibz,maxmshd)
-use mod_types, only: t_inc
-use mod_wunfiles, only: t_params
-use mod_rhoqtools, only: rhoq_write_kmesh
-IMPLICIT NONE
+subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
+  rsymat, isymindex, symunitary, ielast, ez, kmesh, iprint, krel, kpoibz, &
+  maxmshd)
+  use :: mod_types, only: t_inc
+  use :: mod_wunfiles, only: t_params
+  use :: mod_rhoqtools, only: rhoq_write_kmesh
+  implicit none
 !..
 !.. Scalar Arguments ..
-      INTEGER MAXMESH,NBXIN,NBYIN,NBZIN,NSYMAT,IPRINT, &
-              KREL,KPOIBZ,IELAST,MAXMSHD
-      LOGICAL LIRR
+  integer :: maxmesh, nbxin, nbyin, nbzin, nsymat, iprint, krel, kpoibz, &
+    ielast, maxmshd
+  logical :: lirr
 !..
 !.. Array Arguments ..
-      DOUBLE PRECISION BRAVAIS(3,3),RECBV(3,3)
-      DOUBLE PRECISION RSYMAT(64,3,3)
-      INTEGER ISYMINDEX(*),KMESH(*)
-      DOUBLE COMPLEX EZ(*)
+  double precision :: bravais(3, 3), recbv(3, 3)
+  double precision :: rsymat(64, 3, 3)
+  integer :: isymindex(*), kmesh(*)
+  double complex :: ez(*)
 !.. unitary/antiunitary symmetry flag
-      LOGICAL SYMUNITARY(*)
+  logical :: symunitary(*)
 !..
 !.. Local Scalars ..
-      DOUBLE PRECISION VOLBZ
-      INTEGER I,ID,KS,L,N,NBX,NBY,NBZ,NOFKS
+  double precision :: volbz
+  integer :: i, id, ks, l, n, nbx, nby, nbz, nofks
 !..
 !.. Local Arrays ..
-      DOUBLE PRECISION BZKP(3,KPOIBZ),VOLCUB(KPOIBZ)
-      INTEGER NXYZ(3)
+  double precision :: bzkp(3, kpoibz), volcub(kpoibz)
+  integer :: nxyz(3)
 !..
 !.. External Functions ..
-      LOGICAL TEST
-      EXTERNAL TEST
+  logical :: test
+  external :: test
 !..
 !.. External Subroutines ..
-      EXTERNAL BZIRR3D
+  external :: bzirr3d
 ! ---------------------------------------------------------------------
 
 ! --> set number of different K-meshes
 
-maxmesh = 1
-IF ( test('fix mesh') ) THEN
-  DO i = 1,ielast
-    kmesh(i) = 1
-  END DO
-ELSE
-  DO i = 1,ielast
-    IF (DIMAG(ez(ielast)) /= 0) THEN
-      n = INT(1.001D0 + LOG(DIMAG(ez(i))/DIMAG(ez(ielast)))/LOG(2.0D0))
-    ELSE
-      n = 1
-    END IF
-    kmesh(i) = n
-    maxmesh = MAX(maxmesh,n)
-    IF ( kmesh(i) < 1 ) kmesh(i) = 1
-  END DO
-  kmesh(1) = maxmesh
-END IF
+  maxmesh = 1
+  if (test('fix mesh')) then
+    do i = 1, ielast
+      kmesh(i) = 1
+    end do
+  else
+    do i = 1, ielast
+      if (dimag(ez(ielast))/=0) then
+        n = int(1.001d0+log(dimag(ez(i))/dimag(ez(ielast)))/log(2.0d0))
+      else
+        n = 1
+      end if
+      kmesh(i) = n
+      maxmesh = max(maxmesh, n)
+      if (kmesh(i)<1) kmesh(i) = 1
+    end do
+    kmesh(1) = maxmesh
+  end if
 
-IF ( test('fix4mesh') ) THEN
-  DO i = 1,ielast
-    kmesh(i) = maxmesh
-  END DO
-END IF
+  if (test('fix4mesh')) then
+    do i = 1, ielast
+      kmesh(i) = maxmesh
+    end do
+  end if
 
-IF (maxmesh > maxmshd) THEN
-  WRITE (6,FMT='(5X,A,I2)')  &
-      'Dimension ERROR: Please increase MAXMSHD to ',maxmesh
-  WRITE (6,FMT='(22X,A,/)') 'in the programs < main0 > and < main1b >'
-  STOP '        < BZKMESH >'
-END IF
+  if (maxmesh>maxmshd) then
+    write (6, fmt='(5X,A,I2)') 'Dimension ERROR: Please increase MAXMSHD to ', &
+      maxmesh
+    write (6, fmt='(22X,A,/)') 'in the programs < main0 > and < main1b >'
+    stop '        < BZKMESH >'
+  end if
 ! ---------------------------------------------------------------------
-nbx = nbxin
-nby = nbyin
-nbz = nbzin
+  nbx = nbxin
+  nby = nbyin
+  nbz = nbzin
 
-IF(test('kptsfile')) OPEN (52,FILE='kpoints',FORM='formatted')
+  if (test('kptsfile')) open (52, file='kpoints', form='formatted')
 !       OPEN (52,FILE='kpoints',FORM='formatted')
 
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-WRITE (1337,99000)
-WRITE (1337,99001) maxmesh,nsymat
+  write (1337, 110)
+  write (1337, 120) maxmesh, nsymat
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
 !save maxmesh and allocate kmesh for later use in t_inc and t_params
-t_inc%nkmesh = maxmesh
-t_params%kpoibz = kpoibz
-t_params%maxmesh = maxmesh
-allocate(t_inc%kmesh(maxmesh))
-allocate(t_params%bzkp(3,kpoibz,maxmesh), t_params%volcub(kpoibz,maxmesh),  &
-    t_params%volbz(maxmesh),t_params%nofks(maxmesh))
+  t_inc%nkmesh = maxmesh
+  t_params%kpoibz = kpoibz
+  t_params%maxmesh = maxmesh
+  allocate (t_inc%kmesh(maxmesh))
+  allocate (t_params%bzkp(3,kpoibz,maxmesh), t_params%volcub(kpoibz,maxmesh), &
+    t_params%volbz(maxmesh), t_params%nofks(maxmesh))
 ! needed for wavefunction saving
-allocate(t_inc%kmesh_ie(ielast))
-t_inc%kmesh_ie = kmesh(1:ielast)
+  allocate (t_inc%kmesh_ie(ielast))
+  t_inc%kmesh_ie = kmesh(1:ielast)
 ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-DO l = 1,maxmesh
-  IF (l > 1) THEN
-    nbx = nbx/1.4
-    nby = nby/1.4
-    nbz = nbz/1.4
-  END IF
-  IF (nbx < 1) nbx = 1
-  IF (nby < 1) nby = 1
-  IF (nbz < 1) nbz = 1
-  nxyz(1) = nbx
-  nxyz(2) = nby
-  nxyz(3) = nbz
-  
-  CALL bzirr3d(nofks,nxyz,kpoibz,bzkp,recbv,bravais,volcub,volbz,  &
-      rsymat,nsymat,isymindex,symunitary, lirr,krel,iprint)
-  
+  do l = 1, maxmesh
+    if (l>1) then
+      nbx = nbx/1.4
+      nby = nby/1.4
+      nbz = nbz/1.4
+    end if
+    if (nbx<1) nbx = 1
+    if (nby<1) nby = 1
+    if (nbz<1) nbz = 1
+    nxyz(1) = nbx
+    nxyz(2) = nby
+    nxyz(3) = nbz
+
+    call bzirr3d(nofks, nxyz, kpoibz, bzkp, recbv, bravais, volcub, volbz, &
+      rsymat, nsymat, isymindex, symunitary, lirr, krel, iprint)
+
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-  WRITE(1337,99002) l,nofks,(nxyz(i),i=1,3),volbz
-  IF ( l == maxmesh ) WRITE(1337,99003)
+    write (1337, 130) l, nofks, (nxyz(i), i=1, 3), volbz
+    if (l==maxmesh) write (1337, 140)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-  
-  IF(test('kptsfile')) WRITE(52,FMT='(I8,F15.10,/,(3F12.8,D20.10))')  &
-      nofks,volbz,((bzkp(id,i),id=1,3),volcub(i),i=1,nofks)
-  IF( test('rhoqtest') .AND. (l==1) ) THEN
-    CALL rhoq_write_kmesh(nofks, nxyz, volbz, bzkp, volcub, recbv, bravais)
-  END IF
+
+    if (test('kptsfile')) write (52, fmt='(I8,F15.10,/,(3F12.8,D20.10))') &
+      nofks, volbz, ((bzkp(id,i),id=1,3), volcub(i), i=1, nofks)
+    if (test('rhoqtest') .and. (l==1)) then
+      call rhoq_write_kmesh(nofks, nxyz, volbz, bzkp, volcub, recbv, bravais)
+    end if
 !       WRITE(52,FMT='(I8,F15.10,/,(3F12.8,D20.10))')
 !      +        NOFKS,VOLBZ,((BZKP(ID,I),ID=1,3),VOLCUB(I),I=1,NOFKS)
-  t_params%nofks(l) = nofks
-  t_params%volbz(l) = volbz
-  DO i=1,nofks
-    DO id=1,3
-      t_params%bzkp(id,i,l) = bzkp(id,i)
-    END DO
-    t_params%volcub(i,l) = volcub(i)
-  END DO
+    t_params%nofks(l) = nofks
+    t_params%volbz(l) = volbz
+    do i = 1, nofks
+      do id = 1, 3
+        t_params%bzkp(id, i, l) = bzkp(id, i)
+      end do
+      t_params%volcub(i, l) = volcub(i)
+    end do
 ! save nofks for this mesh in t_inc
-  t_inc%kmesh(l) = nofks
+    t_inc%kmesh(l) = nofks
 ! ---------------------------------------------------------------------
-  
+
 ! -->  output of k-mesh
-  
-  IF (test('k-net   ')) THEN
-    DO ks = 1,nofks
-      WRITE (1337,FMT=9000) (bzkp(i,ks),i=1,3),volcub(ks)
-    END DO
-  END IF
+
+    if (test('k-net   ')) then
+      do ks = 1, nofks
+        write (1337, fmt=100)(bzkp(i,ks), i=1, 3), volcub(ks)
+      end do
+    end if
 ! ---------------------------------------------------------------------
-END DO
+  end do
 ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-IF(test('kptsfile')) CLOSE (52)
+  if (test('kptsfile')) close (52)
 !       CLOSE (52)
-9000 FORMAT (3F12.5,f15.8)
-99000 FORMAT (5X,'< BZKMESH > : creating k-mesh,', ' write to file kpoints',/)
-99001 FORMAT (8X,'number of different k-meshes :',i2,/,  &
-    8X,'the direct lattice',i3,' symmetries will be used',//,  &
-    8X,35(1H-),/,8X,'k-mesh NofKs N kx N ky N kz vol BZ',/, 8X,35(1H-))
-99002    FORMAT (8X,2I6,3I5,f8.4)
-99003    FORMAT (8X,35(1H-),/)
-END SUBROUTINE bzkmesh
+100 format (3f12.5, f15.8)
+110 format (5x, '< BZKMESH > : creating k-mesh,', ' write to file kpoints', /)
+120 format (8x, 'number of different k-meshes :', i2, /, 8x, &
+    'the direct lattice', i3, ' symmetries will be used', /, /, 8x, 35('-'), &
+    /, 8x, 'k-mesh NofKs N kx N ky N kz vol BZ', /, 8x, 35('-'))
+130 format (8x, 2i6, 3i5, f8.4)
+140 format (8x, 35('-'), /)
+end subroutine

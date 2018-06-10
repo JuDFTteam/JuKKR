@@ -5,101 +5,101 @@
 !> @note
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,NSTART,NEND,RHO2NS,VONS,R,DRDI,A,IRWS,  &
-   IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP,NPOTD,LMPOT,LMXSPD, &
-   IRM,NATYP,LMMAXD)
+subroutine vxcdrv(exc, kte, kxc, lpot, nspin, nstart, nend, rho2ns, vons, r, &
+  drdi, a, irws, ircut, ipan, ntcell, kshape, gsh, ilm_map, imaxsh, ifunm, &
+  thetas, lmsp, npotd, lmpot, lmxspd, irm, natyp, lmmaxd)
 
-   use global_variables
+  use :: global_variables
 
-   implicit none
+  implicit none
 
-   ! .. Input variables
-   integer, intent(in) :: IRM    !< Maximum number of radial points
-   integer, intent(in) :: KTE    !< Calculation of the total energy On/Off (1/0)
-   integer, intent(in) :: KXC    !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
-   integer, intent(in) :: NEND
-   integer, intent(in) :: LPOT   !< Maximum l component in potential expansion
-   integer, intent(in) :: NATYP  !< Number of kinds of atoms in unit cell
-   integer, intent(in) :: NPOTD  !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-   integer, intent(in) :: LMPOT  !< (LPOT+1)**2
-   integer, intent(in) :: NSPIN  !< Counter for spin directions
-   integer, intent(in) :: LMMAXD !< (KREL+KORBIT+1)(LMAX+1)^2
-   integer, intent(in) :: NSTART
-   integer, intent(in) :: KSHAPE !< Exact treatment of WS cell
-   integer, intent(in) :: LMXSPD !< (2*LPOT+1)**2
-   ! .. Array Arguments ..
-   double precision, dimension(NATYP), intent(in)  :: A   !< Constants for exponential R mesh
-   double precision, dimension(NGSHD), intent(in)  :: GSH
-   double precision, dimension(IRM,NATYP), intent(in) :: R !< Radial mesh ( in units a Bohr)
-   double precision, dimension(IRM,NATYP), intent(in) :: DRDI  !< Derivative dr/di
-   double precision, dimension(IRID,NFUND,NCELLD), intent(in) :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-   double precision, dimension(IRM,LMPOT,NATYP,2), intent(in) :: RHO2NS !< radial density
-   integer, dimension(NATYP), intent(in)           :: IRWS   !< R point at WS radius
-   integer, dimension(NATYP), intent(in)           :: IPAN   !< Number of panels in non-MT-region
-   integer, dimension(NATYP), intent(in)           :: NTCELL !< index for WS cell
-   integer, dimension(0:LMPOT), intent(in)         :: IMAXSH
-   integer, dimension(NGSHD,3), intent(in)         :: ILM_MAP
-   integer, dimension(NATYP,LMXSPD), intent(in)    :: LMSP   !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
-   integer, dimension(NATYP,LMXSPD), intent(in)    :: IFUNM
-   integer, dimension(0:IPAND,NATYP), intent(in)   :: IRCUT  !< r points of panel borders
-   ! .. In/Out variables
-   double precision, dimension(0:LPOT,NATYP), intent(inout) :: EXC   !< exchange correlation energy
-   ! .. Output variables
-   double precision, dimension(IRM,LMPOT,NPOTD), intent(out)   :: VONS !< output potential (nonspherical VONS)
-   ! ..
-   ! .. External Subroutines
-   external DCOPY,SPHERE_GGA,SPHERE_NOGGA,VXCGGA,VXCLM
-   ! .. Local Scalars
-   integer :: IATYP,ICELL,IPOT,LMX1
-   integer :: IJD
-   ! .. Parameters
-   parameter (IJD = 434)
-   ! .. Local Arrays ..
-   integer, dimension(LMXSPD) :: LMSPIAT
-   integer, dimension(LMXSPD) :: IFUNMIAT
-   double precision, dimension(IJD)          :: THET
-   double precision, dimension(IJD,LMPOT)    :: YR
-   double precision, dimension(IJD,3)        :: RIJ
-   double precision, dimension(IJD,LMPOT)    :: YLM
-   double precision, dimension(IJD,LMPOT)    :: WTYR
-   double precision, dimension(IJD,LMPOT)    :: DYLMF1
-   double precision, dimension(IJD,LMPOT)    :: DYLMF2
-   double precision, dimension(IJD,LMPOT)    :: DYLMT1
-   double precision, dimension(IJD,LMPOT)    :: DYLMT2
-   double precision, dimension(IJD,LMPOT)    :: DYLMTF
-   double precision, dimension(IRM,LMPOT,2)  :: RHO2IAT
-   !     ..
-   if (KXC.lt.3) then
-      call SPHERE_NOGGA(LPOT,YR,WTYR,RIJ,IJD)
-   else
-      call SPHERE_GGA(LPOT,YR,WTYR,RIJ,IJD,LMPOT,THET,YLM,DYLMT1, &
-         DYLMT2,DYLMF1,DYLMF2,DYLMTF)
-   end if
-   do IATYP = NSTART,NEND
-      ICELL = NTCELL(IATYP)
-      IPOT = NSPIN* (IATYP-1) + 1
-      do LMX1 = 1,LMXSPD
-         IFUNMIAT(LMX1) = IFUNM(ICELL,LMX1)
-         LMSPIAT(LMX1) = LMSP(ICELL,LMX1)
-      end do
-      call DCOPY(IRM*LMPOT,RHO2NS(1,1,IATYP,1),1,RHO2IAT(1,1,1),1)
-      if (NSPIN.eq.2 .or. KREL.eq.1) then
-         call DCOPY(IRM*LMPOT,RHO2NS(1,1,IATYP,2),1,RHO2IAT(1,1,2),1)
-      end if
-      if (KXC.LT.3) then
-         call VXCLM(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2IAT,VONS(1,1,IPOT),      &
-            R(1,IATYP),DRDI(1,IATYP), IRWS(IATYP),IRCUT(0,IATYP),IPAN(IATYP), &
-            KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNMIAT,THETAS(1,1,ICELL), YR,WTYR,IJD,    &
-            LMSPIAT,LMPOT,LMXSPD,LMMAXD,IRM,LPOT,NATYP)
-      else
-         !----------------------------------------------------------------------
-         ! GGA EX-COR POTENTIAL
-         !----------------------------------------------------------------------
-         call VXCGGA(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2IAT,VONS(1,1,IPOT),     &
-            R(1,IATYP),DRDI(1,IATYP),A(IATYP),IRWS(IATYP),IRCUT(0,IATYP),     &
-            IPAN(IATYP),KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNMIAT,THETAS(1,1,ICELL),WTYR,&
-            IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF,LMPOT,    &
-            LMXSPD,LMMAXD,IRM,LPOT,NATYP)
-      end if
-   end do
-end subroutine VXCDRV
+! .. Input variables
+  integer, intent (in) :: irm !< Maximum number of radial points
+  integer, intent (in) :: kte !< Calculation of the total energy On/Off (1/0)
+  integer, intent (in) :: kxc !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+  integer, intent (in) :: nend
+  integer, intent (in) :: lpot !< Maximum l component in potential expansion
+  integer, intent (in) :: natyp !< Number of kinds of atoms in unit cell
+  integer, intent (in) :: npotd !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+  integer, intent (in) :: lmpot !< (LPOT+1)**2
+  integer, intent (in) :: nspin !< Counter for spin directions
+  integer, intent (in) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
+  integer, intent (in) :: nstart
+  integer, intent (in) :: kshape !< Exact treatment of WS cell
+  integer, intent (in) :: lmxspd !< (2*LPOT+1)**2
+! .. Array Arguments ..
+  double precision, dimension (natyp), intent (in) :: a !< Constants for exponential R mesh
+  double precision, dimension (ngshd), intent (in) :: gsh
+  double precision, dimension (irm, natyp), intent (in) :: r !< Radial mesh ( in units a Bohr)
+  double precision, dimension (irm, natyp), intent (in) :: drdi !< Derivative dr/di
+  double precision, dimension (irid, nfund, ncelld), intent (in) :: thetas !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+  double precision, dimension (irm, lmpot, natyp, 2), intent (in) :: rho2ns !< radial density
+  integer, dimension (natyp), intent (in) :: irws !< R point at WS radius
+  integer, dimension (natyp), intent (in) :: ipan !< Number of panels in non-MT-region
+  integer, dimension (natyp), intent (in) :: ntcell !< index for WS cell
+  integer, dimension (0:lmpot), intent (in) :: imaxsh
+  integer, dimension (ngshd, 3), intent (in) :: ilm_map
+  integer, dimension (natyp, lmxspd), intent (in) :: lmsp !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+  integer, dimension (natyp, lmxspd), intent (in) :: ifunm
+  integer, dimension (0:ipand, natyp), intent (in) :: ircut !< r points of panel borders
+! .. In/Out variables
+  double precision, dimension (0:lpot, natyp), intent (inout) :: exc !< exchange correlation energy
+! .. Output variables
+  double precision, dimension (irm, lmpot, npotd), intent (out) :: vons !< output potential (nonspherical VONS)
+! ..
+! .. External Subroutines
+  external :: dcopy, sphere_gga, sphere_nogga, vxcgga, vxclm
+! .. Local Scalars
+  integer :: iatyp, icell, ipot, lmx1
+  integer :: ijd
+! .. Parameters
+  parameter (ijd=434)
+! .. Local Arrays ..
+  integer, dimension (lmxspd) :: lmspiat
+  integer, dimension (lmxspd) :: ifunmiat
+  double precision, dimension (ijd) :: thet
+  double precision, dimension (ijd, lmpot) :: yr
+  double precision, dimension (ijd, 3) :: rij
+  double precision, dimension (ijd, lmpot) :: ylm
+  double precision, dimension (ijd, lmpot) :: wtyr
+  double precision, dimension (ijd, lmpot) :: dylmf1
+  double precision, dimension (ijd, lmpot) :: dylmf2
+  double precision, dimension (ijd, lmpot) :: dylmt1
+  double precision, dimension (ijd, lmpot) :: dylmt2
+  double precision, dimension (ijd, lmpot) :: dylmtf
+  double precision, dimension (irm, lmpot, 2) :: rho2iat
+!     ..
+  if (kxc<3) then
+    call sphere_nogga(lpot, yr, wtyr, rij, ijd)
+  else
+    call sphere_gga(lpot, yr, wtyr, rij, ijd, lmpot, thet, ylm, dylmt1, &
+      dylmt2, dylmf1, dylmf2, dylmtf)
+  end if
+  do iatyp = nstart, nend
+    icell = ntcell(iatyp)
+    ipot = nspin*(iatyp-1) + 1
+    do lmx1 = 1, lmxspd
+      ifunmiat(lmx1) = ifunm(icell, lmx1)
+      lmspiat(lmx1) = lmsp(icell, lmx1)
+    end do
+    call dcopy(irm*lmpot, rho2ns(1,1,iatyp,1), 1, rho2iat(1,1,1), 1)
+    if (nspin==2 .or. krel==1) then
+      call dcopy(irm*lmpot, rho2ns(1,1,iatyp,2), 1, rho2iat(1,1,2), 1)
+    end if
+    if (kxc<3) then
+      call vxclm(exc, kte, kxc, lpot, nspin, iatyp, rho2iat, vons(1,1,ipot), &
+        r(1,iatyp), drdi(1,iatyp), irws(iatyp), ircut(0,iatyp), ipan(iatyp), &
+        kshape, gsh, ilm_map, imaxsh, ifunmiat, thetas(1,1,icell), yr, wtyr, &
+        ijd, lmspiat, lmpot, lmxspd, lmmaxd, irm, lpot, natyp)
+    else
+!----------------------------------------------------------------------
+! GGA EX-COR POTENTIAL
+!----------------------------------------------------------------------
+      call vxcgga(exc, kte, kxc, lpot, nspin, iatyp, rho2iat, vons(1,1,ipot), &
+        r(1,iatyp), drdi(1,iatyp), a(iatyp), irws(iatyp), ircut(0,iatyp), &
+        ipan(iatyp), kshape, gsh, ilm_map, imaxsh, ifunmiat, &
+        thetas(1,1,icell), wtyr, ijd, lmspiat, thet, ylm, dylmt1, dylmt2, &
+        dylmf1, dylmf2, dylmtf, lmpot, lmxspd, lmmaxd, irm, lpot, natyp)
+    end if
+  end do
+end subroutine
