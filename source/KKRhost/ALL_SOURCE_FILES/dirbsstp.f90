@@ -13,6 +13,7 @@ subroutine dirbsstp(y, dydx, nv, x, htry, eps, yscal, b, v, r, drdi, nmesh)
 !   *                                                                  *
 !   ********************************************************************
 
+      Use mod_datatypes, Only: dp
   use :: mod_types, only: t_inc
   implicit none
 

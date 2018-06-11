@@ -37,7 +37,7 @@ use mod_md5sums
 IMPLICIT NONE
 !.
 !. Parameters
-DOUBLE COMPLEX CONE,CZERO
+complex (kind=dp) CONE,CZERO
 PARAMETER ( CONE  = (1D0,0D0) )
 PARAMETER ( CZERO = (0D0,0D0) )
 INTEGER NIJMAX
@@ -46,14 +46,14 @@ PARAMETER ( NIJMAX = 200 )
 !. Scalar arguments
 INTEGER IELAST,NSPIN,IFTMAT,IPRINT,LMMAXD,NAEZ,NATOMIMP, &
         NATYP,NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD,NPOL
-DOUBLE COMPLEX EZ(*), WEZ(*)
+complex (kind=dp) EZ(*), WEZ(*)
 !.
 !. Array arguments
 INTEGER ATOMIMP(*),IJTABCALC(*),IJTABSH(*),IJTABSYM(*), &
         IQAT(*),IQCALC(*),ISH(NSHELD,*),ITOQ(NATYPD,*), &
         JSH(NSHELD,*),NOQ(*),NSHELL(0:NSHELD)
-DOUBLE COMPLEX DSYMLL(LMMAXD,LMMAXD,*)
-DOUBLE PRECISION RATOM(3,*)
+complex (kind=dp) DSYMLL(LMMAXD,LMMAXD,*)
+real (kind=dp) RATOM(3,*)
 !.
 !. Local scalars
 INTEGER I1,IA,IFGMAT,IFMCPA,IQ,IREC,ISPIN,ISYM,IT,J1,JA, &
@@ -62,9 +62,9 @@ INTEGER I1,IA,IFGMAT,IFMCPA,IQ,IREC,ISPIN,ISYM,IT,J1,JA, &
 #ifdef CPP_MPI
 INTEGER ie_start, IERR
 #endif
-DOUBLE COMPLEX CSUM, WGTEMP
+complex (kind=dp) CSUM, WGTEMP
 #ifdef CPP_MPI
-DOUBLE COMPLEX XINTEGDTMP
+complex (kind=dp) XINTEGDTMP
 #endif
 CHARACTER*8 FMT1
 CHARACTER*22 FMT2
@@ -75,22 +75,22 @@ CHARACTER*80 STRBAR,STRTMP
 !.
 !. Local arrays
 INTEGER NIJCALC(:),KIJSH(:,:),JIJDONE(:,:,:)
-DOUBLE COMPLEX JXCIJINT(:,:,:)
+complex (kind=dp) JXCIJINT(:,:,:)
 #ifndef CPP_MPI
-DOUBLE COMPLEX, ALLOCATABLE :: XINTEGD(:,:,:)
+complex (kind=dp), ALLOCATABLE :: XINTEGD(:,:,:)
 #else
-DOUBLE COMPLEX, ALLOCATABLE :: csum_store(:,:,:,:), &
+complex (kind=dp), ALLOCATABLE :: csum_store(:,:,:,:), &
                                csum_store2(:,:,:,:)
 #endif
 ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT
-DOUBLE COMPLEX DELTSST(LMMAXD,LMMAXD,NATYP), &
+complex (kind=dp) DELTSST(LMMAXD,LMMAXD,NATYP), &
                DMATTS(LMMAXD,LMMAXD,NATYP,NSPIN), &
                DTILTS(LMMAXD,LMMAXD,NATYP,NSPIN), &
                GMIJ(LMMAXD,LMMAXD), &
                GMJI(LMMAXD,LMMAXD),GS(LMMAXD,LMMAXD,NSPIN), &
                TSST(LMMAXD,LMMAXD,NATYP,2),W1(LMMAXD,LMMAXD), &
                W2(LMMAXD,LMMAXD),W3(LMMAXD,LMMAXD)
-DOUBLE PRECISION RSH(NSHELD),PI
+real (kind=dp) RSH(NSHELD),PI
 INTEGER JTAUX(NATYP)
 !..
 !.. Intrinsic Functions ..
@@ -334,10 +334,10 @@ DO ie_num=1,ie_end
   
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
   IF ( iprint > 1 ) THEN
-    WRITE(1337,'(8X,60(1H-),/,10X,  &
+    WRITE(1337,'(8X,60("-"),/,10X,  &
         "Single-site and projection matrices read in", " for IT=1,",I3,/)') natyp
     DO ispin = 1,nspin
-      WRITE(1337,'(8X,60(1H+),/,30X, " ISPIN = ",I1,/,8X,60(1H+),/)') ispin
+      WRITE(1337,'(8X,60("+"),/,30X, " ISPIN = ",I1,/,8X,60("+"),/)') ispin
       DO it = 1,natyp
         WRITE(1337,'(12X," IE = ",I2," IT =",I3)') ie,it
         CALL cmatstr(' T MAT ',7,tsst(1,1,it,ispin),  &
@@ -346,18 +346,18 @@ DO ie_num=1,ie_end
             lmmaxd,lmmaxd,0,0,0,1D-8,6)
         CALL cmatstr(' D~ MAT',7,dtilts(1,1,it,ispin),  &
             lmmaxd,lmmaxd,0,0,0,1D-8,6)
-        IF ( it /= natyp) WRITE(1337,'(8X,60(1H-),/)')
+        IF ( it /= natyp) WRITE(1337,'(8X,60("-"),/)')
       END DO
-      WRITE(1337,'(8X,60(1H+),/)')
+      WRITE(1337,'(8X,60("+"),/)')
     END DO
-    WRITE(1337,'(8X,60(1H-),/,10X,  &
+    WRITE(1337,'(8X,60("-"),/,10X,  &
         "Delta_t = t(it,DN) - t(it,UP) matrices for IT=1,", I3,/)') natyp
     DO it = 1,natyp
       WRITE(1337,'(12X," IE = ",I2," IT =",I3)') ie,it
       CALL cmatstr(' DEL T ',7,deltsst(1,1,it), lmmaxd,lmmaxd,0,0,0,1D-8,6)
-      IF ( it /= natyp) WRITE(1337,'(8X,60(1H-),/)')
+      IF ( it /= natyp) WRITE(1337,'(8X,60("-"),/)')
     END DO
-    WRITE(1337,'(8X,60(1H-),/)')
+    WRITE(1337,'(8X,60("-"),/)')
   endif
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
   
@@ -419,9 +419,9 @@ DO ie_num=1,ie_end
       
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
       IF ( iprint > 2 ) THEN
-        WRITE(1337,'(8X,60(1H-),/,10X,  &
+        WRITE(1337,'(8X,60("-"),/,10X,  &
             " G_ij(DN) and G_ji(UP) matrices I =",I3," J =",I3,  &
-            " IE =",I3,/,8X,60(1H-))') ia,ja,ie
+            " IE =",I3,/,8X,60("-"))') ia,ja,ie
         CALL cmatstr(' Gij DN',7,gmij,lmmaxd,lmmaxd,0,0,0,1D-8,6)
         CALL cmatstr(' Gji UP',7,gmji,lmmaxd,lmmaxd,0,0,0,1D-8,6)
       endif
@@ -655,10 +655,10 @@ IF(myrank==master)THEN
       jtaux(ntcalc) = it
     endif
   END DO
-  WRITE (strbar,'(19(1H-))')
+  WRITE (strbar,'(19("-"))')
   lstr = 19
   DO i1 = 1,lm2
-    WRITE(strtmp,'(A,15(1H-))') strbar(1:lstr)
+    WRITE(strtmp,'(A,15("-"))') strbar(1:lstr)
     lstr = lstr+15
     strbar(1:lstr)=strtmp(1:lstr)
   END DO
@@ -766,13 +766,13 @@ endif ! t_mpi_c_grid%myrank_ie==0
 #endif
 
 deallocate (kijsh,nijcalc,jijdone,jxcijint,stat=lm1)
-99000 FORMAT(79(1H=),/,10X, "TBXCCPLJIJ : Off-diagonal exchange coupling",  &
-    " constants J_ij",/,79(1H=),/)
+99000 FORMAT(79("="),/,10X, "TBXCCPLJIJ : Off-diagonal exchange coupling",  &
+    " constants J_ij",/,79("="),/)
 99001 FORMAT(6X,"ERROR: Cannot allocate array(s) :",a,/)
-99002 FORMAT(4X,a,4(1H-),/,5X," IT/IQ ",3X,"R_IQ,JQ",2X,"JQ ",  &
-    " (J_IT,JT  JT)",/,15X," [ ALAT ] ",4X,"[ mRy ]",/, 4X,a,4(1H-))
+99002 FORMAT(4X,a,4("-"),/,5X," IT/IQ ",3X,"R_IQ,JQ",2X,"JQ ",  &
+    " (J_IT,JT  JT)",/,15X," [ ALAT ] ",4X,"[ mRy ]",/, 4X,a,4("-"))
 99003 FORMAT(5X,i3,1X,i3)
-99004 FORMAT(4X,a,4(1H-))
+99004 FORMAT(4X,a,4("-"))
 99005 FORMAT(f10.6)
 99006 FORMAT(12X,f10.6)
 99007 FORMAT(i4,f12.8,i3)

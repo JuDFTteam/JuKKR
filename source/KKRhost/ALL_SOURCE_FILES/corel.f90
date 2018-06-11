@@ -10,28 +10,29 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
 !                                      xenon core: 5540=5s,5p,4d
 !-----------------------------------------------------------------------
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
 !.. Parameters ..
   integer :: nitmax, irnumx
   parameter (nitmax=40, irnumx=10)
-  double precision :: zero
+  real (kind=dp) :: zero
   parameter (zero=0.0d0)
 !..
 !.. Scalar Arguments ..
-  double precision :: a, b, qc, rmax, z
+  real (kind=dp) :: a, b, qc, rmax, z
   integer :: ip, ipr, irmd, is, ncore, nr, nspin, nsra
 !..
 !.. Array Arguments ..
-  double precision :: drdi(*), ecore(*), rhoc(*), v(*)
+  real (kind=dp) :: drdi(*), ecore(*), rhoc(*), v(*)
   integer :: lcore(*)
 !..
 !.. Local Scalars ..
-  double precision :: e, e1, e2, ediff, ei, slope, sum, tol, value, wgt
+  real (kind=dp) :: e, e1, e2, ediff, ei, slope, sum, tol, value, wgt
   integer :: ic, in, inuc, ir, l, lmp1, lmxc, lp1, nc, nmax, nn, nre
   logical :: vlnc
 !..
 !.. Local Arrays ..
-  double precision :: f(irmd), g(irmd), rho(irmd)
+  real (kind=dp) :: f(irmd), g(irmd), rho(irmd)
   integer :: kfg(4)
   character (len=4) :: spn(2), text(5)
 !..

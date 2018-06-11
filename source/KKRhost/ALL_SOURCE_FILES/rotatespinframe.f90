@@ -3,18 +3,19 @@
 !> @brief Rotates a matrix in the local frame pointing in
 !> the direction of phi and theta to the global frame
 !-------------------------------------------------------------------------------
-subroutine rotatematrix(mat, theta, phi, lmmax, mode)
-  implicit none
+    Subroutine rotatematrix(mat, theta, phi, lmmax, mode)
+      Use mod_datatypes, Only: dp
+      Implicit None
 !interface
-  integer, intent (in) :: lmmax
-  integer, intent (in) :: mode
-  double precision, intent (in) :: phi
-  double precision, intent (in) :: theta
-  double complex, dimension (2*lmmax, 2*lmmax), intent (inout) :: mat
+      Integer, Intent (In) :: lmmax
+      Integer, Intent (In) :: mode
+      Real (Kind=dp), Intent (In) :: phi
+      Real (Kind=dp), Intent (In) :: theta
+      Complex (Kind=dp), Dimension (2*lmmax, 2*lmmax), Intent (Inout) :: mat
 !local
-  double complex, dimension (2*lmmax, 2*lmmax) :: umat
-  double complex, dimension (2*lmmax, 2*lmmax) :: udeggamat
-  double complex, dimension (2*lmmax, 2*lmmax) :: mattemp
+      Complex (Kind=dp), Dimension (2*lmmax, 2*lmmax) :: umat
+      Complex (Kind=dp), Dimension (2*lmmax, 2*lmmax) :: udeggamat
+      Complex (Kind=dp), Dimension (2*lmmax, 2*lmmax) :: mattemp
 
 !***********************************************************************
 ! create the rotation matrix:
@@ -26,7 +27,7 @@ subroutine rotatematrix(mat, theta, phi, lmmax, mode)
 !***********************************************************************
 
 
-  call create_umatrix(theta, phi, lmmax, umat, udeggamat)
+      Call create_umatrix(theta, phi, lmmax, umat, udeggamat)
 !***********************************************************************
 ! calculate matrix in the global frame:
 !
@@ -34,21 +35,21 @@ subroutine rotatematrix(mat, theta, phi, lmmax, mode)
 !***********************************************************************
 
 
-  if (mode==0) then ! 'loc->glob'
-    call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1d0,0d0), mat, 2*lmmax, &
-      udeggamat, 2*lmmax, (0d0,0d0), mattemp, 2*lmmax)
-    call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1d0,0d0), umat, 2*lmmax, &
-      mattemp, 2*lmmax, (0d0,0d0), mat, 2*lmmax)
-  else if (mode==1) then !'glob->loc'
-    call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1d0,0d0), mat, 2*lmmax, &
-      umat, 2*lmmax, (0d0,0d0), mattemp, 2*lmmax)
-    call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1d0,0d0), udeggamat, &
-      2*lmmax, mattemp, 2*lmmax, (0d0,0d0), mat, 2*lmmax)
-  else
-    stop '[rotatematrix] mode not known'
-  end if
+      If (mode==0) Then ! 'loc->glob'
+        Call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1E0_dp,0E0_dp), mat, &
+          2*lmmax, udeggamat, 2*lmmax, (0E0_dp,0E0_dp), mattemp, 2*lmmax)
+        Call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1E0_dp,0E0_dp), umat, &
+          2*lmmax, mattemp, 2*lmmax, (0E0_dp,0E0_dp), mat, 2*lmmax)
+      Else If (mode==1) Then !'glob->loc'
+        Call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1E0_dp,0E0_dp), mat, &
+          2*lmmax, umat, 2*lmmax, (0E0_dp,0E0_dp), mattemp, 2*lmmax)
+        Call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1E0_dp,0E0_dp), &
+          udeggamat, 2*lmmax, mattemp, 2*lmmax, (0E0_dp,0E0_dp), mat, 2*lmmax)
+      Else
+        Stop '[rotatematrix] mode not known'
+      End If
 
-end subroutine
+    End Subroutine
 
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: rotatevector
@@ -57,56 +58,57 @@ end subroutine
 !> \f$\rho_{loc}(ir,lm)= W1 * \rho_{glob}(ir,lm) * W2\f$
 !> where \f$\rho\f$ and \f$W\f$ are matricies in spin space
 !-------------------------------------------------------------------------------
-subroutine rotatevector(rho2nsc, rho2ns, nrmax, lmpotd, theta, phi, theta_old, &
-  phi_old, nrmaxd)
+    Subroutine rotatevector(rho2nsc, rho2ns, nrmax, lmpotd, theta, phi, &
+      theta_old, phi_old, nrmaxd)
+      Use mod_datatypes, Only: dp
 
-  implicit none
+      Implicit None
 !interface
-  integer :: nrmaxd, lmpotd, nrmax
-  double complex :: rho2nsc(nrmaxd, lmpotd, 4)
-  double precision :: rho2ns(nrmaxd, lmpotd, 4)
-  double precision :: theta, phi
-  double precision :: theta_old, phi_old
+      Integer :: nrmaxd, lmpotd, nrmax
+      Complex (Kind=dp) :: rho2nsc(nrmaxd, lmpotd, 4)
+      Real (Kind=dp) :: rho2ns(nrmaxd, lmpotd, 4)
+      Real (Kind=dp) :: theta, phi
+      Real (Kind=dp) :: theta_old, phi_old
 !local
-  integer :: ir, ilm
-  double complex :: w1(2, 2), w2(2, 2)
-  double complex :: w1_11w2_11, w1_11w2_22, w1_11w2_12, w1_11w2_21
-  double complex :: w1_22w2_11, w1_22w2_22, w1_22w2_12, w1_22w2_21
-  double complex :: w1_12w2_11, w1_12w2_22, w1_12w2_12, w1_12w2_21
-  double complex :: w1_21w2_11, w1_21w2_22, w1_21w2_12, w1_21w2_21
+      Integer :: ir, ilm
+      Complex (Kind=dp) :: w1(2, 2), w2(2, 2)
+      Complex (Kind=dp) :: w1_11w2_11, w1_11w2_22, w1_11w2_12, w1_11w2_21
+      Complex (Kind=dp) :: w1_22w2_11, w1_22w2_22, w1_22w2_12, w1_22w2_21
+      Complex (Kind=dp) :: w1_12w2_11, w1_12w2_22, w1_12w2_12, w1_12w2_21
+      Complex (Kind=dp) :: w1_21w2_11, w1_21w2_22, w1_21w2_12, w1_21w2_21
 
-  call create_wmatrix(theta, phi, theta_old, phi_old, 1, w1, w2)
+      Call create_wmatrix(theta, phi, theta_old, phi_old, 1, w1, w2)
 
-  w1_11w2_11 = w1(1, 1)*w2(1, 1)
-  w1_11w2_22 = w1(1, 1)*w2(2, 2)
-  w1_11w2_12 = w1(1, 1)*w2(1, 2)
-  w1_11w2_21 = w1(1, 1)*w2(2, 1)
-  w1_22w2_11 = w1(2, 2)*w2(1, 1)
-  w1_22w2_22 = w1(2, 2)*w2(2, 2)
-  w1_22w2_12 = w1(2, 2)*w2(1, 2)
-  w1_22w2_21 = w1(2, 2)*w2(2, 1)
-  w1_12w2_11 = w1(1, 2)*w2(1, 1)
-  w1_12w2_22 = w1(1, 2)*w2(2, 2)
-  w1_12w2_12 = w1(1, 2)*w2(1, 2)
-  w1_12w2_21 = w1(1, 2)*w2(2, 1)
-  w1_21w2_11 = w1(2, 1)*w2(1, 1)
-  w1_21w2_22 = w1(2, 1)*w2(2, 2)
-  w1_21w2_12 = w1(2, 1)*w2(1, 2)
-  w1_21w2_21 = w1(2, 1)*w2(2, 1)
+      w1_11w2_11 = w1(1, 1)*w2(1, 1)
+      w1_11w2_22 = w1(1, 1)*w2(2, 2)
+      w1_11w2_12 = w1(1, 1)*w2(1, 2)
+      w1_11w2_21 = w1(1, 1)*w2(2, 1)
+      w1_22w2_11 = w1(2, 2)*w2(1, 1)
+      w1_22w2_22 = w1(2, 2)*w2(2, 2)
+      w1_22w2_12 = w1(2, 2)*w2(1, 2)
+      w1_22w2_21 = w1(2, 2)*w2(2, 1)
+      w1_12w2_11 = w1(1, 2)*w2(1, 1)
+      w1_12w2_22 = w1(1, 2)*w2(2, 2)
+      w1_12w2_12 = w1(1, 2)*w2(1, 2)
+      w1_12w2_21 = w1(1, 2)*w2(2, 1)
+      w1_21w2_11 = w1(2, 1)*w2(1, 1)
+      w1_21w2_22 = w1(2, 1)*w2(2, 2)
+      w1_21w2_12 = w1(2, 1)*w2(1, 2)
+      w1_21w2_21 = w1(2, 1)*w2(2, 1)
 
-  do ir = 1, nrmax
-    do ilm = 1, lmpotd
-      rho2ns(ir, ilm, 1) = aimag(+(rho2nsc(ir,ilm,1)*w1_11w2_11)+(rho2nsc(ir, &
-        ilm,3)*w1_11w2_21)+(rho2nsc(ir,ilm,4)*w1_12w2_11)+(rho2nsc(ir,ilm, &
-        2)*w1_12w2_21))
+      Do ir = 1, nrmax
+        Do ilm = 1, lmpotd
+          rho2ns(ir, ilm, 1) = aimag(+(rho2nsc(ir,ilm, &
+            1)*w1_11w2_11)+(rho2nsc(ir,ilm,3)*w1_11w2_21)+(rho2nsc(ir,ilm, &
+            4)*w1_12w2_11)+(rho2nsc(ir,ilm,2)*w1_12w2_21))
 
-      rho2ns(ir, ilm, 2) = aimag(+(rho2nsc(ir,ilm,1)*w1_21w2_12)-(rho2nsc(ir, &
-        ilm,3)*w1_21w2_22)-(rho2nsc(ir,ilm,4)*w1_22w2_12)+(rho2nsc(ir,ilm, &
-        2)*w1_22w2_22))
-    end do
-  end do
+          rho2ns(ir, ilm, 2) = aimag(+(rho2nsc(ir,ilm, &
+            1)*w1_21w2_12)-(rho2nsc(ir,ilm,3)*w1_21w2_22)-(rho2nsc(ir,ilm, &
+            4)*w1_22w2_12)+(rho2nsc(ir,ilm,2)*w1_22w2_22))
+        End Do
+      End Do
 
-end subroutine
+    End Subroutine
 
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: create_Wmatrix
@@ -126,99 +128,102 @@ end subroutine
 !>
 !>  \f$Udegga = transpose(complex conjug ( U ) )\f&
 !-------------------------------------------------------------------------------
-subroutine create_wmatrix(theta, phi, theta_old, phi_old, lmmax, wmat1, wmat2)
-  implicit none
+    Subroutine create_wmatrix(theta, phi, theta_old, phi_old, lmmax, wmat1, &
+      wmat2)
+      Use mod_datatypes, Only: dp
+      Implicit None
 !interface
-  double precision, intent (in) :: phi
-  double precision, intent (in) :: theta
-  double precision, intent (in) :: phi_old
-  double precision, intent (in) :: theta_old
-  integer, intent (in) :: lmmax
-  double complex, intent (out) :: wmat1(2*lmmax, 2*lmmax)
-  double complex, intent (out) :: wmat2(2*lmmax, 2*lmmax)
+      Real (Kind=dp), Intent (In) :: phi
+      Real (Kind=dp), Intent (In) :: theta
+      Real (Kind=dp), Intent (In) :: phi_old
+      Real (Kind=dp), Intent (In) :: theta_old
+      Integer, Intent (In) :: lmmax
+      Complex (Kind=dp), Intent (Out) :: wmat1(2*lmmax, 2*lmmax)
+      Complex (Kind=dp), Intent (Out) :: wmat2(2*lmmax, 2*lmmax)
 !local
-  double complex :: umat1(2*lmmax, 2*lmmax)
-  double complex :: udeggamat1(2*lmmax, 2*lmmax)
-  double complex :: umat2(2*lmmax, 2*lmmax)
-  double complex :: udeggamat2(2*lmmax, 2*lmmax)
+      Complex (Kind=dp) :: umat1(2*lmmax, 2*lmmax)
+      Complex (Kind=dp) :: udeggamat1(2*lmmax, 2*lmmax)
+      Complex (Kind=dp) :: umat2(2*lmmax, 2*lmmax)
+      Complex (Kind=dp) :: udeggamat2(2*lmmax, 2*lmmax)
 
-  call create_umatrix(theta_old, phi_old, lmmax, umat1, udeggamat1)
+      Call create_umatrix(theta_old, phi_old, lmmax, umat1, udeggamat1)
 
-  call create_umatrix(theta, phi, lmmax, umat2, udeggamat2)
+      Call create_umatrix(theta, phi, lmmax, umat2, udeggamat2)
 
-  call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1d0,0d0), udeggamat2, &
-    2*lmmax, umat1, 2*lmmax, (0d0,0d0), wmat1, 2*lmmax)
-  call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1d0,0d0), udeggamat1, &
-    2*lmmax, umat2, 2*lmmax, (0d0,0d0), wmat2, 2*lmmax)
+      Call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1E0_dp,0E0_dp), &
+        udeggamat2, 2*lmmax, umat1, 2*lmmax, (0E0_dp,0E0_dp), wmat1, 2*lmmax)
+      Call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1E0_dp,0E0_dp), &
+        udeggamat1, 2*lmmax, umat2, 2*lmmax, (0E0_dp,0E0_dp), wmat2, 2*lmmax)
 
 
-end subroutine
+    End Subroutine
 
 !-------------------------------------------------------------------------------
 !> @brief create the rotation matrix:
 !>  \f$U= \left(\begin{array}{cc} cos(\theta/2) exp(-i/2 \phi) & -sin(\theta/2) exp(-i/2 \phi) \\ sin(\theta/2) exp( i/2 \phi)  &  cos(\theta/2) exp( i/2 \phi)\end{array}\right)\f$
 !>  \f$Udegga = transpose(complex conjug ( U ) )\f$
 !-------------------------------------------------------------------------------
-subroutine create_umatrix(theta, phi, lmmax, umat, udeggamat)
+    Subroutine create_umatrix(theta, phi, lmmax, umat, udeggamat)
 
-  use :: constants
+      Use constants
+      Use mod_datatypes, Only: dp
 
-  implicit none
+      Implicit None
 !interface
-  double precision, intent (in) :: phi
-  double precision, intent (in) :: theta
-  integer, intent (in) :: lmmax
-  double complex, intent (out) :: umat(2*lmmax, 2*lmmax)
-  double complex, intent (out) :: udeggamat(2*lmmax, 2*lmmax)
+      Real (Kind=dp), Intent (In) :: phi
+      Real (Kind=dp), Intent (In) :: theta
+      Integer, Intent (In) :: lmmax
+      Complex (Kind=dp), Intent (Out) :: umat(2*lmmax, 2*lmmax)
+      Complex (Kind=dp), Intent (Out) :: udeggamat(2*lmmax, 2*lmmax)
 !local
-  double complex :: umat11, umat12, umat21, umat22
-  double complex :: udeggamat11, udeggamat12, udeggamat21, udeggamat22
-  integer :: ival
-  character (len=25) :: spinmode
+      Complex (Kind=dp) :: umat11, umat12, umat21, umat22
+      Complex (Kind=dp) :: udeggamat11, udeggamat12, udeggamat21, udeggamat22
+      Integer :: ival
+      Character (Len=25) :: spinmode
 
-  spinmode = 'kkr'
-  if (spinmode=='regular') then
-    umat11 = cos(theta/2.0d0)*exp(-ci/2.0d0*phi)
-    umat12 = -sin(theta/2.0d0)*exp(-ci/2.0d0*phi)
-    umat21 = sin(theta/2.0d0)*exp(ci/2.0d0*phi)
-    umat22 = cos(theta/2.0d0)*exp(ci/2.0d0*phi)
-  else if (spinmode=='kkr') then
-    umat11 = cos(theta/2.0d0)*exp(ci/2.0d0*phi)
-    umat12 = sin(theta/2.0d0)*exp(ci/2.0d0*phi)
-    umat21 = -sin(theta/2.0d0)*exp(-ci/2.0d0*phi)
-    umat22 = cos(theta/2.0d0)*exp(-ci/2.0d0*phi)
-  else
-    stop '[create_Umatrix] mode not known'
-  end if
+      spinmode = 'kkr'
+      If (spinmode=='regular') Then
+        umat11 = cos(theta/2.0E0_dp)*exp(-ci/2.0E0_dp*phi)
+        umat12 = -sin(theta/2.0E0_dp)*exp(-ci/2.0E0_dp*phi)
+        umat21 = sin(theta/2.0E0_dp)*exp(ci/2.0E0_dp*phi)
+        umat22 = cos(theta/2.0E0_dp)*exp(ci/2.0E0_dp*phi)
+      Else If (spinmode=='kkr') Then
+        umat11 = cos(theta/2.0E0_dp)*exp(ci/2.0E0_dp*phi)
+        umat12 = sin(theta/2.0E0_dp)*exp(ci/2.0E0_dp*phi)
+        umat21 = -sin(theta/2.0E0_dp)*exp(-ci/2.0E0_dp*phi)
+        umat22 = cos(theta/2.0E0_dp)*exp(-ci/2.0E0_dp*phi)
+      Else
+        Stop '[create_Umatrix] mode not known'
+      End If
 
-  umat = czero
-  do ival = 1, lmmax
-    umat(ival, ival) = umat11
-    umat(ival, lmmax+ival) = umat12
-    umat(lmmax+ival, ival) = umat21
-    umat(lmmax+ival, lmmax+ival) = umat22
-  end do
+      umat = czero
+      Do ival = 1, lmmax
+        umat(ival, ival) = umat11
+        umat(ival, lmmax+ival) = umat12
+        umat(lmmax+ival, ival) = umat21
+        umat(lmmax+ival, lmmax+ival) = umat22
+      End Do
 
-  if (spinmode=='regular') then
-    udeggamat11 = cos(theta/2.0d0)*exp(ci/2.0d0*phi)
-    udeggamat12 = sin(theta/2.0d0)*exp(-ci/2.0d0*phi)
-    udeggamat21 = -sin(theta/2.0d0)*exp(ci/2.0d0*phi)
-    udeggamat22 = cos(theta/2.0d0)*exp(-ci/2.0d0*phi)
-  else if (spinmode=='kkr') then
-    udeggamat11 = cos(theta/2.0d0)*exp(-ci/2.0d0*phi)
-    udeggamat12 = -sin(theta/2.0d0)*exp(ci/2.0d0*phi)
-    udeggamat21 = sin(theta/2.0d0)*exp(-ci/2.0d0*phi)
-    udeggamat22 = cos(theta/2.0d0)*exp(ci/2.0d0*phi)
-  else
-    stop '[create_Umatrix] mode not known'
-  end if
+      If (spinmode=='regular') Then
+        udeggamat11 = cos(theta/2.0E0_dp)*exp(ci/2.0E0_dp*phi)
+        udeggamat12 = sin(theta/2.0E0_dp)*exp(-ci/2.0E0_dp*phi)
+        udeggamat21 = -sin(theta/2.0E0_dp)*exp(ci/2.0E0_dp*phi)
+        udeggamat22 = cos(theta/2.0E0_dp)*exp(-ci/2.0E0_dp*phi)
+      Else If (spinmode=='kkr') Then
+        udeggamat11 = cos(theta/2.0E0_dp)*exp(-ci/2.0E0_dp*phi)
+        udeggamat12 = -sin(theta/2.0E0_dp)*exp(ci/2.0E0_dp*phi)
+        udeggamat21 = sin(theta/2.0E0_dp)*exp(-ci/2.0E0_dp*phi)
+        udeggamat22 = cos(theta/2.0E0_dp)*exp(ci/2.0E0_dp*phi)
+      Else
+        Stop '[create_Umatrix] mode not known'
+      End If
 
-  udeggamat = czero
-  do ival = 1, lmmax
-    udeggamat(ival, ival) = udeggamat11
-    udeggamat(ival, lmmax+ival) = udeggamat12
-    udeggamat(lmmax+ival, ival) = udeggamat21
-    udeggamat(lmmax+ival, lmmax+ival) = udeggamat22
-  end do
+      udeggamat = czero
+      Do ival = 1, lmmax
+        udeggamat(ival, ival) = udeggamat11
+        udeggamat(ival, lmmax+ival) = udeggamat12
+        udeggamat(lmmax+ival, ival) = udeggamat21
+        udeggamat(lmmax+ival, lmmax+ival) = udeggamat22
+      End Do
 
-end subroutine
+    End Subroutine

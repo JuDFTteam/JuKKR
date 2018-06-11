@@ -114,6 +114,7 @@ contains
 #endif
 
       use Constants
+      use mod_DataTypes, only: dp
    
       implicit none
       integer :: ncheb                               ! number of chebyshev nodes
@@ -133,14 +134,14 @@ contains
       integer info,icheb2,icheb,ipan,mn,nm,nplm
 
       ! source terms
-      double complex :: gmatprefactor               ! prefactor of green function
+      complex (kind=dp) :: gmatprefactor               ! prefactor of green function
       ! non-rel: = kappa = sqrt e
 #ifndef hostcode
-      double complex :: hlk(:,:), jlk(:,:), &       ! right sol. source terms
+      complex (kind=dp) :: hlk(:,:), jlk(:,:), &       ! right sol. source terms
       hlk2(:,:), jlk2(:,:)        ! left sol. source terms
       ! (tipically bessel and hankel fn)
 #else
-      DOUBLE COMPLEX :: HLK(LBESSEL,NRMAX), &
+      complex (kind=dp) :: HLK(LBESSEL,NRMAX), &
       JLK(LBESSEL,NRMAX), &
       HLK2(LBESSEL,NRMAX), &
       JLK2(LBESSEL,NRMAX)
@@ -161,14 +162,14 @@ contains
       ! cmoderll ="T" : op( )=transpose in L for reg. solution
       ! cmodesll: same for irregular
 
-      double complex ::  sll(lmsize2,lmsize,nrmax), &  ! irr. volterra sol.
+      complex (kind=dp) ::  sll(lmsize2,lmsize,nrmax), &  ! irr. volterra sol.
       rll(lmsize2,lmsize,nrmax), &  ! reg. fredholm sol.
       tllp(lmsize,lmsize), &        ! t-matrix
       vll(lmsize*nvec,lmsize*nvec,nrmax) ! potential term in 5.7
       ! bauer, phd
-      double complex,allocatable ::  ull(:,:,:)        ! reg. volterra sol.
+      complex (kind=dp),allocatable ::  ull(:,:,:)        ! reg. volterra sol.
 
-      double complex,allocatable ::  &
+      complex (kind=dp),allocatable ::  &
       work(:,:), &
       work2(:,:), &
       allp(:,:,:),bllp(:,:,:), &                  ! eq. 5.9, 5.10 for reg. sol
@@ -191,14 +192,14 @@ contains
       vjlr(:,:,:), &                               ! vjlr = j * v (regular sol.)
       vhli(:,:,:), &                               ! vhli = h * v (irregular sol.)
       vjli(:,:,:)                                  ! vjli = j * v (irregular sol.)
-      double complex,allocatable :: yif(:,:,:,:), &               ! source terms (different array
+      complex (kind=dp),allocatable :: yif(:,:,:,:), &               ! source terms (different array
       yrf(:,:,:,:), &                              !               ordering)
       zif(:,:,:,:), &
       zrf(:,:,:,:)
       ! chebyshev arrays
-      double complex zslc1sum(0:ncheb)
-      double precision c1(0:ncheb,0:ncheb),rpanbound(0:npan)
-      double precision cslc1(0:ncheb,0:ncheb), & ! Integration matrix from left ( C*S_L*C^-1 in eq. 5.53)
+      complex (kind=dp) zslc1sum(0:ncheb)
+      real (kind=dp) c1(0:ncheb,0:ncheb),rpanbound(0:npan)
+      real (kind=dp) cslc1(0:ncheb,0:ncheb), & ! Integration matrix from left ( C*S_L*C^-1 in eq. 5.53)
       csrc1(0:ncheb,0:ncheb), & ! Same from right ( C*S_R*C^-1 in eq. 5.54)
       tau(0:ncheb,0:npan), &    ! Radial mesh point
       slc1sum(0:ncheb),rmesh(nrmax)
@@ -209,7 +210,7 @@ contains
       integer :: idotime
       integer,parameter  :: directsolv=1
 #ifdef hostcode
-      DOUBLE COMPLEX ALPHAGET(LMSIZE,LMSIZE) ! LLY
+      complex (kind=dp) ALPHAGET(LMSIZE,LMSIZE) ! LLY
 #endif
 
 #ifdef CPP_HYBRID
@@ -861,10 +862,12 @@ end subroutine rllsll
    !define this routine here only for host since mod_rllsllutils does not exsist in
    !host code
    subroutine inverse(nmat,mat)
+      use mod_dataTypes, only: dp
+      implicit none
       !interface
       integer        :: nmat
-      double complex :: mat(nmat,nmat)
-      double complex :: work(nmat,nmat)
+      complex (kind=dp) :: mat(nmat,nmat)
+      complex (kind=dp) :: work(nmat,nmat)
       !local
       integer        :: IPIV(nmat)
       integer        :: info
@@ -880,9 +883,9 @@ end subroutine rllsll
    ! implicit none
    ! integer, intent(in) :: NCHEB
    ! integer, intent(in) :: LMSIZE,LMSIZE2
-   ! double complex :: MMAT(0:NCHEB,LMSIZE2,0:NCHEB,LMSIZE2)
-   ! double complex :: BMAT(0:NCHEB,LMSIZE2,LMSIZE)
-   ! double complex :: XMAT(0:NCHEB,LMSIZE2,LMSIZE)
+   ! complex (kind=dp) :: MMAT(0:NCHEB,LMSIZE2,0:NCHEB,LMSIZE2)
+   ! complex (kind=dp) :: BMAT(0:NCHEB,LMSIZE2,LMSIZE)
+   ! complex (kind=dp) :: XMAT(0:NCHEB,LMSIZE2,LMSIZE)
    ! !########################################################
    ! ! solves the system of linear equations
    ! ! MMAT*XMAT = BMAT
@@ -905,6 +908,7 @@ program test_rllsll
 
    use mod_timing
    use Constants
+   use mod_DataTypes, only :: dp
 
    implicit none
 
@@ -912,14 +916,14 @@ program test_rllsll
    logical, parameter :: output=.true.
 
    integer :: ncheb, npan, lmsize, lmsize2, nvec, nrmax, lbessel, use_sratrick1
-   double complex :: gmatprefactor
+   complex (kind=dp) :: gmatprefactor
    character(len=1) :: cmoderll,cmodesll,cmodetest
 
-   double complex, allocatable :: hlk(:,:), jlk(:,:), hlk2(:,:), jlk2(:,:)
+   complex (kind=dp), allocatable :: hlk(:,:), jlk(:,:), hlk2(:,:), jlk2(:,:)
    integer, allocatable :: jlk_index(:)
-   double precision, allocatable :: rpanbound(:), rmesh(:)
-   double complex, allocatable ::  sll(:,:,:), rll(:,:,:), tllp(:,:), vll(:,:,:)
-   double complex, allocatable :: alphaget(:,:) ! lly
+   real (kind=dp), allocatable :: rpanbound(:), rmesh(:)
+   complex (kind=dp), allocatable ::  sll(:,:,:), rll(:,:,:), tllp(:,:), vll(:,:,:)
+   complex (kind=dp), allocatable :: alphaget(:,:) ! lly
 
    call timing_init(0)
    call timing_start('read-in')
@@ -1024,19 +1028,20 @@ subroutine write_rllsll_test_input(ncheb, npan, lmsize, nvec, nrmax, lbessel, &
    use_sratrick1, gmatprefactor, cmoderll, cmodesll, cmodetest, hlk, jlk, hlk2, &
    jlk2, jlk_index, rpanbound, rmesh, sll, rll, tllp, vll, alphaget)
 
+   use mod_DataTypes, only :: dp
    implicit none
 
    integer :: ir
 
    integer, intent(in) :: ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1
-   double complex, intent(in) :: gmatprefactor
+   complex (kind=dp), intent(in) :: gmatprefactor
    character(len=1), intent(in) :: cmoderll,cmodesll,cmodetest
 
-   double complex, intent(in) :: hlk(lbessel,nrmax), jlk(lbessel,nrmax), hlk2(lbessel,nrmax), jlk2(lbessel,nrmax)
+   complex (kind=dp), intent(in) :: hlk(lbessel,nrmax), jlk(lbessel,nrmax), hlk2(lbessel,nrmax), jlk2(lbessel,nrmax)
    integer, intent(in) :: jlk_index(2*lmsize)
-   double precision, intent(in) :: rpanbound(0:npan), rmesh(nrmax)
-   double complex, intent(in) ::  sll(nvec*lmsize,lmsize,nrmax), rll(nvec*lmsize,lmsize,nrmax), tllp(lmsize,lmsize), vll(lmsize*nvec,lmsize*nvec,nrmax)
-   double complex, intent(in) :: alphaget(lmsize, lmsize)
+   real (kind=dp), intent(in) :: rpanbound(0:npan), rmesh(nrmax)
+   complex (kind=dp), intent(in) ::  sll(nvec*lmsize,lmsize,nrmax), rll(nvec*lmsize,lmsize,nrmax), tllp(lmsize,lmsize), vll(lmsize*nvec,lmsize*nvec,nrmax)
+   complex (kind=dp), intent(in) :: alphaget(lmsize, lmsize)
 
 
    write(*,'(A)') '  === starting writeout routine for rllsll ==='

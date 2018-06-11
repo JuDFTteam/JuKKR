@@ -1,5 +1,7 @@
 !-------------------------------------------------------------------------------
 subroutine yshysh(x, y, z, r, yrealy)
+      Use mod_datatypes, Only: dp
+  implicit none
   integer :: lmax
   parameter (lmax=lmaxd)
   integer :: lmax2
@@ -8,19 +10,19 @@ subroutine yshysh(x, y, z, r, yrealy)
   parameter (lmax2p=lmax2+1, lmxp=lmax2p*(lmax2p+1)/2)
 !     ..
 !     .. Scalar Arguments ..
-  double precision :: r, x, y, z
+  real (kind=dp) :: r, x, y, z
 !     ..
 !     .. Array Arguments ..
-  double precision :: yrealy(*)
+  real (kind=dp) :: yrealy(*)
 !     ..
 !     .. Local Scalars ..
-  double precision :: a, arg, b, c, cosphi, costhe, eat, p, psq, rssq, save, &
+  real (kind=dp) :: a, arg, b, c, cosphi, costhe, eat, p, psq, rssq, save, &
     sinphi, sinthe, tave, tent, w, xa, ya
   integer :: i, ia, ib, ic, istopz, isuzy, j, jc, k, kov2, l, lave, lsuzy, &
     ltwoqp, m, mave, mp1, msuzy, n
 !     ..
 !     .. Local Arrays ..
-  double precision :: cosmph(lmax2p), factor(50), plm(lmxp), sinmph(lmax2p)
+  real (kind=dp) :: cosmph(lmax2p), factor(50), plm(lmxp), sinmph(lmax2p)
 !     ..
 !     .. Intrinsic Functions ..
   intrinsic :: dabs, dsign, dsqrt

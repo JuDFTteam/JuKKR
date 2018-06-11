@@ -5,24 +5,24 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
   use mod_DataTypes
   implicit none
 !.. Parameters ..
-  double precision :: kb
+  real (kind=dp) :: kb
   parameter (kb=0.6333659d-5)
 !..
 !.. Scalar Arguments ..
-  double precision :: alatc, e1, e2, efermi, tk
+  real (kind=dp) :: alatc, e1, e2, efermi, tk
   integer :: ielast, iemxd, intervx, intervy, intervz, lmaxd1, nacls1, natyp, &
     npotd
 !===== uses spin-up and down also in the REL mode (KREL=1)
   integer :: nspinpot
 !..
 !.. Array Arguments ..
-  double complex :: den(0:lmaxd1, iemxd, npotd), ez(iemxd), wez(iemxd)
-  double precision :: dostot(0:lmaxd1, 2), conc(*) ! CONC(NATYPD)
+  complex (kind=dp) :: den(0:lmaxd1, iemxd, npotd), ez(iemxd), wez(iemxd)
+  real (kind=dp) :: dostot(0:lmaxd1, 2), conc(*) ! CONC(NATYPD)
   integer :: ititle(20, npotd)
 !..
 !.. Local Scalars ..
-  double complex :: doscmplx
-  double precision :: dos, dossgn, efctor, pi
+  complex (kind=dp) :: doscmplx
+  real (kind=dp) :: dos, dossgn, efctor, pi
   integer :: i1, ia, ie, ipot, ispin, l
   character (len=8) :: dosfl0
   character (len=11) :: dosfl

@@ -7,6 +7,7 @@ use mod_mympi, only: myrank, master, nranks
 #ENDIF
 use mod_version_info
 use mod_wunfiles, only: t_params
+      Use mod_datatypes, Only: dp
 
        IMPLICIT NONE
 !-----------------------------------------------------------------
@@ -18,14 +19,14 @@ use mod_wunfiles, only: t_params
        PARAMETER (LMAXSQ=(LMAXD+1)**2)
        INTEGER LMMAXSO
        PARAMETER (LMMAXSO=(KORBIT+1)*LMAXSQ)
-       DOUBLE COMPLEX E,E1
-       DOUBLE COMPLEX CONE,CZERO
+       complex (kind=dp) E,E1
+       complex (kind=dp) CONE,CZERO
        PARAMETER (CONE=(1d0,0d0),CZERO=(0d0,0d0))
        INTEGER NATOMIMP,NDIM,INFO
        INTEGER I,J,LM1,LM2,ILM,JLM,ILM1,JLM1
        INTEGER IPVT1(NATOMIMP*LMMAXSO)
-       DOUBLE COMPLEX DTMTRX(LMMAXSO*NATOMIMP,LMMAXSO*NATOMIMP)
-       DOUBLE COMPLEX, ALLOCATABLE :: GIMP(:,:),GI(:,:)
+       complex (kind=dp) DTMTRX(LMMAXSO*NATOMIMP,LMMAXSO*NATOMIMP)
+       complex (kind=dp), ALLOCATABLE :: GIMP(:,:),GI(:,:)
 
 ! read in GF of the host
 allocate(gimp(natomimp*lmmaxso,natomimp*lmmaxso))

@@ -17,6 +17,7 @@ subroutine clsgen99(naez, rr, nr, rbasis, kaoez, z, cls, nacls, refpot, atom, &
   rcls, rcut, rcutxy, l2dim, alat, natyp, nemb, nprincd, naclsd, nclsd)
 
   use :: mod_version_info
+      use mod_DataTypes
 
   implicit none
 ! .. Arguments ..
@@ -31,14 +32,14 @@ subroutine clsgen99(naez, rr, nr, rbasis, kaoez, z, cls, nacls, refpot, atom, &
   integer, intent (in) :: nprincd !< Number of principle layers, set to a number >= NRPINC in output of main0
   integer, intent (in) :: nlbasis !< Number of basis layers of left host (repeated units)
   integer, intent (in) :: nrbasis !< Number of basis layers of right host (repeated units)
-  double precision, intent (in) :: alat !< Lattice constant in a.u.
-  double precision, intent (in) :: rcut !< Parameter for the screening cluster along the z-direction
-  double precision, intent (in) :: rcutxy !< Parameter for the screening cluster along the x-y plane
+  real (kind=dp), intent (in) :: alat !< Lattice constant in a.u.
+  real (kind=dp), intent (in) :: rcut !< Parameter for the screening cluster along the z-direction
+  real (kind=dp), intent (in) :: rcutxy !< Parameter for the screening cluster along the x-y plane
   integer, dimension (naez+nemb), intent (in) :: refpot !< Ref. pot. card  at position
-  double precision, dimension (natyp), intent (in) :: zat !< Nuclear charge
-  double precision, dimension (3, 0:nr), intent (in) :: rr !< Set of real space vectors (in a.u.)
-  double precision, dimension (3, naez+nemb), intent (in) :: rbasis !< Position of atoms in the unit cell in units of bravais vectors
-  double precision, dimension (3, naclsd, nclsd), intent (in) :: rcls !< Real space position of atom in cluster
+  real (kind=dp), dimension (natyp), intent (in) :: zat !< Nuclear charge
+  real (kind=dp), dimension (3, 0:nr), intent (in) :: rr !< Set of real space vectors (in a.u.)
+  real (kind=dp), dimension (3, naez+nemb), intent (in) :: rbasis !< Position of atoms in the unit cell in units of bravais vectors
+  real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls !< Real space position of atom in cluster
 !
   integer, dimension (naez+nemb), intent (inout) :: cls !< Cluster around atomic sites
   integer, dimension (nclsd), intent (inout) :: nacls !< Number of atoms in cluster
@@ -55,16 +56,16 @@ subroutine clsgen99(naez, rr, nr, rbasis, kaoez, z, cls, nacls, refpot, atom, &
   integer, dimension (nclsd) :: iatcls
   integer, dimension (naez, naez) :: icouplmat
 !
-  double precision :: r, r2, epsshl
-  double precision :: rcut2, rcutxy2, rxy2
-  double precision, dimension (3) :: tmp
-  double precision, dimension (naclsd) :: rsort
-  double precision, dimension (3) :: zperleft
-  double precision, dimension (3) :: zperight
-  double precision, dimension (3, naclsd) :: rg
-  double precision, dimension (3, naclsd) :: rcls1
-  double precision, dimension (3, nemb+1) :: tleft
-  double precision, dimension (3, nemb+1) :: tright
+  real (kind=dp) :: r, r2, epsshl
+  real (kind=dp) :: rcut2, rcutxy2, rxy2
+  real (kind=dp), dimension (3) :: tmp
+  real (kind=dp), dimension (naclsd) :: rsort
+  real (kind=dp), dimension (3) :: zperleft
+  real (kind=dp), dimension (3) :: zperight
+  real (kind=dp), dimension (3, naclsd) :: rg
+  real (kind=dp), dimension (3, naclsd) :: rcls1
+  real (kind=dp), dimension (3, nemb+1) :: tleft
+  real (kind=dp), dimension (3, nemb+1) :: tright
 !
   logical :: l2dim, clustcomp
 !

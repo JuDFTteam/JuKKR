@@ -65,30 +65,30 @@ SUBROUTINE rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin, &    ! Added IRMIN
       PARAMETER (LMAXD1= LMAXD+1)
 !..
 !.. Scalar Arguments ..
-      DOUBLE COMPLEX DF,EK
+      complex (kind=dp) DF,EK
       INTEGER IEND,IPAN,NSRA,IRMIN
 !..
 !.. Array Arguments ..
-      DOUBLE COMPLEX AR(LMMAXD,LMMAXD),CR(LMMAXD,LMMAXD),DEN(0:LMAXD1), &
+      complex (kind=dp) AR(LMMAXD,LMMAXD),CR(LMMAXD,LMMAXD),DEN(0:LMAXD1), &
                      EKL(0:LMAXD),FZ(IRMD,0:LMAXD),GMAT(LMMAXD,LMMAXD), &
                      PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),PZ(IRMD,0:LMAXD), &
                      QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),QZ(IRMD,0:LMAXD), &
                      SZ(IRMD,0:LMAXD) &
                     ,DENLM(LMMAXD)
 #ifndef CPP_MPI
-      DOUBLE COMPLEX ENERG  ! lm-dos
+      complex (kind=dp) ENERG  ! lm-dos
 #endif
-      DOUBLE PRECISION CLEB(*),DRDI(IRMD),RHO2NS(IRMD,LMPOTD), &
+      real (kind=dp) CLEB(*),DRDI(IRMD),RHO2NS(IRMD,LMPOTD), &
                        THETAS(IRID,NFUND)
       INTEGER ICLEB(NCLEB,4),IFUNM(*),IRCUT(0:IPAND), &
               JEND(LMPOTD,0:LMAXD,0:LMAXD),LMSP(*)
 !..
 !.. Local Scalars ..
-      DOUBLE COMPLEX DENNS,V1
+      complex (kind=dp) DENNS,V1
       INTEGER IMT1,L,LM,M,IRMAX, LM1, LM2
 !..
 !.. Local Arrays ..
-      DOUBLE COMPLEX CDEN(IRMD,0:LMAXD),CDENNS(IRMD),EFAC(LMMAXD) &
+      complex (kind=dp) CDEN(IRMD,0:LMAXD),CDENNS(IRMD),EFAC(LMMAXD) &
                     ,CDENLM(IRMD,LMMAXD),CWR(IRMD,LMMAXD,LMMAXD)   &! lm-dos
                     ,GFLLE_PART(LMMAXD,LMMAXD)
 !..
@@ -102,7 +102,7 @@ SUBROUTINE rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin, &    ! Added IRMIN
 !.. Intrinsic Functions ..
       INTRINSIC DBLE
 !..
-      DOUBLE PRECISION PI
+      real (kind=dp) PI
       PI = 4.D0*DATAN(1.D0)
 
 !---> set up efac(lm) = sqrt(e))**l/(2l - 1)!!

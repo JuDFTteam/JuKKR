@@ -1,5 +1,4 @@
     Subroutine bastrmat(lmax, cgc, rc, crel, rrel, nkmmax, nkmpmax)
-      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *    INITIALIZE TRANSFORMATION MATRIX THAT TAKES MATRICES FROM     *
@@ -10,6 +9,7 @@
 !   *                                                                  *
 !   * 13/01/98  HE                                                     *
 !   ********************************************************************
+      Use mod_datatypes, Only: dp
       Implicit None
 
 ! PARAMETER definitions

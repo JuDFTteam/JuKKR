@@ -1,13 +1,14 @@
 ! ************************************************************************
     Subroutine brysh2(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
       lmpot, lsmear)
-      Use mod_datatypes, Only: dp
 !*********************************************************************
 !     maps the density or potential back from one single vector into
 !     the proper bins of each single mt-cell . the magnetization
 !     density is also added in.
 !                                    s. bluegel , kfa , 1987
 
+      Use mod_datatypes, Only: dp
+      implicit none
 ! ------------------------------------------------------------------------
 !.. Parameters ..
       Include 'inc.p'

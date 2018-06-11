@@ -10,6 +10,7 @@ subroutine rll_local_solutions(vll,tau,drpan2,cslc1,slc1sum, &
                          ncheb,ipan,lmsize,lmsize2,nrmax, &
                          nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor, &
                          cmoderll,LBESSEL,use_sratrick1)
+      Use mod_datatypes, Only: dp
 implicit none
       integer :: ncheb                               ! number of chebyshev nodes
       integer :: lmsize                              ! lm-components * nspin
@@ -21,7 +22,7 @@ implicit none
       integer :: LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
 
 
-      double complex,parameter:: cone=(1.0d0,0.0d0),czero=(0.0d0,0.0d0)
+      complex (kind=dp),parameter:: cone=(1.0d0,0.0d0),czero=(0.0d0,0.0d0)
 
 ! running indices
       integer ivec, ivec2                            
@@ -29,10 +30,10 @@ implicit none
       integer info,icheb2,icheb,ipan,mn,nplm
 
 ! source terms
-      double complex :: gmatprefactor               ! prefactor of green function
+      complex (kind=dp) :: gmatprefactor               ! prefactor of green function
 ! non-rel: = kappa = sqrt e
 
-      DOUBLE COMPLEX :: HLK(LBESSEL,NRMAX), &
+      complex (kind=dp) :: HLK(LBESSEL,NRMAX), &
                         JLK(LBESSEL,NRMAX), &
                         HLK2(LBESSEL,NRMAX), &
                         JLK2(LBESSEL,NRMAX) 
@@ -45,14 +46,14 @@ implicit none
 ! cmoderll ="1" : op( )=identity       for reg. solution
 ! cmoderll ="T" : op( )=transpose in L for reg. solution
 
-      double complex :: vll(lmsize*nvec,lmsize*nvec,nrmax) ! potential term in 5.7
+      complex (kind=dp) :: vll(lmsize*nvec,lmsize*nvec,nrmax) ! potential term in 5.7
 
-      double complex ::  &
+      complex (kind=dp) ::  &
                      mrnvy(lmsize,lmsize),mrnvz(lmsize,lmsize), &
                      mrjvy(lmsize,lmsize),mrjvz(lmsize,lmsize), &
                      yrf(lmsize2,lmsize,0:ncheb), &       
                      zrf(lmsize2,lmsize,0:ncheb)          
-      double complex ::  &
+      complex (kind=dp) ::  &
                      slv(0:ncheb,lmsize2,0:ncheb,lmsize2), &
                      slv1(0:ncheb,lmsize,0:ncheb,lmsize), &
                      yrll1(0:ncheb,lmsize,lmsize), zrll1(0:ncheb,lmsize,lmsize), &
@@ -63,17 +64,17 @@ implicit none
                      vjlr_zrll1(lmsize,lmsize), vhlr_zrll1(lmsize,lmsize), &
                      yrll1temp(lmsize,lmsize), zrll1temp(lmsize,lmsize)
 
-      double complex ::  &
+      complex (kind=dp) ::  &
                      jlmkmn(0:ncheb,lmsize2,0:ncheb), &
                      hlmkmn(0:ncheb,lmsize2,0:ncheb)
 
 ! chebyshev arrays
-      double complex zslc1sum(0:ncheb)
-      double precision drpan2
-      double precision cslc1(0:ncheb,0:ncheb), & ! Integration matrix from left ( C*S_L*C^-1 in eq. 5.53)
+      complex (kind=dp) zslc1sum(0:ncheb)
+      real (kind=dp) drpan2
+      real (kind=dp) cslc1(0:ncheb,0:ncheb), & ! Integration matrix from left ( C*S_L*C^-1 in eq. 5.53)
                        tau(0:ncheb), &    ! Radial mesh point
                        slc1sum(0:ncheb),taucslcr,tau_icheb
-      double complex :: gf_tau_icheb
+      complex (kind=dp) :: gf_tau_icheb
 
       integer ipiv(0:ncheb,lmsize2)
       integer :: use_sratrick

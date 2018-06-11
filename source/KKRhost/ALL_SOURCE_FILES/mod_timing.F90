@@ -1,6 +1,7 @@
 module mod_timing
 
 ! taken from impurity code of David Bauer
+      Use mod_datatypes, Only: dp
 
 implicit none
 
@@ -16,7 +17,7 @@ implicit none
   integer,parameter      :: nkeylen=40
   character(len=nkeylen) :: timingkeys(nkeys)=''
   integer                :: start_time(nkeys)=0
-  double precision       :: interm_time(nkeys)=0.0D0
+  real (kind=dp)       :: interm_time(nkeys)=0.0D0
   integer                :: ispaused(nkeys)=0
   integer                :: writetiming=1
   integer                :: init=0

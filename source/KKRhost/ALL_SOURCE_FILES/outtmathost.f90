@@ -6,12 +6,13 @@ subroutine outtmathost(alat, ins, krel, kmrot, nspin, naez, lmmax, bravais, &
 ! *                                                                    *
 ! **********************************************************************
   use :: mod_version_info
+      Use mod_datatypes, Only: dp
   implicit none
 !..
 !.. Arguments ..
   integer :: ins, krel, kmrot, nspin, naez, lmmax, npol, npnt1, npnt2, npnt3
-  double precision :: alat, e2in, tk
-  double precision :: bravais(3, 3), rbasis(3, *), qmtet(*), qmphi(*)
+  real (kind=dp) :: alat, e2in, tk
+  real (kind=dp) :: bravais(3, 3), rbasis(3, *), qmtet(*), qmphi(*)
 !..
 !.. Locals ..
   integer :: i, ih

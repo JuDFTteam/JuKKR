@@ -2,6 +2,7 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
   r_log, npan_log, npan_eq, ncheb, npan_tot, rnew, rpan_intervall, &
   ipan_intervall, vinsnew, ntcell, thetas, thetasnew)
 
+      Use mod_datatypes, Only: dp
   implicit none
   include 'inc.p'
   integer :: nspin, irmin(natypd), ipan(natypd), irws(natypd)
@@ -13,21 +14,21 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
   parameter (irmind=irmd-irnsd)
   integer :: npan_log, npan_eq, ncheb, npan_inst, npan_tot(natypd)
   integer :: ircut(0:ipand, natypd)
-  double precision :: r(irmd, natypd)
-  double precision :: fac
+  real (kind=dp) :: r(irmd, natypd)
+  real (kind=dp) :: fac
   parameter (fac=2d0)
-  double precision :: vins(irmind:irmd, lmpotd, nspotd), visp(irmd, nspotd), &
+  real (kind=dp) :: vins(irmind:irmd, lmpotd, nspotd), visp(irmd, nspotd), &
     vinsin(irmd, lmpotd, nspin)
-  double precision :: thetas(irid, nfund, ncelld), thetasin(irid, nfund, &
+  real (kind=dp) :: thetas(irid, nfund, ncelld), thetasin(irid, nfund, &
     ncelld), thetasnew(ntotd*(nchebd+1), nfund, ncelld)
   integer :: ntcell(natypd)
   integer :: i1, ipot, ipotm, ir, ispin, ir2, ip, icell, ishift, ilogpanshift, &
     ilinpanshift, npan_logtemp, imin, imax, iminnew, imaxnew, lm1
-  double precision :: r_log, rmin, rmax, rval
-  double precision :: rnew(ntotd*(nchebd+1), natypd), &
+  real (kind=dp) :: r_log, rmin, rmax, rval
+  real (kind=dp) :: rnew(ntotd*(nchebd+1), natypd), &
     rpan_intervall(0:ntotd, natypd)
   integer :: ipan_intervall(0:ntotd, natypd)
-  double precision :: vinsnew(ntotd*(nchebd+1), lmpotd, nspotd)
+  real (kind=dp) :: vinsnew(ntotd*(nchebd+1), lmpotd, nspotd)
 
   vinsnew = 0d0
   thetasnew = 0d0
@@ -184,14 +185,14 @@ subroutine chebmesh(npan, ncheb, ri, ro)
 
   integer, intent (in) :: npan
   integer, intent (in) :: ncheb
-  double precision, intent (in) :: ri(0:npan)
-  double precision, intent (out) :: ro(npan*(ncheb+1))
+  real (kind=dp), intent (in) :: ri(0:npan)
+  real (kind=dp), intent (out) :: ro(npan*(ncheb+1))
   implicit none
 
 !-----------------------------------------------
 
   integer :: i, k, ik
-  double precision :: tau, pi
+  real (kind=dp) :: tau, pi
 
   pi = 4d0*datan(1d0)
   do i = 1, npan

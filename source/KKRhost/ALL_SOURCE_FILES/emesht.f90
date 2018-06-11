@@ -43,20 +43,20 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
   integer, intent (in) :: npnt2 !< number of E points (EMESHT) for the contour integration
   integer, intent (in) :: npnt3 !< number of E points (EMESHT) for the contour integration
   integer, intent (in) :: iemxd !< Dimension for energy-dependent arrays
-  double precision, intent (in) :: tk !< Temperature
-  double precision, intent (in) :: emu !< Top of the contour
-  double precision, intent (in) :: ebot !< Bottom of the contour
-  double precision, intent (in) :: efermi !< Fermi energy
+  real (kind=dp), intent (in) :: tk !< Temperature
+  real (kind=dp), intent (in) :: emu !< Top of the contour
+  real (kind=dp), intent (in) :: ebot !< Bottom of the contour
+  real (kind=dp), intent (in) :: efermi !< Fermi energy
 ! .. Input/Output variables
   integer, intent (inout) :: npnt
-  double complex, dimension (iemxd), intent (inout) :: df
-  double complex, dimension (iemxd), intent (inout) :: ez
+  complex (kind=dp), dimension (iemxd), intent (inout) :: df
+  complex (kind=dp), dimension (iemxd), intent (inout) :: ez
 ! .. Local Scalars ..
   integer :: i
-  double complex :: de
-  double precision :: er, etk
+  complex (kind=dp) :: de
+  real (kind=dp) :: er, etk
 ! .. Local Arrays ..
-  double precision, dimension (128) :: wi, xi
+  real (kind=dp), dimension (128) :: wi, xi
 ! .. External Subroutines ..
   logical :: opt
   external :: gaufd, gauleg, opt

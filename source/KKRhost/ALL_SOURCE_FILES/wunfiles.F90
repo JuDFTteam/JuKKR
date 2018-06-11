@@ -15,6 +15,7 @@
 module mod_wunfiles
 
    use Profiling
+   use mod_DataTypes
 
    implicit none
 
@@ -130,28 +131,28 @@ module mod_wunfiles
       integer :: NATOMIMPD !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
       integer :: ITRUNLDAU !< Iteration index for LDA+U
       integer :: IESEMICORE
-      double precision :: TK        !< Temperature
-      double precision :: FCM
-      double precision :: EMIN      !< Energies needed in EMESHT
-      double precision :: EMAX      !< Energies needed in EMESHT
-      double precision :: ALAT      !< Lattice constant in a.u.
-      double precision :: R_LOG
-      double precision :: EFOLD
-      double precision :: DENEF
-      double precision :: EFERMI    !< Fermi energy
-      double precision :: CPATOL    !< Convergency tolerance for CPA-cycle
-      double precision :: MIXING    !< Magnitude of the mixing parameter
-      double precision :: QBOUND    !< Convergence parameter for the potential
-      double precision :: TKSEMI    !< Temperature of semi-core contour
-      double precision :: CHRGOLD
-      double precision :: TOLRDIF   !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
-      double precision :: LASTERR
-      double precision :: EMUSEMI
-      double precision :: EBOTSEMI
-      double precision :: FSEMICORE
-      double precision :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-      double precision :: CHRGSEMICORE
-      double complex :: DELTAE      !< Energy difference for numerical derivative
+      real (kind=dp) :: TK        !< Temperature
+      real (kind=dp) :: FCM
+      real (kind=dp) :: EMIN      !< Energies needed in EMESHT
+      real (kind=dp) :: EMAX      !< Energies needed in EMESHT
+      real (kind=dp) :: ALAT      !< Lattice constant in a.u.
+      real (kind=dp) :: R_LOG
+      real (kind=dp) :: EFOLD
+      real (kind=dp) :: DENEF
+      real (kind=dp) :: EFERMI    !< Fermi energy
+      real (kind=dp) :: CPATOL    !< Convergency tolerance for CPA-cycle
+      real (kind=dp) :: MIXING    !< Magnitude of the mixing parameter
+      real (kind=dp) :: QBOUND    !< Convergence parameter for the potential
+      real (kind=dp) :: TKSEMI    !< Temperature of semi-core contour
+      real (kind=dp) :: CHRGOLD
+      real (kind=dp) :: TOLRDIF   !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+      real (kind=dp) :: LASTERR
+      real (kind=dp) :: EMUSEMI
+      real (kind=dp) :: EBOTSEMI
+      real (kind=dp) :: FSEMICORE
+      real (kind=dp) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+      real (kind=dp) :: CHRGSEMICORE
+      complex (kind=dp) :: DELTAE      !< Energy difference for numerical derivative
       logical :: LNC                !< Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
       logical :: LRHOSYM
       logical :: LINTERFACE         !< If True a matching with semi-inifinite surfaces must be performed
@@ -159,80 +160,80 @@ module mod_wunfiles
       character(len=80) :: TMPDIR
 
       !     .. Arrays
-      double complex, dimension(:), allocatable :: EZ
-      double complex, dimension(:), allocatable :: WEZ
-      double complex, dimension(:,:), allocatable :: RC        !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-      double complex, dimension(:,:), allocatable :: CREL      !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-      double complex, dimension(:,:), allocatable :: RREL      !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
-      double complex, dimension(:,:), allocatable :: PHILDAU
-      double complex, dimension(:,:,:), allocatable :: SRREL
-      double complex, dimension(:,:,:), allocatable :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-      double complex, dimension(:,:,:), allocatable :: DSYMLL
-      double complex, dimension(:,:,:,:,:), allocatable :: LEFTTINVLL
-      double complex, dimension(:,:,:,:,:), allocatable :: RIGHTTINVLL
-      double precision, dimension(:), allocatable :: A               !< Constants for exponential R mesh
-      double precision, dimension(:), allocatable :: B               !< Constants for exponential R mesh
-      double precision, dimension(:), allocatable :: EU
-      double precision, dimension(:), allocatable :: EDC
-      double precision, dimension(:), allocatable :: VBC             !< Potential constants
-      double precision, dimension(:), allocatable :: ZAT             !< Nuclear charge
-      double precision, dimension(:), allocatable :: RMT             !< Muffin-tin radius of true system
-      double precision, dimension(:), allocatable :: RWS             !< Wigner Seitz radius
-      double precision, dimension(:), allocatable :: GSH
-      double precision, dimension(:), allocatable :: PHI
-      double precision, dimension(:), allocatable :: UEFF            !< input U parameter for each atom
-      double precision, dimension(:), allocatable :: JEFF            !< input J parameter for each atom
-      double precision, dimension(:), allocatable :: VREF
-      double precision, dimension(:), allocatable :: CONC            !< Concentration of a given atom
-      double precision, dimension(:), allocatable :: THETA
-      double precision, dimension(:), allocatable :: VOLBZ
-      double precision, dimension(:), allocatable :: QMTET           !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(:), allocatable :: QMPHI           !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(:), allocatable :: RMTREF          !< Muffin-tin radius of reference system
-      double precision, dimension(:), allocatable :: RMTNEW          !< Adapted muffin-tin radius
-      double precision, dimension(:), allocatable :: DENEFAT
-      double precision, dimension(:), allocatable :: EREFLDAU        !< the energies of the projector's wave functions (REAL)
-      double precision, dimension(:), allocatable :: SOCSCALE        !< Spin-orbit scaling
-      double precision, dimension(:,:,:), allocatable :: VINS        !< Non-spherical part of the potential
-      double precision, dimension(:,:), allocatable :: RMESH         !< Radial mesh ( in units a Bohr)
-      double precision, dimension(:,:), allocatable :: RR
-      double precision, dimension(:,:), allocatable :: DRDI          !< Derivative dr/di
-      double precision, dimension(:,:), allocatable :: CSCL          !< Speed of light scaling
-      double precision, dimension(:,:), allocatable :: CLEB          !< GAUNT coefficients (GAUNT)
-      double precision, dimension(:,:), allocatable :: RHOC
-      double precision, dimension(:,:), allocatable :: ESPV
-      double precision, dimension(:,:), allocatable :: RNEW
-      double precision, dimension(:,:), allocatable :: VISP          !< Spherical part of the potential
-      double precision, dimension(:,:), allocatable :: VTREL         !< potential (spherical part)
-      double precision, dimension(:,:), allocatable :: BTREL         !< magnetic field
-      double precision, dimension(:,:), allocatable :: ECORE         !< Core energies
-      double precision, dimension(:,:), allocatable :: RMREL         !< radial mesh
-      double precision, dimension(:,:), allocatable :: RATOM
-      double precision, dimension(:,:), allocatable :: RBASIS        !< Position of atoms in the unit cell in units of bravais vectors
-      double precision, dimension(:,:), allocatable :: SOCSCL
-      double precision, dimension(:,:), allocatable :: VOLCUB
-      double precision, dimension(:,:), allocatable :: RHOORB
-      double precision, dimension(:,:), allocatable :: RCLSIMP
-      double precision, dimension(:,:), allocatable :: DRDIREL       !< derivative of radial mesh
-      double precision, dimension(:,:), allocatable :: ECOREREL
-      double precision, dimension(:,:), allocatable :: CMOMHOST      !< Charge moments of each atom of the (left/right) host
-      double precision, dimension(:,:), allocatable :: QMPHITAB
-      double precision, dimension(:,:), allocatable :: QMTETTAB
-      double precision, dimension(:,:), allocatable :: QMGAMTAB
-      double precision, dimension(:,:), allocatable :: R2DRDIREL     !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-      double precision, dimension(:,:), allocatable :: RPAN_INTERVALL
+      complex (kind=dp), dimension(:), allocatable :: EZ
+      complex (kind=dp), dimension(:), allocatable :: WEZ
+      complex (kind=dp), dimension(:,:), allocatable :: RC        !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+      complex (kind=dp), dimension(:,:), allocatable :: CREL      !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+      complex (kind=dp), dimension(:,:), allocatable :: RREL      !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+      complex (kind=dp), dimension(:,:), allocatable :: PHILDAU
+      complex (kind=dp), dimension(:,:,:), allocatable :: SRREL
+      complex (kind=dp), dimension(:,:,:), allocatable :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+      complex (kind=dp), dimension(:,:,:), allocatable :: DSYMLL
+      complex (kind=dp), dimension(:,:,:,:,:), allocatable :: LEFTTINVLL
+      complex (kind=dp), dimension(:,:,:,:,:), allocatable :: RIGHTTINVLL
+      real (kind=dp), dimension(:), allocatable :: A               !< Constants for exponential R mesh
+      real (kind=dp), dimension(:), allocatable :: B               !< Constants for exponential R mesh
+      real (kind=dp), dimension(:), allocatable :: EU
+      real (kind=dp), dimension(:), allocatable :: EDC
+      real (kind=dp), dimension(:), allocatable :: VBC             !< Potential constants
+      real (kind=dp), dimension(:), allocatable :: ZAT             !< Nuclear charge
+      real (kind=dp), dimension(:), allocatable :: RMT             !< Muffin-tin radius of true system
+      real (kind=dp), dimension(:), allocatable :: RWS             !< Wigner Seitz radius
+      real (kind=dp), dimension(:), allocatable :: GSH
+      real (kind=dp), dimension(:), allocatable :: PHI
+      real (kind=dp), dimension(:), allocatable :: UEFF            !< input U parameter for each atom
+      real (kind=dp), dimension(:), allocatable :: JEFF            !< input J parameter for each atom
+      real (kind=dp), dimension(:), allocatable :: VREF
+      real (kind=dp), dimension(:), allocatable :: CONC            !< Concentration of a given atom
+      real (kind=dp), dimension(:), allocatable :: THETA
+      real (kind=dp), dimension(:), allocatable :: VOLBZ
+      real (kind=dp), dimension(:), allocatable :: QMTET           !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+      real (kind=dp), dimension(:), allocatable :: QMPHI           !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+      real (kind=dp), dimension(:), allocatable :: RMTREF          !< Muffin-tin radius of reference system
+      real (kind=dp), dimension(:), allocatable :: RMTNEW          !< Adapted muffin-tin radius
+      real (kind=dp), dimension(:), allocatable :: DENEFAT
+      real (kind=dp), dimension(:), allocatable :: EREFLDAU        !< the energies of the projector's wave functions (REAL)
+      real (kind=dp), dimension(:), allocatable :: SOCSCALE        !< Spin-orbit scaling
+      real (kind=dp), dimension(:,:,:), allocatable :: VINS        !< Non-spherical part of the potential
+      real (kind=dp), dimension(:,:), allocatable :: RMESH         !< Radial mesh ( in units a Bohr)
+      real (kind=dp), dimension(:,:), allocatable :: RR
+      real (kind=dp), dimension(:,:), allocatable :: DRDI          !< Derivative dr/di
+      real (kind=dp), dimension(:,:), allocatable :: CSCL          !< Speed of light scaling
+      real (kind=dp), dimension(:,:), allocatable :: CLEB          !< GAUNT coefficients (GAUNT)
+      real (kind=dp), dimension(:,:), allocatable :: RHOC
+      real (kind=dp), dimension(:,:), allocatable :: ESPV
+      real (kind=dp), dimension(:,:), allocatable :: RNEW
+      real (kind=dp), dimension(:,:), allocatable :: VISP          !< Spherical part of the potential
+      real (kind=dp), dimension(:,:), allocatable :: VTREL         !< potential (spherical part)
+      real (kind=dp), dimension(:,:), allocatable :: BTREL         !< magnetic field
+      real (kind=dp), dimension(:,:), allocatable :: ECORE         !< Core energies
+      real (kind=dp), dimension(:,:), allocatable :: RMREL         !< radial mesh
+      real (kind=dp), dimension(:,:), allocatable :: RATOM
+      real (kind=dp), dimension(:,:), allocatable :: RBASIS        !< Position of atoms in the unit cell in units of bravais vectors
+      real (kind=dp), dimension(:,:), allocatable :: SOCSCL
+      real (kind=dp), dimension(:,:), allocatable :: VOLCUB
+      real (kind=dp), dimension(:,:), allocatable :: RHOORB
+      real (kind=dp), dimension(:,:), allocatable :: RCLSIMP
+      real (kind=dp), dimension(:,:), allocatable :: DRDIREL       !< derivative of radial mesh
+      real (kind=dp), dimension(:,:), allocatable :: ECOREREL
+      real (kind=dp), dimension(:,:), allocatable :: CMOMHOST      !< Charge moments of each atom of the (left/right) host
+      real (kind=dp), dimension(:,:), allocatable :: QMPHITAB
+      real (kind=dp), dimension(:,:), allocatable :: QMTETTAB
+      real (kind=dp), dimension(:,:), allocatable :: QMGAMTAB
+      real (kind=dp), dimension(:,:), allocatable :: R2DRDIREL     !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      real (kind=dp), dimension(:,:), allocatable :: RPAN_INTERVALL
 
-      double precision, dimension(:,:,:), allocatable :: RCLS        !< Real space position of atom in cluster
-      double precision, dimension(:,:,:), allocatable :: RROT
-      double precision, dimension(:,:,:), allocatable :: BZKP
-      double precision, dimension(:,:,:), allocatable :: MVEVI
-      double precision, dimension(:,:,:), allocatable :: THETAS      !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-      double precision, dimension(:,:,:), allocatable :: MVEVIEF
-      double precision, dimension(:,:,:), allocatable :: THETASNEW
-      double precision, dimension(:,:,:,:), allocatable :: R2NEF
-      double precision, dimension(:,:,:,:), allocatable :: WLDAU     !< potential matrix
-      double precision, dimension(:,:,:,:), allocatable :: RHO2NS
-      double precision, dimension(:,:,:,:,:), allocatable :: ULDAU   !< calculated Coulomb matrix elements (EREFLDAU)
+      real (kind=dp), dimension(:,:,:), allocatable :: RCLS        !< Real space position of atom in cluster
+      real (kind=dp), dimension(:,:,:), allocatable :: RROT
+      real (kind=dp), dimension(:,:,:), allocatable :: BZKP
+      real (kind=dp), dimension(:,:,:), allocatable :: MVEVI
+      real (kind=dp), dimension(:,:,:), allocatable :: THETAS      !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+      real (kind=dp), dimension(:,:,:), allocatable :: MVEVIEF
+      real (kind=dp), dimension(:,:,:), allocatable :: THETASNEW
+      real (kind=dp), dimension(:,:,:,:), allocatable :: R2NEF
+      real (kind=dp), dimension(:,:,:,:), allocatable :: WLDAU     !< potential matrix
+      real (kind=dp), dimension(:,:,:,:), allocatable :: RHO2NS
+      real (kind=dp), dimension(:,:,:,:,:), allocatable :: ULDAU   !< calculated Coulomb matrix elements (EREFLDAU)
       integer, dimension(:), allocatable :: CLS       !< Cluster around atomic sites
       integer, dimension(:), allocatable :: NOQ       !< Number of diff. atom types located
       integer, dimension(:), allocatable :: IMT       !< R point at MT radius
@@ -441,86 +442,86 @@ contains
       integer, intent(in) :: ITRUNLDAU    !< Iteration index for LDA+U
       integer, intent(in) :: IESEMICORE
       !     .. nembd2 = NAEZ+NEMB, lmaxd1=lmaxd+1, naezdpd=NAEZ/nprincd)
-      double precision, intent(in) :: TK        !< Temperature
-      double precision, intent(in) :: FCM
-      double precision, intent(in) :: ALAT      !< Lattice constant in a.u.
-      double precision, intent(inout) :: EMIN   !< Energies needed in EMESHT
-      double precision, intent(in) :: EMAX      !< Energies needed in EMESHT
-      double precision, intent(in) :: R_LOG
-      double precision, intent(in) :: EFERMI    !< Fermi energy
-      double precision, intent(in) :: CPATOL    !< Convergency tolerance for CPA-cycle
-      double precision, intent(in) :: MIXING    !< Magnitude of the mixing parameter
-      double precision, intent(in) :: QBOUND    !< Convergence parameter for the potential
-      double precision, intent(in) :: TKSEMI    !< Temperature of semi-core contour
-      double precision, intent(in) :: EMUSEMI
-      double precision, intent(in) :: TOLRDIF   !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
-      double precision, intent(in) :: EBOTSEMI
-      double precision, intent(in) :: FSEMICORE
-      double precision, intent(in) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+      real (kind=dp), intent(in) :: TK        !< Temperature
+      real (kind=dp), intent(in) :: FCM
+      real (kind=dp), intent(in) :: ALAT      !< Lattice constant in a.u.
+      real (kind=dp), intent(inout) :: EMIN   !< Energies needed in EMESHT
+      real (kind=dp), intent(in) :: EMAX      !< Energies needed in EMESHT
+      real (kind=dp), intent(in) :: R_LOG
+      real (kind=dp), intent(in) :: EFERMI    !< Fermi energy
+      real (kind=dp), intent(in) :: CPATOL    !< Convergency tolerance for CPA-cycle
+      real (kind=dp), intent(in) :: MIXING    !< Magnitude of the mixing parameter
+      real (kind=dp), intent(in) :: QBOUND    !< Convergence parameter for the potential
+      real (kind=dp), intent(in) :: TKSEMI    !< Temperature of semi-core contour
+      real (kind=dp), intent(in) :: EMUSEMI
+      real (kind=dp), intent(in) :: TOLRDIF   !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+      real (kind=dp), intent(in) :: EBOTSEMI
+      real (kind=dp), intent(in) :: FSEMICORE
+      real (kind=dp), intent(in) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
       logical, intent(in) :: LRHOSYM
       logical, intent(in) :: LINTERFACE         !< If True a matching with semi-inifinite surfaces must be performed
       character(len=10), intent(in) :: SOLVER   !< Type of solver
-      double complex, intent(in) :: DELTAE      !< Energy difference for numerical derivative
+      complex (kind=dp), intent(in) :: DELTAE      !< Energy difference for numerical derivative
       !     ..
       !     .. Array arguments
-      double complex, dimension(IEMXD), intent(in) :: EZ
-      double complex, dimension(IEMXD), intent(in) :: WEZ
-      double complex, dimension(LMMAXD,LMMAXD), intent(in)  :: RC           !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-      double complex, dimension(LMMAXD,LMMAXD), intent(in)  :: CREL         !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-      double complex, dimension(LMMAXD,LMMAXD), intent(in)  :: RREL         !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
-      double complex, dimension(IRM,NATYP), intent(in)      :: PHILDAU
+      complex (kind=dp), dimension(IEMXD), intent(in) :: EZ
+      complex (kind=dp), dimension(IEMXD), intent(in) :: WEZ
+      complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in)  :: RC           !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+      complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in)  :: CREL         !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+      complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in)  :: RREL         !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+      complex (kind=dp), dimension(IRM,NATYP), intent(in)      :: PHILDAU
 
-      double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(in)      :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-      double complex, dimension(LMMAXD,LMMAXD,NSYMAXD), intent(in)   :: DSYMLL
-      double complex, dimension(2,2,LMMAXD), intent(in)              :: SRREL
-      double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(in) :: LEFTTINVLL
-      double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(in) :: RIGHTTINVLL
-      double precision, dimension(NATYP), intent(in)  :: A        !< Constants for exponential R mesh
-      double precision, dimension(NATYP), intent(in)  :: B        !< Constants for exponential R mesh
-      double precision, dimension(2), intent(in)      :: VBC      !< Potential constants
-      double precision, dimension(NATYP), intent(in)  :: ZAT      !< Nuclear charge
-      double precision, dimension(NATYP), intent(in)  :: RMT      !< Muffin-tin radius of true system
-      double precision, dimension(NATYP), intent(in)  :: RWS      !< Wigner Seitz radius
-      double precision, dimension(NGSHD), intent(in)  :: GSH
-      double precision, dimension(NATYP), intent(in)  :: CONC     !< Concentration of a given atom
-      double precision, dimension(NREF), intent(in)   :: VREF
-      double precision, dimension(NATYP), intent(in)  :: UEFF     !< input U parameter for each atom
-      double precision, dimension(NATYP), intent(in)  :: JEFF     !< input J parameter for each atom
-      double precision, dimension(NAEZ), intent(in)   :: QMTET    !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(NAEZ), intent(in)   :: QMPHI    !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(NREF), intent(in)   :: RMTREF   !< Muffin-tin radius of reference system
-      double precision, dimension(NATYP), intent(in)  :: RMTNEW   !< Adapted muffin-tin radius
-      double precision, dimension(NATYP), intent(in)  :: EREFLDAU !< the energies of the projector's wave functions (REAL)
-      double precision, dimension(NATYP), intent(in)  :: SOCSCALE !< Spin-orbit scaling
-      double precision, dimension(IRM,NATYP), intent(in)             :: R        !< Radial mesh ( in units a Bohr)
-      double precision, dimension(3,0:NR), intent(in)                :: RR
-      double precision, dimension(IRM,NATYP), intent(in)             :: DRDI     !< Derivative dr/di
-      double precision, dimension(NCLEB,2), intent(in)               :: CLEB     !< GAUNT coefficients (GAUNT)
-      double precision, dimension(LMAXD1,NATYP), intent(in)          :: CSCL     !< Speed of light scaling
-      double precision, dimension(NTOTD*(NCHEB+1),NATYP), intent(in) :: RNEW
-      double precision, dimension(IRM,NPOTD), intent(in)             :: VISP     !< Spherical part of the potential
-      double precision, dimension(IRM,NATYP), intent(in)             :: VTREL    !< potential (spherical part)
-      double precision, dimension(IRM,NATYP), intent(in)             :: BTREL    !< magnetic field
-      double precision, dimension(IRM,NATYP), intent(in)             :: RMREL    !< radial mesh
-      double precision, dimension(3,NSHELD), intent(in)              :: RATOM
-      double precision, dimension(20,NPOTD), intent(in)              :: ECORE    !< Core energies
-      double precision, dimension(3,NEMBD2), intent(in)              :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
-      double precision, dimension(LMAXD1,NATYP), intent(in)          :: SOCSCL
-      double precision, dimension(IRM,NATYP), intent(in)             :: DRDIREL  !< derivative of radial mesh
-      double precision, dimension(NAEZ,3), intent(in)                :: QMPHITAB
-      double precision, dimension(NAEZ,3), intent(in)                :: QMTETTAB
-      double precision, dimension(NAEZ,3), intent(in)                :: QMGAMTAB
-      double precision, dimension(3,NATOMIMPD), intent(in)           :: RCLSIMP
-      double precision, dimension(LMPOT,NEMBD1), intent(in)          :: CMOMHOST !< Charge moments of each atom of the (left/right) host
-      double precision, dimension(IRM,NATYP), intent(in)             :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-      double precision, dimension(0:NTOTD,NATYP), intent(in)         :: RPAN_INTERVALL
-      double precision, dimension(48,3,NSHELD), intent(in)              :: RROT
-      double precision, dimension(3,NACLSD,NCLSD), intent(in)           :: RCLS   !< Real space position of atom in cluster
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(in)  :: VINS   !< Non-spherical part of the potential
-      double precision, dimension(IRID,NFUND,NCELLD), intent(in)        :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-      double precision, dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(in)   :: THETASNEW
-      double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(in)       :: WLDAU  !< potential matrix
-      double precision, dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(in)  :: ULDAU  !< calculated Coulomb matrix elements (EREFLDAU)
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)      :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NSYMAXD), intent(in)   :: DSYMLL
+      complex (kind=dp), dimension(2,2,LMMAXD), intent(in)              :: SRREL
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(in) :: LEFTTINVLL
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(in) :: RIGHTTINVLL
+      real (kind=dp), dimension(NATYP), intent(in)  :: A        !< Constants for exponential R mesh
+      real (kind=dp), dimension(NATYP), intent(in)  :: B        !< Constants for exponential R mesh
+      real (kind=dp), dimension(2), intent(in)      :: VBC      !< Potential constants
+      real (kind=dp), dimension(NATYP), intent(in)  :: ZAT      !< Nuclear charge
+      real (kind=dp), dimension(NATYP), intent(in)  :: RMT      !< Muffin-tin radius of true system
+      real (kind=dp), dimension(NATYP), intent(in)  :: RWS      !< Wigner Seitz radius
+      real (kind=dp), dimension(NGSHD), intent(in)  :: GSH
+      real (kind=dp), dimension(NATYP), intent(in)  :: CONC     !< Concentration of a given atom
+      real (kind=dp), dimension(NREF), intent(in)   :: VREF
+      real (kind=dp), dimension(NATYP), intent(in)  :: UEFF     !< input U parameter for each atom
+      real (kind=dp), dimension(NATYP), intent(in)  :: JEFF     !< input J parameter for each atom
+      real (kind=dp), dimension(NAEZ), intent(in)   :: QMTET    !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+      real (kind=dp), dimension(NAEZ), intent(in)   :: QMPHI    !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+      real (kind=dp), dimension(NREF), intent(in)   :: RMTREF   !< Muffin-tin radius of reference system
+      real (kind=dp), dimension(NATYP), intent(in)  :: RMTNEW   !< Adapted muffin-tin radius
+      real (kind=dp), dimension(NATYP), intent(in)  :: EREFLDAU !< the energies of the projector's wave functions (REAL)
+      real (kind=dp), dimension(NATYP), intent(in)  :: SOCSCALE !< Spin-orbit scaling
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R        !< Radial mesh ( in units a Bohr)
+      real (kind=dp), dimension(3,0:NR), intent(in)                :: RR
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: DRDI     !< Derivative dr/di
+      real (kind=dp), dimension(NCLEB,2), intent(in)               :: CLEB     !< GAUNT coefficients (GAUNT)
+      real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: CSCL     !< Speed of light scaling
+      real (kind=dp), dimension(NTOTD*(NCHEB+1),NATYP), intent(in) :: RNEW
+      real (kind=dp), dimension(IRM,NPOTD), intent(in)             :: VISP     !< Spherical part of the potential
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: VTREL    !< potential (spherical part)
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: BTREL    !< magnetic field
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: RMREL    !< radial mesh
+      real (kind=dp), dimension(3,NSHELD), intent(in)              :: RATOM
+      real (kind=dp), dimension(20,NPOTD), intent(in)              :: ECORE    !< Core energies
+      real (kind=dp), dimension(3,NEMBD2), intent(in)              :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
+      real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: SOCSCL
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: DRDIREL  !< derivative of radial mesh
+      real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMPHITAB
+      real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMTETTAB
+      real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMGAMTAB
+      real (kind=dp), dimension(3,NATOMIMPD), intent(in)           :: RCLSIMP
+      real (kind=dp), dimension(LMPOT,NEMBD1), intent(in)          :: CMOMHOST !< Charge moments of each atom of the (left/right) host
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      real (kind=dp), dimension(0:NTOTD,NATYP), intent(in)         :: RPAN_INTERVALL
+      real (kind=dp), dimension(48,3,NSHELD), intent(in)              :: RROT
+      real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in)           :: RCLS   !< Real space position of atom in cluster
+      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(in)  :: VINS   !< Non-spherical part of the potential
+      real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in)        :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+      real (kind=dp), dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(in)   :: THETASNEW
+      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(in)       :: WLDAU  !< potential matrix
+      real (kind=dp), dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(in)  :: ULDAU  !< calculated Coulomb matrix elements (EREFLDAU)
       !     ..
       integer, dimension(NAEZ), intent(in)      :: NOQ       !< Number of diff. atom types located
       integer, dimension(NATYP), intent(in)     :: IMT       !< R point at MT radius
@@ -586,8 +587,8 @@ contains
       integer :: I1
       integer :: IC, NACLSMIN, NACLSMAX, NQDOS, IRMDNEW  ! variables for t_inc filling
       integer :: ITMPDIR,ILTMP
-      double precision, dimension(NATYP) :: PHI
-      double precision, dimension(NATYP) :: THETA
+      real (kind=dp), dimension(NATYP) :: PHI
+      real (kind=dp), dimension(NATYP) :: THETA
       character(len=80) :: TMPDIR
       ! .. External Functions
       LOGICAL OPT,TEST
@@ -844,9 +845,9 @@ contains
       integer :: i_stat
 
       !-------------------------------------------------------------------------
-      ! Allocate double complex arrays
+      ! Allocate complex (kind=dp) arrays
       !-------------------------------------------------------------------------
-      allocate(t_params%EZ(t_params%IEMXD),stat=i_stat)   !DOUBLE COMPLEX
+      allocate(t_params%EZ(t_params%IEMXD),stat=i_stat)   !complex (kind=dp)
       call memocc(i_stat,product(shape(t_params%EZ))*kind(t_params%EZ),'t_params%EZ','init_t_params')
       allocate(t_params%WEZ(t_params%IEMXD),stat=i_stat)
       call memocc(i_stat,product(shape(t_params%WEZ))*kind(t_params%WEZ),'t_params%WEZ','init_t_params')
@@ -871,13 +872,13 @@ contains
       allocate(t_params%PHILDAU(t_params%IRM,t_params%NATYP), stat=i_stat)
       call memocc(i_stat,product(shape(t_params%PHILDAU))*kind(t_params%PHILDAU),'t_params%PHILDAU','init_t_params')
       !-------------------------------------------------------------------------
-      ! End of allocation of double complex arrays
+      ! End of allocation of complex (kind=dp) arrays
       !-------------------------------------------------------------------------
 
       !-------------------------------------------------------------------------
-      ! Allocate double precision arrays
+      ! Allocate real (kind=dp) arrays
       !-------------------------------------------------------------------------
-      allocate(t_params%VINS(t_params%IRMIND:t_params%IRM,t_params%LMPOT,t_params%NSPOTD),stat=i_stat)!DOUBLE PRECISION
+      allocate(t_params%VINS(t_params%IRMIND:t_params%IRM,t_params%LMPOT,t_params%NSPOTD),stat=i_stat)!real (kind=dp)
       call memocc(i_stat,product(shape(t_params%VINS))*kind(t_params%VINS),'t_params%VINS','init_t_params')
       allocate(t_params%VISP(t_params%IRM,t_params%NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(t_params%VISP))*kind(t_params%VISP),'t_params%VISP','init_t_params')
@@ -991,16 +992,16 @@ contains
       call memocc(i_stat,product(shape(t_params%RHOORB))*kind(t_params%RHOORB),'t_params%RHOORB','init_t_params')
       allocate(t_params%ECOREREL(t_params%KREL*20+(1-t_params%KREL),t_params%NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(t_params%ECOREREL))*kind(t_params%ECOREREL),'t_params%ECOREREL','init_t_params')
-      allocate(t_params%RCLSIMP(3,t_params%NATOMIMPD), stat=i_stat)    !DOUBLE PRECISION
+      allocate(t_params%RCLSIMP(3,t_params%NATOMIMPD), stat=i_stat)    !real (kind=dp)
       call memocc(i_stat,product(shape(t_params%RCLSIMP))*kind(t_params%RCLSIMP),'t_params%ECOREREL','init_t_params')
       if (.not.allocated(t_params%theta)) then
-         allocate(t_params%THETA(t_params%natyp),stat=i_stat)    !double precision
+         allocate(t_params%THETA(t_params%natyp),stat=i_stat)    !real (kind=dp)
          call memocc(i_stat,product(shape(t_params%THETA))*kind(t_params%THETA),'t_params%THETA','init_t_params')
-         allocate(t_params%PHI(t_params%natyp), stat=i_stat)      !double precision
+         allocate(t_params%PHI(t_params%natyp), stat=i_stat)      !real (kind=dp)
          call memocc(i_stat,product(shape(t_params%PHI))*kind(t_params%PHI),'t_params%PHI','init_t_params')
       end if
       !-------------------------------------------------------------------------
-      ! End of allocation of double precision arrays
+      ! End of allocation of real (kind=dp) arrays
       !-------------------------------------------------------------------------
 
       !-------------------------------------------------------------------------
@@ -1160,11 +1161,11 @@ contains
       !-------------------------------------------------------------------------
 
       if (.not.allocated(t_params%nofks)) then
-         allocate(t_params%BZKP(3,t_params%KPOIBZ,t_params%MAXMESH), stat=i_stat)! double precision
+         allocate(t_params%BZKP(3,t_params%KPOIBZ,t_params%MAXMESH), stat=i_stat)! real (kind=dp)
          call memocc(i_stat,product(shape(t_params%BZKP))*kind(t_params%BZKP),'t_params%BZKP','init_t_params')
-         allocate(t_params%VOLCUB(t_params%KPOIBZ,t_params%MAXMESH), stat=i_stat)! double precision
+         allocate(t_params%VOLCUB(t_params%KPOIBZ,t_params%MAXMESH), stat=i_stat)! real (kind=dp)
          call memocc(i_stat,product(shape(t_params%VOLCUB))*kind(t_params%VOLCUB),'t_params%VOLCUB','init_t_params')
-         allocate(t_params%VOLBZ(t_params%MAXMESH), stat=i_stat)! double precision
+         allocate(t_params%VOLBZ(t_params%MAXMESH), stat=i_stat)! real (kind=dp)
          call memocc(i_stat,product(shape(t_params%VOLBZ))*kind(t_params%VOLBZ),'t_params%VOLBZ','init_t_params')
          allocate(t_params%NOFKS(t_params%MAXMESH), stat=i_stat) ! integer
          call memocc(i_stat,product(shape(t_params%NOFKS))*kind(t_params%NOFKS),'t_params%NOFKS','init_t_params')
@@ -1310,7 +1311,7 @@ contains
       call MPI_Get_address(t_params%TOLRDIF,    disp1(111), ierr)
       call MPI_Get_address(t_params%EFOLD,      disp1(112), ierr)
       call MPI_Get_address(t_params%CHRGOLD,    disp1(113), ierr)
-      !DOUBLE COMPLEX
+      !complex (kind=dp)
       call MPI_Get_address(t_params%DELTAE,     disp1(114), ierr)
       !LOGICAL
       call MPI_Get_address(t_params%LINTERFACE, disp1(115), ierr)
@@ -1323,7 +1324,7 @@ contains
       call MPI_Get_address(t_params%I1,         disp1(119), ierr)
       call MPI_Get_address(t_params%NMVECMAX,   disp1(120), ierr)
       call MPI_Get_address(t_params%ITAB,       disp1(121), ierr)
-      !DOUBLE PRECISION
+      !real (kind=dp)
       call MPI_Get_address(t_params%LASTERR,      disp1(122), ierr)
       call MPI_Get_address(t_params%DENEF,        disp1(123), ierr)
       call MPI_Get_address(t_params%CHRGSEMICORE, disp1(124), ierr)
@@ -1380,7 +1381,7 @@ contains
       integer :: ierr
 
       !-------------------------------------------------------------------------
-      !DOUBLE COMPLEX arrays
+      !complex (kind=dp) arrays
       !-------------------------------------------------------------------------
       call MPI_Bcast(t_params%EZ,t_params%IEMXD,&
          MPI_DOUBLE_COMPLEX,master,MPI_COMM_WORLD,ierr)
@@ -1408,7 +1409,7 @@ contains
          MPI_DOUBLE_COMPLEX,master,MPI_COMM_WORLD,ierr)
 
       !-------------------------------------------------------------------------
-      !DOUBLE PRECISION arrays
+      !real (kind=dp) arrays
       !-------------------------------------------------------------------------
       call MPI_Bcast(t_params%VINS,((t_params%IRM-t_params%IRMIND+1)*&
          t_params%LMPOT*t_params%NSPOTD),&
@@ -1684,11 +1685,11 @@ contains
       ! K-points arrays
       !-------------------------------------------------------------------------
       call MPI_Bcast(t_params%BZKP,(3*t_params%KPOIBZ*t_params%MAXMESH),&
-         MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr) ! double precision
+         MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr) ! real (kind=dp)
       call MPI_Bcast(t_params%VOLCUB,(t_params%KPOIBZ*t_params%MAXMESH),&
-         MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr) ! double precision
+         MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr) ! real (kind=dp)
       call MPI_Bcast(t_params%VOLBZ,(t_params%MAXMESH),&
-         MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr) ! double precision
+         MPI_DOUBLE_PRECISION,master,MPI_COMM_WORLD,ierr) ! real (kind=dp)
       call MPI_Bcast(t_params%NOFKS,(t_params%MAXMESH),&
          MPI_INTEGER,master,MPI_COMM_WORLD,ierr) ! integer
 
@@ -1805,23 +1806,23 @@ contains
       integer, intent(in) :: NATOMIMPD !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
       integer, intent(in) :: ITRUNLDAU !< Iteration index for LDA+U
       integer, intent(in) :: IESEMICORE
-      double precision, intent(in) :: TK           !< Temperature
-      double precision, intent(in) :: FCM
-      double precision, intent(in) :: EMIN         !< Energies needed in EMESHT
-      double precision, intent(in) :: EMAX         !< Energies needed in EMESHT
-      double precision, intent(in) :: ALAT         !< Lattice constant in a.u.
-      double precision, intent(in) :: R_LOG
-      double precision, intent(in) :: TKSEMI       !< Temperature of semi-core contour
-      double precision, intent(in) :: EFERMI       !< Fermi energy
-      double precision, intent(in) :: CPATOL       !< Convergency tolerance for CPA-cycle
-      double precision, intent(in) :: MIXING       !< Magnitude of the mixing parameter
-      double precision, intent(in) :: QBOUND       !< Convergence parameter for the potential
-      double precision, intent(in) :: EMUSEMI
-      double precision, intent(in) :: TOLRDIF      !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
-      double precision, intent(in) :: EBOTSEMI
-      double precision, intent(in) :: FSEMICORE
-      double precision, intent(in) :: LAMBDA_XC    !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-      double complex, intent(in) :: DELTAE         !< Energy difference for numerical derivative
+      real (kind=dp), intent(in) :: TK           !< Temperature
+      real (kind=dp), intent(in) :: FCM
+      real (kind=dp), intent(in) :: EMIN         !< Energies needed in EMESHT
+      real (kind=dp), intent(in) :: EMAX         !< Energies needed in EMESHT
+      real (kind=dp), intent(in) :: ALAT         !< Lattice constant in a.u.
+      real (kind=dp), intent(in) :: R_LOG
+      real (kind=dp), intent(in) :: TKSEMI       !< Temperature of semi-core contour
+      real (kind=dp), intent(in) :: EFERMI       !< Fermi energy
+      real (kind=dp), intent(in) :: CPATOL       !< Convergency tolerance for CPA-cycle
+      real (kind=dp), intent(in) :: MIXING       !< Magnitude of the mixing parameter
+      real (kind=dp), intent(in) :: QBOUND       !< Convergence parameter for the potential
+      real (kind=dp), intent(in) :: EMUSEMI
+      real (kind=dp), intent(in) :: TOLRDIF      !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+      real (kind=dp), intent(in) :: EBOTSEMI
+      real (kind=dp), intent(in) :: FSEMICORE
+      real (kind=dp), intent(in) :: LAMBDA_XC    !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+      complex (kind=dp), intent(in) :: DELTAE         !< Energy difference for numerical derivative
       logical, intent(in) :: LRHOSYM
       logical, intent(in) :: LINTERFACE            !< If True a matching with semi-inifinite surfaces must be performed
       character(len=10), intent(in) :: SOLVER      !< Type of solver
@@ -2016,66 +2017,66 @@ contains
       integer, intent(in) :: NPAN_LOG
       integer, intent(in) :: NATOMIMPD !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
       !     .. Array arguments
-      double complex, dimension(IEMXD), intent(in) :: EZ
-      double complex, dimension(IEMXD), intent(in) :: WEZ
-      double complex, dimension(LMMAXD,LMMAXD), intent(in) :: RC     !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-      double complex, dimension(LMMAXD,LMMAXD), intent(in) :: CREL   !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-      double complex, dimension(LMMAXD,LMMAXD), intent(in) :: RREL   !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
-      double complex, dimension(IRM,NATYP), intent(in) :: PHILDAU
-      double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(in) :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-      double complex, dimension(2,2,LMMAXD), intent(in) :: SRREL
-      double complex, dimension(LMMAXD,LMMAXD,NSYMAXD), intent(in) :: DSYMLL
-      double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(in) :: LEFTTINVLL
-      double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(in) :: RIGHTTINVLL
+      complex (kind=dp), dimension(IEMXD), intent(in) :: EZ
+      complex (kind=dp), dimension(IEMXD), intent(in) :: WEZ
+      complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: RC     !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+      complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: CREL   !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+      complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: RREL   !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+      complex (kind=dp), dimension(IRM,NATYP), intent(in) :: PHILDAU
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in) :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+      complex (kind=dp), dimension(2,2,LMMAXD), intent(in) :: SRREL
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NSYMAXD), intent(in) :: DSYMLL
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(in) :: LEFTTINVLL
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(in) :: RIGHTTINVLL
 
-      double precision, dimension(NATYP), intent(in)  :: A                 !< Constants for exponential R mesh
-      double precision, dimension(NATYP), intent(in)  :: B                 !< Constants for exponential R mesh
-      double precision, dimension(2), intent(in)      :: VBC               !< Potential constants
-      double precision, dimension(NATYP), intent(in)  :: RMT               !< Muffin-tin radius of true system
-      double precision, dimension(NATYP), intent(in)  :: RWS               !< Wigner Seitz radius
-      double precision, dimension(NGSHD), intent(in)  :: GSH
-      double precision, dimension(NATYP), intent(in)  :: ZAT               !< Nuclear charge
-      double precision, dimension(NATYP), intent(in)  :: UEFF              !< input U parameter for each atom
-      double precision, dimension(NATYP), intent(in)  :: JEFF              !< input J parameter for each atom
-      double precision, dimension(NATYP), intent(in)  :: CONC              !< Concentration of a given atom
-      double precision, dimension(NREF), intent(in)   :: VREF
-      double precision, dimension(NAEZ), intent(in)   :: QMTET             !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(NAEZ), intent(in)   :: QMPHI             !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
-      double precision, dimension(NREF), intent(in)   :: RMTREF            !< Muffin-tin radius of reference system
-      double precision, dimension(NATYP), intent(in)  :: RMTNEW            !< Adapted muffin-tin radius
-      double precision, dimension(NATYP), intent(in)  :: EREFLDAU          !< the energies of the projector's wave functions (REAL)
-      double precision, dimension(NATYP), intent(in)  :: SOCSCALE          !< Spin-orbit scaling
+      real (kind=dp), dimension(NATYP), intent(in)  :: A                 !< Constants for exponential R mesh
+      real (kind=dp), dimension(NATYP), intent(in)  :: B                 !< Constants for exponential R mesh
+      real (kind=dp), dimension(2), intent(in)      :: VBC               !< Potential constants
+      real (kind=dp), dimension(NATYP), intent(in)  :: RMT               !< Muffin-tin radius of true system
+      real (kind=dp), dimension(NATYP), intent(in)  :: RWS               !< Wigner Seitz radius
+      real (kind=dp), dimension(NGSHD), intent(in)  :: GSH
+      real (kind=dp), dimension(NATYP), intent(in)  :: ZAT               !< Nuclear charge
+      real (kind=dp), dimension(NATYP), intent(in)  :: UEFF              !< input U parameter for each atom
+      real (kind=dp), dimension(NATYP), intent(in)  :: JEFF              !< input J parameter for each atom
+      real (kind=dp), dimension(NATYP), intent(in)  :: CONC              !< Concentration of a given atom
+      real (kind=dp), dimension(NREF), intent(in)   :: VREF
+      real (kind=dp), dimension(NAEZ), intent(in)   :: QMTET             !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+      real (kind=dp), dimension(NAEZ), intent(in)   :: QMPHI             !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+      real (kind=dp), dimension(NREF), intent(in)   :: RMTREF            !< Muffin-tin radius of reference system
+      real (kind=dp), dimension(NATYP), intent(in)  :: RMTNEW            !< Adapted muffin-tin radius
+      real (kind=dp), dimension(NATYP), intent(in)  :: EREFLDAU          !< the energies of the projector's wave functions (REAL)
+      real (kind=dp), dimension(NATYP), intent(in)  :: SOCSCALE          !< Spin-orbit scaling
 
-      double precision, dimension(IRM,NATYP), intent(in)             :: R          !< Radial mesh ( in units a Bohr)
-      double precision, dimension(3,0:NR), intent(in)                :: RR         !< Set of real space vectors (in a.u.)
-      double precision, dimension(NCLEB,2), intent(in)               :: CLEB       !< GAUNT coefficients (GAUNT)
-      double precision, dimension(IRM,NATYP), intent(in)             :: DRDI       !< Derivative dr/di
-      double precision, dimension(IRM,NPOTD), intent(in)             :: VISP       !< Spherical part of the potential
-      double precision, dimension(LMAXD1,NATYP), intent(in)          :: CSCL       !< Speed of light scaling
-      double precision, dimension(NTOTD*(NCHEB+1),NATYP), intent(in) :: RNEW
-      double precision, dimension(IRM,NATYP), intent(in)             :: VTREL      !< potential (spherical part)
-      double precision, dimension(IRM,NATYP), intent(in)             :: BTREL      !< magnetic field
-      double precision, dimension(IRM,NATYP), intent(in)             :: RMREL      !< radial mesh
-      double precision, dimension(20,NPOTD), intent(in)              :: ECORE      !< Core energies
-      double precision, dimension(3,NSHELD), intent(in)              :: RATOM
-      double precision, dimension(3,NEMBD2), intent(in)              :: RBASIS     !< Position of atoms in the unit cell in units of bravais vectors
-      double precision, dimension(LMAXD1,NATYP), intent(in)          :: SOCSCL
-      double precision, dimension(3,NATOMIMPD), intent(in)           :: RCLSIMP
-      double precision, dimension(IRM,NATYP), intent(in)             :: DRDIREL    !< derivative of radial mesh
-      double precision, dimension(NAEZ,3), intent(in)                :: QMPHITAB
-      double precision, dimension(NAEZ,3), intent(in)                :: QMTETTAB
-      double precision, dimension(NAEZ,3), intent(in)                :: QMGAMTAB
-      double precision, dimension(LMPOT,NEMBD1), intent(in)          :: CMOMHOST   !< Charge moments of each atom of the (left/right) host
-      double precision, dimension(IRM,NATYP), intent(in)             :: R2DRDIREL  !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-      double precision, dimension(0:NTOTD,NATYP), intent(in)         :: RPAN_INTERVALL
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R          !< Radial mesh ( in units a Bohr)
+      real (kind=dp), dimension(3,0:NR), intent(in)                :: RR         !< Set of real space vectors (in a.u.)
+      real (kind=dp), dimension(NCLEB,2), intent(in)               :: CLEB       !< GAUNT coefficients (GAUNT)
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: DRDI       !< Derivative dr/di
+      real (kind=dp), dimension(IRM,NPOTD), intent(in)             :: VISP       !< Spherical part of the potential
+      real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: CSCL       !< Speed of light scaling
+      real (kind=dp), dimension(NTOTD*(NCHEB+1),NATYP), intent(in) :: RNEW
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: VTREL      !< potential (spherical part)
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: BTREL      !< magnetic field
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: RMREL      !< radial mesh
+      real (kind=dp), dimension(20,NPOTD), intent(in)              :: ECORE      !< Core energies
+      real (kind=dp), dimension(3,NSHELD), intent(in)              :: RATOM
+      real (kind=dp), dimension(3,NEMBD2), intent(in)              :: RBASIS     !< Position of atoms in the unit cell in units of bravais vectors
+      real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: SOCSCL
+      real (kind=dp), dimension(3,NATOMIMPD), intent(in)           :: RCLSIMP
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: DRDIREL    !< derivative of radial mesh
+      real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMPHITAB
+      real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMTETTAB
+      real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMGAMTAB
+      real (kind=dp), dimension(LMPOT,NEMBD1), intent(in)          :: CMOMHOST   !< Charge moments of each atom of the (left/right) host
+      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R2DRDIREL  !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      real (kind=dp), dimension(0:NTOTD,NATYP), intent(in)         :: RPAN_INTERVALL
 
-      double precision, dimension(3,NACLSD,NCLSD), intent(in)                 :: RCLS   !< Real space position of atom in cluster
-      double precision, dimension(48,3,NSHELD), intent(in)                    :: RROT
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(in)        :: VINS   !< Non-spherical part of the potential
-      double precision, dimension(IRID,NFUND,NCELLD), intent(in)              :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-      double precision, dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(in)   :: THETASNEW
-      double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(in)       :: WLDAU  !< potential matrix
-      double precision, dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(in)  :: ULDAU  !< calculated Coulomb matrix elements (EREFLDAU)
+      real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in)                 :: RCLS   !< Real space position of atom in cluster
+      real (kind=dp), dimension(48,3,NSHELD), intent(in)                    :: RROT
+      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(in)        :: VINS   !< Non-spherical part of the potential
+      real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in)              :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+      real (kind=dp), dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(in)   :: THETASNEW
+      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(in)       :: WLDAU  !< potential matrix
+      real (kind=dp), dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(in)  :: ULDAU  !< calculated Coulomb matrix elements (EREFLDAU)
       !     ..
       integer, dimension(NAEZ), intent(in)      :: NOQ        !< Number of diff. atom types located
       integer, dimension(NATYP), intent(in)     :: IMT        !< R point at MT radius
@@ -2340,34 +2341,34 @@ contains
       integer, dimension(NCLEB,4), intent(inout)          :: ICLEB   !< Pointer array
       integer, dimension(0:IPAND,NATYP), intent(inout)    :: IRCUT   !< R points of panel borders
       integer, dimension(0:NTOTD,NATYP), intent(inout)    :: IPAN_INTERVALL
-      double precision, intent(inout) :: ALAT                        !< Lattice constant in a.u.
-      double precision, intent(inout) :: R_LOG
-      double precision, intent(inout) :: TOLRDIF                     !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
-      double precision, dimension(NATYP), intent(inout) :: ZAT       !< Nuclear charge
-      double precision, dimension(NREF), intent(inout)  :: VREF
-      double precision, dimension(NATYP), intent(inout) :: UEFF      !< input U parameter for each atom
-      double precision, dimension(NATYP), intent(inout) :: JEFF      !< input J parameter for each atom
-      double precision, dimension(NREF), intent(inout)  :: RMTREF    !< Muffin-tin radius of reference system
-      double precision, dimension(NATYP), intent(inout) :: EREFLDAU  !< the energies of the projector's wave functions (REAL)
-      double precision, dimension(NATYP), intent(inout) :: SOCSCALE  !< Spin-orbit scaling
-      double precision, dimension(NCLEB,2), intent(inout)                         :: CLEB      !< GAUNT coefficients (GAUNT)
-      double precision, dimension(IRM,NPOTD), intent(inout)                       :: VISP      !< Spherical part of the potential
-      double precision, dimension(IRM,NATYP), intent(inout)                       :: DRDI      !< Derivative dr/di
-      double precision, dimension(NRMAXD,NATYP), intent(inout)                    :: RNEW
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: CSCL      !< Speed of light scaling
-      double precision, dimension(IRM,NATYP), intent(inout)                       :: RMESH
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: VTREL     !< potential (spherical part)
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: BTREL     !< magnetic field
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: RMREL     !< radial mesh
-      double precision, dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: SOCSCL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: DRDIREL   !< derivative of radial mesh
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: R2DRDIREL !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-      double precision, dimension(0:NTOTD,NATYP), intent(inout)                   :: RPAN_INTERVALL
-      double precision, dimension(3,NACLSD,NCLSD), intent(inout)          :: RCLS  !< Real space position of atom in cluster
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS  !< Non-spherical part of the potential
+      real (kind=dp), intent(inout) :: ALAT                        !< Lattice constant in a.u.
+      real (kind=dp), intent(inout) :: R_LOG
+      real (kind=dp), intent(inout) :: TOLRDIF                     !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+      real (kind=dp), dimension(NATYP), intent(inout) :: ZAT       !< Nuclear charge
+      real (kind=dp), dimension(NREF), intent(inout)  :: VREF
+      real (kind=dp), dimension(NATYP), intent(inout) :: UEFF      !< input U parameter for each atom
+      real (kind=dp), dimension(NATYP), intent(inout) :: JEFF      !< input J parameter for each atom
+      real (kind=dp), dimension(NREF), intent(inout)  :: RMTREF    !< Muffin-tin radius of reference system
+      real (kind=dp), dimension(NATYP), intent(inout) :: EREFLDAU  !< the energies of the projector's wave functions (REAL)
+      real (kind=dp), dimension(NATYP), intent(inout) :: SOCSCALE  !< Spin-orbit scaling
+      real (kind=dp), dimension(NCLEB,2), intent(inout)                         :: CLEB      !< GAUNT coefficients (GAUNT)
+      real (kind=dp), dimension(IRM,NPOTD), intent(inout)                       :: VISP      !< Spherical part of the potential
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)                       :: DRDI      !< Derivative dr/di
+      real (kind=dp), dimension(NRMAXD,NATYP), intent(inout)                    :: RNEW
+      real (kind=dp), dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: CSCL      !< Speed of light scaling
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)                       :: RMESH
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: VTREL     !< potential (spherical part)
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: BTREL     !< magnetic field
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: RMREL     !< radial mesh
+      real (kind=dp), dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: SOCSCL
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: DRDIREL   !< derivative of radial mesh
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: R2DRDIREL !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      real (kind=dp), dimension(0:NTOTD,NATYP), intent(inout)                   :: RPAN_INTERVALL
+      real (kind=dp), dimension(3,NACLSD,NCLSD), intent(inout)          :: RCLS  !< Real space position of atom in cluster
+      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS  !< Non-spherical part of the potential
 
-      double complex, intent(inout) :: DELTAE      !< Energy difference for numerical derivative
-      double complex, dimension(IEMXD), intent(inout) :: EZ
+      complex (kind=dp), intent(inout) :: DELTAE      !< Energy difference for numerical derivative
+      complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
       character(len=10), intent(inout) :: SOLVER   !< Type of solver
       character(len=80), intent(inout) :: TMPDIR
 
@@ -2563,30 +2564,30 @@ contains
       integer, dimension(NATYP,NAEZ+NEMB), intent(inout)    :: KAOEZ
       integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(inout) :: ICHECK
       integer, dimension(2,2,LMMAXD), intent(inout) :: IRREL
-      double precision, intent(inout) :: ALAT
-      double precision, intent(inout) :: CPATOL
-      double precision, dimension(NREF), intent(inout)      :: VREF
-      double precision, dimension(NATYP), intent(inout)     :: CONC
-      double precision, dimension(NREF), intent(inout)      :: RMTREF
-      double precision, dimension(MAXMSHD), intent(inout)   :: VOLBZ
-      double precision, dimension(3,0:NR), intent(inout)          :: RR
-      double precision, dimension(3,NSHELD), intent(inout)        :: RATOM
-      double precision, dimension(3,NAEZ+NEMB), intent(inout)     :: RBASIS
-      double precision, dimension(KPOIBZ,MAXMSHD), intent(inout)  :: VOLCUB
-      double precision, dimension(3,NATOMIMPD), intent(inout)     :: RCLSIMP
-      double precision, dimension(48,3,NSHELD), intent(inout)        :: RROT
-      double precision, dimension(3,NACLSD,NCLSD), intent(inout)     :: RCLS
-      double precision, dimension(3,KPOIBZ,MAXMSHD), intent(inout)   :: BZKP
-      double complex, dimension(IEMXD), intent(inout) :: EZ
-      double complex, dimension(IEMXD), intent(inout) :: WEZ
-      double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: RC
-      double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: CREL
-      double complex, dimension(LMMAXD,LMMAXD), intent(inout) :: RREL
-      double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(inout)      :: DROTQ
-      double complex, dimension(LMMAXD,LMMAXD,NSYMAXD), intent(inout)   :: DSYMLL
-      double complex, dimension(2,2,LMMAXD), intent(inout)              :: SRREL
-      double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(inout) :: LEFTTINVLL
-      double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(inout) :: RIGHTTINVLL
+      real (kind=dp), intent(inout) :: ALAT
+      real (kind=dp), intent(inout) :: CPATOL
+      real (kind=dp), dimension(NREF), intent(inout)      :: VREF
+      real (kind=dp), dimension(NATYP), intent(inout)     :: CONC
+      real (kind=dp), dimension(NREF), intent(inout)      :: RMTREF
+      real (kind=dp), dimension(MAXMSHD), intent(inout)   :: VOLBZ
+      real (kind=dp), dimension(3,0:NR), intent(inout)          :: RR
+      real (kind=dp), dimension(3,NSHELD), intent(inout)        :: RATOM
+      real (kind=dp), dimension(3,NAEZ+NEMB), intent(inout)     :: RBASIS
+      real (kind=dp), dimension(KPOIBZ,MAXMSHD), intent(inout)  :: VOLCUB
+      real (kind=dp), dimension(3,NATOMIMPD), intent(inout)     :: RCLSIMP
+      real (kind=dp), dimension(48,3,NSHELD), intent(inout)        :: RROT
+      real (kind=dp), dimension(3,NACLSD,NCLSD), intent(inout)     :: RCLS
+      real (kind=dp), dimension(3,KPOIBZ,MAXMSHD), intent(inout)   :: BZKP
+      complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
+      complex (kind=dp), dimension(IEMXD), intent(inout) :: WEZ
+      complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(inout) :: RC
+      complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(inout) :: CREL
+      complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(inout) :: RREL
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(inout)      :: DROTQ
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NSYMAXD), intent(inout)   :: DSYMLL
+      complex (kind=dp), dimension(2,2,LMMAXD), intent(inout)              :: SRREL
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(inout) :: LEFTTINVLL
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(inout) :: RIGHTTINVLL
       character(len=80), intent(inout) :: TMPDIR
       logical, dimension(2), intent(inout)         :: VACFLAG
       logical, dimension(NSYMAXD), intent(inout)   :: SYMUNITARY
@@ -2831,45 +2832,45 @@ contains
       integer, dimension(20,NPOTD), intent(inout)              :: ITITLE
       integer, dimension(0:NTOTD,NATYP), intent(inout)         :: IPAN_INTERVALL
 
-      double precision, intent(inout) :: TK
-      double precision, intent(inout) :: EMIN
-      double precision, intent(inout) :: EMAX
-      double precision, intent(inout) :: ALAT
-      double precision, intent(inout) :: R_LOG
-      double precision, intent(inout) :: EFERMI
+      real (kind=dp), intent(inout) :: TK
+      real (kind=dp), intent(inout) :: EMIN
+      real (kind=dp), intent(inout) :: EMAX
+      real (kind=dp), intent(inout) :: ALAT
+      real (kind=dp), intent(inout) :: R_LOG
+      real (kind=dp), intent(inout) :: EFERMI
 
-      double precision, dimension(NATYP), intent(inout)  :: A
-      double precision, dimension(NATYP), intent(inout)  :: B
-      double precision, dimension(NATYP), intent(inout)  :: ZAT
-      double precision, dimension(NATYP), intent(inout)  :: CONC
-      double precision, dimension(NATYP), intent(inout)  :: UEFF
-      double precision, dimension(NATYP), intent(inout)  :: JEFF
-      double precision, dimension(NAEZ), intent(inout)   :: QMPHI
-      double precision, dimension(NAEZ), intent(inout)   :: QMTET
-      double precision, dimension(NATYP), intent(inout)  :: SOCSCALE
-      double precision, dimension(NATYP), intent(inout)  :: EREFLDAU
-      double precision, dimension(IRM,NATYP), intent(inout)             :: DRDI
-      double precision, dimension(IRM,NATYP), intent(inout)             :: RMESH
-      double precision, dimension(NCLEB,2), intent(inout)               :: CLEB
-      double precision, dimension(LMAXD1,NATYP), intent(inout)          :: CSCL
-      double precision, dimension(IRM,NPOTD), intent(inout)             :: VISP
-      double precision, dimension(NTOTD*(NCHEB+1),NATYP), intent(inout) :: RNEW
-      double precision, dimension(IRM,NATYP), intent(inout)             :: RMREL
-      double precision, dimension(IRM,NATYP), intent(inout)             :: VTREL
-      double precision, dimension(IRM,NATYP), intent(inout)             :: BTREL
-      double precision, dimension(20,NPOTD), intent(inout)              :: ECORE
-      double precision, dimension(LMAXD1,NATYP), intent(inout)          :: SOCSCL
-      double precision, dimension(IRM,NATYP), intent(inout)             :: DRDIREL
-      double precision, dimension(IRM,NATYP), intent(inout)             :: R2DRDIREL
-      double precision, dimension(0:NTOTD,NATYP), intent(inout)         :: RPAN_INTERVALL
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)        :: VINS
-      double precision, dimension(IRID,NFUND,NCELLD), intent(inout)              :: THETAS
-      double precision, dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(inout)   :: THETASNEW
-      double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(inout) :: WLDAU
-      double precision, dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(inout) :: ULDAU
-      double complex, dimension(IEMXD), intent(inout) :: EZ
-      double complex, dimension(IEMXD), intent(inout) :: WEZ
-      double complex, dimension(IRM,NATYP), intent(inout) :: PHILDAU
+      real (kind=dp), dimension(NATYP), intent(inout)  :: A
+      real (kind=dp), dimension(NATYP), intent(inout)  :: B
+      real (kind=dp), dimension(NATYP), intent(inout)  :: ZAT
+      real (kind=dp), dimension(NATYP), intent(inout)  :: CONC
+      real (kind=dp), dimension(NATYP), intent(inout)  :: UEFF
+      real (kind=dp), dimension(NATYP), intent(inout)  :: JEFF
+      real (kind=dp), dimension(NAEZ), intent(inout)   :: QMPHI
+      real (kind=dp), dimension(NAEZ), intent(inout)   :: QMTET
+      real (kind=dp), dimension(NATYP), intent(inout)  :: SOCSCALE
+      real (kind=dp), dimension(NATYP), intent(inout)  :: EREFLDAU
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: DRDI
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: RMESH
+      real (kind=dp), dimension(NCLEB,2), intent(inout)               :: CLEB
+      real (kind=dp), dimension(LMAXD1,NATYP), intent(inout)          :: CSCL
+      real (kind=dp), dimension(IRM,NPOTD), intent(inout)             :: VISP
+      real (kind=dp), dimension(NTOTD*(NCHEB+1),NATYP), intent(inout) :: RNEW
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: RMREL
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: VTREL
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: BTREL
+      real (kind=dp), dimension(20,NPOTD), intent(inout)              :: ECORE
+      real (kind=dp), dimension(LMAXD1,NATYP), intent(inout)          :: SOCSCL
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: DRDIREL
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: R2DRDIREL
+      real (kind=dp), dimension(0:NTOTD,NATYP), intent(inout)         :: RPAN_INTERVALL
+      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)        :: VINS
+      real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(inout)              :: THETAS
+      real (kind=dp), dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(inout)   :: THETASNEW
+      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(inout) :: WLDAU
+      real (kind=dp), dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(inout) :: ULDAU
+      complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
+      complex (kind=dp), dimension(IEMXD), intent(inout) :: WEZ
+      complex (kind=dp), dimension(IRM,NATYP), intent(inout) :: PHILDAU
       character(len=10), intent(inout) :: SOLVER
       character(len=80), intent(inout) :: TMPDIR
       !     .. External Functions ..
@@ -3105,41 +3106,41 @@ contains
       integer, dimension(NATYP,NAEZ+NEMB), intent(inout) :: KAOEZ
       integer, dimension(0:IPAND,NATYP), intent(inout)   :: IRCUT
       integer, dimension(20,NPOTD), intent(inout)        :: ITITLE
-      double precision, intent(inout) :: TK
-      double precision, intent(inout) :: FCM
-      double precision, intent(inout) :: EMIN
-      double precision, intent(inout) :: EMAX
-      double precision, intent(inout) :: ALAT
-      double precision, intent(inout) :: EFOLD
-      double precision, intent(inout) :: FSOLD
-      double precision, intent(inout) :: QBOUND
-      double precision, intent(inout) :: TKSEMI
-      double precision, intent(inout) :: MIXING
-      double precision, intent(inout) :: CHRGOLD
-      double precision, intent(inout) :: EMUSEMI
-      double precision, intent(inout) :: EBOTSEMI
-      double precision, intent(inout) :: LAMBDA_XC
-      double precision, dimension(NATYP), intent(inout)  :: A
-      double precision, dimension(NATYP), intent(inout)  :: B
-      double precision, dimension(2), intent(inout)      :: VBC
-      double precision, dimension(NATYP), intent(inout)  :: RWS
-      double precision, dimension(NGSHD), intent(inout)  :: GSH
-      double precision, dimension(NATYP), intent(inout)  :: ZAT
-      double precision, dimension(NATYP), intent(inout)  :: RMT
-      double precision, dimension(NATYP), intent(inout)  :: CONC
-      double precision, dimension(NATYP), intent(inout)  :: RMTNEW
-      double precision, dimension(IRM,NATYP), intent(inout)                :: R
-      double precision, dimension(IRM,NATYP), intent(inout)                :: DRDI
-      double precision, dimension(IRM,NPOTD), intent(inout)                :: VISP
-      double precision, dimension(20,NPOTD), intent(inout)                 :: ECORE
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: RMREL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: DRDIREL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: R2DRDIREL
-      double precision, dimension(LMPOT,NEMBD1), intent(inout)             :: CMOMHOST
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)  :: VINS
-      double precision, dimension(IRID,NFUND,NCELLD), intent(inout)        :: THETAS
-      double complex, dimension(IEMXD), intent(inout) :: EZ
-      double complex, dimension(IEMXD), intent(inout) :: WEZ
+      real (kind=dp), intent(inout) :: TK
+      real (kind=dp), intent(inout) :: FCM
+      real (kind=dp), intent(inout) :: EMIN
+      real (kind=dp), intent(inout) :: EMAX
+      real (kind=dp), intent(inout) :: ALAT
+      real (kind=dp), intent(inout) :: EFOLD
+      real (kind=dp), intent(inout) :: FSOLD
+      real (kind=dp), intent(inout) :: QBOUND
+      real (kind=dp), intent(inout) :: TKSEMI
+      real (kind=dp), intent(inout) :: MIXING
+      real (kind=dp), intent(inout) :: CHRGOLD
+      real (kind=dp), intent(inout) :: EMUSEMI
+      real (kind=dp), intent(inout) :: EBOTSEMI
+      real (kind=dp), intent(inout) :: LAMBDA_XC
+      real (kind=dp), dimension(NATYP), intent(inout)  :: A
+      real (kind=dp), dimension(NATYP), intent(inout)  :: B
+      real (kind=dp), dimension(2), intent(inout)      :: VBC
+      real (kind=dp), dimension(NATYP), intent(inout)  :: RWS
+      real (kind=dp), dimension(NGSHD), intent(inout)  :: GSH
+      real (kind=dp), dimension(NATYP), intent(inout)  :: ZAT
+      real (kind=dp), dimension(NATYP), intent(inout)  :: RMT
+      real (kind=dp), dimension(NATYP), intent(inout)  :: CONC
+      real (kind=dp), dimension(NATYP), intent(inout)  :: RMTNEW
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)                :: R
+      real (kind=dp), dimension(IRM,NATYP), intent(inout)                :: DRDI
+      real (kind=dp), dimension(IRM,NPOTD), intent(inout)                :: VISP
+      real (kind=dp), dimension(20,NPOTD), intent(inout)                 :: ECORE
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: RMREL
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: DRDIREL
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: R2DRDIREL
+      real (kind=dp), dimension(LMPOT,NEMBD1), intent(inout)             :: CMOMHOST
+      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)  :: VINS
+      real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(inout)        :: THETAS
+      complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
+      complex (kind=dp), dimension(IEMXD), intent(inout) :: WEZ
       character(len=124), dimension(5), intent(inout) :: TXC
       logical, intent(inout) :: LRHOSYM
       logical, intent(inout) :: LINTERFACE
@@ -3298,15 +3299,15 @@ contains
       integer, intent(in) :: N3SEMI
       integer, intent(in) :: NPOLSEMI
       integer, intent(in) :: IESEMICORE
-      double precision, intent(in) :: TK
-      double precision, intent(in) :: EMIN
-      double precision, intent(in) :: EMAX
-      double precision, intent(in) :: TKSEMI
-      double precision, intent(in) :: EMUSEMI
-      double precision, intent(in) :: EBOTSEMI
-      double precision, intent(in) :: FSEMICORE
-      double complex, dimension(IEMXD), intent(in) :: EZ
-      double complex, dimension(IEMXD), intent(in) :: WEZ
+      real (kind=dp), intent(in) :: TK
+      real (kind=dp), intent(in) :: EMIN
+      real (kind=dp), intent(in) :: EMAX
+      real (kind=dp), intent(in) :: TKSEMI
+      real (kind=dp), intent(in) :: EMUSEMI
+      real (kind=dp), intent(in) :: EBOTSEMI
+      real (kind=dp), intent(in) :: FSEMICORE
+      complex (kind=dp), dimension(IEMXD), intent(in) :: EZ
+      complex (kind=dp), dimension(IEMXD), intent(in) :: WEZ
 
       t_params%IELAST     = IELAST
       t_params%EZ         = EZ
@@ -3357,18 +3358,18 @@ contains
       integer, dimension(NATYP), intent(in) :: ZREL
       integer, dimension(NATYP), intent(in) :: JWSREL
       integer, dimension(NATYP), intent(in) :: IRSHIFT
-      double precision, intent(in) :: EFOLD
-      double precision, intent(in) :: CHRGOLD
-      double precision, dimension(2), intent(in) :: VBC
-      double precision, dimension(IRM,NPOTD), intent(in) :: VISP
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: VTREL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: BTREL
-      double precision, dimension(20,NPOTD), intent(in) :: ECORE
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: RMREL
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: DRDIREL
-      double precision, dimension(LMPOT,NEMBD1), intent(in) :: CMOMHOST
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: R2DRDIREL
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(in) :: VINS
+      real (kind=dp), intent(in) :: EFOLD
+      real (kind=dp), intent(in) :: CHRGOLD
+      real (kind=dp), dimension(2), intent(in) :: VBC
+      real (kind=dp), dimension(IRM,NPOTD), intent(in) :: VISP
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: VTREL
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: BTREL
+      real (kind=dp), dimension(20,NPOTD), intent(in) :: ECORE
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: RMREL
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: DRDIREL
+      real (kind=dp), dimension(LMPOT,NEMBD1), intent(in) :: CMOMHOST
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: R2DRDIREL
+      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(in) :: VINS
 
       t_params%VINS  = VINS
       t_params%VISP  = VISP
@@ -3415,18 +3416,18 @@ contains
       integer, dimension(NATYP), intent(in) :: LOPT
       integer, dimension(20,NATYP), intent(in) :: NKCORE
       integer, dimension(20,NPOTD), intent(in) :: KAPCORE
-      double precision, intent(in) :: DENEF
-      double precision, intent(in) :: CHRGSEMICORE
-      double precision, intent(in) :: EU(NATYP)
-      double precision, intent(in) :: EDC(NATYP)
-      double precision, intent(in) :: DENEFAT(NATYP)
-      double precision, intent(in) :: RHOC(IRM,NPOTD)
-      double precision, intent(in) :: ESPV(0:LMAXD1,NPOTD)
-      double precision, intent(in) :: ECORE(20,NPOTD)
-      double precision, intent(in) :: RHOORB(IRM*KREL+(1-KREL),NATYP)
-      double precision, intent(in) :: ECOREREL(KREL*20+(1-KREL),NPOTD)
-      double precision, intent(in) :: R2NEF(IRM,LMPOT,NATYP,2)
-      double precision, intent(in) :: RHO2NS(IRM,LMPOT,NATYP,2)
+      real (kind=dp), intent(in) :: DENEF
+      real (kind=dp), intent(in) :: CHRGSEMICORE
+      real (kind=dp), intent(in) :: EU(NATYP)
+      real (kind=dp), intent(in) :: EDC(NATYP)
+      real (kind=dp), intent(in) :: DENEFAT(NATYP)
+      real (kind=dp), intent(in) :: RHOC(IRM,NPOTD)
+      real (kind=dp), intent(in) :: ESPV(0:LMAXD1,NPOTD)
+      real (kind=dp), intent(in) :: ECORE(20,NPOTD)
+      real (kind=dp), intent(in) :: RHOORB(IRM*KREL+(1-KREL),NATYP)
+      real (kind=dp), intent(in) :: ECOREREL(KREL*20+(1-KREL),NPOTD)
+      real (kind=dp), intent(in) :: R2NEF(IRM,LMPOT,NATYP,2)
+      real (kind=dp), intent(in) :: RHO2NS(IRM,LMPOT,NATYP,2)
 
       t_params%RHO2NS       = RHO2NS
       t_params%R2NEF        = R2NEF
@@ -3473,18 +3474,18 @@ contains
       integer, dimension(NATYP), intent(out) :: LOPT
       integer, dimension(20,NATYP), intent(out) :: NKCORE
       integer, dimension(20,NPOTD), intent(out) :: KAPCORE
-      double precision, intent(out) :: RHO2NS(IRM,LMPOT,NATYP,2)
-      double precision, intent(out) :: DENEF
-      double precision, intent(out) :: CHRGSEMICORE
-      double precision, dimension(NATYP), intent(out) :: EU
-      double precision, dimension(NATYP), intent(out) :: EDC
-      double precision, dimension(NATYP), intent(out) :: DENEFAT
-      double precision, dimension(IRM,NPOTD), intent(out) :: RHOC
-      double precision, dimension(0:LMAXD1,NPOTD), intent(out) :: ESPV
-      double precision, dimension(20,NPOTD), intent(out) :: ECORE
-      double precision, dimension(IRM*KREL+(1-KREL),NATYP), intent(out) :: RHOORB
-      double precision, dimension(KREL*20+(1-KREL),NPOTD), intent(out) :: ECOREREL
-      double precision, dimension(IRM,LMPOT,NATYP,2), intent(out) :: R2NEF
+      real (kind=dp), intent(out) :: RHO2NS(IRM,LMPOT,NATYP,2)
+      real (kind=dp), intent(out) :: DENEF
+      real (kind=dp), intent(out) :: CHRGSEMICORE
+      real (kind=dp), dimension(NATYP), intent(out) :: EU
+      real (kind=dp), dimension(NATYP), intent(out) :: EDC
+      real (kind=dp), dimension(NATYP), intent(out) :: DENEFAT
+      real (kind=dp), dimension(IRM,NPOTD), intent(out) :: RHOC
+      real (kind=dp), dimension(0:LMAXD1,NPOTD), intent(out) :: ESPV
+      real (kind=dp), dimension(20,NPOTD), intent(out) :: ECORE
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(out) :: RHOORB
+      real (kind=dp), dimension(KREL*20+(1-KREL),NPOTD), intent(out) :: ECOREREL
+      real (kind=dp), dimension(IRM,LMPOT,NATYP,2), intent(out) :: R2NEF
 
       RHO2NS       = t_params%RHO2NS
       R2NEF        = t_params%R2NEF
@@ -3525,13 +3526,13 @@ contains
       type(type_params), intent(inout) :: t_params
 
       integer, intent(in) :: NATYP
-      double precision, dimension(NATYP), intent(out) :: THETA
-      double precision, dimension(NATYP), intent(out) :: PHI
+      real (kind=dp), dimension(NATYP), intent(out) :: THETA
+      real (kind=dp), dimension(NATYP), intent(out) :: PHI
 
       logical :: LREAD, LCHECKANGLES
       integer :: I1,i_stat
-      double precision :: TH1, PH1
-      double precision, parameter :: PI=4.d0*datan(1.d0), eps=1d-5
+      real (kind=dp) :: TH1, PH1
+      real (kind=dp), parameter :: PI=4.d0*datan(1.d0), eps=1d-5
 
       ! if executed first in wunfiles theta is not allocated, thus read angles from file
       if(.not.allocated(t_params%THETA)) then

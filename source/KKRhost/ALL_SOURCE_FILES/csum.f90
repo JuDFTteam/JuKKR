@@ -2,7 +2,7 @@
     Complex *16 Function csum(n, v, iv)
       Use mod_datatypes, Only: dp
 ! **********************************************************************
-!        sum up the first N elements of the double complex
+!        sum up the first N elements of the complex (kind=dp)
 !        array V(*) with a stepwidth of IV
 ! ----------------------------------------------------------------------
 !.. Scalar Arguments ..

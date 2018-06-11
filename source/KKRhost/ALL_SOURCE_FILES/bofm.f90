@@ -1,8 +1,8 @@
 ! **********************************************************************
     Subroutine bofm(pl1, pl2, block, nsize, gin, almd)
-      Use mod_datatypes, Only: dp
 ! **********************************************************************
 
+      Use mod_datatypes, Only: dp
       Implicit None
 !.. Scalar Arguments ..
       Integer :: almd, nsize, pl1, pl2

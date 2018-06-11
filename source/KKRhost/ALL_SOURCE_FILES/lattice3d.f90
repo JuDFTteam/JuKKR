@@ -8,7 +8,6 @@
 !-------------------------------------------------------------------------------
     Subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, &
       nsg, nsr, gn, rm, rmax, gmax, iprint, nmaxd, ishld)
-      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
 ! *  generate lattice vectors of direct and reciprocal space from      *
@@ -31,6 +30,7 @@
 ! *  one it is used only locally (GNR/RMR)       v.popescu May 2004    *
 ! *                                                                    *
 ! **********************************************************************
+      Use mod_datatypes, Only: dp
       Implicit None
 ! ..
 ! .. Input variables

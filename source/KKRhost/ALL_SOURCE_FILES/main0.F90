@@ -35,6 +35,7 @@ module mod_main0
    use mod_rhoqtools, only: rhoq_save_rmesh
    use rinput
    use mod_DataTypes
+      Use mod_datatypes, Only: dp
 
    implicit none
 
@@ -259,13 +260,13 @@ module mod_main0
    real (kind=dp), dimension(:,:,:), allocatable :: VINS !< Non-spherical part of the potential
    real (kind=dp), dimension(:,:,:), allocatable :: RCLS !< Real space position of atom in cluster
    real (kind=dp), dimension(:,:,:), allocatable :: RROT
-   double complex, dimension(:), allocatable :: EZ
-   double complex, dimension(:), allocatable :: DEZ
-   double complex, dimension(:), allocatable :: WEZ
-   double complex, dimension(:,:,:), allocatable :: DSYMLL
-   double complex, dimension(:,:,:), allocatable :: DSYMLL1
-   double complex, dimension(:,:,:,:,:), allocatable :: LEFTTINVLL
-   double complex, dimension(:,:,:,:,:), allocatable :: RIGHTTINVLL
+   complex (kind=dp), dimension(:), allocatable :: EZ
+   complex (kind=dp), dimension(:), allocatable :: DEZ
+   complex (kind=dp), dimension(:), allocatable :: WEZ
+   complex (kind=dp), dimension(:,:,:), allocatable :: DSYMLL
+   complex (kind=dp), dimension(:,:,:), allocatable :: DSYMLL1
+   complex (kind=dp), dimension(:,:,:,:,:), allocatable :: LEFTTINVLL
+   complex (kind=dp), dimension(:,:,:,:,:), allocatable :: RIGHTTINVLL
    character(len=124), dimension(6) :: TXC
    logical, dimension(2) :: VACFLAG
    !
@@ -301,11 +302,11 @@ module mod_main0
    real (kind=dp) :: CPATOL !< Convergency tolerance for CPA-cycle
    real (kind=dp), dimension(:), allocatable :: CONC !< Concentration of a given atom
    !-------------------------------------------------------------------------------
-   double complex, dimension(:,:), allocatable :: RC !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-   double complex, dimension(:,:), allocatable :: CREL !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-   double complex, dimension(:,:), allocatable :: RREL !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
-   double complex, dimension(:,:,:), allocatable :: SRREL
-   double complex, dimension(:,:,:), allocatable :: DROTQ !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+   complex (kind=dp), dimension(:,:), allocatable :: RC !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+   complex (kind=dp), dimension(:,:), allocatable :: CREL !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+   complex (kind=dp), dimension(:,:), allocatable :: RREL !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+   complex (kind=dp), dimension(:,:,:), allocatable :: SRREL
+   complex (kind=dp), dimension(:,:,:), allocatable :: DROTQ !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
    integer, dimension(:), allocatable :: ZREL    !< atomic number (cast integer)
    integer, dimension(:), allocatable :: JWSREL  !< index of the WS radius
    integer, dimension(:), allocatable :: IRSHIFT !< shift of the REL radial mesh with respect no NREL
@@ -357,13 +358,13 @@ module mod_main0
    !.. quantities
    real (kind=dp), dimension(:,:,:,:), allocatable :: WLDAU !< potential matrix
    real (kind=dp), dimension(:,:,:,:,:), allocatable :: ULDAU !< calculated Coulomb matrix elements (EREFLDAU)
-   double complex, dimension(:,:), allocatable :: PHILDAU
+   complex (kind=dp), dimension(:,:), allocatable :: PHILDAU
    !-------------------------------------------------------------------------
    ! LDA+U LDA+U LDA+U
    !-------------------------------------------------------------------------
    ! Lloyds formula
    integer :: LLY !< LLY <> 0 : apply Lloyds formula
-   double complex :: DELTAE  !< Energy difference for numerical derivative
+   complex (kind=dp) :: DELTAE  !< Energy difference for numerical derivative
 
    ! SUSC (BEGIN: modifications by Manuel and Benedikt)             ! susc
    ! LOGICAL THAT CHECKS WHETHER ENERGY MESH FILE EXISTS            ! susc
@@ -873,8 +874,8 @@ contains
       if (OPT('FERMIOUT'))then                                                   ! fswrt
          if(AIMAG(EZ(1))>0d0) stop 'E has imaginary part'                        ! fswrt
          IELAST=3                                                                ! fswrt
-         EZ(2) = EZ(1) + CMPLX(1.0D-03,0.0D0)                                    ! fswrt
-         EZ(3) = EZ(1) - CMPLX(1.0D-03,0.0D0)                                    ! fswrt
+         EZ(2) = EZ(1) + CMPLX(1.0D-03,0.0D0, kind=dp)                                    ! fswrt
+         EZ(3) = EZ(1) - CMPLX(1.0D-03,0.0D0, kind=dp)                                    ! fswrt
       end if                                                                     ! fswrt
       !-------------------------------------------------------------------------
       ! update the value of NSPIN to be consistent with REL mode
@@ -935,7 +936,7 @@ contains
       else !NPOL==0
          ! write dummy files
 
-         !DOUBLE PRECISION AVMAD(LMPOT,LMPOT),BVMAD(LMPOT)
+         !real (kind=dp) AVMAD(LMPOT,LMPOT),BVMAD(LMPOT)
          LRECABMAD = WLENGTH*2*LMPOT*LMPOT + WLENGTH*2*LMPOT
          open (69,ACCESS='direct',RECL=LRECABMAD,FILE='abvmad.unformatted', &
             FORM='unformatted')

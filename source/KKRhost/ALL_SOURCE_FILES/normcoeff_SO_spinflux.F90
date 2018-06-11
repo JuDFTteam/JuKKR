@@ -21,6 +21,7 @@ use mod_types, only: t_mpi_c_grid, t_inc, t_imp
 #ELSE
 use mod_types, only: t_inc, t_imp
 #ENDIF
+      Use mod_datatypes, Only: dp
       IMPLICIT NONE
 
 !.. Parameters ..
@@ -37,17 +38,17 @@ use mod_types, only: t_inc, t_imp
       INTEGER          NATOM, mode, LMMAX,KSRA
 !..
 !.. Array Arguments ..
-      DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATOM)
-      DOUBLE PRECISION DRDI(IRMD,NATYPD)
+      complex (kind=dp)   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATOM)
+      real (kind=dp) DRDI(IRMD,NATYPD)
       INTEGER          IRCUT(0:IPAND,NATYPD)
 !..
 !.. Local Scalars ..
-      DOUBLE COMPLEX   CZERO
+      complex (kind=dp)   CZERO
       INTEGER          LM1,LM2,LM1P, &
                        IR,I1,I1SP1,I1SP2, &
                        LMSP1,LMSP2,ISIGMA,I2SP1,I2SP2,INSRA,NSRA
       INTEGER          LMMAXSO, I2
-      DOUBLE COMPLEX :: DELTA1, DELTA2
+      complex (kind=dp) :: DELTA1, DELTA2
 !     MPI stuff
       INTEGER :: ierr, ihelp, i1_start, i1_end
 !..
@@ -61,12 +62,12 @@ use mod_types, only: t_inc, t_imp
       SAVE             CZERO
 !..
 !..Local Arrays..
-      DOUBLE COMPLEX, ALLOCATABLE  ::   SPINFLUX(:,:,:,:), &
+      complex (kind=dp), ALLOCATABLE  ::   SPINFLUX(:,:,:,:), &
                                         RLL_12(:), &
                                         DENS(:,:,:,:,:,:,:), &
                                         RLL(:,:,:,:,:,:,:)
 !     MPI stuff
-      DOUBLE COMPLEX, ALLOCATABLE  :: work(:,:,:,:,:,:,:)
+      complex (kind=dp), ALLOCATABLE  :: work(:,:,:,:,:,:,:)
 !..
 !.. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/

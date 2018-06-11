@@ -4,20 +4,21 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
 !.....-----------------------------------------------------------------
 !.....gxcp: exchange-correlation potential in ry. also total-energy.
 !.....-----------------------------------------------------------------
+      Use mod_datatypes, Only: dp
   implicit none
 !.. Scalar Arguments ..
-  double precision :: agr, agrd, agru, cedg, cedl, g2r, g2rd, g2ru, gggr, &
+  real (kind=dp) :: agr, agrd, agru, cedg, cedl, g2r, g2rd, g2ru, gggr, &
     gggrd, gggru, grgrd, grgru, gzgr, ro, vcgd, vcgu, vcld, vclu, vxgd, vxgu, &
     vxld, vxlu, xced, xcptd, xcptu, xedg, xedl, zta
   integer :: idspr
 !..
 !.. Local Scalars ..
-  double precision :: a, a1, a2, a3, af, alc, alf, alfc, ap, b, b1, b1f, b1p, &
+  real (kind=dp) :: a, a1, a2, a3, af, alc, alf, alfc, ap, b, b1, b1f, b1p, &
     b2, b2f, b2p, b3, bcr, beta, bf, bp, brs, bx, bxd, bxu, bz41, c, c1, c113, &
     c115, c13, c1415, c2, c23, c2915, c2q23, c3, c32, c43, c53, c56, c76, c83, &
     ca, ccf, ccp, ce, cef, cep, cf, cgz, cp, crdc, crf, cro, crp, crr1, crr2, &
     d, dacdr, dbdr, dbrod, dbrou, dcdr, dd, decdrf, decdrp, df, dfdz, dlta, &
-    dp, dsdfd, dsdfu, dspr, dsprs, dvdr1, dvdr2, dvdrd, dvdru, ec, ecf, ecp, &
+    d_p, dsdfd, dsdfu, dspr, dsprs, dvdr1, dvdr2, dvdrd, dvdru, ec, ecf, ecp, &
     ecrs, eczta, ef3vi, expfai, f1d, f1u, f2d, f2u, f3d, f3u, fai, fai2, fd, &
     fdd0, fk, fu, fz, g, gf, gp, gr2, gr2d, gr2u, gz, gz2, gz3, hugef, huges, &
     pi, q, q1, q2, q3, r, rnc, ro113, ro13, ro2, ro43, ro76, ro83, rod, rod13, &
@@ -36,11 +37,11 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
   intrinsic :: acos, atan, exp, log, sqrt
 !..
 !.. Statement Functions ..
-  double precision :: fbet, fdedr, fdfdz, ffz, fncecl, fncecs, fncf, fncvcl, &
+  real (kind=dp) :: fbet, fdedr, fdfdz, ffz, fncecl, fncecs, fncf, fncvcl, &
     fncvcs, fvnec, fvq
 !..
 !.. Save statement ..
-  save :: gp, gf, b1p, b1f, b2p, b2f, cp, cf, dp, df, ap, bp, af, bf, a1, x01, &
+  save :: gp, gf, b1p, b1f, b2p, b2f, cp, cf, d_p, df, ap, bp, af, bf, a1, x01, &
     b1, c1, a2, x02, b2, c2, a3, x03, b3, c3, fdd0, huges, hugef, dspr, igl, &
     igh, imj, ibh, ica, icg, ivn, ipg, ivg, ip9, igd, ixlf, iex, xlf
 !..
@@ -65,7 +66,7 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
     /((x-x0)*xl)-4.d0*(b+2.d0*x0)/(xld**2+q**2))))
 !..
 !.. Data statements ..
-  data gp, gf, b1p, b1f, b2p, b2f, cp, cf, dp, df/ -.2846d0, -.1686d0, &
+  data gp, gf, b1p, b1f, b2p, b2f, cp, cf, d_p, df/ -.2846d0, -.1686d0, &
     1.0529d0, 1.3981d0, 0.3334d0, 0.2611d0, 0.0040d0, 0.0014d0, -.0232d0, &
     -.0096d0/
   data ap, bp, af, bf/0.0622d0, -.096d0, 0.0311d0, -0.0538d0/
@@ -250,9 +251,9 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
       vcp = fncvcl(cep, rs, b1p, b2p)
       vcf = fncvcl(cef, rs, b1f, b2f)
     else
-      cep = fncecs(rs, ap, bp, cp, dp)
+      cep = fncecs(rs, ap, bp, cp, d_p)
       cef = fncecs(rs, af, bf, cf, df)
-      vcp = fncvcs(rs, ap, bp, cp, dp)
+      vcp = fncvcs(rs, ap, bp, cp, d_p)
       vcf = fncvcs(rs, af, bf, cf, df)
     end if
 !.....
@@ -275,8 +276,8 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
       cep = fncecl(rs, gp, b1p, b2p)
       vcp = fncvcl(cep, rs, b1p, b2p)
     else
-      cep = fncecs(rs, ap, bp, cp, dp)
-      vcp = fncvcs(rs, ap, bp, cp, dp)
+      cep = fncecs(rs, ap, bp, cp, d_p)
+      vcp = fncvcs(rs, ap, bp, cp, d_p)
     end if
 !.....
     ce = cep*gz3

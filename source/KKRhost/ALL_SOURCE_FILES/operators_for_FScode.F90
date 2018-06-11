@@ -21,6 +21,7 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   use mod_wunfiles, only: t_params
   use mod_save_wavefun, only: t_wavefunctions, read_wavefunc
   use mod_types, only: t_imp
+      Use mod_datatypes, Only: dp
 
   implicit none
 
@@ -29,7 +30,7 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
 
   ! read in wavefunctions 
   logical :: rll_was_read_in, sll_was_read_in,  rllleft_was_read_in, sllleft_was_read_in
-  double complex, allocatable :: RLL(:,:,:,:),SLL(:,:,:,:), RLLLEFT(:,:,:,:),SLLLEFT(:,:,:,:), RLLTEMP(:,:), PNSTEMP(:,:), PNS_SO(:,:,:,:), PNS_SO_ALL(:,:,:,:,:) 
+  complex (kind=dp), allocatable :: RLL(:,:,:,:),SLL(:,:,:,:), RLLLEFT(:,:,:,:),SLLLEFT(:,:,:,:), RLLTEMP(:,:), PNSTEMP(:,:), PNS_SO(:,:,:,:), PNS_SO_ALL(:,:,:,:,:) 
 
   ! loop counter etc.
   integer :: ie, ie_start, ie_end, ie_num, lm1, lm2, ir, i1, i1_start, i1_end, ierr
@@ -39,20 +40,20 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
 
   ! arrays for rmeshes (old and new), and nonco_angles
   integer, allocatable :: irws(:), npan_tot(:), ipan_intervall(:,:)
-  double precision, allocatable :: rmesh(:,:), rpan_intervall(:,:), theta(:), phi(:)
+  real (kind=dp), allocatable :: rmesh(:,:), rpan_intervall(:,:), theta(:), phi(:)
 
   ! constants
-  double complex, parameter :: czero=(0.0d0, 0.0d0)
+  complex (kind=dp), parameter :: czero=(0.0d0, 0.0d0)
 
   ! for impurity-wavefunction related stuff
-  double complex, allocatable :: PNS_SO_IMP(:,:,:,:,:) 
+  complex (kind=dp), allocatable :: PNS_SO_IMP(:,:,:,:,:) 
   integer :: i1_imp, natomimp
 
 #ifdef CPP_MPI
   ! communcate PNS_SO_ALL for OPERATOR option
   integer :: ihelp
   integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
-  double complex, allocatable :: work(:,:,:,:,:)
+  complex (kind=dp), allocatable :: work(:,:,:,:,:)
 #endif
 
   ! for TEST options

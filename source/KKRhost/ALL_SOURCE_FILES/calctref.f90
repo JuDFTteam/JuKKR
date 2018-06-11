@@ -1,6 +1,5 @@
     Subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, &
       alpharef, dalpharef, lmaxdp1, lmmaxd)
-      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *  calculates analytically the single-site scattering matrix for a *
@@ -42,6 +41,7 @@
 !
 !   ********************************************************************
 
+      Use mod_datatypes, Only: dp
       Implicit None
 !..
 !.. Scalar arguments

@@ -14,17 +14,18 @@ subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
 ! * Note: so far, only SPHERICAL case implemented                      *
 ! *                                                                    *
 ! **********************************************************************
+      Use mod_datatypes, Only: dp
   use :: mod_version_info
   implicit none
 !..      
 !.. Scalar arguments
-  double precision :: alat, efermi
+  real (kind=dp) :: alat, efermi
   integer :: ins, ipand, irmd, kmrot, krel, lmaxd, naez
   integer :: naezd, natyp, natypd, nspin
   character (len=10) :: solver
 !..
 !.. Array arguments
-  double precision :: bravais(3, 3), btrel(irmd*krel+(1-krel), *), conc(*), &
+  real (kind=dp) :: bravais(3, 3), btrel(irmd*krel+(1-krel), *), conc(*), &
     ctl(krel*lmaxd+1, *), drdi(irmd, *), drdirel(irmd*krel+(1-krel), *), &
     qmphi(*), qmtet(*), rbasis(3, *), rmrel(irmd*krel+(1-krel), *), rmt(*), &
     rr(irmd, *), rws(*), soc(krel*lmaxd+1, *), visp(irmd, *), &

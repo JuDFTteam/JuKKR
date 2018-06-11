@@ -32,6 +32,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    use global_variables
    use Constants
    use Profiling
+      Use mod_datatypes, Only: dp
 
    IMPLICIT NONE
 
@@ -59,34 +60,34 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    integer, intent(in) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
    integer, intent(in) :: NPAN_TOT
    integer, intent(in) :: NPAN_LOG  !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
-   double precision, intent(in) :: ZAT       !< Nuclear charge for a given atom
-   double precision, intent(in) :: SOCSCALE  !< Spin-orbit scaling for a given atom
+   real (kind=dp), intent(in) :: ZAT       !< Nuclear charge for a given atom
+   real (kind=dp), intent(in) :: SOCSCALE  !< Spin-orbit scaling for a given atom
    logical, intent(in) :: LDORHOEF
    integer, dimension(LMXSPD), intent(in)    :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
    integer, dimension(LMXSPD), intent(in)    :: IFUNM
    integer, dimension(0:NTOTD), intent(in)   :: IPAN_INTERVALL
    integer, dimension(NCLEB,4), intent(in)   :: ICLEB
-   double precision, dimension(*), intent(in)   :: CLEB !< GAUNT coefficients (GAUNT)
-   double precision, dimension(IRM), intent(in) :: RMESH
-   double precision, dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix
-   double complex, dimension(IRM), intent(in) :: PHILDAU
+   real (kind=dp), dimension(*), intent(in)   :: CLEB !< GAUNT coefficients (GAUNT)
+   real (kind=dp), dimension(IRM), intent(in) :: RMESH
+   real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix
+   complex (kind=dp), dimension(IRM), intent(in) :: PHILDAU
 
    ! .. In/Out variables
-   double precision, intent(inout) :: PHI
-   double precision, intent(inout) :: THETA
-   double precision, dimension(NRMAXD), intent(inout)       :: RNEW
-   double precision, dimension(0:NTOTD), intent(inout)      :: RPAN_INTERVALL
-   double precision, dimension(0:LMAX+1,3), intent(inout)   :: MUORB
-   double precision, dimension(NRMAXD,NFUND), intent(inout) :: THETASNEW
-   double precision, dimension(NRMAXD,LMPOT,NSPOTD), intent(inout) :: VINSNEW  !< Non-spherical part of the potential
-   double complex, dimension(IEMXD), intent(inout) :: EZ
-   double complex, dimension(IEMXD), intent(inout) :: WEZ
+   real (kind=dp), intent(inout) :: PHI
+   real (kind=dp), intent(inout) :: THETA
+   real (kind=dp), dimension(NRMAXD), intent(inout)       :: RNEW
+   real (kind=dp), dimension(0:NTOTD), intent(inout)      :: RPAN_INTERVALL
+   real (kind=dp), dimension(0:LMAX+1,3), intent(inout)   :: MUORB
+   real (kind=dp), dimension(NRMAXD,NFUND), intent(inout) :: THETASNEW
+   real (kind=dp), dimension(NRMAXD,LMPOT,NSPOTD), intent(inout) :: VINSNEW  !< Non-spherical part of the potential
+   complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
+   complex (kind=dp), dimension(IEMXD), intent(inout) :: WEZ
    ! .. Output variables
-   double precision, dimension(2), intent(out)              :: angles_new
-   double precision, dimension(0:LMAX+1,2), intent(out)     :: ESPV
-   double precision, dimension(IRM,LMPOT,4), intent(out)    :: R2NEF
-   double precision, dimension(IRM,LMPOT,4), intent(out)    :: RHO2NS
-   double complex, dimension(0:LMAX+1,IEMXD,2), intent(out) :: DEN_out
+   real (kind=dp), dimension(2), intent(out)              :: angles_new
+   real (kind=dp), dimension(0:LMAX+1,2), intent(out)     :: ESPV
+   real (kind=dp), dimension(IRM,LMPOT,4), intent(out)    :: R2NEF
+   real (kind=dp), dimension(IRM,LMPOT,4), intent(out)    :: RHO2NS
+   complex (kind=dp), dimension(0:LMAX+1,IEMXD,2), intent(out) :: DEN_out
 
    ! .. Local variables
    integer :: LMAXD1
@@ -97,72 +98,72 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    integer :: LMLO,LMHI,MMAX,IS,JS  ! LDAU
    integer :: IX,M1       ! qdos ruess
 
-   double precision :: THETANEW,PHINEW
-   double precision :: TOTMOMENT
-   double precision :: TOTXYMOMENT
-   double complex :: EK
-   double complex :: DF
-   double complex :: ERYD
-   double complex :: TEMP1
-   double complex :: DENTEMP
-   double complex :: GMATPREFACTOR
+   real (kind=dp) :: THETANEW,PHINEW
+   real (kind=dp) :: TOTMOMENT
+   real (kind=dp) :: TOTXYMOMENT
+   complex (kind=dp) :: EK
+   complex (kind=dp) :: DF
+   complex (kind=dp) :: ERYD
+   complex (kind=dp) :: TEMP1
+   complex (kind=dp) :: DENTEMP
+   complex (kind=dp) :: GMATPREFACTOR
    integer, dimension(4)         :: LMSHIFT1
    integer, dimension(4)         :: LMSHIFT2
    integer, dimension(2*LMMAXSO) :: JLK_INDEX
-   double precision, dimension(3) :: MOMENT
-   double precision, dimension(3) :: DENORBMOM
-   double precision, dimension(3) :: DENORBMOMNS
-   double precision, dimension(2,4) :: DENORBMOMSP
-   double precision, dimension(0:LMAX,3) :: DENORBMOMLM
-   double complex, dimension(4)                       :: RHO2
-   double complex, dimension(4)                       :: RHO2INT
-   double complex, dimension(2*(LMAX+1))              :: ALPHASPH
-   double complex, dimension(LMMAXSO,LMMAXSO)         :: GMAT0
-   double complex, dimension(LMMAXSO,LMMAXSO)         :: GLDAU   ! LDAU
-   double complex, dimension(LMMAXSO,LMMAXSO)         :: TMATLL
-   double complex, dimension(LMMAXSO,LMMAXSO)         :: ALPHALL ! LLY
-   double complex, dimension(LMMAXSO,LMMAXSO)         :: TMATTEMP
-   double complex, dimension(2,2)                     :: RHO2NS_TEMP
-   double complex, dimension(LMMAXSO,LMMAXSO,IEMXD)   :: GMATLL
-   double complex, dimension(MMAXD,MMAXD,2,2)         :: DENMATN ! LDAU
+   real (kind=dp), dimension(3) :: MOMENT
+   real (kind=dp), dimension(3) :: DENORBMOM
+   real (kind=dp), dimension(3) :: DENORBMOMNS
+   real (kind=dp), dimension(2,4) :: DENORBMOMSP
+   real (kind=dp), dimension(0:LMAX,3) :: DENORBMOMLM
+   complex (kind=dp), dimension(4)                       :: RHO2
+   complex (kind=dp), dimension(4)                       :: RHO2INT
+   complex (kind=dp), dimension(2*(LMAX+1))              :: ALPHASPH
+   complex (kind=dp), dimension(LMMAXSO,LMMAXSO)         :: GMAT0
+   complex (kind=dp), dimension(LMMAXSO,LMMAXSO)         :: GLDAU   ! LDAU
+   complex (kind=dp), dimension(LMMAXSO,LMMAXSO)         :: TMATLL
+   complex (kind=dp), dimension(LMMAXSO,LMMAXSO)         :: ALPHALL ! LLY
+   complex (kind=dp), dimension(LMMAXSO,LMMAXSO)         :: TMATTEMP
+   complex (kind=dp), dimension(2,2)                     :: RHO2NS_TEMP
+   complex (kind=dp), dimension(LMMAXSO,LMMAXSO,IEMXD)   :: GMATLL
+   complex (kind=dp), dimension(MMAXD,MMAXD,2,2)         :: DENMATN ! LDAU
 
    ! .. Local allocatable arrays
-   double precision, dimension(:,:), allocatable :: QVEC ! qdos ruess: q-vectors for qdos
-   double precision, dimension(:,:,:), allocatable :: VINS
-   double complex, dimension(:,:), allocatable :: TMATSPH
-   double complex, dimension(:,:), allocatable :: CDENTEMP
-   double complex, dimension(:,:), allocatable :: RHOTEMP
-   double complex, dimension(:,:), allocatable :: RHONEWTEMP
-   double complex, dimension(:,:,:), allocatable :: HLK
-   double complex, dimension(:,:,:), allocatable :: JLK
-   double complex, dimension(:,:,:), allocatable :: HLK2
-   double complex, dimension(:,:,:), allocatable :: JLK2
-   double complex, dimension(:,:,:), allocatable :: CDENNS
-   double complex, dimension(:,:,:), allocatable :: R2NEFC
-   double complex, dimension(:,:,:), allocatable :: RHO2NSC
-   double complex, dimension(:,:,:), allocatable :: VNSPLL0
-   double complex, dimension(:,:,:), allocatable :: R2NEFNEW
-   double complex, dimension(:,:,:), allocatable :: RHO2NSNEW
-   double complex, dimension(:,:,:), allocatable :: GFLLE_PART
-   double complex, dimension(:,:,:,:), allocatable :: RLL
-   double complex, dimension(:,:,:,:), allocatable :: SLL
-   double complex, dimension(:,:,:,:), allocatable :: DEN
-   double complex, dimension(:,:,:,:), allocatable :: CDEN
-   double complex, dimension(:,:,:,:), allocatable :: GFLLE
-   double complex, dimension(:,:,:,:), allocatable :: DENLM
-   double complex, dimension(:,:,:,:), allocatable :: CDENLM
-   double complex, dimension(:,:,:,:), allocatable :: VNSPLL
-   double complex, dimension(:,:,:,:), allocatable :: R2ORBC
-   double complex, dimension(:,:,:,:), allocatable :: VNSPLL1
-   double complex, dimension(:,:,:,:), allocatable :: RLLLEFT
-   double complex, dimension(:,:,:,:), allocatable :: SLLLEFT
-   double complex, dimension(:,:,:,:), allocatable :: R2NEFC_loop
-   double complex, dimension(:,:,:,:), allocatable :: RHO2NSC_loop
+   real (kind=dp), dimension(:,:), allocatable :: QVEC ! qdos ruess: q-vectors for qdos
+   real (kind=dp), dimension(:,:,:), allocatable :: VINS
+   complex (kind=dp), dimension(:,:), allocatable :: TMATSPH
+   complex (kind=dp), dimension(:,:), allocatable :: CDENTEMP
+   complex (kind=dp), dimension(:,:), allocatable :: RHOTEMP
+   complex (kind=dp), dimension(:,:), allocatable :: RHONEWTEMP
+   complex (kind=dp), dimension(:,:,:), allocatable :: HLK
+   complex (kind=dp), dimension(:,:,:), allocatable :: JLK
+   complex (kind=dp), dimension(:,:,:), allocatable :: HLK2
+   complex (kind=dp), dimension(:,:,:), allocatable :: JLK2
+   complex (kind=dp), dimension(:,:,:), allocatable :: CDENNS
+   complex (kind=dp), dimension(:,:,:), allocatable :: R2NEFC
+   complex (kind=dp), dimension(:,:,:), allocatable :: RHO2NSC
+   complex (kind=dp), dimension(:,:,:), allocatable :: VNSPLL0
+   complex (kind=dp), dimension(:,:,:), allocatable :: R2NEFNEW
+   complex (kind=dp), dimension(:,:,:), allocatable :: RHO2NSNEW
+   complex (kind=dp), dimension(:,:,:), allocatable :: GFLLE_PART
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: RLL
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: SLL
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: DEN
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: CDEN
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: GFLLE
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: DENLM
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: CDENLM
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: VNSPLL
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: R2ORBC
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: VNSPLL1
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: RLLLEFT
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: SLLLEFT
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: R2NEFC_loop
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: RHO2NSC_loop
 
 #ifdef CPP_MPI
-   double complex, dimension(2) :: DENTOT         ! qdos ruess
+   complex (kind=dp), dimension(2) :: DENTOT         ! qdos ruess
    ! communication
-   double complex, dimension(:,:,:,:), allocatable :: workc
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: workc
 #endif
    ! OMP - number of threads, thread id
    integer nth,ith
@@ -810,7 +811,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
                   end if                                                         ! qdos
                endif   ! IQ.EQ.1                                                 ! qdos
                do JSPIN =1,2                                                     ! qdos
-                  DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                              ! qdos
+                  DENTOT(JSPIN) = DCMPLX(0.D0,0.D0, kind=dp)                              ! qdos
                   do L1 = 0,LMAXD1                                               ! qdos
                      DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)         ! qdos
                   enddo                                                          ! qdos
@@ -855,7 +856,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
                      end if                                                      ! complex qdos
                   endif   ! IQ.EQ.1                                              ! complex qdos
                   do JSPIN =1,2                                                  ! complex qdos
-                     DENTOT(JSPIN) = DCMPLX(0.D0,0.D0)                           ! complex qdos
+                     DENTOT(JSPIN) = DCMPLX(0.D0,0.D0, kind=dp)                           ! complex qdos
                      do L1 = 0,LMAXD1                                            ! complex qdos
                         DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)      ! complex qdos
                      enddo                                                       ! complex qdos

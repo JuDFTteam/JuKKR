@@ -13,6 +13,7 @@ module mod_logo
 ! #define KKprime  ! for use in KKprime (pkkr) code
 
 
+      Use mod_datatypes, Only: dp
 private
 public :: JuKKRlogo, print_logo, logo_line_width, logo_num_lines
 

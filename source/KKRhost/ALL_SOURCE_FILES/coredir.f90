@@ -1,5 +1,5 @@
 subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
-  nzero, gc, fc, dp, dq, wp, wq, pow, qow, piw, qiw, cgd, cgmd, cgo, nrc, z, &
+  nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, cgd, cgmd, cgo, nrc, z, &
   nucleus)
 !   ********************************************************************
 !   *                                                                  *
@@ -15,34 +15,35 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
 !   *                                                                  *
 !   ********************************************************************
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
 
 ! PARAMETER definitions
   integer :: mpsmax, npemax, invmax
   parameter (mpsmax=20, npemax=20, invmax=3)
-  double precision :: tol
+  real (kind=dp) :: tol
   parameter (tol=1.0d-9)
   integer :: itmax
   parameter (itmax=50)
 
 ! Dummy arguments
-  double precision :: c, cgo, mj
-  double precision :: e
+  real (kind=dp) :: c, cgo, mj
+  real (kind=dp) :: e
   integer :: it, l, nmatch, nrc, nucleus, nzero, z
   character (len=3) :: way
-  double precision :: bb(nrc), cgd(2), cgmd(2), dovrc(nrc), dp(2, 2, nrc), &
+  real (kind=dp) :: bb(nrc), cgd(2), cgmd(2), dovrc(nrc), d_p(2, 2, nrc), &
     dq(2, 2, nrc), drdic(nrc), fc(2, 2, nrc), gc(2, 2, nrc), piw(2, 2), &
     pow(2, 2), qiw(2, 2), qow(2, 2), rc(nrc), vv(nrc), wp(2, 2, nrc), &
     wq(2, 2, nrc)
 
 ! Local variables
-  double precision :: a11, a12, a21, a22, aa11, aa12, aa21, aa22, alpha, bb1, &
+  real (kind=dp) :: a11, a12, a21, a22, aa11, aa12, aa21, aa22, alpha, bb1, &
     bb2, beta, bova, bpp, bqq, diffa, diffb, dmue, emvpp, emvqq, w1, w2, w3, &
     w4, w5, w6, w7
-  double precision :: bc(0:npemax), cg1, cg2, cg4, cg5, cg8, csqr, det, dvc, &
+  real (kind=dp) :: bc(0:npemax), cg1, cg2, cg4, cg5, cg8, csqr, det, dvc, &
     gam(2), gpm, h24, kap(2), pc(2, 2, 0:mpsmax), pnew(2, 2), pold(2, 2), &
     qc(2, 2, 0:mpsmax), qnew(2, 2), qold(2, 2), rpwgpm, rr, tz, vc(0:npemax)
-  double precision :: dabs, dble, dexp, dsqrt
+  real (kind=dp) :: dabs, dble, dexp, dsqrt
   integer :: i, iv, j, jcorr, k, kap1, kap2, m, mps, n, nn, nsol
   integer :: int, nint
   save :: a11, a12, a21, a22, aa11, aa12, aa21, aa22, alpha, bb1, bb2, bc, &
@@ -52,7 +53,7 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
     vc, w1, w2, w3, w4, w5, w6, w7
 
 ! MB
-!     DOUBLE PRECISION CM(INVMAX,INVMAX),CMI(INVMAX,INVMAX)
+!     real (kind=dp) CM(INVMAX,INVMAX),CMI(INVMAX,INVMAX)
 ! MB
 
 
@@ -149,13 +150,13 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
       do j = 1, nsol
         i = 3 - j
         wp(j, j, n) = dexp(-dmue*rr)
-        dp(j, j, n) = -dmue*drdic(n)*wp(j, j, n)
+        d_p(j, j, n) = -dmue*drdic(n)*wp(j, j, n)
         wq(j, j, n) = bova*wp(j, j, n)
-        dq(j, j, n) = bova*dp(j, j, n)
+        dq(j, j, n) = bova*d_p(j, j, n)
 
         wp(i, j, n) = 0.0d0
         wq(i, j, n) = 0.0d0
-        dp(i, j, n) = 0.0d0
+        d_p(i, j, n) = 0.0d0
         dq(i, j, n) = 0.0d0
       end do
     end do
@@ -171,8 +172,8 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
 
       do j = 1, nsol
         do i = 1, nsol
-          pnew(i, j) = wp(i, j, n+1) - h24*(55.0d0*dp(i,j,n+1)-59.0d0*dp(i,j,n &
-            +2)+37.0d0*dp(i,j,n+3)-9.0d0*dp(i,j,n+4))
+          pnew(i, j) = wp(i, j, n+1) - h24*(55.0d0*d_p(i,j,n+1)-59.0d0*d_p(i,j,n &
+            +2)+37.0d0*d_p(i,j,n+3)-9.0d0*d_p(i,j,n+4))
           qnew(i, j) = wq(i, j, n+1) - h24*(55.0d0*dq(i,j,n+1)-59.0d0*dq(i,j,n &
             +2)+37.0d0*dq(i,j,n+3)-9.0d0*dq(i,j,n+4))
         end do
@@ -191,13 +192,13 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
           do i = 1, nsol
             pold(i, j) = pnew(i, j)
             qold(i, j) = qnew(i, j)
-            dp(i, j, n) = -kap(i)*pnew(i, j)*dovrc(n) + &
+            d_p(i, j, n) = -kap(i)*pnew(i, j)*dovrc(n) + &
               (emvqq+bqq*cgmd(i))*qnew(i, j)
             dq(i, j, n) = kap(i)*qnew(i, j)*dovrc(n) + &
               (emvpp+bpp*cgd(i))*pnew(i, j) + bpp*cgo*pnew(3-i, j)
 
-            pnew(i, j) = wp(i, j, n+1) - h24*(9.0d0*dp(i,j,n)+19.0d0*dp(i,j,n+ &
-              1)-5.0d0*dp(i,j,n+2)+dp(i,j,n+3))
+            pnew(i, j) = wp(i, j, n+1) - h24*(9.0d0*d_p(i,j,n)+19.0d0*d_p(i,j,n+ &
+              1)-5.0d0*d_p(i,j,n+2)+d_p(i,j,n+3))
             qnew(i, j) = wq(i, j, n+1) - h24*(9.0d0*dq(i,j,n)+19.0d0*dq(i,j,n+ &
               1)-5.0d0*dq(i,j,n+2)+dq(i,j,n+3))
           end do
@@ -229,7 +230,7 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
         do i = 1, nsol
           wp(i, j, n) = pnew(i, j)
           wq(i, j, n) = qnew(i, j)
-          dp(i, j, n) = -kap(i)*pnew(i, j)*dovrc(n) + &
+          d_p(i, j, n) = -kap(i)*pnew(i, j)*dovrc(n) + &
             (emvqq+bqq*cgmd(i))*qnew(i, j)
           dq(i, j, n) = kap(i)*qnew(i, j)*dovrc(n) + &
             (emvpp+bpp*cgd(i))*pnew(i, j) + bpp*cgo*pnew(3-i, j)
@@ -396,7 +397,7 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
         wp(i, j, n) = pc(i, j, 0)*rpwgpm
         wq(i, j, n) = qc(i, j, 0)*rpwgpm
 !      print*,WP(i,j,N), WQ(I,J,N),0,i,j
-        dp(i, j, n) = pc(i, j, 0)*rpwgpm*gam(j)*dovrc(n)
+        d_p(i, j, n) = pc(i, j, 0)*rpwgpm*gam(j)*dovrc(n)
         dq(i, j, n) = qc(i, j, 0)*rpwgpm*gam(j)*dovrc(n)
       end do
 
@@ -408,7 +409,7 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
           wp(i, j, n) = wp(i, j, n) + pc(i, j, m)*rpwgpm
           wq(i, j, n) = wq(i, j, n) + qc(i, j, m)*rpwgpm
 !       print*,WP(i,j,N),WQ(I,J,N) ,m,i,j
-          dp(i, j, n) = dp(i, j, n) + pc(i, j, m)*rpwgpm*gpm*dovrc(n)
+          d_p(i, j, n) = d_p(i, j, n) + pc(i, j, m)*rpwgpm*gpm*dovrc(n)
           dq(i, j, n) = dq(i, j, n) + qc(i, j, m)*rpwgpm*gpm*dovrc(n)
         end do
 
@@ -428,8 +429,8 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
 
     do j = 1, nsol
       do i = 1, nsol
-        pnew(i, j) = wp(i, j, n-1) + h24*(55.0d0*dp(i,j,n-1)-59.0d0*dp(i,j,n-2 &
-          )+37.0d0*dp(i,j,n-3)-9.0d0*dp(i,j,n-4))
+        pnew(i, j) = wp(i, j, n-1) + h24*(55.0d0*d_p(i,j,n-1)-59.0d0*d_p(i,j,n-2 &
+          )+37.0d0*d_p(i,j,n-3)-9.0d0*d_p(i,j,n-4))
         qnew(i, j) = wq(i, j, n-1) + h24*(55.0d0*dq(i,j,n-1)-59.0d0*dq(i,j,n-2 &
           )+37.0d0*dq(i,j,n-3)-9.0d0*dq(i,j,n-4))
       end do
@@ -449,13 +450,13 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
         do i = 1, nsol
           pold(i, j) = pnew(i, j)
           qold(i, j) = qnew(i, j)
-          dp(i, j, n) = -kap(i)*pnew(i, j)*dovrc(n) + &
+          d_p(i, j, n) = -kap(i)*pnew(i, j)*dovrc(n) + &
             (emvqq+bqq*cgmd(i))*qnew(i, j)
           dq(i, j, n) = kap(i)*qnew(i, j)*dovrc(n) + &
             (emvpp+bpp*cgd(i))*pnew(i, j) + bpp*cgo*pnew(3-i, j)
 
-          pnew(i, j) = wp(i, j, n-1) + h24*(9.0d0*dp(i,j,n)+19.0d0*dp(i,j,n-1) &
-            -5.0d0*dp(i,j,n-2)+dp(i,j,n-3))
+          pnew(i, j) = wp(i, j, n-1) + h24*(9.0d0*d_p(i,j,n)+19.0d0*d_p(i,j,n-1) &
+            -5.0d0*d_p(i,j,n-2)+d_p(i,j,n-3))
           qnew(i, j) = wq(i, j, n-1) + h24*(9.0d0*dq(i,j,n)+19.0d0*dq(i,j,n-1) &
             -5.0d0*dq(i,j,n-2)+dq(i,j,n-3))
         end do
@@ -486,7 +487,7 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
       do i = 1, nsol
         wp(i, j, n) = pnew(i, j)
         wq(i, j, n) = qnew(i, j)
-        dp(i, j, n) = -kap(i)*pnew(i, j)*dovrc(n) + (emvqq+bqq*cgmd(i))*qnew(i &
+        d_p(i, j, n) = -kap(i)*pnew(i, j)*dovrc(n) + (emvqq+bqq*cgmd(i))*qnew(i &
           , j)
         dq(i, j, n) = kap(i)*qnew(i, j)*dovrc(n) + (emvpp+bpp*cgd(i))*pnew(i, &
           j) + bpp*cgo*pnew(3-i, j)

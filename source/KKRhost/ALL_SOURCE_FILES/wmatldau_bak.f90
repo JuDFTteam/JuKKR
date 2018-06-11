@@ -19,26 +19,27 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
 ! *                                                                    *
 ! *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
 ! **********************************************************************
+      Use mod_datatypes, Only: dp
   implicit none
   include 'inc.p'
 ! Dummy arguments
 
 
-  double complex :: czero
+  complex (kind=dp) :: czero
   parameter (czero=(0.0d0,0.0d0))
 ! Local variables
 !..
 !    ..
   integer :: ntldau, nspin, mmaxd, npotd
   integer :: itldau(natypd), lopt(natypd)
-  double precision :: ueff(natypd), jeff(natypd), edc(natypd), eu(natypd), &
+  real (kind=dp) :: ueff(natypd), jeff(natypd), edc(natypd), eu(natypd), &
     wldau(mmaxd, mmaxd, nspind, natypd)
-  double precision, allocatable :: uldau(:, :, :, :, :)
-  double complex :: denmatc(mmaxd, mmaxd, npotd)
+  real (kind=dp), allocatable :: uldau(:, :, :, :, :)
+  complex (kind=dp) :: denmatc(mmaxd, mmaxd, npotd)
 
 
-  double complex :: csum, csum2, vldau(mmaxd, mmaxd, nspind)
-  double precision :: denmat(mmaxd, mmaxd, nspind), dentot, dentots(nspind)
+  complex (kind=dp) :: csum, csum2, vldau(mmaxd, mmaxd, nspind)
+  real (kind=dp) :: denmat(mmaxd, mmaxd, nspind), dentot, dentots(nspind)
   integer :: i1, it, ipot, is, js, m1, m2, m3, m4, mm, mmax
   integer :: iprint
   character (len=15) :: str15
@@ -253,7 +254,7 @@ end subroutine
 
 subroutine rwrite(z, mmaxd, mmax, ifile)
 
-  double precision, intent (inout) :: z(mmaxd, mmaxd)
+  real (kind=dp), intent (inout) :: z(mmaxd, mmaxd)
   integer, intent (inout) :: mmaxd
   integer, intent (in) :: mmax
   integer, intent (inout) :: ifile

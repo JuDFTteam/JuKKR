@@ -1,125 +1,129 @@
-subroutine renorm_lly( & ! LLY Lloyd  &
-  cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, iestart, ieend, wez, &
-  ircut, ipan, ez, zat, rho2ns, r2nef, denef, denefat, espv)
+! LLY Lloyd  &
+    Subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
+      iestart, ieend, wez, ircut, ipan, ez, zat, rho2ns, r2nef, denef, &
+      denefat, espv)
+      Use mod_datatypes, Only: dp
 ! Renormalize the valence charge according to Lloyd's formula.
 ! Find renormalization constant per energy, then renormalize
 ! charge/atom/energy, then integrate over energies to find
 ! the renormalized charge/atom. Use it to renormalize the density.
 ! Phivos Mavropoulos, July 2014
-  implicit none
-  include 'inc.p'
-  integer :: lmaxd1
-  parameter (lmaxd1=lmaxd+1)
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  integer :: npotd
-  parameter (npotd=(2*(krel+korbit)+(1-(krel+korbit))*nspind)*natypd)
+      Implicit None
+      Include 'inc.p'
+      Integer :: lmaxd1
+      Parameter (lmaxd1=lmaxd+1)
+      Integer :: lmpotd
+      Parameter (lmpotd=(lpotd+1)**2)
+      Integer :: npotd
+      Parameter (npotd=(2*(krel+korbit)+(1-(krel+korbit))*nspind)*natypd)
 ! Concentration (for cpa)
-  integer :: lmaxp1, natyp, nspin ! Non-renormalized density per atom (density=-cden/pi)
-  integer :: iestart, ieend, ielast ! DOS according to Lloyd's formula
-  integer :: ircut(0:ipand, natypd), ipan(natypd) ! Input/Output:
-  double precision :: conc(natypd) ! Internal:
-  double complex :: cden(0:lmaxd1, ielast, npotd) ! 1: charge renormalization per atom (energy-integrated)
-  double complex :: cdos_lly(iemxd, nspind) ! 2: same for spin moment
-  double complex :: wez(iemxd), ez(iemxd)
-  double precision :: zat(natypd)
+      Integer :: lmaxp1, natyp, nspin
+      Integer :: iestart, ieend, ielast ! Non-renormalized density per atom (density=-cden/pi)
+      Integer :: ircut(0:ipand, natypd), ipan(natypd) ! DOS according to Lloyd's formula
+      Real (Kind=dp) :: conc(natypd) ! Input/Output:
+      Complex (Kind=dp) :: cden(0:lmaxd1, ielast, npotd) ! Internal:
+      Complex (Kind=dp) :: cdos_lly(iemxd, nspind) ! 1: charge renormalization per atom (energy-integrated)
+      Complex (Kind=dp) :: wez(iemxd), ez(iemxd)
+      Real (Kind=dp) :: zat(natypd)
+! 2: same for spin moment
+      Real (Kind=dp) :: rho2ns(irmd, lmpotd, natypd, 2)
+      Real (Kind=dp) :: r2nef(irmd, lmpotd, natypd, 2)
+      Real (Kind=dp) :: denef, denefat(natypd)
+      Real (Kind=dp) :: espv(0:lmaxd1, npotd)
 !  Density from local summation
-  double precision :: rho2ns(irmd, lmpotd, natypd, 2)
-  double precision :: r2nef(irmd, lmpotd, natypd, 2)
-  double precision :: denef, denefat(natypd)
-  double precision :: espv(0:lmaxd1, npotd)
-!      and from Lloyd's formula
-  integer :: ll, ie, i1, ispin, ipot, spindegen, irc1, signsp, idim
-  double precision :: renorm_at(natypd, 2) ! Renormalization constant for charge and spin density
-! Atomic charge per spin (local summation and renormalized)
-  double complex :: cdos_loc(iemxd, (1+krel)*nspind) ! Integration step for charge/atom/spin
-  double complex :: cdos_locvc(iemxd, (1+krel)*nspind) 
-  double precision :: cren(iemxd, 2) 
-  double precision :: charge(natypd, 2), charge_lly(natypd, 2) 
-  double complex :: chadd(iemxd, natypd, nspind), cdos_add ! Spin degeneracy, 2 if nspin=1, 1 if nspin=2
-  double complex :: qlly(2), qstar(2)
-  double precision :: sum0(2), sum1(2)
-  double complex :: czero
-  double precision :: pi
-  logical :: opt, test
-  external :: opt, test
+      Integer :: ll, ie, i1, ispin, ipot, spindegen, irc1, signsp, idim
+      Real (Kind=dp) :: renorm_at(natypd, 2) !      and from Lloyd's formula
+! Renormalization constant for charge and spin density
+      Complex (Kind=dp) :: cdos_loc(iemxd, (1+krel)*nspind) ! Atomic charge per spin (local summation and renormalized)
+      Complex (Kind=dp) :: cdos_locvc(iemxd, (1+krel)*nspind)
+      Real (Kind=dp) :: cren(iemxd, 2)
+      Real (Kind=dp) :: charge(natypd, 2), charge_lly(natypd, 2)
+      Complex (Kind=dp) :: chadd(iemxd, natypd, nspind), cdos_add ! Integration step for charge/atom/spin
+      Complex (Kind=dp) :: qlly(2), qstar(2)
+      Real (Kind=dp) :: sum0(2), sum1(2)
+      Complex (Kind=dp) :: czero
+      Real (Kind=dp) :: pi
+      Logical :: opt, test
+      External :: opt, test
+! Spin degeneracy, 2 if nspin=1, 1 if nspin=2
 
+      czero = (0.E0_dp, 0.E0_dp)
+      pi = 4.E0_dp*atan(1.E0_dp)
 
-  czero = (0.d0, 0.d0)
-  pi = 4.d0*datan(1.d0)
-! First find renormalization factor per energy and atomic charges
-  spindegen = 3 - nspin ! Factor 1/pi included in Wez
+      spindegen = 3 - nspin ! First find renormalization factor per energy and atomic charges
+! Factor 1/pi included in Wez
+      cren(:, :) = 0E0_dp
+      renorm_at(:, :) = 1.E0_dp
+      charge_lly(:, :) = 0.E0_dp
+      charge(:, :) = 0.E0_dp
+      qlly(:) = czero
+      qstar(:) = czero
 ! Complex charge
-  cren(:, :) = 0d0
-  renorm_at(:, :) = 1.d0
-  charge_lly(:, :) = 0.d0
-  charge(:, :) = 0.d0
-  qlly(:) = czero
-  qstar(:) = czero
 ! I1=1,NATYP
+      cdos_loc = czero
+      cdos_locvc = czero
+      chadd = czero
+      Do ie = iestart, ieend
+        Do ispin = 1, nspin
+          Do i1 = 1, natyp
+            ipot = (i1-1)*nspin + ispin
+            cdos_add = czero
+            Do ll = 0, lmaxp1
+              cdos_add = cdos_add + conc(i1)*cden(ll, ie, ipot) ! ISPIN = 1,NSPIN
+            End Do
+            If (zat(i1)>1E-06_dp) Then
+              cdos_loc(ie, ispin) = cdos_loc(ie, ispin) + cdos_add
+            Else
+              cdos_locvc(ie, ispin) = cdos_locvc(ie, ispin) + cdos_add
+            End If
+            chadd(ie, i1, ispin) = wez(ie)*cdos_add ! IE = IESTART,IEEND
+            charge(i1, ispin) = charge(i1, ispin) + aimag(chadd(ie,i1,ispin))/ &
+              real(nspin, kind=dp)
+          End Do ! Now the locally-summed charge/energy is in cdos_loc, charge/energy/atom in chadd
+          cdos_loc(ie, ispin) = -cdos_loc(ie, ispin)/pi
+          cdos_locvc(ie, ispin) = -cdos_locvc(ie, ispin)/pi
+        End Do ! Renormalization factor per energy:
+      End Do ! Apply to DOS of each atom:
 ! ISPIN = 1,NSPIN
-  cdos_loc = czero
-  cdos_locvc = czero
-  chadd = czero
-  do ie = iestart, ieend
-    do ispin = 1, nspin
-      do i1 = 1, natyp
-        ipot = (i1-1)*nspin + ispin
-        cdos_add = czero
-        do ll = 0, lmaxp1
-          cdos_add = cdos_add + conc(i1)*cden(ll, ie, ipot) ! IE = IESTART,IEEND
-        end do
-        if (zat(i1)>1d-06) then
-          cdos_loc(ie, ispin) = cdos_loc(ie, ispin) + cdos_add
-        else
-          cdos_locvc(ie, ispin) = cdos_locvc(ie, ispin) + cdos_add
-        end if
-        chadd(ie, i1, ispin) = wez(ie)*cdos_add ! Now the locally-summed charge/energy is in cdos_loc, charge/energy/atom in chadd
-        charge(i1, ispin) = charge(i1, ispin) + aimag(chadd(ie,i1,ispin))/dble &
-          (nspin)
-      end do ! Renormalization factor per energy:
-      cdos_loc(ie, ispin) = -cdos_loc(ie, ispin)/pi
-      cdos_locvc(ie, ispin) = -cdos_locvc(ie, ispin)/pi
-    end do ! Apply to DOS of each atom:
-  end do ! ISPIN = 1,NSPIN
+      If (.Not. opt('NEWSOSOL')) Then
+        Do ie = iestart, ieend
+          Do ispin = 1, nspin
 ! IE = IESTART,IEEND
-  if (.not. opt('NEWSOSOL')) then
-    do ie = iestart, ieend
-      do ispin = 1, nspin
+            cren(ie, ispin) = aimag((cdos_lly(ie,ispin)-cdos_locvc(ie, &
+              ispin))*wez(ie))/aimag(cdos_loc(ie,ispin)*wez(ie))
 ! Renormalization factor per energy:
-        cren(ie, ispin) = aimag((cdos_lly(ie,ispin)-cdos_locvc(ie, &
-          ispin))*wez(ie))/aimag(cdos_loc(ie,ispin)*wez(ie))
-! Apply to DOS of each atom:
-        do i1 = 1, natypd
-          if (zat(i1)>1d-06) then
-            charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              cren(ie, ispin)*aimag(chadd(ie,i1,ispin))/dble(nspin)
-          else
-            charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              aimag(chadd(ie,i1,ispin))/dble(nspin)
-          end if
-        end do
-      end do ! IE = IESTART,IEEND
-    end do 
-  else
-    do ie = iestart, ieend
+            Do i1 = 1, natypd
+              If (zat(i1)>1E-06_dp) Then
+                charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
+                  cren(ie, ispin)*aimag(chadd(ie,i1,ispin))/ &
+                  real(nspin, kind=dp)
+              Else
+                charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
+                  aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
+              End If
+            End Do
+          End Do ! Apply to DOS of each atom:
+        End Do
+      Else
+        Do ie = iestart, ieend
+! IE = IESTART,IEEND
+          cren(ie, 1) = aimag((cdos_lly(ie,1)-cdos_locvc(ie,1)-cdos_locvc(ie, &
+            2))*wez(ie))/aimag((cdos_loc(ie,1)+cdos_loc(ie,2))*wez(ie))
 ! add term from sum from l>lmax to infinity
-      cren(ie, 1) = aimag((cdos_lly(ie,1)-cdos_locvc(ie,1)-cdos_locvc(ie, &
-        2))*wez(ie))/aimag((cdos_loc(ie,1)+cdos_loc(ie,2))*wez(ie))
-!            DO I1=1,NATYPD
-      do ispin = 1, nspin
-        do i1 = 1, natypd
-          if (zat(i1)>1d-06) then
-            charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              cren(ie, 1)*aimag(chadd(ie,i1,ispin))/dble(nspin)
-          else
-            charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              aimag(chadd(ie,i1,ispin))/dble(nspin)
-          end if
-        end do
-      end do
-    end do !             DO ISPIN=1,NSPIN
-  end if
+          Do ispin = 1, nspin
+            Do i1 = 1, natypd
+              If (zat(i1)>1E-06_dp) Then
+                charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
+                  cren(ie, 1)*aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
+              Else
+                charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
+                  aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
+              End If
+            End Do
+          End Do
+        End Do !            DO I1=1,NATYPD
+      End If
+!             DO ISPIN=1,NSPIN
 !             CHARGE_LLY(I1,ISPIN)=CHARGE_LLY(I1,ISPIN)-DIMAG(CDOS2(I1))
 !             ENDDO
 !            ENDDO
@@ -127,126 +131,126 @@ subroutine renorm_lly( & ! LLY Lloyd  &
 
 ! Now apply renormalization to energy-integrated density
 ! If spins are coupled, then only charge density
+      If (nspin==1 .Or. opt('NEWSOSOL')) cren(:, 2) = cren(:, 1)
 ! Index of outmost radial point
-  if (nspin==1 .or. opt('NEWSOSOL')) cren(:, 2) = cren(:, 1)
 
 
+      If (nspin==1) Then
+        Do i1 = 1, natyp
+          If (charge(i1,1)>0) Then
+            renorm_at(i1, 1) = charge_lly(i1, 1)/charge(i1, 1)
+          Else
+            renorm_at(i1, 1) = 1.0E0_dp
+          End If
+          renorm_at(i1, 2) = renorm_at(i1, 1)
+          irc1 = ircut(ipan(i1), i1)
+          rho2ns(1:irc1, 1:lmpotd, i1, 1) = rho2ns(1:irc1, 1:lmpotd, i1, 1)* &
+            renorm_at(i1, 1)
+          r2nef(1:irc1, 1:lmpotd, i1, 1) = r2nef(1:irc1, 1:lmpotd, i1, 1)* &
+            renorm_at(i1, 1)
+        End Do
 ! First decouple charge and spin density to the density of each channels
-  if (nspin==1) then
-    do i1 = 1, natyp
-      if (charge(i1,1)>0) then
-        renorm_at(i1, 1) = charge_lly(i1, 1)/charge(i1, 1)
-      else
-        renorm_at(i1, 1) = 1.0d0
-      end if
-      renorm_at(i1, 2) = renorm_at(i1, 1)
-      irc1 = ircut(ipan(i1), i1) 
-      rho2ns(1:irc1, 1:lmpotd, i1, 1) = rho2ns(1:irc1, 1:lmpotd, i1, 1)* &
-        renorm_at(i1, 1)
-      r2nef(1:irc1, 1:lmpotd, i1, 1) = r2nef(1:irc1, 1:lmpotd, i1, 1)* &
-        renorm_at(i1, 1)
-    end do
+      Else
 ! Index of outmost radial point
-  else
 ! Second merge density of each channels to charge and spin density
+        idim = irmd*lmpotd*natypd
+        Call daxpy(idim, 1.0E0_dp, rho2ns(1,1,1,1), 1, rho2ns(1,1,1,2), 1)
+        Call dscal(idim, 0.5E0_dp, rho2ns(1,1,1,2), 1)
+        Call daxpy(idim, -1.0E0_dp, rho2ns(1,1,1,2), 1, rho2ns(1,1,1,1), 1)
 
-    idim = irmd*lmpotd*natypd
-    call daxpy(idim, 1.0d0, rho2ns(1,1,1,1), 1, rho2ns(1,1,1,2), 1)
-    call dscal(idim, 0.5d0, rho2ns(1,1,1,2), 1)
-    call daxpy(idim, -1.0d0, rho2ns(1,1,1,2), 1, rho2ns(1,1,1,1), 1)
-
-    call daxpy(idim, 1.0d0, r2nef(1,1,1,1), 1, r2nef(1,1,1,2), 1)
-    call dscal(idim, 0.5d0, r2nef(1,1,1,2), 1)
-    call daxpy(idim, -1.0d0, r2nef(1,1,1,2), 1, r2nef(1,1,1,1), 1)
-    do i1 = 1, natyp
-      irc1 = ircut(ipan(i1), i1) ! calculate density at Fermi level
-      do ispin = 1, nspin
-        renorm_at(i1, ispin) = charge_lly(i1, ispin)/charge(i1, ispin)
-        rho2ns(1:irc1, 1:lmpotd, i1, ispin) = rho2ns(1:irc1, 1:lmpotd, i1, &
-          ispin)*renorm_at(i1, ispin)
-        r2nef(1:irc1, 1:lmpotd, i1, ispin) = r2nef(1:irc1, 1:lmpotd, i1, &
-          ispin)*renorm_at(i1, ispin)
-      end do
-    end do
+        Call daxpy(idim, 1.0E0_dp, r2nef(1,1,1,1), 1, r2nef(1,1,1,2), 1)
+        Call dscal(idim, 0.5E0_dp, r2nef(1,1,1,2), 1)
+        Call daxpy(idim, -1.0E0_dp, r2nef(1,1,1,2), 1, r2nef(1,1,1,1), 1)
+        Do i1 = 1, natyp
+          irc1 = ircut(ipan(i1), i1) 
+          Do ispin = 1, nspin
+            renorm_at(i1, ispin) = charge_lly(i1, ispin)/charge(i1, ispin)
+            rho2ns(1:irc1, 1:lmpotd, i1, ispin) = rho2ns(1:irc1, 1:lmpotd, i1, &
+              ispin)*renorm_at(i1, ispin)
+            r2nef(1:irc1, 1:lmpotd, i1, ispin) = r2nef(1:irc1, 1:lmpotd, i1, &
+              ispin)*renorm_at(i1, ispin)
+          End Do
+        End Do
+! calculate density at Fermi level
+        Call dscal(idim, 2.0E0_dp, rho2ns(1,1,1,1), 1)
+        Call daxpy(idim, -0.5E0_dp, rho2ns(1,1,1,1), 1, rho2ns(1,1,1,2), 1)
+        Call daxpy(idim, 1.0E0_dp, rho2ns(1,1,1,2), 1, rho2ns(1,1,1,1), 1)
 ! LL
-    call dscal(idim, 2.0d0, rho2ns(1,1,1,1), 1)
-    call daxpy(idim, -0.5d0, rho2ns(1,1,1,1), 1, rho2ns(1,1,1,2), 1)
-    call daxpy(idim, 1.0d0, rho2ns(1,1,1,2), 1, rho2ns(1,1,1,1), 1)
+        Call dscal(idim, 2.0E0_dp, r2nef(1,1,1,1), 1)
+        Call daxpy(idim, -0.5E0_dp, r2nef(1,1,1,1), 1, r2nef(1,1,1,2), 1)
+        Call daxpy(idim, 1.0E0_dp, r2nef(1,1,1,2), 1, r2nef(1,1,1,1), 1)
+      End If
 ! ISPIN
-    call dscal(idim, 2.0d0, r2nef(1,1,1,1), 1)
-    call daxpy(idim, -0.5d0, r2nef(1,1,1,1), 1, r2nef(1,1,1,2), 1)
-    call daxpy(idim, 1.0d0, r2nef(1,1,1,2), 1, r2nef(1,1,1,1), 1)
-  end if
 ! I1
-! Write out renormalization factors
-  denef = 0d0
-  do i1 = 1, natyp
-    denefat(i1) = 0d0
-    do ispin = 1, nspin
-      ipot = (i1-1)*nspin + ispin
-      do ll = 0, lmaxp1
-        if (zat(i1)>1d-06) then
-          denefat(i1) = denefat(i1) - 2.0d0*conc(i1)*cren(ielast, ispin)*aimag &
-            (cden(ll,ielast,ipot))/pi/dble(nspin)
-        else
-          denefat(i1) = denefat(i1) - 2.0d0*conc(i1)*aimag(cden(ll,ielast,ipot &
-            ))/pi/dble(nspin)
-        end if
-        espv(ll, ipot) = 0d0
-        if (zat(i1)>1d-06) then
-          do ie = 1, ielast
-            espv(ll, ipot) = espv(ll, ipot) + cren(ie, ispin)*aimag(ez(ie)* &
-              cden(ll,ie,ipot)*wez(ie)/dble(nspin))
-          end do
-        else
-          do ie = 1, ielast
-            espv(ll, ipot) = espv(ll, ipot) + aimag(ez(ie)*cden(ll,ie,ipot)* &
-              wez(ie)/dble(nspin))
-          end do
-        end if
-      end do ! -1,+1 for spin down,up (ispin=1,2)
-    end do 
-    denef = denef + denefat(i1)
-  end do 
+      denef = 0E0_dp
+      Do i1 = 1, natyp
+        denefat(i1) = 0E0_dp
+        Do ispin = 1, nspin
+          ipot = (i1-1)*nspin + ispin
+          Do ll = 0, lmaxp1
+            If (zat(i1)>1E-06_dp) Then
+              denefat(i1) = denefat(i1) - 2.0E0_dp*conc(i1)*cren(ielast, ispin &
+                )*aimag(cden(ll,ielast,ipot))/pi/real(nspin, kind=dp)
+            Else
+              denefat(i1) = denefat(i1) - 2.0E0_dp*conc(i1)*aimag(cden(ll, &
+                ielast,ipot))/pi/real(nspin, kind=dp)
+            End If
+            espv(ll, ipot) = 0E0_dp
+            If (zat(i1)>1E-06_dp) Then
+              Do ie = 1, ielast
+                espv(ll, ipot) = espv(ll, ipot) + cren(ie, ispin)*aimag(ez(ie) &
+                  *cden(ll,ie,ipot)*wez(ie)/real(nspin,kind=dp))
+              End Do
+            Else
+              Do ie = 1, ielast
+                espv(ll, ipot) = espv(ll, ipot) + aimag(ez(ie)*cden(ll,ie,ipot &
+                  )*wez(ie)/real(nspin,kind=dp))
+              End Do
+            End If
+          End Do ! Write out renormalization factors
+        End Do
+        denef = denef + denefat(i1)
+      End Do
+! -1,+1 for spin down,up (ispin=1,2)
+      Write (1337, *) 'Information on renormalization by Lloyds formula'
+      Write (1337, *) 'RENORM_LLY: Complex renormalization factor per energy:'
+      Write (1337, Fmt='(A5,2A32)') 'IE', 'Spin 1 (down)           ', &
+        'Spin 2 (up)           '
+      Do ie = iestart, ieend
+        Write (1337, Fmt='(I5,4F16.12)') ie, (cren(ie,ispin), ispin=1, nspin)
+      End Do
+      Write (1337, *) 'RENORM_LLY: renormalization factor per atom:'
+      Write (1337, Fmt='(A5,2A16)') 'IAT', 'Spin down', 'Spin up'
+      Do i1 = 1, natyp
+        Write (1337, Fmt='(I5,2E17.9)') i1, (renorm_at(i1,ispin), ispin=1, &
+          nspin)
+      End Do
+      Write (1337, *) 'RENORM_LLY: Renormalized charge per atom:'
+      Write (1337, Fmt='(A5,2A16)') 'IAT', 'Spin down', 'Spin up'
+      Do i1 = 1, natyp
+        Write (1337, Fmt='(I5,2F16.12)') i1, (charge_lly(i1,ispin), ispin=1, &
+          nspin)
+      End Do
+      sum0(:) = 0.E0_dp
+      sum1(:) = 0.E0_dp
+      Do ispin = 1, nspin
+        signsp = 2*ispin - 3
+        If (nspin==1) signsp = 1
+        Do i1 = 1, natyp
+          sum0(ispin) = sum0(ispin) + signsp*conc(i1)*charge(i1, ispin)
+          sum1(ispin) = sum1(ispin) + signsp*conc(i1)*charge_lly(i1, ispin)
 
-  write (1337, *) 'Information on renormalization by Lloyds formula'
-  write (1337, *) 'RENORM_LLY: Complex renormalization factor per energy:'
-  write (1337, fmt='(A5,2A32)') 'IE', 'Spin 1 (down)           ', &
-    'Spin 2 (up)           '
-  do ie = iestart, ieend
-    write (1337, fmt='(I5,4F16.12)') ie, (cren(ie,ispin), ispin=1, nspin)
-  end do
-  write (1337, *) 'RENORM_LLY: renormalization factor per atom:'
-  write (1337, fmt='(A5,2A16)') 'IAT', 'Spin down', 'Spin up'
-  do i1 = 1, natyp
-    write (1337, fmt='(I5,2E17.9)') i1, (renorm_at(i1,ispin), ispin=1, nspin)
-  end do
-  write (1337, *) 'RENORM_LLY: Renormalized charge per atom:'
-  write (1337, fmt='(A5,2A16)') 'IAT', 'Spin down', 'Spin up'
-  do i1 = 1, natyp
-    write (1337, fmt='(I5,2F16.12)') i1, (charge_lly(i1,ispin), ispin=1, nspin &
-      )
-  end do
-  sum0(:) = 0.d0
-  sum1(:) = 0.d0
-  do ispin = 1, nspin
-    signsp = 2*ispin - 3 
-    if (nspin==1) signsp = 1
-    do i1 = 1, natyp
-      sum0(ispin) = sum0(ispin) + signsp*conc(i1)*charge(i1, ispin)
-      sum1(ispin) = sum1(ispin) + signsp*conc(i1)*charge_lly(i1, ispin)
+        End Do
+      End Do
+      Write (1337, Fmt='(A45,2E17.9)') &
+        'RENORM_LLY: Locally summed charge and moment:', &
+        (sum0(ispin), ispin=1, nspin)
+      Write (1337, Fmt='(A45,2E17.9)') &
+        'RENORM_LLY: Renormalized charge and moment:  ', &
+        (sum1(ispin), ispin=1, nspin)
+      Write (1337, Fmt='(A50,2E17.9)') &
+        'RENORM_LLY: Renormalization factor of total charge:', sum1(1)/sum0(1)
 ! LLY Lloyd  &
-    end do
-  end do
-  write (1337, fmt='(A45,2E17.9)') &
-    'RENORM_LLY: Locally summed charge and moment:', &
-    (sum0(ispin), ispin=1, nspin)
-  write (1337, fmt='(A45,2E17.9)') &
-    'RENORM_LLY: Renormalized charge and moment:  ', &
-    (sum1(ispin), ispin=1, nspin)
-  write (1337, fmt='(A50,2E17.9)') &
-    'RENORM_LLY: Renormalization factor of total charge:', sum1(1)/sum0(1)
 ! Renormalize the valence charge according to Lloyd's formula.
 ! Find renormalization constant per energy, then renormalize
-! charge/atom/energy, then integrate over energies to find
-end subroutine
+    End Subroutine

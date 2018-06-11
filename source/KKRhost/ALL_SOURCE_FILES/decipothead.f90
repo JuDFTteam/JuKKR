@@ -9,19 +9,20 @@ subroutine decipothead(ihost, filehost, ilhost, nathost, vacflag, alat, &
 ! *                                                                    *
 ! **********************************************************************
   use :: mod_version_info
+      Use mod_datatypes, Only: dp
   implicit none
 !..
 !.. Arguments
-  double precision :: alat, efermi
+  real (kind=dp) :: alat, efermi
   character (len=40) :: filehost
   integer :: ihost, ilhost, ins, insh, kmrot, krel, krelh, nathost, nq, nspin, &
     nspinh, nt
-  double precision :: bravais(3, 3), bravsys(3, 3)
+  real (kind=dp) :: bravais(3, 3), bravsys(3, 3)
   logical :: vacflag(2)
 !..
 !.. Locals
-  double precision :: alath
-  double precision :: dabs
+  real (kind=dp) :: alath
+  real (kind=dp) :: dabs
   integer :: i, ih, ios, kmroth
 ! ----------------------------------------------------------------------
   if (.not. (filehost(1:7)=='vacuum')) then

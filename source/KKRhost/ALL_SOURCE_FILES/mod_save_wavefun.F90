@@ -14,10 +14,10 @@ implicit none
       ! allocatable arrays
       integer, allocatable :: isave_wavefun(:,:)    ! 0 if (iat_myrank, ie_myrank) pair is not saved, 1...Nwfsavemax otherwise, for first, second, ... Nwfsavemax-th saved wavefunction on this rank; (Nat_myrank, Ne_myrank)
       logical :: save_rll, save_sll, save_rllleft, save_sllleft ! logicals that say which wavefunctions are stored (used to reduce amount of memory that is used
-      double complex, allocatable :: rll(:,:,:,:,:)     ! regular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-      double complex, allocatable :: rllleft(:,:,:,:,:) ! regular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-      double complex, allocatable :: sll(:,:,:,:,:)     ! iregular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-      double complex, allocatable :: sllleft(:,:,:,:,:) ! iregular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+      complex (kind=dp), allocatable :: rll(:,:,:,:,:)     ! regular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+      complex (kind=dp), allocatable :: rllleft(:,:,:,:,:) ! regular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+      complex (kind=dp), allocatable :: sll(:,:,:,:,:)     ! iregular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+      complex (kind=dp), allocatable :: sllleft(:,:,:,:,:) ! iregular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
 
    end type type_wavefunctions
 
@@ -41,7 +41,7 @@ contains
       type(type_wavefunctions), intent(inout) :: t_wavefunctions
 
       integer :: nth, nat, ne, ierr, i, ie, iat, maxpos(1), Nwfsave_count, nat_myrank, ne_myrank, ioff_at, ioff_ie, Nsave
-      double precision :: delta_mem
+      real (kind=dp) :: delta_mem
 
       integer, allocatable :: kmesh_priority(:), my_kmesh(:)
       logical, allocatable :: mask(:)
@@ -229,7 +229,7 @@ contains
       implicit none
       type(type_wavefunctions), intent(inout) :: t_wavefunctions
       integer, intent(in) :: iat, ie, NSRA, LMMAXSO, IRMDNEW, ith
-      double complex, intent(in) :: rll(:,:,:,0:), rllleft(:,:,:,0:), sll(:,:,:,0:), sllleft(:,:,:,0:)
+      complex (kind=dp), intent(in) :: rll(:,:,:,0:), rllleft(:,:,:,0:), sll(:,:,:,0:), sllleft(:,:,:,0:)
 
       integer :: isave
 
@@ -269,7 +269,7 @@ contains
       implicit none
       type(type_wavefunctions), intent(inout) :: t_wavefunctions
       integer, intent(in) :: iat, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth
-      double complex, intent(out) :: rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), sllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1))
+      complex (kind=dp), intent(out) :: rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1)), sllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,0:(nth-1))
       logical, intent(out) :: read_in_rll, read_in_sll, read_in_rllleft, read_in_sllleft ! true or false, if wavefunction of this (iat,ie) pair was read in or not, respectively
 
       integer :: isave

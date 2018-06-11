@@ -2,6 +2,7 @@ subroutine renormrho_lly(cdos_lly, rhospher, irmax, ielast, nspin, ! LLY Lloyd  
 
   natyp, den, lmaxp1, conc, iestart, ieend, thetas, ntcell, rho2ns)
 ! Renormalize the valence charge according to Lloyd's formula
+      Use mod_datatypes, Only: dp
   implicit none
   include 'inc.p'
   integer :: lmaxd1

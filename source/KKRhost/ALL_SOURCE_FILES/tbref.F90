@@ -16,6 +16,7 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    use Constants
    use Profiling
    use global_variables
+      Use mod_datatypes, Only: dp
 
    implicit  none
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -37,47 +38,47 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    integer, intent(in) :: NCLSD  !< Maximum number of different TB-clusters
    integer, intent(in) :: IELAST
    integer, intent(in) :: LMGF0D !< (LMAX+1)**2
-   double precision, intent(in) :: ALATC
-   double precision, intent(in) :: TOLRDIF !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
+   real (kind=dp), intent(in) :: ALATC
+   real (kind=dp), intent(in) :: TOLRDIF !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
    integer, dimension(NAEZ+NEMB), intent(in) :: CLS      !< Cluster around atomic sites
    integer, dimension(LM2D), intent(in)      :: LOFLM    !< l of lm=(l,m) (GAUNT)
    integer, dimension(NCLSD), intent(in)     :: NACLS    !< Number of atoms in cluster
    integer, dimension(NAEZ+NEMB), intent(in) :: REFPOT   !< Ref. pot. card  at position
    integer, dimension(NACLSD,NAEZ+NEMB), intent(in)   :: ATOM  !< Atom at site in cluster
    integer, dimension(NCLEB,4), intent(in)            :: ICLEB !< Pointer array
-   double precision, dimension(NREF), intent(in) :: VREF
-   double precision, dimension(NREF), intent(in) :: RMTREF   !< Muffin-tin radius of reference system
-   double precision, dimension(NCLEB,2), intent(in) :: CLEB  !< GAUNT coefficients (GAUNT)
-   double precision, dimension(3,NACLSD,NCLSD), intent(in) :: RCLS   !< Real space position of atom in cluster
+   real (kind=dp), dimension(NREF), intent(in) :: VREF
+   real (kind=dp), dimension(NREF), intent(in) :: RMTREF   !< Muffin-tin radius of reference system
+   real (kind=dp), dimension(NCLEB,2), intent(in) :: CLEB  !< GAUNT coefficients (GAUNT)
+   real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in) :: RCLS   !< Real space position of atom in cluster
    ! .. In/Out variables
    integer, intent(inout) :: ILTMP
    integer, intent(inout) :: ITMPDIR
    character(len=80), intent(inout) :: TMPDIR
-   double complex, dimension(IEMXD), intent(inout) :: EZ
+   complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
    ! .. Local variables
    integer :: I1,IC,ICLS,IE,LM1,NACLSMAX,LRECGRF1, i_stat,i_all
-   double complex :: ERYD
-   double complex :: LLY_G0TR_IE    ! LLY
-   double complex :: lly_g0tr_dum   ! LLY dummy variable used if no LLY is chosen to save memory
+   complex (kind=dp) :: ERYD
+   complex (kind=dp) :: LLY_G0TR_IE    ! LLY
+   complex (kind=dp) :: lly_g0tr_dum   ! LLY dummy variable used if no LLY is chosen to save memory
    ! .. Parameters
    integer :: LRECGRF
    ! .. Local Arrays
-   double complex, dimension(0:LMAX,NREF) :: ALPHAREF  ! LLY Lloyd Alpha matrix
-   double complex, dimension(0:LMAX,NREF) :: DALPHAREF ! LLY Derivative of the Lloyd Alpha matrix
-   double complex, dimension(LMGF0D,LMGF0D,NREF) :: TREFLL    ! LLY
-   double complex, dimension(LMGF0D,LMGF0D,NREF) :: DTREFLL   ! LLY
+   complex (kind=dp), dimension(0:LMAX,NREF) :: ALPHAREF  ! LLY Lloyd Alpha matrix
+   complex (kind=dp), dimension(0:LMAX,NREF) :: DALPHAREF ! LLY Derivative of the Lloyd Alpha matrix
+   complex (kind=dp), dimension(LMGF0D,LMGF0D,NREF) :: TREFLL    ! LLY
+   complex (kind=dp), dimension(LMGF0D,LMGF0D,NREF) :: DTREFLL   ! LLY
 
    ! .. Local allocatable arrays
-   double complex, dimension(:,:), allocatable :: LLY_G0TR  ! LLY
-   double complex, dimension(:,:), allocatable :: dginp_dum ! LLY dummy variable used if no LLY is chosen to save memory
-   double complex, dimension(:,:,:), allocatable :: GINP
-   double complex, dimension(:,:,:), allocatable :: DGINP
+   complex (kind=dp), dimension(:,:), allocatable :: LLY_G0TR  ! LLY
+   complex (kind=dp), dimension(:,:), allocatable :: dginp_dum ! LLY dummy variable used if no LLY is chosen to save memory
+   complex (kind=dp), dimension(:,:,:), allocatable :: GINP
+   complex (kind=dp), dimension(:,:,:), allocatable :: DGINP
 #ifdef CPP_MPI
    ! ..
    ! .. MPI variables
    integer :: ntot1, idim
    integer, dimension(0:nranks-1) :: ntot_pT, ioff_pT
-   double complex, dimension(:,:,:), allocatable :: work
+   complex (kind=dp), dimension(:,:,:), allocatable :: work
 #endif
    integer :: IE_START, IE_END
    integer :: i1_start, i1_end

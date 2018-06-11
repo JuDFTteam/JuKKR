@@ -10,6 +10,7 @@ subroutine forcxc(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, alat, &
 
 !-----------------------------------------------------------------------
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
 !     .. Parameters ..
   include 'inc.p'
@@ -17,22 +18,22 @@ subroutine forcxc(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, alat, &
   parameter (lmpotd=(lpotd+1)**2)
 !     $     RM(3,*),
 !      INTEGER IRWS(*),NSHELL(*)
-  double precision :: alat
+  real (kind=dp) :: alat
   integer :: lmax, natref, nend, nspin, nstart
 !..
 !.. Local Scalars ..
-  double precision :: drdi(irmd, *), flm(-1:1, *), flmc(-1:1, *), r(irmd, *), &
+  real (kind=dp) :: drdi(irmd, *), flm(-1:1, *), flmc(-1:1, *), r(irmd, *), &
     rhoc(irmd, *), & !,DVOL
     v(irmd, lmpotd, *)
 !,J
   integer :: irws(*)
 !..
 !.. Local Arrays ..
-  double precision :: dv, fac, pi, rws, trp, vint1, vol !..
+  real (kind=dp) :: dv, fac, pi, rws, trp, vint1, vol !..
   integer :: i, iatyp, iper, ipot, irep, irws1, ispin, lm, m !.. External Subroutines ..
 !..
 !.. Save statement ..
-  double precision :: f(3, natypd), flmh(-1:1, natypd), flmxc(-1:1, natypd), &
+  real (kind=dp) :: f(3, natypd), flmh(-1:1, natypd), flmxc(-1:1, natypd), &
     p(natypd), v1(irmd)
 !..
 !.. Intrinsic Functions ..

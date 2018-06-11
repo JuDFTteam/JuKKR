@@ -8,24 +8,25 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
 !-----------------------------------------------------------------
 !------------------------------------------------------------------
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
 !.. Scalar Arguments ..
-  double precision :: dx
+  real (kind=dp) :: dx
   integer :: irmd, ist1, mesh, nspin
 !..
 !.. Array Arguments ..
-  double precision :: ddrr(irmd), ddrru(irmd), drdi(irmd), drdi2(irmd), &
+  real (kind=dp) :: ddrr(irmd), ddrru(irmd), drdi(irmd), drdi2(irmd), &
     drr(irmd), drru(irmd), ro(irmd), rou(irmd), zta(irmd)
 !..
 !.. Local Scalars ..
-  double precision :: d, drx, drx0, drx1, drx2, drx3, drxu, drxu0, drxu1, &
+  real (kind=dp) :: d, drx, drx0, drx1, drx2, drx3, drxu, drxu0, drxu1, &
     drxu2, drxu3, drxx, drxx0, drxx1, drxx2, drxx3, drxxu, drxxu0, drxxu1, &
     drxxu2, drxxu3, f0, f1, f2, f3, f4, f5, g1, g2, g3, g4, g5, xlf
   integer :: i, i1, i2, i3, i4, i5, i6, ibh, ica, icg, iex, igd, igh, igl, &
     ihb, imj, ip9, ipg, ipw, ist, ivg, ivn, iwr, ixlf, j, ndvpt, nred
 !..
 !.. Statement Functions ..
-  double precision :: f131, f132, f133, f141, f142, f143, f144, f151, f152, &
+  real (kind=dp) :: f131, f132, f133, f141, f142, f143, f144, f151, f152, &
     f153, f154, f155, f161, f162, f163, f164, f165, f166, f231, f232, f233, &
     f241, f242, f243, f244, f251, f252, f253, f254, f255, f261, f262, f263, &
     f264, f265, f266
@@ -42,12 +43,12 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
 !     .. Data statements ..
 !.....-----------------------------------------------------------------
 !     double function
-!      double precision f131,f132,f133,f141,f142,f143,f144
-!      double precision fl61,fl62,fl63,fl64,fl65,fl66
-!      double precision fl51,fl52,fl53,fl54,fl55
-!      double precision f231,f232,f233,f241,f242,f243,f244
-!      double precision f251,f252,f253,f254,f255
-!      double precision f261,f262,f263,f264,f265,f266
+!      real (kind=dp) f131,f132,f133,f141,f142,f143,f144
+!      real (kind=dp) fl61,fl62,fl63,fl64,fl65,fl66
+!      real (kind=dp) fl51,fl52,fl53,fl54,fl55
+!      real (kind=dp) f231,f232,f233,f241,f242,f243,f244
+!      real (kind=dp) f251,f252,f253,f254,f255
+!      real (kind=dp) f261,f262,f263,f264,f265,f266
 
   data ndvpt/6/
   data igl, igh, imj, ibh, ica, icg, ivn, ipw, ipg, ivg, ip9, igd, ixlf, iex, &

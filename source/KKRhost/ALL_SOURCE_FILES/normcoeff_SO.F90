@@ -26,6 +26,7 @@ use mod_types, only: t_mpi_c_grid, t_inc, t_imp
 #ELSE
 use mod_types, only: t_inc, t_imp
 #ENDIF
+      Use mod_datatypes, Only: dp
 
 IMPLICIT NONE
 
@@ -42,16 +43,16 @@ INTEGER, PARAMETER :: NSPD=NSPIND
 INTEGER      ::   NATOM, mode, IEND,LMMAX,KSRA,IRWS(*),LMMAXSO
 !..
 !.. Array Arguments ..
-DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATOM)   ! non-sph. eigen states of single pot 
-DOUBLE PRECISION CLEB(*),THETAS(IRID,NFUND,*), &
+complex (kind=dp)   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATOM)   ! non-sph. eigen states of single pot 
+real (kind=dp) CLEB(*),THETAS(IRID,NFUND,*), &
                  DRDI(IRMD,NATYPD)                            ! derivative dr/di
 INTEGER          ICLEB(NCLEB,4),IFUNM(NATYPD,LMPOTD), &
                  LMSP(NATYPD,*),IRCUT(0:IPAND,NATYPD), &
                  IPAN(NATYPD),NTCELL(*)
 !..
 !.. Local Scalars ..
-DOUBLE COMPLEX   CZERO,NORM
-DOUBLE PRECISION PI
+complex (kind=dp)   CZERO,NORM
+real (kind=dp) PI
 INTEGER          IR,LM1,LM2,LM1P,LM2P, &
                  I1,I1SP1,I1SP2, &
                  LMSP1,LMSP2,I2SP1,I2SP2,INSRA,NSRA, &
@@ -65,12 +66,12 @@ EXTERNAL         ZGEMM
 !.. Intrinsic Functions ..
 INTRINSIC        DATAN,aimag,SQRT
 !..Local Arrays..
-DOUBLE COMPLEX, ALLOCATABLE  :: DENS(:,:,:,:,:,:,:)
-DOUBLE COMPLEX, ALLOCATABLE  ::   RLL_12(:,:,:), &
+complex (kind=dp), ALLOCATABLE  :: DENS(:,:,:,:,:,:,:)
+complex (kind=dp), ALLOCATABLE  ::   RLL_12(:,:,:), &
                                   RLL(:,:,:,:,:,:,:), &
                                   RHOD(:,:,:,:)
 ! MPI stuff
-DOUBLE COMPLEX, ALLOCATABLE  :: work(:,:,:,:,:,:,:)
+complex (kind=dp), ALLOCATABLE  :: work(:,:,:,:,:,:,:)
 !..
 !.. Data statements ..
 DATA CZERO/ (0.0D0,0.0D0)/

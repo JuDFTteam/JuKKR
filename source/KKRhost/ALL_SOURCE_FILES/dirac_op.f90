@@ -27,46 +27,46 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
 ! PARAMETER definitions
   integer :: mpsmax, npemax, nabm
   parameter (mpsmax=40, npemax=4, nabm=4)
-  double complex :: c0
+  complex (kind=dp) :: c0
   parameter (c0=(0.0d0,0.0d0))
-  double precision :: tol
+  real (kind=dp) :: tol
   parameter (tol=1.0d-9)
   integer :: itmax
   parameter (itmax=50)
 
 ! Dummy arguments
-  double precision :: c, cg1, cg2, cg4, cg5, cg8, mj
-  double complex :: e, pis
+  real (kind=dp) :: c, cg1, cg2, cg4, cg5, cg8, mj
+  complex (kind=dp) :: e, pis
   logical :: getirrsol
   integer :: it, kap1, kap2, l, lop, nkmmax, nlamax, nmesh, nrmax, ntmax, &
     nucleus, z
-  double precision :: ameopo(nkmmax, nkmmax, nlamax, 3), ap(2, 2, nrmax), &
+  real (kind=dp) :: ameopo(nkmmax, nkmmax, nlamax, 3), ap(2, 2, nrmax), &
     aq(2, 2, nrmax), at(nrmax, nlamax, 3, ntmax), b(nrmax), dovr(nrmax), &
     drdi(nrmax), r(nrmax), v(nrmax)
-  double complex :: d_p(2, 2, nrmax), dq(2, 2, nrmax), pi(2, 2, nrmax), &
+  complex (kind=dp) :: d_p(2, 2, nrmax), dq(2, 2, nrmax), pi(2, 2, nrmax), &
     pr(2, 2, nrmax), qi(2, 2, nrmax), qr(2, 2, nrmax)
 
 ! Local variables
-  double complex :: aa11, aa12, aa21, aa22, arg, bb1, bb2, bpp, bqq, cfac, &
+  complex (kind=dp) :: aa11, aa12, aa21, aa22, arg, bb1, bb2, bpp, bqq, cfac, &
     cgo, d14, detd, dh, diffa, diffb, emvpp, emvqq, mp1(2, 2), mp2(2, 2), &
     mp3(2, 2), mp4(2, 2), mq1(2, 2), mq2(2, 2), mq3(2, 2), mq4(2, 2), &
     p1(2, 2), p2(2, 2), p3(2, 2), p4(2, 2), pc(2, 2, -npemax:mpsmax), &
     pnew(2, 2), pold(2, 2), q1(2, 2), q2(2, 2), q3(2, 2), q4(2, 2), &
     qc(2, 2, -npemax:mpsmax), qnew(2, 2), qold(2, 2), s0, t0, zz
-  double precision :: acorr(0:nabm-1), acorr0(0:nabm-1), apred(nabm), &
+  real (kind=dp) :: acorr(0:nabm-1), acorr0(0:nabm-1), apred(nabm), &
     apred0(nabm), astep, b14, bc(0:npemax), bh, bhlp(nabm+4), cgd(2), cgmd(2), &
     cm(npemax, npemax), cmi(npemax, npemax), csqr, dhlp(nabm+4), gam(2), gpm, &
     hlp(nabm+4), hlp1, kap(2), r14, rh, rhlp(nabm+4), rpwgpm, rr, sk(2), sk1, &
     sk2, so2, so6, srk, tz, v14, vc(0:npemax), vh, vhlp(nabm+4), wrp, wrq, &
     x14, xh
-  double complex :: cjlz
-  double precision :: abs, dble, sqrt
+  complex (kind=dp) :: cjlz
+  real (kind=dp) :: abs, dble, sqrt
   integer :: i, ic, ikm(2), ikmi, ikmj, imkm(2), imkmi, imkmj, ip, irk, isk1, &
     isk2, iv, j, jcorr, k, lb(2), lb1, lb2, m, mps, ms, n, nacorr, ndiv, nhlp, &
     nm, npe, nsol, ntop
   integer :: ikapmue
   integer :: int, isign, nint
-  double precision :: ylag
+  real (kind=dp) :: ylag
 
 !DATA APRED0 / 1901.0D0, -2774.0D0, 2616.0D0, -1274.0D0, 251.0D0 /
 !DATA ACORR0 /  251.0D0,  +646.0D0, -264.0D0,  +106.0D0, -19.0D0 /

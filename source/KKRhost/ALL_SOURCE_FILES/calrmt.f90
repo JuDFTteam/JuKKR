@@ -1,7 +1,6 @@
 ! ************************************************************************
     Subroutine calrmt(ipf, ipfe, ipe, imt, z, rmt, rws, rmtnew, alat, drdi, a, &
       b, irws, r, ifile, kshape)
-      Use mod_datatypes, Only: dp
 !***********************************************************************
 !     this subroutine calculates imt and rmt(cal-rmt)
 !                     and prints some informations about the used meshes
@@ -10,6 +9,8 @@
 !        imt  = number of meshpoint generating a new mt-radius closer th
 !               mt-radius than every ather meshpoint
 !***********************************************************************
+      Use mod_datatypes, Only: dp
+      implicit none
 !.. Scalar Arguments ..
       Real (Kind=dp) :: a, alat, b, rmt, rmtnew, rws, z
       Integer :: ifile, imt, ipe, ipf, ipfe, irws, kshape

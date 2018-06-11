@@ -6,6 +6,7 @@ subroutine wrldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
 ! *                                                                    *
 ! **********************************************************************
   use :: mod_version_info
+      Use mod_datatypes, Only: dp
   implicit none
 !..
   integer :: irmd, mmaxd, natypd, nspind, irws(natypd)
@@ -13,10 +14,10 @@ subroutine wrldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
 !.. Arguments ..
   integer :: itrunldau, natyp
   integer :: lopt(natypd)
-  double precision :: ueff(natypd), jeff(natypd), erefldau(natypd)
-  double precision :: wldau(mmaxd, mmaxd, nspind, natypd)
-  double precision :: uldau(mmaxd, mmaxd, mmaxd, mmaxd, natypd)
-  double complex :: phildau(irmd, natypd)
+  real (kind=dp) :: ueff(natypd), jeff(natypd), erefldau(natypd)
+  real (kind=dp) :: wldau(mmaxd, mmaxd, nspind, natypd)
+  real (kind=dp) :: uldau(mmaxd, mmaxd, mmaxd, mmaxd, natypd)
+  complex (kind=dp) :: phildau(irmd, natypd)
 !..
 !..  Locals 
   integer :: ir, m1, m2, m3, m4, it, is

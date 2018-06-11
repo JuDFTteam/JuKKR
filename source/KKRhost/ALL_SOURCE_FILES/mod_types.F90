@@ -1,5 +1,6 @@
 module mod_types
 
+use mod_DataTypes
 implicit none
 
 
@@ -13,9 +14,9 @@ implicit none
       integer :: Nelements = 4 ! 3 arrays in this type, for mpi bcast
       
       ! allocatable arrays for tmat, gmat and gref
-      double complex, allocatable :: tmat(:,:,:)       ! dimensions=LMMAXD, LMMAXD, IREC; IREC= IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) ;IE=1,...,IELAST, ISPIN=1,...,NSPIN, I1=1,...,NATYP)
-      double complex, allocatable :: gmat(:,:,:)       ! dimensions=LMMAXD, LMMAXD, IREC; IREC= IQDOS+NQDOS*(IE-1)+NQDOS*IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) ;IE=1,...,IELAST, ISPIN=1,...,NSPIN, I1=1,...,NATYP)
-      double complex, allocatable :: gref(:,:,:,:)       !GINP(NACLSD*LMGF0D,LMGF0D,NCLSD) IREC=IE=1,...,IELAST
+      complex (kind=dp), allocatable :: tmat(:,:,:)       ! dimensions=LMMAXD, LMMAXD, IREC; IREC= IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) ;IE=1,...,IELAST, ISPIN=1,...,NSPIN, I1=1,...,NATYP)
+      complex (kind=dp), allocatable :: gmat(:,:,:)       ! dimensions=LMMAXD, LMMAXD, IREC; IREC= IQDOS+NQDOS*(IE-1)+NQDOS*IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) ;IE=1,...,IELAST, ISPIN=1,...,NSPIN, I1=1,...,NATYP)
+      complex (kind=dp), allocatable :: gref(:,:,:,:)       !GINP(NACLSD*LMGF0D,LMGF0D,NCLSD) IREC=IE=1,...,IELAST
 
    end type type_tgmatices
    
@@ -28,8 +29,8 @@ implicit none
       integer :: Nelements = 3 ! 2 array in this type, for mpi bcast
       
       ! allocatable arrays for tmat, gmat and gref
-      double complex, allocatable :: dmatts(:,:,:,:)       ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
-      double complex, allocatable :: dtilts(:,:,:,:)       ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
+      complex (kind=dp), allocatable :: dmatts(:,:,:,:)       ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
+      complex (kind=dp), allocatable :: dtilts(:,:,:,:)       ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
    end type type_cpa
 
    !data type for the derivatives of the t-matrix with respect to changing the non-collinear angles in directions {x,y,z}
@@ -37,7 +38,7 @@ implicit none
      
       integer :: Nelements = 3
       logical :: calculate = .false.
-      double complex, allocatable :: dtmat_xyz(:,:,:,:) !dimensions= LMMAXD, LMMAXD, 3, IELAST;  3={x,y,z}
+      complex (kind=dp), allocatable :: dtmat_xyz(:,:,:,:) !dimensions= LMMAXD, LMMAXD, 3, IELAST;  3={x,y,z}
 
    end type type_dtmatJijDij
 
@@ -107,11 +108,11 @@ implicit none
       integer :: N1 = 6 ! 5 logicals and 5 arrays this type, for mpi bcast
       
       ! allocatable arrays
-      double complex, allocatable :: dtmat(:,:,:)      ! DOUBLE COMPLEX TMAT0(LMMAXD,LMMAXD), IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
-      double complex, allocatable :: tralpha(:)        ! DOUBLE COMPLEX TRALPHA, IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
-      double complex, allocatable :: cdos(:,:)         ! DOUBLE COMPLEX CDOS_LLY(IEMXD,NSPIND), irec=IE, aalready in dim 1 of cdos!
-      double complex, allocatable :: dgref(:,:,:,:)    ! DOUBLE COMPLEX; ALLOCATE ( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) ), IREC=IE 
-      double complex, allocatable :: g0tr(:)           ! DOUBLE COMPLEX LLY_G0TR_IE, irec=ie
+      complex (kind=dp), allocatable :: dtmat(:,:,:)      ! complex (kind=dp) TMAT0(LMMAXD,LMMAXD), IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
+      complex (kind=dp), allocatable :: tralpha(:)        ! complex (kind=dp) TRALPHA, IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
+      complex (kind=dp), allocatable :: cdos(:,:)         ! complex (kind=dp) CDOS_LLY(IEMXD,NSPIND), irec=IE, aalready in dim 1 of cdos!
+      complex (kind=dp), allocatable :: dgref(:,:,:,:)    ! complex (kind=dp); ALLOCATE ( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) ), IREC=IE 
+      complex (kind=dp), allocatable :: g0tr(:)           ! complex (kind=dp) LLY_G0TR_IE, irec=ie
 
    end type type_lloyd
 
@@ -131,15 +132,15 @@ implicit none
       integer, allocatable :: IRWSIMP(:)          ! radial mesh, IRWS for imps,                IRWSIMP(NATOMIMP)
       integer, allocatable :: HOSTIMP(:)          ! layer index of host atoms,                 HOSTIMP(NATYPD)
       integer, allocatable :: ATOMIMP(:)          ! layer index of imp atoms,                  ATOMIMP(NATOMIMP)
-      double precision, allocatable :: RIMP(:,:)        ! Rmesh of imps,                       RIMP(IRMD,NATOMIMP)
-      double precision, allocatable :: ZIMP(:)          ! atom charge of imps,                 ZIMP(NATOMIMP)
-      double precision, allocatable :: THETASIMP(:,:,:) ! shape functions of imps,             THETASIMP(IRID,NFUND,NATOMIMP)
-      double precision, allocatable :: VISPIMP(:,:)     ! impurity potential,                  VISPIMP(IRMD,NATOMIMP*NSPIN)
-      double precision, allocatable :: VINSIMP(:,:,:)   ! impurity potential,                  VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN)
-      double precision, allocatable :: RCLSIMP(:,:)     ! impurity positions(scoef file),      RCLSIMP(3,NATOMIMPD)
-      double precision, allocatable :: THETAIMP(:)      ! theta of nonco_angle of impurity     THETAIMP(NATOMIMP)
-      double precision, allocatable :: PHIIMP(:)        ! phi of nonco_angle of impurity       PHIIMP(NATOMIMP)
-      double complex, allocatable :: RLLIMP(:,:,:,:)    ! impurity wavefunctions,              RLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEW(I1))
+      real (kind=dp), allocatable :: RIMP(:,:)        ! Rmesh of imps,                       RIMP(IRMD,NATOMIMP)
+      real (kind=dp), allocatable :: ZIMP(:)          ! atom charge of imps,                 ZIMP(NATOMIMP)
+      real (kind=dp), allocatable :: THETASIMP(:,:,:) ! shape functions of imps,             THETASIMP(IRID,NFUND,NATOMIMP)
+      real (kind=dp), allocatable :: VISPIMP(:,:)     ! impurity potential,                  VISPIMP(IRMD,NATOMIMP*NSPIN)
+      real (kind=dp), allocatable :: VINSIMP(:,:,:)   ! impurity potential,                  VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN)
+      real (kind=dp), allocatable :: RCLSIMP(:,:)     ! impurity positions(scoef file),      RCLSIMP(3,NATOMIMPD)
+      real (kind=dp), allocatable :: THETAIMP(:)      ! theta of nonco_angle of impurity     THETAIMP(NATOMIMP)
+      real (kind=dp), allocatable :: PHIIMP(:)        ! phi of nonco_angle of impurity       PHIIMP(NATOMIMP)
+      complex (kind=dp), allocatable :: RLLIMP(:,:,:,:)    ! impurity wavefunctions,              RLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEW(I1))
 
    end type type_imp
 
@@ -401,7 +402,7 @@ contains
          t_imp%atomimp = 0
       endif
 
-      ! double precision arrays
+      ! real (kind=dp) arrays
       if (.not. allocated(t_imp%RIMP)) then
          allocate(t_imp%RIMP(IRMD,NATOMIMP), STAT=ierr)
          t_imp%rimp = 0.d0
@@ -435,7 +436,7 @@ contains
          t_imp%phiimp = 0.d0
       endif
 
-      ! double complex arrays
+      ! complex (kind=dp) arrays
       if (.not. allocated(t_imp%RLLIMP)) then
          allocate(t_imp%RLLIMP(t_inc%nsra*t_inc%lmmaxso, t_inc%lmmaxso, t_inc%irmdnew, NATOMIMP), STAT=ierr)
          t_imp%rllimp = (0.0d0, 0.0d0)
@@ -762,7 +763,7 @@ contains
     type(type_lloyd), intent(inout) :: t_lloyd
     integer, intent(in) :: lmmaxd, mympi_comm
 
-    double complex, allocatable :: work_lly(:,:,:)
+    complex (kind=dp), allocatable :: work_lly(:,:,:)
     integer :: ierr, iwork, nspin
     
     nspin = t_inc%nspin
@@ -808,7 +809,7 @@ contains
 
     integer :: ihelp
     integer :: nspin, recvcounts(nranks), displs(nranks)
-    double complex, allocatable :: work(:,:,:)
+    complex (kind=dp), allocatable :: work(:,:,:)
     integer :: ierr,idim
     
     

@@ -27,6 +27,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    use mod_wunfiles, only: t_params
    use Constants
    use Profiling
+      Use mod_datatypes, Only: dp
 
    implicit none
 
@@ -55,8 +56,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    integer, intent(in) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
    integer, intent(in) :: NPAN_LOG  !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
    integer, intent(in) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-   double precision, intent(in) :: C
-   double precision, intent(in) :: R_LOG !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
+   real (kind=dp), intent(in) :: C
+   real (kind=dp), intent(in) :: R_LOG !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
    integer, dimension(NATYP), intent(in)    :: IPAN  !< Number of panels in non-MT-region
    integer, dimension(NATYP), intent(in)    :: IRWS  !< R point at WS radius
    integer, dimension(NATYP), intent(in)    :: IRMIN !< Max R for spherical treatment
@@ -68,62 +69,62 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    integer, dimension(NCLEB,4), intent(in)            :: ICLEB    !< Pointer array
    integer, dimension(0:IPAND,NATYP), intent(in)      :: IRCUT    !< R points of panel borders
    integer, dimension(0:IPAND,NATOMIMP), intent(in)   :: IRCUTIMP
-   double precision, dimension(NATYP), intent(in)     :: ZAT      !< Nuclear charge
-   double precision, dimension(NATOMIMP), intent(in)  :: ZIMP
-   double precision, dimension(IRM,NATYP), intent(in)    :: R        !< Radial mesh ( in units a Bohr)
-   double precision, dimension(NCLEB,2), intent(in)      :: CLEB     !< GAUNT coefficients (GAUNT)
-   double precision, dimension(IRM,NATOMIMP), intent(in) :: RIMP
-   double precision, dimension(3,NATOMIMP), intent(in)   :: RCLSIMP
+   real (kind=dp), dimension(NATYP), intent(in)     :: ZAT      !< Nuclear charge
+   real (kind=dp), dimension(NATOMIMP), intent(in)  :: ZIMP
+   real (kind=dp), dimension(IRM,NATYP), intent(in)    :: R        !< Radial mesh ( in units a Bohr)
+   real (kind=dp), dimension(NCLEB,2), intent(in)      :: CLEB     !< GAUNT coefficients (GAUNT)
+   real (kind=dp), dimension(IRM,NATOMIMP), intent(in) :: RIMP
+   real (kind=dp), dimension(3,NATOMIMP), intent(in)   :: RCLSIMP
    ! .. In/Out variables
-   double complex, intent(inout) :: E
-   double precision, dimension(IRM,NSPOTD), intent(inout) :: VM2Z
-   double precision, dimension(IRM,NSPIN*NATOMIMP), intent(inout) :: VM2ZIMP
-   double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS   !< Non-spherical part of the potential
-   double precision, dimension(IRMIND:IRM,LMPOT,NSPIN*NATOMIMP), intent(inout) :: VINSIMP
-   double complex, dimension((KORBIT+1)*LMMAXD*NATOMIMP,(KORBIT+1)*LMMAXD*NATOMIMP), intent(inout) :: DTMTRX
+   complex (kind=dp), intent(inout) :: E
+   real (kind=dp), dimension(IRM,NSPOTD), intent(inout) :: VM2Z
+   real (kind=dp), dimension(IRM,NSPIN*NATOMIMP), intent(inout) :: VM2ZIMP
+   real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS   !< Non-spherical part of the potential
+   real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPIN*NATOMIMP), intent(inout) :: VINSIMP
+   complex (kind=dp), dimension((KORBIT+1)*LMMAXD*NATOMIMP,(KORBIT+1)*LMMAXD*NATOMIMP), intent(inout) :: DTMTRX
    ! .. Parameters
    integer :: LMMAXSO
    ! .. Local variables
    integer :: ipot
    integer :: I1,IR,NSRA,USE_SRATRICK,NVEC,LM1,LM2,ISPIN,I2,IL1,IL2,IRMDNEWD
    integer :: i_stat, i_all,ierr
-   double precision :: THETA,PHI
-   double complex :: GMATPREFACTOR
+   real (kind=dp) :: THETA,PHI
+   complex (kind=dp) :: GMATPREFACTOR
    integer, dimension(NATYP) :: NPAN_TOT
    integer, dimension(NATYP) :: NPAN_INST
    integer, dimension(NATYP) :: NPAN_EQ_AT
    integer, dimension(NATYP) :: NPAN_LOG_AT
-   double precision, dimension(NATOMIMP)  :: PHIimp
-   double precision, dimension(NATYP)     :: PHIhost
-   double precision, dimension(NATOMIMP)  :: THETAimp
-   double precision, dimension(NATYP)     :: THETAhost
-   double complex, dimension(2*(LMAX+1)) :: TMATSPH
-   double complex, dimension(2*(LMAX+1)) :: dummy_alpha
-   double complex, dimension((KORBIT+1)*LMMAXD,(KORBIT+1)*LMMAXD,IHOST) :: TMATLL
-   double complex, dimension((KORBIT+1)*LMMAXD,(KORBIT+1)*LMMAXD)       :: dummy_alphaget
+   real (kind=dp), dimension(NATOMIMP)  :: PHIimp
+   real (kind=dp), dimension(NATYP)     :: PHIhost
+   real (kind=dp), dimension(NATOMIMP)  :: THETAimp
+   real (kind=dp), dimension(NATYP)     :: THETAhost
+   complex (kind=dp), dimension(2*(LMAX+1)) :: TMATSPH
+   complex (kind=dp), dimension(2*(LMAX+1)) :: dummy_alpha
+   complex (kind=dp), dimension((KORBIT+1)*LMMAXD,(KORBIT+1)*LMMAXD,IHOST) :: TMATLL
+   complex (kind=dp), dimension((KORBIT+1)*LMMAXD,(KORBIT+1)*LMMAXD)       :: dummy_alphaget
    ! .. Allocatable variables
    integer, dimension(:), allocatable :: irmdnew
    integer, dimension(:), allocatable :: JLK_INDEX
    integer, dimension(:,:), allocatable :: IPAN_INTERVALL
-   double precision, dimension(:,:), allocatable :: RNEW,RPAN_INTERVALL
-   double precision, dimension(:,:,:), allocatable :: VINSNEW
-   double complex, dimension(:), allocatable :: DELTATMP
-   double complex, dimension(:,:), allocatable :: HLK,JLK,HLK2,JLK2
-   double complex, dimension(:,:), allocatable :: RADIALHOST,RADIALIMP
-   double complex, dimension(:,:), allocatable :: VLLIMP,DELTAV,DELTAIMP
-   double complex, dimension(:,:,:), allocatable :: VNSIMP
-   double complex, dimension(:,:,:), allocatable :: RLL,SLL
-   double complex, dimension(:,:,:), allocatable :: DELTABG,DELTASM
-   double complex, dimension(:,:,:), allocatable :: TMATLLIMP,DELTAMTR
-   double complex, dimension(:,:,:), allocatable :: VNSPLL0,VNSPLL,VNSPLL1
-   double complex, dimension(:,:,:,:), allocatable :: RLLHOST
-   double complex, dimension(:,:,:,:), allocatable :: VNSHOST
+   real (kind=dp), dimension(:,:), allocatable :: RNEW,RPAN_INTERVALL
+   real (kind=dp), dimension(:,:,:), allocatable :: VINSNEW
+   complex (kind=dp), dimension(:), allocatable :: DELTATMP
+   complex (kind=dp), dimension(:,:), allocatable :: HLK,JLK,HLK2,JLK2
+   complex (kind=dp), dimension(:,:), allocatable :: RADIALHOST,RADIALIMP
+   complex (kind=dp), dimension(:,:), allocatable :: VLLIMP,DELTAV,DELTAIMP
+   complex (kind=dp), dimension(:,:,:), allocatable :: VNSIMP
+   complex (kind=dp), dimension(:,:,:), allocatable :: RLL,SLL
+   complex (kind=dp), dimension(:,:,:), allocatable :: DELTABG,DELTASM
+   complex (kind=dp), dimension(:,:,:), allocatable :: TMATLLIMP,DELTAMTR
+   complex (kind=dp), dimension(:,:,:), allocatable :: VNSPLL0,VNSPLL,VNSPLL1
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: RLLHOST
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: VNSHOST
    ! .. Parallelization variables
    integer :: i1_start, i1_end, i1_start_imp, i1_end_imp
 #ifdef CPP_MPI
    integer, dimension(0:nranks-1) :: ntot_pT, ioff_pT
-   double complex, dimension(:,:,:),allocatable :: temp
-   double complex, dimension(:,:,:,:),allocatable :: temp2 ! needed for MPI communication
+   complex (kind=dp), dimension(:,:,:),allocatable :: temp
+   complex (kind=dp), dimension(:,:,:,:),allocatable :: temp2 ! needed for MPI communication
 #endif
    logical, external :: OPT
    logical, external :: TEST

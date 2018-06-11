@@ -115,7 +115,7 @@
 !                a b c d e f g h i j k l m n o p q r s t u v w x y z
       Character (Len=24), Save :: vt(0:7) = (/ 'NO TYPE                 ', &
         'REAL                    ', 'INTEGER                 ', &
-        'DOUBLE PRECISION        ', 'LOGICAL                 ', &
+        'real (kind=dp)        ', 'LOGICAL                 ', &
         'COMPLEX                 ', 'CHARACTER               ', &
         'OTHER TYPE              ' /)
 
@@ -154,10 +154,10 @@
             ivt = 1
           Else If (text(1:7)=='INTEGER') Then
             ivt = 2
-          Else If (text(1:24)=='DOUBLE PRECISION COMPLEX') Then
+          Else If (text(1:24)=='real (kind=dp) COMPLEX') Then
             ivt = 7
-            vt(7) = 'DOUBLE PRECISION COMPLEX'
-          Else If (text(1:16)=='DOUBLE PRECISION') Then
+            vt(7) = 'real (kind=dp) COMPLEX'
+          Else If (text(1:16)=='real (kind=dp)') Then
             ivt = 3
           Else If (text(1:7)=='LOGICAL') Then
             ivt = 4
@@ -270,7 +270,7 @@
       Type :: argument
         Character (Len=10) :: name
         Integer :: intention ! IN = 1, OUT = 2, IN OUT = 3
-        Character (Len=24) :: var_type ! Room for DOUBLE PRECISION COMPLEX
+        Character (Len=24) :: var_type ! Room for real (kind=dp) COMPLEX
 
         Integer :: dim ! DIM = 0 for scalars
         Character (Len=24) :: dimensions ! Not used if DIM = 0
@@ -461,7 +461,7 @@
             End If
           End If
 
-!     If first word is one of INTEGER, REAL, DOUBLE PRECISION, CHARACTER ,
+!     If first word is one of INTEGER, REAL, real (kind=dp), CHARACTER ,
 !     LOGICAL or COMPLEX, add :: unless FUNCTION appears on the same line
 !     or next non-blank character is '*' as in REAL*8.
           If (index(current%text,'FUNCTION')==0) Then
@@ -470,7 +470,7 @@
               pos = 9
             Else If (index(current%text,'REAL')==1) Then
               pos = 6
-            Else If (index(current%text,'DOUBLE PRECISION')==1) Then
+            Else If (index(current%text,'real (kind=dp)')==1) Then
               pos = 18
             Else If (index(current%text,'CHARACTER')==1) Then
               pos = 11

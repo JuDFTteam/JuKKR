@@ -44,6 +44,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    use global_variables
    use Constants
    use Profiling
+      Use mod_datatypes, Only: dp
 
    implicit none
    ! .. Input variables
@@ -63,7 +64,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    integer, intent(in) :: NLBASIS   !< Number of basis layers of left host (repeated units)
    integer, intent(in) :: NRBASIS   !< Number of basis layers of right host (repeated units)
    integer, intent(in) :: NACLSMAX
-   double precision, intent(in) :: ALAT         !< Lattice constant in a.u.
+   real (kind=dp), intent(in) :: ALAT         !< Lattice constant in a.u.
    integer, dimension(*), intent(in)                           :: CLS     !< Cluster around atomic sites
    integer, dimension(*), intent(in)                           :: NSH1    !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
    integer, dimension(*), intent(in)                           :: NSH2    !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
@@ -74,26 +75,26 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    integer, dimension(2,LMMAXD), intent(in)                    :: NRREL
    integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(in)   :: ICHECK
    integer, dimension(2,2,LMMAXD), intent(in)                  :: IRREL
-   double precision, dimension(*), intent(in)            :: VOLCUB
-   double precision, dimension(3,0:NR), intent(in)       :: RR       !< Set of real space vectors (in a.u.)
-   double precision, dimension(3,*), intent(in)          :: BZKP
-   double precision, dimension(3,*), intent(in)          :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
-   double precision, dimension(48,3,*), intent(in)       :: RROT
-   double precision, dimension(3,NACLSD,*), intent(in)   :: RCLS  !< Real space position of atom in cluster
-   double complex, dimension(LMMAXD,LMMAXD), intent(in)              :: FACTL
-   double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(in)         :: TINVLL
-   double complex, dimension(LMMAXD,LMMAXD,*), intent(in)            :: TINVBUP
-   double complex, dimension(LMMAXD,LMMAXD,NREF), intent(in)         :: DTREFLL ! LLY dtref/dE
-   double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(in)         :: DTMATLL ! LLY  dt/dE (should be av.-tmatrix in CPA)
-   double complex, dimension(LMMAXD,LMMAXD,*), intent(in)            :: TINVBDOWN
-   double complex, dimension(LMGF0D*NACLSMAX,LMGF0D,*), intent(in)   :: GINP  ! Gref
-   double complex, dimension(LMGF0D*NACLSMAX,LMGF0D,*), intent(in)   :: DGINP ! LLY dGref/dE
-   double complex, dimension(2,2,LMMAXD), intent(in)                 :: SRREL
+   real (kind=dp), dimension(*), intent(in)            :: VOLCUB
+   real (kind=dp), dimension(3,0:NR), intent(in)       :: RR       !< Set of real space vectors (in a.u.)
+   real (kind=dp), dimension(3,*), intent(in)          :: BZKP
+   real (kind=dp), dimension(3,*), intent(in)          :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
+   real (kind=dp), dimension(48,3,*), intent(in)       :: RROT
+   real (kind=dp), dimension(3,NACLSD,*), intent(in)   :: RCLS  !< Real space position of atom in cluster
+   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in)              :: FACTL
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)         :: TINVLL
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(in)            :: TINVBUP
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREF), intent(in)         :: DTREFLL ! LLY dtref/dE
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)         :: DTMATLL ! LLY  dt/dE (should be av.-tmatrix in CPA)
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(in)            :: TINVBDOWN
+   complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,*), intent(in)   :: GINP  ! Gref
+   complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,*), intent(in)   :: DGINP ! LLY dGref/dE
+   complex (kind=dp), dimension(2,2,LMMAXD), intent(in)                 :: SRREL
    logical, dimension(2), intent(in) :: VACFLAG
    ! .. In/Out variables
-   double complex, dimension(LMMAXD,LMMAXD,NSYMAXD,*), intent(inout) :: GS
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NSYMAXD,*), intent(inout) :: GS
    ! .. Output variables
-   double complex, intent(out) :: LLY_GRTR ! Trace Eq.5.38 PhD Thiess  (integrated) ! LLY Lloyd
+   complex (kind=dp), intent(out) :: LLY_GRTR ! Trace Eq.5.38 PhD Thiess  (integrated) ! LLY Lloyd
    ! .. Local variables
    integer :: ALM
    integer :: NDIM
@@ -102,27 +103,27 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    integer :: IKM1,IKM2,IS,N1,N2,J1,J2,I2
    integer :: IQ1,IQ2,IOFF1,IOFF2,JOFF1,JOFF2
    integer :: I,I1,ILM,ISYM,IU,J,JLM,IL1,KPT,LM,LM1,LM2,NS,IL2,JL1,JL2
-   double precision :: ZKTR
-   double complex :: LLY_GRTR_K ! Trace Eq.5.38 PhD Thiess  (k-dependent) ! LLY Lloyd
-   double complex :: CSUM1,CSUM2,TRACE,TRACET  ! LLY Lloyd
-   double complex :: CARG,CITPI,CFCTOR
-   double precision, dimension(3) :: KP
-   double precision, dimension(6) :: BZKPK
-   double precision, dimension(3,0:NR) :: RRM
-   double complex, dimension(LMMAXD,LMMAXD) :: G
-   double complex, dimension(LMMAXD,LMMAXD) :: GAUX1 ! LLY
-   double complex, dimension(LMMAXD,LMMAXD) :: GAUX2 ! LLY
-   double complex, dimension(LMMAXD,LMMAXD) :: GAUX3 ! LLY
-   double complex, dimension(NSYMAXD,NSHELD) :: ETAIKR
-   double complex, dimension(LMMAXD,LMMAXD,NAEZ) :: T_AUX   ! LLY auxiliary array for t-matrix manipulation
+   real (kind=dp) :: ZKTR
+   complex (kind=dp) :: LLY_GRTR_K ! Trace Eq.5.38 PhD Thiess  (k-dependent) ! LLY Lloyd
+   complex (kind=dp) :: CSUM1,CSUM2,TRACE,TRACET  ! LLY Lloyd
+   complex (kind=dp) :: CARG,CITPI,CFCTOR
+   real (kind=dp), dimension(3) :: KP
+   real (kind=dp), dimension(6) :: BZKPK
+   real (kind=dp), dimension(3,0:NR) :: RRM
+   complex (kind=dp), dimension(LMMAXD,LMMAXD) :: G
+   complex (kind=dp), dimension(LMMAXD,LMMAXD) :: GAUX1 ! LLY
+   complex (kind=dp), dimension(LMMAXD,LMMAXD) :: GAUX2 ! LLY
+   complex (kind=dp), dimension(LMMAXD,LMMAXD) :: GAUX3 ! LLY
+   complex (kind=dp), dimension(NSYMAXD,NSHELD) :: ETAIKR
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ) :: T_AUX   ! LLY auxiliary array for t-matrix manipulation
    ! .. Local allocatable arrays
-   double complex, dimension(:,:), allocatable :: GLLKE,GLLKEM,GLLKEN
-   double complex, dimension(:,:), allocatable :: DGLLKE,DGLLKEM,DGLLKEN,GREFLLKE ! LLY
-   double complex, dimension(:,:), allocatable :: GLLKE0V,GLLKE0V2,GLLKETV ! for VIRTUAL ATOMS
-   double complex, dimension(:,:), allocatable :: GLLKETV_new ! for VIRTUAL ATOMS
-   double complex, dimension(:,:), allocatable :: GLLKE0,GLLKE0M
+   complex (kind=dp), dimension(:,:), allocatable :: GLLKE,GLLKEM,GLLKEN
+   complex (kind=dp), dimension(:,:), allocatable :: DGLLKE,DGLLKEM,DGLLKEN,GREFLLKE ! LLY
+   complex (kind=dp), dimension(:,:), allocatable :: GLLKE0V,GLLKE0V2,GLLKETV ! for VIRTUAL ATOMS
+   complex (kind=dp), dimension(:,:), allocatable :: GLLKETV_new ! for VIRTUAL ATOMS
+   complex (kind=dp), dimension(:,:), allocatable :: GLLKE0,GLLKE0M
    ! .. Parameters
-   double complex :: CMI
+   complex (kind=dp) :: CMI
    parameter (CMI=(0D0,-1D0))
 
 #ifdef CPP_MPI
@@ -138,13 +139,13 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    intrinsic :: ATAN,EXP
    !     ..
 !#ifdef CPP_MPI
-   double complex, dimension(LMMAXD,LMMAXD,NSYMAXD) :: WORK
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NSYMAXD) :: WORK
    integer :: IERR,IWORK
 !#endif
    integer :: mu, nscoef, imin, ie
    integer, allocatable :: iatomimp(:)
    
-   double precision, allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts
+   real (kind=dp), allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts
    integer, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
    integer :: mythread
 
@@ -769,6 +770,7 @@ end subroutine KKRMAT01
 subroutine GTDYSON(GTMAT,GMAT,NDIM,LMGF0D,NGD)
 
    use Constants
+      use mod_dataTypes, only: dp
 
    implicit none
    ! .. Input variables
@@ -776,8 +778,8 @@ subroutine GTDYSON(GTMAT,GMAT,NDIM,LMGF0D,NGD)
    integer, intent(in) :: NDIM
    integer, intent(in) :: LMGF0D !< (LMAX+1)**2
    ! .. In/Out variables
-   double complex, dimension(NGD,LMGF0D), intent(inout)  :: GMAT
-   double complex, dimension(NGD,NGD), intent(inout)     :: GTMAT
+   complex (kind=dp), dimension(NGD,LMGF0D), intent(inout)  :: GMAT
+   complex (kind=dp), dimension(NGD,NGD), intent(inout)     :: GTMAT
    ! .. Local variables
    integer :: I,INFO
    integer, dimension(NGD) :: IPVT

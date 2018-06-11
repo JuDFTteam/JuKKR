@@ -22,13 +22,14 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
    use global_variables
    use Constants
    use Profiling
+      Use mod_datatypes, Only: dp
 
    implicit none
    !
    ! .. Parameters
    integer :: LINMAX
    parameter (LINMAX=1)
-   double precision :: TOLMSSQ
+   real (kind=dp) :: TOLMSSQ
    parameter ( TOLMSSQ=1.0D-6 )
    ! .. Input variables
    integer, intent(in) :: NR        !< Number of real space vectors rr
@@ -59,12 +60,12 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
    integer, intent(in) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
    integer, intent(in) :: NACLSMAX
    integer, intent(in) :: IQDOSRUN  !< qdos ruess: counts qdos run
-   double precision, intent(in) :: ALAT   !< Lattice constant in a.u.
-   double precision, intent(in) :: VOLBZ
-   double precision, intent(in) :: CPATOL !< Convergency tolerance for CPA-cycle
-   double complex, intent(in) :: ERYD
-   double complex, intent(in) :: CFCTOR
-   double complex, intent(in) :: CFCTORINV
+   real (kind=dp), intent(in) :: ALAT   !< Lattice constant in a.u.
+   real (kind=dp), intent(in) :: VOLBZ
+   real (kind=dp), intent(in) :: CPATOL !< Convergency tolerance for CPA-cycle
+   complex (kind=dp), intent(in) :: ERYD
+   complex (kind=dp), intent(in) :: CFCTOR
+   complex (kind=dp), intent(in) :: CFCTORINV
    ! .. Input arrays
    integer, dimension(*), intent(in)         :: CLS      !< Cluster around atomic sites
    integer, dimension(NAEZ), intent(in)      :: NOQ      !< Number of diff. atom types located
@@ -83,46 +84,46 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
    integer, dimension(2,LMMAXD), intent(in)                    :: NRREL
    integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(in)   :: ICHECK
    integer, dimension(2,2,LMMAXD), intent(in) :: IRREL
-   double precision, dimension(NATYP), intent(in)  :: CONC        !< Concentration of a given atom
-   double precision, dimension(KPOIBZ), intent(in) :: VOLCUB
-   double precision, dimension(3,0:NR), intent(in)    :: RR       !< Set of real space vectors (in a.u.)
-   double precision, dimension(3,KPOIBZ), intent(in)  :: BZKP
-   double precision, dimension(3,*), intent(in)       :: RATOM
-   double precision, dimension(3,*), intent(in)       :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
-   double precision, dimension(3,NACLSD,*), intent(in)   :: RCLS  !< Real space position of atom in cluster
-   double precision, dimension(48,3,*), intent(in)       :: RROT
-   double complex, dimension(LMMAXD,LMMAXD), intent(in) :: RC     !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-   double complex, dimension(LMMAXD,LMMAXD), intent(in) :: CREL   !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-   double complex, dimension(LMMAXD,LMMAXD), intent(in) :: RREL   !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
-   double complex, dimension(LMMAXD,LMMAXD), intent(in) :: FACTL
-   double complex, dimension(LMMAXD,LMMAXD,NATYP), intent(in)  :: TSST
-   double complex, dimension(LMMAXD,LMMAXD,NATYP), intent(in)  :: MSST
-   double complex, dimension(2,2,LMMAXD), intent(in)           :: SRREL
-   double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: TQDOS  ! qdos : Read-in inverse t-matrix
-   double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-   double complex, dimension(LMMAXD,LMMAXD,NREF), intent(in)   :: TREFLL
-   double complex, dimension(LMMAXD,LMMAXD,*), intent(in)      :: DSYMLL
-   double complex, dimension(LMMAXD,LMMAXD,NREF), intent(in)   :: DTREFLL !< LLY Lloyd dtref/dE
-   double complex, dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DTMATLL  ! LLY  dt/dE (should be av.-tmatrix in CPA)
-   double complex, dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: GINP !< Cluster GF (ref syst.)
-   double complex, dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: DGINP !< LLY Lloyd Energy derivative of GINP
-   double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPIN), intent(in) :: LEFTTINVLL
-   double complex, dimension(LMMAXD,LMMAXD,NEMBD1,NSPIN), intent(in) :: RIGHTTINVLL
+   real (kind=dp), dimension(NATYP), intent(in)  :: CONC        !< Concentration of a given atom
+   real (kind=dp), dimension(KPOIBZ), intent(in) :: VOLCUB
+   real (kind=dp), dimension(3,0:NR), intent(in)    :: RR       !< Set of real space vectors (in a.u.)
+   real (kind=dp), dimension(3,KPOIBZ), intent(in)  :: BZKP
+   real (kind=dp), dimension(3,*), intent(in)       :: RATOM
+   real (kind=dp), dimension(3,*), intent(in)       :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
+   real (kind=dp), dimension(3,NACLSD,*), intent(in)   :: RCLS  !< Real space position of atom in cluster
+   real (kind=dp), dimension(48,3,*), intent(in)       :: RROT
+   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: RC     !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: CREL   !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: RREL   !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: FACTL
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYP), intent(in)  :: TSST
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYP), intent(in)  :: MSST
+   complex (kind=dp), dimension(2,2,LMMAXD), intent(in)           :: SRREL
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: TQDOS  ! qdos : Read-in inverse t-matrix
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREF), intent(in)   :: TREFLL
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(in)      :: DSYMLL
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREF), intent(in)   :: DTREFLL !< LLY Lloyd dtref/dE
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DTMATLL  ! LLY  dt/dE (should be av.-tmatrix in CPA)
+   complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: GINP !< Cluster GF (ref syst.)
+   complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: DGINP !< LLY Lloyd Energy derivative of GINP
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPIN), intent(in) :: LEFTTINVLL
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPIN), intent(in) :: RIGHTTINVLL
    logical, dimension(2), intent(in) :: VACFLAG
    logical, dimension(*), intent(in) :: SYMUNITARY !< unitary/antiunitary symmetry flag
    ! .. Output variables
    integer, intent(out) :: ICPAFLAG
    ! .. In/Out variables
    integer, intent(inout) :: ITCPAMAX  !< Max. number of CPA iterations
-   double complex, intent(inout) :: TRACET   !< \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$
-   double complex, intent(inout) :: LLY_GRTR !< Trace Eq.5.38 PhD Thiess (k-integrated)! LLY Lloyd
-   double complex, dimension(LMMAXD,LMMAXD,*), intent(inout) :: GMATLL  !< GMATLL = diagonal elements of the G matrix (system)
+   complex (kind=dp), intent(inout) :: TRACET   !< \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$
+   complex (kind=dp), intent(inout) :: LLY_GRTR !< Trace Eq.5.38 PhD Thiess (k-integrated)! LLY Lloyd
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(inout) :: GMATLL  !< GMATLL = diagonal elements of the G matrix (system)
    ! .. Local Scalars
    integer :: i_stat,i_all
    integer :: IH,LM1,LM2,NS,NSDIA,ICALL,IREC
    integer :: IQ,JQ,IT,I,J,IQTAU,ICPASTART,ITCPA,IU,NSMAX
-   double precision :: CPAERRL,CPAERR,CPACORR,CPACHNG
-   double complex :: EZ,CNSYMAT,TAUVBZ
+   real (kind=dp) :: CPAERRL,CPAERR,CPACORR,CPACHNG
+   complex (kind=dp) :: EZ,CNSYMAT,TAUVBZ
    logical :: LDIA
    character(len=4) :: STR4
    character(len=10) :: STR10
@@ -134,18 +135,18 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
    integer, dimension(LINMAX)    :: IKM2LIN
    integer, dimension(NSYMAXD,NAEZ)    :: ISUMQ
    integer, dimension(NSYMAXD,NATYP)   :: ISUMT
-   double complex, dimension(LMMAXD,LMMAXD)  :: GLL
-   double complex, dimension(LINMAX,NATYP)   :: TAUTLIN
+   complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: GLL
+   complex (kind=dp), dimension(LINMAX,NATYP)   :: TAUTLIN
    ! .. Effective (site-dependent) Delta_t^(-1) matrix ..
-   double complex, dimension(LMMAXD,LMMAXD) :: XC
-   double complex, dimension(LMMAXD,LMMAXD) :: W1
-   double complex, dimension(LMMAXD,LMMAXD) :: W2
-   double complex, dimension(LMMAXD,LMMAXD,NAEZ) :: MSSQ
+   complex (kind=dp), dimension(LMMAXD,LMMAXD) :: XC
+   complex (kind=dp), dimension(LMMAXD,LMMAXD) :: W1
+   complex (kind=dp), dimension(LMMAXD,LMMAXD) :: W2
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ) :: MSSQ
    ! .. Local allocatable arrays
-   double complex, dimension(:,:,:), allocatable :: DMSSQ
-   double complex, dimension(:,:,:), allocatable :: TAUDELQ
-   double complex, dimension(:,:,:), allocatable :: TAUDELT
-   double complex, dimension(:,:,:,:), allocatable :: GS
+   complex (kind=dp), dimension(:,:,:), allocatable :: DMSSQ
+   complex (kind=dp), dimension(:,:,:), allocatable :: TAUDELQ
+   complex (kind=dp), dimension(:,:,:), allocatable :: TAUDELT
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: GS
 
 #ifdef CPP_MPI
    integer :: irec0

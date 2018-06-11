@@ -1,6 +1,5 @@
     Subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
       rsymat, nsymat, isymindex, symunitary, irr, krel, iprint)
-      Use mod_datatypes, Only: dp
 !===========================================================================
 !info
 !info   find irreducible BZ and create mesh in it.
@@ -36,6 +35,7 @@
 !         ibk   : Flag showing if the mesh point jx,jy,jz has already been
 !                 taken. Could also be a logical variable.
 !==========================================================================
+      Use mod_datatypes, Only: dp
       Implicit None
       Integer :: maxk1, maxk2, maxk3, nsymaxd
       Parameter (maxk1=501, maxk2=501, maxk3=100, nsymaxd=48)

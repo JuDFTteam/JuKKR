@@ -12,6 +12,7 @@
 !-------------------------------------------------------------------------------
     Module profiling
 
+      use mod_DataTypes
       Implicit None
 
     Contains

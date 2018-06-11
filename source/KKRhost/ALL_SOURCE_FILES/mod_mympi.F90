@@ -1,6 +1,8 @@
 module mod_mympi
 !ruess: taken from Pkkr_sidebranch2D_2014_12_16, created by Bernd Zimmermann
 
+      Use mod_datatypes, Only: dp
+
 implicit none
 
   private
@@ -146,7 +148,7 @@ contains
   integer, intent(out) :: mympi_comm_ie, mympi_comm_at, nranks_atcomm, nranks_at, nranks_ie, myrank_ie, myrank_at, myrank_atcomm
   
   integer :: rest, k(nkmesh-1), ktake(nkmesh), myg, ie, iat, ierr, ik, i1,i2,i3
-  double precision :: f(nkmesh-1), q, qmin
+  real (kind=dp) :: f(nkmesh-1), q, qmin
   integer, allocatable :: groups(:,:), mygroup(:)
   integer :: mympi_group_ie, mympi_group_world, myMPI_comm_grid
 
@@ -443,16 +445,16 @@ contains
     integer, intent(in) :: irmd,lmpotd,natypd,lmaxd,lmmaxd,ielast,mmaxd,idoldau,natyp,krel,nmvecmax,npotd,lmaxd1,nqdos
     logical, intent(in) :: lmomvec
     integer, intent(in) :: mympi_comm
-    double precision, intent(inout) :: RHO2NS(IRMD,LMPOTD,NATYPD,2), R2NEF(IRMD,LMPOTD,NATYPD,2),    &
+    real (kind=dp), intent(inout) :: RHO2NS(IRMD,LMPOTD,NATYPD,2), R2NEF(IRMD,LMPOTD,NATYPD,2),    &
                                      & ESPV(0:LMAXD1,NPOTD), DENEF, DENEFAT(NATYPD), RHOORB(IRMD*KREL + (1-KREL),NATYPD),   &
                                      & MUORB(0:LMAXD1+1,3,NATYPD) 
-    double complex, intent(inout)   :: DEN(0:LMAXD1,IELAST,NPOTD,NQDOS), DENLM(LMMAXD,IELAST,NPOTD,NQDOS), DENMATC(MMAXD,MMAXD,NPOTD), MVEVI(NATYPD,3,NMVECMAX),   &
+    complex (kind=dp), intent(inout)   :: DEN(0:LMAXD1,IELAST,NPOTD,NQDOS), DENLM(LMMAXD,IELAST,NPOTD,NQDOS), DENMATC(MMAXD,MMAXD,NPOTD), MVEVI(NATYPD,3,NMVECMAX),   &
                                      & MVEVIL(0:LMAXD,NATYPD,3,NMVECMAX), MVEVIEF(NATYPD,3,NMVECMAX)
     
     integer :: idim, ierr!, myrank_comm
     integer, parameter :: master = 0
-    double precision, allocatable :: work1(:), work2(:,:), work3(:,:,:), work4(:,:,:,:)
-    double complex,   allocatable :: work3c(:,:,:), work4c(:,:,:,:)
+    real (kind=dp), allocatable :: work1(:), work2(:,:), work3(:,:,:), work4(:,:,:,:)
+    complex (kind=dp),   allocatable :: work3c(:,:,:), work4c(:,:,:,:)
 
 
     allocate(work4(IRMD,LMPOTD,NATYPD,2) , stat=ierr)
@@ -582,16 +584,16 @@ contains
      implicit none
      integer, intent(in) :: IRMDNEW, LMPOTD, LMAXD, LMAXD1, LMMAXD, LMMAXSO, IELAST, NQDOS
      integer, intent(in) :: mympi_comm
-     double complex, intent(inout)   :: R2NEFC(IRMDNEW,LMPOTD,4), RHO2NSC(IRMDNEW,LMPOTD,4), DEN(0:LMAXD1,IELAST,NQDOS,2), DENLM(LMMAXD,IELAST,NQDOS,2), RHO2INT(4), GFLLE(LMMAXSO,LMMAXSO,IELAST,NQDOS)
-     double precision, intent(inout) :: ESPV(0:LMAXD1,2), MUORB(0:LMAXD1+1,3), DENORBMOM(3), DENORBMOMSP(2,4), DENORBMOMLM(0:LMAXD,3), DENORBMOMNS(3)
+     complex (kind=dp), intent(inout)   :: R2NEFC(IRMDNEW,LMPOTD,4), RHO2NSC(IRMDNEW,LMPOTD,4), DEN(0:LMAXD1,IELAST,NQDOS,2), DENLM(LMMAXD,IELAST,NQDOS,2), RHO2INT(4), GFLLE(LMMAXSO,LMMAXSO,IELAST,NQDOS)
+     real (kind=dp), intent(inout) :: ESPV(0:LMAXD1,2), MUORB(0:LMAXD1+1,3), DENORBMOM(3), DENORBMOMSP(2,4), DENORBMOMLM(0:LMAXD,3), DENORBMOMNS(3)
      
      integer :: ierr, idim
-     double precision, allocatable :: work(:,:,:,:)
-     double complex, allocatable :: workc(:,:,:,:)
+     real (kind=dp), allocatable :: work(:,:,:,:)
+     complex (kind=dp), allocatable :: workc(:,:,:,:)
      
 
 ! all with reduce instead of allreduce:
-      !double complex arrays
+      !complex (kind=dp) arrays
      IDIM = IRMDNEW*LMPOTD*4
      allocate(workc(IRMDNEW,LMPOTD,4,1), stat=ierr)
      if(ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, r2nefc'
@@ -646,7 +648,7 @@ contains
      CALL ZCOPY(IDIM,WORKC,1,GFLLE,1)
      deallocate(workc)
      
-     !double precision arrays
+     !real (kind=dp) arrays
      IDIM = (LMAXD1+1)*2
      allocate(work(0:LMAXD1,2,1,1))
      work = 0.d0
@@ -709,15 +711,15 @@ contains
      implicit none
      integer, intent(in) :: LMAXD1,IELAST,NQDOS,NPOTD,NATYPD,LMPOTD,IRMD,LMMAXD,MMAXD
      integer, intent(in) :: mympi_comm
-     double complex, intent(inout)   :: den(0:LMAXD1,IELAST,NQDOS,NPOTD), denlm(LMMAXD,IELAST,NQDOS,NPOTD),denmatn(MMAXD,MMAXD,2,2,NATYPD)
-     double precision, intent(inout) :: muorb(0:LMAXD1+1,3,NATYPD), espv(0:LMAXD1,NPOTD), r2nef(IRMD,LMPOTD,NATYPD,2), rho2ns(IRMD,LMPOTD,NATYPD,2), denefat(NATYPD), denef, angles_new(NATYPD,2)
+     complex (kind=dp), intent(inout)   :: den(0:LMAXD1,IELAST,NQDOS,NPOTD), denlm(LMMAXD,IELAST,NQDOS,NPOTD),denmatn(MMAXD,MMAXD,2,2,NATYPD)
+     real (kind=dp), intent(inout) :: muorb(0:LMAXD1+1,3,NATYPD), espv(0:LMAXD1,NPOTD), r2nef(IRMD,LMPOTD,NATYPD,2), rho2ns(IRMD,LMPOTD,NATYPD,2), denefat(NATYPD), denef, angles_new(NATYPD,2)
      
      integer :: ierr, idim
-     double precision, allocatable :: work(:,:,:,:)
-     double complex, allocatable :: workc(:,:,:,:)
-     double complex, allocatable :: workc1(:,:,:,:,:)
+     real (kind=dp), allocatable :: work(:,:,:,:)
+     complex (kind=dp), allocatable :: workc(:,:,:,:)
+     complex (kind=dp), allocatable :: workc1(:,:,:,:,:)
      
-     !double complex arrays
+     !complex (kind=dp) arrays
      IDIM = (1+LMAXD1)*IELAST*NQDOS*NPOTD
      allocate(workc(0:LMAXD1,IELAST,NQDOS,NPOTD))
      workc = (0.d0, 0.d0)
@@ -745,7 +747,7 @@ contains
      CALL ZCOPY(IDIM,WORKC1,1,DENMATN,1)
      deallocate(workc1)
 
-     !double precision arrays
+     !real (kind=dp) arrays
      IDIM = (LMAXD1+2)*3*NATYPD
      allocate(work(0:LMAXD1+1,3,NATYPD,1))
      work = 0.d0
@@ -823,11 +825,11 @@ contains
   
     integer, intent(inout) :: MPIadapt
     logical, intent(inout) :: MPIatom
-    double precision, intent(inout) :: timings_1a(:,:), timings_1b(:)
+    real (kind=dp), intent(inout) :: timings_1a(:,:), timings_1b(:)
     integer, intent(out) :: load_imbalance(:)
     integer, intent(in) :: nkmesh, kmesh_ie(:)
   
-    double precision, allocatable :: t_average(:), work(:,:)
+    real (kind=dp), allocatable :: t_average(:), work(:,:)
     integer, allocatable :: kmesh_n(:)
     integer :: nat, ne, ne_1b, ierr, ie, iat, ik, iwork
   

@@ -1,6 +1,6 @@
       SUBROUTINE DIRBS(GETIRRSOL,C,E,L,MJ,KAP1,KAP2,PIS,CG1,CG2,CG4,
      &                 CG5,CG8,V,B,Z,NUCLEUS,R,DRDI,DOVR,NMESH,PR,QR,PI,
-     &                 QI,DP,DQ)
+     &                 QI,d_p,DQ)
 C   ********************************************************************
 C   *                                                                  *
 C   *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
@@ -21,6 +21,7 @@ C   *  29/04/95  MB  Adopted for finite nucleus                        *
 C   ********************************************************************
 C
 
+      use mod_DataTypes
       IMPLICIT NONE
       INCLUDE 'sprkkr_rmesh.dim'
 C
@@ -49,7 +50,7 @@ C
       DOUBLE COMPLEX PIS
       DOUBLE PRECISION B(NRMAX),DOVR(NRMAX),DRDI(NRMAX),R(NRMAX),
      &                 V(NRMAX)
-      DOUBLE COMPLEX DP(2,2,NRMAX),DQ(2,2,NRMAX),PI(2,2,NRMAX),
+      DOUBLE COMPLEX d_p(2,2,NRMAX),DQ(2,2,NRMAX),PI(2,2,NRMAX),
      &               PR(2,2,NRMAX)
       DOUBLE COMPLEX QI(2,2,NRMAX),QR(2,2,NRMAX)
 C
@@ -308,7 +309,7 @@ C
                DO I = 1,NSOL
                   PR(I,J,N) = PC(I,J,0)*RPWGPM
                   QR(I,J,N) = QC(I,J,0)*RPWGPM
-                  DP(I,J,N) = PC(I,J,0)*RPWGPM*GAM(J)*DOVR(N)
+                  d_p(I,J,N) = PC(I,J,0)*RPWGPM*GAM(J)*DOVR(N)
                   DQ(I,J,N) = QC(I,J,0)*RPWGPM*GAM(J)*DOVR(N)
                END DO
 C
@@ -319,7 +320,7 @@ C
                   DO I = 1,NSOL
                      PR(I,J,N) = PR(I,J,N) + PC(I,J,M)*RPWGPM
                      QR(I,J,N) = QR(I,J,N) + QC(I,J,M)*RPWGPM
-                     DP(I,J,N) = DP(I,J,N) + PC(I,J,M)
+                     d_p(I,J,N) = d_p(I,J,N) + PC(I,J,M)
      &                           *RPWGPM*GPM*DOVR(N)
                      DQ(I,J,N) = DQ(I,J,N) + QC(I,J,M)
      &                           *RPWGPM*GPM*DOVR(N)
@@ -342,7 +343,7 @@ C
                I = 3 - J
                PR(J,J,N) = CJLZ(L,ZZ)*R(N)
                QR(J,J,N) = EFAC*SK(J)*CJLZ(LB(J),ZZ)*R(N)*C
-               DP(J,J,N) = (DBLE(L+1)*CJLZ(L,ZZ)-ZZ*CJLZ(L+1,ZZ))
+               d_p(J,J,N) = (DBLE(L+1)*CJLZ(L,ZZ)-ZZ*CJLZ(L+1,ZZ))
      &                     *DRDI(N)
                M = LB(J)
                DQ(J,J,N) = EFAC*SK(J)
@@ -351,7 +352,7 @@ C
 C
                PR(I,J,N) = C0
                QR(I,J,N) = C0
-               DP(I,J,N) = C0
+               d_p(I,J,N) = C0
                DQ(I,J,N) = C0
             END DO
          END DO
@@ -366,7 +367,7 @@ C
          DO I = 1,NSOL
             FY(NFY+1) = PR(I,J,1)
             FY(NFY+2) = QR(I,J,1)
-            DY(NFY+1) = DP(I,J,1)
+            DY(NFY+1) = d_p(I,J,1)
             DY(NFY+2) = DQ(I,J,1)
             NFY = NFY + 2
          END DO
@@ -412,7 +413,7 @@ C
       DO J = 1,NSOL
          PI(J,J,N) = CJLZ(L,ZZ)*R(N)
          QI(J,J,N) = CFAC*SK(J)*CJLZ(LB(J),ZZ)*R(N)*C
-         DP(J,J,N) = (DBLE(L+1)*CJLZ(L,ZZ)-ZZ*CJLZ(L+1,ZZ))
+         d_p(J,J,N) = (DBLE(L+1)*CJLZ(L,ZZ)-ZZ*CJLZ(L+1,ZZ))
      &               *DRDI(N)
 C
          M = LB(J)
@@ -423,7 +424,7 @@ C
          I = 3 - J
          PI(I,J,N) = C0
          QI(I,J,N) = C0
-         DP(I,J,N) = C0
+         d_p(I,J,N) = C0
          DQ(I,J,N) = C0
       END DO
 C
@@ -435,7 +436,7 @@ C
          DO I = 1,NSOL
             FY(NFY+1) = PI(I,J,NMESH)
             FY(NFY+2) = QI(I,J,NMESH)
-            DY(NFY+1) = DP(I,J,NMESH)
+            DY(NFY+1) = d_p(I,J,NMESH)
             DY(NFY+2) = DQ(I,J,NMESH)
             NFY = NFY + 2
          END DO
@@ -455,7 +456,7 @@ C
             DO I = 1,NSOL
                PI(I,J,N) = FY(NFY+1)
                QI(I,J,N) = FY(NFY+2)
-C              DP(I,J,N) = DY(NFY+1)
+C              d_p(I,J,N) = DY(NFY+1)
 C              DQ(I,J,N) = DY(NFY+2)
                NFY = NFY + 2
             END DO

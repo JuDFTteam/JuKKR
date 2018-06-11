@@ -13,11 +13,12 @@ subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, &
 ! *                                                                    *
 ! **********************************************************************
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
   integer :: iemxd
-  double complex :: ez(*), df(*), ezsemi(iemxd), dfsemi(iemxd)
-  double complex :: ezval(iemxd), dfval(iemxd)
-  double precision :: ebotsem, emusem, tksem, ebotval, emuval, tkval, efermi
+  complex (kind=dp) :: ez(*), df(*), ezsemi(iemxd), dfsemi(iemxd)
+  complex (kind=dp) :: ezval(iemxd), dfval(iemxd)
+  real (kind=dp) :: ebotsem, emusem, tksem, ebotval, emuval, tkval, efermi
   integer :: npolsem, n1sem, n2sem, n3sem
   integer :: npolval, n1val, n2val, n3val
   integer :: iesemicore, npnt, npntsemi, npntval

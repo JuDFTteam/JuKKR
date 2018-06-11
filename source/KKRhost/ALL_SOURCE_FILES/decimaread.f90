@@ -23,6 +23,7 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
 ! *                                                                    *
 ! **********************************************************************
   use :: mod_version_info
+      Use mod_datatypes, Only: dp
   implicit none
 !..
   integer :: krel, natypd, nembd1, lmmaxd !,KORBIT
@@ -30,13 +31,13 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
 !.. Scalar arguments
   integer :: nptp1, nptp2, nptp3, npol, ispin, ienergy
   integer :: nlbasis, nrbasis, naez, kmrot, ins, nspin, lmmax, ielast
-  double precision :: tk
+  real (kind=dp) :: tk
   character (len=40) :: fileleft, fileright
 !..
 !.. Array arguments
   integer :: kaoez(natypd, *)
-  double complex :: ez(*)
-  double complex :: lefttinvll(lmmaxd, lmmaxd, nembd1), &
+  complex (kind=dp) :: ez(*)
+  complex (kind=dp) :: lefttinvll(lmmaxd, lmmaxd, nembd1), &
     righttinvll(lmmaxd, lmmaxd, nembd1)
   logical :: vacflag(2)
 !..
@@ -44,13 +45,13 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
   integer :: ios, npt1l, npt2l, npt3l, npoll, insl
   integer :: nspinl, naezl, lmmaxl, krell, kmrotl
   integer :: iel, ih, lm1, lm2, i, idum, ih1, ihost, ilhost, nathost
-  double precision :: alatl, templ, e2l, qmt, qmp
-  double complex :: el
-  double complex :: w1(lmmaxd, lmmaxd)
+  real (kind=dp) :: alatl, templ, e2l, qmt, qmp
+  complex (kind=dp) :: el
+  complex (kind=dp) :: w1(lmmaxd, lmmaxd)
   character (len=80) :: baner1
   character (len=40) :: filehost
   character (len=5) :: chhost(2), str5
-  double precision :: bravaisl(3, 3), rbasisl(3, nembd1)
+  real (kind=dp) :: bravaisl(3, 3), rbasisl(3, nembd1)
 !..
 !.. External Functions
   integer :: lngstring

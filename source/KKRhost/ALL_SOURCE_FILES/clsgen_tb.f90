@@ -19,6 +19,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
 !
 !
   use :: mod_version_info
+      Use mod_datatypes, Only: dp
   implicit none
 !.. arguments
   integer :: naez, & ! number of atoms in EZ
@@ -29,9 +30,9 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
     nvirt, & ! Number of virtual atoms
     nprinc ! Calculated number of layers in a principal layer
   integer :: naezd, natyp, nembd, nrd, naclsd, nclsd, nrefd
-  double precision :: alat ! lattice constant A
-  double precision :: rcut, rcutxy
-  double precision :: rbasis(3, naez+nembd), & ! pos. of basis atoms in EZ
+  real (kind=dp) :: alat ! lattice constant A
+  real (kind=dp) :: rcut, rcutxy
+  real (kind=dp) :: rbasis(3, naez+nembd), & ! pos. of basis atoms in EZ
     rcls(3, naclsd, ncls) & ! real space position of atom in cluster
     , rr(3, 0:nr), & ! set of lattice vectors
     zat(natyp), & ! nucleus charge
@@ -52,16 +53,16 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
   integer :: iatom(naclsd), iezoa(naclsd), isort(naclsd), &
     icouplmat(naez, naez), irep(ncls) ! representative atom of cluster (inverse of CLS)
   integer :: irefpot(naez+nembd), nrefpot
-  double precision :: rmtrefat(naez+nembd), rmtref1(naez+nembd)
-  double precision :: vrefat(naez+nembd), vref1(naez+nembd), vref(nrefd)
+  real (kind=dp) :: rmtrefat(naez+nembd), rmtref1(naez+nembd)
+  real (kind=dp) :: vrefat(naez+nembd), vref1(naez+nembd), vref(nrefd)
 
 
-  double precision :: r2, epsshl, tol, tol2, distmin, rcls1(3, naclsd), &
+  real (kind=dp) :: r2, epsshl, tol, tol2, distmin, rcls1(3, naclsd), &
     rg(3, naclsd), tmp(3), rsort(naclsd)
   integer :: nlbasis, nrbasis, nleft, nright
-  double precision :: zperleft(3), zperight(3), tleft(3, nlbasis), &
+  real (kind=dp) :: zperleft(3), zperight(3), tleft(3, nlbasis), &
     tright(3, nrbasis)
-  double precision :: rcut2, rcutxy2, rxy2, dist
+  real (kind=dp) :: rcut2, rcutxy2, rxy2, dist
 
   logical :: lfound
   logical :: l2dim, clustcomp_tb

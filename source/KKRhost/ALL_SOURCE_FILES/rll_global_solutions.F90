@@ -33,6 +33,7 @@ use mod_timing                            ! timing routine
 #ifdef CPP_HYBRID
 use omp_lib ! omp functions
 #endif
+      Use mod_datatypes, Only: dp
 implicit none
       integer :: ncheb                               ! number of chebyshev nodes
       integer :: npan                                ! number of panels
@@ -45,7 +46,7 @@ implicit none
       integer :: nrmaxd, LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
 #endif
 
-      double complex,parameter:: ci= (0.0d0,1.0d0), &! complex i
+      complex (kind=dp),parameter:: ci= (0.0d0,1.0d0), &! complex i
                                  cone=(1.0d0,0.0d0),&!         1
                                  czero=(0.0d0,0.0d0) !         0
       ! running indices
@@ -53,14 +54,14 @@ implicit none
       integer info,icheb,ipan,mn,nm
 
       ! source terms
-      double complex :: gmatprefactor               ! prefactor of green function
+      complex (kind=dp) :: gmatprefactor               ! prefactor of green function
                                                     ! non-rel: = kappa = sqrt e
 #ifndef hostcode
-      double complex :: hlk(:,:), jlk(:,:), &       ! right sol. source terms
+      complex (kind=dp) :: hlk(:,:), jlk(:,:), &       ! right sol. source terms
                         hlk2(:,:), jlk2(:,:)        ! left sol. source terms
                                                     ! (tipically bessel and hankel fn)
 #else
-      DOUBLE COMPLEX :: HLK(LBESSEL,NRMAX), &
+      complex (kind=dp) :: HLK(LBESSEL,NRMAX), &
                         JLK(LBESSEL,NRMAX), &
                         HLK2(LBESSEL,NRMAX), &
                         JLK2(LBESSEL,NRMAX) 
@@ -79,22 +80,22 @@ implicit none
                                                        ! cmoderll ="1" : op( )=identity
                                                        ! cmoderll ="T" : op( )=transpose in L
 
-      double complex ::  rll(lmsize2,lmsize,nrmax), &  ! reg. fredholm sol.
+      complex (kind=dp) ::  rll(lmsize2,lmsize,nrmax), &  ! reg. fredholm sol.
                          tllp(lmsize,lmsize), &        ! t-matrix
                          vll(lmsize*nvec,lmsize*nvec,nrmax) ! potential term in 5.7 
                                                        ! bauer, phd
-      double complex,allocatable ::  ull(:,:,:)        ! reg. volterra sol.
+      complex (kind=dp),allocatable ::  ull(:,:,:)        ! reg. volterra sol.
 
-      double complex,allocatable ::  &
+      complex (kind=dp),allocatable ::  &
                      work(:,:), &
                      allp(:,:,:),bllp(:,:,:), &                  ! eq. 5.9, 5.10 for reg. sol
                      mrnvy(:,:,:),mrnvz(:,:,:), &                ! ***************
                      mrjvy(:,:,:),mrjvz(:,:,:)                   !    eq. 5.19-5.22
-      double complex,allocatable :: yrf(:,:,:,:), &               ! source terms (different array
+      complex (kind=dp),allocatable :: yrf(:,:,:,:), &               ! source terms (different array
                      zrf(:,:,:,:)                                 !               ordering)
       ! chebyshev arrays
-      double precision c1(0:ncheb,0:ncheb),rpanbound(0:npan),drpan2
-      double precision cslc1(0:ncheb,0:ncheb), & ! Integration matrix from left ( C*S_L*C^-1 in eq. 5.53)
+      real (kind=dp) c1(0:ncheb,0:ncheb),rpanbound(0:npan),drpan2
+      real (kind=dp) cslc1(0:ncheb,0:ncheb), & ! Integration matrix from left ( C*S_L*C^-1 in eq. 5.53)
                        csrc1(0:ncheb,0:ncheb), & ! Same from right ( C*S_R*C^-1 in eq. 5.54)
                        tau(0:ncheb,0:npan), &    ! Radial mesh point
                        slc1sum(0:ncheb),rmesh(nrmax)
@@ -104,7 +105,7 @@ implicit none
       integer :: idotime
       integer,parameter  :: directsolv=1
 #ifdef hostcode
-      DOUBLE COMPLEX ALPHAGET(LMSIZE,LMSIZE) ! LLY
+      complex (kind=dp) ALPHAGET(LMSIZE,LMSIZE) ! LLY
 #endif
 
 #ifdef CPP_HYBRID

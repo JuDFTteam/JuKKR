@@ -1,5 +1,4 @@
     Subroutine changerep(a, mode, b, n, m, rc, crel, rrel, text, ltext)
-      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *   change the representation of matrix A and store in B           *
@@ -17,6 +16,7 @@
 !   *   for LTEXT > 0 the new matrix  B  is printed                    *
 !   *                                                                  *
 !   ********************************************************************
+      Use mod_datatypes, Only: dp
       Implicit None
 
 ! PARAMETER definitions

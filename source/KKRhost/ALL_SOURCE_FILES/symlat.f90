@@ -13,14 +13,15 @@ subroutine symlat(nsymop, platcp, symopm)
 !r   these operations themselves.
 ! ----------------------------------------------------------------------
 
+      Use mod_datatypes, Only: dp
   implicit none
 ! Passed parameters:                                                    
   integer :: nsymop
-  double precision :: platcp(3, 3), symopm(9, *)
+  real (kind=dp) :: platcp(3, 3), symopm(9, *)
 ! Local parameters:                                                     
   integer :: i, iprint, ltmax, ll1, m, m1, m2, m3, mm, nrot(4)
   parameter (ltmax=3, ll1=ltmax*2+1, iprint=20)
-  double precision :: platt(9), qlatcp(3, 3), mat(9), vecg(3), vol
+  real (kind=dp) :: platt(9), qlatcp(3, 3), mat(9), vecg(3), vol
   logical :: latvec, lirr
 ! External calls:                                                       
   external :: dinv33, dmpy, latvec, rotmat

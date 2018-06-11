@@ -50,28 +50,29 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
 !           false -> volterra equation
 !-----------------------------------------------------------------------
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
 !.. Scalar Arguments ..
-  double complex :: ek
+  complex (kind=dp) :: ek
   integer :: icst, ipan, ipand, irmd, irmind, lmmaxd, nsra
 !..
 !.. Array Arguments ..
-  double complex :: ader(lmmaxd, lmmaxd, irmind:irmd), &
+  complex (kind=dp) :: ader(lmmaxd, lmmaxd, irmind:irmd), &
     amat(lmmaxd, lmmaxd, irmind:irmd), ar(lmmaxd, lmmaxd), &
     bder(lmmaxd, lmmaxd, irmind:irmd), bmat(lmmaxd, lmmaxd, irmind:irmd), &
     br(lmmaxd, lmmaxd), efac(*), pns(lmmaxd, lmmaxd, irmind:irmd, 2), &
     pzekdr(lmmaxd, irmind:irmd, 2), pzlm(lmmaxd, irmind:irmd, 2), &
     qzekdr(lmmaxd, irmind:irmd, 2), qzlm(lmmaxd, irmind:irmd, 2)
-  double precision :: vnspll(lmmaxd, lmmaxd, irmind:irmd)
+  real (kind=dp) :: vnspll(lmmaxd, lmmaxd, irmind:irmd)
   integer :: ircut(0:ipand)
 !..
 !.. Local Scalars ..
-  double complex :: efac1, efac2
-  double precision :: err
+  complex (kind=dp) :: efac1, efac2
+  real (kind=dp) :: err
   integer :: i, ir, irc1, j, lm1, lm2, lm3
 !..
 !.. Local Arrays ..
-  double complex :: pns0(lmmaxd, lmmaxd, irmind:irmd, 2), &
+  complex (kind=dp) :: pns0(lmmaxd, lmmaxd, irmind:irmd, 2), &
     pns1(lmmaxd, lmmaxd, irmind:irmd)
   integer :: ipiv(lmmaxd)
 !..
@@ -79,7 +80,7 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   external :: csinwd, csout, wfint, wfint0, zgeinv1
 !..
 !.. Parameters ..
-  double complex :: cone
+  complex (kind=dp) :: cone
   parameter (cone=(1.0d0,0.0d0))
 !..
   logical :: fred
@@ -309,7 +310,7 @@ end subroutine
 
 subroutine zgeinv1(a, u, aux, ipiv, dim)
 ! ************************************************************************
-!   - inverts a general double complex matrix A,
+!   - inverts a general complex (kind=dp) matrix A,
 !   - the result is return in U,
 !   - input matrix A is returned unchanged,
 !   - AUX is a auxiliary matrix,
@@ -317,16 +318,16 @@ subroutine zgeinv1(a, u, aux, ipiv, dim)
 ! ------------------------------------------------------------------------
 
   real, intent (inout) :: a
-  double complex :: a(dim, *, intent(out) :: u(dim,*)
-  double complex :: a(dim,*,intent(in out):: aux(dim,*)
+  complex (kind=dp) :: a(dim, *, intent(out) :: u(dim,*)
+  complex (kind=dp) :: a(dim,*,intent(in out):: aux(dim,*)
   integer,intent(inout):: ipiv(*)
   integer,intent(in):: dim
 
-  double complex :: a(dim,*)
+  complex (kind=dp) :: a(dim,*)
 
 !     .. PARAMETER
 
-  double complex :: cone
+  complex (kind=dp) :: cone
   real,parameter :: cone=(1.d0,0.d0)
 
   integer :: lm1,info

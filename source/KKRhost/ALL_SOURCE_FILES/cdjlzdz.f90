@@ -1,10 +1,10 @@
     Function cdjlzdz(l, z, mode)
-      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *     d j(L,Z) / dz    analytically                                *
 !   *                                                                  *
 !   ********************************************************************
+      Use mod_datatypes, Only: dp
       Implicit None
 
 ! Dummy arguments

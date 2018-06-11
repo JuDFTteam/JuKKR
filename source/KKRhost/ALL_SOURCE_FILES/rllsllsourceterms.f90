@@ -5,78 +5,79 @@
 !> - full-relativistic
 !> calculations
 !-------------------------------------------------------------------------------
-subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, &
-  lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
+    Subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, &
+      lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
 
-  use :: constants
+      Use constants
+      Use mod_datatypes, Only: dp
 
-  implicit none
+      Implicit None
 
-  integer :: nsra, lmax, nrmax, nrmaxd, nvec
-  integer :: lmsize
-  double complex :: eryd
-  double precision, dimension (nrmaxd) :: rmesh
-  integer, dimension (2*lmsize) :: jlk_index
-  integer :: l1, lm1, m1, ivec, ispinfullgmat, ir
-  integer :: use_fullgmat
-  double complex :: ek, ek2, gmatprefactor
-  double complex, dimension (1:4*(lmax+1), nrmax) :: hlk, jlk
-  double complex, dimension (1:4*(lmax+1), nrmax) :: hlk2, jlk2
+      Integer :: nsra, lmax, nrmax, nrmaxd, nvec
+      Integer :: lmsize
+      Complex (Kind=dp) :: eryd
+      Real (Kind=dp), Dimension (nrmaxd) :: rmesh
+      Integer, Dimension (2*lmsize) :: jlk_index
+      Integer :: l1, lm1, m1, ivec, ispinfullgmat, ir
+      Integer :: use_fullgmat
+      Complex (Kind=dp) :: ek, ek2, gmatprefactor
+      Complex (Kind=dp), Dimension (1:4*(lmax+1), nrmax) :: hlk, jlk
+      Complex (Kind=dp), Dimension (1:4*(lmax+1), nrmax) :: hlk2, jlk2
 
-  if (nsra==2) then
-    nvec = 2
-  else if (nsra==1) then
-    nvec = 1
-  end if
+      If (nsra==2) Then
+        nvec = 2
+      Else If (nsra==1) Then
+        nvec = 1
+      End If
 
-  lm1 = 1
-  do ivec = 1, nvec
-    do ispinfullgmat = 0, use_fullgmat
-      do l1 = 0, lmax
-        do m1 = -l1, l1
-          jlk_index(lm1) = l1 + (ivec-1)*(lmax+1) + 1
-          lm1 = lm1 + 1
-        end do
-      end do
-    end do !ispinorbit=0,use_fullgmat
-  end do !nvec
+      lm1 = 1
+      Do ivec = 1, nvec
+        Do ispinfullgmat = 0, use_fullgmat
+          Do l1 = 0, lmax
+            Do m1 = -l1, l1
+              jlk_index(lm1) = l1 + (ivec-1)*(lmax+1) + 1
+              lm1 = lm1 + 1
+            End Do
+          End Do
+        End Do !ispinorbit=0,use_fullgmat
+      End Do !nvec
 
-  if (nsra==1) then
-    ek = sqrt(eryd)
-    ek2 = sqrt(eryd)
-  else if (nsra==2) then
-    ek = sqrt(eryd+(eryd/cvlight)**2)
-    ek2 = sqrt(eryd+(eryd/cvlight)**2)*(1.0d0+eryd/cvlight**2)
-  end if
+      If (nsra==1) Then
+        ek = sqrt(eryd)
+        ek2 = sqrt(eryd)
+      Else If (nsra==2) Then
+        ek = sqrt(eryd+(eryd/cvlight)**2)
+        ek2 = sqrt(eryd+(eryd/cvlight)**2)*(1.0E0_dp+eryd/cvlight**2)
+      End If
 
-  do ir = 1, nrmax
+      Do ir = 1, nrmax
 
-    call beshank(hlk(:,ir), jlk(:,ir), ek*rmesh(ir), lmax)
-    if (nsra==2) then
-      call beshank_smallcomp(hlk(:,ir), jlk(:,ir), ek*rmesh(ir), rmesh(ir), &
-        eryd, lmax)
-    end if
+        Call beshank(hlk(:,ir), jlk(:,ir), ek*rmesh(ir), lmax)
+        If (nsra==2) Then
+          Call beshank_smallcomp(hlk(:,ir), jlk(:,ir), ek*rmesh(ir), &
+            rmesh(ir), eryd, lmax)
+        End If
 
-    do l1 = 1, nvec*(lmax+1)
-      hlk(l1, ir) = -ci*hlk(l1, ir)
-    end do
+        Do l1 = 1, nvec*(lmax+1)
+          hlk(l1, ir) = -ci*hlk(l1, ir)
+        End Do
 
-    if (nsra==1) then
-      do l1 = 1, nvec*(lmax+1)
-        jlk2(l1, ir) = jlk(l1, ir)
-        hlk2(l1, ir) = hlk(l1, ir)
-      end do
-    else if (nsra==2) then
-      do l1 = 1, lmax + 1
-        jlk2(l1, ir) = jlk(l1, ir)
-        hlk2(l1, ir) = hlk(l1, ir)
-      end do
-      do l1 = lmax + 2, 2*(lmax+1)
-        jlk2(l1, ir) = -jlk(l1, ir)
-        hlk2(l1, ir) = -hlk(l1, ir)
-      end do
-    end if
+        If (nsra==1) Then
+          Do l1 = 1, nvec*(lmax+1)
+            jlk2(l1, ir) = jlk(l1, ir)
+            hlk2(l1, ir) = hlk(l1, ir)
+          End Do
+        Else If (nsra==2) Then
+          Do l1 = 1, lmax + 1
+            jlk2(l1, ir) = jlk(l1, ir)
+            hlk2(l1, ir) = hlk(l1, ir)
+          End Do
+          Do l1 = lmax + 2, 2*(lmax+1)
+            jlk2(l1, ir) = -jlk(l1, ir)
+            hlk2(l1, ir) = -hlk(l1, ir)
+          End Do
+        End If
 
-  end do
-  gmatprefactor = ek2
-end subroutine
+      End Do
+      gmatprefactor = ek2
+    End Subroutine

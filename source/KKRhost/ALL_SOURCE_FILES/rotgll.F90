@@ -22,11 +22,12 @@ SUBROUTINE rotgll(gmatll,natomimp,ijtabsym,ijtabsh,  &
 ! *                                                                    *
 ! **********************************************************************
 use mod_mympi, only: myrank, master
+      Use mod_datatypes, Only: dp
 
 IMPLICIT NONE
 !     ..
 !     .. Parameter definitions
-DOUBLE COMPLEX czero,cone
+complex (kind=dp) czero,cone
 PARAMETER (czero= (0.0D0,0.0D0),cone= (1.d0,0.d0))
 !     ..
 !     .. Scalar arguments
@@ -35,12 +36,12 @@ INTEGER :: igf,krel,natomimp
 !     ..
 !     .. Array arguments
 INTEGER :: ijtabsym(*),ijtabsh(*)
-DOUBLE COMPLEX gmatll(lmmaxd,lmmaxd,*), dsymll(lmmaxd,lmmaxd,*)
-DOUBLE COMPLEX crel(lmmaxd,lmmaxd),rc(lmmaxd,lmmaxd), rrel(lmmaxd,lmmaxd)
+complex (kind=dp) gmatll(lmmaxd,lmmaxd,*), dsymll(lmmaxd,lmmaxd,*)
+complex (kind=dp) crel(lmmaxd,lmmaxd),rc(lmmaxd,lmmaxd), rrel(lmmaxd,lmmaxd)
 LOGICAL :: symunitary(*)
 !     ..
 !     .. Local arrays
-DOUBLE COMPLEX gll(:,:,:,:),tpg(:,:)
+complex (kind=dp) gll(:,:,:,:),tpg(:,:)
 COMPLEX*8 gclust(:)
 allocatable gll,tpg,gclust
 !     ..

@@ -49,6 +49,7 @@ subroutine ecoub(cmom, ecou, lmax, nspin, natyp, rho2ns, vm2z, z, r, drdi, &
 !                               b.drittler   jan. 1990
 !-----------------------------------------------------------------------
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
 !.. Parameters ..
   include 'inc.p'
@@ -60,19 +61,19 @@ subroutine ecoub(cmom, ecou, lmax, nspin, natyp, rho2ns, vm2z, z, r, drdi, &
   integer :: kshape, kvmad, lmax, natyp, nspin
 !..
 !.. Local Arrays ..
-  double precision :: cmom(lmpotd, *), drdi(irmd, *), ecou(0:lpotd, *), &
+  real (kind=dp) :: cmom(lmpotd, *), drdi(irmd, *), ecou(0:lpotd, *), &
     gsh(*), r(irmd, *), rho2ns(irmd, lmpotd, natypd, *), &
     thetas(irid, nfund, *), vm2z(irmd, lmpotd, *), z(*)
   integer :: ifunm(natypd, *), ilm_map(ngshd, 3), imaxsh(0:lmpotd), ipan(*), &
     ircut(0:ipand, *), irws(*), ntcell(*), lmsp(natypd, *)
 !..
 !.. External Subroutines ..
-  double precision :: rfpi, rhosp, sign, vm, vmad
+  real (kind=dp) :: rfpi, rhosp, sign, vm, vmad
   integer :: i, iatyp, icell, ifun, ipan1, ipot, ir, irc1, irh, irs1, ispin, &
     j, l, lm, lm2, m
 !..
 !.. Intrinsic Functions ..
-  double precision :: er(irmd)
+  real (kind=dp) :: er(irmd)
 !..
 
   external :: simp3, simpk

@@ -3,6 +3,7 @@
       Use mod_datatypes, Only: dp
 !     This subroutine copies or subtracts a block to a matrix
 ! **********************************************************************
+      Use mod_datatypes, Only: dp
       Implicit None
 !.. Scalar Arguments ..
       Integer :: almd, nsize, pl1, pl2

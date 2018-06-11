@@ -3,6 +3,7 @@
 !> @author Bernd Zimmermann
 !-------------------------------------------------------------------------------
 module mod_tbxccpljijdij
+      Use mod_datatypes, Only: dp
    implicit none
 
    private
@@ -42,13 +43,13 @@ contains
 
       ! various
       integer, intent(in) :: lmmaxd, lmgf0d, naezd, natypd
-      double precision, dimension(natypd), intent(in) :: phis
-      double precision, dimension(natypd), intent(in) :: thetas
+      real (kind=dp), dimension(natypd), intent(in) :: phis
+      real (kind=dp), dimension(natypd), intent(in) :: thetas
 
       ! Energy contour
       integer, intent(in) :: ielast, iemxd, npol
-      double complex, dimension(iemxd), intent(in) :: ez
-      double complex, dimension(iemxd), intent(in) :: wez
+      complex (kind=dp), dimension(iemxd), intent(in) :: ez
+      complex (kind=dp), dimension(iemxd), intent(in) :: wez
       integer :: ie, ie_end, ie_num
 #ifdef CPP_MPI
       integer :: ie_start
@@ -64,10 +65,10 @@ contains
       integer, dimension(nofgijD), intent(in)   :: ijtabsym
       integer, dimension(nofgijD), intent(in)   :: ijtabcalc
       integer, dimension(nofgijD), intent(in)   :: ijtabcalc_I
-      double precision, dimension(3,natomimpd), intent(in) :: rclsimp
+      real (kind=dp), dimension(3,natomimpd), intent(in) :: rclsimp
 
       ! Symmetries
-      double complex, dimension(lmmaxd,lmmaxd,nsymaxd), intent(in) :: dsymll
+      complex (kind=dp), dimension(lmmaxd,lmmaxd,nsymaxd), intent(in) :: dsymll
 
       ! CPA arrays
       integer, intent(in) :: ncpa
@@ -75,33 +76,33 @@ contains
       integer, dimension(natypd,naezd), intent(in) :: itoq
 
       !Green functions and GF-work arrays of size LMSxLMS
-      double complex, dimension(:,:), allocatable :: w1
-      double complex, dimension(:,:), allocatable :: w2
-      double complex, dimension(:,:), allocatable :: w3
-      double complex, dimension(:,:), allocatable :: Tik
-      double complex, dimension(:,:), allocatable :: Tjl
-      double complex, dimension(:,:), allocatable :: gij
-      double complex, dimension(:,:), allocatable :: gji
-      double complex, dimension(:,:), allocatable :: gij_proj
-      double complex, dimension(:,:), allocatable :: gji_proj
+      complex (kind=dp), dimension(:,:), allocatable :: w1
+      complex (kind=dp), dimension(:,:), allocatable :: w2
+      complex (kind=dp), dimension(:,:), allocatable :: w3
+      complex (kind=dp), dimension(:,:), allocatable :: Tik
+      complex (kind=dp), dimension(:,:), allocatable :: Tjl
+      complex (kind=dp), dimension(:,:), allocatable :: gij
+      complex (kind=dp), dimension(:,:), allocatable :: gji
+      complex (kind=dp), dimension(:,:), allocatable :: gij_proj
+      complex (kind=dp), dimension(:,:), allocatable :: gji_proj
       !
-      double complex, dimension(:,:), allocatable :: jxcijint
-      double complex, dimension(:,:,:,:), allocatable :: Jijmat
+      complex (kind=dp), dimension(:,:), allocatable :: jxcijint
+      complex (kind=dp), dimension(:,:,:,:), allocatable :: Jijmat
 #ifdef CPP_MPI
-      double complex, dimension(:,:,:,:), allocatable :: Jijmat_tmp
+      complex (kind=dp), dimension(:,:,:,:), allocatable :: Jijmat_tmp
 #endif
       integer, dimension(:,:), allocatable :: indxarr
 
       integer :: i1,i2,nn,kk,ish,isym,iq,jq,iJ1,iI1,jt,it,kalpha,lalpha
       integer :: irec,ierr,lm1,lm2,lm3,istore,ncount
       integer :: nstore,i_stat,i_all
-      double precision :: rsh
-      double complex :: csum
+      real (kind=dp) :: rsh
+      complex (kind=dp) :: csum
       integer, dimension(2*natomimp) :: isort, istoretmp
-      double precision, dimension(3) :: rdiff
-      double precision, dimension(2*natomimp) :: dists
-      double complex, dimension(4) :: jtmp
-      double precision, parameter :: fpi= 4.0d0*PI
+      real (kind=dp), dimension(3) :: rdiff
+      real (kind=dp), dimension(2*natomimp) :: dists
+      complex (kind=dp), dimension(4) :: jtmp
+      real (kind=dp), parameter :: fpi= 4.0d0*PI
       character(len=1) :: cnt
       character(len=22) :: fmt2
       character(len=13) :: jfnam
@@ -486,7 +487,7 @@ contains
 
       implicit none
       integer,          intent(in)  :: n
-      double precision, intent(in)  :: Xin(n)
+      real (kind=dp), intent(in)  :: Xin(n)
       integer,          intent(out) :: Iout(n)
 
       logical          :: swaped

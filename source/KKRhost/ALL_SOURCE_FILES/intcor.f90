@@ -4,22 +4,22 @@ subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
   use mod_DataTypes
   implicit none
 !.. Scalar Arguments ..
-  double precision :: a, b, e, f1, f2, rn, slope, sum, tol, value, z
+  real (kind=dp) :: a, b, e, f1, f2, rn, slope, sum, tol, value, z
   integer :: ipr, irm, l, nitmax, nn, nr, nre, nsra
   logical :: vlnc
 !..
 !.. Array Arguments ..
-  double precision :: f(*), g(*), rho(*), v(*)
+  real (kind=dp) :: f(*), g(*), rho(*), v(*)
 !..
 !.. Local Scalars ..
-  double complex :: arg, cappai, dofe
-  double precision :: cvlight, de, dg1, dg2, dpsi1, dpsi2, drdikc, e1, e2, ea, &
+  complex (kind=dp) :: arg, cappai, dofe
+  real (kind=dp) :: cvlight, de, dg1, dg2, dpsi1, dpsi2, drdikc, e1, e2, ea, &
     gkc2, pi, pkc1, pkc2, psi1, psi2, q, qkc1, qkc2, ratio, ratio1, re, rkc, &
     rpb, slop, tsrme, valu, vme, xxx, zz
   integer :: ir, k, k2, kc, niter, nne, nrem1, nrem2
 !..
 !.. Local Arrays ..
-  double complex :: hl(6)
+  complex (kind=dp) :: hl(6)
 !..
 !.. External Subroutines ..
   external :: hankel, intin, intout

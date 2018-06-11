@@ -39,33 +39,34 @@ use omp_lib
 #ENDIF
 
 use constants
+      Use mod_datatypes, Only: dp
 
       IMPLICIT NONE
 !..
 !.. Parameters ..
-      DOUBLE PRECISION BOUND
+      real (kind=dp) BOUND
       PARAMETER ( BOUND=1D-8 )
 !..
 !.. Scalar arguments ..
-      DOUBLE PRECISION ALAT,VOL
+      real (kind=dp) ALAT,VOL
       INTEGER IPRINT,LPOT,NAEZ,NGMAX,NRMAX,NSHLG,NSHLR
       INTEGER LASSLD,LMXSPD,NAEZD
 !..
 !.. Array arguments ..
-      DOUBLE PRECISION  GN(3,*),QI0(3,*),RM(3,*),SMAT(LMXSPD,NAEZD,*)
+      real (kind=dp)  GN(3,*),QI0(3,*),RM(3,*),SMAT(LMXSPD,NAEZD,*)
       INTEGER NSG(*),NSR(*)
 !..
 !.. Local scalars ..
-      DOUBLE COMPLEX BFAC
-      DOUBLE PRECISION ALPHA,BETA,DQ1,DQ2,DQ3,DQDOTG,EXPBSQ,FPI, &
+      complex (kind=dp) BFAC
+      real (kind=dp) ALPHA,BETA,DQ1,DQ2,DQ3,DQDOTG,EXPBSQ,FPI, &
                        G1,G2,G3,GA,LAMDA,R,R1,R2,R3,RFAC,S
-      DOUBLE PRECISION DBLE
+      real (kind=dp) DBLE
       INTEGER I,I1,I2,IT,L,LM,LMX,LMXSP,LFMT,M,NGE,NGS,NRE,NRS,NSTART
       CHARACTER*80 FMT
 !..
 !.. Local arrays ..
-      DOUBLE COMPLEX STEST(LMXSPD)
-      DOUBLE PRECISION G(0:LASSLD),YLM(LMXSPD),QI(3,NAEZD)
+      complex (kind=dp) STEST(LMXSPD)
+      real (kind=dp) G(0:LASSLD),YLM(LMXSPD),QI(3,NAEZD)
 !..
 !.. External subroutines ..
       EXTERNAL GAMFC,YMY

@@ -1,5 +1,6 @@
 module mod_jijhelp
-
+ 
+  use mod_DataTypes
   implicit none
   private
 
@@ -50,7 +51,7 @@ contains
 ! subroutine calc_dtmatJij(NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,dtmat)
 
     implicit none
-    double complex :: czero, cone
+    complex (kind=dp) :: czero, cone
     parameter (czero=(0d0,0d0), cone=(1d0,0d0))
 
     integer, intent (in) :: lmmaxd, lmmaxso, lmpotd, nsra, irmdnew, nrmaxd, &
@@ -58,16 +59,16 @@ contains
 !   integer, intent(in) :: NSRA,IRMDNEW,NRMAXD,NSPIN,IEND,NCLEB,NTOTD    !integer arguments that only define array sizes
     integer, intent (in) :: npan_tot, ncheb, ipan_intervall(0:ntotd), &
       icleb(ncleb, 4) !integer arguments
-    double precision, intent (in) :: rpan_intervall(0:ntotd), &
+    real (kind=dp), intent (in) :: rpan_intervall(0:ntotd), &
       vins(irmdnew, lmpotd, nspin), cleb(*), rnew(nrmaxd)
-    double complex, intent (in) :: rll(nsra*lmmaxso, lmmaxso, irmdnew), &
+    complex (kind=dp), intent (in) :: rll(nsra*lmmaxso, lmmaxso, irmdnew), &
       rllleft(nsra*lmmaxso, lmmaxso, irmdnew)
-    double complex, intent (out) :: dtmat(lmmaxso, lmmaxso, 3)
+    complex (kind=dp), intent (out) :: dtmat(lmmaxso, lmmaxso, 3)
 
 !..locals..
     integer :: ispin1, ispin2, jspin, ir, ishift1, ishift2, lm1, lm2
-    double precision :: bins(irmdnew, lmpotd, 1)
-    double complex :: bnspll0(lmmaxd, lmmaxd, irmdnew), sigma(2, 2, 3), &
+    real (kind=dp) :: bins(irmdnew, lmpotd, 1)
+    complex (kind=dp) :: bnspll0(lmmaxd, lmmaxd, irmdnew), sigma(2, 2, 3), &
       vnspll0(lmmaxso, lmmaxso), pnsil(lmmaxso, lmmaxso), &
       pnsir(lmmaxso, lmmaxso), cmattmp(lmmaxso, lmmaxso), &
       wr(lmmaxso, lmmaxso, irmdnew), ctmp(irmdnew)
@@ -145,9 +146,9 @@ contains
 
   subroutine calclambda(lambda, theta, phi)
     implicit none
-    double complex :: lambda(2, 2, 3)
-    double precision :: theta, phi
-    double complex :: sigmatemp(2, 2, 3), sigma(2, 2, 3)
+    complex (kind=dp) :: lambda(2, 2, 3)
+    real (kind=dp) :: theta, phi
+    complex (kind=dp) :: sigmatemp(2, 2, 3), sigma(2, 2, 3)
     integer :: ispin
 
     call calc_sigma(sigma)
@@ -163,7 +164,7 @@ contains
 
   subroutine calc_sigma(sigma)
     implicit none
-    double complex :: sigma(2, 2, 3)
+    complex (kind=dp) :: sigma(2, 2, 3)
     integer :: verbose
     character (len=*), parameter :: conventionmode = 'kkr'
 

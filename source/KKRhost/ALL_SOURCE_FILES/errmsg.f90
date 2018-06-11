@@ -9,6 +9,7 @@ subroutine errmsg(messg, isev)
 !r   program will stop.
 ! ----------------------------------------------------------------------
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
 ! Passed parameters:                                                    
   integer :: isev

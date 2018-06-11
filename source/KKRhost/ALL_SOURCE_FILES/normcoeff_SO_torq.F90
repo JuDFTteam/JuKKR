@@ -22,6 +22,7 @@ use mod_types, only: t_mpi_c_grid, t_inc, t_imp
 use mod_types, only: t_inc, t_imp
 #ENDIF
 
+      Use mod_datatypes, Only: dp
       
       IMPLICIT NONE
 
@@ -40,8 +41,8 @@ use mod_types, only: t_inc, t_imp
                        IRWS(*),NSPIN,IRMIN(*), I2
 !..
 !.. Array Arguments ..
-      DOUBLE COMPLEX   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)
-      DOUBLE PRECISION CLEB(*), &
+      complex (kind=dp)   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)
+      real (kind=dp) CLEB(*), &
                        DRDI(IRMD,NATYPD), &
                        VISP(IRMD,*),         &      ! spherical part of the potential
                        VINS(IRMIND:IRMD,LMPOTD,*), & ! non-spher. part of the potential
@@ -52,7 +53,7 @@ use mod_types, only: t_inc, t_imp
                        IPAN(NATYPD),NTCELL(*)
 !..
 !.. Local Scalars ..
-      DOUBLE COMPLEX   CZERO,NORM
+      complex (kind=dp)   CZERO,NORM
       INTEGER          LM1,LM2,LM1P,LM2P, &
                        IR,I1,I1SP1,I1SP2, &
                        LMSP1,LMSP2,ISIGMA,I2SP1,I2SP2,INSRA,NSRA
@@ -71,12 +72,12 @@ use mod_types, only: t_inc, t_imp
       SAVE             CZERO
 !..
 !..Local Arrays..
-      DOUBLE COMPLEX, ALLOCATABLE  ::   TORQ(:,:,:,:), &
+      complex (kind=dp), ALLOCATABLE  ::   TORQ(:,:,:,:), &
                                         RLL_12(:,:,:), &
                                         DENS(:,:,:,:,:,:,:), &
                                         RLL(:,:,:,:,:,:,:)
 !     MPI stuff
-      DOUBLE COMPLEX, ALLOCATABLE  :: work(:,:,:,:,:,:,:)
+      complex (kind=dp), ALLOCATABLE  :: work(:,:,:,:,:,:,:)
 !..
 !.. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/

@@ -8,13 +8,14 @@
 !>
 !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck, lmmaxd)
+    Subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck, lmmaxd)
 
-  use :: constants
-  use :: profiling
-  use :: global_variables
+      Use constants
+      Use profiling
+      Use global_variables
+      Use mod_datatypes, Only: dp
 
-  implicit none
+      Implicit None
 
 !-------------------------------------------------------------------------------
 ! For KREL = 1 (relativistic mode)
@@ -28,125 +29,125 @@ subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck, lmmaxd)
 !
 !-------------------------------------------------------------------------------
 ! .. Input variables
-  integer, intent (in) :: ndim
-  integer, intent (in) :: ichck
-  integer, intent (in) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
-  integer, intent (in) :: itermax
-  double precision, intent (in) :: errmax
+      Integer, Intent (In) :: ndim
+      Integer, Intent (In) :: ichck
+      Integer, Intent (In) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
+      Integer, Intent (In) :: itermax
+      Real (Kind=dp), Intent (In) :: errmax
 ! .. Input arrays
-  double complex, dimension (ndim, ndim), intent (in) :: m0
-  double complex, dimension (ndim, ndim), intent (in) :: ml
-  double complex, dimension (ndim, ndim), intent (in) :: mr
+      Complex (Kind=dp), Dimension (ndim, ndim), Intent (In) :: m0
+      Complex (Kind=dp), Dimension (ndim, ndim), Intent (In) :: ml
+      Complex (Kind=dp), Dimension (ndim, ndim), Intent (In) :: mr
 ! .. Output variables
-  double complex, dimension (ndim, ndim), intent (out) :: x
+      Complex (Kind=dp), Dimension (ndim, ndim), Intent (Out) :: x
 ! .. Local Scalars
-  integer :: i, info, iter, j, n
-  double precision :: err, sum, xim, xre
+      Integer :: i, info, iter, j, n
+      Real (Kind=dp) :: err, sum, xim, xre
 ! .. Local Arrays
-  integer, dimension (ndim) :: ipvt
-  double complex, dimension (ndim, ndim) :: aa, alfa, bb, beta, cc, cunit, &
-    eps, tempin
-  double complex, dimension (ndim, ndim) :: tempout, y1, y2
+      Integer, Dimension (ndim) :: ipvt
+      Complex (Kind=dp), Dimension (ndim, ndim) :: aa, alfa, bb, beta, cc, &
+        cunit, eps, tempin
+      Complex (Kind=dp), Dimension (ndim, ndim) :: tempout, y1, y2
 ! .. External Subroutines ..
-  external :: cinit, zaxpy, zcopy, zgemm, zgetrf, zgetrs
+      External :: cinit, zaxpy, zcopy, zgemm, zgetrf, zgetrs
 ! .. Intrinsic Functions ..
-  intrinsic :: dble, aimag
+      Intrinsic :: real, aimag
 !     ..
 
-  call cinit(ndim*ndim, cunit)
-  do n = 1, ndim
-    cunit(n, n) = cone
-  end do
+      Call cinit(ndim*ndim, cunit)
+      Do n = 1, ndim
+        cunit(n, n) = cone
+      End Do
 
-  call zcopy(ndim*ndim, m0, 1, eps, 1)
-  call zcopy(ndim*ndim, ml, 1, alfa, 1)
-  call zcopy(ndim*ndim, mr, 1, beta, 1)
-  call zcopy(ndim*ndim, m0, 1, x, 1)
+      Call zcopy(ndim*ndim, m0, 1, eps, 1)
+      Call zcopy(ndim*ndim, ml, 1, alfa, 1)
+      Call zcopy(ndim*ndim, mr, 1, beta, 1)
+      Call zcopy(ndim*ndim, m0, 1, x, 1)
 
-  iter = 1
-100 continue
+      iter = 1
+100   Continue
 
-  call zcopy(ndim*ndim, eps, 1, y1, 1)
-  call zcopy(ndim*ndim, y1, 1, tempin, 1)
-  call zgetrf(ndim, ndim, tempin, ndim, ipvt, info)
+      Call zcopy(ndim*ndim, eps, 1, y1, 1)
+      Call zcopy(ndim*ndim, y1, 1, tempin, 1)
+      Call zgetrf(ndim, ndim, tempin, ndim, ipvt, info)
 
 !     aa = eps^-1 * alfa
-  call zcopy(ndim*ndim, alfa, 1, tempout, 1)
-  call zgetrs('N', ndim, ndim, tempin, ndim, ipvt, tempout, ndim, info)
-  call zcopy(ndim*ndim, tempout, 1, aa, 1)
+      Call zcopy(ndim*ndim, alfa, 1, tempout, 1)
+      Call zgetrs('N', ndim, ndim, tempin, ndim, ipvt, tempout, ndim, info)
+      Call zcopy(ndim*ndim, tempout, 1, aa, 1)
 
 !     bb = eps^-1 * beta
 
-  call zcopy(ndim*ndim, beta, 1, tempout, 1)
-  call zgetrs('N', ndim, ndim, tempin, ndim, ipvt, tempout, ndim, info)
-  call zcopy(ndim*ndim, tempout, 1, bb, 1)
+      Call zcopy(ndim*ndim, beta, 1, tempout, 1)
+      Call zgetrs('N', ndim, ndim, tempin, ndim, ipvt, tempout, ndim, info)
+      Call zcopy(ndim*ndim, tempout, 1, bb, 1)
 
 !     alfa_new = alfa * aa
 
-  call zgemm('N', 'N', ndim, ndim, ndim, cone, alfa, ndim, aa, ndim, czero, &
-    y1, ndim)
+      Call zgemm('N', 'N', ndim, ndim, ndim, cone, alfa, ndim, aa, ndim, &
+        czero, y1, ndim)
 
 !     beta_new = beta * bb
 
-  call zgemm('N', 'N', ndim, ndim, ndim, cone, beta, ndim, bb, ndim, czero, &
-    y2, ndim)
+      Call zgemm('N', 'N', ndim, ndim, ndim, cone, beta, ndim, bb, ndim, &
+        czero, y2, ndim)
 
 !     cc = - alfa * bb
 
-  call zgemm('N', 'N', ndim, ndim, ndim, -cone, alfa, ndim, bb, ndim, czero, &
-    cc, ndim)
+      Call zgemm('N', 'N', ndim, ndim, ndim, -cone, alfa, ndim, bb, ndim, &
+        czero, cc, ndim)
 
 !     x_new = x + cc
 
-  call zaxpy(ndim*ndim, cone, cc, 1, x, 1)
+      Call zaxpy(ndim*ndim, cone, cc, 1, x, 1)
 
 !     cc = eps + cc
 
-  call zaxpy(ndim*ndim, cone, cc, 1, eps, 1)
+      Call zaxpy(ndim*ndim, cone, cc, 1, eps, 1)
 
 !     eps_new = cc - beta * aa
 
-  call zgemm('N', 'N', ndim, ndim, ndim, -cone, beta, ndim, aa, ndim, cone, &
-    eps, ndim)
+      Call zgemm('N', 'N', ndim, ndim, ndim, -cone, beta, ndim, aa, ndim, &
+        cone, eps, ndim)
 
-  call zcopy(ndim*ndim, y1, 1, alfa, 1)
-  call zcopy(ndim*ndim, y2, 1, beta, 1)
+      Call zcopy(ndim*ndim, y1, 1, alfa, 1)
+      Call zcopy(ndim*ndim, y2, 1, beta, 1)
 
-  sum = 0.d0
-  do i = 1, ndim
-    do j = 1, ndim
-      xre = dble(alfa(i,j))
-      xim = aimag(alfa(i,j))
-      sum = sum + xre*xre + xim*xim
-    end do
-  end do
+      sum = 0.E0_dp
+      Do i = 1, ndim
+        Do j = 1, ndim
+          xre = real(alfa(i,j))
+          xim = aimag(alfa(i,j))
+          sum = sum + xre*xre + xim*xim
+        End Do
+      End Do
 
-  err = sqrt(sum)
-  if (err<errmax .or. iter>itermax) go to 110
-  iter = iter + 1
-  go to 100
+      err = sqrt(sum)
+      If (err<errmax .Or. iter>itermax) Go To 110
+      iter = iter + 1
+      Go To 100
 
-110 continue
+110   Continue
 
-  call zcopy(ndim*ndim, x, 1, tempin, 1)
-  call zcopy(ndim*ndim, cunit, 1, tempout, 1)
-  call zgetrf(ndim, ndim, tempin, ndim, ipvt, info)
-  call zgetrs('N', ndim, ndim, tempin, ndim, ipvt, tempout, ndim, info)
-  call zcopy(ndim*ndim, tempout, 1, x, 1)
+      Call zcopy(ndim*ndim, x, 1, tempin, 1)
+      Call zcopy(ndim*ndim, cunit, 1, tempout, 1)
+      Call zgetrf(ndim, ndim, tempin, ndim, ipvt, info)
+      Call zgetrs('N', ndim, ndim, tempin, ndim, ipvt, tempout, ndim, info)
+      Call zcopy(ndim*ndim, tempout, 1, x, 1)
 
-  call zgemm('N', 'N', ndim, ndim, ndim, cone, x, ndim, mr, ndim, czero, &
-    tempin, ndim)
-  call zgemm('N', 'N', ndim, ndim, ndim, cone, ml, ndim, tempin, ndim, czero, &
-    x, ndim)
+      Call zgemm('N', 'N', ndim, ndim, ndim, cone, x, ndim, mr, ndim, czero, &
+        tempin, ndim)
+      Call zgemm('N', 'N', ndim, ndim, ndim, cone, ml, ndim, tempin, ndim, &
+        czero, x, ndim)
 
-  if (iter>itermax) then
-    write (6, fmt='('' itermax too small.  iter='',i3)') iter
-    write (6, '('' Surfgf:  iter='',i4,''  error='',d14.7)') iter, err
-  end if
-  if (ichck==0) return
+      If (iter>itermax) Then
+        Write (6, Fmt='('' itermax too small.  iter='',i3)') iter
+        Write (6, '('' Surfgf:  iter='',i4,''  error='',d14.7)') iter, err
+      End If
+      If (ichck==0) Return
 !      write(6,'('' Surfgf:  iter='',i4,''  error='',d12.7)') iter,err
 !      write(6,'(/'' X matrix'')')
 !      write(6,*)
 !
-  return
-end subroutine
+      Return
+    End Subroutine

@@ -50,57 +50,57 @@ INTEGER MMAXD
 PARAMETER ( MMAXD = 2*LMAXD+1 )
 INTEGER LM2D
 PARAMETER (LM2D= (2*LMAXD+1)**2)
-DOUBLE PRECISION CVLIGHT
+real (kind=dp) CVLIGHT
 PARAMETER (CVLIGHT=274.0720442D0)
-DOUBLE COMPLEX CZERO,CONE
+complex (kind=dp) CZERO,CONE
 PARAMETER (CZERO=(0.D0,0.D0),CONE=(1.D0,0.D0))
 !..
 !.. Scalar Arguments ..
-DOUBLE PRECISION ZAT
+real (kind=dp) ZAT
 INTEGER I1,ICST,IELAST,IEND,INS,IPAN,ISPIN,NSPIN,NSRA
 INTEGER IDOLDAU,JWSREL,LOPT,ZREL
 INTEGER LLY ! LLY <> 0 for applying Lloyds formula
 INTEGER SIGNDE,IDERIV
-DOUBLE COMPLEX DELTAE  ! Energy difference for numerical derivative
+complex (kind=dp) DELTAE  ! Energy difference for numerical derivative
 !..
 !.. Array Arguments ..
-DOUBLE COMPLEX EZ(IEMXD), &
+complex (kind=dp) EZ(IEMXD), &
                TMAT0(LMMAXD,LMMAXD), &
                TMATLL(LMMAXD,LMMAXD), &
                DTMATLL(LMMAXD,LMMAXD) ! LLY t-matrix derivative
-DOUBLE PRECISION CLEB(NCLEB,2),DRDI(IRMD),RMESH(IRMD), &
+real (kind=dp) CLEB(NCLEB,2),DRDI(IRMD),RMESH(IRMD), &
                  VINS(IRMIND:IRMD,LMPOTD), &
                  VISP(IRMD)
 CHARACTER*10 SOLVER
-DOUBLE PRECISION SOCTL(KREL*LMAXD+1)
-DOUBLE PRECISION CTL(KREL*LMAXD+1)
+real (kind=dp) SOCTL(KREL*LMAXD+1)
+real (kind=dp) CTL(KREL*LMAXD+1)
 INTEGER ICLEB(NCLEB,4),IRCUT(0:IPAND), &
         LOFLM(LM2D)
-DOUBLE PRECISION VTREL(IRMD*KREL+(1-KREL))
-DOUBLE PRECISION BTREL(IRMD*KREL+(1-KREL))
-DOUBLE PRECISION DRDIREL(IRMD*KREL+(1-KREL)), &
+real (kind=dp) VTREL(IRMD*KREL+(1-KREL))
+real (kind=dp) BTREL(IRMD*KREL+(1-KREL))
+real (kind=dp) DRDIREL(IRMD*KREL+(1-KREL)), &
                  R2DRDIREL(IRMD*KREL+(1-KREL)), &
                  RMREL(IRMD*KREL+(1-KREL))
 !..
 !.. Local Scalars ..
-DOUBLE COMPLEX ERYD,EK
+complex (kind=dp) ERYD,EK
 INTEGER IE,IREC,LM1,LM2,LMHI,LMLO,M1,MMAX,IRMIN
-DOUBLE PRECISION WLDAUAV
+real (kind=dp) WLDAUAV
 !.. this routine does not need irregular wavefunctions
 LOGICAL LIRRSOL
 PARAMETER ( LIRRSOL = .TRUE. )
 !..
 !.. Local Arrays ..
-DOUBLE COMPLEX ALPHA(0:LMAXD), &
+complex (kind=dp) ALPHA(0:LMAXD), &
                FZ(IRMD,0:LMAXD), &
                PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),PZ(IRMD,0:LMAXD), &
                QZ(IRMD,0:LMAXD),SZ(IRMD,0:LMAXD),TMAT(0:LMAXD), &
                ALPHALL(LMMAXD,LMMAXD),DALPHALL(LMMAXD,LMMAXD), &  ! LLY alpha matrix and derivative
                ALPHA0(LMMAXD,LMMAXD),AUX(LMMAXD,LMMAXD), &         ! LLY alpha-matrix
                TRALPHA,TRALPHA1  ! LLY Trace of alpha^-1 * d alpha/dE for Lloyds formula
-DOUBLE PRECISION WLDAU(MMAXD,MMAXD,NSPIND)
-DOUBLE PRECISION RS(IRMD,0:LMAXD),SL(0:LMAXD)
-DOUBLE PRECISION CUTOFF(IRMD)
+real (kind=dp) WLDAU(MMAXD,MMAXD,NSPIND)
+real (kind=dp) RS(IRMD,0:LMAXD),SL(0:LMAXD)
+real (kind=dp) CUTOFF(IRMD)
 INTEGER IPIV(LMMAXD) ! LLY
 CHARACTER*9 TXTS(2)
 #ifdef CPP_MPI

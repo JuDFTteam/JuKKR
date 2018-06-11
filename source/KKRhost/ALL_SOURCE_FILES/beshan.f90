@@ -1,5 +1,4 @@
     Subroutine beshan(hl, jl, nl, z, lmax)
-      Use mod_datatypes, Only: dp
 !-----------------------------------------------------------------------
 !  calculates spherical bessel, hankel and neumann functions
 !  for the orders l .le. lmax.
@@ -8,6 +7,8 @@
 
 !                            R. Zeller   Jan. 1990
 !-----------------------------------------------------------------------
+      Use mod_datatypes, Only: dp
+      implicit none
 !     .. Parameters ..
       Complex (Kind=dp) :: ci
       Parameter (ci=(0.0E0_dp,1.0E0_dp))

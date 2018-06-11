@@ -17,6 +17,7 @@ subroutine writekkrflex(natomimp, nspin, ielast, lmpot, lmmaxd, alat, natyp, &
   use :: mod_version_info
   use :: mod_md5sums
   use :: global_variables
+      Use mod_datatypes, Only: dp
 
   implicit none
 
@@ -31,21 +32,21 @@ subroutine writekkrflex(natomimp, nspin, ielast, lmpot, lmmaxd, alat, natyp, &
   integer, intent (in) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
   integer, intent (in) :: lmgf0d !< (LMAX+1)**2
   integer, intent (in) :: natomimp !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-  double precision, intent (in) :: alat !< Lattice constant in a.u.
+  real (kind=dp), intent (in) :: alat !< Lattice constant in a.u.
   integer, dimension (naez), intent (in) :: noq !< Number of diff. atom types located
   integer, dimension (natomimp), intent (in) :: atomimp
   integer, dimension (0:natyp), intent (in) :: hostimp
   integer, dimension (natyp, naez+nemb), intent (in) :: kaoez !< Kind of atom at site in elem. cell
-  double precision, dimension (2), intent (in) :: vbc !< Potential constants
-  double precision, dimension (natyp), intent (in) :: zat !< Nuclear charge
-  double precision, dimension (natyp), intent (in) :: conc !< Concentration of a given atom
-  double precision, dimension (lmpot, natyp), intent (in) :: cmom
-  double precision, dimension (lmpot, natyp), intent (in) :: cminst
-  double precision, dimension (lmpot, naez), intent (in) :: vinters
+  real (kind=dp), dimension (2), intent (in) :: vbc !< Potential constants
+  real (kind=dp), dimension (natyp), intent (in) :: zat !< Nuclear charge
+  real (kind=dp), dimension (natyp), intent (in) :: conc !< Concentration of a given atom
+  real (kind=dp), dimension (lmpot, natyp), intent (in) :: cmom
+  real (kind=dp), dimension (lmpot, natyp), intent (in) :: cminst
+  real (kind=dp), dimension (lmpot, naez), intent (in) :: vinters
 ! .. Local variables
   integer :: ispin, ie, i1, iatom, irec, i, lm
-  double precision, dimension (natyp) :: theta, phi
-  double complex, dimension (lmmaxd, lmmaxd) :: tmat0
+  real (kind=dp), dimension (natyp) :: theta, phi
+  complex (kind=dp), dimension (lmmaxd, lmmaxd) :: tmat0
 ! .. External Functions
   logical :: opt
   external :: opt

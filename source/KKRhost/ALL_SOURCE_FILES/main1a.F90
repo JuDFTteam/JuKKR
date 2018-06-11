@@ -14,6 +14,7 @@ module MOD_MAIN1A
    use Profiling
    use Constants
    use global_variables
+      Use mod_datatypes, Only: dp
 
    implicit none
 
@@ -65,16 +66,16 @@ contains
       integer :: LRECTMT
       integer :: LRECTRA
       ! .. Local arrays
-      double precision, dimension(NATYP) :: PHI
-      double precision, dimension(NATYP) :: THETA
-      double precision, dimension(:,:,:), allocatable :: VINSNEW
+      real (kind=dp), dimension(NATYP) :: PHI
+      real (kind=dp), dimension(NATYP) :: THETA
+      real (kind=dp), dimension(:,:,:), allocatable :: VINSNEW
 
 #ifdef CPP_MPI
       integer :: ntot1, mytot, ii
       integer, dimension(0:nranks-1) :: ntot_pT, ioff_pT,ntot_all, ioff_all
       ! communication of dtmat in case of lloyd
       integer :: iwork
-      double complex, dimension(:,:,:,:), allocatable :: work_jij
+      complex (kind=dp), dimension(:,:,:,:), allocatable :: work_jij
 #endif
       integer :: i1_start, i1_end, ierr,i_stat,i_all
 

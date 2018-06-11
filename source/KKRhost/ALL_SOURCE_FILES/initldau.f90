@@ -16,7 +16,7 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
   use mod_types, only: t_inc
   implicit none
   include 'inc.p'
-! DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+! real (kind=dp), allocatable :: ULDAU(:,:,:,:,:) 
 
   integer :: npotd, mmaxd
   parameter (npotd=(2*krel+(1-krel)*nspind)*natypd)
@@ -24,22 +24,22 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
 ! Local variables
 
   integer :: ntldau, nspin, nsra
-  double precision :: drdi(irmd, natypd), r(irmd, natypd), visp(irmd, npotd), &
+  real (kind=dp) :: drdi(irmd, natypd), r(irmd, natypd), visp(irmd, npotd), &
     z(natypd)
-  double precision :: uldau(mmaxd, mmaxd, mmaxd, mmaxd, natypd)
+  real (kind=dp) :: uldau(mmaxd, mmaxd, mmaxd, mmaxd, natypd)
 
-  double complex :: phi(irmd, natypd)
+  complex (kind=dp) :: phi(irmd, natypd)
   integer :: itldau(natypd), lopt(natypd)
   integer :: ipan(natypd), ircut(0:ipand, natypd)
 !      ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
 
-  double precision :: aa(mmaxd, mmaxd, mmaxd, mmaxd, 0:2*lmaxd), &
+  real (kind=dp) :: aa(mmaxd, mmaxd, mmaxd, mmaxd, 0:2*lmaxd), &
     erefldau(natypd), fact(0:100), fclmb(0:2*lmaxd+1), g12, g34, jeff(natypd), &
     pi, rlop, rpw(irmd, 2*lmaxd+1), scl, sg(irmd), sl(irmd), sum, sumfclmb, &
     tg(irmd), tl(irmd), ueff(natypd), wgtfclmb(0:2*lmaxd+1), wig3j, &
     wint(irmd), w2(irmd)
-  double precision :: cgcrac, gauntc
-  double precision :: atan, dble
+  real (kind=dp) :: cgcrac, gauntc
+  real (kind=dp) :: atan, dble
   integer :: i1, im1, im2, im3, im4, ipan1, ir, irc1, it, kk, l1, lf, lfmax, &
     ll, m1, m2, m3, m4
   integer :: nint
@@ -260,19 +260,20 @@ function cgcrac(fact, j1, j2, j3, m1, m2, m3)
 !Dummy arguments
 
 ! Local variables
+  use mod_DataTypes, only: dp
   implicit none
 
 ! INLINE FUNCTION    FACTORIAL FOR REAL ARGUMENT
-  double precision :: j1, j2, j3, m1, m2, m3
-  double precision :: cgcrac
-  double precision :: fact(0:100)
+  real (kind=dp) :: j1, j2, j3, m1, m2, m3
+  real (kind=dp) :: cgcrac
+  real (kind=dp) :: fact(0:100)
 
 
-  double precision :: dsqrt
+  real (kind=dp) :: dsqrt
   integer :: j, n, n1, n2, n3, n4, n5, nbot, ntop
   integer :: nint
-  double precision :: rfact
-  double precision :: s, sum, vf, x, y
+  real (kind=dp) :: rfact
+  real (kind=dp) :: s, sum, vf, x, y
 
 
   rfact(x) = fact(nint(x))
@@ -338,21 +339,22 @@ function gauntc(fact, l1, m1, l2, m2, l3, m3)
 ! PARAMETER definitions
 
 ! Dummy arguments
+  use mod_DataTypes, only: dp
   implicit none
 
 ! Local variables
-  double precision :: pi
+  real (kind=dp) :: pi
   parameter (pi=3.141592653589793238462643d0)
 
 !*==gauntc.f    processed by SPAG 6.05Rc at 15:27 on  7 Mar 2003
   integer :: l1, l2, l3, m1, m2, m3
-  double precision :: fact(0:100)
-  double precision :: gauntc
+  real (kind=dp) :: fact(0:100)
+  real (kind=dp) :: gauntc
 
 !   ********************************************************************
-  double precision :: cgcrac
-  double precision :: dble
-  double precision :: g
+  real (kind=dp) :: cgcrac
+  real (kind=dp) :: dble
+  real (kind=dp) :: g
 !   *                                                                  *
   if ((l1<0) .or. (l2<0) .or. (l3<0)) then
     g = 0.0d0

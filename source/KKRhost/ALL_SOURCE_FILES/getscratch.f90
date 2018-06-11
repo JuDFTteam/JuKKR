@@ -7,6 +7,7 @@
 ! *                                                                    *
 ! **********************************************************************
 
+      Use mod_datatypes, Only: dp
       Implicit None
       Character (Len=*) :: tmpdir
       Integer :: itmpdir, iltmp, lngstring
@@ -34,6 +35,7 @@
 ! * running directory will be used.                                    *
 ! *                                                                    *
 ! **********************************************************************
+      Use mod_datatypes, Only: dp
       Implicit None
       Integer :: iunit, lbasename, lrec, itmpdir, iltmp
       Character (Len=iltmp) :: tmpdir

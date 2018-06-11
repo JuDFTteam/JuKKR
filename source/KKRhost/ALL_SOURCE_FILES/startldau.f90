@@ -17,7 +17,7 @@
       Real (Kind=dp) :: ueff(natypd), jeff(natypd), erefldau(natypd)
       Real (Kind=dp) :: wldau(mmaxd, mmaxd, nspind, natypd)
       Real (Kind=dp) :: uldau(mmaxd, mmaxd, mmaxd, mmaxd, natypd)
-!      DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
+!      real (kind=dp), allocatable :: ULDAU(:,:,:,:,:) 
       Complex (Kind=dp) :: phildau(irmd, natypd)
 !.. 
 !.. Locals ..

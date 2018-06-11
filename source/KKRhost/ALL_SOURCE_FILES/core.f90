@@ -51,11 +51,12 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 !   *        ITPRT  correct value of the atom-type index               *
 !   ********************************************************************
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
 
 
 ! PARAMETER definitions
-  double precision :: unend, tolvar, trymix, dvstep
+  real (kind=dp) :: unend, tolvar, trymix, dvstep
   parameter (unend=600.0d0, tolvar=1.0d-6, trymix=0.01d0, dvstep=0.01d0)
   integer :: itermax, nlshellmax
   parameter (itermax=200, nlshellmax=15)
@@ -63,7 +64,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 ! Dummy arguments
   integer :: iprint, ismqhfi, itprt, itxray, ncstmax, nkmmax, nlmax, nmemax, &
     nmmax, nrmax, nt, ntmax, nucleus
-  double precision :: bcor(ntmax), bcors(ntmax), bt(nrmax, ntmax), &
+  real (kind=dp) :: bcor(ntmax), bcors(ntmax), bt(nrmax, ntmax), &
     ctl(ntmax, nlmax), drdi(nrmax, nmmax), ecor(ncstmax), ecortab(120, ntmax), &
     fcor(nrmax, 2, ncstmax), gcor(nrmax, 2, ncstmax), qdia(nkmmax), &
     qmdia(nkmmax), qmoff(nkmmax), qoff(nkmmax), r(nrmax, nmmax), &
@@ -75,9 +76,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     nkpcor(ncstmax), z(ntmax), ncort(ntmax)
 
 ! Local variables
-  double precision :: aux, bb(nrmax*2), bhf(2, 2), bhf1(2, 2), bhf2(2, 2), &
+  real (kind=dp) :: aux, bb(nrmax*2), bhf(2, 2), bhf1(2, 2), bhf2(2, 2), &
     bsh, bsol, bsum, cgd(2), cgmd(2), cgo, dec, dedv(4, 4), dovrc(nrmax*2), &
-    dp(2, 2, nrmax*2), dq(2, 2, nrmax*2), drdic(nrmax*2), drovrn(2*nrmax), &
+    d_p(2, 2, nrmax*2), dq(2, 2, nrmax*2), drdic(nrmax*2), drovrn(2*nrmax), &
     dv(4), dvde(4, 4), ec, ecc, elim, err(4), errnew(4), fc(2, 2, nrmax*2), &
     fck(2, 2, nrmax*2), gc(2, 2, nrmax*2), gck(2, 2, nrmax*2), mj, niw(2), &
     norm, now(2), piw(2, 2), pow(2, 2), qiw(2, 2), qow(2, 2), &
@@ -86,7 +87,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     split2(nmemax, ntmax), split3(nmemax, ntmax), sz, val, var(4), varnew(4), &
     vartab(4, 20), vv(nrmax*2), vz, w, wp(2, 2, nrmax*2), wq(2, 2, nrmax*2)
   logical :: check, ferro, scaleb, suppressb, bndstachk
-  double precision :: dble, dsign
+  real (kind=dp) :: dble, dsign
   integer :: i, ic, ic1, ic2, icst, ie, iflag, ii, il, ilc, ilshell, im, imin, &
     in, info, ipiv(4), ish, istart, it, iter, iv, j, jlim, jtop, jv, k, &
     kap(2), kap1, kap2, kc, l, lcp1, lll, loop, lqntab(nlshellmax), muem05, n, &
@@ -94,7 +95,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     nzero, s, t
   integer :: iabs
   integer :: ikapmue
-  double precision :: rnuctab
+  real (kind=dp) :: rnuctab
   character (len=10) :: txtb(1:5)
   character (len=3) :: txtk(4)
   character (len=1) :: txtl(0:3)
@@ -349,7 +350,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 
 130       continue
           call coredir(it, ctl(it,ilc), ec, l, mj, 'OUT', vv, bb, rc, drdic, &
-            dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, piw, qiw, &
+            dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, &
             cgd, cgmd, cgo, nrc, z(it), nucleus)
 
           node = 0
@@ -377,7 +378,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 
 
           call coredir(it, ctl(it,ilc), ec, l, mj, 'INW', vv, bb, rc, drdic, &
-            dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, piw, qiw, &
+            dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, &
             cgd, cgmd, cgo, nrc, z(it), nucleus)
 
 !                                      --------------------
@@ -510,10 +511,10 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           if (abs(dv(1)/var(1))<tolvar) varnew(1) = var(1)* &
             (1.0d0+dsign(dvstep*tolvar,dv(1)))
           call coredir(it, ctl(it,ilc), varnew(1), l, mj, 'OUT', vv, bb, rc, &
-            drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+            drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
             piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
           call coredir(it, ctl(it,ilc), varnew(1), l, mj, 'INW', vv, bb, rc, &
-            drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+            drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
             piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
 
           call coreerr(errnew, varnew, s, nsol, pow, qow, piw, qiw)
@@ -543,10 +544,10 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           end if
 
           call coredir(it, ctl(it,ilc), var(1), l, mj, 'OUT', vv, bb, rc, &
-            drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+            drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
             piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
           call coredir(it, ctl(it,ilc), var(1), l, mj, 'INW', vv, bb, rc, &
-            drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+            drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
             piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
 
           call coreerr(err, var, s, nsol, pow, qow, piw, qiw)
@@ -891,10 +892,10 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
             ecc = 0.95d0*ec
 150         continue
             call coredir(it, ctl(it,ilc), ecc, l, mj, 'OUT', vv, bb, rc, &
-              drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+              drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
               piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
             call coredir(it, ctl(it,ilc), ecc, l, mj, 'INW', vv, bb, rc, &
-              drdic, dovrc, nmatch, nzero, gc, fc, dp, dq, wp, wq, pow, qow, &
+              drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
               piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
 
             norm = pow(s, s)/piw(s, s)

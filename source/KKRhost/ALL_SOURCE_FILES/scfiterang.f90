@@ -7,33 +7,34 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
 !   *                                                                  *
 !   ********************************************************************
   use :: mod_wunfiles, only: t_params
+      Use mod_datatypes, Only: dp
   implicit none
 
 ! PARAMETER definitions
 
   integer :: ixtrmax
   parameter (ixtrmax=4)
-  double precision :: dangmax
+  real (kind=dp) :: dangmax
   parameter (dangmax=3d0)
 
 ! Dummy arguments
 
-  double precision :: erravang
+  real (kind=dp) :: erravang
   integer :: itrscf, nk, nkmmax, nmvecmax, nq, nqmax, ntmax
-  double precision :: fact(0:100), mvgam(ntmax, nmvecmax), &
+  real (kind=dp) :: fact(0:100), mvgam(ntmax, nmvecmax), &
     mvphi(ntmax, nmvecmax), mvtet(ntmax, nmvecmax), qmgam(nqmax), &
     qmphi(nqmax), qmtet(nqmax)
   integer :: itoq(ntmax, nqmax)
 
 ! Local variables
 
-  double precision :: a, b, c, phixtr, tetxtr, d12, d23, d3x
-  double precision :: delphi, deltet, lasterr, mixing, qmgammix, qmphimix, &
+  real (kind=dp) :: a, b, c, phixtr, tetxtr, d12, d23, d3x
+  real (kind=dp) :: delphi, deltet, lasterr, mixing, qmgammix, qmphimix, &
     qmtetmix, wn, wo
   integer :: i, imv, iprev, iprint, iq, it, itab, ixtr
-  double precision :: qmgamtab(nqmax, 3), qmphitab(nqmax, 3), &
+  real (kind=dp) :: qmgamtab(nqmax, 3), qmphitab(nqmax, 3), &
     qmtettab(nqmax, 3)
-  double complex :: drotq(nkmmax, nkmmax, nqmax)
+  complex (kind=dp) :: drotq(nkmmax, nkmmax, nqmax)
 
   mixing = 1.0d0
   wo = 1.0d0 - mixing

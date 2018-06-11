@@ -27,6 +27,7 @@ program kkrcode
    use memoryhandling
    use mod_version_info
    use global_variables
+      Use mod_datatypes, Only: dp
 
 #ifdef CPP_MPI
    use mod_mympi, only: mympi_init, myrank, nranks, master,find_dims_2d,      &

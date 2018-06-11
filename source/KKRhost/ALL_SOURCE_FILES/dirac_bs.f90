@@ -1,5 +1,5 @@
 subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
-  cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, pr, qr, pi, qi, dp, dq)
+  cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, pr, qr, pi, qi, d_p, dq)
 !   ********************************************************************
 !   *                                                                  *
 !   *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
@@ -18,47 +18,48 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
 !   *  06/12/94  HE  CM real                                           *
 !   *  29/04/95  MB  Adopted for finite nucleus                        *
 !   ********************************************************************
+      Use mod_datatypes, Only: dp
   implicit none
   include 'sprkkr_rmesh.dim'
 
 ! PARAMETER definitions
   integer :: mpsmax, npemax, nabm
   parameter (mpsmax=40, npemax=4, nabm=5)
-  double complex :: c0
+  complex (kind=dp) :: c0
   parameter (c0=(0.0d0,0.0d0))
-  double precision :: epsbs
+  real (kind=dp) :: epsbs
   parameter (epsbs=2.0d-7)
 
 ! COMMON variables
-  double precision :: cgd(2), cgmd(2), cgo, csqr, kap(2)
-  double complex :: ebs
+  real (kind=dp) :: cgd(2), cgmd(2), cgo, csqr, kap(2)
+  complex (kind=dp) :: ebs
   integer :: nradbs, nsolbs
   common /commbs/ebs, csqr, cgd, cgmd, cgo, kap, nsolbs, nradbs
 
 ! Dummy arguments
-  double precision :: c, cg1, cg2, cg4, cg5, cg8, mj
-  double complex :: e
+  real (kind=dp) :: c, cg1, cg2, cg4, cg5, cg8, mj
+  complex (kind=dp) :: e
   logical :: getirrsol
   integer :: kap1, kap2, l, nmesh, nucleus, z
-  double complex :: pis
-  double precision :: b(nrmax), dovr(nrmax), drdi(nrmax), r(nrmax), v(nrmax)
-  double complex :: dp(2, 2, nrmax), dq(2, 2, nrmax), pi(2, 2, nrmax), &
+  complex (kind=dp) :: pis
+  real (kind=dp) :: b(nrmax), dovr(nrmax), drdi(nrmax), r(nrmax), v(nrmax)
+  complex (kind=dp) :: d_p(2, 2, nrmax), dq(2, 2, nrmax), pi(2, 2, nrmax), &
     pr(2, 2, nrmax)
-  double complex :: qi(2, 2, nrmax), qr(2, 2, nrmax)
+  complex (kind=dp) :: qi(2, 2, nrmax), qr(2, 2, nrmax)
 
 ! Local variables
-  double complex :: a11, a12, a21, a22, aa11, aa12, aa21, aa22, alpha, bb1, &
+  complex (kind=dp) :: a11, a12, a21, a22, aa11, aa12, aa21, aa22, alpha, bb1, &
     bb2, beta
-  double complex :: bqq, cfac, emvpp, emvqq, w1, w2, w3, w4, w5, w6, w7
-  double precision :: bc(0:npemax), cm(npemax, npemax), cmi(npemax, npemax), &
+  complex (kind=dp) :: bqq, cfac, emvpp, emvqq, w1, w2, w3, w4, w5, w6, w7
+  real (kind=dp) :: bc(0:npemax), cm(npemax, npemax), cmi(npemax, npemax), &
     dix
-  double precision :: gam(2), gpm, hbs, rpwgpm, rr, sk(2), sk1, sk2, tz, &
+  real (kind=dp) :: gam(2), gpm, hbs, rpwgpm, rr, sk(2), sk1, sk2, tz, &
     vc(0:npemax), x
-  double complex :: cjlz
+  complex (kind=dp) :: cjlz
 
-  double complex :: detd, dy(ncfmax), efac, fy(ncfmax), &
+  complex (kind=dp) :: detd, dy(ncfmax), efac, fy(ncfmax), &
     pc(2, 2, -npemax:mpsmax)
-  double complex :: qc(2, 2, -npemax:mpsmax), zz
+  complex (kind=dp) :: qc(2, 2, -npemax:mpsmax), zz
 
   integer :: i, ip, isk1, isk2, iv, j, k, lb(2), lb1, lb2, m, mps, n, nfy, &
     npe, nsol
@@ -294,7 +295,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
         do i = 1, nsol
           pr(i, j, n) = pc(i, j, 0)*rpwgpm
           qr(i, j, n) = qc(i, j, 0)*rpwgpm
-          dp(i, j, n) = pc(i, j, 0)*rpwgpm*gam(j)*dovr(n)
+          d_p(i, j, n) = pc(i, j, 0)*rpwgpm*gam(j)*dovr(n)
           dq(i, j, n) = qc(i, j, 0)*rpwgpm*gam(j)*dovr(n)
         end do
 
@@ -305,7 +306,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
           do i = 1, nsol
             pr(i, j, n) = pr(i, j, n) + pc(i, j, m)*rpwgpm
             qr(i, j, n) = qr(i, j, n) + qc(i, j, m)*rpwgpm
-            dp(i, j, n) = dp(i, j, n) + pc(i, j, m)*rpwgpm*gpm*dovr(n)
+            d_p(i, j, n) = d_p(i, j, n) + pc(i, j, m)*rpwgpm*gpm*dovr(n)
             dq(i, j, n) = dq(i, j, n) + qc(i, j, m)*rpwgpm*gpm*dovr(n)
           end do
 
@@ -326,14 +327,14 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
         i = 3 - j
         pr(j, j, n) = cjlz(l, zz)*r(n)
         qr(j, j, n) = efac*sk(j)*cjlz(lb(j), zz)*r(n)*c
-        dp(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
+        d_p(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
         m = lb(j)
         dq(j, j, n) = efac*sk(j)*(dble(m+1)*cjlz(m,zz)-zz*cjlz(m+1,zz))* &
           drdi(n)*c
 
         pr(i, j, n) = c0
         qr(i, j, n) = c0
-        dp(i, j, n) = c0
+        d_p(i, j, n) = c0
         dq(i, j, n) = c0
       end do
     end do
@@ -348,7 +349,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
     do i = 1, nsol
       fy(nfy+1) = pr(i, j, 1)
       fy(nfy+2) = qr(i, j, 1)
-      dy(nfy+1) = dp(i, j, 1)
+      dy(nfy+1) = d_p(i, j, 1)
       dy(nfy+2) = dq(i, j, 1)
       nfy = nfy + 2
     end do
@@ -394,7 +395,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
   do j = 1, nsol
     pi(j, j, n) = cjlz(l, zz)*r(n)
     qi(j, j, n) = cfac*sk(j)*cjlz(lb(j), zz)*r(n)*c
-    dp(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
+    d_p(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
 
     m = lb(j)
     dq(j, j, n) = cfac*sk(j)*(dble(m+1)*cjlz(m,zz)-zz*cjlz(m+1,zz))*drdi(n)*c
@@ -402,7 +403,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
     i = 3 - j
     pi(i, j, n) = c0
     qi(i, j, n) = c0
-    dp(i, j, n) = c0
+    d_p(i, j, n) = c0
     dq(i, j, n) = c0
   end do
 
@@ -414,7 +415,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
     do i = 1, nsol
       fy(nfy+1) = pi(i, j, nmesh)
       fy(nfy+2) = qi(i, j, nmesh)
-      dy(nfy+1) = dp(i, j, nmesh)
+      dy(nfy+1) = d_p(i, j, nmesh)
       dy(nfy+2) = dq(i, j, nmesh)
       nfy = nfy + 2
     end do
@@ -434,7 +435,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
       do i = 1, nsol
         pi(i, j, n) = fy(nfy+1)
         qi(i, j, n) = fy(nfy+2)
-!              DP(I,J,N) = DY(NFY+1)
+!              d_p(I,J,N) = DY(NFY+1)
 !              DQ(I,J,N) = DY(NFY+2)
         nfy = nfy + 2
       end do

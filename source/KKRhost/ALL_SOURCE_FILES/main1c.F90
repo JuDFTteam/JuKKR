@@ -68,53 +68,53 @@ contains
       integer :: ie_start, ie_end, ie_num
       integer :: L,I1,IE,IR,IS,LM,IQ,ierr,IPOT
       integer :: ICELL,IPOT1,ISPIN,IHOST,ILTMP
-      double precision :: DENEF
-      double precision :: CHRGSEMICORE
+      real (kind=dp) :: DENEF
+      real (kind=dp) :: CHRGSEMICORE
       character(len=5)  :: TEXTNS
       character(len=80) :: TMPDIR
       character(len=8)  :: QDOSOPT
       logical :: LMOMVEC
       logical :: LDORHOEF
       logical :: ITERMVDIR
-      double complex :: CSUM                    ! LLY Lloyd
-      double complex :: EREAD                   ! LLY
+      complex (kind=dp) :: CSUM                    ! LLY Lloyd
+      complex (kind=dp) :: EREAD                   ! LLY
       integer, dimension(20,NATYP) :: NKCORE    !< Number of KAPPA values for a given (n,l) core state
       integer, dimension(20,NPOTD) :: KAPCORE   !< The (maximum 2) values of KAPPA
-      double precision, dimension(NATYP)                    :: EU
-      double precision, dimension(NATYP)                    :: EDC
-      double precision, dimension(NATYP)                    :: PHI
-      double precision, dimension(NATYP)                    :: THETA
-      double precision, dimension(NATYP)                    :: DENEFAT
-      double precision, dimension(NSPIND)                   :: CHARGE_LLY  ! LLY
-      double precision, dimension(0:LMAX+1,NPOTD)           :: ESPV
-      double precision, dimension(0:LMAX+1,2)               :: ESPV1
-      double precision, dimension(0:LMAX+1,2)               :: DOSTOT
-      double precision, dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL !< for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
-      double precision, dimension(2,NATYP)                  :: angles_new
-      double precision, dimension(0:LMAX+1,NATYP,2)         :: CHARGE
-      double precision, dimension(MMAXD,MMAXD,NSPIND,NATYP) :: WLDAUOLD
-      double complex, dimension(IEMXD)                   :: DF
-      double complex, dimension(NATYP)                   :: CDOS2          ! LLY Lloyd
-      double complex, dimension(IEMXD)                   :: CDOS0
-      double complex, dimension(IEMXD)                   :: CDOS1
-      double complex, dimension(IEMXD)                   :: CDOSAT0
-      double complex, dimension(IEMXD)                   :: CDOSAT1
-      double complex, dimension(IEMXD,NSPIND)            :: CDOS_LLY
-      double complex, dimension(0:LMAX+1,IEMXD,2)        :: DEN1
-      double complex, dimension(NATYP,3,NMVECMAX)        :: MVEVI          ! OUTPUT
-      double complex, dimension(NATYP,3,NMVECMAX)        :: MVEVIEF        ! OUTPUT
-      double complex, dimension(MMAXD,MMAXD,NPOTD)       :: DENMATC
-      double complex, dimension(MMAXD,MMAXD,2,2,NATYP)   :: DENMATN
-      double complex, dimension(0:LMAX,3,NMVECMAX)       :: MVEVIL1
-      double complex, dimension(0:LMAX,3,NMVECMAX)       :: MVEVIL2        ! WORK ARRAYS
-      double complex, dimension(0:LMAX,NATYP,3,NMVECMAX) :: MVEVIL
+      real (kind=dp), dimension(NATYP)                    :: EU
+      real (kind=dp), dimension(NATYP)                    :: EDC
+      real (kind=dp), dimension(NATYP)                    :: PHI
+      real (kind=dp), dimension(NATYP)                    :: THETA
+      real (kind=dp), dimension(NATYP)                    :: DENEFAT
+      real (kind=dp), dimension(NSPIND)                   :: CHARGE_LLY  ! LLY
+      real (kind=dp), dimension(0:LMAX+1,NPOTD)           :: ESPV
+      real (kind=dp), dimension(0:LMAX+1,2)               :: ESPV1
+      real (kind=dp), dimension(0:LMAX+1,2)               :: DOSTOT
+      real (kind=dp), dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL !< for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
+      real (kind=dp), dimension(2,NATYP)                  :: angles_new
+      real (kind=dp), dimension(0:LMAX+1,NATYP,2)         :: CHARGE
+      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYP) :: WLDAUOLD
+      complex (kind=dp), dimension(IEMXD)                   :: DF
+      complex (kind=dp), dimension(NATYP)                   :: CDOS2          ! LLY Lloyd
+      complex (kind=dp), dimension(IEMXD)                   :: CDOS0
+      complex (kind=dp), dimension(IEMXD)                   :: CDOS1
+      complex (kind=dp), dimension(IEMXD)                   :: CDOSAT0
+      complex (kind=dp), dimension(IEMXD)                   :: CDOSAT1
+      complex (kind=dp), dimension(IEMXD,NSPIND)            :: CDOS_LLY
+      complex (kind=dp), dimension(0:LMAX+1,IEMXD,2)        :: DEN1
+      complex (kind=dp), dimension(NATYP,3,NMVECMAX)        :: MVEVI          ! OUTPUT
+      complex (kind=dp), dimension(NATYP,3,NMVECMAX)        :: MVEVIEF        ! OUTPUT
+      complex (kind=dp), dimension(MMAXD,MMAXD,NPOTD)       :: DENMATC
+      complex (kind=dp), dimension(MMAXD,MMAXD,2,2,NATYP)   :: DENMATN
+      complex (kind=dp), dimension(0:LMAX,3,NMVECMAX)       :: MVEVIL1
+      complex (kind=dp), dimension(0:LMAX,3,NMVECMAX)       :: MVEVIL2        ! WORK ARRAYS
+      complex (kind=dp), dimension(0:LMAX,NATYP,3,NMVECMAX) :: MVEVIL
       character(len=7), dimension(3) :: TEXTS
       character(len=4), dimension(0:6) :: TEXTL
       !-------------------------------------------------------------------------
       !> @note attention: muorb second index means both spins and total
       !-------------------------------------------------------------------------
-      double precision, dimension(IRM*KREL + (1-KREL),NATYP) :: RHOORB   !< orbital density
-      double precision, dimension(0:LMAX+1+1,3,NATYP) :: MUORB           !< orbital magnetic moment
+      real (kind=dp), dimension(IRM*KREL + (1-KREL),NATYP) :: RHOORB   !< orbital density
+      real (kind=dp), dimension(0:LMAX+1+1,3,NATYP) :: MUORB           !< orbital magnetic moment
       ! ----------------------------------------------------------------------
       !  R2NEF (IRM,LMPOT,NATYP,2)  ! rho at FERMI energy
       !  RHO2NS(IRM,LMPOT,NATYP,2)  ! radial density
@@ -123,20 +123,20 @@ contains
       !                               (*,*,*,2) rho(2) - rho(1) -> mag. moment
       !  RHOC(IRM,NPOTD)              ! core charge density
       ! ----------------------------------------------------------------------
-      double precision, dimension(IRM,NPOTD)    :: RHOC   !< core charge density
-      double precision, dimension(IRM,LMPOT,4) :: RHO2M1
-      double precision, dimension(IRM,LMPOT,4) :: RHO2M2
+      real (kind=dp), dimension(IRM,NPOTD)    :: RHOC   !< core charge density
+      real (kind=dp), dimension(IRM,LMPOT,4) :: RHO2M1
+      real (kind=dp), dimension(IRM,LMPOT,4) :: RHO2M2
       !---------------------------------------------------------------
 
       ! .. Alocatable arrays
-      double precision, dimension(:,:), allocatable      :: QVEC
-      double precision, dimension(:,:,:), allocatable    :: RHO2N1
-      double precision, dimension(:,:,:), allocatable    :: RHO2N2
-      double precision, dimension(:,:,:), allocatable    :: VINSNEW
-      double precision, dimension(:,:,:,:), allocatable  :: R2NEF     !< rho at FERMI energy
-      double precision, dimension(:,:,:,:), allocatable  :: RHO2NS    !< radial density
-      double complex, dimension(:,:,:,:), allocatable    :: DEN   ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS)
-      double complex, dimension(:,:,:,:), allocatable    :: DENLM ! DENLM(LMMAXD1,IEMXD,NPOTD,NQDOS)
+      real (kind=dp), dimension(:,:), allocatable      :: QVEC
+      real (kind=dp), dimension(:,:,:), allocatable    :: RHO2N1
+      real (kind=dp), dimension(:,:,:), allocatable    :: RHO2N2
+      real (kind=dp), dimension(:,:,:), allocatable    :: VINSNEW
+      real (kind=dp), dimension(:,:,:,:), allocatable  :: R2NEF     !< rho at FERMI energy
+      real (kind=dp), dimension(:,:,:,:), allocatable  :: RHO2NS    !< radial density
+      complex (kind=dp), dimension(:,:,:,:), allocatable    :: DEN   ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS)
+      complex (kind=dp), dimension(:,:,:,:), allocatable    :: DENLM ! DENLM(LMMAXD1,IEMXD,NPOTD,NQDOS)
       !-------------------------------------------------------------------------
       ! MPI parameters
       !-------------------------------------------------------------------------
@@ -144,11 +144,11 @@ contains
       integer :: ntot1
       integer :: ihelp
       integer :: idim, nranks_local, myrank_ie_tmp
-      double complex :: DENTOT ! qdos
+      complex (kind=dp) :: DENTOT ! qdos
       integer, dimension(0:nranks-1) :: ntot_pT
       integer, dimension(0:nranks-1) :: ioff_pT
-      double complex, dimension(:,:), allocatable :: WORK
-      double complex, dimension(:,:,:,:), allocatable :: workc
+      complex (kind=dp), dimension(:,:), allocatable :: WORK
+      complex (kind=dp), dimension(:,:,:,:), allocatable :: workc
 #endif
 
       ! .. Intrinsic Functions ..
@@ -630,7 +630,7 @@ contains
                      ! qdos
                      do IE=1,IELAST                                                 ! qdos
                         do IQ=1,NQDOS                                               ! qdos
-                           DENTOT = DCMPLX(0.D0,0.D0)                               ! qdos
+                           DENTOT = DCMPLX(0.D0,0.D0, kind=dp)                               ! qdos
                            do L = 0,LMAXD1                                          ! qdos
                               DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)                   ! qdos
                            enddo                                                    ! qdos
@@ -661,7 +661,7 @@ contains
                         ! complex qdos
                         do IE=1,IELAST                                                    ! complex qdos
                            do IQ=1,NQDOS                                                  ! complex qdos
-                              DENTOT = DCMPLX(0.D0,0.D0)                                  ! complex qdos
+                              DENTOT = DCMPLX(0.D0,0.D0, kind=dp)                                  ! complex qdos
                               do L = 0,LMAXD1                                             ! complex qdos
                                  DEN(L,IE,IQ,IPOT) = -2.0d0/pi*DEN(L,IE,IQ,IPOT)          ! complex qdos
                                  DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)                      ! complex qdos

@@ -1,5 +1,6 @@
-subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, &
-  nembd1, lmpotd)
+    Subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, &
+      natypd, nembd1, lmpotd)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
 ! * This subroutine reads in the CMOMHOST from the decimation files    *
@@ -19,90 +20,90 @@ subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, &
 ! *                                                  29.10.99          *
 ! *                                                  05.06.04          *
 ! **********************************************************************
-  implicit none
+      Implicit None
 !..
 !.. Arguments
-  integer :: lmpotd, natypd, nembd1
-  integer :: naez, nlbasis, nrbasis
-  double precision :: cmomhost(lmpotd, nembd1)
-  integer :: kaoez(natypd, *)
-  logical :: vacflag(2)
+      Integer :: lmpotd, natypd, nembd1
+      Integer :: naez, nlbasis, nrbasis
+      Real (Kind=dp) :: cmomhost(lmpotd, nembd1)
+      Integer :: kaoez(natypd, *)
+      Logical :: vacflag(2)
 !..
 !.. Local variables ..
-  double precision :: c00(lmpotd)
-  character (len=5) :: chhost(2)
-  integer :: ih, ih1, ihl, ihost, lm, lmpotl, naezl, nathost
+      Real (Kind=dp) :: c00(lmpotd)
+      Character (Len=5) :: chhost(2)
+      Integer :: ih, ih1, ihl, ihost, lm, lmpotl, naezl, nathost
 !..
 !.. Data statements
-  data chhost/'LEFT ', 'RIGHT'/
+      Data chhost/'LEFT ', 'RIGHT'/
 !..
-  write (1337, '(5X,A,/,8X,30("-"),/,8X,3A6,A10,/,8X,30("-"))') &
-    'Reading in host charge moments ( SCFSTEPS > 1 )', ' HOST ', '  IBAS', &
-    '  ATOM', '   CMOM(1)'
+      Write (1337, '(5X,A,/,8X,30("-"),/,8X,3A6,A10,/,8X,30("-"))') &
+        'Reading in host charge moments ( SCFSTEPS > 1 )', ' HOST ', '  IBAS', &
+        '  ATOM', '   CMOM(1)'
 ! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
-  do ihost = 1, 2
-    nathost = nlbasis
-    if (ihost==2) nathost = nrbasis
-    write (1337, '(8X,A5,1X)', advance='no') chhost(ihost)
+      Do ihost = 1, 2
+        nathost = nlbasis
+        If (ihost==2) nathost = nrbasis
+        Write (1337, '(8X,A5,1X)', Advance='no') chhost(ihost)
 ! ----------------------------------------------------------------------
-    if (vacflag(ihost)) then
-      do ih = 1, nlbasis
-        do lm = 1, lmpotd
-          cmomhost(lm, (ihost-1)*nlbasis+ih) = 0.d0
+        If (vacflag(ihost)) Then
+          Do ih = 1, nlbasis
+            Do lm = 1, lmpotd
+              cmomhost(lm, (ihost-1)*nlbasis+ih) = 0.E0_dp
 ! mapping the CMOMHOST array, ordering is important
-        end do
-      end do
-      write (1337, '(A)') ' Vacuum setting    0.000'
-      if (ihost==1) then
-        write (1337, '(14X,24("-"))')
-      else
-        write (1337, '(8X,30("-"))')
-      end if
+            End Do
+          End Do
+          Write (1337, '(A)') ' Vacuum setting    0.000'
+          If (ihost==1) Then
+            Write (1337, '(14X,24("-"))')
+          Else
+            Write (1337, '(8X,30("-"))')
+          End If
 ! ----------------------------------------------------------------------
-    else
-      read (36+ihost, 110) naezl, lmpotl
+        Else
+          Read (36+ihost, 110) naezl, lmpotl
 ! ......................................................................
-      if (naezl/=nathost) then
-        write (6, '(/,5X,2A)') 'ERROR: ', &
-          'host not compatible with your input.'
-        write (6, '(/,12X,A,I3,A,I3)') 'Charge moments tabulated for', naezl, &
-          ' host atoms, input NBASIS =', nathost
-        stop '       < CMOMSREAD > '
-      end if
+          If (naezl/=nathost) Then
+            Write (6, '(/,5X,2A)') 'ERROR: ', &
+              'host not compatible with your input.'
+            Write (6, '(/,12X,A,I3,A,I3)') 'Charge moments tabulated for', &
+              naezl, ' host atoms, input NBASIS =', nathost
+            Stop '       < CMOMSREAD > '
+          End If
 ! ......................................................................
-      do ih = 1, naezl
-        read (36+ihost, *) ihl
-        if (ihl/=ih) then
-          write (6, '(/,5X,2A,/)') 'ERROR reading host file', &
-            ' basis indexing wrong'
-          stop '       < CMOMSREAD > '
-        end if
-        read (36+ihost, 100)(c00(lm), lm=1, lmpotl)
-        ih1 = kaoez(1, naez+(ihost-1)*nlbasis+ih)
+          Do ih = 1, naezl
+            Read (36+ihost, *) ihl
+            If (ihl/=ih) Then
+              Write (6, '(/,5X,2A,/)') 'ERROR reading host file', &
+                ' basis indexing wrong'
+              Stop '       < CMOMSREAD > '
+            End If
+            Read (36+ihost, 100)(c00(lm), lm=1, lmpotl)
+            ih1 = kaoez(1, naez+(ihost-1)*nlbasis+ih)
 
-        do lm = 1, lmpotl
-          cmomhost(lm, (ihost-1)*nlbasis+ih) = c00(lm)
+            Do lm = 1, lmpotl
+              cmomhost(lm, (ihost-1)*nlbasis+ih) = c00(lm)
 ! mapping the CMOMHOST array, ordering is important
-        end do
+            End Do
 
-        if (ih==1) then
-          write (1337, '(1X,2I6,D12.4)') ih, ih1, c00(1)
-        else
-          write (1337, '(14X,2I6,D12.4)') ih, ih1, c00(1)
-        end if
-      end do
+            If (ih==1) Then
+              Write (1337, '(1X,2I6,D12.4)') ih, ih1, c00(1)
+            Else
+              Write (1337, '(14X,2I6,D12.4)') ih, ih1, c00(1)
+            End If
+          End Do
 ! ......................................................................
-      if (ihost==1) then
-        write (1337, '(14X,24("-"))')
-      else
-        write (1337, '(8X,30("-"))')
-      end if
-    end if
+          If (ihost==1) Then
+            Write (1337, '(14X,24("-"))')
+          Else
+            Write (1337, '(8X,30("-"))')
+          End If
+        End If
 ! ----------------------------------------------------------------------
-  end do
+      End Do
 ! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
-  write (1337, *)
+      Write (1337, *)
 
-100 format (4d22.14)
-110 format (5x, 2i6)
-end subroutine
+100   Format (4D22.14)
+110   Format (5X, 2I6)
+    End Subroutine

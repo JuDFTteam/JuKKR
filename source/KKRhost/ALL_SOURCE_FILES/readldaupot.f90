@@ -7,6 +7,7 @@ subroutine readldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
 ! **********************************************************************
 
   use :: mod_version_info
+      Use mod_datatypes, Only: dp
   implicit none
 !..
   integer :: irmd, mmaxd, natypd, nspind, irws(natypd)
@@ -14,17 +15,17 @@ subroutine readldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
 !.. Arguments ..
   integer :: itrunldau, natyp, ntldau
   integer :: lopt(natypd), itldau(natypd)
-  double precision :: ueff(natypd), jeff(natypd), erefldau(natypd)
-  double precision :: wldau(mmaxd, mmaxd, nspind, natypd)
-  double precision :: uldau(mmaxd, mmaxd, mmaxd, mmaxd, natypd)
+  real (kind=dp) :: ueff(natypd), jeff(natypd), erefldau(natypd)
+  real (kind=dp) :: wldau(mmaxd, mmaxd, nspind, natypd)
+  real (kind=dp) :: uldau(mmaxd, mmaxd, mmaxd, mmaxd, natypd)
 !..OUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
-  double complex :: phildau(irmd, natypd)
+  complex (kind=dp) :: phildau(irmd, natypd)
 !..
 !..  Locals 
   integer :: ios, ir, m1, m2, m3, m4, it, i1, i2, is
   integer :: irunldau, ntloc
   integer :: loptldau(natypd)
-  double precision :: ueff0, jeff0, eref0
+  real (kind=dp) :: ueff0, jeff0, eref0
 ! ======================================================================
 
 

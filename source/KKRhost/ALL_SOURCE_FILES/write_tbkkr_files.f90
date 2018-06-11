@@ -10,6 +10,7 @@ subroutine write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &
   nclsd, naclsd)
 
   use :: mod_version_info, only: serialnr
+      Use mod_datatypes, Only: dp
 
   implicit none
 !interface
@@ -25,12 +26,12 @@ subroutine write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &
   integer, intent (in) :: naclsd !< Maximum number of atoms in a TB-cluster
   integer, intent (in) :: ielast
   integer, intent (in) :: korbit !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
-  double precision, intent (in) :: alat !< Lattice constant in a.u.
-  double precision, dimension (3, 3), intent (in) :: recbv !< Reciprocal basis vectors
-  double precision, dimension (3, 3), intent (in) :: bravais !< Bravais lattice vectors
-  double precision, dimension (3, naez+nemb), intent (in) :: rbasis !< Position of atoms in the unit cell in units of bravais vectors
-  double precision, dimension (3, naclsd, nclsd), intent (in) :: rcls !< Real space position of atom in cluster
-  double precision, dimension (3, 0:nr), intent (in) :: rr !< Set of real space vectors (in a.u.)
+  real (kind=dp), intent (in) :: alat !< Lattice constant in a.u.
+  real (kind=dp), dimension (3, 3), intent (in) :: recbv !< Reciprocal basis vectors
+  real (kind=dp), dimension (3, 3), intent (in) :: bravais !< Bravais lattice vectors
+  real (kind=dp), dimension (3, naez+nemb), intent (in) :: rbasis !< Position of atoms in the unit cell in units of bravais vectors
+  real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls !< Real space position of atom in cluster
+  real (kind=dp), dimension (3, 0:nr), intent (in) :: rr !< Set of real space vectors (in a.u.)
   integer, dimension (naez), intent (in) :: cls !< Cluster around atomic sites
   integer, dimension (nclsd), intent (in) :: nacls !< Number of atoms in cluster
   integer, dimension (naclsd, naez), intent (in) :: ezoa !< EZ of atom at site in cluster

@@ -1,4 +1,5 @@
 program readvirtual
+      Use mod_datatypes, Only: dp
   implicit none
   integer, parameter :: naezd = 20
   integer :: naez, naeznew

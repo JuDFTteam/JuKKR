@@ -31,6 +31,7 @@ subroutine brydbm(visp, v, vins, vspsme, vspsmo, ins, lmpot, r, drdi, alpha, &
 !*********************************************************************
 
   use :: mod_types
+      Use mod_datatypes, Only: dp
 
 !     .. Parameters ..
   include 'inc.p'
@@ -47,17 +48,17 @@ subroutine brydbm(visp, v, vins, vspsme, vspsmo, ins, lmpot, r, drdi, alpha, &
   parameter (itdthd=40)
 !..
 !.. External Functions ..
-  double precision :: atwght(*), drdi(irmd, *), r(irmd, *), &
+  real (kind=dp) :: atwght(*), drdi(irmd, *), r(irmd, *), &
     v(irmd, lmpotd, *), vins(irmind:irmd, lmpotd, *), visp(irmd, *), &
     vspsmo(irmd, *), vspsme(irmd, *)
   integer :: irc(*), irmin(*)
 !..
 !.. External Subroutines ..
-  double precision :: cmm, one, rmixiv, smnorm, vmdeno, vmnorm, volinv, zero
+  real (kind=dp) :: cmm, one, rmixiv, smnorm, vmdeno, vmnorm, volinv, zero
   integer :: ia, ij, imap, ir, irc1, irmin1, isp, it, lm, mit, lsmear
 !..
 !.. Intrinsic Functions ..
-  double precision :: ddot
+  real (kind=dp) :: ddot
   external :: ddot
 !..
 !.. Save statement ..
@@ -70,11 +71,11 @@ subroutine brydbm(visp, v, vins, vspsme, vspsmo, ins, lmpot, r, drdi, alpha, &
   save :: mit, zero, one, wit
 !..
 !.. Data statements ..
-  double precision, allocatable :: am(:), bm(:), fm(:), fm1(:), g(:), sm(:), &
+  real (kind=dp), allocatable :: am(:), bm(:), fm(:), fm1(:), g(:), sm(:), &
     sm1(:), vi3(:), wit(:), ui2(:), ui3(:), vi2(:)
 
 
-  double precision :: alpha
+  real (kind=dp) :: alpha
   integer :: imix, ins, iobroy, ipf, itdept, lmpot, natps, natyp, nspin
 
 

@@ -16,6 +16,7 @@ subroutine slaydirect(lpot, vec1, vec2, alat, br, suml)
 
   use :: constants
   use :: global_variables
+      Use mod_datatypes, Only: dp
 
   implicit none
 
@@ -27,23 +28,23 @@ subroutine slaydirect(lpot, vec1, vec2, alat, br, suml)
   parameter (lmpotd=(lpotd+1)**2)
   parameter (lm2potd=(2*lpotd+1)**2)
 ! .. Input variables
-  double precision, intent (in) :: alat !< Lattice constant in a.u.
-  double precision, dimension (3), intent (in) :: vec1
-  double precision, dimension (3), intent (in) :: vec2
-  double precision, dimension (3, 3), intent (in) :: br
+  real (kind=dp), intent (in) :: alat !< Lattice constant in a.u.
+  real (kind=dp), dimension (3), intent (in) :: vec1
+  real (kind=dp), dimension (3), intent (in) :: vec2
+  real (kind=dp), dimension (3, 3), intent (in) :: br
 ! .. Output variables
-  double precision, dimension (lm2potd), intent (out) :: suml
+  real (kind=dp), dimension (lm2potd), intent (out) :: suml
 ! .. Local variables
   integer :: i1, i2
   integer :: l, lm, m, k, lpot, n
   integer :: i, j, lm2pot, n1, maxn, ia, n2
   integer :: ipar
-  double precision :: zzz, r, cc, zz, cr, x0, y0, r2
-  double precision :: zoffx, zoffy, rmax
-  double precision :: r0, a1, a2, b1, b2, rtest, ccc
+  real (kind=dp) :: zzz, r, cc, zz, cr, x0, y0, r2
+  real (kind=dp) :: zoffx, zoffy, rmax
+  real (kind=dp) :: r0, a1, a2, b1, b2, rtest, ccc
   logical :: ltest, test
-  double precision, dimension (lm2potd) :: ylm
-  double precision, dimension (lm2potd) :: sumt
+  real (kind=dp), dimension (lm2potd) :: ylm
+  real (kind=dp), dimension (lm2potd) :: sumt
 !----------------------------------------------------------------------------
   do lm = 1, lm2potd
     suml(lm) = 0.d0

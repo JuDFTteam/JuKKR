@@ -17,6 +17,7 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
 !     adopted for more atoms per site (CPA) v.popescu feb. 02
 !-----------------------------------------------------------------------
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
   include 'inc.p'
 ! *  NPOTD = 2 * NATYPD                                               *
@@ -38,15 +39,15 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
 !..
 !.. externals
   integer :: kpre, lmax, lpot, natyp, nspin, idoldau
-  double precision :: conc(natypd)
-  double precision :: ecou(0:lpotd, *), epotin(*), espc(0:3, npotd), &
+  real (kind=dp) :: conc(natypd)
+  real (kind=dp) :: ecou(0:lpotd, *), epotin(*), espc(0:3, npotd), &
     espv(0:lmaxd1, npotd), exc(0:lpotd, *), eu(*), edcldau(*)
   integer :: lcoremax(*), nshell(*), lopt(*)
 !..
 !.. Data statements ..
-  double precision :: bandesum, bandet, ecous, edc, efctor, et, etot, excs
-  double precision :: etotldau
-  double precision :: dble
+  real (kind=dp) :: bandesum, bandet, ecous, edc, efctor, et, etot, excs
+  real (kind=dp) :: etotldau
+  real (kind=dp) :: dble
   integer :: iatyp, ipot, is, ispin, l
   logical :: test
   character (len=4) :: textl(0:6)

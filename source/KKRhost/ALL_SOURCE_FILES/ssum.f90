@@ -1,7 +1,7 @@
     Function ssum(n, v, iv)
       Use mod_datatypes, Only: dp
 ! **********************************************************************
-!        sum up the first N elements of the double precision
+!        sum up the first N elements of the real (kind=dp)
 !        array V(*) with a stepwidth of IV
 ! ----------------------------------------------------------------------
       Implicit None

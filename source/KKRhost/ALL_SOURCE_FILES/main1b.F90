@@ -11,6 +11,7 @@ module MOD_MAIN1B
    use Profiling
    use Constants
    use global_variables
+      Use mod_datatypes, Only: dp
 
    implicit none
 
@@ -89,14 +90,14 @@ contains
       integer :: ICPAFLAG
       integer :: RECLENGTH
       integer :: LRECGREEN
-      double precision :: PHI
-      double precision :: THETA
-      double precision :: RFCTOR !< rfctor=a/(2*pi) conversion factor to p.u.
-      double complex :: ERYD
-      double complex :: TREAD ! qdos ruess
-      double complex :: CFCTOR
-      double complex :: TRALPHA1 ! LLY Lloyd
-      double complex :: CFCTORINV
+      real (kind=dp) :: PHI
+      real (kind=dp) :: THETA
+      real (kind=dp) :: RFCTOR !< rfctor=a/(2*pi) conversion factor to p.u.
+      complex (kind=dp) :: ERYD
+      complex (kind=dp) :: TREAD ! qdos ruess
+      complex (kind=dp) :: CFCTOR
+      complex (kind=dp) :: TRALPHA1 ! LLY Lloyd
+      complex (kind=dp) :: CFCTORINV
       logical :: OPT
       logical :: TEST
       logical :: LCPAIJ
@@ -109,47 +110,47 @@ contains
       integer, dimension(MAXMSHD)   :: NOFKS
       integer, dimension(IEMXD)     :: IECPAFAIL
       integer, dimension(NATYP,NAEZ) :: ITOQ
-      double precision, dimension(NATYP)     :: PHI_AT
-      double precision, dimension(MAXMSHD)   :: VOLBZ
-      double precision, dimension(NATYP)     :: THETA_AT
-      double precision, dimension(KPOIBZ,MAXMSHD) :: VOLCUB
-      double complex, dimension(IEMXD) :: LLY_G0TR             !< LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
-      double complex, dimension(IEMXD) :: TRALPHAREF           ! LLY Lloyd
-      double complex, dimension(IEMXD) :: CDOSREF_LLY          ! LLY Lloyd
-      double complex, dimension(LMMAXD,LMMAXD)  :: W1
-      double complex, dimension(LMGF0D,LMGF0D)  :: WN1
-      double complex, dimension(LMGF0D,LMGF0D)  :: WN2         ! LLY
-      double complex, dimension(LMMAXD,LMMAXD)  :: TMAT
-      double complex, dimension(LMMAXD,LMMAXD)  :: GMAT0
-      double complex, dimension(LMMAXD,LMMAXD)  :: FACTL
-      double complex, dimension(IEMXD,NSPIND)   :: TRACET      !< Tr[ (t-tref)^-1 d(t-tref)/dE ]  ! LLY Lloyd
-      double complex, dimension(IEMXD,NSPIND)   :: TRALPHA
-      double complex, dimension(IEMXD,NSPIND)   :: LLY_GRTR    !< LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
-      double complex, dimension(IEMXD,NSPIND)   :: CDOS_LLY
-      double complex, dimension(0:LMAX,NREF)    :: ALPHAREF
-      double complex, dimension(0:LMAX,NREF)    :: DALPHAREF   !< LLY Lloyd Alpha matrix and deriv.
-      double complex, dimension(LMMAXD,LMMAXD,NATYP)  :: MSST
-      double complex, dimension(LMMAXD,LMMAXD,NATYP)  :: TSST
-      double complex, dimension(LMMAXD,LMMAXD,NAEZ)   :: TQDOS  ! qdos ruess
-      double complex, dimension(LMMAXD,LMMAXD,NREF)   :: TREFLL
-      double complex, dimension(LMMAXD,LMMAXD,NSHELD) :: GMATLL   !< GMATLL = diagonal elements of the G matrix (system)
-      double complex, dimension(LMMAXD,LMMAXD,NREF)   :: DTREFLL  !< LLY Lloyd dtref/dE
-      double complex, dimension(LMMAXD,LMMAXD,NAEZ)   :: DTMATLL  !< LLY Lloyd  dt/dE
+      real (kind=dp), dimension(NATYP)     :: PHI_AT
+      real (kind=dp), dimension(MAXMSHD)   :: VOLBZ
+      real (kind=dp), dimension(NATYP)     :: THETA_AT
+      real (kind=dp), dimension(KPOIBZ,MAXMSHD) :: VOLCUB
+      complex (kind=dp), dimension(IEMXD) :: LLY_G0TR             !< LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
+      complex (kind=dp), dimension(IEMXD) :: TRALPHAREF           ! LLY Lloyd
+      complex (kind=dp), dimension(IEMXD) :: CDOSREF_LLY          ! LLY Lloyd
+      complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: W1
+      complex (kind=dp), dimension(LMGF0D,LMGF0D)  :: WN1
+      complex (kind=dp), dimension(LMGF0D,LMGF0D)  :: WN2         ! LLY
+      complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: TMAT
+      complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: GMAT0
+      complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: FACTL
+      complex (kind=dp), dimension(IEMXD,NSPIND)   :: TRACET      !< Tr[ (t-tref)^-1 d(t-tref)/dE ]  ! LLY Lloyd
+      complex (kind=dp), dimension(IEMXD,NSPIND)   :: TRALPHA
+      complex (kind=dp), dimension(IEMXD,NSPIND)   :: LLY_GRTR    !< LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
+      complex (kind=dp), dimension(IEMXD,NSPIND)   :: CDOS_LLY
+      complex (kind=dp), dimension(0:LMAX,NREF)    :: ALPHAREF
+      complex (kind=dp), dimension(0:LMAX,NREF)    :: DALPHAREF   !< LLY Lloyd Alpha matrix and deriv.
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYP)  :: MSST
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYP)  :: TSST
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ)   :: TQDOS  ! qdos ruess
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NREF)   :: TREFLL
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NSHELD) :: GMATLL   !< GMATLL = diagonal elements of the G matrix (system)
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NREF)   :: DTREFLL  !< LLY Lloyd dtref/dE
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ)   :: DTMATLL  !< LLY Lloyd  dt/dE
       complex*8, dimension(LMMAXD*LMMAXD) :: GIMP !<  Cluster GF (ref. syst.)
       character(len=35), dimension(0:2), parameter :: INVALG=(/'FULL MATRIX                        ',   &
                                                                'BANDED MATRIX (slab)               ',    &
                                                                'BANDED + CORNERS MATRIX (supercell)' /)
 
       ! .. Allocatable local arrays
-      double precision, dimension(:,:), allocatable   :: QVEC     !< qdos ruess, q-vectors for qdos
-      double precision, dimension(:,:,:), allocatable :: BZKP
-      double complex, dimension(:,:), allocatable     :: DTMTRX   !< For GREENIMP
-      double complex, dimension(:,:,:), allocatable   :: GINP     !< Cluster GF (ref syst.) GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
-      double complex, dimension(:,:,:), allocatable   :: DGINP    !< LLY Lloyd Energy derivative of GINP DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
+      real (kind=dp), dimension(:,:), allocatable   :: QVEC     !< qdos ruess, q-vectors for qdos
+      real (kind=dp), dimension(:,:,:), allocatable :: BZKP
+      complex (kind=dp), dimension(:,:), allocatable     :: DTMTRX   !< For GREENIMP
+      complex (kind=dp), dimension(:,:,:), allocatable   :: GINP     !< Cluster GF (ref syst.) GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
+      complex (kind=dp), dimension(:,:,:), allocatable   :: DGINP    !< LLY Lloyd Energy derivative of GINP DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
 
 #ifdef CPP_MPI
       integer :: ihelp
-      double complex, allocatable :: work(:,:)
+      complex (kind=dp), allocatable :: work(:,:)
 #endif
       integer :: ie_start
       integer :: ie_num, ie_end, ierr, i_stat, i_all

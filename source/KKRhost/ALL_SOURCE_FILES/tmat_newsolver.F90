@@ -48,59 +48,59 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
    integer, intent(in) :: NPAN_TOT
    integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
-   double precision, intent(in) :: ZAT       !< Nuclear charge for a given atom
-   double precision, intent(in) :: PHI
-   double precision, intent(in) :: THETA
-   double precision, intent(in) :: SOCSCALE  !< Spin-orbit scaling for a given atom
-   double complex, intent(in) :: DELTAE      !< Energy difference for numerical derivative
+   real (kind=dp), intent(in) :: ZAT       !< Nuclear charge for a given atom
+   real (kind=dp), intent(in) :: PHI
+   real (kind=dp), intent(in) :: THETA
+   real (kind=dp), intent(in) :: SOCSCALE  !< Spin-orbit scaling for a given atom
+   complex (kind=dp), intent(in) :: DELTAE      !< Energy difference for numerical derivative
    integer, dimension(0:NTOTD), intent(in) :: IPAN_INTERVALL
    integer, dimension(NCLEB,4), intent(in) :: ICLEB
-   double precision, dimension(*), intent(in) :: CLEB !< GAUNT coefficients (GAUNT)
-   double precision, dimension(NRMAXD), intent(in) :: RNEW
-   double precision, dimension(0:NTOTD), intent(in) :: RPAN_INTERVALL
-   double precision, dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix
-   double precision, dimension(NRMAXD,LMPOT,NSPOTD), intent(in) :: VINSNEW
-   double complex, dimension(IEMXD), intent(in) :: EZ
+   real (kind=dp), dimension(*), intent(in) :: CLEB !< GAUNT coefficients (GAUNT)
+   real (kind=dp), dimension(NRMAXD), intent(in) :: RNEW
+   real (kind=dp), dimension(0:NTOTD), intent(in) :: RPAN_INTERVALL
+   real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix
+   real (kind=dp), dimension(NRMAXD,LMPOT,NSPOTD), intent(in) :: VINSNEW
+   complex (kind=dp), dimension(IEMXD), intent(in) :: EZ
    ! .. In/Out variables
    type(type_dtmatJijDij), intent(inout) :: t_dtmatJij_at
 
    ! .. Local variables
    integer :: IR,IREC,USE_SRATRICK,NVEC,LM1,LM2,IE,IRMDNEW
    integer :: i_stat, i_all
-   double complex :: ERYD
-   double complex, dimension(2*(LMAX+1)) :: ALPHASPH
+   complex (kind=dp) :: ERYD
+   complex (kind=dp), dimension(2*(LMAX+1)) :: ALPHASPH
    ! .. Parameters
    integer :: LMMAXSO
    !parameter (LMMAXSO=2*LMMAXD)
    ! .. Local allocatable arrays
    integer, dimension(:), allocatable :: JLK_INDEX
-   double precision, dimension(:,:,:), allocatable :: VINS  !< Non-spherical part of the potential
-   double complex, dimension(:,:), allocatable     :: AUX      ! LLY
-   double complex, dimension(:,:), allocatable     :: TMAT0
-   double complex, dimension(:,:), allocatable     :: ALPHA0   ! LLY
-   double complex, dimension(:,:), allocatable     :: TMATLL
-   double complex, dimension(:,:), allocatable     :: DTMATLL
-   double complex, dimension(:,:), allocatable     :: TMATSPH
-   double complex, dimension(:,:), allocatable     :: ALPHALL  ! LLY
-   double complex, dimension(:,:), allocatable     :: DALPHALL ! LLY
-   double complex, dimension(:,:,:), allocatable   :: HLK
-   double complex, dimension(:,:,:), allocatable   :: JLK
-   double complex, dimension(:,:,:), allocatable   :: HLK2
-   double complex, dimension(:,:,:), allocatable   :: JLK2
-   double complex, dimension(:,:,:), allocatable   :: VNSPLL0
-   double complex, dimension(:,:,:,:), allocatable :: RLL
-   double complex, dimension(:,:,:,:), allocatable :: SLL
-   double complex, dimension(:,:,:,:), allocatable :: VNSPLL
-   double complex, dimension(:,:,:,:), allocatable :: VNSPLL1
-   double complex, dimension(:,:,:,:), allocatable :: RLLLEFT
-   double complex, dimension(:,:,:,:), allocatable :: SLLLEFT
+   real (kind=dp), dimension(:,:,:), allocatable :: VINS  !< Non-spherical part of the potential
+   complex (kind=dp), dimension(:,:), allocatable     :: AUX      ! LLY
+   complex (kind=dp), dimension(:,:), allocatable     :: TMAT0
+   complex (kind=dp), dimension(:,:), allocatable     :: ALPHA0   ! LLY
+   complex (kind=dp), dimension(:,:), allocatable     :: TMATLL
+   complex (kind=dp), dimension(:,:), allocatable     :: DTMATLL
+   complex (kind=dp), dimension(:,:), allocatable     :: TMATSPH
+   complex (kind=dp), dimension(:,:), allocatable     :: ALPHALL  ! LLY
+   complex (kind=dp), dimension(:,:), allocatable     :: DALPHALL ! LLY
+   complex (kind=dp), dimension(:,:,:), allocatable   :: HLK
+   complex (kind=dp), dimension(:,:,:), allocatable   :: JLK
+   complex (kind=dp), dimension(:,:,:), allocatable   :: HLK2
+   complex (kind=dp), dimension(:,:,:), allocatable   :: JLK2
+   complex (kind=dp), dimension(:,:,:), allocatable   :: VNSPLL0
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: RLL
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: SLL
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: VNSPLL
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: VNSPLL1
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: RLLLEFT
+   complex (kind=dp), dimension(:,:,:,:), allocatable :: SLLLEFT
 
    ! .. LDAU local variables
    integer :: LMLO,LMHI,MMAX
    ! .. LLoyd local variables
    integer :: IDERIV,SIGNDE
-   double complex :: TRALPHA
-   double complex :: GMATPREFACTOR
+   complex (kind=dp) :: TRALPHA
+   complex (kind=dp) :: GMATPREFACTOR
    integer, dimension(:), allocatable :: IPIV    ! LLY
    ! .. OMP local variables
    integer :: nth,ith ! total number of threads and thread id

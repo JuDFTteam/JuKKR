@@ -4,6 +4,7 @@
       r, drdi, vons, visp, vins, vspsmo, vspsme, lsmear)
       Use mod_datatypes, Only: dp
 ! ************************************************************************
+implicit none
 !.. Parameters ..
       Include 'inc.p'
       Integer :: lmpotd, irmind

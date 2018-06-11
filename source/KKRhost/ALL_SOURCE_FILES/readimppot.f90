@@ -5,13 +5,13 @@
     Subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, &
       ipanimp, thetasimp, ircutimp, irwsimp, khfeld, hfield, vinsimp, vm2zimp, &
       irminimp, rimp, zimp, irmd, irnsd, irid, nfund, ntotd, ipand)
-      Use mod_datatypes, Only: dp
 ! ************************************************************************
 ! read in impurity potential
 ! n.h.long, May 2013
 !-----------------------------------------------------------------------
-!.. Parameters ..
+      Use mod_datatypes, Only: dp
       Implicit None
+!.. Parameters ..
       Integer :: nspin, natomimp, irmd, irnsd, irid, nfund, ntotd, ipand
 !..
 !.. Scalar Arguments ..

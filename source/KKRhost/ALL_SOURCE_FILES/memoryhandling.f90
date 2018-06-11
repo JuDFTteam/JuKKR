@@ -1173,7 +1173,7 @@
 
         If (flag>0) Then
 
-          Allocate (atom(naclsd, naez+(nembd1-1)), Stat=i_stat)
+          Allocate (atom(naclsd,naez+(nembd1-1)), Stat=i_stat)
           Call memocc(i_stat, product(shape(atom))*kind(atom), 'ATOM', &
             'allocate_clusters')
           atom = 0

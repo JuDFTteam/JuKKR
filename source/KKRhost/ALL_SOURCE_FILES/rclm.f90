@@ -1,4 +1,5 @@
-subroutine rclm(key, ll, ldim, vmat)
+    Subroutine rclm(key, ll, ldim, vmat)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
 ! * Transform complex matrix VMAT:                                     *
@@ -35,99 +36,99 @@ subroutine rclm(key, ll, ldim, vmat)
 ! *                                                                    *
 ! *                                ph. mavropoulos, juelich 2004       *
 ! **********************************************************************
-  implicit none
+      Implicit None
 !..
-  double complex :: cone, ci, czero
-  parameter (cone=(1d0,0d0), ci=(0d0,1d0), czero=(0d0,0d0))
+      Complex (Kind=dp) :: cone, ci, czero
+      Parameter (cone=(1E0_dp,0E0_dp), ci=(0E0_dp,1E0_dp), &
+        czero=(0E0_dp,0E0_dp))
 !..
-  integer :: ldim, key, ll
-  double complex :: vmat(2*ldim+1, 2*ldim+1)
+      Integer :: ldim, key, ll
+      Complex (Kind=dp) :: vmat(2*ldim+1, 2*ldim+1)
 !.. Locals
-  double complex :: vtmp(2*ldim+1, 2*ldim+1)
-  double complex :: aa(2*ldim+1, 2*ldim+1), aac(2*ldim+1, 2*ldim+1)
-  double precision :: ovsqrtwo
-  double complex :: oneovrt, ciovrt, cimovrt, blj
-  double complex :: a11, a13, a31, a33
-  integer :: mdim, icall
-  integer :: m1, m2, m3, m4, mm, midl
+      Complex (Kind=dp) :: vtmp(2*ldim+1, 2*ldim+1)
+      Complex (Kind=dp) :: aa(2*ldim+1, 2*ldim+1), aac(2*ldim+1, 2*ldim+1)
+      Real (Kind=dp) :: ovsqrtwo
+      Complex (Kind=dp) :: oneovrt, ciovrt, cimovrt, blj
+      Complex (Kind=dp) :: a11, a13, a31, a33
+      Integer :: mdim, icall
+      Integer :: m1, m2, m3, m4, mm, midl
 
-  data icall/0/
-  save :: icall, oneovrt, ciovrt, cimovrt
+      Data icall/0/
+      Save :: icall, oneovrt, ciovrt, cimovrt
 ! ======================================================================
-  mdim = 2*ldim + 1
-  if (ll>ldim) stop 'ERROR IN RCLM: LL>LDIM'
+      mdim = 2*ldim + 1
+      If (ll>ldim) Stop 'ERROR IN RCLM: LL>LDIM'
 ! ----------------------------------------------------------------------
-  icall = icall + 1
-  if (icall==1) then
-    ovsqrtwo = 1d0/dsqrt(2d0)
-    oneovrt = ovsqrtwo*cone
-    ciovrt = ovsqrtwo*ci
-    cimovrt = -ciovrt
-  end if
+      icall = icall + 1
+      If (icall==1) Then
+        ovsqrtwo = 1E0_dp/sqrt(2E0_dp)
+        oneovrt = ovsqrtwo*cone
+        ciovrt = ovsqrtwo*ci
+        cimovrt = -ciovrt
+      End If
 ! ----------------------------------------------------------------------
 
-  if (key==2) then ! matrix elements
-    a11 = ciovrt
-    a13 = cimovrt
-    a31 = oneovrt
-    a33 = oneovrt
-  else if (key==1) then ! adjoint matrix elements
-    a11 = conjg(ciovrt)
-    a13 = oneovrt
-    a31 = conjg(cimovrt)
-    a33 = oneovrt
-  else
-    stop 'ERROR IN RCLM: KEY NOT EQUAL 1 OR 2'
-  end if
+      If (key==2) Then ! matrix elements
+        a11 = ciovrt
+        a13 = cimovrt
+        a31 = oneovrt
+        a33 = oneovrt
+      Else If (key==1) Then ! adjoint matrix elements
+        a11 = conjg(ciovrt)
+        a13 = oneovrt
+        a31 = conjg(cimovrt)
+        a33 = oneovrt
+      Else
+        Stop 'ERROR IN RCLM: KEY NOT EQUAL 1 OR 2'
+      End If
 
 ! -> Construct transformation matrix AA
 
-  call cinit(mdim*mdim, aa)
-  mm = 2*ll + 1
-  midl = ll + 1
-  do m1 = 1, ll
-    aa(m1, m1) = a11
-    aa(m1, mm+1-m1) = a13
-  end do
+      Call cinit(mdim*mdim, aa)
+      mm = 2*ll + 1
+      midl = ll + 1
+      Do m1 = 1, ll
+        aa(m1, m1) = a11
+        aa(m1, mm+1-m1) = a13
+      End Do
 
-  aa(midl, midl) = cone
-  do m1 = midl + 1, mm
-    aa(m1, m1) = a33
-    aa(m1, mm+1-m1) = a31
-  end do
+      aa(midl, midl) = cone
+      Do m1 = midl + 1, mm
+        aa(m1, m1) = a33
+        aa(m1, mm+1-m1) = a31
+      End Do
 
 ! -> Construct transformation matrix AA+
 
-  do m2 = 1, mm
-    do m1 = 1, mm
-      aac(m1, m2) = conjg(aa(m2,m1))
-    end do
-  end do
+      Do m2 = 1, mm
+        Do m1 = 1, mm
+          aac(m1, m2) = conjg(aa(m2,m1))
+        End Do
+      End Do
 
 ! -> Multiply from left
 
-  call cinit(mdim*mdim, vtmp)
-  do m2 = 1, mm
-    do m4 = 1, mm
-      blj = aac(m4, m2)
-      if (blj/=czero) then
-        do m3 = 1, mm
-          vtmp(m3, m2) = vtmp(m3, m2) + vmat(m3, m4)*blj
-        end do
-      end if
-    end do
-  end do
+      Call cinit(mdim*mdim, vtmp)
+      Do m2 = 1, mm
+        Do m4 = 1, mm
+          blj = aac(m4, m2)
+          If (blj/=czero) Then
+            Do m3 = 1, mm
+              vtmp(m3, m2) = vtmp(m3, m2) + vmat(m3, m4)*blj
+            End Do
+          End If
+        End Do
+      End Do
 
-  call cinit(mdim*mdim, vmat)
-  do m2 = 1, mm
-    do m3 = 1, mm
-      blj = vtmp(m3, m2)
-      if (blj/=czero) then
-        do m1 = 1, mm
-          vmat(m1, m2) = vmat(m1, m2) + aa(m1, m3)*blj
-        end do
-      end if
-    end do
-  end do
-end subroutine
-
+      Call cinit(mdim*mdim, vmat)
+      Do m2 = 1, mm
+        Do m3 = 1, mm
+          blj = vtmp(m3, m2)
+          If (blj/=czero) Then
+            Do m1 = 1, mm
+              vmat(m1, m2) = vmat(m1, m2) + aa(m1, m3)*blj
+            End Do
+          End If
+        End Do
+      End Do
+    End Subroutine

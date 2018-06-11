@@ -1,6 +1,5 @@
     Subroutine cpw91(fk, sk, gz, ec, ecrs, eczta, rs, zta, t, uu, vv, ww, h, &
       dvcup, dvcdn)
-      Use mod_datatypes, Only: dp
 !-----------------------------------------------------------------
 !gga91 correlation
 !-----------------------------------------------------------------
@@ -18,6 +17,8 @@
 ! with ks=sqrt(4*kf/pai), gz=[(1+zta)**(2/3)+(1-zta)**(2/3)]/2, &
 !      kf=cbrt(3*pai**2*d).
 !-----------------------------------------------------------------
+      Use mod_datatypes, Only: dp
+      implicit none
 !.. Scalar Arguments ..
       Real (Kind=dp) :: dvcdn, dvcup, ec, ecrs, eczta, fk, gz, h, rs, sk, t, &
         uu, vv, ww, zta

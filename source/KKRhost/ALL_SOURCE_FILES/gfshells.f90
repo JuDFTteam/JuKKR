@@ -11,6 +11,7 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
 ! *                                                                    *
 ! **********************************************************************
   use :: mod_types, only: t_imp
+      Use mod_datatypes, Only: dp
   implicit none
   integer :: lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld
 !..
@@ -27,9 +28,9 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
   integer :: ish(nsheld, *), jsh(nsheld, *)
   integer :: ijtabsym(*), ijtabsh(*), ijtabcalc(*), iofgij(*), jofgij(*)
 !..
-  double precision :: bravais(3, 3), ratom(3, nsheld)
-  double precision :: rbasis(3, *), rclsimp(3, natomimpd)
-  double precision :: rsymat(64, 3, 3)
+  real (kind=dp) :: bravais(3, 3), ratom(3, nsheld)
+  real (kind=dp) :: rbasis(3, *), rclsimp(3, natomimpd)
+  real (kind=dp) :: rsymat(64, 3, 3)
 !.. 
 !.. Local scalars
   integer :: nb, i, j, pos, ii, io, ns, in, ndim, nsize, ihost, ierr

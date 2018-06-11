@@ -1,4 +1,4 @@
-subroutine cint4pts(y, jtop, z)
+    Subroutine cint4pts(y, jtop, z)
 !   ********************************************************************
 !   *                                                                  *
 !   *      perform the integral  Z(i)   =  INT   Y(i') di'             *
@@ -12,59 +12,61 @@ subroutine cint4pts(y, jtop, z)
 !   *                       COMPLEX - VERSION                          *
 !   *                                                                  *
 !   ********************************************************************
-  use mod_DataTypes
-  implicit none
+      Use mod_datatypes
+      Implicit None
 
 ! Dummy arguments
-  integer :: jtop
-  complex *16 :: y(jtop), z(jtop)
+      Integer :: jtop
+      Complex (Kind=dp) :: y(jtop), z(jtop)
 
 ! Local variables
-  integer :: i, ig, j, k, m, n1, n2
-  real *8 :: q(5, 5), q5(5, 5)
-  complex *16 :: s, svn
+      Integer :: i, ig, j, k, m, n1, n2
+      Real (Kind=dp) :: q(5, 5), q5(5, 5)
+      Complex (Kind=dp) :: s, svn
 
-  data q5/0.d0, 251.d0, 232.d0, 243.d0, 224.d0, 0.d0, 646.d0, 992.d0, 918.d0, &
-    1024.d0, 0.d0, -264.d0, 192.d0, 648.d0, 384.d0, 0.d0, 106.d0, 32.d0, &
-    378.d0, 1024.d0, 0.d0, -19.d0, -8.d0, -27.d0, 224.d0/
+      Data q5/0.E0_dp, 251.E0_dp, 232.E0_dp, 243.E0_dp, 224.E0_dp, 0.E0_dp, &
+        646.E0_dp, 992.E0_dp, 918.E0_dp, 1024.E0_dp, 0.E0_dp, -264.E0_dp, &
+        192.E0_dp, 648.E0_dp, 384.E0_dp, 0.E0_dp, 106.E0_dp, 32.E0_dp, &
+        378.E0_dp, 1024.E0_dp, 0.E0_dp, -19.E0_dp, -8.E0_dp, -27.E0_dp, &
+        224.E0_dp/
 
-  do i = 1, 5
-    do j = 1, 5
-      q(i, j) = q5(i, j)/720.0d0
-    end do
-  end do
+      Do i = 1, 5
+        Do j = 1, 5
+          q(i, j) = q5(i, j)/720.0E0_dp
+        End Do
+      End Do
 
-  z(1) = cmplx(0.d0, 0.d0, kind=dp)
-  svn = z(1)
+      z(1) = cmplx(0.E0_dp, 0.E0_dp, kind=dp)
+      svn = z(1)
 
-  do ig = 1, jtop - 4, 4
-    n1 = ig
-    n2 = ig + 4
-    do m = n1 + 1, n2
-      i = m - n1 + 1
-      s = svn
-      do k = n1, n2
-        j = k - n1 + 1
-        s = s + q(i, j)*y(k)
-      end do
-      z(m) = s
-    end do
-    svn = z(n2)
-  end do
+      Do ig = 1, jtop - 4, 4
+        n1 = ig
+        n2 = ig + 4
+        Do m = n1 + 1, n2
+          i = m - n1 + 1
+          s = svn
+          Do k = n1, n2
+            j = k - n1 + 1
+            s = s + q(i, j)*y(k)
+          End Do
+          z(m) = s
+        End Do
+        svn = z(n2)
+      End Do
 
-  if (n2/=jtop) then
-    n1 = jtop - 4
-    n2 = jtop
-    svn = z(n1)
-    do m = n1 + 1, n2
-      i = m - n1 + 1
-      s = svn
-      do k = n1, n2
-        j = k - n1 + 1
-        s = s + q(i, j)*y(k)
-      end do
-      z(m) = s
-    end do
-  end if
+      If (n2/=jtop) Then
+        n1 = jtop - 4
+        n2 = jtop
+        svn = z(n1)
+        Do m = n1 + 1, n2
+          i = m - n1 + 1
+          s = svn
+          Do k = n1, n2
+            j = k - n1 + 1
+            s = s + q(i, j)*y(k)
+          End Do
+          z(m) = s
+        End Do
+      End If
 
-end subroutine
+    End Subroutine

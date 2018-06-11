@@ -8,6 +8,7 @@
 
 module mod_version_info
 
+      Use mod_datatypes, Only: dp
    implicit none
 
    private

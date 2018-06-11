@@ -1,4 +1,5 @@
 module mod_rhoqtools
+      Use mod_datatypes, Only: dp
 
    contains
 
@@ -9,7 +10,7 @@ module mod_rhoqtools
       implicit none
    
       integer, intent(in) :: nofks, nxyz(3)
-      double precision, intent(in) :: volbz, bzkp(3,nofks), volcub(nofks), recbv(3,3), bravais(3,3)
+      real (kind=dp), intent(in) :: volbz, bzkp(3,nofks), volcub(nofks), recbv(3,3), bravais(3,3)
       ! local
       integer :: ks, i
    
@@ -89,12 +90,12 @@ module mod_rhoqtools
       integer, intent(in) :: nofks
       integer, intent(out) :: k_end
       integer, allocatable, intent(out) :: kmask(:)
-      double precision, intent(in) :: bzkp(3, nofks)
-      double precision, allocatable, intent(out) :: rhoq_kmask(:,:)
+      real (kind=dp), intent(in) :: bzkp(3, nofks)
+      real (kind=dp), allocatable, intent(out) :: rhoq_kmask(:,:)
       ! local
       integer :: i, j, kpt, kmask_mode, k_start
       logical :: kmask_info
-      double precision :: k_mask_bounds(4), recbv(3,3), kp(3)
+      real (kind=dp) :: k_mask_bounds(4), recbv(3,3), kp(3)
 #ifdef CPP_MPI
       integer :: ierr
 #endif
@@ -239,8 +240,8 @@ module mod_rhoqtools
 
       integer, intent(in) :: i, j, mu, imin, lmmaxd, nscoef, nofks, k_end, kpt
       integer, intent(in) :: iatomimp(nscoef)
-      double precision, intent(in) :: rhoq_kmask(5, k_end), kp(3)
-      double complex, intent(in) :: G(lmmaxd, lmmaxd)
+      real (kind=dp), intent(in) :: rhoq_kmask(5, k_end), kp(3)
+      complex (kind=dp), intent(in) :: G(lmmaxd, lmmaxd)
       ! local
       integer :: ix, jx, lm1, irec 
 
@@ -289,16 +290,16 @@ module mod_rhoqtools
 
    implicit none
 
-   double complex, parameter :: CZERO = (0.0d0, 0.0d0)
+   complex (kind=dp), parameter :: CZERO = (0.0d0, 0.0d0)
 
    integer, intent(in) :: nofks, nshell, nsymat, nscoef, mu, lmmaxd, imin
    integer, intent(in) :: nsh1(nshell), nsh2(nshell), iatomimp(nscoef)
-   double precision, intent(in) :: bzkp(3, nofks)
+   real (kind=dp), intent(in) :: bzkp(3, nofks)
    integer, allocatable, intent(inout) :: kmask(:)
    !local
    integer :: kpt, ns, i, j, isym, irec, ix, jx, lm1
-   double precision :: kp(3)
-   double complex :: G(lmmaxd, lmmaxd)
+   real (kind=dp) :: kp(3)
+   complex (kind=dp) :: G(lmmaxd, lmmaxd)
 
    if(myrank==master) then
       write(*,*)                      ! status bar
@@ -377,8 +378,8 @@ module mod_rhoqtools
 
    integer, intent(in) :: natyp, irmd, ipand, npan_log, npan_eq
    integer, intent(in) :: irmin(natyp), irws(natyp), ipan(natyp), ntcell(natyp), ircut(0:ipand,natyp)
-   double precision, intent(in) :: r_log
-   double precision, intent(in) :: rmesh(irmd, natyp)
+   real (kind=dp), intent(in) :: r_log
+   real (kind=dp), intent(in) :: rmesh(irmd, natyp)
    !local
    integer :: i1
 
@@ -411,7 +412,7 @@ module mod_rhoqtools
 
    integer, intent(in) :: ielast, i1, nref, natyp, wlength, lmmaxd, ie
    integer, intent(in) :: refpot(natyp)
-   double complex, intent(in) :: trefll(lmmaxd,lmmaxd,natyp)
+   complex (kind=dp), intent(in) :: trefll(lmmaxd,lmmaxd,natyp)
    !local
    integer :: irec
 

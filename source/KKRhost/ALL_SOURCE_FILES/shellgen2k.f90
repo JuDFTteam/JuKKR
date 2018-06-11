@@ -1,7 +1,8 @@
 ! 23.2.2000/ 27.9.2004 *************************************************
-subroutine shellgen2k(icc, natom, rcls, atom, nofgij, iofgij, jofgij, nrot, &
-  rsymat, isymindex, rotname, nshell, ratom, nsh1, nsh2, ish, jsh, ijtabsym, &
-  ijtabsh, ijtabcalc, iprint, nsheld)
+    Subroutine shellgen2k(icc, natom, rcls, atom, nofgij, iofgij, jofgij, &
+      nrot, rsymat, isymindex, rotname, nshell, ratom, nsh1, nsh2, ish, jsh, &
+      ijtabsym, ijtabsh, ijtabcalc, iprint, nsheld)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *    Determines the number of different atomic pairs in a cluster by *
 ! * symmetry considerations, assigning a "shell" pointer (used to set  *
@@ -33,110 +34,110 @@ subroutine shellgen2k(icc, natom, rcls, atom, nofgij, iofgij, jofgij, nrot, &
 ! * RATOM(3,NS) diference vector R_i(NS) - R_j(NS)                     *
 ! *                                                                    *
 ! **********************************************************************
-  implicit none
+      Implicit None
 !..
 !.. Parameters
-  integer :: nshell0
-  parameter (nshell0=10000)
+      Integer :: nshell0
+      Parameter (nshell0=10000)
 !..
 !.. Scalar arguments
-  integer :: icc, nofgij, natom, nrot, iprint, nsheld
+      Integer :: icc, nofgij, natom, nrot, iprint, nsheld
 !..
 !.. Array arguments
-  integer :: atom(*), isymindex(*), ijtabsym(*), ijtabsh(*), ijtabcalc(*)
-  integer :: nshell(0:nsheld), nsh1(*), nsh2(*)
-  integer :: ish(nsheld, *), jsh(nsheld, *)
-  integer :: iofgij(*), jofgij(*)
-  double precision :: rcls(3, *), rsymat(64, 3, *)
-  double precision :: ratom(3, *)
-  character (len=10) :: rotname(*)
+      Integer :: atom(*), isymindex(*), ijtabsym(*), ijtabsh(*), ijtabcalc(*)
+      Integer :: nshell(0:nsheld), nsh1(*), nsh2(*)
+      Integer :: ish(nsheld, *), jsh(nsheld, *)
+      Integer :: iofgij(*), jofgij(*)
+      Real (Kind=dp) :: rcls(3, *), rsymat(64, 3, *)
+      Real (Kind=dp) :: ratom(3, *)
+      Character (Len=10) :: rotname(*)
 !..
 !.. Local scalars
-  integer :: ai, aj, i, j, k, ns, nsnew, nsgen, id, isym, ii, ij, igij
-  double precision :: r1, small
-  logical :: lfound
+      Integer :: ai, aj, i, j, k, ns, nsnew, nsgen, id, isym, ii, ij, igij
+      Real (Kind=dp) :: r1, small
+      Logical :: lfound
 !..
 !.. Local arrays
-  double precision :: ri(3), rj(3)
-  integer :: nsh1i(:), nsh2i(:), nshelli(:)
-  double precision :: ratomi(:, :)
-  allocatable :: nsh1i, nsh2i, nshelli, ratomi
+      Real (Kind=dp) :: ri(3), rj(3)
+      Integer :: nsh1i(:), nsh2i(:), nshelli(:)
+      Real (Kind=dp) :: ratomi(:, :)
+      Allocatable :: nsh1i, nsh2i, nshelli, ratomi
 !..
 !.. Data statements
-  data small/1.0d-10/
+      Data small/1.0E-10_dp/
 !..
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-  write (1337, 120)
-  if (iprint>1) call printijtab(natom, ijtabcalc)
+      Write (1337, 120)
+      If (iprint>1) Call printijtab(natom, ijtabcalc)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-  if (nsheld>=nshell0) then
-    write (6, 110) 'local', 'NSHELL0', nsheld
-    stop
-  end if
+      If (nsheld>=nshell0) Then
+        Write (6, 110) 'local', 'NSHELL0', nsheld
+        Stop
+      End If
 
-  if (nofgij<=0) then
-    write (6, '(A)') '      ICC set to 0'
-    write (6, '(A)') '         maybe you should check your input?'
-    icc = 0 ! Bauer Long 2011-10-11
-    return
-  end if
-  allocate (nsh1i(nshell0), nsh2i(nshell0), nshelli(nshell0), stat=ns)
-  if (ns/=0) stop '   < shellgen2k > allocate NSHELLI arrays'
-  allocate (ratomi(3,nshell0), stat=ns)
-  if (ns/=0) stop '   < shellgen2k > allocate RATOMI array'
+      If (nofgij<=0) Then
+        Write (6, '(A)') '      ICC set to 0'
+        Write (6, '(A)') '         maybe you should check your input?'
+        icc = 0 ! Bauer Long 2011-10-11
+        Return
+      End If
+      Allocate (nsh1i(nshell0), nsh2i(nshell0), nshelli(nshell0), Stat=ns)
+      If (ns/=0) Stop '   < shellgen2k > allocate NSHELLI arrays'
+      Allocate (ratomi(3,nshell0), Stat=ns)
+      If (ns/=0) Stop '   < shellgen2k > allocate RATOMI array'
 ! ======================================================================
 
 ! --> initialise number of shells found for this cluster, setup the
 !     working arrays NSH1I,NSH2I,NSHELLI,RATOMI and set the number of
 !     new found shells (NSNEW) to zero
 
-  do i = 1, nshell(0)
-    nsh1i(i) = nsh1(i)
-    nsh2i(i) = nsh2(i)
-    nshelli(i) = nshell(i)
-    do j = 1, 3
-      ratomi(j, i) = ratom(j, i)
-    end do
-  end do
-  nsnew = 0
+      Do i = 1, nshell(0)
+        nsh1i(i) = nsh1(i)
+        nsh2i(i) = nsh2(i)
+        nshelli(i) = nshell(i)
+        Do j = 1, 3
+          ratomi(j, i) = ratom(j, i)
+        End Do
+      End Do
+      nsnew = 0
 
 ! **********************************************************************
 !                                         loop over I,J-pairs in cluster
-  do igij = 1, nofgij
+      Do igij = 1, nofgij
 
 ! --> search for a symmetric equivalent pair of atoms, LFOUND takes
 !     on the value false/true if this equivalent pair is found
 
-    i = iofgij(igij)
-    j = jofgij(igij)
-    ai = atom(i)
-    aj = atom(j)
+        i = iofgij(igij)
+        j = jofgij(igij)
+        ai = atom(i)
+        aj = atom(j)
 
-    lfound = .false.
-    nsgen = nshell(0) + nsnew
+        lfound = .False.
+        nsgen = nshell(0) + nsnew
 
 ! RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
-    do id = 1, nrot
-      isym = isymindex(id)
+        Do id = 1, nrot
+          isym = isymindex(id)
 ! ----------------------------------------------------------------------
-      do ii = 1, 3
-        ri(ii) = rsymat(isym, ii, 1)*rcls(1, i) + rsymat(isym, ii, 2)*rcls(2, &
-          i) + rsymat(isym, ii, 3)*rcls(3, i)
+          Do ii = 1, 3
+            ri(ii) = rsymat(isym, ii, 1)*rcls(1, i) + &
+              rsymat(isym, ii, 2)*rcls(2, i) + rsymat(isym, ii, 3)*rcls(3, i)
 
-        rj(ii) = rsymat(isym, ii, 1)*rcls(1, j) + rsymat(isym, ii, 2)*rcls(2, &
-          j) + rsymat(isym, ii, 3)*rcls(3, j)
-      end do
+            rj(ii) = rsymat(isym, ii, 1)*rcls(1, j) + &
+              rsymat(isym, ii, 2)*rcls(2, j) + rsymat(isym, ii, 3)*rcls(3, j)
+          End Do
 ! ----------------------------------------------------------------------
 
 ! --> search for an equivalent pair within the already generated
 !     shells (1..NSHELL(0)+NSNEW)
 
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      ns = 0
-      do while ((.not. lfound) .and. (ns<nsgen))
-        ns = ns + 1
+          ns = 0
+          Do While ((.Not. lfound) .And. (ns<nsgen))
+            ns = ns + 1
 ! ----------------------------------------------------------------------
 !              IF ( ( AI.EQ.NSH1I(NS) .AND. AJ.EQ.NSH2I(NS) ).OR.
 !    &              ( AI.EQ.NSH2I(NS) .AND. AJ.EQ.NSH1I(NS) )  ) THEN
@@ -148,25 +149,25 @@ subroutine shellgen2k(icc, natom, rcls, atom, nofgij, iofgij, jofgij, nrot, &
 ! Either flag the pairs to be transposed, which is is a little faster but complicated
 ! to program, or do not consider the (I,J) and (J,I) pairs as belonging to the same shell,
 ! which is done now:
-        if ((ai==nsh1i(ns) .and. aj==nsh2i(ns))) then
+            If ((ai==nsh1i(ns) .And. aj==nsh2i(ns))) Then
 
-          r1 = (ri(1)-rj(1)+ratomi(1,ns))**2 + (ri(2)-rj(2)+ratomi(2,ns))**2 + &
-            (ri(3)-rj(3)+ratomi(3,ns))**2
+              r1 = (ri(1)-rj(1)+ratomi(1,ns))**2 + (ri(2)-rj(2)+ratomi(2,ns)) &
+                **2 + (ri(3)-rj(3)+ratomi(3,ns))**2
 
-          if (r1<small) then
-            lfound = .true.
-            nshelli(ns) = nshelli(ns) + 1
-            if (ns<=nshell(0)) write (1337, 130) ai, (rcls(ii,i), ii=1, 3), &
-              aj, (rcls(ii,j), ii=1, 3), ns
-            ish(ns, nshelli(ns)) = i
-            jsh(ns, nshelli(ns)) = j
-          end if
+              If (r1<small) Then
+                lfound = .True.
+                nshelli(ns) = nshelli(ns) + 1
+                If (ns<=nshell(0)) Write (1337, 130) ai, &
+                  (rcls(ii,i), ii=1, 3), aj, (rcls(ii,j), ii=1, 3), ns
+                ish(ns, nshelli(ns)) = i
+                jsh(ns, nshelli(ns)) = j
+              End If
 
-        end if
+            End If
 ! ----------------------------------------------------------------------
-      end do ! NS = 1..NSGEN while .NOT.LFOUND
+          End Do ! NS = 1..NSGEN while .NOT.LFOUND
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    end do
+        End Do
 ! RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
 
 ! --> if the rotation and the representative pair (shell) that
@@ -174,51 +175,51 @@ subroutine shellgen2k(icc, natom, rcls, atom, nofgij, iofgij, jofgij, nrot, &
 !     the search for a different pair of atoms starts; otherwise
 !     the pair (I,J) requires a new shell
 
-    if (.not. lfound) then
-      nsnew = nsnew + 1
-      if (nsnew+nshell(0)>nshell0) then
-        write (6, 110) 'local', 'NSHELL0', nsnew + nshell(0)
-        stop
-      end if
-      if (nsnew+nshell(0)>nsheld) then
-        write (6, 110) 'global', 'NSHELD', nsnew + nshell(0)
-        stop
-      end if
+        If (.Not. lfound) Then
+          nsnew = nsnew + 1
+          If (nsnew+nshell(0)>nshell0) Then
+            Write (6, 110) 'local', 'NSHELL0', nsnew + nshell(0)
+            Stop
+          End If
+          If (nsnew+nshell(0)>nsheld) Then
+            Write (6, 110) 'global', 'NSHELD', nsnew + nshell(0)
+            Stop
+          End If
 
-      nsh1i(nshell(0)+nsnew) = ai
-      nsh2i(nshell(0)+nsnew) = aj
-      nshelli(nshell(0)+nsnew) = 1
-      ish(nshell(0)+nsnew, 1) = i
-      jsh(nshell(0)+nsnew, 1) = j
-      do ii = 1, 3
-        ratomi(ii, nshell(0)+nsnew) = rcls(ii, j) - rcls(ii, i)
-      end do
-    end if
+          nsh1i(nshell(0)+nsnew) = ai
+          nsh2i(nshell(0)+nsnew) = aj
+          nshelli(nshell(0)+nsnew) = 1
+          ish(nshell(0)+nsnew, 1) = i
+          jsh(nshell(0)+nsnew, 1) = j
+          Do ii = 1, 3
+            ratomi(ii, nshell(0)+nsnew) = rcls(ii, j) - rcls(ii, i)
+          End Do
+        End If
 
-  end do
+      End Do
 ! **********************************************************************
 
 ! --> test number of shells
 
-  if (nsnew+nshell(0)>nsheld) then
-    write (6, 110) 'global', 'NSHELD', nsnew + nshell(0)
-    stop
-  end if
+      If (nsnew+nshell(0)>nsheld) Then
+        Write (6, 110) 'global', 'NSHELD', nsnew + nshell(0)
+        Stop
+      End If
 
 ! --> update the argument arrays
 
-  do i = 1, nshell(0) + nsnew
-    nsh1(i) = nsh1i(i)
-    nsh2(i) = nsh2i(i)
-    nshell(i) = nshelli(i)
-    do j = 1, 3
-      ratom(j, i) = ratomi(j, i)
-    end do
-  end do
+      Do i = 1, nshell(0) + nsnew
+        nsh1(i) = nsh1i(i)
+        nsh2(i) = nsh2i(i)
+        nshell(i) = nshelli(i)
+        Do j = 1, 3
+          ratom(j, i) = ratomi(j, i)
+        End Do
+      End Do
 
-  nshell(0) = nshell(0) + nsnew
-  deallocate (nsh1i, nsh2i, nshelli, ratomi, stat=ns)
-  if (ns/=0) stop '   < shellgen2k > deallocate arrays'
+      nshell(0) = nshell(0) + nsnew
+      Deallocate (nsh1i, nsh2i, nshelli, ratomi, Stat=ns)
+      If (ns/=0) Stop '   < shellgen2k > deallocate arrays'
 
 ! **********************************************************************
 
@@ -229,111 +230,113 @@ subroutine shellgen2k(icc, natom, rcls, atom, nofgij, iofgij, jofgij, nrot, &
 !     G_ij = D^\dagger(ISYM) * G(NS) * D(ISYM)
 
 ! **********************************************************************
-  do i = 1, natom
-    ai = (i-1)*natom
-    do j = 1, natom
-      ij = ai + j
-      ijtabsh(ij) = 0
-      ijtabsym(ij) = 0
-    end do
-  end do
+      Do i = 1, natom
+        ai = (i-1)*natom
+        Do j = 1, natom
+          ij = ai + j
+          ijtabsh(ij) = 0
+          ijtabsym(ij) = 0
+        End Do
+      End Do
 ! **********************************************************************
-  do i = 1, natom
-    ai = atom(i)
-    do j = 1, natom
-      aj = atom(j)
+      Do i = 1, natom
+        ai = atom(i)
+        Do j = 1, natom
+          aj = atom(j)
 !=======================================================================
-      do ii = 1, nshell(0)
+          Do ii = 1, nshell(0)
 !-----------------------------------------------------------------------
-        do id = 1, nrot
-          isym = isymindex(id)
+            Do id = 1, nrot
+              isym = isymindex(id)
 
-          do k = 1, 3
-            ri(k) = rsymat(isym, k, 1)*ratom(1, ii) + &
-              rsymat(isym, k, 2)*ratom(2, ii) + rsymat(isym, k, 3)*ratom(3, ii &
-              )
-          end do
+              Do k = 1, 3
+                ri(k) = rsymat(isym, k, 1)*ratom(1, ii) + &
+                  rsymat(isym, k, 2)*ratom(2, ii) + rsymat(isym, k, 3)*ratom(3 &
+                  , ii)
+              End Do
 
-          if ((ai==nsh1(ii) .and. aj==nsh2(ii)) .or. (ai==nsh2( &
-            ii) .and. aj==nsh1(ii))) then
+              If ((ai==nsh1(ii) .And. aj==nsh2(ii)) .Or. (ai==nsh2( &
+                ii) .And. aj==nsh1(ii))) Then
 
-            r1 = (rcls(1,j)-rcls(1,i)-ri(1))**2 + (rcls(2,j)-rcls(2,i)-ri(2)) &
-              **2 + (rcls(3,j)-rcls(3,i)-ri(3))**2
+                r1 = (rcls(1,j)-rcls(1,i)-ri(1))**2 + &
+                  (rcls(2,j)-rcls(2,i)-ri(2))**2 + (rcls(3,j)-rcls(3,i)-ri(3)) &
+                  **2
 
-            if (r1<small) then
-              ij = (i-1)*natom + j
-              ijtabsh(ij) = ii
-              ijtabsym(ij) = id
-              go to 100
-            end if
-          end if
-        end do
+                If (r1<small) Then
+                  ij = (i-1)*natom + j
+                  ijtabsh(ij) = ii
+                  ijtabsym(ij) = id
+                  Go To 100
+                End If
+              End If
+            End Do
 !-----------------------------------------------------------------------
-100     continue
-      end do
+100         Continue
+          End Do
 !=======================================================================
-    end do
-  end do
+        End Do
+      End Do
 !***********************************************************************
-  if (iprint<=0) return
+      If (iprint<=0) Return
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-  write (1337, 140) 'assigned shells and symmetries'
-  do i = 1, natom
-    ai = (i-1)*natom + j
-    do j = 1, natom
-      ij = ai + j
-      if (ijtabcalc(ij)>0) write (1337, 150) i, j, ijtabsh(ij), ijtabsym(ij), &
-        rotname(ijtabsym(ij))
-    end do
-  end do
-  write (1337, 160)
+      Write (1337, 140) 'assigned shells and symmetries'
+      Do i = 1, natom
+        ai = (i-1)*natom + j
+        Do j = 1, natom
+          ij = ai + j
+          If (ijtabcalc(ij)>0) Write (1337, 150) i, j, ijtabsh(ij), &
+            ijtabsym(ij), rotname(ijtabsym(ij))
+        End Do
+      End Do
+      Write (1337, 160)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-110 format (6x, 'Dimension ERROR: please increase the ', a, ' parameter', /, &
-    6x, a, ' to a value >=', i5, /)
-120 format (9x, '< SHELLGEN2K > : assigning representative pairs', &
-    ' (shells) ', /, 26x, 'for the off-diagonal elements Gij', /)
-130 format (9x, 'INFO: For the atomic sites   I=', i3, ' :', 3f10.6, /, 9x, &
-    29x, 'J=', i3, ' :', 3f10.6, /, 9x, 6x, &
-    'an already generated equivalent shell (', i3, ') was found', /)
-140 format (13x, 30('-'), /, 13x, a, /, 13x, 30('-'), /, 13x, ' I ', 1x, &
-    ' J ', ' | ', 'shell', 4x, 'isym', /, 13x, 30('-'))
-150 format (13x, i3, 1x, i3, ' | ', 1x, i4, 4x, i2, 2x, a10)
-160 format (13x, 30('-'), /)
-end subroutine ! SUBROUTINE SHELLGEN
+110   Format (6X, 'Dimension ERROR: please increase the ', A, ' parameter', /, &
+        6X, A, ' to a value >=', I5, /)
+120   Format (9X, '< SHELLGEN2K > : assigning representative pairs', &
+        ' (shells) ', /, 26X, 'for the off-diagonal elements Gij', /)
+130   Format (9X, 'INFO: For the atomic sites   I=', I3, ' :', 3F10.6, /, 9X, &
+        29X, 'J=', I3, ' :', 3F10.6, /, 9X, 6X, &
+        'an already generated equivalent shell (', I3, ') was found', /)
+140   Format (13X, 30('-'), /, 13X, A, /, 13X, 30('-'), /, 13X, ' I ', 1X, &
+        ' J ', ' | ', 'shell', 4X, 'isym', /, 13X, 30('-'))
+150   Format (13X, I3, 1X, I3, ' | ', 1X, I4, 4X, I2, 2X, A10)
+160   Format (13X, 30('-'), /)
+    End Subroutine ! SUBROUTINE SHELLGEN
 
 ! **********************************************************************
 
-subroutine printijtab(natom, ijtab)
-  implicit none
+    Subroutine printijtab(natom, ijtab)
+      Implicit None
 !     ..
-  integer :: natom
-  integer :: ijtab(*)
+      Integer :: natom
+      Integer :: ijtab(*)
 !     ..
-  integer :: i, j, ij
-  integer :: lgmax
+      Integer :: i, j, ij
+      Integer :: lgmax
 !     ..
-  lgmax = 59
-  write (1337, 100, advance='no') '  searched for pairs marked with 1 in the table below'
-  do j = 1, min(natom+3, lgmax)
-    write (1337, '("-")', advance='no')
-  end do
-  write (1337, *)
-  do i = 1, natom
-    write (1337, '(14X,I3," | ")', advance='no') i
-    ij = (i-1)*natom
-    do j = 1, natom
-      write (1337, '(I1)', advance='no') ijtab(ij+j)
-    end do
-    write (1337, *)
-  end do
-  write (1337, '(13X,6("-"))', advance='no')
-  do j = 1, min(natom+3, lgmax)
-    write (1337, '("-")', advance='no')
-  end do
-  write (1337, '(/)')
+      lgmax = 59
+      Write (1337, 100, Advance='no') &
+        '  searched for pairs marked with 1 in the table below'
+      Do j = 1, min(natom+3, lgmax)
+        Write (1337, '("-")', Advance='no')
+      End Do
+      Write (1337, *)
+      Do i = 1, natom
+        Write (1337, '(14X,I3," | ")', Advance='no') i
+        ij = (i-1)*natom
+        Do j = 1, natom
+          Write (1337, '(I1)', Advance='no') ijtab(ij+j)
+        End Do
+        Write (1337, *)
+      End Do
+      Write (1337, '(13X,6("-"))', Advance='no')
+      Do j = 1, min(natom+3, lgmax)
+        Write (1337, '("-")', Advance='no')
+      End Do
+      Write (1337, '(/)')
 !     ...........................................
-100 format (13x, 65('-'), /, 18x, a, /, 13x, 65('-'), /, 13x, '   J |', /, &
-    13x, 'I    | 1..NATCLUS', /, 13x, 6('-'))
-end subroutine
+100   Format (13X, 65('-'), /, 18X, A, /, 13X, 65('-'), /, 13X, '   J |', /, &
+        13X, 'I    | 1..NATCLUS', /, 13X, 6('-'))
+    End Subroutine

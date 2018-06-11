@@ -1,5 +1,6 @@
 module mod_types
 
+      Use mod_datatypes, Only: dp
 implicit none
 
 

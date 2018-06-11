@@ -10,7 +10,6 @@
 !-------------------------------------------------------------------------------
     Subroutine lattice2d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, &
       nsg, nsr, gn, rm, rmax, gmax, iprint, nmaxd, ishld)
-      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
 ! *  generate lattice vectors of direct and reciprocal space from      *
@@ -36,6 +35,7 @@
 ! *  actually needed in EWALD2D                  v.popescu May 2004    *
 ! *                                                                    *
 ! **********************************************************************
+      Use mod_datatypes, Only: dp
       Implicit None
 ! ..
 ! .. Input variables

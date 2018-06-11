@@ -11,6 +11,7 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
 !   *                                                                  *
 !   ********************************************************************
   use :: mod_types, only: t_tgmat
+      Use mod_datatypes, Only: dp
   implicit none
 
 ! PARAMETER definitions
@@ -25,7 +26,7 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   parameter (linmax=2*nlmax*(2*nlmax-1))
   complex *16 :: cone, czero
   parameter (cone=(1.0d0,0.0d0), czero=(0.0d0,0.0d0))
-  double precision :: dzero
+  real (kind=dp) :: dzero
   parameter (dzero=0.0d0)
 
 ! Dummy arguments
@@ -34,13 +35,13 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   integer :: lmpotd, iemxd, i1
   logical :: ldorhoef
   complex *16 :: we, eryd
-  double precision :: rho2ns(irmd, lmpotd, 2), r2nef(irmd, lmpotd, 2)
-!  DOUBLE PRECISION VT(NRMAX,NTMAX),BT(NRMAX,NTMAX)
-  double precision :: vt(nrmax), bt(nrmax)
-  double precision :: r(nrmax, nmmax), r2drdi(nrmax, nmmax)
-  double precision :: drdi(nrmax, nmmax), soctl(ntmax, nlmax)
-  double precision :: ctl(ntmax, nlmax)
-  double complex :: gmatll(lmmaxd, lmmaxd, iemxd), den(0:lmaxd+1, 2*ielast)
+  real (kind=dp) :: rho2ns(irmd, lmpotd, 2), r2nef(irmd, lmpotd, 2)
+!  real (kind=dp) VT(NRMAX,NTMAX),BT(NRMAX,NTMAX)
+  real (kind=dp) :: vt(nrmax), bt(nrmax)
+  real (kind=dp) :: r(nrmax, nmmax), r2drdi(nrmax, nmmax)
+  real (kind=dp) :: drdi(nrmax, nmmax), soctl(ntmax, nlmax)
+  real (kind=dp) :: ctl(ntmax, nlmax)
+  complex (kind=dp) :: gmatll(lmmaxd, lmmaxd, iemxd), den(0:lmaxd+1, 2*ielast)
 ! l-resolved orbital polarisation 
   complex *16 :: dmuorb(0:lmaxd, 3)
 ! orbital density
@@ -78,7 +79,7 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
     kaptab(nmuemax), nmuetab(nmuemax)
   character (len=10) :: solver
   character (len=4) :: txtt(ntmax)
-  double complex :: w1(lmmaxd, lmmaxd)
+  complex (kind=dp) :: w1(lmmaxd, lmmaxd)
   integer :: icall, iec
 !qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
   complex *16 :: gmat0(lmmaxd, lmmaxd) !qdos ruess

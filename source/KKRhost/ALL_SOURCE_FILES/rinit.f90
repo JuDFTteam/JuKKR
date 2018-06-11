@@ -1,7 +1,7 @@
     Subroutine rinit(n, a)
       Use mod_datatypes, Only: dp
 ! **********************************************************************
-! * Setting the first N values of a double precision array A to zero   *
+! * Setting the first N values of a real (kind=dp) array A to zero   *
 ! **********************************************************************
 !..
 !.. Arguments ..

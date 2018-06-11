@@ -9,26 +9,27 @@ subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, &
 !------------------------------------------------------------------
 !------------------------------------------------------------------
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
 !.. Parameters ..
-  double precision :: zero, zero1
+  real (kind=dp) :: zero, zero1
   parameter (zero=0.d0, zero1=1.d-12)
 !..
 !.. Scalar Arguments ..
-  double precision :: dx
+  real (kind=dp) :: dx
   integer :: ipan, ipand, irmd, l1max, lmpotd, mesh, nspin
 !..
 !.. Array Arguments ..
-  double precision :: ddrrl(irmd, lmpotd), ddrrul(irmd, lmpotd), drdi(irmd), &
+  real (kind=dp) :: ddrrl(irmd, lmpotd), ddrrul(irmd, lmpotd), drdi(irmd), &
     drrl(irmd, lmpotd), drrul(irmd, lmpotd), rhol(irmd, 2, lmpotd), rv(irmd)
   integer :: ircut(0:ipand)
 !..
 !.. Local Scalars ..
-  double precision :: chgden, pi, r2, s4, spiden
+  real (kind=dp) :: chgden, pi, r2, s4, spiden
   integer :: i1, ien, ip, ir, ist, llmax
 !..
 !.. Local Arrays ..
-  double precision :: drdi2(irmd), rl1(irmd), rl1udm(irmd), ztal(irmd)
+  real (kind=dp) :: drdi2(irmd), rl1(irmd), rl1udm(irmd), ztal(irmd)
 !..
 !.. External Subroutines ..
   external :: gradr

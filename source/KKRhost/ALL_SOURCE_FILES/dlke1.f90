@@ -7,6 +7,7 @@ subroutine dlke1(gllke, alat, nacls, naclsmax, rr, ezoa, atom, bzkp, ic, ginp, &
 
 ! ----------------------------------------------------------------------
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit none
 !.. Parameters ..
   include 'inc.p'
@@ -24,26 +25,26 @@ subroutine dlke1(gllke, alat, nacls, naclsmax, rr, ezoa, atom, bzkp, ic, ginp, &
   parameter (lmgf0d=(lmaxd+1)**2)
   integer :: almgf0
   parameter (almgf0=lmgf0d*naezd)
-  double complex :: ci
+  complex (kind=dp) :: ci
   parameter (ci=(0.0d0,1.0d0))
 !..
 !.. Local Scalars ..
-  double precision :: alat
+  real (kind=dp) :: alat
   integer :: ic, naclsmax
 !..
 !.. Local Arrays ..
   integer :: atom(*), ezoa(*), nacls(*)
-  double complex :: gllke(almgf0, *), ginp(lmgf0d*naclsmax, *)
-  double precision :: bzkp(*), rr(3, 0:nrd), rcls(3, *)
+  complex (kind=dp) :: gllke(almgf0, *), ginp(lmgf0d*naclsmax, *)
+  real (kind=dp) :: bzkp(*), rr(3, 0:nrd), rcls(3, *)
 !..
 !.. External Subroutines ..
-  double precision :: convpu, tpi
+  real (kind=dp) :: convpu, tpi
   integer :: am, i, ii, im, lm2, m
-  double complex :: eikr, tt
+  complex (kind=dp) :: eikr, tt
   logical :: opt, test
 !..
 !.. Intrinsic Functions ..
-  double complex :: arg(3)
+  complex (kind=dp) :: arg(3)
 !..
 !.. Save statement ..
   external :: cinit, test, opt, zaxpy

@@ -1,5 +1,6 @@
     Subroutine errortrap(routine, k, istop)
 
+      Use mod_datatypes, Only: dp
       Implicit None
       Integer, Parameter :: kmax = 14
       Integer, Intent (In) :: k, istop

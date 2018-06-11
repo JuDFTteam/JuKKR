@@ -4,6 +4,7 @@ subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
   use :: mod_types, only: t_inc
   use :: mod_wunfiles, only: t_params
   use :: mod_rhoqtools, only: rhoq_write_kmesh
+      Use mod_datatypes, Only: dp
   implicit none
 !..
 !.. Scalar Arguments ..
@@ -12,19 +13,19 @@ subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
   logical :: lirr
 !..
 !.. Array Arguments ..
-  double precision :: bravais(3, 3), recbv(3, 3)
-  double precision :: rsymat(64, 3, 3)
+  real (kind=dp) :: bravais(3, 3), recbv(3, 3)
+  real (kind=dp) :: rsymat(64, 3, 3)
   integer :: isymindex(*), kmesh(*)
-  double complex :: ez(*)
+  complex (kind=dp) :: ez(*)
 !.. unitary/antiunitary symmetry flag
   logical :: symunitary(*)
 !..
 !.. Local Scalars ..
-  double precision :: volbz
+  real (kind=dp) :: volbz
   integer :: i, id, ks, l, n, nbx, nby, nbz, nofks
 !..
 !.. Local Arrays ..
-  double precision :: bzkp(3, kpoibz), volcub(kpoibz)
+  real (kind=dp) :: bzkp(3, kpoibz), volcub(kpoibz)
   integer :: nxyz(3)
 !..
 !.. External Functions ..

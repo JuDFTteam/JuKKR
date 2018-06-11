@@ -237,10 +237,11 @@
       Implicit None
 
 ! PARAMETER definitions
-      Real (Kind=dp), Parameter :: thrd = 1.D0/3.D0
-      Real (Kind=dp), Parameter :: thrd4 = 4.D0/3.D0
-      Real (Kind=dp), Parameter :: ax = -0.738558766382022405884230032680836D0
-      Real (Kind=dp), Parameter :: uk = 0.8040D0
+      Real (Kind=dp), Parameter :: thrd = 1.E0_dp/3.E0_dp
+      Real (Kind=dp), Parameter :: thrd4 = 4.E0_dp/3.E0_dp
+      Real (Kind=dp), Parameter :: ax = &
+        -0.738558766382022405884230032680836E0_dp
+      Real (Kind=dp), Parameter :: uk = 0.8040E0_dp
       Real (Kind=dp) :: ul
 
 ! Dummy arguments
@@ -322,16 +323,17 @@
       Implicit None
 
 ! PARAMETER definitions
-      Real (Kind=dp), Parameter :: thrd = 1.E0/3.D0
+      Real (Kind=dp), Parameter :: thrd = 1.E0_dp/3.E0_dp
       Real (Kind=dp), Parameter :: thrdm = -thrd
-      Real (Kind=dp), Parameter :: thrd2 = 2.E0*thrd
-      Real (Kind=dp), Parameter :: sixthm = thrdm/2.E0
-      Real (Kind=dp), Parameter :: thrd4 = 4.E0*thrd
-      Real (Kind=dp), Parameter :: gam = 0.5198420997897463295344212145565D0
-      Real (Kind=dp), Parameter :: fzz = 8.D0/(9.D0*gam)
+      Real (Kind=dp), Parameter :: thrd2 = 2.E0_dp*thrd
+      Real (Kind=dp), Parameter :: sixthm = thrdm/2.E0_dp
+      Real (Kind=dp), Parameter :: thrd4 = 4.E0_dp*thrd
+      Real (Kind=dp), Parameter :: gam = &
+        0.5198420997897463295344212145565E0_dp
+      Real (Kind=dp), Parameter :: fzz = 8.E0_dp/(9.E0_dp*gam)
       Real (Kind=dp), Parameter :: gamma = &
-        0.03109069086965489503494086371273D0
-      Real (Kind=dp), Parameter :: eta = 1.D-12
+        0.03109069086965489503494086371273E0_dp
+      Real (Kind=dp), Parameter :: eta = 1.E-12_dp
 
 ! Dummy arguments
       Real (Kind=dp) :: ec, rs, t, uu, vcdn, vcup, vv, ww, zeta, bet

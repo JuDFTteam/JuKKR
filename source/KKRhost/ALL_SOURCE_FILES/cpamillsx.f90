@@ -18,33 +18,34 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
 !   * 15/12/03                                                         *
 !   ********************************************************************
   use :: mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
   implicit complex *16(a-h, o-z)
 
 ! PARAMETER definitions
-  double precision :: tol, sclstd
+  real (kind=dp) :: tol, sclstd
   parameter (tol=10d0, sclstd=1d0)
-  double complex :: c0, c1
+  complex (kind=dp) :: c0, c1
   parameter (c0=(0.0d0,0.0d0), c1=(1.0d0,0.0d0))
 
 ! Dummy arguments
-  double precision :: cpachng, cpacorr, cpaerr
+  real (kind=dp) :: cpachng, cpacorr, cpaerr
   integer :: iprint, itcpa, kmrot, nkmmax, nq, nqmax, ntmax
-  double precision :: conc(ntmax)
-  double complex :: drotq(nkmmax, nkmmax, nqmax), mssq(nkmmax, nkmmax, nqmax), &
+  real (kind=dp) :: conc(ntmax)
+  complex (kind=dp) :: drotq(nkmmax, nkmmax, nqmax), mssq(nkmmax, nkmmax, nqmax), &
     dmssq(nkmmax, nkmmax, nqmax), msst(nkmmax, nkmmax, ntmax), &
     tauq(nkmmax, nkmmax, nqmax)
   integer :: icpa(nqmax), itoq(ntmax, nqmax), nkmq(nqmax), noq(nqmax)
 
 ! Local variables
   logical :: check
-  double precision :: cpachngl, cpacorrl, scl
-  double complex :: csum
-  double complex :: dmamc(nkmmax, nkmmax), dmattg(nkmmax, nkmmax), &
+  real (kind=dp) :: cpachngl, cpacorrl, scl
+  complex (kind=dp) :: csum
+  complex (kind=dp) :: dmamc(nkmmax, nkmmax), dmattg(nkmmax, nkmmax), &
     dq(nkmmax, nqmax), dtiltg(nkmmax, nkmmax), err(nkmmax, nkmmax), &
     w1(nkmmax, nkmmax), w2(nkmmax, nkmmax)
   integer :: i, icparun, info, io
   integer :: ipiv(nkmmax), iq, it, iw, iw0, j, m, n
-  double precision :: p1, p2
+  real (kind=dp) :: p1, p2
   save :: cpachngl, cpacorrl, scl
 
   data icparun/0/

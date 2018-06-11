@@ -1,6 +1,5 @@
     Subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, &
       imkmtab, cgc, nlmax, nkmmax, nkmpmax, nmvecmax)
-      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *   calculate the angular matrix elements connected with           *
@@ -13,6 +12,7 @@
 !   *   ipol= 1,2,3  ==  (+),(-),(z):                                  *
 !   *                                                                  *
 !   ********************************************************************
+      Use mod_datatypes, Only: dp
       Implicit Real *8(A-H, O-Z)
 
 ! Dummy arguments

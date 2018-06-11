@@ -149,7 +149,7 @@ contains
     real (kind=dp), intent (inout) :: ebotsemi !< Bottom of semicore contour in Ryd
     real (kind=dp), intent (inout) :: fsemicore !< Initial normalization factor for semicore states (approx. 1.)
     real (kind=dp), intent (inout) :: lambda_xc !< Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
-    double complex, intent (inout) :: deltae !< LLY Energy difference for numerical derivative
+    complex (kind=dp), intent (inout) :: deltae !< LLY Energy difference for numerical derivative
     logical, intent (inout) :: lrhosym
     logical, intent (inout) :: linipol !< True: Initial spin polarization; false: no initial spin polarization
     logical, intent (inout) :: lcartesian !< True: Basis in cartesian coords; false: in internal coords
@@ -198,7 +198,7 @@ contains
     character (len=40), intent (inout) :: i40  !< File identifiers
 
     character (len=124), dimension (6), intent (inout) :: txc
-    double complex, dimension (:, :, :), allocatable, intent (out) :: drotq !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+    complex (kind=dp), dimension (:, :, :), allocatable, intent (out) :: drotq !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
 !----------------------------------------------------------------------------
 !> @note CPA variables. Routine has been modified to look for
 !>     the token ATOMINFOC and only afterwards, if not found, for the

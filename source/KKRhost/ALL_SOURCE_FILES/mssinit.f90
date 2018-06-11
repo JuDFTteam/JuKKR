@@ -3,11 +3,12 @@ subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, &
   iqat, itoq, noq, conc, kmrot, natyp, naez, lmmaxd) ! nrefd was taken out of calling list 1.2.2012
 
   use :: mod_mympi, only: myrank, master
+      Use mod_datatypes, Only: dp
   implicit none
   include 'inc.p' ! Included  1.2.2012
 
 !.. Local variables
-  double complex :: czero, cone
+  complex (kind=dp) :: czero, cone
   parameter (czero=(0.0d0,0.0d0))
   parameter (cone=(1.0d0,0.0d0))
 !..
@@ -15,19 +16,19 @@ subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, &
   integer :: kmrot, natyp, naez, lmmaxd, ncpa, icpastart
   integer :: iqat(natypd), itoq(natypd, naezd)
   integer :: refpot(naezd), noq(naezd)
-  double precision :: conc(natypd)
-  double complex :: tsst(lmmaxd, lmmaxd, natypd), trefll(lmmaxd, lmmaxd, nrefd &
+  real (kind=dp) :: conc(natypd)
+  complex (kind=dp) :: tsst(lmmaxd, lmmaxd, natypd), trefll(lmmaxd, lmmaxd, nrefd &
     )
-  double complex :: msst(lmmaxd, lmmaxd, natypd)
-  double complex :: mssq(lmmaxd, lmmaxd, naezd)
-  double complex :: drotq(lmmaxd, lmmaxd, naezd)
+  complex (kind=dp) :: msst(lmmaxd, lmmaxd, natypd)
+  complex (kind=dp) :: mssq(lmmaxd, lmmaxd, naezd)
+  complex (kind=dp) :: drotq(lmmaxd, lmmaxd, naezd)
 ! ======================================================================
 
   integer :: it, iq, rf, j, io, info, lm1, lm2, lp, ld, lmp, lmd
   integer :: ipvt(lmmaxd)
-  double complex :: zc
-  double complex :: w1(lmmaxd, lmmaxd)
-  double complex :: w2(lmmaxd, lmmaxd)
+  complex (kind=dp) :: zc
+  complex (kind=dp) :: w1(lmmaxd, lmmaxd)
+  complex (kind=dp) :: w2(lmmaxd, lmmaxd)
 !   --> set up the Delta_t^-1 matrix (MSST) in the LOCAL frame
 
   logical :: test, opt

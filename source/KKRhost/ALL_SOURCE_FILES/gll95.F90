@@ -14,6 +14,7 @@ SUBROUTINE gll13(ez,cleb,icleb,loflm,iend,tmatll,dtmatll,atom,  &
 use omp_lib
 #ENDIF
 use mod_types, only: t_inc
+      Use mod_datatypes, Only: dp
       IMPLICIT NONE
 !.. Parameters ..
       INCLUDE 'inc.p'
@@ -21,18 +22,18 @@ use mod_types, only: t_inc
       PARAMETER (LMAX=LMAXD,NATOMD=NACLSD)
       INTEGER LMGF0D,NGD
       PARAMETER (LMGF0D= (LMAX+1)**2,NGD=LMGF0D*NATOMD)
-      DOUBLE COMPLEX CONE,CZERO
+      complex (kind=dp) CONE,CZERO
       PARAMETER (CONE= (1.D0,0.D0),CZERO= (0.D0,0.D0))
 !..
 !.. Scalar Arguments ..
-      DOUBLE COMPLEX EZ
-      DOUBLE PRECISION ALAT,TOLRDIF ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
+      complex (kind=dp) EZ
+      real (kind=dp) ALAT,TOLRDIF ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
       INTEGER IEND,NATOM,OUT_WR,NACLSMAX
 !..
 !.. Array Arguments ..
-      DOUBLE COMPLEX GREF0(NACLSMAX*LMGF0D,LMGF0D), &
+      complex (kind=dp) GREF0(NACLSMAX*LMGF0D,LMGF0D), &
                      TMATLL(LMGF0D,LMGF0D,*)
-      DOUBLE PRECISION CLEB(*),RATOM(3,*)
+      real (kind=dp) CLEB(*),RATOM(3,*)
       INTEGER ATOM(*),ICLEB(NCLEB,4),LOFLM(*),REFPOT(*)
 !..
 !.. Local Scalars ..
@@ -40,13 +41,13 @@ use mod_types, only: t_inc
 !..
 !.. Local Arrays ..
       INTEGER IPVT(:)
-      DOUBLE PRECISION RDIFF(3),ABSRDIFF
-      DOUBLE COMPLEX DTMATLL(LMGF0D,LMGF0D,*) ! Derivative of ref.-sys t-matrix
-      DOUBLE COMPLEX GREF(:,:),GLL(:,:),GTREF(:,:)
-      DOUBLE COMPLEX DGTDE(:,:),DGTDE0(:,:) ! LLY (1-gt)^-1 * d(1-gt)/dE (after grefsy13)
-      DOUBLE COMPLEX DGLLDE(:,:),DGDE(:,:), &
+      real (kind=dp) RDIFF(3),ABSRDIFF
+      complex (kind=dp) DTMATLL(LMGF0D,LMGF0D,*) ! Derivative of ref.-sys t-matrix
+      complex (kind=dp) GREF(:,:),GLL(:,:),GTREF(:,:)
+      complex (kind=dp) DGTDE(:,:),DGTDE0(:,:) ! LLY (1-gt)^-1 * d(1-gt)/dE (after grefsy13)
+      complex (kind=dp) DGLLDE(:,:),DGDE(:,:), &
                      DGDEOUT(NACLSMAX*LMGF0D,LMGF0D)
-      DOUBLE COMPLEX LLY_G0TR   ! LLY Trace of  DTGLL for Lloyds formula
+      complex (kind=dp) LLY_G0TR   ! LLY Trace of  DTGLL for Lloyds formula
       INTEGER LLY     ! LLY =0 : no Lloyd's formula; <>0: use Lloyd's formula
       ALLOCATABLE GREF,GLL,GTREF,DGLLDE,DGTDE,DGTDE0,DGDE,IPVT
 !..

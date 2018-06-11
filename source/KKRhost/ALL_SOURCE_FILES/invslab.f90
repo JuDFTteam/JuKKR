@@ -1,5 +1,6 @@
 ! ************************************************************************
-subroutine invslab(gdi, gup, gdow, gin, icheck)
+    Subroutine invslab(gdi, gup, gdow, gin, icheck)
+      Use mod_datatypes, Only: dp
 ! ************************************************************************
 ! ************************************************************************
 !
@@ -12,10 +13,10 @@ subroutine invslab(gdi, gup, gdow, gin, icheck)
 !      see notes R. Zeller
 !
 ! ------------------------------------------------------------------------
-  implicit none
+      Implicit None
 
 !     .. parameters ..
-  include 'inc.p'
+      Include 'inc.p'
 ! *  NPOTD = 2 * NATYPD                                               *
 ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
 ! *  NSPIND = 1                                                       *
@@ -26,203 +27,208 @@ subroutine invslab(gdi, gup, gdow, gin, icheck)
 !.. data statements ..
 
 !.. external subroutines ..
-  integer, parameter :: lmmaxd = (krel+korbit+1)*(lmaxd+1)**2
-  integer, parameter :: ndim = nprincd*lmmaxd
-  integer, parameter :: almd = naezd*lmmaxd
-  double complex, parameter :: ci = (0.d0, 1.d0)
-  double complex, parameter :: czero = (0.d0, 0.d0)
-  double complex, parameter :: cone = (1.d0, 0.d0)
-  integer :: ipvt(ndim)
-  complex *16 :: gup(ndim, ndim, nlayerd), gdow(ndim, ndim, nlayerd), &
-    gdi(ndim, ndim, nlayerd), dmat(ndim, ndim, nlayerd), &
-    dinver(ndim, ndim, nlayerd), f(ndim, ndim), e(ndim, ndim), g(ndim, ndim), &
-    cunit(ndim, ndim), gin(almd, almd), gdiold(ndim, ndim, nlayerd)
+      Integer, Parameter :: lmmaxd = (krel+korbit+1)*(lmaxd+1)**2
+      Integer, Parameter :: ndim = nprincd*lmmaxd
+      Integer, Parameter :: almd = naezd*lmmaxd
+      Complex (Kind=dp), Parameter :: ci = (0.E0_dp, 1.E0_dp)
+      Complex (Kind=dp), Parameter :: czero = (0.E0_dp, 0.E0_dp)
+      Complex (Kind=dp), Parameter :: cone = (1.E0_dp, 0.E0_dp)
+      Integer :: ipvt(ndim)
+      Complex (Kind=dp) :: gup(ndim, ndim, nlayerd), &
+        gdow(ndim, ndim, nlayerd), gdi(ndim, ndim, nlayerd), &
+        dmat(ndim, ndim, nlayerd), dinver(ndim, ndim, nlayerd), f(ndim, ndim), &
+        e(ndim, ndim), g(ndim, ndim), cunit(ndim, ndim), gin(almd, almd), &
+        gdiold(ndim, ndim, nlayerd)
 
-  integer :: n, lm, info, i, j, irow
+      Integer :: n, lm, info, i, j, irow
 !---> to be changed: set up the triangular matrix.
-  integer :: icheck(nlayerd, nlayerd)
+      Integer :: icheck(nlayerd, nlayerd)
 !     first version:
 
-  external :: cinit, zcopy, zgemm, zgetrf, zgetrs, btom
+      External :: cinit, zcopy, zgemm, zgetrf, zgetrs, btom
 
 
 
 
 
-  call cinit(ndim*ndim, e)
-  call cinit(ndim*ndim, f)
-  call cinit(ndim*ndim, g)
-  call cinit(ndim*ndim, cunit)
-  call cinit(ndim*ndim*nlayerd, dmat)
+      Call cinit(ndim*ndim, e)
+      Call cinit(ndim*ndim, f)
+      Call cinit(ndim*ndim, g)
+      Call cinit(ndim*ndim, cunit)
+      Call cinit(ndim*ndim*nlayerd, dmat)
 !---> calculate D_1 = (M_11)**(-1)
-  do n = 1, ndim
-    cunit(n, n) = cone
-  end do
+      Do n = 1, ndim
+        cunit(n, n) = cone
+      End Do
 
-  do n = 1, nlayerd
-    call zcopy(ndim*ndim, gdi(1,1,n), 1, gdiold(1,1,n), 1)
-  end do
+      Do n = 1, nlayerd
+        Call zcopy(ndim*ndim, gdi(1,1,n), 1, gdiold(1,1,n), 1)
+      End Do
 
 
 
 !---> claculate D_N (2 <= N <= NLAYERD)
 
-  call zcopy(ndim*ndim, gdi(1,1,1), 1, e(1,1), 1)
-  call zcopy(ndim*ndim, cunit, 1, dmat(1,1,1), 1)
+      Call zcopy(ndim*ndim, gdi(1,1,1), 1, e(1,1), 1)
+      Call zcopy(ndim*ndim, cunit, 1, dmat(1,1,1), 1)
 
-  call zgetrf(ndim, ndim, e(1,1), ndim, ipvt, info)
-  call zgetrs('N', ndim, ndim, e(1,1), ndim, ipvt, dmat(1,1,1), ndim, info)
+      Call zgetrf(ndim, ndim, e(1,1), ndim, ipvt, info)
+      Call zgetrs('N', ndim, ndim, e(1,1), ndim, ipvt, dmat(1,1,1), ndim, &
+        info)
 !---> F = D(N-1) * M1(N-1)
 
 
-  do n = 2, nlayerd
+      Do n = 2, nlayerd
 
 
 !---> D(N) = [MDI(N) - MUP(N-1)*DMAT(N-1)*DOWM(N-1) ]^(-1)
 
-    call zgemm('N', 'N', ndim, ndim, ndim, cone, dmat(1,1,n-1), ndim, &
-      gup(1,1,n-1), ndim, czero, f(1,1), ndim)
+        Call zgemm('N', 'N', ndim, ndim, ndim, cone, dmat(1,1,n-1), ndim, &
+          gup(1,1,n-1), ndim, czero, f(1,1), ndim)
 
 
 
 
-    call zcopy(ndim*ndim, gdi(1,1,n), 1, e(1,1), 1)
-    call zcopy(ndim*ndim, cunit(1,1), 1, dmat(1,1,n), 1)
+        Call zcopy(ndim*ndim, gdi(1,1,n), 1, e(1,1), 1)
+        Call zcopy(ndim*ndim, cunit(1,1), 1, dmat(1,1,n), 1)
 
-    call zgemm('N', 'N', ndim, ndim, ndim, -cone, gdow(1,1,n-1), ndim, f(1,1), &
-      ndim, cone, e(1,1), ndim)
+        Call zgemm('N', 'N', ndim, ndim, ndim, -cone, gdow(1,1,n-1), ndim, &
+          f(1,1), ndim, cone, e(1,1), ndim)
 !     At this point the matrix DMAT(ndim,ndim,nlayerd) contains the
-    call zcopy(ndim*ndim, e(1,1), 1, dinver(1,1,n), 1)
+        Call zcopy(ndim*ndim, e(1,1), 1, dinver(1,1,n), 1)
 !     matrices [of dimension (ndim,ndim)]  D^n, n=1,..,nlayerd
-    call zgetrf(ndim, ndim, e(1,1), ndim, ipvt, info)
-    call zgetrs('N', ndim, ndim, e(1,1), ndim, ipvt, dmat(1,1,n), ndim, info)
+        Call zgetrf(ndim, ndim, e(1,1), ndim, ipvt, info)
+        Call zgetrs('N', ndim, ndim, e(1,1), ndim, ipvt, dmat(1,1,n), ndim, &
+          info)
 
-  end do
+      End Do
 !---> calculate Z_n for 1 =< n <= n-1
 
 
 
 
 
-  do n = nlayerd, 1, (-1)
+      Do n = nlayerd, 1, (-1)
 
-    if (n==nlayerd) then
+        If (n==nlayerd) Then
 
-      call zcopy(ndim*ndim, dmat(1,1,nlayerd), 1, e(1,1), 1)
+          Call zcopy(ndim*ndim, dmat(1,1,nlayerd), 1, e(1,1), 1)
 
-      call btom(nlayerd, nlayerd, e, ndim, gin, almd, .false.)
+          Call btom(nlayerd, nlayerd, e, ndim, gin, almd, .False.)
 
-      call zcopy(ndim*ndim, dmat(1,1,nlayerd), 1, gdi(1,1,nlayerd), 1)
-    else
+          Call zcopy(ndim*ndim, dmat(1,1,nlayerd), 1, gdi(1,1,nlayerd), 1)
+        Else
 
-      call zgemm('N', 'N', ndim, ndim, ndim, cone, gdow(1,1,n), ndim, &
-        dmat(1,1,n), ndim, czero, f(1,1), ndim)
+          Call zgemm('N', 'N', ndim, ndim, ndim, cone, gdow(1,1,n), ndim, &
+            dmat(1,1,n), ndim, czero, f(1,1), ndim)
 
-      call bofm(n+1, n+1, e, ndim, gin, almd)
+          Call bofm(n+1, n+1, e, ndim, gin, almd)
 
-      call zgemm('N', 'N', ndim, ndim, ndim, cone, e(1,1), ndim, f(1,1), ndim, &
-        czero, g(1,1), ndim)
-      call zgemm('N', 'N', ndim, ndim, ndim, cone, gup(1,1,n), ndim, g(1,1), &
-        ndim, czero, f(1,1), ndim)
+          Call zgemm('N', 'N', ndim, ndim, ndim, cone, e(1,1), ndim, f(1,1), &
+            ndim, czero, g(1,1), ndim)
+          Call zgemm('N', 'N', ndim, ndim, ndim, cone, gup(1,1,n), ndim, &
+            g(1,1), ndim, czero, f(1,1), ndim)
 
-      do lm = 1, ndim
-        f(lm, lm) = cone + f(lm, lm)
-      end do
+          Do lm = 1, ndim
+            f(lm, lm) = cone + f(lm, lm)
+          End Do
 
-      call zgemm('N', 'N', ndim, ndim, ndim, cone, dmat(1,1,n), ndim, f(1,1), &
-        ndim, czero, e(1,1), ndim)
+          Call zgemm('N', 'N', ndim, ndim, ndim, cone, dmat(1,1,n), ndim, &
+            f(1,1), ndim, czero, e(1,1), ndim)
 !     here start the two loops on the row index,
-      call btom(n, n, e, ndim, gin, almd, .false.)
+          Call btom(n, n, e, ndim, gin, almd, .False.)
 !     in order to span all the matrix
-      call zcopy(ndim*ndim, e(1,1), 1, gdi(1,1,n), 1)
+          Call zcopy(ndim*ndim, e(1,1), 1, gdi(1,1,n), 1)
 !     and to calculate just the blocks that are needed
-    end if
+        End If
 !     for the construction of the cluster of green's function
 
 
 
 !     this is the loop for element G_ij with i<j
 
-    if (icheck(n,n)==0) go to 110
+        If (icheck(n,n)==0) Go To 110
 
-    if (n==1) go to 100
+        If (n==1) Go To 100
 
 
 
-    do irow = (n-1), 1, (-1)
+        Do irow = (n-1), 1, (-1)
 
-      if (icheck(irow,n)==1) then
+          If (icheck(irow,n)==1) Then
 
-        call bofm(irow+1, n, e, ndim, gin, almd)
+            Call bofm(irow+1, n, e, ndim, gin, almd)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, gup(1,1,irow), ndim, &
-          e(1,1), ndim, czero, f(1,1), ndim)
+            Call zgemm('N', 'N', ndim, ndim, ndim, cone, gup(1,1,irow), ndim, &
+              e(1,1), ndim, czero, f(1,1), ndim)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, -cone, dmat(1,1,irow), ndim, &
-          f(1,1), ndim, czero, e(1,1), ndim)
+            Call zgemm('N', 'N', ndim, ndim, ndim, -cone, dmat(1,1,irow), &
+              ndim, f(1,1), ndim, czero, e(1,1), ndim)
 
-        call btom(irow, n, e, ndim, gin, almd, .false.)
+            Call btom(irow, n, e, ndim, gin, almd, .False.)
 
-      end if
+          End If
 
 !     this is the loop for element G_ij with i>j
-    end do
+        End Do
 
-100 continue
+100     Continue
 
-    if (n==nlayerd) go to 110
+        If (n==nlayerd) Go To 110
 
 
 
-    do irow = n + 1, nlayerd, 1
+        Do irow = n + 1, nlayerd, 1
 
-      if (icheck(irow,n)==1) then
+          If (icheck(irow,n)==1) Then
 
-        call zcopy(ndim*ndim, cunit(1,1), 1, e(1,1), 1)
+            Call zcopy(ndim*ndim, cunit(1,1), 1, e(1,1), 1)
 
-        call bofm(irow, irow, f, ndim, gin, almd)
+            Call bofm(irow, irow, f, ndim, gin, almd)
 
-        call zgetrf(ndim, ndim, f(1,1), ndim, ipvt, info)
-        call zgetrs('N', ndim, ndim, f(1,1), ndim, ipvt, e(1,1), ndim, info)
+            Call zgetrf(ndim, ndim, f(1,1), ndim, ipvt, info)
+            Call zgetrs('N', ndim, ndim, f(1,1), ndim, ipvt, e(1,1), ndim, &
+              info)
 
-        do i = 1, ndim
-          do j = 1, ndim
-            f(i, j) = gdiold(i, j, irow) - (dinver(i,j,irow)-e(i,j))
-          end do
-        end do
+            Do i = 1, ndim
+              Do j = 1, ndim
+                f(i, j) = gdiold(i, j, irow) - (dinver(i,j,irow)-e(i,j))
+              End Do
+            End Do
 
-        call zcopy(ndim*ndim, cunit(1,1), 1, e(1,1), 1)
+            Call zcopy(ndim*ndim, cunit(1,1), 1, e(1,1), 1)
 
-        call zgetrf(ndim, ndim, f(1,1), ndim, ipvt, info)
-        call zgetrs('N', ndim, ndim, f(1,1), ndim, ipvt, e(1,1), ndim, info)
+            Call zgetrf(ndim, ndim, f(1,1), ndim, ipvt, info)
+            Call zgetrs('N', ndim, ndim, f(1,1), ndim, ipvt, e(1,1), ndim, &
+              info)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, -cone, e(1,1), ndim, &
-          gdow(1,1,irow-1), ndim, czero, f(1,1), ndim)
+            Call zgemm('N', 'N', ndim, ndim, ndim, -cone, e(1,1), ndim, &
+              gdow(1,1,irow-1), ndim, czero, f(1,1), ndim)
 !     corrected 15.3.2000
-        call bofm(irow-1, n, e, ndim, gin, almd)
+            Call bofm(irow-1, n, e, ndim, gin, almd)
 
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, f(1,1), ndim, e(1,1), &
-          ndim, czero, g(1,1), ndim)
+            Call zgemm('N', 'N', ndim, ndim, ndim, cone, f(1,1), ndim, e(1,1), &
+              ndim, czero, g(1,1), ndim)
 
 
 
-        call btom(irow, n, g, ndim, gin, almd, .false.)
+            Call btom(irow, n, g, ndim, gin, almd, .False.)
 
 
-      end if
+          End If
 
 
-    end do
+        End Do
 
-110 continue
+110     Continue
 
-  end do
+      End Do
 
 
 ! ************************************************************************
 ! ************************************************************************
 ! ************************************************************************
-  return
+      Return
 !
-end subroutine
+    End Subroutine

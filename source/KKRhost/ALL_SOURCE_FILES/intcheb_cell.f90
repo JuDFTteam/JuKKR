@@ -1,12 +1,12 @@
     Subroutine intcheb_cell(cden, den, rpan_intervall, ipan_intervall, &
       npan_tot, ncheb, irmdnew)
-      Use mod_datatypes, Only: dp
 !***********************************************************************
 ! integrate the complex density of states for LM=1 
 ! gives the total complex charge which is then
 ! transformed to the xyz component of the magnetic 
 ! moment
 !***********************************************************************
+      Use mod_datatypes, Only: dp
       Implicit None
 
       Integer :: ncheb, npan_tot, irmdnew
