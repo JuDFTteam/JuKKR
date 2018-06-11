@@ -34,7 +34,10 @@ contains
       use omp_lib
 #endif
       use mod_mympi, only: myrank, nranks, master
-      use mod_types, only: t_inc, t_mpi_c_grid
+      use mod_types, only: t_inc
+#ifdef CPP_MPI
+      use mod_types, only: t_mpi_c_grid
+#endif
 
       implicit none
 

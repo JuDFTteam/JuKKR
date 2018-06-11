@@ -13,6 +13,7 @@
 ! klo and khi and test if they remain appropriate on the
 ! next call.
       Implicit None
+      real(kind=dp), parameter :: eps=1E-14_dp
       Integer :: n
       Real (Kind=dp) :: x, y, yderiv, xa(*), ya(*), y2a(*)
       Integer :: k, khi, klo
@@ -32,7 +33,7 @@
 ! klo and khi now bracket the input value of x.
       h = xa(khi) - xa(klo)
 ! The xa's must be distinct.
-      If (h==0.E0_dp) Stop 'bad xa input in splint'
+      If (abs(h)<eps) Stop 'bad xa input in splint'
 ! Cubic spline polynomial is now evaluated.
       a = (xa(khi)-x)/h
       b = (x-xa(klo))/h

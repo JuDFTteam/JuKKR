@@ -4,6 +4,7 @@
       Use mod_datatypes, Only: dp
 
       Implicit None
+      real(kind=dp), parameter :: eps=1E-14_dp
 !..
 !.. Arguments ..
       Integer :: naezd, natypd, nembd
@@ -54,7 +55,7 @@
         zperight(3) = zperight(3)*cbasis
       End If
 
-      If (abasis/=1E0_dp .Or. bbasis/=1E0_dp .Or. cbasis/=1E0_dp) Then
+      If (abs(abasis)<eps .Or. abs(bbasis)<eps .Or. abs(cbasis)<eps) Then
         Write (1337, '(5X,A,2(/,34X,F12.8,A))') &
           'Scaling site coordinates with:', abasis, '  x', bbasis, '  y'
         If (.Not. linterface) Write (1337, '(34X,F12.8,A)') cbasis, '  z'

@@ -60,7 +60,6 @@ use constants
       complex (kind=dp) BFAC
       real (kind=dp) ALPHA,BETA,DQ1,DQ2,DQ3,DQDOTG,EXPBSQ,FPI, &
                        G1,G2,G3,GA,LAMDA,R,R1,R2,R3,RFAC,S
-      real (kind=dp) DBLE
       INTEGER I,I1,I2,IT,L,LM,LMX,LMXSP,LFMT,M,NGE,NGS,NRE,NRS,NSTART
       CHARACTER*80 FMT
 !..
@@ -199,7 +198,7 @@ DO i1 = 1,naez
             lm = l*(l+1) + m + 1
             stest(lm) = stest(lm) + ylm(lm)*bfac
           END DO
-          bfac = bfac*ga/ci/DBLE(2*l+1)
+          bfac = bfac*ga/ci/real(2*l+1, kind=dp)
         END DO
       END DO
 ! ---------------------------------------------------------------------
@@ -210,7 +209,7 @@ DO i1 = 1,naez
                 ' to REAL lattice sum'
             STOP
           endif
-          smat(lm,i1,i2) = DBLE(stest(lm))
+          smat(lm,i1,i2) = real(stest(lm), kind=dp)
           stest(lm) = 0.0D0
         END DO
       ELSE
@@ -221,7 +220,7 @@ DO i1 = 1,naez
 !$omp critical
 #endif
       DO lm = 1,lmxsp
-        s = DBLE(stest(lm))
+        s = real(stest(lm), kind=dp)
         smat(lm,i1,i2) = smat(lm,i1,i2) + s
         IF ( ABS(s) > bound ) WRITE (6,FMT=99001) i1,i2, lm,ABS(s)
       END DO

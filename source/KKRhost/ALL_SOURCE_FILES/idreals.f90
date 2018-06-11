@@ -3,10 +3,11 @@
       Implicit None
 
 ! PARAMETER definitions
-      Integer :: nsqr, nmul, divmax
-      Parameter (nsqr=7, nmul=5, divmax=15)
-      Real (Kind=dp) :: tol
-      Parameter (tol=1E-6_dp)
+      Integer, parameter :: nsqr=7
+      Integer, parameter :: nmul=5
+      Integer, parameter :: divmax=15
+      Real (Kind=dp), parameter :: tol=1E-6_dp
+      real (kind=dp), parameter :: eps=1E-14_dp
 
 ! Dummy arguments
       Integer :: iprint, narry
@@ -35,7 +36,7 @@
           If (idone(i2)==0) Then
             x = darry(i2)*darry(i2)*dsq
             xn = dnint(x)
-            If (dabs(x-xn)/dsq<tol .And. xn/=0.E0_dp) Then
+            If (dabs(x-xn)/dsq<tol .And. abs(xn)<eps) Then
               If (iprint>4) Write (1337, 100) dabs(darry(i2)), nint(x), div
               darry(i2) = dsign(1E0_dp, darry(i2))*dsqrt(xn/dsq)
               idone(i2) = 1
@@ -54,7 +55,7 @@
             If (idone(i2)==0) Then
               x = darry(i2)*dsq
               xn = dnint(x)
-              If (dabs(x-xn)/dsq<tol .And. xn/=0.E0_dp) Then
+              If (dabs(x-xn)/dsq<tol .And. abs(xn)<eps) Then
                 If (iprint>4) Write (1337, 110) dabs(darry(i2)), isqr(i1), &
                   iabs(idnint(xn)), iabs(isqr(i1)*div)
                 darry(i2) = xn/dsq
@@ -75,7 +76,7 @@
             If (idone(i2)==0) Then
               x = darry(i2)*dsq
               xn = dnint(x)
-              If (dabs(x-xn)/dsq<tol .And. xn/=0.E0_dp) Then
+              If (dabs(x-xn)/dsq<tol .And. abs(xn)<eps) Then
                 If (iprint>4) Write (1337, 120) dabs(darry(i2)), imul(i1), &
                   iabs(idnint(xn)), div
                 darry(i2) = xn/dsq

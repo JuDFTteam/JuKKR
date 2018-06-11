@@ -178,7 +178,7 @@ subroutine timing_delkey(char1)
   do ival = 1, nkeys
   if (char1==timingkeys(ival)) then
     timingkeys(ival)=''
-    start_time(ival)=0.0D0
+    start_time(ival)=0
     return
   end if
   end do

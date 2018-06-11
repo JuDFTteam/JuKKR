@@ -13,6 +13,7 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
   use :: mod_types, only: t_imp
       Use mod_datatypes, Only: dp
   implicit none
+  real(kind=dp), parameter :: eps=1E-14_dp
   integer :: lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld
 !..
 !.. Scalar arguments
@@ -102,7 +103,7 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
 !heck if we are in surface mode
 
   lsurf = .false.
-  if (bravais(1,3)==0d0 .and. bravais(2,3)==0d0 .and. bravais(3,3)==0d0) &
+  if (abs(bravais(1,3))<eps .and. abs(bravais(2,3))<eps .and. abs(bravais(3,3))<eps) &
     lsurf = .true.
   ndim = 3
   if (lsurf) ndim = 2

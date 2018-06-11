@@ -9,6 +9,7 @@
 !o   rn    :normalized vector
 ! ----------------------------------------------------------------------
       Implicit None
+      real(kind=dp), parameter :: eps=1E-14_dp
 ! Passed parameters:                                                    
       Integer :: n
       Real (Kind=dp) :: r(3, *), rn(3, *)
@@ -22,7 +23,7 @@
       Do i = 1, n
         d2 = r(1, i)*r(1, i) + r(2, i)*r(2, i) + r(3, i)*r(3, i)
         d = sqrt(d2)
-        If (d/=0.E0_dp) Call dscal(3, 1.E0_dp/d, rn(1,i), 1)
+        If (abs(d)<eps) Call dscal(3, 1.E0_dp/d, rn(1,i), 1)
       End Do
 
     End Subroutine

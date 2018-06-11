@@ -48,7 +48,7 @@
         Character (Len=36) :: maxarray, locarray
         Integer :: nalloc, ndealloc, locpeak, locmemory, iproc
         Integer :: dblsize, mfileno
-        Integer *8 :: memory, maxmemory
+        Integer (kind=DI) :: memory, maxmemory
         Character (Len=1) :: allocationflag
 
         Save :: memory, nalloc, ndealloc, maxroutine, maxarray, maxmemory

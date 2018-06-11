@@ -16,11 +16,11 @@
 ! ------------------------------------------------------------------------
       poi = '.'
       If (band<0) Then
-        lo = log(real(-band,kind=dp))/log(10.0E0_dp) + 1
+        lo = nint(log(real(-band,kind=dp))/log(10.0E0_dp)) + 1
       Else If (band==0) Then
         lo = 0
       Else
-        lo = log(real(band,kind=dp))/log(10.0E0_dp)
+        lo = nint(log(real(band,kind=dp))/log(10.0E0_dp))
       End If
 
 !      write(6,*) 'LO ',lo
