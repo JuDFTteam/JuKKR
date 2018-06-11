@@ -35,6 +35,7 @@ rwthhybrid: FC=$(MPIFC)
 jureca: FC = mpif90
 # $(MPIFC)
 gfort: FC = gfortran
+gfortdebug: FC = gfortran
 
 
 # information for version-tracking in executable:
@@ -60,6 +61,7 @@ rwthmpidebug: COMPVER ='mpidebug-rwth'
 rwthhybrid:   COMPVER ='hybrid-rwth'
 jureca   : COMPVER='jureca'
 gfort   : COMPVER='gfort'
+gfortdebug: COMPVER='gfort'
 
 
 
@@ -146,6 +148,7 @@ $(OBJ)/tinc_mod.o: $(SRC)/tinc_mod.f
 # serial:
 LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 gfort: LLIBS  = -lblas -llapack -fopenmp
+gfortdebug: LLIBS  = -lblas -llapack -fopenmp
 # mac libs:
 MACLLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
 # RWTH cluster:
@@ -217,6 +220,7 @@ hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
 hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID -D CPP_NOMD5
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 gfort: CPP = -D CPP_TIMING -D CPP_NOMD5
+gfortdebug: CPP = -D CPP_TIMING -D CPP_NOMD5
 
 ####################################################
 # Compiler flags                                   #
@@ -230,7 +234,7 @@ FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback
 mac: FFLAGS = -O2 -r8 -module $(OBJ) -traceback 
 gfort: FFLAGS= -O3 -ffree-line-length-none -fopenmp
 # -J$(OBJ)
-#gfort: FFLAGS= -O0 -ffree-line-length-none -fdefault-real-8 -J $(OBJ) -Wall -Wextra -pedantic -fimplicit-none -fcheck=all -fbacktrace
+gfortdebug: FFLAGS= -O0 -ffree-line-length-none -Wall -Wextra -pedantic -fimplicit-none -fcheck=all -fbacktrace
 
 OPENMPFLAGS =
 hybrid: OPENMPFLAGS = -qopenmp
@@ -345,3 +349,4 @@ rwthompdebug: compile
 rwthhybrid:   compile
 jureca: compile
 gfort: compile
+gfortdebug: compile

@@ -24,7 +24,7 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   parameter (nkmmax=2*nlmax**2, nkmax=2*nlmax-1)
   parameter (nkmpmax=nkmmax+2*nlmax, nmuemax=2*nlmax)
   parameter (linmax=2*nlmax*(2*nlmax-1))
-  complex *16 :: cone, czero
+  complex (kind=dp) :: cone, czero
   parameter (cone=(1.0d0,0.0d0), czero=(0.0d0,0.0d0))
   real (kind=dp) :: dzero
   parameter (dzero=0.0d0)
@@ -34,7 +34,7 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   integer :: zat(ntmax), jws(nmmax), ishift
   integer :: lmpotd, iemxd, i1
   logical :: ldorhoef
-  complex *16 :: we, eryd
+  complex (kind=dp) :: we, eryd
   real (kind=dp) :: rho2ns(irmd, lmpotd, 2), r2nef(irmd, lmpotd, 2)
 !  real (kind=dp) VT(NRMAX,NTMAX),BT(NRMAX,NTMAX)
   real (kind=dp) :: vt(nrmax), bt(nrmax)
@@ -43,18 +43,18 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   real (kind=dp) :: ctl(ntmax, nlmax)
   complex (kind=dp) :: gmatll(lmmaxd, lmmaxd, iemxd), den(0:lmaxd+1, 2*ielast)
 ! l-resolved orbital polarisation 
-  complex *16 :: dmuorb(0:lmaxd, 3)
+  complex (kind=dp) :: dmuorb(0:lmaxd, 3)
 ! orbital density
-  real *8 :: rhotborb(irmd)
+  real (kind=dp) :: rhotborb(irmd)
 
 ! Local variables
-  real *8 :: ameopo(nkmmax, nkmmax, nlamax, 3), at(nrmax, nlamax, 3, ntmax), &
+  real (kind=dp) :: ameopo(nkmmax, nkmmax, nlamax, 3), at(nrmax, nlamax, 3, ntmax), &
     bcor(ntmax), bcors(ntmax), conc(ntmax), dos(ntmax), dosi(ntmax), efermi, &
     hff(ntmax), hffi(ntmax), mueorb, muespn, nvaltot, omt(ntmax), omti(ntmax), &
     qel(ntmax), rhoorb(nrmax, ntmax), rhochr(nrmax, ntmax), &
     rhospn(nrmax, ntmax)
-  real *8 :: shftef, smt(ntmax), smti(ntmax), pi, sqpi, totdos
-  complex *16 :: bzj(linmax, ntmax), bzz(linmax, ntmax), dosint(nlmax, ntmax), &
+  real (kind=dp) :: shftef, smt(ntmax), smti(ntmax), pi, sqpi, totdos
+  complex (kind=dp) :: bzj(linmax, ntmax), bzz(linmax, ntmax), dosint(nlmax, ntmax), &
     dosl0(nlmax, ntmax), dosm(nmuemax), dzj(linmax, ntmax), &
     dzz(linmax, ntmax), eband, ebandt(ntmax), hffint(nlmax, ntmax), &
     hffl0(nlmax, ntmax), hffm(nmuemax), msst(nkmmax, nkmmax, ntmax), &
@@ -62,14 +62,14 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
     ozj(linmax, ntmax), ozz(linmax, ntmax), p, qzj(linmax, ntmax), &
     qzz(linmax, ntmax), smtint(nlmax, ntmax), smtl0(nlmax, ntmax), &
     smtm(nmuemax), szj(linmax, ntmax), szz(linmax, ntmax)
-  complex *16 :: taut(nkmmax, nkmmax, ntmax), omtls0(nlmax, ntmax, 2)
-  complex *16 :: ozzs(linmax, ntmax, 2), ozjs(linmax, ntmax, 2)
-  complex *16 :: tautlin(linmax, ntmax), tsst(nkmmax, nkmmax, ntmax), &
+  complex (kind=dp) :: taut(nkmmax, nkmmax, ntmax), omtls0(nlmax, ntmax, 2)
+  complex (kind=dp) :: ozzs(linmax, ntmax, 2), ozjs(linmax, ntmax, 2)
+  complex (kind=dp) :: tautlin(linmax, ntmax), tsst(nkmmax, nkmmax, ntmax), &
     tsstlin(linmax, ntmax), tzj(linmax, ntmax), tzz(linmax, ntmax)
   logical :: calcint, getirrsol
-  real *8 :: cgc(nkmpmax, 2)
-  real *8 :: gdia(nkmmax), gmdia(nkmmax), goff(nkmmax), gmoff(nkmmax)
-  real *8 :: fdia(nkmmax), fmdia(nkmmax), foff(nkmmax), fmoff(nkmmax)
+  real (kind=dp) :: cgc(nkmpmax, 2)
+  real (kind=dp) :: gdia(nkmmax), gmdia(nkmmax), goff(nkmmax), gmoff(nkmmax)
+  real (kind=dp) :: fdia(nkmmax), fmdia(nkmmax), foff(nkmmax), fmoff(nkmmax)
   integer :: i, iecurr, ihyper, ikm1lin(linmax), ikm2lin(linmax), il, &
     imt(ntmax), imue, ip, iprint, iq, iqat(nqmax, ntmax), irel, it, iwrirrwf, &
     iwrregwf, j, lin, lopt(ntmax), mmax, nat(ntmax), netab, nkm, nkmq(nqmax), &
@@ -82,7 +82,7 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   complex (kind=dp) :: w1(lmmaxd, lmmaxd)
   integer :: icall, iec
 !qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
-  complex *16 :: gmat0(lmmaxd, lmmaxd) !qdos ruess
+  complex (kind=dp) :: gmat0(lmmaxd, lmmaxd) !qdos ruess
   integer :: nqdos, irec, ipoint !qdos ruess 
 !qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
   intrinsic :: atan, sqrt
@@ -93,21 +93,21 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   logical :: itermvdir, splitss
   integer :: nmvecmaxd, nmvecmax
   parameter (nmvecmaxd=4)
-  real *8 :: amemvec(nkmmax, nkmmax, 3, nmvecmaxd), fact(0:100)
+  real (kind=dp) :: amemvec(nkmmax, nkmmax, 3, nmvecmaxd), fact(0:100)
   integer :: imkmtab(nkmmax), ikmllim1(nkmmax), ikmllim2(nkmmax)
   character (len=1) :: txtl(0:nlmax)
   integer :: igrid(2), iepath, nepath
 
-  real *8 :: qmtet, qmphi ! ARG. LIST
-  real *8 :: qmphiloc(nqmax), qmtetloc(nqmax) ! DUMMY
+  real (kind=dp) :: qmtet, qmphi ! ARG. LIST
+  real (kind=dp) :: qmphiloc(nqmax), qmtetloc(nqmax) ! DUMMY
 
-  complex *16 :: bmvevdl0(nlmax, ntmax, 3, nmvecmax), &
+  complex (kind=dp) :: bmvevdl0(nlmax, ntmax, 3, nmvecmax), &
     bmvevil1(nlmax, ntmax, 3, nmvecmax), mvevdl0(nlmax, ntmax, 3, nmvecmax), &
     mvevil1(nlmax, ntmax, 3, nmvecmax)
-  complex *16 :: mvevil(0:lmaxd, 3, nmvecmax) ! OUTPUT
-  complex *16 :: mvevilef(0:lmaxd, 3, nmvecmax) ! OUTPUT
+  complex (kind=dp) :: mvevil(0:lmaxd, 3, nmvecmax) ! OUTPUT
+  complex (kind=dp) :: mvevilef(0:lmaxd, 3, nmvecmax) ! OUTPUT
 !.. dummy arrays
-  complex *16 :: mezj(nkmmax, nkmmax, ntmax, nmvecmax), &
+  complex (kind=dp) :: mezj(nkmmax, nkmmax, ntmax, nmvecmax), &
     mezz(nkmmax, nkmmax, ntmax, nmvecmax)
 
 ! ITERMDIR

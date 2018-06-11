@@ -8,8 +8,8 @@ implicit none
   private
   public :: timings_1a, timings_1b, load_imbalance, timing_init, timing_start, timing_stop, timing_pause, print_time_and_date
   ! for adaptive load imbalance tackling
-  real*8, allocatable, save  :: timings_1a(:,:)
-  real*8, allocatable, save  :: timings_1b(:)
+  real (kind=dp), allocatable, save  :: timings_1a(:,:)
+  real (kind=dp), allocatable, save  :: timings_1b(:)
   integer, allocatable, save :: load_imbalance(:)
     
 
@@ -72,7 +72,7 @@ subroutine timing_pause(mykey2)
   integer ikey
   character(len=*)       :: mykey2
   character(len=nkeylen) :: mykey
-  real*8                   :: timing
+  real (kind=dp)                   :: timing
   integer                   :: clock_rate
 
   mykey=mykey2
@@ -96,12 +96,12 @@ subroutine timing_stop(mykey2, save_out)
   use mod_types, only: t_inc
   implicit none
   character(len=*), intent(in)  :: mykey2
-  real*8, intent(out), optional :: save_out
+  real (kind=dp), intent(out), optional :: save_out
   
   integer                       :: stop_time
   integer                       :: ikey
   character(len=nkeylen)        :: mykey
-  real*8                        :: timing
+  real (kind=dp)                        :: timing
   integer                       :: clock_rate
   
   mykey=mykey2

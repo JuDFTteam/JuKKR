@@ -30,11 +30,11 @@
       Integer :: nrefold
       Integer :: natomimp
       Real (Kind=dp), Allocatable :: ratomimp(:, :)
-!      real*8,allocatable  :: rbasislist(:,:)
+!      real (kind=dp),allocatable  :: rbasislist(:,:)
       Integer, Allocatable :: atomimp(:)
       Integer :: iatom, ibasis
       Integer :: ierr
-!       real*8              :: ratomvtest(3)
+!       real (kind=dp)              :: ratomvtest(3)
       Real (Kind=dp) :: rbasisnew(3)
       Real (Kind=dp), Allocatable :: rclsnew(:, :), rbasisnew1(:, :)
 

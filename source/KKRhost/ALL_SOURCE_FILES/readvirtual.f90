@@ -4,15 +4,15 @@ program readvirtual
   integer, parameter :: naezd = 20
   integer :: naez, naeznew
   integer :: natomv
-  real *8, allocatable :: ratomv(:, :)
-  real *8 :: rbasislist(3, naezd)
-  real *8 :: rbasisold(3, naezd)
+  real (kind=dp), allocatable :: ratomv(:, :)
+  real (kind=dp) :: rbasislist(3, naezd)
+  real (kind=dp) :: rbasisold(3, naezd)
   integer :: iatom, ibasis
   integer :: ierr
-  real *8 :: ratomvtest(3)
-  real *8 :: rbasis(3), rbasisnew(3)
+  real (kind=dp) :: ratomvtest(3)
+  real (kind=dp) :: rbasis(3), rbasisnew(3)
 
-  real *8 :: bravais(3, 3)
+  real (kind=dp) :: bravais(3, 3)
   integer :: ndim
 
 !     get Bravais vectors <- implement !
@@ -92,10 +92,10 @@ contains
 ! in the range of (1,bound)
 ! --------------------------
     integer :: bound
-    real *8 :: vec(3)
-    real *8 :: veclist(3, bound)
+    real (kind=dp) :: vec(3)
+    real (kind=dp) :: veclist(3, bound)
     integer :: ilist
-    real *8 :: tempvec(3), diff
+    real (kind=dp) :: tempvec(3), diff
 
     vec_in_list = .false.
     do ilist = 1, bound
@@ -112,13 +112,13 @@ contains
 ! such that rbasis = bravais * n with n in [0,1]^ndim
 ! --------------------------
     implicit none
-    real *8 :: bravais(3, 3)
-    real *8 :: bravais_inv(ndim, ndim)
+    real (kind=dp) :: bravais(3, 3)
+    real (kind=dp) :: bravais_inv(ndim, ndim)
     integer :: ndim
-    real *8 :: rpos(3)
-    real *8 :: rbasis(3)
+    real (kind=dp) :: rpos(3)
+    real (kind=dp) :: rbasis(3)
 
-    real *8 :: ncoeffreal(ndim)
+    real (kind=dp) :: ncoeffreal(ndim)
     integer :: ncoeffint(ndim)
     integer :: idim
 

@@ -30,13 +30,13 @@ SUBROUTINE strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr,  &
 ! **********************************************************************
 #ifdef CPP_HYBRID
 #define CPP_OMPSTUFF
-#ENDIF
+#endif
 #ifdef CPP_OMP
 #define CPP_OMPSTUFF
-#ENDIF
+#endif
 #ifdef CPP_OMPSTUFF
 use omp_lib
-#ENDIF
+#endif
 
 use constants
       Use mod_datatypes, Only: dp
@@ -112,7 +112,7 @@ endif
 !$omp& private(LM, NSTART, IT, NRS, NGS, NRE, NGE, I, R1, R2)
 !$omp& private(R3 , R, YLM, ALPHA, G, L, RFAC, M, G1, G2)
 !$omp& private(G3, GA, BETA, EXPBSQ, DQDOTG, BFAC, S, I1, I2)
-#ENDIF
+#endif
 DO i1 = 1,naez
   DO i2 = 1,naez
 !======================================================================
@@ -217,17 +217,17 @@ DO i1 = 1,naez
         
 ! --> test convergence
         
-#IFDEF CPP_OMPSTUFF
+#ifdef CPP_OMPSTUFF
 !$omp critical
-#ENDIF
+#endif
       DO lm = 1,lmxsp
         s = DBLE(stest(lm))
         smat(lm,i1,i2) = smat(lm,i1,i2) + s
         IF ( ABS(s) > bound ) WRITE (6,FMT=99001) i1,i2, lm,ABS(s)
       END DO
-#IFDEF CPP_OMPSTUFF
+#ifdef CPP_OMPSTUFF
 !$omp end critical
-#ENDIF
+#endif
   endif
 ! ---------------------------------------------------------------------
 END DO
@@ -236,7 +236,7 @@ END DO
 END DO
 #ifdef CPP_OMPSTUFF
 !$omp end parallel do
-#ENDIF
+#endif
 ! **********************************************************************
 
 IF ( iprint < 2 ) RETURN

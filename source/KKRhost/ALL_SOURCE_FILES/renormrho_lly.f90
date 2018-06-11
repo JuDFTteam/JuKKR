@@ -15,18 +15,18 @@ subroutine renormrho_lly(cdos_lly, rhospher, irmax, ielast, nspin, ! LLY Lloyd  
   integer :: lmaxp1, natyp, nspin, irmax ! Spherical component of normalized density/atom/energy/spin
   integer :: iestart, ieend, ielast ! Non-renormalized charge per atom
   integer :: ntcell(natypd), nfu(natypd), llmsp(natypd, nfund) ! DOS according to Lloyd's formula
-  real *8 :: conc(natypd) ! Input/Output:
-  real *8 :: rhospher(irmax, ielast, nspin, natyp) ! Valence charge density to be renormalized in its spherical component
-  real *8 :: thetas(irid, nfund, ncelld)
-  complex *16 :: den(0:lmaxd1, iemxd, npotd) ! Internal:
-  complex *16 :: cdos_lly(iemxd, nspind) ! Density from local summation and from lloyd's formula
+  real (kind=dp) :: conc(natypd) ! Input/Output:
+  real (kind=dp) :: rhospher(irmax, ielast, nspin, natyp) ! Valence charge density to be renormalized in its spherical component
+  real (kind=dp) :: thetas(irid, nfund, ncelld)
+  complex (kind=dp) :: den(0:lmaxd1, iemxd, npotd) ! Internal:
+  complex (kind=dp) :: cdos_lly(iemxd, nspind) ! Density from local summation and from lloyd's formula
 ! Renormalization constant for charge and spin density
-  real *8 :: rho2ns(irmd, lmpotd, natypd, 2) 
+  real (kind=dp) :: rho2ns(irmd, lmpotd, natypd, 2) 
 
   integer :: ll, ie, i1, ispin, ipot, spindegen
-  real *8 :: denloc(2), denlly(2) ! Spin degeneracy, 2 if nspin=1, 1 if nspin=2
-  real *8 :: renorm(2) 
-  real *8 :: pi
+  real (kind=dp) :: denloc(2), denlly(2) ! Spin degeneracy, 2 if nspin=1, 1 if nspin=2
+  real (kind=dp) :: renorm(2) 
+  real (kind=dp) :: pi
 
   pi = 4.d0*datan(1.d0)
 

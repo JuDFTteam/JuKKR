@@ -8,25 +8,25 @@ subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
 !   ********************************************************************
   use :: mod_types, only: t_inc
       Use mod_datatypes, Only: dp
-  implicit complex *16(a-h, o-z)
+  implicit complex (kind=dp)(a-h, o-z)
 
 ! PARAMETER definitions
 
-  complex *16 :: c0, c1, ci
+  complex (kind=dp) :: c0, c1, ci
   parameter (c0=(0.0d0,0.0d0), c1=(1.0d0,0.0d0), ci=(0.0d0,1.0d0))
-  real *8 :: pi
+  real (kind=dp) :: pi
   parameter (pi=3.141592653589793238462643d0)
-  complex *16 :: cpre
+  complex (kind=dp) :: cpre
   parameter (cpre=-c1/pi)
 
 ! Dummy arguments
 
-  complex *16 :: we
+  complex (kind=dp) :: we
   integer :: iecurr, iepath, igrid, iprint, irel, nepath, netab, nfilcbwf, &
     nkm, nkmmax, nl, nlmax, nmmax, nmuemax, nmvecmax, nqmax, nrmax, nt, ntmax
   logical :: splitss
-  real *8 :: amemvec(nkmmax, nkmmax, 3, nmvecmax), r2drdi(nrmax, nmmax)
-  complex *16 :: bmvevdl0(nlmax, ntmax, 3, nmvecmax), &
+  real (kind=dp) :: amemvec(nkmmax, nkmmax, 3, nmvecmax), r2drdi(nrmax, nmmax)
+  complex (kind=dp) :: bmvevdl0(nlmax, ntmax, 3, nmvecmax), &
     bmvevil(nlmax, ntmax, 3, nmvecmax), mezj(nkmmax, nkmmax, ntmax, nmvecmax), &
     mezz(nkmmax, nkmmax, ntmax, nmvecmax), mvevdl0(nlmax, ntmax, 3, nmvecmax), &
     mvevil(nlmax, ntmax, 3, nmvecmax), taut(nkmmax, nkmmax, ntmax), &
@@ -41,10 +41,10 @@ subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
 !ccc     &           ZF(NRMAX,2,NKMMAX),ZG(NRMAX,2,NKMMAX),
 !F77--------------------------------------------------------------------
 !F90--------------------------------------------------------------------
-  complex *16 :: jf(:, :, :), jg(:, :, :), zf(:, :, :), zg(:, :, :)
+  complex (kind=dp) :: jf(:, :, :), jg(:, :, :), zf(:, :, :), zg(:, :, :)
   allocatable :: jf, jg, zf, zg
 !F90--------------------------------------------------------------------
-  complex *16 :: bmvevd(ntmax, 3, nmvecmax), bmvevdl(nlmax, 3, nmvecmax), &
+  complex (kind=dp) :: bmvevd(ntmax, 3, nmvecmax), bmvevdl(nlmax, 3, nmvecmax), &
     bmvevdm(nlmax, nmuemax, 3, nmvecmax), bmvevi(ntmax, 3, nmvecmax), cwgt, &
     meirr(nkmmax, nkmmax, 3, nmvecmax), mereg(nkmmax, nkmmax, 3, nmvecmax), &
     mvevd(ntmax, 3, nmvecmax), mvevdl(nlmax, 3, nmvecmax), &
@@ -56,7 +56,7 @@ subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
     imkm1, imkm2, imv, imvec, ipol, it, iti, j, j1, j2, jtop, k, k1, k2, &
     kapcb, l, li, lmax, m, mue, muetop, n, nmvec, noswf, npol, nsol, &
     nsolcb(nkmmax)
-  real *8 :: mj, sum
+  real (kind=dp) :: mj, sum
   character (len=3) :: str3
 
 ! index 3:  ipol= 1,2,3  ==  (+),(-),(z)

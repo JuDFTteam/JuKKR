@@ -59,6 +59,7 @@
 ! ======================================================================
 
       lrecabmad = wlength*2*lmpotd*lmpotd + wlength*2*lmpotd
+      write(*,*) lrecabmad, 2*lmpotd*lmpotd, 2*lmpotd
       Open (69, Access='direct', Recl=lrecabmad, File='abvmad.unformatted', &
         Form='unformatted')
 
@@ -75,6 +76,7 @@
             cleb, icleb, iend, lpotd, lmpotd, lmxspd, nclebd)
 
           irec = iq2 + naez*(iq1-1)
+          write(*,*) shape(avmad)*type(avmad), shape(bvmad)*type(bvmad), shape(avmad), shape(bvmad)
           Write (69, Rec=irec) avmad, bvmad
 !-----------------------------------------------------------------------
           If ((iq1<=6) .And. (iq2<=6)) Then

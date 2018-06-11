@@ -19,7 +19,7 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
 !   ********************************************************************
   use :: mod_types, only: t_inc
       Use mod_datatypes, Only: dp
-  implicit complex *16(a-h, o-z)
+  implicit complex (kind=dp)(a-h, o-z)
 
 ! PARAMETER definitions
   real (kind=dp) :: tol, sclstd

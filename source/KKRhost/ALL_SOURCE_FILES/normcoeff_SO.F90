@@ -19,13 +19,13 @@ SUBROUTINE normcoeff_so(natom, ircut,  &
 !-----------------------------------------------------------------------
 #ifdef CPP_MPI
 use mpi
-#ENDIF
+#endif
 use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
 use mod_types, only: t_mpi_c_grid, t_inc, t_imp
-#ELSE
+#else
 use mod_types, only: t_inc, t_imp
-#ENDIF
+#endif
       Use mod_datatypes, Only: dp
 
 IMPLICIT NONE
@@ -100,10 +100,10 @@ dens=czero
 i1_start = t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie) + 1
 i1_end   = t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie) +  &
     t_mpi_c_grid%ntot_pt1(t_mpi_c_grid%myrank_ie)
-#ELSE
+#else
 i1_start = 1
 i1_end   = natom
-#ENDIF
+#endif
 
 ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
 DO i1=i1_start, i1_end
@@ -197,7 +197,7 @@ dens(:,:,:,:,:,:,:) = work(:,:,:,:,:,:,:)
 deallocate(work, stat=ierr)
 IF(ierr /= 0) STOP  &
     'Error deallocating work for MPI comm of DENS in normcoeff_SO'
-#ENDIF
+#endif
 
 
 IF(myrank==master) THEN ! do last part and writeout only on master

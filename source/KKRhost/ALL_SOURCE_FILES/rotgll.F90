@@ -172,9 +172,9 @@ IF ( igf /= 0 ) THEN
   IF ( ( opt('KKRFLEX ') ) ) THEN
 #ifdef CPP_MPI
     irec = irec
-#ELSE
+#else
     irec = icall
-#ENDIF
+#endif
   WRITE(888,REC=irec) gclust
   IF ( ( opt('GPLAIN  ') ) ) THEN
     WRITE(8888,'(50000E25.16)') gclust

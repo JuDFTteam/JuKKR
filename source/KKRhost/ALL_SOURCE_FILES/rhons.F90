@@ -161,7 +161,7 @@ IF (.NOT.opt('qdos    ')) THEN
   WRITE(30,9000) real(energ, kind=dp),(-aimag(denlm(lm))/pi,lm=1,lmmaxd)
   9000 FORMAT(30E12.4)
 endif  ! not qdos option
-#ENDIF
+#endif
 
 
 IF (ipan > 1) THEN

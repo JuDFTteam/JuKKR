@@ -2,9 +2,9 @@ SUBROUTINE greenimp(natomimp,dtmtrx,e)
 #ifdef CPP_MPI
 use mpi
 use mod_mympi, only: myrank, master, nranks, distribute_linear_on_tasks
-#ELSE
+#else
 use mod_mympi, only: myrank, master, nranks
-#ENDIF
+#endif
 use mod_version_info
 use mod_wunfiles, only: t_params
       Use mod_datatypes, Only: dp

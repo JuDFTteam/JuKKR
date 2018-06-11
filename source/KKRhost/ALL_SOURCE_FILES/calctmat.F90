@@ -171,7 +171,7 @@ t_mpi_c_grid%ioff_pt2 = ioff_pt
 ! now initialize arrays for tmat, gmat, and gref
 CALL init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
 IF(lly /= 0) CALL init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
-#ELSE
+#else
 ! now initialize arrays for tmat, gmat, and gref
 CALL init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
 IF(lly /= 0) CALL init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
@@ -317,7 +317,7 @@ ELSE
 #ifdef CPP_MPI
   irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*  &
       (i1-t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie)-1)
-#ELSE
+#else
   irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i1-1)
 #endif
 t_tgmat%tmat(:,:,irec) = tmat0
@@ -354,7 +354,7 @@ endif
 #ifdef CPP_MPI
 !stop timing measurement for this pair of ie and i1, needed for MPIadapt
 IF(mpiadapt) CALL timing_stop('time_1a_ieiatom',save_out=timings_1a(ie, i1))
-#ENDIF
+#endif
 
 END DO ! IE = 1,IELAST
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE

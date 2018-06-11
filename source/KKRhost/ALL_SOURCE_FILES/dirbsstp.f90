@@ -22,7 +22,7 @@ subroutine dirbsstp(y, dydx, nv, x, htry, eps, yscal, b, v, r, drdi, nmesh)
 ! PARAMETER definitions
   integer :: iseqmax, nuse
   parameter (iseqmax=30, nuse=7)
-  complex *16 :: tiny
+  complex (kind=dp) :: tiny
 ! Bereshad:
 !      parameter (  tiny  = (1.0d-20,1.0d-20)  )
 ! dadurch wird der Imaginaerteil fuer die Skalierungsfunktion nicht 00 klein.
@@ -32,14 +32,14 @@ subroutine dirbsstp(y, dydx, nv, x, htry, eps, yscal, b, v, r, drdi, nmesh)
   parameter (tiny=(1.0d-20,1.0d-20))
 
 ! Dummy arguments
-  real *8 :: eps, htry, x
+  real (kind=dp) :: eps, htry, x
   integer :: nmesh, nv
-  real *8 :: b(nrmax), drdi(nrmax), r(nrmax), v(nrmax)
-  complex *16 :: dydx(nv), y(nv), yscal(nv)
+  real (kind=dp) :: b(nrmax), drdi(nrmax), r(nrmax), v(nrmax)
+  complex (kind=dp) :: dydx(nv), y(nv), yscal(nv)
 
 ! Local variables
-  complex *16 :: dysav(ncfmax), yerr(ncfmax), ysav(ncfmax), yseq(ncfmax)
-  real *8 :: errmax, h, xest, xsav
+  complex (kind=dp) :: dysav(ncfmax), yerr(ncfmax), ysav(ncfmax), yseq(ncfmax)
+  real (kind=dp) :: errmax, h, xest, xsav
   integer :: i, j, nseq(iseqmax)
 
   data nseq/2, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, &

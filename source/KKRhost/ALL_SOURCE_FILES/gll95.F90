@@ -12,7 +12,7 @@ SUBROUTINE gll13(ez,cleb,icleb,loflm,iend,tmatll,dtmatll,atom,  &
 ! ----------------------------------------------------------------------
 #ifdef CPP_HYBRID
 use omp_lib
-#ENDIF
+#endif
 use mod_types, only: t_inc
       Use mod_datatypes, Only: dp
       IMPLICIT NONE
@@ -92,7 +92,7 @@ IF (test('flow    ').AND.(t_inc%i_write>0)) WRITE (1337,FMT=*) '>>> GLL95'
 !$omp& private(n1, n2, rdiff, absrdiff, lm2, lm1, nlm2, nlm1, GLL)
 !$omp& private(thread_id, gtref, dgtde, DGLLDE)
 thread_id = omp_get_thread_num()
-#ENDIF
+#endif
 ! allocate here, inside omp parallel region
 allocate(gll(lmgf0d,lmgf0d),dgllde(lmgf0d,lmgf0d), stat=lm1)
 IF(lm1/=0) STOP 'Error allocating gll etc. <GLL95>'
@@ -104,7 +104,7 @@ dgllde(:,:) = czero
 
 #ifdef CPP_HYBRID
 !$omp do
-#ENDIF
+#endif
 DO n1 = 1,natom
   DO n2 = 1,natom
     rdiff(1:3) = - (ratom(1:3,n1)-ratom(1:3,n2))*alat
@@ -139,7 +139,7 @@ END DO
 deallocate( gll, dgllde, stat=lm1)
 IF ( lm1 /= 0 ) STOP ' [gll13] dealloc'
 !$omp end parallel
-#ENDIF
+#endif
 IF (test('flow    ').AND.(t_inc%i_write>0)) WRITE (1337,FMT=*) 'GFREE o.k.'
 ! ----------------------------------------------------------------------
 
