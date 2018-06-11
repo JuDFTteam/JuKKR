@@ -34,6 +34,7 @@ module mod_main0
    use mod_create_newmesh
    use mod_rhoqtools, only: rhoq_save_rmesh
    use rinput
+   use mod_DataTypes
 
    implicit none
 
@@ -122,34 +123,34 @@ module mod_main0
    integer :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
    integer :: IESEMICORE
    integer :: IDOSEMICORE
-   double precision :: TK        !< Temperature
-   double precision :: FCM       !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
-   double precision :: E2IN
-   double precision :: EMIN      !< Lower value (in Ryd) for the energy contour
-   double precision :: EMAX      !< Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
-   double precision :: ALAT      !< Lattice constant in a.u.
-   double precision :: RMAX      !< Ewald summation cutoff parameter for real space summation
-   double precision :: GMAX      !< Ewald summation cutoff parameter for reciprocal space summation
-   double precision :: R_LOG     !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
-   double precision :: RCUTZ     !< Parameter for the screening cluster along the z-direction
-   double precision :: RCUTXY    !< Parameter for the screening cluster along the x-y plane
-   double precision :: QBOUND    !< Convergence parameter for the potential
-   double precision :: VCONST    !< Potential shift in the first iteration
-   double precision :: HFIELD    !< External magnetic field, for initial potential shift in spin polarised case
-   double precision :: MIXING    !< Magnitude of the mixing parameter
-   double precision :: ABASIS    !< Scaling factors for rbasis
-   double precision :: BBASIS    !< Scaling factors for rbasis
-   double precision :: CBASIS    !< Scaling factors for rbasis
-   double precision :: EFERMI    !< Fermi energy
-   double precision :: ESHIFT
-   double precision :: TKSEMI    !< Temperature of semi-core contour
-   double precision :: TOLRDIF   !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
-   double precision :: ALATNEW
-   double precision :: VOLUME0
-   double precision :: EMUSEMI   !< Top of semicore contour in Ryd.
-   double precision :: EBOTSEMI  !< Bottom of semicore contour in Ryd
-   double precision :: FSEMICORE !< Initial normalization factor for semicore states (approx. 1.)
-   double precision :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+   real (kind=dp) :: TK        !< Temperature
+   real (kind=dp) :: FCM       !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
+   real (kind=dp) :: E2IN
+   real (kind=dp) :: EMIN      !< Lower value (in Ryd) for the energy contour
+   real (kind=dp) :: EMAX      !< Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
+   real (kind=dp) :: ALAT      !< Lattice constant in a.u.
+   real (kind=dp) :: RMAX      !< Ewald summation cutoff parameter for real space summation
+   real (kind=dp) :: GMAX      !< Ewald summation cutoff parameter for reciprocal space summation
+   real (kind=dp) :: R_LOG     !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
+   real (kind=dp) :: RCUTZ     !< Parameter for the screening cluster along the z-direction
+   real (kind=dp) :: RCUTXY    !< Parameter for the screening cluster along the x-y plane
+   real (kind=dp) :: QBOUND    !< Convergence parameter for the potential
+   real (kind=dp) :: VCONST    !< Potential shift in the first iteration
+   real (kind=dp) :: HFIELD    !< External magnetic field, for initial potential shift in spin polarised case
+   real (kind=dp) :: MIXING    !< Magnitude of the mixing parameter
+   real (kind=dp) :: ABASIS    !< Scaling factors for rbasis
+   real (kind=dp) :: BBASIS    !< Scaling factors for rbasis
+   real (kind=dp) :: CBASIS    !< Scaling factors for rbasis
+   real (kind=dp) :: EFERMI    !< Fermi energy
+   real (kind=dp) :: ESHIFT
+   real (kind=dp) :: TKSEMI    !< Temperature of semi-core contour
+   real (kind=dp) :: TOLRDIF   !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
+   real (kind=dp) :: ALATNEW
+   real (kind=dp) :: VOLUME0
+   real (kind=dp) :: EMUSEMI   !< Top of semicore contour in Ryd.
+   real (kind=dp) :: EBOTSEMI  !< Bottom of semicore contour in Ryd
+   real (kind=dp) :: FSEMICORE !< Initial normalization factor for semicore states (approx. 1.)
+   real (kind=dp) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
    character(len=10) :: SOLVER   !< Type of solver
    character(len=40) :: I12      !< File identifiers
    character(len=40) :: I13      !< Potential file name
@@ -215,49 +216,49 @@ module mod_main0
    integer, dimension(:,:), allocatable :: ICHECK
    integer, dimension(:,:), allocatable :: IPAN_INTERVALL
    integer, dimension(:,:,:), allocatable :: JEND !< Pointer array for icleb()
-   double precision, dimension(2) :: VBC       !< Potential constants
-   double precision, dimension(3) :: ZPERIGHT  !< Vector to define how to repeat the basis of the right host
-   double precision, dimension(3) :: ZPERLEFT  !< Vector to define how to repeat the basis of the left host
-   double precision, dimension(3,3) :: RECBV   !< Reciprocal basis vectors
-   double precision, dimension(3,3) :: BRAVAIS !< Bravais lattice vectors
-   double precision, dimension(64,3,3) :: RSYMAT
-   double precision, dimension(:), allocatable :: A   !< Constants for exponential R mesh
-   double precision, dimension(:), allocatable :: B   !< Constants for exponential R mesh
-   double precision, dimension(:), allocatable :: WG  !< Integr. weights for Legendre polynomials
-   double precision, dimension(:), allocatable :: GSH
-   double precision, dimension(:), allocatable :: ZAT !< Nuclear charge
-   double precision, dimension(:), allocatable :: RMT !< Muffin-tin radius of true system
-   double precision, dimension(:), allocatable :: RWS !< Wigner Seitz radius
-   double precision, dimension(:), allocatable :: VREF
-   double precision, dimension(:), allocatable :: MTFAC  !< Scaling factor for radius MT
-   double precision, dimension(:), allocatable :: RMTNEW !< Adapted muffin-tin radius
-   double precision, dimension(:), allocatable :: RMTREF !< Muffin-tin radius of reference system
-   double precision, dimension(:), allocatable :: RMTREFAT
-   double precision, dimension(:), allocatable :: FPRADIUS !< R point at which full-potential treatment starts
-   double precision, dimension(:), allocatable :: SOCSCALE !< Spin-orbit scaling
-   double precision, dimension(:,:), allocatable :: RMESH    !< Radial mesh ( in units a Bohr)
-   double precision, dimension(:,:), allocatable :: S
-   double precision, dimension(:,:), allocatable :: RR   !< Set of real space vectors (in a.u.)
-   double precision, dimension(:,:), allocatable :: DRDI !< Derivative dr/di
-   double precision, dimension(:,:), allocatable :: DROR
-   double precision, dimension(:,:), allocatable :: CLEB !< GAUNT coefficients (GAUNT)
-   double precision, dimension(:,:), allocatable :: VISP !< Spherical part of the potential
-   double precision, dimension(:,:), allocatable :: CSCL !< Speed of light scaling
-   double precision, dimension(:,:), allocatable :: RNEW
-   double precision, dimension(:,:), allocatable :: RATOM
-   double precision, dimension(:,:), allocatable :: ECORE   !< Core energies
-   double precision, dimension(:,:), allocatable :: TLEFT   !< Vectors of the basis for the left host
-   double precision, dimension(:,:), allocatable :: TRIGHT  !< Vectors of the basis for the right host
-   double precision, dimension(:,:), allocatable :: SOCSCL
-   double precision, dimension(:,:), allocatable :: RBASIS  !< Position of atoms in the unit cell in units of bravais vectors
-   double precision, dimension(:,:), allocatable :: RCLSIMP
-   double precision, dimension(:,:), allocatable :: CMOMHOST !< Charge moments of each atom of the (left/right) host
-   double precision, dimension(:,:), allocatable :: RPAN_INTERVALL
-   double precision, dimension(:,:,:), allocatable :: RS
-   double precision, dimension(:,:,:), allocatable :: YRG  !< Spherical harmonics (GAUNT2)
-   double precision, dimension(:,:,:), allocatable :: VINS !< Non-spherical part of the potential
-   double precision, dimension(:,:,:), allocatable :: RCLS !< Real space position of atom in cluster
-   double precision, dimension(:,:,:), allocatable :: RROT
+   real (kind=dp), dimension(2) :: VBC       !< Potential constants
+   real (kind=dp), dimension(3) :: ZPERIGHT  !< Vector to define how to repeat the basis of the right host
+   real (kind=dp), dimension(3) :: ZPERLEFT  !< Vector to define how to repeat the basis of the left host
+   real (kind=dp), dimension(3,3) :: RECBV   !< Reciprocal basis vectors
+   real (kind=dp), dimension(3,3) :: BRAVAIS !< Bravais lattice vectors
+   real (kind=dp), dimension(64,3,3) :: RSYMAT
+   real (kind=dp), dimension(:), allocatable :: A   !< Constants for exponential R mesh
+   real (kind=dp), dimension(:), allocatable :: B   !< Constants for exponential R mesh
+   real (kind=dp), dimension(:), allocatable :: WG  !< Integr. weights for Legendre polynomials
+   real (kind=dp), dimension(:), allocatable :: GSH
+   real (kind=dp), dimension(:), allocatable :: ZAT !< Nuclear charge
+   real (kind=dp), dimension(:), allocatable :: RMT !< Muffin-tin radius of true system
+   real (kind=dp), dimension(:), allocatable :: RWS !< Wigner Seitz radius
+   real (kind=dp), dimension(:), allocatable :: VREF
+   real (kind=dp), dimension(:), allocatable :: MTFAC  !< Scaling factor for radius MT
+   real (kind=dp), dimension(:), allocatable :: RMTNEW !< Adapted muffin-tin radius
+   real (kind=dp), dimension(:), allocatable :: RMTREF !< Muffin-tin radius of reference system
+   real (kind=dp), dimension(:), allocatable :: RMTREFAT
+   real (kind=dp), dimension(:), allocatable :: FPRADIUS !< R point at which full-potential treatment starts
+   real (kind=dp), dimension(:), allocatable :: SOCSCALE !< Spin-orbit scaling
+   real (kind=dp), dimension(:,:), allocatable :: RMESH    !< Radial mesh ( in units a Bohr)
+   real (kind=dp), dimension(:,:), allocatable :: S
+   real (kind=dp), dimension(:,:), allocatable :: RR   !< Set of real space vectors (in a.u.)
+   real (kind=dp), dimension(:,:), allocatable :: DRDI !< Derivative dr/di
+   real (kind=dp), dimension(:,:), allocatable :: DROR
+   real (kind=dp), dimension(:,:), allocatable :: CLEB !< GAUNT coefficients (GAUNT)
+   real (kind=dp), dimension(:,:), allocatable :: VISP !< Spherical part of the potential
+   real (kind=dp), dimension(:,:), allocatable :: CSCL !< Speed of light scaling
+   real (kind=dp), dimension(:,:), allocatable :: RNEW
+   real (kind=dp), dimension(:,:), allocatable :: RATOM
+   real (kind=dp), dimension(:,:), allocatable :: ECORE   !< Core energies
+   real (kind=dp), dimension(:,:), allocatable :: TLEFT   !< Vectors of the basis for the left host
+   real (kind=dp), dimension(:,:), allocatable :: TRIGHT  !< Vectors of the basis for the right host
+   real (kind=dp), dimension(:,:), allocatable :: SOCSCL
+   real (kind=dp), dimension(:,:), allocatable :: RBASIS  !< Position of atoms in the unit cell in units of bravais vectors
+   real (kind=dp), dimension(:,:), allocatable :: RCLSIMP
+   real (kind=dp), dimension(:,:), allocatable :: CMOMHOST !< Charge moments of each atom of the (left/right) host
+   real (kind=dp), dimension(:,:), allocatable :: RPAN_INTERVALL
+   real (kind=dp), dimension(:,:,:), allocatable :: RS
+   real (kind=dp), dimension(:,:,:), allocatable :: YRG  !< Spherical harmonics (GAUNT2)
+   real (kind=dp), dimension(:,:,:), allocatable :: VINS !< Non-spherical part of the potential
+   real (kind=dp), dimension(:,:,:), allocatable :: RCLS !< Real space position of atom in cluster
+   real (kind=dp), dimension(:,:,:), allocatable :: RROT
    double complex, dimension(:), allocatable :: EZ
    double complex, dimension(:), allocatable :: DEZ
    double complex, dimension(:), allocatable :: WEZ
@@ -272,8 +273,8 @@ module mod_main0
    !     Magnetisation angles -- description see RINPUT13
    !-------------------------------------------------------------------------
    integer :: KMROT !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-   double precision, dimension(:), allocatable :: QMTET !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-   double precision, dimension(:), allocatable :: QMPHI !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+   real (kind=dp), dimension(:), allocatable :: QMTET !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+   real (kind=dp), dimension(:), allocatable :: QMPHI !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
    !-------------------------------------------------------------------------
    !     CPA variables
    !-------------------------------------------------------------------------
@@ -288,17 +289,17 @@ module mod_main0
    !>              (H. Ebert + V. Popescu) allows a self-consistent
    !>              determination of the magnetic configuration in REL mode
    !-------------------------------------------------------------------------
-   double precision, dimension(:), allocatable :: QMGAM
-   double precision, dimension(:,:), allocatable :: QMGAMTAB
-   double precision, dimension(:,:), allocatable :: QMPHITAB
-   double precision, dimension(:,:), allocatable :: QMTETTAB
+   real (kind=dp), dimension(:), allocatable :: QMGAM
+   real (kind=dp), dimension(:,:), allocatable :: QMGAMTAB
+   real (kind=dp), dimension(:,:), allocatable :: QMPHITAB
+   real (kind=dp), dimension(:,:), allocatable :: QMTETTAB
    !-------------------------------------------------------------------------
    !> @note changes for impurity 20/02/2004 -- v.popescu according to
    !>                                          n.papanikolaou VINS()
    !-------------------------------------------------------------------------
    integer, dimension(:), allocatable :: HOSTIMP
-   double precision :: CPATOL !< Convergency tolerance for CPA-cycle
-   double precision, dimension(:), allocatable :: CONC !< Concentration of a given atom
+   real (kind=dp) :: CPATOL !< Convergency tolerance for CPA-cycle
+   real (kind=dp), dimension(:), allocatable :: CONC !< Concentration of a given atom
    !-------------------------------------------------------------------------------
    double complex, dimension(:,:), allocatable :: RC !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
    double complex, dimension(:,:), allocatable :: CREL !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
@@ -310,13 +311,13 @@ module mod_main0
    integer, dimension(:), allocatable :: IRSHIFT !< shift of the REL radial mesh with respect no NREL
    integer, dimension(:,:), allocatable :: NRREL
    integer, dimension(:,:,:), allocatable :: IRREL
-   double precision, dimension(0:100) :: FACT
-   double precision, dimension(:,:), allocatable :: VTREL !< potential (spherical part)
-   double precision, dimension(:,:), allocatable :: BTREL !< magnetic field
-   double precision, dimension(:,:), allocatable :: RMREL !< radial mesh
-   double precision, dimension(:,:), allocatable :: DRDIREL !< derivative of radial mesh
-   double precision, dimension(:,:), allocatable :: R2DRDIREL !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-   double precision, dimension(:,:,:), allocatable :: THESME
+   real (kind=dp), dimension(0:100) :: FACT
+   real (kind=dp), dimension(:,:), allocatable :: VTREL !< potential (spherical part)
+   real (kind=dp), dimension(:,:), allocatable :: BTREL !< magnetic field
+   real (kind=dp), dimension(:,:), allocatable :: RMREL !< radial mesh
+   real (kind=dp), dimension(:,:), allocatable :: DRDIREL !< derivative of radial mesh
+   real (kind=dp), dimension(:,:), allocatable :: R2DRDIREL !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+   real (kind=dp), dimension(:,:,:), allocatable :: THESME
    logical :: PARA
    logical, dimension(NSYMAXD) :: SYMUNITARY !< unitary/antiunitary symmetry flag
    !
@@ -348,14 +349,14 @@ module mod_main0
    integer :: KREADLDAU !< LDA+U arrays available
    integer, dimension(:), allocatable :: LOPT !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
    integer, dimension(:), allocatable :: ITLDAU !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
-   double precision, dimension(:), allocatable :: UEFF !< input U parameter for each atom
-   double precision, dimension(:), allocatable :: JEFF !< input J parameter for each atom
-   double precision, dimension(:), allocatable :: EREFLDAU !< the energies of the projector's wave functions (REAL)
+   real (kind=dp), dimension(:), allocatable :: UEFF !< input U parameter for each atom
+   real (kind=dp), dimension(:), allocatable :: JEFF !< input J parameter for each atom
+   real (kind=dp), dimension(:), allocatable :: EREFLDAU !< the energies of the projector's wave functions (REAL)
    !..
    !.. distinguish between spin-dependent and spin-independent
    !.. quantities
-   double precision, dimension(:,:,:,:), allocatable :: WLDAU !< potential matrix
-   double precision, dimension(:,:,:,:,:), allocatable :: ULDAU !< calculated Coulomb matrix elements (EREFLDAU)
+   real (kind=dp), dimension(:,:,:,:), allocatable :: WLDAU !< potential matrix
+   real (kind=dp), dimension(:,:,:,:,:), allocatable :: ULDAU !< calculated Coulomb matrix elements (EREFLDAU)
    double complex, dimension(:,:), allocatable :: PHILDAU
    !-------------------------------------------------------------------------
    ! LDA+U LDA+U LDA+U
@@ -373,8 +374,8 @@ module mod_main0
    integer :: IVSHIFT
 
    !allocations:
-   double precision, dimension(:,:,:), allocatable :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-   double precision, dimension(:,:,:), allocatable :: THETASNEW
+   real (kind=dp), dimension(:,:,:), allocatable :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+   real (kind=dp), dimension(:,:,:), allocatable :: THETASNEW
 
    public :: main0, bshift_ns
 
@@ -416,7 +417,7 @@ contains
       integer :: i_stat
       integer :: IREC
       integer :: LRECABMAD
-      double precision :: ZATTEMP
+      real (kind=dp) :: ZATTEMP
       ! for OPERATOR option
       logical :: lexist, operator_imp
 
@@ -1233,6 +1234,8 @@ contains
    subroutine bshift_ns(IRM,IRID,IPAND,LMPOT,NPOTD,NATYP,NSPIN,NGSHD,NFUND,NCELLD,  &
       IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM_MAP,LMSP,IFUNM,IRCUT,     &
       HFIELD,GSH,RMESH,THESME,THETAS,VISP,VINS)
+ 
+      use mod_DataTypes
 
       implicit none
 
@@ -1262,21 +1265,21 @@ contains
       integer, dimension(NATYP,LMXSPD), intent(in) :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
       integer, dimension(NATYP,LMXSPD), intent(in) :: IFUNM
       integer, dimension(0:IPAND,NATYP), intent(in) :: IRCUT !< r points of panel borders
-      double precision, intent(in) :: HFIELD !< External magnetic field, for initial potential shift in spin polarised case
-      double precision, dimension(NGSHD), intent(in) :: GSH
-      double precision, dimension(IRM,NATYP), intent(in) :: RMESH
-      double precision, dimension(IRID,NFUND,NCELLD), intent(in) :: THESME
-      double precision, dimension(IRID,NFUND,NCELLD), intent(in) :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+      real (kind=dp), intent(in) :: HFIELD !< External magnetic field, for initial potential shift in spin polarised case
+      real (kind=dp), dimension(NGSHD), intent(in) :: GSH
+      real (kind=dp), dimension(IRM,NATYP), intent(in) :: RMESH
+      real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in) :: THESME
+      real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in) :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
 
       ! Input/Output:
-      double precision, dimension(IRM,NPOTD), intent(inout) :: VISP !< Spherical part of the potential
-      double precision, dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS !< Non-spherical part of the potential
+      real (kind=dp), dimension(IRM,NPOTD), intent(inout) :: VISP !< Spherical part of the potential
+      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS !< Non-spherical part of the potential
 
       ! Inside
       integer :: ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
-      double precision  :: RFPI, VSHIFT
-      double precision, dimension(IRM) :: PSHIFTR
-      double precision, dimension(IRM,LMPOT) :: PSHIFTLMR
+      real (kind=dp)  :: RFPI, VSHIFT
+      real (kind=dp), dimension(IRM) :: PSHIFTR
+      real (kind=dp), dimension(IRM,LMPOT) :: PSHIFTLMR
 
       RFPI = SQRT(16.0D0*ATAN(1.0D0))
 

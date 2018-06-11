@@ -228,7 +228,7 @@ FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback
 
 # Change to if flag is matched:
 mac: FFLAGS = -O2 -r8 -module $(OBJ) -traceback 
-gfort: FFLAGS= -O3 -ffree-line-length-none -fopenmp -fdefault-real-8
+gfort: FFLAGS= -O3 -ffree-line-length-none -fopenmp
 # -J$(OBJ)
 #gfort: FFLAGS= -O0 -ffree-line-length-none -fdefault-real-8 -J $(OBJ) -Wall -Wextra -pedantic -fimplicit-none -fcheck=all -fbacktrace
 

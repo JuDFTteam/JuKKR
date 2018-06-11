@@ -82,7 +82,7 @@
           Call memocc(i_stat, product(shape(cls))*kind(cls), 'CLS', &
             'allocate_cell')
           cls = 1
-          Allocate (rbasis(3,naez), Stat=i_stat)
+          Allocate (rbasis(3,naez+nemb), Stat=i_stat)
           Call memocc(i_stat, product(shape(rbasis))*kind(rbasis), 'RBASIS', &
             'allocate_cell')
           rbasis = 0.E0_dp
@@ -1173,7 +1173,7 @@
 
         If (flag>0) Then
 
-          Allocate (atom(3,nsheld), Stat=i_stat)
+          Allocate (atom(naclsd, naez+(nembd1-1)), Stat=i_stat)
           Call memocc(i_stat, product(shape(atom))*kind(atom), 'ATOM', &
             'allocate_clusters')
           atom = 0
@@ -1193,7 +1193,7 @@
           Call memocc(i_stat, product(shape(nacls))*kind(nacls), 'NACLS', &
             'allocate_clusters')
           nacls = 0
-          Allocate (ezoa(naclsd,naez), Stat=i_stat)
+          Allocate (ezoa(naclsd,naez+(nembd1-1)), Stat=i_stat)
           Call memocc(i_stat, product(shape(ezoa))*kind(ezoa), 'EZOA', &
             'allocate_clusters')
           ezoa = 0

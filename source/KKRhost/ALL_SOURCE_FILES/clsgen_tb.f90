@@ -42,7 +42,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
 
   integer :: cls(naez+nembd), & ! type of cluster around atom
     kaoez(natyp, naez+nembd) & ! type of atom at position in EZ
-    , nacls(natyp), & ! number of atoms in cluster
+    , nacls(ncls), & ! number of atoms in cluster
     atom(naclsd, naez+nembd), & ! index to atom in elem/cell at site in cluster
     ezoa(naclsd, naez+nembd) ! index to bravais lattice  at site in cluster
 

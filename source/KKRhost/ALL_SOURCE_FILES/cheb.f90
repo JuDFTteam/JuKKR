@@ -5,10 +5,11 @@
 subroutine getcmatrix(ncheb, cmatrix)
 ! calculates the C matrix according to:
 ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  use mod_DataTypes
   implicit none
   integer, intent (in) :: ncheb
-  double precision, intent (out) :: cmatrix(0:ncheb, 0:ncheb)
-  double precision :: pi
+  real (kind=dp), intent (out) :: cmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp) :: pi
 !local
   integer :: icheb1, icheb2
 
@@ -26,13 +27,14 @@ end subroutine
 subroutine getcinvmatrix(ncheb, cinvmatrix)
 ! calculates the C**-1 matrix according to:
 ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  use mod_DataTypes
   implicit none
   integer, intent (in) :: ncheb
-  double precision, intent (out) :: cinvmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp), intent (out) :: cinvmatrix(0:ncheb, 0:ncheb)
 !local
-  double precision :: pi
+  real (kind=dp) :: pi
   integer :: icheb1, icheb2
-  double precision :: fac
+  real (kind=dp) :: fac
 
   pi = 4d0*datan(1d0)
   fac = 1.0d0/(ncheb+1)
@@ -52,8 +54,8 @@ subroutine getccmatrix(ncheb, rmesh, nrmesh, cmatrix)
   use mod_DataTypes
   implicit none
   integer, intent (in) :: ncheb, nrmesh
-  double precision, intent (in) :: rmesh(nrmesh)
-  double precision, intent (out) :: cmatrix(1:nrmesh, 0:ncheb)
+  real (kind=dp), intent (in) :: rmesh(nrmesh)
+  real (kind=dp), intent (out) :: cmatrix(1:nrmesh, 0:ncheb)
   integer :: icheb, ir
 
   do ir = 1, nrmesh
@@ -67,9 +69,10 @@ end subroutine
 subroutine getlambda(ncheb, lambda)
 ! set up the Lambda matrix which differentiates the coefficients of an
 ! Chebyshev expansion 
+  use mod_DataTypes
   implicit none
   integer, intent (in) :: ncheb
-  double precision, intent (out) :: lambda(0:ncheb, 0:ncheb)
+  real (kind=dp), intent (out) :: lambda(0:ncheb, 0:ncheb)
 !local
   integer :: icheb, icheb2
 
@@ -85,16 +88,17 @@ end subroutine
 
 
 subroutine getclambdacinv(ncheb, clambdacinv)
+  use mod_DataTypes
   implicit none
 ! set up the Lambda matrix which differentiates the coefficients of an
 ! Chebyshev expansion
   integer :: ncheb
-  double precision :: clambdacinv(0:ncheb, 0:ncheb)
+  real (kind=dp) :: clambdacinv(0:ncheb, 0:ncheb)
 !local
-  double precision :: lambda(0:ncheb, 0:ncheb)
-  double precision :: cmatrix(0:ncheb, 0:ncheb)
-  double precision :: cinvmatrix(0:ncheb, 0:ncheb)
-  double precision :: temp1(0:ncheb, 0:ncheb)
+  real (kind=dp) :: lambda(0:ncheb, 0:ncheb)
+  real (kind=dp) :: cmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp) :: cinvmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp) :: temp1(0:ncheb, 0:ncheb)
   integer :: n
 
   lambda = (0.0d0, 0.0d0)
@@ -113,17 +117,18 @@ end subroutine
 
 
 subroutine getclambda2cinv(ncheb, clambda2cinv)
+  use mod_DataTypes
   implicit none
 ! set up the Lambda matrix which differentiates the coefficients of an
 ! Chebyshev expansion
   integer :: ncheb
-  double precision :: clambda2cinv(0:ncheb, 0:ncheb)
+  real (kind=dp) :: clambda2cinv(0:ncheb, 0:ncheb)
 !local
-  double precision :: lambda(0:ncheb, 0:ncheb)
-  double precision :: cmatrix(0:ncheb, 0:ncheb)
-  double precision :: cinvmatrix(0:ncheb, 0:ncheb)
-  double precision :: temp1(0:ncheb, 0:ncheb)
-  double precision :: temp2(0:ncheb, 0:ncheb)
+  real (kind=dp) :: lambda(0:ncheb, 0:ncheb)
+  real (kind=dp) :: cmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp) :: cinvmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp) :: temp1(0:ncheb, 0:ncheb)
+  real (kind=dp) :: temp2(0:ncheb, 0:ncheb)
 
   lambda = (0.0d0, 0.0d0)
   cmatrix = (0.0d0, 0.0d0)
@@ -142,35 +147,35 @@ end subroutine
 
 
 subroutine diffcheb(fn, ncheb, dfndr)
+  use mod_DataTypes
   implicit none
   integer :: ncheb
-  double precision :: fn(0:ncheb)
-  double precision :: dfndr(0:ncheb)
-  double precision :: clambdacinv(0:ncheb, 0:ncheb)
-!function
-  double precision :: matvec_dmdm
+  real (kind=dp) :: fn(0:ncheb)
+  real (kind=dp) :: dfndr(0:ncheb)
+  real (kind=dp) :: clambdacinv(0:ncheb, 0:ncheb)
 
 !needs to be checked!!!!!!1
   call getclambdacinv(ncheb, clambdacinv(0:ncheb,0:ncheb))
-  dfndr(0:ncheb) = matvec_dmdm(ncheb, clambdacinv(0:ncheb,0:ncheb), &
-    fn(0:ncheb))
+  call matvec_dmdm(ncheb, clambdacinv(0:ncheb,0:ncheb), fn(0:ncheb), dfndr(0:ncheb))
 end subroutine
 
 
 ! helper functions
 
-double precision function matvec_dmdm(ncheb, mat1, vec1)
+subroutine matvec_dmdm(ncheb, mat1, vec1, outvec)
+  use mod_DataTypes
   implicit none
   integer, intent (in) :: ncheb
-  double precision, intent (in) :: mat1(0:ncheb, 0:ncheb), vec1(0:ncheb)
+  real (kind=dp), intent (in) :: mat1(0:ncheb, 0:ncheb), vec1(0:ncheb)
+  real (kind=dp), intent (out) :: outvec(0:ncheb)
   integer :: n, m
 
   m = size(mat1, 1)
   n = size(mat1, 2)
   if (size(vec1,1)/=n) stop &
     'matvec_dmdm: dimensions of first input array differ.'
-  call dgemv('N', m, n, 1.0d0, mat1, m, vec1, 1, 0.0d0, matvec_dmdm, 1)
-end function
+  call dgemv('N', m, n, 1.0d0, mat1, m, vec1, 1, 0.0d0, outvec, 1)
+end subroutine matvec_dmdm
 
 subroutine matmat_dmdm(mat1, mat2, ncheb, outmat)
   use mod_DataTypes

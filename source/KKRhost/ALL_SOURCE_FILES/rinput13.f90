@@ -29,14 +29,15 @@ contains
     drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, qmtet, &
     qmphi, kreadldau, lopt, ueff, jeff, erefldau, ntotd)
 
-    use :: profiling
-    use :: constants
-    use :: mod_wunfiles, only: t_params
-    use :: memoryhandling
-    use :: global_variables
-    use :: mod_types, only: t_inc
-    use :: mod_save_wavefun, only: t_wavefunctions
-    use :: mod_version_info
+    use profiling
+    use constants
+    use mod_wunfiles, only: t_params
+    use memoryhandling
+    use global_variables
+    use mod_types, only: t_inc
+    use mod_save_wavefun, only: t_wavefunctions
+    use mod_version_info
+    use mod_DataTypes
 
     implicit none
 !     ..
@@ -124,30 +125,30 @@ contains
     integer, intent (inout) :: npan_eq !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
     integer, intent (inout) :: npan_log !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
     integer, intent (inout) :: npolsemi !< Number of poles for the semicore contour
-    double precision, intent (inout) :: tk !< Temperature
-    double precision, intent (inout) :: fcm !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
-    double precision, intent (inout) :: emin !< Lower value (in Ryd) for the energy contour
-    double precision, intent (inout) :: emax !< Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
-    double precision, intent (inout) :: rmax !< Ewald summation cutoff parameter for real space summation
-    double precision, intent (inout) :: gmax !< Ewald summation cutoff parameter for reciprocal space summation
-    double precision, intent (inout) :: alat !< Lattice constant (in a.u.)
-    double precision, intent (inout) :: r_log !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
-    double precision, intent (inout) :: rcutz !< Parameter for the screening cluster along the z-direction
-    double precision, intent (inout) :: rcutxy !< Parameter for the screening cluster along the x-y plane
-    double precision, intent (inout) :: eshift
-    double precision, intent (inout) :: qbound !< Convergence parameter for the potential
-    double precision, intent (inout) :: hfield !< External magnetic field, for initial potential shift in spin polarised case
-    double precision, intent (inout) :: mixing !< Magnitude of the mixing parameter
-    double precision, intent (inout) :: abasis !< Scaling factors for rbasis
-    double precision, intent (inout) :: bbasis !< Scaling factors for rbasis
-    double precision, intent (inout) :: cbasis !< Scaling factors for rbasis
-    double precision, intent (inout) :: vconst !< Potential shift in the first iteration
-    double precision, intent (inout) :: tksemi !< Temperature for semi-core contour
-    double precision, intent (inout) :: tolrdif !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
-    double precision, intent (inout) :: emusemi !< Top of semicore contour in Ryd.
-    double precision, intent (inout) :: ebotsemi !< Bottom of semicore contour in Ryd
-    double precision, intent (inout) :: fsemicore !< Initial normalization factor for semicore states (approx. 1.)
-    double precision, intent (inout) :: lambda_xc !< Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
+    real (kind=dp), intent (inout) :: tk !< Temperature
+    real (kind=dp), intent (inout) :: fcm !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
+    real (kind=dp), intent (inout) :: emin !< Lower value (in Ryd) for the energy contour
+    real (kind=dp), intent (inout) :: emax !< Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
+    real (kind=dp), intent (inout) :: rmax !< Ewald summation cutoff parameter for real space summation
+    real (kind=dp), intent (inout) :: gmax !< Ewald summation cutoff parameter for reciprocal space summation
+    real (kind=dp), intent (inout) :: alat !< Lattice constant (in a.u.)
+    real (kind=dp), intent (inout) :: r_log !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
+    real (kind=dp), intent (inout) :: rcutz !< Parameter for the screening cluster along the z-direction
+    real (kind=dp), intent (inout) :: rcutxy !< Parameter for the screening cluster along the x-y plane
+    real (kind=dp), intent (inout) :: eshift
+    real (kind=dp), intent (inout) :: qbound !< Convergence parameter for the potential
+    real (kind=dp), intent (inout) :: hfield !< External magnetic field, for initial potential shift in spin polarised case
+    real (kind=dp), intent (inout) :: mixing !< Magnitude of the mixing parameter
+    real (kind=dp), intent (inout) :: abasis !< Scaling factors for rbasis
+    real (kind=dp), intent (inout) :: bbasis !< Scaling factors for rbasis
+    real (kind=dp), intent (inout) :: cbasis !< Scaling factors for rbasis
+    real (kind=dp), intent (inout) :: vconst !< Potential shift in the first iteration
+    real (kind=dp), intent (inout) :: tksemi !< Temperature for semi-core contour
+    real (kind=dp), intent (inout) :: tolrdif !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
+    real (kind=dp), intent (inout) :: emusemi !< Top of semicore contour in Ryd.
+    real (kind=dp), intent (inout) :: ebotsemi !< Bottom of semicore contour in Ryd
+    real (kind=dp), intent (inout) :: fsemicore !< Initial normalization factor for semicore states (approx. 1.)
+    real (kind=dp), intent (inout) :: lambda_xc !< Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
     double complex, intent (inout) :: deltae !< LLY Energy difference for numerical derivative
     logical, intent (inout) :: lrhosym
     logical, intent (inout) :: linipol !< True: Initial spin polarization; false: no initial spin polarization
@@ -165,25 +166,25 @@ contains
     integer, dimension (:), allocatable, intent (out) :: ixipol !< Constraint of spin pol.
     integer, dimension (:), allocatable, intent (out) :: hostimp
     integer, dimension (:, :), allocatable, intent (out) :: kfg
-    double precision, dimension (2), intent (inout) :: vbc !< Potential constants
-    double precision, dimension (3), intent (inout) :: zperleft !< Vector to define how to repeat the basis of the left host
-    double precision, dimension (3), intent (inout) :: zperight !< Vector to define how to repeat the basis of the right host
-    double precision, dimension (3, 3), intent (inout) :: bravais !< Bravais lattice vectors
-    double precision, dimension (:), allocatable, intent (out) :: rmt !< Muffin-tin radius of true system
-    double precision, dimension (:), allocatable, intent (out) :: zat !< Nuclear charge
-    double precision, dimension (:), allocatable, intent (out) :: rws !< Wigner Seitz radius
-    double precision, dimension (:), allocatable, intent (out) :: mtfac !< Scaling factor for radius MT
-    double precision, dimension (:), allocatable, intent (out) :: rmtref !< Muffin-tin radius of reference system
-    double precision, dimension (:), allocatable, intent (out) :: rmtnew !< Adapted muffin-tin radius
-    double precision, dimension (:), allocatable, intent (out) :: rmtrefat
-    double precision, dimension (:), allocatable, intent (out) :: fpradius !< R point at which full-potential treatment starts
-    double precision, dimension (:, :), allocatable, intent (out) :: tleft !< Vectors of the basis for the left host
-    double precision, dimension (:, :), allocatable, intent (out) :: tright !< vectors of the basis for the right host
-    double precision, dimension (:, :), allocatable, intent (out) :: rbasis !< Position of atoms in the unit cell in units of bravais vectors
+    real (kind=dp), dimension (2), intent (inout) :: vbc !< Potential constants
+    real (kind=dp), dimension (3), intent (inout) :: zperleft !< Vector to define how to repeat the basis of the left host
+    real (kind=dp), dimension (3), intent (inout) :: zperight !< Vector to define how to repeat the basis of the right host
+    real (kind=dp), dimension (3, 3), intent (inout) :: bravais !< Bravais lattice vectors
+    real (kind=dp), dimension (:), allocatable, intent (out) :: rmt !< Muffin-tin radius of true system
+    real (kind=dp), dimension (:), allocatable, intent (out) :: zat !< Nuclear charge
+    real (kind=dp), dimension (:), allocatable, intent (out) :: rws !< Wigner Seitz radius
+    real (kind=dp), dimension (:), allocatable, intent (out) :: mtfac !< Scaling factor for radius MT
+    real (kind=dp), dimension (:), allocatable, intent (out) :: rmtref !< Muffin-tin radius of reference system
+    real (kind=dp), dimension (:), allocatable, intent (out) :: rmtnew !< Adapted muffin-tin radius
+    real (kind=dp), dimension (:), allocatable, intent (out) :: rmtrefat
+    real (kind=dp), dimension (:), allocatable, intent (out) :: fpradius !< R point at which full-potential treatment starts
+    real (kind=dp), dimension (:, :), allocatable, intent (out) :: tleft !< Vectors of the basis for the left host
+    real (kind=dp), dimension (:, :), allocatable, intent (out) :: tright !< vectors of the basis for the right host
+    real (kind=dp), dimension (:, :), allocatable, intent (out) :: rbasis !< Position of atoms in the unit cell in units of bravais vectors
 !     variables for spin-orbit/speed of light scaling
-    double precision, dimension (:), allocatable, intent (out) :: socscale !< Spin-orbit scaling
-    double precision, dimension (:, :), allocatable, intent (out) :: cscl !< Speed of light scaling
-    double precision, dimension (:, :), allocatable, intent (out) :: socscl
+    real (kind=dp), dimension (:), allocatable, intent (out) :: socscale !< Spin-orbit scaling
+    real (kind=dp), dimension (:, :), allocatable, intent (out) :: cscl !< Speed of light scaling
+    real (kind=dp), dimension (:, :), allocatable, intent (out) :: socscl
     character (len=10), intent (inout) :: solver  !< Type of solver
 
     character (len=40), intent (inout) :: i12  !< File identifiers
@@ -210,12 +211,12 @@ contains
 !----------------------------------------------------------------------------
     integer, intent (inout) :: ncpa !< ncpa = 0/1 CPA flag
     integer, intent (inout) :: itcpamax !< max. number of CPA iterations
-    double precision, intent (inout) :: cpatol !< convergency tolerance for CPA-cycle
+    real (kind=dp), intent (inout) :: cpatol !< convergency tolerance for CPA-cycle
     integer, dimension (:), allocatable, intent (out) :: noq !< number of diff. atom types located
     integer, dimension (:), allocatable, intent (out) :: iqat !< the site on which an atom is located on a given site
     integer, dimension (:), allocatable, intent (out) :: icpa !< icpa = 0/1 site-dependent CPA flag
     integer, dimension (:, :), allocatable, intent (out) :: kaoez !< atom types located at a given site
-    double precision, dimension (:), allocatable, intent (out) :: conc !< concentration of a given atom
+    real (kind=dp), dimension (:), allocatable, intent (out) :: conc !< concentration of a given atom
 
 !----------------------------------------------------------------------------
 !> @note Variables storing the magnetization direction information.
@@ -231,15 +232,15 @@ contains
 !>   ( see also the routine < FINDGROUP > and ff)
 !----------------------------------------------------------------------------
     integer, intent (inout) :: kmrot !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-    double precision, dimension (:), allocatable, intent (out) :: qmtet !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-    double precision, dimension (:), allocatable, intent (out) :: qmphi !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), dimension (:), allocatable, intent (out) :: qmtet !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), dimension (:), allocatable, intent (out) :: qmphi !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
 ! ---------------------------------------------------------------------------
 ! LDA+U
     integer, intent (inout) :: kreadldau !< LDA+U arrays available
     integer, dimension (:), allocatable, intent (inout) :: lopt !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-    double precision, dimension (:), allocatable, intent (out) :: ueff !< input U parameter for each atom
-    double precision, dimension (:), allocatable, intent (out) :: jeff !< input J parameter for each atom
-    double precision, dimension (:), allocatable, intent (out) :: erefldau !< the energies of the projector's wave functions (REAL)
+    real (kind=dp), dimension (:), allocatable, intent (out) :: ueff !< input U parameter for each atom
+    real (kind=dp), dimension (:), allocatable, intent (out) :: jeff !< input J parameter for each atom
+    real (kind=dp), dimension (:), allocatable, intent (out) :: erefldau !< the energies of the projector's wave functions (REAL)
 ! LDA+U
 ! ---------------------------------------------------------------------------
 
@@ -256,8 +257,8 @@ contains
     integer :: ndim !< Dimension for the Bravais lattice for slab or bulk (2/3)
     integer :: nasoc
     integer :: i, il, j, ier, ier2, i1, ii, ir, idosemicore, i_stat, i_all
-    double precision :: soscale, ctlscale
-    double precision :: brymix, strmix, tx, ty, tz
+    real (kind=dp) :: soscale, ctlscale
+    real (kind=dp) :: brymix, strmix, tx, ty, tz
     character (len=43) :: tshape
     character (len=256) :: uio  ! NCOLIO=256
 
@@ -267,13 +268,13 @@ contains
     logical :: latominfo !< Logical variable for old/new treatment of the ATOMINFO
 !.. Local CPA variables
     integer :: io, ia, iq, iprint
-    double precision :: sum
+    real (kind=dp) :: sum
     character (len=3), dimension (0:1) :: cpaflag
 
 !     .. Local Arrays ..
     integer, dimension (:), allocatable :: isp
     integer, dimension (:), allocatable :: imansoc
-    double precision, dimension (10) :: dvec
+    real (kind=dp), dimension (10) :: dvec
     character (len=4), dimension (3) :: tspin
     character (len=8), dimension (3) :: tkws
     character (len=2), dimension (-2:-1) :: socii

@@ -28,7 +28,7 @@ SUBROUTINE tbxccpljij(iftmat,ielast,ez,wez,nspin,ncpa,naez, natyp,  &
 
 #ifdef CPP_MPI
 use mpi
-#ENDIF
+#endif
 use mod_types, only: t_tgmat, t_mpi_c_grid, t_cpa
 use mod_mympi, only: myrank, master
 use mod_version_info
@@ -130,9 +130,9 @@ IF(iprint>0)  WRITE(1337,99000)
 IF(t_mpi_c_grid%myrank_ie==0) THEN
   
   ie_end = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
-#ELSE
+#else
   ie_end = ielast
-#ENDIF
+#endif
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
 !         open(22,STATUS='unknown',FILE='integrand.dat',
@@ -163,14 +163,14 @@ IF ( lm1 /= 0 ) THEN
   WRITE(6,99001) 'csum_store'
   STOP
 endif
-#ELSE
+#else
 !        ALLOCATE (XINTEGD1(NATYP,NATYP,IELAST),STAT=LM1)
 allocate (xintegd(natyp,natyp,nshell(0)),stat=lm1)
 IF ( lm1 /= 0 ) THEN
   WRITE(6,99001) 'XINTEGD'
   STOP
 endif
-#ENDIF
+#endif
 allocate (jxcijint(natyp,natyp,nshell(0)),stat=lm1)
 IF ( lm1 /= 0 ) THEN
   WRITE(6,99001) 'JXCIJINT'
@@ -187,7 +187,7 @@ DO ie=1,ielast
     END DO
   END DO
 END DO!IE
-#ELSE
+#else
 DO ns = 1,nshell(0)
   DO jt = 1,natyp
     DO it = 1,natyp
@@ -196,7 +196,7 @@ DO ns = 1,nshell(0)
     END DO
   END DO
 END DO
-#ENDIF
+#endif
 DO ns = 1,nshell(0)
   nijcalc(ns) = 0
   DO jt = 1,natyp
@@ -271,11 +271,11 @@ ie_end   = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
 
 DO ie_num=1,ie_end
   ie = ie_start+ie_num
-#ELSE
+#else
   DO ie = 1,ielast
     ie_num = ie
     ie_end = ielast
-#ENDIF
+#endif
 ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS SPIN
   DO ispin = 1,nspin
 ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT NATYP
@@ -479,7 +479,7 @@ DO ie_num=1,ie_end
 !BZ! and XINTEGD is performed later                                !!
 !BZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           csum_store(it,jt,nseff,ie)=csum
-#ELSE
+#else
           
           jxcijint(it,jt,nseff) = jxcijint(it,jt,nseff)  &
               - wez(ie)*csum/DBLE(nspin)
@@ -507,7 +507,7 @@ DO ie_num=1,ie_end
                 jxcijint(it,jt,nseff)/4.d0
             CLOSE(499)
           endif!(npol==0 .or. test('Jijenerg'))
-#ENDIF
+#endif
         
       END DO !I1
     END DO   !J1, loop over occupants
@@ -618,7 +618,7 @@ IF(myrank==master)THEN
     END DO   !L1 = 1,NIJCALC(NS)
   END DO  !NS, loop over shells
 endif!myrank==master
-#ENDIF
+#endif
 
 IF(myrank==master)THEN
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
@@ -763,7 +763,7 @@ IF(myrank==master)THEN
 endif!myrank==master
 #ifdef CPP_MPI
 endif ! t_mpi_c_grid%myrank_ie==0
-#ENDIF
+#endif
 
 deallocate (kijsh,nijcalc,jijdone,jxcijint,stat=lm1)
 99000 FORMAT(79(1H=),/,10X, "TBXCCPLJIJ : Off-diagonal exchange coupling",  &
