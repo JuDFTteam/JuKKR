@@ -44,9 +44,9 @@
       nclebd = lmxspd*lmpotd
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      Write (1337, '(79(1H=))')
+      Write (1337, '(79("="))')
       Write (1337, '(18X,A)') 'MADELUNG3D: setting bulk Madelung coefficients'
-      Write (1337, '(79(1H=))')
+      Write (1337, '(79("="))')
       Write (1337, *)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
