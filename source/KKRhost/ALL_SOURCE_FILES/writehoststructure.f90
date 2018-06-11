@@ -1,8 +1,7 @@
 subroutine writehoststructure(bravais, nrbasis, rbasis, naezd, nembd)
   use mod_version_info
   use mod_md5sums
-  use mod_DataTypes
-      Use mod_datatypes, Only: dp
+  Use mod_datatypes, Only: dp
   implicit none
 !interface
   real (kind=dp), intent(in) :: bravais(3, 3)

@@ -412,7 +412,6 @@ contains
 !   stop ' in < RINPUT13 > '
 !end if
 
-    nref = naez
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Read the atom types, if no CPA NATYP=NAEZ
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -908,12 +907,12 @@ contains
       write (111, *) 'Default IEMXD= ', iemxd
     end if
 
-    call ioinput('NR              ', uio, 1, 7, ier)
+    call ioinput('NRMESH          ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) nr
-      write (111, *) 'NR= ', nr
+      write (111, *) 'NRMESH= ', nr
     else
-      write (111, *) 'Default NR= ', nr
+      write (111, *) 'Default NRMESH= ', nr
     end if
 
     kvrel = 1 ! 0=Schroedinger / 1=SRA / 2=Dirac
@@ -1707,15 +1706,15 @@ contains
       end do
     end if
 
-    ncls = 0
-    nref = 0
 
 ! Determine total number of clusters
+    ncls = 0
     do i = 1, natyp
       ncls = max(ncls, cls(iqat(i)))
     end do
 
 ! Determine total number of different reference potentials
+    nref = 0
     do i = 1, naez + nemb
       nref = max(nref, refpot(i))
     end do

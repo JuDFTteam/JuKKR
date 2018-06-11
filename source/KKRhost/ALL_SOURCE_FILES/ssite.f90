@@ -687,7 +687,6 @@
 120   Format (3(2X,2F9.6))
 130   Format (' IT=', I2, 2I3, A, 2X, 2E14.5, 2X, 2E14.5)
     End Subroutine
-!*==readwfun.f    processed by SPAG 6.05Rc at 17:31 on 29 Apr 2001
 
     Subroutine readwfun(nfil, it, l, mj, nsol, sreg, sirr, ikm1, kap1, ikm2, &
       kap2, nt, nkm, zg, zf, jg, jf, jtop, nrmax)

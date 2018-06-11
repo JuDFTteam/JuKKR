@@ -33,12 +33,11 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
   real (kind=dp) :: alat ! lattice constant A
   real (kind=dp) :: rcut, rcutxy
   real (kind=dp) :: rbasis(3, naez+nembd), & ! pos. of basis atoms in EZ
-    rcls(3, naclsd, ncls) & ! real space position of atom in cluster
-    , rr(3, 0:nr), & ! set of lattice vectors
-    zat(natyp), & ! nucleus charge
-    rmtref(nrefd)
-!     RWS(*),
-!     BBOX(3)                  ! bounding box for povray plots
+                    rcls(3, naclsd, ncls), & ! real space position of atom in cluster
+                    rr(3, 0:nr), & ! set of lattice vectors
+                    zat(natyp), & ! nucleus charge
+                    rmtref(nrefd), &
+                    vref(nrefd)
 
 
   integer :: cls(naez+nembd), & ! type of cluster around atom
@@ -54,7 +53,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
     icouplmat(naez, naez), irep(ncls) ! representative atom of cluster (inverse of CLS)
   integer :: irefpot(naez+nembd), nrefpot
   real (kind=dp) :: rmtrefat(naez+nembd), rmtref1(naez+nembd)
-  real (kind=dp) :: vrefat(naez+nembd), vref1(naez+nembd), vref(nrefd)
+  real (kind=dp) :: vrefat(naez+nembd), vref1(naez+nembd)
 
 
   real (kind=dp) :: r2, epsshl, tol, tol2, distmin, rcls1(3, naclsd), &

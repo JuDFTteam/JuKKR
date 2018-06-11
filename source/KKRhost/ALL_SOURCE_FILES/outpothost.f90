@@ -1,4 +1,3 @@
-!*==outpothost.f    processed by SPAG 6.05Rc at 13:41 on  3 Dec 2004
 subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
   bravais, rbasis, qmtet, qmphi, noq, kaoez, iqat, zat, conc, ipan, ircut, &
   solver, soc, ctl, irws, rmt, rws, rr, drdi, visp, irshift, rmrel, drdirel, &

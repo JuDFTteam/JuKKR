@@ -302,7 +302,6 @@ function cgcrac(fact, j1, j2, j3, m1, m2, m3)
 
   vf = dsqrt(x/y)
 
-!*==cgcrac.f    processed by SPAG 6.05Rc at 15:27 on  7 Mar 2003
   n1 = nint(j1+j2-j3)
   n2 = nint(j1-m1)
   n3 = nint(j2+m2)
@@ -346,7 +345,6 @@ function gauntc(fact, l1, m1, l2, m2, l3, m3)
   real (kind=dp) :: pi
   parameter (pi=3.141592653589793238462643d0)
 
-!*==gauntc.f    processed by SPAG 6.05Rc at 15:27 on  7 Mar 2003
   integer :: l1, l2, l3, m1, m2, m3
   real (kind=dp) :: fact(0:100)
   real (kind=dp) :: gauntc

@@ -259,7 +259,6 @@ subroutine rwrite(z, mmaxd, mmax, ifile)
   integer, intent (in) :: mmax
   integer, intent (inout) :: ifile
   implicit none
-!*==rwrite.f    processed by SPAG 6.05Rc at 16:58 on 22 Dec 2004
 
   integer :: m1, m2
 

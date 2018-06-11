@@ -76,7 +76,6 @@
             cleb, icleb, iend, lpotd, lmpotd, lmxspd, nclebd)
 
           irec = iq2 + naez*(iq1-1)
-          write(*,*) shape(avmad), shape(bvmad)
           Write (69, Rec=irec) avmad, bvmad
 !-----------------------------------------------------------------------
           If ((iq1<=6) .And. (iq2<=6)) Then

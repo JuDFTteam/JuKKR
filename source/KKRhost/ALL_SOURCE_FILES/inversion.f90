@@ -151,13 +151,13 @@
 
         If (invmod==1) Then
 ! supercell geometry inversion
-          Call invslab(gdi, gup, gdow, gllke, icheck, nprincd)
+          Call invslab(gdi, gup, gdow, gllke, icheck)
 
 
 !          write (6,*) '-------supercell calculation--------'
         Else If (invmod==2) Then
 
-          Call invsupercell(gdi, gup, gdow, gllke, icheck, nprincd)
+          Call invsupercell(gdi, gup, gdow, gllke, icheck)
 
 ! sparse matrix inversion
 

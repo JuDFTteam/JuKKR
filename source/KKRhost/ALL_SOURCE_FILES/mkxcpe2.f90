@@ -447,7 +447,6 @@
         vcdn = 0.E0_dp
       End If
     End Subroutine
-!*==excgcor2.f    processed by SPAG 6.55Rc at 08:17 on 20 Dec 2009
 
     Subroutine excgcor2(a, a1, b1, b2, b3, b4, rtrs, gg, ggrs)
       Use mod_datatypes, Only: dp

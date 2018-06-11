@@ -193,7 +193,6 @@
         kapcore)
 
     End Subroutine
-!*==sumecore.f    processed by SPAG 6.05Rc at 11:35 on 10 May 2004
 
     Subroutine sumecore(ncore, lcore, ecortab, nkcore, ecorerel, ecore, &
       kapcore)

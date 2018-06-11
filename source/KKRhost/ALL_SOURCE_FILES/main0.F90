@@ -34,8 +34,7 @@ module mod_main0
    use mod_create_newmesh
    use mod_rhoqtools, only: rhoq_save_rmesh
    use rinput
-   use mod_DataTypes
-      Use mod_datatypes, Only: dp
+   Use mod_datatypes, Only: dp
 
    implicit none
 
@@ -605,10 +604,16 @@ contains
          .TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,I25)
       endif
 
+!      write(*,*) 'l1',NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS
+!      write(*,*) 'l2',NACLS,ATOM,EZOA 
+!      write(*,*) 'l3',NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT
+!      write(*,*) 'l4',TLEFT,TRIGHT,RMTREF,RMTREFAT,VREF
+!      write(*,*) 'l5',REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT
+!      write(*,*) 'l6',NAEZ,NATYP,NEMBD1-1,NR,NACLSD,NCLSD,NREF
       call CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,ATOM, &
          EZOA,NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,RMTREF,&
          RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,NAEZ,NATYP, &
-         NEMB,NPRINCD,NR,NACLSD,NCLS,NREF)
+         NEMBD1-1,NR,NACLSD,NCLSD,NREF)
 
       ! Now the clusters, reference potentials and muffin-tin radii have been set.
       !-------------------------------------------------------------------------
