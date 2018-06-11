@@ -146,7 +146,7 @@
       rmsavq = sqrt(rmsavq/natom)
       rmsavm = sqrt(rmsavm/natom)
 !.. Parameters ..
-      Write (1337, '(79(1H-),/)')
+      Write (1337, '(79("-"),/)')
       If (nspin==2) Then
         Write (ipf, Fmt=140) itc, rmsavq, rmsavm
         Write (6, Fmt=140) itc, rmsavq, rmsavm
@@ -154,7 +154,7 @@
         Write (ipf, Fmt=150) itc, rmsavq
         Write (6, Fmt=150) itc, rmsavq
       End If
-      Write (1337, '(79(1H-))')
+      Write (1337, '(79("-"))')
 ! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
 100   Format (5X, ' rms-error for atom', I3, 1X, ':', 'v+ + v- = ', 1P, D11.4, &
         2X, ',', 2X, 'v+ - v- = ', 1P, D11.4)

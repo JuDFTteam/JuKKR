@@ -36,7 +36,7 @@ subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, &
 !.. Data statements
   data chhost/'LEFT ', 'RIGHT'/
 !..
-  write (1337, '(5X,A,/,8X,30(1H-),/,8X,3A6,A10,/,8X,30(1H-))') &
+  write (1337, '(5X,A,/,8X,30("-"),/,8X,3A6,A10,/,8X,30("-"))') &
     'Reading in host charge moments ( SCFSTEPS > 1 )', ' HOST ', '  IBAS', &
     '  ATOM', '   CMOM(1)'
 ! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
@@ -54,9 +54,9 @@ subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, &
       end do
       write (1337, '(A)') ' Vacuum setting    0.000'
       if (ihost==1) then
-        write (1337, '(14X,24(1H-))')
+        write (1337, '(14X,24("-"))')
       else
-        write (1337, '(8X,30(1H-))')
+        write (1337, '(8X,30("-"))')
       end if
 ! ----------------------------------------------------------------------
     else
@@ -93,9 +93,9 @@ subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, &
       end do
 ! ......................................................................
       if (ihost==1) then
-        write (1337, '(14X,24(1H-))')
+        write (1337, '(14X,24("-"))')
       else
-        write (1337, '(8X,30(1H-))')
+        write (1337, '(8X,30("-"))')
       end if
     end if
 ! ----------------------------------------------------------------------

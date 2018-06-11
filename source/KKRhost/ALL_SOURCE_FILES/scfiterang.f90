@@ -196,7 +196,7 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
     end do
 
     write (1337, fmt=120) itrscf, erravang
-    write (1337, '(I5,4F10.3,'' #  ANGLES'',/,79(1H+),/)') itrscf, &
+    write (1337, '(I5,4F10.3,'' #  ANGLES'',/,79("+"),/)') itrscf, &
       (qmphi(iq), qmtet(iq), iq=1, min(2,nq))
 
     lasterr = erravang

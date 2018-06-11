@@ -64,7 +64,7 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
 !     ..
 ! ========================================================== IENERGY = 0
   if (ienergy<1) then
-    write (1337, '(5X,A,/,8X,65(1H-))') 'Reading in host Delta_t matrices'
+    write (1337, '(5X,A,/,8X,65("-"))') 'Reading in host Delta_t matrices'
     vacflag(1) = .false.
     vacflag(2) = .false.
 ! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
@@ -105,7 +105,7 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
           (nspinl/=nspin) .or. (lmmaxl/=lmmax) .or. (naezl/=nathost)) then
           write (6, '(/,5X,2A)') 'ERROR: ', &
             'host not compatible with your input/sytem'
-          write (6, '(14X,6(A6),/,8X,42(1H-))') '  KREL', ' KMROT', '   INS', &
+          write (6, '(14X,6(A6),/,8X,42("-"))') '  KREL', ' KMROT', '   INS', &
             ' NSPIN', ' LMMAX', ' BASIS'
           write (6, '(8X,A6,6I6)') 'syst: ', krel, kmrot, ins, nspin, lmmax, &
             nathost
@@ -142,7 +142,7 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
           (npoll/=npol) .or. (abs(templ-tk)>1.d-4)) then
           write (6, '(/,5X,2A)') 'ERROR: Host energy mesh', &
             ' not compatible with your input'
-          write (6, '(14X,5(A6),/,8X,40(1H-))') '   NE1', '   NE2', '   NE3', &
+          write (6, '(14X,5(A6),/,8X,40("-"))') '   NE1', '   NE2', '   NE3', &
             '  NPOL', '  TEMP'
           write (6, '(8X,A6,4I6,2X,F10.6)') 'input:', nptp1, nptp2, nptp3, &
             npol, tk
@@ -155,7 +155,7 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
         write (1337, 180) npt1l, npt2l, npt3l, npoll
       end if
 ! ----------------------------------------------------------------------
-      write (1337, '(8X,65(1H-))')
+      write (1337, '(8X,65("-"))')
     end do
 ! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
 !                            Headers read in
@@ -191,7 +191,7 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
           if ((abs(el-ez(ienergy))>1.d-4) .or. (iel/=ienergy)) then
             write (6, '(/,5X,2A)') 'ERROR: Host energy mesh', &
               ' not compatible with your input'
-            write (6, '(14X,2(A6),/,8X,43(1H-))') '    IE', ' E(IE)'
+            write (6, '(14X,2(A6),/,8X,43("-"))') '    IE', ' E(IE)'
             write (6, '(8X,A6,I6,1X,2(1X,F10.6))') 'input:', ienergy, &
               ez(ienergy)
             write (6, '(8X,A6,I6,1X,2(1X,F10.6),/)') ' host:', iel, el

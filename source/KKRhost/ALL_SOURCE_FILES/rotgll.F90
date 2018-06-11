@@ -73,11 +73,11 @@ endif
 ! **********************************************************************
 IF ( icall == 1) THEN
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-  IF(myrank==master) WRITE (1337,'(79(1H=))')
+  IF(myrank==master) WRITE (1337,'(79("="))')
   IF(myrank==master) WRITE (1337,'(6X,2A)')  &
       'ROTGLL : Expand GF for all pairs by rotation',  &
       ' and write out (all E-points)'
-  IF(myrank==master) WRITE (1337,'(79(1H=))')
+  IF(myrank==master) WRITE (1337,'(79("="))')
   IF(myrank==master) WRITE (1337,*)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 endif
@@ -107,11 +107,11 @@ END DO
 !     visualise Gij
 
 IF ( test('Gmatij  ') ) THEN
-  WRITE (1337,'(/,4X,70(1H+),/,4X,A,I4)')  &
+  WRITE (1337,'(/,4X,70("+"),/,4X,A,I4)')  &
       'cluster G_ij matrices for i,j = 1,',natomimp
   
   DO iq = 1,natomimp
-    WRITE(1337,'(/,8X,66(1H=))')
+    WRITE(1337,'(/,8X,66("="))')
     DO jq = 1,natomimp
       
       WRITE(str4i,'(I4)') iq
@@ -123,11 +123,11 @@ IF ( test('Gmatij  ') ) THEN
         CALL changerep(gll(1,1,iq,jq),'REL>RLM',tpg,lmmaxd,  &
             lmmaxd,rc,crel,rrel,str18,18)
       endif
-      IF (jq < natomimp) WRITE(1337,'(/,9X,65(1H-))')
+      IF (jq < natomimp) WRITE(1337,'(/,9X,65("-"))')
     END DO
-    IF (iq == natomimp) WRITE(1337,'(/,8X,66(1H=),/)')
+    IF (iq == natomimp) WRITE(1337,'(/,8X,66("="),/)')
   END DO
-  WRITE(1337,'(4X,70(1H+))')
+  WRITE(1337,'(4X,70("+"))')
 endif
 
 !***********************************************************************

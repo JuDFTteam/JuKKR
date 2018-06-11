@@ -28,9 +28,9 @@ subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, &
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
   if (t_inc%i_write>0) then
     write (1337, *)
-    write (1337, '(79(1H=))')
+    write (1337, '(79("="))')
     write (1337, '(20X,A)') 'EPATHTB: generates a complex E contour'
-    write (1337, '(79(1H=))')
+    write (1337, '(79("="))')
     write (1337, *)
   end if
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT

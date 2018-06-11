@@ -85,7 +85,7 @@
                 avmad(lm1, lm2)
             End Do
           End Do
-          Write (78, '(33(1H-))')
+          Write (78, '(33("-"))')
         End Do
       End Do
       Write (78, 150) ' Slab - Left Host '
@@ -102,7 +102,7 @@
                 avmad(lm1, lm2)
             End Do
           End Do
-          Write (78, '(33(1H-))')
+          Write (78, '(33("-"))')
         End Do
       End Do
       Write (78, 150) ' Slab - Right Host '
@@ -119,7 +119,7 @@
                 avmad(lm1, lm2)
             End Do
           End Do
-          Write (78, '(33(1H-))')
+          Write (78, '(33("-"))')
         End Do
       End Do
       Close (69)
@@ -197,8 +197,8 @@
             End Do
             If (abs(bvmad(lm1))>1E-10_dp) Write (79, 160) lm1, bvmad(lm1)
           End Do
-          Write (78, '(33(1H-))')
-          Write (79, '(28(1H-))')
+          Write (78, '(33("-"))')
+          Write (79, '(28("-"))')
         End Do
       End Do
       Close (69)

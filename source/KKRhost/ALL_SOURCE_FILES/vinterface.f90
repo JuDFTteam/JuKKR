@@ -304,8 +304,8 @@
       End Do
 !----------------------------------------------------------------------------
       Close (69)
-      Write (1337, '(15X,45(1H-),/)')
-      Write (1337, '(79(1H=))')
+      Write (1337, '(15X,45("-"),/)')
+      Write (1337, '(79("="))')
       If ((icc==0) .And. (.Not. opt('KKRFLEX '))) Return
 !----------------------------------------------------------------------------
 ! Now Prepare output for Impurity calculation
@@ -314,9 +314,9 @@
       Write (1337, *)
       Write (1337, *) '                     ', &
         'Writing intercell potential for impurity'
-      Write (1337, '(/,20X,55(1H-))')
+      Write (1337, '(/,20X,55("-"))')
       Write (1337, 130) hostimp(0), lmpot
-      Write (1337, '(20X,55(1H-),/,35X,"  i host lm  Vint")')
+      Write (1337, '(20X,55("-"),/,35X,"  i host lm  Vint")')
       Do i = 1, hostimp(0)
         Write (1337, *)
         lm = 1
@@ -325,9 +325,9 @@
         Do lm = 2, 9
           Write (1337, '(43X,I3,1X,F10.6)') lm, vinters(lm, hostimp(i))
         End Do
-        Write (1337, '(20X,55(1H-))')
+        Write (1337, '(20X,55("-"))')
       End Do
-      Write (1337, '(79(1H=),/)')
+      Write (1337, '(79("="),/)')
 
       Write (91, 140) hostimp(0), lmpot
       Do i = 1, hostimp(0)

@@ -238,7 +238,7 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
       end do
     end if
   end do
-  write (1337, '(6X,72(1H-))')
+  write (1337, '(6X,72("-"))')
   nb = 0
   do ns = 1, nshell(0)
     nb = nb + nshell(ns)

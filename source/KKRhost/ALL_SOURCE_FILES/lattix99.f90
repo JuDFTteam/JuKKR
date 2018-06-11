@@ -49,7 +49,7 @@
       recbv(1:3, 1:3) = 0E0_dp
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      Write (1337, '(79(1H=))')
+      Write (1337, '(79("="))')
       If (lsurf) Then
         ndim = 2
         Write (1337, '(23X,A)') 'LATTIX99: surface geometry mode'
@@ -57,7 +57,7 @@
         ndim = 3
         Write (1337, '(23X,A)') '  LATTIX99: bulk geometry mode'
       End If
-      Write (1337, '(79(1H=))')
+      Write (1337, '(79("="))')
       Write (1337, *)
       Write (1337, '(5X,A,F12.8,4X,A,F12.8,/)') 'Lattice constants :  ALAT =', &
         alat, ' 2*PI/ALAT =', tpia

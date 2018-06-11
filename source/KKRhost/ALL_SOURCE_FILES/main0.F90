@@ -450,15 +450,15 @@ contains
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
       if(ith==0) then
-         write(*,'(1X,A,I5//79(1H*)/)') 'Number of OpenMP threads used:',nth
-         write(1337,'(1X,A,I5//79(1H*)/)') 'Number of OpenMP threads used:',nth
+         write(*,'(1X,A,I5//79("*")/)') 'Number of OpenMP threads used:',nth
+         write(1337,'(1X,A,I5//79("*")/)') 'Number of OpenMP threads used:',nth
       endif
 !$omp end parallel
 #endif
 
 #ifdef CPP_MPI
-      write(*,'(1X,A,I5//79(1H*)/)') 'Number of MPI ranks used:',nranks
-      write(1337,'(1X,A,I5//79(1H*)/)') 'Number of MPI ranks used:',nranks
+      write(*,'(1X,A,I5//79("*")/)') 'Number of MPI ranks used:',nranks
+      write(1337,'(1X,A,I5//79("*")/)') 'Number of MPI ranks used:',nranks
 #endif
       !-------------------------------------------------------------------------
       ! End write version info
@@ -1220,7 +1220,7 @@ contains
       !
       !-------------------------------------------------------------------------
       !
-      write (1337,'(79(1H=),/,31X,"< KKR0 finished >",/,79(1H=),/)')
+      write (1337,'(79("="),/,31X,"< KKR0 finished >",/,79("="),/)')
       9070 format (5X,'INFO:  Output of cluster Green function at E Fermi')
       9080 format (5X,'INFO:  Determination of DOS at E Fermi')
 

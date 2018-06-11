@@ -172,6 +172,7 @@ LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_th
 MACLLIBSOPENMP = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000 -lmkl_intel_thread -liomp5
 # RWTH cluster:
 RWTHLLIBSOMP = $(FLAGS_MKL_LINKER) -lmkl_intel_lp64 -lmkl_intel_thread -liomp5
+RWTHNAGLIBS= 
 
 
 mac:    LLIBSOPENMP=$(MACLLIBSOPENMP)
@@ -192,6 +193,7 @@ ompdebug: LLIBS=$(LLIBSOPENMP)
 rwthomp: LLIBS=$(RWTHLLIBSOMP)
 rwthompdebug: LLIBS=$(RWTHLLIBSOMP)
 rwthhybrid: LLIBS=$(RWTHLLIBSOMP)
+rwthnag: LLIBS=$(RWTHNAGLIBS)
 
 ####################################################
 # C preprocessor options                           #
@@ -238,7 +240,7 @@ ompdebug: OPENMPFLAGS = -qopenmp
 # on rwth cluster (CLAIX and bull)
 rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
-rwthnag: FFLAGS = 
+rwthnag: FFLAGS =  
 
 # profiling on mac
 macompprof: FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback -prof-gen:srcpos

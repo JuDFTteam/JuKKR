@@ -52,7 +52,7 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
   do i1 = 1, 100
     fact(i1) = fact(i1-1)*dble(i1) 
   end do
-  if (t_inc%i_write>0) write (1337, '(/,79(1H=),/,22X,A,/,79(1H=))') &
+  if (t_inc%i_write>0) write (1337, '(/,79("="),/,22X,A,/,79("="))') &
     'LDA+U:  INITIALISE Coulomb matrix U'
 ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 !                                                        Loop over atoms
@@ -68,7 +68,7 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
       phi(1,i1), nspin, nsra)
   end do
 
-  if (t_inc%i_write>0) write (1337, '(6X,43(1H-),/,6X,A,/,6X,43(1H-))') &
+  if (t_inc%i_write>0) write (1337, '(6X,43("-"),/,6X,A,/,6X,43("-"))') &
     'Slater integrals F^n'
 
   do it = 1, ntldau
@@ -218,7 +218,7 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
         write (1337, '(12X,I3,2(2X,F12.8," Ry"))') lf, fclmb(lf)/scl, &
           fclmb(lf)
       end do
-      if (it<ntldau) write (1337, '(8X,58(1H~))')
+      if (it<ntldau) write (1337, '(8X,58("~"))')
     end if
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
@@ -226,7 +226,7 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 
   if (t_inc%i_write>0) then
-    write (1337, '(/,6X,60(1H-),/,6X,A,/,6X,60(1H-))') &
+    write (1337, '(/,6X,60("-"),/,6X,A,/,6X,60("-"))') &
       'Coulomb matrix U(m1,m1,m3,m3)'
     do it = 1, ntldau
       i1 = itldau(it)
@@ -238,11 +238,11 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
       do im1 = 1, 2*ll + 1
         write (1337, 100)(uldau(im1,im1,im3,im3,i1), im3=1, 2*ll+1)
       end do
-      if (it<ntldau) write (1337, '(8X,58(1H~))')
+      if (it<ntldau) write (1337, '(8X,58("~"))')
 !   *  Calculates ULDAU                                               *
 !   *  fivos will add some comments later                             *
     end do
-    write (1337, '(/,6X,60(1H-),/)')
+    write (1337, '(/,6X,60("-"),/)')
   end if
 100 format (6x, 7f10.6)
 end subroutine

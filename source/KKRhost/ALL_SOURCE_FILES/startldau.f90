@@ -39,7 +39,7 @@
       End Do
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-      Write (1337, '(79(1H=),/,27X,A,/, 79(1H=),/)') &
+      Write (1337, '(79("="),/,27X,A,/, 79("="),/)') &
         'LDA+U: starting parameters'
       Write (1337, 100) natyp, ntldau
       Write (1337, 110)
@@ -92,7 +92,7 @@
           End Do
           If (it<ntldau) Write (1337, 190)
         End Do
-        Write (1337, '(9X,60(1H-))')
+        Write (1337, '(9X,60("-"))')
       Else
         Call rinit(mmaxd*mmaxd*mmaxd*mmaxd*natypd, uldau)
         Call rinit(mmaxd*mmaxd*nspind*natypd, wldau)

@@ -62,9 +62,9 @@
       nclebd = lmxspd*lmpotd
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      Write (1337, '(79(1H=))')
+      Write (1337, '(79("="))')
       Write (1337, '(18X,A)') 'MADELUNG2D: setting 2D Madelung coefficients'
-      Write (1337, '(79(1H=))')
+      Write (1337, '(79("="))')
       Write (1337, *)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
@@ -114,7 +114,7 @@
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
           If (iprint>=2) Then
             Write (1337, 110) iq1, iq2, sum(1)
-            If (iq2==naez .And. iq1/=naez) Write (1337, '(20X,20(1H-))')
+            If (iq2==naez .And. iq1/=naez) Write (1337, '(20X,20("-"))')
           End If
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
@@ -127,7 +127,7 @@
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       End Do
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      If (iprint>=2) Write (1337, '(18X,22(1H-),/)')
+      If (iprint>=2) Write (1337, '(18X,22("-"),/)')
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 ! ********************************************** loop over atoms in slab
 
@@ -174,7 +174,7 @@
               If (iprint>=2) Then
                 Write (1337, 110) iq1, ileft, sum(1)
                 If (ileft==nleftall .And. iq1/=naez) Write (1337, &
-                  '(20X,20(1H-))')
+                  '(20X,20("-"))')
               End If
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
@@ -195,7 +195,7 @@
 ! **********************************************************************
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-        If (iprint>=2) Write (1337, '(18X,22(1H-),/)')
+        If (iprint>=2) Write (1337, '(18X,22("-"),/)')
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
 ! ********************************************** loop over atoms in slab
@@ -232,7 +232,7 @@
               If (iprint>=2) Then
                 Write (1337, 110) iq1, iright, sum(1)
                 If (iright==nrightall .And. iq1/=naez) Write (1337, &
-                  '(20X,20(1H-))')
+                  '(20X,20("-"))')
               End If
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
@@ -253,7 +253,7 @@
 ! **********************************************************************
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-        If (iprint>=2) Write (1337, '(18X,22(1H-),/)')
+        If (iprint>=2) Write (1337, '(18X,22("-"),/)')
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
       End If

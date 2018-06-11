@@ -170,7 +170,7 @@
       nsymat = nsym
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      Write (1337, '(8X,60(1H-))')
+      Write (1337, '(8X,60("-"))')
       If (lbulk) Then
         Write (1337, 110)
       Else

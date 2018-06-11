@@ -1030,9 +1030,9 @@ contains
          if (NPOL.ne.0) then
             if(t_inc%i_write>0) then
                write (1337,*)
-               write (1337,'(78(1H#))')
+               write (1337,'(78("#"))')
                write (1337,'(33X,A)') 'CORE  STATES'
-               write (1337,'(78(1H#))')
+               write (1337,'(78("#"))')
             endif
             do I1 = 1,NATYP
                do ISPIN = 1,NSPIN
@@ -1051,7 +1051,7 @@ contains
             end do
             if(t_inc%i_write>0) then
                write (1337,*)
-               write (1337,'(78(1H#))')
+               write (1337,'(78("#"))')
                write (1337,*)
             endif
          end if
@@ -1088,7 +1088,7 @@ contains
 
          !
          if(t_inc%i_write>0) then
-            write (1337,'(79(1H=),/,30X,"< KKR1c finished >",/,79(1H=),/)')
+            write (1337,'(79("="),/,30X,"< KKR1c finished >",/,79("="),/)')
          endif
 
 #ifdef CPP_TIMING

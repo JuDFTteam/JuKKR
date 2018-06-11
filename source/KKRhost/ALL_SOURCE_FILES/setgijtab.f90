@@ -35,9 +35,9 @@
 
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      Write (1337, '(79(1H=),/,15X,A)') &
+      Write (1337, '(79("="),/,15X,A)') &
         'SETGIJTAB: setting task-specific Gij pairs'
-      Write (1337, '(79(1H=),/)')
+      Write (1337, '(79("="),/)')
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
       ido = 0

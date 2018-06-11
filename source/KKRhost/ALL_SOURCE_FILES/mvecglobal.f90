@@ -73,9 +73,9 @@ subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
       end do
     end if
 
-    write (1337, '(78(1H#))')
+    write (1337, '(78("#"))')
     write (1337, 100)
-    write (1337, '(78(1H#))')
+    write (1337, '(78("#"))')
     write (1337, *)
     write (1337, 110)
 
@@ -250,10 +250,10 @@ subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
   write (1337, 150) qmphi, qmtet, (mvphi(imv), mvtet(imv), imv=1, 2)
 ! ----------------------------------------------------------------------
   if (it<natyp) then
-    write (1337, '(3X,75(1H=))')
+    write (1337, '(3X,75("="))')
   else
     write (1337, *)
-    write (1337, '(78(1H#))')
+    write (1337, '(78("#"))')
   end if
 ! ----------------------------------------------------------------------
 

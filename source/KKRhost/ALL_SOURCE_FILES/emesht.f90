@@ -70,7 +70,7 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
   if (t_inc%i_write>0) then
     write (1337, '(5X,A,F12.6," (Ry)",8X,A,F12.6," (Ry)")') 'E min = ', ebot, &
       'Fermi energy = ', efermi
-    write (1337, '(5X,A,F12.6," (Ry)",8X,A,F12.6," (K )",/,5X,62(1H-))') &
+    write (1337, '(5X,A,F12.6," (Ry)",8X,A,F12.6," (K )",/,5X,62("-"))') &
       'E max = ', emu, 'Temperature  = ', tk
   end if
 !----------------------------------------------------------------------------

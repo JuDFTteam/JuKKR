@@ -101,7 +101,7 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
   wldauav = 0d0
   allocate (loflm(lm2d), stat=i1)
   if (i1/=0) stop '    Allocate LOFLM'
-  write (6, '(5X,A,/,8X,65(1H-))') 'Reading in host potentials'
+  write (6, '(5X,A,/,8X,65("-"))') 'Reading in host potentials'
   vacflag(1) = .false.
   vacflag(2) = .false.
   nsra = 1
@@ -143,7 +143,7 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
   end do
 
   if (ntleft+ntright<=0) then
-    write (6, '(8X,"Vacuum will be considered on both sides",/, 8X,65(1H-))')
+    write (6, '(8X,"Vacuum will be considered on both sides",/, 8X,65("-"))')
     return
   end if
 
@@ -185,7 +185,7 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
     ilhost = lngstring(filehost, 40)
 
     if (filehost(1:7)=='vacuum') then
-      write (6, '(A,/,8X,65(1H-))') 'VACUUM will be used'
+      write (6, '(A,/,8X,65("-"))') 'VACUUM will be used'
     else
       write (6, '(A,/)') filehost(1:ilhost)
       write (6, 130) krelh(ihost), nspinh(ihost), insh(ihost), kmrot, nqhost, &
@@ -195,7 +195,7 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
         qmphi, noq, kaoez, zat, iqat, conc, irws, ipan, ircut, rr, drdi, visp, &
         nspinh(ihost), krelh(ihost), solver, socscl, cscl, vtrel, btrel, irmd, &
         ipand, nembd1, ntmax, nspind, lmaxd)
-      write (6, '(8X,65(1H-))')
+      write (6, '(8X,65("-"))')
     end if
   end do
 ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

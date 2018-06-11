@@ -317,7 +317,7 @@ subroutine printijtab(natom, ijtab)
   lgmax = 59
   write (1337, 100, advance='no') '  searched for pairs marked with 1 in the table below'
   do j = 1, min(natom+3, lgmax)
-    write (1337, '(1H-)', advance='no')
+    write (1337, '("-")', advance='no')
   end do
   write (1337, *)
   do i = 1, natom
@@ -328,9 +328,9 @@ subroutine printijtab(natom, ijtab)
     end do
     write (1337, *)
   end do
-  write (1337, '(13X,6(1H-))', advance='no')
+  write (1337, '(13X,6("-"))', advance='no')
   do j = 1, min(natom+3, lgmax)
-    write (1337, '(1H-)', advance='no')
+    write (1337, '("-")', advance='no')
   end do
   write (1337, '(/)')
 !     ...........................................

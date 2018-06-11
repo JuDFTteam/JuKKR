@@ -526,7 +526,7 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
    !----------------------------------------------------------------------------
    !
    if ( TEST('Gmat    ') .and. (t_inc%i_write>0)) then
-      write (1337,'(/,4X,70(1H-),/,4X,A,I4)')'system G_ii matrix for i = 1,',NSMAX
+      write (1337,'(/,4X,70("-"),/,4X,A,I4)')'system G_ii matrix for i = 1,',NSMAX
    endif
    do NS = 1,NSHELL(0)
       !
@@ -601,7 +601,7 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
       end if
    end do
    !----------------------------------------------------------------------------
-   if ( TEST('Gmat    ') .and. (t_inc%i_write>0)) write (1337,'(/,4X,70(1H-))')
+   if ( TEST('Gmat    ') .and. (t_inc%i_write>0)) write (1337,'(/,4X,70("-"))')
    !----------------------------------------------------------------------------
    ! it calculates the rest of the G n n' matrix from the
    ! knowledge of the representative pairs (shells) using the

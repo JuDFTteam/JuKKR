@@ -219,13 +219,13 @@
             End If ! (ISPIN.NE.1)
           End Do ! ISPIN = 1,NSPIN
 !----------------------------------------------------------------------
-          If (ioez/=noq(iqez)) Write (ipf, '(2X,77(1H-))')
+          If (ioez/=noq(iqez)) Write (ipf, '(2X,77("-"))')
         End Do
 !-------------------------------------------------------------------------
 ! IOEZ = 1, NOQ(IQEZ)
 !-------------------------------------------------------------------------
         If (noq(iqez)>1) Then
-          Write (ipf, '(2X,77(1H=))')
+          Write (ipf, '(2X,77("="))')
           Write (ipf, Fmt=200) iqez, csite(iqez, 1)
           If (nspin==2) Then
             Write (ipf, Fmt=210) csite(iqez, nspin)
@@ -234,9 +234,9 @@
               Write (ipf, Fmt=230) csite(iqez, nspin) + muosite(iqez)
             End If
           End If
-          If (iqez/=naez) Write (ipf, '(2X,77(1H=))')
+          If (iqez/=naez) Write (ipf, '(2X,77("="))')
         Else
-          If (iqez/=naez) Write (ipf, '(2X,77(1H=))')
+          If (iqez/=naez) Write (ipf, '(2X,77("="))')
         End If
       End Do
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -250,7 +250,7 @@
           i1)
       End Do
 
-      Write (ipf, '(79(1H+))')
+      Write (ipf, '(79("+"))')
       Write (ipf, Fmt=160) itc, chrgnt
       Write (6, Fmt=160) itc, chrgnt
 

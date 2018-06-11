@@ -55,7 +55,7 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
 ! if this is 0. then: n**2    in Edc and potential
 
 
-  write (1337, '(/,79(1H#),/,16X,A,/,79(1H#))') &
+  write (1337, '(/,79("#"),/,16X,A,/,79("#"))') &
     'LDA+U: Calculating interaction potential VLDAU'
 !----------------------------------------------------------------------------
   do it = 1, ntldau

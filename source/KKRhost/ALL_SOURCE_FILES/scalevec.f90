@@ -19,10 +19,10 @@
       Logical :: lcartesian
       Real (Kind=dp) :: rbasis1(3, naezd+nembd), temp(3), tx, ty, tz
 
-      Write (1337, '(79(1H=))')
+      Write (1337, '(79("="))')
       Write (1337, '(23X,A)') 'SCALEVEC: scale site coordinates'
       Write (1337, '(23X,A)') '          bring all to CARTESIAN system'
-      Write (1337, '(79(1H=))')
+      Write (1337, '(79("="))')
       Write (1337, *)
 
 ! -->   normalization of basis vectors
@@ -58,7 +58,7 @@
         Write (1337, '(5X,A,2(/,34X,F12.8,A))') &
           'Scaling site coordinates with:', abasis, '  x', bbasis, '  y'
         If (.Not. linterface) Write (1337, '(34X,F12.8,A)') cbasis, '  z'
-        Write (1337, '(5X,44(1H-))')
+        Write (1337, '(5X,44("-"))')
       Else
         Write (1337, '(5X,A)') 'Site coordinates will not be scaled'
       End If
@@ -82,10 +82,10 @@
         If (.Not. lcartesian) Then
 !----------------------------------------------------------------------
           Write (1337, *)
-          Write (1337, '(12X,49(1H-))')
+          Write (1337, '(12X,49("-"))')
           Write (1337, '(13X,A)') &
             'Input positions transformed to CARTESIAN system'
-          Write (1337, '(12X,49(1H-),/,13X,A,/,12X,49(1H-))') &
+          Write (1337, '(12X,49("-"),/,13X,A,/,12X,49("-"))') &
             'IQ        x             y             z        IT'
           Do i = 1, naez + nemb
             Do j = 1, 2
@@ -100,9 +100,9 @@
             Else
               Write (1337, 140) i, (rbasis(j,i), j=1, 3), kaoez(1, i)
             End If
-            If (i==naez) Write (1337, '(12X,49(1H.))')
+            If (i==naez) Write (1337, '(12X,49("."))')
           End Do
-          Write (1337, '(12X,49(1H-),/)')
+          Write (1337, '(12X,49("-"),/)')
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ! -->  Do the same for the boundary vectors
@@ -183,15 +183,15 @@
               kaoez(1, naez+nlbasis+i1)
           End Do
         End Do
-        Write (1337, '(14X,45(1H-),/)')
+        Write (1337, '(14X,45("-"),/)')
 !======================================================================
       Else If (.Not. lcartesian) Then ! Rescale lattice
 !----------------------------------------------------------------------
         Write (1337, *)
-        Write (1337, '(12X,49(1H-))')
+        Write (1337, '(12X,49("-"))')
         Write (1337, '(13X,A)') &
           'Input positions transformed to CARTESIAN system'
-        Write (1337, '(12X,49(1H-),/,13X,A,/,12X,49(1H-))') &
+        Write (1337, '(12X,49("-"),/,13X,A,/,12X,49("-"))') &
           'IQ        x             y             z        IT'
         Do i = 1, naez + nemb
           Do j = 1, 3
@@ -205,9 +205,9 @@
           Else
             Write (1337, 140) i, (rbasis(j,i), j=1, 3), kaoez(1, i)
           End If
-          If (i==naez .And. nemb>0) Write (1337, '(12X,49(1H.))')
+          If (i==naez .And. nemb>0) Write (1337, '(12X,49("."))')
         End Do
-        Write (1337, '(12X,49(1H-),/)')
+        Write (1337, '(12X,49("-"),/)')
 !----------------------------------------------------------------------
       Else
 !----------------------------------------------------------------------
@@ -225,10 +225,10 @@
           Else
             Write (1337, 100) j, (rbasis(i,j), i=1, 3), kaoez(1, j)
           End If
-          If (i==naez .And. nemb>0) Write (1337, '(12X,51(1H.))')
+          If (i==naez .And. nemb>0) Write (1337, '(12X,51("."))')
         End Do
 !     end of the change
-        Write (1337, '(12X,51(1H-),/)')
+        Write (1337, '(12X,51("-"),/)')
 !----------------------------------------------------------------------
 !======================================================================
       End If !  IF (.NOT.LINTERFACE )

@@ -335,7 +335,7 @@ contains
       call timing_stop('main1a - tbref')
 #endif
 
-      if(t_inc%i_write>0) write (1337,'(79(1H=),/,30X,"< KKR1a finished >",/,79(1H=),/)')
+      if(t_inc%i_write>0) write (1337,'(79("="),/,30X,"< KKR1a finished >",/,79("="),/)')
 
       ! Deallocate leftover arrays
       if (allocated(VINSNEW)) then

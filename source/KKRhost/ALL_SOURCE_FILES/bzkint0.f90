@@ -50,9 +50,9 @@
 !..
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      Write (1337, '(79(1H=),/,15X,A)') &
+      Write (1337, '(79("="),/,15X,A)') &
         'BZKINT0: finding symmetry, setting BZ integration'
-      Write (1337, '(79(1H=),/)')
+      Write (1337, '(79("="),/)')
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
       Call pointgrp(rsymat, rotname)

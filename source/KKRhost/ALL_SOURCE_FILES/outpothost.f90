@@ -87,7 +87,7 @@ subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
   end do
 ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   do i = 1, natyp
-    write (37, '(80(1H*))')
+    write (37, '(80("*"))')
     ir = int(zat(i))
     write (37, 230) i, elemname(ir), rmt(i), rws(i)
     if (krel==0) then

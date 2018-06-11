@@ -20,13 +20,13 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
   write (1337, *)
 
   if ((krel==1) .or. (nspin==2)) then
-    write (1337, '(78(1H#))')
+    write (1337, '(78("#"))')
     write (1337, 100)
-    write (1337, '(78(1H#))')
+    write (1337, '(78("#"))')
   else
-    write (1337, '(44(1H#))')
+    write (1337, '(44("#"))')
     write (1337, 110)
-    write (1337, '(44(1H#))')
+    write (1337, '(44("#"))')
   end if
 
   write (1337, *)
@@ -72,11 +72,11 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
     write (6, *)
   end if
 
-  write (1337, '(3X,26(1H=))', advance='no')
+  write (1337, '(3X,26("="))', advance='no')
   if (krel==1) then
-    write (1337, '(46(1H=))')
+    write (1337, '(46("="))')
   else
-    if (nspin==2) write (1337, '(23(1H=))', advance='no')
+    if (nspin==2) write (1337, '(23("="))', advance='no')
     write (1337, *)
   end if
 
@@ -141,9 +141,9 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
       end if
     end if
 
-    write (1337, '(10x,19(1H-))', advance='no')
+    write (1337, '(10x,19("-"))', advance='no')
     if (krel==1) then
-      write (1337, '(44(1H-))')
+      write (1337, '(44("-"))')
       write (1337, fmt=fmt2) ' TOT', (sumch(it,ispin), ispin=1, nspin), &
         muspin(it, lmaxd1+1), muorb(lmaxd1+1, 3, it), &
         (muorb(lmaxd1+1,ispin,it), ispin=1, nspin)
@@ -153,7 +153,7 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
       write (1337, '(25X,F12.8,12X,F8.4)') chtot(it), mutot(it)
     else
       if (nspin==2) then
-        write (1337, '(17(1H-))')
+        write (1337, '(17("-"))')
         write (1337, fmt=fmt2) ' TOT', (sumch(it,ispin), ispin=1, nspin), &
           muspin(it, lmaxd1+1)
         write (6, fmt=fmt2) ' TOT', (sumch(it,ispin), ispin=1, nspin), &
@@ -167,11 +167,11 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
     end if
 
     if (it/=natyp) then
-      write (1337, '(3X,26(1H=))', advance='no')
+      write (1337, '(3X,26("="))', advance='no')
       if (krel==1) then
-        write (1337, '(40(1H=))')
+        write (1337, '(40("="))')
       else
-        if (nspin==2) write (1337, '(17(1H=))', advance='no')
+        if (nspin==2) write (1337, '(17("="))', advance='no')
         write (1337, *)
       end if
     end if
@@ -179,9 +179,9 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
 
   write (1337, *)
   if ((krel==1) .or. (nspin==2)) then
-    write (1337, '(78(1H#))')
+    write (1337, '(78("#"))')
   else
-    write (1337, '(44(1H#))')
+    write (1337, '(44("#"))')
   end if
   write (1337, *)
 

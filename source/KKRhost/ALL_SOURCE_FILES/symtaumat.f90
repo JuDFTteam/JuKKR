@@ -193,7 +193,7 @@
           (symeulang(i,isym), i=1, 3), symunitary(isym)
 
       End Do
-      Write (1337, '(8X,57(1H-),/)')
+      Write (1337, '(8X,57("-"),/)')
 
 !-----------------------------------------------------------------------
 !                    initialize all rotation matrices

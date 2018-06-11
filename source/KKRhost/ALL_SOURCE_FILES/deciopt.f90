@@ -67,8 +67,8 @@
       External :: opt
 
 ! ======================================================================
-      Write (1337, '(79(1H=))')
-      Write (1337, '(15X,A,/,79(1H=),/)') &
+      Write (1337, '(79("="))')
+      Write (1337, '(15X,A,/,79("="),/)') &
         'DECIOPT: reading left/right host decimation files'
       il = 1
       ierror = 0

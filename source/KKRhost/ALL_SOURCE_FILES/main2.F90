@@ -236,9 +236,9 @@ contains
       ITSCF = ITSCF + 1         ! initialised to 0 in main0
       t_inc%i_iteration = ITSCF
       !
-      write(1337,'(/,79(1H*))')
+      write(1337,'(/,79("*"))')
       write(1337,'(19X,A,I3,A,I3,A)') '****** ITERATION : ',ITSCF,' OUT OF ',SCFSTEPS,' ******'
-      write(1337,'(79(1H*),/)')
+      write(1337,'(79("*"),/)')
       !
       if (IMIX.ge.3) then
          open (IOBROY,FILE='broy_io.unformatted',FORM='unformatted',STATUS='unknown')
@@ -314,7 +314,7 @@ contains
       !-------------------------------------------------------------------------
       write (1337,FMT=9030) EMAX,DENEF/DBLE(NAEZ)
       write (6,FMT=9030) EMAX,DENEF/DBLE(NAEZ)
-      write(1337,'(79(1H+),/)')
+      write(1337,'(79("+"),/)')
       !-------------------------------------------------------------------------
       DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIN)
       !-------------------------------------------------------------------------
@@ -607,7 +607,7 @@ contains
             ISHIFT,NSHELL,LINTERFACE)
       END IF                                                                     ! fxf
       !-------------------------------------------------------------------------
-      WRITE(1337,'(79(1H=),/)')
+      WRITE(1337,'(79("="),/)')
       !-------------------------------------------------------------------------
       ! Convolute potential with shape function for next iteration
       !-------------------------------------------------------------------------
@@ -748,7 +748,7 @@ contains
       if (ITSCF.NE.1) RMSAV0 = 1.0d2*MAX(RMSAVQ,RMSAVM)
       !
       write(1337,FMT=9160) MIX
-      write(1337,'(79(1H=),/)')
+      write(1337,'(79("="),/)')
       !-------------------------------------------------------------------------
       if (MAX(RMSAVQ,RMSAVM).LT.QBOUND) then
          t_inc%i_iteration = t_inc%N_iteration
@@ -834,7 +834,7 @@ contains
       !-------------------------------------------------------------------------
       if (MAX(RMSAVQ,RMSAVM).LT.QBOUND) then
          write(6,'(17X,A)') '++++++ SCF ITERATION CONVERGED ++++++'
-         write(6,'(79(1H*))')
+         write(6,'(79("*"))')
          ICONT = 0
          go to 260
          !----------------------------------------------------------------------
@@ -849,7 +849,7 @@ contains
          if (ITSCF.ge.SCFSTEPS) then
             t_inc%i_iteration = t_inc%N_iteration
             write(6,'(12X,A)') '++++++ NUMBER OF SCF STEPS EXHAUSTED ++++++'
-            write(6,'(79(1H*))')
+            write(6,'(79("*"))')
             ICONT = 0
             goto 260
          end if
@@ -871,7 +871,7 @@ contains
             WEZ(IE) = -2.D0/PI*DEZ(IE)
             if ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
          end do
-         write(1337,'(79(1H=))')
+         write(1337,'(79("="))')
       end if
       !-------------------------------------------------------------------------
       ! Convert VISP potential to the relativistic form VTREL,BTREL.

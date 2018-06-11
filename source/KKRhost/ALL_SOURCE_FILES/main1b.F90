@@ -271,9 +271,9 @@ contains
       call SETFACTL(FACTL,LMAX,KREL,LMMAXD)
 
       if(t_inc%i_write>0) then
-         write(1337, '(79(1H=))')
+         write(1337, '(79("="))')
          write(1337, '(2A)') "      Inversion algorithm used : ", INVALG(INVMOD)
-         write(1337, '(79(1H=))')
+         write(1337, '(79("="))')
       end if
 
       NACLSMAX = 1
@@ -1341,7 +1341,7 @@ contains
          close(9999)
       endif
 
-      if(t_inc%i_write>0) write (1337,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
+      if(t_inc%i_write>0) write (1337,'(79("="),/,30X,"< KKR1b finished >",/,79("="),/)')
 
 99019 FORMAT('(/,1X,79(*),/," tolerance for CPA-cycle:",F15.7,/," CPA not converged for",I3," energies:",/,3(" E:",I3,F7.4,:,2X))')
 99020 FORMAT('(/,1X,79(*),/,25X,"no problems with","  CPA-cycle ",/,1X,79(*),/)')
