@@ -31,6 +31,7 @@
 subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
   npnt3, iemxd)
 
+  use mod_DataTypes
   use :: mod_types, only: t_inc
   use :: constants
 
@@ -61,7 +62,7 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
   external :: gaufd, gauleg, opt
 ! ..
 ! .. Intrinsic Functions ..
-  intrinsic :: dcmplx
+  intrinsic :: cmplx
 ! ..
 !----------------------------------------------------------------------------
 ! OUTPUT
@@ -82,7 +83,7 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
     if (npnt2>1) then
       de = de/(npnt2-1)
     else
-      de = dcmplx(1.0d0, 0.0d0)
+      de = cmplx(1.0d0, 0.0d0, kind=dp)
     end if
     npnt = 0
     do i = 1, npnt2
@@ -94,7 +95,7 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
         stop '     < EMESHT >'
       end if
       er = ebot + (i-1)*de
-      ez(npnt) = dcmplx(er, etk)
+      ez(npnt) = cmplx(er, etk, kind=dp)
       df(npnt) = de
     end do ! I
     if (t_inc%i_write>0) write (1337, fmt=100) npnt, etk, etk*ryd
@@ -103,7 +104,7 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
 !----------------------------------------------------------------------------
   else if (npol>0) then
     call gauleg(xi, wi, npnt1)
-    de = npol*dcmplx(0.0d0, etk)
+    de = npol*cmplx(0.0d0, etk, kind=dp)
     npnt = 0
     do i = 1, npnt1
       npnt = npnt + 1
@@ -126,7 +127,7 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
           npnt
         stop '     < EMESHT >'
       end if
-      ez(npnt) = xi(i)*de + de + ebot + 2*npol*dcmplx(0.0d0, etk)
+      ez(npnt) = xi(i)*de + de + ebot + 2*npol*cmplx(0.0d0, etk, kind=dp)
       df(npnt) = wi(i)*de
     end do ! I -> NPTN2
     call gaufd(xi, wi, npnt3)
@@ -139,7 +140,7 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
           npnt
         stop '     < EMESHT >'
       end if
-      ez(npnt) = xi(i)*de + emu + 2*npol*dcmplx(0.0d0, etk)
+      ez(npnt) = xi(i)*de + emu + 2*npol*cmplx(0.0d0, etk, kind=dp)
       df(npnt) = wi(i)*de
     end do ! I - >NPTN3
     do i = npol, 1, -1
@@ -150,8 +151,8 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
           npnt
         stop '     < EMESHT >'
       end if
-      ez(npnt) = emu + (2*i-1)*dcmplx(0.0d0, etk)
-      df(npnt) = -2*dcmplx(0.0d0, etk)
+      ez(npnt) = emu + (2*i-1)*cmplx(0.0d0, etk, kind=dp)
+      df(npnt) = -2*cmplx(0.0d0, etk, kind=dp)
     end do
     if (t_inc%i_write>0) write (1337, 110) npnt, npol, npnt1, npnt2, npnt3
 !-------------------------------------------------------------------------
@@ -159,7 +160,7 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
 !-------------------------------------------------------------------------
   else
     if (npnt1>0) call gauleg(xi, wi, npnt1)
-    de = -npol*dcmplx(0.0d0, etk)
+    de = -npol*cmplx(0.0d0, etk, kind=dp)
     npnt = 0
     do i = 1, npnt1
       if (npnt>iemxd) then
@@ -182,12 +183,12 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
           npnt
         stop '     < EMESHT >'
       end if
-      ez(npnt) = xi(i)*de + de + ebot - 2*npol*dcmplx(0.0d0, etk)
-      if (opt('GF-EF   ')) ez(npnt) = emu + npol*dcmplx(0.0d0, etk)
+      ez(npnt) = xi(i)*de + de + ebot - 2*npol*cmplx(0.0d0, etk, kind=dp)
+      if (opt('GF-EF   ')) ez(npnt) = emu + npol*cmplx(0.0d0, etk, kind=dp)
       df(npnt) = wi(i)*de
     end do ! I -> NPNT2
     if (npnt3>0) call gauleg(xi, wi, npnt3)
-    de = -npol*dcmplx(0.0d0, etk)
+    de = -npol*cmplx(0.0d0, etk, kind=dp)
     do i = npnt3, 1, -1
       npnt = npnt + 1
       if (npnt>iemxd) then

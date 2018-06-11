@@ -23,7 +23,6 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 ! *********************************************************************
 !
 
-
 !.. array arguments
 
 !.. local scalars
@@ -48,7 +47,7 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 ! ---> START OF THE FACTORIZATION L * M * U
 
   external :: cinit, zcopy, zgemm, zgetrf, zgetrs, btom
-  intrinsic :: abs, dimag
+  intrinsic :: abs, aimag
 
 ! ---> N =1
 

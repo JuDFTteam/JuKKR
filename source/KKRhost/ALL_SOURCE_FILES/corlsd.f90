@@ -1,4 +1,5 @@
-subroutine corlsd(rs, zta, ec, vcup, vcdn, ecrs, eczta, alfc)
+    Subroutine corlsd(rs, zta, ec, vcup, vcdn, ecrs, eczta, alfc)
+      Use mod_datatypes, Only: dp
 !.....-----------------------------------------------------------------
 !     uniform-gas correlation of perdew and wang 1991
 !.....-----------------------------------------------------------------
@@ -9,43 +10,43 @@ subroutine corlsd(rs, zta, ec, vcup, vcdn, ecrs, eczta, alfc)
 !     output: correlation contribution (alfc) to the spin stiffness
 !.....-----------------------------------------------------------------
 !.. Scalar Arguments ..
-  double precision :: alfc, ec, ecrs, eczta, rs, vcdn, vcup, zta
+      Real (Kind=dp) :: alfc, ec, ecrs, eczta, rs, vcdn, vcup, zta
 !..
 !.. Local Scalars ..
-  double precision :: alfm, alfrsm, comm, ep, eprs, eu, eurs, f, fz, fzz, gam, &
-    thrd, thrd4, z4
+      Real (Kind=dp) :: alfm, alfrsm, comm, ep, eprs, eu, eurs, f, fz, fzz, &
+        gam, thrd, thrd4, z4
 !..
 !.. External Subroutines ..
-  external :: gcor91
+      External :: gcor91
 !..
 !.. Save statement ..
-  save :: gam, fzz, thrd, thrd4
+      Save :: gam, fzz, thrd, thrd4
 !..
 !.. Data statements ..
 !.....-----------------------------------------------------------------
-  data gam, fzz/0.5198421d0, 1.709921d0/
-  data thrd, thrd4/0.333333333333d0, 1.333333333333d0/
+      Data gam, fzz/0.5198421E0_dp, 1.709921E0_dp/
+      Data thrd, thrd4/0.333333333333E0_dp, 1.333333333333E0_dp/
 !..
 !.....-----------------------------------------------------------------
-  f = ((1.d0+zta)**thrd4+(1.d0-zta)**thrd4-2.d0)/gam
-  call gcor91(0.0310907d0, 0.21370d0, 7.5957d0, 3.5876d0, 1.6382d0, 0.49294d0, &
-    1.00d0, rs, eu, eurs)
-  call gcor91(0.01554535d0, 0.20548d0, 14.1189d0, 6.1977d0, 3.3662d0, &
-    0.62517d0, 1.00d0, rs, ep, eprs)
-  call gcor91(0.0168869d0, 0.11125d0, 10.357d0, 3.6231d0, 0.88026d0, &
-    0.49671d0, 1.00d0, rs, alfm, alfrsm)
+      f = ((1.E0_dp+zta)**thrd4+(1.E0_dp-zta)**thrd4-2.E0_dp)/gam
+      Call gcor91(0.0310907E0_dp, 0.21370E0_dp, 7.5957E0_dp, 3.5876E0_dp, &
+        1.6382E0_dp, 0.49294E0_dp, 1.00E0_dp, rs, eu, eurs)
+      Call gcor91(0.01554535E0_dp, 0.20548E0_dp, 14.1189E0_dp, 6.1977E0_dp, &
+        3.3662E0_dp, 0.62517E0_dp, 1.00E0_dp, rs, ep, eprs)
+      Call gcor91(0.0168869E0_dp, 0.11125E0_dp, 10.357E0_dp, 3.6231E0_dp, &
+        0.88026E0_dp, 0.49671E0_dp, 1.00E0_dp, rs, alfm, alfrsm)
 !  alfm is minus the spin stiffness alfc
-  alfc = -alfm
-  z4 = zta**4
-  ec = eu*(1.d0-f*z4) + ep*f*z4 - alfm*f*(1.d0-z4)/fzz
+      alfc = -alfm
+      z4 = zta**4
+      ec = eu*(1.E0_dp-f*z4) + ep*f*z4 - alfm*f*(1.E0_dp-z4)/fzz
 !  energy done. now the potential:
-  ecrs = eurs*(1.d0-f*z4) + eprs*f*z4 - alfrsm*f*(1.d0-z4)/fzz
-  fz = thrd4*((1.d0+zta)**thrd-(1.d0-zta)**thrd)/gam
-  eczta = 4.d0*(zta**3)*f*(ep-eu+alfm/fzz) + fz*(z4*ep-z4*eu-(1.d0-z4)*alfm/ &
-    fzz)
-  comm = ec - rs*ecrs/3.d0 - zta*eczta
-  vcup = comm + eczta
-  vcdn = comm - eczta
+      ecrs = eurs*(1.E0_dp-f*z4) + eprs*f*z4 - alfrsm*f*(1.E0_dp-z4)/fzz
+      fz = thrd4*((1.E0_dp+zta)**thrd-(1.E0_dp-zta)**thrd)/gam
+      eczta = 4.E0_dp*(zta**3)*f*(ep-eu+alfm/fzz) + fz*(z4*ep-z4*eu-(1.E0_dp- &
+        z4)*alfm/fzz)
+      comm = ec - rs*ecrs/3.E0_dp - zta*eczta
+      vcup = comm + eczta
+      vcdn = comm - eczta
 
-  return
-end subroutine
+      Return
+    End Subroutine

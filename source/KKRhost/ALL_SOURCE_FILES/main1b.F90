@@ -136,7 +136,7 @@ contains
       double complex, dimension(LMMAXD,LMMAXD,NREF)   :: DTREFLL  !< LLY Lloyd dtref/dE
       double complex, dimension(LMMAXD,LMMAXD,NAEZ)   :: DTMATLL  !< LLY Lloyd  dt/dE
       complex*8, dimension(LMMAXD*LMMAXD) :: GIMP !<  Cluster GF (ref. syst.)
-      character(len=35), dimension(0:2), parameter :: INVALG=(/'FULL MATRIX',   &
+      character(len=35), dimension(0:2), parameter :: INVALG=(/'FULL MATRIX                        ',   &
                                                                'BANDED MATRIX (slab)               ',    &
                                                                'BANDED + CORNERS MATRIX (supercell)' /)
 
@@ -571,8 +571,8 @@ contains
                      read(37,*) TEXT                             ! qdos ruess
                      read(37,*) TEXT                             ! qdos ruess
  9921                continue                                    ! qdos ruess
-                     read(37,99013) LM1,LM2,TREAD                ! qdos ruess
-                     99013 format ('(2I5,1P,2D22.14)')                 ! qdos ruess
+                     read(37,*) LM1,LM2,TREAD                ! qdos ruess
+                     !99013 format ('(2I5,1P,2D22.14)')                 ! qdos ruess
                      if ( (LM1+LM2).ne.0 ) then                  ! qdos ruess
                         TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
                         if ( (LM1+LM2).lt.2*LMMAXD ) goto 9921   ! qdos ruess
@@ -742,8 +742,11 @@ contains
                if(t_inc%i_write>0) then
                   write(1337,*)
                   write(1337,'(1X,79(''*''),/)')
-                  write(1337,99019) CPATOL, NCPAFAIL,    &
-                  (IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),IE=1,NCPAFAIL)
+                  !write(1337,99019) CPATOL, NCPAFAIL,    &
+                  !(IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),IE=1,NCPAFAIL)
+                  write(1337, '(" tolerance for CPA-cycle:",F15.7)') CPATOL
+                  write(1337, '(" CPA not converged for",I3," energies:")') NCPAFAIL
+                  write(1337, '(3(" E:",I3,F7.4,:,2X))') (IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),IE=1,NCPAFAIL)
                   write(1337,'(1X,79(''*''),/)')
                   write(1337,*)
                endif
@@ -1076,8 +1079,10 @@ contains
             if(t_inc%i_write>0) then
                write(1337,*)
                write(1337,'(1X,79(''*''),/)')
-               write(1337,99019) CPATOL, NCPAFAIL,    &
-                  (IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),IE=1,NCPAFAIL)
+               write(1337, '(1X,79(''*''))')
+               write(1337, '(" tolerance for CPA-cycle:",F15.7)') CPATOL
+               write(1337, '(" CPA not converged for",I3," energies:")') NCPAFAIL
+               write(1337, '(3(" E:",I3,F7.4,:,2X))') (IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),IE=1,NCPAFAIL)
                write(1337,'(1X,79(''*''),/)')
                write(1337,*)
             endif
@@ -1247,8 +1252,8 @@ contains
 
         ! consistency checks
         if(.not.(ielast==1.or.ielast==3)) stop 'Error: GREENIMP option only possible with 1 () or 3 () energy points in contour'
-        if(ielast==1 .and.dabs(dimag(ez(1)))>1E-10) stop 'Error: T>0 for GREENIMP (DTMTRX writeout, IELAST==3)'
-        if(ielast==3 .and.dabs(dimag(ez(1)))<1E-10) stop 'Error: T==0 for GREENIMP (GMATLL_GES writeout, IELAST==3)'
+        if(ielast==1 .and.dabs(aimag(ez(1)))>1E-10) stop 'Error: T>0 for GREENIMP (DTMTRX writeout, IELAST==3)'
+        if(ielast==3 .and.dabs(aimag(ez(1)))<1E-10) stop 'Error: T==0 for GREENIMP (GMATLL_GES writeout, IELAST==3)'
         ! end consistency checks
 
 #ifdef CPP_MPI

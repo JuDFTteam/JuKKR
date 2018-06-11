@@ -69,7 +69,7 @@ subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm, ipan1, &
   external :: zgemm
 !     ..
 !     .. Data statements ..
-  intrinsic :: atan, dimag, sqrt
+  intrinsic :: atan, aimag, sqrt
 !     ..
 !
   save
@@ -146,7 +146,7 @@ subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm, ipan1, &
 !
 !
     do ir = irmin + 1, irmax
-      rho2ns(ir, 1) = rho2ns(ir, 1) + c0ll*dimag(cden(ir,l1)*df) 
+      rho2ns(ir, 1) = rho2ns(ir, 1) + c0ll*aimag(cden(ir,l1)*df) 
     end do
 ! lm-dos
 ! lm-dos
@@ -185,7 +185,7 @@ subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm, ipan1, &
 
 
     do ir = irmin + 1, irmax
-      rho2ns(ir, lm3) = rho2ns(ir, lm3) + dimag(cltdf*wr(lm1,lm2,ir))
+      rho2ns(ir, lm3) = rho2ns(ir, lm3) + aimag(cltdf*wr(lm1,lm2,ir))
     end do
 
     if (ipan1>1 .and. lmsp(lm3)>0) then

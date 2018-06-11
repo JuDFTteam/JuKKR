@@ -315,25 +315,25 @@ subroutine printijtab(natom, ijtab)
   integer :: lgmax
 !     ..
   lgmax = 59
-  write (1337, 100) '  searched for pairs marked with 1 in the table below'
+  write (1337, 100, advance='no') '  searched for pairs marked with 1 in the table below'
   do j = 1, min(natom+3, lgmax)
-    write (1337, '(1H-,$)')
+    write (1337, '(1H-)', advance='no')
   end do
   write (1337, *)
   do i = 1, natom
-    write (1337, '(14X,I3," | ",$)') i
+    write (1337, '(14X,I3," | ")', advance='no') i
     ij = (i-1)*natom
     do j = 1, natom
-      write (1337, '(I1,$)') ijtab(ij+j)
+      write (1337, '(I1)', advance='no') ijtab(ij+j)
     end do
     write (1337, *)
   end do
-  write (1337, '(13X,6(1H-),$)')
+  write (1337, '(13X,6(1H-))', advance='no')
   do j = 1, min(natom+3, lgmax)
-    write (1337, '(1H-,$)')
+    write (1337, '(1H-)', advance='no')
   end do
   write (1337, '(/)')
 !     ...........................................
 100 format (13x, 65('-'), /, 18x, a, /, 13x, 65('-'), /, 13x, '   J |', /, &
-    13x, 'I    | 1..NATCLUS', /, 13x, 6('-'), $)
+    13x, 'I    | 1..NATCLUS', /, 13x, 6('-'))
 end subroutine

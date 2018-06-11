@@ -28,14 +28,14 @@ subroutine wfint(qns, cder, dder, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, &
     vtqnsi(lmmaxd, lmmaxd), vtqnsr(lmmaxd, lmmaxd)
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: dcmplx, dimag, dble
+  intrinsic :: cmplx, aimag, dble
 !     ..
 
   do ir = irmin, irmax
     do lm2 = 1, lmmaxd
       do lm1 = 1, lmmaxd
         qnsr(lm1, lm2) = dble(qns(lm1,lm2,ir,1))
-        qnsi(lm1, lm2) = dimag(qns(lm1,lm2,ir,1))
+        qnsi(lm1, lm2) = aimag(qns(lm1,lm2,ir,1))
       end do
     end do
     call dgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, 1.d0, vnspll(1,1,ir), lmmaxd, &
@@ -44,9 +44,9 @@ subroutine wfint(qns, cder, dder, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, &
       qnsi, lmmaxd, 0.d0, vtqnsi, lmmaxd)
     do lm1 = 1, lmmaxd
       do lm2 = 1, lmmaxd
-        cder(lm1, lm2, ir) = qzekdr(lm1, ir, 1)*dcmplx(vtqnsr(lm1,lm2), vtqnsi &
+        cder(lm1, lm2, ir) = qzekdr(lm1, ir, 1)*cmplx(vtqnsr(lm1,lm2), vtqnsi &
           (lm1,lm2))
-        dder(lm1, lm2, ir) = pzekdr(lm1, ir, 1)*dcmplx(vtqnsr(lm1,lm2), vtqnsi &
+        dder(lm1, lm2, ir) = pzekdr(lm1, ir, 1)*cmplx(vtqnsr(lm1,lm2), vtqnsi &
           (lm1,lm2))
       end do
     end do
@@ -54,7 +54,7 @@ subroutine wfint(qns, cder, dder, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, &
       do lm2 = 1, lmmaxd
         do lm1 = 1, lmmaxd
           qnsr(lm1, lm2) = dble(qns(lm1,lm2,ir,2))
-          qnsi(lm1, lm2) = dimag(qns(lm1,lm2,ir,2))
+          qnsi(lm1, lm2) = aimag(qns(lm1,lm2,ir,2))
         end do
       end do
       call dgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, 1.d0, vnspll(1,1,ir), &
@@ -63,9 +63,9 @@ subroutine wfint(qns, cder, dder, qzekdr, pzekdr, vnspll, nsra, irmind, irmd, &
         lmmaxd, qnsi, lmmaxd, 0.d0, vtqnsi, lmmaxd)
       do lm2 = 1, lmmaxd
         do lm1 = 1, lmmaxd
-          cder(lm1, lm2, ir) = cder(lm1, lm2, ir) + qzekdr(lm1, ir, 2)*dcmplx( &
+          cder(lm1, lm2, ir) = cder(lm1, lm2, ir) + qzekdr(lm1, ir, 2)*cmplx( &
             vtqnsr(lm1,lm2), vtqnsi(lm1,lm2))
-          dder(lm1, lm2, ir) = dder(lm1, lm2, ir) + pzekdr(lm1, ir, 2)*dcmplx( &
+          dder(lm1, lm2, ir) = dder(lm1, lm2, ir) + pzekdr(lm1, ir, 2)*cmplx( &
             vtqnsr(lm1,lm2), vtqnsi(lm1,lm2))
         end do
       end do

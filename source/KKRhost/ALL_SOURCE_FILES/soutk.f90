@@ -10,53 +10,54 @@
 !> @date Oct. 1989
 !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine soutk(f, fint, ipan, ircut)
+    Subroutine soutk(f, fint, ipan, ircut)
 
-  use :: global_variables
+      Use global_variables
+      Use mod_datatypes, Only: dp
 
 ! .. Scalar Arguments
-  integer, intent (in) :: ipan !< Number of panels in non-MT-region
+      Integer, Intent (In) :: ipan !< Number of panels in non-MT-region
 ! .. Array Arguments
-  integer, dimension (0:ipand), intent (in) :: ircut !< R points of panel borders
-  double precision, dimension (*), intent (in) :: f
+      Integer, Dimension (0:ipand), Intent (In) :: ircut !< R points of panel borders
+      Real (Kind=dp), Dimension (*), Intent (In) :: f
 ! .. Output variables
-  double precision, dimension (*), intent (out) :: fint
+      Real (Kind=dp), Dimension (*), Intent (Out) :: fint
 ! .. Local Scalars
-  integer :: i, ien, ip, ist
-  double precision :: a1, a2
+      Integer :: i, ien, ip, ist
+      Real (Kind=dp) :: a1, a2
 ! ..
-  a1 = 1.0d0/3.0d0
-  a2 = 4.0d0/3.0d0
+      a1 = 1.0E0_dp/3.0E0_dp
+      a2 = 4.0E0_dp/3.0E0_dp
 
 !----------------------------------------------------------------------------
 ! Loop over kinks
 !----------------------------------------------------------------------------
-  do ip = 1, ipan
-    ien = ircut(ip)
-    ist = ircut(ip-1) + 1
+      Do ip = 1, ipan
+        ien = ircut(ip)
+        ist = ircut(ip-1) + 1
 !
-    if (ip==1) then
-      fint(ist) = 0.0d0
+        If (ip==1) Then
+          fint(ist) = 0.0E0_dp
 !----------------------------------------------------------------------
 ! Integrate fint(ist+1) with a 4 point lagrangian
 !----------------------------------------------------------------------
-      fint(ist+1) = (f(ist+3)-5.0d0*f(ist+2)+19.0d0*f(ist+1)+9.0d0*f(ist))/ &
-        24.0d0
-    else
-      fint(ist) = fint(ist-1)
+          fint(ist+1) = (f(ist+3)-5.0E0_dp*f(ist+2)+19.0E0_dp*f(ist+1)+ &
+            9.0E0_dp*f(ist))/24.0E0_dp
+        Else
+          fint(ist) = fint(ist-1)
 !----------------------------------------------------------------------
 ! Integrate fint(ist+1) with a 4 point lagrangian
 !----------------------------------------------------------------------
-      fint(ist+1) = fint(ist-1) + (f(ist+3)-5.0d0*f(ist+2)+19.0d0*f(ist+1)+ &
-        9.0d0*f(ist))/24.0d0
-    end if
+          fint(ist+1) = fint(ist-1) + (f(ist+3)-5.0E0_dp*f(ist+2)+19.0E0_dp*f( &
+            ist+1)+9.0E0_dp*f(ist))/24.0E0_dp
+        End If
 
 !-------------------------------------------------------------------------
 ! Calculate fint with an extended 3-point-simpson
 !-------------------------------------------------------------------------
-    do i = ist + 2, ien
-      fint(i) = ((fint(i-2)+f(i-2)*a1)+f(i-1)*a2) + f(i)*a1
-    end do ! I
-  end do ! IP
+        Do i = ist + 2, ien
+          fint(i) = ((fint(i-2)+f(i-2)*a1)+f(i-1)*a2) + f(i)*a1
+        End Do ! I
+      End Do ! IP
 !
-end subroutine
+    End Subroutine

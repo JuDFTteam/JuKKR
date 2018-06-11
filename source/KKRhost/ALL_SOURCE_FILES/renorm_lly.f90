@@ -75,7 +75,7 @@ subroutine renorm_lly( & ! LLY Lloyd  &
           cdos_locvc(ie, ispin) = cdos_locvc(ie, ispin) + cdos_add
         end if
         chadd(ie, i1, ispin) = wez(ie)*cdos_add ! Now the locally-summed charge/energy is in cdos_loc, charge/energy/atom in chadd
-        charge(i1, ispin) = charge(i1, ispin) + dimag(chadd(ie,i1,ispin))/dble &
+        charge(i1, ispin) = charge(i1, ispin) + aimag(chadd(ie,i1,ispin))/dble &
           (nspin)
       end do ! Renormalization factor per energy:
       cdos_loc(ie, ispin) = -cdos_loc(ie, ispin)/pi
@@ -87,16 +87,16 @@ subroutine renorm_lly( & ! LLY Lloyd  &
     do ie = iestart, ieend
       do ispin = 1, nspin
 ! Renormalization factor per energy:
-        cren(ie, ispin) = dimag((cdos_lly(ie,ispin)-cdos_locvc(ie, &
-          ispin))*wez(ie))/dimag(cdos_loc(ie,ispin)*wez(ie))
+        cren(ie, ispin) = aimag((cdos_lly(ie,ispin)-cdos_locvc(ie, &
+          ispin))*wez(ie))/aimag(cdos_loc(ie,ispin)*wez(ie))
 ! Apply to DOS of each atom:
         do i1 = 1, natypd
           if (zat(i1)>1d-06) then
             charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              cren(ie, ispin)*dimag(chadd(ie,i1,ispin))/dble(nspin)
+              cren(ie, ispin)*aimag(chadd(ie,i1,ispin))/dble(nspin)
           else
             charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              dimag(chadd(ie,i1,ispin))/dble(nspin)
+              aimag(chadd(ie,i1,ispin))/dble(nspin)
           end if
         end do
       end do ! IE = IESTART,IEEND
@@ -104,17 +104,17 @@ subroutine renorm_lly( & ! LLY Lloyd  &
   else
     do ie = iestart, ieend
 ! add term from sum from l>lmax to infinity
-      cren(ie, 1) = dimag((cdos_lly(ie,1)-cdos_locvc(ie,1)-cdos_locvc(ie, &
-        2))*wez(ie))/dimag((cdos_loc(ie,1)+cdos_loc(ie,2))*wez(ie))
+      cren(ie, 1) = aimag((cdos_lly(ie,1)-cdos_locvc(ie,1)-cdos_locvc(ie, &
+        2))*wez(ie))/aimag((cdos_loc(ie,1)+cdos_loc(ie,2))*wez(ie))
 !            DO I1=1,NATYPD
       do ispin = 1, nspin
         do i1 = 1, natypd
           if (zat(i1)>1d-06) then
             charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              cren(ie, 1)*dimag(chadd(ie,i1,ispin))/dble(nspin)
+              cren(ie, 1)*aimag(chadd(ie,i1,ispin))/dble(nspin)
           else
             charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              dimag(chadd(ie,i1,ispin))/dble(nspin)
+              aimag(chadd(ie,i1,ispin))/dble(nspin)
           end if
         end do
       end do
@@ -186,21 +186,21 @@ subroutine renorm_lly( & ! LLY Lloyd  &
       ipot = (i1-1)*nspin + ispin
       do ll = 0, lmaxp1
         if (zat(i1)>1d-06) then
-          denefat(i1) = denefat(i1) - 2.0d0*conc(i1)*cren(ielast, ispin)*dimag &
+          denefat(i1) = denefat(i1) - 2.0d0*conc(i1)*cren(ielast, ispin)*aimag &
             (cden(ll,ielast,ipot))/pi/dble(nspin)
         else
-          denefat(i1) = denefat(i1) - 2.0d0*conc(i1)*dimag(cden(ll,ielast,ipot &
+          denefat(i1) = denefat(i1) - 2.0d0*conc(i1)*aimag(cden(ll,ielast,ipot &
             ))/pi/dble(nspin)
         end if
         espv(ll, ipot) = 0d0
         if (zat(i1)>1d-06) then
           do ie = 1, ielast
-            espv(ll, ipot) = espv(ll, ipot) + cren(ie, ispin)*dimag(ez(ie)* &
+            espv(ll, ipot) = espv(ll, ipot) + cren(ie, ispin)*aimag(ez(ie)* &
               cden(ll,ie,ipot)*wez(ie)/dble(nspin))
           end do
         else
           do ie = 1, ielast
-            espv(ll, ipot) = espv(ll, ipot) + dimag(ez(ie)*cden(ll,ie,ipot)* &
+            espv(ll, ipot) = espv(ll, ipot) + aimag(ez(ie)*cden(ll,ie,ipot)* &
               wez(ie)/dble(nspin))
           end do
         end if

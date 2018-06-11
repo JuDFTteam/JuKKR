@@ -1,11 +1,13 @@
 ! **********************************************************************
-double precision function dclock()
+    Function dclock()
+      Use mod_datatypes, Only: dp
+      Real (Kind=dp) :: dclock
 ! **********************************************************************
 !     .. External Functions ..
-  real :: etime, tarry(2)
-  external :: etime
+      Real (Kind=dp) :: etime, tarry(2)
+      External :: etime
 
 !     ..
-  dclock = dble(etime(tarry))
-  return
-end function
+      dclock = real(etime(tarry), kind=dp)
+      Return
+    End Function

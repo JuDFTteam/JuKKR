@@ -23,6 +23,7 @@ subroutine regsol(cvlight, e, nsra, dlogdp, fz, hamf, mass, pz, dror, r, s, &
 !                                               ph. mavropoulos
 
 !-----------------------------------------------------------------------
+  use mod_DataTypes
   implicit none
 !.. Scalar Arguments ..
   double complex :: e
@@ -121,7 +122,7 @@ subroutine regsol(cvlight, e, nsra, dlogdp, fz, hamf, mass, pz, dror, r, s, &
         if (nsra==2 .and. z>0.0d0) then
           a(-1) = 0.0d0
           a(0) = 1.0d0
-          b(0) = dcmplx(sm1*cvlight*cvlight/(2*z), 0.0d0)
+          b(0) = cmplx(sm1*cvlight*cvlight/(2*z), 0.0d0, kind=dp)
           do j = 1, 3
             a(j) = (0.0d0, 0.d0)
             b(j) = (0.0d0, 0.d0)

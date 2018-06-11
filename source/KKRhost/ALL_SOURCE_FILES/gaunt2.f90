@@ -1,5 +1,6 @@
 !***********************************************************************
-subroutine gaunt2(w, yr, n)
+    Subroutine gaunt2(w, yr, n)
+      Use mod_datatypes, Only: dp
 ! ************************************************************************
 !     sets up values needed for gaunt
 !        m. weinert  january 1982
@@ -15,67 +16,68 @@ subroutine gaunt2(w, yr, n)
 !                 of RF=(4*pi)**(1/3)
 
 !-----------------------------------------------------------------------
-  implicit none
+      Implicit None
 !.. Arguments
-  integer :: n
-  double precision :: w(*), yr(n, 0:n, 0:n)
+      Integer :: n
+      Real (Kind=dp) :: w(*), yr(n, 0:n, 0:n)
 !..
 !.. Local Scalars ..
-  double precision :: a, cd, cth, fac, fpi, rf, sth, t
-  integer :: k, l, lomax, m
+      Real (Kind=dp) :: a, cd, cth, fac, fpi, rf, sth, t
+      Integer :: k, l, lomax, m
 !..
 !.. Local Arrays ..
-  double precision :: p(0:n+1, 0:n), x(n)
+      Real (Kind=dp) :: p(0:n+1, 0:n), x(n)
 !..
 !.. External Subroutines ..
-  external :: grule
+      External :: grule
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: atan, sqrt
+      Intrinsic :: atan, sqrt
 !     ..
-  fpi = 16d0*atan(1d0)
-  rf = fpi**(1d0/3d0)
-  lomax = n
+      fpi = 16E0_dp*atan(1E0_dp)
+      rf = fpi**(1E0_dp/3E0_dp)
+      lomax = n
 
 !--->    obtain gauss-legendre points and weights
 
-  call grule(2*n, x, w)
+      Call grule(2*n, x, w)
 
 !--->    generate associated legendre functions for m.ge.0
 
-  do k = 1, n
-    cth = x(k)
-    sth = sqrt(1.d0-cth*cth)
-    fac = 1.d0
+      Do k = 1, n
+        cth = x(k)
+        sth = sqrt(1.E0_dp-cth*cth)
+        fac = 1.E0_dp
 
 !--->    loop over m values
 
-    do m = 0, lomax
-      fac = -dble(2*m-1)*fac
-      p(m, m) = fac
-      p(m+1, m) = dble(2*m+1)*cth*fac
+        Do m = 0, lomax
+          fac = -real(2*m-1, kind=dp)*fac
+          p(m, m) = fac
+          p(m+1, m) = real(2*m+1, kind=dp)*cth*fac
 
 !--->    recurse upward in l
 
-      do l = m + 2, lomax
-        p(l, m) = (dble(2*l-1)*cth*p(l-1,m)-dble(l+m-1)*p(l-2,m))/dble(l-m)
-      end do
+          Do l = m + 2, lomax
+            p(l, m) = (real(2*l-1,kind=dp)*cth*p(l-1,m)-real(l+m-1,kind=dp)*p( &
+              l-2,m))/real(l-m, kind=dp)
+          End Do
 
-      fac = fac*sth
-    end do
+          fac = fac*sth
+        End Do
 
 !--->    multiply in the normalization factors
 
-    do l = 0, lomax
-      a = rf*sqrt((2*l+1)/fpi)
-      cd = 1.d0
-      yr(k, l, 0) = a*p(l, 0)
+        Do l = 0, lomax
+          a = rf*sqrt((2*l+1)/fpi)
+          cd = 1.E0_dp
+          yr(k, l, 0) = a*p(l, 0)
 
-      do m = 1, l
-        t = dble((l+1-m)*(l+m))
-        cd = cd/t
-        yr(k, l, m) = a*sqrt(2.d0*cd)*p(l, m)
-      end do
-    end do
-  end do
-end subroutine
+          Do m = 1, l
+            t = real((l+1-m)*(l+m), kind=dp)
+            cd = cd/t
+            yr(k, l, m) = a*sqrt(2.E0_dp*cd)*p(l, m)
+          End Do
+        End Do
+      End Do
+    End Subroutine

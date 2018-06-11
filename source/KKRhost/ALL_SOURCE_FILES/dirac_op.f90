@@ -1,6 +1,6 @@
 subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
   cg4, cg5, cg8, ameopo, v, b, at, z, nucleus, r, drdi, dovr, nmesh, pr, qr, &
-  pi, qi, dp, dq, ap, aq, lop, ntmax, nlamax, nkmmax, nrmax)
+  pi, qi, d_p, dq, ap, aq, lop, ntmax, nlamax, nkmmax, nrmax)
 !   ********************************************************************
 !   *                                                                  *
 !   *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
@@ -21,6 +21,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
 !   ********************************************************************
 
   use :: mod_types, only: t_inc
+  use mod_DataTypes
   implicit none
 
 ! PARAMETER definitions
@@ -42,7 +43,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
   double precision :: ameopo(nkmmax, nkmmax, nlamax, 3), ap(2, 2, nrmax), &
     aq(2, 2, nrmax), at(nrmax, nlamax, 3, ntmax), b(nrmax), dovr(nrmax), &
     drdi(nrmax), r(nrmax), v(nrmax)
-  double complex :: dp(2, 2, nrmax), dq(2, 2, nrmax), pi(2, 2, nrmax), &
+  double complex :: d_p(2, 2, nrmax), dq(2, 2, nrmax), pi(2, 2, nrmax), &
     pr(2, 2, nrmax), qi(2, 2, nrmax), qr(2, 2, nrmax)
 
 ! Local variables
@@ -59,7 +60,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
     sk2, so2, so6, srk, tz, v14, vc(0:npemax), vh, vhlp(nabm+4), wrp, wrq, &
     x14, xh
   double complex :: cjlz
-  double precision :: dabs, dble, dsqrt
+  double precision :: abs, dble, sqrt
   integer :: i, ic, ikm(2), ikmi, ikmj, imkm(2), imkmi, imkmj, ip, irk, isk1, &
     isk2, iv, j, jcorr, k, lb(2), lb1, lb2, m, mps, ms, n, nacorr, ndiv, nhlp, &
     nm, npe, nsol, ntop
@@ -127,14 +128,14 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
   kap(1) = dble(kap1)
 ! MB
   if (nucleus==0) then
-    gam(1) = dsqrt(kap(1)**2-(tz/c)**2)
+    gam(1) = sqrt(kap(1)**2-(tz/c)**2)
   else
-    gam(1) = dabs(kap(1))
+    gam(1) = abs(kap(1))
   end if
 ! MB
   lb(1) = lb1
   sk(1) = sk1
-  if (dabs(mj)>l) then
+  if (abs(mj)>l) then
     cg2 = 0.0d0
     cg4 = 0.0d0
     cg8 = 0.0d0
@@ -147,7 +148,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
     lb(2) = 0
     sk(2) = 0.0d0
   else
-    cg2 = -dsqrt(1.0d0-(mj/(kap1+0.5d0))**2)
+    cg2 = -sqrt(1.0d0-(mj/(kap1+0.5d0))**2)
     cg4 = -mj/(kap2+0.5d0)
     cg8 = -mj/(-kap2+0.5d0)
     nsol = 2
@@ -157,9 +158,9 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
     kap(2) = dble(kap2)
 
     if (nucleus==0) then
-      gam(2) = dsqrt(kap(2)**2-(tz/c)**2)
+      gam(2) = sqrt(kap(2)**2-(tz/c)**2)
     else
-      gam(2) = dabs(kap(2))
+      gam(2) = abs(kap(2))
     end if
 
     lb(2) = lb2
@@ -242,7 +243,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
 
     do j = 1, nsol
       i = 3 - j
-      pc(j, j, 0) = dsqrt(abs(kap(j))-gam(j))
+      pc(j, j, 0) = sqrt(abs(kap(j))-gam(j))
       qc(j, j, 0) = (kap(j)+gam(j))*(csqr/tz)*pc(j, j, 0)
       pc(i, j, 0) = c0
       qc(i, j, 0) = c0
@@ -295,7 +296,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
         do i = 1, nsol
           pr(i, j, n) = pc(i, j, 0)*rpwgpm
           qr(i, j, n) = qc(i, j, 0)*rpwgpm
-          dp(i, j, n) = pc(i, j, 0)*rpwgpm*gam(j)*dovr(n)
+          d_p(i, j, n) = pc(i, j, 0)*rpwgpm*gam(j)*dovr(n)
           dq(i, j, n) = qc(i, j, 0)*rpwgpm*gam(j)*dovr(n)
         end do
 
@@ -306,7 +307,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
           do i = 1, nsol
             pr(i, j, n) = pr(i, j, n) + pc(i, j, m)*rpwgpm
             qr(i, j, n) = qr(i, j, n) + qc(i, j, m)*rpwgpm
-            dp(i, j, n) = dp(i, j, n) + pc(i, j, m)*rpwgpm*gpm*dovr(n)
+            d_p(i, j, n) = d_p(i, j, n) + pc(i, j, m)*rpwgpm*gpm*dovr(n)
             dq(i, j, n) = dq(i, j, n) + qc(i, j, m)*rpwgpm*gpm*dovr(n)
           end do
 
@@ -328,18 +329,18 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
         do i = 1, nsol
           pr(i, j, n) = c0
           qr(i, j, n) = c0
-          dp(i, j, n) = c0
+          d_p(i, j, n) = c0
           dq(i, j, n) = c0
         end do
       end do
 
-      zz = cdsqrt(s0*t0)*r(n)
+      zz = sqrt(s0*t0)*r(n)
 
       do j = 1, nsol
         pr(j, j, n) = cjlz(l, zz)*r(n)
-        dp(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
+        d_p(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
 
-        qr(j, j, n) = (dp(j,j,n)/drdi(n)+pr(j,j,n)*(kap(j)/r(n)))/s0
+        qr(j, j, n) = (d_p(j,j,n)/drdi(n)+pr(j,j,n)*(kap(j)/r(n)))/s0
         dq(j, j, n) = qr(j, j, n)*(kap(j)/r(n)) - pr(j, j, n)*t0
       end do
     end do
@@ -361,7 +362,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
         qnew(i, j) = qr(i, j, n-1)
 
         do ip = 1, nabm
-          pnew(i, j) = pnew(i, j) + apred(ip)*dp(i, j, n-ip)
+          pnew(i, j) = pnew(i, j) + apred(ip)*d_p(i, j, n-ip)
           qnew(i, j) = qnew(i, j) + apred(ip)*dq(i, j, n-ip)
         end do
       end do
@@ -382,7 +383,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
           k = 3 - i
           pold(i, j) = pnew(i, j)
           qold(i, j) = qnew(i, j)
-          dp(i, j, n) = -kap(i)*dovr(n)*pnew(i, j) + &
+          d_p(i, j, n) = -kap(i)*dovr(n)*pnew(i, j) + &
             (emvqq+bqq*cgmd(i)+aq(i,j,n))*qnew(i, j)
           dq(i, j, n) = kap(i)*dovr(n)*qnew(i, j) + (emvpp+bpp*cgd(i)+ap(i,j,n &
             ))*pnew(i, j) + (bpp*cgo+ap(k,j,n))*pnew(k, j)
@@ -390,7 +391,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
           pnew(i, j) = pr(i, j, n-1)
           qnew(i, j) = qr(i, j, n-1)
           do ic = 0, nacorr
-            pnew(i, j) = pnew(i, j) + acorr(ic)*dp(i, j, n-ic)
+            pnew(i, j) = pnew(i, j) + acorr(ic)*d_p(i, j, n-ic)
             qnew(i, j) = qnew(i, j) + acorr(ic)*dq(i, j, n-ic)
           end do
         end do
@@ -399,12 +400,12 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
       do j = 1, nsol
         do i = 1, nsol
           diffa = pold(i, j) - pnew(i, j)
-          if (abs(dreal(diffa))>(tol*abs(dreal(pnew(i,j))))) go to 100
-          if (abs(dimag(diffa))>(tol*abs(dimag(pnew(i,j))))) go to 100
+          if (abs(real(diffa, kind=dp))>(tol*abs(real(pnew(i,j), kind=dp)))) go to 100
+          if (abs(aimag(diffa))>(tol*abs(aimag(pnew(i,j))))) go to 100
 
           diffb = qold(i, j) - qnew(i, j)
-          if (abs(dreal(diffb))>(tol*abs(dreal(qnew(i,j))))) go to 100
-          if (abs(dimag(diffb))>(tol*abs(dimag(qnew(i,j))))) go to 100
+          if (abs(real(diffb, kind=dp))>(tol*abs(real(qnew(i,j), kind=dp)))) go to 100
+          if (abs(aimag(diffb))>(tol*abs(aimag(qnew(i,j))))) go to 100
         end do
       end do
       go to 110
@@ -424,7 +425,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
         k = 3 - i
         pr(i, j, n) = pnew(i, j)
         qr(i, j, n) = qnew(i, j)
-        dp(i, j, n) = -kap(i)*dovr(n)*pnew(i, j) + (emvqq+bqq*cgmd(i)+aq(i,j,n &
+        d_p(i, j, n) = -kap(i)*dovr(n)*pnew(i, j) + (emvqq+bqq*cgmd(i)+aq(i,j,n &
           ))*qnew(i, j)
         dq(i, j, n) = kap(i)*dovr(n)*qnew(i, j) + (emvpp+bpp*cgd(i)+ap(i,j,n)) &
           *pnew(i, j) + (bpp*cgo+ap(k,j,n))*pnew(k, j)
@@ -451,14 +452,14 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
       i = 3 - j
       pi(j, j, n) = cjlz(l, arg)*r(n)
       qi(j, j, n) = cfac*sk(j)*cjlz(lb(j), arg)*r(n)*c
-      dp(j, j, n) = (dble(l+1)*cjlz(l,arg)-arg*cjlz(l+1,arg))*drdi(n)
+      d_p(j, j, n) = (dble(l+1)*cjlz(l,arg)-arg*cjlz(l+1,arg))*drdi(n)
       m = lb(j)
       dq(j, j, n) = cfac*sk(j)*(dble(m+1)*cjlz(m,arg)-arg*cjlz(m+1,arg))* &
         drdi(n)*c
 
       pi(i, j, n) = c0
       qi(i, j, n) = c0
-      dp(i, j, n) = c0
+      d_p(i, j, n) = c0
       dq(i, j, n) = c0
     end do
   end do
@@ -482,7 +483,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
 ! *** reinitialize Q using only DP and PI
     do j = 1, nsol
       i = 3 - j
-      qi(j, j, n) = (dp(j,j,n)+kap(j)*pi(j,j,n)*dovr(n))/(emvqq+bqq*cgmd(j))
+      qi(j, j, n) = (d_p(j,j,n)+kap(j)*pi(j,j,n)*dovr(n))/(emvqq+bqq*cgmd(j))
       qi(i, j, n) = c0
     end do
 
@@ -498,7 +499,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
       do i = 1, nsol
         p1(i, j) = pi(i, j, n)
         q1(i, j) = qi(i, j, n)
-        mp1(i, j) = dp(i, j, n)
+        mp1(i, j) = d_p(i, j, n)
         mq1(i, j) = dq(i, j, n)
       end do
     end do
@@ -614,7 +615,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
           do i = 1, nsol
             pi(i, j, n) = p1(i, j)
             qi(i, j, n) = q1(i, j)
-            dp(i, j, n) = mp1(i, j)
+            d_p(i, j, n) = mp1(i, j)
             dq(i, j, n) = mq1(i, j)
           end do
         end do
@@ -646,7 +647,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
         qnew(i, j) = qi(i, j, n+1)
 
         do ip = 1, nabm
-          pnew(i, j) = pnew(i, j) - apred(ip)*dp(i, j, n+ip)
+          pnew(i, j) = pnew(i, j) - apred(ip)*d_p(i, j, n+ip)
           qnew(i, j) = qnew(i, j) - apred(ip)*dq(i, j, n+ip)
         end do
       end do
@@ -665,7 +666,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
           k = 3 - i
           pold(i, j) = pnew(i, j)
           qold(i, j) = qnew(i, j)
-          dp(i, j, n) = -kap(i)*dovr(n)*pnew(i, j) + &
+          d_p(i, j, n) = -kap(i)*dovr(n)*pnew(i, j) + &
             (emvqq+bqq*cgmd(i)+aq(i,j,n))*qnew(i, j)
           dq(i, j, n) = kap(i)*dovr(n)*qnew(i, j) + (emvpp+bpp*cgd(i)+ap(i,j,n &
             ))*pnew(i, j) + (bpp*cgo+ap(k,j,n))*pnew(k, j)
@@ -673,7 +674,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
           pnew(i, j) = pi(i, j, n+1)
           qnew(i, j) = qi(i, j, n+1)
           do ic = 0, nacorr
-            pnew(i, j) = pnew(i, j) - acorr(ic)*dp(i, j, n+ic)
+            pnew(i, j) = pnew(i, j) - acorr(ic)*d_p(i, j, n+ic)
             qnew(i, j) = qnew(i, j) - acorr(ic)*dq(i, j, n+ic)
           end do
         end do
@@ -682,12 +683,12 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
       do j = 1, nsol
         do i = 1, nsol
           diffa = pold(i, j) - pnew(i, j)
-          if (abs(dreal(diffa))>(tol*abs(dreal(pnew(i,j))))) go to 120
-          if (abs(dimag(diffa))>(tol*abs(dimag(pnew(i,j))))) go to 120
+          if (abs(real(diffa, kind=dp))>(tol*abs(real(pnew(i,j), kind=dp)))) go to 120
+          if (abs(aimag(diffa))>(tol*abs(aimag(pnew(i,j))))) go to 120
 
           diffb = qold(i, j) - qnew(i, j)
-          if (abs(dreal(diffb))>(tol*abs(dreal(qnew(i,j))))) go to 120
-          if (abs(dimag(diffb))>(tol*abs(dimag(qnew(i,j))))) go to 120
+          if (abs(real(diffb, kind=dp))>(tol*abs(real(qnew(i,j), kind=dp)))) go to 120
+          if (abs(aimag(diffb))>(tol*abs(aimag(qnew(i,j))))) go to 120
         end do
       end do
       go to 130
@@ -705,7 +706,7 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
         k = 3 - i
         pi(i, j, n) = pnew(i, j)
         qi(i, j, n) = qnew(i, j)
-        dp(i, j, n) = -kap(i)*dovr(n)*pnew(i, j) + (emvqq+bqq*cgmd(i)+aq(i,j,n &
+        d_p(i, j, n) = -kap(i)*dovr(n)*pnew(i, j) + (emvqq+bqq*cgmd(i)+aq(i,j,n &
           ))*qnew(i, j)
         dq(i, j, n) = kap(i)*dovr(n)*qnew(i, j) + (emvpp+bpp*cgd(i)+ap(i,j,n)) &
           *pnew(i, j) + (bpp*cgo+ap(k,j,n))*pnew(k, j)

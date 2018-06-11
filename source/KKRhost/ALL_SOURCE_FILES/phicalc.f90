@@ -14,6 +14,7 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
 ! *                                                                   *
 ! *********************************************************************
 
+  use mod_DataTypes
   implicit none
   include 'inc.p'
   integer :: npotd
@@ -38,7 +39,7 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
   double precision :: wint(irmd), wnorm, cutoff(irmd)
   double complex :: cnorm, ez, czero
 
-  czero = dcmplx(0.d0, 0.d0)
+  czero = cmplx(0.d0, 0.d0, kind=dp)
   ipan1 = ipan(iatom)
   irc1 = ircut(ipan1, iatom)
 ! -> set VPOT = [ V(UP) + V(DN) ]/2  for IATOM
@@ -58,7 +59,7 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
 
   do l1 = 0, lmaxd
     if (nsra==2) then
-      s(l1) = dsqrt(dble(l1*l1+l1+1)-4.0d0*z(iatom)*z(iatom)/(cvlight*cvlight) &
+      s(l1) = sqrt(dble(l1*l1+l1+1)-4.0d0*z(iatom)*z(iatom)/(cvlight*cvlight) &
         )
       if (z(iatom)==0.0d0) s(l1) = dble(l1)
     else
@@ -73,7 +74,7 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
   do ir = 2, irc1
     dror(ir) = drdi(ir, iatom)/r(ir, iatom)
   end do
-  ez = dcmplx(erefldau, 0.d0)
+  ez = cmplx(erefldau, 0.d0, kind=dp)
 ! The result of regsol is (R*r)/r**l (in non-sra and similar in sra)
 
 
@@ -109,7 +110,7 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
 ! --> integrate, normalisation factor = WNORM
 
   do ir = 1, irc1
-    wint(ir) = dreal(dconjg(phi(ir))*phi(ir))
+    wint(ir) = real(conjg(phi(ir))*phi(ir), kind=dp)
   end do
 
 ! --> normalise PZ,FZ to unit probability in WS cell
@@ -119,7 +120,7 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
 ! *********************************************************************
 ! *                                                                   *
 ! * Calculates test functions PHI for LDA+U.                          *
-  cnorm = 1.d0/dsqrt(wnorm)
+  cnorm = 1.d0/sqrt(wnorm)
   call zscal(irc1, cnorm, phi, 1)
 ! * Only spherical part of the potential is used.                     *
   return

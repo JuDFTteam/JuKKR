@@ -319,7 +319,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
 !                     assume constant pot: V=V(1)   ignore coupling: B=0
 
     do n = 1, nabm
-      zz = cdsqrt(e-v(1))*r(n)
+      zz = sqrt(e-v(1))*r(n)
       efac = (zz/r(n))*c/(e+csqr)
 
       do j = 1, nsol

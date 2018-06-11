@@ -5,6 +5,7 @@ subroutine taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, &
 !   *   find the structure of the site-diagonal TAU - matrices  TAUQ   *
 !   *                                                                  *
 !   ********************************************************************
+  use mod_DataTypes
   implicit none
 
 ! PARAMETER definitions
@@ -18,7 +19,6 @@ subroutine taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, &
 
 ! Local variables
   double precision :: abst, x
-  double precision :: dble
   integer :: i, i0, imweight, iq, isym, iw, iwr, j, k, l, lin, nelmt, &
     nkmq(nqmax), nkmtop, nlin, non0(nqmax)
   double complex :: st(nkmmax, nkmmax), tauk(nkmmax, nkmmax, nqmax)
@@ -49,14 +49,14 @@ subroutine taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, &
           if (symunitary(isym)) then
             do l = 1, nkmtop
               do k = 1, nkmtop
-                tauk(k, l, i0) = tauk(k, l, i0) + drot(i, k, isym)*dconjg(drot &
+                tauk(k, l, i0) = tauk(k, l, i0) + drot(i, k, isym)*conjg(drot &
                   (j,l,isym))
               end do
             end do
           else
             do l = 1, nkmtop
               do k = 1, nkmtop
-                tauk(l, k, i0) = tauk(l, k, i0) + drot(i, k, isym)*dconjg(drot &
+                tauk(l, k, i0) = tauk(l, k, i0) + drot(i, k, isym)*conjg(drot &
                   (j,l,isym))
               end do
             end do
@@ -70,12 +70,12 @@ subroutine taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, &
             abst = abs(tauk(k,l,iq))
             st(i, j) = st(i, j) + abst
             if (abst>1d-8) then
-              if (dimag(tauk(k,l,iq))>1d-5) then
+              if (aimag(tauk(k,l,iq))>1d-5) then
                 if (iprint>0) write (1337, *) ' Im(Weight) > 1D-5 ', i, j, k, &
                   l
                 imweight = 1
               end if
-              x = dreal(tauk(k,l,iq))/dble(nsym)
+              x = real(tauk(k,l,iq), kind=dp)/real(nsym, kind=dp)
 
               if (iprint>1) then
                 if (iwr==0) then

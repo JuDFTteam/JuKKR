@@ -82,6 +82,7 @@ module mod_rhoqtools
       use mpi
 #endif
       use mod_mympi, only: myrank, master
+      use mod_DataTypes
 
       implicit none
 
@@ -197,8 +198,8 @@ module mod_rhoqtools
          do kpt=1, nofks
             if(kmask(kpt)>0) then
               rhoq_kmask(1:3,k_start) = bzkp(1:3,kpt)
-              rhoq_kmask(4,k_start) = dfloat(kpt)
-              rhoq_kmask(5,k_start) = dfloat(kmask(kpt))
+              rhoq_kmask(4,k_start) = real(kpt, kind=dp)
+              rhoq_kmask(5,k_start) = real(kmask(kpt), kind=dp)
               k_start = k_start+1
             end if
          end do
@@ -284,6 +285,7 @@ module mod_rhoqtools
    subroutine rhoq_write_tau0(nofks, nshell, nsh1, nsh2, nsymat, nscoef, mu, iatomimp, kmask, lmmaxd, bzkp, imin)
 
    use mod_mympi, only: myrank, master
+   use mod_DataTypes
 
    implicit none
 
@@ -302,7 +304,7 @@ module mod_rhoqtools
       write(*,*)                      ! status bar
       write(*,*) 'rhoq: write-out loop'
       write(*,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
-      write(*,FMT=190) !beginning of statusbar
+      write(*,FMT=190, advance='no') !beginning of statusbar
       
       ! write out fort.998899, fort.998888
       ! ======================================================================
@@ -327,7 +329,7 @@ module mod_rhoqtools
                  KP(1:3) = bzkp(1:3,kpt)
                  G(1:LMMAXD,1:LMMAXD) = CZERO
               end if
-              write(998899,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD) * dfloat(kmask(kpt))
+              write(998899,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD) * real(kmask(kpt), kind=dp)
             end if
             irec = (nscoef*2)*(kpt-1)
             if( ((j==mu) .and. any(i==iatomimp(1:nscoef))) ) then
@@ -345,15 +347,15 @@ module mod_rhoqtools
                  KP(1:3) = bzkp(1:3,kpt)
                  G(1:LMMAXD,1:LMMAXD) = CZERO
               end if
-              write(998888,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD) * dfloat(kmask(kpt))
+              write(998888,'(10000ES15.7)') KP(1:2), G(1:LMMAXD,1:LMMAXD) * real(kmask(kpt), kind=dp)
             end if ! iii==mu ...
           END DO ! ISYM = 1,NSYMAT
         END DO !NS = 1,NSHELL
         
         if(nofks>=50) then
-          if(mod(KPT-0,nofks/50)==0) write(6,FMT=200)
+          if(mod(KPT-0,nofks/50)==0) write(6,FMT=200, advance='no')
         else
-          write(6,FMT=200)
+          write(6,FMT=200, advance='no')
         end if
         
       end do !kpt=1,nofks
@@ -362,8 +364,8 @@ module mod_rhoqtools
    end if !myrank==master
    deallocate(kmask)
 
-190   FORMAT('                 |'$)      ! status bar
-200   FORMAT('|'$)                       ! status bar
+190   FORMAT('                 |')      ! status bar
+200   FORMAT('|')                       ! status bar
 
    end subroutine rhoq_write_tau0
 

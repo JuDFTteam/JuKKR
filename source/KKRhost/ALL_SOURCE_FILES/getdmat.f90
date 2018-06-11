@@ -1,4 +1,5 @@
-subroutine getdmat(tauq, dmatt, dtilt, dm, n, mssq, msst, m)
+    Subroutine getdmat(tauq, dmatt, dtilt, dm, n, mssq, msst, m)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *   calculate projection matrices   DMATT  and  DTILT              *
@@ -17,48 +18,48 @@ subroutine getdmat(tauq, dmatt, dtilt, dm, n, mssq, msst, m)
 !   * 01/11/2000 HE                                                    *
 !   ********************************************************************
 
-  implicit none
+      Implicit None
 
 ! PARAMETER definitions
-  complex *16 :: c0, c1
-  parameter (c0=(0.0d0,0.0d0), c1=(1.0d0,0.0d0))
+      Complex (Kind=dp) :: c0, c1
+      Parameter (c0=(0.0E0_dp,0.0E0_dp), c1=(1.0E0_dp,0.0E0_dp))
 
 ! Dummy arguments
-  integer :: m, n
-  complex *16 :: dm(m, m), dmatt(m, m), dtilt(m, m), mssq(m, m), msst(m, m), &
-    tauq(m, m)
+      Integer :: m, n
+      Complex (Kind=dp) :: dm(m, m), dmatt(m, m), dtilt(m, m), mssq(m, m), &
+        msst(m, m), tauq(m, m)
 
 ! Local variables
-  integer :: i, j, info, ipiv(m)
-  complex *16 :: maux(m, m)
+      Integer :: i, j, info, ipiv(m)
+      Complex (Kind=dp) :: maux(m, m)
 
-  do j = 1, n
-    do i = 1, n
-      dm(i, j) = msst(i, j) - mssq(i, j)
-    end do
-  end do
+      Do j = 1, n
+        Do i = 1, n
+          dm(i, j) = msst(i, j) - mssq(i, j)
+        End Do
+      End Do
 
 !     -------------------------------------------
 !                   ( m(t) - m(c) ) * TAU
 !     -------------------------------------------
-  call zgemm('N', 'N', n, n, n, c1, dm, m, tauq, m, c0, dtilt, m)
-  call zgemm('N', 'N', n, n, n, c1, tauq, m, dm, m, c0, dmatt, m)
+      Call zgemm('N', 'N', n, n, n, c1, dm, m, tauq, m, c0, dtilt, m)
+      Call zgemm('N', 'N', n, n, n, c1, tauq, m, dm, m, c0, dmatt, m)
 
 !     -------------------------------------------
 !               1 + ( m(t) - m(c) ) * TAU
 !     -------------------------------------------
-  do i = 1, n
-    dtilt(i, i) = c1 + dtilt(i, i)
-    dmatt(i, i) = c1 + dmatt(i, i)
-  end do
+      Do i = 1, n
+        dtilt(i, i) = c1 + dtilt(i, i)
+        dmatt(i, i) = c1 + dmatt(i, i)
+      End Do
 
 !     -------------------------------------------
 !     D~(t) = ( 1 + ( m(t) - m(c) ) * TAU )**(-1)
 !     -------------------------------------------
-  call zgetrf(n, n, dtilt, m, ipiv, info)
-  call zgetri(n, dtilt, m, ipiv, maux, m*m, info)
+      Call zgetrf(n, n, dtilt, m, ipiv, info)
+      Call zgetri(n, dtilt, m, ipiv, maux, m*m, info)
 
-  call zgetrf(n, n, dmatt, m, ipiv, info)
-  call zgetri(n, dmatt, m, ipiv, maux, m*m, info)
+      Call zgetrf(n, n, dmatt, m, ipiv, info)
+      Call zgetri(n, dmatt, m, ipiv, maux, m*m, info)
 
-end subroutine
+    End Subroutine

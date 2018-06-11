@@ -1,4 +1,7 @@
 module mod_tbxccpljij
+
+use mod_DataTypes
+
 IMPLICIT NONE
 
 private
@@ -663,7 +666,7 @@ IF(myrank==master)THEN
   WRITE(1337,99002) strbar(1:lstr),strbar(1:lstr)
   DO i1 = 1,ntcalc
     it = jtaux(i1)
-    WRITE (1337,99003) it,iqat(it)
+    WRITE (1337,99003, advance='no') it,iqat(it)
     l1 = 0
     DO ns = 1,nshcalc
       lm1 = 0
@@ -673,19 +676,19 @@ IF(myrank==master)THEN
       IF ( lm1 /= 0 ) THEN
         lm2 = 0
         IF ( l1 == 0 ) THEN
-          WRITE(1337,99005) rsh(ns)
+          WRITE(1337,99005, advance='no') rsh(ns)
           l1 = 1
         ELSE
-          WRITE (1337,99006) rsh(ns)
+          WRITE (1337,99006, advance='no') rsh(ns)
         endif
         DO jt = 1,natyp
           IF ( jijdone(it,jt,ns) /= 0 ) THEN
             lm2 = lm2 + 1
             IF ( lm2 == 1 ) THEN
-              WRITE (1337,99007) iqat(jt), DIMAG(jxcijint(it,jt,ns))*1D3,jt
+              WRITE (1337,99007, advance='no') iqat(jt), aimag(jxcijint(it,jt,ns))*1D3,jt
               WRITE(1337,*) ns+nsmax,' shell'
             ELSE
-              WRITE (1337,99008) DIMAG(jxcijint(it,jt,ns))*1D3,jt
+              WRITE (1337,99008, advance='no') aimag(jxcijint(it,jt,ns))*1D3,jt
               WRITE(1337,*) ns+nsmax,' shell'
             endif
             IF ( lm2 == lm1 ) WRITE (1337,*)
@@ -738,7 +741,7 @@ IF(myrank==master)THEN
       DO ns = 1,nshcalc
         IF ( jijdone(it,l1,ns) /= 0 ) THEN
           lm1 = lm1 + 1
-          WRITE (49,99010) rsh(ns), DIMAG(jxcijint(it,l1,ns)),  &
+          WRITE (49,99010) rsh(ns), aimag(jxcijint(it,l1,ns)),  &
               jijdone(it,l1,ns),ns+nsmax ! fivos added NS+NSMAX
 !              do IE=1,IELAST
 !                XINTEGD(IT,JT,IE)= XINTEGD(IT,JT,IE)*(1.D0/(PI*4.D0))
@@ -768,12 +771,12 @@ deallocate (kijsh,nijcalc,jijdone,jxcijint,stat=lm1)
 99001 FORMAT(6X,"ERROR: Cannot allocate array(s) :",a,/)
 99002 FORMAT(4X,a,4(1H-),/,5X," IT/IQ ",3X,"R_IQ,JQ",2X,"JQ ",  &
     " (J_IT,JT  JT)",/,15X," [ ALAT ] ",4X,"[ mRy ]",/, 4X,a,4(1H-))
-99003 FORMAT(5X,i3,1X,i3,$)
+99003 FORMAT(5X,i3,1X,i3)
 99004 FORMAT(4X,a,4(1H-))
-99005 FORMAT(f10.6,$)
-99006 FORMAT(12X,f10.6,$)
-99007 FORMAT(i4,f12.8,i3,$)
-99008 FORMAT(f12.8,i3,$)
+99005 FORMAT(f10.6)
+99006 FORMAT(12X,f10.6)
+99007 FORMAT(i4,f12.8,i3)
+99008 FORMAT(f12.8,i3)
 99009 FORMAT("# off-diagonal exchange coupling constants ",/,  &
     "# for atom IT = ",i3," on site IQ = ",i3,/,  &
     "# R_IQ,JQ      J_IT,JT       JT",/, "# ( ALAT )       ( Ry )",/,"#      ")

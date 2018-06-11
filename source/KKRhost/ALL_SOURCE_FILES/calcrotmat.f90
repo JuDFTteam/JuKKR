@@ -63,11 +63,11 @@ subroutine calcrotmat(nk, irel, alfdeg, betdeg, gamdeg, rot, fact, nkmmax)
 
     do im2 = 1, nmue
       m2 = -j + (im2-1.0d0)
-      emim2a = cdexp(-ci*m2*alfdeg*pi/180.0d0)
+      emim2a = exp(-ci*m2*alfdeg*pi/180.0d0)
 
       do im1 = 1, nmue
         m1 = -j + (im1-1.0d0)
-        emim1g = cdexp(-ci*m1*gamdeg*pi/180.0d0)
+        emim1g = exp(-ci*m1*gamdeg*pi/180.0d0)
 
         if (dabs(betdeg)<1d-8) then
           if (im1==im2) then

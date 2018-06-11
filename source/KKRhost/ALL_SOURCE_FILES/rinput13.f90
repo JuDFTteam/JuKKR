@@ -2308,7 +2308,7 @@ contains
               socscl(1:lmax+1, i) = soscale
             end if
           end do
-          write (1337, 900)
+          write (1337, 900, advance='no')
           if (nasoc==0) write (1337, 910)
           if (nasoc>0) then
             write (1337, 920)
@@ -2350,7 +2350,7 @@ contains
 
         if (manctl) then
           cscl(:, :) = cscl(:, :)/dsqrt(ctlscale)
-          write (1337, 980)
+          write (1337, 980, advance='no')
           write (1337, 910)
           write (1337, 950) 1.d0/dsqrt(ctlscale)
         end if
@@ -2561,7 +2561,7 @@ contains
 890 format (15x, '++++++++++   SOC option will be IGNORED   ++++++++++', /, &
       1x, 'Please use SOCSCALE= XXX (real>-2.5) in the inputcard', &
       ' to make your option valid ', /)
-900 format (1x, 'The SOC will be SCALED', $)
+900 format (1x, 'The SOC will be SCALED')
 910 format (' for ALL the atoms in the unit cell.')
 920 format (' for the FOLLOWING atoms in the unit cell :')
 930 format (' for all the atoms in the unit cell EXCLUDING :')
@@ -2571,7 +2571,7 @@ contains
 970 format (15x, '+++++++++  CSCALE option will be IGNORED  ++++++++++', /, &
       1x, 'Please use CTLSCALE= X (real>=1D-12) in the inputcard', &
       ' to make your option valid ', /)
-980 format (1x, 'The CLIGHT will be SCALED', $)
+980 format (1x, 'The CLIGHT will be SCALED')
 
   end subroutine
 !---------------------------------------------------------------------
@@ -2615,7 +2615,7 @@ contains
     integer :: ii
     logical, external :: test
 
-    if (t_inc%i_write) write (1337, *) 'in ADDTEST: adding option ', string
+    if (t_inc%i_write>0) write (1337, *) 'in ADDTEST: adding option ', string
 
     if (.not. test('        ')) then
       write (*, *) 'Error in ADDTEST for ', string, &

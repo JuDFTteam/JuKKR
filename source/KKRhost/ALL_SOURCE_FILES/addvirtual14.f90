@@ -2,6 +2,7 @@ subroutine addviratoms14(linterface, nvirt, naez, naezd, natypd, nemb, nembd, &
   rbasis, lcartesian, bravais, ncls, nineq, refpot, kaoez, noq, nref, &
   rmtrefat, i25)
 
+  use mod_DataTypes
   implicit none
 !interface variables
   logical :: linterface, lcartesian, labscord
@@ -13,38 +14,35 @@ subroutine addviratoms14(linterface, nvirt, naez, naezd, natypd, nemb, nembd, &
   parameter (naclsd=1000)
 
   integer :: i, i1, j
-  real *8 :: rbasis(3, *), rbasisold(3, nemb+naezd), rbasissave(3, nemb+naezd)
-  real *8 :: rmtrefat(naezd+nembd)
+  real (kind=dp) :: rbasis(3, *), rbasisold(3, nemb+naezd), rbasissave(3, nemb+naezd)
+  real (kind=dp) :: rmtrefat(naezd+nembd)
   integer :: refpot(*), refpotold(naezd+nemb)
   integer :: noq(*)
   integer :: kaoez(natypd, *), kaoezold(1, nemb+naezd)
-  real *8 :: diff, rmaxclus, vec1(3), vec2(3, naclsd)
+  real (kind=dp) :: diff, rmaxclus, vec1(3), vec2(3, naclsd)
   integer :: nbr(3), nmax, nmaxz, n1, n2, n3, iq
   external :: getclusnxyz
-
-
 
 !local variables
   character (len=40) :: i25
   integer :: nrefold
   integer :: natomimp
-  real *8, allocatable :: ratomimp(:, :)
+  real (kind=dp), allocatable :: ratomimp(:, :)
 !      real*8,allocatable  :: rbasislist(:,:)
   integer, allocatable :: atomimp(:)
   integer :: iatom, ibasis
   integer :: ierr
 !       real*8              :: ratomvtest(3)
-  real *8 :: rbasisnew(3)
-  real *8, allocatable :: rclsnew(:, :), rbasisnew1(:, :)
+  real (kind=dp) :: rbasisnew(3)
+  real (kind=dp), allocatable :: rclsnew(:, :), rbasisnew1(:, :)
 
-  real *8 :: bravais(3, 3)
-  real *8, allocatable :: bravaisinv(:, :)
-  real *8 :: tol
+  real (kind=dp) :: bravais(3, 3)
+  real (kind=dp), allocatable :: bravaisinv(:, :)
+  real (kind=dp) :: tol
   integer :: ndim
   integer :: naeznew
 
   tol = 1.d-5
-
 
   write (1337, *) 'LINTERFACE', linterface
   write (1337, *) 'NAEZ', naez
@@ -95,7 +93,7 @@ subroutine addviratoms14(linterface, nvirt, naez, naezd, natypd, nemb, nembd, &
 ! invert bravais vectors
   allocate (bravaisinv(ndim,ndim))
   bravaisinv = bravais(1:ndim, 1:ndim)
-  call inverse_d1(bravaisinv)
+  call inverse_d1(bravaisinv(:,:), ndim)
 
 
   nrefold = 0
@@ -295,11 +293,12 @@ logical function vec_in_list(vec, veclist, bound)
 ! checks if the vector vec is in the vector list veclist
 ! in the range of (1,bound)
 ! --------------------------
+  use mod_DataTypes
   integer :: bound
-  real *8 :: vec(3)
-  real *8 :: veclist(3, bound)
+  real (kind=dp) :: vec(3)
+  real (kind=dp) :: veclist(3, bound)
   integer :: ilist
-  real *8 :: tempvec(3), diff
+  real (kind=dp) :: tempvec(3), diff
 
   vec_in_list = .false.
   do ilist = 1, bound
@@ -315,14 +314,15 @@ subroutine rtobasis(bravais, rpos, rbasis, ndim)
 ! converts a spacial vector rpos to a basis vector rbasis
 ! such that rbasis = bravais * n with n in [0,1]^ndim
 ! --------------------------
+  use mod_DataTypes
   implicit none
-  real *8, intent (in) :: bravais(3, 3)
-  real *8, intent (in) :: rpos(3)
+  real (kind=dp), intent (in) :: bravais(3, 3)
+  real (kind=dp), intent (in) :: rpos(3)
   integer, intent (in) :: ndim
-  real *8, intent (out) :: rbasis(3)
-  real *8 :: bravais_inv(ndim, ndim)
+  real (kind=dp), intent (out) :: rbasis(3)
 
-  real *8 :: ncoeffreal(ndim)
+  real (kind=dp) :: bravais_inv(ndim, ndim)
+  real (kind=dp) :: ncoeffreal(ndim)
   integer :: ncoeffint(ndim)
   integer :: idim
 
@@ -330,7 +330,7 @@ subroutine rtobasis(bravais, rpos, rbasis, ndim)
 ! first invert the bravais matrix => bravais_inv
 ! --------------------------
   bravais_inv = bravais(1:ndim, 1:ndim)
-  call inverse_d1(bravais_inv)
+  call inverse_d1(bravais_inv(:,:), ndim)
 ! --------------------------
 ! then do n = Bravais* rpos
 ! --------------------------
@@ -362,18 +362,21 @@ subroutine rtobasis(bravais, rpos, rbasis, ndim)
   rbasis = rpos - rbasis
 end subroutine
 
-subroutine inverse_d1(mat)
+subroutine inverse_d1(mat, n)
+  use mod_DataTypes
   implicit none
-  real (8), intent (inout) :: mat(:, :)
-  real (8), allocatable :: work(:)
+  integer, intent(in) :: n
+  real (kind=dp), dimension(n,n), intent (inout) :: mat
+  real (kind=dp), allocatable :: work(:)
   integer, allocatable :: ipiv(:)
-  integer :: n, info
+  integer :: info
 
-  n = size(mat, 1)
-  if (size(mat,2)/=n) stop 'inverse_d1: array dimensions differ.'
-  allocate (ipiv(n), work(n))
+  allocate (ipiv(n), work(n), stat=info)
+  if (info/=0) stop 'error allocating work arrays in inverse_d1 of addviratom'
   call dgetrf(n, n, mat, n, ipiv, info)
   if (info/=0) stop 'inverse_d1: dpotrf failed.'
   call dgetri(n, mat, n, ipiv, work, n, info)
   if (info/=0) stop 'inverse_d1: dpotri failed.'
+  deallocate(ipiv, work, stat=info)
+  if (info/=0) stop 'error allocating work arrays in inverse_d1 of addviratom'
 end subroutine

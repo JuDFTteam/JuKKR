@@ -27,6 +27,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    use mod_jijhelp, only: calc_dtmatJij
    use mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun,save_wavefunc
    use global_variables
+   use mod_DataTypes
 
    implicit none
 
@@ -373,7 +374,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
       IDERIV=0
       if (LLY.NE.0) IDERIV=1
       do SIGNDE=-IDERIV,IDERIV,2
-         ERYD = EZ(IE)+DFLOAT(SIGNDE)*DELTAE/2.D0 ! LLY
+         ERYD = EZ(IE)+real(SIGNDE, kind=dp)*DELTAE/2.D0 ! LLY
 #ifdef CPP_OMP
          !$omp critical
 #endif
@@ -473,8 +474,8 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          if (LLY.NE.0) then
             do LM1=1,LMMAXSO
                do LM2=1,LMMAXSO
-                  DTMATLL(LM1,LM2)=DTMATLL(LM1,LM2)+DFLOAT(SIGNDE)*TMAT0(LM1,LM2) ! LLY
-                  DALPHALL(LM1,LM2)=DALPHALL(LM1,LM2)+DFLOAT(SIGNDE)*ALPHA0(LM1,LM2) ! LLY
+                  DTMATLL(LM1,LM2)=DTMATLL(LM1,LM2)+real(SIGNDE, kind=dp)*TMAT0(LM1,LM2) ! LLY
+                  DALPHALL(LM1,LM2)=DALPHALL(LM1,LM2)+real(SIGNDE, kind=dp)*ALPHA0(LM1,LM2) ! LLY
                enddo
             enddo
          endif
@@ -483,8 +484,8 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
       ! Average values of t-matrix and alpha at e+de and e-de
       do LM1=1,LMMAXSO
          do LM2=1,LMMAXSO
-            TMATLL(LM1,LM2)=TMATLL(LM1,LM2)/DFLOAT(1+IDERIV) ! LLY
-            ALPHALL(LM1,LM2)=ALPHALL(LM1,LM2)/DFLOAT(1+IDERIV) ! LLY
+            TMATLL(LM1,LM2)=TMATLL(LM1,LM2)/real(1+IDERIV, kind=dp) ! LLY
+            ALPHALL(LM1,LM2)=ALPHALL(LM1,LM2)/real(1+IDERIV, kind=dp) ! LLY
             if (LLY.NE.0) then
                ! Contruct derivative of t-matrix and alpha
                DTMATLL(LM1,LM2)=DTMATLL(LM1,LM2)/DELTAE ! LLY
@@ -654,14 +655,14 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
              write(*,*)                      ! status bar
              write(*,*) 'rhoq: write-out t-mat', ie_end, t_params%natyp
              write(*, '("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
-             write(*,FMT=190) !beginning of statusbar
+             write(*,FMT=190, advance='no') !beginning of statusbar
            endif
            
            if(myrank==master) then
              if(t_params%NATYP*ie_end>=50) then
-               if(mod( I1+t_params%natyp*(ie_num-1), (t_params%NATYP*ie_end/50))==0 ) write(6,FMT=200)
+               if(mod( I1+t_params%natyp*(ie_num-1), (t_params%NATYP*ie_end/50))==0 ) write(6,FMT=200, advance='no')
              else
-               write(6,FMT=200)
+               write(6,FMT=200, advance='no')
              end if
            end if
 
@@ -714,8 +715,8 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
       !$omp end parallel do
 #endif
 
-190     FORMAT('                 |'$)   ! status bar
-200     FORMAT('|'$)                    ! status bar
+190     FORMAT('                 |')   ! status bar
+200     FORMAT('|')                    ! status bar
         if(test('rhoqtest').and.i1==t_params%natyp.and.myrank==master) write(6,*) ! status bar
         ! finished kpts status bar
 

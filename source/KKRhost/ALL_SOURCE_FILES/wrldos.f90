@@ -1,7 +1,8 @@
 subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
   alatc, tk, nacls1, nspinpot, natyp, conc, ielast, intervx, intervy, intervz, &
   dostot)
-  use :: mod_version_info
+  use mod_version_info
+  use mod_DataTypes
   implicit none
 !.. Parameters ..
   double precision :: kb
@@ -27,7 +28,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
   character (len=11) :: dosfl
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: atan, dble, dimag
+  intrinsic :: atan, dble, aimag
 !..
 !.. External Functions ..
   logical :: test
@@ -62,11 +63,11 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
       do ie = 1, ielast
         dos = 0.0d0
         do l = 0, lmaxd1
-          dos = dos - 2.0d0*dimag(den(l,ie,ipot))/pi/dble(nspinpot)
-          dostot(l, ispin) = dostot(l, ispin) + dimag(wez(ie)*den(l,ie,ipot))
+          dos = dos - 2.0d0*aimag(den(l,ie,ipot))/pi/dble(nspinpot)
+          dostot(l, ispin) = dostot(l, ispin) + aimag(wez(ie)*den(l,ie,ipot))
         end do
         write (48, fmt=160) dble(ez(ie))*efctor, dos*dossgn/efctor, &
-          (-2.0d0*dimag(den(l,ie,ipot))*dossgn/efctor/pi/dble(nspinpot), l=0, &
+          (-2.0d0*aimag(den(l,ie,ipot))*dossgn/efctor/pi/dble(nspinpot), l=0, &
           lmaxd1)
       end do
       write (48, fmt=180)(dostot(l,ispin)/efctor/dble(nspinpot), l=0, lmaxd1)
@@ -95,7 +96,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
       write (49, fmt=150) tk, pi*kb*tk, alatc, intervx, intervy, intervz, &
         nacls1
       do ie = 1, ielast
-        doscmplx = dcmplx(0.0d0, 0.d0)
+        doscmplx = cmplx(0.0d0, 0.d0, kind=dp)
         do l = 0, lmaxd1
           doscmplx = doscmplx - 2.0d0*den(l, ie, ipot)/pi/dble(nspinpot)
         end do
@@ -112,7 +113,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
   call version_print_header(49)
   write (49, fmt='(4A16)') '# Real(E)', '  Im(E)', ' Re(DEN)', ' Im(DEN)'
   do ie = 1, ielast
-    doscmplx = dcmplx(0.0d0, 0.d0)
+    doscmplx = cmplx(0.0d0, 0.d0, kind=dp)
     do i1 = 1, natyp
       do ispin = 1, nspinpot
         ipot = nspinpot*(i1-1) + ispin

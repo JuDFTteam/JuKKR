@@ -21,6 +21,13 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
   use :: mod_version_info
   implicit none
 !.. arguments
+  integer :: naez, & ! number of atoms in EZ
+    nemb, & ! number of embedding postions
+    ncls, & ! number of diff. clusters
+    nr, & ! number of lattice vectors RR
+    nlr, & ! =NEMB in decimation, =0 in slab or bulk
+    nvirt, & ! Number of virtual atoms
+    nprinc ! Calculated number of layers in a principal layer
   integer :: naezd, natyp, nembd, nrd, naclsd, nclsd, nrefd
   double precision :: alat ! lattice constant A
   double precision :: rcut, rcutxy
@@ -32,13 +39,6 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
 !     RWS(*),
 !     BBOX(3)                  ! bounding box for povray plots
 
-  integer :: naez, & ! number of atoms in EZ
-    nemb, & ! number of embedding postions
-    ncls, & ! number of diff. clusters
-    nr, & ! number of lattice vectors RR
-    nlr, & ! =NEMB in decimation, =0 in slab or bulk
-    nvirt, & ! Number of virtual atoms
-    nprinc ! Calculated number of layers in a principal layer
 
   integer :: cls(naez+nembd), & ! type of cluster around atom
     kaoez(natyp, naez+nembd) & ! type of atom at position in EZ

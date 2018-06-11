@@ -1,5 +1,7 @@
 module mod_save_wavefun
 
+use mod_DataTypes
+
 implicit none
 
    type :: type_wavefunctions
@@ -84,7 +86,7 @@ contains
 
         !>>>>>>>  find numer of wavefunctions that can be stored and allocate store arrays  >>>>>>>!
         ! memory demand for one atom and one energy point in Mbyte
-        delta_mem = dfloat(t_inc%NSRA*t_inc%LMMAXSO * t_inc%LMMAXSO * t_inc%IRMDNEW * nth * 16) / (1024.0d0**2)
+        delta_mem = real(t_inc%NSRA*t_inc%LMMAXSO * t_inc%LMMAXSO * t_inc%IRMDNEW * nth * 16, kind=dp) / (1024.0d0**2)
 
         !number of wavefunction (rll, sll, rllleft, sllleft) that are needed to be stored
         Nsave = 0
@@ -110,7 +112,7 @@ contains
            write(message,"(A)") '   ==> find_isave_wavefun '
            write(1337, '(A)') trim(message)
            if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
-           write(message,"(A,F15.2,A)") '   (maxmem given per rank for storage:',dfloat((1024**(t_wavefunctions%maxmem_units-2))*t_wavefunctions%maxmem_number), 'MB'
+           write(message,"(A,F15.2,A)") '   (maxmem given per rank for storage:',real((1024**(t_wavefunctions%maxmem_units-2))*t_wavefunctions%maxmem_number, kind=dp), 'MB'
            write(1337, '(A)') trim(message)
            if(t_wavefunctions%Nwfsavemax>0) write(*, '(A)') trim(message)
            write(message,"(A,I11)") '    number of wavefunctions that fit in:', t_wavefunctions%Nwfsavemax
@@ -127,7 +129,7 @@ contains
            write(1337, '(A)') trim(message)
            write(*, '(A)') trim(message)
 
-           write(message,'(A,I3,4(A,L))') '    Number of saved wavefunctions per atom and energy:',Nsave,'; save rll:',t_wavefunctions%save_rll,'; save sll:',t_wavefunctions%save_sll,'; save rllleft:',t_wavefunctions%save_rllleft,'; save sllleft:',t_wavefunctions%save_sllleft
+           write(message,'(A,I3,4(A,L1))') '    Number of saved wavefunctions per atom and energy:',Nsave,'; save rll:',t_wavefunctions%save_rll,'; save sll:',t_wavefunctions%save_sll,'; save rllleft:',t_wavefunctions%save_rllleft,'; save sllleft:',t_wavefunctions%save_sllleft
            write(1337, '(A)') trim(message)
            write(*, '(A)') trim(message)
 

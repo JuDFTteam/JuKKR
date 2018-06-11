@@ -1,6 +1,7 @@
 ! ************************************************************************
-subroutine brysh2(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
-  lmpot, lsmear)
+    Subroutine brysh2(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
+      lmpot, lsmear)
+      Use mod_datatypes, Only: dp
 !*********************************************************************
 !     maps the density or potential back from one single vector into
 !     the proper bins of each single mt-cell . the magnetization
@@ -9,52 +10,52 @@ subroutine brysh2(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
 
 ! ------------------------------------------------------------------------
 !.. Parameters ..
-  include 'inc.p'
+      Include 'inc.p'
 !..
 !.. Array Arguments ..
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
+      Integer :: lmpotd
+      Parameter (lmpotd=(lpotd+1)**2)
 !..
 !.. Local Scalars ..
-  integer :: imap, ins, lmpot, natps, natyp, nspin, lsmear
+      Integer :: imap, ins, lmpot, natps, natyp, nspin, lsmear
 !     ..
 
-  double precision :: x(irmd, lmpotd, *), y(*), xsme(irmd, *)
-  integer :: irc(*), irmin(*)
+      Real (Kind=dp) :: x(irmd, lmpotd, *), y(*), xsme(irmd, *)
+      Integer :: irc(*), irmin(*)
 
 !     Next for SMEARed spherical potential
-  integer :: ia, ip, ir, irc1, irmin1, is, lm
+      Integer :: ia, ip, ir, irc1, irmin1, is, lm
 
-  imap = 0
+      imap = 0
 
-  do is = 1, nspin
-    do ia = natps, natyp
-      ip = nspin*(ia-1) + is
-      irc1 = irc(ia)
-      do ir = 1, irc1
-        imap = imap + 1
-        x(ir, 1, ip) = y(imap)
-      end do
+      Do is = 1, nspin
+        Do ia = natps, natyp
+          ip = nspin*(ia-1) + is
+          irc1 = irc(ia)
+          Do ir = 1, irc1
+            imap = imap + 1
+            x(ir, 1, ip) = y(imap)
+          End Do
 
 ! ************************************************************************
-      if (lsmear>0) then
-        do ir = 1, irc1
-          imap = imap + 1
-          xsme(ir, ip) = y(imap)
-        end do
-      end if
+          If (lsmear>0) Then
+            Do ir = 1, irc1
+              imap = imap + 1
+              xsme(ir, ip) = y(imap)
+            End Do
+          End If
 !*********************************************************************
-      if (ins>0 .and. lmpot>1) then
-        irmin1 = irmin(ia)
-        do lm = 2, lmpot
-          do ir = irmin1, irc1
-            imap = imap + 1
-            x(ir, lm, ip) = y(imap)
-          end do
-        end do
-      end if
+          If (ins>0 .And. lmpot>1) Then
+            irmin1 = irmin(ia)
+            Do lm = 2, lmpot
+              Do ir = irmin1, irc1
+                imap = imap + 1
+                x(ir, lm, ip) = y(imap)
+              End Do
+            End Do
+          End If
 !     maps the density or potential back from one single vector into
-    end do
-  end do
+        End Do
+      End Do
 !     the proper bins of each single mt-cell . the magnetization
-end subroutine
+    End Subroutine

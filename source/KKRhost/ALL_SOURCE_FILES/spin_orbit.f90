@@ -1,5 +1,6 @@
 ! ************************************************************************
-subroutine spin_orbit_one_l(lmax, l_s)
+    Subroutine spin_orbit_one_l(lmax, l_s)
+      Use mod_datatypes, Only: dp
 ! ************************************************************************
 !      in this subroutine the matrix L*S is calculated for the basis of
 !      real spherical harmonics
@@ -7,145 +8,145 @@ subroutine spin_orbit_one_l(lmax, l_s)
 !      schematically it has the form
 !      (  -L_z    L_+  )
 !      (  L_-     L_z  )
-  implicit none
+      Implicit None
 
-  integer, intent (in) :: lmax
-  double complex, intent (out) :: l_s((2*lmax+1)*2, (2*lmax+1)*2)
+      Integer, Intent (In) :: lmax
+      Complex (Kind=dp), Intent (Out) :: l_s((2*lmax+1)*2, (2*lmax+1)*2)
 
 !  local variables 
-  integer :: i1, i2, i1l
-  double complex :: icompl
-  double complex, allocatable :: l_min(:, :)
-  double complex, allocatable :: l_up(:, :)
-  double precision :: lfac
+      Integer :: i1, i2, i1l
+      Complex (Kind=dp) :: icompl
+      Complex (Kind=dp), Allocatable :: l_min(:, :)
+      Complex (Kind=dp), Allocatable :: l_up(:, :)
+      Real (Kind=dp) :: lfac
 
 
-  icompl = (0d0, 1d0)
+      icompl = (0E0_dp, 1E0_dp)
 
 
-  allocate (l_min(-lmax:lmax,-lmax:lmax))
-  allocate (l_up(-lmax:lmax,-lmax:lmax))
+      Allocate (l_min(-lmax:lmax,-lmax:lmax))
+      Allocate (l_up(-lmax:lmax,-lmax:lmax))
 
 !  initialize the matrix
 
-  do i1 = 1, (2*lmax+1)*2
-    do i2 = 1, (2*lmax+1)*2
-      l_s(i2, i1) = 0d0
-    end do
-  end do
+      Do i1 = 1, (2*lmax+1)*2
+        Do i2 = 1, (2*lmax+1)*2
+          l_s(i2, i1) = 0E0_dp
+        End Do
+      End Do
 
-  do i1 = -lmax, lmax
-    do i2 = -lmax, lmax
-      l_min(i2, i1) = 0d0
-      l_up(i2, i1) = 0d0
-    end do
-  end do
+      Do i1 = -lmax, lmax
+        Do i2 = -lmax, lmax
+          l_min(i2, i1) = 0E0_dp
+          l_up(i2, i1) = 0E0_dp
+        End Do
+      End Do
 
 !  fill the second and the forth quadrant with L_z
 ! (-L_z,respectively)
 
 
-  do i1 = 1, 2*lmax + 1
-    i1l = i1 - lmax - 1 ! the value of m (varies from -l to +l)
-    i2 = 2*lmax + 1 - (i1-1)
+      Do i1 = 1, 2*lmax + 1
+        i1l = i1 - lmax - 1 ! the value of m (varies from -l to +l)
+        i2 = 2*lmax + 1 - (i1-1)
 
 !         L_S(i2,i1)=icompl*i1l
-    l_s(i2, i1) = -icompl*i1l
+        l_s(i2, i1) = -icompl*i1l
 
-  end do
+      End Do
 
-  do i1 = 2*lmax + 2, (2*lmax+1)*2
-    i1l = i1 - lmax - 1 - (2*lmax+1) ! the value of m (varies from -l to +l)
-    i2 = (2*lmax+1)*2 - (i1-(2*lmax+2))
+      Do i1 = 2*lmax + 2, (2*lmax+1)*2
+        i1l = i1 - lmax - 1 - (2*lmax+1) ! the value of m (varies from -l to +l)
+        i2 = (2*lmax+1)*2 - (i1-(2*lmax+2))
 
 !         L_S(i2,i1)=-icompl*i1l
-    l_s(i2, i1) = icompl*i1l
+        l_s(i2, i1) = icompl*i1l
 
-  end do
+      End Do
 
 
 !  implement now L_- in the third quadrant
 
-  if (lmax>0) then
+      If (lmax>0) Then
 
-    lfac = sqrt(lmax*(lmax+1d0))/sqrt(2d0)
-    l_min(0, -1) = -icompl*lfac
+        lfac = sqrt(lmax*(lmax+1E0_dp))/sqrt(2E0_dp)
+        l_min(0, -1) = -icompl*lfac
 !         l_min(0,-1)=icompl*lfac
-    l_min(0, 1) = lfac
-    l_min(-1, 0) = icompl*lfac
-    l_min(1, 0) = -lfac
+        l_min(0, 1) = lfac
+        l_min(-1, 0) = icompl*lfac
+        l_min(1, 0) = -lfac
 
-    if (lmax>1) then
+        If (lmax>1) Then
 
-      do i1 = 2, lmax
+          Do i1 = 2, lmax
 
-        lfac = 0.5d0*sqrt(lmax*(lmax+1d0)-i1*(i1-1d0))
-        l_min(-i1, -i1+1) = -lfac
-        l_min(-i1, i1-1) = icompl*lfac
-        l_min(i1, -i1+1) = -icompl*lfac
-        l_min(i1, i1-1) = -lfac
+            lfac = 0.5E0_dp*sqrt(lmax*(lmax+1E0_dp)-i1*(i1-1E0_dp))
+            l_min(-i1, -i1+1) = -lfac
+            l_min(-i1, i1-1) = icompl*lfac
+            l_min(i1, -i1+1) = -icompl*lfac
+            l_min(i1, i1-1) = -lfac
 
-        lfac = 0.5d0*sqrt(lmax*(lmax+1d0)-(i1-1)*(i1))
-        l_min(-i1+1, -i1) = lfac
-        l_min(-i1+1, i1) = icompl*lfac
-        l_min(i1-1, -i1) = -icompl*lfac
-        l_min(i1-1, i1) = lfac
+            lfac = 0.5E0_dp*sqrt(lmax*(lmax+1E0_dp)-(i1-1)*(i1))
+            l_min(-i1+1, -i1) = lfac
+            l_min(-i1+1, i1) = icompl*lfac
+            l_min(i1-1, -i1) = -icompl*lfac
+            l_min(i1-1, i1) = lfac
 
-      end do
+          End Do
 
-    end if
-  end if
+        End If
+      End If
 
 
-  do i1 = -lmax, lmax
-    do i2 = -lmax, lmax
-      l_s(i2+3*lmax+2, i1+lmax+1) = l_min(i1, i2)
-    end do
-  end do
+      Do i1 = -lmax, lmax
+        Do i2 = -lmax, lmax
+          l_s(i2+3*lmax+2, i1+lmax+1) = l_min(i1, i2)
+        End Do
+      End Do
 
 
 !  implement now L_+ in the   quadrant
 
-  if (lmax>0) then
+      If (lmax>0) Then
 
-    lfac = sqrt(lmax*(lmax+1d0))/sqrt(2d0)
-    l_up(0, -1) = -icompl*lfac
-    l_up(0, 1) = -lfac
-    l_up(-1, 0) = icompl*lfac
-    l_up(1, 0) = lfac
+        lfac = sqrt(lmax*(lmax+1E0_dp))/sqrt(2E0_dp)
+        l_up(0, -1) = -icompl*lfac
+        l_up(0, 1) = -lfac
+        l_up(-1, 0) = icompl*lfac
+        l_up(1, 0) = lfac
 
-    if (lmax>1) then
+        If (lmax>1) Then
 
-      do i1 = 2, lmax
+          Do i1 = 2, lmax
 
-        lfac = 0.5d0*sqrt(lmax*(lmax+1d0)-i1*(i1-1d0))
-        l_up(-i1, -i1+1) = lfac
-        l_up(-i1, i1-1) = icompl*lfac
-        l_up(i1, -i1+1) = -icompl*lfac
-        l_up(i1, i1-1) = lfac
+            lfac = 0.5E0_dp*sqrt(lmax*(lmax+1E0_dp)-i1*(i1-1E0_dp))
+            l_up(-i1, -i1+1) = lfac
+            l_up(-i1, i1-1) = icompl*lfac
+            l_up(i1, -i1+1) = -icompl*lfac
+            l_up(i1, i1-1) = lfac
 
-        lfac = 0.5d0*sqrt(lmax*(lmax+1d0)-(i1-1)*(i1))
-        l_up(-i1+1, -i1) = -lfac
-        l_up(-i1+1, i1) = icompl*lfac
-        l_up(i1-1, -i1) = -icompl*lfac
-        l_up(i1-1, i1) = -lfac
+            lfac = 0.5E0_dp*sqrt(lmax*(lmax+1E0_dp)-(i1-1)*(i1))
+            l_up(-i1+1, -i1) = -lfac
+            l_up(-i1+1, i1) = icompl*lfac
+            l_up(i1-1, -i1) = -icompl*lfac
+            l_up(i1-1, i1) = -lfac
 
-      end do
+          End Do
 
-    end if
-  end if
-
-
-  do i1 = -lmax, lmax
-    do i2 = -lmax, lmax
-      l_s(i2+lmax+1, i1+3*lmax+2) = l_up(i1, i2)
-    end do
-  end do
+        End If
+      End If
 
 
+      Do i1 = -lmax, lmax
+        Do i2 = -lmax, lmax
+          l_s(i2+lmax+1, i1+3*lmax+2) = l_up(i1, i2)
+        End Do
+      End Do
 
-  deallocate (l_min)
-  deallocate (l_up)
 
 
-end subroutine
+      Deallocate (l_min)
+      Deallocate (l_up)
+
+
+    End Subroutine

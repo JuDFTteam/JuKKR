@@ -1,5 +1,6 @@
-subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
-  natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, natomimpd)
+    Subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, &
+      iqcalc, natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, natomimpd)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
 ! * In case of tasks requiring Gij blocks calculation, set variables:  *
@@ -18,17 +19,17 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
 ! * EXCHANGE COUPLING CONSTANTS calculation case                       *
 ! *                                                                    *
 ! **********************************************************************
-  implicit none
+      Implicit None
 
 ! Arguments
-  integer :: ido, naez, natomimp, niqcalc, natomimpd
-  integer :: atomimp(*), ijtabcalc(*), ijtabcalc_i(*), iqcalc(*)
-  double precision :: bravais(3, 3), rbasis(3, *), rclsimp(3, *)
-  logical :: linterface
+      Integer :: ido, naez, natomimp, niqcalc, natomimpd
+      Integer :: atomimp(*), ijtabcalc(*), ijtabcalc_i(*), iqcalc(*)
+      Real (Kind=dp) :: bravais(3, 3), rbasis(3, *), rclsimp(3, *)
+      Logical :: linterface
 
 ! Locals
-  integer :: i, i1, i2, i3, ibr(3), ieqvec, iq, iqs, j, jq, nbr(3), ndim, nn, &
-    nout, jqs
+      Integer :: i, i1, i2, i3, ibr(3), ieqvec, iq, iqs, j, jq, nbr(3), ndim, &
+        nn, nout, jqs
 !.......................................................................
 !     uniquely identify a vector R_j - r_i = (r_j + T_n) - r_i by a
 !     quintuple integer in IVECI2J(5,*):
@@ -42,71 +43,71 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
 !     IREF(1..NVECI2J(I),I) points to the NVECI2J(I) identical vectors
 !     in the array IVECI2J (one site is kept only once)
 !.......................................................................
-  integer :: nb3max
-  integer :: njqcalc
-  integer :: iveci2j(:, :), nveci2j(:), iref(:, :), jqcalc(:)
-  allocatable :: iveci2j, nveci2j, iref, jqcalc
-  double precision :: clurad, cluradsq, dq(3), dr(3), drsq, tol, tolsq
-  double precision :: cluradxy, cluradxysq, drxysq
-  logical :: lspher
-  character (len=256) :: uio  ! NCOLIO=256
+      Integer :: nb3max
+      Integer :: njqcalc
+      Integer :: iveci2j(:, :), nveci2j(:), iref(:, :), jqcalc(:)
+      Allocatable :: iveci2j, nveci2j, iref, jqcalc
+      Real (Kind=dp) :: clurad, cluradsq, dq(3), dr(3), drsq, tol, tolsq
+      Real (Kind=dp) :: cluradxy, cluradxysq, drxysq
+      Logical :: lspher
+      Character (Len=256) :: uio ! NCOLIO=256
 
-  logical :: opt
+      Logical :: opt
 !..
 !.. Externals
-  external :: getclusnxyz, ioinput, opt
+      External :: getclusnxyz, ioinput, opt
 !..
-  ido = 0
+      ido = 0
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-  write (1337, 110)
+      Write (1337, 110)
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-  tol = 1.0d-4
-  tolsq = tol*tol
-  ndim = 3
-  if (linterface) ndim = 2
+      tol = 1.0E-4_dp
+      tolsq = tol*tol
+      ndim = 3
+      If (linterface) ndim = 2
 
-  iq = 0
-  clurad = 0d0
-  lspher = .true.
-  call ioinput('JIJRAD          ', uio, 0, 7, iq)
-  if (iq==0) then
-    read (unit=uio, fmt=*) clurad
-    if (clurad<0d0) clurad = 0d0
-    cluradxy = clurad
-    if (clurad>0d0) then
       iq = 0
-      call ioinput('JIJRADXY        ', uio, 0, 7, iq)
-      if (iq==0) then
-        read (unit=uio, fmt=*) cluradxy
-        if (cluradxy<=0d0) cluradxy = clurad
-      end if
-    end if
-    lspher = (abs(clurad-cluradxy)<tol)
-  else
-    write (1337, 120)
-  end if
+      clurad = 0E0_dp
+      lspher = .True.
+      Call ioinput('JIJRAD          ', uio, 0, 7, iq)
+      If (iq==0) Then
+        Read (Unit=uio, Fmt=*) clurad
+        If (clurad<0E0_dp) clurad = 0E0_dp
+        cluradxy = clurad
+        If (clurad>0E0_dp) Then
+          iq = 0
+          Call ioinput('JIJRADXY        ', uio, 0, 7, iq)
+          If (iq==0) Then
+            Read (Unit=uio, Fmt=*) cluradxy
+            If (cluradxy<=0E0_dp) cluradxy = clurad
+          End If
+        End If
+        lspher = (abs(clurad-cluradxy)<tol)
+      Else
+        Write (1337, 120)
+      End If
 
-  do i = 1, 3
-    nbr(i) = 0
-  end do
-  cluradxysq = max(clurad, cluradxy)
-  call getclusnxyz(cluradxysq, bravais, ndim, cluradsq, nbr)
+      Do i = 1, 3
+        nbr(i) = 0
+      End Do
+      cluradxysq = max(clurad, cluradxy)
+      Call getclusnxyz(cluradxysq, bravais, ndim, cluradsq, nbr)
 
-  cluradsq = (clurad+tol)*(clurad+tol)
-  cluradxysq = (cluradxy+tol)*(cluradxy+tol)
+      cluradsq = (clurad+tol)*(clurad+tol)
+      cluradxysq = (cluradxy+tol)*(cluradxy+tol)
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-  if (clurad>0d0) then
-    if (lspher) then
-      write (1337, 130) clurad, ((2*nbr(i)+1), i=1, 3)
-    else
-      write (1337, 140) cluradxy, clurad, ((2*nbr(i)+1), i=1, 3)
-    end if
-  else
-    write (1337, 150)
-  end if
+      If (clurad>0E0_dp) Then
+        If (lspher) Then
+          Write (1337, 130) clurad, ((2*nbr(i)+1), i=1, 3)
+        Else
+          Write (1337, 140) cluradxy, clurad, ((2*nbr(i)+1), i=1, 3)
+        End If
+      Else
+        Write (1337, 150)
+      End If
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
 ! --> set the reference I and J sites for J_IJ within the unit cell
@@ -123,38 +124,38 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
 !        will take 2 sites 'I', 1st and 3rd, and 1 site 'J', the 4th
 !        hence the calculated pairs will be (1,4),(3,4)
 
-  allocate (jqcalc(naez), stat=iq)
-  if (iq/=0) stop '    Allocate JQCALC'
-  niqcalc = naez
-  njqcalc = niqcalc
-  do iq = 1, naez
-    iqcalc(iq) = iq
-    jqcalc(iq) = iq
-  end do
-  nn = 0
-  call ioinput('JIJSITEI        ', uio, 0, 7, nn)
-  if (nn==0) then
-    read (unit=uio, fmt=*) niqcalc, (iqcalc(iq), iq=1, niqcalc)
-    if (niqcalc<=0) return
-    do iq = 1, niqcalc
-      if ((iqcalc(iq)<=0) .or. (iqcalc(iq)>naez)) return
-    end do
-  end if
-  call ioinput('JIJSITEJ        ', uio, 0, 7, nn)
-  if (nn==0) then
-    read (unit=uio, fmt=*) njqcalc, (jqcalc(iq), iq=1, njqcalc)
-    if (njqcalc<=0) return
-    do iq = 1, njqcalc
-      if ((jqcalc(iq)<=0) .or. (jqcalc(iq)>naez)) return
-    end do
-  end if
+      Allocate (jqcalc(naez), Stat=iq)
+      If (iq/=0) Stop '    Allocate JQCALC'
+      niqcalc = naez
+      njqcalc = niqcalc
+      Do iq = 1, naez
+        iqcalc(iq) = iq
+        jqcalc(iq) = iq
+      End Do
+      nn = 0
+      Call ioinput('JIJSITEI        ', uio, 0, 7, nn)
+      If (nn==0) Then
+        Read (Unit=uio, Fmt=*) niqcalc, (iqcalc(iq), iq=1, niqcalc)
+        If (niqcalc<=0) Return
+        Do iq = 1, niqcalc
+          If ((iqcalc(iq)<=0) .Or. (iqcalc(iq)>naez)) Return
+        End Do
+      End If
+      Call ioinput('JIJSITEJ        ', uio, 0, 7, nn)
+      If (nn==0) Then
+        Read (Unit=uio, Fmt=*) njqcalc, (jqcalc(iq), iq=1, njqcalc)
+        If (njqcalc<=0) Return
+        Do iq = 1, njqcalc
+          If ((jqcalc(iq)<=0) .Or. (jqcalc(iq)>naez)) Return
+        End Do
+      End If
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-  if (niqcalc==naez) then
-    write (1337, 160) naez
-  else
-    write (1337, 170) niqcalc, naez
-  end if
+      If (niqcalc==naez) Then
+        Write (1337, 160) naez
+      Else
+        Write (1337, 170) niqcalc, naez
+      End If
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
 ! ======================================================================
@@ -162,122 +163,123 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
 ! --> determine the size of the arrays IVECI2J,NVECI2J,IREF
 
 ! ++++++++++++++++++++++++++++++++++++++++ (selected) sites in unit cell
-  nn = 0
-  do iqs = 1, niqcalc
-    nn = nn + 1
-    iq = iqcalc(iqs)
+      nn = 0
+      Do iqs = 1, niqcalc
+        nn = nn + 1
+        iq = iqcalc(iqs)
 ! **************************************** (selected) sites in unit cell
-    do jqs = 1, njqcalc
-      jq = jqcalc(jqs)
-      do i = 1, 3
-        dq(i) = rbasis(i, jq) - rbasis(i, iq)
-      end do
+        Do jqs = 1, njqcalc
+          jq = jqcalc(jqs)
+          Do i = 1, 3
+            dq(i) = rbasis(i, jq) - rbasis(i, iq)
+          End Do
 ! -------------------------------------------------- translation vectors
-      do i1 = -nbr(1), nbr(1)
-        do i2 = -nbr(2), nbr(2)
-          do i3 = -nbr(3), nbr(3)
-            ibr(1) = i1
-            ibr(2) = i2
-            ibr(3) = i3
-            do i = 1, 3
-              dr(i) = dq(i)
-              do j = 1, 3
-                dr(i) = dr(i) + dble(ibr(j))*bravais(i, j)
-              end do
-            end do
-            drxysq = 0d0
-            do i = 1, 2
-              drxysq = drxysq + dr(i)*dr(i)
-            end do
-            drsq = dr(3)*dr(3)
+          Do i1 = -nbr(1), nbr(1)
+            Do i2 = -nbr(2), nbr(2)
+              Do i3 = -nbr(3), nbr(3)
+                ibr(1) = i1
+                ibr(2) = i2
+                ibr(3) = i3
+                Do i = 1, 3
+                  dr(i) = dq(i)
+                  Do j = 1, 3
+                    dr(i) = dr(i) + real(ibr(j), kind=dp)*bravais(i, j)
+                  End Do
+                End Do
+                drxysq = 0E0_dp
+                Do i = 1, 2
+                  drxysq = drxysq + dr(i)*dr(i)
+                End Do
+                drsq = dr(3)*dr(3)
 
-            if ((drxysq<=cluradxysq) .and. (drsq<=cluradsq)) nn = nn + 1
-          end do
-        end do
-      end do
+                If ((drxysq<=cluradxysq) .And. (drsq<=cluradsq)) nn = nn + 1
+              End Do
+            End Do
+          End Do
 ! ----------------------------------------------------------------------
-    end do
+        End Do
 ! **********************************************************************
-  end do
+      End Do
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  nb3max = nn
-  allocate (iveci2j(5,nb3max), nveci2j(nb3max), iref(nb3max,nb3max), stat=iq)
-  if (iq/=0) stop '    Allocate IVECI2J/NVECI2J/IREF'
+      nb3max = nn
+      Allocate (iveci2j(5,nb3max), nveci2j(nb3max), iref(nb3max,nb3max), &
+        Stat=iq)
+      If (iq/=0) Stop '    Allocate IVECI2J/NVECI2J/IREF'
 
 
 ! --> set the first NAEZ vectors (inside the unit-cell at [0,0,0])
 
-  nn = 0
-  do iq = 1, niqcalc
-    nn = nn + 1
-    nveci2j(nn) = 1
-    iref(1, nn) = nn
-    iveci2j(1, nn) = iqcalc(iq)
-    iveci2j(2, nn) = iqcalc(iq)
-    do j = 3, 5
-      iveci2j(j, nn) = 0
-    end do
-  end do
+      nn = 0
+      Do iq = 1, niqcalc
+        nn = nn + 1
+        nveci2j(nn) = 1
+        iref(1, nn) = nn
+        iveci2j(1, nn) = iqcalc(iq)
+        iveci2j(2, nn) = iqcalc(iq)
+        Do j = 3, 5
+          iveci2j(j, nn) = 0
+        End Do
+      End Do
 ! ++++++++++++++++++++++++++++++++++++++++ (selected) sites in unit cell
-  do iqs = 1, niqcalc
-    iq = iqcalc(iqs)
+      Do iqs = 1, niqcalc
+        iq = iqcalc(iqs)
 ! *************************************** (selected)  sites in unit cell
-    do jqs = 1, njqcalc
-      jq = jqcalc(jqs)
+        Do jqs = 1, njqcalc
+          jq = jqcalc(jqs)
 
 ! --> set up vector Rij = R_j - r_i = (r_j+T_n) - r_i = (r_j - r_i) + T_n
 !                   DR  =                               DQ          + T_n
 
-      do i = 1, 3
-        dq(i) = rbasis(i, jq) - rbasis(i, iq)
-      end do
+          Do i = 1, 3
+            dq(i) = rbasis(i, jq) - rbasis(i, iq)
+          End Do
 ! ================================================== translation vectors
-      do i1 = -nbr(1), nbr(1)
-        do i2 = -nbr(2), nbr(2)
-          do i3 = -nbr(3), nbr(3)
-            ibr(1) = i1
-            ibr(2) = i2
-            ibr(3) = i3
-            do i = 1, 3
-              dr(i) = dq(i)
-              do j = 1, 3
-                dr(i) = dr(i) + dble(ibr(j))*bravais(i, j)
-              end do
-            end do
+          Do i1 = -nbr(1), nbr(1)
+            Do i2 = -nbr(2), nbr(2)
+              Do i3 = -nbr(3), nbr(3)
+                ibr(1) = i1
+                ibr(2) = i2
+                ibr(3) = i3
+                Do i = 1, 3
+                  dr(i) = dq(i)
+                  Do j = 1, 3
+                    dr(i) = dr(i) + real(ibr(j), kind=dp)*bravais(i, j)
+                  End Do
+                End Do
 
 ! --> calculate Rij(xy)**2 -- DRXYSQ
 !     and       Rij(z)**2  -- DRSQ
 
-            drxysq = 0d0
-            do i = 1, 2
-              drxysq = drxysq + dr(i)*dr(i)
-            end do
-            drsq = dr(3)*dr(3)
-            if (lspher) drsq = drsq + drxysq
+                drxysq = 0E0_dp
+                Do i = 1, 2
+                  drxysq = drxysq + dr(i)*dr(i)
+                End Do
+                drsq = dr(3)*dr(3)
+                If (lspher) drsq = drsq + drxysq
 
 ! --> TOL <= Rij(xy)**2 <= CLURADXY**2 and
 !     TOL <= Rij(z)**2  <= CLURADZ**2  --> keep the vector Rij by its
 !     beginning and end points and the translation indices IBR(1..3)
 
 ! ------------------------------------------- TOL <= Rij**2 <= CLURAD**2
-            if ((drxysq<=cluradxysq) .and. (drsq<=cluradsq)) then
-              nn = nn + 1
-              nveci2j(nn) = 1
-              iref(1, nn) = nn
-              iveci2j(1, nn) = iq
-              iveci2j(2, nn) = jq
-              do j = 3, 5
-                iveci2j(j, nn) = ibr(j-2)
-              end do
-            end if
+                If ((drxysq<=cluradxysq) .And. (drsq<=cluradsq)) Then
+                  nn = nn + 1
+                  nveci2j(nn) = 1
+                  iref(1, nn) = nn
+                  iveci2j(1, nn) = iq
+                  iveci2j(2, nn) = jq
+                  Do j = 3, 5
+                    iveci2j(j, nn) = ibr(j-2)
+                  End Do
+                End If
 ! ----------------------------------------------------------------------
-          end do
-        end do
-      end do
+              End Do
+            End Do
+          End Do
 ! ======================================================================
-    end do
+        End Do
 ! **********************************************************************
-  end do
+      End Do
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ! --> array IVECI2J contains now the positions of all NIQCALC clusters
@@ -286,11 +288,11 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
 !     IJTABCALC array
 !     NOUT is the number of eliminated (repeated) sites
 
-  nout = 0
+      nout = 0
 ! **********************************************************************
-  do i = 1, nn
+      Do i = 1, nn
 ! ======================================================================
-    if (nveci2j(i)==1) then
+        If (nveci2j(i)==1) Then
 
 ! --> check vector IVECI2J(I) only if NVECI2J(I).EQ.1
 !     finding a J for which the R_j is the same, increment NVECI2J(I)
@@ -298,68 +300,68 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
 !     same R_j means same site j, same translation vector (indices 2..5)
 
 ! ----------------------------------------------------------------------
-      do j = i + 1, nn
+          Do j = i + 1, nn
 
-        if (nveci2j(j)==1) then
-          ieqvec = 0
-          do iq = 2, 5
-            ieqvec = ieqvec + abs(iveci2j(iq,j)-iveci2j(iq,i))
-          end do
+            If (nveci2j(j)==1) Then
+              ieqvec = 0
+              Do iq = 2, 5
+                ieqvec = ieqvec + abs(iveci2j(iq,j)-iveci2j(iq,i))
+              End Do
 ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-          if (ieqvec==0) then
-            nveci2j(j) = 0
-            nveci2j(i) = nveci2j(i) + 1
-            iref(nveci2j(i), i) = j
-            nout = nout + 1
-          end if
+              If (ieqvec==0) Then
+                nveci2j(j) = 0
+                nveci2j(i) = nveci2j(i) + 1
+                iref(nveci2j(i), i) = j
+                nout = nout + 1
+              End If
 ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-        end if
+            End If
 
-      end do
+          End Do
 ! ----------------------------------------------------------------------
-    end if
+        End If
 ! ======================================================================
-  end do
+      End Do
 ! **********************************************************************
 
 ! --> get now the actual NATOMIMP cluster positions R_j to be scanned
 !     R_j is obtained from IVECI2J
 
-  natomimp = 0
+      natomimp = 0
 ! **********************************************************************
-  do i = 1, nn
+      Do i = 1, nn
 ! ======================================================================
-    if (nveci2j(i)/=0) then
+        If (nveci2j(i)/=0) Then
 
-      do j = 1, 3
-        dr(j) = rbasis(j, iveci2j(2,i))
-        do iq = 3, 5
-          dr(j) = dr(j) + iveci2j(iq, i)*bravais(j, iq-2)
-        end do
-      end do
+          Do j = 1, 3
+            dr(j) = rbasis(j, iveci2j(2,i))
+            Do iq = 3, 5
+              dr(j) = dr(j) + iveci2j(iq, i)*bravais(j, iq-2)
+            End Do
+          End Do
 
-      natomimp = natomimp + 1
-      if (natomimp>natomimpd) then
-        write (6, 180) 'global', 'NATOMIMPD', natomimp
-        stop
-      end if
-      do j = 1, 3
-        rclsimp(j, natomimp) = dr(j)
-      end do
+          natomimp = natomimp + 1
+          If (natomimp>natomimpd) Then
+            Write (6, 180) 'global', 'NATOMIMPD', natomimp
+            Stop
+          End If
+          Do j = 1, 3
+            rclsimp(j, natomimp) = dr(j)
+          End Do
 
-      atomimp(natomimp) = iveci2j(2, i)
-      nveci2j(natomimp) = nveci2j(i)
-      do j = 1, nveci2j(natomimp)
-        iref(j, natomimp) = iref(j, i)
-      end do
-    end if
+          atomimp(natomimp) = iveci2j(2, i)
+          nveci2j(natomimp) = nveci2j(i)
+          Do j = 1, nveci2j(natomimp)
+            iref(j, natomimp) = iref(j, i)
+          End Do
+        End If
 ! ======================================================================
-  end do
+      End Do
 ! **********************************************************************
 ! --> crosscheck -- if something went wrong return with IDO=0
 
-  if ((nn-nout/=natomimp) .or. (natomimp<=0)) go to 100
-  if ((naez==1) .and. (natomimp==naez)) go to 100
+      If ((nn-nout/=natomimp) .Or. (natomimp<=0)) Go To 100
+      If ((naez==1) .And. (natomimp==naez)) Go To 100
 
 ! **********************************************************************
 ! --> set table IJTABCALC(I,J)
@@ -367,65 +369,65 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
 !                    and for each J which was previously obtained as
 !                    connected to I ( IVECI2J(1,IREF)=I )
 
-  do iq = 1, 2*natomimp
-    ijtabcalc(iq) = 0
-  end do
+      Do iq = 1, 2*natomimp
+        ijtabcalc(iq) = 0
+      End Do
 ! ======================================================================
-  write (1337, 190)
-  do iq = 1, niqcalc
-    nn = (iq-1)*natomimp
-    nout = 0
-    do jq = 1, natomimp
+      Write (1337, 190)
+      Do iq = 1, niqcalc
+        nn = (iq-1)*natomimp
+        nout = 0
+        Do jq = 1, natomimp
 ! ----------------------------------------------------------------------
-      if (jq/=iq) then
-        do i = 1, nveci2j(jq)
-          if (iveci2j(1,iref(i,jq))==atomimp(iq)) then
+          If (jq/=iq) Then
+            Do i = 1, nveci2j(jq)
+              If (iveci2j(1,iref(i,jq))==atomimp(iq)) Then
 !                  IF ( IVECI2J(1,IREF(I,JQ)).EQ.1.AND.
 !     +               IVECI2J(2,IREF(I,JQ)).EQ.1 ) THEN
-            ijtabcalc(nn+jq) = 1
-            if (opt('NEWSOSOL')) then !Jijtensor
-              ijtabcalc((jq-1)*natomimp+iq) = 1 !Jijtensor
-              ijtabcalc_i(nn+jq) = 1 !Jijtensor
-            end if !Jijtensor
-            nout = nout + 1
+                ijtabcalc(nn+jq) = 1
+                If (opt('NEWSOSOL')) Then !Jijtensor
+                  ijtabcalc((jq-1)*natomimp+iq) = 1 !Jijtensor
+                  ijtabcalc_i(nn+jq) = 1 !Jijtensor
+                End If !Jijtensor
+                nout = nout + 1
 !                  END IF
-          end if
-        end do
-      end if
+              End If
+            End Do
+          End If
 ! ----------------------------------------------------------------------
-    end do
-    write (1337, 200) iq, nout
-  end do
-  write (1337, 210)
+        End Do
+        Write (1337, 200) iq, nout
+      End Do
+      Write (1337, 210)
 ! ======================================================================
-  ido = 1
-100 continue
-  deallocate (iveci2j, nveci2j, iref, stat=iq)
-  if (iq/=0) stop '    Deallocate IVECI2J/NVECI2J/IREF'
-  deallocate (jqcalc, stat=iq)
-  if (iq/=0) stop '    Deallocate JQCALC'
+      ido = 1
+100   Continue
+      Deallocate (iveci2j, nveci2j, iref, Stat=iq)
+      If (iq/=0) Stop '    Deallocate IVECI2J/NVECI2J/IREF'
+      Deallocate (jqcalc, Stat=iq)
+      If (iq/=0) Stop '    Deallocate JQCALC'
 ! ..
-110 format (5x, '< GIJXCPL > : Exchange coupling constants calculation', /)
-120 format (6x, 'WARNING: Calculation range JIJRAD missing from your input', &
-    /, 6x, '         Default value JIJRAD = 0.0 will be assumed', /)
-130 format (6x, 'Range of calculating Jij around each atom', /, 6x, &
-    '      spherical cluster of radius :', f7.4, ' (ALAT)', /, /, 6x, &
-    'Sites j sought within a parallelipiped', /, 6x, 'of size  (', i3, &
-    '*a_1) X (', i3, '*a_2) X (', i3, '*a_3)')
-140 format (6x, 'Range of calculating Jij around each atom', /, 6x, &
-    '    cylindrical cluster of radius :', f7.4, ' (ALAT)', /, 6x, &
-    '                           height :', f7.4, ' (ALAT)', /, /, 6x, &
-    'Sites j sought within a parallelipiped', /, 6x, 'of size  (', i3, &
-    '*a_1) X (', i3, '*a_2) X (', i3, '*a_3)')
-150 format (6x, 'Calculations restricted within the unit cell')
-160 format (6x, ' - all of the', i3, ' atoms of the u.c. ', &
-    'will be taken into account', /)
-170 format (6x, ' - only', i3, ' atom(s) (out of', i3, ') in the u.c.', &
-    'will be calculated', /)
-180 format (6x, 'Dimension ERROR: please increase the ', a, ' parameter', /, &
-    6x, a, ' to a value >=', i5, /)
-190 format (8x, 'Jij connections set', /, 10x, 20('-'), /, 11x, ' I ', 3x, &
-    'no. of J''S', /, 10x, 20('-'))
-200 format (10x, i4, 8x, i6)
-210 format (10x, 20('-'), /)
-end subroutine
+110   Format (5X, '< GIJXCPL > : Exchange coupling constants calculation', /)
+120   Format (6X, 'WARNING: Calculation range JIJRAD missing from your input', &
+        /, 6X, '         Default value JIJRAD = 0.0 will be assumed', /)
+130   Format (6X, 'Range of calculating Jij around each atom', /, 6X, &
+        '      spherical cluster of radius :', F7.4, ' (ALAT)', /, /, 6X, &
+        'Sites j sought within a parallelipiped', /, 6X, 'of size  (', I3, &
+        '*a_1) X (', I3, '*a_2) X (', I3, '*a_3)')
+140   Format (6X, 'Range of calculating Jij around each atom', /, 6X, &
+        '    cylindrical cluster of radius :', F7.4, ' (ALAT)', /, 6X, &
+        '                           height :', F7.4, ' (ALAT)', /, /, 6X, &
+        'Sites j sought within a parallelipiped', /, 6X, 'of size  (', I3, &
+        '*a_1) X (', I3, '*a_2) X (', I3, '*a_3)')
+150   Format (6X, 'Calculations restricted within the unit cell')
+160   Format (6X, ' - all of the', I3, ' atoms of the u.c. ', &
+        'will be taken into account', /)
+170   Format (6X, ' - only', I3, ' atom(s) (out of', I3, ') in the u.c.', &
+        'will be calculated', /)
+180   Format (6X, 'Dimension ERROR: please increase the ', A, ' parameter', /, &
+        6X, A, ' to a value >=', I5, /)
+190   Format (8X, 'Jij connections set', /, 10X, 20('-'), /, 11X, ' I ', 3X, &
+        'no. of J''S', /, 10X, 20('-'))
+200   Format (10X, I4, 8X, I6)
+210   Format (10X, 20('-'), /)
+    End Subroutine

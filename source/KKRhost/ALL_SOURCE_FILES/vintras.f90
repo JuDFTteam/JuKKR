@@ -24,154 +24,155 @@
 !> @date May 1987
 !-----------------------------------------------------------------------
 
-subroutine vintras(cmom, cminst, lmax, nspin, nstart, nend, rho2ns, v, r, &
-  drdi, irws, ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, &
-  thetas, lmsp, irm, lmpot, natyp, lmxspd, npotd)
+    Subroutine vintras(cmom, cminst, lmax, nspin, nstart, nend, rho2ns, v, r, &
+      drdi, irws, ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, &
+      thetas, lmsp, irm, lmpot, natyp, lmxspd, npotd)
 
-  use :: constants
-  use :: global_variables
+      Use constants
+      Use global_variables
+      Use mod_datatypes, Only: dp
 
-  implicit none
+      Implicit None
 
 ! .. Input Variables
-  integer, intent (in) :: irm !< Maximum number of radial points
-  integer, intent (in) :: lmax !< Maximum l component in wave function expansion
-  integer, intent (in) :: nend
-  integer, intent (in) :: nspin !< Counter for spin directions
-  integer, intent (in) :: lmpot !< (LPOT+1)**2
-  integer, intent (in) :: natyp !< Number of kinds of atoms in unit cell
-  integer, intent (in) :: npotd !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-  integer, intent (in) :: nstart
-  integer, intent (in) :: lmxspd !< (2*LPOT+1)**2
-  integer, intent (in) :: kshape !< Exact treatment of WS cell
-  integer, dimension (natyp), intent (in) :: irws !< R point at WS radius
-  integer, dimension (natyp), intent (in) :: ipan !< Number of panels in non-MT-region
-  integer, dimension (natyp), intent (in) :: ntcell !< Index for WS cell
-  integer, dimension (0:lmpot), intent (in) :: imaxsh
-  integer, dimension (ngshd, 3), intent (in) :: ilm_map
-  integer, dimension (natyp, lmxspd), intent (in) :: lmsp !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
-  integer, dimension (natyp, lmxspd), intent (in) :: ifunm
-  integer, dimension (0:ipand, natyp), intent (in) :: ircut !< R points of panel borders
-  double precision, dimension (ngshd), intent (in) :: gsh
-  double precision, dimension (irm, natyp), intent (in) :: r !< Radial mesh ( in units a Bohr)
-  double precision, dimension (irm, natyp), intent (in) :: drdi !< Derivative dr/di
-  double precision, dimension (irid, nfund, ncelld), intent (in) :: thetas !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-  double precision, dimension (irm, lmpot, natyp, 2), intent (in) :: rho2ns !< radial density
+      Integer, Intent (In) :: irm !< Maximum number of radial points
+      Integer, Intent (In) :: lmax !< Maximum l component in wave function expansion
+      Integer, Intent (In) :: nend
+      Integer, Intent (In) :: nspin !< Counter for spin directions
+      Integer, Intent (In) :: lmpot !< (LPOT+1)**2
+      Integer, Intent (In) :: natyp !< Number of kinds of atoms in unit cell
+      Integer, Intent (In) :: npotd !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+      Integer, Intent (In) :: nstart
+      Integer, Intent (In) :: lmxspd !< (2*LPOT+1)**2
+      Integer, Intent (In) :: kshape !< Exact treatment of WS cell
+      Integer, Dimension (natyp), Intent (In) :: irws !< R point at WS radius
+      Integer, Dimension (natyp), Intent (In) :: ipan !< Number of panels in non-MT-region
+      Integer, Dimension (natyp), Intent (In) :: ntcell !< Index for WS cell
+      Integer, Dimension (0:lmpot), Intent (In) :: imaxsh
+      Integer, Dimension (ngshd, 3), Intent (In) :: ilm_map
+      Integer, Dimension (natyp, lmxspd), Intent (In) :: lmsp !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+      Integer, Dimension (natyp, lmxspd), Intent (In) :: ifunm
+      Integer, Dimension (0:ipand, natyp), Intent (In) :: ircut !< R points of panel borders
+      Real (Kind=dp), Dimension (ngshd), Intent (In) :: gsh
+      Real (Kind=dp), Dimension (irm, natyp), Intent (In) :: r !< Radial mesh ( in units a Bohr)
+      Real (Kind=dp), Dimension (irm, natyp), Intent (In) :: drdi !< Derivative dr/di
+      Real (Kind=dp), Dimension (irid, nfund, ncelld), Intent (In) :: thetas !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+      Real (Kind=dp), Dimension (irm, lmpot, natyp, 2), Intent (In) :: rho2ns !< radial density
 ! .. Output variables
-  double precision, dimension (lmpot, natyp), intent (out) :: cmom !< LM moment of total charge
-  double precision, dimension (lmpot, natyp), intent (out) :: cminst
-  double precision, dimension (irm, lmpot, npotd), intent (out) :: v
+      Real (Kind=dp), Dimension (lmpot, natyp), Intent (Out) :: cmom !< LM moment of total charge
+      Real (Kind=dp), Dimension (lmpot, natyp), Intent (Out) :: cminst
+      Real (Kind=dp), Dimension (irm, lmpot, npotd), Intent (Out) :: v
 ! .. Local Variables
-  double precision :: fac, rl
-  integer :: i, iatyp, icell, iend, ifun, ipot, irc1, irs1, istart, j, l, lm, &
-    lm2, lm3, m
+      Real (Kind=dp) :: fac, rl
+      Integer :: i, iatyp, icell, iend, ifun, ipot, irc1, irs1, istart, j, l, &
+        lm, lm2, lm3, m
 ! .. Local Arrays
-  integer, dimension (0:ipand) :: ircutm
-  double precision, dimension (irm) :: v1
-  double precision, dimension (irm) :: v2
-  double precision, dimension (irm) :: vint1
-  double precision, dimension (irm) :: vint2
+      Integer, Dimension (0:ipand) :: ircutm
+      Real (Kind=dp), Dimension (irm) :: v1
+      Real (Kind=dp), Dimension (irm) :: v2
+      Real (Kind=dp), Dimension (irm) :: vint1
+      Real (Kind=dp), Dimension (irm) :: vint2
 ! .. External Subroutines ..
-  external :: sinwk, soutk
+      External :: sinwk, soutk
 ! .. Intrinsic Functions ..
-  intrinsic :: atan, real
+      Intrinsic :: atan, real
 !     ..
-  do iatyp = nstart, nend
-    if (kshape/=0) then
-      irs1 = ircut(1, iatyp)
-      irc1 = ircut(ipan(iatyp), iatyp)
-      icell = ntcell(iatyp)
-      do i = 0, ipan(iatyp)
-        ircutm(i) = ircut(i, iatyp)
-      end do ! I
-    else
-      irs1 = irws(iatyp)
-      irc1 = irs1
-      ircutm(0) = ircut(0, iatyp)
-      ircutm(1) = irc1
-    end if
+      Do iatyp = nstart, nend
+        If (kshape/=0) Then
+          irs1 = ircut(1, iatyp)
+          irc1 = ircut(ipan(iatyp), iatyp)
+          icell = ntcell(iatyp)
+          Do i = 0, ipan(iatyp)
+            ircutm(i) = ircut(i, iatyp)
+          End Do ! I
+        Else
+          irs1 = irws(iatyp)
+          irc1 = irs1
+          ircutm(0) = ircut(0, iatyp)
+          ircutm(1) = irc1
+        End If
 !-------------------------------------------------------------------------
 ! Determine the right potential numbers
 !-------------------------------------------------------------------------
-    ipot = nspin*iatyp
+        ipot = nspin*iatyp
 
-    do l = 0, lmax
-      fac = 8.0d0*pi/real(2*l+1)
-      do m = -l, l
-        lm = l*l + l + m + 1
+        Do l = 0, lmax
+          fac = 8.0E0_dp*pi/real(2*l+1, kind=dp)
+          Do m = -l, l
+            lm = l*l + l + m + 1
 !-------------------------------------------------------------------
 ! Set up of the integrands v1 and v2
 !-------------------------------------------------------------------
-        v1(1) = 0.0d0
-        v2(1) = 0.0d0
-        do i = 2, irs1
-          rl = r(i, iatyp)**l
-          v1(i) = rho2ns(i, lm, iatyp, 1)*rl*drdi(i, iatyp)
-          v2(i) = rho2ns(i, lm, iatyp, 1)/r(i, iatyp)/rl*drdi(i, iatyp)
-        end do ! I
+            v1(1) = 0.0E0_dp
+            v2(1) = 0.0E0_dp
+            Do i = 2, irs1
+              rl = r(i, iatyp)**l
+              v1(i) = rho2ns(i, lm, iatyp, 1)*rl*drdi(i, iatyp)
+              v2(i) = rho2ns(i, lm, iatyp, 1)/r(i, iatyp)/rl*drdi(i, iatyp)
+            End Do ! I
 !-------------------------------------------------------------------
 ! Convolute charge density of interstial with shape function if kshape.gt.0
 !-------------------------------------------------------------------
-        if (kshape/=0) then
-          do i = irs1 + 1, irc1
-            v1(i) = 0.0d0
-          end do ! I
-          istart = imaxsh(lm-1) + 1
-          iend = imaxsh(lm)
-          do j = istart, iend
-            lm2 = ilm_map(j, 2)
-            lm3 = ilm_map(j, 3)
-            if (lmsp(icell,lm3)>0) then
-              ifun = ifunm(icell, lm3)
-              do i = irs1 + 1, irc1
-                v1(i) = v1(i) + gsh(j)*rho2ns(i, lm2, iatyp, 1)*thetas(i-irs1, &
-                  ifun, icell)
-              end do ! I
-            end if
-          end do ! J
+            If (kshape/=0) Then
+              Do i = irs1 + 1, irc1
+                v1(i) = 0.0E0_dp
+              End Do ! I
+              istart = imaxsh(lm-1) + 1
+              iend = imaxsh(lm)
+              Do j = istart, iend
+                lm2 = ilm_map(j, 2)
+                lm3 = ilm_map(j, 3)
+                If (lmsp(icell,lm3)>0) Then
+                  ifun = ifunm(icell, lm3)
+                  Do i = irs1 + 1, irc1
+                    v1(i) = v1(i) + gsh(j)*rho2ns(i, lm2, iatyp, 1)*thetas(i- &
+                      irs1, ifun, icell)
+                  End Do ! I
+                End If
+              End Do ! J
 
-          do i = irs1 + 1, irc1
-            rl = r(i, iatyp)**l
-            v2(i) = v1(i)/r(i, iatyp)/rl*drdi(i, iatyp)
-            v1(i) = v1(i)*rl*drdi(i, iatyp)
-          end do ! I
-        end if
+              Do i = irs1 + 1, irc1
+                rl = r(i, iatyp)**l
+                v2(i) = v1(i)/r(i, iatyp)/rl*drdi(i, iatyp)
+                v1(i) = v1(i)*rl*drdi(i, iatyp)
+              End Do ! I
+            End If
 !-------------------------------------------------------------------
 ! Now integrate v1 and v2
 !-------------------------------------------------------------------
-        call soutk(v1, vint1, ipan(iatyp), ircutm)
-        call sinwk(v2, vint2, ipan(iatyp), ircutm)
+            Call soutk(v1, vint1, ipan(iatyp), ircutm)
+            Call sinwk(v2, vint2, ipan(iatyp), ircutm)
 !-------------------------------------------------------------------
 ! Gather all parts
 !-------------------------------------------------------------------
-        if (lm==1) then
-          v(1, lm, ipot) = fac*vint2(1)
-        else
-          v(1, lm, ipot) = 0.0d0
-        end if
+            If (lm==1) Then
+              v(1, lm, ipot) = fac*vint2(1)
+            Else
+              v(1, lm, ipot) = 0.0E0_dp
+            End If
 
-        do i = 2, irc1
-          rl = r(i, iatyp)**l
-          v(i, lm, ipot) = fac*(vint1(i)/r(i,iatyp)/rl+vint2(i)*rl)
-        end do ! I
+            Do i = 2, irc1
+              rl = r(i, iatyp)**l
+              v(i, lm, ipot) = fac*(vint1(i)/r(i,iatyp)/rl+vint2(i)*rl)
+            End Do ! I
 !-------------------------------------------------------------------
 ! Store charge moment - in case of kshape.gt.0 this is the moment
 !      of the charge in the muffin tin sphere
 !-------------------------------------------------------------------
-        cmom(lm, iatyp) = vint1(irs1)
+            cmom(lm, iatyp) = vint1(irs1)
 !-------------------------------------------------------------------
 ! Store charge moment of interstial in case of kshape.gt.0
 !-------------------------------------------------------------------
-        if (kshape/=0) cminst(lm, iatyp) = vint1(irc1) - vint1(irs1)
+            If (kshape/=0) cminst(lm, iatyp) = vint1(irc1) - vint1(irs1)
 !
-        if (nspin==2) then
-          do i = 1, irc1
-            v(i, lm, ipot-1) = v(i, lm, ipot)
-          end do ! I
-        end if
-      end do ! M
-    end do ! L
-  end do ! IATYP
-  return
+            If (nspin==2) Then
+              Do i = 1, irc1
+                v(i, lm, ipot-1) = v(i, lm, ipot)
+              End Do ! I
+            End If
+          End Do ! M
+        End Do ! L
+      End Do ! IATYP
+      Return
 
-end subroutine
+    End Subroutine

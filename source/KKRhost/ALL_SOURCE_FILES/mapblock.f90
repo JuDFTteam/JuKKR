@@ -1,54 +1,54 @@
-integer function mapblock(ie, ie1, ne, iterstep, nodefirst, nodelast)
+    Integer Function mapblock(ie, ie1, ne, iterstep, nodefirst, nodelast)
 ! **********************************************************************
 ! *                                                                    *
 ! *                                                                    *
 ! *                                                                    *
 ! **********************************************************************
-  implicit none
+      Implicit None
 
 !Arguments ..
-  integer :: ie, ie1, ne, iterstep
-  integer :: nodefirst, nodelast
+      Integer :: ie, ie1, ne, iterstep
+      Integer :: nodefirst, nodelast
 
 !Locals ..
-  integer :: inc, ip, ipp, iproc, je, ke
-  integer :: iesort(ne), iproce(ne)
+      Integer :: inc, ip, ipp, iproc, je, ke
+      Integer :: iesort(ne), iproce(ne)
 ! ......................................................................
-  ipp = iterstep !         dummy use of argument iterstep
-  do je = ie1, ne
-    iesort(je) = je
-    iproce(je) = 0
-  end do
+      ipp = iterstep !         dummy use of argument iterstep
+      Do je = ie1, ne
+        iesort(je) = je
+        iproce(je) = 0
+      End Do
 
-  ipp = 0
-  do ip = nodefirst, nodelast
-    ipp = ipp + 1
-  end do
+      ipp = 0
+      Do ip = nodefirst, nodelast
+        ipp = ipp + 1
+      End Do
 ! ----------------------------------------------------------------------
-  if (ipp>1) then
-    iproc = 0
-    inc = 1
-    do je = ie1, ne - 1
-      ke = iesort(je)
-      iproc = iproc + inc
-
-      if (iproc==ipp) then
+      If (ipp>1) Then
         iproc = 0
         inc = 1
-      else if (iproc==-1) then
-        iproc = 0
-        inc = 1
-      end if
+        Do je = ie1, ne - 1
+          ke = iesort(je)
+          iproc = iproc + inc
 
-      iproce(ke) = iproc
-    end do
-    mapblock = iproce(ie)
+          If (iproc==ipp) Then
+            iproc = 0
+            inc = 1
+          Else If (iproc==-1) Then
+            iproc = 0
+            inc = 1
+          End If
+
+          iproce(ke) = iproc
+        End Do
+        mapblock = iproce(ie)
 ! ----------------------------------------------------------------------
-  else
+      Else
 ! ----------------------------------------------------------------------
-    mapblock = 0
-  end if
+        mapblock = 0
+      End If
 ! ----------------------------------------------------------------------
 
-  return
-end function
+      Return
+    End Function

@@ -105,7 +105,7 @@ subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
   external :: csimpk
 !..
 
-  intrinsic :: atan, dimag, sqrt
+  intrinsic :: atan, aimag, sqrt
 
 
   save
@@ -159,7 +159,7 @@ subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
         ffz = fz(i, l)
         denr(i) = ppz*(gmatl*ppz+ekl(l)*qz(i,l)) + ffz*(gmatl*ffz+ekl(l)*sz(i, &
           l))
-        rho2ns(i, 1) = rho2ns(i, 1) + c0ll*dimag(df*denr(i))
+        rho2ns(i, 1) = rho2ns(i, 1) + c0ll*aimag(df*denr(i))
       end do
 !---> calculate density of states
     else
@@ -167,7 +167,7 @@ subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
       do i = 2, ircut(1)
         ppz = pz(i, l)
         denr(i) = ppz*(gmatl*ppz+ekl(l)*qz(i,l))
-        rho2ns(i, 1) = rho2ns(i, 1) + c0ll*dimag(df*denr(i))
+        rho2ns(i, 1) = rho2ns(i, 1) + c0ll*aimag(df*denr(i))
       end do
     end if
 
@@ -210,7 +210,7 @@ subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
           j0 = j1 + 1
 
           do i = 2, ircut(1)
-            rho2ns(i, lm3) = rho2ns(i, lm3) + dimag(gmatl*wr(i,l1,l2))
+            rho2ns(i, lm3) = rho2ns(i, lm3) + aimag(gmatl*wr(i,l1,l2))
           end do
 
         end if

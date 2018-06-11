@@ -613,7 +613,7 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
         if (wronski) then
           do i = 1, jtop, 40
             crsq = c*r(i, im)**2
-            write (1337, 110) it, l, nint(2*mj), i, r(i, im), &
+            write (1337, 110, advance='no') it, l, nint(2*mj), i, r(i, im), &
               1.0d0 - (zf(i,1,1)*jg(i,1,1)-zg(i,1,1)*jf(i,1,1)+ &
               zf(i,2,1)*jg(i,2,1)-zg(i,2,1)*jf(i,2,1))*crsq
             if (nsol==2) then
@@ -665,8 +665,7 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
 
 100 format ('  t-ss(TLM)', 2i3, f5.1, 2e14.5, 2x, 2e14.5, :, /, 22x, 2e14.5, &
     2x, 2e14.5)
-110 format (' IT=', i2, ' L=', i2, ' MJ=', i2, '/2', i7, f10.6, 1(2x,2f9.6), &
-    $)
+110 format (' IT=', i2, ' L=', i2, ' MJ=', i2, '/2', i7, f10.6, 1(2x,2f9.6))
 120 format (3(2x,2f9.6))
 130 format (' IT=', i2, 2i3, a, 2x, 2e14.5, 2x, 2e14.5)
 end subroutine

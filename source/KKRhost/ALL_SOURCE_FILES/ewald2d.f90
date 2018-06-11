@@ -402,9 +402,9 @@ subroutine ewald2d(lpot, alat, vec1, vec2, iq1, iq2, rm2, nrmax, nshlr, nsr, &
 ! **********************************************************************
 !
   do lm = 1, lmmax
-    if (abs(dimag(stest(lm)))>bound) then
+    if (abs(aimag(stest(lm)))>bound) then
       write (6, *) ' ERROR: Imaginary contribution', ' to REAL lattice sum', &
-        dimag(stest(lm)), bound
+        aimag(stest(lm)), bound
       stop
     end if
     sum2d(lm) = dble(stest(lm))

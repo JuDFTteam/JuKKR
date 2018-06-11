@@ -77,7 +77,7 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
       end if
       ilhost = lngstring(filehost, 40)
 
-      write (1337, '(8X,A5," side host: ",$)') chhost(ihost)
+      write (1337, '(8X,A5," side host: ")', advance='no') chhost(ihost)
 ! ----------------------------------------------------------------------
       if (filehost(1:7)=='vacuum') then
         write (1337, '(A)') 'VACUUM will be used'

@@ -62,9 +62,9 @@ subroutine rotatevector(rho2nsc, rho2ns, nrmax, lmpotd, theta, phi, theta_old, &
 
   implicit none
 !interface
+  integer :: nrmaxd, lmpotd, nrmax
   double complex :: rho2nsc(nrmaxd, lmpotd, 4)
   double precision :: rho2ns(nrmaxd, lmpotd, 4)
-  integer :: nrmaxd, lmpotd, nrmax
   double precision :: theta, phi
   double precision :: theta_old, phi_old
 !local
@@ -96,11 +96,11 @@ subroutine rotatevector(rho2nsc, rho2ns, nrmax, lmpotd, theta, phi, theta_old, &
 
   do ir = 1, nrmax
     do ilm = 1, lmpotd
-      rho2ns(ir, ilm, 1) = dimag(+(rho2nsc(ir,ilm,1)*w1_11w2_11)+(rho2nsc(ir, &
+      rho2ns(ir, ilm, 1) = aimag(+(rho2nsc(ir,ilm,1)*w1_11w2_11)+(rho2nsc(ir, &
         ilm,3)*w1_11w2_21)+(rho2nsc(ir,ilm,4)*w1_12w2_11)+(rho2nsc(ir,ilm, &
         2)*w1_12w2_21))
 
-      rho2ns(ir, ilm, 2) = dimag(+(rho2nsc(ir,ilm,1)*w1_21w2_12)-(rho2nsc(ir, &
+      rho2ns(ir, ilm, 2) = aimag(+(rho2nsc(ir,ilm,1)*w1_21w2_12)-(rho2nsc(ir, &
         ilm,3)*w1_21w2_22)-(rho2nsc(ir,ilm,4)*w1_22w2_12)+(rho2nsc(ir,ilm, &
         2)*w1_22w2_22))
     end do

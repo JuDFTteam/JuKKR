@@ -1,17 +1,18 @@
 subroutine writehoststructure(bravais, nrbasis, rbasis, naezd, nembd)
-  use :: mod_version_info
-  use :: mod_md5sums
+  use mod_version_info
+  use mod_md5sums
+  use mod_DataTypes
   implicit none
 !interface
-  double precision :: bravais(3, 3)
-  integer :: nrbasis
-  double precision :: rbasis(3, naezd+nembd)
-  integer :: naezd
-  integer :: nembd
+  double precision, intent(in) :: bravais(3, 3)
+  integer, intent(in) :: nrbasis
+  integer, intent(in) :: naezd
+  integer, intent(in) :: nembd
+  double precision, intent(in) :: rbasis(3, naezd+nembd)
 
 !local
   integer :: iatom
-  real (kind=8) :: wght
+  real (kind=dp) :: wght
   character (len=256) :: uio
   integer :: ier
   integer :: itemp1(12), it

@@ -55,7 +55,7 @@ use mod_types, only: t_inc, t_imp
       EXTERNAL         ZGEMM
 !..
 !.. Intrinsic Functions ..
-      INTRINSIC DATAN,DIMAG,DSQRT
+      INTRINSIC DATAN,aimag,DSQRT
 !..
 !.. Save statement ..
       SAVE             CZERO
@@ -161,10 +161,10 @@ DO i1=i1_start, i1_end
                       lm1p,lm1,i1sp1,i1sp2,insra,i1)) /drdi(ircut(1,i2),i2)
                   
                   rll_12(lm1p)=  &
-                      DCONJG(rll(ircut(1,i2)-1,lm1p,lm1,i1sp1,i1sp2,  &
+                      CONJG(rll(ircut(1,i2)-1,lm1p,lm1,i1sp1,i1sp2,  &
                       insra,i1))*delta1-  &
                       rll(ircut(1,i2)-1,lm1p,lm2,i2sp1,i2sp2,insra,i1)  &
-                      *DCONJG(delta2)
+                      *CONJG(delta2)
                   
                 END DO!LM1P
                 

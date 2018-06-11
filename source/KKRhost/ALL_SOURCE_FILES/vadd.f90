@@ -1,15 +1,16 @@
 ! ************************************************************************
-subroutine vadd(a, b, c)
+    Subroutine vadd(a, b, c)
+      Use mod_datatypes, Only: dp
 ! ************************************************************************
 
-  double precision, intent (in) :: a(*)
-  double precision, intent (in) :: b(*)
-  double precision, intent (out) :: c(*)
+      Real (Kind=dp), Intent (In) :: a(*)
+      Real (Kind=dp), Intent (In) :: b(*)
+      Real (Kind=dp), Intent (Out) :: c(*)
 
-  integer :: i
+      Integer :: i
 
-  do i = 1, 3
-    c(i) = a(i) + b(i)
-  end do
-  return
-end subroutine
+      Do i = 1, 3
+        c(i) = a(i) + b(i)
+      End Do
+      Return
+    End Subroutine

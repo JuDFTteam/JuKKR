@@ -1,87 +1,88 @@
-subroutine spher(ylm, l, x)
+    Subroutine spher(ylm, l, x)
+      Use mod_datatypes, Only: dp
 !      spherical harmonics except the facter exp(i*m*phi)
 
 !      m=-l to l , for given l.
 !      x=cos(theta)
 !     .. Scalar Arguments ..
-  double precision :: x
-  integer :: l
+      Real (Kind=dp) :: x
+      Integer :: l
 !..
 !.. Array Arguments ..
-  double precision :: ylm(*)
+      Real (Kind=dp) :: ylm(*)
 !..
 !.. Local Scalars ..
-  double precision :: fac, ovr1, pi, qq
-  integer :: i, ii, l2, lm, ln, m, nn
+      Real (Kind=dp) :: fac, ovr1, pi, qq
+      Integer :: i, ii, l2, lm, ln, m, nn
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: abs, atan, dble, sqrt
+      Intrinsic :: abs, atan, real, sqrt
 !     ..
-  pi = 4.0d0*atan(1.0d0)
+      pi = 4.0E0_dp*atan(1.0E0_dp)
 
 
-  ovr1 = abs(x) - 1.d0
-  if (ovr1>0.1d-12) then
-    write (6, fmt=100) x
-    stop
-  else if (abs(ovr1)<1.d-10) then
-    if (x>0.0d0) then
-      fac = 1.0d0
-    else
-      fac = (-1)**l
-    end if
-    l2 = 2*l + 1
-    do i = 1, l2
-      ylm(i) = 0.0d0
-    end do
-    ylm(l+1) = sqrt(dble(l2)/(4.0d0*pi))*fac
-    return
-  end if
+      ovr1 = abs(x) - 1.E0_dp
+      If (ovr1>0.1E-12_dp) Then
+        Write (6, Fmt=100) x
+        Stop
+      Else If (abs(ovr1)<1.E-10_dp) Then
+        If (x>0.0E0_dp) Then
+          fac = 1.0E0_dp
+        Else
+          fac = (-1)**l
+        End If
+        l2 = 2*l + 1
+        Do i = 1, l2
+          ylm(i) = 0.0E0_dp
+        End Do
+        ylm(l+1) = sqrt(real(l2,kind=dp)/(4.0E0_dp*pi))*fac
+        Return
+      End If
 
 ! l<0
-  if (l<0) then
-    write (6, fmt=*) ' === l=', l, ' < 0  : in sub.spher. ==='
-    stop '=== stop in sub.spher. (l<0) ==='
+      If (l<0) Then
+        Write (6, Fmt=*) ' === l=', l, ' < 0  : in sub.spher. ==='
+        Stop '=== stop in sub.spher. (l<0) ==='
 ! l=0
-  else if (l==0) then
-    ylm(1) = sqrt(1.0d0/(4.0d0*pi))
+      Else If (l==0) Then
+        ylm(1) = sqrt(1.0E0_dp/(4.0E0_dp*pi))
 ! l=1
-  else if (l==1) then
-    fac = sqrt(3.0d0/(4.0d0*pi))
-    ylm(1) = fac*sqrt((1.0d0-x*x)/2.0d0)
-    ylm(2) = fac*x
-    ylm(3) = -ylm(1)
+      Else If (l==1) Then
+        fac = sqrt(3.0E0_dp/(4.0E0_dp*pi))
+        ylm(1) = fac*sqrt((1.0E0_dp-x*x)/2.0E0_dp)
+        ylm(2) = fac*x
+        ylm(3) = -ylm(1)
 ! l>1
-  else
-    ylm(1) = 1.0d0
-    ylm(2) = x
-    do i = 2, l
-      ylm(i+1) = ((2*i-1)*x*ylm(i)-(i-1)*ylm(i-1))/i
-    end do
-    fac = 1.0d0/sqrt(1.0d0-x*x)
-    do m = 1, l
-      lm = l + m
-      ylm(lm+1) = fac*(-(l-m+1)*x*ylm(lm)+(lm-1)*ylm(l))
-      if (m<l) then
-        nn = m + 1
-        do i = nn, l
-          ii = l - i + nn
-          ylm(ii) = fac*(-(ii-m)*x*ylm(ii)+(ii+m-2)*ylm(ii-1))
-        end do
-      end if
-    end do
-    fac = sqrt((2*l+1)/(4.0d0*pi))
-    ylm(l+1) = fac*ylm(l+1)
-    do m = 1, l
-      fac = -fac/sqrt(dble((l+m)*(l-m+1)))
-      lm = l + 1 + m
-      ln = l + 1 - m
-      qq = ylm(lm)
-      ylm(lm) = fac*qq
-      ylm(ln) = abs(fac)*qq
-    end do
-  end if
+      Else
+        ylm(1) = 1.0E0_dp
+        ylm(2) = x
+        Do i = 2, l
+          ylm(i+1) = ((2*i-1)*x*ylm(i)-(i-1)*ylm(i-1))/i
+        End Do
+        fac = 1.0E0_dp/sqrt(1.0E0_dp-x*x)
+        Do m = 1, l
+          lm = l + m
+          ylm(lm+1) = fac*(-(l-m+1)*x*ylm(lm)+(lm-1)*ylm(l))
+          If (m<l) Then
+            nn = m + 1
+            Do i = nn, l
+              ii = l - i + nn
+              ylm(ii) = fac*(-(ii-m)*x*ylm(ii)+(ii+m-2)*ylm(ii-1))
+            End Do
+          End If
+        End Do
+        fac = sqrt((2*l+1)/(4.0E0_dp*pi))
+        ylm(l+1) = fac*ylm(l+1)
+        Do m = 1, l
+          fac = -fac/sqrt(real((l+m)*(l-m+1),kind=dp))
+          lm = l + 1 + m
+          ln = l + 1 - m
+          qq = ylm(lm)
+          ylm(lm) = fac*qq
+          ylm(ln) = abs(fac)*qq
+        End Do
+      End If
 
-  return
-100 format (/, /, 3x, '==invalid argument for spher; x=', d24.16, ' ==')
-end subroutine
+      Return
+100   Format (/, /, 3X, '==invalid argument for spher; x=', D24.16, ' ==')
+    End Subroutine

@@ -204,7 +204,7 @@ DO i1 = 1,naez
 ! ---------------------------------------------------------------------
       IF ( it == 1 ) THEN
         DO lm = 1,lmxsp
-          IF ( ABS(DIMAG(stest(lm))) > bound ) THEN
+          IF ( ABS(AIMAG(stest(lm))) > bound ) THEN
             WRITE (6,*) ' ERROR: Imaginary contribution',  &
                 ' to REAL lattice sum'
             STOP

@@ -1,4 +1,5 @@
-subroutine calccgc(ltab, kaptab, nmuetab, cgc, nkmax, nmuemax, nkmpmax)
+    Subroutine calccgc(ltab, kaptab, nmuetab, cgc, nkmax, nmuemax, nkmpmax)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *   CLEBSCH-GORDON-COEFFICIENTS     CGC(IKM,IS)                    *
@@ -9,48 +10,48 @@ subroutine calccgc(ltab, kaptab, nmuetab, cgc, nkmax, nmuemax, nkmpmax)
 !   *                                                                  *
 !   ********************************************************************
 
-  implicit none
+      Implicit None
 
 ! Dummy arguments
-  integer :: nkmax, nkmpmax, nmuemax
-  real *8 :: cgc(nkmpmax, 2)
-  integer :: kaptab(nmuemax), ltab(nmuemax), nmuetab(nmuemax)
+      Integer :: nkmax, nkmpmax, nmuemax
+      Real (Kind=dp) :: cgc(nkmpmax, 2)
+      Integer :: kaptab(nmuemax), ltab(nmuemax), nmuetab(nmuemax)
 
 ! Local variables
-  integer :: ikm, k, kappa, m
-  real *8 :: j, l, mue, twolp1
+      Integer :: ikm, k, kappa, m
+      Real (Kind=dp) :: j, l, mue, twolp1
 
-  ikm = 0
-  do k = 1, (nkmax+1)
-    l = ltab(k)
-    kappa = kaptab(k)
-    j = abs(kappa) - 0.5d0
-    mue = -j - 1.0d0
-    twolp1 = 2.0d0*l + 1.0d0
+      ikm = 0
+      Do k = 1, (nkmax+1)
+        l = ltab(k)
+        kappa = kaptab(k)
+        j = abs(kappa) - 0.5E0_dp
+        mue = -j - 1.0E0_dp
+        twolp1 = 2.0E0_dp*l + 1.0E0_dp
 
-    if (kappa<0) then
+        If (kappa<0) Then
 
 !     J = L + 1/2
-      do m = 1, nmuetab(k)
+          Do m = 1, nmuetab(k)
 
-        mue = mue + 1.0d0
-        ikm = ikm + 1
-        cgc(ikm, 1) = dsqrt((l-mue+0.5d0)/twolp1)
-        cgc(ikm, 2) = dsqrt((l+mue+0.5d0)/twolp1)
-      end do
-    else
+            mue = mue + 1.0E0_dp
+            ikm = ikm + 1
+            cgc(ikm, 1) = sqrt((l-mue+0.5E0_dp)/twolp1)
+            cgc(ikm, 2) = sqrt((l+mue+0.5E0_dp)/twolp1)
+          End Do
+        Else
 !     J = L - 1/2
-      do m = 1, nmuetab(k)
+          Do m = 1, nmuetab(k)
 
-        mue = mue + 1.0d0
-        ikm = ikm + 1
-        cgc(ikm, 1) = dsqrt((l+mue+0.5d0)/twolp1)
-        cgc(ikm, 2) = -dsqrt((l-mue+0.5d0)/twolp1)
+            mue = mue + 1.0E0_dp
+            ikm = ikm + 1
+            cgc(ikm, 1) = sqrt((l+mue+0.5E0_dp)/twolp1)
+            cgc(ikm, 2) = -sqrt((l-mue+0.5E0_dp)/twolp1)
 
-      end do
-    end if
+          End Do
+        End If
 
 
-  end do
+      End Do
 
-end subroutine
+    End Subroutine

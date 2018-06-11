@@ -1,4 +1,5 @@
-subroutine dinv33(matrix, iopt, invers, det)
+    Subroutine dinv33(matrix, iopt, invers, det)
+      Use mod_datatypes, Only: dp
 !- Inverts 3X3 matrix
 ! ----------------------------------------------------------------------
 !i Inputs:
@@ -13,30 +14,30 @@ subroutine dinv33(matrix, iopt, invers, det)
 !r Remarks:
 !r  To generate reciprocal lattice vectors, call dinv33(plat,3,plat)
 ! ----------------------------------------------------------------------
-  implicit none
+      Implicit None
 ! Passed parameters:                                                    
-  integer :: iopt
-  double precision :: matrix(3, 3), invers(3, 3), det
+      Integer :: iopt
+      Real (Kind=dp) :: matrix(3, 3), invers(3, 3), det
 ! Local parameters:                                                     
-  integer :: i, j
-  double precision :: ddot1, twopi, pi
-  parameter (pi=3.141592653589793d0)
-  parameter (twopi=2.d0*pi)
+      Integer :: i, j
+      Real (Kind=dp) :: ddot1, twopi, pi
+      Parameter (pi=3.141592653589793E0_dp)
+      Parameter (twopi=2.E0_dp*pi)
 
 ! external calls:                                                       
-  external :: cross, ddot1, dscal1, dswap1
+      External :: cross, ddot1, dscal1, dswap1
 
-  call cross(matrix(1,2), matrix(1,3), invers(1,1))
-  call cross(matrix(1,3), matrix(1,1), invers(1,2))
-  call cross(matrix(1,1), matrix(1,2), invers(1,3))
-  det = ddot1(3, matrix, 1, invers, 1)
-  if (iopt>=2) det = det/twopi
-  if (mod(iopt,2)==0) then
-    do i = 1, 3
-      do j = i + 1, 3
-        call dswap1(1, invers(i,j), 1, invers(j,i), 1)
-      end do
-    end do
-  end if
-  call dscal1(9, 1.d0/det, invers, 1)
-end subroutine
+      Call cross(matrix(1,2), matrix(1,3), invers(1,1))
+      Call cross(matrix(1,3), matrix(1,1), invers(1,2))
+      Call cross(matrix(1,1), matrix(1,2), invers(1,3))
+      det = ddot1(3, matrix, 1, invers, 1)
+      If (iopt>=2) det = det/twopi
+      If (mod(iopt,2)==0) Then
+        Do i = 1, 3
+          Do j = i + 1, 3
+            Call dswap1(1, invers(i,j), 1, invers(j,i), 1)
+          End Do
+        End Do
+      End If
+      Call dscal1(9, 1.E0_dp/det, invers, 1)
+    End Subroutine

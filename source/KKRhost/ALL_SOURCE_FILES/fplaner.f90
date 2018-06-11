@@ -1,4 +1,5 @@
-subroutine fplaner(alpha, g, r)
+    Subroutine fplaner(alpha, g, r)
+      Use mod_datatypes, Only: dp
 ! ************************************************
 ! This sub calculates the derivatives of the real
 ! space contribution to the ewald sum .
@@ -15,26 +16,27 @@ subroutine fplaner(alpha, g, r)
 
 ! ************************************************
 
-  implicit none
-  double precision :: alpha, g(0:4), r
-  integer :: l
-  double precision :: derfc, lamda, er, ex, pi, pref, sqpi
+      Implicit None
+      Real (Kind=dp) :: alpha, g(0:4), r
+      Integer :: l
+      Real (Kind=dp) :: derfc, lamda, er, ex, pi, pref, sqpi
 
-  do l = 0, 4
-    g(l) = 0.d0
-  end do
-  pi = 4.d0*atan(1.d0)
-  sqpi = sqrt(pi)
-  er = derfc(alpha)
-  ex = exp(-alpha*alpha)
-  lamda = alpha/r
+      Do l = 0, 4
+        g(l) = 0.E0_dp
+      End Do
+      pi = 4.E0_dp*atan(1.E0_dp)
+      sqpi = sqrt(pi)
+      er = derfc(alpha)
+      ex = exp(-alpha*alpha)
+      lamda = alpha/r
 
-  g(0) = er/r
+      g(0) = er/r
 
-  pref = sqrt(5.d0/pi)/4.d0
-  g(2) = -pref*(er/r/r/r+ex*2.d0*lamda/r/r/sqpi)
+      pref = sqrt(5.E0_dp/pi)/4.E0_dp
+      g(2) = -pref*(er/r/r/r+ex*2.E0_dp*lamda/r/r/sqpi)
 
-  pref = 3.d0*sqrt(9.d0/pi)/16.d0/9.d0
-  g(4) = pref*(9.d0*er+ex*(12.d0*alpha**3+18.d0*alpha)/sqpi)/r/r/r/r/r
+      pref = 3.E0_dp*sqrt(9.E0_dp/pi)/16.E0_dp/9.E0_dp
+      g(4) = pref*(9.E0_dp*er+ex*(12.E0_dp*alpha**3+18.E0_dp*alpha)/sqpi)/r/r/ &
+        r/r/r
 
-end subroutine
+    End Subroutine

@@ -1,5 +1,7 @@
-subroutine relpotcvt(icall, vm2z, zin, rin, drdiin, ircut, vtrel, btrel, zrel, &
-  rmrel, jwsrel, drdirel, r2drdirel, irshift, ipand, irmd, npotd, natypd)
+    Subroutine relpotcvt(icall, vm2z, zin, rin, drdiin, ircut, vtrel, btrel, &
+      zrel, rmrel, jwsrel, drdirel, r2drdirel, irshift, ipand, irmd, npotd, &
+      natypd)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   * driving routine to convert the TB-KKR potential from the non-    *
@@ -25,87 +27,87 @@ subroutine relpotcvt(icall, vm2z, zin, rin, drdiin, ircut, vtrel, btrel, zrel, &
 !   *                                                                  *
 !   ********************************************************************
 
-  implicit none
+      Implicit None
 
 !PARAMETER definitions
-  integer :: nspinpot
-  parameter (nspinpot=2)
+      Integer :: nspinpot
+      Parameter (nspinpot=2)
 
 ! Scalar arguments
-  integer :: icall, ipand, irmd, npotd, natypd
+      Integer :: icall, ipand, irmd, npotd, natypd
 
 ! Array arguments
-  double precision :: vm2z(irmd, npotd)
-  double precision :: zin(natypd), rin(irmd, natypd)
-  double precision :: drdiin(irmd, natypd)
-  integer :: ircut(0:ipand, natypd)
+      Real (Kind=dp) :: vm2z(irmd, npotd)
+      Real (Kind=dp) :: zin(natypd), rin(irmd, natypd)
+      Real (Kind=dp) :: drdiin(irmd, natypd)
+      Integer :: ircut(0:ipand, natypd)
 
-  double precision :: vtrel(irmd, natypd), btrel(irmd, natypd)
-  double precision :: drdirel(irmd, natypd), r2drdirel(irmd, natypd)
-  double precision :: rmrel(irmd, natypd)
-  integer :: irshift(natypd), jwsrel(natypd), zrel(natypd)
+      Real (Kind=dp) :: vtrel(irmd, natypd), btrel(irmd, natypd)
+      Real (Kind=dp) :: drdirel(irmd, natypd), r2drdirel(irmd, natypd)
+      Real (Kind=dp) :: rmrel(irmd, natypd)
+      Integer :: irshift(natypd), jwsrel(natypd), zrel(natypd)
 
 ! Local scalars
-  double precision :: vdn, vup
-  integer :: it, ir, ip, ipot, ishift, jr
+      Real (Kind=dp) :: vdn, vup
+      Integer :: it, ir, ip, ipot, ishift, jr
 
 ! Intrinsic Functions
-  intrinsic :: nint
+      Intrinsic :: nint
 
 ! External Subroutines
-  external :: rinit
+      External :: rinit
 
 ! ------------------------------------------------------- INITIALISATION
-  if (icall==1) then
-    call rinit(irmd*natypd, rmrel)
-    call rinit(irmd*natypd, drdirel)
-    call rinit(irmd*natypd, r2drdirel)
-    do it = 1, natypd
-      jwsrel(it) = 0
-      irshift(it) = 0
-      zrel(it) = 0
-    end do
-  end if
-  call rinit(irmd*natypd, vtrel)
-  call rinit(irmd*natypd, btrel)
+      If (icall==1) Then
+        Call rinit(irmd*natypd, rmrel)
+        Call rinit(irmd*natypd, drdirel)
+        Call rinit(irmd*natypd, r2drdirel)
+        Do it = 1, natypd
+          jwsrel(it) = 0
+          irshift(it) = 0
+          zrel(it) = 0
+        End Do
+      End If
+      Call rinit(irmd*natypd, vtrel)
+      Call rinit(irmd*natypd, btrel)
 ! ------------------------------------------------------- INITIALISATION
 
 ! *************************************************************** NATYPD
-  do it = 1, natypd
+      Do it = 1, natypd
 ! ================================================================ ICALL
 !                                       variables require init only once
-    if (icall==1) then
+        If (icall==1) Then
 
 ! skip first mesh point and also the second if IRCUT(1,IT) = WS-rad odd,
 ! since JWSREL(IT) must be odd
 
-      ishift = 1
-      if (mod(ircut(1,it),2)==1) ishift = 2
-      ir = 0
+          ishift = 1
+          If (mod(ircut(1,it),2)==1) ishift = 2
+          ir = 0
 ! ----------------------------------------------------------------------
-      do jr = 1 + ishift, ircut(1, it)
-        ir = ir + 1
-        rmrel(ir, it) = rin(jr, it)
-        drdirel(ir, it) = drdiin(jr, it)
-        r2drdirel(ir, it) = rmrel(ir, it)*rmrel(ir, it)*drdirel(ir, it)
-      end do
+          Do jr = 1 + ishift, ircut(1, it)
+            ir = ir + 1
+            rmrel(ir, it) = rin(jr, it)
+            drdirel(ir, it) = drdiin(jr, it)
+            r2drdirel(ir, it) = rmrel(ir, it)*rmrel(ir, it)*drdirel(ir, it)
+          End Do
 ! ----------------------------------------------------------------------
-      jwsrel(it) = ir
-      irshift(it) = ishift
-      zrel(it) = nint(zin(it))
-    end if
+          jwsrel(it) = ir
+          irshift(it) = ishift
+          zrel(it) = nint(zin(it))
+        End If
 ! ================================================================ ICALL
-    ipot = (it-1)*nspinpot + 1
-    ishift = irshift(it)
+        ipot = (it-1)*nspinpot + 1
+        ishift = irshift(it)
 ! ----------------------------------------------------------------------
-    do ir = 1, jwsrel(it)
-      ip = ir + ishift
-      vdn = -2d0*zin(it)/rin(ip, it) + vm2z(ip, ipot)
-      vup = -2d0*zin(it)/rin(ip, it) + vm2z(ip, ipot+1)
-      vtrel(ir, it) = (vup+vdn)/2.0d0
-      btrel(ir, it) = (vup-vdn)/2.0d0
-    end do
+        Do ir = 1, jwsrel(it)
+          ip = ir + ishift
+          vdn = -2E0_dp*zin(it)/rin(ip, it) + vm2z(ip, ipot)
+          vup = -2E0_dp*zin(it)/rin(ip, it) + vm2z(ip, ipot+1)
+          vtrel(ir, it) = (vup+vdn)/2.0E0_dp
+          btrel(ir, it) = (vup-vdn)/2.0E0_dp
+        End Do
 ! ----------------------------------------------------------------------
-  end do
+      End Do
 ! *************************************************************** NATYPD
-end subroutine
+    End Subroutine

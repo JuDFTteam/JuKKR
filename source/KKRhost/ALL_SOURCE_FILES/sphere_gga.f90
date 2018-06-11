@@ -10,6 +10,7 @@ subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
 !     spherical harmonics.
 !     Phivos Mavropoulos, July 2007.
 !-----------------------------------------------------------------------
+  use mod_DataTypes
   implicit none
 
 !.. Scalar Arguments ..
@@ -162,6 +163,7 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
 !
 !
 ! Ph.Mavropoulos, Juelich, July 2007
+  use mod_DataTypes
   implicit none
 ! Parameters:
   integer :: lmaxd, l4maxd
@@ -227,15 +229,15 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
 ! Following taken from KKR program (routine ymy, by M.Weinert).
   fac = 1.0d0
   do mm = 0, lmax - 1
-    fac = -dfloat(2*mm-1)*fac
+    fac = -real(2*mm-1, kind=dp)*fac
     plm(mm, mm) = fac
-    plm(mm+1, mm) = dfloat(2*mm+1)*cth*fac
+    plm(mm+1, mm) = real(2*mm+1, kind=dp)*cth*fac
 
 !--->    recurse upward in l
 
     do ll = mm + 2, lmax
-      plm(ll, mm) = (dfloat(2*ll-1)*cth*plm(ll-1,mm)-dfloat(ll+mm-1)*plm(ll-2, &
-        mm))/dfloat(ll-mm)
+      plm(ll, mm) = (real(2*ll-1, kind=dp)*cth*plm(ll-1,mm)-real(ll+mm-1, kind=dp)*plm(ll-2, &
+        mm))/real(ll-mm, kind=dp)
     end do
     fac = fac*sth
   end do
@@ -277,7 +279,7 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
   ii = 0
   do ll = 0, lmax
     ii = ii + ll + 1
-    aa = dsqrt(dfloat(2*ll+1)/fpi)
+    aa = dsqrt(real(2*ll+1, kind=dp)/fpi)
     cd = 1.d0
     ylm(ii) = aa*plm(ll, 0)
     dydfi(ii) = 0.d0
@@ -291,7 +293,7 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
     do mm = 1, ll
       ipm = ii + mm
       imm = ii - mm
-      tt = dfloat((ll+1-mm)*(ll+mm))
+      tt = real((ll+1-mm)*(ll+mm), kind=dp)
       cd = cd/tt
       tt = aa*dsqrt(cd)
 
@@ -301,10 +303,10 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
       ylm(ipm) = qlm(ipm)*cmfi(mm)
       ylm(imm) = sgmm*qlm(imm)*smfi(mm)
 
-      dydfi(ipm) = -dfloat(mm)*ylm(imm)
-      dydfi(imm) = dfloat(mm)*ylm(ipm)
-      d2ydfi2(ipm) = -dfloat(mm*mm)*ylm(ipm)
-      d2ydfi2(imm) = -dfloat(mm*mm)*ylm(imm)
+      dydfi(ipm) = -real(mm, kind=dp)*ylm(imm)
+      dydfi(imm) = real(mm, kind=dp)*ylm(ipm)
+      d2ydfi2(ipm) = -real(mm*mm, kind=dp)*ylm(ipm)
+      d2ydfi2(imm) = -real(mm*mm, kind=dp)*ylm(imm)
 
       sgm = -sgm
       sgmm = -sgmm
@@ -322,14 +324,14 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
 ! Start with l=1.
   do ll = 1, lmax
     ii = ll*(ll+1) + 1 ! (position of m=0 harmonic in array)
-    aa = dfloat(ll*(ll+1))
+    aa = real(ll*(ll+1), kind=dp)
 
 ! Take special care of m=0 harmonic due to 1/sqrt(2)
     dydth(ii) = -dsqrt(aa)*qlm(ii+1)/rtwo
 
     aux = -2.d0*aa*qlm(ii)
-    if (ll>1) aux = aux + (qlm(ii-2)+qlm(ii+2))*dsqrt(dfloat((ll-1)*ll*(ll+ &
-      1)*(ll+2)))
+    if (ll>1) aux = aux + (qlm(ii-2)+qlm(ii+2))*dsqrt(real((ll-1)*ll*(ll+ &
+      1)*(ll+2), kind=dp))
     d2ydth2(ii) = 0.25d0*aux/rtwo
 
     do mm = 1, ll
@@ -341,21 +343,21 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
       lpmp1 = ll + mm + 1
       lmmp1 = ll - mm + 1
 ! Apply Eq. (A1)
-      aux = qlm(ipm-1)*dsqrt(dfloat(lpm*lmmp1))
-      if (mm<ll) aux = aux - qlm(ipm+1)*dsqrt(dfloat(lpmp1*lmm))
+      aux = qlm(ipm-1)*dsqrt(real(lpm*lmmp1, kind=dp))
+      if (mm<ll) aux = aux - qlm(ipm+1)*dsqrt(real(lpmp1*lmm, kind=dp))
       aux = 0.5d0*aux
 
       dydth(ipm) = aux*cmfi(mm)
       dydth(imm) = aux*smfi(mm)
 
-      d2ydthdfi(ipm) = -dfloat(mm)*aux*smfi(mm)
-      d2ydthdfi(imm) = dfloat(mm)*aux*cmfi(mm)
+      d2ydthdfi(ipm) = -real(mm, kind=dp)*aux*smfi(mm)
+      d2ydthdfi(imm) = real(mm, kind=dp)*aux*cmfi(mm)
 
 ! Apply Eq. (B1)
-      aux = -qlm(ipm)*dfloat(lmm*lpmp1+lpm*lmmp1)
-      if (mm<ll-1) aux = aux + qlm(ipm+2)*dsqrt(dfloat((lmm-1)*lmm*lpmp1*(lpm+ &
-        2)))
-      aux = aux + qlm(ipm-2)*dsqrt(dfloat(lmmp1*(lmm+2)*(lpm-1)*lpm))
+      aux = -qlm(ipm)*real(lmm*lpmp1+lpm*lmmp1, kind=dp)
+      if (mm<ll-1) aux = aux + qlm(ipm+2)*dsqrt(real((lmm-1)*lmm*lpmp1*(lpm+ &
+        2), kind=dp))
+      aux = aux + qlm(ipm-2)*dsqrt(real(lmmp1*(lmm+2)*(lpm-1)*lpm, kind=dp))
       aux = 0.25d0*aux
 
       d2ydth2(ipm) = aux*cmfi(mm)

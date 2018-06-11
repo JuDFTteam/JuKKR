@@ -436,29 +436,14 @@ contains
       external :: readimppot
       !     ..
       !     .. Intrinsic Functions ..
-      intrinsic :: ATAN,DABS,DBLE,DIMAG,LOG,MAX,SQRT,product,shape
+      intrinsic :: ATAN,DABS,DBLE,LOG,MAX,SQRT,product,shape
       !     ..
       !     ..
       !-------------------------------------------------------------------------
       ! Write version info:
       !-------------------------------------------------------------------------
-      write(*,2004)     'Screened Korringa-Kohn-Rostoker ',                   &
-                        'Electronic Structure Code',                          &
-                        'for Bulk and Interfaces',                            &
-                        'Juelich-Munich 2001 - 2016',                         &
-                        ' Code version: ',trim(version1),                     &
-                        ' Compile options:', trim(version2), trim(version3),  &
-                           trim(version4),                                    &
-                        ' serial number for files:', serialnr
-      write(1337,2004)  'Screened Korringa-Kohn-Rostoker ',                   &
-                        'Electronic Structure Code',                          &
-                        'for Bulk and Interfaces',                            &
-                        'Juelich-Munich 2001 - 2016',                         &
-                        ' Code version: ',trim(version1),                     &
-                        ' Compile options:', trim(version2), trim(version3),  &
-                           trim(version4),                                    &
-                        ' serial number for files: ', serialnr
-      2004  format(/79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A/)//2A/79(1H*)/)
+      call print_versionserial (6, version1, version2, version3, version4, serialnr)
+      call print_versionserial (1337, version1, version2, version3, version4, serialnr)
 
 #ifdef CPP_OMPSTUFF
 !$omp parallel shared(nth) private(ith)
@@ -844,9 +829,9 @@ contains
         inquire(file='emesh.dat',exist=emeshfile)                      ! susc
         write(*,'("main0: Runflag KKRSUSC is set.")')                  ! susc
         if (emeshfile) then                                            ! susc
-          write(*,'("main0: File emesh.dat exists and will "$)')       ! susc
+          write(*,'("main0: File emesh.dat exists and will ")', advance='no')       ! susc
           write(*,                            '("be read in.")')       ! susc
-          write(*,'("       Energy contour from inputcard "$)')        ! susc
+          write(*,'("       Energy contour from inputcard ")', advance='no')        ! susc
           write(*,                 '("will be overwritten!")')         ! susc
           open(file='emesh.dat',unit=50)                               ! susc
             read(50,*) ielast                                          ! susc
@@ -1701,5 +1686,23 @@ contains
       MAXMESH     = 1
 
    end subroutine init_mesh_variables
+
+   subroutine print_versionserial(iunit, version1, version2, version3, version4, serialnr)
+      implicit none
+      integer, intent(in) :: iunit
+      character (len=*), intent(in) :: version1
+      character (len=*), intent(in) :: version2
+      character (len=*), intent(in) :: version3
+      character (len=*), intent(in) :: version4
+      character (len=*), intent(in) :: serialnr
+
+      write(iunit,'(1A)') '     Screened Korringa-Kohn-Rostoker Electronic Structure Code'                          
+      write(iunit,'(1A)') '                      for Bulk and Interfaces'                            
+      write(iunit,'(1A)') '                    Juelich-Munich 2001 - 2018'                         
+      write(iunit,'(1A)') ''
+      write(iunit,'(2A)') '  Code version: ',trim(version1)                     
+      write(iunit,'(6A)') '  Compile options: ', trim(version2), ' ', trim(version3), ' ', trim(version4)                                    
+      write(iunit,'(2A)') '  serial number for files: ', serialnr
+   end subroutine print_versionserial
 
 end module mod_main0

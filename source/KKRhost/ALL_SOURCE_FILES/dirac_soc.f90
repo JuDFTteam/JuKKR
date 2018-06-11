@@ -1,6 +1,6 @@
 subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
   cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, dxp, pr, qr, pi, &
-  qi, dp, dq, nrmax)
+  qi, d_p, dq, nrmax)
 !   ********************************************************************
 !   *                                                                  *
 !   *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
@@ -23,6 +23,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
 !   ********************************************************************
 
   use :: mod_types, only: t_inc
+  use mod_DataTypes
   implicit none
 
 ! PARAMETER definitions
@@ -42,7 +43,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
   integer :: it, kap1, kap2, l, nmesh, nrmax, nucleus, z
   double complex :: pis
   double precision :: b(nrmax), dovr(nrmax), drdi(nrmax), r(nrmax), v(nrmax)
-  double complex :: dp(2, 2, nrmax), dq(2, 2, nrmax), dxp(2, 2), &
+  double complex :: d_p(2, 2, nrmax), dq(2, 2, nrmax), dxp(2, 2), &
     pi(2, 2, nrmax), pr(2, 2, nrmax), qi(2, 2, nrmax), qr(2, 2, nrmax)
 
 !  Local variables
@@ -234,7 +235,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
         do i = 1, nsol
           pr(i, j, n) = pc(i, j, 0)*rpwgpm
           qr(i, j, n) = qc(i, j, 0)*rpwgpm
-          dp(i, j, n) = pc(i, j, 0)*rpwgpm*gam(j)*dovr(n)
+          d_p(i, j, n) = pc(i, j, 0)*rpwgpm*gam(j)*dovr(n)
           dq(i, j, n) = qc(i, j, 0)*rpwgpm*gam(j)*dovr(n)
         end do
 
@@ -245,7 +246,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
           do i = 1, nsol
             pr(i, j, n) = pr(i, j, n) + pc(i, j, m)*rpwgpm
             qr(i, j, n) = qr(i, j, n) + qc(i, j, m)*rpwgpm
-            dp(i, j, n) = dp(i, j, n) + pc(i, j, m)*rpwgpm*gpm*dovr(n)
+            d_p(i, j, n) = d_p(i, j, n) + pc(i, j, m)*rpwgpm*gpm*dovr(n)
             dq(i, j, n) = dq(i, j, n) + qc(i, j, m)*rpwgpm*gpm*dovr(n)
           end do
 
@@ -267,18 +268,18 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
         do i = 1, nsol
           pr(i, j, n) = c0
           qr(i, j, n) = c0
-          dp(i, j, n) = c0
+          d_p(i, j, n) = c0
           dq(i, j, n) = c0
         end do
       end do
 
-      zz = cdsqrt(s0*t0)*r(n)
+      zz = sqrt(s0*t0)*r(n)
 
       do j = 1, nsol
         pr(j, j, n) = cjlz(l, zz)*r(n)
-        dp(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
+        d_p(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
 
-        qr(j, j, n) = (dp(j,j,n)/drdi(n)+pr(j,j,n)*(kpx(j)/r(n)))/s0
+        qr(j, j, n) = (d_p(j,j,n)/drdi(n)+pr(j,j,n)*(kpx(j)/r(n)))/s0
         dq(j, j, n) = qr(j, j, n)*(kpx(j)/r(n)) - pr(j, j, n)*t0
       end do
     end do
@@ -300,7 +301,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
         qnew(i, j) = qr(i, j, n-1)
 
         do ip = 1, nabm
-          pnew(i, j) = pnew(i, j) + apred(ip)*dp(i, j, n-ip)
+          pnew(i, j) = pnew(i, j) + apred(ip)*d_p(i, j, n-ip)
           qnew(i, j) = qnew(i, j) + apred(ip)*dq(i, j, n-ip)
         end do
       end do
@@ -324,7 +325,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
           k = 3 - i
           pold(i, j) = pnew(i, j)
           qold(i, j) = qnew(i, j)
-          dp(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + &
+          d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + &
             (emvqq+bqq*cgmd(i))*qnew(i, j)
           dq(i, j, n) = kpx(i)*qnew(i, j)*dovr(n) + (emvpp+bpp*cgd(i))*pnew(i, &
             j) + bpp*cgo*pnew(k, j) + socpp(i)*pnew(i, j)
@@ -332,7 +333,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
           pnew(i, j) = pr(i, j, n-1)
           qnew(i, j) = qr(i, j, n-1)
           do ic = 0, nacorr
-            pnew(i, j) = pnew(i, j) + acorr(ic)*dp(i, j, n-ic)
+            pnew(i, j) = pnew(i, j) + acorr(ic)*d_p(i, j, n-ic)
             qnew(i, j) = qnew(i, j) + acorr(ic)*dq(i, j, n-ic)
           end do
         end do
@@ -341,12 +342,12 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       do j = 1, nsol
         do i = 1, nsol
           diffa = pold(i, j) - pnew(i, j)
-          if (abs(dreal(diffa))>(tol*abs(dreal(pnew(i,j))))) go to 100
-          if (abs(dimag(diffa))>(tol*abs(dimag(pnew(i,j))))) go to 100
+          if (abs(real(diffa, kind=dp))>(tol*abs(real(pnew(i,j), kind=dp)))) go to 100
+          if (abs(aimag(diffa))>(tol*abs(aimag(pnew(i,j))))) go to 100
 
           diffb = qold(i, j) - qnew(i, j)
-          if (abs(dreal(diffb))>(tol*abs(dreal(qnew(i,j))))) go to 100
-          if (abs(dimag(diffb))>(tol*abs(dimag(qnew(i,j))))) go to 100
+          if (abs(real(diffb, kind=dp))>(tol*abs(real(qnew(i,j), kind=dp)))) go to 100
+          if (abs(aimag(diffb))>(tol*abs(aimag(qnew(i,j))))) go to 100
         end do
       end do
       go to 110
@@ -365,7 +366,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
         k = 3 - i
         pr(i, j, n) = pnew(i, j)
         qr(i, j, n) = qnew(i, j)
-        dp(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i, &
+        d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i, &
           j)
         dq(i, j, n) = kpx(i)*qnew(i, j)*dovr(n) + (emvpp+bpp*cgd(i))*pnew(i, j &
           ) + bpp*cgo*pnew(k, j) + socpp(i)*pnew(i, j)
@@ -378,7 +379,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
 
   do i = 1, 2
     do j = 1, 2
-      dxp(i, j) = dp(i, j, nmesh)
+      dxp(i, j) = d_p(i, j, nmesh)
     end do
   end do
 
@@ -402,14 +403,14 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       i = 3 - j
       pi(j, j, n) = cjlz(l, arg)*r(n)
       qi(j, j, n) = cfac*sk(j)*cjlz(lb(j), arg)*r(n)*c
-      dp(j, j, n) = (dble(l+1)*cjlz(l,arg)-arg*cjlz(l+1,arg))*drdi(n)
+      d_p(j, j, n) = (dble(l+1)*cjlz(l,arg)-arg*cjlz(l+1,arg))*drdi(n)
       m = lb(j)
       dq(j, j, n) = cfac*sk(j)*(dble(m+1)*cjlz(m,arg)-arg*cjlz(m+1,arg))* &
         drdi(n)*c
 
       pi(i, j, n) = c0
       qi(i, j, n) = c0
-      dp(i, j, n) = c0
+      d_p(i, j, n) = c0
       dq(i, j, n) = c0
     end do
   end do
@@ -436,7 +437,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
 ! *** reinitialize Q using only DP and PI
     do j = 1, nsol
       i = 3 - j
-      qi(j, j, n) = (dp(j,j,n)+kpx(j)*pi(j,j,n)*dovr(n))/(emvqq+bqq*cgmd(j))
+      qi(j, j, n) = (d_p(j,j,n)+kpx(j)*pi(j,j,n)*dovr(n))/(emvqq+bqq*cgmd(j))
       qi(i, j, n) = c0
     end do
 
@@ -452,7 +453,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       do i = 1, nsol
         p1(i, j) = pi(i, j, n)
         q1(i, j) = qi(i, j, n)
-        mp1(i, j) = dp(i, j, n)
+        mp1(i, j) = d_p(i, j, n)
         mq1(i, j) = dq(i, j, n)
       end do
     end do
@@ -574,7 +575,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
           do i = 1, nsol
             pi(i, j, n) = p1(i, j)
             qi(i, j, n) = q1(i, j)
-            dp(i, j, n) = mp1(i, j)
+            d_p(i, j, n) = mp1(i, j)
             dq(i, j, n) = mq1(i, j)
           end do
         end do
@@ -606,7 +607,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
         qnew(i, j) = qi(i, j, n+1)
 
         do ip = 1, nabm
-          pnew(i, j) = pnew(i, j) - apred(ip)*dp(i, j, n+ip)
+          pnew(i, j) = pnew(i, j) - apred(ip)*d_p(i, j, n+ip)
           qnew(i, j) = qnew(i, j) - apred(ip)*dq(i, j, n+ip)
         end do
       end do
@@ -628,7 +629,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
           k = 3 - i
           pold(i, j) = pnew(i, j)
           qold(i, j) = qnew(i, j)
-          dp(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + &
+          d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + &
             (emvqq+bqq*cgmd(i))*qnew(i, j)
           dq(i, j, n) = kpx(i)*qnew(i, j)*dovr(n) + (emvpp+bpp*cgd(i))*pnew(i, &
             j) + bpp*cgo*pnew(k, j) + socpp(i)*pnew(i, j)
@@ -636,7 +637,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
           pnew(i, j) = pi(i, j, n+1)
           qnew(i, j) = qi(i, j, n+1)
           do ic = 0, nacorr
-            pnew(i, j) = pnew(i, j) - acorr(ic)*dp(i, j, n+ic)
+            pnew(i, j) = pnew(i, j) - acorr(ic)*d_p(i, j, n+ic)
             qnew(i, j) = qnew(i, j) - acorr(ic)*dq(i, j, n+ic)
           end do
         end do
@@ -645,12 +646,12 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       do j = 1, nsol
         do i = 1, nsol
           diffa = pold(i, j) - pnew(i, j)
-          if (abs(dreal(diffa))>(tol*abs(dreal(pnew(i,j))))) go to 120
-          if (abs(dimag(diffa))>(tol*abs(dimag(pnew(i,j))))) go to 120
+          if (abs(real(diffa, kind=dp))>(tol*abs(real(pnew(i,j), kind=dp)))) go to 120
+          if (abs(aimag(diffa))>(tol*abs(aimag(pnew(i,j))))) go to 120
 
           diffb = qold(i, j) - qnew(i, j)
-          if (abs(dreal(diffb))>(tol*abs(dreal(qnew(i,j))))) go to 120
-          if (abs(dimag(diffb))>(tol*abs(dimag(qnew(i,j))))) go to 120
+          if (abs(real(diffb, kind=dp))>(tol*abs(real(qnew(i,j), kind=dp)))) go to 120
+          if (abs(aimag(diffb))>(tol*abs(aimag(qnew(i,j))))) go to 120
         end do
       end do
       go to 130
@@ -670,7 +671,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
         k = 3 - i
         pi(i, j, n) = pnew(i, j)
         qi(i, j, n) = qnew(i, j)
-        dp(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i, &
+        d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i, &
           j)
         dq(i, j, n) = kpx(i)*qnew(i, j)*dovr(n) + (emvpp+bpp*cgd(i))*pnew(i, j &
           ) + bpp*cgo*pnew(k, j) + socpp(i)*pnew(i, j)

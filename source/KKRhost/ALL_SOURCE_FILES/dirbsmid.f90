@@ -1,4 +1,6 @@
-subroutine dirbsmid(y, dydx, nv, xs, htot, nstep, yout, b, v, r, drdi, nmesh)
+    Subroutine dirbsmid(y, dydx, nv, xs, htot, nstep, yout, b, v, r, drdi, &
+      nmesh)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *   modified midpoint step to support the  Burlisch-Stoer method   *
@@ -8,43 +10,43 @@ subroutine dirbsmid(y, dydx, nv, xs, htot, nstep, yout, b, v, r, drdi, nmesh)
 !   *                                                                  *
 !   ********************************************************************
 
-  implicit none
+      Implicit None
 
-  include 'sprkkr_rmesh.dim'
+      Include 'sprkkr_rmesh.dim'
 
 ! Dummy arguments
-  real *8 :: htot, xs
-  integer :: nmesh, nstep, nv
-  real *8 :: b(nrmax), drdi(nrmax), r(nrmax), v(nrmax)
-  complex *16 :: dydx(nv), y(nv), yout(nv)
+      Real (Kind=dp) :: htot, xs
+      Integer :: nmesh, nstep, nv
+      Real (Kind=dp) :: b(nrmax), drdi(nrmax), r(nrmax), v(nrmax)
+      Complex (Kind=dp) :: dydx(nv), y(nv), yout(nv)
 
 ! Local variables
-  real *8 :: h, h2, x
-  integer :: i, n
-  complex *16 :: swap, ym(ncfmax), yn(ncfmax)
+      Real (Kind=dp) :: h, h2, x
+      Integer :: i, n
+      Complex (Kind=dp) :: swap, ym(ncfmax), yn(ncfmax)
 
-  h = htot/nstep
-  do i = 1, nv
-    ym(i) = y(i)
-    yn(i) = y(i) + h*dydx(i)
-  end do
-  x = xs + h
+      h = htot/nstep
+      Do i = 1, nv
+        ym(i) = y(i)
+        yn(i) = y(i) + h*dydx(i)
+      End Do
+      x = xs + h
 
-  call dirbsrad(x, yn, yout, drdi, b, v, r, nmesh)
+      Call dirbsrad(x, yn, yout, drdi, b, v, r, nmesh)
 
-  h2 = 2.d0*h
-  do n = 2, nstep
-    do i = 1, nv
-      swap = ym(i) + h2*yout(i)
-      ym(i) = yn(i)
-      yn(i) = swap
-    end do
-    x = x + h
-    call dirbsrad(x, yn, yout, drdi, b, v, r, nmesh)
-  end do
-  do i = 1, nv
-    yout(i) = 0.5d0*(ym(i)+yn(i)+h*yout(i))
+      h2 = 2.E0_dp*h
+      Do n = 2, nstep
+        Do i = 1, nv
+          swap = ym(i) + h2*yout(i)
+          ym(i) = yn(i)
+          yn(i) = swap
+        End Do
+        x = x + h
+        Call dirbsrad(x, yn, yout, drdi, b, v, r, nmesh)
+      End Do
+      Do i = 1, nv
+        yout(i) = 0.5E0_dp*(ym(i)+yn(i)+h*yout(i))
 
-  end do
+      End Do
 
-end subroutine
+    End Subroutine

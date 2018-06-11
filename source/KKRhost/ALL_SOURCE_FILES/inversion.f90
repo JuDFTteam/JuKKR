@@ -1,5 +1,6 @@
 ! ************************************************************************
-subroutine inversion(gllke, invmod, icheck)
+    Subroutine inversion(gllke, invmod, icheck)
+      Use mod_datatypes, Only: dp
 ! ************************************************************************
 ! This subroutine calculates the inversion of a matrix
 ! in 4 different ways depending on the form of the matrix
@@ -10,10 +11,10 @@ subroutine inversion(gllke, invmod, icheck)
 !     INVMOD = 3  ----> sparse matrix inversion scheme
 
 ! ------------------------------------------------------------------------
-  implicit none
+      Implicit None
 
 !     .. parameters ..
-  include 'inc.p'
+      Include 'inc.p'
 ! *  NPOTD = 2 * NATYPD                                               *
 ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
 ! *  NSPIND = 1                                                       *
@@ -23,157 +24,157 @@ subroutine inversion(gllke, invmod, icheck)
 
 ! changed 3.11.99
 
+      Integer :: lmmaxd
+      Parameter (lmmaxd=(krel+korbit+1)*(lmaxd+1)**2)
+      Integer :: almd, ndim
+      Parameter (almd=naezd*lmmaxd, ndim=nprincd*lmmaxd)
+      Complex (Kind=dp) :: ci, czero, cone
+      Parameter (ci=(0.E0_dp,1.E0_dp), czero=(0.E0_dp,0.E0_dp), &
+        cone=(1.E0_dp,0.E0_dp))
 
-  integer :: lmmaxd
-  parameter (lmmaxd=(krel+korbit+1)*(lmaxd+1)**2)
-  integer :: almd, ndim
-  parameter (almd=naezd*lmmaxd, ndim=nprincd*lmmaxd)
-  double complex :: ci, czero, cone
-  parameter (ci=(0.d0,1.d0), czero=(0.d0,0.d0), cone=(1.d0,0.d0))
-
-  double complex :: gllke(almd, almd), gdi(ndim, ndim, nlayerd), &
-    gup(ndim, ndim, nlayerd), gdow(ndim, ndim, nlayerd)
-  double complex, allocatable :: gtemp(:, :)
-  integer :: i, i1, ip1, ii1, il1, ldi1, ip2, ii2, il2, ldi2, j, invmod
-  integer :: lm1, lm2, info, ipvt(almd), nlayer
-  integer :: icheck(naezd/nprincd, naezd/nprincd) 
+      Complex (Kind=dp) :: gllke(almd, almd), gdi(ndim, ndim, nlayerd), &
+        gup(ndim, ndim, nlayerd), gdow(ndim, ndim, nlayerd)
+      Complex (Kind=dp), Allocatable :: gtemp(:, :)
+      Integer :: i, i1, ip1, ii1, il1, ldi1, ip2, ii2, il2, ldi2, j, invmod
+      Integer :: lm1, lm2, info, ipvt(almd), nlayer
+      Integer :: icheck(naezd/nprincd, naezd/nprincd)
 ! total matrix inversion
-  external :: zgetrf, zgetrs, zcopy, invslab
+      External :: zgetrf, zgetrs, zcopy, invslab
 
-  allocate (gtemp(almd,almd))
+      Allocate (gtemp(almd,almd))
 
-  nlayer = naezd/nprincd
+      nlayer = naezd/nprincd
 
-  if (invmod==0) then 
+      If (invmod==0) Then
 
 !     write (6,*) '-------full inversion calculation--------'
 
-    do i = 1, almd
-      do j = 1, almd
-        gtemp(i, j) = czero
-        if (i==j) then
-          gtemp(i, j) = cone
-        end if
-      end do
-    end do
+        Do i = 1, almd
+          Do j = 1, almd
+            gtemp(i, j) = czero
+            If (i==j) Then
+              gtemp(i, j) = cone
+            End If
+          End Do
+        End Do
 
 
 
 
-    call zgetrf(almd, almd, gllke, almd, ipvt, info)
-    call zgetrs('N', almd, almd, gllke, almd, ipvt, gtemp, almd, info)
+        Call zgetrf(almd, almd, gllke, almd, ipvt, info)
+        Call zgetrs('N', almd, almd, gllke, almd, ipvt, gtemp, almd, info)
 ! slab or supercell
-    call zcopy(almd*almd, gtemp, 1, gllke, 1)
+        Call zcopy(almd*almd, gtemp, 1, gllke, 1)
 ! inversion
 
 
-  else if ((invmod>=1) .and. (invmod<=2)) then 
+      Else If ((invmod>=1) .And. (invmod<=2)) Then
 !     this part now is correct also for    ! changes 20/10/99
 !     supercell geometry : 20/10/99
 !---> upper linear part
-    do i1 = 1, nlayerd
-      do ip1 = 1, nprincd
-        do ip2 = 1, nprincd
-          ii1 = (i1-1)*nprincd + ip1
-          ii2 = (i1-1)*nprincd + ip2
-          do lm1 = 1, lmmaxd
-            do lm2 = 1, lmmaxd
-              ldi1 = lmmaxd*(ip1-1) + lm1
-              il1 = lmmaxd*(ii1-1) + lm1
-              ldi2 = lmmaxd*(ip2-1) + lm2
-              il2 = lmmaxd*(ii2-1) + lm2
-              gdi(ldi1, ldi2, i1) = gllke(il1, il2)
-            end do
-          end do
-        end do
-      end do
-    end do
+        Do i1 = 1, nlayerd
+          Do ip1 = 1, nprincd
+            Do ip2 = 1, nprincd
+              ii1 = (i1-1)*nprincd + ip1
+              ii2 = (i1-1)*nprincd + ip2
+              Do lm1 = 1, lmmaxd
+                Do lm2 = 1, lmmaxd
+                  ldi1 = lmmaxd*(ip1-1) + lm1
+                  il1 = lmmaxd*(ii1-1) + lm1
+                  ldi2 = lmmaxd*(ip2-1) + lm2
+                  il2 = lmmaxd*(ii2-1) + lm2
+                  gdi(ldi1, ldi2, i1) = gllke(il1, il2)
+                End Do
+              End Do
+            End Do
+          End Do
+        End Do
 
 
 !---> lower linear part
 
-    do i1 = 1, nlayerd
-      do ip1 = 1, nprincd
-        do ip2 = 1, nprincd
-          do lm1 = 1, lmmaxd
-            do lm2 = 1, lmmaxd
-              ldi1 = lmmaxd*(ip1-1) + lm1
-              ldi2 = lmmaxd*(ip2-1) + lm2
-              if (i1<=(nlayerd-1)) then
-                ii1 = (i1-1)*nprincd + ip1
-                ii2 = i1*nprincd + ip2
-                il1 = lmmaxd*(ii1-1) + lm1
-                il2 = lmmaxd*(ii2-1) + lm2
-                gup(ldi1, ldi2, i1) = gllke(il1, il2)
-              else
-                ii1 = ip1
-                ii2 = (nlayerd-1)*nprincd + ip2
-                il1 = lmmaxd*(ii1-1) + lm1
-                il2 = lmmaxd*(ii2-1) + lm2
-                gdow(ldi1, ldi2, i1) = gllke(il1, il2)
-              end if
-            end do
-          end do
-        end do
-      end do
-    end do
+        Do i1 = 1, nlayerd
+          Do ip1 = 1, nprincd
+            Do ip2 = 1, nprincd
+              Do lm1 = 1, lmmaxd
+                Do lm2 = 1, lmmaxd
+                  ldi1 = lmmaxd*(ip1-1) + lm1
+                  ldi2 = lmmaxd*(ip2-1) + lm2
+                  If (i1<=(nlayerd-1)) Then
+                    ii1 = (i1-1)*nprincd + ip1
+                    ii2 = i1*nprincd + ip2
+                    il1 = lmmaxd*(ii1-1) + lm1
+                    il2 = lmmaxd*(ii2-1) + lm2
+                    gup(ldi1, ldi2, i1) = gllke(il1, il2)
+                  Else
+                    ii1 = ip1
+                    ii2 = (nlayerd-1)*nprincd + ip2
+                    il1 = lmmaxd*(ii1-1) + lm1
+                    il2 = lmmaxd*(ii2-1) + lm2
+                    gdow(ldi1, ldi2, i1) = gllke(il1, il2)
+                  End If
+                End Do
+              End Do
+            End Do
+          End Do
+        End Do
 !     end of the corrected part  20/10/99
 
 
-    do i1 = 1, nlayerd
-      do ip1 = 1, nprincd
-        do ip2 = 1, nprincd
-          do lm1 = 1, lmmaxd
-            do lm2 = 1, lmmaxd
-              ldi1 = lmmaxd*(ip1-1) + lm1
-              ldi2 = lmmaxd*(ip2-1) + lm2
-              if (i1<=(nlayerd-1)) then
-                ii1 = i1*nprincd + ip1
-                ii2 = (i1-1)*nprincd + ip2
-                il1 = lmmaxd*(ii1-1) + lm1
-                il2 = lmmaxd*(ii2-1) + lm2
-                gdow(ldi1, ldi2, i1) = gllke(il1, il2)
-              else
-                ii1 = (nlayerd-1)*nprincd + ip1
-                ii2 = ip2
-                il1 = lmmaxd*(ii1-1) + lm1
-                il2 = lmmaxd*(ii2-1) + lm2
-                gup(ldi1, ldi2, i1) = gllke(il1, il2)
-              end if
-            end do
-          end do
-        end do
-      end do
-    end do
+        Do i1 = 1, nlayerd
+          Do ip1 = 1, nprincd
+            Do ip2 = 1, nprincd
+              Do lm1 = 1, lmmaxd
+                Do lm2 = 1, lmmaxd
+                  ldi1 = lmmaxd*(ip1-1) + lm1
+                  ldi2 = lmmaxd*(ip2-1) + lm2
+                  If (i1<=(nlayerd-1)) Then
+                    ii1 = i1*nprincd + ip1
+                    ii2 = (i1-1)*nprincd + ip2
+                    il1 = lmmaxd*(ii1-1) + lm1
+                    il2 = lmmaxd*(ii2-1) + lm2
+                    gdow(ldi1, ldi2, i1) = gllke(il1, il2)
+                  Else
+                    ii1 = (nlayerd-1)*nprincd + ip1
+                    ii2 = ip2
+                    il1 = lmmaxd*(ii1-1) + lm1
+                    il2 = lmmaxd*(ii2-1) + lm2
+                    gup(ldi1, ldi2, i1) = gllke(il1, il2)
+                  End If
+                End Do
+              End Do
+            End Do
+          End Do
+        End Do
 
 !          write (6,*) '-------slab calculation--------'
 
-    if (invmod==1) then
+        If (invmod==1) Then
 ! supercell geometry inversion
-      call invslab(gdi, gup, gdow, gllke, icheck)
+          Call invslab(gdi, gup, gdow, gllke, icheck, nprincd)
 
 
 !          write (6,*) '-------supercell calculation--------'
-    else if (invmod==2) then 
+        Else If (invmod==2) Then
 
-      call invsupercell(gdi, gup, gdow, gllke, icheck)
+          Call invsupercell(gdi, gup, gdow, gllke, icheck, nprincd)
 
 ! sparse matrix inversion
 
-    end if
+        End If
 !     NOT YET IMPLEMENTED!!!!!!!!!
 
-  else 
+      Else
 
 
 
 
-  end if
+      End If
 
 ! ************************************************************************
-  deallocate (gtemp)
+      Deallocate (gtemp)
 ! ************************************************************************
 ! This subroutine calculates the inversion of a matrix
-  return
+      Return
 ! in 4 different ways depending on the form of the matrix
-end subroutine
+    End Subroutine

@@ -1,4 +1,5 @@
-double precision function ddet33(matrix)
+    Function ddet33(matrix)
+      Use mod_datatypes, Only: dp
 !- calculates the determinant of a 3X3 matrix
 ! ----------------------------------------------------------------------
 !i Inputs:
@@ -6,15 +7,16 @@ double precision function ddet33(matrix)
 !o Outputs:
 !o   ddet33:determinant
 ! ----------------------------------------------------------------------
-  implicit none
+      Implicit None
+      Real (Kind=dp) :: ddet33
 ! Passed parameters:
-  double precision :: matrix(*)
+      Real (Kind=dp) :: matrix(*)
 ! Local parameters:
-  double precision :: ddot, m1cm2(3)
+      Real (Kind=dp) :: ddot, m1cm2(3)
 ! external calls:
-  external :: cross, ddot
+      External :: cross, ddot
 
-  call cross(matrix(4), matrix(7), m1cm2)
-  ddet33 = ddot(3, matrix(1), 1, m1cm2, 1)
+      Call cross(matrix(4), matrix(7), m1cm2)
+      ddet33 = ddot(3, matrix(1), 1, m1cm2, 1)
 
-end function
+    End Function

@@ -1,19 +1,19 @@
 ! ************************************************************************
-integer function length(s, max)
+    Integer Function length(s, max)
 ! ************************************************************************
 
-  character (len=1), intent (inout) :: s(*)
-  integer, intent (in) :: max
+      Character (Len=1), Intent (Inout) :: s(*)
+      Integer, Intent (In) :: max
 
-  integer :: i
+      Integer :: i
 ! ------------------------------------------------------------------------
-  i = max
+      i = max
 
-  do while (s(i)==' ')
-    i = i - 1
-  end do
+      Do While (s(i)==' ')
+        i = i - 1
+      End Do
 
-  length = i
+      length = i
 
-  return
-end function
+      Return
+    End Function

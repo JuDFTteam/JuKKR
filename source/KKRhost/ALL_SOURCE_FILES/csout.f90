@@ -1,4 +1,5 @@
-subroutine csout(f, fint, lmmsqd, irmind, irmd, irmin, ipan, ircut)
+    Subroutine csout(f, fint, lmmsqd, irmind, irmd, irmin, ipan, ircut)
+      Use mod_datatypes, Only: dp
 !-----------------------------------------------------------------------
 !     this subroutine does an outwards integration of llmax
 !     functions f with an extended 3-point-simpson :
@@ -29,54 +30,55 @@ subroutine csout(f, fint, lmmsqd, irmind, irmd, irmin, ipan, ircut)
 !    modified by m. ogura, june 2015
 !-----------------------------------------------------------------------
 !.. Parameters ..
-  double precision :: a1, a2, a3
-  parameter (a1=5.d0/12.d0, a2=8.d0/12.d0, a3=-1.d0/12.d0)
+      Real (Kind=dp) :: a1, a2, a3
+      Parameter (a1=5.E0_dp/12.E0_dp, a2=8.E0_dp/12.E0_dp, &
+        a3=-1.E0_dp/12.E0_dp)
 !..
 !.. Scalar Arguments ..
-  integer :: ipan, irmd, irmind, lmmsqd, irmin
+      Integer :: ipan, irmd, irmind, lmmsqd, irmin
 !..
 !.. Array Arguments ..
-  double complex :: f(lmmsqd, irmind:irmd), fint(lmmsqd, irmind:irmd)
-  integer :: ircut(0:ipan)
+      Complex (Kind=dp) :: f(lmmsqd, irmind:irmd), fint(lmmsqd, irmind:irmd)
+      Integer :: ircut(0:ipan)
 !..
 !.. Local Scalars ..
-  integer :: i, ien, ip, ist, ll
+      Integer :: i, ien, ip, ist, ll
 
 !---> loop over kinks
 
-  do ip = 1, ipan
-    ien = ircut(ip)
-    ist = ircut(ip-1) + 1
+      Do ip = 1, ipan
+        ien = ircut(ip)
+        ist = ircut(ip-1) + 1
 
-    if (ip==1) then
-      ist = irmin
-      do ll = 1, lmmsqd
-        fint(ll, ist) = 0.0d0
-      end do
+        If (ip==1) Then
+          ist = irmin
+          Do ll = 1, lmmsqd
+            fint(ll, ist) = 0.0E0_dp
+          End Do
 
-    else
-      do ll = 1, lmmsqd
-        fint(ll, ist) = fint(ll, ist-1)
-      end do
-    end if
+        Else
+          Do ll = 1, lmmsqd
+            fint(ll, ist) = fint(ll, ist-1)
+          End Do
+        End If
 
 
 !---> calculate fint with an extended 3-point-simpson
 
-    do i = ist, ien - 2, 2
-      do ll = 1, lmmsqd
-        fint(ll, i+1) = fint(ll, i) + f(ll, i)*a1 + f(ll, i+1)*a2 + &
-          f(ll, i+2)*a3
-        fint(ll, i+2) = fint(ll, i+1) + f(ll, i)*a3 + f(ll, i+1)*a2 + &
-          f(ll, i+2)*a1
-      end do
-    end do
-    if (mod(ien-ist,2)==1) then
-      do ll = 1, lmmsqd
-        fint(ll, ien) = fint(ll, ien-1) + f(ll, ien)*a1 + f(ll, ien-1)*a2 + &
-          f(ll, ien-2)*a3
-      end do
-    end if
-  end do
+        Do i = ist, ien - 2, 2
+          Do ll = 1, lmmsqd
+            fint(ll, i+1) = fint(ll, i) + f(ll, i)*a1 + f(ll, i+1)*a2 + &
+              f(ll, i+2)*a3
+            fint(ll, i+2) = fint(ll, i+1) + f(ll, i)*a3 + f(ll, i+1)*a2 + &
+              f(ll, i+2)*a1
+          End Do
+        End Do
+        If (mod(ien-ist,2)==1) Then
+          Do ll = 1, lmmsqd
+            fint(ll, ien) = fint(ll, ien-1) + f(ll, ien)*a1 + &
+              f(ll, ien-1)*a2 + f(ll, ien-2)*a3
+          End Do
+        End If
+      End Do
 
-end subroutine
+    End Subroutine

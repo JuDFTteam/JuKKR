@@ -1,5 +1,6 @@
-subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, &
-  alpharef, dalpharef, lmaxdp1, lmmaxd)
+    Subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, &
+      alpharef, dalpharef, lmaxdp1, lmmaxd)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *  calculates analytically the single-site scattering matrix for a *
@@ -41,107 +42,114 @@ subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, &
 !
 !   ********************************************************************
 
-  implicit none
+      Implicit None
 !..
 !.. Scalar arguments
 !Input:
-  double complex :: eryd ! energy
-  integer :: lmax, lmaxdp1, lmmaxd
-  double precision :: vref, rmtref ! repulsive potential and its radius
+      Complex (Kind=dp) :: eryd ! energy
+      Integer :: lmax, lmaxdp1, lmmaxd
+      Real (Kind=dp) :: vref, rmtref ! repulsive potential and its radius
 
 !Output:
-  integer :: lmtmat
+      Integer :: lmtmat
 !..
 !.. Array arguments ..
 !Output:
-  double complex :: trefll(lmmaxd, lmmaxd) ! t-matrix
-  double complex :: dtrefll(lmmaxd, lmmaxd) ! energy derivative of t-matrix             ! LLY Lloyd
-  double complex :: alpharef(0:lmaxdp1-1), dalpharef(0:lmaxdp1-1) ! alpha matrix and derivative   ! LLY Lloyd
+      Complex (Kind=dp) :: trefll(lmmaxd, lmmaxd) ! t-matrix
+      Complex (Kind=dp) :: dtrefll(lmmaxd, lmmaxd) ! energy derivative of t-matrix             ! LLY Lloyd
+      Complex (Kind=dp) :: alpharef(0:lmaxdp1-1), dalpharef(0:lmaxdp1-1) ! alpha matrix and derivative   ! LLY Lloyd
 !..
 !.. Local scalars
-  integer :: j1, l1, lm1
-  double complex :: a1, b1, da1, db1, tmatanal, dtmatanal
-  double complex :: roote1, roote2
-  double complex :: ci, ciove
+      Integer :: j1, l1, lm1
+      Complex (Kind=dp) :: a1, b1, da1, db1, tmatanal, dtmatanal
+      Complex (Kind=dp) :: roote1, roote2
+      Complex (Kind=dp) :: ci, ciove
 !..
 !.. Local arrays
-  double complex :: bessjw1(0:lmaxdp1), bessjw2(0:lmaxdp1), & ! Bessel & Hankel
-    bessyw1(0:lmaxdp1), bessyw2(0:lmaxdp1), hankws1(0:lmaxdp1), &
-    hankws2(0:lmaxdp1), dbessjw1(0:lmaxdp1), dbessjw2(0:lmaxdp1), & ! Derivatives
-    dhankws1(0:lmaxdp1)
+! Bessel & Hankel
+! Derivatives
+      Complex (Kind=dp) :: bessjw1(0:lmaxdp1), bessjw2(0:lmaxdp1), &
+        bessyw1(0:lmaxdp1), bessyw2(0:lmaxdp1), hankws1(0:lmaxdp1), &
+        hankws2(0:lmaxdp1), dbessjw1(0:lmaxdp1), dbessjw2(0:lmaxdp1), &
+        dhankws1(0:lmaxdp1)
 !..
 !.. Intrinsic functions
-  intrinsic :: sqrt
+      Intrinsic :: sqrt
 !..
 !.. External subroutines
-  external :: beshan, cinit
+      External :: beshan, cinit
 !.. 
 !.. Data statement
-  data ci/(0d0, 1d0)/
+      Data ci/(0E0_dp, 1E0_dp)/
 !..
-  lmtmat = 0
-  call cinit(lmmaxd*lmmaxd, trefll)
-  call cinit(lmmaxd*lmmaxd, dtrefll)
+      lmtmat = 0
+      Call cinit(lmmaxd*lmmaxd, trefll)
+      Call cinit(lmmaxd*lmmaxd, dtrefll)
 
-  roote1 = sqrt(eryd)
-  roote2 = sqrt(eryd-vref)
+      roote1 = sqrt(eryd)
+      roote2 = sqrt(eryd-vref)
 
-  a1 = roote1*rmtref
-  b1 = roote2*rmtref
-  ciove = ci/roote1
+      a1 = roote1*rmtref
+      b1 = roote2*rmtref
+      ciove = ci/roote1
 
 !     Bessel functions and their derivatives:
-  call beshan(hankws1, bessjw1, bessyw1, a1, lmaxdp1)
-  call beshan(hankws2, bessjw2, bessyw2, b1, lmaxdp1)
+      Call beshan(hankws1, bessjw1, bessyw1, a1, lmaxdp1)
+      Call beshan(hankws2, bessjw2, bessyw2, b1, lmaxdp1)
 
-  dbessjw1(0) = -bessjw1(1)/a1
-  dbessjw2(0) = -bessjw2(1)/b1
-  dhankws1(0) = -hankws1(1)/a1
+      dbessjw1(0) = -bessjw1(1)/a1
+      dbessjw2(0) = -bessjw2(1)/b1
+      dhankws1(0) = -hankws1(1)/a1
 
-  do l1 = 1, lmax + 1
-    dbessjw1(l1) = (bessjw1(l1-1)-(l1+1)*bessjw1(l1)/a1)/a1
-    dbessjw2(l1) = (bessjw2(l1-1)-(l1+1)*bessjw2(l1)/b1)/b1
-    dhankws1(l1) = (hankws1(l1-1)-(l1+1)*hankws1(l1)/a1)/a1
-  end do
+      Do l1 = 1, lmax + 1
+        dbessjw1(l1) = (bessjw1(l1-1)-(l1+1)*bessjw1(l1)/a1)/a1
+        dbessjw2(l1) = (bessjw2(l1-1)-(l1+1)*bessjw2(l1)/b1)/b1
+        dhankws1(l1) = (hankws1(l1-1)-(l1+1)*hankws1(l1)/a1)/a1
+      End Do
 
-  do l1 = 0, lmax + 1
-    dbessjw1(l1) = 0.5d0*dbessjw1(l1)*rmtref**2
-    dbessjw2(l1) = 0.5d0*dbessjw2(l1)*rmtref**2
-    dhankws1(l1) = 0.5d0*dhankws1(l1)*rmtref**2
-  end do
-
-
-
-  do l1 = 0, lmax
-    a1 = roote1*bessjw1(l1+1)*bessjw2(l1) - roote2*bessjw1(l1)*bessjw2(l1+1)
-
-    b1 = roote1*hankws1(l1+1)*bessjw2(l1) - roote2*hankws1(l1)*bessjw2(l1+1)
+      Do l1 = 0, lmax + 1
+        dbessjw1(l1) = 0.5E0_dp*dbessjw1(l1)*rmtref**2
+        dbessjw2(l1) = 0.5E0_dp*dbessjw2(l1)*rmtref**2
+        dhankws1(l1) = 0.5E0_dp*dhankws1(l1)*rmtref**2
+      End Do
 
 
-    da1 = 0.5d0/roote1*bessjw1(l1+1)*bessjw2(l1) - 0.5d0/roote2*bessjw1(l1)* &
-      bessjw2(l1+1) + roote1*dbessjw1(l1+1)*bessjw2(l1) - &
-      roote2*dbessjw1(l1)*bessjw2(l1+1) + roote1*bessjw1(l1+1)*dbessjw2(l1) - &
-      roote2*bessjw1(l1)*dbessjw2(l1+1)
 
-    db1 = 0.5d0/roote1*hankws1(l1+1)*bessjw2(l1) - 0.5d0/roote2*hankws1(l1)* &
-      bessjw2(l1+1) + roote1*dhankws1(l1+1)*bessjw2(l1) - &
-      roote2*dhankws1(l1)*bessjw2(l1+1) + roote1*hankws1(l1+1)*dbessjw2(l1) - &
-      roote2*hankws1(l1)*dbessjw2(l1+1)
+      Do l1 = 0, lmax
+        a1 = roote1*bessjw1(l1+1)*bessjw2(l1) - roote2*bessjw1(l1)*bessjw2(l1+ &
+          1)
+
+        b1 = roote1*hankws1(l1+1)*bessjw2(l1) - roote2*hankws1(l1)*bessjw2(l1+ &
+          1)
 
 
-    tmatanal = -ciove*a1/b1
-    dtmatanal = ci*0.5d0/roote1**3*a1/b1 - ci/roote1*(da1/b1-a1*db1/b1**2)
+        da1 = 0.5E0_dp/roote1*bessjw1(l1+1)*bessjw2(l1) - &
+          0.5E0_dp/roote2*bessjw1(l1)*bessjw2(l1+1) + &
+          roote1*dbessjw1(l1+1)*bessjw2(l1) - roote2*dbessjw1(l1)*bessjw2(l1+1 &
+          ) + roote1*bessjw1(l1+1)*dbessjw2(l1) - roote2*bessjw1(l1)*dbessjw2( &
+          l1+1)
 
-    alpharef(l1) = -(roote2/roote1)**l1/(rmtref**2*roote1*b1) ! Following R. Zeller
-    dalpharef(l1) = (l1/2.d0/roote2-(l1+1)/2.d0/roote1-db1/b1)*alpharef(l1)
+        db1 = 0.5E0_dp/roote1*hankws1(l1+1)*bessjw2(l1) - &
+          0.5E0_dp/roote2*hankws1(l1)*bessjw2(l1+1) + &
+          roote1*dhankws1(l1+1)*bessjw2(l1) - roote2*dhankws1(l1)*bessjw2(l1+1 &
+          ) + roote1*hankws1(l1+1)*dbessjw2(l1) - roote2*hankws1(l1)*dbessjw2( &
+          l1+1)
 
-    do j1 = -l1, l1
-      lm1 = l1*(l1+1) + j1 + 1
-      trefll(lm1, lm1) = tmatanal
-      dtrefll(lm1, lm1) = dtmatanal
-    end do
-  end do
-  lmtmat = lm1
 
-end subroutine
+        tmatanal = -ciove*a1/b1
+        dtmatanal = ci*0.5E0_dp/roote1**3*a1/b1 - ci/roote1*(da1/b1-a1*db1/b1 &
+          **2)
 
+        alpharef(l1) = -(roote2/roote1)**l1/(rmtref**2*roote1*b1) ! Following R. Zeller
+        dalpharef(l1) = (l1/2.E0_dp/roote2-(l1+1)/2.E0_dp/roote1-db1/b1)* &
+          alpharef(l1)
+
+        Do j1 = -l1, l1
+          lm1 = l1*(l1+1) + j1 + 1
+          trefll(lm1, lm1) = tmatanal
+          dtrefll(lm1, lm1) = dtmatanal
+        End Do
+      End Do
+      lmtmat = lm1
+
+    End Subroutine

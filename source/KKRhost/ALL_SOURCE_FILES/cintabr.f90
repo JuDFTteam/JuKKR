@@ -1,4 +1,5 @@
-subroutine cintabr(ag, bg, agbg, af, bf, afbf, rpw, nka, nkb, jtop, nrmax)
+    Subroutine cintabr(ag, bg, agbg, af, bf, afbf, rpw, nka, nkb, jtop, nrmax)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *  SIMPSON - INTERGRATION FOR COMPLEX INTEGRAND  FX FROM 1 TO JTOP *
@@ -9,45 +10,47 @@ subroutine cintabr(ag, bg, agbg, af, bf, afbf, rpw, nka, nkb, jtop, nrmax)
 !   *                                                                  *
 !   ********************************************************************
 
-  implicit none
+      Implicit None
 
 
 !Dummy arguments
-  integer :: jtop, nka, nkb, nrmax
-  complex *16 :: af(nrmax, 2), afbf(2, 2), ag(nrmax, 2), agbg(2, 2), &
-    bf(nrmax, 2), bg(nrmax, 2)
-  real *8 :: rpw(nrmax)
+      Integer :: jtop, nka, nkb, nrmax
+      Complex (Kind=dp) :: af(nrmax, 2), afbf(2, 2), ag(nrmax, 2), agbg(2, 2), &
+        bf(nrmax, 2), bg(nrmax, 2)
+      Real (Kind=dp) :: rpw(nrmax)
 
 !Local variables
-  real *8 :: f, simp
-  integer :: i, ka, kb
+      Real (Kind=dp) :: f, simp
+      Integer :: i, ka, kb
 
-  do kb = 1, nkb
-    do ka = 1, nka
-      agbg(ka, kb) = ag(1, ka)*bg(1, kb)*rpw(1)
-      afbf(ka, kb) = af(1, ka)*bf(1, kb)*rpw(1)
-    end do
-  end do
+      Do kb = 1, nkb
+        Do ka = 1, nka
+          agbg(ka, kb) = ag(1, ka)*bg(1, kb)*rpw(1)
+          afbf(ka, kb) = af(1, ka)*bf(1, kb)*rpw(1)
+        End Do
+      End Do
 
-  if (mod(jtop,2)==0) stop '<CINTABR>  JTOP is even !!!'
+      If (mod(jtop,2)==0) Stop '<CINTABR>  JTOP is even !!!'
 
-  simp = -1.0d0
-  do i = 2, jtop - 1
-    simp = -simp
-    f = (3.0d0+simp)*rpw(i)
-    do kb = 1, nkb
-      do ka = 1, nka
-        agbg(ka, kb) = agbg(ka, kb) + ag(i, ka)*bg(i, kb)*f
-        afbf(ka, kb) = afbf(ka, kb) + af(i, ka)*bf(i, kb)*f
-      end do
-    end do
-  end do
+      simp = -1.0E0_dp
+      Do i = 2, jtop - 1
+        simp = -simp
+        f = (3.0E0_dp+simp)*rpw(i)
+        Do kb = 1, nkb
+          Do ka = 1, nka
+            agbg(ka, kb) = agbg(ka, kb) + ag(i, ka)*bg(i, kb)*f
+            afbf(ka, kb) = afbf(ka, kb) + af(i, ka)*bf(i, kb)*f
+          End Do
+        End Do
+      End Do
 
-  do kb = 1, nkb
-    do ka = 1, nka
-      agbg(ka, kb) = (agbg(ka,kb)+ag(jtop,ka)*bg(jtop,kb)*rpw(jtop))/3.0d0
-      afbf(ka, kb) = (afbf(ka,kb)+af(jtop,ka)*bf(jtop,kb)*rpw(jtop))/3.0d0
-    end do
-  end do
+      Do kb = 1, nkb
+        Do ka = 1, nka
+          agbg(ka, kb) = (agbg(ka,kb)+ag(jtop,ka)*bg(jtop,kb)*rpw(jtop))/ &
+            3.0E0_dp
+          afbf(ka, kb) = (afbf(ka,kb)+af(jtop,ka)*bf(jtop,kb)*rpw(jtop))/ &
+            3.0E0_dp
+        End Do
+      End Do
 
-end subroutine
+    End Subroutine

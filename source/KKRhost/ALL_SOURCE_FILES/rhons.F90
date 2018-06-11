@@ -43,6 +43,7 @@ SUBROUTINE rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin, &    ! Added IRMIN
 
 !                               b.drittler   july 1989
 !-----------------------------------------------------------------------
+      use mod_DataTypes
       IMPLICIT NONE
 !.. Parameters ..
       INCLUDE 'inc.p'
@@ -157,7 +158,7 @@ END DO
 #ifndef CPP_MPI
 IF (.NOT.opt('qdos    ')) THEN
   energ = ek**2                                         ! lm-dos
-  WRITE(30,9000) dreal(energ),(-DIMAG(denlm(lm))/pi,lm=1,lmmaxd)
+  WRITE(30,9000) real(energ, kind=dp),(-aimag(denlm(lm))/pi,lm=1,lmmaxd)
   9000 FORMAT(30E12.4)
 endif  ! not qdos option
 #ENDIF

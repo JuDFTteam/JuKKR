@@ -244,7 +244,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    if(t_inc%i_write>0) then
       write(1337,'("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') &
       0, 20, 40, 60, 80, 100
-      write(1337,FMT=190) ! Beginning of statusbar
+      write(1337,FMT=190, advance='no') ! Beginning of statusbar
    endif
 
 
@@ -465,7 +465,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
                               J2 = IRREL(I2,IS,IKM2) + JOFF2
                               CSUM2 = CSUM2 +GLLKE0(J1,J2)*SRREL(I2,IS,IKM2)
                            end do
-                           CSUM1 = CSUM1 + DCONJG(SRREL(I1,IS,IKM1))*CSUM2
+                           CSUM1 = CSUM1 + CONJG(SRREL(I1,IS,IKM1))*CSUM2
                         end do
                      end do
                      GLLKE(IOFF1+IKM1,IOFF2+IKM2) = CSUM1
@@ -667,15 +667,15 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
 #ifdef CPP_MPI
         if( (((k_end-k_start)/50)==0 .or. &
         mod(KPT-k_start,(k_end-k_start)/50)==0) .and. &
-        t_inc%i_write>0 ) write(1337,FMT=200)
+        t_inc%i_write>0 ) write(1337,FMT=200, advance='no')
 #else
-        if( ((NOFKS/50)==0 .or.mod(KPT,NOFKS/50)==0) .and.t_inc%i_write>0 ) write(1337,FMT=200)
+        if( ((NOFKS/50)==0 .or.mod(KPT,NOFKS/50)==0) .and.t_inc%i_write>0 ) write(1337,FMT=200, advance='no')
 #endif
       end if ! mythread==0
    !
    end do ! KPT = 1,NOFKS   end K-points loop
-   190 format('                 |'$)      ! status bar
-   200 format('|'$)                       ! status bar
+   190 format('                 |')      ! status bar
+   200 format('|')                       ! status bar
    if(t_inc%i_write>0) write(1337,*)      ! finalize status bar
    !
 #ifdef CPP_HYBRID

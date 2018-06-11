@@ -27,7 +27,7 @@ subroutine invslab(gdi, gup, gdow, gin, icheck)
 
 !.. external subroutines ..
   integer, parameter :: lmmaxd = (krel+korbit+1)*(lmaxd+1)**2
-  integer, parameter :: ndim = max(nprincd*lmmaxd, 1)
+  integer, parameter :: ndim = nprincd*lmmaxd
   integer, parameter :: almd = naezd*lmmaxd
   double complex, parameter :: ci = (0.d0, 1.d0)
   double complex, parameter :: czero = (0.d0, 0.d0)

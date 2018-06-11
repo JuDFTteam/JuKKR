@@ -58,7 +58,7 @@ subroutine mdirnewang(it, nmvec, mvevi, mvphi, mvtet, mvgam, natypd, lmaxd, &
   do imv = 1, nmvec
 
     do i = 1, 3
-      mvglo(i, imv) = dimag(mvevi(it,i,imv))
+      mvglo(i, imv) = aimag(mvevi(it,i,imv))
     end do
 
     mvx = mvglo(1, imv)

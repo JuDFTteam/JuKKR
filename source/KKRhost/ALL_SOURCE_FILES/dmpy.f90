@@ -1,4 +1,5 @@
-subroutine dmpy(a, nca, nra, b, ncb, nrb, c, ncc, nrc, n, m, l)
+    Subroutine dmpy(a, nca, nra, b, ncb, nrb, c, ncc, nrc, n, m, l)
+      Use mod_datatypes, Only: dp
 !- Matrix multiplication:  c = a * b
 ! ----------------------------------------------------------------
 !i Inputs:
@@ -30,29 +31,29 @@ subroutine dmpy(a, nca, nra, b, ncb, nrb, c, ncc, nrc, n, m, l)
 !r   call dmpy(a,nrowa,1,b,nrowb,1,c,1,nrowc,n,m,l)
 ! ----------------------------------------------------------------
 
-  implicit none
+      Implicit None
 ! Passed parameters                                                     
-  integer :: nca, nra, ncb, nrb, ncc, nrc, n, m, l
-  double precision :: a(0:*), b(0:*), c(0:*)
+      Integer :: nca, nra, ncb, nrb, ncc, nrc, n, m, l
+      Real (Kind=dp) :: a(0:*), b(0:*), c(0:*)
 ! Local parameters                                                      
-  double precision :: sum
-  integer :: i, j, k, nakpi, nbjpk
+      Real (Kind=dp) :: sum
+      Integer :: i, j, k, nakpi, nbjpk
 !
 !#ifdefC CRAY
 !      CALL MXMA(A,NRA,NCA,B,NRB,NCB,C,NRC,NCC,N,L,M)
 !#else
-  do i = n - 1, 0, -1
-    do j = m - 1, 0, -1
-      sum = 0.d0
-      nakpi = nra*i
-      nbjpk = ncb*j
-      do k = l - 1, 0, -1
-        sum = sum + a(nakpi)*b(nbjpk)
-        nakpi = nakpi + nca
-        nbjpk = nbjpk + nrb
-      end do
-      c(i*nrc+j*ncc) = sum
-    end do
-  end do
+      Do i = n - 1, 0, -1
+        Do j = m - 1, 0, -1
+          sum = 0.E0_dp
+          nakpi = nra*i
+          nbjpk = ncb*j
+          Do k = l - 1, 0, -1
+            sum = sum + a(nakpi)*b(nbjpk)
+            nakpi = nakpi + nca
+            nbjpk = nbjpk + nrb
+          End Do
+          c(i*nrc+j*ncc) = sum
+        End Do
+      End Do
 !#endif
-end subroutine
+    End Subroutine

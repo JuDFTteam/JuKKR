@@ -34,6 +34,7 @@ use mod_timing
 #endif
 use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,  &
     t_lloyd,init_tlloyd
+use mod_DataTypes
 
 IMPLICIT NONE
 
@@ -264,8 +265,8 @@ DO signde = -ideriv,ideriv,2       ! LLY
 END DO  ! SIGNDE = -IDERIV,IDERIV,2      ! LLY
 
 ! Average values of t-matrix and alpha at E+DE and E-DE
-tmatll(:,:) = tmatll(:,:) / dfloat(1+ideriv)      !/ 1 or 2 (IDERIV=1 or 2)! LLY
-alphall(:,:) = alphall(:,:) / dfloat(1+ideriv)    !/ 1 or 2 ! LLY
+tmatll(:,:) = tmatll(:,:) / real(1+ideriv, kind=dp)      !/ 1 or 2 (IDERIV=1 or 2)! LLY
+alphall(:,:) = alphall(:,:) / real(1+ideriv, kind=dp)    !/ 1 or 2 ! LLY
 
 IF (lly /= 0) THEN
 ! Construct derivative of t-matrix and alpha
@@ -342,8 +343,8 @@ endif                                                       ! LLY
 ! ----------------------------------------------------------------------
 IF ( test('tmat    ') .AND. (t_inc%i_write>0)) THEN
   WRITE (1337,*)
-  WRITE (1337,99001) '-----> t matrix for atom: ',i1
-  IF ( krel == 0 ) WRITE (1337,99002) txts(ispin)
+  WRITE (1337,99001, advance='no') '-----> t matrix for atom: ',i1
+  IF ( krel == 0 ) WRITE (1337,99002, advance='no') txts(ispin)
   WRITE (1337,99003) ', energy: ',eryd
   CALL cmatstr(' ',1,tmat0,lmmaxd,lmmaxd, 2*krel+1,2*krel+1,0,1D-8,6)
   WRITE (1337,*)
@@ -358,8 +359,8 @@ IF(mpiadapt) CALL timing_stop('time_1a_ieiatom',save_out=timings_1a(ie, i1))
 END DO ! IE = 1,IELAST
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
-99001 FORMAT (a,i3,$)
-99002 FORMAT (', ',a,$)
+99001 FORMAT (a,i3)
+99002 FORMAT (', ',a)
 99003 FORMAT (a,2F10.6)
 
 RETURN

@@ -1,4 +1,5 @@
-function cjlz(l, z)
+    Function cjlz(l, z)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *   SPHERICAL BESSEL-FUNCTION  J(L,Z)  FOR COMPLEX ARGUMENT  Z     *
@@ -6,60 +7,60 @@ function cjlz(l, z)
 !   *                                                                  *
 !   ********************************************************************
 
-  implicit none
+      Implicit None
 
 ! PARAMETER definitions
-  complex *16 :: c1
-  parameter (c1=(1.0d0,0.0d0))
-  integer :: lp2max
-  parameter (lp2max=25)
+      Complex (Kind=dp) :: c1
+      Parameter (c1=(1.0E0_dp,0.0E0_dp))
+      Integer :: lp2max
+      Parameter (lp2max=25)
 
 
 ! Dummy arguments
-  integer :: l
-  complex *16 :: z
-  complex *16 :: cjlz
+      Integer :: l
+      Complex (Kind=dp) :: z
+      Complex (Kind=dp) :: cjlz
 
 ! Local variables
-  real *8 :: dfac
-  complex *16 :: dt, s(lp2max), t, zsq
-  integer :: i, k, llp1
+      Real (Kind=dp) :: dfac
+      Complex (Kind=dp) :: dt, s(lp2max), t, zsq
+      Integer :: i, k, llp1
 
-  zsq = z*z
-  llp1 = l + l + 1
+      zsq = z*z
+      llp1 = l + l + 1
 
-  if (abs(zsq/dble(llp1))<=10.d0) then
+      If (abs(zsq/real(llp1,kind=dp))<=10.E0_dp) Then
 
-    dfac = 1.0d0
-    do k = 3, llp1, 2
-      dfac = dfac*dble(k)
-    end do
+        dfac = 1.0E0_dp
+        Do k = 3, llp1, 2
+          dfac = dfac*real(k, kind=dp)
+        End Do
 
-    dt = c1
-    t = c1
-    do i = 2, 400, 2
-      dt = -dt*zsq/dble(i*(i+llp1))
-      t = t + dt
-      if (abs(dt)<1.0d-10) go to 100
-    end do
+        dt = c1
+        t = c1
+        Do i = 2, 400, 2
+          dt = -dt*zsq/real(i*(i+llp1), kind=dp)
+          t = t + dt
+          If (abs(dt)<1.0E-10_dp) Go To 100
+        End Do
 
-100 continue
-    cjlz = t*z**l/dfac
+100     Continue
+        cjlz = t*z**l/dfac
 
-  else
-    if (l>23) stop '<cjlz>: l too large'
+      Else
+        If (l>23) Stop '<cjlz>: l too large'
 
-    s(2) = sin(z)/z
-    if (l<=0) then
-      cjlz = s(2)*z**l
-      return
-    end if
+        s(2) = sin(z)/z
+        If (l<=0) Then
+          cjlz = s(2)*z**l
+          Return
+        End If
 
-    s(1) = cos(z)
-    do i = 3, l + 2
-      s(i) = (s(i-1)*(2*i-5)-s(i-2))/zsq
-    end do
-    cjlz = s(l+2)*z**l
+        s(1) = cos(z)
+        Do i = 3, l + 2
+          s(i) = (s(i-1)*(2*i-5)-s(i-2))/zsq
+        End Do
+        cjlz = s(l+2)*z**l
 
-  end if
-end function
+      End If
+    End Function

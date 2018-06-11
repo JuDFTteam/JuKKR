@@ -5,6 +5,7 @@ subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
 !   *  by extrapolating the lower integration boundary to r -> 0       *
 !   *                                                                  *
 !   ********************************************************************
+  use mod_DataTypes
   implicit none
 
 !Dummy arguments
@@ -15,7 +16,7 @@ subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
 
 ! Local variables
   double precision :: ai, ar, bi, br, delta, hibar, r1bar, reldif, rlim1, &
-    rlim2, s, si, sr, sx, sxi, sxr, sxx, yi, yr
+    rlim2, s, s_i, sr, sx, sxi, sxr, sxx, yi, yr
 
   double complex :: hi, hif, z(nrmax)
   integer :: i, imax, imin, ka, kb, n
@@ -58,28 +59,28 @@ subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
       sx = 0.0d0
       sxx = 0.0d0
       sr = 0.0d0
-      si = 0.0d0
+      s_i = 0.0d0
       sxr = 0.0d0
       sxi = 0.0d0
 
       do i = imin, imax
-        yr = dreal(z(jtop)-z(i))
-        yi = dimag(z(jtop)-z(i))
+        yr = real(z(jtop)-z(i), kind=dp)
+        yi = aimag(z(jtop)-z(i))
         n = n + 1
         s = s + 1.0d0
         sx = sx + r(i)
         sxx = sxx + r(i)**2
         sr = sr + yr
-        si = si + yi
+        s_i = s_i + yi
         sxr = sxr + yr*r(i)
         sxi = sxi + yi*r(i)
       end do
 
       delta = s*sxx - sx*sx
       ar = (sxx*sr-sx*sxr)/delta
-      ai = (sxx*si-sx*sxi)/delta
+      ai = (sxx*s_i-sx*sxi)/delta
       br = (s*sxr-sx*sr)/delta
-      bi = (s*sxi-sx*si)/delta
+      bi = (s*sxi-sx*s_i)/delta
 
       hibar = 0.0d0
       r1bar = 0.0d0
@@ -96,11 +97,11 @@ subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
       reldif = 0.0d0
       do i = imin, imax
         hi = z(jtop) - z(i)
-        hif = dcmplx(ar, ai) + dcmplx(br, bi)*r(i)
+        hif = cmplx(ar, ai, kind=dp) + cmplx(br, bi, kind=dp)*r(i)
         if (abs(hif)/=0.0d0) reldif = max(reldif, abs(1.0d0-hi/hif))
       end do
 
-      rmehf(ka, kb) = dcmplx(ar, ai)
+      rmehf(ka, kb) = cmplx(ar, ai, kind=dp)
 
     end do
   end do

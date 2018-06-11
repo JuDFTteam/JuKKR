@@ -113,7 +113,7 @@ implicit none
 #endif
 
       external zgetrf,zgetrs
-      intrinsic abs,atan,cos,dimag,exp,max,min,sin,sqrt
+      intrinsic abs,atan,cos,aimag,exp,max,min,sin,sqrt
 
 ! ***********************************************************************
 !                                  SRA trick

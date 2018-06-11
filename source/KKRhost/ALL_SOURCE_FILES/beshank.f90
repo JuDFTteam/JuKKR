@@ -23,12 +23,12 @@ subroutine beshank(hl, jl, z, lmax)
   integer :: l, m, n
 !     ..
 !     .. Intrinsic Functions ..
-  intrinsic :: cdabs, exp
+  intrinsic :: abs, exp
 !     ..
   zj = 1.d0
   zn = 1.d0
   z2 = z*z
-  if (cdabs(z)<lmax+1.d0) then
+  if (abs(z)<lmax+1.d0) then
     do l = 0, lmax
       rl = l + l
       termj = -0.5d0/(rl+3.d0)*z2
@@ -52,7 +52,7 @@ subroutine beshank(hl, jl, z, lmax)
   end if
 
   do l = 0, lmax
-    if (cdabs(z)>=l+1.d0) then
+    if (abs(z)>=l+1.d0) then
       hl(l) = 0.d0
       nl(l) = 0.d0
       rnm = 1.d0
@@ -80,13 +80,13 @@ subroutine beshank_smallcomp(hl, jl, zval, tau, eryd, lmax)
 !  these values are filled with the potential-free solution of the
 !  SRA-equations
 !-----------------------------------------------------------------------
+  integer :: lmax
   double complex :: hl(0:2*(lmax+1)-1), jl(0:2*(lmax+1)-1), nl(0:2*(lmax+1)-1)
   double precision :: cvlight
   parameter (cvlight=274.0720442d0)
   double complex :: zval
   double complex :: eryd
   double precision :: tau
-  integer :: lmax
 
 !       DOUBLE PRECISION CVLIGHT
   double complex :: prefac

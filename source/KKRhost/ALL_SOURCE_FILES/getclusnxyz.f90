@@ -1,4 +1,5 @@
-subroutine getclusnxyz(clurad, bravais, ndim, cluradsq, nbr)
+    Subroutine getclusnxyz(clurad, bravais, ndim, cluradsq, nbr)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
 ! * Given a spherical cluster of radius CLURAD it determines the three *
@@ -10,37 +11,37 @@ subroutine getclusnxyz(clurad, bravais, ndim, cluradsq, nbr)
 ! *  the cluster. Subroutine also returns the CLURAD**2 value          *
 ! *                                                                    *
 ! **********************************************************************
-  implicit none
+      Implicit None
 ! ..
 ! ..  Arguments
-  double precision :: clurad, cluradsq
-  double precision :: bravais(3, 3)
-  integer :: ndim, nbr(3)
+      Real (Kind=dp) :: clurad, cluradsq
+      Real (Kind=dp) :: bravais(3, 3)
+      Integer :: ndim, nbr(3)
 ! .. 
 ! ..  Locals
-  double precision :: dr(3)
-  integer :: i, j
-  integer :: int
+      Real (Kind=dp) :: dr(3)
+      Integer :: i, j
+      Integer :: int
 ! ..
 ! ..
-  do i = 1, ndim
-    dr(i) = 0d0
-    do j = 1, ndim
-      dr(i) = dr(i) + bravais(j, i)*bravais(j, i)
-    end do
-    dr(i) = sqrt(dr(i))
-  end do
+      Do i = 1, ndim
+        dr(i) = 0E0_dp
+        Do j = 1, ndim
+          dr(i) = dr(i) + bravais(j, i)*bravais(j, i)
+        End Do
+        dr(i) = sqrt(dr(i))
+      End Do
 
-  if (abs(clurad)<1d-6) then
-    do i = 1, ndim
-      nbr(i) = 0
-    end do
-    cluradsq = 1d10
-  else
-    do i = 1, ndim
-      nbr(i) = int(clurad/dr(i)) + 2
-    end do
-    cluradsq = clurad*clurad
-  end if
+      If (abs(clurad)<1E-6_dp) Then
+        Do i = 1, ndim
+          nbr(i) = 0
+        End Do
+        cluradsq = 1E10_dp
+      Else
+        Do i = 1, ndim
+          nbr(i) = int(clurad/dr(i)) + 2
+        End Do
+        cluradsq = clurad*clurad
+      End If
 
-end subroutine
+    End Subroutine

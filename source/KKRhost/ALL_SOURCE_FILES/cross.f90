@@ -1,4 +1,5 @@
-subroutine cross(x1, x2, cr12)
+    Subroutine cross(x1, x2, cr12)
+      Use mod_datatypes, Only: dp
 !- Cross product cr12 = X1 cross X2
 ! ----------------------------------------------------------------------
 !i Inputs:
@@ -8,14 +9,14 @@ subroutine cross(x1, x2, cr12)
 !o   cr12  :cross product
 ! ----------------------------------------------------------------------
 
-  implicit none
+      Implicit None
 ! Passed parameters:
-  double precision :: x1(3)
-  double precision :: x2(3)
-  double precision :: cr12(3)
+      Real (Kind=dp) :: x1(3)
+      Real (Kind=dp) :: x2(3)
+      Real (Kind=dp) :: cr12(3)
 
-  cr12(1) = x1(2)*x2(3) - x1(3)*x2(2)
-  cr12(2) = x1(3)*x2(1) - x1(1)*x2(3)
-  cr12(3) = x1(1)*x2(2) - x1(2)*x2(1)
+      cr12(1) = x1(2)*x2(3) - x1(3)*x2(2)
+      cr12(2) = x1(3)*x2(1) - x1(1)*x2(3)
+      cr12(3) = x1(1)*x2(2) - x1(2)*x2(1)
 
-end subroutine
+    End Subroutine

@@ -459,7 +459,7 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
                else
 #ifdef CPP_MPI
                   irec = irec0 + LM2 + LMMAXD*(LM1-1)
-                  if ( CDABS(MSSQ(LM1,LM2,IH)/MSSQ(LM1,LM1,IH)).GT.TOLMSSQ ) then
+                  if ( ABS(MSSQ(LM1,LM2,IH)/MSSQ(LM1,LM1,IH)).GT.TOLMSSQ ) then
                      if (.not.OPT('deci-out')) then
                         write(37,rec=irec) MSSQ(LM1,LM2,IH)*CFCTORINV
                      else
@@ -471,7 +471,7 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
                      end if
                   end if
 #else
-                  if ( CDABS(MSSQ(LM1,LM2,IH)/MSSQ(LM1,LM1,IH)).GT.TOLMSSQ )  then
+                  if ( ABS(MSSQ(LM1,LM2,IH)/MSSQ(LM1,LM1,IH)).GT.TOLMSSQ )  then
                      write(37,99006)LM1,LM2,MSSQ(LM1,LM2,IH)*CFCTORINV
                   endif
 #endif

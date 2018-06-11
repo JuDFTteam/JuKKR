@@ -238,9 +238,9 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
                 do i = 1, jtop
                   zgzg = zg(i, ka, k1)*zg(i, kb, k2)
                   zfzf = zf(i, ka, k1)*zf(i, kb, k2)
-                  rhochr(i, it) = rhochr(i, it) + dimag(wds*zgzg+wds*zfzf)
-                  rhospn(i, it) = rhospn(i, it) + dimag(wsg*zgzg-wsf*zfzf)
-                  rhoorb(i, it) = rhoorb(i, it) + dimag(wog*zgzg-wof*zfzf)
+                  rhochr(i, it) = rhochr(i, it) + aimag(wds*zgzg+wds*zfzf)
+                  rhospn(i, it) = rhospn(i, it) + aimag(wsg*zgzg-wsf*zfzf)
+                  rhoorb(i, it) = rhoorb(i, it) + aimag(wog*zgzg-wof*zfzf)
                 end do
               end do
             end do
@@ -266,9 +266,9 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
                   do i = 1, jtop
                     zgjg = zg(i, ka, k1)*jg(i, kb, k2)
                     zfjf = zf(i, ka, k1)*jf(i, kb, k2)
-                    rhochr(i, it) = rhochr(i, it) + dimag(wds*zgjg+wds*zfjf)
-                    rhospn(i, it) = rhospn(i, it) + dimag(wsg*zgjg-wsf*zfjf)
-                    rhoorb(i, it) = rhoorb(i, it) + dimag(wog*zgjg-wof*zfjf)
+                    rhochr(i, it) = rhochr(i, it) + aimag(wds*zgjg+wds*zfjf)
+                    rhospn(i, it) = rhospn(i, it) + aimag(wsg*zgjg-wsf*zfjf)
+                    rhoorb(i, it) = rhoorb(i, it) + aimag(wog*zgjg-wof*zfjf)
                   end do
                 end do
               end do
@@ -330,14 +330,14 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
 ! ---------------------------------------------------------------------
 
 
-      dos(it) = dos(it) + dimag(dosl)
-      smt(it) = smt(it) + dimag(smtl)
-      omt(it) = omt(it) + dimag(omtl)
-      hff(it) = hff(it) + dimag(hffl)
-      dosi(it) = dosi(it) + dimag(dosint(il,it))
-      smti(it) = smti(it) + dimag(smtint(il,it))
-      omti(it) = omti(it) + dimag(omtint(il,it))
-      hffi(it) = hffi(it) + dimag(hffint(il,it))
+      dos(it) = dos(it) + aimag(dosl)
+      smt(it) = smt(it) + aimag(smtl)
+      omt(it) = omt(it) + aimag(omtl)
+      hff(it) = hff(it) + aimag(hffl)
+      dosi(it) = dosi(it) + aimag(dosint(il,it))
+      smti(it) = smti(it) + aimag(smtint(il,it))
+      omti(it) = omti(it) + aimag(omtint(il,it))
+      hffi(it) = hffi(it) + aimag(hffint(il,it))
     end do
 ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 
@@ -441,13 +441,13 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
       bdum(2) = (bcor(it)-bcors(it))*1d-3
       bdum(3) = bcor(it)*1d-3
 
-      write (1337, 170)(dimag(dosl0(il,it)), dimag(dosint(il, &
-        it)), dimag(smtl0(il,it)), dimag(smtint(il,it)), dimag(omtl0(il, &
-        it)), dimag(omtint(il,it)), dimag(hffint(il, &
+      write (1337, 170)(aimag(dosl0(il,it)), aimag(dosint(il, &
+        it)), aimag(smtl0(il,it)), aimag(smtint(il,it)), aimag(omtl0(il, &
+        it)), aimag(omtint(il,it)), aimag(hffint(il, &
         it))*1d-3, bdum(il), il=1, min(3,nl))
-      if (nl>3) write (1337, 180)(dimag(dosl0(il,it)), dimag(dosint(il, &
-        it)), dimag(smtl0(il,it)), dimag(smtint(il,it)), dimag(omtl0(il, &
-        it)), dimag(omtint(il,it)), dimag(hffint(il,it))*1d-3, il=4, nl)
+      if (nl>3) write (1337, 180)(aimag(dosl0(il,it)), aimag(dosint(il, &
+        it)), aimag(smtl0(il,it)), aimag(smtint(il,it)), aimag(omtl0(il, &
+        it)), aimag(omtint(il,it)), aimag(hffint(il,it))*1d-3, il=4, nl)
 
       write (1337, 190) dos(it), dosi(it), smt(it), smti(it), omt(it), &
         omti(it), (hffi(it)*1d-3), ((hffi(it)+bcor(it))*1d-3)
@@ -455,7 +455,7 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
       if (it<nt) then
         write (1337, '(1X,79(''-''))')
       else
-        write (1337, 210) totdos, totnos, muespn, mueorb, dimag(eband)
+        write (1337, 210) totdos, totnos, muespn, mueorb, aimag(eband)
       end if
 
       im = imt(it)

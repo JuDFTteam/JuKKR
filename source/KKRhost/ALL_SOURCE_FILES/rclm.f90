@@ -72,9 +72,9 @@ subroutine rclm(key, ll, ldim, vmat)
     a31 = oneovrt
     a33 = oneovrt
   else if (key==1) then ! adjoint matrix elements
-    a11 = dconjg(ciovrt)
+    a11 = conjg(ciovrt)
     a13 = oneovrt
-    a31 = dconjg(cimovrt)
+    a31 = conjg(cimovrt)
     a33 = oneovrt
   else
     stop 'ERROR IN RCLM: KEY NOT EQUAL 1 OR 2'
@@ -100,7 +100,7 @@ subroutine rclm(key, ll, ldim, vmat)
 
   do m2 = 1, mm
     do m1 = 1, mm
-      aac(m1, m2) = dconjg(aa(m2,m1))
+      aac(m1, m2) = conjg(aa(m2,m1))
     end do
   end do
 

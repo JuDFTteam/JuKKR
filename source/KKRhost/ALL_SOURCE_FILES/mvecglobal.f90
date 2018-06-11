@@ -8,6 +8,7 @@ subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
 !   *                                           frame of reference     *
 !   *                                                                  *
 !   ********************************************************************
+  use mod_DataTypes
   implicit none
 
 !Parameter definitions
@@ -41,7 +42,7 @@ subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
   character (len=1) :: txtl(0:lmaxdloc)
 
 !Intrinsic Functions
-  intrinsic :: abs, acos, atan, dreal, dimag, dconjg
+  intrinsic :: abs, acos, atan, real, aimag, conjg
 
 !External subroutines
   external :: calcrotmat
@@ -138,11 +139,11 @@ subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
     do j = 1, 3
       cs = 0.0d0
       do k = 1, 3
-        cs = cs + dconjg(usc(k,i))*w3x3(k, j)
+        cs = cs + conjg(usc(k,i))*w3x3(k, j)
       end do
-      if (dimag(cs)>1d-8) write (*, *) ' MROT', i, j, cs, ' ???????????'
+      if (aimag(cs)>1d-8) write (*, *) ' MROT', i, j, cs, ' ???????????'
 !     see above >> MROT(I,J) = DREAL(CS)
-      mrot(j, i) = dreal(cs)
+      mrot(j, i) = real(cs, kind=dp)
     end do
   end do
 !-----------------------------------------------------------------------
@@ -180,14 +181,14 @@ subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
         mvg(i, imv) = mvg(i, imv) + mrot(i, j)*mvevi(it, j, imv)
         mvgef(i, imv) = mvgef(i, imv) + mrot(i, j)*mvevief(it, j, imv)
       end do
-      mvglo(i, imv) = dimag(mvg(i,imv))
+      mvglo(i, imv) = aimag(mvg(i,imv))
 
       do l = 0, lmaxd
         mvgl(l, i, imv) = czero
         do j = 1, 3
           mvgl(l, i, imv) = mvgl(l, i, imv) + mrot(i, j)*mvevil(l, it, j, imv)
         end do
-        mvglol(l, i, imv) = dimag(mvgl(l,i,imv))
+        mvglol(l, i, imv) = aimag(mvgl(l,i,imv))
       end do
 
     end do

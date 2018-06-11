@@ -1,31 +1,33 @@
-double precision function ssum(n, v, iv)
+    Function ssum(n, v, iv)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 !        sum up the first N elements of the double precision
 !        array V(*) with a stepwidth of IV
 ! ----------------------------------------------------------------------
-  implicit none
+      Implicit None
+      Real (Kind=dp) :: ssum
 !.. Scalar Arguments ..
-  integer :: iv, n
+      Integer :: iv, n
 !..
 !.. Array Arguments ..
-  double precision :: v(*)
+      Real (Kind=dp) :: v(*)
 !..
 !.. Local Scalars ..
-  double precision :: vsum
-  integer :: i, ibot, itop
+      Real (Kind=dp) :: vsum
+      Integer :: i, ibot, itop
 !..
-  if (iv>=0) then
-    ibot = 1
-    itop = 1 + (n-1)*iv
+      If (iv>=0) Then
+        ibot = 1
+        itop = 1 + (n-1)*iv
 
-  else
-    ibot = 1 - (n-1)*iv
-    itop = 1
-  end if
+      Else
+        ibot = 1 - (n-1)*iv
+        itop = 1
+      End If
 
-  vsum = 0.0d0
-  do i = ibot, itop, iv
-    vsum = vsum + v(i)
-  end do
-  ssum = vsum
-end function
+      vsum = 0.0E0_dp
+      Do i = ibot, itop, iv
+        vsum = vsum + v(i)
+      End Do
+      ssum = vsum
+    End Function

@@ -1,4 +1,4 @@
-function ikapmue(kappa, muem05)
+    Function ikapmue(kappa, muem05)
 !   ********************************************************************
 !   *                                                                  *
 !   *  INDEXING OF MATRIX-ELEMENTS:                                    *
@@ -6,24 +6,24 @@ function ikapmue(kappa, muem05)
 !   *  I = 2*L*(J+1/2) + J + MUE + 1                                   *
 !   *                                                                  *
 !   ********************************************************************
-  implicit none
+      Implicit None
 
 ! Dummy arguments
-  integer :: kappa, muem05
-  integer :: ikapmue
+      Integer :: kappa, muem05
+      Integer :: ikapmue
 
 ! Local variables
-  integer :: iabs
-  integer :: jp05, l
+      Integer :: iabs
+      Integer :: jp05, l
 
-  jp05 = iabs(kappa)
+      jp05 = iabs(kappa)
 
-  if (kappa<0) then
-    l = -kappa - 1
-  else
-    l = kappa
-  end if
+      If (kappa<0) Then
+        l = -kappa - 1
+      Else
+        l = kappa
+      End If
 
-  ikapmue = 2*l*jp05 + jp05 + muem05 + 1
+      ikapmue = 2*l*jp05 + jp05 + muem05 + 1
 
-end function
+    End Function

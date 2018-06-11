@@ -2,111 +2,112 @@
 ! SUBROUTINE: READIMPPOT
 !> @brief Reads the potential and shapefun of inpurity
 !-------------------------------------------------------------------------------
-subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, &
-  ipanimp, thetasimp, ircutimp, irwsimp, khfeld, hfield, vinsimp, vm2zimp, &
-  irminimp, rimp, zimp, irmd, irnsd, irid, nfund, ntotd, ipand)
+    Subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, &
+      ipanimp, thetasimp, ircutimp, irwsimp, khfeld, hfield, vinsimp, vm2zimp, &
+      irminimp, rimp, zimp, irmd, irnsd, irid, nfund, ntotd, ipand)
+      Use mod_datatypes, Only: dp
 ! ************************************************************************
 ! read in impurity potential
 ! n.h.long, May 2013
 !-----------------------------------------------------------------------
 !.. Parameters ..
-  implicit none
-  integer :: nspin, natomimp, irmd, irnsd, irid, nfund, ntotd, ipand
+      Implicit None
+      Integer :: nspin, natomimp, irmd, irnsd, irid, nfund, ntotd, ipand
 !..
 !.. Scalar Arguments ..
-  double precision :: alat, hfield, vbc(2)
-  integer :: ins, ipe, ipf, ipfe, khfeld, kws, lpot
+      Real (Kind=dp) :: alat, hfield, vbc(2)
+      Integer :: ins, ipe, ipf, ipfe, khfeld, kws, lpot
 !..
 !.. Array Arguments ..
-  double precision :: a(natomimp), b(natomimp), drdi(irmd, natomimp), &
-    dror(irmd, natomimp), ecore(20, nspin*natomimp), rimp(irmd, natomimp), &
-    rmt(natomimp), rmtnew(natomimp), rws(natomimp), thetasimp(irid, nfund, &
-    natomimp), vinsimp((irmd-irnsd):irmd, (lpot+1)**2, natomimp*nspin), &
-    vm2zimp(irmd, natomimp*nspin), zimp(natomimp)
-  integer :: imt(natomimp), ipanimp(natomimp), ircutimp(0:ipand, natomimp), &
-    irminimp(natomimp), irwsimp(natomimp), ititle(20, nspin*natomimp), &
-    lcore(20, nspin*natomimp), ncore(nspin*natomimp), nfu(natomimp)
+      Real (Kind=dp) :: a(natomimp), b(natomimp), drdi(irmd, natomimp), &
+        dror(irmd, natomimp), ecore(20, nspin*natomimp), rimp(irmd, natomimp), &
+        rmt(natomimp), rmtnew(natomimp), rws(natomimp), &
+        thetasimp(irid, nfund, natomimp), vinsimp((irmd-irnsd):irmd, (lpot+1) &
+        **2, natomimp*nspin), vm2zimp(irmd, natomimp*nspin), zimp(natomimp)
+      Integer :: imt(natomimp), ipanimp(natomimp), ircutimp(0:ipand, natomimp) &
+        , irminimp(natomimp), irwsimp(natomimp), ititle(20, nspin*natomimp), &
+        lcore(20, nspin*natomimp), ncore(nspin*natomimp), nfu(natomimp)
 !..
 !.. Local Arrays ..
-  double precision :: dummy2(irmd, natomimp*nspin)
+      Real (Kind=dp) :: dummy2(irmd, natomimp*nspin)
 !..
 !.. Local Scalars ..
-  double precision :: a1, b1, ea, efnew, dummy
-  integer :: i, ia, icell, icore, ifun, ih, imt1, inew, io, ipan1, ir, irc1, &
-    iri, irminm, irminp, irns1p, irt1p, irws1, isave, ispin, isum, j, lm, lm1, &
-    lmpot, lmpotp, n, ncell, nfun, nr
-  logical :: test
+      Real (Kind=dp) :: a1, b1, ea, efnew, dummy
+      Integer :: i, ia, icell, icore, ifun, ih, imt1, inew, io, ipan1, ir, &
+        irc1, iri, irminm, irminp, irns1p, irt1p, irws1, isave, ispin, isum, &
+        j, lm, lm1, lmpot, lmpotp, n, ncell, nfun, nr
+      Logical :: test
 !..
 !.. Local Arrays ..
-  double precision :: drn(irid, natomimp), scale(1), u(irmd), &
-    xrn(irid, natomimp)
-  integer :: meshn(natomimp), nm(ipand, natomimp), npan(natomimp)
+      Real (Kind=dp) :: drn(irid, natomimp), scale(1), u(irmd), &
+        xrn(irid, natomimp)
+      Integer :: meshn(natomimp), nm(ipand, natomimp), npan(natomimp)
 !..
 !.. External Subroutines ..
-  external :: calrmt, potcut, rinit, test
+      External :: calrmt, potcut, rinit, test
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: anint, exp, log, max, mod, real, sqrt
+      Intrinsic :: anint, exp, log, max, mod, real, sqrt
 !..
 !------------------------------------------------------------------
-  write (1337, *) 'in readimppot'
-  vinsimp = 0d0
+      Write (1337, *) 'in readimppot'
+      vinsimp = 0E0_dp
 !------------------------------------------------------------------
 !read data from shapefun_imp file
-  if (ins>0) then
-    open (unit=20, file='shapefun_imp', form='FORMATTED')
-    read (20, *) ncell
-    read (20, *) scale(1)
-    do icell = 1, ncell
-      read (20, fmt=100) npan(icell), meshn(icell)
-      read (20, fmt=100)(nm(ipan1,icell), ipan1=2, npan(icell)+1)
-      read (20, fmt=110)(xrn(ir,icell), drn(ir,icell), ir=1, meshn(icell))
-      read (20, fmt=100) nfu(icell)
-      nfun = nfu(icell)
+      If (ins>0) Then
+        Open (Unit=20, File='shapefun_imp', Form='FORMATTED')
+        Read (20, *) ncell
+        Read (20, *) scale(1)
+        Do icell = 1, ncell
+          Read (20, Fmt=100) npan(icell), meshn(icell)
+          Read (20, Fmt=100)(nm(ipan1,icell), ipan1=2, npan(icell)+1)
+          Read (20, Fmt=110)(xrn(ir,icell), drn(ir,icell), ir=1, meshn(icell))
+          Read (20, Fmt=100) nfu(icell)
+          nfun = nfu(icell)
 
-      do ifun = 1, nfun
-        read (20, fmt=100) lm
-        if (lm<=(2*lpot+1)**2) then
-          read (20, fmt=110)(thetasimp(n,ifun,icell), n=1, meshn(icell))
-        else
-          read (20, fmt=110)(dummy, n=1, meshn(icell))
-        end if
-      end do
+          Do ifun = 1, nfun
+            Read (20, Fmt=100) lm
+            If (lm<=(2*lpot+1)**2) Then
+              Read (20, Fmt=110)(thetasimp(n,ifun,icell), n=1, meshn(icell))
+            Else
+              Read (20, Fmt=110)(dummy, n=1, meshn(icell))
+            End If
+          End Do
 
-    end do
-  end if ! INS.EQ.1
+        End Do
+      End If ! INS.EQ.1
 
-  do icell = 1, ncell
-    if (ins/=0) then
-      ipanimp(icell) = 1 + npan(icell)
-    else
-      ipanimp(icell) = 1
-    end if
-  end do
+      Do icell = 1, ncell
+        If (ins/=0) Then
+          ipanimp(icell) = 1 + npan(icell)
+        Else
+          ipanimp(icell) = 1
+        End If
+      End Do
 !------------------------------------------------------------------
 !read in impurity potential
 
-  open (unit=21, file='potential_imp', form='FORMATTED')
-  lmpot = (lpot+1)*(lpot+1)
-  do ih = 1, ncell
-    do ispin = 1, nspin
-      i = nspin*(ih-1) + ispin
-      ircutimp(0, ih) = 0
+      Open (Unit=21, File='potential_imp', Form='FORMATTED')
+      lmpot = (lpot+1)*(lpot+1)
+      Do ih = 1, ncell
+        Do ispin = 1, nspin
+          i = nspin*(ih-1) + ispin
+          ircutimp(0, ih) = 0
 
 !---> read title of potential card
-      read (21, fmt=120)(ititle(ia,i), ia=1, 20)
+          Read (21, Fmt=120)(ititle(ia,i), ia=1, 20)
 
 !--->read muffin-tin radius , lattice constant and new muffin radius
 !READ (21,FMT=9030) RMT(IH),ALAT,RMTNEW(IH)
-      read (21, fmt=*) rmt(ih), alat, rmtnew(ih)
+          Read (21, Fmt=*) rmt(ih), alat, rmtnew(ih)
 
 !---> read nuclear charge , lmax of the core states ,
 !wigner seitz radius , fermi energy and energy difference
 !between electrostatic zero and muffin tin zero
 
 !READ (21,FMT=9040) ZIMP(IH),RWS(IH),EFNEW,VBC(ISPIN)
-      read (21, fmt=*) zimp(ih)
-      read (21, fmt=*) rws(ih), efnew, vbc(ispin)
+          Read (21, Fmt=*) zimp(ih)
+          Read (21, Fmt=*) rws(ih), efnew, vbc(ispin)
 
 !---> read : number of radial mesh points
 !    (in case of ws input-potential: last mesh point corresponds
@@ -118,177 +119,177 @@ subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, &
 !    for the radial exponential mesh : r(i) = b*(exp(a*(i-1))-1)
 !    the no. of different core states and some other stuff
 
-      read (21, fmt=150) irwsimp(ih)
+          Read (21, Fmt=150) irwsimp(ih)
 !READ (21,FMT=9051) A(IH),B(IH),NCORE(I),INEW
-      read (21, fmt=*) a(ih), b(ih)
-      read (21, fmt=*) ncore(i), inew
-      nr = irwsimp(ih)
+          Read (21, Fmt=*) a(ih), b(ih)
+          Read (21, Fmt=*) ncore(i), inew
+          nr = irwsimp(ih)
 !---> read the different core states : l and energy
 
-      if (ncore(i)>=1) read (21, fmt=180)(lcore(icore,i), ecore(icore,i), &
-        icore=1, ncore(i))
+          If (ncore(i)>=1) Read (21, Fmt=180)(lcore(icore,i), ecore(icore,i), &
+            icore=1, ncore(i))
 
-      if (ins<1) then
+          If (ins<1) Then
 
 !--->  read radial mesh points, its derivative, the spherically averaged
 !      charge density and the input potential without the nuclear pot.
 
-        if (inew==0) then
-          read (21, fmt=170)(rimp(ir,ih), drdi(ir,ih), vm2zimp(ir,i), ir=1, &
-            nr)
-        else
-          read (21, fmt=*)(vm2zimp(ir,i), ir=1, nr)
-        end if
+            If (inew==0) Then
+              Read (21, Fmt=170)(rimp(ir,ih), drdi(ir,ih), vm2zimp(ir,i), &
+                ir=1, nr)
+            Else
+              Read (21, Fmt=*)(vm2zimp(ir,i), ir=1, nr)
+            End If
 
-      else ! (INS.LT.1)
+          Else ! (INS.LT.1)
 
 !--->  read full potential - the non spherical contribution from irmin
 !      to irt - remember that the lm = 1 contribution is multiplied by
 !      1/sqrt(4 pi)
 
-        read (21, fmt=190) irt1p, irns1p, lmpotp, isave
-        irminp = irt1p - irns1p
-        irminm = max(irminp, irmd-irnsd)
-        read (21, fmt=200)(vm2zimp(ir,i), ir=1, nr)
-        if (lmpotp>1) then
-          lm1 = 2
-          do lm = 2, lmpotp
-            if (lm1/=1) then
-              if (isave==1) then
-                read (21, fmt=190) lm1
-              else
-                lm1 = lm
-              end if
-              if (lm1>1) then
-                read (21, fmt=200)(u(ir), ir=irminp, nr)
-                if (lm1<=lmpot) then
-                  do ir = irminm, nr
-                    vinsimp(ir, lm1, i) = u(ir)
-                  end do
-                end if
-              end if
-            end if
-          end do
-        end if
-      end if ! (INS.LT.1)
-      irws1 = irwsimp(ih)
+            Read (21, Fmt=190) irt1p, irns1p, lmpotp, isave
+            irminp = irt1p - irns1p
+            irminm = max(irminp, irmd-irnsd)
+            Read (21, Fmt=200)(vm2zimp(ir,i), ir=1, nr)
+            If (lmpotp>1) Then
+              lm1 = 2
+              Do lm = 2, lmpotp
+                If (lm1/=1) Then
+                  If (isave==1) Then
+                    Read (21, Fmt=190) lm1
+                  Else
+                    lm1 = lm
+                  End If
+                  If (lm1>1) Then
+                    Read (21, Fmt=200)(u(ir), ir=irminp, nr)
+                    If (lm1<=lmpot) Then
+                      Do ir = irminm, nr
+                        vinsimp(ir, lm1, i) = u(ir)
+                      End Do
+                    End If
+                  End If
+                End If
+              End Do
+            End If
+          End If ! (INS.LT.1)
+          irws1 = irwsimp(ih)
 
 !---> redefine new mt-radius in case of shape corrections
 
-      if (ins/=0) then
-        rmtnew(ih) = scale(1)*alat*xrn(1, ih)
-        imt1 = anint(log(rmtnew(ih)/b(ih)+1.0d0)/a(ih)) + 1
+          If (ins/=0) Then
+            rmtnew(ih) = scale(1)*alat*xrn(1, ih)
+            imt1 = anint(log(rmtnew(ih)/b(ih)+1.0E0_dp)/a(ih)) + 1
 
 !---> for proper core treatment imt must be odd
 !     shift potential by one mesh point if imt is even
 
-        if (mod(imt1,2)==0) then
-          imt1 = imt1 + 1
-          do ir = imt1, 2, -1
-            vm2zimp(ir, i) = vm2zimp(ir-1, i)
-          end do
-        end if
+            If (mod(imt1,2)==0) Then
+              imt1 = imt1 + 1
+              Do ir = imt1, 2, -1
+                vm2zimp(ir, i) = vm2zimp(ir-1, i)
+              End Do
+            End If
 
-        imt(ih) = imt1
-        b(ih) = rmtnew(ih)/(exp(a(ih)*real(imt1-1))-1.0d0)
-      end if ! (INS.NE.0)
+            imt(ih) = imt1
+            b(ih) = rmtnew(ih)/(exp(a(ih)*real(imt1-1,kind=dp))-1.0E0_dp)
+          End If ! (INS.NE.0)
 
 !---> generate radial mesh - potential only is stored in potential card
 !     INEW = 1
 !     p. zahn, jan. 99
 
-      a1 = a(ih)
-      b1 = b(ih)
-      rimp(1, ih) = 0.0d0
-      drdi(1, ih) = a1*b1
-      do ir = 2, irws1
-        ea = exp(a1*real(ir-1))
-        rimp(ir, ih) = b1*(ea-1.0d0)
-        drdi(ir, ih) = a1*b1*ea
-        dror(ir, ih) = a1/(1.0d0-1.0d0/ea)
-      end do
+          a1 = a(ih)
+          b1 = b(ih)
+          rimp(1, ih) = 0.0E0_dp
+          drdi(1, ih) = a1*b1
+          Do ir = 2, irws1
+            ea = exp(a1*real(ir-1,kind=dp))
+            rimp(ir, ih) = b1*(ea-1.0E0_dp)
+            drdi(ir, ih) = a1*b1*ea
+            dror(ir, ih) = a1/(1.0E0_dp-1.0E0_dp/ea)
+          End Do
 
 !---> fill cell-type depending mesh points in the non-muffin-tin-region
 
-      if (ins/=0) then
-        do iri = 1, meshn(ih)
-          ir = iri + imt1
-          rimp(ir, ih) = scale(1)*alat*xrn(iri, ih)
-          drdi(ir, ih) = scale(1)*alat*drn(iri, ih)
-          dror(ir, ih) = drdi(ir, ih)/rimp(ir, ih)
-        end do
-      end if
+          If (ins/=0) Then
+            Do iri = 1, meshn(ih)
+              ir = iri + imt1
+              rimp(ir, ih) = scale(1)*alat*xrn(iri, ih)
+              drdi(ir, ih) = scale(1)*alat*drn(iri, ih)
+              dror(ir, ih) = drdi(ir, ih)/rimp(ir, ih)
+            End Do
+          End If
 
-      rws(ih) = rimp(irws1, ih)
+          rws(ih) = rimp(irws1, ih)
 
 !---> kshape.eq.0 : calculate new rmt adapted to exp. mesh
 
-      call calrmt(ipf, ipfe, ipe, imt(ih), zimp(ih), rmt(ih), rws(ih), &
-        rmtnew(ih), alat, drdi(1,ih), a(ih), b(ih), irws1, rimp(1,ih), io, &
-        ins)
+          Call calrmt(ipf, ipfe, ipe, imt(ih), zimp(ih), rmt(ih), rws(ih), &
+            rmtnew(ih), alat, drdi(1,ih), a(ih), b(ih), irws1, rimp(1,ih), io, &
+            ins)
 
-      if (ins>0) then
-        ircutimp(1, ih) = imt(ih)
-        isum = imt(ih)
-        do ipan1 = 2, ipanimp(ih)
-          isum = isum + nm(ipan1, ih)
-          ircutimp(ipan1, ih) = isum
-        end do
-        nr = isum
-      else ! INS.EQ.0
-        nr = irwsimp(ih)
-        if (kws>=1) then
-          ircutimp(1, ih) = irws1
-        else
-          ircutimp(1, ih) = imt(ih)
-        end if
-      end if ! INS.GT.0
+          If (ins>0) Then
+            ircutimp(1, ih) = imt(ih)
+            isum = imt(ih)
+            Do ipan1 = 2, ipanimp(ih)
+              isum = isum + nm(ipan1, ih)
+              ircutimp(ipan1, ih) = isum
+            End Do
+            nr = isum
+          Else ! INS.EQ.0
+            nr = irwsimp(ih)
+            If (kws>=1) Then
+              ircutimp(1, ih) = irws1
+            Else
+              ircutimp(1, ih) = imt(ih)
+            End If
+          End If ! INS.GT.0
 
 !---> fill array irmin in case of full potential
-      if (ins/=0) irminimp(ih) = nr - irns1p
+          If (ins/=0) irminimp(ih) = nr - irns1p
 
 !---> cut input potential at rmt if given only at exponential mesh
-      if (ins>1) then
-        imt1 = imt(ih)
-        irc1 = ircutimp(ipanimp(ih), ih)
-        call potcut(imt1, irc1, ins, lmpot, rimp(1,ih), vm2zimp(1,i), dummy2, &
-          vinsimp(irmd-irnsd,1,i), zimp(ih), irmd, irmd-irnsd)
-      end if
+          If (ins>1) Then
+            imt1 = imt(ih)
+            irc1 = ircutimp(ipanimp(ih), ih)
+            Call potcut(imt1, irc1, ins, lmpot, rimp(1,ih), vm2zimp(1,i), &
+              dummy2, vinsimp(irmd-irnsd,1,i), zimp(ih), irmd, irmd-irnsd)
+          End If
 
-      if (ins==0 .and. kws==0) then
+          If (ins==0 .And. kws==0) Then
 !---> in case of a mt calculation cut potential at mt radius
-        imt1 = imt(ih)
-        irws1 = irwsimp(ih)
-        call potcut(imt1, irws1, ins, lmpot, rimp(1,ih), vm2zimp(1,i), dummy2, &
-          vinsimp(irmd-irnsd,1,i), zimp(ih), irmd, irmd-irnsd)
+            imt1 = imt(ih)
+            irws1 = irwsimp(ih)
+            Call potcut(imt1, irws1, ins, lmpot, rimp(1,ih), vm2zimp(1,i), &
+              dummy2, vinsimp(irmd-irnsd,1,i), zimp(ih), irmd, irmd-irnsd)
 
-      end if ! INS.EQ.0 .AND. KWS.EQ.0
+          End If ! INS.EQ.0 .AND. KWS.EQ.0
 !--->       maybe apply a magnetic field
-      if (khfeld==1) then
-        write (1337, *) 'ATOM', ih, 'SPIN', ispin, 'SHIFTED BY', &
-          -real(2*ispin-3)*hfield
-        do j = 1, ircutimp(ipanimp(ih), ih)
-          vm2zimp(j, i) = vm2zimp(j, i) - real(2*ispin-3)*hfield
-        end do
-      end if
+          If (khfeld==1) Then
+            Write (1337, *) 'ATOM', ih, 'SPIN', ispin, 'SHIFTED BY', &
+              -real(2*ispin-3, kind=dp)*hfield
+            Do j = 1, ircutimp(ipanimp(ih), ih)
+              vm2zimp(j, i) = vm2zimp(j, i) - real(2*ispin-3, kind=dp)*hfield
+            End Do
+          End If
 
-    end do ! ISPIN = 1,NSPIN
-  end do ! IH = 1,NCELL
-  close (20)
-  close (21)
+        End Do ! ISPIN = 1,NSPIN
+      End Do ! IH = 1,NCELL
+      Close (20)
+      Close (21)
 
-  return
+      Return
 
 
-100 format (16i5)
-110 format (4d20.12)
-120 format (20a4)
-130 format (3f12.8)
-140 format (f10.5, /, f10.5, 2f15.10)
-150 format (i4)
-160 format (2d15.8, /, 2i2)
-170 format (1p, 2d15.6, 1p, d15.8)
-180 format (i5, 1p, d20.11)
-190 format (10i5)
-200 format (1p, 4d20.13)
-end subroutine
+100   Format (16I5)
+110   Format (4D20.12)
+120   Format (20A4)
+130   Format (3F12.8)
+140   Format (F10.5, /, F10.5, 2F15.10)
+150   Format (I4)
+160   Format (2D15.8, /, 2I2)
+170   Format (1P, 2D15.6, 1P, D15.8)
+180   Format (I5, 1P, D20.11)
+190   Format (10I5)
+200   Format (1P, 4D20.13)
+    End Subroutine

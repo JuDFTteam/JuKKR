@@ -50,7 +50,7 @@ subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck, lmmaxd)
 ! .. External Subroutines ..
   external :: cinit, zaxpy, zcopy, zgemm, zgetrf, zgetrs
 ! .. Intrinsic Functions ..
-  intrinsic :: dble, dimag
+  intrinsic :: dble, aimag
 !     ..
 
   call cinit(ndim*ndim, cunit)
@@ -116,7 +116,7 @@ subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck, lmmaxd)
   do i = 1, ndim
     do j = 1, ndim
       xre = dble(alfa(i,j))
-      xim = dimag(alfa(i,j))
+      xim = aimag(alfa(i,j))
       sum = sum + xre*xre + xim*xim
     end do
   end do

@@ -31,6 +31,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    use Profiling
    use mod_version_info
    use global_variables
+   use mod_DataTypes
 
    implicit none
 
@@ -62,6 +63,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
    integer, intent(in) :: NSPINPOT
    integer, intent(in) :: NMVECMAX
+   integer, intent(inout) :: NQDOS
    double precision, intent(in) :: ZAT !< Nuclear charge
    logical, intent(in) :: LDORHOEF
    character(len=10), intent(in) :: SOLVER
@@ -84,7 +86,6 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    double complex, dimension(0:LMAX+1,IEMXD*(1+KREL),NQDOS), intent(in) :: DEN
    double complex, dimension(LMMAXD,IEMXD*(1+KREL),NQDOS), intent(in)   :: DENLM
    ! .. In/Out variables
-   integer, intent(inout) :: NQDOS
    double precision, dimension(MMAXD,MMAXD,NSPIND), intent(inout) :: WLDAU !< potential matrix
    !---------------------------------------------------------------------------
    !     IHOST = 1   < -- this routine is called by the HOST tbkkr-program
@@ -170,7 +171,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    ! .. External Subroutines
    external :: DAXPY,DSCAL,CRADWF,DRVRHO,PNSQNS,RHOLM,RHONS,WFMESH
    ! .. Intrinsic Functions
-   intrinsic :: ATAN,DBLE,DIMAG,SQRT
+   intrinsic :: ATAN,DBLE,aimag,SQRT
    ! .. External Functions
    logical :: OPT,TEST                          ! qdos
    external :: OPT,TEST                         ! qdos
@@ -446,14 +447,14 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
 #ifndef CPP_MPI
             ! Write out qdos:
             if (OPT('qdos    ')) then                                            ! qdos
-               DENTOT = DCMPLX(0.D0,0.D0)                                        ! qdos
+               DENTOT = CMPLX(0.D0,0.D0, kind=dp)                                        ! qdos
                do L = 0,LMAXD1                                                   ! qdos
                   DENTOT = DENTOT + DEN(L,IE,IQ)                                 ! qdos
                enddo                                                             ! qdos
                write(30,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),       &     ! lmdos
-                  -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)       ! lmdos
+                  -aimag(DENTOT)/PI,(-aimag(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)       ! lmdos
                write(31,9000) ERYD,QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),       &     ! qdos
-                  -DIMAG(DENTOT)/PI,(-DIMAG(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)       ! qdos
+                  -aimag(DENTOT)/PI,(-aimag(DENLM(L,IE,IQ))/PI,L=1,LMMAXD)       ! qdos
                9000 format(5F10.6,40E16.8)                                       ! qdos
                ! writeout complex qdos for interpolation                         ! complex qdos
                if(test('compqdos')) then                                         ! complex qdos
@@ -466,7 +467,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
          end do ! IQ                                                             ! qdos
          !----------------------------------------------------------------------
          do L = 0,LMAXD1
-            ESPV(L,ISPIN) = ESPV(L,ISPIN)+DIMAG(ERYD*DEN(L,IE,1)*DF)
+            ESPV(L,ISPIN) = ESPV(L,ISPIN)+aimag(ERYD*DEN(L,IE,1)*DF)
          end do
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          ! get the charge at the Fermi energy (IELAST)
@@ -504,13 +505,13 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
             I1,NQDOS)                                                            ! qdos
          !
          do L = 0,LMAXD1
-            ESPV(L,1) = ESPV(L,1) + DIMAG(ERYD*DEN(L,IE,IQ)*DF)
-            ESPV(L,2) = ESPV(L,2) + DIMAG(ERYD*DEN(L,IE+IEMXD,IQ)*DF)
+            ESPV(L,1) = ESPV(L,1) + aimag(ERYD*DEN(L,IE,IQ)*DF)
+            ESPV(L,2) = ESPV(L,2) + aimag(ERYD*DEN(L,IE+IEMXD,IQ)*DF)
          end do
          !
          do IR = 1,3
             do L = 0,LMAX
-               MUORB(L,IR) = MUORB(L,IR) + DIMAG(DMUORB(L,IR)*DF)
+               MUORB(L,IR) = MUORB(L,IR) + aimag(DMUORB(L,IR)*DF)
             end do
          end do
       end if
@@ -536,7 +537,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
       do M1=1,MMAX
          LM1=LMLO-1+M1
          DENMATC(1:MMAX,M1)=(1.0/(2.0*CI))*&
-            (GLDAU(LMLO:LMHI,LM1)-DCONJG(GLDAU(LM1,LMLO:LMHI)))
+            (GLDAU(LMLO:LMHI,LM1)-CONJG(GLDAU(LM1,LMLO:LMHI)))
       enddo
    endif
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

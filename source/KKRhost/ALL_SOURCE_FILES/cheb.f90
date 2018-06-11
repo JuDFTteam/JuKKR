@@ -49,6 +49,7 @@ end subroutine
 subroutine getccmatrix(ncheb, rmesh, nrmesh, cmatrix)
 ! calculates the C matrix according to:
 ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  use mod_DataTypes
   implicit none
   integer, intent (in) :: ncheb, nrmesh
   double precision, intent (in) :: rmesh(nrmesh)
@@ -57,7 +58,7 @@ subroutine getccmatrix(ncheb, rmesh, nrmesh, cmatrix)
 
   do ir = 1, nrmesh
     do icheb = 0, ncheb
-      cmatrix(ir, icheb) = cos(dfloat(icheb)*dacos(rmesh(ir)))
+      cmatrix(ir, icheb) = cos(real(icheb, kind=dp)*dacos(rmesh(ir)))
     end do
   end do
 end subroutine
@@ -107,8 +108,7 @@ subroutine getclambdacinv(ncheb, clambdacinv)
   call getcmatrix(ncheb, cmatrix)
   n = ncheb + 1
   call dgemm('N', 'N', n, n, n, 1d0, lambda, n, cinvmatrix, n, 0d0, temp1, n)
-  call dgemm('N', 'N', n, n, n, 1d0, cmatrix, n, temp1, n, 0d0, clambdacinv, &
-    n)
+  call dgemm('N', 'N', n, n, n, 1d0, cmatrix, n, temp1, n, 0d0, clambdacinv, n)
 end subroutine
 
 
@@ -124,8 +124,6 @@ subroutine getclambda2cinv(ncheb, clambda2cinv)
   double precision :: cinvmatrix(0:ncheb, 0:ncheb)
   double precision :: temp1(0:ncheb, 0:ncheb)
   double precision :: temp2(0:ncheb, 0:ncheb)
-!function
-  double precision :: matmat_dmdm
 
   lambda = (0.0d0, 0.0d0)
   cmatrix = (0.0d0, 0.0d0)
@@ -137,9 +135,9 @@ subroutine getclambda2cinv(ncheb, clambda2cinv)
   call getcinvmatrix(ncheb, cinvmatrix)
   call getcmatrix(ncheb, cmatrix)
 
-  temp1 = matmat_dmdm(lambda, lambda, ncheb)
-  temp2 = matmat_dmdm(temp1, cinvmatrix, ncheb)
-  clambda2cinv = matmat_dmdm(cmatrix, temp2, ncheb)
+  call matmat_dmdm(lambda, lambda, ncheb, temp1)
+  call matmat_dmdm(temp1, cinvmatrix, ncheb, temp2)
+  call matmat_dmdm(cmatrix, temp2, ncheb, clambda2cinv)
 end subroutine
 
 
@@ -170,19 +168,22 @@ double precision function matvec_dmdm(ncheb, mat1, vec1)
   m = size(mat1, 1)
   n = size(mat1, 2)
   if (size(vec1,1)/=n) stop &
-    'matmat_dmdm: dimensions of first input array differ.'
+    'matvec_dmdm: dimensions of first input array differ.'
   call dgemv('N', m, n, 1.0d0, mat1, m, vec1, 1, 0.0d0, matvec_dmdm, 1)
 end function
 
-double precision function matmat_dmdm(mat1, mat2, ncheb)
+subroutine matmat_dmdm(mat1, mat2, ncheb, outmat)
+  use mod_DataTypes
   implicit none
-  integer :: ncheb, n
-  double precision, intent (in) :: mat1(0:ncheb, 0:ncheb), &
-    mat2(0:ncheb, 0:ncheb)
+  integer, intent(in) :: ncheb
+  real (kind=dp), intent (in) :: mat1(0:ncheb, 0:ncheb), mat2(0:ncheb, 0:ncheb)
+  real (kind=dp), intent (out) :: outmat(0:ncheb, 0:ncheb)
+  
+  integer :: n
 
   n = ncheb + 1
-  call dgemm('N', 'N', n, n, n, 1d0, mat1, n, mat2, n, 0d0, matmat_dmdm, n)
-end function
+  call dgemm('N', 'N', n, n, n, 1d0, mat1, n, mat2, n, 0d0, outmat, n)
+end subroutine matmat_dmdm
 
 
 !end module mod_cheb

@@ -4,18 +4,20 @@
 !> @author Jonathan Chico
 !> @date 09.01.2018
 !-------------------------------------------------------------------------------
-module constants
+    Module constants
+      Use mod_datatypes, Only: dp
 
-  implicit none
+      Implicit None
+      Private :: dp
 !.. Scalar parameters
-  double precision :: kb_ev = 8.61734d-5 !< Boltzmann constant in eV
-  integer, parameter :: nsymaxd = 48
-  integer, parameter :: maxmshd = 30
-  double precision, parameter :: kb = 0.6333659d-5 !< Boltzmann constant in Ry
-  double precision, parameter :: pi = 3.141592653589793d0
-  double precision, parameter :: ryd = 13.6058d0 !< Rydbergs in eV
-  double precision, parameter :: cvlight = 274.0720442d0 !< Speed of light divided by the fine structure constant
-  double complex, parameter :: ci = (0.0d0, 1.0d0) !< Unitary imaginary complex number
-  double complex, parameter :: cone = (1.0d0, 0.0d0) !< Unitary real complex number
-  double complex, parameter :: czero = (0.0d0, 0.0d0) !< Complex zero initialization
-end module
+      Real (Kind=dp) :: kb_ev = 8.61734E-5_dp !< Boltzmann constant in eV
+      Integer, Parameter :: nsymaxd = 48
+      Integer, Parameter :: maxmshd = 30
+      Real (Kind=dp), Parameter :: kb = 0.6333659E-5_dp !< Boltzmann constant in Ry
+      Real (Kind=dp), Parameter :: pi = 3.141592653589793E0_dp
+      Real (Kind=dp), Parameter :: ryd = 13.6058E0_dp !< Rydbergs in eV
+      Real (Kind=dp), Parameter :: cvlight = 274.0720442E0_dp !< Speed of light divided by the fine structure constant
+      Complex (Kind=dp), Parameter :: ci = (0.0E0_dp, 1.0E0_dp) !< Unitary imaginary complex number
+      Complex (Kind=dp), Parameter :: cone = (1.0E0_dp, 0.0E0_dp) !< Unitary real complex number
+      Complex (Kind=dp), Parameter :: czero = (0.0E0_dp, 0.0E0_dp) !< Complex zero initialization
+    End Module

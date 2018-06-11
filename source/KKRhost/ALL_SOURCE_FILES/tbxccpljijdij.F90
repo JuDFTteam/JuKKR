@@ -376,7 +376,7 @@ contains
                         endif !test('Jijenerg')
                         !            Jijmat_real = 0d0
                         do ie=1,ielast
-                           !                 Jijmat_real(:,:)=Jijmat_real(:,:)+dimag(wez(ie)*Jijmat(:,:,istore,ie))/2d0
+                           !                 Jijmat_real(:,:)=Jijmat_real(:,:)+aimag(wez(ie)*Jijmat(:,:,istore,ie))/2d0
                            jtmp(1) = (Jijmat(1,1,istore,ie)+Jijmat(2,2,istore,ie))/2d0
                            !jtmp(2) = (Jijmat(2,1,istore,ie)-Jijmat(1,2,istore,ie))/2d0 !<- old defiition (until Apr.2017) which assumed +Dij.(SixSj)
                            jtmp(2) = (Jijmat(1,2,istore,ie)-Jijmat(2,1,istore,ie))/2d0  !<- changed to -Dij.(SixSj), to be consistent with KKRwiki
@@ -452,10 +452,10 @@ contains
 
                         rdiff = rclsimp(:,i2)-rclsimp(:,i1)
                         rsh   = sqrt(sum(rdiff**2))
-                        write(49,99010) rsh, dimag(jxcijint(1,istore)),&
-                        & dimag(jxcijint(2,istore)),&
-                        & dimag(jxcijint(3,istore)),&
-                        & dimag(jxcijint(4,istore)),&
+                        write(49,99010) rsh, aimag(jxcijint(1,istore)),&
+                        & aimag(jxcijint(2,istore)),&
+                        & aimag(jxcijint(3,istore)),&
+                        & aimag(jxcijint(4,istore)),&
                         & rdiff, lm2, i2
                      end do
 

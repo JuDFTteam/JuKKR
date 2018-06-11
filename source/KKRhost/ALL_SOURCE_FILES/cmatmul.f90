@@ -1,4 +1,5 @@
-subroutine cmatmul(n, m, a, b, c)
+    Subroutine cmatmul(n, m, a, b, c)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *   perform  the matrix-matrix operation           C = A * B       *
@@ -9,35 +10,35 @@ subroutine cmatmul(n, m, a, b, c)
 !   *                                                                  *
 !   ********************************************************************
 
-  implicit none
+      Implicit None
 
 ! PARAMETER definitions
-  double complex :: c0
-  parameter (c0=(0.0d0,0.0d0))
+      Complex (Kind=dp) :: c0
+      Parameter (c0=(0.0E0_dp,0.0E0_dp))
 
 ! Dummy arguments
-  integer :: m, n
-  double complex :: a(m, m), b(m, m), c(m, m)
+      Integer :: m, n
+      Complex (Kind=dp) :: a(m, m), b(m, m), c(m, m)
 
 ! Local variables
-  double complex :: blj
-  integer :: i, j, l
+      Complex (Kind=dp) :: blj
+      Integer :: i, j, l
 
-  do j = 1, n
-    do i = 1, n
-      c(i, j) = c0
-    end do
-  end do
+      Do j = 1, n
+        Do i = 1, n
+          c(i, j) = c0
+        End Do
+      End Do
 
-  do j = 1, n
-    do l = 1, n
-      blj = b(l, j)
-      if (blj/=c0) then
-        do i = 1, n
-          c(i, j) = c(i, j) + a(i, l)*blj
-        end do
-      end if
-    end do
-  end do
+      Do j = 1, n
+        Do l = 1, n
+          blj = b(l, j)
+          If (blj/=c0) Then
+            Do i = 1, n
+              c(i, j) = c(i, j) + a(i, l)*blj
+            End Do
+          End If
+        End Do
+      End Do
 
-end subroutine
+    End Subroutine

@@ -1,43 +1,45 @@
-subroutine calc_orbitalmoment(lmax, lmsize, loperator)
+    Subroutine calc_orbitalmoment(lmax, lmsize, loperator)
 
-  use :: constants
-  use :: profiling
+      Use constants
+      Use profiling
+      Use mod_datatypes, Only: dp
 
-  implicit none
-  integer, intent (in) :: lmax, lmsize
-  double complex, dimension (lmsize, lmsize, 3), intent (out) :: loperator
-  integer, save :: first = 1
-  integer :: lval
-  double complex, dimension (:, :, :), allocatable :: lorbit_onel
-  integer :: lmmax, lstart, lstop, i_stat, i_all
+      Implicit None
+      Integer, Intent (In) :: lmax, lmsize
+      Complex (Kind=dp), Dimension (lmsize, lmsize, 3), &
+        Intent (Out) :: loperator
+      Integer, Save :: first = 1
+      Integer :: lval
+      Complex (Kind=dp), Dimension (:, :, :), Allocatable :: lorbit_onel
+      Integer :: lmmax, lstart, lstop, i_stat, i_all
 
-  lmmax = (lmax+1)**2
-  loperator = czero
+      lmmax = (lmax+1)**2
+      loperator = czero
 
-  loperator(1, 1, 1) = czero
-  loperator(1, 1, 2) = czero
-  loperator(1, 1, 3) = czero
+      loperator(1, 1, 1) = czero
+      loperator(1, 1, 2) = czero
+      loperator(1, 1, 3) = czero
 
-  do lval = 1, lmax
-    allocate (lorbit_onel(2*lval+1,2*lval+1,3), stat=i_stat)
-    call memocc(i_stat, product(shape(lorbit_onel))*kind(lorbit_onel), &
-      'lorbit_onel', 'calc_orbitalmoment')
-    lorbit_onel = czero
-    call calc_orbit_onel(lval, lorbit_onel)
-    lstart = ((lval-1)+1)**2 + 1
-    lstop = ((lval)+1)**2
-    loperator(lstart:lstop, lstart:lstop, 1) = lorbit_onel(:, :, 1)
-    loperator(lstart:lstop, lstart:lstop, 2) = lorbit_onel(:, :, 2)
-    loperator(lstart:lstop, lstart:lstop, 3) = lorbit_onel(:, :, 3)
+      Do lval = 1, lmax
+        Allocate (lorbit_onel(2*lval+1,2*lval+1,3), Stat=i_stat)
+        Call memocc(i_stat, product(shape(lorbit_onel))*kind(lorbit_onel), &
+          'lorbit_onel', 'calc_orbitalmoment')
+        lorbit_onel = czero
+        Call calc_orbit_onel(lval, lorbit_onel)
+        lstart = ((lval-1)+1)**2 + 1
+        lstop = ((lval)+1)**2
+        loperator(lstart:lstop, lstart:lstop, 1) = lorbit_onel(:, :, 1)
+        loperator(lstart:lstop, lstart:lstop, 2) = lorbit_onel(:, :, 2)
+        loperator(lstart:lstop, lstart:lstop, 3) = lorbit_onel(:, :, 3)
 !
-    i_all = -product(shape(lorbit_onel))*kind(lorbit_onel)
-    deallocate (lorbit_onel, stat=i_stat)
-    call memocc(i_stat, i_all, 'lorbit_onel', 'calc_orbitalmoment')
-  end do
-  if (lmsize/=lmmax) then
-    loperator(lmmax+1:lmsize, lmmax+1:lmsize, :) = loperator(:lmmax, :lmmax, &
-      :)
-  end if
+        i_all = -product(shape(lorbit_onel))*kind(lorbit_onel)
+        Deallocate (lorbit_onel, Stat=i_stat)
+        Call memocc(i_stat, i_all, 'lorbit_onel', 'calc_orbitalmoment')
+      End Do
+      If (lmsize/=lmmax) Then
+        loperator(lmmax+1:lmsize, lmmax+1:lmsize, :) = loperator(:lmmax, &
+          :lmmax, :)
+      End If
 
 ! if (first==1) then
 !  open(unit=423492157,file='out_Lx')
@@ -51,92 +53,93 @@ subroutine calc_orbitalmoment(lmax, lmsize, loperator)
 !  close(423492157);close(423492158);close(423492159)
 ! end if
 
-  first = 0
-end subroutine
+      first = 0
+    End Subroutine
 
 
-subroutine calc_orbit_onel(lval, lorbit_onel)
+    Subroutine calc_orbit_onel(lval, lorbit_onel)
 
-  use :: constants
+      Use constants
+      Use mod_datatypes, Only: dp
 
-  implicit none
-  integer, intent (in) :: lval
-  double complex, dimension (2*lval+1, 2*lval+1, 3), &
-    intent (out) :: lorbit_onel
-  double complex, dimension (-lval:lval, -lval:lval) :: l_z
-  double complex, dimension (-lval:lval, -lval:lval) :: l_x
-  double complex, dimension (-lval:lval, -lval:lval) :: l_y
-  double complex, dimension (-lval:lval, -lval:lval) :: l_dn
-  double complex, dimension (-lval:lval, -lval:lval) :: l_up
-  integer :: i1
-  double precision :: lfac
+      Implicit None
+      Integer, Intent (In) :: lval
+      Complex (Kind=dp), Dimension (2*lval+1, 2*lval+1, 3), &
+        Intent (Out) :: lorbit_onel
+      Complex (Kind=dp), Dimension (-lval:lval, -lval:lval) :: l_z
+      Complex (Kind=dp), Dimension (-lval:lval, -lval:lval) :: l_x
+      Complex (Kind=dp), Dimension (-lval:lval, -lval:lval) :: l_y
+      Complex (Kind=dp), Dimension (-lval:lval, -lval:lval) :: l_dn
+      Complex (Kind=dp), Dimension (-lval:lval, -lval:lval) :: l_up
+      Integer :: i1
+      Real (Kind=dp) :: lfac
 !
-  l_z = czero
-  l_x = czero
-  l_y = czero
-  l_dn = czero
-  l_up = czero
+      l_z = czero
+      l_x = czero
+      l_y = czero
+      l_dn = czero
+      l_up = czero
 !
-  lorbit_onel = czero
-  do i1 = -lval, lval
-    l_z(-i1, i1) = -ci*i1
-  end do
+      lorbit_onel = czero
+      Do i1 = -lval, lval
+        l_z(-i1, i1) = -ci*i1
+      End Do
 !
-  if (lval>0) then
+      If (lval>0) Then
 !
-    lfac = sqrt(lval*(lval+1d0))/sqrt(2d0)
-    l_dn(0, -1) = -ci*lfac
-    l_dn(0, 1) = lfac
-    l_dn(-1, 0) = ci*lfac
-    l_dn(1, 0) = -lfac
+        lfac = sqrt(lval*(lval+1E0_dp))/sqrt(2E0_dp)
+        l_dn(0, -1) = -ci*lfac
+        l_dn(0, 1) = lfac
+        l_dn(-1, 0) = ci*lfac
+        l_dn(1, 0) = -lfac
 !
-    if (lval>1) then
-      do i1 = 2, lval
-        lfac = 0.5d0*sqrt(lval*(lval+1d0)-i1*(i1-1d0))
-        l_dn(-i1, -i1+1) = -lfac
-        l_dn(-i1, i1-1) = ci*lfac
-        l_dn(i1, -i1+1) = -ci*lfac
-        l_dn(i1, i1-1) = -lfac
+        If (lval>1) Then
+          Do i1 = 2, lval
+            lfac = 0.5E0_dp*sqrt(lval*(lval+1E0_dp)-i1*(i1-1E0_dp))
+            l_dn(-i1, -i1+1) = -lfac
+            l_dn(-i1, i1-1) = ci*lfac
+            l_dn(i1, -i1+1) = -ci*lfac
+            l_dn(i1, i1-1) = -lfac
 !
-        lfac = 0.5d0*sqrt(lval*(lval+1d0)-(i1-1d0)*i1)
-        l_dn(-i1+1, -i1) = lfac
-        l_dn(-i1+1, i1) = ci*lfac
-        l_dn(i1-1, -i1) = -ci*lfac
-        l_dn(i1-1, i1) = lfac
-      end do
-    end if
-  end if
+            lfac = 0.5E0_dp*sqrt(lval*(lval+1E0_dp)-(i1-1E0_dp)*i1)
+            l_dn(-i1+1, -i1) = lfac
+            l_dn(-i1+1, i1) = ci*lfac
+            l_dn(i1-1, -i1) = -ci*lfac
+            l_dn(i1-1, i1) = lfac
+          End Do
+        End If
+      End If
 !
-  if (lval>0) then
+      If (lval>0) Then
 !
-    lfac = sqrt(lval*(lval+1d0))/sqrt(2d0)
-    l_up(0, -1) = -ci*lfac
-    l_up(0, 1) = -lfac
-    l_up(-1, 0) = ci*lfac
-    l_up(1, 0) = lfac
+        lfac = sqrt(lval*(lval+1E0_dp))/sqrt(2E0_dp)
+        l_up(0, -1) = -ci*lfac
+        l_up(0, 1) = -lfac
+        l_up(-1, 0) = ci*lfac
+        l_up(1, 0) = lfac
 !
-    if (lval>1) then
-      do i1 = 2, lval
-        lfac = 0.5d0*sqrt(lval*(lval+1d0)-i1*(i1-1d0))
-        l_up(-i1, -i1+1) = lfac
-        l_up(-i1, i1-1) = ci*lfac
-        l_up(i1, -i1+1) = -ci*lfac
-        l_up(i1, i1-1) = lfac
+        If (lval>1) Then
+          Do i1 = 2, lval
+            lfac = 0.5E0_dp*sqrt(lval*(lval+1E0_dp)-i1*(i1-1E0_dp))
+            l_up(-i1, -i1+1) = lfac
+            l_up(-i1, i1-1) = ci*lfac
+            l_up(i1, -i1+1) = -ci*lfac
+            l_up(i1, i1-1) = lfac
 !
-        lfac = 0.5d0*sqrt(lval*(lval+1d0)-(i1-1d0)*i1)
-        l_up(-i1+1, -i1) = -lfac
-        l_up(-i1+1, i1) = ci*lfac
-        l_up(i1-1, -i1) = -ci*lfac
-        l_up(i1-1, i1) = -lfac
-      end do
-    end if
-  end if
+            lfac = 0.5E0_dp*sqrt(lval*(lval+1E0_dp)-(i1-1E0_dp)*i1)
+            l_up(-i1+1, -i1) = -lfac
+            l_up(-i1+1, i1) = ci*lfac
+            l_up(i1-1, -i1) = -ci*lfac
+            l_up(i1-1, i1) = -lfac
+          End Do
+        End If
+      End If
 !
-  l_x = 0.5d0*(l_up+l_dn)
-  l_y = -0.5d0*ci*(l_up-l_dn)
+      l_x = 0.5E0_dp*(l_up+l_dn)
+      l_y = -0.5E0_dp*ci*(l_up-l_dn)
 !
-  lorbit_onel(:, :, 1) = l_x
-  lorbit_onel(:, :, 2) = l_y
-  lorbit_onel(:, :, 3) = l_z
+      lorbit_onel(:, :, 1) = l_x
+      lorbit_onel(:, :, 2) = l_y
+      lorbit_onel(:, :, 3) = l_z
 
-end subroutine
+    End Subroutine

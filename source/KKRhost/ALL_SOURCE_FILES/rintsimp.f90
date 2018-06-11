@@ -1,4 +1,5 @@
-subroutine rintsimp(fx, jtop, cint)
+    Subroutine rintsimp(fx, jtop, cint)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *  SIMPSON - INTERGRATION FOR  REAL   INTEGRAND  FX FROM 1 TO JTOP *
@@ -7,25 +8,25 @@ subroutine rintsimp(fx, jtop, cint)
 !   *                                                                  *
 !   ********************************************************************
 
-  implicit none
+      Implicit None
 
 ! Dummy arguments
-  real *8 :: cint
-  integer :: jtop
-  real *8 :: fx(jtop)
+      Real (Kind=dp) :: cint
+      Integer :: jtop
+      Real (Kind=dp) :: fx(jtop)
 
 ! Local variables
-  integer :: i
-  real *8 :: simp
+      Integer :: i
+      Real (Kind=dp) :: simp
 
-  cint = fx(1)
-  simp = -1.0d0
+      cint = fx(1)
+      simp = -1.0E0_dp
 
-  do i = 2, jtop - 1
-    simp = -simp
-    cint = cint + (3.0d0+simp)*fx(i)
-  end do
+      Do i = 2, jtop - 1
+        simp = -simp
+        cint = cint + (3.0E0_dp+simp)*fx(i)
+      End Do
 
-  cint = (cint+fx(jtop))/3.0d0
+      cint = (cint+fx(jtop))/3.0E0_dp
 
-end subroutine
+    End Subroutine

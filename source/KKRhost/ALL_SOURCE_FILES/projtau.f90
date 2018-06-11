@@ -120,7 +120,7 @@ subroutine projtau(icpaflag, cpachng, kmrot, wrtau, wrtaumq, ifiltau, eryd, &
           if (i==j) then
             write (ifiltau, 120) i, j, taut(i, j, it)
           else
-            if (cdabs(taut(i,j,it)/taut(i,i,it))>tol) write (ifiltau, 120) i, &
+            if (abs(taut(i,j,it)/taut(i,i,it))>tol) write (ifiltau, 120) i, &
               j, taut(i, j, it)
           end if
         end do
@@ -140,7 +140,7 @@ subroutine projtau(icpaflag, cpachng, kmrot, wrtau, wrtaumq, ifiltau, eryd, &
           else
             rtau = tauq(i, j, iq)/tauq(i, i, iq)
             rmss = mssq(i, j, iq)/mssq(i, i, iq)
-            if ((cdabs(rtau)>tol) .or. (cdabs(rmss)>tol)) write (ifiltau, 120) &
+            if ((abs(rtau)>tol) .or. (abs(rmss)>tol)) write (ifiltau, 120) &
               i, j, tauq(i, j, iq), mssq(i, j, iq)
           end if
 

@@ -1,6 +1,7 @@
 ! ************************************************************************
-subroutine brysh1(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
-  lmpot, lsmear)
+    Subroutine brysh1(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
+      lmpot, lsmear)
+      Use mod_datatypes, Only: dp
 !*********************************************************************
 !     shifts the density or potential of all mt-cell into one single
 !     vector and projects out the coulomb part only.
@@ -8,50 +9,50 @@ subroutine brysh1(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
 
 ! ------------------------------------------------------------------------
 !     .. Parameters ..
-  include 'inc.p'
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
+      Include 'inc.p'
+      Integer :: lmpotd
+      Parameter (lmpotd=(lpotd+1)**2)
 !..
 !.. Local Scalars ..
-  integer :: imap, ins, lmpot, natps, natyp, nspin, lsmear
+      Integer :: imap, ins, lmpot, natps, natyp, nspin, lsmear
 !..
 !     ..
-  double precision :: x(irmd, lmpotd, *), y(*), xsme(irmd, *)
-  integer :: irc(*), irmin(*)
+      Real (Kind=dp) :: x(irmd, lmpotd, *), y(*), xsme(irmd, *)
+      Integer :: irc(*), irmin(*)
 
 !     Next for SMEARed spherical potential
-  integer :: ia, ip, ir, irc1, irmin1, is, lm
+      Integer :: ia, ip, ir, irc1, irmin1, is, lm
 
 
-  imap = 0
-  do is = 1, nspin
-    do ia = natps, natyp
-      ip = nspin*(ia-1) + is
-      irc1 = irc(ia)
-      do ir = 1, irc1
-        imap = imap + 1
-        y(imap) = x(ir, 1, ip)
-      end do
+      imap = 0
+      Do is = 1, nspin
+        Do ia = natps, natyp
+          ip = nspin*(ia-1) + is
+          irc1 = irc(ia)
+          Do ir = 1, irc1
+            imap = imap + 1
+            y(imap) = x(ir, 1, ip)
+          End Do
 
 ! ************************************************************************
-      if (lsmear>0) then
-        do ir = 1, irc1
-          imap = imap + 1
-          y(imap) = xsme(ir, ip)
-        end do
-      end if
+          If (lsmear>0) Then
+            Do ir = 1, irc1
+              imap = imap + 1
+              y(imap) = xsme(ir, ip)
+            End Do
+          End If
 !*********************************************************************
-      if (ins>0 .and. lmpot>1) then
-        irmin1 = irmin(ia)
-        do lm = 2, lmpot
-          do ir = irmin1, irc1
-            imap = imap + 1
-            y(imap) = x(ir, lm, ip)
-          end do
-        end do
-      end if
+          If (ins>0 .And. lmpot>1) Then
+            irmin1 = irmin(ia)
+            Do lm = 2, lmpot
+              Do ir = irmin1, irc1
+                imap = imap + 1
+                y(imap) = x(ir, lm, ip)
+              End Do
+            End Do
+          End If
 !     shifts the density or potential of all mt-cell into one single
-    end do
-  end do
+        End Do
+      End Do
 !     vector and projects out the coulomb part only.
-end subroutine
+    End Subroutine

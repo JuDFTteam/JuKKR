@@ -1,12 +1,12 @@
 ! ************************************************************************
-subroutine rcstop(c)
+    Subroutine rcstop(c)
 ! ************************************************************************
 !     .. Scalar Arguments ..
 
-  character (len=8), intent (in) :: c
+      Character (Len=8), Intent (In) :: c
 
 !     ..
-  print *, 'ERROR: STOP AT POSITION ', c
-  stop
+      Print *, 'ERROR: STOP AT POSITION ', c
+      Stop
 
-end subroutine
+    End Subroutine

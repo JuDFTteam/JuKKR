@@ -527,7 +527,7 @@ contains
          RHO2NSNM(:,:,:,2) = 0.D0            ! Set spin density to zero
          call VXCDRV(EXCNM,KTE,KXC,LPOT,NSPIN,1,NATYP,RHO2NSNM,VXCNM,&
             RMESH,DRDI,A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,              &
-            ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP)
+            ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP,NPOTD, LMPOT,LMXSPD,IRM,NATYP,LMMAXD)
          ! Compute the EXC-difference
          EXCDIFF = 0.D0
          do I1 = 1,NATYP

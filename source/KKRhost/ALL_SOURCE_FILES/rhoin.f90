@@ -97,7 +97,7 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz, fz, &
   external :: zdotu
 !..
 !.. Data statements ..
-  intrinsic :: atan, dimag, sqrt
+  intrinsic :: atan, aimag, sqrt
 !..
 !
   save :: czero
@@ -190,7 +190,7 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz, fz, &
         ffz = fz(i, l)
         cden(i, l) = ppz*(gmatl*ppz+ekl(l)*qz(i,l)) + &
           ffz*(gmatl*ffz+ekl(l)*sz(i,l))
-        rho2ns(i, 1) = rho2ns(i, 1) + c0ll*dimag(df*cden(i,l)) !lm-dos    
+        rho2ns(i, 1) = rho2ns(i, 1) + c0ll*aimag(df*cden(i,l)) !lm-dos    
 !lm-dos
 !lm-dos
         do m = -l, l !lm-dos
@@ -205,7 +205,7 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz, fz, &
       do i = 2, irc1
         ppz = pz(i, l)
         cden(i, l) = ppz*(gmatl*ppz+ekl(l)*qz(i,l))
-        rho2ns(i, 1) = rho2ns(i, 1) + c0ll*dimag(df*cden(i,l)) !lm-dos
+        rho2ns(i, 1) = rho2ns(i, 1) + c0ll*aimag(df*cden(i,l)) !lm-dos
 !lm-dos
         do m = -l, l 
           lm1 = l*(l+1) + m + 1 
@@ -246,7 +246,7 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz, fz, &
 
           gmatl = df*gmatl
           do i = 2, irc1
-            rho2ns(i, lm3) = rho2ns(i, lm3) + dimag(gmatl*wf(i,l1,l2))
+            rho2ns(i, lm3) = rho2ns(i, lm3) + aimag(gmatl*wf(i,l1,l2))
           end do
         end if
 ! lm-dos

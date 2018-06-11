@@ -1,7 +1,9 @@
-subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax, bravais, &
-  tk, npol, npnt1, npnt2, npnt3, ez, ielast, kaoez, lefttinvll, righttinvll, &
-  vacflag, nlbasis, nrbasis, cmomhost, vref, rmtref, nref, refpot, lmaxd, &
-  lmgf0d, lmmaxd, lm2d, nembd1, iemxd, nspind, lmpotd, natypd, irmd, ipand)
+    Subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax, &
+      bravais, tk, npol, npnt1, npnt2, npnt3, ez, ielast, kaoez, lefttinvll, &
+      righttinvll, vacflag, nlbasis, nrbasis, cmomhost, vref, rmtref, nref, &
+      refpot, lmaxd, lmgf0d, lmmaxd, lm2d, nembd1, iemxd, nspind, lmpotd, &
+      natypd, irmd, ipand)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
 ! * This routine treats the DECIMATION case setting up the single-site *
@@ -33,106 +35,109 @@ subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax, bravais, &
 ! *                                                                    *
 ! **********************************************************************
 
-  implicit none
+      Implicit None
 !..
 !.. Scalar arguments
-  integer :: lmmaxd, nembd1, iemxd, nspind, lmpotd, natypd, ipand, irmd, lmaxd
-  integer :: lm2d, nref, lmgf0d
-  integer :: ins, krel, kmrot, nspin, naez, lmmax, npol, npnt1, npnt2, npnt3
-  integer :: ielast, nlbasis, nrbasis, kvrel
-  double precision :: alat, tk
+      Integer :: lmmaxd, nembd1, iemxd, nspind, lmpotd, natypd, ipand, irmd, &
+        lmaxd
+      Integer :: lm2d, nref, lmgf0d
+      Integer :: ins, krel, kmrot, nspin, naez, lmmax, npol, npnt1, npnt2, &
+        npnt3
+      Integer :: ielast, nlbasis, nrbasis, kvrel
+      Real (Kind=dp) :: alat, tk
 !..
 !.. Array arguments
-  integer :: kaoez(natypd, *), refpot(nembd1)
-  double precision :: bravais(3, 3), cmomhost(lmpotd, *)
-  double precision :: vref(*), rmtref(*)
-  double complex :: lefttinvll(lmmaxd, lmmaxd, nembd1, nspind, iemxd), &
-    righttinvll(lmmaxd, lmmaxd, nembd1, nspind, iemxd)
-  double complex :: ez(iemxd)
-  logical :: vacflag(2)
+      Integer :: kaoez(natypd, *), refpot(nembd1)
+      Real (Kind=dp) :: bravais(3, 3), cmomhost(lmpotd, *)
+      Real (Kind=dp) :: vref(*), rmtref(*)
+      Complex (Kind=dp) :: lefttinvll(lmmaxd, lmmaxd, nembd1, nspind, iemxd), &
+        righttinvll(lmmaxd, lmmaxd, nembd1, nspind, iemxd)
+      Complex (Kind=dp) :: ez(iemxd)
+      Logical :: vacflag(2)
 !..
 !.. Local scalars
-  integer :: ierror, il, ie, ispin, nspinso ! ruess: for tmat new solver
-  double complex :: cfctor
-  character (len=40) :: fileleft, fileright
-  character (len=256) :: uio  ! NCOLIO=256
+      Integer :: ierror, il, ie, ispin, nspinso ! ruess: for tmat new solver
+      Complex (Kind=dp) :: cfctor
+      Character (Len=40) :: fileleft, fileright
+      Character (Len=256) :: uio ! NCOLIO=256
 
 !..                                  ! ruess: for NEWSOSOL running option
 !.. External Functions ..
-  logical :: opt
-  external :: opt
+      Logical :: opt
+      External :: opt
 
 ! ======================================================================
-  write (1337, '(79(1H=))')
-  write (1337, '(15X,A,/,79(1H=),/)') &
-    'DECIOPT: reading left/right host decimation files'
-  il = 1
-  ierror = 0
-  call ioinput('DECIFILES       ', uio, il, 7, ierror)
+      Write (1337, '(79(1H=))')
+      Write (1337, '(15X,A,/,79(1H=),/)') &
+        'DECIOPT: reading left/right host decimation files'
+      il = 1
+      ierror = 0
+      Call ioinput('DECIFILES       ', uio, il, 7, ierror)
 ! :::::::::::::::::::::::::::::::::::::::::::::::: decifiles (tmatrices)
-  if (ierror==0) then
-    read (unit=uio, fmt='(A40)') fileleft
-    call ioinput('DECIFILES       ', uio, il+1, 7, ierror)
-    read (unit=uio, fmt='(A40)') fileright
+      If (ierror==0) Then
+        Read (Unit=uio, Fmt='(A40)') fileleft
+        Call ioinput('DECIFILES       ', uio, il+1, 7, ierror)
+        Read (Unit=uio, Fmt='(A40)') fileright
 ! ----------------------------------------------------------------------
 
 ! --> first call to read the header ( IE = 0 )
 
-    ie = 0
-    call decimaread(ez, tk, npnt1, npnt2, npnt3, npol, nspin, &
-      lefttinvll(1,1,1,1,1), righttinvll(1,1,1,1,1), vacflag, ie, nlbasis, &
-      nrbasis, naez, kaoez, kmrot, ins, nspin, lmmax, ielast, fileleft, &
-      fileright, krel, natypd, lmmaxd, nembd1)
+        ie = 0
+        Call decimaread(ez, tk, npnt1, npnt2, npnt3, npol, nspin, &
+          lefttinvll(1,1,1,1,1), righttinvll(1,1,1,1,1), vacflag, ie, nlbasis, &
+          nrbasis, naez, kaoez, kmrot, ins, nspin, lmmax, ielast, fileleft, &
+          fileright, krel, natypd, lmmaxd, nembd1)
 
 ! --> get the left and right host Delta_t matrices
 
-    cfctor = alat/(8.d0*atan(1.0d0)) ! = ALAT/(2*PI)
-    nspinso = nspin
-    if (opt('NEWSOSOL')) nspinso = 1 ! ruess: only combined l-s index for newsolver
-    do ispin = 1, nspinso
-      do ie = 1, ielast
-        call decimaread(ez, tk, npnt1, npnt2, npnt3, npol, ispin, &
-          lefttinvll(1,1,1,ispin,ie), righttinvll(1,1,1,ispin,ie), vacflag, &
-          ie, nlbasis, nrbasis, naez, kaoez, kmrot, ins, nspin, lmmax, ielast, &
-          fileleft, fileright, krel, natypd, lmmaxd, nembd1)
+        cfctor = alat/(8.E0_dp*atan(1.0E0_dp)) ! = ALAT/(2*PI)
+        nspinso = nspin
+        If (opt('NEWSOSOL')) nspinso = 1 ! ruess: only combined l-s index for newsolver
+        Do ispin = 1, nspinso
+          Do ie = 1, ielast
+            Call decimaread(ez, tk, npnt1, npnt2, npnt3, npol, ispin, &
+              lefttinvll(1,1,1,ispin,ie), righttinvll(1,1,1,ispin,ie), &
+              vacflag, ie, nlbasis, nrbasis, naez, kaoez, kmrot, ins, nspin, &
+              lmmax, ielast, fileleft, fileright, krel, natypd, lmmaxd, &
+              nembd1)
 
 ! --> host matrices have been written out in true units
 !     they are used in p.u. units (see kloopz) --> convert them here
 
-        call zscal(lmmaxd*lmmaxd*nembd1, cfctor, lefttinvll(1,1,1,ispin,ie), &
-          1)
-        call zscal(lmmaxd*lmmaxd*nembd1, cfctor, righttinvll(1,1,1,ispin,ie), &
-          1)
-      end do
-    end do
+            Call zscal(lmmaxd*lmmaxd*nembd1, cfctor, &
+              lefttinvll(1,1,1,ispin,ie), 1)
+            Call zscal(lmmaxd*lmmaxd*nembd1, cfctor, &
+              righttinvll(1,1,1,ispin,ie), 1)
+          End Do
+        End Do
 
 ! --> get the left and right host charge moments
 !     ( not needed in single-iteration mode calculations )
 
 !fivos        IF ( SCFSTEPS.GT.1 )
-    call cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, &
-      nembd1, lmpotd)
-    close (37)
-    close (38)
+        Call cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, &
+          natypd, nembd1, lmpotd)
+        Close (37)
+        Close (38)
 ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  else
+      Else
 ! :::::::::::::::::::::::::::::::::::::::::::::::: decipots (calc tmats)
-    ierror = 0
-    call ioinput('DECIPOTS        ', uio, il, 7, ierror)
-    if (ierror/=0) then
-      write (6, 100)
-      stop
-    end if
-    read (unit=uio, fmt='(A40)') fileleft
-    call ioinput('DECIPOTS        ', uio, il+1, 7, ierror)
-    read (unit=uio, fmt='(A40)') fileright
-    call decitset(alat, bravais, ez, ielast, nlbasis, nrbasis, fileleft, &
-      fileright, ins, kvrel, krel, nspin, kmrot, vref, rmtref, nref, refpot, &
-      lefttinvll, righttinvll, vacflag, nembd1, iemxd, irmd, ipand, lmaxd, &
-      lmgf0d, lmmaxd, lm2d, nspind)
-  end if
+        ierror = 0
+        Call ioinput('DECIPOTS        ', uio, il, 7, ierror)
+        If (ierror/=0) Then
+          Write (6, 100)
+          Stop
+        End If
+        Read (Unit=uio, Fmt='(A40)') fileleft
+        Call ioinput('DECIPOTS        ', uio, il+1, 7, ierror)
+        Read (Unit=uio, Fmt='(A40)') fileright
+        Call decitset(alat, bravais, ez, ielast, nlbasis, nrbasis, fileleft, &
+          fileright, ins, kvrel, krel, nspin, kmrot, vref, rmtref, nref, &
+          refpot, lefttinvll, righttinvll, vacflag, nembd1, iemxd, irmd, &
+          ipand, lmaxd, lmgf0d, lmmaxd, lm2d, nspind)
+      End If
 ! ======================================================================
 
-100 format (/, 6x, 'ERROR : Missing decimation files (t-mat or pot)', /, 14x, &
-    'Please use one of the tokens DECIFILES/DECIPOTS', /)
-end subroutine
+100   Format (/, 6X, 'ERROR : Missing decimation files (t-mat or pot)', /, &
+        14X, 'Please use one of the tokens DECIFILES/DECIPOTS', /)
+    End Subroutine

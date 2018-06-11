@@ -169,7 +169,7 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
 
 ! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: HOST-LOOP
   do ihost = 1, 2
-    write (6, '(8X,A5," side host: ",$)') chhost(ihost)
+    write (6, '(8X,A5," side host: ")', advance='no') chhost(ihost)
     iqoff = 0
     itoff = 0
     nqhost = nlbasis
@@ -315,8 +315,8 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
 ! tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
           if (test('tmat    ')) then
             write (1337, *)
-            write (1337, 100) '      ---> Delta_t  matrix for site: ', iqh
-            if (krel==0) write (1337, 110) txts(ispin)
+            write (1337, 100, advance='no') '      ---> Delta_t  matrix for site: ', iqh
+            if (krel==0) write (1337, 110, advance='no') txts(ispin)
             write (1337, 120) ', energy: ', eryd
             call cmatstr(' ', 1, dhmat(1,1,ispin), lmmaxd, lmmaxd, 2*krel+1, &
               2*krel+1, 0, 1d-8, 6)
@@ -376,8 +376,8 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
     deallocate (r2drdirel, zrel, stat=i1)
     if (i1/=0) stop '   Deallocate R2DRDIREL/ZREL'
   end if
-100 format (a, i3, $)
-110 format (', ', a, $)
+100 format (a, i3)
+110 format (', ', a)
 120 format (a, 2f10.6)
 130 format (10x, 'KREL= ', i1, ' NSPIN= ', i1, ' INS= ', i1, ' KMROT= ', i1, &
     /, 10x, 'NAEZ=', i3, ' ALAT= ', f9.6, ' EFERMI= ', f9.6)

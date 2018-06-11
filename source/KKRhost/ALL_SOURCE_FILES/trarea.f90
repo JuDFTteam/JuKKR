@@ -1,37 +1,38 @@
-subroutine trarea(a, b, lmax)
+    Subroutine trarea(a, b, lmax)
+      Use mod_datatypes, Only: dp
 ! from complex to real  (differenciated spherical harmonics)
 
 !.. Parameters ..
-  double precision :: rtwo
-  double complex :: ci
-  parameter (rtwo=1.414213562373d0, ci=(0.d0,1.d0))
+      Real (Kind=dp) :: rtwo
+      Complex (Kind=dp) :: ci
+      Parameter (rtwo=1.414213562373E0_dp, ci=(0.E0_dp,1.E0_dp))
 !..
 !.. Scalar Arguments ..
-  integer :: lmax
+      Integer :: lmax
 !..
 !.. Array Arguments ..
-  double complex :: a(*)
-  double precision :: b(*)
+      Complex (Kind=dp) :: a(*)
+      Real (Kind=dp) :: b(*)
 !..
 !.. Local Scalars ..
-  double precision :: sgm
-  integer :: i, l, m
+      Real (Kind=dp) :: sgm
+      Integer :: i, l, m
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: conjg, dble
+      Intrinsic :: conjg, real
 
 !    calculate real the spherical harmonics derivetived
-  i = 0
-  do l = 0, lmax
-    i = i + l + 1
-    b(i) = dble(a(i))
-    sgm = -1.d0
-    do m = 1, l
-      b(i-m) = dble(ci*(a(i-m)-conjg(a(i-m))))/rtwo
-      b(i+m) = sgm*dble((a(i+m)+conjg(a(i+m))))/rtwo
-      sgm = -sgm
-    end do
-    i = i + l
-  end do
-  return
-end subroutine
+      i = 0
+      Do l = 0, lmax
+        i = i + l + 1
+        b(i) = real(a(i))
+        sgm = -1.E0_dp
+        Do m = 1, l
+          b(i-m) = real(ci*(a(i-m)-conjg(a(i-m))))/rtwo
+          b(i+m) = sgm*real((a(i+m)+conjg(a(i+m))))/rtwo
+          sgm = -sgm
+        End Do
+        i = i + l
+      End Do
+      Return
+    End Subroutine

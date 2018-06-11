@@ -13,12 +13,12 @@ subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, &
   implicit none
 
   integer :: nsra, lmax, nrmax, nrmaxd, nvec
+  integer :: lmsize
   double complex :: eryd
   double precision, dimension (nrmaxd) :: rmesh
   integer, dimension (2*lmsize) :: jlk_index
   integer :: l1, lm1, m1, ivec, ispinfullgmat, ir
   integer :: use_fullgmat
-  integer :: lmsize
   double complex :: ek, ek2, gmatprefactor
   double complex, dimension (1:4*(lmax+1), nrmax) :: hlk, jlk
   double complex, dimension (1:4*(lmax+1), nrmax) :: hlk2, jlk2

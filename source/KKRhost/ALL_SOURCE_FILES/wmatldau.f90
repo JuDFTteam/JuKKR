@@ -15,6 +15,7 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
   wldau, eu, edc, mmaxd, npotd, natyp, nspind, lmax)
 
   use :: constants
+  use mod_DataTypes
 
   implicit none
 ! .. Input variables
@@ -114,7 +115,7 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
           dentots(is) = dentots(is) + denmat(mm, mm, is)
         end do
         dentot = dentot + dentots(is)
-        dentots(is) = dentots(is)/dfloat(3-nspin)
+        dentots(is) = dentots(is)/real(3-nspin, kind=dp)
       end do
 !----------------------------------------------------------------------
       if (iprint>0) then
@@ -161,8 +162,7 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
             csum = czero
             do m4 = 1, mmax
               do m3 = 1, mmax
-                csum = csum - uldau(m1, m4, m3, m2, i1)*denmat(m3, m4, is)/ &
-                  dfloat(3-nspin)
+                csum = csum - uldau(m1, m4, m3, m2, i1)*denmat(m3, m4, is)/real(3-nspin, kind=dp)
               end do
             end do
             vldau(m1, m2, is) = vldau(m1, m2, is) + csum
@@ -251,7 +251,7 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
 !-------------------------------------------------------------------
         do m2 = 1, mmax
           do m1 = 1, mmax
-            wldau(m1, m2, is, i1) = dreal(vldau(m1,m2,is))
+            wldau(m1, m2, is, i1) = real(vldau(m1,m2,is), kind=dp)
           end do
         end do
       end do

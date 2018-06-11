@@ -1,5 +1,6 @@
 ! ************************************************************************
-subroutine reg2(m, x, f, w, c, xm, fm)
+    Subroutine reg2(m, x, f, w, c, xm, fm)
+      Use mod_datatypes, Only: dp
 !*****************************************************************
 !                                                                *
 !  Das Unterprogramm REG2 berechnet die Koeffizienten eines      *
@@ -37,56 +38,56 @@ subroutine reg2(m, x, f, w, c, xm, fm)
 
 ! Deklarationen.
 
-  implicit none
-  integer :: n, lda
+      Implicit None
+      Integer :: n, lda
 ! Polynom 2. Grades
-  parameter (n=2, lda=n+1)
-  double precision :: xm, fm
-  double precision :: x(*), f(*), w(*), c(*)
+      Parameter (n=2, lda=n+1)
+      Real (Kind=dp) :: xm, fm
+      Real (Kind=dp) :: x(*), f(*), w(*), c(*)
 
-  double precision :: dummy
-  double precision :: a(lda, n+1), b(n+1)
-  integer :: ipiv(n+1), info
-  integer :: i, j, j1, k, k1, l, m
+      Real (Kind=dp) :: dummy
+      Real (Kind=dp) :: a(lda, n+1), b(n+1)
+      Integer :: ipiv(n+1), info
+      Integer :: i, j, j1, k, k1, l, m
 
 !  Berechnung der ersten Spalte der Matrix und der rechten Seite
 !  des Gleichungssystems.
 
-  a(1, 1) = 0.0d0
-  b(1) = 0.0d0
-  do i = 1, m
-    a(1, 1) = a(1, 1) + w(i)
-    b(1) = b(1) + w(i)*f(i)
-  end do
-  do j = 1, n
-    j1 = j + 1
-    a(j1, 1) = 0.0d0
-    b(j1) = 0.0d0
-    do i = 1, m
-      dummy = w(i)*x(i)**j
-      a(j1, 1) = a(j1, 1) + dummy
-      b(j1) = b(j1) + dummy*f(i)
-    end do
-  end do
+      a(1, 1) = 0.0E0_dp
+      b(1) = 0.0E0_dp
+      Do i = 1, m
+        a(1, 1) = a(1, 1) + w(i)
+        b(1) = b(1) + w(i)*f(i)
+      End Do
+      Do j = 1, n
+        j1 = j + 1
+        a(j1, 1) = 0.0E0_dp
+        b(j1) = 0.0E0_dp
+        Do i = 1, m
+          dummy = w(i)*x(i)**j
+          a(j1, 1) = a(j1, 1) + dummy
+          b(j1) = b(j1) + dummy*f(i)
+        End Do
+      End Do
 
 !  Berechnung der letzten Zeile der Matrix.
 
-  do k = 1, n
-    k1 = k + 1
-    l = k + n
-    a(j1, k1) = 0.0d0
-    do i = 0, m
-      a(j1, k1) = a(j1, k1) + w(i)*x(i)**l
-    end do
-  end do
+      Do k = 1, n
+        k1 = k + 1
+        l = k + n
+        a(j1, k1) = 0.0E0_dp
+        Do i = 0, m
+          a(j1, k1) = a(j1, k1) + w(i)*x(i)**l
+        End Do
+      End Do
 
 !  Vervollstaendigung der Matrix.
 
-  do k = 1, n
-    do i = 1, n
-      a(i, k+1) = a(i+1, k)
-    end do
-  end do
+      Do k = 1, n
+        Do i = 1, n
+          a(i, k+1) = a(i+1, k)
+        End Do
+      End Do
 
 !*****************************************************************
 !     Loesung eines linearen Gleichungssystems                   *
@@ -94,18 +95,18 @@ subroutine reg2(m, x, f, w, c, xm, fm)
 ! ****************************************************************
 
 !      CALL DGEF(A,LDA,N+1,IPIV)
-  call dgetrf(n+1, n+1, a, lda, ipiv, info)
+      Call dgetrf(n+1, n+1, a, lda, ipiv, info)
 !      CALL DGESM('N',A,LDA,N+1,IPIV,B,N+1,1)
-  call dgetrs('N', n+1, 1, a, lda, ipiv, b, n+1, info)
+      Call dgetrs('N', n+1, 1, a, lda, ipiv, b, n+1, info)
 
 !      write(6,FMT='(f12.4  )') (b(i),i=1,3)
 
-  do j = 1, n + 1
-    c(j) = b(j)
-  end do
+      Do j = 1, n + 1
+        c(j) = b(j)
+      End Do
 
-  xm = -c(2)/(2.d0*c(3))
-  fm = c(3)*xm*xm + c(2)*xm + c(1)
+      xm = -c(2)/(2.E0_dp*c(3))
+      fm = c(3)*xm*xm + c(2)*xm + c(1)
 
-  return
-end subroutine
+      Return
+    End Subroutine

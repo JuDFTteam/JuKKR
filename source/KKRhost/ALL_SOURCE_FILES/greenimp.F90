@@ -62,7 +62,7 @@ CALL zgetrf(ndim,ndim,gi,ndim,ipvt1,info)
 CALL zgetrs('N',ndim,ndim,gi,ndim,ipvt1,gimp,ndim,info)
 
 ! write down to the file GMATLL_GES
-WRITE(59,'(2(e17.9,X))') e
+WRITE(59,'(2(e17.9,1X))') e
 DO lm1=1,ndim
   DO lm2=1,ndim
     WRITE(59,'((2I5),(2e17.9))') lm2,lm1,gimp(lm2,lm1)

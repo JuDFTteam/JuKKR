@@ -1,37 +1,38 @@
-function cdjlzdz(l, z, mode)
+    Function cdjlzdz(l, z, mode)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *     d j(L,Z) / dz    analytically                                *
 !   *                                                                  *
 !   ********************************************************************
-  implicit none
+      Implicit None
 
 ! Dummy arguments
-  integer :: l, mode
-  complex *16 :: z
-  complex *16 :: cdjlzdz
+      Integer :: l, mode
+      Complex (Kind=dp) :: z
+      Complex (Kind=dp) :: cdjlzdz
 
 ! Local variables
-  complex *16 :: cjlz
+      Complex (Kind=dp) :: cjlz
 
-  if (mode==1) then
+      If (mode==1) Then
 
-    if (l==0) then
+        If (l==0) Then
 
-      cdjlzdz = l*cjlz(l, z)/z - cjlz(l+1, z)
-    else
-      cdjlzdz = (l*cjlz(l-1,z)-(l+1)*cjlz(l+1,z))/dble(2*l+1)
-      return
-    end if
-  else if (mode==2) then
+          cdjlzdz = l*cjlz(l, z)/z - cjlz(l+1, z)
+        Else
+          cdjlzdz = (l*cjlz(l-1,z)-(l+1)*cjlz(l+1,z))/real(2*l+1, kind=dp)
+          Return
+        End If
+      Else If (mode==2) Then
 
-    if (l==0) then
-      cdjlzdz = l*cjlz(l, z)/z - cjlz(l+1, z)
-    else
-      cdjlzdz = cjlz(l-1, z) - (l+1)*cjlz(l, z)/z
-      return
-    end if
-  else
-    cdjlzdz = l*cjlz(l, z)/z - cjlz(l+1, z)
-  end if
-end function
+        If (l==0) Then
+          cdjlzdz = l*cjlz(l, z)/z - cjlz(l+1, z)
+        Else
+          cdjlzdz = cjlz(l-1, z) - (l+1)*cjlz(l, z)/z
+          Return
+        End If
+      Else
+        cdjlzdz = l*cjlz(l, z)/z - cjlz(l+1, z)
+      End If
+    End Function

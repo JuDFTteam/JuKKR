@@ -14,59 +14,61 @@
 !> - R. Zeller Sep. 2000: modified
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine vllns(vnspll, vins, cleb, icleb, iend, irm, ncleb, lmpot, irmind, &
-  lmmaxd)
+    Subroutine vllns(vnspll, vins, cleb, icleb, iend, irm, ncleb, lmpot, &
+      irmind, lmmaxd)
+      Use mod_datatypes, Only: dp
 
-  implicit none
+      Implicit None
 
 ! .. Input variables
-  integer, intent (in) :: irm !< Maximum number of radial points
-  integer, intent (in) :: iend
-  integer, intent (in) :: ncleb !< Number of Clebsch-Gordon coefficients
-  integer, intent (in) :: lmpot !< (LPOT+1)**2
-  integer, intent (in) :: irmind !< IRM-IRNSD
-  integer, intent (in) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
+      Integer, Intent (In) :: irm !< Maximum number of radial points
+      Integer, Intent (In) :: iend
+      Integer, Intent (In) :: ncleb !< Number of Clebsch-Gordon coefficients
+      Integer, Intent (In) :: lmpot !< (LPOT+1)**2
+      Integer, Intent (In) :: irmind !< IRM-IRNSD
+      Integer, Intent (In) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
 ! .. Array Arguments
-  integer, dimension (ncleb, 4), intent (in) :: icleb !< Pointer array
-  double precision, dimension (ncleb, 2), intent (in) :: cleb !< GAUNT coefficients (GAUNT)
-  double precision, dimension (irmind:irm, lmpot), intent (in) :: vins !< Non-spherical part of the potential
+      Integer, Dimension (ncleb, 4), Intent (In) :: icleb !< Pointer array
+      Real (Kind=dp), Dimension (ncleb, 2), Intent (In) :: cleb !< GAUNT coefficients (GAUNT)
+      Real (Kind=dp), Dimension (irmind:irm, lmpot), Intent (In) :: vins !< Non-spherical part of the potential
 ! .. Output variables
-  double precision, dimension (lmmaxd, lmmaxd, irmind:irm), &
-    intent (out) :: vnspll
+      Real (Kind=dp), Dimension (lmmaxd, lmmaxd, irmind:irm), &
+        Intent (Out) :: vnspll
 ! .. Local Scalars
-  integer :: ir, j, lm1, lm2, lm3
+      Integer :: ir, j, lm1, lm2, lm3
 ! ..
-  do lm1 = 1, lmmaxd
-    do lm2 = 1, lm1
-      do ir = irmind, irm
-        vnspll(lm1, lm2, ir) = 0.0d0
-      end do
-    end do
-  end do
+      Do lm1 = 1, lmmaxd
+        Do lm2 = 1, lm1
+          Do ir = irmind, irm
+            vnspll(lm1, lm2, ir) = 0.0E0_dp
+          End Do
+        End Do
+      End Do
 !
-  do j = 1, iend
-    lm1 = icleb(j, 1)
-    lm2 = icleb(j, 2)
-    lm3 = icleb(j, 3)
-    do ir = irmind, irm
-      vnspll(lm1, lm2, ir) = vnspll(lm1, lm2, ir) + cleb(j, 1)*vins(ir, lm3)
-    end do
-  end do
+      Do j = 1, iend
+        lm1 = icleb(j, 1)
+        lm2 = icleb(j, 2)
+        lm3 = icleb(j, 3)
+        Do ir = irmind, irm
+          vnspll(lm1, lm2, ir) = vnspll(lm1, lm2, ir) + &
+            cleb(j, 1)*vins(ir, lm3)
+        End Do
+      End Do
 !----------------------------------------------------------------------------
 ! Use symmetry of the gaunt coef.
 !----------------------------------------------------------------------------
-  do lm1 = 1, lmmaxd
-    do lm2 = 1, lm1 - 1
-      do ir = irmind, irm
-        vnspll(lm2, lm1, ir) = vnspll(lm1, lm2, ir)
-      end do
-    end do
-  end do
+      Do lm1 = 1, lmmaxd
+        Do lm2 = 1, lm1 - 1
+          Do ir = irmind, irm
+            vnspll(lm2, lm1, ir) = vnspll(lm1, lm2, ir)
+          End Do
+        End Do
+      End Do
 
-  do lm1 = 1, lmmaxd
-    do ir = irmind, irm
-      vnspll(lm1, lm1, ir) = vnspll(lm1, lm1, ir) + vins(ir, 1)
-    end do
-  end do
+      Do lm1 = 1, lmmaxd
+        Do ir = irmind, irm
+          vnspll(lm1, lm1, ir) = vnspll(lm1, lm1, ir) + vins(ir, 1)
+        End Do
+      End Do
 
-end subroutine
+    End Subroutine

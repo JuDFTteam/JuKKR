@@ -12,7 +12,8 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
 !   *                                                                 *
 !   *******************************************************************
 
-  use :: mod_types, only: t_inc
+  use mod_DataTypes
+  use mod_types, only: t_inc
   implicit none
   include 'inc.p'
 ! DOUBLE PRECISION, allocatable :: ULDAU(:,:,:,:,:) 
@@ -109,7 +110,7 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
 
 
       do ir = 2, irc1
-        wint(ir) = dreal(dconjg(phi(ir,i1))*phi(ir,i1))
+        wint(ir) = real(conjg(phi(ir,i1))*phi(ir,i1), kind=dp)
         w2(ir) = 2.d0*drdi(ir, i1)*wint(ir)
         tl(ir) = w2(ir)*rpw(ir, lf)
         tg(ir) = w2(ir)/rpw(ir, lf+1)

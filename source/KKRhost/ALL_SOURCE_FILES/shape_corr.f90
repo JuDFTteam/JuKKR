@@ -1,5 +1,6 @@
-subroutine shape_corr(lpot, natyp, gsh, ilm_map, imaxsh, lmsp, ntcell, w, yr, &
-  lassld, lmpotd, natypd, ngshd)
+    Subroutine shape_corr(lpot, natyp, gsh, ilm_map, imaxsh, lmsp, ntcell, w, &
+      yr, lassld, lmpotd, natypd, ngshd)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *  Prepares shape corrections using gaussian quadrature as given by  *
 ! *  m. abramowitz and i.a. stegun, handbook of mathematical functions *
@@ -10,133 +11,137 @@ subroutine shape_corr(lpot, natyp, gsh, ilm_map, imaxsh, lmsp, ntcell, w, yr, &
 ! *                                                                    *
 ! **********************************************************************
 
-  implicit none
+      Implicit None
 !..
 !.. Scalar Arguments ..
-  integer :: lassld, lmpotd, natypd, ngshd
-  integer :: lpot, natyp
+      Integer :: lassld, lmpotd, natypd, ngshd
+      Integer :: lpot, natyp
 !..
 !.. Array Arguments ..
-  double precision :: gsh(*), w(lassld), yr(lassld, 0:lassld, 0:lassld)
-  integer :: ilm_map(ngshd, 3), imaxsh(0:lmpotd), lmsp(natypd, *), ntcell(*)
+      Real (Kind=dp) :: gsh(*), w(lassld), yr(lassld, 0:lassld, 0:lassld)
+      Integer :: ilm_map(ngshd, 3), imaxsh(0:lmpotd), lmsp(natypd, *), &
+        ntcell(*)
 !..
 !.. Local Scalars ..
-  double precision :: factor, gaunt, s
-  integer :: i, iat, icell, isum, j, l1, l2, l3, lm1, lm2, lm3, m1, m1a, m1s, &
-    m2, m2a, m2s, m3, m3a, m3s
-  logical :: triangle
+      Real (Kind=dp) :: factor, gaunt, s
+      Integer :: i, iat, icell, isum, j, l1, l2, l3, lm1, lm2, lm3, m1, m1a, &
+        m1s, m2, m2a, m2s, m3, m3a, m3s
+      Logical :: triangle
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: abs, dble, sign
+      Intrinsic :: abs, real, sign
 !..
 !.. External Subroutines ..
-  external :: rcstop, triangle
+      External :: rcstop, triangle
 !..
 
 ! -> set up of the gaunt coefficients with an index field
 !    so that  c(lm,lm',lm'') is mapped to c(i)
-  i = 1
+      i = 1
 ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-  do l1 = 0, lpot
+      Do l1 = 0, lpot
 ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-    do m1 = -l1, l1
+        Do m1 = -l1, l1
 
-      lm1 = l1*l1 + l1 + m1 + 1
-      imaxsh(lm1-1) = i - 1
+          lm1 = l1*l1 + l1 + m1 + 1
+          imaxsh(lm1-1) = i - 1
 ! llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll
-      do l3 = 0, lpot*2
+          Do l3 = 0, lpot*2
 ! mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
-        do m3 = -l3, l3
+            Do m3 = -l3, l3
 
-          lm3 = l3*l3 + l3 + m3 + 1
-          isum = 0
+              lm3 = l3*l3 + l3 + m3 + 1
+              isum = 0
 
-          do iat = 1, natyp
-            icell = ntcell(iat)
+              Do iat = 1, natyp
+                icell = ntcell(iat)
 !                      write(*,*) 'test icell=ntcell(iat) in shape_corr.f',
 !      +                icell,iat
-            isum = isum + lmsp(icell, lm3)
-          end do
+                isum = isum + lmsp(icell, lm3)
+              End Do
 
 ! ======================================================================
-          if (isum>0) then
-            do l2 = 0, lpot
+              If (isum>0) Then
+                Do l2 = 0, lpot
 ! ----------------------------------------------------------------------
-              if (triangle(l1,l2,l3)) then
-                do m2 = -l2, l2
+                  If (triangle(l1,l2,l3)) Then
+                    Do m2 = -l2, l2
 
-                  lm2 = l2*l2 + l2 + m2 + 1
+                      lm2 = l2*l2 + l2 + m2 + 1
 
 ! -> use the m-conditions for the gaunt coefficients not to be 0
 
-                  m1s = sign(1, m1)
-                  m2s = sign(1, m2)
-                  m3s = sign(1, m3)
+                      m1s = sign(1, m1)
+                      m2s = sign(1, m2)
+                      m3s = sign(1, m3)
 ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-                  if (m1s*m2s*m3s>=0) then
-                    m1a = abs(m1)
-                    m2a = abs(m2)
-                    m3a = abs(m3)
-                    factor = 0.0d0
+                      If (m1s*m2s*m3s>=0) Then
+                        m1a = abs(m1)
+                        m2a = abs(m2)
+                        m3a = abs(m3)
+                        factor = 0.0E0_dp
 
-                    if (m1a+m2a==m3a) factor = factor + &
-                      dble(3*m3s+sign(1,-m3))/8.0d0
+                        If (m1a+m2a==m3a) factor = factor + &
+                          real(3*m3s+sign(1,-m3), kind=dp)/8.0E0_dp
 
-                    if (m1a-m2a==m3a) factor = factor + dble(m1s)/4.0d0
+                        If (m1a-m2a==m3a) factor = factor + &
+                          real(m1s, kind=dp)/4.0E0_dp
 
-                    if (m2a-m1a==m3a) factor = factor + dble(m2s)/4.0d0
+                        If (m2a-m1a==m3a) factor = factor + &
+                          real(m2s, kind=dp)/4.0E0_dp
 ! ......................................................................
-                    if (factor/=0.0d0) then
+                        If (factor/=0.0E0_dp) Then
 
-                      if (m1s*m2s/=1 .or. m2s*m3s/=1 .or. m1s*m3s/=1) &
-                        factor = -factor
+                          If (m1s*m2s/=1 .Or. m2s*m3s/=1 .Or. m1s*m3s/=1) &
+                            factor = -factor
 
-                      s = 0.0d0
-                      do j = 1, lassld
-                        s = s + w(j)*yr(j, l1, m1a)*yr(j, l2, m2a)*yr(j, l3, &
-                          m3a)
-                      end do
+                          s = 0.0E0_dp
+                          Do j = 1, lassld
+                            s = s + w(j)*yr(j, l1, m1a)*yr(j, l2, m2a)*yr(j, &
+                              l3, m3a)
+                          End Do
 
-                      gaunt = s*factor
-                      if (abs(gaunt)>1d-10) then
-                        gsh(i) = gaunt
-                        ilm_map(i, 1) = lm1
-                        ilm_map(i, 2) = lm2
-                        ilm_map(i, 3) = lm3
-                        i = i + 1
-                      end if
-                    end if
+                          gaunt = s*factor
+                          If (abs(gaunt)>1E-10_dp) Then
+                            gsh(i) = gaunt
+                            ilm_map(i, 1) = lm1
+                            ilm_map(i, 2) = lm2
+                            ilm_map(i, 3) = lm3
+                            i = i + 1
+                          End If
+                        End If
 ! ......................................................................
-                  end if
+                      End If
 ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-                end do
-              end if
+                    End Do
+                  End If
 ! ----------------------------------------------------------------------
-            end do
-          end if
+                End Do
+              End If
 ! ======================================================================
-        end do
+            End Do
 ! mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
-      end do
+          End Do
 ! llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll
-    end do
+        End Do
 ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-  end do
+      End Do
 ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 
-  imaxsh(lm1) = i - 1
-  write (1337, fmt=100) imaxsh(lm1), ngshd
-  if (imaxsh(lm1)>ngshd) call rcstop('SHAPE   ')
+      imaxsh(lm1) = i - 1
+      Write (1337, Fmt=100) imaxsh(lm1), ngshd
+      If (imaxsh(lm1)>ngshd) Call rcstop('SHAPE   ')
 
-100 format (' >>> SHAPE : IMAXSH(', i4, '),NGSHD :', 2i6)
+100   Format (' >>> SHAPE : IMAXSH(', I4, '),NGSHD :', 2I6)
 
-end subroutine
+    End Subroutine
 
-function triangle(l1, l2, l3)
-  implicit none
-  integer :: l1, l2, l3
-  logical :: triangle
-  intrinsic :: mod
+    Function triangle(l1, l2, l3)
+      Implicit None
+      Integer :: l1, l2, l3
+      Logical :: triangle
+      Intrinsic :: mod
 !     ..
-  triangle = (l1>=abs(l3-l2)) .and. (l1<=(l3+l2)) .and. (mod((l1+l2+l3),2)==0)
-end function
+      triangle = (l1>=abs(l3-l2)) .And. (l1<=(l3+l2)) .And. &
+        (mod((l1+l2+l3),2)==0)
+    End Function

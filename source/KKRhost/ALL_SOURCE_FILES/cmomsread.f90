@@ -43,7 +43,7 @@ subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, &
   do ihost = 1, 2
     nathost = nlbasis
     if (ihost==2) nathost = nrbasis
-    write (1337, '(8X,A5,1X,$)') chhost(ihost)
+    write (1337, '(8X,A5,1X)', advance='no') chhost(ihost)
 ! ----------------------------------------------------------------------
     if (vacflag(ihost)) then
       do ih = 1, nlbasis

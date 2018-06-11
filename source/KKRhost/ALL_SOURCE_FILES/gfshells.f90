@@ -217,22 +217,22 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
       write (1337, 170) ns, nsh1(ns), nsh2(ns), (ratom(ii,ns), ii=1, 3), &
         sqrt(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns)**2), str9
     else
-      write (1337, 180) ns, nsh1(ns), nsh2(ns), (ratom(ii,ns), ii=1, 3), &
+      write (1337, 180, advance='no') ns, nsh1(ns), nsh2(ns), (ratom(ii,ns), ii=1, 3), &
         sqrt(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns)**2)
       io = min(2, nshell(ns))
       do i = 1, io
         call setpairstr(ish(ns,i), jsh(ns,i), str9)
-        write (1337, '(A9,$)') str9
+        write (1337, '(A9)', advance='no') str9
       end do
       write (1337, *)
       pos = (nshell(ns)+1)/2
       do i = 2, pos
         io = (i-1)*2
         in = min(2, nshell(ns)-io)
-        write (1337, 190)
+        write (1337, 190, advance='no')
         do j = 1, in
           call setpairstr(ish(ns,io+j), jsh(ns,io+j), str9)
-          write (1337, '(A9,$)') str9
+          write (1337, '(A9)', advance='no') str9
         end do
         write (1337, *)
       end do
@@ -262,8 +262,8 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
 160 format (6x, 72('-'), /, 6x, 'shell|', ' IQ ', ' JQ', ' | ', 10x, &
     'vec R_IJ ', 11x, 'R_IJ   | equiv. pairs', /, 6x, 72('-'))
 170 format (5x, i5, ' |', i3, 1x, i3, ' | ', 3f9.4, f9.5, 1x, '|', a9)
-180 format (5x, i5, ' |', i3, 1x, i3, ' | ', 3f9.4, f9.5, 1x, '|', $)
-190 format (5x, 5x, ' |', 7x, ' | ', 27x, 9x, 1x, '|', $)
+180 format (5x, i5, ' |', i3, 1x, i3, ' | ', 3f9.4, f9.5, 1x, '|')
+190 format (5x, 5x, ' |', 7x, ' | ', 27x, 9x, 1x, '|')
 200 format (8x, 'Number of block elements to be calculated : ', i3, /)
 210 format (8x, 'Setting pairs for task-defined cluster sites ', &
     'and connections', /, 12x, 'atoms in cluster : ', i3)

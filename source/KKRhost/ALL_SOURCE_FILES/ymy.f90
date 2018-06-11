@@ -1,5 +1,6 @@
 ! **********************************************************************
-subroutine ymy(v1, v2, v3, r, ylm, lmax)
+    Subroutine ymy(v1, v2, v3, r, ylm, lmax)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 !    this subroutine calculates real spherical harmonics with the
 !     normalization : <y|y> =1
@@ -14,117 +15,117 @@ subroutine ymy(v1, v2, v3, r, ylm, lmax)
 !                                  b.drittler 1987
 !-----------------------------------------------------------------------
 
-  implicit none
+      Implicit None
 !.. Parameters ..
-  double precision :: szero
-  parameter (szero=1.0d-20)
+      Real (Kind=dp) :: szero
+      Parameter (szero=1.0E-20_dp)
 !..
 !.. Scalar Arguments ..
-  double precision, intent (out) :: r
-  double precision, intent (in) :: v1, v2, v3
-  integer, intent (in) :: lmax
+      Real (Kind=dp), Intent (Out) :: r
+      Real (Kind=dp), Intent (In) :: v1, v2, v3
+      Integer, Intent (In) :: lmax
 !..
 !.. Array Arguments ..
-  double precision, intent (out) :: ylm((2*lmax+1)**2)
+      Real (Kind=dp), Intent (Out) :: ylm((2*lmax+1)**2)
 !..
 !.. Local Scalars ..
-  double precision :: a, cd, cph, cth, fac, fpi, pi, rtwo, sgm, sph, sth, t, &
-    xy, xyz
-  integer :: i, l, m
+      Real (Kind=dp) :: a, cd, cph, cth, fac, fpi, pi, rtwo, sgm, sph, sth, t, &
+        xy, xyz
+      Integer :: i, l, m
 !..
 !.. Local Arrays ..
-  double precision :: c(0:lmax), p(0:lmax, 0:lmax), s(0:lmax)
+      Real (Kind=dp) :: c(0:lmax), p(0:lmax, 0:lmax), s(0:lmax)
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: atan, sqrt
+      Intrinsic :: atan, sqrt
 !..
 !.. External Subroutines ..
-  external :: rcstop
+      External :: rcstop
 !     ..
-  pi = 4.d0*atan(1.d0)
-  fpi = 4.d0*pi
-  rtwo = sqrt(2.0d0)
+      pi = 4.E0_dp*atan(1.E0_dp)
+      fpi = 4.E0_dp*pi
+      rtwo = sqrt(2.0E0_dp)
 
 !--->    calculate sin and cos of theta and phi
 
-  xy = v1**2 + v2**2
-  xyz = xy + v3**2
+      xy = v1**2 + v2**2
+      xyz = xy + v3**2
 
-  r = sqrt(xyz)
-  if (xyz<=0.0d0) then
-    write (*, *) xyz
-    call rcstop('ylm=0   ')
+      r = sqrt(xyz)
+      If (xyz<=0.0E0_dp) Then
+        Write (*, *) xyz
+        Call rcstop('ylm=0   ')
 
-  else
+      Else
 
-    if (xy>szero*xyz) then
-      xy = sqrt(xy)
-      xyz = sqrt(xyz)
-      cth = v3/xyz
-      sth = xy/xyz
-      cph = v1/xy
-      sph = v2/xy
+        If (xy>szero*xyz) Then
+          xy = sqrt(xy)
+          xyz = sqrt(xyz)
+          cth = v3/xyz
+          sth = xy/xyz
+          cph = v1/xy
+          sph = v2/xy
 
-    else
+        Else
 
-      sth = 0.0d0
-      cth = 1.0d0
-      if (v3<0) cth = -1.0d0
-      cph = 1.0d0
-      sph = 0.0d0
-    end if
+          sth = 0.0E0_dp
+          cth = 1.0E0_dp
+          If (v3<0) cth = -1.0E0_dp
+          cph = 1.0E0_dp
+          sph = 0.0E0_dp
+        End If
 
 !--->    generate associated legendre functions for m.ge.0
 !        loop over m values
 
-    fac = 1.0d0
-    do m = 0, lmax - 1
-      fac = -(2*m-1)*fac
-      p(m, m) = fac
-      p(m+1, m) = (2*m+1)*cth*fac
+        fac = 1.0E0_dp
+        Do m = 0, lmax - 1
+          fac = -(2*m-1)*fac
+          p(m, m) = fac
+          p(m+1, m) = (2*m+1)*cth*fac
 
 !--->    recurse upward in l
 
-      do l = m + 2, lmax
-        p(l, m) = ((2*l-1)*cth*p(l-1,m)-(l+m-1)*p(l-2,m))/(l-m)
-      end do
-      fac = fac*sth
-    end do
-    p(lmax, lmax) = -(2*lmax-1)*fac
+          Do l = m + 2, lmax
+            p(l, m) = ((2*l-1)*cth*p(l-1,m)-(l+m-1)*p(l-2,m))/(l-m)
+          End Do
+          fac = fac*sth
+        End Do
+        p(lmax, lmax) = -(2*lmax-1)*fac
 
 !--->    determine sin and cos of phi
 
-    s(0) = 0.0d0
-    s(1) = sph
-    c(0) = 1.0d0
-    c(1) = cph
-    do m = 2, lmax
-      s(m) = 2*cph*s(m-1) - s(m-2)
-      c(m) = 2*cph*c(m-1) - c(m-2)
-    end do
+        s(0) = 0.0E0_dp
+        s(1) = sph
+        c(0) = 1.0E0_dp
+        c(1) = cph
+        Do m = 2, lmax
+          s(m) = 2*cph*s(m-1) - s(m-2)
+          c(m) = 2*cph*c(m-1) - c(m-2)
+        End Do
 
 !--->    multiply in the normalization factors
 
-    i = 0
-    do l = 0, lmax
-      i = i + l + 1
-      a = sqrt((2*l+1)/fpi)
-      cd = 1
-      ylm(i) = a*p(l, 0)
-      sgm = -rtwo
-      do m = 1, l
-        t = (l+1-m)*(l+m)
-        cd = cd/t
-        t = a*sqrt(cd)
-        ylm(i+m) = sgm*t*p(l, m)*c(m)
-        ylm(i-m) = sgm*t*p(l, m)*s(m)
-        sgm = -sgm
-      end do
-      i = i + l
-    end do
+        i = 0
+        Do l = 0, lmax
+          i = i + l + 1
+          a = sqrt((2*l+1)/fpi)
+          cd = 1
+          ylm(i) = a*p(l, 0)
+          sgm = -rtwo
+          Do m = 1, l
+            t = (l+1-m)*(l+m)
+            cd = cd/t
+            t = a*sqrt(cd)
+            ylm(i+m) = sgm*t*p(l, m)*c(m)
+            ylm(i-m) = sgm*t*p(l, m)*s(m)
+            sgm = -sgm
+          End Do
+          i = i + l
+        End Do
 
-  end if
+      End If
 
-  return
+      Return
 
-end subroutine
+    End Subroutine

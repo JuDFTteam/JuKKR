@@ -1,70 +1,72 @@
-double precision function erfcex(z)
+    Function erfcex(z)
+      Use mod_datatypes, Only: dp
 !-----------------------------------------------------------------------
 
 !     calculates complementary errorfunction times sqrt(pi)
 !      times exp(z*z)  by continued fractions
 
 !-----------------------------------------------------------------------
-  implicit none
+      Implicit None
+      Real (Kind=dp) :: erfcex
 
 !.. scalar arguments ..
-  double precision :: z
+      Real (Kind=dp) :: z
 
 !.. local scalars ..
-  double precision :: bound, erf1, exzz, f, fa, q, ratio, sqrtpi, term, u, ua, &
-    v, x, xa, y, z2, zz
+      Real (Kind=dp) :: bound, erf1, exzz, f, fa, q, ratio, sqrtpi, term, u, &
+        ua, v, x, xa, y, z2, zz
 
 !.. intrinsic functions ..
-  intrinsic :: abs, atan, exp, sqrt
+      Intrinsic :: abs, atan, exp, sqrt
 
 
-  bound = 3.d-11
-  sqrtpi = sqrt(4.0d0*atan(1.0d0))
-  zz = z*z
+      bound = 3.E-11_dp
+      sqrtpi = sqrt(4.0E0_dp*atan(1.0E0_dp))
+      zz = z*z
 
 !---> choose algorithm
 
-  if (z<1.5d0) then
+      If (z<1.5E0_dp) Then
 
 !     this exponential was outside the if statement
 !     but for large arguments the exponent blow up
 !     changes made 21/10/99
 
-    exzz = exp(zz)
+        exzz = exp(zz)
 
-    z2 = 2.0d0*zz
-    erf1 = z
-    ratio = 1.0d0
-    term = z
-100 continue
-    ratio = ratio + 2.0d0
-    term = term*z2/ratio
-    erf1 = erf1 + term
-    if (term>bound) go to 100
-    erfcex = sqrtpi*exzz - 2.0d0*erf1
+        z2 = 2.0E0_dp*zz
+        erf1 = z
+        ratio = 1.0E0_dp
+        term = z
+100     Continue
+        ratio = ratio + 2.0E0_dp
+        term = term*z2/ratio
+        erf1 = erf1 + term
+        If (term>bound) Go To 100
+        erfcex = sqrtpi*exzz - 2.0E0_dp*erf1
 
-  else
+      Else
 
 !---> continued fraction expansion : abramowitz p. 298, eq. (7.1.14)
 
-    u = 1.0d0
-    v = 0.0d0
-    x = z
-    y = 1.0d0
-    q = 0.5d0
-    f = (u+v*q)/(x+y*q)
-110 continue
-    ua = u
-    u = u*z + v*q
-    v = ua
-    xa = x
-    x = x*z + y*q
-    y = xa
-    q = q + 0.5d0
-    fa = f
-    f = (u+v*q)/(x+y*q)
-    if (abs(fa-f)>bound*f) go to 110
-    erfcex = f
-  end if
+        u = 1.0E0_dp
+        v = 0.0E0_dp
+        x = z
+        y = 1.0E0_dp
+        q = 0.5E0_dp
+        f = (u+v*q)/(x+y*q)
+110     Continue
+        ua = u
+        u = u*z + v*q
+        v = ua
+        xa = x
+        x = x*z + y*q
+        y = xa
+        q = q + 0.5E0_dp
+        fa = f
+        f = (u+v*q)/(x+y*q)
+        If (abs(fa-f)>bound*f) Go To 110
+        erfcex = f
+      End If
 
-end function
+    End Function

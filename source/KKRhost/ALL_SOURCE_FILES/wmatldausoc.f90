@@ -26,7 +26,8 @@ subroutine wmatldausoc(ntldau, itldau, nspin, denmatn, lopt, ueff, jeff, &
 ! *                                                                    *
 ! *                  n.long,  April 2016, Juelich                      *
 ! **********************************************************************
-  use :: constants
+  use constants
+  use mod_DataTypes
 
   implicit none
 !
@@ -255,8 +256,7 @@ subroutine wmatldausoc(ntldau, itldau, nspin, denmatn, lopt, ueff, jeff, &
 !----------------------------------------------------------------
           do m2 = 1, mmax
             do m1 = 1, mmax
-              wldau(m1, m2, is, i1) = wldau(m1, m2, is, i1) + &
-                dreal(vldau(m1,m2,js,is))
+              wldau(m1, m2, is, i1) = wldau(m1, m2, is, i1) + real(vldau(m1,m2,js,is), kind=dp)
             end do
           end do
         end do ! js

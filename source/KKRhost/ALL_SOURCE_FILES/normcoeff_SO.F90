@@ -63,7 +63,7 @@ INTEGER :: ierr, ihelp, i1_start, i1_end
 EXTERNAL         ZGEMM
 !..
 !.. Intrinsic Functions ..
-INTRINSIC        DATAN,DIMAG,DSQRT
+INTRINSIC        DATAN,aimag,SQRT
 !..Local Arrays..
 DOUBLE COMPLEX, ALLOCATABLE  :: DENS(:,:,:,:,:,:,:)
 DOUBLE COMPLEX, ALLOCATABLE  ::   RLL_12(:,:,:), &
@@ -154,7 +154,7 @@ DO i1=i1_start, i1_end
                     DO ir=1,irmd
                       
                       rll_12(ir,lm1p,lm2p)=  &
-                          DCONJG(rll(ir,lm1p,lm1,i1sp1,i1sp2,insra,i1))*  &
+                          CONJG(rll(ir,lm1p,lm1,i1sp1,i1sp2,insra,i1))*  &
                           rll(ir,lm2p,lm2,i2sp1,i2sp2,insra,i1)
                     END DO       !IR
                     

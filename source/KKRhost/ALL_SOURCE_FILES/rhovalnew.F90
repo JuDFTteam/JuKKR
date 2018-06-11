@@ -680,7 +680,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
          do JSPIN=1,4
             if (JSPIN.LE.2) then
                do LM1=0,LMAXD1
-                  ESPV(LM1,JSPIN)=ESPV(LM1,JSPIN)+DIMAG( ERYD * DEN(LM1,IE,IQ,JSPIN) * DF )
+                  ESPV(LM1,JSPIN)=ESPV(LM1,JSPIN)+aimag( ERYD * DEN(LM1,IE,IQ,JSPIN) * DF )
                enddo
             endif
          enddo
@@ -724,10 +724,10 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
                      IPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW)
                   !
                   RHO2(JSPIN)=DENTEMP
-                  MUORB(LM1,JSPIN)=MUORB(LM1,JSPIN)-DIMAG(RHO2(JSPIN)*DF)
-                  DENORBMOM(IORB)=DENORBMOM(IORB)-DIMAG(RHO2(JSPIN)*DF)
-                  DENORBMOMSP(JSPIN,IORB)=DENORBMOMSP(JSPIN,IORB)-DIMAG(RHO2(JSPIN)*DF)
-                  DENORBMOMLM(LM1,IORB)=DENORBMOMLM(LM1,IORB)-DIMAG(RHO2(JSPIN)*DF)
+                  MUORB(LM1,JSPIN)=MUORB(LM1,JSPIN)-aimag(RHO2(JSPIN)*DF)
+                  DENORBMOM(IORB)=DENORBMOM(IORB)-aimag(RHO2(JSPIN)*DF)
+                  DENORBMOMSP(JSPIN,IORB)=DENORBMOMSP(JSPIN,IORB)-aimag(RHO2(JSPIN)*DF)
+                  DENORBMOMLM(LM1,IORB)=DENORBMOMLM(LM1,IORB)-aimag(RHO2(JSPIN)*DF)
                   CDENTEMP(:,ith)=CZERO
                   !
                   do IR=1,IRMDNEW
@@ -735,7 +735,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
                   enddo
                   call INTCHEB_CELL(CDENTEMP(:,ith),TEMP1,RPAN_INTERVALL,&
                      IPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW)
-                  DENORBMOMNS(IORB)=DENORBMOMNS(IORB)-DIMAG(TEMP1*DF)
+                  DENORBMOMNS(IORB)=DENORBMOMNS(IORB)-aimag(TEMP1*DF)
                enddo
             endif
          enddo
@@ -817,9 +817,9 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
                enddo                                                             ! qdos
                !    write qdos.nn.s.dat                                          ! qdos
                write(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),  &        ! qdos
-                  -DIMAG(DENTOT(1))/PI,(-DIMAG(DEN(L1,IE,IQ,1))/PI,L1=0,LMAXD1)  ! qdos
+                  -aimag(DENTOT(1))/PI,(-aimag(DEN(L1,IE,IQ,1))/PI,L1=0,LMAXD1)  ! qdos
                write(32,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ),QVEC(3,IQ),  &        ! qdos
-                  -DIMAG(DENTOT(2))/PI,(-DIMAG(DEN(L1,IE,IQ,2))/PI,L1=0,LMAXD1)  ! qdos
+                  -aimag(DENTOT(2))/PI,(-aimag(DEN(L1,IE,IQ,2))/PI,L1=0,LMAXD1)  ! qdos
                9000        format(5F10.6,40E16.8)                                ! qdos
                !                                                                 ! qdos
                if(test('compqdos')) then                                         ! complex qdos
@@ -936,7 +936,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
                do M1=1,MMAX
                   LM1=LMLO-1+M1
                   DENMATN(1:MMAX,M1,JS,IS)=(1.0/(2.0*CI))*&
-                     (GLDAU(LM2:LMHI,LM1)-DCONJG(GLDAU(LM1,LM2:LMHI)))
+                     (GLDAU(LM2:LMHI,LM1)-CONJG(GLDAU(LM1,LM2:LMHI)))
                enddo
             enddo
          enddo
@@ -975,8 +975,8 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
                   write (30,*) ' '                                               ! lm-dos
                   write (30,8600) '# ISPIN=',2,' I1=',I1                         ! lm-dos
                endif !IE==1                                                      ! lm-dos
-               write(29,9001) EZ(IE),(-DIMAG(DENLM(L1,IE,IQ,1))/PI,L1=1,LMMAXD)  ! lm-dos
-               write(30,9001) EZ(IE),(-DIMAG(DENLM(L1,IE,IQ,2))/PI,L1=1,LMMAXD)  ! lm-dos
+               write(29,9001) EZ(IE),(-aimag(DENLM(L1,IE,IQ,1))/PI,L1=1,LMMAXD)  ! lm-dos
+               write(30,9001) EZ(IE),(-aimag(DENLM(L1,IE,IQ,2))/PI,L1=1,LMMAXD)  ! lm-dos
                9001    format(30E12.4)                                           ! lm-dos
                8600    format (a8,I3,a4,I5)                                      ! lm-dos/qdos ruess
             enddo !IE
@@ -1047,9 +1047,9 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
          RHO2INT(3)=RHO2NS_TEMP(1,2)
          RHO2INT(4)=RHO2NS_TEMP(2,1)
          !
-         MOMENT(1)=DIMAG(RHO2INT(3)+RHO2INT(4))
+         MOMENT(1)=aimag(RHO2INT(3)+RHO2INT(4))
          MOMENT(2)=-real(RHO2INT(3)-RHO2INT(4))
-         MOMENT(3)=DIMAG(-RHO2INT(1)+RHO2INT(2))
+         MOMENT(3)=aimag(-RHO2INT(1)+RHO2INT(2))
          !
          TOTMOMENT=SQRT(MOMENT(1)**2+MOMENT(2)**2+MOMENT(3)**2)
          TOTXYMOMENT=SQRT(MOMENT(1)**2+MOMENT(2)**2)
@@ -1079,8 +1079,8 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
          call ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,LMPOT,THETANEW,PHINEW,  &
             THETA,PHI,IRM)
       else
-         RHO2NS(:,:,:)=DIMAG(RHO2NSNEW(:,:,:))
-         R2NEF(:,:,:)=DIMAG(R2NEFNEW(:,:,:))
+         RHO2NS(:,:,:)=aimag(RHO2NSNEW(:,:,:))
+         R2NEF(:,:,:)=aimag(R2NEFNEW(:,:,:))
       endif
       !
       IDIM = IRM*LMPOT

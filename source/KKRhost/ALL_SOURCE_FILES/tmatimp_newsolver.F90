@@ -370,9 +370,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          VNSPLL0=CZERO
          VNSPLL1=CZERO
          call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,  &
-            LMPOT,VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
+            VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1), LMPOT,         &
             CLEB,ICLEB,IEND,NSPIN,ZAT(I1),RNEW(1:IRMDNEW(I1),I1),0,NCLEB)
-         !     +             CLEB,ICLEB,IEND,NSPIN,Z(I1),RNEW(:,I1),USE_SRATRICK)
    
          ! contruct the spin-orbit coupling hamiltonian and add to potential
          call SPINORBIT_HAM(LMAX,LMMAXD,                                &
@@ -585,7 +584,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       VNSPLL1=CZERO
 
       call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,  &
-         LMPOT,VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),LMPOT,          &
          CLEB,ICLEB,IEND,NSPIN,                                      &
          ZIMP(I1),RNEW(1:IRMDNEW(I1),I1),USE_SRATRICK,NCLEB)
 
@@ -690,7 +689,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       ! set up the non-spherical ll' matrix for potential VLL'
       VNSPLL0=CZERO
       call VLLMAT(1,IRMDNEW(I1),IRMDNEW(I1),LMMAXD,LMMAXSO,VNSPLL0,  &
-         LMPOT,VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
+         VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),LMPOT,          &
          CLEB,ICLEB,IEND,NSPIN,                                      &
          ZIMP(I1),RNEW(1:IRMDNEW(I1),I1),0,NCLEB)
       !     +             ZIMP(I1),RNEW(:,I1),USE_SRATRICK)

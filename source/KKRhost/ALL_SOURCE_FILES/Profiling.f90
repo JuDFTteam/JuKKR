@@ -10,11 +10,11 @@
 !> Jonathan Chico
 !> @date 10.12.2017
 !-------------------------------------------------------------------------------
-module profiling
+    Module profiling
 
-  implicit none
+      Implicit None
 
-contains
+    Contains
 
 !control the memory occupation by calculating the overall size in bytes of the allocated arrays
 !usage:
@@ -35,122 +35,122 @@ contains
 ! GNU General Public License, see http://www.gnu.org/copyleft/gpl.txt .
 ! Copyright (C) Luigi Genovese, CEA Grenoble, France, 2007
 !> Memory profiling routine
-  subroutine memocc(istat, isize, array, routine)
-    implicit none
-    character (len=*), intent (in) :: array
-    character (len=*), intent (in) :: routine
-    integer, intent (in) :: istat
-    integer, intent (in) :: isize
+      Subroutine memocc(istat, isize, array, routine)
+        Implicit None
+        Character (Len=*), Intent (In) :: array
+        Character (Len=*), Intent (In) :: routine
+        Integer, Intent (In) :: istat
+        Integer, Intent (In) :: isize
 
 ! Local variables
-    character (len=36) :: maxroutine, locroutine
-    character (len=36) :: maxarray, locarray
-    integer :: nalloc, ndealloc, locpeak, locmemory, iproc
-    integer :: dblsize, mfileno
-    integer *8 :: memory, maxmemory
-    character (len=1) :: allocationflag
+        Character (Len=36) :: maxroutine, locroutine
+        Character (Len=36) :: maxarray, locarray
+        Integer :: nalloc, ndealloc, locpeak, locmemory, iproc
+        Integer :: dblsize, mfileno
+        Integer *8 :: memory, maxmemory
+        Character (Len=1) :: allocationflag
 
-    save :: memory, nalloc, ndealloc, maxroutine, maxarray, maxmemory
-    save :: locroutine, locarray, locpeak, locmemory, iproc
+        Save :: memory, nalloc, ndealloc, maxroutine, maxarray, maxmemory
+        Save :: locroutine, locarray, locpeak, locmemory, iproc
 
-    mfileno = 77
-    dblsize = 1
+        mfileno = 77
+        dblsize = 1
 !print *,'MEMOCC',isize,array
 !
-    select case (array)
-    case ('count')
-      if (routine=='start') then
-        memory = 0
-        maxmemory = 0
-        nalloc = 0
-        ndealloc = 0
-        locroutine = 'routine'
-        locarray = 'array'
-        locmemory = 0
-        locpeak = 0
-        iproc = isize
+        Select Case (array)
+        Case ('count')
+          If (routine=='start') Then
+            memory = 0
+            maxmemory = 0
+            nalloc = 0
+            ndealloc = 0
+            locroutine = 'routine'
+            locarray = 'array'
+            locmemory = 0
+            locpeak = 0
+            iproc = isize
 !open the writing file for the root process
-        if (iproc==0) then
-          open (unit=mfileno, file='meminfo', status='unknown')
-          write (mfileno, '(a32,1x,a20,3(1x,a12))') &
-            '(Data in kB)             Routine', '    Peak Array', &
-            'Routine Mem', 'Total Mem', 'Action'
-        end if
-      else if (routine=='stop' .and. iproc==0) then
+            If (iproc==0) Then
+              Open (Unit=mfileno, File='meminfo', Status='unknown')
+              Write (mfileno, '(a32,1x,a20,3(1x,a12))') &
+                '(Data in kB)             Routine', '    Peak Array', &
+                'Routine Mem', 'Total Mem', 'Action'
+            End If
+          Else If (routine=='stop' .And. iproc==0) Then
 !write(mfileno,'(a32,a16,4(1x,i12))')&
 !     trim(locroutine),trim(locarray),locmemory/1024,locpeak/1024,memory/1024,&
 !     (memory+locpeak-locmemory)/1024
 !close(mfileno)
-        write (*, '(1x,a)') '-------------------MEMORY CONSUMPTION &
-          &REPORT-----------------------'
-        write (*, '(1x,2(i0,a),i0)') nalloc, ' allocations and ', ndealloc, &
-          ' deallocations, remaining memory(B):', memory
-        write (*, '(1x,a,i0,a)') 'Memory occupation peak: ', maxmemory/1024, &
-          ' kB'
-        write (*, '(1x,5(a))') 'For the array: "', trim(maxarray), &
-          '" in routine "', trim(maxroutine), '"'
-        write (*, '(1x,a)') '-----------------END MEMORY CONSUMPTION &
-          &REPORT---------------------'
-      end if
+            Write (*, '(1x,a)') '-------------------MEMORY CONSUMPTION &
+              &REPORT-----------------------'
+            Write (*, '(1x,2(i0,a),i0)') nalloc, ' allocations and ', &
+              ndealloc, ' deallocations, remaining memory(B):', memory
+            Write (*, '(1x,a,i0,a)') 'Memory occupation peak: ', &
+              maxmemory/1024, ' kB'
+            Write (*, '(1x,5(a))') 'For the array: "', trim(maxarray), &
+              '" in routine "', trim(maxroutine), '"'
+            Write (*, '(1x,a)') '-----------------END MEMORY CONSUMPTION &
+              &REPORT---------------------'
+          End If
 
-    case default
+        Case Default
 !control of the allocation/deallocation status
-      if (istat/=0) then
-        if (isize>=0) then
-          write (*, *) ' subroutine ', routine, &
-            ': problem of allocation of array ', array
-          stop
-        else if (isize<0) then
-          write (*, *) ' subroutine ', routine, &
-            ': problem of deallocation of array ', array
-          stop
-        end if
-      end if
-      select case (iproc)
-      case (0)
+          If (istat/=0) Then
+            If (isize>=0) Then
+              Write (*, *) ' subroutine ', routine, &
+                ': problem of allocation of array ', array
+              Stop
+            Else If (isize<0) Then
+              Write (*, *) ' subroutine ', routine, &
+                ': problem of deallocation of array ', array
+              Stop
+            End If
+          End If
+          Select Case (iproc)
+          Case (0)
 ! To be used for inspecting an array which is not deallocated
-        if (isize>0) then
-          allocationflag = 'A'
-        else if (isize<0) then
-          allocationflag = 'D'
-        else
-          allocationflag = '?'
-        end if
+            If (isize>0) Then
+              allocationflag = 'A'
+            Else If (isize<0) Then
+              allocationflag = 'D'
+            Else
+              allocationflag = '?'
+            End If
 
-        write (mfileno, '(a32,1x,a20,3(1x,i12),1x,a12)') trim(routine), &
-          trim(array), isize*dblsize, memory, maxmemory, allocationflag
-        if (trim(locroutine)/=routine) then
+            Write (mfileno, '(a32,1x,a20,3(1x,i12),1x,a12)') trim(routine), &
+              trim(array), isize*dblsize, memory, maxmemory, allocationflag
+            If (trim(locroutine)/=routine) Then
 !          write(mfileno,'(a32,a14,4(1x,i12))')&
 !               trim(locroutine),trim(locarray),locmemory/1024,locpeak/1024,memory/1024,&
 !               (memory+locpeak-locmemory)/1024
-          locroutine = routine
-          locmemory = isize*dblsize
-          locpeak = isize*dblsize
-        else
-          locmemory = locmemory + isize*dblsize
-          if (locmemory>locpeak) then
-            locpeak = locmemory
-          end if
-        end if
-        locarray = array
-        memory = memory + isize*dblsize
-        if (memory>maxmemory) then
-          maxmemory = memory
-          maxroutine = routine
-          maxarray = array
-        end if
-        if (isize>0) then
-          nalloc = nalloc + 1
-        else if (isize<0) then
-          ndealloc = ndealloc + 1
-        end if
-      case default
-        return
-      end select
+              locroutine = routine
+              locmemory = isize*dblsize
+              locpeak = isize*dblsize
+            Else
+              locmemory = locmemory + isize*dblsize
+              If (locmemory>locpeak) Then
+                locpeak = locmemory
+              End If
+            End If
+            locarray = array
+            memory = memory + isize*dblsize
+            If (memory>maxmemory) Then
+              maxmemory = memory
+              maxroutine = routine
+              maxarray = array
+            End If
+            If (isize>0) Then
+              nalloc = nalloc + 1
+            Else If (isize<0) Then
+              ndealloc = ndealloc + 1
+            End If
+          Case Default
+            Return
+          End Select
 
-    end select
+        End Select
 
-  end subroutine
+      End Subroutine
 
 
-end module
+    End Module

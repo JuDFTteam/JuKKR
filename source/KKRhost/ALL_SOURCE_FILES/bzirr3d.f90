@@ -1,5 +1,6 @@
-subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
-  rsymat, nsymat, isymindex, symunitary, irr, krel, iprint)
+    Subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
+      rsymat, nsymat, isymindex, symunitary, irr, krel, iprint)
+      Use mod_datatypes, Only: dp
 !===========================================================================
 !info
 !info   find irreducible BZ and create mesh in it.
@@ -35,113 +36,113 @@ subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
 !         ibk   : Flag showing if the mesh point jx,jy,jz has already been
 !                 taken. Could also be a logical variable.
 !==========================================================================
-  implicit none
-  integer :: maxk1, maxk2, maxk3, nsymaxd
-  parameter (maxk1=501, maxk2=501, maxk3=100, nsymaxd=48)
+      Implicit None
+      Integer :: maxk1, maxk2, maxk3, nsymaxd
+      Parameter (maxk1=501, maxk2=501, maxk3=100, nsymaxd=48)
 !PARAMETER (MAXK1=350,MAXK2=350,MAXK3=70,NSYMAXD=48)
 ! i/o
 ! made local ibk array allocatable to not take too much memory
 !integer nkp,nkxyz(3),ibk(0:MAXK1,0:MAXK2,0:MAXK3),kpoibz,nsymat
-  integer :: nkp, nkxyz(3), kpoibz, nsymat
-  integer :: isymindex(*), nkxyz1(3), krel
-  double precision :: kp(3, *), wtkp(*), volbz, cf(3)
-  double precision :: recbv(3, 3), bravais(3, 3), rsymat(64, 3, 3)
-  logical :: irr
+      Integer :: nkp, nkxyz(3), kpoibz, nsymat
+      Integer :: isymindex(*), nkxyz1(3), krel
+      Real (Kind=dp) :: kp(3, *), wtkp(*), volbz, cf(3)
+      Real (Kind=dp) :: recbv(3, 3), bravais(3, 3), rsymat(64, 3, 3)
+      Logical :: irr
 ! local
-  integer, allocatable :: ibk(:, :, :)
-  real *8 :: bginv(3, 3), bgmat(3, 3), bgp(3, 3), bv(3)
-  integer :: nbgp(3, 3, 48), isym
-  integer :: iktab(3), ind2(3), iprint
-  integer :: i, j, jx, jy, jz, nsym, iws, iwt, is, ja, jb, jc, ix, iy, iz, k, &
-    nk, n
-  integer :: ndim
-  double precision :: u(3, 3, 48), gq(3, 3), v1
-  logical :: lsurf
-  logical :: symunitary(nsymaxd)
-  double precision :: msign
+      Integer, Allocatable :: ibk(:, :, :)
+      Real (Kind=dp) :: bginv(3, 3), bgmat(3, 3), bgp(3, 3), bv(3)
+      Integer :: nbgp(3, 3, 48), isym
+      Integer :: iktab(3), ind2(3), iprint
+      Integer :: i, j, jx, jy, jz, nsym, iws, iwt, is, ja, jb, jc, ix, iy, iz, &
+        k, nk, n
+      Integer :: ndim
+      Real (Kind=dp) :: u(3, 3, 48), gq(3, 3), v1
+      Logical :: lsurf
+      Logical :: symunitary(nsymaxd)
+      Real (Kind=dp) :: msign
 
-  double precision :: ddet33, ddot
-  external :: ddet33, ddot
+      Real (Kind=dp) :: ddet33, ddot
+      External :: ddet33, ddot
 
-  allocate (ibk(0:maxk1,0:maxk2,0:maxk3))
+      Allocate (ibk(0:maxk1,0:maxk2,0:maxk3))
 
 
 !heck if we are in surface mode
 
-  lsurf = .false.
-  if (bravais(1,3)==0.d0 .and. bravais(2,3)==0.d0 .and. bravais(3,3)==0.d0) &
-    lsurf = .true.
+      lsurf = .False.
+      If (bravais(1,3)==0.E0_dp .And. bravais(2,3)==0.E0_dp .And. &
+        bravais(3,3)==0.E0_dp) lsurf = .True.
 
-  ndim = 3
-  if (lsurf) then
-    nkxyz(3) = 1
-    ndim = 2
-  end if
+      ndim = 3
+      If (lsurf) Then
+        nkxyz(3) = 1
+        ndim = 2
+      End If
 
-  if (nkxyz(1)>maxk1 .or. nkxyz(2)>maxk2 .or. nkxyz(3)>maxk3) then
-    write (6, *) 'BZIRR3D : Increase MAXK ', (nkxyz(i), i=1, 3), maxk1, maxk2, &
-      maxk3
-    stop
-  end if
-  do i = 1, 3
-    nkxyz1(i) = nkxyz(i)
-  end do
+      If (nkxyz(1)>maxk1 .Or. nkxyz(2)>maxk2 .Or. nkxyz(3)>maxk3) Then
+        Write (6, *) 'BZIRR3D : Increase MAXK ', (nkxyz(i), i=1, 3), maxk1, &
+          maxk2, maxk3
+        Stop
+      End If
+      Do i = 1, 3
+        nkxyz1(i) = nkxyz(i)
+      End Do
 !-------------------
 
 ! Create small unit cell for the integration in the reciprocal space (gq),
 
 !                                          steps along the basis vectors
-  do i = 1, 3
-    do j = 1, 3
-      gq(i, j) = recbv(i, j)/dble(nkxyz1(j))
-    end do
-  end do
+      Do i = 1, 3
+        Do j = 1, 3
+          gq(i, j) = recbv(i, j)/real(nkxyz1(j), kind=dp)
+        End Do
+      End Do
 !=======================================================================
-  if (irr) then
+      If (irr) Then
 
-    nsym = nsymat
+        nsym = nsymat
 
 !-----------------------------------------------------------------------
 
-    if (nsym>48) stop 'DIM problem in bzirr3d.'
+        If (nsym>48) Stop 'DIM problem in bzirr3d.'
 
-    if ((lsurf) .and. (nsym>12)) stop 'DIM problem in bzirr3d, surf mode.'
+        If ((lsurf) .And. (nsym>12)) Stop 'DIM problem in bzirr3d, surf mode.'
 
 !----------------------------------------------------------------------
 
-    do n = 1, nsym
-      isym = isymindex(n)
-      msign = 1.d0
-      if ((krel==1) .and. (.not. symunitary(n))) msign = -1.d0
-      do i = 1, 3
-        do j = 1, 3
-          u(i, j, n) = msign*rsymat(isym, i, j)
-        end do
-      end do
-    end do
+        Do n = 1, nsym
+          isym = isymindex(n)
+          msign = 1.E0_dp
+          If ((krel==1) .And. (.Not. symunitary(n))) msign = -1.E0_dp
+          Do i = 1, 3
+            Do j = 1, 3
+              u(i, j, n) = msign*rsymat(isym, i, j)
+            End Do
+          End Do
+        End Do
 !========================================================================
-  else
+      Else
 !========================================================================
-    nsym = 1
-    u(1, 1, 1) = 1.d0
-    u(1, 2, 1) = 0.d0
-    u(1, 3, 1) = 0.d0
-    u(2, 1, 1) = 0.d0
-    u(2, 2, 1) = 1.d0
-    u(2, 3, 1) = 0.d0
-    u(3, 1, 1) = 0.d0
-    u(3, 2, 1) = 0.d0
-    u(3, 3, 1) = 1.d0
-  end if
+        nsym = 1
+        u(1, 1, 1) = 1.E0_dp
+        u(1, 2, 1) = 0.E0_dp
+        u(1, 3, 1) = 0.E0_dp
+        u(2, 1, 1) = 0.E0_dp
+        u(2, 2, 1) = 1.E0_dp
+        u(2, 3, 1) = 0.E0_dp
+        u(3, 1, 1) = 0.E0_dp
+        u(3, 2, 1) = 0.E0_dp
+        u(3, 3, 1) = 1.E0_dp
+      End If
 !==========================================================================
 
-  do j = 1, 3
-    do i = 1, 3
-      bgmat(i, j) = ddot(3, gq(1,i), 1, gq(1,j), 1)
-    end do
-  end do
+      Do j = 1, 3
+        Do i = 1, 3
+          bgmat(i, j) = ddot(3, gq(1,i), 1, gq(1,j), 1)
+        End Do
+      End Do
 
-  call rinvgj(bginv, bgmat, 3, ndim)
+      Call rinvgj(bginv, bgmat, 3, ndim)
 
 !-----------------------------------------------------------------------
 !          rotate the 3 step vectors   GQ  --  it should be possible
@@ -149,124 +150,125 @@ subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
 !     B(i) = SUM(j) GQ(j) * n(j,i)  with integer coefficients n(j,i)
 
 !==========================================================================
-  do is = 1, nsym
-    if (iprint>2) write (1337, 100) is
+      Do is = 1, nsym
+        If (iprint>2) Write (1337, 100) is
 
-    do i = 1, 3
-      call dgemv('N', 3, 3, 1d0, u(1,1,is), 3, gq(1,i), 1, 0d0, bgp(1,i), 1)
+        Do i = 1, 3
+          Call dgemv('N', 3, 3, 1E0_dp, u(1,1,is), 3, gq(1,i), 1, 0E0_dp, &
+            bgp(1,i), 1)
 
-      do j = 1, 3
-        bv(j) = ddot(3, gq(1,j), 1, bgp(1,i), 1)
-      end do
-      call dgemv('N', 3, 3, 1d0, bginv, 3, bv, 1, 0d0, cf, 1)
+          Do j = 1, 3
+            bv(j) = ddot(3, gq(1,j), 1, bgp(1,i), 1)
+          End Do
+          Call dgemv('N', 3, 3, 1E0_dp, bginv, 3, bv, 1, 0E0_dp, cf, 1)
 
-      do j = 1, ndim
-        if (abs(nint(cf(j))-cf(j))>1d-8) write (1337, 120) i, j, cf(j)
-        nbgp(j, i, is) = nint(cf(j))
-      end do
-      if (iprint>2) write (1337, 110) i, (bgp(j,i), j=1, 3), bv, cf, &
-        (nbgp(j,i,is), j=1, 3)
+          Do j = 1, ndim
+            If (abs(nint(cf(j))-cf(j))>1E-8_dp) Write (1337, 120) i, j, cf(j)
+            nbgp(j, i, is) = nint(cf(j))
+          End Do
+          If (iprint>2) Write (1337, 110) i, (bgp(j,i), j=1, 3), bv, cf, &
+            (nbgp(j,i,is), j=1, 3)
 
-    end do
+        End Do
 
-  end do
+      End Do
 !========================================================================
 
-  nk = nkxyz1(1)*nkxyz1(2)*nkxyz1(3)
+      nk = nkxyz1(1)*nkxyz1(2)*nkxyz1(3)
 
-  do i = 0, nkxyz1(1)
-    do j = 0, nkxyz1(2)
-      do k = 0, nkxyz1(3)
-        ibk(i, j, k) = 0
-      end do
-    end do
-  end do
+      Do i = 0, nkxyz1(1)
+        Do j = 0, nkxyz1(2)
+          Do k = 0, nkxyz1(3)
+            ibk(i, j, k) = 0
+          End Do
+        End Do
+      End Do
 
-  ix = nkxyz1(1)
-  iy = nkxyz1(2)
-  iz = nkxyz1(3)
-  nkp = 0
-  iws = 0
+      ix = nkxyz1(1)
+      iy = nkxyz1(2)
+      iz = nkxyz1(3)
+      nkp = 0
+      iws = 0
 
-  do jx = 0, ix - 1
-    iktab(1) = jx
-    do jy = 0, iy - 1
-      iktab(2) = jy
-      do jz = 0, iz - 1
-        iktab(3) = jz
+      Do jx = 0, ix - 1
+        iktab(1) = jx
+        Do jy = 0, iy - 1
+          iktab(2) = jy
+          Do jz = 0, iz - 1
+            iktab(3) = jz
 
-        if (ibk(jx,jy,jz)==0) then
-          nkp = nkp + 1
-          iwt = 0
+            If (ibk(jx,jy,jz)==0) Then
+              nkp = nkp + 1
+              iwt = 0
 
 !========================================================================
-          do isym = 1, nsym
+              Do isym = 1, nsym
 
 !               rotate k-vector  NKP  and transform into parallelepiped
 !          ROT k = SUM(i) m(i) ROT gq(i)
 !                = SUM(i) m(i) SUM(j) n(i,j) gq(j)
 !                = SUM(j) [SUM(i) m(i) n(i,j)] gq(j)
 
-            do j = 1, 3
-              is = 0
-              do i = 1, 3
-                is = is + iktab(i)*nbgp(j, i, isym)
-              end do
-              is = mod(is, nkxyz1(j))
-              if (is<0) is = is + nkxyz1(j)
-              ind2(j) = is
-            end do
+                Do j = 1, 3
+                  is = 0
+                  Do i = 1, 3
+                    is = is + iktab(i)*nbgp(j, i, isym)
+                  End Do
+                  is = mod(is, nkxyz1(j))
+                  If (is<0) is = is + nkxyz1(j)
+                  ind2(j) = is
+                End Do
 
-            ja = ind2(1)
-            jb = ind2(2)
-            jc = ind2(3)
+                ja = ind2(1)
+                jb = ind2(2)
+                jc = ind2(3)
 
-            if (ibk(ja,jb,jc)==0) then
-              ibk(ja, jb, jc) = nkp
-              iwt = iwt + 1
-            end if
+                If (ibk(ja,jb,jc)==0) Then
+                  ibk(ja, jb, jc) = nkp
+                  iwt = iwt + 1
+                End If
 ! Mesh point in the unit cell found.
-          end do
+              End Do
 !========================================================================
 
-          if (nkp<=kpoibz) then
-            do i = 1, 3
-              kp(i, nkp) = 0d0
-              do j = 1, 3
-                kp(i, nkp) = kp(i, nkp) + gq(i, j)*dble(iktab(j))
-              end do
-            end do
-            wtkp(nkp) = dble(iwt)/dble(nk)
-          else
-            write (6, *) ' No. of k-points ', nkp, ' > KPOIBZ '
-            stop ' <BZIRR3D> increase parameter KPOIBZ'
-          end if
+              If (nkp<=kpoibz) Then
+                Do i = 1, 3
+                  kp(i, nkp) = 0E0_dp
+                  Do j = 1, 3
+                    kp(i, nkp) = kp(i, nkp) + gq(i, j)*real(iktab(j), kind=dp)
+                  End Do
+                End Do
+                wtkp(nkp) = real(iwt, kind=dp)/real(nk, kind=dp)
+              Else
+                Write (6, *) ' No. of k-points ', nkp, ' > KPOIBZ '
+                Stop ' <BZIRR3D> increase parameter KPOIBZ'
+              End If
 
-        end if
-        iws = iws + iwt
+            End If
+            iws = iws + iwt
 
-      end do
-    end do
-  end do
+          End Do
+        End Do
+      End Do
 
-  volbz = 0.d0
+      volbz = 0.E0_dp
 
-  if (lsurf) then
-    v1 = dabs(recbv(1,1)*recbv(2,2)-recbv(1,2)*recbv(2,1))
-  else
-    v1 = ddet33(recbv)
-  end if
+      If (lsurf) Then
+        v1 = abs(recbv(1,1)*recbv(2,2)-recbv(1,2)*recbv(2,1))
+      Else
+        v1 = ddet33(recbv)
+      End If
 
-  do i = 1, nkp
-    wtkp(i) = wtkp(i)*v1/dble(nsym)
-    volbz = volbz + wtkp(i)*dble(nsym)
-  end do
+      Do i = 1, nkp
+        wtkp(i) = wtkp(i)*v1/real(nsym, kind=dp)
+        volbz = volbz + wtkp(i)*real(nsym, kind=dp)
+      End Do
 
-  deallocate (ibk)
+      Deallocate (ibk)
 
-  return
+      Return
 
-100 format (5x, 'rotated GQ  for IROT=', i3)
-110 format (5x, i3, 3f7.3, 2x, 3f7.3, 2x, 3f7.3, 2x, 3i3)
-120 format (5x, 2i3, 3f7.3)
-end subroutine
+100   Format (5X, 'rotated GQ  for IROT=', I3)
+110   Format (5X, I3, 3F7.3, 2X, 3F7.3, 2X, 3F7.3, 2X, 3I3)
+120   Format (5X, 2I3, 3F7.3)
+    End Subroutine

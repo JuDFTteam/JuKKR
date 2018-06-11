@@ -12,6 +12,7 @@ subroutine cint4pts(y, jtop, z)
 !   *                       COMPLEX - VERSION                          *
 !   *                                                                  *
 !   ********************************************************************
+  use mod_DataTypes
   implicit none
 
 ! Dummy arguments
@@ -33,7 +34,7 @@ subroutine cint4pts(y, jtop, z)
     end do
   end do
 
-  z(1) = dcmplx(0.d0, 0.d0)
+  z(1) = cmplx(0.d0, 0.d0, kind=dp)
   svn = z(1)
 
   do ig = 1, jtop - 4, 4

@@ -1,14 +1,15 @@
 ! ************************************************************************
-subroutine veq(a, b)
+    Subroutine veq(a, b)
+      Use mod_datatypes, Only: dp
 ! ************************************************************************
-  implicit none
+      Implicit None
 
-  double precision :: a(*)
-  double precision :: b(*)
+      Real (Kind=dp) :: a(*)
+      Real (Kind=dp) :: b(*)
 
-  integer :: i
+      Integer :: i
 
-  do i = 1, 3
-    b(i) = a(i)
-  end do
-end subroutine
+      Do i = 1, 3
+        b(i) = a(i)
+      End Do
+    End Subroutine

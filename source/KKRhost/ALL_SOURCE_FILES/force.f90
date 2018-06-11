@@ -1,121 +1,124 @@
-subroutine force(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, drdi, irws)
+    Subroutine force(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, drdi, &
+      irws)
+      Use mod_datatypes, Only: dp
 !-----------------------------------------------------------------------
 !     calculates the force on nucleus m
 !     from a given non spherical charge density at the nucleus site r
 !     with core correction (coulomb contribution)
 
 !-----------------------------------------------------------------------
-  implicit none
+      Implicit None
 
 !     .. Parameters ..
-  include 'inc.p'
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
+      Include 'inc.p'
+      Integer :: lmpotd
+      Parameter (lmpotd=(lpotd+1)**2)
 !..
 !.. Local Scalars ..
-  integer :: lmax, nend, nspin, nstart
+      Integer :: lmax, nend, nspin, nstart
 !..
 !.. Local Arrays ..
-  double precision :: drdi(irmd, *), flm(-1:1, *), flmc(-1:1, *), r(irmd, *), &
-    rhoc(irmd, *), v(irmd, lmpotd, *)
-  integer :: irws(*)
+      Real (Kind=dp) :: drdi(irmd, *), flm(-1:1, *), flmc(-1:1, *), &
+        r(irmd, *), rhoc(irmd, *), v(irmd, lmpotd, *)
+      Integer :: irws(*)
 !..
 !.. External Subroutines ..
-  double precision :: dv, fac, pi, rws, vint1
-  integer :: i, iatyp, ipot, irws1, ispin, lm, m
+      Real (Kind=dp) :: dv, fac, pi, rws, vint1
+      Integer :: i, iatyp, ipot, irws1, ispin, lm, m
 !..
 !.. Save statement ..
-  double precision :: flmh(-1:1, natypd), v1(irmd)
+      Real (Kind=dp) :: flmh(-1:1, natypd), v1(irmd)
 !..
 !.. Intrinsic Functions ..
-  external :: simp3
+      External :: simp3
 !..
 
-  save :: pi
+      Save :: pi
 
 !---> loop over rep. atoms
-  intrinsic :: atan, dsqrt
+      Intrinsic :: atan, sqrt
 
-  pi = 4.d0*atan(1.d0)
-  fac = dsqrt((4.0d0*pi)/3.0d0)
-  if (lmax<1) then
-    write (6, fmt=100)
-    stop
+      pi = 4.E0_dp*atan(1.E0_dp)
+      fac = sqrt((4.0E0_dp*pi)/3.0E0_dp)
+      If (lmax<1) Then
+        Write (6, Fmt=100)
+        Stop
 
-  end if
-
-
-
-  do iatyp = nstart, nend
+      End If
 
 
-    irws1 = irws(iatyp)
-    rws = r(irws1, iatyp)
+
+      Do iatyp = nstart, nend
+
+
+        irws1 = irws(iatyp)
+        rws = r(irws1, iatyp)
 !---> initialize v1
 
 
-    do m = -1, 1
-      lm = 2 + m + 1
+        Do m = -1, 1
+          lm = 2 + m + 1
 
 !---> determine the right potential numbers
 
-      do i = 1, irws1
-        v1(i) = 0.0d0
-      end do
+          Do i = 1, irws1
+            v1(i) = 0.0E0_dp
+          End Do
 
-      do ispin = 1, nspin
+          Do ispin = 1, nspin
 !---> determine the derivative of the potential using a 5-point formular
 
 
-        ipot = nspin*(iatyp-1) + ispin
+            ipot = nspin*(iatyp-1) + ispin
 
 
 
-        dv = (-3.0d0*v(1,lm,ipot)-10.0d0*v(2,lm,ipot)+18.0d0*v(3,lm,ipot)- &
-          6.0d0*v(4,lm,ipot)+v(5,lm,ipot))/(12.0d0*drdi(2,iatyp))
+            dv = (-3.0E0_dp*v(1,lm,ipot)-10.0E0_dp*v(2,lm,ipot)+ &
+              18.0E0_dp*v(3,lm,ipot)-6.0E0_dp*v(4,lm,ipot)+v(5,lm,ipot))/ &
+              (12.0E0_dp*drdi(2,iatyp))
 
-        v1(2) = rhoc(2, ipot)*(2.0d0*v(2,lm,ipot)/r(2,iatyp)+dv)/(4.0d0*pi) + &
-          v1(2)
+            v1(2) = rhoc(2, ipot)*(2.0E0_dp*v(2,lm,ipot)/r(2,iatyp)+dv)/ &
+              (4.0E0_dp*pi) + v1(2)
 
-        do i = 3, irws1 - 2
+            Do i = 3, irws1 - 2
 
-          dv = (v(i-2,lm,ipot)-v(i+2,lm,ipot)+8.0d0*(v(i+1,lm,ipot)-v(i-1,lm, &
-            ipot)))/(12.0d0*drdi(i,iatyp))
+              dv = (v(i-2,lm,ipot)-v(i+2,lm,ipot)+8.0E0_dp*(v(i+1,lm, &
+                ipot)-v(i-1,lm,ipot)))/(12.0E0_dp*drdi(i,iatyp))
 
-          v1(i) = rhoc(i, ipot)*(2.0d0*v(i,lm,ipot)/r(i,iatyp)+dv)/ &
-            (4.0d0*pi) + v1(i)
-        end do
+              v1(i) = rhoc(i, ipot)*(2.0E0_dp*v(i,lm,ipot)/r(i,iatyp)+dv)/ &
+                (4.0E0_dp*pi) + v1(i)
+            End Do
 !---> integrate with simpson subroutine
-        dv = (-v(irws1-4,lm,ipot)+6.0d0*v(irws1-3,lm,ipot)- &
-          18.0d0*v(irws1-2,lm,ipot)+10.0d0*v(irws1-1,lm,ipot)+ &
-          3.0d0*v(irws1,lm,ipot))/(12.0d0*drdi(irws1-1,iatyp))
-        v1(irws1-1) = rhoc(irws1-1, ipot)*(2.0d0*v(irws1-1,lm,ipot)/r(irws1-1, &
-          iatyp)+dv)/(4.0d0*pi) + v1(irws1-1)
+            dv = (-v(irws1-4,lm,ipot)+6.0E0_dp*v(irws1-3,lm,ipot)- &
+              18.0E0_dp*v(irws1-2,lm,ipot)+10.0E0_dp*v(irws1-1,lm,ipot)+ &
+              3.0E0_dp*v(irws1,lm,ipot))/(12.0E0_dp*drdi(irws1-1,iatyp))
+            v1(irws1-1) = rhoc(irws1-1, ipot)*(2.0E0_dp*v(irws1-1,lm,ipot)/r( &
+              irws1-1,iatyp)+dv)/(4.0E0_dp*pi) + v1(irws1-1)
 
-        dv = (3.0d0*v(irws1-4,lm,ipot)-16.0d0*v(irws1-3,lm,ipot)+ &
-          36.0d0*v(irws1-2,lm,ipot)-48.0d0*v(irws1-1,lm,ipot)+ &
-          25.0d0*v(irws1,lm,ipot))/(12.0d0*drdi(irws1,iatyp))
+            dv = (3.0E0_dp*v(irws1-4,lm,ipot)-16.0E0_dp*v(irws1-3,lm,ipot)+ &
+              36.0E0_dp*v(irws1-2,lm,ipot)-48.0E0_dp*v(irws1-1,lm,ipot)+ &
+              25.0E0_dp*v(irws1,lm,ipot))/(12.0E0_dp*drdi(irws1,iatyp))
 
-        v1(irws1) = rhoc(irws1, ipot)*(2.0d0*v(irws1,lm,ipot)/r(irws1,iatyp)+ &
-          dv)/(4.0d0*pi) + v1(irws1)
-      end do
-
-
-
-      call simp3(v1, vint1, 1, irws1, drdi(1,iatyp))
-
-      flmh(m, iatyp) = fac*flm(m, iatyp)
-      flmc(m, iatyp) = -fac*vint1
-      flm(m, iatyp) = flmh(m, iatyp) + flmc(m, iatyp)
+            v1(irws1) = rhoc(irws1, ipot)*(2.0E0_dp*v(irws1,lm,ipot)/r(irws1, &
+              iatyp)+dv)/(4.0E0_dp*pi) + v1(irws1)
+          End Do
 
 
-    end do
+
+          Call simp3(v1, vint1, 1, irws1, drdi(1,iatyp))
+
+          flmh(m, iatyp) = fac*flm(m, iatyp)
+          flmc(m, iatyp) = -fac*vint1
+          flm(m, iatyp) = flmh(m, iatyp) + flmc(m, iatyp)
+
+
+        End Do
 !-----------------------------------------------------------------------
 !     calculates the force on nucleus m
-  end do
+      End Do
 !     from a given non spherical charge density at the nucleus site r
-100 format (13x, 'error stop in subroutine force :', &
-    ' the charge density has to contain non spherical', &
-    ' contributions up to l=1 at least ')
+100   Format (13X, 'error stop in subroutine force :', &
+        ' the charge density has to contain non spherical', &
+        ' contributions up to l=1 at least ')
 !     with core correction (coulomb contribution)
-end subroutine
+    End Subroutine

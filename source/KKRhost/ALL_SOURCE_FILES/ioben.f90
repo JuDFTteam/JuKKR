@@ -1,4 +1,5 @@
-integer function ioben(r)
+    Integer Function ioben(r)
+      Use mod_datatypes, Only: dp
 !-----------------------------------------------------------------------
 
 !                             --   --
@@ -13,34 +14,34 @@ integer function ioben(r)
 !                                           last update: February 1994
 !-----------------------------------------------------------------------
 
-  implicit none
+      Implicit None
 
 !.. Scalar Arguments ..
 
-  double precision :: r
+      Real (Kind=dp) :: r
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: abs, int, nint
+      Intrinsic :: abs, int, nint
 !..
 
 !.. Parameters ..
-  double precision :: eps
-  parameter (eps=1d-6)
+      Real (Kind=dp) :: eps
+      Parameter (eps=1E-6_dp)
 !..
 
-  if ((nint(r)-r)<eps) then
-    if (abs(nint(r)-r)<eps) then
-      ioben = nint(r)
-    else
-      ioben = nint(r+1.0)
-    end if
-  else
-    if (abs(int(r)-r)<eps) then
-      ioben = int(r)
-    else
-      ioben = int(r+1.0)
-    end if
-  end if
+      If ((nint(r)-r)<eps) Then
+        If (abs(nint(r)-r)<eps) Then
+          ioben = nint(r)
+        Else
+          ioben = nint(r+1.0_dp)
+        End If
+      Else
+        If (abs(int(r)-r)<eps) Then
+          ioben = int(r)
+        Else
+          ioben = int(r+1.0_dp)
+        End If
+      End If
 
-  return
-end function
+      Return
+    End Function

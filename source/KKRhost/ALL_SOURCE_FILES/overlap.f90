@@ -1,5 +1,7 @@
-subroutine overlap(result, phi, pz, qz, pqns, acr, dr, lirreg, ipan, ircut, &
-  drdi, irmin, lphi, ipand, lmaxd, lmmaxd, mmaxd, lmpotd, irmind, irmd)
+    Subroutine overlap(result, phi, pz, qz, pqns, acr, dr, lirreg, ipan, &
+      ircut, drdi, irmin, lphi, ipand, lmaxd, lmmaxd, mmaxd, lmpotd, irmind, &
+      irmd)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
 ! * Calculates the overlap integral of test function PHI with regular  *
@@ -50,69 +52,69 @@ subroutine overlap(result, phi, pz, qz, pqns, acr, dr, lirreg, ipan, ircut, &
 ! *                             ph. mavropoulos, juelich, 2002         *
 ! *                                                                    *
 ! **********************************************************************
-  implicit none
+      Implicit None
 !..
 !.. Scalar Arguments ..
-  integer :: ipand, lmaxd, lmmaxd, mmaxd, lmpotd, irmind, irmd
-  integer :: irmin, ipan, lphi ! l-value for LDA+U
-  logical :: lirreg
+      Integer :: ipand, lmaxd, lmmaxd, mmaxd, lmpotd, irmind, irmd
+      Integer :: irmin, ipan, lphi ! l-value for LDA+U
+      Logical :: lirreg
 !..
 !.. Array arguments ..
-  double complex :: phi(irmd), pz(irmd, 0:lmaxd), qz(irmd, 0:lmaxd)
-  double complex :: pqns(lmmaxd, lmmaxd, irmind:irmd, 2)
-  double complex :: acr(lmmaxd, lmmaxd), dr(lmmaxd, lmmaxd)
-  double complex :: result(mmaxd, mmaxd)
-  double precision :: drdi(irmd)
-  integer :: ircut(0:ipand)
+      Complex (Kind=dp) :: phi(irmd), pz(irmd, 0:lmaxd), qz(irmd, 0:lmaxd)
+      Complex (Kind=dp) :: pqns(lmmaxd, lmmaxd, irmind:irmd, 2)
+      Complex (Kind=dp) :: acr(lmmaxd, lmmaxd), dr(lmmaxd, lmmaxd)
+      Complex (Kind=dp) :: result(mmaxd, mmaxd)
+      Real (Kind=dp) :: drdi(irmd)
+      Integer :: ircut(0:ipand)
 !..
 !.. Locals ..
-  integer :: lphisq, mmax, irs1, irc1
-  integer :: lm1, lm2, lm3, mm1, mm2, mm3, ir
-  double precision :: gaunt(lmmaxd, lmmaxd, lmpotd)
-  double complex :: wint(irmd)
+      Integer :: lphisq, mmax, irs1, irc1
+      Integer :: lm1, lm2, lm3, mm1, mm2, mm3, ir
+      Real (Kind=dp) :: gaunt(lmmaxd, lmmaxd, lmpotd)
+      Complex (Kind=dp) :: wint(irmd)
 !..
-  mmax = 2*lphi + 1
-  lphisq = lphi*lphi
-  irs1 = ircut(1)
-  irc1 = ircut(ipan)
+      mmax = 2*lphi + 1
+      lphisq = lphi*lphi
+      irs1 = ircut(1)
+      irc1 = ircut(ipan)
 
-  call rinit(lmmaxd*lmmaxd*lmpotd, gaunt)
+      Call rinit(lmmaxd*lmmaxd*lmpotd, gaunt)
 
-  do lm1 = 1, lmmaxd
-    gaunt(lm1, lm1, 1) = 1.d0
-  end do
-  call cinit(mmaxd*mmaxd, result)
+      Do lm1 = 1, lmmaxd
+        gaunt(lm1, lm1, 1) = 1.E0_dp
+      End Do
+      Call cinit(mmaxd*mmaxd, result)
 
 ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ! Loop over mm1,mm2:
-  do mm1 = 1, mmax
-    lm1 = lphisq + mm1
-    do mm2 = 1, mmax
-      lm2 = lphisq + mm2
+      Do mm1 = 1, mmax
+        lm1 = lphisq + mm1
+        Do mm2 = 1, mmax
+          lm2 = lphisq + mm2
 ! Set up integrand
-      call cinit(irmd, wint)
+          Call cinit(irmd, wint)
 ! ----------------------------------------------------------------------
-      do mm3 = 1, mmax
-        lm3 = lphisq + mm3
+          Do mm3 = 1, mmax
+            lm3 = lphisq + mm3
 
 ! -> First inner part (up to irmin, no thetas)
-        do ir = 2, irmin
-          wint(ir) = wint(ir) + phi(ir)*pz(ir, lphi)*acr(lm3, lm2)*gaunt(lm1, &
-            lm3, 1)
-        end do
+            Do ir = 2, irmin
+              wint(ir) = wint(ir) + phi(ir)*pz(ir, lphi)*acr(lm3, lm2)*gaunt( &
+                lm1, lm3, 1)
+            End Do
 
-        if (lirreg) then
-          do ir = 2, irmin
-            wint(ir) = wint(ir) + phi(ir)*qz(ir, lphi)*dr(lm3, lm2)*gaunt(lm1, &
-              lm3, 1)
-          end do
-        end if
+            If (lirreg) Then
+              Do ir = 2, irmin
+                wint(ir) = wint(ir) + phi(ir)*qz(ir, lphi)*dr(lm3, lm2)*gaunt( &
+                  lm1, lm3, 1)
+              End Do
+            End If
 
 ! -> Next middle part (from irmin+1 to irc1, no thetas)
-        do ir = irmin + 1, irs1
-          wint(ir) = wint(ir) + phi(ir)*pqns(lm3, lm2, ir, 1)*gaunt(lm1, lm3, &
-            1)
-        end do
+            Do ir = irmin + 1, irs1
+              wint(ir) = wint(ir) + phi(ir)*pqns(lm3, lm2, ir, 1)*gaunt(lm1, &
+                lm3, 1)
+            End Do
 
 ! -> Finally last part - from irc1+1 to irs1 - with THETAS and proper
 !    GAUNTS if we integrate in cell:
@@ -129,15 +131,15 @@ subroutine overlap(result, phi, pz, qz, pqns, acr, dr, lirreg, ipan, ircut, &
 
 !    or still without THETAS if we integrate in sphere
 
-        do ir = irs1 + 1, irc1
-          wint(ir) = wint(ir) + phi(ir)*pqns(lm3, lm2, ir, 1)*gaunt(lm1, lm3, &
-            1)
-        end do
-      end do
+            Do ir = irs1 + 1, irc1
+              wint(ir) = wint(ir) + phi(ir)*pqns(lm3, lm2, ir, 1)*gaunt(lm1, &
+                lm3, 1)
+            End Do
+          End Do
 ! ----------------------------------------------------------------------
 
-      call csimpk(wint, result(mm1,mm2), ipan, ircut, drdi(1))
-    end do
-  end do
+          Call csimpk(wint, result(mm1,mm2), ipan, ircut, drdi(1))
+        End Do
+      End Do
 ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-end subroutine
+    End Subroutine

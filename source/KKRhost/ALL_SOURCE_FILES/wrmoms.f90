@@ -30,8 +30,8 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
   end if
 
   write (1337, *)
-  write (1337, 120)
-  write (6, 130)
+  write (1337, 120, advance='no')
+  write (6, 130, advance='no')
   do it = 1, natyp
     muspin(it, lmaxd1+1) = 0d0
     sumch(it, 1) = 0d0
@@ -56,27 +56,27 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
   if (nspin==1) is = is + 2
   do ispin = 1, nspin
     is = is + 1
-    write (1337, 140) texts(is)
-    write (6, 140) texts(is)
+    write (1337, 140, advance='no') texts(is)
+    write (6, 140, advance='no') texts(is)
   end do
 
   if (krel==1) then
-    write (1337, 150)
-    write (6, 150)
+    write (1337, 150, advance='no')
+    write (6, 150, advance='no')
     write (1337, 160)
     write (6, 160)
   else
-    if (nspin==2) write (1337, 150)
-    if (nspin==2) write (6, 150)
+    if (nspin==2) write (1337, 150, advance='no')
+    if (nspin==2) write (6, 150, advance='no')
     write (1337, *)
     write (6, *)
   end if
 
-  write (1337, '(3X,26(1H=),$)')
+  write (1337, '(3X,26(1H=))', advance='no')
   if (krel==1) then
     write (1337, '(46(1H=))')
   else
-    if (nspin==2) write (1337, '(23(1H=),$)')
+    if (nspin==2) write (1337, '(23(1H=))', advance='no')
     write (1337, *)
   end if
 
@@ -141,7 +141,7 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
       end if
     end if
 
-    write (1337, '(10x,19(1H-),$)')
+    write (1337, '(10x,19(1H-))', advance='no')
     if (krel==1) then
       write (1337, '(44(1H-))')
       write (1337, fmt=fmt2) ' TOT', (sumch(it,ispin), ispin=1, nspin), &
@@ -167,11 +167,11 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
     end if
 
     if (it/=natyp) then
-      write (1337, '(3X,26(1H=),$)')
+      write (1337, '(3X,26(1H=))', advance='no')
       if (krel==1) then
         write (1337, '(40(1H=))')
       else
-        if (nspin==2) write (1337, '(17(1H=),$)')
+        if (nspin==2) write (1337, '(17(1H=))', advance='no')
         write (1337, *)
       end if
     end if
@@ -195,9 +195,9 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
 
 100 format (15x, 'l-decomposed valence charges and magnetic moments')
 110 format (8x, 'l-decomposed valence charges')
-120 format (3x, 'ATOM      ', $)
-130 format (3x, '          ', $)
-140 format (2x, 'Ne ', a7, $)
-150 format ('    m_spin', $)
+120 format (3x, 'ATOM      ')
+130 format (3x, '          ')
+140 format (2x, 'Ne ', a7)
+150 format ('    m_spin')
 160 format ('    m_orb   spin dn  spin up')
 end subroutine

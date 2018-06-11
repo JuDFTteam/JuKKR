@@ -1,6 +1,7 @@
 subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
   vlnc, a, b, z, rn, nr, tol, irm, ipr, nitmax, nsra)
-  use :: mod_types, only: t_inc
+  use mod_types, only: t_inc
+  use mod_DataTypes
   implicit none
 !.. Scalar Arguments ..
   double precision :: a, b, e, f1, f2, rn, slope, sum, tol, value, z
@@ -24,7 +25,7 @@ subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
   external :: hankel, intin, intout
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: abs, atan, dcmplx, dsqrt, exp, log, max0, min0, real, sqrt
+  intrinsic :: abs, atan, cmplx, dsqrt, exp, log, max0, min0, real, sqrt
 !..
   pi = 4.d0*atan(1.d0)
   zz = z + z
@@ -68,13 +69,13 @@ subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
 !--->   single site  boundary condition
         vme = -e
         if (nsra==1) then
-          cappai = dcmplx(0.d0, dsqrt(vme))
+          cappai = cmplx(0.d0, dsqrt(vme), kind=dp)
         else
-          cappai = dcmplx(0.d0, dsqrt((1.d0-vme/cvlight/cvlight)*vme))
+          cappai = cmplx(0.d0, dsqrt((1.d0-vme/cvlight/cvlight)*vme), kind=dp)
         end if
         arg = cappai*rn
         call hankel(hl, l+2, arg)
-        dofe = real(l+1)/rn - cappai*hl(l+2)/hl(l+1)
+        dofe = real(l+1, kind=dp)/rn - cappai*hl(l+2)/hl(l+1)
         valu = 1.d-10
         slop = valu*dofe
       end if

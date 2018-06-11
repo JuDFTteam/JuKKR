@@ -120,7 +120,7 @@ subroutine strsmat(lmax, cgc, srrel, nrrel, irrel, nkmmax, nkmpmax)
 
     do lr = 1, 2*nlm
 !             IF ( CDABS(RREL(LR,LAM)).GT.1D-6 ) THEN
-      if (cdabs(rrel(lr,lam))>1d-4) then
+      if (abs(rrel(lr,lam))>1d-4) then
         if (lr<=nlm) then
           ns1 = ns1 + 1
           if (ns1>2) stop ' IN <STRSMAT>   NS1 > 2'

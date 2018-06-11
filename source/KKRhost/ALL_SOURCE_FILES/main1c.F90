@@ -14,6 +14,7 @@ module MOD_MAIN1C
    use Profiling
    use Constants
    use global_variables
+   use mod_DataTypes
 
    implicit none
 
@@ -151,7 +152,7 @@ contains
 #endif
 
       ! .. Intrinsic Functions ..
-      intrinsic ATAN,DBLE,DIMAG,DREAL
+      intrinsic ATAN,DBLE,aimag,REAL
       ! .. External Functions ..
       logical OPT,TEST
       external OPT,TEST
@@ -378,7 +379,7 @@ contains
                do IE = 1,IELAST                                                  ! LLY Lloyd
                   CSUM = CSUM + CDOS_LLY(IE,ISPIN) * WEZ(IE)                     ! LLY Lloyd
                enddo                                                             ! LLY Lloyd
-               CHARGE_LLY(ISPIN) = -DIMAG(CSUM) * PI / NSPINPOT                  ! LLY Lloyd
+               CHARGE_LLY(ISPIN) = -aimag(CSUM) * PI / NSPINPOT                  ! LLY Lloyd
             enddo                                                                ! LLY Lloyd
             ! LLY Lloyd
             ! LLY Lloyd
@@ -439,7 +440,7 @@ contains
             do IE = 1,IELAST                                                           ! LLY
                CSUM = CSUM + CDOS_LLY(IE,1) * WEZ(IE)                                  ! LLY
             enddo                                                                      ! LLY
-            CHARGE_LLY(1) = -DIMAG(CSUM) * PI                                          ! LLY
+            CHARGE_LLY(1) = -aimag(CSUM) * PI                                          ! LLY
             if(myrank==master) then
                open (701,FILE='cdos_lloyd.dat',FORM='FORMATTED')                       ! LLY
                do IE=1,IELAST                                                          ! LLY
@@ -530,9 +531,9 @@ contains
             !
             do L = 0,LMAXD1
                DENEF = DENEF - 2.0D0 * CONC(I1)*   &
-                  DIMAG(DEN(L,IELAST,1,IPOT1))/PI/DBLE(NSPINPOT)
+                  aimag(DEN(L,IELAST,1,IPOT1))/PI/DBLE(NSPINPOT)
                DENEFAT(I1) = DENEFAT(I1) - 2.0D0*  &
-                  DIMAG(DEN(L,IELAST,1,IPOT1))/PI/DBLE(NSPINPOT)
+                  aimag(DEN(L,IELAST,1,IPOT1))/PI/DBLE(NSPINPOT)
             end do
             !
             if (NSPINPOT.EQ.2) then
@@ -545,9 +546,9 @@ contains
                !
                do L = 0,LMAXD1
                   DENEF = DENEF - 2.0D0 * CONC(I1)*   &
-                     DIMAG(DEN(L,IELAST,1,IPOT1+1))/PI/DBLE(NSPINPOT)
+                     aimag(DEN(L,IELAST,1,IPOT1+1))/PI/DBLE(NSPINPOT)
                   DENEFAT(I1) = DENEFAT(I1) - 2.0D0*  &
-                     DIMAG(DEN(L,IELAST,1,IPOT1+1))/PI/DBLE(NSPINPOT)
+                     aimag(DEN(L,IELAST,1,IPOT1+1))/PI/DBLE(NSPINPOT)
                end do
             end if
 
@@ -634,8 +635,8 @@ contains
                               DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)                   ! qdos
                            enddo                                                    ! qdos
                            write(31,9000) EZ(IE),QVEC(1,IQ),QVEC(2,IQ), &
-                              QVEC(3,IQ),-DIMAG(DENTOT)/PI,             &           ! qdos
-                              (-DIMAG(DEN(L,IE,IQ,IPOT))/PI,L=0,LMAXD1)             ! qdos
+                              QVEC(3,IQ),-aimag(DENTOT)/PI,             &           ! qdos
+                              (-aimag(DEN(L,IE,IQ,IPOT))/PI,L=0,LMAXD1)             ! qdos
                         end do ! IQ=1,NQDOS                                         ! qdos
                      end do ! IE=1,IELAST                                           ! qdos
                      close(31)                                                      ! qdos
@@ -723,8 +724,8 @@ contains
                      write (30,8600) '# ISPIN=',ISPIN,' I1=',I1                  ! lm-dos
                      8600         FORMAT (a8,I3,a4,I5)                           ! lm-dos
                      do IE=1,IELAST                                              ! lm-dos
-                        write(30,9001) DREAL(EZ(IE)), &                          ! lm-dos
-                           (-DIMAG(DENLM(LM,IE,1,IPOT))/PI,LM=1,LMMAXD)          ! lm-dos
+                        write(30,9001) REAL(EZ(IE), kind=dp), &                          ! lm-dos
+                           (-aimag(DENLM(LM,IE,1,IPOT))/PI,LM=1,LMMAXD)          ! lm-dos
                      end do ! IE                                                 ! lm-dos
                   end do ! ISPIN                                                 ! lm-dos
                   9001       FORMAT(30E12.4)                                     ! lm-dos
@@ -839,15 +840,15 @@ contains
 
             do L = 0,LMAXD1
                DENEF = DENEF - 2.0D0 * CONC(I1)*   &
-                  DIMAG(DEN(L,IELAST,1,IPOT))/PI/DBLE(NSPIN)
+                  aimag(DEN(L,IELAST,1,IPOT))/PI/DBLE(NSPIN)
                DENEFAT(I1) = DENEFAT(I1) - 2.0D0*  &
-                  DIMAG(DEN(L,IELAST,1,IPOT))/PI/DBLE(NSPIN)
+                  aimag(DEN(L,IELAST,1,IPOT))/PI/DBLE(NSPIN)
             end do
             do L = 0,LMAXD1
                DENEF = DENEF - 2.0D0 * CONC(I1)*   &
-                  DIMAG(DEN(L,IELAST,1,IPOT+1))/PI/DBLE(NSPIN)
+                  aimag(DEN(L,IELAST,1,IPOT+1))/PI/DBLE(NSPIN)
                DENEFAT(I1) = DENEFAT(I1) - 2.0D0*  &
-                  DIMAG(DEN(L,IELAST,1,IPOT+1))/PI/DBLE(NSPIN)
+                  aimag(DEN(L,IELAST,1,IPOT+1))/PI/DBLE(NSPIN)
             end do
             do ISPIN=1,NSPIN
                do L=0,LMAXD1
@@ -935,7 +936,7 @@ contains
                   !
                   do IE = 1,IELAST
                      CHARGE(L,I1,ISPIN) = CHARGE(L,I1,ISPIN) + &
-                        DIMAG(WEZ(IE)*DEN(L,IE,1,IPOT))/DBLE(NSPINPOT)
+                        aimag(WEZ(IE)*DEN(L,IE,1,IPOT))/DBLE(NSPINPOT)
                      if ( IE.eq.IESEMICORE ) then
                         CHRGSEMICORE = CHRGSEMICORE + CONC(I1)*CHARGE(L,I1,ISPIN)
                      endif

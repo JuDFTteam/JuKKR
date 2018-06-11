@@ -1,4 +1,5 @@
-subroutine rinvgj(ainv, a, arraydim, n)
+    Subroutine rinvgj(ainv, a, arraydim, n)
+      Use mod_datatypes, Only: dp
 !   ********************************************************************
 !   *                                                                  *
 !   *                      AINV = A**(-1)                              *
@@ -9,45 +10,45 @@ subroutine rinvgj(ainv, a, arraydim, n)
 !   *                    REAL*8 VERSION                                *
 !   *                                                                  *
 !   ********************************************************************
-  implicit none
+      Implicit None
 
 ! Dummy arguments
-  integer :: arraydim, n
-  real *8 :: a(arraydim, arraydim), ainv(arraydim, arraydim)
+      Integer :: arraydim, n
+      Real (Kind=dp) :: a(arraydim, arraydim), ainv(arraydim, arraydim)
 
 ! Local variables
-  integer :: icol, l, ll
-  real *8 :: t, t1
+      Integer :: icol, l, ll
+      Real (Kind=dp) :: t, t1
 
-  ainv(1, 1) = 0d0
+      ainv(1, 1) = 0E0_dp
 !                                                        scan columns
-  do icol = 1, n
+      Do icol = 1, n
 
 !                                               make A(ICOL,ICOL) = 1
-    t1 = 1.0d0/a(icol, icol)
-    do l = (icol+1), n
-      a(icol, l) = a(icol, l)*t1
-    end do
+        t1 = 1.0E0_dp/a(icol, icol)
+        Do l = (icol+1), n
+          a(icol, l) = a(icol, l)*t1
+        End Do
 
-    do l = 1, (icol-1)
-      ainv(icol, l) = ainv(icol, l)*t1
-    end do
-    ainv(icol, icol) = t1
+        Do l = 1, (icol-1)
+          ainv(icol, l) = ainv(icol, l)*t1
+        End Do
+        ainv(icol, icol) = t1
 
 !                                    make A(LL,ICOL) = 0 for LL<>ICOL
-    do ll = 1, n
-      if (ll/=icol) then
-        t = a(ll, icol)
-        do l = (icol+1), n
-          a(ll, l) = a(ll, l) - a(icol, l)*t
-        end do
+        Do ll = 1, n
+          If (ll/=icol) Then
+            t = a(ll, icol)
+            Do l = (icol+1), n
+              a(ll, l) = a(ll, l) - a(icol, l)*t
+            End Do
 
-        do l = 1, (icol-1)
-          ainv(ll, l) = ainv(ll, l) - ainv(icol, l)*t
-        end do
-        ainv(ll, icol) = -t1*t
-      end if
-    end do
-  end do
+            Do l = 1, (icol-1)
+              ainv(ll, l) = ainv(ll, l) - ainv(icol, l)*t
+            End Do
+            ainv(ll, icol) = -t1*t
+          End If
+        End Do
+      End Do
 
-end subroutine
+    End Subroutine

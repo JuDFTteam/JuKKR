@@ -1,5 +1,6 @@
 ! 02.08.95 *************************************************************
-subroutine rrgen(bv1, lsurf, rr, nr, nrd)
+    Subroutine rrgen(bv1, lsurf, rr, nr, nrd)
+      Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
 ! * generates a number of real space vectors to construct the          *
@@ -7,150 +8,152 @@ subroutine rrgen(bv1, lsurf, rr, nr, nrd)
 ! * routine CLSGEN99                                                   *
 ! *                                                                    *
 ! **********************************************************************
-  implicit none
+      Implicit None
 !..
 !.. Scalar arguments ..
-  logical :: lsurf
-  integer :: nr, nrd
+      Logical :: lsurf
+      Integer :: nr, nrd
 !    ..
 !    .. Array arguments ..
-  double precision :: bv1(3, 3), rr(3, 0:nrd)
+      Real (Kind=dp) :: bv1(3, 3), rr(3, 0:nrd)
 !    ..
 !    .. Local scalars ..
-  double precision :: epsshl, r, r1, r2, r3, rmax, rr2, rs
-  integer :: i, j, k, n1, n2, n3, pos, iprint
-  integer :: nint
-  double precision :: dble
+      Real (Kind=dp) :: epsshl, r, r1, r2, r3, rmax, rr2, rs
+      Integer :: i, j, k, n1, n2, n3, pos, iprint
+      Integer :: nint
+      Real (Kind=dp) :: dble
 !..
 !.. Local arrays
-  double precision :: rabs(nrd), rr1(3, nrd), v(3), vx(3), vy(3), vz(3), &
-    vx0(3), vy0(3), vz0(3)
-  integer :: ind(nrd)
+      Real (Kind=dp) :: rabs(nrd), rr1(3, nrd), v(3), vx(3), vy(3), vz(3), &
+        vx0(3), vy0(3), vz0(3)
+      Integer :: ind(nrd)
 !..
 !.. Intrinsic Functions ..
-  intrinsic :: abs, min, sqrt, nint
+      Intrinsic :: abs, min, sqrt, nint
 !..
 !.. External Subroutines ..
-  external :: dsort, scalpr, vadd, veq
+      External :: dsort, scalpr, vadd, veq
 !..
 !.. Data Statements ..
-  data epsshl/1.0d-5/
+      Data epsshl/1.0E-5_dp/
 !     ..................................................................
-  write (1337, '(5X,A,/)') '< RRGEN > : generation of real space mesh RR(NR)'
+      Write (1337, '(5X,A,/)') &
+        '< RRGEN > : generation of real space mesh RR(NR)'
 
-  iprint = 0
+      iprint = 0
 
-  call scalpr(bv1(1,1), bv1(1,1), r1)
-  call scalpr(bv1(1,2), bv1(1,2), r2)
-  call scalpr(bv1(1,3), bv1(1,3), r3)
-  rmax = 5.d0
+      Call scalpr(bv1(1,1), bv1(1,1), r1)
+      Call scalpr(bv1(1,2), bv1(1,2), r2)
+      Call scalpr(bv1(1,3), bv1(1,3), r3)
+      rmax = 5.E0_dp
 
-  r1 = sqrt(r1)
-  r2 = sqrt(r2)
-  r3 = sqrt(r3)
-  r = 1.5d0*rmax + sqrt(r1*r1+r2*r2+r3*r3) + epsshl
-  rs = r*r
-  n1 = nint(r/r1)
-  n2 = nint(r/r2)
-  if (.not. lsurf) n3 = nint(r/r3)
+      r1 = sqrt(r1)
+      r2 = sqrt(r2)
+      r3 = sqrt(r3)
+      r = 1.5E0_dp*rmax + sqrt(r1*r1+r2*r2+r3*r3) + epsshl
+      rs = r*r
+      n1 = nint(r/r1)
+      n2 = nint(r/r2)
+      If (.Not. lsurf) n3 = nint(r/r3)
 
-  n1 = min(12, n1)
-  n2 = min(12, n2)
-  if (.not. lsurf) n3 = min(12, n3)
+      n1 = min(12, n1)
+      n2 = min(12, n2)
+      If (.Not. lsurf) n3 = min(12, n3)
 
-  n1 = max(2, n1)
-  n2 = max(2, n2)
-  if (.not. lsurf) n3 = max(2, n3)
+      n1 = max(2, n1)
+      n2 = max(2, n2)
+      If (.Not. lsurf) n3 = max(2, n3)
 
-  if (lsurf) n3 = 0
+      If (lsurf) n3 = 0
 
-  write (1337, 100) r
-  write (1337, 110) rs
-  if (lsurf) then
-    write (1337, 120) n1, n2
-  else
-    write (1337, 130) n1, n2, n3
-  end if
+      Write (1337, 100) r
+      Write (1337, 110) rs
+      If (lsurf) Then
+        Write (1337, 120) n1, n2
+      Else
+        Write (1337, 130) n1, n2, n3
+      End If
 
-  nr = 0
-  rr(1, 0) = 0.0d0
-  rr(2, 0) = 0.0d0
-  rr(3, 0) = 0.0d0
+      nr = 0
+      rr(1, 0) = 0.0E0_dp
+      rr(2, 0) = 0.0E0_dp
+      rr(3, 0) = 0.0E0_dp
 
-  call vmul(bv1(1,1), dble(-n1-1), vx0(1))
-  call vmul(bv1(1,2), dble(-n2-1), vy0(1))
-  call vmul(bv1(1,3), dble(-n3-1), vz0(1))
-  call veq(vx0, vx)
+      Call vmul(bv1(1,1), dble(-n1-1), vx0(1))
+      Call vmul(bv1(1,2), dble(-n2-1), vy0(1))
+      Call vmul(bv1(1,3), dble(-n3-1), vz0(1))
+      Call veq(vx0, vx)
 ! **********************************************************************
-  do i = -n1, n1
-    call vadd(vx, bv1(1,1), vx)
-    call veq(vy0, vy)
+      Do i = -n1, n1
+        Call vadd(vx, bv1(1,1), vx)
+        Call veq(vy0, vy)
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    do j = -n2, n2
-      call vadd(vy, bv1(1,2), vy)
-      call veq(vz0, vz)
+        Do j = -n2, n2
+          Call vadd(vy, bv1(1,2), vy)
+          Call veq(vz0, vz)
 ! ----------------------------------------------------------------------
-      do k = -n3, n3
-        call vadd(vz, bv1(1,3), vz)
-        call vadd(vx, vy, v)
-        call vadd(v, vz, v)
-        call scalpr(v, v, rr2)
+          Do k = -n3, n3
+            Call vadd(vz, bv1(1,3), vz)
+            Call vadd(vx, vy, v)
+            Call vadd(v, vz, v)
+            Call scalpr(v, v, rr2)
 
-        if (((rr2<=rs) .or. (abs(i)+abs(j)+abs(k)<=6)) .and. (rr2>epsshl)) &
-          then
-          nr = nr + 1
+            If (((rr2<=rs) .Or. (abs(i)+abs(j)+abs(k)<= &
+              6)) .And. (rr2>epsshl)) Then
+              nr = nr + 1
 
-          if (nr>nrd) then
-            write (6, *) 'Dimension ERROR. Please, change the ', &
-              'parameter NRD in inc.p to ', nr, nrd
-            stop
-          end if
+              If (nr>nrd) Then
+                Write (6, *) 'Dimension ERROR. Please, change the ', &
+                  'parameter NRD in inc.p to ', nr, nrd
+                Stop
+              End If
 
-          rr1(1, nr) = v(1)
-          rr1(2, nr) = v(2)
-          rr1(3, nr) = v(3)
-          rabs(nr) = sqrt(rr2)
-        end if
-      end do
+              rr1(1, nr) = v(1)
+              rr1(2, nr) = v(2)
+              rr1(3, nr) = v(3)
+              rabs(nr) = sqrt(rr2)
+            End If
+          End Do
 ! ----------------------------------------------------------------------
-    end do
+        End Do
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  end do
+      End Do
 ! **********************************************************************
 
-  write (1337, 140) nr + 1
+      Write (1337, 140) nr + 1
 
 ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-  if (iprint>0) then
-    write (1337, 150)
-    write (1337, 170) 0, 0.0, 0.0, 0.0, 0.0
-  end if
+      If (iprint>0) Then
+        Write (1337, 150)
+        Write (1337, 170) 0, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp
+      End If
 ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
-  call dsort(rabs, ind, nr, pos)
-  do i = 1, nr
-    pos = ind(i)
-    rr(1, i) = rr1(1, pos)
-    rr(2, i) = rr1(2, pos)
-    rr(3, i) = rr1(3, pos)
+      Call dsort(rabs, ind, nr, pos)
+      Do i = 1, nr
+        pos = ind(i)
+        rr(1, i) = rr1(1, pos)
+        rr(2, i) = rr1(2, pos)
+        rr(3, i) = rr1(3, pos)
 ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-    if (iprint>0) write (1337, 170) i, rr(1, i), rr(2, i), rr(3, i), rabs(pos)
+        If (iprint>0) Write (1337, 170) i, rr(1, i), rr(2, i), rr(3, i), &
+          rabs(pos)
 ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-  end do
+      End Do
 
 ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-  if (iprint>0) write (1337, 160)
+      If (iprint>0) Write (1337, 160)
 ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
-100 format (10x, 'Radius R        : ', f15.6, ' (ALAT    units)')
-110 format (10x, '       R**2     : ', f15.6, ' (ALAT**2 units)')
-120 format (10x, 'mesh divisions  : ', 5x, 2i5)
-130 format (10x, 'mesh divisions  : ', 3i5)
-140 format (10x, 'vectors created : ', i15)
-150 format (/, 10x, 60('+'), /, 18x, &
-    'generated real-space mesh-points (ALAT units)', /, 10x, 60('+'), /, 13x, &
-    'index      x           y           z          distance  ', /, 10x, &
-    60('-'))
-160 format (10x, 60('+'))
-170 format (10x, i6, 3f12.3, f15.4)
-end subroutine
+100   Format (10X, 'Radius R        : ', F15.6, ' (ALAT    units)')
+110   Format (10X, '       R**2     : ', F15.6, ' (ALAT**2 units)')
+120   Format (10X, 'mesh divisions  : ', 5X, 2I5)
+130   Format (10X, 'mesh divisions  : ', 3I5)
+140   Format (10X, 'vectors created : ', I15)
+150   Format (/, 10X, 60('+'), /, 18X, &
+        'generated real-space mesh-points (ALAT units)', /, 10X, 60('+'), /, &
+        13X, 'index      x           y           z          distance  ', /, &
+        10X, 60('-'))
+160   Format (10X, 60('+'))
+170   Format (10X, I6, 3F12.3, F15.4)
+    End Subroutine

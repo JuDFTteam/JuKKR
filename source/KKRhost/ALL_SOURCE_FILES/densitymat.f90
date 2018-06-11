@@ -26,6 +26,7 @@ subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, &
 ! *                                                                    *
 ! *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
 ! **********************************************************************
+  use mod_DataTypes
   implicit none
   include 'inc.p'
 !
@@ -108,7 +109,7 @@ subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, &
 ! test fivos 19.9.08
   call cinit(mmaxd*mmaxd, denmatc2(1,1)) ! test fivos
   do m1 = 1, mmax !         write(*,9001) denmatc(1,1),denmatc(2,2),denmatc(3,3),
-    denmatc2(m1, m1) = den(lopt, ie)/dfloat(mmax) !    &        denmatc(4,4),denmatc(5,5),denmatc(6,6),denmatc(7,7)
+    denmatc2(m1, m1) = den(lopt, ie)/real(mmax, kind=dp) !    &        denmatc(4,4),denmatc(5,5),denmatc(6,6),denmatc(7,7)
   end do !        write(*,9001) -denmatc2(1,1)/3.14159,
   do m2 = 1, mmax
     do m1 = 1, mmax

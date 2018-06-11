@@ -1,4 +1,5 @@
-logical function latvec(n, qlat, vec)
+    Logical Function latvec(n, qlat, vec)
+      Use mod_datatypes, Only: dp
 !- Checks if a set of vectors are lattice vectors
 ! ----------------------------------------------------------------------
 !i Inputs:
@@ -9,26 +10,26 @@ logical function latvec(n, qlat, vec)
 !o   latvec:.true. if all vectors are lattice vectors
 !r Remarks:
 ! ----------------------------------------------------------------------
-  implicit none
+      Implicit None
 ! Passed parameters:                                                    
-  integer :: n
-  double precision :: qlat(3, *), vec(3, *)
+      Integer :: n
+      Real (Kind=dp) :: qlat(3, *), vec(3, *)
 ! Local parameters:                                                     
-  integer :: i, m
-  double precision :: tol, vdiff
-  parameter (tol=1.d-3)
+      Integer :: i, m
+      Real (Kind=dp) :: tol, vdiff
+      Parameter (tol=1.E-3_dp)
 ! Common block:                                                         
 ! Intrinsic functions:                                                  
-  intrinsic :: dabs, dnint
+      Intrinsic :: abs, anint
 
-  latvec = .false.
-  do i = 1, n
-    do m = 1, 3
-      vdiff = vec(1, i)*qlat(1, m) + vec(2, i)*qlat(2, m) + &
-        vec(3, i)*qlat(3, m)
-      vdiff = dabs(vdiff-dnint(vdiff))
-      if (vdiff>tol) return
-    end do
-  end do
-  latvec = .true.
-end function
+      latvec = .False.
+      Do i = 1, n
+        Do m = 1, 3
+          vdiff = vec(1, i)*qlat(1, m) + vec(2, i)*qlat(2, m) + &
+            vec(3, i)*qlat(3, m)
+          vdiff = abs(vdiff-anint(vdiff))
+          If (vdiff>tol) Return
+        End Do
+      End Do
+      latvec = .True.
+    End Function

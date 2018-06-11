@@ -44,8 +44,8 @@ subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
     end do
   else
     do i = 1, ielast
-      if (dimag(ez(ielast))/=0) then
-        n = int(1.001d0+log(dimag(ez(i))/dimag(ez(ielast)))/log(2.0d0))
+      if (aimag(ez(ielast))/=0) then
+        n = int(1.001d0+log(aimag(ez(i))/aimag(ez(ielast)))/log(2.0d0))
       else
         n = 1
       end if
