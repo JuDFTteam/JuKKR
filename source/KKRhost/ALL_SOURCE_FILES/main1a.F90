@@ -246,7 +246,7 @@ contains
             call TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT(I1),SOCSCALE(I1),EZ, &
                NSRA,CLEB(1,1),ICLEB,IEND,NCHEB,NPAN_TOT(I1),               &
                RPAN_INTERVALL(0,I1),IPAN_INTERVALL(0,I1),RNEW(1,I1),       &
-               VINSNEW,THETA(I1),PHI(I1),I1,IPOT,NTOTD,LLY,LMPOT,MMAXD,NRMAXD,LMMAXD,DELTAE,IDOLDAU, &
+               VINSNEW,THETA(I1),PHI(I1),I1,IPOT,LLY,LMPOT,DELTAE,IDOLDAU, &
                LOPT(I1),WLDAU(1,1,1,I1),t_dtmatJij(I1))
 
          enddo !I1, atom loop

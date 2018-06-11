@@ -35,4 +35,34 @@
       Integer :: natomimpd !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
       Logical :: lnc !< Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
 
+      integer :: lmaxd !< lmax cutoff
+      integer :: lmmaxd !< (KREL+KORBIT+1)*(LMAXD+1)^2
+      integer :: lmgf0d !< (lmaxd+1)^2
+      integer :: alm !< naez*lmmaxd
+      integer :: almgf0 !< naezd*lmgf0d (<=alm)
+      integer :: ndim_slabinv !< nprincd*lmmaxd
+      integer :: nembd1 !< NEBMD+1
+      integer :: nembd2 !< NEBMD+NAEZ
+      integer :: nrd
+      integer :: lm2d
+      integer :: nclsd
+      integer :: mmaxd
+      integer :: npotd
+      integer :: lmxspd
+      integer :: lassld
+      integer :: irmind
+      integer :: nofgij
+      integer :: nspindd
+      integer :: nsatypd
+      integer :: nrefd
+      integer :: irmd
+      integer :: naezd
+      integer :: natypd
+      integer :: lmpotd
+      integer :: ntotd
+      integer :: nrmaxd
+      integer :: nembd
+
+      logical :: linterface
+
     End Module

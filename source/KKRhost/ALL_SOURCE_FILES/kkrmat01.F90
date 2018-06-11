@@ -17,7 +17,7 @@
 !> - New version 10.99: up -> left , down -> right, for decimation
 !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
+subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    NSHELL,NSDIA,ALAT,NSYMAT,                          &
    NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,              &
    NSH1,NSH2,GINP,RBASIS,RCLS,                        &
@@ -48,16 +48,11 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
 
    implicit none
    ! .. Input variables
-   integer, intent(in) :: NR        !< Number of real space vectors rr
    integer, intent(in) :: LLY       !< LLY <> 0 --> use Lloyds formula
-   integer, intent(in) :: NREF      !< Number of diff. ref. potentials
    integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
-   integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
    integer, intent(in) :: NOFKS
    integer, intent(in) :: NSDIA
    integer, intent(in) :: IDECI
-   integer, intent(in) :: LMGF0D    !< (LMAX+1)**2
-   integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
    integer, intent(in) :: NSHELL    !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
    integer, intent(in) :: NSYMAT
    integer, intent(in) :: INVMOD    !< Inversion scheme
@@ -76,7 +71,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(in)   :: ICHECK
    integer, dimension(2,2,LMMAXD), intent(in)                  :: IRREL
    real (kind=dp), dimension(*), intent(in)            :: VOLCUB
-   real (kind=dp), dimension(3,0:NR), intent(in)       :: RR       !< Set of real space vectors (in a.u.)
+   real (kind=dp), dimension(3,0:NRD), intent(in)       :: RR       !< Set of real space vectors (in a.u.)
    real (kind=dp), dimension(3,*), intent(in)          :: BZKP
    real (kind=dp), dimension(3,*), intent(in)          :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
    real (kind=dp), dimension(48,3,*), intent(in)       :: RROT
@@ -84,7 +79,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in)              :: FACTL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)         :: TINVLL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(in)            :: TINVBUP
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREF), intent(in)         :: DTREFLL ! LLY dtref/dE
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD), intent(in)         :: DTREFLL ! LLY dtref/dE
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)         :: DTMATLL ! LLY  dt/dE (should be av.-tmatrix in CPA)
    complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(in)            :: TINVBDOWN
    complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,*), intent(in)   :: GINP  ! Gref
@@ -96,9 +91,6 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    ! .. Output variables
    complex (kind=dp), intent(out) :: LLY_GRTR ! Trace Eq.5.38 PhD Thiess  (integrated) ! LLY Lloyd
    ! .. Local variables
-   integer :: ALM
-   integer :: NDIM
-   integer :: ALMGF0
    integer :: i_stat, i_all
    integer :: IKM1,IKM2,IS,N1,N2,J1,J2,I2
    integer :: IQ1,IQ2,IOFF1,IOFF2,JOFF1,JOFF2
@@ -109,7 +101,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    complex (kind=dp) :: CARG,CITPI,CFCTOR
    real (kind=dp), dimension(3) :: KP
    real (kind=dp), dimension(6) :: BZKPK
-   real (kind=dp), dimension(3,0:NR) :: RRM
+   real (kind=dp), dimension(3,0:NRD) :: RRM
    complex (kind=dp), dimension(LMMAXD,LMMAXD) :: G
    complex (kind=dp), dimension(LMMAXD,LMMAXD) :: GAUX1 ! LLY
    complex (kind=dp), dimension(LMMAXD,LMMAXD) :: GAUX2 ! LLY
@@ -153,9 +145,6 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Array sizes definitions
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   NDIM   = LMMAXD*NAEZ
-   ALM    = NAEZ*LMMAXD
-   ALMGF0 = NAEZ*LMGF0D
 
    if ( TEST('flow     ') .and. (t_inc%i_write>0)) write(1337,*) '>>> kkrmat1: loop over k-points'
    !
@@ -304,7 +293,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
       if(mythread==0 .and. t_inc%i_time>0) call timing_start('main1b - fourier')
 #endif
 
-      RRM(1:3,1:NR) = -RR(1:3,1:NR)
+      RRM(1:3,1:NRD) = -RR(1:3,1:NRD)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !  KREL .EQ. 0/1
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -496,8 +485,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
       if (LLY.NE.0) GREFLLKE(1:ALM,1:ALM) = GLLKE(1:ALM,1:ALM) ! LLY Save k-dependent Gref
       !
       if ( IDECI.EQ.1 ) then
-         call DECIMATE(GLLKE,NAEZ,TINVBUP,TINVBDOWN,VACFLAG,FACTL,NLBASIS,NRBASIS,&
-         ALM,NDIM,LMMAXD)
+         call DECIMATE(GLLKE,NAEZ,TINVBUP,TINVBDOWN,VACFLAG,FACTL,NLBASIS,NRBASIS)
       endif
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Construct the matrix M=[-(t)^-1 + G^r] and store it
@@ -619,7 +607,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
             ! GLLKETV = -GLLKE0V * TINVLL,
             ! where TINVLL contains (t-tref) and not 1/(t-tref) in case of opt VIRATOMS
             ! tref=0 for each vir. atom.
-            call ZGEMM('N','N',NDIM,LMMAXD,LMMAXD,-CONE, &
+            call ZGEMM('N','N',NDIM_slabinv,LMMAXD,LMMAXD,-CONE, &
                GLLKE0V(1,IL1),ALM,TINVLL(1,1,I1),LMGF0D, &
                CZERO,GLLKETV(1,1),ALM)
             call ZCOPY(ALM*LMMAXD,GLLKETV(1,1),1,GLLKE0V2(1,IL1),1)
@@ -628,7 +616,7 @@ subroutine KKRMAT01(NR,LMAX,NREF,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT,
          ! Solve (1-gt)G=g instead of [Gref - t^-1]^-1 for viratoms
          ! because for a virtual atom t=0, t^-1 undefined.
          !----------------------------------------------------------------------
-         call GTDYSON(GLLKE0V2,GLLKE,NDIM,ALM,ALM)
+         call GTDYSON(GLLKE0V2,GLLKE,NDIM_slabinv,ALM,ALM)
       end if                 !  .not. OPT('VIRATOMS')
       !-------------------------------------------------------------------------
       ! Global sum on array gs

@@ -3,7 +3,7 @@
 !> @note
 !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,IE,IGF,  &
+subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    NSHELL,NAEZ,NOFKS,VOLBZ,BZKP,VOLCUB,CLS,NACLS,     &
    NACLSMAX,NCLS,RR,RBASIS,EZOA,ATOM,RCLS,ICC,        &
    GINP,IDECI,LEFTTINVLL,RIGHTTINVLL,VACFLAG,         &
@@ -27,12 +27,9 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
    implicit none
    !
    ! .. Parameters
-   integer :: LINMAX
-   parameter (LINMAX=1)
-   real (kind=dp) :: TOLMSSQ
-   parameter ( TOLMSSQ=1.0D-6 )
+   integer, parameter :: LINMAX=1
+   real (kind=dp), parameter :: TOLMSSQ=1.0D-6
    ! .. Input variables
-   integer, intent(in) :: NR        !< Number of real space vectors rr
    integer, intent(in) :: IE
    integer, intent(in) :: LLY       !< LLY <> 0 => use Lloyd formula
    integer, intent(in) :: IGF       !< Do not print or print (0/1) the KKRFLEX_* files
@@ -41,17 +38,12 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
    integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
    integer, intent(in) :: NCPA      !< NCPA = 0/1 CPA flag
    integer, intent(in) :: NCLS      !< Number of reference clusters
-   integer, intent(in) :: NREF      !< Number of diff. ref. potentials
-   integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
    integer, intent(in) :: KMROT     !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
    integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
    integer, intent(in) :: NOFKS
    integer, intent(in) :: IDECI
    integer, intent(in) :: ISPIN
    integer, intent(in) :: NSPIN     !< Counter for spin directions
-   integer, intent(in) :: NEMBD1    !< NEMB+1
-   integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-   integer, intent(in) :: LMGF0D    !< (LMAX+1)**2
    integer, intent(in) :: NSYMAT
    integer, intent(in) :: INVMOD    !< Inversion scheme
    integer, intent(in) :: IPRINT
@@ -86,7 +78,7 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
    integer, dimension(2,2,LMMAXD), intent(in) :: IRREL
    real (kind=dp), dimension(NATYP), intent(in)  :: CONC        !< Concentration of a given atom
    real (kind=dp), dimension(KPOIBZ), intent(in) :: VOLCUB
-   real (kind=dp), dimension(3,0:NR), intent(in)    :: RR       !< Set of real space vectors (in a.u.)
+   real (kind=dp), dimension(3,0:NRD), intent(in)    :: RR       !< Set of real space vectors (in a.u.)
    real (kind=dp), dimension(3,KPOIBZ), intent(in)  :: BZKP
    real (kind=dp), dimension(3,*), intent(in)       :: RATOM
    real (kind=dp), dimension(3,*), intent(in)       :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
@@ -101,9 +93,9 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
    complex (kind=dp), dimension(2,2,LMMAXD), intent(in)           :: SRREL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: TQDOS  ! qdos : Read-in inverse t-matrix
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREF), intent(in)   :: TREFLL
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD), intent(in)   :: TREFLL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(in)      :: DSYMLL
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREF), intent(in)   :: DTREFLL !< LLY Lloyd dtref/dE
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD), intent(in)   :: DTREFLL !< LLY Lloyd dtref/dE
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DTMATLL  ! LLY  dt/dE (should be av.-tmatrix in CPA)
    complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: GINP !< Cluster GF (ref syst.)
    complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: DGINP !< LLY Lloyd Energy derivative of GINP
@@ -327,7 +319,7 @@ subroutine KLOOPZ1_QDOS(NR,NEMBD1,LMMAXD,LMGF0D,LMAX,NREF,ERYD,GMATLL,INS,ALAT,I
       MSSQ(:,:,:) = TQDOS(:,:,:) ! lmmaxd,lmmaxd,naez                            !qdos ruess
    endif
    !
-   call KKRMAT01(NR,NREF,LMAX,LMGF0D,LMMAXD,BZKP,NOFKS,GS,VOLCUB,     &
+   call KKRMAT01(BZKP,NOFKS,GS,VOLCUB,     &
       MSSQ,RROT,NSHELL(0),NSDIA,ALAT,NSYMAT,NAEZ,CLS,NACLS,NACLSMAX,    &
       RR,EZOA,ATOM,NSH1,NSH2,GINP,RBASIS,RCLS,LEFTTINVLL(1,1,1,ISPIN),  &
       RIGHTTINVLL(1,1,1,ISPIN),VACFLAG,NLBASIS,NRBASIS,FACTL,ICHECK,    &

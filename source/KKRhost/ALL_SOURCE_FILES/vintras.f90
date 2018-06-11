@@ -26,7 +26,7 @@
 
     Subroutine vintras(cmom, cminst, lmax, nspin, nstart, nend, rho2ns, v, r, &
       drdi, irws, ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, &
-      thetas, lmsp, irm, lmpot, natyp, lmxspd, npotd)
+      thetas, lmsp, lmpot, natyp)
 
       Use constants
       Use global_variables
@@ -35,15 +35,12 @@
       Implicit None
 
 ! .. Input Variables
-      Integer, Intent (In) :: irm !< Maximum number of radial points
       Integer, Intent (In) :: lmax !< Maximum l component in wave function expansion
       Integer, Intent (In) :: nend
       Integer, Intent (In) :: nspin !< Counter for spin directions
       Integer, Intent (In) :: lmpot !< (LPOT+1)**2
       Integer, Intent (In) :: natyp !< Number of kinds of atoms in unit cell
-      Integer, Intent (In) :: npotd !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
       Integer, Intent (In) :: nstart
-      Integer, Intent (In) :: lmxspd !< (2*LPOT+1)**2
       Integer, Intent (In) :: kshape !< Exact treatment of WS cell
       Integer, Dimension (natyp), Intent (In) :: irws !< R point at WS radius
       Integer, Dimension (natyp), Intent (In) :: ipan !< Number of panels in non-MT-region
@@ -54,24 +51,24 @@
       Integer, Dimension (natyp, lmxspd), Intent (In) :: ifunm
       Integer, Dimension (0:ipand, natyp), Intent (In) :: ircut !< R points of panel borders
       Real (Kind=dp), Dimension (ngshd), Intent (In) :: gsh
-      Real (Kind=dp), Dimension (irm, natyp), Intent (In) :: r !< Radial mesh ( in units a Bohr)
-      Real (Kind=dp), Dimension (irm, natyp), Intent (In) :: drdi !< Derivative dr/di
+      Real (Kind=dp), Dimension (irmd, natyp), Intent (In) :: r !< Radial mesh ( in units a Bohr)
+      Real (Kind=dp), Dimension (irmd, natyp), Intent (In) :: drdi !< Derivative dr/di
       Real (Kind=dp), Dimension (irid, nfund, ncelld), Intent (In) :: thetas !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-      Real (Kind=dp), Dimension (irm, lmpot, natyp, 2), Intent (In) :: rho2ns !< radial density
+      Real (Kind=dp), Dimension (irmd, lmpot, natyp, 2), Intent (In) :: rho2ns !< radial density
 ! .. Output variables
       Real (Kind=dp), Dimension (lmpot, natyp), Intent (Out) :: cmom !< LM moment of total charge
       Real (Kind=dp), Dimension (lmpot, natyp), Intent (Out) :: cminst
-      Real (Kind=dp), Dimension (irm, lmpot, npotd), Intent (Out) :: v
+      Real (Kind=dp), Dimension (irmd, lmpot, npotd), Intent (Out) :: v
 ! .. Local Variables
       Real (Kind=dp) :: fac, rl
       Integer :: i, iatyp, icell, iend, ifun, ipot, irc1, irs1, istart, j, l, &
         lm, lm2, lm3, m
 ! .. Local Arrays
       Integer, Dimension (0:ipand) :: ircutm
-      Real (Kind=dp), Dimension (irm) :: v1
-      Real (Kind=dp), Dimension (irm) :: v2
-      Real (Kind=dp), Dimension (irm) :: vint1
-      Real (Kind=dp), Dimension (irm) :: vint2
+      Real (Kind=dp), Dimension (irmd) :: v1
+      Real (Kind=dp), Dimension (irmd) :: v2
+      Real (Kind=dp), Dimension (irmd) :: vint1
+      Real (Kind=dp), Dimension (irmd) :: vint2
 ! .. External Subroutines ..
       External :: sinwk, soutk
 ! .. Intrinsic Functions ..

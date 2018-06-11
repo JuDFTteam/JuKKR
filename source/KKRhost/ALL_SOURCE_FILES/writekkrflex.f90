@@ -8,9 +8,9 @@
 !> - kkrflex_intercell_cmoms
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine writekkrflex(natomimp, nspin, ielast, lmpot, lmmaxd, alat, natyp, &
+subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, &
   kshape, vbc, atomimp, hostimp, noq, zat, kaoez, conc, cmom, cminst, vinters, &
-  nemb, naez, lmgf0d)
+  nemb, naez)
 
   use :: mod_types, only: t_tgmat
   use :: mod_wunfiles, only: t_params, read_angles
@@ -29,8 +29,6 @@ subroutine writekkrflex(natomimp, nspin, ielast, lmpot, lmmaxd, alat, natyp, &
   integer, intent (in) :: natyp !< Number of kinds of atoms in unit cell
   integer, intent (in) :: kshape !< Exact treatment of WS cell
   integer, intent (in) :: ielast
-  integer, intent (in) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
-  integer, intent (in) :: lmgf0d !< (LMAX+1)**2
   integer, intent (in) :: natomimp !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
   real (kind=dp), intent (in) :: alat !< Lattice constant in a.u.
   integer, dimension (naez), intent (in) :: noq !< Number of diff. atom types located

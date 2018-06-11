@@ -1,5 +1,5 @@
     Subroutine lattix99(lsurf, alat, natyp, naez, conc, rws, bravais, recbv, &
-      volume0, rr, nr, nrd, natypd)
+      volume0, rr, nrd, natypd)
       Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
@@ -15,7 +15,7 @@
 !..
 !.. Scalar arguments ..
       Logical :: lsurf
-      Integer :: nr, nrd ! number of real space vectors
+      Integer :: nrd ! number of real space vectors
       Integer :: iprint, natyp, naez, natypd
       Real (Kind=dp) :: alat, volume0
 !..
@@ -194,7 +194,7 @@
 ! --> now generate the real-space lattice vectors for the
 !     cluster generation
 
-      Call rrgen(bravais, lsurf, rr, nr, nrd)
+      Call rrgen(bravais, lsurf, rr, nrd)
       Write (1337, *)
 
 100   Format (9X, 22('-'), 16X, 22('-'))

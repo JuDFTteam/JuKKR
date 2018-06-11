@@ -5,7 +5,7 @@
 !-------------------------------------------------------------------------------
 subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    IEND,NCHEB,NPAN_TOT,RPAN_INTERVALL,IPAN_INTERVALL,RNEW,VINSNEW,THETA,PHI,  &
-   I1,IPOT,NTOTD,LMPOT,MMAXD,NRMAXD,LMMAXD,LLY,DELTAE,IDOLDAU,LOPT,WLDAU,t_dtmatJij_at)
+   I1,IPOT,LMPOT,LLY,DELTAE,IDOLDAU,LOPT,WLDAU,t_dtmatJij_at)
 
 #ifdef CPP_OMP
    use omp_lib        ! necessary for omp functions
@@ -38,14 +38,10 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    integer, intent(in) :: NSRA
    integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
    integer, intent(in) :: IPOT
-   integer, intent(in) :: NTOTD
    integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
    integer, intent(in) :: NSPIN     !< Counter for spin directions
    integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-   integer, intent(in) :: MMAXD     !< 2*LMAX+1
-   integer, intent(in) :: NRMAXD    !< NTOTD*(NCHEB+1)
    integer, intent(in) :: IELAST
-   integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
    integer, intent(in) :: NPAN_TOT
    integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
    real (kind=dp), intent(in) :: ZAT       !< Nuclear charge for a given atom

@@ -89,11 +89,11 @@ contains
       real (kind=dp), dimension(LMPOT)           :: BVMAD
       real (kind=dp), dimension(NATYP)           :: DENEFAT
       real (kind=dp), dimension(2)               :: VMT_INIT
-      real (kind=dp), dimension(IRM,NPOTD)       :: RHOC     !< core charge density
+      real (kind=dp), dimension(IRMD,NPOTD)       :: RHOC     !< core charge density
       real (kind=dp), dimension(LMPOT,LMPOT)     :: AVMAD
       real (kind=dp), dimension(0:LPOT,NATYP)    :: EXCNM    !< Scale magn. part of xc-potential
       real (kind=dp), dimension(LMPOT,NAEZ)      :: VINTERS
-      real (kind=dp), dimension(IRM,NPOTD)       :: VSPSMDUM
+      real (kind=dp), dimension(IRMD,NPOTD)       :: VSPSMDUM
       logical, dimension(NATYP,LMPOT)              :: LPOTSYMM
       !-------------------------------------------------------------------------
       ! ITERMDIR variables
@@ -116,7 +116,7 @@ contains
       real (kind=dp), dimension(0:LPOT,NATYP)    :: EXC      !< exchange correlation energy
       real (kind=dp), dimension(0:LPOT,NATYP)    :: ECOU     !< Coulomb energy
       real (kind=dp), dimension(0:LMAX+1,NPOTD)  :: ESPV     !< energy single particle valence both changed for the relativistic case
-      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP)  :: RHOORB
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYP)  :: RHOORB
       real (kind=dp), dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL
       !-------------------------------------------------------------------------
       !  CMINST(LMPOT,NATYP)            ! charge moment of interstitial
@@ -141,12 +141,12 @@ contains
       real (kind=dp), dimension(:,:,:), allocatable :: VONS !< output potential (nonspherical VONS)
 
       !-------------------------------------------------------------------------
-      !  R2NEF (IRM,LMPOT,NATYP,2)  ! rho at FERMI energy
-      !  RHO2NS(IRM,LMPOT,NATYP,2)  ! radial density
+      !  R2NEF (IRMD,LMPOT,NATYP,2)  ! rho at FERMI energy
+      !  RHO2NS(IRMD,LMPOT,NATYP,2)  ! radial density
       !   nspin=1            : (*,*,*,1) radial charge density
       !   nspin=2 or krel=1  : (*,*,*,1) rho(2) + rho(1) -> charge
       !                               (*,*,*,2) rho(2) - rho(1) -> mag. moment
-      !  RHOC(IRM,NPOTD)              ! core charge density
+      !  RHOC(IRMD,NPOTD)              ! core charge density
       !-------------------------------------------------------------------------
       real (kind=dp), dimension(:,:,:,:), allocatable :: R2NEF  !< rho at FERMI energy
       real (kind=dp), dimension(:,:,:,:), allocatable :: RHO2NS !< radial density
@@ -171,19 +171,19 @@ contains
       !call memocc(i_stat,product(shape(THETAS))*kind(THETAS),'THETAS','main2')
       !allocate(THESME(IRID,NFUND,NCELLD),stat=i_stat)
       !call memocc(i_stat,product(shape(THESME))*kind(THESME),'THESME','main2')
-      !allocate(VONS(IRM,LMPOT,NPOTD),stat=i_stat)
+      !allocate(VONS(IRMD,LMPOT,NPOTD),stat=i_stat)
       !call memocc(i_stat,product(shape(VONS))*kind(VONS),'VONS','main2')
-      !allocate(VINS(IRMIND:IRM,LMPOT,NSPOTD),stat=i_stat)
+      !allocate(VINS(IRMIND:IRMD,LMPOT,NSPOTD),stat=i_stat)
       !call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','main2')
-      allocate(VXCM(IRM,LMPOT,NPOTD),stat=i_stat)
+      allocate(VXCM(IRMD,LMPOT,NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(VXCM))*kind(VXCM),'VXCM','main2')
-      allocate(VXCNM(IRM,LMPOT,NPOTD),stat=i_stat)
+      allocate(VXCNM(IRMD,LMPOT,NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(VXCNM))*kind(VXCNM),'VXCNM','main2')
-      allocate(R2NEF(IRM,LMPOT,NATYP,2),stat=i_stat)
+      allocate(R2NEF(IRMD,LMPOT,NATYP,2),stat=i_stat)
       call memocc(i_stat,product(shape(R2NEF))*kind(R2NEF),'R2NEF','main2')
-      allocate(RHO2NS(IRM,LMPOT,NATYP,2),stat=i_stat)
+      allocate(RHO2NS(IRMD,LMPOT,NATYP,2),stat=i_stat)
       call memocc(i_stat,product(shape(RHO2NS))*kind(RHO2NS),'RHO2NS','main2')
-      allocate(RHO2NSNM(IRM,LMPOT,NATYP,2),stat=i_stat)
+      allocate(RHO2NSNM(IRMD,LMPOT,NATYP,2),stat=i_stat)
       call memocc(i_stat,product(shape(RHO2NSNM))*kind(RHO2NSNM),'RHO2NSNM','main2')
 
       ! Consistency check
@@ -195,7 +195,7 @@ contains
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
       call get_params_2(t_params,KREL,NATYP,IPAND,NPOTD,NATOMIMPD,LMXSPD,NFUND,  &
-         LMPOT,NCELLD,IRM,NEMBD1,NEMB,IRMIND,NSRA,INS,NSPIN,IPAN,IRCUT,LCORE,    &
+         LMPOT,NCELLD,IRMD,NEMBD1,NEMB,IRMIND,NSRA,INS,NSPIN,IPAN,IRCUT,LCORE,    &
          NCORE,LMAX,NTCELL,LPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,NATOMIMP,ATOMIMP,   &
          IMIX,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD,KXC, ICC,ISHIFT,      &
          IXIPOL,KFORCE,IFUNM,LMSP,IMT,IRC,IRMIN,IRWS,LLMSP,ITITLE,NFU,HOSTIMP,   &
@@ -211,7 +211,7 @@ contains
       !-------------------------------------------------------------------------
       call read_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,ESPV,ECORE,  &
          IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE,RHOORB,ECOREREL,NKCORE,KAPCORE,KREL,&
-         NATYP,NPOTD,IRM,LMPOT,LMAXD1)
+         NATYP,NPOTD,IRMD,LMPOT,LMAXD1)
       !-------------------------------------------------------------------------
       ! End read in variables
       !-------------------------------------------------------------------------
@@ -258,7 +258,7 @@ contains
       if(TEST('flow    ')) write(1337,*) '>>> RHOTOTB'
       call RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB,ZAT,DRDI,IRWS,IRCUT,  &
          LPOT,NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,CHRGNT,ITSCF,NSHELL,NOQ,CONC,  &
-         KAOEZ,CHRGATOM,IRM,NEMB,LMPOT)
+         KAOEZ,CHRGATOM,IRMD,NEMB,LMPOT)
 
       if(TEST('flow    ')) write(1337,*) '<<< RHOTOTB'
 
@@ -394,7 +394,7 @@ contains
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (LRHOSYM) then
          call RHOSYMM(LMPOT,NSPIN,1,NATYP,RHO2NS,IXIPOL,IRWS,IRCUT,IPAN,KSHAPE,&
-            NATYP,IRM)
+            NATYP,IRMD)
       endif
 
       CMINST(:,:) = 0.d0
@@ -402,7 +402,7 @@ contains
       VONS(:,:,:) = 0.d0
       call VINTRAS(CMOM,CMINST,LPOT,NSPIN,1,NATYP,RHO2NS,VONS,       &
          RMESH,DRDI,IRWS,IRCUT,IPAN,KSHAPE,NTCELL,ILM_MAP,IFUNM,IMAXSH,GSH,  &
-         THETAS,LMSP,IRM,LMPOT,NATYP,LMXSPD,NPOTD)
+         THETAS,LMSP,LMPOT,NATYP)
 
       if ( TEST('vintrasp') ) then !Bauer
          open(unit=786785,file='test_vintraspot')
@@ -420,26 +420,25 @@ contains
       if ( LINTERFACE ) then
          call VINTERFACE(CMOM,CMINST,LPOT,NSPIN,NAEZ,NATYP,VONS,ZAT,RMESH,IRWS,IRCUT,&
             IPAN,KSHAPE,NOQ,KAOEZ,IQAT,CONC,CHRGATOM(1,1),ICC,HOSTIMP,NLBASIS,   &
-            NLEFT,NRBASIS,NRIGHT,CMOMHOST,CHRGNT,VINTERS,IRM,NAEZ,LMPOT,NPOTD,   &
-            NEMBD1)
+            NLEFT,NRBASIS,NRIGHT,CMOMHOST,CHRGNT,VINTERS,NAEZ,LMPOT)
          !----------------------------------------------------------------------
       else
          !----------------------------------------------------------------------
          call VMADELBLK(CMOM,CMINST,LPOT,NSPIN,NAEZ,VONS,ZAT,RMESH,IRWS,IRCUT,IPAN,  &
-            KSHAPE,NOQ,KAOEZ,CONC,CHRGATOM(1,1),ICC,HOSTIMP,VINTERS,IRM,NEMB,    &
-            LMPOT,NPOTD,LMMAXD,NATYP)
+            KSHAPE,NOQ,KAOEZ,CONC,CHRGATOM(1,1),ICC,HOSTIMP,VINTERS,NEMB,    &
+            LMPOT,NATYP)
       end if
 
       if (OPT('KKRFLEX ')) then
-         call WRITEKKRFLEX(NATOMIMP,NSPIN,IELAST,(LPOT+1)**2,LMMAXD,ALAT,NATYP,  &
+         call WRITEKKRFLEX(NATOMIMP,NSPIN,IELAST,(LPOT+1)**2,ALAT,NATYP,  &
             KSHAPE,VBC,ATOMIMP,HOSTIMP,NOQ,ZAT,KAOEZ,CONC,CMOM,CMINST,VINTERS,   &
-            NEMB,NAEZ,LMGF0D)
+            NEMB,NAEZ)
       end if
 
       !-------------------------------------------------------------------------
       !fivos      END IF
       !-------------------------------------------------------------------------
-      if ( TEST('Vspher  ') ) VONS(1:IRM,2:LMPOT,1:NPOTD) = 0.D0
+      if ( TEST('Vspher  ') ) VONS(1:IRMD,2:LMPOT,1:NPOTD) = 0.D0
       if ( TEST('vpotout ') ) then !bauer
          open(unit=54633163,file='test_vpotout_inter')
          do i1=1,natyp*nspin
@@ -515,10 +514,10 @@ contains
       !-------------------------------------------------------------------------
       VXCM(:,:,:) = 0.D0
       call VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,1,NATYP,RHO2NS,VXCM,RMESH,DRDI, &
-         A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP,NPOTD,&
-         LMPOT,LMXSPD,IRM,NATYP,LMMAXD)
+         A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP,&
+         LMPOT,NATYP)
 
-      if ( TEST('Vspher  ') ) VONS(1:IRM,2:LMPOT,1:NPOTD) = 0.D0
+      if ( TEST('Vspher  ') ) VONS(1:IRMD,2:LMPOT,1:NPOTD) = 0.D0
 
       ! Recalculate XC-potential with zero spin density for magn. moment scaling
       VXCNM(:,:,:) = 0.D0                 ! Initialize
@@ -528,7 +527,7 @@ contains
          RHO2NSNM(:,:,:,2) = 0.D0            ! Set spin density to zero
          call VXCDRV(EXCNM,KTE,KXC,LPOT,NSPIN,1,NATYP,RHO2NSNM,VXCNM,&
             RMESH,DRDI,A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,              &
-            ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP,NPOTD, LMPOT,LMXSPD,IRM,NATYP,LMMAXD)
+            ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP,NPOTD, LMPOT,LMXSPD,IRMD,NATYP,LMMAXD)
          ! Compute the EXC-difference
          EXCDIFF = 0.D0
          do I1 = 1,NATYP
@@ -588,7 +587,7 @@ contains
          VSHIFT = - VBC(1)                                                       ! fxf
          call POTENSHIFT(VISP,VINS,NATYP,NSPIN,IRCUT,IRC,IRMIN,NTCELL,  &        ! fxf
             IMAXSH,ILM_MAP,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,RFPI,RMESH,KSHAPE,&        ! fxf
-            VSHIFT,IRM,NPOTD,IRMIND,LMXSPD)                                      ! fxf
+            VSHIFT,IRMD,NPOTD,IRMIND,LMXSPD)                                      ! fxf
       else if (ISHIFT.EQ.1) then
          ! Shift new potential to old MT-zero for correct mixing
          ! (convolution with shapes is done later)
@@ -664,7 +663,7 @@ contains
             do LM = 1, LMPOT
                if (LM.ne.1.and.LM.ne.11.and.LM.ne.21  &
                   .and.LM.ne.25.and.LM.ne.43.and.LM.ne.47) then
-                  do I = 1,IRM
+                  do I = 1,IRMD
                      VONS(I,LM,IPOT) = 0.d0
                   enddo
                endif
@@ -697,7 +696,7 @@ contains
                else
                   do ISPIN=1,NSPIN
                      IPOT = NSPIN* (I1-1) + ISPIN
-                     do IR = 1,IRM
+                     do IR = 1,IRMD
                         VONS(IR,LM,IPOT) = 0.0D0
                      end do
                   end do
@@ -720,7 +719,7 @@ contains
       if(opt('simulasa')) then
          do IAS = 1, NPOTD
             do ILM_MAPP = 1, LMPOT
-               do IPOS = 1, IRM
+               do IPOS = 1, IRMD
                   if (ILM_MAPP .NE. 1) then
                      VONS(IPOS, ILM_MAPP, IAS) = 0.D0
                   endif
@@ -805,14 +804,14 @@ contains
          VSHIFT = VBC(1)                                                         ! fxf
          call POTENSHIFT(VISP,VINS,NATYP,NSPIN,IRCUT,IRC,IRMIN,NTCELL,  &        ! fxf
             IMAXSH,ILM_MAP,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,RFPI,RMESH,KSHAPE,&        ! fxf
-            VSHIFT,IRM,NPOTD,IRMIND,LMXSPD)                                      ! fxf
+            VSHIFT,IRMD,NPOTD,IRMIND,LMXSPD)                                      ! fxf
          write(1337,*) 'New VMT ZERO:',VBC(1)                                    ! fxf
       end if                                                                     ! fxf
       !
       call RITES(11,1,NATYP,NSPIN,ZAT,ALAT,RMT,RMTNEW,RWS,ITITLE, &
          RMESH,DRDI,VISP,IRWS,A,B,TXC,KXC,INS,IRNS,LPOT,VINS,         &
          QBOUND,IRC,KSHAPE,EFNEW,VBC,ECORE,LCORE,NCORE,           &
-         ECOREREL,NKCORE,KAPCORE,IRM,IRMIND,LMPOT)
+         ECOREREL,NKCORE,KAPCORE,LMPOT)
       close (11)
       !-------------------------------------------------------------------------
       ! ENERGIES calculation
@@ -879,7 +878,7 @@ contains
       !-------------------------------------------------------------------------
       if ( KREL.eq.1 ) then
          call RELPOTCVT(2,VISP,ZAT,RMESH,DRDI,IRCUT,VTREL,BTREL,ZREL, &
-            RMREL,JWSREL,DRDIREL,R2DRDIREL,IRSHIFT,IPAND,IRM,NPOTD,NATYP)
+            RMREL,JWSREL,DRDIREL,R2DRDIREL,IRSHIFT,IPAND,IRMD,NPOTD,NATYP)
       endif
       !
       !-------------------------------------------------------------------------
@@ -897,7 +896,7 @@ contains
       call save_scfinfo(t_params,VINS,VISP,ECORE,VBC,RMREL,DRDIREL,  &
          R2DRDIREL,ZREL,JWSREL,IRSHIFT,VTREL,BTREL,                  &
          ITSCF,SCFSTEPS,EFOLD,CHRGOLD,CMOMHOST,KREL,                 &
-         IRMIND,IRM,LMPOT,NSPOTD,NATYP,NPOTD,                     &
+         IRMIND,IRMD,LMPOT,NSPOTD,NATYP,NPOTD,                     &
          NEMBD1)
       !-------------------------------------------------------------------------
       9020 format ('                old',' E Fermi ',F14.10,' Delta E_F = ',E16.8)
@@ -932,19 +931,19 @@ contains
    !> @brief Adds a constant (=VSHIFT) to the potentials of atoms
    !----------------------------------------------------------------------------
    subroutine POTENSHIFT(VISP,VINS,NATYP,NSPIN, IRCUT,IRC,IRMIN,NTCELL,IMAXSH,   &
-      ILM_MAP,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,RFPI,RMESH,KSHAPE,VSHIFT,IRM,NPOTD, &
+      ILM_MAP,IFUNM,LMSP,LMPOT,GSH,THETAS,THESME,RFPI,RMESH,KSHAPE,VSHIFT,IRMD,NPOTD, &
       IRMIND,LMXSPD)
 
       implicit none
       !
       ! .. Input variables
-      integer, intent(in) :: IRM       !< Maximum number of radial points
+      integer, intent(in) :: IRMD       !< Maximum number of radial points
       integer, intent(in) :: LMPOT     !< (LPOT+1)**2
       integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
       integer, intent(in) :: NSPIN     !< Counter for spin directions
       integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
       integer, intent(in) :: LMXSPD    !< (2*LPOT+1)**2
-      integer, intent(in) :: IRMIND    !< IRM-IRNSD
+      integer, intent(in) :: IRMIND    !< IRMD-IRNSD
       integer, intent(in) :: KSHAPE    !< Exact treatment of WS cell
       real (kind=dp), intent(in) :: RFPI
       real (kind=dp), intent(in) :: VSHIFT
@@ -957,16 +956,16 @@ contains
       integer, dimension(NATYP,LMXSPD), intent(in)    :: IFUNM
       integer, dimension(0:IPAND,NATYP), intent(in)   :: IRCUT    !< R points of panel borders
       real (kind=dp), dimension(NGSHD), intent(in)              :: GSH
-      real (kind=dp), dimension(IRM,NATYP), intent(in)          :: RMESH    !< Radial mesh ( in units a Bohr)
+      real (kind=dp), dimension(IRMD,NATYP), intent(in)          :: RMESH    !< Radial mesh ( in units a Bohr)
       real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in)  :: THESME
       real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in)  :: THETAS   !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
       ! .. Input/Output:
-      real (kind=dp), dimension(IRM,NPOTD), intent(inout) :: VISP  !< Spherical part of the potential
-      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS   !< Non-spherical part of the potential
+      real (kind=dp), dimension(IRMD,NPOTD), intent(inout) :: VISP  !< Spherical part of the potential
+      real (kind=dp), dimension(IRMIND:IRMD,LMPOT,NSPOTD), intent(inout) :: VINS   !< Non-spherical part of the potential
       ! .. Local variables
       integer :: ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
-      real (kind=dp), dimension(IRM) :: PSHIFTR
-      real (kind=dp), dimension(IRM,LMPOT) :: PSHIFTLMR
+      real (kind=dp), dimension(IRMD) :: PSHIFTR
+      real (kind=dp), dimension(IRMD,LMPOT) :: PSHIFTLMR
 
       do IH = 1,NATYP
          IMT1 = IRCUT(1,IH)
@@ -976,8 +975,8 @@ contains
             write (1337,*) 'SHIFTING OF THE POTENTIALS OF ATOM',IH,' BY', VSHIFT, 'RY.'
             IPOT = NSPIN * (IH-1) + ISPIN
             !
-            call RINIT(IRM*LMPOT,PSHIFTLMR)
-            call RINIT(IRM,PSHIFTR)
+            call RINIT(IRMD*LMPOT,PSHIFTLMR)
+            call RINIT(IRMD,PSHIFTR)
             do IR = 1,IRC1
                PSHIFTLMR(IR,1) = VSHIFT
             enddo

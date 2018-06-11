@@ -12,22 +12,22 @@ contains
 !> is a problem the user only has to add a line or change a value of the inc.p
 !> not recompile the code
 !-------------------------------------------------------------------------------
-  subroutine rinput13(nr, kte, igf, irm, kxc, lly, icc, ins, kws, ipe, ipf, &
-    ipfe, icst, lm2d, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, &
-    kefg, khyp, kpre, nclsd, mmaxd, npotd, kvmad, lmmax, lmpot, ncheb, nleft, &
-    ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, lmxspd, lmmaxd, &
-    lmgf0d, lassld, nembd1, irmind, nofgij, kfrozn, ishift, n1semi, n2semi, &
-    n3semi, nsteps, insref, kshape, itdbry, nright, kforce, nspindd, nsatypd, &
+  subroutine rinput13(kte, igf, irm, kxc, lly, icc, ins, kws, ipe, ipf, &
+    ipfe, icst, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, &
+    kefg, khyp, kpre, kvmad, lmmax, lmpot, ncheb, nleft, &
+    ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, &
+    kfrozn, ishift, n1semi, n2semi, &
+    n3semi, nsteps, insref, kshape, itdbry, nright, kforce, &
     ivshift, khfield, nlbasis, nrbasis, intervx, intervy, intervz, npan_eq, &
     npan_log, npolsemi, tk, fcm, emin, emax, rmax, gmax, alat, r_log, rcutz, &
     rcutxy, eshift, qbound, hfield, mixing, abasis, bbasis, cbasis, vconst, &
     tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, &
-    linipol, lcartesian, linterface, imt, cls, lmxc, irns, irws, ntcell, &
+    linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, &
     refpot, inipol, ixipol, hostimp, kfg, vbc, zperleft, zperight, bravais, &
     rmt, zat, rws, mtfac, rmtref, rmtnew, rmtrefat, fpradius, tleft, tright, &
     rbasis, socscale, cscl, socscl, solver, i12, i13, i19, i25, i40, txc, &
     drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, qmtet, &
-    qmphi, kreadldau, lopt, ueff, jeff, erefldau, ntotd)
+    qmphi, kreadldau, lopt, ueff, jeff, erefldau)
 
     use profiling
     use constants
@@ -52,7 +52,6 @@ contains
     intrinsic :: min
 !     ..
 !     .. Scalar Arguments ..
-    integer, intent (inout) :: nr !< Number of real space vectors rr
     integer, intent (inout) :: kte !< Calculation of the total energy On/Off (1/0)
     integer, intent (inout) :: igf !< Do not print or print (0/1) the KKRFLEX_* files
     integer, intent (inout) :: irm !< Maximum number of radial points
@@ -65,7 +64,6 @@ contains
     integer, intent (inout) :: ipf !< Not real used, IPFE should be 0
     integer, intent (inout) :: ipfe !< Not real used, IPFE should be 0
     integer, intent (inout) :: icst !< Number of Born approximation
-    integer, intent (inout) :: lm2d
     integer, intent (inout) :: imix !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
     integer, intent (inout) :: lpot !< Maximum l component in potential expansion
     integer, intent (inout) :: naez !< Number of atoms in unit cell
@@ -78,13 +76,9 @@ contains
     integer, intent (inout) :: kefg
     integer, intent (inout) :: khyp
     integer, intent (inout) :: kpre
-    integer, intent (inout) :: nclsd !< Maximum number of different TB-clusters
-    integer, intent (inout) :: mmaxd
-    integer, intent (inout) :: npotd
     integer, intent (inout) :: kvmad
     integer, intent (inout) :: lmmax
     integer, intent (inout) :: lmpot
-    integer, intent (inout) :: ntotd !< NTOTD = IPAND+30
     integer, intent (inout) :: ncheb !< Number of Chebychev pannels for the new solver
     integer, intent (inout) :: nleft !< Number of repeated basis for left host to get converged  electrostatic potentials
     integer, intent (inout) :: ifile !< Unit specifier for potential card
@@ -95,13 +89,6 @@ contains
     integer, intent (inout) :: npnt1 !< number of E points (EMESHT) for the contour integration
     integer, intent (inout) :: npnt2 !< number of E points (EMESHT) for the contour integration
     integer, intent (inout) :: npnt3 !< number of E points (EMESHT) for the contour integration
-    integer, intent (inout) :: lmxspd !< (2*LPOT+1)**2
-    integer, intent (inout) :: lmmaxd
-    integer, intent (inout) :: lmgf0d
-    integer, intent (inout) :: lassld
-    integer, intent (inout) :: nembd1
-    integer, intent (inout) :: irmind
-    integer, intent (inout) :: nofgij
     integer, intent (inout) :: kfrozn
     integer, intent (inout) :: ishift
     integer, intent (inout) :: n1semi !< Number of energy points for the semicore contour
@@ -113,8 +100,6 @@ contains
     integer, intent (inout) :: itdbry !< Number of SCF steps to remember for the Broyden mixing
     integer, intent (inout) :: nright !< Number of repeated basis for right host to get converged  electrostatic potentials
     integer, intent (inout) :: kforce !< Calculation of the forces
-    integer, intent (inout) :: nspindd !< !< NSPIND-KORBIT
-    integer, intent (inout) :: nsatypd !< (NATYPD-1)*KNOSPH+1
     integer, intent (inout) :: ivshift
     integer, intent (inout) :: khfield !< 0,1: no / yes external magnetic field
     integer, intent (inout) :: nlbasis !< Number of basis layers of left host (repeated units)
@@ -153,9 +138,8 @@ contains
     logical, intent (inout) :: lrhosym
     logical, intent (inout) :: linipol !< True: Initial spin polarization; false: no initial spin polarization
     logical, intent (inout) :: lcartesian !< True: Basis in cartesian coords; false: in internal coords
-    logical, intent (inout) :: linterface !< If True a matching with semi-inifinite surfaces must be performed
 !     .. Array Arguments ..
-    integer, dimension (:), allocatable, intent (out) :: imt !< R point at MT radius
+    integer, dimension (:), allocatable, intent (out)  :: imt !< R point at MT radius
     integer, dimension (:), allocatable, intent (out) :: cls !< Cluster around atomic sites
     integer, dimension (:), allocatable, intent (out) :: lmxc
     integer, dimension (:), allocatable, intent (out) :: irns !< Position of atoms in the unit cell in units of bravais vectors
@@ -909,10 +893,10 @@ contains
 
     call ioinput('NRMESH          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) nr
-      write (111, *) 'NRMESH= ', nr
+      read (unit=uio, fmt=*) nrd
+      write (111, *) 'NRMESH= ', nrd
     else
-      write (111, *) 'Default NRMESH= ', nr
+      write (111, *) 'Default NRMESH= ', nrd
     end if
 
     kvrel = 1 ! 0=Schroedinger / 1=SRA / 2=Dirac

@@ -20,7 +20,7 @@
 !-------------------------------------------------------------------------------
     Subroutine vmadelblk(cmom, cminst, lmax, nspin, naez, v, zat, r, irws, &
       ircut, ipan, kshape, noq, kaoez, conc, catom, icc, hostimp, vinters, &
-      irm, nemb, lmpot, npotd, lmmaxd, natyp)
+      nemb, lmpot, natyp)
 
       Use constants
       Use global_variables
@@ -30,16 +30,13 @@
 
 ! .. Input variables
       Integer, Intent (In) :: icc !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-      Integer, Intent (In) :: irm !< Maximum number of radial points
       Integer, Intent (In) :: naez !< Number of atoms in unit cell
       Integer, Intent (In) :: lmax !< Maximum l component in wave function expansion
       Integer, Intent (In) :: nemb !< Number of 'embedding' positions
       Integer, Intent (In) :: natyp !< Number of kinds of atoms in unit cell
       Integer, Intent (In) :: nspin !< Counter for spin directions
       Integer, Intent (In) :: lmpot !< (LPOT+1)**2
-      Integer, Intent (In) :: npotd !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
       Integer, Intent (In) :: kshape !< Exact treatment of WS cell
-      Integer, Intent (In) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
 ! .. Array Arguments
       Integer, Dimension (naez), Intent (In) :: noq !< Number of diff. atom types located
       Integer, Dimension (natyp), Intent (In) :: irws !< Position of atoms in the unit cell in units of bravais vectors
@@ -50,11 +47,11 @@
       Real (Kind=dp), Dimension (natyp), Intent (In) :: zat !< Nuclear charge
       Real (Kind=dp), Dimension (natyp), Intent (In) :: conc !< Concentration of a given atom
       Real (Kind=dp), Dimension (natyp), Intent (In) :: catom
-      Real (Kind=dp), Dimension (irm, natyp), Intent (In) :: r !< Radial mesh ( in units a Bohr)
+      Real (Kind=dp), Dimension (irmd, natyp), Intent (In) :: r !< Radial mesh ( in units a Bohr)
       Real (Kind=dp), Dimension (lmpot, natyp), Intent (In) :: cmom !< LM moment of total charge
       Real (Kind=dp), Dimension (lmpot, natyp), Intent (In) :: cminst !< charge moment of interstitial
 ! .. Input/Ouput variables
-      Real (Kind=dp), Dimension (irm, lmpot, npotd), Intent (Inout) :: v
+      Real (Kind=dp), Dimension (irmd, lmpot, npotd), Intent (Inout) :: v
 ! .. Output variables
       Real (Kind=dp), Dimension (lmpot, naez), Intent (Out) :: vinters
 ! .. Local Scalars

@@ -1,5 +1,5 @@
 ! 02.08.95 *************************************************************
-    Subroutine rrgen(bv1, lsurf, rr, nr, nrd)
+    Subroutine rrgen(bv1, lsurf, rr, nrd)
       Use mod_datatypes, Only: dp
 ! **********************************************************************
 ! *                                                                    *
@@ -12,7 +12,7 @@
 !..
 !.. Scalar arguments ..
       Logical :: lsurf
-      Integer :: nr, nrd
+      Integer :: nrd
 !    ..
 !    .. Array arguments ..
       Real (Kind=dp) :: bv1(3, 3), rr(3, 0:nrd)
@@ -22,6 +22,7 @@
       Integer :: i, j, k, n1, n2, n3, pos, iprint
       Integer :: nint
       Real (Kind=dp) :: dble
+      integer :: nr
 !..
 !.. Local arrays
       Real (Kind=dp) :: rabs(nrd), rr1(3, nrd), v(3), vx(3), vy(3), vz(3), &
@@ -118,6 +119,9 @@
         End Do
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       End Do
+
+      ! store changed nr dimension
+      nrd = nr
 ! **********************************************************************
 
       Write (1337, 140) nr + 1

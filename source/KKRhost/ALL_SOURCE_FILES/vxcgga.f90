@@ -33,7 +33,7 @@
     Subroutine vxcgga(exc, kte, kxc, lmax, nspin, iatyp, rho2ns, v, r, drdi, &
       a, irws, ircut, ipan, kshape, gsh, ilm_map, imaxsh, ifunm, thetas, wtyr, &
       ijend, lmsp, thet, ylm, dylmt1, dylmt2, dylmf1, dylmf2, dylmtf, lmpot, &
-      lmxspd, lmmax, irm, lpot, natyp)
+      lmmax, lpot, natyp)
 
       Use constants
       Use global_variables
@@ -42,7 +42,6 @@
       Implicit None
 
 ! .. Input variables
-      Integer, Intent (In) :: irm !< Maximum number of radial points
       Integer, Intent (In) :: kte !< Calculation of the total energy On/Off (1/0)
       Integer, Intent (In) :: kxc !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
       Integer, Intent (In) :: lmax !< Maximum l component in wave function expansion
@@ -56,7 +55,6 @@
       Integer, Intent (In) :: nspin !< Counter for spin directions
       Integer, Intent (In) :: lmmax !< (LMAX+1)^2
       Integer, Intent (In) :: kshape !< Exact treatment of WS cell
-      Integer, Intent (In) :: lmxspd !< (2*LPOT+1)**2
       Real (Kind=dp), Intent (In) :: a !< IATYP entry for the array A with the constants for exponential R mesh
 ! .. Array Arguments
       Integer, Dimension (lmxspd), Intent (In) :: lmsp !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
@@ -64,9 +62,9 @@
       Integer, Dimension (lmxspd), Intent (In) :: ifunm
       Integer, Dimension (0:lmpot), Intent (In) :: imaxsh
       Integer, Dimension (ngshd, 3), Intent (In) :: ilm_map
-      Real (Kind=dp), Dimension (irm), Intent (In) :: r !< IATYP entry of the radial mesh ( in units a Bohr)
+      Real (Kind=dp), Dimension (irmd), Intent (In) :: r !< IATYP entry of the radial mesh ( in units a Bohr)
       Real (Kind=dp), Dimension (ngshd), Intent (In) :: gsh
-      Real (Kind=dp), Dimension (irm), Intent (In) :: drdi !< IATYP entry of the derivative dr/di
+      Real (Kind=dp), Dimension (irmd), Intent (In) :: drdi !< IATYP entry of the derivative dr/di
       Real (Kind=dp), Dimension (ijend), Intent (In) :: thet
       Real (Kind=dp), Dimension (ijend, lmpot), Intent (In) :: ylm
       Real (Kind=dp), Dimension (ijend, lmpot), Intent (In) :: wtyr
@@ -76,10 +74,10 @@
       Real (Kind=dp), Dimension (ijend, lmpot), Intent (In) :: dylmt1
       Real (Kind=dp), Dimension (ijend, lmpot), Intent (In) :: dylmt2
       Real (Kind=dp), Dimension (ijend, lmpot), Intent (In) :: dylmtf
-      Real (Kind=dp), Dimension (irm, lmpot, 2), Intent (In) :: rho2ns !< radial density
+      Real (Kind=dp), Dimension (irmd, lmpot, 2), Intent (In) :: rho2ns !< radial density
 ! .. Input/Output variables
       Real (Kind=dp), Dimension (0:lpot, natyp), Intent (Inout) :: exc !< exchange correlation energy
-      Real (Kind=dp), Dimension (irm, lmpot, 2), Intent (Inout) :: v
+      Real (Kind=dp), Dimension (irmd, lmpot, 2), Intent (Inout) :: v
 ! .. Local Scalars
       Real (Kind=dp) :: vxc1, vxc2, vxc3, zero, zero1
       Real (Kind=dp) :: chgden, dx, elmxc, fpi, r1, r2, rpoint, spiden, vlmxc
@@ -88,16 +86,16 @@
         l1max, lm
 ! .. Local Arrays
       Real (Kind=dp), Dimension (ijend) :: excij
-      Real (Kind=dp), Dimension (irm, 0:lpot) :: er
+      Real (Kind=dp), Dimension (irmd, 0:lpot) :: er
       Real (Kind=dp), Dimension (ijend, 2) :: vxc
-      Real (Kind=dp), Dimension (irm, lmpot) :: drrl
+      Real (Kind=dp), Dimension (irmd, lmpot) :: drrl
       Real (Kind=dp), Dimension (2:3, 2) :: vxcr
-      Real (Kind=dp), Dimension (irm, lmpot) :: estor
+      Real (Kind=dp), Dimension (irmd, lmpot) :: estor
       Real (Kind=dp), Dimension (lmpot, 2) :: rholm
-      Real (Kind=dp), Dimension (irm, lmpot) :: drrul
-      Real (Kind=dp), Dimension (irm, lmpot) :: ddrrl
-      Real (Kind=dp), Dimension (irm, lmpot) :: ddrrul
-      Real (Kind=dp), Dimension (irm, 2, lmpot) :: rhol
+      Real (Kind=dp), Dimension (irmd, lmpot) :: drrul
+      Real (Kind=dp), Dimension (irmd, lmpot) :: ddrrl
+      Real (Kind=dp), Dimension (irmd, lmpot) :: ddrrul
+      Real (Kind=dp), Dimension (irmd, 2, lmpot) :: rhol
 ! .. External Functions
       Real (Kind=dp) :: ddot
       External :: ddot
@@ -188,7 +186,7 @@
       End If
 
       Call gradrl(nspin, mesh, l1max, dx, rhol, r, drdi, ipan1, ipand, ircut, &
-        drrl, ddrrl, drrul, ddrrul, irm, lmpot)
+        drrl, ddrrl, drrul, ddrrul, irmd, lmpot)
 
 !----------------------------------------------------------------------------
 ! Loop over radial mesh
@@ -212,16 +210,16 @@
         If (kxc==3) Then
           Call mkxcpe(nspin2, ir, ijend, l1max, rpoint, rholm, vxc, excij, &
             thet, ylm, dylmt1, dylmt2, dylmf1, dylmf2, dylmtf, drrl, ddrrl, &
-            drrul, ddrrul, irm, lmpot)
+            drrul, ddrrul, irmd, lmpot)
 ! PBE functional
         Else If (kxc==4) Then
           Call mkxcpe2(ir, ijend, rpoint, rholm, vxc, excij, ylm, dylmt1, &
-            dylmf1, dylmf2, dylmtf, drrl, ddrrl, drrul, ddrrul, irm, lmpot, &
+            dylmf1, dylmf2, dylmtf, drrl, ddrrl, drrul, ddrrul, irmd, lmpot, &
             lmmax, .False.)
 ! PBEsol functional
         Else If (kxc==5) Then
           Call mkxcpe2(ir, ijend, rpoint, rholm, vxc, excij, ylm, dylmt1, &
-            dylmf1, dylmf2, dylmtf, drrl, ddrrl, drrul, ddrrul, irm, lmpot, &
+            dylmf1, dylmf2, dylmtf, drrl, ddrrl, drrul, ddrrul, irmd, lmpot, &
             lmmax, .True.)
         Else
           Write (1337, *) ' KXC ???'

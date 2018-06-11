@@ -4,7 +4,7 @@
 !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
     Subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, &
-      nlbasis, nrbasis, alm, ndim, lmmaxd)
+      nlbasis, nrbasis)
 
       Use global_variables
       Use mod_datatypes, Only: dp
@@ -25,10 +25,7 @@
 ! *                                                                   *
 ! *********************************************************************
 !
-      Integer, Intent (In) :: alm !< NAEZ*LMMAXD
-      Integer, Intent (In) :: ndim !< NPRINCD*LMMAXD
       Integer, Intent (In) :: naez !< Number of atoms in unit cell
-      Integer, Intent (In) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
       Integer, Intent (In) :: nlbasis !< Number of basis layers of left host (repeated units)
       Integer, Intent (In) :: nrbasis !< Number of basis layers of right host (repeated units)
       Logical, Dimension (2), Intent (In) :: vacflag
@@ -43,7 +40,7 @@
         itermax
       Real (Kind=dp) :: errmax
 ! .. Local Arrays
-      Complex (Kind=dp), Dimension (ndim, ndim) :: a1, an, b1, bn, c1, cn, x1, &
+      Complex (Kind=dp), Dimension (ndim_slabinv, ndim_slabinv) :: a1, an, b1, bn, c1, cn, x1, &
         xn
 ! ..
       Data icall/0/
@@ -71,7 +68,7 @@
 !-------------------------------------------------------------------------
 ! Get the matrix B1
 !-------------------------------------------------------------------------
-        Call bofm(1, 1, b1, ndim, gllke, alm)
+        Call bofm(1, 1, b1, ndim_slabinv, gllke, alm)
 
 ! Now Subtract t-mat of left host
         Do ip1 = 1, nprincd
@@ -85,11 +82,11 @@
           End Do
         End Do
 
-        Call bofm(1, 2, c1, ndim, gllke, alm)
-        Call bofm(2, 1, a1, ndim, gllke, alm)
+        Call bofm(1, 2, c1, ndim_slabinv, gllke, alm)
+        Call bofm(2, 1, a1, ndim_slabinv, gllke, alm)
 
 ! It performs the 'space decimation' iterative procedure.
-        Call surfgf(ndim, a1, b1, c1, x1, itermax, errmax, ichck, lmmaxd)
+        Call surfgf(ndim_slabinv, a1, b1, c1, x1, itermax, errmax, ichck)
 ! Adds to the matrix GLLKE the elements that couples the
 ! interface to the two half-spaces.
         Do ip1 = 1, nprincd
@@ -119,7 +116,7 @@
 !----------------------------------------------------------------------
 ! Get the matrix BN
 !----------------------------------------------------------------------
-          Call bofm(nlayer, nlayer, bn, ndim, gllke, alm)
+          Call bofm(nlayer, nlayer, bn, ndim_slabinv, gllke, alm)
 
 ! Now Substract t-mat right host
 ! Notes : the indexing is easier like that
@@ -135,11 +132,11 @@
             End Do
           End Do
 
-          Call bofm(nlayer, nlayer-1, an, ndim, gllke, alm)
-          Call bofm(nlayer-1, nlayer, cn, ndim, gllke, alm)
+          Call bofm(nlayer, nlayer-1, an, ndim_slabinv, gllke, alm)
+          Call bofm(nlayer-1, nlayer, cn, ndim_slabinv, gllke, alm)
 
 ! It performs the 'space decimation' iterative procedure.
-          Call surfgf(ndim, cn, bn, an, xn, itermax, errmax, ichck, lmmaxd)
+          Call surfgf(ndim_slabinv, cn, bn, an, xn, itermax, errmax, ichck, lmmaxd)
 !
         Else
 !

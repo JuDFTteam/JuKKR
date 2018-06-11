@@ -27,7 +27,7 @@
     Subroutine vinterface(cmom, cminst, lpot, nspin, nlayers, natyp, v, zat, &
       r, irws, ircut, ipan, kshape, noq, kaoez, iqat, conc, catom, icc, &
       hostimp, nlbasis, nleft, nrbasis, nright, cmomhost, chrgnt, vinters, &
-      irm, naez, lmpot, npotd, nembd1)
+      naez, lmpot)
 
       Use constants
       Use global_variables
@@ -37,15 +37,12 @@
 
 ! .. Input variables ..
       Integer, Intent (In) :: icc !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-      Integer, Intent (In) :: irm !< Maximum number of radial points
       Integer, Intent (In) :: lpot !< Maximum l component in potential expansion
       Integer, Intent (In) :: naez !< Number of atoms in unit cell
       Integer, Intent (In) :: lmpot !< (LPOT+1)**2
       Integer, Intent (In) :: nspin !< Counter for spin directions
       Integer, Intent (In) :: natyp !< Number of kinds of atoms in unit cell
-      Integer, Intent (In) :: npotd !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
       Integer, Intent (In) :: nleft !< Number of repeated basis for left host to get converged electrostatic potentials
-      Integer, Intent (In) :: nembd1 !< NEMB+1
       Integer, Intent (In) :: nright !< Number of repeated basis for right host to get converged electrostatic potentials
       Integer, Intent (In) :: kshape !< Exact treatment of WS cell
       Integer, Intent (In) :: nlayers
@@ -62,12 +59,12 @@
       Real (Kind=dp), Dimension (natyp), Intent (In) :: zat !< Nuclear charge
       Real (Kind=dp), Dimension (natyp), Intent (In) :: conc !< Concentration of a given atom
       Real (Kind=dp), Dimension (natyp), Intent (In) :: catom
-      Real (Kind=dp), Dimension (irm, natyp), Intent (In) :: r !< Radial mesh ( in units a Bohr)
+      Real (Kind=dp), Dimension (irmd, natyp), Intent (In) :: r !< Radial mesh ( in units a Bohr)
       Real (Kind=dp), Dimension (lmpot, natyp), Intent (In) :: cmom !< LM moment of total charge
       Real (Kind=dp), Dimension (lmpot, natyp), Intent (In) :: cminst !< charge moment of interstitial
       Real (Kind=dp), Dimension (lmpot, nembd1), Intent (In) :: cmomhost !< Charge moments of each atom of the (left/right) host
 ! .. In/out variables
-      Real (Kind=dp), Dimension (irm, lmpot, npotd), Intent (Inout) :: v
+      Real (Kind=dp), Dimension (irmd, lmpot, npotd), Intent (Inout) :: v
 
 ! .. Local variables
       Integer :: ileft, iright

@@ -2,10 +2,10 @@
 ! SUBROUTINE: RHOOUTNEW
 !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-    Subroutine rhooutnew(nsra, lmmaxd, lmmaxso, lmax, gmatll, ek, lmpot, df, &
+    Subroutine rhooutnew(nsra, lmmaxso, lmax, gmatll, ek, lmpot, df, &
       npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, &
       lmsp, rll, rllleft, sllleft, cden, cdenlm, cdenns, rho2nsc, corbital, &
-      gflle_part, rpan_intervall, ipan_intervall, ntotd)
+      gflle_part, rpan_intervall, ipan_intervall)
 
       Use constants
       Use profiling
@@ -18,10 +18,8 @@
       Integer, Intent (In) :: lmax !< Maximum l component in wave function expansion
       Integer, Intent (In) :: iend !< Number of nonzero gaunt coefficients
       Integer, Intent (In) :: imt1
-      Integer, Intent (In) :: ntotd
       Integer, Intent (In) :: ncheb !< Number of Chebychev pannels for the new solver
       Integer, Intent (In) :: lmpot !< (LPOT+1)**2
-      Integer, Intent (In) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
       Integer, Intent (In) :: lmmaxso !< 2*LMMAXD)
       Integer, Intent (In) :: irmdnew
       Integer, Intent (In) :: corbital

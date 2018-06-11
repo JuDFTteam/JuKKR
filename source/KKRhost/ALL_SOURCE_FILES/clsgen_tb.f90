@@ -1,8 +1,8 @@
 ! ************************************************************************
-subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
+subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, &
   tleft, tright, rmtref, rmtrefat, vref, irefpot, nrefpot, rcls, rcut, rcutxy, &
-  l2dim, alat, naezd, natyp, nembd, nrd, naclsd, nclsd, nrefd)
+  alat, natyp, nclsd, nrd, naclsd, nrefd, nembd)
 ! ************************************************************************
 ! This subroutine is used to create the clusters around each atom
 ! (Based on clsgen99.f). Also the reference potential height and radius is set
@@ -19,22 +19,25 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
 !
 !
   use :: mod_version_info
-      Use mod_datatypes, Only: dp
+  Use mod_datatypes, Only: dp
   implicit none
 !.. arguments
   integer :: naez, & ! number of atoms in EZ
-    nemb, & ! number of embedding postions
-    ncls, & ! number of diff. clusters
-    nr, & ! number of lattice vectors RR
-    nlr, & ! =NEMB in decimation, =0 in slab or bulk
-    nvirt, & ! Number of virtual atoms
-    nprinc ! Calculated number of layers in a principal layer
-  integer :: naezd, natyp, nembd, nrd, naclsd, nclsd, nrefd
+             nemb, & ! number of embedding postions
+             ncls, & ! number of diff. clusters
+             nlr, & ! =NEMB in decimation, =0 in slab or bulk
+             nvirt, & ! Number of virtual atoms
+             nclsd, & ! 
+             nrd, & ! 
+             naclsd, & ! 
+             nrefd, & ! 
+             nprinc ! Calculated number of layers in a principal layer
+  integer :: natyp, nembd
   real (kind=dp) :: alat ! lattice constant A
   real (kind=dp) :: rcut, rcutxy
   real (kind=dp) :: rbasis(3, naez+nembd), & ! pos. of basis atoms in EZ
                     rcls(3, naclsd, ncls), & ! real space position of atom in cluster
-                    rr(3, 0:nr), & ! set of lattice vectors
+                    rr(3, 0:nrd), & ! set of lattice vectors
                     zat(natyp), & ! nucleus charge
                     rmtref(nrefd), &
                     vref(nrefd)
@@ -64,7 +67,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
   real (kind=dp) :: rcut2, rcutxy2, rxy2, dist
 
   logical :: lfound
-  logical :: l2dim, clustcomp_tb
+  logical :: linterface, clustcomp_tb
 
   external :: dsort, clustcomp_tb
   intrinsic :: min, sqrt
@@ -72,6 +75,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
   data epsshl/1.d-4/
   data tol/1.d-7/
   data tol2/1.d-7/
+
 
 ! ------------------------------------------------------------------------
   write (1337, *) '>>> CLSGEN_TB: generation of cluster coordinates'
@@ -97,7 +101,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
   rcutxy2 = rcutxy**2
   rcut2 = rcut**2
   nlr = 0
-  if (l2dim) nlr = nemb
+  if (linterface) nlr = nemb
   vrefat(:) = 8.d0 ! Set to 8 Rydbergs
   vref1(:) = 8.d0 ! Set to 8 Rydbergs
   vref(:) = 8.d0 ! Set to 8 Rydbergs
@@ -113,7 +117,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
     distmin = 1.d100 ! Large initial value for RMT**2
     do na = 1, naez ! loop in all sites in unit cell
       if (kaoez(1,na)/=-1) then ! Exclude virtual atoms from clusters (except clust. center)
-        do ir = 0, nr ! loop in all bravais vectors
+        do ir = 0, nrd ! loop in all bravais vectors
           tmp(1:3) = rr(1:3, ir) + rbasis(1:3, na) - rbasis(1:3, jatom)
           rxy2 = tmp(1)**2 + tmp(2)**2
           r2 = tmp(3)**2 + tmp(1)**2 + tmp(2)**2
@@ -128,9 +132,9 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
 !
 !        In the case of 2 dimensional case loop in the atoms outside.
 !
-    if (l2dim) then
+    if (linterface) then
 !        Somehow messy (lionel messi?)
-      do ir = 0, nr
+      do ir = 0, nrd
         do ilay = nleft, 1, -1 ! loop in some layers on left side
           do i1 = nlbasis, 1, -1 ! loop in representative atoms on left side
             tmp(1:3) = rr(1:3, ir) + tleft(1:3, i1) + (ilay-1)*zperleft(1:3) - &
@@ -238,7 +242,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
     number = 0 ! counter for sites in cluster
     do na = 1, naez ! loop in all sites
       if (kaoez(1,na)/=-1) then ! proceed only if the neighbour is not virtual atom
-        do ir = 0, nr ! loop in all bravais vectors
+        do ir = 0, nrd ! loop in all bravais vectors
           tmp(1:3) = rr(1:3, ir) + rbasis(1:3, na) - rbasis(1:3, jatom)
           rxy2 = tmp(1)**2 + tmp(2)**2
           r2 = tmp(3)**2 + tmp(1)**2 + tmp(2)**2
@@ -256,11 +260,11 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
 !
 !        In the case of 2 dimensional case loop in the atoms outside.
 !
-    if (l2dim) then
+    if (linterface) then
 !        Somehow messy (eh? lionel?)
 !        Index ATOM gives the kind of atom
 !
-      do ir = 0, nr
+      do ir = 0, nrd
         do ilay = nleft, 1, -1 ! loop in some layers on left side
           do i1 = nlbasis, 1, -1 ! loop in representative atoms on left side
             tmp(1:3) = rr(1:3, ir) + tleft(1:3, i1) + (ilay-1)*zperleft(1:3) - &
@@ -372,7 +376,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
     write (1337, 220) jatom, irefpot(jatom), rmtrefat(jatom), vrefat(jatom), &
       cls(jatom), nacls(cls(jatom))
   end do
-  if (l2dim) then
+  if (linterface) then
     write (1337, *) 'Clusters from clsgen_tb in outer region, left:'
     do ia = 1, nlbasis
       jatom = naez + ia
@@ -421,7 +425,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, nr, rbasis, kaoez, zat, cls, ncls, &
     write (1337, 280) jatom, (icouplmat(jatom,iat), iat=1, naez)
   end do
 
-  if (l2dim) then
+  if (linterface) then
 ! Calculate number of layers in principal layer
     nprinc = 1
     do jatom = 1, naez ! loop over rows

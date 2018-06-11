@@ -4,7 +4,7 @@
 !-------------------------------------------------------------------------------
 subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM,  &
    CLS,ICLEB,LOFLM,NACLS,REFPOT,RMTREF,TOLRDIF,TMPDIR,ITMPDIR,ILTMP,NAEZ,LLY,    & ! LLY Lloyd
-   LM2D,LMGF0D,NEMB,NCLSD)
+   NEMB)
 
    use mod_mympi, only: myrank, nranks, master
    use mod_types, only: t_tgmat, t_lloyd, t_inc
@@ -27,7 +27,6 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    !     ..
    ! .. Input variables
    integer, intent(in) :: LLY    !< LLY <> 0 : alpply Lloyds formula
-   integer, intent(in) :: LM2D   !< (2*LMAX+1)**2
    integer, intent(in) :: IEND
    integer, intent(in) :: LMAX   !< Maximum l component in wave function expansion
    integer, intent(in) :: NCLS   !< Number of reference clusters
@@ -35,9 +34,7 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    integer, intent(in) :: NAEZ   !< Number of atoms in unit cell
    integer, intent(in) :: NEMB   !< Number of 'embedding' positions
    integer, intent(in) :: NINEQ  !< Number of ineq. positions in unit cell
-   integer, intent(in) :: NCLSD  !< Maximum number of different TB-clusters
    integer, intent(in) :: IELAST
-   integer, intent(in) :: LMGF0D !< (LMAX+1)**2
    real (kind=dp), intent(in) :: ALATC
    real (kind=dp), intent(in) :: TOLRDIF !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
    integer, dimension(NAEZ+NEMB), intent(in) :: CLS      !< Cluster around atomic sites

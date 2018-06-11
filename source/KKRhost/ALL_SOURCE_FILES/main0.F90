@@ -38,7 +38,6 @@ module mod_main0
 
    implicit none
 
-   integer :: NR, NRD        !< Number of real space vectors rr
    integer :: KTE       !< Calculation of the total energy On/Off (1/0)
    integer :: KWS       !< 0 (MT), 1(ASA)
    integer :: KXC       !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
@@ -62,15 +61,12 @@ module mod_main0
    integer :: NEMB      !< Number of 'embedding' positions
    integer :: LMAX      !< Maximum l component in wave function expansion
    integer :: NCLS      !< Number of reference clusters
-   integer :: LM2D      !< (2*LMAX+1)**2
    integer :: NREF      !< Number of diff. ref. potentials
    integer :: NPOL      !< Number of Matsubara Poles (EMESHT)
    integer :: NPNT1     !< number of E points (EMESHT) for the contour integration
    integer :: NPNT2     !< number of E points (EMESHT) for the contour integration
    integer :: NPNT3     !< number of E points (EMESHT) for the contour integration
    integer :: LMMAX     !< (LMAX+1)^2
-   integer :: NCLSD     !< Maximum number of different TB-clusters
-   integer :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
    integer :: NVIRT
    integer :: LMPOT     !< (LPOT+1)**2
    integer :: KVMAD
@@ -80,36 +76,24 @@ module mod_main0
    integer :: NATYP     !< Number of kinds of atoms in unit cell
    integer :: IFILE     !< Unit specifier for potential card
    integer :: KVREL     !< 0,1 : non / scalar relat. calculation
-   integer :: NTOTD
    integer :: NSPIN     !< Counter for spin directions
-   integer :: MMAXD     !< 2*LMAX+1
    integer :: NLEFT     !< Number of repeated basis for left host to get converged electrostatic potentials
    integer :: NRIGHT    !< Number of repeated basis for right host to get converged electrostatic potentials
-   integer :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
-   integer :: NEMBD1    !< NEMB+1
    integer :: INVMOD    !< Inversion scheme
    integer :: KHFELD    !< 0,1: no / yes external magnetic field
    integer :: ITDBRY    !< Number of SCF steps to remember for the Broyden mixing
    integer :: INSREF    !< INS for reference pot. (usual 0)
    integer :: KSHAPE    !< Exact treatment of WS cell
    integer :: IELAST
-   integer :: NRMAXD    !< NTOTD*(NCHEBD+1)
    integer :: ISHIFT
    integer :: KFROZN
    integer :: NSYMAT
-   integer :: LMGF0D    !< (LMAX+1)**2
-   integer :: NOFGIJ    !< number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
-   integer :: LMXSPD    !< (2*LPOT+1)**2
-   integer :: LASSLD    !< 4*LMAX
    integer :: NQCALC
    integer :: KFORCE    !< Calculation of the forces
    integer :: N1SEMI    !< Number of energy points for the semicore contour
    integer :: N2SEMI    !< Number of energy points for the semicore contour
    integer :: N3SEMI    !< Number of energy points for the semicore contour
    integer :: NLAYER    !< Number of principal layer
-   integer :: IRMIND    !< IRM-IRNSD
-   integer :: NSATYPD   !< (NATYPD-1)*KNOSPH+1
-   integer :: NSPINDD   !< NSPIND-KORBIT
    integer :: NLBASIS   !< Number of basis layers of left host (repeated units)
    integer :: NRBASIS   !< Number of basis layers of right host (repeated units)
    integer :: INTERVX   !< Number of intervals in x-direction for k-net in IB of the BZ
@@ -160,7 +144,6 @@ module mod_main0
    logical :: LRHOSYM
    logical :: LINIPOL    !< True: Initial spin polarization; false: no initial spin polarization
    logical :: LCARTESIAN !< True: Basis in cartesian coords; false: in internal coords
-   logical :: LINTERFACE !< If True a matching with semi-inifinite surfaces must be performed
 
    !..
    !.. Local Arrays ..
@@ -507,20 +490,20 @@ contains
       !> @note JC: have added reading calls for the parameters that used to be in
       !> the inc.p and can now be modified via the inputcard directly
       !-------------------------------------------------------------------------
-      call RINPUT13(NR,KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,LM2D,IMIX, &
-         LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KCOR,KEFG,KHYP,KPRE,NCLSD,MMAXD,NPOTD,  &
+      call RINPUT13(KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,IMIX, &
+         LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KCOR,KEFG,KHYP,KPRE,  &
          KVMAD,LMMAX,LMPOT,NCHEB,NLEFT,IFILE,KVREL,NSPIN,NATYP,NINEQ,NPNT1,NPNT2,   &
-         NPNT3,LMXSPD,LMMAXD,LMGF0D,LASSLD,NEMBD1,IRMIND,NOFGIJ,KFROZN,ISHIFT,      &
-         N1SEMI,N2SEMI,N3SEMI,SCFSTEPS,INSREF,KSHAPE,ITDBRY,NRIGHT,KFORCE,NSPINDD,  &
-         NSATYPD,IVSHIFT,KHFELD,NLBASIS,NRBASIS,INTERVX,INTERVY,INTERVZ,NPAN_EQ,    &
+         NPNT3,KFROZN,ISHIFT,      &
+         N1SEMI,N2SEMI,N3SEMI,SCFSTEPS,INSREF,KSHAPE,ITDBRY,NRIGHT,KFORCE,  &
+         IVSHIFT,KHFELD,NLBASIS,NRBASIS,INTERVX,INTERVY,INTERVZ,NPAN_EQ,    &
          NPAN_LOG,NPOLSEMI,TK,FCM,EMIN,EMAX,RMAX,GMAX,ALAT,R_LOG,RCUTZ,RCUTXY,      &
          ESHIFT,QBOUND,HFIELD,MIXING,ABASIS,BBASIS,CBASIS,VCONST,TKSEMI,TOLRDIF,    &
          EMUSEMI,EBOTSEMI,FSEMICORE,LAMBDA_XC,DELTAE,LRHOSYM,LINIPOL,LCARTESIAN,    &
-         LINTERFACE,IMT,CLS,LMXC,IRNS,IRWS,NTCELL,REFPOT,INIPOL,IXIPOL,HOSTIMP,KFG, &
+         IMT,CLS,LMXC,IRNS,IRWS,NTCELL,REFPOT,INIPOL,IXIPOL,HOSTIMP,KFG, &
          VBC,ZPERLEFT,ZPERIGHT,BRAVAIS,RMT,ZAT,RWS,MTFAC,RMTREF,RMTNEW,RMTREFAT,    &
          FPRADIUS,TLEFT,TRIGHT,RBASIS,SOCSCALE,CSCL,SOCSCL,SOLVER,I12,I13,I19,I25,  &
          I40,TXC,DROTQ,NCPA,ITCPAMAX,CPATOL,NOQ,IQAT,ICPA,KAOEZ,CONC,KMROT,QMTET,   &
-         QMPHI,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU,NTOTD)
+         QMPHI,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU)
 
       !Some consistency checks
       if ( (KREL.lt.0) .OR. (KREL.gt.1) ) &
@@ -571,7 +554,7 @@ contains
       call allocate_pannels(1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQ_AT,NPAN_LOG_AT,  &
          IPAN_INTERVALL,RPAN_INTERVALL)
       ! Call to allocate misc arrays
-      call allocate_misc(1,NR,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREF,IEMXD,NTOTD,   &
+      call allocate_misc(1,NRD,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREF,IEMXD,NTOTD,   &
          NSHELD,LMMAXD,NEMBD1,NCHEB,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM, &
          IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,DSYMLL1,        &
          LEFTTINVLL,RIGHTTINVLL)
@@ -588,9 +571,8 @@ contains
       ! Deal with the lattice
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      NRD = NR ! needed otherwise array dimension is overwritten
       call LATTIX99(LINTERFACE,ALAT,NATYP,NAEZ,CONC,RWS,BRAVAIS,RECBV,VOLUME0,RR,&
-         NR,NRD,NATYP)
+         NRD,NATYP)
 
       call SCALEVEC(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,NLBASIS,NRBASIS,NLEFT,&
          NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,     &
@@ -604,16 +586,9 @@ contains
          .TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,I25)
       endif
 
-!      write(*,*) 'l1',NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS
-!      write(*,*) 'l2',NACLS,ATOM,EZOA 
-!      write(*,*) 'l3',NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT
-!      write(*,*) 'l4',TLEFT,TRIGHT,RMTREF,RMTREFAT,VREF
-!      write(*,*) 'l5',REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT
-!      write(*,*) 'l6',NAEZ,NATYP,NEMBD1-1,NR,NACLSD,NCLSD,NREF
-      call CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,NR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,ATOM, &
+      call CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,ATOM, &
          EZOA,NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,RMTREF,&
-         RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,NAEZ,NATYP, &
-         NEMBD1-1,NR,NACLSD,NCLSD,NREF)
+         RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,ALAT,NATYP, NCLSD, nrd, naclsd, nrefd, nembd)
 
       ! Now the clusters, reference potentials and muffin-tin radii have been set.
       !-------------------------------------------------------------------------
@@ -1148,32 +1123,30 @@ contains
       end if
 
       call WUNFILES(NPOL,NPNT1,NPNT2,NPNT3,IELAST,TK,EMIN,EMAX,EZ,WEZ,EFERMI, &
-         NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,TKSEMI,EBOTSEMI,EMUSEMI,    &
-         FSEMICORE,VINS,VISP,VBC,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ZREL,    &
-         JWSREL,IRSHIFT,ITSCF,SCFSTEPS,CMOMHOST,ECORE,LCORE,NCORE,QMTET,QMPHI,&
-         QMPHITAB,QMTETTAB,QMGAMTAB,DROTQ,NSRA,INS,NATYP,NAEZ,NINEQ,NREF,     &
-         NSPIN,NCLS,ICST,IPAN,IRCUT,ALAT,ZAT,RMESH,DRDI,REFPOT,RMTREF,VREF,IEND,  &
-         JEND,CLEB,ICLEB,ATOM,CLS,RCLS,NACLS,LOFLM,SOLVER,SOCSCL,CSCL,ICC,IGF,&
-         NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,&
-         NSH2,IJTABCALC,IJTABCALC_I,ISH,JSH,IJTABSYM,IJTABSH,NOFGIJ,NQCALC,   &
-         IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,KMESH,MAXMESH,NSYMAT,SYMUNITARY,    &
-         RROT,DSYMLL,INVMOD,ICHECK,NATOMIMP,RATOM,ATOMIMP,RC,CREL,RREL,SRREL, &
-         NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,A,B,IFUNM,IFUNM1,INTERVX, &
-         INTERVY,INTERVZ,ITITLE,LMSP1,NTCELL,THETAS,LPOT,LMPOT,NRIGHT,NLEFT,  &
-         LINTERFACE,IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD, &
-         KXC,LAMBDA_XC,TXC,ISHIFT,IXIPOL,LRHOSYM,KFORCE,LMSP,LLMSP,RMT,RMTNEW,&
-         RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM_MAP,IMAXSH,IDOLDAU,ITRUNLDAU, &
-         NTLDAU,LOPT,ITLDAU,UEFF,JEFF,EREFLDAU,ULDAU,WLDAU,PHILDAU,IEMXD,     &
-         IRMIND,IRM,NSPOTD,NPOTD,NEMBD1,LMMAXD,IPAND,NAEZ+NEMB,LMAX,NCLEB,    &
-         NACLSD,NCLSD,LM2D,LMAX+1,MMAXD,NR,NSHELD,NSYMAXD,NAEZ/NPRINCD,       &
-         NATOMIMPD,NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD,KREL,NTOTD,NCHEB,    &
-         NPAN_LOG,NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,R_LOG,NPAN_TOT,RNEW,         &
-         RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF,LLY,&
+         NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,TKSEMI,EBOTSEMI,EMUSEMI,FSEMICORE,&
+         VINS,VISP,VBC,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ZREL,JWSREL,IRSHIFT,     &
+         ITSCF,SCFSTEPS,CMOMHOST,ECORE,LCORE,NCORE,QMTET,QMPHI,QMPHITAB,QMTETTAB,   &
+         QMGAMTAB,DROTQ,NSRA,INS,NATYP,NAEZ,NINEQ,NREF,NSPIN,NCLS,ICST,IPAN,IRCUT,  &
+         ALAT,ZAT,RMESH,DRDI,REFPOT,RMTREF,VREF,IEND,JEND,CLEB,ICLEB,ATOM,CLS,RCLS,     &
+         NACLS,LOFLM,SOLVER,SOCSCL,CSCL,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX, &
+         CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,NSH2,IJTABCALC,IJTABCALC_I,ISH,JSH,      &
+         IJTABSYM,IJTABSH,NOFGIJ,NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,KMESH,     &
+         MAXMESH,NSYMAT,SYMUNITARY,RROT,DSYMLL,INVMOD,ICHECK,NATOMIMP,RATOM,ATOMIMP,&
+         RC,CREL,RREL,SRREL,NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,A,B,IFUNM,   &
+         IFUNM1,INTERVX,INTERVY,INTERVZ,ITITLE,LMSP1,NTCELL,THETAS,LPOT,LMPOT,      &
+         NRIGHT,NLEFT,LINTERFACE,IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,&
+         KVMAD,KXC,LAMBDA_XC,TXC,ISHIFT,IXIPOL,LRHOSYM,KFORCE,LMSP,LLMSP,RMT,RMTNEW,&
+         RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM_MAP,IMAXSH,IDOLDAU,ITRUNLDAU,NTLDAU,&
+         LOPT,ITLDAU,UEFF,JEFF,EREFLDAU,ULDAU,WLDAU,PHILDAU,IEMXD,IRMIND,IRM,NSPOTD,&
+         NPOTD,NEMBD1,LMMAXD,IPAND,NEMBD2,LMAX,NCLEB,NACLSD,NCLSD,LM2D,LMAX+1,MMAXD,&
+         NRD,NSHELD,NSYMAXD,NAEZ/NPRINCD,NATOMIMPD,NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD, &
+         KREL,NTOTD,NCHEB,NPAN_LOG,NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,R_LOG,NPAN_TOT,   &
+         RNEW,RPAN_INTERVALL,IPAN_INTERVALL,NSPINDD,THETASNEW,SOCSCALE,TOLRDIF,LLY, &
          DELTAE,RCLSIMP)
 
       if (OPT('FERMIOUT'))then                                                   ! fswrt
          call WRITE_TBKKR_FILES(LMAX,NEMB,NCLS,NATYP,NAEZ,IELAST,INS,ALAT,    &  ! fswrt
-            BRAVAIS,RECBV,RBASIS,CLS,NACLS,RCLS,EZOA,ATOM,RR,NSPIN,NR,KORBIT, &  ! fswrt
+            BRAVAIS,RECBV,RBASIS,CLS,NACLS,RCLS,EZOA,ATOM,RR,NSPIN,NRD,KORBIT, &  ! fswrt
             NCLSD,NACLSD)                                                        ! fswrt
       end if                                                                     ! fswrt
       !
@@ -1685,8 +1658,8 @@ contains
 
       implicit none
 
-      NR          = 20000     ! Number of real space
-      IRM         = 900       ! Number of radial mesh points in (0,...,RWS)
+      NRD          = 20000     ! Number of real space
+      IRMD         = 900       ! Number of radial mesh points in (0,...,RWS)
       IRNSD       = 890       ! Number of radial mesh points in (RMT,...,RWS)
       KPOIBZ      = 250000    ! Number of reciprocal space vectors
       INTERVX     = 0         ! Number of intervals in x-direction for k-net in IB of the BZ

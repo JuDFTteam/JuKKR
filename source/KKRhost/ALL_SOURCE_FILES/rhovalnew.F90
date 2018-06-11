@@ -2,7 +2,7 @@
 ! SUBROUTINE: RHOVALNEW
 !> @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,   &
+subroutine RHOVALNEW(LMMAXSO,LMPOT,   &
    LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,SOCSCALE,CLEB,ICLEB,IEND,IFUNM,    &
    LMSP,NCHEB,NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,RPAN_INTERVALL,IPAN_INTERVALL,&
    RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,DEN_out,ESPV,RHO2NS,R2NEF,MUORB,     &
@@ -32,12 +32,11 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    use global_variables
    use Constants
    use Profiling
-      Use mod_datatypes, Only: dp
+   Use mod_datatypes, Only: dp
 
    IMPLICIT NONE
 
    integer, intent(in) :: I1
-   integer, intent(in) :: IRM       !< Maximum number of radial points
    integer, intent(in) :: NSRA
    integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
    integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
@@ -48,13 +47,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    integer, intent(in) :: NSPIN     !< Counter for spin directions
    integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
    integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-   integer, intent(in) :: MMAXD     !< 2*LMAX+1
-   integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-   integer, intent(in) :: NTOTD
    integer, intent(in) :: IELAST
-   integer, intent(in) :: NRMAXD    !< NTOTD*(NCHEBD+1)
-   integer, intent(in) :: LMXSPD    !< (2*LPOT+1)**2
-   integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
    integer, intent(in) :: LMMAXSO   !< 2*LMMAXD
    integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
    integer, intent(in) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
@@ -68,9 +61,9 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    integer, dimension(0:NTOTD), intent(in)   :: IPAN_INTERVALL
    integer, dimension(NCLEB,4), intent(in)   :: ICLEB
    real (kind=dp), dimension(*), intent(in)   :: CLEB !< GAUNT coefficients (GAUNT)
-   real (kind=dp), dimension(IRM), intent(in) :: RMESH
+   real (kind=dp), dimension(IRMD), intent(in) :: RMESH
    real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix
-   complex (kind=dp), dimension(IRM), intent(in) :: PHILDAU
+   complex (kind=dp), dimension(IRMD), intent(in) :: PHILDAU
 
    ! .. In/Out variables
    real (kind=dp), intent(inout) :: PHI
@@ -85,8 +78,8 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    ! .. Output variables
    real (kind=dp), dimension(2), intent(out)              :: angles_new
    real (kind=dp), dimension(0:LMAX+1,2), intent(out)     :: ESPV
-   real (kind=dp), dimension(IRM,LMPOT,4), intent(out)    :: R2NEF
-   real (kind=dp), dimension(IRM,LMPOT,4), intent(out)    :: RHO2NS
+   real (kind=dp), dimension(IRMD,LMPOT,4), intent(out)    :: R2NEF
+   real (kind=dp), dimension(IRMD,LMPOT,4), intent(out)    :: RHO2NS
    complex (kind=dp), dimension(0:LMAX+1,IEMXD,2), intent(out) :: DEN_out
 
    ! .. Local variables
@@ -273,13 +266,13 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
    call memocc(i_stat,product(shape(RHO2NSC))*kind(RHO2NSC),'RHO2NSC','RHOVALNEW')
    allocate(RHO2NSC_loop(IRMDNEW,LMPOT,4,ielast),stat=i_stat)
    call memocc(i_stat,product(shape(RHO2NSC_loop))*kind(RHO2NSC_loop),'RHO2NSC_loop','RHOVALNEW')
-   allocate(RHO2NSNEW(IRM,LMPOT,4),stat=i_stat)
+   allocate(RHO2NSNEW(IRMD,LMPOT,4),stat=i_stat)
    call memocc(i_stat,product(shape(RHO2NSNEW))*kind(RHO2NSNEW),'RHO2NSNEW','RHOVALNEW')
    allocate(R2NEFC(IRMDNEW,LMPOT,4),stat=i_stat)
    call memocc(i_stat,product(shape(R2NEFC))*kind(R2NEFC),'R2NEFC','RHOVALNEW')
    allocate(R2NEFC_loop(IRMDNEW,LMPOT,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(R2NEFC_loop))*kind(R2NEFC_loop),'R2NEFC_loop','RHOVALNEW')
-   allocate(R2NEFNEW(IRM,LMPOT,4),stat=i_stat)
+   allocate(R2NEFNEW(IRMD,LMPOT,4),stat=i_stat)
    call memocc(i_stat,product(shape(R2NEFNEW))*kind(R2NEFNEW),'R2NEFNEW','RHOVALNEW')
    allocate(R2ORBC(IRMDNEW,LMPOT,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(R2ORBC))*kind(R2ORBC),'R2ORBC','RHOVALNEW')
@@ -630,14 +623,14 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
             enddo
          enddo
          ! calculate density
-         call RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
+         call RHOOUTNEW(NSRA,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
             LMPOT,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,                 &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
             CDEN(:,:,:,ith),CDENLM(:,:,:,ith),                       &
             CDENNS(:,:,ith),RHO2NSC_loop(:,:,:,ie),0,                &
-            GFLLE(:,:,IE,IQ),RPAN_INTERVALL,IPAN_INTERVALL,NTOTD)
+            GFLLE(:,:,IE,IQ),RPAN_INTERVALL,IPAN_INTERVALL)
 
          do JSPIN=1,4
             do LM1 = 0,LMAX
@@ -1006,7 +999,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
             enddo
          enddo
          call CHEB2OLDGRID(IRWS,IRMDNEW,LMPOT,RMESH,NCHEB,NPAN_TOT,&
-            RPAN_INTERVALL,IPAN_INTERVALL,RHOTEMP,RHONEWTEMP,IRM)
+            RPAN_INTERVALL,IPAN_INTERVALL,RHOTEMP,RHONEWTEMP,IRMD)
          do LM1=1,LMPOT
             do IR=1,IRWS
                RHO2NSNEW(IR,LM1,JSPIN)=RHONEWTEMP(IR,LM1)
@@ -1021,7 +1014,7 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
             enddo
          enddo
          call CHEB2OLDGRID(IRWS,IRMDNEW,LMPOT,RMESH,NCHEB,NPAN_TOT,&
-            RPAN_INTERVALL,IPAN_INTERVALL,RHOTEMP,RHONEWTEMP,IRM)
+            RPAN_INTERVALL,IPAN_INTERVALL,RHOTEMP,RHONEWTEMP,IRMD)
          do LM1=1,LMPOT
             do IR=1,IRWS
                R2NEFNEW(IR,LM1,JSPIN)=RHONEWTEMP(IR,LM1)
@@ -1076,15 +1069,15 @@ subroutine RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT,NPOTD,NRMAXD,  
          angles_new(1) = THETANEW
          angles_new(2) = PHINEW
          call ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOT,THETANEW,PHINEW,&
-            THETA,PHI,IRM)
+            THETA,PHI,IRMD)
          call ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,LMPOT,THETANEW,PHINEW,  &
-            THETA,PHI,IRM)
+            THETA,PHI,IRMD)
       else
          RHO2NS(:,:,:)=aimag(RHO2NSNEW(:,:,:))
          R2NEF(:,:,:)=aimag(R2NEFNEW(:,:,:))
       endif
       !
-      IDIM = IRM*LMPOT
+      IDIM = IRMD*LMPOT
       call DSCAL(IDIM,2.D0,RHO2NS(1,1,1),1)
       call DAXPY(IDIM,-0.5D0,RHO2NS(1,1,1),1,RHO2NS(1,1,2),1)
       call DAXPY(IDIM,1.0D0,RHO2NS(1,1,2),1,RHO2NS(1,1,1),1)

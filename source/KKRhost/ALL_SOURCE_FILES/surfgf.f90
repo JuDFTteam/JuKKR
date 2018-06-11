@@ -8,7 +8,7 @@
 !>
 !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-    Subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck, lmmaxd)
+    Subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck)
 
       Use constants
       Use profiling
@@ -31,7 +31,6 @@
 ! .. Input variables
       Integer, Intent (In) :: ndim
       Integer, Intent (In) :: ichck
-      Integer, Intent (In) :: lmmaxd !< (KREL+KORBIT+1)(LMAX+1)^2
       Integer, Intent (In) :: itermax
       Real (Kind=dp), Intent (In) :: errmax
 ! .. Input arrays

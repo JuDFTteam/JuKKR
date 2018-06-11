@@ -113,26 +113,26 @@ contains
       !-------------------------------------------------------------------------
       !> @note attention: muorb second index means both spins and total
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(IRM*KREL + (1-KREL),NATYP) :: RHOORB   !< orbital density
+      real (kind=dp), dimension(IRMD*KREL + (1-KREL),NATYP) :: RHOORB   !< orbital density
       real (kind=dp), dimension(0:LMAX+1+1,3,NATYP) :: MUORB           !< orbital magnetic moment
       ! ----------------------------------------------------------------------
-      !  R2NEF (IRM,LMPOT,NATYP,2)  ! rho at FERMI energy
-      !  RHO2NS(IRM,LMPOT,NATYP,2)  ! radial density
+      !  R2NEF (IRMD,LMPOTD,NATYP,2)  ! rho at FERMI energy
+      !  RHO2NS(IRMD,LMPOTD,NATYP,2)  ! radial density
       !   nspin=1            : (*,*,*,1) radial charge density
       !   nspin=2 or krel=1  : (*,*,*,1) rho(2) + rho(1) -> charge
       !                               (*,*,*,2) rho(2) - rho(1) -> mag. moment
-      !  RHOC(IRM,NPOTD)              ! core charge density
+      !  RHOC(IRMD,NPOTD)              ! core charge density
       ! ----------------------------------------------------------------------
-      real (kind=dp), dimension(IRM,NPOTD)    :: RHOC   !< core charge density
-      real (kind=dp), dimension(IRM,LMPOT,4) :: RHO2M1
-      real (kind=dp), dimension(IRM,LMPOT,4) :: RHO2M2
+      real (kind=dp), dimension(IRMD,NPOTD)    :: RHOC   !< core charge density
+      real (kind=dp), dimension(IRMD,LMPOTD,4) :: RHO2M1
+      real (kind=dp), dimension(IRMD,LMPOTD,4) :: RHO2M2
+      real (kind=dp), dimension(NRMAXD,LMPOTD,NSPOTD) :: VINSNEW
       !---------------------------------------------------------------
 
       ! .. Alocatable arrays
       real (kind=dp), dimension(:,:), allocatable      :: QVEC
       real (kind=dp), dimension(:,:,:), allocatable    :: RHO2N1
       real (kind=dp), dimension(:,:,:), allocatable    :: RHO2N2
-      real (kind=dp), dimension(:,:,:), allocatable    :: VINSNEW
       real (kind=dp), dimension(:,:,:,:), allocatable  :: R2NEF     !< rho at FERMI energy
       real (kind=dp), dimension(:,:,:,:), allocatable  :: RHO2NS    !< radial density
       complex (kind=dp), dimension(:,:,:,:), allocatable    :: DEN   ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS)
@@ -172,15 +172,13 @@ contains
 
 
       ! Allocate arrays
-      allocate(VINSNEW(NRMAXD,LMPOT,NSPOTD),stat=i_stat)
-      call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','main1c')
-      allocate(RHO2N1(IRM,LMPOT,NPOTD),stat=i_stat)
+      allocate(RHO2N1(IRMD,LMPOTD,NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(RHO2N1))*kind(RHO2N1),'RHO2N1','main1c')
-      allocate(RHO2NS(IRM,LMPOT,NATYP,2),stat=i_stat)
+      allocate(RHO2NS(IRMD,LMPOTD,NATYP,2),stat=i_stat)
       call memocc(i_stat,product(shape(RHO2NS))*kind(RHO2NS),'RHO2NS','main1c')
-      allocate(RHO2N2(IRM,LMPOT,NPOTD),stat=i_stat)
+      allocate(RHO2N2(IRMD,LMPOTD,NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(RHO2N2))*kind(RHO2N2),'RHO2N2','main1c')
-      allocate(R2NEF(IRM,LMPOT,NATYP,2),stat=i_stat)
+      allocate(R2NEF(IRMD,LMPOTD,NATYP,2),stat=i_stat)
       call memocc(i_stat,product(shape(R2NEF))*kind(R2NEF),'R2NEF','main1c')
 
       ! Initialze to zero
@@ -201,8 +199,8 @@ contains
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1c(t_params,KREL,NAEZ,NATYP,NCLEB,LM2D,NCHEB,IPAND,LMPOT,  &
-         LMAX,LMXSPD,NFUND,NPOTD,NTOTD,MMAXD,IEMXD,IRM,NSRA,INS,NSPIN,NACLS1,    &
+      call get_params_1c(t_params,KREL,NAEZ,NATYP,NCLEB,LM2D,NCHEB,IPAND,LMPOTD,  &
+         LMAX,LMXSPD,NFUND,NPOTD,NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NSPIN,NACLS1,    &
          ICST,KMROT,IQAT,IDOLDAU,IRWS,IPAN,IRCUT,IEND,ICLEB, LOFLM,JEND,IFUNM1,  &
          LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,&
          LLY,ITMPDIR,ILTMP,NPAN_EQ_AT,IPAN_INTERVALL,NPAN_LOG_AT,NPAN_TOT,NTLDAU,LOPT, &
@@ -298,7 +296,7 @@ contains
             do IE = 1,IELAST                                                     ! LLY Lloyd
                call RHOVAL0(EZ(IE),DRDI(1,I1),RMESH(1,I1),IPAN(I1),  &           ! LLY Lloyd
                   IRCUT(0,I1),IRWS(I1),THETAS(1,1,ICELL),CDOSAT0(IE),&           ! LLY Lloyd
-                  CDOSAT1(IE),IRM,LMAX)                                          ! LLY Lloyd
+                  CDOSAT1(IE),IRMD,LMAX)                                          ! LLY Lloyd
 
                ! calculate contribution from free space
 
@@ -511,8 +509,7 @@ contains
                   RMREL(1,I1),DRDIREL(1,I1),R2DRDIREL(1,I1),ZREL(I1),         &
                   JWSREL(I1),IRSHIFT(I1),LMOMVEC,QMTET(IQ),QMPHI(IQ),MVEVIL1, &
                   MVEVIL2,NMVECMAX,IDOLDAU,LOPT(I1),PHILDAU(1,I1),            &
-                  WLDAU(1,1,1,I1),DENMATC(1,1,IPOT),NATYP,NQDOS,LMAX,LMMAXD,  &
-                  IRM,MMAXD,LMXSPD,IRMIND,LMPOT, LM2D)
+                  WLDAU(1,1,1,I1),DENMATC(1,1,IPOT),NATYP,NQDOS,LMAX)
 #ifdef CPP_TIMING
                call timing_pause('main1c - rhoval')
 #endif
@@ -522,8 +519,8 @@ contains
             !-------------------------------------------------------------------
             IPOT1 = (I1-1)*NSPINPOT + 1
             !
-            do LM = 1,LMPOT
-               do IR = 1,IRM
+            do LM = 1,LMPOTD
+               do IR = 1,IRMD
                   RHO2NS(IR,LM,I1,1) = RHO2N1(IR,LM,IPOT1)
                   R2NEF(IR,LM,I1,1)  = RHO2N2(IR,LM,IPOT1)
                end do
@@ -537,8 +534,8 @@ contains
             end do
             !
             if (NSPINPOT.EQ.2) then
-               do LM = 1,LMPOT
-                  do IR = 1,IRM
+               do LM = 1,LMPOTD
+                  do IR = 1,IRMD
                      RHO2NS(IR,LM,I1,2) = RHO2N1(IR,LM,IPOT1+1)
                      R2NEF(IR,LM,I1,2)  = RHO2N2(IR,LM,IPOT1+1)
                   end do
@@ -690,12 +687,12 @@ contains
 #ifdef CPP_TIMING
          call timing_start('main1c - communication')
 #endif
-         call mympi_main1c_comm(IRM,LMPOT,NATYP,LMAX,LMAXD1,LMMAXD, &
+         call mympi_main1c_comm(IRMD,LMPOTD,NATYP,LMAX,LMAXD1,LMMAXD, &
             NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,           &
             NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,     &
             denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,        &
             t_mpi_c_grid%mympi_comm_ie)
-         call mympi_main1c_comm(IRM,LMPOT,NATYP,LMAX,LMAXD1,LMMAXD, &
+         call mympi_main1c_comm(IRMD,LMPOTD,NATYP,LMAX,LMAXD1,LMMAXD, &
             NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,           &
             NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,     &
             denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,        &
@@ -745,8 +742,8 @@ contains
             call CINIT(MMAXD*MMAXD*4*NATYP,DENMATN(1,1,1,1,1))
          endif
 
-         call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATYP,IPAND,       &
-            LMPOT,NSPOTD,NTOTD,NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH, &
+         call INTERPOLATE_POTEN(LPOT,IRMD,IRNSD,NATYP,IPAND,       &
+            LMPOTD,NSPOTD,NTOTD,NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH, &
             IRMIND,IRMIN,IRWS,IRCUT,VINS,VISP,NPAN_LOG_AT,NPAN_EQ_AT,   &
             NPAN_TOT,RNEW,IPAN_INTERVALL,VINSNEW)
 
@@ -804,8 +801,8 @@ contains
             call timing_start('main1c - rhovalnew')
 #endif
 
-            call RHOVALNEW(IRM,NTOTD,LMMAXSO,MMAXD,LMXSPD,LMMAXD,LMPOT, &
-               NPOTD,NRMAXD,LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,     &
+            call RHOVALNEW(LMMAXSO,LMPOTD, &
+               LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,     &
                ZAT(I1),SOCSCALE(I1),CLEB(1,1),ICLEB,IEND,               &
                IFUNM1(1,ICELL),LMSP1(1,ICELL),                          &
                NCHEB,NPAN_TOT(I1),NPAN_LOG_AT(I1),                         &
@@ -830,8 +827,8 @@ contains
                enddo
             enddo
             do ISPIN=1,NSPIN
-               do LM = 1,LMPOT
-                  do IR = 1,IRM
+               do LM = 1,LMPOTD
+                  do IR = 1,IRMD
                      RHO2NS(IR,LM,I1,ISPIN) = RHO2M1(IR,LM,ISPIN)
                      R2NEF(IR,LM,I1,ISPIN)  = RHO2M2(IR,LM,ISPIN)
                   end do
@@ -866,7 +863,7 @@ contains
          !reset NQDOS to 1 to avoid endless communication
          NQDOS = 1
          call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,    &
-            NPOTD,NATYP,LMPOT,IRM,MMAXD,den, denlm, muorb, espv, r2nef, &
+            NPOTD,NATYP,LMPOTD,IRMD,MMAXD,den, denlm, muorb, espv, r2nef, &
             rho2ns, denefat, denef,denmatn,angles_new,t_mpi_c_grid%mympi_comm_ie)
 #endif
 
@@ -991,7 +988,7 @@ contains
             ! Write full lda+u information in ascii file ldaupot_new
             !-------------------------------------------------------------------
             call WRLDAUPOT(ITRUNLDAU,LOPT,UEFF,JEFF,EREFLDAU,NATYP,WLDAU,  &
-               ULDAU,PHILDAU,IRM,NATYP,NSPIND,MMAXD,IRWS)
+               ULDAU,PHILDAU,IRMD,NATYP,NSPIND,MMAXD,IRWS)
          end if
          !----------------------------------------------------------------------
          ! LDA+U
@@ -1060,13 +1057,13 @@ contains
          !----------------------------------------------------------------------
          call save_density(t_params,RHO2NS,R2NEF,RHOC,DENEF,DENEFAT,ESPV,  &
             ECORE,IDOLDAU,LOPT,EU,EDC,CHRGSEMICORE,RHOORB,ECOREREL,NKCORE, &
-            KAPCORE,KREL,NATYP,NPOTD,IRM,LMPOT,LMAXD1)
+            KAPCORE,KREL,NATYP,NPOTD,IRMD,LMPOTD,LMAXD1)
 
          if (TEST('den-asci')) then
             open (67,FILE='densitydn.ascii',FORM='formatted')
             do I1 = 1,NATYP
-               do LM = 1,LMPOT
-                  do IR = 1,IRM
+               do LM = 1,LMPOTD
+                  do IR = 1,IRMD
                      write(67,FMT='(I6,2I5,2E25.16)') &
                         I1,LM,IR,RHO2NS(IR,LM,I1,1),RHO2NS(IR,LM,I1,2)
                   enddo

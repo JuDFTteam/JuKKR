@@ -17,14 +17,13 @@
     Subroutine rites(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
       ititle, r, drdi, vm2z, irws, a, b, txc, kxc, ins, irns, lpot, vins, &
       qbound, irc, kshape, efermi, vbc, ecore, lcore, ncore, ecorerel, nkcore, &
-      kapcore, irm, irmind, lmpot)
+      kapcore, lmpot)
 
       Use global_variables
       Use mod_datatypes, Only: dp
 
 ! .. Scalar Arguments
       Integer, Intent (In) :: ins !< 0 (MT), 1(ASA), 2(Full Potential)
-      Integer, Intent (In) :: irm !< Maximum number of radial points
       Integer, Intent (In) :: kxc !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
       Integer, Intent (In) :: lpot !< Maximum l component in potential expansion
       Integer, Intent (In) :: lmpot !< (LPOT+1)**2
@@ -33,7 +32,6 @@
       Integer, Intent (In) :: natyp !< Number of kinds of atoms in unit cell
       Integer, Intent (In) :: nspin !< Counter for spin directions
       Integer, Intent (In) :: kshape !< Exact treatment of WS cell
-      Integer, Intent (In) :: irmind !< IRM-IRNSD
       Real (Kind=dp), Intent (In) :: alat !< Lattice constant in a.u.
       Real (Kind=dp), Intent (In) :: qbound !< Convergence parameter for the potential
       Real (Kind=dp), Intent (In) :: efermi !< Fermi energy
@@ -45,11 +43,11 @@
       Real (Kind=dp), Dimension (2), Intent (In) :: vbc !< Potential constants
       Real (Kind=dp), Dimension (*), Intent (In) :: rmt !< Muffin-tin radius of true system
       Real (Kind=dp), Dimension (*), Intent (In) :: rmtnew !< Adapted muffin-tin radius
-      Real (Kind=dp), Dimension (irm, *), Intent (In) :: r !< Radial mesh ( in units a Bohr)
-      Real (Kind=dp), Dimension (irm, *), Intent (In) :: vm2z
-      Real (Kind=dp), Dimension (irm, *), Intent (In) :: drdi !< Derivative dr/di
+      Real (Kind=dp), Dimension (irmd, *), Intent (In) :: r !< Radial mesh ( in units a Bohr)
+      Real (Kind=dp), Dimension (irmd, *), Intent (In) :: vm2z
+      Real (Kind=dp), Dimension (irmd, *), Intent (In) :: drdi !< Derivative dr/di
       Real (Kind=dp), Dimension (20, *), Intent (In) :: ecore !< Core energies !(2), 22.5,2000
-      Real (Kind=dp), Dimension (irmind:irm, lmpot, *), Intent (In) :: vins !< Non-spherical part of the potential
+      Real (Kind=dp), Dimension (irmind:irmd, lmpot, *), Intent (In) :: vins !< Non-spherical part of the potential
 !----------------------------------------------------------------------------
       Integer, Dimension (20, natyp), Intent (In) :: nkcore
       Integer, Dimension (20, 2*natyp), Intent (In) :: kapcore
@@ -70,9 +68,9 @@
 ! .. Local Arrays
       Integer, Dimension (20) :: lcore1
       Real (Kind=dp), Dimension (20) :: ecore1
-      Real (Kind=dp), Dimension (irm) :: dradi
-      Real (Kind=dp), Dimension (irm) :: ra
-      Real (Kind=dp), Dimension (irm) :: vm2za
+      Real (Kind=dp), Dimension (irmd) :: dradi
+      Real (Kind=dp), Dimension (irmd) :: ra
+      Real (Kind=dp), Dimension (irmd) :: vm2za
       Real (Kind=dp), Dimension (20, 2) :: ecore2
       Character (Len=3), Dimension (4) :: txtk
       Character (Len=1), Dimension (0:3) :: txtl
