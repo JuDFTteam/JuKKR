@@ -63,7 +63,7 @@ contains
     integer, intent (in) :: npan_tot, ncheb, ipan_intervall(0:ntotd), &
       icleb(ncleb, 4)              ! integer arguments
     real (kind=dp), intent (in) :: rpan_intervall(0:ntotd), &
-      vins(irmdnew, lmpotd, nspin), cleb(*), rnew(nrmaxd)
+      vins(irmdnew, lmpotd, nspin), cleb(ncleb), rnew(nrmaxd)
     complex (kind=dp), intent (in) :: rll(nsra*lmmaxso, lmmaxso, irmdnew), &
       rllleft(nsra*lmmaxso, lmmaxso, irmdnew)
     complex (kind=dp), intent (out) :: dtmat(lmmaxso, lmmaxso, 3)

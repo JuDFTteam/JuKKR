@@ -96,7 +96,7 @@ contains
       LRECTMT=WLENGTH*4*LMMAXD*LMMAXD
       LRECTRA=WLENGTH*4
 
-      allocate(VINSNEW(NRMAXD,LMPOT,NSPOTD),stat=i_stat)
+      allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','main1a')
       VINSNEW=0.0D0
 
@@ -235,7 +235,7 @@ contains
          call read_angles(t_params,NATYP,THETA,PHI)
 
          ! Interpolate potential
-         call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATYP,IPAND,NSPOTD,NTOTD,   &
+         call INTERPOLATE_POTEN(LPOT,IRMD,IRNSD,NATYP,IPAND,LMPOTD,NSPOTD,NTOTD,   &
             NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH,IRMIND,IRMIN,IRWS,IRCUT,VINS,VISP,   &
             NPAN_LOG_AT,NPAN_EQ_AT,NPAN_TOT,RNEW,IPAN_INTERVALL,VINSNEW)
 
@@ -244,10 +244,10 @@ contains
             IPOT=NSPIN*(I1-1)+1
 
             call TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT(I1),SOCSCALE(I1),EZ, &
-               NSRA,CLEB(1,1),ICLEB,IEND,NCHEB,NPAN_TOT(I1),               &
-               RPAN_INTERVALL(0,I1),IPAN_INTERVALL(0,I1),RNEW(1,I1),       &
-               VINSNEW,THETA(I1),PHI(I1),I1,IPOT,LLY,LMPOT,DELTAE,IDOLDAU, &
-               LOPT(I1),WLDAU(1,1,1,I1),t_dtmatJij(I1))
+               NSRA,CLEB(:,1),ICLEB,IEND,NCHEB,NPAN_TOT(I1),               &
+               RPAN_INTERVALL(0:,I1),IPAN_INTERVALL(0:,I1),RNEW(1:,I1),       &
+               VINSNEW,THETA(I1),PHI(I1),I1,IPOT,LMPOTD,LLY,DELTAE,IDOLDAU, &
+               LOPT(I1),WLDAU(:,:,:,I1),t_dtmatJij(I1))
 
          enddo !I1, atom loop
 
@@ -330,7 +330,7 @@ contains
       if ( LREFSYS ) then
          call TBREF(EZ,IELAST,ALAT,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,  &
             ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,RMTREF,TOLRDIF,TMPDIR,ITMPDIR,  &
-            ILTMP,NAEZ,LLY,LM2D,LMGF0D,NEMB,NCLSD) ! LLY Lloyd
+            ILTMP,NAEZ,LLY) ! LLY Lloyd
       endif
 #ifdef CPP_TIMING
       call timing_stop('main1a - tbref')

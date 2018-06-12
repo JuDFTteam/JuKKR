@@ -34,7 +34,7 @@ subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
 
   ! Local variables
   real (kind=dp) :: a, b, co1, co2, co3, det, fact(0:100), pi, si1, si2, si3, &
-    sk, symeulang(3, 48), tet1, tet2, tet3
+    sk, symeulang(3, 48), tet1, tet2, tet3, rmj, rj
   logical :: checkrmat
   real (kind=dp) :: dble
   real (kind=dp) :: ddet33
@@ -42,7 +42,7 @@ subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
     rc(nkmmax, nkmmax), w1(nkmmax, nkmmax), w2(nkmmax, nkmmax)
   logical :: equal
   integer :: i, i1, i2, ind0q(nqmax), invflag(48), iq, irel, ireleff, isym, &
-    itop, j, k, l, loop, m, n, nk, nkeff, nkm, nlm, nok, ns, rj, rmj
+    itop, j, k, l, loop, m, n, nk, nkeff, nkm, nlm, nok, ns
   integer :: nint
   real (kind=dp) :: rmat(3, 3)
   real (kind=dp) :: w
@@ -293,8 +293,9 @@ subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
       else
         sk = +1e0_dp
       end if
-      rj = nint(l+sk*0.5e0_dp)
-      do rmj = -rj, +rj, 1
+      !rj = nint(l+sk*0.5e0_dp)
+      rj = l+sk*0.5e0_dp
+      do rmj = -rj, +rj, 1.0_dp
         i1 = nint(2*l*(rj+0.5e0_dp)+rj+rmj+1)
         i2 = nint(2*l*(rj+0.5e0_dp)+rj-rmj+1)
         dtim(i1, i2) = sk*(-1)**nint(rmj+0.5e0_dp)

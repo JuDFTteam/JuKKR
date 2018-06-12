@@ -1391,7 +1391,7 @@ contains
          MPI_DOUBLE_COMPLEX,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%DSYMLL,t_params%LMMAXD*t_params%LMMAXD*t_params%NSYMAXD,&
          MPI_DOUBLE_COMPLEX,master,MPI_COMM_WORLD,ierr)
-      call MPI_Bcast(t_params%LEFTTINVLL,t_params%LMMAXD*t_params%LMMAXD,&
+      call MPI_Bcast(t_params%LEFTTINVLL,t_params%LMMAXD*t_params%LMMAXD*&
          t_params%NEMBD1*t_params%NSPINDD*t_params%IEMXD,&
          MPI_DOUBLE_COMPLEX,master,MPI_COMM_WORLD,ierr)
       call MPI_Bcast(t_params%RIGHTTINVLL,t_params%LMMAXD*t_params%LMMAXD*&

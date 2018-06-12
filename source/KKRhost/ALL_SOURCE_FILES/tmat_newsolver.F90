@@ -51,7 +51,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    complex (kind=dp), intent(in) :: DELTAE      !< Energy difference for numerical derivative
    integer, dimension(0:NTOTD), intent(in) :: IPAN_INTERVALL
    integer, dimension(NCLEB,4), intent(in) :: ICLEB
-   real (kind=dp), dimension(*), intent(in) :: CLEB !< GAUNT coefficients (GAUNT)
+   real (kind=dp), dimension(NCLEB), intent(in) :: CLEB !< GAUNT coefficients (GAUNT)
    real (kind=dp), dimension(NRMAXD), intent(in) :: RNEW
    real (kind=dp), dimension(0:NTOTD), intent(in) :: RPAN_INTERVALL
    real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix

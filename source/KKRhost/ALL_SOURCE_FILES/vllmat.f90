@@ -22,13 +22,12 @@ subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, &
   real (kind=dp), intent (in) :: z
 
   integer, dimension (ncleb, 4), intent (in) :: icleb
-  real (kind=dp), dimension (*), intent (in) :: cleb ! < GAUNT coefficients
+  real (kind=dp), dimension (ncleb), intent (in) :: cleb ! < GAUNT coefficients
                                                      ! (GAUNT)
   real (kind=dp), dimension (irmin:irc, lmpot, nspin), intent (in) :: vins
   ! < Non-spherical part of the potential
   real (kind=dp), dimension (irmin:nrmaxd), intent (in) :: rnew
-  complex (kind=dp), dimension (lmmaxso, lmmaxso, irmin:irc), &
-    intent (out) :: vnspll0
+  complex (kind=dp), dimension (lmmaxso, lmmaxso, irmin:irc), intent (out) :: vnspll0
 
   ! .. Local variables
   integer :: isp
