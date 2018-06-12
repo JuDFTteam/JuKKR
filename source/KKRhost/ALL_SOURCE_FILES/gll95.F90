@@ -88,8 +88,8 @@ IF (test('flow    ').AND.(t_inc%i_write>0)) WRITE (1337,FMT=*) '>>> GLL95'
 
 
 #ifdef CPP_HYBRID
-!$omp parallel default(shared)
-!$omp& private(n1, n2, rdiff, absrdiff, lm2, lm1, nlm2, nlm1, GLL)
+!$omp parallel default(shared) &
+!$omp& private(n1, n2, rdiff, absrdiff, lm2, lm1, nlm2, nlm1, GLL) &
 !$omp& private(thread_id, gtref, dgtde, DGLLDE)
 thread_id = omp_get_thread_num()
 #endif

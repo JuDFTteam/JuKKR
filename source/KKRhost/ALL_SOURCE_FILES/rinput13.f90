@@ -1069,6 +1069,7 @@ contains
       write (111, *) 'Default KVREL= ', kvrel
     end if
 
+    if (opt('NEWSOSOL')) KORBIT = 1
     call ioinput('KORBIT          ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) korbit
