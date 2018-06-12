@@ -625,7 +625,7 @@ contains
                      ! qdos
                      do IE=1,IELAST                                                 ! qdos
                         do IQ=1,NQDOS                                               ! qdos
-                           DENTOT = DCMPLX(0.D0,0.D0, kind=dp)                               ! qdos
+                           DENTOT = CMPLX(0.D0,0.D0, kind=dp)                               ! qdos
                            do L = 0,LMAXD1                                          ! qdos
                               DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)                   ! qdos
                            enddo                                                    ! qdos
@@ -656,7 +656,7 @@ contains
                         ! complex qdos
                         do IE=1,IELAST                                                    ! complex qdos
                            do IQ=1,NQDOS                                                  ! complex qdos
-                              DENTOT = DCMPLX(0.D0,0.D0, kind=dp)                                  ! complex qdos
+                              DENTOT = CMPLX(0.D0,0.D0, kind=dp)                                  ! complex qdos
                               do L = 0,LMAXD1                                             ! complex qdos
                                  DEN(L,IE,IQ,IPOT) = -2.0d0/pi*DEN(L,IE,IQ,IPOT)          ! complex qdos
                                  DENTOT = DENTOT + DEN(L,IE,IQ,IPOT)                      ! complex qdos

@@ -155,7 +155,7 @@ endif
 IF(myrank==master .AND. t_inc%i_write>0) WRITE(1337,*) 'atom: ',i1
 #ifdef CPP_MPI
 CALL distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,  &
-    t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), ! print this info only for first atom at master  &
+    t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), &! print this info only for first atom at master  &
     master,ielast,ntot_pt,ioff_pt,.true.)
 
 ie_start = ioff_pt(t_mpi_c_grid%myrank_at)

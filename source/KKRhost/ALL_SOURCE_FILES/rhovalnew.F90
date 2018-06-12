@@ -803,7 +803,7 @@ subroutine RHOVALNEW(LMPOT,   &
                   end if                                                         ! qdos
                endif   ! IQ.EQ.1                                                 ! qdos
                do JSPIN =1,2                                                     ! qdos
-                  DENTOT(JSPIN) = DCMPLX(0.D0,0.D0, kind=dp)                              ! qdos
+                  DENTOT(JSPIN) = CMPLX(0.D0,0.D0, kind=dp)                              ! qdos
                   do L1 = 0,LMAXD1                                               ! qdos
                      DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)         ! qdos
                   enddo                                                          ! qdos
@@ -848,7 +848,7 @@ subroutine RHOVALNEW(LMPOT,   &
                      end if                                                      ! complex qdos
                   endif   ! IQ.EQ.1                                              ! complex qdos
                   do JSPIN =1,2                                                  ! complex qdos
-                     DENTOT(JSPIN) = DCMPLX(0.D0,0.D0, kind=dp)                           ! complex qdos
+                     DENTOT(JSPIN) = CMPLX(0.D0,0.D0, kind=dp)                           ! complex qdos
                      do L1 = 0,LMAXD1                                            ! complex qdos
                         DENTOT(JSPIN) = DENTOT(JSPIN) + DEN(L1,IE,IQ,JSPIN)      ! complex qdos
                      enddo                                                       ! complex qdos
