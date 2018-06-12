@@ -245,7 +245,7 @@ contains
 
             call TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT(I1),SOCSCALE(I1),EZ, &
                NSRA,CLEB(:,1),ICLEB,IEND,NCHEB,NPAN_TOT(I1),               &
-               RPAN_INTERVALL(0:,I1),IPAN_INTERVALL(0:,I1),RNEW(1:,I1),       &
+               RPAN_INTERVALL(:,I1),IPAN_INTERVALL(:,I1),RNEW(:,I1),       &
                VINSNEW,THETA(I1),PHI(I1),I1,IPOT,LMPOTD,LLY,DELTAE,IDOLDAU, &
                LOPT(I1),WLDAU(:,:,:,I1),t_dtmatJij(I1))
 

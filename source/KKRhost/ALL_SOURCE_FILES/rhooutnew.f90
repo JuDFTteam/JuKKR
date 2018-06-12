@@ -62,12 +62,13 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
   complex (kind=dp), dimension (lmmaxso, lmmaxso), intent (out) :: gflle_part
   ! lmlm-dos
   complex (kind=dp), dimension (irmdnew, 0:lmax, 4), intent (out) :: cden
-  complex (kind=dp), dimension (irmdnew, lmmaxd, 4), intent (out) :: cdenlm
+  complex (kind=dp), dimension (irmdnew, lmmaxd/2, 4), intent (out) :: cdenlm
 
   ! .. In/Out variables
   complex (kind=dp), dimension (irmdnew, lmpot, 4), intent (inout) :: rho2nsc
 
   ! .. Local variables
+   integer :: lmsize
   integer :: ir, jspin, lm1, lm2, lm3, m1, l1, j, ifun
   integer :: i_stat, i_all
   real (kind=dp) :: c0ll
@@ -85,6 +86,8 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
   ! .. External routines
   logical :: test, opt
   external :: test, opt
+
+  lmsize = lmmaxd/2
 
   allocate (wr(lmmaxso,lmmaxso,irmdnew), stat=i_stat)
   call memocc(i_stat, product(shape(wr))*kind(wr), 'WR', 'RHOOUTNEW')
@@ -104,12 +107,12 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
 
   ! set LMSHIFT value which is need to construct CDEN
   lmshift1(1) = 0
-  lmshift1(2) = lmmaxd
+  lmshift1(2) = lmsize
   lmshift1(3) = 0
-  lmshift1(4) = lmmaxd
+  lmshift1(4) = lmsize
   lmshift2(1) = 0
-  lmshift2(2) = lmmaxd
-  lmshift2(3) = lmmaxd
+  lmshift2(2) = lmsize
+  lmshift2(3) = lmsize
   lmshift2(4) = 0
 
   ! for orbital moment
@@ -186,7 +189,7 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
     end do
 
     do jspin = 1, 4
-      do lm1 = 1, lmmaxd
+      do lm1 = 1, lmsize
         do lm2 = 1, lm1 - 1
           wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) &
             = wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) + &
@@ -232,7 +235,7 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
 
   ! DO IR = 1,IRMDNEW
   ! DO JSPIN = 1,4
-  ! DO LM1 = 1,LMMAXD
+  ! DO LM1 = 1,lmsize
   ! DO LM2 = 1,LM1-1
   ! WR(LM1+LMSHIFT1(JSPIN),LM2+LMSHIFT2(JSPIN),IR)=
   ! +           WR(LM1+LMSHIFT1(JSPIN),LM2+LMSHIFT2(JSPIN),IR)+

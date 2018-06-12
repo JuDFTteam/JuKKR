@@ -799,7 +799,7 @@ contains
             call timing_start('main1c - rhovalnew')
 #endif
 
-            call RHOVALNEW(LMPOTD, &
+            call RHOVALNEW( &
                LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,     &
                ZAT(I1),SOCSCALE(I1),CLEB(1,1),ICLEB,IEND,               &
                IFUNM1(1,ICELL),LMSP1(1,ICELL),                          &

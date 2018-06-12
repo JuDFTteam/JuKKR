@@ -1459,8 +1459,8 @@ contains
       NCLSD       = 2                                          ! NAEZD + NEMBD maximum number of different TB-clusters
       NACLSD      = 500                                        ! Maximum number of atoms in a TB-cluster
       NOFGIJ      = 2                                          ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
-      NATOMIMP    = 1                                          ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-      NATOMIMPD   = 1                                          ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+      NATOMIMP    = 0                                          ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+      NATOMIMPD   = 150                                        ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
       I25         = 'scoef                                   ' ! Default name of scoef file
 
    end subroutine init_cluster_variables

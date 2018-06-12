@@ -60,28 +60,28 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    integer, intent(in) :: NRBASIS   !< Number of basis layers of right host (repeated units)
    integer, intent(in) :: NACLSMAX
    real (kind=dp), intent(in) :: ALAT         !< Lattice constant in a.u.
-   integer, dimension(*), intent(in)                           :: CLS     !< Cluster around atomic sites
-   integer, dimension(*), intent(in)                           :: NSH1    !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-   integer, dimension(*), intent(in)                           :: NSH2    !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-   integer, dimension(*), intent(in)                           :: NACLS   !< Number of atoms in cluster
-   integer, dimension(*), intent(in)                           :: REFPOT  !< Ref. pot. card  at position ! REFPOT(NAEZD+NEMBD)
-   integer, dimension(NACLSD,*), intent(in)                    :: ATOM   !< Atom at site in cluster
-   integer, dimension(NACLSD,*), intent(in)                    :: EZOA   !< EZ of atom at site in cluster
+   integer, dimension(NEMBD2), intent(in)                           :: CLS     !< Cluster around atomic sites
+   integer, dimension(NSHELD), intent(in)                           :: NSH1    !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(NSHELD), intent(in)                           :: NSH2    !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(NCLSD), intent(in)                           :: NACLS   !< Number of atoms in cluster
+   integer, dimension(NEMBD2), intent(in)                           :: REFPOT  !< Ref. pot. card  at position ! REFPOT(NAEZD+NEMBD)
+   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: ATOM   !< Atom at site in cluster
+   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: EZOA   !< EZ of atom at site in cluster
    integer, dimension(2,LMMAXD), intent(in)                    :: NRREL
    integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(in)   :: ICHECK
    integer, dimension(2,2,LMMAXD), intent(in)                  :: IRREL
    real (kind=dp), dimension(*), intent(in)            :: VOLCUB
    real (kind=dp), dimension(3,0:NRD), intent(in)       :: RR       !< Set of real space vectors (in a.u.)
    real (kind=dp), dimension(3,*), intent(in)          :: BZKP
-   real (kind=dp), dimension(3,*), intent(in)          :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
-   real (kind=dp), dimension(48,3,*), intent(in)       :: RROT
-   real (kind=dp), dimension(3,NACLSD,*), intent(in)   :: RCLS  !< Real space position of atom in cluster
+   real (kind=dp), dimension(3,NEMBD2), intent(in)          :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
+   real (kind=dp), dimension(48,3,NSHELD), intent(in)       :: RROT
+   real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in)   :: RCLS  !< Real space position of atom in cluster
    complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in)              :: FACTL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)         :: TINVLL
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(in)            :: TINVBUP
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1), intent(in)            :: TINVBUP
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD), intent(in)         :: DTREFLL ! LLY dtref/dE
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)         :: DTMATLL ! LLY  dt/dE (should be av.-tmatrix in CPA)
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(in)            :: TINVBDOWN
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1), intent(in)            :: TINVBDOWN
    complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,*), intent(in)   :: GINP  ! Gref
    complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,*), intent(in)   :: DGINP ! LLY dGref/dE
    complex (kind=dp), dimension(2,2,LMMAXD), intent(in)                 :: SRREL

@@ -2,7 +2,7 @@
 ! SUBROUTINE: RHOVALNEW
 !> @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RHOVALNEW(LMPOT,   &
+subroutine RHOVALNEW( &
    LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,SOCSCALE,CLEB,ICLEB,IEND,IFUNM,    &
    LMSP,NCHEB,NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,RPAN_INTERVALL,IPAN_INTERVALL,&
    RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,DEN_out,ESPV,RHO2NS,R2NEF,MUORB,     &
@@ -46,7 +46,6 @@ subroutine RHOVALNEW(LMPOT,   &
    integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
    integer, intent(in) :: NSPIN     !< Counter for spin directions
    integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
-   integer, intent(in) :: LMPOT     !< (LPOT+1)**2
    integer, intent(in) :: IELAST
    integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
    integer, intent(in) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
@@ -71,17 +70,18 @@ subroutine RHOVALNEW(LMPOT,   &
    real (kind=dp), dimension(0:NTOTD), intent(inout)      :: RPAN_INTERVALL
    real (kind=dp), dimension(0:LMAX+1,3), intent(inout)   :: MUORB
    real (kind=dp), dimension(NRMAXD,NFUND), intent(inout) :: THETASNEW
-   real (kind=dp), dimension(NRMAXD,LMPOT,NSPOTD), intent(inout) :: VINSNEW  !< Non-spherical part of the potential
+   real (kind=dp), dimension(NRMAXD,lmpotd,NSPOTD), intent(inout) :: VINSNEW  !< Non-spherical part of the potential
    complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
    complex (kind=dp), dimension(IEMXD), intent(inout) :: WEZ
    ! .. Output variables
    real (kind=dp), dimension(2), intent(out)              :: angles_new
    real (kind=dp), dimension(0:LMAX+1,2), intent(out)     :: ESPV
-   real (kind=dp), dimension(IRMD,LMPOT,4), intent(out)    :: R2NEF
-   real (kind=dp), dimension(IRMD,LMPOT,4), intent(out)    :: RHO2NS
+   real (kind=dp), dimension(IRMD,lmpotd,4), intent(out)    :: R2NEF
+   real (kind=dp), dimension(IRMD,lmpotd,4), intent(out)    :: RHO2NS
    complex (kind=dp), dimension(0:LMAX+1,IEMXD,2), intent(out) :: DEN_out
 
    ! .. Local variables
+   integer :: lmsize
    integer :: LMAXD1
    integer :: IR,IREC,USE_SRATRICK,NVEC,LM1,LM2,IE,IRMDNEW,IMT1,JSPIN,IDIM,IORB, L1
    integer :: i_stat, i_all
@@ -167,6 +167,8 @@ subroutine RHOVALNEW(LMPOT,   &
    logical :: TEST,OPT
    external :: TEST,OPT
 
+   lmsize = lmmaxd/2
+
    ! determine if omp is used
    ith = 0
    nth = 1
@@ -184,10 +186,10 @@ subroutine RHOVALNEW(LMPOT,   &
 
    IRMDNEW= NPAN_TOT*(NCHEB+1)
    IMT1=IPAN_INTERVALL(NPAN_LOG+NPAN_EQ)+1
-   allocate(VINS(IRMDNEW,LMPOT,NSPIN),stat=i_stat)
+   allocate(VINS(IRMDNEW,lmpotd,NSPIN),stat=i_stat)
    call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','RHOVALNEW')
    VINS=0d0
-   do LM1=1,LMPOT
+   do LM1=1,lmpotd
       do IR=1,IRMDNEW
          VINS(IR,LM1,1)=VINSNEW(IR,LM1,IPOT)
          VINS(IR,LM1,NSPIN)=VINSNEW(IR,LM1,IPOT+NSPIN-1)
@@ -207,7 +209,7 @@ subroutine RHOVALNEW(LMPOT,   &
    call memocc(i_stat,product(shape(VNSPLL1))*kind(VNSPLL1),'VNSPLL1','RHOVALNEW')
    VNSPLL0=CZERO
    !
-   call VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,LMPOT,CLEB,ICLEB,IEND,&
+   call VLLMAT(1,NRMAXD,IRMDNEW,lmsize,LMMAXSO,VNSPLL0,VINS,lmpotd,CLEB,ICLEB,IEND,&
       NSPIN,ZAT,RNEW,USE_SRATRICK,NCLEB)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! LDAU
@@ -218,8 +220,8 @@ subroutine RHOVALNEW(LMPOT,   &
       do IR=1,IRMDNEW
          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+WLDAU(1:MMAXD,1:MMAXD,1)
       enddo
-      LMLO=LMLO+LMMAXD
-      LMHI=LMHI+LMMAXD
+      LMLO=LMLO+lmsize
+      LMHI=LMHI+lmsize
       do IR=1,IRMDNEW
          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+WLDAU(1:MMAXD,1:MMAXD,2)
       enddo
@@ -257,23 +259,23 @@ subroutine RHOVALNEW(LMPOT,   &
    call memocc(i_stat,product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','RHOVALNEW')
    allocate(CDEN(IRMDNEW,0:LMAX,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(CDEN))*kind(CDEN),'CDEN','RHOVALNEW')
-   allocate(CDENLM(IRMDNEW,LMMAXD,4,0:nth-1),stat=i_stat)
+   allocate(CDENLM(IRMDNEW,lmsize,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(CDENLM))*kind(CDENLM),'CDENLM','RHOVALNEW')
    allocate(CDENNS(IRMDNEW,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(CDENNS))*kind(CDENNS),'CDENNS','RHOVALNEW')
-   allocate(RHO2NSC(IRMDNEW,LMPOT,4),stat=i_stat)
+   allocate(RHO2NSC(IRMDNEW,lmpotd,4),stat=i_stat)
    call memocc(i_stat,product(shape(RHO2NSC))*kind(RHO2NSC),'RHO2NSC','RHOVALNEW')
-   allocate(RHO2NSC_loop(IRMDNEW,LMPOT,4,ielast),stat=i_stat)
+   allocate(RHO2NSC_loop(IRMDNEW,lmpotd,4,ielast),stat=i_stat)
    call memocc(i_stat,product(shape(RHO2NSC_loop))*kind(RHO2NSC_loop),'RHO2NSC_loop','RHOVALNEW')
-   allocate(RHO2NSNEW(IRMD,LMPOT,4),stat=i_stat)
+   allocate(RHO2NSNEW(IRMD,lmpotd,4),stat=i_stat)
    call memocc(i_stat,product(shape(RHO2NSNEW))*kind(RHO2NSNEW),'RHO2NSNEW','RHOVALNEW')
-   allocate(R2NEFC(IRMDNEW,LMPOT,4),stat=i_stat)
+   allocate(R2NEFC(IRMDNEW,lmpotd,4),stat=i_stat)
    call memocc(i_stat,product(shape(R2NEFC))*kind(R2NEFC),'R2NEFC','RHOVALNEW')
-   allocate(R2NEFC_loop(IRMDNEW,LMPOT,4,0:nth-1),stat=i_stat)
+   allocate(R2NEFC_loop(IRMDNEW,lmpotd,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(R2NEFC_loop))*kind(R2NEFC_loop),'R2NEFC_loop','RHOVALNEW')
-   allocate(R2NEFNEW(IRMD,LMPOT,4),stat=i_stat)
+   allocate(R2NEFNEW(IRMD,lmpotd,4),stat=i_stat)
    call memocc(i_stat,product(shape(R2NEFNEW))*kind(R2NEFNEW),'R2NEFNEW','RHOVALNEW')
-   allocate(R2ORBC(IRMDNEW,LMPOT,4,0:nth-1),stat=i_stat)
+   allocate(R2ORBC(IRMDNEW,lmpotd,4,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(R2ORBC))*kind(R2ORBC),'R2ORBC','RHOVALNEW')
    allocate(CDENTEMP(IRMDNEW,0:nth-1),stat=i_stat)
    call memocc(i_stat,product(shape(CDENTEMP))*kind(CDENTEMP),'CDENTEMP','RHOVALNEW')
@@ -281,7 +283,7 @@ subroutine RHOVALNEW(LMPOT,   &
    call memocc(i_stat,product(shape(GFLLE_PART))*kind(GFLLE_PART),'GFLLE_PART','RHOVALNEW')
    allocate(GFLLE(LMMAXSO,LMMAXSO,IELAST,1),stat=i_stat)
    call memocc(i_stat,product(shape(GFLLE))*kind(GFLLE),'GFLLE','RHOVALNEW')
-   allocate(DEN(0:LMAXD1,IEMXD,1,2),DENLM(LMMAXD,IEMXD,1,2),stat=i_stat)
+   allocate(DEN(0:LMAXD1,IEMXD,1,2),DENLM(lmsize,IEMXD,1,2),stat=i_stat)
    call memocc(i_stat,product(shape(DEN))*kind(DEN),'DEN','RHOVALNEW')
    RHO2NSC=CZERO
    RHO2NSC_loop=CZERO
@@ -307,12 +309,12 @@ subroutine RHOVALNEW(LMPOT,   &
    GLDAU=CZERO
    ! LM shifts for correct density summation
    LMSHIFT1(1)=0                                                   ! qdos ruess
-   LMSHIFT1(2)=LMMAXD                                              ! qdos ruess
+   LMSHIFT1(2)=lmsize                                              ! qdos ruess
    LMSHIFT1(3)=0                                                   ! qdos ruess
-   LMSHIFT1(4)=LMMAXD                                              ! qdos ruess
+   LMSHIFT1(4)=lmsize                                              ! qdos ruess
    LMSHIFT2(1)=0                                                   ! qdos ruess
-   LMSHIFT2(2)=LMMAXD                                              ! qdos ruess
-   LMSHIFT2(3)=LMMAXD                                              ! qdos ruess
+   LMSHIFT2(2)=lmsize                                              ! qdos ruess
+   LMSHIFT2(3)=lmsize                                              ! qdos ruess
    LMSHIFT2(4)=0                                                   ! qdos ruess
 
    !      DO IR=1,3
@@ -347,7 +349,7 @@ subroutine RHOVALNEW(LMPOT,   &
       call memocc(i_stat,product(shape(GFLLE))*kind(GFLLE),'GFLLE','RHOVALNEW')  ! qdos ruess
       allocate(DEN(0:LMAXD1,IEMXD,NQDOS,2),stat=i_stat)                          ! qdos ruess
       call memocc(i_stat,product(shape(DEN))*kind(DEN),'DEN','RHOVALNEW')        ! qdos ruess
-      allocate(DENLM(LMMAXD,IEMXD,NQDOS,2),stat=i_stat)                          ! qdos ruess
+      allocate(DENLM(lmsize,IEMXD,NQDOS,2),stat=i_stat)                          ! qdos ruess
       call memocc(i_stat,product(shape(DENLM))*kind(QVEC),'DENLM','RHOVALNEW')   ! qdos ruess
       3000  if (IERR.NE.0) stop 'ERROR READING ''qvec.dat'''                     ! qdos ruess
    end if  ! OPT('qdos    ')                                                     ! qdos ruess
@@ -398,7 +400,7 @@ subroutine RHOVALNEW(LMPOT,   &
    !$omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,cdentemp)         &
    !$omp shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)        &
    !$omp shared(t_tgmat,ie_end, ie_start, t_wavefunctions)                 &
-   !$omp shared(LMMAXSO,LMMAXD,LMPOT,NRMAXD,NTOTD,LMAXD1)                  &
+   !$omp shared(LMMAXSO,lmsize,lmpotd,NRMAXD,NTOTD,LMAXD1)                  &
    !$omp reduction(+:rho2int,espv) reduction(-:muorb)                      &
    !$omp reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
 #endif
@@ -435,8 +437,8 @@ subroutine RHOVALNEW(LMPOT,   &
 
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
-      call SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,    &
-         ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,LMPOT,    &
+      call SPINORBIT_HAM(LMAX,lmsize,VINS,RNEW,    &
+         ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,lmpotd,    &
          THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,  &
          NPAN_TOT,NCHEB,IRMDNEW,NRMAXD,            &
          VNSPLL0,VNSPLL1(:,:,:,ith),'1')
@@ -474,7 +476,7 @@ subroutine RHOVALNEW(LMPOT,   &
          ! using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
             call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,  &
-               LMPOT,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,      &
+               lmpotd,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,      &
                JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),          &
                JLK2(:,:,ith),GMATPREFACTOR,TMATSPH(:,ith),                 &
                ALPHASPH,USE_SRATRICK)
@@ -520,8 +522,8 @@ subroutine RHOVALNEW(LMPOT,   &
          .not. (rllleft_was_read_in.and.sllleft_was_read_in) ) &
          .or. (t_wavefunctions%Nwfsavemax==0)) then
          ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
-         call SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT, &
-            CVLIGHT,SOCSCALE,NSPIN,LMPOT,THETA,PHI,         &
+         call SPINORBIT_HAM(LMAX,lmsize,VINS,RNEW,ERYD,ZAT, &
+            CVLIGHT,SOCSCALE,NSPIN,lmpotd,THETA,PHI,         &
             IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,   &
             IRMDNEW,NRMAXD,VNSPLL0,VNSPLL1(:,:,:,ith),      &
             'transpose')
@@ -556,7 +558,7 @@ subroutine RHOVALNEW(LMPOT,   &
          ! notice that exchange the order of left and right hankel/bessel functions
          if (USE_SRATRICK.EQ.1) then
             call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,  &
-               LMPOT,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,      &
+               lmpotd,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,      &
                JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),                      &
                HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,                    &
                ALPHASPH,TMATSPH(:,ith),USE_SRATRICK)
@@ -614,7 +616,7 @@ subroutine RHOVALNEW(LMPOT,   &
 #endif
 
          ! rotate gmat from global frame to local frame
-         call ROTATEMATRIX(GMAT0,THETA,PHI,LMMAXD,1)
+         call ROTATEMATRIX(GMAT0,THETA,PHI,lmsize,1)
 
          do LM1=1,LMMAXSO
             do LM2=1,LMMAXSO
@@ -623,7 +625,7 @@ subroutine RHOVALNEW(LMPOT,   &
          enddo
          ! calculate density
          call RHOOUTNEW(NSRA,LMAX,GMATLL(1,1,IE),EK,  &
-            LMPOT,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,                 &
+            lmpotd,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,                 &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
@@ -648,7 +650,7 @@ subroutine RHOVALNEW(LMPOT,   &
             enddo
 
             if (JSPIN.LE.2) then
-               do LM1 = 1,LMMAXD
+               do LM1 = 1,lmsize
                   CDENTEMP(:,ith)=CZERO
                   DENTEMP=CZERO
                   do IR=1,IRMDNEW
@@ -684,7 +686,7 @@ subroutine RHOVALNEW(LMPOT,   &
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (IE.EQ.IELAST.AND.LDORHOEF) then
          call RHOOUTNEW(NSRA,LMAX,GMATLL(1,1,IE),EK,  &
-            LMPOT,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,               &
+            lmpotd,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,               &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
@@ -698,7 +700,7 @@ subroutine RHOVALNEW(LMPOT,   &
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       do IORB=1,3
          call RHOOUTNEW(NSRA,LMAX,GMATLL(1,1,IE),EK,  &
-            LMPOT,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,               &
+            lmpotd,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,               &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
@@ -740,7 +742,7 @@ subroutine RHOVALNEW(LMPOT,   &
 
    ! omp: move sum from rhooutnew here after parallel calculation
    do IR=1,IRMDNEW
-      do LM1=1,LMPOT
+      do LM1=1,lmpotd
          do JSPIN=1,4
             do IE=1,IELAST
                RHO2NSC(IR,LM1,JSPIN) = RHO2NSC(IR,LM1,JSPIN) +RHO2NSC_loop(IR,LM1,JSPIN,IE)
@@ -893,8 +895,8 @@ subroutine RHOVALNEW(LMPOT,   &
       denorbmomlm = 0.0d0
       denorbmomns = 0.0d0
    endif
-   call mympi_main1c_comm_newsosol(IRMDNEW,LMPOT,LMAX,LMAXD1,  &
-      LMMAXD,LMMAXSO,IELAST,NQDOS,                       &
+   call mympi_main1c_comm_newsosol(IRMDNEW,lmpotd,LMAX,LMAXD1,  &
+      lmsize,LMMAXSO,IELAST,NQDOS,                       &
       den,denlm,gflle,rho2nsc,r2nefc,                          &
       rho2int,espv,muorb,denorbmom,                            &
       denorbmomsp,denorbmomlm,denorbmomns,                     &
@@ -923,9 +925,9 @@ subroutine RHOVALNEW(LMPOT,   &
          MMAX=2*LOPT+1
          do IS=1,2
             do JS=1,2
-               LMLO=LOPT**2+1+(IS-1)*LMMAXD
-               LMHI=(LOPT+1)**2+(JS-1)*LMMAXD
-               LM2=LOPT**2+1+(JS-1)*LMMAXD
+               LMLO=LOPT**2+1+(IS-1)*lmsize
+               LMHI=(LOPT+1)**2+(JS-1)*lmsize
+               LM2=LOPT**2+1+(JS-1)*lmsize
                do M1=1,MMAX
                   LM1=LMLO-1+M1
                   DENMATN(1:MMAX,M1,JS,IS)=(1.0/(2.0*CI))*&
@@ -968,8 +970,8 @@ subroutine RHOVALNEW(LMPOT,   &
                   write (30,*) ' '                                               ! lm-dos
                   write (30,8600) '# ISPIN=',2,' I1=',I1                         ! lm-dos
                endif !IE==1                                                      ! lm-dos
-               write(29,9001) EZ(IE),(-aimag(DENLM(L1,IE,IQ,1))/PI,L1=1,LMMAXD)  ! lm-dos
-               write(30,9001) EZ(IE),(-aimag(DENLM(L1,IE,IQ,2))/PI,L1=1,LMMAXD)  ! lm-dos
+               write(29,9001) EZ(IE),(-aimag(DENLM(L1,IE,IQ,1))/PI,L1=1,lmsize)  ! lm-dos
+               write(30,9001) EZ(IE),(-aimag(DENLM(L1,IE,IQ,2))/PI,L1=1,lmsize)  ! lm-dos
                9001    format(30E12.4)                                           ! lm-dos
                8600    format (a8,I3,a4,I5)                                      ! lm-dos/qdos ruess
             enddo !IE
@@ -984,22 +986,22 @@ subroutine RHOVALNEW(LMPOT,   &
          write(91,REC=I1) GFLLE                                                  ! lmlm-dos
       endif                                                                      ! lmlm-dos
       !
-      allocate(RHOTEMP(IRMDNEW,LMPOT),stat=i_stat)
+      allocate(RHOTEMP(IRMDNEW,lmpotd),stat=i_stat)
       call memocc(i_stat,product(shape(RHOTEMP))*kind(RHOTEMP),'RHOTEMP','RHOVALNEW')
-      allocate(RHONEWTEMP(IRWS,LMPOT),stat=i_stat)
+      allocate(RHONEWTEMP(IRWS,lmpotd),stat=i_stat)
       call memocc(i_stat,product(shape(RHONEWTEMP))*kind(RHONEWTEMP),'RHONEWTEMP','RHOVALNEW')
       !
       do JSPIN=1,4
          RHOTEMP=CZERO
          RHONEWTEMP=CZERO
-         do LM1=1,LMPOT
+         do LM1=1,lmpotd
             do IR=1,IRMDNEW
                RHOTEMP(IR,LM1)=RHO2NSC(IR,LM1,JSPIN)
             enddo
          enddo
-         call CHEB2OLDGRID(IRWS,IRMDNEW,LMPOT,RMESH,NCHEB,NPAN_TOT,&
+         call CHEB2OLDGRID(IRWS,IRMDNEW,lmpotd,RMESH,NCHEB,NPAN_TOT,&
             RPAN_INTERVALL,IPAN_INTERVALL,RHOTEMP,RHONEWTEMP,IRMD)
-         do LM1=1,LMPOT
+         do LM1=1,lmpotd
             do IR=1,IRWS
                RHO2NSNEW(IR,LM1,JSPIN)=RHONEWTEMP(IR,LM1)
             enddo
@@ -1007,14 +1009,14 @@ subroutine RHOVALNEW(LMPOT,   &
 
          RHOTEMP=CZERO
          RHONEWTEMP=CZERO
-         do LM1=1,LMPOT
+         do LM1=1,lmpotd
             do IR=1,IRMDNEW
                RHOTEMP(IR,LM1)=R2NEFC(IR,LM1,JSPIN)
             enddo
          enddo
-         call CHEB2OLDGRID(IRWS,IRMDNEW,LMPOT,RMESH,NCHEB,NPAN_TOT,&
+         call CHEB2OLDGRID(IRWS,IRMDNEW,lmpotd,RMESH,NCHEB,NPAN_TOT,&
             RPAN_INTERVALL,IPAN_INTERVALL,RHOTEMP,RHONEWTEMP,IRMD)
-         do LM1=1,LMPOT
+         do LM1=1,lmpotd
             do IR=1,IRWS
                R2NEFNEW(IR,LM1,JSPIN)=RHONEWTEMP(IR,LM1)
             enddo
@@ -1067,16 +1069,16 @@ subroutine RHOVALNEW(LMPOT,   &
          !only on master different from zero:
          angles_new(1) = THETANEW
          angles_new(2) = PHINEW
-         call ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,LMPOT,THETANEW,PHINEW,&
+         call ROTATEVECTOR(RHO2NSNEW,RHO2NS,IRWS,lmpotd,THETANEW,PHINEW,&
             THETA,PHI,IRMD)
-         call ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,LMPOT,THETANEW,PHINEW,  &
+         call ROTATEVECTOR(R2NEFNEW,R2NEF,IRWS,lmpotd,THETANEW,PHINEW,  &
             THETA,PHI,IRMD)
       else
          RHO2NS(:,:,:)=aimag(RHO2NSNEW(:,:,:))
          R2NEF(:,:,:)=aimag(R2NEFNEW(:,:,:))
       endif
       !
-      IDIM = IRMD*LMPOT
+      IDIM = IRMD*lmpotd
       call DSCAL(IDIM,2.D0,RHO2NS(1,1,1),1)
       call DAXPY(IDIM,-0.5D0,RHO2NS(1,1,1),1,RHO2NS(1,1,2),1)
       call DAXPY(IDIM,1.0D0,RHO2NS(1,1,2),1,RHO2NS(1,1,1),1)

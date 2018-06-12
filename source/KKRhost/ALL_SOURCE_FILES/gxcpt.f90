@@ -33,10 +33,10 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
   ! .. External Subroutines ..
   external :: corlsd, cpw91, exch91
   ! ..
-  ! .. Intrinsic Functions ..
+  ! .. Intrinsic real functions ..
   intrinsic :: acos, atan, exp, log, sqrt
   ! ..
-  ! .. Statement Functions ..
+  ! .. Statement real functions ..
   real (kind=dp) :: fbet, fdedr, fdfdz, ffz, fncecl, fncecs, fncf, fncvcl, &
     fncvcs, fvnec, fvq
   ! ..
@@ -44,28 +44,6 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
   save :: gp, gf, b1p, b1f, b2p, b2f, cp, cf, d_p, df, ap, bp, af, bf, a1, &
     x01, b1, c1, a2, x02, b2, c2, a3, x03, b3, c3, fdd0, huges, hugef, dspr, &
     igl, igh, imj, ibh, ica, icg, ivn, ipg, ivg, ip9, igd, ixlf, iex, xlf
-  ! ..
-  ! .. Statement Function definitions ..
-  fncf(x) = (1.e0_dp+x*x*x)*log(1.e0_dp+1.e0_dp/x) + x/2.e0_dp - x*x - &
-    0.333333333e0_dp
-  fncecl(r, g, b1, b2) = g/(1.e0_dp+b1*sqrt(r)+b2*r)
-  fncvcl(ce, r, b1, b2) = ce*(1.e0_dp+1.16666667e0_dp*b1*sqrt(r)+ &
-    1.33333333e0_dp*b2*r)/(1.e0_dp+b1*sqrt(r)+b2*r)
-  fncecs(r, a, b, c, d) = a*log(r) + b + c*r*log(r) + d*r
-  fncvcs(r, a, b, c, d) = a*log(r) + (b-a/3.e0_dp) + &
-    0.666666667e0_dp*c*r*log(r) + (2.e0_dp*d-c)*r/3.e0_dp
-  ffz(zta) = 1.923661051e0_dp*((1.e0_dp+zta)**1.3333333333e0_dp+(1.e0_dp-zta) &
-    **1.3333333333e0_dp-2.e0_dp)
-  fdfdz(zta) = 2.564881401e0_dp*((1.e0_dp+zta)**.333333333333e0_dp-(1.e0_dp- &
-    zta)**.333333333333e0_dp)
-  fvq(b, c) = sqrt(4.e0_dp*c-b**2)
-  fvnec(a, x, xl, x0, xl0, b, q) = a*(log(x*x/xl)+2.e0_dp*b/q*atan(q/(2.e0_dp* &
-    x+b))-b*x0/xl0*(log((x-x0)**2/xl)+2.e0_dp*(b+2.e0_dp*x0)/q*atan(q/(2.e0_dp &
-    *x+b))))
-  fbet(fdd0, ecf, ecp, alc) = fdd0*(ecf-ecp)/alc - 1.e0_dp
-  fdedr(ro, x, a, x0, xl, xl0, xld, b, q) = -x/(6.e0_dp*ro)*a* &
-    ((2.e0_dp*xl-x*xld)/(x*xl)-b*(4.e0_dp/(xld**2+q**2)+x0/xl0*((2.e0_dp*xl-(x &
-    -x0)*xld)/((x-x0)*xl)-4.e0_dp*(b+2.e0_dp*x0)/(xld**2+q**2))))
   ! ..
   ! .. Data statements ..
   data gp, gf, b1p, b1f, b2p, b2f, cp, cf, d_p, df/ -.2846e0_dp, -.1686e0_dp, &
@@ -621,3 +599,96 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
   return
 120 format (/, ' ivn should be 1 for ivg=1. ivn,ivg=', 2i5, /)
 end subroutine gxcpt
+
+real function fncf(x)
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: x
+  fncf = (1.e0_dp+x*x*x)*log(1.e0_dp+1.e0_dp/x) + x/2.e0_dp - x*x - 0.333333333e0_dp
+end function fncf
+
+real function fncecl(r, g, b1, b2) 
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: r, g, b1, b2
+  fncecl = g/(1.e0_dp+b1*sqrt(r)+b2*r)
+end function
+
+real function fncvcl(ce, r, b1, b2)
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: ce, r, b1, b2
+  fncvcl = ce*(1.e0_dp+1.16666667e0_dp*b1*sqrt(r)+1.33333333e0_dp*b2*r)/(1.e0_dp+b1*sqrt(r)+b2*r)
+end function
+
+real function fncecs(r, a, b, c, d)
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: r, a, b, c, d
+  fncecs= a*log(r) + b + c*r*log(r) + d*r
+end function
+
+real function fncvcs(r, a, b, c, d)
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: r, a, b, c, d
+  fncvcs = a*log(r) &
+          + (b-a/3.e0_dp) + 0.666666667e0_dp*c*r*log(r) &
+          + (2.e0_dp*d-c)*r/3.e0_dp
+end function
+
+real function ffz(zta)
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: zta
+  ffz = 1.923661051e0_dp*((1.e0_dp+zta)**1.3333333333e0_dp &
+       + (1.e0_dp-zta)**1.3333333333e0_dp-2.e0_dp)
+end function
+
+real function fdfdz(zta)
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: zta
+  fdfdz = 2.564881401e0_dp*((1.e0_dp+zta)**.333333333333e0_dp &
+         - (1.e0_dp-zta)**.333333333333e0_dp)
+end function
+
+real function fvq(b, c) 
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: b, c
+  fvq = sqrt(4.e0_dp*c-b**2)
+end function
+
+real function fvnec(a, x, xl, x0, xl0, b, q)
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: a, x, xl, x0, xl0, b, q 
+  fvnec = a*(log(x*x/xl) &
+            + 2.e0_dp*b/q*atan(q/(2.e0_dp*x+b)) &
+            - b*x0/xl0*(log((x-x0)**2/xl) &
+                       + 2.e0_dp*(b+2.e0_dp*x0)/q*atan(q/(2.e0_dp*x+b)) &
+                       ) &
+            )
+end function
+
+real function fbet(fdd0, ecf, ecp, alc)
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: fdd0, ecf, ecp, alc
+  fbet = fdd0*(ecf-ecp)/alc - 1.e0_dp
+end function
+
+real function fdedr(ro, x, a, x0, xl, xl0, xld, b, q)
+  use mod_DataTypes
+  implicit none
+  real (kind=dp), intent(in) :: ro, x, a, x0, xl, xl0, xld, b, q
+  fdedr = -x/(6.e0_dp*ro) * a &
+         * ( (2.e0_dp*xl-x*xld)/(x*xl) &
+             - b*(4.e0_dp/(xld**2+q**2) &
+                 + x0/xl0*((2.e0_dp*xl &
+                 - (x-x0)*xld)/((x-x0)*xl) &
+                 - 4.e0_dp*(b+2.e0_dp*x0)/(xld**2+q**2))) &
+           )
+end function
+

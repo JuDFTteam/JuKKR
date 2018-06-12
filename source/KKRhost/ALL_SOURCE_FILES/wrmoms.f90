@@ -103,12 +103,12 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
 
   do it = 1, natyp
     if (krel==1) then
-      write (1337, fmt=fmt1) it, textl(0), (charge(0,it,ispin), ispin=1, nspin &
-        ), muspin(it, 0), muorb(0, 3, it), (muorb(0,ispin,it), ispin=1, nspin)
+      write (1337, fmt=fmt1) it, textl(0), (charge(0,it,ispin), ispin=1, nspin), &
+        muspin(it, 0), muorb(0, 3, it), (muorb(0,ispin,it), ispin=1, nspin)
     else
       if (nspin==2) then
-        write (1337, fmt=fmt1) it, textl(0), (charge(0,it,ispin), ispin=1, &
-          nspin), muspin(it, 0)
+        write (1337, fmt=fmt1) it, textl(0), (charge(0,it,ispin), ispin=1, nspin), &
+          muspin(it, 0)
       else
         write (1337, fmt=fmt1) it, textl(0), charge(0, it, 1)
       end if
@@ -120,8 +120,8 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
           muspin(it, l), muorb(l, 3, it), (muorb(l,ispin,it), ispin=1, nspin)
       else
         if (nspin==2) then
-          write (1337, fmt=fmt2) textl(l), (charge(l,it,ispin), ispin=1, nspin &
-            ), muspin(it, l)
+          write (1337, fmt=fmt2) textl(l), (charge(l,it,ispin), ispin=1, nspin), &
+            muspin(it, l)
         else
           write (1337, fmt=fmt2) textl(l), charge(l, it, 1)
         end if
@@ -130,8 +130,8 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
     end do
 
     if (krel==1) then
-      write (1337, fmt=fmt2) textns, (charge(lmaxd1,it,ispin), ispin=1, nspin) &
-        , muspin(it, lmaxd1), muorb(lmaxd1, 3, it), (muorb(lmaxd1,ispin,it), &
+      write (1337, fmt=fmt2) textns, (charge(lmaxd1,it,ispin), ispin=1, nspin), &
+        muspin(it, lmaxd1), muorb(lmaxd1, 3, it), (muorb(lmaxd1,ispin,it), &
         ispin=1, nspin)
     else
       if (nspin==2) then

@@ -59,19 +59,19 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    complex (kind=dp), intent(in) :: CFCTOR
    complex (kind=dp), intent(in) :: CFCTORINV
    ! .. Input arrays
-   integer, dimension(*), intent(in)         :: CLS      !< Cluster around atomic sites
+   integer, dimension(NEMBD2), intent(in)         :: CLS      !< Cluster around atomic sites
    integer, dimension(NAEZ), intent(in)      :: NOQ      !< Number of diff. atom types located
-   integer, dimension(*), intent(in)         :: NSH1     !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-   integer, dimension(*), intent(in)         :: NSH2     !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(NSHELD), intent(in)         :: NSH1     !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(NSHELD), intent(in)         :: NSH2     !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
    integer, dimension(NAEZ), intent(in)      :: ICPA     !< ICPA = 0/1 site-dependent CPA flag
    integer, dimension(NATYP), intent(in)     :: IQAT     !< The site on which an atom is located on a given site
-   integer, dimension(*), intent(in)         :: NACLS    !< Number of atoms in cluster
+   integer, dimension(NCLSD), intent(in)         :: NACLS    !< Number of atoms in cluster
    integer, dimension(0:NSHELD), intent(in)  :: NSHELL   !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
-   integer, dimension(*), intent(in)         :: REFPOT   !< Ref. pot. card  at position
-   integer, dimension(*), intent(in)         :: IJTABSH  !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
-   integer, dimension(*), intent(in)         :: IJTABSYM !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
-   integer, dimension(NACLSD,*), intent(in)                    :: ATOM  !< Atom at site in cluster
-   integer, dimension(NACLSD,*), intent(in)                    :: EZOA  !< EZ of atom at site in cluster
+   integer, dimension(NEMBD2), intent(in)         :: REFPOT   !< Ref. pot. card  at position
+   integer, dimension(NOFGIJ), intent(in)         :: IJTABSH  !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
+   integer, dimension(NOFGIJ), intent(in)         :: IJTABSYM !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
+   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: ATOM  !< Atom at site in cluster
+   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: EZOA  !< EZ of atom at site in cluster
    integer, dimension(NATYP,NAEZ), intent(in)                  :: ITOQ
    integer, dimension(2,LMMAXD), intent(in)                    :: NRREL
    integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(in)   :: ICHECK
@@ -80,10 +80,10 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    real (kind=dp), dimension(KPOIBZ), intent(in) :: VOLCUB
    real (kind=dp), dimension(3,0:NRD), intent(in)    :: RR       !< Set of real space vectors (in a.u.)
    real (kind=dp), dimension(3,KPOIBZ), intent(in)  :: BZKP
-   real (kind=dp), dimension(3,*), intent(in)       :: RATOM
-   real (kind=dp), dimension(3,*), intent(in)       :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
-   real (kind=dp), dimension(3,NACLSD,*), intent(in)   :: RCLS  !< Real space position of atom in cluster
-   real (kind=dp), dimension(48,3,*), intent(in)       :: RROT
+   real (kind=dp), dimension(3,NSHELD), intent(in)       :: RATOM
+   real (kind=dp), dimension(3,NEMBD2), intent(in)       :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
+   real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in)   :: RCLS  !< Real space position of atom in cluster
+   real (kind=dp), dimension(48,3,NSHELD), intent(in)       :: RROT
    complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: RC     !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
    complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: CREL   !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
    complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: RREL   !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
@@ -94,7 +94,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: TQDOS  ! qdos : Read-in inverse t-matrix
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD), intent(in)   :: TREFLL
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(in)      :: DSYMLL
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NSYMAXD), intent(in)      :: DSYMLL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD), intent(in)   :: DTREFLL !< LLY Lloyd dtref/dE
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DTMATLL  ! LLY  dt/dE (should be av.-tmatrix in CPA)
    complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: GINP !< Cluster GF (ref syst.)
@@ -102,14 +102,14 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPIN), intent(in) :: LEFTTINVLL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPIN), intent(in) :: RIGHTTINVLL
    logical, dimension(2), intent(in) :: VACFLAG
-   logical, dimension(*), intent(in) :: SYMUNITARY !< unitary/antiunitary symmetry flag
+   logical, dimension(NSYMAXD), intent(in) :: SYMUNITARY !< unitary/antiunitary symmetry flag
    ! .. Output variables
    integer, intent(out) :: ICPAFLAG
    ! .. In/Out variables
    integer, intent(inout) :: ITCPAMAX  !< Max. number of CPA iterations
    complex (kind=dp), intent(inout) :: TRACET   !< \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$
    complex (kind=dp), intent(inout) :: LLY_GRTR !< Trace Eq.5.38 PhD Thiess (k-integrated)! LLY Lloyd
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,*), intent(inout) :: GMATLL  !< GMATLL = diagonal elements of the G matrix (system)
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NSHELD), intent(inout) :: GMATLL  !< GMATLL = diagonal elements of the G matrix (system)
    ! .. Local Scalars
    integer :: i_stat,i_all
    integer :: IH,LM1,LM2,NS,NSDIA,ICALL,IREC

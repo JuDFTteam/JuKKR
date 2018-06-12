@@ -62,7 +62,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
 
    ! .. Local variables
    integer :: IR,IREC,USE_SRATRICK,NVEC,LM1,LM2,IE,IRMDNEW
-   integer :: i_stat, i_all
+   integer :: i_stat, i_all, lmsize
    complex (kind=dp) :: ERYD
    complex (kind=dp), dimension(2*(LMAX+1)) :: ALPHASPH
    ! .. Local allocatable arrays
@@ -106,6 +106,8 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    !rhoqtest
    logical, external :: test, opt
    integer :: mu0, nscoef
+
+   lmsize = lmmaxd/2
 
    ! .. Allocation of local arrays
    allocate(AUX(LMMAXSO,LMMAXSO),stat=i_stat)
@@ -175,7 +177,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    VNSPLL1=CZERO
 
    VNSPLL0=CZERO
-   call VLLMAT(1,NRMAXD,IRMDNEW,LMMAXD,LMMAXSO,VNSPLL0,VINS,LMPOT,CLEB,ICLEB,&
+   call VLLMAT(1,NRMAXD,IRMDNEW,lmsize,LMMAXSO,VNSPLL0,VINS,LMPOT,CLEB,ICLEB,&
       IEND,NSPIN,ZAT,RNEW,USE_SRATRICK,NCLEB)
    ! LDAU
    if (IDOLDAU.EQ.1) then
@@ -185,8 +187,8 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+  &
             WLDAU(1:MMAXD,1:MMAXD,1)
       enddo
-      LMLO=LMLO+LMMAXD
-      LMHI=LMHI+LMMAXD
+      LMLO=LMLO+lmsize
+      LMHI=LMHI+lmsize
       do IR=1,IRMDNEW
          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+  &
             WLDAU(1:MMAXD,1:MMAXD,2)
@@ -328,7 +330,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    !$omp private(dalphall)                                                    &
    !$omp shared(t_inc)                                                        &
    !!$omp firstprivate(t_inc)                                                 &
-   !$omp shared(nspin,nsra,lmax,LMMAXD,iend,ipot,ielast,npan_tot,ncheb)       &
+   !$omp shared(nspin,nsra,lmax,lmsize,iend,ipot,ielast,npan_tot,ncheb)       &
    !$omp shared(zat,socscale,ez,cleb,rnew,nth,LMPOT,NRMAXD,LMMAXSO,NTOTD)     &
    !$omp shared(rpan_intervall,vinsnew,ipan_intervall,NCLEB)                  &
    !$omp shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)                  &
@@ -376,7 +378,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
 #endif
 
          ! Contruct the spin-orbit coupling hamiltonian and add to potential
-         call SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,CVLIGHT,SOCSCALE,  &
+         call SPINORBIT_HAM(LMAX,lmsize,VINS,RNEW,ERYD,ZAT,CVLIGHT,SOCSCALE,  &
             NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,    &
             NCHEB,IRMDNEW,NRMAXD,VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),'1')
          ! extend matrix for the SRA treatment
@@ -515,7 +517,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          !
          ! Contruct the spin-orbit coupling hamiltonian and add to potential
-         call SPINORBIT_HAM(LMAX,LMMAXD,VINS,RNEW,ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,  &
+         call SPINORBIT_HAM(LMAX,lmsize,VINS,RNEW,ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,  &
             LMPOT,THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW,  &
             NRMAXD,VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),'transpose')
 
@@ -627,7 +629,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
       end if
 
       if(t_dtmatJij_at%calculate) then
-         call calc_dtmatJij(LMMAXD,LMMAXSO,LMPOT,NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,  &
+         call calc_dtmatJij(lmsize,LMMAXSO,LMPOT,NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,  &
             VINS,RLLLEFT(:,:,:,ith),RLL(:,:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL,   &
             NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,t_dtmatJij_at%dtmat_xyz(:,:,:,ie_num))
 

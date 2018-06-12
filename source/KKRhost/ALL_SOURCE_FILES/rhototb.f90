@@ -201,10 +201,10 @@ subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, &
 
           do ifun = 1, nfu(icell)
             lm = llmsp(icell, ifun)
-            if (lm<=lmpot) then
+            if (lm<=lmpot .and. lm>0) then
               do i = irs1 + 1, irc1
-                rho(i) = rho(i) + rho2ns(i, lm, iatyp, ispin)*thetas(i-irs1, &
-                  ifun, icell)
+                rho(i) = rho(i) + rho2ns(i, lm, iatyp, ispin) &
+                        * thetas(i-irs1, ifun, icell)
               end do
             end if
           end do
