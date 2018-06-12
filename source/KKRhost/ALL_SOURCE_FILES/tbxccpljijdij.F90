@@ -28,8 +28,9 @@ contains
 
 #ifdef CPP_MPI
       use mpi
+      use mod_types, only: t_mpi_c_grid
 #endif
-      use mod_types, only: t_tgmat, t_mpi_c_grid, t_dtmatJij, t_cpa
+      use mod_types, only: t_tgmat, t_dtmatJij, t_cpa
       use mod_mympi, only: myrank, master
       use mod_version_info
       use mod_md5sums
@@ -90,12 +91,13 @@ contains
       complex (kind=dp), dimension(:,:,:,:), allocatable :: Jijmat
 #ifdef CPP_MPI
       complex (kind=dp), dimension(:,:,:,:), allocatable :: Jijmat_tmp
+      integer :: ierr,i_all
 #endif
       integer, dimension(:,:), allocatable :: indxarr
 
       integer :: i1,i2,nn,kk,ish,isym,iq,jq,iJ1,iI1,jt,it,kalpha,lalpha
-      integer :: irec,ierr,lm1,lm2,lm3,istore,ncount
-      integer :: nstore,i_stat,i_all
+      integer :: irec,lm1,lm2,lm3,istore,ncount
+      integer :: nstore,i_stat
       real (kind=dp) :: rsh
       complex (kind=dp) :: csum
       integer, dimension(2*natomimp) :: isort, istoretmp

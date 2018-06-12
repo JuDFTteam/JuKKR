@@ -136,7 +136,7 @@
           Call bofm(nlayer-1, nlayer, cn, ndim_slabinv, gllke, alm)
 
 ! It performs the 'space decimation' iterative procedure.
-          Call surfgf(ndim_slabinv, cn, bn, an, xn, itermax, errmax, ichck, lmmaxd)
+          Call surfgf(ndim_slabinv, cn, bn, an, xn, itermax, errmax, ichck)
 !
         Else
 !

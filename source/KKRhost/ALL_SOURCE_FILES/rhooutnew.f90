@@ -2,7 +2,7 @@
 ! SUBROUTINE: RHOOUTNEW
 !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-    Subroutine rhooutnew(nsra, lmmaxso, lmax, gmatll, ek, lmpot, df, &
+    Subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, &
       npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, &
       lmsp, rll, rllleft, sllleft, cden, cdenlm, cdenns, rho2nsc, corbital, &
       gflle_part, rpan_intervall, ipan_intervall)
@@ -20,7 +20,6 @@
       Integer, Intent (In) :: imt1
       Integer, Intent (In) :: ncheb !< Number of Chebychev pannels for the new solver
       Integer, Intent (In) :: lmpot !< (LPOT+1)**2
-      Integer, Intent (In) :: lmmaxso !< 2*LMMAXD)
       Integer, Intent (In) :: irmdnew
       Integer, Intent (In) :: corbital
       Integer, Intent (In) :: npan_tot

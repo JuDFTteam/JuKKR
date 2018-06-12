@@ -65,9 +65,6 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    integer :: i_stat, i_all
    complex (kind=dp) :: ERYD
    complex (kind=dp), dimension(2*(LMAX+1)) :: ALPHASPH
-   ! .. Parameters
-   integer :: LMMAXSO
-   !parameter (LMMAXSO=2*LMMAXD)
    ! .. Local allocatable arrays
    integer, dimension(:), allocatable :: JLK_INDEX
    real (kind=dp), dimension(:,:,:), allocatable :: VINS  !< Non-spherical part of the potential
@@ -92,7 +89,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    complex (kind=dp), dimension(:,:,:,:), allocatable :: SLLLEFT
 
    ! .. LDAU local variables
-   integer :: LMLO,LMHI,MMAX
+   integer :: LMLO,LMHI
    ! .. LLoyd local variables
    integer :: IDERIV,SIGNDE
    complex (kind=dp) :: TRALPHA
@@ -109,8 +106,6 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    !rhoqtest
    logical, external :: test, opt
    integer :: mu0, nscoef
-
-   LMMAXSO=2*LMMAXD
 
    ! .. Allocation of local arrays
    allocate(AUX(LMMAXSO,LMMAXSO),stat=i_stat)
@@ -188,13 +183,13 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
       LMHI=(LOPT+1)**2
       do IR=1,IRMDNEW
          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+  &
-            WLDAU(1:MMAX,1:MMAX,1)
+            WLDAU(1:MMAXD,1:MMAXD,1)
       enddo
       LMLO=LMLO+LMMAXD
       LMHI=LMHI+LMMAXD
       do IR=1,IRMDNEW
          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+  &
-            WLDAU(1:MMAX,1:MMAX,2)
+            WLDAU(1:MMAXD,1:MMAXD,2)
       enddo
    endif
    ! LDAU

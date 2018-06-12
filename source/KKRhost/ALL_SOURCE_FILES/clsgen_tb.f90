@@ -2,7 +2,7 @@
 subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, &
   tleft, tright, rmtref, rmtrefat, vref, irefpot, nrefpot, rcls, rcut, rcutxy, &
-  alat, natyp, nclsd, nrd, naclsd, nrefd, nembd)
+  alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface)
 ! ************************************************************************
 ! This subroutine is used to create the clusters around each atom
 ! (Based on clsgen99.f). Also the reference potential height and radius is set
@@ -22,32 +22,35 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   Use mod_datatypes, Only: dp
   implicit none
 !.. arguments
-  integer :: naez, & ! number of atoms in EZ
-             nemb, & ! number of embedding postions
-             ncls, & ! number of diff. clusters
-             nlr, & ! =NEMB in decimation, =0 in slab or bulk
-             nvirt, & ! Number of virtual atoms
-             nclsd, & ! 
-             nrd, & ! 
-             naclsd, & ! 
-             nrefd, & ! 
-             nprinc ! Calculated number of layers in a principal layer
-  integer :: natyp, nembd
+  integer :: naez ! number of atoms in EZ
+  integer :: nemb ! number of embedding postions
+  integer :: ncls ! number of diff. clusters
+  integer :: nlr ! =NEMB in decimation, =0 in slab or bulk
+  integer :: nvirt ! Number of virtual atoms
+  integer :: nclsd ! 
+  integer :: nrd ! 
+  integer :: naclsd ! 
+  integer :: nrefd ! 
+  integer :: nprinc ! Calculated number of layers in a principal layer
+  integer :: natyp
+  integer :: nembd
   real (kind=dp) :: alat ! lattice constant A
   real (kind=dp) :: rcut, rcutxy
-  real (kind=dp) :: rbasis(3, naez+nembd), & ! pos. of basis atoms in EZ
-                    rcls(3, naclsd, ncls), & ! real space position of atom in cluster
-                    rr(3, 0:nrd), & ! set of lattice vectors
-                    zat(natyp), & ! nucleus charge
-                    rmtref(nrefd), &
-                    vref(nrefd)
+  real (kind=dp) :: rbasis(3, naez+nembd) ! pos. of basis atoms in EZ
+  real (kind=dp) :: rcls(3, naclsd, ncls) ! real space position of atom in cluster
+  real (kind=dp) :: rr(3, 0:nrd) ! set of lattice vectors
+  real (kind=dp) :: zat(natyp) ! nucleus charge
+  real (kind=dp) :: rmtref(nrefd)
+  real (kind=dp) :: vref(nrefd)
+
+  logical, intent(in) :: linterface
 
 
-  integer :: cls(naez+nembd), & ! type of cluster around atom
-    kaoez(natyp, naez+nembd) & ! type of atom at position in EZ
-    , nacls(ncls), & ! number of atoms in cluster
-    atom(naclsd, naez+nembd), & ! index to atom in elem/cell at site in cluster
-    ezoa(naclsd, naez+nembd) ! index to bravais lattice  at site in cluster
+  integer :: cls(naez+nembd) ! type of cluster around atom
+  integer :: kaoez(natyp, naez+nembd) ! type of atom at position in EZ
+  integer :: nacls(ncls) ! number of atoms in cluster
+  integer :: atom(naclsd, naez+nembd) ! index to atom in elem/cell at site in cluster
+  integer :: ezoa(naclsd, naez+nembd) ! index to bravais lattice  at site in cluster
 
 !.. locals
   integer :: ilay, n1, ir, isite, jsite, iat1, na, number, maxnumber, & !IX,
@@ -67,7 +70,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   real (kind=dp) :: rcut2, rcutxy2, rxy2, dist
 
   logical :: lfound
-  logical :: linterface, clustcomp_tb
+  logical :: clustcomp_tb
 
   external :: dsort, clustcomp_tb
   intrinsic :: min, sqrt

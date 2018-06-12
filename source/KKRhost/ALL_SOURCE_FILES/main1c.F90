@@ -60,7 +60,6 @@ contains
       integer :: LMAXD1
       integer :: LRECTMT
       integer :: LMMAXD1
-      integer :: LMMAXSO
       integer :: ITMPDIR
       integer :: NSPINPOT
 
@@ -165,7 +164,6 @@ contains
       DATA IHOST / 1 /          ! this is the host program
 
       ! .. Calculate parameters
-      LMMAXSO = 2*LMMAXD
       LMAXD1=LMAX+1
       LMMAXD1=LMMAXD+1
       LRECTMT=WLENGTH*4*LMMAXD*LMMAXD
@@ -801,7 +799,7 @@ contains
             call timing_start('main1c - rhovalnew')
 #endif
 
-            call RHOVALNEW(LMMAXSO,LMPOTD, &
+            call RHOVALNEW(LMPOTD, &
                LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,     &
                ZAT(I1),SOCSCALE(I1),CLEB(1,1),ICLEB,IEND,               &
                IFUNM1(1,ICELL),LMSP1(1,ICELL),                          &

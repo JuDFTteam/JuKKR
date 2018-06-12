@@ -27,23 +27,18 @@ use mod_types, only: t_mpi_c_grid, t_inc, t_imp
 use mod_types, only: t_inc, t_imp
 #endif
       Use mod_datatypes, Only: dp
+use global_variables
 
 IMPLICIT NONE
 
 !.. Parameters ..
-include 'inc.p'
-INTEGER          LMMAXD
-PARAMETER        (LMMAXD= (LMAXD+1)**2)
-INTEGER          LMPOTD
-PARAMETER        (LMPOTD= (LPOTD+1)**2)
-INTEGER, PARAMETER :: NSPOD=1+KORBIT
-INTEGER, PARAMETER :: NSPD=NSPIND
+INTEGER :: NSPOD
 !..
 !.. Scalar Arguments ..
-INTEGER      ::   NATOM, mode, IEND,LMMAX,KSRA,IRWS(*),LMMAXSO
+INTEGER      ::   NATOM, mode, IEND,LMMAX,KSRA,IRWS(*)
 !..
 !.. Array Arguments ..
-complex (kind=dp)   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATOM)   ! non-sph. eigen states of single pot 
+complex (kind=dp)   PNS(NSPIND*LMMAXD,NSPIND*LMMAXD,IRMD,2,NATOM)   ! non-sph. eigen states of single pot 
 real (kind=dp) CLEB(*),THETAS(IRID,NFUND,*), &
                  DRDI(IRMD,NATYPD)                            ! derivative dr/di
 INTEGER          ICLEB(NCLEB,4),IFUNM(NATYPD,LMPOTD), &
@@ -78,7 +73,9 @@ DATA CZERO/ (0.0D0,0.0D0)/
       !..
 
 pi=4.d0*DATAN(1.d0)
-lmmaxso=2*lmmaxd
+
+NSPOD=1+KORBIT
+
 IF(t_inc%i_write>0) WRITE(1337,*) "KSRA",ksra
 IF (ksra >= 1) THEN    ! previously this was .GT. which is wrong for kvrel=1
   nsra = 2
@@ -89,7 +86,7 @@ IF(t_inc%i_write>0) WRITE(1337,*) "NSRA",nsra
 
 allocate(rll(irmd,lmmax,lmmax,nspoh,nspoh,nspoh,natom))
 allocate(rll_12(irmd,lmmax,lmmax))
-allocate(dens(lmmaxd,lmmaxd,nspd,nspd,nspd,nspd,natom))
+allocate(dens(lmmaxd,lmmaxd,nspind,nspind,nspind,nspind,natom))
 
 rll=czero
 dens=czero
@@ -186,10 +183,10 @@ deallocate(rll_12)
 
 #ifdef CPP_MPI
 ! finally gather DENS on master in case of MPI run
-allocate(work(lmmaxd,lmmaxd,nspd,nspd,nspd,nspd,natom), stat=ierr)
+allocate(work(lmmaxd,lmmaxd,nspind,nspind,nspind,nspind,natom), stat=ierr)
 IF(ierr /= 0) STOP  &
     'Error allocating work for MPI comm of DENS in normcoeff_SO'
-ihelp = lmmaxd*lmmaxd*nspd*nspd*nspd*nspd*natom
+ihelp = lmmaxd*lmmaxd*nspind*nspind*nspind*nspind*natom
 CALL mpi_reduce(dens, work, ihelp, mpi_double_complex,  &
     mpi_sum, master,t_mpi_c_grid%mympi_comm_ie,ierr)
 IF(ierr /= mpi_success) STOP 'Error in MPI comm of DENS in normcoeff_SO'

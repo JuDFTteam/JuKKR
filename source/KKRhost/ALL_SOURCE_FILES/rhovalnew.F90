@@ -2,7 +2,7 @@
 ! SUBROUTINE: RHOVALNEW
 !> @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
-subroutine RHOVALNEW(LMMAXSO,LMPOT,   &
+subroutine RHOVALNEW(LMPOT,   &
    LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,SOCSCALE,CLEB,ICLEB,IEND,IFUNM,    &
    LMSP,NCHEB,NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,RPAN_INTERVALL,IPAN_INTERVALL,&
    RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,DEN_out,ESPV,RHO2NS,R2NEF,MUORB,     &
@@ -48,7 +48,6 @@ subroutine RHOVALNEW(LMMAXSO,LMPOT,   &
    integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
    integer, intent(in) :: LMPOT     !< (LPOT+1)**2
    integer, intent(in) :: IELAST
-   integer, intent(in) :: LMMAXSO   !< 2*LMMAXD
    integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
    integer, intent(in) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
    integer, intent(in) :: NPAN_TOT
@@ -88,7 +87,7 @@ subroutine RHOVALNEW(LMMAXSO,LMPOT,   &
    integer :: i_stat, i_all
    integer :: IQ, NQDOS             ! qdos ruess: number of qdos points
    integer :: LRECGFLLE,IERR        ! lmlm-dos
-   integer :: LMLO,LMHI,MMAX,IS,JS  ! LDAU
+   integer :: LMLO,LMHI,IS,JS,MMAX  ! LDAU
    integer :: IX,M1       ! qdos ruess
 
    real (kind=dp) :: THETANEW,PHINEW
@@ -217,12 +216,12 @@ subroutine RHOVALNEW(LMMAXSO,LMPOT,   &
       LMLO=LOPT**2+1
       LMHI=(LOPT+1)**2
       do IR=1,IRMDNEW
-         VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+WLDAU(1:MMAX,1:MMAX,1)
+         VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+WLDAU(1:MMAXD,1:MMAXD,1)
       enddo
       LMLO=LMLO+LMMAXD
       LMHI=LMHI+LMMAXD
       do IR=1,IRMDNEW
-         VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+WLDAU(1:MMAX,1:MMAX,2)
+         VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+WLDAU(1:MMAXD,1:MMAXD,2)
       enddo
    endif
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -623,7 +622,7 @@ subroutine RHOVALNEW(LMMAXSO,LMPOT,   &
             enddo
          enddo
          ! calculate density
-         call RHOOUTNEW(NSRA,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
+         call RHOOUTNEW(NSRA,LMAX,GMATLL(1,1,IE),EK,  &
             LMPOT,DF,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,                 &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
@@ -684,28 +683,28 @@ subroutine RHOVALNEW(LMMAXSO,LMPOT,   &
       ! Get charge at the Fermi energy (IELAST)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (IE.EQ.IELAST.AND.LDORHOEF) then
-         call RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
+         call RHOOUTNEW(NSRA,LMAX,GMATLL(1,1,IE),EK,  &
             LMPOT,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,               &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
             CDEN(:,:,:,ith),CDENLM(:,:,:,ith),                       &
             CDENNS(:,:,ith),R2NEFC_loop(:,:,:,ith),0,                &
-            GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL, NTOTD)
+            GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL)
       endif
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Get orbital moment
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       do IORB=1,3
-         call RHOOUTNEW(NSRA,LMMAXD,LMMAXSO,LMAX,GMATLL(1,1,IE),EK,  &
+         call RHOOUTNEW(NSRA,LMAX,GMATLL(1,1,IE),EK,  &
             LMPOT,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,               &
             IRMDNEW,THETASNEW,IFUNM,IMT1,LMSP,                       &
             RLL(:,:,:,ith),                                          & !SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),                   &
             CDEN(:,:,:,ith),CDENLM(:,:,:,ith),                       &
             CDENNS(:,:,ith),R2ORBC(:,:,:,ith),IORB,                  &
-            GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL, NTOTD)
+            GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL)
          do JSPIN=1,4
             if (JSPIN.LE.2) then
                do LM1=0,LMAX

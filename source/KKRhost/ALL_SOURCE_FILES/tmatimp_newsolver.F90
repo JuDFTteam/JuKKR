@@ -13,7 +13,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    IHOST,NTOTD,NSPIN,LMPOT,NCHEB,LMMAXD,KORBIT,NSPOTD,IELAST,IRMIND,NPAN_EQ,NPAN_LOG,      &
    NATOMIMP,C,R_LOG,IPAN,IRWS,IRMIN,HOSTIMP,IPANIMP,IRWSIMP,ATOMIMP,IRMINIMP,       &
    ICLEB,IRCUT,IRCUTIMP,ZAT,ZIMP,R,CLEB,RIMP,RCLSIMP,E,VM2Z,VM2ZIMP,VINS,VINSIMP,   &
-   DTMTRX)
+   DTMTRX, LMMAXSO)
 
 #ifdef CPP_MPI
    use mpi
@@ -50,6 +50,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
    integer, intent(in) :: KORBIT    !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
    integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
+   integer, intent(in) :: LMMAXSO
    integer, intent(in) :: NSPOTD    !< Number of potentials for storing non-sph. potentials
    integer, intent(in) :: IELAST
    integer, intent(in) :: IRMIND    !< IRM-IRNSD
@@ -82,8 +83,6 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS   !< Non-spherical part of the potential
    real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPIN*NATOMIMP), intent(inout) :: VINSIMP
    complex (kind=dp), dimension((KORBIT+1)*LMMAXD*NATOMIMP,(KORBIT+1)*LMMAXD*NATOMIMP), intent(inout) :: DTMTRX
-   ! .. Parameters
-   integer :: LMMAXSO
    ! .. Local variables
    integer :: ipot
    integer :: I1,IR,NSRA,USE_SRATRICK,NVEC,LM1,LM2,ISPIN,I2,IL1,IL2,IRMDNEWD
@@ -135,8 +134,6 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    else
       NSRA=1
    endif
-
-   LMMAXSO=2*LMMAXD
 
    allocate(JLK_INDEX(2*LMMAXSO),stat=i_stat)
    call memocc(i_stat,product(shape(JLK_INDEX))*kind(JLK_INDEX),'JLK_INDEX','tmatimp_newsolver')

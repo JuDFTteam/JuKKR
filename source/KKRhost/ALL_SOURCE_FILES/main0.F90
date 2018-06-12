@@ -586,9 +586,12 @@ contains
          .TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,I25)
       endif
 
-      call CLSGEN_TB(NAEZ,NEMB,NVIRT,RR,RBASIS,KAOEZ,ZAT,CLS,NCLS,NACLS,ATOM, &
-         EZOA,NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,RMTREF,&
-         RMTREFAT,VREF,REFPOT,NREF,RCLS,RCUTZ,RCUTXY,ALAT,NATYP, NCLSD, nrd, naclsd, nrefd, nembd)
+      write(*,*) naez, nemb, nvirt, nlbasis, nrbasis, nleft, nright, nref
+      write(*,*) natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface
+      call clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
+         nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, &
+         tleft, tright, rmtref, rmtrefat, vref, refpot, nref, rcls, rcutz, rcutxy, &
+         alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface)
 
       ! Now the clusters, reference potentials and muffin-tin radii have been set.
       !-------------------------------------------------------------------------

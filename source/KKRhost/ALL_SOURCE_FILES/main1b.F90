@@ -1295,7 +1295,7 @@ contains
                t_params%RMESH,t_params%CLEB(1,1),                              &
                t_imp%RIMP(1:t_params%IRM,1:t_imp%NATOMIMP),               &
                t_params%RCLSIMP,EZ(IE),t_params%VISP,t_imp%VISPIMP,        &
-               t_params%VINS,t_imp%VINSIMP,DTMTRX)
+               t_params%VINS,t_imp%VINSIMP,DTMTRX,LMMAXSO)
 
             ! compute GMATLL_GES, on master rank only
             if (IELAST.EQ.3 .and. myrank==master) then

@@ -7,6 +7,7 @@ use mod_mympi, only: myrank, master, nranks
 #endif
 use mod_version_info
 use mod_wunfiles, only: t_params
+use global_variables
       Use mod_datatypes, Only: dp
 
        IMPLICIT NONE
@@ -14,11 +15,6 @@ use mod_wunfiles, only: t_params
 ! calculate impurity GF by solving dyson equation 
 ! N. H. Long, Juelich, 05.2013
 !-----------------------------------------------------------------
-       INCLUDE 'inc.p'
-       INTEGER LMAXSQ
-       PARAMETER (LMAXSQ=(LMAXD+1)**2)
-       INTEGER LMMAXSO
-       PARAMETER (LMMAXSO=(KORBIT+1)*LMAXSQ)
        complex (kind=dp) E,E1
        complex (kind=dp) CONE,CZERO
        PARAMETER (CONE=(1d0,0d0),CZERO=(0d0,0d0))

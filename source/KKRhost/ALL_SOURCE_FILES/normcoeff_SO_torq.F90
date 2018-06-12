@@ -23,25 +23,16 @@ use mod_types, only: t_inc, t_imp
 #endif
 
       Use mod_datatypes, Only: dp
+use global_variables
       
       IMPLICIT NONE
-
-!.. Parameters ..
-      include 'inc.p'
-      INTEGER          LMMAXD
-      PARAMETER        (LMMAXD= (LMAXD+1)**2)
-      INTEGER          LMPOTD
-      PARAMETER        (LMPOTD= (LPOTD+1)**2)
-      INTEGER          IRMIND,IRLMD
-      PARAMETER        (IRMIND=IRMD-IRNSD,IRLMD= (IRNSD+1)*LMMAXD)
-      INTEGER, PARAMETER :: NSPD=NSPIND
 !..
 !.. Scalar Arguments ..
       INTEGER          NATOM, mode, IEND, LMMAX, KSRA, &
                        IRWS(*),NSPIN,IRMIN(*), I2
 !..
 !.. Array Arguments ..
-      complex (kind=dp)   PNS(NSPD*LMMAXD,NSPD*LMMAXD,IRMD,2,NATYPD)
+      complex (kind=dp)   PNS(NSPIND*LMMAXD,NSPIND*LMMAXD,IRMD,2,NATYPD)
       real (kind=dp) CLEB(*), &
                        DRDI(IRMD,NATYPD), &
                        VISP(IRMD,*),         &      ! spherical part of the potential
@@ -57,7 +48,6 @@ use mod_types, only: t_inc, t_imp
       INTEGER          LM1,LM2,LM1P,LM2P, &
                        IR,I1,I1SP1,I1SP2, &
                        LMSP1,LMSP2,ISIGMA,I2SP1,I2SP2,INSRA,NSRA
-      INTEGER          LMMAXSO
       LOGICAL          lexist
 !     MPI stuff
       INTEGER :: ierr, ihelp, i1_start, i1_end
@@ -82,8 +72,6 @@ use mod_types, only: t_inc, t_imp
 !.. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
 !..
-
-lmmaxso=2*lmmaxd
 
 IF(t_inc%i_write>0) WRITE(1337,*) "KSRA",ksra
 IF (ksra >= 1) THEN    ! previously this was .GT. which is wrong for kvrel=1
