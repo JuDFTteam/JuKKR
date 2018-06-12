@@ -1,38 +1,38 @@
-    Function cdnlzdz(l, z, mode)
-!   ********************************************************************
-!   *                                                                  *
-!   *     d n(L,Z) / dz    analytically                                *
-!   *                                                                  *
-!   ********************************************************************
-      Use mod_datatypes, Only: dp
-      Implicit None
+function cdnlzdz(l, z, mode)
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *     d n(L,Z) / dz    analytically                                *
+  ! *                                                                  *
+  ! ********************************************************************
+  use :: mod_datatypes, only: dp
+  implicit none
 
-! Dummy arguments
-      Integer :: l, mode
-      Complex (Kind=dp) :: z
-      Complex (Kind=dp) :: cdnlzdz
+  ! Dummy arguments
+  integer :: l, mode
+  complex (kind=dp) :: z
+  complex (kind=dp) :: cdnlzdz
 
-! Local variables
-      Complex (Kind=dp) :: cnlz
+  ! Local variables
+  complex (kind=dp) :: cnlz
 
-      If (mode==1) Then
+  if (mode==1) then
 
-        If (l==0) Then
+    if (l==0) then
 
-          cdnlzdz = l*cnlz(l, z)/z - cnlz(l+1, z)
-        Else
-          cdnlzdz = (l*cnlz(l-1,z)-(l+1)*cnlz(l+1,z))/real(2*l+1, kind=dp)
-          Return
-        End If
-      Else If (mode==2) Then
+      cdnlzdz = l*cnlz(l, z)/z - cnlz(l+1, z)
+    else
+      cdnlzdz = (l*cnlz(l-1,z)-(l+1)*cnlz(l+1,z))/real(2*l+1, kind=dp)
+      return
+    end if
+  else if (mode==2) then
 
-        If (l==0) Then
-          cdnlzdz = l*cnlz(l, z)/z - cnlz(l+1, z)
-        Else
-          cdnlzdz = cnlz(l-1, z) - (l+1)*cnlz(l, z)/z
-          Return
-        End If
-      Else
-        cdnlzdz = l*cnlz(l, z)/z - cnlz(l+1, z)
-      End If
-    End Function
+    if (l==0) then
+      cdnlzdz = l*cnlz(l, z)/z - cnlz(l+1, z)
+    else
+      cdnlzdz = cnlz(l-1, z) - (l+1)*cnlz(l, z)/z
+      return
+    end if
+  else
+    cdnlzdz = l*cnlz(l, z)/z - cnlz(l+1, z)
+  end if
+end function cdnlzdz

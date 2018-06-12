@@ -490,7 +490,7 @@ contains
       !> @note JC: have added reading calls for the parameters that used to be in
       !> the inc.p and can now be modified via the inputcard directly
       !-------------------------------------------------------------------------
-      call RINPUT13(KTE,IGF,IRM,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,IMIX, &
+      call RINPUT13(KTE,IGF,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,IMIX, &
          LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KCOR,KEFG,KHYP,KPRE,  &
          KVMAD,LMMAX,LMPOT,NCHEB,NLEFT,IFILE,KVREL,NSPIN,NATYP,NINEQ,NPNT1,NPNT2,   &
          NPNT3,KFROZN,ISHIFT,      &
@@ -512,9 +512,87 @@ contains
          stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
 
       ! Set the calculation of several parameters
+
+      ! IRMD = IRM
+
       NTOTD=IPAND+30
       NCELLD=NAEZ
       NRMAXD=NTOTD*(NCHEB+1)
+
+      NATYPD = NATYP
+      NAEZD = NAEZ
+
+      LMAXD        = LMAX
+      ALM          = NAEZD*LMMAXD
+      ALMGF0       = NAEZD*LMGF0D
+      NDIM_SLABINV = NPRINCD*LMMAXD
+      NEMBD        = NEMBD1-1
+      NEMBD2       = NEMBD+NAEZ
+      IRMIND       = IRMD-IRNSD
+      NOFGIJ       = NATOMIMPD*NATOMIMPD+1
+      NREFD        = NAEZD
+      LMPOTD       = (LPOT+1)**2
+      LMMAXSO      = (KREL+1)*LMMAXD
+
+      write(*,*) 'dimensions after rinput13'
+      write(*,*) 'irid                          ', irid
+      write(*,*) 'krel                          ', krel
+      write(*,*) 'nfund                         ', nfund
+      write(*,*) 'ipand                         ', ipand
+      write(*,*) 'ngshd                         ', ngshd
+      write(*,*) 'ncleb                         ', ncleb
+      write(*,*) 'knoco                         ', knoco
+      write(*,*) 'iemxd                         ', iemxd
+      write(*,*) 'irnsd                         ', irnsd
+      write(*,*) 'nmaxd                         ', nmaxd
+      write(*,*) 'ishld                         ', ishld
+      write(*,*) 'naclsd                        ', naclsd
+      write(*,*) 'nspotd                        ', nspotd
+      write(*,*) 'ntperd                        ', ntperd
+      write(*,*) 'ntrefd                        ', ntrefd
+      write(*,*) 'nsheld                        ', nsheld
+      write(*,*) 'ncelld                        ', ncelld
+      write(*,*) 'nspind                        ', nspind
+      write(*,*) 'knosph                        ', knosph
+      write(*,*) 'korbit                        ', korbit
+      write(*,*) 'kpoibz                        ', kpoibz
+      write(*,*) 'wlength                       ', wlength
+      write(*,*) 'nprincd                       ', nprincd
+      write(*,*) 'nlayerd                       ', nlayerd
+      write(*,*) 'natomimpd                     ', natomimpd
+      write(*,*) 'lnc                           ', lnc
+      write(*,*) 'lmaxd                         ', lmaxd
+      write(*,*) 'lmmaxd                        ', lmmaxd
+      write(*,*) 'lmgf0d                        ', lmgf0d
+      write(*,*) 'alm                           ', alm
+      write(*,*) 'almgf0                        ', almgf0
+      write(*,*) 'ndim_slabinv                  ', ndim_slabinv
+      write(*,*) 'nembd                         ', nembd
+      write(*,*) 'nembd1                        ', nembd1
+      write(*,*) 'nembd2                        ', nembd2
+      write(*,*) 'nrd                           ', nrd
+      write(*,*) 'lm2d                          ', lm2d
+      write(*,*) 'nclsd                         ', nclsd
+      write(*,*) 'mmaxd                         ', mmaxd
+      write(*,*) 'npotd                         ', npotd
+      write(*,*) 'lmxspd                        ', lmxspd
+      write(*,*) 'lassld                        ', lassld
+      write(*,*) 'irmind                        ', irmind
+      write(*,*) 'nofgij                        ', nofgij
+      write(*,*) 'nspindd                       ', nspindd
+      write(*,*) 'nsatypd                       ', nsatypd
+      write(*,*) 'nrefd                         ', nrefd
+      write(*,*) 'irmd                          ', irmd
+      write(*,*) 'naezd                         ', naezd
+      write(*,*) 'natypd                        ', natypd
+      write(*,*) 'lmpotd                        ', lmpotd
+      write(*,*) 'ntotd                         ', ntotd
+      write(*,*) 'nrmaxd                        ', nrmaxd
+      write(*,*) 'lmmaxso                       ', lmmaxso
+      write(*,*) 'linterface                    ', linterface
+      write(*,*) 'end dimensions after rinput13'
+
+
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Allocation calls
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -528,16 +606,16 @@ contains
       !> consumption
       !
       ! Call to allocate the arrays associated with the potential
-      call allocate_potential(1,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,    &
+      call allocate_potential(1,NAEZ,NEMB,IRMD,NATYP,NPOTD,IPAND,NFUND,LMXSPD,    &
          LMPOT,IRMIND,NSPOTD,NFU,IRC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,   &
          ITITLE,FPRADIUS,VISP,ECORE,VINS)
       ! Call to allocate the arrays associated with the LDA+U potential
-      call allocate_ldau_potential(1,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,ULDAU,  &
+      call allocate_ldau_potential(1,IRMD,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,ULDAU,  &
          PHILDAU)
       ! Call to allocate the arrays associated with the energy
       call allocate_energies(1,IEMXD,EZ,DEZ,WEZ)
       ! Call to allocate the arrays associated with the relativistic corrections
-      call allocate_relativistic(1,KREL,IRM,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,      &
+      call allocate_relativistic(1,KREL,IRMD,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,      &
          VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,QMGAM,QMGAMTAB,QMPHITAB,QMTETTAB)
       ! Call to allocate the arrays associated with the relativistic transformations
       call allocate_rel_transformations(1,LMMAXD,NRREL,IRREL,RC,CREL,RREL,SRREL)
@@ -549,12 +627,12 @@ contains
       call allocate_expansion(1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,NCHEB, &
          LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
       ! Call to allocate the arrays associated with the integration mesh
-      call allocate_mesh(1,IRM,NATYP,A,B,RMESH,DRDI)
+      call allocate_mesh(1,IRMD,NATYP,A,B,RMESH,DRDI)
       ! Call to allocate the arrays associated with the pannels for the new solver
       call allocate_pannels(1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQ_AT,NPAN_LOG_AT,  &
          IPAN_INTERVALL,RPAN_INTERVALL)
       ! Call to allocate misc arrays
-      call allocate_misc(1,NRD,IRM,IRID,LMAX,NAEZ,NATYP,NFUND,NREF,IEMXD,NTOTD,   &
+      call allocate_misc(1,NRD,IRMD,IRID,LMAX,NAEZ,NATYP,NFUND,NREFD,IEMXD,NTOTD,   &
          NSHELD,LMMAXD,NEMBD1,NCHEB,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM, &
          IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,DSYMLL1,        &
          LEFTTINVLL,RIGHTTINVLL)
@@ -614,7 +692,7 @@ contains
       if (KVREL.GE.1) NSRA = 2
       if (KVREL.GE.2) NSRA = 3
       !
-      call TESTDIM(NSPIN,NAEZ,NEMB,NATYP,LMAX,IRM,INS,INSREF,NREF,IRNS,NCLS,  &
+      call TESTDIM(NSPIN,NAEZ,NEMB,NATYP,LMAX,IRMD,INS,INSREF,NREF,IRNS,NCLS,  &
          NLAYER,KREL,NSPIND,NCLSD,NPRINCD,KNOSPH,IRNSD,KORBIT)
       !
       if ( INS.GT.0 )    open (19,FILE=I19,STATUS='old',FORM='formatted')
@@ -625,7 +703,7 @@ contains
          RMT,ITITLE,IMT,IRC,VCONST,INS,IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,   &
          KSHAPE,NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,VBC,       &
          DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,RMESH,ZAT,A,B,IRWS,1,LMPOT,    &
-         IRMIND,IRM,LMXSPD,IPAND,IRID,IRNSD,NATYP,NCELLD,NFUND,NSPOTD,IVSHIFT, &
+         IRMIND,IRMD,LMXSPD,IPAND,IRID,IRNSD,NATYP,NCELLD,NFUND,NSPOTD,IVSHIFT, &
          NPOTD)
 
 
@@ -661,14 +739,14 @@ contains
       if ( TEST('Vspher  ') ) then
          write(1337,*) 'TEST OPTION Vspher,',&
          'keeping only spherical component of potential.'
-         VINS(IRMIND:IRM,2:LMPOT,1:NSPOTD) = 0.D0
+         VINS(IRMIND:IRMD,2:LMPOT,1:NSPOTD) = 0.D0
       endif
 
       if (OPT('zeropot ').OR.TEST('zeropot ')) then
          write(1337,*) 'Using OPT zeropot, setting potential to zero.'
          write(1337,*) 'Using OPT zeropot, setting nuclear charge to zero.'
-         VINS(IRMIND:IRM,1:LMPOT,1:NSPOTD) = 0.D0
-         VISP(1:IRM,1:NPOTD) = 0.D0
+         VINS(IRMIND:IRMD,1:LMPOT,1:NSPOTD) = 0.D0
+         VISP(1:IRMD,1:NPOTD) = 0.D0
          ZAT(1:NATYP) = 0.D0
       endif
       !
@@ -697,7 +775,7 @@ contains
          rewind(3)
          call GENERALPOT(3,1,NATYP,NSPIN,ZAT,ALAT,RMT,RMTNEW,RWS,RMESH,DRDI,VISP, &
             IRWS,A,B,INS,IRNS,LPOT,VINS,QBOUND,IRC,KSHAPE,E2IN,VBC,ECORE,     &
-            LCORE,NCORE,LMPOT,IRM,IRMIND)
+            LCORE,NCORE,LMPOT,IRMD,IRMIND)
          close(3)
       end if
       !-------------------------------------------------------------------------
@@ -706,7 +784,7 @@ contains
       !     from startb1 moved here
       if (KHFELD.eq.1) then
          !---> maybe apply a magnetic field
-         call bshift_ns(IRM,IRID,IPAND,LMPOT,NPOTD,NATYP,NSPIN,NGSHD,NFUND,NCELLD,  &
+         call bshift_ns(IRMD,IRID,IPAND,LMPOT,NPOTD,NATYP,NSPIN,NGSHD,NFUND,NCELLD,  &
             IRMIND,LMXSPD,KSHAPE,IRC,IRMIN,INIPOL,NTCELL,IMAXSH,ILM_MAP,LMSP,IFUNM,     &
             IRCUT,HFIELD,GSH,RMESH,THESME,THETAS,VISP,VINS)
       end if
@@ -736,8 +814,8 @@ contains
             !-------------------------------------------------------------------
             do I = NATYP,1,-1
                J = 2*I - 1
-               call DCOPY(IRM,VISP(1,I),1,VISP(1,J),1)
-               call DCOPY(IRM,VISP(1,J),1,VISP(1,J+1),1)
+               call DCOPY(IRMD,VISP(1,I),1,VISP(1,J),1)
+               call DCOPY(IRMD,VISP(1,J),1,VISP(1,J+1),1)
                !
                call DCOPY(20,ECORE(1,I),1,ECORE(1,J),1)
                call DCOPY(20,ECORE(1,J),1,ECORE(1,J+1),1)
@@ -759,13 +837,13 @@ contains
             !     paramagnetic (useful for symmetry cosiderations)
             !-------------------------------------------------------------------
             do I = 1,2*NATYP-1,2
-               do J=1,IRM
+               do J=1,IRMD
                   if (ABS(VISP(J,I)-VISP(J,I+1)).GT.1D-5) PARA = .FALSE.
                end do
             end do
             if (PARA) then
                do I=1,2*NATYP-1,2
-                  call DCOPY(IRM,VISP(1,I),1,VISP(1,I+1),1)
+                  call DCOPY(IRMD,VISP(1,I),1,VISP(1,I+1),1)
                end do
             end if
 
@@ -778,7 +856,7 @@ contains
          if(KREL.eq.1) then
             ! call this only if relativisitic solver is used
             call RELPOTCVT(1,VISP,ZAT,RMESH,DRDI,IRCUT,VTREL,BTREL,ZREL,RMREL,&
-               JWSREL,DRDIREL,R2DRDIREL,IRSHIFT,IPAND,IRM,NPOTD,NATYP)
+               JWSREL,DRDIREL,R2DRDIREL,IRSHIFT,IPAND,IRMD,NPOTD,NATYP)
          endif
       end if !KREL+KORBIT.EQ.1
       !-------------------------------------------------------------------------
@@ -1066,7 +1144,7 @@ contains
          CALL OUTPOTHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,NATYP,E2IN, &
             BRAVAIS,RBASIS,QMTET,QMPHI,NOQ,KAOEZ,IQAT,ZAT,CONC,IPAN,IRCUT, &
             SOLVER,SOCSCL,CSCL,IRWS,RMTNEW,RWS,RMESH,DRDI,VISP,IRSHIFT,RMREL,  &
-            DRDIREL,VTREL,BTREL,LMAX,NATYP,NAEZ,IPAND,IRM)
+            DRDIREL,VTREL,BTREL,LMAX,NATYP,NAEZ,IPAND,IRMD)
       endif
       if ( OPT('deci-out') ) then
          CALL OUTTMATHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,LMMAX,     &
@@ -1077,7 +1155,7 @@ contains
             BRAVAIS,TK,NPOL,NPNT1,NPNT2,NPNT3,EZ,IELAST,KAOEZ,LEFTTINVLL,  &
             RIGHTTINVLL,VACFLAG,NLBASIS,NRBASIS,CMOMHOST,VREF,RMTREF,NREF, &
             REFPOT(NAEZ),LMAX,LMGF0D,LMMAXD,LM2D,NEMBD1,IEMXD,NSPINDD,     &
-            LMPOT,NATYP,IRM,IPAND)
+            LMPOT,NATYP,IRMD,IPAND)
       endif
       !-------------------------------------------------------------------------
 
@@ -1106,7 +1184,7 @@ contains
       !
       if (OPT('LDA+U   ')) then
          CALL STARTLDAU(ITRUNLDAU,IDOLDAU,KREADLDAU,LOPT,UEFF,JEFF,EREFLDAU,  &
-            NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,IRWS,NTLDAU,ITLDAU,IRM,NATYP,     &
+            NATYP,NSPIN,WLDAU,ULDAU,PHILDAU,IRWS,NTLDAU,ITLDAU,IRMD,NATYP,     &
             NSPIND,MMAXD)
       end if
       !-------------------------------------------------------------------------
@@ -1119,7 +1197,7 @@ contains
       !
       ! new solver for full-potential, spin-orbit, initialise
       if (OPT('NEWSOSOL')) THEN
-         call CREATE_NEWMESH(NATYP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,NFUND,&
+         call CREATE_NEWMESH(NATYP,LMAX,LPOT,IRMD,IRNSD,IPAND,IRID,NTOTD,NFUND,&
             NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH,IRMIN,IPAN,IRCUT,R_LOG,NPAN_LOG,    &
             NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,NPAN_TOT,RNEW,RPAN_INTERVALL,      &
             IPAN_INTERVALL,NCELLD,NTCELL,THETAS,THETASNEW)
@@ -1140,7 +1218,7 @@ contains
          NRIGHT,NLEFT,LINTERFACE,IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,&
          KVMAD,KXC,LAMBDA_XC,TXC,ISHIFT,IXIPOL,LRHOSYM,KFORCE,LMSP,LLMSP,RMT,RMTNEW,&
          RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM_MAP,IMAXSH,IDOLDAU,ITRUNLDAU,NTLDAU,&
-         LOPT,ITLDAU,UEFF,JEFF,EREFLDAU,ULDAU,WLDAU,PHILDAU,IEMXD,IRMIND,IRM,NSPOTD,&
+         LOPT,ITLDAU,UEFF,JEFF,EREFLDAU,ULDAU,WLDAU,PHILDAU,IEMXD,IRMIND,IRMD,NSPOTD,&
          NPOTD,NEMBD1,LMMAXD,IPAND,NEMBD2,LMAX,NCLEB,NACLSD,NCLSD,LM2D,LMAX+1,MMAXD,&
          NRD,NSHELD,NSYMAXD,NAEZ/NPRINCD,NATOMIMPD,NSPIND,IRID,NFUND,NCELLD,LMXSPD,NGSHD, &
          KREL,NTOTD,NCHEB,NPAN_LOG,NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,R_LOG,NPAN_TOT,   &
@@ -1169,7 +1247,7 @@ contains
       !
       if (OPT('GREENIMP') .or. operator_imp) then                      ! GREENIMP
          ! fill array dimensions and allocate arrays in t_imp          ! GREENIMP
-         call init_params_t_imp(t_imp,IPAND,NATYP,IRM,IRID,NFUND,     &! GREENIMP
+         call init_params_t_imp(t_imp,IPAND,NATYP,IRMD,IRID,NFUND,     &! GREENIMP
                                 NSPIN,IRMIND,LMPOT)                    ! GREENIMP
          call init_t_imp(t_inc,t_imp)                                  ! GREENIMP
                                                                        ! GREENIMP
@@ -1178,7 +1256,7 @@ contains
                          t_imp%IPANIMP,t_imp%THETASIMP,t_imp%IRCUTIMP,&! GREENIMP
                          t_imp%IRWSIMP,KHFELD,HFIELD,t_imp%VINSIMP,   &! GREENIMP
                          t_imp%VISPIMP,t_imp%IRMINIMP,                &! GREENIMP
-                         t_imp%RIMP,t_imp%ZIMP, IRM, IRNSD,IRID,NFUND,NTOTD,IPAND) ! GREENIMP
+                         t_imp%RIMP,t_imp%ZIMP, IRMD, IRNSD,IRID,NFUND,NTOTD,IPAND) ! GREENIMP
       end if                                                           ! GREENIMP
       !
       !

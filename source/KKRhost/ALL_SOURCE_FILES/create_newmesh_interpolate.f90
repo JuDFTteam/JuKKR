@@ -2,7 +2,7 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
   r_log, npan_log, npan_eq, ncheb, npan_tot, rnew, rpan_intervall, &
   ipan_intervall, vinsnew, ntcell, thetas, thetasnew)
 
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
   include 'inc.p'
   integer :: nspin, irmin(natypd), ipan(natypd), irws(natypd)
@@ -19,28 +19,28 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
   parameter (fac=2d0)
   real (kind=dp) :: vins(irmind:irmd, lmpotd, nspotd), visp(irmd, nspotd), &
     vinsin(irmd, lmpotd, nspin)
-  real (kind=dp) :: thetas(irid, nfund, ncelld), thetasin(irid, nfund, &
-    ncelld), thetasnew(ntotd*(nchebd+1), nfund, ncelld)
+  real (kind=dp) :: thetas(irid, nfund, ncelld), thetasin(irid, nfund, ncelld) &
+    , thetasnew(ntotd*(nchebd+1), nfund, ncelld)
   integer :: ntcell(natypd)
   integer :: i1, ipot, ipotm, ir, ispin, ir2, ip, icell, ishift, ilogpanshift, &
     ilinpanshift, npan_logtemp, imin, imax, iminnew, imaxnew, lm1
   real (kind=dp) :: r_log, rmin, rmax, rval
-  real (kind=dp) :: rnew(ntotd*(nchebd+1), natypd), &
-    rpan_intervall(0:ntotd, natypd)
+  real (kind=dp) :: rnew(ntotd*(nchebd+1), natypd), rpan_intervall(0:ntotd, &
+    natypd)
   integer :: ipan_intervall(0:ntotd, natypd)
   real (kind=dp) :: vinsnew(ntotd*(nchebd+1), lmpotd, nspotd)
 
   vinsnew = 0d0
   thetasnew = 0d0
   ipotm = 0
-! log panel
+  ! log panel
   do i1 = 1, natypd
 
     ipot = nspin*(i1-1) + 1
     npan_inst = ipan(i1) - 1
     npan_tot(i1) = npan_log + npan_eq + npan_inst
 
-! NPAN_LOG
+    ! NPAN_LOG
 
     rmin = r(2, i1)
     rmax = r_log
@@ -53,7 +53,7 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
       ilogpanshift = 0
       ilinpanshift = 1
     end if
-! equivalent panel
+    ! equivalent panel
     if (ilinpanshift==1) then
       write (*, *) 'ERORR: non-spherical part of the potential needs'
       write (*, *) 'to be inside the log panel'
@@ -63,7 +63,7 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
       write (*, *) 'IRMIN(I1)', irmin(i1)
       stop 'Error creating newmesh'
     end if
-! NPAN_EQ
+    ! NPAN_EQ
     do ip = 0, npan_log - ilogpanshift
       rval = (fac**ip-1d0)/(fac**(npan_log-ilogpanshift)-1d0)
       rpan_intervall(ip+ishift, i1) = rmin + rval*(rmax-rmin)
@@ -76,9 +76,9 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
         rpan_intervall(ip, i1) = r(irmin(i1), i1)
         ipan_intervall(ip, i1) = ip*(ncheb+1)
       end if
-    end do 
-! intersection zone
-! NPAN_INST
+    end do
+    ! intersection zone
+    ! NPAN_INST
     ishift = 0
     rmin = r_log
     rmax = r(ircut(1,i1), i1)
@@ -86,15 +86,15 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
       rpan_intervall(ip+ishift+npan_log, i1) = rmin + &
         ip*(rmax-rmin)/(npan_eq-ilinpanshift)
       ipan_intervall(ip+ishift+npan_log, i1) = (npan_log+ip+ishift)*(ncheb+1)
-    end do 
+    end do
 
 
     do ip = 1, npan_inst
       rpan_intervall(npan_log+npan_eq+ip, i1) = r(ircut(ip+1,i1), i1)
       ipan_intervall(npan_log+npan_eq+ip, i1) = (npan_log+npan_eq+ip)* &
         (ncheb+1)
-    end do ! interpolate potential to new mesh
-! save input potential to VINSIN
+    end do                         ! interpolate potential to new mesh
+    ! save input potential to VINSIN
     npan_eq = npan_eq + npan_log - npan_logtemp
     npan_log = npan_logtemp
 
@@ -120,11 +120,11 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
         end do
       end if
     end do
-! LM1
+    ! LM1
     do ispin = 1, nspin
 
       ipotm = ipotm + 1
-! ISPIN
+      ! ISPIN
       do lm1 = 1, lmpotd
         imin = 1
         imax = irmin(i1)
@@ -135,7 +135,7 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
             vinsin(imin:imax,lm1,ispin), vinsnew(iminnew:imaxnew,lm1,ipotm), &
             imax-imin+1, imaxnew-iminnew+1)
         end do
-! interpolate shape function THETAS to new shape function THETASNEW
+        ! interpolate shape function THETAS to new shape function THETASNEW
         imin = irmin(i1)
         imax = ircut(1, i1)
         do ip = npan_log + 1, npan_log + npan_eq
@@ -156,11 +156,11 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
             vinsin(imin:imax,lm1,ispin), vinsnew(iminnew:imaxnew,lm1,ipotm), &
             imax-imin+1, imaxnew-iminnew+1)
         end do
-      end do ! save THETAS to THETASIN
-! I1
-    end do 
-! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
-! SET ACCORDING TO lmax VALUE OF INPUTCARD
+      end do                       ! save THETAS to THETASIN
+      ! I1
+    end do
+    ! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
+    ! SET ACCORDING TO lmax VALUE OF INPUTCARD
     icell = ntcell(i1)
     do lm1 = 1, nfund
       thetasin(:, lm1, icell) = thetas(:, lm1, icell)
@@ -176,8 +176,8 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
           iminnew:imaxnew,lm1,icell), imax-imin+1, imaxnew-iminnew+1)
       end do
     end do
-  end do !      PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
-end subroutine
+  end do                           ! PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
+end subroutine create_newmesh
 
 
 
@@ -189,7 +189,7 @@ subroutine chebmesh(npan, ncheb, ri, ro)
   real (kind=dp), intent (out) :: ro(npan*(ncheb+1))
   implicit none
 
-!-----------------------------------------------
+  ! -----------------------------------------------
 
   integer :: i, k, ik
   real (kind=dp) :: tau, pi
@@ -203,5 +203,5 @@ subroutine chebmesh(npan, ncheb, ri, ro)
       ro(ik) = tau
     end do
   end do
-end subroutine
+end subroutine chebmesh
 

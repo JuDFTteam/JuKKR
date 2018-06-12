@@ -1,19 +1,19 @@
 subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, &
   emuval, tkval, npolval, n1val, n2val, n3val, ebotsem, emusem, tksem, &
   npolsem, n1sem, n2sem, n3sem, iemxd)
-! **********************************************************************
-! *                                                                    *
-! * Generating the energy mesh.                                        *
-! *                                                                    *
-! * Calls the routine EMESHT once for the valence contour and once for *
-! * the semicore contour.                                              *
-! * In the semicore range, -NPOLSEM is used to create a rectangular    *
-! * contour.                                                           *
-! *              ph. mavropoulos, v.popescu Juelich/Munich 2004        *
-! *                                                                    *
-! **********************************************************************
+  ! **********************************************************************
+  ! *                                                                    *
+  ! * Generating the energy mesh.                                        *
+  ! *                                                                    *
+  ! * Calls the routine EMESHT once for the valence contour and once for *
+  ! * the semicore contour.                                              *
+  ! * In the semicore range, -NPOLSEM is used to create a rectangular    *
+  ! * contour.                                                           *
+  ! *              ph. mavropoulos, v.popescu Juelich/Munich 2004        *
+  ! *                                                                    *
+  ! **********************************************************************
   use :: mod_types, only: t_inc
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
   integer :: iemxd
   complex (kind=dp) :: ez(*), df(*), ezsemi(iemxd), dfsemi(iemxd)
@@ -26,7 +26,7 @@ subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, &
   integer :: idosemicore
 
 
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+  ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
   if (t_inc%i_write>0) then
     write (1337, *)
     write (1337, '(79("="))')
@@ -34,7 +34,7 @@ subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, &
     write (1337, '(79("="))')
     write (1337, *)
   end if
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+  ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
   iesemicore = 0
   if (idosemicore==1) then
@@ -61,4 +61,4 @@ subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, &
   end do
 
 100 format (7x, '* ', a, /, 7x, 20('-'), /)
-end subroutine
+end subroutine epathtb

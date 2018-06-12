@@ -1,10 +1,10 @@
 ! ***********************************************************************
 logical function opt(string)
-! ***********************************************************************
+  ! ***********************************************************************
 
-!     OPT = 'STRING  ' IS CONTAINED IN /OPTC/.
+  ! OPT = 'STRING  ' IS CONTAINED IN /OPTC/.
 
-! ------------------------------------------------------------------------
+  ! ------------------------------------------------------------------------
   use :: mod_wunfiles, only: t_params
 
   implicit none
@@ -19,4 +19,4 @@ logical function opt(string)
     if (string==optc(i)) opt = .true.
   end do
   return
-end function
+end function opt

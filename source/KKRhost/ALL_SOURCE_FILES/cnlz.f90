@@ -1,72 +1,72 @@
-    Function cnlz(l, z)
-      Use mod_datatypes, Only: dp
-!   ********************************************************************
-!   *                                                                  *
-!   *     von NEUMANN  - FUNCTION  N(L,Z)  FOR COMPLEX ARGUMENT  Z     *
-!   *                  see:  e.g. MERZBACHER EQ. (10.34)               *
-!   *                                                                  *
-!   ********************************************************************
-      Implicit None
+function cnlz(l, z)
+  use :: mod_datatypes, only: dp
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *     von NEUMANN  - FUNCTION  N(L,Z)  FOR COMPLEX ARGUMENT  Z     *
+  ! *                  see:  e.g. MERZBACHER EQ. (10.34)               *
+  ! *                                                                  *
+  ! ********************************************************************
+  implicit none
 
-! PARAMETER definitions
-      Complex (Kind=dp) :: c1
-      Parameter (c1=(1.0E0_dp,0.0E0_dp))
-      Integer :: lp2max
-      Parameter (lp2max=25)
+  ! PARAMETER definitions
+  complex (kind=dp) :: c1
+  parameter (c1=(1.0e0_dp,0.0e0_dp))
+  integer :: lp2max
+  parameter (lp2max=25)
 
-! Dummy arguments
-      Integer :: l
-      Complex (Kind=dp) :: z
-      Complex (Kind=dp) :: cnlz
+  ! Dummy arguments
+  integer :: l
+  complex (kind=dp) :: z
+  complex (kind=dp) :: cnlz
 
-! Local variables
-      Complex (Kind=dp) :: cjlz
+  ! Local variables
+  complex (kind=dp) :: cjlz
 
-      Real (Kind=dp) :: dfac
-      Complex (Kind=dp) :: dt, s(lp2max), t, zsq
-      Integer :: i, k, llp1
+  real (kind=dp) :: dfac
+  complex (kind=dp) :: dt, s(lp2max), t, zsq
+  integer :: i, k, llp1
 
-      If (l<0) Then
-        cnlz = cjlz(l+1, z)
-        Return
-      End If
+  if (l<0) then
+    cnlz = cjlz(l+1, z)
+    return
+  end if
 
-      zsq = z*z
-      llp1 = l + l + 1
+  zsq = z*z
+  llp1 = l + l + 1
 
-      If (abs(zsq/real(llp1,kind=dp))<=10.E0_dp) Then
+  if (abs(zsq/real(llp1,kind=dp))<=10.e0_dp) then
 
-        dfac = 1.0E0_dp
-        Do k = 3, llp1, 2
-          dfac = dfac*real(k, kind=dp)
-        End Do
+    dfac = 1.0e0_dp
+    do k = 3, llp1, 2
+      dfac = dfac*real(k, kind=dp)
+    end do
 
-        dt = c1
-        t = c1
+    dt = c1
+    t = c1
 
-        Do i = 2, 400, 2
-          dt = -dt*zsq/real(i*(i-llp1), kind=dp)
-          t = t + dt
-          If (abs(dt)<1.0E-10_dp) Go To 100
-        End Do
+    do i = 2, 400, 2
+      dt = -dt*zsq/real(i*(i-llp1), kind=dp)
+      t = t + dt
+      if (abs(dt)<1.0e-10_dp) go to 100
+    end do
 
-100     Continue
-        cnlz = -t*z**(-l-1)*dfac/real(llp1, kind=dp)
+100 continue
+    cnlz = -t*z**(-l-1)*dfac/real(llp1, kind=dp)
 
-      Else
-        If (l>23) Stop '<cnlz>: l too large'
-        s(2) = cos(z)
-        If (l<=0) Then
-          cnlz = -s(2)*z**(-l-1)
-          Return
-        End If
+  else
+    if (l>23) stop '<cnlz>: l too large'
+    s(2) = cos(z)
+    if (l<=0) then
+      cnlz = -s(2)*z**(-l-1)
+      return
+    end if
 
-        s(1) = -sin(z)/z
-        Do i = 3, l + 2
-          s(i) = s(i-1)*(2*i-5) - zsq*s(i-2)
-        End Do
-        cnlz = -s(l+2)*z**(-l-1)
+    s(1) = -sin(z)/z
+    do i = 3, l + 2
+      s(i) = s(i-1)*(2*i-5) - zsq*s(i-2)
+    end do
+    cnlz = -s(l+2)*z**(-l-1)
 
-      End If
+  end if
 
-    End Function
+end function cnlz

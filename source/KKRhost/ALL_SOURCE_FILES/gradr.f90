@@ -1,76 +1,76 @@
 subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   ddrru, rou, irmd)
-!-----------------------------------------------------------------
-!evaluates d(ro)/dr,d{d(ro)/dr}/dr.
-!drr=d(ro)/dr, ddrr=d(drr)/dr.
-!coded by T.Asada. Feb.1994.
-!-----------------------------------------------------------------
-!-----------------------------------------------------------------
-!------------------------------------------------------------------
+  ! -----------------------------------------------------------------
+  ! evaluates d(ro)/dr,d{d(ro)/dr}/dr.
+  ! drr=d(ro)/dr, ddrr=d(drr)/dr.
+  ! coded by T.Asada. Feb.1994.
+  ! -----------------------------------------------------------------
+  ! -----------------------------------------------------------------
+  ! ------------------------------------------------------------------
   use :: mod_types, only: t_inc
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
-!.. Scalar Arguments ..
+  ! .. Scalar Arguments ..
   real (kind=dp) :: dx
   integer :: irmd, ist1, mesh, nspin
-!..
-!.. Array Arguments ..
+  ! ..
+  ! .. Array Arguments ..
   real (kind=dp) :: ddrr(irmd), ddrru(irmd), drdi(irmd), drdi2(irmd), &
     drr(irmd), drru(irmd), ro(irmd), rou(irmd), zta(irmd)
-!..
-!.. Local Scalars ..
-  real (kind=dp) :: d, drx, drx0, drx1, drx2, drx3, drxu, drxu0, drxu1, &
-    drxu2, drxu3, drxx, drxx0, drxx1, drxx2, drxx3, drxxu, drxxu0, drxxu1, &
-    drxxu2, drxxu3, f0, f1, f2, f3, f4, f5, g1, g2, g3, g4, g5, xlf
+  ! ..
+  ! .. Local Scalars ..
+  real (kind=dp) :: d, drx, drx0, drx1, drx2, drx3, drxu, drxu0, drxu1, drxu2, &
+    drxu3, drxx, drxx0, drxx1, drxx2, drxx3, drxxu, drxxu0, drxxu1, drxxu2, &
+    drxxu3, f0, f1, f2, f3, f4, f5, g1, g2, g3, g4, g5, xlf
   integer :: i, i1, i2, i3, i4, i5, i6, ica, icg, iex, igd, igh, igl, ihb, &
     imj, ip9, ipg, ipw, ist, ivg, ivn, iwr, ixlf, j, ndvpt, nred
-!..
-!.. Statement Functions ..
+  ! ..
+  ! .. Statement Functions ..
   real (kind=dp) :: f131, f132, f133, f141, f142, f143, f144, f151, f152, &
     f153, f154, f155, f161, f162, f163, f164, f165, f166, f231, f232, f233, &
     f241, f242, f243, f244, f251, f252, f253, f254, f255, f261, f262, f263, &
     f264, f265, f266
-!..
-!.. Intrinsic Functions ..
+  ! ..
+  ! .. Intrinsic Functions ..
   intrinsic :: dble
-!..
-!.. Save statement ..
+  ! ..
+  ! .. Save statement ..
   save :: ndvpt, igl, igh, imj, ica, icg, ivn, ipw, ipg, ivg, ip9, igd, ixlf, &
     iex, xlf, iwr
-!..
-!.. Data statements ..
-!.....-----------------------------------------------------------------
-!..uble function
-!..ouble precision f131,f132,f133,f141,f142,f143,f144
-!..ouble precision fl61,fl62,fl63,fl64,fl65,fl66
-!..ouble precision fl51,fl52,fl53,fl54,fl55
-!..ouble precision f231,f232,f233,f241,f242,f243,f244
-!..ouble precision f251,f252,f253,f254,f255
-!..ouble precision f261,f262,f263,f264,f265,f266
+  ! ..
+  ! .. Data statements ..
+  ! .....-----------------------------------------------------------------
+  ! ..uble function
+  ! ..ouble precision f131,f132,f133,f141,f142,f143,f144
+  ! ..ouble precision fl61,fl62,fl63,fl64,fl65,fl66
+  ! ..ouble precision fl51,fl52,fl53,fl54,fl55
+  ! ..ouble precision f231,f232,f233,f241,f242,f243,f244
+  ! ..ouble precision f251,f252,f253,f254,f255
+  ! ..ouble precision f261,f262,f263,f264,f265,f266
 
   data ndvpt/5/
   data igl, igh, imj, ica, icg, ivn, ipw, ipg, ivg, ip9, igd, ixlf, iex, &
     xlf/0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0.00d0/
   data iwr/0/
-!     ..
-!     .. Statement Function definitions ..
-!  statement functions:
+  ! ..
+  ! .. Statement Function definitions ..
+  ! statement functions:
 
-!.....three point formula for the 1st deriv.
+  ! .....three point formula for the 1st deriv.
 
-!.....four point formula for the 1st deriv.
+  ! .....four point formula for the 1st deriv.
 
-!.....five point formula for the 1st deriv.
+  ! .....five point formula for the 1st deriv.
 
-!.....six point formula for the 1st deriv.
+  ! .....six point formula for the 1st deriv.
 
-!.....three point formula for the 2nd deriv.
+  ! .....three point formula for the 2nd deriv.
 
-!.....four point formula for the 2nd deriv.
+  ! .....four point formula for the 2nd deriv.
 
-!.....five point formula for the 2nd deriv.
+  ! .....five point formula for the 2nd deriv.
 
-!.....six point formula for the 2nd deriv.
+  ! .....six point formula for the 2nd deriv.
   f131(f0, f1, f2, d) = (-3*f0+4*f1-f2)/(2*d)
   f132(g1, f0, f1, d) = (-1*g1-0*f0+f1)/(2*d)
   f133(g2, g1, f0, d) = (g2-4*g1+3*f0)/(2*d)
@@ -119,29 +119,30 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
     (60*d*d)
   f266(g5, g4, g3, g2, g1, f0, d) = (-50*g5+305*g4-780*g3+1070*g2-770*g1+225* &
     f0)/(60*d*d)
-!     ..
+  ! ..
 
-!.....-----------------------------------------------------------------
+  ! .....-----------------------------------------------------------------
   if ((iwr==1) .and. (t_inc%i_write>0)) then
-    write (1337, "('igd, etc.', 14 i2, f10.4)") ipw, ipg, ivg, ip9, igd, ixlf, iex, xlf
+    write (1337, '(''igd, etc.'', 14 i2, f10.4)') ipw, ipg, ivg, ip9, igd, &
+      ixlf, iex, xlf
   end if
   iwr = 0
 
   ist = ist1
-!     write(6,*) 'ndvpt ist mesh dx drdi2' ,ndvpt,ist,mesh,dx,
-!    &            drdi2(ist)
+  ! write(6,*) 'ndvpt ist mesh dx drdi2' ,ndvpt,ist,mesh,dx,
+  ! &            drdi2(ist)
 
   if (ndvpt<3 .or. ndvpt>6) then
     write (6, fmt=120) ndvpt
     stop 18
   end if
-!.....
-!.....ro: total(core+val)(up+down) charge density.
+  ! .....
+  ! .....ro: total(core+val)(up+down) charge density.
 
   do i = ist, mesh
     rou(i) = ro(i)*(zta(i)+1.d0)/2.d0
   end do
-!.....
+  ! .....
   if (igd<=0) then
 
     do i = ist, mesh
@@ -161,12 +162,12 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   i5 = ist + 4
   i6 = ist + 5
 
-!.....drr:d(ro)/dr, ddrr=d(d(ro)/dr)/dr
-!c.... drru,ddrru: for up   spin,
-!.....
+  ! .....drr:d(ro)/dr, ddrr=d(d(ro)/dr)/dr
+  ! c.... drru,ddrru: for up   spin,
+  ! .....
 
   if (nspin==1) go to 100
-!.....
+  ! .....
   if (ndvpt==3) then
 
     drx1 = f131(ro(i1), ro(i2), ro(i3), dx)
@@ -276,7 +277,7 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
     ddrru(j) = (drxxu-drxu*drdi2(j))/drdi(j)**2
 
   end do
-!.....
+  ! .....
   if (ndvpt==3) then
 
     drx0 = f133(ro(mesh-2), ro(mesh-1), ro(mesh), dx)
@@ -367,7 +368,7 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
 
 100 continue
 
-!.....
+  ! .....
   if (ndvpt==3) then
 
     drx1 = f131(ro(i1), ro(i2), ro(i3), dx)
@@ -447,10 +448,10 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
 
     drr(j) = drx/drdi(j)
     ddrr(j) = (drxx-drx*drdi2(j))/drdi(j)**2
-!           write(6,9000) j,drr(j)
-!9000       format(1x,' j drr(j)',i5,e15.5)
+    ! write(6,9000) j,drr(j)
+    ! 9000       format(1x,' j drr(j)',i5,e15.5)
   end do
-!.....
+  ! .....
   if (ndvpt==3) then
 
     drx0 = f133(ro(mesh-2), ro(mesh-1), ro(mesh), dx)
@@ -509,11 +510,11 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
 
 
 
-!      write(6,8000) nspin,ist1,mesh,dx
-!8000 format(1x,' nspin ist1 mesh dx',3i5,2d20.10)
-!     write(6,8001) (ro(kk),drr(kk),ddrr(kk),
-!    &  drdi(kk),drdi2(kk), kk=ist1,mesh,20)
-!8001 format(1x,' ro drr ddrr drdi drdi2',5f12.5)
+  ! write(6,8000) nspin,ist1,mesh,dx
+  ! 8000 format(1x,' nspin ist1 mesh dx',3i5,2d20.10)
+  ! write(6,8001) (ro(kk),drr(kk),ddrr(kk),
+  ! &  drdi(kk),drdi2(kk), kk=ist1,mesh,20)
+  ! 8001 format(1x,' ro drr ddrr drdi drdi2',5f12.5)
   return
 120 format (/, ' ndvpt should be ge.4 .or. le.6. ndvpt=', i3)
-end subroutine
+end subroutine gradr

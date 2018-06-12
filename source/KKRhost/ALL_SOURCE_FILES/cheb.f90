@@ -1,196 +1,195 @@
-!module mod_cheb
+! module mod_cheb
 
-!contains 
+! contains
 
-    Subroutine getcmatrix(ncheb, cmatrix)
-! calculates the C matrix according to:
-! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
-      Use mod_datatypes
-      Implicit None
-      Integer, Intent (In) :: ncheb
-      Real (Kind=dp), Intent (Out) :: cmatrix(0:ncheb, 0:ncheb)
-      Real (Kind=dp) :: pi
-!local
-      Integer :: icheb1, icheb2
+subroutine getcmatrix(ncheb, cmatrix)
+  ! calculates the C matrix according to:
+  ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  use :: mod_datatypes
+  implicit none
+  integer, intent (in) :: ncheb
+  real (kind=dp), intent (out) :: cmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp) :: pi
+  ! local
+  integer :: icheb1, icheb2
 
-      pi = 4E0_dp*atan(1E0_dp)
-      Do icheb1 = 0, ncheb
-        Do icheb2 = 0, ncheb
-! maybe incorrect
-          cmatrix(icheb2, icheb1) = cos(icheb1*pi*((ncheb- &
-            icheb2)+0.5E0_dp)/(ncheb+1))
-        End Do
-      End Do
-    End Subroutine
-
-
-    Subroutine getcinvmatrix(ncheb, cinvmatrix)
-! calculates the C**-1 matrix according to:
-! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
-      Use mod_datatypes
-      Implicit None
-      Integer, Intent (In) :: ncheb
-      Real (Kind=dp), Intent (Out) :: cinvmatrix(0:ncheb, 0:ncheb)
-!local
-      Real (Kind=dp) :: pi
-      Integer :: icheb1, icheb2
-      Real (Kind=dp) :: fac
-
-      pi = 4E0_dp*atan(1E0_dp)
-      fac = 1.0E0_dp/(ncheb+1)
-      Do icheb1 = 0, ncheb
-        Do icheb2 = 0, ncheb
-          cinvmatrix(icheb1, icheb2) = fac*cos(icheb1*pi*((ncheb- &
-            icheb2)+0.5E0_dp)/(ncheb+1))
-        End Do
-        fac = 2.0E0_dp/(ncheb+1)
-      End Do
-    End Subroutine
+  pi = 4e0_dp*atan(1e0_dp)
+  do icheb1 = 0, ncheb
+    do icheb2 = 0, ncheb
+      ! maybe incorrect
+      cmatrix(icheb2, icheb1) = cos(icheb1*pi*((ncheb- &
+        icheb2)+0.5e0_dp)/(ncheb+1))
+    end do
+  end do
+end subroutine getcmatrix
 
 
-    Subroutine getccmatrix(ncheb, rmesh, nrmesh, cmatrix)
-! calculates the C matrix according to:
-! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
-      Use mod_datatypes
-      Implicit None
-      Integer, Intent (In) :: ncheb, nrmesh
-      Real (Kind=dp), Intent (In) :: rmesh(nrmesh)
-      Real (Kind=dp), Intent (Out) :: cmatrix(1:nrmesh, 0:ncheb)
-      Integer :: icheb, ir
+subroutine getcinvmatrix(ncheb, cinvmatrix)
+  ! calculates the C**-1 matrix according to:
+  ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  use :: mod_datatypes
+  implicit none
+  integer, intent (in) :: ncheb
+  real (kind=dp), intent (out) :: cinvmatrix(0:ncheb, 0:ncheb)
+  ! local
+  real (kind=dp) :: pi
+  integer :: icheb1, icheb2
+  real (kind=dp) :: fac
 
-      Do ir = 1, nrmesh
-        Do icheb = 0, ncheb
-          cmatrix(ir, icheb) = cos(real(icheb,kind=dp)*acos(rmesh(ir)))
-        End Do
-      End Do
-    End Subroutine
-
-
-    Subroutine getlambda(ncheb, lambda)
-! set up the Lambda matrix which differentiates the coefficients of an
-! Chebyshev expansion 
-      Use mod_datatypes
-      Implicit None
-      Integer, Intent (In) :: ncheb
-      Real (Kind=dp), Intent (Out) :: lambda(0:ncheb, 0:ncheb)
-!local
-      Integer :: icheb, icheb2
-
-      Do icheb2 = 1, ncheb, 2
-        lambda(0, icheb2) = icheb2
-      End Do
-      Do icheb = 1, ncheb
-        Do icheb2 = icheb + 1, ncheb, 2
-          lambda(icheb, icheb2) = icheb2*2
-        End Do
-      End Do
-    End Subroutine
+  pi = 4e0_dp*atan(1e0_dp)
+  fac = 1.0e0_dp/(ncheb+1)
+  do icheb1 = 0, ncheb
+    do icheb2 = 0, ncheb
+      cinvmatrix(icheb1, icheb2) = fac*cos(icheb1*pi*((ncheb- &
+        icheb2)+0.5e0_dp)/(ncheb+1))
+    end do
+    fac = 2.0e0_dp/(ncheb+1)
+  end do
+end subroutine getcinvmatrix
 
 
-    Subroutine getclambdacinv(ncheb, clambdacinv)
-      Use mod_datatypes
-      Implicit None
-! set up the Lambda matrix which differentiates the coefficients of an
-! Chebyshev expansion
-      Integer :: ncheb
-      Real (Kind=dp) :: clambdacinv(0:ncheb, 0:ncheb)
-!local
-      Real (Kind=dp) :: lambda(0:ncheb, 0:ncheb)
-      Real (Kind=dp) :: cmatrix(0:ncheb, 0:ncheb)
-      Real (Kind=dp) :: cinvmatrix(0:ncheb, 0:ncheb)
-      Real (Kind=dp) :: temp1(0:ncheb, 0:ncheb)
-      Integer :: n
+subroutine getccmatrix(ncheb, rmesh, nrmesh, cmatrix)
+  ! calculates the C matrix according to:
+  ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  use :: mod_datatypes
+  implicit none
+  integer, intent (in) :: ncheb, nrmesh
+  real (kind=dp), intent (in) :: rmesh(nrmesh)
+  real (kind=dp), intent (out) :: cmatrix(1:nrmesh, 0:ncheb)
+  integer :: icheb, ir
 
-      lambda = (0.0E0_dp, 0.0E0_dp)
-      cmatrix = (0.0E0_dp, 0.0E0_dp)
-      cinvmatrix = (0.0E0_dp, 0.0E0_dp)
-      lambda = (0.0E0_dp, 0.0E0_dp)
-      temp1 = (0.0E0_dp, 0.0E0_dp)
-
-      Call getlambda(ncheb, lambda)
-      Call getcinvmatrix(ncheb, cinvmatrix)
-      Call getcmatrix(ncheb, cmatrix)
-      n = ncheb + 1
-      Call dgemm('N', 'N', n, n, n, 1E0_dp, lambda, n, cinvmatrix, n, 0E0_dp, &
-        temp1, n)
-      Call dgemm('N', 'N', n, n, n, 1E0_dp, cmatrix, n, temp1, n, 0E0_dp, &
-        clambdacinv, n)
-    End Subroutine
+  do ir = 1, nrmesh
+    do icheb = 0, ncheb
+      cmatrix(ir, icheb) = cos(real(icheb,kind=dp)*acos(rmesh(ir)))
+    end do
+  end do
+end subroutine getccmatrix
 
 
-    Subroutine getclambda2cinv(ncheb, clambda2cinv)
-      Use mod_datatypes
-      Implicit None
-! set up the Lambda matrix which differentiates the coefficients of an
-! Chebyshev expansion
-      Integer :: ncheb
-      Real (Kind=dp) :: clambda2cinv(0:ncheb, 0:ncheb)
-!local
-      Real (Kind=dp) :: lambda(0:ncheb, 0:ncheb)
-      Real (Kind=dp) :: cmatrix(0:ncheb, 0:ncheb)
-      Real (Kind=dp) :: cinvmatrix(0:ncheb, 0:ncheb)
-      Real (Kind=dp) :: temp1(0:ncheb, 0:ncheb)
-      Real (Kind=dp) :: temp2(0:ncheb, 0:ncheb)
+subroutine getlambda(ncheb, lambda)
+  ! set up the Lambda matrix which differentiates the coefficients of an
+  ! Chebyshev expansion
+  use :: mod_datatypes
+  implicit none
+  integer, intent (in) :: ncheb
+  real (kind=dp), intent (out) :: lambda(0:ncheb, 0:ncheb)
+  ! local
+  integer :: icheb, icheb2
 
-      lambda = (0.0E0_dp, 0.0E0_dp)
-      cmatrix = (0.0E0_dp, 0.0E0_dp)
-      cinvmatrix = (0.0E0_dp, 0.0E0_dp)
-      lambda = (0.0E0_dp, 0.0E0_dp)
-      temp1 = (0.0E0_dp, 0.0E0_dp)
-
-      Call getlambda(ncheb, lambda)
-      Call getcinvmatrix(ncheb, cinvmatrix)
-      Call getcmatrix(ncheb, cmatrix)
-
-      Call matmat_dmdm(lambda, lambda, ncheb, temp1)
-      Call matmat_dmdm(temp1, cinvmatrix, ncheb, temp2)
-      Call matmat_dmdm(cmatrix, temp2, ncheb, clambda2cinv)
-    End Subroutine
+  do icheb2 = 1, ncheb, 2
+    lambda(0, icheb2) = icheb2
+  end do
+  do icheb = 1, ncheb
+    do icheb2 = icheb + 1, ncheb, 2
+      lambda(icheb, icheb2) = icheb2*2
+    end do
+  end do
+end subroutine getlambda
 
 
-    Subroutine diffcheb(fn, ncheb, dfndr)
-      Use mod_datatypes
-      Implicit None
-      Integer :: ncheb
-      Real (Kind=dp) :: fn(0:ncheb)
-      Real (Kind=dp) :: dfndr(0:ncheb)
-      Real (Kind=dp) :: clambdacinv(0:ncheb, 0:ncheb)
+subroutine getclambdacinv(ncheb, clambdacinv)
+  use :: mod_datatypes
+  implicit none
+  ! set up the Lambda matrix which differentiates the coefficients of an
+  ! Chebyshev expansion
+  integer :: ncheb
+  real (kind=dp) :: clambdacinv(0:ncheb, 0:ncheb)
+  ! local
+  real (kind=dp) :: lambda(0:ncheb, 0:ncheb)
+  real (kind=dp) :: cmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp) :: cinvmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp) :: temp1(0:ncheb, 0:ncheb)
+  integer :: n
 
-!needs to be checked!!!!!!1
-      Call getclambdacinv(ncheb, clambdacinv(0:ncheb,0:ncheb))
-      Call matvec_dmdm(ncheb, clambdacinv(0:ncheb,0:ncheb), fn(0:ncheb), &
-        dfndr(0:ncheb))
-    End Subroutine
+  lambda = (0.0e0_dp, 0.0e0_dp)
+  cmatrix = (0.0e0_dp, 0.0e0_dp)
+  cinvmatrix = (0.0e0_dp, 0.0e0_dp)
+  lambda = (0.0e0_dp, 0.0e0_dp)
+  temp1 = (0.0e0_dp, 0.0e0_dp)
+
+  call getlambda(ncheb, lambda)
+  call getcinvmatrix(ncheb, cinvmatrix)
+  call getcmatrix(ncheb, cmatrix)
+  n = ncheb + 1
+  call dgemm('N', 'N', n, n, n, 1e0_dp, lambda, n, cinvmatrix, n, 0e0_dp, &
+    temp1, n)
+  call dgemm('N', 'N', n, n, n, 1e0_dp, cmatrix, n, temp1, n, 0e0_dp, &
+    clambdacinv, n)
+end subroutine getclambdacinv
+
+
+subroutine getclambda2cinv(ncheb, clambda2cinv)
+  use :: mod_datatypes
+  implicit none
+  ! set up the Lambda matrix which differentiates the coefficients of an
+  ! Chebyshev expansion
+  integer :: ncheb
+  real (kind=dp) :: clambda2cinv(0:ncheb, 0:ncheb)
+  ! local
+  real (kind=dp) :: lambda(0:ncheb, 0:ncheb)
+  real (kind=dp) :: cmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp) :: cinvmatrix(0:ncheb, 0:ncheb)
+  real (kind=dp) :: temp1(0:ncheb, 0:ncheb)
+  real (kind=dp) :: temp2(0:ncheb, 0:ncheb)
+
+  lambda = (0.0e0_dp, 0.0e0_dp)
+  cmatrix = (0.0e0_dp, 0.0e0_dp)
+  cinvmatrix = (0.0e0_dp, 0.0e0_dp)
+  lambda = (0.0e0_dp, 0.0e0_dp)
+  temp1 = (0.0e0_dp, 0.0e0_dp)
+
+  call getlambda(ncheb, lambda)
+  call getcinvmatrix(ncheb, cinvmatrix)
+  call getcmatrix(ncheb, cmatrix)
+
+  call matmat_dmdm(lambda, lambda, ncheb, temp1)
+  call matmat_dmdm(temp1, cinvmatrix, ncheb, temp2)
+  call matmat_dmdm(cmatrix, temp2, ncheb, clambda2cinv)
+end subroutine getclambda2cinv
+
+
+subroutine diffcheb(fn, ncheb, dfndr)
+  use :: mod_datatypes
+  implicit none
+  integer :: ncheb
+  real (kind=dp) :: fn(0:ncheb)
+  real (kind=dp) :: dfndr(0:ncheb)
+  real (kind=dp) :: clambdacinv(0:ncheb, 0:ncheb)
+
+  ! needs to be checked!!!!!!1
+  call getclambdacinv(ncheb, clambdacinv(0:ncheb,0:ncheb))
+  call matvec_dmdm(ncheb, clambdacinv(0:ncheb,0:ncheb), fn(0:ncheb), &
+    dfndr(0:ncheb))
+end subroutine diffcheb
 
 
 ! helper functions
 
-    Subroutine matvec_dmdm(ncheb, mat1, vec1, outvec)
-      Use mod_datatypes
-      Implicit None
-      Integer, Intent (In) :: ncheb
-      Real (Kind=dp), Intent (In) :: mat1(0:ncheb, 0:ncheb), vec1(0:ncheb)
-      Real (Kind=dp), Intent (Out) :: outvec(0:ncheb)
-      Integer :: n, m
+subroutine matvec_dmdm(ncheb, mat1, vec1, outvec)
+  use :: mod_datatypes
+  implicit none
+  integer, intent (in) :: ncheb
+  real (kind=dp), intent (in) :: mat1(0:ncheb, 0:ncheb), vec1(0:ncheb)
+  real (kind=dp), intent (out) :: outvec(0:ncheb)
+  integer :: n, m
 
-      m = size(mat1, 1)
-      n = size(mat1, 2)
-      If (size(vec1,1)/=n) Stop &
-        'matvec_dmdm: dimensions of first input array differ.'
-      Call dgemv('N', m, n, 1.0E0_dp, mat1, m, vec1, 1, 0.0E0_dp, outvec, 1)
-    End Subroutine
+  m = size(mat1, 1)
+  n = size(mat1, 2)
+  if (size(vec1,1)/=n) stop &
+    'matvec_dmdm: dimensions of first input array differ.'
+  call dgemv('N', m, n, 1.0e0_dp, mat1, m, vec1, 1, 0.0e0_dp, outvec, 1)
+end subroutine matvec_dmdm
 
-    Subroutine matmat_dmdm(mat1, mat2, ncheb, outmat)
-      Use mod_datatypes
-      Implicit None
-      Integer, Intent (In) :: ncheb
-      Real (Kind=dp), Intent (In) :: mat1(0:ncheb, 0:ncheb), &
-        mat2(0:ncheb, 0:ncheb)
-      Real (Kind=dp), Intent (Out) :: outmat(0:ncheb, 0:ncheb)
+subroutine matmat_dmdm(mat1, mat2, ncheb, outmat)
+  use :: mod_datatypes
+  implicit none
+  integer, intent (in) :: ncheb
+  real (kind=dp), intent (in) :: mat1(0:ncheb, 0:ncheb), &
+    mat2(0:ncheb, 0:ncheb)
+  real (kind=dp), intent (out) :: outmat(0:ncheb, 0:ncheb)
 
-      Integer :: n
+  integer :: n
 
-      n = ncheb + 1
-      Call dgemm('N', 'N', n, n, n, 1E0_dp, mat1, n, mat2, n, 0E0_dp, outmat, &
-        n)
-    End Subroutine
+  n = ncheb + 1
+  call dgemm('N', 'N', n, n, n, 1e0_dp, mat1, n, mat2, n, 0e0_dp, outmat, n)
+end subroutine matmat_dmdm

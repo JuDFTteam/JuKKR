@@ -1,39 +1,39 @@
 subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
   alatc, tk, nacls1, nspinpot, natyp, conc, ielast, intervx, intervy, intervz, &
   dostot)
-  use mod_version_info
-  use mod_DataTypes
+  use :: mod_version_info
+  use :: mod_datatypes
   implicit none
-!.. Parameters ..
+  ! .. Parameters ..
   real (kind=dp) :: kb
   parameter (kb=0.6333659d-5)
-!..
-!.. Scalar Arguments ..
+  ! ..
+  ! .. Scalar Arguments ..
   real (kind=dp) :: alatc, e1, e2, efermi, tk
   integer :: ielast, iemxd, intervx, intervy, intervz, lmaxd1, nacls1, natyp, &
     npotd
-!===== uses spin-up and down also in the REL mode (KREL=1)
+  ! ===== uses spin-up and down also in the REL mode (KREL=1)
   integer :: nspinpot
-!..
-!.. Array Arguments ..
+  ! ..
+  ! .. Array Arguments ..
   complex (kind=dp) :: den(0:lmaxd1, iemxd, npotd), ez(iemxd), wez(iemxd)
   real (kind=dp) :: dostot(0:lmaxd1, 2), conc(*) ! CONC(NATYPD)
   integer :: ititle(20, npotd)
-!..
-!.. Local Scalars ..
+  ! ..
+  ! .. Local Scalars ..
   complex (kind=dp) :: doscmplx
   real (kind=dp) :: dos, dossgn, efctor, pi
   integer :: i1, ia, ie, ipot, ispin, l
   character (len=8) :: dosfl0
   character (len=11) :: dosfl
-!..
-!.. Intrinsic Functions ..
+  ! ..
+  ! .. Intrinsic Functions ..
   intrinsic :: atan, dble, aimag
-!..
-!.. External Functions ..
+  ! ..
+  ! .. External Functions ..
   logical :: test
   external :: test
-!     ..
+  ! ..
   pi = 4.0d0*atan(1.0d0)
   dosfl0 = 'dos.atom'
   efctor = 1.0d0
@@ -76,7 +76,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
     close (48)
   end do
 
-! Write complex DOS in unit 49:
+  ! Write complex DOS in unit 49:
   open (49, file='complex.dos', form='formatted')
   call version_print_header(49)
   write (49, *) natyp*nspinpot
@@ -108,7 +108,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
   end do
   close (49)
 
-! Write total DOS summed over atoms and spins(complex)
+  ! Write total DOS summed over atoms and spins(complex)
   open (49, file='total_cmplx.dos', form='formatted')
   call version_print_header(49)
   write (49, fmt='(4A16)') '# Real(E)', '  Im(E)', ' Re(DEN)', ' Im(DEN)'
@@ -129,7 +129,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
 
 
   return
-!ccc 9000 FORMAT ('&')
+  ! ccc 9000 FORMAT ('&')
 100 format (' ')
 110 format ('#', 19a4)
 120 format ('# I1    :', i8)
@@ -142,4 +142,4 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
 170 format (16('(',e12.4,',',e12.4,')'))
 180 format ('# Integrated DOS ', 1p, d10.3, 7d11.3)
 190 format ('&')
-end subroutine
+end subroutine wrldos

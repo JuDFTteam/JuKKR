@@ -1,23 +1,23 @@
 subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
   qmgam, nq, nk, erravang, nqmax, ntmax, nmvecmax, nkmmax)
-!   ********************************************************************
-!   *                                                                  *
-!   * applied to mix the angles specifying                             *
-!   * the local frame of reference                                     *
-!   *                                                                  *
-!   ********************************************************************
+  ! ********************************************************************
+  ! *                                                                  *
+  ! * applied to mix the angles specifying                             *
+  ! * the local frame of reference                                     *
+  ! *                                                                  *
+  ! ********************************************************************
   use :: mod_wunfiles, only: t_params
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
 
-! PARAMETER definitions
+  ! PARAMETER definitions
 
   integer :: ixtrmax
   parameter (ixtrmax=4)
   real (kind=dp) :: dangmax
   parameter (dangmax=3d0)
 
-! Dummy arguments
+  ! Dummy arguments
 
   real (kind=dp) :: erravang
   integer :: itrscf, nk, nkmmax, nmvecmax, nq, nqmax, ntmax
@@ -26,22 +26,21 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
     qmphi(nqmax), qmtet(nqmax)
   integer :: itoq(ntmax, nqmax)
 
-! Local variables
+  ! Local variables
 
   real (kind=dp) :: a, b, c, phixtr, tetxtr, d12, d23, d3x
   real (kind=dp) :: delphi, deltet, lasterr, mixing, qmgammix, qmphimix, &
     qmtetmix, wn, wo
   integer :: i, imv, iprev, iprint, iq, it, itab, ixtr
-  real (kind=dp) :: qmgamtab(nqmax, 3), qmphitab(nqmax, 3), &
-    qmtettab(nqmax, 3)
+  real (kind=dp) :: qmgamtab(nqmax, 3), qmphitab(nqmax, 3), qmtettab(nqmax, 3)
   complex (kind=dp) :: drotq(nkmmax, nkmmax, nqmax)
 
   mixing = 1.0d0
   wo = 1.0d0 - mixing
   wn = mixing
   iprint = 0
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-!      ITERMDIR I/O
+  ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+  ! ITERMDIR I/O
 
   qmtet = t_params%qmtet
   qmphi = t_params%qmphi
@@ -50,18 +49,18 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
   qmgamtab = t_params%qmgamtab
   itab = t_params%itab
   lasterr = t_params%lasterr
-!       READ (67) QMTET,QMPHI,QMPHITAB,QMTETTAB,QMGAMTAB,ITAB,LASTERR
-!       REWIND (67)
+  ! READ (67) QMTET,QMPHI,QMPHITAB,QMTETTAB,QMGAMTAB,ITAB,LASTERR
+  ! REWIND (67)
 
-!      ITERMDIR I/O
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+  ! ITERMDIR I/O
+  ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
   write (1337, fmt=110)
 
   if (itrscf==0) then
 
-! ----------------------------------------------------- store old angles
-! --------------------------------------- dummy for tbkkr, done in main0
+    ! ----------------------------------------------------- store old angles
+    ! --------------------------------------- dummy for tbkkr, done in main0
     do iq = 1, nq
       qmphitab(iq, 1) = qmphi(iq)
       qmtettab(iq, 1) = qmtet(iq)
@@ -77,8 +76,8 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
 
   else
 
-!------------------------- set new local frame of reference according to
-!-------------------------------------------- orientation of spin moment
+    ! ------------------------- set new local frame of reference according to
+    ! -------------------------------------------- orientation of spin moment
 
     imv = 1
 
@@ -92,7 +91,7 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
 
     end do
 
-!=======================================================================
+    ! =======================================================================
 
     if (itrscf<=2) then
       itab = itrscf
@@ -189,7 +188,7 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
       write (1337, 140) iq, qmphitab(iq, iprev), qmtettab(iq, iprev), &
         qmphi(iq), qmtet(iq), delphi, deltet
 
-! --> update the rotation matrices DROTQ for the new angles
+      ! --> update the rotation matrices DROTQ for the new angles
 
       call calcrotmat(nk, 3, qmphi(iq), qmtet(iq), 0.0d0, drotq(1,1,iq), fact, &
         nkmmax)
@@ -201,11 +200,11 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
       (qmphi(iq), qmtet(iq), iq=1, min(2,nq))
 
     lasterr = erravang
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-!      ITERMDIR I/O
+    ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+    ! ITERMDIR I/O
 
-!          WRITE (67) QMTET,QMPHI,QMPHITAB,QMTETTAB,QMGAMTAB,ITAB,LASTERR
-!          WRITE (67) DROTQ
+    ! WRITE (67) QMTET,QMPHI,QMPHITAB,QMTETTAB,QMGAMTAB,ITAB,LASTERR
+    ! WRITE (67) DROTQ
     t_params%qmtet = qmtet
     t_params%qmphi = qmphi
     t_params%qmphitab = qmphitab
@@ -215,16 +214,16 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
     t_params%lasterr = lasterr
     t_params%drotq = drotq
 
-!      ITERMDIR I/O
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+    ! ITERMDIR I/O
+    ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
   end if
 100 format (/, 5x, 'IQ', i3, '  IXTR', i3, '  LAST ERROR', f12.4, /, 3(3(5x,a, &
     5x,'TAB',i2,2x,f12.6,/),3(5x,a,9x,f12.6,/)))
-!   ====================================================================
+  ! ====================================================================
 110 format (79('+'), /, 28x, 'ANGLE - mixing scheme')
 120 format (5x, 'iter.', i4, '     max. CHANGE = ', f12.6)
 130 format (/, 5x, ' setting new LOCAL frame of reference ', /, /, 5x, &
     'IQ  old   phi      tet    --> new   phi      tet', &
     '     del   phi      tet')
 140 format (5x, i2, 4x, 2f9.4, 8x, 2f9.4, 5x, 2f9.4)
-end subroutine
+end subroutine scfiterang

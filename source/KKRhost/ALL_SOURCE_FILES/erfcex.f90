@@ -1,72 +1,72 @@
-    Function erfcex(z)
-      Use mod_datatypes, Only: dp
-!-----------------------------------------------------------------------
+function erfcex(z)
+  use :: mod_datatypes, only: dp
+  ! -----------------------------------------------------------------------
 
-!     calculates complementary errorfunction times sqrt(pi)
-!      times exp(z*z)  by continued fractions
+  ! calculates complementary errorfunction times sqrt(pi)
+  ! times exp(z*z)  by continued fractions
 
-!-----------------------------------------------------------------------
-      Implicit None
-      Real (Kind=dp) :: erfcex
+  ! -----------------------------------------------------------------------
+  implicit none
+  real (kind=dp) :: erfcex
 
-!.. scalar arguments ..
-      Real (Kind=dp) :: z
+  ! .. scalar arguments ..
+  real (kind=dp) :: z
 
-!.. local scalars ..
-      Real (Kind=dp) :: bound, erf1, exzz, f, fa, q, ratio, sqrtpi, term, u, &
-        ua, v, x, xa, y, z2, zz
+  ! .. local scalars ..
+  real (kind=dp) :: bound, erf1, exzz, f, fa, q, ratio, sqrtpi, term, u, ua, &
+    v, x, xa, y, z2, zz
 
-!.. intrinsic functions ..
-      Intrinsic :: abs, atan, exp, sqrt
+  ! .. intrinsic functions ..
+  intrinsic :: abs, atan, exp, sqrt
 
 
-      bound = 3.E-11_dp
-      sqrtpi = sqrt(4.0E0_dp*atan(1.0E0_dp))
-      zz = z*z
+  bound = 3.e-11_dp
+  sqrtpi = sqrt(4.0e0_dp*atan(1.0e0_dp))
+  zz = z*z
 
-!---> choose algorithm
+  ! ---> choose algorithm
 
-      If (z<1.5E0_dp) Then
+  if (z<1.5e0_dp) then
 
-!     this exponential was outside the if statement
-!     but for large arguments the exponent blow up
-!     changes made 21/10/99
+    ! this exponential was outside the if statement
+    ! but for large arguments the exponent blow up
+    ! changes made 21/10/99
 
-        exzz = exp(zz)
+    exzz = exp(zz)
 
-        z2 = 2.0E0_dp*zz
-        erf1 = z
-        ratio = 1.0E0_dp
-        term = z
-100     Continue
-        ratio = ratio + 2.0E0_dp
-        term = term*z2/ratio
-        erf1 = erf1 + term
-        If (term>bound) Go To 100
-        erfcex = sqrtpi*exzz - 2.0E0_dp*erf1
+    z2 = 2.0e0_dp*zz
+    erf1 = z
+    ratio = 1.0e0_dp
+    term = z
+100 continue
+    ratio = ratio + 2.0e0_dp
+    term = term*z2/ratio
+    erf1 = erf1 + term
+    if (term>bound) go to 100
+    erfcex = sqrtpi*exzz - 2.0e0_dp*erf1
 
-      Else
+  else
 
-!---> continued fraction expansion : abramowitz p. 298, eq. (7.1.14)
+    ! ---> continued fraction expansion : abramowitz p. 298, eq. (7.1.14)
 
-        u = 1.0E0_dp
-        v = 0.0E0_dp
-        x = z
-        y = 1.0E0_dp
-        q = 0.5E0_dp
-        f = (u+v*q)/(x+y*q)
-110     Continue
-        ua = u
-        u = u*z + v*q
-        v = ua
-        xa = x
-        x = x*z + y*q
-        y = xa
-        q = q + 0.5E0_dp
-        fa = f
-        f = (u+v*q)/(x+y*q)
-        If (abs(fa-f)>bound*f) Go To 110
-        erfcex = f
-      End If
+    u = 1.0e0_dp
+    v = 0.0e0_dp
+    x = z
+    y = 1.0e0_dp
+    q = 0.5e0_dp
+    f = (u+v*q)/(x+y*q)
+110 continue
+    ua = u
+    u = u*z + v*q
+    v = ua
+    xa = x
+    x = x*z + y*q
+    y = xa
+    q = q + 0.5e0_dp
+    fa = f
+    f = (u+v*q)/(x+y*q)
+    if (abs(fa-f)>bound*f) go to 110
+    erfcex = f
+  end if
 
-    End Function
+end function erfcex

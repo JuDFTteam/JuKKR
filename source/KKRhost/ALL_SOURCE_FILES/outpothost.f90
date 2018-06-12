@@ -2,28 +2,28 @@ subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
   bravais, rbasis, qmtet, qmphi, noq, kaoez, iqat, zat, conc, ipan, ircut, &
   solver, soc, ctl, irws, rmt, rws, rr, drdi, visp, irshift, rmrel, drdirel, &
   vtrel, btrel, lmaxd, natypd, naezd, ipand, irmd)
-! **********************************************************************
-! *                                                                    *
-! * writes decimation potential-file  'decimate.pot' to be later used  *
-! * for 2D systems with the DECIMATE option. Based on the host         *
-! * potentials, the single-site matrices of the host can be calculated *
-! * directly on each particular energy-mesh                            *
-! *                                        v.popescu - munich, Dec 04  *
-! *                                                                    *
-! * Note: so far, only SPHERICAL case implemented                      *
-! *                                                                    *
-! **********************************************************************
-      Use mod_datatypes, Only: dp
+  ! **********************************************************************
+  ! *                                                                    *
+  ! * writes decimation potential-file  'decimate.pot' to be later used  *
+  ! * for 2D systems with the DECIMATE option. Based on the host         *
+  ! * potentials, the single-site matrices of the host can be calculated *
+  ! * directly on each particular energy-mesh                            *
+  ! *                                        v.popescu - munich, Dec 04  *
+  ! *                                                                    *
+  ! * Note: so far, only SPHERICAL case implemented                      *
+  ! *                                                                    *
+  ! **********************************************************************
+  use :: mod_datatypes, only: dp
   use :: mod_version_info
   implicit none
-!..      
-!.. Scalar arguments
+  ! ..
+  ! .. Scalar arguments
   real (kind=dp) :: alat, efermi
   integer :: ins, ipand, irmd, kmrot, krel, lmaxd, naez
   integer :: naezd, natyp, natypd, nspin
   character (len=10) :: solver
-!..
-!.. Array arguments
+  ! ..
+  ! .. Array arguments
   real (kind=dp) :: bravais(3, 3), btrel(irmd*krel+(1-krel), *), conc(*), &
     ctl(krel*lmaxd+1, *), drdi(irmd, *), drdirel(irmd*krel+(1-krel), *), &
     qmphi(*), qmtet(*), rbasis(3, *), rmrel(irmd*krel+(1-krel), *), rmt(*), &
@@ -31,16 +31,16 @@ subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
     vtrel(irmd*krel+(1-krel), *), zat(*)
   integer :: ipan(*), iqat(*), ircut(0:ipand, *), irshift(*), irws(*), &
     kaoez(natypd, *), noq(naezd)
-!..      
-!.. Locals
+  ! ..
+  ! .. Locals
   character (len=3) :: elemname(0:113)
   integer :: i, iq, ir, is
   integer :: int
   character (len=9) :: txtrel(2), txtspin(3)
-!..
+  ! ..
   data txtspin/'         ', 'spin UP  ', 'spin DOWN'/
   data txtrel/'(UP+DN)/2', '(UP-DN)/2'/
-!.. 1     2     3     4    5     6     7     8     9     0
+  ! .. 1     2     3     4    5     6     7     8     9     0
   data elemname/'Vac', 'H  ', 'He ', 'Li ', 'Be', 'B  ', 'C  ', 'N  ', 'O  ', &
     'F  ', 'Ne ', 'Na ', 'Mg ', 'Al ', 'Si', 'P  ', 'S  ', 'Cl ', 'Ar ', &
     'K  ', 'Ca ', 'Sc ', 'Ti ', 'V  ', 'Cr', 'Mn ', 'Fe ', 'Co ', 'Ni ', &
@@ -53,7 +53,7 @@ subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
     'Ac ', 'Th ', 'Pa ', 'U  ', 'Np ', 'Pu', 'Am ', 'Cm ', 'Bk ', 'Cf ', &
     'Es ', 'Fm ', 'Md ', 'No ', 'Lr ', 'Rf', 'Db ', 'Sg ', 'Bh ', 'Hs ', &
     'Mt ', 'Uun', 'Uuu', 'Uub', 'NoE'/
-!     ..
+  ! ..
   write (1337, '(5X,A,A,/)') '< OUTPOTHOST > : ', &
     'creating decimate.pot file - host potential'
 
@@ -65,10 +65,10 @@ subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
   write (37, fmt=150) naez, natyp, alat
   write (37, fmt=130) efermi
   write (37, fmt=110) bravais
-! ----------------------------------------------------------------------
-! here insert whatever is more needed for the structure (BZ,SYM etc),
-! ref. system and so on for a full host calculation (1 iteration)
-! ----------------------------------------------------------------------
+  ! ----------------------------------------------------------------------
+  ! here insert whatever is more needed for the structure (BZ,SYM etc),
+  ! ref. system and so on for a full host calculation (1 iteration)
+  ! ----------------------------------------------------------------------
   write (37, fmt=120)
   do iq = 1, naez
     write (37, fmt=160) iq, (rbasis(i,iq), i=1, 3)
@@ -85,7 +85,7 @@ subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
       (ircut(iq,i), iq=0, ipan(i))
     if (krel==1) write (37, 220) soc(1, i), ctl(1, i)
   end do
-! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   do i = 1, natyp
     write (37, '(80("*"))')
     ir = int(zat(i))
@@ -108,9 +108,9 @@ subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
     end if
   end do
 
-! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   close (37)
-!     ..
+  ! ..
 100 format ('Vectors in lattice constant units')
 110 format ('BRAVAIS ', /, 3f8.4, /, 3f8.4, /, 3f8.4)
 120 format ('RBASIS')
@@ -130,4 +130,4 @@ subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
     f12.8, /, 'RWS   :', f12.8)
 240 format (1p, 4d20.12)
 250 format ('ISHIFT:', i3)
-end subroutine
+end subroutine outpothost

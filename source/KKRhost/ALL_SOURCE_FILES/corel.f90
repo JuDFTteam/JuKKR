@@ -1,53 +1,53 @@
 subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
   b, is, nspin, nr, rmax, irmd)
-!-----------------------------------------------------------------------
-!     subroutine for core states
-!-----------------------------------------------------------------------
-!     lmxc = lmaxcore = (0,1,2,...), .e.g, argon core : lmxc = 1
-!                                        krypton core : lmxc = 2
-!     kfg = configuration of core, e.g., argon core: 3300=3s,3p,0d
-!                                      krypton core: 4430=4s,4p,3d
-!                                      xenon core: 5540=5s,5p,4d
-!-----------------------------------------------------------------------
+  ! -----------------------------------------------------------------------
+  ! subroutine for core states
+  ! -----------------------------------------------------------------------
+  ! lmxc = lmaxcore = (0,1,2,...), .e.g, argon core : lmxc = 1
+  ! krypton core : lmxc = 2
+  ! kfg = configuration of core, e.g., argon core: 3300=3s,3p,0d
+  ! krypton core: 4430=4s,4p,3d
+  ! xenon core: 5540=5s,5p,4d
+  ! -----------------------------------------------------------------------
   use :: mod_types, only: t_inc
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
-!.. Parameters ..
+  ! .. Parameters ..
   integer :: nitmax, irnumx
   parameter (nitmax=40, irnumx=10)
   real (kind=dp) :: zero
   parameter (zero=0.0d0)
-!..
-!.. Scalar Arguments ..
+  ! ..
+  ! .. Scalar Arguments ..
   real (kind=dp) :: a, b, qc, rmax, z
   integer :: ip, ipr, irmd, is, ncore, nr, nspin, nsra
-!..
-!.. Array Arguments ..
+  ! ..
+  ! .. Array Arguments ..
   real (kind=dp) :: drdi(*), ecore(*), rhoc(*), v(*)
   integer :: lcore(*)
-!..
-!.. Local Scalars ..
+  ! ..
+  ! .. Local Scalars ..
   real (kind=dp) :: e, e1, e2, ediff, ei, slope, sum, tol, value, wgt
   integer :: ic, in, inuc, ir, l, lmp1, lmxc, lp1, nc, nmax, nn, nre
   logical :: vlnc
-!..
-!.. Local Arrays ..
+  ! ..
+  ! .. Local Arrays ..
   real (kind=dp) :: f(irmd), g(irmd), rho(irmd)
   integer :: kfg(4)
   character (len=4) :: spn(2), text(5)
-!..
-!.. External Subroutines ..
+  ! ..
+  ! .. External Subroutines ..
   external :: intcor, simp3
-!..
-!.. Intrinsic Functions ..
+  ! ..
+  ! .. Intrinsic Functions ..
   intrinsic :: dble, real
-!..
-!.. Save statement ..
+  ! ..
+  ! .. Save statement ..
   save :: spn, text
-!..
-!.. Data statements ..
+  ! ..
+  ! .. Data statements ..
   data spn, text/'down', 'up  ', 's   ', 'p   ', 'd   ', 'f   ', 'g   '/
-!..
+  ! ..
   vlnc = .false.
   value = 1.d-8
   slope = -1.d-8
@@ -101,7 +101,7 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
         if ((t_inc%i_write>0) .and. (ipr/=0)) write (1337, fmt=110) ei, ediff, &
           e
 
-!---> sum up contributions to total core charge
+        ! ---> sum up contributions to total core charge
 
         do ir = 2, nre
           rhoc(ir) = rhoc(ir) + rho(ir)*wgt
@@ -113,7 +113,7 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
   end do
   if (nc*irnumx>150 .or. irnumx>10) stop 'corel'
 
-!---> integrate core density to get core charge
+  ! ---> integrate core density to get core charge
 
   call simp3(rhoc, qc, 1, nr, drdi)
 
@@ -121,4 +121,4 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
     '  spin=', a4, i5, 'th cell', '    einput = ', 1p, d16.8)
 110 format (1x, '  einput =', 1p, d16.8, '   eout - ein =', 1p, d16.8, &
     '   eoutput = ', 1p, d16.8)
-end subroutine
+end subroutine corel

@@ -1,162 +1,161 @@
-    Subroutine projtau(icpaflag, cpachng, kmrot, wrtau, wrtaumq, ifiltau, &
-      eryd, nt, nq, nkmq, msst, mssq, nlinq, iqat, conc, tauq, taut, tautlin, &
-      ikm1lin, ikm2lin, drotq, ntmax, nqmax, nkmmax, linmax)
-      Use mod_datatypes, Only: dp
-!   ********************************************************************
-!   *                                                                  *
-!   *   calculate the component projected TAU - matrices               *
-!   *                                                                  *
-!   *      TAU(IT) =  TAU(IQ) * ( 1 + (m(t)-m(c))*TAU(IQ) )**(-1)      *
-!   *                                                                  *
-!   *   NOTE: it is assumed that all equivalent sites  IQ  have the    *
-!   *   same TAU-matrix  TAUQ(IQ). To get  TAU(IT)  the first site IQ  *
-!   *   occupied by type IT is taken to be representative for          *
-!   *   all other (NAT(IT)-1) sites occupied by IT                     *
-!   *                                                                  *
-!   *   allows an atom type IT to have different orientation of        *
-!   *   its moment on different but equivalent sites  IQ               *
-!   *                                                                  *
-!   * 01/11/00                                                         *
-!   ********************************************************************
-      Implicit None
+subroutine projtau(icpaflag, cpachng, kmrot, wrtau, wrtaumq, ifiltau, eryd, &
+  nt, nq, nkmq, msst, mssq, nlinq, iqat, conc, tauq, taut, tautlin, ikm1lin, &
+  ikm2lin, drotq, ntmax, nqmax, nkmmax, linmax)
+  use :: mod_datatypes, only: dp
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *   calculate the component projected TAU - matrices               *
+  ! *                                                                  *
+  ! *      TAU(IT) =  TAU(IQ) * ( 1 + (m(t)-m(c))*TAU(IQ) )**(-1)      *
+  ! *                                                                  *
+  ! *   NOTE: it is assumed that all equivalent sites  IQ  have the    *
+  ! *   same TAU-matrix  TAUQ(IQ). To get  TAU(IT)  the first site IQ  *
+  ! *   occupied by type IT is taken to be representative for          *
+  ! *   all other (NAT(IT)-1) sites occupied by IT                     *
+  ! *                                                                  *
+  ! *   allows an atom type IT to have different orientation of        *
+  ! *   its moment on different but equivalent sites  IQ               *
+  ! *                                                                  *
+  ! * 01/11/00                                                         *
+  ! ********************************************************************
+  implicit none
 
-! PARAMETER definitions
-      Real (Kind=dp) :: tol
-      Parameter (tol=1.0E-6_dp)
-      Complex (Kind=dp) :: c0, c1
-      Parameter (c0=(0.0E0_dp,0.0E0_dp), c1=(1.0E0_dp,0.0E0_dp))
+  ! PARAMETER definitions
+  real (kind=dp) :: tol
+  parameter (tol=1.0e-6_dp)
+  complex (kind=dp) :: c0, c1
+  parameter (c0=(0.0e0_dp,0.0e0_dp), c1=(1.0e0_dp,0.0e0_dp))
 
-! Dummy arguments
-      Real (Kind=dp) :: cpachng
-      Complex (Kind=dp) :: eryd
-      Integer :: icpaflag, ifiltau, kmrot, linmax, nkmmax, nq, nqmax, nt, &
-        ntmax
-      Logical :: wrtau, wrtaumq
-      Real (Kind=dp) :: conc(ntmax)
-      Complex (Kind=dp) :: drotq(nkmmax, nkmmax, nqmax), &
-        mssq(nkmmax, nkmmax, nqmax), msst(nkmmax, nkmmax, ntmax), &
-        tauq(nkmmax, nkmmax, nqmax), taut(nkmmax, nkmmax, ntmax), &
-        tautlin(linmax, ntmax)
-      Integer :: ikm1lin(linmax), ikm2lin(linmax), iqat(ntmax), nkmq(nqmax), &
-        nlinq(nqmax)
+  ! Dummy arguments
+  real (kind=dp) :: cpachng
+  complex (kind=dp) :: eryd
+  integer :: icpaflag, ifiltau, kmrot, linmax, nkmmax, nq, nqmax, nt, ntmax
+  logical :: wrtau, wrtaumq
+  real (kind=dp) :: conc(ntmax)
+  complex (kind=dp) :: drotq(nkmmax, nkmmax, nqmax), &
+    mssq(nkmmax, nkmmax, nqmax), msst(nkmmax, nkmmax, ntmax), &
+    tauq(nkmmax, nkmmax, nqmax), taut(nkmmax, nkmmax, ntmax), &
+    tautlin(linmax, ntmax)
+  integer :: ikm1lin(linmax), ikm2lin(linmax), iqat(ntmax), nkmq(nqmax), &
+    nlinq(nqmax)
 
-! Local variables
-      Real (Kind=dp) :: cpac
-      Complex (Kind=dp) :: dmamc(nkmmax, nkmmax), dmattg(nkmmax, nkmmax), &
-        dtiltg(nkmmax, nkmmax), rmss, rtau, w1(nkmmax, nkmmax)
-      Integer :: i, icpaf, iq, it, j, lin, m, n
+  ! Local variables
+  real (kind=dp) :: cpac
+  complex (kind=dp) :: dmamc(nkmmax, nkmmax), dmattg(nkmmax, nkmmax), &
+    dtiltg(nkmmax, nkmmax), rmss, rtau, w1(nkmmax, nkmmax)
+  integer :: i, icpaf, iq, it, j, lin, m, n
 
-      Do it = 1, nt
+  do it = 1, nt
 
-! ---------- pick first site IQ occupied by type IT to be representative
-! ----------- all other (NAT(IT)-1) occupied sites have to be equivalent
+    ! ---------- pick first site IQ occupied by type IT to be representative
+    ! ----------- all other (NAT(IT)-1) occupied sites have to be equivalent
 
-        iq = iqat(it)
-        m = nkmmax
-        n = nkmq(iq)
+    iq = iqat(it)
+    m = nkmmax
+    n = nkmq(iq)
 
-        If (conc(it)<0.995_dp) Then
+    if (conc(it)<0.995_dp) then
 
-! ------------------------- rotate the single site m-matrix if necessary
-          If (kmrot/=0) Then
+      ! ------------------------- rotate the single site m-matrix if necessary
+      if (kmrot/=0) then
 
-            Call rotate(msst(1,1,it), 'L->G', w1, n, drotq(1,1,iq), m)
+        call rotate(msst(1,1,it), 'L->G', w1, n, drotq(1,1,iq), m)
 
-            Call getdmat(tauq(1,1,iq), dmattg, dtiltg, dmamc, n, mssq(1,1,iq), &
-              w1, m)
+        call getdmat(tauq(1,1,iq), dmattg, dtiltg, dmamc, n, mssq(1,1,iq), w1, &
+          m)
 
-          Else
+      else
 
-            Call getdmat(tauq(1,1,iq), dmattg, dtiltg, dmamc, n, mssq(1,1,iq), &
-              msst(1,1,it), m)
+        call getdmat(tauq(1,1,iq), dmattg, dtiltg, dmamc, n, mssq(1,1,iq), &
+          msst(1,1,it), m)
 
-          End If
+      end if
 
-!     -------------------------------------------
-!              TAU(t) = TAU * D~(t)
-!     ----------------------------------------
-          Call zgemm('N', 'N', n, n, n, c1, tauq(1,1,iq), m, dtiltg, m, c0, &
-            taut(1,1,it), m)
+      ! -------------------------------------------
+      ! TAU(t) = TAU * D~(t)
+      ! ----------------------------------------
+      call zgemm('N', 'N', n, n, n, c1, tauq(1,1,iq), m, dtiltg, m, c0, &
+        taut(1,1,it), m)
 
-          icpaf = icpaflag
-          cpac = cpachng
+      icpaf = icpaflag
+      cpac = cpachng
 
-        Else
+    else
 
-!     CONC > 0.995:  COPY TAU TO TAUTLIN
+      ! CONC > 0.995:  COPY TAU TO TAUTLIN
 
-          Do j = 1, n
-            Call zcopy(n, tauq(1,j,iq), 1, taut(1,j,it), 1)
-          End Do
+      do j = 1, n
+        call zcopy(n, tauq(1,j,iq), 1, taut(1,j,it), 1)
+      end do
 
-          icpaf = 0
-          cpac = 0E0_dp
+      icpaf = 0
+      cpac = 0e0_dp
 
-        End If
+    end if
 
-!     -------------------------------------------
-!            rotate  TAU(t)  if required
-!     -------------------------------------------
+    ! -------------------------------------------
+    ! rotate  TAU(t)  if required
+    ! -------------------------------------------
 
-        If (kmrot/=0) Then
+    if (kmrot/=0) then
 
-          Do j = 1, n
-            Call zcopy(n, taut(1,j,it), 1, w1(1,j), 1)
-          End Do
+      do j = 1, n
+        call zcopy(n, taut(1,j,it), 1, w1(1,j), 1)
+      end do
 
-          Call rotate(w1, 'G->L', taut(1,1,it), n, drotq(1,1,iq), m)
+      call rotate(w1, 'G->L', taut(1,1,it), n, drotq(1,1,iq), m)
 
-        End If
+    end if
 
-!     -------------------------------------------
-!        STORE TAU(t) IN LINEAR ARRAY TAUTLIN
-!     -------------------------------------------
+    ! -------------------------------------------
+    ! STORE TAU(t) IN LINEAR ARRAY TAUTLIN
+    ! -------------------------------------------
 
-        Do lin = 1, nlinq(iq)
-          tautlin(lin, it) = taut(ikm1lin(lin), ikm2lin(lin), it)
-        End Do
+    do lin = 1, nlinq(iq)
+      tautlin(lin, it) = taut(ikm1lin(lin), ikm2lin(lin), it)
+    end do
 
-        If (wrtau) Then
-          Write (ifiltau, 100) eryd, it, iq, icpaf, cpac
-          Do i = 1, n
-            Do j = 1, n
-              If (i==j) Then
-                Write (ifiltau, 120) i, j, taut(i, j, it)
-              Else
-                If (abs(taut(i,j,it)/taut(i,i,it))>tol) Write (ifiltau, 120) i &
-                  , j, taut(i, j, it)
-              End If
-            End Do
-          End Do
-        End If
+    if (wrtau) then
+      write (ifiltau, 100) eryd, it, iq, icpaf, cpac
+      do i = 1, n
+        do j = 1, n
+          if (i==j) then
+            write (ifiltau, 120) i, j, taut(i, j, it)
+          else
+            if (abs(taut(i,j,it)/taut(i,i,it))>tol) write (ifiltau, 120) i, j, &
+              taut(i, j, it)
+          end if
+        end do
+      end do
+    end if
 
-      End Do
-!================================================================= IT ==
+  end do
+  ! ================================================================= IT ==
 
-      If (wrtaumq) Then
-        Do iq = 1, nq
-          Write (ifiltau, 110) eryd, iq, icpaflag, cpachng
-          Do i = 1, n
-            Do j = 1, n
-              If (i==j) Then
-                Write (ifiltau, 120) i, j, tauq(i, j, iq), mssq(i, j, iq)
-              Else
-                rtau = tauq(i, j, iq)/tauq(i, i, iq)
-                rmss = mssq(i, j, iq)/mssq(i, i, iq)
-                If ((abs(rtau)>tol) .Or. (abs(rmss)>tol)) Write (ifiltau, 120) &
-                  i, j, tauq(i, j, iq), mssq(i, j, iq)
-              End If
+  if (wrtaumq) then
+    do iq = 1, nq
+      write (ifiltau, 110) eryd, iq, icpaflag, cpachng
+      do i = 1, n
+        do j = 1, n
+          if (i==j) then
+            write (ifiltau, 120) i, j, tauq(i, j, iq), mssq(i, j, iq)
+          else
+            rtau = tauq(i, j, iq)/tauq(i, i, iq)
+            rmss = mssq(i, j, iq)/mssq(i, i, iq)
+            if ((abs(rtau)>tol) .or. (abs(rmss)>tol)) write (ifiltau, 120) i, &
+              j, tauq(i, j, iq), mssq(i, j, iq)
+          end if
 
-            End Do
-          End Do
+        end do
+      end do
 
-        End Do
-      End If
-!--------------------------------------------------------- FORMAT IFMT=2
-100   Format (/, 80('*'), /, 2F21.15, ' RYD   TAU FOR IT=', I2, '  IQ=', I2, &
-        :, '  CPA:', I2, F15.6)
-110   Format (/, 80('*'), /, 2F21.15, ' RYD   TAU-C M-C  FOR IQ=', I2, :, &
-        '  CPA:', I2, F15.6)
-120   Format (2I5, 1P, 4E22.14)
+    end do
+  end if
+  ! --------------------------------------------------------- FORMAT IFMT=2
+100 format (/, 80('*'), /, 2f21.15, ' RYD   TAU FOR IT=', i2, '  IQ=', i2, :, &
+    '  CPA:', i2, f15.6)
+110 format (/, 80('*'), /, 2f21.15, ' RYD   TAU-C M-C  FOR IQ=', i2, :, &
+    '  CPA:', i2, f15.6)
+120 format (2i5, 1p, 4e22.14)
 
-    End Subroutine
+end subroutine projtau

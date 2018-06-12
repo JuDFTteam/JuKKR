@@ -1,47 +1,47 @@
-    Integer Function ioben(r)
-      Use mod_datatypes, Only: dp
-!-----------------------------------------------------------------------
+integer function ioben(r)
+  use :: mod_datatypes, only: dp
+  ! -----------------------------------------------------------------------
 
-!                             --   --
-!     Calculates the function |  r  |  (next upper or equal integer)
-!                             |     |
+  ! --   --
+  ! Calculates the function |  r  |  (next upper or equal integer)
+  ! |     |
 
-!     Descrition of input parameters:
+  ! Descrition of input parameters:
 
-!       r : real number to look for
+  ! r : real number to look for
 
-!                                           Rudolf Berrendorf, July 1992
-!                                           last update: February 1994
-!-----------------------------------------------------------------------
+  ! Rudolf Berrendorf, July 1992
+  ! last update: February 1994
+  ! -----------------------------------------------------------------------
 
-      Implicit None
+  implicit none
 
-!.. Scalar Arguments ..
+  ! .. Scalar Arguments ..
 
-      Real (Kind=dp) :: r
-!..
-!.. Intrinsic Functions ..
-      Intrinsic :: abs, int, nint
-!..
+  real (kind=dp) :: r
+  ! ..
+  ! .. Intrinsic Functions ..
+  intrinsic :: abs, int, nint
+  ! ..
 
-!.. Parameters ..
-      Real (Kind=dp) :: eps
-      Parameter (eps=1E-6_dp)
-!..
+  ! .. Parameters ..
+  real (kind=dp) :: eps
+  parameter (eps=1e-6_dp)
+  ! ..
 
-      If ((nint(r)-r)<eps) Then
-        If (abs(nint(r)-r)<eps) Then
-          ioben = nint(r)
-        Else
-          ioben = nint(r+1.0_dp)
-        End If
-      Else
-        If (abs(int(r)-r)<eps) Then
-          ioben = int(r)
-        Else
-          ioben = int(r+1.0_dp)
-        End If
-      End If
+  if ((nint(r)-r)<eps) then
+    if (abs(nint(r)-r)<eps) then
+      ioben = nint(r)
+    else
+      ioben = nint(r+1.0_dp)
+    end if
+  else
+    if (abs(int(r)-r)<eps) then
+      ioben = int(r)
+    else
+      ioben = int(r+1.0_dp)
+    end if
+  end if
 
-      Return
-    End Function
+  return
+end function ioben

@@ -1,8 +1,8 @@
-    Real *8 Function rnuctab(z)
-      Use mod_datatypes, Only: dp
-      Integer, Intent (Out) :: z
+real *8 function rnuctab(z)
+  use :: mod_datatypes, only: dp
+  integer, intent (out) :: z
 
-      z = 0
-      rnuctab = 0E0_dp
-      Stop ' < RNUCTAB > : NUCLEUS <> 0 not implemented '
-    End Function
+  z = 0
+  rnuctab = 0e0_dp
+  stop ' < RNUCTAB > : NUCLEUS <> 0 not implemented '
+end function rnuctab

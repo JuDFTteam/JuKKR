@@ -1,26 +1,26 @@
-    Subroutine sumupint(sum, vg, g, wg, vf, f, wf, n)
-      Use mod_datatypes, Only: dp
-!   ********************************************************************
-!   *                                                                  *
-!   ********************************************************************
-      Implicit None
+subroutine sumupint(sum, vg, g, wg, vf, f, wf, n)
+  use :: mod_datatypes, only: dp
+  ! ********************************************************************
+  ! *                                                                  *
+  ! ********************************************************************
+  implicit none
 
 
-! Dummy arguments
-      Integer :: n
-      Complex (Kind=dp) :: sum
-      Real (Kind=dp) :: vf, vg
-      Complex (Kind=dp) :: f(2, 2), g(2, 2)
-      Real (Kind=dp) :: wf(2, 2), wg(2, 2)
+  ! Dummy arguments
+  integer :: n
+  complex (kind=dp) :: sum
+  real (kind=dp) :: vf, vg
+  complex (kind=dp) :: f(2, 2), g(2, 2)
+  real (kind=dp) :: wf(2, 2), wg(2, 2)
 
-! Local variables
-      Integer :: i, j
+  ! Local variables
+  integer :: i, j
 
-      sum = 0.0E0_dp
-      Do j = 1, n
-        Do i = 1, n
-          sum = sum + vg*g(i, j)*wg(i, j) + vf*f(i, j)*wf(i, j)
-        End Do
-      End Do
+  sum = 0.0e0_dp
+  do j = 1, n
+    do i = 1, n
+      sum = sum + vg*g(i, j)*wg(i, j) + vf*f(i, j)*wf(i, j)
+    end do
+  end do
 
-    End Subroutine
+end subroutine sumupint

@@ -1,10 +1,10 @@
 ! *********************************************************** 17.05.91 **
 logical function test(string)
-! ***********************************************************************
+  ! ***********************************************************************
 
-!     TEST = 'STRING  ' IS CONTAINED IN /TESTC/.
+  ! TEST = 'STRING  ' IS CONTAINED IN /TESTC/.
 
-! ------------------------------------------------------------------------
+  ! ------------------------------------------------------------------------
   use :: mod_wunfiles, only: t_params
 
   implicit none
@@ -19,4 +19,4 @@ logical function test(string)
     if (string==testc(i)) test = .true.
   end do
   return
-end function
+end function test

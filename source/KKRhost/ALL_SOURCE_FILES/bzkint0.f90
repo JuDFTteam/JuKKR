@@ -1,106 +1,105 @@
-    Subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, &
-      recbv, atomimp, rsymat, isymindex, nsymat, ifilimp, natomimp, nsh1, &
-      nsh2, rclsimp, ratom, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, &
-      nofgij, ish, jsh, rrot, dsymll, para, qmtet, qmphi, symunitary, hostimp, &
-      intervx, intervy, intervz, ielast, ez, kmesh, maxmesh, maxmshd, nsymaxd, &
-      krel, lmaxd, lmmaxd, kpoibz, naezd, natypd, natomimpd, nsheld, nembd)
-      Use mod_datatypes, Only: dp
-      Implicit None
-!.. Parameters ..
-      Integer :: nsymaxd, krel, lmaxd, lmmaxd
-      Integer :: kpoibz, naezd, natypd, natomimpd, nsheld, nembd
-!..
-!.. Scalar Arguments ..
-      Integer :: icc, naez, natomimp, natyp, nsymat, nofgij
-      Integer :: intervx, intervy, intervz, maxmesh, maxmshd, ielast
-      Character (Len=40) :: ifilimp
-!..
-!.. Array Arguments ..
-      Complex (Kind=dp) :: dsymll(lmmaxd, lmmaxd, nsymaxd), ez(*)
-      Real (Kind=dp) :: bravais(3, 3), ratom(3, nsheld), &
-        rbasis(3, naezd+nembd), rclsimp(3, natomimpd), recbv(3, 3), &
-        rrot(48, 3, nsheld), rsymat(64, 3, 3)
-      Integer :: atomimp(natomimpd), isymindex(nsymaxd), &
-        kaoez(natypd, naezd+nembd), noq(naezd), kmesh(*), nsh1(*), nsh2(*), &
-        nshell(0:nsheld), ijtabsym(*), ijtabsh(*), ijtabcalc(*), iofgij(*), &
-        jofgij(*), ish(nsheld, *), jsh(nsheld, *)
+subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, &
+  recbv, atomimp, rsymat, isymindex, nsymat, ifilimp, natomimp, nsh1, nsh2, &
+  rclsimp, ratom, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, &
+  jsh, rrot, dsymll, para, qmtet, qmphi, symunitary, hostimp, intervx, &
+  intervy, intervz, ielast, ez, kmesh, maxmesh, maxmshd, nsymaxd, krel, lmaxd, &
+  lmmaxd, kpoibz, naezd, natypd, natomimpd, nsheld, nembd)
+  use :: mod_datatypes, only: dp
+  implicit none
+  ! .. Parameters ..
+  integer :: nsymaxd, krel, lmaxd, lmmaxd
+  integer :: kpoibz, naezd, natypd, natomimpd, nsheld, nembd
+  ! ..
+  ! .. Scalar Arguments ..
+  integer :: icc, naez, natomimp, natyp, nsymat, nofgij
+  integer :: intervx, intervy, intervz, maxmesh, maxmshd, ielast
+  character (len=40) :: ifilimp
+  ! ..
+  ! .. Array Arguments ..
+  complex (kind=dp) :: dsymll(lmmaxd, lmmaxd, nsymaxd), ez(*)
+  real (kind=dp) :: bravais(3, 3), ratom(3, nsheld), rbasis(3, naezd+nembd), &
+    rclsimp(3, natomimpd), recbv(3, 3), rrot(48, 3, nsheld), rsymat(64, 3, 3)
+  integer :: atomimp(natomimpd), isymindex(nsymaxd), &
+    kaoez(natypd, naezd+nembd), noq(naezd), kmesh(*), nsh1(*), nsh2(*), &
+    nshell(0:nsheld), ijtabsym(*), ijtabsh(*), ijtabcalc(*), iofgij(*), &
+    jofgij(*), ish(nsheld, *), jsh(nsheld, *)
 
-!..anges for impurity 20/02/2004 -- v.popescu according to 
-!..                                 n.papanikolaou 
+  ! ..anges for impurity 20/02/2004 -- v.popescu according to
+  ! ..                                 n.papanikolaou
 
-      Integer :: hostimp(0:natypd)
-!..
-!.. Local Scalars ..
-      Integer :: i, ishell, iu, iprint
-      Logical :: lirr
-!..
-!.. Local Arrays ..
-      Character (Len=10) :: rotname(64)
-!.. magnetisation angles ..
-      Real (Kind=dp) :: qmtet(naezd), qmphi(naezd)
-!.. unitary/antiunitary symmetry flag
-      Logical :: symunitary(nsymaxd), para
-!..
-!.. External Functions ..
-      Logical :: test, opt
-      External :: test, opt
-!..
-!.. External Subroutines ..
-      External :: bzkmesh, crtstar, findgroup, gfshells, pointgrp, symtaumat
-!..
+  integer :: hostimp(0:natypd)
+  ! ..
+  ! .. Local Scalars ..
+  integer :: i, ishell, iu, iprint
+  logical :: lirr
+  ! ..
+  ! .. Local Arrays ..
+  character (len=10) :: rotname(64)
+  ! .. magnetisation angles ..
+  real (kind=dp) :: qmtet(naezd), qmphi(naezd)
+  ! .. unitary/antiunitary symmetry flag
+  logical :: symunitary(nsymaxd), para
+  ! ..
+  ! .. External Functions ..
+  logical :: test, opt
+  external :: test, opt
+  ! ..
+  ! .. External Subroutines ..
+  external :: bzkmesh, crtstar, findgroup, gfshells, pointgrp, symtaumat
+  ! ..
 
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-      Write (1337, '(79("="),/,15X,A)') &
-        'BZKINT0: finding symmetry, setting BZ integration'
-      Write (1337, '(79("="),/)')
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+  ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+  write (1337, '(79("="),/,15X,A)') &
+    'BZKINT0: finding symmetry, setting BZ integration'
+  write (1337, '(79("="),/)')
+  ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-      Call pointgrp(rsymat, rotname)
-      Call findgroup(bravais, recbv, rbasis, naez, rsymat, rotname, isymindex, &
-        nsymat, para, qmtet, qmphi, symunitary, krel, naezd, nembd, nsymaxd)
+  call pointgrp(rsymat, rotname)
+  call findgroup(bravais, recbv, rbasis, naez, rsymat, rotname, isymindex, &
+    nsymat, para, qmtet, qmphi, symunitary, krel, naezd, nembd, nsymaxd)
 
-      lirr = .True.
-      iprint = 0
-      If (test('TAUSTRUC')) iprint = 2
+  lirr = .true.
+  iprint = 0
+  if (test('TAUSTRUC')) iprint = 2
 
-! --> test: full BZ integration
+  ! --> test: full BZ integration
 
-      If (test('fullBZ  ') .Or. opt('NEWSOSOL')) Then
-        nsymat = 1
-        lirr = .False.
-        Write (1337, '(8X,2A,/)') &
-          'Test option < fullBZ > or Run option < NEWSOSOL >: ', &
-          ' overriding NSYMAT, generate full BZ k-mesh'
-      End If
+  if (test('fullBZ  ') .or. opt('NEWSOSOL')) then
+    nsymat = 1
+    lirr = .false.
+    write (1337, '(8X,2A,/)') &
+      'Test option < fullBZ > or Run option < NEWSOSOL >: ', &
+      ' overriding NSYMAT, generate full BZ k-mesh'
+  end if
 
-! --> generate BZ k-mesh
+  ! --> generate BZ k-mesh
 
-      Call bzkmesh(intervx, intervy, intervz, maxmesh, lirr, bravais, recbv, &
-        nsymat, rsymat, isymindex, symunitary, ielast, ez, kmesh, iprint, &
-        krel, kpoibz, maxmshd)
+  call bzkmesh(intervx, intervy, intervz, maxmesh, lirr, bravais, recbv, &
+    nsymat, rsymat, isymindex, symunitary, ielast, ez, kmesh, iprint, krel, &
+    kpoibz, maxmshd)
 
-      Call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, symunitary, &
-        naezd, lmmaxd, naez, lmaxd+1, krel, iprint, nsymaxd)
+  call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, symunitary, &
+    naezd, lmmaxd, naez, lmaxd+1, krel, iprint, nsymaxd)
 
-! Now DSYMLL hold NSYMAT symmetrization matrices
+  ! Now DSYMLL hold NSYMAT symmetrization matrices
 
-! 20.02.2004
-      Call gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
-        iofgij, jofgij, nofgij, ish, jsh, nshell, naez, natyp, noq, rbasis, &
-        bravais, ifilimp, ratom, rclsimp, nsymat, isymindex, rsymat, kaoez, &
-        atomimp, rotname, hostimp, lmaxd, lmmaxd, naezd, natypd, natomimpd, &
-        nembd, nsheld)
+  ! 20.02.2004
+  call gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
+    iofgij, jofgij, nofgij, ish, jsh, nshell, naez, natyp, noq, rbasis, &
+    bravais, ifilimp, ratom, rclsimp, nsymat, isymindex, rsymat, kaoez, &
+    atomimp, rotname, hostimp, lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, &
+    nsheld)
 
-! -->  creates difference vectors RROT for BZ integration in KKRMAT01
+  ! -->  creates difference vectors RROT for BZ integration in KKRMAT01
 
-      Call crtstar(ratom, nshell(0), rsymat, nsymat, isymindex, rrot)
-! ----------------------------------------------------------------------
-      If (iprint>2) Then
-        Do ishell = 1, nshell(0)
-          Write (1337, Fmt='(I4)') ishell
-          Write (1337, Fmt='((I4,3F10.1))')(iu, (rrot(iu,i, &
-            ishell),i=1,3), iu=1, nsymat)
-        End Do
-      End If
-! ----------------------------------------------------------------------
-    End Subroutine
+  call crtstar(ratom, nshell(0), rsymat, nsymat, isymindex, rrot)
+  ! ----------------------------------------------------------------------
+  if (iprint>2) then
+    do ishell = 1, nshell(0)
+      write (1337, fmt='(I4)') ishell
+      write (1337, fmt='((I4,3F10.1))')(iu, (rrot(iu,i, &
+        ishell),i=1,3), iu=1, nsymat)
+    end do
+  end if
+  ! ----------------------------------------------------------------------
+end subroutine bzkint0

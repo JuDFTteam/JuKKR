@@ -2,59 +2,59 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
   iofgij, jofgij, nofgij, ish, jsh, nshell, naez, natyp, noq, rbasis, bravais, &
   ifilimp, ratom, rclsimp, nsymat, isymindex, rsymat, kaoez, atomimp, rotname, &
   hostimp, lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld)
-! **********************************************************************
-! *                                                                    *
-! * This subroutine constructs mainly the index arrays                 *
-! * NSHELL, NSH1, NSH2 -- NSHELL(0) number of different GF blocks that *
-! * have to be calculated, NSH1(I),NSH2(I) the sites connected for     *
-! * the block I, I = 1,NSHELL(0)                                       *
-! *                                                                    *
-! **********************************************************************
+  ! **********************************************************************
+  ! *                                                                    *
+  ! * This subroutine constructs mainly the index arrays                 *
+  ! * NSHELL, NSH1, NSH2 -- NSHELL(0) number of different GF blocks that *
+  ! * have to be calculated, NSH1(I),NSH2(I) the sites connected for     *
+  ! * the block I, I = 1,NSHELL(0)                                       *
+  ! *                                                                    *
+  ! **********************************************************************
   use :: mod_types, only: t_imp
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
-  real(kind=dp), parameter :: eps=1E-14_dp
+  real (kind=dp), parameter :: eps = 1e-14_dp
   integer :: lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld
-!..
-!.. Scalar arguments
+  ! ..
+  ! .. Scalar arguments
   integer :: icc, naez, natomimp, natyp, nsymat, nofgij
   character (len=40) :: ifilimp
-!..
-!.. Array arguments
+  ! ..
+  ! .. Array arguments
   character (len=10) :: rotname(64)
-!..
+  ! ..
   integer :: atomimp(natomimpd), hostimp(0:natypd)
   integer :: isymindex(*), kaoez(natypd, naezd+nembd)
   integer :: noq(naezd), nsh1(*), nsh2(*), nshell(0:nsheld)
   integer :: ish(nsheld, *), jsh(nsheld, *)
   integer :: ijtabsym(*), ijtabsh(*), ijtabcalc(*), iofgij(*), jofgij(*)
-!..
+  ! ..
   real (kind=dp) :: bravais(3, 3), ratom(3, nsheld)
   real (kind=dp) :: rbasis(3, *), rclsimp(3, natomimpd)
   real (kind=dp) :: rsymat(64, 3, 3)
-!.. 
-!.. Local scalars
+  ! ..
+  ! .. Local scalars
   integer :: nb, i, j, pos, ii, io, ns, in, ndim, nsize, ihost, ierr
   character (len=9) :: str9
   logical :: lsurf, opt
-!..
-!.. External subroutines
+  ! ..
+  ! .. External subroutines
   external :: impcheck, impcoefs, shellgen2k, opt
 
   write (1337, 100)
 
   nsize = natomimpd*lmmaxd
 
-! **********************************************************************
+  ! **********************************************************************
 
-! --> construction of ratom, nsh1 and nsh2 for a self-consistent
-!     calculation
+  ! --> construction of ratom, nsh1 and nsh2 for a self-consistent
+  ! calculation
 
   if (.not. opt('VIRATOMS')) then
     nshell(0) = natyp
   else
     nshell(0) = naez
-  end if !( .not. OPT('VIRATOMS') ) THEN
+  end if                           ! ( .not. OPT('VIRATOMS') ) THEN
 
   if (nshell(0)>nsheld) then
     write (6, 110) 'NSHELD', nshell(0)
@@ -97,29 +97,29 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
     return
   end if
 
-!      end of simple SCF-calculation part.
-! **********************************************************************
+  ! end of simple SCF-calculation part.
+  ! **********************************************************************
 
-!heck if we are in surface mode
+  ! heck if we are in surface mode
 
   lsurf = .false.
-  if (abs(bravais(1,3))<eps .and. abs(bravais(2,3))<eps .and. abs(bravais(3,3))<eps) &
-    lsurf = .true.
+  if (abs(bravais(1,3))<eps .and. abs(bravais(2,3))<eps .and. abs(bravais(3, &
+    3))<eps) lsurf = .true.
   ndim = 3
   if (lsurf) ndim = 2
 
-! **********************************************************************
-!      NATOMIMP=0   ! BUG: This initialization breaks the shell generation for
-!                   ! ICC=-1, which is set by option XCPL.  B. Zimmermann
+  ! **********************************************************************
+  ! NATOMIMP=0   ! BUG: This initialization breaks the shell generation for
+  ! ! ICC=-1, which is set by option XCPL.  B. Zimmermann
 
   if (icc<0) then
 
-! --->  ICC.LT.1 all shells are (should be) prepared
+    ! --->  ICC.LT.1 all shells are (should be) prepared
 
     write (1337, 210) natomimp
   else
 
-! --> read-in the cluster coordinates from an external file
+    ! --> read-in the cluster coordinates from an external file
 
     rewind 25
     read (25, fmt=*) natomimp
@@ -147,7 +147,7 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
         end do
       end do
 
-! save stuff to t_imp for later use
+      ! save stuff to t_imp for later use
       t_imp%ihost = ihost
       t_imp%natomimp = natomimp
       allocate (t_imp%hostimp(ihost), stat=ierr)
@@ -157,19 +157,19 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
       if (ierr/=0) stop 'Error allocating t_imp%ATOMIMP'
       t_imp%atomimp(1:natomimp) = atomimp(1:natomimp)
 
-    end if !GREENIMP
+    end if                         ! GREENIMP
 
-  end if ! ICC>=0
-! **********************************************************************
+  end if                           ! ICC>=0
+  ! **********************************************************************
 
   call impcheck(atomimp, natomimp, naez, rclsimp, rbasis, bravais, ndim)
 
-! **********************************************************************
+  ! **********************************************************************
   if (icc>0) then
     write (1337, 150)
 
-! --> set up the number of all (I,J)-pairs to be looked for,
-!     avoid considering again the diagonal elements
+    ! --> set up the number of all (I,J)-pairs to be looked for,
+    ! avoid considering again the diagonal elements
 
     nofgij = 0
     do i = 1, natomimp
@@ -193,22 +193,22 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
       end if
     end do
   end if
-! **********************************************************************
+  ! **********************************************************************
 
   call shellgen2k(icc, natomimp, rclsimp(1,1), atomimp(1), nofgij, iofgij, &
     jofgij, nsymat, rsymat, isymindex, rotname, nshell, ratom(1,1), nsh1, &
     nsh2, ish, jsh, ijtabsym, ijtabsh, ijtabcalc, 2, nsheld)
 
-! **********************************************************************
+  ! **********************************************************************
 
-! --> now write out the impurity.coefs file for the impurity calculation
-!                                                         n.papanikolaou
+  ! --> now write out the impurity.coefs file for the impurity calculation
+  ! n.papanikolaou
 
   if (icc>0 .or. opt('KKRFLEX ')) call impcoefs(natomimp, naez, atomimp, &
     rclsimp, nshell, nsh1, nsh2, ratom, nsymat, isymindex, rotname, hostimp, &
     natypd, lmaxd, nsheld, nsize)
 
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+  ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
   write (1337, 130) nshell(0)
   write (1337, 160)
   nb = max(natyp, naez)
@@ -219,8 +219,9 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
       write (1337, 170) ns, nsh1(ns), nsh2(ns), (ratom(ii,ns), ii=1, 3), &
         sqrt(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns)**2), str9
     else
-      write (1337, 180, advance='no') ns, nsh1(ns), nsh2(ns), (ratom(ii,ns), ii=1, 3), &
-        sqrt(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns)**2)
+      write (1337, 180, advance='no') ns, nsh1(ns), nsh2(ns), &
+        (ratom(ii,ns), ii=1, 3), sqrt(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns &
+        )**2)
       io = min(2, nshell(ns))
       do i = 1, io
         call setpairstr(ish(ns,i), jsh(ns,i), str9)
@@ -246,9 +247,9 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
     nb = nb + nshell(ns)
   end do
   write (1337, 200) nb
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+  ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-! ----------------------------------------------------------------------
+  ! ----------------------------------------------------------------------
 100 format (5x, '< GFSHELLS > : setting up indices of the GF blocks', /)
 110 format (6x, 'Dimension ERROR: please increase the global parameter', /, &
     6x, a, ' to a value >=', i5, /)
@@ -272,7 +273,7 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
 220 format (6x, 72(':'), /, 22x, '(impurity) cluster related data/indexing', &
     /, 6x, 72(':'))
 
-end subroutine
+end subroutine gfshells
 ! **********************************************************************
 
 subroutine setpairstr(i, j, str9)
@@ -280,7 +281,7 @@ subroutine setpairstr(i, j, str9)
   character (len=9) :: str9, strd
   integer :: i, j, l, lstr
   character (len=20) :: fmt1
-!     ..
+  ! ..
   fmt1 = '("(",I'
   fmt1 = fmt1(1:6) // '1'
   lstr = 4
@@ -309,5 +310,5 @@ subroutine setpairstr(i, j, str9)
     str9(l:l) = ' '
   end do
   str9 = str9(1:9-lstr) // strd(1:lstr)
-end subroutine
+end subroutine setpairstr
 ! **********************************************************************

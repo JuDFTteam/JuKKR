@@ -1,35 +1,35 @@
 subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
   wldau, eu, edc, mmaxd, npotd)
-! **********************************************************************
-! *                                                                    *
-! * Calculation of Coulomb interaction potential in LDA+U              *
-! * non-relativistic case -- otherwise matrices DENMAT and VLDAU must  *
-! *                          have double dimension                     *
-! *                                                                    *
-! * Uses the Coulomb matrix U (array ULDAU), the density matrix n      *
-! * (array DENMAT) and the occupation numbers dentot (total) and n_s   *
-! * (array DENTOTS) (per spin).                                        *
-! *                                                                    *
-! * The expression evaluated (array VLDAU) is                          *
-! *                                                                    *
-! *       V_{m1,s,m2,s'} =                                             *
-! * delta_{ss'} Sum_{s'',m3,m4} U_{m1,m2,m3,m4} n_{m3,s'',m4,s''}      *
-! * - Sum_{m3,m4} U_{m1,m4,m3,m2} n_{m3,s',m4,s}                       *
-! * - [Ueff (dentot-1/2) - Jeff (n_s - 1/2)] delta_{ss'} delta_{m1,m2} *
-! *                                                                    *
-! *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
-! **********************************************************************
-      Use mod_datatypes, Only: dp
+  ! **********************************************************************
+  ! *                                                                    *
+  ! * Calculation of Coulomb interaction potential in LDA+U              *
+  ! * non-relativistic case -- otherwise matrices DENMAT and VLDAU must  *
+  ! *                          have double dimension                     *
+  ! *                                                                    *
+  ! * Uses the Coulomb matrix U (array ULDAU), the density matrix n      *
+  ! * (array DENMAT) and the occupation numbers dentot (total) and n_s   *
+  ! * (array DENTOTS) (per spin).                                        *
+  ! *                                                                    *
+  ! * The expression evaluated (array VLDAU) is                          *
+  ! *                                                                    *
+  ! *       V_{m1,s,m2,s'} =                                             *
+  ! * delta_{ss'} Sum_{s'',m3,m4} U_{m1,m2,m3,m4} n_{m3,s'',m4,s''}      *
+  ! * - Sum_{m3,m4} U_{m1,m4,m3,m2} n_{m3,s',m4,s}                       *
+  ! * - [Ueff (dentot-1/2) - Jeff (n_s - 1/2)] delta_{ss'} delta_{m1,m2} *
+  ! *                                                                    *
+  ! *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
+  ! **********************************************************************
+  use :: mod_datatypes, only: dp
   implicit none
   include 'inc.p'
-! Dummy arguments
+  ! Dummy arguments
 
 
   complex (kind=dp) :: czero
   parameter (czero=(0.0d0,0.0d0))
-! Local variables
-!..
-!    ..
+  ! Local variables
+  ! ..
+  ! ..
   integer :: ntldau, nspin, mmaxd, npotd
   integer :: itldau(natypd), lopt(natypd)
   real (kind=dp) :: ueff(natypd), jeff(natypd), edc(natypd), eu(natypd), &
@@ -45,14 +45,14 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
   character (len=15) :: str15
 
   data iprint/1/
-! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+  ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
   write (1337, '(/,79(1H#),/,16X,A,/,79(1H#))') &
     'LDA+U: Calculating interaction potential VLDAU'
 
   allocate (uldau(mmaxd,mmaxd,mmaxd,mmaxd,natypd))
-! Result is in real Ylm basis.
-! It must be converted to complex Ylm basis:
+  ! Result is in real Ylm basis.
+  ! It must be converted to complex Ylm basis:
   do it = 1, ntldau
     i1 = itldau(it)
 
@@ -60,12 +60,12 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
       call rinit(mmaxd*mmaxd*nspind, denmat(1,1,1))
       mmax = 2*lopt(i1) + 1
       write (1337, 100) i1, lopt(i1)
-! ----------------------------------------------------------------------
+      ! ----------------------------------------------------------------------
 
-! -> Convert DENMATC and DENMAT to complex spherical harmonics.
+      ! -> Convert DENMATC and DENMAT to complex spherical harmonics.
 
       if (iprint>1) write (1337, 110) 'Occupation matrix in REAL basis:'
-! ----------------------------------------------------------------------
+      ! ----------------------------------------------------------------------
       do is = 1, nspin
         ipot = (i1-1)*nspin + is
         if (iprint>1) then
@@ -73,9 +73,9 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
           call cmatstr(str15, 15, denmatc(1,1,ipot), mmaxd, mmax, 0, 0, 0, &
             1d-8, 6)
         end if
-! ----------------------------------------------------------------------
+        ! ----------------------------------------------------------------------
 
-! -> DENMAT is real: (imag(denmatc))
+        ! -> DENMAT is real: (imag(denmatc))
         call rclm(1, lopt(i1), lmaxd, denmatc(1,1,ipot))
       end do
 
@@ -89,18 +89,18 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
           call cmatstr(str15, 15, denmatc(1,1,ipot), mmaxd, mmax, 0, 0, 0, &
             1d-8, 6)
         end if
-! 2.  Calculate total occupation numbers:
-! ntot_s = Sum_m n_{m,s,m,s}, ntot = n_1 + n_2
+        ! 2.  Calculate total occupation numbers:
+        ! ntot_s = Sum_m n_{m,s,m,s}, ntot = n_1 + n_2
 
         do m2 = 1, mmax
           do m1 = 1, mmax
             denmat(m1, m2, is) = dimag(denmatc(m1,m2,ipot))
           end do
         end do
-! ----------------------------------------------------------------------
+        ! ----------------------------------------------------------------------
 
-! In paramagnetic case the spin degeneracy has been accounted
-! for by the weight DF in tmatrho.
+        ! In paramagnetic case the spin degeneracy has been accounted
+        ! for by the weight DF in tmatrho.
         dentots(is) = 0.d0
         do mm = 1, mmax
           dentots(is) = dentots(is) + denmat(mm, mm, is)
@@ -117,17 +117,17 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
         end do
         write (1337, 140) 'Spins sum =', dentot
       end if
-! ----------------------------------------------------------------------
+      ! ----------------------------------------------------------------------
 
-! 3.  Use density matrix and Coulomb matrix ULDAU to calculate the
-! interaction potential VLDAU
-! 3a. First part (always diagonal in spin).
+      ! 3.  Use density matrix and Coulomb matrix ULDAU to calculate the
+      ! interaction potential VLDAU
+      ! 3a. First part (always diagonal in spin).
       call cinit(mmaxd*mmaxd*nspind, vldau(1,1,1))
       do is = 1, nspin
 
 
-! 3b. Second part (in fully rel. case not diagonal in spin; then this
-! loop must be changed accordingly).
+        ! 3b. Second part (in fully rel. case not diagonal in spin; then this
+        ! loop must be changed accordingly).
 
         do m2 = 1, mmax
           do m1 = 1, mmax
@@ -145,7 +145,7 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
           end do
         end do
 
-! 3c. Third part (always spin- and m-diagonal).
+        ! 3c. Third part (always spin- and m-diagonal).
 
 
         do m2 = 1, mmax
@@ -159,20 +159,21 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
             vldau(m1, m2, is) = vldau(m1, m2, is) + csum
           end do
         end do
-! 4. Calculate total-energy corrections EU and EDC (double-counting).
-! Then the correction is EU-EDC.
-! Note: EU,EDC initialised outside the routine
+        ! 4. Calculate total-energy corrections EU and EDC (double-counting).
+        ! Then the correction is EU-EDC.
+        ! Note: EU,EDC initialised outside the routine
         do m1 = 1, mmax
           vldau(m1, m1, is) = vldau(m1, m1, is) - ueff(i1)*(dentot-0.5d0) + &
             jeff(i1)*(dentots(is)-0.5d0)
         end do
 
-! Here VLDAU is assumed spin-diagonal (contrary to the spin-orbit case).
+        ! Here VLDAU is assumed spin-diagonal (contrary to the spin-orbit
+        ! case).
 
-! ----------------------------------------------------------------------
-! ----------------------------------------------------------------------
+        ! ----------------------------------------------------------------------
+        ! ----------------------------------------------------------------------
 
-! 5.  Transform VLDAU into real spherical harmonics basis
+        ! 5.  Transform VLDAU into real spherical harmonics basis
         do m2 = 1, mmax
           do m1 = 1, mmax
             eu(i1) = eu(i1) + denmat(m1, m2, is)*dreal(vldau(m1,m2,is))
@@ -190,16 +191,16 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
           call cmatstr(str15, 15, vldau(1,1,is), mmaxd, mmax, 0, 0, 0, 1d-8, &
             6)
         end if
-! Copy transformed VLDAU to real WLDAU
+        ! Copy transformed VLDAU to real WLDAU
 
-! Apply damping to the interaction matrix WLDAU ? Here not.
+        ! Apply damping to the interaction matrix WLDAU ? Here not.
         call rclm(2, lopt(i1), lmaxd, vldau(1,1,is))
 
 
 
-! ----------------------------------------------------------------------
-! ----------------------------------------------------------------------
-! ----------------------------------------------------------------------
+        ! ----------------------------------------------------------------------
+        ! ----------------------------------------------------------------------
+        ! ----------------------------------------------------------------------
         do m2 = 1, mmax
           do m1 = 1, mmax
             wldau(m1, m2, is, i1) = dreal(vldau(m1,m2,is))
@@ -207,7 +208,7 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
         end do
 
       end do
-! Corrections in total energy:
+      ! Corrections in total energy:
       if (iprint>0) then
         write (1337, 110) 'Interaction potential in REAL basis:'
         do is = 1, nspin
@@ -224,24 +225,25 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
       end do
       write (1337, *)
 
-! -> Write out corrections on energy:
-!    E[LDA+U] = E[LDA] + EU - EDC
+      ! -> Write out corrections on energy:
+      ! E[LDA+U] = E[LDA] + EU - EDC
 
       eu(i1) = 0.5d0*eu(i1)
       edc(i1) = 0.5d0*(ueff(i1)*dentot*(dentot-1.d0)-edc(i1))
-! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-! I1 = 1,NTLDAU
-! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-! **********************************************************************
+      ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+      ! I1 = 1,NTLDAU
+      ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+      ! **********************************************************************
       write (1337, 110) 'Corrections to the total energy:'
       write (1337, *)
       write (1337, 130) 'EU  =', eu(i1)
       write (1337, 130) 'Edc =', edc(i1)
       write (1337, 150) 'E[LDA+U] = E[LDA] + EU - Edc'
     end if
-! *                                                                    *
-  end do ! * Calculation of Coulomb interaction potential in LDA+U              *
-! * non-relativistic case -- otherwise matrices DENMAT and VLDAU must  *
+    ! *                                                                    *
+  end do                           ! * Calculation of Coulomb interaction
+                                   ! potential in LDA+U              *
+  ! * non-relativistic case -- otherwise matrices DENMAT and VLDAU must  *
 100 format (/, 6x, 65('='), /, 6x, 'Atom :', i3, ' (l =', i2, ')', /, 6x, &
     18('='))
 110 format (8x, '* ', a)
@@ -249,7 +251,7 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
 130 format (10x, a, f10.6)
 140 format (10x, 21('-'), /, 10x, a, f10.6, /, 10x, 60('-'), /)
 150 format (27x, a, /)
-end subroutine
+end subroutine wmatldau
 
 
 subroutine rwrite(z, mmaxd, mmax, ifile)
@@ -270,4 +272,4 @@ subroutine rwrite(z, mmaxd, mmax, ifile)
   write (ifile, 100)
 100 format (10x, 60('-'))
 110 format (10x, 7f10.6)
-end subroutine
+end subroutine rwrite

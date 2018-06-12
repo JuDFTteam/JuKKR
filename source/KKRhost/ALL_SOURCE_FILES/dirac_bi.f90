@@ -1,7 +1,7 @@
-!       SUBROUTINE DIRABMBI(GETIRRSOL,C,IT,E,L,MJ,KAP1,KAP2,PIS,CG1,CG2,
-!      &                    CG4,CG5,CG8,AMEBI1,AMEBI2,V,B,AT,Z,NUCLEUS,R,
-!      &                    DRDI,DOVR,NMESH,PR,QR,PI,QI,DP,DQ,AP,AQ,NTMAX,
-!      &                    NLAMAX,NKMMAX,NRMAX)
+! SUBROUTINE DIRABMBI(GETIRRSOL,C,IT,E,L,MJ,KAP1,KAP2,PIS,CG1,CG2,
+! &                    CG4,CG5,CG8,AMEBI1,AMEBI2,V,B,AT,Z,NUCLEUS,R,
+! &                    DRDI,DOVR,NMESH,PR,QR,PI,QI,DP,DQ,AP,AQ,NTMAX,
+! &                    NLAMAX,NKMMAX,NRMAX)
 ! C   ********************************************************************
 ! C   *                                                                  *
 ! C   *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
@@ -20,33 +20,33 @@
 ! C   *                                                                  *
 ! C   *  26/01/95  HE                                                    *
 ! C   ********************************************************************
-!       IMPLICIT COMPLEX*16(A-H,O-Z)
+! IMPLICIT COMPLEX*16(A-H,O-Z)
 ! C
 ! C
 ! C PARAMETER definitions
 ! C
-!       INTEGER NLMAXLOC,NTMAXLOC,NRMAXLOC,MPSMAX,NPEMAX,NABM
-!       PARAMETER (NLMAXLOC=4,NTMAXLOC=2,NRMAXLOC=750,MPSMAX=40,NPEMAX=4,
-!      &           NABM=4)
-!       COMPLEX*16 CZ
-!       PARAMETER (CZ=(0.0D0,0.0D0))
-!       REAL*8 TOL
-!       PARAMETER (TOL=1.0D-6)
-!       INTEGER ITMAX
-!       PARAMETER (ITMAX=50)
+! INTEGER NLMAXLOC,NTMAXLOC,NRMAXLOC,MPSMAX,NPEMAX,NABM
+! PARAMETER (NLMAXLOC=4,NTMAXLOC=2,NRMAXLOC=750,MPSMAX=40,NPEMAX=4,
+! &           NABM=4)
+! COMPLEX*16 CZ
+! PARAMETER (CZ=(0.0D0,0.0D0))
+! REAL*8 TOL
+! PARAMETER (TOL=1.0D-6)
+! INTEGER ITMAX
+! PARAMETER (ITMAX=50)
 ! C
 ! C Dummy arguments
 ! C
-!       REAL*8 C,CG1,CG2,CG4,CG5,CG8,MJ
-!       COMPLEX*16 E,PIS
-!       LOGICAL GETIRRSOL
-!       INTEGER IT,KAP1,KAP2,L,NKMMAX,NLAMAX,NMESH,NRMAX,NTMAX,NUCLEUS,Z
-!       REAL*8 AMEBI1(NKMMAX,NKMMAX,NLAMAX,-1:+1),
-!      &       AMEBI2(NKMMAX,NKMMAX,NLAMAX,-1:+1),AP(2,2,NRMAXLOC),
-!      &       AQ(2,2,NRMAXLOC),AT(NRMAXLOC,NLAMAX,-1:+1,NTMAXLOC),
-!      &       B(NRMAX),DOVR(NRMAX),DRDI(NRMAX),R(NRMAX),V(NRMAX)
-!       COMPLEX*16 DP(2,2,NRMAX),DQ(2,2,NRMAX),PI(2,2,NRMAX),PR(2,2,NRMAX)
-!      &           ,QI(2,2,NRMAX),QR(2,2,NRMAX)
+! REAL*8 C,CG1,CG2,CG4,CG5,CG8,MJ
+! COMPLEX*16 E,PIS
+! LOGICAL GETIRRSOL
+! INTEGER IT,KAP1,KAP2,L,NKMMAX,NLAMAX,NMESH,NRMAX,NTMAX,NUCLEUS,Z
+! REAL*8 AMEBI1(NKMMAX,NKMMAX,NLAMAX,-1:+1),
+! &       AMEBI2(NKMMAX,NKMMAX,NLAMAX,-1:+1),AP(2,2,NRMAXLOC),
+! &       AQ(2,2,NRMAXLOC),AT(NRMAXLOC,NLAMAX,-1:+1,NTMAXLOC),
+! &       B(NRMAX),DOVR(NRMAX),DRDI(NRMAX),R(NRMAX),V(NRMAX)
+! COMPLEX*16 DP(2,2,NRMAX),DQ(2,2,NRMAX),PI(2,2,NRMAX),PR(2,2,NRMAX)
+! &           ,QI(2,2,NRMAX),QR(2,2,NRMAX)
 ! C
 ! ! C Local variables
 ! ! C
@@ -61,7 +61,7 @@
 ! !       DATA ASTEP/24.0D0/
 ! C
 ! C#######################################################################
-!
-!       stop ' < DIRABMBI > : Not implemented. Set SOLVER=BS in inputcard'
-!
-!       END
+
+! stop ' < DIRABMBI > : Not implemented. Set SOLVER=BS in inputcard'
+
+! END

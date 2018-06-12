@@ -1,52 +1,52 @@
-    Function checkrmat(rmat, co1, si1, co2, si2, co3, si3, i, j)
-      Use mod_datatypes, Only: dp
-!   ********************************************************************
-!   *                                                                  *
-!   *  check whether the values of the cosinus and sinus found for the *
-!   *  Euler angles TET1, TET2, TET3 are consistent with the           *
-!   *  rotation matrix   RMAT                                          *
-!   *                                                                  *
-!   ********************************************************************
+function checkrmat(rmat, co1, si1, co2, si2, co3, si3, i, j)
+  use :: mod_datatypes, only: dp
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *  check whether the values of the cosinus and sinus found for the *
+  ! *  Euler angles TET1, TET2, TET3 are consistent with the           *
+  ! *  rotation matrix   RMAT                                          *
+  ! *                                                                  *
+  ! ********************************************************************
 
-      Implicit None
+  implicit none
 
-! Dummy arguments
-      Real (Kind=dp) :: co1, co2, co3, si1, si2, si3
-      Integer :: i, j
-      Logical :: checkrmat
-      Real (Kind=dp) :: rmat(3, 3)
+  ! Dummy arguments
+  real (kind=dp) :: co1, co2, co3, si1, si2, si3
+  integer :: i, j
+  logical :: checkrmat
+  real (kind=dp) :: rmat(3, 3)
 
-! Local variables
-      Real (Kind=dp) :: a, b
-      Logical :: equal
-      Logical :: result
+  ! Local variables
+  real (kind=dp) :: a, b
+  logical :: equal
+  logical :: result
 
-      equal(a, b) = (abs(a-b)<1E-7_dp)
+  equal(a, b) = (abs(a-b)<1e-7_dp)
 
-      result = .False.
+  result = .false.
 
-      If (i==1) Then
-        If (j==1) Then
-          result = equal(rmat(1,1), co3*co2*co1-si3*si1)
-        Else If (j==2) Then
-          result = equal(rmat(1,2), co3*co2*si1+si3*co1)
-        Else If (j==3) Then
-          result = equal(rmat(1,3), -co3*si2)
-        End If
-      Else If (i==2) Then
-        If (j==1) Then
-          result = equal(rmat(2,1), -si3*co2*co1-co3*si1)
-        Else If (j==2) Then
-          result = equal(rmat(2,2), -si3*co2*si1+co3*co1)
-        Else If (j==3) Then
-          result = equal(rmat(2,3), si3*si2)
-        End If
-      Else If (j==1) Then
-        result = equal(rmat(3,1), si2*co1)
-      Else If (j==2) Then
-        result = equal(rmat(3,2), si2*si1)
-      Else If (j==3) Then
-        result = equal(rmat(3,3), co2)
-      End If
-      checkrmat = result
-    End Function
+  if (i==1) then
+    if (j==1) then
+      result = equal(rmat(1,1), co3*co2*co1-si3*si1)
+    else if (j==2) then
+      result = equal(rmat(1,2), co3*co2*si1+si3*co1)
+    else if (j==3) then
+      result = equal(rmat(1,3), -co3*si2)
+    end if
+  else if (i==2) then
+    if (j==1) then
+      result = equal(rmat(2,1), -si3*co2*co1-co3*si1)
+    else if (j==2) then
+      result = equal(rmat(2,2), -si3*co2*si1+co3*co1)
+    else if (j==3) then
+      result = equal(rmat(2,3), si3*si2)
+    end if
+  else if (j==1) then
+    result = equal(rmat(3,1), si2*co1)
+  else if (j==2) then
+    result = equal(rmat(3,2), si2*si1)
+  else if (j==3) then
+    result = equal(rmat(3,3), co2)
+  end if
+  checkrmat = result
+end function checkrmat

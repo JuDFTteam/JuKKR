@@ -1,41 +1,41 @@
 subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   cg1, cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, dxp, pr, &
   qr, pi, qi, d_p, dq, nrmax)
-!   ********************************************************************
-!   *                                                                  *
-!   *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
-!   *                                                                  *
-!   *   with the SOC-operator manipulated                              *
-!   *                                                                  *
-!   *           H_soc = xi [ (sig_x*l_x+sig*l_y) + sig_z*l_z ]         *
-!   *                                                                  *
-!   *   SOCSCL = -1  ==  IXY = 0 : neglect 1st term of SOC-operator    *
-!   *   SOCSCL = -2: ==  IXY = 1 : neglect 2nd term of SOC-operator    *
-!   *                                                                  *
-!   *   the outward integration is started by a power expansion        *
-!   *   and continued by ADAMS-BASHFORTH-MOULTON - pred./corr.-method  *
-!   *   NABM = 4(5) selects the 4(5)-point formula                     *
-!   *                                                                  *
-!   *   the inward integration is started analytically                 *
-!   *                                                                  *
-!   *   returns the wave functions up to the mesh point NMESH          *
-!   *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
-!   *   and    R/I standing for regular/irregular solution             *
-!   *                                                                  *
-!   *  12/12/97  HE                                                    *
-!   *  21/01/98  HE  finite nucelus                                    *
-!   ********************************************************************
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
+  ! *                                                                  *
+  ! *   with the SOC-operator manipulated                              *
+  ! *                                                                  *
+  ! *           H_soc = xi [ (sig_x*l_x+sig*l_y) + sig_z*l_z ]         *
+  ! *                                                                  *
+  ! *   SOCSCL = -1  ==  IXY = 0 : neglect 1st term of SOC-operator    *
+  ! *   SOCSCL = -2: ==  IXY = 1 : neglect 2nd term of SOC-operator    *
+  ! *                                                                  *
+  ! *   the outward integration is started by a power expansion        *
+  ! *   and continued by ADAMS-BASHFORTH-MOULTON - pred./corr.-method  *
+  ! *   NABM = 4(5) selects the 4(5)-point formula                     *
+  ! *                                                                  *
+  ! *   the inward integration is started analytically                 *
+  ! *                                                                  *
+  ! *   returns the wave functions up to the mesh point NMESH          *
+  ! *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
+  ! *   and    R/I standing for regular/irregular solution             *
+  ! *                                                                  *
+  ! *  12/12/97  HE                                                    *
+  ! *  21/01/98  HE  finite nucelus                                    *
+  ! ********************************************************************
 
   use :: mod_types, only: t_inc
-  use mod_DataTypes, only: dp
+  use :: mod_datatypes, only: dp
   implicit none
 
-! PARAMETER definitions
+  ! PARAMETER definitions
 
   integer :: mpsmax, npemax, nabm
   parameter (mpsmax=40, npemax=4)
   parameter (nabm=4)
-!PARAMETER ( NABM   =      5 )
+  ! PARAMETER ( NABM   =      5 )
   complex (kind=dp) :: cz
   parameter (cz=(0.0d0,0.0d0))
   real (kind=dp) :: tol
@@ -43,7 +43,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   integer :: itmax
   parameter (itmax=50)
 
-! Dummy arguments
+  ! Dummy arguments
   real (kind=dp) :: c, cg1, cg2, cg4, cg5, cg8, mj, socscl
   complex (kind=dp) :: e
   logical :: getirrsol
@@ -53,7 +53,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   complex (kind=dp) :: d_p(2, 2, nrmax), dq(2, 2, nrmax), dxp(2, 2), &
     pi(2, 2, nrmax), pr(2, 2, nrmax), qi(2, 2, nrmax), qr(2, 2, nrmax)
 
-! Local variables
+  ! Local variables
   complex (kind=dp) :: aa11, aa12, aa21, aa22, arg, bb1, bb2, bpp, bqq, cfac, &
     d14, db14, dbh, dh, diffa, diffb, dv14, dvh, emvpp, emvqq, s0, t0
   real (kind=dp) :: acorr(0:nabm-1), acorr0(0:nabm-1), apred(nabm), &
@@ -82,7 +82,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   csqr = c*c
   cfac = pis*c/(e+csqr)
 
-! find   NPE  expansion coefficients for the potential and b-field
+  ! find   NPE  expansion coefficients for the potential and b-field
   npe = 4
 
   tz = dble(2*z)
@@ -109,15 +109,15 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
     end do
   end do
 
-!*HF* IXY=0 ==> ONLY ZZ-PART, IXY=1 ==> ONLY XY-PART
+  ! *HF* IXY=0 ==> ONLY ZZ-PART, IXY=1 ==> ONLY XY-PART
   if (nint(socscl)==-1) then
     ixy = 0
   else
     ixy = 1
   end if
-!*HF*
+  ! *HF*
 
-!    calculate g-coefficients of b-field
+  ! calculate g-coefficients of b-field
 
   isk1 = isign(1, kap1)
   isk2 = isign(1, kap2)
@@ -197,7 +197,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
     end do
   end do
 
-! ======================================================================
+  ! ======================================================================
 
   if ((tz>=2) .and. (nucleus==0)) then
 
@@ -209,7 +209,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
       qc(i, j, 0) = cz
     end do
 
-!  DETERMINE HIGHER EXPANSION COEFFICIENTS FOR THE WAVE FUNCTIONS
+    ! DETERMINE HIGHER EXPANSION COEFFICIENTS FOR THE WAVE FUNCTIONS
 
     mps = 40
 
@@ -246,8 +246,8 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
     end do
 
 
-!  PERFORM SUMMATION OVER WAVE FUNCTION - EXPANSION COEFFICIENTS
-!  FOR THE FIRST   NABM   R - MESH - POINTS
+    ! PERFORM SUMMATION OVER WAVE FUNCTION - EXPANSION COEFFICIENTS
+    ! FOR THE FIRST   NABM   R - MESH - POINTS
 
     do n = 1, nabm
       rr = r(n)
@@ -276,11 +276,11 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
         end do
       end do
     end do
-! ======================================================================
-!                                  == EMPTY SPHERE  or FINITE NUCLEUS ==
+    ! ======================================================================
+    ! == EMPTY SPHERE  or FINITE NUCLEUS ==
   else
 
-!        assume constant pot: V=V(1)   ignore coupling: B=0
+    ! assume constant pot: V=V(1)   ignore coupling: B=0
 
     t0 = e - v(1)
     s0 = (e-v(1))/csqr + 1
@@ -308,14 +308,14 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
     end do
 
   end if
-! ===================================================================
+  ! ===================================================================
 
-! =============================================================== N ====
-!     CALCULATE ALL NEXT POINTS BY PRE/CORR(ADAMS-BASHFORTH-MOULTON)
+  ! =============================================================== N ====
+  ! CALCULATE ALL NEXT POINTS BY PRE/CORR(ADAMS-BASHFORTH-MOULTON)
 
   do n = nabm + 1, nmesh
 
-!    EVALUATE PREDICTOR
+    ! EVALUATE PREDICTOR
 
     do j = 1, nsol
       do i = 1, nsol
@@ -339,7 +339,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
 
     end do
 
-!    EVALUATE CORRECTOR
+    ! EVALUATE CORRECTOR
 
 
     do jcorr = 1, itmax
@@ -366,11 +366,13 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
       do j = 1, nsol
         do i = 1, nsol
           diffa = pold(i, j) - pnew(i, j)
-          if (abs(real(diffa, kind=dp))>(tol*abs(real(pnew(i,j), kind=dp)))) go to 100
+          if (abs(real(diffa,kind=dp))>(tol*abs(real(pnew(i,j),kind=dp)))) &
+            go to 100
           if (abs(aimag(diffa))>(tol*abs(aimag(pnew(i,j))))) go to 100
 
           diffb = qold(i, j) - qnew(i, j)
-          if (abs(real(diffb, kind=dp))>(tol*abs(real(qnew(i,j), kind=dp)))) go to 100
+          if (abs(real(diffb,kind=dp))>(tol*abs(real(qnew(i,j),kind=dp)))) &
+            go to 100
           if (abs(aimag(diffb))>(tol*abs(aimag(qnew(i,j))))) go to 100
         end do
       end do
@@ -380,7 +382,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
     if (t_inc%i_write>0) write (1337, 140) kap1, n, r(n), diffa, diffb, it, l, &
       int(2*mj), 'REG'
 
-!                   SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
+    ! SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 
 110 continue
     do j = 1, nsol
@@ -388,8 +390,8 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
         k = 3 - i
         pr(i, j, n) = pnew(i, j)
         qr(i, j, n) = qnew(i, j)
-        d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i, &
-          j)
+        d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i &
+          , j)
         dq(i, j, n) = kpx(i)*qnew(i, j)*dovr(n) + (emvpp+bpp*cgd(i))*pnew(i, j &
           ) + (bpp*cgo+socpp(k)*cgoz)*pnew(k, j) + socpp(i)*cgz(i)*pnew(i, j)
       end do
@@ -397,7 +399,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
 
 
   end do
-! =============================================================== N ====
+  ! =============================================================== N ====
 
   do i = 1, 2
     do j = 1, 2
@@ -411,12 +413,12 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
 
   if (.not. getirrsol) return
 
-! #####################################################################
+  ! #####################################################################
 
-!             IRREGULAR SOLUTION IRREGULAR SOLUTION  IRREGULAR SOLUTION
+  ! IRREGULAR SOLUTION IRREGULAR SOLUTION  IRREGULAR SOLUTION
 
-!  CALCULATE THE INITIAL VALUES OF THE WAVEFUNCTION AT THE SPHERE
-!  BOUNDARY
+  ! CALCULATE THE INITIAL VALUES OF THE WAVEFUNCTION AT THE SPHERE
+  ! BOUNDARY
 
   do n = nmesh, nmesh + nabm
     arg = pis*r(n)
@@ -436,9 +438,9 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
       dq(i, j, n) = cz
     end do
   end do
-!        ------------------------------------------------------------
-!              INITIALIZE INWARD INTEGRATION WITH RUNGE - KUTTA
-!        ------------------------------------------------------------
+  ! ------------------------------------------------------------
+  ! INITIALIZE INWARD INTEGRATION WITH RUNGE - KUTTA
+  ! ------------------------------------------------------------
   ndiv = 60
   if (ndiv/=0) then
 
@@ -458,7 +460,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
 
     end do
 
-! *** reinitialize Q using only DP and PI
+    ! *** reinitialize Q using only DP and PI
 
     do j = 1, nsol
       i = 3 - j
@@ -621,9 +623,9 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
 
   end if
 
-! =============================================================== N ====
+  ! =============================================================== N ====
 
-!     CALCULATE ALL NEXT POINTS BY PRE/CORR(ADAMS-BASHFORTH-MOULTON)
+  ! CALCULATE ALL NEXT POINTS BY PRE/CORR(ADAMS-BASHFORTH-MOULTON)
 
   if (ndiv/=0) then
     ntop = nmesh - nabm
@@ -634,7 +636,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   do nm = 1, ntop
     n = 1 + ntop - nm
 
-!    EVALUATE PREDICTOR
+    ! EVALUATE PREDICTOR
 
     do j = 1, nsol
       do i = 1, nsol
@@ -657,7 +659,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
         (e-v(n)+csqr+b(n)*cgmd(i))**2
     end do
 
-!    EVALUATE CORRECTOR
+    ! EVALUATE CORRECTOR
 
     do jcorr = 1, itmax
       do j = 1, nsol
@@ -683,11 +685,13 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
       do j = 1, nsol
         do i = 1, nsol
           diffa = pold(i, j) - pnew(i, j)
-          if (abs(real(diffa, kind=dp))>(tol*abs(real(pnew(i,j), kind=dp)))) go to 120
+          if (abs(real(diffa,kind=dp))>(tol*abs(real(pnew(i,j),kind=dp)))) &
+            go to 120
           if (abs(aimag(diffa))>(tol*abs(aimag(pnew(i,j))))) go to 120
 
           diffb = qold(i, j) - qnew(i, j)
-          if (abs(real(diffb, kind=dp))>(tol*abs(real(qnew(i,j), kind=dp)))) go to 120
+          if (abs(real(diffb,kind=dp))>(tol*abs(real(qnew(i,j),kind=dp)))) &
+            go to 120
           if (abs(aimag(diffb))>(tol*abs(aimag(qnew(i,j))))) go to 120
         end do
       end do
@@ -697,7 +701,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
     if (t_inc%i_write>0) write (1337, 140) kap1, n, r(n), diffa, diffb, it, l, &
       int(2*mj), 'IRR'
 
-!                   SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
+    ! SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 
 130 continue
     do j = 1, nsol
@@ -705,44 +709,44 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
         k = 3 - i
         pi(i, j, n) = pnew(i, j)
         qi(i, j, n) = qnew(i, j)
-        d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i, &
-          j)
+        d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i &
+          , j)
         dq(i, j, n) = kpx(i)*qnew(i, j)*dovr(n) + (emvpp+bpp*cgd(i))*pnew(i, j &
           ) + (bpp*cgo+socpp(k)*cgoz)*pnew(k, j) + socpp(i)*cgz(i)*pnew(i, j)
       end do
     end do
 
   end do
-! =============================================================== N ====
+  ! =============================================================== N ====
 
-!     the minor component for the soc-manipulated wf is meaningless
-!     =>  set it to zero
+  ! the minor component for the soc-manipulated wf is meaningless
+  ! =>  set it to zero
 
   call cinit(2*2*nrmax, qr)
   call cinit(2*2*nrmax, qi)
 140 format (' PRE/CORR NOT CONV. IN <DIRABMSOC2> ', 2i4, f10.7, 2x, 4e12.4, &
     3i2, '/2 ', a3)
 
-end subroutine
+end subroutine dirabmsoc2
 
 subroutine dvdrspline(v, r, dvdr, n)
-!   ********************************************************************
-!   *                                                                  *
-!   *   CALCULATE DERIVATIVE OF THE POTENTIAL                          *
-!   *   DV/DR= ( D(R**2*V)/DR-2.R*V ) / R**2                           *
-!   *                                                                  *
-!   *   calling J.REDINGER's routine <DERSPL>                          *
-!   *                                                                  *
-!   * 27/10/94  HE  adopted for SPRKKR-package                         *
-!   ********************************************************************
-  use mod_DataTypes, only: dp
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *   CALCULATE DERIVATIVE OF THE POTENTIAL                          *
+  ! *   DV/DR= ( D(R**2*V)/DR-2.R*V ) / R**2                           *
+  ! *                                                                  *
+  ! *   calling J.REDINGER's routine <DERSPL>                          *
+  ! *                                                                  *
+  ! * 27/10/94  HE  adopted for SPRKKR-package                         *
+  ! ********************************************************************
+  use :: mod_datatypes, only: dp
   implicit none
 
-! Dummy arguments
+  ! Dummy arguments
   integer :: n
   real (kind=dp) :: dvdr(n), r(n), v(n)
 
-! Local variables
+  ! Local variables
   real (kind=dp) :: dr2vdr(n), r2v(n)
   integer :: i
 
@@ -755,27 +759,27 @@ subroutine dvdrspline(v, r, dvdr, n)
   do i = 1, n
     dvdr(i) = (dr2vdr(i)-2.d0*r2v(i)/r(i))/r(i)**2
   end do
-end subroutine
+end subroutine dvdrspline
 
 subroutine derspl(n, x, f, d)
-!   ********************************************************************
-!   *                                                                  *
-!   *   F(I) ARE THE FUNCTION VALUES AT THE POINTS X(I) FOR I=1,N      *
-!   *   AND THE SPLINE DERIVATIVES D(I) ARE FOUND.                     *
-!   *   THE DIMENSION OF A MUST NOT BE LESS THAN 3*N.                  *
-!   *                                                                  *
-!   *   sepp redinger 1985                                             *
-!   *                                                                  *
-!   ********************************************************************
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *   F(I) ARE THE FUNCTION VALUES AT THE POINTS X(I) FOR I=1,N      *
+  ! *   AND THE SPLINE DERIVATIVES D(I) ARE FOUND.                     *
+  ! *   THE DIMENSION OF A MUST NOT BE LESS THAN 3*N.                  *
+  ! *                                                                  *
+  ! *   sepp redinger 1985                                             *
+  ! *                                                                  *
+  ! ********************************************************************
   use :: mod_types, only: t_inc
-  use mod_DataTypes, only: dp
+  use :: mod_datatypes, only: dp
   implicit none
 
-! Dummy arguments
+  ! Dummy arguments
   integer :: n
   real (kind=dp) :: d(n), f(n), x(n)
 
-! Local variables
+  ! Local variables
   real (kind=dp) :: a(n*3), h1, h2, p
   integer :: i, j, k
 
@@ -831,4 +835,4 @@ subroutine derspl(n, x, f, d)
   d(1) = (d(1)-d(2)*a(2)-d(3)*a(3))/a(1)
   a(1) = 0.d0
 110 format (' RETURN FROM DERSPL  ', i3, ' OUT OF ORDER')
-end subroutine
+end subroutine derspl

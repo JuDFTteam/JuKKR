@@ -1,27 +1,27 @@
 subroutine wrldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
   uldau, phildau, irmd, natypd, nspind, mmaxd, irws)
-! **********************************************************************
-! *                                                                    *
-! * Writes out LDA+U arrays into formatted file 'ldaupot'              *
-! *                                                                    *
-! **********************************************************************
+  ! **********************************************************************
+  ! *                                                                    *
+  ! * Writes out LDA+U arrays into formatted file 'ldaupot'              *
+  ! *                                                                    *
+  ! **********************************************************************
   use :: mod_version_info
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
-!..
+  ! ..
   integer :: irmd, mmaxd, natypd, nspind, irws(natypd)
-!..
-!.. Arguments ..
+  ! ..
+  ! .. Arguments ..
   integer :: itrunldau, natyp
   integer :: lopt(natypd)
   real (kind=dp) :: ueff(natypd), jeff(natypd), erefldau(natypd)
   real (kind=dp) :: wldau(mmaxd, mmaxd, nspind, natypd)
   real (kind=dp) :: uldau(mmaxd, mmaxd, mmaxd, mmaxd, natypd)
   complex (kind=dp) :: phildau(irmd, natypd)
-!..
-!..  Locals 
+  ! ..
+  ! ..  Locals
   integer :: ir, m1, m2, m3, m4, it, is
-! ======================================================================
+  ! ======================================================================
 
   open (67, file='ldaupot_new', form='FORMATTED')
   call version_print_header(67)
@@ -59,4 +59,4 @@ subroutine wrldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
 140 format ('IAT', 6x, 'UEFF', 12x, 'JEFF', 12x, 'EREF')
 150 format (i3, 3(1x,e15.8))
 160 format (5e16.8)
-end subroutine
+end subroutine wrldaupot

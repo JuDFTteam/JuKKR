@@ -1,43 +1,43 @@
 subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, &
   drrl, ddrrl, drrul, ddrrul, irmd, lmpotd)
-!------------------------------------------------------------------
-!gradient of rl with rl defined by charge density=sum(rl*ylm).
-!mesh,l1max: max of mesh and l+1.
-!IRMD,LMPOTD: maxima of corresponding dimension parameters.
-!drrl=d(rl)/dr, ddrrl=d(drrl)/dr, drrul=d(rl-up)/dr,
-!ztal: zeta for each l-component necessary to get down-components.
-!------------------------------------------------------------------
-!------------------------------------------------------------------
+  ! ------------------------------------------------------------------
+  ! gradient of rl with rl defined by charge density=sum(rl*ylm).
+  ! mesh,l1max: max of mesh and l+1.
+  ! IRMD,LMPOTD: maxima of corresponding dimension parameters.
+  ! drrl=d(rl)/dr, ddrrl=d(drrl)/dr, drrul=d(rl-up)/dr,
+  ! ztal: zeta for each l-component necessary to get down-components.
+  ! ------------------------------------------------------------------
+  ! ------------------------------------------------------------------
   use :: mod_types, only: t_inc
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
-!.. Parameters ..
+  ! .. Parameters ..
   real (kind=dp) :: zero, zero1
   parameter (zero=0.d0, zero1=1.d-12)
-!..
-!.. Scalar Arguments ..
+  ! ..
+  ! .. Scalar Arguments ..
   real (kind=dp) :: dx
   integer :: ipan, ipand, irmd, l1max, lmpotd, mesh, nspin
-!..
-!.. Array Arguments ..
+  ! ..
+  ! .. Array Arguments ..
   real (kind=dp) :: ddrrl(irmd, lmpotd), ddrrul(irmd, lmpotd), drdi(irmd), &
     drrl(irmd, lmpotd), drrul(irmd, lmpotd), rhol(irmd, 2, lmpotd), rv(irmd)
   integer :: ircut(0:ipand)
-!..
-!.. Local Scalars ..
+  ! ..
+  ! .. Local Scalars ..
   real (kind=dp) :: chgden, pi, r2, s4, spiden
   integer :: i1, ien, ip, ir, ist, llmax
-!..
-!.. Local Arrays ..
+  ! ..
+  ! .. Local Arrays ..
   real (kind=dp) :: drdi2(irmd), rl1(irmd), rl1udm(irmd), ztal(irmd)
-!..
-!.. External Subroutines ..
+  ! ..
+  ! .. External Subroutines ..
   external :: gradr
-!..
-!.. Intrinsic Functions ..
+  ! ..
+  ! .. Intrinsic Functions ..
   intrinsic :: abs, acos, sqrt
-!..
-!------------------------------------------------------------------
+  ! ..
+  ! ------------------------------------------------------------------
   pi = cos(-1.d0)
   s4 = sqrt(4.d0*pi)
   llmax = l1max*l1max
@@ -121,4 +121,4 @@ subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, &
   return
 120 format (1x, ' l1max=', i5, ' mesh=', i5, 'nspi=', i5, ' ipan=', i5)
 130 format (1x, '  ip ist ien', 3i5)
-end subroutine
+end subroutine gradrl

@@ -1,33 +1,33 @@
-    Function ssum(n, v, iv)
-      Use mod_datatypes, Only: dp
-! **********************************************************************
-!        sum up the first N elements of the real (kind=dp)
-!        array V(*) with a stepwidth of IV
-! ----------------------------------------------------------------------
-      Implicit None
-      Real (Kind=dp) :: ssum
-!.. Scalar Arguments ..
-      Integer :: iv, n
-!..
-!.. Array Arguments ..
-      Real (Kind=dp) :: v(*)
-!..
-!.. Local Scalars ..
-      Real (Kind=dp) :: vsum
-      Integer :: i, ibot, itop
-!..
-      If (iv>=0) Then
-        ibot = 1
-        itop = 1 + (n-1)*iv
+function ssum(n, v, iv)
+  use :: mod_datatypes, only: dp
+  ! **********************************************************************
+  ! sum up the first N elements of the real (kind=dp)
+  ! array V(*) with a stepwidth of IV
+  ! ----------------------------------------------------------------------
+  implicit none
+  real (kind=dp) :: ssum
+  ! .. Scalar Arguments ..
+  integer :: iv, n
+  ! ..
+  ! .. Array Arguments ..
+  real (kind=dp) :: v(*)
+  ! ..
+  ! .. Local Scalars ..
+  real (kind=dp) :: vsum
+  integer :: i, ibot, itop
+  ! ..
+  if (iv>=0) then
+    ibot = 1
+    itop = 1 + (n-1)*iv
 
-      Else
-        ibot = 1 - (n-1)*iv
-        itop = 1
-      End If
+  else
+    ibot = 1 - (n-1)*iv
+    itop = 1
+  end if
 
-      vsum = 0.0E0_dp
-      Do i = ibot, itop, iv
-        vsum = vsum + v(i)
-      End Do
-      ssum = vsum
-    End Function
+  vsum = 0.0e0_dp
+  do i = ibot, itop, iv
+    vsum = vsum + v(i)
+  end do
+  ssum = vsum
+end function ssum

@@ -1,24 +1,24 @@
 subroutine errmsg(messg, isev)
-!- Write error message to message error device
-! ----------------------------------------------------------------------
-!i Inputs:
-!i   messg :error message
-!i   isev  :severity level
-!r Remarks
-!r   if severity level greater or equal than error tolerance
-!r   program will stop.
-! ----------------------------------------------------------------------
+  ! - Write error message to message error device
+  ! ----------------------------------------------------------------------
+  ! i Inputs:
+  ! i   messg :error message
+  ! i   isev  :severity level
+  ! r Remarks
+  ! r   if severity level greater or equal than error tolerance
+  ! r   program will stop.
+  ! ----------------------------------------------------------------------
   use :: mod_types, only: t_inc
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
-! Passed parameters:                                                    
+  ! Passed parameters:
   integer :: isev
   character (len=*) :: messg
-! Local parameters:                                                     
+  ! Local parameters:
   integer :: iline, iisev, ipos(0:20), l, nline, nunit
   character (len=14) :: c(1:4)
-! External calls:                                                       
-! Intrinsic functions                                                   
+  ! External calls:
+  ! Intrinsic functions
   intrinsic :: iabs, max0, min0
 
   data c/'Information:', 'Warning:', 'Error:', 'Fatal error:'/
@@ -50,4 +50,4 @@ subroutine errmsg(messg, isev)
 
 100 format (a13, a)
 
-end subroutine
+end subroutine errmsg

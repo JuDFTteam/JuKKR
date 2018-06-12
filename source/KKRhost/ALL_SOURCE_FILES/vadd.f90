@@ -1,16 +1,16 @@
 ! ************************************************************************
-    Subroutine vadd(a, b, c)
-      Use mod_datatypes, Only: dp
-! ************************************************************************
+subroutine vadd(a, b, c)
+  use :: mod_datatypes, only: dp
+  ! ************************************************************************
 
-      Real (Kind=dp), Intent (In) :: a(*)
-      Real (Kind=dp), Intent (In) :: b(*)
-      Real (Kind=dp), Intent (Out) :: c(*)
+  real (kind=dp), intent (in) :: a(*)
+  real (kind=dp), intent (in) :: b(*)
+  real (kind=dp), intent (out) :: c(*)
 
-      Integer :: i
+  integer :: i
 
-      Do i = 1, 3
-        c(i) = a(i) + b(i)
-      End Do
-      Return
-    End Subroutine
+  do i = 1, 3
+    c(i) = a(i) + b(i)
+  end do
+  return
+end subroutine vadd

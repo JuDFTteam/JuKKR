@@ -1,43 +1,43 @@
 ! ************************************************************************
-    Subroutine sname(name, new, band)
-      Use mod_datatypes, Only: dp
-! ************************************************************************
-!.. scalar arguments
-      Integer :: band
-      Character (Len=40) :: name, new
+subroutine sname(name, new, band)
+  use :: mod_datatypes, only: dp
+  ! ************************************************************************
+  ! .. scalar arguments
+  integer :: band
+  character (len=40) :: name, new
 
-!.. locals
-      Integer :: i, l, lo
-      Character (Len=1) :: ch(50), poi
-      Character (Len=10) :: s
+  ! .. locals
+  integer :: i, l, lo
+  character (len=1) :: ch(50), poi
+  character (len=10) :: s
 
-      Integer :: length
-      External :: length
-! ------------------------------------------------------------------------
-      poi = '.'
-      If (band<0) Then
-        lo = nint(log(real(-band,kind=dp))/log(10.0E0_dp)) + 1
-      Else If (band==0) Then
-        lo = 0
-      Else
-        lo = nint(log(real(band,kind=dp))/log(10.0E0_dp))
-      End If
+  integer :: length
+  external :: length
+  ! ------------------------------------------------------------------------
+  poi = '.'
+  if (band<0) then
+    lo = nint(log(real(-band,kind=dp))/log(10.0e0_dp)) + 1
+  else if (band==0) then
+    lo = 0
+  else
+    lo = nint(log(real(band,kind=dp))/log(10.0e0_dp))
+  end if
 
-!      write(6,*) 'LO ',lo
+  ! write(6,*) 'LO ',lo
 
-      Read (name, Fmt='(255a1)')(ch(i), i=1, 40)
-      l = length(ch, 40)
-!      write(6,*) 'L  ',l
+  read (name, fmt='(255a1)')(ch(i), i=1, 40)
+  l = length(ch, 40)
+  ! write(6,*) 'L  ',l
 
-!      write(6,*) 'CH ',(CH(I),I=1,25)
+  ! write(6,*) 'CH ',(CH(I),I=1,25)
 
-      Write (s, Fmt='(I10)') band
-!      write(6,*) 'S  ',s
+  write (s, fmt='(I10)') band
+  ! write(6,*) 'S  ',s
 
-      Read (s, Fmt='(255A1)')(ch(i), i=l+1, l+10)
-!      write(6,*) 'CH ',(CH(I),I=L+1,L+10)
+  read (s, fmt='(255A1)')(ch(i), i=l+1, l+10)
+  ! write(6,*) 'CH ',(CH(I),I=L+1,L+10)
 
-      Write (new, Fmt='(255A1)')(ch(i), i=1, l), poi, (ch(i), i=l+10-lo, l+10)
+  write (new, fmt='(255A1)')(ch(i), i=1, l), poi, (ch(i), i=l+10-lo, l+10)
 
-      Return
-    End Subroutine
+  return
+end subroutine sname

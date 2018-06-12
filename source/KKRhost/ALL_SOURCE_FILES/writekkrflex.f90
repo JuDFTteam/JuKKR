@@ -1,51 +1,59 @@
-!-------------------------------------------------------------------------------
+! -------------------------------------------------------------------------------
 ! SUBROUTINE: writekkrflex
-!> @brief Subroutine dealing with the printing of the needed kkrflex files for the
-!> realization of an impurity calculation with the KKRFLEX software package.
-!> @details It specifically prints the following files:
-!> - kkrflex_tmat
-!> - kkrflex_intercell_ref
-!> - kkrflex_intercell_cmoms
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-!-------------------------------------------------------------------------------
-subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, &
-  kshape, vbc, atomimp, hostimp, noq, zat, kaoez, conc, cmom, cminst, vinters, &
-  nemb, naez)
+! > @brief Subroutine dealing with the printing of the needed kkrflex files
+! for the
+! > realization of an impurity calculation with the KKRFLEX software package.
+! > @details It specifically prints the following files:
+! > - kkrflex_tmat
+! > - kkrflex_intercell_ref
+! > - kkrflex_intercell_cmoms
+! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
+! Fortran90
+! -------------------------------------------------------------------------------
+subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, kshape, &
+  vbc, atomimp, hostimp, noq, zat, kaoez, conc, cmom, cminst, vinters, nemb, &
+  naez)
 
   use :: mod_types, only: t_tgmat
   use :: mod_wunfiles, only: t_params, read_angles
   use :: mod_version_info
   use :: mod_md5sums
   use :: global_variables
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
 
   implicit none
 
-! .. Input variables
-  integer, intent (in) :: nemb !< Number of 'embedding' positions
-  integer, intent (in) :: naez !< Number of atoms in unit cell
-  integer, intent (in) :: lmpot !< (LPOT+1)**2
-  integer, intent (in) :: nspin !< Counter for spin directions
-  integer, intent (in) :: natyp !< Number of kinds of atoms in unit cell
-  integer, intent (in) :: kshape !< Exact treatment of WS cell
+  ! .. Input variables
+  integer, intent (in) :: nemb     ! < Number of 'embedding' positions
+  integer, intent (in) :: naez     ! < Number of atoms in unit cell
+  integer, intent (in) :: lmpot    ! < (LPOT+1)**2
+  integer, intent (in) :: nspin    ! < Counter for spin directions
+  integer, intent (in) :: natyp    ! < Number of kinds of atoms in unit cell
+  integer, intent (in) :: kshape   ! < Exact treatment of WS cell
   integer, intent (in) :: ielast
-  integer, intent (in) :: natomimp !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-  real (kind=dp), intent (in) :: alat !< Lattice constant in a.u.
-  integer, dimension (naez), intent (in) :: noq !< Number of diff. atom types located
+  integer, intent (in) :: natomimp ! < Size of the cluster for
+                                   ! impurity-calculation output of GF should
+                                   ! be 1, if you don't do such a calculation
+  real (kind=dp), intent (in) :: alat ! < Lattice constant in a.u.
+  integer, dimension (naez), intent (in) :: noq ! < Number of diff. atom types
+                                                ! located
   integer, dimension (natomimp), intent (in) :: atomimp
   integer, dimension (0:natyp), intent (in) :: hostimp
-  integer, dimension (natyp, naez+nemb), intent (in) :: kaoez !< Kind of atom at site in elem. cell
-  real (kind=dp), dimension (2), intent (in) :: vbc !< Potential constants
-  real (kind=dp), dimension (natyp), intent (in) :: zat !< Nuclear charge
-  real (kind=dp), dimension (natyp), intent (in) :: conc !< Concentration of a given atom
+  integer, dimension (natyp, naez+nemb), intent (in) :: kaoez ! < Kind of atom
+                                                              ! at site in
+                                                              ! elem. cell
+  real (kind=dp), dimension (2), intent (in) :: vbc ! < Potential constants
+  real (kind=dp), dimension (natyp), intent (in) :: zat ! < Nuclear charge
+  real (kind=dp), dimension (natyp), intent (in) :: conc ! < Concentration of
+                                                         ! a given atom
   real (kind=dp), dimension (lmpot, natyp), intent (in) :: cmom
   real (kind=dp), dimension (lmpot, natyp), intent (in) :: cminst
   real (kind=dp), dimension (lmpot, naez), intent (in) :: vinters
-! .. Local variables
+  ! .. Local variables
   integer :: ispin, ie, i1, iatom, irec, i, lm
   real (kind=dp), dimension (natyp) :: theta, phi
   complex (kind=dp), dimension (lmmaxd, lmmaxd) :: tmat0
-! .. External Functions
+  ! .. External Functions
   logical :: opt
   external :: opt
 
@@ -62,7 +70,7 @@ subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, &
         form='unformatted')
     end if
 
-!read in non-collinear angles
+    ! read in non-collinear angles
     call read_angles(t_params, natyp, theta, phi)
 
     do iatom = 1, natomimp
@@ -76,23 +84,24 @@ subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, &
                 read (69, rec=irec) tmat0
               else
                 stop 'WRONG tmat_to_file for KKRFLEX writeout!!'
-!not correctly read in with this option, to fix this communication is needed
-!                      tmat0(:,:) = t_tgmat%tmat(:,:,irec)
+                ! not correctly read in with this option, to fix this
+                ! communication is needed
+                ! tmat0(:,:) = t_tgmat%tmat(:,:,irec)
               end if
             else
               tmat0 = (0.0d0, 0.0d0)
             end if
             write (6699, '(4I12,50000E25.16)') iatom, ispin, ie, 0, tmat0
-          end do !ie=1,ielast
-        end do !ispin=1,nspin
+          end do                   ! ie=1,ielast
+        end do                     ! ispin=1,nspin
       else if (korbit==1) then
         ispin = 1
         do ie = 1, ielast
           if (i1<=natyp) then
             irec = ie + ielast*(i1-1)
             read (69, rec=irec) tmat0
-!perform here a transformation from the local to the global
-!spin-frame of reference
+            ! perform here a transformation from the local to the global
+            ! spin-frame of reference
             call rotatematrix(tmat0, theta(i1), phi(i1), lmgf0d, 0)
           else
             tmat0 = (0d0, 0d0)
@@ -114,8 +123,8 @@ subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, &
     write (91, *) '# KSHAPE', kshape
     write (91, *) '# NATOMIMP, lmpot, ALAT VBC(1), VBC(2)'
     write (91, '(2I12,10F25.16)') natomimp, lmpot, alat, vbc(1), vbc(2)
-    do iatom = 1, natomimp ! Bauer 2011-10-11
-      i = atomimp(iatom) !
+    do iatom = 1, natomimp         ! Bauer 2011-10-11
+      i = atomimp(iatom)
       write (1337, *) 'ac2', i, hostimp(i), lmpot, (vinters(lm,i), lm=1, lmpot &
         )
       write (91, '(5000F25.16)')(vinters(lm,i), lm=1, lmpot)
@@ -153,4 +162,4 @@ subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, &
     close (91)
   end if
 
-end subroutine
+end subroutine writekkrflex

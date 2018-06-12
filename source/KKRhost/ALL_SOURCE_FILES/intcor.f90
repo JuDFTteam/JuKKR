@@ -1,32 +1,32 @@
 subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
   vlnc, a, b, z, rn, nr, tol, irm, ipr, nitmax, nsra)
-  use mod_types, only: t_inc
-  use mod_DataTypes
+  use :: mod_types, only: t_inc
+  use :: mod_datatypes
   implicit none
-!.. Scalar Arguments ..
+  ! .. Scalar Arguments ..
   real (kind=dp) :: a, b, e, f1, f2, rn, slope, sum, tol, value, z
   integer :: ipr, irm, l, nitmax, nn, nr, nre, nsra
   logical :: vlnc
-!..
-!.. Array Arguments ..
+  ! ..
+  ! .. Array Arguments ..
   real (kind=dp) :: f(*), g(*), rho(*), v(*)
-!..
-!.. Local Scalars ..
+  ! ..
+  ! .. Local Scalars ..
   complex (kind=dp) :: arg, cappai, dofe
   real (kind=dp) :: cvlight, de, dg1, dg2, dpsi1, dpsi2, drdikc, e1, e2, ea, &
     gkc2, pi, pkc1, pkc2, psi1, psi2, q, qkc1, qkc2, ratio, ratio1, re, rkc, &
     rpb, slop, tsrme, valu, vme, xxx, zz
   integer :: ir, k, k2, kc, niter, nne, nrem1, nrem2
-!..
-!.. Local Arrays ..
+  ! ..
+  ! .. Local Arrays ..
   complex (kind=dp) :: hl(6)
-!..
-!.. External Subroutines ..
+  ! ..
+  ! .. External Subroutines ..
   external :: hankel, intin, intout
-!..
-!.. Intrinsic Functions ..
+  ! ..
+  ! .. Intrinsic Functions ..
   intrinsic :: abs, atan, cmplx, dsqrt, exp, log, max0, min0, real, sqrt
-!..
+  ! ..
   pi = 4.d0*atan(1.d0)
   zz = z + z
   cvlight = 274.0720442d0
@@ -66,7 +66,7 @@ subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
       valu = value
       slop = slope
       if (.not. vlnc) then
-!--->   single site  boundary condition
+        ! --->   single site  boundary condition
         vme = -e
         if (nsra==1) then
           cappai = cmplx(0.d0, dsqrt(vme), kind=dp)
@@ -174,4 +174,4 @@ subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
 160 format (' state', i2, ',', i1, ':', i4, 'x,', i5, '/', i3, ',  bc=', 1p, &
     2d12.3, /, 14x, 'e=', d14.6, '   de=', d11.2, '   sum=', d12.4)
 170 format (' *** int: stop after', i4, ' iterations')
-end subroutine
+end subroutine intcor

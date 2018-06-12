@@ -3,65 +3,65 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
   mm05cor, nkpcor, ikmcor, izero, ncxray, lcxray, itxray, bcor, bcors, sdia, &
   smdia, soff, smoff, qdia, qoff, qmdia, qmoff, nkmmax, nmemax, ismqhfi, &
   ntmax, nrmax, nmmax, ncstmax, nlmax)
-!   ********************************************************************
-!   *                                                                  *
-!   *   SUBROUTINE TO CALCULATE THE RELATIVISTIC CORE WAVE             *
-!   *   FUNCTIONS FOR A SPIN-DEPENDENT POTENTIAL                       *
-!   *                                                                  *
-!   *   FOR A GIVEN POTENTIAL THE NUMBER OF CORE AND VALENCE           *
-!   *   ELECTRONS IS DETERMINED AND ALL CORE STATES THEN CALCULATED    *
-!   *   > THE ROUTINE IS ORGANIZED AS DESCLAUX'S ROUTINE <RESLD>       *
-!   *     BUT FINDS THE CORRECTION TO THE E-EIGENVALUE AND THE         *
-!   *     MATCHING PARAMETERS BY A NEWTON RAPHSON ALGORITHM            *
-!   *     THIS IS IN VARIANCE TO THE METHOD SUGGESTED BY CORTONA       *
-!   *   > SET THE SWITCH 'CHECK'  TO COPARE E-EIGENVALUES WITH         *
-!   *     RESULTS OBTAINED WITH THE CONVENTIONAL E-CORRECTION          *
-!   *     ALGORITHM, WHICH WORKS ONLY IF NO COUPLING IS PRESENT !      *
-!   *   > THE FUNCTIONS  {GC,FC}(I,J) J=1,NSOL ARE THE LINEAR          *
-!   *     INDEPENDENT SOLUTIONS TO THE DIFFERENTIAL EQUATIONS WITH     *
-!   *     KAPPA-CHARACTER I=1,NSOL;   FOR OUTWARD AND INWARD           *
-!   *     INTEGRATION THE SAME ARRAYS ARE USED !                       *
-!   *   > THE PROPER SOLUTIONS SATISFYING THE BOUNDARY CONDITIONS      *
-!   *     AT R=0 AND(!) R=INFINITY ARE STORED IN {GCK,FCK}(K,S)        *
-!   *     S,K=1,NSOL   SOLUTION S=1 FOR  KAPPA = - L - 1               *
-!   *                           S=2 FOR  KAPPA = + L (IF EXISTENT)     *
-!   *   > THE SWITCH NUCLEUS SELECTS WHETHER A FINITE NUCLEUS          *
-!   *     SHOULD BE USED                                               *
-!   *                                                                  *
-!   *   ADAPTED FOR FINITE NUCLEUS       MB MAR. 1995                  *
-!   *   HYPERFINE FIELD SPLITTING introduced if icore=1 MB JUN. 1995   *
-!   *                                                                  *
-!   *   SCALEB:                                                        *
-!   *   if the B-field is quite high it might happen that the routine  *
-!   *   fails to find both 'spin-orbit-split' solutions.               *
-!   *   in that case the whole l-shell is rerun with the B-field       *
-!   *   gradually switched on, i.e. scaled with a parameter that       *
-!   *   increases from 0 to 1 during the iteration loop  HE Nov. 95    *
-!   *                                                                  *
-!   *   ITXRAY =  0  run over all core states to get charge density    *
-!   *   ITXRAY >  0  deal exclusively with state  NCXRAY,LCXRAY        *
-!   *   ITXRAY <  0  state  NCXRAY,LCXRAY  is checked to be a          *
-!   *                bound state or not. on return:                    *
-!   *                ITXRAY = |ITXRAY| indicates bound state           *
-!   *                ITXRAY = -1       indicates NO bound state found  *
-!   *                                                                  *
-!   *                                                                  *
-!   *   few changes in the TB-KKR implementation as compared to SPR    *
-!   *        IPRINT values between 0 and 2                             *
-!   *        ITPRT  correct value of the atom-type index               *
-!   ********************************************************************
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *   SUBROUTINE TO CALCULATE THE RELATIVISTIC CORE WAVE             *
+  ! *   FUNCTIONS FOR A SPIN-DEPENDENT POTENTIAL                       *
+  ! *                                                                  *
+  ! *   FOR A GIVEN POTENTIAL THE NUMBER OF CORE AND VALENCE           *
+  ! *   ELECTRONS IS DETERMINED AND ALL CORE STATES THEN CALCULATED    *
+  ! *   > THE ROUTINE IS ORGANIZED AS DESCLAUX'S ROUTINE <RESLD>       *
+  ! *     BUT FINDS THE CORRECTION TO THE E-EIGENVALUE AND THE         *
+  ! *     MATCHING PARAMETERS BY A NEWTON RAPHSON ALGORITHM            *
+  ! *     THIS IS IN VARIANCE TO THE METHOD SUGGESTED BY CORTONA       *
+  ! *   > SET THE SWITCH 'CHECK'  TO COPARE E-EIGENVALUES WITH         *
+  ! *     RESULTS OBTAINED WITH THE CONVENTIONAL E-CORRECTION          *
+  ! *     ALGORITHM, WHICH WORKS ONLY IF NO COUPLING IS PRESENT !      *
+  ! *   > THE FUNCTIONS  {GC,FC}(I,J) J=1,NSOL ARE THE LINEAR          *
+  ! *     INDEPENDENT SOLUTIONS TO THE DIFFERENTIAL EQUATIONS WITH     *
+  ! *     KAPPA-CHARACTER I=1,NSOL;   FOR OUTWARD AND INWARD           *
+  ! *     INTEGRATION THE SAME ARRAYS ARE USED !                       *
+  ! *   > THE PROPER SOLUTIONS SATISFYING THE BOUNDARY CONDITIONS      *
+  ! *     AT R=0 AND(!) R=INFINITY ARE STORED IN {GCK,FCK}(K,S)        *
+  ! *     S,K=1,NSOL   SOLUTION S=1 FOR  KAPPA = - L - 1               *
+  ! *                           S=2 FOR  KAPPA = + L (IF EXISTENT)     *
+  ! *   > THE SWITCH NUCLEUS SELECTS WHETHER A FINITE NUCLEUS          *
+  ! *     SHOULD BE USED                                               *
+  ! *                                                                  *
+  ! *   ADAPTED FOR FINITE NUCLEUS       MB MAR. 1995                  *
+  ! *   HYPERFINE FIELD SPLITTING introduced if icore=1 MB JUN. 1995   *
+  ! *                                                                  *
+  ! *   SCALEB:                                                        *
+  ! *   if the B-field is quite high it might happen that the routine  *
+  ! *   fails to find both 'spin-orbit-split' solutions.               *
+  ! *   in that case the whole l-shell is rerun with the B-field       *
+  ! *   gradually switched on, i.e. scaled with a parameter that       *
+  ! *   increases from 0 to 1 during the iteration loop  HE Nov. 95    *
+  ! *                                                                  *
+  ! *   ITXRAY =  0  run over all core states to get charge density    *
+  ! *   ITXRAY >  0  deal exclusively with state  NCXRAY,LCXRAY        *
+  ! *   ITXRAY <  0  state  NCXRAY,LCXRAY  is checked to be a          *
+  ! *                bound state or not. on return:                    *
+  ! *                ITXRAY = |ITXRAY| indicates bound state           *
+  ! *                ITXRAY = -1       indicates NO bound state found  *
+  ! *                                                                  *
+  ! *                                                                  *
+  ! *   few changes in the TB-KKR implementation as compared to SPR    *
+  ! *        IPRINT values between 0 and 2                             *
+  ! *        ITPRT  correct value of the atom-type index               *
+  ! ********************************************************************
   use :: mod_types, only: t_inc
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
 
 
-! PARAMETER definitions
+  ! PARAMETER definitions
   real (kind=dp) :: unend, tolvar, trymix, dvstep
   parameter (unend=600.0d0, tolvar=1.0d-6, trymix=0.01d0, dvstep=0.01d0)
   integer :: itermax, nlshellmax
   parameter (itermax=200, nlshellmax=15)
 
-! Dummy arguments
+  ! Dummy arguments
   integer :: iprint, ismqhfi, itprt, itxray, ncstmax, nkmmax, nlmax, nmemax, &
     nmmax, nrmax, nt, ntmax, nucleus
   real (kind=dp) :: bcor(ntmax), bcors(ntmax), bt(nrmax, ntmax), &
@@ -75,9 +75,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     kapcor(ncstmax), lcxray(ntmax), mm05cor(ncstmax), ncxray(ntmax), &
     nkpcor(ncstmax), z(ntmax), ncort(ntmax)
 
-! Local variables
-  real (kind=dp) :: aux, bb(nrmax*2), bhf(2, 2), bhf1(2, 2), bhf2(2, 2), &
-    bsh, bsol, bsum, cgd(2), cgmd(2), cgo, dec, dedv(4, 4), dovrc(nrmax*2), &
+  ! Local variables
+  real (kind=dp) :: aux, bb(nrmax*2), bhf(2, 2), bhf1(2, 2), bhf2(2, 2), bsh, &
+    bsol, bsum, cgd(2), cgmd(2), cgo, dec, dedv(4, 4), dovrc(nrmax*2), &
     d_p(2, 2, nrmax*2), dq(2, 2, nrmax*2), drdic(nrmax*2), drovrn(2*nrmax), &
     dv(4), dvde(4, 4), ec, ecc, elim, err(4), errnew(4), fc(2, 2, nrmax*2), &
     fck(2, 2, nrmax*2), gc(2, 2, nrmax*2), gck(2, 2, nrmax*2), mj, niw(2), &
@@ -119,7 +119,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     bndstachk = .false.
   end if
 
-! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+  ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
   do it = 1, nt
     suppressb = .false.
     scaleb = .false.
@@ -147,9 +147,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
       do while (rc(in)<=rnuc)
         in = in + 1
       end do
-!     INTEGRATION BOUNDARY FOR HYPERFINE FIELDS FOR FINITE NUCLEUS
-!     2 MESH POINTS MORE FOR EXECUTING APPROPRIATE INTERPOLATION
-!     TO REAL NUCLEAR RADIUS RNUC
+      ! INTEGRATION BOUNDARY FOR HYPERFINE FIELDS FOR FINITE NUCLEUS
+      ! 2 MESH POINTS MORE FOR EXECUTING APPROPRIATE INTERPOLATION
+      ! TO REAL NUCLEAR RADIUS RNUC
       jlim = in + 2
       if (mod(jlim,2)==0) jlim = jlim - 1
     end if
@@ -225,10 +225,10 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
       itprt, z(it)
 
 
-! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-!                   ---------------------------------------
-!                   INITIALIZE QUANTUM NUMBERS  NQN  AND  L
-!                   ---------------------------------------
+    ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    ! ---------------------------------------
+    ! INITIALIZE QUANTUM NUMBERS  NQN  AND  L
+    ! ---------------------------------------
     ic = 0
     do ilshell = 1, nlshell
       nqn = nqntab(ilshell)
@@ -237,9 +237,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
       ilc = min(nlmax, il)
       nsh = 2*(2*l+1)
 
-! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-!     SKIP SHELL IF NOT NEEDED IN A  XRAY - CALCULATION
-! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      ! SKIP SHELL IF NOT NEEDED IN A  XRAY - CALCULATION
+      ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
       if (itxray/=0) then
         if (it/=itxray) go to 160
         if ((nqn/=ncxray(it)) .or. (l/=lcxray(it))) go to 160
@@ -252,14 +252,14 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           end do
         end do
       end if
-! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
       ish = 0
       bsh = 0.0d0
       do i = 1, nmemax
         split1(i) = 0.0d0
       end do
-! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+      ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
       do muem05 = -l - 1, +l
         mj = muem05 + 0.5d0
 
@@ -282,15 +282,15 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           nvar = 2
         end if
 
-! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+        ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
         do s = 1, nsol
           ic = ic + 1
           ish = ish + 1
           t = 3 - s
-!                  ----------------------------------------
-!                   USE EC OF PREVIOUS RUNS AS START-VALUE
-!                   TAKE SPIN-ORBIT SPLITTING INTO ACCOUNT
-!                  ----------------------------------------
+          ! ----------------------------------------
+          ! USE EC OF PREVIOUS RUNS AS START-VALUE
+          ! TAKE SPIN-ORBIT SPLITTING INTO ACCOUNT
+          ! ----------------------------------------
           if (ish>1) then
             ec = ecortab(ic-1, it)
             if (s==2) ec = ecortab(ic-1, it)*1.1d0
@@ -299,9 +299,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           end if
 
 
-!                                      --------------------
-!                                         FIND  E-LIMIT
-!                                      --------------------
+          ! --------------------
+          ! FIND  E-LIMIT
+          ! --------------------
           if (lll==0) then
             elim = -2*dble(z(it)**2)/(1.5d0*nqn*nqn)
           else
@@ -318,9 +318,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 110       continue
           if (ec<=elim) ec = elim*0.7d0
 
-!                                      --------------------
-!                                         FIND    NZERO
-!                                      --------------------
+          ! --------------------
+          ! FIND    NZERO
+          ! --------------------
           do n = 1, (nrc-1)
             if ((vv(n)-ec)*rc(n)**2>unend) then
               if (mod(n,2)==0) then
@@ -334,9 +334,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           nzero = nrc - 1
           write (6, 190) itprt, nqn, l, (nrc-1)
           stop
-!                                      --------------------
-!                                         FIND    NMATCH
-!                                      --------------------
+          ! --------------------
+          ! FIND    NMATCH
+          ! --------------------
 120       continue
           n = nzero + 1
           do nn = 1, nzero
@@ -381,10 +381,10 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
             dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, &
             cgd, cgmd, cgo, nrc, z(it), nucleus)
 
-!                                      --------------------
-!                                       START VALUES FOR
-!                                           PARAMETERS
-!                                      --------------------
+          ! --------------------
+          ! START VALUES FOR
+          ! PARAMETERS
+          ! --------------------
 
           var(1) = ec
           var(2) = pow(s, s)/piw(s, s)
@@ -436,7 +436,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           end do
 
           iter = 0
-! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+          ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 140       continue
           iter = iter + 1
 
@@ -447,9 +447,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
               bb(n) = bt(n, it)*scale
             end do
           end if
-!                         ----------------------------------
-!                         CHECK WHETHER NUMBER OF NODES O.K.
-!                         ----------------------------------
+          ! ----------------------------------
+          ! CHECK WHETHER NUMBER OF NODES O.K.
+          ! ----------------------------------
           if (iter>1) then
             node = 0
             do n = 2, (nmatch-1)
@@ -558,12 +558,14 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
             scale, var(1), (var(iv), iv=1, 4), (dv(iv), iv=1, 4), &
             (err(ie), ie=1, 4)
 
-!----------------------------------  check relative change in parameters
-! ----------------------- parameters 3 and 4 = 0 for paramagnetic case !
+          ! ----------------------------------  check relative change in
+          ! parameters
+          ! ----------------------- parameters 3 and 4 = 0 for paramagnetic
+          ! case !
           if (iter<itermax) then
             do iv = 1, nvar
               vartab(iv, ish) = var(iv)
-!           IF( ABS(VAR(IV)) .EQ. 0.0D0 ) THEN
+              ! IF( ABS(VAR(IV)) .EQ. 0.0D0 ) THEN
               if ((abs(var(iv))+abs(var(iv)))<1.0d-30) then
                 if (ferro .and. (t_inc%i_write>0)) write (1337, '(A,I3,A)') &
                   ' VAR ', iv, ' = 0 ??????!!!!!'
@@ -579,14 +581,14 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
             if (t_inc%i_write>0) write (1337, 220) itermax, &
               (var(iv), iv=1, 4), (dv(iv), iv=1, 4), (err(ie), ie=1, 4)
           end if
-! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+          ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 
-!                         ---------------------------------
-!                         NORMALIZE WAVEFUNCTIONS ACCORDING
-!                               TO MATCHING CONDITIONS
-!                         ---------------------------------
+          ! ---------------------------------
+          ! NORMALIZE WAVEFUNCTIONS ACCORDING
+          ! TO MATCHING CONDITIONS
+          ! ---------------------------------
 
-!                                    INWARD - SOLUTION
+          ! INWARD - SOLUTION
           do n = nmatch, nzero
             do j = 1, nsol
               do i = 1, nsol
@@ -597,14 +599,14 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           end do
 
           if (nsol==2) then
-!                                   OUTWARD - SOLUTION
+            ! OUTWARD - SOLUTION
             do n = 1, (nmatch-1)
               do i = 1, nsol
                 gc(i, t, n) = gc(i, t, n)*var(3)
                 fc(i, t, n) = fc(i, t, n)*var(3)
               end do
             end do
-!                                    INWARD - SOLUTION
+            ! INWARD - SOLUTION
             do n = nmatch, nzero
               do i = 1, nsol
                 gc(i, t, n) = gc(i, t, n)*var(4)
@@ -613,7 +615,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
             end do
           end if
 
-!                                    SUM FOR EACH KAPPA
+          ! SUM FOR EACH KAPPA
           do n = 1, nzero
             do k = 1, nsol
               gck(k, s, n) = 0.0d0
@@ -625,9 +627,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
             end do
           end do
 
-!                       -----------------------------------
-!                       CALCULATE  NORM  AND NORMALIZE TO 1
-!                       -----------------------------------
+          ! -----------------------------------
+          ! CALCULATE  NORM  AND NORMALIZE TO 1
+          ! -----------------------------------
           do k = 1, nsol
             norm = r2drdic(1)*(gck(k,s,1)**2+fck(k,s,1)**2)
           end do
@@ -678,8 +680,10 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 
           call rintsimp(rint, jtop, aux)
 
-! ------------------------------ omit normalization for XRAY calculation
-! ------------------------------ to recover old (errounous data) -------
+          ! ------------------------------ omit normalization for XRAY
+          ! calculation
+          ! ------------------------------ to recover old (errounous data)
+          ! -------
           if (itxray>0) then
             norm = 1.0d0
           else
@@ -693,9 +697,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
             end do
           end do
 
-!                       -----------------------------------
-!                       CALCULATE  CHARGE AND SPIN DENSITY
-!                       -----------------------------------
+          ! -----------------------------------
+          ! CALCULATE  CHARGE AND SPIN DENSITY
+          ! -----------------------------------
 
           do n = 1, jws(im)
             do k = 1, nsol
@@ -712,9 +716,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           end if
 
 
-!                       -----------------------------------
-!                            CALCULATE  SPIN CHARACTER
-!                       -----------------------------------
+          ! -----------------------------------
+          ! CALCULATE  SPIN CHARACTER
+          ! -----------------------------------
 
           w = r2drdic(1)
           sz = 0.0d0
@@ -761,9 +765,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           sz = sz/3.0d0
 
 
-!                         ------------------------------
-!                         CALCULATE   HYPERFINE - FIELD
-!                         ------------------------------
+          ! ------------------------------
+          ! CALCULATE   HYPERFINE - FIELD
+          ! ------------------------------
 
           call corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, &
             0.0d0, nzero, nrc)
@@ -777,7 +781,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
                 bhf(i, j) = bhf(i, j) - bhf1(i, j) + bhf2(i, j)
               end do
             end do
-          end if !end of nucleus.eq.0
+          end if                   ! end of nucleus.eq.0
 
           bsol = 0.0d0
           do j = 1, nsol
@@ -791,9 +795,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 
           ecortab(ic, it) = ec
 
-!     ------------------
-!     SPLIT HFF-FIELD
-!     ------------------
+          ! ------------------
+          ! SPLIT HFF-FIELD
+          ! ------------------
           if (ismqhfi==1) then
             call hffcore(rnuc, nzero, kap1, kap2, nsol, mj, gck, fck, nrc, &
               shf, s, nmemax, nkmmax, rc, drdic, sdia, smdia, soff, smoff, &
@@ -813,11 +817,13 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
               if (kap1==-1) split3(k, it) = split3(k, it) + shf(1, 1, k)
             end do
           end if
-!MBE
+          ! MBE
 
-!---------------------------------------------------- l-shell UNCOMPLETE
+          ! ---------------------------------------------------- l-shell
+          ! UNCOMPLETE
           if (ish>=nsh) then
-!----------------------------------------------------- l-shell completed
+            ! ----------------------------------------------------- l-shell
+            ! completed
             if (itxray==0 .and. iprint>0 .and. (t_inc%i_write>0)) then
               write (1337, 280) itprt, nqn, txtl(l), txtk(iabs(kap(s))), &
                 (2*muem05+1), kap(s), iter, ec, bsol*.001d0, bsh*.001d0
@@ -829,9 +835,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
                   100.0d0*(1.0d0-split(4)/split(5))
               end if
             end if
-!                              ----------------------------
-!                              CHECK CONSISTENCY OF RESULTS
-!                              ----------------------------
+            ! ----------------------------
+            ! CHECK CONSISTENCY OF RESULTS
+            ! ----------------------------
             if (l/=0) then
               ic1 = ic - nsh + 1
               ic2 = ic
@@ -877,17 +883,17 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
                 100.0d0*(1.0d0-split(4)/split(5))
             end if
           end if
-!-----------------------------------------------------------------------
+          ! -----------------------------------------------------------------------
 
           if (iprint>=1 .and. (t_inc%i_write>0)) write (1337, 310)((bhf(i, &
             j)*.001d0,i=1,nsol), j=1, nsol)
 
 
-!                          --------------------------------
-!                            IF THE SWITCH CHECK IS SET:
-!                            RECALCULATE THE EIGENVALUE
-!                          USING THE CONVENTIONAL ALGORITHM
-!                          --------------------------------
+          ! --------------------------------
+          ! IF THE SWITCH CHECK IS SET:
+          ! RECALCULATE THE EIGENVALUE
+          ! USING THE CONVENTIONAL ALGORITHM
+          ! --------------------------------
           if (check) then
             ecc = 0.95d0*ec
 150         continue
@@ -922,9 +928,9 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           end if
 
 
-! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-!           STORE CORE WAVE FUNCTIONS IF REQUIRED
-! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          ! STORE CORE WAVE FUNCTIONS IF REQUIRED
+          ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
           if (itxray/=0) then
             if (nsol==2) then
               if (s==2) then
@@ -958,16 +964,16 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
               ikmcor(icst, 2) = ikapmue(kap(t), muem05)
             end if
           end if
-! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 
         end do
-! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+        ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 
       end do
-! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+      ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 160 end do
-! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+    ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 
 
     if (itxray==0 .and. iprint>0 .and. (t_inc%i_write>0)) write (1337, 250) &
@@ -999,7 +1005,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     end if
 
   end do
-! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+  ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
 170 format (/, 10x, 'potential is not exchange split ')
 180 format (/, '  ATOM   IT      : ', i5, /, '  ATOMIC NUMBER  : ', i5, /, /, &
@@ -1031,4 +1037,4 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     ' NMATCH  =', i5, '    R=', f10.5, /, ' NZERO   =', i5, '    R=', f10.5, &
     /, ' NODES   =', i5, '  RAT=', e11.4)
 330 format (' integrated core ', a, ' density for atom type ', i4, ':', f12.8)
-end subroutine
+end subroutine core

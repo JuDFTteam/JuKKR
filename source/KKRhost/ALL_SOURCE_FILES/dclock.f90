@@ -1,13 +1,13 @@
 ! **********************************************************************
-    Function dclock()
-      Use mod_datatypes, Only: dp
-      Real (Kind=dp) :: dclock
-! **********************************************************************
-!     .. External Functions ..
-      Real (Kind=dp) :: etime, tarry(2)
-      External :: etime
+function dclock()
+  use :: mod_datatypes, only: dp
+  real (kind=dp) :: dclock
+  ! **********************************************************************
+  ! .. External Functions ..
+  real (kind=dp) :: etime, tarry(2)
+  external :: etime
 
-!     ..
-      dclock = real(etime(tarry), kind=dp)
-      Return
-    End Function
+  ! ..
+  dclock = real(etime(tarry), kind=dp)
+  return
+end function dclock

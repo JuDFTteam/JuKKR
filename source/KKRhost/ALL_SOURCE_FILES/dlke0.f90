@@ -1,122 +1,122 @@
 ! 04.10.95 *************************************************************
-    Subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, &
-      bzkp, rcls, ginp)
-      Use mod_datatypes, Only: dp
-! **********************************************************************
-      Implicit None
-!     .. Parameters ..
-      Include 'inc.p'
-! *          function, set up in the spin-independent non-relativstic *
-! *          (l,m_l)-representation                                   *
-! *                                                                   *
-! *********************************************************************
-!     ..
-!..
-!.. Scalar Arguments ..
-!..
-!.. Array Arguments ..
-      Integer :: lmax
-      Parameter (lmax=lmaxd)
-      Integer :: lmgf0d
-      Parameter (lmgf0d=(lmax+1)**2)
-      Integer :: almgf0
-      Parameter (almgf0=lmgf0d*naezd)
+subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, &
+  bzkp, rcls, ginp)
+  use :: mod_datatypes, only: dp
+  ! **********************************************************************
+  implicit none
+  ! .. Parameters ..
+  include 'inc.p'
+  ! *          function, set up in the spin-independent non-relativstic *
+  ! *          (l,m_l)-representation                                   *
+  ! *                                                                   *
+  ! *********************************************************************
+  ! ..
+  ! ..
+  ! .. Scalar Arguments ..
+  ! ..
+  ! .. Array Arguments ..
+  integer :: lmax
+  parameter (lmax=lmaxd)
+  integer :: lmgf0d
+  parameter (lmgf0d=(lmax+1)**2)
+  integer :: almgf0
+  parameter (almgf0=lmgf0d*naezd)
 
 
-      Real (Kind=dp) :: alat
-      Integer :: naez, naclsmax
-!..
-!.. Local Scalars ..
-!..
-!.. Local Arrays ..
-      Complex (Kind=dp) :: ginp(lmgf0d*naclsmax, lmgf0d, *), gllke(almgf0, *)
-      Real (Kind=dp) :: bzkp(*), rcls(3, naclsd, *), rr(3, 0:nrd)
-      Integer :: atom(naclsd, *), cls(*), ezoa(naclsd, *), nacls(*)
-!..
-!.. External Subroutines ..
-      Integer :: i, ic, im, j, jn, m, n
-!..
-!.. Save statement ..
-      Complex (Kind=dp) :: gllke1(almgf0, lmgf0d)
-      Real (Kind=dp) :: kp(6)
-!      write(6,*) '>>> DLKE0 : Fourier-transforms the ',
-!     +           'GF of reference system'
-      External :: cinit, dlke1
-! ----------------------------------------------------------------------
+  real (kind=dp) :: alat
+  integer :: naez, naclsmax
+  ! ..
+  ! .. Local Scalars ..
+  ! ..
+  ! .. Local Arrays ..
+  complex (kind=dp) :: ginp(lmgf0d*naclsmax, lmgf0d, *), gllke(almgf0, *)
+  real (kind=dp) :: bzkp(*), rcls(3, naclsd, *), rr(3, 0:nrd)
+  integer :: atom(naclsd, *), cls(*), ezoa(naclsd, *), nacls(*)
+  ! ..
+  ! .. External Subroutines ..
+  integer :: i, ic, im, j, jn, m, n
+  ! ..
+  ! .. Save statement ..
+  complex (kind=dp) :: gllke1(almgf0, lmgf0d)
+  real (kind=dp) :: kp(6)
+  ! write(6,*) '>>> DLKE0 : Fourier-transforms the ',
+  ! +           'GF of reference system'
+  external :: cinit, dlke1
+  ! ----------------------------------------------------------------------
 
-      Save
-!     .. External Functions ..
-!     ..
-
-
-
-      Logical :: opt
-      External :: opt
-
-      Call cinit(almgf0*almgf0, gllke(1,1))
-
-      Do i = 1, naez
+  save
+  ! .. External Functions ..
+  ! ..
 
 
-        kp(1) = bzkp(1)
-        kp(2) = bzkp(2)
-        kp(3) = bzkp(3)
-        If (opt('COMPLEX ')) Then
-          kp(4) = bzkp(4)
-          kp(5) = bzkp(5)
-          kp(6) = bzkp(6)
-        End If
 
-        ic = cls(i)
-        Call dlke1(gllke1, alat, nacls, naclsmax, rr, ezoa(1,i), atom(1,i), &
-          kp, ic, ginp(1,1,ic), rcls(1,1,ic))
+  logical :: opt
+  external :: opt
 
-        Do m = 1, lmgf0d
+  call cinit(almgf0*almgf0, gllke(1,1))
+
+  do i = 1, naez
+
+
+    kp(1) = bzkp(1)
+    kp(2) = bzkp(2)
+    kp(3) = bzkp(3)
+    if (opt('COMPLEX ')) then
+      kp(4) = bzkp(4)
+      kp(5) = bzkp(5)
+      kp(6) = bzkp(6)
+    end if
+
+    ic = cls(i)
+    call dlke1(gllke1, alat, nacls, naclsmax, rr, ezoa(1,i), atom(1,i), kp, &
+      ic, ginp(1,1,ic), rcls(1,1,ic))
+
+    do m = 1, lmgf0d
+      im = (i-1)*lmgf0d + m
+      do jn = 1, lmgf0d*naez
+        gllke(jn, im) = gllke(jn, im) + gllke1(jn, m)
+      end do
+    end do
+    ! ----------------------------------------------------------------------
+
+    ! -->   symmetrization
+  end do
+
+
+  if (opt('symG(k) ')) then
+
+
+
+    do i = 1, naez
+
+      kp(1) = -bzkp(1)
+      kp(2) = -bzkp(2)
+      kp(3) = -bzkp(3)
+      if (opt('COMPLEX ')) then
+        kp(4) = -bzkp(4)
+        kp(5) = -bzkp(5)
+        kp(6) = -bzkp(6)
+      end if
+      ! ----------------------------------------------------------------------
+      ic = cls(i)
+      call dlke1(gllke1, alat, nacls, naclsmax, rr, ezoa(1,i), atom(1,i), kp, &
+        ic, ginp(1,1,ic), rcls(1,1,ic))
+
+      do j = 1, naez
+        do m = 1, lmgf0d
           im = (i-1)*lmgf0d + m
-          Do jn = 1, lmgf0d*naez
-            gllke(jn, im) = gllke(jn, im) + gllke1(jn, m)
-          End Do
-        End Do
-! ----------------------------------------------------------------------
+          do n = 1, lmgf0d
+            jn = (j-1)*lmgf0d + n
+            gllke(im, jn) = (gllke(im,jn)+gllke1(jn,m))/2.0e0_dp
+          end do
+        end do
+      end do
 
-! -->   symmetrization
-      End Do
-
-
-      If (opt('symG(k) ')) Then
-
-
-
-        Do i = 1, naez
-
-          kp(1) = -bzkp(1)
-          kp(2) = -bzkp(2)
-          kp(3) = -bzkp(3)
-          If (opt('COMPLEX ')) Then
-            kp(4) = -bzkp(4)
-            kp(5) = -bzkp(5)
-            kp(6) = -bzkp(6)
-          End If
-! ----------------------------------------------------------------------
-          ic = cls(i)
-          Call dlke1(gllke1, alat, nacls, naclsmax, rr, ezoa(1,i), atom(1,i), &
-            kp, ic, ginp(1,1,ic), rcls(1,1,ic))
-
-          Do j = 1, naez
-            Do m = 1, lmgf0d
-              im = (i-1)*lmgf0d + m
-              Do n = 1, lmgf0d
-                jn = (j-1)*lmgf0d + n
-                gllke(im, jn) = (gllke(im,jn)+gllke1(jn,m))/2.0E0_dp
-              End Do
-            End Do
-          End Do
-
-        End Do
-! 04.10.95 *************************************************************
-      End If
-! **********************************************************************
-!     .. Parameters ..
-      Return
-! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
-    End Subroutine
+    end do
+    ! 04.10.95 *************************************************************
+  end if
+  ! **********************************************************************
+  ! .. Parameters ..
+  return
+  ! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
+end subroutine dlke0

@@ -1,98 +1,98 @@
-    Subroutine idreals(darry, narry, iprint)
-      Use mod_datatypes, Only: dp
-      Implicit None
+subroutine idreals(darry, narry, iprint)
+  use :: mod_datatypes, only: dp
+  implicit none
 
-! PARAMETER definitions
-      Integer, parameter :: nsqr=7
-      Integer, parameter :: nmul=5
-      Integer, parameter :: divmax=15
-      Real (Kind=dp), parameter :: tol=1E-6_dp
-      real (kind=dp), parameter :: eps=1E-14_dp
+  ! PARAMETER definitions
+  integer, parameter :: nsqr = 7
+  integer, parameter :: nmul = 5
+  integer, parameter :: divmax = 15
+  real (kind=dp), parameter :: tol = 1e-6_dp
+  real (kind=dp), parameter :: eps = 1e-14_dp
 
-! Dummy arguments
-      Integer :: iprint, narry
-      Real (Kind=dp) :: darry(narry)
+  ! Dummy arguments
+  integer :: iprint, narry
+  real (kind=dp) :: darry(narry)
 
-! Local variables
-      Real (Kind=dp) :: dabs, dble, dsqrt, dsign
-      Integer :: div, i1, i2, idone(narry), imul(nmul), isqr(nsqr)
-      Real (Kind=dp) :: dsq, x, xn
-      Integer :: iabs, idnint
+  ! Local variables
+  real (kind=dp) :: dabs, dble, dsqrt, dsign
+  integer :: div, i1, i2, idone(narry), imul(nmul), isqr(nsqr)
+  real (kind=dp) :: dsq, x, xn
+  integer :: iabs, idnint
 
-      Data isqr/2, 3, 5, 6, 7, 8, 10/
-      Data imul/3, 7, 11, 13, 17/
+  data isqr/2, 3, 5, 6, 7, 8, 10/
+  data imul/3, 7, 11, 13, 17/
 
-! --> mark all numbers as unchecked
+  ! --> mark all numbers as unchecked
 
-      Do i1 = 1, narry
-        idone(i1) = 0
-      End Do
+  do i1 = 1, narry
+    idone(i1) = 0
+  end do
 
-! --> check darry**2/i integer?, i=1,divmax
+  ! --> check darry**2/i integer?, i=1,divmax
 
-      Do div = 1, divmax
-        dsq = dble(div)
-        Do i2 = 1, narry
-          If (idone(i2)==0) Then
-            x = darry(i2)*darry(i2)*dsq
-            xn = dnint(x)
-            If (dabs(x-xn)/dsq<tol .And. abs(xn)<eps) Then
-              If (iprint>4) Write (1337, 100) dabs(darry(i2)), nint(x), div
-              darry(i2) = dsign(1E0_dp, darry(i2))*dsqrt(xn/dsq)
-              idone(i2) = 1
-            End If
-          End If
-        End Do
-      End Do
+  do div = 1, divmax
+    dsq = dble(div)
+    do i2 = 1, narry
+      if (idone(i2)==0) then
+        x = darry(i2)*darry(i2)*dsq
+        xn = dnint(x)
+        if (dabs(x-xn)/dsq<tol .and. abs(xn)<eps) then
+          if (iprint>4) write (1337, 100) dabs(darry(i2)), nint(x), div
+          darry(i2) = dsign(1e0_dp, darry(i2))*dsqrt(xn/dsq)
+          idone(i2) = 1
+        end if
+      end if
+    end do
+  end do
 
-! --> check darry/sqrt(n) =?=  i/j
-!        n=2,3,5,6,7,8,10      i=1,divmax j=i*n
+  ! --> check darry/sqrt(n) =?=  i/j
+  ! n=2,3,5,6,7,8,10      i=1,divmax j=i*n
 
-      Do i1 = 1, nsqr
-        Do div = 1, divmax
-          dsq = dsqrt(dble(div*div*isqr(i1)))
-          Do i2 = 1, narry
-            If (idone(i2)==0) Then
-              x = darry(i2)*dsq
-              xn = dnint(x)
-              If (dabs(x-xn)/dsq<tol .And. abs(xn)<eps) Then
-                If (iprint>4) Write (1337, 110) dabs(darry(i2)), isqr(i1), &
-                  iabs(idnint(xn)), iabs(isqr(i1)*div)
-                darry(i2) = xn/dsq
-                idone(i2) = 1
-              End If
-            End If
-          End Do
-        End Do
-      End Do
+  do i1 = 1, nsqr
+    do div = 1, divmax
+      dsq = dsqrt(dble(div*div*isqr(i1)))
+      do i2 = 1, narry
+        if (idone(i2)==0) then
+          x = darry(i2)*dsq
+          xn = dnint(x)
+          if (dabs(x-xn)/dsq<tol .and. abs(xn)<eps) then
+            if (iprint>4) write (1337, 110) dabs(darry(i2)), isqr(i1), &
+              iabs(idnint(xn)), iabs(isqr(i1)*div)
+            darry(i2) = xn/dsq
+            idone(i2) = 1
+          end if
+        end if
+      end do
+    end do
+  end do
 
-! --> check darry = j/i * n ?
-!        n=3,7,11,13,17
+  ! --> check darry = j/i * n ?
+  ! n=3,7,11,13,17
 
-      Do i1 = 1, nmul
-        Do div = 1, divmax
-          dsq = dble(div*imul(i1))
-          Do i2 = 1, narry
-            If (idone(i2)==0) Then
-              x = darry(i2)*dsq
-              xn = dnint(x)
-              If (dabs(x-xn)/dsq<tol .And. abs(xn)<eps) Then
-                If (iprint>4) Write (1337, 120) dabs(darry(i2)), imul(i1), &
-                  iabs(idnint(xn)), div
-                darry(i2) = xn/dsq
-                idone(i2) = 1
-              End If
-            End If
-          End Do
-        End Do
-      End Do
-      Return
+  do i1 = 1, nmul
+    do div = 1, divmax
+      dsq = dble(div*imul(i1))
+      do i2 = 1, narry
+        if (idone(i2)==0) then
+          x = darry(i2)*dsq
+          xn = dnint(x)
+          if (dabs(x-xn)/dsq<tol .and. abs(xn)<eps) then
+            if (iprint>4) write (1337, 120) dabs(darry(i2)), imul(i1), &
+              iabs(idnint(xn)), div
+            darry(i2) = xn/dsq
+            idone(i2) = 1
+          end if
+        end if
+      end do
+    end do
+  end do
+  return
 
-100   Format (8X, '< IDREALS > : identify ', F12.8, ' as dsqrt(', I3, '/', I3, &
-        ')')
-110   Format (8X, '< IDREALS > : identify ', F12.8, ' as dsqrt(', I2, ')*', &
-        I3, '/', I3)
-120   Format (8X, '< IDREALS > : identify ', F12.8, ' as 1/', I2, ' * ', I2, &
-        '/', I1)
+100 format (8x, '< IDREALS > : identify ', f12.8, ' as dsqrt(', i3, '/', i3, &
+    ')')
+110 format (8x, '< IDREALS > : identify ', f12.8, ' as dsqrt(', i2, ')*', i3, &
+    '/', i3)
+120 format (8x, '< IDREALS > : identify ', f12.8, ' as 1/', i2, ' * ', i2, &
+    '/', i1)
 
-    End Subroutine
+end subroutine idreals

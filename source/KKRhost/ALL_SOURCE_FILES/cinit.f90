@@ -1,33 +1,33 @@
-    Subroutine cinit(n, a)
-      Use mod_datatypes, Only: dp
-! **********************************************************************
-! * Setting the first N values of a complex (kind=dp) array A to zero     *
-! **********************************************************************
-!     ..
-!     .. Arguments ..
-      Integer :: n
-      Complex (Kind=dp) :: a(*)
-!     ..
-!     .. Locals
-      Integer :: i, m, mp1
-      Complex (Kind=dp) :: czero
-!     ..
-      Data czero/(0.0E0_dp, 0.0E0_dp)/
-!     ..
-      m = mod(n, 5)
-      If (m/=0) Then
-        Do i = 1, m
-          a(i) = czero
-        End Do
-        If (n<5) Return
-      End If
-      mp1 = m + 1
-      Do i = mp1, n, 5
-        a(i) = czero
-        a(i+1) = czero
-        a(i+2) = czero
-        a(i+3) = czero
-        a(i+4) = czero
-      End Do
+subroutine cinit(n, a)
+  use :: mod_datatypes, only: dp
+  ! **********************************************************************
+  ! * Setting the first N values of a complex (kind=dp) array A to zero     *
+  ! **********************************************************************
+  ! ..
+  ! .. Arguments ..
+  integer :: n
+  complex (kind=dp) :: a(*)
+  ! ..
+  ! .. Locals
+  integer :: i, m, mp1
+  complex (kind=dp) :: czero
+  ! ..
+  data czero/(0.0e0_dp, 0.0e0_dp)/
+  ! ..
+  m = mod(n, 5)
+  if (m/=0) then
+    do i = 1, m
+      a(i) = czero
+    end do
+    if (n<5) return
+  end if
+  mp1 = m + 1
+  do i = mp1, n, 5
+    a(i) = czero
+    a(i+1) = czero
+    a(i+2) = czero
+    a(i+3) = czero
+    a(i+4) = czero
+  end do
 
-    End Subroutine
+end subroutine cinit

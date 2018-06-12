@@ -1,50 +1,50 @@
 ! 17.10.95 ***************************************************************
 subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
   nspin, natyp, nshell, conc, idoldau, lopt, eu, edcldau)
-! ************************************************************************
-!     calculate the total energy of the cluster .
-!     gather all energy-parts which are calculated in different
-!     subroutines .
-!     since the program uses group theory only shell-indices
-!     are used instead of atom-indices .
+  ! ************************************************************************
+  ! calculate the total energy of the cluster .
+  ! gather all energy-parts which are calculated in different
+  ! subroutines .
+  ! since the program uses group theory only shell-indices
+  ! are used instead of atom-indices .
 
-!                               b.drittler   may 1987
+  ! b.drittler   may 1987
 
-!     modified for supercells with nshell(i) atoms of type i in the
-!     unit cell
-!                               p.zahn       oct. 95
+  ! modified for supercells with nshell(i) atoms of type i in the
+  ! unit cell
+  ! p.zahn       oct. 95
 
-!     adopted for more atoms per site (CPA) v.popescu feb. 02
-!-----------------------------------------------------------------------
+  ! adopted for more atoms per site (CPA) v.popescu feb. 02
+  ! -----------------------------------------------------------------------
   use :: mod_types, only: t_inc
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
   include 'inc.p'
-! *  NPOTD = 2 * NATYPD                                               *
-! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-! *  NSPIND = 1                                                       *
-! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
-! *          function, set up in the spin-independent non-relativstic *
-! *          (l,m_l)-representation                                   *
-! *                                                                   *
-! *********************************************************************
+  ! *  NPOTD = 2 * NATYPD                                               *
+  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
+  ! *  NSPIND = 1                                                       *
+  ! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
+  ! *          function, set up in the spin-independent non-relativstic *
+  ! *          (l,m_l)-representation                                   *
+  ! *                                                                   *
+  ! *********************************************************************
 
-! PARAMETER definitions
+  ! PARAMETER definitions
 
-!..Dummy arguments
+  ! ..Dummy arguments
 
-!..Local variables
+  ! ..Local variables
   integer :: lmaxd1, npotd
   parameter (lmaxd1=lmaxd+1, npotd=(2*krel+(1-krel)*nspind)*natypd)
-!..
-!.. externals
+  ! ..
+  ! .. externals
   integer :: kpre, lmax, lpot, natyp, nspin, idoldau
   real (kind=dp) :: conc(natypd)
   real (kind=dp) :: ecou(0:lpotd, *), epotin(*), espc(0:3, npotd), &
     espv(0:lmaxd1, npotd), exc(0:lpotd, *), eu(*), edcldau(*)
   integer :: lcoremax(*), nshell(*), lopt(*)
-!..
-!.. Data statements ..
+  ! ..
+  ! .. Data statements ..
   real (kind=dp) :: bandesum, bandet, ecous, edc, efctor, et, etot, excs
   real (kind=dp) :: etotldau
   real (kind=dp) :: dble
@@ -53,7 +53,7 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
   character (len=4) :: textl(0:6)
   character (len=5) :: textns
   character (len=13) :: texts(3)
-! ------------------------------------------------------------------------
+  ! ------------------------------------------------------------------------
 
   external :: test
 
@@ -61,7 +61,7 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
   data textl/' s =', ' p =', ' d =', ' f =', ' g =', ' h =', ' i ='/
   data texts/' spin down   ', ' spin  up    ', ' paramagnetic'/
   data textns/' ns ='/
-!---> loop over host atoms
+  ! ---> loop over host atoms
   efctor = 1.0d0/13.6058d0
 
   etot = 0.0d0
@@ -87,7 +87,7 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
     do ispin = 1, nspin
       is = is + 1
       ipot = (iatyp-1)*nspin + ispin
-! -> LDA+U
+      ! -> LDA+U
       if (kpre==1 .and. (t_inc%i_write>0)) then
         write (1337, fmt=120) texts(is)
         write (1337, fmt=130)(textl(l), espc(l,ipot), l=0, lcoremax(iatyp))
@@ -106,7 +106,7 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
       bandet = bandet + espv(lmaxd1, ipot)
       et = et + espv(lmaxd1, ipot)
     end do
-! --->  sum up Coulomb and Ex.-Corel. contribution
+    ! --->  sum up Coulomb and Ex.-Corel. contribution
 
 
     et = et + eu(iatyp)
@@ -146,7 +146,7 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
           edcldau(iatyp)
         write (1337, fmt=250) edc
       end if
-! IATYP = 1,NATYP
+      ! IATYP = 1,NATYP
     end if
 
     if (natyp>1 .or. nshell(iatyp)>1) then
@@ -159,7 +159,7 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
     etot = etot + et*dble(nshell(iatyp))*conc(iatyp)
     bandesum = bandesum + bandet*dble(nshell(iatyp))*conc(iatyp)
 
-  end do 
+  end do
 
   if (t_inc%i_write>0) write (1337, fmt=220) bandesum
   if (t_inc%i_write>0) write (1337, fmt=230) etot, etot/efctor
@@ -167,7 +167,7 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
 
 
   return
-! 17.10.95 ***************************************************************
+  ! 17.10.95 ***************************************************************
 100 format (32('='), ' TOTAL ENERGIES ', 31('='), /)
 110 format (3x, 'Total energies atom ', i3, /, 3x, 23('-'))
 120 format (5x, 'single particle energies ', a13)
@@ -181,7 +181,7 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
 180 format (5x, 'coulomb  contribution : ', 2(i3,1x,f15.8), /, (29x,2(i3,1x, &
     f15.8)))
 190 format (5x, 68('-'))
-! ************************************************************************
+  ! ************************************************************************
 200 format (5x, 'ex.-cor. contribution : ', 2(i3,1x,f15.8), /, (29x,2(i3,1x, &
     f15.8)))
 210 format (/, 3x, 'Total contribution of atom', i3, ' =', f15.8)
@@ -198,9 +198,9 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
     f16.8)
 290 format (/, 5x, 'LDA+U double counting contribution                 :', &
     f16.8)
-!     calculate the total energy of the cluster .
+  ! calculate the total energy of the cluster .
 300 format (3x, '   including LDA+U correction :', f15.8)
 310 format (3x, 70('-'))
-!     gather all energy-parts which are calculated in different
+  ! gather all energy-parts which are calculated in different
 320 format ('TOTAL ENERGY in ryd. : ', f25.8, /, 15x)
-end subroutine
+end subroutine etotb1

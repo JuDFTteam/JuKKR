@@ -1,43 +1,45 @@
 subroutine dirbsstp(y, dydx, nv, x, htry, eps, yscal, b, v, r, drdi, nmesh)
-!   ********************************************************************
-!   *                                                                  *
-!   *   Burlisch-Stoer step with monitoring of local truncation error  *
-!   *   on entry: X,Y,DXDY  for last mesh-point                        *
-!   *   on exit:  X,Y,DXDY  updated for X = X(last) + HTRY             *
-!   *                                                                  *
-!   *   see: numerical recipes chapter 15.4                            *
-!   *                                                                  *
-!   *   note: don't set NUSE    > NUSEMAX in <DIRBSRZE>                *
-!   *         don't set ISEQMAX > ISEQMAX in <DIRBSRZE>                *
-!   *         no step size adjusted in case of no convergency > STOP   *
-!   *                                                                  *
-!   ********************************************************************
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *   Burlisch-Stoer step with monitoring of local truncation error  *
+  ! *   on entry: X,Y,DXDY  for last mesh-point                        *
+  ! *   on exit:  X,Y,DXDY  updated for X = X(last) + HTRY             *
+  ! *                                                                  *
+  ! *   see: numerical recipes chapter 15.4                            *
+  ! *                                                                  *
+  ! *   note: don't set NUSE    > NUSEMAX in <DIRBSRZE>                *
+  ! *         don't set ISEQMAX > ISEQMAX in <DIRBSRZE>                *
+  ! *         no step size adjusted in case of no convergency > STOP   *
+  ! *                                                                  *
+  ! ********************************************************************
 
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   use :: mod_types, only: t_inc
   implicit none
 
   include 'sprkkr_rmesh.dim'
 
-! PARAMETER definitions
+  ! PARAMETER definitions
   integer :: iseqmax, nuse
   parameter (iseqmax=30, nuse=7)
   complex (kind=dp) :: tiny
-! Bereshad:
-!      parameter (  tiny  = (1.0d-20,1.0d-20)  )
-! dadurch wird der Imaginaerteil fuer die Skalierungsfunktion nicht 00 klein.
-! Ich hatte da spruenge in dem errmax; das verlaeuft jetzt stetig, hat aber mit
-! den kleinen Werten doch so seine Konvergenzprobleme.
+  ! Bereshad:
+  ! parameter (  tiny  = (1.0d-20,1.0d-20)  )
+  ! dadurch wird der Imaginaerteil fuer die Skalierungsfunktion nicht 00
+  ! klein.
+  ! Ich hatte da spruenge in dem errmax; das verlaeuft jetzt stetig, hat aber
+  ! mit
+  ! den kleinen Werten doch so seine Konvergenzprobleme.
 
   parameter (tiny=(1.0d-20,1.0d-20))
 
-! Dummy arguments
+  ! Dummy arguments
   real (kind=dp) :: eps, htry, x
   integer :: nmesh, nv
   real (kind=dp) :: b(nrmax), drdi(nrmax), r(nrmax), v(nrmax)
   complex (kind=dp) :: dydx(nv), y(nv), yscal(nv)
 
-! Local variables
+  ! Local variables
   complex (kind=dp) :: dysav(ncfmax), yerr(ncfmax), ysav(ncfmax), yseq(ncfmax)
   real (kind=dp) :: errmax, h, xest, xsav
   integer :: i, j, nseq(iseqmax)
@@ -100,4 +102,4 @@ subroutine dirbsstp(y, dydx, nv, x, htry, eps, yscal, b, v, r, drdi, nmesh)
 
 
   return
-end subroutine
+end subroutine dirbsstp

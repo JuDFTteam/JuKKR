@@ -1,26 +1,26 @@
-    Subroutine interpolspline(rmesh, rmeshnew, vpot, vpotnew, nrmax, nrmaxnew)
-      Use mod_datatypes, Only: dp
-      Implicit None
-!interface
-      Integer :: nrmax
-      Integer :: nrmaxnew
-      Real (Kind=dp) :: rmesh(nrmax)
-      Real (Kind=dp) :: rmeshnew(nrmaxnew)
-      Real (Kind=dp) :: vpot(nrmax)
-      Real (Kind=dp) :: vpotnew(nrmaxnew)
-!local
-      Real (Kind=dp) :: maxa
-      Real (Kind=dp) :: spline(nrmax)
-      Real (Kind=dp) :: parsum, parsumderiv, r0
-      Integer :: ir
+subroutine interpolspline(rmesh, rmeshnew, vpot, vpotnew, nrmax, nrmaxnew)
+  use :: mod_datatypes, only: dp
+  implicit none
+  ! interface
+  integer :: nrmax
+  integer :: nrmaxnew
+  real (kind=dp) :: rmesh(nrmax)
+  real (kind=dp) :: rmeshnew(nrmaxnew)
+  real (kind=dp) :: vpot(nrmax)
+  real (kind=dp) :: vpotnew(nrmaxnew)
+  ! local
+  real (kind=dp) :: maxa
+  real (kind=dp) :: spline(nrmax)
+  real (kind=dp) :: parsum, parsumderiv, r0
+  integer :: ir
 
-      maxa = 1.E35_dp
-      Call spline_real(nrmax, rmesh, vpot, nrmax, maxa, maxa, spline)
-!           CALL SPLINE(IRMDJJ,R,VM2Z,NR,maxa,maxa,VM2ZB)
+  maxa = 1.e35_dp
+  call spline_real(nrmax, rmesh, vpot, nrmax, maxa, maxa, spline)
+  ! CALL SPLINE(IRMDJJ,R,VM2Z,NR,maxa,maxa,VM2ZB)
 
-      Do ir = 1, nrmaxnew
-        r0 = rmeshnew(ir)
-        Call splint_real(rmesh, vpot, spline, nrmax, r0, parsum, parsumderiv)
-        vpotnew(ir) = parsum
-      End Do
-    End Subroutine
+  do ir = 1, nrmaxnew
+    r0 = rmeshnew(ir)
+    call splint_real(rmesh, vpot, spline, nrmax, r0, parsum, parsumderiv)
+    vpotnew(ir) = parsum
+  end do
+end subroutine interpolspline

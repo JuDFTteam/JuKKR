@@ -1,25 +1,25 @@
 subroutine ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, &
   nl)
-!   ********************************************************************
-!   *                                                                  *
-!   * SETUP TABLE OF INDICES    IKM(INT)                               *
-!   *                                                                  *
-!   *  IKM IS STANDARD INDEX IN  (KAPPA,MUE)-REPRESENTATION            *
-!   *  IKM = 2*L*(J+1/2) + J + MUE + 1                                 *
-!   *                                                                  *
-!   *  INT NUMBERS LINEARLY ONLY NON-VANISHING ELEMENTS OF M-SS        *
-!   *  USED TO CALCULATE DOS ...                                       *
-!   *                                                                  *
-!   ********************************************************************
+  ! ********************************************************************
+  ! *                                                                  *
+  ! * SETUP TABLE OF INDICES    IKM(INT)                               *
+  ! *                                                                  *
+  ! *  IKM IS STANDARD INDEX IN  (KAPPA,MUE)-REPRESENTATION            *
+  ! *  IKM = 2*L*(J+1/2) + J + MUE + 1                                 *
+  ! *                                                                  *
+  ! *  INT NUMBERS LINEARLY ONLY NON-VANISHING ELEMENTS OF M-SS        *
+  ! *  USED TO CALCULATE DOS ...                                       *
+  ! *                                                                  *
+  ! ********************************************************************
   use :: mod_types, only: t_inc
   implicit none
 
 
-! Dummy arguments
+  ! Dummy arguments
   integer :: iprint, linmax, nl, nlmax, nmuemax
   integer :: ikm1lin(linmax), ikm2lin(linmax), nsollm(nlmax, nmuemax)
 
-! Local variables
+  ! Local variables
   integer :: i, il, imue, k1, k2, kap(2), l, lin, muem05, nsol
   integer :: ikapmue
 
@@ -51,4 +51,4 @@ subroutine ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, &
     write (1337, fmt='('' INT='',I3,''  IKM=('',I3,'','',I3,'')'')')(i, &
       ikm1lin(i), ikm2lin(i), i=1, lin)
   end if
-end subroutine
+end subroutine ikmlin

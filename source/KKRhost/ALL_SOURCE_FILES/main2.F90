@@ -171,8 +171,8 @@ contains
       !call memocc(i_stat,product(shape(THETAS))*kind(THETAS),'THETAS','main2')
       !allocate(THESME(IRID,NFUND,NCELLD),stat=i_stat)
       !call memocc(i_stat,product(shape(THESME))*kind(THESME),'THESME','main2')
-      !allocate(VONS(IRMD,LMPOT,NPOTD),stat=i_stat)
-      !call memocc(i_stat,product(shape(VONS))*kind(VONS),'VONS','main2')
+      allocate(VONS(IRMD,LMPOT,NPOTD),stat=i_stat)
+      call memocc(i_stat,product(shape(VONS))*kind(VONS),'VONS','main2')
       !allocate(VINS(IRMIND:IRMD,LMPOT,NSPOTD),stat=i_stat)
       !call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','main2')
       allocate(VXCM(IRMD,LMPOT,NPOTD),stat=i_stat)
@@ -922,6 +922,9 @@ contains
       i_all=-product(shape(RHO2NSNM))*kind(RHO2NSNM)
       deallocate(RHO2NSNM,stat=i_stat)
       call memocc(i_stat,i_all,'RHO2NSNM','main2')
+      deallocate(VONS,stat=i_stat)
+      i_all = product(shape(VONS))*kind(VONS)
+      call memocc(i_stat,i_all,'VONS','main2')
 
    end subroutine main2
 

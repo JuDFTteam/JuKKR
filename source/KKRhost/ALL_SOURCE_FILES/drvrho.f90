@@ -2,25 +2,25 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   eryd, we, ielast, gmatll, vt, bt, r, drdi, r2drdi, zat, jws, ishift, solver, &
   soctl, ctl, qmtet, qmphi, itermvdir, mvevil, mvevilef, lmmaxd, lmaxd, irmd, &
   lmpotd, iemxd, nmvecmax, i1, nqdos) ! qdos ruess
-!   ********************************************************************
-!   *                                                                  *
-!   * driving routine to call relativistic routines                    *
-!   *          < SSITE >, < SCFCHRDNS >, < CALCMVEC >                  *
-!   * to calculate the charge and spin density in the REL mode         *
-!   * v.popescu, munich, may 2004                                      *
-!   *                                                                  *
-!   ********************************************************************
+  ! ********************************************************************
+  ! *                                                                  *
+  ! * driving routine to call relativistic routines                    *
+  ! *          < SSITE >, < SCFCHRDNS >, < CALCMVEC >                  *
+  ! * to calculate the charge and spin density in the REL mode         *
+  ! * v.popescu, munich, may 2004                                      *
+  ! *                                                                  *
+  ! ********************************************************************
   use :: mod_types, only: t_tgmat
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
 
-! PARAMETER definitions
+  ! PARAMETER definitions
   integer :: nrmax
   parameter (nrmax=900)
   integer :: nlamax, nqmax, ntmax, nmmax
   parameter (nlamax=1, nqmax=1, ntmax=1, nmmax=1)
   integer :: nlmax, nkmmax, nmuemax, nkmpmax, nkmax, linmax
-  parameter (nlmax=5) ! this should be >= LMAXD + 1
+  parameter (nlmax=5)              ! this should be >= LMAXD + 1
   parameter (nkmmax=2*nlmax**2, nkmax=2*nlmax-1)
   parameter (nkmpmax=nkmmax+2*nlmax, nmuemax=2*nlmax)
   parameter (linmax=2*nlmax*(2*nlmax-1))
@@ -29,39 +29,39 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   real (kind=dp) :: dzero
   parameter (dzero=0.0d0)
 
-! Dummy arguments
+  ! Dummy arguments
   integer :: lmaxd, lmmaxd, irmd, ielast
   integer :: zat(ntmax), jws(nmmax), ishift
   integer :: lmpotd, iemxd, i1
   logical :: ldorhoef
   complex (kind=dp) :: we, eryd
   real (kind=dp) :: rho2ns(irmd, lmpotd, 2), r2nef(irmd, lmpotd, 2)
-!  real (kind=dp) VT(NRMAX,NTMAX),BT(NRMAX,NTMAX)
+  ! real (kind=dp) VT(NRMAX,NTMAX),BT(NRMAX,NTMAX)
   real (kind=dp) :: vt(nrmax), bt(nrmax)
   real (kind=dp) :: r(nrmax, nmmax), r2drdi(nrmax, nmmax)
   real (kind=dp) :: drdi(nrmax, nmmax), soctl(ntmax, nlmax)
   real (kind=dp) :: ctl(ntmax, nlmax)
   complex (kind=dp) :: gmatll(lmmaxd, lmmaxd, iemxd), den(0:lmaxd+1, 2*ielast)
-! l-resolved orbital polarisation 
+  ! l-resolved orbital polarisation
   complex (kind=dp) :: dmuorb(0:lmaxd, 3)
-! orbital density
+  ! orbital density
   real (kind=dp) :: rhotborb(irmd)
 
-! Local variables
-  real (kind=dp) :: ameopo(nkmmax, nkmmax, nlamax, 3), at(nrmax, nlamax, 3, ntmax), &
-    bcor(ntmax), bcors(ntmax), conc(ntmax), dos(ntmax), dosi(ntmax), efermi, &
-    hff(ntmax), hffi(ntmax), mueorb, muespn, nvaltot, omt(ntmax), omti(ntmax), &
-    qel(ntmax), rhoorb(nrmax, ntmax), rhochr(nrmax, ntmax), &
-    rhospn(nrmax, ntmax)
+  ! Local variables
+  real (kind=dp) :: ameopo(nkmmax, nkmmax, nlamax, 3), &
+    at(nrmax, nlamax, 3, ntmax), bcor(ntmax), bcors(ntmax), conc(ntmax), &
+    dos(ntmax), dosi(ntmax), efermi, hff(ntmax), hffi(ntmax), mueorb, muespn, &
+    nvaltot, omt(ntmax), omti(ntmax), qel(ntmax), rhoorb(nrmax, ntmax), &
+    rhochr(nrmax, ntmax), rhospn(nrmax, ntmax)
   real (kind=dp) :: shftef, smt(ntmax), smti(ntmax), pi, sqpi, totdos
-  complex (kind=dp) :: bzj(linmax, ntmax), bzz(linmax, ntmax), dosint(nlmax, ntmax), &
-    dosl0(nlmax, ntmax), dosm(nmuemax), dzj(linmax, ntmax), &
-    dzz(linmax, ntmax), eband, ebandt(ntmax), hffint(nlmax, ntmax), &
-    hffl0(nlmax, ntmax), hffm(nmuemax), msst(nkmmax, nkmmax, ntmax), &
-    omtint(nlmax, ntmax), omtl0(nlmax, ntmax), omtm(nmuemax), &
-    ozj(linmax, ntmax), ozz(linmax, ntmax), p, qzj(linmax, ntmax), &
-    qzz(linmax, ntmax), smtint(nlmax, ntmax), smtl0(nlmax, ntmax), &
-    smtm(nmuemax), szj(linmax, ntmax), szz(linmax, ntmax)
+  complex (kind=dp) :: bzj(linmax, ntmax), bzz(linmax, ntmax), &
+    dosint(nlmax, ntmax), dosl0(nlmax, ntmax), dosm(nmuemax), &
+    dzj(linmax, ntmax), dzz(linmax, ntmax), eband, ebandt(ntmax), &
+    hffint(nlmax, ntmax), hffl0(nlmax, ntmax), hffm(nmuemax), &
+    msst(nkmmax, nkmmax, ntmax), omtint(nlmax, ntmax), omtl0(nlmax, ntmax), &
+    omtm(nmuemax), ozj(linmax, ntmax), ozz(linmax, ntmax), p, &
+    qzj(linmax, ntmax), qzz(linmax, ntmax), smtint(nlmax, ntmax), &
+    smtl0(nlmax, ntmax), smtm(nmuemax), szj(linmax, ntmax), szz(linmax, ntmax)
   complex (kind=dp) :: taut(nkmmax, nkmmax, ntmax), omtls0(nlmax, ntmax, 2)
   complex (kind=dp) :: ozzs(linmax, ntmax, 2), ozjs(linmax, ntmax, 2)
   complex (kind=dp) :: tautlin(linmax, ntmax), tsst(nkmmax, nkmmax, ntmax), &
@@ -81,14 +81,14 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   character (len=4) :: txtt(ntmax)
   complex (kind=dp) :: w1(lmmaxd, lmmaxd)
   integer :: icall, iec
-!qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
-  complex (kind=dp) :: gmat0(lmmaxd, lmmaxd) !qdos ruess
-  integer :: nqdos, irec, ipoint !qdos ruess 
-!qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
+  ! qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
+  complex (kind=dp) :: gmat0(lmmaxd, lmmaxd) ! qdos ruess
+  integer :: nqdos, irec, ipoint   ! qdos ruess
+  ! qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
   intrinsic :: atan, sqrt
 
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-! ITERMDIR
+  ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+  ! ITERMDIR
 
   logical :: itermvdir, splitss
   integer :: nmvecmaxd, nmvecmax
@@ -98,7 +98,7 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   character (len=1) :: txtl(0:nlmax)
   integer :: igrid(2), iepath, nepath
 
-  real (kind=dp) :: qmtet, qmphi ! ARG. LIST
+  real (kind=dp) :: qmtet, qmphi   ! ARG. LIST
   real (kind=dp) :: qmphiloc(nqmax), qmtetloc(nqmax) ! DUMMY
 
   complex (kind=dp) :: bmvevdl0(nlmax, ntmax, 3, nmvecmax), &
@@ -106,14 +106,14 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
     mvevil1(nlmax, ntmax, 3, nmvecmax)
   complex (kind=dp) :: mvevil(0:lmaxd, 3, nmvecmax) ! OUTPUT
   complex (kind=dp) :: mvevilef(0:lmaxd, 3, nmvecmax) ! OUTPUT
-!.. dummy arrays
+  ! .. dummy arrays
   complex (kind=dp) :: mezj(nkmmax, nkmmax, ntmax, nmvecmax), &
     mezz(nkmmax, nkmmax, ntmax, nmvecmax)
 
-! ITERMDIR
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-!..
-!.. External Subroutines ..
+  ! ITERMDIR
+  ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+  ! ..
+  ! .. External Subroutines ..
   external :: amemagvec, calccgc, calcgf, calcmvec, cinit, ikmlin, rinit, &
     scfchrdns, ssite, zcopy, zgemm
 
@@ -127,9 +127,9 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
 
   icall = icall + 1
 
-!=======================================================================
-!       initialise relativistic and dummy variables and SAVE them
-!=======================================================================
+  ! =======================================================================
+  ! initialise relativistic and dummy variables and SAVE them
+  ! =======================================================================
   if (icall==1) then
 
     if (lmaxd>nlmax-1) then
@@ -192,7 +192,7 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
       conc(it) = 1d0
       txtt(it) = '    '
       imt(it) = 1
-      lopt(it) = -1 ! this should change for Brooks' OP
+      lopt(it) = -1                ! this should change for Brooks' OP
     end do
 
     do iq = 1, nqmax
@@ -221,13 +221,13 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
     calcint = .true.
     getirrsol = .true.
     nfilcbwf = 87
-!     Length in Bytes
+    ! Length in Bytes
     iol = 8*4 + 3 + (16*4*nrmax)
     open (nfilcbwf, status='SCRATCH', form='UNFORMATTED', access='DIRECT', &
       recl=iol)
 
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-!      ITERMDIR
+    ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+    ! ITERMDIR
 
     if (itermvdir) then
       splitss = .false.
@@ -247,10 +247,10 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
       nepath = 1
     end if
 
-!      ITERMDIR
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-  end if ! ICALL.EQ.1
-!=======================================================================
+    ! ITERMDIR
+    ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+  end if                           ! ICALL.EQ.1
+  ! =======================================================================
 
   call ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
     eryd, p, ihyper, iprint, ikm1lin, ikm2lin, nlq, nkmq, nlinq, nt, nkm, &
@@ -259,47 +259,49 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
     ameopo, lopt, solver, cgc, ozzs, ozjs, nlmax, nqmax, linmax, nrmax, nmmax, &
     ntmax, nkmmax, nkmpmax, nlamax)
 
-!-----------------------------------------------------------------------
-!     get charge density
-!-----------------------------------------------------------------------
+  ! -----------------------------------------------------------------------
+  ! get charge density
+  ! -----------------------------------------------------------------------
 
   netab = iecurr + 1
   iec = iecurr
 
-! Loop over all qdos points specified in qvec.dat
-  do ipoint = 1, nqdos ! qdos ruess
-!                                                                    ! qdos ruess
-! Read in Green function; remember that for the rel. case, nspin = 1 ! qdos ruess
-! (without qdos, IPOINT=NQDOS=1)                                     ! qdos ruess
+  ! Loop over all qdos points specified in qvec.dat
+  do ipoint = 1, nqdos             ! qdos ruess
+    ! ! qdos ruess
+    ! Read in Green function; remember that for the rel. case, nspin = 1 !
+    ! qdos ruess
+    ! (without qdos, IPOINT=NQDOS=1)                                     !
+    ! qdos ruess
     irec = ipoint + nqdos*(iecurr-1) + nqdos*ielast*(i1-1) ! qdos ruess
     if (t_tgmat%gmat_to_file) then
-      read (69, rec=irec) gmat0 ! qdos ruess
+      read (69, rec=irec) gmat0    ! qdos ruess
     else
       gmat0(:, :) = t_tgmat%gmat(:, :, irec)
     end if
     gmatll(:, :, iecurr) = gmat0(:, :) ! qdos ruess
-!                                                                    ! qdos ruess
+    ! ! qdos ruess
 
-!-------- GET TAU MATRIX ------------------------
-!         TAUT = t G t + t
+    ! -------- GET TAU MATRIX ------------------------
+    ! TAUT = t G t + t
 
-! ---> taut = t
+    ! ---> taut = t
 
     do j = 1, nkm
       call zcopy(nkm, tsst(1,j,it), 1, taut(1,j,it), 1)
     end do
 
-! ---> w1 = G * t
+    ! ---> w1 = G * t
 
     call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, gmatll(1,1,iecurr), &
       lmmaxd, tsst(1,1,it), nkmmax, czero, w1, lmmaxd)
 
-! ---> taut = t * G * t + t = t * w1 + taut
+    ! ---> taut = t * G * t + t = t * w1 + taut
 
     call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, tsst(1,1,it), nkmmax, &
       w1, lmmaxd, cone, taut(1,1,it), nkmmax)
 
-! ---> store taut in linear array tautlin
+    ! ---> store taut in linear array tautlin
 
     do lin = 1, nlinq(iq)
       tautlin(lin, it) = taut(ikm1lin(lin), ikm2lin(lin), it)
@@ -350,8 +352,8 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
     den(nl, iecurr+ielast) = czero
     den(nl, iecurr) = czero
 
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-!      ITERMDIR
+    ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+    ! ITERMDIR
 
     if (itermvdir) then
 
@@ -379,16 +381,16 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
       end do
     end if
 
-!      ITERMDIR
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+    ! ITERMDIR
+    ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
-  end do ! IPOINT = 1,NQDOS
+  end do                           ! IPOINT = 1,NQDOS
 
   if ((iecurr/=ielast) .or. (.not. ldorhoef)) return
 
-! ======================================================================
-!     get the charge at the Fermi energy (IELAST)
-!     call SCFCHRDNS with the energy weight CONE --> not overwrite WE
+  ! ======================================================================
+  ! get the charge at the Fermi energy (IELAST)
+  ! call SCFCHRDNS with the energy weight CONE --> not overwrite WE
 
   call rinit(nrmax, rhochr(1,it))
   call rinit(nrmax, rhospn(1,it))
@@ -412,8 +414,8 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
     r2nef(ip, 1, 2) = -0.5d0*sqpi*rhospn(i, it)*(r(i,1)**2)
   end do
 
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-!      ITERMDIR
+  ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+  ! ITERMDIR
 
   if (itermvdir) then
     do i = 1, nmvecmax
@@ -425,10 +427,10 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
     end do
   end if
 
-!      ITERMDIR
-!CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+  ! ITERMDIR
+  ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
 
-! ======================================================================
+  ! ======================================================================
 
-end subroutine
+end subroutine drvrho_qdos

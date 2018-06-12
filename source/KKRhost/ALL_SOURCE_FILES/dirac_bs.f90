@@ -1,42 +1,42 @@
 subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
   cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, pr, qr, pi, qi, d_p, dq)
-!   ********************************************************************
-!   *                                                                  *
-!   *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
-!   *                                                                  *
-!   *   the outward integration is started by a power expansion        *
-!   *   and the inward integration is started analytically             *
-!   *   the integration itself is done by the BURLISCH-STOER method    *
-!   *   see: numerical recipes chapter 15.4                            *
-!   *                                                                  *
-!   *   returns the wave functions up to the mesh point NMESH          *
-!   *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
-!   *   and    R/I standing for regular/irregular solution             *
-!   *                                                                  *
-!   *   bug fixed 93/11/24                                             *
-!   *  31/10/94  HE  arg. list changed - return P,Q instead of g,f     *
-!   *  06/12/94  HE  CM real                                           *
-!   *  29/04/95  MB  Adopted for finite nucleus                        *
-!   ********************************************************************
-      Use mod_datatypes, Only: dp
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
+  ! *                                                                  *
+  ! *   the outward integration is started by a power expansion        *
+  ! *   and the inward integration is started analytically             *
+  ! *   the integration itself is done by the BURLISCH-STOER method    *
+  ! *   see: numerical recipes chapter 15.4                            *
+  ! *                                                                  *
+  ! *   returns the wave functions up to the mesh point NMESH          *
+  ! *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
+  ! *   and    R/I standing for regular/irregular solution             *
+  ! *                                                                  *
+  ! *   bug fixed 93/11/24                                             *
+  ! *  31/10/94  HE  arg. list changed - return P,Q instead of g,f     *
+  ! *  06/12/94  HE  CM real                                           *
+  ! *  29/04/95  MB  Adopted for finite nucleus                        *
+  ! ********************************************************************
+  use :: mod_datatypes, only: dp
   implicit none
   include 'sprkkr_rmesh.dim'
 
-! PARAMETER definitions
+  ! PARAMETER definitions
   integer :: mpsmax, npemax, nabm
   parameter (mpsmax=40, npemax=4, nabm=5)
   complex (kind=dp) :: c0
-  parameter (c0=(0.0d0,0.0d0))
+  parameter (c0=(0.0e0_dp,0.0e0_dp))
   real (kind=dp) :: epsbs
-  parameter (epsbs=2.0d-7)
+  parameter (epsbs=2.0e-7_dp)
 
-! COMMON variables
+  ! COMMON variables
   real (kind=dp) :: cgd(2), cgmd(2), cgo, csqr, kap(2)
   complex (kind=dp) :: ebs
   integer :: nradbs, nsolbs
   common /commbs/ebs, csqr, cgd, cgmd, cgo, kap, nsolbs, nradbs
 
-! Dummy arguments
+  ! Dummy arguments
   real (kind=dp) :: c, cg1, cg2, cg4, cg5, cg8, mj
   complex (kind=dp) :: e
   logical :: getirrsol
@@ -47,12 +47,11 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
     pr(2, 2, nrmax)
   complex (kind=dp) :: qi(2, 2, nrmax), qr(2, 2, nrmax)
 
-! Local variables
+  ! Local variables
   complex (kind=dp) :: a11, a12, a21, a22, aa11, aa12, aa21, aa22, alpha, bb1, &
     bb2, beta
   complex (kind=dp) :: bqq, cfac, emvpp, emvqq, w1, w2, w3, w4, w5, w6, w7
-  real (kind=dp) :: bc(0:npemax), cm(npemax, npemax), cmi(npemax, npemax), &
-    dix
+  real (kind=dp) :: bc(0:npemax), cm(npemax, npemax), cmi(npemax, npemax), dix
   real (kind=dp) :: gam(2), gpm, hbs, rpwgpm, rr, sk(2), sk1, sk2, tz, &
     vc(0:npemax), x
   complex (kind=dp) :: cjlz
@@ -73,10 +72,10 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
   csqr = c*c
   cfac = pis*c/(e+csqr)
 
-! find   NPE  expansion coefficients for the potential and b-field
+  ! find   NPE  expansion coefficients for the potential and b-field
   npe = 4
 
-  tz = dble(2*z)
+  tz = real(2*z, kind=dp)
 
   do iv = 1, npe
     do n = 1, npe
@@ -87,7 +86,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
   call rinvgj(cmi, cm, npemax, npe)
 
   do iv = 1, npe
-    vc(iv-1) = 0.0d0
+    vc(iv-1) = 0.0e0_dp
     do n = 1, npe
       if (nucleus==0) then
         vc(iv-1) = vc(iv-1) + cmi(iv, n)*(v(n)+tz/r(n))
@@ -98,7 +97,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
   end do
 
   do iv = 1, npe
-    bc(iv-1) = 0.0d0
+    bc(iv-1) = 0.0e0_dp
     do n = 1, npe
       bc(iv-1) = bc(iv-1) + cmi(iv, n)*b(n)
     end do
@@ -106,57 +105,57 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
 
 
 
-!    calculate g-coefficients of b-field
+  ! calculate g-coefficients of b-field
 
   isk1 = isign(1, kap1)
   isk2 = isign(1, kap2)
-  sk1 = dble(isk1)
-  sk2 = dble(isk2)
+  sk1 = real(isk1, kind=dp)
+  sk2 = real(isk2, kind=dp)
   lb1 = l - isk1
   lb2 = l - isk2
 
-  cg1 = -mj/(kap1+0.5d0)
-  cg5 = -mj/(-kap1+0.5d0)
+  cg1 = -mj/(kap1+0.5e0_dp)
+  cg5 = -mj/(-kap1+0.5e0_dp)
   cgd(1) = cg1
   cgmd(1) = cg5
-  kap(1) = dble(kap1)
-! MB
+  kap(1) = real(kap1, kind=dp)
+  ! MB
   if (nucleus==0) then
-    gam(1) = dsqrt(kap(1)**2-(tz/c)**2)
+    gam(1) = sqrt(kap(1)**2-(tz/c)**2)
   else
-    gam(1) = dabs(kap(1))
+    gam(1) = abs(kap(1))
   end if
-! MB
+  ! MB
   lb(1) = lb1
   sk(1) = sk1
-  if (dabs(mj)>l) then
-    cg2 = 0.0d0
-    cg4 = 0.0d0
-    cg8 = 0.0d0
+  if (abs(mj)>l) then
+    cg2 = 0.0e0_dp
+    cg4 = 0.0e0_dp
+    cg8 = 0.0e0_dp
     nsol = 1
-    cgd(2) = 0.0d0
-    cgo = 0.0d0
-    cgmd(2) = 0.0d0
-    gam(2) = 0.0d0
-    kap(2) = 0.0d0
+    cgd(2) = 0.0e0_dp
+    cgo = 0.0e0_dp
+    cgmd(2) = 0.0e0_dp
+    gam(2) = 0.0e0_dp
+    kap(2) = 0.0e0_dp
     lb(2) = 0
-    sk(2) = 0.0d0
+    sk(2) = 0.0e0_dp
   else
-    cg2 = -dsqrt(1.0d0-(mj/(kap1+0.5d0))**2)
-    cg4 = -mj/(kap2+0.5d0)
-    cg8 = -mj/(-kap2+0.5d0)
+    cg2 = -sqrt(1.0e0_dp-(mj/(kap1+0.5e0_dp))**2)
+    cg4 = -mj/(kap2+0.5e0_dp)
+    cg8 = -mj/(-kap2+0.5e0_dp)
     nsol = 2
     cgd(2) = cg4
     cgo = cg2
     cgmd(2) = cg8
-    kap(2) = dble(kap2)
-! MB
+    kap(2) = real(kap2, kind=dp)
+    ! MB
     if (nucleus==0) then
-      gam(2) = dsqrt(kap(2)**2-(tz/c)**2)
+      gam(2) = sqrt(kap(2)**2-(tz/c)**2)
     else
-      gam(2) = dabs(kap(2))
+      gam(2) = abs(kap(2))
     end if
-! MB
+    ! MB
     lb(2) = lb2
     sk(2) = sk2
   end if
@@ -173,18 +172,18 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
     end do
   end do
 
-! ======================================================================
+  ! ======================================================================
   if (tz>=2) then
 
     do j = 1, nsol
       i = 3 - j
-      pc(j, j, 0) = dsqrt(abs(kap(j))-gam(j))
+      pc(j, j, 0) = sqrt(abs(kap(j))-gam(j))
       qc(j, j, 0) = (kap(j)+gam(j))*(csqr/tz)*pc(j, j, 0)
       pc(i, j, 0) = c0
       qc(i, j, 0) = c0
     end do
 
-!  determine higher expansion coefficients for the wave functions
+    ! determine higher expansion coefficients for the wave functions
 
     mps = 40
 
@@ -193,9 +192,9 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
     emvqq = (e-vc(0)+csqr)/csqr
     emvpp = -e + vc(0)
     bqq = bc(0)/csqr
-!MBA
+    ! MBA
     if (nucleus==0) then
-!MBE
+      ! MBE
 
       do j = 1, nsol
 
@@ -219,24 +218,24 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
         end do
 
       end do
-! MBA
+      ! MBA
     else
-! EXPANSION ADAPTED FOR POTENTIALS WITH FINITE NUCLEUS
-! EXPANSION OF POTENTIAL UP TO SECOND ORDER: V_O+V_1*R+V_2*R*R
+      ! EXPANSION ADAPTED FOR POTENTIALS WITH FINITE NUCLEUS
+      ! EXPANSION OF POTENTIAL UP TO SECOND ORDER: V_O+V_1*R+V_2*R*R
       do j = 1, nsol
         i = 3 - j
         if (kap(j)>0) then
-! ARBITRARY STARTING VALUES
-          alpha = 0.0d0
-          beta = 0.174d0
+          ! ARBITRARY STARTING VALUES
+          alpha = 0.0e0_dp
+          beta = 0.174e0_dp
         else
-          beta = 0.0d0
-          alpha = 0.174d0
+          beta = 0.0e0_dp
+          alpha = 0.174e0_dp
         end if
         pc(j, j, 0) = alpha
         qc(j, j, 0) = beta
-        pc(i, j, 0) = 0.0d0
-        qc(i, j, 0) = 0.0d0
+        pc(i, j, 0) = 0.0e0_dp
+        qc(i, j, 0) = 0.0e0_dp
       end do
       w4 = bc(0)*cgo
       w2 = vc(1)/csqr
@@ -247,8 +246,8 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
         do i = 1, nsol
           w1 = emvqq + bqq*cgmd(i)
           w3 = -emvpp + bc(0)*cgd(i)
-          a11 = gam(j) + kap(i) + 1d0
-          a12 = gam(j) - kap(i) + 1d0
+          a11 = gam(j) + kap(i) + 1e0_dp
+          a12 = gam(j) - kap(i) + 1e0_dp
           if (a11/=0) pc(i, j, 1) = w1/a11*qc(i, j, 0)
           if (a12/=0) qc(i, j, 1) = (-w3*pc(i,j,0)+w4*pc(3-i,j,0))/a12
         end do
@@ -257,8 +256,8 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
         do i = 1, nsol
           w1 = emvqq + bqq*cgmd(i)
           w3 = -emvpp + bc(0)*cgd(i)
-          a11 = gam(j) + kap(i) + 2d0
-          a12 = gam(j) - kap(i) + 2d0
+          a11 = gam(j) + kap(i) + 2e0_dp
+          a12 = gam(j) - kap(i) + 2e0_dp
           if (a11/=0) pc(i, j, 2) = (w1*qc(i,j,1)-w2*qc(i,j,0))/a11
           if (a12/=0) qc(i, j, 2) = (-w3*pc(i,j,1)+w4*pc(3-i,j,1)+w5*pc(i,j,0) &
             )/a12
@@ -269,8 +268,8 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
           do i = 1, nsol
             w1 = emvqq + bqq*cgmd(i)
             w3 = -emvpp + bc(0)*cgd(i)
-            a21 = gam(j) + kap(i) + dble(m)
-            a22 = gam(j) - kap(i) + dble(m)
+            a21 = gam(j) + kap(i) + real(m, kind=dp)
+            a22 = gam(j) - kap(i) + real(m, kind=dp)
             if (a21/=0) pc(i, j, m) = (w1*qc(i,j,m-1)-w2*qc(i,j,m-2)-w6*qc(i,j &
               ,m-3))/a21
             if (a22/=0) qc(i, j, m) = (-w3*pc(i,j,m-1)+w4*pc(3-i,j,m-1)+w5*pc( &
@@ -279,12 +278,12 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
         end do
       end do
     end if
-!MBE
+    ! MBE
 
 
 
-!  PERFORM SUMMATION OVER WAVE FUNCTION - EXPANSION COEFFICIENTS
-!  FOR THE FIRST   NABM   R - MESH - POINTS
+    ! PERFORM SUMMATION OVER WAVE FUNCTION - EXPANSION COEFFICIENTS
+    ! FOR THE FIRST   NABM   R - MESH - POINTS
 
     do n = 1, nabm
       rr = r(n)
@@ -314,10 +313,10 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
       end do
     end do
 
-! ======================================================================
-!                                                     == EMPTY SPHERE ==
+    ! ======================================================================
+    ! == EMPTY SPHERE ==
   else
-!                     assume constant pot: V=V(1)   ignore coupling: B=0
+    ! assume constant pot: V=V(1)   ignore coupling: B=0
 
     do n = 1, nabm
       zz = sqrt(e-v(1))*r(n)
@@ -327,10 +326,10 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
         i = 3 - j
         pr(j, j, n) = cjlz(l, zz)*r(n)
         qr(j, j, n) = efac*sk(j)*cjlz(lb(j), zz)*r(n)*c
-        d_p(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
+        d_p(j, j, n) = (real(l+1,kind=dp)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
         m = lb(j)
-        dq(j, j, n) = efac*sk(j)*(dble(m+1)*cjlz(m,zz)-zz*cjlz(m+1,zz))* &
-          drdi(n)*c
+        dq(j, j, n) = efac*sk(j)*(real(m+1,kind=dp)*cjlz(m,zz)-zz*cjlz(m+1,zz) &
+          )*drdi(n)*c
 
         pr(i, j, n) = c0
         qr(i, j, n) = c0
@@ -341,8 +340,8 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
 
   end if
 
-! =============================================================== n ====
-!     DO 400 J=1,NSOL
+  ! =============================================================== n ====
+  ! DO 400 J=1,NSOL
 
   nfy = 0
   do j = 1, nsol
@@ -354,8 +353,8 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
       nfy = nfy + 2
     end do
   end do
-  x = 1.0d0
-  dix = 1.0d0
+  x = 1.0e0_dp
+  dix = 1.0e0_dp
 
   do n = 2, nmesh
 
@@ -379,14 +378,14 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
   if (.not. getirrsol) return
 
 
-! =============================================================== n ====
+  ! =============================================================== n ====
 
-! ######################################################################
-!                     irregular solution
-! ######################################################################
+  ! ######################################################################
+  ! irregular solution
+  ! ######################################################################
 
-!         calculate the initial values of the wavefunction
-!                     at the sphere boundary
+  ! calculate the initial values of the wavefunction
+  ! at the sphere boundary
 
   n = nmesh
 
@@ -395,10 +394,11 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
   do j = 1, nsol
     pi(j, j, n) = cjlz(l, zz)*r(n)
     qi(j, j, n) = cfac*sk(j)*cjlz(lb(j), zz)*r(n)*c
-    d_p(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
+    d_p(j, j, n) = (real(l+1,kind=dp)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
 
     m = lb(j)
-    dq(j, j, n) = cfac*sk(j)*(dble(m+1)*cjlz(m,zz)-zz*cjlz(m+1,zz))*drdi(n)*c
+    dq(j, j, n) = cfac*sk(j)*(real(m+1,kind=dp)*cjlz(m,zz)-zz*cjlz(m+1,zz))* &
+      drdi(n)*c
 
     i = 3 - j
     pi(i, j, n) = c0
@@ -407,8 +407,8 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
     dq(i, j, n) = c0
   end do
 
-! =============================================================== n ====
-  hbs = -1.0d0
+  ! =============================================================== n ====
+  hbs = -1.0e0_dp
 
   nfy = 0
   do j = 1, nsol
@@ -420,7 +420,7 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
       nfy = nfy + 2
     end do
   end do
-  x = dble(nmesh)
+  x = real(nmesh, kind=dp)
 
   nradbs = nmesh
   call dirbsrad(x, fy, dy, drdi, b, v, r, nmesh)
@@ -435,13 +435,13 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
       do i = 1, nsol
         pi(i, j, n) = fy(nfy+1)
         qi(i, j, n) = fy(nfy+2)
-!              d_p(I,J,N) = DY(NFY+1)
-!              DQ(I,J,N) = DY(NFY+2)
+        ! d_p(I,J,N) = DY(NFY+1)
+        ! DQ(I,J,N) = DY(NFY+2)
         nfy = nfy + 2
       end do
     end do
 
   end do
 
-! =============================================================== n ====
-end subroutine
+  ! =============================================================== n ====
+end subroutine dirbs

@@ -1,6 +1,6 @@
-!-------------------------------------------------------------------------------
+! -------------------------------------------------------------------------------
 subroutine yshysh(x, y, z, r, yrealy)
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit none
   integer :: lmax
   parameter (lmax=lmaxd)
@@ -8,25 +8,25 @@ subroutine yshysh(x, y, z, r, yrealy)
   parameter (lmax2=2*lmax)
   integer :: lmax2p, lmxp
   parameter (lmax2p=lmax2+1, lmxp=lmax2p*(lmax2p+1)/2)
-!     ..
-!     .. Scalar Arguments ..
+  ! ..
+  ! .. Scalar Arguments ..
   real (kind=dp) :: r, x, y, z
-!     ..
-!     .. Array Arguments ..
+  ! ..
+  ! .. Array Arguments ..
   real (kind=dp) :: yrealy(*)
-!     ..
-!     .. Local Scalars ..
+  ! ..
+  ! .. Local Scalars ..
   real (kind=dp) :: a, arg, b, c, cosphi, costhe, eat, p, psq, rssq, save, &
     sinphi, sinthe, tave, tent, w, xa, ya
   integer :: i, ia, ib, ic, istopz, isuzy, j, jc, k, kov2, l, lave, lsuzy, &
     ltwoqp, m, mave, mp1, msuzy, n
-!     ..
-!     .. Local Arrays ..
+  ! ..
+  ! .. Local Arrays ..
   real (kind=dp) :: cosmph(lmax2p), factor(50), plm(lmxp), sinmph(lmax2p)
-!     ..
-!     .. Intrinsic Functions ..
+  ! ..
+  ! .. Intrinsic Functions ..
   intrinsic :: dabs, dsign, dsqrt
-!     ..
+  ! ..
   factor(1) = 1.0d00
   do i = 2, 50
     xa = i - 1
@@ -56,11 +56,11 @@ subroutine yshysh(x, y, z, r, yrealy)
   costhe = z/r
   sinphi = y/p
   cosphi = x/p
-!
+
 140 xa = dabs(costhe)
   ya = dabs(sinthe)
-!      write(6,*) costhe,sinthe
-!
+  ! write(6,*) costhe,sinthe
+
   if (xa-1.0d-08) 150, 150, 230
 150 l = 0
   j = 0
@@ -91,7 +91,7 @@ subroutine yshysh(x, y, z, r, yrealy)
   lsuzy = -lsuzy
   tave = 2.0d00*tave
   go to 160
-!
+
 230 if (xa-0.99999999d00) 330, 240, 240
 240 plm(1) = 1.0d00
   plm(2) = costhe
@@ -108,7 +108,7 @@ subroutine yshysh(x, y, z, r, yrealy)
   if (l-lmax2) 260, 270, 270
 260 l = l + 1
   go to 250
-!
+
 270 l = 1
   lave = 1
 280 m = 1
@@ -217,4 +217,4 @@ subroutine yshysh(x, y, z, r, yrealy)
   c
   c
   c
-end subroutine
+end subroutine yshysh

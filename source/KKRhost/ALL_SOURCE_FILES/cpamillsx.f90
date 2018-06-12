@@ -1,42 +1,42 @@
 subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
   noq, itoq, conc, mssq, msst, tauq, dmssq, kmrot, drotq, ntmax, nqmax, &
   nkmmax)
-!   ********************************************************************
-!   *                                                                  *
-!   *   perform  CPA-iteration according    MILLS's  algorithm         *
-!   *                                                                  *
-!   *   the CPA - iteration step for site IQ is omitted if             *
-!   *   ICPA(IQ) = 0 ( set in <INITALL> )                              *
-!   *                                                                  *
-!   *   only the projection matrix  DTILT(G) is needed                 *
-!   *   this is set up with respect to the global frame                *
-!   *   for this reason MSST has to be rotated prior calling <GETDMAT> *
-!   *                                                                  *
-!   *   allows an atom type IT to have different orientation of        *
-!   *   its moment on different but equivalent sites  IQ               *
-!   *                                                                  *
-!   * 15/12/03                                                         *
-!   ********************************************************************
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *   perform  CPA-iteration according    MILLS's  algorithm         *
+  ! *                                                                  *
+  ! *   the CPA - iteration step for site IQ is omitted if             *
+  ! *   ICPA(IQ) = 0 ( set in <INITALL> )                              *
+  ! *                                                                  *
+  ! *   only the projection matrix  DTILT(G) is needed                 *
+  ! *   this is set up with respect to the global frame                *
+  ! *   for this reason MSST has to be rotated prior calling <GETDMAT> *
+  ! *                                                                  *
+  ! *   allows an atom type IT to have different orientation of        *
+  ! *   its moment on different but equivalent sites  IQ               *
+  ! *                                                                  *
+  ! * 15/12/03                                                         *
+  ! ********************************************************************
   use :: mod_types, only: t_inc
-      Use mod_datatypes, Only: dp
+  use :: mod_datatypes, only: dp
   implicit complex (kind=dp)(a-h, o-z)
 
-! PARAMETER definitions
+  ! PARAMETER definitions
   real (kind=dp) :: tol, sclstd
   parameter (tol=10d0, sclstd=1d0)
   complex (kind=dp) :: c0, c1
   parameter (c0=(0.0d0,0.0d0), c1=(1.0d0,0.0d0))
 
-! Dummy arguments
+  ! Dummy arguments
   real (kind=dp) :: cpachng, cpacorr, cpaerr
   integer :: iprint, itcpa, kmrot, nkmmax, nq, nqmax, ntmax
   real (kind=dp) :: conc(ntmax)
-  complex (kind=dp) :: drotq(nkmmax, nkmmax, nqmax), mssq(nkmmax, nkmmax, nqmax), &
-    dmssq(nkmmax, nkmmax, nqmax), msst(nkmmax, nkmmax, ntmax), &
-    tauq(nkmmax, nkmmax, nqmax)
+  complex (kind=dp) :: drotq(nkmmax, nkmmax, nqmax), &
+    mssq(nkmmax, nkmmax, nqmax), dmssq(nkmmax, nkmmax, nqmax), &
+    msst(nkmmax, nkmmax, ntmax), tauq(nkmmax, nkmmax, nqmax)
   integer :: icpa(nqmax), itoq(ntmax, nqmax), nkmq(nqmax), noq(nqmax)
 
-! Local variables
+  ! Local variables
   logical :: check
   real (kind=dp) :: cpachngl, cpacorrl, scl
   complex (kind=dp) :: csum
@@ -74,11 +74,13 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
         call cinit(n, err(1,j))
       end do
 
-!================================================================= IT ==
+      ! ================================================================= IT
+      ! ==
       do io = 1, noq(iq)
         it = itoq(io, iq)
 
-! ------------------------- rotate the single site m-matrix if necessary
+        ! ------------------------- rotate the single site m-matrix if
+        ! necessary
         if (kmrot/=0) then
 
           call rotate(msst(1,1,it), 'L->G', w1, n, drotq(1,1,iq), m)
@@ -97,14 +99,14 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
           dq(i, iq) = dq(i, iq) + conc(it)*dtiltg(i, i)
         end do
 
-!     -------------------------------------------
-!            - E[a] = D~[a] * ( m[a] - m[c] )
-!     -------------------------------------------
+        ! -------------------------------------------
+        ! - E[a] = D~[a] * ( m[a] - m[c] )
+        ! -------------------------------------------
         call zgemm('N', 'N', n, n, n, c1, dtiltg(1,1), m, dmamc, m, c0, w1, m)
 
-!     -------------------------------------------
-!            E = SUM[a]  c[a] *  E[a]
-!     -------------------------------------------
+        ! -------------------------------------------
+        ! E = SUM[a]  c[a] *  E[a]
+        ! -------------------------------------------
         do j = 1, n
           do i = 1, n
             err(i, j) = err(i, j) - conc(it)*w1(i, j)
@@ -112,38 +114,39 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
         end do
 
       end do
-!================================================================= IT ==
+      ! ================================================================= IT
+      ! ==
 
-!     -------------------------------------------
-!                   E * TAU
-!     -------------------------------------------
+      ! -------------------------------------------
+      ! E * TAU
+      ! -------------------------------------------
 
       call zgemm('N', 'N', n, n, n, c1, err, m, tauq(1,1,iq), m, c0, w2, m)
 
-!     -------------------------------------------
-!                1 + E * TAU
-!     -------------------------------------------
+      ! -------------------------------------------
+      ! 1 + E * TAU
+      ! -------------------------------------------
       do i = 1, n
         w2(i, i) = c1 + w2(i, i)
       end do
 
-!     -------------------------------------------
-!               ( 1 + E * TAU )**(-1)
-!     -------------------------------------------
+      ! -------------------------------------------
+      ! ( 1 + E * TAU )**(-1)
+      ! -------------------------------------------
 
       call zgetrf(n, n, w2, m, ipiv, info)
       call zgetri(n, w2, m, ipiv, w1, m*m, info)
 
-!     -------------------------------------------
-!           ( 1 + E * TAU )**(-1) * E
-!     -------------------------------------------
+      ! -------------------------------------------
+      ! ( 1 + E * TAU )**(-1) * E
+      ! -------------------------------------------
 
       call zgemm('N', 'N', n, n, n, c1, w2, m, err, m, c0, w1, m)
 
-!     -------------------------------------------
-!           APPLY CORRECTION  TO  MEFF
-!     m{n+1} = m{n} -  ( 1 + E * TAU )**(-1) * E
-!     -------------------------------------------
+      ! -------------------------------------------
+      ! APPLY CORRECTION  TO  MEFF
+      ! m{n+1} = m{n} -  ( 1 + E * TAU )**(-1) * E
+      ! -------------------------------------------
       do j = 1, n
         cpaerr = cpaerr + abs(dreal(dq(j,iq))) + abs(dimag(dq(j,iq)))
         cpacorr = cpacorr + abs(dreal(w1(j,j))) + abs(dimag(w1(j,j)))
@@ -155,7 +158,7 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
       if (cpachng>tol*cpachngl .or. cpacorr>cpacorrl) then
         write (*, *) '############### CPA step back'
 
-        p1 = 0.5d0 ! P1 = 0.05D0
+        p1 = 0.5d0                 ! P1 = 0.05D0
         p2 = 1d0 - p1
         cpachng = p1*cpachngl
         cpacorr = p1*cpacorrl
@@ -189,7 +192,7 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
           write (1337, 100) iq, cpaerr, cpacorr, csum
         end if
       end if
-!-----------------------------------------------------------------------
+      ! -----------------------------------------------------------------------
       if (check) then
         if (icparun==2) stop 'CPA-iter written to for...'
         iw0 = 100*iq
@@ -198,15 +201,15 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
           write (iw, '(I4,4E14.4)') itcpa, mssq(i, i, iq), w1(i, i)
         end do
       end if
-!-----------------------------------------------------------------------
+      ! -----------------------------------------------------------------------
     end if
 
   end do
-!================================================================= IQ ==
+  ! ================================================================= IQ ==
 
   cpachngl = cpachng
   cpacorrl = cpacorr
 
 100 format (' CPA:  IQ', i3, '  ERR', f12.5, '  CORR', f13.5, '  M', 18(1x,2( &
     1p,e14.6)))
-end subroutine
+end subroutine cpamillsx

@@ -1,32 +1,32 @@
 subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
   cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, dxp, pr, qr, pi, &
   qi, d_p, dq, nrmax)
-!   ********************************************************************
-!   *                                                                  *
-!   *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
-!   *                                                                  *
-!   *               scaling the SPIN-ORBIT-COUPLING                    *
-!   *                                                                  *
-!   *   the outward integration is started by a power expansion        *
-!   *   and continued by ADAMS-BASHFORTH-MOULTON - pred./corr.-method  *
-!   *   NABM = 4(5) selects the 4(5)-point formula                     *
-!   *                                                                  *
-!   *   the inward integration is started analytically                 *
-!   *                                                                  *
-!   *   returns the wave functions up to the mesh point NMESH          *
-!   *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
-!   *   and    R/I standing for regular/irregular solution             *
-!   *                                                                  *
-!   *  19/12/94  HE                                                    *
-!   *  28/06/95  HF: corrected init of inward integration              *
-!   *  21/01/98  HE  finite nucelus                                    *
-!   ********************************************************************
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
+  ! *                                                                  *
+  ! *               scaling the SPIN-ORBIT-COUPLING                    *
+  ! *                                                                  *
+  ! *   the outward integration is started by a power expansion        *
+  ! *   and continued by ADAMS-BASHFORTH-MOULTON - pred./corr.-method  *
+  ! *   NABM = 4(5) selects the 4(5)-point formula                     *
+  ! *                                                                  *
+  ! *   the inward integration is started analytically                 *
+  ! *                                                                  *
+  ! *   returns the wave functions up to the mesh point NMESH          *
+  ! *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
+  ! *   and    R/I standing for regular/irregular solution             *
+  ! *                                                                  *
+  ! *  19/12/94  HE                                                    *
+  ! *  28/06/95  HF: corrected init of inward integration              *
+  ! *  21/01/98  HE  finite nucelus                                    *
+  ! ********************************************************************
 
   use :: mod_types, only: t_inc
-  use mod_DataTypes
+  use :: mod_datatypes
   implicit none
 
-! PARAMETER definitions
+  ! PARAMETER definitions
   integer :: mpsmax, npemax, nabm
   parameter (mpsmax=40, npemax=4, nabm=4)
   complex (kind=dp) :: c0
@@ -36,7 +36,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
   integer :: itmax
   parameter (itmax=50)
 
-!  Dummy arguments
+  ! Dummy arguments
   real (kind=dp) :: c, cg1, cg2, cg4, cg5, cg8, mj, socscl
   complex (kind=dp) :: e
   logical :: getirrsol
@@ -46,7 +46,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
   complex (kind=dp) :: d_p(2, 2, nrmax), dq(2, 2, nrmax), dxp(2, 2), &
     pi(2, 2, nrmax), pr(2, 2, nrmax), qi(2, 2, nrmax), qr(2, 2, nrmax)
 
-!  Local variables
+  ! Local variables
   complex (kind=dp) :: aa11, aa12, aa21, aa22, arg, bb1, bb2, bpp, bqq, cfac, &
     cgo, d14, dh, diffa, diffb, emvpp, emvqq
   real (kind=dp) :: acorr(0:nabm-1), acorr0(0:nabm-1), apred(nabm), &
@@ -74,7 +74,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
   csqr = c*c
   cfac = pis*c/(e+csqr)
 
-! find   NPE  expansion coefficients for the potential and b-field
+  ! find   NPE  expansion coefficients for the potential and b-field
   npe = 4
 
   tz = dble(2*z)
@@ -102,7 +102,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
   end do
 
 
-!    calculate g-coefficients of b-field
+  ! calculate g-coefficients of b-field
 
   isk1 = isign(1, kap1)
   isk2 = isign(1, kap2)
@@ -149,9 +149,9 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
     lmk(i) = dble(l*(l+1)) - kpx(i)*(kpx(i)+1.0d0)
 
     cgmd(i) = 0.0d0
-!-------------------------------------- causes numerical inconsistencies
-!        GAM(I) = DSQRT( KPX(I)**2 - (TZ/C)**2 )
-!        KPY(I) = KPX(I)
+    ! -------------------------------------- causes numerical inconsistencies
+    ! GAM(I) = DSQRT( KPX(I)**2 - (TZ/C)**2 )
+    ! KPY(I) = KPX(I)
 
     gam(i) = dsqrt(kap(i)**2-(tz/c)**2)
     kpy(i) = kap(i)
@@ -173,7 +173,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
     end do
   end do
 
-! ======================================================================
+  ! ======================================================================
   if ((tz>=2) .and. (nucleus==0)) then
 
     do j = 1, nsol
@@ -184,7 +184,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       qc(i, j, 0) = c0
     end do
 
-!  DETERMINE HIGHER EXPANSION COEFFICIENTS FOR THE WAVE FUNCTIONS
+    ! DETERMINE HIGHER EXPANSION COEFFICIENTS FOR THE WAVE FUNCTIONS
 
     mps = 40
 
@@ -223,8 +223,8 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
     end do
 
 
-!  PERFORM SUMMATION OVER WAVE FUNCTION - EXPANSION COEFFICIENTS
-!  FOR THE FIRST   NABM   R - MESH - POINTS
+    ! PERFORM SUMMATION OVER WAVE FUNCTION - EXPANSION COEFFICIENTS
+    ! FOR THE FIRST   NABM   R - MESH - POINTS
 
     do n = 1, nabm
       rr = r(n)
@@ -253,11 +253,11 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
         end do
       end do
     end do
-! ======================================================================
-!                                  == EMPTY SPHERE  or FINITE NUCLEUS ==
+    ! ======================================================================
+    ! == EMPTY SPHERE  or FINITE NUCLEUS ==
   else
 
-!        assume constant pot: V=V(1)   ignore coupling: B=0
+    ! assume constant pot: V=V(1)   ignore coupling: B=0
 
     t0 = e - v(1)
     s0 = (e-v(1))/csqr + 1
@@ -285,15 +285,15 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
     end do
 
   end if
-! ===================================================================
+  ! ===================================================================
 
 
-! =============================================================== N ====
-!     CALCULATE ALL NEXT POINTS BY PRE/CORR(ADAMS-BASHFORTH-MOULTON)
+  ! =============================================================== N ====
+  ! CALCULATE ALL NEXT POINTS BY PRE/CORR(ADAMS-BASHFORTH-MOULTON)
 
   do n = nabm + 1, nmesh
 
-!    EVALUATE PREDICTOR
+    ! EVALUATE PREDICTOR
 
     do j = 1, nsol
       do i = 1, nsol
@@ -315,7 +315,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       socpp(i) = lmk(i)*dovr(n)**2/(emvqq+bqq*cgmd(i))
     end do
 
-!    EVALUATE CORRECTOR
+    ! EVALUATE CORRECTOR
 
 
     do jcorr = 1, itmax
@@ -342,11 +342,13 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       do j = 1, nsol
         do i = 1, nsol
           diffa = pold(i, j) - pnew(i, j)
-          if (abs(real(diffa, kind=dp))>(tol*abs(real(pnew(i,j), kind=dp)))) go to 100
+          if (abs(real(diffa,kind=dp))>(tol*abs(real(pnew(i,j),kind=dp)))) &
+            go to 100
           if (abs(aimag(diffa))>(tol*abs(aimag(pnew(i,j))))) go to 100
 
           diffb = qold(i, j) - qnew(i, j)
-          if (abs(real(diffb, kind=dp))>(tol*abs(real(qnew(i,j), kind=dp)))) go to 100
+          if (abs(real(diffb,kind=dp))>(tol*abs(real(qnew(i,j),kind=dp)))) &
+            go to 100
           if (abs(aimag(diffb))>(tol*abs(aimag(qnew(i,j))))) go to 100
         end do
       end do
@@ -356,7 +358,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
     if (t_inc%i_write>0) write (1337, 140) kap1, n, r(n), diffa, diffb, it, l, &
       int(2*mj), 'REG'
 
-!                   SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
+    ! SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 
 
 
@@ -366,8 +368,8 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
         k = 3 - i
         pr(i, j, n) = pnew(i, j)
         qr(i, j, n) = qnew(i, j)
-        d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i, &
-          j)
+        d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i &
+          , j)
         dq(i, j, n) = kpx(i)*qnew(i, j)*dovr(n) + (emvpp+bpp*cgd(i))*pnew(i, j &
           ) + bpp*cgo*pnew(k, j) + socpp(i)*pnew(i, j)
       end do
@@ -375,7 +377,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
 
 
   end do
-! =============================================================== N ====
+  ! =============================================================== N ====
 
   do i = 1, 2
     do j = 1, 2
@@ -385,15 +387,15 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
 
   if (.not. getirrsol) return
 
-! #####################################################################
-! #####################################################################
-! #####################################################################
+  ! #####################################################################
+  ! #####################################################################
+  ! #####################################################################
 
-!             IRREGULAR SOLUTION IRREGULAR SOLUTION  IRREGULAR SOLUTION
+  ! IRREGULAR SOLUTION IRREGULAR SOLUTION  IRREGULAR SOLUTION
 
 
-!  CALCULATE THE INITIAL VALUES OF THE WAVEFUNCTION AT THE SPHERE
-!  BOUNDARY
+  ! CALCULATE THE INITIAL VALUES OF THE WAVEFUNCTION AT THE SPHERE
+  ! BOUNDARY
 
 
   do n = nmesh, nmesh + nabm
@@ -414,9 +416,9 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       dq(i, j, n) = c0
     end do
   end do
-!        ------------------------------------------------------------
-!              INITIALIZE INWARD INTEGRATION WITH RUNGE - KUTTA
-!        ------------------------------------------------------------
+  ! ------------------------------------------------------------
+  ! INITIALIZE INWARD INTEGRATION WITH RUNGE - KUTTA
+  ! ------------------------------------------------------------
   ndiv = 60
   if (ndiv/=0) then
 
@@ -434,7 +436,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       socpp(i) = lmk(i)*dovr(n)**2/(emvqq+bqq*cgmd(i))
     end do
 
-! *** reinitialize Q using only DP and PI
+    ! *** reinitialize Q using only DP and PI
     do j = 1, nsol
       i = 3 - j
       qi(j, j, n) = (d_p(j,j,n)+kpx(j)*pi(j,j,n)*dovr(n))/(emvqq+bqq*cgmd(j))
@@ -586,9 +588,9 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
 
   end if
 
-! =============================================================== N ====
+  ! =============================================================== N ====
 
-!     CALCULATE ALL NEXT POINTS BY PRE/CORR(ADAMS-BASHFORTH-MOULTON)
+  ! CALCULATE ALL NEXT POINTS BY PRE/CORR(ADAMS-BASHFORTH-MOULTON)
 
   if (ndiv/=0) then
     ntop = nmesh - nabm
@@ -599,7 +601,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
   do nm = 1, ntop
     n = 1 + ntop - nm
 
-!    EVALUATE PREDICTOR
+    ! EVALUATE PREDICTOR
 
     do j = 1, nsol
       do i = 1, nsol
@@ -621,7 +623,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       socpp(i) = lmk(i)*dovr(n)**2/(emvqq+bqq*cgmd(i))
     end do
 
-!    EVALUATE CORRECTOR
+    ! EVALUATE CORRECTOR
 
     do jcorr = 1, itmax
       do j = 1, nsol
@@ -646,11 +648,13 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
       do j = 1, nsol
         do i = 1, nsol
           diffa = pold(i, j) - pnew(i, j)
-          if (abs(real(diffa, kind=dp))>(tol*abs(real(pnew(i,j), kind=dp)))) go to 120
+          if (abs(real(diffa,kind=dp))>(tol*abs(real(pnew(i,j),kind=dp)))) &
+            go to 120
           if (abs(aimag(diffa))>(tol*abs(aimag(pnew(i,j))))) go to 120
 
           diffb = qold(i, j) - qnew(i, j)
-          if (abs(real(diffb, kind=dp))>(tol*abs(real(qnew(i,j), kind=dp)))) go to 120
+          if (abs(real(diffb,kind=dp))>(tol*abs(real(qnew(i,j),kind=dp)))) &
+            go to 120
           if (abs(aimag(diffb))>(tol*abs(aimag(qnew(i,j))))) go to 120
         end do
       end do
@@ -660,7 +664,7 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
     if (t_inc%i_write>0) write (1337, 140) kap1, n, r(n), diffa, diffb, it, l, &
       int(2*mj), 'IRR'
 
-!                   SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
+    ! SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 
 
 
@@ -671,8 +675,8 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
         k = 3 - i
         pi(i, j, n) = pnew(i, j)
         qi(i, j, n) = qnew(i, j)
-        d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i, &
-          j)
+        d_p(i, j, n) = -kpx(i)*pnew(i, j)*dovr(n) + (emvqq+bqq*cgmd(i))*qnew(i &
+          , j)
         dq(i, j, n) = kpx(i)*qnew(i, j)*dovr(n) + (emvpp+bpp*cgd(i))*pnew(i, j &
           ) + bpp*cgo*pnew(k, j) + socpp(i)*pnew(i, j)
       end do
@@ -682,13 +686,13 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
 
 140 format (' PRE/CORR NOT CONV. IN <DIRABMSOC> ', 2i4, f10.7, 2x, 4e12.4, &
     3i2, '/2 ', a3)
-! =============================================================== N ====
+  ! =============================================================== N ====
 
-!     the minor component for the soc-manipulated wf is meaningless
-!     =>  set it to zero
+  ! the minor component for the soc-manipulated wf is meaningless
+  ! =>  set it to zero
 
   call cinit(2*2*nrmax, qr)
   call cinit(2*2*nrmax, qi)
 
   return
-end subroutine
+end subroutine dirabmsoc
