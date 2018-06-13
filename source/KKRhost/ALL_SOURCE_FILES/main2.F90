@@ -166,6 +166,9 @@ contains
       ! .. Intrinsic Functions
       intrinsic :: DABS,ATAN,DMIN1,DSIGN,SQRT,MAX,DBLE
 
+
+      LMAXD1=LMAX+1
+
       ! Allocations
       !allocate(THETAS(IRID,NFUND,NCELLD),stat=i_stat)
       !call memocc(i_stat,product(shape(THETAS))*kind(THETAS),'THETAS','main2')

@@ -171,7 +171,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    ! Symmetrising single-site : same matrix for each symmetry
    ! Symmetrising G matrix    : pick G(ISYM) for symmetry ISYM
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   if ( ICALL.EQ.1 ) then
+   !if ( ICALL.EQ.1 ) then
       CNSYMAT = CONE/DBLE(NSYMAT)
       do IU = 1,NSYMAXD
          do IT = 1,NATYP
@@ -182,7 +182,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
          end do
          ISUMG(IU) = IU
       end do
-   end if
+   !end if
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! TSST in the LOCAL frame is used to set up
    ! MSST = (TSST-TREF)^(-1) in the LOCAL frame to be used in <CPAMILLSX> and < PROJTAU > below

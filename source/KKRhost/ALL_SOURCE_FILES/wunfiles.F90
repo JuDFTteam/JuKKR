@@ -3141,7 +3141,7 @@ contains
       real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(inout)        :: THETAS
       complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
       complex (kind=dp), dimension(IEMXD), intent(inout) :: WEZ
-      character(len=124), dimension(5), intent(inout) :: TXC
+      character(len=124), dimension(6), intent(inout) :: TXC
       logical, intent(inout) :: LRHOSYM
       logical, intent(inout) :: LINTERFACE
       !     .. External Functions ..
