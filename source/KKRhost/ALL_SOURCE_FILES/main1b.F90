@@ -947,31 +947,6 @@ contains
 #ifdef CPP_TIMING
                call timing_start('main1b - kloopz')
 #endif
-      write(1155,*)naez, nmesh, naclsmax, ie, natomimp, natyp, nspindd
-      write(1155,*)shape(GMATLL)
-      write(1155,*)shape(NSHELL)
-      write(1155,*)shape(RR)
-      write(1155,*)shape(EZOA)
-      write(1155,*)shape(ATOM)
-      write(1155,*)shape(NSH1)
-      write(1155,*)shape(NSH2)
-      write(1155,*)shape(TSST)
-      write(1155,*)shape(MSST)
-      write(1155,*)'line1',ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ
-      write(1155,*)'line2',NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH)
-      write(1155,*)'line3',VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,NCLS,RR
-      write(1155,*)'line4',RBASIS,EZOA,ATOM,RCLS,ICC,GINP,IDECI
-      write(1155,*)'line5',LEFTTINVLL(1,1,1,1,IE),                          &
-     & RIGHTTINVLL(1,1,1,1,IE)
-      write(1155,*)'line6',VACFLAG,NLBASIS,NRBASIS,FACTL,NATOMIMP,NSYMAT
-      write(1155,*)'line7',DSYMLL,RATOM,RROT,NSH1,NSH2,IJTABSYM,IJTABSH
-      write(1155,*)'line8',ICHECK,INVMOD,REFPOT,TREFLL,TSST,MSST,CFCTOR
-      write(1155,*)'line9',CFCTORINV,CREL,RC,RREL,SRREL,IRREL,NRREL,DROTQ
-      write(1155,*)'line10',SYMUNITARY,KMROT,NATYP,NCPA,ICPA,ITCPAMAX
-      write(1155,*)'line11',CPATOL,NOQ,IQAT,ITOQ,CONC,IPRINT!,ICPAFLAG
-      write(1155,*)'line12',1, NSPINDD, TQDOS,IQDOSRUN
-      write(1155,*)'line13',DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,1)
-      write(1155,*)'line14',TRACET(IE,1),LLY
                call KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ,  &
                   NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH),               &
                   VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,NCLS,RR,              &
@@ -987,22 +962,6 @@ contains
                   TQDOS,IQDOSRUN,                                          &  ! qdos
                   DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,1),                &  ! LLY Lloyd
                   TRACET(IE,1),LLY)                                       ! LLY Lloyd
-      write(2155,*)naez, nmesh, naclsmax, ie, natomimp, natyp, nspindd
-      write(2155,*)'line1',ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ
-      write(2155,*)'line2',NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH)
-      write(2155,*)'line3',VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,NCLS,RR
-      write(2155,*)'line4',RBASIS,EZOA,ATOM,RCLS,ICC,GINP,IDECI
-      write(2155,*)'line5',LEFTTINVLL(1,1,1,1,IE),                          &
-     & RIGHTTINVLL(1,1,1,1,IE)
-      write(2155,*)'line6',VACFLAG,NLBASIS,NRBASIS,FACTL,NATOMIMP,NSYMAT
-      write(2155,*)'line7',DSYMLL,RATOM,RROT,NSH1,NSH2,IJTABSYM,IJTABSH
-      write(2155,*)'line8',ICHECK,INVMOD,REFPOT,TREFLL,TSST,MSST,CFCTOR
-      write(2155,*)'line9',CFCTORINV,CREL,RC,RREL,SRREL,IRREL,NRREL,DROTQ
-      write(2155,*)'line10',SYMUNITARY,KMROT,NATYP,NCPA,ICPA,ITCPAMAX
-      write(2155,*)'line11',CPATOL,NOQ,IQAT,ITOQ,CONC,IPRINT,ICPAFLAG
-      write(2155,*)'line12',1, NSPINDD, TQDOS,IQDOSRUN
-      write(2155,*)'line13',DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,1)
-      write(2155,*)'line14',TRACET(IE,1),LLY
 #ifdef CPP_TIMING
                call timing_pause('main1b - kloopz')
 #endif
