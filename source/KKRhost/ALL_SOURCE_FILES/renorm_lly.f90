@@ -17,8 +17,8 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
   integer :: ircut(0:ipand, natypd), ipan(natypd) ! DOS according to Lloyd's
                                                   ! formula
   real (kind=dp) :: conc(natypd)   ! Input/Output:
-  complex (kind=dp) :: cden(0:(lmaxd+1), ielast, npotd) ! Internal:
-  complex (kind=dp) :: cdos_lly(iemxd, nspind) ! 1: charge renormalization per
+  complex (kind=dp) :: cden(0:(lmaxd+1), iemxd, npotd) ! Internal:
+  complex (kind=dp) :: cdos_lly(ielast, nspind) ! 1: charge renormalization per
                                                ! atom (energy-integrated)
   complex (kind=dp) :: wez(iemxd), ez(iemxd)
   real (kind=dp) :: zat(natypd)
