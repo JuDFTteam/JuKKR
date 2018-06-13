@@ -14,11 +14,11 @@ subroutine beshan(hl, jl, nl, z, lmax)
   parameter (ci=(0.0e0_dp,1.0e0_dp))
   ! ..
   ! .. Scalar Arguments ..
-  complex (kind=dp) :: z
-  integer :: lmax
+  complex (kind=dp), intent(in) :: z
+  integer, intent(in) :: lmax
   ! ..
   ! .. Array Arguments ..
-  complex (kind=dp) :: hl(0:lmax), jl(0:lmax), nl(0:lmax)
+  complex (kind=dp), intent(out) :: hl(0:lmax), jl(0:lmax), nl(0:lmax)
   ! ..
   ! .. Local Scalars ..
   complex (kind=dp) :: termj, termn, z2, zj, zn

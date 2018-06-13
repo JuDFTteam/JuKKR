@@ -28,9 +28,9 @@ use mod_types, only: t_inc
 !..
 !.. Array Arguments ..
       complex (kind=dp) GREF0(NACLSMAX*LMGF0D,LMGF0D), &
-                     TMATLL(LMGF0D,LMGF0D,*)
-      real (kind=dp) CLEB(*),RATOM(3,*)
-      INTEGER ATOM(*),ICLEB(NCLEB,4),LOFLM(*),REFPOT(*)
+                     TMATLL(LMGF0D,LMGF0D,nrefd)
+      real (kind=dp) CLEB(ncleb),RATOM(3,naclsd)
+      INTEGER ATOM(naclsd),ICLEB(NCLEB,4),LOFLM(lm2d),REFPOT(naezd+nembd)
 !..
 !.. Local Scalars ..
       INTEGER I,LM1,LM2,M,N,N1,N2,NDIM,NLM1,NLM2,INFO,NGD1
@@ -38,7 +38,7 @@ use mod_types, only: t_inc
 !.. Local Arrays ..
       INTEGER IPVT(:)
       real (kind=dp) RDIFF(3),ABSRDIFF
-      complex (kind=dp) DTMATLL(LMGF0D,LMGF0D,*) ! Derivative of ref.-sys t-matrix
+      complex (kind=dp) DTMATLL(LMGF0D,LMGF0D,nrefd) ! Derivative of ref.-sys t-matrix
       complex (kind=dp) GREF(:,:),GLL(:,:),GTREF(:,:)
       complex (kind=dp) DGTDE(:,:),DGTDE0(:,:) ! LLY (1-gt)^-1 * d(1-gt)/dE (after grefsy13)
       complex (kind=dp) DGLLDE(:,:),DGDE(:,:), &

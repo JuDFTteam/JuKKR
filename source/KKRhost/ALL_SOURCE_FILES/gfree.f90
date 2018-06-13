@@ -35,8 +35,8 @@ subroutine gfree13(rdiff, e0, gmll, dgmll, cleb, icleb, loflm, iend)
   ! ..
   complex (kind=dp) :: gmll(lmgf0d, lmgf0d)
   complex (kind=dp) :: dgmll(lmgf0d, lmgf0d) ! .. Local Arrays ..
-  real (kind=dp) :: cleb(ncleb), rdiff(*)
-  integer :: icleb(ncleb, 4), loflm(*)
+  real (kind=dp) :: cleb(ncleb), rdiff(3)
+  integer :: icleb(ncleb, 4), loflm(lm2d)
   ! LLY
   ! ..
   real (kind=dp) :: fpi, pi, rabs, rfpi, x, y, z
