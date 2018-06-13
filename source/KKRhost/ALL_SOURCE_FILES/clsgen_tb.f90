@@ -2,7 +2,7 @@
 subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, &
   tleft, tright, rmtref, rmtrefat, vref, irefpot, nrefpot, rcls, rcut, rcutxy, &
-  alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface)
+  alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprinc)
   ! ************************************************************************
   ! This subroutine is used to create the clusters around each atom
   ! (Based on clsgen99.f). Also the reference potential height and radius is

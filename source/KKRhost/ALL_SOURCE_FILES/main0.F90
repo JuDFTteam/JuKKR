@@ -52,6 +52,7 @@ module mod_main0
    integer :: KEFG
    integer :: KHYP
    integer :: KPRE
+   integer :: nprinc
    integer :: NSRA
    integer :: LPOT      !< Maximum l component in potential expansion
    integer :: IMIX      !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
@@ -609,7 +610,26 @@ contains
       call clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
          nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, &
          tleft, tright, rmtref, rmtrefat, vref, refpot, nref, rcls, rcutz, rcutxy, &
-         alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface)
+         alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprinc)
+
+      ! overwrite nprincd if chosen too small
+      if ( nprincd<nprinc ) then
+        nlayer = naez/nprinc
+        if ( nlayer*nprinc /= naez ) nprinc = naez
+        write(*,*) 'Automatically overwriting nprincd with ', nprinc
+        nprincd = nprinc
+        ! update parameter that depend on nprincd
+        NDIM_SLABINV = NPRINCD*LMMAXD
+        ! change allocations of arrays that have nprincd
+        deallocate (icheck, stat=i_stat)
+        call memocc(i_stat, product(shape(icheck))*kind(icheck), 'ICHECK', &
+          'main0')
+        allocate (icheck(naez/nprincd,naez/nprincd), stat=i_stat)
+        call memocc(i_stat, product(shape(icheck))*kind(icheck), 'ICHECK', &
+          'main0')
+        icheck = 0
+      end if
+
 
       ! Now the clusters, reference potentials and muffin-tin radii have been set.
       !-------------------------------------------------------------------------
