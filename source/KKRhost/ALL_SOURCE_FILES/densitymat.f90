@@ -29,19 +29,8 @@ subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, &
   ! *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
   ! **********************************************************************
   use :: mod_datatypes
+  use global_variables
   implicit none
-  include 'inc.p'
-
-  ! Dummy arguments
-
-  integer :: lmmaxd
-  parameter (lmmaxd=(krel+1)*(lmaxd+1)**2)
-  integer :: mmaxd
-  parameter (mmaxd=2*lmaxd+1)
-  integer :: irmind
-  parameter (irmind=irmd-irnsd)
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
 
   complex (kind=dp) :: czero, cone
   parameter (czero=(0.0e0_dp,0.0e0_dp), cone=(1.e0_dp,0.e0_dp))
@@ -63,9 +52,10 @@ subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, &
   complex (kind=dp) :: denmatc2(mmaxd, mmaxd), gtemp(mmaxd, mmaxd), &
     phiq(mmaxd, mmaxd), phir(mmaxd, mmaxd)
   integer :: lm1, lm2, m1, m2
-  integer :: lmaxd1, ie            ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-  parameter (lmaxd1=lmaxd+1)       ! 1.  Within implicit energy loop:
-  complex (kind=dp) :: den(0:lmaxd1, iemxd*(1+krel)) ! Calculate density
+
+! 1.  Within implicit energy loop:
+  integer :: ie
+  complex (kind=dp) :: den(0:(lmaxd+1), iemxd*(1+krel)) ! Calculate density
                                                      ! matrix.
   external :: cinit, overlap, rinit
 

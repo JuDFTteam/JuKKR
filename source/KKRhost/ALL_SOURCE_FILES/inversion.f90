@@ -1,6 +1,5 @@
 ! ************************************************************************
 subroutine inversion(gllke, invmod, icheck)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
   ! This subroutine calculates the inversion of a matrix
   ! in 4 different ways depending on the form of the matrix
@@ -11,37 +10,24 @@ subroutine inversion(gllke, invmod, icheck)
   ! INVMOD = 3  ----> sparse matrix inversion scheme
 
   ! ------------------------------------------------------------------------
+  use global_variables
+  use :: mod_datatypes, only: dp
   implicit none
 
-  ! .. parameters ..
-  include 'inc.p'
-  ! *  NPOTD = 2 * NATYPD                                               *
-  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-  ! *  NSPIND = 1                                                       *
-  ! *                                                                   *
-  ! *********************************************************************
-
-
-  ! changed 3.11.99
-
-  integer :: lmmaxd
-  parameter (lmmaxd=(krel+korbit+1)*(lmaxd+1)**2)
-  integer :: almd, ndim
-  parameter (almd=naezd*lmmaxd, ndim=nprincd*lmmaxd)
   complex (kind=dp) :: ci, czero, cone
   parameter (ci=(0.e0_dp,1.e0_dp), czero=(0.e0_dp,0.e0_dp), &
     cone=(1.e0_dp,0.e0_dp))
 
-  complex (kind=dp) :: gllke(almd, almd), gdi(ndim, ndim, nlayerd), &
-    gup(ndim, ndim, nlayerd), gdow(ndim, ndim, nlayerd)
+  complex (kind=dp) :: gllke(alm, alm), gdi(ndim_slabinv, ndim_slabinv, nlayerd), &
+    gup(ndim_slabinv, ndim_slabinv, nlayerd), gdow(ndim_slabinv, ndim_slabinv, nlayerd)
   complex (kind=dp), allocatable :: gtemp(:, :)
   integer :: i, i1, ip1, ii1, il1, ldi1, ip2, ii2, il2, ldi2, j, invmod
-  integer :: lm1, lm2, info, ipvt(almd), nlayer
+  integer :: lm1, lm2, info, ipvt(alm), nlayer
   integer :: icheck(naezd/nprincd, naezd/nprincd)
   ! total matrix inversion
   external :: zgetrf, zgetrs, zcopy, invslab
 
-  allocate (gtemp(almd,almd))
+  allocate (gtemp(alm,alm))
 
   nlayer = naezd/nprincd
 
@@ -49,8 +35,8 @@ subroutine inversion(gllke, invmod, icheck)
 
     ! write (6,*) '-------full inversion calculation--------'
 
-    do i = 1, almd
-      do j = 1, almd
+    do i = 1, alm
+      do j = 1, alm
         gtemp(i, j) = czero
         if (i==j) then
           gtemp(i, j) = cone
@@ -61,10 +47,10 @@ subroutine inversion(gllke, invmod, icheck)
 
 
 
-    call zgetrf(almd, almd, gllke, almd, ipvt, info)
-    call zgetrs('N', almd, almd, gllke, almd, ipvt, gtemp, almd, info)
+    call zgetrf(alm, alm, gllke, alm, ipvt, info)
+    call zgetrs('N', alm, alm, gllke, alm, ipvt, gtemp, alm, info)
     ! slab or supercell
-    call zcopy(almd*almd, gtemp, 1, gllke, 1)
+    call zcopy(alm*alm, gtemp, 1, gllke, 1)
     ! inversion
 
 

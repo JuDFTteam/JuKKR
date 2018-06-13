@@ -1,7 +1,6 @@
 ! 13.10.95 ***************************************************************
 subroutine epotinb(epotin, nspin, natyp, rho2ns, vm2z, r, drdi, ins, irmin, &
   irws, lpot, vins, ircut, ipan, z)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
 
   ! attention : energy zero ---> electro static zero
@@ -50,13 +49,8 @@ subroutine epotinb(epotin, nspin, natyp, rho2ns, vm2z, r, drdi, ins, irmin, &
 
   ! b.drittler   oct. 1989
   ! -----------------------------------------------------------------------
-  ! .. Parameters ..
-  include 'inc.p'
-  ! .. Array Arguments ..
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  integer :: irmind
-  parameter (irmind=irmd-irnsd)
+  use :: mod_datatypes, only: dp
+  use global_variables
   ! ..
   ! .. Local Scalars ..
   integer :: ins, lpot, natyp, nspin
@@ -72,7 +66,7 @@ subroutine epotinb(epotin, nspin, natyp, rho2ns, vm2z, r, drdi, ins, irmin, &
   integer :: i, iatyp, ic, ipan1, ipotd, ipotu, irc1, irmin1, irs1, l1, lm, m1
   ! ..
   ! .. Intrinsic Functions ..
-  real (kind=dp) :: ens(0:lpotd, natypd), er(irmd)
+  real (kind=dp) :: ens(0:lpot, natypd), er(irmd)
   integer :: ircutm(0:ipand)
   ! ..
 

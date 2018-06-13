@@ -1,7 +1,7 @@
 ! 13.10.95 ***************************************************************
 subroutine ecoub(cmom, ecou, lmax, nspin, natyp, rho2ns, vm2z, z, r, drdi, &
   irws, kvmad, kshape, ircut, ipan, imaxsh, ifunm, ilm_map, ntcell, gsh, &
-  thetas, lmsp)
+  thetas, lmsp, lpot)
   ! ************************************************************************
 
   ! attention : energy zero ---> electro static zero
@@ -50,18 +50,14 @@ subroutine ecoub(cmom, ecou, lmax, nspin, natyp, rho2ns, vm2z, z, r, drdi, &
   ! -----------------------------------------------------------------------
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  ! .. Parameters ..
-  include 'inc.p'
-  ! .. Array Arguments ..
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
   ! ..
   ! .. Local Scalars ..
-  integer :: kshape, kvmad, lmax, natyp, nspin
+  integer :: lpot, kshape, kvmad, lmax, natyp, nspin
   ! ..
   ! .. Local Arrays ..
-  real (kind=dp) :: cmom(lmpotd, *), drdi(irmd, *), ecou(0:lpotd, *), gsh(*), &
+  real (kind=dp) :: cmom(lmpotd, *), drdi(irmd, *), ecou(0:lpot, *), gsh(*), &
     r(irmd, *), rho2ns(irmd, lmpotd, natypd, *), thetas(irid, nfund, *), &
     vm2z(irmd, lmpotd, *), z(*)
   integer :: ifunm(natypd, *), ilm_map(ngshd, 3), imaxsh(0:lmpotd), ipan(*), &

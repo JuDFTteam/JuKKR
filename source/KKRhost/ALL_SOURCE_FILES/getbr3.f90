@@ -1,6 +1,5 @@
 subroutine getbr3(nembd1, nlbasis, alat, tleft, nrbasis, tright, bravais, &
   recbv, volume0)
-  use :: mod_datatypes, only: dp
   ! In case of slab geometry, define a 3rd Bravais vector along
   ! the z direction so that a periodic slab is constructed.
   ! Also set the z-component of the two first BRAVAIS to zero.
@@ -10,9 +9,9 @@ subroutine getbr3(nembd1, nlbasis, alat, tleft, nrbasis, tright, bravais, &
   ! Assumes cartesian coordinates in z direction.
   ! Phivos Mavropoulos, Oct. 2016
 
+  use :: mod_datatypes, only: dp
 
   implicit none
-  include 'inc.p'
 
   integer :: nembd1, nlbasis, nrbasis
   real (kind=dp) :: alat, tleft(3, nembd1), tright(3, nembd1)

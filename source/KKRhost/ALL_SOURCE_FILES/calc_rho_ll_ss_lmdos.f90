@@ -1,15 +1,9 @@
 subroutine calc_rho_ll_ss_lmdos(rll, ircut, ipan, icell, thetas, cleb, icleb, &
   iend, ifunm, lmsp, irws, drdi, dens, lmdos)
   use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
 
-  include 'inc.p'
-  integer :: lmmaxd
-  parameter (lmmaxd=(lmaxd+1)**2)
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  integer :: irmind
-  parameter (irmind=irmd-irnsd)
   ! non-sph. eigen states of single pot
   ! derivative dr/di
   integer :: iend, irws, lmdos

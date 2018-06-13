@@ -11,13 +11,8 @@ subroutine forcxc(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, alat, &
   ! -----------------------------------------------------------------------
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  ! .. Parameters ..
-  include 'inc.p'
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  ! $     RM(3,*),
-  ! INTEGER IRWS(*),NSHELL(*)
   real (kind=dp) :: alat
   integer :: lmax, natref, nend, nspin, nstart
   ! ..

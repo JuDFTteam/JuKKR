@@ -1,7 +1,6 @@
 subroutine cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, sl, pz, fz, &
   qz, sz, tmat, vm2z, drdi, rmesh, zat, lirrsol, idoldau, lopt, wldauav, &
   cutoff)
-  use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
   ! subroutine for radial wave functions of spherical potentials
 
@@ -19,13 +18,10 @@ subroutine cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, sl, pz, fz, &
 
   ! LDA+U added, March 2003 - Dec 2004, Munich/Juelich
   ! -----------------------------------------------------------------------
+  use global_variables
+  use :: mod_datatypes, only: dp
   implicit none
-  ! .. Parameters ..
-  include 'inc.p'
-  integer :: lmaxp1
-  parameter (lmaxp1=lmaxd+1)
-  complex (kind=dp) :: ci, czero
-  parameter (ci=(0.e0_dp,1.e0_dp), czero=(0.0e0_dp,0.0e0_dp))
+  complex (kind=dp), parameter :: ci=(0.e0_dp,1.e0_dp), czero=(0.0e0_dp,0.0e0_dp)
   ! ..
   ! .. Local Scalars ..
   complex (kind=dp) :: eryd, ek
@@ -48,8 +44,8 @@ subroutine cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, sl, pz, fz, &
   integer :: i, ir, irc1, l1
   ! ..
   ! .. Intrinsic Functions ..
-  complex (kind=dp) :: bessjw(0:lmaxp1), bessyw(0:lmaxp1), dlogdp(0:lmaxd), &
-    hamf(irmd, 0:lmaxd), hankws(0:lmaxp1), mass(irmd)
+  complex (kind=dp) :: bessjw(0:(lmaxd+1)), bessyw(0:(lmaxd+1)), dlogdp(0:lmaxd), &
+    hamf(irmd, 0:lmaxd), hankws(0:(lmaxd+1)), mass(irmd)
   real (kind=dp) :: dror(irmd)
 
 
@@ -65,7 +61,7 @@ subroutine cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, sl, pz, fz, &
   rirc = rmesh(irc1)
   rirc1 = 1e0_dp/rirc
   arg = rirc*ek
-  call beshan(hankws, bessjw, bessyw, arg, lmaxp1)
+  call beshan(hankws, bessjw, bessyw, arg, (lmaxd+1))
   ! ======================================================================
 
   ! ---> determine t - matrix

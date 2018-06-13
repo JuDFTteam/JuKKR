@@ -6,12 +6,9 @@ subroutine force(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, drdi, irws)
   ! with core correction (coulomb contribution)
 
   ! -----------------------------------------------------------------------
+  use global_variables
   implicit none
 
-  ! .. Parameters ..
-  include 'inc.p'
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
   ! ..
   ! .. Local Scalars ..
   integer :: lmax, nend, nspin, nstart

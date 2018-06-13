@@ -9,13 +9,8 @@ subroutine brysh3(y, x, z, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
 
   ! ------------------------------------------------------------------------
   use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  ! .. Parameters ..
-  include 'inc.p'
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  integer :: irmind
-  parameter (irmind=irmd-irnsd)
   ! ..
   ! .. Local Scalars ..
   integer :: imap, ins, lmpot, natps, natyp, nspin, lsmear

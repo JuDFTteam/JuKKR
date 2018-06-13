@@ -1,24 +1,15 @@
 subroutine rhocore(nsra, ispin, nspin, i1, drdi, r, visp, a, b, zat, ircut, &
   rhoc, ecore, ncore, lcore, cscl, vtrel, btrel, rmrel, drdirel, r2drdirel, &
   zrel, jwsrel, irshift, ecorerel, nkcore, kapcore)
-  use :: mod_datatypes, only: dp
-  ! *********************************************************************
-  ! * For KREL = 1 (relativistic mode)                                  *
-  ! *                                                                   *
-  ! *  NPOTD = 2 * NATYPD                                               *
-  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-  ! *  NSPIND = 1                                                       *
-  ! *                                                                   *
-  ! *********************************************************************
-  implicit none
-  ! .. Parameters ..
-  include 'inc.p'
   ! ===================================================================
   ! RELATIVISTIC TREATMENT OF CORE ELECTRONS   July/2002
+  ! SEE ROUTINE <DRVCORE> FOR A SHORT DESCRIPTION OF THE VARIABLES
+  use :: mod_datatypes, only: dp
+  use global_variables
+  implicit none
   real (kind=dp) :: a, b, zat
   integer :: jwsrel, zrel, irshift
   integer :: i1, ispin, ncore, nspin, nsra
-  ! SEE ROUTINE <DRVCORE> FOR A SHORT DESCRIPTION OF THE VARIABLES
 
   real (kind=dp) :: drdi(irmd), ecore(20*(krel+1)), r(irmd), rhoc(irmd, 2), &
     visp(irmd)

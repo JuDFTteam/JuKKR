@@ -15,10 +15,8 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
   ! *********************************************************************
 
   use :: mod_datatypes
+  use global_variables
   implicit none
-  include 'inc.p'
-  integer :: npotd
-  parameter (npotd=(2*krel+(1-krel)*nspind)*natypd)
   real (kind=dp) :: cvlight
   parameter (cvlight=274.0720442e0_dp)
 

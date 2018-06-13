@@ -1,12 +1,11 @@
 ! **********************************************************************
 subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, &
-  iqat, itoq, noq, conc, kmrot, natyp, naez, lmmaxd) ! nrefd was taken out of
+  iqat, itoq, noq, conc, kmrot, natyp, naez) ! nrefd was taken out of
                                                      ! calling list 1.2.2012
-
+  use global_variables
   use :: mod_mympi, only: myrank, master
   use :: mod_datatypes, only: dp
   implicit none
-  include 'inc.p'                  ! Included  1.2.2012
 
   ! .. Local variables
   complex (kind=dp) :: czero, cone
@@ -14,7 +13,7 @@ subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, &
   parameter (cone=(1.0d0,0.0d0))
   ! ..
   ! .. External Subroutines ..
-  integer :: kmrot, natyp, naez, lmmaxd, ncpa, icpastart
+  integer :: kmrot, natyp, naez, ncpa, icpastart
   integer :: iqat(natypd), itoq(natypd, naezd)
   integer :: refpot(naezd), noq(naezd)
   real (kind=dp) :: conc(natypd)

@@ -32,15 +32,9 @@ c                  b. drittler , aug. 1988
 c*********************************************************************
 
       use mod_types
+      use global_variables
 
 C     .. Parameters ..
-      INCLUDE 'inc.p'
-      INTEGER LMPOTD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
-      INTEGER NSPINDD
-      PARAMETER (NSPINDD=2*KREL + (1-KREL)*NSPIND)
       INTEGER NTIRD
       PARAMETER (NTIRD= (IRMD*NTPERD+ (IRNSD+1)* (LMPOTD-1)*NATYPD)*
      +          NSPINDD)

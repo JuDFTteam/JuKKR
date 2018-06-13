@@ -44,32 +44,15 @@ SUBROUTINE rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin, &    ! Added IRMIN
 !                               b.drittler   july 1989
 !-----------------------------------------------------------------------
       use mod_DataTypes
+  use global_variables
       IMPLICIT NONE
-!.. Parameters ..
-      INCLUDE 'inc.p'
-! *********************************************************************
-! * For KREL = 1 (relativistic mode)                                  *
-! *                                                                   *
-! *  NPOTD = 2 * NATYPD                                               *
-! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-! *  NSPIND = 1                                                       *
-! *                                                                   *
-! *********************************************************************
-
-      INTEGER IRMIND
-      PARAMETER (IRMIND=IRMD-IRNSD)
-      INTEGER LMPOTD,LMMAXD
-      PARAMETER (LMPOTD= (LPOTD+1)**2)
-      parameter (lmmaxd= (krel+1) * (lmaxd+1)**2)
-      INTEGER LMAXD1
-      PARAMETER (LMAXD1= LMAXD+1)
 !..
 !.. Scalar Arguments ..
       complex (kind=dp) DF,EK
       INTEGER IEND,IPAN,NSRA,IRMIN
 !..
 !.. Array Arguments ..
-      complex (kind=dp) AR(LMMAXD,LMMAXD),CR(LMMAXD,LMMAXD),DEN(0:LMAXD1), &
+      complex (kind=dp) AR(LMMAXD,LMMAXD),CR(LMMAXD,LMMAXD),DEN(0:(lmaxd+1)), &
                      EKL(0:LMAXD),FZ(IRMD,0:LMAXD),GMAT(LMMAXD,LMMAXD), &
                      PNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),PZ(IRMD,0:LMAXD), &
                      QNS(LMMAXD,LMMAXD,IRMIND:IRMD,2),QZ(IRMD,0:LMAXD), &
@@ -166,7 +149,7 @@ endif  ! not qdos option
 
 IF (ipan > 1) THEN
   CALL csimpk(cdenns,denns,ipan,ircut,drdi)
-  den(lmaxd1) = denns
+  den((lmaxd+1)) = denns
 endif
 
 RETURN

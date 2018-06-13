@@ -7,11 +7,8 @@ subroutine forceh(cmom, flmh, lmax, nspin, nstart, nend, r2rho, v, r, drdi, &
 
 
   ! -----------------------------------------------------------------------
+  use global_variables
   implicit none
-  ! .. Parameters ..
-  include 'inc.p'
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
   ! ..
   ! .. Local Scalars ..
   integer :: lmax, nend, nspin, nstart

@@ -2,20 +2,14 @@
 subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
   iestart, ieend, wez, ircut, ipan, ez, zat, rho2ns, r2nef, denef, denefat, &
   espv)
-  use :: mod_datatypes, only: dp
   ! Renormalize the valence charge according to Lloyd's formula.
   ! Find renormalization constant per energy, then renormalize
   ! charge/atom/energy, then integrate over energies to find
   ! the renormalized charge/atom. Use it to renormalize the density.
   ! Phivos Mavropoulos, July 2014
+  use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  include 'inc.p'
-  integer :: lmaxd1
-  parameter (lmaxd1=lmaxd+1)
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  integer :: npotd
-  parameter (npotd=(2*(krel+korbit)+(1-(krel+korbit))*nspind)*natypd)
   ! Concentration (for cpa)
   integer :: lmaxp1, natyp, nspin
   integer :: iestart, ieend, ielast ! Non-renormalized density per atom
@@ -23,7 +17,7 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
   integer :: ircut(0:ipand, natypd), ipan(natypd) ! DOS according to Lloyd's
                                                   ! formula
   real (kind=dp) :: conc(natypd)   ! Input/Output:
-  complex (kind=dp) :: cden(0:lmaxd1, ielast, npotd) ! Internal:
+  complex (kind=dp) :: cden(0:(lmaxd+1), ielast, npotd) ! Internal:
   complex (kind=dp) :: cdos_lly(iemxd, nspind) ! 1: charge renormalization per
                                                ! atom (energy-integrated)
   complex (kind=dp) :: wez(iemxd), ez(iemxd)
@@ -32,7 +26,7 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
   real (kind=dp) :: rho2ns(irmd, lmpotd, natypd, 2)
   real (kind=dp) :: r2nef(irmd, lmpotd, natypd, 2)
   real (kind=dp) :: denef, denefat(natypd)
-  real (kind=dp) :: espv(0:lmaxd1, npotd)
+  real (kind=dp) :: espv(0:(lmaxd+1), npotd)
   ! Density from local summation
   integer :: ll, ie, i1, ispin, ipot, spindegen, irc1, signsp, idim
   real (kind=dp) :: renorm_at(natypd, 2) ! and from Lloyd's formula

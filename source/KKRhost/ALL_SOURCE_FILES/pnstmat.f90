@@ -2,29 +2,14 @@
 subroutine pnstmat(drdi, ek, icst, pz, qz, fz, sz, pns, tmatll, vins, irmin, &
   ipan, ircut, nsra, cleb, icleb, iend, loflm, tmat, lkonv, idoldau, lopt, &
   lmlo, lmhi, wldau, wldauav, cutoff, alpha0) ! LLY
-  use :: mod_datatypes, only: dp
-  implicit none
-  ! .. Parameters ..
-  include 'inc.p'
-  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-  ! *  NSPIND = 1                                                       *
   ! *                                                                   *
   ! *  LDA+U implementation     Mar. 2002-Dec.2004                      *
   ! *                           ph.mavropoulos, h. ebert, v. popescu    *
   ! *                                                                   *
   ! *********************************************************************
-  ! ..
-  ! .. Scalar Arguments ..
-  ! ..
-  ! .. Array Arguments ..
-  integer :: irmind
-  parameter (irmind=irmd-irnsd)
-  integer :: mmaxd
-  parameter (mmaxd=2*lmaxd+1)
-  integer :: lmmaxd
-  parameter (lmmaxd=(krel+1)*(lmaxd+1)**2)
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
+  use :: mod_datatypes, only: dp
+  use global_variables
+  implicit none
   complex (kind=dp) :: czero
   parameter (czero=(0.e0_dp,0.e0_dp))
   ! LLY

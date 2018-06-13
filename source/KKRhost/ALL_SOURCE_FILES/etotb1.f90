@@ -18,33 +18,14 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
   ! -----------------------------------------------------------------------
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  include 'inc.p'
-  ! *  NPOTD = 2 * NATYPD                                               *
-  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-  ! *  NSPIND = 1                                                       *
-  ! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
-  ! *          function, set up in the spin-independent non-relativstic *
-  ! *          (l,m_l)-representation                                   *
-  ! *                                                                   *
-  ! *********************************************************************
 
-  ! PARAMETER definitions
-
-  ! ..Dummy arguments
-
-  ! ..Local variables
-  integer :: lmaxd1, npotd
-  parameter (lmaxd1=lmaxd+1, npotd=(2*krel+(1-krel)*nspind)*natypd)
-  ! ..
-  ! .. externals
   integer :: kpre, lmax, lpot, natyp, nspin, idoldau
   real (kind=dp) :: conc(natypd)
-  real (kind=dp) :: ecou(0:lpotd, *), epotin(*), espc(0:3, npotd), &
-    espv(0:lmaxd1, npotd), exc(0:lpotd, *), eu(*), edcldau(*)
+  real (kind=dp) :: ecou(0:lpot, *), epotin(*), espc(0:3, npotd), &
+    espv(0:(lmaxd+1), npotd), exc(0:lpot, *), eu(*), edcldau(*)
   integer :: lcoremax(*), nshell(*), lopt(*)
-  ! ..
-  ! .. Data statements ..
   real (kind=dp) :: bandesum, bandet, ecous, edc, efctor, et, etot, excs
   real (kind=dp) :: etotldau
   real (kind=dp) :: dble
@@ -53,7 +34,6 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
   character (len=4) :: textl(0:6)
   character (len=5) :: textns
   character (len=13) :: texts(3)
-  ! ------------------------------------------------------------------------
 
   external :: test
 
@@ -92,7 +72,7 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
         write (1337, fmt=120) texts(is)
         write (1337, fmt=130)(textl(l), espc(l,ipot), l=0, lcoremax(iatyp))
         write (1337, fmt=140)(textl(l), espv(l,ipot), l=0, lmax)
-        write (1337, fmt=150) textns, espv(lmaxd1, ipot)
+        write (1337, fmt=150) textns, espv((lmaxd+1), ipot)
       end if
 
       do l = 0, lcoremax(iatyp)
@@ -103,8 +83,8 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
         bandet = bandet + espv(l, ipot)
         et = et + espv(l, ipot)
       end do
-      bandet = bandet + espv(lmaxd1, ipot)
-      et = et + espv(lmaxd1, ipot)
+      bandet = bandet + espv((lmaxd+1), ipot)
+      et = et + espv((lmaxd+1), ipot)
     end do
     ! --->  sum up Coulomb and Ex.-Corel. contribution
 

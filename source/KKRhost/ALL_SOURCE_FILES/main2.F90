@@ -506,7 +506,7 @@ contains
             LPOT,VINS,IRCUT,IPAN,ZAT)
          ! Coulomb hartree energy
          call ECOUB(CMOM,ECOU,LPOT,NSPIN,NATYP,RHO2NS,VONS,ZAT,RMESH,DRDI,IRWS,   &
-            KVMAD,KSHAPE,IRCUT,IPAN,IMAXSH,IFUNM,ILM_MAP,NTCELL,GSH,THETAS,LMSP)
+            KVMAD,KSHAPE,IRCUT,IPAN,IMAXSH,IFUNM,ILM_MAP,NTCELL,GSH,THETAS,LMSP,LPOT)
 
       end if
       !-------------------------------------------------------------------------

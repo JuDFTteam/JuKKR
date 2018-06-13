@@ -1,6 +1,5 @@
 ! 13.10.95 ***************************************************************
 subroutine espcb(espc, nspin, natyp, ecore, lcore, lcoremax, ncore)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
 
   ! attention : energy zero ---> electro static zero
@@ -19,26 +18,9 @@ subroutine espcb(espc, nspin, natyp, ecore, lcore, lcoremax, ncore)
   ! b.drittler   jan 1990
   ! -----------------------------------------------------------------------
 
+  use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-
-  ! .. Parameters ..
-  include 'inc.p'
-  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-  ! *  NSPIND = 1                                                       *
-  ! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
-  ! *          function, set up in the spin-independent non-relativstic *
-  ! *          (l,m_l)-representation                                   *
-  ! *                                                                   *
-  ! *********************************************************************
-
-
-  ! .. Scalar Arguments ..
-
-  ! .. Array Arguments ..
-  integer :: npotd
-  parameter (npotd=(2*krel+(1-krel)*nspind)*natypd)
-  integer :: lmaxd1
-  parameter (lmaxd1=lmaxd+1)
 
   ! .. Local Scalars ..
   integer :: natyp, nspin

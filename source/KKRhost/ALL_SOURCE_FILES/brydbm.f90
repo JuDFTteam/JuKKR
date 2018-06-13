@@ -32,18 +32,10 @@ subroutine brydbm(visp, v, vins, vspsme, vspsmo, ins, lmpot, r, drdi, alpha, &
 
   use :: mod_types
   use :: mod_datatypes, only: dp
+  use global_variables
 
   ! .. Parameters ..
-  include 'inc.p'
-  ! .. Local Scalars ..
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  integer :: irmind
-  parameter (irmind=irmd-irnsd)
-  integer :: nspindd
-  parameter (nspindd=2*krel+(1-krel)*nspind)
   integer :: ntird
-  parameter (ntird=(irmd*ntperd+(irnsd+1)*(lmpotd-1)*natypd)*nspindd)
   integer :: itdthd
   parameter (itdthd=40)
   ! ..
@@ -81,6 +73,7 @@ subroutine brydbm(visp, v, vins, vspsme, vspsmo, ins, lmpot, r, drdi, alpha, &
 
   data mit/1/, zero, one/0.0d0, 1.0d0/
 
+  ntird=(irmd*ntperd+(irnsd+1)*(lmpotd-1)*natypd)*nspindd
 
   allocate (am(2:itdthd-1), bm(2:itdthd-1), fm(ntird), fm1(ntird), g(ntird), &
     sm(ntird), sm1(ntird), vi3(ntird), wit(2:200), ui2(ntird), ui3(ntird), &

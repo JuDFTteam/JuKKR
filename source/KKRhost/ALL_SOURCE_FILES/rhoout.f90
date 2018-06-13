@@ -1,7 +1,6 @@
 ! Added IRMIN,IRMAX 1.7.2014
 subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm, ipan1, &
   imt1, irmin, irmax, lmsp, cdenns, nsra, cleb, icleb, iend, cdenlm, cwr) ! lm-dos
-  use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
 
   ! calculates the charge density from r(irmin) to r(irc)
@@ -25,25 +24,9 @@ subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm, ipan1, &
 
   ! b.drittler   aug. 1988
   ! -----------------------------------------------------------------------
-  ! .. Parameters ..
+  use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  include 'inc.p'
-  ! *  NPOTD = 2 * NATYPD                                               *
-  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-  ! *  NSPIND = 1                                                       *
-  ! *                                                                   *
-  ! *********************************************************************
-
-  ! ..
-  ! .. Scalar Arguments ..
-  ! ..
-  ! .. Array Arguments ..
-  integer :: lmmaxd
-  parameter (lmmaxd=(krel+1)*(lmaxd+1)**2)
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  integer :: irmind
-  parameter (irmind=irmd-irnsd)
   ! lm-dos
   ! ..
   complex (kind=dp) :: df, ek

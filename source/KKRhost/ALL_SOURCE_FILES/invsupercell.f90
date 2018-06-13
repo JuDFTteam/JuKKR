@@ -1,6 +1,5 @@
 ! ************************************************************************
 subroutine invsupercell(m2, m1, m3, gin, icheck)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
 
   ! ---> ALGORITM FOR SUPERCELL GEOMETRY
@@ -13,38 +12,25 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
   ! ------------------------------------------------------------------------
 
+  use global_variables
+  use :: mod_datatypes, only: dp
   implicit none
 
-  ! .. Parameters ..
-  include 'inc.p'
-  ! *  NPOTD = 2 * NATYPD                                               *
-  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-  ! *  NSPIND = 1                                                       *
-  ! *                                                                   *
-  ! *********************************************************************
-
-
-  ! .. array arguments
-
-  ! .. local scalars
-  integer, parameter :: lmmaxd = (krel+korbit+1)*(lmaxd+1)**2
-  integer, parameter :: ndim = max(nprincd*lmmaxd, 1)
-  integer, parameter :: almd = naezd*lmmaxd
   complex (kind=dp), parameter :: czero = (0.e0_dp, 0.e0_dp)
   complex (kind=dp), parameter :: cone = (1.e0_dp, 0.e0_dp)
 
   ! .. local arrays
-  complex (kind=dp) :: m1(ndim, ndim, nlayerd), m2(ndim, ndim, nlayerd), &
-    m3(ndim, ndim, nlayerd), gin(almd, almd)
+  complex (kind=dp) :: m1(ndim_slabinv, ndim_slabinv, nlayerd), m2(ndim_slabinv, ndim_slabinv, nlayerd), &
+    m3(ndim_slabinv, ndim_slabinv, nlayerd), gin(alm, alm)
   ! --------------------------------------------------------------------
   ! .. External Subroutines ..
   integer :: n, lm, info, irow, icol, nl
 
 
-  integer :: ipvt(ndim), icheck(nlayerd, nlayerd)
-  complex (kind=dp) :: a(ndim, ndim), b(ndim, ndim, nlayerd), &
-    c(ndim, ndim, nlayerd), d(ndim, ndim, nlayerd), e(ndim, ndim), &
-    f(ndim, ndim), g(ndim, ndim), cunit(ndim, ndim)
+  integer :: ipvt(ndim_slabinv), icheck(nlayerd, nlayerd)
+  complex (kind=dp) :: a(ndim_slabinv, ndim_slabinv), b(ndim_slabinv, ndim_slabinv, nlayerd), &
+    c(ndim_slabinv, ndim_slabinv, nlayerd), d(ndim_slabinv, ndim_slabinv, nlayerd), e(ndim_slabinv, ndim_slabinv), &
+    f(ndim_slabinv, ndim_slabinv), g(ndim_slabinv, ndim_slabinv), cunit(ndim_slabinv, ndim_slabinv)
   ! ---> START OF THE FACTORIZATION L * M * U
 
   external :: cinit, zcopy, zgemm, zgetrf, zgetrs, btom
@@ -57,29 +43,29 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
   ! ------------------------------------------------------------------------
 
-  ! ---> cunit = complex unity matrix of order NDIM
-  call cinit(ndim*ndim, a)
-  call cinit(ndim*ndim*nlayerd, b)
-  call cinit(ndim*ndim*nlayerd, c)
-  call cinit(ndim*ndim*nlayerd, d)
-  call cinit(ndim*ndim, e)
-  call cinit(ndim*ndim, f)
-  call cinit(ndim*ndim, g)
-  call cinit(ndim*ndim, cunit)
+  ! ---> cunit = complex unity matrix of order ndim_slabinv
+  call cinit(ndim_slabinv*ndim_slabinv, a)
+  call cinit(ndim_slabinv*ndim_slabinv*nlayerd, b)
+  call cinit(ndim_slabinv*ndim_slabinv*nlayerd, c)
+  call cinit(ndim_slabinv*ndim_slabinv*nlayerd, d)
+  call cinit(ndim_slabinv*ndim_slabinv, e)
+  call cinit(ndim_slabinv*ndim_slabinv, f)
+  call cinit(ndim_slabinv*ndim_slabinv, g)
+  call cinit(ndim_slabinv*ndim_slabinv, cunit)
 
 
 
 
 
-  do n = 1, ndim
+  do n = 1, ndim_slabinv
     cunit(n, n) = cone
   end do
 
 
-  call zcopy(ndim*ndim, m2(1,1,1), 1, e(1,1), 1)
-  call zcopy(ndim*ndim, cunit, 1, d(1,1,1), 1)
-  call zgetrf(ndim, ndim, e(1,1), ndim, ipvt, info)
-  call zgetrs('N', ndim, ndim, e(1,1), ndim, ipvt, d(1,1,1), ndim, info)
+  call zcopy(ndim_slabinv*ndim_slabinv, m2(1,1,1), 1, e(1,1), 1)
+  call zcopy(ndim_slabinv*ndim_slabinv, cunit, 1, d(1,1,1), 1)
+  call zgetrf(ndim_slabinv, ndim_slabinv, e(1,1), ndim_slabinv, ipvt, info)
+  call zgetrs('N', ndim_slabinv, ndim_slabinv, e(1,1), ndim_slabinv, ipvt, d(1,1,1), ndim_slabinv, info)
 
 
   nl = nlayerd
@@ -87,9 +73,9 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
   ! ------------------------------------------------------------------------
   if (nl==1) go to 120
 
-  call zcopy(ndim*ndim, m2(1,1,nl), 1, a(1,1), 1)
-  call zcopy(ndim*ndim, m1(1,1,nl), 1, b(1,1,1), 1)
-  call zcopy(ndim*ndim, m3(1,1,nl), 1, c(1,1,1), 1)
+  call zcopy(ndim_slabinv*ndim_slabinv, m2(1,1,nl), 1, a(1,1), 1)
+  call zcopy(ndim_slabinv*ndim_slabinv, m1(1,1,nl), 1, b(1,1,1), 1)
+  call zcopy(ndim_slabinv*ndim_slabinv, m3(1,1,nl), 1, c(1,1,1), 1)
   ! ---> 2 <= N < NL-1
 
 
@@ -106,46 +92,46 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
     ! ---> F = D(N-1) * M1(N-1)
 
-    call zgemm('N', 'N', ndim, ndim, ndim, cone, d(1,1,n-1), ndim, c(1,1,n-1), &
-      ndim, czero, e(1,1), ndim)
+    call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, d(1,1,n-1), ndim_slabinv, c(1,1,n-1), &
+      ndim_slabinv, czero, e(1,1), ndim_slabinv)
 
 
 
     ! ---> A = A - B(N-1)*D(N-1)*C(N-1)
 
-    call zgemm('N', 'N', ndim, ndim, ndim, cone, d(1,1,n-1), ndim, &
-      m1(1,1,n-1), ndim, czero, f(1,1), ndim)
+    call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, d(1,1,n-1), ndim_slabinv, &
+      m1(1,1,n-1), ndim_slabinv, czero, f(1,1), ndim_slabinv)
 
 
 
     ! ---> B(N) = - B(N-1)*D(N-1)*M1(N-1)
 
-    call zgemm('N', 'N', ndim, ndim, ndim, -cone, b(1,1,n-1), ndim, e(1,1), &
-      ndim, cone, a(1,1), ndim)
+    call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, b(1,1,n-1), ndim_slabinv, e(1,1), &
+      ndim_slabinv, cone, a(1,1), ndim_slabinv)
 
 
     ! ---> C(N) = - M3(N-1)*D(N-1)*C(N-1)
 
-    call zgemm('N', 'N', ndim, ndim, ndim, -cone, b(1,1,n-1), ndim, f(1,1), &
-      ndim, czero, b(1,1,n), ndim)
+    call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, b(1,1,n-1), ndim_slabinv, f(1,1), &
+      ndim_slabinv, czero, b(1,1,n), ndim_slabinv)
 
 
 
     ! ---> D(N) = [ M2(N) - M3(N-1)*D(N-1)*M1(N-1) ]^-1
 
-    call zgemm('N', 'N', ndim, ndim, ndim, -cone, m3(1,1,n-1), ndim, e(1,1), &
-      ndim, czero, c(1,1,n), ndim)
+    call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, m3(1,1,n-1), ndim_slabinv, e(1,1), &
+      ndim_slabinv, czero, c(1,1,n), ndim_slabinv)
 
 
 
 
     ! ------------------------------------------------------------------------
-    call zcopy(ndim*ndim, m2(1,1,n), 1, e(1,1), 1)
-    call zgemm('N', 'N', ndim, ndim, ndim, -cone, m3(1,1,n-1), ndim, f(1,1), &
-      ndim, cone, e(1,1), ndim)
-    call zcopy(ndim*ndim, cunit(1,1), 1, d(1,1,n), 1)
-    call zgetrf(ndim, ndim, e(1,1), ndim, ipvt, info)
-    call zgetrs('N', ndim, ndim, e(1,1), ndim, ipvt, d(1,1,n), ndim, info)
+    call zcopy(ndim_slabinv*ndim_slabinv, m2(1,1,n), 1, e(1,1), 1)
+    call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, m3(1,1,n-1), ndim_slabinv, f(1,1), &
+      ndim_slabinv, cone, e(1,1), ndim_slabinv)
+    call zcopy(ndim_slabinv*ndim_slabinv, cunit(1,1), 1, d(1,1,n), 1)
+    call zgetrf(ndim_slabinv, ndim_slabinv, e(1,1), ndim_slabinv, ipvt, info)
+    call zgetrs('N', ndim_slabinv, ndim_slabinv, e(1,1), ndim_slabinv, ipvt, d(1,1,n), ndim_slabinv, info)
 
     ! ---> N = NL - 1
   end do
@@ -162,49 +148,49 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
   ! ---> F = D(N-1) * M1(N-1)
 
-  call zgemm('N', 'N', ndim, ndim, ndim, cone, d(1,1,n-1), ndim, c(1,1,n-1), &
-    ndim, czero, e(1,1), ndim)
+  call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, d(1,1,n-1), ndim_slabinv, c(1,1,n-1), &
+    ndim_slabinv, czero, e(1,1), ndim_slabinv)
 
 
 
   ! ---> A = A - B(N-1)*D(N-1)*C(N-1)
 
-  call zgemm('N', 'N', ndim, ndim, ndim, cone, d(1,1,n-1), ndim, m1(1,1,n-1), &
-    ndim, czero, f(1,1), ndim)
+  call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, d(1,1,n-1), ndim_slabinv, m1(1,1,n-1), &
+    ndim_slabinv, czero, f(1,1), ndim_slabinv)
 
 
 
   ! ---> B(N) = - B(N-1)*D(N-1)*M1(N-1) + M3(N)
 
-  call zgemm('N', 'N', ndim, ndim, ndim, -cone, b(1,1,n-1), ndim, e(1,1), &
-    ndim, cone, a(1,1), ndim)
+  call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, b(1,1,n-1), ndim_slabinv, e(1,1), &
+    ndim_slabinv, cone, a(1,1), ndim_slabinv)
 
 
 
   ! ---> C(N) = - M3(N-1)*D(N-1)*C(N-1) + M1(N)
 
-  call zcopy(ndim*ndim, m3(1,1,n), 1, b(1,1,n), 1)
-  call zgemm('N', 'N', ndim, ndim, ndim, -cone, b(1,1,n-1), ndim, f(1,1), &
-    ndim, cone, b(1,1,n), ndim)
+  call zcopy(ndim_slabinv*ndim_slabinv, m3(1,1,n), 1, b(1,1,n), 1)
+  call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, b(1,1,n-1), ndim_slabinv, f(1,1), &
+    ndim_slabinv, cone, b(1,1,n), ndim_slabinv)
 
 
 
   ! ---> D(N) = [ M2(N) - M3(N-1)*D(N-1)*M1(N-1) ]^-1
 
-  call zcopy(ndim*ndim, m1(1,1,n), 1, c(1,1,n), 1)
-  call zgemm('N', 'N', ndim, ndim, ndim, -cone, m3(1,1,n-1), ndim, e(1,1), &
-    ndim, cone, c(1,1,n), ndim)
+  call zcopy(ndim_slabinv*ndim_slabinv, m1(1,1,n), 1, c(1,1,n), 1)
+  call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, m3(1,1,n-1), ndim_slabinv, e(1,1), &
+    ndim_slabinv, cone, c(1,1,n), ndim_slabinv)
 
 
 
   ! ------------------------------------------------------------------------
 
-  call zcopy(ndim*ndim, m2(1,1,n), 1, e(1,1), 1)
-  call zgemm('N', 'N', ndim, ndim, ndim, -cone, m3(1,1,n-1), ndim, f(1,1), &
-    ndim, cone, e(1,1), ndim)
-  call zcopy(ndim*ndim, cunit(1,1), 1, d(1,1,n), 1)
-  call zgetrf(ndim, ndim, e(1,1), ndim, ipvt, info)
-  call zgetrs('N', ndim, ndim, e(1,1), ndim, ipvt, d(1,1,n), ndim, info)
+  call zcopy(ndim_slabinv*ndim_slabinv, m2(1,1,n), 1, e(1,1), 1)
+  call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, m3(1,1,n-1), ndim_slabinv, f(1,1), &
+    ndim_slabinv, cone, e(1,1), ndim_slabinv)
+  call zcopy(ndim_slabinv*ndim_slabinv, cunit(1,1), 1, d(1,1,n), 1)
+  call zgetrf(ndim_slabinv, ndim_slabinv, e(1,1), ndim_slabinv, ipvt, info)
+  call zgetrs('N', ndim_slabinv, ndim_slabinv, e(1,1), ndim_slabinv, ipvt, d(1,1,n), ndim_slabinv, info)
   ! ---> N = NL
 
 
@@ -221,23 +207,23 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
   ! ---> A = A - B(NL-1) * E
 
-  call zgemm('N', 'N', ndim, ndim, ndim, cone, d(1,1,nl-1), ndim, c(1,1,nl-1), &
-    ndim, czero, e(1,1), ndim)
+  call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, d(1,1,nl-1), ndim_slabinv, c(1,1,nl-1), &
+    ndim_slabinv, czero, e(1,1), ndim_slabinv)
 
 
 
   ! ---> D(NL) = (A)^-1
 
-  call zgemm('N', 'N', ndim, ndim, ndim, -cone, b(1,1,nl-1), ndim, e(1,1), &
-    ndim, cone, a(1,1), ndim)
+  call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, b(1,1,nl-1), ndim_slabinv, e(1,1), &
+    ndim_slabinv, cone, a(1,1), ndim_slabinv)
 
 
 
   ! jump label for NL=1
 
-  call zcopy(ndim*ndim, cunit(1,1), 1, d(1,1,nl), 1)
-  call zgetrf(ndim, ndim, a(1,1), ndim, ipvt, info)
-  call zgetrs('N', ndim, ndim, a(1,1), ndim, ipvt, d(1,1,nl), ndim, info)
+  call zcopy(ndim_slabinv*ndim_slabinv, cunit(1,1), 1, d(1,1,nl), 1)
+  call zgetrf(ndim_slabinv, ndim_slabinv, a(1,1), ndim_slabinv, ipvt, info)
+  call zgetrs('N', ndim_slabinv, ndim_slabinv, a(1,1), ndim_slabinv, ipvt, d(1,1,nl), ndim_slabinv, info)
   ! ------------------------------------------------------------------------
 
 120 continue                       ! --->  END OF FACTORIZATION
@@ -271,9 +257,9 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
 
 
-      call zcopy(ndim*ndim, d(1,1,nl), 1, e(1,1), 1)
+      call zcopy(ndim_slabinv*ndim_slabinv, d(1,1,nl), 1, e(1,1), 1)
 
-      call btom(nl, nl, e, ndim, gin, almd, .false.)
+      call btom(nl, nl, e, ndim_slabinv, gin, alm, .false.)
       ! ---> GTOT(NL-1,NL-1) = D(NL-1) + D(NL-1)*C(NL-1)*D(NL)*B(NL-1)*D(NL-1)
 
     else if (n==nl-1) then
@@ -283,23 +269,23 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
 
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, b(1,1,nl-1), ndim, &
-          d(1,1,nl-1), ndim, czero, e(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, b(1,1,nl-1), ndim_slabinv, &
+          d(1,1,nl-1), ndim_slabinv, czero, e(1,1), ndim_slabinv)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, d(1,1,nl), ndim, e(1,1), &
-          ndim, czero, f(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, d(1,1,nl), ndim_slabinv, e(1,1), &
+          ndim_slabinv, czero, f(1,1), ndim_slabinv)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, c(1,1,nl-1), ndim, &
-          f(1,1), ndim, czero, e(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, c(1,1,nl-1), ndim_slabinv, &
+          f(1,1), ndim_slabinv, czero, e(1,1), ndim_slabinv)
         ! write (6,*) 'it calculates the element ','(',nl-1,',',nl-1,')'
-        do lm = 1, ndim
+        do lm = 1, ndim_slabinv
           e(lm, lm) = cone + e(lm, lm)
         end do
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, d(1,1,nl-1), ndim, &
-          e(1,1), ndim, czero, f(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, d(1,1,nl-1), ndim_slabinv, &
+          e(1,1), ndim_slabinv, czero, f(1,1), ndim_slabinv)
 
-        call btom(nl-1, nl-1, f, ndim, gin, almd, .false.)
+        call btom(nl-1, nl-1, f, ndim_slabinv, gin, alm, .false.)
 
 
 
@@ -314,38 +300,38 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
 
 
-        call bofm(nl, n+1, f, ndim, gin, almd)
+        call bofm(nl, n+1, f, ndim_slabinv, gin, alm)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, c(1,1,n), ndim, f(1,1), &
-          ndim, czero, e(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, c(1,1,n), ndim_slabinv, f(1,1), &
+          ndim_slabinv, czero, e(1,1), ndim_slabinv)
 
-        call bofm(n+1, n+1, f, ndim, gin, almd)
+        call bofm(n+1, n+1, f, ndim_slabinv, gin, alm)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, m1(1,1,n), ndim, f(1,1), &
-          ndim, cone, e(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, m1(1,1,n), ndim_slabinv, f(1,1), &
+          ndim_slabinv, cone, e(1,1), ndim_slabinv)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, m3(1,1,n), ndim, &
-          d(1,1,n), ndim, czero, f(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, m3(1,1,n), ndim_slabinv, &
+          d(1,1,n), ndim_slabinv, czero, f(1,1), ndim_slabinv)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, e(1,1), ndim, f(1,1), &
-          ndim, czero, g(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, e(1,1), ndim_slabinv, f(1,1), &
+          ndim_slabinv, czero, g(1,1), ndim_slabinv)
 
-        do lm = 1, ndim
+        do lm = 1, ndim_slabinv
           g(lm, lm) = cone + g(lm, lm)
         end do
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, d(1,1,n), ndim, g(1,1), &
-          ndim, czero, e(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, d(1,1,n), ndim_slabinv, g(1,1), &
+          ndim_slabinv, czero, e(1,1), ndim_slabinv)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, cone, b(1,1,n), ndim, d(1,1,n), &
-          ndim, czero, f(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, b(1,1,n), ndim_slabinv, d(1,1,n), &
+          ndim_slabinv, czero, f(1,1), ndim_slabinv)
         ! write (6,*) 'it calculates the element ','(',n,',',n,')'
-        call bofm(n, nl, g, ndim, gin, almd)
+        call bofm(n, nl, g, ndim_slabinv, gin, alm)
 
-        call zgemm('N', 'N', ndim, ndim, ndim, -cone, g(1,1), ndim, f(1,1), &
-          ndim, cone, e(1,1), ndim)
+        call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, g(1,1), ndim_slabinv, f(1,1), &
+          ndim_slabinv, cone, e(1,1), ndim_slabinv)
 
-        call btom(n, n, e, ndim, gin, almd, .false.)
+        call btom(n, n, e, ndim_slabinv, gin, alm, .false.)
 
 
         ! LOOP OVER THE ROW FOR THE COLUMN N
@@ -360,36 +346,36 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
         if ((n==nl) .and. (irow==(nl-1))) then
 
-          call zgemm('N', 'N', ndim, ndim, ndim, cone, d(1,1,nl-1), ndim, &
-            c(1,1,nl-1), ndim, czero, f(1,1), ndim)
+          call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, d(1,1,nl-1), ndim_slabinv, &
+            c(1,1,nl-1), ndim_slabinv, czero, f(1,1), ndim_slabinv)
           ! M(I,I+1) * Z(I+1,J)
-          call zgemm('N', 'N', ndim, ndim, ndim, -cone, f(1,1), ndim, &
-            d(1,1,nl), ndim, czero, g(1,1), ndim)
+          call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, f(1,1), ndim_slabinv, &
+            d(1,1,nl), ndim_slabinv, czero, g(1,1), ndim_slabinv)
 
-          call btom(nl-1, nl, g, ndim, gin, almd, .false.)
+          call btom(nl-1, nl, g, ndim_slabinv, gin, alm, .false.)
 
         else
 
           ! M(I,I+1) * Z(I+1,J) + C(I) * Z(N,J)
 
-          call bofm(irow+1, n, e, ndim, gin, almd)
+          call bofm(irow+1, n, e, ndim_slabinv, gin, alm)
 
-          call zgemm('N', 'N', ndim, ndim, ndim, cone, m1(1,1,irow), ndim, &
-            e(1,1), ndim, czero, g(1,1), ndim)
+          call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, m1(1,1,irow), ndim_slabinv, &
+            e(1,1), ndim_slabinv, czero, g(1,1), ndim_slabinv)
 
           ! -D(I) * ( M(I,I+1)*Z(I+1,J)+C(I)*Z(N,J) )
 
-          call bofm(nl, n, e, ndim, gin, almd)
+          call bofm(nl, n, e, ndim_slabinv, gin, alm)
 
-          call zgemm('N', 'N', ndim, ndim, ndim, cone, c(1,1,irow), ndim, &
-            e(1,1), ndim, cone, g(1,1), ndim)
+          call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, c(1,1,irow), ndim_slabinv, &
+            e(1,1), ndim_slabinv, cone, g(1,1), ndim_slabinv)
 
 
           ! write (6,*) 'it calculates the element ','(',irow,',',n,')'
-          call zgemm('N', 'N', ndim, ndim, ndim, -cone, d(1,1,irow), ndim, &
-            g(1,1), ndim, czero, e(1,1), ndim)
+          call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, d(1,1,irow), ndim_slabinv, &
+            g(1,1), ndim_slabinv, czero, e(1,1), ndim_slabinv)
 
-          call btom(irow, n, e, ndim, gin, almd, .false.)
+          call btom(irow, n, e, ndim_slabinv, gin, alm, .false.)
 
         end if
         ! LOOP OVER THE ROW FOR THE COLUMN N
@@ -406,36 +392,36 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
         if ((n==nl) .and. (icol==(nl-1))) then
 
-          call zgemm('N', 'N', ndim, ndim, ndim, cone, b(1,1,nl-1), ndim, &
-            d(1,1,nl-1), ndim, czero, e(1,1), ndim)
+          call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, b(1,1,nl-1), ndim_slabinv, &
+            d(1,1,nl-1), ndim_slabinv, czero, e(1,1), ndim_slabinv)
           ! Z(I,J+1) * M(J+1,J)
-          call zgemm('N', 'N', ndim, ndim, ndim, -cone, d(1,1,nl), ndim, &
-            e(1,1), ndim, czero, g(1,1), ndim)
+          call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, d(1,1,nl), ndim_slabinv, &
+            e(1,1), ndim_slabinv, czero, g(1,1), ndim_slabinv)
 
-          call btom(nl, nl-1, g, ndim, gin, almd, .false.)
+          call btom(nl, nl-1, g, ndim_slabinv, gin, alm, .false.)
 
         else
 
           ! Z(I,J+1) * M(J+1,J) + Z(I,N) * B(J)
 
-          call bofm(n, icol+1, e, ndim, gin, almd)
+          call bofm(n, icol+1, e, ndim_slabinv, gin, alm)
 
-          call zgemm('N', 'N', ndim, ndim, ndim, cone, e(1,1), ndim, &
-            m3(1,1,icol), ndim, czero, g(1,1), ndim)
+          call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, e(1,1), ndim_slabinv, &
+            m3(1,1,icol), ndim_slabinv, czero, g(1,1), ndim_slabinv)
 
           ! -( Z(I,J+1) * M(J+1,J)+Z(I,N) * B(J) ) * D(J)
 
-          call bofm(n, nl, e, ndim, gin, almd)
+          call bofm(n, nl, e, ndim_slabinv, gin, alm)
 
-          call zgemm('N', 'N', ndim, ndim, ndim, cone, e(1,1), ndim, &
-            b(1,1,icol), ndim, cone, g(1,1), ndim)
+          call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, e(1,1), ndim_slabinv, &
+            b(1,1,icol), ndim_slabinv, cone, g(1,1), ndim_slabinv)
 
 
           ! write (6,*) 'it calculates the element ','(',n,',',icol,')'
-          call zgemm('N', 'N', ndim, ndim, ndim, -cone, g(1,1), ndim, &
-            d(1,1,icol), ndim, czero, e(1,1), ndim)
+          call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, g(1,1), ndim_slabinv, &
+            d(1,1,icol), ndim_slabinv, czero, e(1,1), ndim_slabinv)
 
-          call btom(n, icol, e, ndim, gin, almd, .false.)
+          call btom(n, icol, e, ndim_slabinv, gin, alm, .false.)
 
         end if
         ! LOOP OVER THE COLUMN FOR THE ROW N

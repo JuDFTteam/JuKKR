@@ -65,6 +65,11 @@ module global_variables
   integer :: lmaxd = 3             ! < lmax cutoff
   integer :: lmmaxd                ! < (KREL+KORBIT+1)*(LMAXD+1)^2
   integer :: lmgf0d                ! < (lmaxd+1)^2
+  ! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     * 
+  ! *          function, set up in the spin-independent non-relativstic * 
+  ! *          (l,m_l)-representation                                   * 
+  ! *                                                                   * 
+  ! ********************************************************************* 
   integer :: alm                   ! < naez*lmmaxd
   integer :: almgf0                ! < naezd*lmgf0d (<=alm)
   integer :: ndim_slabinv          ! < nprincd*lmmaxd
@@ -92,5 +97,14 @@ module global_variables
   integer :: lmmaxso
 
   logical :: linterface = .false.
+
+  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
+  ! *  NSPIND = 1                                                       *
+  ! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
+  ! *          function, set up in the spin-independent non-relativstic *
+  ! *          (l,m_l)-representation                                   *
+  ! *                                                                   *
+  ! *********************************************************************
+
 
 end module global_variables

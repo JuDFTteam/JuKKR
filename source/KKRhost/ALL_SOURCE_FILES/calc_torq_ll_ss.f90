@@ -6,17 +6,12 @@
 ! Guillaume Geranton, September 2014
 subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, &
   ifunm, lmsp, irws, drdi, dens, visp, nspin, iatom, vins, irmin)
+
+  use global_variables
   use :: mod_datatypes, only: dp
 
   implicit none
 
-  include 'inc.p'
-  integer :: lmmaxd
-  parameter (lmmaxd=(lmaxd+1)**2)
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  integer :: irmind
-  parameter (irmind=irmd-irnsd)
   ! .. Array Arguments ..
   ! non-sph. eigen states of single pot  &
   integer :: iend, lmmax, irws, nspin, iatom, irmin ! derivative dr/di  &

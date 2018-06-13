@@ -1,34 +1,17 @@
 ! 04.10.95 *************************************************************
 subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, &
   bzkp, rcls, ginp)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
-  implicit none
-  ! .. Parameters ..
-  include 'inc.p'
   ! *          function, set up in the spin-independent non-relativstic *
   ! *          (l,m_l)-representation                                   *
   ! *                                                                   *
   ! *********************************************************************
-  ! ..
-  ! ..
-  ! .. Scalar Arguments ..
-  ! ..
-  ! .. Array Arguments ..
-  integer :: lmax
-  parameter (lmax=lmaxd)
-  integer :: lmgf0d
-  parameter (lmgf0d=(lmax+1)**2)
-  integer :: almgf0
-  parameter (almgf0=lmgf0d*naezd)
-
+  use global_variables
+  use :: mod_datatypes, only: dp
+  implicit none
 
   real (kind=dp) :: alat
   integer :: naez, naclsmax
-  ! ..
-  ! .. Local Scalars ..
-  ! ..
-  ! .. Local Arrays ..
   complex (kind=dp) :: ginp(lmgf0d*naclsmax, lmgf0d, *), gllke(almgf0, *)
   real (kind=dp) :: bzkp(*), rcls(3, naclsd, *), rr(3, 0:nrd)
   integer :: atom(naclsd, *), cls(*), ezoa(naclsd, *), nacls(*)

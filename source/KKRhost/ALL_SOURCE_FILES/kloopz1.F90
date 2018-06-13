@@ -194,7 +194,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    ICPASTART = 1
    call MSSINIT(NCPA,ICPASTART,TSST,MSST,MSSQ,TREFLL,DROTQ, &
       REFPOT,IQAT,ITOQ,NOQ,CONC,                            &
-      KMROT,NATYP,NAEZ,LMMAXD)  ! nref was taken out of calling list 1.2.2012
+      KMROT,NATYP,NAEZ)  ! nref was taken out of calling list 1.2.2012
    !
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !    VIRTUAL ATOMS:

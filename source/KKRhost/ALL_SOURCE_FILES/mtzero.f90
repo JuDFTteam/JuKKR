@@ -1,7 +1,6 @@
 ! ************************************************************************
 subroutine mtzero(lmpot, natyp, conc, nspin, v, vbc, z, r, drdi, imt, ircut, &
   ipan, ntcell, lmsp, ifunm, thetas, irws, eshift, ishift, nshell, lsurf)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
 
   ! determine muffin tin zero and shift potential to muffin tin zero
@@ -12,11 +11,9 @@ subroutine mtzero(lmpot, natyp, conc, nspin, v, vbc, z, r, drdi, imt, ircut, &
   ! may,2000 (new version)
 
   ! -----------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  ! .. Parameters ..
-  include 'inc.p'
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
   ! ..
   ! .. Local Scalars ..
   real (kind=dp) :: eshift, vbc(*)

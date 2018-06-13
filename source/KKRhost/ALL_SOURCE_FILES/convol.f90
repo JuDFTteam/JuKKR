@@ -1,12 +1,10 @@
 ! ************************************************************************
 subroutine convol(imt1, irc1, icell, imaxsh, ilm_map, ifunm, lmpot, gsh, &
   thetas, thesme, z, rfpi, r, vons, vspsmo, lmsp)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
-  ! .. Parameters ..
-  include 'inc.p'
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
+  use :: mod_datatypes, only: dp
+  use global_variables
+  implicit none
   ! ..
   ! .. Local Scalars ..
   real (kind=dp) :: rfpi, z

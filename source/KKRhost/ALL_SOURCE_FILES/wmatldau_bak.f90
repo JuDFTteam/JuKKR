@@ -20,10 +20,8 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
   ! *                  ph. mavropoulos, h.ebert munich/juelich 2002-2004 *
   ! **********************************************************************
   use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  include 'inc.p'
-  ! Dummy arguments
-
 
   complex (kind=dp) :: czero
   parameter (czero=(0.0d0,0.0d0))

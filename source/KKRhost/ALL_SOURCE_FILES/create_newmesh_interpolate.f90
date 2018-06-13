@@ -3,15 +3,9 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
   ipan_intervall, vinsnew, ntcell, thetas, thetasnew)
 
   use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  include 'inc.p'
   integer :: nspin, irmin(natypd), ipan(natypd), irws(natypd)
-  integer :: lmmaxd
-  parameter (lmmaxd=(lmaxd+1)**2)
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  integer :: irmind
-  parameter (irmind=irmd-irnsd)
   integer :: npan_log, npan_eq, ncheb, npan_inst, npan_tot(natypd)
   integer :: ircut(0:ipand, natypd)
   real (kind=dp) :: r(irmd, natypd)

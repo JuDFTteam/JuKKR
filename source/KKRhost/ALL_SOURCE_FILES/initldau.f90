@@ -14,15 +14,10 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
 
   use :: mod_datatypes
   use :: mod_types, only: t_inc
+  use global_variables
   implicit none
-  include 'inc.p'
-  ! real (kind=dp), allocatable :: ULDAU(:,:,:,:,:)
 
-  integer :: npotd, mmaxd
-  parameter (npotd=(2*krel+(1-krel)*nspind)*natypd)
-  parameter (mmaxd=2*lmaxd+1)
   ! Local variables
-
   integer :: ntldau, nspin, nsra
   real (kind=dp) :: drdi(irmd, natypd), r(irmd, natypd), visp(irmd, npotd), &
     z(natypd)
@@ -31,7 +26,6 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
   complex (kind=dp) :: phi(irmd, natypd)
   integer :: itldau(natypd), lopt(natypd)
   integer :: ipan(natypd), ircut(0:ipand, natypd)
-  ! ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
 
   real (kind=dp) :: aa(mmaxd, mmaxd, mmaxd, mmaxd, 0:2*lmaxd), &
     erefldau(natypd), fact(0:100), fclmb(0:2*lmaxd+1), g12, g34, jeff(natypd), &

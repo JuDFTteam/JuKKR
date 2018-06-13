@@ -3,15 +3,9 @@ subroutine renormrho_lly(cdos_lly, rhospher, irmax, ielast, nspin, ! LLY Lloyd
 
   natyp, den, lmaxp1, conc, iestart, ieend, thetas, ntcell, rho2ns)
   ! Renormalize the valence charge according to Lloyd's formula
+  use global_variables
   use :: mod_datatypes, only: dp
   implicit none
-  include 'inc.p'
-  integer :: lmaxd1
-  parameter (lmaxd1=lmaxd+1)
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
-  integer :: npotd
-  parameter (npotd=(2*(krel+korbit)+(1-(krel+korbit))*nspind)*natypd)
   ! Concentration (for cpa)
   integer :: lmaxp1, natyp, nspin, irmax ! Spherical component of normalized
                                          ! density/atom/energy/spin

@@ -1,6 +1,5 @@
 subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz, fz, &
   qz, sz, cleb, icleb, jend, iend, ekl, cdenlm) ! lm-dos
-  use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
 
   ! calculates the charge density inside r(irmin) in case
@@ -54,23 +53,9 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz, fz, &
 
   ! b.drittler   aug. 1988
   ! -----------------------------------------------------------------------
-  ! .. Parameters ..
+  use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  include 'inc.p'
-  ! *  NPOTD = 2 * NATYPD                                               *
-  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-  ! *  NSPIND = 1                                                       *
-  ! *                                                                   *
-  ! *********************************************************************
-
-  ! ..
-  ! .. Scalar Arguments ..
-  ! ..
-  ! .. Array Arguments ..
-  integer :: lmmaxd
-  integer :: lmpotd
-  parameter (lmmaxd=(krel+1)*(lmaxd+1)**2)
-  parameter (lmpotd=(lpotd+1)**2)
   ! lm-dos
   ! ..
   complex (kind=dp) :: df, ek

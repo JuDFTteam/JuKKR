@@ -14,14 +14,10 @@ SUBROUTINE gll13(ez,cleb,icleb,loflm,iend,tmatll,dtmatll,atom,  &
 use omp_lib
 #endif
 use mod_types, only: t_inc
+  use global_variables
       Use mod_datatypes, Only: dp
       IMPLICIT NONE
 !.. Parameters ..
-      INCLUDE 'inc.p'
-      INTEGER LMAX,NATOMD
-      PARAMETER (LMAX=LMAXD,NATOMD=NACLSD)
-      INTEGER LMGF0D,NGD
-      PARAMETER (LMGF0D= (LMAX+1)**2,NGD=LMGF0D*NATOMD)
       complex (kind=dp) CONE,CZERO
       PARAMETER (CONE= (1.D0,0.D0),CZERO= (0.D0,0.D0))
 !..

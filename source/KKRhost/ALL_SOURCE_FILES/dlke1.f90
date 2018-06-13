@@ -8,23 +8,9 @@ subroutine dlke1(gllke, alat, nacls, naclsmax, rr, ezoa, atom, bzkp, ic, ginp, &
   ! ----------------------------------------------------------------------
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+  use global_variables
   implicit none
-  ! .. Parameters ..
-  include 'inc.p'
-  ! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
-  ! *          function, set up in the spin-independent non-relativstic *
-  ! *          (l,m_l)-representation                                   *
-  ! *                                                                   *
-  ! *********************************************************************
 
-  ! ..
-  ! .. Scalar Arguments ..
-  ! ..
-  ! .. Array Arguments ..
-  integer :: lmgf0d
-  parameter (lmgf0d=(lmaxd+1)**2)
-  integer :: almgf0
-  parameter (almgf0=lmgf0d*naezd)
   complex (kind=dp) :: ci
   parameter (ci=(0.0d0,1.0d0))
   ! ..

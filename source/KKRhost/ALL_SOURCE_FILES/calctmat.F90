@@ -35,21 +35,11 @@ use mod_timing
 use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,  &
     t_lloyd,init_tlloyd
 use mod_DataTypes
+use global_variables
 
 IMPLICIT NONE
 
 !.. Parameters ..
-INCLUDE 'inc.p'
-INTEGER LMMAXD
-PARAMETER (LMMAXD= (KREL+1) * (LMAXD+1)**2)
-INTEGER LMPOTD
-PARAMETER (LMPOTD= (LPOTD+1)**2)
-INTEGER IRMIND
-PARAMETER (IRMIND=IRMD-IRNSD)
-INTEGER MMAXD
-PARAMETER ( MMAXD = 2*LMAXD+1 )
-INTEGER LM2D
-PARAMETER (LM2D= (2*LMAXD+1)**2)
 real (kind=dp) CVLIGHT
 PARAMETER (CVLIGHT=274.0720442D0)
 complex (kind=dp) CZERO,CONE

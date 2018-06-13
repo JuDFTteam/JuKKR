@@ -2,13 +2,10 @@
 subroutine mixstr(rmsavq, rmsavm, ins, lpot, lmpot, natref, nshell, nstart, &
   nend, conc, nspin, itc, rfpi, fpi, ipf, mixing, fcm, irc, irmin, r, drdi, &
   vons, visp, vins, vspsmo, vspsme, lsmear)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
+  use global_variables
+  use :: mod_datatypes, only: dp
   implicit none
-  ! .. Parameters ..
-  include 'inc.p'
-  integer :: lmpotd, irmind
-  parameter (lmpotd=(lpotd+1)**2, irmind=irmd-irnsd)
   ! ..
   ! .. Local Scalars ..
   real (kind=dp) :: fcm, fpi, mixing, rfpi, rmsavm, rmsavq

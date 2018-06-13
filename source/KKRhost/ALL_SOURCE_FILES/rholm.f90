@@ -1,6 +1,5 @@
 subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
   sz, cleb, icleb, iend, jend, ekl)
-  use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
   ! calculate in the paramagnetic case (nspin=1) :
   ! the valence charge density times r**2 from the greensfunction
@@ -63,23 +62,8 @@ subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
   ! b.drittler   may 1987
   ! changed  dec 1988
   ! -----------------------------------------------------------------------
-  ! .. Parameters ..
-  include 'inc.p'
-  ! *  NPOTD = 2 * NATYPD                                               *
-  ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-  ! *  NSPIND = 1                                                       *
-  ! *                                                                   *
-  ! *********************************************************************
-  ! ..
-  ! .. Scalar Arguments ..
-  ! ..
-  ! .. Array Arguments ..
-  integer :: lmmaxd
-  parameter (lmmaxd=(krel+1)*(lmaxd+1)**2)
-  integer :: lmaxd1
-  parameter (lmaxd1=lmaxd+1)
-  integer :: lmpotd
-  parameter (lmpotd=(lpotd+1)**2)
+  use global_variables
+  use :: mod_datatypes, only: dp
   complex (kind=dp) :: czero
   parameter (czero=(0.0e0_dp,0.0e0_dp))
   ! ..
@@ -88,7 +72,7 @@ subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
   integer :: iend, ipan, nsra
   ! ..
   ! .. Local Arrays ..
-  complex (kind=dp) :: den(0:lmaxd1), ekl(0:lmaxd), fz(irmd, 0:lmaxd), &
+  complex (kind=dp) :: den(0:(lmaxd+1)), ekl(0:lmaxd), fz(irmd, 0:lmaxd), &
     gmat(lmmaxd, lmmaxd), pz(irmd, 0:lmaxd), qz(irmd, 0:lmaxd), &
     sz(irmd, 0:lmaxd)
   real (kind=dp) :: cleb(*), drdi(irmd), rho2ns(irmd, lmpotd)
@@ -177,7 +161,7 @@ subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
     ! remember that the wavefunctions are l and not lm dependent
     call csimpk(denr, den(l), ipan, ircut, drdi)
   end do
-  den(lmaxd1) = 0.0e0_dp
+  den((lmaxd+1)) = 0.0e0_dp
 
 
 
