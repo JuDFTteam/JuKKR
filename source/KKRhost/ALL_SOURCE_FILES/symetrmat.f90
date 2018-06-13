@@ -1,5 +1,5 @@
 subroutine symetrmat(nsym, cpref, dsymll, symunitary, matq, iqs, matsym, &
-  lmmaxd)
+  lmmaxd,nsymaxd)
   use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
@@ -26,11 +26,11 @@ subroutine symetrmat(nsym, cpref, dsymll, symunitary, matq, iqs, matsym, &
   parameter (czero=(0e0_dp,0e0_dp), cone=(1e0_dp,0e0_dp))
   ! ..
   ! .. Arguments ..
-  integer :: lmmaxd, nsym
-  integer :: iqs(*)
+  integer :: lmmaxd, nsym, nsymaxd
+  integer :: iqs(nsymaxd)
   complex (kind=dp) :: cpref
-  logical :: symunitary(*)
-  complex (kind=dp) :: dsymll(lmmaxd, lmmaxd, *), matsym(lmmaxd, lmmaxd), &
+  logical :: symunitary(nsymaxd)
+  complex (kind=dp) :: dsymll(lmmaxd, lmmaxd, nsymaxd), matsym(lmmaxd, lmmaxd), &
     matq(lmmaxd, lmmaxd, *)
   ! ..
   ! .. Locals ..

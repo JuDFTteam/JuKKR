@@ -39,7 +39,7 @@ subroutine beshank(hl, jl, z, lmax)
       do n = 2, 25
         jl(l) = jl(l) + termj
         nl(l) = nl(l) + termn
-        rn = n + n
+        rn = real(n + n, kind=dp)
         termj = -termj/(rl+rn+1.e0_dp)/rn*z2
         termn = termn/(rl-rn+1.e0_dp)/rn*z2
       end do

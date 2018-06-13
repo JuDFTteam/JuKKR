@@ -93,8 +93,8 @@ contains
       !
       LLY=0
       TOLRDIF=1.5d0
-      LRECTMT=WLENGTH*4*LMMAXD*LMMAXD
-      LRECTRA=WLENGTH*4
+      LRECTMT=WLENGTH*kind(czero)*LMMAXD*LMMAXD
+      LRECTRA=WLENGTH*kind(czero)
 
       allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','main1a')
@@ -108,7 +108,7 @@ contains
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1a(t_params,IPAND,NATYP,IRM,NACLSD,IELAST,NCLSD,NREF,&
+      call get_params_1a(t_params,IPAND,NATYP,IRMD,NACLSD,IELAST,NCLSD,NREF,&
          NCLEB,NEMB,NAEZ,LM2D,NSRA,INS,NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,    &
          NINEQ,IDOLDAU,LLY,KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,    &
          IEND,EZ,VINS,IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,  &

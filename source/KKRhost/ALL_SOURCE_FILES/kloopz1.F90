@@ -230,7 +230,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    ! BEGIN CPA - LOOP  (if required)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !----------------------------------------------------------------------------
-   !  ikm1lin,ikm2lin,nlinq --> dummy settings for <PROJTAU>
+   !  ikm1lin,ikm2lin,nlinq --> dumNSYMAXDy settings for <PROJTAU>
    !----------------------------------------------------------------------------
    IKM1LIN(1) = 1
    IKM2LIN(1) = 1
@@ -286,12 +286,12 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
       if ( ( KREL.EQ.1 ).OR.( INS.NE.0 ) ) then
          do IQ = 1,NAEZ
             call SYMETRMAT(NSYMAT,CNSYMAT,DSYMLL,SYMUNITARY,MSSQ, &
-               ISUMQ(1,IQ),MSSQ(1,1,IQ),LMMAXD)
+               ISUMQ(1,IQ),MSSQ(1,1,IQ),LMMAXD,NSYMAXD)
             if ( KMROT.EQ.0 ) then
                do I = 1,NOQ(IQ)
                   IT = ITOQ(I,IQ)
                   call SYMETRMAT(NSYMAT,CNSYMAT,DSYMLL,SYMUNITARY,MSST, &
-                     ISUMT(1,IT),MSST(1,1,IT),LMMAXD)
+                     ISUMT(1,IT),MSST(1,1,IT),LMMAXD,NSYMAXD)
                end do
             end if
          end do
@@ -339,7 +339,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
       ! symmetrise GS, get GLL as sum over all symmetry wedges of GS
       ! (isumg(i) = i, see above)
       !-------------------------------------------------------------------------
-      call SYMETRMAT(NSYMAT,TAUVBZ,DSYMLL,SYMUNITARY,GS(1,1,1,NS),ISUMG,GLL,LMMAXD)
+      call SYMETRMAT(NSYMAT,TAUVBZ,DSYMLL,SYMUNITARY,GS(1,1,1,NS),ISUMG,GLL,LMMAXD,NSYMAXD)
       !
       if (NS.LE.NATYP) then
          IQTAU = IQAT(NS)
@@ -381,7 +381,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
             do IQ = 1,NAEZ
                if ( ICPA(IQ).NE.0 ) then
                   call SYMETRMAT(NSYMAT,CNSYMAT,DSYMLL,  &
-                     SYMUNITARY,MSSQ,ISUMQ(1,IQ),MSSQ(1,1,IQ),LMMAXD)
+                     SYMUNITARY,MSSQ,ISUMQ(1,IQ),MSSQ(1,1,IQ),LMMAXD,NSYMAXD)
                endif
             end do
          endif

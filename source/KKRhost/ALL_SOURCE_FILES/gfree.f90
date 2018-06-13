@@ -43,10 +43,10 @@ subroutine gfree13(rdiff, e0, gmll, dgmll, cleb, icleb, loflm, iend)
   integer :: ifac, j, lm1, lm2, lm3
   ! .. External Subroutines ..
   ! ..
-  complex (kind=dp) :: bl(lmaxd*2+1), hl(lmaxd*2+1), hyl((lmaxd*2+1)*2), nl(lmaxd*2+1)
-  complex (kind=dp) :: dhl(lmaxd*2+1), dhyl((lmaxd*2+1)*2) ! .. Intrinsic Functions ..
-  real (kind=dp) :: yl((lmaxd*2+1)*2)
-  integer :: lf((lmaxd*2+1)*2)
+  complex (kind=dp) :: bl(lmaxd*2+1), hl(lmaxd*2+1), hyl((lmaxd*2+1)**2), nl(lmaxd*2+1)
+  complex (kind=dp) :: dhl(lmaxd*2+1), dhyl((lmaxd*2+1)**2) ! .. Intrinsic Functions ..
+  real (kind=dp) :: yl((lmaxd*2+1)**2)
+  integer :: lf((lmaxd*2+1)**2)
   ! ..
   ! -----------------------------------------------------------------------
   external :: beshan, ymy
@@ -56,7 +56,7 @@ subroutine gfree13(rdiff, e0, gmll, dgmll, cleb, icleb, loflm, iend)
   fpi = 4.e0_dp*pi
   rfpi = sqrt(fpi)
 
-  do lm1 = 1, (lmaxd*2+1)*2
+  do lm1 = 1, (lmaxd*2+1)**2
     lf(lm1) = loflm(lm1) + 1
   end do
   x = rdiff(1)
@@ -73,7 +73,7 @@ subroutine gfree13(rdiff, e0, gmll, dgmll, cleb, icleb, loflm, iend)
     dhl(lm1) = 0.5e0_dp*(rabs*hl(lm1-1)-(lm1-1)*hl(lm1)/sqrt(e0))
   end do
   ! LLY
-  do lm1 = 1, (lmaxd*2+1)*2
+  do lm1 = 1, (lmaxd*2+1)**2
     hyl(lm1) = -fpi*ci*sqrt(e0)*yl(lm1)*hl(lf(lm1))
     dhyl(lm1) = -fpi*ci*yl(lm1)*dhl(lf(lm1)) ! LLY
   end do

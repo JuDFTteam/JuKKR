@@ -1480,6 +1480,9 @@ contains
       IGF         = 0   ! Not printing the Green functions
       ICC         = 0   ! Not printing the Green functions
       WLENGTH     = 1   ! Word length for direct access files, compiler dependent ifort/others (1/4)
+#ifdef __GFORTRAN__
+     wlength = 4
+#endif
       I12         = '                                        '
       I40         = '                                        '
 

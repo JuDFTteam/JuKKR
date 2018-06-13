@@ -149,6 +149,7 @@ $(OBJ)/tinc_mod.o: $(SRC)/tinc_mod.f
 LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 gfort: LLIBS  = -lblas -llapack -fopenmp
 gfortdebug: LLIBS  = -lblas -llapack -fopenmp
+rwthnag:  -llapack -lblas
 # mac libs:
 MACLLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
 # RWTH cluster:
@@ -234,7 +235,8 @@ FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback
 mac: FFLAGS = -O2 -r8 -module $(OBJ) -traceback 
 gfort: FFLAGS= -O3 -ffree-line-length-none -fopenmp
 # -J$(OBJ)
-gfortdebug: FFLAGS= -O0 -ffree-line-length-none -Wall -Wextra -pedantic -fimplicit-none -fcheck=all -fbacktrace
+gfortdebug: FFLAGS= -O0 -ffree-line-length-none -W -Wall -fbounds-check -pedantic-errors -Wunderflow -Wextra -pedantic -fimplicit-none -fcheck=all -fbacktrace 
+#-ffpe-trap=zero,overflow,underflow -g
 
 OPENMPFLAGS =
 hybrid: OPENMPFLAGS = -qopenmp
@@ -244,7 +246,7 @@ ompdebug: OPENMPFLAGS = -qopenmp
 # on rwth cluster (CLAIX and bull)
 rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
-rwthnag: FFLAGS =  
+rwthnag: FFLAGS = -C=all -C=undefined -info -g -gline 
 
 # profiling on mac
 macompprof: FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback -prof-gen:srcpos

@@ -600,35 +600,35 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
 120 format (/, ' ivn should be 1 for ivg=1. ivn,ivg=', 2i5, /)
 end subroutine gxcpt
 
-real function fncf(x)
+real(kind=dp) function fncf(x)
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: x
   fncf = (1.e0_dp+x*x*x)*log(1.e0_dp+1.e0_dp/x) + x/2.e0_dp - x*x - 0.333333333e0_dp
 end function fncf
 
-real function fncecl(r, g, b1, b2) 
+real(kind=dp) function fncecl(r, g, b1, b2) 
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: r, g, b1, b2
   fncecl = g/(1.e0_dp+b1*sqrt(r)+b2*r)
 end function
 
-real function fncvcl(ce, r, b1, b2)
+real(kind=dp) function fncvcl(ce, r, b1, b2)
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: ce, r, b1, b2
   fncvcl = ce*(1.e0_dp+1.16666667e0_dp*b1*sqrt(r)+1.33333333e0_dp*b2*r)/(1.e0_dp+b1*sqrt(r)+b2*r)
 end function
 
-real function fncecs(r, a, b, c, d)
+real(kind=dp) function fncecs(r, a, b, c, d)
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: r, a, b, c, d
   fncecs= a*log(r) + b + c*r*log(r) + d*r
 end function
 
-real function fncvcs(r, a, b, c, d)
+real(kind=dp) function fncvcs(r, a, b, c, d)
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: r, a, b, c, d
@@ -637,7 +637,7 @@ real function fncvcs(r, a, b, c, d)
           + (2.e0_dp*d-c)*r/3.e0_dp
 end function
 
-real function ffz(zta)
+real(kind=dp) function ffz(zta)
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: zta
@@ -645,7 +645,7 @@ real function ffz(zta)
        + (1.e0_dp-zta)**1.3333333333e0_dp-2.e0_dp)
 end function
 
-real function fdfdz(zta)
+real(kind=dp) function fdfdz(zta)
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: zta
@@ -653,14 +653,14 @@ real function fdfdz(zta)
          - (1.e0_dp-zta)**.333333333333e0_dp)
 end function
 
-real function fvq(b, c) 
+real(kind=dp) function fvq(b, c) 
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: b, c
   fvq = sqrt(4.e0_dp*c-b**2)
 end function
 
-real function fvnec(a, x, xl, x0, xl0, b, q)
+real(kind=dp) function fvnec(a, x, xl, x0, xl0, b, q)
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: a, x, xl, x0, xl0, b, q 
@@ -672,14 +672,14 @@ real function fvnec(a, x, xl, x0, xl0, b, q)
             )
 end function
 
-real function fbet(fdd0, ecf, ecp, alc)
+real(kind=dp) function fbet(fdd0, ecf, ecp, alc)
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: fdd0, ecf, ecp, alc
   fbet = fdd0*(ecf-ecp)/alc - 1.e0_dp
 end function
 
-real function fdedr(ro, x, a, x0, xl, xl0, xld, b, q)
+real(kind=dp) function fdedr(ro, x, a, x0, xl, xl0, xld, b, q)
   use mod_DataTypes
   implicit none
   real (kind=dp), intent(in) :: ro, x, a, x0, xl, xl0, xld, b, q
