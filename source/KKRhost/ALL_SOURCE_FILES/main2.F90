@@ -408,7 +408,7 @@ contains
          open(unit=786785,file='test_vintraspot')
          do i1=1,nspin*natyp
             write(786785,*) '# atom/spin index ',i1
-            write(786785,'(50000E14.7)') vons(:,:,i1)
+            write(786785,'(50000E25.16)') vons(:,:,i1)
          end do !iatom
          close(786785)
       end if !
@@ -443,7 +443,7 @@ contains
          open(unit=54633163,file='test_vpotout_inter')
          do i1=1,natyp*nspin
             write(54633163,*) '# atom ',i1
-            write(54633163,'(50000E14.7)') vons(:,:,i1)
+            write(54633163,'(50000E25.16)') vons(:,:,i1)
          end do !iatom
          close(54633163)
       end if ! config_testflag('write_gmatonsite')
@@ -514,8 +514,7 @@ contains
       !-------------------------------------------------------------------------
       VXCM(:,:,:) = 0.D0
       call VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,1,NATYP,RHO2NS,VXCM,RMESH,DRDI, &
-         A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP,&
-         LMPOT,NATYP)
+         A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP)
 
       if ( TEST('Vspher  ') ) VONS(1:IRMD,2:LMPOT,1:NPOTD) = 0.D0
 
@@ -527,7 +526,7 @@ contains
          RHO2NSNM(:,:,:,2) = 0.D0            ! Set spin density to zero
          call VXCDRV(EXCNM,KTE,KXC,LPOT,NSPIN,1,NATYP,RHO2NSNM,VXCNM,&
             RMESH,DRDI,A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,              &
-            ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP,LMPOT,NATYP)
+            ILM_MAP,IMAXSH,IFUNM,THETAS,LMSP)
          ! Compute the EXC-difference
          EXCDIFF = 0.D0
          do I1 = 1,NATYP
@@ -547,7 +546,7 @@ contains
          open(unit=57633263,file='test_vpotout_xc')
          do i1=1,natyp*nspin
             write(57633263,*) '# atom ',i1
-            write(57633263,'(50000E14.7)') vons(:,:,i1)
+            write(57633263,'(50000E25.16)') vons(:,:,i1)
          end do !iatom
          close(57633263)
       end if ! config_testflag('write_gmatonsite')
@@ -616,7 +615,7 @@ contains
          open(unit=12633269,file='test_vpotout_shift')
          do i1=1,natyp*nspin
             write(12633269,*) '# atom ',i1
-            write(12633269,'(50000E14.7)') vons(:,:,i1)
+            write(12633269,'(50000E25.16)') vons(:,:,i1)
          end do !iatom
          close(12633269)
       end if ! config_testflag('write_gmatonsite')
@@ -647,7 +646,7 @@ contains
          open(unit=57633269,file='test_vpotout_conv')
          do i1=1,natyp*nspin
             write(57633269,*) '# atom ',i1
-            write(57633269,'(50000E14.7)') vons(:,:,i1)
+            write(57633269,'(50000E25.16)') vons(:,:,i1)
          end do !iatom
          close(57633269)
       end if ! config_testflag('write_gmatonsite')
@@ -710,7 +709,7 @@ contains
          open(unit=54633563,file='test_vpotout')
          do i1=1,natyp*nspin
             write(54633563,*) '# atom ',i1
-            write(54633563,'(50000E14.7)') vons(:,:,i1)
+            write(54633563,'(50000E25.16)') vons(:,:,i1)
          end do !iatom
          close(54633563)
       end if ! config_testflag('write_gmatonsite')

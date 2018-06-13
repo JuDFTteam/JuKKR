@@ -419,7 +419,6 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
     write (8, fmt=150) jatom, ic
     do i1 = 1, number
       dist = sqrt(rcls(1,i1,ic)**2+rcls(2,i1,ic)**2+rcls(3,i1,ic)**2)
-      write(*,*) i1, jatom, atom(i1, jatom)
       if (abs(atom(i1,jatom))>natyp) then
          zat_tmp = 0.0_dp
       else

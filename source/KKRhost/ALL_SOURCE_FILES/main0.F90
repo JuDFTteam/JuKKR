@@ -513,7 +513,7 @@ contains
 
       ! Set the calculation of several parameters
 
-      ! IRMD = IRM
+      IRM = IRMD
 
       NTOTD=IPAND+30
       NCELLD=NAEZ
@@ -531,67 +531,9 @@ contains
       IRMIND       = IRMD-IRNSD
       NOFGIJ       = NATOMIMPD*NATOMIMPD+1
       NREFD        = NAEZD
+      LPOTD = LPOT
       LMPOTD       = (LPOT+1)**2
       LMMAXSO      = (KREL+1)*LMMAXD
-
-      write(*,*) 'dimensions after rinput13'
-      write(*,*) 'irid                          ', irid
-      write(*,*) 'krel                          ', krel
-      write(*,*) 'nfund                         ', nfund
-      write(*,*) 'ipand                         ', ipand
-      write(*,*) 'ngshd                         ', ngshd
-      write(*,*) 'ncleb                         ', ncleb
-      write(*,*) 'knoco                         ', knoco
-      write(*,*) 'iemxd                         ', iemxd
-      write(*,*) 'irnsd                         ', irnsd
-      write(*,*) 'nmaxd                         ', nmaxd
-      write(*,*) 'ishld                         ', ishld
-      write(*,*) 'naclsd                        ', naclsd
-      write(*,*) 'nspotd                        ', nspotd
-      write(*,*) 'ntperd                        ', ntperd
-      write(*,*) 'ntrefd                        ', ntrefd
-      write(*,*) 'nsheld                        ', nsheld
-      write(*,*) 'ncelld                        ', ncelld
-      write(*,*) 'nspind                        ', nspind
-      write(*,*) 'knosph                        ', knosph
-      write(*,*) 'korbit                        ', korbit
-      write(*,*) 'kpoibz                        ', kpoibz
-      write(*,*) 'wlength                       ', wlength
-      write(*,*) 'nprincd                       ', nprincd
-      write(*,*) 'nlayerd                       ', nlayerd
-      write(*,*) 'natomimpd                     ', natomimpd
-      write(*,*) 'lnc                           ', lnc
-      write(*,*) 'lmaxd                         ', lmaxd
-      write(*,*) 'lmmaxd                        ', lmmaxd
-      write(*,*) 'lmgf0d                        ', lmgf0d
-      write(*,*) 'alm                           ', alm
-      write(*,*) 'almgf0                        ', almgf0
-      write(*,*) 'ndim_slabinv                  ', ndim_slabinv
-      write(*,*) 'nembd                         ', nembd
-      write(*,*) 'nembd1                        ', nembd1
-      write(*,*) 'nembd2                        ', nembd2
-      write(*,*) 'nrd                           ', nrd
-      write(*,*) 'lm2d                          ', lm2d
-      write(*,*) 'nclsd                         ', nclsd
-      write(*,*) 'mmaxd                         ', mmaxd
-      write(*,*) 'npotd                         ', npotd
-      write(*,*) 'lmxspd                        ', lmxspd
-      write(*,*) 'lassld                        ', lassld
-      write(*,*) 'irmind                        ', irmind
-      write(*,*) 'nofgij                        ', nofgij
-      write(*,*) 'nspindd                       ', nspindd
-      write(*,*) 'nsatypd                       ', nsatypd
-      write(*,*) 'nrefd                         ', nrefd
-      write(*,*) 'irmd                          ', irmd
-      write(*,*) 'naezd                         ', naezd
-      write(*,*) 'natypd                        ', natypd
-      write(*,*) 'lmpotd                        ', lmpotd
-      write(*,*) 'ntotd                         ', ntotd
-      write(*,*) 'nrmaxd                        ', nrmaxd
-      write(*,*) 'lmmaxso                       ', lmmaxso
-      write(*,*) 'linterface                    ', linterface
-      write(*,*) 'end dimensions after rinput13'
-
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Allocation calls
@@ -664,8 +606,6 @@ contains
          .TRUE.,BRAVAIS,NCLS,NINEQ,REFPOT,KAOEZ,NOQ,NREF,RMTREFAT,I25)
       endif
 
-      write(*,*) naez, nemb, nvirt, nlbasis, nrbasis, nleft, nright, nref
-      write(*,*) natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface
       call clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
          nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, &
          tleft, tright, rmtref, rmtrefat, vref, refpot, nref, rcls, rcutz, rcutxy, &
@@ -959,7 +899,6 @@ contains
       ! calculate Madelung constants (needed only for SCF calculations)
       !-------------------------------------------------------------------------
       !fivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
-      write(*,*) 'madel', NPOL, LINTERFACE
       if (NPOL.NE.0) then  ! No madelung calculation in case of DOS.
          !OPEN(99,FILE='madelinfo.txt')
 

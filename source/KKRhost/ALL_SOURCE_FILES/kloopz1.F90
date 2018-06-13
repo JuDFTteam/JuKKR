@@ -230,7 +230,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    ! BEGIN CPA - LOOP  (if required)
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    !----------------------------------------------------------------------------
-   !  ikm1lin,ikm2lin,nlinq --> dumNSYMAXDy settings for <PROJTAU>
+   !  ikm1lin,ikm2lin,nlinq --> dummy settings for <PROJTAU>
    !----------------------------------------------------------------------------
    IKM1LIN(1) = 1
    IKM2LIN(1) = 1

@@ -58,9 +58,8 @@ subroutine madelung3d(lpot, yrg, wg, naez, alat, volume0, bravais, recbv, &
     rbasis, madelsmat, volume0, iprint, lassld, lmxspd, naezd)
   ! ======================================================================
 
-  lrecabmad = wlength*kind(0.0_dp)*lmpotd*lmpotd + wlength*kind(0.0_dp)*lmpotd
-  write (*, *) lrecabmad, 2*lmpotd*lmpotd, 2*lmpotd
-  write(*,*) 'reclen', lrecabmad, wlength, lmpotd, kind(dp)
+  lrecabmad = wlength*2*lmpotd*lmpotd + wlength*2*lmpotd
+  !lrecabmad = wlength*kind(0.0_dp)*lmpotd*lmpotd + wlength*kind(0.0_dp)*lmpotd
   open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', &
     form='unformatted')
 

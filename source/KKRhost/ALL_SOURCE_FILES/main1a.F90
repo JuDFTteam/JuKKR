@@ -93,8 +93,10 @@ contains
       !
       LLY=0
       TOLRDIF=1.5d0
-      LRECTMT=WLENGTH*kind(czero)*LMMAXD*LMMAXD
-      LRECTRA=WLENGTH*kind(czero)
+      !LRECTMT=WLENGTH*kind(czero)*LMMAXD*LMMAXD
+      !LRECTRA=WLENGTH*kind(czero)
+      LRECTMT=WLENGTH*4*LMMAXD*LMMAXD
+      LRECTRA=WLENGTH*4
 
       allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','main1a')
@@ -118,7 +120,7 @@ contains
          ITLDAU,LOPT,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,IRMIND,LMPOT,     &
          NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
       !
-      if ( TEST('Vspher  ') ) VINS(IRMIND:IRM,2:LMPOT,1:NSPOTD) = 0.D0
+      if ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOT,1:NSPOTD) = 0.D0
 
       !-------------------------------------------------------------------------
       !                       End read in variables

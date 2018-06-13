@@ -95,6 +95,7 @@ module global_variables
   integer :: ntotd
   integer :: nrmaxd
   integer :: lmmaxso
+  integer :: lpotd
 
   logical :: linterface = .false.
 
