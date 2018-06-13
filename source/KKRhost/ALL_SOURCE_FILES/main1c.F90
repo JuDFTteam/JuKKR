@@ -85,12 +85,12 @@ contains
       real (kind=dp), dimension(NATYP)                    :: THETA
       real (kind=dp), dimension(NATYP)                    :: DENEFAT
       real (kind=dp), dimension(NSPIND)                   :: CHARGE_LLY  ! LLY
-      real (kind=dp), dimension(0:LMAX+1,NPOTD)           :: ESPV
-      real (kind=dp), dimension(0:LMAX+1,2)               :: ESPV1
-      real (kind=dp), dimension(0:LMAX+1,2)               :: DOSTOT
+      real (kind=dp), dimension(0:LMAXD+1,NPOTD)           :: ESPV
+      real (kind=dp), dimension(0:LMAXD+1,2)               :: ESPV1
+      real (kind=dp), dimension(0:LMAXD+1,2)               :: DOSTOT
       real (kind=dp), dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL !< for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
       real (kind=dp), dimension(2,NATYP)                  :: angles_new
-      real (kind=dp), dimension(0:LMAX+1,NATYP,2)         :: CHARGE
+      real (kind=dp), dimension(0:LMAXD+1,NATYP,2)         :: CHARGE
       real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYP) :: WLDAUOLD
       complex (kind=dp), dimension(IEMXD)                   :: DF
       complex (kind=dp), dimension(NATYP)                   :: CDOS2          ! LLY Lloyd
@@ -99,21 +99,21 @@ contains
       complex (kind=dp), dimension(IEMXD)                   :: CDOSAT0
       complex (kind=dp), dimension(IEMXD)                   :: CDOSAT1
       complex (kind=dp), dimension(IEMXD,NSPIND)            :: CDOS_LLY
-      complex (kind=dp), dimension(0:LMAX+1,IEMXD,2)        :: DEN1
-      complex (kind=dp), dimension(NATYP,3,NMVECMAX)        :: MVEVI          ! OUTPUT
-      complex (kind=dp), dimension(NATYP,3,NMVECMAX)        :: MVEVIEF        ! OUTPUT
+      complex (kind=dp), dimension(0:LMAXD+1,IEMXD,2)        :: DEN1
+      complex (kind=dp), dimension(NATYPD,3,NMVECMAX)        :: MVEVI          ! OUTPUT
+      complex (kind=dp), dimension(NATYPD,3,NMVECMAX)        :: MVEVIEF        ! OUTPUT
       complex (kind=dp), dimension(MMAXD,MMAXD,NPOTD)       :: DENMATC
-      complex (kind=dp), dimension(MMAXD,MMAXD,2,2,NATYP)   :: DENMATN
-      complex (kind=dp), dimension(0:LMAX,3,NMVECMAX)       :: MVEVIL1
-      complex (kind=dp), dimension(0:LMAX,3,NMVECMAX)       :: MVEVIL2        ! WORK ARRAYS
-      complex (kind=dp), dimension(0:LMAX,NATYP,3,NMVECMAX) :: MVEVIL
+      complex (kind=dp), dimension(MMAXD,MMAXD,2,2,NATYPD)   :: DENMATN
+      complex (kind=dp), dimension(0:LMAXD,3,NMVECMAX)       :: MVEVIL1
+      complex (kind=dp), dimension(0:LMAXD,3,NMVECMAX)       :: MVEVIL2        ! WORK ARRAYS
+      complex (kind=dp), dimension(0:LMAXD,NATYPD,3,NMVECMAX) :: MVEVIL
       character(len=7), dimension(3) :: TEXTS
       character(len=4), dimension(0:6) :: TEXTL
       !-------------------------------------------------------------------------
       !> @note attention: muorb second index means both spins and total
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(IRMD*KREL + (1-KREL),NATYP) :: RHOORB   !< orbital density
-      real (kind=dp), dimension(0:LMAX+1+1,3,NATYP) :: MUORB           !< orbital magnetic moment
+      real (kind=dp), dimension(IRMD*KREL + (1-KREL),NATYPD) :: RHOORB   !< orbital density
+      real (kind=dp), dimension(0:LMAX+1+1,3,NATYPD) :: MUORB           !< orbital magnetic moment
       ! ----------------------------------------------------------------------
       !  R2NEF (IRMD,LMPOTD,NATYP,2)  ! rho at FERMI energy
       !  RHO2NS(IRMD,LMPOTD,NATYP,2)  ! radial density
@@ -172,11 +172,11 @@ contains
       ! Allocate arrays
       allocate(RHO2N1(IRMD,LMPOTD,NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(RHO2N1))*kind(RHO2N1),'RHO2N1','main1c')
-      allocate(RHO2NS(IRMD,LMPOTD,NATYP,2),stat=i_stat)
+      allocate(RHO2NS(IRMD,LMPOTD,NATYPD,2),stat=i_stat)
       call memocc(i_stat,product(shape(RHO2NS))*kind(RHO2NS),'RHO2NS','main1c')
       allocate(RHO2N2(IRMD,LMPOTD,NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(RHO2N2))*kind(RHO2N2),'RHO2N2','main1c')
-      allocate(R2NEF(IRMD,LMPOTD,NATYP,2),stat=i_stat)
+      allocate(R2NEF(IRMD,LMPOTD,NATYPD,2),stat=i_stat)
       call memocc(i_stat,product(shape(R2NEF))*kind(R2NEF),'R2NEF','main1c')
 
       ! Initialze to zero
@@ -910,7 +910,7 @@ contains
             LMAXP1 = LMAX                                                        ! LLY Lloyd
             if (INS.ne.0) LMAXP1 = LMAX + 1                                      ! LLY Lloyd
 
-            call RENORM_LLY(CDOS_LLY,IELAST,NSPIN,NATYP,DEN,LMAXP1,CONC,   &
+            call RENORM_LLY(CDOS_LLY,IELAST,NSPIN,NATYP,DEN(:,:,1,:),LMAXP1,CONC,   &
                1,IELAST,WEZ,IRCUT,IPAN,EZ,ZAT,RHO2NS,R2NEF,DENEF,DENEFAT,ESPV)
 
          endif                                                                   ! LLY Lloyd

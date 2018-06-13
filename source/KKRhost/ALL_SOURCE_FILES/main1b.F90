@@ -127,15 +127,15 @@ contains
       complex (kind=dp), dimension(IEMXD,NSPIND)   :: TRALPHA
       complex (kind=dp), dimension(IEMXD,NSPIND)   :: LLY_GRTR    !< LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
       complex (kind=dp), dimension(IEMXD,NSPIND)   :: CDOS_LLY
-      complex (kind=dp), dimension(0:LMAX,NREF)    :: ALPHAREF
-      complex (kind=dp), dimension(0:LMAX,NREF)    :: DALPHAREF   !< LLY Lloyd Alpha matrix and deriv.
-      complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYP)  :: MSST
-      complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYP)  :: TSST
-      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ)   :: TQDOS  ! qdos ruess
-      complex (kind=dp), dimension(LMMAXD,LMMAXD,NREF)   :: TREFLL
+      complex (kind=dp), dimension(0:LMAX,NREFD)    :: ALPHAREF
+      complex (kind=dp), dimension(0:LMAX,NREFD)    :: DALPHAREF   !< LLY Lloyd Alpha matrix and deriv.
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYPD)  :: MSST
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYPD)  :: TSST
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZD)   :: TQDOS  ! qdos ruess
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD)   :: TREFLL
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NSHELD) :: GMATLL   !< GMATLL = diagonal elements of the G matrix (system)
-      complex (kind=dp), dimension(LMMAXD,LMMAXD,NREF)   :: DTREFLL  !< LLY Lloyd dtref/dE
-      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ)   :: DTMATLL  !< LLY Lloyd  dt/dE
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD)   :: DTREFLL  !< LLY Lloyd dtref/dE
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZD)   :: DTMATLL  !< LLY Lloyd  dt/dE
       complex*8, dimension(LMMAXD*LMMAXD) :: GIMP !<  Cluster GF (ref. syst.)
       character(len=35), dimension(0:2), parameter :: INVALG=(/'FULL MATRIX                        ',   &
                                                                'BANDED MATRIX (slab)               ',    &

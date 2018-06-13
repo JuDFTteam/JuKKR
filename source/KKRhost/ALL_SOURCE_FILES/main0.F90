@@ -534,7 +534,7 @@ contains
       NREFD        = NAEZD
       LPOTD = LPOT
       LMPOTD       = (LPOT+1)**2
-      LMMAXSO      = (KREL+1)*LMMAXD
+      LMMAXSO      = lmmaxd ! lmmaxd already doubled in size! (KREL+1)*LMMAXD
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Allocation calls
