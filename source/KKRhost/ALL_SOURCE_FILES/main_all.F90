@@ -130,6 +130,7 @@ program kkrcode
   ! communicate parameters that were written in wunfiles into t_params
   call bcast_t_params_scalars(t_params)
   if (myrank/=master) call init_t_params(t_params)
+  call bcast_t_params_arrays(t_params)
 
   ! communicate global variables (previously in inc.p)
   call bcast_global_variables()

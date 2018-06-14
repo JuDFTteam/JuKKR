@@ -79,30 +79,30 @@ contains
       real (kind=dp) :: ERRAVANG  !< ITERMDIR variables
       real (kind=dp) :: CHRGSEMICORE
       ! .. Local Arrays
-      integer, dimension(NATYP)                    :: LCOREMAX
-      integer, dimension(NATYP,NAEZ)               :: ITOQ
-      integer, dimension(20,NATYP)                 :: NKCORE
+      integer, dimension(NATYPD)                    :: LCOREMAX
+      integer, dimension(NATYPD,NAEZD)               :: ITOQ
+      integer, dimension(20,NATYPD)                 :: NKCORE
       integer, dimension(20,NPOTD)                 :: KAPCORE
-      real (kind=dp), dimension(NATYP)           :: EU  !< LDA+U
-      real (kind=dp), dimension(NATYP)           :: EDC !< LDA+U
-      real (kind=dp), dimension(LMPOT)           :: C00
-      real (kind=dp), dimension(LMPOT)           :: BVMAD
-      real (kind=dp), dimension(NATYP)           :: DENEFAT
+      real (kind=dp), dimension(NATYPD)           :: EU  !< LDA+U
+      real (kind=dp), dimension(NATYPD)           :: EDC !< LDA+U
+      real (kind=dp), dimension(LMPOTD)           :: C00
+      real (kind=dp), dimension(LMPOTD)           :: BVMAD
+      real (kind=dp), dimension(NATYPD)           :: DENEFAT
       real (kind=dp), dimension(2)               :: VMT_INIT
       real (kind=dp), dimension(IRMD,NPOTD)       :: RHOC     !< core charge density
-      real (kind=dp), dimension(LMPOT,LMPOT)     :: AVMAD
-      real (kind=dp), dimension(0:LPOT,NATYP)    :: EXCNM    !< Scale magn. part of xc-potential
-      real (kind=dp), dimension(LMPOT,NAEZ)      :: VINTERS
+      real (kind=dp), dimension(LMPOTD,LMPOTD)     :: AVMAD
+      real (kind=dp), dimension(0:LPOTD,NATYPD)    :: EXCNM    !< Scale magn. part of xc-potential
+      real (kind=dp), dimension(LMPOTD,NAEZD)      :: VINTERS
       real (kind=dp), dimension(IRMD,NPOTD)       :: VSPSMDUM
-      logical, dimension(NATYP,LMPOT)              :: LPOTSYMM
+      logical, dimension(NATYPD,LMPOT)              :: LPOTSYMM
       !-------------------------------------------------------------------------
       ! ITERMDIR variables
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(NATYP,NMVECMAX) :: MVGAM
-      real (kind=dp), dimension(NATYP,NMVECMAX) :: MVPHI
-      real (kind=dp), dimension(NATYP,NMVECMAX) :: MVTET
-      complex (kind=dp), dimension(NATYP,3,NMVECMAX) :: MVEVI
-      complex (kind=dp), dimension(NATYP,3,NMVECMAX) :: MVEVIEF
+      real (kind=dp), dimension(NATYPD,NMVECMAX) :: MVGAM
+      real (kind=dp), dimension(NATYPD,NMVECMAX) :: MVPHI
+      real (kind=dp), dimension(NATYPD,NMVECMAX) :: MVTET
+      complex (kind=dp), dimension(NATYPD,3,NMVECMAX) :: MVEVI
+      complex (kind=dp), dimension(NATYPD,3,NMVECMAX) :: MVEVIEF
       !-------------------------------------------------------------------------
       !   ECOU(0:LPOT,NATYP)      ! Coulomb energy
       !   EPOTIN(NATYP),          ! energy of input potential (EPOTINB
@@ -111,12 +111,12 @@ contains
       !                           ! both changed for the relativistic case
       !   EXC(0:LPOT,NATYP),      ! E_xc
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(NATYP)           :: EPOTIN   !< energy of input potential (EPOTINB
+      real (kind=dp), dimension(NATYPD)           :: EPOTIN   !< energy of input potential (EPOTINB
       real (kind=dp), dimension(0:3,NPOTD)       :: ESPC     !< energy single particle core
-      real (kind=dp), dimension(0:LPOT,NATYP)    :: EXC      !< exchange correlation energy
-      real (kind=dp), dimension(0:LPOT,NATYP)    :: ECOU     !< Coulomb energy
-      real (kind=dp), dimension(0:LMAX+1,NPOTD)  :: ESPV     !< energy single particle valence both changed for the relativistic case
-      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYP)  :: RHOORB
+      real (kind=dp), dimension(0:LPOTD,NATYPD)    :: EXC      !< exchange correlation energy
+      real (kind=dp), dimension(0:LPOTD,NATYPD)    :: ECOU     !< Coulomb energy
+      real (kind=dp), dimension(0:LMAXD+1,NPOTD)  :: ESPV     !< energy single particle valence both changed for the relativistic case
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD)  :: RHOORB
       real (kind=dp), dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL
       !-------------------------------------------------------------------------
       !  CMINST(LMPOT,NATYP)            ! charge moment of interstitial
@@ -124,14 +124,14 @@ contains
       !  CHRGATOM(NATYP,
       !           2*KREL+(1-KREL)*NSPIND) ! total charge per atom
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(LMPOT,NATYP)                    :: CMOM        !< LM moment of total charge
-      real (kind=dp), dimension(LMPOT,NATYP)                    :: CMINST      !< charge moment of interstitial
-      real (kind=dp), dimension(NATYP,2*KREL+(1-KREL)*NSPIND)   :: CHRGATOM    !< total charge per atom
+      real (kind=dp), dimension(LMPOTD,NATYPD)                    :: CMOM        !< LM moment of total charge
+      real (kind=dp), dimension(LMPOTD,NATYPD)                    :: CMINST      !< charge moment of interstitial
+      real (kind=dp), dimension(NATYPD,2*KREL+(1-KREL)*NSPIND)   :: CHRGATOM    !< total charge per atom
       !-------------------------------------------------------------------------
       ! FORCES
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(-1:1,NATYP) :: FLM  !< Forces
-      real (kind=dp), dimension(-1:1,NATYP) :: FLMC !< Forces
+      real (kind=dp), dimension(-1:1,NATYPD) :: FLM  !< Forces
+      real (kind=dp), dimension(-1:1,NATYPD) :: FLMC !< Forces
       !-------------------------------------------------------------------------
       ! For SIMULASA
       !-------------------------------------------------------------------------

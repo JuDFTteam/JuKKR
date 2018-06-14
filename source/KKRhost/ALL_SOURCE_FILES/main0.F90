@@ -402,6 +402,8 @@ contains
       integer :: IREC
       integer :: LRECABMAD
       real (kind=dp) :: ZATTEMP
+      integer :: ierr
+      real (kind=dp), allocatable :: tmp_rr(:,:)
       ! for OPERATOR option
       logical :: lexist, operator_imp
 
@@ -491,6 +493,7 @@ contains
       !> @note JC: have added reading calls for the parameters that used to be in
       !> the inc.p and can now be modified via the inputcard directly
       !-------------------------------------------------------------------------
+      NREFD        = NAEZD
       call RINPUT13(KTE,IGF,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,IMIX, &
          LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KCOR,KEFG,KHYP,KPRE,  &
          KVMAD,LMMAX,LMPOT,NCHEB,NLEFT,IFILE,KVREL,NSPIN,NATYP,NINEQ,NPNT1,NPNT2,   &
@@ -513,6 +516,7 @@ contains
          stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
 
       ! Set the calculation of several parameters
+      !NREFD        = NREF
 
       IRM = IRMD
 
@@ -532,7 +536,6 @@ contains
       NEMBD2       = NEMBD+NAEZ
       IRMIND       = IRMD-IRNSD
       NOFGIJ       = NATOMIMPD*NATOMIMPD+1
-      NREFD        = NAEZD
       LPOTD = LPOT
       LMPOTD       = (LPOT+1)**2
       LMMAXSO      = lmmaxd ! lmmaxd already doubled in size! (KREL+1)*LMMAXD
@@ -550,38 +553,38 @@ contains
       !> consumption
       !
       ! Call to allocate the arrays associated with the potential
-      call allocate_potential(1,NAEZ,NEMB,IRMD,NATYP,NPOTD,IPAND,NFUND,LMXSPD,    &
-         LMPOT,IRMIND,NSPOTD,NFU,IRC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,   &
+      call allocate_potential(1,NAEZD,NEMBD,IRMD,NATYPD,NPOTD,IPAND,NFUND,LMXSPD,    &
+         LMPOTD,IRMIND,NSPOTD,NFU,IRC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,   &
          ITITLE,FPRADIUS,VISP,ECORE,VINS)
       ! Call to allocate the arrays associated with the LDA+U potential
-      call allocate_ldau_potential(1,IRMD,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,ULDAU,  &
+      call allocate_ldau_potential(1,IRMD,NATYPD,MMAXD,NSPIND,ITLDAU,WLDAU,ULDAU,  &
          PHILDAU)
       ! Call to allocate the arrays associated with the energy
       call allocate_energies(1,IEMXD,EZ,DEZ,WEZ)
       ! Call to allocate the arrays associated with the relativistic corrections
-      call allocate_relativistic(1,KREL,IRMD,NAEZ,NATYP,ZREL,JWSREL,IRSHIFT,      &
+      call allocate_relativistic(1,KREL,IRMD,NAEZD,NATYPD,ZREL,JWSREL,IRSHIFT,      &
          VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,QMGAM,QMGAMTAB,QMPHITAB,QMTETTAB)
       ! Call to allocate the arrays associated with the relativistic transformations
       call allocate_rel_transformations(1,LMMAXD,NRREL,IRREL,RC,CREL,RREL,SRREL)
       ! Call to allocate the arrays associated with the clusters
-      call allocate_clusters(1,NAEZ,LMAX,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,LMPOT, &
+      call allocate_clusters(1,NAEZD,LMAXD,NCLEB,NCLSD,NEMBD1,NSHELD,NACLSD,LMPOTD, &
          NATOMIMPD,NSH1,NSH2,NACLS,NSHELL,ATOMIMP,ATOM,EZOA,ICLEB,JEND,RATOM,    &
          RCLSIMP,CMOMHOST,RCLS)
       ! Call to allocate the arrays associated with the expansion of the Green function
-      call allocate_expansion(1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,NCHEB, &
+      call allocate_expansion(1,LM2D,IRID,NFUND,NTOTD,NCLEB,LASSLD,NCELLD,NCHEBD, &
          LOFLM,WG,CLEB,YRG,THETAS,THETASNEW)
       ! Call to allocate the arrays associated with the integration mesh
-      call allocate_mesh(1,IRMD,NATYP,A,B,RMESH,DRDI)
+      call allocate_mesh(1,IRMD,NATYPD,A,B,RMESH,DRDI)
       ! Call to allocate the arrays associated with the pannels for the new solver
-      call allocate_pannels(1,NATYP,NTOTD,IPAN,NPAN_TOT,NPAN_EQ_AT,NPAN_LOG_AT,  &
+      call allocate_pannels(1,NATYPD,NTOTD,IPAN,NPAN_TOT,NPAN_EQ_AT,NPAN_LOG_AT,  &
          IPAN_INTERVALL,RPAN_INTERVALL)
       ! Call to allocate misc arrays
-      call allocate_misc(1,NRD,IRMD,IRID,LMAX,NAEZ,NATYP,NFUND,NREFD,IEMXD,NTOTD,   &
-         NSHELD,LMMAXD,NEMBD1,NCHEB,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM, &
+      call allocate_misc(1,NRD,IRMD,IRID,LMAXD,NAEZD,NATYPD,NFUND,NREFD,IEMXD,NTOTD,   &
+         NSHELD,LMMAXD,NEMBD1,NCHEBD,NCELLD,LMXSPD,NSPINDD,NSYMAXD,NPRINCD,IFUNM, &
          IFUNM1,ICHECK,VREF,S,RR,DROR,RNEW,RS,RROT,THESME,DSYMLL,DSYMLL1,        &
          LEFTTINVLL,RIGHTTINVLL)
       ! Call to allocate the arrays associated with the Green function
-      call allocate_green(1,NAEZ,IEMXD,NGSHD,NSHELD,LMPOT,NOFGIJ,ISH,JSH,KMESH,  &
+      call allocate_green(1,NAEZD,IEMXD,NGSHD,NSHELD,LMPOTD,NOFGIJ,ISH,JSH,KMESH,  &
          IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM_MAP, &
          GSH)
 
@@ -595,6 +598,18 @@ contains
 
       call LATTIX99(LINTERFACE,ALAT,NATYP,NAEZ,CONC,RWS,BRAVAIS,RECBV,VOLUME0,RR,&
          NRD,NATYP)
+
+      ! rr has changed, fix allocation of array to new nrd size
+      allocate(tmp_rr(3,0:nrd), stat=ierr)
+      if ( ierr/=0 ) stop 'error allocating tmp_rr in main0'
+      tmp_rr(:,:) = rr(1:3, 0:nrd)
+      deallocate(rr, stat=ierr)
+      if ( ierr/=0 ) stop 'error deallocating rr in main0'
+      allocate(rr(3,0:nrd), stat=ierr)
+      if ( ierr/=0 ) stop 'error reallocating rr in main0'
+      rr(:,:) = tmp_rr(:,:)
+      deallocate(tmp_rr, stat=ierr)
+      if ( ierr/=0 ) stop 'error allocating tmp_rr in main0'
 
       call SCALEVEC(LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,NLBASIS,NRBASIS,NLEFT,&
          NRIGHT,ZPERLEFT,ZPERIGHT,TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,     &
@@ -1167,14 +1182,14 @@ contains
          NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,TKSEMI,EBOTSEMI,EMUSEMI,FSEMICORE,&
          VINS,VISP,VBC,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ZREL,JWSREL,IRSHIFT,     &
          ITSCF,SCFSTEPS,CMOMHOST,ECORE,LCORE,NCORE,QMTET,QMPHI,QMPHITAB,QMTETTAB,   &
-         QMGAMTAB,DROTQ,NSRA,INS,NATYP,NAEZ,NINEQ,NREF,NSPIN,NCLS,ICST,IPAN,IRCUT,  &
+         QMGAMTAB,DROTQ,NSRA,INS,NATYPD,NAEZD,NINEQ,NREFD,NSPIN,NCLS,ICST,IPAN,IRCUT,  &
          ALAT,ZAT,RMESH,DRDI,REFPOT,RMTREF,VREF,IEND,JEND,CLEB,ICLEB,ATOM,CLS,RCLS,     &
          NACLS,LOFLM,SOLVER,SOCSCL,CSCL,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX, &
          CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,NSH2,IJTABCALC,IJTABCALC_I,ISH,JSH,      &
          IJTABSYM,IJTABSH,NOFGIJ,NQCALC,IQCALC,KMROT,KAOEZ,IQAT,NOQ,CONC,KMESH,     &
          MAXMESH,NSYMAT,SYMUNITARY,RROT,DSYMLL,INVMOD,ICHECK,NATOMIMP,RATOM,ATOMIMP,&
          RC,CREL,RREL,SRREL,NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,A,B,IFUNM,   &
-         IFUNM1,INTERVX,INTERVY,INTERVZ,ITITLE,LMSP1,NTCELL,THETAS,LPOT,LMPOT,      &
+         IFUNM1,INTERVX,INTERVY,INTERVZ,ITITLE,LMSP1,NTCELL,THETAS,LPOTD,LMPOTD,      &
          NRIGHT,NLEFT,LINTERFACE,IMIX,MIXING,QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,&
          KVMAD,KXC,LAMBDA_XC,TXC,ISHIFT,IXIPOL,LRHOSYM,KFORCE,LMSP,LLMSP,RMT,RMTNEW,&
          RWS,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,GSH,ILM_MAP,IMAXSH,IDOLDAU,ITRUNLDAU,NTLDAU,&

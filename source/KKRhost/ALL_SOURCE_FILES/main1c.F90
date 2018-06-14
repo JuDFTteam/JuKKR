@@ -79,21 +79,21 @@ contains
       complex (kind=dp) :: EREAD                   ! LLY
       integer, dimension(20,NATYP) :: NKCORE    !< Number of KAPPA values for a given (n,l) core state
       integer, dimension(20,NPOTD) :: KAPCORE   !< The (maximum 2) values of KAPPA
-      real (kind=dp), dimension(NATYP)                    :: EU
-      real (kind=dp), dimension(NATYP)                    :: EDC
-      real (kind=dp), dimension(NATYP)                    :: PHI
-      real (kind=dp), dimension(NATYP)                    :: THETA
-      real (kind=dp), dimension(NATYP)                    :: DENEFAT
+      real (kind=dp), dimension(NATYPD)                    :: EU
+      real (kind=dp), dimension(NATYPD)                    :: EDC
+      real (kind=dp), dimension(NATYPD)                    :: PHI
+      real (kind=dp), dimension(NATYPD)                    :: THETA
+      real (kind=dp), dimension(NATYPD)                    :: DENEFAT
       real (kind=dp), dimension(NSPIND)                   :: CHARGE_LLY  ! LLY
       real (kind=dp), dimension(0:LMAXD+1,NPOTD)           :: ESPV
       real (kind=dp), dimension(0:LMAXD+1,2)               :: ESPV1
       real (kind=dp), dimension(0:LMAXD+1,2)               :: DOSTOT
       real (kind=dp), dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL !< for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
-      real (kind=dp), dimension(2,NATYP)                  :: angles_new
-      real (kind=dp), dimension(0:LMAXD+1,NATYP,2)         :: CHARGE
-      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYP) :: WLDAUOLD
+      real (kind=dp), dimension(2,NATYPD)                  :: angles_new
+      real (kind=dp), dimension(0:LMAXD+1,NATYPD,2)         :: CHARGE
+      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYPD) :: WLDAUOLD
       complex (kind=dp), dimension(IEMXD)                   :: DF
-      complex (kind=dp), dimension(NATYP)                   :: CDOS2          ! LLY Lloyd
+      complex (kind=dp), dimension(NATYPD)                   :: CDOS2          ! LLY Lloyd
       complex (kind=dp), dimension(IEMXD)                   :: CDOS0
       complex (kind=dp), dimension(IEMXD)                   :: CDOS1
       complex (kind=dp), dimension(IEMXD)                   :: CDOSAT0
@@ -113,7 +113,7 @@ contains
       !> @note attention: muorb second index means both spins and total
       !-------------------------------------------------------------------------
       real (kind=dp), dimension(IRMD*KREL + (1-KREL),NATYPD) :: RHOORB   !< orbital density
-      real (kind=dp), dimension(0:LMAX+1+1,3,NATYPD) :: MUORB           !< orbital magnetic moment
+      real (kind=dp), dimension(0:LMAXD+1+1,3,NATYPD) :: MUORB           !< orbital magnetic moment
       ! ----------------------------------------------------------------------
       !  R2NEF (IRMD,LMPOTD,NATYP,2)  ! rho at FERMI energy
       !  RHO2NS(IRMD,LMPOTD,NATYP,2)  ! radial density

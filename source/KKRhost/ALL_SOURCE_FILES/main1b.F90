@@ -109,10 +109,10 @@ contains
       ! .. Local arrays
       integer, dimension(MAXMSHD)   :: NOFKS
       integer, dimension(IEMXD)     :: IECPAFAIL
-      integer, dimension(NATYP,NAEZ) :: ITOQ
-      real (kind=dp), dimension(NATYP)     :: PHI_AT
+      integer, dimension(NATYPD,NAEZD) :: ITOQ
+      real (kind=dp), dimension(NATYPD)     :: PHI_AT
       real (kind=dp), dimension(MAXMSHD)   :: VOLBZ
-      real (kind=dp), dimension(NATYP)     :: THETA_AT
+      real (kind=dp), dimension(NATYPD)     :: THETA_AT
       real (kind=dp), dimension(KPOIBZ,MAXMSHD) :: VOLCUB
       complex (kind=dp), dimension(IEMXD) :: LLY_G0TR             !< LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
       complex (kind=dp), dimension(IEMXD) :: TRALPHAREF           ! LLY Lloyd
@@ -127,8 +127,8 @@ contains
       complex (kind=dp), dimension(IEMXD,NSPIND)   :: TRALPHA
       complex (kind=dp), dimension(IEMXD,NSPIND)   :: LLY_GRTR    !< LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
       complex (kind=dp), dimension(IEMXD,NSPIND)   :: CDOS_LLY
-      complex (kind=dp), dimension(0:LMAX,NREFD)    :: ALPHAREF
-      complex (kind=dp), dimension(0:LMAX,NREFD)    :: DALPHAREF   !< LLY Lloyd Alpha matrix and deriv.
+      complex (kind=dp), dimension(0:LMAXD,NREFD)    :: ALPHAREF
+      complex (kind=dp), dimension(0:LMAXD,NREFD)    :: DALPHAREF   !< LLY Lloyd Alpha matrix and deriv.
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYPD)  :: MSST
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYPD)  :: TSST
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZD)   :: TQDOS  ! qdos ruess
@@ -189,8 +189,8 @@ contains
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1b(t_params,NATYP,NACLSD,IELAST,NPOL,NCLSD,NREF,NEMB,   &
-         NAEZ,NSRA,INS,NSPIN,LMAX,NCLS,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,     &
+      call get_params_1b(t_params,NATYPD,NACLSD,IELAST,NPOL,NCLSD,NREFD,NEMBD,   &
+         NAEZD,NSRA,INS,NSPIN,LMAXD,NCLS,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,     &
          ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,NSHELD,NPRINCD,     &
          KPOIBZ,ATOMIMP,NATOMIMPD,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,          &
          ITCPAMAX,CPATOL,NRD,IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,      &

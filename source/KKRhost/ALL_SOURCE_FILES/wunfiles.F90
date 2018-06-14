@@ -1184,7 +1184,7 @@ contains
    subroutine bcast_t_params_scalars(t_params)
       ! broadcast scalar parameters, deal with arrays later
       use mpi
-      use mod_mympi, only: master
+      use mod_mympi, only: master, myrank
 
       implicit none
 
@@ -1374,12 +1374,151 @@ contains
    subroutine bcast_t_params_arrays(t_params)
       ! broadcast arrays from t_params
       use mpi
-      use mod_mympi, only: master
+      use mod_mympi, only: master, myrank
       implicit none
 
       type(type_params), intent(inout) :: t_params
       integer :: ierr
-
+ 
+ write(234+myrank,*) product(shape(t_params%EZ))==(t_params%IEMXD )
+ write(234+myrank,*) product(shape(t_params%WEZ))==(t_params%IEMXD )
+ write(234+myrank,*) product(shape(t_params%DROTQ))==(t_params%LMMAXD*t_params%LMMAXD*t_params%NAEZ)
+ write(234+myrank,*) product(shape(t_params%DSYMLL))==(t_params%LMMAXD*t_params%LMMAXD*t_params%NSYMAXD)
+ write(234+myrank,*) product(shape(t_params%LEFTTINVLL))==(t_params%LMMAXD*t_params%LMMAXD*t_params%NEMBD1*t_params%NSPINDD*t_params%IEMXD)
+ write(234+myrank,*) product(shape(t_params%RIGHTTINVLL))==(t_params%LMMAXD*t_params%LMMAXD*t_params%NEMBD1*t_params%NSPINDD*t_params%IEMXD)
+ write(234+myrank,*) product(shape(t_params%CREL))==(t_params%LMMAXD*t_params%LMMAXD )
+ write(234+myrank,*) product(shape(t_params%RC))==(t_params%LMMAXD*t_params%LMMAXD )
+ write(234+myrank,*) product(shape(t_params%RREL))==(t_params%LMMAXD*t_params%LMMAXD )
+ write(234+myrank,*) product(shape(t_params%SRREL))==(2*2*t_params%LMMAXD )
+ write(234+myrank,*) product(shape(t_params%PHILDAU))==(t_params%IRM*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%VINS))==((t_params%IRM-t_params%IRMIND+1)*t_params%LMPOT*t_params%NSPOTD)
+ write(234+myrank,*) product(shape(t_params%VISP))==(t_params%IRM*t_params%NPOTD )
+ write(234+myrank,*) product(shape(t_params%VBC))==(2 )
+ write(234+myrank,*) product(shape(t_params%VTREL))==(t_params%IRM*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%BTREL))==(t_params%IRM*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%SOCSCALE))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%DRDIREL))==(t_params%IRM*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%R2DRDIREL))==(t_params%IRM*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%RMREL))==(t_params%IRM*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%CMOMHOST))==(t_params%LMPOT*t_params%NEMBD1 )
+ write(234+myrank,*) product(shape(t_params%ECORE))==(20*t_params%NPOTD )
+ write(234+myrank,*) product(shape(t_params%QMTET))==(t_params%NAEZ )
+ write(234+myrank,*) product(shape(t_params%QMPHI))==(t_params%NAEZ )
+ write(234+myrank,*) product(shape(t_params%QMPHITAB))==(t_params%NAEZ*3 )
+ write(234+myrank,*) product(shape(t_params%QMTETTAB))==(t_params%NAEZ*3 )
+ write(234+myrank,*) product(shape(t_params%QMGAMTAB))==(t_params%NAEZ*3 )
+ write(234+myrank,*) product(shape(t_params%ZAT))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%RMESH))==(t_params%IRM*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%DRDI))==(t_params%IRM*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%RMTREF))==(t_params%NREF )
+ write(234+myrank,*) product(shape(t_params%VREF))==(t_params%NREF )
+ write(234+myrank,*) product(shape(t_params%CLEB))==(t_params%NCLEB*2 )
+ write(234+myrank,*) product(shape(t_params%RCLS))==(3*t_params%NACLSD*t_params%NCLSD )
+ write(234+myrank,*) product(shape(t_params%SOCSCL))==(t_params%LMAXD1*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%CSCL))==(t_params%LMAXD1*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%RBASIS))==(3*t_params%NEMBD2 )
+ write(234+myrank,*) product(shape(t_params%RR))==(3*(t_params%NR+1) )
+ write(234+myrank,*) product(shape(t_params%CONC))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%RROT))==(48*3*t_params%NSHELD )
+ write(234+myrank,*) product(shape(t_params%RATOM))==(3*t_params%NSHELD )
+ write(234+myrank,*) product(shape(t_params%A))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%B))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%THETAS))==(t_params%IRID*t_params%NFUND*t_params%NCELLD)
+ write(234+myrank,*) product(shape(t_params%RMT))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%RMTNEW))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%RWS))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%GSH))==(t_params%NGSHD )
+ write(234+myrank,*) product(shape(t_params%EREFLDAU))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%UEFF))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%JEFF))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%ULDAU))==(t_params%MMAXD*t_params%MMAXD*t_params%MMAXD*t_params%MMAXD*t_params%NATYP)
+ write(234+myrank,*) product(shape(t_params%WLDAU))==(t_params%MMAXD*t_params%MMAXD*t_params%NSPIND*t_params%NATYP)
+ write(234+myrank,*) product(shape(t_params%RPAN_INTERVALL))==((t_params%NTOTD+1)*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%RNEW))==(t_params%NTOTD*(t_params%NCHEB+1)*t_params%NATYP)
+ write(234+myrank,*) product(shape(t_params%THETASNEW))==(t_params%NTOTD*(t_params%NCHEB+1)*t_params%NFUND*t_params%NCELLD)
+ write(234+myrank,*) product(shape(t_params%MVEVI))==(t_params%NATYP*3*t_params%NMVECMAX )
+ write(234+myrank,*) product(shape(t_params%MVEVIEF))==(t_params%NATYP*3*t_params%NMVECMAX )
+ write(234+myrank,*) product(shape(t_params%RHO2NS))==(t_params%IRM*t_params%LMPOT*t_params%NATYP*2)
+ write(234+myrank,*) product(shape(t_params%R2NEF))==(t_params%IRM*t_params%LMPOT*t_params%NATYP*2)
+ write(234+myrank,*) product(shape(t_params%RHOC))==(t_params%IRM*t_params%NPOTD )
+ write(234+myrank,*) product(shape(t_params%DENEFAT))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%ESPV))==((t_params%LMAXD1+1)*t_params%NPOTD )
+ write(234+myrank,*) product(shape(t_params%EDC))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%EU))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%RHOORB))==(t_params%IRM*t_params%KREL+(1-t_params%KREL)*t_params%NATYP)
+ write(234+myrank,*) product(shape(t_params%ECOREREL))==(t_params%KREL*20+(1-t_params%KREL)*t_params%NPOTD)
+ write(234+myrank,*) product(shape(t_params%theta))==(t_params%natyp )
+ write(234+myrank,*) product(shape(t_params%phi))==(t_params%natyp )
+ write(234+myrank,*) product(shape(t_params%RCLSIMP))==(3*t_params%NATOMIMPD )
+ write(234+myrank,*) product(shape(t_params%LOPT))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%ITLDAU))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%IRSHIFT))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%JWSREL))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%ZREL))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%LCORE))==(20*t_params%NPOTD )
+ write(234+myrank,*) product(shape(t_params%NCORE))==(t_params%NPOTD )
+ write(234+myrank,*) product(shape(t_params%IPAN))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%IRCUT))==((t_params%IPAND+1)*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%JEND))==(t_params%LMPOT*(t_params%LMAX+1)*(t_params%LMAX+1))
+ write(234+myrank,*) product(shape(t_params%ICLEB))==(t_params%NCLEB*4 )
+ write(234+myrank,*) product(shape(t_params%ATOM))==(t_params%NACLSD*t_params%NEMBD2 )
+ write(234+myrank,*) product(shape(t_params%CLS))==(t_params%NEMBD2 )
+ write(234+myrank,*) product(shape(t_params%NACLS))==(t_params%NCLSD )
+ write(234+myrank,*) product(shape(t_params%LOFLM))==(t_params%LM2D )
+ write(234+myrank,*) product(shape(t_params%EZOA))==(t_params%NACLSD*t_params%NEMBD2 )
+ write(234+myrank,*) product(shape(t_params%KAOEZ))==(t_params%NATYP*t_params%NEMBD2 )
+ write(234+myrank,*) product(shape(t_params%IQAT))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%ICPA))==(t_params%NAEZ )
+ write(234+myrank,*) product(shape(t_params%NOQ))==(t_params%NAEZ )
+ write(234+myrank,*) product(shape(t_params%KMESH))==(t_params%IEMXD )
+ write(234+myrank,*) product(shape(t_params%NSHELL))==((t_params%NSHELD+1) )
+ write(234+myrank,*) product(shape(t_params%NSH1))==(t_params%NSHELD )
+ write(234+myrank,*) product(shape(t_params%NSH2))==(t_params%NSHELD )
+ write(234+myrank,*) product(shape(t_params%IJTABCALC))==(t_params%NOFGIJ )
+ write(234+myrank,*) product(shape(t_params%IJTABCALC_I))==(t_params%NOFGIJ )
+ write(234+myrank,*) product(shape(t_params%IJTABSYM))==(t_params%NOFGIJ )
+ write(234+myrank,*) product(shape(t_params%IJTABSH))==(t_params%NOFGIJ )
+ write(234+myrank,*) product(shape(t_params%ISH))==(t_params%NSHELD*t_params%NOFGIJ )
+ write(234+myrank,*) product(shape(t_params%JSH))==(t_params%NSHELD*t_params%NOFGIJ )
+ write(234+myrank,*) product(shape(t_params%IQCALC))==(t_params%NAEZ )
+ write(234+myrank,*) product(shape(t_params%ICHECK))==(t_params%NAEZDPD*t_params%NAEZDPD )
+ write(234+myrank,*) product(shape(t_params%ATOMIMP))==(t_params%NATOMIMPD )
+ write(234+myrank,*) product(shape(t_params%REFPOT))==(t_params%NEMBD2 )
+ write(234+myrank,*) product(shape(t_params%IRREL))==(2*2*t_params%LMMAXD )
+ write(234+myrank,*) product(shape(t_params%NRREL))==(2*t_params%LMMAXD )
+ write(234+myrank,*) product(shape(t_params%IFUNM1))==(t_params%LMXSPD*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%ITITLE))==(20*t_params%NPOTD )
+ write(234+myrank,*) product(shape(t_params%LMSP1))==(t_params%LMXSPD*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%NTCELL))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%IXIPOL))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%IRNS))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%IFUNM))==(t_params%NATYP*t_params%LMXSPD )
+ write(234+myrank,*) product(shape(t_params%LLMSP))==(t_params%NATYP*t_params%NFUND )
+ write(234+myrank,*) product(shape(t_params%LMSP))==(t_params%NATYP*t_params%LMXSPD )
+ write(234+myrank,*) product(shape(t_params%IMT))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%IRC))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%IRMIN))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%IRWS))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%NFU))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%HOSTIMP))==((t_params%NATYP+1) )
+ write(234+myrank,*) product(shape(t_params%ILM_MAP))==(t_params%NGSHD*3 )
+ write(234+myrank,*) product(shape(t_params%IMAXSH))==((t_params%LMPOT+1) )
+ write(234+myrank,*) product(shape(t_params%NPAN_LOG_AT))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%NPAN_EQ_AT))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%NPAN_TOT))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%IPAN_INTERVALL))==((t_params%NTOTD+1)*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%NKCORE))==(20*t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%KAPCORE))==(20*t_params%NPOTD )
+ write(234+myrank,*) product(shape(t_params%qdos_atomselect))==(t_params%NATYP )
+ write(234+myrank,*) product(shape(t_params%SYMUNITARY))==(t_params%NSYMAXD )
+ write(234+myrank,*) product(shape(t_params%VACFLAG))==(2 )
+ write(234+myrank,*) product(shape(t_params%TXC))==(124 )
+ write(234+myrank,*) product(shape(t_params%TESTC))==(32 )
+ write(234+myrank,*) product(shape(t_params%OPTC))==(32 )
+ write(234+myrank,*) product(shape(t_params%BZKP))==(3*t_params%KPOIBZ*t_params%MAXMESH )
+ write(234+myrank,*) product(shape(t_params%VOLCUB))==(t_params%KPOIBZ*t_params%MAXMESH )
+ write(234+myrank,*) product(shape(t_params%VOLBZ))==(t_params%MAXMESH )
+ write(234+myrank,*) product(shape(t_params%NOFKS))==(t_params%MAXMESH )
       !-------------------------------------------------------------------------
       !complex (kind=dp) arrays
       !-------------------------------------------------------------------------
@@ -1950,6 +2089,122 @@ contains
 
       t_params%NMVECMAX    = 4
 
+
+     write(888, *) 't_params%NR              '  , t_params%NR                    
+     write(888, *) 't_params%IRM             '  , t_params%IRM       
+     write(888, *) 't_params%LLY             '  , t_params%LLY       
+     write(888, *) 't_params%INS             '  , t_params%INS       
+     write(888, *) 't_params%ICC             '  , t_params%ICC       
+     write(888, *) 't_params%IGF             '  , t_params%IGF       
+     write(888, *) 't_params%KTE             '  , t_params%KTE       
+     write(888, *) 't_params%KXC             '  , t_params%KXC       
+     write(888, *) 't_params%NREF            '  , t_params%NREF      
+     write(888, *) 't_params%LMAX            '  , t_params%LMAX      
+     write(888, *) 't_params%LM2D            '  , t_params%LM2D      
+     write(888, *) 't_params%LPOT            '  , t_params%LPOT      
+     write(888, *) 't_params%IMIX            '  , t_params%IMIX      
+     write(888, *) 't_params%KPRE            '  , t_params%KPRE      
+     write(888, *) 't_params%NSRA            '  , t_params%NSRA      
+     write(888, *) 't_params%NREF            '  , t_params%NREF      
+     write(888, *) 't_params%LMAX            '  , t_params%LMAX      
+     write(888, *) 't_params%NCLS            '  , t_params%NCLS      
+     write(888, *) 't_params%ICST            '  , t_params%ICST      
+     write(888, *) 't_params%IEND            '  , t_params%IEND      
+     write(888, *) 't_params%NCPA            '  , t_params%NCPA      
+     write(888, *) 't_params%KREL            '  , t_params%KREL      
+     write(888, *) 't_params%IRID            '  , t_params%IRID      
+     write(888, *) 't_params%NAEZ            '  , t_params%NAEZ      
+     write(888, *) 't_params%NPOL            '  , t_params%NPOL      
+     write(888, *) 't_params%NPNT1           '  , t_params%NPNT1     
+     write(888, *) 't_params%NPNT2           '  , t_params%NPNT2     
+     write(888, *) 't_params%NPNT3           '  , t_params%NPNT3     
+     write(888, *) 't_params%NPOTD           '  , t_params%NPOTD     
+     write(888, *) 't_params%NATYP           '  , t_params%NATYP     
+     write(888, *) 't_params%ITSCF           '  , t_params%ITSCF     
+     write(888, *) 't_params%NSPIN           '  , t_params%NSPIN     
+     write(888, *) 't_params%NINEQ           '  , t_params%NINEQ     
+     write(888, *) 't_params%ILTMP           '  , t_params%ILTMP     
+     write(888, *) 't_params%NCHEB           '  , t_params%NCHEB     
+     write(888, *) 't_params%NTOTD           '  , t_params%NTOTD     
+     write(888, *) 't_params%NCHEB           '  , t_params%NCHEB     
+     write(888, *) 't_params%LMPOT           '  , t_params%LMPOT     
+     write(888, *) 't_params%KMROT           '  , t_params%KMROT     
+     write(888, *) 't_params%KVMAD           '  , t_params%KVMAD     
+     write(888, *) 't_params%NGSHD           '  , t_params%NGSHD     
+     write(888, *) 't_params%MMAXD           '  , t_params%MMAXD     
+     write(888, *) 't_params%IEMXD           '  , t_params%IEMXD     
+     write(888, *) 't_params%LMPOT           '  , t_params%LMPOT     
+     write(888, *) 't_params%IPAND           '  , t_params%IPAND     
+     write(888, *) 't_params%NCLEB           '  , t_params%NCLEB     
+     write(888, *) 't_params%NCLSD           '  , t_params%NCLSD     
+     write(888, *) 't_params%NFUND           '  , t_params%NFUND     
+     write(888, *) 't_params%NLEFT           '  , t_params%NLEFT     
+     write(888, *) 't_params%NRIGHT          '  , t_params%NRIGHT    
+     write(888, *) 't_params%ITDBRY          '  , t_params%ITDBRY    
+     write(888, *) 't_params%KSHAPE          '  , t_params%KSHAPE    
+     write(888, *) 't_params%ISHIFT          '  , t_params%ISHIFT    
+     write(888, *) 't_params%KFORCE          '  , t_params%KFORCE    
+     write(888, *) 't_params%IRMIND          '  , t_params%IRMIND    
+     write(888, *) 't_params%NSPOTD          '  , t_params%NSPOTD    
+     write(888, *) 't_params%NEMBD1          '  , t_params%NEMBD1    
+     write(888, *) 't_params%LMMAXD          '  , t_params%LMMAXD    
+     write(888, *) 't_params%NEMBD2          '  , t_params%NEMBD2    
+     write(888, *) 't_params%NACLSD          '  , t_params%NACLSD    
+     write(888, *) 't_params%LMAXD1          '  , t_params%LMAXD1    
+     write(888, *) 't_params%NSHELD          '  , t_params%NSHELD    
+     write(888, *) 't_params%NOFGIJ          '  , t_params%NOFGIJ    
+     write(888, *) 't_params%NSPIND          '  , t_params%NSPIND    
+     write(888, *) 't_params%NCELLD          '  , t_params%NCELLD    
+     write(888, *) 't_params%LMXSPD          '  , t_params%LMXSPD    
+     write(888, *) 't_params%IELAST          '  , t_params%IELAST    
+     write(888, *) 't_params%N1SEMI          '  , t_params%N1SEMI    
+     write(888, *) 't_params%N2SEMI          '  , t_params%N2SEMI    
+     write(888, *) 't_params%N3SEMI          '  , t_params%N3SEMI    
+     write(888, *) 't_params%INVMOD          '  , t_params%INVMOD    
+     write(888, *) 't_params%NQCALC          '  , t_params%NQCALC    
+     write(888, *) 't_params%NSYMAT          '  , t_params%NSYMAT    
+     write(888, *) 't_params%NTLDAU          '  , t_params%NTLDAU    
+     write(888, *) 't_params%NLBASIS         '  , t_params%NLBASIS   
+     write(888, *) 't_params%NRBASIS         '  , t_params%NRBASIS   
+     write(888, *) 't_params%MAXMESH         '  , t_params%MAXMESH   
+     write(888, *) 't_params%NSYMAXD         '  , t_params%NSYMAXD   
+     write(888, *) 't_params%NAEZDPD         '  , t_params%NAEZDPD   
+     write(888, *) 't_params%NSPINDD         '  , t_params%NSPINDD   
+     write(888, *) 't_params%INTERVX         '  , t_params%INTERVX   
+     write(888, *) 't_params%INTERVY         '  , t_params%INTERVY   
+     write(888, *) 't_params%INTERVZ         '  , t_params%INTERVZ   
+     write(888, *) 't_params%IDOLDAU         '  , t_params%IDOLDAU   
+     write(888, *) 't_params%ITMPDIR         '  , t_params%ITMPDIR   
+     write(888, *) 't_params%SCFSTEPS        '  , t_params%SCFSTEPS  
+     write(888, *) 't_params%ITCPAMAX        '  , t_params%ITCPAMAX  
+     write(888, *) 't_params%NATOMIMP        '  , t_params%NATOMIMP  
+     write(888, *) 't_params%NPOLSEMI        '  , t_params%NPOLSEMI  
+     write(888, *) 't_params%NATOMIMPD       '  , t_params%NATOMIMPD 
+     write(888, *) 't_params%ITRUNLDAU       '  , t_params%ITRUNLDAU 
+     write(888, *) 't_params%IESEMICORE      '  , t_params%IESEMICORE
+     write(888, *) 't_params%TK              '  , t_params%TK       
+     write(888, *) 't_params%FCM             '  , t_params%FCM      
+     write(888, *) 't_params%EMIN            '  , t_params%EMIN     
+     write(888, *) 't_params%EMAX            '  , t_params%EMAX     
+     write(888, *) 't_params%ALAT            '  , t_params%ALAT     
+     write(888, *) 't_params%R_LOG           '  , t_params%R_LOG    
+     write(888, *) 't_params%EFERMI          '  , t_params%EFERMI   
+     write(888, *) 't_params%CPATOL          '  , t_params%CPATOL   
+     write(888, *) 't_params%MIXING          '  , t_params%MIXING   
+     write(888, *) 't_params%QBOUND          '  , t_params%QBOUND   
+     write(888, *) 't_params%TKSEMI          '  , t_params%TKSEMI   
+     write(888, *) 't_params%EMUSEMI         '  , t_params%EMUSEMI  
+     write(888, *) 't_params%TOLRDIF         '  , t_params%TOLRDIF  
+     write(888, *) 't_params%EBOTSEMI        '  , t_params%EBOTSEMI 
+     write(888, *) 't_params%FSEMICORE       '  , t_params%FSEMICORE
+     write(888, *) 't_params%LAMBDA_XC       '  , t_params%LAMBDA_XC
+     write(888, *) 't_params%DELTAE          '  , t_params%DELTAE    
+     write(888, *) 't_params%LRHOSYM         '  , t_params%LRHOSYM   
+     write(888, *) 't_params%LINTERFACE      '  , t_params%LINTERFACE
+     write(888, *) 't_params%SOLVER          '  , t_params%SOLVER   
+     write(888, *) 't_params%TMPDIR          '  , t_params%TMPDIR   
+     write(888, *) 't_params%NMVECMAX        '  , t_params%NMVECMAX
+
    end subroutine fill_t_params_scalars
 
    !----------------------------------------------------------------------------
@@ -2141,6 +2396,129 @@ contains
       character(len=124), dimension(6), intent(in) :: TXC
       !     ..
       !fill arrays:
+
+
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%EZ             ), shape(EZ)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%WEZ            ), shape(WEZ)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%DROTQ          ), shape(DROTQ)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%DSYMLL         ), shape(DSYMLL)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%LEFTTINVLL     ), shape(LEFTTINVLL)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%RIGHTTINVLL    ), shape(RIGHTTINVLL)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%CREL           ), shape(CREL)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%RC             ), shape(RC)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%RREL           ), shape(RREL)
+      write(*,'(A,1000I8)') 'fill arrays10', shape(t_params%SRREL          ), shape(SRREL)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%PHILDAU        ), shape(PHILDAU)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%VINS           ), shape(VINS)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%VISP           ), shape(VISP)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%VBC            ), shape(VBC)
+      if(t_params%KREL.gt.0) write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%VTREL          ), shape(VTREL)
+      if(t_params%KREL.gt.0) write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%BTREL          ), shape(BTREL)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%SOCSCALE       ), shape(SOCSCALE)
+      if(t_params%KREL.gt.0) write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%DRDIREL        ), shape(DRDIREL)
+      if(t_params%KREL.gt.0) write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%R2DRDIREL      ), shape(R2DRDIREL)
+      if(t_params%KREL.gt.0) write(*,'(A,1000I8)') 'fill arrays20', shape(t_params%RMREL          ), shape(RMREL)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%CMOMHOST       ), shape(CMOMHOST)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%ECORE          ), shape(ECORE)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%QMTET          ), shape(QMTET)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%QMPHI          ), shape(QMPHI)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%QMPHITAB       ), shape(QMPHITAB)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%QMTETTAB       ), shape(QMTETTAB)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%QMGAMTAB       ), shape(QMGAMTAB)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%ZAT            ), shape(ZAT)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%RMESH          ), shape(R)
+      write(*,'(A,1000I8)') 'fill arrays30', shape(t_params%DRDI           ), shape(DRDI)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%RMTREF         ), shape(RMTREF)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%VREF           ), shape(VREF)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%CLEB           ), shape(CLEB)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%RCLS           ), shape(RCLS)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%SOCSCL         ), shape(SOCSCL)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%CSCL           ), shape(CSCL)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%RBASIS         ), shape(RBASIS)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%RR             ), shape(RR)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%CONC           ), shape(CONC)
+      write(*,'(A,1000I8)') 'fill arrays40', shape(t_params%RROT           ), shape(RROT)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%RATOM          ), shape(RATOM)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%A              ), shape(A)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%B              ), shape(B)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%THETAS         ), shape(THETAS)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%RMT            ), shape(RMT)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%RMTNEW         ), shape(RMTNEW)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%RWS            ), shape(RWS)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%GSH            ), shape(GSH)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%EREFLDAU       ), shape(EREFLDAU)
+      write(*,'(A,1000I8)') 'fill arrays50', shape(t_params%UEFF           ), shape(UEFF)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%JEFF           ), shape(JEFF)
+      if(t_params%IDOLDAU==1) write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%ULDAU          ), shape(ULDAU)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%WLDAU          ), shape(WLDAU)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%RCLSIMP        ), shape(RCLSIMP)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%RPAN_INTERVALL ), shape(RPAN_INTERVALL)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%RNEW           ), shape(RNEW)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%THETASNEW      ), shape(THETASNEW)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%LOPT           ), shape(LOPT)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%ITLDAU         ), shape(ITLDAU)
+      write(*,'(A,1000I8)') 'fill arrays60', shape(t_params%IRSHIFT        ), shape(IRSHIFT)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%JWSREL         ), shape(JWSREL)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%ZREL           ), shape(ZREL)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%LCORE          ), shape(LCORE)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%NCORE          ), shape(NCORE)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%IPAN           ), shape(IPAN)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%IRCUT          ), shape(IRCUT)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%JEND           ), shape(JEND)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%ICLEB          ), shape(ICLEB)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%ATOM           ), shape(ATOM)
+      write(*,'(A,1000I8)') 'fill arrays70', shape(t_params%CLS            ), shape(CLS)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%NACLS          ), shape(NACLS)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%LOFLM          ), shape(LOFLM)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%EZOA           ), shape(EZOA)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%KAOEZ          ), shape(KAOEZ)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%IQAT           ), shape(IQAT)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%ICPA           ), shape(ICPA)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%NOQ            ), shape(NOQ)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%KMESH          ), shape(KMESH)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%NSHELL         ), shape(NSHELL)
+      write(*,'(A,1000I8)') 'fill arrays80', shape(t_params%NSH1           ), shape(NSH1)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%NSH2           ), shape(NSH2)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%IJTABCALC      ), shape(IJTABCALC)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%IJTABCALC_I    ), shape(IJTABCALC_I)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%IJTABSYM       ), shape(IJTABSYM)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%IJTABSH        ), shape(IJTABSH)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%ISH            ), shape(ISH)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%JSH            ), shape(JSH)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%IQCALC         ), shape(IQCALC)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%ICHECK         ), shape(ICHECK)
+      write(*,'(A,1000I8)') 'fill arrays90', shape(t_params%ATOMIMP        ), shape(ATOMIMP)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%REFPOT         ), shape(REFPOT)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%IRREL          ), shape(IRREL)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%NRREL          ), shape(NRREL)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%IFUNM1         ), shape(IFUNM1)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%ITITLE         ), shape(ITITLE)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%LMSP1          ), shape(LMSP1)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%NTCELL         ), shape(NTCELL)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%IXIPOL         ), shape(IXIPOL)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%IRNS           ), shape(IRNS)
+      write(*,'(A,1000I8)') 'fill arrays100', shape(t_params%IFUNM          ), shape(IFUNM)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%LLMSP          ), shape(LLMSP)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%LMSP           ), shape(LMSP)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%IMT            ), shape(IMT)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%IRC            ), shape(IRC)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%IRMIN          ), shape(IRMIN)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%IRWS           ), shape(IRWS)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%NFU            ), shape(NFU)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%HOSTIMP        ), shape(HOSTIMP)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%ILM_MAP            ), shape(ILM_MAP)
+      write(*,'(A,1000I8)') 'fill arrays110', shape(t_params%IMAXSH         ), shape(IMAXSH)
+      write(*,'(A,1000I8)') 'fill arrays1', shape(t_params%NPAN_LOG       ), shape(NPAN_LOG)
+      write(*,'(A,1000I8)') 'fill arrays2', shape(t_params%NPAN_EQ        ), shape(NPAN_EQ)
+      write(*,'(A,1000I8)') 'fill arrays3', shape(t_params%NPAN_LOG_AT    ), shape(NPAN_LOG_AT)
+      write(*,'(A,1000I8)') 'fill arrays4', shape(t_params%NPAN_EQ_AT     ), shape(NPAN_EQ_AT)
+      write(*,'(A,1000I8)') 'fill arrays5', shape(t_params%NPAN_TOT       ), shape(NPAN_TOT)
+      write(*,'(A,1000I8)') 'fill arrays6', shape(t_params%IPAN_INTERVALL ), shape(IPAN_INTERVALL)
+      write(*,'(A,1000I8)') 'fill arrays7', shape(t_params%SYMUNITARY     ), shape(SYMUNITARY)
+      write(*,'(A,1000I8)') 'fill arrays8', shape(t_params%VACFLAG        ), shape(VACFLAG)
+      write(*,'(A,1000I8)') 'fill arrays9', shape(t_params%TXC            ), shape(TXC)
+      write(*,'(A,1000I8)') 'fill arrays120', shape(t_params%NTOTD          ), shape(NTOTD)
+
       t_params%EZ             = EZ
       t_params%WEZ            = WEZ
       t_params%DROTQ          = DROTQ
@@ -2282,6 +2660,8 @@ contains
       NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
       ! get relevant parameters from t_params
       !     ..
+      use mpi
+      use mod_mympi, only: myrank
       implicit none
 
       type(type_params), intent(in) :: t_params
@@ -2372,6 +2752,276 @@ contains
       character(len=10), intent(inout) :: SOLVER   !< Type of solver
       character(len=80), intent(inout) :: TMPDIR
 
+      integer :: ierr
+
+     write(777+myrank, *) 't_params%NR              '  , t_params%NR                    
+     write(777+myrank, *) 't_params%IRM             '  , t_params%IRM       
+     write(777+myrank, *) 't_params%LLY             '  , t_params%LLY       
+     write(777+myrank, *) 't_params%INS             '  , t_params%INS       
+     write(777+myrank, *) 't_params%ICC             '  , t_params%ICC       
+     write(777+myrank, *) 't_params%IGF             '  , t_params%IGF       
+     write(777+myrank, *) 't_params%KTE             '  , t_params%KTE       
+     write(777+myrank, *) 't_params%KXC             '  , t_params%KXC       
+     write(777+myrank, *) 't_params%NREF            '  , t_params%NREF      
+     write(777+myrank, *) 't_params%LMAX            '  , t_params%LMAX      
+     write(777+myrank, *) 't_params%LM2D            '  , t_params%LM2D      
+     write(777+myrank, *) 't_params%LPOT            '  , t_params%LPOT      
+     write(777+myrank, *) 't_params%IMIX            '  , t_params%IMIX      
+     write(777+myrank, *) 't_params%KPRE            '  , t_params%KPRE      
+     write(777+myrank, *) 't_params%NSRA            '  , t_params%NSRA      
+     write(777+myrank, *) 't_params%NREF            '  , t_params%NREF      
+     write(777+myrank, *) 't_params%LMAX            '  , t_params%LMAX      
+     write(777+myrank, *) 't_params%NCLS            '  , t_params%NCLS      
+     write(777+myrank, *) 't_params%ICST            '  , t_params%ICST      
+     write(777+myrank, *) 't_params%IEND            '  , t_params%IEND      
+     write(777+myrank, *) 't_params%NCPA            '  , t_params%NCPA      
+     write(777+myrank, *) 't_params%KREL            '  , t_params%KREL      
+     write(777+myrank, *) 't_params%IRID            '  , t_params%IRID      
+     write(777+myrank, *) 't_params%NAEZ            '  , t_params%NAEZ      
+     write(777+myrank, *) 't_params%NPOL            '  , t_params%NPOL      
+     write(777+myrank, *) 't_params%NPNT1           '  , t_params%NPNT1     
+     write(777+myrank, *) 't_params%NPNT2           '  , t_params%NPNT2     
+     write(777+myrank, *) 't_params%NPNT3           '  , t_params%NPNT3     
+     write(777+myrank, *) 't_params%NPOTD           '  , t_params%NPOTD     
+     write(777+myrank, *) 't_params%NATYP           '  , t_params%NATYP     
+     write(777+myrank, *) 't_params%ITSCF           '  , t_params%ITSCF     
+     write(777+myrank, *) 't_params%NSPIN           '  , t_params%NSPIN     
+     write(777+myrank, *) 't_params%NINEQ           '  , t_params%NINEQ     
+     write(777+myrank, *) 't_params%ILTMP           '  , t_params%ILTMP     
+     write(777+myrank, *) 't_params%NCHEB           '  , t_params%NCHEB     
+     write(777+myrank, *) 't_params%NTOTD           '  , t_params%NTOTD     
+     write(777+myrank, *) 't_params%NCHEB           '  , t_params%NCHEB     
+     write(777+myrank, *) 't_params%LMPOT           '  , t_params%LMPOT     
+     write(777+myrank, *) 't_params%KMROT           '  , t_params%KMROT     
+     write(777+myrank, *) 't_params%KVMAD           '  , t_params%KVMAD     
+     write(777+myrank, *) 't_params%NGSHD           '  , t_params%NGSHD     
+     write(777+myrank, *) 't_params%MMAXD           '  , t_params%MMAXD     
+     write(777+myrank, *) 't_params%IEMXD           '  , t_params%IEMXD     
+     write(777+myrank, *) 't_params%LMPOT           '  , t_params%LMPOT     
+     write(777+myrank, *) 't_params%IPAND           '  , t_params%IPAND     
+     write(777+myrank, *) 't_params%NCLEB           '  , t_params%NCLEB     
+     write(777+myrank, *) 't_params%NCLSD           '  , t_params%NCLSD     
+     write(777+myrank, *) 't_params%NFUND           '  , t_params%NFUND     
+     write(777+myrank, *) 't_params%NLEFT           '  , t_params%NLEFT     
+     write(777+myrank, *) 't_params%NRIGHT          '  , t_params%NRIGHT    
+     write(777+myrank, *) 't_params%ITDBRY          '  , t_params%ITDBRY    
+     write(777+myrank, *) 't_params%KSHAPE          '  , t_params%KSHAPE    
+     write(777+myrank, *) 't_params%ISHIFT          '  , t_params%ISHIFT    
+     write(777+myrank, *) 't_params%KFORCE          '  , t_params%KFORCE    
+     write(777+myrank, *) 't_params%IRMIND          '  , t_params%IRMIND    
+     write(777+myrank, *) 't_params%NSPOTD          '  , t_params%NSPOTD    
+     write(777+myrank, *) 't_params%NEMBD1          '  , t_params%NEMBD1    
+     write(777+myrank, *) 't_params%LMMAXD          '  , t_params%LMMAXD    
+     write(777+myrank, *) 't_params%NEMBD2          '  , t_params%NEMBD2    
+     write(777+myrank, *) 't_params%NACLSD          '  , t_params%NACLSD    
+     write(777+myrank, *) 't_params%LMAXD1          '  , t_params%LMAXD1    
+     write(777+myrank, *) 't_params%NSHELD          '  , t_params%NSHELD    
+     write(777+myrank, *) 't_params%NOFGIJ          '  , t_params%NOFGIJ    
+     write(777+myrank, *) 't_params%NSPIND          '  , t_params%NSPIND    
+     write(777+myrank, *) 't_params%NCELLD          '  , t_params%NCELLD    
+     write(777+myrank, *) 't_params%LMXSPD          '  , t_params%LMXSPD    
+     write(777+myrank, *) 't_params%IELAST          '  , t_params%IELAST    
+     write(777+myrank, *) 't_params%N1SEMI          '  , t_params%N1SEMI    
+     write(777+myrank, *) 't_params%N2SEMI          '  , t_params%N2SEMI    
+     write(777+myrank, *) 't_params%N3SEMI          '  , t_params%N3SEMI    
+     write(777+myrank, *) 't_params%INVMOD          '  , t_params%INVMOD    
+     write(777+myrank, *) 't_params%NQCALC          '  , t_params%NQCALC    
+     write(777+myrank, *) 't_params%NSYMAT          '  , t_params%NSYMAT    
+     write(777+myrank, *) 't_params%NTLDAU          '  , t_params%NTLDAU    
+     write(777+myrank, *) 't_params%NLBASIS         '  , t_params%NLBASIS   
+     write(777+myrank, *) 't_params%NRBASIS         '  , t_params%NRBASIS   
+     write(777+myrank, *) 't_params%MAXMESH         '  , t_params%MAXMESH   
+     write(777+myrank, *) 't_params%NSYMAXD         '  , t_params%NSYMAXD   
+     write(777+myrank, *) 't_params%NAEZDPD         '  , t_params%NAEZDPD   
+     write(777+myrank, *) 't_params%NSPINDD         '  , t_params%NSPINDD   
+     write(777+myrank, *) 't_params%INTERVX         '  , t_params%INTERVX   
+     write(777+myrank, *) 't_params%INTERVY         '  , t_params%INTERVY   
+     write(777+myrank, *) 't_params%INTERVZ         '  , t_params%INTERVZ   
+     write(777+myrank, *) 't_params%IDOLDAU         '  , t_params%IDOLDAU   
+     write(777+myrank, *) 't_params%ITMPDIR         '  , t_params%ITMPDIR   
+     write(777+myrank, *) 't_params%SCFSTEPS        '  , t_params%SCFSTEPS  
+     write(777+myrank, *) 't_params%ITCPAMAX        '  , t_params%ITCPAMAX  
+     write(777+myrank, *) 't_params%NATOMIMP        '  , t_params%NATOMIMP  
+     write(777+myrank, *) 't_params%NPOLSEMI        '  , t_params%NPOLSEMI  
+     write(777+myrank, *) 't_params%NATOMIMPD       '  , t_params%NATOMIMPD 
+     write(777+myrank, *) 't_params%ITRUNLDAU       '  , t_params%ITRUNLDAU 
+     write(777+myrank, *) 't_params%IESEMICORE      '  , t_params%IESEMICORE
+     write(777+myrank, *) 't_params%TK              '  , t_params%TK       
+     write(777+myrank, *) 't_params%FCM             '  , t_params%FCM      
+     write(777+myrank, *) 't_params%EMIN            '  , t_params%EMIN     
+     write(777+myrank, *) 't_params%EMAX            '  , t_params%EMAX     
+     write(777+myrank, *) 't_params%ALAT            '  , t_params%ALAT     
+     write(777+myrank, *) 't_params%R_LOG           '  , t_params%R_LOG    
+     write(777+myrank, *) 't_params%EFERMI          '  , t_params%EFERMI   
+     write(777+myrank, *) 't_params%CPATOL          '  , t_params%CPATOL   
+     write(777+myrank, *) 't_params%MIXING          '  , t_params%MIXING   
+     write(777+myrank, *) 't_params%QBOUND          '  , t_params%QBOUND   
+     write(777+myrank, *) 't_params%TKSEMI          '  , t_params%TKSEMI   
+     write(777+myrank, *) 't_params%EMUSEMI         '  , t_params%EMUSEMI  
+     write(777+myrank, *) 't_params%TOLRDIF         '  , t_params%TOLRDIF  
+     write(777+myrank, *) 't_params%EBOTSEMI        '  , t_params%EBOTSEMI 
+     write(777+myrank, *) 't_params%FSEMICORE       '  , t_params%FSEMICORE
+     write(777+myrank, *) 't_params%LAMBDA_XC       '  , t_params%LAMBDA_XC
+     write(777+myrank, *) 't_params%DELTAE          '  , t_params%DELTAE    
+     write(777+myrank, *) 't_params%LRHOSYM         '  , t_params%LRHOSYM   
+     write(777+myrank, *) 't_params%LINTERFACE      '  , t_params%LINTERFACE
+     write(777+myrank, *) 't_params%SOLVER          '  , t_params%SOLVER   
+     write(777+myrank, *) 't_params%TMPDIR          '  , t_params%TMPDIR   
+     write(777+myrank, *) 't_params%NMVECMAX        '  , t_params%NMVECMAX
+
+      write(5555+myrank, *)  01, shape(NSRA    )== shape(t_params%NSRA)   
+      write(5555+myrank, *)  02, shape(INS     )== shape(t_params%INS)    
+      write(5555+myrank, *)  03, shape(NAEZ    )== shape(t_params%NAEZ)   
+      write(5555+myrank, *)  03, shape(NATYP   )== shape(t_params%NATYP)  
+      write(5555+myrank, *)  04, shape(NSPIN   )== shape(t_params%NSPIN)  
+      write(5555+myrank, *)  05, shape(ICST    )== shape(t_params%ICST)   
+      write(5555+myrank, *)  06, shape(IPAN    )== shape(t_params%IPAN)   
+      write(5555+myrank, *)  07, shape(IRCUT   )== shape(t_params%IRCUT)  
+      write(5555+myrank, *)  08, shape(LMAX    )== shape(t_params%LMAX)   
+      write(5555+myrank, *)  09, shape(NCLS    )== shape(t_params%NCLS)   
+      write(5555+myrank, *) 010, shape(NINEQ   )== shape(t_params%NINEQ)  
+      write(5555+myrank, *) 011, shape(NREF    )== shape(t_params%NREF)   
+      write(5555+myrank, *) 012, shape(IDOLDAU )== shape(t_params%IDOLDAU)
+      write(5555+myrank, *) 013, shape(LLY     )== shape(t_params%LLY)     
+
+      write(6666+myrank, *)  01, kind(NSRA    )== kind(t_params%NSRA)   
+      write(6666+myrank, *)  02, kind(INS     )== kind(t_params%INS)    
+      write(6666+myrank, *)  03, kind(NAEZ    )== kind(t_params%NAEZ)   
+      write(6666+myrank, *)  03, kind(NATYP   )== kind(t_params%NATYP)  
+      write(6666+myrank, *)  04, kind(NSPIN   )== kind(t_params%NSPIN)  
+      write(6666+myrank, *)  05, kind(ICST    )== kind(t_params%ICST)   
+      write(6666+myrank, *)  06, kind(IPAN    )== kind(t_params%IPAN)   
+      write(6666+myrank, *)  07, kind(IRCUT   )== kind(t_params%IRCUT)  
+      write(6666+myrank, *)  08, kind(LMAX    )== kind(t_params%LMAX)   
+      write(6666+myrank, *)  09, kind(NCLS    )== kind(t_params%NCLS)   
+      write(6666+myrank, *) 010, kind(NINEQ   )== kind(t_params%NINEQ)  
+      write(6666+myrank, *) 011, kind(NREF    )== kind(t_params%NREF)   
+      write(6666+myrank, *) 012, kind(IDOLDAU )== kind(t_params%IDOLDAU)
+      write(6666+myrank, *) 013, kind(LLY     )== kind(t_params%LLY)     
+
+ write(999+myrank,*) 'arrays1', t_params%EZ
+ write(999+myrank,*) 'arrays2', t_params%WEZ
+ write(999+myrank,*) 'arrays3', t_params%DROTQ
+ write(999+myrank,*) 'arrays4', t_params%DSYMLL
+ write(999+myrank,*) 'arrays5', t_params%LEFTTINVLL
+ write(999+myrank,*) 'arrays6', t_params%RIGHTTINVLL
+ write(999+myrank,*) 'arrays7', t_params%CREL
+ write(999+myrank,*) 'arrays8', t_params%RC
+ write(999+myrank,*) 'arrays9', t_params%RREL
+ write(999+myrank,*) 'arrays10', t_params%SRREL
+ write(999+myrank,*) 'arrays1', t_params%PHILDAU
+ write(999+myrank,*) 'arrays2', t_params%VINS
+ write(999+myrank,*) 'arrays3', t_params%VISP
+ write(999+myrank,*) 'arrays4', t_params%VBC 
+ if(t_params%KREL.gt.0) write(999+myrank,*) 'arrays5', t_params%VTREL
+ if(t_params%KREL.gt.0) write(999+myrank,*) 'arrays6', t_params%BTREL
+ write(999+myrank,*) 'arrays7', t_params%SOCSCALE
+ if(t_params%KREL.gt.0) write(999+myrank,*) 'arrays8', t_params%DRDIREL
+ if(t_params%KREL.gt.0) write(999+myrank,*) 'arrays9', t_params%R2DRDIREL
+ if(t_params%KREL.gt.0) write(999+myrank,*) 'arrays20', t_params%RMREL
+ write(999+myrank,*) 'arrays1', t_params%CMOMHOST
+ write(999+myrank,*) 'arrays2', t_params%ECORE
+ write(999+myrank,*) 'arrays3', t_params%QMTET
+ write(999+myrank,*) 'arrays4', t_params%QMPHI
+ write(999+myrank,*) 'arrays5', t_params%QMPHITAB
+ write(999+myrank,*) 'arrays6', t_params%QMTETTAB
+ write(999+myrank,*) 'arrays7', t_params%QMGAMTAB
+ write(999+myrank,*) 'arrays8', t_params%ZAT
+ write(999+myrank,*) 'arrays9', t_params%RMESH
+ write(999+myrank,*) 'arrays30', t_params%DRDI
+ write(999+myrank,*) 'arrays1', t_params%RMTREF
+ write(999+myrank,*) 'arrays2', t_params%VREF
+ write(999+myrank,*) 'arrays3', t_params%CLEB
+ write(999+myrank,*) 'arrays4', t_params%RCLS
+ write(999+myrank,*) 'arrays5', t_params%SOCSCL
+ write(999+myrank,*) 'arrays6', t_params%CSCL
+ write(999+myrank,*) 'arrays7', t_params%RBASIS
+ write(999+myrank,*) 'arrays8', t_params%RR
+ write(999+myrank,*) 'arrays9', t_params%CONC
+ write(999+myrank,*) 'arrays40', t_params%RROT 
+ write(999+myrank,*) 'arrays1', t_params%RATOM 
+ write(999+myrank,*) 'arrays2', t_params%A
+ write(999+myrank,*) 'arrays3', t_params%B
+ write(999+myrank,*) 'arrays4', t_params%THETAS
+ write(999+myrank,*) 'arrays5', t_params%RMT
+ write(999+myrank,*) 'arrays6', t_params%RMTNEW
+ write(999+myrank,*) 'arrays7', t_params%RWS
+ write(999+myrank,*) 'arrays8', t_params%GSH
+ write(999+myrank,*) 'arrays9', t_params%EREFLDAU
+ write(999+myrank,*) 'arrays50', t_params%UEFF
+ write(999+myrank,*) 'arrays1', t_params%JEFF
+ if(t_params%IDOLDAU==1) write(999+myrank,*) 'arrays2', t_params%ULDAU
+ write(999+myrank,*) 'arrays3', t_params%WLDAU
+ write(999+myrank,*) 'arrays4', t_params%RCLSIMP
+ write(999+myrank,*) 'arrays5', t_params%RPAN_INTERVALL
+ write(999+myrank,*) 'arrays6', t_params%RNEW
+ write(999+myrank,*) 'arrays7', t_params%THETASNEW
+ write(999+myrank,*) 'arrays8', t_params%LOPT
+ write(999+myrank,*) 'arrays9', t_params%ITLDAU
+ write(999+myrank,*) 'arrays60', t_params%IRSHIFT
+ write(999+myrank,*) 'arrays1', t_params%JWSREL
+ write(999+myrank,*) 'arrays2', t_params%ZREL
+ write(999+myrank,*) 'arrays3', t_params%LCORE 
+ write(999+myrank,*) 'arrays4', t_params%NCORE 
+ write(999+myrank,*) 'arrays5', t_params%IPAN
+ write(999+myrank,*) 'arrays6', t_params%IRCUT 
+ write(999+myrank,*) 'arrays7', t_params%JEND
+ write(999+myrank,*) 'arrays8', t_params%ICLEB 
+ write(999+myrank,*) 'arrays9', t_params%ATOM
+ write(999+myrank,*) 'arrays70', t_params%CLS
+ write(999+myrank,*) 'arrays1', t_params%NACLS 
+ write(999+myrank,*) 'arrays2', t_params%LOFLM 
+ write(999+myrank,*) 'arrays3', t_params%EZOA
+ write(999+myrank,*) 'arrays4', t_params%KAOEZ 
+ write(999+myrank,*) 'arrays5', t_params%IQAT
+ write(999+myrank,*) 'arrays6', t_params%ICPA
+ write(999+myrank,*) 'arrays7', t_params%NOQ
+ write(999+myrank,*) 'arrays8', t_params%KMESH 
+ write(999+myrank,*) 'arrays9', t_params%NSHELL
+ write(999+myrank,*) 'arrays80', t_params%NSH1
+ write(999+myrank,*) 'arrays1', t_params%NSH2
+ write(999+myrank,*) 'arrays2', t_params%IJTABCALC
+ write(999+myrank,*) 'arrays3', t_params%IJTABCALC_I
+ write(999+myrank,*) 'arrays4', t_params%IJTABSYM
+ write(999+myrank,*) 'arrays5', t_params%IJTABSH
+ write(999+myrank,*) 'arrays6', t_params%ISH
+ write(999+myrank,*) 'arrays7', t_params%JSH
+ write(999+myrank,*) 'arrays8', t_params%IQCALC
+ write(999+myrank,*) 'arrays9', t_params%ICHECK
+ write(999+myrank,*) 'arrays90', t_params%ATOMIMP
+ write(999+myrank,*) 'arrays1', t_params%REFPOT
+ write(999+myrank,*) 'arrays2', t_params%IRREL 
+ write(999+myrank,*) 'arrays3', t_params%NRREL 
+ write(999+myrank,*) 'arrays4', t_params%IFUNM1
+ write(999+myrank,*) 'arrays5', t_params%ITITLE
+ write(999+myrank,*) 'arrays6', t_params%LMSP1
+ write(999+myrank,*) 'arrays7', t_params%NTCELL
+ write(999+myrank,*) 'arrays8', t_params%IXIPOL
+ write(999+myrank,*) 'arrays9', t_params%IRNS
+ write(999+myrank,*) 'arrays100', t_params%IFUNM 
+ write(999+myrank,*) 'arrays1', t_params%LLMSP
+ write(999+myrank,*) 'arrays2', t_params%LMSP
+ write(999+myrank,*) 'arrays3', t_params%IMT
+ write(999+myrank,*) 'arrays4', t_params%IRC
+ write(999+myrank,*) 'arrays5', t_params%IRMIN
+ write(999+myrank,*) 'arrays6', t_params%IRWS
+ write(999+myrank,*) 'arrays7', t_params%NFU
+ write(999+myrank,*) 'arrays8', t_params%HOSTIMP
+ write(999+myrank,*) 'arrays9', t_params%ILM_MAP
+ write(999+myrank,*) 'arrays110', t_params%IMAXSH
+ write(999+myrank,*) 'arrays1', t_params%NPAN_LOG
+ write(999+myrank,*) 'arrays2', t_params%NPAN_EQ
+ write(999+myrank,*) 'arrays3', t_params%NPAN_LOG_AT
+ write(999+myrank,*) 'arrays4', t_params%NPAN_EQ_AT 
+ write(999+myrank,*) 'arrays5', t_params%NPAN_TOT
+ write(999+myrank,*) 'arrays6', t_params%IPAN_INTERVALL
+ write(999+myrank,*) 'arrays7', t_params%SYMUNITARY
+ write(999+myrank,*) 'arrays8', t_params%VACFLAG
+ write(999+myrank,*) 'arrays9', t_params%TXC
+ write(999+myrank,*) 'arrays120', t_params%NTOTD
+
+
+
       NSRA    = t_params%NSRA
       INS     = t_params%INS
       NAEZ    = t_params%NAEZ
@@ -2386,6 +3036,9 @@ contains
       NREF    = t_params%NREF
       IDOLDAU = t_params%IDOLDAU
       LLY     = t_params%LLY
+
+      write(*,*) 'get_params', myrank, NSRA,INS, NAEZ, NATYP, NSPIN, ICST, NREF
+      write(*,*) 'get_params2', IPAN, IRCUT, LMAX, NCLS, NINEQ, NREF, IDOLDAU, LLY
       !-------------------------------------------------------------------------
       ! Consistency check
       !-------------------------------------------------------------------------
@@ -2402,6 +3055,133 @@ contains
       !-------------------------------------------------------------------------
       ! End of consistency check
       !-------------------------------------------------------------------------
+
+      write(5555+myrank, *)  1, shape(ALAT          )==shape(t_params%ALAT)
+      write(5555+myrank, *)  2, shape(ZAT           )==shape(t_params%ZAT)
+      write(5555+myrank, *)  3, shape(DRDI          )==shape(t_params%DRDI)
+      write(5555+myrank, *)  3, shape(RMESH         )==shape(t_params%RMESH)
+      write(5555+myrank, *)  4, shape(RMTREF        )==shape(t_params%RMTREF), shape(RMTREF), shape(t_params%RMTREF)
+      write(5555+myrank, *)  5, shape(VREF          )==shape(t_params%VREF), shape(VREF), shape(t_params%VREF)
+      write(5555+myrank, *)  6, shape(IEND          )==shape(t_params%IEND)
+      write(5555+myrank, *)  7, shape(CLEB          )==shape(t_params%CLEB)
+      write(5555+myrank, *)  8, shape(RCLS          )==shape(t_params%RCLS)
+      write(5555+myrank, *)  9, shape(ATOM          )==shape(t_params%ATOM)
+      write(5555+myrank, *) 10, shape(CLS           )==shape(t_params%CLS)
+      write(5555+myrank, *)  1, shape(ICLEB         )==shape(t_params%ICLEB)
+      write(5555+myrank, *)  2, shape(LOFLM         )==shape(t_params%LOFLM)
+      write(5555+myrank, *)  3, shape(NACLS         )==shape(t_params%NACLS)
+      write(5555+myrank, *)  3, shape(REFPOT        )==shape(t_params%REFPOT)
+      write(5555+myrank, *)  4, shape(IRWS          )==shape(t_params%IRWS)
+      write(5555+myrank, *)  5, shape(IRMIN         )==shape(t_params%IRMIN)
+      write(5555+myrank, *)  6, shape(TOLRDIF       )==shape(t_params%TOLRDIF)
+      write(5555+myrank, *)  7, shape(DELTAE        )==shape(t_params%DELTAE)
+      write(5555+myrank, *)  8, shape(SOCSCALE      )==shape(t_params%SOCSCALE)
+      write(5555+myrank, *)  9, shape(TMPDIR        )==shape(t_params%TMPDIR)
+      write(5555+myrank, *) 20, shape(ITMPDIR       )==shape(t_params%ITMPDIR)
+      write(5555+myrank, *)  1, shape(ILTMP         )==shape(t_params%ILTMP)
+      write(5555+myrank, *)  2, shape(NPAN_LOG      )==shape(t_params%NPAN_LOG_AT)
+      write(5555+myrank, *)  3, shape(NPAN_EQ       )==shape(t_params%NPAN_EQ_AT)
+      write(5555+myrank, *)  3, shape(NCHEB         )==shape(t_params%NCHEB)
+      write(5555+myrank, *)  4, shape(R_LOG         )==shape(t_params%R_LOG)
+      write(5555+myrank, *)  5, shape(NPAN_TOT      )==shape(t_params%NPAN_TOT)
+      write(5555+myrank, *)  6, shape(RNEW          )==shape(t_params%RNEW)
+      write(5555+myrank, *)  7, shape(RPAN_INTERVALL)==shape(t_params%RPAN_INTERVALL)
+      write(5555+myrank, *)  8, shape(IPAN_INTERVALL)==shape(t_params%IPAN_INTERVALL)
+      if(KREL.eq.1) then   
+         write(5555+myrank, *)  9, shape(SOLVER)==shape(t_params%SOLVER)
+         write(5555+myrank, *) 30, shape(SOCSCL)==shape(t_params%SOCSCL)
+         write(5555+myrank, *)  1, shape(CSCL  )==shape(t_params%CSCL)
+      endif
+      if( IDOLDAU.eq.1 ) then
+         write(5555+myrank, *)  2, shape(NTLDAU  )==shape(t_params%NTLDAU)
+         write(5555+myrank, *)  3, shape(ITLDAU  )==shape(t_params%ITLDAU)
+         write(5555+myrank, *)  3, shape(LOPT    )==shape(t_params%LOPT)
+         write(5555+myrank, *)  4, shape(UEFF    )==shape(t_params%UEFF)
+         write(5555+myrank, *)  5, shape(JEFF    )==shape(t_params%JEFF)
+         write(5555+myrank, *)  6, shape(EREFLDAU)==shape(t_params%EREFLDAU)
+      endif                
+      write(5555+myrank, *)  7, shape(IELAST)==shape(t_params%IELAST)
+      write(5555+myrank, *)  8, shape(EZ    )==shape(t_params%EZ)
+      write(5555+myrank, *)  9, shape(VINS )==shape(t_params%VINS)
+      write(5555+myrank, *) 40, shape(VISP )==shape(t_params%VISP)
+      IF (KREL.EQ.1) THEN
+         write(5555+myrank, *)  1, shape(RMREL    )==shape(t_params%RMREL)
+         write(5555+myrank, *)  2, shape(DRDIREL  )==shape(t_params%DRDIREL)
+         write(5555+myrank, *)  3, shape(R2DRDIREL)==shape(t_params%R2DRDIREL)
+         write(5555+myrank, *)  3, shape(ZREL     )==shape(t_params%ZREL)
+         write(5555+myrank, *)  4, shape(JWSREL   )==shape(t_params%JWSREL)
+         write(5555+myrank, *)  5, shape(VTREL    )==shape(t_params%VTREL)
+         write(5555+myrank, *)  6, shape(BTREL    )==shape(t_params%BTREL)
+      END IF                  
+      write(5555+myrank, *)  7, shape(ITSCF   )==shape(t_params%ITSCF)
+      write(5555+myrank, *)  8, shape(NATOMIMP  )==shape(t_params%NATOMIMP)
+      write(5555+myrank, *)  9, shape(ATOMIMP   )==shape(t_params%ATOMIMP)
+      write(5555+myrank, *) 50, shape(IQAT      )==shape(t_params%IQAT)
+
+      write(6666+myrank, *)  1, kind(ALAT          )==kind(t_params%ALAT)
+      write(6666+myrank, *)  2, kind(ZAT           )==kind(t_params%ZAT)
+      write(6666+myrank, *)  3, kind(DRDI          )==kind(t_params%DRDI)
+      write(6666+myrank, *)  3, kind(RMESH         )==kind(t_params%RMESH)
+      write(6666+myrank, *)  4, kind(RMTREF        )==kind(t_params%RMTREF)
+      write(6666+myrank, *)  5, kind(VREF          )==kind(t_params%VREF)
+      write(6666+myrank, *)  6, kind(IEND          )==kind(t_params%IEND)
+      write(6666+myrank, *)  7, kind(CLEB          )==kind(t_params%CLEB)
+      write(6666+myrank, *)  8, kind(RCLS          )==kind(t_params%RCLS)
+      write(6666+myrank, *)  9, kind(ATOM          )==kind(t_params%ATOM)
+      write(6666+myrank, *) 10, kind(CLS           )==kind(t_params%CLS)
+      write(6666+myrank, *)  1, kind(ICLEB         )==kind(t_params%ICLEB)
+      write(6666+myrank, *)  2, kind(LOFLM         )==kind(t_params%LOFLM)
+      write(6666+myrank, *)  3, kind(NACLS         )==kind(t_params%NACLS)
+      write(6666+myrank, *)  3, kind(REFPOT        )==kind(t_params%REFPOT)
+      write(6666+myrank, *)  4, kind(IRWS          )==kind(t_params%IRWS)
+      write(6666+myrank, *)  5, kind(IRMIN         )==kind(t_params%IRMIN)
+      write(6666+myrank, *)  6, kind(TOLRDIF       )==kind(t_params%TOLRDIF)
+      write(6666+myrank, *)  7, kind(DELTAE        )==kind(t_params%DELTAE)
+      write(6666+myrank, *)  8, kind(SOCSCALE      )==kind(t_params%SOCSCALE)
+      write(6666+myrank, *)  9, kind(TMPDIR        )==kind(t_params%TMPDIR)
+      write(6666+myrank, *) 20, kind(ITMPDIR       )==kind(t_params%ITMPDIR)
+      write(6666+myrank, *)  1, kind(ILTMP         )==kind(t_params%ILTMP)
+      write(6666+myrank, *)  2, kind(NPAN_LOG      )==kind(t_params%NPAN_LOG_AT)
+      write(6666+myrank, *)  3, kind(NPAN_EQ       )==kind(t_params%NPAN_EQ_AT)
+      write(6666+myrank, *)  3, kind(NCHEB         )==kind(t_params%NCHEB)
+      write(6666+myrank, *)  4, kind(R_LOG         )==kind(t_params%R_LOG)
+      write(6666+myrank, *)  5, kind(NPAN_TOT      )==kind(t_params%NPAN_TOT)
+      write(6666+myrank, *)  6, kind(RNEW          )==kind(t_params%RNEW)
+      write(6666+myrank, *)  7, kind(RPAN_INTERVALL)==kind(t_params%RPAN_INTERVALL)
+      write(6666+myrank, *)  8, kind(IPAN_INTERVALL)==kind(t_params%IPAN_INTERVALL)
+      if(KREL.eq.1) then   
+         write(6666+myrank, *)  9, kind(SOLVER)==kind(t_params%SOLVER)
+         write(6666+myrank, *) 30, kind(SOCSCL)==kind(t_params%SOCSCL)
+         write(6666+myrank, *)  1, kind(CSCL  )==kind(t_params%CSCL)
+      endif
+      if( IDOLDAU.eq.1 ) then
+         write(6666+myrank, *)  2, kind(NTLDAU  )==kind(t_params%NTLDAU)
+         write(6666+myrank, *)  3, kind(ITLDAU  )==kind(t_params%ITLDAU)
+         write(6666+myrank, *)  3, kind(LOPT    )==kind(t_params%LOPT)
+         write(6666+myrank, *)  4, kind(UEFF    )==kind(t_params%UEFF)
+         write(6666+myrank, *)  5, kind(JEFF    )==kind(t_params%JEFF)
+         write(6666+myrank, *)  6, kind(EREFLDAU)==kind(t_params%EREFLDAU)
+      endif                
+      write(6666+myrank, *)  7, kind(IELAST)==kind(t_params%IELAST)
+      write(6666+myrank, *)  8, kind(EZ    )==kind(t_params%EZ)
+      write(6666+myrank, *)  9, kind(VINS )==kind(t_params%VINS)
+      write(6666+myrank, *) 40, kind(VISP )==kind(t_params%VISP)
+      IF (KREL.EQ.1) THEN
+         write(6666+myrank, *)  1, kind(RMREL    )==kind(t_params%RMREL)
+         write(6666+myrank, *)  2, kind(DRDIREL  )==kind(t_params%DRDIREL)
+         write(6666+myrank, *)  3, kind(R2DRDIREL)==kind(t_params%R2DRDIREL)
+         write(6666+myrank, *)  3, kind(ZREL     )==kind(t_params%ZREL)
+         write(6666+myrank, *)  4, kind(JWSREL   )==kind(t_params%JWSREL)
+         write(6666+myrank, *)  5, kind(VTREL    )==kind(t_params%VTREL)
+         write(6666+myrank, *)  6, kind(BTREL    )==kind(t_params%BTREL)
+      END IF                  
+      write(6666+myrank, *)  7, kind(ITSCF   )==kind(t_params%ITSCF)
+      write(6666+myrank, *)  8, kind(NATOMIMP  )==kind(t_params%NATOMIMP)
+      write(6666+myrank, *)  9, kind(ATOMIMP   )==kind(t_params%ATOMIMP)
+      write(6666+myrank, *) 50, kind(IQAT      )==kind(t_params%IQAT)
+
+      call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+
       ALAT           = t_params%ALAT
       ZAT            = t_params%ZAT
       DRDI           = t_params%DRDI

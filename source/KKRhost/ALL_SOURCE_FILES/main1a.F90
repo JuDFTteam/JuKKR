@@ -66,8 +66,8 @@ contains
       integer :: LRECTMT
       integer :: LRECTRA
       ! .. Local arrays
-      real (kind=dp), dimension(NATYP) :: PHI
-      real (kind=dp), dimension(NATYP) :: THETA
+      real (kind=dp), dimension(NATYPD) :: PHI
+      real (kind=dp), dimension(NATYPD) :: THETA
       real (kind=dp), dimension(:,:,:), allocatable :: VINSNEW
 
 #ifdef CPP_MPI
@@ -110,17 +110,17 @@ contains
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1a(t_params,IPAND,NATYP,IRMD,NACLSD,IELAST,NCLSD,NREF,&
-         NCLEB,NEMB,NAEZ,LM2D,NSRA,INS,NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,    &
+      call get_params_1a(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,NCLSD,NREFD,&
+         NCLEB,NEMB,NAEZD,LM2D,NSRA,INS,NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,    &
          NINEQ,IDOLDAU,LLY,KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,    &
          IEND,EZ,VINS,IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,  &
          VISP,RMTREF,VREF,CLEB,CSCL,SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,    &
          SOLVER,TMPDIR,DELTAE,TOLRDIF,NPAN_LOG_AT,NPAN_EQ_AT,NCHEB,NPAN_TOT,     &
          IPAN_INTERVALL,RPAN_INTERVALL,RNEW,NTOTD,NRMAXD,R_LOG,NTLDAU,     &
-         ITLDAU,LOPT,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,IRMIND,LMPOT,     &
+         ITLDAU,LOPT,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,IRMIND,LMPOTD,     &
          NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
       !
-      if ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOT,1:NSPOTD) = 0.D0
+      if ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
 
       !-------------------------------------------------------------------------
       !                       End read in variables
@@ -199,7 +199,15 @@ contains
       i1_start = 1
       i1_end   = NATYP
 #endif
-      write(*,*) myrank, i1_start, i1_end, shape(rmesh), irmd
+     i1 = 1
+     ipot = 1 
+     write(2222+myrank,*) 'line1',ICST,INS,IELAST,NSRA,NSPIN,I1,EZ,DRDI(1,I1)
+     write(2222+myrank,*) 'line2',RMESH(1,I1),VINS(IRMIND,1,KNOSPH*IPOT+(1-KNOSPH))
+     write(2222+myrank,*) 'line3',VISP(1,IPOT),ZAT(I1),IRMIN(I1),IPAN(I1),IRCUT(0,I1),CLEB
+     write(2222+myrank,*) 'line4',LOFLM,ICLEB,IEND,SOLVER,SOCSCL(1,KREL*I1+(1-KREL))
+     write(2222+myrank,*) 'line5',CSCL(1,KREL*I1+(1-KREL)),VTREL(1,I1),BTREL(1,I1),RMREL(1,I1)
+     write(2222+myrank,*) 'line6',DRDIREL(1,I1),R2DRDIREL(1,I1),ZREL(I1),JWSREL(I1),IDOLDAU
+     write(2222+myrank,*) 'line7',LOPT(I1),WLDAU(1,1,1,I1),LLY,DELTAE
       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 
       !skip this part with GREENIMP option
