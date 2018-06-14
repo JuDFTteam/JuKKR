@@ -40,6 +40,7 @@ contains
   ! Copyright (C) Luigi Genovese, CEA Grenoble, France, 2007
   ! > Memory profiling routine
   subroutine memocc(istat, isize, array, routine)
+    use mod_mympi, only: myrank
     implicit none
     character (len=*), intent (in) :: array
     character (len=*), intent (in) :: routine
@@ -47,6 +48,7 @@ contains
     integer, intent (in) :: isize
 
     ! Local variables
+    character (len=20) :: filename
     character (len=36) :: maxroutine, locroutine
     character (len=36) :: maxarray, locarray
     integer :: nalloc, ndealloc, locpeak, locmemory, iproc
@@ -60,6 +62,8 @@ contains
     mfileno = 77
     dblsize = 1
     ! print *,'MEMOCC',isize,array
+
+    write(filename, '(A,I0.5)') 'meminfo', myrank
 
     select case (array)
     case ('count')
@@ -75,7 +79,7 @@ contains
         iproc = isize
         ! open the writing file for the root process
         if (iproc==0) then
-          open (unit=mfileno, file='meminfo', status='unknown')
+          open (unit=mfileno, file=trim(filename), status='unknown')
           write (mfileno, '(a32,1x,a20,3(1x,a12))') &
             '(Data in kB)             Routine', '    Peak Array', &
             'Routine Mem', 'Total Mem', 'Action'

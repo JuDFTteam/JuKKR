@@ -444,11 +444,11 @@ contains
       nfu = 0
       allocate (vins(irmind:irm,lmpot,nspotd), stat=i_stat)
       call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', &
-        'allocate_misc')
+        'allocate_potential')
       vins = 0.e0_dp
       allocate (visp(irm,npotd), stat=i_stat)
       call memocc(i_stat, product(shape(visp))*kind(visp), 'VISP', &
-        'allocate_misc')
+        'allocate_potential')
       visp = 0.e0_dp
 
     else
@@ -505,12 +505,12 @@ contains
       if (allocated(vins)) then
         i_all = -product(shape(vins))*kind(vins)
         deallocate (vins, stat=i_stat)
-        call memocc(i_stat, i_all, 'VINS', 'allocate_misc')
+        call memocc(i_stat, i_all, 'VINS', 'allocate_potential')
       end if
       if (allocated(visp)) then
         i_all = -product(shape(visp))*kind(visp)
         deallocate (visp, stat=i_stat)
-        call memocc(i_stat, i_all, 'VISP', 'allocate_misc')
+        call memocc(i_stat, i_all, 'VISP', 'allocate_potential')
       end if
 
     end if
@@ -1600,7 +1600,7 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_mesh(flag, irm, natyp, a, b, r, drdi)
+  subroutine allocate_mesh(flag, irm, natyp, a, b, rmesh, drdi)
 
     implicit none
 
@@ -1613,7 +1613,7 @@ contains
                                                                     ! exponential
                                                                     ! R mesh
     real (kind=dp), dimension (:), allocatable, intent (inout) :: b
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: r ! <
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rmesh ! <
                                                                        ! Radial
                                                                        ! mesh
                                                                        ! ( in
@@ -1633,9 +1633,9 @@ contains
       call memocc(i_stat, product(shape(drdi))*kind(drdi), 'DRDI', &
         'allocate_mesh')
       drdi = 0.e0_dp
-      allocate (r(irm,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(r))*kind(r), 'R', 'allocate_mesh')
-      r = 0.e0_dp
+      allocate (rmesh(irm,natyp), stat=i_stat)
+      call memocc(i_stat, product(shape(rmesh))*kind(rmesh), 'RMESH', 'allocate_mesh')
+      rmesh = 0.e0_dp
       allocate (a(natyp), stat=i_stat)
       call memocc(i_stat, product(shape(a))*kind(a), 'A', 'allocate_mesh')
       a = 0.e0_dp
@@ -1649,10 +1649,10 @@ contains
         deallocate (drdi, stat=i_stat)
         call memocc(i_stat, i_all, 'DRDI', 'allocate_mesh')
       end if
-      if (allocated(r)) then
-        i_all = -product(shape(r))*kind(r)
-        deallocate (r, stat=i_stat)
-        call memocc(i_stat, i_all, 'R', 'allocate_mesh')
+      if (allocated(rmesh)) then
+        i_all = -product(shape(rmesh))*kind(rmesh)
+        deallocate (rmesh, stat=i_stat)
+        call memocc(i_stat, i_all, 'RMESH', 'allocate_mesh')
       end if
       if (allocated(a)) then
         i_all = -product(shape(a))*kind(a)

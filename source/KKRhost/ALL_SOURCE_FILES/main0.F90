@@ -519,6 +519,7 @@ contains
       NTOTD=IPAND+30
       NCELLD=NAEZ
       NRMAXD=NTOTD*(NCHEB+1)
+      NCHEBD = NCHEB
 
       NATYPD = NATYP
       NAEZD = NAEZ

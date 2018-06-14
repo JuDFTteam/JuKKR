@@ -199,6 +199,8 @@ contains
       i1_start = 1
       i1_end   = NATYP
 #endif
+      write(*,*) myrank, i1_start, i1_end, shape(rmesh), irmd
+      call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 
       !skip this part with GREENIMP option
       if(opt('GREENIMP') .or. TEST('IMP_ONLY')) then
