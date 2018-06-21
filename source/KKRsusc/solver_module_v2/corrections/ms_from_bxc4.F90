@@ -135,7 +135,7 @@
 ! ----------------------------------------------------------------------
 ! Print output
   if (ie == nescf) then
-    write(*,'(" Noncollinear sum rule: msgflm, msxclm+mssoclm, msxclm, mssoclm")')
+    if(loutsusc) write(*,'(" Noncollinear sum rule: msgflm, msxclm+mssoclm, msxclm, mssoclm")')
     allocate(rotmat(3,3),msgflm(3,lmmax0),msxclm(3,lmmax0),mssoclm(3,lmmax0))
     mtotsusc = 0.d0; mxcsusc = 0.d0; msocsusc = 0.d0
     suscatom: do ia2=1,nasusc2
@@ -202,7 +202,7 @@
       do jlm1=1,lmmax0
         msxclm(:,jlm1)  = matmul(rotmat(:,:),msxclm(:,jlm1))
         mssoclm(:,jlm1) = matmul(rotmat(:,:),mssoclm(:,jlm1))
-        write(*,'("ia=",i4," lm=",2i4,2(3es12.4,2x)" | ",3(3es12.4,2x))') ia, i2lm(:,jlm1), msgflm(:,jlm1), &
+        if(loutsusc) write(*,'("ia=",i4," lm=",2i4,2(3es12.4,2x)" | ",3(3es12.4,2x))') ia, i2lm(:,jlm1), msgflm(:,jlm1), &
             msxclm(:,jlm1)+mssoclm(:,jlm1), msxclm(:,jlm1), mssoclm(:,jlm1)
       end do
     end do suscatom

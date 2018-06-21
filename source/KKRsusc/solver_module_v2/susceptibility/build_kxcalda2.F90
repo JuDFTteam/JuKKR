@@ -86,33 +86,35 @@
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   end do            ! atom i
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  write(*,'(/,"xc kernel ia, im, il, jm, jl, kxc ylm")')
-  do ia2=1,nasusc2
-    ia = iasusc2(ia2)
-    do jlm=1,1!lmmax0
-    do ilm=1,1!lmmax0
-      norm = sum(abs(kxcylm(:,:,ilm,jlm,ia2)))
-      if (real(norm) > atol) then
-        if (lcartesian) then
-          block = 0.d0
-          do j=1,4
+  if(loutsusc) then 
+    write(*,'(/,"xc kernel ia, im, il, jm, jl, kxc ylm")')
+    do ia2=1,nasusc2
+      ia = iasusc2(ia2)
+      do jlm=1,1!lmmax0
+      do ilm=1,1!lmmax0
+        norm = sum(abs(kxcylm(:,:,ilm,jlm,ia2)))
+        if (real(norm) > atol) then
+          if (lcartesian) then
+            block = 0.d0
+            do j=1,4
+            do i=1,4
+              do js=1,4
+              do is=1,4
+                block(i,j) = block(i,j) + ps2c(i,i2is(1,is),i2is(2,is))*kxcylm(is,js,ilm,jlm,ia2)*dc2s(i2is(1,js),i2is(2,js),j)
+              end do
+              end do
+            end do
+            end do
+            kxcylm(:,:,ilm,jlm,ia2) = block
+          end if
           do i=1,4
-            do js=1,4
-            do is=1,4
-              block(i,j) = block(i,j) + ps2c(i,i2is(1,is),i2is(2,is))*kxcylm(is,js,ilm,jlm,ia2)*dc2s(i2is(1,js),i2is(2,js),j)
-            end do
-            end do
+            write(*,'(5i4,8f16.8)') ia, i2lm(:,ilm), i2lm(:,jlm), (kxcylm(i,j,ilm,jlm,ia2),j=1,4)
           end do
-          end do
-          kxcylm(:,:,ilm,jlm,ia2) = block
         end if
-        do i=1,4
-          write(*,'(5i4,8f16.8)') ia, i2lm(:,ilm), i2lm(:,jlm), (kxcylm(i,j,ilm,jlm,ia2),j=1,4)
-        end do
-      end if
+      end do
+      end do
     end do
-    end do
-  end do
+  end if 
 !  kxcsusc = real(kxcsusc)
 ! All done
   end subroutine build_kxcalda2

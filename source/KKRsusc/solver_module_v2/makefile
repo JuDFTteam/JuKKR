@@ -101,7 +101,7 @@ IO       = $(OBJ)/new_input.o $(OBJ)/load_input.o $(OBJ)/find_keyinline.o \
            $(OBJ)/set_susc_options.o $(OBJ)/set_fit_options.o $(OBJ)/set_ldau_options.o \
            $(OBJ)/set_groundstate_options.o $(OBJ)/set_groups.o $(OBJ)/set_global_options.o \
            $(OBJ)/close_outsusc.o $(OBJ)/outsusc_out.o $(OBJ)/outsusc_in.o \
-           $(OBJ)/outsusc_in2.o $(OBJ)/outsusc_in_soc.o
+           $(OBJ)/outsusc_in2.o $(OBJ)/outsusc_in_soc.o $(OBJ)/set_output_options.o
 
 ########################################################################
 #                          Solver module     
@@ -673,6 +673,9 @@ $(OBJ)/set_groups.o: $(IODIR)/set_groups.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 $(OBJ)/set_global_options.o: $(IODIR)/set_global_options.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+
+$(OBJ)/set_output_options.o: $(IODIR)/set_output_options.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 $(OBJ)/close_outsusc.o: $(IODIR)/close_outsusc.F90
