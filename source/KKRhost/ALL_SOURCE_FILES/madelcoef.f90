@@ -14,7 +14,6 @@ subroutine madelcoef(linterface, lpot, a, b, smat, cleb, icleb, iend, lpotd, &
   integer :: icleb(nclebd, 3)
   ! ..
   ! .. Local scalars
-  real (kind=dp), parameter :: pi = 4.0e0_dp*atan(1.0e0_dp)
   real (kind=dp), parameter :: fpi = 16.0e0_dp*atan(1.0e0_dp)
   integer :: i, l, l1, l2, lm1, lm2, lm3, lmpot, loflm(lmxspd), m
   ! INTEGER ICALL_madelcoef

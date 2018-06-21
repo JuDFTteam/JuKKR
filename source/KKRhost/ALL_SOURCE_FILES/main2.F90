@@ -40,6 +40,8 @@ contains
 
       implicit none
 
+      real (kind=dp), parameter :: eps=1.0D-12
+
       integer :: IOBROY
       parameter ( IOBROY = 20 )
       integer :: NMVECMAX
@@ -135,7 +137,7 @@ contains
       !-------------------------------------------------------------------------
       ! For SIMULASA
       !-------------------------------------------------------------------------
-      integer*4 :: IPOS,ILM_MAPP,IAS
+      integer :: IPOS,ILM_MAPP,IAS
 
       ! .. Allocatable arrays
       real (kind=dp), dimension(:,:,:), allocatable :: VONS !< output potential (nonspherical VONS)
@@ -524,7 +526,7 @@ contains
       ! Recalculate XC-potential with zero spin density for magn. moment scaling
       VXCNM(:,:,:) = 0.D0                 ! Initialize
       EXCNM(:,:) = 0.D0
-      if (LAMBDA_XC.ne.1.D0.and.NSPIN.eq.2) then
+      if (abs(LAMBDA_XC-1.D0)>eps.and.NSPIN.eq.2) then
          RHO2NSNM(:,:,:,1) = RHO2NS(:,:,:,1) ! Copy charge density
          RHO2NSNM(:,:,:,2) = 0.D0            ! Set spin density to zero
          call VXCDRV(EXCNM,KTE,KXC,LPOT,NSPIN,1,NATYP,RHO2NSNM,VXCNM,&

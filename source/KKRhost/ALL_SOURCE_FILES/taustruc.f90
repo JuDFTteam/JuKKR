@@ -8,10 +8,6 @@ subroutine taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, &
   use :: mod_datatypes
   implicit none
 
-  ! PARAMETER definitions
-  complex (kind=dp) :: c0
-  parameter (c0=(0.0e0_dp,0.0e0_dp))
-
   ! Dummy arguments
   integer :: iprint, irel, nkm, nkmmax, nq, nqmax, nsym
   complex (kind=dp) :: drot(nkmmax, nkmmax, 48)

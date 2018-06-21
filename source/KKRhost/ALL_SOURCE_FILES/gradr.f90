@@ -32,7 +32,7 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
     f264, f265, f266
   ! ..
   ! .. Intrinsic Functions ..
-  intrinsic :: dble
+  intrinsic :: real
   ! ..
   ! .. Save statement ..
   save :: ndvpt, igl, igh, imj, ica, icg, ivn, ipw, ipg, ivg, ip9, igd, ixlf, &
@@ -52,73 +52,6 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   data igl, igh, imj, ica, icg, ivn, ipw, ipg, ivg, ip9, igd, ixlf, iex, &
     xlf/0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0.00d0/
   data iwr/0/
-  ! ..
-  ! .. Statement Function definitions ..
-  ! statement functions:
-
-  ! .....three point formula for the 1st deriv.
-
-  ! .....four point formula for the 1st deriv.
-
-  ! .....five point formula for the 1st deriv.
-
-  ! .....six point formula for the 1st deriv.
-
-  ! .....three point formula for the 2nd deriv.
-
-  ! .....four point formula for the 2nd deriv.
-
-  ! .....five point formula for the 2nd deriv.
-
-  ! .....six point formula for the 2nd deriv.
-  f131(f0, f1, f2, d) = (-3*f0+4*f1-f2)/(2*d)
-  f132(g1, f0, f1, d) = (-1*g1-0*f0+f1)/(2*d)
-  f133(g2, g1, f0, d) = (g2-4*g1+3*f0)/(2*d)
-  f141(f0, f1, f2, f3, d) = (-11*f0+18*f1-9*f2+2*f3)/(6*d)
-  f142(g1, f0, f1, f2, d) = (-2*g1-3*f0+6*f1-f2)/(6*d)
-  f143(g2, g1, f0, f1, d) = (g2-6*g1+3*f0+2*f1)/(6*d)
-  f144(g3, g2, g1, f0, d) = (-2*g3+9*g2-18*g1+11*f0)/(6*d)
-  f151(f0, f1, f2, f3, f4, d) = (-50*f0+96*f1-72*f2+32*f3-6*f4)/(24*d)
-  f152(g1, f0, f1, f2, f3, d) = (-6*g1-20*f0+36*f1-12*f2+2*f3)/(24*d)
-  f153(g2, g1, f0, f1, f2, d) = (2*g2-16*g1-0*f0+16*f1-2*f2)/(24*d)
-  f154(g3, g2, g1, f0, f1, d) = (-2*g3+12*g2-36*g1+20*f0+6*f1)/(24*d)
-  f155(g4, g3, g2, g1, f0, d) = (6*g4-32*g3+72*g2-96*g1+50*f0)/(24*d)
-  f161(f0, f1, f2, f3, f4, f5, d) = (-274*f0+600*f1-600*f2+400*f3-150*f4+24*f5 &
-    )/(120*d)
-  f162(g1, f0, f1, f2, f3, f4, d) = (-24*g1-130*f0+240*f1-120*f2+40*f3-6*f4)/ &
-    (120*d)
-  f163(g2, g1, f0, f1, f2, f3, d) = (6*g2-60*g1-40*f0+120*f1-30*f2+4*f3)/ &
-    (120*d)
-  f164(g3, g2, g1, f0, f1, f2, d) = (-4*g3+30*g2-120*g1+40*f0+60*f1-6*f2)/ &
-    (120*d)
-  f165(g4, g3, g2, g1, f0, f1, d) = (6*g4-40*g3+120*g2-240*g1+130*f0+24*f1)/ &
-    (120*d)
-  f166(g5, g4, g3, g2, g1, f0, d) = (-24*g5+150*g4-400*g3+600*g2-600*g1+274*f0 &
-    )/(120*d)
-  f231(f0, f1, f2, d) = (f0-2*f1+f2)/(d*d)
-  f232(g1, f0, f1, d) = (g1-2*f0+f1)/(d*d)
-  f233(g2, g1, f0, d) = (g2-2*g1+f0)/(d*d)
-  f241(f0, f1, f2, f3, d) = (6*f0-15*f1+12*f2-3*f3)/(3*d*d)
-  f242(g1, f0, f1, f2, d) = (3*g1-6*f0+3*f1+0*f2)/(3*d*d)
-  f243(g2, g1, f0, f1, d) = (0*g2+3*g1-6*f0+3*f1)/(3*d*d)
-  f244(g3, g2, g1, f0, d) = (-3*g3+2*g2+15*g1+6*f0)/(3*d*d)
-  f251(f0, f1, f2, f3, f4, d) = (35*f0-104*f1+114*f2-56*f3+11*f4)/(12*d*d)
-  f252(g1, f0, f1, f2, f3, d) = (11*g1-20*f0+6*f1+4*f2-f3)/(12*d*d)
-  f253(g2, g1, f0, f1, f2, d) = (-g2+16*g1-30*f0+16*f1-f2)/(12*d*d)
-  f254(g3, g2, g1, f0, f1, d) = (-g3+4*g2+6*g1-20*f0+11*f1)/(12*d*d)
-  f255(g4, g3, g2, g1, f0, d) = (11*g4-56*g3+114*g2-104*g1+35*f0)/(12*d*d)
-  f261(f0, f1, f2, f3, f4, f5, d) = (225*f0-770*f1+1070*f2-780*f3+305*f4-50*f5 &
-    )/(60*d*d)
-  f262(g1, f0, f1, f2, f3, f4, d) = (50*g1-75*f0-20*f1+70*f2-30*f3+5*f4)/ &
-    (60*d*d)
-  f263(g2, g1, f0, f1, f2, f3, d) = (-5*g2+80*g1-150*f0+80*f1-5*f2+0*f3)/ &
-    (60*d*d)
-  f264(g3, g2, g1, f0, f1, f2, d) = (0*g3-5*g2+80*g1-150*f0+80*f1-5*f2)/ &
-    (60*d*d)
-  f265(g4, g3, g2, g1, f0, f1, d) = (5*g4-30*g3+70*g2-20*g1-75*f0+50*f1)/ &
-    (60*d*d)
-  f266(g5, g4, g3, g2, g1, f0, d) = (-50*g5+305*g4-780*g3+1070*g2-770*g1+225* &
-    f0)/(60*d*d)
   ! ..
 
   ! .....-----------------------------------------------------------------
@@ -235,7 +168,7 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
 
   end if
 
-  nred = dble(ndvpt)/2 + .1d0
+  nred = nint(real(ndvpt, kind=dp)/2 + .1d0)
 
   do j = nred + ist, mesh - nred
 
@@ -414,7 +347,7 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
 
   end if
 
-  nred = dble(ndvpt)/2 + .1d0
+  nred = nint(real(ndvpt, kind=dp)/2 + .1d0)
 
   if (mesh-nred<=ist) then
     write (6, fmt='(/'' MESH-NRED.LT.IST. MESH,NRED,IST='',3I4)') mesh, nred, &
@@ -518,3 +451,277 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   return
 120 format (/, ' ndvpt should be ge.4 .or. le.6. ndvpt=', i3)
 end subroutine gradr
+
+  ! ..
+  ! .. Statement Function definitions ..
+  ! statement functions:
+
+  ! .....three point formula for the 1st deriv.
+
+  ! .....four point formula for the 1st deriv.
+
+  ! .....five point formula for the 1st deriv.
+
+  ! .....six point formula for the 1st deriv.
+
+  ! .....three point formula for the 2nd deriv.
+
+  ! .....four point formula for the 2nd deriv.
+
+  ! .....five point formula for the 2nd deriv.
+
+  ! .....six point formula for the 2nd deriv.
+
+real (kind=dp) function f131(f0, f1, f2, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: f0, f1, f2, d
+  f131 = (-3*f0+4*f1-f2)/(2*d)
+end function
+
+real (kind=dp) function f132(g1, f0, f1, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g1, f0, f1, d
+  f132 = (-1*g1-0*f0+f1)/(2*d)
+end function
+
+real (kind=dp) function f133(g2, g1, f0, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g2, g1, f0, d
+  f133 = (g2-4*g1+3*f0)/(2*d)
+end function
+
+real (kind=dp) function f141(f0, f1, f2, f3, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: f0, f1, f2, f3, d
+  f141 = (-11*f0+18*f1-9*f2+2*f3)/(6*d)
+end function
+
+real (kind=dp) function f142(g1, f0, f1, f2, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g1, f0, f1, f2, d
+  f142 = (-2*g1-3*f0+6*f1-f2)/(6*d)
+end function
+
+real (kind=dp) function f143(g2, g1, f0, f1, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g2, g1, f0, f1, d
+  f143 = (g2-6*g1+3*f0+2*f1)/(6*d)
+end function
+
+real (kind=dp) function f144(g3, g2, g1, f0, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g3, g2, g1, f0, d
+  f144 = (-2*g3+9*g2-18*g1+11*f0)/(6*d)
+end function
+
+real (kind=dp) function f151(f0, f1, f2, f3, f4, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: f0, f1, f2, f3, f4, d
+  f151 = (-50*f0+96*f1-72*f2+32*f3-6*f4)/(24*d)
+end function
+
+real (kind=dp) function f152(g1, f0, f1, f2, f3, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g1, f0, f1, f2, f3, d
+  f152 = (-6*g1-20*f0+36*f1-12*f2+2*f3)/(24*d)
+end function
+
+real (kind=dp) function f153(g2, g1, f0, f1, f2, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g2, g1, f0, f1, f2, d
+  f153 = (2*g2-16*g1-0*f0+16*f1-2*f2)/(24*d)
+end function
+
+real (kind=dp) function f154(g3, g2, g1, f0, f1, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g3, g2, g1, f0, f1, d
+  f154 = (-2*g3+12*g2-36*g1+20*f0+6*f1)/(24*d)
+end function
+
+real (kind=dp) function f155(g4, g3, g2, g1, f0, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g4, g3, g2, g1, f0, d
+  f155 = (6*g4-32*g3+72*g2-96*g1+50*f0)/(24*d)
+end function
+
+real (kind=dp) function f161(f0, f1, f2, f3, f4, f5, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: f0, f1, f2, f3, f4, f5, d
+  f161 = (-274*f0+600*f1-600*f2+400*f3-150*f4+24*f5)/(120*d)
+end function
+
+real (kind=dp) function f162(g1, f0, f1, f2, f3, f4, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g1, f0, f1, f2, f3, f4, d
+  f162 = (-24*g1-130*f0+240*f1-120*f2+40*f3-6*f4)/(120*d)
+end function
+
+real (kind=dp) function f163(g2, g1, f0, f1, f2, f3, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g2, g1, f0, f1, f2, f3, d
+  f163 = (6*g2-60*g1-40*f0+120*f1-30*f2+4*f3)/(120*d)
+end function
+
+real (kind=dp) function f164(g3, g2, g1, f0, f1, f2, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g3, g2, g1, f0, f1, f2, d
+  f164 = (-4*g3+30*g2-120*g1+40*f0+60*f1-6*f2)/(120*d)
+end function
+
+real (kind=dp) function f165(g4, g3, g2, g1, f0, f1, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g4, g3, g2, g1, f0, f1, d
+  f165 = (6*g4-40*g3+120*g2-240*g1+130*f0+24*f1)/(120*d)
+end function
+
+real (kind=dp) function f166(g5, g4, g3, g2, g1, f0, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g5, g4, g3, g2, g1, f0, d
+  f166 = (-24*g5+150*g4-400*g3+600*g2-600*g1+274*f0)/(120*d)
+end function
+
+real (kind=dp) function f231(f0, f1, f2, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: f0, f1, f2, d
+  f231 = (f0-2*f1+f2)/(d*d)
+end function
+
+real (kind=dp) function f232(g1, f0, f1, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g1, f0, f1, d
+  f232 = (g1-2*f0+f1)/(d*d)
+end function
+
+real (kind=dp) function f233(g2, g1, f0, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g2, g1, f0, d
+  f233 = (g2-2*g1+f0)/(d*d)
+end function
+
+real (kind=dp) function f241(f0, f1, f2, f3, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: f0, f1, f2, f3, d
+  f241 = (6*f0-15*f1+12*f2-3*f3)/(3*d*d)
+end function
+
+real (kind=dp) function f242(g1, f0, f1, f2, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g1, f0, f1, f2, d
+  f242 = (3*g1-6*f0+3*f1+0*f2)/(3*d*d)
+end function
+
+real (kind=dp) function f243(g2, g1, f0, f1, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g2, g1, f0, f1, d
+  f243 = (0*g2+3*g1-6*f0+3*f1)/(3*d*d)
+end function
+
+real (kind=dp) function f244(g3, g2, g1, f0, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g3, g2, g1, f0, d
+  f244 = (-3*g3+2*g2+15*g1+6*f0)/(3*d*d)
+end function
+
+real (kind=dp) function f251(f0, f1, f2, f3, f4, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: f0, f1, f2, f3, f4, d
+  f251 = (35*f0-104*f1+114*f2-56*f3+11*f4)/(12*d*d)
+end function
+
+real (kind=dp) function f252(g1, f0, f1, f2, f3, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g1, f0, f1, f2, f3, d
+  f252 = (11*g1-20*f0+6*f1+4*f2-f3)/(12*d*d)
+end function
+
+real (kind=dp) function f253(g2, g1, f0, f1, f2, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g2, g1, f0, f1, f2, d
+  f253 = (-g2+16*g1-30*f0+16*f1-f2)/(12*d*d)
+end function
+
+real (kind=dp) function f254(g3, g2, g1, f0, f1, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g3, g2, g1, f0, f1, d
+  f254 = (-g3+4*g2+6*g1-20*f0+11*f1)/(12*d*d)
+end function
+
+real (kind=dp) function f255(g4, g3, g2, g1, f0, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g4, g3, g2, g1, f0, d
+  f255 = (11*g4-56*g3+114*g2-104*g1+35*f0)/(12*d*d)
+end function
+
+real (kind=dp) function f261(f0, f1, f2, f3, f4, f5, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: f0, f1, f2, f3, f4, f5, d
+  f261 = (225*f0-770*f1+1070*f2-780*f3+305*f4-50*f5)/(60*d*d)
+end function
+
+real (kind=dp) function f262(g1, f0, f1, f2, f3, f4, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g1, f0, f1, f2, f3, f4, d
+  f262 = (50*g1-75*f0-20*f1+70*f2-30*f3+5*f4)/(60*d*d)
+end function
+
+real (kind=dp) function f263(g2, g1, f0, f1, f2, f3, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g2, g1, f0, f1, f2, f3, d
+  f263 = (-5*g2+80*g1-150*f0+80*f1-5*f2+0*f3)/(60*d*d)
+end function
+
+real (kind=dp) function f264(g3, g2, g1, f0, f1, f2, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g3, g2, g1, f0, f1, f2, d
+  f264 = (0*g3-5*g2+80*g1-150*f0+80*f1-5*f2)/(60*d*d)
+end function
+
+real (kind=dp) function f265(g4, g3, g2, g1, f0, f1, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g4, g3, g2, g1, f0, f1, d
+  f265 = (5*g4-30*g3+70*g2-20*g1-75*f0+50*f1)/(60*d*d)
+end function
+
+real (kind=dp) function f266(g5, g4, g3, g2, g1, f0, d)
+  use :: mod_datatypes, only: dp
+  implicit none
+  real (kind=dp), intent(in) :: g5, g4, g3, g2, g1, f0, d
+  f266 = (-50*g5+305*g4-780*g3+1070*g2-770*g1+225*f0)/(60*d*d)
+end function
+
+

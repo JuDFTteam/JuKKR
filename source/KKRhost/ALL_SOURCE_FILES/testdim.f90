@@ -8,7 +8,6 @@
 subroutine testdim(nspin, naez, nemb, natyp, lmax, irm, ins, insref, nref, &
   irns, ncls, nlayer, krel, nspind, nclsd, nprincd, knosph, irnsd, korbit)
 
-  use :: mod_datatypes, only: dp
   implicit none
 
   integer, intent (in) :: ins      ! < 0 (MT), 1(ASA), 2(Full Potential)

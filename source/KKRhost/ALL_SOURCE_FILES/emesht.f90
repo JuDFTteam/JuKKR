@@ -114,7 +114,7 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
           npnt
         stop '     < EMESHT >'
       end if
-      er = ebot + (i-1)*de
+      er = real(ebot + (i-1)*de, kind=dp)
       ez(npnt) = cmplx(er, etk, kind=dp)
       df(npnt) = de
     end do                         ! I

@@ -6,6 +6,7 @@ subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
   use :: mod_rhoqtools, only: rhoq_write_kmesh
   use :: mod_datatypes, only: dp
   implicit none
+  real (kind=dp), parameter :: eps=1.0D-12
   ! ..
   ! .. Scalar Arguments ..
   integer :: maxmesh, nbxin, nbyin, nbzin, nsymat, iprint, krel, kpoibz, &
@@ -45,7 +46,7 @@ subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
     end do
   else
     do i = 1, ielast
-      if (aimag(ez(ielast))/=0) then
+      if (abs(aimag(ez(ielast)))>eps) then
         n = int(1.001d0+log(aimag(ez(i))/aimag(ez(ielast)))/log(2.0d0))
       else
         n = 1
@@ -96,9 +97,9 @@ subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
   ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
   do l = 1, maxmesh
     if (l>1) then
-      nbx = nbx/1.4
-      nby = nby/1.4
-      nbz = nbz/1.4
+      nbx = nint(nbx/1.4)
+      nby = nint(nby/1.4)
+      nbz = nint(nbz/1.4)
     end if
     if (nbx<1) nbx = 1
     if (nby<1) nby = 1

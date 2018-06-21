@@ -12,6 +12,7 @@ subroutine shape_corr(lpot, natyp, gsh, ilm_map, imaxsh, lmsp, ntcell, w, yr, &
   ! **********************************************************************
 
   implicit none
+  real (kind=dp), parameter :: eps=1.0D-12
   ! ..
   ! .. Scalar Arguments ..
   integer :: lassld, lmpotd, natypd, ngshd
@@ -90,7 +91,7 @@ subroutine shape_corr(lpot, natyp, gsh, ilm_map, imaxsh, lmsp, ntcell, w, yr, &
                     if (m2a-m1a==m3a) factor = factor + &
                       real(m2s, kind=dp)/4.0e0_dp
                     ! ......................................................................
-                    if (factor/=0.0e0_dp) then
+                    if (abs(factor)>eps) then
 
                       if (m1s*m2s/=1 .or. m2s*m3s/=1 .or. m1s*m3s/=1) &
                         factor = -factor

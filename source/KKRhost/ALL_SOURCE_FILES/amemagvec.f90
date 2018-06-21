@@ -13,7 +13,7 @@ subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, &
   ! *                                                                  *
   ! ********************************************************************
   use :: mod_datatypes, only: dp
-  implicit real *8(a-h, o-z)
+  implicit none
 
   ! Dummy arguments
 

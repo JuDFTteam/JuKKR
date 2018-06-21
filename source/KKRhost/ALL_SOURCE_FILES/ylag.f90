@@ -15,6 +15,8 @@ function ylag(xi, x, y, ind1, n1, imax)
 
   implicit none
 
+  real (kind=dp), parameter :: eps=1.0D-12
+
   ! Dummy arguments
   integer :: imax, ind1, n1
   real (kind=dp) :: xi
@@ -31,9 +33,8 @@ function ylag(xi, x, y, ind1, n1, imax)
   if (n>imax) n = imax
   if (ind>0) go to 110
   do j = 1, imax
-    if (abs(xi-x(j))<1.0e-12_dp) go to 150
+    if (abs(xi-x(j))<eps) go to 150
     if (xi<x(j)) go to 100
-    if (xi==x(j)) go to 150
   end do
   go to 120
 100 continue

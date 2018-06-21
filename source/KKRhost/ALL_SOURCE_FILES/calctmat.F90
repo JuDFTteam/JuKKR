@@ -61,7 +61,7 @@ complex (kind=dp) EZ(IEMXD), &
 real (kind=dp) CLEB(NCLEB,2),DRDI(IRMD),RMESH(IRMD), &
                  VINS(IRMIND:IRMD,LMPOTD), &
                  VISP(IRMD)
-CHARACTER*10 SOLVER
+CHARACTER (len=10) :: SOLVER
 real (kind=dp) SOCTL(KREL*LMAXD+1)
 real (kind=dp) CTL(KREL*LMAXD+1)
 INTEGER ICLEB(NCLEB,4),IRCUT(0:IPAND), &
@@ -92,7 +92,7 @@ real (kind=dp) WLDAU(MMAXD,MMAXD,NSPIND)
 real (kind=dp) RS(IRMD,0:LMAXD),SL(0:LMAXD)
 real (kind=dp) CUTOFF(IRMD)
 INTEGER IPIV(LMMAXD) ! LLY
-CHARACTER*9 TXTS(2)
+CHARACTER (len=9) :: TXTS(2)
 #ifdef CPP_MPI
 integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif

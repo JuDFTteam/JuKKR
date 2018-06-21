@@ -61,7 +61,7 @@ use constants
       real (kind=dp) ALPHA,BETA,DQ1,DQ2,DQ3,DQDOTG,EXPBSQ,FPI, &
                        G1,G2,G3,GA,LAMDA,R,R1,R2,R3,RFAC,S
       INTEGER I,I1,I2,IT,L,LM,LMX,LMXSP,LFMT,M,NGE,NGS,NRE,NRS,NSTART
-      CHARACTER*80 FMT
+      CHARACTER (len=80) :: FMT
 !..
 !.. Local arrays ..
       complex (kind=dp) STEST(LMXSPD)

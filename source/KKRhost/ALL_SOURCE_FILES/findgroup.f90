@@ -28,6 +28,7 @@ subroutine findgroup(bravais, recbv, rbasis, nbasis, rsymat, rotname, &
 
   ! **********************************************************
   implicit none
+  real (kind=dp), parameter :: eps=1.0D-12
   integer :: krel
   integer :: naezd, nembd, nsymaxd
   ! ..
@@ -71,8 +72,7 @@ subroutine findgroup(bravais, recbv, rbasis, nbasis, rsymat, rotname, &
 
   lbulk = .true.
   ! Now check the bravais vectors if they have a z component
-  if ((bravais(1,3)==0.e0_dp) .and. (bravais(2,3)==0.e0_dp) .and. (bravais(3, &
-    3)==0.e0_dp)) then
+  if ((abs(bravais(1,3))<eps) .and. (abs(bravais(2,3))<eps) .and. (abs(bravais(3,3))<eps)) then
     lbulk = .false.
   end if
 
@@ -95,7 +95,7 @@ subroutine findgroup(bravais, recbv, rbasis, nbasis, rsymat, rotname, &
     ! In the case of slab/interface geometry look only for
     ! symmetry opperations that preserve the z axis..
 
-    if (lbulk .or. (rsymat(isym,3,3)==1)) then
+    if (lbulk .or. (abs(rsymat(isym,3,3)-1.0_dp)<eps)) then
       ! do rotation only in case bulk or if slab and z axis is restored..
 
 

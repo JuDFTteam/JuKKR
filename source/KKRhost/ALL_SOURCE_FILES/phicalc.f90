@@ -17,6 +17,7 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
   use :: mod_datatypes
   use global_variables
   implicit none
+  real (kind=dp), parameter :: eps=1.0D-12
   real (kind=dp) :: cvlight
   parameter (cvlight=274.0720442e0_dp)
 
@@ -59,7 +60,7 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
     if (nsra==2) then
       s(l1) = sqrt(real(l1*l1+l1+1,kind=dp)-4.0e0_dp*z(iatom)*z(iatom)/( &
         cvlight*cvlight))
-      if (z(iatom)==0.0e0_dp) s(l1) = real(l1, kind=dp)
+      if (abs(z(iatom))<eps) s(l1) = real(l1, kind=dp)
     else
       s(l1) = real(l1, kind=dp)
     end if

@@ -8,6 +8,8 @@ subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
   use :: mod_datatypes
   implicit none
 
+  real (kind=dp), parameter :: eps=1.0D-12
+
   ! Dummy arguments
   integer :: jtop, nka, nkb, nrmax
   complex (kind=dp) :: af(nrmax, nka), ag(nrmax, nka), bf(nrmax, nkb), &
@@ -98,7 +100,7 @@ subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
       do i = imin, imax
         hi = z(jtop) - z(i)
         hif = cmplx(ar, ai, kind=dp) + cmplx(br, bi, kind=dp)*r(i)
-        if (abs(hif)/=0.0e0_dp) reldif = max(reldif, abs(1.0e0_dp-hi/hif))
+        if (abs(hif)>eps) reldif = max(reldif, abs(1.0e0_dp-hi/hif))
       end do
 
       rmehf(ka, kb) = cmplx(ar, ai, kind=dp)

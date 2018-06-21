@@ -52,7 +52,7 @@ subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
     if (e<=-1.d-8) then
       tsrme = 2.d0*sqrt(-e)
       re = (log(-tsrme*e/1.d-8)/tsrme-zz/e)*2.d0
-      nre = log(re/b+1.d0)/a + 1.d0
+      nre = nint(log(re/b+1.d0)/a + 1.d0)
       nre = (nre/2)*2 + 1
       nre = min0(nre, nr)
       nre = max0(nre, 35)
@@ -77,7 +77,7 @@ subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
         call hankel(hl, l+2, arg)
         dofe = real(l+1, kind=dp)/rn - cappai*hl(l+2)/hl(l+1)
         valu = 1.d-10
-        slop = valu*dofe
+        slop = real(valu*dofe, kind=dp)
       end if
 
     end if

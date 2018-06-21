@@ -226,6 +226,7 @@ subroutine hffint(gg, ga, gb, dr, r, rnuc, nsol, jtop, nrc)
   ! Calculates Hyperfine integrals, extrapolates to zero and
   ! intrapolates to exact nuclear radius RNUC
   implicit none
+  real (kind=dp), parameter :: eps=1.0D-12
 
   ! Dummy arguments
   integer :: jtop, nrc, nsol
@@ -244,7 +245,7 @@ subroutine hffint(gg, ga, gb, dr, r, rnuc, nsol, jtop, nrc)
       end do
       call rint4pts(yi, jtop, zi)
       ! Intrapolation
-      if (rnuc/=0.0e0_dp) then
+      if (abs(rnuc)>eps) then
         do i = 1, 5
           x(i) = r(jtop-5+i)
           y(i) = zi(jtop-5+i)

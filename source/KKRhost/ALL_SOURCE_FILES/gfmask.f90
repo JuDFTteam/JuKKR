@@ -12,7 +12,6 @@ subroutine gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell, &
   ! *                                            29.02.2000              *
   ! *                                                                    *
   ! **********************************************************************
-  use :: mod_datatypes, only: dp
   implicit none
   ! ..
   ! .. Scalar arguments

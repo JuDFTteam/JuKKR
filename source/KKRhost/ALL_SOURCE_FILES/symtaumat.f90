@@ -42,7 +42,7 @@ subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
     rc(nkmmax, nkmmax), w1(nkmmax, nkmmax), w2(nkmmax, nkmmax)
   logical :: equal
   integer :: i, i1, i2, ind0q(nqmax), invflag(48), iq, irel, ireleff, isym, &
-    itop, j, k, l, loop, m, n, nk, nkeff, nkm, nlm, nok, ns
+    itop, j, k, l, loop, m, n, nk, nkeff, nkm, nlm, nok, ns, irmj
   integer :: nint
   real (kind=dp) :: rmat(3, 3)
   real (kind=dp) :: w
@@ -295,7 +295,9 @@ subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
       end if
       !rj = nint(l+sk*0.5e0_dp)
       rj = l+sk*0.5e0_dp
-      do rmj = -rj, +rj, 1.0_dp
+      !do rmj = -rj, +rj, 1.0_dp
+      do irmj = 1, nint(2*rj)+1
+        rmj = real(irmj-1, kind=dp) - rj
         i1 = nint(2*l*(rj+0.5e0_dp)+rj+rmj+1)
         i2 = nint(2*l*(rj+0.5e0_dp)+rj-rmj+1)
         dtim(i1, i2) = sk*(-1)**nint(rmj+0.5e0_dp)

@@ -7,7 +7,6 @@ subroutine scratchdir(tmpdir, itmpdir, iltmp)
   ! *                                                                    *
   ! **********************************************************************
 
-  use :: mod_datatypes, only: dp
   implicit none
   character (len=*) :: tmpdir
   integer :: itmpdir, iltmp, lngstring
@@ -36,7 +35,6 @@ subroutine opendafile(iunit, basename, lbasename, lrec, tmpdir, itmpdir, &
   ! * running directory will be used.                                    *
   ! *                                                                    *
   ! **********************************************************************
-  use :: mod_datatypes, only: dp
   implicit none
   integer :: iunit, lbasename, lrec, itmpdir, iltmp
   character (len=iltmp) :: tmpdir

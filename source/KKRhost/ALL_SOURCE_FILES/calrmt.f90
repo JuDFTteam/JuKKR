@@ -30,9 +30,9 @@ subroutine calrmt(ipf, ipfe, ipe, imt, z, rmt, rws, rmtnew, alat, drdi, a, b, &
   ! ..
   if (kshape==0) then
     rimt = log(rmt/b+1.e0_dp)/a + 1.e0_dp
-    imtl = rimt
+    imtl = nint(rimt)
     irwsm2 = irws - 2
-    idelta = (rimt-imtl)*2
+    idelta = nint((rimt-imtl)*2)
     if (idelta==0) imt = imtl
     if (idelta>0) imt = imtl + 1
     rimtm1 = real(imt-1, kind=dp)

@@ -19,6 +19,7 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
   implicit none
 
   ! PARAMETER definitions
+  real (kind=dp), parameter :: eps=1.0D-12
   integer :: mpsmax, npemax, invmax
   parameter (mpsmax=20, npemax=20, invmax=3)
   real (kind=dp) :: tol
@@ -351,8 +352,8 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
         w3 = -emvpp + bc(0)*cgd(i)
         a11 = gam(j) + kap(i) + 1d0
         a12 = gam(j) - kap(i) + 1d0
-        if (a11/=0) pc(i, j, 1) = w1/a11*qc(i, j, 0)
-        if (a12/=0) qc(i, j, 1) = (-w3*pc(i,j,0)+w4*pc(3-i,j,0))/a12
+        if (abs(a11)>eps) pc(i, j, 1) = w1/a11*qc(i, j, 0)
+        if (abs(a12)>eps) qc(i, j, 1) = (-w3*pc(i,j,0)+w4*pc(3-i,j,0))/a12
 
       end do
     end do
@@ -362,8 +363,8 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
         w3 = -emvpp + bc(0)*cgd(i)
         a11 = gam(j) + kap(i) + 2d0
         a12 = gam(j) - kap(i) + 2d0
-        if (a11/=0) pc(i, j, 2) = (w1*qc(i,j,1)-w2*qc(i,j,0))/a11
-        if (a12/=0) qc(i, j, 2) = (-w3*pc(i,j,1)+w4*pc(3-i,j,1)+w5*pc(i,j,0))/ &
+        if (abs(a11)>eps) pc(i, j, 2) = (w1*qc(i,j,1)-w2*qc(i,j,0))/a11
+        if (abs(a12)>eps) qc(i, j, 2) = (-w3*pc(i,j,1)+w4*pc(3-i,j,1)+w5*pc(i,j,0))/ &
           a12
       end do
     end do
@@ -374,9 +375,9 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
           w3 = -emvpp + bc(0)*cgd(i)
           a21 = gam(j) + kap(i) + dble(m)
           a22 = gam(j) - kap(i) + dble(m)
-          if (a21/=0) pc(i, j, m) = (w1*qc(i,j,m-1)-w2*qc(i,j,m-2)-w6*qc(i,j,m &
+          if (abs(a21)>eps) pc(i, j, m) = (w1*qc(i,j,m-1)-w2*qc(i,j,m-2)-w6*qc(i,j,m &
             -3))/a21
-          if (a22/=0) qc(i, j, m) = (-w3*pc(i,j,m-1)+w4*pc(3-i,j,m-1)+w5*pc(i, &
+          if (abs(a22)>eps) qc(i, j, m) = (-w3*pc(i,j,m-1)+w4*pc(3-i,j,m-1)+w5*pc(i, &
             j,m-2)+w7*pc(i,j,m-3))/a22
         end do
       end do

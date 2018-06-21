@@ -5,6 +5,7 @@ subroutine mkxcpe(nspin, ir, np, l1max, rv, rholm, vxcp, excp, thet, ylm, &
   ! ..
   implicit none
   ! .. Parameters ..
+  real (kind=dp), parameter :: eps=1.0D-12
   integer :: ijd
   parameter (ijd=434)
   ! ..
@@ -217,7 +218,7 @@ subroutine mkxcpe(nspin, ir, np, l1max, rv, rholm, vxcp, excp, thet, ylm, &
     sint1 = sin(thet(ip))
     sint2 = sint1**2
     tant1 = tan(thet(ip))
-    if (sint1==0.e0_dp) then
+    if (abs(sint1)<eps) then
       vxcp(ip, 1) = 0.e0_dp
       vxcp(ip, 2) = 0.e0_dp
       excp(ip) = 0.e0_dp
@@ -367,14 +368,14 @@ subroutine mkxcpe(nspin, ir, np, l1max, rv, rholm, vxcp, excp, thet, ylm, &
   etota0 = 0.e0_dp
   do ip = 1, np
     cosx = cos(thet(ip))
-    if (cosx>0.99e0_dp .and. cosx/=1.e0_dp) then
+    if (cosx>0.99e0_dp .and. abs(cosx-1.e0_dp)>eps) then
       nn = nn + 1
       vtot1 = vtot1 + vxcp(ip, 1)
       vtot2 = vtot2 + vxcp(ip, 2)
       etot0 = etot0 + excp(ip)
       ! write(6,*) 'more',ip,vxcp(ip,1),nn
     end if
-    if (cosx<-0.99e0_dp .and. cosx/=-1.e0_dp) then
+    if (cosx<-0.99e0_dp .and. abs(cosx+1.e0_dp)>eps) then
       nn1 = nn1 + 1
       vtota1 = vtota1 + vxcp(ip, 1)
       vtota2 = vtota2 + vxcp(ip, 2)
@@ -384,14 +385,14 @@ subroutine mkxcpe(nspin, ir, np, l1max, rv, rholm, vxcp, excp, thet, ylm, &
   end do
   do ip = 1, np
     cosx = cos(thet(ip))
-    if (cosx==1.e0_dp) then
+    if (abs(cosx-1.e0_dp)<eps) then
       vxcp(ip, 1) = vtot1/nn
       vxcp(ip, 2) = vtot2/nn
       excp(ip) = etot0/nn
       ! write(6,*) 'averaging ',ip,vxcp(ip,1),vxcp(ip,2),excp(ip)
       ! write(6,*) 'averaging1 ',vtot1,vtot2,etot0,nn
     end if
-    if (cosx==-1.e0_dp) then
+    if (abs(cosx+1.e0_dp)<eps) then
       vxcp(ip, 1) = vtota1/nn1
       vxcp(ip, 2) = vtota2/nn1
       excp(ip) = etota0/nn1

@@ -37,6 +37,7 @@ subroutine rclm(key, ll, ldim, vmat)
   ! *                                ph. mavropoulos, juelich 2004       *
   ! **********************************************************************
   implicit none
+  real (kind=dp), parameter :: eps=1.0D-12
   ! ..
   complex (kind=dp) :: cone, ci, czero
   parameter (cone=(1e0_dp,0e0_dp), ci=(0e0_dp,1e0_dp), czero=(0e0_dp,0e0_dp))
@@ -111,7 +112,7 @@ subroutine rclm(key, ll, ldim, vmat)
   do m2 = 1, mm
     do m4 = 1, mm
       blj = aac(m4, m2)
-      if (blj/=czero) then
+      if (abs(blj)>eps) then
         do m3 = 1, mm
           vtmp(m3, m2) = vtmp(m3, m2) + vmat(m3, m4)*blj
         end do
@@ -123,7 +124,7 @@ subroutine rclm(key, ll, ldim, vmat)
   do m2 = 1, mm
     do m3 = 1, mm
       blj = vtmp(m3, m2)
-      if (blj/=czero) then
+      if (abs(blj)>eps) then
         do m1 = 1, mm
           vmat(m1, m2) = vmat(m1, m2) + aa(m1, m3)*blj
         end do

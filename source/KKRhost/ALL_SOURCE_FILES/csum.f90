@@ -1,5 +1,5 @@
 ! 19.10.95 *************************************************************
-complex *16 function csum(n, v, iv)
+complex (kind=dp) function csum(n, v, iv)
   use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! sum up the first N elements of the complex (kind=dp)

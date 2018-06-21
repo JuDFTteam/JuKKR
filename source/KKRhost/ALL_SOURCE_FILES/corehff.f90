@@ -14,6 +14,7 @@ subroutine corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, rnuc, &
 
 
   ! PARAMETER definitions
+  real (kind=dp), parameter :: eps=1.0D-12
   real (kind=dp) :: e0, a0, cautog
 
   ! CONVERSION FACTOR FOR HYPERFINE FIELDS FROM A.U. TO GAUSS
@@ -54,7 +55,7 @@ subroutine corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, rnuc, &
         yi(n) = drdic(n)*(gck(k1,s,n)*fck(k2,s,n)+fck(k1,s,n)*gck(k2,s,n))
       end do
       call rint4pts(yi, nzero, zi)
-      if (rnuc/=0.0e0_dp) then
+      if (abs(rnuc)>eps) then
         do i = 1, 5
           xx(i) = rc(nzero-5+i)
           yy(i) = zi(nzero-5+i)

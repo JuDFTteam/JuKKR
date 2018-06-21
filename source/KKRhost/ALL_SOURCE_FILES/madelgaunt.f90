@@ -1,6 +1,7 @@
 subroutine madelgaunt(lpot, yrg, wg, cleb, icleb, iend, lassld, nclebd)
   use :: mod_datatypes, only: dp
   implicit none
+  real (kind=dp), parameter :: eps=1.0D-12
   ! ..
   ! .. Scalar arguments
   integer :: lpot, iend
@@ -52,7 +53,7 @@ subroutine madelgaunt(lpot, yrg, wg, cleb, icleb, iend, lassld, nclebd)
               if (m1a-m2a==m3a) factor = factor + real(m1s, kind=dp)/4.0e0_dp
               if (m2a-m1a==m3a) factor = factor + real(m2s, kind=dp)/4.0e0_dp
               ! ======================================================================
-              if (factor/=0.0e0_dp) then
+              if (abs(factor)>eps) then
                 if (m1s*m2s/=1 .or. m2s*m3s/=1 .or. m1s*m3s/=1) &
                   factor = -factor
 

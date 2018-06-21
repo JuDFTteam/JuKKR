@@ -49,7 +49,7 @@ subroutine mkxcpe2(ir, np, rv, rholm, vxcp, excp, ylm, dylmt1, dylmf1, dylmf2, &
       end do
     end do
     do lm = 1, lmmax
-      l1 = sqrt(real(lm,kind=dp)-5e-1_dp)
+      l1 = nint(sqrt(real(lm,kind=dp)-5e-1_dp))
       d(1) = d(1) + rholm(lm, 1)*ylm(ip, lm)
       d(2) = d(2) + rholm(lm, 2)*ylm(ip, lm)
       dl(1) = dl(1) + real(l1*(l1+1), kind=dp)*rholm(lm, 1)*ylm(ip, lm)

@@ -37,6 +37,7 @@ subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
   ! ==========================================================================
   use :: mod_datatypes, only: dp
   implicit none
+  real (kind=dp), parameter :: eps = 1.0D-12
   integer :: maxk1, maxk2, maxk3, nsymaxd
   parameter (maxk1=501, maxk2=501, maxk3=100, nsymaxd=48)
   ! PARAMETER (MAXK1=350,MAXK2=350,MAXK3=70,NSYMAXD=48)
@@ -70,8 +71,7 @@ subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
   ! heck if we are in surface mode
 
   lsurf = .false.
-  if (bravais(1,3)==0.e0_dp .and. bravais(2,3)==0.e0_dp .and. &
-    bravais(3,3)==0.e0_dp) lsurf = .true.
+  if (abs(bravais(1,3))<eps .and. abs(bravais(2,3))<eps .and. abs(bravais(3,3))<eps) lsurf = .true.
 
   ndim = 3
   if (lsurf) then

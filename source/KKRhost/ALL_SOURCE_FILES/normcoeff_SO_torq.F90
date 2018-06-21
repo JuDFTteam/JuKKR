@@ -26,6 +26,7 @@ use mod_types, only: t_inc, t_imp
 use global_variables
       
       IMPLICIT NONE
+      real(kind=dp), parameter :: eps=1.0D-12
 !..
 !.. Scalar Arguments ..
       INTEGER          NATOM, mode, IEND, LMMAX, KSRA, &
@@ -211,7 +212,7 @@ IF(myrank==master) THEN ! do last part and writeout only on master
     DO i1=1,natom
       READ(11,*) theta_tmp,phi_tmp
       IF ( i1 > 1) THEN
-        IF ((theta_tmp /= theta ) .OR. (phi_tmp /= phi))  &
+        IF ((abs(theta_tmp-theta)>eps ) .OR. (abs(phi_tmp-phi)>eps))  &
             STOP "It seems you want to compute the torque  &
             in a non-colinear system. This is not implemented yet."
       endif

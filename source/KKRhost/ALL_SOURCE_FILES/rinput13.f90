@@ -458,6 +458,7 @@ contains
     external :: test, opt
     ! ..
     ! .. Local Scalars ..
+    real (kind=dp), parameter :: eps=10D-13
     integer :: ndim                ! < Dimension for the Bravais lattice for
                                    ! slab or bulk (2/3)
     integer :: nasoc
@@ -1497,7 +1498,7 @@ contains
     call ioinput('HFIELD          ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) hfield
-      if (hfield/=0.d0) then
+      if (abs(hfield)>eps) then
         khfield = 1
         write (*, *) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'
         write (1337, *) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'

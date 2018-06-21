@@ -36,6 +36,7 @@ subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
   use :: mod_datatypes, only: dp
 
   implicit none
+  real (kind=dp), parameter :: eps=1.0D-12
   ! ..
   ! .. Input variables
   integer, intent (in) :: irm      ! < Maximum number of radial points
@@ -309,14 +310,14 @@ subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
 
         ! READ (IFILE,*) Z1,RWS(IH),EFNEW,VBC(ISPIN)
         if (zat(ih)<0.e0_dp) zat(ih) = z1
-        if (z1/=zat(ih) .and. zat(ih)>=0.e0_dp) then
+        if (abs(z1-zat(ih))>eps .and. abs(zat(ih))>=0.e0_dp) then
           write (*, *) 'Warning: For atom ', ih, &
             ': ZATOM different in inputcard and in potential.', zat(ih), z1
         end if
         ! -------------------------------------------------------------------
         ! If efermi .eq. 0 use value from in5
         ! -------------------------------------------------------------------
-        if (efnew/=0.0e0_dp .and. i==1) efermi = efnew
+        if (abs(efnew)>eps .and. i==1) efermi = efnew
         ! -------------------------------------------------------------------
         ! Read : number of radial mesh points
         ! (in case of ws input-potential: last mesh point corresponds
@@ -496,7 +497,7 @@ subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
         do l = 0, lmax
           if (krel>=1) then
             s1 = sqrt(real(l*l+l+1,kind=dp)-4.0e0_dp*z1*z1/(cvlight*cvlight))
-            if (z1==0.0e0_dp) s1 = real(l, kind=dp)
+            if (abs(z1)<eps) s1 = real(l, kind=dp)
           else
             s1 = real(l, kind=dp)
           end if

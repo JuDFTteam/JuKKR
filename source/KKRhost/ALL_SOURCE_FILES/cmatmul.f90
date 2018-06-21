@@ -13,6 +13,7 @@ subroutine cmatmul(n, m, a, b, c)
   implicit none
 
   ! PARAMETER definitions
+  real (kind=dp), parameter :: eps=1.0D-12
   complex (kind=dp) :: c0
   parameter (c0=(0.0e0_dp,0.0e0_dp))
 
@@ -33,7 +34,7 @@ subroutine cmatmul(n, m, a, b, c)
   do j = 1, n
     do l = 1, n
       blj = b(l, j)
-      if (blj/=c0) then
+      if (abs(blj)>eps) then
         do i = 1, n
           c(i, j) = c(i, j) + a(i, l)*blj
         end do

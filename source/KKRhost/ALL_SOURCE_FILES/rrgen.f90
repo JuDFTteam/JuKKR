@@ -20,7 +20,6 @@ subroutine rrgen(bv1, lsurf, rr, nrd)
   ! .. Local scalars ..
   real (kind=dp) :: epsshl, r, r1, r2, r3, rmax, rr2, rs
   integer :: i, j, k, n1, n2, n3, pos, iprint
-  integer :: nint
   real (kind=dp) :: dble
   integer :: nr
   ! ..
@@ -30,7 +29,7 @@ subroutine rrgen(bv1, lsurf, rr, nrd)
   integer :: ind(nrd)
   ! ..
   ! .. Intrinsic Functions ..
-  intrinsic :: abs, min, sqrt, nint
+  intrinsic :: abs, min, sqrt
   ! ..
   ! .. External Subroutines ..
   external :: dsort, scalpr, vadd, veq

@@ -136,7 +136,7 @@ contains
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NSHELD) :: GMATLL   !< GMATLL = diagonal elements of the G matrix (system)
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD)   :: DTREFLL  !< LLY Lloyd dtref/dE
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZD)   :: DTMATLL  !< LLY Lloyd  dt/dE
-      complex*8, dimension(LMMAXD*LMMAXD) :: GIMP !<  Cluster GF (ref. syst.)
+      complex (kind=dp), dimension(LMMAXD*LMMAXD) :: GIMP !<  Cluster GF (ref. syst.)
       character(len=35), dimension(0:2), parameter :: INVALG=(/'FULL MATRIX                        ',   &
                                                                'BANDED MATRIX (slab)               ',    &
                                                                'BANDED + CORNERS MATRIX (supercell)' /)
@@ -173,8 +173,8 @@ contains
       LRECGREEN=WLENGTH*2*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD
       !     ..
       !     .. Data statements
-      DATA IPRINT / 0 /
       !     ..
+      IPRINT = 0
       if(t_inc%i_write>0) IPRINT=1
 
       ! allocatable arrays

@@ -33,8 +33,8 @@ subroutine gaunt(lmax, lpot, w, yr, cleb, loflm, icleb, iend, jend, ncleb, &
 
   implicit none
   ! ..
-  complex (kind=dp) :: ci
-  parameter (ci=(0.0e0_dp,1.0e0_dp))
+  real (kind=dp), parameter :: eps=1.0D-12
+  complex (kind=dp), parameter :: ci=(0.0e0_dp,1.0e0_dp)
   ! ..
   integer :: lmpotd, lmgf0d, lmaxd, ncleb
   ! ..
@@ -116,7 +116,7 @@ subroutine gaunt(lmax, lpot, w, yr, cleb, loflm, icleb, iend, jend, ncleb, &
                       if (m2a-m1a==m3a) factor = factor + &
                         real(m2s, kind=dp)/4.0e0_dp
 
-                      if (factor/=0.0_dp) then
+                      if (abs(factor)>eps) then
 
                         if (m1s*m2s/=1 .or. m2s*m3s/=1 .or. m1s*m3s/=1) &
                           factor = -factor

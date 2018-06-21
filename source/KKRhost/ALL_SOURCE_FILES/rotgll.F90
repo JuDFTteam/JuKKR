@@ -41,8 +41,8 @@ complex (kind=dp) crel(lmmaxd,lmmaxd),rc(lmmaxd,lmmaxd), rrel(lmmaxd,lmmaxd)
 LOGICAL :: symunitary(*)
 !     ..
 !     .. Local arrays
-complex (kind=dp) gll(:,:,:,:),tpg(:,:)
-COMPLEX*8 gclust(:)
+complex (kind=dp) :: gll(:,:,:,:),tpg(:,:)
+COMPLEX (kind=dp) :: gclust(:)
 allocatable gll,tpg,gclust
 !     ..
 !     .. Local scalars

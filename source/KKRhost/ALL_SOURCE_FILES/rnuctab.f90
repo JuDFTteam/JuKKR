@@ -1,4 +1,4 @@
-real *8 function rnuctab(z)
+real (kind=dp) function rnuctab(z)
   use :: mod_datatypes, only: dp
   integer, intent (out) :: z
 

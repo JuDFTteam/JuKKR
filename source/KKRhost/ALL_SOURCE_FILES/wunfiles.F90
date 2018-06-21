@@ -1813,8 +1813,8 @@ contains
       !-------------------------------------------------------------------------
       !CHARACTER arrays
       !-------------------------------------------------------------------------
-      call MPI_Bcast(t_params%TXC,6*124, &!5 entries of length 24
-         MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*24
+      call MPI_Bcast(t_params%TXC,6*124, &!6 entries of length 124
+         MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*124
       call MPI_Bcast(t_params%TESTC,32*8, &!32 entries of length 8
          MPI_CHARACTER,master,MPI_COMM_WORLD,ierr) !CHARACTER*8
       call MPI_Bcast(t_params%OPTC,32*8, &!32 entries of length 8
@@ -2660,7 +2660,9 @@ contains
       NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
       ! get relevant parameters from t_params
       !     ..
+#ifdef CPP_MPI
       use mpi
+#endif
       use mod_mympi, only: myrank
       implicit none
 
@@ -3180,7 +3182,9 @@ contains
       write(6666+myrank, *)  9, kind(ATOMIMP   )==kind(t_params%ATOMIMP)
       write(6666+myrank, *) 50, kind(IQAT      )==kind(t_params%IQAT)
 
+#ifdef CPP_MPI
       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+#endif
 
       ALAT           = t_params%ALAT
       ZAT            = t_params%ZAT

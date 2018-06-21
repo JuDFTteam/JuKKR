@@ -7,7 +7,7 @@ implicit none
    type :: type_opt_test
 
       integer :: Nparams = 2
-      CHARACTER*8 OPTC(32),TESTC(32)
+      CHARACTER (len=8) :: OPTC(32),TESTC(32)
 
    end type type_opt_test
    

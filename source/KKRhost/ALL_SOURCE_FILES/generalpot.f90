@@ -14,6 +14,7 @@ subroutine generalpot(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
   ! ***************************************************
   ! ..
   implicit none
+  real (kind=dp), parameter :: eps=1.0D-12
   ! ..
   ! .. Scalar Arguments ..
   integer :: lmpotd, irmd, irmind
@@ -180,7 +181,7 @@ subroutine generalpot(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
       ! write(6,*) ' All interpolation ok now write'
       ! --------------------------------------------------------------
       write (ifile, fmt=100)
-      nz1 = z1
+      nz1 = nint(z1)
       if (nspin==1) then
         write (ifile, fmt=110) elemname(nz1), z1
       else if (is==1) then
@@ -335,6 +336,7 @@ subroutine splint(xa, ya, y2a, n, x, y, yderiv)
   ! returns a cubic-spline interpolated value y and the derivative yderiv.
   ! Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
   implicit none
+  real (kind=dp), parameter :: eps=1.0D-12
   integer :: n
   real (kind=dp) :: x, y, yderiv, xa(*), ya(*), y2a(*)
   integer :: k, khi, klo
@@ -359,7 +361,7 @@ subroutine splint(xa, ya, y2a, n, x, y, yderiv)
   ! klo and khi now bracket the input value of x.
   h = xa(khi) - xa(klo)
   ! The xa's must be distinct.
-  if (h==0.e0_dp) stop 'Bad XA input in SPLINT'
+  if (abs(h)<eps) stop 'Bad XA input in SPLINT'
   ! Cubic spline polynomial is now evaluated.
   a = (xa(khi)-x)/h
   b = (x-xa(klo))/h
