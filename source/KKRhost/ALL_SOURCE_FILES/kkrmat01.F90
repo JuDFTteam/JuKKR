@@ -639,7 +639,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
                end do
             end do
             if(test('rhoqtest')) then
-               call rhoq_saveG(nscoef,rhoq_kmask,kpt,nofks,k_end,kp,i,j,mu,imin,iatomimp,lmmaxd,G)
+               call rhoq_saveG(nscoef,rhoq_kmask,kpt,k_end,kp,i,j,mu,imin,iatomimp,lmmaxd,G)
             end if
          end do ! isym
          ! ----------------------------------------------------------------------

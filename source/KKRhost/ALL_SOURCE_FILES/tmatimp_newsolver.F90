@@ -11,8 +11,8 @@
 !----------------------------------------------------------------------------
 subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNSD,NFUND,  &
    IHOST,NTOTD,NSPIN,LMPOT,NCHEB,LMMAXD,KORBIT,NSPOTD,IELAST,IRMIND,NPAN_EQ,NPAN_LOG,      &
-   NATOMIMP,C,R_LOG,IPAN,IRWS,IRMIN,HOSTIMP,IPANIMP,IRWSIMP,ATOMIMP,IRMINIMP,       &
-   ICLEB,IRCUT,IRCUTIMP,ZAT,ZIMP,R,CLEB,RIMP,RCLSIMP,E,VM2Z,VM2ZIMP,VINS,VINSIMP,   &
+   NATOMIMP,C,R_LOG,IPAN,IRMIN,HOSTIMP,IPANIMP,IRWSIMP,ATOMIMP,IRMINIMP,       &
+   ICLEB,IRCUT,IRCUTIMP,ZAT,ZIMP,R,CLEB,RIMP,RCLSIMP,E,VM2ZIMP,VINSIMP,   &
    DTMTRX, LMMAXSO)
 
 #ifdef CPP_MPI
@@ -60,7 +60,6 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    real (kind=dp), intent(in) :: C
    real (kind=dp), intent(in) :: R_LOG !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
    integer, dimension(NATYP), intent(in)    :: IPAN  !< Number of panels in non-MT-region
-   integer, dimension(NATYP), intent(in)    :: IRWS  !< R point at WS radius
    integer, dimension(NATYP), intent(in)    :: IRMIN !< Max R for spherical treatment
    integer, dimension(NATYP), intent(in)    :: HOSTIMP
    integer, dimension(NATOMIMP), intent(in) :: IPANIMP
@@ -78,15 +77,16 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    real (kind=dp), dimension(3,NATOMIMP), intent(in)   :: RCLSIMP
    ! .. In/Out variables
    complex (kind=dp), intent(inout) :: E
-   real (kind=dp), dimension(IRM,NSPOTD), intent(inout) :: VM2Z
    real (kind=dp), dimension(IRM,NSPIN*NATOMIMP), intent(inout) :: VM2ZIMP
-   real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS   !< Non-spherical part of the potential
    real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPIN*NATOMIMP), intent(inout) :: VINSIMP
    complex (kind=dp), dimension((KORBIT+1)*LMMAXD*NATOMIMP,(KORBIT+1)*LMMAXD*NATOMIMP), intent(inout) :: DTMTRX
    ! .. Local variables
    integer :: ipot
    integer :: I1,IR,NSRA,USE_SRATRICK,NVEC,LM1,LM2,ISPIN,I2,IL1,IL2,IRMDNEWD
-   integer :: i_stat, i_all,ierr
+   integer :: i_stat, i_all
+#ifdef CPP_MPI
+   integer :: ierr
+#endif
    real (kind=dp) :: THETA,PHI
    complex (kind=dp) :: GMATPREFACTOR
    integer, dimension(NATYP) :: NPAN_TOT
@@ -231,7 +231,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','tmatimp_newsolver')
    
       ! In second step interpolate potential (gain atom by atom with NATYP==1)
-      call CREATE_NEWMESH(NATYP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,NFUND,&
+      call CREATE_NEWMESH(NATYP,IRM,IPAND,IRID,NTOTD,NFUND,&
          NCHEB,IRMDNEWD,NSPIN,R(:,:),IRMIN(:),IPAN(:),IRCUT(0:IPAND,:),    &
          R_LOG,NPAN_LOG,NPAN_EQ,NPAN_LOG_AT(:),NPAN_EQ_AT(:),NPAN_TOT(:),  &
          RNEW(:,:),RPAN_INTERVALL(0:NTOTD,:),IPAN_INTERVALL(0:NTOTD,:),1)
@@ -312,7 +312,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
             JLK2,GMATPREFACTOR)
          ! using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
-            call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZAT(I1),C,E, &
+            call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZAT(I1),E, &
                LMPOT,LMMAXSO,RNEW(1:IRMDNEW(I1),I1),                         &
                VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),             &
                NCHEB,NPAN_TOT(I1),                                            &
@@ -332,7 +332,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          call RLLSLL(RPAN_INTERVALL(0:NTOTD,I1),RNEW(1:IRMDNEW(I1),I1), &
             VNSPLL,RLL,SLL,TMATLL(:,:,I2),NCHEB,                        &
             NPAN_TOT(I1),LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW(I1),   &
-            IRMDNEW(I1),NSRA,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
+            NSRA,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
             '1','1','0',USE_SRATRICK,dummy_alphaget)
          if (NSRA.EQ.2) then
             do IR=1,IRMDNEW(I1)
@@ -537,7 +537,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    TMATLLIMP = CZERO
    TMATSPH = CZERO
 
-   call CREATE_NEWMESH(NATOMIMP,LMAX,LPOT,IRM,IRNSD,IPAND,IRID,NTOTD,NFUND,&
+   call CREATE_NEWMESH(NATOMIMP,IRM,IPAND,IRID,NTOTD,NFUND,&
       NCHEB,IRMDNEWD,NSPIN,RIMP(:,1:NATOMIMP),IRMINIMP(1:NATOMIMP),        &
       IPANIMP(1:NATOMIMP),IRCUTIMP(0:IPAND,1:NATOMIMP),R_LOG,NPAN_LOG,     &
       NPAN_EQ,NPAN_LOG_AT(1:NATOMIMP),NPAN_EQ_AT(1:NATOMIMP),              &
@@ -546,8 +546,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
 
    ! In second step interpolate potential
    call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATOMIMP,IPAND,LMPOT,NSPOTD, &
-      NTOTD,NCHEB,IRMDNEWD,                                      &
-      NSPIN,RIMP(:,1:NATOMIMP),IRMIND,IRMINIMP(1:NATOMIMP),              &
+      NTOTD,IRMDNEWD,                                      &
+      NSPIN,RIMP(:,1:NATOMIMP),IRMINIMP(1:NATOMIMP),              &
       IRWSIMP(1:NATOMIMP),                                        &
       IRCUTIMP(0:IPAND,1:NATOMIMP),                               &
       VINSIMP(IRMIND:IRM,1:LMPOT,1:NATOMIMP),                   &
@@ -635,7 +635,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          HLK,JLK,HLK2,JLK2,GMATPREFACTOR)
       ! using spherical potential as reference
       if (USE_SRATRICK.EQ.1) then
-         call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZIMP(I1),C,  &
+         call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZIMP(I1),  &
             E,LMPOT,LMMAXSO,RNEW(1:IRMDNEW(I1),I1),                       &
             VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),             &
             NCHEB,NPAN_TOT(I1),RPAN_INTERVALL(0:NTOTD,I1),                 &
@@ -655,7 +655,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       call RLLSLL(RPAN_INTERVALL(0:NTOTD,I1),RNEW(1:IRMDNEW(I1),I1), &
          VNSPLL,RLL,SLL,TMATLLIMP(:,:,I1),NCHEB,                     &
          NPAN_TOT(I1),LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),IRMDNEW(I1),   &
-         IRMDNEW(I1),NSRA,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
+         NSRA,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
          '1','1','0',USE_SRATRICK,dummy_alphaget)
       if (NSRA.EQ.2) then
          do IR=1,IRMDNEW(I1)

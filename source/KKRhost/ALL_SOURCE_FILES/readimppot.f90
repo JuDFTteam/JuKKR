@@ -4,7 +4,7 @@
 ! -------------------------------------------------------------------------------
 subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, &
   ipanimp, thetasimp, ircutimp, irwsimp, khfeld, hfield, vinsimp, vm2zimp, &
-  irminimp, rimp, zimp, irmd, irnsd, irid, nfund, ntotd, ipand)
+  irminimp, rimp, zimp, irmd, irnsd, irid, nfund, ipand)
   ! ************************************************************************
   ! read in impurity potential
   ! n.h.long, May 2013
@@ -12,7 +12,7 @@ subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, &
   use :: mod_datatypes, only: dp
   implicit none
   ! .. Parameters ..
-  integer :: nspin, natomimp, irmd, irnsd, irid, nfund, ntotd, ipand
+  integer :: nspin, natomimp, irmd, irnsd, irid, nfund, ipand
   ! ..
   ! .. Scalar Arguments ..
   real (kind=dp) :: alat, hfield, vbc(2)

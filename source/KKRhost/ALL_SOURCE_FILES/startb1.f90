@@ -26,7 +26,7 @@
 ! > @date Nov. 1989
 ! -------------------------------------------------------------------------------
 subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
-  rmtnew, rmt, ititle, imt, irc, vconst, ins, irns, fpradius, lpot, nspin, &
+  rmtnew, rmt, ititle, imt, irc, vconst, ins, irns, fpradius, nspin, &
   vins, irmin, kshape, ntcell, ircut, ipan, thetas, ifunm, nfu, llmsp, lmsp, &
   efermi, vbc, dror, rs, s, vm2z, rws, ecore, lcore, ncore, drdi, r, zat, a, &
   b, irws, iinfo, lmpot, irmind, irm, lmxspd, ipand, irid, irnsd, natyp, &
@@ -48,8 +48,6 @@ subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
   integer, intent (in) :: irid     ! < Shape functions parameters in
                                    ! non-spherical part
   integer, intent (in) :: lmax     ! < Maximum l component in wave function
-                                   ! expansion
-  integer, intent (in) :: lpot     ! < Maximum l component in potential
                                    ! expansion
   integer, intent (in) :: nbeg     ! < Starting number for reading the
                                    ! potential

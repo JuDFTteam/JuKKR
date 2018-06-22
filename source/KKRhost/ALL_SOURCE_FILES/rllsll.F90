@@ -21,7 +21,7 @@ contains
       cmoderll,cmodesll,cmodetest,idotime)
 #else
    subroutine RLLSLL(RPANBOUND,RMESH,VLL,RLL,SLL,TLLP, &
-         NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX,NRMAXD, &
+         NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX, &
          NVEC,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
          CMODERLL,CMODESLL,CMODETEST,USE_SRATRICK1,      &
          ALPHAGET) ! LLY
@@ -125,7 +125,7 @@ contains
       ! nvec=1 non-rel, nvec=2 for sra and dirac
       integer :: nrmax                               ! total number of rad. mesh points
 #ifdef hostcode
-      integer :: nrmaxd, LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
+      integer :: LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
 #endif
 
       ! running indices

@@ -12,10 +12,9 @@ SUBROUTINE sll_global_solutions(RPANBOUND,RMESH,VLL,SLL, &
                   cmodesll,idotime)
 #else
 SUBROUTINE sll_global_solutions(RPANBOUND,RMESH,VLL,SLL, &
-                  NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX,NRMAXD, &
+                  NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX, &
                   NVEC,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
-                  CMODESLL,USE_SRATRICK1,      &
-                  ALPHAGET) ! LLY
+                  CMODESLL,USE_SRATRICK1) ! LLY
 #endif
 ! ************************************************************************
 ! for description see rllsll routine
@@ -43,7 +42,7 @@ implicit none
                                                      ! nvec=1 non-rel, nvec=2 for sra and dirac
       integer :: nrmax                               ! total number of rad. mesh points
 #ifdef hostcode
-      integer :: nrmaxd, LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
+      integer :: LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
 #endif
 
       complex (kind=dp),parameter:: ci= (0.0d0,1.0d0), &! complex i
@@ -98,13 +97,9 @@ implicit none
                        tau(0:ncheb,0:npan), &    ! Radial mesh point
                        slc1sum(0:ncheb),rmesh(nrmax)
 
-      integer ipiv(0:ncheb,lmsize2)
       integer :: ierror,use_sratrick
       integer :: idotime
       integer,parameter  :: directsolv=1
-#ifdef hostcode
-      complex (kind=dp) ALPHAGET(LMSIZE,LMSIZE) ! LLY
-#endif
 
 #ifdef CPP_HYBRID
 !     openMP variable --sacin 23/04/2015

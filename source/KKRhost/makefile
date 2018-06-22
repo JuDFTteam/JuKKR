@@ -50,6 +50,7 @@ hybriddebug:    COMPVER ='hybriddebug'
 openmp:    COMPVER ='openmp'
 ompdebug:  COMPVER ='openmpdebug'
 mac:       COMPVER ='serial-mac'
+macdebug:       COMPVER ='serial-mac-debug'
 macmpi:    COMPVER ='mpi-mac'
 macomp:    COMPVER ='openmp-mac'
 macompprof:    COMPVER ='openmp-mac-prof'
@@ -165,6 +166,7 @@ RWTHLLIBS = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 JURECALIBS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
 
 mac:    LLIBS=$(MACLLIBS)
+macdebug:    LLIBS=$(MACLLIBS)
 macmpi: LLIBS=$(MACLLIBS)
 macomp: LLIBS=$(MACLLIBS)
 macompprof: LLIBS=$(MACLLIBS)
@@ -187,6 +189,7 @@ RWTHNAGLIBS=
 
 
 mac:    LLIBSOPENMP=$(MACLLIBSOPENMP)
+macdebug:    LLIBSOPENMP=$(MACLLIBSOPENMP)
 macmpi: LLIBSOPENMP=$(MACLLIBSOPENMP)
 macomp: LLIBSOPENMP=$(MACLLIBSOPENMP)
 macompprof: LLIBSOPENMP=$(MACLLIBSOPENMP)
@@ -270,6 +273,7 @@ rwthhybrid: OPENMPFLAGS = -qopenmp
 DEBUGFLAGS = -O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
 
 debug:       FFLAGS = $(DEBUGFLAGS)
+macdebug:       FFLAGS = $(DEBUGFLAGS)
 hybriddebug: FFLAGS = $(DEBUGFLAGS)
 mpidebug:    FFLAGS = $(DEBUGFLAGS)
 ompdebug:    FFLAGS = $(DEBUGFLAGS)
@@ -345,6 +349,7 @@ rwthmpidebug: compile
 install: clean mpi
 
 mac:    compile
+macdebug:    compile
 macmpi: compile
 macomp: compile
 macompprof: compile

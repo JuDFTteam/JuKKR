@@ -28,7 +28,7 @@
 ! Fortran90
 ! -------------------------------------------------------------------------------
 subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, &
-  irws, ircut, lpot, nfu, llmsp, thetas, ntcell, kshape, ipan, chrgnt, itc, &
+  irws, ircut, nfu, llmsp, thetas, ntcell, kshape, ipan, chrgnt, itc, &
   nshell, noq, conc, kaoez, catom, irm, nemb, lmpot)
 
   use :: global_variables
@@ -42,8 +42,6 @@ subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, &
   integer, intent (in) :: ipf
   integer, intent (in) :: irm      ! < Maximum number of radial points
   integer, intent (in) :: nemb     ! < Number of 'embedding' positions
-  integer, intent (in) :: lpot     ! < Maximum l component in potential
-                                   ! expansion
   integer, intent (in) :: naez     ! < Number of atoms in unit cell
   integer, intent (in) :: natyp    ! < Number of kinds of atoms in unit cell
   integer, intent (in) :: nspin    ! < Counter for spin directions

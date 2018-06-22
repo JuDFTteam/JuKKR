@@ -1,4 +1,4 @@
-subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, z, c, e, lmpotd, &
+subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, z, e, lmpotd, &
   lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk, jlk, &
   hlk2, jlk2, gmatprefactor, tmat, alpha, use_sratrick)
 
@@ -11,7 +11,7 @@ subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, z, c, e, lmpotd, &
   integer :: nsra, irmdnew, nrmaxd, nspin, lmax, lmpotd, lmmaxso
   integer :: ncheb, npan_tot
   integer :: use_sratrick
-  real (kind=dp) :: z, c
+  real (kind=dp) :: z
   complex (kind=dp) :: e, gmatprefactor
   real (kind=dp) :: rnew(nrmaxd), rpan_intervall(0:npan_tot)
   real (kind=dp) :: vins(irmdnew, lmpotd, nspin)
@@ -106,7 +106,7 @@ subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, z, c, e, lmpotd, &
       tmattemp = (0e0_dp, 0e0_dp)
       alphatemp = (0e0_dp, 0e0_dp)
       call rllsll(rpan_intervall, rnew, vll, rlltemp, slltemp, tmattemp, &
-        ncheb, npan_tot, lmsize, lmsize2, nvec, irmdnew, nrmaxd, nvec, &
+        ncheb, npan_tot, lmsize, lmsize2, nvec, irmdnew, nvec, &
         jlk_indextemp, hlktemp, jlktemp, hlk2temp, jlk2temp, gmatprefactor, &
         '1', '1', '0', use_sratrick, alphatemp) ! LLY
 

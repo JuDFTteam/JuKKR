@@ -262,7 +262,7 @@ contains
       !-------------------------------------------------------------------------
       if(TEST('flow    ')) write(1337,*) '>>> RHOTOTB'
       call RHOTOTB(IPF,NATYP,NAEZ,NSPIN,RHO2NS,RHOC,RHOORB,ZAT,DRDI,IRWS,IRCUT,  &
-         LPOT,NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,CHRGNT,ITSCF,NSHELL,NOQ,CONC,  &
+         NFU,LLMSP,THETAS,NTCELL,KSHAPE,IPAN,CHRGNT,ITSCF,NSHELL,NOQ,CONC,  &
          KAOEZ,CHRGATOM,IRMD,NEMB,LMPOT)
 
       if(TEST('flow    ')) write(1337,*) '<<< RHOTOTB'

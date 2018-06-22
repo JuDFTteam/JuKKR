@@ -7,7 +7,7 @@
 ! > inc.p import and to be able to use routine for different number of atoms
 ! -------------------------------------------------------------------------------
 subroutine interpolate_poten(lpot, irm, irnsd, natyp, ipand, lmpot, nspotd, &
-  ntotd, ncheb, irmdnew, nspin, r, irmind, irmin, irws, ircut, vins, visp, &
+  ntotd, irmdnew, nspin, r, irmin, irws, ircut, vins, visp, &
   npan_log, npan_eq, npan_tot, rnew, ipan_intervall, vinsnew)
   use :: mod_datatypes, only: dp
 
@@ -18,14 +18,11 @@ subroutine interpolate_poten(lpot, irm, irnsd, natyp, ipand, lmpot, nspotd, &
                                    ! expansion
   integer, intent (in) :: irnsd
   integer, intent (in) :: ntotd
-  integer, intent (in) :: ncheb    ! < Number of Chebychev pannels for the new
-                                   ! solver
   integer, intent (in) :: natyp    ! < Number of kinds of atoms in unit cell
   integer, intent (in) :: ipand    ! < Number of panels in non-spherical part
   integer, intent (in) :: lmpot    ! < (LPOT+1)**2
   integer, intent (in) :: nspin    ! < Counter for spin directions
   integer, intent (in) :: nspotd
-  integer, intent (in) :: irmind   ! < IRM-IRNSD
   integer, intent (in) :: irmdnew
   integer, dimension (natyp), intent (in) :: irws ! < R point at WS radius
   integer, dimension (natyp), intent (in) :: irmin ! < Max R for spherical

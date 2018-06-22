@@ -741,8 +741,8 @@ contains
          endif
 
          call INTERPOLATE_POTEN(LPOT,IRMD,IRNSD,NATYP,IPAND,       &
-            LMPOTD,NSPOTD,NTOTD,NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH, &
-            IRMIND,IRMIN,IRWS,IRCUT,VINS,VISP,NPAN_LOG_AT,NPAN_EQ_AT,   &
+            LMPOTD,NSPOTD,NTOTD,NTOTD*(NCHEB+1),NSPIN,RMESH, &
+            IRMIN,IRWS,IRCUT,VINS,VISP,NPAN_LOG_AT,NPAN_EQ_AT,   &
             NPAN_TOT,RNEW,IPAN_INTERVALL,VINSNEW)
 
 
@@ -809,7 +809,7 @@ contains
                THETASNEW(1,1,ICELL),THETA(I1),PHI(I1),I1,IPOT,          &
                DEN1(0,1,1),ESPV1(0,1),RHO2M1,RHO2M2,MUORB(0,1,I1),      &
                angles_new(:,i1),                                        &
-               IDOLDAU,LOPT(I1),PHILDAU(1,I1),WLDAU(1,1,1,I1),          &  ! LDAU
+               IDOLDAU,LOPT(I1),WLDAU(1,1,1,I1),          &  ! LDAU
                DENMATN(1,1,1,1,I1),NATYP)                                  ! LDAU
 
 #ifdef CPP_TIMING

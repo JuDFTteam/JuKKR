@@ -143,12 +143,12 @@ program kkrcode
       refpot, kfg, kaoez, rmt, zat, rws, mtfac, rmtref, rmtrefat, rmtnew, &
       rbasis, lmxc)
     call allocate_semi_inf_host(1, nembd, tleft, tright)
-    call allocate_cpa(1, naezd, nemb, natypd, noq, icpa, iqat, hostimp, conc)
+    call allocate_cpa(1, naezd,natypd, noq, icpa, iqat, hostimp, conc)
     call allocate_soc(1, krel, natypd, lmaxd, socscale, cscl, socscl)
     call allocate_ldau(1, natypd, lopt, ueff, jeff, erefldau)
     call allocate_magnetization(1, naezd, natypd, lmmaxd, inipol, ixipol, qmtet, &
       qmphi, drotq)
-    call allocate_potential(1,NAEZD,NEMBD,IRMD,NATYPD,NPOTD,IPAND,NFUND,LMXSPD,    &
+    call allocate_potential(1,IRMD,NATYPD,NPOTD,IPAND,NFUND,LMXSPD,    &
        LMPOTD,IRMIND,NSPOTD,NFU,IRC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,   &
        ITITLE,FPRADIUS,VISP,ECORE,VINS)
     call allocate_ldau_potential(1,IRMD,NATYPD,MMAXD,NSPIND,ITLDAU,WLDAU,ULDAU,  &
@@ -859,10 +859,10 @@ program kkrcode
   call allocate_cell(-1,NAEZ,NEMB,NATYP,CLS,IMT,IRWS,IRNS,NTCELL,REFPOT,  &
      KFG,KAOEZ,RMT,ZAT,RWS,MTFAC,RMTREF,RMTREFAT,RMTNEW,RBASIS,LMXC)
   call allocate_semi_inf_host(-1,NEMB,TLEFT,TRIGHT)
-  call allocate_potential(-1,NAEZ,NEMB,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
+  call allocate_potential(-1,IRM,NATYP,NPOTD,IPAND,NFUND,LMXSPD,&
      LMPOT,IRMIND,NSPOTD,NFU,IRC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,&
      ITITLE,FPRADIUS,VISP,ECORE,VINS)
-  call allocate_cpa(-1,NAEZ,NEMB,NATYP,NOQ,ICPA,IQAT,HOSTIMP,CONC)
+  call allocate_cpa(-1,NAEZ,NATYP,NOQ,ICPA,IQAT,HOSTIMP,CONC)
   call allocate_ldau(-1,NATYP,LOPT,UEFF,JEFF,EREFLDAU)
   call allocate_ldau_potential(-1,IRM,NATYP,MMAXD,NSPIND,ITLDAU,WLDAU,    &
      ULDAU,PHILDAU)

@@ -1283,7 +1283,7 @@ contains
                t_params%LMMAXD,t_params%KORBIT,t_params%NSPOTD,            &
                t_params%IELAST,t_params%IRMIND,t_params%NPAN_EQ,           &
                t_params%NPAN_LOG,t_imp%NATOMIMP,CVLIGHT,t_params%R_LOG,    &
-               t_params%IPAN,t_params%IRWS,t_params%IRMIN,                 &
+               t_params%IPAN,t_params%IRMIN,                 &
                t_imp%HOSTIMP(1:t_imp%NATOMIMP),                            &
                t_imp%IPANIMP(1:t_imp%NATOMIMP),                            &
                t_imp%IRWSIMP(1:t_imp%NATOMIMP),                            &
@@ -1294,8 +1294,8 @@ contains
                t_params%ZAT,t_imp%ZIMP(1:t_imp%NATOMIMP),       &
                t_params%RMESH,t_params%CLEB(1,1),                              &
                t_imp%RIMP(1:t_params%IRM,1:t_imp%NATOMIMP),               &
-               t_params%RCLSIMP,EZ(IE),t_params%VISP,t_imp%VISPIMP,        &
-               t_params%VINS,t_imp%VINSIMP,DTMTRX,LMMAXSO)
+               t_params%RCLSIMP,EZ(IE),t_imp%VISPIMP,        &
+               t_imp%VINSIMP,DTMTRX,LMMAXSO)
 
             ! compute GMATLL_GES, on master rank only
             if (IELAST.EQ.3 .and. myrank==master) then

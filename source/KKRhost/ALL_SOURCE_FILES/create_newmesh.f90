@@ -20,7 +20,7 @@ contains
   ! > create_newmesh in tmatimp routine for GREENIMP option
   ! > this is the list of  array dimensions previously importted from inc.p
   ! ----------------------------------------------------------------------------
-  subroutine create_newmesh(natyp, lmax, lpot, irm, irnsd, ipand, irid, ntotd, &
+  subroutine create_newmesh(natyp, irm, ipand, irid, ntotd, &
     nfund, ncheb, irmdnew, nspin, r, irmin, ipan, ircut, r_log, npan_log, &
     npan_eq, npan_log_at, npan_eq_at, npan_tot, rnew, rpan_intervall, &
     ipan_intervall, ncelld, ntcell, thetas, thetasnew) ! < optional arguments
@@ -31,13 +31,8 @@ contains
     integer, intent (in) :: irm    ! < Maximum number of radial points
     integer, intent (in) :: irid   ! < Shape functions parameters in
                                    ! non-spherical part
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
-                                   ! expansion
-    integer, intent (in) :: lpot   ! < Maximum l component in potential
-                                   ! expansion
     integer, intent (in) :: nspin  ! < Counter for spin directions
     integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
-    integer, intent (in) :: irnsd
     integer, intent (in) :: ipand  ! < Number of panels in non-spherical part
     integer, intent (in) :: ntotd
     integer, intent (in) :: nfund  ! < Shape functions parameters in

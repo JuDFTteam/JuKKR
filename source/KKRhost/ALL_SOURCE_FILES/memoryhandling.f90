@@ -321,15 +321,13 @@ contains
   ! > Jonathan Chico
   ! > @date 14.11.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_potential(flag, naez, nemb, irm, natyp, npotd, ipand, &
+  subroutine allocate_potential(flag, irm, natyp, npotd, ipand, &
     nfund, lmxspd, lmpot, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, &
     ircut, lcore, llmsp, ititle, fpradius, visp, ecore, vins)
 
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: nemb   ! < number of 'embedding' positions
     integer, intent (in) :: irm
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
     integer, intent (in) :: npotd  ! < 2*NATYP
@@ -528,14 +526,13 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_cpa(flag, naez, nemb, natyp, noq, icpa, iqat, hostimp, &
+  subroutine allocate_cpa(flag, naez, natyp, noq, icpa, iqat, hostimp, &
     conc)
 
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: nemb   ! < number of 'embedding' positions
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
 
     integer, dimension (:), allocatable, intent (inout) :: noq ! < Number of

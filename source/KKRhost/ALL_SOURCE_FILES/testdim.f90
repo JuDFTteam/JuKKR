@@ -5,15 +5,12 @@
 ! changes done to the
 ! > inc.p
 ! -------------------------------------------------------------------------------
-subroutine testdim(nspin, naez, nemb, natyp, lmax, irm, ins, insref, nref, &
-  irns, ncls, nlayer, krel, nspind, nclsd, nprincd, knosph, irnsd, korbit)
+subroutine testdim(nspin, naez, nemb, natyp, ins, insref, nref, &
+  irns, nlayer, krel, nspind, nprincd, knosph, irnsd, korbit)
 
   implicit none
 
   integer, intent (in) :: ins      ! < 0 (MT), 1(ASA), 2(Full Potential)
-  integer, intent (in) :: irm      ! < Maximum number of radial points
-  integer, intent (in) :: lmax     ! < Maximum l component in wave function
-                                   ! expansion
   integer, intent (in) :: naez     ! < Number of atoms in unit cell
   integer, intent (in) :: nref     ! < Number of diff. ref. potentials
   integer, intent (in) :: krel     ! < Switch for
@@ -22,10 +19,8 @@ subroutine testdim(nspin, naez, nemb, natyp, lmax, irm, ins, insref, nref, &
                                    ! parameters depend explicitly on KREL,
                                    ! they are set automatically Used for Dirac
                                    ! solver in ASA
-  integer, intent (in) :: ncls     ! < Number of reference clusters
   integer, intent (in) :: nspin    ! < Counter for spin directions
   integer, intent (in) :: natyp    ! < Number of kinds of atoms in unit cell
-  integer, intent (in) :: nclsd    ! < Maximum number of different TB-clusters
   integer, intent (in) :: irnsd
   integer, intent (in) :: insref   ! < INS for reference pot. (usual 0)
   integer, intent (in) :: knosph   ! < switch for spherical/non-spherical

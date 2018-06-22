@@ -12,7 +12,7 @@ SUBROUTINE rll_global_solutions(RPANBOUND,RMESH,VLL,RLL,TLLP, &
                   cmoderll,idotime)
 #else
 SUBROUTINE rll_global_solutions(RPANBOUND,RMESH,VLL,RLL,TLLP, &
-                  NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX,NRMAXD, &
+                  NCHEB,NPAN,LMSIZE,LMSIZE2,LBESSEL,NRMAX, &
                   NVEC,JLK_INDEX,HLK,JLK,HLK2,JLK2,GMATPREFACTOR, &
                   CMODERLL,USE_SRATRICK1,      &
                   ALPHAGET) ! LLY
@@ -43,7 +43,7 @@ implicit none
                                                      ! nvec=1 non-rel, nvec=2 for sra and dirac
       integer :: nrmax                               ! total number of rad. mesh points
 #ifdef hostcode
-      integer :: nrmaxd, LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
+      integer :: LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
 #endif
 
       complex (kind=dp),parameter:: ci= (0.0d0,1.0d0), &! complex i

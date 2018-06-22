@@ -409,7 +409,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          ! Using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
             TMATSPH(:,ith)=CZERO
-            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,LMPOT, &
+            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,ERYD,LMPOT, &
                LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,JLK_INDEX,        &
                HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),            &
                GMATPREFACTOR,TMATSPH(:,ith),ALPHASPH,USE_SRATRICK)
@@ -427,13 +427,13 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          if( OPT('RLL-SLL ') .and. .not.(OPT('XCPL    ').or.OPT('OPERATOR')) ) then
             call rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),  &
                RLL(:,:,:,ith),TMAT0(:,:),NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO, &
-               4*(LMAX+1),IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),         &
+               4*(LMAX+1),IRMDNEW,NSRA,JLK_INDEX,HLK(:,:,ith),         &
                JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,'1',    &
                USE_SRATRICK,ALPHA0(:,:))
          else
             call RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),RLL(:,:,:,ith), &
                SLL(:,:,:,ith),TMAT0(:,:),NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO, &
-               4*(LMAX+1),IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),         &
+               4*(LMAX+1),IRMDNEW,NSRA,JLK_INDEX,HLK(:,:,ith),         &
                JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,'1','1',&
                '0',USE_SRATRICK,ALPHA0(:,:))
          end if
@@ -550,7 +550,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          ! notice that exchange the order of left and right hankel/bessel functions
          if (USE_SRATRICK.EQ.1) then
             TMATSPH(:,ith)=CZERO
-            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,LMPOT, &
+            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,ERYD,LMPOT, &
                LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,JLK_INDEX,        &
                HLK2(:,:,ith),JLK2(:,:,ith),HLK(:,:,ith),JLK(:,:,ith),            &
                GMATPREFACTOR,ALPHASPH,TMATSPH(:,ith),USE_SRATRICK)
@@ -572,7 +572,7 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          else
             call RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),RLLLEFT(:,:,:,ith),      &
                SLLLEFT(:,:,:,ith),TMAT0,NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),&
-               IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),HLK(:,:,ith), &
+               IRMDNEW,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),HLK(:,:,ith), &
                JLK(:,:,ith),GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHA0)
          end if
          if (NSRA.EQ.2) then

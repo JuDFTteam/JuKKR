@@ -2754,7 +2754,9 @@ contains
       character(len=10), intent(inout) :: SOLVER   !< Type of solver
       character(len=80), intent(inout) :: TMPDIR
 
+#ifdef CPP_MPI
       integer :: ierr
+#endif
 
      write(777+myrank, *) 't_params%NR              '  , t_params%NR                    
      write(777+myrank, *) 't_params%IRM             '  , t_params%IRM       

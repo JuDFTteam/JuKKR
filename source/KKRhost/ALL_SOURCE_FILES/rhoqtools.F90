@@ -230,7 +230,7 @@ module mod_rhoqtools
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-   subroutine rhoq_saveG(nscoef, rhoq_kmask, kpt, nofks, k_end, kp, i, j, mu, imin, iatomimp, lmmaxd, G)
+   subroutine rhoq_saveG(nscoef, rhoq_kmask, kpt, k_end, kp, i, j, mu, imin, iatomimp, lmmaxd, G)
 
 #ifdef CPP_HYBRID
       use omp_lib
@@ -238,7 +238,7 @@ module mod_rhoqtools
 
       implicit none
 
-      integer, intent(in) :: i, j, mu, imin, lmmaxd, nscoef, nofks, k_end, kpt
+      integer, intent(in) :: i, j, mu, imin, lmmaxd, nscoef, k_end, kpt
       integer, intent(in) :: iatomimp(nscoef)
       real (kind=dp), intent(in) :: rhoq_kmask(5, k_end), kp(3)
       complex (kind=dp), intent(in) :: G(lmmaxd, lmmaxd)

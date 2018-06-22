@@ -6,7 +6,7 @@ subroutine RHOVALNEW( &
    LDORHOEF,IELAST,NSRA,NSPIN,LMAX,EZ,WEZ,ZAT,SOCSCALE,CLEB,ICLEB,IEND,IFUNM,    &
    LMSP,NCHEB,NPAN_TOT,NPAN_LOG,NPAN_EQ,RMESH,IRWS,RPAN_INTERVALL,IPAN_INTERVALL,&
    RNEW,VINSNEW,THETASNEW,THETA,PHI,I1,IPOT,DEN_out,ESPV,RHO2NS,R2NEF,MUORB,     &
-   angles_new,IDOLDAU,LOPT,PHILDAU,WLDAU,DENMATN,NATYP)
+   angles_new,IDOLDAU,LOPT,WLDAU,DENMATN,NATYP)
 
 #ifdef CPP_OMP
    use omp_lib
@@ -61,7 +61,6 @@ subroutine RHOVALNEW( &
    real (kind=dp), dimension(*), intent(in)   :: CLEB !< GAUNT coefficients (GAUNT)
    real (kind=dp), dimension(IRMD), intent(in) :: RMESH
    real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix
-   complex (kind=dp), dimension(IRMD), intent(in) :: PHILDAU
 
    ! .. In/Out variables
    real (kind=dp), intent(inout) :: PHI
@@ -475,7 +474,7 @@ subroutine RHOVALNEW( &
 
          ! using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
-            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,  &
+            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,ERYD,  &
                lmpotd,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,      &
                JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),          &
                JLK2(:,:,ith),GMATPREFACTOR,TMATSPH(:,ith),                 &
@@ -497,14 +496,14 @@ subroutine RHOVALNEW( &
             call rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),  &
                RLL(:,:,:,ith),TMATLL,                                         &
                NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),                &
-               IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),       &
+               IRMDNEW,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),       &
                HLK2(:,:,ith),JLK2(:,:,ith),                                   &
                GMATPREFACTOR,'1',USE_SRATRICK,ALPHALL)
          else
             call RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),          &
                RLL(:,:,:,ith),SLL(:,:,:,ith),TMATLL,                    &
                NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),          &
-               IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith), &
+               IRMDNEW,NSRA,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith), &
                HLK2(:,:,ith),JLK2(:,:,ith),                             &
                GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
          endif
@@ -557,7 +556,7 @@ subroutine RHOVALNEW( &
          ! using spherical potential as reference
          ! notice that exchange the order of left and right hankel/bessel functions
          if (USE_SRATRICK.EQ.1) then
-            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,CVLIGHT,ERYD,  &
+            call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,ERYD,  &
                lmpotd,LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,      &
                JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),                      &
                HLK(:,:,ith),JLK(:,:,ith),GMATPREFACTOR,                    &
@@ -576,20 +575,20 @@ subroutine RHOVALNEW( &
             call rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),  &
                RLLLEFT(:,:,:,ith),TMATTEMP,                                   &
                NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),                &
-               IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),     &
+               IRMDNEW,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),     &
                HLK(:,:,ith),JLK(:,:,ith),                                     &
                GMATPREFACTOR,'1',USE_SRATRICK,ALPHALL)
             call sll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),  &
                SLLLEFT(:,:,:,ith),                                            &
                NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),                &
-               IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),     &
+               IRMDNEW,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),     &
                HLK(:,:,ith),JLK(:,:,ith),                                     &
-               GMATPREFACTOR,'1',USE_SRATRICK,ALPHALL)
+               GMATPREFACTOR,'1',USE_SRATRICK)
          else
             call RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),             &
                RLLLEFT(:,:,:,ith),SLLLEFT(:,:,:,ith),TMATTEMP,             &
                NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),             &
-               IRMDNEW,NRMAXD,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),  &
+               IRMDNEW,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),  &
                HLK(:,:,ith),JLK(:,:,ith),                                  &
                GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHALL)
          end if
@@ -776,7 +775,7 @@ subroutine RHOVALNEW( &
             IE = ie_start+ie_num                                                 ! qdos
             do IQ=1,NQDOS                                                        ! qdos
                if ((IQ.EQ.1).AND.(IE_num.EQ.1)) then                             ! qdos
-                  if(t_inc%NATYP.ge.100) then                                    ! qdos
+                  if(NATYP.ge.100) then                                    ! qdos
                      open(31,                                                  & ! qdos
                         FILE="qdos."//char(48+I1/100)//char(48+mod(I1/10,10))//& ! qdos
                         char(48+mod(I1,10))//"."//char(48+1)//".dat")            ! qdos
@@ -819,7 +818,7 @@ subroutine RHOVALNEW( &
                !                                                                 ! qdos
                if(test('compqdos')) then                                         ! complex qdos
                   if ((IQ.EQ.1).AND.(IE_num.EQ.1)) then                          ! complex qdos
-                     if(t_inc%NATYP.ge.100) then                                 ! complex qdos
+                     if(NATYP.ge.100) then                                 ! complex qdos
                         open(31,                                              &  ! complex qdos
                            FILE="cqdos."//char(48+I1/100)//                   &  ! complex qdos
                            char(48+mod(I1/10,10))//char(48+mod(I1,10))//"."   &  ! complex qdos
@@ -947,7 +946,7 @@ subroutine RHOVALNEW( &
             do IE=1,IELAST                                                       ! lm-dos
                IQ=1                                                              ! lm-dos
                if (IE.EQ.1) then                                                 ! lm-dos
-                  if(t_inc%NATYP.ge.100) then                                    ! lm-dos
+                  if(NATYP.ge.100) then                                    ! lm-dos
                      open(29,                               &                    ! lm-dos
                         FILE="lmdos."//char(48+I1/100)//    &                    ! lm-dos
                         char(48+mod(I1/10,10))//            &                    ! lm-dos

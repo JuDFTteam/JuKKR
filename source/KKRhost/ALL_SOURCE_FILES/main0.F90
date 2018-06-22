@@ -553,7 +553,7 @@ contains
       !> consumption
       !
       ! Call to allocate the arrays associated with the potential
-      call allocate_potential(1,NAEZD,NEMBD,IRMD,NATYPD,NPOTD,IPAND,NFUND,LMXSPD,    &
+      call allocate_potential(1,IRMD,NATYPD,NPOTD,IPAND,NFUND,LMXSPD,    &
          LMPOTD,IRMIND,NSPOTD,NFU,IRC,NCORE,IRMIN,LMSP,LMSP1,IRCUT,LCORE,LLMSP,   &
          ITITLE,FPRADIUS,VISP,ECORE,VINS)
       ! Call to allocate the arrays associated with the LDA+U potential
@@ -668,15 +668,15 @@ contains
       if (KVREL.GE.1) NSRA = 2
       if (KVREL.GE.2) NSRA = 3
       !
-      call TESTDIM(NSPIN,NAEZ,NEMB,NATYP,LMAX,IRMD,INS,INSREF,NREF,IRNS,NCLS,  &
-         NLAYER,KREL,NSPIND,NCLSD,NPRINCD,KNOSPH,IRNSD,KORBIT)
+      call TESTDIM(NSPIN,NAEZ,NEMB,NATYP,INS,INSREF,NREF,IRNS,  &
+         NLAYER,KREL,NSPIND,NPRINCD,KNOSPH,IRNSD,KORBIT)
       !
       if ( INS.GT.0 )    open (19,FILE=I19,STATUS='old',FORM='formatted')
       if ( IFILE.EQ.13 ) open (IFILE,FILE=I13,STATUS='old',FORM='formatted')
       if ( ICC.GT.0 )    open (25,FILE=I25,STATUS='unknown',FORM='formatted')
       !
       call STARTB1(IFILE,1337,1337,IPE,KREL,KWS,LMAX,1,NATYP,ALATNEW,RMTNEW, &
-         RMT,ITITLE,IMT,IRC,VCONST,INS,IRNS,FPRADIUS,LPOT,NSPIN,VINS,IRMIN,   &
+         RMT,ITITLE,IMT,IRC,VCONST,INS,IRNS,FPRADIUS,NSPIN,VINS,IRMIN,   &
          KSHAPE,NTCELL,IRCUT,IPAN,THETAS,IFUNM,NFU,LLMSP,LMSP,E2IN,VBC,       &
          DROR,RS,S,VISP,RWS,ECORE,LCORE,NCORE,DRDI,RMESH,ZAT,A,B,IRWS,1,LMPOT,    &
          IRMIND,IRMD,LMXSPD,IPAND,IRID,IRNSD,NATYP,NCELLD,NFUND,NSPOTD,IVSHIFT, &
@@ -1172,7 +1172,7 @@ contains
       !
       ! new solver for full-potential, spin-orbit, initialise
       if (OPT('NEWSOSOL')) THEN
-         call CREATE_NEWMESH(NATYP,LMAX,LPOT,IRMD,IRNSD,IPAND,IRID,NTOTD,NFUND,&
+         call CREATE_NEWMESH(NATYP,IRMD,IPAND,IRID,NTOTD,NFUND,&
             NCHEB,NTOTD*(NCHEB+1),NSPIN,RMESH,IRMIN,IPAN,IRCUT,R_LOG,NPAN_LOG,    &
             NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,NPAN_TOT,RNEW,RPAN_INTERVALL,      &
             IPAN_INTERVALL,NCELLD,NTCELL,THETAS,THETASNEW)
@@ -1231,7 +1231,7 @@ contains
                          t_imp%IPANIMP,t_imp%THETASIMP,t_imp%IRCUTIMP,&! GREENIMP
                          t_imp%IRWSIMP,KHFELD,HFIELD,t_imp%VINSIMP,   &! GREENIMP
                          t_imp%VISPIMP,t_imp%IRMINIMP,                &! GREENIMP
-                         t_imp%RIMP,t_imp%ZIMP, IRMD, IRNSD,IRID,NFUND,NTOTD,IPAND) ! GREENIMP
+                         t_imp%RIMP,t_imp%ZIMP, IRMD, IRNSD,IRID,NFUND,IPAND) ! GREENIMP
       end if                                                           ! GREENIMP
       !
       !
