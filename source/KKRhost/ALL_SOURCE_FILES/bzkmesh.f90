@@ -97,9 +97,9 @@ subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
   ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
   do l = 1, maxmesh
     if (l>1) then
-      nbx = nint(nbx/1.4)
-      nby = nint(nby/1.4)
-      nbz = nint(nbz/1.4)
+      nbx = int(nbx/1.4)
+      nby = int(nby/1.4)
+      nbz = int(nbz/1.4)
     end if
     if (nbx<1) nbx = 1
     if (nby<1) nby = 1
