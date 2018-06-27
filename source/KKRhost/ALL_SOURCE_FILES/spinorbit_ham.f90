@@ -91,15 +91,13 @@ subroutine spinorbit_ham(lmax, lmmaxd, vins, rnew, e, z, c, socscale, nspin, &
     end do
   else
     do ir = 1, irmdnew
-      rmass(ir) = 0.5e0_dp - 0.5e0_dp/c**2*((vr(ir)-real(e))-2e0_dp*z/rnew(ir) &
-        )
+      rmass(ir) = 0.5e0_dp - 0.5e0_dp/c**2*((vr(ir)-real(e))-2e0_dp*z/rnew(ir))
       hsofac(ir) = socscale/(2e0_dp*rmass(ir)**2*c**2*rnew(ir))*dvdr(ir)
 
       ! add to potential
       do lm1 = 1, 2*lmmaxd
         do lm2 = 1, 2*lmmaxd
-          vnspll1(lm1, lm2, ir) = vnspll(lm1, lm2, ir) + &
-            hsofac(ir)*lsmh(lm1, lm2)
+          vnspll1(lm1, lm2, ir) = vnspll(lm1, lm2, ir) + hsofac(ir)*lsmh(lm1, lm2)
         end do
       end do
     end do

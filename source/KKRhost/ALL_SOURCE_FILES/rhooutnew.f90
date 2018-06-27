@@ -252,30 +252,28 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
       lm1 = l1*(l1+1) + m1 + 1
       do ir = 1, irmdnew
         do jspin = 1, 4
-          cden(ir, l1, jspin) = cden(ir, l1, jspin) + &
-            wr(lm1+lmshift1(jspin), lm1+lmshift2(jspin), ir)
-          cdenlm(ir, lm1, jspin) = wr(lm1+lmshift1(jspin), &
-            lm1+lmshift2(jspin), ir)
+          cden(ir, l1, jspin) = cden(ir, l1, jspin) + wr(lm1+lmshift1(jspin), lm1+lmshift2(jspin), ir)
+          cdenlm(ir, lm1, jspin) = wr(lm1+lmshift1(jspin), lm1+lmshift2(jspin), ir)
         end do                     ! JPSIN
       end do                       ! IR
     end do                         ! M1
 
     do jspin = 1, 4
       do ir = 1, irmdnew
-        rho2nsc(ir, 1, jspin) = rho2nsc(ir, 1, jspin) + &
-          c0ll*(cden(ir,l1,jspin)*df)
+        rho2nsc(ir, 1, jspin) = rho2nsc(ir, 1, jspin) + c0ll*(cden(ir,l1,jspin)*df)
       end do                       ! IR
 
       do ir = imt1 + 1, irmdnew
         cden(ir, l1, jspin) = cden(ir, l1, jspin)*thetasnew(ir, 1)*c0ll
         do m1 = -l1, l1
           lm1 = l1*(l1+1) + m1 + 1
-          cdenlm(ir, lm1, jspin) = cdenlm(ir, lm1, jspin)*thetasnew(ir, 1)* &
-            c0ll
+          cdenlm(ir, lm1, jspin) = cdenlm(ir, lm1, jspin)*thetasnew(ir, 1) * c0ll
         end do                     ! M1
       end do                       ! IR
     end do                         ! JSPIN
   end do                           ! L1
+
+  ! Then the non-spherical part
 
   cdenns = czero
 
@@ -287,14 +285,14 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
     do jspin = 1, 4
       do ir = 1, irmdnew
         rho2nsc(ir, lm3, jspin) = rho2nsc(ir, lm3, jspin) + &
-          (cltdf*wr(lm1+lmshift1(jspin),lm2+lmshift2(jspin),ir))
+          (cltdf * wr(lm1+lmshift1(jspin),lm2+lmshift2(jspin),ir))
       end do
 
       if (lmsp(lm3)>0) then
         ifun = ifunm(lm3)
         do ir = imt1 + 1, irmdnew
-          cdenns(ir, jspin) = cdenns(ir, jspin) + cleb(j)*wr(lm1+lmshift1( &
-            jspin), lm2+lmshift2(jspin), ir)*thetasnew(ir, ifun)
+          cdenns(ir, jspin) = cdenns(ir, jspin) + &
+            cleb(j) * wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) * thetasnew(ir, ifun)
         end do
       end if
     end do                         ! JSPIN

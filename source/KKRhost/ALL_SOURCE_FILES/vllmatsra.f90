@@ -20,8 +20,7 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
   real (kind=dp), dimension (nrmaxd), intent (in) :: rmesh
   complex (kind=dp), dimension (lmsize, lmsize, nrmax), intent (in) :: vll0
   ! .. Output variables
-  complex (kind=dp), dimension (2*lmsize, 2*lmsize, nrmax), &
-    intent (out) :: vll
+  complex (kind=dp), dimension (2*lmsize, 2*lmsize, nrmax), intent (out) :: vll
   ! .. Local variables
   integer :: ilm, lval, mval, ival, ir
   integer, dimension (lmsize) :: loflm
@@ -29,8 +28,7 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
 
   ! ************************************************************************************
   ! determine the bounds of the matricies to get the lm-expansion and the max.
-  ! number
-  ! of radial points
+  ! number of radial points
   ! ************************************************************************************
 
   ! ************************************************************************************
@@ -63,10 +61,10 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
     stop '[vllmatsra] error'
   end if
 
-  vll = czero
+  vll(:,:,:) = czero
 
   if (cmode=='Ref=0') then
-    vll(1:lmsize, 1:lmsize, :) = vll0 ! /cvlight
+    vll(1:lmsize, 1:lmsize, :) = vll0(1:lmsize,1:lmsize,:) ! /cvlight
 
     do ir = 1, nrmax
       do ival = 1, lmsize
@@ -78,23 +76,21 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
         ! Conventional potential matrix
         ! ************************************************************************************
 
-        vll(lmsize+ival, lmsize+ival, ir) = -vll0(ival, ival, ir)/cvlight**2
-        ! TEST 9/22/2011
-        vll(ival, ival, ir) = vll(ival, ival, ir) + (1.0e0_dp/mass-1.0e0_dp/ &
-          mass0)*lval*(lval+1)/rmesh(ir)**2
+        vll(lmsize+ival, lmsize+ival, ir) = -vll0(ival, ival, ir)/cvlight**2 ! TEST 9/22/2011
+        vll(ival, ival, ir) = vll(ival, ival, ir) + (1.0e0_dp/mass-1.0e0_dp/mass0)*lval*(lval+1)/rmesh(ir)**2
 
         ! ************************************************************************************
         ! The pertubation matrix is changed in the following way
 
         ! from  / V11  V12 \   to    / V21  V22 \
-        ! \ V21  V22 /         \-V11 -V12 /
+        !       \ V21  V22 /         \-V11 -V12 /
         ! because of the convention used for the left solution
         ! ************************************************************************************
       end do                       ! ival
 
     end do                         ! ir
   else if (cmode=='Ref=Vsph') then
-    vll(lmsize+1:2*lmsize, 1:lmsize, :) = vll0
+    vll(lmsize+1:2*lmsize, 1:lmsize, :) = vll0(1:lmsize,1:lmsize, :)
   end if
 
 end subroutine vllmatsra
