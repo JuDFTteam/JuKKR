@@ -122,7 +122,7 @@ contains
       integer :: lmsize                              ! lm-components * nspin
       integer :: lmsize2                             ! lmsize * nvec
       integer :: nvec                                ! spinor integer
-      ! nvec=1 non-rel, nvec=2 for sra and dirac
+                                                     ! nvec=1 non-rel, nvec=2 for sra and dirac
       integer :: nrmax                               ! total number of rad. mesh points
 #ifdef hostcode
       integer :: LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
@@ -135,11 +135,11 @@ contains
 
       ! source terms
       complex (kind=dp) :: gmatprefactor               ! prefactor of green function
-      ! non-rel: = kappa = sqrt e
+                                                       ! non-rel: = kappa = sqrt e
 #ifndef hostcode
       complex (kind=dp) :: hlk(:,:), jlk(:,:), &       ! right sol. source terms
-      hlk2(:,:), jlk2(:,:)        ! left sol. source terms
-      ! (tipically bessel and hankel fn)
+      hlk2(:,:), jlk2(:,:)                             ! left sol. source terms
+                                                       ! (typically bessel and hankel fn)
 #else
       complex (kind=dp) :: HLK(LBESSEL,NRMAX), &
       JLK(LBESSEL,NRMAX), &
@@ -149,21 +149,21 @@ contains
 
 #ifndef hostcode
       integer jlk_index(:)                          ! mapping array l = jlk_index(lm)
-      ! in: lm-index
-      ! corresponding l-index used hlk,..
-      ! hlk(l) = jlk_index(lm)
+                                                    ! in: lm-index
+                                                    ! corresponding l-index used hlk,..
+                                                    ! hlk(l) = jlk_index(lm)
 #else
       INTEGER JLK_INDEX(2*LMSIZE)
 #endif
 
       character(len=1) :: cmoderll,cmodesll,cmodetest  ! These define the op(V(r)) in the eqs. above
-      ! (comment in the beginning of this subroutine)
-      ! cmoderll ="1" : op( )=identity       for reg. solution
-      ! cmoderll ="T" : op( )=transpose in L for reg. solution
-      ! cmodesll: same for irregular
+                                                       ! (comment in the beginning of this subroutine)
+                                                       ! cmoderll ="1" : op( )=identity       for reg. solution
+                                                       ! cmoderll ="T" : op( )=transpose in L for reg. solution
+                                                       ! cmodesll: same for irregular
 
       complex (kind=dp) ::  sll(lmsize2,lmsize,nrmax), &  ! irr. volterra sol.
-      rll(lmsize2,lmsize,nrmax), &  ! reg. fredholm sol.
+      rll(lmsize2,lmsize,nrmax), &                        ! reg. fredholm sol.
       tllp(lmsize,lmsize), &        ! t-matrix
       vll(lmsize*nvec,lmsize*nvec,nrmax) ! potential term in 5.7
       ! bauer, phd
@@ -200,8 +200,8 @@ contains
       complex (kind=dp) zslc1sum(0:ncheb)
       real (kind=dp) c1(0:ncheb,0:ncheb),rpanbound(0:npan)
       real (kind=dp) cslc1(0:ncheb,0:ncheb), & ! Integration matrix from left ( C*S_L*C^-1 in eq. 5.53)
-      csrc1(0:ncheb,0:ncheb), & ! Same from right ( C*S_R*C^-1 in eq. 5.54)
-      tau(0:ncheb,0:npan), &    ! Radial mesh point
+      csrc1(0:ncheb,0:ncheb),                & ! Same from right ( C*S_R*C^-1 in eq. 5.54)
+      tau(0:ncheb,0:npan),                   & ! Radial mesh point
       slc1sum(0:ncheb),rmesh(nrmax)
 
       integer ipiv(0:ncheb,lmsize2)
@@ -232,8 +232,8 @@ contains
       ! problem. The matrix M which needs to be inverted has a special form
       ! if the SRA approximation is used:
       !
-      ! matrix A ( C 1)     (same as in eq. 5.68)
-      !          ( B 0)
+      ! matrix A ( C 0)     (same as in eq. 5.68)
+      !          ( B 1)
       ! (C, B are matricies here)
       !
       ! inverse of A is   (C^-1    0 )

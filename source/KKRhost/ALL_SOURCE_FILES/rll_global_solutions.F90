@@ -33,11 +33,14 @@ use mod_timing                            ! timing routine
 #ifdef CPP_HYBRID
 use omp_lib ! omp functions
 #endif
-      Use mod_datatypes, Only: dp
-implicit none
+
+      use Constants
+      Use mod_DataTypes, Only: dp
+
+      implicit none
       integer :: ncheb                               ! number of chebyshev nodes
       integer :: npan                                ! number of panels
-      integer :: lmsize                              ! lm-components * nspin 
+      integer :: lmsize                              ! lm-components * nspin
       integer :: lmsize2                             ! lmsize * nvec
       integer :: nvec                                ! spinor integer
                                                      ! nvec=1 non-rel, nvec=2 for sra and dirac
@@ -46,9 +49,6 @@ implicit none
       integer :: LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
 #endif
 
-      complex (kind=dp),parameter:: ci= (0.0d0,1.0d0), &! complex i
-                                 cone=(1.0d0,0.0d0),&!         1
-                                 czero=(0.0d0,0.0d0) !         0
       ! running indices
       integer lm1,lm2
       integer info,icheb,ipan,mn,nm
@@ -59,7 +59,7 @@ implicit none
 #ifndef hostcode
       complex (kind=dp) :: hlk(:,:), jlk(:,:), &       ! right sol. source terms
                         hlk2(:,:), jlk2(:,:)        ! left sol. source terms
-                                                    ! (tipically bessel and hankel fn)
+                                                    ! (typically bessel and hankel fn)
 #else
       complex (kind=dp) :: HLK(LBESSEL,NRMAX), &
                         JLK(LBESSEL,NRMAX), &
