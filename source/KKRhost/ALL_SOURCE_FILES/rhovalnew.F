@@ -1029,7 +1029,7 @@ C
       endif !(myrank==master)
       
       ! communicate den_out to all processors with the same atom number
-      IDIM = (LMAXD+2)*IEMXD*2
+      IDIM = (LMAXD+2)*IELAST*2
       call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master, 
      &               t_mpi_c_grid%myMPI_comm_at, ierr)
       if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'
