@@ -18,7 +18,7 @@
      &           NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,    &
      &           TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTREF,RMTREFAT,&
      &           KFORCE,KMROT,QMTET,QMPHI,NCPA,ICPA,ITCPAMAX,CPATOL,&   
-     &           NOQ,IQAT,CONC,SOLVER,SOCSCL,CSCL,KREL,SOCSCALE,&
+     &           NOQ,IQAT,CONC,SOLVER,SOCSCL,CSCL,KREL,SOCSCALE,KORBIT,& ! GODFRIN Flaviano
      &           LOPT,UEFF,JEFF,EREFLDAU,KREADLDAU,&
      &           LMAXD,LPOTD,NSPIND,NAEZD,NATYPD,NEMBD,NPRINCD,&
      &           IRMD,IRNSD,NPAN_LOG,NPAN_EQ,NCHEB,R_LOG,IVSHIFT,&
@@ -28,6 +28,7 @@
       use mod_types, only: t_inc
       use mod_save_wavefun, only: t_wavefunctions
       use mod_version_info
+      use godfrin, only: t_godfrin ! GODFRIN Flaviano
       IMPLICIT NONE
 !     ..
 !     .. Parameters
@@ -36,6 +37,7 @@
 !     ..
 !     .. Scalar arguments ..
       INTEGER  KREL,LMAXD,LPOTD,NSPIND,NAEZD,NATYPD,NEMBD,NPRINCD,IRMD,IRNSD,NREFD
+      INTEGER, INTENT(IN) :: KORBIT ! GODFRIN Flaviano
 
 !     .. Local Arrays ..
       CHARACTER*4 TSPIN(3)
@@ -111,7 +113,7 @@
       REAL*8 CONC(NATYPD)        ! concentration of a given atom 
 
       CHARACTER*3 CPAFLAG(0:1)
-      REAL*8 SUM
+      REAL*8 SUM1
       INTEGER IO,IA,IQ,IPRINT
 
       ! for OPERATOR option
@@ -664,15 +666,15 @@
             ENDDO
 
             DO IQ=1,NAEZ
-               SUM = 0D0
+               SUM1 = 0D0
                IF (NOQ(IQ).LT.1) THEN
                   WRITE(6,*) 'RINPUT13: CPA: SITE',IQ,'HAS NO ASSIGNED ATOM'
                   STOP 'RINPUT13: CPA'
                ENDIF
                DO IO=1,NOQ(IQ)
-                  SUM = SUM + CONC(KAOEZ(IO,IQ))
+                  SUM1 = SUM1 + CONC(KAOEZ(IO,IQ))
                END DO
-               IF ( ABS(SUM-1.D0).GT.1D-6) THEN
+               IF ( ABS(SUM1-1.D0).GT.1D-6) THEN
                   WRITE(6,*) ' SITE ', IQ, ' CONCENTRATION <> 1.0 !'
                   WRITE(6,*) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
                   STOP       ' IN <RINPUT99>'
@@ -1383,15 +1385,15 @@
       !WRITE(6,2103)
 
       DO IQ=1,NAEZ
-         SUM = 0D0
+         SUM1 = 0D0
          IF (NOQ(IQ).LT.1) THEN
             WRITE(6,*) 'RINPUT13: CPA: SITE',IQ,'HAS NO ASSIGNED ATOM'
             STOP 'RINPUT13: CPA'
          ENDIF
          DO IO=1,NOQ(IQ)
-            SUM = SUM + CONC(KAOEZ(IO,IQ))
+            SUM1 = SUM1 + CONC(KAOEZ(IO,IQ))
          END DO
-         IF ( ABS(SUM-1.D0).GT.1D-6) THEN
+         IF ( ABS(SUM1-1.D0).GT.1D-6) THEN
             WRITE(6,*) ' SITE ', IQ, ' CONCENTRATION <> 1.0 !'
             WRITE(6,*) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
             STOP       ' IN <RINPUT99>'
@@ -2159,6 +2161,46 @@
       end if
 ! ============================================================= WF_SAVE
 
+! Begin Godfrin inversion scheme control                       ! GODFRIN Flaviano
+!==========================================================
+      IF(OPT('godfrin ')) THEN
+         WRITE(111 ,*) 'Godfrin inversion scheme parameters'
+         WRITE(1337,*) 'Godfrin inversion scheme parameters'
+
+         t_godfrin%na = NAEZD
+         CALL IOINPUT('GODFRIN         ',UIO,2,7,IER)
+         IF (IER.NE.0) STOP 'RINPUT: GODFRIN not found!'
+         READ (UNIT=UIO,FMT=*) t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+
+         CALL IOINPUT('GODFRIN         ',UIO,4,7,IER)
+         ALLOCATE(t_godfrin%bdims(t_godfrin%nb))
+         READ (UNIT=UIO,FMT=*) t_godfrin%bdims(:)
+      END IF
+
+      !Inconsistency check
+      write(*,*) t_godfrin%na
+      IF( t_godfrin%na /= sum(t_godfrin%bdims) ) stop 'godfrin: na /= sum(bdims)'
+
+      WRITE(111 ,FMT='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
+      WRITE(1337,FMT='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
+      WRITE(111 ,*) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      WRITE(1337,*) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      WRITE(111 ,FMT='(50(I0," "))') t_godfrin%bdims(:)
+      WRITE(1337,FMT='(50(I0," "))') t_godfrin%bdims(:)
+
+      !multiply blocks by angular momentum dimension
+      IL = (KREL+KORBIT+1) * (LMAXD+1)**2 ! LMMAXD
+      t_godfrin%na    = t_godfrin%na*IL
+      t_godfrin%bdims = t_godfrin%bdims*IL
+
+      IF(ICC/=0 .AND. t_godfrin%ldiag) THEN
+        t_godfrin%ldiag = .FALSE.
+        WRITE(111 ,FMT='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
+        WRITE(1337,FMT='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
+      END IF 
+        
+! End Godfrin inversion scheme control                         ! GODFRIN Flaviano
+!==========================================================
 
 
       WRITE(1337,2100) 
