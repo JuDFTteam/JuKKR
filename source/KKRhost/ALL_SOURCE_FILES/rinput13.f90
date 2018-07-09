@@ -2703,29 +2703,29 @@ contains
        CALL IOINPUT('GODFRIN         ',UIO,4,7,IER)
        ALLOCATE(t_godfrin%bdims(t_godfrin%nb))
        READ (UNIT=UIO,FMT=*) t_godfrin%bdims(:)
-    END IF
    
-    !Inconsistency check
-    write(*,*) t_godfrin%na
-    IF( t_godfrin%na /= sum(t_godfrin%bdims) ) stop 'godfrin: na /= sum(bdims)'
-   
-    WRITE(111 ,FMT='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
-    WRITE(1337,FMT='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
-    WRITE(111 ,*) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
-    WRITE(1337,*) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
-    WRITE(111 ,FMT='(50(I0," "))') t_godfrin%bdims(:)
-    WRITE(1337,FMT='(50(I0," "))') t_godfrin%bdims(:)
-   
-    !multiply blocks by angular momentum dimension
-    t_godfrin%na    = t_godfrin%na*lmmaxd
-    t_godfrin%bdims = t_godfrin%bdims*lmmaxd
-   
-    if(ICC/=0 .and. t_godfrin%ldiag) then
-      t_godfrin%ldiag = .false.
-      write(111 ,fmt='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
-      write(1337,fmt='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
-    end if 
+      !Inconsistency check
+      write(*,*) t_godfrin%na
+      IF( t_godfrin%na /= sum(t_godfrin%bdims) ) stop 'godfrin: na /= sum(bdims)'
+     
+      WRITE(111 ,FMT='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
+      WRITE(1337,FMT='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
+      WRITE(111 ,*) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      WRITE(1337,*) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      WRITE(111 ,FMT='(50(I0," "))') t_godfrin%bdims(:)
+      WRITE(1337,FMT='(50(I0," "))') t_godfrin%bdims(:)
+     
+      !multiply blocks by angular momentum dimension
+      t_godfrin%na    = t_godfrin%na*lmmaxd
+      t_godfrin%bdims = t_godfrin%bdims*lmmaxd
+     
+      if(ICC/=0 .and. t_godfrin%ldiag) then
+        t_godfrin%ldiag = .false.
+        write(111 ,fmt='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
+        write(1337,fmt='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
+      end if 
       
+    END IF
     ! End Godfrin inversion scheme control                         ! GODFRIN Flaviano
     !==========================================================
 

@@ -33,12 +33,12 @@ subroutine inversion(gllke, invmod, icheck)
   ! Naive number of layers in each principal layer
   nlayer = naezd/nprincd
 
-! ---------------------------------------------------------------------
-!                       full matrix inversion
-! ---------------------------------------------------------------------
+  ! ---------------------------------------------------------------------
+  !                       full matrix inversion
+  ! ---------------------------------------------------------------------
   if (invmod==0) then
 
-!  initialize unit matrix
+    ! initialize unit matrix
     do i = 1, alm
       do j = 1, alm
         gtemp(i, j) = czero
@@ -54,9 +54,9 @@ subroutine inversion(gllke, invmod, icheck)
     call zcopy(alm*alm, gtemp, 1, gllke, 1)
     ! inversion
 
-! ---------------------------------------------------------------------
-!           block tridiagonal inversion (slab or supercell)
-! ---------------------------------------------------------------------
+  ! ---------------------------------------------------------------------
+  !           block tridiagonal inversion (slab or supercell)
+  ! ---------------------------------------------------------------------
   else if ((invmod>=1) .and. (invmod<=2)) then
     ! this part now is correct also for    ! changes 20/10/99
     ! supercell geometry : 20/10/99
@@ -109,10 +109,6 @@ subroutine inversion(gllke, invmod, icheck)
     end do
     ! end of the corrected part  20/10/99
 
-    end do
-
-    ! write (6,*) '-------slab calculation--------'
-
     if (invmod==1) then
       ! write (6,*) '-------slab calculation--------'
       ! supercell: matrix is tridiagonal with corner blocks
@@ -123,25 +119,21 @@ subroutine inversion(gllke, invmod, icheck)
       call invsupercell(gdi, gup, gdow, gllke, icheck)
     end if
 
+  ! -----------------------------------------------------------------
+  !                       godfrin module
+  ! -----------------------------------------------------------------
+  else if (invmod==3) then
+    call sparse_inverse(gllke,t_godfrin%na,t_godfrin%nb, &
+      t_godfrin%bdims,t_godfrin%ldiag,t_godfrin%lper,    &
+      t_godfrin%lpardiso)  ! GODFRIN Flaviano
+  !------------------------------------------------------------------
   else
-
-    ! sparse matrix inversion
+    ! if it gets here, did you have a coffee before running the code?
+    stop 'UNKNOWN INVERSION MODE !!!'
+    ! maybe in the future sparse matrix inversion
     ! NOT YET IMPLEMENTED!!!!!!!!!
-
-  end if
-! -----------------------------------------------------------------
-!                       godfrin module
-! -----------------------------------------------------------------
- else if (invmod==3) then
-   call sparse_inverse(gllke,t_godfrin%na,t_godfrin%nb,
-     t_godfrin%bdims,t_godfrin%ldiag,t_godfrin%lper,
-     t_godfrin%lpardiso)  ! GODFRIN Flaviano
-!------------------------------------------------------------------
- else
-!  if it gets here, did you have a coffee before running the code?
-   stop 'UNKNOWN INVERSION MODE !!!'
- endif
-!------------------------------------------------------------------
+  endif
+  !------------------------------------------------------------------
 
   ! ************************************************************************
   deallocate (gtemp)
