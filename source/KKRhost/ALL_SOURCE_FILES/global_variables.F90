@@ -211,66 +211,6 @@ subroutine Bcast_global_variables()
     deallocate(blocklen1, etype1, disp1, stat=ierr)
     if ( ierr/=0 ) stop 'error deallocating arrays in bcast_global_variables'
 
-    ! tests
-    write(111+myrank, *) N            
-    write(111+myrank, *) irid         
-    write(111+myrank, *) krel         
-    write(111+myrank, *) nfund        
-    write(111+myrank, *) ipand        
-    write(111+myrank, *) ngshd        
-    write(111+myrank, *) ncleb        
-    write(111+myrank, *) knoco        
-    write(111+myrank, *) iemxd        
-    write(111+myrank, *) irnsd        
-    write(111+myrank, *) nmaxd        
-    write(111+myrank, *) ishld        
-    write(111+myrank, *) naclsd       
-    write(111+myrank, *) nspotd       
-    write(111+myrank, *) ntperd       
-    write(111+myrank, *) ntrefd       
-    write(111+myrank, *) nsheld       
-    write(111+myrank, *) ncelld       
-    write(111+myrank, *) nspind       
-    write(111+myrank, *) knosph       
-    write(111+myrank, *) korbit       
-    write(111+myrank, *) kpoibz       
-    write(111+myrank, *) wlength      
-    write(111+myrank, *) nprincd      
-    write(111+myrank, *) nlayerd      
-    write(111+myrank, *) natomimpd    
-    write(111+myrank, *) lmaxd        
-    write(111+myrank, *) lmmaxd       
-    write(111+myrank, *) lmgf0d       
-    write(111+myrank, *) alm         
-    write(111+myrank, *) almgf0       
-    write(111+myrank, *) ndim_slabinv 
-    write(111+myrank, *) nembd        
-    write(111+myrank, *) nembd1       
-    write(111+myrank, *) nembd2       
-    write(111+myrank, *) nrd          
-    write(111+myrank, *) lm2d         
-    write(111+myrank, *) nclsd        
-    write(111+myrank, *) mmaxd        
-    write(111+myrank, *) npotd        
-    write(111+myrank, *) lmxspd       
-    write(111+myrank, *) lassld       
-    write(111+myrank, *) irmind       
-    write(111+myrank, *) nofgij       
-    write(111+myrank, *) nspindd      
-    write(111+myrank, *) nsatypd      
-    write(111+myrank, *) nrefd        
-    write(111+myrank, *) irmd         
-    write(111+myrank, *) naezd        
-    write(111+myrank, *) natypd       
-    write(111+myrank, *) lmpotd       
-    write(111+myrank, *) ntotd        
-    write(111+myrank, *) nrmaxd       
-    write(111+myrank, *) lmmaxso      
-    write(111+myrank, *) lpotd        
-    write(111+myrank, *) nchebd       
-    write(111+myrank, *) linterface   
-    write(111+myrank, *) lnc          
-
 end subroutine Bcast_global_variables
 #endif
 

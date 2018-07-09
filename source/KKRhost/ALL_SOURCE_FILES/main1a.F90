@@ -201,13 +201,6 @@ contains
 #endif
      i1 = 1
      ipot = 1 
-     write(2222+myrank,*) 'line1',ICST,INS,IELAST,NSRA,NSPIN,I1,EZ,DRDI(1,I1)
-     write(2222+myrank,*) 'line2',RMESH(1,I1),VINS(IRMIND,1,KNOSPH*IPOT+(1-KNOSPH))
-     write(2222+myrank,*) 'line3',VISP(1,IPOT),ZAT(I1),IRMIN(I1),IPAN(I1),IRCUT(0,I1),CLEB
-     write(2222+myrank,*) 'line4',LOFLM,ICLEB,IEND,SOLVER,SOCSCL(1,KREL*I1+(1-KREL))
-     write(2222+myrank,*) 'line5',CSCL(1,KREL*I1+(1-KREL)),VTREL(1,I1),BTREL(1,I1),RMREL(1,I1)
-     write(2222+myrank,*) 'line6',DRDIREL(1,I1),R2DRDIREL(1,I1),ZREL(I1),JWSREL(I1),IDOLDAU
-     write(2222+myrank,*) 'line7',LOPT(I1),WLDAU(1,1,1,I1),LLY,DELTAE
 #ifdef CPP_MPI
       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 #endif

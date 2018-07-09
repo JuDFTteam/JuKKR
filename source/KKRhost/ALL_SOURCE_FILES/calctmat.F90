@@ -303,6 +303,10 @@ tmat0(:,:) = tmatll(:,:)
 irec = ie + ielast*(ispin-1) + ielast*nspin* (i1-1)
 IF (t_tgmat%tmat_to_file) THEN
   WRITE(69,REC=irec) tmat0
+  ! human readable writeout if test option is hit
+  if(test('fileverb')) then
+     write(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
+  end if
 ELSE
 #ifdef CPP_MPI
   irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*  &
