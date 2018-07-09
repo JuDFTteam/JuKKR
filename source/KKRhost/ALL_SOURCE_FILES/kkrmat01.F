@@ -47,9 +47,15 @@
       use mod_mympi, only: myrank, nranks, master 
 #endif
       use mod_types, only: t_inc
+#ifdef CPP_HYBRID
+      use omp_lib
+#endif
 #ifdef CPP_TIMING
       use mod_timing
 #endif
+      use mod_rhoqtools, only: rhoq_find_kmask, rhoq_saveG, 
+     &                         rhoq_write_tau0, rhoq_read_mu0_scoef
+
       IMPLICIT NONE
 !     ..
 !     .. Parameters ..
@@ -125,8 +131,7 @@
       integer :: ntot1
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
-      integer :: i1_start, i1_end
-
+      integer :: k_start, k_end
 
       LOGICAL TEST,OPT
 !     ..
@@ -136,10 +141,18 @@
 !     .. Intrinsic functions ..
       INTRINSIC ATAN,EXP
 !     ..
-#ifdef CPP_MPI
+!#ifdef CPP_MPI
       DOUBLE COMPLEX WORK(LMMAXD,LMMAXD,NSYMAXD)
       INTEGER IERR,IWORK
-#endif
+      integer :: mu, nscoef, imin, ie
+      integer, allocatable :: iatomimp(:)
+      
+      double precision, allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts
+      integer, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
+!#endif
+! #ifdef CPP_HYBRID
+      integer :: mythread
+! #endif
 !     ..
 
 !      NDIM=LMGF0D*NAEZ
@@ -175,35 +188,55 @@
 
 !-----------------------------------------------------------------------
 
+
+      if(test('rhoqtest')) then
+         call rhoq_read_mu0_scoef(iatomimp, mu, nscoef, imin)
+         call rhoq_find_kmask(nofks,k_end,bzkp(1:3,1:nofks),kmask,
+     &                        rhoq_kmask)
+      end if !test('rhoqtest')
+
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++ K-points loop
 
 #ifdef CPP_MPI
 ! MPI:     
-      ntot1 = NOFKS
-
-      if(myrank==master) write(1337,*) 'kkrmat k loop:', NOFKS, 
-     &                          t_mpi_c_grid%nranks_ie
-      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
-     &                 t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
-     &                           master,ntot1,ntot_pT,ioff_pT,.true.)
-
-      i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-      i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
-     &           ntot_pT(t_mpi_c_grid%myrank_ie)
-      t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
-
-      t_mpi_c_grid%ntot_pT1 = ntot_pT
-      t_mpi_c_grid%ioff_pT1 = ioff_pT
+      if(.not.opt('qdos    ')) then
       
+        if(test('rhoqtest')) then
+          ntot1 = k_end
+        else
+          ntot1 = NOFKS
+        endif
+
+        if(myrank==master) write(1337,*) 'kkrmat k loop:', NOFKS, 
+     &                            t_mpi_c_grid%nranks_ie
+        call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                             master,ntot1,ntot_pT,ioff_pT,.true.)
+
+        k_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+        k_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &             ntot_pT(t_mpi_c_grid%myrank_ie)
+        t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+        t_mpi_c_grid%ntot_pT1 = ntot_pT
+        t_mpi_c_grid%ioff_pT1 = ioff_pT
+      
+      else !.not.opt('qdos    ')
+      
+        k_start = 1
+        k_end = NOFKS
+      
+      end if !.not.opt('qdos    ')
 #else
-      i1_start = 1
-      i1_end = NOFKS
+      k_start = 1
+      if(.not.test('rhoqtest')) k_end = NOFKS 
 #endif
+        
       ! k-loop not needed for GREENIMP-case
       if(opt('GREENIMP')) then
          if(myrank==master) write(*,*) 'Skipping kloop in kkrmat' 
-         i1_start = 1
-         i1_end = 0
+         k_start = 1
+         k_end = 0
       end if
 
       !print header of statusbar for k-loop
@@ -212,16 +245,36 @@
      &    0, 20, 40, 60, 80, 100
       write(1337,FMT=190) !beginning of statusbar
       endif
+      
+#ifdef CPP_HYBRID
+!$omp parallel default(shared)
+!$omp& private(kpt, ns, i, j, isym, carg, i1, zktr, i2, iq1, iq2, ioff1)
+!$omp& private(ioff2, joff1, joff2, ikm1, ikm2, csum1, is, n1, n2)
+!$omp& private(j1, csum2, j2, il1, il2, lm1, lm2, gaux1, gaux2)
+!$omp& private(jl1, jl2, gaux3, ilm, jlm, mythread )
+!$omp& reduction(+:trace)
 
-      DO KPT = i1_start,i1_end
+      mythread = omp_get_thread_num()
+#else
+      mythread = 0
+#endif
+
+      ! kpts loop
+      DO KPT = k_start,k_end
          GLLKE(:,:) = CZERO
          IF (LLY.NE.0) DGLLKE(:,:) = CZERO
          KP(1:3) = BZKP(1:3,KPT)
+         
+         ! overwrite kpt in case of rhoqtest (take only reduced set of kpts)
+         if(test('rhoqtest')) kp(1:3) = rhoq_kmask(1:3,kpt)
  
          ETAIKR(1:NSYMAT,1:NSHELL) = VOLCUB(KPT)
  
          ! --> first NAEZ/NATYP elements of GS() are site-diagonal
- 
+
+#ifdef CPP_HYBRID
+!$omp do
+#endif
          DO NS = NSDIA+1,NSHELL
             I = NSH1(NS)
             J = NSH2(NS)
@@ -235,13 +288,17 @@
                ETAIKR(ISYM,NS) = ETAIKR(ISYM,NS) * EXP(CARG*CITPI)
             END DO
          END DO
+#ifdef CPP_HYBRID
+!$omp end do
+#endif
  
          BZKPK(1:3) = KP(1:3)
          BZKPK(4:6) = 0.D0
 
          ! -> Fourier transformation
 #ifdef CPP_TIMING
-            if(t_inc%i_time>0) call timing_start('main1b_fourier')
+         if(mythread==0 .and. t_inc%i_time>0) 
+     &                  call timing_start('main1b - fourier')
 #endif
  
          RRM(1:3,1:NRD) = -RR(1:3,1:NRD)
@@ -250,16 +307,22 @@
          IF (KREL.EQ.0) THEN
 
             !--------------------------------------------------------------------
+            if(mythread==0) then
             ALLOCATE(GLLKEN(ALMGF0,ALMGF0),STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKEN'
             GLLKEN(:,:) = CZERO
+            endif
+!             !$omp barrier
             !--------------------------------------------------------------------
             CALL DLKE0(GLLKEN,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,
      &                 EZOA,ATOM,BZKPK,RCLS,GINP)
             !--------------------------------------------------------------------
+            if(mythread==0) then
             ALLOCATE(GLLKEM(ALMGF0,ALMGF0),STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKEM'
             GLLKEM(:,:) = CZERO
+            endif
+!             !$omp barrier
             !--------------------------------------------------------------------
             CALL DLKE0(GLLKEM,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,
      &                 EZOA,ATOM,BZKPK,RCLS,GINP)
@@ -270,16 +333,22 @@
             ! and Fourier transform for the derivatives.
             IF (LLY.NE.0) THEN
                !--------------------------------------------------------------------
+            if(mythread==0) then
                ALLOCATE(DGLLKEN(ALMGF0,ALMGF0),STAT=IU)
                IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate DGLLKEM'
                DGLLKEN(:,:) = CZERO
+            endif
+!             !$omp barrier
                !--------------------------------------------------------------------
                CALL DLKE0(DGLLKEN,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,
      &                    EZOA,ATOM,BZKPK,RCLS,DGINP)
                !--------------------------------------------------------------------
+            if(mythread==0) then
                ALLOCATE(DGLLKEM(ALMGF0,ALMGF0),STAT=IU)
                IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate DGLLKEM'
                DGLLKEM(:,:) = CZERO
+            endif
+!             !$omp barrier
                !--------------------------------------------------------------------
                CALL DLKE0(DGLLKEM,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,
      &                    EZOA,ATOM,BZKPK,RCLS,DGINP)
@@ -307,6 +376,9 @@
                ENDDO
 
                ! bigger GLLKE matrix and rearrange with atom block
+#ifdef CPP_HYBRID
+!$omp do
+#endif
                DO IQ1=1,NAEZ
                   DO IQ2=1,NAEZ
 
@@ -332,9 +404,13 @@
 
                   ENDDO
                ENDDO
+#ifdef CPP_HYBRID
+!$omp end do
+#endif
  
             ENDIF               ! (.NOT.OPT('NEWSOSOL'))
             !-----------------------------------------------------------------------
+            if(mythread==0) then
             DEALLOCATE(GLLKEM,STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > deallocate GLLKEM'
             DEALLOCATE(GLLKEN,STAT=IU)
@@ -343,6 +419,8 @@
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > deallocate DGLLKEM'
             IF (LLY.NE.0) DEALLOCATE(DGLLKEN,STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > deallocate DGLLKEN'
+            endif
+!             !$omp barrier
             !-----------------------------------------------------------------------
 
             ! LLY Lloyd At this point DGLLKE contains the Fourier transform of the dGref/dE
@@ -350,10 +428,13 @@
          ELSE                   !  (KREL.EQ.0) 
             ! LLY Lloyd Not implementing Lloyds formula for KREL=1 (Dirac ASA)
             !-----------------------------------------------------------------------
+            if(mythread==0) then
             ALLOCATE(GLLKE0(ALMGF0,ALMGF0),STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKE0'
             ALLOCATE(GLLKE0M(ALMGF0,ALMGF0),STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > allocate GLLKE0M'
+            endif
+!             !$omp barrier
             !-----------------------------------------------------------------------
             CALL DLKE0(GLLKE0,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,
      &                 EZOA,ATOM,BZKPK,RCLS,GINP)
@@ -370,6 +451,9 @@
             !    ==> GLLKE
 
             ! ======================================================================
+#ifdef CPP_HYBRID
+!$omp do
+#endif
             DO IQ1=1,NAEZ
                DO IQ2=1,NAEZ   
                   IOFF1 = LMMAXD*(IQ1-1)
@@ -405,14 +489,21 @@
                   ! ----------------------------------------------------------------------
                END DO
             END DO
+#ifdef CPP_HYBRID
+!$omp end do
+#endif
             !-----------------------------------------------------------------------
+            if(mythread==0) then
             DEALLOCATE(GLLKE0,GLLKE0M,STAT=IU)
             IF ( IU.NE.0 ) STOP '      <kkrmat01 > deallocate GLLKE0'
+            endif
+!             !$omp barrier
             !-----------------------------------------------------------------------
             ! ======================================================================
          END IF !  (KREL.EQ.0) 
 #ifdef CPP_TIMING
-            if(t_inc%i_time>0) call timing_pause('main1b_fourier')
+            if(mythread==0 .and. t_inc%i_time>0) 
+     &                 call timing_pause('main1b - fourier')
 #endif
          ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -437,7 +528,8 @@
             ENDDO
       
 #ifdef CPP_TIMING
-            if(t_inc%i_time>0) call timing_start('main1b_inversion')
+            if(mythread==0 .and. t_inc%i_time>0) 
+     &                 call timing_start('main1b - inversion')
 #endif
             !     --> Perform the inversion of matrix M
             !     the output is the scattering path operator TAU stored in GLLKE
@@ -448,7 +540,8 @@
             CALL INVERSION(GLLKE,INVMOD,ICHECK)
             ENDIF
 #ifdef CPP_TIMING
-            if(t_inc%i_time>0) call timing_pause('main1b_inversion')
+            if(mythread==0 .and. t_inc%i_time>0) 
+     &                 call timing_pause('main1b - inversion')
 #endif
             ! ----------------------------------------------------------
             ! LLY Lloyd ----------------------------------------------------------
@@ -555,6 +648,7 @@ c            DEALLOCATE(GLLKE0)
          ! --> global sum on array gs
 
          ! ======================================================================
+         ! no omp at this loop because of rhoq output
          DO NS = 1,NSHELL
             I = NSH1(NS)
             J = NSH2(NS)
@@ -572,29 +666,54 @@ c            DEALLOCATE(GLLKE0)
      &                                   + ETAIKR(ISYM,NS) * G(LM1,LM2)
                   END DO
                END DO
-            END DO
+
+               if(test('rhoqtest')) then
+                  call rhoq_saveG(nscoef,rhoq_kmask,kpt,nofks,k_end,kp,
+     &                            i,j,mu,imin,iatomimp,lmmaxd,G)
+               end if
+           
+            END DO ! ISYM = 1,NSYMAT
+            
             ! ----------------------------------------------------------------------
-         END DO
+            
+         END DO !NS = 1,NSHELL
          ! ======================================================================
          IF (LLY.NE.0) LLY_GRTR =                                   ! LLY Lloyd Integration
      &                 LLY_GRTR + LLY_GRTR_K * VOLCUB(KPT) * NSYMAT ! LLY Lloyd Integration
          
 
          !update statusbar
+        if(mythread==0) then
 #ifdef CPP_MPI
-         if( (((i1_end-i1_start)/50)==0 .or. 
-     &       mod(KPT-i1_start,(i1_end-i1_start)/50)==0) .and.
+         if( (((k_end-k_start)/50)==0 .or. 
+     &       mod(KPT-k_start,(k_end-k_start)/50)==0) .and.
      &       t_inc%i_write>0 ) write(1337,FMT=200)
 #else
          if( ((NOFKS/50)==0 .or. 
      &       mod(KPT,NOFKS/50)==0) .and.
      &                          t_inc%i_write>0 ) write(1337,FMT=200)
 #endif
+        end if ! mythread==0
 
       END DO ! KPT = 1,NOFKS   end K-points loop
 190   FORMAT('                 |'$)      ! status bar
 200   FORMAT('|'$)                       ! status bar
       IF(t_inc%i_write>0) write(1337,*)  ! finalize status bar
+
+#ifdef CPP_HYBRID
+      !$omp end parallel
+#endif
+         
+      if(test('rhoqtest')) then
+#ifdef CPP_TIMING
+        call timing_start('main1b - kkrmat01 - writeout_rhoq')
+#endif
+         call rhoq_write_tau0(nofks,nshell,nsh1,nsh2,nsymat,nscoef,
+     &                        mu,iatomimp,kmask,lmmaxd,bzkp,imin)
+#ifdef CPP_TIMING
+        call timing_stop('main1b - kkrmat01 - writeout_rhoq')
+#endif
+      end if !test('rhoqtest')
 
       TRACET = CZERO
       IF (LLY.EQ.2) THEN 
@@ -624,6 +743,7 @@ c            DEALLOCATE(GLLKE0)
 !-----------------------------------------------------------------------
 ! 
 #ifdef CPP_MPI
+      IF(.not.opt('qdos    ')) then
         DO NS = 1,NSHELL
           IWORK = LMMAXD*LMMAXD*NSYMAXD
           CALL MPI_ALLREDUCE(GS(1,1,1,NS),WORK,IWORK,
@@ -634,19 +754,22 @@ c            DEALLOCATE(GLLKE0)
           
         IF (LLY.NE.0) then
           IWORK = 1
-          CALL MPI_ALLREDUCE(LLY_GRTR,WORK(1,1,1),IWORK,
+          WORK = CZERO
+          CALL MPI_ALLREDUCE(LLY_GRTR,WORK,IWORK,
      +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
      +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-          CALL ZCOPY(IWORK,WORK(1,1,1),1,LLY_GRTR,1)
+          CALL ZCOPY(IWORK,WORK,1,LLY_GRTR,1)
         endif
           
         if(lly.eq.2) then
           IWORK = 1
-          CALL MPI_ALLREDUCE(TRACET,WORK(1,1,1),IWORK,
+          WORK = CZERO
+          CALL MPI_ALLREDUCE(TRACET,WORK,IWORK,
      +                       MPI_DOUBLE_COMPLEX,MPI_SUM,
      +                       t_mpi_c_grid%mympi_comm_ie,IERR)
-          CALL ZCOPY(IWORK,WORK(1,1,1),1,TRACET,1)
+          CALL ZCOPY(IWORK,WORK,1,TRACET,1)
         endif
+      ENDIF !.not.opt('qdos    ')
 #endif
 
       IF ( TEST('flow    ') .and. (t_inc%i_write>0)) 

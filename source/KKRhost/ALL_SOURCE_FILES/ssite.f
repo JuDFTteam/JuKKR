@@ -93,7 +93,7 @@ C
       DOUBLE PRECISION DBLE,DSQRT
       INTEGER I,I1,I2,I3,I5,IKM1,IKM2,IL,IM,IN,INFO,IPIV(NKMMAX),IQ,
      &        ISK1,ISK2,IT,J,JLIM,JTOP,K,K1,K2,KAP1,KAP2,KC,L,L1,LB1,
-     &        LB2,LIN,N,NSOL,IMKM1,IMKM2,IS
+     &        LB2,LIN,N,NSOL,IMKM1,IMKM2,IS, IMJ
       INTEGER IKAPMUE
       INTEGER ISIGN,NINT
       REAL*8 RNUCTAB
@@ -196,7 +196,9 @@ C
             END IF
 C
 C MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-            DO MJ = -(DBLE(L)+0.5D0), + (DBLE(L)+0.5D0),1.0D0
+            !DO MJ = -(DBLE(L)+0.5D0), + (DBLE(L)+0.5D0),1.0D0
+            DO IMJ = 1, 2*L+1
+               MJ = -(DBLE(L)+0.5D0) + DBLE(IMJ-1)
 C
 C------------------------------------------------------------------------
 C NO COUPLING FOR:  ABS(MUE)= J   +  J=L+1/2 == KAP=-L-1

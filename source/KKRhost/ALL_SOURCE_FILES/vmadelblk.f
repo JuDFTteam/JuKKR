@@ -209,7 +209,7 @@ C *********************************************************************
       WRITE(1337,'(25X,30(1H-),/)')
       WRITE(1337,'(79(1H=))')
 C
-      IF (ICC.EQ.0 .and. OPT('KKRFLEX ')==.false.) RETURN
+      IF ( (ICC==0) .and. (.not.OPT('KKRFLEX ')) ) RETURN
 C *********************************************************************
 C
 C Now Prepare output for Impurity calculation 

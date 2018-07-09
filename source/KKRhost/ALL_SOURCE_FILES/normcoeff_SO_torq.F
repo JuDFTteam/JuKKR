@@ -58,6 +58,7 @@ C     .. Local Scalars ..
      +                 IR,I1,I1SP1,I1SP2,
      +                 LMSP1,LMSP2,ISIGMA,I2SP1,I2SP2,INSRA,NSRA
       INTEGER          LMMAXSO
+      LOGICAL          lexist
 !     MPI stuff
       INTEGER :: ierr, ihelp, i1_start, i1_end
 C     ..
@@ -84,14 +85,14 @@ C     ..
 c
       LMMAXSO=2*LMMAXD
 
-      if(t_inc%i_write) WRITE(1337,*) "KSRA",KSRA
+      if(t_inc%i_write>0) WRITE(1337,*) "KSRA",KSRA
       IF (KSRA.GE.1) THEN    ! previously this was .GT. which is wrong for kvrel=1
          NSRA = 2
       ELSE
          NSRA = 1
       END IF
 
-      if(t_inc%i_write) then
+      if(t_inc%i_write>0) then
         WRITE(1337,*) "NSRA",NSRA
         WRITE(1337,*) "LMMAX",LMMAX
         WRITE(1337,*) "LMMAXD",LMMAXD
@@ -120,7 +121,7 @@ c
 
       ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
       DO I1=i1_start, i1_end
-        if(t_inc%i_write) WRITE(1337,*) 'ATOM',I1, i1_start, i1_end
+        if(t_inc%i_write>0) WRITE(1337,*) 'ATOM',I1, i1_start, i1_end
         ! use I2 as index to map for mode==1 each impurity position to the corresponding layer index of the host
         if (mode==1) then
            I2 = t_imp%ATOMIMP(I1)
@@ -217,19 +218,22 @@ c set up the array R*_L1L2 R_L3L4
 
 
       ! reads spin quantization axis from file
-        OPEN(UNIT=11,FILE='nonco_angle.dat',FORM='FORMATTED')
+        inquire(file='nonco_angle.dat', exist=lexist)
+        if(lexist) then
+          OPEN(UNIT=11,FILE='nonco_angle.dat',FORM='FORMATTED')
 
-        DO I1=1,NATOM 
-          READ(11,*) THETA_TMP,PHI_TMP
-          IF ( I1 > 1) THEN
-            IF ((THETA_TMP .ne. THETA ) .or. (PHI_TMP .ne. PHI))
-     +        stop "It seems you want to compute the torque 
-     +        in a non-colinear system. This is not implemented yet."
-          END IF        
-          THETA = THETA_TMP
-          PHI = PHI_TMP
-        END DO
-        CLOSE(11)
+          DO I1=1,NATOM 
+            READ(11,*) THETA_TMP,PHI_TMP
+            IF ( I1 > 1) THEN
+              IF ((THETA_TMP .ne. THETA ) .or. (PHI_TMP .ne. PHI))
+     +          stop "It seems you want to compute the torque 
+     +          in a non-colinear system. This is not implemented yet."
+            END IF        
+            THETA = THETA_TMP
+            PHI = PHI_TMP
+          END DO
+          CLOSE(11)
+        end if
 
         SQA(1) = sin(THETA)*cos(PHI)
         SQA(2) = sin(THETA)*sin(PHI)

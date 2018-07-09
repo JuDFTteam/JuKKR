@@ -33,6 +33,9 @@ rwthhybrid: FC=$(MPIFC)
 ###  jureca  ###
 jureca: FC = mpif90
 # $(MPIFC)
+gfort: FC = gfortran
+###  hazelhen  ###
+hazelhen:   FC = ftn
 
 
 # information for version-tracking in executable:
@@ -56,6 +59,8 @@ rwthomp:   COMPVER ='openmp-rwth'
 rwthmpidebug: COMPVER ='mpidebug-rwth'
 rwthhybrid:   COMPVER ='hybrid-rwth'
 jureca   : COMPVER='jureca'
+hazelhen   : COMPVER='hazelhen'
+gfort   : COMPVER='gfort'
 
 
 
@@ -72,11 +77,11 @@ INCR = ./sprkkr_rmesh.dim
 
 FILENAME0 = kkr.x
 
-MODULES = $(OBJ)/mod_version.o $(OBJ)/mod_version_info.o  $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJ)/mod_wunfiles.o $(OBJ)/mod_md5sums.o $(OBJ)/mod_jijhelp.o $(OBJ)/initabjij.o $(OBJ)/tbxccpljij.o $(OBJ)/tbxccpljijdij.o $(OBJ)/create_newmesh.o $(OBJ)/godfrin.o
+MODULES = $(OBJ)/mod_version.o $(OBJ)/mod_version_info.o  $(OBJ)/mod_mympi.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/mod_save_wavefun.o $(OBJ)/mod_wunfiles.o $(OBJ)/mod_md5sums.o $(OBJ)/mod_jijhelp.o $(OBJ)/initabjij.o $(OBJ)/tbxccpljij.o $(OBJ)/tbxccpljijdij.o $(OBJ)/create_newmesh.o $(OBJ)/cheb.o $(OBJ)/mod_rhoqtools.o $(OBJ)/godfrin.o
 
 OBJECTS0 = $(OBJ)/getbr3.o $(OBJ)/write_tbkkr_files.o $(OBJ)/gaunt.o $(OBJ)/main0.o	$(OBJ)/rinput13.o $(OBJ)/symtaumat.o $(OBJ)/taustruc.o $(OBJ)/bzkint0.o $(OBJ)/findgroup.o $(OBJ)/calcrotmat.o $(OBJ)/errortrap.o $(OBJ)/bzkmesh.o $(OBJ)/bzirr3d.o $(OBJ)/madelung3d.o $(OBJ)/madelung2d.o $(OBJ)/madelout.o $(OBJ)/idreals.o $(OBJ)/deciopt.o $(OBJ)/impcheck.o $(OBJ)/impcoefs.o $(OBJ)/setgijtab.o $(OBJ)/gijxcpl.o $(OBJ)/gijcond.o $(OBJ)/calctref.o $(OBJ)/getclusnxyz.o $(OBJ)/decitset.o    $(OBJ)/decitmat.o $(OBJ)/outpothost.o  $(OBJ)/decipothead.o $(OBJ)/getscratch.o $(OBJ)/decipotbas.o  $(OBJ)/outtmathost.o $(OBJ)/lngstring.o $(OBJ)/startldau.o   $(OBJ)/readldaupot.o $(OBJ)/epathtb.o $(OBJ)/addvirtual14.o   $(OBJ)/interpolspline.o $(OBJ)/spline_real.o $(OBJ)/splint_real.o $(OBJ)/calrmt.o     $(OBJ)/clsgen_tb.o   $(OBJ)/clustcomp.o $(OBJ)/cmomsread.o $(OBJ)/crospr.o $(OBJ)/cross.o $(OBJ)/crtstar.o $(OBJ)/ddet33.o $(OBJ)/ddot1.o $(OBJ)/dscal1.o $(OBJ)/dsort.o $(OBJ)/dswap1.o $(OBJ)/emesht.o $(OBJ)/erfcex.o $(OBJ)/errmsg.o $(OBJ)/gamfc.o $(OBJ)/gaufd.o  $(OBJ)/gauleg.o $(OBJ)/gaunt2.o $(OBJ)/gfmask.o $(OBJ)/gfshells.o $(OBJ)/grule.o $(OBJ)/ioinput.o $(OBJ)/lattice2d.o $(OBJ)/lattice3d.o $(OBJ)/lattix99.o $(OBJ)/latvec.o $(OBJ)/length.o $(OBJ)/nrmliz.o $(OBJ)/opt.o $(OBJ)/pointgrp.o $(OBJ)/potcut.o $(OBJ)/rcstop.o $(OBJ)/rinit.o $(OBJ)/decimaread.o $(OBJ)/rrgen.o $(OBJ)/scalevec.o $(OBJ)/cinit.o $(OBJ)/scalpr.o $(OBJ)/shellgen2k.o $(OBJ)/sname.o $(OBJ)/spatpr.o $(OBJ)/strmat.o $(OBJ)/test.o $(OBJ)/generalpot.o $(OBJ)/ymy.o $(OBJ)/veq.o $(OBJ)/vadd.o $(OBJ)/vmul.o $(OBJ)/testdim.o $(OBJ)/startb1.o $(OBJ)/madelcoef.o $(OBJ)/madelgaunt.o $(OBJ)/ewald2d.o $(OBJ)/fplaneg.o $(OBJ)/fplaner.o $(OBJ)/shape.o $(OBJ)/wfmesh.o $(OBJ)/regsol.o $(OBJ)/beshan.o $(OBJ)/drvbastrans.o $(OBJ)/relpotcvt.o $(OBJ)/drvreltmat.o $(OBJ)/calccgc.o $(OBJ)/ikmlin.o $(OBJ)/strsmat.o $(OBJ)/bastrmat.o $(OBJ)/ikapmue.o $(OBJ)/cmatstr.o $(OBJ)/checkrmat.o $(OBJ)/rinvgj.o $(OBJ)/ssite.o $(OBJ)/cintabr.o $(OBJ)/sumupint.o $(OBJ)/dirac_bs.o $(OBJ)/dirbslag.o $(OBJ)/dirbsmid.o $(OBJ)/dirbsrad.o $(OBJ)/dirbsrze.o $(OBJ)/dirbsstp.o $(OBJ)/cjlz.o $(OBJ)/cnlz.o $(OBJ)/cdjlzdz.o $(OBJ)/cdnlzdz.o $(OBJ)/cint4pts.o $(OBJ)/cinthff.o $(OBJ)/ylag.o $(OBJ)/rnuctab.o $(OBJ)/dirac_bi.o $(OBJ)/dirac_op.o $(OBJ)/dirac_soc.o $(OBJ)/dirac_soc2.o $(OBJ)/changerep.o $(OBJ)/writehoststructure.o $(OBJ)/readimppot.o $(OBJ)/tmatimp_newsolver.o $(OBJ)/greenimp.o
 
-OBJECTS1a= $(OBJ)/main1a.o $(OBJ)/calctmat.o $(OBJ)/initldau.o $(OBJ)/phicalc.o $(OBJ)/tmat_newsolver.o $(OBJ)/cheb.o $(OBJ)/interpolate_poten.o $(OBJ)/vllmat.o $(OBJ)/rotatespinframe.o $(OBJ)/spinorbit_ham.o $(OBJ)/spin_orbit.o $(OBJ)/spin_orbit_compl.o $(OBJ)/vllmatsra.o $(OBJ)/beshank.o $(OBJ)/rllsllsourceterms.o $(OBJ)/calcsph.o $(OBJ)/rllsll.o $(OBJ)/chebint.o $(OBJ)/csum.o $(OBJ)/gfree.o $(OBJ)/gll95.o $(OBJ)/grefsy.o $(OBJ)/ioben.o $(OBJ)/mapblock.o $(OBJ)/cradwf.o $(OBJ)/csinwd.o $(OBJ)/csout.o $(OBJ)/hankel.o $(OBJ)/irwsol.o $(OBJ)/regns.o $(OBJ)/tbref.o $(OBJ)/wfint.o $(OBJ)/wfint0.o $(OBJ)/wftsca.o $(OBJ)/pnstmat.o $(OBJ)/vllns.o $(OBJ)/simpk.o $(OBJ)/soutk.o $(OBJ)/ssum.o
+OBJECTS1a= $(OBJ)/main1a.o $(OBJ)/calctmat.o $(OBJ)/initldau.o $(OBJ)/phicalc.o $(OBJ)/tmat_newsolver.o $(OBJ)/interpolate_poten.o $(OBJ)/vllmat.o $(OBJ)/rotatespinframe.o $(OBJ)/spinorbit_ham.o $(OBJ)/spin_orbit.o $(OBJ)/spin_orbit_compl.o $(OBJ)/vllmatsra.o $(OBJ)/beshank.o $(OBJ)/rllsllsourceterms.o $(OBJ)/calcsph.o $(OBJ)/rllsll.o $(OBJ)/chebint.o $(OBJ)/csum.o $(OBJ)/gfree.o $(OBJ)/gll95.o $(OBJ)/grefsy.o $(OBJ)/ioben.o $(OBJ)/mapblock.o $(OBJ)/cradwf.o $(OBJ)/csinwd.o $(OBJ)/csout.o $(OBJ)/hankel.o $(OBJ)/irwsol.o $(OBJ)/regns.o $(OBJ)/tbref.o $(OBJ)/wfint.o $(OBJ)/wfint0.o $(OBJ)/wftsca.o $(OBJ)/pnstmat.o $(OBJ)/vllns.o $(OBJ)/simpk.o $(OBJ)/soutk.o $(OBJ)/ssum.o $(OBJ)/rll_local_solutions.o $(OBJ)/sll_local_solutions.o $(OBJ)/rll_global_solutions.o $(OBJ)/sll_global_solutions.o
 
 OBJECTS1b= $(OBJ)/cmatmul.o $(OBJ)/main1b.o $(OBJ)/kloopz1.o  $(OBJ)/mssinit.o $(OBJ)/kkrmat01.o $(OBJ)/decimate.o $(OBJ)/rotgll.o $(OBJ)/setfactl.o $(OBJ)/gijdmat.o $(OBJ)/symetrmat.o $(OBJ)/projtau.o $(OBJ)/cpamillsx.o $(OBJ)/rotate.o $(OBJ)/getdmat.o $(OBJ)/bofm.o $(OBJ)/btom.o $(OBJ)/dlke0.o $(OBJ)/dlke1.o $(OBJ)/inversion.o $(OBJ)/invslab.o $(OBJ)/invsupercell.o $(OBJ)/surfgf.o $(OBJ)/calc_rho_ll_ss.o $(OBJ)/calc_rho_ll_ss_lmdos.o $(OBJ)/normcoeff_SO.o $(OBJ)/normcoeff_SO_spinflux.o $(OBJ)/normcoeff_SO_torq.o $(OBJ)/calc_torq_ll_ss.o $(OBJ)/operators_for_FScode.o
 
@@ -85,17 +90,37 @@ OBJECTS1c= $(OBJ)/main1c.o $(OBJ)/rhoval.o $(OBJ)/rhoval0.o $(OBJ)/rhocore.o $(O
 OBJECTS2 = $(OBJ)/main2.o $(OBJ)/vmadelblk.o $(OBJ)/vinterface.o $(OBJ)/etotb1.o $(OBJ)/rhototb.o $(OBJ)/brydbm.o $(OBJ)/brysh1.o $(OBJ)/brysh2.o $(OBJ)/brysh3.o $(OBJ)/convol.o $(OBJ)/ecoub.o $(OBJ)/epotinb.o $(OBJ)/espcb.o $(OBJ)/force.o $(OBJ)/forceh.o $(OBJ)/forcxc.o $(OBJ)/mixstr.o $(OBJ)/mtzero.o $(OBJ)/reg2.o $(OBJ)/rhosymm.o $(OBJ)/rites.o $(OBJ)/sinwk.o $(OBJ)/vintras.o $(OBJ)/corlsd.o $(OBJ)/cpw91.o $(OBJ)/cylm02.o $(OBJ)/exch91.o $(OBJ)/gcor91.o $(OBJ)/gradr.o $(OBJ)/gradrl.o $(OBJ)/gxcpt.o $(OBJ)/mkxcpe.o $(OBJ)/spher.o $(OBJ)/sphere_gga.o $(OBJ)/sphere_nogga.o $(OBJ)/trarea.o $(OBJ)/vosko.o $(OBJ)/vxcdrv.o $(OBJ)/vxcgga.o $(OBJ)/vxclm.o $(OBJ)/vxcspo.o $(OBJ)/lebedev.o $(OBJ)/mkxcpe2.o $(OBJ)/mdirnewang.o $(OBJ)/scfiterang.o $(OBJ)/writekkrflex.o
 
 # only these conatin explicit !$omp statements:
-$(OBJ)/main0.o: $(SRC)/main0.F
+$(OBJ)/mod_rhoqtools.o: $(SRC)/rhoqtools.F90
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
-$(OBJ)/rhoval.o: $(SRC)/rhoval.F
+$(OBJ)/main0.o: $(SRC)/main0.F
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
 $(OBJ)/rhovalnew.o: $(SRC)/rhovalnew.F
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
 $(OBJ)/strmat.o: $(SRC)/strmat.F
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+$(OBJ)/rllsll.o: $(SRC)/rllsll.F90
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+$(OBJ)/rll_local_solutions.o: $(SRC)/rll_local_solutions.F90
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+$(OBJ)/sll_local_solutions.o: $(SRC)/sll_local_solutions.F90
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+$(OBJ)/rll_global_solutions.o: $(SRC)/rll_global_solutions.F90
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+$(OBJ)/sll_global_solutions.o: $(SRC)/sll_global_solutions.F90
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
 $(OBJ)/tmat_newsolver.o: $(SRC)/tmat_newsolver.F
 	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+$(OBJ)/gll95.o: $(SRC)/gll95.F
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) $(CPP) -c -o $@ $<
+# these are called in the above routines and thus have to be thread safe
+$(OBJ)/gamfc.o: $(SRC)/gamfc.f
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) -c -o $@ $<
+$(OBJ)/ymy.o: $(SRC)/ymy.f
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) -c -o $@ $<
+$(OBJ)/gfree.o: $(SRC)/gfree.f
+	$(FC) $(FFLAGS) $(OPENMPFLAGS) -c -o $@ $<
 
+# wildcards for module files
 $(OBJ)/mod_%.o: $(SRC)/%.f
 	$(FC) $(FFLAGS)  -c -o $@ $<
 $(OBJ)/mod_%.o: $(SRC)/%.f90
@@ -105,7 +130,7 @@ $(OBJ)/mod_%.o: $(SRC)/%.F
 $(OBJ)/mod_%.o: $(SRC)/%.F90
 	$(FC) $(FFLAGS)  $(CPP) -c -o $@ $<
 
-
+# wildcards for normal .o files
 $(OBJ)/%.o: $(SRC)/%.f
 	$(FC) $(FFLAGS)   -c -o $@ $<
 $(OBJ)/%.o: $(SRC)/%.f90
@@ -122,12 +147,15 @@ $(OBJ)/%.o: $(SRC)/%.F90
 # standart libs
 # serial:
 LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+gfort: LLIBS  = -lblas -llapack -fopenmp
 # mac libs:
 MACLLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
 # RWTH cluster:
 RWTHLLIBS = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 # JURECA:
 JURECALIBS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
+# HazelHen:
+HAZELHENLIBS = -mkl
 
 mac:    LLIBS=$(MACLLIBS)
 macmpi: LLIBS=$(MACLLIBS)
@@ -139,6 +167,8 @@ rwthmpi:       LLIBS=$(RWTHLLIBS)
 rwthmpidebug:  LLIBS=$(RWTHLLIBS)
 
 jureca: LLIBS=$(JURECALIBS)
+hazelhen: LLIBS=$(HAZELHENLIBS)
+
 
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
@@ -188,6 +218,8 @@ rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
 hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
 hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID -D CPP_NOMD5
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
+hazelhen: CPP = -D CPP_MPI -D CPP_TIMING
+gfort: CPP = -D CPP_TIMING -D CPP_NOMD5
 
 ####################################################
 # Compiler flags                                   #
@@ -196,38 +228,47 @@ jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback
 # -xHost 
 # flags for ifort: optimization, default 8 bytes, trackeback to line, compiled module files in $(OBJ), save compiler version info in executable
-# Change to if flag is matched:
-debug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
-hybriddebug:    FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
-mpidebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox -check noarg_temp_created
-ompdebug: FFLAGS = -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
 
-OPENMPFLAGS = 
-hybrid: OPENMPFLAGS = -qopenmp 
-hybriddebug: OPENMPFLAGS = -qopenmp
-openmp: OPENMPFLAGS = -qopenmp
-ompdebug: OPENMPFLAGS = -qopenmp
+# Change to if flag is matched:
+gfort: FFLAGS= -O0 -ffree-line-length-none -fdefault-real-8 -J $(OBJ) -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace
+
+# on rwth cluster (CLAIX and bull)
 rwthomp: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 rwthhybrid: FFLAGS = -O2 -r8 -traceback   -module $(OBJ) -sox
 
+# profiling on mac
 macompprof: FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback -prof-gen:srcpos
 
-macmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g -sox
-macompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g -sox
-rwthmpidebug: FFLAGS = -r8 -CB -check all -traceback -module $(OBJ) -g -sox
-rwthompdebug: FFLAGS = -O2 -r8 -traceback -module $(OBJ) -g -sox
-#rwthompdebug: FFLAGS = -O0 -r8 -traceback -CB -check all -module $(OBJ) -g
-
+# openmp flags
+OPENMPFLAGS = 
+hybrid: OPENMPFLAGS = -qopenmp
+openmp: OPENMPFLAGS = -qopenmp
 rwthomp: OPENMPFLAGS = -qopenmp
-rwthompdebug: OPENMPFLAGS = -qopenmp
 rwthhybrid: OPENMPFLAGS = -qopenmp
+
+
+# standard debug flags
+DEBUGFLAGS = -O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
+
+debug:       FFLAGS = $(DEBUGFLAGS)
+hybriddebug: FFLAGS = $(DEBUGFLAGS)
+mpidebug:    FFLAGS = $(DEBUGFLAGS)
+ompdebug:    FFLAGS = $(DEBUGFLAGS)
+macmpidebug: FFLAGS = $(DEBUGFLAGS)
+macompdebug: FFLAGS = $(DEBUGFLAGS)
+rwthmpidebug: FFLAGS = $(DEBUGFLAGS)
+rwthompdebug: FFLAGS = $(DEBUGFLAGS)
+
+hybriddebug: OPENMPFLAGS = -qopenmp
+ompdebug: OPENMPFLAGS = -qopenmp
+rwthompdebug: OPENMPFLAGS = -qopenmp
 
 
 
 ####################################################
 # helper                                           #
 ####################################################
-.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp macompprof rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid jureca
+.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp macompprof rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid print_rwthwarn jureca hazelhen print_hazelwarn
 
 getversion:
 	@echo "Wrinting Version file: "; git describe;\
@@ -235,6 +276,19 @@ getversion:
 	echo $(FFLAGS) $(OPENMPFLAGS)>compflag; \
 	echo $(LLIBS) >complib; \
 	$(SRC)/getversion.sh
+print_rwthwarn:
+	@echo "****************************************\n"; \
+	echo "!!!Warning!!!"; \
+	echo "run 'module switch openmpi intelmpi'"; \
+	echo "in the terminal before compiling and running the code!\n"; \
+	echo "****************************************\n"
+print_hazelwarn:
+	@echo "****************************************\n"; \
+	echo "!!!Warning!!!"; \
+	echo "run 'module swap PrgEnv-cray PrgEnv-intel'"; \
+	echo "and 'module unload cray-libsci'"; \
+	echo "in the terminal before compiling and running the code!\n"; \
+	echo "****************************************\n"
 mkdirobj:
 	@if test ! -d $(OBJ); \
 	then mkdir $(OBJ); fi
@@ -287,10 +341,12 @@ mac:    compile
 macmpi: compile
 macomp: compile
 macompprof: compile
-rwth:    compile
-rwthmpi: compile
-rwthomp: compile
-rwthmpidebug: compile
-rwthompdebug: compile
-rwthhybrid:   compile
+rwth:    print_rwthwarn compile
+rwthmpi: print_rwthwarn compile
+rwthomp: print_rwthwarn compile
+rwthmpidebug: print_rwthwarn compile
+rwthompdebug: print_rwthwarn compile
+rwthhybrid:   print_rwthwarn compile
 jureca: compile
+hazelhen: print_hazelwarn compile
+gfort: compile

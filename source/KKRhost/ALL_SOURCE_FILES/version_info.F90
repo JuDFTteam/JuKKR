@@ -46,7 +46,8 @@ contains
     call date_and_time(VALUES=values)
     
     ! write codename, version info and time stamp to serialnr
-    write(tmpname, '(6A,I4.4,5I2.2)') trim(codename), '_', trim(version(1)), '_', trim(version(2)), '_', values(1), values(2), values(3), values(5), values(6), values(7)
+    write(tmpname, '(6A,I4.4,5I2.2)') trim(codename), '_', trim(version1), '_', trim(version2), '_', values(1), values(2), values(3), values(5), values(6), values(7)
+    !write(tmpname, '(6A,I4.4,5I2.2)') trim(codename), '_', trim(version(1)), '_', trim(version(2)), '_', values(1), values(2), values(3), values(5), values(6), values(7)
     slength = len_trim(tmpname)
   
     allocate( character(len=slength) :: serialnr, stat=ierr)

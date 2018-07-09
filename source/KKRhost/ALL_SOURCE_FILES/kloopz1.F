@@ -70,8 +70,8 @@ C     .. Array Arguments ..
       DOUBLE PRECISION RATOM(3,*),RBASIS(3,*),RCLS(3,NACLSD,*),
      +                 RR(3,0:NRD),RROT(48,3,*)
       DOUBLE COMPLEX GMATLL(LMMAXD,LMMAXD,*),
-     +               GINP(LMGF0D*NACLSMAX,LMGF0D,*),
-     &               DGINP(LMGF0D*NACLSMAX,LMGF0D,*) ! LLY Energy deriv. of GINP (=Gref)
+     +               GINP(LMGF0D*NACLSMAX,LMGF0D,NCLS),
+     &               DGINP(LMGF0D*NACLSMAX,LMGF0D,NCLS) ! LLY Energy deriv. of GINP (=Gref)
       DOUBLE COMPLEX LEFTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPIN),
      &               RIGHTTINVLL(LMMAXD,LMMAXD,NEMBD1,NSPIN)
       DOUBLE COMPLEX TSST(LMMAXD,LMMAXD,NATYPD),

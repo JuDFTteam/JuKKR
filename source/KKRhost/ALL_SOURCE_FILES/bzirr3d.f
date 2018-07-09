@@ -38,7 +38,7 @@ C                 taken. Could also be a logical variable.
 C==========================================================================
       implicit none
       integer MAXK1,MAXK2,MAXK3,NSYMAXD
-      PARAMETER (MAXK1=500,MAXK2=500,MAXK3=100,NSYMAXD=48)
+      PARAMETER (MAXK1=501,MAXK2=501,MAXK3=100,NSYMAXD=48)
       !PARAMETER (MAXK1=350,MAXK2=350,MAXK3=70,NSYMAXD=48)
 C i/o
       ! made local ibk array allocatable to not take too much memory

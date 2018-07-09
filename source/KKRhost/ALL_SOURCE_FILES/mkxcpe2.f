@@ -9,19 +9,20 @@ c     ------------------------------------------------------------------
       integer ijd
       parameter(ijd=434)
 c
-      real*8 rv
+      double precision rv
       integer ir,irmd,lmmax,lmpotd,np
-      real*8 ddrrl(irmd,lmpotd),ddrrul(irmd,lmpotd),drrl(irmd,lmpotd)
+      double precision ddrrl(irmd,lmpotd),ddrrul(irmd,lmpotd),
+     &       drrl(irmd,lmpotd)
      &      ,drrul(irmd,lmpotd),dylmf1(ijd,lmpotd),dylmf2(ijd,lmpotd)
      &      ,dylmt1(ijd,lmpotd),dylmtf(ijd,lmpotd),excp(ijd)
      &      ,rholm(lmpotd,2),vxcp(ijd,2),ylm(ijd,lmpotd)
 c
-      real*8 c,pi,s
+      double precision c,pi,s
       integer ip,ispin,l1,lm,n
-      real*8 d(2),d1(3,2),d2(5,2),dl(2)
+      double precision d(2),d1(3,2),d2(5,2),dl(2)
 c     use_sol=0 -> PBE, use_sol=1 -> PBEsol
       logical use_sol
-      real*8 :: um,bet
+      double precision :: um,bet
 c
       pi=4d0*atan(1d0)
 c   
@@ -101,11 +102,12 @@ c     coded by M. Ogura, Jun. 2011, Munich
 c----------------------------------------------------------------------
       implicit none
 c
-      real*8 c,exc,s,v1,v2,xr
-      real*8 ro(2),rol(2),ro1(3,2),ro2(5,2)
-      real*8 um,bet
+      double precision c,exc,s,v1,v2,xr
+      double precision ro(2),rol(2),ro1(3,2),ro2(5,2)
+      double precision um,bet
 c
-      real*8 conf,conrs,d,drv1,drv2,drv2s,drv3,drv4,ec,ex,fk,g,pi,rs,sk
+      double precision conf,conrs,d,drv1,drv2,drv2s,drv3,drv4,ec,ex,fk,
+     &       g,pi,rs,sk
      &      ,ss,thrd,thrd2,tt,uu,vcdn,vcup,vv,vx,vxcdn,vxcup,ww,x,xd,xu
      &      ,y,z,zet
       integer jsp,llda
@@ -237,16 +239,16 @@ C
       REAL*8, PARAMETER :: thrd4=4.d0/3.d0
       REAL*8, PARAMETER :: ax=-0.738558766382022405884230032680836D0
       REAL*8, PARAMETER :: uk=0.8040D0
-      REAL*8            :: ul
+      DOUBLE PRECISION            :: ul
 C
 C Dummy arguments
 C
-      REAL*8 EX,RHO,S,U,V,VX,UM
+      DOUBLE PRECISION EX,RHO,S,U,V,VX,UM
       INTEGER LLDA
 C
 C Local variables
 C
-      REAL*8 EXUNIF,FS,FSS,FXPBE,P0,S2
+      DOUBLE PRECISION EXUNIF,FS,FSS,FXPBE,P0,S2
 C
 C*** End of declarations rewritten by SPAG
 C
@@ -336,12 +338,13 @@ C
 C
 C Dummy arguments
 C
-      REAL*8 EC,RS,T,UU,VCDN,VCUP,VV,WW,ZETA,BET
+      DOUBLE PRECISION EC,RS,T,UU,VCDN,VCUP,VV,WW,ZETA,BET
       INTEGER LLDA
 C
 C Local variables
 C
-      REAL*8 ALFM,ALFRSM,B,B2,BEC,BG,COMM,ECRS,ECZETA,EP,EPRS,EU,EURS,F,
+      DOUBLE PRECISION ALFM,ALFRSM,B,B2,BEC,BG,COMM,ECRS,ECZETA,EP,
+     &       EPRS,EU,EURS,F,
      &       FAC,FACT0,FACT1,FACT2,FACT3,FACT5,FZ,G,G3,G4,GZ,H,HB,HBT,
      &       HRS,HRST,HT,HTT,HZ,HZT,PON,PREF,Q4,Q5,Q8,Q9,RSTHRD,RTRS,T2,
      &       T4,T6,Z4,DELT
@@ -465,11 +468,11 @@ C*** Start of declarations rewritten by SPAG
 C
 C Dummy arguments
 C
-      REAL*8 A,A1,B1,B2,B3,B4,GG,GGRS,RTRS
+      DOUBLE PRECISION A,A1,B1,B2,B3,B4,GG,GGRS,RTRS
 C
 C Local variables
 C
-      REAL*8 Q0,Q1,Q2,Q3
+      DOUBLE PRECISION Q0,Q1,Q2,Q3
 C
 C*** End of declarations rewritten by SPAG
 C

@@ -60,7 +60,7 @@ C*** Start of declarations rewritten by SPAG
 C
 C PARAMETER definitions
 C
-      REAL*8 UNEND,TOLVAR,TRYMIX,DVSTEP
+      DOUBLE PRECISION UNEND,TOLVAR,TRYMIX,DVSTEP
       PARAMETER (UNEND=600.0D0,TOLVAR=1.0D-6,TRYMIX=0.01D0,
      &           DVSTEP=0.01D0)
       INTEGER ITERMAX,NLSHELLMAX
@@ -70,7 +70,8 @@ C Dummy arguments
 C
       INTEGER IPRINT,ISMQHFI,ITPRT,ITXRAY,NCSTMAX,NKMMAX,NLMAX,NMEMAX,
      &        NMMAX,NRMAX,NT,NTMAX,NUCLEUS
-      REAL*8 BCOR(NTMAX),BCORS(NTMAX),BT(NRMAX,NTMAX),CTL(NTMAX,NLMAX),
+      DOUBLE PRECISION BCOR(NTMAX),BCORS(NTMAX),BT(NRMAX,NTMAX),
+     &       CTL(NTMAX,NLMAX),
      &       DRDI(NRMAX,NMMAX),ECOR(NCSTMAX),ECORTAB(120,NTMAX),
      &       FCOR(NRMAX,2,NCSTMAX),GCOR(NRMAX,2,NCSTMAX),QDIA(NKMMAX),
      &       QMDIA(NKMMAX),QMOFF(NKMMAX),QOFF(NKMMAX),R(NRMAX,NMMAX),
@@ -83,7 +84,8 @@ C
 C
 C Local variables
 C
-      REAL*8 AUX,BB(NRMAX*2),BHF(2,2),BHF1(2,2),BHF2(2,2),BSH,BSOL,BSUM,
+      DOUBLE PRECISION AUX,BB(NRMAX*2),BHF(2,2),BHF1(2,2),BHF2(2,2),
+     &       BSH,BSOL,BSUM,
      &       CGD(2),CGMD(2),CGO,DEC,DEDV(4,4),DOVRC(NRMAX*2),
      &       DP(2,2,NRMAX*2),DQ(2,2,NRMAX*2),DRDIC(NRMAX*2),
      &       DROVRN(2*NRMAX),DV(4),DVDE(4,4),EC,ECC,ELIM,ERR(4),
@@ -103,10 +105,10 @@ C
      &        NRC,NSH,NSOL,NVAR,NZERO,S,T
       INTEGER IABS
       INTEGER IKAPMUE
-      REAL*8 RNUCTAB
-      CHARACTER*10 TXTB(1:5)
-      CHARACTER*3 TXTK(4)
-      CHARACTER*1 TXTL(0:3)
+      DOUBLE PRECISION RNUCTAB
+      CHARACTER (len=10) :: TXTB(1:5)
+      CHARACTER (len=3) :: TXTK(4)
+      CHARACTER (len=1) :: TXTL(0:3)
 C
 C*** End of declarations rewritten by SPAG
 C
@@ -1072,7 +1074,7 @@ C
      &        '  NZERO set to  (NRC-1) =',I4)
 99004 FORMAT (//,'  STOP IN <<CORE>>',/,'  IT=',I2,' NQN=',I2,' L=',I2,
      &        /,'  no matching-radius found for  EC=',F10.3)
-99005 FORMAT (' LOOP    =  ',I3,' BSCL=',F10.5,/,' E=',F14.7,' VAR  ',
+99005 FORMAT (' LOOP    =  ',I3,' BSCL=',F10.5,/,' E=',F25.16,' VAR  ',
      &        4E11.4,/,17X,' CORR ',4E11.4,/,17X,' ERR  ',4E11.4)
 99006 FORMAT (' iteration not converged after',I3,' steps !',/,
      &        ' parameters:',4E18.10,/,' last corr.:',4E18.10,/,

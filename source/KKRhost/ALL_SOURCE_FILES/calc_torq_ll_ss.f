@@ -75,14 +75,14 @@ c     Sph. potential has to be multiplied by sqrt(4 PI) !
 
       DO 60 IR = 1,IRMD
 c cut contributions from outside the MT if recquired
-        IF ((TEST('ONLYMT  ') .eq. .TRUE.) .and. (IR > IRCUT(1))) THEN
+        IF (TEST('ONLYMT  ') .and. (IR > IRCUT(1))) THEN
           RGES(IR) = 0
         ELSE
           RGES(IR) = RSP(IR)
         END IF
    60 CONTINUE
 
-      IF (TEST('ONLYSPH ') .eq. .FALSE.) THEN
+      IF (.not.TEST('ONLYSPH ')) THEN
         DO 160 J = 1,IEND
           LM1P = ICLEB(J,1)
           LM2P = ICLEB(J,2)

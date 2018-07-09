@@ -22,7 +22,7 @@
       INTEGER IESTART,IEEND,IELAST             ! Starting and ending energy point for renormalization
       INTEGER IRCUT(0:IPAND,NATYPD),IPAN(NATYPD) ! Mesh info
       DOUBLE PRECISION CONC(NATYPD)                      ! Concentration (for cpa)
-      DOUBLE COMPLEX CDEN(0:LMAXD1,IEMXD,NPOTD)    ! Non-renormalized density per atom (density=-cden/pi)
+      DOUBLE COMPLEX CDEN(0:LMAXD1,IELAST,NPOTD)    ! Non-renormalized density per atom (density=-cden/pi)
       DOUBLE COMPLEX CDOS_LLY(IEMXD,NSPIND)        ! DOS according to Lloyd's formula
       DOUBLE COMPLEX WEZ(IEMXD),EZ(IEMXD)
       DOUBLE PRECISION ZAT(NATYPD)
@@ -138,7 +138,11 @@ c             CHARGE_LLY(I1,ISPIN)=CHARGE_LLY(I1,ISPIN)-DIMAG(CDOS2(I1))
 ! If spins are coupled, then only charge density 
       IF (NSPIN.EQ.1) THEN
        DO I1 = 1,NATYP
-        RENORM_AT(I1,1) = CHARGE_LLY(I1,1)/CHARGE(I1,1)  
+        if (CHARGE(I1,1)>0) then
+           RENORM_AT(I1,1) = CHARGE_LLY(I1,1)/CHARGE(I1,1)  
+        else
+           RENORM_AT(I1,1) = 1.0d0  
+        end if
         RENORM_AT(I1,2) = RENORM_AT(I1,1)  
         IRC1 = IRCUT(IPAN(I1),I1) ! Index of outmost radial point
         RHO2NS(1:IRC1,1:LMPOTD,I1,1) = 

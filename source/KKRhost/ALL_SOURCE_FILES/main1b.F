@@ -17,7 +17,7 @@
      &                      bcast_t_imp_scalars, bcast_t_imp_arrays
       use mpi
 #endif
-      use mod_mympi, only: myrank, master
+      use mod_mympi, only: myrank, master, nranks
 #ifdef CPP_MPI
      &                     ,find_dims_2d,
      &                     distribute_linear_on_tasks, MPIadapt
@@ -26,6 +26,7 @@
       use mod_tbxccpljij, only: tbxccpljij
       use mod_tbxccpljijdij, only: tbxccpljijdij
       use mod_version_info
+      use mod_rhoqtools, only: rhoq_save_refpot
 
       IMPLICIT NONE
       INCLUDE 'inc.p'
@@ -96,7 +97,10 @@ C     RFCTOR=A/(2*PI) conversion factor to p.u.
       CHARACTER*80 TMPDIR
 #ifndef CPP_MPI
       CHARACTER*80 TEXT !qdos ruess
+#else
+      integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
 #endif
+      INTEGER iq_start, iq_end ! qdos
 C     .. 
 C     .. Local Arrays
       INTEGER NSHELL(0:NSHELD),REFPOT(NAEZD+NEMBD),ATOMIMP(NATOMIMPD)
@@ -168,9 +172,10 @@ C     ..
       INTEGER ICHECK(NAEZD/NPRINCD,NAEZD/NPRINCD)
       CHARACTER*35 INVALG(0:2)
 #ifdef CPP_MPI
-      integer :: ie_start
+      integer :: ihelp
+      double complex, allocatable :: work(:,:)
 #endif
-      integer :: ie_num, ie_end, ierr
+      integer :: ie_num, ie_start, ie_end, ierr
 
       ! for OPERATOR option
       logical :: lexist, operator_imp
@@ -229,6 +234,12 @@ C -------------------------------------------------------------- input1b
      &       NRREL,IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,
      &       BZKP,VOLCUB,WEZ,NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,
      &       RCLSIMP)
+     
+      if(test('rhoqtest')) then
+        !write(*,*) myrank ,'open tau0', lmmaxd, (LMMAXD*LMMAXD+1)*4
+         open(9889, access='direct', file='tau0_k', 
+     &        form='unformatted', recl=(LMMAXD*LMMAXD+1)*4) ! lm blocks
+      end if
      
      
       IF (TEST('gmatasci'))
@@ -391,7 +402,7 @@ C    &             FILE='green',FORM='unformatted')                             
      &                NATOMIMP, LMMAXD, KORBIT,
      &             (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
               IF ( ( OPT('GPLAIN  ') ) ) THEN
-                WRITE(8888,'(5I,50000F)') IELAST,NSPIN,NATOMIMP,
+                WRITE(8888,'(5I5,50000F25.16)') IELAST,NSPIN,NATOMIMP,
      &               NATOMIMP, (LMAX+1)**2,
      &               (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST)
               END IF
@@ -457,18 +468,19 @@ C
 #ifdef CPP_MPI         
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+         ie_start = 0
+         ie_end = ielast
+#endif
          
          DO 360 ie_num=1,ie_end
             IE = ie_start+ie_num
             
+#ifdef CPP_MPI
             !start timing measurement for this ie, needed for MPIadapt
             if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
               call timing_start('time_1b_ie')
             end if
-#else
-         DO 360 IE = 1,IELAST
-            ie_num = ie
-            ie_end = ielast
 #endif
 C
             ! write energy into green_host file
@@ -499,6 +511,7 @@ C
 #ifdef CPP_TIMING
         call timing_start('main1b - calctref13')
 #endif
+            TREFLL(:,:,:) = CZERO
             IF ( KREL.EQ.0 ) THEN
                DO I1 = 1,NREF
                   CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
@@ -588,6 +601,11 @@ C --> setting up of Delta_t moved to < KLOOPZ1 >
 C
             IF (OPT('readcpa ').OR.
      &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
+#ifdef CPP_MPI
+               ! Barrier needed because i first run only tmatrix is witten out and only in second run the q loop is done which is parallel
+               call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
+               if(ierr/=0) stop '[main1b] Error in MPI Barrier'
+#endif
                DO ISITE = 1,NAEZ                              ! qdos ruess
                   TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
 #ifdef CPP_MPI
@@ -617,7 +635,28 @@ C
                ENDDO                                          ! qdos ruess
             END IF                                            ! qdos ruess
 C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
-            DO 200 IQ = 1,NQDOS                               ! qdos ruess
+
+            iq_start = 1
+            iq_end   = NQDOS
+#ifdef CPP_MPI
+            IF (OPT('qdos    ')) THEN
+              if(myrank==master) write(1337,*) 'q loop:', NQDOS, 
+     &                                  t_mpi_c_grid%nranks_ie
+              call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                   master,NQDOS,ntot_pT,ioff_pT,.true.)
+
+              iq_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+              iq_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &                   ntot_pT(t_mpi_c_grid%myrank_ie)
+              t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+              t_mpi_c_grid%ntot_pT1 = ntot_pT
+              t_mpi_c_grid%ioff_pT1 = ioff_pT
+            END IF !(OPT('qdos    '))
+#endif
+
+            DO 200 IQ = iq_start,iq_end                       ! qdos ruess
             IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
 C
 #ifdef CPP_TIMING
@@ -677,50 +716,50 @@ C           Skip this part if first part of the qdos is running
               ENDIF
 
 
-            ! writeout of host green function for impurity code for single-atom cluster (not captured in rotgll)
-            IF ( NATOMIMP==1 ) THEN
-              IF ( OPT('KKRFLEX ') ) THEN
+              ! writeout of host green function for impurity code for single-atom cluster (not captured in rotgll)
+              IF ( NATOMIMP==1 ) THEN
                 I1=ATOMIMP(1)
-                irec = ielast*(ispin-1)+ ie+1
-                ILM=0
-                GIMP=(0.e0,0.e0) !complex*8
-                DO LM2=1,LMMAXD
+                IF ( OPT('KKRFLEX ') ) THEN
+                  irec = ielast*(ispin-1)+ ie+1
+                  ILM=0
+                  GIMP=(0.e0,0.e0) !complex*8
+                  DO LM2=1,LMMAXD
+                      DO LM1=1,LMMAXD
+                        ILM=ILM+1
+                        GIMP(ILM)=GMATLL(LM1,LM2,I1)
+                      ENDDO
+                  ENDDO
+                  irec = ielast*(ispin-1)+ ie+1
+                  WRITE(888,REC=irec) GIMP
+                  IF ( OPT('GPLAIN  ') ) THEN
+                    WRITE(8888,'(50000E25.16)') GIMP
+                  END IF
+                ENDIF ! KKRFLEX
+                IF (OPT('WRTGREEN') .and. myrank==master) THEN
+                  DO LM2=1,LMMAXD
                     DO LM1=1,LMMAXD
-                      ILM=ILM+1
-                      GIMP(ILM)=GMATLL(LM1,LM2,I1)
-                    ENDDO
-                ENDDO
-                irec = ielast*(ispin-1)+ ie+1
-                WRITE(888,REC=irec) GIMP
-                IF ( OPT('GPLAIN  ') ) THEN
-                  WRITE(8888,'(50000E)') GIMP
-                END IF
-              ENDIF ! KKRFLEX
-              IF (OPT('WRTGREEN') .and. myrank==master) THEN
-                DO LM2=1,LMMAXD
-                  DO LM1=1,LMMAXD
-                    ! writeout of green_host for WRTGREEN option
-                    WRITE(58,'((2I5),(2e17.9))') LM2, LM1,
-     &                                     GMATLL(LM1,LM2,I1)
+                      ! writeout of green_host for WRTGREEN option
+                      WRITE(58,'((2I5),(2e17.9))') LM2, LM1,
+     &                                       GMATLL(LM1,LM2,I1)
+                    END DO
                   END DO
-                END DO
-              ENDIF ! WRTGREEN
-            END IF !( NATOMIMP==1 )
-
-            IF ( LCPAIJ ) THEN
-             if(t_cpa%dmatproj_to_file) then
-               DO I1 = 1,NATYP
-                  GMAT0(:,:) = TSST(:,:,I1)
-                  W1(:,:)    = MSST(:,:,I1)
-                  IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN*(I1-1)
-                  WRITE (71,REC=IREC) GMAT0,W1
-               END DO
-             else!t_cpa%dmatproj_to_file
-               irec = ie_num + ie_end*(ISPIN-1)
-               t_cpa%dmatts(:,:,:,irec) = TSST(:,:,:)
-               t_cpa%dtilts(:,:,:,irec) = MSST(:,:,:)
-             end if!t_cpa%dmatproj_to_file
-            END IF  ! ( LCPAIJ )
+                ENDIF ! WRTGREEN
+              END IF !( NATOMIMP==1 )
+              
+              IF ( LCPAIJ ) THEN
+               if(t_cpa%dmatproj_to_file) then
+                 DO I1 = 1,NATYP
+                    GMAT0(:,:) = TSST(:,:,I1)
+                    W1(:,:)    = MSST(:,:,I1)
+                    IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN*(I1-1)
+                    WRITE (71,REC=IREC) GMAT0,W1
+                 END DO
+               else!t_cpa%dmatproj_to_file
+                 irec = ie_num + ie_end*(ISPIN-1)
+                 t_cpa%dmatts(:,:,:,irec) = TSST(:,:,:)
+                 t_cpa%dtilts(:,:,:,irec) = MSST(:,:,:)
+               end if!t_cpa%dmatproj_to_file
+              END IF  ! ( LCPAIJ )
 C
             ENDIF    ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
  200        CONTINUE ! IQ = 1,NQDOS                                       ! qdos ruess
@@ -763,9 +802,12 @@ c ------------------------------------------------------------------------
 #ifdef CPP_TIMING
         if(.not.OPT('GREENIMP')) then
            if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-           if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-           if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+           if(t_inc%i_time>0) call timing_pause('main1b - fourier')
+           if(t_inc%i_time>0) call timing_stop('main1b - inversion')
            if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
+        endif
+        if(t_inc%i_time>0 .and.test('rhoqtest')) then
+           call timing_stop('main1b - kkrmat01 - writeout_rhoq')
         endif
 #endif
 !EEEEEEEEEEEEEEEEEEEEEEEEE  NO-SOC EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
@@ -802,19 +844,25 @@ C
 #ifdef CPP_MPI
       ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
       ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+      ie_start = 0
+      ie_end = IELAST
+#endif
+
+      if(test('rhoqtest')) then
+         ie_start = 1
+         ie_end = 1
+      end if
+         
 
       DO 460 ie_num=1,ie_end
          IE = ie_start+ie_num
    
+#ifdef CPP_MPI
          !start timing measurement for this ie, needed for MPIadapt
          if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
            call timing_start('time_1b_ie')
          end if
-
-#else
-      ie_end = IELAST
-      DO 460 IE=1,IELAST
-         ie_num = ie
 #endif
 
        ! write energy into green_host file
@@ -844,16 +892,22 @@ c construct t matrix for reference system (now is always double matrix)
        call timing_start('main1b - calctref13')
 #endif
        DO I1 = 1,NREF
-        CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
-     +                WN1,WN2,                                ! LLY
-     &                ALPHAREF(0,I1),DALPHAREF(0,I1),         ! LLY 
-     &                LMAXD+1,LMGF0D)
-        DO I=1,LM1
-         TREFLL(I,I,I1) = WN1(I,I)
-         TREFLL(LM1+I,LM1+I,I1) = WN1(I,I)
-         DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
-         DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
-        ENDDO
+          CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,
+     +                  WN1,WN2,                                ! LLY
+     &                  ALPHAREF(0,I1),DALPHAREF(0,I1),         ! LLY 
+     &                  LMAXD+1,LMGF0D)
+          DO I=1,LM1
+             TREFLL(I,I,I1) = WN1(I,I)
+             TREFLL(LM1+I,LM1+I,I1) = WN1(I,I)
+             DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
+             DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
+          ENDDO
+          
+          if(test('rhoqtest')) then
+             call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),
+     &                             wlength,lmmaxd,ie,trefll)
+          end if ! rhoqtest
+        
        ENDDO ! I1
 #ifdef CPP_TIMING
        call timing_pause('main1b - calctref13')
@@ -927,6 +981,11 @@ c rotate t-matrix from local to global frame
 c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS
             IF (OPT('readcpa ').OR.
      &        (OPT('qdos    ').AND.(IQDOSRUN.EQ.1))) THEN     ! qdos ruess: read in cpa t-matrix
+#ifdef CPP_MPI
+               ! Barrier needed because i first run only tmatrix is witten out and only in second run the q loop is done which is parallel
+               call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie, ierr)
+               if(ierr/=0) stop '[main1b] Error in MPI Barrier'
+#endif
                DO ISITE = 1,NAEZ                              ! qdos ruess
                   TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
 #ifdef CPP_MPI
@@ -955,7 +1014,27 @@ c QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDO
                ENDDO                                          ! qdos ruess
             END IF                                            ! qdos ruess
 C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
-            DO 220 IQ = 1,NQDOS                               ! qdos ruess
+            iq_start = 1
+            iq_end   = NQDOS
+#ifdef CPP_MPI
+            IF (OPT('qdos    ')) THEN
+              if(myrank==master) write(1337,*) 'q loop:', NQDOS, 
+     &                                  t_mpi_c_grid%nranks_ie
+              call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, 
+     &                   t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,
+     &                   master,NQDOS,ntot_pT,ioff_pT,.true.)
+
+              iq_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+              iq_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+
+     &                   ntot_pT(t_mpi_c_grid%myrank_ie)
+              t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+              t_mpi_c_grid%ntot_pT1 = ntot_pT
+              t_mpi_c_grid%ioff_pT1 = ioff_pT
+            END IF !(OPT('qdos    '))
+#endif
+
+            DO 220 IQ = iq_start,iq_end                       ! qdos ruess
             IF (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
 
 #ifdef CPP_TIMING
@@ -1015,18 +1094,20 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
                  ENDDO
                ENDIF
 
-               IF ( NATOMIMP==1 .and. OPT('KKRFLEX ') ) THEN
+               IF ( NATOMIMP==1 ) THEN
                   I1=ATOMIMP(1)
-                  IREC = IE+1
-                  ILM=0
-                  GIMP=(0.e0,0.e0) ! complex*8
-                  DO LM2=1,LMMAXD
-                     DO LM1=1,LMMAXD
-                        ILM=ILM+1
-                        GIMP(ILM)=GMATLL(LM1,LM2,I1)
-                     ENDDO
-                  ENDDO
-                  WRITE(888,REC=IREC) GIMP
+                  IF(OPT('KKRFLEX')) THEN
+                    IREC = IE+1
+                    ILM=0
+                    GIMP=(0.e0,0.e0) ! complex*8
+                    DO LM2=1,LMMAXD
+                       DO LM1=1,LMMAXD
+                          ILM=ILM+1
+                          GIMP(ILM)=GMATLL(LM1,LM2,I1)
+                       ENDDO
+                    ENDDO
+                    WRITE(888,REC=IREC) GIMP
+                  ENDIF
                   IF (OPT('WRTGREEN') .and. myrank==master) THEN
                     DO LM2=1,LMMAXD
                       DO LM1=1,LMMAXD
@@ -1084,8 +1165,8 @@ C  Loop over all QDOS points and change volume for KLOOPZ run accordingly
 #ifdef CPP_TIMING
         if(.not.OPT('GREENIMP')) then
            if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-           if(t_inc%i_time>0) call timing_pause('main1b_fourier')
-           if(t_inc%i_time>0) call timing_stop('main1b_inversion')
+           if(t_inc%i_time>0) call timing_pause('main1b - fourier')
+           if(t_inc%i_time>0) call timing_stop('main1b - inversion')
            if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
         endif
 #endif
@@ -1129,7 +1210,18 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
 
       IF (LLY.NE.0) THEN                                                 ! LLY Lloyd
          if(t_lloyd%cdos_diff_lly_to_file) then
-            OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
+            if(myrank==master) then
+               OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
+            endif
+#ifdef CPP_MPI
+            ihelp      = IELAST*NSPIN  !IELAST*NSPIN
+            allocate(work(ielast,nspin))
+            work = (0.d0, 0.d0)
+            CALL MPI_ALLREDUCE(cdos_lly,work,ihelp,
+     &      MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
+            call zcopy(ihelp,work,1,cdos_lly,1)
+            deallocate(work)
+#endif
          end if
          
          IF (.NOT.OPT('NEWSOSOL')) THEN
@@ -1143,7 +1235,7 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
            DO IE = 1,IELAST                                              ! LLY
             ie_num = ie
 #endif
-            if(t_lloyd%cdos_diff_lly_to_file) then
+            if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) then
                WRITE(701,FMT='(10E25.16)') EZ(IE),
      &          CDOS_LLY(IE,ISPIN),
      &          TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN)                     ! LLY
@@ -1162,7 +1254,7 @@ c     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
            DO IE = 1,IELAST                                              ! LLY
             ie_num = ie
 #endif
-            if(t_lloyd%cdos_diff_lly_to_file) then
+            if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) then
               WRITE(701,FMT='(10E25.16)') EZ(IE),CDOS_LLY(IE,1),     
      &                                    TRALPHA(IE,1),LLY_GRTR(IE,1)   ! LLY
             else
@@ -1217,6 +1309,21 @@ C     kpoint (defined in qvec.dat)
       IF (IQDOSRUN.EQ.1) GO TO 210                 ! qdos ruess
 
 
+      if(test('rhoqtest')) then     
+#ifdef CPP_MPI
+         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+#endif
+         close(9889) ! tau0_k file
+         close(99992)
+         call timing_stop('Time in Iteration')
+         if (myrank==master) call print_time_and_date('Done w. rhoq!!!')
+#ifdef CPP_MPI
+         call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+         call MPI_FINALIZE(ierr)
+#endif
+         stop 'finished with rhoq output'
+      
+      end if
 
       IF(OPT('OPERATOR') .and. myrank==master) THEN
         ! check if impurity files are present (otherwise no imp.
@@ -1247,9 +1354,9 @@ C     kpoint (defined in qvec.dat)
         if(.not.(ielast==1.or.ielast==3)) stop 
      + 'Error: GREENIMP option only possible with 1 () or 3 () energy
      +  points in contour'
-        if(ielast==1 .and.dabs(dimag(ez(1)))>10**-10) stop 
+        if(ielast==1 .and.dabs(dimag(ez(1)))>1E-10) stop 
      + 'Error: T>0 for GREENIMP (DTMTRX writeout, IELAST==3)'
-        if(ielast==3 .and.dabs(dimag(ez(1)))<10**-10) stop 
+        if(ielast==3 .and.dabs(dimag(ez(1)))<1E-10) stop 
      + 'Error: T==0 for GREENIMP (GMATLL_GES writeout, IELAST==3)'
         ! end consistency checks
 
@@ -1356,7 +1463,6 @@ C
         close(9999)
       endif
 
-
       ! clean up allocations before exiting
       deallocate(LEFTTINVLL, RIGHTTINVLL, BZKP, stat=ierr)
       if(ierr/=0) stop '[main1b] Error deallocating leftinvll etc.'
@@ -1368,10 +1474,8 @@ C
       if(ierr/=0) stop '[main1b] Error deallocating ISH and JSH'
 
 
-
       if(t_inc%i_write>0) 
      &   WRITE (1337,'(79(1H=),/,30X,"< KKR1b finished >",/,79(1H=),/)')
-
 
  2100 FORMAT(/,79(1H=),/,5X,' Inversion algorithm used : ',A,/,
      &     79(1H=),/)

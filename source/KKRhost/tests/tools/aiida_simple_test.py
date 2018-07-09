@@ -9,7 +9,7 @@ from aiida.work import run
 from aiida_kkr.tools.kkr_params import kkrparams
 from aiida_kkr.workflows.kkr_scf import kkr_scf_wc
 from pprint import pprint
-from scipy import array
+from numpy import array
 
 ParameterData = DataFactory('parameter')
 StructureData = DataFactory('structure')
@@ -39,6 +39,7 @@ bravais = array([[0.5, 0.5, 0.0], [0.5, 0.0, 0.5], [0.0, 0.5, 0.5]])
 a = 0.5*alat*abohr
 Cu = StructureData(cell=[[a, a, 0.0], [a, 0.0, a], [0.0, a, a]])
 Cu.append_atom(position=[0.0, 0.0, 0.0], symbols='Cu')
+Cu.label = 'Cu_bulk_simple_test'
 
 Cu.store()
 print(Cu)

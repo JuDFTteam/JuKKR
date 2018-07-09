@@ -117,7 +117,7 @@ C     .. Local Arrays ..
       integer :: ierr
       DOUBLE COMPLEX EZ(IEMXD),WEZ(IEMXD)
       DOUBLE COMPLEX, allocatable :: den(:,:,:,:), denlm(:,:,:,:) ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS),DENLM(LMMAXD1,IEMXD,NPOTD,NQDOS)
-      DOUBLE COMPLEX DEN1(0:LMAXD1,IEMXD,2)
+      DOUBLE COMPLEX, allocatable :: DEN1(:,:,:)
       DOUBLE COMPLEX CDOSAT0(IEMXD),CDOSAT1(IEMXD),CSUM                       ! LLY Lloyd
       DOUBLE COMPLEX CDOS0(IEMXD),CDOS_LLY(IEMXD,NSPIND),CDOS1(IEMXD),
      +               CDOS2(NATYPD)                                            ! LLY Lloyd
@@ -189,7 +189,6 @@ C     .. qdos and lmlm-dos ..
       DOUBLE COMPLEX DENTOT ! qdos
 #endif
       DOUBLE PRECISION, allocatable :: QVEC(:,:)
-      INTEGER LM1,LM2
 #ifdef CPP_MPI
       integer :: ntot1
       integer :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1)
@@ -287,11 +286,13 @@ C        Read BZ path for qdos calculation:
          CLOSE(67)                                      ! qdos
       END IF
       
-      allocate( DEN(0:LMAXD1,IEMXD,NQDOS,NPOTD),
-     &          DENLM(LMMAXD,IEMXD,NQDOS,NPOTD))
+      allocate( DEN(0:LMAXD1,IELAST,NQDOS,NPOTD),
+     &          DENLM(LMMAXD,IELAST,NQDOS,NPOTD),
+     &          DEN1(0:LMAXD1,IELAST,2))
 
-      CALL CINIT(IEMXD*(LMAXD+2)*NPOTD*NQDOS,DEN)
-      CALL CINIT(IEMXD*(LMMAXD)*NPOTD*NQDOS,DENLM)
+      CALL CINIT(IELAST*(LMAXD+2)*NPOTD*NQDOS,DEN)
+      CALL CINIT(IELAST*(LMMAXD)*NPOTD*NQDOS,DENLM)
+      CALL CINIT(IELAST*(LMAXD+2),DEN1)
       DENEF = 0.0D0
       CALL RINIT(NATYPD,DENEFAT)
 C
@@ -370,22 +371,28 @@ c calculate contribution from free space
          CDOS_LLY(1:ielast,1:NSPIN) = CZERO                                ! LLY Lloyd
          IF (.NOT.OPT('NEWSOSOL')) THEN
          if(t_lloyd%cdos_diff_lly_to_file) then
-            OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
-            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
-               DO IE = 1,IELAST                                               ! LLY Lloyd
-                  READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,ISPIN)         ! LLY Lloyd
-               ENDDO                                                          ! LLY Lloyd
-            ENDDO                                                             ! LLY Lloyd
-            CLOSE(701)                                                        ! LLY Lloyd
-         else   !(t_lloyd%cdos_diff_lly_to_file)
-            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
+            if(myrank==master) then
+              OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
+              DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
+                 DO IE = 1,IELAST                                               ! LLY Lloyd
+                    READ(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,ISPIN)         ! LLY Lloyd
+                 ENDDO                                                          ! LLY Lloyd
+              ENDDO                                                             ! LLY Lloyd
+              CLOSE(701)                                                        ! LLY Lloyd
+            end if
 #ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-#else
-               ie_start = 0
-               ie_end = IELAST
+            call MPI_Bcast(CDOS_LLY, ielast*nspin, MPI_DOUBLE_COMPLEX,
+     &                     master, t_mpi_c_grid%myMPI_comm_at, ierr)
 #endif
+         else   !(t_lloyd%cdos_diff_lly_to_file)
+#ifdef CPP_MPI
+            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+            ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+            ie_start = 0
+            ie_end = IELAST
+#endif
+            DO ISPIN = 1,NSPIN                                                ! LLY Lloyd
                DO ie_num=1,ie_end
                   IE = ie_start+ie_num
                   CDOS_LLY(IE,ISPIN) = t_lloyd%cdos(ie_num,ispin)             ! LLY Lloyd
@@ -446,11 +453,11 @@ c calculate contribution from free space
             CLOSE(701)                                                     ! LLY
           else  !(t_lloyd%cdos_diff_lly_to_file)
 #ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+            ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
-               ie_start = 0
-               ie_end = IELAST
+            ie_start = 0
+            ie_end = IELAST
 #endif
             DO ie_num=1,ie_end
                IE = ie_start+ie_num
@@ -591,8 +598,8 @@ C
         IF ( TEST('RHOVALW ') ) THEN !Bauer
         open(unit=324234,file='out_rhoval')
         WRITE(324234,*) '#IATOM',I1
-        write(324234,'(50000F)') RHO2NS(:,:,I1,1)
-        IF (NSPIN==2) write(324234,'(50000F)') RHO2NS(:,:,I1,2)
+        write(324234,'(50000F25.16)') RHO2NS(:,:,I1,1)
+        IF (NSPIN==2) write(324234,'(50000F25.16)') RHO2NS(:,:,I1,2)
         END IF
 
 
@@ -620,8 +627,9 @@ C ----------------------------------------------------------------------
       END DO
 C ================================================================ NATYP
 #ifdef CPP_TIMING
-!     call timing_stop('main1c - rhoval')
-      if(i1_end>=i1_start) call timing_stop('main1c - rhoval')
+!       call timing_stop('main1c - rhoval')
+      if(i1_end>=i1_start .and. t_inc%i_time>0) 
+     &                   call timing_stop('main1c - rhoval')
 #endif
       CLOSE (69) !gmat file
 #ifndef CPP_MPI   
@@ -635,8 +643,8 @@ C ================================================================ NATYP
       !move writeout of qdos file here                                   ! qdos
       IF (OPT('qdos    ')) THEN                                          ! qdos
        ! first communicate den array to write out qdos files             ! qdos
-       IDIM = (LMAXD1+1)*IEMXD*NQDOS*NPOTD                               ! qdos
-       allocate(workc(0:LMAXD1,IEMXD,NQDOS,NPOTD))                       ! qdos
+       IDIM = (LMAXD1+1)*IELAST*NQDOS*NPOTD                               ! qdos
+       allocate(workc(0:LMAXD1,IELAST,NQDOS,NPOTD))                       ! qdos
        workc = (0.d0, 0.d0)                                              ! qdos
                                                                          ! qdos
        CALL MPI_ALLREDUCE(DEN,workc,IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,     ! qdos
@@ -717,63 +725,63 @@ C ================================================================ NATYP
  9000 FORMAT(5F10.6,40E16.8)                                             ! qdos
  9002 FORMAT(5F10.6,80E16.8)                                             ! complex qdos
  
-      !reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
-      NQDOS=1
       
+      if(.not.opt('qdos    ')) then
+        !communication only needed if qdos option was not chosen
+        !reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
+        NQDOS=1
+        !MPI: reduce these arrays, so that master processor has the results (MPI_REDUCE)
 #ifdef CPP_TIMING
-      call timing_start('main1c - communication')
+        call timing_start('main1c - communication')
 #endif
-      !MPI: reduce these arrays, so that master processor has the results (MPI_REDUCE)
-#ifdef CPP_TIMING
-      call timing_start('main1c - communication')
-#endif
-      call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
-     &              NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
+        call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
+     &              NPOTD,IELAST,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
      &              NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
      &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
      &              t_mpi_c_grid%mympi_comm_ie)
-      call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
-     &              NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
+        call mympi_main1c_comm(IRMD,LMPOTD,NATYPD,LMAXD,LMAXD1,LMMAXD,
+     &              NPOTD,IELAST,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,
      &              NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,
      &              denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,
      &              t_mpi_c_grid%mympi_comm_at)
 #ifdef CPP_TIMING
-      call timing_stop('main1c - communication')
+        call timing_stop('main1c - communication')
 #endif
 
 !     lmdos writeout
-      if(myrank==master) then                                            ! lm-dos
-c        IF (.not.OPT('qdos    ')) THEN                                   ! lm-dos
-        IF (OPT('lmdos    ')) THEN                                       ! lm-dos
-          DO I1=1,NATYP                                                  ! lm-dos
-            DO ISPIN = 1,NSPIN                                           ! lm-dos
-              IPOT = (I1-1) * NSPINPOT + ISPIN                           ! lm-dos
-              if(NATYP.ge.100) then                                      ! lm-dos
-                OPEN(30,                                                 ! lm-dos
-     +               FILE="lmdos."//char(48+I1/100)//                    ! lm-dos
-     +                     char(48+mod(I1/10,10))//                      ! lm-dos
-     +                     char(48+mod(I1,10))//"."//                    ! lm-dos
-     +                     char(48+ISPIN)//".dat")                       ! lm-dos
-              else                                                       ! lm-dos
-                OPEN(30,                                                 ! lm-dos
-     +               FILE="lmdos."//char(48+I1/10)//                     ! lm-dos
-     +                     char(48+mod(I1,10))//"."//                    ! lm-dos
-     +                     char(48+ISPIN)//".dat")                       ! lm-dos
-              end if                                                     ! lm-dos
-              call version_print_header(30)
-              WRITE (30,*) ' '                                           ! lm-dos
-              WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1                 ! lm-dos
- 8600         FORMAT (a8,I3,a4,I5)                                       ! lm-dos
-              DO IE=1,IELAST                                             ! lm-dos
-                WRITE(30,9001) DREAL(EZ(IE)),                            ! lm-dos
-     &               (-DIMAG(DENLM(LM,IE,1,IPOT))/PI,LM=1,LMMAXD)        ! lm-dos
-              END DO ! IE                                                ! lm-dos
-            END DO ! ISPIN                                               ! lm-dos
- 9001       FORMAT(30E12.4)                                              ! lm-dos
-            close(30)                                                    ! lm-dos
-          END DO !I1                                                     ! lm-dos
-        ENDIF  ! not qdos option                                         ! lm-dos
-      end if ! myrank==master                                            ! lm-dos
+        if(myrank==master) then                                           ! lm-dos
+         IF (OPT('lmdos    ')) THEN                                       ! lm-dos
+           DO I1=1,NATYP                                                  ! lm-dos
+             DO ISPIN = 1,NSPIN                                           ! lm-dos
+               IPOT = (I1-1) * NSPINPOT + ISPIN                           ! lm-dos
+               if(NATYP.ge.100) then                                      ! lm-dos
+                 OPEN(30,                                                 ! lm-dos
+     +                FILE="lmdos."//char(48+I1/100)//                    ! lm-dos
+     +                      char(48+mod(I1/10,10))//                      ! lm-dos
+     +                      char(48+mod(I1,10))//"."//                    ! lm-dos
+     +                      char(48+ISPIN)//".dat")                       ! lm-dos
+               else                                                       ! lm-dos
+                 OPEN(30,                                                 ! lm-dos
+     +                FILE="lmdos."//char(48+I1/10)//                     ! lm-dos
+     +                      char(48+mod(I1,10))//"."//                    ! lm-dos
+     +                      char(48+ISPIN)//".dat")                       ! lm-dos
+               end if                                                     ! lm-dos
+               call version_print_header(30)
+               WRITE (30,*) ' '                                           ! lm-dos
+               WRITE (30,8600) '# ISPIN=',ISPIN,' I1=',I1                 ! lm-dos
+ 8600          FORMAT (a8,I3,a4,I5)                                       ! lm-dos
+               DO IE=1,IELAST                                             ! lm-dos
+                 WRITE(30,9001) DREAL(EZ(IE)),                            ! lm-dos
+     &                (-DIMAG(DENLM(LM,IE,1,IPOT))/PI,LM=1,LMMAXD)        ! lm-dos
+               END DO ! IE                                                ! lm-dos
+             END DO ! ISPIN                                               ! lm-dos
+ 9001        FORMAT(30E12.4)                                              ! lm-dos
+             close(30)                                                    ! lm-dos
+           END DO !I1                                                     ! lm-dos
+         ENDIF  ! lmdos option                                            ! lm-dos
+        end if ! myrank==master                                           ! lm-dos
+
+      endif !(.not.opt('qdos    '))
 #endif
 
       ELSE ! new spin-orbit solver
@@ -787,7 +795,7 @@ c interpolate potential
      +           CALL CINIT(MMAXD*MMAXD*4*NATYPD,DENMATN(1,1,1,1,1))
 
        CALL INTERPOLATE_POTEN(LPOTD,IRMD,IRNSD,NATYPD,IPAND,
-     +                        NSPOTD,NTOTD,NCHEBD,NTOTD*(NCHEBD+1),
+     +                        NSPOTD,NTOTD,NTOTD*(NCHEBD+1),
      +                        NSPIN,RMESH,IRMIN,IRWS,IRCUT,VINS,
      +                        VISP,NPAN_LOG,NPAN_EQ,NPAN_TOT,
      +                        RNEW,IPAN_INTERVALL,
@@ -902,13 +910,15 @@ c interpolate potential
       END DO !I1
       
 #ifdef CPP_MPI
-      !reset NQDOS to 1 to avoid endless communication
-      NQDOS = 1
-      call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,         &
+      if(.not.opt('qdos    ')) then
+        !reset NQDOS to 1 to avoid endless communication
+        NQDOS = 1
+        call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IELAST,NQDOS,         &
      &                                 NPOTD,NATYPD,LMPOTD,IRMD,MMAXD,    &
      &                                 den, denlm, muorb, espv, r2nef,    &
      &                                 rho2ns, denefat, denef,denmatn,    &
      &                            angles_new,t_mpi_c_grid%mympi_comm_ie)
+      end if ! .not.opt('qdos    ')
 #endif
       
 #ifdef CPP_TIMING
@@ -1068,10 +1078,10 @@ C   RHO_core is calculated only if also RHO_valence was
 C
       IF (NPOL.NE.0) THEN 
          if(t_inc%i_write>0) then
-         WRITE (1337,*)
-         WRITE (1337,'(78(1H#))')
-         WRITE (1337,'(33X,A)') 'CORE  STATES'
-         WRITE (1337,'(78(1H#))')
+            WRITE (1337,*)
+            WRITE (1337,'(78(1H#))')
+            WRITE (1337,'(33X,A)') 'CORE  STATES'
+            WRITE (1337,'(78(1H#))')
          endif
          DO I1 = 1,NATYP
             DO ISPIN = 1,NSPIN
@@ -1093,9 +1103,9 @@ C
             END DO
          END DO
          if(t_inc%i_write>0) then
-         WRITE (1337,*)
-         WRITE (1337,'(78(1H#))')
-         WRITE (1337,*)
+            WRITE (1337,*)
+            WRITE (1337,'(78(1H#))')
+            WRITE (1337,*)
          endif
       END IF
 C
@@ -1137,51 +1147,13 @@ C
 #ifdef CPP_TIMING
       call timing_stop('main1c - serial part')
 #endif
-      if(test('rhoqtest')) then
-
-        open(9999, file='cleb_shapefun.txt')
-        write(9999,*) 'params'
-        write(9999,*) t_params%ncleb, t_params%lm2d, t_params%lmaxd,
-     &                t_params%iend, t_params%nfund, t_params%lmxspd,
-     &                nrmaxd
-        write(9999,*) 'cleb'
-        do lm1=1,t_params%ncleb
-          write(9999,'(E16.7,4I9)') t_params%cleb(lm1,1), 
-     &                              t_params%icleb(lm1,1:4)
-        end do
-        write(9999,*) 'loflm'
-        do lm1=1,t_params%lm2d
-          write(9999,'(I9)') t_params%loflm(lm1)
-        end do
-        open(8888, file='mu0')
-        read(8888,*) i1
-        close(8888)
-        ICELL = NTCELL(I1)
-        write(9999,*) 'ifunm'
-        do lm1=1,lmxspd
-          write(9999,'(I9)') ifunm1(lm1,icell)
-        end do
-        write(9999,*) 'lmsp'
-        do lm1=1,lmxspd
-          write(9999,'(I9)') LMSP1(LM1,icell)
-        end do
-        write(9999,*) 'thetasnew',nrmaxd,nfund
-        do lm1=1,nrmaxd
-          do lm2=1,nfund
-            write(9999,'(E16.7)') thetasnew(lm1,lm2,icell)
-          end do
-        end do
-        close(9999)
-        open(987987, file='shapefun_test')
-        write(987987,*) thetasnew
-        close(987987)
-
-      endif
 #ifdef CPP_MPI
       end if !myrank==master
 #endif
       
-      deallocate(den,denlm, thetasnew, thetas, vins, vinsnew,stat=ierr)
+      deallocate( den, denlm, den1, stat=ierr)
+      if(ierr/=0) stop '[main1b] Error deallocating den etc.'
+      deallocate( thetasnew, thetas, vins, vinsnew, stat=ierr)
       if(ierr/=0) stop '[main1b] Error deallocating vins, vinsnew etc.'
       deallocate(RHO2N1,RHO2NS,RHO2N2,R2NEF,stat=ierr)
       if(ierr/=0) stop '[main1b] Error deallocating rho2n1 etc.'

@@ -1,4 +1,10 @@
       module MOD_MAIN0 
+#ifdef CPP_HYBRID
+#  define cpp_ompstuff
+#endif
+#ifdef CPP_OMP
+#  define cpp_ompstuff
+#endif
       
       use mod_wunfiles
       use mod_types, only: t_imp
@@ -6,6 +12,7 @@
       use mod_timing
 #endif
       use mod_create_newmesh
+      use mod_rhoqtools, only: rhoq_save_rmesh
       
       implicit none
       
@@ -203,13 +210,13 @@ C Note: IRMD-dimension depends on KREL to save space
 C ======================================================================VINS()
 
       use mod_types
-#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+#ifdef cpp_ompstuff
       use omp_lib        ! necessary for omp functions
 #endif
 #ifdef CPP_MPI
       use mpi
-      use mod_mympi, only: nranks
 #endif
+      use mod_mympi, only: nranks
       use mod_version
       use mod_version_info
       use mod_md5sums
@@ -421,7 +428,7 @@ C ruess: IVSHIFT test option
       double precision, allocatable :: THETAS(:,:,:), THETASNEW(:,:,:)
       integer :: ierr
       
-#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+#ifdef cpp_ompstuff
 !     .. OMP ..
       integer nth, ith          ! total number of threads, thread number
 #endif
@@ -460,26 +467,30 @@ C     ..
      &              'Electronic Structure Code',
      &              'for Bulk and Interfaces',
      &              'Juelich-Munich 2001 - 2016',
-     &             ' Code version: ',trim(version(1)),
-     &             ' Compile options:',(trim(version(i)),i=2,4),
+     &             ' Code version: ',trim(version1),
+     &             ' Compile options:', trim(version2), trim(version3),
+     &                                  trim(version4),
      &             ' serial number for files:', serialnr
       WRITE(1337,2004) 'Screened Korringa-Kohn-Rostoker ',
      &              'Electronic Structure Code',
      &              'for Bulk and Interfaces',
      &              'Juelich-Munich 2001 - 2016',
-     &             ' Code version: ',trim(version(1)),
-     &             ' Compile options:',(trim(version(i)),i=2,4),
+     &             ' Code version: ',trim(version1),
+     &             ' Compile options:', trim(version2), trim(version3),
+     &                                  trim(version4),
      &             ' serial number for files: ', serialnr
  2004  FORMAT( /79(1H*)/10X2A/27XA/10XA//2A/2(A,X)2(/A)//2A/79(1H*)/ )
 
-#if defined(CPP_OMP) .OR. defined(CPP_HYBRID)
+#ifdef cpp_ompstuff
 !$omp parallel shared(nth) private(ith)
       nth = omp_get_num_threads()
       ith = omp_get_thread_num()
       if(ith==0) then
-      WRITE(*,'(1X,A,I5//79(1H*)/)')
-     &              'Number of OpenMP threads used:',nth
-      WRITE(1337,'(1X,A,I5//79(1H*)/)')
+#ifdef CPP_OMP      
+         WRITE(*,'(1X,A,I5//79(1H*)/)')
+#else         
+         WRITE(*,'(1X,A,I5/)')
+#endif         
      &              'Number of OpenMP threads used:',nth
       endif
 !$omp end parallel
@@ -490,6 +501,18 @@ C     ..
      &              'Number of MPI ranks used:',nranks
       WRITE(1337,'(1X,A,I5//79(1H*)/)')
      &              'Number of MPI ranks used:',nranks
+#ifdef CPP_hybrid
+!$omp parallel shared(nth,ith)
+      nth = omp_get_num_threads()
+      ith = omp_get_thread_num()
+      if(ith==0) then
+         WRITE(*,'(1X,A,I5//79(1H*)/)')
+     &              'Number of OpenMP threads used per rank:',nth
+         WRITE(1337,'(1X,A,I5//79(1H*)/)')
+     &              'Number of OpenMP threads used per rank:',nth
+      endif
+!$omp end parallel
+#endif
 #endif
 !End write version info
 !vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -567,7 +590,7 @@ C ================================================ deal with the lattice
      &               NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,
      &               TLEFT,TRIGHT,RMTREF,RMTREFAT,VREF,
      &               REFPOT,NREF,RCLS,RCUTZ,RCUTXY,LINTERFACE,ALAT,
-     &               NAEZD,NATYPD,NEMBD,NPRINCD,NRD,NACLSD,NCLSD,NREFD)
+     &               NAEZD,NATYPD,NEMBD,NRD,NACLSD,NCLSD,NREFD)
 
 ! Now the clusters, reference potentials and muffin-tin radii have been set.
 C ......................................................................
@@ -622,7 +645,30 @@ C
          write(1337,'(A,A)') 
      &   'Doing calculation with shapefun: ',md5sum_shapefun
       end if
+      
+      
+      IF(TEST('rhoqtest')) THEN
+         call rhoq_save_rmesh(natyp,irmd,ipand,irmin,irws,ipan,r,ntcell,
+     &                        ircut,r_log,npan_log,npan_eq)
 
+         ! check consistency
+         if (OPT('GREENIMP') .or. OPT('WRTGREEN')) then
+            write(*,*) 'warning! rhoqtest cannot be used together with '
+            write(*,*) "'GREENIMP' or 'WRTGREEN' options"
+            stop
+         end if
+
+         !! enforce MPIatom here
+         !if (TEST('MPIenerg')) stop 'rhoqtest assumes MPIatom'
+         !CALL ADDTEST('MPIatom')
+         
+         if (nranks>1) then
+            write(*,*) 'at the moment rhoqtest does not work with MPI.'
+            write(*,*) 'compile hybrid version and use OMP level only.'
+            stop
+         end if 
+
+      ENDIF ! TEST('rhoqtest')
 
       IF ( TEST('Vspher  ') ) THEN
          WRITE(1337,*) 'TEST OPTION Vspher,', 
@@ -684,11 +730,11 @@ c
         open(unit=54633163,file='test_vpotout_bshift')
         do i1=1,natyp*nspin
             write(54633163,*) '# visp of atom ',i1
-            write(54633163,'(50000E)') visp(:,i1)
+            write(54633163,'(50000E25.16)') visp(:,i1)
         end do !iatom
         do i1=1,natyp*nspin
             write(54633163,*) '# vins of atom ',i1
-            write(54633163,'(50000E)') vins(:,:,i1)
+            write(54633163,'(50000E25.16)') vins(:,:,i1)
         end do !iatom
         close(54633163)
       end if
@@ -965,7 +1011,7 @@ C
             ISVATOM=0
             ZATTEMP=ZAT(KAOEZ(1,ATOMIMP(I)))
           END IF
-          WRITE (58,'(3F,F6.2,3I)') (RCLSIMP(J,I),J=1,3), ZATTEMP,
+          WRITE (58,'(3F25.16,F6.2,3I5)') (RCLSIMP(J,I),J=1,3), ZATTEMP,
      +                  ISVATOM,0,LMAXD
         END DO
         CLOSE (58)
