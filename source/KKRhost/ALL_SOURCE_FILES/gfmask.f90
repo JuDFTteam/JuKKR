@@ -26,16 +26,17 @@ subroutine gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell, &
   integer :: icouple(naezd, naezd)
   integer :: i, j, k, ii, istep1, ilt1, istep2, ilt2, il2, il1, lfchk
   character (len=80) :: fmtchk
-  character (len=35) :: invalg(0:2)
+  character (len=35) :: invalg(0:3)
   ! ..
   ! .. External functions
   logical :: opt, test
   external :: opt, test
   ! ..
   ! .. Data statements
-  data invalg/'FULL MATRIX                        ', &
+  data invalg /'FULL MATRIX                        ', &
     'BANDED MATRIX (slab)               ', &
-    'BANDED + CORNERS MATRIX (supercell)'/
+    'BANDED + CORNERS MATRIX (supercell)', &
+    'godfrin module                     '/
 
   write (1337, 100)
 
@@ -51,7 +52,12 @@ subroutine gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell, &
 
   if (opt('full inv')) invmod = 0
 
-  if ((invmod/=0) .and. (mod(naez,nprincd)/=0)) then
+! ----------------------------------------------------------------------
+  if (opt('godfrin ')) invmod = 3  ! GODFRIN
+! ----------------------------------------------------------------------
+      
+! 21.10.2014 GODFRIN Flaviano 
+  if ((invmod/=0) .and. (mod(naez,nprincd)/=0) .and. (invmod/=3)) then
     write (6, 110) naez, nprincd
     stop
   end if

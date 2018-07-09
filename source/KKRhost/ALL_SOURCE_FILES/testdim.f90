@@ -126,7 +126,7 @@ subroutine testdim(nspin, naez, nemb, natyp, ins, insref, nref, &
     write (6, *) 'No usage of embedding points. NEMB is set to ', nemb, '.'
   end if
 
-  if (.not. opt('full inv') .and. .not. opt('SPARSE  ')) then
+  if (.not. opt('full inv') .and. .not. opt('SPARSE  ') .and. .not. opt('godfrin ')) then
     ! -------------------------------------------------------------------------
     ! Constants for O(N) algorithm for matrix inversion
     ! -------------------------------------------------------------------------

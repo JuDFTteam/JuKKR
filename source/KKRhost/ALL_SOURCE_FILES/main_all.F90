@@ -34,9 +34,11 @@ program kkrcode
                        distribute_linear_on_tasks, create_newcomms_group_ie, &
                        MPIatom , MPIadapt, check_communication_pattern
   use mod_save_wavefun, only: t_wavefunctions, bcast_params_savewf
+  use godfrin, only: t_godfrin, bcast_params_godfrin ! GODFRIN Flaviano
 #else
   use mod_mympi, only: mympi_init, myrank, nranks, master, MPIatom, MPIadapt
   use mod_save_wavefun, only: t_wavefunctions
+  use godfrin, only: t_godfrin                       ! GODFRIN Flaviano
 #endif
 
 #ifdef CPP_MPI
@@ -255,6 +257,8 @@ program kkrcode
 #ifdef CPP_MPI
   ! communicate parameters for save_wavefunctions
   call bcast_params_savewf(t_wavefunctions)
+  ! communicate parameters of godfrin inversion scheme ! GODFRIN Flaviano
+  call bcast_params_godfrin(t_godfrin)                 ! GODFRIN Flaviano
 #endif
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< distribute stuff from main0 !!!!!!!!!!!!!!!!!!!!!!!!!!!

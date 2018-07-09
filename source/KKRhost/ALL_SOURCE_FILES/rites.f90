@@ -219,7 +219,7 @@ subroutine rites(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
   close (ifile)
 
 100 format (7a4, 6x, '  exc:', a124, 3x, a10)
-110 format (3f12.8)
+110 format (3f20.15)
   ! 9010 FORMAT (3F) !f12.8) maybe change to higher accuracy in writeout?
 120 format (f10.5, /, f10.5, 2f20.15)
 130 format (i3, /, 2d15.8, /, 2i2)

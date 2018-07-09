@@ -444,6 +444,17 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
     write (1337, 280) jatom, (icouplmat(jatom,iat), iat=1, naez)
   end do
 
+! ----------------------------------------------------------------------
+! output coupling matrix to file                              ! GODFRIN
+  open(file='couplings.dat',unit=123456,status='replace')     ! GODFRIN
+  write(123456,'("# Couplings between atoms via gref")')      ! GODFRIN
+  write(123456,'(i8)') naez                                   ! GODFRIN
+  do ia=1,naez                                                ! GODFRIN
+    write(123456,'(1000i1)') icouplmat(ia,1:naez)             ! GODFRIN
+  end do                                                      ! GODFRIN
+  close(123456)                                               ! GODFRIN
+! ----------------------------------------------------------------------
+
   if (linterface) then
     ! Calculate number of layers in principal layer
     nprinc = 1

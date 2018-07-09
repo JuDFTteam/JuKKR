@@ -36,6 +36,8 @@ jureca: FC = mpif90
 # $(MPIFC)
 gfort: FC = gfortran
 gfortdebug: FC = gfortran
+###  hazelhen  ###
+hazelhen:   FC = ftn
 
 
 # information for version-tracking in executable:
@@ -61,6 +63,7 @@ rwthomp:   COMPVER ='openmp-rwth'
 rwthmpidebug: COMPVER ='mpidebug-rwth'
 rwthhybrid:   COMPVER ='hybrid-rwth'
 jureca   : COMPVER='jureca'
+hazelhen   : COMPVER='hazelhen'
 gfort   : COMPVER='gfort'
 gfortdebug: COMPVER='gfort'
 
@@ -80,7 +83,7 @@ INCR = ./sprkkr_rmesh.dim
 FILENAME0 = kkr.x
 
 #$(OBJ)/tinc_mod.o
-MODULES =  $(OBJ)/mod_DataTypes.o $(OBJ)/mod_version.o $(OBJ)/mod_version_info.o $(OBJ)/constants.o $(OBJ)/mod_mympi.o $(OBJ)/global_variables.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/Profiling.o $(OBJ)/mod_save_wavefun.o $(OBJ)/mod_wunfiles.o $(OBJ)/mod_md5sums.o $(OBJ)/mod_jijhelp.o $(OBJ)/initabjij.o $(OBJ)/tbxccpljij.o $(OBJ)/tbxccpljijdij.o $(OBJ)/create_newmesh.o $(OBJ)/cheb.o $(OBJ)/mod_rhoqtools.o $(OBJ)/memoryhandling.o $(OBJ)/rinput13.o
+MODULES =  $(OBJ)/mod_DataTypes.o $(OBJ)/mod_version.o $(OBJ)/mod_version_info.o $(OBJ)/constants.o $(OBJ)/mod_mympi.o $(OBJ)/global_variables.o $(OBJ)/mod_types.o $(OBJ)/mod_timing.o $(OBJ)/Profiling.o $(OBJ)/mod_save_wavefun.o $(OBJ)/mod_wunfiles.o $(OBJ)/mod_md5sums.o $(OBJ)/mod_jijhelp.o $(OBJ)/initabjij.o $(OBJ)/tbxccpljij.o $(OBJ)/tbxccpljijdij.o $(OBJ)/create_newmesh.o $(OBJ)/cheb.o $(OBJ)/mod_rhoqtools.o $(OBJ)/godfrin.o $(OBJ)/memoryhandling.o $(OBJ)/rinput13.o
 
 OBJECTS0 = $(OBJ)/getbr3.o $(OBJ)/write_tbkkr_files.o $(OBJ)/gaunt.o $(OBJ)/main0.o	 $(OBJ)/symtaumat.o $(OBJ)/taustruc.o $(OBJ)/bzkint0.o $(OBJ)/findgroup.o $(OBJ)/calcrotmat.o $(OBJ)/errortrap.o $(OBJ)/bzkmesh.o $(OBJ)/bzirr3d.o $(OBJ)/madelung3d.o $(OBJ)/madelung2d.o $(OBJ)/madelout.o $(OBJ)/idreals.o $(OBJ)/deciopt.o $(OBJ)/impcheck.o $(OBJ)/impcoefs.o $(OBJ)/setgijtab.o $(OBJ)/gijxcpl.o $(OBJ)/gijcond.o $(OBJ)/calctref.o $(OBJ)/getclusnxyz.o $(OBJ)/decitset.o    $(OBJ)/decitmat.o $(OBJ)/outpothost.o  $(OBJ)/decipothead.o $(OBJ)/getscratch.o $(OBJ)/decipotbas.o  $(OBJ)/outtmathost.o $(OBJ)/lngstring.o $(OBJ)/startldau.o   $(OBJ)/readldaupot.o $(OBJ)/epathtb.o $(OBJ)/addvirtual14.o   $(OBJ)/interpolspline.o $(OBJ)/spline_real.o $(OBJ)/splint_real.o $(OBJ)/calrmt.o     $(OBJ)/clsgen_tb.o   $(OBJ)/clustcomp.o $(OBJ)/cmomsread.o $(OBJ)/crospr.o $(OBJ)/cross.o $(OBJ)/crtstar.o $(OBJ)/ddet33.o $(OBJ)/ddot1.o $(OBJ)/dscal1.o $(OBJ)/dsort.o $(OBJ)/dswap1.o $(OBJ)/emesht.o $(OBJ)/erfcex.o $(OBJ)/errmsg.o $(OBJ)/gamfc.o $(OBJ)/gaufd.o  $(OBJ)/gauleg.o $(OBJ)/gaunt2.o $(OBJ)/gfmask.o $(OBJ)/gfshells.o $(OBJ)/grule.o $(OBJ)/ioinput.o $(OBJ)/lattice2d.o $(OBJ)/lattice3d.o $(OBJ)/lattix99.o $(OBJ)/latvec.o $(OBJ)/length.o $(OBJ)/nrmliz.o $(OBJ)/opt.o $(OBJ)/pointgrp.o $(OBJ)/potcut.o $(OBJ)/rcstop.o $(OBJ)/rinit.o $(OBJ)/decimaread.o $(OBJ)/rrgen.o $(OBJ)/scalevec.o $(OBJ)/cinit.o $(OBJ)/scalpr.o $(OBJ)/shellgen2k.o $(OBJ)/sname.o $(OBJ)/spatpr.o $(OBJ)/strmat.o $(OBJ)/test.o $(OBJ)/generalpot.o $(OBJ)/ymy.o $(OBJ)/veq.o $(OBJ)/vadd.o $(OBJ)/vmul.o $(OBJ)/testdim.o $(OBJ)/startb1.o $(OBJ)/madelcoef.o $(OBJ)/madelgaunt.o $(OBJ)/ewald2d.o $(OBJ)/fplaneg.o $(OBJ)/fplaner.o $(OBJ)/shape_corr.o $(OBJ)/wfmesh.o $(OBJ)/regsol.o $(OBJ)/beshan.o $(OBJ)/drvbastrans.o $(OBJ)/relpotcvt.o $(OBJ)/drvreltmat.o $(OBJ)/calccgc.o $(OBJ)/ikmlin.o $(OBJ)/strsmat.o $(OBJ)/bastrmat.o $(OBJ)/ikapmue.o $(OBJ)/cmatstr.o $(OBJ)/checkrmat.o $(OBJ)/rinvgj.o $(OBJ)/ssite.o $(OBJ)/cintabr.o $(OBJ)/sumupint.o $(OBJ)/dirac_bs.o $(OBJ)/dirbslag.o $(OBJ)/dirbsmid.o $(OBJ)/dirbsrad.o $(OBJ)/dirbsrze.o $(OBJ)/dirbsstp.o $(OBJ)/cjlz.o $(OBJ)/cnlz.o $(OBJ)/cdjlzdz.o $(OBJ)/cdnlzdz.o $(OBJ)/cint4pts.o $(OBJ)/cinthff.o $(OBJ)/ylag.o $(OBJ)/rnuctab.o $(OBJ)/dirac_op.o $(OBJ)/dirac_soc.o $(OBJ)/dirac_soc2.o $(OBJ)/changerep.o $(OBJ)/writehoststructure.o $(OBJ)/readimppot.o $(OBJ)/tmatimp_newsolver.o $(OBJ)/greenimp.o
 
@@ -164,6 +167,8 @@ MACLLIBS = -mkl -Wl,-stack_size,0x40000000,-stack_addr,0xf0000000
 RWTHLLIBS = $(FLAGS_MKL_LINKER) #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 # JURECA:
 JURECALIBS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
+# HazelHen:
+HAZELHENLIBS = -mkl
 
 mac:    LLIBS=$(MACLLIBS)
 macdebug:    LLIBS=$(MACLLIBS)
@@ -177,6 +182,8 @@ rwthmpi:       LLIBS=$(RWTHLLIBS)
 rwthmpidebug:  LLIBS=$(RWTHLLIBS)
 
 jureca: LLIBS=$(JURECALIBS)
+hazelhen: LLIBS=$(HAZELHENLIBS)
+
 
 # openmp libs
 LLIBSOPENMP = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5
@@ -230,6 +237,7 @@ rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
 hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
 hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID -D CPP_NOMD5
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
+hazelhen: CPP = -D CPP_MPI -D CPP_TIMING
 gfort: CPP = -D CPP_TIMING -D CPP_NOMD5
 gfortdebug: CPP = -D CPP_TIMING -D CPP_NOMD5
 
@@ -292,7 +300,7 @@ rwthompdebug: OPENMPFLAGS = -qopenmp
 ####################################################
 # helper                                           #
 ####################################################
-.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp macompprof rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid jureca
+.PHONY: default mkdirobj isincpthere copyinc clean clear serial debug openmp mpi mpidebug install getversion compile hybrid hybriddebug mac macmpi macomp macompprof rwth rwthmpi rwthomp rwthmpidebug rwthompdebug rwthhybrid print_rwthwarn jureca hazelhen print_hazelwarn
 
 getversion:
 	@echo "Wrinting Version file: "; git describe;\
@@ -300,18 +308,38 @@ getversion:
 	echo $(FFLAGS) $(OPENMPFLAGS)>compflag; \
 	echo $(LLIBS) >complib; \
 	$(SRC)/getversion.sh
+
+print_rwthwarn:
+	@echo "****************************************\n"; \
+	echo "!!!Warning!!!"; \
+	echo "run 'module switch openmpi intelmpi'"; \
+	echo "in the terminal before compiling and running the code!\n"; \
+	echo "****************************************\n"
+
+print_hazelwarn:
+	@echo "****************************************\n"; \
+	echo "!!!Warning!!!"; \
+	echo "run 'module swap PrgEnv-cray PrgEnv-intel'"; \
+	echo "and 'module unload cray-libsci'"; \
+	echo "in the terminal before compiling and running the code!\n"; \
+	echo "****************************************\n"
+
 mkdirobj:
 	@if test ! -d $(OBJ); \
 	then mkdir $(OBJ); fi
+
 isincpthere:
 	@if test ! -e inc.p; \
 	then echo "inc.p not found. Copy default values from inc.p_0"; cp inc.p_0 inc.p; \
 	fi;
+
 copyinc: isincpthere
 	cp -p inc.p   $(SRC)/inc.p; \
 	cp -p sprkkr_rmesh.dim   $(SRC)/sprkkr_rmesh.dim
+
 clean:
 	rm -rf *.mod *.o OBJ/ *__genmod.*
+
 clear:
 	rm -rf *.mod *.o OBJ/ *__genmod.*
 
@@ -333,9 +361,6 @@ compile: compile0 compile1 compile2
 
 ###################################################################
 
-
-
-
 serial:   compile
 debug:    compile
 openmp:   compile
@@ -353,14 +378,16 @@ macdebug:    compile
 macmpi: compile
 macomp: compile
 macompprof: compile
-rwth:    compile
-rwthnag: compile
-rwthmpi: compile
-rwthomp: compile
-rwthdebug: compile
-rwthmpidebug: compile
-rwthompdebug: compile
-rwthhybrid:   compile
+
+rwth:    print_rwthwarn compile
+rwthnag: print_rwthwarn compile
+rwthmpi: print_rwthwarn compile
+rwthomp: print_rwthwarn compile
+rwthmpidebug: print_rwthwarn compile
+rwthompdebug: print_rwthwarn compile
+rwthhybrid:   print_rwthwarn compile
+
 jureca: compile
+hazelhen: print_hazelwarn compile
 gfort: compile
 gfortdebug: compile
