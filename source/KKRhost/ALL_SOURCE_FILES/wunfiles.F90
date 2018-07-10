@@ -2641,7 +2641,7 @@ contains
    !> so that they can be passed between different control modules, specifically for main1b
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine get_params_1b(t_params,NATYPD, NAEZD, NATYP,NACLSD,IELAST,NPOL,NCLSD,NREF,NEMBD,   &
+   subroutine get_params_1b(t_params,NATYPD, NAEZD, NATYP,NACLSD,IELAST,NPOL,NCLSD,NREFD, NREF,NEMBD,   &
       NAEZ,NSRA,INS,NSPIN,LMAX,NCLS,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,ITMPDIR,   &
       ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,NSHELD,NPRINCD,KPOIBZ,ATOMIMP,    &
       NATOMIMPD,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,IDECI,      &
@@ -2660,6 +2660,7 @@ contains
       integer, intent(in) :: NAEZD
       integer, intent(in) :: NEMBD
       integer, intent(in) :: NRD
+      integer, intent(in) :: NREFD
       integer, intent(in) :: KREL
       integer, intent(in) :: IEMXD
       integer, intent(in) :: NCLSD
@@ -2681,7 +2682,7 @@ contains
       integer, intent(inout) :: NSRA
       integer, intent(inout) :: LMAX
       integer, intent(inout) :: NCLS
-      integer, intent(inout) :: NREF
+      integer, intent(out) :: NREF
       integer, intent(inout) :: NCPA
       integer, intent(out) :: NAEZ
       integer, intent(out) :: NATYP
@@ -2727,9 +2728,9 @@ contains
       integer, dimension(2,2,LMMAXD), intent(inout) :: IRREL
       real (kind=dp), intent(inout) :: ALAT
       real (kind=dp), intent(inout) :: CPATOL
-      real (kind=dp), dimension(NREF), intent(inout)      :: VREF
+      real (kind=dp), dimension(NREFD), intent(inout)      :: VREF
       real (kind=dp), dimension(NATYPD), intent(inout)     :: CONC
-      real (kind=dp), dimension(NREF), intent(inout)      :: RMTREF
+      real (kind=dp), dimension(NREFD), intent(inout)      :: RMTREF
       real (kind=dp), dimension(MAXMSHD), intent(inout)   :: VOLBZ
       real (kind=dp), dimension(3,0:NRD), intent(inout)          :: RR
       real (kind=dp), dimension(3,NSHELD), intent(inout)        :: RATOM

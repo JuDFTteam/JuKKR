@@ -10,7 +10,7 @@ module constants
   implicit none
   
   private :: dp
-
+  
   !> Boltzmann constant in eV
   real (kind=dp) :: kb_ev = 8.61734e-5_dp
   !> Boltzmann constant in Ry
@@ -21,11 +21,15 @@ module constants
   real (kind=dp), parameter :: ryd = 13.6058e0_dp
   !> Speed of light divided by the fine structure constant
   real (kind=dp), parameter :: cvlight = 274.0720442e0_dp
+
   !> complex number 'i'
   complex (kind=dp), parameter :: ci = (0.0e0_dp, 1.0e0_dp)
   !> complex number '1'
   complex (kind=dp), parameter :: cone = (1.0e0_dp, 0.0e0_dp)
   !> complex number '0', usually used for initializations
   complex (kind=dp), parameter :: czero = (0.0e0_dp, 0.0e0_dp)
+
+  !> maximal number of lattice symmetries
+  integer, parameter :: nsymaxd = 48
 
 end module constants

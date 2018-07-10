@@ -15,7 +15,7 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    use Constants
    use Profiling
    use global_variables
-      Use mod_datatypes, Only: dp
+   use mod_datatypes, Only: dp
 
    implicit  none
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -35,11 +35,11 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    integer, intent(in) :: IELAST
    real (kind=dp), intent(in) :: ALATC
    real (kind=dp), intent(in) :: TOLRDIF !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
-   integer, dimension(NAEZ+NEMBD), intent(in) :: CLS      !< Cluster around atomic sites
+   integer, dimension(NAEZD+NEMBD), intent(in) :: CLS      !< Cluster around atomic sites
    integer, dimension(LM2D), intent(in)      :: LOFLM    !< l of lm=(l,m) (GAUNT)
    integer, dimension(NCLSD), intent(in)     :: NACLS    !< Number of atoms in cluster
-   integer, dimension(NAEZ+NEMBD), intent(in) :: REFPOT   !< Ref. pot. card  at position
-   integer, dimension(NACLSD,NAEZ+NEMBD), intent(in)   :: ATOM  !< Atom at site in cluster
+   integer, dimension(NAEZD+NEMBD), intent(in) :: REFPOT   !< Ref. pot. card  at position
+   integer, dimension(NACLSD,NAEZD+NEMBD), intent(in)   :: ATOM  !< Atom at site in cluster
    integer, dimension(NCLEB,4), intent(in)            :: ICLEB !< Pointer array
    real (kind=dp), dimension(NREF), intent(in) :: VREF
    real (kind=dp), dimension(NREF), intent(in) :: RMTREF   !< Muffin-tin radius of reference system

@@ -189,7 +189,7 @@ contains
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1b(t_params,NATYPD, NAEZD, NATYP,NACLSD,IELAST,NPOL,NCLSD,NREFD,NEMBD,   &
+      call get_params_1b(t_params,NATYPD, NAEZD, NATYP,NACLSD,IELAST,NPOL,NCLSD,NREFD, NREF,NEMBD,   &
          NAEZ,NSRA,INS,NSPIN,LMAXD,NCLS,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,     &
          ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,NSHELD,NPRINCD,     &
          KPOIBZ,ATOMIMP,NATOMIMPD,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,          &
@@ -201,7 +201,6 @@ contains
          NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,RCLSIMP)
      
       if(test('rhoqtest')) then
-        !write(*,*) myrank ,'open tau0', lmmaxd, (LMMAXD*LMMAXD+1)*4
          open(9889, access='direct', file='tau0_k', form='unformatted', recl=(LMMAXD*LMMAXD+1)*4) ! lm blocks
       end if
 

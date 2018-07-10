@@ -98,8 +98,6 @@ module global_variables
   integer :: lpotd
   integer :: nchebd
 
-  !> maximal number of lattice symmetries
-  integer :: nsymaxd = 48
   !> maximal number of different k-meshes
   integer :: maxmshd = 30
 
@@ -125,7 +123,7 @@ subroutine Bcast_global_variables()
     use mod_mympi,   only: master, myrank
     implicit none
 
-    !< number of paramters that are broadcast
+    !< number of paramters that are broadcasted
     integer :: N
 
     !< blocklength of variuables in derived data type and list of MPI datatypes
@@ -139,7 +137,7 @@ subroutine Bcast_global_variables()
     !< base address of first entry
     integer(kind=MPI_ADDRESS_KIND) :: base
 
-    N  = 60
+    N  = 59
     allocate(blocklen1(N), etype1(N), disp1(N), stat=ierr)
     if ( ierr/=0 ) stop 'error allocating arrays in bcast_global_variables'
 
@@ -200,9 +198,8 @@ subroutine Bcast_global_variables()
     call MPI_Get_address(lpotd,        disp1(55), ierr)
     call MPI_Get_address(nchebd,       disp1(56), ierr)
     call MPI_Get_address(maxmshd,      disp1(57), ierr)
-    call MPI_Get_address(nsymaxd,      disp1(58), ierr)
-    call MPI_Get_address(linterface,   disp1(59), ierr)
-    call MPI_Get_address(lnc,          disp1(60), ierr)
+    call MPI_Get_address(linterface,   disp1(58), ierr)
+    call MPI_Get_address(lnc,          disp1(59), ierr)
 
     ! find displacements of variables
     base  = disp1(1)
