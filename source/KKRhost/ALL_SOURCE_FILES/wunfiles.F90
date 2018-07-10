@@ -2420,14 +2420,14 @@ contains
    !> @note JC: NPAN_EQ seems to have been passed here as an array, while in the
    !> rest of the routines it is an scalar. Why?
    !----------------------------------------------------------------------------
-   subroutine get_params_1a(t_params,IPAND,NATYP,IRM,NACLSD,IELAST,NCLSD,NREF,   &
-      NCLEB,NEMB,NAEZ,LM2D,NSRA,INS,NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,NINEQ,       &
+   subroutine get_params_1a(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,NCLSD,NREFD,   &
+      NCLEB,NEMBD,NAEZD,LM2D,NSRA,INS,NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,NINEQ,       &
       IDOLDAU,LLY,KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,IEND,EZ,VINS,IRMIN,&
       ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,VISP,RMTREF,VREF,CLEB,CSCL,   &
       SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,SOLVER,TMPDIR,DELTAE,TOLRDIF,NPAN_LOG,  &
       NPAN_EQ,NCHEB,NPAN_TOT,IPAN_INTERVALL,RPAN_INTERVALL,RNEW,NTOTD,NRMAXD,    &
       R_LOG,NTLDAU,ITLDAU,LOPT,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,IRMIND,LMPOT, &
-      NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
+      NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT, NAEZ, NATYP, NREF)
       ! get relevant parameters from t_params
       !     ..
 #ifdef CPP_MPI
@@ -2437,9 +2437,9 @@ contains
       implicit none
 
       type(type_params), intent(in) :: t_params
-      integer, intent(in) :: IRM          !< Maximum number of radial points
+      integer, intent(in) :: IRMD          !< Maximum number of radial points
       integer, intent(in) :: KREL         !< Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
-      integer, intent(in) :: NEMB         !< Number of 'embedding' positions
+      integer, intent(in) :: NEMBD         !< Number of 'embedding' positions
       integer, intent(in) :: LM2D         !< (2*LMAX+1)**2
       integer, intent(in) :: NCLSD        !< Maximum number of different TB-clusters
       integer, intent(in) :: NCLEB        !< Number of Clebsch-Gordon coefficients
@@ -2457,12 +2457,15 @@ contains
       integer, intent(inout) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
       integer, intent(inout) :: NSRA
       integer, intent(inout) :: LMAX      !< Maximum l component in wave function expansion
-      integer, intent(inout) :: NREF      !< Number of diff. ref. potentials
+      integer, intent(in) :: NREFD      !< Number of diff. ref. potentials
+      integer, intent(out) :: NREF      !< Number of diff. ref. potentials
       integer, intent(inout) :: ICST      !< Number of Born approximation
       integer, intent(inout) :: NCLS      !< Number of reference clusters
       integer, intent(inout) :: IEND      !< Number of nonzero gaunt coefficients
-      integer, intent(inout) :: NAEZ      !< Number of atoms in unit cell
-      integer, intent(inout) :: NATYP     !< Number of kinds of atoms in unit cell
+      integer, intent(in) :: NAEZD      !< Number of atoms in unit cell
+      integer, intent(out) :: NAEZ      !< Number of atoms in unit cell
+      integer, intent(in) :: NATYPD     !< Number of kinds of atoms in unit cell
+      integer, intent(out) :: NATYP     !< Number of kinds of atoms in unit cell
       integer, intent(inout) :: NSPIN     !< Counter for spin directions
       integer, intent(inout) :: NINEQ     !< Number of ineq. positions in unit cell
       integer, intent(inout) :: ILTMP
@@ -2473,51 +2476,51 @@ contains
       integer, intent(inout) :: ITMPDIR
       integer, intent(inout) :: IDOLDAU   !< flag to perform LDA+U
       integer, intent(inout) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-      integer, dimension(NAEZ+NEMB), intent(inout) :: CLS         !< Cluster around atomic sites
-      integer, dimension(NATYP), intent(inout)     :: LOPT        !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-      integer, dimension(NATYP), intent(inout)     :: IRWS        !< R point at WS radius
-      integer, dimension(NATYP), intent(inout)     :: IPAN        !< Number of panels in non-MT-region
-      integer, dimension(NATYP), intent(inout)     :: ZREL        !< atomic number (cast integer)
-      integer, dimension(NATYP), intent(inout)     :: IQAT        !< The site on which an atom is located on a given site
+      integer, dimension(NAEZD+NEMBD), intent(inout) :: CLS         !< Cluster around atomic sites
+      integer, dimension(NATYPD), intent(inout)     :: LOPT        !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+      integer, dimension(NATYPD), intent(inout)     :: IRWS        !< R point at WS radius
+      integer, dimension(NATYPD), intent(inout)     :: IPAN        !< Number of panels in non-MT-region
+      integer, dimension(NATYPD), intent(inout)     :: ZREL        !< atomic number (cast integer)
+      integer, dimension(NATYPD), intent(inout)     :: IQAT        !< The site on which an atom is located on a given site
       integer, dimension(LM2D), intent(inout)      :: LOFLM       !< l of lm=(l,m) (GAUNT)
-      integer, dimension(NATYP), intent(inout)     :: IRMIN       !< Max R for spherical treatment
+      integer, dimension(NATYPD), intent(inout)     :: IRMIN       !< Max R for spherical treatment
       integer, dimension(NCLSD), intent(inout)     :: NACLS       !< Number of atoms in cluster
-      integer, dimension(NAEZ+NEMB), intent(inout) :: REFPOT      !< Ref. pot. card  at position
-      integer, dimension(NATYP), intent(inout)     :: ITLDAU      !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
-      integer, dimension(NATYP), intent(inout)     :: JWSREL      !< index of the WS radius
-      integer, dimension(NATYP), intent(inout)     :: NPAN_EQ
-      integer, dimension(NATYP), intent(inout)     :: NPAN_LOG
-      integer, dimension(NATYP), intent(inout)     :: NPAN_TOT
+      integer, dimension(NAEZD+NEMBD), intent(inout) :: REFPOT      !< Ref. pot. card  at position
+      integer, dimension(NATYPD), intent(inout)     :: ITLDAU      !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
+      integer, dimension(NATYPD), intent(inout)     :: JWSREL      !< index of the WS radius
+      integer, dimension(NATYPD), intent(inout)     :: NPAN_EQ
+      integer, dimension(NATYPD), intent(inout)     :: NPAN_LOG
+      integer, dimension(NATYPD), intent(inout)     :: NPAN_TOT
       integer, dimension(NATOMIMPD), intent(inout) :: ATOMIMP
-      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout) :: ATOM    !< Atom at site in cluster
+      integer, dimension(NACLSD,NAEZD+NEMBD), intent(inout) :: ATOM    !< Atom at site in cluster
       integer, dimension(NCLEB,4), intent(inout)          :: ICLEB   !< Pointer array
-      integer, dimension(0:IPAND,NATYP), intent(inout)    :: IRCUT   !< R points of panel borders
-      integer, dimension(0:NTOTD,NATYP), intent(inout)    :: IPAN_INTERVALL
+      integer, dimension(0:IPAND,NATYPD), intent(inout)    :: IRCUT   !< R points of panel borders
+      integer, dimension(0:NTOTD,NATYPD), intent(inout)    :: IPAN_INTERVALL
       real (kind=dp), intent(inout) :: ALAT                        !< Lattice constant in a.u.
       real (kind=dp), intent(inout) :: R_LOG
       real (kind=dp), intent(inout) :: TOLRDIF                     !< Tolerance for r<tolrdif (a.u.) to handle vir. atoms
-      real (kind=dp), dimension(NATYP), intent(inout) :: ZAT       !< Nuclear charge
-      real (kind=dp), dimension(NREF), intent(inout)  :: VREF
-      real (kind=dp), dimension(NATYP), intent(inout) :: UEFF      !< input U parameter for each atom
-      real (kind=dp), dimension(NATYP), intent(inout) :: JEFF      !< input J parameter for each atom
-      real (kind=dp), dimension(NREF), intent(inout)  :: RMTREF    !< Muffin-tin radius of reference system
-      real (kind=dp), dimension(NATYP), intent(inout) :: EREFLDAU  !< the energies of the projector's wave functions (REAL)
-      real (kind=dp), dimension(NATYP), intent(inout) :: SOCSCALE  !< Spin-orbit scaling
+      real (kind=dp), dimension(NATYPD), intent(inout) :: ZAT       !< Nuclear charge
+      real (kind=dp), dimension(NREFD), intent(inout)  :: VREF
+      real (kind=dp), dimension(NATYPD), intent(inout) :: UEFF      !< input U parameter for each atom
+      real (kind=dp), dimension(NATYPD), intent(inout) :: JEFF      !< input J parameter for each atom
+      real (kind=dp), dimension(NREFD), intent(inout)  :: RMTREF    !< Muffin-tin radius of reference system
+      real (kind=dp), dimension(NATYPD), intent(inout) :: EREFLDAU  !< the energies of the projector's wave functions (REAL)
+      real (kind=dp), dimension(NATYPD), intent(inout) :: SOCSCALE  !< Spin-orbit scaling
       real (kind=dp), dimension(NCLEB,2), intent(inout)                         :: CLEB      !< GAUNT coefficients (GAUNT)
-      real (kind=dp), dimension(IRM,NPOTD), intent(inout)                       :: VISP      !< Spherical part of the potential
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)                       :: DRDI      !< Derivative dr/di
-      real (kind=dp), dimension(NRMAXD,NATYP), intent(inout)                    :: RNEW
-      real (kind=dp), dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: CSCL      !< Speed of light scaling
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)                       :: RMESH
-      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: VTREL     !< potential (spherical part)
-      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: BTREL     !< magnetic field
-      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: RMREL     !< radial mesh
-      real (kind=dp), dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: SOCSCL
-      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: DRDIREL   !< derivative of radial mesh
-      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: R2DRDIREL !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-      real (kind=dp), dimension(0:NTOTD,NATYP), intent(inout)                   :: RPAN_INTERVALL
+      real (kind=dp), dimension(IRMD,NPOTD), intent(inout)                       :: VISP      !< Spherical part of the potential
+      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)                       :: DRDI      !< Derivative dr/di
+      real (kind=dp), dimension(NRMAXD,NATYPD), intent(inout)                    :: RNEW
+      real (kind=dp), dimension(KREL*LMAX+1,KREL*NATYPD+(1-KREL)), intent(inout) :: CSCL      !< Speed of light scaling
+      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)                       :: RMESH
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD), intent(inout)         :: VTREL     !< potential (spherical part)
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD), intent(inout)         :: BTREL     !< magnetic field
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD), intent(inout)         :: RMREL     !< radial mesh
+      real (kind=dp), dimension(KREL*LMAX+1,KREL*NATYPD+(1-KREL)), intent(inout) :: SOCSCL
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD), intent(inout)         :: DRDIREL   !< derivative of radial mesh
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD), intent(inout)         :: R2DRDIREL !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      real (kind=dp), dimension(0:NTOTD,NATYPD), intent(inout)                   :: RPAN_INTERVALL
       real (kind=dp), dimension(3,NACLSD,NCLSD), intent(inout)          :: RCLS  !< Real space position of atom in cluster
-      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS  !< Non-spherical part of the potential
+      real (kind=dp), dimension(IRMIND:IRMD,LMPOT,NSPOTD), intent(inout) :: VINS  !< Non-spherical part of the potential
 
       complex (kind=dp), intent(inout) :: DELTAE      !< Energy difference for numerical derivative
       complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ

@@ -111,15 +111,15 @@ contains
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
       call get_params_1a(t_params,IPAND,NATYPD,IRMD,NACLSD,IELAST,NCLSD,NREFD,&
-         NCLEB,NEMB,NAEZD,LM2D,NSRA,INS,NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,    &
+         NCLEB,NEMBD,NAEZD,LM2D,NSRA,INS,NSPIN,ICST,IPAN,IRCUT,LMAX,NCLS,    &
          NINEQ,IDOLDAU,LLY,KREL,ATOM,CLS,ICLEB,LOFLM,NACLS,REFPOT,IRWS,    &
          IEND,EZ,VINS,IRMIN,ITMPDIR,ILTMP,ALAT,DRDI,RMESH,ZAT,RCLS,IEMXD,  &
          VISP,RMTREF,VREF,CLEB,CSCL,SOCSCALE,SOCSCL,EREFLDAU,UEFF,JEFF,    &
          SOLVER,TMPDIR,DELTAE,TOLRDIF,NPAN_LOG_AT,NPAN_EQ_AT,NCHEB,NPAN_TOT,     &
          IPAN_INTERVALL,RPAN_INTERVALL,RNEW,NTOTD,NRMAXD,R_LOG,NTLDAU,     &
          ITLDAU,LOPT,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,IRMIND,LMPOTD,     &
-         NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
-      !
+         NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT, NAEZ, NATYP, NREF)
+
       if ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
 
       !-------------------------------------------------------------------------
@@ -145,10 +145,6 @@ contains
       !-------------------------------------------------------------------------
       ! End of LDA+U setup
       !-------------------------------------------------------------------------
-#ifdef CPP_MPI
-      ! MPI:
-      ntot1 = t_inc%NATYP
-#endif
       !-------------------------------------------------------------------------
       ! No need to recalculate the reference system in SCF decimation case
       !-------------------------------------------------------------------------
@@ -176,6 +172,7 @@ contains
       !
 
 #ifdef CPP_MPI
+      ntot1 = NATYP
       call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie,  &
          t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master, &
          ntot1,ntot_pT,ioff_pT,.true.,.true.)
