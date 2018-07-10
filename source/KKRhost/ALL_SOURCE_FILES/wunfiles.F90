@@ -2913,8 +2913,8 @@ contains
    !> so that they can be passed between different control modules, specifically for main1c
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine get_params_1c(t_params,KREL,NAEZ,NATYP,NCLEB,LM2D,NCHEB,IPAND,     &
-      LMPOT,LMAX,LMXSPD,NFUND,NPOTD,NTOTD,MMAXD,IEMXD,IRM,NSRA,INS,NSPIN,NACLS1, &
+   subroutine get_params_1c(t_params,KREL,NAEZD,NATYPD,NCLEB,LM2D,NCHEB,IPAND,     &
+      LMPOTD,LMAXD,LMXSPD,NFUND,NPOTD,NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NSPIN,NACLS1, &
       ICST,KMROT,IQAT,IDOLDAU,IRWS,IPAN,IRCUT,IEND,ICLEB,LOFLM,JEND,IFUNM1,LMSP1,&
       NFU,LLMSP,LCORE,NCORE,NTCELL,IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,LLY,     &
       ITMPDIR,ILTMP,NPAN_EQ,IPAN_INTERVALL,NPAN_LOG,NPAN_TOT,NTLDAU,LOPT,ITLDAU, &
@@ -2922,21 +2922,21 @@ contains
       ZAT,DRDI,RMESH,A,B,CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,RNEW,SOCSCL,   &
       THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,EMIN,EMAX,TK,VINS,VISP,ECORE,DRDIREL,  &
       R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ,WEZ,PHILDAU,TMPDIR,SOLVER,      &
-      NSPIND,NSPOTD,IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
+      NSPIND,NSPOTD,IRMIND,LMAXD1,NCELLD,IRID,R_LOG, NAEZ, NATYP, LMAX)
       ! get relevant parameters from t_params
       !     ..
       implicit none
 
       type(type_params), intent(in) :: t_params
 
-      integer, intent(in) :: IRM
+      integer, intent(in) :: IRMD
       integer, intent(in) :: KREL
       integer, intent(in) :: IRID
       integer, intent(in) :: LM2D
       integer, intent(in) :: NCLEB
       integer, intent(in) :: NTOTD
       integer, intent(in) :: IPAND
-      integer, intent(in) :: LMPOT
+      integer, intent(in) :: LMPOTD
       integer, intent(in) :: NFUND
       integer, intent(in) :: NPOTD
       integer, intent(in) :: MMAXD
@@ -2951,12 +2951,15 @@ contains
       integer, intent(inout) :: LLY
       integer, intent(inout) :: NSRA
       integer, intent(inout) :: ICST
-      integer, intent(inout) :: NAEZ
-      integer, intent(inout) :: LMAX
+      integer, intent(in) :: NAEZD
+      integer, intent(out) :: NAEZ
+      integer, intent(in) :: LMAXD
+      integer, intent(out) :: LMAX
       integer, intent(inout) :: NPOL
       integer, intent(inout) :: IEND
       integer, intent(inout) :: NCHEB
-      integer, intent(inout) :: NATYP
+      integer, intent(in) :: NATYPD
+      integer, intent(out) :: NATYP
       integer, intent(inout) :: NSPIN
       integer, intent(inout) :: KMROT
       integer, intent(inout) :: ILTMP
@@ -2970,31 +2973,31 @@ contains
       integer, intent(inout) :: ITMPDIR
       integer, intent(inout) :: ITRUNLDAU
       integer, intent(inout) :: IESEMICORE
-      integer, dimension(NATYP), intent(inout) :: NFU
-      integer, dimension(NATYP), intent(inout) :: LOPT
-      integer, dimension(NATYP), intent(inout) :: IQAT
-      integer, dimension(NATYP), intent(inout) :: IRWS
-      integer, dimension(NATYP), intent(inout) :: IPAN
-      integer, dimension(NATYP), intent(inout) :: ZREL
+      integer, dimension(NATYPD), intent(inout) :: NFU
+      integer, dimension(NATYPD), intent(inout) :: LOPT
+      integer, dimension(NATYPD), intent(inout) :: IQAT
+      integer, dimension(NATYPD), intent(inout) :: IRWS
+      integer, dimension(NATYPD), intent(inout) :: IPAN
+      integer, dimension(NATYPD), intent(inout) :: ZREL
       integer, dimension(LM2D), intent(inout) :: LOFLM
       integer, dimension(NPOTD), intent(inout) :: NCORE
-      integer, dimension(NATYP), intent(inout) :: IRMIN
-      integer, dimension(NATYP), intent(inout) :: NTCELL
-      integer, dimension(NATYP), intent(inout) :: ITLDAU
-      integer, dimension(NATYP), intent(inout) :: JWSREL
-      integer, dimension(NATYP), intent(inout) :: NPAN_EQ
-      integer, dimension(NATYP), intent(inout) :: IRSHIFT
-      integer, dimension(NATYP), intent(inout) :: NPAN_LOG
-      integer, dimension(NATYP), intent(inout) :: NPAN_TOT
-      integer, dimension(LMPOT,0:LMAX,0:LMAX), intent(inout)   :: JEND
-      integer, dimension(0:IPAND,NATYP), intent(inout)         :: IRCUT
+      integer, dimension(NATYPD), intent(inout) :: IRMIN
+      integer, dimension(NATYPD), intent(inout) :: NTCELL
+      integer, dimension(NATYPD), intent(inout) :: ITLDAU
+      integer, dimension(NATYPD), intent(inout) :: JWSREL
+      integer, dimension(NATYPD), intent(inout) :: NPAN_EQ
+      integer, dimension(NATYPD), intent(inout) :: IRSHIFT
+      integer, dimension(NATYPD), intent(inout) :: NPAN_LOG
+      integer, dimension(NATYPD), intent(inout) :: NPAN_TOT
+      integer, dimension(LMPOTD,0:LMAXD,0:LMAXD), intent(inout)   :: JEND
+      integer, dimension(0:IPAND,NATYPD), intent(inout)         :: IRCUT
       integer, dimension(NCLEB,4), intent(inout)               :: ICLEB
-      integer, dimension(LMXSPD,NATYP), intent(inout)          :: LMSP1
-      integer, dimension(NATYP,NFUND), intent(inout)           :: LLMSP
+      integer, dimension(LMXSPD,NATYPD), intent(inout)          :: LMSP1
+      integer, dimension(NATYPD,NFUND), intent(inout)           :: LLMSP
       integer, dimension(20,NPOTD), intent(inout)              :: LCORE
-      integer, dimension(LMXSPD,NATYP), intent(inout)          :: IFUNM1
+      integer, dimension(LMXSPD,NATYPD), intent(inout)          :: IFUNM1
       integer, dimension(20,NPOTD), intent(inout)              :: ITITLE
-      integer, dimension(0:NTOTD,NATYP), intent(inout)         :: IPAN_INTERVALL
+      integer, dimension(0:NTOTD,NATYPD), intent(inout)         :: IPAN_INTERVALL
 
       real (kind=dp), intent(inout) :: TK
       real (kind=dp), intent(inout) :: EMIN
@@ -3003,38 +3006,38 @@ contains
       real (kind=dp), intent(inout) :: R_LOG
       real (kind=dp), intent(inout) :: EFERMI
 
-      real (kind=dp), dimension(NATYP), intent(inout)  :: A
-      real (kind=dp), dimension(NATYP), intent(inout)  :: B
-      real (kind=dp), dimension(NATYP), intent(inout)  :: ZAT
-      real (kind=dp), dimension(NATYP), intent(inout)  :: CONC
-      real (kind=dp), dimension(NATYP), intent(inout)  :: UEFF
-      real (kind=dp), dimension(NATYP), intent(inout)  :: JEFF
-      real (kind=dp), dimension(NAEZ), intent(inout)   :: QMPHI
-      real (kind=dp), dimension(NAEZ), intent(inout)   :: QMTET
-      real (kind=dp), dimension(NATYP), intent(inout)  :: SOCSCALE
-      real (kind=dp), dimension(NATYP), intent(inout)  :: EREFLDAU
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: DRDI
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: RMESH
+      real (kind=dp), dimension(NATYPD), intent(inout)  :: A
+      real (kind=dp), dimension(NATYPD), intent(inout)  :: B
+      real (kind=dp), dimension(NATYPD), intent(inout)  :: ZAT
+      real (kind=dp), dimension(NATYPD), intent(inout)  :: CONC
+      real (kind=dp), dimension(NATYPD), intent(inout)  :: UEFF
+      real (kind=dp), dimension(NATYPD), intent(inout)  :: JEFF
+      real (kind=dp), dimension(NAEZD), intent(inout)   :: QMPHI
+      real (kind=dp), dimension(NAEZD), intent(inout)   :: QMTET
+      real (kind=dp), dimension(NATYPD), intent(inout)  :: SOCSCALE
+      real (kind=dp), dimension(NATYPD), intent(inout)  :: EREFLDAU
+      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: DRDI
+      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: RMESH
       real (kind=dp), dimension(NCLEB,2), intent(inout)               :: CLEB
-      real (kind=dp), dimension(LMAXD1,NATYP), intent(inout)          :: CSCL
-      real (kind=dp), dimension(IRM,NPOTD), intent(inout)             :: VISP
-      real (kind=dp), dimension(NTOTD*(NCHEB+1),NATYP), intent(inout) :: RNEW
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: RMREL
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: VTREL
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: BTREL
+      real (kind=dp), dimension(LMAXD1,NATYPD), intent(inout)          :: CSCL
+      real (kind=dp), dimension(IRMD,NPOTD), intent(inout)             :: VISP
+      real (kind=dp), dimension(NTOTD*(NCHEB+1),NATYPD), intent(inout) :: RNEW
+      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: RMREL
+      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: VTREL
+      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: BTREL
       real (kind=dp), dimension(20,NPOTD), intent(inout)              :: ECORE
-      real (kind=dp), dimension(LMAXD1,NATYP), intent(inout)          :: SOCSCL
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: DRDIREL
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)             :: R2DRDIREL
-      real (kind=dp), dimension(0:NTOTD,NATYP), intent(inout)         :: RPAN_INTERVALL
-      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)        :: VINS
+      real (kind=dp), dimension(LMAXD1,NATYPD), intent(inout)          :: SOCSCL
+      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: DRDIREL
+      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: R2DRDIREL
+      real (kind=dp), dimension(0:NTOTD,NATYPD), intent(inout)         :: RPAN_INTERVALL
+      real (kind=dp), dimension(IRMIND:IRMD,LMPOTD,NSPOTD), intent(inout)        :: VINS
       real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(inout)              :: THETAS
       real (kind=dp), dimension(NTOTD*(NCHEB+1),NFUND,NCELLD), intent(inout)   :: THETASNEW
-      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYP), intent(inout) :: WLDAU
-      real (kind=dp), dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYP), intent(inout) :: ULDAU
+      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYPD), intent(inout) :: WLDAU
+      real (kind=dp), dimension(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD), intent(inout) :: ULDAU
       complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
       complex (kind=dp), dimension(IEMXD), intent(inout) :: WEZ
-      complex (kind=dp), dimension(IRM,NATYP), intent(inout) :: PHILDAU
+      complex (kind=dp), dimension(IRMD,NATYPD), intent(inout) :: PHILDAU
       character(len=10), intent(inout) :: SOLVER
       character(len=80), intent(inout) :: TMPDIR
       !     .. External Functions ..
@@ -3152,7 +3155,7 @@ contains
          VTREL     = t_params%VTREL
          BTREL     = t_params%BTREL
       END IF
-      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRM,2:LMPOT,1:NSPOTD) = 0.D0
+      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
       !-------------------------------------------------------------------------
       ! Itermdir
       !-------------------------------------------------------------------------
@@ -3179,7 +3182,7 @@ contains
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
    subroutine get_params_2(t_params,KREL,NATYP,IPAND,NPOTD,NATOMIMPD,LMXSPD,     &
-      NFUND,LMPOT,NCELLD,IRM,NEMBD1,NEMB,IRMIND,NSRA,INS,NSPIN,IPAN,IRCUT,LCORE, &
+      NFUND,LMPOT,NCELLD,IRMD,NEMBD1,NEMBD,IRMIND,NSRA,INS,NSPIN,IPAN,IRCUT,LCORE, &
       NCORE,LMAX,NTCELL,LPOT,NLBASIS,NRBASIS,NRIGHT,NLEFT,NATOMIMP,ATOMIMP,IMIX, &
       QBOUND,FCM,ITDBRY,IRNS,KPRE,KSHAPE,KTE,KVMAD,KXC,ICC,ISHIFT,IXIPOL,KFORCE, &
       IFUNM,LMSP,IMT,IRC,IRMIN,IRWS,LLMSP,ITITLE,NFU,HOSTIMP,ILM_MAP,IMAXSH,IELAST,  &
@@ -3193,9 +3196,9 @@ contains
       IMPLICIT NONE
       type(type_params), intent(in) :: t_params
 
-      integer, intent(in) :: IRM
+      integer, intent(in) :: IRMD
       integer, intent(in) :: IRID
-      integer, intent(in) :: NEMB
+      integer, intent(in) :: NEMBD
       integer, intent(in) :: KREL
       integer, intent(in) :: IPAND
       integer, intent(in) :: NPOTD
@@ -3267,7 +3270,7 @@ contains
       integer, dimension(20,NPOTD), intent(inout)        :: LCORE
       integer, dimension(NATYP,NFUND), intent(inout)     :: LLMSP
       integer, dimension(NATYP,LMXSPD), intent(inout)    :: IFUNM
-      integer, dimension(NATYP,NAEZ+NEMB), intent(inout) :: KAOEZ
+      integer, dimension(NATYP,NAEZ+NEMBD), intent(inout) :: KAOEZ
       integer, dimension(0:IPAND,NATYP), intent(inout)   :: IRCUT
       integer, dimension(20,NPOTD), intent(inout)        :: ITITLE
       real (kind=dp), intent(inout) :: TK
@@ -3293,15 +3296,15 @@ contains
       real (kind=dp), dimension(NATYP), intent(inout)  :: RMT
       real (kind=dp), dimension(NATYP), intent(inout)  :: CONC
       real (kind=dp), dimension(NATYP), intent(inout)  :: RMTNEW
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)                :: R
-      real (kind=dp), dimension(IRM,NATYP), intent(inout)                :: DRDI
-      real (kind=dp), dimension(IRM,NPOTD), intent(inout)                :: VISP
+      real (kind=dp), dimension(IRMD,NATYP), intent(inout)                :: R
+      real (kind=dp), dimension(IRMD,NATYP), intent(inout)                :: DRDI
+      real (kind=dp), dimension(IRMD,NPOTD), intent(inout)                :: VISP
       real (kind=dp), dimension(20,NPOTD), intent(inout)                 :: ECORE
-      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: RMREL
-      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: DRDIREL
-      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)  :: R2DRDIREL
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYP), intent(inout)  :: RMREL
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYP), intent(inout)  :: DRDIREL
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYP), intent(inout)  :: R2DRDIREL
       real (kind=dp), dimension(LMPOT,NEMBD1), intent(inout)             :: CMOMHOST
-      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout)  :: VINS
+      real (kind=dp), dimension(IRMIND:IRMD,LMPOT,NSPOTD), intent(inout)  :: VINS
       real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(inout)        :: THETAS
       complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
       complex (kind=dp), dimension(IEMXD), intent(inout) :: WEZ
@@ -3434,7 +3437,7 @@ contains
       EFOLD    = t_params%EFOLD
       CHRGOLD  = t_params%CHRGOLD
       CMOMHOST = t_params%CMOMHOST
-      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRM,2:LMPOT,1:NSPOTD) = 0.D0
+      IF ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOT,1:NSPOTD) = 0.D0
 
    end subroutine get_params_2
 

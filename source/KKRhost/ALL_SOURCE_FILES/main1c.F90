@@ -197,8 +197,8 @@ contains
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1c(t_params,KREL,NAEZ,NATYP,NCLEB,LM2D,NCHEB,IPAND,LMPOTD,  &
-         LMAX,LMXSPD,NFUND,NPOTD,NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NSPIN,NACLS1,    &
+      call get_params_1c(t_params,KREL,NAEZD,NATYPD,NCLEB,LM2D,NCHEB,IPAND,LMPOTD,  &
+         LMAXD,LMXSPD,NFUND,NPOTD,NTOTD,MMAXD,IEMXD,IRMD,NSRA,INS,NSPIN,NACLS1,    &
          ICST,KMROT,IQAT,IDOLDAU,IRWS,IPAN,IRCUT,IEND,ICLEB, LOFLM,JEND,IFUNM1,  &
          LMSP1,NFU,LLMSP,LCORE,NCORE,NTCELL,IRMIN,ITITLE,INTERVX,INTERVY,INTERVZ,&
          LLY,ITMPDIR,ILTMP,NPAN_EQ_AT,IPAN_INTERVALL,NPAN_LOG_AT,NPAN_TOT,NTLDAU,LOPT, &
@@ -206,7 +206,7 @@ contains
          CONC,ALAT,ZAT,DRDI,RMESH,A,B,CLEB,THETAS,SOCSCALE,RPAN_INTERVALL,CSCL,  &
          RNEW,SOCSCL,THETASNEW,EFERMI,EREFLDAU,UEFF,JEFF,EMIN,EMAX,TK,VINS,VISP, &
          ECORE,DRDIREL,R2DRDIREL,RMREL,VTREL,BTREL,WLDAU,ULDAU,EZ,WEZ,PHILDAU,   &
-         TMPDIR,SOLVER,NSPIND,NSPOTD,IRMIND,LMAXD1,NCELLD,IRID,R_LOG)
+         TMPDIR,SOLVER,NSPIND,NSPOTD,IRMIND,LMAXD1,NCELLD,IRID,R_LOG, NAEZ, NATYP, LMAX)
 
       ! Initialization needed due to merging to one executable
       ESPV(:,:)      = 0.d0
@@ -236,13 +236,13 @@ contains
          close(67)                                                               ! qdos
       end if
 
-      allocate(DEN(0:LMAXD1,IEMXD,NQDOS,NPOTD),stat=i_stat)
+      allocate(DEN(0:LMAXD1,IELAST,NQDOS,NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(DEN))*kind(DEN),'DEN','main1c')
-      allocate(DENLM(LMMAXD,IEMXD,NQDOS,NPOTD),stat=i_stat)
+      allocate(DENLM(LMMAXD,IELAST,NQDOS,NPOTD),stat=i_stat)
       call memocc(i_stat,product(shape(DENLM))*kind(DENLM),'DENLM','main1c')
 
-      call CINIT(IEMXD*(LMAX+2)*NPOTD*NQDOS,DEN)
-      call CINIT(IEMXD*(LMMAXD)*NPOTD*NQDOS,DENLM)
+      call CINIT(IELAST*(LMAX+2)*NPOTD*NQDOS,DEN)
+      call CINIT(IELAST*(LMMAXD)*NPOTD*NQDOS,DENLM)
       DENEF = 0.0D0
       call RINIT(NATYP,DENEFAT)
       !
@@ -590,8 +590,8 @@ contains
          !move writeout of qdos file here                                           ! qdos
          if (OPT('qdos    ')) then                                                  ! qdos
             ! first communicate den array to write out qdos files                   ! qdos
-            IDIM = (LMAXD1+1)*IEMXD*NQDOS*NPOTD                                     ! qdos
-            allocate(workc(0:LMAXD1,IEMXD,NQDOS,NPOTD))                             ! qdos
+            IDIM = (LMAXD1+1)*IELAST*NQDOS*NPOTD                                     ! qdos
+            allocate(workc(0:LMAXD1,IELAST,NQDOS,NPOTD))                             ! qdos
             call memocc(i_stat,product(shape(workc))*kind(workc),'workc','main1c')  ! qdos
             workc = (0.d0, 0.d0)                                                    ! qdos
             ! qdos
@@ -686,12 +686,12 @@ contains
          call timing_start('main1c - communication')
 #endif
          call mympi_main1c_comm(IRMD,LMPOTD,NATYP,LMAX,LMAXD1,LMMAXD, &
-            NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,           &
+            NPOTD,IELAST,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,           &
             NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,     &
             denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,        &
             t_mpi_c_grid%mympi_comm_ie)
          call mympi_main1c_comm(IRMD,LMPOTD,NATYP,LMAX,LMAXD1,LMMAXD, &
-            NPOTD,IEMXD,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,           &
+            NPOTD,IELAST,MMAXD,IDOLDAU,NATYP,KREL,LMOMVEC,           &
             NMVECMAX,NQDOS,rho2ns,r2nef,espv,den,denlm,denmatc,     &
             denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,        &
             t_mpi_c_grid%mympi_comm_at)
@@ -749,8 +749,6 @@ contains
 #ifdef CPP_MPI
          ntot1 = t_inc%NATYP
 
-
-         !         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie,
          if(t_mpi_c_grid%dims(1)>1) then
             nranks_local = t_mpi_c_grid%nranks_ie
             if(t_mpi_c_grid%nranks_ie>t_mpi_c_grid%dims(1)) then
@@ -860,7 +858,7 @@ contains
 #ifdef CPP_MPI
          !reset NQDOS to 1 to avoid endless communication
          NQDOS = 1
-         call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IEMXD,NQDOS,    &
+         call mympi_main1c_comm_newsosol2(LMAXD1,LMMAXD,IELAST,NQDOS,    &
             NPOTD,NATYP,LMPOTD,IRMD,MMAXD,den, denlm, muorb, espv, r2nef, &
             rho2ns, denefat, denef,denmatn,angles_new,t_mpi_c_grid%mympi_comm_ie)
 #endif

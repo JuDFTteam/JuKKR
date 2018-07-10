@@ -166,7 +166,8 @@ subroutine RHOVALNEW( &
    logical :: TEST,OPT
    external :: TEST,OPT
 
-   lmsize = lmmaxd/2
+   ! lmsize is original lm-size (without enhancement through soc etc.)
+   lmsize = lmmaxd/(1+korbit)
 
    ! determine if omp is used
    ith = 0
@@ -282,7 +283,7 @@ subroutine RHOVALNEW( &
    call memocc(i_stat,product(shape(GFLLE_PART))*kind(GFLLE_PART),'GFLLE_PART','RHOVALNEW')
    allocate(GFLLE(LMMAXSO,LMMAXSO,IELAST,1),stat=i_stat)
    call memocc(i_stat,product(shape(GFLLE))*kind(GFLLE),'GFLLE','RHOVALNEW')
-   allocate(DEN(0:LMAXD1,IEMXD,1,2),DENLM(lmsize,IEMXD,1,2),stat=i_stat)
+   allocate(DEN(0:LMAXD1,IELAST,1,2),DENLM(lmsize,IELAST,1,2),stat=i_stat)
    call memocc(i_stat,product(shape(DEN))*kind(DEN),'DEN','RHOVALNEW')
    RHO2NSC=CZERO
    RHO2NSC_loop=CZERO
@@ -346,9 +347,9 @@ subroutine RHOVALNEW( &
       !                                                                          ! qdos ruess
       allocate(GFLLE(LMMAXSO,LMMAXSO,IELAST,NQDOS),stat=i_stat)                  ! qdos ruess
       call memocc(i_stat,product(shape(GFLLE))*kind(GFLLE),'GFLLE','RHOVALNEW')  ! qdos ruess
-      allocate(DEN(0:LMAXD1,IEMXD,NQDOS,2),stat=i_stat)                          ! qdos ruess
+      allocate(DEN(0:LMAXD1,IELAST,NQDOS,2),stat=i_stat)                          ! qdos ruess
       call memocc(i_stat,product(shape(DEN))*kind(DEN),'DEN','RHOVALNEW')        ! qdos ruess
-      allocate(DENLM(lmsize,IEMXD,NQDOS,2),stat=i_stat)                          ! qdos ruess
+      allocate(DENLM(lmsize,IELAST,NQDOS,2),stat=i_stat)                          ! qdos ruess
       call memocc(i_stat,product(shape(DENLM))*kind(QVEC),'DENLM','RHOVALNEW')   ! qdos ruess
       3000  if (IERR.NE.0) stop 'ERROR READING ''qvec.dat'''                     ! qdos ruess
    end if  ! OPT('qdos    ')                                                     ! qdos ruess
@@ -757,8 +758,8 @@ subroutine RHOVALNEW( &
 #ifdef CPP_MPI
    if (OPT('qdos    ')) then                                                     ! qdos
       ! first communicate den array to write out qdos files                      ! qdos
-      IDIM = (LMAXD1+1)*IEMXD*2*NQDOS                                            ! qdos
-      allocate(workc(0:LMAXD1,IEMXD,2,NQDOS),stat=i_stat)                        ! qdos
+      IDIM = (LMAXD1+1)*IELAST*2*NQDOS                                            ! qdos
+      allocate(workc(0:LMAXD1,IELAST,2,NQDOS),stat=i_stat)                        ! qdos
       call memocc(i_stat,product(shape(workc))*kind(workc),'workc','RHOVALNEW')  ! qdos
       workc = CZERO                                                              ! qdos
       call MPI_REDUCE(DEN, workc, IDIM, MPI_DOUBLE_COMPLEX, MPI_SUM,master, &    ! qdos
@@ -877,7 +878,7 @@ subroutine RHOVALNEW( &
    if( .not.OPT('lmdos    ')) then
       NQDOS=1
    else
-      if(myrank==master) write(*,*) 'lmlm-dos option, communcation might take a while!', IEMXD,NQDOS
+      if(myrank==master) write(*,*) 'lmlm-dos option, communcation might take a while!', IELAST,NQDOS
    endif
    ! set these arrays to zero to avoid double counting in cases where extra ranks are used
    if ( t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1) ) then
@@ -1089,7 +1090,7 @@ subroutine RHOVALNEW( &
       call DAXPY(IDIM,1.0D0,R2NEF(1,1,2),1,R2NEF(1,1,1),1)
       !
       do LM1=0,LMAXD1
-         do IE=1,IEMXD
+         do IE=1,IELAST
             do JSPIN=1,NSPIN
                DEN_out(LM1,IE,JSPIN) =  DEN(LM1,IE,1,JSPIN)
             enddo
@@ -1100,7 +1101,7 @@ subroutine RHOVALNEW( &
    endif !(myrank==master)
 
    ! communicate den_out to all processors with the same atom number
-   IDIM = (LMAX+2)*IELAST*2
+   IDIM = (LMAX+2)*IEMXD*2
    call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master,&
       t_mpi_c_grid%myMPI_comm_at, ierr)
    if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'
