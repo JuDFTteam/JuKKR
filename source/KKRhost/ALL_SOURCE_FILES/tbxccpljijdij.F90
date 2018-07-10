@@ -35,6 +35,7 @@ contains
       use mod_version_info
       use mod_md5sums
       use Constants
+      use global_variables, only: nsymaxd
       use Profiling
 
       implicit none

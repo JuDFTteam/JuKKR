@@ -2641,10 +2641,10 @@ contains
    !> so that they can be passed between different control modules, specifically for main1b
    !> @author Philipp Rüssmann
    !----------------------------------------------------------------------------
-   subroutine get_params_1b(t_params,NATYP,NACLSD,IELAST,NPOL,NCLSD,NREF,NEMB,   &
+   subroutine get_params_1b(t_params,NATYPD, NAEZD, NATYP,NACLSD,IELAST,NPOL,NCLSD,NREF,NEMBD,   &
       NAEZ,NSRA,INS,NSPIN,LMAX,NCLS,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,ITMPDIR,   &
       ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,NSHELD,NPRINCD,KPOIBZ,ATOMIMP,    &
-      NATOMIMPD,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NR,IDECI,      &
+      NATOMIMPD,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX,CPATOL,NRD,IDECI,      &
       RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,JSH,NSH1,NSH2,NOQ,IQAT,NOFGIJ,       &
       NATOMIMP,CONC,KMESH,MAXMESH,NSYMAT,NQCALC,RATOM,RROT,DROTQ,IJTABCALC,      &
       IJTABCALC_I,IJTABSYM,IJTABSH,IQCALC,DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,    &
@@ -2655,9 +2655,12 @@ contains
       implicit none
 
       type(type_params), intent(in) :: t_params
-      integer, intent(in) :: NR
+
+      integer, intent(in) :: NATYPD
+      integer, intent(in) :: NAEZD
+      integer, intent(in) :: NEMBD
+      integer, intent(in) :: NRD
       integer, intent(in) :: KREL
-      integer, intent(in) :: NEMB
       integer, intent(in) :: IEMXD
       integer, intent(in) :: NCLSD
       integer, intent(in) :: NACLSD
@@ -2680,8 +2683,8 @@ contains
       integer, intent(inout) :: NCLS
       integer, intent(inout) :: NREF
       integer, intent(inout) :: NCPA
-      integer, intent(inout) :: NAEZ
-      integer, intent(inout) :: NATYP
+      integer, intent(out) :: NAEZ
+      integer, intent(out) :: NATYP
       integer, intent(inout) :: NSPIN
       integer, intent(inout) :: ILTMP
       integer, intent(inout) :: IDECI
@@ -2697,18 +2700,18 @@ contains
       integer, intent(inout) :: NRBASIS
       integer, intent(inout) :: NATOMIMP
       integer, intent(inout) :: ITCPAMAX
-      integer, dimension(NAEZ+NEMB), intent(inout) :: CLS
-      integer, dimension(NAEZ), intent(inout)      :: NOQ
-      integer, dimension(NAEZ), intent(inout)      :: ICPA
-      integer, dimension(NATYP), intent(inout)     :: IQAT
+      integer, dimension(NAEZD+NEMBD), intent(inout) :: CLS
+      integer, dimension(NAEZD), intent(inout)      :: NOQ
+      integer, dimension(NAEZD), intent(inout)      :: ICPA
+      integer, dimension(NATYPD), intent(inout)     :: IQAT
       integer, dimension(NSHELD), intent(inout)    :: NSH1
       integer, dimension(NSHELD), intent(inout)    :: NSH2
       integer, dimension(IEMXD), intent(inout)     :: KMESH
       integer, dimension(NCLSD), intent(inout)     :: NACLS
       integer, dimension(MAXMSHD), intent(inout)   :: NOFKS
       integer, dimension(0:NSHELD), intent(inout)  :: NSHELL
-      integer, dimension(NAEZ), intent(inout)      :: IQCALC
-      integer, dimension(NAEZ+NEMB), intent(inout) :: REFPOT
+      integer, dimension(NAEZD), intent(inout)      :: IQCALC
+      integer, dimension(NAEZD+NEMBD), intent(inout) :: REFPOT
       integer, dimension(NATOMIMPD), intent(inout) :: ATOMIMP
       integer, dimension(NOFGIJ), intent(inout)    :: IJTABSH
       integer, dimension(NOFGIJ), intent(inout)    :: IJTABSYM
@@ -2716,21 +2719,21 @@ contains
       integer, dimension(NOFGIJ), intent(inout)    :: IJTABCALC_I
       integer, dimension(NSHELD,NOFGIJ), intent(inout)      :: ISH
       integer, dimension(NSHELD,NOFGIJ), intent(inout)      :: JSH
-      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout)   :: EZOA
-      integer, dimension(NACLSD,NAEZ+NEMB), intent(inout)   :: ATOM
+      integer, dimension(NACLSD,NAEZD+NEMBD), intent(inout)   :: EZOA
+      integer, dimension(NACLSD,NAEZD+NEMBD), intent(inout)   :: ATOM
       integer, dimension(2,LMMAXD), intent(inout)           :: NRREL
-      integer, dimension(NATYP,NAEZ+NEMB), intent(inout)    :: KAOEZ
-      integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(inout) :: ICHECK
+      integer, dimension(NATYPD,NAEZD+NEMBD), intent(inout)    :: KAOEZ
+      integer, dimension(NAEZD/NPRINCD,NAEZD/NPRINCD), intent(inout) :: ICHECK
       integer, dimension(2,2,LMMAXD), intent(inout) :: IRREL
       real (kind=dp), intent(inout) :: ALAT
       real (kind=dp), intent(inout) :: CPATOL
       real (kind=dp), dimension(NREF), intent(inout)      :: VREF
-      real (kind=dp), dimension(NATYP), intent(inout)     :: CONC
+      real (kind=dp), dimension(NATYPD), intent(inout)     :: CONC
       real (kind=dp), dimension(NREF), intent(inout)      :: RMTREF
       real (kind=dp), dimension(MAXMSHD), intent(inout)   :: VOLBZ
-      real (kind=dp), dimension(3,0:NR), intent(inout)          :: RR
+      real (kind=dp), dimension(3,0:NRD), intent(inout)          :: RR
       real (kind=dp), dimension(3,NSHELD), intent(inout)        :: RATOM
-      real (kind=dp), dimension(3,NAEZ+NEMB), intent(inout)     :: RBASIS
+      real (kind=dp), dimension(3,NAEZD+NEMBD), intent(inout)     :: RBASIS
       real (kind=dp), dimension(KPOIBZ,MAXMSHD), intent(inout)  :: VOLCUB
       real (kind=dp), dimension(3,NATOMIMPD), intent(inout)     :: RCLSIMP
       real (kind=dp), dimension(48,3,NSHELD), intent(inout)        :: RROT
@@ -2741,7 +2744,7 @@ contains
       complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(inout) :: RC
       complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(inout) :: CREL
       complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(inout) :: RREL
-      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(inout)      :: DROTQ
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZD), intent(inout)      :: DROTQ
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NSYMAXD), intent(inout)   :: DSYMLL
       complex (kind=dp), dimension(2,2,LMMAXD), intent(inout)              :: SRREL
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPINDD,IEMXD), intent(inout) :: LEFTTINVLL
@@ -2810,7 +2813,6 @@ contains
       LLY         = t_params%LLY
       NSYMAT      = t_params%NSYMAT
       NATOMIMP    = t_params%NATOMIMP
-      NOFGIJ      = t_params%NOFGIJ
       NQCALC      = t_params%NQCALC
       RATOM       = t_params%RATOM
       RROT        = t_params%RROT

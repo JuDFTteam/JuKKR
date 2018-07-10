@@ -28,9 +28,4 @@ module constants
   !> complex number '0', usually used for initializations
   complex (kind=dp), parameter :: czero = (0.0e0_dp, 0.0e0_dp)
 
-  !> maximal number of lattice symmetries, maybe move somewhere else?
-  integer, parameter :: nsymaxd = 48
-  !> maximal number of different k-meshes, maybe move somewhere else?
-  integer, parameter :: maxmshd = 30
-
 end module constants

@@ -189,8 +189,8 @@ contains
       ! the main0 module, now  instead of unformatted files take parameters from
       ! types defined in wunfiles.F90
       !-------------------------------------------------------------------------
-      call get_params_1b(t_params,NATYPD,NACLSD,IELAST,NPOL,NCLSD,NREFD,NEMBD,   &
-         NAEZD,NSRA,INS,NSPIN,LMAXD,NCLS,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,     &
+      call get_params_1b(t_params,NATYPD, NAEZD, NATYP,NACLSD,IELAST,NPOL,NCLSD,NREFD,NEMBD,   &
+         NAEZ,NSRA,INS,NSPIN,LMAXD,NCLS,LLY,KREL,ATOM,CLS,NACLS,REFPOT,EZ,     &
          ITMPDIR,ILTMP,ALAT,RCLS,IEMXD,RMTREF,VREF,TMPDIR,NSHELD,NPRINCD,     &
          KPOIBZ,ATOMIMP,NATOMIMPD,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,          &
          ITCPAMAX,CPATOL,NRD,IDECI,RBASIS,RR,EZOA,NSHELL,KMROT,KAOEZ,ISH,      &

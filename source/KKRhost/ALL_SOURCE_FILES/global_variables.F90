@@ -98,6 +98,11 @@ module global_variables
   integer :: lpotd
   integer :: nchebd
 
+  !> maximal number of lattice symmetries
+  integer :: nsymaxd = 48
+  !> maximal number of different k-meshes
+  integer :: maxmshd = 30
+
   logical :: linterface = .false.
 
   ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
@@ -113,20 +118,28 @@ end module global_variables
 
 
 #ifdef CPP_MPI
+!< MPI broadcast routine for global variables (i.e. array dimensions etc.)
 subroutine Bcast_global_variables()
     use mpi
     use global_variables
     use mod_mympi,   only: master, myrank
     implicit none
 
+    !< number of paramters that are broadcast
     integer :: N
 
+    !< blocklength of variuables in derived data type and list of MPI datatypes
     integer, allocatable  :: blocklen1(:), etype1(:)
-    integer :: ierr, myMPItype1
+    !< error status
+    integer :: ierr
+    !< derived data type for collective communication
+    integer :: myMPItype1
+    !< MPI addresses
     integer(kind=MPI_ADDRESS_KIND), allocatable :: disp1(:)
+    !< base address of first entry
     integer(kind=MPI_ADDRESS_KIND) :: base
 
-    N  = 58
+    N  = 60
     allocate(blocklen1(N), etype1(N), disp1(N), stat=ierr)
     if ( ierr/=0 ) stop 'error allocating arrays in bcast_global_variables'
 
@@ -186,27 +199,36 @@ subroutine Bcast_global_variables()
     call MPI_Get_address(lmmaxso,      disp1(54), ierr)
     call MPI_Get_address(lpotd,        disp1(55), ierr)
     call MPI_Get_address(nchebd,       disp1(56), ierr)
-    call MPI_Get_address(linterface,   disp1(57), ierr)
-    call MPI_Get_address(lnc,          disp1(58), ierr)
+    call MPI_Get_address(maxmshd,      disp1(57), ierr)
+    call MPI_Get_address(nsymaxd,      disp1(58), ierr)
+    call MPI_Get_address(linterface,   disp1(59), ierr)
+    call MPI_Get_address(lnc,          disp1(60), ierr)
 
+    ! find displacements of variables
     base  = disp1(1)
     disp1 = disp1 - base
 
+    ! set length of variables in derived data type
     blocklen1(1:N) = 1
 
-    etype1(1:N) = MPI_INTEGER
+    ! set datatype of variables
+    etype1(1:N-2) = MPI_INTEGER
     etype1(N-1:N) = MPI_LOGICAL
 
+    ! create new Type structure for derived data type
     call MPI_Type_create_struct(N, blocklen1, disp1, etype1, myMPItype1, ierr)
     if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_t_inc'
 
+    ! commit new type
     call MPI_Type_commit(myMPItype1, ierr)
     if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_t_inc'
 
-    write(*,*) myrank, N
+    ! broadcast derived data type
+    
     call MPI_Bcast(N, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
     if(ierr/=MPI_SUCCESS) stop 'error brodcasting t_inc'
 
+    ! finally free auxiliary type and deallocate working arrays
     call MPI_Type_free(myMPItype1, ierr)
     deallocate(blocklen1, etype1, disp1, stat=ierr)
     if ( ierr/=0 ) stop 'error deallocating arrays in bcast_global_variables'
