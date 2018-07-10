@@ -2705,8 +2705,12 @@ contains
        READ (UNIT=UIO,FMT=*) t_godfrin%bdims(:)
    
       !Inconsistency check
-      write(*,*) t_godfrin%na
       IF( t_godfrin%na /= sum(t_godfrin%bdims) ) stop 'godfrin: na /= sum(bdims)'
+#ifdef __INTEL_COMPILER
+      ! can only use pardiso solver with intel mkl at the moment, probably only
+      ! a linking issue that should be solved in the future
+      if( t_godfrin%lpardiso) stop 'No pardiso library available. Try the intel compiler or fix the linking issues'
+#endif
      
       WRITE(111 ,FMT='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
       WRITE(1337,FMT='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
