@@ -333,6 +333,8 @@ contains
             enddo                                                                ! LLY Lloyd
             close(701)                                                           ! LLY Lloyd
          end if ! myrank==master
+
+         ! energy integration to get cdos_lly
          CDOS_LLY(1:ielast,1:NSPIN) = CZERO                                      ! LLY Lloyd
          if (.not.OPT('NEWSOSOL')) then
             if(t_lloyd%cdos_diff_lly_to_file) then
@@ -1109,17 +1111,17 @@ contains
 
       if (lly/=0) then
         ! cleanup allocations
-        deallocate(CDOS0(IELAST), stat=i_stat)
+        deallocate(CDOS0, stat=i_stat)
         call memocc(i_stat,-product(shape(CDOS0))*kind(CDOS0),'CDOS0','main1c')
-        deallocate(CDOS1(IELAST), stat=i_stat)
+        deallocate(CDOS1, stat=i_stat)
         call memocc(i_stat,-product(shape(CDOS1))*kind(CDOS1),'CDOS1','main1c')
-        deallocate(CDOS2(NATYPD), stat=i_stat)
+        deallocate(CDOS2, stat=i_stat)
         call memocc(i_stat,-product(shape(CDOS2))*kind(CDOS2),'CDOS2','main1c')
-        deallocate(CDOSAT0(IELAST), stat=i_stat)
+        deallocate(CDOSAT0, stat=i_stat)
         call memocc(i_stat,-product(shape(CDOSAT0))*kind(CDOSAT0),'CDOSAT0','main1c')
-        deallocate(CDOSAT1(IELAST), stat=i_stat)            
+        deallocate(CDOSAT1, stat=i_stat)            
         call memocc(i_stat,-product(shape(CDOSAT1))*kind(CDOSAT1),'CDOSAT1','main1c')
-        deallocate(CDOS_LLY(IELAST,NSPIND), stat=i_stat)            
+        deallocate(CDOS_LLY, stat=i_stat)            
         call memocc(i_stat,-product(shape(CDOS_LLY))*kind(CDOS_LLY),'CDOS_LLY','main1c')
       end if
 

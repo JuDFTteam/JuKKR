@@ -114,19 +114,12 @@ contains
       real (kind=dp), dimension(MAXMSHD)   :: VOLBZ
       real (kind=dp), dimension(NATYPD)     :: THETA_AT
       real (kind=dp), dimension(KPOIBZ,MAXMSHD) :: VOLCUB
-      complex (kind=dp), dimension(IEMXD) :: LLY_G0TR             !< LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
-      complex (kind=dp), dimension(IEMXD) :: TRALPHAREF           ! LLY Lloyd
-      complex (kind=dp), dimension(IEMXD) :: CDOSREF_LLY          ! LLY Lloyd
       complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: W1
       complex (kind=dp), dimension(LMGF0D,LMGF0D)  :: WN1
       complex (kind=dp), dimension(LMGF0D,LMGF0D)  :: WN2         ! LLY
       complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: TMAT
       complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: GMAT0
       complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: FACTL
-      complex (kind=dp), dimension(IEMXD,NSPIND)   :: TRACET      !< Tr[ (t-tref)^-1 d(t-tref)/dE ]  ! LLY Lloyd
-      complex (kind=dp), dimension(IEMXD,NSPIND)   :: TRALPHA
-      complex (kind=dp), dimension(IEMXD,NSPIND)   :: LLY_GRTR    !< LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
-      complex (kind=dp), dimension(IEMXD,NSPIND)   :: CDOS_LLY
       complex (kind=dp), dimension(0:LMAXD,NREFD)    :: ALPHAREF
       complex (kind=dp), dimension(0:LMAXD,NREFD)    :: DALPHAREF   !< LLY Lloyd Alpha matrix and deriv.
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYPD)  :: MSST
@@ -147,6 +140,13 @@ contains
       complex (kind=dp), dimension(:,:), allocatable     :: DTMTRX   !< For GREENIMP
       complex (kind=dp), dimension(:,:,:), allocatable   :: GINP     !< Cluster GF (ref syst.) GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
       complex (kind=dp), dimension(:,:,:), allocatable   :: DGINP    !< LLY Lloyd Energy derivative of GINP DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
+      complex (kind=dp), dimension(:), allocatable :: LLY_G0TR             !< LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
+      complex (kind=dp), dimension(:), allocatable :: TRALPHAREF           ! LLY Lloyd
+      complex (kind=dp), dimension(:), allocatable :: CDOSREF_LLY          ! LLY Lloyd
+      complex (kind=dp), dimension(:,:), allocatable   :: TRACET      !< Tr[ (t-tref)^-1 d(t-tref)/dE ]  ! LLY Lloyd
+      complex (kind=dp), dimension(:,:), allocatable   :: TRALPHA
+      complex (kind=dp), dimension(:,:), allocatable   :: LLY_GRTR    !< LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
+      complex (kind=dp), dimension(:,:), allocatable   :: CDOS_LLY
 
 #ifdef CPP_MPI
       integer :: ihelp
@@ -180,6 +180,21 @@ contains
       ! allocatable arrays
       allocate(BZKP(3,KPOIBZ,MAXMSHD), stat=i_stat)
       call memocc(i_stat,product(shape(BZKP))*kind(BZKP),'BZKP','main1b')
+      allocate(LLY_G0TR(IELAST), stat=i_stat)
+      call memocc(i_stat,product(shape(LLY_G0TR))*kind(LLY_G0TR),'LLY_G0TR','main1b')
+      allocate(TRALPHAREF(IELAST), stat=i_stat)
+      call memocc(i_stat,product(shape(TRALPHAREF))*kind(TRALPHAREF),'TRALPHAREF','main1b')
+      allocate(CDOSREF_LLY(IELAST), stat=i_stat)
+      call memocc(i_stat,product(shape(CDOSREF_LLY))*kind(CDOSREF_LLY),'CDOSREF_LLY','main1b')
+      allocate(TRACET(IELAST,NSPIND), stat=i_stat)
+      call memocc(i_stat,product(shape(TRACET))*kind(TRACET),'TRACET','main1b')
+      allocate(TRALPHA(IELAST,NSPIND), stat=i_stat)
+      call memocc(i_stat,product(shape(TRALPHA))*kind(TRALPHA),'TRALPHA','main1b')
+      allocate(LLY_GRTR(IELAST,NSPIND), stat=i_stat)
+      call memocc(i_stat,product(shape(LLY_GRTR))*kind(LLY_GRTR),'LLY_GRTR','main1b')
+      allocate(CDOS_LLY(IELAST,NSPIND), stat=i_stat)
+      call memocc(i_stat,product(shape(CDOS_LLY))*kind(CDOS_LLY),'CDOS_LLY','main1b')
+
       !Consistency check
       if ( (KREL.LT.0) .OR. (KREL.GT.1) ) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
       if ( (KREL.EQ.1) .AND. (NSPIND.EQ.2) ) stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
@@ -1148,7 +1163,7 @@ contains
                   end if
                enddo ! IE                                                  ! LLY
             enddo                                                          ! LLY
-         else
+         else ! NEWSOSOL
 #ifdef CPP_MPI
             ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
             ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
@@ -1344,6 +1359,24 @@ contains
                        t_params%nacls(1:t_params%nclsd)
          close(9999)
       endif
+
+      ! deallocate arrays
+      deallocate(BZKP, stat=i_stat)
+      call memocc(i_stat,-product(shape(BZKP))*kind(BZKP),'BZKP','main1b')
+      deallocate(LLY_G0TR, stat=i_stat)
+      call memocc(i_stat,-product(shape(LLY_G0TR))*kind(LLY_G0TR),'LLY_G0TR','main1b')
+      deallocate(TRALPHAREF, stat=i_stat)
+      call memocc(i_stat,-product(shape(TRALPHAREF))*kind(TRALPHAREF),'TRALPHAREF','main1b')
+      deallocate(CDOSREF_LLY, stat=i_stat)
+      call memocc(i_stat,-product(shape(CDOSREF_LLY))*kind(CDOSREF_LLY),'CDOSREF_LLY','main1b')
+      deallocate(TRACET, stat=i_stat)
+      call memocc(i_stat,-product(shape(TRACET))*kind(TRACET),'TRACET','main1b')
+      deallocate(TRALPHA, stat=i_stat)
+      call memocc(i_stat,-product(shape(TRALPHA))*kind(TRALPHA),'TRALPHA','main1b')
+      deallocate(LLY_GRTR, stat=i_stat)
+      call memocc(i_stat,-product(shape(LLY_GRTR))*kind(LLY_GRTR),'LLY_GRTR','main1b')
+      deallocate(CDOS_LLY, stat=i_stat)
+      call memocc(i_stat,-product(shape(CDOS_LLY))*kind(CDOS_LLY),'CDOS_LLY','main1b')
 
       if(t_inc%i_write>0) write (1337,'(79("="),/,30X,"< KKR1b finished >",/,79("="),/)')
 

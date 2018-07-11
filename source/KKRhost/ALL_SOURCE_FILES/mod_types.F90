@@ -110,7 +110,7 @@ implicit none
       ! allocatable arrays
       complex (kind=dp), allocatable :: dtmat(:,:,:)      ! complex (kind=dp) TMAT0(LMMAXD,LMMAXD), IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
       complex (kind=dp), allocatable :: tralpha(:)        ! complex (kind=dp) TRALPHA, IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
-      complex (kind=dp), allocatable :: cdos(:,:)         ! complex (kind=dp) CDOS_LLY(IEMXD,NSPIND), irec=IE, aalready in dim 1 of cdos!
+      complex (kind=dp), allocatable :: cdos(:,:)         ! complex (kind=dp) CDOS_LLY(IELAST,NSPIND), irec=IE, aalready in dim 1 of cdos!
       complex (kind=dp), allocatable :: dgref(:,:,:,:)    ! complex (kind=dp); ALLOCATE ( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) ), IREC=IE 
       complex (kind=dp), allocatable :: g0tr(:)           ! complex (kind=dp) LLY_G0TR_IE, irec=ie
 
