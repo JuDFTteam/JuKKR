@@ -126,8 +126,16 @@ contains
       end if
 
       if (ilinpanshift==1) then
-        stop 'non-spherical part of the potential needs to be inside &
-          &the log panel'
+         write(*,*)
+         write(*,*) 'ERORR: non-spherical part of the potential needs'
+         write(*,*) 'to be inside the log panel (i.e. R_LOG too small)'
+         write(*,*)
+         write(*,*) 'atom (I1):', i1
+         write(*,*) 'R_LOG', r_log
+         write(*,*) 'Rmesh(IRMIN(I1), I1)', r(irmin(i1),i1)
+         write(*,*) 'IRMIN(I1)', irmin(i1)
+         write(*,*)
+         stop 'Error creating newmesh!' 
       end if
 
       do ip = 0, npan_log - ilogpanshift
