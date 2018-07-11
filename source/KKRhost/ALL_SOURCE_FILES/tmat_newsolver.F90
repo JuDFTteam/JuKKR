@@ -682,6 +682,9 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          if(t_lloyd%dtmat_to_file) then
             IREC = IE + IELAST*(I1-1)
             write(691,REC=IREC) DTMATLL(:,:)    ! LLY
+            if(test('fileverb')) then
+               write(691691691,'(i9,20000F15.7)') irec, DTMATLL(:,:)
+            end if
          else
             irec = ie_num + ie_end*(i1-1)
             t_lloyd%dtmat(:,:,irec) = DTMATLL(:,:)
@@ -689,6 +692,9 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          if(t_lloyd%tralpha_to_file) then
             IREC = IE + IELAST*(I1-1)
             write(692,REC=IREC) TRALPHA                              ! LLY
+            if(test('fileverb')) then
+               write(692692692,'(i9,20000F15.7)') irec, TRALPHA
+            end if
          else
             irec = ie_num + ie_end*(i1-1)
             t_lloyd%tralpha(irec) = TRALPHA

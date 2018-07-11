@@ -107,7 +107,7 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
       allocate(DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS), stat=i_stat)
       call memocc(i_stat,product(shape(DGINP))*kind(DGINP),'DGINP','TBREF')
       DGINP = CZERO
-      allocate(LLY_G0TR(IEMXD,NCLSD), stat=i_stat)
+      allocate(LLY_G0TR(IELAST,NCLSD), stat=i_stat)
       call memocc(i_stat,product(shape(LLY_G0TR))*kind(LLY_G0TR),'LLY_G0TR','TBREF')
       LLY_G0TR = CZERO
    endif
@@ -305,14 +305,21 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
       else   ! (t_tgmat%gref_to_file)
          t_tgmat%gref(:,:,:,ie_num) = GINP(:,:,:)
       end if ! (t_tgmat%gref_to_file)
+      ! store result either to file or in memory
       if (LLY.NE.0) then                                ! LLY Lloyd
          if(t_lloyd%dgref_to_file) then                 ! LLY Lloyd
             write (681,REC=IE) DGINP ! dGref/dE         ! LLY Lloyd
+            if (test('fileverb')) then
+              write(681681,'(i9,200000ES15.7)') ie, DGINP
+            end if
          else                                           ! LLY Lloyd
             t_lloyd%dgref(:,:,:,ie_num) = DGINP(:,:,:)  ! LLY Lloyd
          endif                                          ! LLY Lloyd
          if(t_lloyd%g0tr_to_file) then                  ! LLY Lloyd
             write (682,FMT='(2E24.16)') LLY_G0TR_IE     ! LLY Lloyd
+            if (test('fileverb')) then
+              write(682682,'(i9,200000ES15.7)') ie_num, LLY_G0TR_IE
+            end if
          else                                           ! LLY Lloyd
             t_lloyd%g0tr(ie_num) = LLY_G0TR_IE          ! LLY Lloyd
          end if                                         ! LLY Lloyd

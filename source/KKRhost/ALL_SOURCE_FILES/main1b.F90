@@ -431,7 +431,7 @@ contains
       NCPAFAIL = 0
 
       ! Initialize trace for Lloyd formula                    ! LLY Lloyd
-      LLY_GRTR(:,:) = CZERO ! 1:IEMXD,1:NSPIND          ! LLY Lloyd
+      LLY_GRTR(:,:) = CZERO ! 1:IELAST,1:NSPIND          ! LLY Lloyd
 
       if (.not.OPT('NEWSOSOL')) then
          !----------------------------------------------------------------------
@@ -851,6 +851,11 @@ contains
                   DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
                   DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
                enddo
+               write(8800+myrank,*) 'atom', i1, ERYD,VREF(I1),RMTREF(I1),LMAX
+               write(8810+myrank,*) 'atom', i1, ALPHAREF(0,I1)
+               write(8820+myrank,*) 'atom', i1, DALPHAREF(0,I1),LMAX+1,LMGF0D
+               write(8830+myrank,*) 'atom', i1, TREFLL(:,:,i1)
+               write(8840+myrank,*) 'atom', i1, DTREFLL(:,:,i1)
           
                if(test('rhoqtest')) then
                   call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),wlength,lmmaxd,ie,trefll)
