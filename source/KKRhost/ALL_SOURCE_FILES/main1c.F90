@@ -93,12 +93,6 @@ contains
       real (kind=dp), dimension(0:LMAXD+1,NATYPD,2)         :: CHARGE
       real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYPD) :: WLDAUOLD
       complex (kind=dp), dimension(IEMXD)                   :: DF
-      complex (kind=dp), dimension(NATYPD)                   :: CDOS2          ! LLY Lloyd
-      complex (kind=dp), dimension(IEMXD)                   :: CDOS0
-      complex (kind=dp), dimension(IEMXD)                   :: CDOS1
-      complex (kind=dp), dimension(IEMXD)                   :: CDOSAT0
-      complex (kind=dp), dimension(IEMXD)                   :: CDOSAT1
-      complex (kind=dp), dimension(IEMXD,NSPIND)            :: CDOS_LLY
       complex (kind=dp), dimension(0:LMAXD+1,IEMXD,2)        :: DEN1
       complex (kind=dp), dimension(NATYPD,3,NMVECMAX)        :: MVEVI          ! OUTPUT
       complex (kind=dp), dimension(NATYPD,3,NMVECMAX)        :: MVEVIEF        ! OUTPUT
@@ -136,6 +130,13 @@ contains
       real (kind=dp), dimension(:,:,:,:), allocatable  :: RHO2NS    !< radial density
       complex (kind=dp), dimension(:,:,:,:), allocatable    :: DEN   ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS)
       complex (kind=dp), dimension(:,:,:,:), allocatable    :: DENLM ! DENLM(LMMAXD1,IEMXD,NPOTD,NQDOS)
+      complex (kind=dp), dimension(:), allocatable ::  CDOS2          ! LLY Lloyd
+      complex (kind=dp), dimension(:), allocatable :: CDOS0
+      complex (kind=dp), dimension(:), allocatable :: CDOS1
+      complex (kind=dp), dimension(:), allocatable :: CDOSAT0
+      complex (kind=dp), dimension(:), allocatable :: CDOSAT1
+      complex (kind=dp), dimension(:,:), allocatable :: CDOS_LLY
+
       !-------------------------------------------------------------------------
       ! MPI parameters
       !-------------------------------------------------------------------------
@@ -282,14 +283,28 @@ contains
       ! LLY Lloyd
       ! ------------------------------------------------------------------------
       if (LLY.ne.0) then                                                         ! LLY Lloyd
+
+         allocate(CDOS0(IELAST), stat=i_stat)
+         call memocc(i_stat,product(shape(CDOS0))*kind(CDOS0),'CDOS0','main1c')
+         allocate(CDOS1(IELAST), stat=i_stat)
+         call memocc(i_stat,product(shape(CDOS1))*kind(CDOS1),'CDOS1','main1c')
+         allocate(CDOS2(NATYPD), stat=i_stat)
+         call memocc(i_stat,product(shape(CDOS2))*kind(CDOS2),'CDOS2','main1c')
+         allocate(CDOSAT0(IELAST), stat=i_stat)
+         call memocc(i_stat,product(shape(CDOSAT0))*kind(CDOSAT0),'CDOSAT0','main1c')
+         allocate(CDOSAT1(IELAST), stat=i_stat)            
+         call memocc(i_stat,product(shape(CDOSAT1))*kind(CDOSAT1),'CDOSAT1','main1c')
+         allocate(CDOS_LLY(IELAST,NSPIND), stat=i_stat)            
+         call memocc(i_stat,product(shape(CDOS_LLY))*kind(CDOS_LLY),'CDOS_LLY','main1c')
+
          ! LLY Lloyd
          ! Calculate free-space contribution to dos                              ! LLY Lloyd
-         CDOS0(1:IEMXD) = CZERO                                                  ! LLY Lloyd
-         CDOS1(1:IEMXD) = CZERO                                                  ! LLY Lloyd
+         CDOS0(1:IELAST) = CZERO                                                  ! LLY Lloyd
+         CDOS1(1:IELAST) = CZERO                                                  ! LLY Lloyd
          CDOS2(1:NAEZ) = CZERO                                                   ! LLY Lloyd
          do I1 = 1,NAEZ                                                          ! LLY Lloyd
-            CDOSAT0(1:IEMXD) = CZERO                                             ! LLY Lloyd
-            CDOSAT1(1:IEMXD) = CZERO                                             ! LLY Lloyd
+            CDOSAT0(1:IELAST) = CZERO                                             ! LLY Lloyd
+            CDOSAT1(1:IELAST) = CZERO                                             ! LLY Lloyd
             ICELL = NTCELL(I1)                                                   ! LLY Lloyd
             do IE = 1,IELAST                                                     ! LLY Lloyd
                call RHOVAL0(EZ(IE),DRDI(1,I1),RMESH(1,I1),IPAN(I1),  &           ! LLY Lloyd
@@ -300,8 +315,8 @@ contains
 
                CDOS2(I1) = CDOS2(I1) + CDOSAT1(IE)*WEZ(IE)                       ! LLY Lloyd
             enddo                                                                ! LLY Lloyd
-            CDOS0(1:IEMXD) = CDOS0(1:IEMXD) + CDOSAT0(1:IEMXD)                   ! LLY Lloyd
-            CDOS1(1:IEMXD) = CDOS1(1:IEMXD) + CDOSAT1(1:IEMXD)                   ! LLY Lloyd
+            CDOS0(1:IELAST) = CDOS0(1:IELAST) + CDOSAT0(1:IELAST)                   ! LLY Lloyd
+            CDOS1(1:IELAST) = CDOS1(1:IELAST) + CDOSAT1(1:IELAST)                   ! LLY Lloyd
          enddo                                                                   ! LLY Lloyd
          CDOS0(:) = -CDOS0(:) / PI                                               ! LLY Lloyd
          CDOS1(:) = -CDOS1(:) / PI                                               ! LLY Lloyd
@@ -1090,6 +1105,23 @@ contains
 #ifdef CPP_MPI
       end if !myrank==master
 #endif
+
+
+      if (lly/=0) then
+        ! cleanup allocations
+        deallocate(CDOS0(IELAST), stat=i_stat)
+        call memocc(i_stat,-product(shape(CDOS0))*kind(CDOS0),'CDOS0','main1c')
+        deallocate(CDOS1(IELAST), stat=i_stat)
+        call memocc(i_stat,-product(shape(CDOS1))*kind(CDOS1),'CDOS1','main1c')
+        deallocate(CDOS2(NATYPD), stat=i_stat)
+        call memocc(i_stat,-product(shape(CDOS2))*kind(CDOS2),'CDOS2','main1c')
+        deallocate(CDOSAT0(IELAST), stat=i_stat)
+        call memocc(i_stat,-product(shape(CDOSAT0))*kind(CDOSAT0),'CDOSAT0','main1c')
+        deallocate(CDOSAT1(IELAST), stat=i_stat)            
+        call memocc(i_stat,-product(shape(CDOSAT1))*kind(CDOSAT1),'CDOSAT1','main1c')
+        deallocate(CDOS_LLY(IELAST,NSPIND), stat=i_stat)            
+        call memocc(i_stat,-product(shape(CDOS_LLY))*kind(CDOS_LLY),'CDOS_LLY','main1c')
+      end if
 
    end subroutine main1c
 

@@ -912,9 +912,6 @@ Contains
     Type (type_godfrin), Intent (Inout) :: t_godfrin
     Integer :: ierr
 
-    Integer :: mpi_integer, mpi_success, mpi_comm_world
-    Integer :: mpi_logical
-
     Call mpi_bcast(t_godfrin%na, 1, mpi_integer, 0, mpi_comm_world, ierr)
     If (ierr/=mpi_success) Stop &
       '[bcast_params_savewf] Error broadcasting maxmem_number'

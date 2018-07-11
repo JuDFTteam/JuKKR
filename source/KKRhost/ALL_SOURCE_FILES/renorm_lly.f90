@@ -17,7 +17,7 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
   integer :: ircut(0:ipand, natypd), ipan(natypd) ! DOS according to Lloyd's
                                                   ! formula
   real (kind=dp) :: conc(natypd)   ! Input/Output:
-  complex (kind=dp) :: cden(0:(lmaxd+1), iemxd, npotd) ! Internal:
+  complex (kind=dp) :: cden(0:(lmaxd+1), ielast, npotd) ! Internal:
   complex (kind=dp) :: cdos_lly(ielast, nspind) ! 1: charge renormalization per
                                                ! atom (energy-integrated)
   complex (kind=dp) :: wez(iemxd), ez(iemxd)
@@ -31,14 +31,14 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
   integer :: ll, ie, i1, ispin, ipot, spindegen, irc1, signsp, idim
   real (kind=dp) :: renorm_at(natypd, 2) ! and from Lloyd's formula
   ! Renormalization constant for charge and spin density
-  complex (kind=dp) :: cdos_loc(iemxd, (1+krel)*nspind) ! Atomic charge per
+  complex (kind=dp) :: cdos_loc(ielast, (1+krel)*nspind) ! Atomic charge per
                                                         ! spin (local
                                                         ! summation and
                                                         ! renormalized)
-  complex (kind=dp) :: cdos_locvc(iemxd, (1+krel)*nspind)
-  real (kind=dp) :: cren(iemxd, 2)
+  complex (kind=dp) :: cdos_locvc(ielast, (1+krel)*nspind)
+  real (kind=dp) :: cren(ielast, 2)
   real (kind=dp) :: charge(natypd, 2), charge_lly(natypd, 2)
-  complex (kind=dp) :: chadd(iemxd, natypd, nspind), cdos_add ! Integration
+  complex (kind=dp) :: chadd(ielast, natypd, nspind), cdos_add ! Integration
                                                               ! step for
                                                               ! charge/atom/spin
   complex (kind=dp) :: qlly(2), qstar(2)
