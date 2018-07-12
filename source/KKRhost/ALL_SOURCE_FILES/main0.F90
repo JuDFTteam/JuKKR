@@ -493,7 +493,6 @@ contains
       !> @note JC: have added reading calls for the parameters that used to be in
       !> the inc.p and can now be modified via the inputcard directly
       !-------------------------------------------------------------------------
-      NREFD        = NAEZD
       call RINPUT13(KTE,IGF,KXC,LLY,ICC,INS,KWS,IPE,IPF,IPFE,ICST,IMIX, &
          LPOT,NAEZ,NEMB,NREF,NCLS,NPOL,LMAX,KCOR,KEFG,KHYP,KPRE,  &
          KVMAD,LMMAX,LMPOT,NCHEB,NLEFT,IFILE,KVREL,NSPIN,NATYP,NINEQ,NPNT1,NPNT2,   &
@@ -516,7 +515,7 @@ contains
          stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
 
       ! Set the calculation of several parameters
-      NREFD        = NREF
+      NREFD = naez+nemb ! can be changed later on when it is determined in clsgen_tb
 
       IRM = IRMD
 
