@@ -58,6 +58,12 @@ subroutine rhoval0(ez, drdi, rmesh, ipan, ircut, irws, thetas, dos0, dos1, &
   c0ll = 1.0e0_dp/sqrt(16.0e0_dp*atan(1.0e0_dp))
   ciek = ci*ek
 
+  ! initialize to zero
+  cden0(:, :) = czero
+  cden1(:, :) = czero
+  dos0 = czero
+  dos1 = czero
+
   ! ----------------------------------------------------------------------------
   do ir = 2, irws
     call beshan(hankws, bessjw, bessyw, rmesh(ir)*ek, lmaxd1)
@@ -67,10 +73,6 @@ subroutine rhoval0(ez, drdi, rmesh, ipan, ircut, irws, thetas, dos0, dos1, &
     end do
   end do
   imt1 = ircut(1)
-  do l1 = 0, lmaxd1
-    cden0(1, l1) = czero
-    cden1(1, l1) = czero
-  end do
   do ir = 2, irws
     cden0(ir, 0) = ek*pz(ir, 0)*qz(ir, 0)
     cden1(ir, 0) = ek*pz(ir, 0)**2*(0.e0_dp, -1.e0_dp)

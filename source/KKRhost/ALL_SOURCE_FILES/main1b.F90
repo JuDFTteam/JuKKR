@@ -865,7 +865,6 @@ contains
             TRALPHA(IE,NSPINDD)=CZERO
             TRALPHAREF(IE)=CZERO
             ! read in t matrix
-
             do I1 = 1,NATYP
 
                ! read in theta and phi for noncolinear
