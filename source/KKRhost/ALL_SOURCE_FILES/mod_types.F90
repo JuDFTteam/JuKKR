@@ -53,7 +53,7 @@ implicit none
       integer :: NATYP   = -1
       integer :: LMGF0D  = -1
       integer :: NCLSD   = -1
-      integer :: NACLSD  = -1
+      integer :: NACLSMAX  = -1
       integer :: i_iteration = -1 
       integer :: N_iteration = -1
       integer :: mit_bry = 1
@@ -211,12 +211,12 @@ contains
       if (.not. allocated(t_tgmat%gref)) then
          if (.not. t_tgmat%gref_to_file) then
             if(nranks.eq.1) then
-               !allocate gref(NACLSD*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IELAST
-               allocate(t_tgmat%gref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
+               !allocate gref(NACLSMAX*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IELAST
+               allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_tgmat%gref'
             else
-               !allocate gref(NACLSD*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
-               allocate(t_tgmat%gref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
+               !allocate gref(NACLSMAX*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
+               allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_tgmat%gref for mpi'
             end if
          else
@@ -472,7 +472,7 @@ contains
     call MPI_Get_address(t_inc%NATYP ,        disp1(6), ierr)
     call MPI_Get_address(t_inc%LMGF0D,        disp1(7), ierr)
     call MPI_Get_address(t_inc%NCLSD ,        disp1(8), ierr)
-    call MPI_Get_address(t_inc%NACLSD,        disp1(9), ierr)
+    call MPI_Get_address(t_inc%NACLSMAX,      disp1(9), ierr)
     call MPI_Get_address(t_inc%i_iteration,  disp1(10), ierr)
     call MPI_Get_address(t_inc%N_iteration,  disp1(11), ierr)
     call MPI_Get_address(t_inc%mit_bry,      disp1(12), ierr)
@@ -659,10 +659,10 @@ contains
       if (.not. allocated(t_lloyd%dgref)) then
          if (.not. t_lloyd%dgref_to_file) then
             if(nranks.eq.1) then
-               allocate(t_lloyd%dgref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
+               allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_lloyd%dgref'
             else
-               allocate(t_lloyd%dgref(t_inc%NACLSD*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
+               allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
                if(ierr/=0) stop 'Problem allocating t_lloyd%dgref for mpi'
             end if
          else

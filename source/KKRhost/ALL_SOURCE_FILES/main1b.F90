@@ -842,6 +842,8 @@ contains
 #ifdef CPP_TIMING
             call timing_start('main1b - calctref13')
 #endif
+            TREFLL(:,:,:) = CZERO
+            DTREFLL(:,:,:) = CZERO
             do I1 = 1,NREF
                call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,WN1,WN2,  &  ! LLY
                   ALPHAREF(0,I1),DALPHAREF(0,I1),LMAX+1,LMGF0D)              ! LLY
@@ -851,11 +853,6 @@ contains
                   DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
                   DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
                enddo
-               write(8800+myrank,*) 'atom', i1, ERYD,VREF(I1),RMTREF(I1),LMAX
-               write(8810+myrank,*) 'atom', i1, ALPHAREF(0,I1)
-               write(8820+myrank,*) 'atom', i1, DALPHAREF(0,I1),LMAX+1,LMGF0D
-               write(8830+myrank,*) 'atom', i1, TREFLL(:,:,i1)
-               write(8840+myrank,*) 'atom', i1, DTREFLL(:,:,i1)
           
                if(test('rhoqtest')) then
                   call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),wlength,lmmaxd,ie,trefll)

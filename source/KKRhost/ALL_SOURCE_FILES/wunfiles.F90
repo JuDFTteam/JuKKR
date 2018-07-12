@@ -667,7 +667,7 @@ contains
       t_inc%NATYP    = NATYP
       t_inc%LMGF0D   = (LMAX+1)**2  ! see main1b
       t_inc%NCLSD    = NCLS
-      t_inc%NACLSD   = NACLSMAX
+      t_inc%NACLSMAX   = NACLSMAX
       t_inc%NSHELL0  = NSHELL(0)
       IF(OPT('NEWSOSOL')) t_inc%NEWSOSOL = .true.
       IF(OPT('deci-out')) t_inc%deci_out = .true.
