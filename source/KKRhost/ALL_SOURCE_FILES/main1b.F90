@@ -352,6 +352,9 @@ contains
          end if
 
          if ( ( OPT('KKRFLEX ') ) ) then
+            !! Green functions has (lmmaxd*natomimp)**2 double complex (i.e. factor '4') values
+            !RECLENGTH = WLENGTH*4*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD
+            !at the moment kkrflex_green file is only written with single precision (factor'2')
             RECLENGTH = WLENGTH*2*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD
             ! sometimes (lmax=2) the record length might be too small to store the parameters, then reclength needs to be bigger
             if(RECLENGTH<8*IELAST+6) then

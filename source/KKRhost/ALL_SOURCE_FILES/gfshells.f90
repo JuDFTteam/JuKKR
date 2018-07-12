@@ -37,6 +37,7 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
   integer :: nb, i, j, pos, ii, io, ns, in, ndim, nsize, ihost, ierr
   character (len=9) :: str9
   logical :: lsurf, opt
+  integer :: nofgij_with_diag
   ! ..
   ! .. External subroutines
   external :: impcheck, impcoefs, shellgen2k, opt
@@ -172,6 +173,7 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
     ! avoid considering again the diagonal elements
 
     nofgij = 0
+    nofgij_with_diag = 0
     do i = 1, natomimp
       nb = (i-1)*natomimp
       do j = 1, natomimp
@@ -189,6 +191,10 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
             jofgij(nofgij) = j
             ijtabcalc(nb+j) = 1
           end if
+          ! increment counter that includes diagonal elements
+          if ((atomimp(j)>=0)) then
+            nofgij_with_diag = nofgij_with_diag + 1
+          end if
         end do
       end if
     end do
@@ -198,6 +204,10 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
   call shellgen2k(icc, natomimp, rclsimp(1,1), atomimp(1), nofgij, iofgij, &
     jofgij, nsymat, rsymat, isymindex, rotname, nshell, ratom(1,1), nsh1, &
     nsh2, ish, jsh, ijtabsym, ijtabsh, ijtabcalc, 2, nsheld)
+
+  ! after shells have been created reset nofgij to nofgij_with_diag.
+  ! Otherwise a segmentation fault occurs in kkrflex (in rotgll: ijtabsh etc too small)
+  nofgij = nofgij_with_diag
 
   ! **********************************************************************
 

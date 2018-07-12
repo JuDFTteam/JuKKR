@@ -22,7 +22,7 @@ SUBROUTINE rotgll(gmatll,natomimp,ijtabsym,ijtabsh,  &
 ! *                                                                    *
 ! **********************************************************************
 use mod_mympi, only: myrank, master
-      Use mod_datatypes, Only: dp
+Use mod_datatypes, Only: dp, sp
 
 IMPLICIT NONE
 !     ..
@@ -106,7 +106,6 @@ END DO
 !***********************************************************************
 
 !     visualise Gij
-
 IF ( test('Gmatij  ') ) THEN
   WRITE (1337,'(/,4X,70("+"),/,4X,A,I4)')  &
       'cluster G_ij matrices for i,j = 1,',natomimp
@@ -175,7 +174,9 @@ IF ( igf /= 0 ) THEN
 #else
     irec = icall
 #endif
-  WRITE(888,REC=irec) gclust
+  ! force single precision complex writeout to minimize file size etc.
+  ! maybe this can be removed in the future
+  WRITE(888,REC=irec) cmplx(gclust, kind=sp)
   IF ( ( opt('GPLAIN  ') ) ) THEN
     WRITE(8888,'(50000E25.16)') gclust
   endif
