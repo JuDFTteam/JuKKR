@@ -895,6 +895,9 @@ program kkrcode
      IJTABCALC_I,ILM_MAP,GSH)
   ! End of deallocation
 
+  ! print memory report to stdout
+  if (t_inc%i_write>0) call memocc(0,0,'count','stop')
+
 #ifdef CPP_MPI
   ! finalize MPI
   call MPI_Finalize(ierr)
@@ -902,8 +905,6 @@ program kkrcode
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< close allocated arrays and finalize MPI !!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-  call memocc(0,0,'count','stop')
 
 end program
 
