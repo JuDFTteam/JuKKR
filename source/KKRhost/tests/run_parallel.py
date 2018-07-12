@@ -31,6 +31,9 @@ if test_coverage<0:
     if test_coverage in [-14]:
         npara_pairs = [[1,8]]
         modes = ['mpi']
+    if test_coverage -6:
+        # for FERMIOUT option nranks<=natom needed
+        npara_pairs = [[1,2], [1,3], [1,4]]
     test_coverage = -test_coverage
 
 # loop over all combinations
