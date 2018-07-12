@@ -36,7 +36,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   real (kind=dp) :: alat           ! lattice constant A
   real (kind=dp) :: rcut, rcutxy
   real (kind=dp) :: rbasis(3, naez+nembd) ! pos. of basis atoms in EZ
-  real (kind=dp) :: rcls(3, naclsd, ncls) ! real space position of atom in
+  real (kind=dp) :: rcls(3, naclsd, nclsd) ! real space position of atom in
                                           ! cluster
   real (kind=dp) :: rr(3, 0:nrd)   ! set of lattice vectors
   real (kind=dp) :: zat(natyp)     ! nucleus charge
@@ -48,7 +48,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
 
   integer :: cls(naez+nembd)       ! type of cluster around atom
   integer :: kaoez(natyp, naez+nembd) ! type of atom at position in EZ
-  integer :: nacls(ncls)           ! number of atoms in cluster
+  integer :: nacls(nclsd)           ! number of atoms in cluster
   integer :: atom(naclsd, naez+nembd) ! index to atom in elem/cell at site in
                                       ! cluster
   integer :: ezoa(naclsd, naez+nembd) ! index to bravais lattice  at site in
@@ -58,7 +58,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   integer :: ilay, n1, ir, isite, jsite, iat1, na, number, maxnumber, & ! IX,
     pos, ia, in, ib, ii, jatom, icu, ic, iat, i1, icluster, nclsall
   integer :: iatom(naclsd), iezoa(naclsd), isort(naclsd), &
-    icouplmat(naez, naez), irep(ncls) ! representative atom of cluster
+    icouplmat(naez, naez), irep(nclsd) ! representative atom of cluster
                                       ! (inverse of CLS)
   integer :: irefpot(naez+nembd), nrefpot
   real (kind=dp) :: rmtrefat(naez+nembd), rmtref1(naez+nembd)

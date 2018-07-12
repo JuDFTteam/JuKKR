@@ -516,7 +516,7 @@ contains
          stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
 
       ! Set the calculation of several parameters
-      !NREFD        = NREF
+      NREFD        = NREF
 
       IRM = IRMD
 

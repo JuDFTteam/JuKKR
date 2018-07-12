@@ -307,11 +307,11 @@ program kkrcode
      call main1b()
      call timing_stop('main1b')
      if(test('STOP1B  '))then
+       if(.not. OPT('WRTGREEN') .and. myrank==master) write(*,*) 'done with WRTGREEN step'
+       if(myrank==master) write(*,*) 'Stop after main1b'
 #ifdef CPP_MPI
         call MPI_Finalize(ierr)
 #endif
-       if(.not. OPT('WRTGREEN')) write(*,*) 'done with WRTGREEN step'
-       if(myrank==master) write(*,*) 'Stop after main1b'
        stop
      end if!test
 
