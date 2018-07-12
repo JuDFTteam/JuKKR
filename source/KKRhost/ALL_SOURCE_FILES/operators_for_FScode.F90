@@ -220,13 +220,13 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
     
     ! done with preparations, call normcoeff routines that construct operators
     if(myrank==master) write(*,*) 'Computing spin operator'
-    CALL NORMCOEFF_SO(NATYP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_ALL,t_params%THETAS,t_params%NTCELL,t_params%IFUNM,t_params%IPAN,t_params%LMSP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_params%DRDI,t_params%IRWS,1+KORBIT, 0)
+    CALL NORMCOEFF_SO(NATYP, t_params%IRCUT,t_params%LMMAXD/(1+KORBIT),PNS_SO_ALL,t_params%THETAS,t_params%NTCELL,t_params%IFUNM,t_params%IPAN,t_params%LMSP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_params%DRDI,t_params%IRWS,1+KORBIT, 0)
        
     if(myrank==master) write(*,*) 'Computing torq operator'
-    CALL NORMCOEFF_SO_TORQ(NATYP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_ALL,t_params%NTCELL,t_params%IFUNM,t_params%IPAN,t_params%LMSP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_params%DRDI,t_params%IRWS,t_params%VISP,t_inc%NSPIN,t_params%VINS,t_params%IRMIN,0)
+    CALL NORMCOEFF_SO_TORQ(NATYP, t_params%IRCUT,t_params%LMMAXD/(1+KORBIT),PNS_SO_ALL,t_params%NTCELL,t_params%IFUNM,t_params%IPAN,t_params%LMSP,t_inc%KVREL,t_params%CLEB,t_params%ICLEB,t_params%IEND,t_params%DRDI,t_params%IRWS,t_params%VISP,t_inc%NSPIN,t_params%VINS,t_params%IRMIN,0)
     
     if(myrank==master) write(*,*) 'Computing spinflux operator'
-    CALL NORMCOEFF_SO_SPINFLUX(NATYP, t_params%IRCUT,t_params%LMMAXD/2,PNS_SO_ALL,t_inc%KVREL,t_params%DRDI,0)
+    CALL NORMCOEFF_SO_SPINFLUX(NATYP, t_params%IRCUT,t_params%LMMAXD/(1+KORBIT),PNS_SO_ALL,t_inc%KVREL,t_params%DRDI,0)
 
   end if ! .not. TEST('IMP_ONLY')
 

@@ -17,7 +17,7 @@ subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, &
   integer :: iend, lmmax, irws, nspin, iatom, irmin ! derivative dr/di  &
   ! spherical part of the potential  &
   ! non-sph. part of the potential
-  complex (kind=dp) :: rll(irmd, lmmaxd, lmmaxd), dens
+  complex (kind=dp) :: rll(irmd, lmmax, lmmax), dens
   ! local variables
   real (kind=dp) :: cleb(*), drdi(irmd), visp(irmd, *), &
     vins(irmind:irmd, lmpotd, *)

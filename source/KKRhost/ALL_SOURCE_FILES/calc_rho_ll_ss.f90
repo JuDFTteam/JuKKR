@@ -11,7 +11,7 @@ subroutine calc_rho_ll_ss(lmmax, rll, ircut, ipan, icell, thetas, cleb, icleb, &
 
   ! local variables
   ! ,DENS(:,:,:)
-  complex (kind=dp) :: rll(irmd, lmmaxd, lmmaxd), dens
+  complex (kind=dp) :: rll(irmd, lmmax, lmmax), dens
   real (kind=dp) :: cleb(*), thetas(irid, nfund, *), drdi(irmd) ! RGES_W(:,:,:,:),
                                                                 ! &
   integer :: icleb(ncleb, 4), ifunm(natypd, lmpotd), lmsp(natypd, *), &

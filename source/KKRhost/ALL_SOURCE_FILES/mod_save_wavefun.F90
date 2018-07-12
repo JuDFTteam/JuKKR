@@ -109,7 +109,14 @@ contains
            write(1337, '(A)') 'reset Nwfsavemax to 0'
            t_wavefunctions%Nwfsavemax=0
         end if
-
+        
+        ! avoid unnessesary large allocations of arrays
+        if( t_wavefunctions%Nwfsavemax > nat_myrank*ne_myrank ) then
+           t_wavefunctions%Nwfsavemax = nat_myrank*ne_myrank
+           if(t_inc%i_write>0) write(1337,'(A,I5,A,I9)') '  rank',myrank,' reset Nwfsavemax to maximal needed number for this thread:',t_wavefunctions%Nwfsavemax
+        end if
+        
+        ! write out info about allocation for wf storage
         if(myrank==master) then
 
            write(message,"(A)") '   ==> find_isave_wavefun '
@@ -137,13 +144,6 @@ contains
            write(*, '(A)') trim(message)
 
         end if
-
-        ! avoid unnessesary large allocations of arrays
-        if( t_wavefunctions%Nwfsavemax > nat_myrank*ne_myrank ) then
-           t_wavefunctions%Nwfsavemax = nat_myrank*ne_myrank
-           if(t_inc%i_write>0) write(1337,'(A,I5,A,I9)') '  rank',myrank,' reset Nwfsavemax to maximal needed number for this thread:',t_wavefunctions%Nwfsavemax
-        end if
-
 
         ! allocate store arrays in t_wavefunctions
         if(t_wavefunctions%Nwfsavemax>0) then

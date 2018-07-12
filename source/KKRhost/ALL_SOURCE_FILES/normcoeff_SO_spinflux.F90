@@ -27,10 +27,12 @@ use global_variables
 
 !..
 !.. Scalar Arguments ..
-      INTEGER          NATOM, mode, LMMAX,KSRA
+      INTEGER          NATOM, mode, KSRA
+!< lmsize without spin degree of freedom (in contrast to lmmaxd) 
+integer, intent(in) :: lmmax
 !..
 !.. Array Arguments ..
-      complex (kind=dp)   PNS(NSPIND*LMMAXD,NSPIND*LMMAXD,IRMD,2,NATOM)
+      complex (kind=dp)   PNS(NSPIND*LMMAX,NSPIND*LMMAX,IRMD,2,NATOM)
       real (kind=dp) DRDI(IRMD,NATYPD)
       INTEGER          IRCUT(0:IPAND,NATYPD)
 !..
@@ -74,14 +76,12 @@ endif
 IF (t_inc%i_write>0) THEN
   WRITE(1337,*) "NSRA",nsra
   WRITE(1337,*) "LMMAX",lmmax
-  WRITE(1337,*) "LMMAXD",lmmaxd
   WRITE(1337,*) "LMMAXSO",lmmaxso
 endif
 
-
 allocate(rll(irmd,lmmax,lmmax,2,2,2,natom))
 allocate(rll_12(lmmax))
-allocate(dens(lmmaxd,lmmaxd,2,2,2,2,natom))
+allocate(dens(lmmax,lmmax,2,2,2,2,natom))
 allocate(spinflux(lmmaxso,lmmaxso,natom,3))
 
 rll =czero
@@ -98,7 +98,7 @@ i1_start = 1
 i1_end   = natom
 #endif
 
-! rewrite the wavefunctions in RLL arrays of 1,2*LMMAXD
+! rewrite the wavefunctions in RLL arrays of 1,2*LMMAX
 DO i1=i1_start, i1_end
   IF(t_inc%i_write>0) WRITE(1337,*) 'ATOM',i1, i1_start, i1_end
   
@@ -114,14 +114,14 @@ DO i1=i1_start, i1_end
       
       DO i1sp1=1,2
         DO i1sp2=1,2
-          DO lm1 =1,lmmaxd
-            lmsp1=(i1sp1-1)*lmmaxd+lm1
-            DO lm2 =1,lmmaxd
-              lmsp2=(i1sp2-1)*lmmaxd+lm2
+          DO lm1 =1,lmmax
+            lmsp1=(i1sp1-1)*lmmax+lm1
+            DO lm2 =1,lmmax
+              lmsp2=(i1sp2-1)*lmmax+lm2
               rll(ir,lm2,lm1,i1sp2,i1sp1,insra,i1)=  &
                   pns(lmsp2,lmsp1,ir,insra,i1)
-            END DO      !LM1=1,LMMAXD
-          END DO      !LM1=1,LMMAXD
+            END DO      !LM1=1,LMMAX
+          END DO      !LM1=1,LMMAX
         END DO      !ISP1=1,2
       END DO      !ISP1=1,2
       
@@ -178,10 +178,10 @@ END DO             !I1
 
 #ifdef CPP_MPI
 ! finally gather DENS on master in case of MPI run
-allocate(work(lmmaxd,lmmaxd,2,2,2,2,natom), stat=ierr)
+allocate(work(lmmax,lmmax,2,2,2,2,natom), stat=ierr)
 IF(ierr /= 0) STOP  &
     'Error allocating work for MPI comm of DENS in normcoeff_spinf'
-ihelp = lmmaxd*lmmaxd*2*2*2*2*natom
+ihelp = lmmax*lmmax*2*2*2*2*natom
 CALL mpi_reduce(dens, work, ihelp, mpi_double_complex,  &
     mpi_sum, master,t_mpi_c_grid%mympi_comm_ie,ierr)
 IF(ierr /= mpi_success) STOP  &

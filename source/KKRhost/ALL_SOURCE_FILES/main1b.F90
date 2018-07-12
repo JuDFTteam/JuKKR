@@ -1331,17 +1331,32 @@ contains
          end do ! ie-loop
 
          ! done with GREENIMP option, stopping now
-
-        ! done with GREENIMP option, stopping now
-        if(.not. OPT('OPERATOR')) then
-          if(myrank==master) write(*,*) 'done with GREENIMP, stop here!'
+         if(.not. OPT('OPERATOR')) then
+           if(myrank==master) write(*,*) 'done with GREENIMP, stop here!'
 #ifdef CPP_MPI
-          call MPI_FINALIZE(ierr)
+           call MPI_FINALIZE(ierr)
 #endif
-          stop
-        end if
+           stop
+         end if
 
       ENDIF ! GREENIMP .or. OPERATOR
+
+! ------------------------------------------------------------------------
+! determine the spin operator, torque operator and spin flux operator
+! used in FScode do compute spin expectation values etc. within Boltzmann
+! formalism
+! ------------------------------------------------------------------------
+         if (OPT('OPERATOR')) then
+#ifdef CPP_TIMING
+           call timing_start('main1b - operator')
+#endif
+
+           call operators_for_FScode(KORBIT, operator_imp)
+
+#ifdef CPP_TIMING
+           call timing_stop('main1b - operator')
+#endif
+         end if ! OPERATOR
 
 ! ----------------------------------------------------------------------
 !
