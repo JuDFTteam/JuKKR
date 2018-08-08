@@ -208,17 +208,20 @@ module MadelungPotential_mod
   !------------------------------------------------------------------------------
   subroutine sumAC(ac, cmom_save, cminst_save, zat_i2, smat_i2, lpot, cleb, icleb, iend, loflm, dfac)
   use Constants_mod, only: pi
-    double precision, intent(inout) :: ac(:)
-    double precision, intent(in) :: cmom_save(:)
-    double precision, intent(in) :: cminst_save(:)
-    double precision, intent(in) :: zat_i2
-    double precision, intent(in) :: smat_i2(:)
-    double precision, intent(in) :: cleb(:)
-    integer, intent(in) :: iend
-    double precision, intent(in) :: dfac(0:,0:)
-    integer, intent(in) :: icleb(:,:)
-    integer, intent(in) :: loflm(:)
-    integer, intent(in) :: lpot
+    double precision, intent(inout) :: ac(:) ! multipole moments of the potential in the local atom i1
+    double precision, intent(in) :: cmom_save(:) ! multipole moments inside the MT sphere of the remote atom i2
+    double precision, intent(in) :: cminst_save(:) ! multipole moments in the interstitial of the remote atom i2
+    double precision, intent(in) :: zat_i2 ! nuclear charge of the remote atom i2
+    double precision, intent(in) :: smat_i2(:) ! Madelung matrix of the remote atom i2 
+    double precision, intent(in) :: cleb(:) ! Clebsh-Gordon coefficients
+    integer, intent(in) :: iend ! number of Clebsh-Gordon coefficients
+    double precision, intent(in) :: dfac(0:,0:) ! precomputed factorials
+! --> calculate:                                (2*(l+l')-1)!!
+!                 dfac(l,l') = (4*pi)**2 *  ----------------------
+!                                           (2*l+1)!! * (2*l'+1)!!
+    integer, intent(in) :: icleb(:,:) ! Clebsh-Gordon indices
+    integer, intent(in) :: loflm(:) ! retrieve ell(lm)
+    integer, intent(in) :: lpot ! angular momentum truncation
 
     integer :: lm1, lm2, lm3, i, lmmax, lmpot, ell
     double precision :: avmad((lpot+1)**2,(lpot+1)**2)
@@ -236,7 +239,8 @@ module MadelungPotential_mod
 
       ! --> this loop has to be calculated only for l1+l2=l3
 
-      avmad(lm1,lm2) = avmad(lm1,lm2) + 2.d0*dfac(loflm(lm1),loflm(lm2))*smat_i2(lm3)*cleb(i)
+      avmad(lm1,lm2) = avmad(lm1,lm2) + 2.d0*dfac(loflm(lm1),loflm(lm2))*cleb(i)*smat_i2(lm3)
+      !             here, the prefactor 2.d0 is due to Rydberg units
     enddo ! i
 
     ! --> calculate bvmad(lm1)
@@ -245,6 +249,10 @@ module MadelungPotential_mod
 
     do lm1 = 1, lmpot
       ell = loflm(lm1)
+      ! bvmat takes care of the correct interaction of nuclei:
+      ! a prefactor of 4pi/(2l+1) comes from the Poisson equation
+      ! another prefactor of -2 is because of Rydberg units: V(r) = -2Z/r
+      ! the interaction is diagonal in lm
       bvmad(lm1) = bvmad(lm1) - (8.d0*pi/(2*ell + 1.d0))*smat_i2(lm1)
     enddo ! lm1
 
@@ -254,7 +262,7 @@ module MadelungPotential_mod
       !---> take moments of sphere
 
       do lm2 = 1, lmmax
-        ac(lm1) = ac(lm1) + avmad(lm1,lm2)*(cmom_save(lm2) + cminst_save(lm2))
+        ac(lm1) = ac(lm1) + avmad(lm1,lm2)*(cmom_save(lm2) + cminst_save(lm2)) ! matrix multiply with the total multipole moments
       enddo ! lm2
     enddo ! lm1
 
