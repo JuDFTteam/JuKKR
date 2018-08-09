@@ -515,7 +515,7 @@ contains
          stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
 
       ! Set the calculation of several parameters
-      NREFD = naez+nemb ! can be changed later on when it is determined in clsgen_tb
+      NREFD = naez!+nemb ! can be changed later on when it is determined in clsgen_tb
 
       IRM = IRMD
 
@@ -627,11 +627,14 @@ contains
          tleft, tright, rmtref, rmtrefat, vref, refpot, nref, rcls, rcutz, rcutxy, &
          alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprinc)
 
+      write(*,*) 'after clsgen', nref, nrefd
+
       ! overwrite nprincd if chosen too small
       if ( nprincd<nprinc ) then
         nlayer = naez/nprinc
         if ( nlayer*nprinc /= naez ) nprinc = naez
         write(*,*) 'Automatically overwriting nprincd with ', nprinc
+        write(1337,*) 'Automatically overwriting nprincd with ', nprinc
         nprincd = nprinc
         ! update parameter that depend on nprincd
         NDIM_SLABINV = NPRINCD*LMMAXD

@@ -214,6 +214,7 @@ contains
          IQCALC,DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,NRREL,     &
          IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,BZKP,VOLCUB,WEZ,    &
          NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,RCLSIMP)
+               nref = 1
      
       if(test('rhoqtest')) then
          open(9889, access='direct', file='tau0_k', form='unformatted', recl=(LMMAXD*LMMAXD+1)*4) ! lm blocks
@@ -489,6 +490,7 @@ contains
 #ifdef CPP_TIMING
                call timing_start('main1b - calctref13')
 #endif
+               write(*,*) 'call calctref', nref, nrefd, shape(rmtref)
                TREFLL(:,:,:) = CZERO
                if ( KREL.EQ.0 ) then
                   do I1 = 1,NREF
@@ -847,6 +849,7 @@ contains
 #endif
             TREFLL(:,:,:) = CZERO
             DTREFLL(:,:,:) = CZERO
+            write(*,*) 'call calctref', nref, nrefd, shape(rmtref)
             do I1 = 1,NREF
                call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,WN1,WN2,  &  ! LLY
                   ALPHAREF(0,I1),DALPHAREF(0,I1),LMAX+1,LMGF0D)              ! LLY

@@ -278,7 +278,8 @@ rwthhybrid: OPENMPFLAGS = -qopenmp
 
 
 # standard debug flags
-DEBUGFLAGS = -O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
+DEBUGFLAGS = -O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -module $(OBJ) -g -sox
+#DEBUGFLAGS = -O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
 
 debug:       FFLAGS = $(DEBUGFLAGS)
 macdebug:       FFLAGS = $(DEBUGFLAGS)

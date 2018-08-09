@@ -208,10 +208,11 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   do isite = 2, naez + nemb
     lfound = .false.
     do jsite = 1, isite - 1
-      if (abs(rmtrefat(isite)-rmtrefat(jsite))+abs(vrefat(isite)-vrefat( &
-        jsite))<=tol) then
+     write(*,*) 'check clsgen', RMTREFAT(ISITE),RMTREFAT(JSITE),VREFAT(ISITE),VREFAT(JSITE),naez,nemb,nrefpot
+      if (abs(rmtrefat(isite)-rmtrefat(jsite))+abs(vrefat(isite)-vrefat(jsite))<=tol) then
         irefpot(isite) = irefpot(jsite)
         lfound = .true.
+        write(*,*) 'increment', isite, jsite
       end if
     end do
     if (.not. lfound) then
@@ -234,6 +235,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   end do
   vref(1:nrefpot) = vref1(1:nrefpot)
 
+      write(*,*) 'final nrefpot', nrefpot
 
 
   icluster = 1
