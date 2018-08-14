@@ -1329,7 +1329,7 @@ module ProcessKKRresults_mod
 
     write(*,"(/,3x,70('+'),/,15x,'TOTAL ENERGY in ryd. : ',        f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))") &
                   total_energies(1), total_energies(1)*13.6058D0
-    write(*,"(/,3x,70('+'),/,15x,'Weinert total energy in ryd. : ',f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))") &
+    write(*,"(/,3x,70('+'),/, 7x,'Weinert total energy in ryd. : ',f21.8,/15x,'                 eV  : ',f21.8,/,3x,70('+'))") &
                   total_energies(2), total_energies(2)*13.6058D0
   endsubroutine ! print
 
