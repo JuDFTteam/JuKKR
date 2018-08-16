@@ -276,7 +276,8 @@ contains
                write(887766, '(999999999ES21.9)') CLEB(:,1)
                write(887766, '(A25)') 'ICLEB= '
                write(887766, '(999999999I9)') ICLEB(:,:)
-               write(887766, '(A25,999999999ES21.9)') 'EZ= ', EZ
+               write(887766, '(A25)') 'EZ= '
+               write(887766, '(2ES21.9)') EZ
                write(887766, *) 
                write(887766, '(A25)') 'atom-dependent input:'
                write(887766, *) 

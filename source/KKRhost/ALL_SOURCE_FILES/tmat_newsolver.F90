@@ -107,6 +107,9 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
    logical, external :: test, opt
    integer :: mu0, nscoef
 
+   ! BdG
+   character(len=100) :: filename
+
    lmsize = lmmaxd/2
 
    ! .. Allocation of local arrays
@@ -406,6 +409,31 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,LMMAXSO, &
             1,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),   &
             GMATPREFACTOR)
+
+         if (test('BdG_dev ')) then
+           write(*,*), 'Energy:', ie, eryd
+           write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk_atom_',i1,'_energ_',ie,'.dat'
+           open(888888, file=trim(filename), form='formatted')
+           write(888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=',4*(LMAX+1),' IRMDNEW=', IRMDNEW, ' ; ERYD=', ERYD
+           write(888888, '(2ES21.9)') jlk(:,:,ith)
+           close(888888)
+           write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_hlk_atom_',i1,'_energ_',ie,'.dat'
+           open(888888, file=trim(filename), form='formatted')
+           write(888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=',4*(LMAX+1),' IRMDNEW=', IRMDNEW, ' ; ERYD=', ERYD
+           write(888888, '(2ES21.9)') hlk(:,:,ith)
+           close(888888)
+           write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk2_atom_',i1,'_energ_',ie,'.dat'
+           open(888888, file=trim(filename), form='formatted')
+           write(888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=',4*(LMAX+1),' IRMDNEW=', IRMDNEW, ' ; ERYD=', ERYD
+           write(888888, '(2ES21.9)') jlk2(:,:,ith)
+           close(888888)
+           write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_hlk2_atom_',i1,'_energ_',ie,'.dat'
+           open(888888, file=trim(filename), form='formatted')
+           write(888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=',4*(LMAX+1),' IRMDNEW=', IRMDNEW, ' ; ERYD=', ERYD
+           write(888888, '(2ES21.9)') hlk2(:,:,ith)
+           close(888888)
+         end if
+
          ! Using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
             TMATSPH(:,ith)=CZERO
@@ -442,6 +470,18 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
             RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
             SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
          endif
+         if (test('BdG_dev ')) then
+           write(filename, '(A,I0.3,A,I0.3,A)') 'rll_atom_',i1,'_energ_',ie,'.dat'
+           open(888888, file=trim(filename), form='formatted')
+           write(888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso*nvec=',nvec*lmmaxso,' lmmaxso=',lmmaxso,' irmdnew=', irmdnew 
+           write(888888, '(2ES21.9)') rll(:,:,:,ith)
+           close(888888)
+           write(filename, '(A,I0.3,A,I0.3,A)') 'sll_atom_',i1,'_energ_',ie,'.dat'
+           open(888888, file=trim(filename), form='formatted')
+           write(888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso*nvec=',nvec*lmmaxso,' lmmaxso=',lmmaxso,' irmdnew=', irmdnew 
+           write(888888, '(2ES21.9)') sll(:,:,:,ith)
+           close(888888)
+         end if
 
          ! add spherical contribution of tmatrix
          if (USE_SRATRICK.EQ.1) then

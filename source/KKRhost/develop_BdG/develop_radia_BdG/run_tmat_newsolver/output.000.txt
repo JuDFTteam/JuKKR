@@ -1,0 +1,293 @@
+# serial: kkrjm_v2.3-152-g02c4a53_debug_20180816145415
+     Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                      for Bulk and Interfaces
+                    Juelich-Munich 2001 - 2018
+
+  Code version: v2.3-152-g02c4a53
+  Compile options: debug -O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -module ./OBJ -g -sox -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+  serial number for files: kkrjm_v2.3-152-g02c4a53_debug_20180816145415
+ 3D-calculation, adding run-option "full inv" for full inversion.
+         ABASIS         BBASIS         CBASIS
+     1.00000000     1.00000000     1.00000000
+--------------+--------------+--------------+----------------------------------
+          ALAT =      5.40225429
+ NSPIN 
+   2
+---+---------------------------------------------------------------------------
+ Cell information <SHAPE>:
+ INIPOL
+   0
+---+---+---+---+---+---+---+---+---+---+---------------------------------------
+---+---------------------------------------------------------------------------
+   INTERVX   INTERVY   INTERVZ
+        30        30        30
+---------+---------+---------+-------------------------------------------------
+ Parameters used for the cluster calculation
+ Clusters inside spheres with radius R =    2.60000000000000     
+---+---------------------------------------------------------------------------
+ RBASIS
+SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
+---+--------------+--------------+--------------+------------------------------
+   1     0.57735027     0.57735027     0.57735027   0.0   0.0   0   1  1
+ ATOMINFOC or ATOMINFO:
+ NATYP 
+   1
+   Z lmx     KFG cls pot ntc  MTFAC irns SITE  CONC
+---+---------------------------------------------------------------------------
+ 41.   0    0000   1   0   1  0.0000  -1    1  1.00000
+---+---+-------+---+---+---+-------+---+---------------------------------------
+---+---------------------------------------------------------------------------
+ NPOL=0, setting NSTEPS to 1
+ NSTEPS
+   1
+---+---------------------------------------------------------------------------
+ NPOL=0, setting IMIX= 0
+ NPOL=0, setting STRMIX= 0.
+ I12="                                        "
+ I13="potential                               "
+ I40="                                        "
+ I19="shapefun                                "
+ I25="scoef                                   "
+ lmax
+   2
+---+---------------------------------------------------------------------------
+          EMIN        EMAX        TK
+    0.723776    0.723776  200.000000
+-----------+-----------+-----------+-------------------------------------------
+   NPOL  NPNT1  NPNT2  NPNT3
+      0      0      1      0
+------+------+------+------+---------------------------------------------------
+------+------+------+----------------------------------------------------------
+  IFILE    IPE ISHIFT ESHIFT
+     13      1      0    0.000000
+------+------+------+-----------+----------------------------------------------
+ KSHAPE    IRM    INS   ICST INSREF
+      2    900      1      2      0
+------+------+------+------+------+--------------------------------------------
+   KCOR  KVREL    KWS   KHYP KHFIELD   KXC
+      2      1      2      0      0      2
+------+------+------+------+------+------+-------------------------------------
+    KTE   KPRE   KEFG  KVMAD 
+      1      1      0      0
+------+------+------+------+------+--------------------------------------------
+   IMIX    IGF    ICC
+      0      0      0
+------+------+------+------+---------------------------------------------------
+ ITDBRY
+     40
+------+------------------------------------------------------------------------
+      STRMIX        FCM       QBOUND
+    0.000000   20.000000    0.000000
+-----------+-----------+-----------+-------------------------------------------
+      BRYMIX
+    0.050000
+-----------+-------------------------------------------------------------------
+ external magnetic hfield     :         0.0000
+ VCONST                       :       0.000000
+ mixing factor used           :       0.000000
+ convergence quality required :       1.00D-08
+ make use of CPA algorithm    :             NO
+
+                                 check of dimension-data consistency
+                                 -----------------------------------
+                                        lmax   : (     2,     2)
+                                        natyp  : (     1,     1)
+                                        irm    : (   900,   900)
+                                        nspin  : (     2,     2)
+
+
+
+                    full potential calculation - cut off of non spherical potential
+ >
+
+                               representive atom no.  1 irns :   -1 irnsd :  890
+
+
+                        spin polarized calculation
+                      s.r.a. calculation                        
+                      core relaxation nonsra                    
+                      exact cell treatment (shape correction)   
+                      Vosko,Wilk,Nusair      exchange-correlation potential
+                      non spherical input potential for cluster 
+                      using  2-th. born approximation 
+ *******************************************************************************
+ IXIPOL
+   0
+---+---+---+---+---+---+---+---+---+---+---------------------------------------
+    NAEZ    NEMB  
+       1       0
+-------+-------+-------+-------------------------------------------------------
+    NCLS    NREF   NINEQ
+       1       0       1
+-------+-------+-------+-------------------------------------------------------
+---+---+---+---+---+---+---+---+---+---+---------------------------------------
+
+-------+-------+-------+-------+-------+-------+-------+-----------------------
+-------------------------------------------------------------------------------
+ EXECUTION OPTIONS:
+ NEWSOSOL//full inv//        //        //        //        //        //        
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+ TEST OPTIONS:
+ BdG_dev //        //        //        //        //        //        //        
+         //        //        //        //        //        //        //        
+
+-------------------------------------------------------------------------------
+ < MEMWFSAVE >, use default:           0
+ < UNITMEMWFSAVE >, use default:           2 
+ (MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)
+-------------------------------------------------------------------------------
+ KMROT
+       0
+-------+-------+-------+-------------------------------------------------------
+  >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< 
+===============================================================================
+                         LATTIX99: bulk geometry mode
+===============================================================================
+ 
+     Lattice constants :  ALAT =  5.40225429     2*PI/ALAT =  1.16306730
+
+     Direct lattice cell vectors :
+
+         normalised (ALAT)                     a.u.
+         --------------------------------      --------------------------------
+     a_1: -0.577350  0.577350  0.577350         -3.118993  3.118993  3.118993
+     a_2:  0.577350 -0.577350  0.577350          3.118993 -3.118993  3.118993
+     a_3:  0.577350  0.577350 -0.577350          3.118993  3.118993 -3.118993
+         --------------------------------      --------------------------------
+ 
+     Unit cell volume :  V =    0.76980036 (ALAT**3) =   121.36771598 (a.u.**3)
+
+     WARNING : Unit cell volume inconsistent with the average WS-radius
+               Unit cell volume        =  121.36771598
+               NAEZ * WSRav^3 * 4*PI/3 =    0.00000000
+               difference              =  121.36771598
+
+     Reciprocal lattice cell vectors :
+
+         normalised (2*PI/ALAT)                1/a.u.
+         --------------------------------      --------------------------------
+     b_1:  0.000000  0.866025  0.866025          0.000000  1.007246  1.007246
+     b_2:  0.866025  0.000000  0.866025          1.007246  0.000000  1.007246
+     b_3:  0.866025  0.866025  0.000000          1.007246  1.007246  0.000000
+         --------------------------------      --------------------------------
+ 
+     < RRGEN > : generation of real space mesh RR(NR)
+
+          Radius R        :        9.232061 (ALAT    units)
+                 R**2     :       85.230947 (ALAT**2 units)
+          mesh divisions  :     9    9    9
+          vectors created :            3817
+ 
+===============================================================================
+                       SCALEVEC: scale site coordinates
+                                 bring all to CARTESIAN system
+===============================================================================
+ 
+     Site coordinates will not be scaled
+ CARTESIAN coordinates
+                                          ---> No transformation required
+
+            ---------------------------------------------------
+                    Positions of (ALL) generated sites
+                   in CARTESIAN coordinates (ALAT units)
+            ---------------------------------------------------
+               IQ       x           y           z       IT
+            ---------------------------------------------------
+                 1    0.577350    0.577350    0.577350  1
+            ---------------------------------------------------
+
+ >>> CLSGEN_TB: generation of cluster coordinates
+ RCUT =    2.60000000000000       RCUTXY =    2.60000000000000     
+ Spherical Clusters are created
+ clsgen_tb: cluster size of site:           1 :         113
+ clsgen_tb: Touching RMT of site:           1 :  0.500000000000003     
+ Clusters from clsgen_tb:
+CLSGEN_TB: Atom    1 Refpot    1 Rmtref 2.6700000 Vref 8.0000000 TB-cluster    1 Sites  113
+ Coupling matrix:
+   1 1
+  Sub clsgen_tb  exiting <<<<<<<<<<<<<
+ Dimension and Input Data CHECK
+   ncell :            1           1
+   nfun  :            8         289
+ <#Nb41 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ <#Nb41 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+Doing calculation with potential: MD5 (potential) = 847eb7b7b7d455bf75682d3503aa34c1
+Doing calculation with shapefun: MD5 (shapefun) = 1756bd412da3ba3503daf7a3f7ea67d8
+ 
+===============================================================================
+                    EPATHTB: generates a complex E contour
+===============================================================================
+ 
+     E min =     0.723776 (Ry)        Fermi energy =     0.723776 (Ry)
+     E max =     0.723776 (Ry)        Temperature  =   200.000000 (K )
+     --------------------------------------------------------------
+     Density-of-States calculation
+     Number of energy points :   1    broadening =    3.980 ( mRy )
+                                                 =   54.145 ( meV )
+ 
+ >>> SHAPE : IMAXSH( 165),NGSHD : 60000
+===============================================================================
+               BZKINT0: finding symmetry, setting BZ integration
+===============================================================================
+
+     < FINDGROUP > : Finding symmetry operations
+
+        ------------------------------------------------------------
+        3D symmetries:
+ found for this lattice: 48
+        ------------------------------------------------------------
+        E           C3alfa      C3beta      C3gamma     C3delta   
+        C3alfa-1    C3beta-1    C3gamma-1   C3delta-1   C2x       
+        C2y         C2z         C4x         C4y         C4z       
+        C4x-1       C4y-1       C4z-1       C2a         C2b       
+        C2c         C2d         C2e         C2f         IE        
+        IC3alfa     IC3beta     IC3gamma    IC3delta    IC3alfa-1 
+        IC3beta-1   IC3gamma-1  IC3delta-1  IC2x        IC2y      
+        IC2z        IC4x        IC4y        IC4z        IC4x-1    
+        IC4y-1      IC4z-1      IC2a        IC2b        IC2c      
+        IC2d        IC2e        IC2f      
+        ------------------------------------------------------------
+
+        Test option < fullBZ > or Run option < NEWSOSOL >:  overriding NSYMAT, generate full BZ k-mesh
+
+     < BZKMESH > : creating k-mesh, write to file kpoints
+
+        number of different k-meshes : 1
+        the direct lattice  1 symmetries will be used
+
+        -----------------------------------
+        k-mesh NofKs N kx N ky N kz vol BZ
+        -----------------------------------
+             1 27000   30   30   30  1.2990
+        -----------------------------------
+
+     <SYMTAUMAT> : rotation matrices acting on t/G/tau
+
+        ---------------------------------------------------------
+        ISYM            INV          Euler angles      Unitarity
+        ---------------------------------------------------------
+         1   E           0   0.00000   0.00000   0.00000   T
+        ---------------------------------------------------------
+
+     < GFSHELLS > : setting up indices of the GF blocks
+
+        Different shells for GF calculation :   1
+
+     < GFMASK > : set KKR matrix inversion algorithm
+
+        INVERSION algorithm used : FULL MATRIX                        
+
+===============================================================================
+                               < KKR0 finished >
+===============================================================================
+
+ atom:            1  NSRA:           2
+   ==> find_isave_wavefun
+   (maxmem given per rank for storage:           0.00MB
+    number of wavefunctions that fit in:          0
+    total memory needed for storage:           0.00MB
+    Ne=          1, Nat=          1
+    memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:           3.34MB)  <==
+    Number of saved wavefunctions per atom and energy:  1; save rll:T; save sll:F; save rllleft:F; save sllleft:F
+ energy:           1  (0.723775735100000,3.979555317000000E-003)

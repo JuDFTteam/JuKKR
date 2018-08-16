@@ -1,0 +1,18 @@
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !!! Most output written to output.myrank.txt files !!!
+ !!! please check these files as well               !!!
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                      for Bulk and Interfaces
+                    Juelich-Munich 2001 - 2018
+
+  Code version: v2.3-152-g02c4a53
+  Compile options: debug -O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -module ./OBJ -g -sox -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+  serial number for files: kkrjm_v2.3-152-g02c4a53_debug_20180816144953
+ final nrefpot           1
+ after clsgen           1           1
+ set nref           1
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ +++            SCF ITERATIONS START                +++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+started on 2018/ 8/16 at 14:49:54
