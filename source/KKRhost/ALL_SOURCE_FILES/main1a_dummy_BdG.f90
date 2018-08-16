@@ -94,7 +94,7 @@ subroutine main1a_dummy
         read(887766, *) dummy, IEND
         read(887766, *) dummy, LMPOTD
         read(887766, *) dummy, LLY
-        read(887766, *) dummy, DELTAE
+        read(887766, '(A,2ES21.9)') dummy, DELTAE
         read(887766, *) dummy, IDOLDAU
         read(887766, *) dummy, NCLEB
         read(887766, *) dummy, NCHEB

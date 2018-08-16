@@ -33,8 +33,8 @@ EMIN= 0.723775735132693   # EF
 EMAX= 0.723775735132693   # EF
 #EMIN= 0.7090698527797519   # EF-0.2eV
 #EMAX= 0.7384816174856341   # EF+0.2eV
-TEMPR= 200  36.938607335606024  # => 10meV, from: Im E = * pi * kB * TEMPR with kB=6.33622661443*10**-6 Ry/K (NPOL=0)
-#TEMPR= 3.6938607335606024  # => 1meV, from: Im E = * pi * kB * TEMPR with kB=6.33622661443*10**-6 Ry/K (NPOL=0)
+TEMPR= 200  36.938607335606024  # => 10meV, from: Im E = * pi * kB * T with kB=6.33622661443*10**-6 Ry/K
+#TEMPR= 3.6938607335606024  # => 1meV
 NPT1= 0
 NPT2= 1 
 NPT3= 0
@@ -58,7 +58,6 @@ NPAN_EQ=  15
 NCHEB=    12
 R_LOG=     0.55
 
-do
 
 ###################################
 # inputs for radial BdG program

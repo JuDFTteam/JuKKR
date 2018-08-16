@@ -35,6 +35,7 @@ rwthhybrid: FC=$(MPIFC)
 jureca: FC = mpif90
 # $(MPIFC)
 gfort: FC = gfortran
+BdGgfort: FC = gfortran
 gfortdebug: FC = gfortran
 ###  hazelhen  ###
 hazelhen:   FC = ftn
@@ -65,6 +66,7 @@ rwthhybrid:   COMPVER ='hybrid-rwth'
 jureca   : COMPVER='jureca'
 hazelhen   : COMPVER='hazelhen'
 gfort   : COMPVER='gfort'
+BdGgfort   : COMPVER='gfort'
 gfortdebug: COMPVER='gfort'
 
 
@@ -164,6 +166,7 @@ $(OBJ)/tinc_mod.o: $(SRC)/tinc_mod.f
 # serial:
 LLIBS  = -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 gfort: LLIBS  = -lblas -llapack -fopenmp
+BdGgfort: LLIBS  = -lblas -llapack -fopenmp
 gfortdebug: LLIBS  = -lblas -llapack -fopenmp
 rwthnag:  -llapack -lblas
 # mac libs:
@@ -244,6 +247,7 @@ hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID -D CPP_NOMD5
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 hazelhen: CPP = -D CPP_MPI -D CPP_TIMING
 gfort: CPP = -D CPP_TIMING -D CPP_NOMD5
+BdGgfort: CPP = -D CPP_TIMING -D CPP_NOMD5
 gfortdebug: CPP = -D CPP_TIMING -D CPP_NOMD5
 
 BdG: CPP= -D CPP_TIMING
@@ -260,6 +264,7 @@ FFLAGS = -O2 -r8 -module $(OBJ) -sox -traceback
 # Change to if flag is matched:
 mac: FFLAGS = -O2 -r8 -module $(OBJ) -traceback 
 gfort: FFLAGS= -O3 -ffree-line-length-none -fopenmp
+BdGgfort: FFLAGS= -O3 -ffree-line-length-none -fopenmp
 # -J$(OBJ)
 gfortdebug: FFLAGS= -O0 -ffree-line-length-none -W -Wall -fbounds-check -pedantic-errors -Wunderflow -Wextra -pedantic -fimplicit-none -fcheck=all -fbacktrace 
 #-ffpe-trap=zero,overflow,underflow -g
@@ -380,6 +385,7 @@ compile2_BdG: compile0 compile1_BdG $(OBJ)/main_tmat_runner.o
 
 # for BdG test:
 BdG: compile0 compile1_BdG compile2_BdG
+BdGgfort: compile0 compile1_BdG compile2_BdG
 BdGdebug: compile0 compile1_BdG compile2_BdG
 
 serial:   compile

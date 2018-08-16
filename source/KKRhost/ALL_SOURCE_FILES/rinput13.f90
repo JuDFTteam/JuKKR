@@ -1652,6 +1652,7 @@ contains
     npol = 7
     ! if (OPT('dos     ').OR.OPT('DOS     ')) NPOL = 0
     call ioinput('NPOL            ', uio, 1, 7, ier)
+    write(*,*) 'get NPOL ', uio, ier
     if (ier==0) then
       read (unit=uio, fmt=*) npol
       write (111, *) 'NPOL=', npol

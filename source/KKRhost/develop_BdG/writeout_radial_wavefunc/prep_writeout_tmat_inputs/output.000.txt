@@ -1,1 +1,0 @@
-# serial: kkrjm_v2.3-152-g02c4a53_debug_20180816144953
