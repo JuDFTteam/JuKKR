@@ -34,7 +34,42 @@ subroutine main1a_dummy
 
   integer :: i1_run, i1_start, i1_end, ierr,i_stat,i_all
 
+  ! for data import:
   character(len=25) dummy
+  integer :: ier
+  character (len=256) :: uio                             ! NCOLIO=256
+
+  ! BdG specific:
+  logical :: use_BdG
+  complex (kind=dp) :: delta_BdG
+
+
+  !================
+  ! start read-in
+
+  write(*,*) 'start reading BdG-inputs from inputcard ...'
+
+  call ioinput('use_BdG         ',uio,1,7,ier)
+  if (ier.eq.0) then
+    read (unit=uio,fmt=*) use_BdG
+    write(*,*) 'use_BdG= ', use_BdG
+  else
+    stop '[main1a_dummy] error "use_BdG" not found in inputcard'
+  endif
+
+  call ioinput('delta_BdG       ',uio,1,7,ier)
+  if (ier.eq.0) then
+    read (unit=uio,fmt=*) delta_BdG
+    write(*,*) 'delta_BdG= ', delta_BdG
+  else
+    stop '[main1a_dummy] error "delta_BdG" not found in inputcard'
+  endif
+
+  ! end read-in
+  !================
+
+
+  write(*,*) 'now read atom-specific input for tmat_newsolver'
 
   allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD),stat=i_stat)
   call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','main1a')
@@ -75,7 +110,6 @@ subroutine main1a_dummy
         read(887766, *) ICLEB(:,:)
         read(887766, *) dummy
         read(887766, '(2ES21.9)') EZ
-        write(*,*), 'EZ', EZ
         read(887766, *)
         read(887766, *) dummy
         read(887766, *)
@@ -99,6 +133,8 @@ subroutine main1a_dummy
         write(*,*) 'done reading tmat_newsolver input of test option BdG_dev'
       end if
     end if
+
+    write(*,*) 'start tmat_newsolver ...'
 
     call init_t_dtmatJij(t_inc,t_dtmatJij)
 

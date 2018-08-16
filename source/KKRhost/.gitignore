@@ -41,3 +41,17 @@ pgopti.dpi.lock
 pgopti.spi
 pgopti.spl
 HTML
+
+# BdG developments test outputs
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/clusters
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/couplings.dat
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/inputcard_generated.txt
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/meminfo00000
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/out_timing.000.txt
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/output.000.txt
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/rll_atom_001_energ_001.dat
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/rll_source_hlk2_atom_001_energ_001.dat
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/rll_source_hlk_atom_001_energ_001.dat
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/rll_source_jlk2_atom_001_energ_001.dat
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/rll_source_jlk_atom_001_energ_001.dat
+develop_BdG/develop_radial_BdG/run_tmat_newsolver/sll_atom_001_energ_001.dat
