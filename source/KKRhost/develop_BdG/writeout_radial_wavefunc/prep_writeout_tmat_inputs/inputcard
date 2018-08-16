@@ -58,3 +58,14 @@ NPAN_EQ=  15
 NCHEB=    12
 R_LOG=     0.55
 
+do
+
+###################################
+# inputs for radial BdG program
+###################################
+
+# switch to turn on/off BdG mode
+use_BdG= F
+
+# e-h coupling:
+delta_BdG= (0.0d0, 0.0d0)

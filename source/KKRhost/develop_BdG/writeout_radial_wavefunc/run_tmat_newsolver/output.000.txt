@@ -1,11 +1,11 @@
-# serial: kkrjm_v2.3-152-g02c4a53_debug_20180816145415
+# serial: kkrjm_v2.3-152-g02c4a53_debug_20180816160154
      Screened Korringa-Kohn-Rostoker Electronic Structure Code
                       for Bulk and Interfaces
                     Juelich-Munich 2001 - 2018
 
   Code version: v2.3-152-g02c4a53
   Compile options: debug -O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -module ./OBJ -g -sox -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
-  serial number for files: kkrjm_v2.3-152-g02c4a53_debug_20180816145415
+  serial number for files: kkrjm_v2.3-152-g02c4a53_debug_20180816160154
  3D-calculation, adding run-option "full inv" for full inversion.
          ABASIS         BBASIS         CBASIS
      1.00000000     1.00000000     1.00000000
