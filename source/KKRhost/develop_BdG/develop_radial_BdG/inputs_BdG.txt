@@ -1,0 +1,9 @@
+###################################
+# input file for radial BdG program
+###################################
+
+# switch to turn on/off BdG mode
+use_BdG= F
+
+# e-h coupling:
+delta= (0.0d0, 0.0d0)

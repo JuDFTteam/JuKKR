@@ -98,59 +98,9 @@ subroutine main1a_dummy
         close(887766)
         write(*,*) 'done reading tmat_newsolver input of test option BdG_dev'
       end if
-
-      if (i1==i1_start) open(887766, file='check_BdG_tmat_inputs.txt', form='formatted')
-      if (i1==1) then 
-        write(887766, '(A25)') 'global parameters:'
-        write(887766, *) 
-        write(887766, '(A25,I9)') 'IELAST= ', IELAST
-        write(887766, '(A25,I9)') 'NSPIN= ', NSPIN
-        write(887766, '(A25,I9)') 'LMAX= ', LMAX
-        write(887766, '(A25,I9)') 'NSRA= ', NSRA
-        write(887766, '(A25,I9)') 'IEND= ', IEND
-        write(887766, '(A25,I9)') 'LMPOTD= ', LMPOTD
-        write(887766, '(A25,I9)') 'LLY= ', LLY
-        write(887766, '(A25,2ES21.9)') 'DELTAE= ', DELTAE
-        write(887766, '(A25,I9)') 'IDOLDAU= ', IDOLDAU
-        write(887766, '(A25,I9)') 'NCLEB= ', NCLEB
-        write(887766, '(A25,I9)') 'NCHEB= ', NCHEB
-        write(887766, '(A25,I9)') 'NTOTD= ', NTOTD
-        write(887766, '(A25,I9)') 'MMAXD= ', MMAXD
-        write(887766, '(A25,I9)') 'NSPIND= ', NSPIND
-        write(887766, '(A25,I9)') 'IEMXD= ', IEMXD
-        write(887766, '(A25,I9)') 'NRMAXD= ', NRMAXD
-        write(887766, '(A25,I9)') 'NSPOTD= ', NSPOTD
-        write(887766, '(A25)') 'CLEB= '
-        write(887766, '(999999999ES21.9)') CLEB(:,1)
-        write(887766, '(A25)') 'ICLEB= '
-        write(887766, '(999999999I9)') ICLEB(:,:)
-        write(887766, '(A25)') 'EZ= '
-        write(887766, '(2ES21.9)') EZ
-        write(887766, *) 
-        write(887766, '(A25)') 'atom-dependent input:'
-        write(887766, *) 
-      end if 
-      write(887766, '(A25,I9)') 'I1= ', I1
-      write(887766, '(A25,I9)') 'IPOT= ', IPOT
-      write(887766, '(A25,I9)') 'NPAN_TOT= ', NPAN_TOT(I1)
-      write(887766, '(A25,I9)') 'LPOT= ', LOPT(I1)
-      write(887766, '(A25,999999999I9)') 'IPAN_INTERVALL= ', IPAN_INTERVALL(:,I1)
-      write(887766, '(A25,ES21.9)') 'ZAT= ', ZAT(I1)
-      write(887766, '(A25,ES21.9)') 'PHI= ', PHI(I1)
-      write(887766, '(A25,ES21.9)') 'THETA= ', THETA(I1)
-      write(887766, '(A25,ES21.9)') 'SOCSCALE= ', SOCSCALE(I1)
-      write(887766, '(A25,999999999ES21.9)') 'RNEW= ', RNEW(:,I1)
-      write(887766, '(A25,999999999ES21.9)') 'RPAN_INTERVALL= ', RPAN_INTERVALL(:,I1)
-      write(887766, '(A25,999999999ES21.9)') 'WLDAU= ', WLDAU(:,:,:,I1)
-      write(887766, '(A25,999999999ES21.9)') 'VINSNEW= ', VINSNEW
-      write(887766, *)
-      if (i1==i1_end) close(887766)
     end if
 
-         call init_t_dtmatJij(t_inc,t_dtmatJij)
-         if(OPT('XCPL    '))then
-            call set_Jijcalc_flags(t_dtmatJij,NATYP,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)
-         end if !OPT('XCPL')
+    call init_t_dtmatJij(t_inc,t_dtmatJij)
 
     call TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT(I1),SOCSCALE(I1),EZ,  &
        NSRA,CLEB(:,1),ICLEB,IEND,NCHEB,NPAN_TOT(I1),                &

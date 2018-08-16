@@ -411,7 +411,6 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
             GMATPREFACTOR)
 
          if (test('BdG_dev ')) then
-           write(*,*), 'Energy:', ie, eryd
            write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk_atom_',i1,'_energ_',ie,'.dat'
            open(888888, file=trim(filename), form='formatted')
            write(888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=',4*(LMAX+1),' IRMDNEW=', IRMDNEW, ' ; ERYD=', ERYD
