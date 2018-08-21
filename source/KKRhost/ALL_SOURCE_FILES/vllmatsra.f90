@@ -1,27 +1,29 @@
+!< constructs potential including big/small components and with relativistic mass terms etc included
 subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
   lval_in, cmode)
 
   use :: constants
   use :: mod_datatypes, only: dp
   ! ************************************************************************************
-  ! The perubation matrix for the SRA-equations are set up
+  ! The perturbation matrix for the SRA-equations are set up
   ! ************************************************************************************
   implicit none
 
-  integer, intent (in) :: lmax     ! < Maximum l component in wave function
-                                   ! expansion
+  ! inputs
+  integer, intent (in) :: lmax     ! < Maximum l component in wave function expansion
   integer, intent (in) :: nrmax    ! < NTOTD*(NCHEBD+1)
-  integer, intent (in) :: nrmaxd
-  integer, intent (in) :: lmsize
-  integer, intent (in) :: lval_in
-  complex (kind=dp), intent (in) :: eryd
-  character (len=*), intent (in) :: cmode
+  integer, intent (in) :: nrmaxd   ! < dimension for rmesh (maximum of nrmax values of all atoms)
+  integer, intent (in) :: lmsize   ! < (lmax+2)^2
+  integer, intent (in) :: lval_in  ! < l-value used in spherical calculation of calcpsh (lmsize=1)
+  complex (kind=dp), intent (in) :: eryd  ! < energy (used in rel-mass factor)
+  character (len=*), intent (in) :: cmode ! < either 'Ref=0' or 'Ref=Vsph' which determines the used reference system (for calcsph trick or direct evaluation)
+  real (kind=dp), dimension (nrmaxd), intent (in) :: rmesh ! < radial mesh
+  complex (kind=dp), dimension (lmsize, lmsize, nrmax), intent (in) :: vll0 ! < input potential in (l,m,s) basis
 
-  real (kind=dp), dimension (nrmaxd), intent (in) :: rmesh
-  complex (kind=dp), dimension (lmsize, lmsize, nrmax), intent (in) :: vll0
-  ! .. Output variables
-  complex (kind=dp), dimension (2*lmsize, 2*lmsize, nrmax), intent (out) :: vll
-  ! .. Local variables
+  ! outputs
+  complex (kind=dp), dimension (2*lmsize, 2*lmsize, nrmax), intent (out) :: vll ! < output potential in (l,m,s) basis with big/small components
+
+  ! locals
   integer :: ilm, lval, mval, ival, ir
   integer, dimension (lmsize) :: loflm
   complex (kind=dp) :: mass, mass0
@@ -64,6 +66,7 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
   vll(:,:,:) = czero
 
   if (cmode=='Ref=0') then
+    ! without SRA-trick the full matrix is constructed and the proper mass terms (as described in the PhD thesis of Bauer) have to be included
     vll(1:lmsize, 1:lmsize, :) = vll0(1:lmsize,1:lmsize,:) ! /cvlight
 
     do ir = 1, nrmax
@@ -90,6 +93,7 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
 
     end do                         ! ir
   else if (cmode=='Ref=Vsph') then
+    ! for SRA-trick the small component of vll vanishes
     vll(lmsize+1:2*lmsize, 1:lmsize, :) = vll0(1:lmsize,1:lmsize, :)
   end if
 

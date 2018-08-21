@@ -1,4 +1,4 @@
-subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, z, e, lmpotd, &
+subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, &
   lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk, jlk, &
   hlk2, jlk2, gmatprefactor, tmat, alpha, use_sratrick)
 
@@ -11,8 +11,8 @@ subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, z, e, lmpotd, &
   integer :: nsra, irmdnew, nrmaxd, nspin, lmax, lmpotd, lmmaxso
   integer :: ncheb, npan_tot
   integer :: use_sratrick
-  real (kind=dp) :: z
-  complex (kind=dp) :: e, gmatprefactor
+  real (kind=dp) :: zat
+  complex (kind=dp) :: eryd, gmatprefactor
   real (kind=dp) :: rnew(nrmaxd), rpan_intervall(0:npan_tot)
   real (kind=dp) :: vins(irmdnew, lmpotd, nspin)
   complex (kind=dp) :: hlk(1:4*(lmax+1), irmdnew)
@@ -84,10 +84,10 @@ subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, z, e, lmpotd, &
     do lval = 0, lmax
 
       do ir = 1, irmdnew
-        vll0(lmsize, lmsize, ir) = vins(ir, 1, ispin) - 2e0_dp*z/rnew(ir)
+        vll0(lmsize, lmsize, ir) = vins(ir, 1, ispin) - 2e0_dp*zat/rnew(ir)
       end do
       if (nsra==2) then
-        call vllmatsra(vll0, vll, rnew, lmsize, irmdnew, nrmaxd, e, lmax, &
+        call vllmatsra(vll0, vll, rnew, lmsize, irmdnew, nrmaxd, eryd, lmax, &
           lval, 'Ref=0')
       else
         vll(:, :, :) = vll0(:, :, :)

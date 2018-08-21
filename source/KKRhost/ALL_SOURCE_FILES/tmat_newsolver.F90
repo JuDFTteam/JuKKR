@@ -384,7 +384,16 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          call SPINORBIT_HAM(LMAX,lmsize,VINS,RNEW,ERYD,ZAT,CVLIGHT,SOCSCALE,  &
             NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,    &
             NCHEB,IRMDNEW,NRMAXD,VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),'1')
-         ! extend matrix for the SRA treatment
+
+         ! test writeout of VNSPLL1
+         if (test('BdG_dev ')) then
+           open(7352834, file='vnspll_SOC.txt', form='formatted')
+           write(7352834, '(A,3I9)') '# LMMAXSO,LMMAXSO,IRMDNEW=', lmmaxso, lmmaxso, irmdnew
+           write(7352834, '(2F25.14)') VNSPLL1(:,:,:,ith)
+           close(7352834)
+         end if
+
+         ! now extend matrix for the SRA treatment
          VNSPLL(:,:,:,ith)=CZERO
 
          if (NSRA.EQ.2) then
@@ -398,6 +407,18 @@ subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
          else
             VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
          endif
+
+         ! test writeout of VNPSLL
+         if (test('BdG_dev ')) then
+           open(7352834, file='vnspll_sra.txt', form='formatted')
+           if (NSRA.EQ.2) then
+             write(7352834, '(A,3I9)') '# 2*LMMAXSO,2*LMMAXSO,IRMDNEW=', 2*lmmaxso, 2*lmmaxso, irmdnew
+           else
+             write(7352834, '(A,3I9)') '# LMMAXSO,LMMAXSO,IRMDNEW=', lmmaxso, lmmaxso, irmdnew
+           end if
+           write(7352834, '(2F25.14)') VNSPLL(:,:,:,ith)
+           close(7352834)
+         end if
 
          ! Calculate the source terms in the Lippmann-Schwinger equation
          ! these are spherical hankel and bessel functions

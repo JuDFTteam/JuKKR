@@ -3,31 +3,28 @@
 ! > @brief
 ! -------------------------------------------------------------------------------
 subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, &
-  cleb, icleb, iend, nspin, z, rnew, use_sratrick, ncleb)
+  cleb, icleb, iend, nspin, Zat, rnew, use_sratrick, ncleb)
   use :: mod_datatypes, only: dp
 
   implicit none
 
   ! .. Input variables
   integer, intent (in) :: irc      ! < r point for potential cutting
-  integer, intent (in) :: iend
-  integer, intent (in) :: ncleb    ! < Number of Clebsch-Gordon coefficients
-  integer, intent (in) :: irmin    ! < max r for spherical treatment
+  integer, intent (in) :: iend     ! < maximal number of non-vanishing Gaunt coefficients
+  integer, intent (in) :: ncleb    ! < Number of Gaunt coefficients
+  integer, intent (in) :: irmin    ! < max r for spherical treatment, afterwards non-spherical contribution
   integer, intent (in) :: lmmax    ! < (LMAX+1)^2
-  integer, intent (in) :: nspin    ! < Counter for spin directions
+  integer, intent (in) :: nspin    ! < spin-degree of freedom
   integer, intent (in) :: lmpot    ! < (LPOT+1)**2
-  integer, intent (in) :: nrmaxd   ! < NTOTD*(NCHEBD+1)
-  integer, intent (in) :: lmmaxso
-  integer, intent (in) :: use_sratrick
-  real (kind=dp), intent (in) :: z
-
-  integer, dimension (ncleb, 4), intent (in) :: icleb
+  integer, intent (in) :: nrmaxd   ! < NTOTD*(NCHEBD+1), maximal number of radial points in Chebychev mesh
+  integer, intent (in) :: lmmaxso  ! < 2*(LMAX+1)^2, for SOC L=(l,m,s) instead of L=(l,m)
+  integer, intent (in) :: use_sratrick ! < switch to use SRA trick (see routine rllsll) or not
+  real (kind=dp), intent (in) :: Zat ! < atomic charge
+  integer, dimension (ncleb, 4), intent (in) :: icleb    ! < index array for Gaunt coefficients
   real (kind=dp), dimension (ncleb), intent (in) :: cleb ! < GAUNT coefficients
-                                                     ! (GAUNT)
-  real (kind=dp), dimension (irmin:irc, lmpot, nspin), intent (in) :: vins
-  ! < Non-spherical part of the potential
-  real (kind=dp), dimension (irmin:nrmaxd), intent (in) :: rnew
-  complex (kind=dp), dimension (lmmaxso, lmmaxso, irmin:irc), intent (out) :: vnspll0
+  real (kind=dp), dimension (irmin:irc, lmpot, nspin), intent (in) :: vins ! < Non-spherical part of the potential
+  real (kind=dp), dimension (irmin:nrmaxd), intent (in) :: rnew ! < radial mesh points of Chebychev mesh
+  complex (kind=dp), dimension (lmmaxso, lmmaxso, irmin:irc), intent (out) :: vnspll0 ! < output potential in Chebychev mesh and (l,m,s)-space
 
   ! .. Local variables
   integer :: isp
@@ -67,7 +64,7 @@ subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, &
       do lm1 = 1, lmmax
         do i = irmin, irc
           vnspll(lm1, lm1, i, isp) = vnspll(lm1, lm1, i, isp) + &
-            vins(i, 1, isp) - 2e0_dp*z/rnew(i)
+            vins(i, 1, isp) - 2e0_dp*Zat/rnew(i)
         end do
       end do
     end if
@@ -75,12 +72,10 @@ subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, &
   end do                           ! NSPIN
 
   ! Set vnspll as twice as large
-  vnspll0(1:lmmax, 1:lmmax, irmin:irc) = cmplx(vnspll(1:lmmax,1:lmmax,irmin: &
-    irc,1), 0e0_dp, kind=dp)
+  vnspll0(1:lmmax, 1:lmmax, irmin:irc) = cmplx(vnspll(1:lmmax,1:lmmax,irmin:irc,1), 0e0_dp, kind=dp)
 
   if (nspin==2) then               ! hack to make routine work for Bxc-field
-    vnspll0(lmmax+1:lmmaxso, lmmax+1:lmmaxso, irmin:irc) &
-      = cmplx(vnspll(1:lmmax,1:lmmax,irmin:irc,nspin), 0e0_dp, kind=dp)
+    vnspll0(lmmax+1:lmmaxso, lmmax+1:lmmaxso, irmin:irc) = cmplx(vnspll(1:lmmax,1:lmmax,irmin:irc,nspin), 0e0_dp, kind=dp)
   end if
 
 end subroutine vllmat

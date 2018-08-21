@@ -6,26 +6,24 @@ subroutine beshank(hl, jl, z, lmax)
   ! For |z| .ge. l+1 the explicit expressions for hl(+), hl(-) are used.
   ! -----------------------------------------------------------------------
   use :: mod_datatypes, only: dp
+
   implicit none
-  ! .. Parameters ..
-  complex (kind=dp) :: ci
-  parameter (ci=(0.0e0_dp,1.0e0_dp))
-  ! ..
-  ! .. Scalar Arguments ..
-  complex (kind=dp) :: z
-  integer :: lmax
-  ! ..
-  ! .. Array Arguments ..
-  complex (kind=dp) :: hl(0:lmax), jl(0:lmax), nl(0:lmax)
-  ! ..
-  ! .. Local Scalars ..
+
+  ! inputs
+  complex (kind=dp), intent(in) :: z ! < complex energy E+i*eta = Re(z)+i*Im(z)
+  integer, intent(in) :: lmax        ! < energy cutoff
+
+  ! outputs
+  complex (kind=dp), intent(out) :: hl(0:lmax), jl(0:lmax) ! < spherical Hankel and Bessel up to lmax 
+
+  ! locals
+  complex (kind=dp) :: nl(0:lmax) ! < Neumann function
+  complex (kind=dp), parameter :: ci=(0.0e0_dp,1.0e0_dp) ! < complex imaginary unit
   complex (kind=dp) :: termj, termn, z2, zj, zn
   real (kind=dp) :: rl, rn, rnm
   integer :: l, m, n
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: abs, exp
-  ! ..
+
+
   zj = 1.e0_dp
   zn = 1.e0_dp
   z2 = z*z
@@ -74,6 +72,7 @@ subroutine beshank(hl, jl, z, lmax)
 
 end subroutine beshank
 
+
 subroutine beshank_smallcomp(hl, jl, zval, tau, eryd, lmax)
   use :: mod_datatypes, only: dp
   implicit none
@@ -83,43 +82,37 @@ subroutine beshank_smallcomp(hl, jl, zval, tau, eryd, lmax)
   ! these values are filled with the potential-free solution of the
   ! SRA-equations
   ! -----------------------------------------------------------------------
-  integer :: lmax
-  complex (kind=dp) :: hl(0:2*(lmax+1)-1), jl(0:2*(lmax+1)-1), &
-    nl(0:2*(lmax+1)-1)
-  real (kind=dp) :: cvlight
-  parameter (cvlight=274.0720442e0_dp)
-  complex (kind=dp) :: zval
-  complex (kind=dp) :: eryd
-  real (kind=dp) :: tau
+  integer, intent(in) :: lmax
+  complex (kind=dp), intent(in) :: zval
+  complex (kind=dp), intent(in) :: eryd
+  real (kind=dp), intent(in) :: tau
+  complex (kind=dp), intent(inout) :: hl(0:2*(lmax+1)-1)
+  complex (kind=dp), intent(inout) :: jl(0:2*(lmax+1)-1)
+  !complex (kind=dp), intent(inout) :: nl(0:2*(lmax+1)-1)
 
-  ! real (kind=dp) CVLIGHT
+  ! local
+  real (kind=dp), parameter :: cvlight=274.0720442e0_dp
   complex (kind=dp) :: prefac
   integer :: il, il2
 
 
-  prefac = 1.0e0_dp/(1.0e0_dp+eryd/cvlight**2)/tau ! /cvlight  !last cvlight
-                                                   ! for small component test
+  prefac = 1.0e0_dp/(1.0e0_dp+eryd/cvlight**2)/tau !last cvlight for small component test
 
   il = 0
   il2 = il + lmax + 1
-  nl(il2) = prefac*(zval*(-nl(il+1)))
+  !nl(il2) = prefac*(zval*(-nl(il+1)))
   jl(il2) = prefac*(zval*(-jl(il+1)))
   ! HL(IL2)=JL(IL2)+ CI*NL(IL2)
   hl(il2) = prefac*(zval*(-hl(il+1)))
-  ! write(*,'(5000E)') tau,HL(IL2),JL(IL2)+ (0.0D0,1.0D0)*NL(IL2)
-  ! write(*,'(5000E)') tau,HL(0),JL(0)+ (0.0D0,1.0D0)*NL(0)
 
-  prefac = 1.0e0_dp/(1.0e0_dp+eryd/cvlight**2)/tau ! /cvlight !last cvlight
-                                                   ! for small component test
+  prefac = 1.0e0_dp/(1.0e0_dp+eryd/cvlight**2)/tau !last cvlight for small component test
 
   do il = 1, lmax
     il2 = il + lmax + 1
-    nl(il2) = prefac*(zval*nl(il-1)-(il+1)*nl(il))
+    !nl(il2) = prefac*(zval*nl(il-1)-(il+1)*nl(il))
     jl(il2) = prefac*(zval*jl(il-1)-(il+1)*jl(il))
     ! HL(IL2)=JL(IL2)+ CI*NL(IL2)
     hl(il2) = prefac*(zval*hl(il-1)-(il+1)*hl(il))
-    ! HL(IL2)=PREFAC * ( ZVAL * HL(IL-1)-(IL+1)*HL(IL) )
-    ! write(*,'(5000E)') tau,HL(IL2),JL(IL2)+ (0.0D0,1.0D0)*NL(IL2)
   end do
 
 end subroutine beshank_smallcomp
