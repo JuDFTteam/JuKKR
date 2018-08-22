@@ -14,7 +14,8 @@ module MOD_MAIN1A
    use Profiling
    use Constants
    use global_variables
-      Use mod_datatypes, Only: dp
+   Use mod_datatypes, Only: dp
+   use mod_tmatnewsolver, only: tmat_newsolver
 
    implicit none
 

@@ -12,6 +12,8 @@ subroutine main1a_dummy
   use mod_jijhelp, only: set_Jijcalc_flags
 
   use mod_main0
+  use mod_tmatnewsolver, only: tmat_newsolver
+
 
   implicit none
 

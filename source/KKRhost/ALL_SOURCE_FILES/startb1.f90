@@ -525,7 +525,8 @@ subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
           do j = 1, irmin(ih)
             vm2z(j, i) = vm2z(j, i) + vconst
           end do
-        else if (.not. test('atptshft')) then
+        else if (.not. test('atptshft') .and. abs(vconst)>eps) then
+          write(1337,*) 'shifting potential by VCONST=', vconst
           do j = 1, nr
             vm2z(j, i) = vm2z(j, i) + vconst
           end do
