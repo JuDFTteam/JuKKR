@@ -16,7 +16,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
   integer :: nspinpot
   ! ..
   ! .. Array Arguments ..
-  complex (kind=dp) :: den(0:lmaxd1, iemxd, npotd), ez(iemxd), wez(iemxd)
+  complex (kind=dp) :: den(0:lmaxd1, ielast, npotd), ez(iemxd), wez(iemxd)
   real (kind=dp) :: dostot(0:lmaxd1, 2), conc(*) ! CONC(NATYPD)
   integer :: ititle(20, npotd)
   ! ..
