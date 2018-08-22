@@ -16,7 +16,7 @@ C===== uses spin-up and down also in the REL mode (KREL=1)
 C     ..
 C     .. Array Arguments ..
       DOUBLE COMPLEX DEN(0:LMAXD1,IELAST,NPOTD),EZ(IEMXD),WEZ(IEMXD)
-      DOUBLE PRECISION DOSTOT(0:LMAXD1,2),CONC(*) ! CONC(NATYPD)
+      DOUBLE PRECISION DOSTOT(0:LMAXD1,2),DOSTOT2(0:LMAXD1),CONC(*) ! CONC(NATYPD)
       INTEGER ITITLE(20,NPOTD)
 C     ..
 C     .. Local Scalars ..
@@ -49,6 +49,7 @@ C     ..
         OPEN (48,FILE=trim(DOSFL),FORM='formatted')
         call version_print_header(48)
         DO ISPIN = 1,NSPINPOT
+            DOSTOT2(:) = 0.0D0
             IPOT = NSPINPOT * (I1-1) + ISPIN
             DOSSGN = 1.0D0
             IF (ISPIN.NE.NSPINPOT) DOSSGN = -1.0D0
@@ -66,13 +67,15 @@ C     ..
      &               DIMAG(DEN(L,IE,IPOT))/PI/DBLE(NSPINPOT)
                     DOSTOT(L,ISPIN) = DOSTOT(L,ISPIN) +
      +                   DIMAG(WEZ(IE)*DEN(L,IE,IPOT))
+                    DOSTOT2(L) = DOSTOT2(L) +
+     +                   DIMAG(WEZ(IE)*DEN(L,IE,IPOT))
                 END DO
                 WRITE (48,FMT=9060) DBLE(EZ(IE))*EFCTOR,
      &                DOS*DOSSGN/EFCTOR,
      &               (-2.0D0*DIMAG(DEN(L,IE,IPOT))*DOSSGN/EFCTOR/PI
      &               /DBLE(NSPINPOT),L=0,LMAXD1)
             END DO
-            WRITE (48,FMT=9070) (DOSTOT(L,ISPIN)/EFCTOR/DBLE(NSPINPOT),
+            WRITE (48,FMT=9070) (DOSTOT2(L)/EFCTOR/DBLE(NSPINPOT),
      +                                                      L=0,LMAXD1)
             IF (ISPIN.NE.NSPINPOT) WRITE (48,FMT=9000)
         END DO
