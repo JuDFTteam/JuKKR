@@ -19,9 +19,9 @@ contains
 #ifdef CPP_MPI
       use mpi
 #endif
-      use mod_mympi, only: myrank, nranks, master
+      use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
-      use mod_mympi, only: distribute_linear_on_tasks, MPIadapt
+      use mod_mympi, only: distribute_linear_on_tasks, MPIadapt, nranks
       use mod_timing
 #endif
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat, &
@@ -68,7 +68,7 @@ contains
 
       ! .. Local variables
       integer :: IR,IREC,USE_SRATRICK,NVEC,LM1,LM2,IE,IRMDNEW
-      integer :: i_stat, i_all, lmsize
+      integer :: i_stat, lmsize
       complex (kind=dp) :: ERYD
       complex (kind=dp), dimension(2*(LMAX+1)) :: ALPHASPH
       ! .. Local allocatable arrays
@@ -107,7 +107,7 @@ contains
 #ifdef CPP_MPI
       integer, dimension(0:nranks-1) :: ntot_pT, ioff_pT
 #endif
-      integer :: ie_end, ie_num, ie_start, ierr
+      integer :: ie_end, ie_num, ie_start
          
       !rhoqtest
       logical, external :: test, opt
@@ -118,37 +118,6 @@ contains
       complex (kind=dp) :: e_shift
       integer :: ier
       character (len=256) :: uio
-
-      lmsize = lmmaxd/2
-
-      ! .. Allocation of local arrays
-      allocate(AUX(LMMAXSO,LMMAXSO),stat=i_stat)
-      call memocc(i_stat,product(shape(AUX))*kind(AUX),'AUX','tmat_newsolver')
-      AUX=CZERO
-      allocate(IPIV(LMMAXSO),stat=i_stat)
-      call memocc(i_stat,product(shape(IPIV))*kind(IPIV),'IPIV','tmat_newsolver')
-      IPIV=0
-      allocate(TMAT0(LMMAXSO,LMMAXSO),stat=i_stat)
-      call memocc(i_stat,product(shape(TMAT0))*kind(TMAT0),'TMAT0','tmat_newsolver')
-      TMAT0=CZERO
-      allocate(TMATLL(LMMAXSO,LMMAXSO),stat=i_stat)
-      call memocc(i_stat,product(shape(TMATLL))*kind(TMATLL),'TMATLL','tmat_newsolver')
-      TMATLL=CZERO
-      allocate(ALPHA0(LMMAXSO,LMMAXSO),stat=i_stat)
-      call memocc(i_stat,product(shape(ALPHA0))*kind(ALPHA0),'ALPHA0','tmat_newsolver')
-      ALPHA0=CZERO
-      allocate(DTMATLL(LMMAXSO,LMMAXSO),stat=i_stat)
-      call memocc(i_stat,product(shape(DTMATLL))*kind(DTMATLL),'DTMATLL','tmat_newsolver')
-      DTMATLL=CZERO
-      allocate(ALPHALL(LMMAXSO,LMMAXSO),stat=i_stat)
-      call memocc(i_stat,product(shape(ALPHALL))*kind(ALPHALL),'ALPHALL','tmat_newsolver')
-      ALPHALL=CZERO
-      allocate(DALPHALL(LMMAXSO,LMMAXSO),stat=i_stat)
-      call memocc(i_stat,product(shape(DALPHALL))*kind(DALPHALL),'DALPHALL','tmat_newsolver')
-      DALPHALL=CZERO
-      allocate(JLK_INDEX(2*LMMAXSO),stat=i_stat)
-      call memocc(i_stat,product(shape(JLK_INDEX))*kind(JLK_INDEX),'JLK_INDEX','tmat_newsolver')
-      JLK_INDEX=0
 
 #ifdef CPP_OMP
       ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
@@ -163,11 +132,20 @@ contains
       ith = 0
 #endif
 
-
+      lmsize = lmmaxd/2
       IRMDNEW= NPAN_TOT*(NCHEB+1)
-      allocate(VINS(IRMDNEW,LMPOT,NSPIN),stat=i_stat)
-      call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','tmat_newsolver')
-      VINS=0.0d0
+
+      if (NSRA.EQ.2) then
+         USE_SRATRICK=1
+      elseif (NSRA.EQ.1) then
+         USE_SRATRICK=0
+      endif
+
+
+      ! .. allocate and initialize arrays
+      call allocate_locals_tmat_newsolver(1, IRMDNEW, LMPOT, NSPIN, VINS, AUX, IPIV, TMAT0, TMATLL, &
+         ALPHA0, DTMATLL, ALPHALL, DALPHALL, JLK_INDEX, nsra, lmmaxso, nth, lmax, vnspll, vnspll0, vnspll1,  &
+         hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
       do LM1=1,LMPOT
          do IR=1,IRMDNEW
@@ -193,22 +171,7 @@ contains
         e_shift = complex(0.0_dp, 0.0_dp)
       end if
 
-
-      if (NSRA.EQ.2) then
-         USE_SRATRICK=1
-      elseif (NSRA.EQ.1) then
-         USE_SRATRICK=0
-      endif
-
       ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
-
-      allocate(VNSPLL0(LMMAXSO,LMMAXSO,IRMDNEW),stat=i_stat)
-      call memocc(i_stat,product(shape(VNSPLL0))*kind(VNSPLL0),'VNSPLL0','tmat_newsolver')
-      VNSPLL0=CZERO
-      allocate(VNSPLL1(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-      call memocc(i_stat,product(shape(VNSPLL1))*kind(VNSPLL1),'VNSPLL1','tmat_newsolver')
-      VNSPLL1=CZERO
-
       call VLLMAT(1,NRMAXD,IRMDNEW,lmsize,LMMAXSO,VNSPLL0,VINS,LMPOT,CLEB,ICLEB,&
          IEND,NSPIN,ZAT,RNEW,USE_SRATRICK,NCLEB)
       ! LDAU
@@ -227,10 +190,6 @@ contains
          enddo
       endif
       ! LDAU
-
-      ! allocate and initialize arrays
-      call allocate_arrays_tmat_newsolver(nsra, lmmaxso, irmdnew, nth, lmax, &
-        vnspll, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
       ! start energy loop
       if(myrank==master.and.(t_inc%i_write>0)) WRITE(1337,*) 'atom: ',I1,' NSRA:',NSRA
@@ -308,7 +267,6 @@ contains
       !$omp private(dtmatll)                                                     &
       !$omp private(dalphall)                                                    &
       !$omp shared(t_inc)                                                        &
-      !!$omp firstprivate(t_inc)                                                 &
       !$omp shared(nspin,nsra,lmax,lmsize,iend,ipot,ielast,npan_tot,ncheb)       &
       !$omp shared(zat,socscale,ez,cleb,rnew,nth,LMPOT,NRMAXD,LMMAXSO,NTOTD)     &
       !$omp shared(rpan_intervall,vinsnew,ipan_intervall,NCLEB)                  &
@@ -770,88 +728,32 @@ contains
            if(test('rhoqtest').and.i1==t_params%natyp.and.myrank==master) write(6,*) ! status bar
            ! finished kpts status bar
 
-      i_all=-product(shape(AUX))*kind(AUX)
-      deallocate(AUX,stat=i_stat)
-      call memocc(i_stat,i_all,'AUX','tmat_newsolver')
-      i_all=-product(shape(ALPHA0))*kind(ALPHA0)
-      deallocate(ALPHA0,stat=i_stat)
-      call memocc(i_stat,i_all,'ALPHA0','tmat_newsolver')
-      i_all=-product(shape(ALPHALL))*kind(ALPHALL)
-      deallocate(ALPHALL,stat=i_stat)
-      call memocc(i_stat,i_all,'ALPHALL','tmat_newsolver')
-      i_all=-product(shape(DALPHALL))*kind(DALPHALL)
-      deallocate(DALPHALL,stat=i_stat)
-      call memocc(i_stat,i_all,'DALPHALL','tmat_newsolver')
-      i_all=-product(shape(TMAT0))*kind(TMAT0)
-      deallocate(TMAT0,stat=i_stat)
-      call memocc(i_stat,i_all,'TMAT0','tmat_newsolver')
-      i_all=-product(shape(DTMATLL))*kind(DTMATLL)
-      deallocate(DTMATLL,stat=i_stat)
-      call memocc(i_stat,i_all,'DTMATLL','tmat_newsolver')
-      i_all=-product(shape(TMATLL))*kind(TMATLL)
-      deallocate(TMATLL,stat=i_stat)
-      call memocc(i_stat,i_all,'TMATLL','tmat_newsolver')
-      i_all=-product(shape(JLK_INDEX))*kind(JLK_INDEX)
-      deallocate(JLK_INDEX,stat=i_stat)
-      call memocc(i_stat,i_all,'JLK_INDEX','tmat_newsolver')
-      i_all=-product(shape(VINS))*kind(VINS)
-      deallocate(VINS,stat=i_stat)
-      call memocc(i_stat,i_all,'VINS','tmat_newsolver')
-      i_all=-product(shape(VNSPLL0))*kind(VNSPLL0)
-      deallocate(VNSPLL0,stat=i_stat)
-      call memocc(i_stat,i_all,'VNSPLL0','tmat_newsolver')
-      i_all=-product(shape(VNSPLL1))*kind(VNSPLL1)
-      deallocate(VNSPLL1,stat=i_stat)
-      call memocc(i_stat,i_all,'VNSPLL1','tmat_newsolver')
-      i_all=-product(shape(VNSPLL))*kind(VNSPLL)
-      deallocate(VNSPLL,stat=i_stat)
-      call memocc(i_stat,i_all,'VNSPLL','tmat_newsolver')
-      i_all=-product(shape(HLK))*kind(HLK)
-      deallocate(HLK,stat=i_stat)
-      call memocc(i_stat,i_all,'HLK','tmat_newsolver')
-      i_all=-product(shape(JLK))*kind(JLK)
-      deallocate(JLK,stat=i_stat)
-      call memocc(i_stat,i_all,'JLK','tmat_newsolver')
-      i_all=-product(shape(HLK2))*kind(HLK2)
-      deallocate(HLK2,stat=i_stat)
-      call memocc(i_stat,i_all,'HLK2','tmat_newsolver')
-      i_all=-product(shape(JLK2))*kind(JLK2)
-      deallocate(JLK2,stat=i_stat)
-      call memocc(i_stat,i_all,'JLK2','tmat_newsolver')
-      i_all=-product(shape(TMATSPH))*kind(TMATSPH)
-      deallocate(TMATSPH,stat=i_stat)
-      call memocc(i_stat,i_all,'TMATSPH','tmat_newsolver')
-      i_all=-product(shape(RLL))*kind(RLL)
-      deallocate(RLL,stat=i_stat)
-      call memocc(i_stat,i_all,'RLL','tmat_newsolver')
-      i_all=-product(shape(SLL))*kind(SLL)
-      deallocate(SLL,stat=i_stat)
-      call memocc(i_stat,i_all,'SLL','tmat_newsolver')
-      i_all=-product(shape(RLLLEFT))*kind(RLLLEFT)
-      deallocate(RLLLEFT,stat=i_stat)
-      call memocc(i_stat,i_all,'RLLLEFT','tmat_newsolver')
-      i_all=-product(shape(SLLLEFT))*kind(SLLLEFT)
-      deallocate(SLLLEFT,stat=i_stat)
-      call memocc(i_stat,i_all,'SLLLEFT','tmat_newsolver')
+      ! deallocate arrays
+      call allocate_locals_tmat_newsolver(-1, IRMDNEW, LMPOT, NSPIN, VINS, AUX, IPIV, TMAT0, TMATLL, ALPHA0, DTMATLL, ALPHALL, DALPHALL, JLK_INDEX, nsra, lmmaxso, nth, lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
    end subroutine TMAT_NEWSOLVER
 
 
-
-   subroutine allocate_arrays_tmat_newsolver(nsra, lmmaxso, irmdnew, nth, lmax, vnspll, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+   subroutine allocate_locals_tmat_newsolver(allocmode, IRMDNEW, LMPOT, NSPIN, VINS, AUX, IPIV, TMAT0, TMATLL, ALPHA0, DTMATLL, ALPHALL, DALPHALL, JLK_INDEX, nsra, lmmaxso, nth, lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
       use mod_DataTypes, only: dp
       use Constants, only: czero
       use Profiling, only: memocc
       use mod_save_wavefun, only: t_wavefunctions
       implicit none
 
+      integer, intent(in) :: allocmode
+      integer, intent(in) :: IRMDNEW, LMPOT, NSPIN
       integer, intent(in) :: nsra
       integer, intent(in) :: lmmaxso
-      integer, intent(in) :: irmdnew
       integer, intent(in) :: nth
       integer, intent(in) :: lmax
 
+      real (kind=dp), allocatable, intent(inout) :: VINS(:,:,:)
+      complex (kind=dp), allocatable, intent(inout) :: AUX(:,:), TMAT0(:,:), TMATLL(:,:), ALPHA0(:,:), DTMATLL(:,:), ALPHALL(:,:), DALPHALL(:,:)
+      integer, allocatable, intent(inout) :: IPIV(:), JLK_INDEX(:)
       complex (kind=dp), allocatable, dimension(:,:,:,:), intent(inout) :: vnspll
+      complex (kind=dp), allocatable, dimension(:,:,:), intent(inout) :: vnspll0
+      complex (kind=dp), allocatable, dimension(:,:,:,:), intent(inout) :: vnspll1
       complex (kind=dp), allocatable, dimension(:,:,:), intent(inout) :: jlk
       complex (kind=dp), allocatable, dimension(:,:,:), intent(inout) :: hlk
       complex (kind=dp), allocatable, dimension(:,:,:), intent(inout) :: jlk2
@@ -867,61 +769,166 @@ contains
       logical, external :: test, opt
 
 
-      ! potential array
-      if (NSRA.EQ.2) THEN
-         allocate(VNSPLL(2*LMMAXSO,2*LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','allocate_arrays_tmat_newsolver')
-         VNSPLL=CZERO
-      else
-         allocate(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','allocate_arrays_tmat_newsolver')
-         VNSPLL=CZERO
-      endif
+      if (allocmode==1) then
 
-      ! source terms (bessel and hankel functions)
-      allocate(HLK(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
-      call memocc(i_stat,product(shape(HLK))*kind(HLK),'HLK','allocate_arrays_tmat_newsolver')
-      HLK=CZERO
-      allocate(JLK(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
-      call memocc(i_stat,product(shape(JLK))*kind(JLK),'JLK','allocate_arrays_tmat_newsolver')
-      JLK=CZERO
-      allocate(HLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
-      call memocc(i_stat,product(shape(HLK2))*kind(HLK2),'HLK2','allocate_arrays_tmat_newsolver')
-      HLK2=CZERO
-      allocate(JLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
-      call memocc(i_stat,product(shape(JLK2))*kind(JLK2),'JLK2','allocate_arrays_tmat_newsolver')
-      JLK2=CZERO
+         ! potential arrays
+         if (NSRA.EQ.2) THEN
+            allocate(VNSPLL(2*LMMAXSO,2*LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
+            call memocc(i_stat,product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','allocate_locals_tmat_newsolver')
+            VNSPLL=CZERO
+         else
+            allocate(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
+            call memocc(i_stat,product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','allocate_locals_tmat_newsolver')
+            VNSPLL=CZERO
+         endif
+         allocate(VNSPLL0(LMMAXSO,LMMAXSO,IRMDNEW),stat=i_stat)
+         call memocc(i_stat,product(shape(VNSPLL0))*kind(VNSPLL0),'VNSPLL0','allocate_locals_tmat_newsolver')
+         VNSPLL0=CZERO
+         allocate(VNSPLL1(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
+         call memocc(i_stat,product(shape(VNSPLL1))*kind(VNSPLL1),'VNSPLL1','allocate_locals_tmat_newsolver')
+         VNSPLL1=CZERO
 
-      ! Spherical part of tmatrix (used with SRATRICK)
-      allocate(TMATSPH(2*(LMAX+1),0:nth-1),stat=i_stat)
-      call memocc(i_stat,product(shape(TMATSPH))*kind(TMATSPH),'TMATSPH','allocate_arrays_tmat_newsolver')
-      TMATSPH=CZERO
+         ! source terms (bessel and hankel functions)
+         allocate(HLK(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
+         call memocc(i_stat,product(shape(HLK))*kind(HLK),'HLK','allocate_locals_tmat_newsolver')
+         HLK=CZERO
+         allocate(JLK(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
+         call memocc(i_stat,product(shape(JLK))*kind(JLK),'JLK','allocate_locals_tmat_newsolver')
+         JLK=CZERO
+         allocate(HLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
+         call memocc(i_stat,product(shape(HLK2))*kind(HLK2),'HLK2','allocate_locals_tmat_newsolver')
+         HLK2=CZERO
+         allocate(JLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
+         call memocc(i_stat,product(shape(JLK2))*kind(JLK2),'JLK2','allocate_locals_tmat_newsolver')
+         JLK2=CZERO
 
-      ! Regular and irregular wavefunctions
-      allocate(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-      call memocc(i_stat,product(shape(RLL))*kind(RLL),'RLL','allocate_arrays_tmat_newsolver')
-      RLL=CZERO
-      allocate(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-      call memocc(i_stat,product(shape(SLL))*kind(SLL),'SLL','allocate_arrays_tmat_newsolver')
-      SLL=CZERO
+         ! Spherical part of tmatrix (used with SRATRICK)
+         allocate(TMATSPH(2*(LMAX+1),0:nth-1),stat=i_stat)
+         call memocc(i_stat,product(shape(TMATSPH))*kind(TMATSPH),'TMATSPH','allocate_locals_tmat_newsolver')
+         TMATSPH=CZERO
 
-      ! Left regular and irregular wavefunctions (used here only in case of XCPL or saving of left wavefunctions)
-      if( opt('XCPL    ') .or. (t_wavefunctions%save_rllleft .or.t_wavefunctions%save_sllleft .or. test('rhoqtest')) ) then
-         allocate(RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','allocate_arrays_tmat_newsolver')
-         RLLLEFT=CZERO
-         allocate(SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','allocate_arrays_tmat_newsolver')
-         SLLLEFT=CZERO
-      else
-         allocate(RLLLEFT(1,1,1,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','allocate_arrays_tmat_newsolver')
-         RLLLEFT=CZERO
-         allocate(SLLLEFT(1,1,1,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','allocate_arrays_tmat_newsolver')
-         SLLLEFT=CZERO
-      end if ! ( opt('XCPL    ') .or. ... )
+         ! Regular and irregular wavefunctions
+         allocate(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
+         call memocc(i_stat,product(shape(RLL))*kind(RLL),'RLL','allocate_locals_tmat_newsolver')
+         RLL=CZERO
+         allocate(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
+         call memocc(i_stat,product(shape(SLL))*kind(SLL),'SLL','allocate_locals_tmat_newsolver')
+         SLL=CZERO
 
-   end subroutine allocate_arrays_tmat_newsolver
+         ! Left regular and irregular wavefunctions (used here only in case of XCPL or saving of left wavefunctions)
+         if( opt('XCPL    ') .or. (t_wavefunctions%save_rllleft .or.t_wavefunctions%save_sllleft .or. test('rhoqtest')) ) then
+            allocate(RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
+            call memocc(i_stat,product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','allocate_locals_tmat_newsolver')
+            RLLLEFT=CZERO
+            allocate(SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
+            call memocc(i_stat,product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','allocate_locals_tmat_newsolver')
+            SLLLEFT=CZERO
+         else
+            allocate(RLLLEFT(1,1,1,0:nth-1),stat=i_stat)
+            call memocc(i_stat,product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','allocate_locals_tmat_newsolver')
+            RLLLEFT=CZERO
+            allocate(SLLLEFT(1,1,1,0:nth-1),stat=i_stat)
+            call memocc(i_stat,product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','allocate_locals_tmat_newsolver')
+            SLLLEFT=CZERO
+         end if ! ( opt('XCPL    ') .or. ... )
+
+         allocate(VINS(IRMDNEW,LMPOT,NSPIN),stat=i_stat)
+         call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','allocate_locals_tmat_newsolver')
+         VINS=0.0d0
+         allocate(AUX(LMMAXSO,LMMAXSO),stat=i_stat)
+         call memocc(i_stat,product(shape(AUX))*kind(AUX),'AUX','allocate_locals_tmat_newsolver')
+         AUX=CZERO
+         allocate(IPIV(LMMAXSO),stat=i_stat)
+         call memocc(i_stat,product(shape(IPIV))*kind(IPIV),'IPIV','allocate_locals_tmat_newsolver')
+         IPIV=0
+         allocate(TMAT0(LMMAXSO,LMMAXSO),stat=i_stat)
+         call memocc(i_stat,product(shape(TMAT0))*kind(TMAT0),'TMAT0','allocate_locals_tmat_newsolver')
+         TMAT0=CZERO
+         allocate(TMATLL(LMMAXSO,LMMAXSO),stat=i_stat)
+         call memocc(i_stat,product(shape(TMATLL))*kind(TMATLL),'TMATLL','allocate_locals_tmat_newsolver')
+         TMATLL=CZERO
+         allocate(ALPHA0(LMMAXSO,LMMAXSO),stat=i_stat)
+         call memocc(i_stat,product(shape(ALPHA0))*kind(ALPHA0),'ALPHA0','allocate_locals_tmat_newsolver')
+         ALPHA0=CZERO
+         allocate(DTMATLL(LMMAXSO,LMMAXSO),stat=i_stat)
+         call memocc(i_stat,product(shape(DTMATLL))*kind(DTMATLL),'DTMATLL','allocate_locals_tmat_newsolver')
+         DTMATLL=CZERO
+         allocate(ALPHALL(LMMAXSO,LMMAXSO),stat=i_stat)
+         call memocc(i_stat,product(shape(ALPHALL))*kind(ALPHALL),'ALPHALL','allocate_locals_tmat_newsolver')
+         ALPHALL=CZERO
+         allocate(DALPHALL(LMMAXSO,LMMAXSO),stat=i_stat)
+         call memocc(i_stat,product(shape(DALPHALL))*kind(DALPHALL),'DALPHALL','allocate_locals_tmat_newsolver')
+         DALPHALL=CZERO
+         allocate(JLK_INDEX(2*LMMAXSO),stat=i_stat)
+         call memocc(i_stat,product(shape(JLK_INDEX))*kind(JLK_INDEX),'JLK_INDEX','allocate_locals_tmat_newsolver')
+         JLK_INDEX=0
+
+      else ! allocmode
+
+         if (NSRA.EQ.2) THEN
+            deallocate(VNSPLL,stat=i_stat)
+            call memocc(i_stat,-product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','allocate_locals_tmat_newsolver')
+         else
+            deallocate(VNSPLL,stat=i_stat)
+            call memocc(i_stat,-product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','allocate_locals_tmat_newsolver')
+         endif
+         deallocate(VNSPLL0,stat=i_stat)
+         call memocc(i_stat,-product(shape(VNSPLL0))*kind(VNSPLL0),'VNSPLL0','allocate_locals_tmat_newsolver')
+         deallocate(VNSPLL1,stat=i_stat)
+         call memocc(i_stat,-product(shape(VNSPLL1))*kind(VNSPLL1),'VNSPLL1','allocate_locals_tmat_newsolver')
+
+         deallocate(HLK,stat=i_stat)
+         call memocc(i_stat,-product(shape(HLK))*kind(HLK),'HLK','allocate_locals_tmat_newsolver')
+         deallocate(JLK,stat=i_stat)
+         call memocc(i_stat,-product(shape(JLK))*kind(JLK),'JLK','allocate_locals_tmat_newsolver')
+         deallocate(HLK2,stat=i_stat)
+         call memocc(i_stat,-product(shape(HLK2))*kind(HLK2),'HLK2','allocate_locals_tmat_newsolver')
+         deallocate(JLK2,stat=i_stat)
+         call memocc(i_stat,-product(shape(JLK2))*kind(JLK2),'JLK2','allocate_locals_tmat_newsolver')
+
+         deallocate(TMATSPH,stat=i_stat)
+         call memocc(i_stat,-product(shape(TMATSPH))*kind(TMATSPH),'TMATSPH','allocate_locals_tmat_newsolver')
+
+         deallocate(RLL,stat=i_stat)
+         call memocc(i_stat,-product(shape(RLL))*kind(RLL),'RLL','allocate_locals_tmat_newsolver')
+         deallocate(SLL,stat=i_stat)
+         call memocc(i_stat,-product(shape(SLL))*kind(SLL),'SLL','allocate_locals_tmat_newsolver')
+
+         if( opt('XCPL    ') .or. (t_wavefunctions%save_rllleft .or.t_wavefunctions%save_sllleft .or. test('rhoqtest')) ) then
+            deallocate(RLLLEFT,stat=i_stat)
+            call memocc(i_stat,-product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','allocate_locals_tmat_newsolver')
+            deallocate(SLLLEFT,stat=i_stat)
+            call memocc(i_stat,-product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','allocate_locals_tmat_newsolver')
+         else
+            deallocate(RLLLEFT,stat=i_stat)
+            call memocc(i_stat,-product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','allocate_locals_tmat_newsolver')
+            deallocate(SLLLEFT,stat=i_stat)
+            call memocc(i_stat,-product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','allocate_locals_tmat_newsolver')
+         end if ! ( opt('XCPL    ') .or. ... )
+
+         deallocate(VINS,stat=i_stat)
+         call memocc(i_stat,-product(shape(VINS))*kind(VINS),'VINS','allocate_locals_tmat_newsolver')
+         deallocate(AUX,stat=i_stat)
+         call memocc(i_stat,-product(shape(AUX))*kind(AUX),'AUX','allocate_locals_tmat_newsolver')
+         deallocate(IPIV,stat=i_stat)
+         call memocc(i_stat,-product(shape(IPIV))*kind(IPIV),'IPIV','allocate_locals_tmat_newsolver')
+         deallocate(TMAT0,stat=i_stat)
+         call memocc(i_stat,-product(shape(TMAT0))*kind(TMAT0),'TMAT0','allocate_locals_tmat_newsolver')
+         deallocate(TMATLL,stat=i_stat)
+         call memocc(i_stat,-product(shape(TMATLL))*kind(TMATLL),'TMATLL','allocate_locals_tmat_newsolver')
+         deallocate(ALPHA0,stat=i_stat)
+         call memocc(i_stat,-product(shape(ALPHA0))*kind(ALPHA0),'ALPHA0','allocate_locals_tmat_newsolver')
+         deallocate(DTMATLL,stat=i_stat)
+         call memocc(i_stat,-product(shape(DTMATLL))*kind(DTMATLL),'DTMATLL','allocate_locals_tmat_newsolver')
+         deallocate(ALPHALL,stat=i_stat)
+         call memocc(i_stat,-product(shape(ALPHALL))*kind(ALPHALL),'ALPHALL','allocate_locals_tmat_newsolver')
+         deallocate(DALPHALL,stat=i_stat)
+         call memocc(i_stat,-product(shape(DALPHALL))*kind(DALPHALL),'DALPHALL','allocate_locals_tmat_newsolver')
+         deallocate(JLK_INDEX,stat=i_stat)
+         call memocc(i_stat,-product(shape(JLK_INDEX))*kind(JLK_INDEX),'JLK_INDEX','allocate_locals_tmat_newsolver')
+
+      end if ! allocmode
+
+   end subroutine allocate_locals_tmat_newsolver
 
 end module mod_tmatnewsolver

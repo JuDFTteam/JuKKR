@@ -238,7 +238,7 @@ macmpi:   CPP = -D CPP_MPI -D CPP_TIMING
 macomp:   CPP = -D CPP_OMP -D CPP_TIMING
 macompprof:   CPP = -D CPP_OMP -D CPP_TIMING
 rwthmpi:  CPP = -D CPP_MPI -D CPP_TIMING
-rwthnag:  CPP = -DCPP_TIMING
+rwthnag:  CPP = -DCPP_TIMING -DCOMP_NO_INTEL
 rwthmpidebug:  CPP = -D CPP_MPI -D CPP_TIMING
 rwthomp:  CPP = -D CPP_OMP -D CPP_TIMING
 rwthhybrid:  CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
@@ -246,9 +246,9 @@ hybrid:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID
 hybriddebug:   CPP = -D CPP_MPI -D CPP_TIMING -D CPP_HYBRID -D CPP_NOMD5
 jureca:   CPP = -D CPP_MPI -D CPP_TIMING
 hazelhen: CPP = -D CPP_MPI -D CPP_TIMING
-gfort: CPP = -D CPP_TIMING -D CPP_NOMD5
-BdGgfort: CPP = -D CPP_TIMING -D CPP_NOMD5
-gfortdebug: CPP = -D CPP_TIMING -D CPP_NOMD5
+gfort: CPP = -D CPP_TIMING -D CPP_NOMD5 -D COMP_NO_INTEL
+BdGgfort: CPP = -D CPP_TIMING -D CPP_NOMD5 -D COMP_NO_INTEL
+gfortdebug: CPP = -D CPP_TIMING -D CPP_NOMD5 -D COMP_NO_INTEL
 
 BdG: CPP= -D CPP_TIMING
 BdGdebug: CPP= -D CPP_TIMING
@@ -294,22 +294,22 @@ rwthhybrid: OPENMPFLAGS = -qopenmp
 DEBUGFLAGS = -O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -module $(OBJ) -g -sox
 #DEBUGFLAGS = -O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox
 
-debug:       FFLAGS = $(DEBUGFLAGS)
-macdebug:       FFLAGS = $(DEBUGFLAGS)
-hybriddebug: FFLAGS = $(DEBUGFLAGS)
-mpidebug:    FFLAGS = $(DEBUGFLAGS)
-ompdebug:    FFLAGS = $(DEBUGFLAGS)
-macmpidebug: FFLAGS = $(DEBUGFLAGS)
-macompdebug: FFLAGS = $(DEBUGFLAGS)
-rwthdebug: FFLAGS = $(DEBUGFLAGS)
+debug:        FFLAGS = $(DEBUGFLAGS)
+macdebug:     FFLAGS = $(DEBUGFLAGS)
+hybriddebug:  FFLAGS = $(DEBUGFLAGS)
+mpidebug:     FFLAGS = $(DEBUGFLAGS)
+ompdebug:     FFLAGS = $(DEBUGFLAGS)
+macmpidebug:  FFLAGS = $(DEBUGFLAGS)
+macompdebug:  FFLAGS = $(DEBUGFLAGS)
+rwthdebug:    FFLAGS = $(DEBUGFLAGS)
 rwthmpidebug: FFLAGS = $(DEBUGFLAGS)
 rwthompdebug: FFLAGS = $(DEBUGFLAGS)
 
-hybriddebug: OPENMPFLAGS = -qopenmp
-ompdebug: OPENMPFLAGS = -qopenmp
+hybriddebug:  OPENMPFLAGS = -qopenmp
+ompdebug:     OPENMPFLAGS = -qopenmp
 rwthompdebug: OPENMPFLAGS = -qopenmp
 
-BdGdebug:       FFLAGS = $(DEBUGFLAGS)
+BdGdebug:     FFLAGS = $(DEBUGFLAGS)
 
 
 ####################################################
