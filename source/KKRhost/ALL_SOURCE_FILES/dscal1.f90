@@ -1,3 +1,7 @@
+module mod_dscal1
+
+contains
+
 subroutine dscal1(n, da, dx, incx)
   use :: mod_datatypes, only: dp
   ! - Scales a vector by a constant  dx(i) -> a * dx(i)
@@ -46,3 +50,5 @@ subroutine dscal1(n, da, dx, incx)
     end do
   end if
 end subroutine dscal1
+
+end module mod_dscal1

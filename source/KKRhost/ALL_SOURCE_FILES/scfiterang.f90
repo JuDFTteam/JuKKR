@@ -1,3 +1,7 @@
+module mod_scfiterang
+
+contains
+
 subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
   qmgam, nq, nk, erravang, nqmax, ntmax, nmvecmax, nkmmax)
   ! ********************************************************************
@@ -8,6 +12,7 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
   ! ********************************************************************
   use :: mod_wunfiles, only: t_params
   use :: mod_datatypes, only: dp
+   use mod_calcrotmat
   implicit none
 
   ! PARAMETER definitions
@@ -227,3 +232,5 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
     '     del   phi      tet')
 140 format (5x, i2, 4x, 2f9.4, 8x, 2f9.4, 5x, 2f9.4)
 end subroutine scfiterang
+
+end module mod_scfiterang

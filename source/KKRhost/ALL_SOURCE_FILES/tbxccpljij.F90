@@ -33,6 +33,12 @@ use mod_types, only: t_tgmat, t_mpi_c_grid, t_cpa
 use mod_mympi, only: myrank, master
 use mod_version_info
 use mod_md5sums
+use mod_cinit
+use mod_cmatmul
+use mod_initabjij
+use mod_cmatstr
+use mod_rotatematrix
+use mod_test
 
 IMPLICIT NONE
 !.

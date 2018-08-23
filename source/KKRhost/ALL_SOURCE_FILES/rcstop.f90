@@ -1,3 +1,7 @@
+module mod_rcstop
+
+contains
+
 ! ************************************************************************
 subroutine rcstop(c)
   ! ************************************************************************
@@ -10,3 +14,5 @@ subroutine rcstop(c)
   stop
 
 end subroutine rcstop
+
+end module mod_rcstop

@@ -1,3 +1,7 @@
+module mod_generalpot
+
+contains
+
 ! **********************************************************************
 subroutine generalpot(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
   r, drdi, vm2z, irws, a, b, ins, irns, lpot, vins, qbound, irc, kshape, &
@@ -440,3 +444,5 @@ subroutine doubleraus1(irmax, irmin, lmpot, rr, drdi, vpot, vins, irmd, &
   end do
   return
 end subroutine doubleraus1
+
+end module mod_generalpot

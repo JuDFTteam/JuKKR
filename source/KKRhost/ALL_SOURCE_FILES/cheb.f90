@@ -1,6 +1,6 @@
-! module mod_cheb
+module mod_cheb
 
-! contains
+contains
 
 subroutine getcmatrix(ncheb, cmatrix)
   ! calculates the C matrix according to:
@@ -193,3 +193,5 @@ subroutine matmat_dmdm(mat1, mat2, ncheb, outmat)
   n = ncheb + 1
   call dgemm('N', 'N', n, n, n, 1e0_dp, mat1, n, mat2, n, 0e0_dp, outmat, n)
 end subroutine matmat_dmdm
+
+end module mod_cheb

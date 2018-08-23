@@ -1,3 +1,7 @@
+module mod_rhototb
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! > @brief add core and valence density expanded in spherical harmonics
 ! >         ( convention see subroutine rholm )
@@ -324,3 +328,5 @@ subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, &
 230 format ('      total magnetic moment =', f10.6)
 
 end subroutine rhototb
+
+end module mod_rhototb

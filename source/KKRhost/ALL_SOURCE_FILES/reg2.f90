@@ -1,3 +1,7 @@
+module mod_reg2
+
+contains
+
 ! ************************************************************************
 subroutine reg2(m, x, f, w, c, xm, fm)
   use :: mod_datatypes, only: dp
@@ -110,3 +114,5 @@ subroutine reg2(m, x, f, w, c, xm, fm)
 
   return
 end subroutine reg2
+
+end module mod_reg2

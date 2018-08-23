@@ -1,3 +1,7 @@
+module mod_dswap1
+
+contains
+
 subroutine dswap1(n, dx, incx, dy, incy)
   use :: mod_datatypes, only: dp
   ! -Interchanges two vectors
@@ -62,3 +66,5 @@ subroutine dswap1(n, dx, incx, dy, incy)
     end do
   end if
 end subroutine dswap1
+
+end module mod_dswap1

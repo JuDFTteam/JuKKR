@@ -1,7 +1,12 @@
+module mod_mkxcpe
+
+contains
+
 subroutine mkxcpe(nspin, ir, np, l1max, rv, rholm, vxcp, excp, thet, ylm, &
   dylmt1, dylmt2, dylmf1, dylmf2, dylmtf, drrl, ddrrl, drrul, ddrrul, irmd, &
   lmpotd)
   use :: mod_datatypes, only: dp
+   use mod_gxcpt
   ! ..
   implicit none
   ! .. Parameters ..
@@ -402,3 +407,5 @@ subroutine mkxcpe(nspin, ir, np, l1max, rv, rholm, vxcp, excp, thet, ylm, &
   end do
   return
 end subroutine mkxcpe
+
+end module mod_mkxcpe

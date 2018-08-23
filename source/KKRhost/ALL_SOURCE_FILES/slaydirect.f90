@@ -1,3 +1,7 @@
+module mod_slaydirect
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: SLAYDIRECT
 ! > @brief This subroutine returns
@@ -136,3 +140,5 @@ subroutine slaydirect(lpot, vec1, vec2, alat, br, suml)
 120 format (1x, ' I1, I2 LM, DIRECT SUM=', 3i4, (d18.9,d18.9))
 
 end subroutine slaydirect
+
+end module mod_slaydirect

@@ -1,3 +1,7 @@
+module mod_rhooutnew
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: RHOOUTNEW
 ! > @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
@@ -12,6 +16,8 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
   use :: profiling
   use :: global_variables
   use :: mod_datatypes, only: dp
+  use mod_calc_orbitalmoment
+  use mod_intcheb_cell
 
   implicit none
 
@@ -315,3 +321,5 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
   call memocc(i_stat, i_all, 'PNSI', 'RHOOUTNEW')
 
 end subroutine rhooutnew
+
+end module mod_rhooutnew

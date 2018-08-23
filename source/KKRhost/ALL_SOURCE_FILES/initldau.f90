@@ -1,3 +1,7 @@
+module mod_initldau
+
+contains
+
 subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
   nspin, r, drdi, z, ipan, ircut, phi, uldau)
 
@@ -15,6 +19,12 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
   use :: mod_datatypes
   use :: mod_types, only: t_inc
   use global_variables
+   use mod_cgcrac
+   use mod_phicalc
+   use mod_gauntc
+   use mod_rinit
+   use mod_simpk
+   use mod_soutk
   implicit none
 
   ! Local variables
@@ -358,3 +368,5 @@ function gauntc(fact, l1, m1, l2, m2, l3, m3)
   end if
   gauntc = g
 end function gauntc
+
+end module mod_initldau

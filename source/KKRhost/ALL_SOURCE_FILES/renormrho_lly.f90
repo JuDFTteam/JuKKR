@@ -1,3 +1,7 @@
+module mod_renormrho_lly
+
+contains
+
 subroutine renormrho_lly(cdos_lly, rhospher, irmax, ielast, nspin, ! LLY Lloyd
                                                                    ! &
 
@@ -77,3 +81,5 @@ subroutine renormrho_lly(cdos_lly, rhospher, irmax, ielast, nspin, ! LLY Lloyd
   ! SET ACCORDING TO lmax VALUE OF INPUTCARD
 end subroutine renormrho_lly
 ! PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
+
+end module mod_renormrho_lly

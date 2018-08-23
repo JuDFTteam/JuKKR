@@ -1,3 +1,7 @@
+module mod_shellgen2k
+
+contains
+
 ! 23.2.2000/ 27.9.2004 *************************************************
 subroutine shellgen2k(icc, natom, rcls, atom, nofgij, iofgij, jofgij, nrot, &
   rsymat, isymindex, rotname, nshell, ratom, nsh1, nsh2, ish, jsh, ijtabsym, &
@@ -346,3 +350,5 @@ subroutine printijtab(natom, ijtab)
 100 format (13x, 65('-'), /, 18x, a, /, 13x, 65('-'), /, 13x, '   J |', /, &
     13x, 'I    | 1..NATCLUS', /, 13x, 6('-'))
 end subroutine printijtab
+
+end module mod_shellgen2k

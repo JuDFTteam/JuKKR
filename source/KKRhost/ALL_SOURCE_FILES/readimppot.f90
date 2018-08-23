@@ -1,3 +1,7 @@
+module mod_readimppot
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: READIMPPOT
 ! > @brief Reads the potential and shapefun of inpurity
@@ -10,6 +14,8 @@ subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, &
   ! n.h.long, May 2013
   ! -----------------------------------------------------------------------
   use :: mod_datatypes, only: dp
+   use mod_calrmt
+   use mod_potcut
   implicit none
   ! .. Parameters ..
   integer :: nspin, natomimp, irmd, irnsd, irid, nfund, ipand
@@ -295,3 +301,5 @@ subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, &
 190 format (10i5)
 200 format (1p, 4d20.13)
 end subroutine readimppot
+
+end module mod_readimppot

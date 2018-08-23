@@ -9,12 +9,12 @@
 ! write out files for test runs
 !#define test_prep
 
-! choose between interface for impurity and host code (different calling lists)
-#ifndef hostcode
 module MOD_RLLSLL
 
 contains
 
+! choose between interface for impurity and host code (different calling lists)
+#ifndef hostcode
    subroutine RLLSLL(RPANBOUND,RMESH,VLL,RLL,SLL,TLLP, &
       NCHEB,NPAN,LMSIZE,LMSIZE2,NRMAX, &
       nvec,jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR, &
@@ -107,6 +107,8 @@ contains
       use mod_physic_params,only: cvlight       ! speed of light
       use sourceterms
       use mod_chebyshev
+#else
+      use mod_chebint
 #endif
       use mod_timing                            ! timing routine
 #ifdef CPP_HYBRID
@@ -899,9 +901,7 @@ end subroutine rllsll
    !
    ! end subroutine iterativesol
 
-#ifndef hostcode
 END MODULE MOD_RLLSLL
-#endif
 
 #ifdef test_run
 program test_rllsll

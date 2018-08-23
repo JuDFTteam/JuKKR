@@ -1,3 +1,7 @@
+module mod_decipotbas
+
+contains
+
 subroutine decipotbas(ihost, iqoff, itoff, nq, nt, rbasis, qmtet, qmphi, noq, &
   kaoez, zat, iqat, conc, irws, ipan, ircut, rr, drdi, visp, nspin, krel, &
   solver, socscl, cscl, vtrel, btrel, irmd, ipand, nembd1, ntmax, nspind, &
@@ -109,3 +113,5 @@ subroutine decipotbas(ihost, iqoff, itoff, nq, nt, rbasis, qmtet, qmphi, noq, &
 180 format (9x, i3, 1x, a3, i3, f7.4, i4, f10.6)
 190 format (1p, 4d20.12)
 end subroutine decipotbas
+
+end module mod_decipotbas

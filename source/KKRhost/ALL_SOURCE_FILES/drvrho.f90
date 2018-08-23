@@ -1,3 +1,7 @@
+module mod_drvrho
+
+contains
+
 subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   eryd, we, ielast, gmatll, vt, bt, r, drdi, r2drdi, zat, jws, ishift, solver, &
   soctl, ctl, qmtet, qmphi, itermvdir, mvevil, mvevilef, lmmaxd, lmaxd, irmd, &
@@ -12,6 +16,13 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   ! ********************************************************************
   use :: mod_types, only: t_tgmat
   use :: mod_datatypes, only: dp
+  use mod__amemagvec
+   use mod_calccgc
+   use mod_calcgf
+   use mod_calcmvec
+   use mod_ssite
+   use mod_scfchrdns
+   use mod_ikmlin
   implicit none
 
   ! PARAMETER definitions
@@ -434,3 +445,5 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   ! ======================================================================
 
 end subroutine drvrho_qdos
+
+end module mod_drvrho

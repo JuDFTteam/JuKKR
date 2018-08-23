@@ -1,3 +1,7 @@
+module mod_bofm
+
+contains
+
 ! **********************************************************************
 subroutine bofm(pl1, pl2, block, nsize, gin, almd)
   ! **********************************************************************
@@ -24,3 +28,5 @@ subroutine bofm(pl1, pl2, block, nsize, gin, almd)
   return
 
 end subroutine bofm
+
+end module mod_bofm

@@ -1,3 +1,7 @@
+module mod_gfmask
+
+contains
+
 subroutine gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell, &
   naezd, nprincd)
   ! **********************************************************************
@@ -228,3 +232,5 @@ subroutine gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell, &
     i3, /, 6x, 'Use ONLY  full inversion in this case')
 120 format (8x, 'INVERSION algorithm used : ', a35, /)
 end subroutine gfmask
+
+end module mod_gfmask

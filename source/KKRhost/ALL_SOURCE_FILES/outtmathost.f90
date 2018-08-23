@@ -1,3 +1,7 @@
+module mod_outtmathost
+
+contains
+
 subroutine outtmathost(alat, ins, krel, kmrot, nspin, naez, lmmax, bravais, &
   rbasis, qmtet, qmphi, e2in, tk, npol, npnt1, npnt2, npnt3)
   ! **********************************************************************
@@ -52,3 +56,5 @@ subroutine outtmathost(alat, ins, krel, kmrot, nspin, naez, lmmax, bravais, &
 170 format ('EF=', f10.6, ' TEMP=', f10.4, ' Kelvin')
 180 format ('N1=', i3, ' N2=', i3, ' N3=', i3, ' NPOL=', i3)
 end subroutine outtmathost
+
+end module mod_outtmathost

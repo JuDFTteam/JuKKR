@@ -1,3 +1,7 @@
+module mod_simp3
+
+contains
+
 subroutine simp3(f, fint, istart, iend, drdi)
   use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
@@ -49,3 +53,5 @@ subroutine simp3(f, fint, istart, iend, drdi)
   fint = fint - f(iend)*drdi(iend)/3.0e0_dp
 
 end subroutine simp3
+
+end module mod_simp3

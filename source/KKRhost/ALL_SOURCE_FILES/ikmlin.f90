@@ -1,3 +1,7 @@
+module mod_ikmlin
+
+contains
+
 subroutine ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, &
   nl)
   ! ********************************************************************
@@ -12,6 +16,7 @@ subroutine ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, &
   ! *                                                                  *
   ! ********************************************************************
   use :: mod_types, only: t_inc
+   use mod_ikapmue
   implicit none
 
 
@@ -52,3 +57,5 @@ subroutine ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, &
       ikm1lin(i), ikm2lin(i), i=1, lin)
   end if
 end subroutine ikmlin
+
+end module mod_ikmlin

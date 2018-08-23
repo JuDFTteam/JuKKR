@@ -1,10 +1,18 @@
+module mod_drvbastrans
+
+contains
+
 subroutine drvbastrans(rc, crel, rrel, srrel, nrrel, irrel, nlmax, nkmmax, &
   nmuemax, nkmpmax, nkmax, linmax)
+  ! ********************************************************************
+  ! *                                                                  *
+  ! *                                                                  *
+  ! ********************************************************************
   use :: mod_datatypes, only: dp
-  ! ********************************************************************
-  ! *                                                                  *
-  ! *                                                                  *
-  ! ********************************************************************
+  use mod_bastrmat
+   use mod_ikmlin
+   use mod_strsmat
+   use mod_calccgc
   implicit none
 
   ! Dummy arguments
@@ -62,3 +70,5 @@ subroutine drvbastrans(rc, crel, rrel, srrel, nrrel, irrel, nlmax, nkmmax, &
 
   return
 end subroutine drvbastrans
+
+end module mod_drvbastrans

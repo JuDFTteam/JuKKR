@@ -1,3 +1,7 @@
+module mod_calcsph
+
+contains
+
 subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, &
   lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk, jlk, &
   hlk2, jlk2, gmatprefactor, tmat, alpha, use_sratrick)
@@ -5,6 +9,8 @@ subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, &
   use :: constants
   use :: profiling
   use :: mod_datatypes, only: dp
+   use mod_rllsll
+   use mod_vllmatsra
 
   implicit none
   ! construct wavefunctions for spherical potentials
@@ -177,3 +183,5 @@ subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, &
   deallocate (vll)
 
 end subroutine calcsph
+
+end module mod_calcsph

@@ -1,3 +1,7 @@
+module mod_hankel
+
+contains
+
 subroutine hankel(h, l, arg)
   use :: mod_datatypes, only: dp
   ! this subroutine uses the explicit formulas for the hankel
@@ -65,3 +69,5 @@ subroutine hankel(h, l, arg)
 
 100 format (2x, ' hankel :  l=', i2, ' is too large')
 end subroutine hankel
+
+end module mod_hankel

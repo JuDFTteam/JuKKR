@@ -14,7 +14,31 @@ module MOD_MAIN2
    use Profiling
    use Constants
    use global_variables
-      Use mod_datatypes, Only: dp
+   Use mod_datatypes, Only: dp
+
+   use mod_brydbm
+   use mod_convol
+   use mod_ecoub
+   use mod_epathtb
+   use mod_epotinb
+   use mod_espcb
+   use mod_etotb1
+   use mod_force
+   use mod_forceh
+   use mod_forcxc
+   use mod_mtzero
+   use mod_mdirnewang
+   use mod_mixstr
+   use mod_rhosymm
+   use mod_relpotcvt
+   use mod_rhototb
+   use mod_vmadelblk
+   use mod_vintras
+   use mod_vinterface
+   use mod_scfiterang
+   use mod_rites
+   use mod_writekkrflex
+   use mod_vxcdrv
 
    implicit none
 

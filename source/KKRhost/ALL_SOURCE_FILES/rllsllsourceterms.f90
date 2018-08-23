@@ -1,3 +1,7 @@
+module mod_rllsllsourceterms
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! > @brief Calculates the source terms J,H and the left solution J2, H2 for:
 ! > - non-relativistic
@@ -10,6 +14,8 @@ subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, &
 
   use :: constants
   use :: mod_datatypes, only: dp
+  use mod_beshank
+  use mod_beshank_smallcomp
 
   implicit none
 
@@ -98,3 +104,5 @@ subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, &
   gmatprefactor = ek2
 
 end subroutine rllsllsourceterms
+
+end module mod_rllsllsourceterms

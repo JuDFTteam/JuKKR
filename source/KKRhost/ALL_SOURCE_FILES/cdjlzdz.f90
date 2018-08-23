@@ -1,3 +1,7 @@
+module mod_cdjlzdz
+
+contains
+
 function cdjlzdz(l, z, mode)
   ! ********************************************************************
   ! *                                                                  *
@@ -36,3 +40,5 @@ function cdjlzdz(l, z, mode)
     cdjlzdz = l*cjlz(l, z)/z - cjlz(l+1, z)
   end if
 end function cdjlzdz
+
+end module mod_cdjlzdz

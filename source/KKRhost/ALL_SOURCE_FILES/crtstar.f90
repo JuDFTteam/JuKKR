@@ -1,3 +1,7 @@
+module mod_crtstar
+
+contains
+
 ! 20.07.96 ***************************************************************
 subroutine crtstar(ratom, nshell, nd, irot, isymindex, rrot)
   use :: mod_datatypes, only: dp
@@ -31,3 +35,5 @@ subroutine crtstar(ratom, nshell, nd, irot, isymindex, rrot)
   return
 
 end subroutine crtstar
+
+end module mod_crtstar

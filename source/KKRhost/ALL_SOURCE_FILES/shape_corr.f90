@@ -1,6 +1,9 @@
+module mod_shape_corr
+
+contains
+
 subroutine shape_corr(lpot, natyp, gsh, ilm_map, imaxsh, lmsp, ntcell, w, yr, &
   lassld, lmpotd, natypd, ngshd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *  Prepares shape corrections using gaussian quadrature as given by  *
   ! *  m. abramowitz and i.a. stegun, handbook of mathematical functions *
@@ -11,6 +14,9 @@ subroutine shape_corr(lpot, natyp, gsh, ilm_map, imaxsh, lmsp, ntcell, w, yr, &
   ! *                                                                    *
   ! **********************************************************************
 
+  use :: mod_datatypes, only: dp
+   use mod_rcstop
+   use mod_trarea
   implicit none
   real (kind=dp), parameter :: eps=1.0D-12
   ! ..
@@ -145,3 +151,5 @@ function triangle(l1, l2, l3)
   ! ..
   triangle = (l1>=abs(l3-l2)) .and. (l1<=(l3+l2)) .and. (mod((l1+l2+l3),2)==0)
 end function triangle
+
+end module mod_shape_corr

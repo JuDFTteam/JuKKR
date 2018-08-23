@@ -1,3 +1,7 @@
+module mod_getdmat
+
+contains
+
 subroutine getdmat(tauq, dmatt, dtilt, dm, n, mssq, msst, m)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -63,3 +67,5 @@ subroutine getdmat(tauq, dmatt, dtilt, dm, n, mssq, msst, m)
   call zgetri(n, dmatt, m, ipiv, maux, m*m, info)
 
 end subroutine getdmat
+
+end module mod_getdmat

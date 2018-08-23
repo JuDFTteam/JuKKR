@@ -1,3 +1,7 @@
+module mod_calctmat
+
+contains
+
 
 SUBROUTINE calctmat(icst,ins,ielast, nsra,ispin,nspin,i1,ez,  &
     drdi,rmesh,vins,visp,zat,irmin,ipan, &               ! Added IRMIN 1.7.2014  &
@@ -36,6 +40,9 @@ use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,  &
     t_lloyd,init_tlloyd
 use mod_DataTypes
 use global_variables
+   use mod_pnstmat
+   use mod_cradwf
+   use mod_wfmesh
 
 IMPLICIT NONE
 
@@ -359,3 +366,5 @@ END DO ! IE = 1,IELAST
 
 RETURN
 END SUBROUTINE calctmat
+
+end module mod_calctmat

@@ -1,3 +1,7 @@
+module mod_core
+
+contains
+
 subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
   drdi, jws, imt, rhochr, rhospn, ecortab, gcor, fcor, ecor, szcor, kapcor, &
   mm05cor, nkpcor, ikmcor, izero, ncxray, lcxray, itxray, bcor, bcors, sdia, &
@@ -50,8 +54,15 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
   ! *        IPRINT values between 0 and 2                             *
   ! *        ITPRT  correct value of the atom-type index               *
   ! ********************************************************************
-  use :: mod_types, only: t_inc
-  use :: mod_datatypes, only: dp
+  use mod_types, only: t_inc
+  use mod_datatypes, only: dp
+  use mod_coredir
+  use mod_coreerr
+  use mod_corehff
+  use mod_hffcore
+  use mod_ikapmue
+  use mod_rintsimp
+  use mod_rnuctab
   implicit none
 
 
@@ -1038,3 +1049,5 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     /, ' NODES   =', i5, '  RAT=', e11.4)
 330 format (' integrated core ', a, ' density for atom type ', i4, ':', f12.8)
 end subroutine core
+
+end module mod_core

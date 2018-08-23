@@ -1,6 +1,9 @@
+module mod_gijdmat
+
+contains
+
 subroutine gijdmat(tauq, tsst, mssq, dmat, dtil, cfctorinv, iprint, ie, it, &
   krel, lmmaxd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! * Subroutine to get the projection matrices                          *
   ! *                                                                    *
@@ -25,6 +28,8 @@ subroutine gijdmat(tauq, tsst, mssq, dmat, dtil, cfctorinv, iprint, ie, it, &
   ! *                                      v.popescu Oct. 2004           *
   ! **********************************************************************
 
+  use :: mod_datatypes, only: dp
+   use mod_getdmat
   implicit none
   ! ..
   ! .. Arguments ..
@@ -95,3 +100,5 @@ subroutine gijdmat(tauq, tsst, mssq, dmat, dtil, cfctorinv, iprint, ie, it, &
   ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 
 end subroutine gijdmat
+
+end module mod_gijdmat

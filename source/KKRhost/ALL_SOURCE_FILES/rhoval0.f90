@@ -1,3 +1,7 @@
+module mod_rhoval0
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: RHOVAL0
 ! > @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
@@ -9,6 +13,8 @@ subroutine rhoval0(ez, drdi, rmesh, ipan, ircut, irws, thetas, dos0, dos1, &
   use :: constants
   use :: global_variables
   use :: mod_datatypes, only: dp
+   use mod_beshan
+   use mod_csimpk
 
   implicit none
 
@@ -99,3 +105,5 @@ subroutine rhoval0(ez, drdi, rmesh, ipan, ircut, irws, thetas, dos0, dos1, &
   end do
 
 end subroutine rhoval0
+
+end module mod_rhoval0

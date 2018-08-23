@@ -1,3 +1,7 @@
+module mod_grule
+
+contains
+
 ! **********************************************************************
 subroutine grule(n, x, w)
 
@@ -68,3 +72,5 @@ subroutine grule(n, x, w)
   end do
   if (m+m>n) x(m) = 0._dp
 end subroutine grule
+
+end module mod_grule

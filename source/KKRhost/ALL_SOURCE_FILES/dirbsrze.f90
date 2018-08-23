@@ -1,3 +1,7 @@
+module mod_dirbsrze
+
+contains
+
 subroutine dirbsrze(iest, xest, yest, yz, dy, nv, nuse)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -62,3 +66,5 @@ subroutine dirbsrze(iest, xest, yest, yz, dy, nv, nuse)
     end do
   end if
 end subroutine dirbsrze
+
+end module mod_dirbsrze

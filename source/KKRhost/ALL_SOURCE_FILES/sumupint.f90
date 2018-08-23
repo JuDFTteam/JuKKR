@@ -1,3 +1,7 @@
+module mod_sumupint
+
+contains
+
 subroutine sumupint(sum, vg, g, wg, vf, f, wf, n)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -24,3 +28,5 @@ subroutine sumupint(sum, vg, g, wg, vf, f, wf, n)
   end do
 
 end subroutine sumupint
+
+end module mod_sumupint

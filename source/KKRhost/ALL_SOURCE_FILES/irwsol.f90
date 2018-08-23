@@ -1,3 +1,7 @@
+module mod_irwsol
+
+contains
+
 subroutine irwsol(ek, fz, hamf, mass, pz, qz, sz, dror, s, ipan, ircut, irmd, &
   ipand, lmaxd)
   use :: mod_datatypes, only: dp
@@ -189,3 +193,5 @@ subroutine irwsol(ek, fz, hamf, mass, pz, qz, sz, dror, s, ipan, ircut, irmd, &
   end do
 
 end subroutine irwsol
+
+end module mod_irwsol

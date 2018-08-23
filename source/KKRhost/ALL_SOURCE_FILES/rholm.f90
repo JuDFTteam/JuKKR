@@ -1,3 +1,7 @@
+module mod_rholm
+
+contains
+
 subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
   sz, cleb, icleb, iend, jend, ekl)
   ! -----------------------------------------------------------------------
@@ -207,3 +211,5 @@ subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
   end do
   ! calculate in the spin-polarized case (nspin=2) :
 end subroutine rholm
+
+end module mod_rholm

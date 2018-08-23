@@ -1,3 +1,7 @@
+module mod_clsgen99
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: CLSGEN99
 ! > @brief This subroutine is used to create the clusters around each atom
@@ -205,3 +209,5 @@ subroutine clsgen99(naez, rr, nr, rbasis, kaoez, z, cls, nacls, refpot, atom, &
               if (number>naclsd) then
                 write (6, *) 'ERROR: Dimension NACLSD in inc.cls too small', &
                   number,
+
+end module mod_clsgen99

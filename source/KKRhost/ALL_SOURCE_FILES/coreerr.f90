@@ -1,3 +1,7 @@
+module mod_coreerr
+
+contains
+
 subroutine coreerr(err, var, s, nsol, pow, qow, piw, qiw)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -29,3 +33,5 @@ subroutine coreerr(err, var, s, nsol, pow, qow, piw, qiw)
     qiw(t, t)*var(2)*var(4)
 
 end subroutine coreerr
+
+end module mod_coreerr

@@ -1,3 +1,7 @@
+module mod_vllns
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: VLLNS
 ! > @brief Transformation of the wavefunctions for non spherical potentials.
@@ -80,3 +84,5 @@ subroutine vllns(vnspll, vins, cleb, icleb, iend, irm, ncleb, lmpot, irmind, &
   end do
 
 end subroutine vllns
+
+end module mod_vllns

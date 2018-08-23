@@ -1,3 +1,7 @@
+module mod_strsmat
+
+contains
+
 subroutine strsmat(lmax, cgc, srrel, nrrel, irrel, nkmmax, nkmpmax)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -142,3 +146,5 @@ subroutine strsmat(lmax, cgc, srrel, nrrel, irrel, nkmmax, nkmpmax)
   end do
 
 end subroutine strsmat
+
+end module mod_strsmat

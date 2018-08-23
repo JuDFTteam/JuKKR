@@ -1,3 +1,7 @@
+module mod_dclock
+
+contains
+
 ! **********************************************************************
 function dclock()
   use :: mod_datatypes, only: dp
@@ -11,3 +15,5 @@ function dclock()
   dclock = real(etime(tarry), kind=dp)
   return
 end function dclock
+
+end module mod_dclock

@@ -1,3 +1,7 @@
+module mod_length
+
+contains
+
 ! ************************************************************************
 integer function length(s, max)
   ! ************************************************************************
@@ -17,3 +21,5 @@ integer function length(s, max)
 
   return
 end function length
+
+end module mod_length

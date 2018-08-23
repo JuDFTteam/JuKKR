@@ -1,5 +1,11 @@
+module mod_interpolspline
+
+contains
+
 subroutine interpolspline(rmesh, rmeshnew, vpot, vpotnew, nrmax, nrmaxnew)
   use :: mod_datatypes, only: dp
+   use mod_spline_real
+   use mod_splint_real
   implicit none
   ! interface
   integer :: nrmax
@@ -24,3 +30,5 @@ subroutine interpolspline(rmesh, rmeshnew, vpot, vpotnew, nrmax, nrmaxnew)
     vpotnew(ir) = parsum
   end do
 end subroutine interpolspline
+
+end module mod_interpolspline

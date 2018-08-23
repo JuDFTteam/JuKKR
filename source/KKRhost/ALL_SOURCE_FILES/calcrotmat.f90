@@ -1,3 +1,7 @@
+module mod_calcrotmat
+
+contains
+
 subroutine calcrotmat(nk, irel, alfdeg, betdeg, gamdeg, rot, fact, nkmmax)
   ! ********************************************************************
   ! *                                                                  *
@@ -14,6 +18,7 @@ subroutine calcrotmat(nk, irel, alfdeg, betdeg, gamdeg, rot, fact, nkmmax)
   ! ********************************************************************
 
   use :: mod_datatypes, only: dp
+   use mod_errortrap
   implicit none
 
   complex (kind=dp) :: ci, c0
@@ -104,3 +109,5 @@ subroutine calcrotmat(nk, irel, alfdeg, betdeg, gamdeg, rot, fact, nkmmax)
 
   return
 end subroutine calcrotmat
+
+end module mod_calcrotmat

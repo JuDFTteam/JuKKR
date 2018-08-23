@@ -1,3 +1,7 @@
+module mod_changerep
+
+contains
+
 subroutine changerep(a, mode, b, n, m, rc, crel, rrel, text, ltext)
   ! ********************************************************************
   ! *                                                                  *
@@ -67,3 +71,5 @@ subroutine changerep(a, mode, b, n, m, rc, crel, rrel, text, ltext)
   if (ltext>0) call cmatstr(text, ltext, b, n, m, key, key, 0, 1e-8_dp, 6)
   ! IF ( LTEXT.GT.0 ) CALL CMATSTR(TEXT,LTEXT,B,N,M,KEY,KEY,0,1D-12,6)
 end subroutine changerep
+
+end module mod_changerep

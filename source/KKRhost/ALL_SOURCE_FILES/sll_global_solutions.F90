@@ -1,3 +1,7 @@
+module mod_sll_global_solutions
+
+contains
+
 ! preprocessor options:
 ! change this definition if used in host/impurity code
 ! this is commented out, since then the logical hostcode is not defined
@@ -33,6 +37,8 @@ use mod_timing                            ! timing routine
 use omp_lib ! omp functions
 #endif
       Use mod_datatypes, Only: dp
+   use mod_chebint
+   use mod_sll_local_solutions
 implicit none
       integer :: ncheb                               ! number of chebyshev nodes
       integer :: npan                                ! number of panels
@@ -287,3 +293,5 @@ if (idotime==1) call timing_stop('rllsll')
 deallocate( work, cllp, dllp, mihvy, mihvz,  mijvy, mijvz,yif,zif, stat=ierror )
 if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
 end subroutine sll_global_solutions
+
+end module mod_sll_global_solutions

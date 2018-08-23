@@ -1,6 +1,9 @@
+module mod_corehff
+
+contains
+
 subroutine corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, rnuc, &
   nzero, nrc)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! *   CALCULATE THE RELATIVISTIC HYPERFINEFIELDS FOR THE             *
@@ -10,6 +13,9 @@ subroutine corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, rnuc, &
   ! *                                                                  *
   ! ********************************************************************
 
+  use :: mod_datatypes, only: dp
+   use mod_ylag
+   use mod_rint4pts
   implicit none
 
 
@@ -76,3 +82,5 @@ subroutine corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, rnuc, &
   end do
 
 end subroutine corehff
+
+end module mod_corehff

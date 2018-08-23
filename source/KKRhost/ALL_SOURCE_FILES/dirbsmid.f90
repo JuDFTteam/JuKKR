@@ -1,5 +1,8 @@
+module mod_dirbsmid
+
+contains
+
 subroutine dirbsmid(y, dydx, nv, xs, htot, nstep, yout, b, v, r, drdi, nmesh)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! *   modified midpoint step to support the  Burlisch-Stoer method   *
@@ -9,6 +12,8 @@ subroutine dirbsmid(y, dydx, nv, xs, htot, nstep, yout, b, v, r, drdi, nmesh)
   ! *                                                                  *
   ! ********************************************************************
 
+  use :: mod_datatypes, only: dp
+   use mod_dirbsrad
   implicit none
 
   include 'sprkkr_rmesh.dim'
@@ -49,3 +54,5 @@ subroutine dirbsmid(y, dydx, nv, xs, htot, nstep, yout, b, v, r, drdi, nmesh)
   end do
 
 end subroutine dirbsmid
+
+end module mod_dirbsmid

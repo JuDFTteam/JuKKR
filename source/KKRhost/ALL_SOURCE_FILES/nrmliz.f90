@@ -1,3 +1,7 @@
+module mod_nrmliz
+
+contains
+
 subroutine nrmliz(n, r, rn)
   use :: mod_datatypes, only: dp
   ! -  normalizes a vector
@@ -27,3 +31,5 @@ subroutine nrmliz(n, r, rn)
   end do
 
 end subroutine nrmliz
+
+end module mod_nrmliz

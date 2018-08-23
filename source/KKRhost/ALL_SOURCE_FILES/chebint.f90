@@ -1,3 +1,7 @@
+module mod_chebint
+
+contains
+
 subroutine chebint(cslc1, csrc1, slc1sum, c1, n)
   use :: mod_datatypes, only: dp
   ! ---------------------------------------------------------------------
@@ -107,3 +111,5 @@ subroutine chebint(cslc1, csrc1, slc1sum, c1, n)
   end do
   return
 end subroutine chebint
+
+end module mod_chebint

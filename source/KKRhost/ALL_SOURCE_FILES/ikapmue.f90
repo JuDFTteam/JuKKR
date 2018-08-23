@@ -1,3 +1,7 @@
+module mod_ikapmue
+
+contains
+
 function ikapmue(kappa, muem05)
   ! ********************************************************************
   ! *                                                                  *
@@ -27,3 +31,5 @@ function ikapmue(kappa, muem05)
   ikapmue = 2*l*jp05 + jp05 + muem05 + 1
 
 end function ikapmue
+
+end module mod_ikapmue

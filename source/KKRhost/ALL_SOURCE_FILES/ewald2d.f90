@@ -1,3 +1,7 @@
+module mod_ewald2d
+
+contains
+
 subroutine ewald2d(lpot, alat, vec1, vec2, iq1, iq2, rm2, nrmax, nshlr, nsr, &
   gn2, ngmax, nshlg, nsg, sum2d, vol, lassld, lmxspd)
   use :: mod_datatypes, only: dp
@@ -37,6 +41,10 @@ subroutine ewald2d(lpot, alat, vec1, vec2, iq1, iq2, rm2, nrmax, nshlr, nsr, &
   ! *                                                                    *
   ! **********************************************************************
   use :: mod_datatypes, only: dp
+   use mod_fplaneg
+   use mod_fplaner
+   use mod_gamfc
+   use mod_ymy
   implicit none
   ! ..
   ! .. Scalar arguments ..
@@ -431,3 +439,5 @@ subroutine ewald2d(lpot, alat, vec1, vec2, iq1, iq2, rm2, nrmax, nshlr, nsr, &
     e9.2, 'LAYER PAIR', 2i6, /, 15x, &
     'You should use more lattice vectors (GMAX)')
 end subroutine ewald2d
+
+end module mod_ewald2d

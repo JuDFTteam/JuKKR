@@ -17,6 +17,12 @@ module MOD_MAIN1A
    Use mod_datatypes, Only: dp
    use mod_tmatnewsolver, only: tmat_newsolver
 
+   use mod_tbref
+   use mod_opendafile
+   use mod_interpolate_poten
+   use mod_initldau
+   use mod_calctmat
+
    implicit none
 
 contains

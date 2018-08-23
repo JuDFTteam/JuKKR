@@ -1,3 +1,7 @@
+module mod_gxcpt
+
+contains
+
 subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
   gggru, gggrd, grgru, grgrd, gzgr, xcptu, xcptd, xced, vxlu, vxld, vclu, &
   vcld, xedl, cedl, vxgu, vxgd, vcgu, vcgd, xedg, cedg)
@@ -5,6 +9,11 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
   ! .....gxcp: exchange-correlation potential in ry. also total-energy.
   ! .....-----------------------------------------------------------------
   use :: mod_datatypes, only: dp
+   use mod_corlsd
+   use mod_cpw91
+   use mod_exch91
+   use mod_fdfdz
+   use mod_ffz
   implicit none
   ! .. Scalar Arguments ..
   real (kind=dp) :: agr, agrd, agru, cedg, cedl, g2r, g2rd, g2ru, gggr, gggrd, &
@@ -692,3 +701,5 @@ real(kind=dp) function fdedr(ro, x, a, x0, xl, xl0, xld, b, q)
            )
 end function
 
+
+end module mod_gxcpt

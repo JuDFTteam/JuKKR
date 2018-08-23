@@ -1,5 +1,8 @@
+module mod_csimpk
+
+contains
+
 subroutine csimpk(cf, cfint, ipan, ircut, drdi)
-  use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
   ! this subroutine does an integration up to rcut of an
   ! complex function cf with an extended 3-point-simpson :
@@ -14,6 +17,9 @@ subroutine csimpk(cf, cfint, ipan, ircut, drdi)
   ! attention : input cf is destroyed !
 
   ! -----------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+   use mod_csum
+  implicit none
   ! .. Scalar Arguments ..
   complex (kind=dp) :: cfint
   integer :: ipan
@@ -68,3 +74,5 @@ subroutine csimpk(cf, cfint, ipan, ircut, drdi)
   end do
 
 end subroutine csimpk
+
+end module mod_csimpk

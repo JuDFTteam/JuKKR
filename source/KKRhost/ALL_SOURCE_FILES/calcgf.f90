@@ -1,3 +1,7 @@
+module mod_calcgf
+
+contains
+
 subroutine calcgf(nk, cgc, gdia, gmdia, goff, gmoff, fdia, fmdia, foff, fmoff, &
   ltab, lbtab, kaptab, nmuetab, nmuemax, nkmmax, nkmpmax)
   use :: mod_datatypes, only: dp
@@ -106,3 +110,5 @@ subroutine calcgf(nk, cgc, gdia, gmdia, goff, gmoff, fdia, fmdia, foff, fmoff, &
 
 
 end subroutine calcgf
+
+end module mod_calcgf

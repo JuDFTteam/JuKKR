@@ -1,3 +1,7 @@
+module mod_fplaneg
+
+contains
+
 subroutine fplaneg(lamda, g, pref, lmax, ga, vol)
   use :: mod_datatypes, only: dp
   ! **************************************************************************
@@ -53,3 +57,5 @@ subroutine fplaneg(lamda, g, pref, lmax, ga, vol)
   ! &                               -2.d0*ga*ga*lamda*lamda
   ! &                               +12.d0*lamda**5))
 end subroutine fplaneg
+
+end module mod_fplaneg

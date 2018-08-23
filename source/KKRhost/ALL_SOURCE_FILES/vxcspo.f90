@@ -1,3 +1,7 @@
+module mod_vxcspo
+
+contains
+
 subroutine vxcspo(exc, fpirho, vxc, kxc, ijend, ijd)
   use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
@@ -104,3 +108,5 @@ subroutine vxcspo(exc, fpirho, vxc, kxc, ijend, ijd)
     vxc(ij, 1) = vxcc + d2*xfac
   end do
 end subroutine vxcspo
+
+end module mod_vxcspo

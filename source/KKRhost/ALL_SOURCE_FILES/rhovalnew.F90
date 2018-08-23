@@ -1,3 +1,7 @@
+module mod_rhovalnew
+
+contains
+
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: RHOVALNEW
 !> @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
@@ -33,6 +37,19 @@ subroutine RHOVALNEW( &
    use Constants
    use Profiling
    Use mod_datatypes, Only: dp
+   use mod_rhooutnew
+   use mod_calcsph
+   use mod_cheb2oldgrid
+   use mod_rll_global_solutions
+   use mod_intcheb_cell
+   use mod_rllsllsourceterms
+   use mod_rllsll
+   use mod_spinorbit_ham
+   use mod_sll_global_solutions
+   use mod_rotatevector
+   use mod_rotatematrix
+   use mod_vllmatsra
+   use mod_vllmat
 
    IMPLICIT NONE
 
@@ -1200,3 +1217,5 @@ subroutine RHOVALNEW( &
    call memocc(i_stat,i_all,'DENLM','RHOVALNEW')
 
 end subroutine RHOVALNEW
+
+end module mod_rhovalnew

@@ -1,6 +1,11 @@
+module mod_gaunt2
+
+contains
+
 ! ***********************************************************************
 subroutine gaunt2(w, yr, n)
   use :: mod_datatypes, only: dp
+   use mod_grule
   ! ************************************************************************
   ! sets up values needed for gaunt
   ! m. weinert  january 1982
@@ -81,3 +86,5 @@ subroutine gaunt2(w, yr, n)
     end do
   end do
 end subroutine gaunt2
+
+end module mod_gaunt2

@@ -1,3 +1,7 @@
+module mod_beshank
+
+contains
+
 subroutine beshank(hl, jl, z, lmax)
   ! -----------------------------------------------------------------------
   ! calculates spherical bessel, hankel and neumann functions
@@ -116,3 +120,5 @@ subroutine beshank_smallcomp(hl, jl, zval, tau, eryd, lmax)
   end do
 
 end subroutine beshank_smallcomp
+
+end module mod_beshank

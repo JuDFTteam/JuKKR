@@ -34,6 +34,14 @@ contains
       use mod_jijhelp, only: calc_dtmatJij
       use global_variables
       use mod_DataTypes
+      use mod_ioinput
+      use mod_calcsph
+      use mod_rll_global_solutions
+      use mod_rllsllsourceterms
+      use mod_rllsll
+      use mod_spinorbit_ham
+      use mod_vllmat
+      use mod_vllmatsra
 
       implicit none
 

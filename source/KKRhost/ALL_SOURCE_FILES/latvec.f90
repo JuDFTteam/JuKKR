@@ -1,3 +1,7 @@
+module mod_latvec
+
+contains
+
 logical function latvec(n, qlat, vec)
   use :: mod_datatypes, only: dp
   ! - Checks if a set of vectors are lattice vectors
@@ -33,3 +37,5 @@ logical function latvec(n, qlat, vec)
   end do
   latvec = .true.
 end function latvec
+
+end module mod_latvec

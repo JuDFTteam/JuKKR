@@ -1,3 +1,7 @@
+module mod_cnlz
+
+contains
+
 function cnlz(l, z)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -70,3 +74,5 @@ function cnlz(l, z)
   end if
 
 end function cnlz
+
+end module mod_cnlz

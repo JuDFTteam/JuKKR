@@ -1,3 +1,7 @@
+module mod_ssite
+
+contains
+
 subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
   eryd, p, ihyper, iprint, ikm1lin, ikm2lin, nlq, nkmq, nlinq, nt, nkm, iqat, &
   tsst, msst, tsstlin, dzz, dzj, szz, szj, ozz, ozj, bzz, bzj, qzz, qzj, tzz, &
@@ -30,6 +34,20 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
   ! *               polarisation                                       *
   ! ********************************************************************
 
+   use mod_cdjlzdz
+   use mod_cdnlzdz
+   use mod_dirabmop
+   use mod_cinthff
+   use mod_cintabr
+   use mod_cjlz
+   use mod_dirabmsoc2
+   use mod_dirabmsoc
+   use mod_dirbs
+   use mod_cnlz
+   use mod_ikapmue
+   use mod_rinit
+   use mod_sumupint
+   use mod_rnuctab
 
   implicit none
 
@@ -762,3 +780,5 @@ subroutine readwfun(nfil, it, l, mj, nsol, sreg, sirr, ikm1, kap1, ikm2, kap2, &
     ' IFLAG = 1', /, 10x, 'for  IT=', i2, ' L=', i2, ' MJ=', f4.1, ' KEYS=', &
     a, a)
 end subroutine readwfun
+
+end module mod_ssite

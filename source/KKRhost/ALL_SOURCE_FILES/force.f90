@@ -1,3 +1,7 @@
+module mod_force
+
+contains
+
 subroutine force(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, drdi, irws)
   use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
@@ -119,3 +123,5 @@ subroutine force(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, drdi, irws)
     ' contributions up to l=1 at least ')
   ! with core correction (coulomb contribution)
 end subroutine force
+
+end module mod_force

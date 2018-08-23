@@ -1,3 +1,7 @@
+module mod_vxcgga
+
+contains
+
 SUBROUTINE VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A, &
                   IRWS,IRCUT,IPAN,KSHAPE,GSH,ILM,IMAXSH, &
                   IFUNM,THETAS,WTYR,IJEND,LMSP,THET,YLM,DYLMT1, &
@@ -42,6 +46,10 @@ SUBROUTINE VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A, &
 !INTEGER LMXSPD
 !PARAMETER (LMXSPD= (2*LPOTD+1)**2)
 use global_variables
+   use mod_mkxcpe2
+   use mod_mkxcpe
+   use mod_gradrl
+   use mod_simpk
 implicit none
 
 ! Scalar Arguments ..
@@ -315,3 +323,5 @@ DO ISPIN = 1,NSPIN
 END DO
 
 END
+
+end module mod_vxcgga

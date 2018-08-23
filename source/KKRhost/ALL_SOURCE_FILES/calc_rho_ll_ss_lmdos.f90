@@ -1,3 +1,7 @@
+module mod_calc_rho_ll_ss_lmdos
+
+contains
+
 subroutine calc_rho_ll_ss_lmdos(rll, ircut, ipan, icell, thetas, cleb, icleb, &
   iend, ifunm, lmsp, irws, drdi, dens, lmdos)
   use :: mod_datatypes, only: dp
@@ -102,3 +106,5 @@ subroutine calc_rho_ll_ss_lmdos(rll, ircut, ipan, icell, thetas, cleb, icleb, &
   deallocate (rsp)
   ! PARAMETER ( NRD = 20000, KPOIBZ = 32000 )
 end subroutine calc_rho_ll_ss_lmdos
+
+end module mod_calc_rho_ll_ss_lmdos

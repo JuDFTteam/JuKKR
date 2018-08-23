@@ -1,3 +1,7 @@
+module mod_dsort
+
+contains
+
 ! ************************************************************************
 subroutine dsort(w, ind, max, pos)
   use :: mod_datatypes, only: dp
@@ -50,3 +54,5 @@ subroutine dsort(w, ind, max, pos)
 
   return
 end subroutine dsort
+
+end module mod_dsort

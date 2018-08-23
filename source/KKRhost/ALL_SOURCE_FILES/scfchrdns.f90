@@ -1,3 +1,7 @@
+module mod_scfchrdns
+
+contains
+
 subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
   mueorb, irel, iprint, nt, nl, nkm, eryd, we, efermi, iecurr, netab, dos, &
   smt, omt, hff, dosi, smti, omti, hffi, dosm, dosl0, dosint, smtm, smtl0, &
@@ -5,7 +9,6 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
   szz, szj, ozz, ozj, bzz, bzj, ozzs, ozjs, omtls0, tautlin, nvaltot, txtt, &
   conc, nat, rhochr, rhospn, rhoorb, qel, gdia, gmdia, goff, ntmax, nlmax, &
   nmuemax, linmax, nrmax, nmmax, nkmmax, eband, ebandt)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! * SUBROUTINE TO CALCULATE THE  CHARGE, SPIN  AND  ORBITAL DENSITY  *
@@ -13,6 +16,10 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
   ! *                                                                  *
   ! * 12/03/96 HE                                                      *
   ! ********************************************************************
+  use :: mod_datatypes, only: dp
+   use mod_readwfun
+   use mod_rintsimp
+   use mod_ikapmue
   implicit none
 
   ! PARAMETER definitions
@@ -519,3 +526,5 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
     f8.1, /, ' SUM(ML)  ', 2f8.3, 2x, 2f8.3, 2x, 2f8.3, f10.1, f8.1, &
     20(:,/,' ML= ',i2,'   ',2f8.3,2x,2f8.3,2x,2f8.3,f10.1,f8.1))
 end subroutine scfchrdns
+
+end module mod_scfchrdns

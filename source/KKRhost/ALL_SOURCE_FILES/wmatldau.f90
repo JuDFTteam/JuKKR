@@ -1,3 +1,7 @@
+module mod_wmatldau
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: WMATLDAU
 ! > @brief Calculation of Coulomb interaction potential in LDA+U
@@ -22,6 +26,7 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
 
   use :: constants
   use :: mod_datatypes
+   use mod_rclm
 
   implicit none
   ! .. Input variables
@@ -344,3 +349,5 @@ subroutine rwrite(z, mmaxd, mmax, ifile)
 100 format (10x, 60('-'))
 110 format (10x, 7f10.6)
 end subroutine rwrite
+
+end module mod_wmatldau

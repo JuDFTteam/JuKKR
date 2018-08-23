@@ -1,3 +1,7 @@
+module mod_operators_for_FScode
+
+contains
+
 subroutine operators_for_FScode(KORBIT, operator_imp)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -21,7 +25,12 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   use mod_wunfiles, only: t_params
   use mod_save_wavefun, only: t_wavefunctions, read_wavefunc
   use mod_types, only: t_imp
-      Use mod_datatypes, Only: dp
+  Use mod_datatypes, Only: dp
+  use mod_cheb2oldgrid
+  use mod_normcoeff_so
+  use mod_normcoeff_so_spinflux
+  use mod_normcoeff_so_torq
+  use mod_rotatematrix
 
   implicit none
 
@@ -359,3 +368,5 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   if(t_inc%i_write>0) write(*,*) 'Done with Operators'
 
 end subroutine operators_for_FScode
+
+end module mod_operators_for_FScode

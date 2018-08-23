@@ -1,3 +1,7 @@
+module mod_tbref
+
+contains
+
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: TBREF
 !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
@@ -16,6 +20,9 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    use Profiling
    use global_variables
    use mod_datatypes, Only: dp
+   use mod_calctref13
+   use mod_opendafile
+   use mod_gll13
 
    implicit  none
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -348,3 +355,5 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    end if
 
 end subroutine TBREF
+
+end module mod_tbref

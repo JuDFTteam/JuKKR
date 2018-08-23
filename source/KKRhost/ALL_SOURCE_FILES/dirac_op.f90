@@ -1,3 +1,7 @@
+module mod_dirac_op
+
+contains
+
 subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
   cg4, cg5, cg8, ameopo, v, b, at, z, nucleus, r, drdi, dovr, nmesh, pr, qr, &
   pi, qi, d_p, dq, ap, aq, lop, ntmax, nlamax, nkmmax, nrmax)
@@ -22,6 +26,9 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
 
   use :: mod_types, only: t_inc
   use :: mod_datatypes
+   use mod_ylag
+   use mod_rinvgj
+   use mod_ikapmue
   implicit none
 
   ! PARAMETER definitions
@@ -722,3 +729,5 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
 140 format (' PRE/CORR NOT CONV. IN <DIRAC> ', 2i4, f10.7, 2x, 4e12.4, 3i2, &
     '/2 ', a3)
 end subroutine dirabmop
+
+end module mod_dirac_op

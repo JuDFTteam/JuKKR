@@ -1,3 +1,7 @@
+module mod_espcb
+
+contains
+
 ! 13.10.95 ***************************************************************
 subroutine espcb(espc, nspin, natyp, ecore, lcore, lcoremax, ncore)
   ! ************************************************************************
@@ -61,3 +65,5 @@ subroutine espcb(espc, nspin, natyp, ecore, lcore, lcoremax, ncore)
     end do
   end do
 end subroutine espcb
+
+end module mod_espcb

@@ -1,3 +1,7 @@
+module mod_writekkrflex
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: writekkrflex
 ! > @brief Subroutine dealing with the printing of the needed kkrflex files
@@ -163,3 +167,5 @@ subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, kshape, &
   end if
 
 end subroutine writekkrflex
+
+end module mod_writekkrflex

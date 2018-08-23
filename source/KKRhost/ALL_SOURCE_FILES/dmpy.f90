@@ -1,3 +1,7 @@
+module mod_dmpy
+
+contains
+
 subroutine dmpy(a, nca, nra, b, ncb, nrb, c, ncc, nrc, n, m, l)
   use :: mod_datatypes, only: dp
   ! - Matrix multiplication:  c = a * b
@@ -57,3 +61,5 @@ subroutine dmpy(a, nca, nra, b, ncb, nrb, c, ncc, nrc, n, m, l)
   end do
   ! #endif
 end subroutine dmpy
+
+end module mod_dmpy

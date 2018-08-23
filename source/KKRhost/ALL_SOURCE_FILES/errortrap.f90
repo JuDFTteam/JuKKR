@@ -1,3 +1,7 @@
+module mod_errortrap
+
+contains
+
 subroutine errortrap(routine, k, istop)
 
   implicit none
@@ -40,3 +44,5 @@ subroutine errortrap(routine, k, istop)
     a, /, 1x, 79('>'), /)
   return
 end subroutine errortrap
+
+end module mod_errortrap

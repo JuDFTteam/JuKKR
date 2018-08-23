@@ -1,3 +1,7 @@
+module mod_calrmt
+
+contains
+
 ! ************************************************************************
 subroutine calrmt(ipf, ipfe, ipe, imt, z, rmt, rws, rmtnew, alat, drdi, a, b, &
   irws, r, ifile, kshape)
@@ -10,6 +14,7 @@ subroutine calrmt(ipf, ipfe, ipe, imt, z, rmt, rws, rmtnew, alat, drdi, a, b, &
   ! mt-radius than every ather meshpoint
   ! ***********************************************************************
   use :: mod_datatypes, only: dp
+   use mod_rcstop
   implicit none
   ! .. Scalar Arguments ..
   real (kind=dp) :: a, alat, b, rmt, rmtnew, rws, z
@@ -78,3 +83,5 @@ subroutine calrmt(ipf, ipfe, ipe, imt, z, rmt, rws, rmtnew, alat, drdi, a, b, &
 120 format (' irws=', i6, ' imt=', i6, /, ' rws=', f12.8, ' rmt=', f12.8, &
     ' rmtnew=', f12.8, ' alat=', f12.8)
 end subroutine calrmt
+
+end module mod_calrmt

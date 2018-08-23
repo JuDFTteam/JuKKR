@@ -1,3 +1,7 @@
+module mod_rhosymm
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: RHOSYMM
 ! > @brief Symmetrize the charge densities and magnetic moments of
@@ -82,3 +86,5 @@ subroutine rhosymm(lmpot, nspin, nstart, nend, rho2ns, ixipol, irws, ircut, &
   return
 
 end subroutine rhosymm
+
+end module mod_rhosymm

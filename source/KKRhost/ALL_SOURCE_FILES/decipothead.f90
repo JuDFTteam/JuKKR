@@ -1,3 +1,7 @@
+module mod_decipothead
+
+contains
+
 subroutine decipothead(ihost, filehost, ilhost, nathost, vacflag, alat, &
   bravsys, nq, nt, bravais, efermi, insh, krelh, nspinh, ins, krel, nspin, &
   kmrot)
@@ -101,3 +105,5 @@ subroutine decipothead(ihost, filehost, ilhost, nathost, vacflag, alat, &
 160 format (14x, '2D lattice', 4x, 'host', 14x, 'system', /, 14x, 38('-'))
 170 format (10x, 'a_', i1, 1x, 2f9.5, 2x, 2f9.5)
 end subroutine decipothead
+
+end module mod_decipothead

@@ -1,3 +1,7 @@
+module mod_scalevec
+
+contains
+
 subroutine scalevec(lcartesian, rbasis, abasis, bbasis, cbasis, nlbasis, &
   nrbasis, nleft, nright, zperleft, zperight, tleft, tright, linterface, naez, &
   nemb, bravais, kaoez, noq, naezd, natypd, nembd)
@@ -247,3 +251,5 @@ subroutine scalevec(lcartesian, rbasis, abasis, bbasis, cbasis, nlbasis, &
     16x, '   in CARTESIAN coordinates (ALAT units)', /, 12x, 51('-'), /, 15x, &
     'IQ       x           y           z       IT', /, 12x, 51('-'))
 end subroutine scalevec
+
+end module mod_scalevec

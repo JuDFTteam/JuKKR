@@ -1,3 +1,7 @@
+module mod_densitymat
+
+contains
+
 subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, &
   drdi, ek, irmin, lopt, mmax, lmstart, lmend, phi, denmatc, den, ie) ! test
                                                                       ! fivos
@@ -30,6 +34,7 @@ subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, &
   ! **********************************************************************
   use :: mod_datatypes
   use global_variables
+   use mod_overlap
   implicit none
 
   complex (kind=dp) :: czero, cone
@@ -126,3 +131,5 @@ subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, &
   ! *                                                                    *
   ! * Calculation of density matrix needed in evaluating the Coulomb     *
 end subroutine densitymat
+
+end module mod_densitymat

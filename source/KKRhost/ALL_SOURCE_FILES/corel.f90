@@ -1,3 +1,7 @@
+module mod_corel
+
+contains
+
 subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
   b, is, nspin, nr, rmax, irmd)
   ! -----------------------------------------------------------------------
@@ -11,6 +15,7 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
   ! -----------------------------------------------------------------------
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+   use mod_intcor
   implicit none
   ! .. Parameters ..
   integer :: nitmax, irnumx
@@ -122,3 +127,5 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
 110 format (1x, '  einput =', 1p, d16.8, '   eout - ein =', 1p, d16.8, &
     '   eoutput = ', 1p, d16.8)
 end subroutine corel
+
+end module mod_corel

@@ -1,3 +1,7 @@
+module mod_getscratch
+
+contains
+
 subroutine scratchdir(tmpdir, itmpdir, iltmp)
   ! **********************************************************************
   ! *                                                                    *
@@ -7,6 +11,7 @@ subroutine scratchdir(tmpdir, itmpdir, iltmp)
   ! *                                                                    *
   ! **********************************************************************
 
+   use mod_lngstring
   implicit none
   character (len=*) :: tmpdir
   integer :: itmpdir, iltmp, lngstring
@@ -50,3 +55,5 @@ subroutine opendafile(iunit, basename, lbasename, lrec, tmpdir, itmpdir, &
   end if
   return
 end subroutine opendafile
+
+end module mod_getscratch

@@ -1,3 +1,7 @@
+module mod_intcheb_cell
+
+contains
+
 subroutine intcheb_cell(cden, den, rpan_intervall, ipan_intervall, npan_tot, &
   ncheb, irmdnew)
   ! ***********************************************************************
@@ -55,3 +59,5 @@ subroutine intcheb_complex(ncheb, arr1, result1)
   end do
 
 end subroutine intcheb_complex
+
+end module mod_intcheb_cell

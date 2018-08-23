@@ -1,7 +1,14 @@
+module mod_intcor
+
+contains
+
 subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
   vlnc, a, b, z, rn, nr, tol, irm, ipr, nitmax, nsra)
   use :: mod_types, only: t_inc
   use :: mod_datatypes
+   use mod_intin
+   use mod_intout
+   use mod_hankel
   implicit none
   ! .. Scalar Arguments ..
   real (kind=dp) :: a, b, e, f1, f2, rn, slope, sum, tol, value, z
@@ -175,3 +182,5 @@ subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
     2d12.3, /, 14x, 'e=', d14.6, '   de=', d11.2, '   sum=', d12.4)
 170 format (' *** int: stop after', i4, ' iterations')
 end subroutine intcor
+
+end module mod_intcor

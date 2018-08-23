@@ -1,3 +1,7 @@
+module mod_amemagvec
+
+contains
+
 subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, &
   cgc, nlmax, nkmmax, nkmpmax, nmvecmax)
   ! ********************************************************************
@@ -13,6 +17,7 @@ subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, &
   ! *                                                                  *
   ! ********************************************************************
   use :: mod_datatypes, only: dp
+   use mod_rmatstr
   implicit none
 
   ! Dummy arguments
@@ -159,3 +164,5 @@ subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, &
     end do
   end do
 end subroutine amemagvec
+
+end module mod_amemagvec

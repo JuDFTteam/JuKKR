@@ -1,3 +1,7 @@
+module mod_bastrmat
+
+contains
+
 subroutine bastrmat(lmax, cgc, rc, crel, rrel, nkmmax, nkmpmax)
   ! ********************************************************************
   ! *                                                                  *
@@ -112,3 +116,5 @@ subroutine bastrmat(lmax, cgc, rc, crel, rrel, nkmmax, nkmpmax)
     nkmmax)
 
 end subroutine bastrmat
+
+end module mod_bastrmat

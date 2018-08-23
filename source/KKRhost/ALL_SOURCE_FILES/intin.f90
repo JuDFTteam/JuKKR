@@ -1,3 +1,7 @@
+module mod_intin
+
+contains
+
 subroutine intin(g, f, v, e, l, nne, valu, slop, k1, k2, kc, dg, a, b, z, &
   nsra)
   use :: mod_datatypes, only: dp
@@ -130,3 +134,5 @@ subroutine intin(g, f, v, e, l, nne, valu, slop, k1, k2, kc, dg, a, b, z, &
 110 kc = k
   dg = dg3
 end subroutine intin
+
+end module mod_intin

@@ -1,3 +1,7 @@
+module mod_mixstr
+
+contains
+
 ! 13.10.95 ***************************************************************
 subroutine mixstr(rmsavq, rmsavm, ins, lpot, lmpot, natref, nshell, nstart, &
   nend, conc, nspin, itc, rfpi, fpi, ipf, mixing, fcm, irc, irmin, r, drdi, &
@@ -166,3 +170,5 @@ subroutine mixstr(rmsavq, rmsavm, ins, lpot, lmpot, natref, nshell, nstart, &
 150 format ('      ITERATION', i4, ' average rms-error : v+ + v- = ', 1p, &
     d11.4)
 end subroutine mixstr
+
+end module mod_mixstr

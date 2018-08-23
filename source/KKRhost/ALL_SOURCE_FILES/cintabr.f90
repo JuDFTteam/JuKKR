@@ -1,3 +1,7 @@
+module mod_cintabr
+
+contains
+
 subroutine cintabr(ag, bg, agbg, af, bf, afbf, rpw, nka, nkb, jtop, nrmax)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -52,3 +56,5 @@ subroutine cintabr(ag, bg, agbg, af, bf, afbf, rpw, nka, nkb, jtop, nrmax)
   end do
 
 end subroutine cintabr
+
+end module mod_cintabr

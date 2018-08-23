@@ -1,3 +1,7 @@
+module mod_clustcomp
+
+contains
+
 logical function clustcomp_tb(rcls, irefpot, atom, iat1, ic1, n1, rcls1, n2, &
   iat2, naclsd)
   use :: mod_datatypes, only: dp
@@ -34,3 +38,5 @@ logical function clustcomp_tb(rcls, irefpot, atom, iat1, ic1, n1, rcls1, n2, &
     if (abs(rd)<tol .and. lreflog) clustcomp_tb = .true.
   end if
 end function clustcomp_tb
+
+end module mod_clustcomp

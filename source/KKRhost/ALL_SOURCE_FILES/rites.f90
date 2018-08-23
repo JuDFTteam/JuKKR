@@ -1,3 +1,7 @@
+module mod_rites
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: RITES
 ! > @brief this subroutine stores in 'ifile' the necessary results
@@ -230,3 +234,5 @@ subroutine rites(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
 180 format (10i5)
 190 format (1p, 4d20.13)
 end subroutine rites
+
+end module mod_rites

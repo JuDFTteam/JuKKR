@@ -1,3 +1,7 @@
+module mod_dirac_soc2
+
+contains
+
 subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   cg1, cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, dxp, pr, &
   qr, pi, qi, d_p, dq, nrmax)
@@ -28,6 +32,8 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
 
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+   use mod_ylag
+   use mod_rinvgj
   implicit none
 
   ! PARAMETER definitions
@@ -836,3 +842,5 @@ subroutine derspl(n, x, f, d)
   a(1) = 0.d0
 110 format (' RETURN FROM DERSPL  ', i3, ' OUT OF ORDER')
 end subroutine derspl
+
+end module mod_dirac_soc2

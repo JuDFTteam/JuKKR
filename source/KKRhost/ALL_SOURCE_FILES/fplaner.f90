@@ -1,3 +1,7 @@
+module mod_fplaner
+
+contains
+
 subroutine fplaner(alpha, g, r)
   use :: mod_datatypes, only: dp
   ! ************************************************
@@ -40,3 +44,5 @@ subroutine fplaner(alpha, g, r)
     r
 
 end subroutine fplaner
+
+end module mod_fplaner

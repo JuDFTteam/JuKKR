@@ -1,3 +1,7 @@
+module mod_decimaread
+
+contains
+
 subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
   righttinvll, vacflag, ienergy, nlbasis, nrbasis, naez, kaoez, kmrot, ins, &
   nspin, lmmax, ielast, fileleft, fileright, krel, natypd, lmmaxd, nembd1)
@@ -25,6 +29,7 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
   ! **********************************************************************
   use :: mod_version_info
   use :: mod_datatypes, only: dp
+   use mod_lngstring
   implicit none
   ! ..
   integer :: krel, natypd, nembd1, lmmaxd ! ,KORBIT
@@ -265,3 +270,5 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
 260 format (3f8.4, 2f9.4)
 
 end subroutine decimaread
+
+end module mod_decimaread

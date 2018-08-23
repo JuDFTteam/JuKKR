@@ -1,6 +1,12 @@
+module mod_cheb2oldgrid
+
+contains
+
 subroutine cheb2oldgrid(nrmax, nrmaxnew, lmmaxpot, rmesh, ncheb, npan_tot, &
   rpan_intervall, ipan_intervall, arrayin, arrayout, irmd)
   use :: mod_datatypes, only: dp
+   use mod_getccmatrix
+   use mod_getcinvmatrix
 
   ! use mod_cheb, only: getCCmatrix, getCinvmatrix
   implicit none
@@ -112,3 +118,5 @@ subroutine cheb2oldgrid(nrmax, nrmaxnew, lmmaxpot, rmesh, ncheb, npan_tot, &
   end do                           ! in
 
 end subroutine cheb2oldgrid
+
+end module mod_cheb2oldgrid

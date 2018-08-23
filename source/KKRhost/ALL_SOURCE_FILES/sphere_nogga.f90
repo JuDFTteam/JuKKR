@@ -1,3 +1,7 @@
+module mod_sphere_nogga
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! > @brief Generate an angular mesh and spherical harmonics at those
 ! > mesh points. For an angular integration the weights are generated .
@@ -10,6 +14,8 @@ subroutine sphere_nogga(lmax, yr, wtyr, rij, ijd)
 
   use :: constants
   use :: mod_datatypes, only: dp
+   use mod_lebedev
+   use mod_ymy
   ! ..
   ! .. Scalar Arguments
   integer, intent (in) :: ijd
@@ -48,3 +54,5 @@ subroutine sphere_nogga(lmax, yr, wtyr, rij, ijd)
   end do                           ! IJ
 
 end subroutine sphere_nogga
+
+end module mod_sphere_nogga

@@ -1,9 +1,13 @@
+module mod_addvirtatoms14
+
+contains
+
 subroutine addviratoms14(linterface, nvirt, naez, naezd, natypd, nemb, nembd, &
   rbasis, lcartesian, bravais, ncls, nineq, refpot, kaoez, noq, nref, &
   rmtrefat, i25)
 
   use :: mod_datatypes
-  use :: mod_datatypes
+   use mod_getclusnxyz
   implicit none
   ! interface variables
   logical :: linterface, lcartesian, labscord
@@ -388,3 +392,5 @@ subroutine inverse_d1(mat, n)
   deallocate (ipiv, work, stat=info)
   if (info/=0) stop 'error allocating work arrays in inverse_d1 of addviratom'
 end subroutine inverse_d1
+
+end module mod_addvirtatoms14

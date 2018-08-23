@@ -1,8 +1,11 @@
+module mod_deciopt
+
+contains
+
 subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax, bravais, &
   tk, npol, npnt1, npnt2, npnt3, ez, ielast, kaoez, lefttinvll, righttinvll, &
   vacflag, nlbasis, nrbasis, cmomhost, vref, rmtref, nref, refpot, lmaxd, &
   lmgf0d, lmmaxd, lm2d, nembd1, iemxd, nspind, lmpotd, natypd, irmd, ipand)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * This routine treats the DECIMATION case setting up the single-site *
@@ -34,6 +37,11 @@ subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax, bravais, &
   ! *                                                                    *
   ! **********************************************************************
 
+  use :: mod_datatypes, only: dp
+  use mod_decitset
+  use mod_decimaread
+  use mod_cmomsread
+  use mod_ioinput
   implicit none
   ! ..
   ! .. Scalar arguments
@@ -139,3 +147,5 @@ subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax, bravais, &
 100 format (/, 6x, 'ERROR : Missing decimation files (t-mat or pot)', /, 14x, &
     'Please use one of the tokens DECIFILES/DECIPOTS', /)
 end subroutine deciopt
+
+end module mod_deciopt

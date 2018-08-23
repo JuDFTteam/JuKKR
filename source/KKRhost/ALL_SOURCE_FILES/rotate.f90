@@ -1,3 +1,7 @@
+module mod_rotate
+
+contains
+
 subroutine rotate(t1, mode, t2, n, rot, nkmmax)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -45,3 +49,5 @@ subroutine rotate(t1, mode, t2, n, rot, nkmmax)
   call zgemm('N', fl2, n, n, n, c1, w1, nkmmax, rot, nkmmax, c0, t2, nkmmax)
 
 end subroutine rotate
+
+end module mod_rotate

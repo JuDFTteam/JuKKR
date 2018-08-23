@@ -1,5 +1,8 @@
+module mod_ddet33
+
+contains
+
 function ddet33(matrix)
-  use :: mod_datatypes, only: dp
   ! - calculates the determinant of a 3X3 matrix
   ! ----------------------------------------------------------------------
   ! i Inputs:
@@ -7,6 +10,8 @@ function ddet33(matrix)
   ! o Outputs:
   ! o   ddet33:determinant
   ! ----------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+   use mod_cross
   implicit none
   real (kind=dp) :: ddet33
   ! Passed parameters:
@@ -20,3 +25,5 @@ function ddet33(matrix)
   ddet33 = ddot(3, matrix(1), 1, m1cm2, 1)
 
 end function ddet33
+
+end module mod_ddet33

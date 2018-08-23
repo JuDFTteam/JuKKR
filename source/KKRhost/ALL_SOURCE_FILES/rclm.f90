@@ -1,3 +1,7 @@
+module mod_rclm
+
+contains
+
 subroutine rclm(key, ll, ldim, vmat)
   use :: mod_datatypes, only: dp
   ! **********************************************************************
@@ -132,3 +136,5 @@ subroutine rclm(key, ll, ldim, vmat)
     end do
   end do
 end subroutine rclm
+
+end module mod_rclm

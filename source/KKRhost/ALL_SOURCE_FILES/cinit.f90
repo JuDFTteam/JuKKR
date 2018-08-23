@@ -1,3 +1,7 @@
+module mod_cinit
+
+contains
+
 subroutine cinit(n, a)
   use :: mod_datatypes, only: dp
   ! **********************************************************************
@@ -31,3 +35,5 @@ subroutine cinit(n, a)
   end do
 
 end subroutine cinit
+
+end module mod_cinit

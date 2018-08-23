@@ -1,3 +1,7 @@
+module mod_forcxc
+
+contains
+
 subroutine forcxc(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, alat, &
   drdi, irws, natref)
   ! >>>>>BEWARE!!! RM commented away!!! -->Dipole Tensor is useless
@@ -181,3 +185,5 @@ subroutine forcxc(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, alat, &
   ! +                  RM,NSHELL,DRDI,IRWS,NATREF)
   ! -----------------------------------------------------------------------
 end subroutine forcxc
+
+end module mod_forcxc

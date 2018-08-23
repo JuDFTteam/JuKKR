@@ -1,3 +1,7 @@
+module mod_yshysh
+
+contains
+
 ! -------------------------------------------------------------------------------
 subroutine yshysh(x, y, z, r, yrealy)
   use :: mod_datatypes, only: dp
@@ -218,3 +222,5 @@ subroutine yshysh(x, y, z, r, yrealy)
   c
   c
 end subroutine yshysh
+
+end module mod_yshysh

@@ -1,7 +1,10 @@
+module mod_irwns
+
+contains
+
 subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra, pzlm, &
   qzlm, pzekdr, qzekdr, cder, cmat, dder, dmat, irmind, irmd, irmin, irmax, &
   ipand, lmmaxd)                   ! Added IRMIN,IRMAX 1.7.2014
-  use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
   ! determines the irregular non spherical wavefunctions in the n-th.
   ! born approximation ( n given by input parameter icst ) .
@@ -43,6 +46,10 @@ subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra, pzlm, &
   ! -----------------------------------------------------------------------
   ! modified by R. Zeller      Aug. 1994
   ! -----------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+   use mod_wfint0
+   use mod_wfint
+   use mod_csinwd
   implicit none
   ! .. Parameters ..
   complex (kind=dp) :: cone
@@ -121,3 +128,5 @@ subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra, pzlm, &
     end do
   end do
 end subroutine irwns
+
+end module mod_irwns

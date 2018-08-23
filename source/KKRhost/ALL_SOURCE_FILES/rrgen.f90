@@ -1,6 +1,9 @@
+module mod_rrgen
+
+contains
+
 ! 02.08.95 *************************************************************
 subroutine rrgen(bv1, lsurf, rr, nrd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * generates a number of real space vectors to construct the          *
@@ -8,6 +11,12 @@ subroutine rrgen(bv1, lsurf, rr, nrd)
   ! * routine CLSGEN99                                                   *
   ! *                                                                    *
   ! **********************************************************************
+  use mod_datatypes, only: dp
+  use mod_vmul
+  use mod_vadd
+  use mod_veq
+  use mod_scalpr
+  use mod_dsort
   implicit none
   ! ..
   ! .. Scalar arguments ..
@@ -158,3 +167,5 @@ subroutine rrgen(bv1, lsurf, rr, nrd)
 160 format (10x, 60('+'))
 170 format (10x, i6, 3f12.3, f15.4)
 end subroutine rrgen
+
+end module mod_rrgen

@@ -1,3 +1,7 @@
+module mod_normcoeff_SO_spinflux
+
+contains
+
 ! 05.10.10 ***************************************************************
 SUBROUTINE normcoeff_so_spinflux(natom, ircut, lmmax,pns,  &
     ksra,drdi, mode)
@@ -284,3 +288,5 @@ END SUBROUTINE normcoeff_so_spinflux
 
 
 
+
+end module mod_normcoeff_SO_spinflux

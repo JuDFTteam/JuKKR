@@ -1,3 +1,7 @@
+module mod_mapblockold
+
+contains
+
 integer function mapblockold(itercurr, iterfirst, iterlast, iterstep, &
   nodefirst, nodelast)
   use :: mod_datatypes, only: dp
@@ -120,3 +124,5 @@ integer function mapblockold(itercurr, iterfirst, iterlast, iterstep, &
 
   return
 end function mapblockold
+
+end module mod_mapblockold

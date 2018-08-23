@@ -1,3 +1,7 @@
+module mod_ioben
+
+contains
+
 integer function ioben(r)
   use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
@@ -45,3 +49,5 @@ integer function ioben(r)
 
   return
 end function ioben
+
+end module mod_ioben

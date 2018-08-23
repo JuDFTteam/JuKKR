@@ -1,3 +1,7 @@
+module mod_ioinput
+
+contains
+
 subroutine ioinput(charkey, char, iline, ifile, ierror)
   ! *********************************************************
   ! *  This subroutine is responsible for the I/O
@@ -178,3 +182,5 @@ subroutine verify77(nabc, abc, nchar, str1, ipos1, ipos2)
   end do
   return
 end subroutine verify77
+
+end module mod_ioinput

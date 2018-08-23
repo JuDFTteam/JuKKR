@@ -1,5 +1,8 @@
+module mod_gamfc
+
+contains
+
 subroutine gamfc(alpha, glh, lmax, r)
-  use :: mod_datatypes, only: dp
   ! ----------------------------------------------------------------------
 
   ! calculation of convergence function
@@ -15,6 +18,8 @@ subroutine gamfc(alpha, glh, lmax, r)
   ! 1..i..l
 
   ! -----------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+   use mod_erfcex
   implicit none
   ! .. scalar arguments ..
   real (kind=dp) :: alpha, r
@@ -56,3 +61,5 @@ subroutine gamfc(alpha, glh, lmax, r)
   end do
 
 end subroutine gamfc
+
+end module mod_gamfc

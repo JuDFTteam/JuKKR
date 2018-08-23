@@ -1,3 +1,7 @@
+module mod_getbr3
+
+contains
+
 subroutine getbr3(nembd1, nlbasis, alat, tleft, nrbasis, tright, bravais, &
   recbv, volume0)
   ! In case of slab geometry, define a 3rd Bravais vector along
@@ -49,3 +53,5 @@ subroutine getbr3(nembd1, nlbasis, alat, tleft, nrbasis, tright, bravais, &
   ! Use the "outside region" defined by tleft, tright to make sure
   return
 end subroutine getbr3
+
+end module mod_getbr3

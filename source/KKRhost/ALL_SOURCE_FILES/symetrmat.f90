@@ -1,3 +1,7 @@
+module mod_symetrmat
+
+contains
+
 subroutine symetrmat(nsym, cpref, dsymll, symunitary, matq, iqs, matsym, &
   lmmaxd,nsymaxd)
   use :: mod_datatypes, only: dp
@@ -66,3 +70,5 @@ subroutine symetrmat(nsym, cpref, dsymll, symunitary, matq, iqs, matsym, &
   end do
 
 end subroutine symetrmat
+
+end module mod_symetrmat

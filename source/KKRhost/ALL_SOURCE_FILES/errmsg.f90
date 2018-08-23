@@ -1,3 +1,7 @@
+module mod_errmsg
+
+contains
+
 subroutine errmsg(messg, isev)
   ! - Write error message to message error device
   ! ----------------------------------------------------------------------
@@ -50,3 +54,5 @@ subroutine errmsg(messg, isev)
 100 format (a13, a)
 
 end subroutine errmsg
+
+end module mod_errmsg

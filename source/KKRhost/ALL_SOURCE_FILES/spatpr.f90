@@ -1,3 +1,7 @@
+module mod_spatpr
+
+contains
+
 ! ************************************************************************
 subroutine spatpr(a, b, c, v)
   use :: mod_datatypes, only: dp
@@ -18,3 +22,5 @@ subroutine spatpr(a, b, c, v)
   v = v + c(3)*(a(1)*b(2)-a(2)*b(1))
   return
 end subroutine spatpr
+
+end module mod_spatpr

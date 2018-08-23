@@ -1,5 +1,8 @@
+module mod_dirbsrad
+
+contains
+
 subroutine dirbsrad(xbs, y, dydx, drdi, b, v, r, nmesh)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! *   supply the derivatives for the coupled set of                  *
@@ -7,6 +10,8 @@ subroutine dirbsrad(xbs, y, dydx, drdi, b, v, r, nmesh)
   ! *                                                                  *
   ! ********************************************************************
 
+  use :: mod_datatypes, only: dp
+   use mod_dirbslag
   implicit none
 
   include 'sprkkr_rmesh.dim'
@@ -54,3 +59,5 @@ subroutine dirbsrad(xbs, y, dydx, drdi, b, v, r, nmesh)
     end do
   end do
 end subroutine dirbsrad
+
+end module mod_dirbsrad

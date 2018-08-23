@@ -1,7 +1,16 @@
+module mod_vxcdrv
+
+contains
+
 SUBROUTINE VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,NSTART,NEND,RHO2NS,VONS, &
                   R,DRDI,A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM, &
                   IMAXSH,IFUNM,THETAS,LMSP)
 use global_variables
+
+   use mod_sphere_nogga
+   use mod_sphere_gga
+   use mod_vxcgga
+   use mod_vxclm
 IMPLICIT NONE
 !INCLUDE 'inc.p'
 ! Parameters ..
@@ -69,3 +78,5 @@ DO IATYP = NSTART,NEND
   END IF
 END DO
 END
+
+end module mod_vxcdrv

@@ -1,3 +1,7 @@
+module mod_madelgaunt
+
+contains
+
 subroutine madelgaunt(lpot, yrg, wg, cleb, icleb, iend, lassld, nclebd)
   use :: mod_datatypes, only: dp
   implicit none
@@ -90,3 +94,5 @@ subroutine madelgaunt(lpot, yrg, wg, cleb, icleb, iend, lassld, nclebd)
   ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
   iend = i - 1
 end subroutine madelgaunt
+
+end module mod_madelgaunt

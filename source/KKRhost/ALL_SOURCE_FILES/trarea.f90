@@ -1,3 +1,7 @@
+module mod_trarea
+
+contains
+
 subroutine trarea(a, b, lmax)
   use :: mod_datatypes, only: dp
   ! from complex to real  (differenciated spherical harmonics)
@@ -36,3 +40,5 @@ subroutine trarea(a, b, lmax)
   end do
   return
 end subroutine trarea
+
+end module mod_trarea

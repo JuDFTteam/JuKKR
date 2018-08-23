@@ -1,3 +1,7 @@
+module mod_rhons
+
+contains
+
 SUBROUTINE rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin, &    ! Added IRMIN 1.7.2014  &
         thetas,ifunm,lmsp,nsra,qns,pns,ar,cr,pz,fz,qz,  &
         sz,cleb,icleb,jend,iend,ekl,denlm,gflle_part)
@@ -45,6 +49,8 @@ SUBROUTINE rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin, &    ! Added IRMIN
 !-----------------------------------------------------------------------
       use mod_DataTypes
   use global_variables
+   use mod_rhoin
+   use mod_rhoout
       IMPLICIT NONE
 !..
 !.. Scalar Arguments ..
@@ -154,3 +160,5 @@ endif
 
 RETURN
 END SUBROUTINE rhons
+
+end module mod_rhons

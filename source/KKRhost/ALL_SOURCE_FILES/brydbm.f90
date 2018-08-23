@@ -1,3 +1,7 @@
+module mod_brydbm
+
+contains
+
 ! *********************************************************************
 subroutine brydbm(visp, v, vins, vspsme, vspsmo, ins, lmpot, r, drdi, alpha, &
   atwght, irc, irmin, nspin, natps, natyp, itdept, imix, iobroy, ipf, lsmear)
@@ -33,6 +37,10 @@ subroutine brydbm(visp, v, vins, vspsme, vspsmo, ins, lmpot, r, drdi, alpha, &
   use :: mod_types
   use :: mod_datatypes, only: dp
   use global_variables
+   use mod_brysh1
+   use mod_brysh2
+   use mod_brysh3
+   use mod_rcstop
 
   ! .. Parameters ..
   integer :: ntird
@@ -316,3 +324,5 @@ subroutine brydbm(visp, v, vins, vspsme, vspsmo, ins, lmpot, r, drdi, alpha, &
   ! imix :
   ! 3      broyden's            f i r s t  m e t h o d
 end subroutine brydbm
+
+end module mod_brydbm

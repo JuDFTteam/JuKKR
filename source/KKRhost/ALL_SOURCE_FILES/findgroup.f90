@@ -1,7 +1,10 @@
+module mod_findgroup
+
+contains
+
 subroutine findgroup(bravais, recbv, rbasis, nbasis, rsymat, rotname, &
   isymindex, nsymat, para, qmtet, qmphi, symunitary, krel, naezd, nembd, &
   nsymaxd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************
   ! This subroutine finds the rotation matrices that leave the
   ! real lattice unchanged.
@@ -27,6 +30,9 @@ subroutine findgroup(bravais, recbv, rbasis, nbasis, rsymat, rotname, &
   ! if the PARA(magnetic) flag is set to .FALSE.
 
   ! **********************************************************
+  use :: mod_datatypes, only: dp
+   use mod_ddet33
+   use mod_latvec
   implicit none
   real (kind=dp), parameter :: eps=1.0D-12
   integer :: krel
@@ -195,3 +201,5 @@ subroutine findgroup(bravais, recbv, rbasis, nbasis, rsymat, rotname, &
 140 format (8x, 5(a10,2x))
 150 format (8x, 60('-'), /)
 end subroutine findgroup
+
+end module mod_findgroup

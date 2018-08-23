@@ -1,3 +1,7 @@
+module mod_lattice2d
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: lattice2d
 ! > @brief Generates the lattice vectors of direct and reciprocal space from
@@ -371,3 +375,5 @@ subroutine lattice2d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
 170 format (13x, 42('-'))
 180 format (10x, 45('+'), /)
 end subroutine lattice2d
+
+end module mod_lattice2d

@@ -1,3 +1,7 @@
+module mod_spin_orbit
+
+contains
+
 ! ************************************************************************
 subroutine spin_orbit_one_l(lmax, l_s)
   use :: mod_datatypes, only: dp
@@ -150,3 +154,5 @@ subroutine spin_orbit_one_l(lmax, l_s)
 
 
 end subroutine spin_orbit_one_l
+
+end module mod_spin_orbit

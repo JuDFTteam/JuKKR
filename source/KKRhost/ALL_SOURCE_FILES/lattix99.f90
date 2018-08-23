@@ -1,6 +1,9 @@
+module mod_lattix99
+
+contains
+
 subroutine lattix99(lsurf, alat, natyp, naez, conc, rws, bravais, recbv, &
   volume0, rr, nrd, natypd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * LATTIX99 generates the real space and reciprocal lattices.         *
@@ -11,6 +14,12 @@ subroutine lattix99(lsurf, alat, natyp, naez, conc, rws, bravais, recbv, &
   ! * (structure dependent output).                                      *
   ! *                                                                    *
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
+   use mod_rrgen
+   use mod_spatpr
+   use mod_crospr
+   use mod_ddet33
+   use mod_idreals
   implicit none
   ! ..
   ! .. Scalar arguments ..
@@ -203,3 +212,5 @@ subroutine lattix99(lsurf, alat, natyp, naez, conc, rws, bravais, recbv, &
 120 format (5x, a2, i1, ':', 2f10.6, 18x, 2f10.6)
 130 format (5x, a2, i1, ':', 3f10.6, 8x, 3f10.6)
 end subroutine lattix99
+
+end module mod_lattix99

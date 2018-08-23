@@ -1,3 +1,7 @@
+module mod_bzirr3d
+
+contains
+
 subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
   rsymat, nsymat, isymindex, symunitary, irr, krel, iprint)
   ! ===========================================================================
@@ -36,6 +40,8 @@ subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
   ! taken. Could also be a logical variable.
   ! ==========================================================================
   use :: mod_datatypes, only: dp
+   use mod_ddet33
+   use mod_rinvgj
   implicit none
   real (kind=dp), parameter :: eps = 1.0D-12
   integer :: maxk1, maxk2, maxk3, nsymaxd
@@ -272,3 +278,5 @@ subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
 110 format (5x, i3, 3f7.3, 2x, 3f7.3, 2x, 3f7.3, 2x, 3i3)
 120 format (5x, 2i3, 3f7.3)
 end subroutine bzirr3d
+
+end module mod_bzirr3d

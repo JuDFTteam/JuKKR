@@ -1,7 +1,10 @@
+module mod_projtau
+
+contains
+
 subroutine projtau(icpaflag, cpachng, kmrot, wrtau, wrtaumq, ifiltau, eryd, &
   nt, nq, nkmq, msst, mssq, nlinq, iqat, conc, tauq, taut, tautlin, ikm1lin, &
   ikm2lin, drotq, ntmax, nqmax, nkmmax, linmax)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! *   calculate the component projected TAU - matrices               *
@@ -18,6 +21,9 @@ subroutine projtau(icpaflag, cpachng, kmrot, wrtau, wrtaumq, ifiltau, eryd, &
   ! *                                                                  *
   ! * 01/11/00                                                         *
   ! ********************************************************************
+  use :: mod_datatypes, only: dp
+   use mod_getdmat
+   use mod_rotate
   implicit none
 
   ! PARAMETER definitions
@@ -159,3 +165,5 @@ subroutine projtau(icpaflag, cpachng, kmrot, wrtau, wrtaumq, ifiltau, eryd, &
 120 format (2i5, 1p, 4e22.14)
 
 end subroutine projtau
+
+end module mod_projtau

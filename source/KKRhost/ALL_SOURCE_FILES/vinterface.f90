@@ -1,3 +1,7 @@
+module mod_vinterface
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: VINTERFACE
 ! > @brief This is calculating the intra-atomic contibution of the potential
@@ -372,3 +376,5 @@ subroutine vinterface(cmom, cminst, lpot, nspin, nlayers, natyp, v, zat, r, &
 140 format (3i6)
 150 format (4d20.10)
 end subroutine vinterface
+
+end module mod_vinterface

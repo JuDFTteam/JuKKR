@@ -1,3 +1,7 @@
+module mod_lattice3d
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: LATTICE3D
 ! > @brief Generates the lattice vectors of direct and reciprocal space from
@@ -365,3 +369,5 @@ subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
 170 format (13x, 52('-'))
 180 format (10x, 55('+'), /)
 end subroutine lattice3d
+
+end module mod_lattice3d

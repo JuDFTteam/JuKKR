@@ -1,7 +1,12 @@
+module mod_writehoststructure
+
+contains
+
 subroutine writehoststructure(bravais, nrbasis, rbasis, naezd, nembd)
   use :: mod_version_info
   use :: mod_md5sums
   use :: mod_datatypes, only: dp
+   use mod_ioinput
   implicit none
   ! interface
   real (kind=dp), intent (in) :: bravais(3, 3)
@@ -44,3 +49,5 @@ subroutine writehoststructure(bravais, nrbasis, rbasis, naezd, nembd)
 
 
 end subroutine writehoststructure
+
+end module mod_writehoststructure

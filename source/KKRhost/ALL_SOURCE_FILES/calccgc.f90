@@ -1,3 +1,7 @@
+module mod_calccgc
+
+contains
+
 subroutine calccgc(ltab, kaptab, nmuetab, cgc, nkmax, nmuemax, nkmpmax)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -55,3 +59,5 @@ subroutine calccgc(ltab, kaptab, nmuetab, cgc, nkmax, nmuemax, nkmpmax)
   end do
 
 end subroutine calccgc
+
+end module mod_calccgc

@@ -1,3 +1,7 @@
+module mod_gradrl
+
+contains
+
 subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, &
   drrl, ddrrl, drrul, ddrrul, irmd, lmpotd)
   ! ------------------------------------------------------------------
@@ -10,6 +14,7 @@ subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, &
   ! ------------------------------------------------------------------
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+  use mod_gradr
   implicit none
   ! .. Parameters ..
   real (kind=dp) :: zero, zero1
@@ -122,3 +127,5 @@ subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, &
 120 format (1x, ' l1max=', i5, ' mesh=', i5, 'nspi=', i5, ' ipan=', i5)
 130 format (1x, '  ip ist ien', 3i5)
 end subroutine gradrl
+
+end module mod_gradrl

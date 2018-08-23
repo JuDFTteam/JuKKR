@@ -1,3 +1,7 @@
+module mod_potcut
+
+contains
+
 subroutine potcut(imt1, irc1, ins, lmpot, r, vm2z, vspsme, vins, z1, irmd, &
   irmind)
   use :: mod_datatypes, only: dp
@@ -36,3 +40,5 @@ subroutine potcut(imt1, irc1, ins, lmpot, r, vm2z, vspsme, vins, z1, irmd, &
     end do
   end if
 end subroutine potcut              ! SUBROUTINE POTCUT
+
+end module mod_potcut

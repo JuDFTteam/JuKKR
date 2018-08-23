@@ -1,3 +1,7 @@
+module mod_greenimp
+
+contains
+
 SUBROUTINE greenimp(natomimp,dtmtrx,e)
 #ifdef CPP_MPI
 use mpi
@@ -68,3 +72,5 @@ END DO
 deallocate(gimp)
 deallocate(gi)
 END SUBROUTINE greenimp
+
+end module mod_greenimp

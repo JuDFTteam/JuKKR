@@ -1,3 +1,7 @@
+module mod_vosko
+
+contains
+
 subroutine vosko(exc, fpirho, vxc, ijend, ijd)
   use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
@@ -100,3 +104,5 @@ subroutine vosko(exc, fpirho, vxc, ijend, ijd)
 
   end do
 end subroutine vosko
+
+end module mod_vosko

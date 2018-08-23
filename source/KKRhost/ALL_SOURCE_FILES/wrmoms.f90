@@ -1,3 +1,7 @@
+module mod_wrmoms
+
+contains
+
 subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
   lmaxd, lmaxd1)
   use :: mod_datatypes, only: dp
@@ -202,3 +206,5 @@ subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
 150 format ('    m_spin')
 160 format ('    m_orb   spin dn  spin up')
 end subroutine wrmoms
+
+end module mod_wrmoms

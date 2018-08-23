@@ -7,6 +7,7 @@ module mod_create_newmesh
   use :: constants
   use :: profiling
   use :: mod_datatypes, only: dp
+  use mod_interpolspline
 
   implicit none
   private :: dp

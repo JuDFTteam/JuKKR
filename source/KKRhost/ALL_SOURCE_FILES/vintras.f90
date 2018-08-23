@@ -1,3 +1,7 @@
+module mod_vintras
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: VINTRAS
 ! > @brief Calculate the electron-intracell-potentials and the charge-moments
@@ -39,6 +43,8 @@ subroutine vintras(cmom, cminst, lmax, nspin, nstart, nend, rho2ns, v, r, &
   use :: constants
   use :: global_variables
   use :: mod_datatypes, only: dp
+   use mod_sinwk
+   use mod_soutk
 
   implicit none
 
@@ -208,3 +214,5 @@ subroutine vintras(cmom, cminst, lmax, nspin, nstart, nend, rho2ns, v, r, &
   return
 
 end subroutine vintras
+
+end module mod_vintras

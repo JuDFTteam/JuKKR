@@ -1,3 +1,7 @@
+module mod_invslab
+
+contains
+
 ! ************************************************************************
 subroutine invslab(gdi, gup, gdow, gin, icheck)
   ! ************************************************************************
@@ -14,6 +18,8 @@ subroutine invslab(gdi, gup, gdow, gin, icheck)
   ! ------------------------------------------------------------------------
   use global_variables
   use :: mod_datatypes, only: dp
+   use mod_bofm
+   use mod_btom
   implicit none
 
   complex (kind=dp), parameter :: ci = (0.e0_dp, 1.e0_dp)
@@ -144,3 +150,5 @@ subroutine invslab(gdi, gup, gdow, gin, icheck)
   end do
 
 end subroutine invslab
+
+end module mod_invslab

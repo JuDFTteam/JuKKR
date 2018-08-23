@@ -1,3 +1,7 @@
+module mod_dlke1
+
+contains
+
 ! 01.06.99 *************************************************************
 subroutine dlke1(gllke, alat, nacls, naclsmax, rr, ezoa, atom, bzkp, ic, ginp, &
   rcls)
@@ -9,6 +13,7 @@ subroutine dlke1(gllke, alat, nacls, naclsmax, rr, ezoa, atom, bzkp, ic, ginp, &
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
   use global_variables
+   use mod_dlke1
   implicit none
 
   complex (kind=dp) :: ci
@@ -123,3 +128,5 @@ subroutine dlke1(gllke, alat, nacls, naclsmax, rr, ezoa, atom, bzkp, ic, ginp, &
 100 format (3f12.4)
 110 format (2f18.10)
 end subroutine dlke1
+
+end module mod_dlke1

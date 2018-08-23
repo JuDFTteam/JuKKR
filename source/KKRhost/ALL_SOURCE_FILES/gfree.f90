@@ -1,3 +1,7 @@
+module mod_gfree
+
+contains
+
 ! **********************************************************************
   ! ---- CALCULATION OF FREE ELECTRON GREEN'S FUNCTION :  G(M)LL'(E0)
   ! -----------------------------------------------------------------------
@@ -24,6 +28,8 @@ subroutine gfree13(rdiff, e0, gmll, dgmll, cleb, icleb, loflm, iend)
   ! **********************************************************************
   use :: mod_datatypes, only: dp
   use global_variables
+   use mod_beshan
+   use mod_ymy
   implicit none
   complex (kind=dp) :: czero, ci
   parameter (czero=(0.0e0_dp,0.0e0_dp), ci=(0.0e0_dp,1.0e0_dp))
@@ -105,3 +111,5 @@ subroutine gfree13(rdiff, e0, gmll, dgmll, cleb, icleb, loflm, iend)
   return
   ! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
 end subroutine gfree13
+
+end module mod_gfree

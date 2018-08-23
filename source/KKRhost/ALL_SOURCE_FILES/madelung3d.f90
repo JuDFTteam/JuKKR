@@ -1,7 +1,10 @@
+module mod_madelung3d
+
+contains
+
 subroutine madelung3d(lpot, yrg, wg, naez, alat, volume0, bravais, recbv, &
   rbasis, rmax, gmax, naezd, lmxspd, lassld, lpotd, lmpotd, nmaxd, ishld, &
   nembd, wlength)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * This subroutine calculates the Madelung potential coefficients     *
@@ -9,6 +12,12 @@ subroutine madelung3d(lpot, yrg, wg, naez, alat, volume0, bravais, recbv, &
   ! * The record index is simply (IQ1-1)*NAEZ + IQ2 for record (IQ1,IQ2) *
   ! *                                                                    *
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
+   use mod_madelgaunt
+   use mod_madelcoef
+   use mod_madel3out
+   use mod_lattice3d
+   use mod_strmat
 
   implicit none
   ! ..
@@ -93,3 +102,5 @@ subroutine madelung3d(lpot, yrg, wg, naez, alat, volume0, bravais, recbv, &
   call madel3out(iprint, naez, lrecabmad, smat1, smat2, lmpotd)
 
 end subroutine madelung3d
+
+end module mod_madelung3d

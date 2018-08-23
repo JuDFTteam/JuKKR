@@ -1,3 +1,7 @@
+module mod_cradwf
+
+contains
+
 subroutine cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, sl, pz, fz, &
   qz, sz, tmat, vm2z, drdi, rmesh, zat, lirrsol, idoldau, lopt, wldauav, &
   cutoff)
@@ -20,6 +24,9 @@ subroutine cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, sl, pz, fz, &
   ! -----------------------------------------------------------------------
   use global_variables
   use :: mod_datatypes, only: dp
+   use mod_beshan
+   use mod_regsol
+   use mod_irwsol
   implicit none
   complex (kind=dp), parameter :: ci=(0.e0_dp,1.e0_dp), czero=(0.0e0_dp,0.0e0_dp)
   ! ..
@@ -133,3 +140,5 @@ subroutine cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, sl, pz, fz, &
   end do
   ! the generalized phase shifts are calculated by
 end subroutine cradwf
+
+end module mod_cradwf

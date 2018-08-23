@@ -1,3 +1,7 @@
+module mod_wrmomssoc
+
+contains
+
 subroutine wrmomssoc(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
   lmaxd, lmaxd1, korbit, ormoment)
   use :: mod_datatypes, only: dp
@@ -190,3 +194,5 @@ subroutine wrmomssoc(krel, natyp, nspin, texts, textl, textns, charge, muorb, &
 140 format ('    m_spin')
 150 format ('    m_orb   spin dn  spin up')
 end subroutine wrmomssoc
+
+end module mod_wrmomssoc

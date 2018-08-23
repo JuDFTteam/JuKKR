@@ -1,3 +1,7 @@
+module mod_dirbsstp
+
+contains
+
 subroutine dirbsstp(y, dydx, nv, x, htry, eps, yscal, b, v, r, drdi, nmesh)
   ! ********************************************************************
   ! *                                                                  *
@@ -15,6 +19,9 @@ subroutine dirbsstp(y, dydx, nv, x, htry, eps, yscal, b, v, r, drdi, nmesh)
 
   use :: mod_datatypes, only: dp
   use :: mod_types, only: t_inc
+   use mod_dirbsrad
+   use mod_dirbsrze
+   use mod_dirbsmid
   implicit none
 
   include 'sprkkr_rmesh.dim'
@@ -103,3 +110,5 @@ subroutine dirbsstp(y, dydx, nv, x, htry, eps, yscal, b, v, r, drdi, nmesh)
 
   return
 end subroutine dirbsstp
+
+end module mod_dirbsstp

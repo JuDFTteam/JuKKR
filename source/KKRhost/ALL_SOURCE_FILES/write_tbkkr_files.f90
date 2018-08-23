@@ -1,3 +1,7 @@
+module mod_write_tbkkr_files
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: WRITE_TBKKR_FILES
 ! > @brief Printing to file the TBKKR files, containing key information of the
@@ -121,3 +125,5 @@ subroutine write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &
   close (935)
 
 end subroutine write_tbkkr_files
+
+end module mod_write_tbkkr_files

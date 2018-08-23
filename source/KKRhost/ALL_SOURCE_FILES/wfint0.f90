@@ -1,3 +1,7 @@
+module mod_wfint0
+
+contains
+
 subroutine wfint0(cder, dder, qzlm, qzekdr, pzekdr, vnspll, nsra, irmind, &
   irmd, lmmaxd, irmin, irmax)      ! Added IRMIN,IRMAX 1.7.2014
   use :: mod_datatypes, only: dp
@@ -43,3 +47,5 @@ subroutine wfint0(cder, dder, qzlm, qzekdr, pzekdr, vnspll, nsra, irmind, &
 
   end do
 end subroutine wfint0
+
+end module mod_wfint0

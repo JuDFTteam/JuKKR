@@ -14,6 +14,9 @@ contains
     use :: mod_types, only: t_inc, type_dtmatjijdij
     use :: mod_save_wavefun, only: t_wavefunctions
 
+    use mod_vllmat
+    use mod_intcheb_cell
+
     implicit none
     type (type_dtmatjijdij), intent (inout) :: t_dtmatjij(t_inc%natyp)
     integer, intent (in) :: natypd, natomimpd, natomimp, atomimp(natomimpd), &

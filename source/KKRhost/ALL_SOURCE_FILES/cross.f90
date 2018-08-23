@@ -1,3 +1,7 @@
+module mod_cross
+
+contains
+
 subroutine cross(x1, x2, cr12)
   use :: mod_datatypes, only: dp
   ! - Cross product cr12 = X1 cross X2
@@ -20,3 +24,5 @@ subroutine cross(x1, x2, cr12)
   cr12(3) = x1(1)*x2(2) - x1(2)*x2(1)
 
 end subroutine cross
+
+end module mod_cross

@@ -1,3 +1,7 @@
+module mod_checkrmat
+
+contains
+
 function checkrmat(rmat, co1, si1, co2, si2, co3, si3, i, j)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -50,3 +54,5 @@ function checkrmat(rmat, co1, si1, co2, si2, co3, si3, i, j)
   end if
   checkrmat = result
 end function checkrmat
+
+end module mod_checkrmat

@@ -1,3 +1,7 @@
+module mod_pnstmat
+
+contains
+
 ! Added IRMIN 1.7.2014  &
 subroutine pnstmat(drdi, ek, icst, pz, qz, fz, sz, pns, tmatll, vins, irmin, &
   ipan, ircut, nsra, cleb, icleb, iend, loflm, tmat, lkonv, idoldau, lopt, &
@@ -9,6 +13,9 @@ subroutine pnstmat(drdi, ek, icst, pz, qz, fz, sz, pns, tmatll, vins, irmin, &
   ! *********************************************************************
   use :: mod_datatypes, only: dp
   use global_variables
+   use mod_vllns
+   use mod_wftsca
+   use mod_regns
   implicit none
   complex (kind=dp) :: czero
   parameter (czero=(0.e0_dp,0.e0_dp))
@@ -121,3 +128,5 @@ subroutine pnstmat(drdi, ek, icst, pz, qz, fz, sz, pns, tmatll, vins, irmin, &
   ! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
   return
 end subroutine pnstmat
+
+end module mod_pnstmat

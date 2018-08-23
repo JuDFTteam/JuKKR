@@ -1,3 +1,7 @@
+module mod_interpolate_poten
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: INTERPOLATE_POTEN
 ! > @brief Routine for the interpolation of the potential in the integration
@@ -10,6 +14,7 @@ subroutine interpolate_poten(lpot, irm, irnsd, natyp, ipand, lmpot, nspotd, &
   ntotd, irmdnew, nspin, r, irmin, irws, ircut, vins, visp, &
   npan_log, npan_eq, npan_tot, rnew, ipan_intervall, vinsnew)
   use :: mod_datatypes, only: dp
+  use mod_interpolspline
 
   implicit none
 
@@ -117,3 +122,5 @@ subroutine interpolate_poten(lpot, irm, irnsd, natyp, ipand, lmpot, nspotd, &
     end do                         ! ispin
   end do                           ! i1
 end subroutine interpolate_poten
+
+end module mod_interpolate_poten

@@ -1,3 +1,7 @@
+module mod_beshan
+
+contains
+
 subroutine beshan(hl, jl, nl, z, lmax)
   ! -----------------------------------------------------------------------
   ! calculates spherical bessel, hankel and neumann functions
@@ -75,3 +79,5 @@ subroutine beshan(hl, jl, nl, z, lmax)
   return
 
 end subroutine beshan
+
+end module mod_beshan

@@ -1,3 +1,7 @@
+module mod_rinit
+
+contains
+
 subroutine rinit(n, a)
   use :: mod_datatypes, only: dp
   ! **********************************************************************
@@ -32,3 +36,5 @@ subroutine rinit(n, a)
   end do
 
 end subroutine rinit
+
+end module mod_rinit

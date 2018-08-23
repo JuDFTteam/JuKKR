@@ -1,3 +1,7 @@
+module mod_madelcoef
+
+contains
+
 subroutine madelcoef(linterface, lpot, a, b, smat, cleb, icleb, iend, lpotd, &
   lmpotd, lmxspd, nclebd)
   use :: mod_datatypes, only: dp
@@ -95,3 +99,5 @@ subroutine madelcoef(linterface, lpot, a, b, smat, cleb, icleb, iend, lpotd, &
     b(lm1) = b(lm1) - 2.0e0_dp*fpi/real(2*l1+1, kind=dp)*smat(lm1)
   end do
 end subroutine madelcoef
+
+end module mod_madelcoef

@@ -1,3 +1,7 @@
+module mod_csum
+
+contains
+
 ! 19.10.95 *************************************************************
 complex (kind=dp) function csum(n, v, iv)
   use :: mod_datatypes, only: dp
@@ -31,3 +35,5 @@ complex (kind=dp) function csum(n, v, iv)
   csum = vsum
   return
 end function csum
+
+end module mod_csum

@@ -1,3 +1,7 @@
+module mod_kkrmat01
+
+contains
+
 !-------------------------------------------------------------------------------
 !> @brief Performs k-space integration, determines scattering path operator
 !> \f$\tau = \left(g\left(\mathbf{k},e\right)-t^{-1}\right)^{-1}\f$
@@ -45,6 +49,10 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    use Constants
    use Profiling
       Use mod_datatypes, Only: dp
+   use mod_decimate
+   use mod_dlke0
+   use mod_inversion
+   use mod_gtdyson
 
    implicit none
    ! .. Input variables
@@ -785,3 +793,5 @@ subroutine GTDYSON(GTMAT,GMAT,NDIM,LMGF0D,NGD)
    return
 
 end subroutine GTDYSON
+
+end module mod_kkrmat01

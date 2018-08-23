@@ -1,3 +1,7 @@
+module mod_veq
+
+contains
+
 ! ************************************************************************
 subroutine veq(a, b)
   use :: mod_datatypes, only: dp
@@ -13,3 +17,5 @@ subroutine veq(a, b)
     b(i) = a(i)
   end do
 end subroutine veq
+
+end module mod_veq

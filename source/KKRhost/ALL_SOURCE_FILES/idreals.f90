@@ -1,3 +1,7 @@
+module mod_idreals
+
+contains
+
 subroutine idreals(darry, narry, iprint)
   use :: mod_datatypes, only: dp
   implicit none
@@ -96,3 +100,5 @@ subroutine idreals(darry, narry, iprint)
     '/', i1)
 
 end subroutine idreals
+
+end module mod_idreals

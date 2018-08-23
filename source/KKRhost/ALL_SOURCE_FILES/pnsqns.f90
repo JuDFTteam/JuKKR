@@ -1,3 +1,7 @@
+module mod_pnsqns
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: PNSQNS
 ! > @note
@@ -11,6 +15,10 @@ subroutine pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, &
 
   use :: global_variables
   use :: mod_datatypes, only: dp
+   use mod_irwns
+   use mod_regns
+   use mod_wftsca
+   use mod_vllns
 
   implicit none
 
@@ -144,3 +152,5 @@ subroutine pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, &
   return
 
 end subroutine pnsqns
+
+end module mod_pnsqns

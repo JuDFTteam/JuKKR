@@ -1,3 +1,7 @@
+module mod_kloopz1
+
+contains
+
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: KLOOPZ1_QDOS
 !> @note
@@ -23,6 +27,14 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    use Constants
    use Profiling
       Use mod_datatypes, Only: dp
+   use mod_rotgll
+   use mod_mssinit
+   use mod_kkrmat01
+   use mod_gijdmat
+   use mod_cpamillsx
+   use mod_cmatstr
+   use mod_symetrmat
+   use mod_rotate
 
    implicit none
    !
@@ -664,3 +676,5 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    99006 format (2I5,1P,2D22.14)
 
 end subroutine KLOOPZ1_QDOS
+
+end module mod_kloopz1

@@ -1,3 +1,7 @@
+module mod_gcor91
+
+contains
+
 subroutine gcor91(a, a1, b1, b2, b3, b4, p, rs, gg, ggrs)
   use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------
@@ -25,3 +29,5 @@ subroutine gcor91(a, a1, b1, b2, b3, b4, p, rs, gg, ggrs)
   ggrs = -2.e0_dp*a*a1*q2 - q0*q3/(q1**2+q1)
   return
 end subroutine gcor91
+
+end module mod_gcor91

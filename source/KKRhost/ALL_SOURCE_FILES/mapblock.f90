@@ -1,3 +1,7 @@
+module mod_mapblock
+
+contains
+
 integer function mapblock(ie, ie1, ne, iterstep, nodefirst, nodelast)
   ! **********************************************************************
   ! *                                                                    *
@@ -52,3 +56,5 @@ integer function mapblock(ie, ie1, ne, iterstep, nodefirst, nodelast)
 
   return
 end function mapblock
+
+end module mod_mapblock

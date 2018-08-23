@@ -1,3 +1,7 @@
+module mod_vllmat
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: VLLMAT
 ! > @brief
@@ -79,3 +83,5 @@ subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, &
   end if
 
 end subroutine vllmat
+
+end module mod_vllmat

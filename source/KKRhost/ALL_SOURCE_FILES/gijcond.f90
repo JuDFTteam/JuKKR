@@ -1,3 +1,7 @@
+module mod_gijcond
+
+contains
+
 subroutine gijcond(ido, naez, rbasis, iqat, natomimp, rclsimp, atomimp, &
   ijtabcalc, natomimpd)
   use :: mod_datatypes, only: dp
@@ -104,3 +108,5 @@ subroutine gijcond(ido, naez, rbasis, iqat, natomimp, rclsimp, atomimp, &
 110 format (6x, 'Dimension ERROR: please increase the ', a, ' parameter', /, &
     6x, a, ' to a value >=', i5, /)
 end subroutine gijcond
+
+end module mod_gijcond

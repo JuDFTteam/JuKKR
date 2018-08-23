@@ -1,3 +1,7 @@
+module mod_outpothost
+
+contains
+
 subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
   bravais, rbasis, qmtet, qmphi, noq, kaoez, iqat, zat, conc, ipan, ircut, &
   solver, soc, ctl, irws, rmt, rws, rr, drdi, visp, irshift, rmrel, drdirel, &
@@ -131,3 +135,5 @@ subroutine outpothost(alat, ins, krel, kmrot, nspin, naez, natyp, efermi, &
 240 format (1p, 4d20.12)
 250 format ('ISHIFT:', i3)
 end subroutine outpothost
+
+end module mod_outpothost

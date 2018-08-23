@@ -1,7 +1,12 @@
+module mod_drvcore
+
+contains
+
 subroutine drvcore(iprint, itprt, lcore, ncore, cscl, vtin, btin, rin, a, b, &
   drdiin, r2drdiin, zat, jws, ishift, rhoc, ecorerel, nkcore, kapcore, ecore, &
   lmaxd, irmd)
   use :: mod_datatypes, only: dp
+   use mod_core
   ! ********************************************************************
   ! *                                                                  *
   ! * driving routine to call relativistic < CORE > routine            *
@@ -298,3 +303,5 @@ subroutine sumecore(ncore, lcore, ecortab, nkcore, ecorerel, ecore, kapcore)
     end do
   end do
 end subroutine sumecore
+
+end module mod_drvcore

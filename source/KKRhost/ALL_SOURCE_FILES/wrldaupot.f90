@@ -1,3 +1,7 @@
+module mod_wrldaupot
+
+contains
+
 subroutine wrldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
   uldau, phildau, irmd, natypd, nspind, mmaxd, irws)
   ! **********************************************************************
@@ -60,3 +64,5 @@ subroutine wrldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
 150 format (i3, 3(1x,e15.8))
 160 format (5e16.8)
 end subroutine wrldaupot
+
+end module mod_wrldaupot

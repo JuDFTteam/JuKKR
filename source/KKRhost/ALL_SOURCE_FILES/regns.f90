@@ -1,3 +1,7 @@
+module mod_regns
+
+contains
+
 subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   pzekdr, qzekdr, ek, ader, amat, bder, bmat, nsra, irmind, irmd, irmin, &
   irmax, ipand, lmmaxd)            ! Added IRMIN,IRMAX 1.7.2014
@@ -51,6 +55,9 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   ! -----------------------------------------------------------------------
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+  use mod_csout
+  use mod_wfint
+  use mod_wfint0
   implicit none
   ! .. Scalar Arguments ..
   complex (kind=dp) :: ek
@@ -351,3 +358,5 @@ subroutine zgeinv1(a, u, aux, ipiv, dim)
 
   return
 end subroutine zgeinv1
+
+end module mod_regns

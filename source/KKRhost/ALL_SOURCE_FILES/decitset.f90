@@ -1,3 +1,7 @@
+module mod_decitset
+
+contains
+
 subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
   fileright, ins, kvrel, krel, nspin, kmrot, vref, rmtref, nref, refpot, &
   lefttinv, righttinv, vacflag, nembd1, iemxd, irmd, ipand, lmaxd, lmgf0d, &
@@ -26,6 +30,12 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
   ! *        - CPA case not implemented - requires BZ integration        *
   ! *                                                                    *
   ! **********************************************************************
+   use mod_calctref13
+   use mod_decipotbas
+   use mod_cmatstr
+   use mod_decipothead
+   use mod_decitmat
+   use mod_lngstring
   implicit none
   ! ..
   ! .. Scalars arguments ..
@@ -394,3 +404,5 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
 140 format (10x, 'BRAVAIS ', /, 10x, 3f8.4, /, 10x, 3f8.4, /, 10x, 3f8.4, /, &
     10x, 'RBASIS')
 end subroutine decitset
+
+end module mod_decitset

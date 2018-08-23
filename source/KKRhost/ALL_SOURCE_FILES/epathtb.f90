@@ -1,3 +1,7 @@
+module mod_epathtb
+
+contains
+
 subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, &
   emuval, tkval, npolval, n1val, n2val, n3val, ebotsem, emusem, tksem, &
   npolsem, n1sem, n2sem, n3sem, iemxd)
@@ -14,6 +18,7 @@ subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, &
   ! **********************************************************************
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+  use mod_emesht
   implicit none
   integer :: iemxd
   complex (kind=dp) :: ez(*), df(*), ezsemi(iemxd), dfsemi(iemxd)
@@ -62,3 +67,5 @@ subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, &
 
 100 format (7x, '* ', a, /, 7x, 20('-'), /)
 end subroutine epathtb
+
+end module mod_epathtb

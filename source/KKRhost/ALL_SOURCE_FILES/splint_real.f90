@@ -1,3 +1,7 @@
+module mod_splint_real
+
+contains
+
 ! ***********************************************************************
 subroutine splint_real(xa, ya, y2a, n, x, y, yderiv)
   use :: mod_datatypes, only: dp
@@ -44,3 +48,5 @@ subroutine splint_real(xa, ya, y2a, n, x, y, yderiv)
 
   return
 end subroutine splint_real
+
+end module mod_splint_real

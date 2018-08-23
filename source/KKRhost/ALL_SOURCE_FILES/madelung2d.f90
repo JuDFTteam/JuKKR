@@ -1,7 +1,10 @@
+module mod_madelung2d
+
+contains
+
 subroutine madelung2d(lpot, yrg, wg, naez, alat, vol, bravais, recbv, rbasis, &
   rmax, gmax, nlbasis, nleft, zperleft, tleft, nrbasis, nright, zperight, &
   tright, lmxspd, lassld, lpotd, lmpotd, nmaxd, ishld, nembd1, wlength)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * This subroutine calculates the Madelung potential coefficients     *
@@ -24,6 +27,12 @@ subroutine madelung2d(lpot, yrg, wg, naez, alat, vol, bravais, recbv, rbasis, &
   ! *             + (IR-1)*NRIGHT+IBR      slab, (IR,IBR) in the right   *
   ! *                                                                    *
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
+   use mod_madelgaunt
+   use mod_madelcoef
+   use mod_madel2out
+   use mod_ewald2d
+   use mod_lattice2d
   implicit none
   ! ..
   ! .. Scalar Arguments ..
@@ -272,3 +281,5 @@ subroutine madelung2d(lpot, yrg, wg, naez, alat, vol, bravais, recbv, rbasis, &
     18x, 23('-'))
 110 format (18x, 2i5, d12.4)
 end subroutine madelung2d
+
+end module mod_madelung2d

@@ -1,3 +1,7 @@
+module mod_intout
+
+contains
+
 subroutine intout(g, f, v, e, l, nne, k2, dg, a, b, z, nsra)
   use :: mod_datatypes, only: dp
   implicit none
@@ -124,3 +128,5 @@ subroutine intout(g, f, v, e, l, nne, k2, dg, a, b, z, nsra)
   end do
   dg = dg3
 end subroutine intout
+
+end module mod_intout

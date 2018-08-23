@@ -1,3 +1,7 @@
+module mod_decimate
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: DECIMATE
 ! > @brief Decimation method
@@ -9,6 +13,8 @@ subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, &
 
   use :: global_variables
   use :: mod_datatypes, only: dp
+   use mod_bofm
+   use mod_surfgf
 
   implicit none
 
@@ -182,3 +188,5 @@ subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, &
   return
 
 end subroutine decimate
+
+end module mod_decimate

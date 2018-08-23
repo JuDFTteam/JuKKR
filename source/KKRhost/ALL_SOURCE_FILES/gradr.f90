@@ -1,3 +1,7 @@
+module mod_gradr
+
+contains
+
 subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   ddrru, rou, irmd)
   ! -----------------------------------------------------------------
@@ -37,16 +41,6 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   ! .. Save statement ..
   save :: ndvpt, igl, igh, imj, ica, icg, ivn, ipw, ipg, ivg, ip9, igd, ixlf, &
     iex, xlf, iwr
-  ! ..
-  ! .. Data statements ..
-  ! .....-----------------------------------------------------------------
-  ! ..uble function
-  ! ..ouble precision f131,f132,f133,f141,f142,f143,f144
-  ! ..ouble precision fl61,fl62,fl63,fl64,fl65,fl66
-  ! ..ouble precision fl51,fl52,fl53,fl54,fl55
-  ! ..ouble precision f231,f232,f233,f241,f242,f243,f244
-  ! ..ouble precision f251,f252,f253,f254,f255
-  ! ..ouble precision f261,f262,f263,f264,f265,f266
 
   data ndvpt/5/
   data igl, igh, imj, ica, icg, ivn, ipw, ipg, ivg, ip9, igd, ixlf, iex, &
@@ -452,6 +446,8 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
 120 format (/, ' ndvpt should be ge.4 .or. le.6. ndvpt=', i3)
 end subroutine gradr
 
+end module mod_gradr
+
   ! ..
   ! .. Statement Function definitions ..
   ! statement functions:
@@ -723,5 +719,6 @@ real (kind=dp) function f266(g5, g4, g3, g2, g1, f0, d)
   real (kind=dp), intent(in) :: g5, g4, g3, g2, g1, f0, d
   f266 = (-50*g5+305*g4-780*g3+1070*g2-770*g1+225*f0)/(60*d*d)
 end function
+
 
 

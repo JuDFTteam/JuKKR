@@ -1,3 +1,7 @@
+module mod_rotmat
+
+contains
+
 subroutine rotmat(iopt, li, nrot, symopm, vecg)
   use :: mod_datatypes, only: dp
   ! - Converts rotation/rotoinversion matrix <-> (nrot,vecg,li)
@@ -116,3 +120,5 @@ subroutine rotmat(iopt, li, nrot, symopm, vecg)
 100 format (' ROTMAT: Bad component ', i1, ' of operation ', &
     '. Diagonal element =', f9.5, '$')
 end subroutine rotmat
+
+end module mod_rotmat

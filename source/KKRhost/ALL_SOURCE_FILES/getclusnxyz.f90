@@ -1,3 +1,7 @@
+module mod_getclusnxyz
+
+contains
+
 subroutine getclusnxyz(clurad, bravais, ndim, cluradsq, nbr)
   use :: mod_datatypes, only: dp
   ! **********************************************************************
@@ -45,3 +49,5 @@ subroutine getclusnxyz(clurad, bravais, ndim, cluradsq, nbr)
   end if
 
 end subroutine getclusnxyz
+
+end module mod_getclusnxyz

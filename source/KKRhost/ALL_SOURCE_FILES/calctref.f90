@@ -1,3 +1,7 @@
+module mod_calctref
+
+contains
+
 subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, &
   alpharef, dalpharef, lmaxdp1, lmmaxd)
   ! ********************************************************************
@@ -42,6 +46,7 @@ subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, &
   ! ********************************************************************
 
   use :: mod_datatypes, only: dp
+   use mod_beshan
   implicit none
   ! ..
   ! .. Scalar arguments
@@ -155,3 +160,5 @@ subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, &
   lmtmat = lm1
 
 end subroutine calctref13
+
+end module mod_calctref

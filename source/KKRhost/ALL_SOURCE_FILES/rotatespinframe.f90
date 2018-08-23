@@ -1,3 +1,7 @@
+module mod_rotatespinframe
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: rotatematrix
 ! > @brief Rotates a matrix in the local frame pointing in
@@ -229,3 +233,5 @@ subroutine create_umatrix(theta, phi, lmmax, umat, udeggamat)
   end do
 
 end subroutine create_umatrix
+
+end module mod_rotatespinframe

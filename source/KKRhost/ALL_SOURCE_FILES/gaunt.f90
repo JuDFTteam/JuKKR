@@ -1,7 +1,10 @@
+module mod_gaunt
+
+contains
+
 ! ************************************************************************
 subroutine gaunt(lmax, lpot, w, yr, cleb, loflm, icleb, iend, jend, ncleb, &
   lmaxd, lmgf0d, lmpotd)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
 
   ! - fills the array cleb with the gaunt coeffients ,i.e.
@@ -31,6 +34,8 @@ subroutine gaunt(lmax, lpot, w, yr, cleb, loflm, icleb, iend, jend, ncleb, &
 
   ! ---> attention : ncleb is an empirical factor - it has to be optimized
 
+  use :: mod_datatypes, only: dp
+   use mod_rcstop
   implicit none
   ! ..
   real (kind=dp), parameter :: eps=1.0D-12
@@ -200,3 +205,5 @@ subroutine gaunt(lmax, lpot, w, yr, cleb, loflm, icleb, iend, jend, ncleb, &
 100 format (13x, 'error stop in gaunt : dimension of NCLEB = ', i10, &
     ' too small ', /, 13x, 'change NCLEB to ', i6)
 end subroutine gaunt
+
+end module mod_gaunt

@@ -1,7 +1,13 @@
+module mod_sname
+
+contains
+
 ! ************************************************************************
 subroutine sname(name, new, band)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
+  use :: mod_datatypes, only: dp
+   use mod_length
+  implicit none
   ! .. scalar arguments
   integer :: band
   character (len=40) :: name, new
@@ -41,3 +47,5 @@ subroutine sname(name, new, band)
 
   return
 end subroutine sname
+
+end module mod_sname

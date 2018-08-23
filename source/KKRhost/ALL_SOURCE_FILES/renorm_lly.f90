@@ -1,3 +1,7 @@
+module mod_renorm_lly
+
+contains
+
 ! LLY Lloyd  &
 subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
   iestart, ieend, wez, ircut, ipan, ez, zat, rho2ns, r2nef, denef, denefat, &
@@ -256,3 +260,5 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
   ! Renormalize the valence charge according to Lloyd's formula.
   ! Find renormalization constant per energy, then renormalize
 end subroutine renorm_lly
+
+end module mod_renorm_lly

@@ -1,3 +1,7 @@
+module mod_symlat
+
+contains
+
 subroutine symlat(nsymop, platcp, symopm)
   ! - Supplies the point symmetry operations of the lattice
   ! ----------------------------------------------------------------------
@@ -69,3 +73,5 @@ subroutine symlat(nsymop, platcp, symopm)
 100 format (/, ' SYMLAT: lattice invariant under ', i2, &
     ' symmetry operations.')
 end subroutine symlat
+
+end module mod_symlat

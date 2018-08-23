@@ -1,3 +1,7 @@
+module mod_cint4pts
+
+contains
+
 subroutine cint4pts(y, jtop, z)
   ! ********************************************************************
   ! *                                                                  *
@@ -69,3 +73,5 @@ subroutine cint4pts(y, jtop, z)
   end if
 
 end subroutine cint4pts
+
+end module mod_cint4pts

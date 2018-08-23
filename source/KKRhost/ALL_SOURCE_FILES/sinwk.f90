@@ -1,3 +1,7 @@
+module mod_sinwk
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: SINWK
 ! > @brief This subroutine does an outwards integration of a function with
@@ -67,3 +71,5 @@ subroutine sinwk(f, fint, ipan, ircut)
   end do                           ! IP
 
 end subroutine sinwk
+
+end module mod_sinwk

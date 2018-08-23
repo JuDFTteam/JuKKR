@@ -1,3 +1,7 @@
+module mod_cmatstr
+
+contains
+
 subroutine cmatstr(str, lstr, a, n, m, mlin, mcol, ijq, tolp, k_fmt_fil)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -296,3 +300,5 @@ subroutine cmatstr(str, lstr, a, n, m, mlin, mcol, ijq, tolp, k_fmt_fil)
 150 format (/, 8x, i5, ' elements   >', 1p, e9.1, /, 8x, i5, ' elements   <', &
     1p, e9.1, /)
 end subroutine cmatstr
+
+end module mod_cmatstr

@@ -1,3 +1,7 @@
+module mod_dirac_bs
+
+contains
+
 subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
   cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, pr, qr, pi, qi, d_p, dq)
   ! ********************************************************************
@@ -19,6 +23,10 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
   ! *  29/04/95  MB  Adopted for finite nucleus                        *
   ! ********************************************************************
   use :: mod_datatypes, only: dp
+   use mod_dirbsstp
+   use mod_cjlz
+   use mod_dirbsrad
+   use mod_rinvgj
   implicit none
   include 'sprkkr_rmesh.dim'
 
@@ -445,3 +453,5 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
 
   ! =============================================================== n ====
 end subroutine dirbs
+
+end module mod_dirac_bs

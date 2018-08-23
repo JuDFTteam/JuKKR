@@ -1,3 +1,7 @@
+module mod_cpamillsx
+
+contains
+
 subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
   noq, itoq, conc, mssq, msst, tauq, dmssq, kmrot, drotq, ntmax, nqmax, &
   nkmmax)
@@ -19,6 +23,8 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
   ! ********************************************************************
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+   use mod_getdmat
+   use mod_rotate
   implicit complex (kind=dp)(a-h, o-z)
 
   ! PARAMETER definitions
@@ -213,3 +219,5 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
 100 format (' CPA:  IQ', i3, '  ERR', f12.5, '  CORR', f13.5, '  M', 18(1x,2( &
     1p,e14.6)))
 end subroutine cpamillsx
+
+end module mod_cpamillsx

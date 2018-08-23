@@ -1,3 +1,7 @@
+module mod_clsgen_tb
+
+contains
+
 ! ************************************************************************
 subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, &
@@ -18,6 +22,8 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
 
   use :: mod_version_info
   use :: mod_datatypes, only: dp
+   use mod_clustcomp_tb
+   use mod_dsort
   implicit none
   ! .. arguments
   integer :: naez                  ! number of atoms in EZ
@@ -508,3 +514,5 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
 end subroutine clsgen_tb
 
 
+
+end module mod_clsgen_tb

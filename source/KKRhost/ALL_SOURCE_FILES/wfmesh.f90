@@ -1,3 +1,7 @@
+module mod_wfmesh
+
+contains
+
 subroutine wfmesh(e, ek, cvlight, nsra, z, r, s, rs, irm, irmd, lmaxd)
   use :: mod_datatypes, only: dp
   real (kind=dp), parameter :: eps=1.0D-12
@@ -38,3 +42,5 @@ subroutine wfmesh(e, ek, cvlight, nsra, z, r, s, rs, irm, irmd, lmaxd)
   end do
   return
 end subroutine wfmesh
+
+end module mod_wfmesh

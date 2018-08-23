@@ -1,3 +1,7 @@
+module mod_create_newmesh_interpolate
+
+contains
+
 subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
   r_log, npan_log, npan_eq, ncheb, npan_tot, rnew, rpan_intervall, &
   ipan_intervall, vinsnew, ntcell, thetas, thetasnew)
@@ -199,3 +203,5 @@ subroutine chebmesh(npan, ncheb, ri, ro)
   end do
 end subroutine chebmesh
 
+
+end module mod_create_newmesh_interpolate

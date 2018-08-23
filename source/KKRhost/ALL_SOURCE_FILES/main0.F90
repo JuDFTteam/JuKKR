@@ -36,6 +36,39 @@ module mod_main0
    use rinput
    Use mod_datatypes, Only: dp
 
+   use mod_addviratoms14
+   use mod_bzkint0
+   use mod_calcrotmat
+   use mod_changerep
+   use mod_cinit
+   use mod_clsgen_tb
+   use mod_convol
+   use mod_deciopt
+   use mod_drvbastrans
+   use mod_epathtb
+   use mod_gaunt2
+   use mod_gaunt
+   use mod_generalpot
+   use mod_getbr3
+   use mod_gfmask
+   use mod_lattix99
+   use mod_madelung2d
+   use mod_madelung3d
+   use mod_opt
+   use mod_outpothost
+   use mod_outtmathost
+   use mod_readimppot
+   use mod_relpotcvt
+   use mod_rinit
+   use mod_scalevec
+   use mod_setgijtab
+   use mod_shape_corr
+   use mod_startb1
+   use mod_startldau
+   use mod_testdim
+   use mod_write_tbkkr_files
+   use mod_writehoststructure
+
    implicit none
 
    integer :: KTE       !< Calculation of the total energy On/Off (1/0)
@@ -451,42 +484,10 @@ contains
       ! End write version info
       !-------------------------------------------------------------------------
       !
-      ! Set the default values for the I/O variables
-      call init_io_variables()
-      ! Set the defaults values for the CPA variables
-      call init_CPA_variables()
-      ! Set the default values for the Slab mode variables
-      call init_slab_variables()
-      ! Set the default values for the LDA+U variables
-      call init_LDAU_variables()
-      ! Set the default values for misc variables for the calculation
-      call init_misc_variables()
-      ! Set the default values for the distinct mesh variables
-      call init_mesh_variables()
-      ! Set the default values for the unit cell variables
-      call init_cell_variables()
-      ! Set the default variables for the energy related variables
-      call init_energy_variables()
-      ! Set the default values for the cluster variables
-      call init_cluster_variables()
-      ! Set the default values for the potential variables
-      call init_potential_variables()
-      ! Set the default values for the convergence and solver variables
-      call init_convergence_variables()
-      ! Set the default values for the relativistic variables
-      call init_relativistic_variables()
-      ! Set the default values for the magnetisation variables
-      call init_magnetization_variables()
-      ! Set the default values for the angular momentum related variables
-      call init_angular_momentum_variables()
 
-      ! allocate and initialize testc and optc in t_params for run and test options
-      allocate(t_params%OPTC(32), stat=i_stat) !CHARACTER*8
-      call memocc(i_stat,product(shape(t_params%OPTC))*kind(t_params%OPTC),'t_params%OPTC','main0')
-      t_params%OPTC(1:32) =  '        '
-      allocate(t_params%TESTC(32), stat=i_stat)
-      call memocc(i_stat,product(shape(t_params%TESTC))*kind(t_params%TESTC),'t_params%TESTC','main0')
-      t_params%TESTC(1:32) = '        '
+      ! allocate and initialize default values
+      call init_all_wrapper()
+
       !
       !-------------------------------------------------------------------------
       ! Reading of the inputcard, and allocation of several arrays
@@ -1729,6 +1730,58 @@ contains
       MAXMESH     = 1
 
    end subroutine init_mesh_variables
+
+
+   !-------------------------------------------------------------------------
+   ! subroutine: init_all_wrapper
+   !> @brief wrapper for initialization subroutines and allocation of test/opt arrays
+   !> @author Philipp Ruessmann
+   !> @date 22.08.2018
+   !-------------------------------------------------------------------------
+   subroutine init_all_wrapper()
+      use mod_wunfiles, only: t_params
+      implicit none
+      integer :: i_stat
+
+      ! Set the default values for the I/O variables
+      call init_io_variables()
+      ! Set the defaults values for the CPA variables
+      call init_CPA_variables()
+      ! Set the default values for the Slab mode variables
+      call init_slab_variables()
+      ! Set the default values for the LDA+U variables
+      call init_LDAU_variables()
+      ! Set the default values for misc variables for the calculation
+      call init_misc_variables()
+      ! Set the default values for the distinct mesh variables
+      call init_mesh_variables()
+      ! Set the default values for the unit cell variables
+      call init_cell_variables()
+      ! Set the default variables for the energy related variables
+      call init_energy_variables()
+      ! Set the default values for the cluster variables
+      call init_cluster_variables()
+      ! Set the default values for the potential variables
+      call init_potential_variables()
+      ! Set the default values for the convergence and solver variables
+      call init_convergence_variables()
+      ! Set the default values for the relativistic variables
+      call init_relativistic_variables()
+      ! Set the default values for the magnetisation variables
+      call init_magnetization_variables()
+      ! Set the default values for the angular momentum related variables
+      call init_angular_momentum_variables()
+
+      ! allocate and initialize testc and optc in t_params for run and test options
+      allocate(t_params%OPTC(32), stat=i_stat) !CHARACTER*8
+      call memocc(i_stat,product(shape(t_params%OPTC))*kind(t_params%OPTC),'t_params%OPTC','main0')
+      t_params%OPTC(1:32) =  '        '
+      allocate(t_params%TESTC(32), stat=i_stat)
+      call memocc(i_stat,product(shape(t_params%TESTC))*kind(t_params%TESTC),'t_params%TESTC','main0')
+      t_params%TESTC(1:32) = '        '
+
+   end subroutine init_all_wrapper
+
 
    subroutine print_versionserial(iunit, version1, version2, version3, version4, serialnr)
       implicit none

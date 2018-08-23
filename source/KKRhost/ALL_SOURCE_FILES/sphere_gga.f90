@@ -1,3 +1,7 @@
+module mod_sphere_gga
+
+contains
+
 subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
   dylmt2, dylmf1, dylmf2, dylmtf)
   ! -----------------------------------------------------------------------
@@ -11,6 +15,8 @@ subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
   ! Phivos Mavropoulos, July 2007.
   ! -----------------------------------------------------------------------
   use :: mod_datatypes
+   use mod_lebedev
+   use mod_ymy
   implicit none
 
   ! .. Scalar Arguments ..
@@ -375,3 +381,5 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
 
 
 end subroutine derivylm
+
+end module mod_sphere_gga

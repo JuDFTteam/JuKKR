@@ -1,3 +1,7 @@
+module mod_gll95
+
+contains
+
 ! **********************************************************************
 SUBROUTINE gll13(ez,cleb,icleb,loflm,iend,tmatll,dtmatll,atom,  &
     refpot,ratom,natom,tolrdif,alat,out_wr,gref0, dgdeout,naclsmax,lly_g0tr,lly)
@@ -15,7 +19,9 @@ use omp_lib
 #endif
 use mod_types, only: t_inc
   use global_variables
-      Use mod_datatypes, Only: dp
+   Use mod_datatypes, Only: dp
+   use mod_gfree13
+   use mod_grefsy13
       IMPLICIT NONE
 !.. Parameters ..
       complex (kind=dp) CONE,CZERO
@@ -228,3 +234,5 @@ IF (lly /= 0) THEN
   IF ( lm1 /= 0 ) STOP ' [gll13] dealloc'
 endif
 END SUBROUTINE gll13
+
+end module mod_gll95

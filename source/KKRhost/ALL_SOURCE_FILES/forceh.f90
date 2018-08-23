@@ -1,3 +1,7 @@
+module mod_forceh
+
+contains
+
 subroutine forceh(cmom, flmh, lmax, nspin, nstart, nend, r2rho, v, r, drdi, &
   irws, z)
   use :: mod_datatypes, only: dp
@@ -86,3 +90,5 @@ subroutine forceh(cmom, flmh, lmax, nspin, nstart, nend, r2rho, v, r, drdi, &
     ' contributions up to l=1 at least ')
 
 end subroutine forceh
+
+end module mod_forceh

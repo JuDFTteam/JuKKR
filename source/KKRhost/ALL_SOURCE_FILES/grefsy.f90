@@ -1,3 +1,7 @@
+module mod_grefsy
+
+contains
+
 subroutine grefsy13(gtmat, gmat, dgtde, lly_g0tr, ipvt, ndim, lly, lmgf0d, &
   ngd)
   use :: mod_datatypes, only: dp
@@ -108,3 +112,5 @@ subroutine grefsy(gtmat, gmat, ndim, lmgf0d, ngd)
   return
 
 end subroutine grefsy
+
+end module mod_grefsy

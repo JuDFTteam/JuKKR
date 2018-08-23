@@ -1,3 +1,7 @@
+module mod_dirac_bi
+
+contains
+
 ! SUBROUTINE DIRABMBI(GETIRRSOL,C,IT,E,L,MJ,KAP1,KAP2,PIS,CG1,CG2,
 ! &                    CG4,CG5,CG8,AMEBI1,AMEBI2,V,B,AT,Z,NUCLEUS,R,
 ! &                    DRDI,DOVR,NMESH,PR,QR,PI,QI,DP,DQ,AP,AQ,NTMAX,
@@ -65,3 +69,5 @@
 ! stop ' < DIRABMBI > : Not implemented. Set SOLVER=BS in inputcard'
 
 ! END
+
+end module mod_dirac_bi

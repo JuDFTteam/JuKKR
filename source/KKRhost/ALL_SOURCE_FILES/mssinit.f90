@@ -1,3 +1,7 @@
+module mod_mssinit
+
+contains
+
 ! **********************************************************************
 subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, &
   iqat, itoq, noq, conc, kmrot, natyp, naez) ! nrefd was taken out of
@@ -5,6 +9,7 @@ subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, &
   use global_variables
   use :: mod_mympi, only: myrank, master
   use :: mod_datatypes, only: dp
+   use mod_rotate
   implicit none
 
   ! .. Local variables
@@ -278,3 +283,5 @@ subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, &
   ! Included  1.2.2012
   return
 end subroutine mssinit
+
+end module mod_mssinit

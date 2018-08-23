@@ -1,3 +1,7 @@
+module mod_wftsca
+
+contains
+
 ! Added IRMIN,IRMAX 1.7.2014  &
 subroutine wftsca(drdi, efac, pz, qz, fz, sz, nsra, pzlm, qzlm, pzekdr, &
   qzekdr, ek, loflm, irmind, irmd, irmin, irmax, lmaxd, lmmaxd)
@@ -70,3 +74,5 @@ subroutine wftsca(drdi, efac, pz, qz, fz, sz, nsra, pzlm, qzlm, pzekdr, &
 
 
 end subroutine wftsca
+
+end module mod_wftsca

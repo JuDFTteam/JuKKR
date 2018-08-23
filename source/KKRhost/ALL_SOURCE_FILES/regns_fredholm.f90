@@ -1,3 +1,7 @@
+module mod_regns_fredholm
+
+contains
+
 subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   pzekdr, qzekdr, ek, ader, amat, bder, bmat, nsra, irmind, irmd, ipand, &
   lmmaxd)
@@ -123,3 +127,5 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
     end do
   end do
 end subroutine regns
+
+end module mod_regns_fredholm

@@ -1,3 +1,7 @@
+module mod_dinv33
+
+contains
+
 subroutine dinv33(matrix, iopt, invers, det)
   use :: mod_datatypes, only: dp
   ! - Inverts 3X3 matrix
@@ -41,3 +45,5 @@ subroutine dinv33(matrix, iopt, invers, det)
   end if
   call dscal1(9, 1.e0_dp/det, invers, 1)
 end subroutine dinv33
+
+end module mod_dinv33

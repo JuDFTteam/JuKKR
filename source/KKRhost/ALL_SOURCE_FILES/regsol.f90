@@ -1,3 +1,7 @@
+module mod_regsol
+
+contains
+
 subroutine regsol(cvlight, e, nsra, dlogdp, fz, hamf, mass, pz, dror, r, s, &
   vm2z, z, ipan, ircut, idoldau, lopt, wldauav, cutoff, irmd, ipand, lmaxd)
   ! -----------------------------------------------------------------------
@@ -294,3 +298,5 @@ subroutine regsol(cvlight, e, nsra, dlogdp, fz, hamf, mass, pz, dror, r, s, &
 
 
 end subroutine regsol
+
+end module mod_regsol

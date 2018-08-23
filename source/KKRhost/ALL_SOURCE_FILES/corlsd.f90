@@ -1,5 +1,8 @@
+module mod_corlsd
+
+contains
+
 subroutine corlsd(rs, zta, ec, vcup, vcdn, ecrs, eczta, alfc)
-  use :: mod_datatypes, only: dp
   ! .....-----------------------------------------------------------------
   ! uniform-gas correlation of perdew and wang 1991
   ! .....-----------------------------------------------------------------
@@ -9,6 +12,9 @@ subroutine corlsd(rs, zta, ec, vcup, vcdn, ecrs, eczta, alfc)
   ! derivatives of ec wrt rs (ecrs) &zta (eczta).
   ! output: correlation contribution (alfc) to the spin stiffness
   ! .....-----------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+   use mod_gcor91
+  implicit none
   ! .. Scalar Arguments ..
   real (kind=dp) :: alfc, ec, ecrs, eczta, rs, vcdn, vcup, zta
   ! ..
@@ -50,3 +56,5 @@ subroutine corlsd(rs, zta, ec, vcup, vcdn, ecrs, eczta, alfc)
 
   return
 end subroutine corlsd
+
+end module mod_corlsd

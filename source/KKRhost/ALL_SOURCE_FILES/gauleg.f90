@@ -1,3 +1,7 @@
+module mod_gauleg
+
+contains
+
 ! ********************************************************
 subroutine gauleg(xi, wi, n)
   use :: mod_datatypes, only: dp
@@ -1750,3 +1754,5 @@ subroutine gauleg(xi, wi, n)
   return
 
 end subroutine gauleg              ! SUBROUTINE GAULEG(XI,WI,N)
+
+end module mod_gauleg

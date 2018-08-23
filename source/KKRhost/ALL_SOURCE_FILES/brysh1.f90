@@ -1,3 +1,7 @@
+module mod_brysh1
+
+contains
+
 ! ************************************************************************
 subroutine brysh1(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
   lmpot, lsmear)
@@ -54,3 +58,5 @@ subroutine brysh1(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
   end do
   ! vector and projects out the coulomb part only.
 end subroutine brysh1
+
+end module mod_brysh1

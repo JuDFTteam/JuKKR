@@ -1,3 +1,7 @@
+module mod_exch91
+
+contains
+
 subroutine exch91(d, s, u, v, exl, exg, vxl, vxg)
   use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------
@@ -68,3 +72,5 @@ subroutine exch91(d, s, u, v, exl, exg, vxl, vxg)
   vxg = vxg*2.e0_dp
   return
 end subroutine exch91
+
+end module mod_exch91

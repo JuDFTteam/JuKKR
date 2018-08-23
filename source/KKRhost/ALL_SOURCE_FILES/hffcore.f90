@@ -1,7 +1,10 @@
+module mod_hffcore
+
+contains
+
 subroutine hffcore(rnuc, jtop, kap1, kap2, nsol, mj, gc, fc, nrc, shf, s, &
   nmemax, nkmmax, r, drdi, sdia, smdia, soff, smoff, qdia, qoff, qmdia, qmoff, &
   nucleus, jlim)
-  use :: mod_datatypes, only: dp
   ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
   ! Calculates matrix elements of several hyperfine interaction
   ! connected quantities in the core.
@@ -16,6 +19,10 @@ subroutine hffcore(rnuc, jtop, kap1, kap2, nsol, mj, gc, fc, nrc, shf, s, &
   ! 5      Total Hyperfine Field (see Rose (1961))
   ! called by core
   ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+  use :: mod_datatypes, only: dp
+   use mod_ylag
+   use mod_ikapmue
+   use mod_rint4pts
   implicit none
 
 
@@ -263,3 +270,5 @@ subroutine hffint(gg, ga, gb, dr, r, rnuc, nsol, jtop, nrc)
     end do
   end do
 end subroutine hffint
+
+end module mod_hffcore

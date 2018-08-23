@@ -1,3 +1,7 @@
+module mod_calc_torq_ll_ss
+
+contains
+
 ! This subroutine computes a matrix that is the basis for constructing
 ! the KKR representation of the torque operator. It is adapted from the
 ! CALC_RHO_LL_SS subroutine, but the spin dependent part, i.e., the exhange
@@ -113,3 +117,5 @@ subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, &
   deallocate (rsp)
   ! field, replaces the shape function in the integration.
 end subroutine calc_torq_ll_ss
+
+end module mod_calc_torq_ll_ss

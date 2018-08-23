@@ -1,3 +1,7 @@
+module mod_rotgll
+
+contains
+
 SUBROUTINE rotgll(gmatll,natomimp,ijtabsym,ijtabsh,  &
         dsymll,symunitary,igf,rc,crel,rrel,  &
         krel,lmmaxd,irec)
@@ -23,6 +27,7 @@ SUBROUTINE rotgll(gmatll,natomimp,ijtabsym,ijtabsh,  &
 ! **********************************************************************
 use mod_mympi, only: myrank, master
 Use mod_datatypes, Only: dp, sp
+   use mod_changerep
 
 IMPLICIT NONE
 !     ..
@@ -196,3 +201,5 @@ endif !IGF/=0
 deallocate (gll,tpg)
 RETURN
 END                       ! SUBROUTINE ROTGLL
+
+end module mod_rotgll

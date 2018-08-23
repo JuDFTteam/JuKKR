@@ -1,3 +1,7 @@
+module mod_pointgrp
+
+contains
+
 subroutine pointgrp(rotmat, rotname)
   use :: mod_datatypes, only: dp
   ! **********************************************
@@ -222,3 +226,5 @@ subroutine pointgrp(rotmat, rotname)
 
   ! ccccccccccccccccccccccccccccccccccccccccccccccccc
 end subroutine pointgrp
+
+end module mod_pointgrp

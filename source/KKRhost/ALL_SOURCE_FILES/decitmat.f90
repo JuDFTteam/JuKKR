@@ -1,7 +1,10 @@
+module mod_decitmat
+
+contains
+
 subroutine decitmat(eryd, zat, ipan, rr, dror, visp, ircut, rirc, krel, nsra, &
   ins, tmatll, loflm, idoldau, lopt, wldauav, solver, soctl, ctl, zrel, vtrel, &
   btrel, drdi, r2drdi, ipand, irmd, lmaxd, lmaxdp1, lm2d, lmmaxd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * A modified form of the CALCTMAT routine to deal with the host      *
@@ -10,6 +13,11 @@ subroutine decitmat(eryd, zat, ipan, rr, dror, visp, ircut, rirc, krel, nsra, &
   ! * Non-spherical potential not implemented yet, neither LDA+U         *
   ! *                                                                    *
   ! **********************************************************************
+   use mod_beshan
+  use :: mod_datatypes, only: dp
+   use mod_drvreltmat
+   use mod_regsol
+   use mod_wfmesh
   implicit none
 
   ! Parameters ..
@@ -122,3 +130,5 @@ subroutine decitmat(eryd, zat, ipan, rr, dror, visp, ircut, rirc, krel, nsra, &
   end if
   ! ================================================================= KREL
 end subroutine decitmat
+
+end module mod_decitmat

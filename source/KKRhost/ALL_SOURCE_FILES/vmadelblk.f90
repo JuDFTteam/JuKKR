@@ -1,3 +1,7 @@
+module mod_vmadelblk
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: VMADELBLK
 ! > @brief Calculate the madelung potentials and add these to the potential
@@ -275,3 +279,5 @@ subroutine vmadelblk(cmom, cminst, lmax, nspin, naez, v, zat, r, irws, ircut, &
 140 format (3i6)
 150 format (4d20.10)
 end subroutine vmadelblk
+
+end module mod_vmadelblk

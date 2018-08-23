@@ -1,3 +1,7 @@
+module mod_rintsimp
+
+contains
+
 subroutine rintsimp(fx, jtop, cint)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -30,3 +34,5 @@ subroutine rintsimp(fx, jtop, cint)
   cint = (cint+fx(jtop))/3.0e0_dp
 
 end subroutine rintsimp
+
+end module mod_rintsimp

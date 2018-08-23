@@ -1,6 +1,9 @@
+module mod_symtaumat
+
+contains
+
 subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
   nqmax, nkmmax, nq, nl, krel, iprint, nsymaxd)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! *  Find the symmetry matrices DROT that act on t, tau, ....        *
@@ -17,6 +20,14 @@ subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
   ! *                                                                  *
   ! ********************************************************************
 
+   use mod_calcrotmat
+  use :: mod_datatypes, only: dp
+   use mod_checkrmat
+   use mod_cinit
+   use mod_cmatstr
+   use mod_ddet33
+   use mod_taustruct
+   use mod_errortrap
   implicit none
 
   ! PARAMETER definitions
@@ -359,3 +370,5 @@ subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
 120 format (8x, i2, 3x, a, i3, 3f10.5, 3x, l1)
 130 format (50('>'), ' trouble in <SYMTAUMAT>', i3, f10.5)
 end subroutine symtaumat
+
+end module mod_symtaumat

@@ -1,3 +1,7 @@
+module mod_strmat
+
+contains
+
 SUBROUTINE strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr,  &
     gn,rm,qi0,smat,vol,iprint,lassld,lmxspd,naezd)
 ! **********************************************************************
@@ -40,6 +44,8 @@ use omp_lib
 
 use constants
       Use mod_datatypes, Only: dp
+   use mod_ymy
+   use mod_gamfc
 
       IMPLICIT NONE
 !..
@@ -266,3 +272,5 @@ WRITE (1337,'(7X,A,/)') FMT
 99005 FORMAT (8X,'Lattice sum (LMXSP = 1) up to NAEZ =',i2)
 99006 FORMAT (7X,6(d12.4))
 END SUBROUTINE strmat
+
+end module mod_strmat

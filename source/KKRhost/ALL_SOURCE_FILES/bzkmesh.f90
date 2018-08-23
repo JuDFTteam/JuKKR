@@ -1,3 +1,7 @@
+module mod_bzkmesh
+
+contains
+
 subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
   rsymat, isymindex, symunitary, ielast, ez, kmesh, iprint, krel, kpoibz, &
   maxmshd)
@@ -155,3 +159,5 @@ subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
 130 format (8x, 2i6, 3i5, f8.4)
 140 format (8x, 35('-'), /)
 end subroutine bzkmesh
+
+end module mod_bzkmesh

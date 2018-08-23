@@ -1,3 +1,7 @@
+module mod_csinwd
+
+contains
+
 subroutine csinwd(f, fint, lmmsqd, irmind, irmd, irmin, ipan, ircut)
   use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
@@ -81,3 +85,5 @@ subroutine csinwd(f, fint, lmmsqd, irmind, irmd, irmin, ipan, ircut)
   end do
 
 end subroutine csinwd
+
+end module mod_csinwd

@@ -1,12 +1,17 @@
+module mod_startldau
+
+contains
+
 subroutine startldau(itrunldau, idoldau, kreadldau, lopt, ueff, jeff, &
   erefldau, natyp, nspin, wldau, uldau, phildau, irws, ntldau, itldau, irmd, &
   natypd, nspind, mmaxd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * Reads in LDA+U arrays from formatted file 'ldaupot'                *
   ! *                                                                    *
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
+   use mod_readldaupot
   implicit none
   ! ..
   integer :: irmd, mmaxd, natypd, nspind, irws(natypd)
@@ -114,3 +119,5 @@ subroutine startldau(itrunldau, idoldau, kreadldau, lopt, ueff, jeff, &
 190 format (11x, 58('~'))
 200 format (9x, 'IT =', i3, ' ISPIN =', i2, /)
 end subroutine startldau
+
+end module mod_startldau

@@ -1,3 +1,7 @@
+module mod_complexdos3
+
+contains
+
 program complexdos
   use :: mod_datatypes, only: dp
   implicit none
@@ -103,3 +107,5 @@ program complexdos
 120 format (a80)
 130 format (8(2e12.4))
 end program complexdos
+
+end module mod_complexdos3

@@ -5,6 +5,7 @@
       use mod_types, only: t_inc
       use mod_wunfiles, only: t_params
       use mod_rhoqtools, only: rhoq_write_kmesh
+      use mod_bzkmesh
 
       IMPLICIT NONE
 C     ..

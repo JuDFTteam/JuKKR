@@ -1,3 +1,7 @@
+module mod_dirbslag
+
+contains
+
 subroutine dirbslag(xi, y1i, y2i, y3i, y4i, y1, y2, y3, y4, ind1, n, imax)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -72,3 +76,5 @@ subroutine dirbslag(xi, y1i, y2i, y3i, y4i, y1, y2, y3, y4, ind1, n, imax)
   y3i = y3i*p
   y4i = y4i*p
 end subroutine dirbslag
+
+end module mod_dirbslag

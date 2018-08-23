@@ -1,3 +1,7 @@
+module mod_rhoout
+
+contains
+
 ! Added IRMIN,IRMAX 1.7.2014
 subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm, ipan1, &
   imt1, irmin, irmax, lmsp, cdenns, nsra, cleb, icleb, iend, cdenlm, cwr) ! lm-dos
@@ -188,3 +192,5 @@ subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm, ipan1, &
   ! -----------------------------------------------------------------------
 
 end subroutine rhoout
+
+end module mod_rhoout

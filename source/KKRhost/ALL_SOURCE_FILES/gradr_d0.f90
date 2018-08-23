@@ -1,3 +1,7 @@
+module mod_gradr_d0
+
+contains
+
 subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   ddrru, rou, irmd)
   ! -----------------------------------------------------------------
@@ -525,3 +529,5 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   return
 120 format (/, ' ndvpt should be ge.4 .or. le.6. ndvpt=', i3)
 end subroutine gradr
+
+end module mod_gradr_d0

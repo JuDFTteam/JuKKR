@@ -1,3 +1,7 @@
+module mod_readldaupot
+
+contains
+
 subroutine readldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
   uldau, phildau, irws, ntldau, itldau, irmd, natypd, nspind, mmaxd)
   ! **********************************************************************
@@ -183,3 +187,5 @@ subroutine readldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
 120 format (9x, 'WARNING: ', a, /, 18x, &
     'input-card data will be used, iteration reinitialised')
 end subroutine readldaupot
+
+end module mod_readldaupot

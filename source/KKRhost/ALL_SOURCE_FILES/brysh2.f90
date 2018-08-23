@@ -1,3 +1,7 @@
+module mod_brysh2
+
+contains
+
 ! ************************************************************************
 subroutine brysh2(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
   lmpot, lsmear)
@@ -55,3 +59,5 @@ subroutine brysh2(y, x, xsme, ins, irmin, irc, natps, natyp, nspin, imap, &
   end do
   ! the proper bins of each single mt-cell . the magnetization
 end subroutine brysh2
+
+end module mod_brysh2

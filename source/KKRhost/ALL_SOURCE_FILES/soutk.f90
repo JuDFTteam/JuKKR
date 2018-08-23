@@ -1,3 +1,7 @@
+module mod_soutk
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: SOUTK
 ! > @brief This subroutine does an outwards integration of a function with
@@ -69,3 +73,5 @@ subroutine soutk(f, fint, ipan, ircut)
   end do                           ! IP
 
 end subroutine soutk
+
+end module mod_soutk

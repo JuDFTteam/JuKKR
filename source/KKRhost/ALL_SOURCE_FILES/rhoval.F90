@@ -1,3 +1,7 @@
+module mod_rhoval
+
+contains
+
 !-------------------------------------------------------------------------------
 ! SUBROUTINE: RHOVAL
 !
@@ -31,6 +35,11 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    use mod_version_info
    use global_variables
    use mod_DataTypes
+   use mod_pnsqns
+   use mod_cradwf
+   use mod_rholm
+   use mod_rhons
+   use mod_wfmesh
 
    implicit none
 
@@ -575,3 +584,5 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    end if
 
 end subroutine RHOVAL
+
+end module mod_rhoval

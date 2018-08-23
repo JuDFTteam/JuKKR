@@ -1,3 +1,7 @@
+module mod_lebedev
+
+contains
+
 subroutine lebedev(ij, rij1, rij2, rij3, wij)
   use :: mod_datatypes, only: dp
   ! **********************************************************************
@@ -953,3 +957,5 @@ subroutine lebedev(ij, rij1, rij2, rij3, wij)
 
   return
 end subroutine lebedev
+
+end module mod_lebedev

@@ -1,3 +1,7 @@
+module mod_rmatstr
+
+contains
+
 subroutine rmatstr(str, lstr, a, n, m, mlin, mcol, tolp, nfil)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -222,3 +226,5 @@ subroutine rmatstr(str, lstr, a, n, m, mlin, mcol, tolp, nfil)
 130 format (/, 8x, 'elements <> 0:', i4, /, 8x, 'elements  = 0:', i4)
   return
 end subroutine rmatstr
+
+end module mod_rmatstr

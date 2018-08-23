@@ -1,3 +1,7 @@
+module mod_cjlz
+
+contains
+
 function cjlz(l, z)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -64,3 +68,5 @@ function cjlz(l, z)
 
   end if
 end function cjlz
+
+end module mod_cjlz

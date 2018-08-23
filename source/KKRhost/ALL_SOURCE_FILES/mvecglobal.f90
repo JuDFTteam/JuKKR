@@ -1,3 +1,7 @@
+module mod_mvecglobal
+
+contains
+
 subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
   natypd, lmaxd, nmvecmax)
   ! ********************************************************************
@@ -9,6 +13,7 @@ subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
   ! *                                                                  *
   ! ********************************************************************
   use :: mod_datatypes
+   use mod_calcrotmat
   implicit none
 
   ! Parameter definitions
@@ -269,3 +274,5 @@ subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
     'angles (calc) TET =', f9.4, ' PHI =', f9.4, '   TET =', f9.4, ' PHI =', &
     f9.4)
 end subroutine mvecglobal
+
+end module mod_mvecglobal

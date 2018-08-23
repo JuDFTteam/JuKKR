@@ -1,6 +1,9 @@
+module mod_ymy
+
+contains
+
 ! **********************************************************************
 subroutine ymy(v1, v2, v3, r, ylm, lmax)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! this subroutine calculates real spherical harmonics with the
   ! normalization : <y|y> =1
@@ -15,6 +18,8 @@ subroutine ymy(v1, v2, v3, r, ylm, lmax)
   ! b.drittler 1987
   ! -----------------------------------------------------------------------
 
+  use :: mod_datatypes, only: dp
+   use mod_rcstop
   implicit none
   ! .. Parameters ..
   real (kind=dp) :: szero
@@ -129,3 +134,5 @@ subroutine ymy(v1, v2, v3, r, ylm, lmax)
   return
 
 end subroutine ymy
+
+end module mod_ymy

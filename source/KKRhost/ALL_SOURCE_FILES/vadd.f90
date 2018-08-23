@@ -1,3 +1,7 @@
+module mod_vadd
+
+contains
+
 ! ************************************************************************
 subroutine vadd(a, b, c)
   use :: mod_datatypes, only: dp
@@ -14,3 +18,5 @@ subroutine vadd(a, b, c)
   end do
   return
 end subroutine vadd
+
+end module mod_vadd

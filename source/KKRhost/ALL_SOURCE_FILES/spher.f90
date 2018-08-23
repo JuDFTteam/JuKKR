@@ -1,3 +1,7 @@
+module mod_spher
+
+contains
+
 subroutine spher(ylm, l, x)
   use :: mod_datatypes, only: dp
   ! spherical harmonics except the facter exp(i*m*phi)
@@ -86,3 +90,5 @@ subroutine spher(ylm, l, x)
   return
 100 format (/, /, 3x, '==invalid argument for spher; x=', d24.16, ' ==')
 end subroutine spher
+
+end module mod_spher

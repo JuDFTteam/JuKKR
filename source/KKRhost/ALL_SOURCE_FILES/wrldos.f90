@@ -1,3 +1,7 @@
+module mod_wrldos
+
+contains
+
 subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
   alatc, tk, nacls1, nspinpot, natyp, conc, ielast, intervx, intervy, intervz, &
   dostot)
@@ -143,3 +147,5 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
 180 format ('# Integrated DOS ', 1p, d10.3, 7d11.3)
 190 format ('&')
 end subroutine wrldos
+
+end module mod_wrldos

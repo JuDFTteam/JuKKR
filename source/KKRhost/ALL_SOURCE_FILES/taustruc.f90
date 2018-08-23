@@ -1,3 +1,7 @@
+module mod_taustruc
+
+contains
+
 subroutine taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, &
   irel)
   ! ********************************************************************
@@ -123,3 +127,5 @@ subroutine taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, &
     5x, 'this may occur for rotated magnetic moments', /, 5x, &
     'relevant only for tetrahedron BZ-integration', /, 5x, 50('#'), /)
 end subroutine taustruct
+
+end module mod_taustruc

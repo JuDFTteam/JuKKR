@@ -1,3 +1,7 @@
+module mod_phicalc
+
+contains
+
 subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
   nspin, nsra)
   ! *********************************************************************
@@ -16,6 +20,7 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
 
   use :: mod_datatypes
   use global_variables
+   use mod_regsol
   implicit none
   real (kind=dp), parameter :: eps=1.0D-12
   real (kind=dp) :: cvlight
@@ -124,3 +129,5 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
   ! * Only spherical part of the potential is used.                     *
   return
 end subroutine phicalc
+
+end module mod_phicalc

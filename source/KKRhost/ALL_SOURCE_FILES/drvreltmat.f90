@@ -1,6 +1,9 @@
+module mod_drvreltmat
+
+contains
+
 subroutine drvreltmat(eryd, tmatll, vt, bt, r, drdi, r2drdi, zat, jws, solver, &
   soctl, ctl, lmmaxd, lmaxd, irmd)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! * driving routine to call relativistic < SSITE > routine           *
@@ -9,6 +12,9 @@ subroutine drvreltmat(eryd, tmatll, vt, bt, r, drdi, r2drdi, zat, jws, solver, &
   ! *                                                                  *
   ! ********************************************************************
 
+  use :: mod_datatypes, only: dp
+   use mod_ikmlin
+   use mod_calccgc
   implicit none
 
   ! PARAMETER definitions
@@ -145,3 +151,5 @@ subroutine drvreltmat(eryd, tmatll, vt, bt, r, drdi, r2drdi, zat, jws, solver, &
 
   return
 end subroutine drvreltmat
+
+end module mod_drvreltmat

@@ -1,3 +1,7 @@
+module mod_coredir
+
+contains
+
 subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
   nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, cgd, cgmd, cgo, nrc, z, &
   nucleus)
@@ -525,3 +529,5 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
     '/2 ', a3)
 150 continue
 end subroutine coredir
+
+end module mod_coredir

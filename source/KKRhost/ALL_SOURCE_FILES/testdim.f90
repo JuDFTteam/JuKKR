@@ -1,3 +1,7 @@
+module mod_testdim
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: TESTDIM
 ! > @brief Testing the dimension of several arrays
@@ -152,3 +156,5 @@ subroutine testdim(nspin, naez, nemb, natyp, ins, insref, nref, &
 120 format (' Dimension and Input Data CHECK')
   return
 end subroutine testdim
+
+end module mod_testdim

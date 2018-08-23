@@ -1,3 +1,7 @@
+module mod_ssum
+
+contains
+
 function ssum(n, v, iv)
   use :: mod_datatypes, only: dp
   ! **********************************************************************
@@ -31,3 +35,5 @@ function ssum(n, v, iv)
   end do
   ssum = vsum
 end function ssum
+
+end module mod_ssum

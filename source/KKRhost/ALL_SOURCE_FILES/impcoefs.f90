@@ -1,3 +1,7 @@
+module mod_impcoefs
+
+contains
+
 subroutine impcoefs(natomimp, naez, atomimp, rclsimp, nshell, nsh1, nsh2, &
   ratom, nsymat, isymindex, rotname, hostimp, natypd, lmaxd, nsheld, nsize)
   use :: mod_datatypes, only: dp
@@ -109,3 +113,5 @@ subroutine impcoefs(natomimp, naez, atomimp, rclsimp, nshell, nsh1, nsh2, &
 190 format (3i5, 3f12.8, i8, f10.5)
 200 format (11i20)
 end subroutine impcoefs
+
+end module mod_impcoefs

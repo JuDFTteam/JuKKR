@@ -1,3 +1,7 @@
+module mod_cmomsread
+
+contains
+
 subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, &
   nembd1, lmpotd)
   use :: mod_datatypes, only: dp
@@ -107,3 +111,5 @@ subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, &
 100 format (4d22.14)
 110 format (5x, 2i6)
 end subroutine cmomsread
+
+end module mod_cmomsread

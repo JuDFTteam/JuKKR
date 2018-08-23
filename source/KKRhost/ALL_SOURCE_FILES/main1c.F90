@@ -16,6 +16,21 @@ module MOD_MAIN1C
    use global_variables
    use mod_DataTypes
 
+   use mod_mvecglobal
+   use mod_mixldau
+   use mod_interpolate_poten
+   use mod_rhoval
+   use mod_rhoval0
+   use mod_rhocore
+   use mod_renorm_lly
+   use mod_opendafile
+   use mod_rhovalnew
+   use mod_wmatldau
+   use mod_wmatldausoc
+   use mod_wrldaupot
+   use mod_wrldos
+   use mod_wrmoms
+
    implicit none
 
 contains

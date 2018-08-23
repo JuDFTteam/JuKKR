@@ -1,3 +1,7 @@
+module mod_vxclm
+
+contains
+
 SUBROUTINE VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI, &
                  IRWS,IRCUT,IPAN,KSHAPE,GSH,ILM,IMAXSH, &
                  IFUNM,THETAS,YR,WTYR,IJEND,LMSP)
@@ -41,6 +45,8 @@ SUBROUTINE VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI, &
 !INTEGER LMXSPD
 !PARAMETER (LMXSPD= (2*LPOTD+1)**2)
 use global_variables
+   use mod_vosko
+   use mod_vxcspo
 implicit none
 !..
 !.. Scalar Arguments ..
@@ -250,3 +256,5 @@ DO ISPIN = 1,NSPIN
 END DO
 
 END
+
+end module mod_vxclm

@@ -1,3 +1,7 @@
+module mod_ddot1
+
+contains
+
 function ddot1(n, dx, incx, dy, incy)
   use :: mod_datatypes, only: dp
   ! - Forms the dot product of two vectors.
@@ -54,3 +58,5 @@ function ddot1(n, dx, incx, dy, incy)
 100 ddot1 = dtemp
   end if
 end function ddot1
+
+end module mod_ddot1

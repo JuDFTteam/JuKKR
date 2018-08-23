@@ -1,8 +1,14 @@
+module mod_spinorbit_ham
+
+contains
+
 !< subroutine that constructs SOC potential from radial derivative of vins and adds this to vnspll (output is vnspll1=vnspll+V_SOC)
 subroutine spinorbit_ham(lmax, lmmaxd, vins, rnew, eryd, Zat, cvlight, socscale, nspin, &
   lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, &
   irmdnew, nrmaxd, vnspll, vnspll1, mode)
   use :: mod_datatypes, only: dp
+   use mod_getclambdacinv
+   use mod_spin_orbit_compl
   implicit none
 
   !inputs
@@ -131,3 +137,5 @@ subroutine spinorbit_ham(lmax, lmmaxd, vins, rnew, eryd, Zat, cvlight, socscale,
   ! now output vnspll1 is sum of input and SOC potential (eventually scaled with SOCFAC)
 
 end subroutine spinorbit_ham
+
+end module mod_spinorbit_ham

@@ -1,3 +1,7 @@
+module mod_calc_rho_ll_ss
+
+contains
+
 subroutine calc_rho_ll_ss(lmmax, rll, ircut, ipan, icell, thetas, cleb, icleb, &
   iend, ifunm, lmsp, irws, drdi, dens)
 
@@ -106,3 +110,5 @@ subroutine calc_rho_ll_ss(lmmax, rll, ircut, ipan, icell, thetas, cleb, icleb, &
   deallocate (rsp)
   ! SET ACCORDING TO lmax VALUE OF INPUTCARD
 end subroutine calc_rho_ll_ss
+
+end module mod_calc_rho_ll_ss

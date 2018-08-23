@@ -1,3 +1,7 @@
+module mod_rhoin
+
+contains
+
 subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz, fz, &
   qz, sz, cleb, icleb, jend, iend, ekl, cdenlm) ! lm-dos
   ! -----------------------------------------------------------------------
@@ -245,3 +249,5 @@ subroutine rhoin(ar, cden, cr, df, gmat, ek, rho2ns, irc1, nsra, efac, pz, fz, &
   end do
   ! calculates the charge density inside r(irmin) in case
 end subroutine rhoin
+
+end module mod_rhoin

@@ -1,3 +1,7 @@
+module mod_inversion
+
+contains
+
 ! ************************************************************************
 subroutine inversion(gllke, invmod, icheck)
   ! ************************************************************************
@@ -13,6 +17,8 @@ subroutine inversion(gllke, invmod, icheck)
   use global_variables
   use mod_datatypes, only: dp
   use godfrin
+   use mod_invslab
+   use mod_invsupercell
   implicit none
 
   complex (kind=dp) :: ci, czero, cone
@@ -158,3 +164,5 @@ subroutine inversion(gllke, invmod, icheck)
   return
 
 end subroutine inversion
+
+end module mod_inversion

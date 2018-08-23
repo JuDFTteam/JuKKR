@@ -1,3 +1,7 @@
+module mod_vmul
+
+contains
+
 ! ************************************************************************
 subroutine vmul(a, b, c)
   use :: mod_datatypes, only: dp
@@ -14,3 +18,5 @@ subroutine vmul(a, b, c)
   end do
   return
 end subroutine vmul
+
+end module mod_vmul

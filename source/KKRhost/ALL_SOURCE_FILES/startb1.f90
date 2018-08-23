@@ -1,3 +1,7 @@
+module mod_startb1
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: STARTB1
 ! > @brief Reads the input potentials
@@ -34,6 +38,7 @@ subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
 
   use :: constants
   use :: mod_datatypes, only: dp
+   use mod_potcut
 
   implicit none
   real (kind=dp), parameter :: eps=1.0D-12
@@ -574,3 +579,5 @@ subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
 200 format (10i5)
 210 format (1p, 4d20.13)
 end subroutine startb1
+
+end module mod_startb1

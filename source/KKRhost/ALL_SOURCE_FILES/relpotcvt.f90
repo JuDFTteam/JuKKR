@@ -1,3 +1,7 @@
+module mod_relpotcvt
+
+contains
+
 subroutine relpotcvt(icall, vm2z, zin, rin, drdiin, ircut, vtrel, btrel, zrel, &
   rmrel, jwsrel, drdirel, r2drdirel, irshift, ipand, irmd, npotd, natypd)
   use :: mod_datatypes, only: dp
@@ -110,3 +114,5 @@ subroutine relpotcvt(icall, vm2z, zin, rin, drdiin, ircut, vtrel, btrel, zrel, &
   end do
   ! *************************************************************** NATYPD
 end subroutine relpotcvt
+
+end module mod_relpotcvt

@@ -1,3 +1,7 @@
+module mod_orbitalmoment
+
+contains
+
 subroutine calc_orbitalmoment(lmax, lmsize, loperator)
 
   use :: constants
@@ -142,3 +146,5 @@ subroutine calc_orbit_onel(lval, lorbit_onel)
   lorbit_onel(:, :, 3) = l_z
 
 end subroutine calc_orbit_onel
+
+end module mod_orbitalmoment

@@ -1,3 +1,7 @@
+module mod_gfshells
+
+contains
+
 subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
   iofgij, jofgij, nofgij, ish, jsh, nshell, naez, natyp, noq, rbasis, bravais, &
   ifilimp, ratom, rclsimp, nsymat, isymindex, rsymat, kaoez, atomimp, rotname, &
@@ -12,6 +16,9 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
   ! **********************************************************************
   use :: mod_types, only: t_imp
   use :: mod_datatypes, only: dp
+   use mod_impcheck
+   use mod_impcoefs
+   use mod_shellgen2k
   implicit none
   real (kind=dp), parameter :: eps = 1e-14_dp
   integer :: lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld
@@ -322,3 +329,5 @@ subroutine setpairstr(i, j, str9)
   str9 = str9(1:9-lstr) // strd(1:lstr)
 end subroutine setpairstr
 ! **********************************************************************
+
+end module mod_gfshells

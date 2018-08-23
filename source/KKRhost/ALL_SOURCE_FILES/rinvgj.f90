@@ -1,3 +1,7 @@
+module mod_rinvgj
+
+contains
+
 subroutine rinvgj(ainv, a, arraydim, n)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -52,3 +56,5 @@ subroutine rinvgj(ainv, a, arraydim, n)
   end do
 
 end subroutine rinvgj
+
+end module mod_rinvgj

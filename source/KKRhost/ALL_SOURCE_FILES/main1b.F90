@@ -11,7 +11,18 @@ module MOD_MAIN1B
    use Profiling
    use Constants
    use global_variables
-      Use mod_datatypes, Only: dp
+   Use mod_datatypes, Only: dp
+
+   use mod_operators_for_fscode
+   use mod_opendafile
+   use mod_kloopz1_qdos
+   use mod_greenimp
+   use mod_changerep
+   use mod_tmatimp_newsolver
+   use mod_setfactl
+   use mod_calctref13
+   use mod_calrmt
+   use mod_rotatematrix
 
    implicit none
 

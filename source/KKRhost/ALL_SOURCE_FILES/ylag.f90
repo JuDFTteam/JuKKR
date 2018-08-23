@@ -1,3 +1,7 @@
+module mod_ylag
+
+contains
+
 function ylag(xi, x, y, ind1, n1, imax)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -72,3 +76,5 @@ function ylag(xi, x, y, ind1, n1, imax)
   ylag = y(j)
   go to 140
 end function ylag
+
+end module mod_ylag

@@ -1,3 +1,7 @@
+module mod_invsupercell
+
+contains
+
 ! ************************************************************************
 subroutine invsupercell(m2, m1, m3, gin, icheck)
   ! ************************************************************************
@@ -14,6 +18,8 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
 
   use global_variables
   use :: mod_datatypes, only: dp
+   use mod_bofm
+   use mod_btom
   implicit none
 
   complex (kind=dp), parameter :: czero = (0.e0_dp, 0.e0_dp)
@@ -439,3 +445,5 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
   return
   ! ---> ALGORITM FOR SUPERCELL GEOMETRY
 end subroutine invsupercell
+
+end module mod_invsupercell

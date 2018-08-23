@@ -1,3 +1,7 @@
+module mod_rll_global_solutions
+
+contains
+
 ! preprocessor options:
 ! change this definition if used in host/impurity code
 ! this is commented out, since then the logical hostcode is not defined
@@ -36,6 +40,8 @@ use omp_lib ! omp functions
 
       use Constants
       Use mod_DataTypes, Only: dp
+   use mod_chebint
+   use mod_rll_local_solutions
 
       implicit none
       integer :: ncheb                               ! number of chebyshev nodes
@@ -320,3 +326,5 @@ if (idotime==1) call timing_stop('rllsll')
 deallocate( work, allp, bllp, mrnvy, mrnvz , mrjvy, mrjvz ,yrf,zrf, stat=ierror )
 if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
 end subroutine rll_global_solutions
+
+end module mod_rll_global_solutions

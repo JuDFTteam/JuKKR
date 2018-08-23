@@ -1,3 +1,7 @@
+module mod_initabjij
+
+contains
+
 subroutine initabjij(iprint, naez, natyp, natomimp, nofgij, nqcalc, nsmax, &
   nshell, iqcalc, atomimp, ish, jsh, ijtabcalc, ijtabsh, ijtabsym, nijcalc, &
   kijsh, nijmax, nshell0, nsheld)
@@ -129,3 +133,5 @@ subroutine initabjij(iprint, naez, natyp, natomimp, nofgij, nqcalc, nsmax, &
 220 format (/, 10x, 'effectively calculated type-type pairs (shells)', /, 10x, &
     'IT   JT = 1 ..', i3)
 end subroutine initabjij
+
+end module mod_initabjij

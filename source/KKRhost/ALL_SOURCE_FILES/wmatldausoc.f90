@@ -1,3 +1,7 @@
+module mod_wmatldausoc
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: WMATLDAUSOC
 ! > @brief Calculation of Coulomb interaction potential in LDA+U relativistic
@@ -31,6 +35,8 @@ subroutine wmatldausoc(ntldau, itldau, nspin, denmatn, lopt, ueff, jeff, &
   ! **********************************************************************
   use :: constants
   use :: mod_datatypes
+   use mod_rclm
+   use mod_rwrite
 
   implicit none
 
@@ -318,3 +324,5 @@ subroutine wmatldausoc(ntldau, itldau, nspin, denmatn, lopt, ueff, jeff, &
 140 format (10x, 21('-'), /, 10x, a, f10.6, /, 10x, 60('-'), /)
 150 format (27x, a, /)
 end subroutine wmatldausoc
+
+end module mod_wmatldausoc

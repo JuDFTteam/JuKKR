@@ -1,3 +1,7 @@
+module mod_bzkint0
+
+contains
+
 subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, &
   recbv, atomimp, rsymat, isymindex, nsymat, ifilimp, natomimp, nsh1, nsh2, &
   rclsimp, ratom, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, &
@@ -5,6 +9,10 @@ subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, &
   intervy, intervz, ielast, ez, kmesh, maxmesh, maxmshd, nsymaxd, krel, lmaxd, &
   lmmaxd, kpoibz, naezd, natypd, natomimpd, nsheld, nembd)
   use :: mod_datatypes, only: dp
+   use mod_gfshells
+   use mod_crtstar
+   use mod_pointgrp
+   use mod_findgroup
   implicit none
   ! .. Parameters ..
   integer :: nsymaxd, krel, lmaxd, lmmaxd
@@ -103,3 +111,5 @@ subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, &
   end if
   ! ----------------------------------------------------------------------
 end subroutine bzkint0
+
+end module mod_bzkint0

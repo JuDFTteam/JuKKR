@@ -1,3 +1,7 @@
+module mod_cdnlzdz
+
+contains
+
 function cdnlzdz(l, z, mode)
   ! ********************************************************************
   ! *                                                                  *
@@ -5,6 +9,7 @@ function cdnlzdz(l, z, mode)
   ! *                                                                  *
   ! ********************************************************************
   use :: mod_datatypes, only: dp
+   use mod_cnlz
   implicit none
 
   ! Dummy arguments
@@ -36,3 +41,5 @@ function cdnlzdz(l, z, mode)
     cdnlzdz = l*cnlz(l, z)/z - cnlz(l+1, z)
   end if
 end function cdnlzdz
+
+end module mod_cdnlzdz

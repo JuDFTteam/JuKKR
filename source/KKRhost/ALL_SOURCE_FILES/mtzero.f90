@@ -1,3 +1,7 @@
+module mod_mtzero
+
+contains
+
 ! ************************************************************************
 subroutine mtzero(lmpot, natyp, conc, nspin, v, vbc, z, r, drdi, imt, ircut, &
   ipan, ntcell, lmsp, ifunm, thetas, irws, eshift, ishift, nshell, lsurf)
@@ -147,3 +151,5 @@ subroutine mtzero(lmpot, natyp, conc, nspin, v, vbc, z, r, drdi, imt, ircut, &
 100 format ('  VOL INT.', f16.9, '  VAV INT.', f16.9, '  VMT ZERO', f16.9)
 110 format ('  ATOM ', i4, ' VMT ZERO :', f16.9)
 end subroutine mtzero
+
+end module mod_mtzero

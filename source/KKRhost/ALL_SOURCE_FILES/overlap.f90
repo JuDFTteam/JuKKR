@@ -1,3 +1,7 @@
+module mod_overlap
+
+contains
+
 subroutine overlap(result, phi, pz, qz, pqns, acr, dr, lirreg, ipan, ircut, &
   drdi, irmin, lphi, ipand, lmaxd, lmmaxd, mmaxd, lmpotd, irmind, irmd)
   use :: mod_datatypes, only: dp
@@ -142,3 +146,5 @@ subroutine overlap(result, phi, pz, qz, pqns, acr, dr, lirreg, ipan, ircut, &
   end do
   ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 end subroutine overlap
+
+end module mod_overlap

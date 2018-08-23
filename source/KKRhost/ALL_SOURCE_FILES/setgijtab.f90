@@ -1,7 +1,10 @@
+module mod_setgijtab
+
+contains
+
 subroutine setgijtab(linterface, icc, naez, iqat, rbasis, bravais, natomimp, &
   atomimp, rclsimp, nofgij, ijtabcalc, iofgij, jofgij, nqcalc, iqcalc, &
   natomimpd, ijtabcalc_i)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! * Task-specific settings of Gij elements that need to be calculated  *
   ! * Subroutine (called for ICC=-1) sets up the arrays                  *
@@ -15,6 +18,9 @@ subroutine setgijtab(linterface, icc, naez, iqat, rbasis, bravais, natomimp, &
   ! * IOFGIJ      : I index in the list 1..NATOMIMP for pair I,J         *
   ! * JOFGIJ      : J index                                              *
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
+   use mod_gijcond
+   use mod_gijxcpl
   implicit none
 
   ! Scalar arguments
@@ -105,3 +111,5 @@ subroutine setgijtab(linterface, icc, naez, iqat, rbasis, bravais, natomimp, &
 150 format (9x, i3, ' |', 2(i3,1x), 3f8.4, 1x, 2(i3,1x), 3f8.4)
 160 format (i5, 2(i5,1x), 3f10.6, 1x, 2(i5,1x), 3f10.6)
 end subroutine setgijtab
+
+end module mod_setgijtab

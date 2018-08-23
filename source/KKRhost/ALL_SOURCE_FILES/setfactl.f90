@@ -1,3 +1,7 @@
+module mod_setfactl
+
+contains
+
 subroutine setfactl(factl, lmax, krel, lmmaxd)
   use :: mod_datatypes, only: dp
   implicit none
@@ -89,3 +93,5 @@ subroutine setfactl(factl, lmax, krel, lmmaxd)
   end if
   ! ----------------------------------------------------------------------
 end subroutine setfactl
+
+end module mod_setfactl

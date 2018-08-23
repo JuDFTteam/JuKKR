@@ -1,3 +1,7 @@
+module mod_rnuctab
+
+contains
+
 real (kind=dp) function rnuctab(z)
   use :: mod_datatypes, only: dp
   integer, intent (out) :: z
@@ -6,3 +10,5 @@ real (kind=dp) function rnuctab(z)
   rnuctab = 0e0_dp
   stop ' < RNUCTAB > : NUCLEUS <> 0 not implemented '
 end function rnuctab
+
+end module mod_rnuctab

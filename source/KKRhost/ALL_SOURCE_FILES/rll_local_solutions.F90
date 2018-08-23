@@ -1,8 +1,6 @@
-! preprocessor options:
-! change this definition if used in host/impurity code
-! this is commented out, since then the logical hostcode is not defined
-! and thus "#indef hostcode" returns true and "#ifdef hostcode" false
-#define hostcode ! this is commented out to use the impurity code interface
+module mod_rll_local_solutions
+
+contains
 
 subroutine rll_local_solutions(vll,tau,drpan2,cslc1,slc1sum, &
                          mrnvy,mrnvz,mrjvy,mrjvz, &
@@ -11,6 +9,7 @@ subroutine rll_local_solutions(vll,tau,drpan2,cslc1,slc1sum, &
                          nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor, &
                          cmoderll,LBESSEL,use_sratrick1)
       Use mod_datatypes, Only: dp
+   use mod_svpart
 implicit none
       integer :: ncheb                               ! number of chebyshev nodes
       integer :: lmsize                              ! lm-components * nspin
@@ -347,3 +346,5 @@ end if
 
 end subroutine rll_local_solutions
 
+
+end module mod_rll_local_solutions

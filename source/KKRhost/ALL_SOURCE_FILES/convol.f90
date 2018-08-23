@@ -1,3 +1,7 @@
+module mod_convol
+
+contains
+
 ! ************************************************************************
 subroutine convol(imt1, irc1, icell, imaxsh, ilm_map, ifunm, lmpot, gsh, &
   thetas, thesme, z, rfpi, r, vons, vspsmo, lmsp)
@@ -73,3 +77,5 @@ subroutine convol(imt1, irc1, icell, imaxsh, ilm_map, ifunm, lmpot, gsh, &
   return
   ! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
 end subroutine convol
+
+end module mod_convol

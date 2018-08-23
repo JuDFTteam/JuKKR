@@ -1,3 +1,7 @@
+module mod_epotinb
+
+contains
+
 ! 13.10.95 ***************************************************************
 subroutine epotinb(epotin, nspin, natyp, rho2ns, vm2z, r, drdi, ins, irmin, &
   irws, lpot, vins, ircut, ipan, z)
@@ -180,3 +184,5 @@ subroutine epotinb(epotin, nspin, natyp, rho2ns, vm2z, r, drdi, ins, irmin, &
   ! attention : energy zero ---> electro static zero
   return
 end subroutine epotinb
+
+end module mod_epotinb

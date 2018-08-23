@@ -1,6 +1,9 @@
+module mod_cylm02
+
+contains
+
 subroutine cylm02(lmax, cosx, fai, lpot2p, lmmaxd, thet, ylm, dylmt1, dylmt2, &
   dylmf1, dylmf2, dylmtf)
-  use :: mod_datatypes, only: dp
   ! .....------------------------------------------------------------------
   ! preparation of cylm0(=ylm(ip,i)), cylmt1(=dylm/dtheta),
   ! cylmt2(=d2ylm/dt2),
@@ -8,6 +11,9 @@ subroutine cylm02(lmax, cosx, fai, lpot2p, lmmaxd, thet, ylm, dylmt1, dylmt2, &
   ! cylmtf=d2ylm/dfdt
   ! i=1,2,....,(lmax+1)**2
   ! .....------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+   use mod_spher
+   use mod_triangle
   implicit none
 
   ! .. Parameters ..
@@ -154,3 +160,5 @@ subroutine cylm02(lmax, cosx, fai, lpot2p, lmmaxd, thet, ylm, dylmt1, dylmt2, &
   end do
   return
 end subroutine cylm02
+
+end module mod_cylm02

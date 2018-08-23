@@ -36,6 +36,8 @@ contains
       use mod_md5sums
       use Constants
       use Profiling
+      use mod_cmatmul
+      use mod_test
 
       implicit none
 

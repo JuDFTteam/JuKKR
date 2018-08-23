@@ -1,10 +1,15 @@
+module mod_mkxcpe2
+
+contains
+
 subroutine mkxcpe2(ir, np, rv, rholm, vxcp, excp, ylm, dylmt1, dylmf1, dylmf2, &
   dylmtf, drrl, ddrrl, drrul, ddrrul, irmd, lmpotd, lmmax, use_sol)
-  use :: mod_datatypes, only: dp
   ! ------------------------------------------------------------------
   ! Calculation of the exchange-correlation potential.
   ! coded by M. Ogura, Apr. 2015, Munich
   ! ------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+   use mod_excgcor2
   implicit none
   integer :: ijd
   parameter (ijd=434)
@@ -469,3 +474,5 @@ subroutine excgcor2(a, a1, b1, b2, b3, b4, rtrs, gg, ggrs)
   q3 = a*(b1/rtrs+2.e0_dp*b2+rtrs*(3.e0_dp*b3+4.e0_dp*b4*rtrs))
   ggrs = -2.e0_dp*a*a1*q2 - q0*q3/(q1*(1.e0_dp+q1))
 end subroutine excgcor2
+
+end module mod_mkxcpe2

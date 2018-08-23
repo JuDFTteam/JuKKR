@@ -1,3 +1,7 @@
+module mod_regns_volterra
+
+contains
+
 subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   pzekdr, qzekdr, ek, ader, amat, bder, bmat, nsra, irmind, irmd, ipand, &
   lmmaxd)
@@ -345,3 +349,5 @@ call zgetrs('N',dim,dim,aux,dim,ipiv,u,dim,info)
 
 return
 end subroutine zgeinv1
+
+end module mod_regns_volterra

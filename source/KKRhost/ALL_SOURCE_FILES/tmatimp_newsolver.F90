@@ -1,3 +1,7 @@
+module mod_tmatimp_newsolver
+
+contains
+
 !----------------------------------------------------------------------------
 ! SUBROUTINE: TMATIMP_NEWSOLVER
 !> @brief Calculate and write down impurity tmatrix and delta matrix
@@ -27,7 +31,17 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    use mod_wunfiles, only: t_params
    use Constants
    use Profiling
-      Use mod_datatypes, Only: dp
+   Use mod_datatypes, Only: dp
+
+   use mod_calcsph
+   use mod_interpolate_poten
+   use mod_intcheb_cell
+   use mod_rllsll
+   use mod_rllsllsourceterms
+   use mod_spinorbit_ham
+   use mod_rotatematrix
+   use mod_vllmat
+   use mod_vllmatsra
 
    implicit none
 
@@ -975,3 +989,5 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    deallocate(irmdnew,stat=i_stat)
    call memocc(i_stat,i_all,'irmdnew','tmatimp_newsolver')
 end subroutine TMATIMP_NEWSOLVER
+
+end module mod_tmatimp_newsolver

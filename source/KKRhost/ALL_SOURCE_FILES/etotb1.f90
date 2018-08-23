@@ -1,3 +1,7 @@
+module mod_etotb1
+
+contains
+
 ! 17.10.95 ***************************************************************
 subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
   nspin, natyp, nshell, conc, idoldau, lopt, eu, edcldau)
@@ -184,3 +188,5 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
   ! gather all energy-parts which are calculated in different
 320 format ('TOTAL ENERGY in ryd. : ', f25.8, /, 15x)
 end subroutine etotb1
+
+end module mod_etotb1

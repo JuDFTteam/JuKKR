@@ -1,5 +1,8 @@
+module mod_impcheck
+
+contains
+
 subroutine impcheck(atomimp, natomimp, naez, rclsimp, rbasis, bravais, ndim)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! * Checking the coordinates and site-index assignments of an impurity *
   ! * cluster read in from a file                                        *
@@ -12,6 +15,8 @@ subroutine impcheck(atomimp, natomimp, naez, rclsimp, rbasis, bravais, ndim)
   ! * execution continues.                                               *
   ! **********************************************************************
 
+  use :: mod_datatypes, only: dp
+   use mod_getclusnxyz
   implicit none
   ! ..
   ! .. Scalar arguments
@@ -206,3 +211,5 @@ subroutine impcheck(atomimp, natomimp, naez, rclsimp, rbasis, bravais, ndim)
 180 format (/, 6x, 'ERROR: Wrong assignment of impurity site ', i3, &
     ' to the unit-cell site ', i3, /, 13x, 'Please check your input file', /)
 end subroutine impcheck
+
+end module mod_impcheck

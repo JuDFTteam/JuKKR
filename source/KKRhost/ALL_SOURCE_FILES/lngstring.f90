@@ -1,3 +1,7 @@
+module mod_lngstring
+
+contains
+
 integer function lngstring(string, lstrmax)
   ! ********************************************************************
   ! *                                                                  *
@@ -23,3 +27,5 @@ integer function lngstring(string, lstrmax)
     end if
   end do
 end function lngstring
+
+end module mod_lngstring

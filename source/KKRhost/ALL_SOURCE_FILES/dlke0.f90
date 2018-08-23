@@ -1,3 +1,7 @@
+module mod_dlke0
+
+contains
+
 ! 04.10.95 *************************************************************
 subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, &
   bzkp, rcls, ginp)
@@ -103,3 +107,5 @@ subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, &
   return
   ! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
 end subroutine dlke0
+
+end module mod_dlke0

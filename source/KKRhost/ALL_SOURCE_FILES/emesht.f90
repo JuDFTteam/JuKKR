@@ -1,3 +1,7 @@
+module mod_emesht
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: EMESHT
 ! > @brief This subroutine provides the energy mesh in array EZ and the
@@ -51,6 +55,8 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
   use :: mod_datatypes
   use :: mod_types, only: t_inc
   use :: constants
+  use mod_gaufd
+  use mod_gauleg
 
   implicit none
   ! ..
@@ -264,3 +270,5 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
     'Number of energy points :', i4, 13x, 'poles =', i2, /, 23x, &
     'contour: N1 =', i2, ', N2 =', i4, ', N3 =', i2)
 end subroutine emesht
+
+end module mod_emesht

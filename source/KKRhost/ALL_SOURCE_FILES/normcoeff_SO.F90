@@ -1,3 +1,7 @@
+module mod_normcoeff_SO
+
+contains
+
 SUBROUTINE normcoeff_so(natom, ircut,  &
         lmmax,pns,thetas,ntcell,  &
         ifunm,ipan,lmsp,ksra,cleb,icleb,iend,drdi,  &
@@ -28,6 +32,7 @@ use mod_types, only: t_inc, t_imp
 #endif
       Use mod_datatypes, Only: dp
 use global_variables
+use mod_calc_rho_ll_ss
 
 IMPLICIT NONE
 
@@ -289,3 +294,5 @@ endif !(myrank==master)
 
 END SUBROUTINE normcoeff_so
 
+
+end module mod_normcoeff_SO

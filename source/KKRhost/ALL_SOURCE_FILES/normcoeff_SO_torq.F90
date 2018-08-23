@@ -1,3 +1,7 @@
+module mod_normcoeff_SO_torq
+
+contains
+
 ! 12.05.2016 *************************************************************
 SUBROUTINE normcoeff_so_torq(natom, ircut, lmmax,pns,ntcell,  &
     ifunm,ipan,lmsp,ksra,cleb,icleb,iend,drdi, irws,visp,nspin,vins,irmin,mode)
@@ -22,8 +26,9 @@ use mod_types, only: t_mpi_c_grid, t_inc, t_imp
 use mod_types, only: t_inc, t_imp
 #endif
 
-      Use mod_datatypes, Only: dp
+Use mod_datatypes, Only: dp
 use global_variables
+use mod_calc_torq_ll_ss
       
       IMPLICIT NONE
       real(kind=dp), parameter :: eps=1.0D-12
@@ -318,3 +323,5 @@ deallocate(torq)
 
 END SUBROUTINE normcoeff_so_torq
 
+
+end module mod_normcoeff_SO_torq

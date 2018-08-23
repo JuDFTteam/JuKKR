@@ -40,6 +40,9 @@ contains
     use :: mod_version_info
     use :: mod_datatypes
     use :: godfrin, only: t_godfrin ! GODFRIN Flaviano
+   use mod_rcstop
+   use mod_idreals
+   use mod_ioinput
 
     implicit none
     ! ..

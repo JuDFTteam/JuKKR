@@ -1,3 +1,7 @@
+module mod_wmatldau_bak
+
+contains
+
 subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
   wldau, eu, edc, mmaxd, npotd)
   ! **********************************************************************
@@ -271,3 +275,5 @@ subroutine rwrite(z, mmaxd, mmax, ifile)
 100 format (10x, 60('-'))
 110 format (10x, 7f10.6)
 end subroutine rwrite
+
+end module mod_wmatldau_bak

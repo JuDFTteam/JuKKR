@@ -1,3 +1,7 @@
+module mod_surfgf
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: SURFGF
 ! > @brief Solve surface green's function: \f$
@@ -152,3 +156,5 @@ subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck)
 
   return
 end subroutine surfgf
+
+end module mod_surfgf

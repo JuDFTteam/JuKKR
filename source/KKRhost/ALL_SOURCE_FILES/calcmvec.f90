@@ -1,3 +1,7 @@
+module mod_calcmvec
+
+contains
+
 subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
   mezz, mezj, taut, tsst, iqat, nkmq, nkm, iecurr, netab, igrid, we, mvevdl0, &
   mvevil, bmvevdl0, bmvevil, r2drdi, jrws, imt, amemvec, ikmllim1, ikmllim2, &
@@ -8,6 +12,7 @@ subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
   ! ********************************************************************
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+   use mod_cintabr
   implicit complex (kind=dp)(a-h, o-z)
 
   ! PARAMETER definitions
@@ -368,3 +373,5 @@ subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
   ! main2 --> tbkkr2 --> mvecglobal -- see makefile2
 
 end subroutine calcmvec
+
+end module mod_calcmvec

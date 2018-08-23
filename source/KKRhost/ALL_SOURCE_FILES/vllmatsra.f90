@@ -1,3 +1,7 @@
+module mod_vllmatsra
+
+contains
+
 !< constructs potential including big/small components and with relativistic mass terms etc included
 subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
   lval_in, cmode)
@@ -98,3 +102,5 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
   end if
 
 end subroutine vllmatsra
+
+end module mod_vllmatsra

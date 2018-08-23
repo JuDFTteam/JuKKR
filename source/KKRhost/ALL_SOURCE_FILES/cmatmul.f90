@@ -1,3 +1,7 @@
+module mod_cmatmul
+
+contains
+
 subroutine cmatmul(n, m, a, b, c)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -43,3 +47,5 @@ subroutine cmatmul(n, m, a, b, c)
   end do
 
 end subroutine cmatmul
+
+end module mod_cmatmul

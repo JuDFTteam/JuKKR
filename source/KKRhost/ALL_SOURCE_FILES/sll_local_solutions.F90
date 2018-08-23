@@ -1,8 +1,6 @@
-! preprocessor options:
-! change this definition if used in host/impurity code
-! this is commented out, since then the logical hostcode is not defined
-! and thus "#indef hostcode" returns true and "#ifdef hostcode" false
-#define hostcode ! this is commented out to use the impurity code interface
+module mod_sll_local_solutions
+
+contains
 
 subroutine sll_local_solutions(vll,tau,drpan2,csrc1,slc1sum, &
                          mihvy,mihvz,mijvy,mijvz, &
@@ -370,3 +368,5 @@ implicit none
       end do
    end do
 end subroutine svpart
+
+end module mod_sll_local_solutions

@@ -1,3 +1,7 @@
+module mod_sphere_gga_old
+
+contains
+
 subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
   dylmt2, dylmf1, dylmf2, dylmtf)
   use :: mod_datatypes, only: dp
@@ -101,3 +105,5 @@ subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
     dylmf1, dylmf2, dylmtf)
 
 end subroutine sphere_gga
+
+end module mod_sphere_gga_old

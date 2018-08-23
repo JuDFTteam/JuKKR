@@ -1,3 +1,7 @@
+module mod_cinthff
+
+contains
+
 subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
   ! ********************************************************************
   ! *                                                                  *
@@ -6,6 +10,7 @@ subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
   ! *                                                                  *
   ! ********************************************************************
   use :: mod_datatypes
+   use mod_cint4pts
   implicit none
 
   real (kind=dp), parameter :: eps=1.0D-12
@@ -109,3 +114,5 @@ subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
   end do
 
 end subroutine cinthff
+
+end module mod_cinthff

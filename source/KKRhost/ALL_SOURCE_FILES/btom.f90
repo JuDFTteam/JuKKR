@@ -1,3 +1,7 @@
+module mod_btom
+
+contains
+
 ! **********************************************************************
 subroutine btom(pl1, pl2, block, nsize, gin, almd, lsub)
   use :: mod_datatypes, only: dp
@@ -34,3 +38,5 @@ subroutine btom(pl1, pl2, block, nsize, gin, almd, lsub)
   return
 
 end subroutine btom
+
+end module mod_btom

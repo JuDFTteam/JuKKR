@@ -1,3 +1,7 @@
+module mod_mdirnewang
+
+contains
+
 subroutine mdirnewang(it, nmvec, mvevi, mvphi, mvtet, mvgam, natypd, lmaxd, &
   nmvecmax)
   use :: mod_datatypes, only: dp
@@ -102,3 +106,5 @@ subroutine mdirnewang(it, nmvec, mvevi, mvphi, mvtet, mvgam, natypd, lmaxd, &
   end do
   ! =======================================================================
 end subroutine mdirnewang
+
+end module mod_mdirnewang

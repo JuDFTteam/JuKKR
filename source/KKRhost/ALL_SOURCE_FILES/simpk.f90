@@ -1,3 +1,7 @@
+module mod_simpk
+
+contains
+
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: SINWK
 ! > @brief This subroutine does an integration up to \f$ r_{cut}\f$ of an real
@@ -14,6 +18,7 @@ subroutine simpk(f, fint, ipan, ircut, drdi)
 
   use :: global_variables
   use :: mod_datatypes, only: dp
+   use mod_ssum
 
   integer, intent (in) :: ipan     ! < Number of panels in non-MT-region
   integer, dimension (0:ipand), intent (in) :: ircut ! < R points of panel
@@ -64,3 +69,5 @@ subroutine simpk(f, fint, ipan, ircut, drdi)
     fint = fint + a1*ssum(n, f(ist), 2) + a2*ssum(n, f(ist+1), 2)
   end do                           ! IP
 end subroutine simpk
+
+end module mod_simpk

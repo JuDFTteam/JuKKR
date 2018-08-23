@@ -1,3 +1,7 @@
+module mod_rhocore
+
+contains
+
 subroutine rhocore(nsra, ispin, nspin, i1, drdi, r, visp, a, b, zat, ircut, &
   rhoc, ecore, ncore, lcore, cscl, vtrel, btrel, rmrel, drdirel, r2drdirel, &
   zrel, jwsrel, irshift, ecorerel, nkcore, kapcore)
@@ -6,6 +10,8 @@ subroutine rhocore(nsra, ispin, nspin, i1, drdi, r, visp, a, b, zat, ircut, &
   ! SEE ROUTINE <DRVCORE> FOR A SHORT DESCRIPTION OF THE VARIABLES
   use :: mod_datatypes, only: dp
   use global_variables
+   use mod_corel
+   use mod_drvcore
   implicit none
   real (kind=dp) :: a, b, zat
   integer :: jwsrel, zrel, irshift
@@ -71,3 +77,5 @@ subroutine rhocore(nsra, ispin, nspin, i1, drdi, r, visp, a, b, zat, ircut, &
     5('*'))
 110 format (4x, 'nuclear charge  ', f10.6, 9x, 'core charge =   ', f10.6)
 end subroutine rhocore
+
+end module mod_rhocore

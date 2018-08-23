@@ -1,3 +1,7 @@
+module mod_madelout
+
+contains
+
 ! **********************************************************************
 subroutine madel2out(iprint, naez, lrecamad, lmpotd, nleftoff, nrightoff, &
   nleftall, nrightall)
@@ -216,3 +220,5 @@ subroutine madel3out(iprint, naez, lrecabmad, smat1, smat2, lmpotd)
 150 format (5x, 2i5, 1p, d18.10)
 160 format (5x, i5, 1p, d18.10)
 end subroutine madel3out
+
+end module mod_madelout

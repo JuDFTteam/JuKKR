@@ -1,3 +1,7 @@
+module mod_csout
+
+contains
+
 subroutine csout(f, fint, lmmsqd, irmind, irmd, irmin, ipan, ircut)
   use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
@@ -81,3 +85,5 @@ subroutine csout(f, fint, lmmsqd, irmind, irmd, irmin, ipan, ircut)
   end do
 
 end subroutine csout
+
+end module mod_csout

@@ -1,3 +1,7 @@
+module mod_rint4pts
+
+contains
+
 subroutine rint4pts(y, jtop, z)
   use :: mod_datatypes, only: dp
   ! ********************************************************************
@@ -66,3 +70,5 @@ subroutine rint4pts(y, jtop, z)
   end if
 
 end subroutine rint4pts
+
+end module mod_rint4pts

@@ -1,5 +1,10 @@
+module mod_mixldau
+
+contains
+
 subroutine mixldau(mmaxd, nspind, natypd, natyp, nspin, lopt, wldauold, wldau)
   use :: mod_datatypes, only: dp
+   use mod_ioinput
   implicit none
   ! Input:
   integer :: natypd, nspind, mmaxd
@@ -65,3 +70,5 @@ subroutine mixldau(mmaxd, nspind, natypd, natyp, nspin, lopt, wldauold, wldau)
   end do
 
 end subroutine mixldau
+
+end module mod_mixldau

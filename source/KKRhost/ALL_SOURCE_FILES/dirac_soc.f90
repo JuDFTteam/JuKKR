@@ -1,3 +1,7 @@
+module mod_dirac_soc
+
+contains
+
 subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
   cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, dxp, pr, qr, pi, &
   qi, d_p, dq, nrmax)
@@ -24,6 +28,8 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
 
   use :: mod_types, only: t_inc
   use :: mod_datatypes
+   use mod_ylag
+   use mod_rinvgj
   implicit none
 
   ! PARAMETER definitions
@@ -696,3 +702,5 @@ subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, &
 
   return
 end subroutine dirabmsoc
+
+end module mod_dirac_soc

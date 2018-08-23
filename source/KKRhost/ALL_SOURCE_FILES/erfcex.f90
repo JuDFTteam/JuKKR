@@ -1,3 +1,7 @@
+module mod_erfcex
+
+contains
+
 function erfcex(z)
   use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
@@ -70,3 +74,5 @@ function erfcex(z)
   end if
 
 end function erfcex
+
+end module mod_erfcex

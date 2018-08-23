@@ -1,3 +1,7 @@
+module mod_crospr
+
+contains
+
 ! ************************************************************************
 subroutine crospr(x, y, z)
   use :: mod_datatypes, only: dp
@@ -15,3 +19,5 @@ subroutine crospr(x, y, z)
   z(3) = x(1)*y(2) - x(2)*y(1)
   return
 end subroutine crospr
+
+end module mod_crospr

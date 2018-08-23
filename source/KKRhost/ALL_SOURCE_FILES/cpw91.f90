@@ -1,3 +1,7 @@
+module mod_cpw91
+
+contains
+
 subroutine cpw91(fk, sk, gz, ec, ecrs, eczta, rs, zta, t, uu, vv, ww, h, &
   dvcup, dvcdn)
   ! -----------------------------------------------------------------
@@ -132,3 +136,5 @@ subroutine cpw91(fk, sk, gz, ec, ecrs, eczta, rs, zta, t, uu, vv, ww, h, &
 
   return
 end subroutine cpw91
+
+end module mod_cpw91

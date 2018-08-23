@@ -1,3 +1,7 @@
+module mod_spline_real
+
+contains
+
 ! ***********************************************************************
 subroutine spline_real(nmax, x, y, n, yp1, ypn, y2)
   use :: mod_datatypes, only: dp
@@ -56,3 +60,5 @@ subroutine spline_real(nmax, x, y, n, yp1, ypn, y2)
 
   return
 end subroutine spline_real
+
+end module mod_spline_real

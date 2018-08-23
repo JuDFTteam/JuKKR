@@ -1,3 +1,7 @@
+module mod_ecoub
+
+contains
+
 ! 13.10.95 ***************************************************************
 subroutine ecoub(cmom, ecou, lmax, nspin, natyp, rho2ns, vm2z, z, r, drdi, &
   irws, kvmad, kshape, ircut, ipan, imaxsh, ifunm, ilm_map, ntcell, gsh, &
@@ -211,3 +215,5 @@ subroutine ecoub(cmom, ecou, lmax, nspin, natyp, rho2ns, vm2z, z, r, drdi, &
 110 format (10x, '     generalized madelung pot. for atom', 1x, i3, 1x, ': ', &
     1p, d14.6)
 end subroutine ecoub
+
+end module mod_ecoub

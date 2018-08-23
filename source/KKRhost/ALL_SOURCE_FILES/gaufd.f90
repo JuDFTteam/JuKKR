@@ -1,3 +1,7 @@
+module mod_gaufd
+
+contains
+
 ! ************************************************
 subroutine gaufd(xi, wi, n)
   use :: mod_datatypes, only: dp
@@ -364,3 +368,5 @@ subroutine gaufd(xi, wi, n)
   return
 
 end subroutine gaufd               ! SUBROUTINE GAUFD(XI,WI,N)
+
+end module mod_gaufd
