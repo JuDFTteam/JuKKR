@@ -18,6 +18,10 @@ subroutine symlat(nsymop, platcp, symopm)
   ! ----------------------------------------------------------------------
 
   use :: mod_datatypes, only: dp
+  use mod_dinv33
+  use mod_dmpy
+  use mod_latvec
+  use mod_rotmat
   implicit none
   ! Passed parameters:
   integer :: nsymop
@@ -26,16 +30,15 @@ subroutine symlat(nsymop, platcp, symopm)
   integer :: i, iprint, ltmax, ll1, m, m1, m2, m3, mm, nrot(4)
   parameter (ltmax=3, ll1=ltmax*2+1, iprint=20)
   real (kind=dp) :: platt(9), qlatcp(3, 3), mat(9), vecg(3), vol
-  logical :: latvec, lirr
-  ! External calls:
-  external :: dinv33, dmpy, latvec, rotmat
+  logical :: lirr
+
   data nrot/2, 3, 4, 6/
 
   mm(i, m) = ltmax - (mod(i,ll1**m)-mod(i,ll1**(m-1)))/ll1**(m-1)
 
   call dinv33(platcp, 1, qlatcp, vol)
-  call rotmat(-1, .false., 1, symopm(1,1), 0.d0)
-  call rotmat(-1, .true., 1, symopm(1,2), 0.d0)
+  call rotmat(-1, .false., 1, symopm(1,1), [0.0_dp, 0.0_dp, 0.0_dp])
+  call rotmat(-1, .true., 1, symopm(1,2), [0.0_dp, 0.0_dp, 0.0_dp])
   nsymop = 2
   ! --- find all possible rotation axis
   do i = 0, (ll1**3-1)/2 - 1

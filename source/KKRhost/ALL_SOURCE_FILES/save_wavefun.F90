@@ -103,7 +103,7 @@ contains
         if(delta_mem<1.0d0) delta_mem = 1.0d0
 
         ! find numer of wavefunctions that can be stored
-        t_wavefunctions%Nwfsavemax = t_wavefunctions%maxmem_number * 1024**(t_wavefunctions%maxmem_units-2) / dint(delta_mem)
+        t_wavefunctions%Nwfsavemax = t_wavefunctions%maxmem_number * 1024**(t_wavefunctions%maxmem_units-2) / int(delta_mem)
         if(Nsave==0) then
            write(1337, '(A)') '[find_isave_wavefun] Warning: Nsave is zero!!!'
            write(1337, '(A)') 'reset Nwfsavemax to 0'

@@ -12,6 +12,7 @@ subroutine forceh(cmom, flmh, lmax, nspin, nstart, nend, r2rho, v, r, drdi, &
 
   ! -----------------------------------------------------------------------
   use global_variables
+  use mod_simp3
   implicit none
   ! ..
   ! .. Local Scalars ..
@@ -30,15 +31,10 @@ subroutine forceh(cmom, flmh, lmax, nspin, nstart, nend, r2rho, v, r, drdi, &
   real (kind=dp) :: flm(-1:1, 2), v1(irmd)
   ! ..
 
-  external :: simp3
-  ! .. Intrinsic Functions ..
-  ! ..
   save :: pi
 
 
   ! ---> loop over the rep. atoms
-  intrinsic :: atan
-
   pi = 4.e0_dp*atan(1.e0_dp)
   if (lmax<1) then
     write (6, fmt=100)

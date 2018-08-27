@@ -7,7 +7,7 @@ subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, &
   hlk2, jlk2, gmatprefactor, tmat, alpha, use_sratrick)
 
   use :: constants
-  use :: profiling
+  use :: mod_profiling
   use :: mod_datatypes, only: dp
    use mod_rllsll
    use mod_vllmatsra

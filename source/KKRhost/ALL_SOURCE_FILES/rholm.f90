@@ -68,6 +68,7 @@ subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
   ! -----------------------------------------------------------------------
   use global_variables
   use :: mod_datatypes, only: dp
+  use mod_csimpk
   complex (kind=dp) :: czero
   parameter (czero=(0.0e0_dp,0.0e0_dp))
   ! ..
@@ -82,22 +83,12 @@ subroutine rholm(den, df, gmat, nsra, rho2ns, drdi, ipan, ircut, pz, fz, qz, &
   real (kind=dp) :: cleb(*), drdi(irmd), rho2ns(irmd, lmpotd)
   integer :: icleb(ncleb, 4), ircut(0:ipand), jend(lmpotd, 0:lmaxd, 0:lmaxd)
   ! ..
-  ! .. External Subroutines ..
   complex (kind=dp) :: ffz, gmatl, ppz
   real (kind=dp) :: c0ll, facsym, pi
   integer :: i, j, j0, j1, l, l1, l2, lm3, lm3max, ln1, ln2, lne, lns
   ! ..
-  ! .. Intrinsic Functions ..
   complex (kind=dp) :: denr(irmd), wr(irmd, 0:lmaxd, 0:lmaxd)
   ! ..
-  ! .. Save statement ..
-  external :: csimpk
-  ! ..
-
-  intrinsic :: atan, aimag, sqrt
-
-
-  save
 
   pi = 4.0e0_dp*atan(1.0e0_dp)
   c0ll = 1.0e0_dp/sqrt(4.0e0_dp*pi)

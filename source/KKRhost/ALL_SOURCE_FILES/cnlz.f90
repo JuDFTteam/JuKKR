@@ -3,13 +3,14 @@ module mod_cnlz
 contains
 
 function cnlz(l, z)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! *     von NEUMANN  - FUNCTION  N(L,Z)  FOR COMPLEX ARGUMENT  Z     *
   ! *                  see:  e.g. MERZBACHER EQ. (10.34)               *
   ! *                                                                  *
   ! ********************************************************************
+  use mod_cjlz
+  use :: mod_datatypes, only: dp
   implicit none
 
   ! PARAMETER definitions
@@ -22,9 +23,6 @@ function cnlz(l, z)
   integer :: l
   complex (kind=dp) :: z
   complex (kind=dp) :: cnlz
-
-  ! Local variables
-  complex (kind=dp) :: cjlz
 
   real (kind=dp) :: dfac
   complex (kind=dp) :: dt, s(lp2max), t, zsq

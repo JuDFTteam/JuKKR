@@ -5,6 +5,8 @@ contains
 ! **********************************************************************
 function dclock()
   use :: mod_datatypes, only: dp
+  use mod_etime
+  implicit none
   real (kind=dp) :: dclock
   ! **********************************************************************
   ! .. External Functions ..

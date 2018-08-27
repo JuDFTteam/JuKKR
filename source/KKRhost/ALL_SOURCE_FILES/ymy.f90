@@ -41,12 +41,6 @@ subroutine ymy(v1, v2, v3, r, ylm, lmax)
   ! .. Local Arrays ..
   real (kind=dp) :: c(0:lmax), p(0:lmax, 0:lmax), s(0:lmax)
   ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: atan, sqrt
-  ! ..
-  ! .. External Subroutines ..
-  external :: rcstop
-  ! ..
   pi = 4.e0_dp*atan(1.e0_dp)
   fpi = 4.e0_dp*pi
   rtwo = sqrt(2.0e0_dp)

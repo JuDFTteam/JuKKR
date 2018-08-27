@@ -8,6 +8,7 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
 
   use :: mod_datatypes, only: dp
   use global_variables
+  use mod_interpolspline
   implicit none
   integer :: nspin, irmin(natypd), ipan(natypd), irws(natypd)
   integer :: npan_log, npan_eq, ncheb, npan_inst, npan_tot(natypd)
@@ -96,10 +97,7 @@ subroutine create_newmesh(nspin, r, irmin, irws, ipan, ircut, vins, visp, &
     npan_eq = npan_eq + npan_log - npan_logtemp
     npan_log = npan_logtemp
 
-    call chebmesh(npan_tot, ncheb, rpan_intervall(0:,i1), rnew(1,i1))
-
-
-
+    call chebmesh(npan_tot(i1), ncheb, rpan_intervall(0:npan_tot(i1),i1), rnew(:,i1))
 
     vinsin = 0d0
     do ir = 1, irws(i1)
@@ -180,23 +178,21 @@ end subroutine create_newmesh
 
 
 subroutine chebmesh(npan, ncheb, ri, ro)
-
+  use :: mod_datatypes, only: dp
+  implicit none
   integer, intent (in) :: npan
   integer, intent (in) :: ncheb
   real (kind=dp), intent (in) :: ri(0:npan)
   real (kind=dp), intent (out) :: ro(npan*(ncheb+1))
-  implicit none
-
   ! -----------------------------------------------
-
   integer :: i, k, ik
   real (kind=dp) :: tau, pi
 
-  pi = 4d0*datan(1d0)
+  pi = 4d0*atan(1d0)
   do i = 1, npan
     do k = 0, ncheb
       ik = i*ncheb + i - k
-      tau = dcos(((2*k+1)*pi)/(2*(ncheb+1)))
+      tau = cos(((2*k+1)*pi)/(2*(ncheb+1)))
       tau = 0.5d0*((ri(i)-ri(i-1))*tau+ri(i)+ri(i-1))
       ro(ik) = tau
     end do

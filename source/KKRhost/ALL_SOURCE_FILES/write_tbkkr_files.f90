@@ -66,6 +66,7 @@ subroutine write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &
                                                          ! cluster
   ! .. Local variables
   integer :: i1, i2, j, naclsmax
+
   ! .. External Functions ..
   logical :: opt
   external :: opt

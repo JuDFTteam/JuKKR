@@ -39,6 +39,8 @@ subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
   use :: constants
   use :: mod_datatypes, only: dp
    use mod_potcut
+  use mod_calrmt
+  use mod_rinit
 
   implicit none
   real (kind=dp), parameter :: eps=1.0D-12
@@ -178,12 +180,6 @@ subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
                                             ! IMPURITY-compatible
   real (kind=dp), dimension (irid, ncelld) :: drn
   real (kind=dp), dimension (irid, ncelld) :: xrn
-  ! ..
-  ! .. External Subroutines ..
-  external :: calrmt, potcut, rinit, test
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: nint, exp, log, max, mod, real, sqrt
   ! ..
   ! .. Data statement ..
   integer :: ishape

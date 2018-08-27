@@ -20,6 +20,7 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
   use :: mod_datatypes, only: dp
    use mod_bofm
    use mod_btom
+  use mod_cinit
   implicit none
 
   complex (kind=dp), parameter :: czero = (0.e0_dp, 0.e0_dp)
@@ -29,7 +30,6 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
   complex (kind=dp) :: m1(ndim_slabinv, ndim_slabinv, nlayerd), m2(ndim_slabinv, ndim_slabinv, nlayerd), &
     m3(ndim_slabinv, ndim_slabinv, nlayerd), gin(alm, alm)
   ! --------------------------------------------------------------------
-  ! .. External Subroutines ..
   integer :: n, lm, info, irow, icol, nl
 
 
@@ -38,9 +38,6 @@ subroutine invsupercell(m2, m1, m3, gin, icheck)
     c(ndim_slabinv, ndim_slabinv, nlayerd), d(ndim_slabinv, ndim_slabinv, nlayerd), e(ndim_slabinv, ndim_slabinv), &
     f(ndim_slabinv, ndim_slabinv), g(ndim_slabinv, ndim_slabinv), cunit(ndim_slabinv, ndim_slabinv)
   ! ---> START OF THE FACTORIZATION L * M * U
-
-  external :: cinit, zcopy, zgemm, zgetrf, zgetrs, btom
-  intrinsic :: abs, aimag
 
   ! ---> N =1
 

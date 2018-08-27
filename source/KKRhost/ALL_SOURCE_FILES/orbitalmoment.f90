@@ -5,7 +5,7 @@ contains
 subroutine calc_orbitalmoment(lmax, lmsize, loperator)
 
   use :: constants
-  use :: profiling
+  use :: mod_profiling
   use :: mod_datatypes, only: dp
 
   implicit none

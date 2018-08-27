@@ -3,6 +3,7 @@ module mod_types
 use mod_DataTypes
 implicit none
 
+    public :: t_inc, t_tgmat, t_mpi_c_grid, t_lloyd, t_dtmatJij, t_cpa, t_imp
 
    type :: type_tgmatices
 
@@ -152,6 +153,7 @@ implicit none
    type (type_dtmatJijDij), allocatable, save :: t_dtmatJij(:) !dimensions I1=1,...,NATYP 
    type (type_cpa), save :: t_cpa
    type (type_imp), save :: t_imp
+
 
 contains
 

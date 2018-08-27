@@ -16,10 +16,11 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
   ! *                                                                  *
   ! * 12/03/96 HE                                                      *
   ! ********************************************************************
-  use :: mod_datatypes, only: dp
-   use mod_readwfun
-   use mod_rintsimp
-   use mod_ikapmue
+  use mod_datatypes, only: dp
+  use mod_ssite, only: readwfun
+  use mod_rintsimp
+  use mod_ikapmue
+  use mod_rinit
   implicit none
 
   ! PARAMETER definitions
@@ -57,14 +58,13 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
   real (kind=dp) :: aux, bdum(3), cff(2, 2), cfg(2, 2), cgf(2, 2), cgg(2, 2), &
     chko(ntmaxchk), chkq(ntmaxchk), chks(ntmaxchk), defermi, dq, mj, mjmax, &
     mjmin, r1m(2, 2), rint(nrmax), totnos
-  real (kind=dp) :: dble, dsqrt
   complex (kind=dp) :: dosl, hffl, jf(nrmax, 2, 2), jg(nrmax, 2, 2), omtl, &
     smtl, wds, wof, wog, wsf, wsg, wt, zf(nrmax, 2, 2), zfjf, zfzf, &
     zg(nrmax, 2, 2), zgjg, zgzg
   complex (kind=dp) :: omtls(2), omtms(nmuemax, 2)
   integer :: i, iflag, ikm1, ikm2, il, im, is, it, jj, jtop, k1, k2, ka, kap1, &
     kap2, kb, l, lin, lmax, mm, mue, nsol
-  integer :: ikapmue, imj
+  integer :: imj
   integer :: nint
 
   save :: chko, chkq, chks
@@ -158,9 +158,9 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
       omtls(2) = omtl
 
       if (irel>1) then
-        mjmax = dble(l) + 0.5e0_dp
+        mjmax = real(l, kind=dp) + 0.5e0_dp
       else
-        mjmax = dble(l)
+        mjmax = real(l, kind=dp)
       end if
       mjmin = -mjmax
       mue = 0
@@ -168,7 +168,7 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
       ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
       ! DO MJ = MJMIN,MJMAX,1.0D0
       do imj = nint(mjmin), nint(mjmax), 1
-        mj = dble(imj)
+        mj = real(imj, kind=dp)
         mue = mue + 1
         dosm(mue) = 0.0e0_dp
         smtm(mue) = 0.0e0_dp
@@ -182,7 +182,7 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
         if (irel<=1) then
           nsol = 1
           ! no coupling for:  abs(mue)= j   +  j=l+1/2 == kap=-l-1
-        else if (abs(mj)>dble(l)) then
+        else if (abs(mj)>real(l, kind=dp)) then
           nsol = 1
         else
           nsol = 2
@@ -212,7 +212,7 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
 
         cfg(1, 1) = mj*(kap1+1.0e0_dp)/(kap1+0.5e0_dp)
         cfg(2, 2) = mj*(kap2+1.0e0_dp)/(kap2+0.5e0_dp)
-        cfg(1, 2) = 0.5e0_dp*dsqrt(1.0e0_dp-(mj/(kap1+0.5e0_dp))**2)
+        cfg(1, 2) = 0.5e0_dp*sqrt(1.0e0_dp-(mj/(kap1+0.5e0_dp))**2)
         cfg(2, 1) = cfg(1, 2)
         call rinit(4, cff)
         cff(1, 1) = mj*(-kap1+1.0e0_dp)/(-kap1+0.5e0_dp)

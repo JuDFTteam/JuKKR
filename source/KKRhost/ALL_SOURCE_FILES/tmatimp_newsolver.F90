@@ -30,7 +30,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    use mod_version_info
    use mod_wunfiles, only: t_params
    use Constants
-   use Profiling
+   use mod_Profiling
    Use mod_datatypes, Only: dp
 
    use mod_calcsph
@@ -39,7 +39,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    use mod_rllsll
    use mod_rllsllsourceterms
    use mod_spinorbit_ham
-   use mod_rotatematrix
+   use mod_rotatespinframe, only: rotatematrix
    use mod_vllmat
    use mod_vllmatsra
 

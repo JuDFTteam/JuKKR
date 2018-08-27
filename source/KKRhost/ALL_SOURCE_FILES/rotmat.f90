@@ -3,7 +3,6 @@ module mod_rotmat
 contains
 
 subroutine rotmat(iopt, li, nrot, symopm, vecg)
-  use :: mod_datatypes, only: dp
   ! - Converts rotation/rotoinversion matrix <-> (nrot,vecg,li)
   ! ----------------------------------------------------------------------
   ! i Inputs:
@@ -15,6 +14,11 @@ subroutine rotmat(iopt, li, nrot, symopm, vecg)
   ! io  symopm:symmetry operation matrix
   ! io  vecg  :rotation axis
   ! ----------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+  use mod_ddet33
+  use mod_errmsg
+  use mod_nrmliz
+  use mod_rinit
   implicit none
   ! Passed parameters:
   integer :: iopt, nrot
@@ -22,19 +26,14 @@ subroutine rotmat(iopt, li, nrot, symopm, vecg)
   logical :: li
   ! Local parameters:
   integer :: i, idamax, in, j
-  real (kind=dp) :: costbn, detop, ddet33, dnrm2, omcos, sintbn, sinpb3, tiny, &
+  real (kind=dp) :: costbn, detop, dnrm2, omcos, sintbn, sinpb3, tiny, &
     twopi, vfac
   character (len=144) :: messg
   parameter (twopi=6.28318530717958648e0_dp)
   parameter (tiny=1.0e-3_dp)
-  ! External calls:
-  external :: daxpy, dcopy, ddet33, rinit, dnrm2, dscal, errmsg, idamax, &
-    nrmliz
-  ! Intrinsic functions:
-  intrinsic :: abs, acos, cos, max, sign, sin, sqrt, abs, nint
 
   if (iopt==-1) then
-    call rinit(symopm, 9)
+    call rinit(9, symopm)
     in = abs(nrot)
     if (in==1) then
       call dcopy(3, 1.e0_dp, 0, symopm, 4)
@@ -74,7 +73,7 @@ subroutine rotmat(iopt, li, nrot, symopm, vecg)
     call daxpy(3, 0.5e0_dp, symopm(1,1), 4, costbn, 0)
     if (abs(costbn-1.e0_dp)<tiny) then
       nrot = 1
-      call rinit(vecg, 3)
+      call rinit(3, vecg)
     else
       nrot = nint(twopi/acos(max(-1.e0_dp,costbn)))
       ! ------- for nrot > 2 the matrix is non-symmetric and the rotation

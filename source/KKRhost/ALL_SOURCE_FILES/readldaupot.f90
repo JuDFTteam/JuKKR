@@ -82,9 +82,9 @@ subroutine readldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, &
       itrunldau = 0
       return
     end if
-    ueff0 = dabs(ueff0-ueff(i2))
-    jeff0 = dabs(jeff0-jeff(i2))
-    eref0 = dabs(eref0-erefldau(i2))
+    ueff0 = abs(ueff0-ueff(i2))
+    jeff0 = abs(jeff0-jeff(i2))
+    eref0 = abs(eref0-erefldau(i2))
     if ((ueff0>1d-8) .or. (ueff0>1d-8) .or. (eref0>1d-8)) then
       close (67)
       write (6, 120) 'Inconsistent UEFF/JEFF/EREF values in LDA+U file'

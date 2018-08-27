@@ -31,7 +31,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
 #endif
    use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid, init_tgmat
    use Constants
-   use Profiling
+   use mod_Profiling
    use mod_version_info
    use global_variables
    use mod_DataTypes
@@ -40,6 +40,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    use mod_rholm
    use mod_rhons
    use mod_wfmesh
+   use mod_drvrho
 
    implicit none
 
@@ -169,10 +170,6 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    integer :: ie_start
 #endif
    integer :: ie_end, ie_num
-   ! .. External Subroutines
-   external :: DAXPY,DSCAL,CRADWF,DRVRHO,PNSQNS,RHOLM,RHONS,WFMESH
-   ! .. Intrinsic Functions
-   intrinsic :: ATAN,DBLE,aimag,SQRT
    ! .. External Functions
    logical :: OPT,TEST                          ! qdos
    external :: OPT,TEST                         ! qdos

@@ -13,10 +13,10 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
   ipan_intervall)
 
   use :: constants
-  use :: profiling
+  use :: mod_profiling
   use :: global_variables
   use :: mod_datatypes, only: dp
-  use mod_calc_orbitalmoment
+  use mod_orbitalmoment, only: calc_orbitalmoment
   use mod_intcheb_cell
 
   implicit none
@@ -90,8 +90,7 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
   complex (kind=dp), dimension (:, :, :), allocatable :: wr
   complex (kind=dp), dimension (:, :, :), allocatable :: wr1 ! LDAU
   ! .. External routines
-  logical :: test, opt
-  external :: test, opt
+  logical, external :: opt
 
   lmsize = lmmaxd/2
 

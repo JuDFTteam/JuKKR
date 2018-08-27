@@ -48,7 +48,6 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
   real (kind=dp) :: bc(0:npemax), cg1, cg2, cg4, cg5, cg8, csqr, det, dvc, &
     gam(2), gpm, h24, kap(2), pc(2, 2, 0:mpsmax), pnew(2, 2), pold(2, 2), &
     qc(2, 2, 0:mpsmax), qnew(2, 2), qold(2, 2), rpwgpm, rr, tz, vc(0:npemax)
-  real (kind=dp) :: dabs, dble, dexp, dsqrt
   integer :: i, iv, j, jcorr, k, kap1, kap2, m, mps, n, nn, nsol
   integer :: int, nint
   save :: a11, a12, a21, a22, aa11, aa12, aa21, aa22, alpha, bb1, bb2, bc, &
@@ -69,10 +68,10 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
   ! EXPANSION COEFFICIENTS FOR THE POTENTIAL AND B-FIELD
   ! MB
   if (nucleus==0) then
-    tz = dble(nint(-vv(1)*rc(1)))
+    tz = real(nint(-vv(1)*rc(1)), kind=dp)
     vc(0) = vv(1) - (-tz)/rc(1)
   else
-    tz = 2.0d0*dble(z)
+    tz = 2.0d0*real(z, kind=dp)
     vc(0) = vv(1)
   end if
   do i = 1, 2
@@ -97,15 +96,15 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
   cg5 = -mj/(-kap1+0.5d0)
   cgd(1) = cg1
   cgmd(1) = cg5
-  kap(1) = dble(kap1)
+  kap(1) = real(kap1, kind=dp)
   ! MB
   if (nucleus==0) then
-    gam(1) = dsqrt(kap(1)**2-(tz/dvc)**2)
+    gam(1) = sqrt(kap(1)**2-(tz/dvc)**2)
   else
-    gam(1) = dabs(kap(1))
+    gam(1) = abs(kap(1))
   end if
   ! MB
-  if (dabs(mj)>l) then
+  if (abs(mj)>l) then
     cg2 = 0.0d0
     cg4 = 0.0d0
     cg8 = 0.0d0
@@ -116,19 +115,19 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
     gam(2) = 0.0d0
     kap(2) = 0.0d0
   else
-    cg2 = -dsqrt(1.0d0-(mj/(kap1+0.5d0))**2)
+    cg2 = -sqrt(1.0d0-(mj/(kap1+0.5d0))**2)
     cg4 = -mj/(kap2+0.5d0)
     cg8 = -mj/(-kap2+0.5d0)
     nsol = 2
     cgd(2) = cg4
     cgo = cg2
     cgmd(2) = cg8
-    kap(2) = dble(kap2)
+    kap(2) = real(kap2, kind=dp)
     ! MBA
     if (nucleus==0) then
-      gam(2) = dsqrt(kap(2)**2-(tz/dvc)**2)
+      gam(2) = sqrt(kap(2)**2-(tz/dvc)**2)
     else
-      gam(2) = dabs(kap(2))
+      gam(2) = abs(kap(2))
     end if
     ! MBE
   end if
@@ -154,7 +153,7 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
 
       do j = 1, nsol
         i = 3 - j
-        wp(j, j, n) = dexp(-dmue*rr)
+        wp(j, j, n) = exp(-dmue*rr)
         d_p(j, j, n) = -dmue*drdic(n)*wp(j, j, n)
         wq(j, j, n) = bova*wp(j, j, n)
         dq(j, j, n) = bova*d_p(j, j, n)
@@ -290,7 +289,7 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
     ! MBE
     do j = 1, nsol
       i = 3 - j
-      pc(j, j, 0) = dsqrt(abs(kap(j))-gam(j))
+      pc(j, j, 0) = sqrt(abs(kap(j))-gam(j))
       qc(j, j, 0) = (kap(j)+gam(j))*(csqr/tz)*pc(j, j, 0)
       pc(i, j, 0) = 0.0d0
       qc(i, j, 0) = 0.0d0
@@ -377,8 +376,8 @@ subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, &
         do i = 1, nsol
           w1 = emvqq + bqq*cgmd(i)
           w3 = -emvpp + bc(0)*cgd(i)
-          a21 = gam(j) + kap(i) + dble(m)
-          a22 = gam(j) - kap(i) + dble(m)
+          a21 = gam(j) + kap(i) + real(m, kind=dp)
+          a22 = gam(j) - kap(i) + real(m, kind=dp)
           if (abs(a21)>eps) pc(i, j, m) = (w1*qc(i,j,m-1)-w2*qc(i,j,m-2)-w6*qc(i,j,m &
             -3))/a21
           if (abs(a22)>eps) qc(i, j, m) = (-w3*pc(i,j,m-1)+w4*pc(3-i,j,m-1)+w5*pc(i, &

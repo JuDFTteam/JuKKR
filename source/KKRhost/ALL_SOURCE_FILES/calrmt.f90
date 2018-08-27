@@ -27,12 +27,6 @@ subroutine calrmt(ipf, ipfe, ipe, imt, z, rmt, rws, rmtnew, alat, drdi, a, b, &
   real (kind=dp) :: drd1, drdws, rimt, rimtm1, rnuc
   integer :: idelta, ih, imtl, irwsm2
   ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: exp, log, mod, real
-  ! ..
-  ! .. External Subroutines ..
-  external :: rcstop
-  ! ..
   if (kshape==0) then
     rimt = log(rmt/b+1.e0_dp)/a + 1.e0_dp
     imtl = nint(rimt)

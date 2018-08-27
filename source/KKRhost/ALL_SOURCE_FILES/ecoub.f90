@@ -55,6 +55,8 @@ subroutine ecoub(cmom, ecou, lmax, nspin, natyp, rho2ns, vm2z, z, r, drdi, &
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
   use global_variables
+  use mod_simp3
+  use mod_simpk
   implicit none
   ! ..
   ! .. Local Scalars ..
@@ -75,9 +77,6 @@ subroutine ecoub(cmom, ecou, lmax, nspin, natyp, rho2ns, vm2z, z, r, drdi, &
   ! .. Intrinsic Functions ..
   real (kind=dp) :: er(irmd)
   ! ..
-
-  external :: simp3, simpk
-
 
   intrinsic :: atan, sqrt
   ! --->   determine the right potential numbers - the coulomb potential

@@ -1,7 +1,3 @@
-module mod_opt
-
-contains
-
 ! ***********************************************************************
 logical function opt(string)
   ! ***********************************************************************
@@ -24,5 +20,3 @@ logical function opt(string)
   end do
   return
 end function opt
-
-end module mod_opt

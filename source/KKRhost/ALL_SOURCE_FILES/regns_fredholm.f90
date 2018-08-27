@@ -5,7 +5,6 @@ contains
 subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   pzekdr, qzekdr, ek, ader, amat, bder, bmat, nsra, irmind, irmd, ipand, &
   lmmaxd)
-  use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
   ! determines the regular non spherical wavefunctions , the
   ! alpha matrix and the t - matrix in the n-th. born appro-
@@ -50,6 +49,11 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   ! -----------------------------------------------------------------------
   ! modified by R. Zeller      Aug. 1994
   ! -----------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+  use mod_csout
+  use mod_csinwd
+  use mod_wfint
+  implicit none
   ! .. Scalar Arguments ..
   complex (kind=dp) :: ek
   integer :: icst, ipan, ipand, irmd, irmind, lmmaxd, nsra
@@ -67,9 +71,6 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   ! .. Local Scalars ..
   complex (kind=dp) :: efac1, efac2
   integer :: i, ir, irc1, j, lm1, lm2
-  ! ..
-  ! .. External Subroutines ..
-  external :: csinwd, csout, wfint, wfint0
   ! ..
   ! .. Parameters ..
   complex (kind=dp) :: cone

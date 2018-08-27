@@ -1,4 +1,4 @@
-module mod_gll95
+module mod_gll13
 
 contains
 
@@ -52,9 +52,6 @@ use mod_types, only: t_inc
       complex (kind=dp) LLY_G0TR   ! LLY Trace of  DTGLL for Lloyds formula
       INTEGER LLY     ! LLY =0 : no Lloyd's formula; <>0: use Lloyd's formula
       ALLOCATABLE GREF,GLL,GTREF,DGLLDE,DGTDE,DGTDE0,DGDE,IPVT
-!..
-!.. External Subroutines ..
-      EXTERNAL GFREE13,GREFSY13,ZCOPY,ZGEMM
 !..
 !.. External Functions ..
       LOGICAL TEST
@@ -235,4 +232,4 @@ IF (lly /= 0) THEN
 endif
 END SUBROUTINE gll13
 
-end module mod_gll95
+end module mod_gll13

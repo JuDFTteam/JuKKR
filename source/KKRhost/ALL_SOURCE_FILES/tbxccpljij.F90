@@ -37,8 +37,7 @@ use mod_cinit
 use mod_cmatmul
 use mod_initabjij
 use mod_cmatstr
-use mod_rotatematrix
-use mod_test
+use mod_rotatespinframe, only: rotatematrix
 
 IMPLICIT NONE
 !.
@@ -103,7 +102,6 @@ INTEGER JTAUX(NATYP)
 INTRINSIC MAX,SQRT
 !..
 !.. External Subroutines ..
-EXTERNAL CINIT,CMATMUL,INITABJIJ,ZCOPY
 LOGICAL TEST
 EXTERNAL TEST
 !..
@@ -347,11 +345,11 @@ DO ie_num=1,ie_end
       DO it = 1,natyp
         WRITE(1337,'(12X," IE = ",I2," IT =",I3)') ie,it
         CALL cmatstr(' T MAT ',7,tsst(1,1,it,ispin),  &
-            lmmaxd,lmmaxd,0,0,0,1D-8,6)
+            lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
         CALL cmatstr(' D MAT ',7,dmatts(1,1,it,ispin),  &
-            lmmaxd,lmmaxd,0,0,0,1D-8,6)
+            lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
         CALL cmatstr(' D~ MAT',7,dtilts(1,1,it,ispin),  &
-            lmmaxd,lmmaxd,0,0,0,1D-8,6)
+            lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
         IF ( it /= natyp) WRITE(1337,'(8X,60("-"),/)')
       END DO
       WRITE(1337,'(8X,60("+"),/)')
@@ -360,7 +358,7 @@ DO ie_num=1,ie_end
         "Delta_t = t(it,DN) - t(it,UP) matrices for IT=1,", I3,/)') natyp
     DO it = 1,natyp
       WRITE(1337,'(12X," IE = ",I2," IT =",I3)') ie,it
-      CALL cmatstr(' DEL T ',7,deltsst(1,1,it), lmmaxd,lmmaxd,0,0,0,1D-8,6)
+      CALL cmatstr(' DEL T ',7,deltsst(1,1,it), lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
       IF ( it /= natyp) WRITE(1337,'(8X,60("-"),/)')
     END DO
     WRITE(1337,'(8X,60("-"),/)')
@@ -428,8 +426,8 @@ DO ie_num=1,ie_end
         WRITE(1337,'(8X,60("-"),/,10X,  &
             " G_ij(DN) and G_ji(UP) matrices I =",I3," J =",I3,  &
             " IE =",I3,/,8X,60("-"))') ia,ja,ie
-        CALL cmatstr(' Gij DN',7,gmij,lmmaxd,lmmaxd,0,0,0,1D-8,6)
-        CALL cmatstr(' Gji UP',7,gmji,lmmaxd,lmmaxd,0,0,0,1D-8,6)
+        CALL cmatstr(' Gij DN',7,gmij,lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
+        CALL cmatstr(' Gji UP',7,gmji,lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
       endif
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
       
@@ -488,7 +486,7 @@ DO ie_num=1,ie_end
 #else
           
           jxcijint(it,jt,nseff) = jxcijint(it,jt,nseff)  &
-              - wez(ie)*csum/DBLE(nspin)
+              - wez(ie)*csum/real(nspin, kind=dp)
           
           xintegd(it,jt,nseff)= csum/(pi*4.d0)
           
@@ -608,7 +606,7 @@ IF(myrank==master)THEN
           
           DO ie=1,ielast
             jxcijint(it,jt,nseff) = jxcijint(it,jt,nseff)  &
-                - wez(ie)*csum_store(it,jt,nseff,ie)/DBLE(nspin)
+                - wez(ie)*csum_store(it,jt,nseff,ie)/real(nspin, kind=dp)
             xintegdtmp= csum_store(it,jt,nseff,ie)/(pi*4.d0)
             IF(npol==0 .OR. test('Jijenerg'))THEN
               WRITE (499,FMT='(6E12.4)')  &

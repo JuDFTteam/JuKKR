@@ -9,6 +9,7 @@ subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
   use :: mod_wunfiles, only: t_params
   use :: mod_rhoqtools, only: rhoq_write_kmesh
   use :: mod_datatypes, only: dp
+  use mod_bzirr3d
   implicit none
   real (kind=dp), parameter :: eps=1.0D-12
   ! ..
@@ -36,9 +37,6 @@ subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, &
   ! .. External Functions ..
   logical :: test
   external :: test
-  ! ..
-  ! .. External Subroutines ..
-  external :: bzirr3d
   ! ---------------------------------------------------------------------
 
   ! --> set number of different K-meshes

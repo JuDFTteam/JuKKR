@@ -11,7 +11,7 @@
 !-------------------------------------------------------------------------------
 module MOD_MAIN1C
 
-   use Profiling
+   use mod_Profiling
    use Constants
    use global_variables
    use mod_DataTypes
@@ -23,7 +23,7 @@ module MOD_MAIN1C
    use mod_rhoval0
    use mod_rhocore
    use mod_renorm_lly
-   use mod_opendafile
+   use mod_getscratch, only: opendafile
    use mod_rhovalnew
    use mod_wmatldau
    use mod_wmatldausoc
@@ -165,9 +165,6 @@ contains
       complex (kind=dp), dimension(:,:), allocatable :: WORK
       complex (kind=dp), dimension(:,:,:,:), allocatable :: workc
 #endif
-
-      ! .. Intrinsic Functions ..
-      intrinsic ATAN,DBLE,aimag,REAL
       ! .. External Functions ..
       logical OPT,TEST
       external OPT,TEST

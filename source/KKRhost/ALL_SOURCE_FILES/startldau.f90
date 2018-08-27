@@ -12,6 +12,8 @@ subroutine startldau(itrunldau, idoldau, kreadldau, lopt, ueff, jeff, &
   ! **********************************************************************
   use :: mod_datatypes, only: dp
    use mod_readldaupot
+  use mod_rinit
+   use mod_cinit
   implicit none
   ! ..
   integer :: irmd, mmaxd, natypd, nspind, irws(natypd)

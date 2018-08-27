@@ -32,7 +32,6 @@ subroutine inversion(gllke, invmod, icheck)
   integer :: lm1, lm2, info, ipvt(alm), nlayer
   integer :: icheck(naezd/nprincd, naezd/nprincd)
   ! total matrix inversion
-  external :: zgetrf, zgetrs, zcopy, invslab
 
   allocate (gtemp(alm,alm))
 

@@ -15,7 +15,7 @@ subroutine madelung3d(lpot, yrg, wg, naez, alat, volume0, bravais, recbv, &
   use :: mod_datatypes, only: dp
    use mod_madelgaunt
    use mod_madelcoef
-   use mod_madel3out
+   use mod_madelout, only: madel3out
    use mod_lattice3d
    use mod_strmat
 
@@ -45,9 +45,6 @@ subroutine madelung3d(lpot, yrg, wg, naez, alat, volume0, bravais, recbv, &
   real (kind=dp) :: gn(3, nmaxd), rm(3, nmaxd)
   integer :: icleb(lmxspd*lmpotd, 3)
   integer :: nsg(ishld), nsr(ishld)
-  ! ..
-  ! .. External subroutines
-  external :: lattice3d, strmat, madelgaunt, madelcoef
   ! ......................................................................
   iprint = 0
   nclebd = lmxspd*lmpotd

@@ -1,7 +1,3 @@
-module mod_readvirtual
-
-contains
-
 program readvirtual
   use :: mod_datatypes, only: dp
   implicit none
@@ -172,5 +168,3 @@ contains
 
 
 end program readvirtual
-
-end module mod_readvirtual

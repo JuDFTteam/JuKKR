@@ -30,6 +30,7 @@ subroutine gijdmat(tauq, tsst, mssq, dmat, dtil, cfctorinv, iprint, ie, it, &
 
   use :: mod_datatypes, only: dp
    use mod_getdmat
+  use mod_cmatstr
   implicit none
   ! ..
   ! .. Arguments ..
@@ -47,9 +48,6 @@ subroutine gijdmat(tauq, tsst, mssq, dmat, dtil, cfctorinv, iprint, ie, it, &
   complex (kind=dp) :: gll(lmmaxd, lmmaxd), tssq(lmmaxd, lmmaxd), &
     tpg(lmmaxd, lmmaxd), xc(lmmaxd, lmmaxd)
   character (len=18) :: banner
-  ! ..
-  ! .. Externals
-  external :: cmatstr, getdmat, zcopy, zgemm, zgetrf, zgetri, zscal
   ! ..
   ! .. Data
   data cone/(1e0_dp, 0e0_dp)/

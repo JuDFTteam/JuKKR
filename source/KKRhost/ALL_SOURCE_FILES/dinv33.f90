@@ -3,7 +3,6 @@ module mod_dinv33
 contains
 
 subroutine dinv33(matrix, iopt, invers, det)
-  use :: mod_datatypes, only: dp
   ! - Inverts 3X3 matrix
   ! ----------------------------------------------------------------------
   ! i Inputs:
@@ -18,18 +17,20 @@ subroutine dinv33(matrix, iopt, invers, det)
   ! r Remarks:
   ! r  To generate reciprocal lattice vectors, call dinv33(plat,3,plat)
   ! ----------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+  use mod_cross
+  use mod_ddot1
+  use mod_dscal1
+  use mod_dswap1
   implicit none
   ! Passed parameters:
   integer :: iopt
   real (kind=dp) :: matrix(3, 3), invers(3, 3), det
   ! Local parameters:
   integer :: i, j
-  real (kind=dp) :: ddot1, twopi, pi
+  real (kind=dp) :: twopi, pi
   parameter (pi=3.141592653589793e0_dp)
   parameter (twopi=2.e0_dp*pi)
-
-  ! external calls:
-  external :: cross, ddot1, dscal1, dswap1
 
   call cross(matrix(1,2), matrix(1,3), invers(1,1))
   call cross(matrix(1,3), matrix(1,1), invers(1,2))

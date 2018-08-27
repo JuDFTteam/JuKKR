@@ -2,16 +2,14 @@ module mod_renormrho_lly
 
 contains
 
-subroutine renormrho_lly(cdos_lly, rhospher, irmax, ielast, nspin, ! LLY Lloyd
-                                                                   ! &
-
+subroutine renormrho_lly(cdos_lly, rhospher, irmax, ielast, nspin, & ! LLY Lloyd
   natyp, den, lmaxp1, conc, iestart, ieend, thetas, ntcell, rho2ns)
   ! Renormalize the valence charge according to Lloyd's formula
   use global_variables
   use :: mod_datatypes, only: dp
   implicit none
   ! Concentration (for cpa)
-  integer :: lmaxp1, natyp, nspin, irmax ! Spherical component of normalized
+  integer :: natyp, nspin, irmax ! Spherical component of normalized
                                          ! density/atom/energy/spin
   integer :: iestart, ieend, ielast ! Non-renormalized charge per atom
   integer :: ntcell(natypd), nfu(natypd), llmsp(natypd, nfund) ! DOS according
@@ -24,7 +22,7 @@ subroutine renormrho_lly(cdos_lly, rhospher, irmax, ielast, nspin, ! LLY Lloyd
                                                           ! its spherical
                                                           ! component
   real (kind=dp) :: thetas(irid, nfund, ncelld)
-  complex (kind=dp) :: den(0:lmaxd1, iemxd, npotd) ! Internal:
+  complex (kind=dp) :: den(0:lmaxd+1, iemxd, npotd) ! Internal:
   complex (kind=dp) :: cdos_lly(iemxd, nspind) ! Density from local summation
                                                ! and from lloyd's formula
   ! Renormalization constant for charge and spin density
@@ -50,12 +48,12 @@ subroutine renormrho_lly(cdos_lly, rhospher, irmax, ielast, nspin, ! LLY Lloyd
   ! Spins are coupled, only charge density is given by lloyd's formula
   do ie = iestart, ieend
     do ispin = 1, nspin
-      denlly(ispin) = dimag(cdos_lly(ie,ispin))*spindegen
+      denlly(ispin) = aimag(cdos_lly(ie,ispin))*spindegen
       denloc(ispin) = 0.d0
       do i1 = 1, natyp
         ipot = (i1-1)*nspin + ispin
-        do ll = 0, lmaxp1
-          denloc(ispin) = denloc(ispin) - 2.0d0*conc(i1)*dimag(den(ll,ie,ipot) &
+        do ll = 0, lmaxd+1
+          denloc(ispin) = denloc(ispin) - 2.0d0*conc(i1)*aimag(den(ll,ie,ipot) &
             )/pi/dble(nspin)
         end do
       end do

@@ -33,12 +33,6 @@ subroutine gaunt2(w, yr, n)
   ! .. Local Arrays ..
   real (kind=dp) :: p(0:n+1, 0:n), x(n)
   ! ..
-  ! .. External Subroutines ..
-  external :: grule
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: atan, sqrt
-  ! ..
   fpi = 16e0_dp*atan(1e0_dp)
   rf = fpi**(1e0_dp/3e0_dp)
   lomax = n

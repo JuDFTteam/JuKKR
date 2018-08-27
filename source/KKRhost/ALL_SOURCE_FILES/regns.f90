@@ -53,11 +53,12 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   ! FRED: true -> use fredholm equation
   ! false -> volterra equation
   ! -----------------------------------------------------------------------
-  use :: mod_types, only: t_inc
-  use :: mod_datatypes, only: dp
+  use mod_types, only: t_inc
+  use mod_datatypes, only: dp
   use mod_csout
   use mod_wfint
-  use mod_wfint0
+  use mod_cinit
+  use mod_csinwd
   implicit none
   ! .. Scalar Arguments ..
   complex (kind=dp) :: ek
@@ -82,9 +83,6 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   complex (kind=dp) :: pns0(lmmaxd, lmmaxd, irmind:irmd, 2), &
     pns1(lmmaxd, lmmaxd, irmind:irmd)
   integer :: ipiv(lmmaxd)
-  ! ..
-  ! .. External Subroutines ..
-  external :: csinwd, csout, wfint, wfint0, zgeinv1
   ! ..
   ! .. Parameters ..
   complex (kind=dp) :: cone, czero
@@ -335,6 +333,7 @@ subroutine zgeinv1(a, u, aux, ipiv, dim)
   ! - A,U and AUX are of dimension (DIM,DIM),
   ! ------------------------------------------------------------------------
   use :: mod_datatypes, only: dp
+   use mod_cinit
   implicit none
   integer :: dim, ipiv(*)
   complex (kind=dp) :: a(dim, *), aux(dim, *), u(dim, *)
@@ -345,7 +344,6 @@ subroutine zgeinv1(a, u, aux, ipiv, dim)
   parameter (cone=(1.d0,0.d0))
 
   integer :: lm1, info
-  external :: zcopy, zgetrs, zgetrf
   ! ------------------------------------------------------------------------
   call cinit(dim*dim, u)
   do lm1 = 1, dim

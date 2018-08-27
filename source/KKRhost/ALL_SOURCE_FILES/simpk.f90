@@ -31,10 +31,6 @@ subroutine simpk(f, fint, ipan, ircut, drdi)
   ! .. Local Scalars
   integer :: i, ien, ip, ist, n
   real (kind=dp) :: a1, a2
-
-  ! .. External Functions
-  real (kind=dp) :: ssum
-  external :: ssum
   ! ..
   a1 = 4.0e0_dp/3.0e0_dp
   a2 = 2.0e0_dp/3.0e0_dp

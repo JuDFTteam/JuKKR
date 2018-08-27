@@ -20,12 +20,7 @@ subroutine mixldau(mmaxd, nspind, natypd, natyp, nspin, lopt, wldauold, wldau)
   character (len=256) :: uio                               ! NCOLIO=256
 
 
-
-  external :: ioinput
-
-
   ! First calculate rms error in interaction matrix
-
   do iat = 1, natyp
     rmserr = 0.e0_dp
     if (lopt(iat)>=0) then

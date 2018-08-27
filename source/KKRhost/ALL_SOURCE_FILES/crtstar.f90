@@ -4,11 +4,11 @@ contains
 
 ! 20.07.96 ***************************************************************
 subroutine crtstar(ratom, nshell, nd, irot, isymindex, rrot)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
   ! THE SYMMETRY OPERATIONS OF THE SYMMETRY GROUP ARE APPLIED TO THE
   ! INPUT VECTOR RATOM
   ! ------------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
   implicit none
   integer :: irot, nshell
   real (kind=dp) :: nd(64, 3, *), ratom(3, *), rrot(48, 3, *)

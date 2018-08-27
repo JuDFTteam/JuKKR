@@ -9,15 +9,13 @@ function cdjlzdz(l, z, mode)
   ! *                                                                  *
   ! ********************************************************************
   use :: mod_datatypes, only: dp
+  use mod_cjlz
   implicit none
 
   ! Dummy arguments
   integer :: l, mode
   complex (kind=dp) :: z
   complex (kind=dp) :: cdjlzdz
-
-  ! Local variables
-  complex (kind=dp) :: cjlz
 
   if (mode==1) then
 

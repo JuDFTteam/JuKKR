@@ -11,6 +11,7 @@ subroutine force(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, drdi, irws)
 
   ! -----------------------------------------------------------------------
   use global_variables
+  use mod_simp3
   implicit none
 
   ! ..
@@ -28,9 +29,6 @@ subroutine force(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, drdi, irws)
   ! ..
   ! .. Save statement ..
   real (kind=dp) :: flmh(-1:1, natypd), v1(irmd)
-  ! ..
-  ! .. Intrinsic Functions ..
-  external :: simp3
   ! ..
 
   save :: pi

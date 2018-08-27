@@ -7,6 +7,7 @@ subroutine calc_rho_ll_ss(lmmax, rll, ircut, ipan, icell, thetas, cleb, icleb, &
 
   use :: mod_datatypes, only: dp
   use global_variables
+  use mod_csimpk
   implicit none
 
   ! .. Array Arguments ..

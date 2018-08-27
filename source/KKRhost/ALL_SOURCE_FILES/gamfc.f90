@@ -32,13 +32,6 @@ subroutine gamfc(alpha, glh, lmax, r)
   real (kind=dp) :: arg, facl, fex
   integer :: l
   ! ..
-  ! .. external functions ..
-  real (kind=dp) :: erfcex
-  external :: erfcex
-  ! ..
-  ! .. intrinsic functions ..
-  intrinsic :: exp, real
-  ! ..
   arg = alpha*alpha
   glh(0) = erfcex(alpha)
   facl = 2.0e0_dp*alpha

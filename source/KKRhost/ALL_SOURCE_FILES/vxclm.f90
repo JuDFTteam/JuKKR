@@ -40,44 +40,40 @@ SUBROUTINE VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI, &
 !-----------------------------------------------------------------------
 !INCLUDE 'inc.p'
 !.. Parameters ..
-!INTEGER LMPOTD
-!PARAMETER (LMPOTD= (LPOTD+1)**2)
-!INTEGER LMXSPD
-!PARAMETER (LMXSPD= (2*LPOTD+1)**2)
+!integer LMPOTD
+!parameter (LMPOTD= (LPOTD+1)**2)
+!integer LMXSPD
+!parameter (LMXSPD= (2*LPOTD+1)**2)
+use mod_DataTypes, only: dp
 use global_variables
    use mod_vosko
    use mod_vxcspo
+  use mod_simpk
+  use mod_simp3
 implicit none
 !..
 !.. Scalar Arguments ..
-INTEGER IATYP,IJEND,IPAN,IRWS,KSHAPE,KTE,KXC,LMAX,NSPIN
+integer IATYP,IJEND,IPAN,IRWS,KSHAPE,KTE,KXC,LMAX,NSPIN
 !..
 !.. Array Arguments ..
-DOUBLE PRECISION DRDI(IRMD),EXC(0:LPOTD,*),GSH(*),R(IRMD), &
+real (kind=dp) DRDI(IRMD),EXC(0:LPOTD,*),GSH(*),R(IRMD), &
                  RHO2NS(IRMD,LMPOTD,2),THETAS(IRID,NFUND), &
                  V(IRMD,LMPOTD,2),WTYR(IJEND,*),YR(IJEND,*)
-INTEGER IFUNM(LMXSPD)
-INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND), &
+integer IFUNM(LMXSPD)
+integer ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND), &
         LMSP(LMXSPD)
 !..
 !.. Local Scalars ..
-DOUBLE PRECISION ELMXC,FPI,FPIPR2,VLMXC,VXC1,VXC2,VXC3,factor
-INTEGER IFUN,IJ,IPOT,IR,IRC1,IRH,IRS1,IS,ISPIN,J,L,LM,LM2,LMMAX,M
+real (kind=dp) ELMXC,FPI,FPIPR2,VLMXC,VXC1,VXC2,VXC3,factor
+integer IFUN,IJ,IPOT,IR,IRC1,IRH,IRS1,IS,ISPIN,J,L,LM,LM2,LMMAX,M
 !..
 !.. Local Arrays ..
-DOUBLE PRECISION ER(IRMD,0:LPOTD),ESTOR(IRMD,LMPOTD),EXCIJ(IJEND), &
+real (kind=dp) ER(IRMD,0:LPOTD),ESTOR(IRMD,LMPOTD),EXCIJ(IJEND), &
                  FPRHO(IJEND,2),VXC(IJEND,2),VXCR(2:3,2)
 !..
 !.. External Functions ..
-DOUBLE PRECISION DDOT
-EXTERNAL DDOT
-!..
-!.. External Subroutines ..
-EXTERNAL DAXPY,SIMP3,SIMPK,VOSKO,VXCSPO
-!..
-!.. Intrinsic Functions ..
-INTRINSIC ATAN
-!..
+real (kind=dp) DDOT
+external DDOT
 
 WRITE(1337,*) 'Including cutoff of vxc for small density'
 FPI = 16.0D0*ATAN(1.0D0)
@@ -149,7 +145,7 @@ DO IR = 2,IRC1
   END IF
 
     do ij=1,ijend
-    factor = (1.d0-dexp(-dabs(fprho(ij,1))*1000.d0))
+    factor = (1.d0-exp(-abs(fprho(ij,1))*1000.d0))
     do ispin=1,nspin
     vxc(ij,ispin) = &
       vxc(ij,ispin) * factor  !cutoff

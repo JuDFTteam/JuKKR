@@ -19,7 +19,7 @@ function ddet33(matrix)
   ! Local parameters:
   real (kind=dp) :: ddot, m1cm2(3)
   ! external calls:
-  external :: cross, ddot
+  external :: ddot
 
   call cross(matrix(4), matrix(7), m1cm2)
   ddet33 = ddot(3, matrix(1), 1, m1cm2, 1)

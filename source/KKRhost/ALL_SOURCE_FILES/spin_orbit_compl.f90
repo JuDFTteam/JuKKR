@@ -8,8 +8,9 @@ subroutine spin_orbit_compl(lmax, lmmaxd, l_s)
   ! in this subroutine the matrix L*S is calculated for the basis of
   ! real spherical harmonics
 
-  use :: mod_datatypes, only: dp
-   use mod_spin_orbit_one_l
+  use mod_datatypes, only: dp
+  use mod_spin_orbit, only: spin_orbit_one_l
+   use mod_cinit
   implicit none
 
   integer, intent (in) :: lmax, lmmaxd

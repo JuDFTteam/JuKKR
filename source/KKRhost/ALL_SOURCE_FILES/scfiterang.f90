@@ -195,7 +195,7 @@ subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, &
 
       ! --> update the rotation matrices DROTQ for the new angles
 
-      call calcrotmat(nk, 3, qmphi(iq), qmtet(iq), 0.0d0, drotq(1,1,iq), fact, &
+      call calcrotmat(nk, 3, qmphi(iq), qmtet(iq), 0.0_dp, drotq(1,1,iq), fact, &
         nkmmax)
 
     end do

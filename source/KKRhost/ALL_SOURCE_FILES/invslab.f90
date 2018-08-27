@@ -20,6 +20,7 @@ subroutine invslab(gdi, gup, gdow, gin, icheck)
   use :: mod_datatypes, only: dp
    use mod_bofm
    use mod_btom
+  use mod_cinit
   implicit none
 
   complex (kind=dp), parameter :: ci = (0.e0_dp, 1.e0_dp)
@@ -35,8 +36,6 @@ subroutine invslab(gdi, gup, gdow, gin, icheck)
   ! ---> to be changed: set up the triangular matrix.
   integer :: icheck(nlayerd, nlayerd)
   ! first version:
-
-  external :: cinit, zcopy, zgemm, zgetrf, zgetrs, btom
 
   call cinit(ndim_slabinv*ndim_slabinv, e)
   call cinit(ndim_slabinv*ndim_slabinv, f)

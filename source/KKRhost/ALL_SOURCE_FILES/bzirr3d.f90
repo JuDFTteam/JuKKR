@@ -68,8 +68,8 @@ subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, &
   logical :: symunitary(nsymaxd)
   real (kind=dp) :: msign
 
-  real (kind=dp) :: ddet33, ddot
-  external :: ddet33, ddot
+  real (kind=dp) :: ddot
+  external :: ddot
 
   allocate (ibk(0:maxk1,0:maxk2,0:maxk3))
 

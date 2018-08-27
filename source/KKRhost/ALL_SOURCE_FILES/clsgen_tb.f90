@@ -2,6 +2,7 @@ module mod_clsgen_tb
 
 contains
 
+
 ! ************************************************************************
 subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, &
@@ -22,8 +23,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
 
   use :: mod_version_info
   use :: mod_datatypes, only: dp
-   use mod_clustcomp_tb
-   use mod_dsort
+  use mod_dsort
   implicit none
   ! .. arguments
   integer :: naez                  ! number of atoms in EZ
@@ -79,10 +79,6 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   real (kind=dp) :: rcut2, rcutxy2, rxy2, dist
 
   logical :: lfound
-  logical :: clustcomp_tb
-
-  external :: dsort, clustcomp_tb
-  intrinsic :: min, sqrt
 
   data epsshl/1.d-4/
   data tol/1.d-7/
@@ -180,7 +176,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
       end do                       ! loop in all bravais lattices
     end if                         ! L2DIM Interface calculation
 
-    distmin = dsqrt(distmin)/2.d0  ! Touching RMT
+    distmin = sqrt(distmin)/2.d0  ! Touching RMT
     ! Define MT-radius of TB-ref. potentials if not read-in from the input
     if (rmtrefat(jatom)<0.d0) &    ! I.e., if not read in  &
       rmtrefat(jatom) = int(distmin*alat*99.d0)/100.d0 ! round up the decimals
@@ -332,7 +328,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
     end if
 
     do ia = 1, number
-      rsort(ia) = dsqrt(rcls1(1,ia)**2+rcls1(2,ia)**2+rcls1(3,ia)**2)
+      rsort(ia) = sqrt(rcls1(1,ia)**2+rcls1(2,ia)**2+rcls1(3,ia)**2)
 
       rsort(ia) = 1.d9*rsort(ia) + 1.d6*rcls1(3, ia) + 1.d3*rcls1(2, ia) + &
         1.d0*rcls1(1, ia)
@@ -513,6 +509,43 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   return
 end subroutine clsgen_tb
 
+
+logical function clustcomp_tb(rcls, irefpot, atom, iat1, ic1, n1, rcls1, n2, &
+  iat2, naclsd)
+  use :: mod_datatypes, only: dp
+  ! This function returns true if cluster ic1 is equal to new cluster
+  ! RCLS        coordinates of all (already found) clusters
+  ! IC1         First cluster index
+  ! N1          Number of atoms in IC1 cluster
+  ! rcls1       coordinates of new cluster
+  ! n2          number of atoms in ic2 cluster
+  ! ATOM:       atom-type at a certain position in a cluster
+  ! IAT1, IAT2: central atoms of 1st,2nd cluster
+  ! IREFPOT:    Type of reference potential
+  implicit none
+  integer :: naclsd
+  real (kind=dp) :: rcls(3, naclsd, *), rcls1(3, naclsd)
+  integer :: atom(naclsd, *), irefpot(*)
+  integer :: ic1, n1, n2, iat1, iat2, n, i
+  real (kind=dp) :: rd, tol
+  logical :: lreflog
+
+  tol = 1.e-5_dp
+  clustcomp_tb = .false.
+  lreflog = .true.
+  if (n1==n2) then
+    rd = 0.e0_dp
+    do n = 1, n1
+      ! compare ref-potential types
+      if (irefpot(abs(atom(n,iat1)))/=irefpot(abs(atom(n,iat2)))) &
+        lreflog = .false.
+      do i = 1, 3
+        rd = rd + abs(rcls(i,n,ic1)-rcls1(i,n)) ! compare coordinares
+      end do
+    end do
+    if (abs(rd)<tol .and. lreflog) clustcomp_tb = .true.
+  end if
+end function clustcomp_tb
 
 
 end module mod_clsgen_tb

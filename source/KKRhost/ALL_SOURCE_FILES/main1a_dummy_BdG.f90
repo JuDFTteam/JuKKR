@@ -1,6 +1,6 @@
 !> this is dummy version of main1a
 subroutine main1a_dummy
-  use Profiling
+  use mod_Profiling
   use Constants
   use global_variables
   Use mod_datatypes, Only: dp

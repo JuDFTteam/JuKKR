@@ -35,7 +35,7 @@ subroutine RHOVALNEW( &
    use mod_version_info
    use global_variables
    use Constants
-   use Profiling
+   use mod_Profiling
    Use mod_datatypes, Only: dp
    use mod_rhooutnew
    use mod_calcsph
@@ -46,8 +46,7 @@ subroutine RHOVALNEW( &
    use mod_rllsll
    use mod_spinorbit_ham
    use mod_sll_global_solutions
-   use mod_rotatevector
-   use mod_rotatematrix
+   use mod_rotatespinframe, only: rotatematrix, rotatevector
    use mod_vllmatsra
    use mod_vllmat
 
@@ -1075,7 +1074,7 @@ subroutine RHOVALNEW( &
             if (TOTXYMOMENT.LT.1d-05) then
                PHINEW=0d0
             else
-               PHINEW=DATAN2(MOMENT(2),MOMENT(1))
+               PHINEW=ATAN2(MOMENT(2),MOMENT(1))
             endif
          endif
          !

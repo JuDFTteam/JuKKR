@@ -4,7 +4,6 @@ contains
 
 subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
   natomimp, rclsimp, atomimp, ijtabcalc, natomimpd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * In case of tasks requiring Gij blocks calculation, set variables:  *
@@ -20,6 +19,9 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
   ! * EXCHANGE COUPLING CONSTANTS calculation case                       *
   ! *                                                                    *
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
+  use mod_getclusnxyz
+  use mod_ioinput
   implicit none
 
   ! Arguments
@@ -52,11 +54,6 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
   logical :: lspher
   character (len=256) :: uio                               ! NCOLIO=256
 
-
-  ! ..
-  ! .. Externals
-  external :: getclusnxyz, ioinput
-  ! ..
   ido = 0
 
   ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT

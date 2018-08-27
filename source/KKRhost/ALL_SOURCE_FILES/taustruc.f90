@@ -1,4 +1,4 @@
-module mod_taustruc
+module mod_taustruct
 
 contains
 
@@ -10,6 +10,8 @@ subroutine taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, &
   ! *                                                                  *
   ! ********************************************************************
   use :: mod_datatypes
+  use mod_cmatstr
+   use mod_cinit
   implicit none
 
   ! Dummy arguments
@@ -128,4 +130,4 @@ subroutine taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, &
     'relevant only for tetrahedron BZ-integration', /, 5x, 50('#'), /)
 end subroutine taustruct
 
-end module mod_taustruc
+end module mod_taustruct

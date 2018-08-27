@@ -49,8 +49,7 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
   real (kind=dp) :: sum0(2), sum1(2)
   complex (kind=dp) :: czero
   real (kind=dp) :: pi
-  logical :: opt, test
-  external :: opt, test
+  logical, external :: opt
   ! Spin degeneracy, 2 if nspin=1, 1 if nspin=2
 
   czero = (0.e0_dp, 0.e0_dp)

@@ -25,6 +25,7 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
   use :: mod_datatypes, only: dp
    use mod_getdmat
    use mod_rotate
+  use mod_cinit
   implicit complex (kind=dp)(a-h, o-z)
 
   ! PARAMETER definitions
@@ -154,8 +155,8 @@ subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, &
       ! m{n+1} = m{n} -  ( 1 + E * TAU )**(-1) * E
       ! -------------------------------------------
       do j = 1, n
-        cpaerr = cpaerr + abs(dreal(dq(j,iq))) + abs(dimag(dq(j,iq)))
-        cpacorr = cpacorr + abs(dreal(w1(j,j))) + abs(dimag(w1(j,j)))
+        cpaerr = cpaerr + abs(real(dq(j,iq))) + abs(aimag(dq(j,iq)))
+        cpacorr = cpacorr + abs(real(w1(j,j))) + abs(aimag(w1(j,j)))
         cpachng = max(cpachng, abs(w1(j,j)/mssq(j,j,iq)))
       end do
       cpachng = scl*cpachng

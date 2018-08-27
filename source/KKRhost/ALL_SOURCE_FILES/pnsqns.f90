@@ -79,8 +79,6 @@ subroutine pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, &
   complex (kind=dp), dimension (lmmaxd, irmind:irmd, 2) :: qzlm
   complex (kind=dp), dimension (lmmaxd, irmind:irmd, 2) :: pzekdr
   complex (kind=dp), dimension (lmmaxd, irmind:irmd, 2) :: qzekdr
-  ! .. External Subroutines
-  external :: irwns, regns, vllns, wftsca
 
   irmax = ircut(ipan)              ! Added IRMAX 1.7.2014
   call vllns(vnspll, vins, cleb, icleb, iend, irmd, ncleb, lmpotd, irmind, &

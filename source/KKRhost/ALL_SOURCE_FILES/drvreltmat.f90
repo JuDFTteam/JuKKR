@@ -2,7 +2,7 @@ module mod_drvreltmat
 
 contains
 
-subroutine drvreltmat(eryd, tmatll, vt, bt, r, drdi, r2drdi, zat, jws, solver, &
+subroutine drvreltmat(eryd, tmatll, vt, bt, r, drdi, r2drdi, zat_in, jws, solver, &
   soctl, ctl, lmmaxd, lmaxd, irmd)
   ! ********************************************************************
   ! *                                                                  *
@@ -15,6 +15,7 @@ subroutine drvreltmat(eryd, tmatll, vt, bt, r, drdi, r2drdi, zat, jws, solver, &
   use :: mod_datatypes, only: dp
    use mod_ikmlin
    use mod_calccgc
+  use mod_ssite
   implicit none
 
   ! PARAMETER definitions
@@ -30,7 +31,7 @@ subroutine drvreltmat(eryd, tmatll, vt, bt, r, drdi, r2drdi, zat, jws, solver, &
 
   ! Dummy arguments
   integer :: lmaxd, lmmaxd, irmd
-  integer :: zat(ntmax), jws(nmmax)
+  integer :: zat_in, zat(ntmax), jws(nmmax)
   complex (kind=dp) :: tmatll(lmmaxd, lmmaxd)
   real (kind=dp) :: soctl(nlmax)
   real (kind=dp) :: ctl(nlmax)
@@ -66,6 +67,7 @@ subroutine drvreltmat(eryd, tmatll, vt, bt, r, drdi, r2drdi, zat, jws, solver, &
     iprint, it, nt, nucleus, iwrregwf, iwrirrwf, calcint, getirrsol, nfilcbwf
 
   icall = icall + 1
+  zat(ntmax) = zat_in
 
   ! =======================================================================
   ! initialise relativistic and dummy variables and SAVE them

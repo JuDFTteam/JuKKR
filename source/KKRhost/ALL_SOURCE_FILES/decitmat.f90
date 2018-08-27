@@ -18,6 +18,7 @@ subroutine decitmat(eryd, zat, ipan, rr, dror, visp, ircut, rirc, krel, nsra, &
    use mod_drvreltmat
    use mod_regsol
    use mod_wfmesh
+  use mod_cinit
   implicit none
 
   ! Parameters ..
@@ -56,9 +57,6 @@ subroutine decitmat(eryd, zat, ipan, rr, dror, visp, ircut, rirc, krel, nsra, &
   allocatable :: rs, s
   allocatable :: bessjw, bessyw, hankws, dlogdp
   allocatable :: tmat, mass, hamf, fz, pz
-
-  ! External subroutines ..
-  external :: beshan, cinit, regsol, wfmesh
 
 
   call cinit(lmmaxd*lmmaxd, tmatll)

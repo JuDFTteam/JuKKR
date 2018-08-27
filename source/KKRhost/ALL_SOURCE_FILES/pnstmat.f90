@@ -33,7 +33,6 @@ subroutine pnstmat(drdi, ek, icst, pz, qz, fz, sz, pns, tmatll, vins, irmin, &
   real (kind=dp) :: wldau(mmaxd, mmaxd), cutoff(irmd)
   integer :: icleb(ncleb, 4), ircut(0:ipand), loflm(*)
   ! ..
-  ! .. External Subroutines ..
   integer :: i, ir, lm1, lm2, lmmkonv, m1, m2, irmax
 
 
@@ -44,7 +43,6 @@ subroutine pnstmat(drdi, ek, icst, pz, qz, fz, sz, pns, tmatll, vins, irmin, &
   real (kind=dp) :: vnspll(lmmaxd, lmmaxd, irmind:irmd)
   ! ======================================================================
   ! LDA+U
-  external :: regns, vllns, wftsca, zgemm
   ! Add WLDAU to non-spherical porential VINS in case of LDA+U
   irmax = ircut(ipan)
   ! Use the average wldau (=wldauav) and calculate the deviation

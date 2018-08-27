@@ -14,6 +14,7 @@ subroutine bastrmat(lmax, cgc, rc, crel, rrel, nkmmax, nkmpmax)
   ! * 13/01/98  HE                                                     *
   ! ********************************************************************
   use :: mod_datatypes, only: dp
+  use mod_cinit
   implicit none
 
   ! PARAMETER definitions

@@ -6,6 +6,7 @@ subroutine calc_rho_ll_ss_lmdos(rll, ircut, ipan, icell, thetas, cleb, icleb, &
   iend, ifunm, lmsp, irws, drdi, dens, lmdos)
   use :: mod_datatypes, only: dp
   use global_variables
+  use mod_csimpk
   implicit none
 
   ! non-sph. eigen states of single pot

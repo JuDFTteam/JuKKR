@@ -3,7 +3,6 @@ module mod_fplaneg
 contains
 
 subroutine fplaneg(lamda, g, pref, lmax, ga, vol)
-  use :: mod_datatypes, only: dp
   ! **************************************************************************
   ! This sub calculates the derivatives of the inverce
   ! space contribution to the ewald sum
@@ -19,11 +18,12 @@ subroutine fplaneg(lamda, g, pref, lmax, ga, vol)
   ! And the limit z -> 0 is taken (lam is the lamda parameter
 
   ! *********************************************************************
+  use :: mod_datatypes, only: dp
   implicit none
   integer :: lmax
   real (kind=dp) :: alpha, g(0:4), pref(0:lmax)
   integer :: l
-  real (kind=dp) :: derfc, lamda, er, ex, pi, ga, vol
+  real (kind=dp) :: lamda, er, ex, pi, ga, vol
   real (kind=dp) :: sqpi
 
   do l = 0, 4
@@ -35,7 +35,7 @@ subroutine fplaneg(lamda, g, pref, lmax, ga, vol)
   pi = 4.e0_dp*atan(1.e0_dp)
   sqpi = sqrt(pi)
   alpha = ga/2.e0_dp/lamda
-  er = derfc(alpha)
+  er = erfc(alpha)
   ex = exp(-alpha*alpha)
 
   if (abs(ga)>1.e-6_dp) then

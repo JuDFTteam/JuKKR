@@ -36,7 +36,7 @@ module mod_main0
    use rinput
    Use mod_datatypes, Only: dp
 
-   use mod_addviratoms14
+   use mod_addvirtual14
    use mod_bzkint0
    use mod_calcrotmat
    use mod_changerep
@@ -54,7 +54,6 @@ module mod_main0
    use mod_lattix99
    use mod_madelung2d
    use mod_madelung3d
-   use mod_opt
    use mod_outpothost
    use mod_outtmathost
    use mod_readimppot
@@ -448,17 +447,6 @@ contains
       !     .. External Functions ..
       logical :: OPT,TEST
       external :: OPT,TEST
-      !     ..
-      !     .. External Subroutines ..
-      external :: BZKINT0,CINIT,CLSGEN_TB,DECIOPT,EPATHTB,GAUNT,GAUNT2
-      external :: GFMASK,LATTIX99,RINIT,SCALEVEC
-      external :: STARTB1,STARTLDAU,TESTDIM,SHAPE_CORR
-      external :: readimppot
-      !     ..
-      !     .. Intrinsic Functions ..
-      intrinsic :: ATAN,DABS,DBLE,LOG,MAX,SQRT,product,shape
-      !     ..
-      !     ..
       !-------------------------------------------------------------------------
       ! Write version info:
       !-------------------------------------------------------------------------
@@ -748,7 +736,7 @@ contains
          end if
       end if
 
-      if ( DABS(E2IN-EMAX).GT.1D-10 .AND. NPOL.NE.0 ) EMAX = E2IN
+      if ( ABS(E2IN-EMAX).GT.1D-10 .AND. NPOL.NE.0 ) EMAX = E2IN
       !-------------------------------------------------------------------------
       if (OPT('GENPOT  ')) then
          rewind(3)
@@ -905,7 +893,7 @@ contains
       ! SUSC (END:   modifications by Manuel and Benedikt)             ! susc
 
       do IE = 1,IELAST
-         WEZ(IE) = -2.D0/PI*DEZ(IE)
+         WEZ(IE) = -2.0_dp/PI*DEZ(IE)
          if ( IE.LE.IESEMICORE ) WEZ(IE) = WEZ(IE)*FSEMICORE
       end do
       !-------------------------------------------------------------------------
@@ -1112,7 +1100,7 @@ contains
          !
          DO I1=1,NAEZ
             CALL CALCROTMAT(MMAXD,(KREL+KORBIT)*3,QMPHI(I1),QMTET(I1),&
-            0.0D0,DROTQ(1,1,I1),FACT,LMMAXD)
+            0.0_dp,DROTQ(1,1,I1),FACT,LMMAXD)
          END DO
       END IF
       !-------------------------------------------------------------------------
@@ -1348,7 +1336,7 @@ contains
             else                ! Full-potential
                !
                call CONVOL(IMT1,IRC1,NTCELL(IH),IMAXSH(LMPOT),ILM_MAP,IFUNM,LMPOT,&
-                  GSH,THETAS,THESME,0.d0,RFPI,RMESH(1,IH),PSHIFTLMR,PSHIFTR,  &
+                  GSH,THETAS,THESME,0.0_dp,RFPI,RMESH(1,IH),PSHIFTLMR,PSHIFTR,  &
                   LMSP)
                !
                do IR = 1,IRC1

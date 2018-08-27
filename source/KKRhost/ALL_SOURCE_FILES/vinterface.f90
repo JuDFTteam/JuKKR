@@ -113,9 +113,7 @@ subroutine vinterface(cmom, cminst, lpot, nspin, nlayers, natyp, v, zat, r, &
   real (kind=dp), dimension (naez) :: monopol
   real (kind=dp), dimension (lmpot, lmpot) :: avmad
   real (kind=dp), dimension (lmpot, naez) :: vinters
-  ! .. Intrinsic Functions ..
-  intrinsic :: atan, sqrt
-  ! .. External Functions/Subroutines
+
   external :: opt, test
 
   if (test('flow    ')) write (1337, *) '>>>>>> Vinterface'

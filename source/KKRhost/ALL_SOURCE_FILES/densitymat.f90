@@ -35,6 +35,7 @@ subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, &
   use :: mod_datatypes
   use global_variables
    use mod_overlap
+  use mod_cinit
   implicit none
 
   complex (kind=dp) :: czero, cone
@@ -62,7 +63,6 @@ subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, &
   integer :: ie
   complex (kind=dp) :: den(0:(lmaxd+1), iemxd*(1+krel)) ! Calculate density
                                                      ! matrix.
-  external :: cinit, overlap, rinit
 
   call cinit(mmaxd*mmaxd, denmatc2(1,1))
   ! 1a. Calculate overlap integral (inner product) with wavefunctions of

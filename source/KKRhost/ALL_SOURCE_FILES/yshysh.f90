@@ -28,9 +28,6 @@ subroutine yshysh(x, y, z, r, yrealy)
   ! .. Local Arrays ..
   real (kind=dp) :: cosmph(lmax2p), factor(50), plm(lmxp), sinmph(lmax2p)
   ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: dabs, dsign, dsqrt
-  ! ..
   factor(1) = 1.0d00
   do i = 2, 50
     xa = i - 1
@@ -47,22 +44,22 @@ subroutine yshysh(x, y, z, r, yrealy)
   go to 140
 
 110 if (psq-1.0d-10) 120, 120, 130
-120 r = dsqrt(rssq)
+120 r = sqrt(rssq)
   sinthe = 0.0d00
-  costhe = dsign(1.0d00, z)
+  costhe = sign(1.0d00, z)
   sinphi = 0.0d00
   cosphi = 1.0d00
   go to 140
 
-130 r = dsqrt(rssq)
-  p = dsqrt(psq)
+130 r = sqrt(rssq)
+  p = sqrt(psq)
   sinthe = p/r
   costhe = z/r
   sinphi = y/p
   cosphi = x/p
 
-140 xa = dabs(costhe)
-  ya = dabs(sinthe)
+140 xa = abs(costhe)
+  ya = abs(sinthe)
   ! write(6,*) costhe,sinthe
 
   if (xa-1.0d-08) 150, 150, 230

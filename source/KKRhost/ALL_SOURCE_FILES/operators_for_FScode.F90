@@ -30,7 +30,7 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   use mod_normcoeff_so
   use mod_normcoeff_so_spinflux
   use mod_normcoeff_so_torq
-  use mod_rotatematrix
+  use mod_rotatespinframe, only: rotatematrix
 
   implicit none
 

@@ -62,7 +62,6 @@ subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, &
   real (kind=dp) :: bc(0:npemax), cm(npemax, npemax), cmi(npemax, npemax), dix
   real (kind=dp) :: gam(2), gpm, hbs, rpwgpm, rr, sk(2), sk1, sk2, tz, &
     vc(0:npemax), x
-  complex (kind=dp) :: cjlz
 
   complex (kind=dp) :: detd, dy(ncfmax), efac, fy(ncfmax), &
     pc(2, 2, -npemax:mpsmax)

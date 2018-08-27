@@ -27,7 +27,8 @@ SUBROUTINE rotgll(gmatll,natomimp,ijtabsym,ijtabsh,  &
 ! **********************************************************************
 use mod_mympi, only: myrank, master
 Use mod_datatypes, Only: dp, sp
-   use mod_changerep
+use mod_changerep
+  use mod_cmatstr
 
 IMPLICIT NONE
 !     ..
@@ -56,9 +57,6 @@ INTEGER :: lm1,lm2,nlin, ilm, jlm
 CHARACTER (LEN=1) :: cnt
 CHARACTER (LEN=4) :: str4i,str4j
 CHARACTER (LEN=18) :: str18
-!     ..
-!     .. External Subroutines
-EXTERNAL changerep,cmatstr,zgemm,opt
 !     ..
 !     .. External Functions
 LOGICAL :: test,opt
@@ -123,7 +121,7 @@ IF ( test('Gmatij  ') ) THEN
       WRITE(str4j,'(I4)') jq
       str18 = '   i ='//str4i(1:4)//' j ='//str4j(1:4)
       IF (krel == 0) THEN
-        CALL cmatstr(str18,18,gll(1,1,iq,jq),lmmaxd,lmmaxd, 0,0,0,1D-8,6)
+        CALL cmatstr(str18,18,gll(1,1,iq,jq),lmmaxd,lmmaxd, 0,0,0,1.0e-8_dp,6)
       ELSE
         CALL changerep(gll(1,1,iq,jq),'REL>RLM',tpg,lmmaxd,  &
             lmmaxd,rc,crel,rrel,str18,18)

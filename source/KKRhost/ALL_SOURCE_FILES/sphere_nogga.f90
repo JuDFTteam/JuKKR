@@ -30,8 +30,6 @@ subroutine sphere_nogga(lmax, yr, wtyr, rij, ijd)
   real (kind=dp) :: wght
   real (kind=dp) :: r, r1, r2, r3
   real (kind=dp), dimension (1000) :: y
-  ! .. External Subroutines
-  external :: ymy
 
   write (1337, *) ' SPHERE : read LEBEDEV mesh'
   if (ijd>1000) stop ' SPHERE '

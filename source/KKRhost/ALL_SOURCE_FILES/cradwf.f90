@@ -56,10 +56,7 @@ subroutine cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, sl, pz, fz, &
   real (kind=dp) :: dror(irmd)
 
 
-  external :: beshan, irwsol, regsol
   ! ---> calculate regular wavefunctions
-
-  intrinsic :: real
 
   irc1 = ircut(ipan)
   do ir = 2, irc1

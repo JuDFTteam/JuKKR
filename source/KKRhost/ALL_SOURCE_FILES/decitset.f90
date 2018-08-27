@@ -53,7 +53,7 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
   logical :: vacflag(2)
   ! ..
   ! .. Local scalars ..
-  integer :: ihost, i, ll, mm, lngstring, nqhost, ilhost
+  integer :: ihost, i, ll, mm, nqhost, ilhost
   integer :: nhost
   integer :: nq, nt, iqoff, itoff, ie, ih, iqh, ioq, info
   integer :: ipot, i1, ispin, nsra, lm1, lm2, irc1, iref
@@ -64,7 +64,6 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
   ! ..
   real (kind=dp) :: efermi, rirc
   complex (kind=dp) :: eryd, carg, cfctor
-  logical :: test
   character (len=40) :: filehost
   character (len=10) :: solver
   ! ..
@@ -94,13 +93,8 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
   allocatable :: trefll, tmatll, dhmat
   allocatable :: dtrefll, alpharef, dalpharef ! LLY
   ! ..
-  ! .. External subroutines
-  external :: calctref13, changerep, cinit, cmatstr, decipotbas, decipothead, &
-    decitmat, zaxpy, zcopy, zgetrf, zgetri
-  ! ..
-  ! .. External Functions ..
-  external :: lngstring, test
-  ! ..
+  ! .. External Functions
+  logical, external :: test
   ! .. Data statements
   data chhost/'LEFT ', 'RIGHT'/
   data txts/'spin   UP', 'spin DOWN'/

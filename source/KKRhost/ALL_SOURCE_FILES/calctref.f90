@@ -1,4 +1,4 @@
-module mod_calctref
+module mod_calctref13
 
 contains
 
@@ -47,6 +47,7 @@ subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, &
 
   use :: mod_datatypes, only: dp
    use mod_beshan
+  use mod_cinit
   implicit none
   ! ..
   ! .. Scalar arguments
@@ -83,12 +84,6 @@ subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, &
     bessyw1(0:lmaxdp1), bessyw2(0:lmaxdp1), hankws1(0:lmaxdp1), &
     hankws2(0:lmaxdp1), dbessjw1(0:lmaxdp1), dbessjw2(0:lmaxdp1), &
     dhankws1(0:lmaxdp1)
-  ! ..
-  ! .. Intrinsic functions
-  intrinsic :: sqrt
-  ! ..
-  ! .. External subroutines
-  external :: beshan, cinit
   ! ..
   ! .. Data statement
   data ci/(0e0_dp, 1e0_dp)/
@@ -161,4 +156,4 @@ subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, &
 
 end subroutine calctref13
 
-end module mod_calctref
+end module mod_calctref13

@@ -51,6 +51,7 @@ SUBROUTINE rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin, &    ! Added IRMIN
   use global_variables
    use mod_rhoin
    use mod_rhoout
+  use mod_csimpk
       IMPLICIT NONE
 !..
 !.. Scalar Arguments ..
@@ -84,12 +85,6 @@ SUBROUTINE rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin, &    ! Added IRMIN
 !.. External Functions ..
       LOGICAL OPT                          ! qdos
       EXTERNAL OPT                         ! qdos
-!..
-!.. External Subroutines ..
-      EXTERNAL CSIMPK,RHOIN,RHOOUT
-!..
-!.. Intrinsic Functions ..
-      INTRINSIC DBLE
 !..
       real (kind=dp) PI
       PI = 4.D0*DATAN(1.D0)

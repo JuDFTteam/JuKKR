@@ -17,9 +17,10 @@ contains
 subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck)
 
   use :: constants
-  use :: profiling
+  use :: mod_profiling
   use :: global_variables
   use :: mod_datatypes, only: dp
+   use mod_cinit
 
   implicit none
 
@@ -53,10 +54,6 @@ subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck)
   complex (kind=dp), dimension (ndim, ndim) :: aa, alfa, bb, beta, cc, cunit, &
     eps, tempin
   complex (kind=dp), dimension (ndim, ndim) :: tempout, y1, y2
-  ! .. External Subroutines ..
-  external :: cinit, zaxpy, zcopy, zgemm, zgetrf, zgetrs
-  ! .. Intrinsic Functions ..
-  intrinsic :: real, aimag
   ! ..
 
   call cinit(ndim*ndim, cunit)

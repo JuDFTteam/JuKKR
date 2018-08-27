@@ -28,12 +28,6 @@ subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
   ! .. Local Arrays ..
   complex (kind=dp) :: hl(6)
   ! ..
-  ! .. External Subroutines ..
-  external :: hankel, intin, intout
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: abs, atan, cmplx, dsqrt, exp, log, max0, min0, real, sqrt
-  ! ..
   pi = 4.d0*atan(1.d0)
   zz = z + z
   cvlight = 274.0720442d0
@@ -76,9 +70,9 @@ subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
         ! --->   single site  boundary condition
         vme = -e
         if (nsra==1) then
-          cappai = cmplx(0.d0, dsqrt(vme), kind=dp)
+          cappai = cmplx(0.d0, sqrt(vme), kind=dp)
         else
-          cappai = cmplx(0.d0, dsqrt((1.d0-vme/cvlight/cvlight)*vme), kind=dp)
+          cappai = cmplx(0.d0, sqrt((1.d0-vme/cvlight/cvlight)*vme), kind=dp)
         end if
         arg = cappai*rn
         call hankel(hl, l+2, arg)

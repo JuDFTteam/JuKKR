@@ -44,24 +44,13 @@ subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm, ipan1, &
   real (kind=dp) :: cleb(*), rho2ns(irmd, lmpotd), thetas(irid, nfund)
   integer :: icleb(ncleb, 4), ifunm(*), lmsp(*)
   ! ..
-  ! .. External Subroutines ..
   complex (kind=dp) :: cltdf, cone, czero
   real (kind=dp) :: c0ll
   integer :: i, ifun, ir, j, l1, lm1, lm2, lm3, m1
   ! ..
-  ! .. Intrinsic Functions ..
   complex (kind=dp) :: wr(lmmaxd, lmmaxd, irmind:irmd), &
     wr2(lmmaxd, lmmaxd, irmind:irmd)
   ! ..
-  ! .. Save statement ..
-  external :: zgemm
-  ! ..
-  ! .. Data statements ..
-  intrinsic :: atan, aimag, sqrt
-  ! ..
-
-  save
-  ! C0LL = 1/sqrt(4*pi)
 
   data czero/(0.0e0_dp, 0.0e0_dp)/
   data cone/(1.0e0_dp, 0.0e0_dp)/

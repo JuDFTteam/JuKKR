@@ -1,4 +1,4 @@
-module mod_gfree
+module mod_gfree13
 
 contains
 
@@ -55,9 +55,6 @@ subroutine gfree13(rdiff, e0, gmll, dgmll, cleb, icleb, loflm, iend)
   integer :: lf((lmaxd*2+1)**2)
   ! ..
   ! -----------------------------------------------------------------------
-  external :: beshan, ymy
-
-  intrinsic :: atan, sqrt
   pi = 4.e0_dp*atan(1.e0_dp)
   fpi = 4.e0_dp*pi
   rfpi = sqrt(fpi)
@@ -112,4 +109,4 @@ subroutine gfree13(rdiff, e0, gmll, dgmll, cleb, icleb, loflm, iend)
   ! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
 end subroutine gfree13
 
-end module mod_gfree
+end module mod_gfree13

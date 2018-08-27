@@ -3,7 +3,7 @@ module mod_drvrho
 contains
 
 subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
-  eryd, we, ielast, gmatll, vt, bt, r, drdi, r2drdi, zat, jws, ishift, solver, &
+  eryd, we, ielast, gmatll, vt, bt, r, drdi, r2drdi, zat_in, jws_in, ishift, solver, &
   soctl, ctl, qmtet, qmphi, itermvdir, mvevil, mvevilef, lmmaxd, lmaxd, irmd, &
   lmpotd, iemxd, nmvecmax, i1, nqdos) ! qdos ruess
   ! ********************************************************************
@@ -16,13 +16,15 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   ! ********************************************************************
   use :: mod_types, only: t_tgmat
   use :: mod_datatypes, only: dp
-  use mod__amemagvec
-   use mod_calccgc
-   use mod_calcgf
-   use mod_calcmvec
-   use mod_ssite
-   use mod_scfchrdns
-   use mod_ikmlin
+  use mod_amemagvec
+  use mod_calccgc
+  use mod_calcgf
+  use mod_calcmvec
+  use mod_ssite
+  use mod_scfchrdns
+  use mod_ikmlin
+  use mod_rinit
+  use mod_cinit
   implicit none
 
   ! PARAMETER definitions
@@ -42,7 +44,7 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
 
   ! Dummy arguments
   integer :: lmaxd, lmmaxd, irmd, ielast
-  integer :: zat(ntmax), jws(nmmax), ishift
+  integer :: zat_in, zat(ntmax), jws_in, jws(nmmax), ishift
   integer :: lmpotd, iemxd, i1
   logical :: ldorhoef
   complex (kind=dp) :: we, eryd
@@ -121,13 +123,6 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
   complex (kind=dp) :: mezj(nkmmax, nkmmax, ntmax, nmvecmax), &
     mezz(nkmmax, nkmmax, ntmax, nmvecmax)
 
-  ! ITERMDIR
-  ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-  ! ..
-  ! .. External Subroutines ..
-  external :: amemagvec, calccgc, calcgf, calcmvec, cinit, ikmlin, rinit, &
-    scfchrdns, ssite, zcopy, zgemm
-
   data icall/0/
 
   save :: icall, ikm1lin, ikm2lin, gdia, gmdia, goff, lopt, nlq, nkmq, iqat, &
@@ -137,6 +132,8 @@ subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, &
     splitss, txtl, igrid, iepath, nepath
 
   icall = icall + 1
+  zat(ntmax) = zat_in
+  jws(nmmax) = jws_in
 
   ! =======================================================================
   ! initialise relativistic and dummy variables and SAVE them

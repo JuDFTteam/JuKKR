@@ -34,13 +34,12 @@ subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, &
   real (kind=dp) :: etotldau
   real (kind=dp) :: dble
   integer :: iatyp, ipot, is, ispin, l
-  logical :: test
   character (len=4) :: textl(0:6)
   character (len=5) :: textns
   character (len=13) :: texts(3)
 
+  logical :: test
   external :: test
-
 
   data textl/' s =', ' p =', ' d =', ' f =', ' g =', ' h =', ' i ='/
   data texts/' spin down   ', ' spin  up    ', ' paramagnetic'/

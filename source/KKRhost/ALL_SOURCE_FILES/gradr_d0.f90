@@ -40,9 +40,7 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   ! ..
   ! .. Save statement ..
   save :: ndvpt, igl, igh, imj, ibh, ica, icg, ivn, ipw, ipg, ivg, ip9, igd, &
-    ixlf,
-
-  iex, xlf, iwr
+    ixlf,iex, xlf, iwr
   ! ..
   ! .. Data statements ..
   ! .....-----------------------------------------------------------------
@@ -135,8 +133,8 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   ! ..
 
   ! .....-----------------------------------------------------------------
-  if ((iwr==1) .and. (t_inc%i_write>0)) write (1337, fmt=9, igd, ixlf, iex, &
-    xlf='', 14 i2, f10.4) ipw, ipg, ivg, ip9, igd, ixlf, iex, xlf
+  !if ((iwr==1) .and. (t_inc%i_write>0)) write (1337, fmt=9, igd, ixlf, iex, &
+  !  xlf='', 14 i2, f10.4) ipw, ipg, ivg, ip9, igd, ixlf, iex, xlf
   iwr = 0
 
   ist = ist1

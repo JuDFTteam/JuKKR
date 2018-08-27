@@ -15,7 +15,7 @@
 program kkrcode
 
   use Constants
-  use Profiling
+  use mod_Profiling
   use mod_main0
   use mod_main1a
   use mod_main1b
@@ -38,7 +38,6 @@ program kkrcode
 #else
   use mod_mympi, only: mympi_init, myrank, nranks, master, MPIatom, MPIadapt
   use mod_save_wavefun, only: t_wavefunctions
-  use godfrin, only: t_godfrin                       ! GODFRIN Flaviano
 #endif
 
 #ifdef CPP_MPI

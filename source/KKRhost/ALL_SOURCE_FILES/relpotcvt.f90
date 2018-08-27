@@ -4,7 +4,6 @@ contains
 
 subroutine relpotcvt(icall, vm2z, zin, rin, drdiin, ircut, vtrel, btrel, zrel, &
   rmrel, jwsrel, drdirel, r2drdirel, irshift, ipand, irmd, npotd, natypd)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! * driving routine to convert the TB-KKR potential from the non-    *
@@ -30,6 +29,8 @@ subroutine relpotcvt(icall, vm2z, zin, rin, drdiin, ircut, vtrel, btrel, zrel, &
   ! *                                                                  *
   ! ********************************************************************
 
+  use :: mod_datatypes, only: dp
+  use mod_rinit
   implicit none
 
   ! PARAMETER definitions
@@ -53,12 +54,6 @@ subroutine relpotcvt(icall, vm2z, zin, rin, drdiin, ircut, vtrel, btrel, zrel, &
   ! Local scalars
   real (kind=dp) :: vdn, vup
   integer :: it, ir, ip, ipot, ishift, jr
-
-  ! Intrinsic Functions
-  intrinsic :: nint
-
-  ! External Subroutines
-  external :: rinit
 
   ! ------------------------------------------------------- INITIALISATION
   if (icall==1) then

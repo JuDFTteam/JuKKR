@@ -46,13 +46,13 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
       use mod_rhoqtools, only: rhoq_find_kmask, rhoq_saveG, rhoq_write_tau0, rhoq_read_mu0_scoef
 
    use global_variables
-   use Constants
-   use Profiling
+   use constants
+   use mod_profiling
       Use mod_datatypes, Only: dp
    use mod_decimate
    use mod_dlke0
    use mod_inversion
-   use mod_gtdyson
+   use mod_cinit
 
    implicit none
    ! .. Input variables
@@ -131,13 +131,6 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    integer, dimension(0:nranks-1) :: ntot_pT, ioff_pT
 #endif
    integer :: k_start, k_end
-   ! ..
-   logical :: TEST,OPT
-   ! .. External subroutines ..
-   external :: CINIT,DLKE0,OPT,TEST,GTDYSON
-   ! .. Intrinsic functions ..
-   intrinsic :: ATAN,EXP
-   !     ..
 !#ifdef CPP_MPI
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NSYMAXD) :: WORK
    integer :: IERR,IWORK
@@ -148,6 +141,8 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    real (kind=dp), allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts
    integer, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
    integer :: mythread
+
+   logical, external :: test, opt
 
    !      NDIM=LMGF0D*NAEZ
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -779,8 +774,9 @@ subroutine GTDYSON(GTMAT,GMAT,NDIM,LMGF0D,NGD)
    ! .. Local variables
    integer :: I,INFO
    integer, dimension(NGD) :: IPVT
-   ! .. External subroutines
-   external :: ZGETRF,ZGETRS
+   ! ..
+   logical :: TEST,OPT
+   external :: OPT,TEST
    !
    do I = 1,NDIM
       GTMAT(I,I) = CONE + GTMAT(I,I) ! GTMAT= 1 - G * T

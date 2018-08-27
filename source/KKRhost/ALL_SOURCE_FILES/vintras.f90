@@ -109,10 +109,6 @@ subroutine vintras(cmom, cminst, lmax, nspin, nstart, nend, rho2ns, v, r, &
   real (kind=dp), dimension (irmd) :: v2
   real (kind=dp), dimension (irmd) :: vint1
   real (kind=dp), dimension (irmd) :: vint2
-  ! .. External Subroutines ..
-  external :: sinwk, soutk
-  ! .. Intrinsic Functions ..
-  intrinsic :: atan, real
   ! ..
   do iatyp = nstart, nend
     if (kshape/=0) then

@@ -11,14 +11,14 @@
 !-------------------------------------------------------------------------------
 module MOD_MAIN1A
 
-   use Profiling
+   use mod_Profiling
    use Constants
    use global_variables
    Use mod_datatypes, Only: dp
    use mod_tmatnewsolver, only: tmat_newsolver
 
    use mod_tbref
-   use mod_opendafile
+   use mod_getscratch, only: opendafile
    use mod_interpolate_poten
    use mod_initldau
    use mod_calctmat
@@ -67,8 +67,6 @@ contains
       integer :: ISPIN
       integer :: ITMPDIR
       character(len=80) :: TMPDIR
-      logical :: OPT
-      logical :: TEST
       logical :: LREFSYS
       integer :: LRECTMT
       integer :: LRECTRA
@@ -86,14 +84,9 @@ contains
 #endif
       integer :: i1_start, i1_end, ierr,i_stat,i_all
 
-      !-------------------------------------------------------------------------
-      !     .. External Subroutines ..
-      !-------------------------------------------------------------------------
-      external :: TBREF,CALCTMAT,OPT
-      !-------------------------------------------------------------------------
-      !     .. Intrinsic Functions ..
-      !-------------------------------------------------------------------------
-      intrinsic :: ATAN,MOD
+      logical :: OPT
+      logical :: TEST
+      external :: OPT, TEST
       !     ..
       !data TOLRDIF /1.5D0/ ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
       !data LLY /0/

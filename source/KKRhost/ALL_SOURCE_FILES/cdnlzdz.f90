@@ -17,9 +17,6 @@ function cdnlzdz(l, z, mode)
   complex (kind=dp) :: z
   complex (kind=dp) :: cdnlzdz
 
-  ! Local variables
-  complex (kind=dp) :: cnlz
-
   if (mode==1) then
 
     if (l==0) then

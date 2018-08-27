@@ -2,7 +2,7 @@ module mod_core
 
 contains
 
-subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
+subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, zat, nucleus, r, r2drdi, &
   drdi, jws, imt, rhochr, rhospn, ecortab, gcor, fcor, ecor, szcor, kapcor, &
   mm05cor, nkpcor, ikmcor, izero, ncxray, lcxray, itxray, bcor, bcors, sdia, &
   smdia, soff, smoff, qdia, qoff, qmdia, qmoff, nkmmax, nmemax, ismqhfi, &
@@ -63,6 +63,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
   use mod_ikapmue
   use mod_rintsimp
   use mod_rnuctab
+  use mod_rinit
   implicit none
 
 
@@ -84,7 +85,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     vt(nrmax, ntmax)
   integer :: ikmcor(ncstmax, 2), imt(ntmax), izero(ncstmax), jws(nmmax), &
     kapcor(ncstmax), lcxray(ntmax), mm05cor(ncstmax), ncxray(ntmax), &
-    nkpcor(ncstmax), z(ntmax), ncort(ntmax)
+    nkpcor(ncstmax), zat(ntmax), ncort(ntmax)
 
   ! Local variables
   real (kind=dp) :: aux, bb(nrmax*2), bhf(2, 2), bhf1(2, 2), bhf2(2, 2), bsh, &
@@ -98,15 +99,12 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     split2(nmemax, ntmax), split3(nmemax, ntmax), sz, val, var(4), varnew(4), &
     vartab(4, 20), vv(nrmax*2), vz, w, wp(2, 2, nrmax*2), wq(2, 2, nrmax*2)
   logical :: check, ferro, scaleb, suppressb, bndstachk
-  real (kind=dp) :: dble, dsign
   integer :: i, ic, ic1, ic2, icst, ie, iflag, ii, il, ilc, ilshell, im, imin, &
     in, info, ipiv(4), ish, istart, it, iter, iv, j, jlim, jtop, jv, k, &
     kap(2), kap1, kap2, kc, l, lcp1, lll, loop, lqntab(nlshellmax), muem05, n, &
     nlshell, nmatch, nn, node, nqn, nqntab(nlshellmax), nrc, nsh, nsol, nvar, &
     nzero, s, t
   integer :: iabs
-  integer :: ikapmue
-  real (kind=dp) :: rnuctab
   character (len=10) :: txtb(1:5)
   character (len=3) :: txtk(4)
   character (len=1) :: txtl(0:3)
@@ -153,7 +151,8 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
       dovrc(n) = drdic(n)/rc(n)
     end do
     if (nucleus/=0) then
-      rnuc = rnuctab(z(it))
+      stop 'something went very wrong!!!'
+      !rnuc = rnuctab(zat(it))
       in = 1
       do while (rc(in)<=rnuc)
         in = in + 1
@@ -200,16 +199,16 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     end do
 
     nlshell = 0
-    if (z(it)>2) nlshell = 1
-    if (z(it)>10) nlshell = 3
-    if (z(it)>18) nlshell = 5
-    if (z(it)>30) nlshell = 6
-    if (z(it)>36) nlshell = 8
-    if (z(it)>48) nlshell = 9
-    if (z(it)>54) nlshell = 11
-    if (z(it)>70) nlshell = 12
-    if (z(it)>80) nlshell = 13
-    if (z(it)>86) nlshell = 15
+    if (zat(it)>2) nlshell = 1
+    if (zat(it)>10) nlshell = 3
+    if (zat(it)>18) nlshell = 5
+    if (zat(it)>30) nlshell = 6
+    if (zat(it)>36) nlshell = 8
+    if (zat(it)>48) nlshell = 9
+    if (zat(it)>54) nlshell = 11
+    if (zat(it)>70) nlshell = 12
+    if (zat(it)>80) nlshell = 13
+    if (zat(it)>86) nlshell = 15
 
     if (ncort(it)/=0) then
       nlshell = 0
@@ -233,7 +232,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
     end if
 
     if (itxray==0 .and. iprint>0 .and. (t_inc%i_write>0)) write (1337, 180) &
-      itprt, z(it)
+      itprt, zat(it)
 
 
     ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -314,7 +313,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           ! FIND  E-LIMIT
           ! --------------------
           if (lll==0) then
-            elim = -2*dble(z(it)**2)/(1.5d0*nqn*nqn)
+            elim = -2*dble(zat(it)**2)/(1.5d0*nqn*nqn)
           else
             elim = vv(1) + lll/rc(1)**2
             do n = 2, nrc
@@ -323,7 +322,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
             end do
           end if
 
-          ec = -dble(z(it)**2)/(2.0d0*nqn*nqn)
+          ec = -dble(zat(it)**2)/(2.0d0*nqn*nqn)
 
           istart = 1
 110       continue
@@ -362,7 +361,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 130       continue
           call coredir(it, ctl(it,ilc), ec, l, mj, 'OUT', vv, bb, rc, drdic, &
             dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, &
-            cgd, cgmd, cgo, nrc, z(it), nucleus)
+            cgd, cgmd, cgo, nrc, zat(it), nucleus)
 
           node = 0
           do n = 2, nmatch
@@ -390,7 +389,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 
           call coredir(it, ctl(it,ilc), ec, l, mj, 'INW', vv, bb, rc, drdic, &
             dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, &
-            cgd, cgmd, cgo, nrc, z(it), nucleus)
+            cgd, cgmd, cgo, nrc, zat(it), nucleus)
 
           ! --------------------
           ! START VALUES FOR
@@ -490,7 +489,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 
             if (abs(var(iv))>1d-16) then
               if (abs(dv(iv)/var(iv))<tolvar) varnew(iv) = var(iv)* &
-                (1.0d0+dsign(dvstep*tolvar,dv(iv)))
+                (1.0d0+sign(dvstep*tolvar,dv(iv)))
             else if (ferro) then
               if (t_inc%i_write>0) write (1337, 270) ' VAR(', iv, &
                 ') = 0 for (T,N,L,K,M;S,NSOL) ', itprt, nqn, l, kap(s), &
@@ -520,13 +519,13 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           end do
           varnew(1) = var(1) + dv(1)*dvstep
           if (abs(dv(1)/var(1))<tolvar) varnew(1) = var(1)* &
-            (1.0d0+dsign(dvstep*tolvar,dv(1)))
+            (1.0d0+sign(dvstep*tolvar,dv(1)))
           call coredir(it, ctl(it,ilc), varnew(1), l, mj, 'OUT', vv, bb, rc, &
             drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
-            piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+            piw, qiw, cgd, cgmd, cgo, nrc, zat(it), nucleus)
           call coredir(it, ctl(it,ilc), varnew(1), l, mj, 'INW', vv, bb, rc, &
             drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
-            piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+            piw, qiw, cgd, cgmd, cgo, nrc, zat(it), nucleus)
 
           call coreerr(errnew, varnew, s, nsol, pow, qow, piw, qiw)
 
@@ -556,10 +555,10 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 
           call coredir(it, ctl(it,ilc), var(1), l, mj, 'OUT', vv, bb, rc, &
             drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
-            piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+            piw, qiw, cgd, cgmd, cgo, nrc, zat(it), nucleus)
           call coredir(it, ctl(it,ilc), var(1), l, mj, 'INW', vv, bb, rc, &
             drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
-            piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+            piw, qiw, cgd, cgmd, cgo, nrc, zat(it), nucleus)
 
           call coreerr(err, var, s, nsol, pow, qow, piw, qiw)
 
@@ -781,7 +780,7 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
           ! ------------------------------
 
           call corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, &
-            0.0d0, nzero, nrc)
+            0.0_dp, nzero, nrc)
           if (nucleus/=0) then
             call corehff(kap1, kap2, mj, s, nsol, bhf1, gck, fck, rc, drdic, &
               rnuc, jlim, nrc)
@@ -910,10 +909,10 @@ subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, z, nucleus, r, r2drdi, &
 150         continue
             call coredir(it, ctl(it,ilc), ecc, l, mj, 'OUT', vv, bb, rc, &
               drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
-              piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+              piw, qiw, cgd, cgmd, cgo, nrc, zat(it), nucleus)
             call coredir(it, ctl(it,ilc), ecc, l, mj, 'INW', vv, bb, rc, &
               drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, &
-              piw, qiw, cgd, cgmd, cgo, nrc, z(it), nucleus)
+              piw, qiw, cgd, cgmd, cgo, nrc, zat(it), nucleus)
 
             norm = pow(s, s)/piw(s, s)
             do n = nmatch, nzero

@@ -7,40 +7,38 @@ SUBROUTINE VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,NSTART,NEND,RHO2NS,VONS, &
                   IMAXSH,IFUNM,THETAS,LMSP)
 use global_variables
 
-   use mod_sphere_nogga
-   use mod_sphere_gga
-   use mod_vxcgga
-   use mod_vxclm
+use mod_DataTypes, only: dp
+use mod_sphere_nogga
+use mod_sphere_gga
+use mod_vxcgga
+use mod_vxclm
 IMPLICIT NONE
 !INCLUDE 'inc.p'
 ! Parameters ..
-INTEGER IJD!,LMPOTD,LMXSPD
-!PARAMETER (LMPOTD= (LPOTD+1)**2,LMXSPD= (2*LPOTD+1)**2)
-PARAMETER (IJD = 434)
+integer IJD!,LMPOTD,LMXSPD
+!parameter (LMPOTD= (LPOTD+1)**2,LMXSPD= (2*LPOTD+1)**2)
+parameter (IJD = 434)
 
 ! Scalar Arguments ..
-INTEGER KSHAPE,KTE,KXC,LPOT,NEND,NSPIN,NSTART
+integer KSHAPE,KTE,KXC,LPOT,NEND,NSPIN,NSTART
 
 ! Array Arguments ..
-DOUBLE PRECISION A(NATYPD),DRDI(IRMD,*),EXC(0:LPOTD,*),GSH(*), &
+real (kind=dp) A(NATYPD),DRDI(IRMD,*),EXC(0:LPOTD,*),GSH(*), &
                  R(IRMD,*),RHO2NS(IRMD,LMPOTD,NATYPD,*), &
                  THETAS(IRID,NFUND,*),VONS(IRMD,LMPOTD,*)
-INTEGER IFUNM(NATYPD,*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*), &
+integer IFUNM(NATYPD,*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*), &
         IRCUT(0:IPAND,*),IRWS(*),LMSP(NATYPD,*),NTCELL(*)
 
-! External Subroutines ..
-EXTERNAL DCOPY,SPHERE_GGA,SPHERE_NOGGA,VXCGGA,VXCLM
-
 ! Local Arrays ..
-DOUBLE PRECISION DYLMF1(IJD,LMPOTD),DYLMF2(IJD,LMPOTD), &
+real (kind=dp) DYLMF1(IJD,LMPOTD),DYLMF2(IJD,LMPOTD), &
                  DYLMT1(IJD,LMPOTD),DYLMT2(IJD,LMPOTD), &
                  DYLMTF(IJD,LMPOTD),RHO2IAT(IRMD,LMPOTD,2), &
                  RIJ(IJD,3),THET(IJD),WTYR(IJD,LMPOTD), &
                  YLM(IJD,LMPOTD),YR(IJD,LMPOTD)
-INTEGER IFUNMIAT(LMXSPD),LMSPIAT(LMXSPD)
+integer IFUNMIAT(LMXSPD),LMSPIAT(LMXSPD)
 
 ! Local Scalars ..
-INTEGER IATYP,ICELL,IPOT,LMX1
+integer IATYP,ICELL,IPOT,LMX1
 
 IF (KXC.LT.3) THEN
   CALL SPHERE_NOGGA(LPOT,YR,WTYR,RIJ,IJD)

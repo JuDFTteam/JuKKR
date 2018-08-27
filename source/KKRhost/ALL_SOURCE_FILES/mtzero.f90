@@ -17,6 +17,8 @@ subroutine mtzero(lmpot, natyp, conc, nspin, v, vbc, z, r, drdi, imt, ircut, &
   ! -----------------------------------------------------------------------
   use :: mod_datatypes, only: dp
   use global_variables
+  use mod_simp3
+  use mod_simpk
   implicit none
   ! ..
   ! .. Local Scalars ..
@@ -30,17 +32,12 @@ subroutine mtzero(lmpot, natyp, conc, nspin, v, vbc, z, r, drdi, imt, ircut, &
     lmsp(natypd, *), ntcell(*), nshell(0:nsheld)
   logical :: lsurf
   ! ..
-  ! .. External Subroutines ..
   real (kind=dp) :: fpi, rfpi, vav0, vol0, zzor
   integer :: icell, ifun, ih, imt1, ipan1, ipot, ir, irc1, irh, is, lm
   ! ..
-  ! .. Intrinsic Functions ..
   real (kind=dp) :: v1(irmd), v2(irmd), vav1(2), vol1(2)
-  ! ..
 
-  logical :: test, opt
-  external :: simp3, simpk, test
-
+  logical, external :: test, opt
 
   intrinsic :: atan, sqrt
 

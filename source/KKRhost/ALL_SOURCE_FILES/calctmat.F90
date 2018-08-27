@@ -40,9 +40,11 @@ use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,  &
     t_lloyd,init_tlloyd
 use mod_DataTypes
 use global_variables
-   use mod_pnstmat
-   use mod_cradwf
-   use mod_wfmesh
+use mod_pnstmat
+use mod_cradwf
+use mod_wfmesh
+use mod_regns, only: zgeinv1
+  use mod_cmatstr
 
 IMPLICIT NONE
 
@@ -108,9 +110,6 @@ integer :: ie_end, ie_num, ie_start
 !.. External Functions ..
 LOGICAL TEST
 EXTERNAL TEST
-!..
-!.. External Subroutines ..
-EXTERNAL CRADWF,PNSTMAT,WFMESH,CMATSTR,DRVRELTMAT,ZGEINV1,ZGEMM
 !..
 !.. Data Statements
 DATA TXTS /'spin   UP','spin DOWN'/
@@ -347,7 +346,7 @@ IF ( test('tmat    ') .AND. (t_inc%i_write>0)) THEN
   WRITE (1337,99001, advance='no') '-----> t matrix for atom: ',i1
   IF ( krel == 0 ) WRITE (1337,99002, advance='no') txts(ispin)
   WRITE (1337,99003) ', energy: ',eryd
-  CALL cmatstr(' ',1,tmat0,lmmaxd,lmmaxd, 2*krel+1,2*krel+1,0,1D-8,6)
+  CALL cmatstr(' ',1,tmat0,lmmaxd,lmmaxd, 2*krel+1,2*krel+1,0,1.0e-8_dp,6)
   WRITE (1337,*)
 endif
 ! ----------------------------------------------------------------------

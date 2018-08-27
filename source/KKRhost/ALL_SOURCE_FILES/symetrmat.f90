@@ -42,8 +42,6 @@ subroutine symetrmat(nsym, cpref, dsymll, symunitary, matq, iqs, matsym, &
   character (len=1) :: cnt
   complex (kind=dp) :: w1(lmmaxd, lmmaxd), ts(lmmaxd, lmmaxd)
   ! ..
-  external :: zcopy, zgemm
-  ! ..
 
   call zcopy(lmmaxd*lmmaxd, matq(1,1,iqs(1)), 1, ts, 1)
 

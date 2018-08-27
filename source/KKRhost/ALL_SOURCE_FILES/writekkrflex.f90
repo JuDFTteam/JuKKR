@@ -18,12 +18,13 @@ subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, kshape, &
   vbc, atomimp, hostimp, noq, zat, kaoez, conc, cmom, cminst, vinters, nemb, &
   naez)
 
-  use :: mod_types, only: t_tgmat
-  use :: mod_wunfiles, only: t_params, read_angles
-  use :: mod_version_info
-  use :: mod_md5sums
-  use :: global_variables
-  use :: mod_datatypes, only: dp
+  use mod_types, only: t_tgmat
+  use mod_wunfiles, only: t_params, read_angles
+  use mod_version_info
+  use mod_md5sums
+  use global_variables
+  use mod_datatypes, only: dp
+  use mod_rotatespinframe, only: rotatematrix
 
   implicit none
 

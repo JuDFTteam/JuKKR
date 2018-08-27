@@ -16,6 +16,7 @@ subroutine forcxc(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, alat, &
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
   use global_variables
+  use mod_simp3
   implicit none
   real (kind=dp) :: alat
   integer :: lmax, natref, nend, nspin, nstart
@@ -35,9 +36,6 @@ subroutine forcxc(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, alat, &
   ! .. Save statement ..
   real (kind=dp) :: f(3, natypd), flmh(-1:1, natypd), flmxc(-1:1, natypd), &
     p(natypd), v1(irmd)
-  ! ..
-  ! .. Intrinsic Functions ..
-  external :: simp3
   ! ..
 
   save :: pi

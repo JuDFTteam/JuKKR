@@ -23,14 +23,14 @@ subroutine fplaner(alpha, g, r)
   implicit none
   real (kind=dp) :: alpha, g(0:4), r
   integer :: l
-  real (kind=dp) :: derfc, lamda, er, ex, pi, pref, sqpi
+  real (kind=dp) :: lamda, er, ex, pi, pref, sqpi
 
   do l = 0, 4
     g(l) = 0.e0_dp
   end do
   pi = 4.e0_dp*atan(1.e0_dp)
   sqpi = sqrt(pi)
-  er = derfc(alpha)
+  er = erfc(alpha)
   ex = exp(-alpha*alpha)
   lamda = alpha/r
 

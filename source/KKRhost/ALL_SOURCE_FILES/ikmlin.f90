@@ -15,10 +15,9 @@ subroutine ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, &
   ! *  USED TO CALCULATE DOS ...                                       *
   ! *                                                                  *
   ! ********************************************************************
-  use :: mod_types, only: t_inc
-   use mod_ikapmue
+  use mod_types, only: t_inc
+  use mod_ikapmue
   implicit none
-
 
   ! Dummy arguments
   integer :: iprint, linmax, nl, nlmax, nmuemax
@@ -26,7 +25,6 @@ subroutine ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, &
 
   ! Local variables
   integer :: i, il, imue, k1, k2, kap(2), l, lin, muem05, nsol
-  integer :: ikapmue
 
   lin = 0
 

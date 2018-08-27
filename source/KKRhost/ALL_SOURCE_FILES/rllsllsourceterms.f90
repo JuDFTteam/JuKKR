@@ -15,7 +15,6 @@ subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, &
   use :: constants
   use :: mod_datatypes, only: dp
   use mod_beshank
-  use mod_beshank_smallcomp
 
   implicit none
 

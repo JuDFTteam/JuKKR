@@ -21,6 +21,7 @@ subroutine phicalc(iatom, lphi, visp, ipan, ircut, r, drdi, z, erefldau, phi, &
   use :: mod_datatypes
   use global_variables
    use mod_regsol
+  use mod_simpk
   implicit none
   real (kind=dp), parameter :: eps=1.0D-12
   real (kind=dp) :: cvlight

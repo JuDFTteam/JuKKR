@@ -4,7 +4,7 @@ contains
 
 real (kind=dp) function rnuctab(z)
   use :: mod_datatypes, only: dp
-  integer, intent (out) :: z
+  integer, intent (inout) :: z
 
   z = 0
   rnuctab = 0e0_dp

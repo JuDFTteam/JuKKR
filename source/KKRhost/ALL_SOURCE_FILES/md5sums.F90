@@ -4,7 +4,7 @@
 
 module mod_md5sums
 
-      Use mod_datatypes, Only: dp
+  Use mod_datatypes, Only: dp
   implicit none
 
   private

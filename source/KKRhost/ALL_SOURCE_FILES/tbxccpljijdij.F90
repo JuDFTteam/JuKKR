@@ -35,9 +35,9 @@ contains
       use mod_version_info
       use mod_md5sums
       use Constants
-      use Profiling
+      use mod_Profiling
       use mod_cmatmul
-      use mod_test
+      use mod_rotatespinframe, only: rotatematrix
 
       implicit none
 

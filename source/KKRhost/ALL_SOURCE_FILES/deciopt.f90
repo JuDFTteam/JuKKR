@@ -65,8 +65,6 @@ subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax, bravais, &
   complex (kind=dp) :: cfctor
   character (len=40) :: fileleft, fileright
   character (len=256) :: uio                               ! NCOLIO=256
-
-
   ! ..                                  ! ruess: for NEWSOSOL running option
   ! .. External Functions ..
   logical :: opt

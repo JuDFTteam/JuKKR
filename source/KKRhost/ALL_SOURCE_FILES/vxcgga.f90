@@ -41,58 +41,54 @@ SUBROUTINE VXCGGA(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,A, &
 !-----------------------------------------------------------------------
 !INCLUDE 'inc.p'
 ! Parameters ..
-!INTEGER LMPOTD
-!PARAMETER (LMPOTD= (LPOTD+1)**2)
-!INTEGER LMXSPD
-!PARAMETER (LMXSPD= (2*LPOTD+1)**2)
+!integer LMPOTD
+!parameter (LMPOTD= (LPOTD+1)**2)
+!integer LMXSPD
+!parameter (LMXSPD= (2*LPOTD+1)**2)
+use mod_datatypes, only: dp
 use global_variables
-   use mod_mkxcpe2
-   use mod_mkxcpe
-   use mod_gradrl
-   use mod_simpk
+use mod_mkxcpe2
+use mod_mkxcpe
+use mod_gradrl
+use mod_simpk
+  use mod_simp3
 implicit none
 
 ! Scalar Arguments ..
-DOUBLE PRECISION A
-INTEGER IATYP,IJEND,IPAN,IRWS,KSHAPE,KTE,KXC,LMAX,NSPIN
+real (kind=dp) A
+integer IATYP,IJEND,IPAN,IRWS,KSHAPE,KTE,KXC,LMAX,NSPIN
 
 ! Array Arguments ..
-DOUBLE PRECISION DRDI(IRMD),R(IRMD), &
+real (kind=dp) DRDI(IRMD),R(IRMD), &
                  DYLMF1(IJEND,LMPOTD),DYLMF2(IJEND,LMPOTD), &
                  DYLMT1(IJEND,LMPOTD),DYLMT2(IJEND,LMPOTD), &
                  DYLMTF(IJEND,LMPOTD),EXC(0:LPOTD,*),GSH(*), &
                  RHO2NS(IRMD,LMPOTD,2),THET(IJEND),WTYR(IJEND,*), &
                  THETAS(IRID,NFUND),V(IRMD,LMPOTD,2), &
                  YLM(IJEND,LMPOTD)
-INTEGER IFUNM(LMXSPD)
-INTEGER ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND), &
+integer IFUNM(LMXSPD)
+integer ILM(NGSHD,3),IMAXSH(0:LMPOTD),IRCUT(0:IPAND), &
         LMSP(LMXSPD)
 
 ! Local Scalars ..
-DOUBLE PRECISION CHGDEN,DX,ELMXC,FPI,R1,R2,RPOINT,SPIDEN,VLMXC, &
+real (kind=dp) CHGDEN,DX,ELMXC,FPI,R1,R2,RPOINT,SPIDEN,VLMXC, &
                  VXC1,VXC2,VXC3,ZERO,ZERO1
-INTEGER IFUN,IPAN1,IPOT,IR,IRC0,IRC1,IRH,IRS1,ISPIN,J,L,L1MAX,LM, &
+integer IFUN,IPAN1,IPOT,IR,IRC0,IRC1,IRH,IRS1,ISPIN,J,L,L1MAX,LM, &
         LM2,LMMAX,M,MESH,NSPIN2
 
 ! Local Arrays ..
-DOUBLE PRECISION DDRRL(IRMD,LMPOTD),DDRRUL(IRMD,LMPOTD), &
+real (kind=dp) DDRRL(IRMD,LMPOTD),DDRRUL(IRMD,LMPOTD), &
                  DRRL(IRMD,LMPOTD),DRRUL(IRMD,LMPOTD), &
                  ER(IRMD,0:LPOTD),ESTOR(IRMD,LMPOTD),EXCIJ(IJEND), &
                  RHOL(IRMD,2,LMPOTD),RHOLM(LMPOTD,2),VXC(IJEND,2), &
                  VXCR(2:3,2)
 
 ! External Functions ..
-DOUBLE PRECISION DDOT
-EXTERNAL DDOT
-
-! External Subroutines ..
-EXTERNAL GRADRL,MKXCPE,SIMP3,SIMPK,MKXCPE2
-
-! Intrinsic Functions ..
-INTRINSIC ABS,ATAN,MOD
+real (kind=dp) DDOT
+external DDOT
 
 ! Data statements ..
-DATA ZERO,ZERO1/0.d0,1.d-12/
+data ZERO,ZERO1/0.d0,1.d-12/
 
 WRITE (1337,FMT=*) ' GGA CALCULATION '
 FPI = 16.0D0*ATAN(1.0D0)

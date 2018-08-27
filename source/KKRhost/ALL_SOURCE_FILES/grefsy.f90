@@ -1,4 +1,4 @@
-module mod_grefsy
+module mod_grefsy13
 
 contains
 
@@ -35,9 +35,6 @@ subroutine grefsy13(gtmat, gmat, dgtde, lly_g0tr, ipvt, ndim, lly, lmgf0d, &
   ! ..
   ! .. LOCAL ARRAYS ..
   integer :: ipvt(ngd)
-  ! ..
-  ! .. EXTERNAL SUBROUTINES ..
-  external :: zgetrf, zgetrs
   ! ..
 
   ! GTMAT =  -g*t
@@ -113,4 +110,4 @@ subroutine grefsy(gtmat, gmat, ndim, lmgf0d, ngd)
 
 end subroutine grefsy
 
-end module mod_grefsy
+end module mod_grefsy13

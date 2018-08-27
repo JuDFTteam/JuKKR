@@ -1,4 +1,4 @@
-module mod_addvirtatoms14
+module mod_addvirtual14
 
 contains
 
@@ -27,7 +27,6 @@ subroutine addviratoms14(linterface, nvirt, naez, naezd, natypd, nemb, nembd, &
   integer :: kaoez(natypd, *), kaoezold(1, nemb+naezd)
   real (kind=dp) :: diff, rmaxclus, vec1(3), vec2(3, naclsd)
   integer :: nbr(3), nmax, nmaxz, n1, n2, n3, iq
-  external :: getclusnxyz
 
   ! local variables
   character (len=40) :: i25
@@ -393,4 +392,4 @@ subroutine inverse_d1(mat, n)
   if (info/=0) stop 'error allocating work arrays in inverse_d1 of addviratom'
 end subroutine inverse_d1
 
-end module mod_addvirtatoms14
+end module mod_addvirtual14

@@ -104,8 +104,6 @@ subroutine clsgen99(naez, rr, nr, rbasis, kaoez, z, cls, nacls, refpot, atom, &
   logical :: l2dim, clustcomp
 
   logical :: test, lspher
-  external :: dsort, clustcomp
-  intrinsic :: min, sqrt
 
   data epsshl/1.0d-4/
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -207,7 +205,8 @@ subroutine clsgen99(naez, rr, nr, rbasis, kaoez, z, cls, nacls, refpot, atom, &
 
               number = number + 1
               if (number>naclsd) then
-                write (6, *) 'ERROR: Dimension NACLSD in inc.cls too small', &
-                  number,
+                write (6, *) 'ERROR: Dimension NACLSD in inc.cls too small', number
+
+end subroutine clsgen99
 
 end module mod_clsgen99

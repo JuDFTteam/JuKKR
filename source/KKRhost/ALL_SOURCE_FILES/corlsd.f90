@@ -22,9 +22,6 @@ subroutine corlsd(rs, zta, ec, vcup, vcdn, ecrs, eczta, alfc)
   real (kind=dp) :: alfm, alfrsm, comm, ep, eprs, eu, eurs, f, fz, fzz, gam, &
     thrd, thrd4, z4
   ! ..
-  ! .. External Subroutines ..
-  external :: gcor91
-  ! ..
   ! .. Save statement ..
   save :: gam, fzz, thrd, thrd4
   ! ..

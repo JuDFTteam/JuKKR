@@ -9,7 +9,7 @@ subroutine rll_local_solutions(vll,tau,drpan2,cslc1,slc1sum, &
                          nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor, &
                          cmoderll,LBESSEL,use_sratrick1)
       Use mod_datatypes, Only: dp
-   use mod_svpart
+   use mod_sll_local_solutions, only: svpart
 implicit none
       integer :: ncheb                               ! number of chebyshev nodes
       integer :: lmsize                              ! lm-components * nspin
@@ -77,8 +77,6 @@ implicit none
 
       integer ipiv(0:ncheb,lmsize2)
       integer :: use_sratrick
-
-      external zgetrf,zgetrs
 
 if ( lmsize==1 ) then
   use_sratrick=0

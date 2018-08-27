@@ -27,6 +27,9 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
   use :: constants
   use :: mod_datatypes
    use mod_rclm
+  use mod_cmatstr
+   use mod_cinit
+   use mod_rinit
 
   implicit none
   ! .. Input variables

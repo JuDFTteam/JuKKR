@@ -11,7 +11,7 @@
 !-------------------------------------------------------------------------------
 module MOD_MAIN2
 
-   use Profiling
+   use mod_Profiling
    use Constants
    use global_variables
    Use mod_datatypes, Only: dp
@@ -39,6 +39,7 @@ module MOD_MAIN2
    use mod_rites
    use mod_writekkrflex
    use mod_vxcdrv
+  use mod_rinit
 
    implicit none
 
@@ -185,12 +186,6 @@ contains
       ! .. External Subroutines
       logical :: OPT
       logical :: TEST
-      external :: BRYDBM,CONVOL,DAXPY,DCOPY,ECOUB,EPATHTB,EPOTINB,ESPCB
-      external :: ETOTB1,FORCE,FORCEH,FORCXC,MDIRNEWANG,MIXSTR,MTZERO,OPT
-      external :: RELPOTCVT,RHOSYMM,RHOTOTB,RINIT,RITES,SCFITERANG
-      external :: TEST,VINTERFACE,VINTRAS,VMADELBLK,VXCDRV
-      ! .. Intrinsic Functions
-      intrinsic :: DABS,ATAN,DMIN1,DSIGN,SQRT,MAX,DBLE
 
 
       LMAXD1=LMAX+1
@@ -310,7 +305,7 @@ contains
          E2SHIFT = CHRGNT/DENEF
       end if
       !
-      E2SHIFT = DMIN1(DABS(E2SHIFT),0.05D0)*DSIGN(1.0D0,E2SHIFT)
+      E2SHIFT = MIN(ABS(E2SHIFT),0.05_dp)*SIGN(1.0_dp,E2SHIFT)
       EFOLD = EMAX
       CHRGOLD = CHRGNT
       if (TEST('no-neutr').OR.OPT('no-neutr')) then
@@ -331,7 +326,7 @@ contains
          if ( CHRGSEMICORE.lt.1D-10 ) CHRGSEMICORE = 1D-10
          !  Number of semicore bands
          I1 = NINT(CHRGSEMICORE)
-         FSEMICORE = DBLE(I1)/CHRGSEMICORE * FSOLD
+         FSEMICORE = real(I1, kind=dp)/CHRGSEMICORE * FSOLD
          write(1337,'(6X,"< SEMICORE > : ",/,21X,"charge found in semicore :",F10.6,/,21X,"new normalisation factor :",F20.16,/)')&
             CHRGSEMICORE,FSEMICORE
       end if
@@ -342,11 +337,11 @@ contains
       ! Divided by NAEZ because the weight of each atom has been already
       !     taken into account in 1c
       !-------------------------------------------------------------------------
-      write (1337,FMT=9030) EMAX,DENEF/DBLE(NAEZ)
-      write (6,FMT=9030) EMAX,DENEF/DBLE(NAEZ)
+      write (1337,FMT=9030) EMAX,DENEF/real(NAEZ, kind=dp)
+      write (6,FMT=9030) EMAX,DENEF/real(NAEZ, kind=dp)
       write(1337,'(79("+"),/)')
       !-------------------------------------------------------------------------
-      DF = 2.0D0/PI*E2SHIFT/DBLE(NSPIN)
+      DF = 2.0D0/PI*E2SHIFT/real(NSPIN, kind=dp)
       !-------------------------------------------------------------------------
       ! ISPIN LOOP
       !-------------------------------------------------------------------------
@@ -355,7 +350,7 @@ contains
          if (KTE.EQ.1) then
             do I1 = 1,NATYP
                IPOT = (I1-1)*NSPIN + ISPIN
-               ESPV(0,IPOT) = ESPV(0,IPOT) -EFOLD*CHRGNT/DBLE(NSPIN*NAEZ)
+               ESPV(0,IPOT) = ESPV(0,IPOT) -EFOLD*CHRGNT/real(NSPIN*NAEZ, kind=dp)
             end do
          end if                 ! (kte.eq.1)
          !----------------------------------------------------------------------
@@ -391,7 +386,7 @@ contains
          !
          FACT(0) = 1.0D0
          do I = 1,100
-            FACT(I) = FACT(I-1)*DBLE(I)
+            FACT(I) = FACT(I-1)*real(I, kind=dp)
          end do
          !----------------------------------------------------------------------
          if (.not.(OPT('DECIMATE'))) then
@@ -760,9 +755,9 @@ contains
       ! Final construction of the potentials (straight mixing)
       !-------------------------------------------------------------------------
       MIX = MIXING
-      if (TEST('alt mix ')) MIX = MIXING/DBLE(1+MOD(ITSCF,2))
+      if (TEST('alt mix ')) MIX = MIXING/real(1+MOD(ITSCF,2), kind=dp)
       if (TEST('spec mix')) then
-         MIX = MIXING/(1.0D0 + 1.0D+3 * ABS(CHRGNT)/DBLE(NAEZ*NSPIN))
+         MIX = MIXING/(1.0D0 + 1.0D+3 * ABS(CHRGNT)/real(NAEZ*NSPIN, kind=dp))
       endif
       write(1337,*) 'MIXSTR',MIX
       call MIXSTR(RMSAVQ,RMSAVM,INS,LPOT,LMPOT,0,NSHELL, &
@@ -854,7 +849,7 @@ contains
       !-------------------------------------------------------------------------
       ! CONVERGENCY TESTS
       !-------------------------------------------------------------------------
-      if ( OPT('SEARCHEF') .and. (DABS(E2SHIFT).LT.1D-8)) then
+      if ( OPT('SEARCHEF') .and. (ABS(E2SHIFT).LT.1D-8)) then
          t_inc%i_iteration = t_inc%N_iteration
          ICONT = 0
          goto 260
@@ -1018,7 +1013,7 @@ contains
                end do
             else                ! Full-potential
                call CONVOL(IMT1,IRC1,NTCELL(IH),IMAXSH(LMPOT),ILM_MAP,IFUNM,   &
-                  LMPOT,GSH,THETAS,THESME,0.d0,RFPI,RMESH(1,IH),PSHIFTLMR, &
+                  LMPOT,GSH,THETAS,THESME,0.0_dp,RFPI,RMESH(1,IH),PSHIFTLMR, &
                   PSHIFTR,LMSP)
                !
                do IR = 1,IRC1

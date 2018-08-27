@@ -4,6 +4,7 @@ contains
 
 subroutine setfactl(factl, lmax, krel, lmmaxd)
   use :: mod_datatypes, only: dp
+   use mod_cinit
   implicit none
   ! ..
   ! .. Parameters
@@ -18,9 +19,6 @@ subroutine setfactl(factl, lmax, krel, lmmaxd)
   integer :: ii1, ii2, l1, l2, lm1, lm2, mm1, mm2, imu1, imu2
   integer :: kap1(2), kap2(2), nsol1, nsol2
   real (kind=dp) :: mu1, mu2, mu1m05, mu2m05
-  ! ..
-  ! .. Externals
-  external :: cinit
   ! ..
   call cinit(lmmaxd*lmmaxd, factl)
 

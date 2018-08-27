@@ -69,9 +69,7 @@ subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
   integer, intent (out) :: nshlr   ! < Shells in real space
   ! ..
   ! .. Local scalars ..
-  integer :: idint
   integer :: i, k, l, m, n, n1, ng, nr, nsh, nshl, numg, numgh, numr, numrh
-  real (kind=dp) :: dble
   real (kind=dp) :: a, absgm, absrm, ag, ar, b, c, da, db, gx, gy, gz, pi, rx, &
     ry, rz, vmin
   ! ..
@@ -83,12 +81,6 @@ subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
   real (kind=dp), dimension (3, 3) :: bg
   real (kind=dp), dimension (3, 3) :: br
   real (kind=dp), dimension (4, nmaxd) :: cj
-  ! ..
-  ! .. Intrinsic functions ..
-  intrinsic :: abs, atan, max, mod, sqrt
-  ! ..
-  ! .. External subroutines ..
-  external :: ioinput
   ! ----------------------------------------------------------------------------
   pi = 4.0e0_dp*atan(1.0e0_dp)
   ! ----------------------------------------------------------------------------
@@ -137,8 +129,8 @@ subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
   absgm = max(absg(1), absg(2), absg(3))
   absrm = 2.0e0_dp*pi/absrm
   absgm = 2.0e0_dp*pi/absgm
-  numr = 2*(idint(rmax/absgm)+1) + 1
-  numg = 2*(idint(gmax/absrm)+1) + 1
+  numr = 2*(int(rmax/absgm)+1) + 1
+  numg = 2*(int(gmax/absrm)+1) + 1
   numrh = numr/2 + 1
   numgh = numg/2 + 1
 
@@ -149,11 +141,11 @@ subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
   nr = 0
   ! ----------------------------------------------------------------------------
   do l = 1, numr
-    a = dble(l-numrh)
+    a = real(l-numrh, kind=dp)
     do m = 1, numr
-      b = dble(m-numrh)
+      b = real(m-numrh, kind=dp)
       do n = 1, numr
-        c = dble(n-numrh)
+        c = real(n-numrh, kind=dp)
         ! -------------------------------------------------------------------
         rx = a*br(1, 1) + b*br(1, 2) + c*br(1, 3)
         ry = a*br(2, 1) + b*br(2, 2) + c*br(2, 3)
@@ -237,11 +229,11 @@ subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
   ng = 0
   ! ----------------------------------------------------------------------------
   do l = 1, numg
-    a = dble(l-numgh)
+    a = real(l-numgh, kind=dp)
     do m = 1, numg
-      b = dble(m-numgh)
+      b = real(m-numgh, kind=dp)
       do n = 1, numg
-        c = dble(n-numgh)
+        c = real(n-numgh, kind=dp)
         ! -------------------------------------------------------------------
         gx = a*bg(1, 1) + b*bg(1, 2) + c*bg(1, 3)
         gy = a*bg(2, 1) + b*bg(2, 2) + c*bg(2, 3)

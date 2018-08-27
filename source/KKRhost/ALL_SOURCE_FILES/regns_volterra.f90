@@ -55,6 +55,10 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   ! -----------------------------------------------------------------------
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
+  use mod_regns, only: zgeinv1
+  use mod_csout
+  use mod_wfint0
+  use mod_wfint
   implicit none
   ! .. Scalar Arguments ..
   complex (kind=dp) :: ek
@@ -79,9 +83,6 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   complex (kind=dp) :: pns0(lmmaxd, lmmaxd, irmind:irmd, 2), &
     pns1(lmmaxd, lmmaxd, irmind:irmd)
   integer :: ipiv(lmmaxd)
-  ! ..
-  ! .. External Subroutines ..
-  external :: csinwd, csout, wfint, wfint0, zgeinv1
   ! ..
   ! .. Parameters ..
   complex (kind=dp) :: cone
@@ -311,43 +312,5 @@ subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, &
   ! endif
 end subroutine regns
 ! ************************************************************************
-
-subroutine zgeinv1(a, u, aux, ipiv, dim)
-  ! ************************************************************************
-  ! - inverts a general complex (kind=dp) matrix A,
-  ! - the result is return in U,
-  ! - input matrix A is returned unchanged,
-  ! - AUX is a auxiliary matrix,
-  ! - A,U and AUX are of dimension (DIM,DIM),
-  ! ------------------------------------------------------------------------
-
-  real, intent (inout) :: a
-  complex (kind=dp) :: a(dim, *, intent(out) :: u(dim,*)
-  complex(kind=dp) :: a(dim,*,intent(in out):: aux(dim,*)
-  integer,intent(inout):: ipiv(*)
-  integer,intent(in):: dim
-
-  complex(kind=dp):: a(dim,*)
-
-  ! .. PARAMETER
-
-  complex(kind=dp):: cone
-  real,parameter :: cone=(1.d0,0.d0)
-
-  integer :: lm1,info
-  external :: zcopy,zgetrs,zgetrf
-  ! ------------------------------------------------------------------------
-  call cinit(dim*dim,u)
-  do lm1=1,dim
-    u(lm1,lm1)=cone
-  end do
-end do
-
-call zcopy(dim*dim,a,1,aux,1)
-call zgetrf(dim,dim,aux,dim,ipiv,info)
-call zgetrs('N',dim,dim,aux,dim,ipiv,u,dim,info)
-
-return
-end subroutine zgeinv1
 
 end module mod_regns_volterra

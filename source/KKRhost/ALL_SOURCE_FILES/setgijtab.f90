@@ -34,11 +34,8 @@ subroutine setgijtab(linterface, icc, naez, iqat, rbasis, bravais, natomimp, &
 
   ! Local scalars
   integer :: i, ido, ii, j, jj, nn
-  logical :: opt
-
-  ! External subroutines
-  external :: gijcond, gijxcpl, opt
-
+  ! external funcitons
+  logical, external :: opt
 
   ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
   write (1337, '(79("="),/,15X,A)') &

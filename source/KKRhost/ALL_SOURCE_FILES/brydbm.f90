@@ -34,13 +34,13 @@ subroutine brydbm(visp, v, vins, vspsme, vspsmo, ins, lmpot, r, drdi, alpha, &
   ! b. drittler , aug. 1988
   ! *********************************************************************
 
-  use :: mod_types
-  use :: mod_datatypes, only: dp
+  use mod_types, only: t_inc
+  use mod_datatypes, only: dp
   use global_variables
-   use mod_brysh1
-   use mod_brysh2
-   use mod_brysh3
-   use mod_rcstop
+  use mod_brysh1
+  use mod_brysh2
+  use mod_brysh3
+  use mod_rcstop
 
   ! .. Parameters ..
   integer :: ntird
@@ -60,9 +60,6 @@ subroutine brydbm(visp, v, vins, vspsme, vspsmo, ins, lmpot, r, drdi, alpha, &
   ! .. Intrinsic Functions ..
   real (kind=dp) :: ddot
   external :: ddot
-  ! ..
-  ! .. Save statement ..
-  external :: brysh1, brysh2, brysh3, daxpy, dscal, rcstop
   ! ..
   ! .. Local Arrays ..
   intrinsic :: abs

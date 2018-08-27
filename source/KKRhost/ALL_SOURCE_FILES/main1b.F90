@@ -8,21 +8,21 @@
 !-------------------------------------------------------------------------------
 module MOD_MAIN1B
 
-   use Profiling
+   use mod_Profiling
    use Constants
    use global_variables
    Use mod_datatypes, Only: dp
 
    use mod_operators_for_fscode
-   use mod_opendafile
-   use mod_kloopz1_qdos
+   use mod_getscratch, only: opendafile
+   use mod_kloopz1, only: kloopz1_qdos
    use mod_greenimp
    use mod_changerep
    use mod_tmatimp_newsolver
    use mod_setfactl
    use mod_calctref13
    use mod_calrmt
-   use mod_rotatematrix
+   use mod_rotatespinframe, only: rotatematrix
 
    implicit none
 
@@ -1084,12 +1084,9 @@ contains
  220        continue               ! IQ = 1,NQ                                         ! qdos ruess
 
             if (LLY.NE.0) then                                       ! LLY
-               CDOS_LLY(IE,1) =   TRALPHA(IE,1) &                    ! LLY
-               - LLY_GRTR(IE,1) / VOLBZ(1) + 2d0*LLY_G0TR(IE)        ! LLY
-               CDOS_LLY(IE,1) = CDOS_LLY(IE,1) / PI                  ! LLY
-
+               CDOS_LLY(IE,1) = TRALPHA(IE,1) - LLY_GRTR(IE,1)/VOLBZ(1) + 2.0_dp*LLY_G0TR(IE)        ! LLY
+               CDOS_LLY(IE,1) = CDOS_LLY(IE,1)/PI                    ! LLY
                CDOSREF_LLY(IE) = TRALPHAREF(IE) - LLY_G0TR(IE)       ! LLY
-
             endif                                                    ! LLY
 
 #ifdef CPP_MPI
@@ -1289,8 +1286,8 @@ contains
 
         ! consistency checks
         if(.not.(ielast==1.or.ielast==3)) stop 'Error: GREENIMP option only possible with 1 () or 3 () energy points in contour'
-        if(ielast==1 .and.dabs(aimag(ez(1)))>1E-10) stop 'Error: T>0 for GREENIMP (DTMTRX writeout, IELAST==3)'
-        if(ielast==3 .and.dabs(aimag(ez(1)))<1E-10) stop 'Error: T==0 for GREENIMP (GMATLL_GES writeout, IELAST==3)'
+        if(ielast==1 .and.abs(aimag(ez(1)))>1E-10) stop 'Error: T>0 for GREENIMP (DTMTRX writeout, IELAST==3)'
+        if(ielast==3 .and.abs(aimag(ez(1)))<1E-10) stop 'Error: T==0 for GREENIMP (GMATLL_GES writeout, IELAST==3)'
         ! end consistency checks
 
 #ifdef CPP_MPI
@@ -1413,7 +1410,7 @@ contains
 
       if(t_inc%i_write>0) write (1337,'(79("="),/,30X,"< KKR1b finished >",/,79("="),/)')
 
-99019 FORMAT('(/,1X,79(*),/," tolerance for CPA-cycle:",F15.7,/," CPA not converged for",I3," energies:",/,3(" E:",I3,F7.4,:,2X))')
+!99019 FORMAT('(/,1X,79(*),/," tolerance for CPA-cycle:",F15.7,/," CPA not converged for",I3," energies:",/,3(" E:",I3,F7.4,:,2X))')
 99020 FORMAT('(/,1X,79(*),/,25X,"no problems with","  CPA-cycle ",/,1X,79(*),/)')
 
    end subroutine main1b

@@ -14,7 +14,7 @@
 !-------------------------------------------------------------------------------
 module mod_wunfiles
 
-   use Profiling
+   use mod_Profiling
    use mod_DataTypes
 
    implicit none

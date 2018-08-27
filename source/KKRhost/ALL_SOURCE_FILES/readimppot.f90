@@ -49,12 +49,6 @@ subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, &
     xrn(irid, natomimp)
   integer :: meshn(natomimp), nm(ipand, natomimp), npan(natomimp)
   ! ..
-  ! .. External Subroutines ..
-  external :: calrmt, potcut, rinit, test
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: anint, exp, log, max, mod, real, sqrt
-  ! ..
   ! ------------------------------------------------------------------
   write (1337, *) 'in readimppot'
   vinsimp = 0e0_dp

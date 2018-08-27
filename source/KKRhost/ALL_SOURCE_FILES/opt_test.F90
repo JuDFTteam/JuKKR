@@ -1,4 +1,4 @@
-module mod_types
+module mod_opt_test
 
       Use mod_datatypes, Only: dp
 implicit none

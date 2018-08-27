@@ -11,11 +11,8 @@ contains
   subroutine set_jijcalc_flags(t_dtmatjij, natypd, natomimpd, natomimp, &
     atomimp, iqat)
 
-    use :: mod_types, only: t_inc, type_dtmatjijdij
-    use :: mod_save_wavefun, only: t_wavefunctions
-
-    use mod_vllmat
-    use mod_intcheb_cell
+    use mod_types, only: t_inc, type_dtmatjijdij
+    use mod_save_wavefun, only: t_wavefunctions
 
     implicit none
     type (type_dtmatjijdij), intent (inout) :: t_dtmatjij(t_inc%natyp)
@@ -54,6 +51,8 @@ contains
     ! subroutine
     ! calc_dtmatJij(NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,dtmat)
 
+    use mod_vllmat
+    use mod_intcheb_cell
     implicit none
     complex (kind=dp) :: czero, cone
     parameter (czero=(0d0,0d0), cone=(1d0,0d0))
@@ -89,8 +88,8 @@ contains
 
     ! convert B_L into B_LL' by using the Gaunt coefficients
     bnspll0 = czero
-    call vllmat(1, nrmaxd, irmdnew, lmmaxd, lmmaxd, bnspll0, bins, cleb, &
-      icleb, iend, 1, 0d0, rnew, 0)
+    call vllmat(1, nrmaxd, irmdnew, lmmaxd, lmmaxd, bnspll0, bins, lmpotd, cleb, &
+      icleb, iend, 1, 0.0_dp, rnew, 0, ncleb)
 
     ! get the pauli spin matrices
     call calc_sigma(sigma)         ! use this to perform automatically
@@ -154,22 +153,21 @@ contains
   end subroutine calc_dtmatjij
 
 
-  subroutine calclambda(lambda, theta, phi)
-    implicit none
-    complex (kind=dp) :: lambda(2, 2, 3)
-    real (kind=dp) :: theta, phi
-    complex (kind=dp) :: sigmatemp(2, 2, 3), sigma(2, 2, 3)
-    integer :: ispin
-
-    call calc_sigma(sigma)
-    sigmatemp = sigma
-    do ispin = 1, 3
-      call rotatematrix(sigmatemp(:,:,ispin), theta, phi, 1, 1)
-      lambda(:, :, ispin) = sigmatemp(:, :, ispin) ! test
-    end do                         ! ispin
-  end subroutine calclambda
-
-
+  !subroutine calclambda(lambda, theta, phi)
+  !  use mod_rotatespinframe, only: rotatematrix
+  !  implicit none
+  !  complex (kind=dp) :: lambda(2, 2, 3)
+  !  real (kind=dp) :: theta, phi
+  !  complex (kind=dp) :: sigmatemp(2, 2, 3), sigma(2, 2, 3)
+  !  integer :: ispin
+  !
+  !  call calc_sigma(sigma)
+  !  sigmatemp = sigma
+  !  do ispin = 1, 3
+  !    call rotatematrix(sigmatemp(:,:,ispin), theta, phi, 1, 1)
+  !    lambda(:, :, ispin) = sigmatemp(:, :, ispin) ! test
+  !  end do                         ! ispin
+  !end subroutine calclambda
 
 
   subroutine calc_sigma(sigma)

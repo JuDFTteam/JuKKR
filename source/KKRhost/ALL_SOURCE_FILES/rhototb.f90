@@ -37,6 +37,8 @@ subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, &
 
   use :: global_variables
   use :: mod_datatypes, only: dp
+  use mod_simpk
+  use mod_simp3
 
   implicit none
 
@@ -110,14 +112,6 @@ subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, &
   real (kind=dp), dimension (naez, 2*krel+(1-krel)*nspin) :: csite
   real (kind=dp), dimension (krel*naez+(1-krel)) :: muosite
 
-  logical :: opt
-  ! .. External Subroutines
-  external :: simp3, simpk, opt
-  ! .. Intrinsic Functions
-  intrinsic :: atan, sqrt
-  ! .. Save statement
-  save
-  ! ..
   rfpi = sqrt(16.0e0_dp*atan(1.0e0_dp))
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

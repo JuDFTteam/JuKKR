@@ -51,10 +51,12 @@ subroutine findgroup(bravais, recbv, rbasis, nbasis, rsymat, rotname, &
   integer :: i, j, isym, nsym, i0, ia
   real (kind=dp) :: mdotmp, mvecq(3, naezd), mvecqp(3, naezd)
   real (kind=dp) :: mrotr(3, 3), symdet, summdotmp
-  real (kind=dp) :: stet, ddot, ddet33, pi
+  real (kind=dp) :: stet, pi
   character (len=10) :: rotname(64)
   character (len=10) :: char(64)
-  logical :: llatbas, latvec, lbulk
+  logical :: llatbas, lbulk
+  ! external functions
+  real (kind=dp), external :: ddot
   ! ..................................................................
 
   ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT

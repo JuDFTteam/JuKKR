@@ -10,6 +10,8 @@ subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, &
   use :: mod_mympi, only: myrank, master
   use :: mod_datatypes, only: dp
    use mod_rotate
+  use mod_cmatstr
+   use mod_cinit
   implicit none
 
   ! .. Local variables
@@ -38,12 +40,6 @@ subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, &
 
   logical :: test, opt
   external :: test, opt
-
-
-
-
-
-
 
   do it = 1, natyp
 
@@ -172,7 +168,7 @@ subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, &
       write (1337, *) 'IQ,IT,RF', iq, it, rf
       write (1337, *) 'DELTA_TMATLL (', iq, ' )'
       call cmatstr(' ', 1, mssq(1,1,iq), lmmaxd, lmmaxd, 2*krel+1, 2*krel+1, &
-        0, 1d-8, 6)
+        0, 1.0e-8_dp, 6)
       write (1337, *)
     end if
     ! ----------------------------------------------------------------------

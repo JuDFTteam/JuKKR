@@ -30,6 +30,7 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
   use :: mod_version_info
   use :: mod_datatypes, only: dp
    use mod_lngstring
+  use mod_cinit
   implicit none
   ! ..
   integer :: krel, natypd, nembd1, lmmaxd ! ,KORBIT
@@ -58,13 +59,6 @@ subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, &
   character (len=40) :: filehost
   character (len=5) :: chhost(2), str5
   real (kind=dp) :: bravaisl(3, 3), rbasisl(3, nembd1)
-  ! ..
-  ! .. External Functions
-  integer :: lngstring
-  external :: lngstring
-  ! ..
-  ! .. External Subroutines
-  external :: zcopy
   ! ..
   ! .. Data statements
   data chhost/'LEFT ', 'RIGHT'/

@@ -26,7 +26,6 @@ subroutine decipothead(ihost, filehost, ilhost, nathost, vacflag, alat, &
   ! ..
   ! .. Locals
   real (kind=dp) :: alath
-  real (kind=dp) :: dabs
   integer :: i, ih, ios, kmroth
   ! ----------------------------------------------------------------------
   if (.not. (filehost(1:7)=='vacuum')) then
@@ -52,7 +51,7 @@ subroutine decipothead(ihost, filehost, ilhost, nathost, vacflag, alat, &
     if (insh/=0) stop ' INS<>0 not implemented '
     if (nq/=nt) stop ' CPA-host not implemented'
     ! ......................................................................
-    if ((nq/=nathost) .or. (kmroth/=kmrot) .or. (dabs(alath-alat)>1d-6)) then
+    if ((nq/=nathost) .or. (kmroth/=kmrot) .or. (abs(alath-alat)>1d-6)) then
       write (6, 150) filehost(1:ilhost)
       write (6, 120) '  NAEZ KMROT ALAT '
       write (6, 130) 'syst: ', nathost, kmrot, alat
@@ -80,7 +79,7 @@ subroutine decipothead(ihost, filehost, ilhost, nathost, vacflag, alat, &
         alath = alath + bravais(i, ih) - bravsys(i, ih)
       end do
     end do
-    if (dabs(alath)>1d-6) then
+    if (abs(alath)>1d-6) then
       write (6, 150) filehost(1:ilhost)
       write (6, 160)
       do ih = 1, 2

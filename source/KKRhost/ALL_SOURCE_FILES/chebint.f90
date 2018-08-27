@@ -30,10 +30,6 @@ subroutine chebint(cslc1, csrc1, slc1sum, c1, n)
   ! .. Local Arrays ..
   real (kind=dp) :: c(0:n, 0:n), c1(0:n, 0:n), s1(0:n, 0:n), s2(0:n, 0:n), &
     sl(0:n, 0:n), slc1(0:n, 0:n), sr(0:n, 0:n), src1(0:n, 0:n)
-  ! .. External Subroutines ..
-  external :: dgemm
-  ! .. Intrinsic Functions ..
-  intrinsic :: atan, cos
   ! ..
   pi = 4.e0_dp*atan(1.e0_dp)
   ! ---------------------------------------------------------------------

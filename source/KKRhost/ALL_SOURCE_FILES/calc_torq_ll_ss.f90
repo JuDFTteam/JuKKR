@@ -13,6 +13,7 @@ subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, &
 
   use global_variables
   use :: mod_datatypes, only: dp
+  use mod_csimpk
 
   implicit none
 

@@ -2,7 +2,7 @@ module mod_corel
 
 contains
 
-subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
+subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, zat, qc, a, &
   b, is, nspin, nr, rmax, irmd)
   ! -----------------------------------------------------------------------
   ! subroutine for core states
@@ -16,6 +16,7 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
    use mod_intcor
+  use mod_simp3
   implicit none
   ! .. Parameters ..
   integer :: nitmax, irnumx
@@ -24,7 +25,7 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
   parameter (zero=0.0d0)
   ! ..
   ! .. Scalar Arguments ..
-  real (kind=dp) :: a, b, qc, rmax, z
+  real (kind=dp) :: a, b, qc, rmax, zat
   integer :: ip, ipr, irmd, is, ncore, nr, nspin, nsra
   ! ..
   ! .. Array Arguments ..
@@ -40,12 +41,6 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
   real (kind=dp) :: f(irmd), g(irmd), rho(irmd)
   integer :: kfg(4)
   character (len=4) :: spn(2), text(5)
-  ! ..
-  ! .. External Subroutines ..
-  external :: intcor, simp3
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: dble, real
   ! ..
   ! .. Save statement ..
   save :: spn, text
@@ -75,7 +70,7 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
   if (kfg(3)/=0) lmxc = 2
   if (kfg(4)/=0) lmxc = 3
 
-  tol = 1.0d-12*(z*z+1.d0)
+  tol = 1.0d-12*(zat*zat+1.d0)
   lmp1 = lmxc + 1
   nc = 0
   inuc = -irnumx
@@ -87,7 +82,7 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
 
   do lp1 = 1, lmp1
     l = lp1 - 1
-    e1 = (-5.d0-((z+1.d0)/dble(lp1))**2)*1.5d0 - 50.d0
+    e1 = (-5.d0-((zat+1.d0)/dble(lp1))**2)*1.5d0 - 50.d0
     nmax = kfg(lp1)
     if (nmax/=0) then
       do in = lp1, nmax
@@ -99,7 +94,7 @@ subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, z, qc, a, &
         if ((t_inc%i_write>0) .and. (ipr/=0)) write (1337, fmt=100) in, &
           text(lp1), nn, spn(is), ip, e
         call intcor(e1, e2, rho, g, f, v, value, slope, l, nn, e, sum, nre, &
-          vlnc, a, b, z, rmax, nr, tol, irmd, ipr, nitmax, nsra)
+          vlnc, a, b, zat, rmax, nr, tol, irmd, ipr, nitmax, nsra)
         ediff = e - ei
         ecore(nc) = e
         wgt = real(l+l+1)/sum*2.d0/real(nspin)

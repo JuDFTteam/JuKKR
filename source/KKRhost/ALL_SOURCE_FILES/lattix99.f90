@@ -39,14 +39,7 @@ subroutine lattix99(lsurf, alat, natyp, naez, conc, rws, bravais, recbv, &
   ! ..
   ! .. Local Scalars ..
   integer :: i, j, ndim
-  real (kind=dp) :: voluc, det, ddet33, pi, tpia, sws
-  ! ..
-  ! .. External declarations ..
-  external :: crospr, spatpr, ddet33, idreals, ioinput
-  ! ..
-  ! .. Intrinsic functions ..
-  intrinsic :: abs, atan, real
-  ! ..
+  real (kind=dp) :: voluc, det, pi, tpia, sws
   ! ..................................................................
 
   ! --> initialise

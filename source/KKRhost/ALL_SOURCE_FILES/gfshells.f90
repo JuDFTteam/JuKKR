@@ -43,11 +43,12 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
   ! .. Local scalars
   integer :: nb, i, j, pos, ii, io, ns, in, ndim, nsize, ihost, ierr
   character (len=9) :: str9
-  logical :: lsurf, opt
+  logical :: lsurf
   integer :: nofgij_with_diag
   ! ..
   ! .. External subroutines
-  external :: impcheck, impcoefs, shellgen2k, opt
+  logical :: opt
+  external :: opt
 
   write (1337, 100)
 

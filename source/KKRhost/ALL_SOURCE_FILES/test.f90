@@ -1,7 +1,3 @@
-module mod_test
-
-contains
-
 ! *********************************************************** 17.05.91 **
 logical function test(string)
   ! ***********************************************************************
@@ -24,5 +20,3 @@ logical function test(string)
   end do
   return
 end function test
-
-end module mod_test

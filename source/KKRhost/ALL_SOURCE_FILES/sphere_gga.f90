@@ -17,6 +17,7 @@ subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
   use :: mod_datatypes
    use mod_lebedev
    use mod_ymy
+  use mod_rinit
   implicit none
 
   ! .. Scalar Arguments ..
@@ -25,9 +26,6 @@ subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
   ! .. Local Scalars ..
   real (kind=dp) :: pi, r, r1, r2, r3
   integer :: ij, lm1
-  ! ..
-  ! .. External Subroutines ..
-  external :: cylm02, ymy
   ! ..
   ! .. Array Arguments ..
   real (kind=dp) :: dylmf1(ijd, lmmaxd), dylmf2(ijd, lmmaxd), &
@@ -38,9 +36,6 @@ subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
   ! ..
   ! .. Local Arrays ..
   real (kind=dp) :: wght, y(1000)
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: abs, acos, atan, cos, sin, sqrt
   ! ..
   pi = 4.e0_dp*atan(1.e0_dp)
   write (1337, *) 'SPHERE for GGA: read LEBEDEV mesh'
@@ -174,6 +169,7 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
 
   ! Ph.Mavropoulos, Juelich, July 2007
   use :: mod_datatypes
+   use mod_rinit
   implicit none
   ! Parameters:
   integer :: lmaxd, l4maxd

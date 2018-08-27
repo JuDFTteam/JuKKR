@@ -9,7 +9,6 @@ subroutine mkxcpe2(ir, np, rv, rholm, vxcp, excp, ylm, dylmt1, dylmf1, dylmf2, &
   ! coded by M. Ogura, Apr. 2015, Munich
   ! ------------------------------------------------------------------
   use :: mod_datatypes, only: dp
-   use mod_excgcor2
   implicit none
   integer :: ijd
   parameter (ijd=434)
@@ -346,7 +345,6 @@ subroutine excpbec(rs, zeta, t, uu, vv, ww, ec, vcup, vcdn, llda, bet)
     eprs, eu, eurs, f, fac, fact0, fact1, fact2, fact3, fact5, fz, g, g3, g4, &
     gz, h, hb, hbt, hrs, hrst, ht, htt, hz, hzt, pon, pref, q4, q5, q8, q9, &
     rsthrd, rtrs, t2, t4, t6, z4, delt
-  external :: excgcor2
 
   ! thrd*=various multiples of 1/3
   ! numbers for use in LSD energy spin-interpolation formula, [c](9).

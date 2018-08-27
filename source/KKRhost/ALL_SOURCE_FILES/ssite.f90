@@ -5,10 +5,9 @@ contains
 subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
   eryd, p, ihyper, iprint, ikm1lin, ikm2lin, nlq, nkmq, nlinq, nt, nkm, iqat, &
   tsst, msst, tsstlin, dzz, dzj, szz, szj, ozz, ozj, bzz, bzj, qzz, qzj, tzz, &
-  tzj, vt, bt, at, z, nucleus, r, drdi, r2drdi, jws, imt, ameopo, lopt, &
+  tzj, vt, bt, at, zat, nucleus, r, drdi, r2drdi, jws, imt, ameopo, lopt, &
   solver, cgc, ozzs, ozjs, nlmax, nqmax, linmax, nrmax, nmmax, ntmax, nkmmax, &
   nkmpmax, nlamax)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! * ASSIGN QUANTUM NUMBERS AND CALL ROUTINE TO SOLVE                 *
@@ -34,15 +33,17 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
   ! *               polarisation                                       *
   ! ********************************************************************
 
+  use :: mod_datatypes, only: dp
+   use mod_cinit
    use mod_cdjlzdz
    use mod_cdnlzdz
-   use mod_dirabmop
+   use mod_dirac_op, only: dirabmop
    use mod_cinthff
    use mod_cintabr
    use mod_cjlz
-   use mod_dirabmsoc2
-   use mod_dirabmsoc
-   use mod_dirbs
+   use mod_dirac_soc2, only: dirabmsoc2
+   use mod_dirac_soc, only: dirabmsoc
+   use mod_dirac_bs, only: dirbs
    use mod_cnlz
    use mod_ikapmue
    use mod_rinit
@@ -84,7 +85,7 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
     tsst(nkmmax, nkmmax, ntmax), tsstlin(linmax, ntmax), tzj(linmax, ntmax), &
     tzz(linmax, ntmax)
   integer :: ikm1lin(linmax), ikm2lin(linmax), imt(ntmax), iqat(nqmax, ntmax), &
-    jws(nmmax), lopt(ntmax), nkmq(nqmax), nlinq(nqmax), nlq(nqmax), z(ntmax), &
+    jws(nmmax), lopt(ntmax), nkmq(nqmax), nlinq(nqmax), nlq(nqmax), zat(ntmax), &
     muem05
 
   ! Local variables
@@ -101,14 +102,10 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
     ctg(2, 2), dovr(nrmax), drovrn(nrmax), mj, r1m(2, 2), rkd(2, 2), rnuc, &
     sk1, sk2, tdia1, tdia2, toff
   real (kind=dp) :: cog(2, 2, 2), cof(2, 2, 2)
-  complex (kind=dp) :: cdjlzdz, cdnlzdz, cjlz, cnlz
-  real (kind=dp) :: dble, dsqrt
   integer :: i, i1, i2, i3, i5, ikm1, ikm2, il, im, in, info, ipiv(nkmmax), &
     iq, isk1, isk2, it, j, jlim, jtop, k, k1, k2, kap1, kap2, kc, l, l1, lb1, &
     lb2, lin, n, nsol, imkm1, imkm2, is, imj
-  integer :: ikapmue
   integer :: isign, nint
-  real (kind=dp) :: rnuctab
   logical :: wronski
 
   data r1m/1.0e0_dp, 0.0e0_dp, 0.0e0_dp, 1.0e0_dp/
@@ -152,7 +149,7 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
     im = imt(it)
     jtop = jws(im)
     if (nucleus/=0) then
-      rnuc = rnuctab(z(it))
+      rnuc = rnuctab(zat(it))
       in = 1
       do while (r(in,im)<rnuc)
         in = in + 1
@@ -183,8 +180,8 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
 
       isk1 = isign(1, kap1)
       isk2 = isign(1, kap2)
-      sk1 = dble(isk1)
-      sk2 = dble(isk2)
+      sk1 = real(isk1, kind=dp)
+      sk2 = real(isk2, kind=dp)
       l1 = l
       lb1 = l - isk1
       lb2 = l - isk2
@@ -208,11 +205,11 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
       ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
       ! DO MJ = -(DBLE(L)+0.5D0), + (DBLE(L)+0.5D0),1.0D0
       do imj = 1, 2*l + 1
-        mj = -(dble(l)+0.5e0_dp) + dble(imj-1)
+        mj = -(real(l, kind=dp)+0.5e0_dp) + real(imj-1, kind=dp)
 
         ! ------------------------------------------------------------------------
         ! NO COUPLING FOR:  ABS(MUE)= J   +  J=L+1/2 == KAP=-L-1
-        if (abs(mj)>=dble(l)) then
+        if (abs(mj)>=real(l, kind=dp)) then
           nsol = 1
         else
           nsol = 2
@@ -236,7 +233,7 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
 
         if (solver(1:2)=='BS') then
           call dirbs(getirrsol, ctl(it,il), eryd, l, mj, kap1, kap2, p, cg1, &
-            cg2, cg4, cg5, cg8, vt(1,it), bt(1,it), z(it), nucleus, r(1,im), &
+            cg2, cg4, cg5, cg8, vt(1,it), bt(1,it), zat(it), nucleus, r(1,im), &
             drdi(1,im), dovr, jtop, pr, qr, pi, qi, zg, zf)
         else if (solver=='ABM-BI') then
           stop ' < DIRABMBI > : Not implemented. Set SOLVER=BS in inputcard'
@@ -249,18 +246,18 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
           ! &                          NKMMAX,NRMAX)
         else if (solver(1:6)=='ABM-OP') then
           call dirabmop(getirrsol, ctl(it,il), it, eryd, l, mj, kap1, kap2, p, &
-            cg1, cg2, cg4, cg5, cg8, ameopo, vt(1,it), bt(1,it), at, z(it), &
+            cg1, cg2, cg4, cg5, cg8, ameopo, vt(1,it), bt(1,it), at, zat(it), &
             nucleus, r(1,im), drdi(1,im), dovr, jtop, pr, qr, pi, qi, zg, zf, &
             ap, aq, lopt(it), ntmax, nlamax, nkmmax, nrmax)
         else if (solver=='ABM-SOC   ') then
           call dirabmsoc(getirrsol, ctl(it,il), soctl(it,il), it, eryd, l, mj, &
-            kap1, kap2, p, cg1, cg2, cg4, cg5, cg8, vt(1,it), bt(1,it), z(it), &
+            kap1, kap2, p, cg1, cg2, cg4, cg5, cg8, vt(1,it), bt(1,it), zat(it), &
             nucleus, r(1,im), drdi(1,im), dovr, jtop, dxp, pr, qr, pi, qi, zg, &
             zf, nrmax)
         else if (solver=='ABM-SOC-II') then
           call dirabmsoc2(getirrsol, ctl(it,il), soctl(it,il), it, eryd, l, &
             mj, kap1, kap2, p, cg1, cg2, cg4, cg5, cg8, vt(1,it), bt(1,it), &
-            z(it), nucleus, r(1,im), drdi(1,im), dovr, jtop, dxp, pr, qr, pi, &
+            zat(it), nucleus, r(1,im), drdi(1,im), dovr, jtop, dxp, pr, qr, pi, &
             qi, zg, zf, nrmax)
         else
           write (6, *) 'No solver found for: ', solver
@@ -372,9 +369,9 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
 
         ! COEFFICIENTS TO CALCULATE THE SPIN  DIPOLAR MOMENT TZ
 
-        tdia1 = 2*mj/dble((2*l1+1)*(2*lb1+1))
-        tdia2 = 2*mj/dble((2*l1+1)*(2*lb2+1))
-        toff = -sqrt((l1+0.5e0_dp)**2-mj**2)/dble(2*l1+1)
+        tdia1 = 2*mj/real((2*l1+1)*(2*lb1+1), kind=dp)
+        tdia2 = 2*mj/real((2*l1+1)*(2*lb2+1), kind=dp)
+        toff = -sqrt((l1+0.5e0_dp)**2-mj**2)/real(2*l1+1, kind=dp)
 
         ctg(1, 1) = 0.5e0_dp*(cg1-3.0e0_dp*tdia1)
         ctg(1, 2) = 0.5e0_dp*(cg2-3.0e0_dp*toff)
@@ -387,7 +384,7 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
 
         cfg(1, 1) = mj*(kap1+1.0e0_dp)/(kap1+0.5e0_dp)
         cfg(2, 2) = mj*(kap2+1.0e0_dp)/(kap2+0.5e0_dp)
-        cfg(1, 2) = 0.5e0_dp*dsqrt(1.0e0_dp-(mj/(kap1+0.5e0_dp))**2)
+        cfg(1, 2) = 0.5e0_dp*sqrt(1.0e0_dp-(mj/(kap1+0.5e0_dp))**2)
         cfg(2, 1) = cfg(1, 2)
         call rinit(4, cff)
         cff(1, 1) = mj*(-kap1+1.0e0_dp)/(-kap1+0.5e0_dp)
@@ -399,16 +396,16 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
         call rinit(4*2, cog)
         call rinit(4*2, cof)
         do is = 1, 2
-          cog(1, 1, is) = cgc(ikm1, is)*cgc(ikm1, is)*dble(muem05-is+2)
-          cof(1, 1, is) = cgc(imkm1, is)*cgc(imkm1, is)*dble(muem05-is+2)
+          cog(1, 1, is) = cgc(ikm1, is)*cgc(ikm1, is)*real(muem05-is+2, kind=dp)
+          cof(1, 1, is) = cgc(imkm1, is)*cgc(imkm1, is)*real(muem05-is+2, kind=dp)
         end do
 
         if (nsol==2) then
           do is = 1, 2
-            cog(2, 2, is) = cgc(ikm2, is)*cgc(ikm2, is)*dble(muem05-is+2)
-            cof(2, 2, is) = cgc(imkm2, is)*cgc(imkm2, is)*dble(muem05-is+2)
+            cog(2, 2, is) = cgc(ikm2, is)*cgc(ikm2, is)*real(muem05-is+2, kind=dp)
+            cof(2, 2, is) = cgc(imkm2, is)*cgc(imkm2, is)*real(muem05-is+2, kind=dp)
 
-            cog(1, 2, is) = cgc(ikm1, is)*cgc(ikm2, is)*dble(muem05-is+2)
+            cog(1, 2, is) = cgc(ikm1, is)*cgc(ikm2, is)*real(muem05-is+2, kind=dp)
             cog(2, 1, is) = cog(1, 2, is)
           end do
         end if
@@ -419,7 +416,7 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
         ch(1, 1) = 4.0e0_dp*kap1*mj/(4.0e0_dp*kap1*kap1-1.0e0_dp)
         ch(2, 2) = 4.0e0_dp*kap2*mj/(4.0e0_dp*kap2*kap2-1.0e0_dp)
         if (nsol==2) then
-          ch(1, 2) = dsqrt(0.25e0_dp-(mj/dble(kap1-kap2))**2)
+          ch(1, 2) = sqrt(0.25e0_dp-(mj/real(kap1-kap2, kind=dp))**2)
           ch(2, 1) = ch(1, 2)
         end if
         ! -----------------------------------------------------------------------

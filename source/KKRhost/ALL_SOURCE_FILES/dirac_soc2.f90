@@ -34,6 +34,8 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   use :: mod_datatypes, only: dp
    use mod_ylag
    use mod_rinvgj
+  use mod_cjlz
+  use mod_cinit
   implicit none
 
   ! PARAMETER definitions
@@ -69,8 +71,6 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
     gam(2), gpm, hlp(nabm+4), hlp1, kap(2), kpx(2), kpy(2), r14, rh, &
     rhlp(nabm+4), rpwgpm, rr, sk(2), sk1, sk2, so2, so6, srk, tz, v14, &
     vc(0:npemax), vh, vhlp(nabm+4), x14, xh
-  complex (kind=dp) :: cjlz
-  real (kind=dp) :: dabs, dble, dsqrt
   complex (kind=dp) :: detd, mp1(2, 2), mp2(2, 2), mp3(2, 2), mp4(2, 2), &
     mq1(2, 2), mq2(2, 2), mq3(2, 2), mq4(2, 2), p1(2, 2), p2(2, 2), p3(2, 2), &
     p4(2, 2), pc(2, 2, -npemax:mpsmax), pnew(2, 2), pold(2, 2), q1(2, 2), &
@@ -79,7 +79,6 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   integer :: i, ic, ip, irk, isk1, isk2, iv, ixy, j, jcorr, k, lb(2), lb1, &
     lb2, m, mps, n, nacorr, ndiv, nhlp, nm, npe, nsol, ntop
   integer :: int, isign, nint
-  real (kind=dp) :: ylag
 
   data apred0/55.0d0, -59.0d0, +37.0d0, -9.0d0/
   data acorr0/9.0d0, +19.0d0, -5.0d0, +1.0d0/
@@ -91,7 +90,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   ! find   NPE  expansion coefficients for the potential and b-field
   npe = 4
 
-  tz = dble(2*z)
+  tz = real(2*z, kind=dp)
 
   do iv = 1, npe
     do n = 1, npe
@@ -127,8 +126,8 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
 
   isk1 = isign(1, kap1)
   isk2 = isign(1, kap2)
-  sk1 = dble(isk1)
-  sk2 = dble(isk2)
+  sk1 = real(isk1, kind=dp)
+  sk2 = real(isk2, kind=dp)
   lb1 = l - isk1
   lb2 = l - isk2
 
@@ -136,8 +135,8 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   cg5 = -mj/(-kap1+0.5d0)
   cgd(1) = cg1
   cgmd(1) = cg5
-  kap(1) = dble(kap1)
-  gam(1) = dsqrt(kap(1)**2-(tz/c)**2)
+  kap(1) = real(kap1, kind=dp)
+  gam(1) = sqrt(kap(1)**2-(tz/c)**2)
   if (ixy==0) then
     cgz(1) = kap(1) + 1 + mj*cgd(1) - 0.5d0
   else
@@ -145,7 +144,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   end if
   lb(1) = lb1
   sk(1) = sk1
-  if (dabs(mj)>l) then
+  if (abs(mj)>l) then
     cg2 = 0.0d0
     cg4 = 0.0d0
     cg8 = 0.0d0
@@ -160,15 +159,15 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
     lb(2) = 0
     sk(2) = 0.0d0
   else
-    cg2 = -dsqrt(1.0d0-(mj/(kap1+0.5d0))**2)
+    cg2 = -sqrt(1.0d0-(mj/(kap1+0.5d0))**2)
     cg4 = -mj/(kap2+0.5d0)
     cg8 = -mj/(-kap2+0.5d0)
     nsol = 2
     cgd(2) = cg4
     cgo = cg2
     cgmd(2) = cg8
-    kap(2) = dble(kap2)
-    gam(2) = dsqrt(kap(2)**2-(tz/c)**2)
+    kap(2) = real(kap2, kind=dp)
+    gam(2) = sqrt(kap(2)**2-(tz/c)**2)
     if (ixy==0) then
       cgz(2) = kap(2) + 1 + mj*cgd(2) - 0.5d0
       cgoz = mj*cgo
@@ -209,7 +208,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
 
     do j = 1, nsol
       i = 3 - j
-      pc(j, j, 0) = dsqrt(abs(kpy(j))-gam(j))
+      pc(j, j, 0) = sqrt(abs(kpy(j))-gam(j))
       qc(j, j, 0) = (kpy(j)+gam(j))*(csqr/tz)*pc(j, j, 0)
       pc(i, j, 0) = cz
       qc(i, j, 0) = cz
@@ -306,7 +305,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
 
       do j = 1, nsol
         pr(j, j, n) = cjlz(l, zz)*r(n)
-        d_p(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
+        d_p(j, j, n) = (real(l+1, kind=dp)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
 
         qr(j, j, n) = (d_p(j,j,n)/drdi(n)+pr(j,j,n)*(kap(j)/r(n)))/s0
         dq(j, j, n) = qr(j, j, n)*(kap(j)/r(n)) - pr(j, j, n)*t0
@@ -433,9 +432,9 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
       i = 3 - j
       pi(j, j, n) = cjlz(l, arg)*r(n)
       qi(j, j, n) = cfac*sk(j)*cjlz(lb(j), arg)*r(n)*c
-      d_p(j, j, n) = (dble(l+1)*cjlz(l,arg)-arg*cjlz(l+1,arg))*drdi(n)
+      d_p(j, j, n) = (real(l+1, kind=dp)*cjlz(l,arg)-arg*cjlz(l+1,arg))*drdi(n)
       m = lb(j)
-      dq(j, j, n) = cfac*sk(j)*(dble(m+1)*cjlz(m,arg)-arg*cjlz(m+1,arg))* &
+      dq(j, j, n) = cfac*sk(j)*(real(m+1, kind=dp)*cjlz(m,arg)-arg*cjlz(m+1,arg))* &
         drdi(n)*c
 
       pi(i, j, n) = cz
@@ -450,7 +449,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
   ndiv = 60
   if (ndiv/=0) then
 
-    srk = 1.0d0/dble(ndiv)
+    srk = 1.0d0/real(ndiv, kind=dp)
     so2 = srk/2.0d0
     so6 = srk/6.0d0
 
@@ -492,11 +491,11 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
       end do
     end do
 
-    x14 = dble(n)
+    x14 = real(n, kind=dp)
     nhlp = nabm + 4
-    hlp1 = dble(nmesh-nhlp)
+    hlp1 = real(nmesh-nhlp, kind=dp)
     do i = 1, nhlp
-      hlp(i) = dble(i)
+      hlp(i) = real(i, kind=dp)
       vhlp(i) = v(nmesh-nhlp+i)
       bhlp(i) = b(nmesh-nhlp+i)
       dhlp(i) = drdi(nmesh-nhlp+i)
@@ -610,7 +609,7 @@ subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, &
 
       if (mod(irk,ndiv)==0) then
         n = nmesh - irk/ndiv
-        if (abs(x14-dble(n))>1.0d-5) then
+        if (abs(x14-real(n, kind=dp))>1.0d-5) then
           write (*, *) ' <DIRAC> RUNGE-KUTTA: ', irk, ndiv, n, x14
           stop
         end if

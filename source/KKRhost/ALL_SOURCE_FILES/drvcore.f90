@@ -3,10 +3,8 @@ module mod_drvcore
 contains
 
 subroutine drvcore(iprint, itprt, lcore, ncore, cscl, vtin, btin, rin, a, b, &
-  drdiin, r2drdiin, zat, jws, ishift, rhoc, ecorerel, nkcore, kapcore, ecore, &
+  drdiin, r2drdiin, zat_in, jws_in, ishift, rhoc, ecorerel, nkcore, kapcore, ecore, &
   lmaxd, irmd)
-  use :: mod_datatypes, only: dp
-   use mod_core
   ! ********************************************************************
   ! *                                                                  *
   ! * driving routine to call relativistic < CORE > routine            *
@@ -46,6 +44,9 @@ subroutine drvcore(iprint, itprt, lcore, ncore, cscl, vtin, btin, rin, a, b, &
   ! *                                                                  *
   ! *                           v.popescu July/2002                    *
   ! ********************************************************************
+  use :: mod_datatypes, only: dp
+   use mod_core
+  use mod_rinit
   implicit none
 
   ! PARAMETER definitions
@@ -71,7 +72,7 @@ subroutine drvcore(iprint, itprt, lcore, ncore, cscl, vtin, btin, rin, a, b, &
 
   real (kind=dp) :: ecore(20, 2), ecorerel(20*2)
   integer :: kapcore(20*2), lcore(20, 2), nkcore(20)
-  integer :: zat(ntmax), jws(nmmax)
+  integer :: zat_in, zat(ntmax), jws_in, jws(nmmax)
   real (kind=dp) :: rhoc(irmd, 2)
 
   ! Local variables
@@ -97,6 +98,8 @@ subroutine drvcore(iprint, itprt, lcore, ncore, cscl, vtin, btin, rin, a, b, &
   data icall/0/
 
   icall = icall + 1
+  zat(1) = zat_in
+  jws(1) = jws_in
 
   ! =======================================================================
   ! initialise relativistic and dummy variables and SAVE them

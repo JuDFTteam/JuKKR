@@ -39,7 +39,6 @@ subroutine rhocore(nsra, ispin, nspin, i1, drdi, r, visp, a, b, zat, ircut, &
   save :: qc
   ! ipr=1 : write something
   ! ipr=2 : write all (for debugging)
-  external :: corel, drvcore
   ! --------------------------------------------------------------
 
   ! =======================================================================

@@ -168,8 +168,8 @@ module mod_rhoqtools
                      kp(1) = kp(1) - k_mask_bounds(1)
                      kp(2) = kp(2) - k_mask_bounds(2)
                      ! then apply rules concerning inner and outer radius
-                     if(dsqrt(kp(1)**2+kp(2)**2)<k_mask_bounds(3)) kmask(kpt)= 1
-                     if(dsqrt(kp(1)**2+kp(2)**2)<k_mask_bounds(4)) kmask(kpt)= 0
+                     if(sqrt(kp(1)**2+kp(2)**2)<k_mask_bounds(3)) kmask(kpt)= 1
+                     if(sqrt(kp(1)**2+kp(2)**2)<k_mask_bounds(4)) kmask(kpt)= 0
                   end do ! j
                end do ! i
             elseif (kmask_mode==2) then ! box mode

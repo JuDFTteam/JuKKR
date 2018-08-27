@@ -12,6 +12,8 @@ subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, &
   ! *********************************************************************
   use global_variables
   use :: mod_datatypes, only: dp
+  use mod_dlke1
+  use mod_cinit
   implicit none
 
   real (kind=dp) :: alat
@@ -26,19 +28,12 @@ subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, &
   ! .. Save statement ..
   complex (kind=dp) :: gllke1(almgf0, lmgf0d)
   real (kind=dp) :: kp(6)
-  ! write(6,*) '>>> DLKE0 : Fourier-transforms the ',
-  ! +           'GF of reference system'
-  external :: cinit, dlke1
-  ! ----------------------------------------------------------------------
-
-  save
-  ! .. External Functions ..
-  ! ..
-
-
 
   logical :: opt
   external :: opt
+  ! write(6,*) '>>> DLKE0 : Fourier-transforms the ',
+  ! +           'GF of reference system'
+  ! ----------------------------------------------------------------------
 
   call cinit(almgf0*almgf0, gllke(1,1))
 

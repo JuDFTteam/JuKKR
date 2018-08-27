@@ -47,7 +47,6 @@ subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra, pzlm, &
   ! modified by R. Zeller      Aug. 1994
   ! -----------------------------------------------------------------------
   use :: mod_datatypes, only: dp
-   use mod_wfint0
    use mod_wfint
    use mod_csinwd
   implicit none
@@ -71,9 +70,6 @@ subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra, pzlm, &
   ! .. Local Scalars ..
   complex (kind=dp) :: efac2
   integer :: i, ir, irc1, j, lm1, lm2
-  ! ..
-  ! .. External Subroutines ..
-  external :: csinwd, wfint, wfint0
   ! ..
   irc1 = ircut(ipan)
   do i = 0, icst

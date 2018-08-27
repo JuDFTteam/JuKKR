@@ -78,8 +78,6 @@ implicit none
       integer ipiv(0:ncheb,lmsize2)
       integer :: use_sratrick
 
-      external zgetrf,zgetrs
-
 if ( lmsize==1 ) then
   use_sratrick=0
 else

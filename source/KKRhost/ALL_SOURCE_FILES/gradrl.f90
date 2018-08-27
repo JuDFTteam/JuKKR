@@ -36,15 +36,9 @@ subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, &
   ! .. Local Arrays ..
   real (kind=dp) :: drdi2(irmd), rl1(irmd), rl1udm(irmd), ztal(irmd)
   ! ..
-  ! .. External Subroutines ..
-  external :: gradr
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: abs, acos, sqrt
-  ! ..
   ! ------------------------------------------------------------------
-  pi = cos(-1.d0)
-  s4 = sqrt(4.d0*pi)
+  pi = cos(-1.0_dp)
+  s4 = sqrt(4.0_dp*pi)
   llmax = l1max*l1max
 
   do ip = 1, ipan
@@ -100,7 +94,7 @@ subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, &
       ist = ircut(ip-1) + 1
       ien = ircut(ip)
 
-      call gradr(nspin, ist, ien, 1.d0, drdi, drdi2, rl1, ztal, drrl(1,i1), &
+      call gradr(nspin, ist, ien, 1.0_dp, drdi, drdi2, rl1, ztal, drrl(1,i1), &
         ddrrl(1,i1), drrul(1,i1), ddrrul(1,i1), rl1udm, irmd)
 
       if (ip==1) then
@@ -114,8 +108,8 @@ subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, &
 
       if (nspin==1) then
         do ir = ist, ien
-          drrul(ir, i1) = drrl(ir, i1)/2.d0
-          ddrrul(ir, i1) = ddrrl(ir, i1)/2.d0
+          drrul(ir, i1) = drrl(ir, i1)/2.0_dp
+          ddrrul(ir, i1) = ddrrl(ir, i1)/2.0_dp
         end do
       end if
 

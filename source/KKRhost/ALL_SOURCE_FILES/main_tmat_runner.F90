@@ -2,7 +2,7 @@
 program tmat_runner
 
   use Constants
-  use Profiling
+  use mod_Profiling
   use mod_main0
   use mod_types
   use mod_timing

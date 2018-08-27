@@ -43,12 +43,6 @@ subroutine mkxcpe(nspin, ir, np, l1max, rv, rholm, vxcp, excp, thet, ylm, &
     rdf2u(ijd), rdt1(ijd), rdt1d(ijd), rdt1u(ijd), rdt2(ijd), rdt2d(ijd), &
     rdt2u(ijd), rdtf(ijd), rdtfd(ijd), rdtfu(ijd), ry(ijd), ryd(ijd), ryu(ijd)
   ! ..
-  ! .. External Subroutines ..
-  external :: gxcpt
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: abs, cos, max, min, sign, sin, sqrt, tan
-  ! ..
   ! .. Data statements ..
   data rdspr/9.0e0_dp/
   ! ..

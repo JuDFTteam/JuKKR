@@ -17,12 +17,12 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    use mod_mympi, only: myrank, nranks, master,find_dims_2d,distribute_linear_on_tasks
 #endif
    use Constants
-   use Profiling
+   use mod_Profiling
    use global_variables
    use mod_datatypes, Only: dp
    use mod_calctref13
-   use mod_opendafile
-   use mod_gll13
+   use mod_getscratch, only: opendafile
+   use mod_gll13, only: gll13
 
    implicit  none
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -89,10 +89,6 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    !     .. External Functions ..
    logical :: TEST,OPT
    external :: TEST,OPT
-   !     ..
-   !     .. External Subroutines ..
-   external :: CALCTREF13,GLL13
-   !     ..
 
    NACLSMAX = 1
    do IC = 1,NCLS

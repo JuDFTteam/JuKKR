@@ -57,12 +57,10 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
   real (kind=dp) :: cluradxy, cluradxysq, drxysq
   logical :: lspher
   character (len=256) :: uio                               ! NCOLIO=256
-
-
-  logical :: opt
   ! ..
   ! .. Externals
-  external :: getclusnxyz, ioinput, opt
+  logical :: opt
+  external :: opt
   ! ..
   ido = 0
 

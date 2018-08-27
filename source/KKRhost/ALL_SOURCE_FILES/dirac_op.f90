@@ -26,9 +26,12 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
 
   use :: mod_types, only: t_inc
   use :: mod_datatypes
-   use mod_ylag
-   use mod_rinvgj
-   use mod_ikapmue
+  use mod_ylag
+  use mod_rinvgj
+  use mod_ikapmue
+  use mod_rinit
+  use mod_intcheb_cell
+  use mod_cjlz
   implicit none
 
   ! PARAMETER definitions
@@ -66,14 +69,11 @@ subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, &
     hlp(nabm+4), hlp1, kap(2), r14, rh, rhlp(nabm+4), rpwgpm, rr, sk(2), sk1, &
     sk2, so2, so6, srk, tz, v14, vc(0:npemax), vh, vhlp(nabm+4), wrp, wrq, &
     x14, xh
-  complex (kind=dp) :: cjlz
   real (kind=dp) :: abs, dble, sqrt
   integer :: i, ic, ikm(2), ikmi, ikmj, imkm(2), imkmi, imkmj, ip, irk, isk1, &
     isk2, iv, j, jcorr, k, lb(2), lb1, lb2, m, mps, ms, n, nacorr, ndiv, nhlp, &
     nm, npe, nsol, ntop
-  integer :: ikapmue
   integer :: int, isign, nint
-  real (kind=dp) :: ylag
 
   ! DATA APRED0 / 1901.0D0, -2774.0D0, 2616.0D0, -1274.0D0, 251.0D0 /
   ! DATA ACORR0 /  251.0D0,  +646.0D0, -264.0D0,  +106.0D0, -19.0D0 /

@@ -20,9 +20,8 @@ subroutine hffcore(rnuc, jtop, kap1, kap2, nsol, mj, gc, fc, nrc, shf, s, &
   ! called by core
   ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
   use :: mod_datatypes, only: dp
-   use mod_ylag
    use mod_ikapmue
-   use mod_rint4pts
+  use mod_rinit
   implicit none
 
 
@@ -49,9 +48,7 @@ subroutine hffcore(rnuc, jtop, kap1, kap2, nsol, mj, gc, fc, nrc, shf, s, &
     drovrn1(nrc), f(nrc, 2), ff(2, 2), ff1(2, 2), ff2(2, 2), fg(2, 2), &
     fg1(2, 2), fg2(2, 2), g(nrc, 2), gf(2, 2), gf1(2, 2), gf2(2, 2), gg(2, 2), &
     gg1(2, 2), gg2(2, 2)
-  real (kind=dp) :: dble, dsqrt
   integer :: i, ikm1, ikm2, j, k, k1, k2, n
-  integer :: ikapmue
   integer :: nint
 
   if (kap2==0) kap2 = kap1
@@ -93,7 +90,7 @@ subroutine hffcore(rnuc, jtop, kap1, kap2, nsol, mj, gc, fc, nrc, shf, s, &
   ame(1, 1) = 4.0e0_dp*kap1*mj/(4.0e0_dp*kap1*kap1-1.0e0_dp)
   if (nsol==2) then
     ame(2, 2) = 4.0e0_dp*kap2*mj/(4.0e0_dp*kap2*kap2-1.0e0_dp)
-    ame(1, 2) = dsqrt(0.25e0_dp-(mj/dble(kap1-kap2))**2)
+    ame(1, 2) = sqrt(0.25e0_dp-(mj/real(kap1-kap2, kind=dp))**2)
     ame(2, 1) = ame(1, 2)
   end if
   ! coefficients for the spin-dipolar matrix elements
@@ -125,7 +122,7 @@ subroutine hffcore(rnuc, jtop, kap1, kap2, nsol, mj, gc, fc, nrc, shf, s, &
   cgg(1, 1) = -mj/(kap1+0.5e0_dp)
   cgf(1, 1) = -mj/(-kap1+0.5e0_dp)
   if (nsol==2) then
-    cgg(1, 2) = -dsqrt(1.0e0_dp-(mj/(kap1+0.5e0_dp))**2)
+    cgg(1, 2) = -sqrt(1.0e0_dp-(mj/(kap1+0.5e0_dp))**2)
     cgg(2, 1) = cgg(1, 2)
     cgg(2, 2) = -mj/(kap2+0.5e0_dp)
     cgf(2, 2) = -mj/(-kap2+0.5e0_dp)
@@ -139,7 +136,7 @@ subroutine hffcore(rnuc, jtop, kap1, kap2, nsol, mj, gc, fc, nrc, shf, s, &
   cff(1, 1) = mj*(-kap1+1.0e0_dp)/(-kap1+0.5e0_dp)
   if (nsol==2) then
     cfg(2, 2) = mj*(kap2+1.0e0_dp)/(kap2+0.5e0_dp)
-    cfg(1, 2) = 0.5e0_dp*dsqrt(1.0e0_dp-(mj/(kap1+0.5e0_dp))**2)
+    cfg(1, 2) = 0.5e0_dp*sqrt(1.0e0_dp-(mj/(kap1+0.5e0_dp))**2)
     cfg(2, 1) = cfg(1, 2)
     cff(2, 2) = mj*(-kap2+1.0e0_dp)/(-kap2+0.5e0_dp)
     ! CFF(1,2) = 0.5D0 * DSQRT( 1.0D0 - (MJ/(- KAP1 + 0.5D0))**2 )
@@ -229,9 +226,11 @@ subroutine rsumupint(sum, vg, g, wg, vf, f, wf, n)
 end subroutine rsumupint
 
 subroutine hffint(gg, ga, gb, dr, r, rnuc, nsol, jtop, nrc)
-  use :: mod_datatypes, only: dp
   ! Calculates Hyperfine integrals, extrapolates to zero and
   ! intrapolates to exact nuclear radius RNUC
+  use :: mod_datatypes, only: dp
+  use mod_ylag
+   use mod_rint4pts
   implicit none
   real (kind=dp), parameter :: eps=1.0D-12
 
@@ -243,7 +242,6 @@ subroutine hffint(gg, ga, gb, dr, r, rnuc, nsol, jtop, nrc)
   ! Local variables
   integer :: i, k1, k2
   real (kind=dp) :: x(5), y(5), yi(nrc), zi(nrc)
-  real (kind=dp) :: ylag
 
   do k1 = 1, nsol
     do k2 = 1, nsol

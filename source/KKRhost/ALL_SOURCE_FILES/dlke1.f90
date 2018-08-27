@@ -13,7 +13,7 @@ subroutine dlke1(gllke, alat, nacls, naclsmax, rr, ezoa, atom, bzkp, ic, ginp, &
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
   use global_variables
-   use mod_dlke1
+  use mod_cinit
   implicit none
 
   complex (kind=dp) :: ci
@@ -28,23 +28,14 @@ subroutine dlke1(gllke, alat, nacls, naclsmax, rr, ezoa, atom, bzkp, ic, ginp, &
   complex (kind=dp) :: gllke(almgf0, *), ginp(lmgf0d*naclsmax, *)
   real (kind=dp) :: bzkp(*), rr(3, 0:nrd), rcls(3, *)
   ! ..
-  ! .. External Subroutines ..
   real (kind=dp) :: convpu, tpi
   integer :: am, i, ii, im, lm2, m
   complex (kind=dp) :: eikr, tt
-  logical :: opt, test
   ! ..
-  ! .. Intrinsic Functions ..
   complex (kind=dp) :: arg(3)
   ! ..
-  ! .. Save statement ..
-  external :: cinit, test, opt, zaxpy
-  ! ..
-
-  intrinsic :: atan, exp
-  ! = 2*PI
-
-  save
+  logical :: opt, test
+  external :: test, opt
 
   ii = 3
   if (opt('COMPLEX ')) ii = 6

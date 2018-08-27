@@ -13,6 +13,7 @@ subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
   use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
    use mod_cintabr
+  use mod_cinit
   implicit complex (kind=dp)(a-h, o-z)
 
   ! PARAMETER definitions

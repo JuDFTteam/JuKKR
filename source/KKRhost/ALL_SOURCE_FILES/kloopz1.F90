@@ -25,8 +25,8 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    use mod_mympi, only: myrank, master
    use global_variables
    use Constants
-   use Profiling
-      Use mod_datatypes, Only: dp
+   use mod_Profiling
+   use mod_datatypes, Only: dp
    use mod_rotgll
    use mod_mssinit
    use mod_kkrmat01
@@ -35,6 +35,8 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    use mod_cmatstr
    use mod_symetrmat
    use mod_rotate
+  use mod_projtau
+   use mod_cinit
 
    implicit none
    !
@@ -155,11 +157,9 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
 #ifdef CPP_MPI
    integer :: irec0
 #endif
-   ! .. External Functions/Subroutines
+   ! .. External Functions
    logical :: TEST,OPT
-   external :: TEST,OPT,KKRMAT01,ROTGLL,ROTATE,SYMETRMAT,ZCOPY,ZGEMM,ZSCAL
-   ! .. Intrinsic Functions
-   intrinsic :: DBLE
+   external :: TEST,OPT
    ! .. Data statement
    data ICALL / 0 /
    ! .. Save statement
@@ -535,7 +535,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    endif
    do NS = 1,NSHELL(0)
       !
-      LDIA = (DABS(RATOM(1,NS)**2+RATOM(2,NS)**2+RATOM(3,NS)**2).LT.1D-6)
+      LDIA = (ABS(RATOM(1,NS)**2+RATOM(2,NS)**2+RATOM(3,NS)**2).LT.1D-6)
       !-------------------------------------------------------------------------
       ! GLL = -TAU
       !-------------------------------------------------------------------------
@@ -602,7 +602,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
          write(STR4,'(I4)') NS
          STR10 = '   i ='//STR4(1:4)
          call CMATSTR(STR10,10,GMATLL(1,1,NS),LMMAXD,LMMAXD, &
-            2*KREL+1,2*KREL+1,0,1d-8,6)
+            2*KREL+1,2*KREL+1,0,1.0e-8_dp,6)
       end if
    end do
    !----------------------------------------------------------------------------

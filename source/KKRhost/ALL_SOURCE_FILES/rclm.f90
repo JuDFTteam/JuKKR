@@ -3,7 +3,6 @@ module mod_rclm
 contains
 
 subroutine rclm(key, ll, ldim, vmat)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * Transform complex matrix VMAT:                                     *
@@ -40,6 +39,8 @@ subroutine rclm(key, ll, ldim, vmat)
   ! *                                                                    *
   ! *                                ph. mavropoulos, juelich 2004       *
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
+   use mod_cinit
   implicit none
   real (kind=dp), parameter :: eps=1.0D-12
   ! ..

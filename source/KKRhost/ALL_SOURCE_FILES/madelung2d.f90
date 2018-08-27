@@ -30,7 +30,7 @@ subroutine madelung2d(lpot, yrg, wg, naez, alat, vol, bravais, recbv, rbasis, &
   use :: mod_datatypes, only: dp
    use mod_madelgaunt
    use mod_madelcoef
-   use mod_madel2out
+   use mod_madelout, only: madel2out
    use mod_ewald2d
    use mod_lattice2d
   implicit none
@@ -53,7 +53,6 @@ subroutine madelung2d(lpot, yrg, wg, naez, alat, vol, bravais, recbv, rbasis, &
   integer :: i, ib, ih, ileft, iright
   integer :: lrecamad, irec, nleftoff, nrightoff, nleftall, nrightall
   integer :: ngmax, nrmax, nshlg, nshlr
-  logical :: opt
   ! ..
   ! .. Local Arrays ..
   ! .. Attention: LMXSPD*LMPOTD appears as NCLEB1 in other routines
@@ -65,6 +64,7 @@ subroutine madelung2d(lpot, yrg, wg, naez, alat, vol, bravais, recbv, rbasis, &
   integer :: icleb(lmxspd*lmpotd, 3)
   ! ..
   ! .. External Functions/Subroutines
+  logical, external :: opt
   ! ......................................................................
   iprint = 0
   nclebd = lmxspd*lmpotd

@@ -28,7 +28,7 @@ contains
                            t_lloyd,init_tlloyd, type_dtmatJijDij, &
                            init_t_dtmatJij_at
       use Constants
-      use Profiling
+      use mod_profiling
       use mod_wunfiles, only: t_params
       use mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun,save_wavefunc
       use mod_jijhelp, only: calc_dtmatJij
@@ -42,6 +42,7 @@ contains
       use mod_spinorbit_ham
       use mod_vllmat
       use mod_vllmatsra
+      use mod_regns, only: zgeinv1
 
       implicit none
 
@@ -745,7 +746,7 @@ contains
    subroutine allocate_locals_tmat_newsolver(allocmode, IRMDNEW, LMPOT, NSPIN, VINS, AUX, IPIV, TMAT0, TMATLL, ALPHA0, DTMATLL, ALPHALL, DALPHALL, JLK_INDEX, nsra, lmmaxso, nth, lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
       use mod_DataTypes, only: dp
       use Constants, only: czero
-      use Profiling, only: memocc
+      use mod_Profiling, only: memocc
       use mod_save_wavefun, only: t_wavefunctions
       implicit none
 
@@ -775,7 +776,6 @@ contains
       integer :: i_stat
 
       logical, external :: test, opt
-
 
       if (allocmode==1) then
 

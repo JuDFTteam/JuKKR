@@ -83,12 +83,9 @@ subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, &
   real (kind=dp) :: er, etk
   ! .. Local Arrays ..
   real (kind=dp), dimension (128) :: wi, xi
-  ! .. External Subroutines ..
+  ! .. External Functions
   logical :: opt
-  external :: gaufd, gauleg, opt
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: cmplx
+  external :: opt
   ! ..
   ! ----------------------------------------------------------------------------
   ! OUTPUT

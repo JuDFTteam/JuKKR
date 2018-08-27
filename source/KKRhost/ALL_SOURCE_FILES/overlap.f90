@@ -4,7 +4,6 @@ contains
 
 subroutine overlap(result, phi, pz, qz, pqns, acr, dr, lirreg, ipan, ircut, &
   drdi, irmin, lphi, ipand, lmaxd, lmmaxd, mmaxd, lmpotd, irmind, irmd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * Calculates the overlap integral of test function PHI with regular  *
@@ -55,6 +54,10 @@ subroutine overlap(result, phi, pz, qz, pqns, acr, dr, lirreg, ipan, ircut, &
   ! *                             ph. mavropoulos, juelich, 2002         *
   ! *                                                                    *
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
+  use mod_csimpk
+  use mod_rinit
+   use mod_cinit
   implicit none
   ! ..
   ! .. Scalar Arguments ..

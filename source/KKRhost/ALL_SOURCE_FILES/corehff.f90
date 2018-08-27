@@ -39,9 +39,7 @@ subroutine corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, rnuc, &
 
   ! Local variables
   real (kind=dp) :: ame(2, 2), xx(5), yi(nrc), yy(5), zi(nrc)
-  real (kind=dp) :: dble, dsqrt
   integer :: i, k1, k2, n
-  real (kind=dp) :: ylag
 
   ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   ! ANGULAR HYPERFINE MATRIX ELEMENTS   SEE E.G.  E.M.ROSE
@@ -50,7 +48,7 @@ subroutine corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, rnuc, &
   ame(1, 1) = 4.0e0_dp*kap1*mj/(4.0e0_dp*kap1*kap1-1.0e0_dp)
   if (nsol==2) then
     ame(2, 2) = 4.0e0_dp*kap2*mj/(4.0e0_dp*kap2*kap2-1.0e0_dp)
-    ame(1, 2) = dsqrt(0.25e0_dp-(mj/dble(kap1-kap2))**2)
+    ame(1, 2) = sqrt(0.25e0_dp-(mj/real(kap1-kap2, kind=dp))**2)
     ame(2, 1) = ame(1, 2)
   end if
   ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++

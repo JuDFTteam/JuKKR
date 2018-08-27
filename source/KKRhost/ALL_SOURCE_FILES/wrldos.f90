@@ -31,9 +31,6 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
   character (len=8) :: dosfl0
   character (len=11) :: dosfl
   ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: atan, dble, aimag
-  ! ..
   ! .. External Functions ..
   logical :: test
   external :: test

@@ -46,12 +46,6 @@ subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, &
   real (kind=dp) :: mvphi(nmvecmax), mvtet(nmvecmax)
   character (len=1) :: txtl(0:lmaxdloc)
 
-  ! Intrinsic Functions
-  intrinsic :: abs, acos, atan, real, aimag, conjg
-
-  ! External subroutines
-  external :: calcrotmat
-
   ! Data Statements
   data icall/0/
 

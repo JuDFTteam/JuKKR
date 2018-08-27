@@ -18,6 +18,7 @@ subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, &
   ! ********************************************************************
   use :: mod_datatypes, only: dp
    use mod_rmatstr
+  use mod_rinit
   implicit none
 
   ! Dummy arguments

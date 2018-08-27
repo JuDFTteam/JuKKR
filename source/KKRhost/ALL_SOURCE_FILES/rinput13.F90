@@ -30,7 +30,7 @@ contains
     icpa, kaoez, conc, kmrot, qmtet, qmphi, kreadldau, lopt, ueff, jeff, &
     erefldau)
 
-    use :: profiling
+    use :: mod_profiling
     use :: constants
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling
@@ -49,12 +49,6 @@ contains
     ! > @note VP : there should be some crosscheck of competing options
     ! >            e.g., XCPL and CONDUCT cannot be done simultaneously
     ! >            neither SOC1 and SOC2 manipulation etc.
-    ! ..
-    ! .. External Subroutines ..
-    external :: rcstop
-    ! ..
-    ! .. Intrinsic Functions ..
-    intrinsic :: min
     ! ..
     ! .. Scalar Arguments ..
     integer, intent (inout) :: kte ! < Calculation of the total energy On/Off
@@ -2583,10 +2577,10 @@ contains
         end if
 
         if (manctl) then
-          cscl(:, :) = cscl(:, :)/dsqrt(ctlscale)
+          cscl(:, :) = cscl(:, :)/sqrt(ctlscale)
           write (1337, 980, advance='no')
           write (1337, 910)
-          write (1337, 950) 1.d0/dsqrt(ctlscale)
+          write (1337, 950) 1.d0/sqrt(ctlscale)
         end if
         write (1337, 310)
       end if

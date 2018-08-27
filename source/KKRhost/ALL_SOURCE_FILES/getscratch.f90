@@ -14,7 +14,7 @@ subroutine scratchdir(tmpdir, itmpdir, iltmp)
    use mod_lngstring
   implicit none
   character (len=*) :: tmpdir
-  integer :: itmpdir, iltmp, lngstring
+  integer :: itmpdir, iltmp
   ! EXTERNAL GETENV
 
   ! CALL GETENV('SCRATCH',TMPDIR)  commented out 15.09.2006 by fivos for

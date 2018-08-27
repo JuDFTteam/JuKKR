@@ -46,9 +46,7 @@ subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
   ! Local variables
   real (kind=dp) :: a, b, co1, co2, co3, det, fact(0:100), pi, si1, si2, si3, &
     sk, symeulang(3, 48), tet1, tet2, tet3, rmj, rj
-  logical :: checkrmat
   real (kind=dp) :: dble
-  real (kind=dp) :: ddet33
   complex (kind=dp) :: dinv(nkmmax, nkmmax), dtim(nkmmax, nkmmax), &
     rc(nkmmax, nkmmax), w1(nkmmax, nkmmax), w2(nkmmax, nkmmax)
   logical :: equal
@@ -58,7 +56,7 @@ subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, &
   real (kind=dp) :: rmat(3, 3)
   real (kind=dp) :: w
 
-  equal(a, b) = (dabs(a-b)<1e-7_dp)
+  equal(a, b) = (abs(a-b)<1e-7_dp)
 
   write (1337, 110)
 

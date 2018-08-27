@@ -4,16 +4,17 @@ contains
 
 subroutine cylm02(lmax, cosx, fai, lpot2p, lmmaxd, thet, ylm, dylmt1, dylmt2, &
   dylmf1, dylmf2, dylmtf)
-  ! .....------------------------------------------------------------------
+  ! ------------------------------------------------------------------
   ! preparation of cylm0(=ylm(ip,i)), cylmt1(=dylm/dtheta),
   ! cylmt2(=d2ylm/dt2),
   ! cylmf1, cylmf2 are for fai.
   ! cylmtf=d2ylm/dfdt
   ! i=1,2,....,(lmax+1)**2
-  ! .....------------------------------------------------------------------
-  use :: mod_datatypes, only: dp
-   use mod_spher
-   use mod_triangle
+  ! ------------------------------------------------------------------
+  use mod_datatypes, only: dp
+  use mod_spher
+  use mod_shape_corr, only: triangle
+  use mod_trarea
   implicit none
 
   ! .. Parameters ..
@@ -38,12 +39,6 @@ subroutine cylm02(lmax, cosx, fai, lpot2p, lmmaxd, thet, ylm, dylmt1, dylmt2, &
   complex (kind=dp) :: cylm0(lmmaxd), cylmf1(lmmaxd), cylmf2(lmmaxd), &
     cylmt1(lmmaxd), cylmt2(lmmaxd), cylmtf(lmmaxd)
   real (kind=dp) :: bb1(lmmaxd), yl(lpot2p)
-  ! ..
-  ! .. External Subroutines ..
-  external :: spher, trarea
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: acos, atan, cmplx, conjg, cos, real, sin, sqrt
   ! ..
 
   ci = cmplx(0.e0_dp, 1.e0_dp, kind=dp)

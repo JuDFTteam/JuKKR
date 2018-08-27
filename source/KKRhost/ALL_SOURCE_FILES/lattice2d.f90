@@ -76,9 +76,7 @@ subroutine lattice2d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
   integer, intent (out) :: ngmax   ! < Number of reciprocal space vectors
   ! ..
   ! .. Local scalars ..
-  integer :: idint
   integer :: i, k, l, m, n, n1, ng, nr, nsh, nshl, numg, numgh, numr, numrh
-  real (kind=dp) :: dble
   real (kind=dp) :: rx, ry, vmin
   real (kind=dp) :: a, absgm, absrm, ag, ar, b, da, db, gx, gy, pi
   ! ..
@@ -91,12 +89,6 @@ subroutine lattice2d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
   real (kind=dp), dimension (3, 3) :: bg
   real (kind=dp), dimension (3, 3) :: br
   real (kind=dp), dimension (4, nmaxd) :: cj
-  ! ..
-  ! .. Intrinsic functions ..
-  intrinsic :: abs, atan, max, mod, sqrt
-  ! ..
-  ! .. External subroutines ..
-  external :: ioinput
   ! ----------------------------------------------------------------------------
   pi = 4.0e0_dp*atan(1.0e0_dp)
   ! ----------------------------------------------------------------------------
@@ -143,8 +135,8 @@ subroutine lattice2d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
   absgm = max(absg(1), absg(2))
   absrm = 2.0e0_dp*pi/absrm
   absgm = 2.0e0_dp*pi/absgm
-  numr = 2*(idint(rmax/absgm)+1) + 1
-  numg = 2*(idint(gmax/absrm)+1) + 1
+  numr = 2*(int(rmax/absgm)+1) + 1
+  numg = 2*(int(gmax/absrm)+1) + 1
   numrh = numr/2 + 1
   numgh = numg/2 + 1
 
@@ -156,9 +148,9 @@ subroutine lattice2d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
   nr = 0
   ! ----------------------------------------------------------------------------
   do l = 1, numr
-    a = dble(l-numrh)
+    a = real(l-numrh, kind=dp)
     do m = 1, numr
-      b = dble(m-numrh)
+      b = real(m-numrh, kind=dp)
       ! ----------------------------------------------------------------------
       rx = a*br(1, 1) + b*br(1, 2)
       ry = a*br(2, 1) + b*br(2, 2)
@@ -243,9 +235,9 @@ subroutine lattice2d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, &
   ng = 0
   ! ----------------------------------------------------------------------------
   do l = 1, numg
-    a = dble(l-numgh)
+    a = real(l-numgh, kind=dp)
     do m = 1, numg
-      b = dble(m-numgh)
+      b = real(m-numgh, kind=dp)
       ! ----------------------------------------------------------------------
       gx = a*bg(1, 1) + b*bg(1, 2)
       gy = a*bg(2, 1) + b*bg(2, 2)

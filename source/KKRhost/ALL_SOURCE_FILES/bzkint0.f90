@@ -13,6 +13,8 @@ subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, &
    use mod_crtstar
    use mod_pointgrp
    use mod_findgroup
+  use mod_bzkmesh
+  use mod_symtaumat
   implicit none
   ! .. Parameters ..
   integer :: nsymaxd, krel, lmaxd, lmmaxd
@@ -51,10 +53,6 @@ subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, &
   ! .. External Functions ..
   logical :: test, opt
   external :: test, opt
-  ! ..
-  ! .. External Subroutines ..
-  external :: bzkmesh, crtstar, findgroup, gfshells, pointgrp, symtaumat
-  ! ..
 
   ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
   write (1337, '(79("="),/,15X,A)') &

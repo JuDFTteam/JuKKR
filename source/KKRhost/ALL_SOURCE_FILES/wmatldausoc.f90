@@ -36,7 +36,10 @@ subroutine wmatldausoc(ntldau, itldau, nspin, denmatn, lopt, ueff, jeff, &
   use :: constants
   use :: mod_datatypes
    use mod_rclm
-   use mod_rwrite
+   use mod_wmatldau, only: rwrite
+   use mod_cinit
+   use mod_rinit
+   use mod_cmatstr
 
   implicit none
 

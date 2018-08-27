@@ -19,9 +19,7 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
   use :: mod_datatypes
   use :: mod_types, only: t_inc
   use global_variables
-   use mod_cgcrac
    use mod_phicalc
-   use mod_gauntc
    use mod_rinit
    use mod_simpk
    use mod_soutk
@@ -42,8 +40,6 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
     pi, rlop, rpw(irmd, 2*lmaxd+1), scl, sg(irmd), sl(irmd), sum, sumfclmb, &
     tg(irmd), tl(irmd), ueff(natypd), wgtfclmb(0:2*lmaxd+1), wig3j, &
     wint(irmd), w2(irmd)
-  real (kind=dp) :: cgcrac, gauntc
-  real (kind=dp) :: atan, dble
   integer :: i1, im1, im2, im3, im4, ipan1, ir, irc1, it, kk, l1, lf, lfmax, &
     ll, m1, m2, m3, m4
   integer :: nint
@@ -51,10 +47,10 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
 
   ! -> Calculate test functions Phi. Phi is already normalised to
   ! int phi**2 dr =1, thus it also contains factor r.
-  pi = 4.d0*atan(1.0d0)
-  fact(0) = 1.0d0
+  pi = 4.d0*atan(1.0_dp)
+  fact(0) = 1.0_dp
   do i1 = 1, 100
-    fact(i1) = fact(i1-1)*dble(i1)
+    fact(i1) = fact(i1-1)*real(i1, kind=dp)
   end do
   if (t_inc%i_write>0) write (1337, '(/,79("="),/,22X,A,/,79("="))') &
     'LDA+U:  INITIALISE Coulomb matrix U'
@@ -98,12 +94,12 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
 
     ! Note on integrand:
     ! Integrals are up to IRC1 because we integrate in sphere,
-    rlop = dble(lopt(i1))
+    rlop = real(lopt(i1), kind=dp)
     sumfclmb = 0.d0
     ! without thetas.
     do lf = 2, lfmax, 2
-      tl(1) = 0.0d0
-      tg(1) = 0.0d0
+      tl(1) = 0.0_dp
+      tg(1) = 0.0_dp
       ! In case of cell integration, from IRCUT(1)+1 to IRC1 a convolution
       ! with thetas and gaunts is needed:
       ! Int dr R_l(r)**2 Sum_L' Gaunt_{lm,lm,l'm'}*thetas_{l'm'}(r).
@@ -123,12 +119,12 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
       call soutk(tl, sl, ipan(i1), ircut(0,i1))
       call soutk(tg, sg, ipan(i1), ircut(0,i1))
 
-      sl(1) = 0.0d0
+      sl(1) = 0.0_dp
       do ir = 2, irc1
         sl(ir) = sl(ir)/rpw(ir, lf+1) + (sg(irc1)-sg(ir))*rpw(ir, lf)
       end do
 
-      sg(1) = 0.0d0
+      sg(1) = 0.0_dp
 
 
       ! ----------------------------------------------------------------------
@@ -138,8 +134,8 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
 
       call simpk(sg, fclmb(lf), ipan1, ircut(0,i1), drdi(1,i1))
       ! 1b.   Normalise slater integrals FCLMB
-      wig3j = (-1)**nint(rlop)*(1d0/sqrt(2d0*rlop+1d0))* &
-        cgcrac(fact, rlop, dble(lf), rlop, 0d0, 0d0, 0d0)
+      wig3j = (-1)**nint(rlop)*(1.0_dp/sqrt(2.0_dp*rlop+1.0_dp))* &
+        cgcrac(fact, rlop, real(lf, kind=dp), rlop, 0.0_dp, 0.0_dp, 0.0_dp)
 
       wgtfclmb(lf) = ((2*rlop+1)/(2*rlop))*wig3j**2
       sumfclmb = sumfclmb + wgtfclmb(lf)*fclmb(lf)
@@ -181,7 +177,7 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
                 sum = sum + g12*g34*(-1)**abs(kk)
               end do
               ! 3.  Calculate ULDAU
-              aa(im1, im2, im3, im4, lf) = sum*4.d0*pi/(2.d0*dble(lf)+1.d0)
+              aa(im1, im2, im3, im4, lf) = sum*4.d0*pi/(2.d0*real(lf, kind=dp)+1.d0)
             end if
           end do
         end do
@@ -250,16 +246,17 @@ subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, &
   end if
 100 format (6x, 7f10.6)
 end subroutine initldau
+! ********************************************************************
 ! *                                                                  *
 ! *     CLEBSCH GORDAN COEFFICIENTS FOR ARBITRARY                    *
 ! *     QUANTUM NUMBERS  J1,J2 ...                                   *
+! *     ACCORDING TO THE FORMULA OF   RACAH                          *
+! *     SEE: M.E.ROSE ELEMENTARY THEORY OF ANGULAR MOMENTUM          *
+! *          EQUATION (3.19)                                         *
+! *          EDMONDS EQ. (3.6.11) PAGE 45                            *
+! *                                                                  *
+! ********************************************************************
 function cgcrac(fact, j1, j2, j3, m1, m2, m3)
-  ! *     ACCORDING TO THE FORMULA OF   RACAH                          *
-  ! *     SEE: M.E.ROSE ELEMENTARY THEORY OF ANGULAR MOMENTUM          *
-  ! *          EQUATION (3.19)                                         *
-  ! *          EDMONDS EQ. (3.6.11) PAGE 45                            *
-  ! *                                                                  *
-  ! ********************************************************************
 
   ! Dummy arguments
 
@@ -273,9 +270,7 @@ function cgcrac(fact, j1, j2, j3, m1, m2, m3)
   real (kind=dp) :: fact(0:100)
 
 
-  real (kind=dp) :: dsqrt
   integer :: j, n, n1, n2, n3, n4, n5, nbot, ntop
-  integer :: nint
   real (kind=dp) :: rfact
   real (kind=dp) :: s, sum, vf, x, y
 
@@ -283,7 +278,7 @@ function cgcrac(fact, j1, j2, j3, m1, m2, m3)
   rfact(x) = fact(nint(x))
 
 
-  cgcrac = 0.0d0
+  cgcrac = 0.0_dp
   if (abs(m3-(m1+m2))>1.0d-6) return
   if (abs(j1-j2)>j3) return
   if ((j1+j2)<j3) return
@@ -298,13 +293,13 @@ function cgcrac(fact, j1, j2, j3, m1, m2, m3)
 
 
 100 continue
-  x = (2.0d0*j3+1.0d0)*rfact(j1+j2-j3)*rfact(j1-j2+j3)*rfact(-j1+j2+j3)* &
+  x = (2.0_dp*j3+1.0_dp)*rfact(j1+j2-j3)*rfact(j1-j2+j3)*rfact(-j1+j2+j3)* &
     rfact(j1+m1)*rfact(j1-m1)*rfact(j2+m2)*rfact(j2-m2)*rfact(j3+m3)* &
     rfact(j3-m3)
 
   y = rfact(j1+j2+j3+1)
 
-  vf = dsqrt(x/y)
+  vf = sqrt(x/y)
 
   n1 = nint(j1+j2-j3)
   n2 = nint(j1-m1)
@@ -316,11 +311,11 @@ function cgcrac(fact, j1, j2, j3, m1, m2, m3)
 
   n = nbot + 1
   if (n==(2*(n/2))) then
-    s = +1.0d0
+    s = +1.0_dp
   else
-    s = -1.0d0
+    s = -1.0_dp
   end if
-  sum = 0.0d0
+  sum = 0.0_dp
   ! ********************************************************************
   do n = nbot, ntop
     s = -s
@@ -329,15 +324,17 @@ function cgcrac(fact, j1, j2, j3, m1, m2, m3)
   end do
   cgcrac = vf*sum
 end function cgcrac
+
+! ********************************************************************
 ! *     GAUNT COEFFICIENTS for complex spherical harmonics  Y[l,m]   *
 ! *                                                                  *
+! *            G = INT dr^  Y[l1,m1]* Y[l2,m2] Y[l3,m3]              *
+! *                                                                  *
+! * see: M.E.ROSE ELEMENTARY THEORY OF ANGULAR MOMENTUM  Eq. (4.34)  *
+! *                                                                  *
+! * 26/01/95  HE                                                     *
+! ********************************************************************
 function gauntc(fact, l1, m1, l2, m2, l3, m3)
-  ! *            G = INT dr^  Y[l1,m1]* Y[l2,m2] Y[l3,m3]              *
-  ! *                                                                  *
-  ! * see: M.E.ROSE ELEMENTARY THEORY OF ANGULAR MOMENTUM  Eq. (4.34)  *
-  ! *                                                                  *
-  ! * 26/01/95  HE                                                     *
-  ! ********************************************************************
 
   ! PARAMETER definitions
 
@@ -347,24 +344,22 @@ function gauntc(fact, l1, m1, l2, m2, l3, m3)
 
   ! Local variables
   real (kind=dp) :: pi
-  parameter (pi=3.141592653589793238462643d0)
+  parameter (pi=3.141592653589793238462643_dp)
 
   integer :: l1, l2, l3, m1, m2, m3
   real (kind=dp) :: fact(0:100)
   real (kind=dp) :: gauntc
 
   ! ********************************************************************
-  real (kind=dp) :: cgcrac
-  real (kind=dp) :: dble
   real (kind=dp) :: g
   ! *                                                                  *
   if ((l1<0) .or. (l2<0) .or. (l3<0)) then
-    g = 0.0d0
+    g = 0.0_dp
   else
-    g = (dble(2*l2+1)*dble(2*l3+1)/(4.0d0*pi*dble(2*l1+ &
-      1)))**0.5d0*cgcrac(fact, dble(l3), dble(l2), dble(l1), dble(m3), &
-      dble(m2), dble(m1))*cgcrac(fact, dble(l3), dble(l2), dble(l1), 0.0d0, &
-      0.0d0, 0.0d0)
+    g = (real(2*l2+1, kind=dp)*real(2*l3+1, kind=dp)/(4.0_dp*pi*real(2*l1+ &
+      1, kind=dp)))**0.5_dp*cgcrac(fact, real(l3, kind=dp), real(l2, kind=dp), real(l1, kind=dp), real(m3, kind=dp), &
+      real(m2, kind=dp), real(m1, kind=dp))*cgcrac(fact, real(l3, kind=dp), real(l2, kind=dp), real(l1, kind=dp), 0.0_dp, &
+      0.0_dp, 0.0_dp)
   end if
   gauntc = g
 end function gauntc

@@ -55,6 +55,8 @@ subroutine epotinb(epotin, nspin, natyp, rho2ns, vm2z, r, drdi, ins, irmin, &
   ! -----------------------------------------------------------------------
   use :: mod_datatypes, only: dp
   use global_variables
+  use mod_simp3
+  use mod_simpk
   ! ..
   ! .. Local Scalars ..
   integer :: ins, lpot, natyp, nspin
@@ -65,19 +67,12 @@ subroutine epotinb(epotin, nspin, natyp, rho2ns, vm2z, r, drdi, ins, irmin, &
     vm2z(irmd, *), z(*)
   integer :: ipan(*), ircut(0:ipand, *), irmin(*), irws(*)
   ! ..
-  ! .. External Subroutines ..
   real (kind=dp) :: pi, r2rhod, r2rhou, rfpi, temp, zzor
   integer :: i, iatyp, ic, ipan1, ipotd, ipotu, irc1, irmin1, irs1, l1, lm, m1
   ! ..
-  ! .. Intrinsic Functions ..
   real (kind=dp) :: ens(0:lpot, natypd), er(irmd)
   integer :: ircutm(0:ipand)
   ! ..
-
-  external :: simp3, simpk
-
-
-  intrinsic :: atan, sqrt
 
   pi = 4.0e0_dp*atan(1.0e0_dp)
   rfpi = sqrt(4.0e0_dp*pi)

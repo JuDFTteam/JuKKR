@@ -51,15 +51,11 @@ subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, &
     c1, cn, x1, xn
   ! ..
   data icall/0/
-  ! .. External Subroutines
-  external :: bofm, surfgf
   ! .. Save statement
   save :: icall, nlayer, itermax, errmax, ichck
   ! .. External Functions
   logical :: opt
   external :: opt
-  ! .. Intrinsic Functions
-  intrinsic :: mod
 
   icall = icall + 1
   ! ----------------------------------------------------------------------------

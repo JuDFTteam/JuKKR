@@ -16,9 +16,6 @@ subroutine sname(name, new, band)
   integer :: i, l, lo
   character (len=1) :: ch(50), poi
   character (len=10) :: s
-
-  integer :: length
-  external :: length
   ! ------------------------------------------------------------------------
   poi = '.'
   if (band<0) then

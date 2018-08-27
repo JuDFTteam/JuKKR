@@ -4,7 +4,6 @@ contains
 
 subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
   dylmt2, dylmf1, dylmf2, dylmtf)
-  use :: mod_datatypes, only: dp
   ! -----------------------------------------------------------------------
   ! generate an angular mesh and spherical harmonics at those
   ! mesh points. For an angular integration the weights are ge-
@@ -14,6 +13,10 @@ subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
   ! Small change for GGA implementation
   ! Nikos          Dec. 1996
   ! -----------------------------------------------------------------------
+  use :: mod_datatypes, only: dp
+  use mod_cylm02
+  use mod_lebedev
+  use mod_ymy
   implicit none
   ! .. Scalar Arguments ..
   integer :: ijd, lmax, lmmaxd
@@ -21,9 +24,6 @@ subroutine sphere_gga(lmax, yr, wtyr, rij, ijd, lmmaxd, thet, ylm, dylmt1, &
   ! .. Local Scalars ..
   real (kind=dp) :: dx1, dx2, dx3, f0, pi, r, r1, r2, r3
   integer :: ij, lm1
-  ! ..
-  ! .. External Subroutines ..
-  external :: cylm02, ymy
   ! ..
   ! .. Array Arguments ..
   real (kind=dp) :: dylmf1(ijd, lmmaxd), dylmf2(ijd, lmmaxd), &

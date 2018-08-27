@@ -63,7 +63,7 @@ subroutine ewald2d(lpot, alat, vec1, vec2, iq1, iq2, rm2, nrmax, nshlr, nsr, &
     dqdotg, expbsq, fpi, g1, g2, g3, ga, lamda, pi, r, r0, r1, r2, r3, rfac, &
     s, signrz, stest0, tpi
   complex (kind=dp) :: aprefmm, aprefpp, bfac, ci, factexp, simag
-  real (kind=dp) :: derfc, exponent, crit
+  real (kind=dp) :: exponent, crit
   integer :: i, im, ir, l, lm, lmax, lmmax, m, icall, ngmax1
   ! ..
   ! .. Local arrays ..
@@ -72,12 +72,6 @@ subroutine ewald2d(lpot, alat, vec1, vec2, iq1, iq2, rm2, nrmax, nshlr, nsr, &
     ylmpref(0:lassld), ylmpref1(0:lassld, 0:lassld)
   complex (kind=dp) :: cim(0:lassld), exponl(0:lassld), pref2(lassld), &
     s0(lmxspd), stest(lmxspd), stestnew(lmxspd)
-  ! ..
-  ! .. External subroutines ..
-  external :: fplaneg, fplaner
-  ! ..
-  ! .. Intrinsic functions ..
-  intrinsic :: abs, atan, real, exp, sqrt
   ! ..
   ! .. Data statements
   data icall/0/
@@ -248,7 +242,7 @@ subroutine ewald2d(lpot, alat, vec1, vec2, iq1, iq2, rm2, nrmax, nshlr, nsr, &
       if (ga>1e-6_dp) then
         call ymy(g1, g2, g3, ga, ylm, lassld)
         beta = ga/lamda
-        expbsq = derfc(beta/2e0_dp)
+        expbsq = erfc(beta/2e0_dp)
 
         bfac = con*simag*expbsq
         stestnew(1) = stestnew(1) + bfac/ga

@@ -55,12 +55,6 @@ subroutine gaunt(lmax, lpot, w, yr, cleb, loflm, icleb, iend, jend, ncleb, &
   integer :: i, j, l, l1, l1p, l2, l2p, l3, lm1, lm2, lm3, lm3p, lmpot, m, m1, &
     m1a, m1s, m2, m2a, m2s, m3, m3a, m3s
   ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: abs, mod, real, sign
-  ! ..
-  ! .. External Subroutines ..
-  external :: rcstop
-  ! ..
 
   i = 1
   do l = 0, 2*lmax

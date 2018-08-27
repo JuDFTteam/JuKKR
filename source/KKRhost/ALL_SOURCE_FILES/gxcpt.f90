@@ -12,8 +12,6 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
    use mod_corlsd
    use mod_cpw91
    use mod_exch91
-   use mod_fdfdz
-   use mod_ffz
   implicit none
   ! .. Scalar Arguments ..
   real (kind=dp) :: agr, agrd, agru, cedg, cedl, g2r, g2rd, g2ru, gggr, gggrd, &
@@ -38,16 +36,6 @@ subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, &
     xedld, xedlu, xf, xl, xl0, xl01, xl02, xl03, xl1, xl2, xl3, xld, xld1, &
     xld2, xld3, xlf, xp, xs, zt13m, zt13p, zta3, zta4
   integer :: ibh, ica, icg, iex, igd, igh, igl, imj, ip9, ipg, ivg, ivn, ixlf
-  ! ..
-  ! .. External Subroutines ..
-  external :: corlsd, cpw91, exch91
-  ! ..
-  ! .. Intrinsic real functions ..
-  intrinsic :: acos, atan, exp, log, sqrt
-  ! ..
-  ! .. Statement real functions ..
-  real (kind=dp) :: fbet, fdedr, fdfdz, ffz, fncecl, fncecs, fncf, fncvcl, &
-    fncvcs, fvnec, fvq
   ! ..
   ! .. Save statement ..
   save :: gp, gf, b1p, b1f, b2p, b2f, cp, cf, d_p, df, ap, bp, af, bf, a1, &

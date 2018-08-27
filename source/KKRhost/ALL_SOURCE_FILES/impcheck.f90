@@ -36,9 +36,6 @@ subroutine impcheck(atomimp, natomimp, naez, rclsimp, rbasis, bravais, ndim)
   logical :: latom(natomimp), lpos(natomimp), labscord
   real (kind=dp) :: diffmin(natomimp)
   ! ..
-  ! .. External subroutine
-  external :: getclusnxyz
-  ! ..
 
   ! ----------------------------------------------------------------------
   ! initialize diffmin array with high value

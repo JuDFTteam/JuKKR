@@ -32,13 +32,6 @@ subroutine shape_corr(lpot, natyp, gsh, ilm_map, imaxsh, lmsp, ntcell, w, yr, &
   real (kind=dp) :: factor, gaunt, s
   integer :: i, iat, icell, isum, j, l1, l2, l3, lm1, lm2, lm3, m1, m1a, m1s, &
     m2, m2a, m2s, m3, m3a, m3s
-  logical :: triangle
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: abs, real, sign
-  ! ..
-  ! .. External Subroutines ..
-  external :: rcstop, triangle
   ! ..
 
   ! -> set up of the gaunt coefficients with an index field

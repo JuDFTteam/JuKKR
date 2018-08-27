@@ -3,7 +3,6 @@ module mod_strsmat
 contains
 
 subroutine strsmat(lmax, cgc, srrel, nrrel, irrel, nkmmax, nkmpmax)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! *    INITIALIZE TRANSFORMATION MATRIX THAT TAKES MATRICES FROM     *
@@ -14,6 +13,8 @@ subroutine strsmat(lmax, cgc, srrel, nrrel, irrel, nkmmax, nkmpmax)
   ! * 25/10/95  HE  proper convention of trans. matrix introduced      *
   ! ********************************************************************
 
+  use :: mod_datatypes, only: dp
+   use mod_cinit
   implicit none
 
   ! PARAMETER definitions

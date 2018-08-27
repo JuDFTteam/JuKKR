@@ -25,6 +25,7 @@ subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, &
   ! **********************************************************************
   use :: mod_datatypes, only: dp
   use global_variables
+   use mod_rinit
   implicit none
 
   complex (kind=dp) :: czero

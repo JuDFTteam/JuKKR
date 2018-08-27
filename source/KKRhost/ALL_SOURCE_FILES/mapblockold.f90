@@ -67,14 +67,6 @@ integer function mapblockold(itercurr, iterfirst, iterlast, iterstep, &
   ! .. Scalar Arguments ..
   integer :: itercurr, iterfirst, iterlast, iterstep, nodefirst, nodelast
   ! ..
-  ! .. Intrinsic Functions ..
-
-  intrinsic :: real, max
-  ! ..
-  ! .. External Functions ..
-  integer :: ioben
-  external :: ioben
-  ! ..
   ! .. Local Scalars ..
   integer :: litercurr, literlast, lnodelast, nprime, q, r
 

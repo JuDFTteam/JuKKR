@@ -20,8 +20,6 @@ subroutine nrmliz(n, r, rn)
   ! Local parameters
   integer :: i
   real (kind=dp) :: d, d2
-  ! External calls
-  external :: dcopy, dscal
 
   call dcopy(3*n, r, 1, rn, 1)
   do i = 1, n

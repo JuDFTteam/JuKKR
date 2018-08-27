@@ -29,19 +29,12 @@ subroutine rrgen(bv1, lsurf, rr, nrd)
   ! .. Local scalars ..
   real (kind=dp) :: epsshl, r, r1, r2, r3, rmax, rr2, rs
   integer :: i, j, k, n1, n2, n3, pos, iprint
-  real (kind=dp) :: dble
   integer :: nr
   ! ..
   ! .. Local arrays
   real (kind=dp) :: rabs(nrd), rr1(3, nrd), v(3), vx(3), vy(3), vz(3), vx0(3), &
     vy0(3), vz0(3)
   integer :: ind(nrd)
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: abs, min, sqrt
-  ! ..
-  ! .. External Subroutines ..
-  external :: dsort, scalpr, vadd, veq
   ! ..
   ! .. Data Statements ..
   data epsshl/1.0e-5_dp/
@@ -87,9 +80,9 @@ subroutine rrgen(bv1, lsurf, rr, nrd)
   rr(2, 0) = 0.0e0_dp
   rr(3, 0) = 0.0e0_dp
 
-  call vmul(bv1(1,1), dble(-n1-1), vx0(1))
-  call vmul(bv1(1,2), dble(-n2-1), vy0(1))
-  call vmul(bv1(1,3), dble(-n3-1), vz0(1))
+  call vmul(bv1(1,1), real(-n1-1, kind=dp), vx0(1))
+  call vmul(bv1(1,2), real(-n2-1, kind=dp), vy0(1))
+  call vmul(bv1(1,3), real(-n3-1, kind=dp), vz0(1))
   call veq(vx0, vx)
   ! **********************************************************************
   do i = -n1, n1

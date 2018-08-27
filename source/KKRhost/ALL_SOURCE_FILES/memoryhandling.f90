@@ -15,7 +15,7 @@
 ! -------------------------------------------------------------------------------
 module memoryhandling
 
-  use :: profiling
+  use :: mod_profiling
   use :: mod_datatypes, only: dp
 
   implicit none

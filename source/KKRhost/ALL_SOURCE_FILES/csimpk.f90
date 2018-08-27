@@ -33,13 +33,6 @@ subroutine csimpk(cf, cfint, ipan, ircut, drdi)
   real (kind=dp) :: a1, a2
   integer :: i, ien, ip, ist, n
   ! ..
-  ! .. External Functions ..
-  complex (kind=dp) :: csum
-  external :: csum
-  ! ..
-  ! .. Intrinsic Functions ..
-  intrinsic :: mod
-  ! ..
   a1 = 4.0e0_dp/3.0e0_dp
   a2 = 2.0e0_dp/3.0e0_dp
   cfint = 0.0e0_dp

@@ -11,7 +11,7 @@
 ! > Jonathan Chico
 ! > @date 10.12.2017
 ! -------------------------------------------------------------------------------
-module profiling
+module mod_profiling
 
   use :: mod_datatypes
   implicit none
@@ -161,4 +161,4 @@ contains
   end subroutine memocc
 
 
-end module profiling
+end module mod_profiling

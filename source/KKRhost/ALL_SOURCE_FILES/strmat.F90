@@ -72,12 +72,6 @@ use constants
 !.. Local arrays ..
       complex (kind=dp) STEST(LMXSPD)
       real (kind=dp) G(0:LASSLD),YLM(LMXSPD),QI(3,NAEZD)
-!..
-!.. External subroutines ..
-      EXTERNAL GAMFC,YMY
-!..
-!.. Intrinsic functions ..
-      INTRINSIC ATAN,ABS,DBLE,EXP,SQRT
 !     ..................................................................
 
 lmx = 2*lpot

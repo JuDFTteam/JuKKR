@@ -6,9 +6,10 @@ contains
 subroutine spinorbit_ham(lmax, lmmaxd, vins, rnew, eryd, Zat, cvlight, socscale, nspin, &
   lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, &
   irmdnew, nrmaxd, vnspll, vnspll1, mode)
-  use :: mod_datatypes, only: dp
-   use mod_getclambdacinv
-   use mod_spin_orbit_compl
+  use mod_datatypes, only: dp
+  use mod_cheb, only: getclambdacinv
+  use mod_spin_orbit_compl
+  use mod_rotatespinframe, only: rotatematrix
   implicit none
 
   !inputs
