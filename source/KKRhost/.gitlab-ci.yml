@@ -30,8 +30,8 @@ test:intel:
     - pip install numpy
     # test if dependencies are working
     - echo 'do some tests here'
-    - echo 'ifort: ' && which ifort
-    - echo 'mpiifort: ' && which mpiifort
+    - echo 'ifort ' && which ifort
+    - echo 'mpiifort ' && which mpiifort
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
 
 ###############################################################################

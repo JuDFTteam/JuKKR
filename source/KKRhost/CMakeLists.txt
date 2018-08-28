@@ -14,8 +14,6 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
     set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mkl -lmkl_sequential")
     set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox")
     set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -r8 -ip -xHOST")
-    # enable pardiso for intel compiler
-    add_definitions(-D__INTEL_COMPILER)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -lblas -llapack -fopenmp -ffree-line-length-none -fdefault-real-8 -fimplicit-none")
     set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g3 -fcheck=all -fbacktrace -Wall -Wextra")
@@ -394,206 +392,206 @@ add_executable(
     kkr_BdG_radial.x
     ALL_SOURCE_FILES/main_tmat_runner.F90
     ALL_SOURCE_FILES/DataTypes.f90
-    ALL_SOURCE_FILES/version.F90 
+    ALL_SOURCE_FILES/version.f90
     ALL_SOURCE_FILES/version_info.F90 
-    ALL_SOURCE_FILES/constants.F90 
+    ALL_SOURCE_FILES/constants.f90 
     ALL_SOURCE_FILES/mympi.F90 
     ALL_SOURCE_FILES/global_variables.F90 
     ALL_SOURCE_FILES/types.F90 
     ALL_SOURCE_FILES/timing.F90 
-    ALL_SOURCE_FILES/profiling.F90 
+    ALL_SOURCE_FILES/profiling.f90 
     ALL_SOURCE_FILES/save_wavefun.F90 
     ALL_SOURCE_FILES/wunfiles.F90 
     ALL_SOURCE_FILES/md5sums.F90 
-    ALL_SOURCE_FILES/jijhelp.F90 
-    ALL_SOURCE_FILES/initabjij.F90 
+    ALL_SOURCE_FILES/jijhelp.f90 
+    ALL_SOURCE_FILES/initabjij.f90 
     ALL_SOURCE_FILES/tbxccpljij.F90 
     ALL_SOURCE_FILES/tbxccpljijdij.F90 
-    ALL_SOURCE_FILES/create_newmesh.F90 
-    ALL_SOURCE_FILES/cheb.F90 
+    ALL_SOURCE_FILES/create_newmesh.f90 
+    ALL_SOURCE_FILES/cheb.f90 
     ALL_SOURCE_FILES/rhoqtools.F90 
     ALL_SOURCE_FILES/godfrin.F90 
-    ALL_SOURCE_FILES/memoryhandling.F90 
+    ALL_SOURCE_FILES/memoryhandling.f90 
     ALL_SOURCE_FILES/rinput13.F90
-    ALL_SOURCE_FILES/getbr3.F90 
-    ALL_SOURCE_FILES/write_tbkkr_files.F90 
-    ALL_SOURCE_FILES/gaunt.F90 
-    ALL_SOURCE_FILES/symtaumat.F90 
-    ALL_SOURCE_FILES/taustruc.F90 
-    ALL_SOURCE_FILES/bzkint0.F90 
-    ALL_SOURCE_FILES/findgroup.F90 
-    ALL_SOURCE_FILES/calcrotmat.F90 
-    ALL_SOURCE_FILES/errortrap.F90 
-    ALL_SOURCE_FILES/bzkmesh.F90 
-    ALL_SOURCE_FILES/bzirr3d.F90 
-    ALL_SOURCE_FILES/madelung3d.F90 
-    ALL_SOURCE_FILES/madelung2d.F90 
-    ALL_SOURCE_FILES/madelout.F90 
-    ALL_SOURCE_FILES/idreals.F90 
-    ALL_SOURCE_FILES/deciopt.F90 
-    ALL_SOURCE_FILES/impcheck.F90 
-    ALL_SOURCE_FILES/impcoefs.F90 
-    ALL_SOURCE_FILES/setgijtab.F90 
-    ALL_SOURCE_FILES/gijxcpl.F90 
-    ALL_SOURCE_FILES/gijcond.F90 
-    ALL_SOURCE_FILES/getclusnxyz.F90 
-    ALL_SOURCE_FILES/decitset.F90    
-    ALL_SOURCE_FILES/decitmat.F90 
-    ALL_SOURCE_FILES/outpothost.F90  
-    ALL_SOURCE_FILES/decipothead.F90 
-    ALL_SOURCE_FILES/getscratch.F90 
-    ALL_SOURCE_FILES/decipotbas.F90  
-    ALL_SOURCE_FILES/outtmathost.F90 
-    ALL_SOURCE_FILES/lngstring.F90 
-    ALL_SOURCE_FILES/startldau.F90   
-    ALL_SOURCE_FILES/readldaupot.F90 
-    ALL_SOURCE_FILES/epathtb.F90 
-    ALL_SOURCE_FILES/addvirtual14.F90   
-    ALL_SOURCE_FILES/interpolspline.F90 
-    ALL_SOURCE_FILES/spline_real.F90 
-    ALL_SOURCE_FILES/splint_real.F90 
-    ALL_SOURCE_FILES/calrmt.F90     
-    ALL_SOURCE_FILES/clsgen_tb.F90   
-    ALL_SOURCE_FILES/clustcomp.F90 
-    ALL_SOURCE_FILES/cmomsread.F90 
-    ALL_SOURCE_FILES/crospr.F90 
-    ALL_SOURCE_FILES/cross.F90 
-    ALL_SOURCE_FILES/crtstar.F90 
-    ALL_SOURCE_FILES/ddet33.F90 
-    ALL_SOURCE_FILES/ddot1.F90 
-    ALL_SOURCE_FILES/dscal1.F90 
-    ALL_SOURCE_FILES/dsort.F90 
-    ALL_SOURCE_FILES/dswap1.F90 
-    ALL_SOURCE_FILES/emesht.F90 
-    ALL_SOURCE_FILES/erfcex.F90 
-    ALL_SOURCE_FILES/errmsg.F90 
-    ALL_SOURCE_FILES/gamfc.F90 
-    ALL_SOURCE_FILES/gaufd.F90  
-    ALL_SOURCE_FILES/gauleg.F90 
-    ALL_SOURCE_FILES/gaunt2.F90 
-    ALL_SOURCE_FILES/gfmask.F90 
-    ALL_SOURCE_FILES/gfshells.F90 
-    ALL_SOURCE_FILES/grule.F90 
+    ALL_SOURCE_FILES/getbr3.f90 
+    ALL_SOURCE_FILES/write_tbkkr_files.f90 
+    ALL_SOURCE_FILES/gaunt.f90 
+    ALL_SOURCE_FILES/symtaumat.f90 
+    ALL_SOURCE_FILES/taustruc.f90 
+    ALL_SOURCE_FILES/bzkint0.f90 
+    ALL_SOURCE_FILES/findgroup.f90 
+    ALL_SOURCE_FILES/calcrotmat.f90 
+    ALL_SOURCE_FILES/errortrap.f90 
+    ALL_SOURCE_FILES/bzkmesh.f90 
+    ALL_SOURCE_FILES/bzirr3d.f90 
+    ALL_SOURCE_FILES/madelung3d.f90 
+    ALL_SOURCE_FILES/madelung2d.f90 
+    ALL_SOURCE_FILES/madelout.f90 
+    ALL_SOURCE_FILES/idreals.f90 
+    ALL_SOURCE_FILES/deciopt.f90 
+    ALL_SOURCE_FILES/impcheck.f90 
+    ALL_SOURCE_FILES/impcoefs.f90 
+    ALL_SOURCE_FILES/setgijtab.f90 
+    ALL_SOURCE_FILES/gijxcpl.f90 
+    ALL_SOURCE_FILES/gijcond.f90 
+    ALL_SOURCE_FILES/getclusnxyz.f90 
+    ALL_SOURCE_FILES/decitset.f90    
+    ALL_SOURCE_FILES/decitmat.f90 
+    ALL_SOURCE_FILES/outpothost.f90  
+    ALL_SOURCE_FILES/decipothead.f90 
+    ALL_SOURCE_FILES/getscratch.f90 
+    ALL_SOURCE_FILES/decipotbas.f90  
+    ALL_SOURCE_FILES/outtmathost.f90 
+    ALL_SOURCE_FILES/lngstring.f90 
+    ALL_SOURCE_FILES/startldau.f90   
+    ALL_SOURCE_FILES/readldaupot.f90 
+    ALL_SOURCE_FILES/epathtb.f90 
+    ALL_SOURCE_FILES/addvirtual14.f90   
+    ALL_SOURCE_FILES/interpolspline.f90 
+    ALL_SOURCE_FILES/spline_real.f90 
+    ALL_SOURCE_FILES/splint_real.f90 
+    ALL_SOURCE_FILES/calrmt.f90     
+    ALL_SOURCE_FILES/clsgen_tb.f90   
+    ALL_SOURCE_FILES/clustcomp.f90 
+    ALL_SOURCE_FILES/cmomsread.f90 
+    ALL_SOURCE_FILES/crospr.f90 
+    ALL_SOURCE_FILES/cross.f90 
+    ALL_SOURCE_FILES/crtstar.f90 
+    ALL_SOURCE_FILES/ddet33.f90 
+    ALL_SOURCE_FILES/ddot1.f90 
+    ALL_SOURCE_FILES/dscal1.f90 
+    ALL_SOURCE_FILES/dsort.f90 
+    ALL_SOURCE_FILES/dswap1.f90 
+    ALL_SOURCE_FILES/emesht.f90 
+    ALL_SOURCE_FILES/erfcex.f90 
+    ALL_SOURCE_FILES/errmsg.f90 
+    ALL_SOURCE_FILES/gamfc.f90 
+    ALL_SOURCE_FILES/gaufd.f90  
+    ALL_SOURCE_FILES/gauleg.f90 
+    ALL_SOURCE_FILES/gaunt2.f90 
+    ALL_SOURCE_FILES/gfmask.f90 
+    ALL_SOURCE_FILES/gfshells.f90 
+    ALL_SOURCE_FILES/grule.f90 
     ALL_SOURCE_FILES/ioinput.f90 
-    ALL_SOURCE_FILES/lattice2d.F90 
-    ALL_SOURCE_FILES/lattice3d.F90 
-    ALL_SOURCE_FILES/lattix99.F90 
-    ALL_SOURCE_FILES/latvec.F90 
-    ALL_SOURCE_FILES/length.F90 
-    ALL_SOURCE_FILES/nrmliz.F90 
-    ALL_SOURCE_FILES/opt.F90 
-    ALL_SOURCE_FILES/pointgrp.F90 
-    ALL_SOURCE_FILES/potcut.F90 
-    ALL_SOURCE_FILES/rcstop.F90 
-    ALL_SOURCE_FILES/rinit.F90 
-    ALL_SOURCE_FILES/decimaread.F90 
-    ALL_SOURCE_FILES/rrgen.F90 
-    ALL_SOURCE_FILES/scalevec.F90 
-    ALL_SOURCE_FILES/cinit.F90 
-    ALL_SOURCE_FILES/scalpr.F90 
-    ALL_SOURCE_FILES/shellgen2k.F90 
-    ALL_SOURCE_FILES/sname.F90 
-    ALL_SOURCE_FILES/spatpr.F90 
+    ALL_SOURCE_FILES/lattice2d.f90 
+    ALL_SOURCE_FILES/lattice3d.f90 
+    ALL_SOURCE_FILES/lattix99.f90 
+    ALL_SOURCE_FILES/latvec.f90 
+    ALL_SOURCE_FILES/length.f90 
+    ALL_SOURCE_FILES/nrmliz.f90 
+    ALL_SOURCE_FILES/opt.f90 
+    ALL_SOURCE_FILES/pointgrp.f90 
+    ALL_SOURCE_FILES/potcut.f90 
+    ALL_SOURCE_FILES/rcstop.f90 
+    ALL_SOURCE_FILES/rinit.f90 
+    ALL_SOURCE_FILES/decimaread.f90 
+    ALL_SOURCE_FILES/rrgen.f90 
+    ALL_SOURCE_FILES/scalevec.f90 
+    ALL_SOURCE_FILES/cinit.f90 
+    ALL_SOURCE_FILES/scalpr.f90 
+    ALL_SOURCE_FILES/shellgen2k.f90 
+    ALL_SOURCE_FILES/sname.f90 
+    ALL_SOURCE_FILES/spatpr.f90 
     ALL_SOURCE_FILES/strmat.F90 
-    ALL_SOURCE_FILES/test.F90 
-    ALL_SOURCE_FILES/generalpot.F90 
-    ALL_SOURCE_FILES/ymy.F90 
-    ALL_SOURCE_FILES/veq.F90 
-    ALL_SOURCE_FILES/vadd.F90 
-    ALL_SOURCE_FILES/vmul.F90 
-    ALL_SOURCE_FILES/testdim.F90 
-    ALL_SOURCE_FILES/startb1.F90 
-    ALL_SOURCE_FILES/madelcoef.F90 
-    ALL_SOURCE_FILES/madelgaunt.F90 
-    ALL_SOURCE_FILES/ewald2d.F90 
-    ALL_SOURCE_FILES/fplaneg.F90 
-    ALL_SOURCE_FILES/fplaner.F90 
-    ALL_SOURCE_FILES/shape_corr.F90 
-    ALL_SOURCE_FILES/wfmesh.F90 
-    ALL_SOURCE_FILES/regsol.F90 
-    ALL_SOURCE_FILES/beshan.F90 
-    ALL_SOURCE_FILES/drvbastrans.F90 
-    ALL_SOURCE_FILES/relpotcvt.F90 
-    ALL_SOURCE_FILES/drvreltmat.F90 
-    ALL_SOURCE_FILES/calccgc.F90 
-    ALL_SOURCE_FILES/ikmlin.F90 
-    ALL_SOURCE_FILES/strsmat.F90 
-    ALL_SOURCE_FILES/bastrmat.F90 
-    ALL_SOURCE_FILES/ikapmue.F90 
-    ALL_SOURCE_FILES/cmatstr.F90 
-    ALL_SOURCE_FILES/checkrmat.F90 
-    ALL_SOURCE_FILES/rinvgj.F90 
-    ALL_SOURCE_FILES/ssite.F90 
-    ALL_SOURCE_FILES/cintabr.F90 
-    ALL_SOURCE_FILES/sumupint.F90 
-    ALL_SOURCE_FILES/dirac_bs.F90 
-    ALL_SOURCE_FILES/dirbslag.F90 
-    ALL_SOURCE_FILES/dirbsmid.F90 
-    ALL_SOURCE_FILES/dirbsrad.F90 
-    ALL_SOURCE_FILES/dirbsrze.F90 
-    ALL_SOURCE_FILES/dirbsstp.F90 
-    ALL_SOURCE_FILES/cjlz.F90 
-    ALL_SOURCE_FILES/cnlz.F90 
-    ALL_SOURCE_FILES/cdjlzdz.F90 
-    ALL_SOURCE_FILES/cdnlzdz.F90 
-    ALL_SOURCE_FILES/cint4pts.F90 
-    ALL_SOURCE_FILES/cinthff.F90 
-    ALL_SOURCE_FILES/ylag.F90 
-    ALL_SOURCE_FILES/rnuctab.F90 
-    ALL_SOURCE_FILES/dirac_op.F90 
-    ALL_SOURCE_FILES/dirac_soc.F90 
-    ALL_SOURCE_FILES/dirac_soc2.F90 
-    ALL_SOURCE_FILES/changerep.F90 
-    ALL_SOURCE_FILES/writehoststructure.F90 
-    ALL_SOURCE_FILES/readimppot.F90 
+    ALL_SOURCE_FILES/test.f90 
+    ALL_SOURCE_FILES/generalpot.f90 
+    ALL_SOURCE_FILES/ymy.f90 
+    ALL_SOURCE_FILES/veq.f90 
+    ALL_SOURCE_FILES/vadd.f90 
+    ALL_SOURCE_FILES/vmul.f90 
+    ALL_SOURCE_FILES/testdim.f90 
+    ALL_SOURCE_FILES/startb1.f90 
+    ALL_SOURCE_FILES/madelcoef.f90 
+    ALL_SOURCE_FILES/madelgaunt.f90 
+    ALL_SOURCE_FILES/ewald2d.f90 
+    ALL_SOURCE_FILES/fplaneg.f90 
+    ALL_SOURCE_FILES/fplaner.f90 
+    ALL_SOURCE_FILES/shape_corr.f90 
+    ALL_SOURCE_FILES/wfmesh.f90 
+    ALL_SOURCE_FILES/regsol.f90 
+    ALL_SOURCE_FILES/beshan.f90 
+    ALL_SOURCE_FILES/drvbastrans.f90 
+    ALL_SOURCE_FILES/relpotcvt.f90 
+    ALL_SOURCE_FILES/drvreltmat.f90 
+    ALL_SOURCE_FILES/calccgc.f90 
+    ALL_SOURCE_FILES/ikmlin.f90 
+    ALL_SOURCE_FILES/strsmat.f90 
+    ALL_SOURCE_FILES/bastrmat.f90 
+    ALL_SOURCE_FILES/ikapmue.f90 
+    ALL_SOURCE_FILES/cmatstr.f90 
+    ALL_SOURCE_FILES/checkrmat.f90 
+    ALL_SOURCE_FILES/rinvgj.f90 
+    ALL_SOURCE_FILES/ssite.f90 
+    ALL_SOURCE_FILES/cintabr.f90 
+    ALL_SOURCE_FILES/sumupint.f90 
+    ALL_SOURCE_FILES/dirac_bs.f90 
+    ALL_SOURCE_FILES/dirbslag.f90 
+    ALL_SOURCE_FILES/dirbsmid.f90 
+    ALL_SOURCE_FILES/dirbsrad.f90 
+    ALL_SOURCE_FILES/dirbsrze.f90 
+    ALL_SOURCE_FILES/dirbsstp.f90 
+    ALL_SOURCE_FILES/cjlz.f90 
+    ALL_SOURCE_FILES/cnlz.f90 
+    ALL_SOURCE_FILES/cdjlzdz.f90 
+    ALL_SOURCE_FILES/cdnlzdz.f90 
+    ALL_SOURCE_FILES/cint4pts.f90 
+    ALL_SOURCE_FILES/cinthff.f90 
+    ALL_SOURCE_FILES/ylag.f90 
+    ALL_SOURCE_FILES/rnuctab.f90 
+    ALL_SOURCE_FILES/dirac_op.f90 
+    ALL_SOURCE_FILES/dirac_soc.f90 
+    ALL_SOURCE_FILES/dirac_soc2.f90 
+    ALL_SOURCE_FILES/changerep.f90 
+    ALL_SOURCE_FILES/writehoststructure.f90 
+    ALL_SOURCE_FILES/readimppot.f90 
     ALL_SOURCE_FILES/tmatimp_newsolver.F90 
     ALL_SOURCE_FILES/greenimp.F90 
-    ALL_SOURCE_FILES/calctref.F90 
+    ALL_SOURCE_FILES/calctref.f90 
     ALL_SOURCE_FILES/main0.F90
     ALL_SOURCE_FILES/tmat_newsolver.F90 
-    ALL_SOURCE_FILES/main1a_dummy_BdG.F90 
+    ALL_SOURCE_FILES/main1a_dummy_BdG.f90 
     ALL_SOURCE_FILES/calctmat.F90 
-    ALL_SOURCE_FILES/initldau.F90 
-    ALL_SOURCE_FILES/phicalc.F90 
-    ALL_SOURCE_FILES/interpolate_poten.F90 
-    ALL_SOURCE_FILES/vllmat.F90 
-    ALL_SOURCE_FILES/rotatespinframe.F90 
-    ALL_SOURCE_FILES/spinorbit_ham.F90 
-    ALL_SOURCE_FILES/spin_orbit.F90 
-    ALL_SOURCE_FILES/spin_orbit_compl.F90 
-    ALL_SOURCE_FILES/vllmatsra.F90 
-    ALL_SOURCE_FILES/beshank.F90 
-    ALL_SOURCE_FILES/rllsllsourceterms.F90 
-    ALL_SOURCE_FILES/calcsph.F90 
+    ALL_SOURCE_FILES/initldau.f90 
+    ALL_SOURCE_FILES/phicalc.f90 
+    ALL_SOURCE_FILES/interpolate_poten.f90 
+    ALL_SOURCE_FILES/vllmat.f90 
+    ALL_SOURCE_FILES/rotatespinframe.f90 
+    ALL_SOURCE_FILES/spinorbit_ham.f90 
+    ALL_SOURCE_FILES/spin_orbit.f90 
+    ALL_SOURCE_FILES/spin_orbit_compl.f90 
+    ALL_SOURCE_FILES/vllmatsra.f90 
+    ALL_SOURCE_FILES/beshank.f90 
+    ALL_SOURCE_FILES/rllsllsourceterms.f90 
+    ALL_SOURCE_FILES/calcsph.f90 
     ALL_SOURCE_FILES/rllsll.F90 
-    ALL_SOURCE_FILES/chebint.F90 
-    ALL_SOURCE_FILES/csum.F90 
-    ALL_SOURCE_FILES/gfree.F90 
+    ALL_SOURCE_FILES/chebint.f90 
+    ALL_SOURCE_FILES/csum.f90 
+    ALL_SOURCE_FILES/gfree.f90 
     ALL_SOURCE_FILES/gll95.F90 
-    ALL_SOURCE_FILES/grefsy.F90 
-    ALL_SOURCE_FILES/ioben.F90 
-    ALL_SOURCE_FILES/mapblock.F90 
-    ALL_SOURCE_FILES/cradwf.F90 
-    ALL_SOURCE_FILES/csinwd.F90 
-    ALL_SOURCE_FILES/csout.F90 
-    ALL_SOURCE_FILES/hankel.F90 
-    ALL_SOURCE_FILES/irwsol.F90 
-    ALL_SOURCE_FILES/regns.F90 
+    ALL_SOURCE_FILES/grefsy.f90 
+    ALL_SOURCE_FILES/ioben.f90 
+    ALL_SOURCE_FILES/mapblock.f90 
+    ALL_SOURCE_FILES/cradwf.f90 
+    ALL_SOURCE_FILES/csinwd.f90 
+    ALL_SOURCE_FILES/csout.f90 
+    ALL_SOURCE_FILES/hankel.f90 
+    ALL_SOURCE_FILES/irwsol.f90 
+    ALL_SOURCE_FILES/regns.f90 
     ALL_SOURCE_FILES/trarea.f90
     ALL_SOURCE_FILES/tbref.F90 
-    ALL_SOURCE_FILES/wfint.F90 
-    ALL_SOURCE_FILES/wfint0.F90 
-    ALL_SOURCE_FILES/wftsca.F90 
-    ALL_SOURCE_FILES/pnstmat.F90 
-    ALL_SOURCE_FILES/vllns.F90 
-    ALL_SOURCE_FILES/simpk.F90 
-    ALL_SOURCE_FILES/soutk.F90 
-    ALL_SOURCE_FILES/ssum.F90 
+    ALL_SOURCE_FILES/wfint.f90 
+    ALL_SOURCE_FILES/wfint0.f90 
+    ALL_SOURCE_FILES/wftsca.f90 
+    ALL_SOURCE_FILES/pnstmat.f90 
+    ALL_SOURCE_FILES/vllns.f90 
+    ALL_SOURCE_FILES/simpk.f90 
+    ALL_SOURCE_FILES/soutk.f90 
+    ALL_SOURCE_FILES/ssum.f90 
     ALL_SOURCE_FILES/rll_local_solutions.F90 
     ALL_SOURCE_FILES/sll_local_solutions.F90 
     ALL_SOURCE_FILES/rll_global_solutions.F90 
     ALL_SOURCE_FILES/sll_global_solutions.F90 
-    ALL_SOURCE_FILES/intcheb_cell.F90 
-    ALL_SOURCE_FILES/cmatmul.F90 
-    ALL_SOURCE_FILES/convol.F90
+    ALL_SOURCE_FILES/intcheb_cell.f90 
+    ALL_SOURCE_FILES/cmatmul.f90 
+    ALL_SOURCE_FILES/convol.f90
     )

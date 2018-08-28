@@ -41,7 +41,7 @@ contains
   ! > Memory profiling routine
   subroutine memocc(istat, isize, array, routine)
     use mod_mympi, only: myrank
-    use mod_types, only: i_write
+    use mod_types, only: t_inc
     implicit none
     character (len=*), intent (in) :: array
     character (len=*), intent (in) :: routine
@@ -64,7 +64,7 @@ contains
     dblsize = 1
     ! print *,'MEMOCC',isize,array
 
-    if (i_write>0) write(filename, '(A,I0.5)') 'meminfo', myrank
+    if (t_inc%i_write>0) write(filename, '(A,I0.5)') 'meminfo', myrank
 
     select case (array)
     case ('count')
@@ -81,7 +81,7 @@ contains
         ! open the writing file for the root process
         if (iproc==0) then
           open (unit=mfileno, file=trim(filename), status='unknown')
-          if (i_write>0) write (mfileno, '(a32,1x,a20,3(1x,a12))') &
+          if (t_inc%i_write>0) write (mfileno, '(a32,1x,a20,3(1x,a12))') &
             '(Data in kB)             Routine', '    Peak Array', &
             'Routine Mem', 'Total Mem', 'Action'
         end if
@@ -90,15 +90,15 @@ contains
         ! trim(locroutine),trim(locarray),locmemory/1024,locpeak/1024,memory/1024,&
         ! (memory+locpeak-locmemory)/1024
         ! close(mfileno)
-        if (i_write>0) write (*, '(1x,a)') '-------------------MEMORY CONSUMPTION &
+        if (t_inc%i_write>0) write (*, '(1x,a)') '-------------------MEMORY CONSUMPTION &
           &REPORT-----------------------'
-        if (i_write>0) write (*, '(1x,2(i0,a),i0)') nalloc, ' allocations and ', ndealloc, &
+        if (t_inc%i_write>0) write (*, '(1x,2(i0,a),i0)') nalloc, ' allocations and ', ndealloc, &
           ' deallocations, remaining memory(B):', memory
-        if (i_write>0) write (*, '(1x,a,i0,a)') 'Memory occupation peak: ', maxmemory/1024, &
+        if (t_inc%i_write>0) write (*, '(1x,a,i0,a)') 'Memory occupation peak: ', maxmemory/1024, &
           ' kB'
-        if (i_write>0) write (*, '(1x,5(a))') 'For the array: "', trim(maxarray), &
+        if (t_inc%i_write>0) write (*, '(1x,5(a))') 'For the array: "', trim(maxarray), &
           '" in routine "', trim(maxroutine), '"'
-        if (i_write>0) write (*, '(1x,a)') '-----------------END MEMORY CONSUMPTION &
+        if (t_inc%i_write>0) write (*, '(1x,a)') '-----------------END MEMORY CONSUMPTION &
           &REPORT---------------------'
       end if
 
@@ -106,11 +106,11 @@ contains
       ! control of the allocation/deallocation status
       if (istat/=0) then
         if (isize>=0) then
-          if (i_write>0) write (*, *) ' subroutine ', routine, &
+          if (t_inc%i_write>0) write (*, *) ' subroutine ', routine, &
             ': problem of allocation of array ', array
           stop
         else if (isize<0) then
-          if (i_write>0) write (*, *) ' subroutine ', routine, &
+          if (t_inc%i_write>0) write (*, *) ' subroutine ', routine, &
             ': problem of deallocation of array ', array
           stop
         end if
@@ -126,7 +126,7 @@ contains
           allocationflag = '?'
         end if
 
-        if (i_write>0) write (mfileno, '(a32,1x,a20,3(1x,i12),1x,a12)') trim(routine), &
+        if (t_inc%i_write>0) write (mfileno, '(a32,1x,a20,3(1x,i12),1x,a12)') trim(routine), &
           trim(array), isize*dblsize, memory, maxmemory, allocationflag
         if (trim(locroutine)/=routine) then
           ! write(mfileno,'(a32,a14,4(1x,i12))')&
