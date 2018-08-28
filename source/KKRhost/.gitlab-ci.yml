@@ -1,19 +1,17 @@
+###############################################################################
+####          continuous integration setting of the JuKKR code             ####
+###############################################################################
+
 # docker image containing Developlement Tools and the current Intel compilers based on CentOS 7
 image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
-
 
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
   - set +e && source compilervars.sh intel64 && set -e
-  # install pip
-  - curl -O https://bootstrap.pypa.io/get-pip.py
-  - python get-pip.py
-  - pip install numpy
   # set environment variables to avoind stack size issue
   - export OMP_NUM_THREADS=1
   - export OMP_STACKSIZE=1g
   - ulimit -s unlimited
-
 
 stages:
   - test
@@ -21,155 +19,73 @@ stages:
   - run
   - verify
 
-
 ###############################################################################
-
 
 test:intel:
   stage: test
   script:
+    # install pip
+    - curl -O https://bootstrap.pypa.io/get-pip.py
+    - python get-pip.py
+    - pip install numpy
     # test if dependencies are working
     - echo 'do some tests here'
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
 
-
 ###############################################################################
 
-
 ### 1. compile code in different versions ###
+ ## 1.1 debug versions
+ ## 1.2 production versions
 
 ## 1.1 debug versions ##
-
 build:intel:debug:
   stage: build
   script:
-    - cp tests/inc.p .
-    - make clean; make debug
-
-build:intel:mpi_debug:
-  stage: build
-  script:
-    - cp tests/inc.p .
-    - make clean; make mpidebug
+    - mkdir build_debug && cd build_debug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug .. && make -j4
 
 build:intel:openmp_debug:
   stage: build
   script:
-    - cp tests/inc.p .
-    - make clean; make ompdebug
+    - mkdir build_ompdebug && cd build_ompdebug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug .. && make -j4
 
 build:intel:hybrid_debug:
   stage: build
   script:
-    - cp tests/inc.p .
-    - make clean; make hybriddebug
+    - mkdir build_hybriddebug && cd build_hybriddebug && cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug .. && make -j4
 
 ## 1.2 production versions ##
-
 build:intel:hybrid:
   stage: build
   script:
     # compile code
-    - cp tests/inc.p .
-    - make clean; make hybrid; cp kkr.x kkr.x_hybrid
+    - mkdir build && cd build && cmake .. && make -j4
+    - cd ..
+    - ln -s build/kkr.x
+    - ln -s build/kkr.x kkr.x_hybrid
+    - ln -s build/kkr.x kkr.x_omp
+    - ln -s build/kkr.x kkr.x_mpi
+    - ln -s build/kkr.x kkr.x_serial
+    - ln -s build/kkr.x kkr.x_1_mpi
   artifacts:
     paths:
+      - kkr.x
       - kkr.x_hybrid
-    expire_in: 1 day
-
-build:intel:omp:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p .
-    - make clean; make openmp; cp kkr.x kkr.x_omp
-  artifacts:
-    paths:
       - kkr.x_omp
-    expire_in: 1 day
-
-build:intel:mpi:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p .
-    - make clean; make mpi; cp kkr.x kkr.x_mpi
-  artifacts:
-    paths:
       - kkr.x_mpi
-    expire_in: 1 day
-
-build:intel:serial:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p .
-    - make clean; make serial; cp kkr.x kkr.x_serial
-  artifacts:
-    paths:
       - kkr.x_serial
-    expire_in: 1 day
-
-build:intel:mpi-aiida:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p_1 inc.p
-    - make clean; make mpi; cp kkr.x kkr.x_1_mpi
-  artifacts:
-    paths:
       - kkr.x_1_mpi
-    expire_in: 1 day
-
-build:intel:debug:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p .
-    - make clean; make debug; cp kkr.x kkr.x_debug
-  artifacts:
-    paths:
-      - kkr.x_debug
-    expire_in: 1 day
-
-build:intel:ompdebug:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p .
-    - make clean; make ompdebug; cp kkr.x kkr.x_ompdebug
-  artifacts:
-    paths:
-      - kkr.x_ompdebug
-    expire_in: 1 day
-
-build:intel:mpidebug:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p .
-    - make clean; make mpidebug; cp kkr.x kkr.x_mpidebug
-  artifacts:
-    paths:
-      - kkr.x_mpidebug
-    expire_in: 1 day
-
-build:intel:hybriddebug:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p .
-    - make clean; make hybriddebug; cp kkr.x kkr.x_hybriddebug
-  artifacts:
-    paths:
-      - kkr.x_hybriddebug
     expire_in: 1 day
 
 ###############################################################################
 
-
 ### 2. run tests with compiled versions ###
+ ## 2.1 simple test systems in serial
+ ## 2.2 comparison serial/parallel run
+ ## 2.3 special features beyond selfconsistency
+ ## 2.4 integration with aiida
 
+## 2.1 simple test systems in serial ##
 run:intel:serial_1:
   stage: run
   script:
@@ -200,6 +116,7 @@ run:intel:serial_3:
       - tests/test_run*
     expire_in: 2 days
 
+## 2.2 comparison serial/parallel run ##
 run:intel:parallel_2:
   stage: run
   script:
@@ -229,7 +146,28 @@ run:intel:multi_node:
     paths:
       - tests/test_run*
     expire_in: 2 days
+
+run:intel:MPIatom_7:
+  stage: run
+  script:
+    - cd tests
+    - ./run_parallel.py -7
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
  
+run:intel:MPIenerg_8:
+  stage: run
+  script:
+    - cd tests
+    - ./run_parallel.py -8
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 2 days
+ 
+## 2.3 special features beyond selfconsistency ##
 run:intel:Jijs_4:
   stage: run
   script:
@@ -262,32 +200,11 @@ run:intel:FERMIOUT_6:
     paths:
       - tests/test_run*
     expire_in: 1 day
-
-
-run:intel:MPIatom_7:
-  stage: run
-  script:
-    - cd tests
-    - ./run_parallel.py -7
-  artifacts:
-    paths:
-      - tests/test_run*
-    expire_in: 2 days
- 
-run:intel:MPIenerg_8:
-  stage: run
-  script:
-    - cd tests
-    - ./run_parallel.py -8
-  artifacts:
-    paths:
-      - tests/test_run*
-    expire_in: 2 days
  
 run:intel:OPERATOR_12:
   stage: run
   script:
-    - cp tests/inc.p_72 inc.p && make clean && make mpi && cp kkr.x kkr.x_72 && mkdir tests/test_run12_mpi_1_8 && cd tests/test_run12_mpi_1_8 && ln -s ../test_inputs/test_12_*/* . && ln -s ../../kkr.x_72 kkr.x && export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
+    - mkdir tests/test_run12_mpi_1_8 && cd tests/test_run12_mpi_1_8 && ln -s ../test_inputs/test_12_*/* . && ln -s ../../kkr.x && export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt
     # run calculation with impurity wavefunctions
     - rm inputcard && ln -s imp/* . &&  export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
@@ -300,8 +217,7 @@ run:intel:OPERATOR_12:
 run:intel:DTM_GMATLL_13:
   stage: run
   script:
-    - cp tests/inc.p_16 inc.p && make clean && make mpi && cp kkr.x kkr.x_16
-    - mkdir tests/test_run13_mpi_1_8 && cd tests/test_run13_mpi_1_8 && ln -s ../test_inputs/test_13_*/* . && rm DTM GMAT && cp -r ../test_inputs/test_13_*/{DTM,GMAT} . && ln -s ../../kkr.x_16 kkr.x
+    - mkdir tests/test_run13_mpi_1_8 && cd tests/test_run13_mpi_1_8 && ln -s ../test_inputs/test_13_*/* . && rm DTM GMAT && cp -r ../test_inputs/test_13_*/{DTM,GMAT} . && ln -s ../../kkr.x
     - export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
     - rm -f gmat tmat gref *for* inputcard_generated.txt
     - cd DTM && pwd && ls && ls -ltr .. && mpirun -np 8 ../kkr.x | tee out_kkr
@@ -334,7 +250,7 @@ run:intel:rhoq_15:
       - tests/test_run*
     expire_in: 2 days
 
-
+## 2.4 integration with aiida ##
 run:intel:aiida-kkr:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
   stage: run
@@ -379,8 +295,8 @@ run:intel:aiida-kkr:
       - test_export.aiida.tar.gz
     expire_in: 2 day
 
-
 ###############################################################################
+
 ### 3. check outcome of the test runs ###
 
 verify:intel:
@@ -415,3 +331,4 @@ verify:intel:aiida:
     - verdi import test_export.aiida.tar.gz
     - python tests/tools/aiida_check_results.py
     
+###############################################################################

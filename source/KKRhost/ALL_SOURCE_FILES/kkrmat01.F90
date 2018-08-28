@@ -242,16 +242,42 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
 
 
 #ifdef CPP_HYBRID
-   !$omp parallel default(shared)
-   !$omp& private(kpt, ns, i, j, isym, carg, i1, zktr, i2, iq1, iq2, ioff1)
-   !$omp& private(ioff2, joff1, joff2, ikm1, ikm2, csum1, is, n1, n2)
-   !$omp& private(j1, csum2, j2, il1, il2, lm1, lm2, gaux1, gaux2)
-   !$omp& private(jl1, jl2, gaux3, ilm, jlm, mythread )
-   !$omp& reduction(+:trace)
+   !$omp parallel default(shared) &
+   !$omp private(kpt, ns, i, j, isym, carg, i1, zktr, i2, iq1, iq2, ioff1) &
+   !$omp private(ioff2, joff1, joff2, ikm1, ikm2, csum1, is, n1, n2) &
+   !$omp private(j1, csum2, j2, il1, il2, lm1, lm2, gaux1, gaux2) &
+   !$omp private(jl1, jl2, gaux3, ilm, jlm, mythread) &
+   !$omp private(gllken, gllkem, dgllken, dgllkem, gllke0, gllke0m) &
+   !$omp reduction(+:trace)
    mythread = omp_get_thread_num()
 #else
    mythread = 0
 #endif
+
+   !----------------------------------------------------------------------
+   ! allocattions of work arrays
+   if (KREL.EQ.0) then
+      allocate(GLLKEN(ALMGF0,ALMGF0),stat=i_stat)
+      call memocc(i_stat,product(shape(GLLKEN))*kind(GLLKEN),'GLLKEN','kkrmat01')
+      GLLKEN(:,:) = CZERO
+      allocate(GLLKEM(ALMGF0,ALMGF0),stat=i_stat)
+      call memocc(i_stat,product(shape(GLLKEM))*kind(GLLKEM),'GLLKEM','kkrmat01')
+      GLLKEM(:,:) = CZERO
+      IF (LLY.NE.0) THEN
+         allocate(DGLLKEN(ALMGF0,ALMGF0),stat=i_stat)
+         call memocc(i_stat,product(shape(DGLLKEN))*kind(DGLLKEN),'DGLLKEN','kkrmat01')
+         DGLLKEN(:,:) = CZERO
+         allocate(DGLLKEM(ALMGF0,ALMGF0),stat=i_stat)
+         call memocc(i_stat,product(shape(DGLLKEM))*kind(DGLLKEM),'DGLLKEM','kkrmat01')
+         DGLLKEM(:,:) = CZERO
+      endif
+   else
+      allocate(GLLKE0(ALMGF0,ALMGF0),stat=i_stat)
+      call memocc(i_stat,product(shape(GLLKE0))*kind(GLLKE0),'GLLKE0','kkrmat01')
+      allocate(GLLKE0M(ALMGF0,ALMGF0),stat=i_stat)
+      call memocc(i_stat,product(shape(GLLKE0M))*kind(GLLKE0M),'GLLKE0M','kkrmat01')
+   end if !(KREL.EQ.0)
+   !----------------------------------------------------------------------
 
    ! kpts loop
    do KPT = k_start,k_end
@@ -302,21 +328,10 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (KREL.EQ.0) then
 
-         !----------------------------------------------------------------------
-         if(mythread==0) then
-           allocate(GLLKEN(ALMGF0,ALMGF0),stat=i_stat)
-           call memocc(i_stat,product(shape(GLLKEN))*kind(GLLKEN),'GLLKEN','kkrmat01')
-           GLLKEN(:,:) = CZERO
-         end if
-         !----------------------------------------------------------------------
+         GLLKEN(:,:) = CZERO
          call DLKE0(GLLKEN,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,BZKPK,RCLS,GINP)
-         !----------------------------------------------------------------------
-         if(mythread==0) then
-           allocate(GLLKEM(ALMGF0,ALMGF0),stat=i_stat)
-           call memocc(i_stat,product(shape(GLLKEM))*kind(GLLKEM),'GLLKEM','kkrmat01')
-           GLLKEM(:,:) = CZERO
-         end if
-         !----------------------------------------------------------------------
+
+         GLLKEM(:,:) = CZERO
          call DLKE0(GLLKEM,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,EZOA,ATOM,BZKPK,RCLS,GINP)
          !----------------------------------------------------------------------
          ! LLY Lloyd
@@ -324,21 +339,10 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
          ! and Fourier transform for the derivatives.
          !----------------------------------------------------------------------
          IF (LLY.NE.0) THEN
-            !-------------------------------------------------------------------
-            if(mythread==0) then
-              allocate(DGLLKEN(ALMGF0,ALMGF0),stat=i_stat)
-              call memocc(i_stat,product(shape(DGLLKEN))*kind(DGLLKEN),'DGLLKEN','kkrmat01')
-              DGLLKEN(:,:) = CZERO
-            end if
-            !-------------------------------------------------------------------
+            DGLLKEN(:,:) = CZERO
             call DLKE0(DGLLKEN,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,BZKPK,RCLS,DGINP)
-            !-------------------------------------------------------------------
-            if(mythread==0) then
-              allocate(DGLLKEM(ALMGF0,ALMGF0),stat=i_stat)
-              call memocc(i_stat,product(shape(DGLLKEM))*kind(DGLLKEM),'DGLLKEM','kkrmat01')
-              DGLLKEM(:,:) = CZERO
-            end if
-            !-------------------------------------------------------------------
+
+            DGLLKEM(:,:) = CZERO
             call DLKE0(DGLLKEM,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,EZOA,ATOM,BZKPK,RCLS,DGINP)
          endif
          !----------------------------------------------------------------------
@@ -393,36 +397,14 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
 #endif
          endif               ! (.NOT.OPT('NEWSOSOL'))
          !----------------------------------------------------------------------
-         if(mythread==0) then
-           i_all=-product(shape(GLLKEM))*kind(GLLKEM)
-           deallocate(GLLKEM, stat=i_stat)
-           call memocc(i_stat,i_all,'GLLKEM','kkrmat01')
-           i_all=-product(shape(GLLKEM))*kind(GLLKEM)
-           deallocate(GLLKEN, stat=i_stat)
-           call memocc(i_stat,i_all,'GLLKEN','kkrmat01')
-           if (LLY.NE.0) then
-              i_all=-product(shape(DGLLKEM))*kind(DGLLKEM)
-              deallocate(DGLLKEM, stat=i_stat)
-              call memocc(i_stat,i_all,'DGLLKEM','kkrmat01')
-              i_all=-product(shape(DGLLKEN))*kind(DGLLKEN)
-              deallocate(DGLLKEN, stat=i_stat)
-              call memocc(i_stat,i_all,'DGLLKEN','kkrmat01')
-           endif
-         end if
-         !----------------------------------------------------------------------
          ! LLY Lloyd At this point DGLLKE contains the Fourier transform of the dGref/dE
          !----------------------------------------------------------------------
       else                   !  (KREL.EQ.0)
          !----------------------------------------------------------------------
          ! LLY Lloyd Not implementing Lloyds formula for KREL=1 (Dirac ASA)
          !----------------------------------------------------------------------
-         if(mythread==0) then
-           allocate(GLLKE0(ALMGF0,ALMGF0),stat=i_stat)
-           call memocc(i_stat,product(shape(GLLKE0))*kind(GLLKE0),'GLLKE0','kkrmat01')
-           allocate(GLLKE0M(ALMGF0,ALMGF0),stat=i_stat)
-           call memocc(i_stat,product(shape(GLLKE0M))*kind(GLLKE0M),'GLLKE0M','kkrmat01')
-         end if
-         !----------------------------------------------------------------------
+         GLLKE0(:,:) = CZERO
+         GLLKE0M(:,:) = CZERO
          call DLKE0(GLLKE0,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,BZKPK,RCLS,GINP)
          call DLKE0(GLLKE0M,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,EZOA,ATOM,BZKPK,RCLS,GINP)
          !
@@ -470,16 +452,6 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
 #ifdef CPP_HYBRID
          !$omp end do
 #endif
-         !-----------------------------------------------------------------------
-         if(mythread==0) then
-           i_all=-product(shape(GLLKE0))*kind(GLLKE0)
-           deallocate(GLLKE0, stat=i_stat)
-           call memocc(i_stat,i_all,'GLLKE0','kkrmat01')
-           i_all=-product(shape(GLLKE0))*kind(GLLKE0)
-           deallocate(GLLKE0M, stat=i_stat)
-           call memocc(i_stat,i_all,'GLLKE0M','kkrmat01')
-         end if
-         !----------------------------------------------------------------------
       end if !  (KREL.EQ.0)
 #ifdef CPP_TIMING
       if(mythread==0 .and. t_inc%i_time>0) call timing_pause('main1b - fourier')
@@ -670,6 +642,33 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    200 format('|')                       ! status bar
    if(t_inc%i_write>0) write(1337,*)      ! finalize status bar
    !
+   !----------------------------------------------------------------------
+   ! deallocattions of work arrays
+   if (KREL.EQ.0) then
+      if(mythread==0) then
+        deallocate(GLLKEN,stat=i_stat)
+        call memocc(i_stat,-product(shape(GLLKEN))*kind(GLLKEN),'GLLKEN','kkrmat01')
+        deallocate(GLLKEM,stat=i_stat)
+        call memocc(i_stat,-product(shape(GLLKEM))*kind(GLLKEM),'GLLKEM','kkrmat01')
+      end if
+      IF (LLY.NE.0) THEN
+         if(mythread==0) then
+           deallocate(DGLLKEN,stat=i_stat)
+           call memocc(i_stat,-product(shape(DGLLKEN))*kind(DGLLKEN),'DGLLKEN','kkrmat01')
+           deallocate(DGLLKEM,stat=i_stat)
+           call memocc(i_stat,-product(shape(DGLLKEM))*kind(DGLLKEM),'DGLLKEM','kkrmat01')
+         end if
+      endif
+   else
+      if(mythread==0) then
+        deallocate(GLLKE0,stat=i_stat)
+        call memocc(i_stat,-product(shape(GLLKE0))*kind(GLLKE0),'GLLKE0','kkrmat01')
+        deallocate(GLLKE0M,stat=i_stat)
+        call memocc(i_stat,-product(shape(GLLKE0M))*kind(GLLKE0M),'GLLKE0M','kkrmat01')
+      end if
+   end if !(KREL.EQ.0)
+   !----------------------------------------------------------------------
+
 #ifdef CPP_HYBRID
    !$omp end parallel
 #endif

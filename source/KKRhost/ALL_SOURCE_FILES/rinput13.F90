@@ -2703,7 +2703,7 @@ contains
    
       !Inconsistency check
       IF( t_godfrin%na /= sum(t_godfrin%bdims) ) stop 'godfrin: na /= sum(bdims)'
-#ifdef __INTEL_COMPILER
+#ifndef __INTEL_COMPILER
       ! can only use pardiso solver with intel mkl at the moment, probably only
       ! a linking issue that should be solved in the future
       if( t_godfrin%lpardiso) stop 'No pardiso library available. Try the intel compiler or fix the linking issues'
