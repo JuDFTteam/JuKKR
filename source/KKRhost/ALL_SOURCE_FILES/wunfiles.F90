@@ -1989,7 +1989,6 @@ contains
       t_params%KPRE        = KPRE
       t_params%NSRA        = NSRA
       t_params%NREF        = NREF
-      write(*,*) 'set nref', nref
       t_params%LMAX        = LMAX
       t_params%NCLS        = NCLS
       t_params%ICST        = ICST

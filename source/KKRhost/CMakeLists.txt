@@ -24,12 +24,24 @@ if(NOT CMAKE_BUILD_TYPE)
     message("Release build")
 endif()
 
+
 # MPI option (enable with '-DENABLE_MPI=ON')
-option(ENABLE_MPI "Enable MPI parallelization" OFF)
+# and OpenMP option (enable with '-DENABLE_OMP=ON')
+# hybrid version with -DENABLE_MPI=ON and -DENABLE_OMP=ON
+option(ENABLE_MPI "Enable MPI parallelization" ON)
+option(ENABLE_OMP "Enable OpenMP parallelization" ON)
 if(ENABLE_MPI)
     message("MPI is enabled")
+    add_definitions(-DCPP_MPI)
+    if(ENABLE_OMP)
+        message("OpenMP (hybrid MPI/OpenMP) is enabled")
+        add_definitions(-DCPP_HYBRID)
+    endif()
+elseif(ENABLE_OMP)
+    message("OpenMP is enabled")
+    add_definitions(-DCPP_OMP)
 else()
-    message("MPI is disabled (use '-DENABLE_MPI=ON' in cmake step to enable it)")
+    message("both MPI and OpenMP is disabled")
 endif()
 
 # the executable is built from this list of files

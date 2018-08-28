@@ -616,8 +616,6 @@ contains
          tleft, tright, rmtref, rmtrefat, vref, refpot, nref, rcls, rcutz, rcutxy, &
          alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprinc)
 
-      write(*,*) 'after clsgen', nref, nrefd
-
       ! overwrite nprincd if chosen too small
       if ( nprincd<nprinc ) then
         nlayer = naez/nprinc
