@@ -318,6 +318,6 @@ DO ISPIN = 1,NSPIN
   V(1,1,IPOT) = V(1,1,IPOT) + VXC1
 END DO
 
-END
+END SUBROUTINE VXCGGA
 
 end module mod_vxcgga

@@ -174,10 +174,10 @@ contains
          read (unit=uio, fmt=*) e_shift
          write(*,*) 'e_shift=', e_shift
        else
-         e_shift = complex(0.0_dp, 0.0_dp)
+         e_shift = (0.0_dp, 0.0_dp)
        end if
       else
-        e_shift = complex(0.0_dp, 0.0_dp)
+        e_shift = (0.0_dp, 0.0_dp)
       end if
 
       ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)

@@ -4,11 +4,10 @@ GREENIMPNEWSOSOLLLOYD
 TESTOPT
 STOP1B  MPIatom 
 
-
 +-------+-------+-------+-------+-------+
 ALATBASIS= 6.570580354    # a = 3.477 Angstr. (in-plane lattice constant)
 NSPIN= 2
-LMAX= 3    
+LMAX= 2    
 -----------------------------------------
 BRAVAIS
 1.   0.                      0.                            
@@ -39,21 +38,16 @@ BZDIVIDE= 1 1 1
 ICST= 2
 
 # WARNING: for this test the radial mesh points are decreased 
-NPAN_LOG=   10
-NPAN_EQ=     4
-NCHEB=       8
+NPAN_LOG=   5
+NPAN_EQ=    3
+NCHEB=      6
 R_LOG=   0.600000000000000     
 
-
 MEMWFSAVE=       1000
-
 -----------------------------------------
 EMIN         EMAX         TEMPR   NPOL      NPT1     NPT2    NPT3
 0.5236007373 0.5276007373 100.0    0         0        3        0
 0.5256007373 0.5256007373 000.0    0         0        1        0   #EF
--1.0         0.8          800.0    9         8        36       4
--1.0         0.8          800.0    9         4        18       2
--1.0         1.0          800.0    0         0       101       0
 -----------------------------------------
 NSTEPS=   200
 IMIX=     5
@@ -65,4 +59,4 @@ BRYMIX=   0.01
 -----------------------------------------
 RMAX= 7.0d0   GMAX= 100.0d0
 # WARNING: for this test the cluster radius is decreased 
-RCLUSTZ= 1.5
+RCLUSTZ= 1.3

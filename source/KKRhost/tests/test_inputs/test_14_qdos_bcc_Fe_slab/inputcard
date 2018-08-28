@@ -42,7 +42,7 @@ Parameters for the clusters    (if same spherical cluster else cylindrical)
 RCLUSTZ=2.20d0       RCLUSTXY=2.20d0
 ----------------------------------------------------------------------
 EMIN      EMAX       TEMPR      NPOL      NPT1    NPT2     NPT3  
- 0.60     0.9          50.        0         0       20       0
+ 0.60     0.9          50.        0         0       3        0
 -0.10     0.9         800.        5         3       10       2
 -0.40     1.2         800.        0         0       60       0
 ----------------------------------------------------------------------

@@ -75,6 +75,6 @@ DO IATYP = NSTART,NEND
                 DYLMF1,DYLMF2,DYLMTF)
   END IF
 END DO
-END
+END SUBROUTINE VXCDRV
 
 end module mod_vxcdrv

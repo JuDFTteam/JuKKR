@@ -198,6 +198,6 @@ endif !IGF/=0
 !***********************************************************************
 deallocate (gll,tpg)
 RETURN
-END                       ! SUBROUTINE ROTGLL
+END SUBROUTINE ROTGLL
 
 end module mod_rotgll

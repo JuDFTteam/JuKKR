@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.6.4)
 
 project(JuKKR)
 enable_language(Fortran)
@@ -8,11 +8,10 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/modules)
 
 # we define some compiler flags
 if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
-    set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} ")
-    set(CMAKE_Fortran_FLAGS_DEBUG   "-g -traceback")
-    set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -ip -xHOST")
-endif()
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+    set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mkl -lmkl_sequential")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox")
+    set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -r8 -ip -xHOST")
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -lblas -llapack -fopenmp -ffree-line-length-none -fdefault-real-8 -fimplicit-none")
     set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g3 -fcheck=all -fbacktrace -Wall -Wextra")
     set(CMAKE_Fortran_FLAGS_RELEASE "-Ofast -march=native -fbacktrace")

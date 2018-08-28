@@ -1,81 +1,81 @@
-! ======================================================================
-!              parameters file for the host TBKKR package
-!                                          last update:   05/06/2004
-! ======================================================================
-! 
-! Description of parameters follows below
-!
-! a) parameters that have to be set by hand before compilation
-! ============================================================
-!
-! PARAMETER   MEANING (settings)
-! ----------------------------------------------------------------------
-! KREL         switch for non-relativistic (KREL=0) or relativistic 
-!              (KREL=1) program. Attention: several other parameters
-!              depend explicitly on KREL, they are set automatically
-!              Used for Dirac solver in ASA
-! KORBIT       Spin-orbit (KORBIT=1) on non-spin-orbit (KORBIT=0) added
-!              to the Schroedinger or SRA equations. Works with FP.
-!              KREL and KORBIT cannot be both non-zero.
-! KNOCO        (0/1) Collinear/Non-collinear magnetism 
-!              (even in non-relativistic non-spin-orbit case)
-! KNOSPH       switch for spherical (KNOSPH=0) or non-spherical 
-!              (KNOSPH=1) program. Same obs. as for KREL applies.
-! KSP          switch for spin-polarised (KSP=1) or paramagnetic 
-!              (KSP=0) calculation. It determines the value of NSPIND 
-! LMAXD        cut-off for the angular momentum expansion
-! IEMXD        dimension for energy-dependent arrays 
-! IRMD         number of radial mesh points in (0,...,RWS)
-! IRNSD        number of radial mesh points in (RMT,...,RWS)
-! NRD          number of real space 
-! KPOIBZ       and reciprocal space vectors
-! NMAXD,ISHLD  paremeters for the Ewald summations
-! NTREFD       parameter in broyden subroutine
-!              MUST BE 0 for the host program 
-! NATYPD       number of different atomic types in the unit cell 
-! NAEZD        number of different atomic sites in the unit cell
-! NSHELD       number of blocks of the GF matrix that need to be
-!              calculated (NATYPD + off-diagonals in case of impurity)
-! NATOMIMPD    size of the cluster for impurity-calculation output of GF
-!              should be 1, if you donot do such a calculation
-! NREFD        number of reference potentials
-! NPRINCD      number of atoms in one principal layer
-! NEMBD        number of sites added to the slab in 2D calculations
-!              to extend the structure left and right (down and up)
-! NCELLD       number of cells (shapes) in non-spherical part
-! IPAND        number of panels in non-spherical part
-! NFUND,IRID
-! NGSHD        shape functions parameters in non-spherical part 
-!
-! WLENGTH   Word length for direct access files, compiler dependent
-!           WLENGTH =1 for ifort but =4 for other compilers
-!
-! b) parameters derived from the values of the previous ones
-! ============================================================
-!
-! PARAMETER   MEANING (settings)
-! ----------------------------------------------------------------------
-! NSPIND      number of spin directions, depending on KSP and KREL
-! LNC         (Logical) Coupled equations in two spins 
-!             (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
-! LPOTD       highest expansion in potential 
-! NCLEB       number of Clebsch-Gordon coefficients
-! NLAYERD     number of principal layers (NAEZD/NPRINCD)
-!             used in the inversion routines (independent on NATYPD)
-! NSPOTD      number of potentials for storing non-sph. potentials
-! NTPERD      parameter in broyden subroutines
-!
-! =====================================================================
-!                           fixed parameters
-! =====================================================================
-      INTEGER KREL,KNOSPH,KSP,LMAXD,IEMXD,IRMD,IRNSD, &
-     &        NRD,KPOIBZ,NMAXD,ISHLD,NTREFD,NATYPD,NAEZD,NSHELD, &
-     &        NATOMIMPD,NREFD,NPRINCD,NEMBD,NCELLD,IPAND,NFUND,IRID, &
+C ======================================================================
+C              parameters file for the host TBKKR package
+C                                          last update:   05/06/2004
+C ======================================================================
+C 
+C Description of parameters follows below
+C
+C a) parameters that have to be set by hand before compilation
+C ============================================================
+C
+C PARAMETER   MEANING (settings)
+C ----------------------------------------------------------------------
+C KREL         switch for non-relativistic (KREL=0) or relativistic 
+C              (KREL=1) program. Attention: several other parameters
+C              depend explicitly on KREL, they are set automatically
+C              Used for Dirac solver in ASA
+C KORBIT       Spin-orbit (KORBIT=1) on non-spin-orbit (KORBIT=0) added
+C              to the Schroedinger or SRA equations. Works with FP.
+C              KREL and KORBIT cannot be both non-zero.
+C KNOCO        (0/1) Collinear/Non-collinear magnetism 
+C              (even in non-relativistic non-spin-orbit case)
+C KNOSPH       switch for spherical (KNOSPH=0) or non-spherical 
+C              (KNOSPH=1) program. Same obs. as for KREL applies.
+C KSP          switch for spin-polarised (KSP=1) or paramagnetic 
+C              (KSP=0) calculation. It determines the value of NSPIND 
+C LMAXD        cut-off for the angular momentum expansion
+C IEMXD        dimension for energy-dependent arrays 
+C IRMD         number of radial mesh points in (0,...,RWS)
+C IRNSD        number of radial mesh points in (RMT,...,RWS)
+C NRD          number of real space 
+C KPOIBZ       and reciprocal space vectors
+C NMAXD,ISHLD  paremeters for the Ewald summations
+C NTREFD       parameter in broyden subroutine
+C              MUST BE 0 for the host program 
+C NATYPD       number of different atomic types in the unit cell 
+C NAEZD        number of different atomic sites in the unit cell
+C NSHELD       number of blocks of the GF matrix that need to be
+C              calculated (NATYPD + off-diagonals in case of impurity)
+C NATOMIMPD    size of the cluster for impurity-calculation output of GF
+C              should be 1, if you donot do such a calculation
+C NREFD        number of reference potentials
+C NPRINCD      number of atoms in one principal layer
+C NEMBD        number of sites added to the slab in 2D calculations
+C              to extend the structure left and right (down and up)
+C NCELLD       number of cells (shapes) in non-spherical part
+C IPAND        number of panels in non-spherical part
+C NFUND,IRID
+C NGSHD        shape functions parameters in non-spherical part 
+C
+C WLENGTH   Word length for direct access files, compiler dependent
+C           WLENGTH =1 for ifort but =4 for other compilers
+C
+C b) parameters derived from the values of the previous ones
+C ============================================================
+C
+C PARAMETER   MEANING (settings)
+C ----------------------------------------------------------------------
+C NSPIND      number of spin directions, depending on KSP and KREL
+C LNC         (Logical) Coupled equations in two spins 
+C             (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
+C LPOTD       highest expansion in potential 
+C NCLEB       number of Clebsch-Gordon coefficients
+C NLAYERD     number of principal layers (NAEZD/NPRINCD)
+C             used in the inversion routines (independent on NATYPD)
+C NSPOTD      number of potentials for storing non-sph. potentials
+C NTPERD      parameter in broyden subroutines
+C
+C =====================================================================
+C                           fixed parameters
+C =====================================================================
+      INTEGER KREL,KNOSPH,KSP,LMAXD,IEMXD,IRMD,IRNSD,
+     &        NRD,KPOIBZ,NMAXD,ISHLD,NTREFD,NATYPD,NAEZD,NSHELD,
+     &        NATOMIMPD,NREFD,NPRINCD,NEMBD,NCELLD,IPAND,NFUND,IRID,
      &        NGSHD,NCHEBD,NTOTD,KORBIT,WLENGTH,KNOCO
-! ---------------------------------------------------------------------
-!     general settings
+C ---------------------------------------------------------------------
+C     general settings
       PARAMETER ( KREL = 0 )   ! 0 for scalar-relativistic, 1 for full relativistic
-      PARAMETER ( KORBIT = 0 ) ! 0 for old solver (noSOC), 1 for newsolver, needed for NEWSOSOL RUNOPT
+      PARAMETER ( KORBIT = 1 ) ! 0 for old solver (noSOC), 1 for newsolver, needed for NEWSOSOL RUNOPT
       PARAMETER ( KNOCO= 0 )
       PARAMETER ( KNOSPH = 1 )
       PARAMETER ( KSP = 1 )
@@ -86,61 +86,61 @@
       PARAMETER ( NRD = 20000, KPOIBZ = 250000)
       PARAMETER ( NMAXD = 2000000, ISHLD= 200000 )
       PARAMETER ( NTREFD = 0 )
-! ---------------------------------------------------------------------
-!     structure-dependent
-      PARAMETER ( NAEZD = 4  )      ! number of atoms in unit cell, set to NATYP value of inputcard
+C ---------------------------------------------------------------------
+C     structure-dependent
+      PARAMETER ( NAEZD = 26 )      ! number of atoms in unit cell, set to NATYP value of inputcard
       PARAMETER ( NATYPD = NAEZD )  ! number of atom types, in case of CPA set to a different number then NATYPD
       PARAMETER ( NSHELD = NATYPD + 300)
 !      PARAMETER ( NSHELD = NATYPD +1000)
       PARAMETER ( NATOMIMPD = 150)
       PARAMETER ( NREFD = NAEZD )
-      PARAMETER ( NPRINCD = 4 )  ! Number of principle layers, set to a number >= NRPINC in output of main0
+      PARAMETER ( NPRINCD = 13 )  ! Number of principle layers, set to a number >= NRPINC in output of main0
       PARAMETER ( NEMBD = 20)    ! Number of basis atoms on left & right host side, set to NHOSTL+NHOSTR
-! ---------------------------------------------------------------------
-!     non-spherical potential 
+C ---------------------------------------------------------------------
+C     non-spherical potential 
       PARAMETER ( NCELLD = NAEZD, IPAND = 50 )
       PARAMETER ( NTOTD = IPAND+30, NCHEBD = 15 )
       PARAMETER ( NFUND = 289, IRID = 350, NGSHD = 60000)
 !      PARAMETER ( NFUND = 289, IRID = 200, NGSHD = 60000) ! 13079
-! ---------------------------------------------------------------------
-!     I/O
+C ---------------------------------------------------------------------
+C     I/O
       PARAMETER (WLENGTH = 1)
       
-!
-! =====================================================================
-!                         derived parameters
-! =====================================================================
+C
+C =====================================================================
+C                         derived parameters
+C =====================================================================
       INTEGER NSPIND,LPOTD,NCLEB,NLAYERD,NSATYPD,NSPOTD,NTPERD
       LOGICAL LNC
-!
+C
       PARAMETER ( NSPIND = KREL + (1-KREL)*(KSP+1) )
       PARAMETER ( LPOTD = 2*LMAXD )
       PARAMETER ( NCLEB = (LMAXD*2+1)**2 * (LMAXD+1)**2 )
       PARAMETER ( NLAYERD = (NAEZD/NPRINCD) )
-      PARAMETER ( NSATYPD = (NATYPD-1)*KNOSPH+1, &
+      PARAMETER ( NSATYPD = (NATYPD-1)*KNOSPH+1,
      &            NSPOTD = (2*KREL + (1-KREL)*NSPIND) * NSATYPD )
       PARAMETER ( NTPERD=NATYPD-NTREFD )
       PARAMETER ( LNC = KREL.NE.0.OR.KORBIT.NE.0.OR.KNOCO.NE.0 ) 
-! =====================================================================
+C =====================================================================
 
-! ======================================================================
-!   parameters file for the host TBKKR package -- TB-clusters settings
-! ======================================================================
-!
-!     Description of parameters follows below (have to be set by hand
-!     before compilation)
-! ======================================================================
-!
-! PARAMETER   MEANING (settings)
-! ----------------------------------------------------------------------
-! NCLSD        maximum number of different TB-clusters
-! NACLSD       maximum number of atoms in a TB-cluster
-!
-! ======================================================================
+C ======================================================================
+C   parameters file for the host TBKKR package -- TB-clusters settings
+C ======================================================================
+C
+C     Description of parameters follows below (have to be set by hand
+C     before compilation)
+C ======================================================================
+C
+C PARAMETER   MEANING (settings)
+C ----------------------------------------------------------------------
+C NCLSD        maximum number of different TB-clusters
+C NACLSD       maximum number of atoms in a TB-cluster
+C
+C ======================================================================
       INTEGER NCLSD, NACLSD
-!
+C
       PARAMETER ( NCLSD = NAEZD + NEMBD )
       PARAMETER ( NACLSD = 500  )
 !      PARAMETER ( NACLSD = 1500  )
-! ======================================================================
+C ======================================================================
 

@@ -1,4 +1,4 @@
-#FILEVERSION= 2   # serial: kkrjm_v2.2-44-g15c7d13_openmp-mac-prof_20180103120845
+#FILEVERSION= 2   # serial: kkrjm_v2.3-61-g4b60676_mpi_20180828093815
        2    lmaxd
        2    lmax
        0    korbit
@@ -12,6 +12,6 @@
        4    natyp
        4    naezd
        4    naez
-     113    naclsmax, used as naclsd
+      65    naclsmax, used as naclsd
        3    ielast
        1    ins
