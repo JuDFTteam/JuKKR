@@ -14,12 +14,14 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
     set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mkl -lmkl_sequential")
     set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox")
     set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -r8 -ip -xHOST")
+    set(compver "intel")
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -lblas -llapack -fopenmp -ffree-line-length-none -fdefault-real-8 -fimplicit-none")
     set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g3 -fcheck=all -fbacktrace -Wall -Wextra")
     set(CMAKE_Fortran_FLAGS_RELEASE "-Ofast -march=native -fbacktrace")
     # disable MD5 sums for gnu compiler
     add_definitions(-DCPP_NOMD5)
+    set(compver "gnu")
 endif()
 
 # common preprocessing options for all compilers
@@ -30,7 +32,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
     message("Release build")
 endif()
-
 
 # MPI option (enable with '-DENABLE_MPI=ON')
 # and OpenMP option (enable with '-DENABLE_OMP=ON')
@@ -44,14 +45,33 @@ if(ENABLE_MPI)
         message("OpenMP (hybrid MPI/OpenMP) is enabled")
         add_definitions(-DCPP_HYBRID)
         set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -openmp")
+        set(compflag "hybrid")
+    else()
+        set(compflag "mpi")
     endif()
 elseif(ENABLE_OMP)
     message("OpenMP is enabled")
     add_definitions(-DCPP_OMP)
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -openmp")
+    set(compflag "openmp")
 else()
     message("both MPI and OpenMP is disabled")
 endif()
+
+# maybe for future librbary dependecies
+set(complib "")
+
+
+# extract version info
+# generate a Git version string
+execute_process(COMMAND git describe OUTPUT_VARIABLE GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# write compiler flags
+add_definitions(-DCOMPVER1="${GIT_VERSION}")
+add_definitions(-DCOMPVER2="${compver}")
+add_definitions(-DCOMPVER3="${compflag}")
+add_definitions(-DCOMPVER4="${complib}")
+
 
 # the executable is built from this list of files
 add_executable(
@@ -355,7 +375,7 @@ add_executable(
     ALL_SOURCE_FILES/types.F90
     ALL_SOURCE_FILES/vadd.f90
     ALL_SOURCE_FILES/veq.f90
-    ALL_SOURCE_FILES/version.f90
+    ALL_SOURCE_FILES/version.F90
     ALL_SOURCE_FILES/version_info.F90
     ALL_SOURCE_FILES/vinterface.f90
     ALL_SOURCE_FILES/vintras.f90
@@ -392,7 +412,7 @@ add_executable(
     kkr_BdG_radial.x
     ALL_SOURCE_FILES/main_tmat_runner.F90
     ALL_SOURCE_FILES/DataTypes.f90
-    ALL_SOURCE_FILES/version.f90
+    ALL_SOURCE_FILES/version.F90
     ALL_SOURCE_FILES/version_info.F90 
     ALL_SOURCE_FILES/constants.f90 
     ALL_SOURCE_FILES/mympi.F90 

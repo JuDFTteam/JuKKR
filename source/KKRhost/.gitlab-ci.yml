@@ -12,6 +12,8 @@ before_script:
   - export OMP_NUM_THREADS=1
   - export OMP_STACKSIZE=1g
   - ulimit -s unlimited
+  # extract version info
+  - touchcompver compflag complib
 
 stages:
   - test
@@ -44,31 +46,43 @@ test:intel:
 build:intel:debug:
   stage: build
   script:
-    - mkdir build_debug && cd build_debug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug .. && make -j4
+    - mkdir build_gfortran_debug && cd build_gfortran_debug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug .. && make -j4
+
+build:intel:debug:
+  stage: build
+  script:
+    - mkdir build_debug && cd build_debug
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4
 
 build:intel:openmp_debug:
   stage: build
   script:
-    - mkdir build_ompdebug && cd build_ompdebug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug .. && make -j4
+    - mkdir build_ompdebug && cd build_ompdebug
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4
 
 build:intel:hybrid_debug:
   stage: build
   script:
-    - mkdir build_hybriddebug && cd build_hybriddebug && cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug .. && make -j4
+    - mkdir build_hybriddebug && cd build_hybriddebug
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4
 
 ## 1.2 production versions ##
 build:intel:hybrid:
   stage: build
   script:
     # compile code
-    - mkdir build && cd build && cmake .. && make -j4
+    - mkdir build && cd build
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake ..
+    - make -j4
     - cd ..
-    - ln -s build/kkr.x
-    - ln -s build/kkr.x kkr.x_hybrid
-    - ln -s build/kkr.x kkr.x_omp
-    - ln -s build/kkr.x kkr.x_mpi
-    - ln -s build/kkr.x kkr.x_serial
-    - ln -s build/kkr.x kkr.x_1_mpi
+    - ln -s kkr.x kkr.x_hybrid
+    - ln -s kkr.x kkr.x_omp
+    - ln -s kkr.x kkr.x_mpi
+    - ln -s kkr.x kkr.x_serial
+    - ln -s kkr.x kkr.x_1_mpi
   artifacts:
     paths:
       - kkr.x
