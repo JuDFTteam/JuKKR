@@ -12,6 +12,8 @@ before_script:
   - export OMP_NUM_THREADS=1
   - export OMP_STACKSIZE=1g
   - ulimit -s unlimited
+  # install pip and numpy
+  - pip install numpy || curl -O https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install numpy
 
 stages:
   - test
@@ -24,10 +26,6 @@ stages:
 test:intel:
   stage: test
   script:
-    # install pip
-    - curl -O https://bootstrap.pypa.io/get-pip.py
-    - python get-pip.py
-    - pip install numpy
     # test if dependencies are working
     - echo 'do some tests here'
     - echo 'ifort ' && which ifort
