@@ -283,7 +283,7 @@ contains
       !$omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)     &
       !$omp shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)     &
       !$omp shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)           &
-      !$omp shared(mu0, nscoef)
+      !$omp shared(mu0, nscoef, e_shift, filename)
 #endif
 
       do ie_num=1,ie_end
@@ -315,14 +315,14 @@ contains
          do SIGNDE=-IDERIV,IDERIV,2
             ERYD = EZ(IE)+real(SIGNDE, kind=dp)*DELTAE/2.D0 ! LLY
 
+#ifdef CPP_OMP
+            !$omp critical
+#endif
             if (test('BdG_dev ')) then
                write(*,'(A,4ES21.7)') 'shifting energy by e_fermi:', eryd, e_shift
                ERYD = ERYD + e_shift
             end if
 
-#ifdef CPP_OMP
-            !$omp critical
-#endif
             if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
 #ifdef CPP_OMP
             if(ie==1.and.(t_inc%i_write>0)) write(1337,*) 'nested omp?',omp_get_nested()
@@ -334,6 +334,9 @@ contains
                NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,    &
                NCHEB,IRMDNEW,NRMAXD,VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),'1')
 
+#ifdef CPP_OMP
+            !$omp critical
+#endif
             ! test writeout of VNSPLL1
             if (test('BdG_dev ')) then
               open(7352834, file='vnspll_SOC.txt', form='formatted')
@@ -341,6 +344,9 @@ contains
               write(7352834, '(2F25.14)') VNSPLL1(:,:,:,ith)
               close(7352834)
             end if
+#ifdef CPP_OMP
+            !$omp end critical
+#endif
 
             ! now extend matrix for the SRA treatment
             VNSPLL(:,:,:,ith)=CZERO
@@ -357,6 +363,9 @@ contains
                VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
             endif
 
+#ifdef CPP_OMP
+            !$omp critical
+#endif
             ! test writeout of VNPSLL
             if (test('BdG_dev ')) then
               open(7352834, file='vnspll_sra.txt', form='formatted')
@@ -368,6 +377,9 @@ contains
               write(7352834, '(2F25.14)') VNSPLL(:,:,:,ith)
               close(7352834)
             end if
+#ifdef CPP_OMP
+            !$omp end critical
+#endif
 
             ! Calculate the source terms in the Lippmann-Schwinger equation
             ! these are spherical hankel and bessel functions
@@ -380,6 +392,9 @@ contains
                1,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),   &
                GMATPREFACTOR)
 
+#ifdef CPP_OMP
+            !$omp critical
+#endif
             if (test('BdG_dev ')) then
               write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk_atom_',i1,'_energ_',ie,'.dat'
               open(888888, file=trim(filename), form='formatted')
@@ -402,6 +417,9 @@ contains
               write(888888, '(2ES21.9)') hlk2(:,:,ith)
               close(888888)
             end if
+#ifdef CPP_OMP
+            !$omp end critical
+#endif
 
             ! Using spherical potential as reference
             if (USE_SRATRICK.EQ.1) then
@@ -439,6 +457,9 @@ contains
                RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
                SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
             endif
+#ifdef CPP_OMP
+            !$omp critical
+#endif
             if (test('BdG_dev ')) then
               write(filename, '(A,I0.3,A,I0.3,A)') 'rll_atom_',i1,'_energ_',ie,'.dat'
               open(888888, file=trim(filename), form='formatted')
@@ -451,6 +472,9 @@ contains
               write(888888, '(2ES21.9)') sll(:,:,:,ith)
               close(888888)
             end if
+#ifdef CPP_OMP
+            !$omp end critical
+#endif
 
             ! add spherical contribution of tmatrix
             if (USE_SRATRICK.EQ.1) then
@@ -482,6 +506,9 @@ contains
                enddo
             endif
 
+#ifdef CPP_OMP
+            !$omp critical
+#endif
             if (test('BdG_dev ')) then
               write(filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_',i1,'_energ_',ie,'.dat'
               open(888888, file=trim(filename), form='formatted')
@@ -489,6 +516,9 @@ contains
               write(888888, '(2ES21.9)') TMATLL(:,:)
               close(888888)
             end if
+#ifdef CPP_OMP
+            !$omp end critical
+#endif
 
          enddo ! signde=-ideriv,ideriv,2 ! lly
 

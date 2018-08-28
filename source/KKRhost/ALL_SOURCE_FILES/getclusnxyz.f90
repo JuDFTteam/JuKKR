@@ -3,7 +3,6 @@ module mod_getclusnxyz
 contains
 
 subroutine getclusnxyz(clurad, bravais, ndim, cluradsq, nbr)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! *                                                                    *
   ! * Given a spherical cluster of radius CLURAD it determines the three *
@@ -15,6 +14,7 @@ subroutine getclusnxyz(clurad, bravais, ndim, cluradsq, nbr)
   ! *  the cluster. Subroutine also returns the CLURAD**2 value          *
   ! *                                                                    *
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
   implicit none
   ! ..
   ! ..  Arguments

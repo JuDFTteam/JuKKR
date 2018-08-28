@@ -2,8 +2,8 @@
 ####          continuous integration setting of the JuKKR code             ####
 ###############################################################################
 
-# docker image containing Developlement Tools and the current Intel compilers based on CentOS 7
-image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
+# docker image containing Developlement Tools and the current Intel compilers based on CentOS 7 with cmake
+image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/extended:2016
 
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
@@ -30,6 +30,8 @@ test:intel:
     - pip install numpy
     # test if dependencies are working
     - echo 'do some tests here'
+    - echo 'ifort: ' && which ifort
+    - echo 'mpiifort: ' && which mpiifort
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
 
 ###############################################################################
