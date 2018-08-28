@@ -74,11 +74,11 @@ build:intel:hybrid:
     - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake ..
     - make -j4
     - cd ..
-    - ln -s kkr.x kkr.x_hybrid
-    - ln -s kkr.x kkr.x_omp
-    - ln -s kkr.x kkr.x_mpi
-    - ln -s kkr.x kkr.x_serial
-    - ln -s kkr.x kkr.x_1_mpi
+    - cp kkr.x kkr.x_hybrid
+    - cp kkr.x kkr.x_omp
+    - cp kkr.x kkr.x_mpi
+    - cp kkr.x kkr.x_serial
+    - cp kkr.x kkr.x_1_mpi
   artifacts:
     paths:
       - kkr.x
