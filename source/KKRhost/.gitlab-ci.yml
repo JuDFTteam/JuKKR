@@ -12,8 +12,6 @@ before_script:
   - export OMP_NUM_THREADS=1
   - export OMP_STACKSIZE=1g
   - ulimit -s unlimited
-  # extract version info
-  - touchcompver compflag complib
 
 stages:
   - test
