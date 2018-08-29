@@ -39,31 +39,31 @@ test:intel:
  ## 1.2 production versions
 
 ## 1.1 debug versions ##
-build:intel:debug:
-  stage: build
-  script:
-    - mkdir build_gfortran_debug && cd build_gfortran_debug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug .. && make -j4
+#build:gnu:debug:
+#  stage: build
+#  script:
+#    - mkdir build_gfortran_debug && cd build_gfortran_debug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug .. && make -j4
 
-build:intel:debug:
-  stage: build
-  script:
-    - mkdir build_debug && cd build_debug
-    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug ..
-    - make -j4
+#build:intel:debug:
+#  stage: build
+#  script:
+#    - mkdir build_debug && cd build_debug
+#    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug ..
+#    - make -j4
 
-build:intel:openmp_debug:
-  stage: build
-  script:
-    - mkdir build_ompdebug && cd build_ompdebug
-    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug ..
-    - make -j4
+#build:intel:openmp_debug:
+#  stage: build
+#  script:
+#    - mkdir build_ompdebug && cd build_ompdebug
+#    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug ..
+#    - make -j4
 
-build:intel:hybrid_debug:
-  stage: build
-  script:
-    - mkdir build_hybriddebug && cd build_hybriddebug
-    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug ..
-    - make -j4
+#build:intel:hybrid_debug:
+#  stage: build
+#  script:
+#    - mkdir build_hybriddebug && cd build_hybriddebug
+#    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug ..
+#    - make -j4
 
 ## 1.2 production versions ##
 build:intel:hybrid:
@@ -91,7 +91,7 @@ build:intel:hybrid:
 run:intel:serial_1:
   stage: run
   script:
-    - cd tests
+    - cd tests && ls -ltr && ls -ltr ../ && ls -ltr ../../
     - ./run_serial.py 1
   artifacts:
     paths:
