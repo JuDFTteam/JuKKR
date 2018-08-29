@@ -34,10 +34,10 @@ for mode in modes:
             print job
             call(job, shell=True)
             job = 'cd '+path+'; '
-            job+= 'ln -s ../test_inputs/test_%s_*/* .; ln -s ../../kkr.x_%s kkr.x; '%(testcase.replace('test_run',''), mode)
+            job+= 'ln -s ../test_inputs/test_%s_*/* .; '%(testcase.replace('test_run',''))
             if global_options != '':
                 job+= global_options+'; '
-            job+= 'export OMP_NUM_THREADS=%i; srun --nodes=%i --ntasks-per-node=%i ./kkr.x | tee out_kkr'%(npara[0], npara[1]/(8/npara[0]), 8/npara[0])
+            job+= 'export OMP_NUM_THREADS=%i; srun --nodes=%i --ntasks-per-node=%i ../../kkr.x | tee out_kkr'%(npara[0], npara[1]/(8/npara[0]), 8/npara[0])
             print job
             call(job, shell=True)
             job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'

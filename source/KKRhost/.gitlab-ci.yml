@@ -96,7 +96,7 @@ run:intel:serial_1:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 days
 
 run:intel:serial_2:
   stage: run
@@ -106,7 +106,7 @@ run:intel:serial_2:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 days
 
 run:intel:serial_3:
   stage: run
@@ -116,7 +116,7 @@ run:intel:serial_3:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 days
 
 ## 2.2 comparison serial/parallel run ##
 run:intel:parallel_2:
@@ -127,7 +127,7 @@ run:intel:parallel_2:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 days
 
 run:intel:multi_node:
   image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
@@ -147,7 +147,7 @@ run:intel:multi_node:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 days
 
 run:intel:MPIatom_7:
   stage: run
@@ -157,7 +157,7 @@ run:intel:MPIatom_7:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 days
  
 run:intel:MPIenerg_8:
   stage: run
@@ -167,7 +167,7 @@ run:intel:MPIenerg_8:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 days
  
 ## 2.3 special features beyond selfconsistency ##
 run:intel:Jijs_4:
@@ -206,30 +206,20 @@ run:intel:FERMIOUT_6:
 run:intel:OPERATOR_12:
   stage: run
   script:
-    - mkdir tests/test_run12_mpi_1_8 && cd tests/test_run12_mpi_1_8 && ln -s ../test_inputs/test_12_*/* . && export OMP_NUM_THREADS=1 && mpirun -np 8 ../../kkr.x | tee out_kkr
-    - rm -f gmat tmat gref *for* inputcard_generated.txt
-    # run calculation with impurity wavefunctions
-    - rm inputcard && ln -s imp/* . &&  export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
-    - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
+      - tests/tools/run_test_12.sh
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 days
 
 run:intel:DTM_GMATLL_13:
   stage: run
   script:
-    - mkdir tests/test_run13_mpi_1_8 && cd tests/test_run13_mpi_1_8 && ln -s ../test_inputs/test_13_*/* . && rm DTM GMAT && cp -r ../test_inputs/test_13_*/{DTM,GMAT} .
-    - export OMP_NUM_THREADS=1 && mpirun -np 8 ../../kkr.x | tee out_kkr
-    - rm -f gmat tmat gref *for* inputcard_generated.txt
-    - cd DTM && pwd && ls && ls -ltr .. && mpirun -np 8 ../../../kkr.x | tee out_kkr
-    - rm -f gmat tmat gref *for* inputcard_generated.txt
-    - cd ../GMAT && mpirun -np 8 ../../../kkr.x | tee out_kkr
-    - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
   artifacts:
+      - tests/tools/run_test_13.sh
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 days
 
 run:intel:qdos_14:
   stage: run
@@ -239,18 +229,17 @@ run:intel:qdos_14:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+    expire_in: 1 days
 
-run:intel:rhoq_15:
-  stage: run
-  script:
-    - mkdir tests/test_run15 && cd tests/test_run15 && ln -s ../test_inputs/test_15_*/* .
-    - ./prepare.sh
-    - ./run.sh
-  artifacts:
-    paths:
-      - tests/test_run*
-    expire_in: 2 days
+#not working at the moment:
+#run:intel:rhoq_15:
+#  stage: run
+#  script:
+#      - tests/tools/run_test_15.sh
+#  artifacts:
+#    paths:
+#      - tests/test_run*
+#    expire_in: 2 days
 
 ## 2.4 integration with aiida ##
 run:intel:aiida-kkr:
@@ -274,7 +263,7 @@ run:intel:aiida-kkr:
   script:
     # some prepararion
     - umask 000 # needed to ensure that all subdirs created by aiida have the right permissions
-    - cp kkr.x_1_mpi "${KKR_EXECUTABLE_PATH}" # copy kkr executable to correct dir
+    - cp kkr.x "${KKR_EXECUTABLE_PATH}" # copy kkr executable to correct dir
     - export C_FORCE_ROOT='true' # needed since root process executes aiida
     - verdi devel setproperty logging.celery_loglevel INFO && verdi devel setproperty logging.aiida_loglevel INFO && verdi daemon restart # restart aiida daemon with increased loglevel
     # compile latest voronoi version and add to aiida
