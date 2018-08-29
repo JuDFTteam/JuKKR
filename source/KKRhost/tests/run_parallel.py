@@ -16,7 +16,7 @@ else:
 
 # some global settings
 modes = ['omp',  'mpi', 'hybrid']  #['serial', 'omp',  'mpi', 'hybrid']
-npara_pairs = [[1,1], [1,2], [2,1], [1,8], [8,1], [1,4], [4,1], [2,4], [4,2], [2,2]] # first entry is OMP_NUM_THREADS second number of MPI ranks
+npara_pairs = [[1,1], [1,4], [4,1], [2,2]] # first entry is OMP_NUM_THREADS second number of MPI ranks
 global_options = ''
 #global_options = 'source /usr/local/bin/compilervars-12.sh intel64; source /usr/local/intel/mkl/bin/mklvars.sh intel64'
 
@@ -28,13 +28,13 @@ test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5], 7:[6], 8:[7], 14:[13
 
 # use mpi only if test_coverage option is set to negative value
 if test_coverage<0:
-    npara_pairs = [[1,2], [1,3], [1,4], [1,7], [1,8]]
+    npara_pairs = [[1,2], [1,4]]
     if test_coverage in [-14]:
         npara_pairs = [[1,8]]
         modes = ['mpi']
     if test_coverage -6:
         # for FERMIOUT option nranks<=natom needed
-        npara_pairs = [[1,2], [1,3], [1,4]]
+        npara_pairs = [[1,3]]
     test_coverage = -test_coverage
 
 # loop over all combinations

@@ -26,13 +26,6 @@ class Test_check_test_runs():
         path0 = 'test_run3_serial_1_1/'
         standard_verify(path0, rms_threshold=8*10**-9)
 
-    """
-    def test_compare_parallel_modes1(self):
-        cmplist = ['serial_1_1', 'omp_1_1', 'omp_4_1', 'mpi_1_1' ,'mpi_1_4', 'hybrid_1_1', 'hybrid_1_4', 'hybrid_4_1', 'hybrid_2_2']
-        path00 = 'test_run1_'
-        cmp_modes(cmplist, path00)
-    """
-
     def test_compare_parallel_modes2(self):
         cmplist = ['serial_', 'omp_', 'mpi_', 'hybrid_']
         l_para = [1,2,4,8]
@@ -50,13 +43,6 @@ class Test_check_test_runs():
         cmplist = cmplist_new
         path00 = 'test_run2_'
         cmp_modes(cmplist, path00)
-
-    """
-    def test_compare_parallel_modes3(self):
-        cmplist = ['serial_1_1', 'omp_1_1', 'omp_4_1', 'mpi_1_1' ,'mpi_1_4', 'hybrid_1_1', 'hybrid_1_4', 'hybrid_4_1', 'hybrid_2_2']
-        path00 = 'test_run3_'
-        cmp_modes(cmplist, path00)
-    """
 
     def test_verify4_Jijs_noSOC(self):
         paths = 'test_run4_serial_1_1/ test_run4_mpi_1_4/ test_run4_hybrid_1_4/'.split()
@@ -161,8 +147,8 @@ class Test_check_test_runs():
            assert set(text)-set(text_ref)==set()
 
     def test_verify14_qdos(self):
-        path  = 'test_run14_mpi_1_8/'
-        path0 = 'test_run14_mpi_1_8/ref/'
+        path  = 'test_run14_mpi_1_3/'
+        path0 = 'test_run14_mpi_1_3/ref/'
         for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
            fname = f
            num, text = read_file(path+fname)
