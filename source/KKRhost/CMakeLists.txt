@@ -24,6 +24,10 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     set(compver "gnu")
 endif()
 
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(compver "${compver}-debug")
+endif()
+
 # common preprocessing options for all compilers
 add_definitions(-DCPP_TIMING)
 

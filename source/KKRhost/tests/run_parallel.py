@@ -4,6 +4,7 @@ from subprocess import call
 import sys
 from numpy import array
 
+
 if len(sys.argv)>1:
     try:
         test_coverage = int(sys.argv[1])
@@ -61,10 +62,10 @@ for mode in modes:
                 print job
                 call(job, shell=True)
                 job = 'cd '+path+'; '
-                job+= 'ln -s ../test_inputs/test_%s_*/* .; ln -s ../../kkr.x kkr.x; '%(testcase.replace('test_run',''))
+                job+= 'ln -s ../test_inputs/test_%s_*/* .; '%(testcase.replace('test_run',''))
                 if global_options != '':
                     job+= global_options+'; '
-                job+= 'export OMP_NUM_THREADS=%i; mpirun -np %i ./kkr.x | tee out_kkr'%(npara[0], npara[1])
+                job+= 'export OMP_NUM_THREADS=%i; mpirun -np %i ../../kkr.x | tee out_kkr'%(npara[0], npara[1])
                 print job
                 call(job, shell=True)
                 job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'

@@ -70,7 +70,6 @@ program kkrcode
   write(ctemp,'(I03.3)') myrank
   ! find serial number that is printed to files
   call construct_serialnr()
-  call memocc(0,0,'count','start')
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< initialize MPI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -97,6 +96,9 @@ program kkrcode
 
      ! default value on master (needed for writeout in main0)
      t_inc%i_write = 1
+
+     ! now memocc can be started (needs t_inc%i_write to be set)
+     call memocc(0,0,'count','start')
 
      ! run main0 only serially, then communicate everything that is in here
      call main0()
@@ -125,6 +127,7 @@ program kkrcode
   ! now communicate type t_inc and t_tgmat switches (this has an implicit barrier, so that all other processes wait for master to finish with main0)
   if(myrank==master) call timing_start('MPI 1')
   call bcast_t_inc_tgmat(t_inc,t_tgmat,t_cpa)
+
   ! also communicate logicals from t_lloyd
   call bcast_t_lly_1(t_lloyd)
 
@@ -135,11 +138,42 @@ program kkrcode
 
   ! communicate global variables (previously in inc.p)
   call bcast_global_variables()
+#endif
 
-  
 
+  ! set verbosity levels for each rank set i_write and i_time to 0 or 1,2, depending on verbosity level specified in inputcard and rank
+  ! take care of different ranks here for verbose0 and timings1,2
+  ! convention: value of 0 mean do not write, value 1 write and reset file, value 2 write everthing
+  if(t_inc%i_write==0 .and. myrank==master) t_inc%i_write = 1 ! only written to master, reset file after each iteration, output.init.txt for main0 output
+  if(t_inc%i_time==0 .and. myrank==master) t_inc%i_time = 1  ! only master writes timings of current iteration
+  if(t_inc%i_time==1) then
+     t_inc%i_time = 0                          ! all ranks do not write timings but only the master
+     if(myrank==master) t_inc%i_time = 2       ! master write all timings of all iterations
+  endif !t_inc%i_time==1
+
+  ! initialize timing files
+  if(myrank.ne.master) call timing_init(myrank)
+  ! set if(t_inc%i_write>0) in front of every write(1337) and in mod_timing for timing_stop writeout (if(t_inc%i_time>0))
+  ! for i_write (or i_time) =2 do not reset files > here for output.*.txt, after main2, copy writeout after main0 to different file
+  if (t_inc%i_write<2) then
+     if(myrank==master) call SYSTEM('cp output.000.txt output.0.txt')
+     if(myrank==master) close(1337, status='delete')
+     if(t_inc%i_write>0) then
+        open(1337, file='output.'//trim(ctemp)//'.txt')
+        call version_print_header(1337)
+     end if
+  endif
+  if(t_inc%i_write>0 .and. myrank.ne.master) then
+     open(1337, file='output.'//trim(ctemp)//'.txt')
+     call version_print_header(1337)
+  end if
+
+#ifdef CPP_MPI
   if ( myrank/=master ) then 
   
+    ! initialize memocc also for the other ranks after t_inc%i_write has been set
+    call memocc(0,0,'count','start')
+
     call allocate_cell(1, naezd, nembd, natypd, cls, imt, irws, irns, ntcell, &
       refpot, kfg, kaoez, rmt, zat, rws, mtfac, rmtref, rmtrefat, rmtnew, &
       rbasis, lmxc)
@@ -174,14 +208,10 @@ program kkrcode
        IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM_MAP, &
        GSH)
 
-  end if
+  end if !( myrank/=master )
    
-
-
   ! broadcast md5 sums (written to some output files (kkrflex_* etc.)
-#ifdef CPP_MPI
   call myMPI_Bcast_md5sums(t_params%INS, myrank, master)
-#endif
 
   ! in case of deci-out run everything only serially to write decifile correctly. This will be fixed in a later version when we get rid of the decifile
   if(t_inc%deci_out .and. t_mpi_c_grid%nranks_at>1) then
@@ -197,6 +227,7 @@ program kkrcode
   if(ierr/=MPI_SUCCESS) stop 'error broadcasting MPIatom in main_all'
   call MPI_Bcast(MPIadapt, 1, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
   if(ierr/=MPI_SUCCESS) stop 'error broadcasting MPIadapt in main_all'
+
   ! allocate timing arrays
   if(MPIadapt>0) then
      allocate(timings_1a(t_inc%ielast,t_inc%natyp),stat=i_stat)
@@ -208,7 +239,8 @@ program kkrcode
      timings_1a(:,:) = 0.0d0
      timings_1b(:) = 0.0d0
      load_imbalance(:) = 0
-  end if
+  end if !MPIadapt>0
+
   ! create_subcomms_2d: first find maximal dimensions
   call find_dims_2d(nranks,t_inc%NATYP,t_inc%IELAST,dims,MPIatom)
   !save in dims
@@ -222,38 +254,8 @@ program kkrcode
   call save_t_mpi_c_grid(t_mpi_c_grid,dims, myMPI_comm_ie, myMPI_comm_at, &
      myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
   if(myrank==master) call timing_stop('MPI 1')
-#endif
 
-   !call set_writeout_timings(t_inc, myrank, master, ctemp)
 
-   ! set verbosity levels for each rank set i_write and i_time to 0 or 1,2, depending on verbosity level specified in inputcard and rank
-   ! take care of different ranks here for verbose0 and timings1,2
-   ! convention: value of 0 mean do not write, value 1 write and reset file, value 2 write everthing
-   if(t_inc%i_write==0 .and. myrank==master) t_inc%i_write = 1 ! only written to master, reset file after each iteration, output.init.txt for main0 output
-   if(t_inc%i_time==0 .and. myrank==master) t_inc%i_time = 1  ! only master writes timings of current iteration
-   if(t_inc%i_time==1) then
-      t_inc%i_time = 0                          ! all ranks do not write timings but only the master
-      if(myrank==master) t_inc%i_time = 2       ! master write all timings of all iterations
-   endif !t_inc%i_time==1
-   ! initialize timing files
-   if(myrank.ne.master) call timing_init(myrank)
-
-   ! set if(t_inc%i_write>0) in front of every write(1337) and in mod_timing for timing_stop writeout (if(t_inc%i_time>0))
-   ! for i_write (or i_time) =2 do not reset files > here for output.*.txt, after main2, copy writeout after main0 to different file
-   if (t_inc%i_write<2) then
-      if(myrank==master) call SYSTEM('cp output.000.txt output.0.txt')
-      if(myrank==master) close(1337, status='delete')
-      if(t_inc%i_write>0) then
-         open(1337, file='output.'//trim(ctemp)//'.txt')
-         call version_print_header(1337)
-      end if
-   endif
-   if(t_inc%i_write>0 .and. myrank.ne.master) then
-      open(1337, file='output.'//trim(ctemp)//'.txt')
-      call version_print_header(1337)
-   end if
-
-#ifdef CPP_MPI
   ! communicate parameters for save_wavefunctions
   call bcast_params_savewf(t_wavefunctions)
   ! communicate parameters of godfrin inversion scheme ! GODFRIN Flaviano
