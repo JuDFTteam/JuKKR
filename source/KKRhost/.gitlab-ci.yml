@@ -215,8 +215,8 @@ run:intel:OPERATOR_12:
 run:intel:DTM_GMATLL_13:
   stage: run
   script:
-  artifacts:
       - tests/tools/run_test_13.sh
+  artifacts:
     paths:
       - tests/test_run*
     expire_in: 1 day
