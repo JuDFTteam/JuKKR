@@ -64,7 +64,7 @@ EMIN      EMAX       TEMPR      NPOL      NPT1    NPT2     NPT3
 BZDIVIDE= 5 5 1 
 ----------------------------------------------------------------------
 NSTEPS     IMIX    STRMIX       FCM       QBOUND    BRYMIX      ITDBRY
- 100         5     0.010        20.0      1.D-7      0.02        20
+ 2           5     0.010        20.0      1.D-7      0.02        20
 ----------------------------------------------------------------------
 Parameters for ewald sums
 RMAX=7.0d0     GMAX=100.0d0     (fcc 7  65)

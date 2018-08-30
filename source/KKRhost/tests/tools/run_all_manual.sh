@@ -54,19 +54,114 @@ echo "run:intel:qdos_12:"
 echo ""
 ./run_parallel.py -12
 
-cd ../
 
 echo "###########################################"
 echo "run:intel:OPERATOR_10:"
 echo ""
-tests/tools/run_test_10.sh
+cd ../
+#tests/tools/run_test_10.sh
+cd tests
 
 echo "###########################################"
 echo "run:intel:DTM_GMATLL_11:"
 echo ""
-tests/tools/run_test_11.sh
+cd ../
+#tests/tools/run_test_11.sh
+cd tests
 
-
-#not working at the moment:
-#echo "run:intel:rhoq_13:"
+echo "###########################################"
+echo "run:intel:rhoq_13:"
+echo ""
+cd ../
 #tests/tools/run_test_13.sh
+cd tests
+
+echo "###########################################"
+echo "run:intel:ASA_14:"
+echo ""
+./run_parallel.py -14
+
+echo "###########################################"
+echo "run:intel:CPA_15:"
+echo ""
+./run_parallel.py -15
+
+echo "###########################################"
+echo "run:intel:Dirac_16:"
+echo ""
+./run_parallel.py -16
+
+echo "###########################################"
+echo "run:intel:lambda_xc_17:"
+echo ""
+./run_parallel.py -17
+
+echo "###########################################"
+echo "run:intel:noco_18:"
+echo ""
+./run_parallel.py -18
+
+
+echo "###########################################"
+echo "run:intel:decimate_19:"
+echo ""
+cd ../
+tests/tools/run_test_19.sh
+cd tests
+
+
+#SOC tests
+
+echo "###########################################"
+echo "run:intel:Au_bulk_SOC_1_1:"
+echo ""
+./run_parallel.py -1001
+
+echo "###########################################"
+echo "run:intel:Fe_slab_SOC_2_1:"
+echo ""
+./run_parallel.py -1002
+
+echo "###########################################"
+echo "run:intel:Si_LLY_SOC_3_1:"
+echo ""
+./run_parallel.py -1003
+
+echo "###########################################"
+echo "run:intel:Jijs_SOC_4_1:"
+echo ""
+./run_parallel.py -1004
+
+echo "###########################################"
+echo "run:intel:kkrflex_SOC_5_1:"
+echo ""
+./run_parallel.py -1005
+
+echo "###########################################"
+echo "run:intel:FERMIOUT_SOC_6_1:"
+echo ""
+./run_parallel.py -1006
+
+echo "###########################################"
+echo "run:intel:qdos_SOC_12_1:"
+./run_parallel.py -1012
+echo ""
+
+echo "###########################################"
+echo "run:intel:ASA_SOC_14_1:"
+./run_parallel.py -1014
+echo ""
+
+echo "###########################################"
+echo "run:intel:CPA_SOC_15_1:"
+./run_parallel.py -1015
+echo ""
+
+
+echo "###########################################"
+echo "run:intel:decimate_SOC_19_1:"
+echo ""
+cd ../
+tests/tools/run_test_19_1.sh
+cd tests
+

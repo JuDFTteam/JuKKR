@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from subprocess import call
-import sys
+import sys, os
 from numpy import array
 
 # some global settings
@@ -30,16 +30,17 @@ for mode in modes:
         # run calculation
         if run_calc:
             path = testcase+'_'+mode+'_'+str(npara[0])+'_'+str(npara[1])
-            job = 'mkdir '+path
-            print job
-            call(job, shell=True)
-            job = 'cd '+path+'; '
-            job+= 'ln -s ../test_inputs/test_%s_*/* .; '%(testcase.replace('test_run',''))
-            if global_options != '':
-                job+= global_options+'; '
-            job+= 'export OMP_NUM_THREADS=%i; srun --nodes=%i --ntasks-per-node=%i ../../kkr.x | tee out_kkr'%(npara[0], npara[1]/(8/npara[0]), 8/npara[0])
-            print job
-            call(job, shell=True)
-            job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'
-            print job
-            call(job, shell=True)
+            if path not in os.listdir('.'):
+                job = 'mkdir '+path
+                print job
+                call(job, shell=True)
+                job = 'cd '+path+'; '
+                job+= 'ln -s ../test_inputs/test_%s_*/* .; '%(testcase.replace('test_run',''))
+                if global_options != '':
+                    job+= global_options+'; '
+                job+= 'export OMP_NUM_THREADS=%i; srun --nodes=%i --ntasks-per-node=%i ../../kkr.x | tee out_kkr'%(npara[0], npara[1]/(8/npara[0]), 8/npara[0])
+                print job
+                call(job, shell=True)
+                job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'
+                print job
+                call(job, shell=True)

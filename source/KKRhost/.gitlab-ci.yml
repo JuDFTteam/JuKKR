@@ -21,6 +21,7 @@ stages:
   - run_serial
   - run_parallel
   - run_features
+  - run_features_SOC
   - verify
 
 ###############################################################################
@@ -234,15 +235,73 @@ run:intel:qdos_12:
       - tests/test_run*
     expire_in: 1 day
 
-#not working at the moment:
-#run:intel:rhoq_13:
-#  stage: run_features
-#  script:
-#      - tests/tools/run_test_13.sh
-#  artifacts:
-#    paths:
-#      - tests/test_run*
-#    expire_in: 1 day
+run:intel:rhoq_13:
+  stage: run_features
+  script:
+      - tests/tools/run_test_13.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:ASA_14:
+  stage: run_features
+  script:
+    - cd tests
+    - ./run_parallel.py -14
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:CPA_15:
+  stage: run_features
+  script:
+    - cd tests
+    - ./run_parallel.py -15
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:Dirac_16:
+  stage: run_features
+  script:
+    - cd tests
+    - ./run_parallel.py -16
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:lambda_xc_17:
+  stage: run_features
+  script:
+    - cd tests
+    - ./run_parallel.py -17
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:noco_18:
+  stage: run_features
+  script:
+    - cd tests
+    - ./run_parallel.py -18
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:decimate_19:
+  stage: run_features
+  script:
+      - tests/tools/run_test_19.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
 
 ## 2.4 integration with aiida ##
 run:intel:aiida-kkr:
@@ -288,6 +347,106 @@ run:intel:aiida-kkr:
       - celery.log
       - test_export.aiida.tar.gz
     expire_in: 2 day
+
+## 2.5 SOC tests ##
+run:intel:Au_bulk_SOC_1_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1001
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:Fe_slab_SOC_2_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1002
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:Si_LLY_SOC_3_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1003
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:Jijs_SOC_4_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1004
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:kkrflex_SOC_5_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1005
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:FERMIOUT_SOC_6_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1006
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:qdos_SOC_12_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1012
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:ASA_SOC_14_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1014
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:CPA_SOC_15_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1015
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:decimate_SOC_19_1:
+  stage: run_features_SOC
+  script:
+      - tests/tools/run_test_19_1.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
 
 ###############################################################################
 

@@ -2630,7 +2630,7 @@ contains
         ! enforce MPIenerg since this is usually faster for qdos option
         call addtest('MPIenerg')
       end if
-
+      if (.not. test('STOP1C  ')) call addtest('STOP1C  ')
     end if
 
     ! =============================================================         !

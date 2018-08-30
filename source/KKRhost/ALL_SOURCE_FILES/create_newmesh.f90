@@ -24,7 +24,8 @@ contains
   subroutine create_newmesh(natyp, irm, ipand, irid, ntotd, &
     nfund, ncheb, irmdnew, nspin, r, irmin, ipan, ircut, r_log, npan_log, &
     npan_eq, npan_log_at, npan_eq_at, npan_tot, rnew, rpan_intervall, &
-    ipan_intervall, ncelld, ntcell, thetas, thetasnew) ! < optional arguments
+    ipan_intervall, ncelld, &
+    ntcell, thetas, thetasnew) ! < optional arguments
 
     implicit none
 
@@ -65,13 +66,12 @@ contains
     real (kind=dp), dimension (irmdnew, natyp), intent (inout) :: rnew
     real (kind=dp), dimension (0:ntotd, natyp), intent (inout) :: &
       rpan_intervall
+
     ! .. Optional arguments, do interpolation when given
-    integer, dimension (natyp), intent (in), optional :: ntcell ! < Index for
-                                                                ! WS cell
+    integer, dimension (natyp), intent (in), optional :: ntcell ! < Index for WS cell
     real (kind=dp), dimension (irid, nfund, ncelld), intent (in), &
-      optional :: thetas           ! < shape function THETA=0 outer space
-                                   ! THETA =1 inside WS cell in spherical
-                                   ! harmonics expansion
+      optional :: thetas ! < shape function THETA=0 outer space, 
+                         ! THETA=1 inside WS cell in spherical harmonics expansion
     real (kind=dp), dimension (ntotd*(ncheb+1), nfund, ncelld), &
       intent (inout), optional :: thetasnew
 

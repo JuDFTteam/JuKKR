@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from subprocess import call
-import sys
+import sys, os
 from numpy import array
 
 
@@ -20,13 +20,18 @@ npara_pairs = [[1,1], [1,4], [4,1], [2,2]] # first entry is OMP_NUM_THREADS seco
 global_options = ''
 #global_options = 'source /usr/local/bin/compilervars-12.sh intel64; source /usr/local/intel/mkl/bin/mklvars.sh intel64'
 
-test_systems = ['test_run%0.2i'%(i) for i in range(1,15)]
+test_systems = ['test_run%0.2i'%(i) for i in range(1,20)]
 
 # define masks of test_systes for exgensive (i.e. non-serial) tests
 # key is the test_coverage that enters as input via sys.argv command line argument
-test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5], 7:[6], 8:[7], 12:[11]}
+test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5], 7:[6], 8:[7], 12:[11], 14:[13], 15:[14], 16:[15], 17:[16], 18:[17]}
 
 # use mpi only if test_coverage option is set to negative value
+if test_coverage<-1000:
+    SOCrun = True
+    test_coverage+=1000
+else:
+    SOCrun = False
 if test_coverage<0:
     npara_pairs = [[1,2], [1,4]]
     if test_coverage in [-12]:
@@ -55,19 +60,26 @@ for mode in modes:
                 if testcase not in array(test_systems)[test_coverages[test_coverage]]:
                     run_calc = False
 
+            # change to SOC extention(".1")
+            if SOCrun:
+                testcase+='.1'
+
             # run calculation
             if run_calc:
                 path = testcase+'_'+mode+'_'+str(npara[0])+'_'+str(npara[1])
-                job = 'mkdir '+path
-                print job
-                call(job, shell=True)
-                job = 'cd '+path+'; '
-                job+= 'ln -s ../test_inputs/test_%s_*/* .; '%(testcase.replace('test_run',''))
-                if global_options != '':
-                    job+= global_options+'; '
-                job+= 'export OMP_NUM_THREADS=%i; mpirun -np %i ../../kkr.x | tee out_kkr'%(npara[0], npara[1])
-                print job
-                call(job, shell=True)
-                job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'
-                print job
-                call(job, shell=True)
+                if path not in os.listdir('.'):
+                    job = 'mkdir '+path
+                    print job
+                    call(job, shell=True)
+                    job = 'cd '+path+'; '
+                    job+= 'ln -s ../test_inputs/test_%s_*/* .; '%(testcase.replace('test_run',''))
+                    if SOCrun:
+                        job = job.replace('_*/*', '/*')
+                    if global_options != '':
+                        job+= global_options+'; '
+                    job+= 'export OMP_NUM_THREADS=%i; mpirun -np %i ../../kkr.x | tee out_kkr'%(npara[0], npara[1])
+                    print job
+                    call(job, shell=True)
+                    job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'
+                    print job
+                    call(job, shell=True)

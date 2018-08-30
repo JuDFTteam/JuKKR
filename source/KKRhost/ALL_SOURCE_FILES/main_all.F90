@@ -322,6 +322,14 @@ program kkrcode
      call timing_start('main1c')
      call main1c()
      call timing_stop('main1c')
+     if(test('STOP1C  '))then
+       if(.not. OPT('qdos    ') .and. myrank==master) write(*,*) 'done with qdos steps'
+       if(myrank==master) write(*,*) 'Stop after main1c'
+#ifdef CPP_MPI
+        call MPI_Finalize(ierr)
+#endif
+       stop
+     end if!test
 
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      ! Calculate DFT stuff (potential from density, exc-potential, calculate total energy, ...)
