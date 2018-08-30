@@ -1,0 +1,457 @@
+# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180830212646
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 2, #of points= 1
+Task 2 treats points 3 to 3, #of points= 1
+Task 3 treats points 4 to 4, #of points= 1
+ ==========================================
+ atom:            1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 5, #of points= 5
+Task 1 treats points 6 to 10, #of points= 5
+Task 2 treats points 11 to 14, #of points= 4
+ ==========================================
+ CALCTMAT: IE=           1  ATOM:           1
+ energy:           1  (-0.400000000000000,1.794010046755946E-002)
+ Born           0   1517.04723895714     
+ Born           1  0.307013940115704     
+ Born           2  9.926597042901832E-004
+ CALCTMAT: IE=           2  ATOM:           1
+ energy:           2  (-0.400000000000000,7.959110633897150E-002)
+ Born           0   1513.80543202174     
+ Born           1  0.305431951357824     
+ Born           2  9.870186098791145E-004
+ CALCTMAT: IE=           3  ATOM:           1
+ energy:           3  (-0.400000000000000,0.141242112210384)
+ Born           0   1506.76706376012     
+ Born           1  0.302062688656196     
+ Born           2  9.752644576266121E-004
+ CALCTMAT: IE=           4  ATOM:           1
+ energy:           4  (-0.332948694328623,0.159182212677943)
+ Born           0   1455.87363113473     
+ Born           1  0.307688482861737     
+ Born           2  1.005124249161933E-003
+ CALCTMAT: IE=           5  ATOM:           1
+ energy:           5  (-8.130521878317340E-002,0.159182212677943)
+ Born           0   1334.84661112138     
+ Born           1  0.363146120084581     
+ Born           2  1.246166336295478E-003
+           0 start tbref e-loop
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 5, #of points= 5
+Task 1 treats points 6 to 10, #of points= 5
+Task 2 treats points 11 to 14, #of points= 4
+ ==========================================
+TBREF: GREF for energy:    1   -0.40000000    0.01794010
+ tbref NCLS loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+TBREF: GREF for energy:    2   -0.40000000    0.07959111
+ tbref NCLS loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+TBREF: GREF for energy:    3   -0.40000000    0.14124211
+ tbref NCLS loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+TBREF: GREF for energy:    4   -0.33294869    0.15918221
+ tbref NCLS loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+TBREF: GREF for energy:    5   -0.08130522    0.15918221
+ tbref NCLS loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+===============================================================================
+                              < KKR1a finished >
+===============================================================================
+
+
+===============================================================================
+      Inversion algorithm used : FULL MATRIX                        
+===============================================================================
+
+ ************ IE =   1 ENERGY =  -0.400000   0.017940 KMESH =   4
+ kkrmat k loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 || 
+ ************ IE =   2 ENERGY =  -0.400000   0.079591 KMESH =   3
+ kkrmat k loop:           8           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 2, #of points= 2
+Task 1 treats points 3 to 4, #of points= 2
+Task 2 treats points 5 to 6, #of points= 2
+Task 3 treats points 7 to 8, #of points= 2
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 ||| 
+ ************ IE =   3 ENERGY =  -0.400000   0.141242 KMESH =   4
+ kkrmat k loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 || 
+ ************ IE =   4 ENERGY =  -0.332949   0.159182 KMESH =   4
+ kkrmat k loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 || 
+ ************ IE =   5 ENERGY =  -0.081305   0.159182 KMESH =   4
+ kkrmat k loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 || 
+===============================================================================
+                              < KKR1b finished >
+===============================================================================
+
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 2, #of points= 1
+Task 2 treats points 3 to 3, #of points= 1
+Task 3 treats points 4 to 4, #of points= 1
+ ==========================================
+ atom           1
+ energy           1 (-0.400000000000000,1.794010046755946E-002)
+ Born           0   1517.04723895714     
+ Born           1  0.307013940115704     
+ Born           2  9.926597042901832E-004
+ energy           2 (-0.400000000000000,7.959110633897150E-002)
+ Born           0   1513.80543202174     
+ Born           1  0.305431951357824     
+ Born           2  9.870186098791145E-004
+ energy           3 (-0.400000000000000,0.141242112210384)
+ Born           0   1506.76706376012     
+ Born           1  0.302062688656196     
+ Born           2  9.752644576266121E-004
+ energy           4 (-0.332948694328623,0.159182212677943)
+ Born           0   1455.87363113473     
+ Born           1  0.307688482861737     
+ Born           2  1.005124249161933E-003
+ energy           5 (-8.130521878317340E-002,0.159182212677943)
+ Born           0   1334.84661112138     
+ Born           1  0.363146120084581     
+ Born           2  1.246166336295478E-003
+ 
+############################################
+        l-decomposed valence charges
+############################################
+ 
+   ATOM        Ne         
+   ========================== 
+      1   s =  0.75802196
+          p =  0.80656630
+          d =  9.43932722
+          ns  -0.00391541
+          ------------------- 
+          TOT 11.00000007
+   ========================== 
+      2   s =  0.75802196
+          p =  0.80656630
+          d =  9.43932722
+          ns  -0.00391541
+          ------------------- 
+          TOT 11.00000007
+   ========================== 
+      3   s =  0.75802196
+          p =  0.80656630
+          d =  9.43932722
+          ns  -0.00391541
+          ------------------- 
+          TOT 11.00000007
+   ========================== 
+      4   s =  0.75802196
+          p =  0.80656630
+          d =  9.43932722
+          ns  -0.00391541
+          ------------------- 
+          TOT 11.00000007
+ 
+############################################
+ 
+ Sum of valence charges of atoms (local summation)   44.0000002678861     
+ 
+##############################################################################
+                                 CORE  STATES
+##############################################################################
+    nuclear charge   79.000000         core charge =    68.000000
+    nuclear charge   79.000000         core charge =    68.000000
+    nuclear charge   79.000000         core charge =    68.000000
+    nuclear charge   79.000000         core charge =    68.000000
+ 
+##############################################################################
+ 
+===============================================================================
+                              < KKR1c finished >
+===============================================================================
+
+
+*******************************************************************************
+                   ****** ITERATION :   2 OUT OF   2 ******
+*******************************************************************************
+
+  Atom    1 charge in wigner seitz cell = 79.000000
+  =============================================================================
+  Atom    2 charge in wigner seitz cell = 79.000000
+  =============================================================================
+  Atom    3 charge in wigner seitz cell = 79.000000
+  =============================================================================
+  Atom    4 charge in wigner seitz cell = 79.000000
+ 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      ITERATION   2 charge neutrality in unit cell =     0.000000
+ 
+                old E Fermi   0.7177218402 Delta E_F =   0.14999468E-07
+                new E FERMI   0.7177218252  DOS(E_F) =     4.464886
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+===============================================================================
+                   MADELUNG POTENTIALS (spherically averaged) 
+
+                          ATOM   Delta_Q       VMAD
+                         ------------------------------
+                            1    0.000000     0.003742
+                            2    0.000000     0.003742
+                            3    0.000000     0.003742
+                            4    0.000000     0.003742
+ ICC in VMADELBLK           0
+                         ------------------------------
+
+===============================================================================
+ in espcb:           1           0           1           1
+ in espcb:           2           0           1           1
+ in espcb:           3           0           1           1
+ in espcb:           4           0           1           1
+ in espcb:           5           0           1           1
+ in espcb:           6           1           1           1
+ in espcb:           7           1           1           1
+ in espcb:           8           1           1           1
+ in espcb:           9           1           1           1
+ in espcb:          10           2           1           1
+ in espcb:          11           2           1           1
+ in espcb:          12           3           1           1
+ in espcb:           1           0           2           2
+ in espcb:           2           0           2           2
+ in espcb:           3           0           2           2
+ in espcb:           4           0           2           2
+ in espcb:           5           0           2           2
+ in espcb:           6           1           2           2
+ in espcb:           7           1           2           2
+ in espcb:           8           1           2           2
+ in espcb:           9           1           2           2
+ in espcb:          10           2           2           2
+ in espcb:          11           2           2           2
+ in espcb:          12           3           2           2
+ in espcb:           1           0           3           3
+ in espcb:           2           0           3           3
+ in espcb:           3           0           3           3
+ in espcb:           4           0           3           3
+ in espcb:           5           0           3           3
+ in espcb:           6           1           3           3
+ in espcb:           7           1           3           3
+ in espcb:           8           1           3           3
+ in espcb:           9           1           3           3
+ in espcb:          10           2           3           3
+ in espcb:          11           2           3           3
+ in espcb:          12           3           3           3
+ in espcb:           1           0           4           4
+ in espcb:           2           0           4           4
+ in espcb:           3           0           4           4
+ in espcb:           4           0           4           4
+ in espcb:           5           0           4           4
+ in espcb:           6           1           4           4
+ in espcb:           7           1           4           4
+ in espcb:           8           1           4           4
+ in espcb:           9           1           4           4
+ in espcb:          10           2           4           4
+ in espcb:          11           2           4           4
+ in espcb:          12           3           4           4
+  SPHERE : read LEBEDEV mesh
+ Including cutoff of vxc for small density
+ Including cutoff of vxc for small density
+ Including cutoff of vxc for small density
+ Including cutoff of vxc for small density
+  VOL INT.   163.777300283  VAV INT.  -119.588280212  VMT ZERO     0.730188372
+===============================================================================
+
+ MIXSTR  4.000000000000000E-002
+      rms-error for atom  1 :v+ + v- =  4.9364D-09
+      rms-error non spherical contribution for atom   1 :v+ + v- =  2.8609D-09
+      rms-error for atom  2 :v+ + v- =  5.0040D-09
+      rms-error non spherical contribution for atom   2 :v+ + v- =  2.8614D-09
+      rms-error for atom  3 :v+ + v- =  4.9648D-09
+      rms-error non spherical contribution for atom   3 :v+ + v- =  2.8608D-09
+      rms-error for atom  4 :v+ + v- =  5.1207D-09
+      rms-error non spherical contribution for atom   4 :v+ + v- =  2.8612D-09
+-------------------------------------------------------------------------------
+
+      ITERATION   2 average rms-error : v+ + v- =  5.7668D-09
+-------------------------------------------------------------------------------
+                    mixing factor used :     4.00D-02
+===============================================================================
+
+================================ TOTAL ENERGIES ===============================
+
+   Total energies atom   1
+   -----------------------
+     single particle energies  paramagnetic
+         core   contribution :  s =-14560.73655228 p = -6908.58109786
+                                d = -1841.62402576 f =   -71.59916347
+       valence  contribution :  s =     0.01302922 p =     0.50880851
+                                d =     3.26473511
+                                ns      0.00109361
+     --------------------------------------------------------------------
+     total contribution of the single particle energies : -23378.75317291
+                                   band energy per atom :    3.7876664581
+
+     coulomb  contribution :   0  14729.31812745  1      0.00000000
+                               2     -0.00038364  3      0.00000000
+                               4      0.00116702
+     --------------------------------------------------------------------
+     tot. coulomb contribution :  14729.31891084
+
+     ex.-cor. contribution :   0   -706.00549680  1      0.00000000
+                               2     -0.00005598  3      0.00000000
+                               4      0.00103475
+     --------------------------------------------------------------------
+     tot. ex.-cor. contribution :   -706.00451803
+
+     eff. pot. contribution     : -28647.25170767
+     total double counting contribution                 : -14623.93731486
+
+   Total contribution of atom  1 =-38002.69048777
+   ----------------------------------------------------------------------
+   Total energies atom   2
+   -----------------------
+     single particle energies  paramagnetic
+         core   contribution :  s =-14560.73655228 p = -6908.58109786
+                                d = -1841.62402570 f =   -71.59916348
+       valence  contribution :  s =     0.01302922 p =     0.50880851
+                                d =     3.26473511
+                                ns      0.00109361
+     --------------------------------------------------------------------
+     total contribution of the single particle energies : -23378.75317286
+                                   band energy per atom :    3.7876664576
+
+     coulomb  contribution :   0  14729.31812746  1      0.00000000
+                               2     -0.00038364  3      0.00000000
+                               4      0.00116702
+     --------------------------------------------------------------------
+     tot. coulomb contribution :  14729.31891084
+
+     ex.-cor. contribution :   0   -706.00549680  1      0.00000000
+                               2     -0.00005598  3      0.00000000
+                               4      0.00103475
+     --------------------------------------------------------------------
+     tot. ex.-cor. contribution :   -706.00451803
+
+     eff. pot. contribution     : -28647.25170767
+     total double counting contribution                 : -14623.93731485
+
+   Total contribution of atom  2 =-38002.69048771
+   ----------------------------------------------------------------------
+   Total energies atom   3
+   -----------------------
+     single particle energies  paramagnetic
+         core   contribution :  s =-14560.73655228 p = -6908.58109786
+                                d = -1841.62402576 f =   -71.59916347
+       valence  contribution :  s =     0.01302922 p =     0.50880851
+                                d =     3.26473511
+                                ns      0.00109361
+     --------------------------------------------------------------------
+     total contribution of the single particle energies : -23378.75317291
+                                   band energy per atom :    3.7876664579
+
+     coulomb  contribution :   0  14729.31812746  1      0.00000000
+                               2     -0.00038364  3      0.00000000
+                               4      0.00116702
+     --------------------------------------------------------------------
+     tot. coulomb contribution :  14729.31891085
+
+     ex.-cor. contribution :   0   -706.00549680  1      0.00000000
+                               2     -0.00005598  3      0.00000000
+                               4      0.00103475
+     --------------------------------------------------------------------
+     tot. ex.-cor. contribution :   -706.00451803
+
+     eff. pot. contribution     : -28647.25170768
+     total double counting contribution                 : -14623.93731486
+
+   Total contribution of atom  3 =-38002.69048777
+   ----------------------------------------------------------------------
+   Total energies atom   4
+   -----------------------
+     single particle energies  paramagnetic
+         core   contribution :  s =-14560.73655228 p = -6908.58109787
+                                d = -1841.62402577 f =   -71.59916348
+       valence  contribution :  s =     0.01302922 p =     0.50880851
+                                d =     3.26473511
+                                ns      0.00109361
+     --------------------------------------------------------------------
+     total contribution of the single particle energies : -23378.75317295
+                                   band energy per atom :    3.7876664569
+
+     coulomb  contribution :   0  14729.31812754  1      0.00000000
+                               2     -0.00038364  3      0.00000000
+                               4      0.00116702
+     --------------------------------------------------------------------
+     tot. coulomb contribution :  14729.31891093
+
+     ex.-cor. contribution :   0   -706.00549680  1      0.00000000
+                               2     -0.00005598  3      0.00000000
+                               4      0.00103475
+     --------------------------------------------------------------------
+     tot. ex.-cor. contribution :   -706.00451803
+
+     eff. pot. contribution     : -28647.25170773
+     total double counting contribution                 : -14623.93731483
+
+   Total contribution of atom  4 =-38002.69048778
+   ----------------------------------------------------------------------
+                                   sum of band energies :   15.1506658305
+   ----------------------------------------------------------------------
+
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+               TOTAL ENERGY in ryd. :          -152010.76195102
+                                eV  :         -2068228.02495325
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

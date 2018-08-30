@@ -1,0 +1,21 @@
+# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180830212659
+ main0                                       0.228100000000000     
+ MPI 1                                       0.134400000000000     
+ main1a - tbref - calctref13                 1.000000000000000E-004
+ main1a - tbref - gll13                      1.160000000000000E-002
+ main1a - tbref                              1.200000000000000E-002
+ main1a                                      0.153500000000000     
+ main1b - calctref13                         3.000000000000000E-004
+ main1b - inversion                          5.000000000000000E-004
+ main1b - kloopz                             4.699999999999999E-003
+ main1b - calctref13                         1.000000000000000E-004
+ main1b - inversion                          5.000000000000000E-004
+ main1b - kloopz                             4.900000000000000E-003
+ main1b                                      1.180000000000000E-002
+ main1c - rhoval                             0.180000000000000     
+ main1c - communication                      4.080000000000000E-002
+ main1c - serial part                        2.000000000000000E-003
+ main1c                                      0.255200000000000     
+ main2                                       0.368500000000000     
+ MPI 2                                       0.120800000000000     
+ Time in Iteration                           0.910000000000000     
