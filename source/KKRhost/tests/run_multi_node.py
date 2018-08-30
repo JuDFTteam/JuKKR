@@ -17,7 +17,7 @@ test_systems = ['test_run'+str(i) for i in range(1,9)]
 # loop over all combinations
 for mode in modes:
     for npara in npara_pairs:
-        testcase = 'test_run11'
+        testcase = 'test_run09'
         # run on parallel execs in parallel
         run_calc = True
         if mode=='serial' and npara[0]*npara[1]>1:

@@ -20,7 +20,7 @@ npara_pairs = [[1,1], [1,4], [4,1], [2,2]] # first entry is OMP_NUM_THREADS seco
 global_options = ''
 #global_options = 'source /usr/local/bin/compilervars-12.sh intel64; source /usr/local/intel/mkl/bin/mklvars.sh intel64'
 
-test_systems = ['test_run'+str(i) for i in range(1,15)]
+test_systems = ['test_run%0.2i'%(i) for i in range(1,15)]
 
 # define masks of test_systes for exgensive (i.e. non-serial) tests
 # key is the test_coverage that enters as input via sys.argv command line argument
@@ -29,7 +29,7 @@ test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5], 7:[6], 8:[7], 14:[13
 # use mpi only if test_coverage option is set to negative value
 if test_coverage<0:
     npara_pairs = [[1,2], [1,4]]
-    if test_coverage in [-14]:
+    if test_coverage in [-12]:
         npara_pairs = [[1,8]]
         modes = ['mpi']
     if test_coverage -6:

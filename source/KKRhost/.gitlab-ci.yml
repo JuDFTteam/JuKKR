@@ -131,26 +131,6 @@ run:intel:parallel_2:
       - tests/test_run*
     expire_in: 1 day
 
-run:intel:multi_node:
-  image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
-  stage: run_parallel
-  services:
-     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
-       alias: c1
-     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
-       alias: c2
-     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
-       alias: c3
-     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
-       alias: c4
-  script:
-    - cd tests
-    - ./run_multi_node.py
-  artifacts:
-    paths:
-      - tests/test_run*
-    expire_in: 1 day
-
 run:intel:MPIatom_7:
   stage: run_parallel
   script:
@@ -166,6 +146,26 @@ run:intel:MPIenerg_8:
   script:
     - cd tests
     - ./run_parallel.py -8
+  artifacts:
+    paths:
+      - tests/test_run*
+    expire_in: 1 day
+
+run:intel:multi_node_9:
+  image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
+  stage: run_parallel
+  services:
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c1
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c2
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c3
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c4
+  script:
+    - cd tests
+    - ./run_multi_node.py
   artifacts:
     paths:
       - tests/test_run*
@@ -205,39 +205,39 @@ run:intel:FERMIOUT_6:
       - tests/test_run*
     expire_in: 1 day
  
-run:intel:OPERATOR_12:
+run:intel:OPERATOR_10:
   stage: run_features
   script:
-      - tests/tools/run_test_12.sh
+      - tests/tools/run_test_10.sh
   artifacts:
     paths:
       - tests/test_run*
     expire_in: 1 day
 
-run:intel:DTM_GMATLL_13:
+run:intel:DTM_GMATLL_11:
   stage: run_features
   script:
-      - tests/tools/run_test_13.sh
+      - tests/tools/run_test_11.sh
   artifacts:
     paths:
       - tests/test_run*
     expire_in: 1 day
 
-run:intel:qdos_14:
+run:intel:qdos_12:
   stage: run_features
   script:
     - cd tests
-    - ./run_parallel.py -14
+    - ./run_parallel.py -12
   artifacts:
     paths:
       - tests/test_run*
     expire_in: 1 day
 
 #not working at the moment:
-#run:intel:rhoq_15:
+#run:intel:rhoq_13:
 #  stage: run_features
 #  script:
-#      - tests/tools/run_test_15.sh
+#      - tests/tools/run_test_13.sh
 #  artifacts:
 #    paths:
 #      - tests/test_run*

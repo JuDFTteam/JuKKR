@@ -1,0 +1,50 @@
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !!! Most output written to output.myrank.txt files !!!
+ !!! please check these files as well               !!!
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+*******************************************************************************
+          Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                           for Bulk and Interfaces
+          Juelich-Munich 2001 - 2016
+
+ Code version: v2.3-61-g4b60676
+ Compile options: mpi
+-O2 -r8 -module ./OBJ -sox -traceback
+-L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+
+ serial number for files:kkrjm_v2.3-61-g4b60676_mpi_20180830090943
+*******************************************************************************
+
+ Number of MPI ranks used:   12
+
+*******************************************************************************
+
+           0
+ Calling MADELUNG2D
+ Exited MADELUNG2D
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ +++            SCF ITERATIONS START                +++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+started on 2018/ 8/30 at  9: 9:44
+               Ne         
+          TOT  0.00000789
+          TOT  0.00128444
+          TOT  0.23424528
+          TOT 10.77449490
+          TOT 10.99574294
+          TOT 11.00108839
+          TOT 11.00220008
+          TOT 11.00208889
+          TOT 11.00245478
+          TOT 11.00099915
+          TOT 11.00355035
+          TOT 10.99815650
+      ITERATION   1 charge neutrality in unit cell =     0.016314
+                new E FERMI   0.7066691319  DOS(E_F) =     3.411383
+      ITERATION   1 average rms-error : v+ + v- =  2.1278D-01
+TOTAL ENERGY in ryd. :           -29743.87225818
+
+            ++++++ NUMBER OF SCF STEPS EXHAUSTED ++++++
+*******************************************************************************
+Iteration finished on 2018/ 8/30 at  9: 9:52

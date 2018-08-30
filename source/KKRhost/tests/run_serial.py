@@ -20,7 +20,7 @@ npara_pairs = [[1,1]] # first entry is OMP_NUM_THREADS second number of MPI rank
 global_options = ''
 #global_options = 'source /usr/local/bin/compilervars-12.sh intel64; source /usr/local/intel/mkl/bin/mklvars.sh intel64'
 
-test_systems = ['test_run1', 'test_run2', 'test_run3', 'test_run4', 'test_run5', 'test_run6']
+test_systems = ['test_run01', 'test_run02', 'test_run03', 'test_run04', 'test_run05', 'test_run06']
 
 # define masks of test_systes for exgensive (i.e. non-serial) tests
 # key is the test_coverage that enters as input via sys.argv command line argument

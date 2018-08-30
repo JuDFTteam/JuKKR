@@ -28,24 +28,23 @@ class Test_check_test_runs():
 
     def test_compare_parallel_modes2(self):
         cmplist = ['serial_', 'omp_', 'mpi_', 'hybrid_']
-        l_para = [1,2,4,8]
-        for ipara in l_para:
-            for jpara in l_para:
-                for irun in cmplist:
-                    if 'serial' in irun and ipara in [1] and jpara in [1]:
-                        cmplist_new = [irun+str(ipara)+'_'+str(jpara)]
-                    elif 'omp' in irun and jpara in [1] and ipara in l_para:
-                        cmplist_new.append(irun+str(ipara)+'_'+str(jpara))
-                    elif 'mpi' in irun and ipara in [1] and jpara in l_para:
-                        cmplist_new.append(irun+str(ipara)+'_'+str(jpara))
-                    elif 'hybrid' in irun and ipara in l_para and jpara in l_para and ipara*jpara<=8:
-                        cmplist_new.append(irun+str(ipara)+'_'+str(jpara))
+        l_para = [[1,1], [1,4], [2,2], [4,1]]
+        for ipara, jpara in l_para:
+           for irun in cmplist:
+               if 'serial' in irun and ipara in [1] and jpara in [1]:
+                   cmplist_new = [irun+str(ipara)+'_'+str(jpara)]
+               elif 'omp' in irun and jpara in [1] and ipara in l_para:
+                   cmplist_new.append(irun+str(ipara)+'_'+str(jpara))
+               elif 'mpi' in irun and ipara in [1] and jpara in l_para:
+                   cmplist_new.append(irun+str(ipara)+'_'+str(jpara))
+               elif 'hybrid' in irun and ipara in l_para and jpara in l_para and ipara*jpara<=4:
+                   cmplist_new.append(irun+str(ipara)+'_'+str(jpara))
         cmplist = cmplist_new
         path00 = 'test_run2_'
         cmp_modes(cmplist, path00)
 
     def test_verify4_Jijs_noSOC(self):
-        paths = 'test_run4_serial_1_1/ test_run4_mpi_1_4/ test_run4_hybrid_1_4/'.split()
+        paths = 'test_run4_serial_1_1/ test_run4_mpi_1_3/ test_run4_hybrid_1_3/'.split()
         path0 = 'test_inputs/test_4_Jijs_Fe_slab_lmax2_noSOC/ref/'
         # compare Jij.atom* files of different runs with reference (in path0)
         for path in paths:
@@ -57,7 +56,7 @@ class Test_check_test_runs():
               assert set(text)-set(text_ref)==set()
 
     def test_verify5_kkrflex(self):
-        paths = 'test_run5_serial_1_1/ test_run5_mpi_1_4/ test_run5_hybrid_1_4/'.split()
+        paths = 'test_run5_serial_1_1/ test_run5_mpi_1_3/ test_run5_hybrid_1_3/'.split()
         path0 = 'test_inputs/test_5_Silicon_lloyd_kkrflex_output_lmax2_noSOC/ref/'
         # compare kkrflex_* files of different runs with reference (in path0)
         for path in paths:
@@ -69,7 +68,7 @@ class Test_check_test_runs():
               assert set(text)-set(text_ref)==set()
 
     def test_verify6_FERMIOUT(self):
-        paths = 'test_run6_serial_1_1/ test_run6_mpi_1_4/ test_run6_hybrid_1_4/'.split()
+        paths = 'test_run6_serial_1_1/ test_run6_mpi_1_3/ test_run6_hybrid_1_3/'.split()
         path0 = 'test_inputs/test_6_Silicon_lloyd_FERMIOUT_output_lmax2_noSOC/ref/'
         # compare TBkkr_* files of different runs with reference (in path0)
         for path in paths:
@@ -82,29 +81,22 @@ class Test_check_test_runs():
 
     def test_verify7_8_mpiatom_mpienerg(self):
         # compare mpiatom and mpienerg parallelisation scheme
-        cmplist = ['test_run7_mpi_1_2', 'test_run7_hybrid_1_2', 
-		   'test_run7_mpi_1_3', 'test_run7_hybrid_1_3',
-		   'test_run7_mpi_1_4', 'test_run7_hybrid_1_4',
-                   'test_run8_mpi_1_2', 'test_run8_hybrid_1_2', 
-		   'test_run8_mpi_1_3', 'test_run8_hybrid_1_3',
-		   'test_run8_mpi_1_4', 'test_run8_hybrid_1_4']
-        cmplist+= ['test_run7_mpi_1_7', 'test_run7_hybrid_1_7', 
-		   'test_run7_mpi_1_8', 'test_run7_hybrid_1_8',
-		   'test_run8_mpi_1_7', 'test_run8_hybrid_1_7',
-		   'test_run8_mpi_1_8', 'test_run8_hybrid_1_8']
+        cmplist = ['test_run2_serial_1_1',
+                   'test_run7_mpi_1_3', 'test_run7_hybrid_1_3',
+		   'test_run8_mpi_1_3', 'test_run8_hybrid_1_3']
         cmp_modes(cmplist, '')
 
-    def test_verify11_multinode(self):
+    def test_verify9_multinode(self):
         # compare mpi and hybrid runs forparallelization across multiple nodes
-        cmplist = ['test_run11_mpi_1_32', 
-		   'test_run11_hybrid_1_32',
-		   'test_run11_hybrid_4_8',
-		   'test_run11_hybrid_8_4']
+        cmplist = ['test_run9_mpi_1_32', 
+		   'test_run9_hybrid_1_32',
+		   'test_run9_hybrid_4_8',
+		   'test_run9_hybrid_8_4']
         cmp_modes(cmplist, '')
 
-    def test_verify12_OPERATOR(self):
-        path  = 'test_run12_mpi_1_8/'
-        path0 = 'test_run12_mpi_1_8/ref/'
+    def test_verify10_OPERATOR(self):
+        path  = 'test_run10_mpi_1_8/'
+        path0 = 'test_run10_mpi_1_8/ref/'
         # compare TBkkr_rhod.txt file with reference (in path0)
         fname = 'TBkkr_rhod.txt'
         num, text = read_file(path+fname)
@@ -129,9 +121,9 @@ class Test_check_test_runs():
           assert mean(diff2) < 10**-15
           assert abs(diff2).max() < 10**-15
 
-    def test_verify13_DTM_GMAT(self):
-        path  = 'test_run13_mpi_1_8/'
-        path0 = 'test_run13_mpi_1_8/ref/'
+    def test_verify11_DTM_GMAT(self):
+        path  = 'test_run11_mpi_1_8/'
+        path0 = 'test_run11_mpi_1_8/ref/'
         for f in 'DTM/DTMTRX ./green_host GMAT/GMATLL_GES'.split():
            fname = f
            num, text = read_file(path+fname)
@@ -146,9 +138,9 @@ class Test_check_test_runs():
            assert abs(num-num_ref).max()<2*10**-8
            assert set(text)-set(text_ref)==set()
 
-    def test_verify14_qdos(self):
-        path  = 'test_run14_mpi_1_3/'
-        path0 = 'test_run14_mpi_1_3/ref/'
+    def test_verify12_qdos(self):
+        path  = 'test_run12_mpi_1_3/'
+        path0 = 'test_run12_mpi_1_3/ref/'
         for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
            fname = f
            num, text = read_file(path+fname)
@@ -167,9 +159,9 @@ class Test_check_test_runs():
            assert abs(num-num_ref).max()<2*10**-12
            assert set(text)-set(text_ref)==set()
 
-    def test_verify15_rhoq(self):
-        path  = 'test_run15/'
-        path0 = 'test_run15/ref/'
+    def test_verify13_rhoq(self):
+        path  = 'test_run13/'
+        path0 = 'test_run13/ref/'
         fname = 'out_rhoq.txt'
         num, text = read_file(path+fname)
         num_ref, text_ref = read_file(path0+fname)

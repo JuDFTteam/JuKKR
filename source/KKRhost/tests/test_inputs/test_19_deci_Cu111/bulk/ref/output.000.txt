@@ -1,0 +1,769 @@
+# serial: kkrjm_v2.3-61-g4b60676_mpi_20180830091837
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+ atom:            1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 30, #of points= 30
+ ==========================================
+ CALCTMAT: IE=           1  ATOM:           1
+ energy:           1  (-0.400000000000000,8.970050233779728E-003)
+ Born           0   903.470018169174     
+ Born           1  1.864209708130525E-002
+ Born           2  2.282251010881245E-005
+ CALCTMAT: IE=           2  ATOM:           1
+ energy:           2  (-0.400000000000000,3.979555316948575E-002)
+ Born           0   903.192192984466     
+ Born           1  1.862637590367520E-002
+ Born           2  2.279679165227402E-005
+ CALCTMAT: IE=           3  ATOM:           1
+ energy:           3  (-0.400000000000000,7.062105610519177E-002)
+ Born           0   902.567682921480     
+ Born           1  1.859400356606443E-002
+ Born           2  2.274752299675968E-005
+ CALCTMAT: IE=           4  ATOM:           1
+ energy:           4  (-0.396458943070336,7.959110633897150E-002)
+ Born           0   901.123267281082     
+ Born           1  1.859023530443122E-002
+ Born           2  2.275425953669992E-005
+ CALCTMAT: IE=           5  ATOM:           1
+ energy:           5  (-0.381433559180794,7.959110633897150E-002)
+ Born           0   896.103672891435     
+ Born           1  1.862975381012514E-002
+ Born           2  2.286592157922189E-005
+ CALCTMAT: IE=           6  ATOM:           1
+ energy:           6  (-0.354771538671936,7.959110633897150E-002)
+ Born           0   887.473713668720     
+ Born           1  1.871025952374240E-002
+ Born           2  2.307989854273486E-005
+ CALCTMAT: IE=           7  ATOM:           1
+ energy:           7  (-0.317091728871571,7.959110633897150E-002)
+ Born           0   875.914514250222     
+ Born           1  1.884873848051543E-002
+ Born           2  2.342012608959925E-005
+ CALCTMAT: IE=           8  ATOM:           1
+ energy:           8  (-0.269276558789077,7.959110633897150E-002)
+ Born           0   862.412010106062     
+ Born           1  1.907187313412245E-002
+ Born           2  2.392480497002774E-005
+ CALCTMAT: IE=           9  ATOM:           1
+ energy:           9  (-0.212446592681135,7.959110633897150E-002)
+ Born           0   848.274417240835     
+ Born           1  1.941925754035050E-002
+ Born           2  2.465173997122012E-005
+ CALCTMAT: IE=          10  ATOM:           1
+ energy:          10  (-0.147933814526977,7.959110633897150E-002)
+ Born           0   835.193380233438     
+ Born           1  1.994926902180428E-002
+ Born           2  2.568784967220625E-005
+ CALCTMAT: IE=          11  ATOM:           1
+ energy:          11  (-7.725032285265404E-002,7.959110633897150E-002)
+ Born           0   825.392000931966     
+ Born           1  2.074990902507223E-002
+ Born           2  2.716631180662405E-005
+ CALCTMAT: IE=          12  ATOM:           1
+ energy:          12  (-2.052865688169453E-003,7.959110633897150E-002)
+ Born           0   821.934828179805     
+ Born           1  2.195917041241612E-002
+ Born           2  2.929815396749365E-005
+ CALCTMAT: IE=          13  ATOM:           1
+ energy:          13  (7.589599992593488E-002,7.959110633897150E-002)
+ Born           0   829.233291316249     
+ Born           1  2.380501331452512E-002
+ Born           2  3.244002501046561E-005
+ CALCTMAT: IE=          14  ATOM:           1
+ energy:          14  (0.154769223963468,7.959110633897150E-002)
+ Born           0   853.727088652818     
+ Born           1  2.667454779936366E-002
+ Born           2  3.721406971764534E-005
+ CALCTMAT: IE=          15  ATOM:           1
+ energy:          15  (0.232718089577572,7.959110633897150E-002)
+ Born           0   905.163307810942     
+ Born           1  3.124199441661583E-002
+ Born           2  4.471667265639832E-005
+ CALCTMAT: IE=          16  ATOM:           1
+ energy:          16  (0.307915546742057,7.959110633897150E-002)
+ Born           0   996.209514395716     
+ Born           1  3.863676116613887E-002
+ Born           2  5.683395463430276E-005
+ CALCTMAT: IE=          17  ATOM:           1
+ energy:          17  (0.378599038416380,7.959110633897150E-002)
+ Born           0   1117.48208625622     
+ Born           1  4.964422518343728E-002
+ Born           2  7.515004330036970E-005
+ CALCTMAT: IE=          18  ATOM:           1
+ energy:          18  (0.443111816570538,7.959110633897150E-002)
+ Born           0   1108.28960311924     
+ Born           1  5.757005102014723E-002
+ Born           2  8.979285324563519E-005
+ CALCTMAT: IE=          19  ATOM:           1
+ energy:          19  (0.499941782678480,7.959110633897150E-002)
+ Born           0   797.444966732804     
+ Born           1  4.932030710928625E-002
+ Born           2  7.923083652066418E-005
+ CALCTMAT: IE=          20  ATOM:           1
+ energy:          20  (0.547756952760974,7.959110633897150E-002)
+ Born           0   494.513505214549     
+ Born           1  3.672281372350654E-002
+ Born           2  6.057053056079203E-005
+ CALCTMAT: IE=          21  ATOM:           1
+ energy:          21  (0.585436762561339,7.959110633897150E-002)
+ Born           0   323.286813799181     
+ Born           1  2.851805055551138E-002
+ Born           2  4.809016646314371E-005
+ CALCTMAT: IE=          22  ATOM:           1
+ energy:          22  (0.612098783070197,7.959110633897150E-002)
+ Born           0   237.610122140319     
+ Born           1  2.397746252687976E-002
+ Born           2  4.110961795425003E-005
+ CALCTMAT: IE=          23  ATOM:           1
+ energy:          23  (0.627124166959739,7.959110633897150E-002)
+ Born           0   213.055980924861     
+ Born           1  2.181626631726773E-002
+ Born           2  3.776996595068796E-005
+ CALCTMAT: IE=          24  ATOM:           1
+ energy:          24  (0.647032610867757,7.959110633897150E-002)
+ Born           0   208.796311766508     
+ Born           1  1.932371933099683E-002
+ Born           2  3.390437871882357E-005
+ CALCTMAT: IE=          25  ATOM:           1
+ energy:          25  (0.691398779149934,7.959110633897150E-002)
+ Born           0   199.492137694352     
+ Born           1  1.496529240256987E-002
+ Born           2  2.710639164962319E-005
+ CALCTMAT: IE=          26  ATOM:           1
+ energy:          26  (0.706669131889403,7.163199570507435E-002)
+ Born           0   196.417683465004     
+ Born           1  1.388097465284779E-002
+ Born           2  2.546568149173206E-005
+ CALCTMAT: IE=          27  ATOM:           1
+ energy:          27  (0.706669131889403,5.571377443728005E-002)
+ Born           0   196.566806291362     
+ Born           1  1.409742071035232E-002
+ Born           2  2.591100094360516E-005
+ CALCTMAT: IE=          28  ATOM:           1
+ energy:          28  (0.706669131889403,3.979555316948575E-002)
+ Born           0   196.736155585765     
+ Born           1  1.428079701220864E-002
+ Born           2  2.628505230876029E-005
+ CALCTMAT: IE=          29  ATOM:           1
+ energy:          29  (0.706669131889403,2.387733190169145E-002)
+ Born           0   196.925912032985     
+ Born           1  1.442498736987406E-002
+ Born           2  2.657559597895751E-005
+ CALCTMAT: IE=          30  ATOM:           1
+ energy:          30  (0.706669131889403,7.959110633897150E-003)
+ Born           0   197.136254810190     
+ Born           1  1.452474653846386E-002
+ Born           2  2.677220980553512E-005
+           0 start tbref e-loop
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 30, #of points= 30
+ ==========================================
+TBREF: GREF for energy:    1   -0.40000000    0.00897005
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:    2   -0.40000000    0.03979555
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:    3   -0.40000000    0.07062106
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:    4   -0.39645894    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:    5   -0.38143356    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:    6   -0.35477154    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:    7   -0.31709173    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:    8   -0.26927656    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:    9   -0.21244659    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   10   -0.14793381    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   11   -0.07725032    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   12   -0.00205287    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   13    0.07589600    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   14    0.15476922    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   15    0.23271809    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   16    0.30791555    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   17    0.37859904    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   18    0.44311182    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   19    0.49994178    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   20    0.54775695    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   21    0.58543676    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   22    0.61209878    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   23    0.62712417    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   24    0.64703261    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   25    0.69139878    0.07959111
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   26    0.70666913    0.07163200
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   27    0.70666913    0.05571377
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   28    0.70666913    0.03979555
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   29    0.70666913    0.02387733
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:   30    0.70666913    0.00795911
+ tbref NCLS loop:           1           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+===============================================================================
+                              < KKR1a finished >
+===============================================================================
+
+
+===============================================================================
+      Inversion algorithm used : FULL MATRIX                        
+===============================================================================
+
+ ************ IE =   1 ENERGY =  -0.400000   0.008970 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =   2 ENERGY =  -0.400000   0.039796 KMESH =   3
+ kkrmat k loop:        1688           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1688, #of points= 1688
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 ||||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =   3 ENERGY =  -0.400000   0.070621 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =   4 ENERGY =  -0.396459   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =   5 ENERGY =  -0.381434   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =   6 ENERGY =  -0.354772   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =   7 ENERGY =  -0.317092   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =   8 ENERGY =  -0.269277   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =   9 ENERGY =  -0.212447   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  10 ENERGY =  -0.147934   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  11 ENERGY =  -0.077250   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  12 ENERGY =  -0.002053   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  13 ENERGY =   0.075896   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  14 ENERGY =   0.154769   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  15 ENERGY =   0.232718   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  16 ENERGY =   0.307916   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  17 ENERGY =   0.378599   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  18 ENERGY =   0.443112   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  19 ENERGY =   0.499942   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  20 ENERGY =   0.547757   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  21 ENERGY =   0.585437   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  22 ENERGY =   0.612099   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  23 ENERGY =   0.627124   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  24 ENERGY =   0.647033   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  25 ENERGY =   0.691399   0.079591 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  26 ENERGY =   0.706669   0.071632 KMESH =   4
+ kkrmat k loop:         504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 504, #of points= 504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  27 ENERGY =   0.706669   0.055714 KMESH =   3
+ kkrmat k loop:        1688           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1688, #of points= 1688
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 ||||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  28 ENERGY =   0.706669   0.039796 KMESH =   3
+ kkrmat k loop:        1688           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1688, #of points= 1688
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 ||||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  29 ENERGY =   0.706669   0.023877 KMESH =   2
+ kkrmat k loop:        4631           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 4631, #of points= 4631
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =  30 ENERGY =   0.706669   0.007959 KMESH =   1
+ kkrmat k loop:       13504           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 13504, #of points= 13504
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||| 
+===============================================================================
+                              < KKR1b finished >
+===============================================================================
+
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+ atom           1
+ energy           1 (-0.400000000000000,8.970050233779728E-003)
+ Born           0   903.470018169174     
+ Born           1  1.864209708130525E-002
+ Born           2  2.282251010881245E-005
+ energy           2 (-0.400000000000000,3.979555316948575E-002)
+ Born           0   903.192192984466     
+ Born           1  1.862637590367520E-002
+ Born           2  2.279679165227402E-005
+ energy           3 (-0.400000000000000,7.062105610519177E-002)
+ Born           0   902.567682921480     
+ Born           1  1.859400356606443E-002
+ Born           2  2.274752299675968E-005
+ energy           4 (-0.396458943070336,7.959110633897150E-002)
+ Born           0   901.123267281082     
+ Born           1  1.859023530443122E-002
+ Born           2  2.275425953669992E-005
+ energy           5 (-0.381433559180794,7.959110633897150E-002)
+ Born           0   896.103672891435     
+ Born           1  1.862975381012514E-002
+ Born           2  2.286592157922189E-005
+ energy           6 (-0.354771538671936,7.959110633897150E-002)
+ Born           0   887.473713668720     
+ Born           1  1.871025952374240E-002
+ Born           2  2.307989854273486E-005
+ energy           7 (-0.317091728871571,7.959110633897150E-002)
+ Born           0   875.914514250222     
+ Born           1  1.884873848051543E-002
+ Born           2  2.342012608959925E-005
+ energy           8 (-0.269276558789077,7.959110633897150E-002)
+ Born           0   862.412010106062     
+ Born           1  1.907187313412245E-002
+ Born           2  2.392480497002774E-005
+ energy           9 (-0.212446592681135,7.959110633897150E-002)
+ Born           0   848.274417240835     
+ Born           1  1.941925754035050E-002
+ Born           2  2.465173997122012E-005
+ energy          10 (-0.147933814526977,7.959110633897150E-002)
+ Born           0   835.193380233438     
+ Born           1  1.994926902180428E-002
+ Born           2  2.568784967220625E-005
+ energy          11 (-7.725032285265404E-002,7.959110633897150E-002)
+ Born           0   825.392000931966     
+ Born           1  2.074990902507223E-002
+ Born           2  2.716631180662405E-005
+ energy          12 (-2.052865688169453E-003,7.959110633897150E-002)
+ Born           0   821.934828179805     
+ Born           1  2.195917041241612E-002
+ Born           2  2.929815396749365E-005
+ energy          13 (7.589599992593488E-002,7.959110633897150E-002)
+ Born           0   829.233291316249     
+ Born           1  2.380501331452512E-002
+ Born           2  3.244002501046561E-005
+ energy          14 (0.154769223963468,7.959110633897150E-002)
+ Born           0   853.727088652818     
+ Born           1  2.667454779936366E-002
+ Born           2  3.721406971764534E-005
+ energy          15 (0.232718089577572,7.959110633897150E-002)
+ Born           0   905.163307810942     
+ Born           1  3.124199441661583E-002
+ Born           2  4.471667265639832E-005
+ energy          16 (0.307915546742057,7.959110633897150E-002)
+ Born           0   996.209514395716     
+ Born           1  3.863676116613887E-002
+ Born           2  5.683395463430276E-005
+ energy          17 (0.378599038416380,7.959110633897150E-002)
+ Born           0   1117.48208625622     
+ Born           1  4.964422518343728E-002
+ Born           2  7.515004330036970E-005
+ energy          18 (0.443111816570538,7.959110633897150E-002)
+ Born           0   1108.28960311924     
+ Born           1  5.757005102014723E-002
+ Born           2  8.979285324563519E-005
+ energy          19 (0.499941782678480,7.959110633897150E-002)
+ Born           0   797.444966732804     
+ Born           1  4.932030710928625E-002
+ Born           2  7.923083652066418E-005
+ energy          20 (0.547756952760974,7.959110633897150E-002)
+ Born           0   494.513505214549     
+ Born           1  3.672281372350654E-002
+ Born           2  6.057053056079203E-005
+ energy          21 (0.585436762561339,7.959110633897150E-002)
+ Born           0   323.286813799181     
+ Born           1  2.851805055551138E-002
+ Born           2  4.809016646314371E-005
+ energy          22 (0.612098783070197,7.959110633897150E-002)
+ Born           0   237.610122140319     
+ Born           1  2.397746252687976E-002
+ Born           2  4.110961795425003E-005
+ energy          23 (0.627124166959739,7.959110633897150E-002)
+ Born           0   213.055980924861     
+ Born           1  2.181626631726773E-002
+ Born           2  3.776996595068796E-005
+ energy          24 (0.647032610867757,7.959110633897150E-002)
+ Born           0   208.796311766508     
+ Born           1  1.932371933099683E-002
+ Born           2  3.390437871882357E-005
+ energy          25 (0.691398779149934,7.959110633897150E-002)
+ Born           0   199.492137694352     
+ Born           1  1.496529240256987E-002
+ Born           2  2.710639164962319E-005
+ energy          26 (0.706669131889403,7.163199570507435E-002)
+ Born           0   196.417683465004     
+ Born           1  1.388097465284779E-002
+ Born           2  2.546568149173206E-005
+ energy          27 (0.706669131889403,5.571377443728005E-002)
+ Born           0   196.566806291362     
+ Born           1  1.409742071035232E-002
+ Born           2  2.591100094360516E-005
+ energy          28 (0.706669131889403,3.979555316948575E-002)
+ Born           0   196.736155585765     
+ Born           1  1.428079701220864E-002
+ Born           2  2.628505230876029E-005
+ energy          29 (0.706669131889403,2.387733190169145E-002)
+ Born           0   196.925912032985     
+ Born           1  1.442498736987406E-002
+ Born           2  2.657559597895751E-005
+ energy          30 (0.706669131889403,7.959110633897150E-003)
+ Born           0   197.136254810190     
+ Born           1  1.452474653846386E-002
+ Born           2  2.677220980553512E-005
+ 
+############################################
+        l-decomposed valence charges
+############################################
+ 
+   ATOM        Ne         
+   ========================== 
+      1   s =  0.70361509
+          p =  0.78784926
+          d =  9.52470329
+          ns  -0.00085752
+          ------------------- 
+          TOT 11.01531012
+ 
+############################################
+ 
+ Sum of valence charges of atoms (local summation)   11.0153101166142     
+ 
+##############################################################################
+                                 CORE  STATES
+##############################################################################
+    nuclear charge   29.000000         core charge =    18.000000
+ 
+##############################################################################
+ 
+===============================================================================
+                              < KKR1c finished >
+===============================================================================
+
+
+*******************************************************************************
+                   ****** ITERATION :   1 OUT OF   1 ******
+*******************************************************************************
+
+  Atom    1 charge in wigner seitz cell = 29.015310
+ 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      ITERATION   1 charge neutrality in unit cell =     0.015310
+ 
+                old E Fermi   0.7066691319 Delta E_F =   0.36216775E-02
+                new E FERMI   0.7030474543  DOS(E_F) =     4.227355
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+===============================================================================
+                   MADELUNG POTENTIALS (spherically averaged) 
+
+                          ATOM   Delta_Q       VMAD
+                         ------------------------------
+                            1    0.015310     0.000158
+ ICC in VMADELBLK           0
+                         ------------------------------
+
+===============================================================================
+ in espcb:           1           0           1           1
+ in espcb:           2           0           1           1
+ in espcb:           3           0           1           1
+ in espcb:           4           1           1           1
+ in espcb:           5           1           1           1
+  SPHERE : read LEBEDEV mesh
+ Including cutoff of vxc for small density
+  VOL INT.    23.697415621  VAV INT.   -17.974879533  VMT ZERO     0.758516448
+===============================================================================
+
+ MIXSTR  2.000000000000000E-003
+      rms-error for atom  1 :v+ + v- =  1.4426D-02
+      rms-error non spherical contribution for atom   1 :v+ + v- =  2.2423D-02
+-------------------------------------------------------------------------------
+
+      ITERATION   1 average rms-error : v+ + v- =  2.6663D-02
+-------------------------------------------------------------------------------
+                    mixing factor used :     2.00D-03
+===============================================================================
+
+ generalized anderson method used 
+ Iteration index (read in):   1
+================================ TOTAL ENERGIES ===============================
+
+   Total energies atom   1
+   -----------------------
+     single particle energies  paramagnetic
+         core   contribution :  s = -1465.81369835 p =  -425.57533985
+
+       valence  contribution :  s =     0.17302137 p =     0.32705769
+                                d =     4.50129058
+                                ns     -0.00018143
+     --------------------------------------------------------------------
+     total contribution of the single particle energies :  -1886.38784999
+                                   band energy per atom :    5.0011882107
+
+     coulomb  contribution :   0   1419.92401675  1      0.00000001
+                               2     -0.00000482  3      0.00000000
+                               4      0.00005278
+     --------------------------------------------------------------------
+     tot. coulomb contribution :   1419.92406472
+
+     ex.-cor. contribution :   0   -130.09462194  1      0.00000000
+                               2     -0.00013395  3      0.00000000
+                               4      0.00036448
+     --------------------------------------------------------------------
+     tot. ex.-cor. contribution :   -130.09439141
+
+     eff. pot. contribution     :  -2708.32936226
+     total double counting contribution                 :  -1418.49968894
+                                   sum of band energies :    5.0011882107
+   ----------------------------------------------------------------------
+
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+               TOTAL ENERGY in ryd. :            -3304.88753894
+                                eV  :           -44965.63887726
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -208,6 +208,19 @@ contains
          if(myrank==master) write(*,*) 'Skipping atom loop in main1a'
          i1_start = 1
          i1_end = 0
+         ! distribute IE dimension here instead, otherwise this would be done in tmat_newsolver/calctmat
+         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,  &
+            t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), & ! print this info only for first atom at master
+            master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
+         t_mpi_c_grid%ntot2=ntot_pT(t_mpi_c_grid%myrank_at)
+         if (.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
+            allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),stat=i_stat)
+            call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT2))*kind(t_mpi_c_grid%ntot_pT2),'t_mpi_c_grid%ntot_pT2','main1a')
+            allocate(t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1),stat=i_stat)
+            call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT2))*kind(t_mpi_c_grid%ioff_pT2),'t_mpi_c_grid%ioff_pT2','main1a')
+         endif
+         t_mpi_c_grid%ntot_pT2 = ntot_pT
+         t_mpi_c_grid%ioff_pT2 = ioff_pT
       end if
 
       if (.not.OPT('NEWSOSOL')) then
