@@ -240,10 +240,10 @@ DO signde = -ideriv,ideriv,2       ! LLY
 !due to an erro in the interface to drvreltmat > talk to long,
 !philipp 20_08_2015
   ELSE
-    STOP 'WARNING check DRVRELTMAT interface in code!!!'
-!                CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,
-!      &                      DRDIREL,R2DRDIREL,ZREL,JWSREL,SOLVER,SOCTL,
-!      &                      CTL,LMMAXD,LMAXD,IRMD)
+!    STOP 'WARNING check DRVRELTMAT interface in code!!!'
+                CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,            &
+      &                      DRDIREL,R2DRDIREL,ZREL,JWSREL,SOLVER,SOCTL, &
+      &                      CTL,LMMAXD,LMAXD,IRMD)
   endif
   
 ! non/scalar-relativistic OR relativistic

@@ -32,8 +32,7 @@ subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, &
   character (len=1) :: chpol(3)
   real (kind=dp) :: dble
   integer :: i, ikm1, ikm2, imkm, imv, imvec, ipol, j1p05, j2p05, k, k1, k2, &
-    kap1, kap2, l, l1, l2, lb1, lb2, m2, msm05, mue1m05, mue2m05, nk, nmvec, &
-    ixm
+    kap1, kap2, l, l1, l2, lb1, lb2, m2, msm05, mue1m05, mue2m05, nk, nmvec
   integer :: iabs, nint
   character (len=20) :: str20
   real (kind=dp) :: sum, xj, xjm, xjp, xm, xynorm
@@ -66,9 +65,7 @@ subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, &
     else
       xj = l - 0.5e0_dp
     end if
-    ! DO XM = -XJ, + XJ
-    do ixm = 1, 2*nint(xj) + 1
-      xm = -xj + dble(ixm-1)
+    do xm = -xj, +xj
       i = i + 1
       ikmllim1(i) = nint(l*2*(xjm+0.5e0_dp)+1)
       ikmllim2(i) = nint(l*2*(xjp+0.5e0_dp)+2*xjp+1)

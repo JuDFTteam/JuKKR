@@ -104,7 +104,7 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
   real (kind=dp) :: cog(2, 2, 2), cof(2, 2, 2)
   integer :: i, i1, i2, i3, i5, ikm1, ikm2, il, im, in, info, ipiv(nkmmax), &
     iq, isk1, isk2, it, j, jlim, jtop, k, k1, k2, kap1, kap2, kc, l, l1, lb1, &
-    lb2, lin, n, nsol, imkm1, imkm2, is, imj
+    lb2, lin, n, nsol, imkm1, imkm2, is
   integer :: isign, nint
   logical :: wronski
 
@@ -203,9 +203,7 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
       end if
 
       ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-      ! DO MJ = -(DBLE(L)+0.5D0), + (DBLE(L)+0.5D0),1.0D0
-      do imj = 1, 2*l + 1
-        mj = -(real(l, kind=dp)+0.5e0_dp) + real(imj-1, kind=dp)
+      do mj = -(real(L, kind=dp)+0.5_dp), + (real(L, kind=dp)+0.5_dp),1.0_dp
 
         ! ------------------------------------------------------------------------
         ! NO COUPLING FOR:  ABS(MUE)= J   +  J=L+1/2 == KAP=-L-1

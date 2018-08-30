@@ -64,7 +64,6 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
   complex (kind=dp) :: omtls(2), omtms(nmuemax, 2)
   integer :: i, iflag, ikm1, ikm2, il, im, is, it, jj, jtop, k1, k2, ka, kap1, &
     kap2, kb, l, lin, lmax, mm, mue, nsol
-  integer :: imj
   integer :: nint
 
   save :: chko, chkq, chks
@@ -166,9 +165,7 @@ subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, &
       mue = 0
 
       ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-      ! DO MJ = MJMIN,MJMAX,1.0D0
-      do imj = nint(mjmin), nint(mjmax), 1
-        mj = real(imj, kind=dp)
+      do mj = mjmin,mjmax,1.0_dp
         mue = mue + 1
         dosm(mue) = 0.0e0_dp
         smtm(mue) = 0.0e0_dp
