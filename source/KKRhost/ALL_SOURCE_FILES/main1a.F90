@@ -35,30 +35,21 @@ contains
    !----------------------------------------------------------------------------
    subroutine main1a()
 
-#ifdef CPP_MPI
-      use mpi
-#endif
-#ifdef CPP_TIMING
-      use mod_timing
-#endif
-
       use mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatJij,init_t_dtmatJij,&
-                           init_t_dtmatJij_at
-#ifdef CPP_MPI
-      use mod_types, only: gather_tmat, gather_lly_dtmat,t_mpi_c_grid,         &
-                           save_t_mpi_c_grid,get_ntot_pT_ioff_pT_2D
-#endif
+        init_t_dtmatJij_at,t_mpi_c_grid
       use mod_mympi, only: nranks, master, myrank
-#ifdef CPP_MPI
-      use mod_mympi, only: find_dims_2d,distribute_linear_on_tasks
-#endif
-#ifdef CPP_TIMING
-      use mod_timing
-#endif
       use mod_wunfiles
       use mod_jijhelp, only: set_Jijcalc_flags
-
       use mod_main0
+#ifdef CPP_TIMING
+      use mod_timing
+#endif
+#ifdef CPP_MPI
+      use mpi
+      use mod_types, only: gather_tmat, gather_lly_dtmat,         &
+                           save_t_mpi_c_grid,get_ntot_pT_ioff_pT_2D
+      use mod_mympi, only: find_dims_2d,distribute_linear_on_tasks
+#endif
 
       ! .. Local variables
       integer :: I1
@@ -208,6 +199,7 @@ contains
          if(myrank==master) write(*,*) 'Skipping atom loop in main1a'
          i1_start = 1
          i1_end = 0
+#ifdef CPP_MPI
          ! distribute IE dimension here instead, otherwise this would be done in tmat_newsolver/calctmat
          call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,  &
             t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), & ! print this info only for first atom at master
@@ -221,6 +213,19 @@ contains
          endif
          t_mpi_c_grid%ntot_pT2 = ntot_pT
          t_mpi_c_grid%ioff_pT2 = ioff_pT
+#else
+         if(.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
+            allocate(t_mpi_c_grid%ntot_pT2(1),stat=i_stat)
+            call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT2))*kind(t_mpi_c_grid%ntot_pT2),'t_mpi_c_grid%ntot_pT2','tmat_newsolver')
+            t_mpi_c_grid%ntot_pT2=0
+            allocate(t_mpi_c_grid%ioff_pT2(1),stat=i_stat)
+            call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT2))*kind(t_mpi_c_grid%ioff_pT2),'t_mpi_c_grid%ioff_pT2','tmat_newsolver')
+            t_mpi_c_grid%ioff_pT2=0
+         endif
+         t_mpi_c_grid%ntot2      =IELAST
+         t_mpi_c_grid%ntot_pT2   = IELAST
+         t_mpi_c_grid%ioff_pT2   = 0
+#endif
       end if
 
       if (.not.OPT('NEWSOSOL')) then
