@@ -247,11 +247,10 @@ C=======================================================================
 !due to an erro in the interface to drvreltmat > talk to long,
 !philipp 20_08_2015
              ELSE
-               write(*,*) 'WARNING: please check results carefully!'
-               write(*,*) 'DRVRELTMAT interface could be wrong'
-               CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,
-     &                      DRDIREL,R2DRDIREL,ZREL,JWSREL,SOLVER,SOCTL,
-     &                      CTL,LMMAXD,LMAXD,IRMD)
+               stop 'WARNING check DRVRELTMAT interface in code!!!'
+!               CALL DRVRELTMAT(ERYD,TMAT0,VTREL,BTREL,RMREL,
+!     &                      DRDIREL,R2DRDIREL,ZREL,JWSREL,SOLVER,SOCTL,
+!     &                      CTL,LMMAXD,LMAXD,IRMD)
             END IF
 C
 C non/scalar-relativistic OR relativistic
