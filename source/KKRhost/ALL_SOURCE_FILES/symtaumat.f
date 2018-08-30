@@ -36,7 +36,7 @@ C
 C
 C Local variables
 C
-      double precision  A,B,CO1,CO2,CO3,DET,FACT(0:100),PI,
+      double precision  A,B,CO1,CO2,CO3,DET,FACT(0:100),PI,RJ,RMJ,
      &        SI1,SI2,SI3,SK,SYMEULANG(3,48),TET1,TET2,TET3
       LOGICAL CHECKRMAT
       DOUBLE PRECISION DBLE
@@ -45,7 +45,7 @@ C
      &           RC(NKMMAX,NKMMAX),W1(NKMMAX,NKMMAX),W2(NKMMAX,NKMMAX)
       LOGICAL EQUAL
       INTEGER I,I1,I2,IND0Q(NQMAX),INVFLAG(48),IQ,IREL,IRELEFF,ISYM,
-     &        ITOP,J,K,L,LOOP,M,N,NK,NKEFF,NKM,NLM,NOK,NS,RJ,RMJ
+     &        ITOP,J,K,L,LOOP,M,N,NK,NKEFF,NKM,NLM,NOK,NS
       INTEGER NINT
       DOUBLE PRECISION RMAT(3,3)
       double precision  W
@@ -297,8 +297,8 @@ C
             ELSE
                SK = +1D0
             END IF
-            RJ = NINT(L + SK*0.5D0)
-            DO RMJ = -RJ, + RJ, 1
+            RJ = L + SK*0.5D0
+            DO RMJ = -RJ, + RJ
                I1 = NINT(2*L*(RJ+0.5D0)+RJ+RMJ+1)
                I2 = NINT(2*L*(RJ+0.5D0)+RJ-RMJ+1)
                DTIM(I1,I2) = SK*(-1)**NINT(RMJ+0.5D0)
