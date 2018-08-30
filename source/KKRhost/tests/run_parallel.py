@@ -24,7 +24,7 @@ test_systems = ['test_run%0.2i'%(i) for i in range(1,15)]
 
 # define masks of test_systes for exgensive (i.e. non-serial) tests
 # key is the test_coverage that enters as input via sys.argv command line argument
-test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5], 7:[6], 8:[7], 14:[13]}
+test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5], 7:[6], 8:[7], 12:[11]}
 
 # use mpi only if test_coverage option is set to negative value
 if test_coverage<0:

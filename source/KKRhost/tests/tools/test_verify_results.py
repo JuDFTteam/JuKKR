@@ -15,15 +15,15 @@ class Test_check_test_runs():
     """
 
     def test_verify1_Au_bulk(self):
-        path0 = 'test_run1_serial_1_1/'
+        path0 = 'test_run01_serial_1_1/'
         standard_verify(path0, rms_threshold=5*10**-8)
 
     def test_verify2_Fe_slab(self):
-        path0 = 'test_run2_serial_1_1/'
+        path0 = 'test_run02_serial_1_1/'
         standard_verify(path0, rms_threshold=7*10**-8)
 
     def test_verify3_Si_lloyd(self):
-        path0 = 'test_run3_serial_1_1/'
+        path0 = 'test_run03_serial_1_1/'
         standard_verify(path0, rms_threshold=8*10**-9)
 
     def test_compare_parallel_modes2(self):
@@ -40,12 +40,12 @@ class Test_check_test_runs():
                elif 'hybrid' in irun and ipara in l_para and jpara in l_para and ipara*jpara<=4:
                    cmplist_new.append(irun+str(ipara)+'_'+str(jpara))
         cmplist = cmplist_new
-        path00 = 'test_run2_'
+        path00 = 'test_run02_'
         cmp_modes(cmplist, path00)
 
     def test_verify4_Jijs_noSOC(self):
-        paths = 'test_run4_serial_1_1/ test_run4_mpi_1_3/ test_run4_hybrid_1_3/'.split()
-        path0 = 'test_inputs/test_4_Jijs_Fe_slab_lmax2_noSOC/ref/'
+        paths = 'test_run04_serial_1_1/ test_run04_mpi_1_3/ test_run04_hybrid_1_3/'.split()
+        path0 = 'test_inputs/test_04_Jijs_Fe_slab_lmax2_noSOC/ref/'
         # compare Jij.atom* files of different runs with reference (in path0)
         for path in paths:
            files = 'Jij.atom00002 Jij.atom00003'.split()
@@ -56,8 +56,8 @@ class Test_check_test_runs():
               assert set(text)-set(text_ref)==set()
 
     def test_verify5_kkrflex(self):
-        paths = 'test_run5_serial_1_1/ test_run5_mpi_1_3/ test_run5_hybrid_1_3/'.split()
-        path0 = 'test_inputs/test_5_Silicon_lloyd_kkrflex_output_lmax2_noSOC/ref/'
+        paths = 'test_run05_serial_1_1/ test_run05_mpi_1_3/ test_run05_hybrid_1_3/'.split()
+        path0 = 'test_inputs/test_05_Silicon_lloyd_kkrflex_output_lmax2_noSOC/ref/'
         # compare kkrflex_* files of different runs with reference (in path0)
         for path in paths:
            files = 'kkrflex_atominfo kkrflex_hoststructure.dat kkrflex_intercell_cmoms kkrflex_intercell_ref kkrflex_tmat'.split()
@@ -68,8 +68,8 @@ class Test_check_test_runs():
               assert set(text)-set(text_ref)==set()
 
     def test_verify6_FERMIOUT(self):
-        paths = 'test_run6_serial_1_1/ test_run6_mpi_1_3/ test_run6_hybrid_1_3/'.split()
-        path0 = 'test_inputs/test_6_Silicon_lloyd_FERMIOUT_output_lmax2_noSOC/ref/'
+        paths = 'test_run06_serial_1_1/ test_run06_mpi_1_3/ test_run06_hybrid_1_3/'.split()
+        path0 = 'test_inputs/test_06_Silicon_lloyd_FERMIOUT_output_lmax2_noSOC/ref/'
         # compare TBkkr_* files of different runs with reference (in path0)
         for path in paths:
            files = 'TBkkr_container.txt  TBkkr_params.txt'.split()
@@ -81,17 +81,17 @@ class Test_check_test_runs():
 
     def test_verify7_8_mpiatom_mpienerg(self):
         # compare mpiatom and mpienerg parallelisation scheme
-        cmplist = ['test_run2_serial_1_1',
-                   'test_run7_mpi_1_3', 'test_run7_hybrid_1_3',
-		   'test_run8_mpi_1_3', 'test_run8_hybrid_1_3']
+        cmplist = ['test_run02_serial_1_1',
+                   'test_run07_mpi_1_3', 'test_run07_hybrid_1_3',
+		   'test_run08_mpi_1_3', 'test_run08_hybrid_1_3']
         cmp_modes(cmplist, '')
 
     def test_verify9_multinode(self):
         # compare mpi and hybrid runs forparallelization across multiple nodes
-        cmplist = ['test_run9_mpi_1_32', 
-		   'test_run9_hybrid_1_32',
-		   'test_run9_hybrid_4_8',
-		   'test_run9_hybrid_8_4']
+        cmplist = ['test_run09_mpi_1_32', 
+		   'test_run09_hybrid_1_32',
+		   'test_run09_hybrid_4_8',
+		   'test_run09_hybrid_8_4']
         cmp_modes(cmplist, '')
 
     def test_verify10_OPERATOR(self):

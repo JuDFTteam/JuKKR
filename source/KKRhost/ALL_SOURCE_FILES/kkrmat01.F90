@@ -241,19 +241,6 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    endif
 
 
-#ifdef CPP_HYBRID
-   !$omp parallel default(shared) &
-   !$omp private(kpt, ns, i, j, isym, carg, i1, zktr, i2, iq1, iq2, ioff1) &
-   !$omp private(ioff2, joff1, joff2, ikm1, ikm2, csum1, is, n1, n2) &
-   !$omp private(j1, csum2, j2, il1, il2, lm1, lm2, gaux1, gaux2) &
-   !$omp private(jl1, jl2, gaux3, ilm, jlm, mythread) &
-   !$omp private(gllken, gllkem, dgllken, dgllkem, gllke0, gllke0m) &
-   !$omp reduction(+:trace)
-   mythread = omp_get_thread_num()
-#else
-   mythread = 0
-#endif
-
    !----------------------------------------------------------------------
    ! allocattions of work arrays
    if (KREL.EQ.0) then
@@ -278,6 +265,19 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
       call memocc(i_stat,product(shape(GLLKE0M))*kind(GLLKE0M),'GLLKE0M','kkrmat01')
    end if !(KREL.EQ.0)
    !----------------------------------------------------------------------
+
+
+#ifdef CPP_HYBRID
+   !$omp parallel default(shared) &
+   !$omp private(kpt, ns, i, j, isym, carg, i1, zktr, i2, iq1, iq2, ioff1) &
+   !$omp private(ioff2, joff1, joff2, ikm1, ikm2, csum1, is, n1, n2) &
+   !$omp private(j1, csum2, j2, il1, il2, lm1, lm2, gaux1, gaux2) &
+   !$omp private(jl1, jl2, gaux3, ilm, jlm, mythread) &
+   !$omp reduction(+:trace)
+   mythread = omp_get_thread_num()
+#else
+   mythread = 0
+#endif
 
    ! kpts loop
    do KPT = k_start,k_end

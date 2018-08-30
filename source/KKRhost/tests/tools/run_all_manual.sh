@@ -50,23 +50,23 @@ echo ""
 ./run_parallel.py -6
 
 echo "###########################################"
-echo "run:intel:qdos_14:"
+echo "run:intel:qdos_12:"
 echo ""
-./run_parallel.py -14
+./run_parallel.py -12
 
 cd ../
 
 echo "###########################################"
-echo "run:intel:OPERATOR_12:"
+echo "run:intel:OPERATOR_10:"
 echo ""
-tests/tools/run_test_12.sh
+tests/tools/run_test_10.sh
 
 echo "###########################################"
-echo "run:intel:DTM_GMATLL_13:"
+echo "run:intel:DTM_GMATLL_11:"
 echo ""
-tests/tools/run_test_13.sh
+tests/tools/run_test_11.sh
 
 
 #not working at the moment:
-#echo "run:intel:rhoq_15:"
-#tests/tools/run_test_15.sh
+#echo "run:intel:rhoq_13:"
+#tests/tools/run_test_13.sh

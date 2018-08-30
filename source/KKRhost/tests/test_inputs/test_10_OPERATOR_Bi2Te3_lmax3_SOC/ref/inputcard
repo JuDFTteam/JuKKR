@@ -3,10 +3,8 @@
 RUNOPT 
 full invNEWSOSOLOPERATOR 
 TESTOPT
-IMP_ONLY
 
-ICC=1
-IGF=1
+
 +-------+-------+-------+-------+-------+
 LMAX=2    NSPIN=2
 NAEZ=22

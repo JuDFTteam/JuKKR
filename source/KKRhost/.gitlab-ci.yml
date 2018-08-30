@@ -68,12 +68,13 @@ build:intel:hybrid_debug:
     - make -j4
 
 ## 1.2 production versions ##
-build:intel:hybrid:
+# take MPI-only version since hybrid is not working at the moment
+build:intel:mpi_only:
   stage: build
   script:
     # compile code
     - mkdir build && cd build
-    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake ..
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort -DENABLE_MPI=ON -DENABLE_OMP=OFF cmake ..
     - make -j4
     - cd ..
   artifacts:

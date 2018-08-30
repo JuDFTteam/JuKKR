@@ -44,7 +44,8 @@ use mod_pnstmat
 use mod_cradwf
 use mod_wfmesh
 use mod_regns, only: zgeinv1
-  use mod_cmatstr
+use mod_cmatstr
+use mod_drvreltmat
 
 IMPLICIT NONE
 
