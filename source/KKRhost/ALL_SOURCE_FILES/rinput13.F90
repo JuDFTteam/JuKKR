@@ -1076,6 +1076,9 @@ contains
     else
       write (111, *) 'Default KVREL= ', kvrel
     end if
+    ! store KVREL to be used later on
+    t_inc%kvrel = kvrel
+
 
     if (opt('NEWSOSOL')) KORBIT = 1
     call ioinput('KORBIT          ', uio, 1, 7, ier)
@@ -1139,17 +1142,6 @@ contains
     else
       write (111, *) 'Default NRMESH= ', nrd
     end if
-
-    kvrel = 1                      ! 0=Schroedinger / 1=SRA / 2=Dirac
-    call ioinput('KVREL           ', uio, 1, 7, ier)
-    if (ier==0) then
-      read (unit=uio, fmt=*) kvrel
-      write (111, *) 'KVREL= ', kvrel
-    else
-      write (111, *) 'Default KVREL= ', kvrel
-    end if
-    ! store KVREL to be used later on
-    t_inc%kvrel = kvrel
 
     call ioinput('KPOIBZ          ', uio, 1, 7, ier)
     if (ier==0) then
@@ -1261,6 +1253,14 @@ contains
       write (111, *) 'NTOTD= ', ntotd
     else
       write (111, *) 'Default NTOTD= ', ntotd
+    end if
+
+    call ioinput('KREL            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) krel
+      write (111, *) 'KREL= ', krel
+    else
+      write (111, *) 'Default KREL= ', krel
     end if
     ! ----------------------------------------------------------------------------
     ! End of variables that used to be in the inc.

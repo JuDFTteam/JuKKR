@@ -35,3 +35,7 @@ NSTEPS     IMIX    STRMIX       FCM       QBOUND    BRYMIX      ITDBRY
 Parameters for ewald sums
 RMAX=7.0d0     GMAX=65.0d0     (fcc 7  65)
 ----------------------------------------------------------------------
+
+KREL=1
+KORBIT=0
+KNOSPH=0

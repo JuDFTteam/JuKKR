@@ -108,7 +108,7 @@ module mod_main0
    integer :: NINEQ     !< Number of ineq. positions in unit cell
    integer :: NATYP     !< Number of kinds of atoms in unit cell
    integer :: IFILE     !< Unit specifier for potential card
-   integer :: KVREL     !< 0,1 : non / scalar relat. calculation
+   integer :: KVREL     !< 0,1,2 : non / scalar relat. / full Dirac calculation
    integer :: NSPIN     !< Counter for spin directions
    integer :: NLEFT     !< Number of repeated basis for left host to get converged electrostatic potentials
    integer :: NRIGHT    !< Number of repeated basis for right host to get converged electrostatic potentials

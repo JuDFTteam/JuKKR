@@ -33,6 +33,7 @@ test:intel:
     - echo 'do some tests here'
     - echo 'ifort ' && which ifort
     - echo 'mpiifort ' && which mpiifort
+    - echo 'gfortran ' && which gfortran && ls /opt/gcc8/bin
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
     - which profmerge
     - which codecov || which Codecov
@@ -84,6 +85,7 @@ build:intel:mpi_only:
     paths:
       - kkr.x
       - build
+      - build/pgopti.spi
     expire_in: 1 day
 
 ###############################################################################
@@ -103,6 +105,7 @@ run:intel:serial_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:serial_2:
@@ -113,6 +116,7 @@ run:intel:serial_2:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:serial_3:
@@ -123,6 +127,7 @@ run:intel:serial_3:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 ## 2.2 comparison serial/parallel run ##
@@ -134,6 +139,7 @@ run:intel:parallel_2:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:MPIatom_7:
@@ -144,6 +150,7 @@ run:intel:MPIatom_7:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
  
 run:intel:MPIenerg_8:
@@ -154,6 +161,7 @@ run:intel:MPIenerg_8:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:multi_node_9:
@@ -174,6 +182,7 @@ run:intel:multi_node_9:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
  
 ## 2.3 special features beyond selfconsistency ##
@@ -186,6 +195,7 @@ run:intel:Jijs_4:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:kkrflex_5:
@@ -197,6 +207,7 @@ run:intel:kkrflex_5:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:FERMIOUT_6:
@@ -208,6 +219,7 @@ run:intel:FERMIOUT_6:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
  
 run:intel:OPERATOR_10:
@@ -217,6 +229,7 @@ run:intel:OPERATOR_10:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:DTM_GMATLL_11:
@@ -226,6 +239,7 @@ run:intel:DTM_GMATLL_11:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:qdos_12:
@@ -236,6 +250,7 @@ run:intel:qdos_12:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 #run:intel:rhoq_13:
@@ -245,6 +260,7 @@ run:intel:qdos_12:
 #  artifacts:
 #    paths:
 #      - tests/test_run*
+#      - build/*dyn
 #    expire_in: 1 day
 
 run:intel:ASA_14:
@@ -255,6 +271,7 @@ run:intel:ASA_14:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:CPA_15:
@@ -265,6 +282,7 @@ run:intel:CPA_15:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:Dirac_16:
@@ -275,6 +293,7 @@ run:intel:Dirac_16:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:lambda_xc_17:
@@ -285,6 +304,7 @@ run:intel:lambda_xc_17:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 #no working test case yet
@@ -296,6 +316,7 @@ run:intel:lambda_xc_17:
 #  artifacts:
 #    paths:
 #      - tests/test_run*
+#      - build/*dyn
 #    expire_in: 1 day
 
 run:intel:decimate_19:
@@ -305,6 +326,7 @@ run:intel:decimate_19:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 # other missing tests:
@@ -367,6 +389,7 @@ run:intel:Au_bulk_SOC_1_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:Fe_slab_SOC_2_1:
@@ -377,6 +400,7 @@ run:intel:Fe_slab_SOC_2_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:Si_LLY_SOC_3_1:
@@ -387,6 +411,7 @@ run:intel:Si_LLY_SOC_3_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:Jijs_SOC_4_1:
@@ -397,6 +422,7 @@ run:intel:Jijs_SOC_4_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:kkrflex_SOC_5_1:
@@ -407,6 +433,7 @@ run:intel:kkrflex_SOC_5_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:FERMIOUT_SOC_6_1:
@@ -417,6 +444,7 @@ run:intel:FERMIOUT_SOC_6_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:qdos_SOC_12_1:
@@ -427,6 +455,7 @@ run:intel:qdos_SOC_12_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:ASA_SOC_14_1:
@@ -437,6 +466,7 @@ run:intel:ASA_SOC_14_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:CPA_SOC_15_1:
@@ -447,6 +477,7 @@ run:intel:CPA_SOC_15_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:decimate_SOC_19_1:
@@ -456,6 +487,7 @@ run:intel:decimate_SOC_19_1:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 ###############################################################################
@@ -464,7 +496,7 @@ run:intel:decimate_SOC_19_1:
 verify:intel_codecov:
   stage: verify
   script:
-    - cd build
+    - cd build && ls -ltr
     - profmerge
     - codecov -spi pgopti.spi -dpi pgopti.dpi
     - tar -zcvf ../cov.tar.gz CODE_COVERAGE.HTML CodeCoverage
