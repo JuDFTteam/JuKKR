@@ -44,10 +44,10 @@ test:intel:
  ## 1.2 production versions
 
 ## 1.1 debug versions ##
-build:gnu:debug:
-  stage: build
-  script:
-    - mkdir build_gfortran_debug && cd build_gfortran_debug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug .. && make -j4
+#build:gnu:debug:
+#  stage: build
+#  script:
+#    - mkdir build_gfortran_debug && cd build_gfortran_debug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug .. && make -j4
 
 build:intel:debug:
   stage: build
@@ -77,12 +77,13 @@ build:intel:mpi_only:
   script:
     # compile code
     - mkdir build && cd build
-    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=OFF ..
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=OFF -DENABLE_COV=ON ..
     - make -j4
     - cd ..
   artifacts:
     paths:
       - kkr.x
+      - build
     expire_in: 1 day
 
 ###############################################################################
@@ -460,6 +461,18 @@ run:intel:decimate_SOC_19_1:
 ###############################################################################
 
 ### 3. check outcome of the test runs ###
+verify:intel_codecov:
+  stage: verify
+  script:
+    - cd build
+    - profmerge
+    - codecov -spi pgopti.spi -dpi pgopti.dpi
+    - tar -zcvf ../cov.tar.gz CODE_COVERAGE.HTML CodeCoverage
+    - rm -rf *.dyn CODE_COVERAGE.HTML CodeCoverage pgopti.spi pgopti.dpi
+  artifacts:
+    path:
+      - cov.tar.gz
+    expire_in: 1 day
 
 verify:intel:
   stage: verify
