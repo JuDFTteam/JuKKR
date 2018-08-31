@@ -470,7 +470,7 @@ verify:intel_codecov:
     - tar -zcvf ../cov.tar.gz CODE_COVERAGE.HTML CodeCoverage
     - rm -rf *.dyn CODE_COVERAGE.HTML CodeCoverage pgopti.spi pgopti.dpi
   artifacts:
-    path:
+    paths:
       - cov.tar.gz
     expire_in: 1 day
 
