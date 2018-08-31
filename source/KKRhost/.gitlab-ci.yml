@@ -238,14 +238,14 @@ run:intel:qdos_12:
       - tests/test_run*
     expire_in: 1 day
 
-run:intel:rhoq_13:
-  stage: run_features
-  script:
-      - tests/tools/run_test_13.sh
-  artifacts:
-    paths:
-      - tests/test_run*
-    expire_in: 1 day
+#run:intel:rhoq_13:
+#  stage: run_features
+#  script:
+#      - tests/tools/run_test_13.sh
+#  artifacts:
+#    paths:
+#      - tests/test_run*
+#    expire_in: 1 day
 
 run:intel:ASA_14:
   stage: run_features

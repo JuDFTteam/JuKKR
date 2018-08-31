@@ -171,6 +171,7 @@ class Test_features():
            assert abs(num-num_ref).max()<2*10**-12
            assert set(text)-set(text_ref)==set()
 
+    """
     def test_13_rhoq(self):
         path  = 'test_run13/'
         path0 = 'test_run13/ref/'
@@ -187,6 +188,7 @@ class Test_features():
         assert mean(abs(num-num_ref))<10**-10
         assert abs(num-num_ref).max()<2*10**-7
         assert set(text)-set(text_ref)==set()
+    """
 
     def test_14_ASA(self):
         path0 = 'test_run14_hybrid_1_3/'
