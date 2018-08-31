@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+
+source python-select local
+
+
 cd tests
 
 echo "###########################################"
@@ -100,7 +105,7 @@ echo ""
 echo "###########################################"
 echo "run:intel:noco_18:"
 echo ""
-./run_parallel.py -18
+#./run_parallel.py -18
 
 
 echo "###########################################"

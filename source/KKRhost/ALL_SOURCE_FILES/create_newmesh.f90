@@ -89,7 +89,7 @@ contains
 
 
     ! checks for optional arguments
-    if (present(ntcell) .and. .not. present(thetas) .or. &
+    if (present(ntcell) .and. .not. present(thetas) .and. &
       .not. present(thetasnew)) then
       write (*, *) 'Error in create_newmesh:'
       write (*, *) 'List of optional arguments not complete'
