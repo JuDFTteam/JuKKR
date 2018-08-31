@@ -71,7 +71,7 @@ class Test_features():
     check results of different features
     """
     def test_4_Jijs_noSOC(self):
-        paths = 'test_run04_serial_1_1/ test_run04_mpi_1_3/ test_run04_hybrid_1_3/'.split()
+        paths = 'test_run04_serial_1_1/ test_run04_hybrid_1_3/'.split()
         path0 = 'test_inputs/test_04_Jijs_Fe_slab_lmax2_noSOC/ref/'
         # compare Jij.atom* files of different runs with reference (in path0)
         for path in paths:
@@ -83,7 +83,7 @@ class Test_features():
               assert set(text)-set(text_ref)==set()
 
     def test_5_kkrflex(self):
-        paths = 'test_run05_serial_1_1/ test_run05_mpi_1_3/ test_run05_hybrid_1_3/'.split()
+        paths = 'test_run05_serial_1_1/ test_run05_hybrid_1_3/'.split()
         path0 = 'test_inputs/test_05_Silicon_lloyd_kkrflex_output_lmax2_noSOC/ref/'
         # compare kkrflex_* files of different runs with reference (in path0)
         for path in paths:
@@ -95,7 +95,7 @@ class Test_features():
               assert set(text)-set(text_ref)==set()
 
     def test_6_FERMIOUT(self):
-        paths = 'test_run06_serial_1_1/ test_run06_mpi_1_3/ test_run06_hybrid_1_3/'.split()
+        paths = 'test_run06_serial_1_1/ test_run06_hybrid_1_3/'.split()
         path0 = 'test_inputs/test_06_Silicon_lloyd_FERMIOUT_output_lmax2_noSOC/ref/'
         # compare TBkkr_* files of different runs with reference (in path0)
         for path in paths:
@@ -189,22 +189,38 @@ class Test_features():
         assert set(text)-set(text_ref)==set()
 
     def test_14_ASA(self):
-        assert 1==2
+        path0 = 'test_run14_hybrid_1_3/'
+        standard_verify(path0, rms_threshold=8*10**-8, rms_threshold_end=8*10**-8, neutr_threshold=2.5*10**-5)
 
     def test_15_CPA(self):
-        assert 1==2
+        path0 = 'test_run15_hybrid_1_3/'
+        standard_verify(path0, rms_threshold=8*10**-8, rms_threshold_end=8*10**-8)
 
     def test_16_Dirac(self):
-        assert 1==2
+        path0 = 'test_run16_hybrid_1_3/'
+        standard_verify(path0, rms_threshold=7*10**-8, rms_threshold_end=7*10**-8)
 
     def test_17_lambda_xc(self):
-        assert 1==2
+        path0 = 'test_run17_hybrid_1_3/'
+        standard_verify(path0, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
 
     def test_18_noco(self):
-        assert 1==2
+        path0 = 'test_run18_hybrid_1_3/'
+        standard_verify(path0, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
 
     def test_19_decimate(self):
-        assert 1==2
+        path00 = 'test_run19_mpi_2_4'
+        # first check decifile generation
+        path = path00+'/bulk/'
+        path0 = path+'/ref/'
+        fname = 'decifile'
+        num, text = read_file(path+fname)
+        num_ref, text_ref = read_file(path0+fname)
+        assert std(num-num_ref)<10**-10
+        assert set(text)-set(text_ref)==set()
+        # now check decimation step (diff against ref)
+        cmplist = [path00, path00+'/ref']
+        cmp_modes(cmplist, '', s_rms_bound=2.13*10**-1, max_s_charges_bound=10**-3)
 
 
 class Test_SOC():
@@ -212,19 +228,19 @@ class Test_SOC():
     check results of different features with SOC
     """
     def test_1_Au_bulk(self):
-        path0 = 'test_run01.1_serial_1_1/'
-        standard_verify(path0, rms_threshold=5*10**-8)
+        path0 = 'test_run01.1_hybrid_1_3/'
+        standard_verify(path0, rms_threshold=1*10**-8)
 
     def test_2_Fe_slab(self):
-        path0 = 'test_run02.1_serial_1_1/'
-        standard_verify(path0, rms_threshold=7*10**-8)
+        path0 = 'test_run02.1_hybrid_1_3/'
+        standard_verify(path0, rms_threshold=1*10**-8, rms_threshold_end=1*10**-8)
 
     def test_3_Si_lloyd(self):
-        path0 = 'test_run03.1_serial_1_1/'
-        standard_verify(path0, rms_threshold=8*10**-9)
+        path0 = 'test_run03.1_hybrid_1_3/'
+        standard_verify(path0, rms_threshold=6*10**-9, rms_threshold_end=6*10**-9)
 
-    def test_4_Jijs_noSOC(self):
-        paths = 'test_run04.1_serial_1_1/ test_run04.1_mpi_1_3/ test_run04.1_hybrid_1_3/'.split()
+    def test_4_Jijs_SOC(self):
+        paths = ['test_run04.1_hybrid_1_3/']
         path0 = 'test_inputs/test_04.1/ref/'
         # compare Jij.atom* files of different runs with reference (in path0)
         for path in paths:
@@ -236,7 +252,7 @@ class Test_SOC():
               assert set(text)-set(text_ref)==set()
 
     def test_5_kkrflex(self):
-        paths = 'test_run05.1_serial_1_1/ test_run05.1_mpi_1_3/ test_run05.1_hybrid_1_3/'.split()
+        paths = ['test_run05_hybrid_1_3/']
         path0 = 'test_inputs/test_05.1/ref/'
         # compare kkrflex_* files of different runs with reference (in path0)
         for path in paths:
@@ -248,7 +264,7 @@ class Test_SOC():
               assert set(text)-set(text_ref)==set()
 
     def test_6_FERMIOUT(self):
-        paths = 'test_run06.1_serial_1_1/ test_run06.1_mpi_1_3/ test_run06.1_hybrid_1_3/'.split()
+        paths = ['test_run06.1_hybrid_1_3/']
         path0 = 'test_inputs/test_06.1/ref/'
         # compare TBkkr_* files of different runs with reference (in path0)
         for path in paths:
@@ -281,14 +297,26 @@ class Test_SOC():
            assert set(text)-set(text_ref)==set()
 
     def test_14_ASA(self):
-        assert 1==2
+        path0 = 'test_run14.1_hybrid_1_3/'
+        standard_verify(path0, rms_threshold=3*10**-8, rms_threshold_end=3*10**-8, neutr_threshold=1.5*10**-5)
 
     def test_15_CPA(self):
-        assert 1==2
+        path0 = 'test_run15.1_hybrid_1_3/'
+        standard_verify(path0, rms_threshold=5*10**-8, rms_threshold_end=5*10**-8)
 
     def test_19_decimate(self):
-        assert 1==2
-
+        path00 = 'test_run19.1_mpi_2_4'
+        # first check decifile generation
+        path = path00+'/bulk/'
+        path0 = path+'ref/'
+        fname = 'decifile'
+        num, text = read_file(path+fname)
+        num_ref, text_ref = read_file(path0+fname)
+        assert std(num-num_ref)<10**-10
+        assert set(text)-set(text_ref)==set()
+        # now check decimation step (diff against ref)
+        cmplist = [path00, path00+'/ref']
+        cmp_modes(cmplist, '', s_rms_bound=3.28*10**-1, max_s_charges_bound=10**-3)
         
 # helper functions
 
@@ -309,7 +337,7 @@ def standard_verify(path0, rms_threshold=10**-8, rms_threshold_end=10**-8, neutr
     # check if charge neutrality is correct
     assert abs(out_dict['convergence_group']['charge_neutrality']) <= neutr_threshold
 
-def cmp_modes(cmplist, path00):
+def cmp_modes(cmplist, path00, s_rms_bound=10**-12, max_s_charges_bound=10**-12):
     """
     check convergence and charges across parallel runs
     returns dict with rms and charges entries for all paths given in 'cmplist' in parent directory 'path00'
@@ -318,7 +346,7 @@ def cmp_modes(cmplist, path00):
     for addpath in cmplist:
         path0 = path00+addpath
         print(path0, os.listdir('.'))
-        if path0 in os.listdir('.'):
+        if path0 in os.listdir('.') or '/ref' in path0:
             path0+='/'
             success, parser_msgs, out_dict = parse_kkr_outputfile({}, path0+'out_kkr', path0+'output.0.txt', path0+'output.000.txt', path0+'out_timing.000.txt', path0+'out_potential', path0+'nonco_angle_out.dat')
             print(path0)
@@ -337,8 +365,8 @@ def cmp_modes(cmplist, path00):
         pprint.pprint('std_rms= {}'.format(s_rms))
         max_s_charges = max(std(cmp_values['charges'], axis=0))
         pprint.pprint('max_std_charges= {}'.format(max_s_charges))
-        assert s_rms < 10**-12
-        assert max_s_charges < 10**-12
+        assert s_rms < s_rms_bound
+        assert max_s_charges < max_s_charges_bound
 
 def read_file(path):
    """
@@ -348,6 +376,8 @@ def read_file(path):
    txt = open(path).readlines()
    numbers, text = [], []
    for line in txt:
+       # replace D+XX by e+XX for be able to read numbers in python
+       line = line.replace('D', 'e')
        if line[0] != '#':
           for i in line.split():
              try:
@@ -357,8 +387,3 @@ def read_file(path):
                text.append(i)
    return array(numbers), text
 
-"""
-if __name__=='__main__':
-    path0 = '/Users/ruess/Downloads/tests/test_run1_serial_1_1/'
-    standard_verify(path0, rms_threshold=5*10**-8)
-#"""

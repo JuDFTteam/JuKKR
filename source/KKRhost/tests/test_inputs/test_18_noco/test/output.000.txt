@@ -1,0 +1,51 @@
+# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180831104056
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 18, #of points= 18
+ ==========================================
+ atom:            1  NSRA:           2
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 2, #of points= 2
+Task 1 treats points 3 to 4, #of points= 2
+Task 2 treats points 5 to 6, #of points= 2
+Task 3 treats points 7 to 8, #of points= 2
+Task 4 treats points 9 to 9, #of points= 1
+Task 5 treats points 10 to 10, #of points= 1
+Task 6 treats points 11 to 11, #of points= 1
+Task 7 treats points 12 to 12, #of points= 1
+Task 8 treats points 13 to 13, #of points= 1
+Task 9 treats points 14 to 14, #of points= 1
+Task 10 treats points 15 to 15, #of points= 1
+Task 11 treats points 16 to 16, #of points= 1
+ ==========================================
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)
+ atom:            2  NSRA:           2
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)
+ atom:            3  NSRA:           2
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)
+ atom:            4  NSRA:           2
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)
+ atom:            5  NSRA:           2
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)
+ atom:            6  NSRA:           2
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)
+ atom:            7  NSRA:           2
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)
+ atom:            8  NSRA:           2
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)
+ atom:            9  NSRA:           2
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)
+ atom:           10  NSRA:           2
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)
+ atom:           11  NSRA:           2
+ energy:           1  (-0.200000000000000,1.794010046755946E-002)
+ energy:           2  (-0.200000000000000,7.959110633897150E-002)

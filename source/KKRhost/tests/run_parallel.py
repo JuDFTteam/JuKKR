@@ -33,6 +33,7 @@ if test_coverage<-1000:
 else:
     SOCrun = False
 if test_coverage<0:
+    modes = ['hybrid']
     npara_pairs = [[1,2], [1,4]]
     if test_coverage in [-12]:
         npara_pairs = [[1,8]]
