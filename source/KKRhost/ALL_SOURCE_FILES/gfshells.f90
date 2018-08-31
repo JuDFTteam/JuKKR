@@ -215,7 +215,7 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
 
   ! after shells have been created reset nofgij to nofgij_with_diag.
   ! Otherwise a segmentation fault occurs in kkrflex (in rotgll: ijtabsh etc too small)
-  nofgij = nofgij_with_diag
+  if (icc>0) nofgij = nofgij_with_diag
 
   ! **********************************************************************
 

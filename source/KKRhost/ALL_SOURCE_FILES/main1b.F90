@@ -1212,7 +1212,7 @@ contains
          else !.NOT.OPT('NEWSOSOL'))
             call TBXCCPLJIJDIJ(naez,natyp,lmmaxd,lmgf0d,natomimpd, &
                iemxd,THETA_AT,PHI_AT,                            &
-               natomimp,atomimp,nofgij,iqat,rclsimp,                &
+               natomimp,atomimp,natomimpd**2+1,iqat,rclsimp,                &
                ijtabcalc,ijtabcalc_I,ijtabsh,                        &
                ijtabsym,                                             &
                ielast,ez,wez,NPOL,dsymll,noq,itoq,ncpa)
