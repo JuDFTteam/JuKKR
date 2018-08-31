@@ -13,7 +13,7 @@
 -O2 -r8 -module ./OBJ -sox -traceback
 -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
- serial number for files:kkrjm_v2.3-64-g8cc70fc_mpi_20180830212138
+ serial number for files:kkrjm_v2.3-64-g8cc70fc_mpi_20180831120926
 *******************************************************************************
 
  Number of MPI ranks used:   12
@@ -26,190 +26,22 @@
  ++++++++++++++++++++++++++++++++++++++++++++++++++++++
  +++            SCF ITERATIONS START                +++
  ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-started on 2018/ 8/30 at 21:21:38
+started on 2018/ 8/31 at 12: 9:26
     memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:           1.69MB)  <==
     Number of saved wavefunctions per atom and energy:  1; save rll: T; save sll: F; save rllleft: F; save sllleft: F
- Valence charge from Lloyds formula:   16.0000472366439     
+ Valence charge from Lloyds formula:   16.0000054146931     
                Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59397825  1.59397825    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59397825  1.59397825    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40577837  0.40577837    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40577837  0.40577837    0.0000    0.0000  0.0000  0.0000
-      ITERATION   1 charge neutrality in unit cell =     0.000021
+          TOT  1.59429721  1.59429721    0.0000    0.0000  0.0000  0.0000
+          TOT  1.59429721  1.59429721    0.0000    0.0000  0.0000  0.0000
+          TOT  0.40546434  0.40546434    0.0000    0.0000  0.0000  0.0000
+          TOT  0.40546434  0.40546434    0.0000    0.0000  0.0000  0.0000
+      ITERATION   1 charge neutrality in unit cell =     0.000000
                     TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6565210061  DOS(E_F) =     0.662623
-      ITERATION   1 average rms-error : v+ + v- =  4.2422D-04
-                                        v+ - v- =  1.0904D-09
-TOTAL ENERGY in ryd. :            -1156.11846181
-
-Iteration finished on 2018/ 8/30 at 21:21:50
- Valence charge from Lloyds formula:   16.0000452182928     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59398692  1.59398692    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59398692  1.59398692    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40576980  0.40576980    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40576980  0.40576980    0.0000    0.0000  0.0000  0.0000
-      ITERATION   2 charge neutrality in unit cell =     0.000020
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6565135752  DOS(E_F) =     0.662701
-      ITERATION   2 average rms-error : v+ + v- =  4.1249D-04
-                                        v+ - v- =  4.5331D-10
-TOTAL ENERGY in ryd. :            -1156.11874107
-
-Iteration finished on 2018/ 8/30 at 21:22: 2
- Valence charge from Lloyds formula:   16.0010717015341     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59440118  1.59440118    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59440118  1.59440118    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40550068  0.40550068    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40550068  0.40550068    0.0000    0.0000  0.0000  0.0000
-      ITERATION   3 charge neutrality in unit cell =     0.000533
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6563126957  DOS(E_F) =     0.663259
-      ITERATION   3 average rms-error : v+ + v- =  4.0061D-05
-                                        v+ - v- =  4.4580D-10
-TOTAL ENERGY in ryd. :            -1156.12845238
-
-Iteration finished on 2018/ 8/30 at 21:22:14
- Valence charge from Lloyds formula:   16.0003987228351     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59437322  1.59437322    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59437322  1.59437322    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40544129  0.40544129    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40544129  0.40544129    0.0000    0.0000  0.0000  0.0000
-      ITERATION   4 charge neutrality in unit cell =     0.000196
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6562389765  DOS(E_F) =     0.666215
-      ITERATION   4 average rms-error : v+ + v- =  5.1692D-05
-                                        v+ - v- =  2.6203D-10
-TOTAL ENERGY in ryd. :            -1156.13258578
-
-Iteration finished on 2018/ 8/30 at 21:22:26
- Valence charge from Lloyds formula:   15.9999674697858     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59428970  1.59428970    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59428970  1.59428970    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546668  0.40546668    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546668  0.40546668    0.0000    0.0000  0.0000  0.0000
-      ITERATION   5 charge neutrality in unit cell =    -0.000019
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6562461642  DOS(E_F) =     0.666946
-      ITERATION   5 average rms-error : v+ + v- =  8.2691D-06
-                                        v+ - v- =  4.1087D-10
-TOTAL ENERGY in ryd. :            -1156.13176574
-
-Iteration finished on 2018/ 8/30 at 21:22:38
- Valence charge from Lloyds formula:   15.9999990554377     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59429225  1.59429225    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59429225  1.59429225    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546839  0.40546839    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546839  0.40546839    0.0000    0.0000  0.0000  0.0000
-      ITERATION   6 charge neutrality in unit cell =    -0.000003
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6562474319  DOS(E_F) =     0.667002
-      ITERATION   6 average rms-error : v+ + v- =  5.9816D-06
-                                        v+ - v- =  5.4658D-10
-TOTAL ENERGY in ryd. :            -1156.13200467
-
-Iteration finished on 2018/ 8/30 at 21:22:50
- Valence charge from Lloyds formula:   16.0000191314422     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59429841  1.59429841    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59429841  1.59429841    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546498  0.40546498    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546498  0.40546498    0.0000    0.0000  0.0000  0.0000
-      ITERATION   7 charge neutrality in unit cell =     0.000007
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6562449373  DOS(E_F) =     0.667014
-      ITERATION   7 average rms-error : v+ + v- =  4.1485D-07
-                                        v+ - v- =  4.7898D-10
-TOTAL ENERGY in ryd. :            -1156.13217196
-
-Iteration finished on 2018/ 8/30 at 21:23: 2
- Valence charge from Lloyds formula:   16.0000096013984     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59429752  1.59429752    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59429752  1.59429752    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546462  0.40546462    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546462  0.40546462    0.0000    0.0000  0.0000  0.0000
-      ITERATION   8 charge neutrality in unit cell =     0.000002
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6562442287  DOS(E_F) =     0.667060
-      ITERATION   8 average rms-error : v+ + v- =  2.0545D-07
-                                        v+ - v- =  4.0162D-10
-TOTAL ENERGY in ryd. :            -1156.13223070
-
-Iteration finished on 2018/ 8/30 at 21:23:14
- Valence charge from Lloyds formula:   16.0000076491343     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59429744  1.59429744    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59429744  1.59429744    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546442  0.40546442    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546442  0.40546442    0.0000    0.0000  0.0000  0.0000
-      ITERATION   9 charge neutrality in unit cell =     0.000001
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6562438859  DOS(E_F) =     0.667079
-      ITERATION   9 average rms-error : v+ + v- =  1.7987D-08
-                                        v+ - v- =  9.2979D-10
-TOTAL ENERGY in ryd. :            -1156.13226248
-
-Iteration finished on 2018/ 8/30 at 21:23:26
- Valence charge from Lloyds formula:   16.0000062693226     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59429730  1.59429730    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59429730  1.59429730    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546437  0.40546437    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546437  0.40546437    0.0000    0.0000  0.0000  0.0000
-      ITERATION  10 charge neutrality in unit cell =     0.000000
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6562438017  DOS(E_F) =     0.667079
-      ITERATION  10 average rms-error : v+ + v- =  1.6345D-08
-                                        v+ - v- =  4.1604D-10
-TOTAL ENERGY in ryd. :            -1156.13225837
-
-Iteration finished on 2018/ 8/30 at 21:23:38
- Valence charge from Lloyds formula:   16.0000055131142     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59429727  1.59429727    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59429727  1.59429727    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546436  0.40546436    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546436  0.40546436    0.0000    0.0000  0.0000  0.0000
-      ITERATION  11 charge neutrality in unit cell =     0.000000
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6562438592  DOS(E_F) =     0.667074
-      ITERATION  11 average rms-error : v+ + v- =  1.0722D-08
-                                        v+ - v- =  3.3023D-10
-TOTAL ENERGY in ryd. :            -1156.13224512
-
-Iteration finished on 2018/ 8/30 at 21:23:50
- Valence charge from Lloyds formula:   16.0000064610478     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59429730  1.59429730    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59429730  1.59429730    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546436  0.40546436    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546436  0.40546436    0.0000    0.0000  0.0000  0.0000
-      ITERATION  12 charge neutrality in unit cell =     0.000000
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6562437391  DOS(E_F) =     0.667049
-      ITERATION  12 average rms-error : v+ + v- =  2.1027D-08
-                                        v+ - v- =  7.6482D-10
-TOTAL ENERGY in ryd. :            -1156.13219157
-
-Iteration finished on 2018/ 8/30 at 21:24: 2
- Valence charge from Lloyds formula:   16.0000063248432     
-               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
-          TOT  1.59429725  1.59429725    0.0000    0.0000  0.0000  0.0000
-          TOT  1.59429725  1.59429725    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546436  0.40546436    0.0000    0.0000  0.0000  0.0000
-          TOT  0.40546436  0.40546436    0.0000    0.0000  0.0000  0.0000
-      ITERATION  13 charge neutrality in unit cell =     0.000000
-                    TOTAL mag. moment in unit cell =     0.000000
-                new E FERMI   0.6562436445  DOS(E_F) =     0.667047
-      ITERATION  13 average rms-error : v+ + v- =  9.6240D-09
-                                        v+ - v- =  1.1210D-09
-TOTAL ENERGY in ryd. :            -1156.13218552
+                new E FERMI   0.6562437204  DOS(E_F) =     0.667047
+      ITERATION   1 average rms-error : v+ + v- =  5.9999D-09
+                                        v+ - v- =  1.1011D-09
+TOTAL ENERGY in ryd. :            -1156.13218545
 
                  ++++++ SCF ITERATION CONVERGED ++++++
 *******************************************************************************
-Iteration finished on 2018/ 8/30 at 21:24:14
+Iteration finished on 2018/ 8/31 at 12: 9:38

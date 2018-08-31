@@ -93,7 +93,7 @@ subroutine RHOVALNEW( &
    real (kind=dp), dimension(0:LMAX+1,2), intent(out)     :: ESPV
    real (kind=dp), dimension(IRMD,lmpotd,4), intent(out)    :: R2NEF
    real (kind=dp), dimension(IRMD,lmpotd,4), intent(out)    :: RHO2NS
-   complex (kind=dp), dimension(0:LMAX+1,IEMXD,2), intent(out) :: DEN_out
+   complex (kind=dp), dimension(0:LMAX+1,IELAST,2), intent(out) :: DEN_out
 
    ! .. Local variables
    integer :: lmsize
@@ -1117,7 +1117,7 @@ subroutine RHOVALNEW( &
    endif !(myrank==master)
 
    ! communicate den_out to all processors with the same atom number
-   IDIM = (LMAX+2)*IEMXD*2
+   IDIM = (LMAX+2)*IELAST*2
    call MPI_Bcast(den_out, idim, MPI_DOUBLE_COMPLEX, master,&
       t_mpi_c_grid%myMPI_comm_at, ierr)
    if(ierr/=MPI_SUCCESS) stop 'error bcast den_out in rhovalnew'

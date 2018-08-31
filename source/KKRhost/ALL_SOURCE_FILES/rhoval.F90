@@ -85,8 +85,8 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    complex (kind=dp), dimension(IEMXD), intent(in) :: EZ
    complex (kind=dp), dimension(IEMXD), intent(in) :: WEZ
    complex (kind=dp), dimension(IRMD), intent(in)  :: PHILDAU
-   complex (kind=dp), dimension(0:LMAX+1,IEMXD*(1+KREL),NQDOS), intent(in) :: DEN
-   complex (kind=dp), dimension(LMMAXD,IEMXD*(1+KREL),NQDOS), intent(in)   :: DENLM
+   complex (kind=dp), dimension(0:LMAX+1,IELAST*(1+KREL),NQDOS), intent(in) :: DEN
+   complex (kind=dp), dimension(LMMAXD,IELAST*(1+KREL),NQDOS), intent(in)   :: DENLM
    ! .. In/Out variables
    real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(inout) :: WLDAU !< potential matrix
    !---------------------------------------------------------------------------
@@ -150,7 +150,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: CR
    complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: DR
    complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: GMAT0
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,IEMXD) :: GMATLL
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,IELAST) :: GMATLL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,IRMIND:IRMD,2) :: PNS
    complex (kind=dp), dimension(LMMAXD,LMMAXD,IRMIND:IRMD,2) :: QNS
    !     .. first 2 indices in dmuorb are the spin-resolved contributions,
@@ -498,12 +498,12 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
             GMATLL,VTREL,BTREL,RMREL,DRDIREL,                     &
             R2DRDIREL,ZREL,JWSREL,IRSHIFT,SOLVER,SOCTL,CTL,       &
             QMTET,QMPHI,ITERMVDIR,MVEVIL,MVEVILEF,LMMAXD,         &
-            LMAX,IRMD,LMPOTD,IEMXD,NMVECMAX,                        &
+            LMAX,IRMD,LMPOTD,IELAST,NMVECMAX,                        &
             I1,NQDOS)                                                            ! qdos
          !
          do L = 0,LMAXD1
             ESPV(L,1) = ESPV(L,1) + aimag(ERYD*DEN(L,IE,IQ)*DF)
-            ESPV(L,2) = ESPV(L,2) + aimag(ERYD*DEN(L,IE+IEMXD,IQ)*DF)
+            ESPV(L,2) = ESPV(L,2) + aimag(ERYD*DEN(L,IE+IELAST,IQ)*DF)
          end do
          !
          do IR = 1,3

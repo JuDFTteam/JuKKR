@@ -108,7 +108,7 @@ contains
       real (kind=dp), dimension(0:LMAXD+1,NATYPD,2)         :: CHARGE
       real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYPD) :: WLDAUOLD
       complex (kind=dp), dimension(IEMXD)                   :: DF
-      complex (kind=dp), dimension(0:LMAXD+1,IEMXD,2)        :: DEN1
+      complex (kind=dp), dimension(0:LMAXD+1,IELAST,2)        :: DEN1
       complex (kind=dp), dimension(NATYPD,3,NMVECMAX)        :: MVEVI          ! OUTPUT
       complex (kind=dp), dimension(NATYPD,3,NMVECMAX)        :: MVEVIEF        ! OUTPUT
       complex (kind=dp), dimension(MMAXD,MMAXD,NPOTD)       :: DENMATC
@@ -143,8 +143,8 @@ contains
       real (kind=dp), dimension(:,:,:), allocatable    :: RHO2N2
       real (kind=dp), dimension(:,:,:,:), allocatable  :: R2NEF     !< rho at FERMI energy
       real (kind=dp), dimension(:,:,:,:), allocatable  :: RHO2NS    !< radial density
-      complex (kind=dp), dimension(:,:,:,:), allocatable    :: DEN   ! DEN(0:LMAXD1,IEMXD,NPOTD,NQDOS)
-      complex (kind=dp), dimension(:,:,:,:), allocatable    :: DENLM ! DENLM(LMMAXD1,IEMXD,NPOTD,NQDOS)
+      complex (kind=dp), dimension(:,:,:,:), allocatable    :: DEN   ! DEN(0:LMAXD1,IELAST,NPOTD,NQDOS)
+      complex (kind=dp), dimension(:,:,:,:), allocatable    :: DENLM ! DENLM(LMMAXD1,IELAST,NPOTD,NQDOS)
       complex (kind=dp), dimension(:), allocatable ::  CDOS2          ! LLY Lloyd
       complex (kind=dp), dimension(:), allocatable :: CDOS0
       complex (kind=dp), dimension(:), allocatable :: CDOS1

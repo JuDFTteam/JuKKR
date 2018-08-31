@@ -34,6 +34,8 @@ test:intel:
     - echo 'ifort ' && which ifort
     - echo 'mpiifort ' && which mpiifort
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
+    - which profmerge
+    - which codecov || which Codecov
 
 ###############################################################################
 
@@ -42,10 +44,10 @@ test:intel:
  ## 1.2 production versions
 
 ## 1.1 debug versions ##
-#build:gnu:debug:
-#  stage: build
-#  script:
-#    - mkdir build_gfortran_debug && cd build_gfortran_debug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug .. && make -j4
+build:gnu:debug:
+  stage: build
+  script:
+    - mkdir build_gfortran_debug && cd build_gfortran_debug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug .. && make -j4
 
 build:intel:debug:
   stage: build
@@ -284,15 +286,16 @@ run:intel:lambda_xc_17:
       - tests/test_run*
     expire_in: 1 day
 
-run:intel:noco_18:
-  stage: run_features
-  script:
-    - cd tests
-    - ./run_parallel.py -18
-  artifacts:
-    paths:
-      - tests/test_run*
-    expire_in: 1 day
+#no working test case yet
+#run:intel:noco_18:
+#  stage: run_features
+#  script:
+#    - cd tests
+#    - ./run_parallel.py -18
+#  artifacts:
+#    paths:
+#      - tests/test_run*
+#    expire_in: 1 day
 
 run:intel:decimate_19:
   stage: run_features
@@ -302,6 +305,12 @@ run:intel:decimate_19:
     paths:
       - tests/test_run*
     expire_in: 1 day
+
+# other missing tests:
+# . LDA+U
+# . LDA+U, SOC
+# . godfrin module
+# ...
 
 ## 2.4 integration with aiida ##
 run:intel:aiida-kkr:

@@ -1,4 +1,4 @@
-# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180830212138
+# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180831120926
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 1, #of points= 1
 Task 1 treats points 2 to 2, #of points= 1
@@ -11,22 +11,29 @@ Task 0 treats points 1 to 8, #of points= 8
 Task 1 treats points 9 to 16, #of points= 8
 Task 2 treats points 17 to 24, #of points= 8
  ==========================================
+   ==> find_isave_wavefun
+   (maxmem given per rank for storage:           0.00MB
+    number of wavefunctions that fit in:          0
+    total memory needed for storage:           0.00MB
+    Ne=         24, Nat=          4
+    memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:           1.69MB)  <==
+    Number of saved wavefunctions per atom and energy:  1; save rll: T; save sll: F; save rllleft: F; save sllleft: F
  energy:           1  (-0.400005000000000,1.794010046755946E-002)
  energy:           1  (-0.399995000000000,1.794010046755946E-002)
  energy:           2  (-0.400005000000000,7.959110633897150E-002)
  energy:           2  (-0.399995000000000,7.959110633897150E-002)
  energy:           3  (-0.400005000000000,0.141242112210384)
  energy:           3  (-0.399995000000000,0.141242112210384)
- energy:           4  (-0.392853874941607,0.159182212677943)
- energy:           4  (-0.392843874941607,0.159182212677943)
- energy:           5  (-0.362749756229208,0.159182212677943)
- energy:           5  (-0.362739756229208,0.159182212677943)
- energy:           6  (-0.310294890857827,0.159182212677943)
- energy:           6  (-0.310284890857827,0.159182212677943)
- energy:           7  (-0.238304712404977,0.159182212677943)
- energy:           7  (-0.238294712404977,0.159182212677943)
- energy:           8  (-0.150658666825059,0.159182212677943)
- energy:           8  (-0.150648666825059,0.159182212677943)
+ energy:           4  (-0.392853875689840,0.159182212677943)
+ energy:           4  (-0.392843875689840,0.159182212677943)
+ energy:           5  (-0.362749760127280,0.159182212677943)
+ energy:           5  (-0.362739760127280,0.159182212677943)
+ energy:           6  (-0.310294900244330,0.159182212677943)
+ energy:           6  (-0.310284900244330,0.159182212677943)
+ energy:           7  (-0.238304729323920,0.159182212677943)
+ energy:           7  (-0.238294729323920,0.159182212677943)
+ energy:           8  (-0.150658692914540,0.159182212677943)
+ energy:           8  (-0.150648692914540,0.159182212677943)
            0 start tbref e-loop
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 8, #of points= 8
@@ -57,7 +64,7 @@ Task 1 treats points 2 to 1, #of points= 0
 Task 2 treats points 2 to 1, #of points= 0
 Task 3 treats points 2 to 1, #of points= 0
  ==========================================
-TBREF: GREF for energy:    4   -0.39284887    0.15918221
+TBREF: GREF for energy:    4   -0.39284888    0.15918221
  tbref NCLS loop:           1           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 1, #of points= 1
@@ -73,7 +80,7 @@ Task 1 treats points 2 to 1, #of points= 0
 Task 2 treats points 2 to 1, #of points= 0
 Task 3 treats points 2 to 1, #of points= 0
  ==========================================
-TBREF: GREF for energy:    6   -0.31028989    0.15918221
+TBREF: GREF for energy:    6   -0.31028990    0.15918221
  tbref NCLS loop:           1           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 1, #of points= 1
@@ -81,7 +88,7 @@ Task 1 treats points 2 to 1, #of points= 0
 Task 2 treats points 2 to 1, #of points= 0
 Task 3 treats points 2 to 1, #of points= 0
  ==========================================
-TBREF: GREF for energy:    7   -0.23829971    0.15918221
+TBREF: GREF for energy:    7   -0.23829973    0.15918221
  tbref NCLS loop:           1           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 1, #of points= 1
@@ -89,7 +96,7 @@ Task 1 treats points 2 to 1, #of points= 0
 Task 2 treats points 2 to 1, #of points= 0
 Task 3 treats points 2 to 1, #of points= 0
  ==========================================
-TBREF: GREF for energy:    8   -0.15065367    0.15918221
+TBREF: GREF for energy:    8   -0.15065369    0.15918221
  tbref NCLS loop:           1           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 1, #of points= 1
@@ -190,7 +197,7 @@ Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
                               < KKR1b finished >
 ===============================================================================
 
- Valence charge from Lloyds formula:   16.0000063248432     
+ Valence charge from Lloyds formula:   16.0000054146931     
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 1, #of points= 1
 Task 1 treats points 2 to 2, #of points= 1
@@ -201,56 +208,56 @@ Task 3 treats points 4 to 4, #of points= 1
  energy:           1  (-0.400000000000000,1.794010046755946E-002)
  energy:           2  (-0.400000000000000,7.959110633897150E-002)
  energy:           3  (-0.400000000000000,0.141242112210384)
- energy:           4  (-0.392848874941607,0.159182212677943)
- energy:           5  (-0.362744756229208,0.159182212677943)
- energy:           6  (-0.310289890857827,0.159182212677943)
- energy:           7  (-0.238299712404977,0.159182212677943)
- energy:           8  (-0.150653666825059,0.159182212677943)
+ energy:           4  (-0.392848875689840,0.159182212677943)
+ energy:           5  (-0.362744760127280,0.159182212677943)
+ energy:           6  (-0.310289900244330,0.159182212677943)
+ energy:           7  (-0.238299729323920,0.159182212677943)
+ energy:           8  (-0.150653692914540,0.159182212677943)
  moment           0  0.000000000000000E+000  0.000000000000000E+000
- -4.440892098500626E-016
+  0.000000000000000E+000
   0.000000000000000E+000  0.000000000000000E+000
  Information on renormalization by Lloyds formula
  RENORM_LLY: Complex renormalization factor per energy:
    IE        Spin 1 (down)                     Spin 2 (up)           
-    1  1.006042056788  1.006042056788
-    2  1.006164922100  1.006164922100
-    3  1.006402957655  1.006402957655
-    4  0.997529066614  0.997529066614
-    5  0.997304661345  0.997304661345
-    6  0.996873985091  0.996873985091
-    7  0.996225842819  0.996225842819
-    8  0.995484437344  0.995484437344
-    9  0.995127493041  0.995127493041
-   10  0.995921175938  0.995921175938
-   11  0.998144495685  0.998144495685
-   12  1.001111599181  1.001111599181
-   13  1.003768747324  1.003768747324
-   14  1.005740509687  1.005740509687
-   15  1.006510939986  1.006510939986
-   16  1.006590762411  1.006590762411
-   17  1.006528309269  1.006528309269
-   18  1.006462371989  1.006462371989
-   19  1.007218847094  1.007218847094
-   20  1.012286184811  1.012286184811
-   21  1.014402247086  1.014402247086
-   22  1.015272514335  1.015272514335
-   23  1.015594474519  1.015594474519
-   24  1.013957742254  1.013957742254
+    1  1.006042056716  1.006042056716
+    2  1.006164922042  1.006164922042
+    3  1.006402957582  1.006402957582
+    4  0.997529197535  0.997529197535
+    5  0.997304617836  0.997304617836
+    6  0.996873930635  0.996873930635
+    7  0.996225807220  0.996225807220
+    8  0.995484211757  0.995484211757
+    9  0.995127508386  0.995127508386
+   10  0.995921144449  0.995921144449
+   11  0.998144460870  0.998144460870
+   12  1.001111506936  1.001111506936
+   13  1.003768705013  1.003768705013
+   14  1.005740563329  1.005740563329
+   15  1.006510939547  1.006510939547
+   16  1.006590728960  1.006590728960
+   17  1.006528346956  1.006528346956
+   18  1.006462389701  1.006462389701
+   19  1.007218837156  1.007218837156
+   20  1.012286346493  1.012286346493
+   21  1.014402867350  1.014402867350
+   22  1.015272693667  1.015272693667
+   23  1.015594171622  1.015594171622
+   24  1.013957348219  1.013957348219
  RENORM_LLY: renormalization factor per atom:
   IAT       Spin down         Spin up
-    1  0.100015003E+01  0.100015003E+01
-    2  0.100015003E+01  0.100015003E+01
+    1  0.100014999E+01  0.100014999E+01
+    2  0.100014999E+01  0.100014999E+01
     3  0.100000000E+01  0.100000000E+01
     4  0.100000000E+01  0.100000000E+01
  RENORM_LLY: Renormalized charge per atom:
   IAT       Spin down         Spin up
-    1  1.594536435440  1.594536435440
-    2  1.594536435442  1.594536435442
-    3  0.405464355165  0.405464355165
-    4  0.405464355164  0.405464355164
-RENORM_LLY: Locally summed charge and moment: -0.399952320E+01  0.399952320E+01
-RENORM_LLY: Renormalized charge and moment:   -0.400000158E+01  0.400000158E+01
-RENORM_LLY: Renormalization factor of total charge  0.100011961E+01
+    1  1.594536334996  1.594536334996
+    2  1.594536334998  1.594536334998
+    3  0.405464341840  0.405464341840
+    4  0.405464341840  0.405464341840
+RENORM_LLY: Locally summed charge and moment: -0.399952310E+01  0.399952310E+01
+RENORM_LLY: Renormalized charge and moment:   -0.400000135E+01  0.400000135E+01
+RENORM_LLY: Renormalization factor of total charge  0.100011958E+01
  
 ##############################################################################
                l-decomposed valence charges and magnetic moments
@@ -258,41 +265,41 @@ RENORM_LLY: Renormalization factor of total charge  0.100011961E+01
  
    ATOM        Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
    ========================================================================
-      1   s =  0.59202258  0.59202258    0.0000    0.0000  0.0000  0.0000
-          p =  0.91512469  0.91512469    0.0000    0.0000  0.0000  0.0000
-          d =  0.09214554  0.09214554    0.0000    0.0000  0.0000  0.0000
+      1   s =  0.59202257  0.59202257    0.0000    0.0000  0.0000  0.0000
+          p =  0.91512466  0.91512466    0.0000    0.0000  0.0000  0.0000
+          d =  0.09214553  0.09214553    0.0000    0.0000  0.0000  0.0000
           ns  -0.00499556 -0.00499556    0.0000    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  1.59429725  1.59429725    0.0000    0.0000  0.0000  0.0000
-                           3.18859449              0.0000
+          TOT  1.59429721  1.59429721    0.0000    0.0000  0.0000  0.0000
+                           3.18859442              0.0000
    ==================================================================
-      2   s =  0.59202258  0.59202258    0.0000    0.0000  0.0000  0.0000
-          p =  0.91512469  0.91512469    0.0000    0.0000  0.0000  0.0000
-          d =  0.09214554  0.09214554    0.0000    0.0000  0.0000  0.0000
+      2   s =  0.59202257  0.59202257    0.0000    0.0000  0.0000  0.0000
+          p =  0.91512466  0.91512466    0.0000    0.0000  0.0000  0.0000
+          d =  0.09214553  0.09214553    0.0000    0.0000  0.0000  0.0000
           ns  -0.00499556 -0.00499556    0.0000    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  1.59429725  1.59429725    0.0000    0.0000  0.0000  0.0000
-                           3.18859449              0.0000
+          TOT  1.59429721  1.59429721    0.0000    0.0000  0.0000  0.0000
+                           3.18859442              0.0000
    ==================================================================
-      3   s =  0.14812227  0.14812227    0.0000    0.0000  0.0000  0.0000
-          p =  0.17882078  0.17882078    0.0000    0.0000  0.0000  0.0000
+      3   s =  0.14812226  0.14812226    0.0000    0.0000  0.0000  0.0000
+          p =  0.17882077  0.17882077    0.0000    0.0000  0.0000  0.0000
           d =  0.07641641  0.07641641    0.0000    0.0000  0.0000  0.0000
           ns   0.00210489  0.00210489    0.0000    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  0.40546436  0.40546436    0.0000    0.0000  0.0000  0.0000
-                           0.81092871              0.0000
+          TOT  0.40546434  0.40546434    0.0000    0.0000  0.0000  0.0000
+                           0.81092868              0.0000
    ==================================================================
-      4   s =  0.14812227  0.14812227    0.0000    0.0000  0.0000  0.0000
-          p =  0.17882078  0.17882078    0.0000    0.0000  0.0000  0.0000
+      4   s =  0.14812226  0.14812226    0.0000    0.0000  0.0000  0.0000
+          p =  0.17882077  0.17882077    0.0000    0.0000  0.0000  0.0000
           d =  0.07641641  0.07641641    0.0000    0.0000  0.0000  0.0000
           ns   0.00210489  0.00210489    0.0000    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  0.40546436  0.40546436    0.0000    0.0000  0.0000  0.0000
-                           0.81092871              0.0000
+          TOT  0.40546434  0.40546434    0.0000    0.0000  0.0000  0.0000
+                           0.81092868              0.0000
  
 ##############################################################################
  
- Sum of valence charges of atoms (local summation)   7.99904640120405     
+ Sum of valence charges of atoms (local summation)   7.99904620513437     
  
 ##############################################################################
                                  CORE  STATES
@@ -310,7 +317,7 @@ RENORM_LLY: Renormalization factor of total charge  0.100011961E+01
 
 
 *******************************************************************************
-                   ****** ITERATION :  13 OUT OF 200 ******
+                   ****** ITERATION :   1 OUT OF   2 ******
 *******************************************************************************
 
   Atom    1 charge in wigner seitz cell = 13.189072
@@ -326,11 +333,11 @@ RENORM_LLY: Renormalization factor of total charge  0.100011961E+01
        spin moment in wigner seitz cell =  0.000000
  
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      ITERATION  13 charge neutrality in unit cell =     0.000000
+      ITERATION   1 charge neutrality in unit cell =     0.000000
                     TOTAL mag. moment in unit cell =     0.000000
  
-                old E Fermi   0.6562437391 Delta E_F =   0.94611562E-07
-                new E FERMI   0.6562436445  DOS(E_F) =     0.667047
+                old E Fermi   0.6562436445 Delta E_F =  -0.75944178E-07
+                new E FERMI   0.6562437204  DOS(E_F) =     0.667047
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ===============================================================================
@@ -363,22 +370,22 @@ RENORM_LLY: Renormalization factor of total charge  0.100011961E+01
  Including cutoff of vxc for small density
  Including cutoff of vxc for small density
  Including cutoff of vxc for small density
-  VOL INT.    91.839426898  VAV INT.   -63.618693126  VMT ZERO     0.692716574
+  VOL INT.    91.839426898  VAV INT.   -63.618693218  VMT ZERO     0.692716575
 ===============================================================================
 
  MIXSTR  2.000000000000000E-002
-      rms-error for atom  1 :v+ + v- =  1.0481D-08  ,  v+ - v- =  2.1945D-16
-      rms-error non spherical contribution for atom   1 :v+ + v- =  3.6577D-09  ,  v+ - v- =  7.6589D-17
-      rms-error for atom  2 :v+ + v- =  1.0482D-08  ,  v+ - v- =  2.5969D-16
-      rms-error non spherical contribution for atom   2 :v+ + v- =  3.6575D-09  ,  v+ - v- =  7.2437D-17
-      rms-error for atom  3 :v+ + v- =  7.4711D-09  ,  v+ - v- =  1.4160D-09
-      rms-error non spherical contribution for atom   3 :v+ + v- =  1.1093D-09  ,  v+ - v- =  4.7751D-17
-      rms-error for atom  4 :v+ + v- =  8.1066D-09  ,  v+ - v- =  1.7383D-09
-      rms-error non spherical contribution for atom   4 :v+ + v- =  1.1092D-09  ,  v+ - v- =  6.4273D-17
+      rms-error for atom  1 :v+ + v- =  5.7558D-09  ,  v+ - v- =  1.2394D-16
+      rms-error non spherical contribution for atom   1 :v+ + v- =  1.9121D-09  ,  v+ - v- =  2.0809D-16
+      rms-error for atom  2 :v+ + v- =  5.7571D-09  ,  v+ - v- =  1.8488D-16
+      rms-error non spherical contribution for atom   2 :v+ + v- =  1.9119D-09  ,  v+ - v- =  1.1523D-16
+      rms-error for atom  3 :v+ + v- =  4.3460D-09  ,  v+ - v- =  1.0477D-09
+      rms-error non spherical contribution for atom   3 :v+ + v- =  7.7738D-10  ,  v+ - v- =  1.5029D-16
+      rms-error for atom  4 :v+ + v- =  7.0932D-09  ,  v+ - v- =  1.9370D-09
+      rms-error non spherical contribution for atom   4 :v+ + v- =  7.7752D-10  ,  v+ - v- =  3.0083D-17
 -------------------------------------------------------------------------------
 
-      ITERATION  13 average rms-error : v+ + v- =  9.6240D-09
-                                        v+ - v- =  1.1210D-09
+      ITERATION   1 average rms-error : v+ + v- =  5.9999D-09
+                                        v+ - v- =  1.1011D-09
 -------------------------------------------------------------------------------
                     mixing factor used :     2.00D-02
 ===============================================================================
@@ -390,33 +397,33 @@ RENORM_LLY: Renormalization factor of total charge  0.100011961E+01
      single particle energies  spin down   
          core   contribution :  s =  -138.72043952 p =   -17.82597067
 
-       valence  contribution :  s =     0.03777584 p =     0.37967869
-                                d =     0.03523506
+       valence  contribution :  s =     0.03777587 p =     0.37967866
+                                d =     0.03523504
                                 ns     -0.00184518
      single particle energies  spin  up    
          core   contribution :  s =  -138.72043952 p =   -17.82597067
 
-       valence  contribution :  s =     0.03777584 p =     0.37967869
-                                d =     0.03523506
+       valence  contribution :  s =     0.03777587 p =     0.37967866
+                                d =     0.03523504
                                 ns     -0.00184518
      --------------------------------------------------------------------
-     total contribution of the single particle energies :   -312.19113158
-                                   band energy per atom :    0.9016887994
+     total contribution of the single particle energies :   -312.19113161
+                                   band energy per atom :    0.9016887753
 
-     coulomb  contribution :   0    251.00457551  1      0.00000000
+     coulomb  contribution :   0    251.00457512  1      0.00000000
                                2      0.00000000  3     -0.00607170
                                4     -0.00034176
      --------------------------------------------------------------------
-     tot. coulomb contribution :    250.99816206
+     tot. coulomb contribution :    250.99816166
 
-     ex.-cor. contribution :   0    -39.33587679  1      0.00000000
+     ex.-cor. contribution :   0    -39.33587676  1      0.00000000
                                2      0.00000000  3     -0.01203401
                                4      0.00569854
      --------------------------------------------------------------------
-     tot. ex.-cor. contribution :    -39.34221227
+     tot. ex.-cor. contribution :    -39.34221223
 
-     eff. pot. contribution     :   -477.25097790
-     total double counting contribution                 :   -265.59502811
+     eff. pot. contribution     :   -477.25097752
+     total double counting contribution                 :   -265.59502809
 
    Total contribution of atom  1 =  -577.78615969
    ----------------------------------------------------------------------
@@ -425,33 +432,33 @@ RENORM_LLY: Renormalization factor of total charge  0.100011961E+01
      single particle energies  spin down   
          core   contribution :  s =  -138.72043952 p =   -17.82597067
 
-       valence  contribution :  s =     0.03777584 p =     0.37967869
-                                d =     0.03523506
+       valence  contribution :  s =     0.03777587 p =     0.37967866
+                                d =     0.03523504
                                 ns     -0.00184518
      single particle energies  spin  up    
          core   contribution :  s =  -138.72043952 p =   -17.82597067
 
-       valence  contribution :  s =     0.03777584 p =     0.37967869
-                                d =     0.03523506
+       valence  contribution :  s =     0.03777587 p =     0.37967866
+                                d =     0.03523504
                                 ns     -0.00184518
      --------------------------------------------------------------------
-     total contribution of the single particle energies :   -312.19113158
-                                   band energy per atom :    0.9016887994
+     total contribution of the single particle energies :   -312.19113161
+                                   band energy per atom :    0.9016887753
 
-     coulomb  contribution :   0    251.00457551  1      0.00000000
+     coulomb  contribution :   0    251.00457512  1      0.00000000
                                2      0.00000000  3     -0.00607170
                                4     -0.00034176
      --------------------------------------------------------------------
-     tot. coulomb contribution :    250.99816206
+     tot. coulomb contribution :    250.99816166
 
-     ex.-cor. contribution :   0    -39.33587679  1      0.00000000
+     ex.-cor. contribution :   0    -39.33587676  1      0.00000000
                                2      0.00000000  3     -0.01203401
                                4      0.00569854
      --------------------------------------------------------------------
-     tot. ex.-cor. contribution :    -39.34221227
+     tot. ex.-cor. contribution :    -39.34221223
 
-     eff. pot. contribution     :   -477.25097790
-     total double counting contribution                 :   -265.59502811
+     eff. pot. contribution     :   -477.25097752
+     total double counting contribution                 :   -265.59502809
 
    Total contribution of atom  2 =  -577.78615969
    ----------------------------------------------------------------------
@@ -459,72 +466,72 @@ RENORM_LLY: Renormalization factor of total charge  0.100011961E+01
    -----------------------
      single particle energies  spin down   
          core   contribution :  s =     0.00000000
-       valence  contribution :  s =     0.03153600 p =     0.05276993
+       valence  contribution :  s =     0.03153603 p =     0.05276993
                                 d =     0.02868395
                                 ns      0.00102095
      single particle energies  spin  up    
          core   contribution :  s =     0.00000000
-       valence  contribution :  s =     0.03153600 p =     0.05276993
+       valence  contribution :  s =     0.03153603 p =     0.05276993
                                 d =     0.02868395
                                 ns      0.00102095
      --------------------------------------------------------------------
-     total contribution of the single particle energies :      0.22802165
-                                   band energy per atom :    0.2280216481
+     total contribution of the single particle energies :      0.22802170
+                                   band energy per atom :    0.2280217041
 
      coulomb  contribution :   0      0.05398420  1      0.00000000
                                2      0.00000000  3     -0.00291307
                                4      0.00025613
      --------------------------------------------------------------------
-     tot. coulomb contribution :      0.05132725
+     tot. coulomb contribution :      0.05132726
 
-     ex.-cor. contribution :   0     -0.34494341  1      0.00000000
+     ex.-cor. contribution :   0     -0.34494343  1      0.00000000
                                2      0.00000000  3     -0.00120095
                                4     -0.00203822
      --------------------------------------------------------------------
-     tot. ex.-cor. contribution :     -0.34818258
+     tot. ex.-cor. contribution :     -0.34818259
 
      eff. pot. contribution     :     -0.21109940
-     total double counting contribution                 :     -0.50795472
+     total double counting contribution                 :     -0.50795474
 
-   Total contribution of atom  3 =    -0.27993307
+   Total contribution of atom  3 =    -0.27993303
    ----------------------------------------------------------------------
    Total energies atom   4
    -----------------------
      single particle energies  spin down   
          core   contribution :  s =     0.00000000
-       valence  contribution :  s =     0.03153600 p =     0.05276993
+       valence  contribution :  s =     0.03153603 p =     0.05276993
                                 d =     0.02868395
                                 ns      0.00102095
      single particle energies  spin  up    
          core   contribution :  s =     0.00000000
-       valence  contribution :  s =     0.03153600 p =     0.05276993
+       valence  contribution :  s =     0.03153603 p =     0.05276993
                                 d =     0.02868395
                                 ns      0.00102095
      --------------------------------------------------------------------
-     total contribution of the single particle energies :      0.22802165
-                                   band energy per atom :    0.2280216481
+     total contribution of the single particle energies :      0.22802170
+                                   band energy per atom :    0.2280217041
 
      coulomb  contribution :   0      0.05398420  1      0.00000000
                                2      0.00000000  3     -0.00291307
                                4      0.00025613
      --------------------------------------------------------------------
-     tot. coulomb contribution :      0.05132725
+     tot. coulomb contribution :      0.05132726
 
-     ex.-cor. contribution :   0     -0.34494341  1      0.00000000
+     ex.-cor. contribution :   0     -0.34494343  1      0.00000000
                                2      0.00000000  3     -0.00120095
                                4     -0.00203822
      --------------------------------------------------------------------
-     tot. ex.-cor. contribution :     -0.34818258
+     tot. ex.-cor. contribution :     -0.34818259
 
      eff. pot. contribution     :     -0.21109940
-     total double counting contribution                 :     -0.50795472
+     total double counting contribution                 :     -0.50795474
 
-   Total contribution of atom  4 =    -0.27993307
+   Total contribution of atom  4 =    -0.27993303
    ----------------------------------------------------------------------
-                                   sum of band energies :    2.2594208950
+                                   sum of band energies :    2.2594209588
    ----------------------------------------------------------------------
 
    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-               TOTAL ENERGY in ryd. :            -1156.13218552
-                                eV  :           -15730.10328971
+               TOTAL ENERGY in ryd. :            -1156.13218545
+                                eV  :           -15730.10328880
    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

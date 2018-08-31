@@ -59,21 +59,21 @@ echo "###########################################"
 echo "run:intel:OPERATOR_10:"
 echo ""
 cd ../
-#tests/tools/run_test_10.sh
+tests/tools/run_test_10.sh
 cd tests
 
 echo "###########################################"
 echo "run:intel:DTM_GMATLL_11:"
 echo ""
 cd ../
-#tests/tools/run_test_11.sh
+tests/tools/run_test_11.sh
 cd tests
 
 echo "###########################################"
 echo "run:intel:rhoq_13:"
 echo ""
 cd ../
-#tests/tools/run_test_13.sh
+tests/tools/run_test_13.sh
 cd tests
 
 

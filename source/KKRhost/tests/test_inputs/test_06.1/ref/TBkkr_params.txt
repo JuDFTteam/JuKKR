@@ -3,8 +3,8 @@
        2    lmax
        1    korbit
        2    nspin, used as nspind
-   20000    nrd
-      20    nembd
+    9700    nrd
+       0    nembd
        0    nemb
        1    ncls once again, used as nclsd
        1    ncls

@@ -1111,6 +1111,7 @@ contains
             DRDIREL,VTREL,BTREL,LMAX,NATYP,NAEZ,IPAND,IRMD)
       endif
       if ( OPT('deci-out') ) then
+         if (nranks>1) stop 'ERROR: deci-out does not work with MPI!'
          CALL OUTTMATHOST(ALAT,INS,KREL+KORBIT,KMROT,NSPIN,NAEZ,LMMAX,     &
             BRAVAIS,RBASIS,QMTET,QMPHI,E2IN,TK,NPOL,NPNT1,NPNT2,NPNT3)
       endif

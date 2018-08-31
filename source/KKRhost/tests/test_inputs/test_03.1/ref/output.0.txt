@@ -1,4 +1,4 @@
-# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180830212138
+# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180831120926
 
 *******************************************************************************
           Screened Korringa-Kohn-Rostoker Electronic Structure Code
@@ -10,7 +10,7 @@
 -O2 -r8 -module ./OBJ -sox -traceback
 -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
- serial number for files: kkrjm_v2.3-64-g8cc70fc_mpi_20180830212138
+ serial number for files: kkrjm_v2.3-64-g8cc70fc_mpi_20180831120926
 *******************************************************************************
 
  Number of MPI ranks used:   12
@@ -57,7 +57,7 @@ SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
 ---+---+-------+---+---+---+-------+---+---------------------------------------
 ---+---------------------------------------------------------------------------
  NSTEPS
- 200
+   2
 ---+---------------------------------------------------------------------------
  I12="                                        "
  I13="potential                               "
@@ -254,15 +254,15 @@ CLSGEN_TB: Atom    4 Refpot    1 Rmtref 2.2000000 Vref 8.0000000 TB-cluster    1
  <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
  <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
  <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
-Doing calculation with potential: MD5 (potential) = 402e04593a29bbd74ae2f5d2f3d42361
+Doing calculation with potential: MD5 (potential) = a71cc443969795d797c7f7ff73718add
 Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee12283
  
 ===============================================================================
                     EPATHTB: generates a complex E contour
 ===============================================================================
  
-     E min =    -0.400000 (Ry)        Fermi energy =     0.656529 (Ry)
-     E max =     0.656529 (Ry)        Temperature  =   800.000000 (K )
+     E min =    -0.400000 (Ry)        Fermi energy =     0.656244 (Ry)
+     E max =     0.656244 (Ry)        Temperature  =   800.000000 (K )
      --------------------------------------------------------------
      GF integration rectangular contour ( ImE > 0 )
      Number of energy points :  24             poles = 5

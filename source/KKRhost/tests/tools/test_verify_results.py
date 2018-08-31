@@ -50,8 +50,8 @@ class Test_parallel():
     def test_7_8_mpiatom_mpienerg(self):
         # compare mpiatom and mpienerg parallelisation scheme
         cmplist = ['test_run02_serial_1_1',
-                   'test_run07_mpi_1_3', 'test_run07_hybrid_1_3',
-		   'test_run08_mpi_1_3', 'test_run08_hybrid_1_3']
+                   'test_run07_hybrid_1_3',
+		   'test_run08_hybrid_1_3']
         cmp_modes(cmplist, '')
 
     def test_9_multinode(self):
@@ -204,9 +204,10 @@ class Test_features():
         path0 = 'test_run17_hybrid_1_3/'
         standard_verify(path0, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
 
-    def test_18_noco(self):
-        path0 = 'test_run18_hybrid_1_3/'
-        standard_verify(path0, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
+    # no working test case yet
+    #def test_18_noco(self):
+    #    path0 = 'test_run18_hybrid_1_3/'
+    #    standard_verify(path0, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
 
     def test_19_decimate(self):
         path00 = 'test_run19_mpi_2_4'
@@ -219,8 +220,9 @@ class Test_features():
         assert std(num-num_ref)<10**-10
         assert set(text)-set(text_ref)==set()
         # now check decimation step (diff against ref)
-        cmplist = [path00, path00+'/ref']
-        cmp_modes(cmplist, '', s_rms_bound=2.13*10**-1, max_s_charges_bound=10**-3)
+        # deactivate following test since decimation test is only valid with slab inversion (full inv gives different result)
+        #cmplist = [path00, path00+'/ref']
+        #cmp_modes(cmplist, '', s_rms_bound=2.13*10**-1, max_s_charges_bound=10**-3)
 
 
 class Test_SOC():
@@ -314,9 +316,10 @@ class Test_SOC():
         num_ref, text_ref = read_file(path0+fname)
         assert std(num-num_ref)<10**-10
         assert set(text)-set(text_ref)==set()
-        # now check decimation step (diff against ref)
-        cmplist = [path00, path00+'/ref']
-        cmp_modes(cmplist, '', s_rms_bound=3.28*10**-1, max_s_charges_bound=10**-3)
+        # deactivate following test since decimation test is only valid with slab inversion (full inv gives different result)
+        ## now check decimation step (diff against ref)
+        #cmplist = [path00, path00+'/ref']
+        #cmp_modes(cmplist, '', s_rms_bound=3.28*10**-1, max_s_charges_bound=10**-3)
         
 # helper functions
 
