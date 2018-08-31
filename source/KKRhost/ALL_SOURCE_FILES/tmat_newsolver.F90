@@ -754,7 +754,7 @@ contains
 
 #ifdef CPP_MPI
          !stop timing measurement for this pair of ie and i1, needed for MPIadapt
-         if(MPIadapt) call timing_stop('time_1a_ieiatom',save_out=timings_1a(ie, i1))
+         if(MPIadapt>0) call timing_stop('time_1a_ieiatom',save_out=timings_1a(ie, i1))
 #endif
 
       enddo ! IE loop

@@ -183,7 +183,7 @@ DO ie_num=1,ie_end
   
 #ifdef CPP_MPI
 !start timing measurement for this pair of ie and i1, needed for MPIadapt
-  IF(mpiadapt) CALL timing_start('time_1a_ieiatom')
+  IF(mpiadapt>0) CALL timing_start('time_1a_ieiatom')
 #endif
 
 IF(t_inc%i_write>0) WRITE(1337,*)'CALCTMAT: IE=',ie,' ATOM:',i1
@@ -354,7 +354,7 @@ endif
 
 #ifdef CPP_MPI
 !stop timing measurement for this pair of ie and i1, needed for MPIadapt
-IF(mpiadapt) CALL timing_stop('time_1a_ieiatom',save_out=timings_1a(ie, i1))
+IF(mpiadapt>0) CALL timing_stop('time_1a_ieiatom',save_out=timings_1a(ie, i1))
 #endif
 
 END DO ! IE = 1,IELAST

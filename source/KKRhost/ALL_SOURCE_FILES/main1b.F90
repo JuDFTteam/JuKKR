@@ -469,7 +469,7 @@ contains
 
 #ifdef CPP_MPI
                !start timing measurement for this ie, needed for MPIadapt
-               if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
+               if(MPIadapt>0.and.t_mpi_c_grid%myrank_ie==0) then
                  call timing_start('time_1b_ie')
                end if
 #endif
@@ -751,7 +751,7 @@ contains
 
 #ifdef CPP_MPI
                !stop timing measurement for this ie, needed for MPIadapt
-               if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
+               if(MPIadapt>0.and.t_mpi_c_grid%myrank_ie==0) then
                   call timing_stop('time_1b_ie', save_out=timings_1b(ie) )
                end if
 #endif
@@ -825,7 +825,7 @@ contains
       
 #ifdef CPP_MPI
             !start timing measurement for this ie, needed for MPIadapt
-            if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
+            if(MPIadapt>0.and.t_mpi_c_grid%myrank_ie==0) then
               call timing_start('time_1b_ie')
             end if
 #endif
@@ -1089,7 +1089,7 @@ contains
 
 #ifdef CPP_MPI
             !stop timing measurement for this ie, needed for MPIadapt
-            if(MPIadapt.and.t_mpi_c_grid%myrank_ie==0) then
+            if(MPIadapt>0.and.t_mpi_c_grid%myrank_ie==0) then
                call timing_stop('time_1b_ie', save_out=timings_1b(ie) )
             end if
 #endif

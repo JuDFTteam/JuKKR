@@ -283,7 +283,6 @@ add_executable(
     ALL_SOURCE_FILES/normcoeff_SO_spinflux.F90
     ALL_SOURCE_FILES/normcoeff_SO_torq.F90
     ALL_SOURCE_FILES/nrmliz.f90
-    ALL_SOURCE_FILES/oldgijxcpl.f90
     ALL_SOURCE_FILES/operators_for_FScode.F90
     ALL_SOURCE_FILES/opt.f90
     ALL_SOURCE_FILES/orbitalmoment.f90
