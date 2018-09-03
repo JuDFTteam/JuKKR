@@ -31,6 +31,7 @@ all_incp_incudes.txt
 # automatic tests
 .cache/
 tests/test_run*
+tests/test_inputs/test_13_rhoq_Cu_Cu111/rhoq_module/last_version_number
 
 # Code coverage report
 *.dyn

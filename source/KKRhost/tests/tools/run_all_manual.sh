@@ -35,6 +35,16 @@ echo "run:intel:MPIenerg_8:"
 echo ""
 ./run_parallel.py -8
 
+echo "###########################################"
+echo "run:intel:MPIatom_SOC_7.1:"
+echo ""
+./run_parallel.py -1007
+
+echo "###########################################"
+echo "run:intel:MPIenerg_SOC_8.1:"
+echo ""
+./run_parallel.py -1008
+
 
 echo "###########################################"
 echo "run:intel:Jijs_4:"
@@ -64,21 +74,27 @@ echo "###########################################"
 echo "run:intel:OPERATOR_10:"
 echo ""
 cd ../
-tests/tools/run_test_10.sh
+if [[ ! -d tests/test_run10_mpi_1_8 ]]; then
+  tests/tools/run_test_10.sh
+fi
 cd tests
 
 echo "###########################################"
 echo "run:intel:DTM_GMATLL_11:"
 echo ""
 cd ../
-tests/tools/run_test_11.sh
+if [[ ! -d tests/test_run11_mpi_1_8 ]]; then
+  tests/tools/run_test_11.sh
+fi
 cd tests
 
 echo "###########################################"
 echo "run:intel:rhoq_13:"
 echo ""
 cd ../
-tests/tools/run_test_13.sh
+if [[ ! -d tests/test_run13 ]]; then
+  tests/tools/run_test_13.sh
+fi
 cd tests
 
 
@@ -112,7 +128,9 @@ echo "###########################################"
 echo "run:intel:decimate_19:"
 echo ""
 cd ../
-tests/tools/run_test_19.sh
+if [[ ! -d tests/test_run19_mpi_2_4 ]]; then
+  tests/tools/run_test_19.sh
+fi
 cd tests
 
 
@@ -168,6 +186,8 @@ echo "###########################################"
 echo "run:intel:decimate_SOC_19_1:"
 echo ""
 cd ../
-tests/tools/run_test_19_1.sh
+if [[ ! -d tests/test_run19.1_mpi_2_4 ]]; then
+  tests/tools/run_test_19_1.sh
+fi
 cd tests
 

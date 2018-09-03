@@ -63,7 +63,11 @@ class Test_parallel():
         cmp_modes(cmplist, '')
 
     def test_SOC_parallel(self):
-        assert 1==2
+        # compare mpiatom and mpienerg parallelisation scheme for SOC run
+        cmplist = ['test_run02.1_hybrid_1_3',
+                   'test_run07.1_hybrid_1_3',
+		   'test_run08.1_hybrid_1_3']
+        cmp_modes(cmplist, '')
 
 
 class Test_features():

@@ -185,6 +185,30 @@ run:intel:multi_node_9:
       - build/*dyn
     expire_in: 1 day
  
+# parallel SOC mode
+run:intel:MPIatom_SOC_7.1:
+  stage: run_parallel
+  script:
+    - cd tests
+    - ./run_parallel.py -1007
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+ 
+run:intel:MPIenerg_SOC_8.1:
+  stage: run_parallel
+  script:
+    - cd tests
+    - ./run_parallel.py -1008
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+
 ## 2.3 special features beyond selfconsistency ##
 run:intel:Jijs_4:
   stage: run_features
