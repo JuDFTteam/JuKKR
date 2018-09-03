@@ -15,8 +15,8 @@ contains
 !----------------------------------------------------------------------------
 subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNSD,NFUND,  &
    IHOST,NTOTD,NSPIN,LMPOT,NCHEB,LMMAXD,KORBIT,NSPOTD,IELAST,IRMIND,NPAN_EQ,NPAN_LOG,      &
-   NATOMIMP,C,R_LOG,IPAN,IRMIN,HOSTIMP,IPANIMP,IRWSIMP,ATOMIMP,IRMINIMP,       &
-   ICLEB,IRCUT,IRCUTIMP,ZAT,ZIMP,RMESH,CLEB,RIMP,RCLSIMP,E,VM2ZIMP,VINSIMP,   &
+   NATOMIMP,R_LOG,IPAN,IRMIN,HOSTIMP,IPANIMP,IRWSIMP,ATOMIMP,IRMINIMP,       &
+   ICLEB,IRCUT,IRCUTIMP,ZAT,ZIMP,RMESH,CLEB,RIMP,RCLSIMP,ERYD,VM2ZIMP,VINSIMP,   &
    DTMTRX, LMMAXSO)
 
 #ifdef CPP_MPI
@@ -71,7 +71,6 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    integer, intent(in) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
    integer, intent(in) :: NPAN_LOG  !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
    integer, intent(in) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-   real (kind=dp), intent(in) :: C
    real (kind=dp), intent(in) :: R_LOG !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
    integer, dimension(NATYP), intent(in)    :: IPAN  !< Number of panels in non-MT-region
    integer, dimension(NATYP), intent(in)    :: IRMIN !< Max R for spherical treatment
@@ -89,8 +88,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    real (kind=dp), dimension(NCLEB,2), intent(in)      :: CLEB     !< GAUNT coefficients (GAUNT)
    real (kind=dp), dimension(IRM,NATOMIMP), intent(in) :: RIMP
    real (kind=dp), dimension(3,NATOMIMP), intent(in)   :: RCLSIMP
+   complex (kind=dp), intent(in) :: ERYD
    ! .. In/Out variables
-   complex (kind=dp), intent(inout) :: E
    real (kind=dp), dimension(IRM,NSPIN*NATOMIMP), intent(inout) :: VM2ZIMP
    real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPIN*NATOMIMP), intent(inout) :: VINSIMP
    complex (kind=dp), dimension((KORBIT+1)*LMMAXD*NATOMIMP,(KORBIT+1)*LMMAXD*NATOMIMP), intent(inout) :: DTMTRX
@@ -283,7 +282,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          ! contruct the spin-orbit coupling hamiltonian and add to potential
          call SPINORBIT_HAM(LMAX,LMMAXD,                                &
             VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
-            RNEW(1:IRMDNEW(I1),I1),E,ZAT(I1),C,t_params%SOCSCALE(I1),   &
+            RNEW(1:IRMDNEW(I1),I1),ERYD,ZAT(I1),CVLIGHT,t_params%SOCSCALE(I1),   &
             NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
             RPAN_INTERVALL(0:NTOTD,I1),NPAN_TOT(I1),NCHEB,              &
             IRMDNEW(I1),IRMDNEW(I1),VNSPLL0,                            &
@@ -294,10 +293,10 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
             call memocc(i_stat,product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','tmatimp_newsolver')
             if (USE_SRATRICK.EQ.0) then
                call VLLMATSRA(VNSPLL1,VNSPLL,RNEW(1:IRMDNEW(I1),I1),LMMAXSO,  &
-                  IRMDNEW(I1),IRMDNEW(I1),E,LMAX,0,'Ref=0')
+                  IRMDNEW(I1),IRMDNEW(I1),ERYD,LMAX,0,'Ref=0')
             elseif (USE_SRATRICK.EQ.1) then
                call VLLMATSRA(VNSPLL1,VNSPLL,RNEW(1:IRMDNEW(I1),I1),LMMAXSO,  &
-                  IRMDNEW(I1),IRMDNEW(I1),E,LMAX,0,'Ref=Vsph')
+                  IRMDNEW(I1),IRMDNEW(I1),ERYD,LMAX,0,'Ref=Vsph')
             endif
          else
             allocate(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW(I1)),stat=i_stat)
@@ -320,13 +319,13 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          HLK2=CZERO
          JLK2=CZERO
          GMATPREFACTOR=CZERO
-         call RLLSLLSOURCETERMS(NSRA,NVEC,E,RNEW(1:IRMDNEW(I1),I1),  &
+         call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW(1:IRMDNEW(I1),I1),  &
             IRMDNEW(I1),IRMDNEW(I1),                                 &
             LMAX,LMMAXSO,1,JLK_INDEX,HLK,JLK,HLK2,                   &
             JLK2,GMATPREFACTOR)
          ! using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
-            call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZAT(I1),E, &
+            call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZAT(I1),ERYD, &
                LMPOT,LMMAXSO,RNEW(1:IRMDNEW(I1),I1),                         &
                VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),             &
                NCHEB,NPAN_TOT(I1),                                            &
@@ -352,8 +351,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
             do IR=1,IRMDNEW(I1)
                do LM1=1,LMMAXSO
                   do LM2=1,LMMAXSO
-                     RLL(LM1+LMMAXSO,LM2,IR)=RLL(LM1+LMMAXSO,LM2,IR)/C
-                     SLL(LM1+LMMAXSO,LM2,IR)=SLL(LM1+LMMAXSO,LM2,IR)/C
+                     RLL(LM1+LMMAXSO,LM2,IR)=RLL(LM1+LMMAXSO,LM2,IR)/CVLIGHT
+                     SLL(LM1+LMMAXSO,LM2,IR)=SLL(LM1+LMMAXSO,LM2,IR)/CVLIGHT
                   enddo
                enddo
             enddo
@@ -388,7 +387,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          ! contruct the spin-orbit coupling hamiltonian and add to potential
          call SPINORBIT_HAM(LMAX,LMMAXD,                                &
             VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
-            RNEW(1:IRMDNEW(I1),I1),E,ZAT(I1),C,t_params%SOCSCALE(I1),   &
+            RNEW(1:IRMDNEW(I1),I1),ERYD,ZAT(I1),CVLIGHT,t_params%SOCSCALE(I1),   &
             NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
             RPAN_INTERVALL(0:NTOTD,I1),NPAN_TOT(I1),NCHEB,              &
             IRMDNEW(I1),IRMDNEW(I1),VNSPLL0,                            &
@@ -604,7 +603,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       ! Contruct the spin-orbit coupling hamiltonian and add to potential
       call SPINORBIT_HAM(LMAX,LMMAXD,                                &
          VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
-         RNEW(1:IRMDNEW(I1),I1),E,ZIMP(I1),C,t_params%SOCSCALE(I1),  &
+         RNEW(1:IRMDNEW(I1),I1),ERYD,ZIMP(I1),CVLIGHT,t_params%SOCSCALE(I1),  &
          NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
          RPAN_INTERVALL(0:NTOTD,I1),NPAN_TOT(I1),NCHEB,              &
          IRMDNEW(I1),IRMDNEW(I1),VNSPLL0,                            &
@@ -617,11 +616,11 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          if (USE_SRATRICK.EQ.0) then
             call VLLMATSRA(VNSPLL1,VNSPLL,                  &
                RNEW(1:IRMDNEW(I1),I1),LMMAXSO,IRMDNEW(I1),  &
-               IRMDNEW(I1),E,LMAX,0,'Ref=0')
+               IRMDNEW(I1),ERYD,LMAX,0,'Ref=0')
          elseif (USE_SRATRICK.EQ.1) then
             call VLLMATSRA(VNSPLL1,VNSPLL,                  &
                RNEW(1:IRMDNEW(I1),I1),LMMAXSO,IRMDNEW(I1),  &
-               IRMDNEW(I1),E,LMAX,0,'Ref=Vsph')
+               IRMDNEW(I1),ERYD,LMAX,0,'Ref=Vsph')
          endif
       else
          allocate(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW(I1)),stat=i_stat)
@@ -644,14 +643,14 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       HLK2=CZERO
       JLK2=CZERO
       GMATPREFACTOR=CZERO
-      call RLLSLLSOURCETERMS(NSRA,NVEC,E,RNEW(1:IRMDNEW(I1),I1),  &
+      call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW(1:IRMDNEW(I1),I1),  &
          IRMDNEW(I1),IRMDNEW(I1),                                 &
          LMAX,LMMAXSO,1,JLK_INDEX,                                &
          HLK,JLK,HLK2,JLK2,GMATPREFACTOR)
       ! using spherical potential as reference
       if (USE_SRATRICK.EQ.1) then
          call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZIMP(I1),  &
-            E,LMPOT,LMMAXSO,RNEW(1:IRMDNEW(I1),I1),                       &
+            ERYD,LMPOT,LMMAXSO,RNEW(1:IRMDNEW(I1),I1),                       &
             VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),             &
             NCHEB,NPAN_TOT(I1),RPAN_INTERVALL(0:NTOTD,I1),                 &
             JLK_INDEX,HLK,JLK,HLK2,JLK2,                                   &
@@ -676,8 +675,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          do IR=1,IRMDNEW(I1)
             do LM1=1,LMMAXSO
                do LM2=1,LMMAXSO
-                  RLL(LM1+LMMAXSO,LM2,IR)=RLL(LM1+LMMAXSO,LM2,IR)/C
-                  SLL(LM1+LMMAXSO,LM2,IR)=SLL(LM1+LMMAXSO,LM2,IR)/C
+                  RLL(LM1+LMMAXSO,LM2,IR)=RLL(LM1+LMMAXSO,LM2,IR)/CVLIGHT
+                  SLL(LM1+LMMAXSO,LM2,IR)=SLL(LM1+LMMAXSO,LM2,IR)/CVLIGHT
                enddo
             enddo
          enddo
@@ -710,7 +709,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       ! contruct the spin-orbit coupling hamiltonian and add to potential
       call SPINORBIT_HAM(LMAX,LMMAXD,                                &
          VINSNEW(1:IRMDNEW(I1),1:LMPOT,IPOT:IPOT+NSPIN-1),          &
-         RNEW(1:IRMDNEW(I1),I1),E,ZIMP(I1),C,t_params%SOCSCALE(I1),  &
+         RNEW(1:IRMDNEW(I1),I1),ERYD,ZIMP(I1),CVLIGHT,t_params%SOCSCALE(I1),  &
          NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL(0:NTOTD,I1),          &
          RPAN_INTERVALL(0:NTOTD,I1),NPAN_TOT(I1),NCHEB,              &
          IRMDNEW(I1),IRMDNEW(I1),VNSPLL0,                            &

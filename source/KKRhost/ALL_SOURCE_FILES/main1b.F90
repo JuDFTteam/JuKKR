@@ -1307,30 +1307,20 @@ contains
 
             ! find DTMTRX (written out for IELAST==1), parallelized with
             ! mpi over atoms
-            call TMATIMP_NEWSOLVER(t_params%IRM,NSRA-1,t_params%LMAX,t_params%IEND, &
-               t_params%IRID,t_params%LPOT,t_params%NATYP,t_params%NCLEB,  &
-               t_params%IPAND,t_params%IRNSD,t_params%NFUND,t_imp%IHOST,   &
-               t_params%NTOTD,t_params%NSPIN,t_params%LMPOT,t_params%NCHEB,&
-               t_params%LMMAXD,t_params%KORBIT,t_params%NSPOTD,            &
-               t_params%IELAST,t_params%IRMIND,t_params%NPAN_EQ,           &
-               t_params%NPAN_LOG,t_imp%NATOMIMP,CVLIGHT,t_params%R_LOG,    &
-               t_params%IPAN,t_params%IRMIN,                 &
-               t_imp%HOSTIMP(1:t_imp%NATOMIMP),                            &
-               t_imp%IPANIMP(1:t_imp%NATOMIMP),                            &
-               t_imp%IRWSIMP(1:t_imp%NATOMIMP),                            &
-               t_params%ATOMIMP(1:t_imp%NATOMIMP),                         &
-               t_imp%IRMINIMP(1:t_imp%NATOMIMP),t_params%ICLEB,            &
-               t_params%IRCUT,                                             &
-               t_imp%IRCUTIMP(0:t_params%IPAND,1:t_imp%NATOMIMP),          &
-               t_params%ZAT,t_imp%ZIMP(1:t_imp%NATOMIMP),       &
-               t_params%RMESH,t_params%CLEB(1,1),                              &
-               t_imp%RIMP(1:t_params%IRM,1:t_imp%NATOMIMP),               &
-               t_params%RCLSIMP,EZ(IE),t_imp%VISPIMP,        &
-               t_imp%VINSIMP,DTMTRX,LMMAXSO)
+            call TMATIMP_NEWSOLVER(IRM,NSRA-1,LMAX,IEND, &
+               IRID,LPOT,NATYP,NCLEB,IPAND,IRNSD,NFUND,t_imp%IHOST, &
+               NTOTD,NSPIN,LMPOT,NCHEB,LMMAXD/(1+KORBIT),KORBIT,NSPOTD, &
+               IELAST,IRMIND,NPAN_EQ,NPAN_LOG,t_imp%NATOMIMP,R_LOG, &
+               IPAN,IRMIN,t_imp%HOSTIMP(1:t_imp%NATOMIMP),t_imp%IPANIMP(1:t_imp%NATOMIMP), &
+               t_imp%IRWSIMP(1:t_imp%NATOMIMP),ATOMIMP(1:t_imp%NATOMIMP), &
+               t_imp%IRMINIMP(1:t_imp%NATOMIMP),ICLEB,IRCUT, &
+               t_imp%IRCUTIMP(0:IPAND,1:t_imp%NATOMIMP),ZAT,t_imp%ZIMP(1:t_imp%NATOMIMP), &
+               RMESH,CLEB(1,1),t_imp%RIMP(1:IRM,1:t_imp%NATOMIMP), &
+               RCLSIMP,EZ(IE),t_imp%VISPIMP,t_imp%VINSIMP,DTMTRX,LMMAXSO)
 
             ! compute GMATLL_GES, on master rank only
             if (IELAST.EQ.3 .and. myrank==master) then
-               CALL GREENIMP(t_imp%NATOMIMP,DTMTRX,t_params%EZ(IE))
+               CALL GREENIMP(t_imp%NATOMIMP,DTMTRX,EZ(IE))
             endif
 
             i_all=-product(shape(DTMTRX))*kind(DTMTRX)
