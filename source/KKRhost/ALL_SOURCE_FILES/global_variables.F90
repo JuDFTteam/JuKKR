@@ -120,7 +120,7 @@ end module global_variables
 subroutine Bcast_global_variables()
     use mpi
     use global_variables
-    use mod_mympi,   only: master, myrank
+    use mod_mympi,   only: master
     implicit none
 
     !< number of paramters that are broadcasted

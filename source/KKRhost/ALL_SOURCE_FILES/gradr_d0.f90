@@ -11,7 +11,6 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   ! -----------------------------------------------------------------
   ! -----------------------------------------------------------------
   ! ------------------------------------------------------------------
-  use :: mod_types, only: t_inc
   use :: mod_datatypes, only: dp
   implicit none
   ! .. Scalar Arguments ..
@@ -25,9 +24,9 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   ! .. Local Scalars ..
   real (kind=dp) :: d, drx, drx0, drx1, drx2, drx3, drxu, drxu0, drxu1, drxu2, &
     drxu3, drxx, drxx0, drxx1, drxx2, drxx3, drxxu, drxxu0, drxxu1, drxxu2, &
-    drxxu3, f0, f1, f2, f3, f4, f5, g1, g2, g3, g4, g5, xlf
-  integer :: i, i1, i2, i3, i4, i5, i6, ibh, ica, icg, iex, igd, igh, igl, &
-    ihb, imj, ip9, ipg, ipw, ist, ivg, ivn, iwr, ixlf, j, ndvpt, nred
+    drxxu3, f0, f1, f2, f3, f4, f5, g1, g2, g3, g4, g5
+  integer :: i, i1, i2, i3, i4, i5, i6, igd, &
+    ist, iwr, j, ndvpt, nred
   ! ..
   ! .. Statement Functions ..
   real (kind=dp) :: f131, f132, f133, f141, f142, f143, f144, f151, f152, &
@@ -39,8 +38,7 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   intrinsic :: dble
   ! ..
   ! .. Save statement ..
-  save :: ndvpt, igl, igh, imj, ibh, ica, icg, ivn, ipw, ipg, ivg, ip9, igd, &
-    ixlf,iex, xlf, iwr
+  save :: ndvpt, igd, iwr
   ! ..
   ! .. Data statements ..
   ! .....-----------------------------------------------------------------
@@ -53,8 +51,7 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   ! real (kind=dp) f261,f262,f263,f264,f265,f266
 
   data ndvpt/6/
-  data igl, igh, imj, ibh, ica, icg, ivn, ipw, ipg, ivg, ip9, igd, ixlf, iex, &
-    xlf/0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0.00d0/
+  data igd/1/
   data iwr/0/
   ! ..
   ! .. Statement Function definitions ..
@@ -133,13 +130,9 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   ! ..
 
   ! .....-----------------------------------------------------------------
-  !if ((iwr==1) .and. (t_inc%i_write>0)) write (1337, fmt=9, igd, ixlf, iex, &
-  !  xlf='', 14 i2, f10.4) ipw, ipg, ivg, ip9, igd, ixlf, iex, xlf
   iwr = 0
 
   ist = ist1
-  ! write(6,*) 'ndvpt ist mesh dx drdi2' ,ndvpt,ist,mesh,dx,
-  ! &            drdi2(ist)
 
   if (ndvpt<3 .or. ndvpt>6) then
     write (6, fmt=120) ndvpt

@@ -191,7 +191,11 @@ DO i1 = 1,naez
         expbsq = EXP(beta*beta/4.0D0)
         dqdotg = dq1*g1 + dq2*g2 + dq3*g3
         
-        bfac = fpi*EXP(ci*dqdotg)/(ga*ga*expbsq*vol)
+        if (expbsq>1e+15_dp) then
+          bfac = 0.0_dp
+        else
+          bfac = fpi*EXP(ci*dqdotg)/(ga*ga*expbsq*vol)
+        end if
         
         DO l = 0,lmx
           DO m = -l,l

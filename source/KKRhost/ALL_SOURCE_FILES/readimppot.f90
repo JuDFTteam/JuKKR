@@ -42,7 +42,6 @@ subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, &
   integer :: i, ia, icell, icore, ifun, ih, imt1, inew, io, ipan1, ir, irc1, &
     iri, irminm, irminp, irns1p, irt1p, irws1, isave, ispin, isum, j, lm, lm1, &
     lmpot, lmpotp, n, ncell, nfun, nr
-  logical :: test
   ! ..
   ! .. Local Arrays ..
   real (kind=dp) :: drn(irid, natomimp), scale(1), u(irmd), &

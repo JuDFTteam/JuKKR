@@ -1182,7 +1182,7 @@ contains
    subroutine bcast_t_params_scalars(t_params)
       ! broadcast scalar parameters, deal with arrays later
       use mpi
-      use mod_mympi, only: master, myrank
+      use mod_mympi, only: master
 
       implicit none
 
@@ -1519,7 +1519,7 @@ contains
    subroutine bcast_t_params_arrays(t_params)
       ! broadcast arrays from t_params
       use mpi
-      use mod_mympi, only: master, myrank
+      use mod_mympi, only: master
       implicit none
 
       type(type_params), intent(inout) :: t_params
@@ -2429,7 +2429,6 @@ contains
 #ifdef CPP_MPI
       use mpi
 #endif
-      use mod_mympi, only: myrank
       implicit none
 
       type(type_params), intent(in) :: t_params
@@ -2523,9 +2522,6 @@ contains
       character(len=10), intent(inout) :: SOLVER   !< Type of solver
       character(len=80), intent(inout) :: TMPDIR
 
-#ifdef CPP_MPI
-      integer :: ierr
-#endif
 
       NSRA    = t_params%NSRA
       INS     = t_params%INS

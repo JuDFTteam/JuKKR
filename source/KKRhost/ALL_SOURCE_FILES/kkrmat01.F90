@@ -135,7 +135,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NSYMAXD) :: WORK
    integer :: IERR,IWORK
 !#endif
-   integer :: mu, nscoef, imin, ie
+   integer :: mu, nscoef, imin
    integer, allocatable :: iatomimp(:)
    
    real (kind=dp), allocatable :: rhoq_kmask(:,:) ! only in reduced number of kpts

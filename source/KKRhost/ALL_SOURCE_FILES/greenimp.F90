@@ -3,14 +3,7 @@ module mod_greenimp
 contains
 
 SUBROUTINE greenimp(natomimp,dtmtrx,e)
-#ifdef CPP_MPI
-use mpi
-use mod_mympi, only: myrank, master, nranks, distribute_linear_on_tasks
-#else
-use mod_mympi, only: myrank, master, nranks
-#endif
 use mod_version_info
-use mod_wunfiles, only: t_params
 use global_variables
       Use mod_datatypes, Only: dp
 

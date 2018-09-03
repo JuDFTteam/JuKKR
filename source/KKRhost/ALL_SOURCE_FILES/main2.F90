@@ -83,7 +83,7 @@ contains
       integer :: LMAXD1
       integer :: LSMEAR
       integer :: LRECABMAD
-      integer :: ierr,i_stat,i_all
+      integer :: i_stat,i_all
       integer :: I,J,IE,I1,I2,IH,IT,IO,LM,IR,IREC
       real (kind=dp) :: DF
       real (kind=dp) :: RV
