@@ -28,7 +28,7 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ../ )
 # we define some compiler flags
 if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
     set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mkl -lmkl_sequential")
-    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox -diag-disable=63")
     if(ENABLE_COV)
         set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -prof-gen:srcpos")
     endif()
