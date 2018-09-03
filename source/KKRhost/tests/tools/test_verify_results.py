@@ -203,7 +203,7 @@ class Test_features():
         standard_verify(path0, rms_threshold=8*10**-8, rms_threshold_end=8*10**-8)
 
     def test_16_Dirac(self):
-        path0 = 'test_run16_hybrid_1_3/'
+        path0 = 'test_run16_serial_1_1/'
         standard_verify(path0, rms_threshold=7*10**-8, rms_threshold_end=7*10**-8)
 
     def test_17_lambda_xc(self):

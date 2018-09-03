@@ -26,21 +26,27 @@ test_systems = ['test_run%0.2i'%(i) for i in range(1,20)]
 # key is the test_coverage that enters as input via sys.argv command line argument
 test_coverages = {1:[0], 2:[1], 3:[2], 4:[3], 5:[4], 6:[5], 7:[6], 8:[7], 12:[11], 14:[13], 15:[14], 16:[15], 17:[16], 18:[17]}
 
-# use mpi only if test_coverage option is set to negative value
+# check for SOC run and change test_coverage automatically
 if test_coverage<-1000:
     SOCrun = True
     test_coverage+=1000
 else:
     SOCrun = False
+
+# use mpi only if test_coverage option is set to negative value
 if test_coverage<0:
     modes = ['hybrid']
     npara_pairs = [[1,2], [1,4]]
     if test_coverage in [-12]:
         npara_pairs = [[1,8]]
         modes = ['mpi']
+    # for FERMIOUT option nranks<=natom is needed
     if test_coverage -6:
-        # for FERMIOUT option nranks<=natom needed
         npara_pairs = [[1,3]]
+    # for Dirac at the moment nranks==1 is needed
+    if test_coverage -16:
+        npara_pairs = [[1,1]]
+        modes = ['serial']
     test_coverage = -test_coverage
 
 # loop over all combinations
