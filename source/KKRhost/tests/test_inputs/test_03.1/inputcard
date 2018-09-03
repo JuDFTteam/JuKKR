@@ -2,7 +2,7 @@
 RUNOPT 
 full invLLOYD   NEWSOSOL...     ...
 TESTOPT
-NOSOC
+MPIatom NOSOC
 
 +-------+-------+-------+-------+-------+
   LMAX=2    NSPIN=2   NATYP=4 
@@ -39,6 +39,7 @@ EMIN      EMAX       TEMPR      NPOL      NPT1    NPT2     NPT3
 BZDIVIDE= 10 10 10 
 ----------------------------------------------------------------------
 NSTEPS     IMIX    STRMIX       FCM       QBOUND    BRYMIX      ITDBRY
+ 1          5      0.020        20.0      1.D-8      0.02        20
  2          5      0.020        20.0      1.D-8      0.02        20
 ----------------------------------------------------------------------
 Parameters for ewald sums

@@ -45,10 +45,12 @@ test:intel:
  ## 1.2 production versions
 
 ## 1.1 debug versions ##
-#build:gnu:debug:
-#  stage: build
-#  script:
-#    - mkdir build_gfortran_debug && cd build_gfortran_debug && cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug .. && make -j4
+build:gnu:debug:
+  stage: build
+  script:
+    - mkdir build_gfortran_debug && cd build_gfortran_debug
+    - FC=/opt/gcc8/bin/gfortran cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4
 
 build:intel:debug:
   stage: build

@@ -84,6 +84,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   data tol/1.d-7/
   data tol2/1.d-7/
 
+  logical, external :: OPT
 
   ! ------------------------------------------------------------------------
   write (1337, *) '>>> CLSGEN_TB: generation of cluster coordinates'
@@ -444,14 +445,16 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
   end do
 
 ! ----------------------------------------------------------------------
-! output coupling matrix to file                              ! GODFRIN
-  open(file='couplings.dat',unit=123456,status='replace')     ! GODFRIN
-  write(123456,'("# Couplings between atoms via gref")')      ! GODFRIN
-  write(123456,'(i8)') naez                                   ! GODFRIN
-  do ia=1,naez                                                ! GODFRIN
-    write(123456,'(1000i1)') icouplmat(ia,1:naez)             ! GODFRIN
-  end do                                                      ! GODFRIN
-  close(123456)                                               ! GODFRIN
+  if (opt('godfrin ')) then
+    ! output coupling matrix to file                            ! GODFRIN
+    open(file='couplings.dat',unit=123456,status='replace')     ! GODFRIN
+    write(123456,'("# Couplings between atoms via gref")')      ! GODFRIN
+    write(123456,'(i8)') naez                                   ! GODFRIN
+    do ia=1,naez                                                ! GODFRIN
+      write(123456,'(1000i1)') icouplmat(ia,1:naez)             ! GODFRIN
+    end do                                                      ! GODFRIN
+    close(123456)                                               ! GODFRIN
+  end if
 ! ----------------------------------------------------------------------
 
   if (linterface) then

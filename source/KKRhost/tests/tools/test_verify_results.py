@@ -260,7 +260,7 @@ class Test_SOC():
               assert set(text)-set(text_ref)==set()
 
     def test_5_kkrflex(self):
-        paths = ['test_run05_hybrid_1_3/']
+        paths = ['test_run05.1_hybrid_1_3/']
         path0 = 'test_inputs/test_05.1/ref/'
         # compare kkrflex_* files of different runs with reference (in path0)
         for path in paths:
@@ -268,7 +268,7 @@ class Test_SOC():
            for fname in files:
               num, text = read_file(path+fname)
               num_ref, text_ref = read_file(path0+fname)
-              assert std(num-num_ref)<10**-10
+              assert std(num-num_ref)<10**-8
               assert set(text)-set(text_ref)==set()
 
     def test_6_FERMIOUT(self):
@@ -386,13 +386,14 @@ def read_file(path):
    numbers, text = [], []
    for line in txt:
        # replace D+XX by e+XX for be able to read numbers in python
-       line = line.replace('D', 'e')
-       if line[0] != '#':
-          for i in line.split():
-             try:
-               tmp = float(i)
-               numbers.append(tmp)
-             except:
-               text.append(i)
+       line = line.replace('D', 'e').replace('\n','')
+       if len(line)>0:
+          if line[0] != '#':
+             for i in line.split():
+                try:
+                  tmp = float(i)
+                  numbers.append(tmp)
+                except:
+                  text.append(i)
    return array(numbers), text
 
