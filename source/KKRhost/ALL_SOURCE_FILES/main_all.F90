@@ -109,6 +109,16 @@ program kkrcode
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< start KKR with main0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+  ! full Dirac works only in serial at the moment
+  if (KREL>0 .and. nranks>1) then
+    if (myrank==master) write(*,*) 'Dirac solver does not work with MPI. Please run serially'
+#ifdef CPP_MPI
+    call MPI_Barrier(MPI_COMM_WORLD, ierr)
+    call MPI_Finalize(ierr)
+#endif
+    stop
+  end if
+
 
   ! without MPI (serial or openMP) something goes wrong if if files are not written out
   ! this seems to be only the case with the old solver
@@ -311,6 +321,7 @@ program kkrcode
        if(.not. OPT('WRTGREEN') .and. myrank==master) write(*,*) 'done with WRTGREEN step'
        if(myrank==master) write(*,*) 'Stop after main1b'
 #ifdef CPP_MPI
+        call MPI_Barrier(MPI_COMM_WORLD, ierr)
         call MPI_Finalize(ierr)
 #endif
        stop
@@ -326,6 +337,7 @@ program kkrcode
        if(.not. OPT('qdos    ') .and. myrank==master) write(*,*) 'done with qdos steps'
        if(myrank==master) write(*,*) 'Stop after main1c'
 #ifdef CPP_MPI
+        call MPI_Barrier(MPI_COMM_WORLD, ierr)
         call MPI_Finalize(ierr)
 #endif
        stop
