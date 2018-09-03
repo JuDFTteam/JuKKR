@@ -54,9 +54,9 @@ contains
       use mod_types, only: gather_tmat, t_mpi_c_grid, save_t_mpi_c_grid,   &
                            get_ntot_pT_ioff_pT_2D
 #endif
-      use mod_mympi, only: myrank, nranks, master
+      use mod_mympi, only: myrank, master
 #ifdef CPP_MPI
-      use mod_mympi, only: find_dims_2d,distribute_linear_on_tasks,  &
+      use mod_mympi, only: nranks, find_dims_2d,distribute_linear_on_tasks,  &
                            mympi_main1c_comm,mympi_main1c_comm_newsosol2
 #endif
       use mod_wunfiles
@@ -78,9 +78,9 @@ contains
       integer :: ITMPDIR
       integer :: NSPINPOT
 
-      integer :: i1_start, i1_end,i_stat,i_all
+      integer :: i1_start, i1_end,i_stat
       integer :: ie_start, ie_end, ie_num
-      integer :: L,I1,IE,IR,IS,LM,IQ,ierr,IPOT
+      integer :: L,I1,IE,IR,IS,LM,IQ,IPOT
       integer :: ICELL,IPOT1,ISPIN,IHOST,ILTMP
       real (kind=dp) :: DENEF
       real (kind=dp) :: CHRGSEMICORE
@@ -156,6 +156,7 @@ contains
       ! MPI parameters
       !-------------------------------------------------------------------------
 #ifdef CPP_MPI
+      integer :: ierr, i_all
       integer :: ntot1
       integer :: ihelp
       integer :: idim, nranks_local, myrank_ie_tmp

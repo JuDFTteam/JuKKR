@@ -16,7 +16,7 @@ contains
 subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNSD,NFUND,  &
    IHOST,NTOTD,NSPIN,LMPOT,NCHEB,LMMAXD,KORBIT,NSPOTD,IELAST,IRMIND,NPAN_EQ,NPAN_LOG,      &
    NATOMIMP,C,R_LOG,IPAN,IRMIN,HOSTIMP,IPANIMP,IRWSIMP,ATOMIMP,IRMINIMP,       &
-   ICLEB,IRCUT,IRCUTIMP,ZAT,ZIMP,R,CLEB,RIMP,RCLSIMP,E,VM2ZIMP,VINSIMP,   &
+   ICLEB,IRCUT,IRCUTIMP,ZAT,ZIMP,RMESH,CLEB,RIMP,RCLSIMP,E,VM2ZIMP,VINSIMP,   &
    DTMTRX, LMMAXSO)
 
 #ifdef CPP_MPI
@@ -85,7 +85,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    integer, dimension(0:IPAND,NATOMIMP), intent(in)   :: IRCUTIMP
    real (kind=dp), dimension(NATYP), intent(in)     :: ZAT      !< Nuclear charge
    real (kind=dp), dimension(NATOMIMP), intent(in)  :: ZIMP
-   real (kind=dp), dimension(IRM,NATYP), intent(in)    :: R        !< Radial mesh ( in units a Bohr)
+   real (kind=dp), dimension(IRM,NATYP), intent(in)    :: RMESH    !< Radial mesh ( in units a Bohr)
    real (kind=dp), dimension(NCLEB,2), intent(in)      :: CLEB     !< GAUNT coefficients (GAUNT)
    real (kind=dp), dimension(IRM,NATOMIMP), intent(in) :: RIMP
    real (kind=dp), dimension(3,NATOMIMP), intent(in)   :: RCLSIMP
@@ -246,7 +246,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    
       ! In second step interpolate potential (gain atom by atom with NATYP==1)
       call CREATE_NEWMESH(NATYP,IRM,IPAND,IRID,NTOTD,NFUND,&
-         NCHEB,IRMDNEWD,NSPIN,R(:,:),IRMIN(:),IPAN(:),IRCUT(0:IPAND,:),    &
+         NCHEB,IRMDNEWD,NSPIN,RMESH(:,:),IRMIN(:),IPAN(:),IRCUT(0:IPAND,:),    &
          R_LOG,NPAN_LOG,NPAN_EQ,NPAN_LOG_AT(:),NPAN_EQ_AT(:),NPAN_TOT(:),  &
          RNEW(:,:),RPAN_INTERVALL(0:NTOTD,:),IPAN_INTERVALL(0:NTOTD,:),1)
    
@@ -259,7 +259,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          PHI = PHIhost(i1)
          ISPIN=1
          IPOT=NSPIN*(I1-1)+1
-         write(6,*) 'HOST',I2,I1
+         write(6,*) 'HOST',I2,I1, irmdnew(i1)
    
          ! set up the non-spherical ll' matrix for potential VLL'
          if (NSRA.EQ.2) then
@@ -505,6 +505,11 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
             enddo
          endif
       end if
+
+      ! cleanup allocation
+      i_all=-product(shape(irmdnew))*kind(irmdnew)
+      deallocate(irmdnew,stat=i_stat)
+      call memocc(i_stat,i_all,'irmdnew','tmatimp_newsolver')
    
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! END  calculate tmat and radial wavefunctions of host atoms
@@ -522,10 +527,6 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
 
    ! create new mesh before loop starts
    ! data for the new mesh
-   i_all=-product(shape(irmdnew))*kind(irmdnew)
-   deallocate(irmdnew,stat=i_stat)
-   call memocc(i_stat,i_all,'irmdnew','tmatimp_newsolver')
-
    allocate(irmdnew(natomimp), stat=i_stat)
    call memocc(i_stat,product(shape(irmdnew))*kind(irmdnew),'irmdnew','tmatimp_newsolver')
    IRMDNEWD = 0

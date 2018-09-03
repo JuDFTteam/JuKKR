@@ -36,7 +36,7 @@ program kkrcode
   use mod_save_wavefun, only: t_wavefunctions, bcast_params_savewf
   use godfrin, only: t_godfrin, bcast_params_godfrin ! GODFRIN Flaviano
 #else
-  use mod_mympi, only: mympi_init, myrank, nranks, master, MPIatom, MPIadapt
+  use mod_mympi, only: mympi_init, myrank, nranks, master
   use mod_save_wavefun, only: t_wavefunctions
 #endif
 
@@ -46,10 +46,10 @@ program kkrcode
 
   implicit none
 
-  integer :: ierr,i_stat,i_all
+  integer :: i_stat,i_all
 #ifdef CPP_MPI
   integer :: myMPI_comm_at, myMPI_comm_ie, nranks_at, myrank_at
-  integer :: myrank_ie, nranks_ie, nranks_atcomm, myrank_atcomm
+  integer :: ierr, myrank_ie, nranks_ie, nranks_atcomm, myrank_atcomm
   integer, dimension(2) :: dims
 #endif
   character(len=3) :: ctemp !name for output file

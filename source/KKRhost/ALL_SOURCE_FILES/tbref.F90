@@ -11,8 +11,8 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
 
    use mod_mympi, only: myrank, nranks, master
    use mod_types, only: t_tgmat, t_lloyd, t_inc
-#ifdef CPP_MPI
    use mod_types, only: t_mpi_c_grid, init_tgmat, init_tlloyd
+#ifdef CPP_MPI
    use mpi
    use mod_mympi, only: myrank, nranks, master,find_dims_2d,distribute_linear_on_tasks
 #endif
@@ -138,20 +138,28 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
    ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 
-     t_mpi_c_grid%ntot2=ie_end   !t_mpi_c_grid%dims(1)
-     if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. allocated(t_mpi_c_grid%ioff_pT2))) then 
-        allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1), t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1))
-     end if
-     t_mpi_c_grid%ntot_pT2 = ntot_pT
-     t_mpi_c_grid%ioff_pT2 = ioff_pT
-
-     ! now initialize arrays for tmat, gmat, and gref
-     call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
-     if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+   t_mpi_c_grid%ntot2=ie_end   !t_mpi_c_grid%dims(1)
+   if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. allocated(t_mpi_c_grid%ioff_pT2))) then 
+      allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1), t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1))
+   end if
+   t_mpi_c_grid%ntot_pT2 = ntot_pT
+   t_mpi_c_grid%ioff_pT2 = ioff_pT
 #else
    ie_start = 0
    ie_end = IELAST
+
+   if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. allocated(t_mpi_c_grid%ioff_pT2))) then
+      allocate(t_mpi_c_grid%ntot_pT2(1),stat=i_stat)
+      allocate(t_mpi_c_grid%ioff_pT2(1),stat=i_stat)
+   endif
+   t_mpi_c_grid%ntot2      =IELAST
+   t_mpi_c_grid%ntot_pT2   = IELAST
+   t_mpi_c_grid%ioff_pT2   = 0
 #endif
+
+   ! now initialize arrays for tmat, gmat, and gref
+   call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+   if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
 
    do ie_num = 1,ie_end
       IE = ie_start+ie_num

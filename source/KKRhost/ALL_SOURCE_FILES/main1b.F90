@@ -1307,7 +1307,7 @@ contains
 
             ! find DTMTRX (written out for IELAST==1), parallelized with
             ! mpi over atoms
-            call TMATIMP_NEWSOLVER(IRMD,NSRA-1,t_params%LMAX,t_params%IEND, &
+            call TMATIMP_NEWSOLVER(t_params%IRM,NSRA-1,t_params%LMAX,t_params%IEND, &
                t_params%IRID,t_params%LPOT,t_params%NATYP,t_params%NCLEB,  &
                t_params%IPAND,t_params%IRNSD,t_params%NFUND,t_imp%IHOST,   &
                t_params%NTOTD,t_params%NSPIN,t_params%LMPOT,t_params%NCHEB,&
