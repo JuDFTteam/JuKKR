@@ -419,7 +419,7 @@ contains
                vjlr(:,:,icheb) = czero
                vhlr(:,:,icheb) = czero
             else
-               stop'[rllsll] mode not known'
+               stop '[rllsll] mode not known'
             end if
 
             if     (cmodesll=='1') then
@@ -454,7 +454,7 @@ contains
                vjli(:,:,icheb) = czero
                vhli(:,:,icheb) = czero
             else
-               stop'[rllsll] mode not known'
+               stop '[rllsll] mode not known'
             end if
 
             ! calculation of the J (and H) matrix according to equation 5.69 (2nd eq.)
@@ -588,14 +588,14 @@ contains
             if (cmoderll/='0') then
                if (idotime==1) call timing_start('inversion')
                call zgetrf(nplm,nplm,slv,nplm,ipiv,info)
-               if (info/=0) stop'rllsll: zgetrf'
+               if (info/=0) stop 'rllsll: zgetrf'
                call zgetrs('n',nplm,lmsize,slv,nplm,ipiv,yrll,nplm,info)
                call zgetrs('n',nplm,lmsize,slv,nplm,ipiv,zrll,nplm,info)
             end if
             if (cmodesll/='0') then
                if (directsolv==1) then
                   call zgetrf(nplm,nplm,srv,nplm,ipiv,info)
-                  if (info/=0) stop'rllsll: zgetrf'
+                  if (info/=0) stop 'rllsll: zgetrf'
                   call zgetrs('n',nplm,lmsize,srv,nplm,ipiv,yill,nplm,info)
                   call zgetrs('n',nplm,lmsize,srv,nplm,ipiv,zill,nplm,info)
                else
