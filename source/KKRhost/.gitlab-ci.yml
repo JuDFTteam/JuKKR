@@ -188,7 +188,7 @@ run:intel:multi_node_9:
     expire_in: 1 day
  
 # parallel SOC mode
-run:intel:MPIatom_SOC_7.1:
+run:intel:MPIatom_SOC_7_1:
   stage: run_parallel
   script:
     - cd tests
@@ -199,7 +199,7 @@ run:intel:MPIatom_SOC_7.1:
       - build/*dyn
     expire_in: 1 day
  
-run:intel:MPIenerg_SOC_8.1:
+run:intel:MPIenerg_SOC_8_1:
   stage: run_parallel
   script:
     - cd tests

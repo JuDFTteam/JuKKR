@@ -14,6 +14,8 @@ if len(sys.argv)>1:
 else:
     test_coverage = 0
 
+print 'test coverage input:', test_coverage
+
 # some global settings
 modes = ['omp',  'mpi', 'hybrid']  #['serial', 'omp',  'mpi', 'hybrid']
 npara_pairs = [[1,1], [1,4], [4,1], [2,2]] # first entry is OMP_NUM_THREADS second number of MPI ranks
@@ -41,13 +43,19 @@ if test_coverage<0:
         npara_pairs = [[1,8]]
         modes = ['mpi']
     # for FERMIOUT option nranks<=natom is needed
-    if test_coverage -6:
+    if test_coverage in [-6]:
         npara_pairs = [[1,3]]
     # for Dirac at the moment nranks==1 is needed
-    if test_coverage -16:
+    if test_coverage in [-16]:
         npara_pairs = [[1,1]]
         modes = ['serial']
     test_coverage = -test_coverage
+
+print 'settings:'
+print 'modes:', modes
+print 'para_pairs:', npara_pairs
+print 'testcase', array(test_systems)[test_coverages[test_coverage]]
+print 'SOCrun:', SOCrun
 
 # loop over all combinations
 for mode in modes:
