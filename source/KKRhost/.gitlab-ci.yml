@@ -550,6 +550,7 @@ verify:intel:
     - cd tests
     - pytest -v --ignore=tools/aiida_simple_test.py 
     - tar -zcvf ../all_test_results.tar.gz test_run*
+  artifacts:
     paths:
       - all_test_results.tar.gz
     expire_in: 1 day
