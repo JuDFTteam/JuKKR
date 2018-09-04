@@ -117,8 +117,8 @@ subroutine mtzero(lmpot, natyp, conc, nspin, v, vbc, z, r, drdi, imt, ircut, &
 
 
     if (lsurf .and. (ih==1)) write (1337, *) 'Vacancies are ignored for VBC'
-    ! ---  > shift potential to muffin tin zero
     if (lsurf .and. (z(ih)<1.e0_dp)) cycle
+    ! ---  > shift potential to muffin tin zero
     vav0 = vav0 + conc(ih)*nshell(ih)*(vav1(1)+vav1(2))/2.e0_dp
     vol0 = vol0 + conc(ih)*nshell(ih)*(vol1(1)+vol1(2))/2.e0_dp
   end do

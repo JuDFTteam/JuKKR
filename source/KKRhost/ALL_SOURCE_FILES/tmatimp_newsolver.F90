@@ -15,7 +15,7 @@ contains
 !----------------------------------------------------------------------------
 subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNSD,NFUND,  &
    IHOST,NTOTD,NSPIN,LMPOT,NCHEB,LMMAXD,KORBIT,NSPOTD,IELAST,IRMIND,NPAN_EQ,NPAN_LOG,      &
-   NATOMIMP,R_LOG,IPAN,IRMIN,HOSTIMP,IPANIMP,IRWSIMP,ATOMIMP,IRMINIMP,       &
+   NATOMIMP,R_LOG,VINS,VM2Z,IPAN,IRMIN,HOSTIMP,IPANIMP,IRWSIMP,ATOMIMP,IRMINIMP,       &
    ICLEB,IRCUT,IRCUTIMP,ZAT,ZIMP,RMESH,CLEB,RIMP,RCLSIMP,ERYD,VM2ZIMP,VINSIMP,   &
    DTMTRX, LMMAXSO)
 
@@ -90,6 +90,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    real (kind=dp), dimension(3,NATOMIMP), intent(in)   :: RCLSIMP
    complex (kind=dp), intent(in) :: ERYD
    ! .. In/Out variables
+   real (kind=dp), dimension(IRM,NSPIN*NATYP), intent(inout) :: VM2Z
+   real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPIN*NATYP), intent(inout) :: VINS
    real (kind=dp), dimension(IRM,NSPIN*NATOMIMP), intent(inout) :: VM2ZIMP
    real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPIN*NATOMIMP), intent(inout) :: VINSIMP
    complex (kind=dp), dimension((KORBIT+1)*LMMAXD*NATOMIMP,(KORBIT+1)*LMMAXD*NATOMIMP), intent(inout) :: DTMTRX
@@ -243,11 +245,22 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       allocate(VINSNEW(IRMDNEWD,LMPOT,NSPOTD),stat=i_stat) !NSPIND*max(NATYP,NATOMIMP)))
       call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','tmatimp_newsolver')
    
-      ! In second step interpolate potential (gain atom by atom with NATYP==1)
       call CREATE_NEWMESH(NATYP,IRM,IPAND,IRID,NTOTD,NFUND,&
          NCHEB,IRMDNEWD,NSPIN,RMESH(:,:),IRMIN(:),IPAN(:),IRCUT(0:IPAND,:),    &
          R_LOG,NPAN_LOG,NPAN_EQ,NPAN_LOG_AT(:),NPAN_EQ_AT(:),NPAN_TOT(:),  &
          RNEW(:,:),RPAN_INTERVALL(0:NTOTD,:),IPAN_INTERVALL(0:NTOTD,:),1)
+
+      !in second step interpolate potential (gain atom by atom with NATYPD==1)
+      call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATYP,IPAND,lmpot,NSPOTD, &
+         NTOTD,IRMDNEWD,                                      &
+         NSPIN,RMESH(:,:),IRMIN(:),              &
+         t_params%IRWS(:),                                        &
+         IRCUT(0:IPAND,:),                               &
+         VINS(IRMIND:IRM,1:LMPOT,:),                   &
+         VM2Z(:,:),NPAN_LOG_AT(:),         &
+         NPAN_EQ_AT(:),NPAN_TOT(:),                &
+         RNEW(:,:),                                &
+         IPAN_INTERVALL(0:NTOTD,:),VINSNEW)
    
       ! calculate tmat and radial wavefunctions of host atoms
       ! parallelized with MPI over atoms
@@ -323,6 +336,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
             IRMDNEW(I1),IRMDNEW(I1),                                 &
             LMAX,LMMAXSO,1,JLK_INDEX,HLK,JLK,HLK2,                   &
             JLK2,GMATPREFACTOR)
+
          ! using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
             call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZAT(I1),ERYD, &
@@ -365,8 +379,8 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
                enddo
             enddo
          enddo
-         ! add spherical contribution of tmatrix
    
+         ! add spherical contribution of tmatrix
          if (USE_SRATRICK.EQ.1) then
             do LM1=1,(KORBIT+1)*LMMAXD
                TMATLL(LM1,LM1,I2)=TMATLL(LM1,LM1,I2)+TMATSPH(JLK_INDEX(LM1))

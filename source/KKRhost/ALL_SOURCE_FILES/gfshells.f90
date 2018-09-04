@@ -146,15 +146,15 @@ subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, &
 
     if (opt('GREENIMP') .or. opt('OPERATOR')) then
       ihost = 0
-      do i = 1, natypd
-        do j = 1, natomimp
+      outer: do i = 1, natypd
+        inner: do j = 1, natomimp
           if (atomimp(j)==i) then
             ihost = ihost + 1
             hostimp(ihost) = atomimp(j)
-            cycle
+            cycle outer
           end if
-        end do
-      end do
+        end do inner
+      end do outer
 
       ! save stuff to t_imp for later use
       t_imp%ihost = ihost

@@ -114,7 +114,7 @@ subroutine cheb2oldgrid(nrmax, nrmaxnew, lmmaxpot, rmesh, ncheb, npan_tot, &
     end do                         ! ilm=1,lmmaxpot
     deallocate (ccmatrix)          ! (CCmatrix(intsub(2,in)-intsub(1,in)+1,0:ncheb))
 
-  end do                           ! in
+  end do ! while loop
 
 end subroutine cheb2oldgrid
 

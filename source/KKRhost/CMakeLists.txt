@@ -435,7 +435,6 @@ add_executable(
     ALL_SOURCE_FILES/wrldaupot.f90
     ALL_SOURCE_FILES/wrldos.f90
     ALL_SOURCE_FILES/wrmoms.f90
-    ALL_SOURCE_FILES/wrmomssoc.f90
     ALL_SOURCE_FILES/wunfiles.F90
     ALL_SOURCE_FILES/ylag.f90
     ALL_SOURCE_FILES/ymy.f90
