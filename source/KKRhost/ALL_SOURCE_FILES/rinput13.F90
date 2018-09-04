@@ -1885,10 +1885,11 @@ contains
     end if
 
     ! reset LLY to zero if certain options are found
-    !if (opt('FERMIOUT') .or. opt('GREENIMP') .or. opt('WRTGREEN')) then
-    !   write(1337,*) 'found option FERMIOUT/WRTGREEN/GREENIMP: resetting LLY to 0'
-    !   lly = 0
-    !end if
+    ! note: WRTGREEN depends on choice of LLY or not!
+    if (opt('FERMIOUT') .or. opt('GREENIMP')) then
+       write(1337,*) 'found option FERMIOUT/GREENIMP: resetting LLY to 0'
+       lly = 0
+    end if
 
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! End accuracy parameters
