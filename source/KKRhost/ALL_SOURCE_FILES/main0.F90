@@ -871,7 +871,7 @@ contains
           close(50)                                                    ! susc
           write(*,'("       Finished reading in file emesh.dat.")')    ! susc
         else                                                           ! susc
-          stop'main0: Runflag KKRSUSC but cannot find file emesh.dat!' ! susc
+          stop 'main0: Runflag KKRSUSC but cannot find file emesh.dat!' ! susc
         end if                                                         ! susc
       end if                                                           ! susc
       !                                                                ! susc

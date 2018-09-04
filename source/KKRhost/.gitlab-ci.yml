@@ -359,6 +359,7 @@ run:intel:decimate_19:
 # . LDA+U
 # . LDA+U, SOC
 # . godfrin module
+# . other exchange-correlation potentials
 # ...
 
 ## 2.4 integration with aiida ##
