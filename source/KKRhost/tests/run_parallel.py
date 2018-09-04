@@ -48,7 +48,6 @@ if test_coverage<0:
     # for Dirac at the moment nranks==1 is needed
     if test_coverage in [-16]:
         npara_pairs = [[1,1]]
-        modes = ['serial']
     test_coverage = -test_coverage
 
 print 'settings:'
