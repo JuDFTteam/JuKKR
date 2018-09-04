@@ -14,11 +14,11 @@ subroutine inversion(gllke, invmod, icheck)
   ! INVMOD = 3  ----> godfrin module
 
   ! ------------------------------------------------------------------------
-  use global_variables
   use mod_datatypes, only: dp
+  use global_variables
   use godfrin
-   use mod_invslab
-   use mod_invsupercell
+  use mod_invslab
+  use mod_invsupercell
   implicit none
 
   complex (kind=dp) :: ci, czero, cone

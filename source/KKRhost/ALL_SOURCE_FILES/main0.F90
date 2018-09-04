@@ -645,6 +645,8 @@ contains
         call memocc(i_stat, product(shape(icheck))*kind(icheck), 'ICHECK', &
           'main0')
         icheck = 0
+        ! do not forget to update nlayerd as well!
+        nlayerd = nlayer
       end if
 
 

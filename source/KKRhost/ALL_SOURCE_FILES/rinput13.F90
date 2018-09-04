@@ -577,15 +577,6 @@ contains
       write (111, *) 'Default INTERFACE= ', linterface
     end if
 
-    ! right now only full inv is working
-    if (linterface) then
-      call addopt('full inv')
-      write(1337,*) '!!! WARNING !!!'
-      write(1337,*) 'this version supports only "full inv" at the moment, add option automatically'
-      write(*,*) '!!! WARNING !!!'
-      write(*,*) 'this version supports only "full inv" at the moment, add option automatically'
-    end if
-
     ndim = 3
     if (linterface) ndim = 2
     if (.not. linterface .and. .not. opt('SUPRCELL')) then
