@@ -406,6 +406,10 @@ run:intel:aiida-kkr:
       - celery.log
       - test_export.aiida.tar.gz
     expire_in: 2 day
+  only: 
+    - schedules
+    - triggers
+    - web
 
 ## 2.5 SOC tests ##
 run:intel:Au_bulk_SOC_1_1:
@@ -532,6 +536,10 @@ verify:intel_codecov:
     paths:
       - cov.tar.gz
     expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
 
 verify:intel:
   stage: verify
@@ -541,6 +549,10 @@ verify:intel:
     # prepare and execute verification using pytest
     - cd tests
     - pytest -v --ignore=tools/aiida_simple_test.py 
+    - tar -zcvf ../all_test_results.tar.gz test_run*
+    paths:
+      - all_test_results.tar.gz
+    expire_in: 1 day
 
 verify:intel:aiida:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
@@ -564,5 +576,9 @@ verify:intel:aiida:
     # check some output of the calculation
     - verdi import test_export.aiida.tar.gz
     - python tests/tools/aiida_check_results.py
+  only: 
+    - schedules
+    - triggers
+    - web
     
 ###############################################################################
