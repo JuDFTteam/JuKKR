@@ -46,6 +46,28 @@
 \usetikzlibrary{shapes.misc,shapes.geometric,arrows,positioning,automata, patterns}
 
 
+% ####################################################################################
+% Bibliography definitions
+% ####################################################################################
+%\usepackage[
+%    style=spphys,
+    %sorting=none,
+    %biblabel=brackets,
+    %articletitle=true,
+    %giveninits=true,
+    %maxbibnames=5,
+    %url=false,
+    %doi=false,
+    %isbn=false,
+    %backend=biber
+%]{bibtex} % Load the package with some options.
+%\AtEveryBibitem{%
+%    \clearlist{language}%
+%    \clearfield{note}%
+%} % delete some entries that are note needed in the bibliographyy
+%\addbibresource{mylit.bib} % add bibtex file
+
+
 
 % Additional Definitions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\matr}[1]{\bm{\mathit{#1}}}
@@ -76,42 +98,16 @@ Germany, \email{s.bluegel@fz-juelich.de}}
 % used in your e-mail or web address
 %
 \maketitle
-
-
 \abstract{
-%\begin{itemize}
-%	\item KKRnano
-%	\item DFT
-%	\item Magnetic textures in B20-MnGe (helical spiral, hedgehog lattice, Bloch point)
-%	\item Parallelization
-%	\item Performance analysis
-%\end{itemize}
 We present the latest version of the linear-scaling electronic structure code KKRnano, in which
 an enhanced 
 Korringa-Kohn-Rostoker (KKR) scheme is utilized to perform Density Functional Theory (DFT) calculations.
-The code allows us to treat system sizes of up to half a million atoms per unit cell and to
+The code allows us to treat system sizes of up to several thousands of atoms per unit cell and to
 simulate a non-collinear alignment of atomic spins.
 This capibility is used to investigate nanometer-sized magnetic textures in the germanide B20-\ce{MnGe},
 a material that is potentially going to play an important role in future spintronic devices.
-A subsequent performance analysis of KKRnano on Hazel Hen emphasizes the good scaling behaviour with increasing
+A performance analysis of KKRnano on Hazel Hen emphasizes the good scaling behaviour with increasing
 system size and demonstrates the extensive integration of highly optimized libraries.
-%the parallelization concept of KKRnano is discussed and
-%The electronic structure code, KKRnano, 
-%specifically designed for petaFLOP computing. 
-%Our method falls in the category of codes that scale linearly with the number of atoms,
-%so that we can realize system sizes of up to half a million atoms in a unit cell.
-%We have developed a unique electronic structure code, KKRnano, specifically designed for petaFLOP computing.
-%Our method scales linearly with the number of atoms, so that we can realize system sizes of up to half
-%a million atoms in a unit cell. Recently, we implemented a relativistic generalization of the algorithm
-%enabling the calculation of complex non-collinear magnetic structures in real space.
-%The new version of KKRnano is used to investigate the magnetic B20 germanides.
-%B20-\ce{MnGe} and B20-\ce{FeGe} 
-%as well as alloys of B20-$\ce{Mn}_{1-x}\ce{Fe}_{x}\ce{Ge}$ type with varied proportions of Mn and Ge. 
-%These compounds are well known for their exhibition of helical states.
-%The focus of our recent work is on B20-\ce{MnGe}. Here, the observation 
-%of topologically protected magnetic particles,
-%also known as skyrmions, was recently reported which
-%makes it a promising candidate for future spintronic devices.
 }
 
 \section{Introduction}
@@ -135,7 +131,7 @@ This report is structured as follows:
 In \cref{sec:methods_algorithms} we give a brief introduction on the Korringa-Kohn-Rostoker (KKR) 
 method and explain how
 linear scaling is achieved.
-Our first results on Hazel Hen for B20-\ce{MnGe} are presented in \cref{sec:mnge}.
+Our results on B20-\ce{MnGe} are presented in \cref{sec:mnge}.
 In \cref{sec:par_scheme} and \cref{sec:performance} the focus is on code-specific issues. 
 The parallelization scheme of KKRnano
 is described in detail and a performance analysis of our code on Hazel Hen is conducted.
@@ -165,10 +161,10 @@ the matrix elements $G_{LL}^{nn'} (\epsilon)$ of the Green function $G(r, r , \e
 In the following we refer to $\Delta t_{L'' L'''}^{n''} (\epsilon)$ as the $\Delta t$-matrices and
 $G_{LL''}^{r,nn''} (\epsilon)$ as the reference Green functions. We refer the reader to the existing
 literature for more details \cite{zeller_towards_2008}.
-The given problem is identical to solving a complex linear matrix equation of the form
+The problem given in \cref{eq:dyson_eq} is identical to solving a complex linear matrix equation of the form
 \begin{equation}
 	\label{eq:axb}
-	\matr{A} \vec{x} = \vec{b}
+	\matr{A} \vec{x} = \vec{b}.
 \end{equation}
 As is well known, this problem scales as $O(N^3)$, where $N$ denotes the dimension of the $N \times N$
 matrix $\matr{A}$. Standard solving schemes therefore severely limit the system size that can
@@ -187,18 +183,25 @@ behavior can be realized, and this feature should be used in any calculation inv
 In most applications the TFQMR solver accounts for the major part of the computational work.
 
 For super-large-scale calculations (above 100,000 atoms) the electrostatics solver begins
-to require an amount of computing resources that is not negligible anymore. 
+to require an amount of computing resources that is not negligible anymore \cite{brommel_juqueen_2017}. 
 The electrostatic problem is given in terms of a Poisson equation that connects electric field and potential. 
 Solving this equation scales quadratically with system size, a drawback which will be removed in the future.
 
 \section{Complex Magnetic Textures in B20-\ce{MnGe}}
 \label{sec:mnge}
-Lately, special attention has been paid to cubic B20-type compounds with broken lattice inversion symmetry,
-where skyrmion phases have been observed experimentally \cite{nagaosa_topological_2013}.
-In a recent study \cite{tanigaki_real-space_2015} it was 
-found by real-space observation transmission electron microscopy that a cubic lattice of skyrmionic hedgehogs
-and anti-hedgehogs (see \cref{fig:mnge_3q}) exists in B20-\ce{MnGe} 
+
+B20-\ce{MnGe} was identified as a good candidate material to be investigated with the new
+version of KKRnano which now contains the feature of non-collinear magnetism and spin-orbit coupling.
+In a recent study \cite{tanigaki_real-space_2015}, it was 
+found by transmission electron microscopy that 3D magnetic
+objects exist in B20-\ce{MnGe}. The authors of \cite{tanigaki_real-space_2015}
+came to the conclusion that their data indicates a
+cubic lattice of skyrmionic hedgehogs
+and anti-hedgehogs (see \cref{fig:mnge_3q}) 
 with a lattice constant of about 3-6 nm.
+The singularity at the center of the texture exists only in the micromagnetic description since the
+atomic magnetic moment of the atom, which is located at the center,
+remains finite \cite{feldtkeller_continuous_2017}.
 \begin{figure}[htb]
 	\subfloat[]{\includegraphics[width=.45\textwidth]{Figures/B20_hedgehog_antihedgehog.pdf}\label{fig:mnge_3q}}
 	\hfill
@@ -211,56 +214,96 @@ with a lattice constant of about 3-6 nm.
 	spin spiral that propagates in (001) direction. Reprinted from \cite{rybakov_new_2016} and
 	licensed under CC BY 3.0.}
 \end{figure}
-Findings by Kanazawa et al. suggest that this lattice is set up by a superposition of three orthogonal
-helical structures also referred to as 3Q state \cite{kanazawa_noncentrosymmetric_2017}. 
+Findings by Kanazawa et al. suggest that the lattice is set up by a superposition of three orthogonal
+helical structures, also referred to as 3Q state \cite{kanazawa_noncentrosymmetric_2017}. 
+Here, the local magnetization is determined by the provision
+\beq
+\label{eq:3q_formula}
+\vec{M}(\vec{r}) =
+\begin{pmatrix}
+	\sin{qy} + \cos{qz} \\
+	\sin{qz} + \cos{qx} \\
+	\sin{qx} + \cos{qy}
+\end{pmatrix},
+\eeq
+where $q=\frac{2\pi}{\lambda}$ is the wavenumber given in terms of the helical wavelength $\lambda$ and
+$x$, $y$ and $z$ are the spatial coordinates within the unit cell.
+Note, that $\vec{M}(\vec{r})$ is not normalized.
+In contrast to other systems exhibiting a
+similar magnetic phase, the rather short helical wavelength in B20-\ce{MnGe} allows one to perform
+Density Functional Theory (DFT) 
+calculations with KKRnano.
+B20-\ce{MnGe} is currently the subject of extensive
+investigation
+\cite{kanazawa_large_2011,kanazawa_possible_2012,grigoriev_chiral_2013,tanigaki_real-space_2015,martin_magnetic_2016}.
+This is mainly inspired by the discovery of skyrmions as small information-carrying particles
+that could potentially be used in spintronic devices \cite{fert_magnetic_2017}.
+However, no large-scale DFT calculation seems to have been performed, yet.
+At present there is a lack of a convincing explanation
+of what is observed in experiment. Research in the framework of micromagnetic models identified both
+magnetic frustration (RKKY interaction) as well as spin-orbit coupling induced Dzyaloshinskii-Moriya (DM)
+interaction as potentially crucial to a better
+understanding \cite{altynbaev_hidden_2016,koretsune_control_2015}. 
 While the 3Q state certainly constitutes the most interesting non-trivial magnetic texture 
-in B20-\ce{MnGe} there are also reports that the magnetic ground state in this system is
-actually a helical spiral (see \cref{fig:mnge_spiral}) \cite{yaouanc_magnetic_2017}.
-These two observations are clearly contradictory and it was not yet explained how
-both can be made within the same material.
-Therefore, we performed
-an analysis of these two helical states and the trivial ferromagnetic (FM) state.
-The ferromagnet was identified as the ground state in the small unit cell (8 atoms), 
-in which 1Q and 3Q state with their wavelengths of
-3-6 nm do not fit.
+in B20-\ce{MnGe}, there are also reports that the magnetic ground state in this system is
+actually a helical spiral (see \cref{fig:mnge_spiral}) \cite{yaouanc_magnetic_2017} which was observed up
+to a temperature of 170 K \cite{makarova_neutron_2012}.
+These two observations are clearly contradictory and it has not yet been explained how
+both can coexist within the same material.
+The helical spin spiral in B20-\ce{MnGe} forms along the (001) direction and therefore the magnetization
+is described by the relation
+\beq
+\label{eq:1q_spiral}
+\vec{M}(\vec{r}) =
+\begin{pmatrix}
+	 \cos{qz} \\
+	-\sin{qz}  \\
+	0
+\end{pmatrix}
+.
+\eeq
+In the following, we refer to this as the 1Q state.
 
-We commenceour investigations by setting up a 6x6x6 B20-\ce{MnGe} supercell (1728 atoms), where we use PBEsol 
+We commence our investigations by considering a 6x6x6 B20-\ce{MnGe} supercell (1728 atoms), where we use PBEsol 
 as exchange-correlation functional
 and include only a single k-point, i.e. the $\Gamma$-point.
-In this initial comparison of the ferromagnetic, 1Q and 3Q states using the equilibrium lattice constant
-$a=4.80$ \AA \,, the ferromagnet is predicted to be the ground state.
-As this contradicts experimental observations we take into consideration that
+In this initial comparison of ferromagnetic (FM), 1Q and 3Q state the respective states are imposed on
+the system by forcing the atomic exchange-correlation B-fields
+to point into specific directions. 
+For the equilibrium lattice constant
+$a=4.80$ \AA, the ferromagnet is the state with the lowest total energy.
+As this contradicts experimental observations, we take into consideration that
 in experiment the crystal structure might inadvertently differ from the ideal structure.
-Such discrepancies can be caused, e.g. by strain.
-Therefore, it is reasonable to check whether a material's properties change, when the
+Such discrepancies can for instance be caused by strain that 
+originates from the manufacturing process of the sample.
+Therefore, it is reasonable to check whether a material's magnetic properties change, when the
 lattice constant is varied.
 \begin{figure}[htb]
-\begin{center}
- \includegraphics[width=\textwidth]{Figures/kkrnano_ferro_1q/MnGe_ferro_1q.pdf}
-\end{center}
-\caption{
-	Comparison of Ferromagnetic (FM), helical spiral (1Q) and hedgehog lattice (3Q) state with KKRnano.
-	Top: Difference of total energies with the FM state as reference state for different lattice constants. 
-	The experimental lattice constant is $a = 4.80$ \AA. 1Q and 3Q states are energetically preferable 
-	for $a > 5.0$ \AA. Bottom: Magnetic moment per Mn atom increases with lattice constant. 
-	High-spin/Low-spin transition is clearly visible between $a = 4.60$ and $a = 4.70$ \AA.
-	Experimentally, the magnetic moment is measured to be $\approx 2 \mu_{B}$.
-	}
-\label{fig:MnGe_ferro_1q}
+  \centering
+   \includegraphics[width=1.00\textwidth]{Figures/kkrnano_ferro_1q/MnGe_ferro_1q.pdf}
+	\caption{Comparison of Ferromagnetic (FM), helical spiral (1Q) and hedgehog lattice (3Q) 
+	state with KKRnano.
+	Top: Difference of total energies with the FM state as reference state for different
+	lattice constants. The experimental lattice constant is $a=4.80$ \AA. 1Q and 3Q state
+	are energetically preferable for $a > 5.0$ \AA.
+	Bottom: Magnetic moment per \ce{Mn} atom increases with lattice constant.
+	High-spin/Low-spin transition is clearly visible between $a=4.60$ and $a=4.70$ \AA.
+	Experimentally, the magnetic moment is measured to be $\approx 2 \mu_B$.}
+\label{fig:MnGe_kkrnano_comparison}
 \end{figure}
-Such a variation is performed in the upper part of \cref{fig:MnGe_ferro_1q}, where
-the total energy is evaluated for the FM, 1Q and 3Q states.
+Such a variation is performed in the upper part of \cref{fig:MnGe_kkrnano_comparison}, where
+the total energy is evaluated for FM, 1Q and 3Q state.
 Clearly, neither the 1Q nor the 3Q state constitutes the ground state,
 when the experimental lattice constant is assumed.
 Yet, by increasing or decreasing the lattice constant the energetic difference can be made
 smaller.
 We focus on an increase of the lattice constant rather than a decrease since 
-the system goes into the low-spin state below $a=4.65$ \AA \, and according to experiment
+the system goes into the low-spin state below $a=4.65$ \AA \, \cite{rosler_ab_2012} and according to experiment
 the non-trivial textures
 exist in the high-spin regime.
 A crucial transition point is found around $a=5.0$ \AA,
 where by imposing the 1Q or 3Q state the energy can be made smaller than for the ferromagnetic state.
-In general, for $a>5.0$ \AA \, both helical states are favored over the ferromagnet.
+In general, for $a>5.0$ \AA \, both helical states are favored over the ferromagnetic one.
 Obviously, an artificial increase of the lattice constant by
 $0.2$ \AA \, ($\approx 4 \%$) or more is fairly large.
 However, probes in experiment are seldom if ever perfectly clean and
@@ -271,19 +314,18 @@ lattice structure.
 An example of the possible effects of positive chemical pressure
 can be found in \ce{Co}-doped B20-\ce{FeGe} \cite{stolt_chemical_2018}. 
 Here, it was experimentally observed
-that doping can increase the melting temperature and magnetic properties of a B20 alloy.
-In the lower part of \cref{fig:MnGe_ferro_1q} the evolution of the magnetic moment
-with decreasing/increasing lattice constant is tracked.
+that doping can increase the melting temperature and change the magnetic properties of a B20 alloy.
+In the lower part of \cref{fig:MnGe_kkrnano_comparison}, the evolution of the magnetic moment
+with varying lattice constant is tracked.
 The resulting magnetic moment for the experimental lattice constant nicely falls 
 on top of the magnetic moment of approximately $2 \mu_{B}$/f.u. 
 which is reported by experimentalists \cite{yaouanc_magnetic_2017}.
-A high-spin/low-spin transition as reported in \cite{rosler_ab_2012}
-is recognizable between $a=4.60$ and $a=4.70$ \AA.
-Furthermore, the magnetic moment increases, when the lattice constant is increased.
-This is a common behaviour in DFT for metallic systems.
+Furthermore, the high-spin/low-spin transition is recognizable between $a=4.60$ and $a=4.70$ \AA.
+It can also be observed that the magnetic moment increases, when the lattice constant is increased.
+This is a common behaviour which is often observed in metallic systems.
 For larger lattice constants the magnetic moments of the three different
 magnetic textures differ more than for the smaller lattice constants.
-This could also give rise to the differences in the total energy.
+This might be connected to the observation of the differences in the total energy.
 
 We continue our investigation of B20-\ce{MnGe} by studying the influence of spin-orbit
 coupling (SOC) enhancement on the magnetic energy landscape.
@@ -291,53 +333,81 @@ An advantage of the way SOC is implemented in KKRnano is that
 its contribution is added to the scalar-relativistic
 potential in a perturbation-like manner. This allows to scale its strength and make it
 artificially stronger.
-%\begin{figure}
-%	\floatbox[{\capbeside\thisfloatsetup{capbesideposition={right,top}}}]{figure}[\FBwidth]
-%{\caption{Illustration of a Bloch point with all magnetic moments pointing out of the center of the Bloch sphere.
-%	We use the same magnetic configuration but invert the spin direction so that all moments point
-%	into the center. Figure provided by Nikolai Kiselev.}\label{fig:blochpoint}}
-%{\includegraphics[width=0.6\textwidth]{Figures/blochpoint.png}}
-%\end{figure}
 \begin{figure}[htb]
 	\sidecaption
 	\includegraphics[width=0.55\textwidth]{Figures/blochpoint.png}
-	\caption{Illustration of a Bloch point with all magnetic moments pointing out of
-	the center of the Bloch sphere.
+	\caption{Illustration of a Bloch point in real space with all magnetic moments
+	pointing out of the center of the Bloch sphere.
 	We use the same magnetic configuration but invert the spin direction so that all moments point
-	into the center. Figure provided by Nikolai Kiselev.}
-	\label{fig:blochpoint}
+	into the center. Figure provided by Nikolai Kiselev.
+	}
+	\label{fig:mnge_blochpoint}
 \end{figure}
-On Hazel Hen we perform a comparison of the magnetic Bloch point (BP) (see \cref{fig:blochpoint}) 
-state and the familiar ferromagnetic (FM) state
-with the same supercell size of 6x6x6 as before but with a denser k-point-mesh of 2x2x2 points.
-As exchange-correlation functional we choose LDA and keep the lattice constant fixed to $a=4.80$ \AA.
-We allow the magnetic moments to relax during the convergence process.
+In this context we perform a comparison of the Bloch point (BP) state 
+and the ferromagnetic (FM) state.
+The BP texture is defined by means of the four spherical parameters $\phi$, $\theta$, 
+$\Phi$ and $\Theta$.
+$\phi$ and $\theta$ designate the position of an \textbf{individual atom} in the unit cell
+which is described by the radius $r$ and the common polar and azimuthal angle
+\beq
+\phi = \arctan{\left(y/x\right)}
+\eeq
+and
+\beq
+\theta = \arccos{\left( \frac{z}{\sqrt{x^2+y^2+z^2}} \right)}.
+\eeq
+The BP texture does not depend on $r$ and we can therefore neglect it in the following.
+Usually, the atomic positions are given in the Cartesian coordinates $x,y$ and $z$.
+In the definition above, we define the origin of the coordinate system, i.e. the tuple $(x=0, \, y=0, \, z=0)$,
+to be at the center of the unit cell.
+In this frame of reference, all atoms that lay in an x-y-plane that intersects with the center
+are described by $\theta=\pi/2$.
+The orientation of the \textbf{individual atomic magnetic moments} for a BP texture is then defined 
+by the polar angle
+\beq
+\Phi = \phi + \phi_{1}
+\eeq
+and the azimuthal angle
+\beq
+\Theta = 2 \arctan{\left(\cot{\frac{\theta}{2}} \right)},
+\eeq
+where the angles designating the atomic position enter as arguments. $\phi_{1}$ is a phase factor.
+An illustration of a BP is given in \Cref{fig:mnge_blochpoint}. Note, that in contrast to
+that illustration we conduct our investigation for a BP with $\phi_{1}=\pi$, where magnetic moments
+are inverted, i.e. all moments point into instead of out of the center.
+\\
+For our calculations we
+again use a 6x6x6 supercell but this time with a 2x2x2 k-point-mesh and LDA as
+exchange-correlation functional. Here, LDA is used because it has been used extensively in all KKR codes
+in the past and 
+we want to eliminate the possibility of numerical problems that could occur when SOC is artificially enhanced.
+The magnetic moments are allowed to relax during the convergence process.
 This leads to a small canting of the moments which is a known effect in
 B20 materials \cite{chizhikov_multishell_2013}.
-A series of calculations is conducted ranging from an SOC that is not altered, i.e. $f_{\text{SOC}}=1.0$ to
-an enhancement of the SOC potential by a
-factor of $f_{\text{SOC}}=4.0$ (see \cref{fig:MnGe_ferro_bp_socscale}).
-\begin{figure}[htb]
-\begin{center}
- \includegraphics[width=\textwidth]{Figures/kkrnano_MnGe_ferro_bp_socscale/MnGe_ferro_bp.pdf}
-\end{center}
-\caption{Effect of increased SOC on B20-\ce{MnGe} in a 6x6x6 supercell.
-	Top: Total energy difference between (relaxed) Bloch point and ferromagnet per formula unit.
-	Bottom: Magnetic moment per formula unit of ferromagnet and Bloch point state.
-	}
-\label{fig:MnGe_ferro_bp_socscale}
+\begin{figure}[!htb]
+  \centering
+   \includegraphics[width=1.00\textwidth]{Figures/kkrnano_ferro_bp_socscale/MnGe_ferro_bp.pdf}
+	\caption{Effect of increased SOC on B20-\ce{MnGe} in a 6x6x6 supercell.
+	Top: Total energy difference between (relaxed) Bloch point and (relaxed) ferromagnet.
+	Bottom: Magnetic moment of ferromagnet and Bloch point state.}
+\label{fig:MnGe_kkrnano_comparison_bp}
 \end{figure}
-As can be expected from the comparison of non-trivial magnetic textures 
-in \cref{fig:MnGe_ferro_1q}, where $f_{\text{SOC}}=1.0$, 
+A series of calculations is conducted ranging from the physical value of the SOC 
+to
+an enhancement of it by a
+factor of $f_{\text{SOC}}=4.0$ (see \cref{fig:MnGe_kkrnano_comparison_bp}).
+As could be expected from the investigation of 1Q and 3Q state before,
 the BP state is energetically not preferred over the FM state for a small
-enhancement of SOC.
-When SOC is increased by $f_{\text{SOC}}=3.5$,
+scaling of SOC.
+However, when SOC is scaled further up to $f_{\text{SOC}}=3.5$,
 both states are energetically more or less equivalent.
-For $f_{\text{SOC}} \geq 3.5$ KKRnano clearly prefers the BP state over the FM state with
+Above $f_{\text{SOC}}=3.5$ the BP state is clearly preferred over the FM state with
 an energy difference of up to 4 meV/f.u.
-The most beneficial scaling value is found to be $f_{\text{SOC}}=4.0$.
+Within the parameter range that we checked in this study,
+the most beneficial scaling value for the BP is found to be $f_{\text{SOC}}=4.0$.
 The effect of SOC scaling on the magnetic moment can be deemed negligible. Over the whole
-range it decreases by 0.07 $\mu_{B}$ for each of the two states.
+range it decreases by 0.07 $\mu_{B}$ for each of the two states
+(see again \cref{fig:MnGe_kkrnano_comparison_bp}).
 It would be interesting to check whether a global minimum of $E_{\text{BP}}-E_{\text{FM}}$ can
 be found for $f_{\text{SOC}} > 4.0$. This would hint to an optimal
 scaling at which also other non-collinear magnetic textures, e.g. 1Q spin spiral or
@@ -346,9 +416,64 @@ However, this is not possible as our method becomes increasingly numerically uns
 such strong scaling factors, i.e. the total energy does not converge anymore.
 The reason for this is currently under investigation.
 
+%\begin{figure}
+%	\floatbox[{\capbeside\thisfloatsetup{capbesideposition={right,top}}}]{figure}[\FBwidth]
+%{\caption{Illustration of a Bloch point with all magnetic moments pointing out of the center of the Bloch sphere.
+%	We use the same magnetic configuration but invert the spin direction so that all moments point
+%	into the center. Figure provided by Nikolai Kiselev.}\label{fig:blochpoint}}
+%{\includegraphics[width=0.6\textwidth]{Figures/blochpoint.png}}
+%\end{figure}
+%\begin{figure}[htb]
+%	\sidecaption
+%	\includegraphics[width=0.55\textwidth]{Figures/blochpoint.png}
+%	\caption{Illustration of a Bloch point with all magnetic moments pointing out of
+%	the center of the Bloch sphere.
+%	We use the same magnetic configuration but invert the spin direction so that all moments point
+%	into the center. Figure provided by Nikolai Kiselev.}
+%	\label{fig:blochpoint}
+%\end{figure}
+%On Hazel Hen we perform a comparison of the magnetic Bloch point (BP) (see \cref{fig:blochpoint}) 
+%state and the familiar ferromagnetic (FM) state
+%with the same supercell size of 6x6x6 as before but with a denser k-point-mesh of 2x2x2 points.
+%As exchange-correlation functional we choose LDA and keep the lattice constant fixed to $a=4.80$ \AA.
+%We allow the magnetic moments to relax during the convergence process.
+%This leads to a small canting of the moments which is a known effect in
+%B20 materials \cite{chizhikov_multishell_2013}.
+%A series of calculations is conducted ranging from an SOC that is not altered, i.e. $f_{\text{SOC}}=1.0$ to
+%an enhancement of the SOC potential by a
+%factor of $f_{\text{SOC}}=4.0$ (see \cref{fig:MnGe_ferro_bp_socscale}).
+%\begin{figure}[htb]
+%\begin{center}
+% \includegraphics[width=\textwidth]{Figures/kkrnano_MnGe_ferro_bp_socscale/MnGe_ferro_bp.pdf}
+%\end{center}
+%\caption{Effect of increased SOC on B20-\ce{MnGe} in a 6x6x6 supercell.
+%	Top: Total energy difference between (relaxed) Bloch point and ferromagnet per formula unit.
+%	Bottom: Magnetic moment per formula unit of ferromagnet and Bloch point state.
+%	}
+%\label{fig:MnGe_ferro_bp_socscale}
+%\end{figure}
+%As can be expected from the comparison of non-trivial magnetic textures 
+%in \cref{fig:MnGe_ferro_1q}, where $f_{\text{SOC}}=1.0$, 
+%the BP state is energetically not preferred over the FM state for a small
+%enhancement of SOC.
+%When SOC is increased by $f_{\text{SOC}}=3.5$,
+%both states are energetically more or less equivalent.
+%For $f_{\text{SOC}} \geq 3.5$ KKRnano clearly prefers the BP state over the FM state with
+%an energy difference of up to 4 meV/f.u.
+%The most beneficial scaling value is found to be $f_{\text{SOC}}=4.0$.
+%The effect of SOC scaling on the magnetic moment can be deemed negligible. Over the whole
+%range it decreases by 0.07 $\mu_{B}$ for each of the two states.
+%It would be interesting to check whether a global minimum of $E_{\text{BP}}-E_{\text{FM}}$ can
+%be found for $f_{\text{SOC}} > 4.0$. This would hint to an optimal
+%scaling at which also other non-collinear magnetic textures, e.g. 1Q spin spiral or
+%3Q hedgehog lattice, can possibly be stabilized.
+%However, this is not possible as our method becomes increasingly numerically unstable for 
+%such strong scaling factors, i.e. the total energy does not converge anymore.
+%The reason for this is currently under investigation.
+
 \section{Parallelization Scheme of KKRnano}
 \label{sec:par_scheme}
-In order to use the full potential of modern supercomputers
+In order to use the full potential of modern supercomputers,
 KKRnano features both MPI and OpenMP parallelization. The parallelization concept is sketched in
 \cref{fig:kkrnano_parallel}.
 There are three MPI levels to parallelize over atoms,
@@ -416,8 +541,8 @@ In practice one MPI task handles 1-16 atoms.
 The reference Green functions are calculated by each task
 for the atoms it is responsible for and are then sent to other tasks that require them. 
 The reference t-matrices for the atoms inside the respective reference cluster are not communicated 
-but calculated by each task individually as it takes less time to re-compute them rather than communicating them.
-In any case the $\Delta t$-matrices of the actual systems need to be communicated.
+but calculated by each task individually as it takes less time to re-compute them compared to communicating them.
+In any case, the $\Delta t$-matrices of the actual systems need to be communicated.
 After the necessary information is distributed, the Dyson equation can be solved independently by each task.
 The calculation of the local charge density can also be conducted locally since only the diagonal
 $nn$-elements are needed for this.
@@ -429,7 +554,7 @@ the moments must be shared with all other atom tasks by means of all-to-all comm
 If the system of interest is a collinear magnet, the two spin channels can be handled by two distinct
 MPI tasks since the
 magnetic Kohn-Sham equations are separable.
-Due to the relatively small additional MPI communication effort
+Due to the relatively small additional MPI communication effort,
 this yields an almost ideal speed-up by a factor of 2 in the important
 multiple-scattering part of the calculation.
 It should be noted that in the non-collinear KKR formalism such a 
@@ -447,7 +572,7 @@ a collinear calculation.
 The requirement to calculate the Green function at different energy points offers another possibility to
 introduce a parallel level since the values of the Green function $G(\epsilon_i)$ at energy points $\epsilon_i$
 can be obtained in parallel.
-After the values are obtained the results must be distributed among the processes within
+After the values are obtained, the results must be distributed among the processes within
 the energy parallelization level to recover the full Green function at all energy points.
 Assigning one MPI task to each energy point is not a promising concept because
 of the significantly different runtimes per energy point. Especially the points closest to the
@@ -507,9 +632,9 @@ $N_{\text{cl}} (l_{\text{max}}+1)^2 \times N_{\text{tr}} (l_{\text{max}}+1)^2$,
 $b$ usually has the
 negative local $\Delta t$ as diagonal elements
 and $X$ has dimension $N_{\text{tr}} (l_{\text{max}}+1)^2 \times (l_{\text{max}}+1)^2$.
-$A$ is a matrix of blocks of size ${(l_{\text{max}}+1)}^2 \times {(l_{\text{max}}+1)}^2$
+$A$ is a matrix of blocks of size ${(l_{\text{max}}+1)}^2 \times {(l_{\text{max}}+1)}^2$,
 while $X$ and $b$ are vectors
-of such blocks. For more than a single atom per task $x$ and $b$ can also take a matrix form
+of such blocks. For more than a single atom per task, $x$ and $b$ can also take a matrix form
 with dimension $N_{\text{cl}} (l_{\text{max}}+1)^2 \times N_{\text{loc}} (l_{\text{max}}+1)^2$, where
 $N_{\text{loc}}$ is the number of atoms treated by one MPI task of the atom parallelization level.
 The corresponding linear system of equations reads
@@ -662,8 +787,8 @@ QPACE3 in J\"ulich is gratefully acknowledged.
 \end{acknowledgement}
 
 % Bibliography %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliographystyle{spmpsci}
-\bibliography{My_Library}
+\bibliographystyle{spphys}
+\bibliography{mylit}
 
 
 \end{document}
