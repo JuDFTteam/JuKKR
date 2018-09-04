@@ -519,6 +519,7 @@ contains
     txc(5) = ' GGA PBE                 #serial: ' // serialnr
     txc(6) = ' GGA PBEsol              #serial: ' // serialnr
 
+    ! choose if output of idreals is shown or not (if iprint >4 print output)
     iprint = 0
 
     open (111, file='inputcard_generated.txt') ! Write out found or assumed
@@ -1884,10 +1885,10 @@ contains
     end if
 
     ! reset LLY to zero if certain options are found
-    if (opt('FERMIOUT') .or. opt('GREENIMP') .or. opt('WRTGREEN')) then
-       write(1337,*) 'found option FERMIOUT/WRTGREEN/GREENIMP: resetting LLY to 0'
-       lly = 0
-    end if
+    !if (opt('FERMIOUT') .or. opt('GREENIMP') .or. opt('WRTGREEN')) then
+    !   write(1337,*) 'found option FERMIOUT/WRTGREEN/GREENIMP: resetting LLY to 0'
+    !   lly = 0
+    !end if
 
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! End accuracy parameters

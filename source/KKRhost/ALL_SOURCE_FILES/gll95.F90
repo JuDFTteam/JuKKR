@@ -135,8 +135,10 @@ END DO
 #ifdef CPP_HYBRID
 !$omp end do
 ! deallocate in omp parallel region
+#endif
 deallocate( gll, dgllde, stat=lm1)
 IF ( lm1 /= 0 ) STOP ' [gll13] dealloc'
+#ifdef CPP_HYBRID
 !$omp end parallel
 #endif
 IF (test('flow    ').AND.(t_inc%i_write>0)) WRITE (1337,FMT=*) 'GFREE o.k.'
@@ -179,7 +181,7 @@ DO n2 = 1,natom
   CALL zcopy(ngd1*lmgf0d,gtref,1,gref(1,nlm2),1)
 ! Now GREF =  -g*t
   IF (test('REFPOT  ').AND.(t_inc%i_write>0)) WRITE (1337,FMT=*)  &
-      n2,refpot(ABS(atom(n2)))
+      n2,refpot(ABS(atom(n2))),atom(n2)
 END DO
 
 IF (test('WAIT    ')) WRITE (6,FMT=*) 'Input I'

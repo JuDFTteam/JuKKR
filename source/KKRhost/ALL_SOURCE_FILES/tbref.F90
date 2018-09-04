@@ -303,8 +303,8 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
             ! test writeout
             do i1=0,nranks-1
                if(myrank==i1) then
-                  write(686868+myrank,*) myrank,ie,ginp
-                  !write(686868+myrank,'(2i9,200000F15.7)') myrank,ie,ginp
+                  write(686868+myrank,*) myrank,ie
+                  write(686868+myrank,'(2ES21.9)') ginp
                endif
                call MPI_BARRIER(t_mpi_c_grid%mympi_comm_ie,ierr)
             end do

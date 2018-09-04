@@ -2,6 +2,8 @@ module mod_idreals
 
 contains
 
+!< check iif entries of darry are fractions or roots of common numbers and
+!replace accordingly for hogher accuracy
 subroutine idreals(darry, narry, iprint)
   use :: mod_datatypes, only: dp
   implicit none
@@ -38,7 +40,7 @@ subroutine idreals(darry, narry, iprint)
       if (idone(i2)==0) then
         x = darry(i2)*darry(i2)*dsq
         xn = nint(x)
-        if (abs(x-xn)/dsq<tol .and. abs(xn)<eps) then
+        if (abs(x-xn)/dsq<tol .and. abs(xn)>eps) then
           if (iprint>4) write (1337, 100) abs(darry(i2)), nint(x), div
           darry(i2) = sign(1e0_dp, darry(i2))*sqrt(xn/dsq)
           idone(i2) = 1
@@ -57,7 +59,7 @@ subroutine idreals(darry, narry, iprint)
         if (idone(i2)==0) then
           x = darry(i2)*dsq
           xn = nint(x)
-          if (abs(x-xn)/dsq<tol .and. abs(xn)<eps) then
+          if (abs(x-xn)/dsq<tol .and. abs(xn)>eps) then
             if (iprint>4) write (1337, 110) abs(darry(i2)), isqr(i1), &
               abs(nint(xn)), abs(isqr(i1)*div)
             darry(i2) = xn/dsq
@@ -78,7 +80,7 @@ subroutine idreals(darry, narry, iprint)
         if (idone(i2)==0) then
           x = darry(i2)*dsq
           xn = nint(x)
-          if (abs(x-xn)/dsq<tol .and. abs(xn)<eps) then
+          if (abs(x-xn)/dsq<tol .and. abs(xn)>eps) then
             if (iprint>4) write (1337, 120) abs(darry(i2)), imul(i1), &
               abs(nint(xn)), div
             darry(i2) = xn/dsq

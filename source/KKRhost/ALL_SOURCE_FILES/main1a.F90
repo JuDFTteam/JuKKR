@@ -111,7 +111,6 @@ contains
          ITLDAU,LOPT,VTREL,BTREL,DRDIREL,R2DRDIREL,RMREL,IRMIND,LMPOTD,     &
          NSPOTD,NPOTD,JWSREL,ZREL,ITSCF,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT, NAEZ, NATYP, NREF)
 
-               nref = 1
       if ( TEST('Vspher  ') ) VINS(IRMIND:IRMD,2:LMPOTD,1:NSPOTD) = 0.D0
 
       !-------------------------------------------------------------------------

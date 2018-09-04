@@ -225,7 +225,6 @@ contains
          IQCALC,DSYMLL,INVMOD,ICHECK,SYMUNITARY,RC,CREL,RREL,SRREL,NRREL,     &
          IRREL,LEFTTINVLL,RIGHTTINVLL,VACFLAG,NOFKS,VOLBZ,BZKP,VOLCUB,WEZ,    &
          NEMBD1,LMMAXD,NSYMAXD,NSPINDD,MAXMSHD,RCLSIMP)
-               nref = 1
      
       if(test('rhoqtest')) then
          open(9889, access='direct', file='tau0_k', form='unformatted', recl=(LMMAXD*LMMAXD+1)*4) ! lm blocks

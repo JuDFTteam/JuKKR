@@ -1,9 +1,9 @@
 RUNOPT
-WRTGREENNEWSOSOLLLOYD   
+full invWRTGREENNEWSOSOLLLOYD   
 
 TESTOPT
-STOP1B  MPIatom 
-
+greffilefileverbSTOP1B  MPIatom 
+REFPOT  
 +-------+-------+-------+-------+-------+
 ALATBASIS= 6.570580354    # a = 3.477 Angstr. (in-plane lattice constant)
 NSPIN= 2

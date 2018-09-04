@@ -246,9 +246,11 @@ module mod_main0
    real (kind=dp), dimension(:), allocatable :: RMT !< Muffin-tin radius of true system
    real (kind=dp), dimension(:), allocatable :: RWS !< Wigner Seitz radius
    real (kind=dp), dimension(:), allocatable :: VREF
+   real (kind=dp), dimension(:), allocatable :: VREF_temp
    real (kind=dp), dimension(:), allocatable :: MTFAC  !< Scaling factor for radius MT
    real (kind=dp), dimension(:), allocatable :: RMTNEW !< Adapted muffin-tin radius
    real (kind=dp), dimension(:), allocatable :: RMTREF !< Muffin-tin radius of reference system
+   real (kind=dp), dimension(:), allocatable :: RMTREF_temp !< Muffin-tin radius of reference system
    real (kind=dp), dimension(:), allocatable :: RMTREFAT
    real (kind=dp), dimension(:), allocatable :: FPRADIUS !< R point at which full-potential treatment starts
    real (kind=dp), dimension(:), allocatable :: SOCSCALE !< Spin-orbit scaling
@@ -615,6 +617,16 @@ contains
          nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, &
          tleft, tright, rmtref, rmtrefat, vref, refpot, nref, rcls, rcutz, rcutxy, &
          alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprinc)
+      ! overwrite nrefd and change allocations accordingly
+      allocate(rmtref_temp(nrefd), vref_temp(nrefd))
+      rmtref_temp(:) = rmtref(:)
+      vref_temp(:) = vref(:)
+      nrefd = nref
+      deallocate(rmtref, vref)
+      allocate (rmtref(nrefd), vref(nrefd), stat=i_stat)
+      rmtref(:) = rmtref_temp(1:nref)
+      vref(:) = vref_temp(1:nref)
+      deallocate(rmtref_temp, vref_temp)
 
       ! overwrite nprincd if chosen too small
       if ( nprincd<nprinc ) then
@@ -1172,7 +1184,7 @@ contains
          NPOLSEMI,N1SEMI,N2SEMI,N3SEMI,IESEMICORE,TKSEMI,EBOTSEMI,EMUSEMI,FSEMICORE,&
          VINS,VISP,VBC,VTREL,BTREL,RMREL,DRDIREL,R2DRDIREL,ZREL,JWSREL,IRSHIFT,     &
          ITSCF,SCFSTEPS,CMOMHOST,ECORE,LCORE,NCORE,QMTET,QMPHI,QMPHITAB,QMTETTAB,   &
-         QMGAMTAB,DROTQ,NSRA,INS,NATYPD,NAEZD,NINEQ,NREFD,NSPIN,NCLS,ICST,IPAN,IRCUT,  &
+         QMGAMTAB,DROTQ,NSRA,INS,NATYPD,NAEZD,NINEQ,NREF,NSPIN,NCLS,ICST,IPAN,IRCUT,  &
          ALAT,ZAT,RMESH,DRDI,REFPOT,RMTREF,VREF,IEND,JEND,CLEB,ICLEB,ATOM,CLS,RCLS,     &
          NACLS,LOFLM,SOLVER,SOCSCL,CSCL,ICC,IGF,NLBASIS,NRBASIS,NCPA,ICPA,ITCPAMAX, &
          CPATOL,RBASIS,RR,EZOA,NSHELL,NSH1,NSH2,IJTABCALC,IJTABCALC_I,ISH,JSH,      &

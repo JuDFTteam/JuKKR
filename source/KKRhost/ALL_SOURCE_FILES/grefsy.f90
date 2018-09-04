@@ -4,12 +4,12 @@ contains
 
 subroutine grefsy13(gtmat, gmat, dgtde, lly_g0tr, ipvt, ndim, lly, lmgf0d, &
   ngd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! Solve the Dyson equation to get reference Green function
   ! Calculate also (1-gt)^-1 * d(1-gt)/dE and the trace LLY_G0TR for
   ! Lloyds formula (ported from KKRnano by Phivos Mavropoulos 11.10.2013)
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
   implicit none
   ! .. PARAMETERS ..
   complex (kind=dp) :: czero, cone
@@ -73,10 +73,10 @@ end subroutine grefsy13
 ! Obsolete, replaced by grefsy13 returning also the derivative on demand.
 
 subroutine grefsy(gtmat, gmat, ndim, lmgf0d, ngd)
-  use :: mod_datatypes, only: dp
   ! **********************************************************************
   ! * Solve the Dyson equation to get reference Green function           *
   ! **********************************************************************
+  use :: mod_datatypes, only: dp
   implicit none
   ! .. PARAMETERS ..
   complex (kind=dp) :: cone
