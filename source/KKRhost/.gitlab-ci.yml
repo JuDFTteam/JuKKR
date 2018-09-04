@@ -50,7 +50,7 @@ build:gnu:debug:
   script:
     - mkdir build_gfortran_debug && cd build_gfortran_debug
     - FC=/opt/gcc8/bin/gfortran cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug ..
-    - make -j4
+    - make -j4 VERBOSE=1 || echo 'GNU compile unsuccessful!'
 
 build:intel:debug:
   stage: build
