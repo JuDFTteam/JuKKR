@@ -37,12 +37,10 @@
 
 % Additional Packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage[version=4]{mhchem}
-\usepackage{cleveref}
+\usepackage[capitalize]{cleveref}
 \usepackage[usenames,dvipsnames]{xcolor}
 \usepackage{bm}
-\usepackage{subcaption}
-\captionsetup{compatibility=false}
-\usepackage{floatrow}
+\usepackage[caption=false]{subfig}
 \usepackage{tikz}
 \usetikzlibrary{decorations.markings}
 \usetikzlibrary{shapes.misc,shapes.geometric,arrows,positioning,automata, patterns}
@@ -50,7 +48,7 @@
 
 
 % Additional Definitions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand{\matr}[1]{\bm{#1}}  
+\newcommand{\matr}[1]{\bm{\mathit{#1}}}
 \newcommand{\beq}{\begin{equation}}
 \newcommand{\eeq}{\end{equation}}
 
@@ -67,7 +65,7 @@
 Germany \& RWTH Aachen University, 52056 Aachen, Germany, \email{m.bornemann@fz-juelich.de}
 \and Paul F. Baumeister \at  J\"ulich Supercomputing Centre, Forschungszentrum J\"ulich, 52425 J\"ulich,
 Germany, \email{p.baumeister@fz-juelich.de}
-\and Rudolf Zeller \at Institute for Advanced Simulation (IAS-3), Forschungszentrum J\"ulich, 52425 J\"ulich,
+\and Rudolf Zeller \at Institute for Advanced Simulation (IAS-1), Forschungszentrum J\"ulich, 52425 J\"ulich,
 Germany, \email{ru.zeller@fz-juelich.de}
 \and Stefan Bl\"ugel \at Peter Gr\"unberg Institute and (PGI-1) and Institute for Advanced Simulation (IAS-1),
 Forschungszentrum J\"ulich, 52425 J\"ulich,
@@ -123,24 +121,22 @@ KKRnano \cite{zeller_towards_2008,thiess_massively_2012},
 specifically designed for petaFLOP computing. Our method scales linearly
 with the number of atoms, so that we can realize system sizes of up to 
 half a million atoms in a unit cell if necessary.
-\\
 Recently, we implemented a relativistic generalization of our algorithm 
 enabling us to calculate complex non-collinear magnetic structures, such as skyrmions,
 in real space. Skyrmions are two-dimensional magnetization solitons, i.e. two-dimensional
 magnetic structures localized in space, topologically protected by a non-trivial
 magnetization texture, which has particle-like properties. 
-\\
 The focus of our work is on the germanide \ce{MnGe} that is particularly
 interesting among the chiral magnetic B20 compounds, as it exhibits a three-dimensional magnetic structure
 that is not yet understood (see preliminary results
 \cite{tanigaki_real-space_2015,rybakov_new_2016,bornemann_investigation_2017}).
-\\
+
 This report is structured as follows:
-In \Cref{sec:methods_algorithms} we give a brief introduction on the Korringa-Kohn-Rostoker (KKR) 
+In \cref{sec:methods_algorithms} we give a brief introduction on the Korringa-Kohn-Rostoker (KKR) 
 method and explain how
 linear scaling is achieved.
-Our first results on Hazel Hen for B20-\ce{MnGe} are presented in \Cref{sec:mnge}.
-In \Cref{sec:par_scheme} and \Cref{sec:performance} the focus is on code-specific issues. 
+Our first results on Hazel Hen for B20-\ce{MnGe} are presented in \cref{sec:mnge}.
+In \cref{sec:par_scheme} and \cref{sec:performance} the focus is on code-specific issues. 
 The parallelization scheme of KKRnano
 is described in detail and a performance analysis of our code on Hazel Hen is conducted.
 
@@ -169,7 +165,6 @@ the matrix elements $G_{LL}^{nn'} (\epsilon)$ of the Green function $G(r, r , \e
 In the following we refer to $\Delta t_{L'' L'''}^{n''} (\epsilon)$ as the $\Delta t$-matrices and
 $G_{LL''}^{r,nn''} (\epsilon)$ as the reference Green functions. We refer the reader to the existing
 literature for more details \cite{zeller_towards_2008}.
-\\
 The given problem is identical to solving a complex linear matrix equation of the form
 \begin{equation}
 	\label{eq:axb}
@@ -190,52 +185,46 @@ and are used worldwide for many years.
 By truncating inter-atomic interactions above a certain distance, an $O(N)$ scaling 
 behavior can be realized, and this feature should be used in any calculation involving more than 1000 atoms.
 In most applications the TFQMR solver accounts for the major part of the computational work.
-\\
+
 For super-large-scale calculations (above 100,000 atoms) the electrostatics solver begins
 to require an amount of computing resources that is not negligible anymore. 
 The electrostatic problem is given in terms of a Poisson equation that connects electric field and potential. 
-Solving this equation scales quadratically with system size, a drawback which will be removed in the future. 
+Solving this equation scales quadratically with system size, a drawback which will be removed in the future.
+
 \section{Complex Magnetic Textures in B20-\ce{MnGe}}
 \label{sec:mnge}
 Lately, special attention has been paid to cubic B20-type compounds with broken lattice inversion symmetry,
 where skyrmion phases have been observed experimentally \cite{nagaosa_topological_2013}.
 In a recent study \cite{tanigaki_real-space_2015} it was 
 found by real-space observation transmission electron microscopy that a cubic lattice of skyrmionic hedgehogs
-and anti-hedgehogs (see \Cref{fig:mnge_3q}) exists in B20-\ce{MnGe} 
+and anti-hedgehogs (see \cref{fig:mnge_3q}) exists in B20-\ce{MnGe} 
 with a lattice constant of about 3-6 nm.
-\begin{figure}[!htb]
-\centering
-\begin{subfigure}[b]{0.49\textwidth}
-   \includegraphics[width=\textwidth]{Figures/helicalspiral.png}
-   \caption{}
-   \label{fig:mnge_spiral}
-\end{subfigure}
-\begin{subfigure}[b]{0.49\textwidth}
-	\includegraphics[width=\textwidth]{Figures/B20_hedgehog_antihedgehog.pdf}
-   \caption{}
-   \label{fig:mnge_3q}
-\end{subfigure}
-	\caption{Magnetic textures that are found experimentally in B20-\ce{MnGe}:  (a) Helical
-	spin spiral that propagates in (001) direction. Figure is taken from \cite{rybakov_new_2016} b) 
-	Magnetic anti-hedgehog texture that is wrapped around a magnetic monopole at the center.
-	Figure is taken from \cite{zhang_electric_2016}.}
-\label{fig:mnge_spiral_and_3q}
+\begin{figure}[htb]
+	\subfloat[]{\includegraphics[width=.45\textwidth]{Figures/B20_hedgehog_antihedgehog.pdf}\label{fig:mnge_3q}}
+	\hfill
+	\subfloat[]{\includegraphics[width=.45\textwidth]{Figures/helicalspiral.png}\label{fig:mnge_spiral}}
+	\hfill
+ \caption{Magnetic textures that are found experimentally in B20-\ce{MnGe}: (a) 
+	Magnetic anti-hedgehog texture that is wrapped around a singularity at the center.
+	Reprinted with permission from \cite{zhang_electric_2016}. Copyright 2016 by
+	the American Physical Society. (b) Helical
+	spin spiral that propagates in (001) direction. Reprinted from \cite{rybakov_new_2016} and
+	licensed under CC BY 3.0.}
 \end{figure}
 Findings by Kanazawa et al. suggest that this lattice is set up by a superposition of three orthogonal
 helical structures also referred to as 3Q state \cite{kanazawa_noncentrosymmetric_2017}. 
 While the 3Q state certainly constitutes the most interesting non-trivial magnetic texture 
 in B20-\ce{MnGe} there are also reports that the magnetic ground state in this system is
-actually a helical spiral (see \Cref{fig:mnge_spiral}) \cite{yaouanc_magnetic_2017}.
+actually a helical spiral (see \cref{fig:mnge_spiral}) \cite{yaouanc_magnetic_2017}.
 These two observations are clearly contradictory and it was not yet explained how
 both can be made within the same material.
-\\
 Therefore, we performed
 an analysis of these two helical states and the trivial ferromagnetic (FM) state.
 The ferromagnet was identified as the ground state in the small unit cell (8 atoms), 
 in which 1Q and 3Q state with their wavelengths of
 3-6 nm do not fit.
-\\
-We begin by setting up a 6x6x6 B20-\ce{MnGe} supercell (1728 atoms), where we use PBEsol 
+
+We commenceour investigations by setting up a 6x6x6 B20-\ce{MnGe} supercell (1728 atoms), where we use PBEsol 
 as exchange-correlation functional
 and include only a single k-point, i.e. the $\Gamma$-point.
 In this initial comparison of the ferromagnetic, 1Q and 3Q states using the equilibrium lattice constant
@@ -243,10 +232,9 @@ $a=4.80$ \AA \,, the ferromagnet is predicted to be the ground state.
 As this contradicts experimental observations we take into consideration that
 in experiment the crystal structure might inadvertently differ from the ideal structure.
 Such discrepancies can be caused, e.g. by strain.
-\\
 Therefore, it is reasonable to check whether a material's properties change, when the
 lattice constant is varied.
-\begin{figure}[!htb]
+\begin{figure}[htb]
 \begin{center}
  \includegraphics[width=\textwidth]{Figures/kkrnano_ferro_1q/MnGe_ferro_1q.pdf}
 \end{center}
@@ -260,13 +248,12 @@ lattice constant is varied.
 	}
 \label{fig:MnGe_ferro_1q}
 \end{figure}
-Such a variation is performed in the upper part of \Cref{fig:MnGe_ferro_1q}, where
+Such a variation is performed in the upper part of \cref{fig:MnGe_ferro_1q}, where
 the total energy is evaluated for the FM, 1Q and 3Q states.
 Clearly, neither the 1Q nor the 3Q state constitutes the ground state,
 when the experimental lattice constant is assumed.
 Yet, by increasing or decreasing the lattice constant the energetic difference can be made
 smaller.
-\\
 We focus on an increase of the lattice constant rather than a decrease since 
 the system goes into the low-spin state below $a=4.65$ \AA \, and according to experiment
 the non-trivial textures
@@ -274,7 +261,6 @@ exist in the high-spin regime.
 A crucial transition point is found around $a=5.0$ \AA,
 where by imposing the 1Q or 3Q state the energy can be made smaller than for the ferromagnetic state.
 In general, for $a>5.0$ \AA \, both helical states are favored over the ferromagnet.
-\\
 Obviously, an artificial increase of the lattice constant by
 $0.2$ \AA \, ($\approx 4 \%$) or more is fairly large.
 However, probes in experiment are seldom if ever perfectly clean and
@@ -286,47 +272,52 @@ An example of the possible effects of positive chemical pressure
 can be found in \ce{Co}-doped B20-\ce{FeGe} \cite{stolt_chemical_2018}. 
 Here, it was experimentally observed
 that doping can increase the melting temperature and magnetic properties of a B20 alloy.
-\\
-In the lower part of \Cref{fig:MnGe_ferro_1q} the evolution of the magnetic moment
+In the lower part of \cref{fig:MnGe_ferro_1q} the evolution of the magnetic moment
 with decreasing/increasing lattice constant is tracked.
 The resulting magnetic moment for the experimental lattice constant nicely falls 
 on top of the magnetic moment of approximately $2 \mu_{B}$/f.u. 
 which is reported by experimentalists \cite{yaouanc_magnetic_2017}.
-\\
 A high-spin/low-spin transition as reported in \cite{rosler_ab_2012}
 is recognizable between $a=4.60$ and $a=4.70$ \AA.
-\\
 Furthermore, the magnetic moment increases, when the lattice constant is increased.
 This is a common behaviour in DFT for metallic systems.
 For larger lattice constants the magnetic moments of the three different
 magnetic textures differ more than for the smaller lattice constants.
 This could also give rise to the differences in the total energy.
-\\
+
 We continue our investigation of B20-\ce{MnGe} by studying the influence of spin-orbit
 coupling (SOC) enhancement on the magnetic energy landscape.
 An advantage of the way SOC is implemented in KKRnano is that
 its contribution is added to the scalar-relativistic
 potential in a perturbation-like manner. This allows to scale its strength and make it
-artificially stronger. \\
-\begin{figure}
-	\floatbox[{\capbeside\thisfloatsetup{capbesideposition={right,top}}}]{figure}[\FBwidth]
-{\caption{Illustration of a Bloch point with all magnetic moments pointing out of the center of the Bloch sphere.
+artificially stronger.
+%\begin{figure}
+%	\floatbox[{\capbeside\thisfloatsetup{capbesideposition={right,top}}}]{figure}[\FBwidth]
+%{\caption{Illustration of a Bloch point with all magnetic moments pointing out of the center of the Bloch sphere.
+%	We use the same magnetic configuration but invert the spin direction so that all moments point
+%	into the center. Figure provided by Nikolai Kiselev.}\label{fig:blochpoint}}
+%{\includegraphics[width=0.6\textwidth]{Figures/blochpoint.png}}
+%\end{figure}
+\begin{figure}[htb]
+	\sidecaption
+	\includegraphics[width=0.55\textwidth]{Figures/blochpoint.png}
+	\caption{Illustration of a Bloch point with all magnetic moments pointing out of
+	the center of the Bloch sphere.
 	We use the same magnetic configuration but invert the spin direction so that all moments point
-	into the center. Figure provided by Nikolai Kiselev.}\label{fig:blochpoint}}
-{\includegraphics[width=0.6\textwidth]{Figures/blochpoint.png}}
+	into the center. Figure provided by Nikolai Kiselev.}
+	\label{fig:blochpoint}
 \end{figure}
-On Hazel Hen we perform a comparison of the magnetic Bloch point (BP) (see \Cref{fig:blochpoint}) 
+On Hazel Hen we perform a comparison of the magnetic Bloch point (BP) (see \cref{fig:blochpoint}) 
 state and the familiar ferromagnetic (FM) state
 with the same supercell size of 6x6x6 as before but with a denser k-point-mesh of 2x2x2 points.
 As exchange-correlation functional we choose LDA and keep the lattice constant fixed to $a=4.80$ \AA.
 We allow the magnetic moments to relax during the convergence process.
 This leads to a small canting of the moments which is a known effect in
 B20 materials \cite{chizhikov_multishell_2013}.
-\\
 A series of calculations is conducted ranging from an SOC that is not altered, i.e. $f_{\text{SOC}}=1.0$ to
 an enhancement of the SOC potential by a
-factor of $f_{\text{SOC}}=4.0$ (see \Cref{fig:MnGe_ferro_bp_socscale}).
-\begin{figure}[!htb]
+factor of $f_{\text{SOC}}=4.0$ (see \cref{fig:MnGe_ferro_bp_socscale}).
+\begin{figure}[htb]
 \begin{center}
  \includegraphics[width=\textwidth]{Figures/kkrnano_MnGe_ferro_bp_socscale/MnGe_ferro_bp.pdf}
 \end{center}
@@ -337,7 +328,7 @@ factor of $f_{\text{SOC}}=4.0$ (see \Cref{fig:MnGe_ferro_bp_socscale}).
 \label{fig:MnGe_ferro_bp_socscale}
 \end{figure}
 As can be expected from the comparison of non-trivial magnetic textures 
-in \Cref{fig:MnGe_ferro_1q}, where $f_{\text{SOC}}=1.0$, 
+in \cref{fig:MnGe_ferro_1q}, where $f_{\text{SOC}}=1.0$, 
 the BP state is energetically not preferred over the FM state for a small
 enhancement of SOC.
 When SOC is increased by $f_{\text{SOC}}=3.5$,
@@ -355,21 +346,18 @@ However, this is not possible as our method becomes increasingly numerically uns
 such strong scaling factors, i.e. the total energy does not converge anymore.
 The reason for this is currently under investigation.
 
-
-
 \section{Parallelization Scheme of KKRnano}
 \label{sec:par_scheme}
 In order to use the full potential of modern supercomputers
 KKRnano features both MPI and OpenMP parallelization. The parallelization concept is sketched in
-\Cref{fig:kkrnano_parallel}.
+\cref{fig:kkrnano_parallel}.
 There are three MPI levels to parallelize over atoms,
 spins and energy points. OpenMP is used in various parts of the code, mainly to parallelize important loops.
 The single-cell solver for calculations involving non-collinear magnetism
 and the
 TFQMR solver that solves the Dyson equation in \cref{eq:dyson_eq} 
 are the parts that potentially benefit the most from OpenMP.
-
-\begin{figure}[!htb]
+\begin{figure}[htb]
 \centering
 \begin{tikzpicture}[node distance=1cm]
 %	\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=orange!30]
@@ -418,7 +406,6 @@ OpenMP is used but is less significant.
 \label{fig:kkrnano_parallel}
 \end{figure}
 
-
 \subsubsection*{MPI parallelization over atoms}
 
 The most crucial MPI level in KKRnano is the one for atoms since application scenarios for KKRnano
@@ -426,7 +413,6 @@ involve the treatment of a few thousand atoms and the KKR formalism allows us to
 multiple-scattering problem locally for each atom, if the Green functions of the reference system and
 the $\Delta t$-matrices of the other scattering centers are provided (see \cref{eq:dyson_eq}).
 In practice one MPI task handles 1-16 atoms.
-\\
 The reference Green functions are calculated by each task
 for the atoms it is responsible for and are then sent to other tasks that require them. 
 The reference t-matrices for the atoms inside the respective reference cluster are not communicated 
@@ -446,7 +432,6 @@ magnetic Kohn-Sham equations are separable.
 Due to the relatively small additional MPI communication effort
 this yields an almost ideal speed-up by a factor of 2 in the important
 multiple-scattering part of the calculation.
-\\
 It should be noted that in the non-collinear KKR formalism such a 
 separation of spin channels is no longer possible because 
 there is intermixing and all operations involving the
@@ -464,14 +449,12 @@ introduce a parallel level since the values of the Green function $G(\epsilon_i)
 can be obtained in parallel.
 After the values are obtained the results must be distributed among the processes within
 the energy parallelization level to recover the full Green function at all energy points.
-\\
 Assigning one MPI task to each energy point is not a promising concept because
 of the significantly different runtimes per energy point. Especially the points closest to the
 Fermi level 
 need more TFQMR iterations.
 Therefore the energy points are split into three different groups and each group is taken care of by
 one MPI task.
-\\
 In the first iteration of the self-consistency cycle the points are equally distributed to all
 groups. At the end of the first iteration the points are regrouped depending on how much time the iteration took
 for each point. The aim is to find a grouping for which all groups of energy points are converged at
@@ -486,7 +469,6 @@ ought to be utilized and the Poisson solver is well-scaling.
 \subsubsection*{OpenMP parallelization}
 
 KKRnano can be compiled either with or without support for OpenMP.
-\\
 If it is enabled,
 loops primarily in the TFQMR solver but also in the routines that calculate the single-cell
 solutions are executed using parallel threads. 
@@ -504,7 +486,6 @@ be given. On Hazel Hen the best performance is achieved, when all threads are us
 
 Assigning multiple atoms to one MPI task is beneficial, if very large systems are
 supposed to be calculated on a comparatively small allocation of compute nodes.
-\\
 KKRnano can treat multiple atoms per atomic MPI task by using the following algebraic scheme: 
 We rewrite the Dyson equation (see \cref{eq:dyson_eq} and \cref{eq:axb}) with indices so that it reads
 \beq
@@ -521,7 +502,6 @@ within the truncation cluster of an atom are considered. This is essential to ac
 the linear-scaling of the multiple-scattering problem. 
 All quantities are expanded in spherical harmonics up to $l_{\text{max}}$, which is usually fixed to
 $l_{\text{max}}=3$.
-\\
 With these definitions we return to \cref{eq:dyson2}, where $A$ is of dimension 
 $N_{\text{cl}} (l_{\text{max}}+1)^2 \times N_{\text{tr}} (l_{\text{max}}+1)^2$,
 $b$ usually has the
@@ -542,25 +522,14 @@ where an additional index $\gamma$ is introduced that runs over $N_{\text{loc}}$
 
 \section{Performance of KKRnano on Hazel Hen}
 \label{sec:performance}
-%\begin{itemize}
-%	\item Benchmarks for 6,12,18 MnGe
-%	\item Potentially benchmarks for larger systems obtained during the workshop at HLRS
-%	\item 50 iterations in each run leads to approx. 8 hours of walltime
-%	\item Total runtimes and time consumption of multiple-scattering and other important routines
-%\end{itemize}
 
-%\begin{itemize}
-%	\item 
-%\end{itemize}
 In this section we present performance results of KKRnano that were obtained on Hazel Hen.
 A runtime analysis of the parts that are related to the specific physical problems is given
 which is followed by an overview of how much time is spent in distinct
 classes of routines, e.g. library calls and MPI communication.
-\\
 The weak-scaling benchmarks on Hazel Hen are performed for B20-\ce{MnGe} 
 with the magnetic moments being treated as
 non-collinear.
-\\
 For this, KKRnano is compiled with the Intel Fortran compiler
 with optimization level O2 and linked to the Intel Math Kernel (MKL) library which handles all BLAS calls.
 The runs are conducted with a task distribution of 24 MPI processes per node. The OpenMP threads 
@@ -570,7 +539,6 @@ and perform one self-consistency step for each system.
 We solely activate the MPI parallelization level over atoms and do not use the ones over spins and energies.
 Then, 72 and 576  nodes
 are needed for the two benchmark calculations, since each MPI task is assigned to one atom. 
-\\
 Each MPI process reads four shared binary direct-access
 files before commencing the self-consistency step.
 Two of them are index-files of the size of a few hundred kByte while the other two can grow with system size
@@ -579,7 +547,7 @@ read in is roughly $N$ $\times$ 0.5 MBytes, where $N$ is the number of atoms.
 After the single self-consistency step 
 the potential is written out. 
 This and the read-in of the four files mentioned above accounts for most of the time spent in I/O.
-\begin{figure}[!htb]
+\begin{figure}[htb]
 \begin{center}
  \includegraphics[width=1.0\textwidth]{Figures/runtime_benchmarks/MnGe_benchmarks.pdf}
 \end{center}
@@ -598,7 +566,6 @@ can be mainly attributed to Fortran direct-access I/O which does not scale well 
 The observation of an increase in total runtime for larger systems is a strong hint to this as the amount of
 file accesses is proportional to the number of MPI processes.
 The implementation of a more suitable I/O library (e.g., MPI I/O or SIONlib) is likely to solve this issue.
-\\
 The multiple-scattering solver, i.e. the TFQMR solver, 
 and the solution of the relativistic single-cell problem are
 expected to account for most of the computational work in KKRnano which 
@@ -609,21 +576,19 @@ Furthermore, it should be noted that the walltime that is needed for a single se
 that includes 1728 atoms
 takes less than five minutes which is a good value, especially when considering that
 the magnetic moments are allowed to be non-collinear.
-\\
 In the KKR formalism, the electron density and the potential are connected via the Poisson equation. 
 For very large systems the Poisson solver contributes considerably
 to the overall runtime \cite{brommel_juqueen_2017}.
 This is expected since the algorithm used in KKRnano scales
 quadratically with the number of atoms. Its impact when mid-sized systems are investigated is negligible. 
 However, there are ideas on how to restructure the Poisson solver towards a more favorable scaling behavior.
-This is planned for the near future.\\
+This is planned for the near future.
 
 Next, we conduct a performance analysis on the level of individual routines.
 The Cray Performance Tools package provides a helpful collection of tools to gather data for this purpose.
 It allows to sample the time that is spent within each routine and can therefore give a good
 picture of which routines are performance-critical and should be considered for further optimization.
-\\
-\begin{figure}[!htb]
+\begin{figure}[htb]
 \begin{center}
  \includegraphics[width=0.8\textwidth]{Figures/cray_report/MnGe_6x6x6_crayreport.pdf}
 \end{center}
@@ -647,7 +612,6 @@ to the MKL kernel.
 The \textit{USER} group accounts for all routines from the KKRnano source code, i.e. our self-written routines.
 Finally, \textit{MPI} contains all the routines that are needed for communication and synchronization
 between the MPI tasks. 
-\\
 Performing linear algebra operations accounts for almost 40 \% of the total runtime. Prior tests have shown that
 Intel's MKL outperforms Cray's LibSci and therefore KKRnano is linked to the former.
 The routines that fall into the \textit{ETC} category consume 28 \% of the total runtime. 
@@ -672,14 +636,14 @@ The high-clocked Intel Xeon processors of Hazel Hen
 make a single DFT self-consistency step for a supercell of 1728 atoms feasible within 
 less than five minutes
 to obtain results in a timely manner.
-\\
+
 During the
 \textit{Optimization of Scaling and Node-level Performance on Hazel Hen} workshop at HLRS this year we were
 given the chance to further optimize our code, where we were able to identify a computational bottleneck and
 improve the performance of KKRnano on Hazel Hen by resolving it. The bottleneck was
 connected to unnecessary copying of a large complex-valued array, when the magnetic moments are allowed to be
 non-collinear.
-All results in \Cref{sec:performance} were
+All results in \cref{sec:performance} were
 obtained with this optimized version.
 Further optimization for standard calculations with a few thousand atoms 
 is difficult since only 20 \% of the runtime is spent in hand-written code. The remaining 80 \% is spent in
