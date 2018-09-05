@@ -614,7 +614,7 @@ supposed to be calculated on a comparatively small allocation of compute nodes.
 KKRnano can treat multiple atoms per atomic MPI task by using the following algebraic scheme: 
 We rewrite the Dyson equation (see \cref{eq:dyson_eq} and \cref{eq:axb}) with indices so that it reads
 \beq
-\sum_{\mu} \sum_{L'} A^{\nu \mu}_{LL'} X^{\mu}_{L'L''} = b_{L'L''}
+\sum_{\mu} \sum_{L'} A^{\nu \mu}_{LL'} X^{\mu}_{L'L''} = b_{L'L''},
 \label{eq:dyson2}
 \eeq
 where $\nu$ and $\mu$ indicate atomic indices and $L$,$L'$ and $L''$ denote
@@ -685,7 +685,7 @@ This and the read-in of the four files mentioned above accounts for most of the 
 \end{figure}
 \Cref{fig:MnGe_6x6x6_benchmark}
 shows the total runtimes of a single self-consistency iteration and how much time is spent
-on solving the individual physical problems for the two supercells.
+on solving the individual physical problems for the two supercells containing 1728 and 13824 atoms, resepctively.
 The remaining time
 can be mainly attributed to Fortran direct-access I/O which does not scale well on a Lustre file system.
 The observation of an increase in total runtime for larger systems is a strong hint to this as the amount of
@@ -759,20 +759,21 @@ Those results are promising and suggest further investigation
 of complex magnetic textures in this particular compound.
 The high-clocked Intel Xeon processors of Hazel Hen
 make a single DFT self-consistency step for a supercell of 1728 atoms feasible within 
-less than five minutes
+less than five minutes and hence allows one
 to obtain results in a timely manner.
 
 During the
-\textit{Optimization of Scaling and Node-level Performance on Hazel Hen} workshop at HLRS this year we were
-given the chance to further optimize our code, where we were able to identify a computational bottleneck and
-improve the performance of KKRnano on Hazel Hen by resolving it. The bottleneck was
+\textit{Optimization of Scaling and Node-level Performance on Hazel Hen} workshop at HLRS in 2018 we were
+given the chance to further optimize our code and were able to identify a computational bottleneck. 
+The performance of KKRnano on Hazel Hen was significantly improved by resolving it. The encountered problem was
 connected to unnecessary copying of a large complex-valued array, when the magnetic moments are allowed to be
 non-collinear.
 All results in \cref{sec:performance} were
 obtained with this optimized version.
 Further optimization for standard calculations with a few thousand atoms 
 is difficult since only 20 \% of the runtime is spent in hand-written code. The remaining 80 \% is spent in
-library calls that are aleady highly tuned, in particular MKL-BLAS and MPI communication.
+library calls that are aleady highly tuned. These routines mainly deal with
+MKL-BLAS and MPI communication.
 %\\
 %We conclude with a request with regards to the job scheduling on Hazel Hen:
 %For our purposes it would be beneficial, if relatively small jobs with an allocation of
