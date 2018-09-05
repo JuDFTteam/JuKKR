@@ -1211,7 +1211,7 @@ contains
          else !.NOT.OPT('NEWSOSOL'))
             call TBXCCPLJIJDIJ(naez,natyp,lmmaxd,lmgf0d,natomimpd, &
                iemxd,THETA_AT,PHI_AT,                            &
-               natomimp,atomimp,natomimpd**2+1,iqat,rclsimp,                &
+               natomimp,atomimp,nofgij,iqat,rclsimp,                &
                ijtabcalc,ijtabcalc_I,ijtabsh,                        &
                ijtabsym,                                             &
                ielast,ez,wez,NPOL,dsymll,noq,itoq,ncpa)
@@ -1306,16 +1306,16 @@ contains
 
             ! find DTMTRX (written out for IELAST==1), parallelized with
             ! mpi over atoms
-            call TMATIMP_NEWSOLVER(IRM,NSRA-1,LMAX,IEND, &
-               IRID,LPOT,NATYP,NCLEB,IPAND,IRNSD,NFUND,t_imp%IHOST, &
-               NTOTD,NSPIN,LMPOT,NCHEB,LMMAXD/(1+KORBIT),KORBIT,NSPOTD, &
-               IELAST,IRMIND,NPAN_EQ,NPAN_LOG,t_imp%NATOMIMP,R_LOG, &
+            call TMATIMP_NEWSOLVER(IRMD,NSRA-1,LMAX,IEND, &
+               IRID,LPOTD,NATYP,NCLEB,IPAND,IRNSD,NFUND,t_imp%IHOST, &
+               NTOTD,NSPIN,LMPOTD,NCHEB,LMMAXD/(1+KORBIT),KORBIT,NSPOTD, &
+               IELAST,IRMIND,t_params%NPAN_EQ,t_params%NPAN_LOG,t_imp%NATOMIMP,R_LOG, &
                VINS, VISP, &
                IPAN,IRMIN,t_imp%HOSTIMP(1:t_imp%NATOMIMP),t_imp%IPANIMP(1:t_imp%NATOMIMP), &
                t_imp%IRWSIMP(1:t_imp%NATOMIMP),ATOMIMP(1:t_imp%NATOMIMP), &
                t_imp%IRMINIMP(1:t_imp%NATOMIMP),ICLEB,IRCUT, &
                t_imp%IRCUTIMP(0:IPAND,1:t_imp%NATOMIMP),ZAT,t_imp%ZIMP(1:t_imp%NATOMIMP), &
-               RMESH,CLEB(1,1),t_imp%RIMP(1:IRM,1:t_imp%NATOMIMP), &
+               RMESH,CLEB(1,1),t_imp%RIMP(1:IRMD,1:t_imp%NATOMIMP), &
                RCLSIMP,EZ(IE),t_imp%VISPIMP,t_imp%VINSIMP,DTMTRX,LMMAXSO)
 
             ! compute GMATLL_GES, on master rank only

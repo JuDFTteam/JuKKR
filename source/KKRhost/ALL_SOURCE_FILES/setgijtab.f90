@@ -3,7 +3,7 @@ module mod_setgijtab
 contains
 
 subroutine setgijtab(linterface, icc, naez, iqat, rbasis, bravais, natomimp, &
-  atomimp, rclsimp, nofgij, ijtabcalc, iofgij, jofgij, nqcalc, iqcalc, &
+  atomimp, rclsimp, ijtabcalc, iofgij, jofgij, nqcalc, iqcalc, &
   natomimpd, ijtabcalc_i)
   ! **********************************************************************
   ! * Task-specific settings of Gij elements that need to be calculated  *
@@ -24,7 +24,7 @@ subroutine setgijtab(linterface, icc, naez, iqat, rbasis, bravais, natomimp, &
   implicit none
 
   ! Scalar arguments
-  integer :: icc, naez, natomimp, natomimpd, nofgij, nqcalc
+  integer :: icc, naez, natomimp, natomimpd, nqcalc
   logical :: linterface
 
   ! Array arguments
@@ -33,7 +33,7 @@ subroutine setgijtab(linterface, icc, naez, iqat, rbasis, bravais, natomimp, &
   real (kind=dp) :: bravais(3, 3), rbasis(3, *), rclsimp(3, *)
 
   ! Local scalars
-  integer :: i, ido, ii, j, jj, nn
+  integer :: i, ido, ii, j, jj, nn, nofgij
   ! external funcitons
   logical, external :: opt
 

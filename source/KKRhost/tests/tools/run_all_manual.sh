@@ -93,7 +93,8 @@ echo "run:intel:rhoq_13:"
 echo ""
 cd ../
 if [[ ! -d tests/test_run13 ]]; then
-  tests/tools/run_test_13.sh
+  #tests/tools/run_test_13.sh
+  echo 'test deactivated'
 fi
 cd tests
 

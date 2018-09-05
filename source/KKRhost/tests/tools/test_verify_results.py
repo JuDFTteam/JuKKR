@@ -123,13 +123,16 @@ class Test_features():
         assert set(text)-set(text_ref)==set()
         # compare output of OPERATOR for host and for impurity wavefunctions
         for filename in 'TBkkr_rhod.txt TBkkr_torq.txt TBkkr_spinflux.txt'.split():
+          print(filename)
           d = loadtxt(path+filename)
           d0 = loadtxt(path+filename.replace('.txt', '_imp.txt'))
           nsigma = 3
           if 'rhod' in filename:
              nsigma +=1
-          d1 = d[:,0].reshape(nsigma,72, 32, 32); d1 = d1[:,36:48,:,:]; d01 = d0[:,0].reshape(nsigma,12,32,32)
-          d2 = d[:,1].reshape(nsigma,72, 32, 32); d2 = d2[:,36:48,:,:]; d02 = d0[:,1].reshape(nsigma,12,32,32)
+          d1 = d[:,0].reshape(nsigma,22, 18, 18); d1 = d1[:,6:18,:,:]
+          d01 = d0[:,0].reshape(nsigma,10,18,18)
+          d2 = d[:,1].reshape(nsigma,22, 18, 18); d2 = d2[:,6:18,:,:]
+          d02 = d0[:,1].reshape(nsigma,10,18,18)
           d1 = d1.reshape(-1); d2 = d2.reshape(-1); d01 = d01.reshape(-1); d02 = d02.reshape(-1)
           diff1 = d01-d1; diff2 = d02-d2
           assert mean(diff1) < 10**-15
@@ -284,8 +287,8 @@ class Test_SOC():
               assert set(text)-set(text_ref)==set()
 
     def test_12_qdos(self):
-        path  = 'test_run12.1_mpi_1_3/'
-        path0 = 'test_run12.1_mpi_1_3/ref/'
+        path  = 'test_run12.1_mpi_1_8/'
+        path0 = 'test_run12.1_mpi_1_8/ref/'
         for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
            fname = f
            num, text = read_file(path+fname)

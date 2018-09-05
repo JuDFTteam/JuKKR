@@ -997,7 +997,7 @@ contains
       !-------------------------------------------------------------------------
       if ( ICC.LT.0 ) then
          call SETGIJTAB(LINTERFACE,ICC,NAEZ,IQAT,RBASIS,BRAVAIS,NATOMIMP,  &
-            ATOMIMP,RCLSIMP,NOFGIJ,IJTABCALC,IOFGIJ,JOFGIJ,NQCALC,IQCALC,  &
+            ATOMIMP,RCLSIMP,IJTABCALC,IOFGIJ,JOFGIJ,NQCALC,IQCALC,  &
             NATOMIMPD,IJTABCALC_I)
       endif
       !
