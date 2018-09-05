@@ -75,9 +75,7 @@ contains
 #endif
       integer :: i1_start, i1_end, ierr,i_stat,i_all
 
-      logical :: OPT
-      logical :: TEST
-      external :: OPT, TEST
+      logical, external :: OPT, TEST
       !     ..
       !data TOLRDIF /1.5D0/ ! Set free GF to zero if R<TOLRDIF in case of virtual atoms
       !data LLY /0/

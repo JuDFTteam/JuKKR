@@ -1,7 +1,7 @@
 ***** Input file for TB-KKR code *****
       ***Running options*** 
 RUNOPT 
-NEWSOSOLfull invewald2d 
+NEWSOSOLewald2d 
 +-------+-------+-------+-------+-------+
       ***test options*** (2 lines) 
 TESTOPT

@@ -251,17 +251,17 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          RNEW(:,:),RPAN_INTERVALL(0:NTOTD,:),IPAN_INTERVALL(0:NTOTD,:),1)
 
       !in second step interpolate potential (gain atom by atom with NATYPD==1)
-      call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATYP,IPAND,lmpot,NSPOTD, &
-         NTOTD,IRMDNEWD,                                      &
-         NSPIN,RMESH(:,:),IRMIN(:),              &
-         t_params%IRWS(:),                                        &
-         IRCUT(0:IPAND,:),                               &
-         VINS(IRMIND:IRM,1:LMPOT,:),                   &
-         VM2Z(:,:),NPAN_LOG_AT(:),         &
-         NPAN_EQ_AT(:),NPAN_TOT(:),                &
-         RNEW(:,:),                                &
-         IPAN_INTERVALL(0:NTOTD,:),VINSNEW)
-   
+      call INTERPOLATE_POTEN(LPOT, IRM, IRNSD, NATYP, &
+         IPAND, lmpot, NSPOTD, NTOTD, IRMDNEWD,       &
+         NSPIN, RMESH(:,:), IRMIN(:),                 &
+         t_params%IRWS(:),                            &
+         IRCUT(0:IPAND,:),                            &
+         VINS(IRMIND:IRM,1:LMPOT,:),                  &
+         VM2Z(:,:), NPAN_LOG_AT(:),                   &
+         NPAN_EQ_AT(:), NPAN_TOT(:),                  &
+         RNEW(:,:),                                   &
+         IPAN_INTERVALL(0:NTOTD,:), VINSNEW)
+
       ! calculate tmat and radial wavefunctions of host atoms
       ! parallelized with MPI over atoms
       do I2=i1_start, i1_end
@@ -573,16 +573,16 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       RPAN_INTERVALL(0:NTOTD,1:NATOMIMP),IPAN_INTERVALL(0:NTOTD,1:NATOMIMP),1)
 
    ! In second step interpolate potential
-   call INTERPOLATE_POTEN(LPOT,IRM,IRNSD,NATOMIMP,IPAND,LMPOT,NSPOTD, &
-      NTOTD,IRMDNEWD,                                      &
-      NSPIN,RIMP(:,1:NATOMIMP),IRMINIMP(1:NATOMIMP),              &
-      IRWSIMP(1:NATOMIMP),                                        &
-      IRCUTIMP(0:IPAND,1:NATOMIMP),                               &
-      VINSIMP(IRMIND:IRM,1:LMPOT,1:NATOMIMP),                   &
-      VM2ZIMP(1:IRM,1:NATOMIMP),NPAN_LOG_AT(1:NATOMIMP),         &
-      NPAN_EQ_AT(1:NATOMIMP),NPAN_TOT(1:NATOMIMP),                &
-      RNEW(1:IRMDNEWD,1:NATOMIMP),                                &
-      IPAN_INTERVALL(0:NTOTD,1:NATOMIMP),VINSNEW)
+   call INTERPOLATE_POTEN(LPOT, IRM, IRNSD, NATOMIMP,      &
+      IPAND, LMPOT, NSPOTD, NTOTD, IRMDNEWD,               &
+      NSPIN, RIMP(:,1:NATOMIMP), IRMINIMP(1:NATOMIMP),     &
+      IRWSIMP(1:NATOMIMP),                                 &
+      IRCUTIMP(0:IPAND,1:NATOMIMP),                        &
+      VINSIMP(IRMIND:IRM,1:LMPOT,1:NATOMIMP),              &
+      VM2ZIMP(1:IRM,1:NATOMIMP), NPAN_LOG_AT(1:NATOMIMP),  &
+      NPAN_EQ_AT(1:NATOMIMP), NPAN_TOT(1:NATOMIMP),        &
+      RNEW(1:IRMDNEWD,1:NATOMIMP),                         &
+      IPAN_INTERVALL(0:NTOTD,1:NATOMIMP), VINSNEW)
 
    ! now start loop over atoms
    do I1=i1_start_imp,i1_end_imp

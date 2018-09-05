@@ -38,7 +38,7 @@ else:
 # use mpi only if test_coverage option is set to negative value
 if test_coverage<0:
     modes = ['hybrid']
-    npara_pairs = [[1,2], [1,4]]
+    npara_pairs = [[1,3]]
     if test_coverage in [-12]:
         npara_pairs = [[1,8]]
         modes = ['mpi']

@@ -19,8 +19,7 @@ subroutine interpolate_poten(lpot, irm, irnsd, natyp, ipand, lmpot, nspotd, &
   implicit none
 
   integer, intent (in) :: irm      ! < Maximum number of radial points
-  integer, intent (in) :: lpot     ! < Maximum l component in potential
-                                   ! expansion
+  integer, intent (in) :: lpot     ! < Maximum l component in potential expansion
   integer, intent (in) :: irnsd
   integer, intent (in) :: ntotd
   integer, intent (in) :: natyp    ! < Number of kinds of atoms in unit cell
@@ -30,29 +29,21 @@ subroutine interpolate_poten(lpot, irm, irnsd, natyp, ipand, lmpot, nspotd, &
   integer, intent (in) :: nspotd
   integer, intent (in) :: irmdnew
   integer, dimension (natyp), intent (in) :: irws ! < R point at WS radius
-  integer, dimension (natyp), intent (in) :: irmin ! < Max R for spherical
-                                                   ! treatment
-  integer, dimension (natyp), intent (in) :: npan_eq ! < Variables for the
-                                                     ! pannels for the new
-                                                     ! solver
-  integer, dimension (natyp), intent (in) :: npan_log ! < Variables for the
-                                                      ! pannels for the new
-                                                      ! solver
+  integer, dimension (natyp), intent (in) :: irmin ! < Max R for spherical treatment
+  integer, dimension (natyp), intent (in) :: npan_eq ! < Variables for the pannels for the new solver
+  integer, dimension (natyp), intent (in) :: npan_log ! < Variables for the pannels for the new solver
   integer, dimension (natyp), intent (in) :: npan_tot
-  integer, dimension (0:ipand, natyp), intent (in) :: ircut ! < R points of
-                                                            ! panel borders
+  integer, dimension (0:ipand, natyp), intent (in) :: ircut ! < R points of panel borders
   integer, dimension (0:ntotd, natyp), intent (in) :: ipan_intervall
   real (kind=dp), dimension (irm, natyp), intent (in) :: r
   real (kind=dp), dimension (irm, nspotd), intent (in) :: visp
-  real (kind=dp), dimension ((irm-irnsd):irm, (lpot+1)**2, nspotd), &
-    intent (in) :: vins
-  ! .. Input/Output variables
-  real (kind=dp), dimension (irmdnew, (lpot+1)**2, nspotd), &
-    intent (inout) :: vinsnew
+  real (kind=dp), dimension ((irm-irnsd):irm, (lpot+1)**2, nspotd), intent (in) :: vins
+
+  ! .. Output variables
+  real (kind=dp), dimension (irmdnew, (lpot+1)**2, nspotd), intent (out) :: vinsnew
 
   ! .. Local variables
-  integer :: i1, ipot, ipotm, imin, imax, ip, ir, lm1, ispin, iminnew, &
-    imaxnew, ir2
+  integer :: i1, ipot, ipotm, imin, imax, ip, ir, lm1, ispin, iminnew, imaxnew, ir2
   real (kind=dp), dimension (irmdnew, natyp) :: rnew
   real (kind=dp), dimension (irm, (lpot+1)**2, nspin) :: vinsin
 

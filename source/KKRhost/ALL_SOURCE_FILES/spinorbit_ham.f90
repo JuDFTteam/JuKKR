@@ -114,24 +114,14 @@ subroutine spinorbit_ham(lmax, lmmaxd, vins, rnew, eryd, Zat, cvlight, socscale,
   hsofac = 0e0_dp
   vnspll1 = (0e0_dp, 0e0_dp)
   if (test('NOSOC   ') .or. Zat<1e-6_dp) then
-    do ir = 1, irmdnew
-      do lm1 = 1, 2*lmmaxd
-        do lm2 = 1, 2*lmmaxd
-          vnspll1(lm1, lm2, ir) = vnspll(lm1, lm2, ir)
-        end do
-      end do
-    end do
+    vnspll1(1:2*lmmaxd, 1:2*lmmaxd, 1:irmdnew) = vnspll(1:2*lmmaxd, 1:2*lmmaxd, 1:irmdnew)
   else
     do ir = 1, irmdnew
       rmass(ir) = 0.5e0_dp - 0.5e0_dp/cvlight**2*((vr(ir)-real(eryd))-2e0_dp*Zat/rnew(ir))
       hsofac(ir) = socscale/(2e0_dp*rmass(ir)**2*cvlight**2*rnew(ir))*dvdr(ir)
 
       ! and add to potential
-      do lm1 = 1, 2*lmmaxd
-        do lm2 = 1, 2*lmmaxd
-          vnspll1(lm1, lm2, ir) = vnspll(lm1, lm2, ir) + hsofac(ir)*lsmh(lm1, lm2)
-        end do
-      end do
+      vnspll1(1:2*lmmaxd, 1:2*lmmaxd, ir) = vnspll(1:2*lmmaxd, 1:2*lmmaxd, ir) + hsofac(ir)*lsmh(1:2*lmmaxd, 1:2*lmmaxd)
     end do
   end if
 
