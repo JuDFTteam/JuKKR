@@ -129,10 +129,13 @@ class Test_features():
           nsigma = 3
           if 'rhod' in filename:
              nsigma +=1
-          d1 = d[:,0].reshape(nsigma,22, 18, 18); d1 = d1[:,6:18,:,:]
+          # real part of middle part (should be equivalent to 'fake' impurity calculation)
+          d1 = d[:,0].reshape(nsigma,22, 18, 18); d1 = d1[:,6:16,:,:]
           d01 = d0[:,0].reshape(nsigma,10,18,18)
-          d2 = d[:,1].reshape(nsigma,22, 18, 18); d2 = d2[:,6:18,:,:]
+          # imaginary part
+          d2 = d[:,1].reshape(nsigma,22, 18, 18); d2 = d2[:,6:16,:,:]
           d02 = d0[:,1].reshape(nsigma,10,18,18)
+          # flatten arrays and take diff
           d1 = d1.reshape(-1); d2 = d2.reshape(-1); d01 = d01.reshape(-1); d02 = d02.reshape(-1)
           diff1 = d01-d1; diff2 = d02-d2
           assert mean(diff1) < 10**-15
@@ -271,7 +274,7 @@ class Test_SOC():
            for fname in files:
               num, text = read_file(path+fname)
               num_ref, text_ref = read_file(path0+fname)
-              assert std(num-num_ref)<10**-8
+              assert std(num-num_ref)<2*10**-8
               assert set(text)-set(text_ref)==set()
 
     def test_6_FERMIOUT(self):

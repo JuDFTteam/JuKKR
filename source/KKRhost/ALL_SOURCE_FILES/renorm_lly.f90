@@ -96,16 +96,13 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
     do ie = iestart, ieend
       do ispin = 1, nspin
         ! IE = IESTART,IEEND
-        cren(ie, ispin) = aimag((cdos_lly(ie,ispin)-cdos_locvc(ie, &
-          ispin))*wez(ie))/aimag(cdos_loc(ie,ispin)*wez(ie))
+        cren(ie, ispin) = aimag((cdos_lly(ie,ispin)-cdos_locvc(ie,ispin))*wez(ie))/aimag(cdos_loc(ie,ispin)*wez(ie))
         ! Renormalization factor per energy:
         do i1 = 1, natypd
           if (zat(i1)>1e-06_dp) then
-            charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              cren(ie, ispin)*aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
+            charge_lly(i1, ispin) = charge_lly(i1, ispin) + cren(ie, ispin)*aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
           else
-            charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
+            charge_lly(i1, ispin) = charge_lly(i1, ispin) + aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
           end if
         end do
       end do                       ! Apply to DOS of each atom:
@@ -113,27 +110,19 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
   else
     do ie = iestart, ieend
       ! IE = IESTART,IEEND
-      cren(ie, 1) = aimag((cdos_lly(ie,1)-cdos_locvc(ie,1)-cdos_locvc(ie, &
-        2))*wez(ie))/aimag((cdos_loc(ie,1)+cdos_loc(ie,2))*wez(ie))
+      cren(ie, 1) = aimag((cdos_lly(ie,1)-cdos_locvc(ie,1)-cdos_locvc(ie,2))*wez(ie))/aimag((cdos_loc(ie,1)+cdos_loc(ie,2))*wez(ie))
       ! add term from sum from l>lmax to infinity
       do ispin = 1, nspin
         do i1 = 1, natypd
           if (zat(i1)>1e-06_dp) then
-            charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              cren(ie, 1)*aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
+            charge_lly(i1, ispin) = charge_lly(i1, ispin) + cren(ie, 1)*aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
           else
-            charge_lly(i1, ispin) = charge_lly(i1, ispin) + &
-              aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
+            charge_lly(i1, ispin) = charge_lly(i1, ispin) + aimag(chadd(ie,i1,ispin))/real(nspin, kind=dp)
           end if
         end do
       end do
     end do                         ! DO I1=1,NATYPD
   end if
-  ! DO ISPIN=1,NSPIN
-  ! CHARGE_LLY(I1,ISPIN)=CHARGE_LLY(I1,ISPIN)-DIMAG(CDOS2(I1))
-  ! ENDDO
-  ! ENDDO
-
 
   ! Now apply renormalization to energy-integrated density
   ! If spins are coupled, then only charge density
@@ -195,22 +184,18 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
       ipot = (i1-1)*nspin + ispin
       do ll = 0, lmaxp1
         if (zat(i1)>1e-06_dp) then
-          denefat(i1) = denefat(i1) - 2.0e0_dp*conc(i1)*cren(ielast, ispin)* &
-            aimag(cden(ll,ielast,ipot))/pi/real(nspin, kind=dp)
+          denefat(i1) = denefat(i1) - 2.0e0_dp*conc(i1)*cren(ielast, ispin)*aimag(cden(ll,ielast,ipot))/pi/real(nspin, kind=dp)
         else
-          denefat(i1) = denefat(i1) - 2.0e0_dp*conc(i1)*aimag(cden(ll,ielast, &
-            ipot))/pi/real(nspin, kind=dp)
+          denefat(i1) = denefat(i1) - 2.0e0_dp*conc(i1)*aimag(cden(ll,ielast,ipot))/pi/real(nspin, kind=dp)
         end if
         espv(ll, ipot) = 0e0_dp
         if (zat(i1)>1e-06_dp) then
           do ie = 1, ielast
-            espv(ll, ipot) = espv(ll, ipot) + cren(ie, ispin)*aimag(ez(ie)* &
-              cden(ll,ie,ipot)*wez(ie)/real(nspin,kind=dp))
+            espv(ll, ipot) = espv(ll, ipot) + cren(ie, ispin)*aimag(ez(ie)*cden(ll,ie,ipot)*wez(ie)/real(nspin,kind=dp))
           end do
         else
           do ie = 1, ielast
-            espv(ll, ipot) = espv(ll, ipot) + aimag(ez(ie)*cden(ll,ie,ipot)* &
-              wez(ie)/real(nspin,kind=dp))
+            espv(ll, ipot) = espv(ll, ipot) + aimag(ez(ie)*cden(ll,ie,ipot)*wez(ie)/real(nspin,kind=dp))
           end do
         end if
       end do                       ! Write out renormalization factors
@@ -247,17 +232,9 @@ subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, &
 
     end do
   end do
-  write (1337, fmt='(A45,2E17.9)') &
-    'RENORM_LLY: Locally summed charge and moment:', &
-    (sum0(ispin), ispin=1, nspin)
-  write (1337, fmt='(A45,2E17.9)') &
-    'RENORM_LLY: Renormalized charge and moment:  ', &
-    (sum1(ispin), ispin=1, nspin)
-  write (1337, fmt='(A50,2E17.9)') &
-    'RENORM_LLY: Renormalization factor of total charge:', sum1(1)/sum0(1)
-  ! LLY Lloyd  &
-  ! Renormalize the valence charge according to Lloyd's formula.
-  ! Find renormalization constant per energy, then renormalize
+  write (1337, fmt='(A45,2E17.9)') 'RENORM_LLY: Locally summed charge and moment:', (sum0(ispin), ispin=1, nspin)
+  write (1337, fmt='(A45,2E17.9)') 'RENORM_LLY: Renormalized charge and moment:  ', (sum1(ispin), ispin=1, nspin)
+  write (1337, fmt='(A50,2E17.9)') 'RENORM_LLY: Renormalization factor of total charge:', sum1(1)/sum0(1)
 end subroutine renorm_lly
 
 end module mod_renorm_lly

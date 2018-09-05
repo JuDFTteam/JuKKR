@@ -8,17 +8,65 @@
                            for Bulk and Interfaces
           Juelich-Munich 2001 - 2016
 
- Code version: v2.3-61-g4b60676
+ Code version: v2.3-64-g8cc70fc
  Compile options: mpi
 -O2 -r8 -module ./OBJ -sox -traceback
 -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
- serial number for files:kkrjm_v2.3-61-g4b60676_mpi_20180829154052
+ serial number for files:kkrjm_v2.3-64-g8cc70fc_mpi_20180905153805
 *******************************************************************************
 
  Number of MPI ranks used:    8
 
 *******************************************************************************
 
-           0
-APPLICATION TERMINATED WITH THE EXIT STRING: Hangup (signal 1)
+        WARNING: Some host atoms are missing in the impurity cluster
+                 Indexing will be changed. Check impurity.coefs file?
+
+ 
+          WARNING
+ 
+ FERMIOUT/WRTGREEN option chosen
+ minimal cluster size smaller than 150 atoms!!!
+ should be increased to least 200-300 atoms
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ +++            SCF ITERATIONS START                +++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+started on 2018/ 9/ 5 at 15:38: 6
+ Skipping atom loop in main1a
+ in tmatimp
+ skipping host atom loop in tmatimp_newsolver
+ IMP           1
+ IMP           5
+ IMP           6
+ IMP           7
+ IMP           3
+ IMP           9
+ IMP          10
+ IMP           2
+ IMP           8
+ IMP           4
+ start computing Operators
+ Operators using impurity wavefunctions
+ Computing impurity spin operator
+ collect terms and writeout
+ Computing impurity torq operator
+ collect terms and writeout
+ ISIGMA           1
+ ISIGMA           2
+ ISIGMA           3
+ Computing impurity spinflux operator
+ collect terms and writeout
+ ISIGMA           1
+ ISIGMA           2
+ ISIGMA           3
+ Done with Operators
+ done with WRTGREEN step
+ Stop after main1b
+ done with WRTGREEN step
+ done with WRTGREEN step
+ done with WRTGREEN step
+ done with WRTGREEN step
+ done with WRTGREEN step
+ done with WRTGREEN step
+ done with WRTGREEN step

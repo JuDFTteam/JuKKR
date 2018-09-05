@@ -487,23 +487,11 @@ contains
                   enddo
                enddo
             endif
-            do LM1=1,LMMAXSO
-               do LM2=1,LMMAXSO
-                  TMATLL(LM1,LM2)=TMATLL(LM1,LM2)+TMAT0(LM1,LM2)
-               enddo
-            enddo
-            do LM1=1,LMMAXSO
-               do LM2=1,LMMAXSO
-                  ALPHALL(LM1,LM2)=ALPHALL(LM1,LM2)+ALPHA0(LM1,LM2)
-               enddo
-            enddo
+            TMATLL(:,:)=TMATLL(:,:)+TMAT0(:,:)
+            ALPHALL(:,:)=ALPHALL(:,:)+ALPHA0(:,:)
             if (LLY.NE.0) then
-               do LM1=1,LMMAXSO
-                  do LM2=1,LMMAXSO
-                     DTMATLL(LM1,LM2)=DTMATLL(LM1,LM2)+real(SIGNDE, kind=dp)*TMAT0(LM1,LM2) ! LLY
-                     DALPHALL(LM1,LM2)=DALPHALL(LM1,LM2)+real(SIGNDE, kind=dp)*ALPHA0(LM1,LM2) ! LLY
-                  enddo
-               enddo
+              DTMATLL(:,:)=DTMATLL(:,:)+real(SIGNDE, kind=dp)*TMAT0(:,:) ! LLY
+              DALPHALL(:,:)=DALPHALL(:,:)+real(SIGNDE, kind=dp)*ALPHA0(:,:) ! LLY
             endif
 
 #ifdef CPP_OMP
@@ -523,17 +511,13 @@ contains
          enddo ! signde=-ideriv,ideriv,2 ! lly
 
          ! Average values of t-matrix and alpha at e+de and e-de
-         do LM1=1,LMMAXSO
-            do LM2=1,LMMAXSO
-               TMATLL(LM1,LM2)=TMATLL(LM1,LM2)/real(1+IDERIV, kind=dp) ! LLY
-               ALPHALL(LM1,LM2)=ALPHALL(LM1,LM2)/real(1+IDERIV, kind=dp) ! LLY
-               if (LLY.NE.0) then
-                  ! Contruct derivative of t-matrix and alpha
-                  DTMATLL(LM1,LM2)=DTMATLL(LM1,LM2)/DELTAE ! LLY
-                  DALPHALL(LM1,LM2)=DALPHALL(LM1,LM2)/DELTAE ! LLY
-               endif
-            enddo
-         enddo
+         TMATLL(:,:)=TMATLL(:,:)/real(1+IDERIV, kind=dp) ! LLY
+         ALPHALL(:,:)=ALPHALL(:,:)/real(1+IDERIV, kind=dp) ! LLY
+         if (LLY.NE.0) then
+           ! Contruct derivative of t-matrix and alpha
+           DTMATLL(:,:)=DTMATLL(:,:)/DELTAE ! LLY
+           DALPHALL(:,:)=DALPHALL(:,:)/DELTAE ! LLY
+         endif
          if (LLY.NE.0) then
             ! calculate Tr[alpha^-1*dalpha/de] for LLoyd's formula
             ALPHA0=CZERO ! LLY

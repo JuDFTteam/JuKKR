@@ -1,1 +1,12 @@
-# serial: kkrjm_v2.3-61-g4b60676_mpi_20180829154052
+# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180905153805
+ main0                                        1.21770000000000     
+ MPI 1                                       0.439900000000000     
+ main1a - tbref - calctref13                 1.000000000000000E-004
+ main1a - tbref - gll13                      2.500000000000000E-003
+ main1a - tbref                              3.380000000000000E-002
+ main1a                                      0.137900000000000     
+ main1b - calctref13                         1.000000000000000E-004
+ main1b - inversion                          3.700000000000000E-002
+ main1b - kloopz                              1.36930000000000     
+ main1b - operator                            8.31830000000000     
+ main1b                                       10.2952000000000     
