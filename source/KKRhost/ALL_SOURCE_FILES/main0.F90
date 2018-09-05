@@ -1038,7 +1038,7 @@ contains
                ISVATOM=0
                ZATTEMP=ZAT(KAOEZ(1,ATOMIMP(I)))
             end if
-            write (58,'(3F14.7,F6.2,3I5)') (RCLSIMP(J,I),J=1,3), &
+            write (58,'(3F25.16,F6.2,3I5)') (RCLSIMP(J,I),J=1,3), &
                ZATTEMP,ISVATOM,0,LMAX
          end do
          close (58)
