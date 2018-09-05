@@ -1,4 +1,4 @@
-# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180831103437
+# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180905132850
 
 *******************************************************************************
           Screened Korringa-Kohn-Rostoker Electronic Structure Code
@@ -10,10 +10,10 @@
 -O2 -r8 -module ./OBJ -sox -traceback
 -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
- serial number for files: kkrjm_v2.3-64-g8cc70fc_mpi_20180831103437
+ serial number for files: kkrjm_v2.3-64-g8cc70fc_mpi_20180905132850
 *******************************************************************************
 
- Number of MPI ranks used:    4
+ Number of MPI ranks used:    8
 
 *******************************************************************************
 
@@ -194,9 +194,6 @@ SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
  < MEMWFSAVE >, use default:           0
  < UNITMEMWFSAVE >, use default:           2 
  (MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)
-                                                     na, nb, ldiag, lper, lpardiso; then bdims(1:nb)
-           0           0 F F F
-
 -------------------------------------------------------------------------------
  KMROT
        0
@@ -335,14 +332,14 @@ CLSGEN_TB: Atom    6 Refpot    1 Rmtref 2.3200000 Vref 8.0000000 TB-cluster    1
  <#Fe26 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
  <#Vac0 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
  <#Vac0 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
-Doing calculation with potential: MD5 (potential) = 9ced9f5761c6b4cc446aef3831418bcd
+Doing calculation with potential: MD5 (potential) = 14ddafa231a8ee9e0a34b4d0dd10a860
 Doing calculation with shapefun: MD5 (shapefun) = 2a2e1c5c0b89c36da8d88650ba34a20e
  
 ===============================================================================
                     EPATHTB: generates a complex E contour
 ===============================================================================
  
-     E min =     0.600000 (Ry)        Fermi energy =     0.650902 (Ry)
+     E min =     0.600000 (Ry)        Fermi energy =     0.650561 (Ry)
      E max =     0.900000 (Ry)        Temperature  =    50.000000 (K )
      --------------------------------------------------------------
      Density-of-States calculation
@@ -400,17 +397,17 @@ Doing calculation with shapefun: MD5 (shapefun) = 2a2e1c5c0b89c36da8d88650ba34a2
                                < KKR0 finished >
 ===============================================================================
 
- create_newcomms_group_ie input:           4           3           1
- rest:           1           3           1           4
+ create_newcomms_group_ie input:           8           3           2
+ rest:           2           3           2           8
  kmesh:         400
- groups(1:Ne), number of ranks:           1           1           2
- groups(1:Ne), ie offset:           0           1           2
+ groups(1:Ne), number of ranks:           2           2           4
+ groups(1:Ne), ie offset:           0           2           4
 ==================================================
-    MPI parallelization: use    4 ranks
-    create processor array of size (nat x ne)   1 x   3
-    nranks_at:     3, nranks_ie:    1
-                                   with rest  1
-    divide rest onto last energy points (k,l,m):  1
+    MPI parallelization: use    8 ranks
+    create processor array of size (nat x ne)   2 x   3
+    nranks_at:     3, nranks_ie:    2
+                                   with rest  2
+    divide rest onto last energy points (k,l,m):  2
                 N_E
          <--------------->
        ^ ( | | | | | | | )
