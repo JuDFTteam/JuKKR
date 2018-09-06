@@ -69,6 +69,13 @@ class Test_parallel():
 		   'test_run08.1_hybrid_1_3']
         cmp_modes(cmplist, '')
 
+    def test_3_Si_lloyd_rest_parallelization(self):
+        # compare parallel modes to check rest parallelization
+        cmplist = ['test_run03.1_hybrid_1_3',
+                   'test_run03.1_hybrid_1_8',
+		   'test_run03.1_hybrid_1_9']
+        cmp_modes(cmplist, '')
+
 
 class Test_features():
     """

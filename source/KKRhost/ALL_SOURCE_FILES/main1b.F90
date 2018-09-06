@@ -458,12 +458,6 @@ contains
          ie_start = 0
          ie_end = ielast
 #endif
-         do I1 = 1,NATYP
-           do ie_num=1,ie_end
-             irec = ie_num+ie_end*(ispin-1)+ie_end*NSPIN*(I1-1)
-             write(7222+myrank,*) myrank, ie_num+ie_start, t_lloyd%tralpha(irec)
-           end do
-         end do
          !----------------------------------------------------------------------
          ! BEGIN do loop over spins and energies
          !----------------------------------------------------------------------

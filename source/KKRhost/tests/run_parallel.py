@@ -42,9 +42,9 @@ if test_coverage<0:
     if test_coverage in [-12]:
         npara_pairs = [[1,8]]
         modes = ['mpi']
-    # for FERMIOUT option nranks<=natom is needed
-    if test_coverage in [-6]:
-        npara_pairs = [[1,3]]
+    # for LLY run check also with 8 and 9 ranks to check for LLY miscommunication bug
+    if test_coverage in [-3]:
+        npara_pairs = [[1,3],[1,8],[1,9]]
     # for Dirac at the moment nranks==1 is needed
     if test_coverage in [-16]:
         npara_pairs = [[1,1]]
