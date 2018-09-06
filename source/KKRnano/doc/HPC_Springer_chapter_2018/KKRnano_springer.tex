@@ -104,7 +104,7 @@ an enhanced
 Korringa-Kohn-Rostoker (KKR) scheme is utilized to perform Density Functional Theory (DFT) calculations.
 The code allows us to treat system sizes of up to several thousands of atoms per unit cell and to
 simulate a non-collinear alignment of atomic spins.
-This capibility is used to investigate nanometer-sized magnetic textures in the germanide B20-\ce{MnGe},
+This capability is used to investigate nanometer-sized magnetic textures in the germanide B20-\ce{MnGe},
 a material that is potentially going to play an important role in future spintronic devices.
 A performance analysis of KKRnano on Hazel Hen emphasizes the good scaling behaviour with increasing
 system size and demonstrates the extensive integration of highly optimized libraries.
@@ -685,7 +685,7 @@ This and the read-in of the four files mentioned above accounts for most of the 
 \end{figure}
 \Cref{fig:MnGe_6x6x6_benchmark}
 shows the total runtimes of a single self-consistency iteration and how much time is spent
-on solving the individual physical problems for the two supercells containing 1728 and 13824 atoms, resepctively.
+on solving the individual physical problems for the two supercells containing 1728 and 13824 atoms, respectively.
 The remaining time
 can be mainly attributed to Fortran direct-access I/O which does not scale well on a Lustre file system.
 The observation of an increase in total runtime for larger systems is a strong hint to this as the amount of
@@ -772,7 +772,7 @@ All results in \cref{sec:performance} were
 obtained with this optimized version.
 Further optimization for standard calculations with a few thousand atoms 
 is difficult since only 20 \% of the runtime is spent in hand-written code. The remaining 80 \% is spent in
-library calls that are aleady highly tuned. These routines mainly deal with
+library calls that are already highly tuned. These routines mainly deal with
 MKL-BLAS and MPI communication.
 %\\
 %We conclude with a request with regards to the job scheduling on Hazel Hen:
