@@ -276,6 +276,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          ! set up the non-spherical ll' matrix for potential VLL'
          if (NSRA.EQ.2) then
             USE_SRATRICK=1
+            if (test('nosph   ')) use_sratrick=0
          elseif (NSRA.EQ.1) then
             USE_SRATRICK=0
          endif

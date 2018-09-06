@@ -146,6 +146,12 @@ contains
 
       if (NSRA.EQ.2) then
          USE_SRATRICK=1
+         if (test('nosph   ')) then
+            if (myrank==master .and. ith==0 .and. i1==1) then
+               write(*,*) 'Found test option "nosph   ", deactivate SRATRICK'
+            end if
+            use_sratrick=0
+         end if
       elseif (NSRA.EQ.1) then
          USE_SRATRICK=0
       endif
@@ -481,15 +487,18 @@ contains
                do LM1=1,LMMAXSO
                   TMAT0(LM1,LM1)=TMAT0(LM1,LM1)+TMATSPH(JLK_INDEX(LM1),ith)
                enddo
-               do LM2=1,LMMAXSO
-                  do LM1=1,LMMAXSO
-                     ALPHA0(LM1,LM2)=ALPHASPH(JLK_INDEX(LM1))*ALPHA0(LM1,LM2)        ! LLY
-                  enddo
-               enddo
+               if (LLY.NE.0) then
+                 do LM2=1,LMMAXSO
+                    do LM1=1,LMMAXSO
+                       ! alphasph is multiplied not added 
+                       ALPHA0(LM1,LM2)=ALPHASPH(JLK_INDEX(LM1)) * ALPHA0(LM1,LM2) ! LLY
+                    enddo
+                 enddo
+               end if ! LLY
             endif
             TMATLL(:,:)=TMATLL(:,:)+TMAT0(:,:)
-            ALPHALL(:,:)=ALPHALL(:,:)+ALPHA0(:,:)
             if (LLY.NE.0) then
+              ALPHALL(:,:)=ALPHALL(:,:)+ALPHA0(:,:)
               DTMATLL(:,:)=DTMATLL(:,:)+real(SIGNDE, kind=dp)*TMAT0(:,:) ! LLY
               DALPHALL(:,:)=DALPHALL(:,:)+real(SIGNDE, kind=dp)*ALPHA0(:,:) ! LLY
             endif
@@ -512,8 +521,8 @@ contains
 
          ! Average values of t-matrix and alpha at e+de and e-de
          TMATLL(:,:)=TMATLL(:,:)/real(1+IDERIV, kind=dp) ! LLY
-         ALPHALL(:,:)=ALPHALL(:,:)/real(1+IDERIV, kind=dp) ! LLY
          if (LLY.NE.0) then
+           ALPHALL(:,:)=ALPHALL(:,:)/real(1+IDERIV, kind=dp) ! LLY
            ! Contruct derivative of t-matrix and alpha
            DTMATLL(:,:)=DTMATLL(:,:)/DELTAE ! LLY
            DALPHALL(:,:)=DALPHALL(:,:)/DELTAE ! LLY
