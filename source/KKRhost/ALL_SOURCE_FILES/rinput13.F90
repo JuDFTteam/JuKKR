@@ -2654,40 +2654,38 @@ contains
     call ioinput('MEMWFSAVE       ', uio, 0, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) t_wavefunctions%maxmem_number
+
+      !if LLOYD is used turn off wave func saving since in main1a and main1c
+      !different energy points are used (in 1a the derivative of the t-matrix is
+      !computed with finite differences)
+      if (lly>0) then
+        write(1337,*) 'wavefunctions cannot be stored if Lloyd is used: reset automatically to 0'
+        t_wavefunctions%maxmem_number = 0
+      end if
+   
       write (1337, *) '< MEMWFSAVE >', t_wavefunctions%maxmem_number
       write (111, *) 'MEMWFSAVE=', t_wavefunctions%maxmem_number
     else
       t_wavefunctions%maxmem_number = 0
-      write (1337, *) '< MEMWFSAVE >, use default:', &
-        t_wavefunctions%maxmem_number
+      write (1337, *) '< MEMWFSAVE >, use default:', t_wavefunctions%maxmem_number
       write (111, *) 'Default MEMWFSAVE= ', t_wavefunctions%maxmem_number
     end if
     call ioinput('UNITMEMWFSAVE   ', uio, 0, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) t_wavefunctions%maxmem_units
-      write (1337, *) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, &
-        ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
+      write (1337, *) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
       write (111, *) 'UNITMEMWFSAVE=', t_wavefunctions%maxmem_units
     else
       t_wavefunctions%maxmem_units = 2
-      write (1337, *) '< UNITMEMWFSAVE >, use default:', &
-        t_wavefunctions%maxmem_units, &
-        '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
-      write (111, *) 'Default UNITMEMWFSAVE= ', t_wavefunctions%maxmem_units, &
-        '(MB)'
-    end if
-
-    !if LLOYD is used turn off wave func saving since in main1a and main1c
-    !different energy points are used (in 1a the derivative of the t-matrix is
-    !computed with finite differences)
-    if (lly>0) then
-       write(1337,*) 'wavefunctions cannot be stored if Lloyd is used: reset automatically to 0'
-       t_wavefunctions%maxmem_number = 0
+      write (1337, *) '< UNITMEMWFSAVE >, use default:', t_wavefunctions%maxmem_units, '(MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)'
+      write (111, *) 'Default UNITMEMWFSAVE= ', t_wavefunctions%maxmem_units, '(MB)'
     end if
 
     ! the following makes saving of the wavefunctions obsolete:
     if(.not. ( OPT('XCPL    ').or.OPT('OPERATOR') .or. test('norllsll') ) ) then
       write(1337,*) 'automatically adding "RLL-SLL " option to speed up calculation (use test option "norllsll" to prevent this)'
+      write(1337,*) 'this diables wf saving automatically'
+      t_wavefunctions%maxmem_number = 0
       call addopt('RLL-SLL ')
     end if
 

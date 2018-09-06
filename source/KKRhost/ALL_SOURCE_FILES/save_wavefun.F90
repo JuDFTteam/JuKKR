@@ -140,11 +140,11 @@ contains
 
            write(message,'(A,F15.2,A)') '    memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:', delta_mem, 'MB)  <=='
            write(1337, '(A)') trim(message)
-           write(*, '(A)') trim(message)
+           !write(*, '(A)') trim(message)
 
            write(message,'(A,I3,4(A,L1))') '    Number of saved wavefunctions per atom and energy:',Nsave,'; save rll:',t_wavefunctions%save_rll,'; save sll:',t_wavefunctions%save_sll,'; save rllleft:',t_wavefunctions%save_rllleft,'; save sllleft:',t_wavefunctions%save_sllleft
            write(1337, '(A)') trim(message)
-           write(*, '(A)') trim(message)
+           !write(*, '(A)') trim(message)
 
         end if
 

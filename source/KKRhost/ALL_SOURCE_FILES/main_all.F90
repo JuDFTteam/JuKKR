@@ -257,7 +257,7 @@ program kkrcode
   t_mpi_c_grid%dims = dims
 
   ! create communicator for atom/energy matrix
-  call create_newcomms_group_ie( nranks,myrank,dims(1),dims(2),t_inc%nkmesh, &
+  call create_newcomms_group_ie(master,nranks,myrank,dims(1),dims(2),t_inc%nkmesh, &
      t_inc%kmesh,mympi_comm_ie,myrank_ie,nranks_ie,mympi_comm_at,myrank_at,  &
      nranks_at, myrank_atcomm,nranks_atcomm)
   ! save grid info in type 't_mpi_c_grid'
@@ -384,7 +384,7 @@ program kkrcode
         t_mpi_c_grid%dims = dims
 
         ! create communicator for atom/energy matrix (load_imbalance instead of t_inc%kmesh in callig list)
-        call create_newcomms_group_ie( nranks,myrank,dims(1),dims(2),t_inc%nkmesh, &
+        call create_newcomms_group_ie(master, nranks,myrank,dims(1),dims(2),t_inc%nkmesh, &
            load_imbalance,mympi_comm_ie,myrank_ie,nranks_ie,mympi_comm_at,         &
            myrank_at,nranks_at, myrank_atcomm,nranks_atcomm)
         ! save grid info in type 't_mpi_c_grid'

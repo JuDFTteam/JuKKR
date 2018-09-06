@@ -136,14 +136,14 @@ contains
 
 
 #ifdef CPP_MPI
-  subroutine create_newcomms_group_ie(nranks,myrank,nat,ne,nkmesh,kmesh,mympi_comm_ie,  &
+  subroutine create_newcomms_group_ie(master,nranks,myrank,nat,ne,nkmesh,kmesh,mympi_comm_ie,  &
   &                                  myrank_ie,nranks_ie,mympi_comm_at,myrank_at, nranks_at, myrank_atcomm, nranks_atcomm)
   !takes vector kmesh with mesh/timing information and finds number of rest procs that are devided in fractions given in ktake for optimal division of work
   
   use mpi
   implicit none
   
-  integer, intent(in) :: nranks,myrank,ne,nat,nkmesh
+  integer, intent(in) :: master,nranks,myrank,ne,nat,nkmesh
   integer, intent(in) :: kmesh(nkmesh)
   integer, intent(out) :: mympi_comm_ie, mympi_comm_at, nranks_atcomm, nranks_at, nranks_ie, myrank_ie, myrank_at, myrank_atcomm
   
@@ -154,7 +154,7 @@ contains
 
   rest = 0
   qmin = -1
-  if(myrank==0) write(1337,*) 'create_newcomms_group_ie input:',nranks,ne,nat
+  if(myrank==master) write(1337,*) 'create_newcomms_group_ie input:',nranks,ne,nat
   
   ktake(:) = 0
 
@@ -167,8 +167,8 @@ contains
     end if
   
     rest = nranks-int(nranks/(ne*nat))*ne*nat
-    if(myrank==0) write(1337,*) 'rest:',rest,ne,nat,nranks
-    if(myrank==0) write(1337,*) 'kmesh:',kmesh
+    if(myrank==master) write(1337,*) 'rest:',rest,ne,nat,nranks
+    if(myrank==master) write(1337,*) 'kmesh:',kmesh
    
     if(rest>0 .and. nkmesh>1) then
       !find fraction of k:l:m
@@ -182,7 +182,7 @@ contains
       end do
       f(nkmesh-1) = real(k(nkmesh-1))/real(k(1))
       
-      if(myrank==0) write(1337,*) 'set k,i:',k,'f',f
+      if(myrank==master) write(1337,*) 'set k,i:',k,'f',f
 
       !brute force look for optimal division of rest ranks after N_E*N_at are already
       !assigned to rectangular part of processor matrix:
@@ -238,7 +238,7 @@ contains
       ! special case when only one additional rank
       if(rest==1) ktake(1) = rest
   
-      if(myrank==0) write(1337,*) 'found ktake',ktake,'with',qmin
+      if(myrank==master) write(1337,*) 'found ktake',ktake,'with',qmin
 
     elseif(rest>0)then
       ktake(1) = rest
@@ -265,8 +265,8 @@ contains
      endif
     enddo
 
-    if(myrank==0) write(1337,*) 'groups(1:Ne), number of ranks:',groups(1:ne,1)
-    if(myrank==0) write(1337,*) 'groups(1:Ne), ie offset:',groups(1:ne,2)
+    if(myrank==master) write(1337,*) 'groups(1:Ne), number of ranks:',groups(1:ne,1)
+    if(myrank==master) write(1337,*) 'groups(1:Ne), ie offset:',groups(1:ne,2)
    
     !find my group
     myg = -1
@@ -360,18 +360,18 @@ contains
 
     rest = 0
 
-    if(myrank==0) write(1337,*) 'create cartesian grid:', ne, nat, nranks
+    if(myrank==master) write(1337,*) 'create cartesian grid:', ne, nat, nranks
     call MPI_Cart_create( MPI_COMM_WORLD, 2, (/ ne, nat /), (/ .false., .false. /), (/ .true., .true. /), myMPI_comm_grid, ierr )
 
-    if(myrank==0) write(1337,*) 'MPI_Cart_sub'
+    if(myrank==master) write(1337,*) 'MPI_Cart_sub'
     call MPI_Cart_sub( myMPI_comm_grid, (/ .true., .false. /), myMPI_comm_at, ierr ) ! row communicator
     call MPI_Cart_sub( myMPI_comm_grid, (/ .false., .true. /), myMPI_comm_ie, ierr ) ! col communicator
 
-    if(myrank==0) write(1337,*) 'MPI_Comm_rank'
+    if(myrank==master) write(1337,*) 'MPI_Comm_rank'
     call MPI_Comm_rank( myMPI_comm_ie, myrank_ie, ierr )
     call MPI_Comm_rank( myMPI_comm_at, myrank_at, ierr )
     
-    if(myrank==0) write(1337,*) 'MPI_Comm_size'
+    if(myrank==master) write(1337,*) 'MPI_Comm_size'
     call MPI_Comm_size ( myMPI_comm_ie, nranks_ie, ierr )
     call MPI_Comm_size ( myMPI_comm_at, nranks_at, ierr )
     
@@ -410,7 +410,7 @@ contains
   end if
   
 
-  if(myrank==0) then
+  if(myrank==master) then
     write(1337,'(A)') '=================================================='  
     write(1337,'(A,I5,A)') '    MPI parallelization: use',nranks,' ranks'
     write(1337,'(A,I3,A,I4)') '    create processor array of size (nat x ne) ',nat,' x',ne
