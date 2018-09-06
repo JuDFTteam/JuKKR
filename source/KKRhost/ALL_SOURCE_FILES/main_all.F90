@@ -408,6 +408,11 @@ program kkrcode
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! close allocated arrays and finalize MPI >>>>>>>>>>>>>>>
   !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+  i_all=-product(shape(t_inc%kmesh))*kind(t_inc%kmesh)
+  deallocate(t_inc%kmesh,stat=i_stat)
+  call memocc(i_stat,i_all,'t_inc%kmesh','main_all')
+
   ! deallocate arrays from t_params
   i_all=-product(shape(t_params%A))*kind(t_params%A)
   deallocate(t_params%A,stat=i_stat)

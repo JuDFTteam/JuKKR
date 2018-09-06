@@ -457,11 +457,11 @@ contains
 
 #ifdef CPP_OMPSTUFF
 !$omp parallel shared(nth) private(ith)
-      nth = omp_get_num_threads()
       ith = omp_get_thread_num()
       if(ith==0) then
-         write(*,'(1X,A,I5//79("*")/)') 'Number of OpenMP threads used:',nth
-         write(1337,'(1X,A,I5//79("*")/)') 'Number of OpenMP threads used:',nth
+         nth = omp_get_num_threads()
+         write(*,'(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:',nth
+         write(1337,'(1X,A,I5)') 'Number of OpenMP threads used:',nth
       endif
 !$omp end parallel
 #endif

@@ -629,9 +629,9 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
       ! Update statusbar
       if(mythread==0) then
 #ifdef CPP_MPI
-        if( (((k_end-k_start)/50)==0 .or. &
-        mod(KPT-k_start,(k_end-k_start)/50)==0) .and. &
-        t_inc%i_write>0 ) write(1337,FMT=200, advance='no')
+        !$omp critical
+        if( (((k_end-k_start)/50)==0 .or. mod(KPT-k_start,(k_end-k_start)/50)==0) .and. t_inc%i_write>0 ) write(1337,FMT=200, advance='no')
+        !$omp end critical
 #else
         if( ((NOFKS/50)==0 .or.mod(KPT,NOFKS/50)==0) .and.t_inc%i_write>0 ) write(1337,FMT=200, advance='no')
 #endif
@@ -640,7 +640,9 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    end do ! KPT = 1,NOFKS   end K-points loop
    190 format('                 |')      ! status bar
    200 format('|')                       ! status bar
+   !$omp critical
    if(t_inc%i_write>0) write(1337,*)      ! finalize status bar
+   !$omp end critical
    !
    !----------------------------------------------------------------------
    ! deallocattions of work arrays
