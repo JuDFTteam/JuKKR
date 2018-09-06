@@ -536,7 +536,7 @@ subroutine RHOVALNEW( &
       ! Left solutions
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if( (t_wavefunctions%Nwfsavemax>0 .and.                  &
-         .not. (rllleft_was_read_in.and.sllleft_was_read_in) ) &
+         (.not. (rllleft_was_read_in.and.sllleft_was_read_in)) ) &
          .or. (t_wavefunctions%Nwfsavemax==0)) then
          ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
          call SPINORBIT_HAM(LMAX,lmsize,VINS,RNEW,ERYD,ZAT, &

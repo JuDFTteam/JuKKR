@@ -2677,6 +2677,20 @@ contains
         '(MB)'
     end if
 
+    !if LLOYD is used turn off wave func saving since in main1a and main1c
+    !different energy points are used (in 1a the derivative of the t-matrix is
+    !computed with finite differences)
+    if (lly>0) then
+       write(1337,*) 'wavefunctions cannot be stored if Lloyd is used: reset automatically to 0'
+       t_wavefunctions%maxmem_number = 0
+    end if
+
+    ! the following makes saving of the wavefunctions obsolete:
+    if(.not. ( OPT('XCPL    ').or.OPT('OPERATOR') .or. test('norllsll') ) ) then
+      write(1337,*) 'automatically adding "RLL-SLL " option to speed up calculation (use test option "norllsll" to prevent this)'
+      call addopt('RLL-SLL ')
+    end if
+
     ! default flags: save only rll from main1a>tmatnewsolver since left
     ! solutions can be calculated always in main1c>rhovalnew and sll is not
     ! used

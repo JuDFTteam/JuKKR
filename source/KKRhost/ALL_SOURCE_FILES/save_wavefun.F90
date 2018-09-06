@@ -23,6 +23,9 @@ implicit none
 
    type (type_wavefunctions), save :: t_wavefunctions
 
+   ! switch to enable some additional output
+   integer, parameter :: iprint_debug = 0
+
 contains
 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -236,27 +239,29 @@ contains
 
       integer :: isave
 
+
       isave = t_wavefunctions%isave_wavefun(iat, ie)
 
       if(isave>0) then
 
          if(t_wavefunctions%save_rll    ) then
-!             write(*,*) 'save rll', ie, iat
+             
+            if(iprint_debug>0) write(*,*) 'save rll', ie, iat
             t_wavefunctions%rll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
          endif
 
          if(t_wavefunctions%save_rllleft) then
-!             write(*,*) 'write out rllleft', ie, iat
+            if(iprint_debug>0) write(*,*) 'write out rllleft', ie, iat
             t_wavefunctions%rllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
          endif
 
          if(t_wavefunctions%save_sll    ) then
-!             write(*,*) 'write out sll', ie, iat
+            if(iprint_debug>0) write(*,*) 'write out sll', ie, iat
             t_wavefunctions%sll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
          endif
 
          if(t_wavefunctions%save_sllleft) then
-!             write(*,*) 'write out sllleft', ie, iat
+            if(iprint_debug>0) write(*,*) 'write out sllleft', ie, iat
             t_wavefunctions%sllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = sllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
          endif
 
@@ -287,25 +292,25 @@ contains
       if(isave>0) then
 
          if(t_wavefunctions%save_rll    ) then
-!            write(*,*) 'read in rll', ie, iat
+           if(iprint_debug>0) write(*,*) 'read in rll', ie, iat
            rll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%rll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
            read_in_rll     = .true.
          endif
 
          if(t_wavefunctions%save_rllleft) then
-!            write(*,*) 'read in rllleft', ie, iat
+           if(iprint_debug>0) write(*,*) 'read in rllleft', ie, iat
            rllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%rllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
            read_in_rllleft = .true.
          endif
 
          if(t_wavefunctions%save_sll    ) then
-!            write(*,*) 'read in sll', ie, iat
+           if(iprint_debug>0) write(*,*) 'read in sll', ie, iat
            sll(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%sll(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
            read_in_sll     = .true.
          endif
 
          if(t_wavefunctions%save_sllleft) then
-!            write(*,*) 'read in sllleft', ie, iat
+           if(iprint_debug>0) write(*,*) 'read in sllleft', ie, iat
            sllleft(1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith) = t_wavefunctions%sllleft(isave,1:NSRA*LMMAXSO,1:LMMAXSO,1:IRMDNEW,ith)
            read_in_sllleft = .true.
          endif
