@@ -125,7 +125,7 @@ magnetization texture, which has particle-like properties.
 The focus of our work is on the germanide \ce{MnGe} that is particularly
 interesting among the chiral magnetic B20 compounds, as it exhibits a three-dimensional magnetic structure
 that is not yet understood (see preliminary results
-\cite{tanigaki_real-space_2015,rybakov_new_2016,bornemann_investigation_2017}).
+\cite{tanigaki_real-space_2015,rybakov_new_2016,bornemann_investigation_2017,bornemann_large-scale_2018}).
 
 This report is structured as follows:
 In \cref{sec:methods_algorithms} we give a brief introduction on the Korringa-Kohn-Rostoker (KKR) 
@@ -205,7 +205,7 @@ remains finite \cite{feldtkeller_continuous_2017}.
 \begin{figure}[htb]
 	\subfloat[]{\includegraphics[width=.45\textwidth]{Figures/B20_hedgehog_antihedgehog.pdf}\label{fig:mnge_3q}}
 	\hfill
-	\subfloat[]{\includegraphics[width=.45\textwidth]{Figures/helicalspiral.png}\label{fig:mnge_spiral}}
+	\subfloat[]{\includegraphics[width=.45\textwidth]{Figures/helicalspiral.eps}\label{fig:mnge_spiral}}
 	\hfill
  \caption{Magnetic textures that are found experimentally in B20-\ce{MnGe}: (a) 
 	Magnetic anti-hedgehog texture that is wrapped around a singularity at the center.
@@ -280,7 +280,7 @@ Therefore, it is reasonable to check whether a material's magnetic properties ch
 lattice constant is varied.
 \begin{figure}[htb]
   \centering
-   \includegraphics[width=1.00\textwidth]{Figures/kkrnano_ferro_1q/MnGe_ferro_1q.pdf}
+   \includegraphics[width=1.00\textwidth]{Figures/MnGe_ferro_1q.eps}
 	\caption{Comparison of Ferromagnetic (FM), helical spiral (1Q) and hedgehog lattice (3Q) 
 	state with KKRnano.
 	Top: Difference of total energies with the FM state as reference state for different
@@ -335,7 +335,7 @@ potential in a perturbation-like manner. This allows to scale its strength and m
 artificially stronger.
 \begin{figure}[htb]
 	\sidecaption
-	\includegraphics[width=0.55\textwidth]{Figures/blochpoint.png}
+	\includegraphics[width=0.55\textwidth]{Figures/blochpoint.eps}
 	\caption{Illustration of a Bloch point in real space with all magnetic moments
 	pointing out of the center of the Bloch sphere.
 	We use the same magnetic configuration but invert the spin direction so that all moments point
@@ -386,7 +386,7 @@ This leads to a small canting of the moments which is a known effect in
 B20 materials \cite{chizhikov_multishell_2013}.
 \begin{figure}[!htb]
   \centering
-   \includegraphics[width=1.00\textwidth]{Figures/kkrnano_ferro_bp_socscale/MnGe_ferro_bp.pdf}
+   \includegraphics[width=1.00\textwidth]{Figures/MnGe_ferro_bp.eps}
 	\caption{Effect of increased SOC on B20-\ce{MnGe} in a 6x6x6 supercell.
 	Top: Total energy difference between (relaxed) Bloch point and (relaxed) ferromagnet.
 	Bottom: Magnetic moment of ferromagnet and Bloch point state.}
@@ -674,7 +674,7 @@ the potential is written out.
 This and the read-in of the four files mentioned above accounts for most of the time spent in I/O.
 \begin{figure}[htb]
 \begin{center}
- \includegraphics[width=1.0\textwidth]{Figures/runtime_benchmarks/MnGe_benchmarks.pdf}
+ \includegraphics[width=1.0\textwidth]{Figures/MnGe_benchmarks.eps}
 \end{center}
 	\caption{Runtime of a single DFT self-consistency step
 	for different B20-\ce{MnGe} supercell sizes with KKRnano. 
@@ -715,7 +715,7 @@ It allows to sample the time that is spent within each routine and can therefore
 picture of which routines are performance-critical and should be considered for further optimization.
 \begin{figure}[htb]
 \begin{center}
- \includegraphics[width=0.8\textwidth]{Figures/cray_report/MnGe_6x6x6_crayreport.pdf}
+ \includegraphics[width=0.8\textwidth]{Figures/MnGe_6x6x6_crayreport.eps}
 \end{center}
 	\caption{Runtime results from Cray Performance Measurement 
 	Tool for a single KKRnano self-consistency step 
