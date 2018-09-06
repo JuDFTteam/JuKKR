@@ -159,10 +159,10 @@ ie_start = ioff_pt(t_mpi_c_grid%myrank_at)
 ie_end   = ntot_pt(t_mpi_c_grid%myrank_at)
 
 t_mpi_c_grid%ntot2=ie_end !t_mpi_c_grid%dims(1)
-IF(.NOT. (allocated(t_mpi_c_grid%ntot_pt2) .OR.  &
-    allocated(t_mpi_c_grid%ioff_pt2)))  &
-    allocate(t_mpi_c_grid%ntot_pt2(0:t_mpi_c_grid%nranks_at-1),  &
-    t_mpi_c_grid%ioff_pt2(0:t_mpi_c_grid%nranks_at-1))
+if (.not. (allocated(t_mpi_c_grid%ntot_pt2) .or. allocated(t_mpi_c_grid%ioff_pt2)) ) then
+    allocate(t_mpi_c_grid%ntot_pt2(0:t_mpi_c_grid%nranks_at-1))
+    allocate(t_mpi_c_grid%ioff_pt2(0:t_mpi_c_grid%nranks_at-1))
+end if
 t_mpi_c_grid%ntot_pt2 = ntot_pt
 t_mpi_c_grid%ioff_pt2 = ioff_pt
 ! now initialize arrays for tmat, gmat, and gref

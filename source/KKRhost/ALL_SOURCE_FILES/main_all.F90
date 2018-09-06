@@ -161,22 +161,6 @@ program kkrcode
      if(myrank==master) t_inc%i_time = 2       ! master write all timings of all iterations
   endif !t_inc%i_time==1
 
-  ! initialize timing files
-  if(myrank.ne.master) call timing_init(myrank)
-  ! set if(t_inc%i_write>0) in front of every write(1337) and in mod_timing for timing_stop writeout (if(t_inc%i_time>0))
-  ! for i_write (or i_time) =2 do not reset files > here for output.*.txt, after main2, copy writeout after main0 to different file
-  if (t_inc%i_write<2) then
-     if(myrank==master) call SYSTEM('cp output.000.txt output.0.txt')
-     if(myrank==master) close(1337, status='delete')
-     if(t_inc%i_write>0) then
-        open(1337, file='output.'//trim(ctemp)//'.txt')
-        call version_print_header(1337)
-     end if
-  endif
-  if(t_inc%i_write>0 .and. myrank.ne.master) then
-     open(1337, file='output.'//trim(ctemp)//'.txt')
-     call version_print_header(1337)
-  end if
 
 #ifdef CPP_MPI
   if ( myrank/=master ) then 
@@ -274,6 +258,23 @@ program kkrcode
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< distribute stuff from main0 !!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! initialize timing and output files
+  ! set if(t_inc%i_write>0) in front of every write(1337) and in mod_timing for timing_stop writeout (if(t_inc%i_time>0))
+  ! for i_write (or i_time) =2 do not reset files > here for output.*.txt, after main2, copy writeout after main0 to different file
+  if(myrank.ne.master) call timing_init(myrank)
+  if (t_inc%i_write<2) then
+     if(myrank==master) call SYSTEM('cp output.000.txt output.0.txt')
+     if(myrank==master) close(1337, status='delete')
+     if(t_inc%i_write>0) then
+        open(1337, file='output.'//trim(ctemp)//'.txt')
+        call version_print_header(1337)
+     end if
+  endif
+  if(t_inc%i_write>0 .and. myrank.ne.master) then
+     open(1337, file='output.'//trim(ctemp)//'.txt')
+     call version_print_header(1337)
+  end if
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! SCF-ITERATION >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

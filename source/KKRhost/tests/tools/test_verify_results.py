@@ -32,7 +32,7 @@ class Test_parallel():
     """
     def test_compare_parallel_modes2(self):
         cmplist = ['serial_', 'omp_', 'mpi_', 'hybrid_']
-        l_para = [[1,1], [1,4], [2,2], [4,1]]
+        l_para = [[1,1], [1,4], [2,2], [4,1], [1,7]]
         for ipara, jpara in l_para:
            for irun in cmplist:
                if 'serial' in irun and ipara in [1] and jpara in [1]:

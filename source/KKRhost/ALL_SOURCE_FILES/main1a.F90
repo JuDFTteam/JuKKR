@@ -185,8 +185,6 @@ contains
       i1_start = 1
       i1_end   = NATYP
 #endif
-     i1 = 1
-     ipot = 1 
 #ifdef CPP_MPI
       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 #endif
@@ -199,8 +197,7 @@ contains
 #ifdef CPP_MPI
          ! distribute IE dimension here instead, otherwise this would be done in tmat_newsolver/calctmat
          call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,  &
-            t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), & ! print this info only for first atom at master
-            master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
+            t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
          t_mpi_c_grid%ntot2=ntot_pT(t_mpi_c_grid%myrank_at)
          if (.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
             allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),stat=i_stat)
@@ -214,10 +211,8 @@ contains
          if(.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
             allocate(t_mpi_c_grid%ntot_pT2(1),stat=i_stat)
             call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT2))*kind(t_mpi_c_grid%ntot_pT2),'t_mpi_c_grid%ntot_pT2','tmat_newsolver')
-            t_mpi_c_grid%ntot_pT2=0
             allocate(t_mpi_c_grid%ioff_pT2(1),stat=i_stat)
             call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT2))*kind(t_mpi_c_grid%ioff_pT2),'t_mpi_c_grid%ioff_pT2','tmat_newsolver')
-            t_mpi_c_grid%ioff_pT2=0
          endif
          t_mpi_c_grid%ntot2      =IELAST
          t_mpi_c_grid%ntot_pT2   = IELAST
@@ -356,6 +351,12 @@ contains
          end if
          
          if(lly/=0 .and. .not.t_lloyd%dtmat_to_file) then
+            if ( t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1) ) then
+              ! reset tralpha and dtmat to zero for rest-ranks, otherwise
+              ! these contributions are counted twice
+              t_lloyd%tralpha = czero
+              t_lloyd%dtmat = czero
+            endif
             call gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd,t_mpi_c_grid%mympi_comm_ie)
          endif
          

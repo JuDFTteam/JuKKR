@@ -450,7 +450,7 @@ contains
                ihelp = ielast*nspin  !IELAST*NSPIN
                allocate(work(ielast,nspin), stat=i_stat)
                call memocc(i_stat,product(shape(work))*kind(work),'work','main1c')
-               work = (0.d0, 0.d0)
+               work = czero
                CALL MPI_ALLREDUCE(cdos_lly(1:ielast,1:nspin),work,ihelp,   &
                   MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
                call zcopy(ihelp,work,1,cdos_lly(1:ielast,1:nspin),1)

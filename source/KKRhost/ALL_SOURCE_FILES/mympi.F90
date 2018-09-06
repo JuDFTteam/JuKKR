@@ -162,8 +162,6 @@ contains
   
     if(nkmesh<=1) then
        if(myrank==master) write(*,'(A,2I7)') 'no load imbalance found (all energy points have the same k-mesh), please use regular grid to not waste any resources. #E, #atoms = ', ne, nat
-!      call MPI_Finalize(ierr)
-!      stop
     end if
   
     rest = nranks-int(nranks/(ne*nat))*ne*nat

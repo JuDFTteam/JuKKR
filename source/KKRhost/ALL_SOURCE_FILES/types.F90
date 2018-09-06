@@ -1,6 +1,9 @@
 module mod_types
 
 use mod_DataTypes
+
+    use constants, only: czero
+
 implicit none
 
     public :: t_inc, t_tgmat, t_mpi_c_grid, t_lloyd, t_dtmatJij, t_cpa, t_imp
@@ -188,7 +191,7 @@ contains
             if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
          end if
       
-         t_tgmat%tmat(:,:,:) = (0.d0, 0.d0)
+         t_tgmat%tmat(:,:,:) = czero
       endif
       
       if (.not. allocated(t_tgmat%gmat)) then
@@ -207,7 +210,7 @@ contains
             allocate(t_tgmat%gmat(1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_tgmat%gmat'
          end if
-         t_tgmat%gmat(:,:,:) = (0.d0, 0.d0)
+         t_tgmat%gmat(:,:,:) = czero
       endif
       
       if (.not. allocated(t_tgmat%gref)) then
@@ -225,7 +228,7 @@ contains
             allocate(t_tgmat%gref(1,1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_tgmat%gref'
          end if
-         t_tgmat%gref(:,:,:,:) = (0.d0, 0.d0)
+         t_tgmat%gref(:,:,:,:) = czero
       endif
 
    end subroutine init_tgmat
@@ -261,7 +264,7 @@ contains
             allocate(t_cpa%dtilts(1,1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_cpa%dmatts'
          end if
-         t_cpa%dmatts(:,:,:,:) = (0.d0, 0.d0)
+         t_cpa%dmatts(:,:,:,:) = czero
       endif
 
       if (.not. allocated(t_cpa%dtilts)) then
@@ -273,7 +276,7 @@ contains
             allocate(t_cpa%dtilts(1,1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_cpa%dtilts'
          end if
-         t_cpa%dtilts(:,:,:,:) = (0.d0, 0.d0)
+         t_cpa%dtilts(:,:,:,:) = czero
       endif
 
    end subroutine init_t_cpa 
@@ -328,7 +331,7 @@ contains
 !           if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
 !        end if
       
-         t_dtmatJij_at%dtmat_xyz(:,:,:,:) = (0.d0, 0.d0)
+         t_dtmatJij_at%dtmat_xyz(:,:,:,:) = czero
       endif
 
    end subroutine init_t_dtmatJij_at
@@ -407,41 +410,41 @@ contains
       ! real (kind=dp) arrays
       if (.not. allocated(t_imp%RIMP)) then
          allocate(t_imp%RIMP(IRMD,NATOMIMP), STAT=ierr)
-         t_imp%rimp = 0.d0
+         t_imp%rimp = 0.0_dp
       endif
       if (.not. allocated(t_imp%ZIMP)) then
          allocate(t_imp%ZIMP(NATOMIMP), STAT=ierr)
-         t_imp%zimp = 0.d0
+         t_imp%zimp = 0.0_dp
       endif
       if (.not. allocated(t_imp%THETASIMP)) then
          allocate(t_imp%THETASIMP(IRID,NFUND,NATOMIMP), STAT=ierr)
-         t_imp%thetasimp = 0.d0
+         t_imp%thetasimp = 0.0_dp
       endif
       if (.not. allocated(t_imp%VISPIMP)) then
          allocate(t_imp%VISPIMP(IRMD,NATOMIMP*NSPIN), STAT=ierr)
-         t_imp%vispimp = 0.d0
+         t_imp%vispimp = 0.0_dp
       endif
       if (.not. allocated(t_imp%VINSIMP)) then
          allocate(t_imp%VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN), STAT=ierr)
-         t_imp%vinsimp = 0.d0
+         t_imp%vinsimp = 0.0_dp
       endif
       if (.not. allocated(t_imp%RCLSIMP)) then
          allocate(t_imp%RCLSIMP(3,NATOMIMP), STAT=ierr)
-         t_imp%rclsimp = 0.d0
+         t_imp%rclsimp = 0.0_dp
       endif
       if (.not. allocated(t_imp%THETAIMP)) then
          allocate(t_imp%THETAIMP(NATOMIMP), STAT=ierr)
-         t_imp%thetaimp = 0.d0
+         t_imp%thetaimp = 0.0_dp
       endif
       if (.not. allocated(t_imp%PHIIMP)) then
          allocate(t_imp%PHIIMP(NATOMIMP), STAT=ierr)
-         t_imp%phiimp = 0.d0
+         t_imp%phiimp = 0.0_dp
       endif
 
       ! complex (kind=dp) arrays
       if (.not. allocated(t_imp%RLLIMP)) then
          allocate(t_imp%RLLIMP(t_inc%nsra*t_inc%lmmaxso, t_inc%lmmaxso, t_inc%irmdnew, NATOMIMP), STAT=ierr)
-         t_imp%rllimp = (0.0d0, 0.0d0)
+         t_imp%rllimp = czero
       endif
 
    end subroutine init_t_imp
@@ -623,7 +626,7 @@ contains
             allocate(t_lloyd%dtmat(1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
          end if
-         t_lloyd%dtmat(:,:,:) = (0.d0, 0.d0)
+         t_lloyd%dtmat(:,:,:) = czero
       endif
       
       if (.not. allocated(t_lloyd%tralpha)) then
@@ -639,7 +642,7 @@ contains
             allocate(t_lloyd%tralpha(1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_lloyd%tralpha'
          end if
-         t_lloyd%tralpha(:) = (0.d0, 0.d0)
+         t_lloyd%tralpha(:) = czero
       endif
       
       if (.not. allocated(t_lloyd%cdos)) then
@@ -655,7 +658,7 @@ contains
             allocate(t_lloyd%cdos(1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_lloyd%cdos'
          end if
-         t_lloyd%cdos(:,:) = (0.d0, 0.d0)
+         t_lloyd%cdos(:,:) = czero
       endif
 
       if (.not. allocated(t_lloyd%dgref)) then
@@ -671,7 +674,7 @@ contains
             allocate(t_lloyd%dgref(1,1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_lloyd%dgref'
          end if
-         t_lloyd%dgref(:,:,:,:) = (0.d0, 0.d0)
+         t_lloyd%dgref(:,:,:,:) = czero
       endif
       
       if (.not. allocated(t_lloyd%g0tr)) then
@@ -687,7 +690,7 @@ contains
             allocate(t_lloyd%g0tr(1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_lloyd%g0tr'
          end if
-         t_lloyd%g0tr(:) = (0.d0, 0.d0)
+         t_lloyd%g0tr(:) = czero
       endif
       
 

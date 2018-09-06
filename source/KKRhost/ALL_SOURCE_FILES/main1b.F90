@@ -447,21 +447,27 @@ contains
       ! Initialize trace for Lloyd formula                    ! LLY Lloyd
       LLY_GRTR(:,:) = CZERO ! 1:IELAST,1:NSPIND          ! LLY Lloyd
 
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! NO-SOC
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (.not.OPT('NEWSOSOL')) then
+#ifdef CPP_MPI
+         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+         ie_start = 0
+         ie_end = ielast
+#endif
+         do I1 = 1,NATYP
+           do ie_num=1,ie_end
+             irec = ie_num+ie_end*(ispin-1)+ie_end*NSPIN*(I1-1)
+             write(7222+myrank,*) myrank, ie_num+ie_start, t_lloyd%tralpha(irec)
+           end do
+         end do
          !----------------------------------------------------------------------
          ! BEGIN do loop over spins and energies
          !----------------------------------------------------------------------
          do 370 ISPIN = 1,NSPIN
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            ! NO-SOC
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#ifdef CPP_MPI
-            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-            ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-#else
-            ie_start = 0
-            ie_end = ielast
-#endif
 
             do 360 ie_num=1,ie_end
                IE = ie_start+ie_num
@@ -794,7 +800,6 @@ contains
             end if
 !
  370     continue                  !  ISPIN = 1,NSPIN
-
 
       else ! NEW SOC SOLVER
 
@@ -1141,7 +1146,9 @@ contains
       close (68)
 !     IF ( IGF.NE.0 ) CLOSE (88)  !no-green
 
+
       if (LLY.NE.0) then                                                 ! LLY Lloyd
+
          if (t_lloyd%cdos_diff_lly_to_file) then
             if(myrank==master) then
                OPEN (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')          ! LLY Lloyd
@@ -1154,47 +1161,31 @@ contains
             call zcopy(ihelp,work,1,cdos_lly,1)
             deallocate(work)
 #endif
-         end if
+         end if !t_lloyd%cdos_diff_lly_to_file
 
-         if (.not.OPT('NEWSOSOL')) then
-            do ISPIN = 1,NSPIN                                             ! LLY
-#ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-#else
-               ie_start = 0
-               ie_end   = ielast
-#endif
-               do ie_num=1,ie_end
-                  IE = ie_start+ie_num
-                  if (t_lloyd%cdos_diff_lly_to_file) then
-                     write(701,FMT='(10E25.16)') EZ(IE),CDOS_LLY(IE,ISPIN),   &
-                     TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN)                  ! LLY
-                  else
-                     t_lloyd%cdos(ie_num,ISPIN) = CDOS_LLY(IE,ISPIN)
-                  end if
-               enddo ! IE                                                  ! LLY
-            enddo                                                          ! LLY
-         else ! NEWSOSOL
+
+         do ISPIN = 1,NSPIN/(1+KORBIT)                                     ! LLY
 #ifdef CPP_MPI
             ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
             ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
             ie_start = 0
             ie_end   = ielast
-#endif         
+#endif
             do ie_num=1,ie_end
                IE = ie_start+ie_num
                if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) then
-                  write(701,FMT='(10E25.16)') EZ(IE),CDOS_LLY(IE,1),  &
-                  TRALPHA(IE,1),LLY_GRTR(IE,1)   ! LLY
+                  write(701,FMT='(10E25.16)') EZ(IE),CDOS_LLY(IE,ISPIN),   &
+                  TRALPHA(IE,ISPIN),LLY_GRTR(IE,ISPIN)                     ! LLY
                else
-                  t_lloyd%cdos(ie_num,1) = CDOS_LLY(IE,1)
+                  t_lloyd%cdos(ie_num,ISPIN) = CDOS_LLY(IE,ISPIN)
                end if
-             end do
-         endif ! .NOT.OPT('NEWSOSOL')                                    ! LLY
-         if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) close(701)                    ! LLY
-      endif                                                              ! LLY
+            enddo ! IE                                                     ! LLY
+         enddo ! ISPIN                                                     ! LLY
+         if(t_lloyd%cdos_diff_lly_to_file .and. myrank==master) close(701) ! LLY
+      endif  !LLY/=0                                                       ! LLY
+
+
 
       if ( ( OPT('XCPL    ') ).AND.( ICC.LE.0 ) ) then
 #ifdef CPP_TIMING
