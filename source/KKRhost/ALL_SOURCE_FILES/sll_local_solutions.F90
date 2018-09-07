@@ -9,7 +9,7 @@ subroutine sll_local_solutions(vll,tau,drpan2,csrc1,slc1sum, &
                          nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor, &
                          cmodesll,LBESSEL,use_sratrick1)
       Use mod_datatypes, Only: dp
-implicit none
+      implicit none
       integer :: ncheb                               ! number of chebyshev nodes
       integer :: lmsize                              ! lm-components * nspin
       integer :: lmsize2                             ! lmsize * nvec
@@ -151,7 +151,7 @@ end if
               vjli(:,:,icheb) = czero
               vhli(:,:,icheb) = czero
     else
-      stop '[rllsll] mode not known'
+      stop '[sll-loc] mode not known'
     end if
 
 ! calculation of the J (and H) matrix according to equation 5.69 (2nd eq.)
@@ -212,12 +212,12 @@ end if
       end do
     end do
 
-        do lm2 = 1,lmsize
-    do icheb2 = 0,ncheb
-      call svpart(srv1(0,1,icheb2,lm2), &
-                  jlmkmn(0,1,icheb2),hlmkmn(0,1,icheb2), &
-                  vhli(1,lm2,icheb2),vjli(1,lm2,icheb2), &
-                  ncheb,lmsize)
+    do lm2 = 1,lmsize
+      do icheb2 = 0,ncheb
+        call svpart(srv1(0,1,icheb2,lm2), &
+                    jlmkmn(0,1,icheb2),hlmkmn(0,1,icheb2), &
+                    vhli(1,lm2,icheb2),vjli(1,lm2,icheb2), &
+                    ncheb,lmsize)
       end do
     end do
     do lm1 = 1,lmsize
@@ -227,7 +227,7 @@ end if
     end do
 
   else
-    stop '[rllsll] error in inversion'
+    stop '[sll-loc] error in inversion'
   end if
 
 !-------------------------------------------------------
@@ -237,15 +237,18 @@ end if
 ! i.e., solve system A*U=J, see eq. 5.68.
 
   if ( use_sratrick==0 ) then
+
     nplm = (ncheb+1)*lmsize2
 
     if (cmodesll/='0') then
       call zgetrf(nplm,nplm,srv,nplm,ipiv,info)
-      if (info/=0) stop 'rllsll: zgetrf'
+      if (info/=0) stop 'sll-loc: zgetrf'
       call zgetrs('n',nplm,lmsize,srv,nplm,ipiv,yill,nplm,info)
       call zgetrs('n',nplm,lmsize,srv,nplm,ipiv,zill,nplm,info)
     end if
+
   elseif ( use_sratrick==1 ) then
+
     nplm = (ncheb+1)*lmsize
 
     call zgetrf(nplm,nplm,srv1,nplm,ipiv,info)
@@ -253,20 +256,22 @@ end if
     call zgetrs('n',nplm,lmsize,srv1,nplm,ipiv,zill1,nplm,info)
 
     do icheb2 = 0,ncheb
+
       do lm2 = 1,lmsize
         do lm1 = 1,lmsize
           yill1temp(lm1,lm2) = yill1(icheb2,lm1,lm2)
           zill1temp(lm1,lm2) = zill1(icheb2,lm1,lm2)
         end do
       end do
-    call zgemm('n','n',lmsize,lmsize,lmsize,cone,vhli(1,1,icheb2), &
-        lmsize,yill1temp,lmsize,czero,vhli_yill1,lmsize)
-    call zgemm('n','n',lmsize,lmsize,lmsize,cone,vhli(1,1,icheb2), &
-        lmsize,zill1temp,lmsize,czero,vhli_zill1,lmsize)
-    call zgemm('n','n',lmsize,lmsize,lmsize,cone,vjli(1,1,icheb2), &
-        lmsize,yill1temp,lmsize,czero,vjli_yill1,lmsize)
-    call zgemm('n','n',lmsize,lmsize,lmsize,cone,vjli(1,1,icheb2), &
-        lmsize,zill1temp,lmsize,czero,vjli_zill1,lmsize)
+
+      call zgemm('n','n',lmsize,lmsize,lmsize,cone,vhli(1,1,icheb2), &
+          lmsize,yill1temp,lmsize,czero,vhli_yill1,lmsize)
+      call zgemm('n','n',lmsize,lmsize,lmsize,cone,vhli(1,1,icheb2), &
+          lmsize,zill1temp,lmsize,czero,vhli_zill1,lmsize)
+      call zgemm('n','n',lmsize,lmsize,lmsize,cone,vjli(1,1,icheb2), &
+          lmsize,yill1temp,lmsize,czero,vjli_yill1,lmsize)
+      call zgemm('n','n',lmsize,lmsize,lmsize,cone,vjli(1,1,icheb2), &
+          lmsize,zill1temp,lmsize,czero,vjli_zill1,lmsize)
 
       do icheb = 0,ncheb
          taucsrcr =  tau(icheb)*csrc1(icheb,icheb2)*drpan2
@@ -285,14 +290,14 @@ end if
               zill2(icheb,lm3,lm2) + &
               taucsrcr*(jlk(l1,mn)*vhli_zill1(lm3,lm2) &
                        -hlk(l1,mn)*vjli_zill1(lm3,lm2))
-
             end do
         end do
-      end do
-    end do
+      end do ! icheb
+
+    end do ! icheb2
 
   else
-    stop '[rllsll] error in inversion'
+    stop '[sll-loc] error in inversion'
   end if
 
 ! Reorient indices for later use

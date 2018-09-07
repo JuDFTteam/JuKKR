@@ -36,10 +36,13 @@ use mod_timing                            ! timing routine
 #ifdef CPP_HYBRID
 use omp_lib ! omp functions
 #endif
-      Use mod_datatypes, Only: dp
-   use mod_chebint
+
+      use Constants
+      Use mod_DataTypes, Only: dp
+      use mod_chebint
    use mod_sll_local_solutions
-implicit none
+
+      implicit none
       integer :: ncheb                               ! number of chebyshev nodes
       integer :: npan                                ! number of panels
       integer :: lmsize                              ! lm-components * nspin 
@@ -51,9 +54,6 @@ implicit none
       integer :: LBESSEL, use_sratrick1      !  dimensions etc., needed only for host code interface
 #endif
 
-      complex (kind=dp),parameter:: ci= (0.0d0,1.0d0), &! complex i
-                                 cone=(1.0d0,0.0d0),&!         1
-                                 czero=(0.0d0,0.0d0) !         0
       ! running indices
       integer lm1,lm2
       integer icheb,ipan,mn
@@ -142,7 +142,7 @@ if ( config_testflag('nosph') .or. lmsize==1 ) then
 elseif ( .not. config_testflag('nosph') ) then
   use_sratrick=1
 else
-  stop '[rllsll] use_sratrick error'
+  stop '[sll-glob] use_sratrick error'
 end if
 #else
 if ( lmsize==1 ) then
@@ -159,7 +159,7 @@ idotime = 0
 #ifdef test_run
 idotime = 1
 #endif
-if (idotime==1) call timing_start('rllsll')
+if (idotime==1) call timing_start('sll-glob')
 
 
 do ipan = 1,npan
@@ -171,6 +171,15 @@ end do
 
 call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 
+allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
+allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
+allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
+allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
+
+allocate( work(lmsize,lmsize) )
+allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
+
+if (idotime==1) call timing_start('local')
 
 #ifdef CPP_HYBRID
 !$OMP PARALLEL DEFAULT (PRIVATE) &
@@ -182,42 +191,21 @@ call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 thread_id = omp_get_thread_num()
 #endif
 
-allocate( work(lmsize,lmsize) )
-allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
-allocate( mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan) )
-allocate( mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan) )
-
-allocate( yif(lmsize2,lmsize,0:ncheb,npan) )
-allocate( zif(lmsize2,lmsize,0:ncheb,npan) )
-
-if (idotime==1) call timing_start('local')
-
 ! loop over subintervals
 #ifdef CPP_HYBRID
 ! openMP pragmas added sachin, parallel region starts earlier to get allocations of arrays right
+
 !$OMP DO
 #endif
-
 do ipan = 1,npan
 
-  if (idotime==1) call timing_start('local1')
-
-      drpan2 = (rpanbound(ipan)-rpanbound(ipan-1))/ 2.d0    ! *(b-a)/2 in eq. 5.53, 5.54
-
-      call sll_local_solutions(vll,tau(0,ipan),drpan2,csrc1,slc1sum, &
-                         mihvy(1,1,ipan),mihvz(1,1,ipan),mijvy(1,1,ipan),mijvz(1,1,ipan), &
-                         yif(1,1,0,ipan),zif(1,1,0,ipan), &
-                         ncheb,ipan,lmsize,lmsize2,nrmax, &
-                         nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor, &
-                         cmodesll,LBESSEL,use_sratrick1)
-
-  if (idotime==1) call timing_pause('local1')
-  if (idotime==1) call timing_start('local2')
-
-  if (idotime==1) call timing_pause('local2')
-  if (idotime==1) call timing_start('local3')
-
-  if (idotime==1) call timing_pause('local3')
+  drpan2 = (rpanbound(ipan)-rpanbound(ipan-1))/ 2.d0    ! *(b-a)/2 in eq. 5.53, 5.54
+  call sll_local_solutions(vll,tau(0,ipan),drpan2,csrc1,slc1sum, &
+                     mihvy(1,1,ipan),mihvz(1,1,ipan),mijvy(1,1,ipan),mijvz(1,1,ipan), &
+                     yif(1,1,0,ipan),zif(1,1,0,ipan), &
+                     ncheb,ipan,lmsize,lmsize2,nrmax, &
+                     nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor, &
+                     cmodesll,LBESSEL,use_sratrick1)
 
 end do !ipan
 #ifdef CPP_HYBRID
@@ -225,8 +213,6 @@ end do !ipan
 !$OMP END PARALLEL
 #endif
 ! end the big loop over the subintervals
-
-
 
 if (idotime==1) call timing_stop('local')
 if (idotime==1) call timing_start('afterlocal')
@@ -241,13 +227,13 @@ if (idotime==1) call timing_start('afterlocal')
 ! irregular 
 do lm2 = 1,lmsize
   do lm1 = 1,lmsize
-    dllp(lm1,lm2,npan) = 0.d0
-    cllp(lm1,lm2,npan) = 0.d0
+    dllp(lm1,lm2,npan) = czero
+    cllp(lm1,lm2,npan) = czero
   end do
 end do
 
 do lm1 = 1,lmsize
-  dllp(lm1,lm1,npan) = 1.d0
+  dllp(lm1,lm1,npan) = cone
 end do
 
 do ipan = npan,1,-1
@@ -282,13 +268,10 @@ if (idotime==1) call timing_start('endstuff')
 if (idotime==1) call timing_stop('endstuff')
 if (idotime==1) call timing_start('checknan')
 if (idotime==1) call timing_stop('checknan')
-if (idotime==1) call timing_stop('local1')
-if (idotime==1) call timing_stop('local2')
-if (idotime==1) call timing_stop('local3')
-if (idotime==1) call timing_stop('rllsll')
+if (idotime==1) call timing_stop('sll-glob')
 
 deallocate( work, cllp, dllp, mihvy, mihvz,  mijvy, mijvz,yif,zif, stat=ierror )
-if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
+if(ierror/=0) stop '[sll-glob] ERROR in deallocating arrays'
 end subroutine sll_global_solutions
 
 end module mod_sll_global_solutions

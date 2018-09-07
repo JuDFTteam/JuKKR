@@ -296,7 +296,7 @@ contains
       allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
       allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
       allocate( cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan) )
-      allocate ( ull(lmsize2,lmsize,nrmax) )
+      allocate( ull(lmsize2,lmsize,nrmax) )
       allocate( work(lmsize,lmsize) )
 
 #ifdef CPP_HYBRID

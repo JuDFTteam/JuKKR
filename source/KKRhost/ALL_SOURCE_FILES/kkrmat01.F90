@@ -328,6 +328,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (KREL.EQ.0) then
 
+         !$omp single
          GLLKEN(:,:) = CZERO
          call DLKE0(GLLKEN,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,BZKPK,RCLS,GINP)
 
@@ -345,10 +346,12 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
             DGLLKEM(:,:) = CZERO
             call DLKE0(DGLLKEM,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RRM,EZOA,ATOM,BZKPK,RCLS,DGINP)
          endif
+         !$omp end single
          !----------------------------------------------------------------------
          ! LLY Lloyd
          !--------------------------------------------------------------------
          if (.NOT.OPT('NEWSOSOL')) then
+            !$omp single
             do I2=1,ALM
                do I1=1,ALM
                   GLLKE(I1,I2)= (GLLKEN(I1,I2) + GLLKEM(I2,I1))*0.5D0
@@ -357,7 +360,9 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
                   endif
                enddo
             enddo
+            !$omp end single
          else                ! (.NOT.OPT('NEWSOSOL'))
+            !$omp single
             do I2=1,ALMGF0
                do I1=1,ALMGF0
                   GLLKEN(I1,I2)=(GLLKEN(I1,I2) + GLLKEM(I2,I1))*0.5D0
@@ -366,6 +371,8 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
                   endif
                enddo
             enddo
+            !$omp end single
+
             ! bigger GLLKE matrix and rearrange with atom block
 #ifdef CPP_HYBRID
             !$omp do
@@ -403,6 +410,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
          !----------------------------------------------------------------------
          ! LLY Lloyd Not implementing Lloyds formula for KREL=1 (Dirac ASA)
          !----------------------------------------------------------------------
+         !$omp single
          GLLKE0(:,:) = CZERO
          GLLKE0M(:,:) = CZERO
          call DLKE0(GLLKE0,ALAT,NAEZ,CLS,NACLS,NACLSMAX,RR,EZOA,ATOM,BZKPK,RCLS,GINP)
@@ -413,6 +421,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
                GLLKE0(I1,I2)=(GLLKE0(I1,I2) + GLLKE0M(I2,I1))*0.5D0
             enddo
          enddo
+         !$omp end single
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          ! Double the GLLKE0 matrix and transform to the REL representation
          !    ==> GLLKE
@@ -467,6 +476,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
       ! in the same matrix GLLKE where G^r was stored.
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if ( .not. OPT('VIRATOMS') ) then
+         !$omp single
          do I1=1,NAEZ
             do LM1 = 1,LMMAXD
                do LM2 = 1,LMMAXD
@@ -476,6 +486,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
                enddo
             enddo
          enddo
+         !$omp end single
          !
 #ifdef CPP_TIMING
          if(mythread==0 .and. t_inc%i_time>0) call timing_start('main1b - inversion')
@@ -485,11 +496,13 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
          ! the output is the scattering path operator TAU stored in GLLKE
          ! Actually -TAU, because TAU = (Deltat^-1 - Gref)^-1
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         !$omp single
          if (LLY.NE.0) then ! If LLY, full inversion is needed
             call INVERSION(GLLKE,0,ICHECK) ! LLY
          else
             call INVERSION(GLLKE,INVMOD,ICHECK)
          endif
+         !$omp end single
 #ifdef CPP_TIMING
          if(mythread==0 .and. t_inc%i_time>0) call timing_pause('main1b - inversion')
 #endif
@@ -509,6 +522,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
             !-------------------------------------------------------------------
             !
             ! First set up (dt/dE - dtref/dE) Deltat^-1, store in array t_aux
+            !$omp single
             do I1 = 1,NAEZ
                ! GAUX1 = dt/dE-dtref/dE
                GAUX1(1:LMMAXD,1:LMMAXD) = (1.D0/CFCTOR) *   &
@@ -542,6 +556,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
                   DGLLKE(IL1:IL2,JL1:JL2) = GAUX2(1:LMMAXD,1:LMMAXD)
                enddo
             enddo
+            !$omp end single
 
             ! full matrix multiple
             !            ALLOCATE(GLLKE0(ALM,ALM))
@@ -597,6 +612,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
       ! Global sum on array gs
       !-------------------------------------------------------------------------
       ! no omp at this loop because of rhoq output
+      !$omp single
       do NS = 1,NSHELL
          I = NSH1(NS)
          J = NSH2(NS)
@@ -619,6 +635,7 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
          end do ! isym
          ! ----------------------------------------------------------------------
       end do ! ns
+      !$omp end single
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! LLY Lloyd Integration
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

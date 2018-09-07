@@ -110,25 +110,25 @@ add_definitions(-DCOMPVER2="${compver}")
 add_definitions(-DCOMPVER3="${compflag}")
 add_definitions(-DCOMPVER4="${complib}")
 
+
+# deal with OpenMP flags:
 # only these files contain OpenMP statements:
 set_source_files_properties(ALL_SOURCE_FILES/gll95.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-#set_source_files_properties(ALL_SOURCE_FILES/kkrmat01.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 set_source_files_properties(ALL_SOURCE_FILES/main0.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 set_source_files_properties(ALL_SOURCE_FILES/rhoqtools.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-#set_source_files_properties(ALL_SOURCE_FILES/rhoval.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 set_source_files_properties(ALL_SOURCE_FILES/rhovalnew.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 set_source_files_properties(ALL_SOURCE_FILES/strmat.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 set_source_files_properties(ALL_SOURCE_FILES/tmat_newsolver.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 set_source_files_properties(ALL_SOURCE_FILES/rllsll.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-set_source_files_properties(ALL_SOURCE_FILES/rll_local_solutions.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-set_source_files_properties(ALL_SOURCE_FILES/sll_local_solutons.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-set_source_files_properties(ALL_SOURCE_FILES/rll_global_solutions.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-set_source_files_properties(ALL_SOURCE_FILES/sll_global_solutons.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-
-# these are called in the above routines and thus have to be thread safe
-#set_source_files_properties(ALL_SOURCE_FILES/gamfc.f90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-#set_source_files_properties(ALL_SOURCE_FILES/ymy.f90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-#set_source_files_properties(ALL_SOURCE_FILES/gfree.f90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+# parallelization of global/local solutions broken, probably because local solutions are called within global solutions
+#set_source_files_properties(ALL_SOURCE_FILES/rll_global_solutions.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+#set_source_files_properties(ALL_SOURCE_FILES/sll_global_solutons.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+#set_source_files_properties(ALL_SOURCE_FILES/rll_local_solutions.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+#set_source_files_properties(ALL_SOURCE_FILES/sll_local_solutons.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+# here parallelization can be optimized (calls to subroutines dlke0 etc are serialized at the moment)
+set_source_files_properties(ALL_SOURCE_FILES/kkrmat01.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+# omp statenments commented out:
+#set_source_files_properties(ALL_SOURCE_FILES/rhoval.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 
 
 # the executable is built from this list of files

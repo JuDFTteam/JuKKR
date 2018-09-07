@@ -149,7 +149,7 @@ if ( config_testflag('nosph') .or. lmsize==1 ) then
 elseif ( .not. config_testflag('nosph') ) then
   use_sratrick=1
 else
-  stop '[rllsll] use_sratrick error'
+  stop '[rll-glob] use_sratrick error'
 end if
 #else
 if ( lmsize==1 ) then
@@ -166,7 +166,7 @@ idotime = 0
 #ifdef test_run
 idotime = 1
 #endif
-if (idotime==1) call timing_start('rllsll')
+if (idotime==1) call timing_start('rll-glob')
 
 
 do ipan = 1,npan
@@ -178,6 +178,17 @@ end do
 
 call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 
+allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
+allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
+allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
+allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
+
+allocate( work(lmsize,lmsize) )
+allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
+
+allocate( ull(lmsize2,lmsize,nrmax) )
+
+if (idotime==1) call timing_start('local')
 
 #ifdef CPP_HYBRID
 !$OMP PARALLEL DEFAULT (PRIVATE) &
@@ -189,27 +200,13 @@ call chebint(cslc1,csrc1,slc1sum,c1,ncheb)
 thread_id = omp_get_thread_num()
 #endif
 
-allocate ( ull(lmsize2,lmsize,nrmax) )
-
-allocate( work(lmsize,lmsize) )
-allocate( allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan) )
-allocate( mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan) )
-allocate( mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan) )
-
-allocate( yrf(lmsize2,lmsize,0:ncheb,npan) )
-allocate( zrf(lmsize2,lmsize,0:ncheb,npan) )
-
-if (idotime==1) call timing_start('local')
-
 ! loop over subintervals
 #ifdef CPP_HYBRID
 ! openMP pragmas added sachin, parallel region starts earlier to get allocations of arrays right
+
 !$OMP DO
 #endif
-
 do ipan = 1,npan
-
-  if (idotime==1) call timing_start('local1')
 
   drpan2 = (rpanbound(ipan)-rpanbound(ipan-1))/ 2.d0    ! *(b-a)/2 in eq. 5.53, 5.54
   call rll_local_solutions(vll,tau(0,ipan),drpan2,cslc1,slc1sum, &
@@ -219,22 +216,12 @@ do ipan = 1,npan
                      nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor, &
                      cmoderll,LBESSEL,use_sratrick1)
 
-  if (idotime==1) call timing_pause('local1')
-  if (idotime==1) call timing_start('local2')
-
-  if (idotime==1) call timing_pause('local2')
-  if (idotime==1) call timing_start('local3')
-
-  if (idotime==1) call timing_pause('local3')
-
 end do !ipan
 #ifdef CPP_HYBRID
 !$OMP END DO
 !$OMP END PARALLEL
 #endif
 ! end the big loop over the subintervals
-
-
 
 if (idotime==1) call timing_stop('local')
 if (idotime==1) call timing_start('afterlocal')
@@ -315,13 +302,10 @@ end do
 if (idotime==1) call timing_stop('endstuff')
 if (idotime==1) call timing_start('checknan')
 if (idotime==1) call timing_stop('checknan')
-if (idotime==1) call timing_stop('local1')
-if (idotime==1) call timing_stop('local2')
-if (idotime==1) call timing_stop('local3')
-if (idotime==1) call timing_stop('rllsll')
+if (idotime==1) call timing_stop('rll-glob')
 
 deallocate( work, allp, bllp, mrnvy, mrnvz , mrjvy, mrjvz ,yrf,zrf, stat=ierror )
-if(ierror/=0) stop '[rllsll] ERROR in deallocating arrays'
+if(ierror/=0) stop '[rll-glob] ERROR in deallocating arrays'
 end subroutine rll_global_solutions
 
 end module mod_rll_global_solutions
