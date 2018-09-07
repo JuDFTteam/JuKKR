@@ -98,7 +98,7 @@ elseif(ENABLE_OMP)
     endif()
     set(compflag "openmp")
 else()
-    message("both MPI and OpenMP is disabled")
+    message("both MPI and OpenMP are disabled")
 endif()
 
 # maybe for future librbary dependecies
