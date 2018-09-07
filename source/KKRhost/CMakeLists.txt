@@ -139,6 +139,11 @@ set_source_files_properties(ALL_SOURCE_FILES/kkrmat01.F90 PROPERTIES COMPILE_FLA
 #set_source_files_properties(ALL_SOURCE_FILES/rhoval.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 
 
+if(ENABLE_BdG)
+    add_definitions(-DCPP_BdG)
+endif()
+
+
 # the executable is built from this list of files
 add_executable(
     kkr.x

@@ -169,6 +169,7 @@ contains
          enddo
       enddo
 
+#ifdef CPP_BdG
       ! shift potential by EF to change referece point of energy to Fermi level
       ! should later be done automatically in main0
       if (test('BdG_dev ')) then
@@ -185,6 +186,7 @@ contains
       else
         e_shift = (0.0_dp, 0.0_dp)
       end if
+#endif
 
       ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
       call VLLMAT(1,NRMAXD,IRMDNEW,lmsize,LMMAXSO,VNSPLL0,VINS,LMPOT,CLEB,ICLEB,&
@@ -324,10 +326,12 @@ contains
 #ifdef CPP_OMP
             !$omp critical
 #endif
+#ifdef CPP_BdG
             if (test('BdG_dev ')) then
                write(*,'(A,4ES21.7)') 'shifting energy by e_fermi:', eryd, e_shift
                ERYD = ERYD + e_shift
             end if
+#endif
 
             if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
 #ifdef CPP_OMP
@@ -343,6 +347,7 @@ contains
 #ifdef CPP_OMP
             !$omp critical
 #endif
+#ifdef CPP_BdG
             ! test writeout of VNSPLL1
             if (test('BdG_dev ')) then
               open(7352834, file='vnspll_SOC.txt', form='formatted')
@@ -350,6 +355,7 @@ contains
               write(7352834, '(2F25.14)') VNSPLL1(:,:,:,ith)
               close(7352834)
             end if
+#endif
 #ifdef CPP_OMP
             !$omp end critical
 #endif
@@ -372,6 +378,7 @@ contains
 #ifdef CPP_OMP
             !$omp critical
 #endif
+#ifdef CPP_BdG
             ! test writeout of VNPSLL
             if (test('BdG_dev ')) then
               open(7352834, file='vnspll_sra.txt', form='formatted')
@@ -383,6 +390,7 @@ contains
               write(7352834, '(2F25.14)') VNSPLL(:,:,:,ith)
               close(7352834)
             end if
+#endif
 #ifdef CPP_OMP
             !$omp end critical
 #endif
@@ -401,6 +409,7 @@ contains
 #ifdef CPP_OMP
             !$omp critical
 #endif
+#ifdef CPP_BdG
             if (test('BdG_dev ')) then
               write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk_atom_',i1,'_energ_',ie,'.dat'
               open(888888, file=trim(filename), form='formatted')
@@ -423,6 +432,7 @@ contains
               write(888888, '(2ES21.9)') hlk2(:,:,ith)
               close(888888)
             end if
+#endif
 #ifdef CPP_OMP
             !$omp end critical
 #endif
@@ -466,6 +476,7 @@ contains
 #ifdef CPP_OMP
             !$omp critical
 #endif
+#ifdef CPP_BdG
             if (test('BdG_dev ')) then
               write(filename, '(A,I0.3,A,I0.3,A)') 'rll_atom_',i1,'_energ_',ie,'.dat'
               open(888888, file=trim(filename), form='formatted')
@@ -478,6 +489,7 @@ contains
               write(888888, '(2ES21.9)') sll(:,:,:,ith)
               close(888888)
             end if
+#endif
 #ifdef CPP_OMP
             !$omp end critical
 #endif
@@ -506,6 +518,7 @@ contains
 #ifdef CPP_OMP
             !$omp critical
 #endif
+#ifdef CPP_BdG
             if (test('BdG_dev ')) then
               write(filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_',i1,'_energ_',ie,'.dat'
               open(888888, file=trim(filename), form='formatted')
@@ -513,6 +526,7 @@ contains
               write(888888, '(2ES21.9)') TMATLL(:,:)
               close(888888)
             end if
+#endif
 #ifdef CPP_OMP
             !$omp end critical
 #endif
