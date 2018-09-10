@@ -284,8 +284,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
 
             if ((rxy2<=rcutxy2) .and. (r2<=rcut2)) then
               number = number + 1
-              atom(number, jatom) = -naez - i1 ! negative values are used in
-                                               ! dlke1.f
+              atom(number, jatom) = -naez - i1 ! negative values are used in dlke1
               ezoa(number, jatom) = ir ! ILAY,I1 are negative
               rcls1(1:3, number) = tmp(1:3)
             end if

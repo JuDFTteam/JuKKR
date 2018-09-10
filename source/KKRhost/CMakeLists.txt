@@ -133,8 +133,10 @@ endif()
 #set_source_files_properties(ALL_SOURCE_FILES/sll_global_solutons.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 #set_source_files_properties(ALL_SOURCE_FILES/rll_local_solutions.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 #set_source_files_properties(ALL_SOURCE_FILES/sll_local_solutons.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-# here parallelization can be optimized (calls to subroutines dlke0 etc are serialized at the moment)
-set_source_files_properties(ALL_SOURCE_FILES/kkrmat01.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+
+# here parallelization only works without lloyd and can be optimized (calls to subroutines dlke0 etc are serialized at the moment)
+#set_source_files_properties(ALL_SOURCE_FILES/kkrmat01.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+
 # omp statenments commented out:
 #set_source_files_properties(ALL_SOURCE_FILES/rhoval.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 
