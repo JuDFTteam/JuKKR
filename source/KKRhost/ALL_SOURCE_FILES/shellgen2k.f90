@@ -116,98 +116,100 @@ subroutine shellgen2k(icc, natom, rcls, atom, nofgij, iofgij, jofgij, nrot, &
 
     i = iofgij(igij)
     j = jofgij(igij)
-    ai = atom(i)
-    aj = atom(j)
-
-    lfound = .false.
-    nsgen = nshell(0) + nsnew
-
-    ! RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
-    do id = 1, nrot
-      isym = isymindex(id)
-      ! ----------------------------------------------------------------------
-      do ii = 1, 3
-        ri(ii) = rsymat(isym, ii, 1)*rcls(1, i) + rsymat(isym, ii, 2)*rcls(2, &
-          i) + rsymat(isym, ii, 3)*rcls(3, i)
-
-        rj(ii) = rsymat(isym, ii, 1)*rcls(1, j) + rsymat(isym, ii, 2)*rcls(2, &
-          j) + rsymat(isym, ii, 3)*rcls(3, j)
-      end do
-      ! ----------------------------------------------------------------------
-
-      ! --> search for an equivalent pair within the already generated
-      ! shells (1..NSHELL(0)+NSNEW)
-
-      ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      ns = 0
-      do while ((.not. lfound) .and. (ns<nsgen))
-        ns = ns + 1
+    ! take only those shells that have atom in them
+    if (i/=0 .or. j/=0) then
+      ai = atom(i)
+      aj = atom(j)
+      
+      lfound = .false.
+      nsgen = nshell(0) + nsnew
+      
+      ! RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+      do id = 1, nrot
+        isym = isymindex(id)
         ! ----------------------------------------------------------------------
-        ! IF ( ( AI.EQ.NSH1I(NS) .AND. AJ.EQ.NSH2I(NS) ).OR.
-        ! &              ( AI.EQ.NSH2I(NS) .AND. AJ.EQ.NSH1I(NS) )  ) THEN
-        ! Commented out by Phivos Mavropoulos 31 Oct 2008. The problem is that
-        ! if (I,J) and (J,I)
-        ! are assigned to the same shell, then G(I,J) should be transposed to
-        ! obtain G(J,I).
-        ! However, this transposition is not performed in account in kkr1b
-        ! (subr. tbxccpljij).
-        ! There, only the real-space rotations (DSYMLL) are performed to
-        ! generate each pair GF from the
-        ! representative pair, but the transposition is forgotten. Thus there
-        ! are two ways to resolve this:
-        ! Either flag the pairs to be transposed, which is is a little faster
-        ! but complicated
-        ! to program, or do not consider the (I,J) and (J,I) pairs as
-        ! belonging to the same shell,
-        ! which is done now:
-        if ((ai==nsh1i(ns) .and. aj==nsh2i(ns))) then
-
-          r1 = (ri(1)-rj(1)+ratomi(1,ns))**2 + (ri(2)-rj(2)+ratomi(2,ns))**2 + &
-            (ri(3)-rj(3)+ratomi(3,ns))**2
-
-          if (r1<small) then
-            lfound = .true.
-            nshelli(ns) = nshelli(ns) + 1
-            if (ns<=nshell(0)) write (1337, 130) ai, (rcls(ii,i), ii=1, 3), &
-              aj, (rcls(ii,j), ii=1, 3), ns
-            ish(ns, nshelli(ns)) = i
-            jsh(ns, nshelli(ns)) = j
+        do ii = 1, 3
+          ri(ii) = rsymat(isym, ii, 1)*rcls(1, i) + rsymat(isym, ii, 2)*rcls(2, i) + rsymat(isym, ii, 3)*rcls(3, i)
+      
+          rj(ii) = rsymat(isym, ii, 1)*rcls(1, j) + rsymat(isym, ii, 2)*rcls(2, j) + rsymat(isym, ii, 3)*rcls(3, j)
+        end do
+        ! ----------------------------------------------------------------------
+      
+        ! --> search for an equivalent pair within the already generated
+        ! shells (1..NSHELL(0)+NSNEW)
+      
+        ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        ns = 0
+        do while ((.not. lfound) .and. (ns<nsgen))
+          ns = ns + 1
+          ! ----------------------------------------------------------------------
+          ! IF ( ( AI.EQ.NSH1I(NS) .AND. AJ.EQ.NSH2I(NS) ).OR.
+          ! &              ( AI.EQ.NSH2I(NS) .AND. AJ.EQ.NSH1I(NS) )  ) THEN
+          ! Commented out by Phivos Mavropoulos 31 Oct 2008. The problem is that
+          ! if (I,J) and (J,I)
+          ! are assigned to the same shell, then G(I,J) should be transposed to
+          ! obtain G(J,I).
+          ! However, this transposition is not performed in account in kkr1b
+          ! (subr. tbxccpljij).
+          ! There, only the real-space rotations (DSYMLL) are performed to
+          ! generate each pair GF from the
+          ! representative pair, but the transposition is forgotten. Thus there
+          ! are two ways to resolve this:
+          ! Either flag the pairs to be transposed, which is is a little faster
+          ! but complicated
+          ! to program, or do not consider the (I,J) and (J,I) pairs as
+          ! belonging to the same shell,
+          ! which is done now:
+          if ((ai==nsh1i(ns) .and. aj==nsh2i(ns))) then
+      
+            r1 = (ri(1)-rj(1)+ratomi(1,ns))**2 + (ri(2)-rj(2)+ratomi(2,ns))**2 + &
+              (ri(3)-rj(3)+ratomi(3,ns))**2
+      
+            if (r1<small) then
+              lfound = .true.
+              nshelli(ns) = nshelli(ns) + 1
+              if (ns<=nshell(0)) write (1337, 130) ai, (rcls(ii,i), ii=1, 3), &
+                aj, (rcls(ii,j), ii=1, 3), ns
+              ish(ns, nshelli(ns)) = i
+              jsh(ns, nshelli(ns)) = j
+            end if
+      
           end if
-
+          ! ----------------------------------------------------------------------
+        end do ! while loop ns = 1..nsgen while .not.lfound
+        ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      end do ! id=1, nrot
+      ! RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+      
+      ! --> if the rotation and the representative pair (shell) that
+      ! identify a pair of atoms was found LFOUND=.TRUE. and
+      ! the search for a different pair of atoms starts; otherwise
+      ! the pair (I,J) requires a new shell
+      
+      if (.not. lfound) then
+        nsnew = nsnew + 1
+        if (nsnew+nshell(0)>nshell0) then
+          write (6, 110) 'local', 'NSHELL0', nsnew + nshell(0)
+          stop
         end if
-        ! ----------------------------------------------------------------------
-      end do                       ! NS = 1..NSGEN while .NOT.LFOUND
-      ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    end do
-    ! RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+        if (nsnew+nshell(0)>nsheld) then
+          write (6, 110) 'global', 'NSHELD', nsnew + nshell(0)
+          stop
+        end if
+      
+        nsh1i(nshell(0)+nsnew) = ai
+        nsh2i(nshell(0)+nsnew) = aj
+        nshelli(nshell(0)+nsnew) = 1
+        ish(nshell(0)+nsnew, 1) = i
+        jsh(nshell(0)+nsnew, 1) = j
+        do ii = 1, 3
+          ratomi(ii, nshell(0)+nsnew) = rcls(ii, j) - rcls(ii, i)
+        end do
+      end if ! .not. lfound
 
-    ! --> if the rotation and the representative pair (shell) that
-    ! identify a pair of atoms was found LFOUND=.TRUE. and
-    ! the search for a different pair of atoms starts; otherwise
-    ! the pair (I,J) requires a new shell
+    end if !(i/=0 .or. j/=0) then
 
-    if (.not. lfound) then
-      nsnew = nsnew + 1
-      if (nsnew+nshell(0)>nshell0) then
-        write (6, 110) 'local', 'NSHELL0', nsnew + nshell(0)
-        stop
-      end if
-      if (nsnew+nshell(0)>nsheld) then
-        write (6, 110) 'global', 'NSHELD', nsnew + nshell(0)
-        stop
-      end if
-
-      nsh1i(nshell(0)+nsnew) = ai
-      nsh2i(nshell(0)+nsnew) = aj
-      nshelli(nshell(0)+nsnew) = 1
-      ish(nshell(0)+nsnew, 1) = i
-      jsh(nshell(0)+nsnew, 1) = j
-      do ii = 1, 3
-        ratomi(ii, nshell(0)+nsnew) = rcls(ii, j) - rcls(ii, i)
-      end do
-    end if
-
-  end do
+  end do ! igij = 1, nofgij
   ! **********************************************************************
 
   ! --> test number of shells
