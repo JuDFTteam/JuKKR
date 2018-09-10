@@ -36,6 +36,16 @@ echo ""
 ./run_parallel.py -8
 
 echo "###########################################"
+echo "run:intel:MPImulti_node_9:"
+echo ""
+echo "faking multi node run with symbolic links!"
+ln -s test_run02_serial_1_1/ test_run09_mpi_1_32
+ln -s test_run02_serial_1_1/ test_run09_hybrid_1_32
+ln -s test_run02_serial_1_1/ test_run09_hybrid_4_8
+ln -s test_run02_serial_1_1/ test_run09_hybrid_8_4
+
+
+echo "###########################################"
 echo "run:intel:MPIatom_SOC_7.1:"
 echo ""
 ./run_parallel.py -1007
