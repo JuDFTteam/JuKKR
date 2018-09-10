@@ -349,9 +349,9 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          endif
    
          ! calculate the tmat and wavefunctions
-         allocate(RLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEW(I1)),stat=i_stat)
+         allocate(RLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEWD),stat=i_stat)
          call memocc(i_stat,product(shape(RLL))*kind(RLL),'RLL','tmatimp_newsolver')
-         allocate(SLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEW(I1)),stat=i_stat)
+         allocate(SLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEWD),stat=i_stat)
          call memocc(i_stat,product(shape(SLL))*kind(SLL),'SLL','tmatimp_newsolver')
          RLL=CZERO
          SLL=CZERO
@@ -673,9 +673,9 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       endif
 
       ! calculate the tmat and wavefunctions
-      allocate(RLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEW(I1)),stat=i_stat)
+      allocate(RLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEWD),stat=i_stat)
       call memocc(i_stat,product(shape(RLL))*kind(RLL),'RLL','tmatimp_newsolver')
-      allocate(SLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEW(I1)),stat=i_stat)
+      allocate(SLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEWD),stat=i_stat)
       call memocc(i_stat,product(shape(SLL))*kind(SLL),'SLL','tmatimp_newsolver')
       RLL=CZERO
       SLL=CZERO
