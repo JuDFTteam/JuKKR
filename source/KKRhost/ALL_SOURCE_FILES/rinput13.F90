@@ -1630,18 +1630,21 @@ contains
       read (unit=uio, fmt=*) intervx, intervy, intervz
       write (111, fmt='(A9,3I5)') 'BZDIVIDE=', intervx, intervy, intervz
     else
-      write (111, fmt='(A17,3I5)') 'Default BZDIVIDE=', intervx, intervy, &
-        intervz
+      write (111, fmt='(A17,3I5)') 'Default BZDIVIDE=', intervx, intervy, intervz
     end if
+
+    if (linterface .and. intervz>1) then
+      write (1337, *) 'Found 2D mode: resetting BZDIVIDE(3) to 1'
+      intervz = 1
+    end if
+
     write (1337, 350)
     write (1337, 190) intervx, intervy, intervz
     write (1337, 330)
 
     if (opt('GREENIMP')) then
-      write (*, *) &
-        'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
-      write (1337, *) &
-        'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+      write (*, *) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+      write (1337, *) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
       intervx = 1
       intervy = 1
       intervz = 1
