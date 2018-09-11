@@ -121,13 +121,13 @@ program kkrcode
 
   ! without MPI (serial or openMP) something goes wrong if if files are not written out
   ! this seems to be only the case with the old solver
-#ifndef CPP_MPI
-  if(.not.t_inc%NEWSOSOL) then
-     t_tgmat%tmat_to_file = .true.
-     t_tgmat%gmat_to_file = .true.
-     t_tgmat%gref_to_file = .true.
-  end if
-#endif
+!#ifndef CPP_MPI
+!  if(.not.t_inc%NEWSOSOL) then
+!     t_tgmat%tmat_to_file = .true.
+!     t_tgmat%gmat_to_file = .true.
+!     t_tgmat%gref_to_file = .true.
+!  end if
+!#endif
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! distribute stuff from main0 >>>>>>>>>>>>>>>>>>>>>>>>>>>

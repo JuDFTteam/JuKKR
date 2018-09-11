@@ -71,6 +71,7 @@ contains
       !
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! .. Local variables
+      integer :: NSPIN1
       integer :: L
       integer :: I
       integer :: I1
@@ -447,380 +448,36 @@ contains
       ! Initialize trace for Lloyd formula                    ! LLY Lloyd
       LLY_GRTR(:,:) = CZERO ! 1:IELAST,1:NSPIND          ! LLY Lloyd
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! NO-SOC
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! determine extend of spin loop
       if (.not.OPT('NEWSOSOL')) then
-#ifdef CPP_MPI
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-#else
-         ie_start = 0
-         ie_end = ielast
-#endif
-         !----------------------------------------------------------------------
-         ! BEGIN do loop over spins and energies
-         !----------------------------------------------------------------------
-         do 370 ISPIN = 1,NSPIN
-
-            do 360 ie_num=1,ie_end
-               IE = ie_start+ie_num
-
-#ifdef CPP_MPI
-               !start timing measurement for this ie, needed for MPIadapt
-               if(MPIadapt>0.and.t_mpi_c_grid%myrank_ie==0) then
-                 call timing_start('time_1b_ie')
-               end if
-#endif
-
-               ! write energy into green_host file
-               if (OPT('WRTGREEN') .and. myrank==master) then
-                  write(58,'(2e17.9)') EZ(IE)
-               endif
-
-               if (t_tgmat%gref_to_file) then
-                  read (68,REC=IE) GINP
-               else
-                  ginp(:,:,:) = t_tgmat%gref(:,:,:,ie_num)
-               end if
-               if(t_lloyd%dgref_to_file) then
-                  if (LLY.NE.0) read (681,REC=IE) DGINP   ! LLY Lloyd
-               else
-                  if (LLY.NE.0) DGINP(:,:,:) = t_lloyd%dgref(:,:,:,ie_num)
-               endif
-
-               ERYD = EZ(IE)
-               NMESH = KMESH(IE)
-               if(t_inc%i_write>0) write (1337,'(A,I3,A,2(1X,F10.6),A,I3)')&
-                  ' ************ IE = ',IE,' ENERGY =',EZ(IE),' KMESH = ', NMESH
-               !----------------------------------------------------------------
-               !  I1 = 1,NREF
-               ! calculate t(ll') of the reference system (on clusters)
-               !----------------------------------------------------------------
-#ifdef CPP_TIMING
-               call timing_start('main1b - calctref13')
-#endif
-               TREFLL(:,:,:) = CZERO
-               if ( KREL.EQ.0 ) then
-                  do I1 = 1,NREF
-                     call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1, &  ! LLY Lloyd
-                        TREFLL(1,1,I1),DTREFLL(1,1,I1),ALPHAREF(0,I1),  &  ! LLY Lloyd
-                        DALPHAREF(0,I1),LMAX+1,LMMAXD)                    ! LLY Lloyd
-                  end do
-               else
-                  do I1 = 1,NREF
-                     call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1, &        ! LLY Lloyd
-                        WN1,WN2,ALPHAREF(0,I1),DALPHAREF(0,I1),LMAX+1,LMGF0D)   ! LLY Lloyd
-                        !-------------------------------------------------------
-                        ! add second spin-block for relativistic calculation and transform
-                        ! from NREL to REL representation
-                        !-------------------------------------------------------
-                     call CINIT(LMMAXD*LMMAXD,W1)
-                     if (LMMAXD.NE.LM1*2) stop 'LMMAXD <> LM1*2 '
-                     do I=1,LM1
-                        W1(I,I) = WN1(I,I)
-                        W1(LM1+I,LM1+I) = WN1(I,I)
-                     end do
-                     call CHANGEREP(W1,'RLM>REL',TREFLL(1,1,I1),LMMAXD,&
-                        LMMAXD,RC,CREL,RREL,'TREFLL',0)
-                  end do
-               end if
-#ifdef CPP_TIMING
-               call timing_pause('main1b - calctref13')
-#endif
-               !----------------------------------------------------------------
-               TRALPHA(IE,ISPIN) = CZERO                                    ! LLY
-               TRALPHAREF(IE) = CZERO                                       ! LLY
-               do I1 = 1,NATYP
-
-                  if (t_tgmat%tmat_to_file) then
-                     IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN* (I1-1)
-                     read (69,REC=IREC) TMAT
-                  else
-                     irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN*(I1-1)
-                     tmat(:,:) = t_tgmat%tmat(:,:,irec)
-                  end if
-                  TSST(1:LMMAXD,1:LMMAXD,I1)=TMAT(1:LMMAXD,1:LMMAXD)
-
-                  if (LLY.ne.0) then                                             ! LLY
-                     if(t_lloyd%dtmat_to_file) then
-                        IREC =IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1)
-                        read (691,REC=IREC) TMAT                                 ! LLY dt/dE
-                     else
-                        irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN*(I1-1)
-                        TMAT(:,:) = t_lloyd%dtmat(:,:,irec)
-                     end if
-                     DTMATLL(1:LMMAXD,1:LMMAXD,I1) =TMAT(1:LMMAXD,1:LMMAXD)      ! LLY
-                     if(t_lloyd%dtmat_to_file) then
-                        IREC=IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1)
-                        read (692,REC=IREC) TRALPHA1                             ! LLY
-                     else
-                        irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN*(I1-1)
-                        TRALPHA1 = t_lloyd%tralpha(irec)
-                     end if
-                     TRALPHA(IE,ISPIN) = TRALPHA(IE,ISPIN) + TRALPHA1            ! LLY Tr[ alpha^{-1} dalpha/dE]
-
-                     if (ISPIN.eq.1) then  ! Ref. system is spin-independent     ! LLY
-                        TRALPHA1 = CZERO                                         ! LLY
-                        do L1 = 0,LMAX                                           ! LLY
-                           TRALPHA1 = TRALPHA1 + (2*L1+1) * &                    ! LLY
-                              DALPHAREF(L1,REFPOT(I1))/ALPHAREF(L1,REFPOT(I1))   ! LLY
-                        enddo
-                        TRALPHAREF(IE) = TRALPHAREF(IE) + TRALPHA1               ! LLY Tr[ alpharef^{-1} dalpharef/dE
-                     endif
-                  endif                                                          ! LLY
-
-               end do  !i1 = 1,natyp
-
-
-               if(t_lloyd%g0tr_to_file) then
-                  if (LLY.ne.0.and.ISPIN.eq.1) read(682,FMT='(2E24.16)') LLY_G0TR(IE)  ! LLY
-               else
-                  if (LLY.ne.0.and.ISPIN.eq.1) LLY_G0TR(IE) = t_lloyd%g0tr(ie_num)        ! LLY
-               end if
-               ! ------------------------------------------------------------------
-               ! Setting up of Delta_t moved to < KLOOPZ1 >
-               ! ------------------------------------------------------------------
-               if (OPT('readcpa ').or.(OPT('qdos    ').and.(IQDOSRUN.eq.1))) then     ! qdos ruess: read in cpa t-matrix
-                  do ISITE = 1,NAEZ                              ! qdos ruess
-                     TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
-#ifdef CPP_MPI
-                     do lm1=1,lmmaxd
-                        do lm2=1,lmmaxd
-                           irec = LM2+(LM1-1)*LMMAXD+LMMAXD**2*(isite-1)+&
-                              LMMAXD**2*naez*(ie-1)+LMMAXD**2*ielast*naez*(ispin-1)
-                           read(37,rec=irec) tread
-                           if ( (LM1+LM2).ne.0 ) then                  ! qdos ruess
-                              TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
-                           end if                                      ! qdos ruess
-                        end do
-                     end do
-
-#else
-                     read(37,*) TEXT                             ! qdos ruess
-                     read(37,*) TEXT                             ! qdos ruess
- 9921                continue                                    ! qdos ruess
-                     read(37,*) LM1,LM2,TREAD                ! qdos ruess
-                     !99013 format ('(2I5,1P,2D22.14)')                 ! qdos ruess
-                     if ( (LM1+LM2).ne.0 ) then                  ! qdos ruess
-                        TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
-                        if ( (LM1+LM2).lt.2*LMMAXD ) goto 9921   ! qdos ruess
-                     end if                                      ! qdos ruess
-#endif
-                  enddo                                          ! qdos ruess
-               end if                                            ! qdos ruess
-               !  Loop over all QDOS points and change volume for KLOOPZ run accordingly
-               do 200 IQ = 1,NQDOS                               ! qdos ruess
-                  if (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
-!
-#ifdef CPP_TIMING
-                  call timing_start('main1b - kloopz')
-#endif
-                  call KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ,  &
-                     NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH),               &
-                     VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,NCLS,RR,              &
-                     RBASIS,EZOA,ATOM,RCLS,ICC,GINP,IDECI,                    &
-                     LEFTTINVLL(1,1,1,1,IE),RIGHTTINVLL(1,1,1,1,IE),          &
-                     VACFLAG,NLBASIS,NRBASIS,FACTL,NATOMIMP,NSYMAT,           &
-                     DSYMLL,RATOM,RROT,NSH1,NSH2,IJTABSYM,IJTABSH,            &
-                     ICHECK,INVMOD,REFPOT,TREFLL,TSST,MSST,CFCTOR,            &
-                     CFCTORINV,CREL,RC,RREL,SRREL,IRREL,NRREL,DROTQ,          &
-                     SYMUNITARY,KMROT,NATYP,NCPA,ICPA,ITCPAMAX,               &
-                     CPATOL,NOQ,IQAT,ITOQ,CONC,IPRINT,ICPAFLAG,               &
-                     ISPIN,NSPINDD,                                           &
-                     TQDOS,IQDOSRUN,                                          &  ! qdos
-                     DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,ISPIN),                &  ! LLY Lloyd
-                     TRACET(IE,ISPIN),LLY)                                       ! LLY Lloyd
-
-#ifdef CPP_TIMING
-                  call timing_pause('main1b - kloopz')
-#endif
-                  !-------------------------------------------------------------
-                  ! Skip this part if first part of the qdos is running
-                  !-------------------------------------------------------------
-                  if ( .not.(OPT('qdos    ').and.(IQDOSRUN.eq.0)) ) then
-                     if (NCPA.ne.0) then
-                        if (ICPAFLAG .ne. 0) then
-                           NCPAFAIL = NCPAFAIL + 1
-                           IECPAFAIL(NCPAFAIL)= IE
-                        end if
-                     end if  ! (NCPA.NE.0)
-
-                     do I1 = 1,NSHELL(0)
-                        GMAT0(:,:)=GMATLL(:,:,I1)
-                        IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST *        &   ! qdos ruess: (without qdos, IQ=NQ=1)
-                           (ISPIN-1) + NQDOS * IELAST * NSPIN * (I1-1)           ! qdos ruess
-                        if (t_tgmat%gmat_to_file) then
-                           write (70,REC=IREC) GMAT0
-                           ! human readable writeout if test option is hit
-                           if(test('fileverb')) then
-                              write(707070,'(i9,200000F15.7)') irec, gmat0
-                           end if
-                        else
-                           IREC = IQ + NQDOS * (ie_num-1) + NQDOS *  &
-                              ie_end * (ISPIN-1) + NQDOS * ie_end * NSPIN * (I1-1)
-                           t_tgmat%gmat(:,:,irec) = gmat0
-                        end if
-                     enddo
-                     if (TEST('gmatasci')) then
-                        write(*,*) 'Writing out gmat.ascii'
-                        do I1 = 1,NSHELL(0)
-                           do LM1=1,LMMAXD
-                              do LM2=1,LMMAXD
-                                 write(298347,FMT='(3I5,2E25.16)')&
-                                 I1,LM1,LM2,GMATLL(LM1,LM2,I1)
-                              enddo
-                           enddo
-                        enddo
-                     endif
-
-                     ! writeout of host green function for impurity code for single-atom cluster (not captured in rotgll)
-                     if ( NATOMIMP==1 ) then
-                        I1=ATOMIMP(1)
-                        if ( OPT('KKRFLEX ') ) then
-                           irec = ielast*(ispin-1)+ ie+1
-                           ILM=0
-                           GIMP=(0.e0,0.e0) !complex*8
-                           do LM2=1,LMMAXD
-                              do LM1=1,LMMAXD
-                                 ILM=ILM+1
-                                 GIMP(ILM)=GMATLL(LM1,LM2,I1)
-                              enddo
-                           enddo
-                           irec = ielast*(ispin-1)+ ie+1
-                           write(888,REC=irec) GIMP
-                           if ( OPT('GPLAIN  ') ) then
-                              !write(8888,'(50000E)') GIMP
-                              write(8888,*) GIMP
-                           end if
-                        endif ! KKRFLEX
-                        if (OPT('WRTGREEN') .and. myrank==master) then
-                           do LM2=1,LMMAXD
-                              do LM1=1,LMMAXD
-                                 ! writeout of green_host for WRTGREEN option
-                                 write(58,'((2I5),(2e17.9))') LM2, LM1,GMATLL(LM1,LM2,I1)
-                              end do
-                           end do
-                        endif ! WRTGREEN
-                     end if !( NATOMIMP==1 )
-
-                     if ( LCPAIJ ) then
-                        if(t_cpa%dmatproj_to_file) then
-                           do I1 = 1,NATYP
-                              GMAT0(:,:) = TSST(:,:,I1)
-                              W1(:,:)    = MSST(:,:,I1)
-                              IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN*(I1-1)
-                              write (71,REC=IREC) GMAT0,W1
-                           end do
-                        else !t_cpa%dmatproj_to_file
-                           irec = ie_num + ie_end*(ISPIN-1)
-                           t_cpa%dmatts(:,:,:,irec) = TSST(:,:,:)
-                           t_cpa%dtilts(:,:,:,irec) = MSST(:,:,:)
-                        end if!t_cpa%dmatproj_to_file
-                     end if  ! ( LCPAIJ )
-
-                  endif    ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
- 200           continue ! IQ = 1,NQDOS                                       ! qdos ruess
-
-
-               if (LLY.ne.0) then                                                      ! LLY Lloyd
-
-                  if (LLY.ne.2) then                                                   ! LLY Lloyd
-                     CDOS_LLY(IE,ISPIN) =   TRALPHA(IE,ISPIN)        &                 ! LLY Lloyd
-                     - LLY_GRTR(IE,ISPIN) / VOLBZ(1) + LLY_G0TR(IE)                    ! LLY Lloyd
-                  else                                                                 ! LLY Lloyd
-                     CDOS_LLY(IE,ISPIN) =    TRACET(IE,ISPIN)+ TRALPHAREF(IE) &        ! LLY Lloyd
-                     - LLY_GRTR(IE,ISPIN) / VOLBZ(1) +  LLY_G0TR(IE)                   ! LLY Lloyd
-                  endif                                                                ! LLY Lloyd
-
-                  if (ISPIN.EQ.1) CDOSREF_LLY(IE) = TRALPHAREF(IE) - LLY_G0TR(IE)      ! LLY Lloyd
-
-                  if (TEST('GMAT=0  ')) then                                           ! LLY Lloyd
-                     CDOS_LLY(IE,ISPIN) = TRALPHA(IE,ISPIN)                            ! LLY Lloyd
-                     if (LLY.EQ.2) then                                                ! LLY Lloyd
-                        CDOS_LLY(IE,ISPIN)=TRACET(IE,ISPIN) + TRALPHAREF(IE)           ! LLY Lloyd
-                     endif                                                             ! LLY Lloyd
-                  endif                                                                ! LLY Lloyd
-
-                  CDOS_LLY(IE,ISPIN) = CDOS_LLY(IE,ISPIN) / PI                         ! LLY Lloyd
-
-               endif                                                                   ! LLY Lloyd
-
-               ! ---------------------------------------------------------------
-
-#ifdef CPP_MPI
-               !stop timing measurement for this ie, needed for MPIadapt
-               if(MPIadapt>0.and.t_mpi_c_grid%myrank_ie==0) then
-                  call timing_stop('time_1b_ie', save_out=timings_1b(ie) )
-               end if
-#endif
-
- 360        continue               ! IE = 1,IELAST
-#ifdef CPP_TIMING
-            if(.not.OPT('GREENIMP')) then
-               if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
-               if(t_inc%i_time>0) call timing_pause('main1b - fourier')
-               if(t_inc%i_time>0) call timing_stop('main1b - inversion')
-               if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
-            endif
-            if(t_inc%i_time>0 .and.test('rhoqtest')) then
-               call timing_stop('main1b - kkrmat01 - writeout_rhoq')
-            endif
-#endif
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            ! NO-SOC
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-            if( NCPAFAIL .NE. 0 ) then
-               if(t_inc%i_write>0) then
-                  write(1337,*)
-                  write(1337,'(1X,79(''*''),/)')
-                  !write(1337,99019) CPATOL, NCPAFAIL,    &
-                  !(IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),IE=1,NCPAFAIL)
-                  write(1337, '(" tolerance for CPA-cycle:",F15.7)') CPATOL
-                  write(1337, '(" CPA not converged for",I3," energies:")') NCPAFAIL
-                  write(1337, '(3(" E:",I3,F7.4,:,2X))') (IECPAFAIL(IE),DBLE(EZ(IECPAFAIL(IE))),IE=1,NCPAFAIL)
-                  write(1337,'(1X,79(''*''),/)')
-                  write(1337,*)
-               endif
-            else
-               if( NCPA .ne. 0 ) then
-                  if(t_inc%i_write>0) then
-                     write(1337,*)
-                     write(1337,99020)
-                     write(1337,*)
-                  endif
-               end if
-            end if
-!
- 370     continue                  !  ISPIN = 1,NSPIN
-
-      else ! NEW SOC SOLVER
-
+         NSPIN1 = NSPIN
+      else
          ! nonco angles
          call read_angles(t_params,NATYP,THETA_AT,PHI_AT)
+         NSPIN1 = 1
+      end if
 
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         ! SOC
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef CPP_MPI
-         ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-         ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
-         ie_start = 0
-         ie_end = IELAST
+      ie_start = 0
+      ie_end = ielast
 #endif
 
-
-         if(test('rhoqtest')) then
-            ie_start = 1
-            ie_end = 1
-         end if
-            
+      if(test('rhoqtest')) then
+         ie_start = 1
+         ie_end = 1
+      end if
    
-         DO 460 ie_num=1,ie_end
+      !----------------------------------------------------------------------
+      ! BEGIN do loop over spins and energies
+      !----------------------------------------------------------------------
+      do ISPIN = 1,NSPIN1
+
+         do ie_num=1,ie_end
             IE = ie_start+ie_num
-      
+
 #ifdef CPP_MPI
             !start timing measurement for this ie, needed for MPIadapt
             if(MPIadapt>0.and.t_mpi_c_grid%myrank_ie==0) then
@@ -832,10 +489,10 @@ contains
             if (OPT('WRTGREEN') .and. myrank==master) then
                write(58,'(2e17.9)') EZ(IE)
             endif
-
+           
             ! read in Green function of reference system
             if (t_tgmat%gref_to_file) then
-               READ (68,REC=IE) GINP
+               read (68,REC=IE) GINP
             else
                ginp(:,:,:) = t_tgmat%gref(:,:,:,ie_num)
             end if
@@ -844,103 +501,134 @@ contains
             else
                if (LLY.NE.0) DGINP(:,:,:) = t_lloyd%dgref(:,:,:,ie_num)
             endif
+            
             ERYD = EZ(IE)
             NMESH = KMESH(IE)
             if(t_inc%i_write>0) then
                write (1337,'(A,I3,A,2(1X,F10.6),A,I3)') &
                   ' ************ IE = ',IE,' ENERGY =',EZ(IE),' KMESH = ', NMESH
-            endif
-
-            ! construct t matrix for reference system (now is always double matrix)
+            end if
+            
+            !----------------------------------------------------------------
+            !  I1 = 1,NREF
+            ! calculate t(ll') of the reference system (on clusters)
+            !----------------------------------------------------------------
 #ifdef CPP_TIMING
             call timing_start('main1b - calctref13')
 #endif
             TREFLL(:,:,:) = CZERO
             DTREFLL(:,:,:) = CZERO
-            do I1 = 1,NREF
-               call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,WN1,WN2,  &  ! LLY
-                  ALPHAREF(0,I1),DALPHAREF(0,I1),LMAX+1,LMGF0D)              ! LLY
-               do I=1,LM1
-                  TREFLL(I,I,I1) = WN1(I,I)
-                  TREFLL(LM1+I,LM1+I,I1) = WN1(I,I)
-                  DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
-                  DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
-               enddo
-          
-               if(test('rhoqtest')) then
-                  call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),wlength,lmmaxd,ie,trefll)
-               end if ! rhoqtest
-          
-            enddo ! I1
+            if ( KREL.EQ.0 ) then
+               do I1 = 1,NREF
+                  if (.not.OPT('NEWSOSOL')) then
+                     call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,WN1,WN2,  &  ! LLY Lloyd
+                        ALPHAREF(0,I1),DALPHAREF(0,I1),LMAX+1,LMMAXD)                    ! LLY Lloyd
+                  else
+                     call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,WN1,WN2,  &  ! LLY
+                        ALPHAREF(0,I1),DALPHAREF(0,I1),LMAX+1,LMGF0D)              ! LLY
+                  end if
+                  do I=1,LM1
+                     TREFLL(I,I,I1) = WN1(I,I)
+                     if (opt('NEWSOSOL')) TREFLL(LM1+I,LM1+I,I1) = WN1(I,I)
+                     DTREFLL(I,I,I1) = WN2(I,I)                 ! LLY
+                     if (opt('NEWSOSOL')) DTREFLL(LM1+I,LM1+I,I1) = WN2(I,I)         ! LLY
+                  enddo
+               
+                  if(test('rhoqtest')) then
+                     call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),wlength,lmmaxd,ie,trefll)
+                  end if ! rhoqtest
+               
+               enddo ! I1
+            else
+               do I1 = 1,NREF
+                  call CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1, &        ! LLY Lloyd
+                     WN1,WN2,ALPHAREF(0,I1),DALPHAREF(0,I1),LMAX+1,LMGF0D)   ! LLY Lloyd
+                     !-------------------------------------------------------
+                     ! add second spin-block for relativistic calculation and transform
+                     ! from NREL to REL representation
+                     !-------------------------------------------------------
+                  call CINIT(LMMAXD*LMMAXD,W1)
+                  if (LMMAXD.NE.LM1*2) stop 'LMMAXD <> LM1*2 '
+                  do I=1,LM1
+                     W1(I,I) = WN1(I,I)
+                     W1(LM1+I,LM1+I) = WN1(I,I)
+                  end do
+                  call CHANGEREP(W1,'RLM>REL',TREFLL(1,1,I1),LMMAXD,&
+                     LMMAXD,RC,CREL,RREL,'TREFLL',0)
+               end do
+            end if
 #ifdef CPP_TIMING
             call timing_pause('main1b - calctref13')
 #endif
-            TRALPHA(IE,NSPINDD)=CZERO
-            TRALPHAREF(IE)=CZERO
+            !----------------------------------------------------------------
+            TRALPHA(IE,ISPIN) = CZERO                                    ! LLY
+            TRALPHAREF(IE) = CZERO                                       ! LLY
             ! read in t matrix
             do I1 = 1,NATYP
-
-               ! read in theta and phi for noncolinear
-               THETA = THETA_AT(I1)
-               PHI   = PHI_AT(I1)
-
                ! read in t-matrix from file
-               IREC = IE + IELAST*(I1-1)
                if (t_tgmat%tmat_to_file) then
+                  IREC = IE + IELAST* (ISPIN-1) + IELAST*NSPIN1* (I1-1)
                   read (69,REC=IREC) TMAT
                else
-                  irec = ie_num + ie_end * (i1-1)
+                  irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN1*(I1-1)
                   tmat(:,:) = t_tgmat%tmat(:,:,irec)
                end if
+            
+               if (opt('NEWSOSOL')) then
+                  ! read in theta and phi for noncolinear
+                  theta = theta_at(i1)
+                  phi   = phi_at(i1)
+                  
+                  ! rotate t-matrix from local to global frame
+                  call rotatematrix(tmat,theta,phi,lmgf0d,0)
+               end if
+            
+               TSST(1:LMMAXD,1:LMMAXD,I1)=TMAT(1:LMMAXD,1:LMMAXD)
 
-               ! rotate t-matrix from local to global frame
-               call ROTATEMATRIX(TMAT,THETA,PHI,LMGF0D,0)
-
-               do LM1=1,LMMAXD
-                  do LM2=1,LMMAXD
-                     TSST(LM1,LM2,I1)=TMAT(LM1,LM2)
-                  enddo
-               enddo
-
-               if (LLY.NE.0) then
-                  IREC = IE + IELAST*(I1-1)
+               if (LLY.ne.0) then                                             ! LLY
                   if(t_lloyd%dtmat_to_file) then
-                     read(691,REC=IREC) TMAT ! LLY
+                     IREC =IE+IELAST*(ISPIN-1)+IELAST*NSPIN1*(I1-1)
+                     read (691,REC=IREC) TMAT                                 ! LLY dt/dE
                   else
-                     irec = ie_num + ie_end * (i1-1)
+                     irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN1*(I1-1)
                      TMAT(:,:) = t_lloyd%dtmat(:,:,irec)
                   end if
-                  call ROTATEMATRIX(TMAT,THETA,PHI,LMGF0D,0) ! LLY
-                  do LM1=1,LMMAXD
-                     do LM2=1,LMMAXD
-                        DTMATLL(LM1,LM2,I1)=TMAT(LM1,LM2) ! LLY
-                     enddo
-                  enddo
-                  IREC = IE + IELAST*(I1-1)
+
+                  if (opt('NEWSOSOL')) call ROTATEMATRIX(TMAT,THETA,PHI,LMGF0D,0) ! LLY
+
+                  DTMATLL(1:LMMAXD,1:LMMAXD,I1) = TMAT(1:LMMAXD,1:LMMAXD) ! LLY
                   if(t_lloyd%dtmat_to_file) then
-                     read(692,REC=IREC) TRALPHA1
+                     IREC=IE+IELAST*(ISPIN-1)+IELAST*NSPIN1*(I1-1)
+                     read (692,REC=IREC) TRALPHA1                             ! LLY
                   else
-                     irec = ie_num + ie_end * (i1-1)
+                     irec = ie_num+ie_end*(ISPIN-1)+ie_end*NSPIN1*(I1-1)
                      TRALPHA1 = t_lloyd%tralpha(irec)
                   end if
 
-                  TRALPHA(IE,NSPINDD)=TRALPHA(IE,NSPINDD)+TRALPHA1 ! LLY
-                  TRALPHA1=CZERO
-                  do L1=0,LMAX
-                     TRALPHA1=TRALPHA1+(2*L1+1)*   &
-                     DALPHAREF(L1,REFPOT(I1))/ALPHAREF(L1,REFPOT(I1)) ! LLY
-                  enddo
-                  TRALPHAREF(IE)=TRALPHAREF(IE)+TRALPHA1 ! LLY
-               endif ! LLY
-            enddo ! I1
-            if(t_lloyd%g0tr_to_file) then
-               if (LLY.NE.0) read(682,FMT='(2E24.16)') LLY_G0TR(IE)  ! LLY
-            else
-               if (LLY.NE.0) LLY_G0TR(IE) = t_lloyd%g0tr(ie_num)
-            end if
+                  TRALPHA(IE,ISPIN) = TRALPHA(IE,ISPIN) + TRALPHA1            ! LLY Tr[ alpha^{-1} dalpha/dE]
 
+                  if (ISPIN.eq.1) then  ! Ref. system is spin-independent     ! LLY
+                     TRALPHA1 = CZERO                                         ! LLY
+                     do L1 = 0,LMAX                                           ! LLY
+                        TRALPHA1 = TRALPHA1 + (2*L1+1) * &                    ! LLY
+                           DALPHAREF(L1,REFPOT(I1))/ALPHAREF(L1,REFPOT(I1))   ! LLY
+                     enddo
+                     TRALPHAREF(IE) = TRALPHAREF(IE) + TRALPHA1               ! LLY Tr[ alpharef^{-1} dalpharef/dE
+                  endif
+
+               endif ! LLY
+
+            end do  !i1 = 1,natyp
+
+
+            if(t_lloyd%g0tr_to_file) then
+               if (LLY.ne.0.and.ISPIN.eq.1) read(682,FMT='(2E24.16)') LLY_G0TR(IE)  ! LLY
+            else
+               if (LLY.ne.0.and.ISPIN.eq.1) LLY_G0TR(IE) = t_lloyd%g0tr(ie_num)        ! LLY
+            end if
+            
             !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            ! QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS
+            ! qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
             !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             if (OPT('readcpa ').or.(OPT('qdos    ').and.(IQDOSRUN.eq.1))) then     ! qdos ruess: read in cpa t-matrix
                do ISITE = 1,NAEZ                              ! qdos ruess
@@ -948,24 +636,23 @@ contains
 #ifdef CPP_MPI
                   do lm1=1,lmmaxd
                      do lm2=1,lmmaxd
-                        irec = LM2+(LM1-1)*LMMAXD+LMMAXD**2*(isite-1)+  &
-                        LMMAXD**2*naez*(ie-1)
+                        irec = LM2+(LM1-1)*LMMAXD+LMMAXD**2*(isite-1)+&
+                           LMMAXD**2*naez*(ie-1)+LMMAXD**2*ielast*naez*(ispin-1)
                         read(37,rec=irec) tread
-                        if ( (LM1+LM2).NE.0 ) then                  ! qdos ruess
+                        if ( (LM1+LM2).ne.0 ) then                  ! qdos ruess
                            TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
                         end if                                      ! qdos ruess
                      end do
                   end do
 
 #else
-                  reaD(37,*) TEXT                             ! qdos ruess
-                  reaD(37,*) TEXT                             ! qdos ruess
+                  read(37,*) TEXT                             ! qdos ruess
+                  read(37,*) TEXT                             ! qdos ruess
  9920             continue                                    ! qdos ruess
-                  read(37,99014) LM1,LM2,TREAD                ! qdos ruess
-99014             format (2I5,1P,2D22.14)                     ! qdos ruess
-                  if ( (LM1+LM2).NE.0 ) then                  ! qdos ruess
+                  read(37,*) LM1,LM2,TREAD                ! qdos ruess
+                  if ( (LM1+LM2).ne.0 ) then                  ! qdos ruess
                      TQDOS(LM1,LM2,ISITE) = TREAD / CFCTORINV ! qdos ruess
-                     if ( (LM1+LM2).LT.2*LMMAXD ) goto 9920   ! qdos ruess
+                     if ( (LM1+LM2)<2*LMMAXD ) goto 9920   ! qdos ruess
                   end if                                      ! qdos ruess
 #endif
                enddo                                          ! qdos ruess
@@ -973,7 +660,7 @@ contains
             !-------------------------------------------------------------------
             !  Loop over all QDOS points and change volume for KLOOPZ run accordingly
             !-------------------------------------------------------------------
-            do 220 IQ = 1,NQDOS                               ! qdos ruess
+            do IQ = 1,NQDOS                               ! qdos ruess
                if (OPT('qdos    ')) BZKP(:,1,1) = QVEC(:,IQ)     ! qdos ruess: Set q-point x,y,z
 
 #ifdef CPP_TIMING
@@ -990,25 +677,28 @@ contains
                   CFCTORINV,CREL,RC,RREL,SRREL,IRREL,NRREL,DROTQ,          &
                   SYMUNITARY,KMROT,NATYP,NCPA,ICPA,ITCPAMAX,               &
                   CPATOL,NOQ,IQAT,ITOQ,CONC,IPRINT,ICPAFLAG,               &
-                  1,NSPINDD,                                               &
+                  ISPIN,NSPINDD,                                           &
                   TQDOS,IQDOSRUN,                                          &  ! qdos
-                  DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,1),                &  ! LLY Lloyd
-                  TRACET(IE,1),LLY)                                       ! LLY Lloyd
+                  DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,ISPIN),                &  ! LLY Lloyd
+                  TRACET(IE,ISPIN),LLY)                                       ! LLY Lloyd
+
 #ifdef CPP_TIMING
                call timing_pause('main1b - kloopz')
 #endif
-
+               !-------------------------------------------------------------
                ! Skip this part if first part of the qdos is running
-               if ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) ) then
-                  if (NCPA.NE.0) then
-                     if (ICPAFLAG .NE. 0) then
+               !-------------------------------------------------------------
+               if ( .not.(OPT('qdos    ').and.(IQDOSRUN==0)) ) then
+                  if (NCPA/=0) then
+                     if (ICPAFLAG /= 0) then
                         NCPAFAIL = NCPAFAIL + 1
                         IECPAFAIL(NCPAFAIL)= IE
                      end if
                   end if  ! (NCPA.NE.0)
+
                   do I1 = 1,NSHELL(0)
                      GMAT0(1:LMMAXD,1:LMMAXD) =GMATLL(1:LMMAXD,1:LMMAXD,I1)
-                     IREC = IQ + NQDOS * (IE-1) + NQDOS * IELAST * (I1-1) ! qdos ruess
+                     IREC = IQ + NQDOS*(IE-1) + NQDOS*IELAST*(ISPIN-1) + NQDOS*IELAST*NSPIN1*(I1-1)           ! qdos ruess
                      if (t_tgmat%gmat_to_file) then
                         write (70,REC=IREC) GMAT0
                         ! human readable writeout if test option is hit
@@ -1016,8 +706,7 @@ contains
                            write(707070,'(i9,200000F15.7)') irec, gmat0
                         end if
                      else
-                        IREC = IQ + NQDOS * (ie_num-1) + NQDOS * &
-                        ie_end * (I1-1)
+                        IREC = IQ + NQDOS*(ie_num-1) + NQDOS*ie_end*(ISPIN-1) + NQDOS*ie_end*NSPIN1*(I1-1)
                         t_tgmat%gmat(:,:,irec) = gmat0
                      end if
                   enddo
@@ -1026,64 +715,87 @@ contains
                      do I1 = 1,NSHELL(0)
                         do LM1=1,LMMAXD
                            do LM2=1,LMMAXD
-                              write(298347,FMT='(3I5,2E25.16)')   &
+                              write(298347,FMT='(3I5,2E25.16)') &
                               I1,LM1,LM2,GMATLL(LM1,LM2,I1)
                            enddo
                         enddo
                      enddo
                   endif
 
-                  if ( NATOMIMP==1 ) THEN
+                  ! writeout of host green function for impurity code for single-atom cluster (not captured in rotgll)
+                  if ( NATOMIMP==1 ) then
                      I1=ATOMIMP(1)
-                     if(OPT('KKRFLEX ')) THEN
-                       IREC = IE+1
-                       ILM=0
-                       GIMP=(0.e0,0.e0) ! complex*8
-                       do LM2=1,LMMAXD
-                          do LM1=1,LMMAXD
-                             ILM=ILM+1
-                             GIMP(ILM)=GMATLL(LM1,LM2,I1)
-                          enddo
-                       enddo
-                       write(888,REC=IREC) GIMP
-                     endif
-                     if (OPT('WRTGREEN') .and. myrank==master) THEN
-                       do LM2=1,LMMAXD
-                         do LM1=1,LMMAXD
-                           ! writeout of green_host for WRTGREEN option
-                           write(58,'((2I5),(2e17.9))') LM2, LM1, GMATLL(LM1,LM2,I1)
-                         enddo
-                       enddo
+                     if ( OPT('KKRFLEX ') ) then
+                        ILM=0
+                        GIMP=(0.e0,0.e0) !complex*8
+                        do LM2=1,LMMAXD
+                           do LM1=1,LMMAXD
+                              ILM=ILM+1
+                              GIMP(ILM)=GMATLL(LM1,LM2,I1)
+                           enddo
+                        enddo
+                        irec = ielast*(ispin-1)+ ie+1
+                        write(888,REC=irec) GIMP
+                        if ( OPT('GPLAIN  ') ) then
+                           !write(8888,'(50000E)') GIMP
+                           write(8888,*) GIMP
+                        end if
+                     endif ! KKRFLEX
+                     if (OPT('WRTGREEN') .and. myrank==master) then
+                        do LM2=1,LMMAXD
+                           do LM1=1,LMMAXD
+                              ! writeout of green_host for WRTGREEN option
+                              write(58,'((2I5),(2e17.9))') LM2, LM1, GMATLL(LM1,LM2,I1)
+                           end do
+                        end do
                      endif ! WRTGREEN
-                  endif
+                  end if !( NATOMIMP==1 )
 
                   if ( LCPAIJ ) then
                      if(t_cpa%dmatproj_to_file) then
                         do I1 = 1,NATYP
-                           do LM2=1,LMMAXD
-                              do LM1=1,LMMAXD
-                                 GMAT0(LM1,LM2) = TSST(LM1,LM2,I1)
-                                 W1(LM1,LM2)    = MSST(LM1,LM2,I1)
-                              end do
-                           end do
-                           IREC = IE + IELAST*(I1-1)
+                           GMAT0(:,:) = TSST(:,:,I1)
+                           W1(:,:)    = MSST(:,:,I1)
+                           IREC = IE + IELAST*(ISPIN-1) + IELAST*NSPIN1*(I1-1)
                            write (71,REC=IREC) GMAT0,W1
                         end do !I1
                      else !t_cpa%dmatproj_to_file
-                        irec = ie_num
+                        irec = ie_num + ie_end*(ISPIN-1)
                         t_cpa%dmatts(:,:,:,irec) = TSST(:,:,:)
                         t_cpa%dtilts(:,:,:,irec) = MSST(:,:,:)
                      end if !t_cpa%dmatproj_to_file
                   end if  ! ( LCPAIJ )
 
-               endif               ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
- 220        continue               ! IQ = 1,NQ                                         ! qdos ruess
+               endif    ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
+            end do   ! IQ = 1,NQDOS                                       ! qdos ruess
 
-            if (LLY.NE.0) then                                       ! LLY
-               CDOS_LLY(IE,1) = TRALPHA(IE,1) - LLY_GRTR(IE,1)/VOLBZ(1) + 2.0_dp*LLY_G0TR(IE)        ! LLY
-               CDOS_LLY(IE,1) = CDOS_LLY(IE,1)/PI                    ! LLY
-               CDOSREF_LLY(IE) = TRALPHAREF(IE) - LLY_G0TR(IE)       ! LLY
+
+            if (LLY.ne.0) then                                       ! LLY
+
+               if (opt('NEWSOSOL')) then
+                  CDOS_LLY(IE,ISPIN) = TRALPHA(IE,ISPIN) - LLY_GRTR(IE,ISPIN)/VOLBZ(1) + 2.0_dp*LLY_G0TR(IE)        ! LLY
+               else
+                  if (LLY.ne.2) then                                                   ! LLY Lloyd
+                     CDOS_LLY(IE,ISPIN) =   TRALPHA(IE,ISPIN) - LLY_GRTR(IE,ISPIN)/VOLBZ(1) + LLY_G0TR(IE)                    ! LLY Lloyd
+                  else                                                                 ! LLY Lloyd
+                     CDOS_LLY(IE,ISPIN) =    TRACET(IE,ISPIN) + TRALPHAREF(IE) - LLY_GRTR(IE,ISPIN)/VOLBZ(1) +  LLY_G0TR(IE)                   ! LLY Lloyd
+                  endif                                                                ! LLY Lloyd
+               end if
+
+               if (TEST('GMAT=0  ')) then                                           ! LLY Lloyd
+                  CDOS_LLY(IE,ISPIN) = TRALPHA(IE,ISPIN)                            ! LLY Lloyd
+                  if (LLY.EQ.2) then                                                ! LLY Lloyd
+                     CDOS_LLY(IE,ISPIN)=TRACET(IE,ISPIN) + TRALPHAREF(IE)           ! LLY Lloyd
+                  endif                                                             ! LLY Lloyd
+               endif                                                                ! LLY Lloyd
+
+               CDOS_LLY(IE,ISPIN) = CDOS_LLY(IE,ISPIN) / PI                         ! LLY Lloyd
+
+               if (ISPIN.EQ.1) CDOSREF_LLY(IE) = TRALPHAREF(IE) - LLY_G0TR(IE)      ! LLY Lloyd
+
             endif                                                    ! LLY
+
+            ! ---------------------------------------------------------------
 
 #ifdef CPP_MPI
             !stop timing measurement for this ie, needed for MPIadapt
@@ -1092,7 +804,7 @@ contains
             end if
 #endif
 
- 460     continue                  ! IE=1,IELAST
+         end do                 ! IE = 1,IELAST
 #ifdef CPP_TIMING
          if(.not.OPT('GREENIMP')) then
             if(t_inc%i_time>0) call timing_stop('main1b - calctref13')
@@ -1100,10 +812,10 @@ contains
             if(t_inc%i_time>0) call timing_stop('main1b - inversion')
             if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
          endif
+         if(t_inc%i_time>0 .and.test('rhoqtest')) then
+            call timing_stop('main1b - kkrmat01 - writeout_rhoq')
+         endif
 #endif
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-         ! SOC
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
          if( NCPAFAIL .NE. 0 ) then
             if(t_inc%i_write>0) then
@@ -1117,7 +829,7 @@ contains
                write(1337,*)
             endif
          else
-            if( NCPA .NE. 0 ) then
+            if( NCPA .ne. 0 ) then
                if(t_inc%i_write>0) then
                   write(1337,*)
                   write(1337,99020)
@@ -1125,9 +837,8 @@ contains
                endif
             end if
          end if
-
-      endif ! NEWSOSOL
-
+!
+      end do                    !  ISPIN = 1,NSPIN1
       !-------------------------------------------------------------------------
       ! END of do loop over spins and energies
       !-------------------------------------------------------------------------
