@@ -465,10 +465,10 @@ subroutine RHOVALNEW( &
       if (NSRA.EQ.2) then
          if (USE_SRATRICK.EQ.0) then
             call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-               IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0')
+               IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0',0)
          elseif (USE_SRATRICK.EQ.1) then
             call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-               IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph')
+               IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph',0)
          endif
       else
          VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
@@ -549,10 +549,10 @@ subroutine RHOVALNEW( &
          if (NSRA.EQ.2) then
             if (USE_SRATRICK.EQ.0) then
                call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                  IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0')
+                  IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0',0)
             elseif (USE_SRATRICK.EQ.1) then
                call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                  IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph')
+                  IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph',0)
             endif
          else
             VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)

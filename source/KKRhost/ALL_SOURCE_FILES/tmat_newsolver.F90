@@ -125,7 +125,7 @@ contains
       ! BdG
       character(len=100) :: filename
       complex (kind=dp) :: e_shift
-      integer :: ier
+      integer :: ier, KBdG
       character (len=256) :: uio
 
 #ifdef CPP_OMP
@@ -141,7 +141,7 @@ contains
       ith = 0
 #endif
 
-      lmsize = lmmaxd/2
+      lmsize = lmmaxd/2 ! size of lm-space (without SOC spin channel for SOC)
       IRMDNEW= NPAN_TOT*(NCHEB+1)
 
       if (NSRA.EQ.2) then
@@ -326,10 +326,12 @@ contains
 #ifdef CPP_OMP
             !$omp critical
 #endif
+            KBdG = 0
 #ifdef CPP_BdG
             if (test('BdG_dev ')) then
-               write(*,'(A,4ES21.7)') 'shifting energy by e_fermi:', eryd, e_shift
-               ERYD = ERYD + e_shift
+               write(*,'(A,6ES21.7)') 'shifting energy by e_fermi:', eryd, e_shift, 2*e_shift - ERYD
+               ERYD = 2*e_shift - ERYD
+               KBdG = 2
             end if
 #endif
 
@@ -366,10 +368,10 @@ contains
             if (NSRA.EQ.2) then
                if (USE_SRATRICK.EQ.0) then
                   call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0')
+                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0', KBdG)
                elseif (USE_SRATRICK.EQ.1) then
                   call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph')
+                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph', KBdG)
                endif
             else
                VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
@@ -380,7 +382,7 @@ contains
 #endif
 #ifdef CPP_BdG
             ! test writeout of VNPSLL
-            if (test('BdG_dev ')) then
+            if (test('BdG_dev ') .and. use_sratrick>0) then
               open(7352834, file='vnspll_sra.txt', form='formatted')
               if (NSRA.EQ.2) then
                 write(7352834, '(A,3I9)') '# 2*LMMAXSO,2*LMMAXSO,IRMDNEW=', 2*lmmaxso, 2*lmmaxso, irmdnew
@@ -581,10 +583,10 @@ contains
             if (NSRA.EQ.2) then
                if (USE_SRATRICK.EQ.0) then
                   call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0')
+                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0', KBdG)
                elseif (USE_SRATRICK.EQ.1) then
                   call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph')
+                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph', KBdG)
                endif
             else
                VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)

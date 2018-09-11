@@ -263,8 +263,8 @@ contains
              call BdG_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, &
                 nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, &
                 ncheb, ntotd, mmaxd, nspind, iemxd, nrmaxd, nspotd, cleb, icleb, &
-                ez, i1, ipot, npan_tot, lpot, ipan,_intervall, zat, phi, theta, &
-                socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end)
+                ez, ipot, npan_tot, ipan_intervall, zat, phi, theta, &
+                socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end, natyp, lopt)
            end if
 #endif
 
@@ -382,8 +382,16 @@ contains
    subroutine BdG_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, &
                 nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, &
                 ncheb, ntotd, mmaxd, nspind, iemxd, nrmaxd, nspotd, cleb, icleb, &
-                ez, i1, ipot, npan_tot, lpot, ipan,_intervall, zat, phi, theta, &
-                socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end)
+                ez, ipot, npan_tot, ipan_intervall, zat, phi, theta, &
+                socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end, natyp, lopt)
+     Use mod_datatypes, Only: dp
+     implicit none
+     integer, intent(in) :: nranks, i1, i1_start, ielast, nspin ,lmax, ncleb, nsra, natyp, iend, lmpotd, lly, idoldau, ncheb, mmaxd, nspind, iemxd, nrmaxd, nspotd, ipot, i1_end
+     integer, intent(in) :: ntotd, icleb(ncleb,4), lopt(natyp), ipan_intervall(0:ntotd,natyp), npan_tot(natyp)
+     real(kind=dp), intent(in) :: cleb(ncleb,2), zat(natyp), phi(natyp), theta(natyp), socscale(natyp), rnew(ntotd*(nchebd+1),natyp), rpan_intervall(0:ntotd,natyp)
+     real(kind=dp), intent(in) :: wldau(:,:,:,:), vinsnew(:,:,:)
+     complex(kind=dp), intent(in) :: deltae, ez(iemxd)
+     
      ! write out inputs for tmat_newsolver to extract first BdG 
      if (nranks>1) stop 'test option BdG_dev can only be used in serial!'
      if (i1==i1_start) open(887766, file='BdG_tmat_inputs.txt', form='formatted')
@@ -420,7 +428,7 @@ contains
      write(887766, '(A25,I9)') 'I1= ', I1
      write(887766, '(A25,I9)') 'IPOT= ', IPOT
      write(887766, '(A25,I9)') 'NPAN_TOT= ', NPAN_TOT(I1)
-     write(887766, '(A25,I9)') 'LPOT= ', LOPT(I1)
+     write(887766, '(A25,I9)') 'LOPT= ', LOPT(I1)
      write(887766, '(A25,999999999I9)') 'IPAN_INTERVALL= ', IPAN_INTERVALL(:,I1)
      write(887766, '(A25,ES21.9)') 'ZAT= ', ZAT(I1)
      write(887766, '(A25,ES21.9)') 'PHI= ', PHI(I1)

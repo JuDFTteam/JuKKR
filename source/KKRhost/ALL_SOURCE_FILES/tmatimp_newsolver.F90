@@ -307,10 +307,10 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
             call memocc(i_stat,product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','tmatimp_newsolver')
             if (USE_SRATRICK.EQ.0) then
                call VLLMATSRA(VNSPLL1,VNSPLL,RNEW(1:IRMDNEW(I1),I1),LMMAXSO,  &
-                  IRMDNEW(I1),IRMDNEW(I1),ERYD,LMAX,0,'Ref=0')
+                  IRMDNEW(I1),IRMDNEW(I1),ERYD,LMAX,0,'Ref=0',0)
             elseif (USE_SRATRICK.EQ.1) then
                call VLLMATSRA(VNSPLL1,VNSPLL,RNEW(1:IRMDNEW(I1),I1),LMMAXSO,  &
-                  IRMDNEW(I1),IRMDNEW(I1),ERYD,LMAX,0,'Ref=Vsph')
+                  IRMDNEW(I1),IRMDNEW(I1),ERYD,LMAX,0,'Ref=Vsph',0)
             endif
          else
             allocate(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW(I1)),stat=i_stat)
@@ -631,11 +631,11 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          if (USE_SRATRICK.EQ.0) then
             call VLLMATSRA(VNSPLL1,VNSPLL,                  &
                RNEW(1:IRMDNEW(I1),I1),LMMAXSO,IRMDNEW(I1),  &
-               IRMDNEW(I1),ERYD,LMAX,0,'Ref=0')
+               IRMDNEW(I1),ERYD,LMAX,0,'Ref=0',0)
          elseif (USE_SRATRICK.EQ.1) then
             call VLLMATSRA(VNSPLL1,VNSPLL,                  &
                RNEW(1:IRMDNEW(I1),I1),LMMAXSO,IRMDNEW(I1),  &
-               IRMDNEW(I1),ERYD,LMAX,0,'Ref=Vsph')
+               IRMDNEW(I1),ERYD,LMAX,0,'Ref=Vsph',0)
          endif
       else
          allocate(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW(I1)),stat=i_stat)

@@ -94,7 +94,7 @@ subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, &
       end do
       if (nsra==2) then
         call vllmatsra(vll0, vll, rnew, lmsize, irmdnew, nrmaxd, eryd, lmax, &
-          lval, 'Ref=0')
+          lval, 'Ref=0', 0)
       else
         vll(:, :, :) = vll0(:, :, :)
       end if

@@ -4,7 +4,7 @@ contains
 
 !< constructs potential including big/small components and with relativistic mass terms etc included
 subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
-  lval_in, cmode)
+  lval_in, cmode, KBdG)
 
   use :: constants
   use :: mod_datatypes, only: dp
@@ -14,6 +14,7 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
   implicit none
 
   ! inputs
+  integer, intent (in) :: KBdG     ! < integer (0/1/2) determines if Bogoliubov de Gennes formalism is used and which part (e/h, 1=e, 2=h) of the Hamilatonian is constructed
   integer, intent (in) :: lmax     ! < Maximum l component in wave function expansion
   integer, intent (in) :: nrmax    ! < NTOTD*(NCHEBD+1)
   integer, intent (in) :: nrmaxd   ! < dimension for rmesh (maximum of nrmax values of all atoms)
@@ -99,6 +100,10 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
   else if (cmode=='Ref=Vsph') then
     ! for SRA-trick the small component of vll vanishes
     vll(lmsize+1:2*lmsize, 1:lmsize, :) = vll0(1:lmsize,1:lmsize, :)
+  end if
+
+  if (KbdG>1) then
+    vll(lmsize+1:2*lmsize, 1:lmsize, :) = -conjg(vll(lmsize+1:2*lmsize, 1:lmsize, :))
   end if
 
 end subroutine vllmatsra

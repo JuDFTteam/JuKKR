@@ -543,7 +543,6 @@ if(ENABLE_BdG)
         ALL_SOURCE_FILES/splint_real.f90 
         ALL_SOURCE_FILES/calrmt.f90     
         ALL_SOURCE_FILES/clsgen_tb.f90   
-        ALL_SOURCE_FILES/clustcomp.f90 
         ALL_SOURCE_FILES/cmomsread.f90 
         ALL_SOURCE_FILES/crospr.f90 
         ALL_SOURCE_FILES/cross.f90 
@@ -671,7 +670,6 @@ if(ENABLE_BdG)
         ALL_SOURCE_FILES/trarea.f90
         ALL_SOURCE_FILES/tbref.F90 
         ALL_SOURCE_FILES/wfint.f90 
-        ALL_SOURCE_FILES/wfint0.f90 
         ALL_SOURCE_FILES/wftsca.f90 
         ALL_SOURCE_FILES/pnstmat.f90 
         ALL_SOURCE_FILES/vllns.f90 
