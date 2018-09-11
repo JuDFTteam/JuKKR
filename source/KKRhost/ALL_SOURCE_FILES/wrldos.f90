@@ -14,8 +14,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
   ! ..
   ! .. Scalar Arguments ..
   real (kind=dp) :: alatc, e1, e2, efermi, tk
-  integer :: ielast, iemxd, intervx, intervy, intervz, lmaxd1, nacls1, natyp, &
-    npotd
+  integer :: ielast, iemxd, intervx, intervy, intervz, lmaxd1, nacls1, natyp, npotd
   ! ===== uses spin-up and down also in the REL mode (KREL=1)
   integer :: nspinpot
   ! ..
@@ -59,8 +58,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
       write (48, fmt=120) i1
       write (48, fmt=130) ispin, ielast, e1, e2, efermi, efctor
       write (48, fmt=140) efermi
-      write (48, fmt=150) tk, pi*kb*tk, alatc, intervx, intervy, intervz, &
-        nacls1
+      write (48, fmt=150) tk, pi*kb*tk, alatc, intervx, intervy, intervz, nacls1
       do ie = 1, ielast
         dos = 0.0d0
         do l = 0, lmaxd1
@@ -68,8 +66,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
           dostot(l, ispin) = dostot(l, ispin) + aimag(wez(ie)*den(l,ie,ipot))
         end do
         write (48, fmt=160) dble(ez(ie))*efctor, dos*dossgn/efctor, &
-          (-2.0d0*aimag(den(l,ie,ipot))*dossgn/efctor/pi/dble(nspinpot), l=0, &
-          lmaxd1)
+          (-2.0d0*aimag(den(l,ie,ipot))*dossgn/efctor/pi/dble(nspinpot), l=0, lmaxd1)
       end do
       write (48, fmt=180)(dostot(l,ispin)/efctor/dble(nspinpot), l=0, lmaxd1)
       if (ispin/=nspinpot) write (48, fmt=100)
@@ -94,15 +91,13 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
       write (49, fmt=120) i1
       write (49, fmt=130) ispin, ielast, e1, e2, efermi, efctor
       write (49, fmt=140) efermi
-      write (49, fmt=150) tk, pi*kb*tk, alatc, intervx, intervy, intervz, &
-        nacls1
+      write (49, fmt=150) tk, pi*kb*tk, alatc, intervx, intervy, intervz, nacls1
       do ie = 1, ielast
         doscmplx = cmplx(0.0d0, 0.d0, kind=dp)
         do l = 0, lmaxd1
           doscmplx = doscmplx - 2.0d0*den(l, ie, ipot)/pi/dble(nspinpot)
         end do
-        write (49, fmt=170) ez(ie)*efctor, (-2.0d0*den(l,ie,ipot)*dossgn/ &
-          efctor/pi/dble(nspinpot), l=0, lmaxd1), doscmplx*dossgn/efctor
+        write (49, fmt=170) ez(ie)*efctor, (-2.0d0*den(l,ie,ipot)*dossgn/efctor/pi/dble(nspinpot), l=0, lmaxd1), doscmplx*dossgn/efctor
       end do
       if (ispin/=nspinpot .or. i1/=natyp) write (49, fmt=100)
     end do
@@ -119,8 +114,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
       do ispin = 1, nspinpot
         ipot = nspinpot*(i1-1) + ispin
         do l = 0, lmaxd1
-          doscmplx = doscmplx - conc(i1)*2.0d0*den(l, ie, ipot)/pi/dble( &
-            nspinpot)
+          doscmplx = doscmplx - conc(i1)*2.0d0*den(l, ie, ipot)/pi/dble(nspinpot)
         end do
       end do
     end do
@@ -140,7 +134,7 @@ subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, &
 150 format ('# TK    =', f8.1, '   Kelvin =', 3p, f8.3, ' mRyd', 0p, /, &
     '# ALAT   :', f12.5, /, '# INTERV X,Y,Z  :', 3i5, /, '# NACLS :', i8)
 160 format (1p, 8e15.7)
-170 format (16('(',e12.4,',',e12.4,')'))
+170 format (16('(',e16.8,',',e16.8,')'))
 180 format ('# Integrated DOS ', 1p, d10.3, 7d11.3)
 190 format ('&')
 end subroutine wrldos

@@ -102,7 +102,6 @@ program complexdos
   close (51)
 
   stop 'telos'
-100 format (10e12.4)
 110 format (10e14.6)
 120 format (a80)
 130 format (8(2e12.4))
