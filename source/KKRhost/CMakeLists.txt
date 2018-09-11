@@ -144,12 +144,12 @@ endif()
 # maybe for future library dependecies
 set(complib "")
 
+# some static dimensions used in Dirac solver
+execute_process(COMMAND ln -s ../sprkkr_rmesh.dim .)
+
 # extract version info
 # generate a Git version string
 execute_process(COMMAND git describe OUTPUT_VARIABLE GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-# some static dimensions used in Dirac solver
-execute_process(COMMAND ln -s ../sprkkr_rmesh.dim .)
 
 # write compiler flags for version info
 add_definitions(-DCOMPVER1="${GIT_VERSION}")
