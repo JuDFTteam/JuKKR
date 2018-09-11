@@ -90,7 +90,7 @@ contains
       logical :: LMOMVEC
       logical :: LDORHOEF
       logical :: ITERMVDIR
-      complex (kind=dp) :: CSUM                    ! LLY Lloyd
+      complex (kind=dp) :: CSUM                    ! LLY
       complex (kind=dp) :: EREAD                   ! LLY
       integer, dimension(20,NATYP) :: NKCORE    !< Number of KAPPA values for a given (n,l) core state
       integer, dimension(20,NPOTD) :: KAPCORE   !< The (maximum 2) values of KAPPA
@@ -145,7 +145,7 @@ contains
       real (kind=dp), dimension(:,:,:,:), allocatable  :: RHO2NS    !< radial density
       complex (kind=dp), dimension(:,:,:,:), allocatable    :: DEN   ! DEN(0:LMAXD1,IELAST,NPOTD,NQDOS)
       complex (kind=dp), dimension(:,:,:,:), allocatable    :: DENLM ! DENLM(LMMAXD1,IELAST,NPOTD,NQDOS)
-      complex (kind=dp), dimension(:), allocatable ::  CDOS2          ! LLY Lloyd
+      complex (kind=dp), dimension(:), allocatable ::  CDOS2          ! LLY
       complex (kind=dp), dimension(:), allocatable :: CDOS0
       complex (kind=dp), dimension(:), allocatable :: CDOS1
       complex (kind=dp), dimension(:), allocatable :: CDOSAT0
@@ -293,9 +293,9 @@ contains
       endif  ! OPT('lmlm-dos')                                                   ! lmlm-dos
 
       ! ------------------------------------------------------------------------
-      ! LLY Lloyd
+      ! LLY
       ! ------------------------------------------------------------------------
-      if (LLY.ne.0) then                                                         ! LLY Lloyd
+      if (LLY.ne.0) then                                                         ! LLY
 
          allocate(CDOS0(IELAST), stat=i_stat)
          call memocc(i_stat,product(shape(CDOS0))*kind(CDOS0),'CDOS0','main1c')
@@ -310,180 +310,117 @@ contains
          allocate(CDOS_LLY(IELAST,NSPIND), stat=i_stat)            
          call memocc(i_stat,product(shape(CDOS_LLY))*kind(CDOS_LLY),'CDOS_LLY','main1c')
 
-         ! LLY Lloyd
-         ! Calculate free-space contribution to dos                              ! LLY Lloyd
-         CDOS0(1:IELAST) = CZERO                                                  ! LLY Lloyd
-         CDOS1(1:IELAST) = CZERO                                                  ! LLY Lloyd
-         CDOS2(1:NAEZ) = CZERO                                                   ! LLY Lloyd
-         do I1 = 1,NAEZ                                                          ! LLY Lloyd
-            CDOSAT0(1:IELAST) = CZERO                                             ! LLY Lloyd
-            CDOSAT1(1:IELAST) = CZERO                                             ! LLY Lloyd
-            ICELL = NTCELL(I1)                                                   ! LLY Lloyd
-            do IE = 1,IELAST                                                     ! LLY Lloyd
-               call RHOVAL0(EZ(IE),DRDI(1,I1),RMESH(1,I1),IPAN(I1),  &           ! LLY Lloyd
-                  IRCUT(0,I1),IRWS(I1),THETAS(1,1,ICELL),CDOSAT0(IE),&           ! LLY Lloyd
-                  CDOSAT1(IE),IRMD,LMAX)                                          ! LLY Lloyd
+         ! LLY
+         ! Calculate free-space contribution to dos                              ! LLY
+         CDOS0(1:IELAST) = CZERO                                                  ! LLY
+         CDOS1(1:IELAST) = CZERO                                                  ! LLY
+         CDOS2(1:NAEZ) = CZERO                                                   ! LLY
+         do I1 = 1,NAEZ                                                          ! LLY
+            CDOSAT0(1:IELAST) = CZERO                                             ! LLY
+            CDOSAT1(1:IELAST) = CZERO                                             ! LLY
+            ICELL = NTCELL(I1)                                                   ! LLY
+            do IE = 1,IELAST                                                     ! LLY
+               call RHOVAL0(EZ(IE),DRDI(1,I1),RMESH(1,I1),IPAN(I1),  &           ! LLY
+                  IRCUT(0,I1),IRWS(I1),THETAS(1,1,ICELL),CDOSAT0(IE),&           ! LLY
+                  CDOSAT1(IE),IRMD,LMAX)                                          ! LLY
 
                ! calculate contribution from free space
 
-               CDOS2(I1) = CDOS2(I1) + CDOSAT1(IE)*WEZ(IE)                       ! LLY Lloyd
-            enddo                                                                ! LLY Lloyd
-            CDOS0(1:IELAST) = CDOS0(1:IELAST) + CDOSAT0(1:IELAST)                   ! LLY Lloyd
-            CDOS1(1:IELAST) = CDOS1(1:IELAST) + CDOSAT1(1:IELAST)                   ! LLY Lloyd
-         enddo                                                                   ! LLY Lloyd
-         CDOS0(:) = -CDOS0(:) / PI                                               ! LLY Lloyd
-         CDOS1(:) = -CDOS1(:) / PI                                               ! LLY Lloyd
-         ! LLY Lloyd
+               CDOS2(I1) = CDOS2(I1) + CDOSAT1(IE)*WEZ(IE)                       ! LLY
+            enddo                                                                ! LLY
+            CDOS0(1:IELAST) = CDOS0(1:IELAST) + CDOSAT0(1:IELAST)                   ! LLY
+            CDOS1(1:IELAST) = CDOS1(1:IELAST) + CDOSAT1(1:IELAST)                   ! LLY
+         enddo                                                                   ! LLY
+         CDOS0(:) = -CDOS0(:) / PI                                               ! LLY
+         CDOS1(:) = -CDOS1(:) / PI                                               ! LLY
+         ! LLY
          if(myrank==master) then
-            open(701,FILE='freedos.dat',FORM='FORMATTED')                        ! LLY Lloyd
-            do IE = 1,IELAST                                                     ! LLY Lloyd
-               write(701,FMT='(10E16.8)') EZ(IE),CDOS0(IE),CDOS1(IE)             ! LLY Lloyd
-            enddo                                                                ! LLY Lloyd
-            close(701)                                                           ! LLY Lloyd
-            open(701,FILE='singledos.dat',FORM='FORMATTED')                      ! LLY Lloyd
-            do I1 = 1,NATYP                                                      ! LLY Lloyd
-               write(701,FMT='(I5,10E16.8)') I1,CDOS2(I1)                        ! LLY Lloyd
-            enddo                                                                ! LLY Lloyd
-            close(701)                                                           ! LLY Lloyd
+            open(701,FILE='freedos.dat',FORM='FORMATTED')                        ! LLY
+            do IE = 1,IELAST                                                     ! LLY
+               write(701,FMT='(10E16.8)') EZ(IE),CDOS0(IE),CDOS1(IE)             ! LLY
+            enddo                                                                ! LLY
+            close(701)                                                           ! LLY
+            open(701,FILE='singledos.dat',FORM='FORMATTED')                      ! LLY
+            do I1 = 1,NATYP                                                      ! LLY
+               write(701,FMT='(I5,10E16.8)') I1,CDOS2(I1)                        ! LLY
+            enddo                                                                ! LLY
+            close(701)                                                           ! LLY
          end if ! myrank==master
 
          ! energy integration to get cdos_lly
-         CDOS_LLY(1:ielast,1:NSPIN) = CZERO                                      ! LLY Lloyd
-         if (.not.OPT('NEWSOSOL')) then
-            if(t_lloyd%cdos_diff_lly_to_file) then
-               if(myrank==master) then
-                  open (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY Lloyd
-                  do ISPIN = 1,NSPIN                                                ! LLY Lloyd
-                     do IE = 1,IELAST                                               ! LLY Lloyd
-                        read(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,ISPIN)         ! LLY Lloyd
-                     enddo                                                          ! LLY Lloyd
-                  enddo                                                             ! LLY Lloyd
-                  close(701)                                                        ! LLY Lloyd
-               end if
-#ifdef CPP_MPI
-               call MPI_Bcast(CDOS_LLY, ielast*nspin, MPI_DOUBLE_COMPLEX, master, t_mpi_c_grid%myMPI_comm_at, ierr)
-#endif
-            else   !(t_lloyd%cdos_diff_lly_to_file)
-#ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-#else
-               ie_start = 0
-               ie_end = IELAST
-#endif
-               do ISPIN = 1,NSPIN                                                ! LLY Lloyd
-                  do ie_num=1,ie_end
-                     IE = ie_start+ie_num
-                     CDOS_LLY(IE,ISPIN) = t_lloyd%cdos(ie_num,ispin)             ! LLY Lloyd
-                  enddo  !ie_num                                                 ! LLY Lloyd
-               enddo    !ispin
-#ifdef CPP_MPI
-               ! MPI gather cdos_lly on all processors
-               ihelp = ielast*nspin  !IELAST*NSPIN
-               allocate(work(ielast,nspin), stat=i_stat)
-               call memocc(i_stat,product(shape(work))*kind(work),'work','main1c')
-               work = (0.d0, 0.d0)
-               call MPI_ALLREDUCE(cdos_lly(1:ielast,1:nspin),work,ihelp,   &
-                  MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
-               call zcopy(ihelp,work,1,cdos_lly(1:ielast,1:nspin),1)
+         CDOS_LLY(1:ielast,1:NSPIN) = CZERO                                      ! LLY
 
-               i_all=-product(shape(work))*kind(work)
-               deallocate(work, stat=i_stat)
-               call memocc(i_stat,i_all,'work','main1c')
-#endif
-            end if   !(t_lloyd%cdos_diff_lly_to_file)
-            ! LLY Lloyd
-            ! Add free-space contribution cdos0                                  ! LLY Lloyd
-            do ISPIN = 1,NSPIN                                                   ! LLY Lloyd
-               CDOS_LLY(1:IELAST,ISPIN) = CDOS_LLY(1:IELAST,ISPIN)&
-               + CDOS0(1:IELAST)                                                 ! LLY Lloyd
-            enddo                                                                ! LLY Lloyd
-            ! LLY Lloyd
-            CHARGE_LLY(1:NSPIND) = 0.D0                                          ! LLY Lloyd
-            do ISPIN = 1,NSPIN                                                   ! LLY Lloyd
-               CSUM = CZERO                                                      ! LLY Lloyd
-               do IE = 1,IELAST                                                  ! LLY Lloyd
-                  CSUM = CSUM + CDOS_LLY(IE,ISPIN) * WEZ(IE)                     ! LLY Lloyd
-               enddo                                                             ! LLY Lloyd
-               CHARGE_LLY(ISPIN) = -aimag(CSUM) * PI / NSPINPOT                  ! LLY Lloyd
-            enddo                                                                ! LLY Lloyd
-            ! LLY Lloyd
-            ! LLY Lloyd
+         if(t_lloyd%cdos_diff_lly_to_file) then
             if(myrank==master) then
-               open (701,FILE='cdos_lloyd.dat',FORM='FORMATTED')                 ! LLY Lloyd
-               do ISPIN=1,NSPIN                                                  ! LLY Lloyd
-                  do IE=1,IELAST                                                 ! LLY Lloyd
-                     write(701,FMT='(10E16.8)') EZ(IE),CDOS_LLY(IE,ISPIN)        ! LLY Lloyd
-                  enddo                                                          ! LLY Lloyd
-               enddo                                                             ! LLY Lloyd
-               close(701)                                                        ! LLY Lloyd
-               write(*,*) 'Valence charge from Lloyds formula:',&                ! LLY Lloyd
-                  (CHARGE_LLY(ISPIN),ISPIN=1,NSPIN)                              ! LLY Lloyd
-               if(t_inc%i_write>0) then                                          ! LLY Lloyd
-                  write(1337,*) 'Valence charge from Lloyds formula:',&          ! LLY Lloyd
-                     (CHARGE_LLY(ISPIN),ISPIN=1,NSPIN)                           ! LLY Lloyd
-               endif
-            end if ! myrank==master
-
-         else !NEWSOSOL
-
-            if(t_lloyd%cdos_diff_lly_to_file) then
                open (701,FILE='cdosdiff_lly.dat',FORM='FORMATTED')               ! LLY
-               do IE = 1,IELAST                                                  ! LLY
-                  read(701,FMT='(10E25.16)') EREAD,CDOS_LLY(IE,1)                ! LLY
-               enddo                                                             ! LLY
+               do ISPIN = 1,NSPIN/(1+KORBIT)                                     ! LLY
+                  do IE = 1,IELAST                                               ! LLY
+                     read(701,fmt='(10e25.16)') eread,cdos_lly(ie,ispin)         ! lly
+                  enddo                                                          ! LLY
+               end do                                                            ! LLY
                close(701)                                                        ! LLY
-            else  !(t_lloyd%cdos_diff_lly_to_file)
+            end if
 #ifdef CPP_MPI
-               ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-               ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+            call MPI_Bcast(CDOS_LLY, ielast*nspin, MPI_DOUBLE_COMPLEX, master, t_mpi_c_grid%myMPI_comm_at, ierr)
+#endif
+         else   !(t_lloyd%cdos_diff_lly_to_file)
+#ifdef CPP_MPI
+            ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+            ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
-               ie_start = 0
-               ie_end = IELAST
+            ie_start = 0
+            ie_end = ielast
 #endif
+            do ispin = 1,nspin/(1+korbit)                                              ! lly
                do ie_num=1,ie_end
-                  IE = ie_start+ie_num
-                  CDOS_LLY(IE,1) = t_lloyd%cdos(ie_num,1)
-               enddo
+                  ie = ie_start+ie_num
+                  cdos_lly(ie,ispin) = t_lloyd%cdos(ie_num,ispin)
+               end do  !ie_num                                                 ! lly
+            end do ! ispin
 #ifdef CPP_MPI
-               ! MPI gather cdos_lly on all processors
-               ihelp = ielast*nspin  !IELAST*NSPIN
-               allocate(work(ielast,nspin), stat=i_stat)
-               call memocc(i_stat,product(shape(work))*kind(work),'work','main1c')
-               work = czero
-               CALL MPI_ALLREDUCE(cdos_lly(1:ielast,1:nspin),work,ihelp,   &
-                  MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
-               call zcopy(ihelp,work,1,cdos_lly(1:ielast,1:nspin),1)
-               i_all=-product(shape(work))*kind(work)
-               deallocate(work,stat=i_stat)
-               call memocc(i_stat,i_all,'work','main1c')
+            ! MPI gather cdos_lly on all processors
+            ihelp = ielast*nspin  !IELAST*NSPIN
+            allocate(work(ielast,nspin), stat=i_stat)
+            call memocc(i_stat,product(shape(work))*kind(work),'work','main1c')
+            work = czero
+            call MPI_ALLREDUCE(cdos_lly(1:ielast,1:nspin),work,ihelp,   &
+               MPI_DOUBLE_COMPLEX,MPI_SUM,t_mpi_c_grid%myMPI_comm_at,ierr)
+            call zcopy(ihelp,work,1,cdos_lly(1:ielast,1:nspin),1)
+
+            i_all=-product(shape(work))*kind(work)
+            deallocate(work, stat=i_stat)
+            call memocc(i_stat,i_all,'work','main1c')
 #endif
-            end if  !(t_lloyd%cdos_diff_lly_to_file)
+         end if   !(t_lloyd%cdos_diff_lly_to_file)            ! LLY
 
-            ! Add free-space contribution cdos0                                        ! LLY
-            CDOS_LLY(1:ielast,1)=CDOS_LLY(1:ielast,1)+2D0*CDOS0(1:ielast)              ! LLY
-            CSUM=CZERO                                                                 ! LLY
-            do IE = 1,IELAST                                                           ! LLY
-               CSUM = CSUM + CDOS_LLY(IE,1) * WEZ(IE)                                  ! LLY
-            enddo                                                                      ! LLY
-            CHARGE_LLY(1) = -aimag(CSUM) * PI                                          ! LLY
-            if(myrank==master) then
-               open (701,FILE='cdos_lloyd.dat',FORM='FORMATTED')                       ! LLY
-               do IE=1,IELAST                                                          ! LLY
-                  write(701,FMT='(10E16.8)') EZ(IE),CDOS_LLY(IE,1)                     ! LLY
-               enddo                                                                   ! LLY
-               close(701)                                                              ! LLY
-               write(*,*) 'Valence charge from Lloyds formula:',(CHARGE_LLY(1))        ! LLY
-               if(t_inc%i_write>0) then                                                ! LLY
-                  write(1337,*) 'Valence charge from Lloyds formula:',(CHARGE_LLY(1))  ! LLY
-               endif                                                                   ! LLY
-            end if ! myrank==master
-
-         endif ! NEWSOSOL
+         ! Add free-space contribution cdos0                                  ! LLY
+         do ispin = 1,nspin/(1+korbit)                                                   ! LLY
+            cdos_lly(1:ielast,ispin) = cdos_lly(1:ielast,ispin) + real(korbit+1, kind=dp)*cdos0(1:ielast)                                                 ! LLY
+         enddo                                                                ! LLY
+         do ispin = 1,nspin/(1+korbit)                                                   ! LLY
+            csum = czero                                                      ! LLY
+            do ie = 1,ielast                                                  ! LLY
+               csum = csum + cdos_lly(ie,ispin) * wez(ie)                     ! LLY
+            enddo                                                             ! LLY
+            charge_lly(ispin) = -aimag(csum) * pi / nspinpot * (1+korbit)     ! LLY
+         end do                                                                ! LLY
+         if(myrank==master) then
+            open (701,file='cdos_lloyd.dat',form='formatted')                 ! LLY
+            do ispin=1,nspin/(1+korbit)                                                  ! LLY
+               do ie=1,ielast                                                 ! LLY
+                  write(701,fmt='(10e16.8)') ez(ie),cdos_lly(ie,ispin)        ! LLY
+               enddo                                                          ! LLY
+            enddo                                                             ! LLY
+            close(701)                                                        ! LLY
+            write(*,*) 'valence charge from lloyds formula:', (charge_lly(ispin),ispin=1,nspin)                              ! LLY
+            if(t_inc%i_write>0) then                                          ! LLY
+               write(1337,*) 'valence charge from lloyds formula:', (charge_lly(ispin),ispin=1,nspin)                           ! LLY
+            endif
+         end if ! myrank==master
 
       endif !LLY<>0                                                     ! LLY
       !-------------------------------------------------------------------------
-      ! LLY Lloyd
+      ! LLY
       !-------------------------------------------------------------------------
 
       if (.not.OPT('NEWSOSOL')) then
@@ -933,15 +870,15 @@ contains
          call timing_start('main1c - serial part')
 #endif
 
-         ! In case of Lloyds formula renormalize valence charge                  ! LLY Lloyd
-         if (LLY.GT.0) then                                                      ! LLY Lloyd
-            LMAXP1 = LMAX                                                        ! LLY Lloyd
-            if (INS.ne.0) LMAXP1 = LMAX + 1                                      ! LLY Lloyd
+         ! In case of Lloyds formula renormalize valence charge                  ! LLY
+         if (LLY.GT.0) then                                                      ! LLY
+            LMAXP1 = LMAX                                                        ! LLY
+            if (INS.ne.0) LMAXP1 = LMAX + 1                                      ! LLY
 
             call RENORM_LLY(CDOS_LLY,IELAST,NSPIN,NATYP,DEN(:,:,1,:),LMAXP1,CONC,   &
                1,IELAST,WEZ,IRCUT,IPAN,EZ,ZAT,RHO2NS,R2NEF,DENEF,DENEFAT,ESPV)
 
-         endif                                                                   ! LLY Lloyd
+         endif                                                                   ! LLY
 
          !----------------------------------------------------------------------
          ! NATYP
