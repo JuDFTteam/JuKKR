@@ -67,10 +67,6 @@ subroutine write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &
   ! .. Local variables
   integer :: i1, i2, j, naclsmax
 
-  ! .. External Functions ..
-  logical :: opt
-  external :: opt
-
   naclsmax = 1
   do i1 = 1, ncls
     if (nacls(i1)>naclsmax) naclsmax = nacls(i1)

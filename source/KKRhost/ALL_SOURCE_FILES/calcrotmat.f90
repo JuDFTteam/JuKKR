@@ -86,8 +86,7 @@ subroutine calcrotmat(nk, irel, alfdeg, betdeg, gamdeg, rot, fact, nkmmax)
           shigh = min(nint(j-m2), nint(j+m1))
           cb05pw = cb05**nint(2*j+m1-m2-2*slow+2)
           msb05pw = msb05**nint(m2-m1+2*slow-2)
-          dom = (-1.0e0_dp)**(slow-1)*sqrt(rfac(j+m1)*rfac(j-m1)*rfac(j+m2)* &
-            rfac(j-m2))
+          dom = (-1.0e0_dp)**(slow-1)*sqrt(rfac(j+m1)*rfac(j-m1)*rfac(j+m2)*rfac(j-m2))
           sum = 0.0e0_dp
 
           do s = slow, shigh

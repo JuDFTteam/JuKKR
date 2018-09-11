@@ -27,7 +27,6 @@ program kkrcode
   use memoryhandling
   use mod_version_info
   use global_variables
-  Use mod_datatypes, Only: dp
 
 #ifdef CPP_MPI
   use mod_mympi, only: mympi_init, myrank, nranks, master,find_dims_2d,      &
@@ -264,7 +263,8 @@ program kkrcode
   ! for i_write (or i_time) =2 do not reset files > here for output.*.txt, after main2, copy writeout after main0 to different file
   if(myrank.ne.master) call timing_init(myrank)
   if (t_inc%i_write<2) then
-     if(myrank==master) call SYSTEM('cp output.000.txt output.0.txt')
+     if(myrank==master) call execute_command_line('cp output.000.txt output.0.txt')
+     !if(myrank==master) call SYSTEM('cp output.000.txt output.0.txt')
      if(myrank==master) close(1337, status='delete')
      if(t_inc%i_write>0) then
         open(1337, file='output.'//trim(ctemp)//'.txt')
@@ -291,7 +291,8 @@ program kkrcode
      ! reset files for t_inc%i_write<2
      ! first copy lat output to output.2.txt so that all information of the precious iteration can be accessed while the next iteration runs
      if (t_inc%i_write<2.and.t_inc%i_write>0.and.myrank==master.and.t_inc%i_iteration>1) then
-        call SYSTEM('cp output.000.txt output.2.txt')
+        !call SYSTEM('cp output.000.txt output.2.txt')
+        call execute_command_line('cp output.000.txt output.2.txt')
      endif
      ! rewind output.xxx.txt
      if (t_inc%i_write<2 .and. t_inc%i_write>0) then

@@ -23,7 +23,6 @@ subroutine invslab(gdi, gup, gdow, gin, icheck)
   use mod_cinit
   implicit none
 
-  complex (kind=dp), parameter :: ci = (0.e0_dp, 1.e0_dp)
   complex (kind=dp), parameter :: czero = (0.e0_dp, 0.e0_dp)
   complex (kind=dp), parameter :: cone = (1.e0_dp, 0.e0_dp)
   integer :: ipvt(ndim_slabinv)

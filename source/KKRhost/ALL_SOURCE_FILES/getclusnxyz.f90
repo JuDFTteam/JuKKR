@@ -25,7 +25,6 @@ subroutine getclusnxyz(clurad, bravais, ndim, cluradsq, nbr)
   ! ..  Locals
   real (kind=dp) :: dr(3)
   integer :: i, j
-  integer :: int
   ! ..
   ! ..
   do i = 1, ndim

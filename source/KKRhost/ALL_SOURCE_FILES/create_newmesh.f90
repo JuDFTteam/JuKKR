@@ -77,7 +77,7 @@ contains
 
     ! .. Local variables
     integer :: npan_inst, i_stat, i_all
-    integer :: i1, ipot, ipotm, ir2, ip, icell
+    integer :: i1, ir2, ip, icell
     integer :: imin, imax, iminnew, imaxnew, lm1
     integer :: ishift, ilogpanshift, ilinpanshift, npan_logtemp
     real (kind=dp) :: fac
@@ -105,11 +105,8 @@ contains
     end if
     if (present(ntcell)) thetasnew = 0.0e0_dp
 
-    ipotm = 0
-
     do i1 = 1, natyp
 
-      ipot = nspin*(i1-1) + 1
       npan_inst = ipan(i1) - 1
       npan_tot(i1) = npan_log + npan_eq + npan_inst
 

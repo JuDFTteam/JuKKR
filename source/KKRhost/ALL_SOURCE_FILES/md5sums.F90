@@ -4,7 +4,6 @@
 
 module mod_md5sums
 
-  Use mod_datatypes, Only: dp
   implicit none
 
   private
@@ -26,13 +25,12 @@ module mod_md5sums
     character(len=100) :: tmp_char
     integer :: istat
 
-    logical :: reorder, skipread
+    logical :: skipread
 #ifndef CPP_NOMD5
     integer :: SYSTEM
     external :: SYSTEM
 #endif
     
-    reorder  = .false.
     skipread = .false.
     ! create md5 checksum for potential
 #ifndef CPP_NOMD5
@@ -46,7 +44,6 @@ module mod_md5sums
 #else
       istat = -1
 #endif
-      reorder=.true.
       if(istat/=0)then
         skipread=.true.
       end if
@@ -70,7 +67,6 @@ module mod_md5sums
 
 
     if(ins>0) then
-      reorder  = .false.
       skipread = .false.
       ! create md5 checksum for shapefun
 #ifndef CPP_NOMD5
@@ -84,7 +80,6 @@ module mod_md5sums
 #else
         istat=-1
 #endif
-        reorder=.true.
         if(istat/=0)then
           skipread=.true.
         end if

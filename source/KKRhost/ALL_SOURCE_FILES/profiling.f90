@@ -51,14 +51,14 @@ contains
     ! Local variables
     character (len=20) :: filename
     character (len=36) :: maxroutine, locroutine
-    character (len=36) :: maxarray, locarray
+    character (len=36) :: maxarray!, locarray
     integer :: nalloc, ndealloc, locpeak, locmemory, iproc
     integer :: dblsize, mfileno
     integer (kind=di) :: memory, maxmemory
     character (len=1) :: allocationflag
 
     save :: memory, nalloc, ndealloc, maxroutine, maxarray, maxmemory
-    save :: locroutine, locarray, locpeak, locmemory, iproc
+    save :: locroutine, locpeak, locmemory, iproc!, locarray
 
     mfileno = 77
     dblsize = 1
@@ -75,7 +75,7 @@ contains
           nalloc = 0
           ndealloc = 0
           locroutine = 'routine'
-          locarray = 'array'
+          !locarray = 'array'
           locmemory = 0
           locpeak = 0
           iproc = isize
@@ -142,7 +142,7 @@ contains
               locpeak = locmemory
             end if
           end if
-          locarray = array
+          !locarray = array
           memory = memory + isize*dblsize
           if (memory>maxmemory) then
             maxmemory = memory

@@ -53,7 +53,7 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
   integer :: njqcalc
   integer :: iveci2j(:, :), nveci2j(:), iref(:, :), jqcalc(:)
   allocatable :: iveci2j, nveci2j, iref, jqcalc
-  real (kind=dp) :: clurad, cluradsq, dq(3), dr(3), drsq, tol, tolsq
+  real (kind=dp) :: clurad, cluradsq, dq(3), dr(3), drsq, tol
   real (kind=dp) :: cluradxy, cluradxysq, drxysq
   logical :: lspher
   character (len=256) :: uio                               ! NCOLIO=256
@@ -69,7 +69,6 @@ subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, &
   ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
   tol = 1.0e-4_dp
-  tolsq = tol*tol
   ndim = 3
   if (linterface) ndim = 2
 

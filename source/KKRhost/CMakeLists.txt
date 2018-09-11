@@ -34,8 +34,8 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
     else()
         set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mkl=sequential")
     endif()
-    #set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox")
-    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -module $(OBJ) -g -sox")
+    #set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g -sox")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -g -sox")
     if(ENABLE_COV)
         set(CMAKE_Fortran_FLAGS     "${CMAKE_Fortran_FLAGS} -prof-gen:srcpos")
     endif()
@@ -52,6 +52,14 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     # disable MD5 sums for gnu compiler
     add_definitions(-DCPP_NOMD5)
     set(compver "gnu")
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES NAG)
+    message("NAG compiler found")
+    set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -Imodules -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -C=all")
+    set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
+    # disable MD5 sums for gnu compiler
+    add_definitions(-DCPP_NOMD5)
+    set(compver "nag")
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -108,6 +116,9 @@ set(complib "")
 # extract version info
 # generate a Git version string
 execute_process(COMMAND git describe OUTPUT_VARIABLE GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# some static dimensions used in Dirac solver
+execute_process(COMMAND ln -s ../sprkkr_rmesh.dim .)
 
 # write compiler flags
 add_definitions(-DCOMPVER1="${GIT_VERSION}")

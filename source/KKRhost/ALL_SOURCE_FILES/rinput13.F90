@@ -474,7 +474,7 @@ contains
     logical :: latominfo           ! < Logical variable for old/new treatment
                                    ! of the ATOMINFO
     ! .. Local CPA variables
-    integer :: io, ia, iq, iprint
+    integer :: io, iq, iprint
     real (kind=dp) :: sum1
     character (len=3), dimension (0:1) :: cpaflag
 
@@ -1254,6 +1254,7 @@ contains
     else
       write (111, *) 'Default KREL= ', krel
     end if
+
     ! ----------------------------------------------------------------------------
     ! End of variables that used to be in the inc.
     ! ----------------------------------------------------------------------------
@@ -1895,7 +1896,6 @@ contains
     write (1337, *) 'ATOMINFOC or ATOMINFO:'
     do i = 1, natyp
       call ioinput('ATOMINFOC       ', uio, i+1, 7, ier)
-      ia = 1
       if (ier==0) then
         latominfo = .true.
         read (unit=uio, fmt=*) zat(i), lmxc(i), (kfg(j,i), j=1, 4), j, ier, &

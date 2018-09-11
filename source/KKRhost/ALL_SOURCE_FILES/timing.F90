@@ -19,7 +19,6 @@ implicit none
   integer                :: start_time(nkeys)=0
   real (kind=dp)       :: interm_time(nkeys)=0.0D0
   integer                :: ispaused(nkeys)=0
-  integer                :: writetiming=1
   integer                :: init=0
   
   

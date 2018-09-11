@@ -21,8 +21,8 @@ subroutine inversion(gllke, invmod, icheck)
   use mod_invsupercell
   implicit none
 
-  complex (kind=dp) :: ci, czero, cone
-  parameter (ci=(0.e0_dp,1.e0_dp), czero=(0.e0_dp,0.e0_dp), &
+  complex (kind=dp) :: czero, cone
+  parameter (czero=(0.e0_dp,0.e0_dp), &
     cone=(1.e0_dp,0.e0_dp))
 
   complex (kind=dp) :: gllke(alm, alm), gdi(ndim_slabinv, ndim_slabinv, nlayerd), &

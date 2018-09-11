@@ -3,7 +3,6 @@ module mod_rmatstr
 contains
 
 subroutine rmatstr(str, lstr, a, n, m, mlin, mcol, tolp, nfil)
-  use :: mod_datatypes, only: dp
   ! ********************************************************************
   ! *                                                                  *
   ! *   writes structure of REAL      NxN   matrix   A                 *
@@ -15,6 +14,7 @@ subroutine rmatstr(str, lstr, a, n, m, mlin, mcol, tolp, nfil)
   ! *                                                                  *
   ! *                                                         03/01/96 *
   ! ********************************************************************
+  use :: mod_datatypes, only: dp
   implicit none
 
   integer, parameter :: ndifmax = 250

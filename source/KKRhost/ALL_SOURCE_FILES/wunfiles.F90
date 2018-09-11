@@ -497,23 +497,30 @@ contains
       real (kind=dp), dimension(3,0:NR), intent(in)                :: RR
       real (kind=dp), dimension(IRM,NATYP), intent(in)             :: DRDI     !< Derivative dr/di
       real (kind=dp), dimension(NCLEB,2), intent(in)               :: CLEB     !< GAUNT coefficients (GAUNT)
-      real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: CSCL     !< Speed of light scaling
+      !real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: CSCL     !< Speed of light scaling
+      real (kind=dp), dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: CSCL      !< Speed of light scaling
       real (kind=dp), dimension(NTOTD*(NCHEB+1),NATYP), intent(in) :: RNEW
       real (kind=dp), dimension(IRM,NPOTD), intent(in)             :: VISP     !< Spherical part of the potential
-      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: VTREL    !< potential (spherical part)
-      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: BTREL    !< magnetic field
-      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: RMREL    !< radial mesh
+      !real (kind=dp), dimension(IRM,NATYP), intent(in)             :: VTREL    !< potential (spherical part)
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: VTREL     !< potential (spherical part)
+      !real (kind=dp), dimension(IRM,NATYP), intent(in)             :: BTREL    !< magnetic field
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: BTREL     !< magnetic field
+      !real (kind=dp), dimension(IRM,NATYP), intent(in)             :: RMREL    !< radial mesh
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: RMREL     !< radial mesh
       real (kind=dp), dimension(3,NSHELD), intent(in)              :: RATOM
       real (kind=dp), dimension(20,NPOTD), intent(in)              :: ECORE    !< Core energies
       real (kind=dp), dimension(3,NEMBD2), intent(in)              :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
-      real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: SOCSCL
-      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: DRDIREL  !< derivative of radial mesh
+      !real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: SOCSCL
+      real (kind=dp), dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: SOCSCL
+      !real (kind=dp), dimension(IRM,NATYP), intent(in)             :: DRDIREL  !< derivative of radial mesh
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: DRDIREL
       real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMPHITAB
       real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMTETTAB
       real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMGAMTAB
       real (kind=dp), dimension(3,NATOMIMPD), intent(in)           :: RCLSIMP
       real (kind=dp), dimension(LMPOT,NEMBD1), intent(in)          :: CMOMHOST !< Charge moments of each atom of the (left/right) host
-      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      !real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: R2DRDIREL
       real (kind=dp), dimension(0:NTOTD,NATYP), intent(in)         :: RPAN_INTERVALL
       real (kind=dp), dimension(48,3,NSHELD), intent(in)              :: RROT
       real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in)           :: RCLS   !< Real space position of atom in cluster
@@ -818,7 +825,7 @@ contains
          REFPOT,IRREL,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,IRNS,IFUNM,     &
          LLMSP,LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM_MAP,IMAXSH,NPAN_LOG,       &
          NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,   &
-         VACFLAG,TXC,RCLSIMP)
+         VACFLAG,TXC,RCLSIMP, KREL)
 
       ! save information about the energy mesh
       call save_emesh(IELAST,EZ,WEZ,EMIN,EMAX,IESEMICORE,FSEMICORE,NPOL,TK,   &
@@ -2114,7 +2121,7 @@ contains
       IQCALC,ICHECK,ATOMIMP,REFPOT,IRREL,NRREL,IFUNM1,ITITLE,LMSP1,NTCELL,IXIPOL,&
       IRNS,IFUNM,LLMSP,LMSP,IMT,IRC,IRMIN,IRWS,NFU,HOSTIMP,ILM_MAP,IMAXSH,NPAN_LOG,  &
       NPAN_EQ,NPAN_LOG_AT,NPAN_EQ_AT,NPAN_TOT,IPAN_INTERVALL,SYMUNITARY,VACFLAG, &
-      TXC,RCLSIMP)
+      TXC,RCLSIMP, KREL)
       ! fill arrays after they have been allocated in init_t_params
       !     ..
       implicit none
@@ -2159,6 +2166,7 @@ contains
       integer, intent(in) :: NPAN_EQ
       integer, intent(in) :: NPAN_LOG
       integer, intent(in) :: NATOMIMPD !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+      integer, intent(in) :: KREL
       !     .. Array arguments
       complex (kind=dp), dimension(IEMXD), intent(in) :: EZ
       complex (kind=dp), dimension(IEMXD), intent(in) :: WEZ
@@ -2195,22 +2203,29 @@ contains
       real (kind=dp), dimension(NCLEB,2), intent(in)               :: CLEB       !< GAUNT coefficients (GAUNT)
       real (kind=dp), dimension(IRM,NATYP), intent(in)             :: DRDI       !< Derivative dr/di
       real (kind=dp), dimension(IRM,NPOTD), intent(in)             :: VISP       !< Spherical part of the potential
-      real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: CSCL       !< Speed of light scaling
+      !real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: CSCL       !< Speed of light scaling
+      real (kind=dp), dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: CSCL      !< Speed of light scaling
       real (kind=dp), dimension(NTOTD*(NCHEB+1),NATYP), intent(in) :: RNEW
-      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: VTREL      !< potential (spherical part)
-      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: BTREL      !< magnetic field
-      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: RMREL      !< radial mesh
+      !real (kind=dp), dimension(IRM,NATYP), intent(in)             :: VTREL      !< potential (spherical part)
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: VTREL     !< potential (spherical part)
+      !real (kind=dp), dimension(IRM,NATYP), intent(in)             :: BTREL      !< magnetic field
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: BTREL     !< magnetic field
+      !real (kind=dp), dimension(IRM,NATYP), intent(in)             :: RMREL      !< radial mesh
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(inout)         :: RMREL     !< radial mesh
       real (kind=dp), dimension(20,NPOTD), intent(in)              :: ECORE      !< Core energies
       real (kind=dp), dimension(3,NSHELD), intent(in)              :: RATOM
       real (kind=dp), dimension(3,NEMBD2), intent(in)              :: RBASIS     !< Position of atoms in the unit cell in units of bravais vectors
-      real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: SOCSCL
+      !real (kind=dp), dimension(LMAXD1,NATYP), intent(in)          :: SOCSCL
+      real (kind=dp), dimension(KREL*LMAX+1,KREL*NATYP+(1-KREL)), intent(inout) :: SOCSCL
       real (kind=dp), dimension(3,NATOMIMPD), intent(in)           :: RCLSIMP
-      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: DRDIREL    !< derivative of radial mesh
+      !real (kind=dp), dimension(IRM,NATYP), intent(in)             :: DRDIREL    !< derivative of radial mesh
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: DRDIREL
       real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMPHITAB
       real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMTETTAB
       real (kind=dp), dimension(NAEZ,3), intent(in)                :: QMGAMTAB
       real (kind=dp), dimension(LMPOT,NEMBD1), intent(in)          :: CMOMHOST   !< Charge moments of each atom of the (left/right) host
-      real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R2DRDIREL  !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      !real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R2DRDIREL  !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+      real (kind=dp), dimension(IRM*KREL+(1-KREL),NATYP), intent(in) :: R2DRDIREL
       real (kind=dp), dimension(0:NTOTD,NATYP), intent(in)         :: RPAN_INTERVALL
 
       real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in)                 :: RCLS   !< Real space position of atom in cluster
@@ -3011,16 +3026,23 @@ contains
       real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: DRDI
       real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: RMESH
       real (kind=dp), dimension(NCLEB,2), intent(inout)               :: CLEB
-      real (kind=dp), dimension(LMAXD1,NATYPD), intent(inout)          :: CSCL
+      !real (kind=dp), dimension(LMAXD1,NATYPD), intent(inout)          :: CSCL
+      real (kind=dp), dimension(KREL*LMAXD+1,KREL*NATYPD+(1-KREL)), intent(inout) :: CSCL      !< Speed of light scaling
       real (kind=dp), dimension(IRMD,NPOTD), intent(inout)             :: VISP
       real (kind=dp), dimension(NTOTD*(NCHEB+1),NATYPD), intent(inout) :: RNEW
-      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: RMREL
-      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: VTREL
-      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: BTREL
+      !real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: RMREL
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD), intent(inout)         :: RMREL     !< radial mesh
+      !real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: VTREL
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD), intent(inout)         :: VTREL     !< potential (spherical part)
+      !real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: BTREL
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD), intent(inout)         :: BTREL     !< magnetic field
       real (kind=dp), dimension(20,NPOTD), intent(inout)              :: ECORE
-      real (kind=dp), dimension(LMAXD1,NATYPD), intent(inout)          :: SOCSCL
-      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: DRDIREL
-      real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: R2DRDIREL
+      !real (kind=dp), dimension(LMAXD1,NATYPD), intent(inout)          :: SOCSCL
+      real (kind=dp), dimension(KREL*LMAXD+1,KREL*NATYPD+(1-KREL)), intent(inout) :: SOCSCL
+      !real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: DRDIREL
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD), intent(inout)         :: DRDIREL
+      !real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: R2DRDIREL
+      real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD), intent(inout)         :: R2DRDIREL !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
       real (kind=dp), dimension(0:NTOTD,NATYPD), intent(inout)         :: RPAN_INTERVALL
       real (kind=dp), dimension(IRMIND:IRMD,LMPOTD,NSPOTD), intent(inout)        :: VINS
       real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(inout)              :: THETAS
