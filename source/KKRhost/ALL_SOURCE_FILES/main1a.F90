@@ -37,7 +37,7 @@ contains
 
       use mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatJij,init_t_dtmatJij,&
         init_t_dtmatJij_at,t_mpi_c_grid
-      use mod_mympi, only: nranks, master, myrank
+      use mod_mympi, only: nranks, master, myrank, distribute_work_atoms, distribute_work_energies
       use mod_wunfiles
       use mod_jijhelp, only: set_Jijcalc_flags
       use mod_main0
@@ -48,7 +48,7 @@ contains
       use mpi
       use mod_types, only: gather_tmat, gather_lly_dtmat,         &
                            save_t_mpi_c_grid,get_ntot_pT_ioff_pT_2D
-      use mod_mympi, only: find_dims_2d,distribute_linear_on_tasks
+      use mod_mympi, only: find_dims_2d
 #endif
 
       ! .. Local variables
@@ -68,7 +68,7 @@ contains
 
 #ifdef CPP_MPI
       integer :: ntot1, mytot, ii
-      integer, dimension(0:nranks-1) :: ntot_pT, ioff_pT,ntot_all, ioff_all
+      integer, dimension(0:nranks-1) :: ntot_pt, ioff_pt,ntot_all, ioff_all
       ! communication of dtmat in case of lloyd
       integer :: iwork
       complex (kind=dp), dimension(:,:,:,:), allocatable :: work_jij
@@ -158,33 +158,10 @@ contains
             call OPENDAFILE(692,'tralpha',7,LRECTRA,TMPDIR,ITMPDIR,ILTMP) ! LLY
          end if
       endif
-      !
 
-#ifdef CPP_MPI
-      ntot1 = NATYP
-      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie,  &
-         t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master, &
-         ntot1,ntot_pT,ioff_pT,.true.,.true.)
+      ! distribute atoms over ranks
+      call distribute_work_atoms(natyp, i1_start, i1_end)
 
-      i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-      i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+ntot_pT(t_mpi_c_grid%myrank_ie)
-      t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
-
-      if (.not. (allocated(t_mpi_c_grid%ntot_pT1) .and.  &
-         allocated(t_mpi_c_grid%ioff_pT1))) then
-         allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),stat=i_stat)
-         call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT1))*kind(t_mpi_c_grid%ntot_pT1),&
-            't_mpi_c_grid%ntot_pT1','main1a')
-         allocate(t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1),stat=i_stat)
-         call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT1))*kind(t_mpi_c_grid%ioff_pT1),&
-            't_mpi_c_grid%ioff_pT1','main1a')
-      endif
-      t_mpi_c_grid%ntot_pT1 = ntot_pT
-      t_mpi_c_grid%ioff_pT1 = ioff_pT
-#else
-      i1_start = 1
-      i1_end   = NATYP
-#endif
 #ifdef CPP_MPI
       call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 #endif
@@ -194,30 +171,9 @@ contains
          if(myrank==master) write(*,*) 'Skipping atom loop in main1a'
          i1_start = 1
          i1_end = 0
-#ifdef CPP_MPI
-         ! distribute IE dimension here instead, otherwise this would be done in tmat_newsolver/calctmat
-         call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,  &
-            t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
-         t_mpi_c_grid%ntot2=ntot_pT(t_mpi_c_grid%myrank_at)
-         if (.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
-            allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),stat=i_stat)
-            call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT2))*kind(t_mpi_c_grid%ntot_pT2),'t_mpi_c_grid%ntot_pT2','main1a')
-            allocate(t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1),stat=i_stat)
-            call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT2))*kind(t_mpi_c_grid%ioff_pT2),'t_mpi_c_grid%ioff_pT2','main1a')
-         endif
-         t_mpi_c_grid%ntot_pT2 = ntot_pT
-         t_mpi_c_grid%ioff_pT2 = ioff_pT
-#else
-         if(.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
-            allocate(t_mpi_c_grid%ntot_pT2(1),stat=i_stat)
-            call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT2))*kind(t_mpi_c_grid%ntot_pT2),'t_mpi_c_grid%ntot_pT2','tmat_newsolver')
-            allocate(t_mpi_c_grid%ioff_pT2(1),stat=i_stat)
-            call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT2))*kind(t_mpi_c_grid%ioff_pT2),'t_mpi_c_grid%ioff_pT2','tmat_newsolver')
-         endif
-         t_mpi_c_grid%ntot2      =IELAST
-         t_mpi_c_grid%ntot_pT2   = IELAST
-         t_mpi_c_grid%ioff_pT2   = 0
-#endif
+         ! distribute IE dimension here if atom loop is skipped
+         ! otherwise this would be done in tmat_newsolver/calctmat
+         call distribute_work_energies(ielast)
       end if
 
       if (.not.OPT('NEWSOSOL')) then

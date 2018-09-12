@@ -135,10 +135,10 @@ program kkrcode
 #ifdef CPP_MPI
   ! now communicate type t_inc and t_tgmat switches (this has an implicit barrier, so that all other processes wait for master to finish with main0)
   if(myrank==master) call timing_start('MPI 1')
-  call bcast_t_inc_tgmat(t_inc,t_tgmat,t_cpa)
+  call bcast_t_inc_tgmat(t_inc,t_tgmat,t_cpa, master)
 
   ! also communicate logicals from t_lloyd
-  call bcast_t_lly_1(t_lloyd)
+  call bcast_t_lly_1(t_lloyd, master)
 
   ! communicate parameters that were written in wunfiles into t_params
   call bcast_t_params_scalars(t_params)

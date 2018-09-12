@@ -1,13 +1,16 @@
 module mod_types
 
-use mod_DataTypes
+   use mod_DataTypes
 
-    use constants, only: czero
+   use constants, only: czero
 
-implicit none
+   implicit none
 
-    public :: t_inc, t_tgmat, t_mpi_c_grid, t_lloyd, t_dtmatJij, t_cpa, t_imp
+   public :: t_inc, t_tgmat, t_mpi_c_grid, t_lloyd, t_dtmatJij, t_cpa, t_imp
 
+
+   !< type holding single site t-matrix, reference GF and structural GF (gmat)
+   !< for distribution between 1a, 1b and 1c parts of the code
    type :: type_tgmatices
 
        ! logical switches to control if matrices are stored in memory or written to files
@@ -25,6 +28,7 @@ implicit none
    end type type_tgmatices
    
 
+   !< type holding CPA information
    type :: type_cpa
 
        ! logical switches to control if matrices are stored in memory or written to files
@@ -37,7 +41,8 @@ implicit none
       complex (kind=dp), allocatable :: dtilts(:,:,:,:)       ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
    end type type_cpa
 
-   !data type for the derivatives of the t-matrix with respect to changing the non-collinear angles in directions {x,y,z}
+
+   !< data type for the derivatives of the t-matrix with respect to changing the non-collinear angles in directions {x,y,z}
    type :: type_dtmatJijDij
      
       integer :: Nelements = 3
@@ -47,6 +52,7 @@ implicit none
    end type type_dtmatJijDij
 
 
+   !< type holding some array dimensions needed independently of t_params
    type :: type_inc
    
       integer :: Nparams = 22   ! number of parameters in type_inc, excluding allocatable array KMESH
@@ -78,6 +84,7 @@ implicit none
    end type type_inc
    
    
+   !< type holding information on the MPI parallelization scheme
    type :: type_mpi_cartesian_grid_info
    
       integer :: Nparams = 12
@@ -100,6 +107,8 @@ implicit none
    end type type_mpi_cartesian_grid_info
 
 
+   !< type holding information needed for lloyd such as derivatives of single
+   !< site t-matrix, reference GF or the trace of alpha matrix and 
    type :: type_lloyd
 
       ! logical switches to control if matrices are stored in memory or written to files
@@ -121,6 +130,7 @@ implicit none
    end type type_lloyd
 
 
+   !< type holding information for impurity potential, needed in GREENIMP mode
    type :: type_imp
 
       integer :: N1 = 12     ! number of scalars for mpi bcast + 2 (for N1,N2)
@@ -148,7 +158,7 @@ implicit none
 
    end type type_imp
 
-
+   ! save types
    type (type_inc), save :: t_inc
    type (type_tgmatices), save :: t_tgmat
    type (type_mpi_cartesian_grid_info), save :: t_mpi_c_grid
@@ -157,12 +167,12 @@ implicit none
    type (type_cpa), save :: t_cpa
    type (type_imp), save :: t_imp
 
-
 contains
 
+   !< subroutine to allocate and initialize arrays of t_tgmat
    subroutine init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
    
-      use mod_mympi, only: nranks
+      !use mod_mympi, only: nranks
    
       implicit none
    
@@ -177,15 +187,18 @@ contains
     
       if (.not. allocated(t_tgmat%tmat)) then
          if (.not. t_tgmat%tmat_to_file) then
-            if(nranks.eq.1) then
-               !allocate tmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
-               allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
-            else
-               !allocate tmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
-               allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%tmat for mpi'
-            end if
+            !if(nranks.eq.1) then
+            !   !allocate tmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
+            !   allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
+            !else
+            !   !allocate tmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
+            !   allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_tgmat%tmat for mpi'
+            !end if
+            !allocate tmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
+            allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
          else
             allocate(t_tgmat%tmat(1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
@@ -196,15 +209,17 @@ contains
       
       if (.not. allocated(t_tgmat%gmat)) then
          if (.not. t_tgmat%gmat_to_file) then
-            if(nranks.eq.1) then
-               !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IELAST*NSPIN*NATYP
-               allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_inc%IELAST*nspin*t_inc%NSHELL0), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%gmat'
-            else
-               !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IEMAX_local*NSPIN*NATYP
-               allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_mpi_c_grid%ntot2*nspin*t_inc%NSHELL0), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%gmat for mpi'
-            end if
+            !if(nranks.eq.1) then
+            !   !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IELAST*NSPIN*NATYP
+            !   allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_inc%IELAST*nspin*t_inc%NSHELL0), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_tgmat%gmat'
+            !else
+            !   !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IEMAX_local*NSPIN*NATYP
+            !   allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_mpi_c_grid%ntot2*nspin*t_inc%NSHELL0), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_tgmat%gmat for mpi'
+            !end if
+            allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_mpi_c_grid%ntot2*nspin*t_inc%NSHELL0), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating t_tgmat%gmat'
             
          else
             allocate(t_tgmat%gmat(1,1,1), STAT=ierr)
@@ -215,15 +230,17 @@ contains
       
       if (.not. allocated(t_tgmat%gref)) then
          if (.not. t_tgmat%gref_to_file) then
-            if(nranks.eq.1) then
-               !allocate gref(NACLSMAX*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IELAST
-               allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%gref'
-            else
-               !allocate gref(NACLSMAX*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
-               allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%gref for mpi'
-            end if
+            !if(nranks.eq.1) then
+            !   !allocate gref(NACLSMAX*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IELAST
+            !   allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_tgmat%gref'
+            !else
+            !   !allocate gref(NACLSMAX*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
+            !   allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_tgmat%gref for mpi'
+            !end if
+            allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating t_tgmat%gref'
          else
             allocate(t_tgmat%gref(1,1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_tgmat%gref'
@@ -234,26 +251,22 @@ contains
    end subroutine init_tgmat
    
 
-   subroutine init_t_cpa(t_inc,t_cpa,ntot2)
+   !< subroutine to allocate and initialize arrays of t_cpa
+   subroutine init_t_cpa(t_inc,t_cpa,nenergy)
    
-      use mod_mympi, only: nranks
+      !use mod_mympi, only: nranks
    
       implicit none
    
       type(type_inc), intent(in) :: t_inc
-      integer, intent(in) :: ntot2
+      integer, intent(in) :: nenergy
       type(type_cpa), intent(inout) :: t_cpa
       
-      integer :: ierr, nspin, nenergy
+      integer :: ierr, nspin
       
       nspin = t_inc%NSPIN
       if(t_inc%NEWSOSOL) nspin = 1
 
-      if(nranks==1)then
-        nenergy=t_inc%IELAST
-      else
-        nenergy=ntot2
-      end if
     
       if (.not. allocated(t_cpa%dmatts)) then
          if (.not. t_cpa%dmatproj_to_file) then
@@ -282,6 +295,7 @@ contains
    end subroutine init_t_cpa 
 
 
+   !< subroutine to allocate and initialize arrays of t_dtmatJij
    subroutine init_t_dtmatJij(t_inc,t_dtmatJij)
 
       implicit none
@@ -301,9 +315,10 @@ contains
    end subroutine init_t_dtmatJij
 
    
+   !< subroutine to allocate and initialize arrays of t_dtmatJij_at
    subroutine init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij_at)
 
-      use mod_mympi, only: nranks
+      !use mod_mympi, only: nranks
 
       implicit none
 
@@ -317,15 +332,17 @@ contains
 
       if (.not. allocated(t_dtmatJij_at%dtmat_xyz) .and. t_dtmatJij_at%calculate) then
 !        if (.not. t_dtmatJij%dtmat_to_file) then
-            if(nranks.eq.1) then
-               !allocate dtmat_xyz(lmmax,lmmax,3,irec) for irec_max=ielast
-               allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_inc%IELAST), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
-            else
-               !allocate dtmat_xyz(lmmax,lmmax,3,irec) for irec_max=iemax_local
-               allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_mpi_c_grid%ntot2), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat for mpi'
-            end if
+            !if(nranks.eq.1) then
+            !   !allocate dtmat_xyz(lmmax,lmmax,3,irec) for irec_max=ielast
+            !   allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_inc%IELAST), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
+            !else
+            !   !allocate dtmat_xyz(lmmax,lmmax,3,irec) for irec_max=iemax_local
+            !   allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_mpi_c_grid%ntot2), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat for mpi'
+            !end if
+            allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_mpi_c_grid%ntot2), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
 !        else
 !           allocate(t_tgmat%tmat(1,1,1), STAT=ierr)
 !           if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
@@ -337,6 +354,7 @@ contains
    end subroutine init_t_dtmatJij_at
 
    
+   !< store parameters needed in t_imp
    subroutine init_params_t_imp(t_imp,IPAND,NATYPD,IRMD,IRID,NFUND,NSPIN,IRMIND,LMPOTD)
 
       implicit none
@@ -356,6 +374,7 @@ contains
    end subroutine init_params_t_imp
 
    
+   !< subroutine to allocate and initialize arrays of t_imp
    subroutine init_t_imp(t_inc,t_imp)
 
       implicit none
@@ -451,17 +470,19 @@ contains
    
 
 #ifdef CPP_MPI
-   subroutine bcast_t_inc_tgmat(t_inc,t_tgmat,t_cpa)
+   !< subroutine to broadcast t_inc and t_tgmat over mpi ranks
+   subroutine bcast_t_inc_tgmat(t_inc,t_tgmat,t_cpa, master)
     !ruess: after myBcast_impcls from Pkkr_sidebranch2D_2014_12_16 by Bernd Zimmermann
 
     use mpi
-    use mod_mympi,   only: master
+    !use mod_mympi,   only: master
     implicit none
 
     type(type_inc), intent(inout) :: t_inc
     type(type_tgmatices), intent(inout) :: t_tgmat
     type(type_cpa), intent(inout) :: t_cpa
 
+    integer, intent(in) :: master
     integer :: blocklen1(t_inc%Nparams), etype1(t_inc%Nparams), myMPItype1 ! for parameter from t_inc
     integer :: blocklen2(t_tgmat%Nelements), etype2(t_tgmat%Nelements), myMPItype2 ! for logicals in t_tgmat
     integer :: ierr
@@ -553,14 +574,15 @@ contains
 
 
 #ifdef CPP_MPI
-   subroutine bcast_t_lly_1(t_lloyd)
+   subroutine bcast_t_lly_1(t_lloyd, master)
 
     use mpi
-    use mod_mympi,   only: master
+    !use mod_mympi,   only: master
     implicit none
 
     type(type_lloyd), intent(inout) :: t_lloyd
 
+    integer, intent(in) :: master
     integer :: blocklen1(t_lloyd%N1), etype1(t_lloyd%N1), myMPItype1 ! for parameter from t_lloyd
     integer :: ierr
     integer(kind=MPI_ADDRESS_KIND) :: disp1(t_lloyd%N1), base
@@ -595,9 +617,10 @@ contains
 #endif
 
 
+   !< subroutine to allocate and initialize t_lloyd
    subroutine init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
    
-      use mod_mympi, only: nranks
+      !use mod_mympi, only: nranks
    
       implicit none
    
@@ -613,15 +636,18 @@ contains
     
       if (.not. allocated(t_lloyd%dtmat)) then
          if (.not. t_lloyd%dtmat_to_file) then
-            if(nranks.eq.1) then
-               !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
-               allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
-            else
-               !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
-               allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_tgmat%tmat for mpi'
-            end if
+            !if(nranks.eq.1) then
+            !   !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
+            !   allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
+            !else
+            !   !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
+            !   allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_tgmat%tmat for mpi'
+            !end if
+            !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
+            allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
          else
             allocate(t_lloyd%dtmat(1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
@@ -631,13 +657,15 @@ contains
       
       if (.not. allocated(t_lloyd%tralpha)) then
          if (.not. t_lloyd%tralpha_to_file) then
-            if(nranks.eq.1) then
-               allocate(t_lloyd%tralpha(t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha'
-            else
-               allocate(t_lloyd%tralpha(t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha for mpi'
-            end if
+            !if(nranks.eq.1) then
+            !   allocate(t_lloyd%tralpha(t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha'
+            !else
+            !   allocate(t_lloyd%tralpha(t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha for mpi'
+            !end if
+            allocate(t_lloyd%tralpha(t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha'
          else
             allocate(t_lloyd%tralpha(1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_lloyd%tralpha'
@@ -647,13 +675,15 @@ contains
       
       if (.not. allocated(t_lloyd%cdos)) then
          if (.not. t_lloyd%cdos_diff_lly_to_file) then
-            if(nranks.eq.1) then
-               allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_lloyd%cdos'
-            else
-               allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_lloyd%cdos for mpi'
-            end if
+            !if(nranks.eq.1) then
+            !   allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_lloyd%cdos'
+            !else
+            !   allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_lloyd%cdos for mpi'
+            !end if
+            allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating t_lloyd%cdos'
          else
             allocate(t_lloyd%cdos(1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_lloyd%cdos'
@@ -663,13 +693,15 @@ contains
 
       if (.not. allocated(t_lloyd%dgref)) then
          if (.not. t_lloyd%dgref_to_file) then
-            if(nranks.eq.1) then
-               allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_lloyd%dgref'
-            else
-               allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_lloyd%dgref for mpi'
-            end if
+            !if(nranks.eq.1) then
+            !   allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_lloyd%dgref'
+            !else
+            !   allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_lloyd%dgref for mpi'
+            !end if
+            allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating t_lloyd%dgref'
          else
             allocate(t_lloyd%dgref(1,1,1,1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_lloyd%dgref'
@@ -679,13 +711,15 @@ contains
       
       if (.not. allocated(t_lloyd%g0tr)) then
          if (.not. t_lloyd%g0tr_to_file) then
-            if(nranks.eq.1) then
-               allocate(t_lloyd%g0tr(t_inc%IELAST), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr'
-            else
-               allocate(t_lloyd%g0tr(t_mpi_c_grid%ntot2), STAT=ierr)
-               if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr for mpi'
-            end if
+            !if(nranks.eq.1) then
+            !   allocate(t_lloyd%g0tr(t_inc%IELAST), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr'
+            !else
+            !   allocate(t_lloyd%g0tr(t_mpi_c_grid%ntot2), STAT=ierr)
+            !   if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr for mpi'
+            !end if
+            allocate(t_lloyd%g0tr(t_mpi_c_grid%ntot2), STAT=ierr)
+            if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr'
          else
             allocate(t_lloyd%g0tr(1), STAT=ierr)
             if(ierr/=0) stop 'Problem allocating dummy t_lloyd%g0tr'
@@ -700,6 +734,7 @@ contains
 
 
 #ifdef CPP_MPI
+   !< subroutine to store MPI rank for of 2 level parallelization
    subroutine save_t_mpi_c_grid(t_mpi_c_grid,subarr_dim, myMPI_comm_ie, myMPI_comm_at, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
    
       use mpi
@@ -723,6 +758,7 @@ contains
 
 
 #ifdef CPP_MPI
+   !< subroutine to extract number of elements and offsets from t_mpi_c_grid
    subroutine get_ntot_pT_ioff_pT_2D(t_mpi_c_grid,ntot_all,ioff_all)
    
    use mpi
@@ -759,6 +795,7 @@ contains
 
 
 #ifdef CPP_MPI
+   !< subroutine to communicate arrays in t_lloyd over ranks
    subroutine gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, mympi_comm)
 
     use mpi
@@ -801,6 +838,7 @@ contains
 
 
 #ifdef CPP_MPI
+   !< subroutine to communicate single site t-matrix over ranks
    subroutine gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_pT, ioff_pT, mytot, mympi_comm, nranks)
 
     use mpi
@@ -868,14 +906,16 @@ contains
 
 
 #ifdef CPP_MPI
-   subroutine gather_gmat(t_inc,t_tgmat,ntot_pT,ioff_pT,mytot)
+   !< subroutine to communicate structural green function over ranks
+   subroutine gather_gmat(t_inc,t_tgmat,ntot_pT,ioff_pT,mytot,nranks)
 
     use mpi
-    use mod_mympi,   only: nranks
+    !use mod_mympi,   only: nranks
     implicit none
 
     type(type_inc), intent(in) :: t_inc
     type(type_tgmatices), intent(inout) :: t_tgmat
+    integer, intent(in) :: nranks
     integer, intent(in) :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1), mytot
 
     integer :: ihelp
@@ -897,14 +937,15 @@ contains
 
 
 #ifdef CPP_MPI
-   subroutine bcast_t_imp_scalars(t_imp)
+   !< subroutine to communicate scalars of t_imp over ranks
+   subroutine bcast_t_imp_scalars(t_imp, master)
 
     use mpi
-    use mod_mympi,   only: master
     implicit none
 
     type(type_imp), intent(inout) :: t_imp
 
+    integer, intent(in) :: master
     integer :: blocklen1(t_imp%N1), etype1(t_imp%N1), myMPItype1 ! for scalars from t_imp
     integer :: ierr
     integer(kind=MPI_ADDRESS_KIND) :: disp1(t_imp%N1), base
@@ -941,15 +982,16 @@ contains
    end subroutine bcast_T_imp_scalars
 
 
-   subroutine bcast_t_imp_arrays(t_imp, t_inc)
+   !< subroutine to communicate arrays of t_imp over ranks
+   subroutine bcast_t_imp_arrays(t_imp, t_inc, master)
 
     use mpi
-    use mod_mympi,   only: master
     implicit none
 
     type(type_imp), intent(inout) :: t_imp
     type(type_inc), intent(in) :: t_inc
 
+    integer, intent(in) :: master
     integer :: blocklen2(t_imp%N2), etype2(t_imp%N2), myMPItype2 ! for arrays from t_imp
     integer :: ierr
     integer(kind=MPI_ADDRESS_KIND) :: disp2(t_imp%N2), base
@@ -1011,4 +1053,4 @@ contains
 #endif
 
 
-end module
+end module mod_types

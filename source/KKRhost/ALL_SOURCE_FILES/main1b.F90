@@ -349,11 +349,7 @@ contains
          if(t_cpa%dmatproj_to_file) then
             open (71,ACCESS='direct',RECL=2*LRECTMT,FILE='dmatproj.unformatted',FORM='unformatted')
          else
-#ifndef CPP_MPI
-            call init_t_cpa(t_inc,t_cpa,IELAST)
-#else
-            call init_t_cpa(t_inc,t_cpa,t_mpi_c_grid%ntot2)
-#endif
+           call init_t_cpa(t_inc, t_cpa, t_mpi_c_grid%ntot2)
          end if !t_cpa%dmatproj_to_file
       end if !LCPAIJ
       !
@@ -986,9 +982,9 @@ contains
 #ifdef CPP_MPI
         ! init arrays and communicate parameters of t_imp for all ranks
         ! that are not the master
-        call bcast_t_imp_scalars(t_imp)
+        call bcast_t_imp_scalars(t_imp, master)
         if(myrank/=master) call init_t_imp(t_inc,t_imp)
-        call bcast_t_imp_arrays(t_imp, t_inc)
+        call bcast_t_imp_arrays(t_imp, t_inc, master)
 #endif
 
         do ie=1,ielast ! big ie loop (use only for GMATLL output)

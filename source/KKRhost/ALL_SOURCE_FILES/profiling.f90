@@ -40,7 +40,6 @@ contains
   ! Copyright (C) Luigi Genovese, CEA Grenoble, France, 2007
   ! > Memory profiling routine
   subroutine memocc(istat, isize, array, routine)
-    use mod_mympi, only: myrank
     use mod_types, only: t_inc
     implicit none
     character (len=*), intent (in) :: array
@@ -65,7 +64,7 @@ contains
 
     if (t_inc%i_write>0) then
 
-      write(filename, '(A,I0.5)') 'meminfo', myrank
+      write(filename, '(A)') 'meminfo.txt'
 
       select case (array)
       case ('count')
