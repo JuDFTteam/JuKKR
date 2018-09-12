@@ -934,7 +934,6 @@ contains
     end if
 
     ! store in t_mpi_c_grid for later use
-    t_mpi_c_grid%ntot2=ntot_pT(t_mpi_c_grid%myrank_at)
     if (.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
        allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),stat=i_stat)
        call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT2))*kind(t_mpi_c_grid%ntot_pT2),'t_mpi_c_grid%ntot_pT2','distribute_work_energies')
@@ -943,6 +942,7 @@ contains
     endif
     t_mpi_c_grid%ntot_pT2 = ntot_pT
     t_mpi_c_grid%ioff_pT2 = ioff_pT
+    t_mpi_c_grid%ntot2    = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
     if(.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
        allocate(t_mpi_c_grid%ntot_pT2(1),stat=i_stat)
@@ -1006,6 +1006,16 @@ contains
     t_mpi_c_grid%ntot_pT1 = ntot_pT
     t_mpi_c_grid%ioff_pT1 = ioff_pT
 #else
+    if(.not.(allocated(t_mpi_c_grid%ntot_pT1).or.allocated(t_mpi_c_grid%ioff_pT1))) then
+       allocate(t_mpi_c_grid%ntot_pT1(1),stat=i_stat)
+       call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT1))*kind(t_mpi_c_grid%ntot_pT1),'t_mpi_c_grid%ntot_pT1','distribute_work_atoms')
+       allocate(t_mpi_c_grid%ioff_pT1(1),stat=i_stat)
+       call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT1))*kind(t_mpi_c_grid%ioff_pT1),'t_mpi_c_grid%ioff_pT1','distribute_work_atoms')
+    endif
+    t_mpi_c_grid%ntot1      = n_work
+    t_mpi_c_grid%ntot_pT1   = n_work
+    t_mpi_c_grid%ioff_pT1   = 0
+
     i1_start = 1
     i1_end   = n_work
 #endif

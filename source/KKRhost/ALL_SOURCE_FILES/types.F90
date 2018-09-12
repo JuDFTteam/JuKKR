@@ -475,7 +475,6 @@ contains
     !ruess: after myBcast_impcls from Pkkr_sidebranch2D_2014_12_16 by Bernd Zimmermann
 
     use mpi
-    !use mod_mympi,   only: master
     implicit none
 
     type(type_inc), intent(inout) :: t_inc
@@ -577,7 +576,6 @@ contains
    subroutine bcast_t_lly_1(t_lloyd, master)
 
     use mpi
-    !use mod_mympi,   only: master
     implicit none
 
     type(type_lloyd), intent(inout) :: t_lloyd
@@ -910,7 +908,6 @@ contains
    subroutine gather_gmat(t_inc,t_tgmat,ntot_pT,ioff_pT,mytot,nranks)
 
     use mpi
-    !use mod_mympi,   only: nranks
     implicit none
 
     type(type_inc), intent(in) :: t_inc

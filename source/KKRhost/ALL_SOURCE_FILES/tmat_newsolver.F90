@@ -211,8 +211,8 @@ contains
 
       call distribute_work_energies(ielast)
 #ifdef CPP_MPI
-      ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
-      ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
 #else
       ie_start = 0
       ie_end   = IELAST
