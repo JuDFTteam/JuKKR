@@ -4,14 +4,14 @@ contains
 
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: SINWK
-! > @brief This subroutine does an integration up to \f$ r_{cut}\f$ of an real
+!> @brief This subroutine does an integration up to \f$ r_{cut}\f$ of an real
 ! function
-! > \f$f\f$ with an extended 3-point-simpson
-! > @details The integration of the function
-! > \f$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'\f$ has been modified
-! > for functions with kinks - at each kink the integration is restarted.
-! > @note Attention : Input \f$f\f$ is destroyed !
-! > @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
+!> \f$f\f$ with an extended 3-point-simpson
+!> @details The integration of the function
+!> \f$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'\f$ has been modified
+!> for functions with kinks - at each kink the integration is restarted.
+!> @note Attention : Input \f$f\f$ is destroyed !
+!> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
 ! Fortran90
 ! -------------------------------------------------------------------------------
 subroutine simpk(f, fint, ipan, ircut, drdi)
@@ -20,10 +20,10 @@ subroutine simpk(f, fint, ipan, ircut, drdi)
   use :: mod_datatypes, only: dp
    use mod_ssum
 
-  integer, intent (in) :: ipan     ! < Number of panels in non-MT-region
-  integer, dimension (0:ipand), intent (in) :: ircut ! < R points of panel
+  integer, intent (in) :: ipan     !! Number of panels in non-MT-region
+  integer, dimension (0:ipand), intent (in) :: ircut !! R points of panel
                                                      ! borders
-  real (kind=dp), dimension (*), intent (in) :: drdi ! < Derivative dr/di
+  real (kind=dp), dimension (*), intent (in) :: drdi !! Derivative dr/di
   ! .. Output variables
   real (kind=dp), intent (out) :: fint
   ! .. In/Out variables

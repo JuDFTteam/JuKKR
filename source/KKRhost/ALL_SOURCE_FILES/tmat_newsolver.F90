@@ -47,29 +47,29 @@ contains
       implicit none
 
       integer, intent(in) :: I1
-      integer, intent(in) :: LLY       !< LLY <> 0: apply Lloyds formula
-      integer, intent(in) :: LOPT      !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-      integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
+      integer, intent(in) :: LLY       ! LLY <> 0: apply Lloyds formula
+      integer, intent(in) :: LOPT      ! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+      integer, intent(in) :: LMAX      ! Maximum l component in wave function expansion
       integer, intent(in) :: NSRA
-      integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
+      integer, intent(in) :: IEND      ! Number of nonzero gaunt coefficients
       integer, intent(in) :: IPOT
-      integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
-      integer, intent(in) :: NSPIN     !< Counter for spin directions
-      integer, intent(in) :: LMPOT     !< (LPOT+1)**2
+      integer, intent(in) :: NCHEB     ! Number of Chebychev pannels for the new solver
+      integer, intent(in) :: NSPIN     ! Counter for spin directions
+      integer, intent(in) :: LMPOT     ! (LPOT+1)**2
       integer, intent(in) :: IELAST
       integer, intent(in) :: NPAN_TOT
-      integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
-      real (kind=dp), intent(in) :: ZAT       !< Nuclear charge for a given atom
+      integer, intent(in) :: IDOLDAU   ! flag to perform LDA+U
+      real (kind=dp), intent(in) :: ZAT       ! Nuclear charge for a given atom
       real (kind=dp), intent(in) :: PHI
       real (kind=dp), intent(in) :: THETA
-      real (kind=dp), intent(in) :: SOCSCALE  !< Spin-orbit scaling for a given atom
-      complex (kind=dp), intent(in) :: DELTAE      !< Energy difference for numerical derivative
+      real (kind=dp), intent(in) :: SOCSCALE  ! Spin-orbit scaling for a given atom
+      complex (kind=dp), intent(in) :: DELTAE      ! Energy difference for numerical derivative
       integer, dimension(0:NTOTD), intent(in) :: IPAN_INTERVALL
       integer, dimension(NCLEB,4), intent(in) :: ICLEB
-      real (kind=dp), dimension(NCLEB), intent(in) :: CLEB !< GAUNT coefficients (GAUNT)
+      real (kind=dp), dimension(NCLEB), intent(in) :: CLEB ! GAUNT coefficients (GAUNT)
       real (kind=dp), dimension(NRMAXD), intent(in) :: RNEW
       real (kind=dp), dimension(0:NTOTD), intent(in) :: RPAN_INTERVALL
-      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix
+      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU ! potential matrix
       real (kind=dp), dimension(NRMAXD,LMPOT,NSPOTD), intent(in) :: VINSNEW
       complex (kind=dp), dimension(IEMXD), intent(in) :: EZ
       ! .. In/Out variables
@@ -82,7 +82,7 @@ contains
       complex (kind=dp), dimension(2*(LMAX+1)) :: ALPHASPH
       ! .. Local allocatable arrays
       integer, dimension(:), allocatable :: JLK_INDEX
-      real (kind=dp), dimension(:,:,:), allocatable :: VINS  !< Non-spherical part of the potential
+      real (kind=dp), dimension(:,:,:), allocatable :: VINS  ! Non-spherical part of the potential
       complex (kind=dp), dimension(:,:), allocatable     :: AUX      ! LLY
       complex (kind=dp), dimension(:,:), allocatable     :: TMAT0
       complex (kind=dp), dimension(:,:), allocatable     :: ALPHA0   ! LLY
@@ -169,6 +169,7 @@ contains
          enddo
       enddo
 
+      KBdG = 0
 #ifdef CPP_BdG
       ! shift potential by EF to change referece point of energy to Fermi level
       ! should later be done automatically in main0
@@ -180,12 +181,16 @@ contains
        if (ier==0) then
          read (unit=uio, fmt=*) e_shift
          write(*,*) 'e_shift=', e_shift
+
+         KBdG = 2
        else
          e_shift = (0.0_dp, 0.0_dp)
        end if
       else
         e_shift = (0.0_dp, 0.0_dp)
       end if
+
+      write(*,*) 'inputs:', KBdG, e_shift
 #endif
 
       ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
@@ -326,12 +331,14 @@ contains
 #ifdef CPP_OMP
             !$omp critical
 #endif
-            KBdG = 0
 #ifdef CPP_BdG
-            if (test('BdG_dev ')) then
+            if (test('BdG_dev ') .and. KBdG>0) then
+               write(*,'(A,6ES21.7)') 'sqrt of e0', sqrt(eryd), sqrt(eryd+(eryd/cvlight)**2), sqrt(eryd+(eryd/cvlight)**2)*(1.0e0_dp+eryd/cvlight**2)
                write(*,'(A,6ES21.7)') 'shifting energy by e_fermi:', eryd, e_shift, 2*e_shift - ERYD
                ERYD = 2*e_shift - ERYD
-               KBdG = 2
+               ! ! take complex conjugate so that square root gives the sheet with positive imaginary part
+               !eryd = conjg(eryd)
+               write(*,'(A,6ES21.7)') 'sqrt of e1', -sqrt(eryd), -sqrt(eryd+(eryd/cvlight)**2), -sqrt(eryd+(eryd/cvlight)**2)*(1.0e0_dp+eryd/cvlight**2)
             end if
 #endif
 
@@ -406,7 +413,7 @@ contains
             GMATPREFACTOR=CZERO
             call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,LMMAXSO, &
                1,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),   &
-               GMATPREFACTOR)
+               GMATPREFACTOR, KBdG)
 
 #ifdef CPP_OMP
             !$omp critical
@@ -568,10 +575,10 @@ contains
          if (t_dtmatJij_at%calculate .or.( t_wavefunctions%isave_wavefun(i1, ie)>0 .and.   &
              (t_wavefunctions%save_rllleft .or.t_wavefunctions%save_sllleft) )             &
             .or. ((test('rhoqtest') .and. ie==2).and.(i1==mu0)) ) then                     !rhoqtest
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             ! Calculate the left-hand side solution this needs to be done for the
             ! calculation of t-matrices for Jij tensor or if wavefunctions should be saved
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             !
             ! Contruct the spin-orbit coupling hamiltonian and add to potential
             call SPINORBIT_HAM(LMAX,lmsize,VINS,RNEW,ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,  &
@@ -601,7 +608,7 @@ contains
             GMATPREFACTOR=CZERO
             jlk_index = 0
             call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,LMMAXSO,1,  &
-               JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR)
+               JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR, KBdG)
 
             ! Using spherical potential as reference
             ! notice that exchange the order of left and right hankel/bessel functions
@@ -639,7 +646,7 @@ contains
 
             if(test('rhoqtest')) then
 #ifdef CPP_OMP
-             write(*,*) 'rhoqtest does not work in OMP version!!'
+             write(*,*) 'rhoqtest does not work in OMP version! '
              write(*,*) 'please use hybrid compilation mode'
              stop
 #else
@@ -672,9 +679,9 @@ contains
 #endif
             end if ! test('rhoqtest')
 
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             ! Calculate the left-hand side solution
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
          end if !t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
 

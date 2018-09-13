@@ -28,7 +28,7 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
   ! *                                                                  *
   ! * 28/10/94  HE  tidy up,  P,Q used in <DIRAC> instead of g,f       *
   ! * 05/10/96  HE  workspace for wavefunctions and matrices           *
-  ! *               is allocated dynamically !!!                       *
+  ! *               is allocated dynamically !                         *
   ! * 07/02/05  VP  few changes connected to the calculation of orbital*
   ! *               polarisation                                       *
   ! ********************************************************************
@@ -172,12 +172,10 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
       c = ctl(it, il)
       csqr = c*c
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      kap1 = -l - 1
+      ! !        kap1 = -l - 1
       kap2 = l
       if (l==0) kap2 = kap1
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+      ! !  
       isk1 = isign(1, kap1)
       isk2 = isign(1, kap2)
       sk1 = real(isk1, kind=dp)

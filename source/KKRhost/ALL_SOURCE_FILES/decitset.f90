@@ -15,7 +15,7 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
   ! * in < outpothost > routine and determines the matrix                *
   ! *                                                                    *
   ! *            /         \-1   /             \-1                       *
-  ! *            | Delta t |   = |  t    - t   |                         *
+  ! *            | Delta t |   = | t    - t    |                         *
   ! *            \         /     \  sys    ref /                         *
   ! *                                                                    *
   ! * for the left and the right host, using the energy mesh as read in  *
@@ -77,21 +77,16 @@ subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, &
   ! ..
   ! .. Allocatable local arrays
   integer :: ntmax
-  real (kind=dp) :: zat(:), rws(:), rmt(:), conc(:)
-  real (kind=dp) :: rr(:, :), drdi(:, :), visp(:, :), dror(:, :)
-  real (kind=dp) :: socscl(:, :), cscl(:, :)
-  integer :: irws(:), ipan(:), iqat(:, :), ircut(:, :), loflm(:)
-  complex (kind=dp) :: trefll(:, :, :), tmatll(:, :), dhmat(:, :, :)
-  complex (kind=dp) :: dtrefll(:, :, :) ! LLY Lloyd
-  complex (kind=dp) :: alpharef(:, :), dalpharef(:, :) ! LLY Lloyd Alpha
+  real (kind=dp), allocatable :: zat(:), rws(:), rmt(:), conc(:)
+  real (kind=dp), allocatable :: rr(:, :), drdi(:, :), visp(:, :), dror(:, :)
+  real (kind=dp), allocatable :: socscl(:, :), cscl(:, :)
+  integer, allocatable :: irws(:), ipan(:), iqat(:, :), ircut(:, :), loflm(:)
+  complex (kind=dp), allocatable :: trefll(:, :, :), tmatll(:, :), dhmat(:, :, :)
+  complex (kind=dp), allocatable :: dtrefll(:, :, :) ! LLY Lloyd
+  complex (kind=dp), allocatable :: alpharef(:, :), dalpharef(:, :) ! LLY Lloyd Alpha
                                                        ! matrix and deriv.
-  real (kind=dp) :: vtrel(:, :), btrel(:, :), r2drdirel(:, :)
-  integer :: zrel(:)
-  allocatable :: zat, rws, rmt, conc, rr, drdi, visp, dror, socscl, cscl
-  allocatable :: vtrel, btrel, r2drdirel
-  allocatable :: irws, ipan, iqat, ircut, loflm, zrel
-  allocatable :: trefll, tmatll, dhmat
-  allocatable :: dtrefll, alpharef, dalpharef ! LLY
+  real (kind=dp), allocatable :: vtrel(:, :), btrel(:, :), r2drdirel(:, :)
+  integer, allocatable :: zrel(:)
   ! ..
   ! .. External Functions
   logical, external :: test

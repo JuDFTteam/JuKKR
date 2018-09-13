@@ -4,7 +4,7 @@ contains
 
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: VLLMAT
-! > @brief
+!> @brief
 ! -------------------------------------------------------------------------------
 subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, &
   cleb, icleb, iend, nspin, Zat, rnew, use_sratrick, ncleb)
@@ -13,22 +13,22 @@ subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, &
   implicit none
 
   ! .. Input variables
-  integer, intent (in) :: irc      ! < r point for potential cutting
-  integer, intent (in) :: iend     ! < maximal number of non-vanishing Gaunt coefficients
-  integer, intent (in) :: ncleb    ! < Number of Gaunt coefficients
-  integer, intent (in) :: irmin    ! < max r for spherical treatment, afterwards non-spherical contribution
-  integer, intent (in) :: lmmax    ! < (LMAX+1)^2
-  integer, intent (in) :: nspin    ! < spin-degree of freedom
-  integer, intent (in) :: lmpot    ! < (LPOT+1)**2
-  integer, intent (in) :: nrmaxd   ! < NTOTD*(NCHEBD+1), maximal number of radial points in Chebychev mesh
-  integer, intent (in) :: lmmaxso  ! < 2*(LMAX+1)^2, for SOC L=(l,m,s) instead of L=(l,m)
-  integer, intent (in) :: use_sratrick ! < switch to use SRA trick (see routine rllsll) or not
-  real (kind=dp), intent (in) :: Zat ! < atomic charge
-  integer, dimension (ncleb, 4), intent (in) :: icleb    ! < index array for Gaunt coefficients
-  real (kind=dp), dimension (ncleb), intent (in) :: cleb ! < GAUNT coefficients
-  real (kind=dp), dimension (irmin:irc, lmpot, nspin), intent (in) :: vins ! < Non-spherical part of the potential
-  real (kind=dp), dimension (irmin:nrmaxd), intent (in) :: rnew ! < radial mesh points of Chebychev mesh
-  complex (kind=dp), dimension (lmmaxso, lmmaxso, irmin:irc), intent (out) :: vnspll0 ! < output potential in Chebychev mesh and (l,m,s)-space
+  integer, intent (in) :: irc      !! r point for potential cutting
+  integer, intent (in) :: iend     !! maximal number of non-vanishing Gaunt coefficients
+  integer, intent (in) :: ncleb    !! Number of Gaunt coefficients
+  integer, intent (in) :: irmin    !! max r for spherical treatment, afterwards non-spherical contribution
+  integer, intent (in) :: lmmax    !! (LMAX+1)^2
+  integer, intent (in) :: nspin    !! spin-degree of freedom
+  integer, intent (in) :: lmpot    !! (LPOT+1)**2
+  integer, intent (in) :: nrmaxd   !! NTOTD*(NCHEBD+1), maximal number of radial points in Chebychev mesh
+  integer, intent (in) :: lmmaxso  !! 2*(LMAX+1)^2, for SOC L=(l,m,s) instead of L=(l,m)
+  integer, intent (in) :: use_sratrick !! switch to use SRA trick (see routine rllsll) or not
+  real (kind=dp), intent (in) :: Zat !! atomic charge
+  integer, dimension (ncleb, 4), intent (in) :: icleb    !! index array for Gaunt coefficients
+  real (kind=dp), dimension (ncleb), intent (in) :: cleb !! GAUNT coefficients
+  real (kind=dp), dimension (irmin:irc, lmpot, nspin), intent (in) :: vins !! Non-spherical part of the potential
+  real (kind=dp), dimension (irmin:nrmaxd), intent (in) :: rnew !! radial mesh points of Chebychev mesh
+  complex (kind=dp), dimension (lmmaxso, lmmaxso, irmin:irc), intent (out) :: vnspll0 !! output potential in Chebychev mesh and (l,m,s)-space
 
   ! .. Local variables
   integer :: isp

@@ -42,16 +42,9 @@ subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
 
   ! Local variables
 
-  ! F77--------------------------------------------------------------------
-  ! ccc      COMPLEX*16 JF(NRMAX,2,NKMMAX),JG(NRMAX,2,NKMMAX),
-  ! ccc     &           ZF(NRMAX,2,NKMMAX),ZG(NRMAX,2,NKMMAX),
-  ! F77--------------------------------------------------------------------
-  ! F90--------------------------------------------------------------------
-  complex (kind=dp) :: jf(:, :, :), jg(:, :, :), zf(:, :, :), zg(:, :, :)
-  allocatable :: jf, jg, zf, zg
-  ! F90--------------------------------------------------------------------
-  complex (kind=dp) :: bmvevd(ntmax, 3, nmvecmax), bmvevdl(nlmax, 3, nmvecmax) &
-    , bmvevdm(nlmax, nmuemax, 3, nmvecmax), bmvevi(ntmax, 3, nmvecmax), cwgt, &
+  complex (kind=dp), allocatable :: jf(:, :, :), jg(:, :, :), zf(:, :, :), zg(:, :, :)
+  complex (kind=dp) :: bmvevd(ntmax, 3, nmvecmax), bmvevdl(nlmax, 3, nmvecmax), &
+    bmvevdm(nlmax, nmuemax, 3, nmvecmax), bmvevi(ntmax, 3, nmvecmax), cwgt, &
     meirr(nkmmax, nkmmax, 3, nmvecmax), mereg(nkmmax, nkmmax, 3, nmvecmax), &
     mvevd(ntmax, 3, nmvecmax), mvevdl(nlmax, 3, nmvecmax), &
     mvevdm(nlmax, nmuemax, 3, nmvecmax), mvevi(ntmax, 3, nmvecmax), &
@@ -93,12 +86,10 @@ subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
   noswf = nt*nkm
   nmvec = 3
 
-  ! F90--------------------------------------------------------------------
   allocate (jf(nrmax,2,nkmmax), jg(nrmax,2,nkmmax), stat=it)
   if (it/=0) stop '      < CALCMVEC > : allocate JF/JG '
   allocate (zf(nrmax,2,nkmmax), zg(nrmax,2,nkmmax), stat=it)
   if (it/=0) stop '      < CALCMVEC > : allocate ZF/ZG '
-  ! F90--------------------------------------------------------------------
   ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
   do it = 1, nt
 
@@ -350,10 +341,9 @@ subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
   end do
   ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
-  ! F90--------------------------------------------------------------------
   deallocate (jf, jg, zf, zg, stat=it)
   if (it/=0) stop '      < CALCMVEC > : deallocate JF/JG/ZF/ZG'
-  ! F90--------------------------------------------------------------------
+  
   if (splitss .and. ((iepath==1) .and. (iecurr==netab))) then
     do imv = 1, nmvec
       do ipol = 1, npol

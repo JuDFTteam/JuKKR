@@ -359,12 +359,12 @@ contains
                         indxarr(2,istore) = jt
                         indxarr(3,istore) = i1
                         indxarr(4,istore) = i2
-                        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
                         ! perform substraction instead of addition
                         ! because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                         ! Write out energy-resorved integrand and integral
                         ! Phivos Mavropoulos 24.10.2012
-                        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
                         if(npol==0 .or. test('Jijenerg'))then
                            fmt2 = '(4(A,I5.5))'
                            write (jfnam2,fmt2) 'Jij_enrg.',it,'.',jt,'.',i1,'.',i2
@@ -383,8 +383,8 @@ contains
                         do ie=1,ielast
                            !                 Jijmat_real(:,:)=Jijmat_real(:,:)+aimag(wez(ie)*Jijmat(:,:,istore,ie))/2d0
                            jtmp(1) = (Jijmat(1,1,istore,ie)+Jijmat(2,2,istore,ie))/2d0
-                           !jtmp(2) = (Jijmat(2,1,istore,ie)-Jijmat(1,2,istore,ie))/2d0 !<- old defiition (until Apr.2017) which assumed +Dij.(SixSj)
-                           jtmp(2) = (Jijmat(1,2,istore,ie)-Jijmat(2,1,istore,ie))/2d0  !<- changed to -Dij.(SixSj), to be consistent with KKRwiki
+                           !jtmp(2) = (Jijmat(2,1,istore,ie)-Jijmat(1,2,istore,ie))/2d0 ! old defiition (until Apr.2017) which assumed +Dij.(SixSj)
+                           jtmp(2) = (Jijmat(1,2,istore,ie)-Jijmat(2,1,istore,ie))/2d0  ! changed to -Dij.(SixSj), to be consistent with KKRwiki
                            jtmp(3) = (Jijmat(1,1,istore,ie)-Jijmat(2,2,istore,ie))/2d0
                            jtmp(4) = (Jijmat(2,1,istore,ie)+Jijmat(1,2,istore,ie))/2d0
 

@@ -2,7 +2,7 @@ module mod_vllmatsra
 
 contains
 
-!< constructs potential including big/small components and with relativistic mass terms etc included
+!! constructs potential including big/small components and with relativistic mass terms etc included
 subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
   lval_in, cmode, KBdG)
 
@@ -14,19 +14,19 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
   implicit none
 
   ! inputs
-  integer, intent (in) :: KBdG     ! < integer (0/1/2) determines if Bogoliubov de Gennes formalism is used and which part (e/h, 1=e, 2=h) of the Hamilatonian is constructed
-  integer, intent (in) :: lmax     ! < Maximum l component in wave function expansion
-  integer, intent (in) :: nrmax    ! < NTOTD*(NCHEBD+1)
-  integer, intent (in) :: nrmaxd   ! < dimension for rmesh (maximum of nrmax values of all atoms)
-  integer, intent (in) :: lmsize   ! < (lmax+2)^2
-  integer, intent (in) :: lval_in  ! < l-value used in spherical calculation of calcpsh (lmsize=1)
-  complex (kind=dp), intent (in) :: eryd  ! < energy (used in rel-mass factor)
-  character (len=*), intent (in) :: cmode ! < either 'Ref=0' or 'Ref=Vsph' which determines the used reference system (for calcsph trick or direct evaluation)
-  real (kind=dp), dimension (nrmaxd), intent (in) :: rmesh ! < radial mesh
-  complex (kind=dp), dimension (lmsize, lmsize, nrmax), intent (in) :: vll0 ! < input potential in (l,m,s) basis
+  integer, intent (in) :: KBdG     !! integer (0/1/2) determines if Bogoliubov de Gennes formalism is used and which part (e/h, 1=e, 2=h) of the Hamilatonian is constructed
+  integer, intent (in) :: lmax     !! Maximum l component in wave function expansion
+  integer, intent (in) :: nrmax    !! NTOTD*(NCHEBD+1)
+  integer, intent (in) :: nrmaxd   !! dimension for rmesh (maximum of nrmax values of all atoms)
+  integer, intent (in) :: lmsize   !! (lmax+2)^2
+  integer, intent (in) :: lval_in  !! l-value used in spherical calculation of calcpsh (lmsize=1)
+  complex (kind=dp), intent (in) :: eryd  !! energy (used in rel-mass factor)
+  character (len=*), intent (in) :: cmode !! either 'Ref=0' or 'Ref=Vsph' which determines the used reference system (for calcsph trick or direct evaluation)
+  real (kind=dp), dimension (nrmaxd), intent (in) :: rmesh !! radial mesh
+  complex (kind=dp), dimension (lmsize, lmsize, nrmax), intent (in) :: vll0 !! input potential in (l,m,s) basis
 
   ! outputs
-  complex (kind=dp), dimension (2*lmsize, 2*lmsize, nrmax), intent (out) :: vll ! < output potential in (l,m,s) basis with big/small components
+  complex (kind=dp), dimension (2*lmsize, 2*lmsize, nrmax), intent (out) :: vll !! output potential in (l,m,s) basis with big/small components
 
   ! locals
   integer :: ilm, lval, mval, ival, ir
@@ -103,6 +103,7 @@ subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, &
   end if
 
   if (KbdG>1) then
+    write(*,*) 'vll --> -conjg(vll)'
     vll(lmsize+1:2*lmsize, 1:lmsize, :) = -conjg(vll(lmsize+1:2*lmsize, 1:lmsize, :))
   end if
 

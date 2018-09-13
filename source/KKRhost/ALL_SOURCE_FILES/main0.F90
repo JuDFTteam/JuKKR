@@ -70,146 +70,146 @@ module mod_main0
 
    implicit none
 
-   integer :: KTE       !< Calculation of the total energy On/Off (1/0)
-   integer :: KWS       !< 0 (MT), 1(ASA)
-   integer :: KXC       !< Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
-   integer :: IGF       !< Do not print or print (0/1) the KKRFLEX_* files
-   integer :: ICC       !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-   integer :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
-   integer :: IRM       !< Maximum number of radial points
-   integer :: IPE       !< Not real used, IPFE should be 0
-   integer :: IPF       !< Not real used, IPFE should be 0
-   integer :: IPFE      !< Not real used, IPFE should be 0
+   integer :: KTE       ! Calculation of the total energy On/Off (1/0)
+   integer :: KWS       ! 0 (MT), 1(ASA)
+   integer :: KXC       ! Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+   integer :: IGF       ! Do not print or print (0/1) the KKRFLEX_* files
+   integer :: ICC       ! Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+   integer :: INS       ! 0 (MT), 1(ASA), 2(Full Potential)
+   integer :: IRM       ! Maximum number of radial points
+   integer :: IPE       ! Not real used, IPFE should be 0
+   integer :: IPF       ! Not real used, IPFE should be 0
+   integer :: IPFE      ! Not real used, IPFE should be 0
    integer :: KCOR
    integer :: KEFG
    integer :: KHYP
    integer :: KPRE
    integer :: nprinc
    integer :: NSRA
-   integer :: LPOT      !< Maximum l component in potential expansion
-   integer :: IMIX      !< Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
-   integer :: IEND      !< Number of nonzero gaunt coefficients
-   integer :: ICST      !< Number of Born approximation
-   integer :: NAEZ      !< Number of atoms in unit cell
-   integer :: NEMB      !< Number of 'embedding' positions
-   integer :: LMAX      !< Maximum l component in wave function expansion
-   integer :: NCLS      !< Number of reference clusters
-   integer :: NREF      !< Number of diff. ref. potentials
-   integer :: NPOL      !< Number of Matsubara Poles (EMESHT)
-   integer :: NPNT1     !< number of E points (EMESHT) for the contour integration
-   integer :: NPNT2     !< number of E points (EMESHT) for the contour integration
-   integer :: NPNT3     !< number of E points (EMESHT) for the contour integration
-   integer :: LMMAX     !< (LMAX+1)^2
+   integer :: LPOT      ! Maximum l component in potential expansion
+   integer :: IMIX      ! Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
+   integer :: IEND      ! Number of nonzero gaunt coefficients
+   integer :: ICST      ! Number of Born approximation
+   integer :: NAEZ      ! Number of atoms in unit cell
+   integer :: NEMB      ! Number of 'embedding' positions
+   integer :: LMAX      ! Maximum l component in wave function expansion
+   integer :: NCLS      ! Number of reference clusters
+   integer :: NREF      ! Number of diff. ref. potentials
+   integer :: NPOL      ! Number of Matsubara Poles (EMESHT)
+   integer :: NPNT1     ! number of E points (EMESHT) for the contour integration
+   integer :: NPNT2     ! number of E points (EMESHT) for the contour integration
+   integer :: NPNT3     ! number of E points (EMESHT) for the contour integration
+   integer :: LMMAX     ! (LMAX+1)^2
    integer :: NVIRT
-   integer :: LMPOT     !< (LPOT+1)**2
+   integer :: LMPOT     ! (LPOT+1)**2
    integer :: KVMAD
    integer :: ITSCF
-   integer :: NCHEB     !< Number of Chebychev pannels for the new solver
-   integer :: NINEQ     !< Number of ineq. positions in unit cell
-   integer :: NATYP     !< Number of kinds of atoms in unit cell
-   integer :: IFILE     !< Unit specifier for potential card
-   integer :: KVREL     !< 0,1,2 : non / scalar relat. / full Dirac calculation
-   integer :: NSPIN     !< Counter for spin directions
-   integer :: NLEFT     !< Number of repeated basis for left host to get converged electrostatic potentials
-   integer :: NRIGHT    !< Number of repeated basis for right host to get converged electrostatic potentials
-   integer :: INVMOD    !< Inversion scheme
-   integer :: KHFELD    !< 0,1: no / yes external magnetic field
-   integer :: ITDBRY    !< Number of SCF steps to remember for the Broyden mixing
-   integer :: INSREF    !< INS for reference pot. (usual 0)
-   integer :: KSHAPE    !< Exact treatment of WS cell
+   integer :: NCHEB     ! Number of Chebychev pannels for the new solver
+   integer :: NINEQ     ! Number of ineq. positions in unit cell
+   integer :: NATYP     ! Number of kinds of atoms in unit cell
+   integer :: IFILE     ! Unit specifier for potential card
+   integer :: KVREL     ! 0,1,2 : non / scalar relat. / full Dirac calculation
+   integer :: NSPIN     ! Counter for spin directions
+   integer :: NLEFT     ! Number of repeated basis for left host to get converged electrostatic potentials
+   integer :: NRIGHT    ! Number of repeated basis for right host to get converged electrostatic potentials
+   integer :: INVMOD    ! Inversion scheme
+   integer :: KHFELD    ! 0,1: no / yes external magnetic field
+   integer :: ITDBRY    ! Number of SCF steps to remember for the Broyden mixing
+   integer :: INSREF    ! INS for reference pot. (usual 0)
+   integer :: KSHAPE    ! Exact treatment of WS cell
    integer :: IELAST
    integer :: ISHIFT
    integer :: KFROZN
    integer :: NSYMAT
    integer :: NQCALC
-   integer :: KFORCE    !< Calculation of the forces
-   integer :: N1SEMI    !< Number of energy points for the semicore contour
-   integer :: N2SEMI    !< Number of energy points for the semicore contour
-   integer :: N3SEMI    !< Number of energy points for the semicore contour
-   integer :: NLAYER    !< Number of principal layer
-   integer :: NLBASIS   !< Number of basis layers of left host (repeated units)
-   integer :: NRBASIS   !< Number of basis layers of right host (repeated units)
-   integer :: INTERVX   !< Number of intervals in x-direction for k-net in IB of the BZ
-   integer :: INTERVY   !< Number of intervals in y-direction for k-net in IB of the BZ
-   integer :: INTERVZ   !< Number of intervals in z-direction for k-net in IB of the BZ
+   integer :: KFORCE    ! Calculation of the forces
+   integer :: N1SEMI    ! Number of energy points for the semicore contour
+   integer :: N2SEMI    ! Number of energy points for the semicore contour
+   integer :: N3SEMI    ! Number of energy points for the semicore contour
+   integer :: NLAYER    ! Number of principal layer
+   integer :: NLBASIS   ! Number of basis layers of left host (repeated units)
+   integer :: NRBASIS   ! Number of basis layers of right host (repeated units)
+   integer :: INTERVX   ! Number of intervals in x-direction for k-net in IB of the BZ
+   integer :: INTERVY   ! Number of intervals in y-direction for k-net in IB of the BZ
+   integer :: INTERVZ   ! Number of intervals in z-direction for k-net in IB of the BZ
    integer :: MAXMESH
-   integer :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
-   integer :: NPAN_LOG  !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
-   integer :: NPOLSEMI  !< Number of poles for the semicore contour
-   integer :: SCFSTEPS  !< number of scf iterations
-   integer :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+   integer :: NPAN_EQ   ! Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
+   integer :: NPAN_LOG  ! Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
+   integer :: NPOLSEMI  ! Number of poles for the semicore contour
+   integer :: SCFSTEPS  ! number of scf iterations
+   integer :: NATOMIMP  ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
    integer :: IESEMICORE
    integer :: IDOSEMICORE
-   real (kind=dp) :: TK        !< Temperature
-   real (kind=dp) :: FCM       !< Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
+   real (kind=dp) :: TK        ! Temperature
+   real (kind=dp) :: FCM       ! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
    real (kind=dp) :: E2IN
-   real (kind=dp) :: EMIN      !< Lower value (in Ryd) for the energy contour
-   real (kind=dp) :: EMAX      !< Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
-   real (kind=dp) :: ALAT      !< Lattice constant in a.u.
-   real (kind=dp) :: RMAX      !< Ewald summation cutoff parameter for real space summation
-   real (kind=dp) :: GMAX      !< Ewald summation cutoff parameter for reciprocal space summation
-   real (kind=dp) :: R_LOG     !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
-   real (kind=dp) :: RCUTZ     !< Parameter for the screening cluster along the z-direction
-   real (kind=dp) :: RCUTXY    !< Parameter for the screening cluster along the x-y plane
-   real (kind=dp) :: QBOUND    !< Convergence parameter for the potential
-   real (kind=dp) :: VCONST    !< Potential shift in the first iteration
-   real (kind=dp) :: HFIELD    !< External magnetic field, for initial potential shift in spin polarised case
-   real (kind=dp) :: MIXING    !< Magnitude of the mixing parameter
-   real (kind=dp) :: ABASIS    !< Scaling factors for rbasis
-   real (kind=dp) :: BBASIS    !< Scaling factors for rbasis
-   real (kind=dp) :: CBASIS    !< Scaling factors for rbasis
-   real (kind=dp) :: EFERMI    !< Fermi energy
+   real (kind=dp) :: EMIN      ! Lower value (in Ryd) for the energy contour
+   real (kind=dp) :: EMAX      ! Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
+   real (kind=dp) :: ALAT      ! Lattice constant in a.u.
+   real (kind=dp) :: RMAX      ! Ewald summation cutoff parameter for real space summation
+   real (kind=dp) :: GMAX      ! Ewald summation cutoff parameter for reciprocal space summation
+   real (kind=dp) :: R_LOG     ! Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
+   real (kind=dp) :: RCUTZ     ! Parameter for the screening cluster along the z-direction
+   real (kind=dp) :: RCUTXY    ! Parameter for the screening cluster along the x-y plane
+   real (kind=dp) :: QBOUND    ! Convergence parameter for the potential
+   real (kind=dp) :: VCONST    ! Potential shift in the first iteration
+   real (kind=dp) :: HFIELD    ! External magnetic field, for initial potential shift in spin polarised case
+   real (kind=dp) :: MIXING    ! Magnitude of the mixing parameter
+   real (kind=dp) :: ABASIS    ! Scaling factors for rbasis
+   real (kind=dp) :: BBASIS    ! Scaling factors for rbasis
+   real (kind=dp) :: CBASIS    ! Scaling factors for rbasis
+   real (kind=dp) :: EFERMI    ! Fermi energy
    real (kind=dp) :: ESHIFT
-   real (kind=dp) :: TKSEMI    !< Temperature of semi-core contour
-   real (kind=dp) :: TOLRDIF   !< For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
+   real (kind=dp) :: TKSEMI    ! Temperature of semi-core contour
+   real (kind=dp) :: TOLRDIF   ! For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
    real (kind=dp) :: ALATNEW
    real (kind=dp) :: VOLUME0
-   real (kind=dp) :: EMUSEMI   !< Top of semicore contour in Ryd.
-   real (kind=dp) :: EBOTSEMI  !< Bottom of semicore contour in Ryd
-   real (kind=dp) :: FSEMICORE !< Initial normalization factor for semicore states (approx. 1.)
-   real (kind=dp) :: LAMBDA_XC !< Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-   character(len=10) :: SOLVER   !< Type of solver
-   character(len=40) :: I12      !< File identifiers
-   character(len=40) :: I13      !< Potential file name
-   character(len=40) :: I19      !< Shape function file name
-   character(len=40) :: I25      !< Scoef file name
-   character(len=40) :: I40      !< File identifiers
+   real (kind=dp) :: EMUSEMI   ! Top of semicore contour in Ryd.
+   real (kind=dp) :: EBOTSEMI  ! Bottom of semicore contour in Ryd
+   real (kind=dp) :: FSEMICORE ! Initial normalization factor for semicore states (approx. 1.)
+   real (kind=dp) :: LAMBDA_XC ! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+   character(len=10) :: SOLVER   ! Type of solver
+   character(len=40) :: I12      ! File identifiers
+   character(len=40) :: I13      ! Potential file name
+   character(len=40) :: I19      ! Shape function file name
+   character(len=40) :: I25      ! Scoef file name
+   character(len=40) :: I40      ! File identifiers
    logical :: LRHOSYM
-   logical :: LINIPOL    !< True: Initial spin polarization; false: no initial spin polarization
-   logical :: LCARTESIAN !< True: Basis in cartesian coords; false: in internal coords
+   logical :: LINIPOL    ! True: Initial spin polarization; false: no initial spin polarization
+   logical :: LCARTESIAN ! True: Basis in cartesian coords; false: in internal coords
 
    !..
    !.. Local Arrays ..
    integer, dimension(NSYMAXD) :: ISYMINDEX
-   integer, dimension(:), allocatable :: CLS    !< Cluster around atomic sites
-   integer, dimension(:), allocatable :: IRC    !< R point for potential cutting
-   integer, dimension(:), allocatable :: IMT    !< R point at MT radius
-   integer, dimension(:), allocatable :: NFU    !< number of shape function components in cell 'icell'
-   integer, dimension(:), allocatable :: NSH1   !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-   integer, dimension(:), allocatable :: NSH2   !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(:), allocatable :: CLS    ! Cluster around atomic sites
+   integer, dimension(:), allocatable :: IRC    ! R point for potential cutting
+   integer, dimension(:), allocatable :: IMT    ! R point at MT radius
+   integer, dimension(:), allocatable :: NFU    ! number of shape function components in cell 'icell'
+   integer, dimension(:), allocatable :: NSH1   ! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(:), allocatable :: NSH2   ! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
    integer, dimension(:), allocatable :: LMXC
-   integer, dimension(:), allocatable :: IPAN   !< Number of panels in non-MT-region
-   integer, dimension(:), allocatable :: IRNS   !< Position of atoms in the unit cell in units of bravais vectors
-   integer, dimension(:), allocatable :: IRWS   !< R point at WS radius
+   integer, dimension(:), allocatable :: IPAN   ! Number of panels in non-MT-region
+   integer, dimension(:), allocatable :: IRNS   ! Position of atoms in the unit cell in units of bravais vectors
+   integer, dimension(:), allocatable :: IRWS   ! R point at WS radius
    integer, dimension(:), allocatable :: KMESH
-   integer, dimension(:), allocatable :: IRMIN  !< Max R for spherical treatment
-   integer, dimension(:), allocatable :: LOFLM  !< l of lm=(l,m) (GAUNT)
-   integer, dimension(:), allocatable :: NACLS  !< Number of atoms in cluster
-   integer, dimension(:), allocatable :: NCORE  !< Number of core states
+   integer, dimension(:), allocatable :: IRMIN  ! Max R for spherical treatment
+   integer, dimension(:), allocatable :: LOFLM  ! l of lm=(l,m) (GAUNT)
+   integer, dimension(:), allocatable :: NACLS  ! Number of atoms in cluster
+   integer, dimension(:), allocatable :: NCORE  ! Number of core states
    integer, dimension(:), allocatable :: IMAXSH
-   integer, dimension(:), allocatable :: NSHELL !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
-   integer, dimension(:), allocatable :: INIPOL !< Initial spin polarisation
-   integer, dimension(:), allocatable :: IXIPOL !< Constraint of spin pol.
-   integer, dimension(:), allocatable :: REFPOT !< Ref. pot. card  at position
-   integer, dimension(:), allocatable :: NTCELL !< Index for WS cell
+   integer, dimension(:), allocatable :: NSHELL ! Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+   integer, dimension(:), allocatable :: INIPOL ! Initial spin polarisation
+   integer, dimension(:), allocatable :: IXIPOL ! Constraint of spin pol.
+   integer, dimension(:), allocatable :: REFPOT ! Ref. pot. card  at position
+   integer, dimension(:), allocatable :: NTCELL ! Index for WS cell
    integer, dimension(:), allocatable :: IQCALC
-   integer, dimension(:), allocatable :: IOFGIJ !< Linear pointers, similar to NSH1/NSH2 but giving the actual index of sites I,J = 1,NATOMIMP in the cluster
-   integer, dimension(:), allocatable :: JOFGIJ !< Linear pointers, similar to NSH1/NSH2 but giving the actual index of sites I,J = 1,NATOMIMP in the cluster
+   integer, dimension(:), allocatable :: IOFGIJ ! Linear pointers, similar to NSH1/NSH2 but giving the actual index of sites I,J = 1,NATOMIMP in the cluster
+   integer, dimension(:), allocatable :: JOFGIJ ! Linear pointers, similar to NSH1/NSH2 but giving the actual index of sites I,J = 1,NATOMIMP in the cluster
    integer, dimension(:), allocatable :: ATOMIMP
-   integer, dimension(:), allocatable :: IJTABSH   !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
-   integer, dimension(:), allocatable :: IJTABSYM  !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
+   integer, dimension(:), allocatable :: IJTABSH   ! Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
+   integer, dimension(:), allocatable :: IJTABSYM  ! Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
    integer, dimension(:), allocatable :: NPAN_TOT
-   integer, dimension(:), allocatable :: IJTABCALC !< Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
+   integer, dimension(:), allocatable :: IJTABCALC ! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
    integer, dimension(:), allocatable :: NPAN_EQ_AT
    integer, dimension(:), allocatable :: NPAN_LOG_AT
    integer, dimension(:), allocatable :: IJTABCALC_I
@@ -217,65 +217,65 @@ module mod_main0
    integer, dimension(:,:), allocatable :: JSH
    integer, dimension(:,:), allocatable :: ILM_MAP
    integer, dimension(:,:), allocatable :: KFG
-   integer, dimension(:,:), allocatable :: ATOM    !< Atom at site in cluster
-   integer, dimension(:,:), allocatable :: EZOA    !< EZ of atom at site in cluster
-   integer, dimension(:,:), allocatable :: LMSP    !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
-   integer, dimension(:,:), allocatable :: LCORE   !< Angular momentum of core states
-   integer, dimension(:,:), allocatable :: ICLEB   !< Pointer array
-   integer, dimension(:,:), allocatable :: IRCUT   !< R points of panel borders
-   integer, dimension(:,:), allocatable :: LLMSP   !< lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
+   integer, dimension(:,:), allocatable :: ATOM    ! Atom at site in cluster
+   integer, dimension(:,:), allocatable :: EZOA    ! EZ of atom at site in cluster
+   integer, dimension(:,:), allocatable :: LMSP    ! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+   integer, dimension(:,:), allocatable :: LCORE   ! Angular momentum of core states
+   integer, dimension(:,:), allocatable :: ICLEB   ! Pointer array
+   integer, dimension(:,:), allocatable :: IRCUT   ! R points of panel borders
+   integer, dimension(:,:), allocatable :: LLMSP   ! lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
    integer, dimension(:,:), allocatable :: LMSP1
-   integer, dimension(:,:), allocatable :: KAOEZ   !< Kind of atom at site in elem. cell
+   integer, dimension(:,:), allocatable :: KAOEZ   ! Kind of atom at site in elem. cell
    integer, dimension(:,:), allocatable :: IFUNM
    integer, dimension(:,:), allocatable :: IFUNM1
    integer, dimension(:,:), allocatable :: ITITLE
    integer, dimension(:,:), allocatable :: ICHECK
    integer, dimension(:,:), allocatable :: IPAN_INTERVALL
-   integer, dimension(:,:,:), allocatable :: JEND !< Pointer array for icleb()
-   real (kind=dp), dimension(2) :: VBC       !< Potential constants
-   real (kind=dp), dimension(3) :: ZPERIGHT  !< Vector to define how to repeat the basis of the right host
-   real (kind=dp), dimension(3) :: ZPERLEFT  !< Vector to define how to repeat the basis of the left host
-   real (kind=dp), dimension(3,3) :: RECBV   !< Reciprocal basis vectors
-   real (kind=dp), dimension(3,3) :: BRAVAIS !< Bravais lattice vectors
+   integer, dimension(:,:,:), allocatable :: JEND ! Pointer array for icleb()
+   real (kind=dp), dimension(2) :: VBC       ! Potential constants
+   real (kind=dp), dimension(3) :: ZPERIGHT  ! Vector to define how to repeat the basis of the right host
+   real (kind=dp), dimension(3) :: ZPERLEFT  ! Vector to define how to repeat the basis of the left host
+   real (kind=dp), dimension(3,3) :: RECBV   ! Reciprocal basis vectors
+   real (kind=dp), dimension(3,3) :: BRAVAIS ! Bravais lattice vectors
    real (kind=dp), dimension(64,3,3) :: RSYMAT
-   real (kind=dp), dimension(:), allocatable :: A   !< Constants for exponential R mesh
-   real (kind=dp), dimension(:), allocatable :: B   !< Constants for exponential R mesh
-   real (kind=dp), dimension(:), allocatable :: WG  !< Integr. weights for Legendre polynomials
+   real (kind=dp), dimension(:), allocatable :: A   ! Constants for exponential R mesh
+   real (kind=dp), dimension(:), allocatable :: B   ! Constants for exponential R mesh
+   real (kind=dp), dimension(:), allocatable :: WG  ! Integr. weights for Legendre polynomials
    real (kind=dp), dimension(:), allocatable :: GSH
-   real (kind=dp), dimension(:), allocatable :: ZAT !< Nuclear charge
-   real (kind=dp), dimension(:), allocatable :: RMT !< Muffin-tin radius of true system
-   real (kind=dp), dimension(:), allocatable :: RWS !< Wigner Seitz radius
+   real (kind=dp), dimension(:), allocatable :: ZAT ! Nuclear charge
+   real (kind=dp), dimension(:), allocatable :: RMT ! Muffin-tin radius of true system
+   real (kind=dp), dimension(:), allocatable :: RWS ! Wigner Seitz radius
    real (kind=dp), dimension(:), allocatable :: VREF
    real (kind=dp), dimension(:), allocatable :: VREF_temp
-   real (kind=dp), dimension(:), allocatable :: MTFAC  !< Scaling factor for radius MT
-   real (kind=dp), dimension(:), allocatable :: RMTNEW !< Adapted muffin-tin radius
-   real (kind=dp), dimension(:), allocatable :: RMTREF !< Muffin-tin radius of reference system
-   real (kind=dp), dimension(:), allocatable :: RMTREF_temp !< Muffin-tin radius of reference system
+   real (kind=dp), dimension(:), allocatable :: MTFAC  ! Scaling factor for radius MT
+   real (kind=dp), dimension(:), allocatable :: RMTNEW ! Adapted muffin-tin radius
+   real (kind=dp), dimension(:), allocatable :: RMTREF ! Muffin-tin radius of reference system
+   real (kind=dp), dimension(:), allocatable :: RMTREF_temp ! Muffin-tin radius of reference system
    real (kind=dp), dimension(:), allocatable :: RMTREFAT
-   real (kind=dp), dimension(:), allocatable :: FPRADIUS !< R point at which full-potential treatment starts
-   real (kind=dp), dimension(:), allocatable :: SOCSCALE !< Spin-orbit scaling
-   real (kind=dp), dimension(:,:), allocatable :: RMESH    !< Radial mesh ( in units a Bohr)
+   real (kind=dp), dimension(:), allocatable :: FPRADIUS ! R point at which full-potential treatment starts
+   real (kind=dp), dimension(:), allocatable :: SOCSCALE ! Spin-orbit scaling
+   real (kind=dp), dimension(:,:), allocatable :: RMESH    ! Radial mesh ( in units a Bohr)
    real (kind=dp), dimension(:,:), allocatable :: S
-   real (kind=dp), dimension(:,:), allocatable :: RR   !< Set of real space vectors (in a.u.)
-   real (kind=dp), dimension(:,:), allocatable :: DRDI !< Derivative dr/di
+   real (kind=dp), dimension(:,:), allocatable :: RR   ! Set of real space vectors (in a.u.)
+   real (kind=dp), dimension(:,:), allocatable :: DRDI ! Derivative dr/di
    real (kind=dp), dimension(:,:), allocatable :: DROR
-   real (kind=dp), dimension(:,:), allocatable :: CLEB !< GAUNT coefficients (GAUNT)
-   real (kind=dp), dimension(:,:), allocatable :: VISP !< Spherical part of the potential
-   real (kind=dp), dimension(:,:), allocatable :: CSCL !< Speed of light scaling
+   real (kind=dp), dimension(:,:), allocatable :: CLEB ! GAUNT coefficients (GAUNT)
+   real (kind=dp), dimension(:,:), allocatable :: VISP ! Spherical part of the potential
+   real (kind=dp), dimension(:,:), allocatable :: CSCL ! Speed of light scaling
    real (kind=dp), dimension(:,:), allocatable :: RNEW
    real (kind=dp), dimension(:,:), allocatable :: RATOM
-   real (kind=dp), dimension(:,:), allocatable :: ECORE   !< Core energies
-   real (kind=dp), dimension(:,:), allocatable :: TLEFT   !< Vectors of the basis for the left host
-   real (kind=dp), dimension(:,:), allocatable :: TRIGHT  !< Vectors of the basis for the right host
+   real (kind=dp), dimension(:,:), allocatable :: ECORE   ! Core energies
+   real (kind=dp), dimension(:,:), allocatable :: TLEFT   ! Vectors of the basis for the left host
+   real (kind=dp), dimension(:,:), allocatable :: TRIGHT  ! Vectors of the basis for the right host
    real (kind=dp), dimension(:,:), allocatable :: SOCSCL
-   real (kind=dp), dimension(:,:), allocatable :: RBASIS  !< Position of atoms in the unit cell in units of bravais vectors
+   real (kind=dp), dimension(:,:), allocatable :: RBASIS  ! Position of atoms in the unit cell in units of bravais vectors
    real (kind=dp), dimension(:,:), allocatable :: RCLSIMP
-   real (kind=dp), dimension(:,:), allocatable :: CMOMHOST !< Charge moments of each atom of the (left/right) host
+   real (kind=dp), dimension(:,:), allocatable :: CMOMHOST ! Charge moments of each atom of the (left/right) host
    real (kind=dp), dimension(:,:), allocatable :: RPAN_INTERVALL
    real (kind=dp), dimension(:,:,:), allocatable :: RS
-   real (kind=dp), dimension(:,:,:), allocatable :: YRG  !< Spherical harmonics (GAUNT2)
-   real (kind=dp), dimension(:,:,:), allocatable :: VINS !< Non-spherical part of the potential
-   real (kind=dp), dimension(:,:,:), allocatable :: RCLS !< Real space position of atom in cluster
+   real (kind=dp), dimension(:,:,:), allocatable :: YRG  ! Spherical harmonics (GAUNT2)
+   real (kind=dp), dimension(:,:,:), allocatable :: VINS ! Non-spherical part of the potential
+   real (kind=dp), dimension(:,:,:), allocatable :: RCLS ! Real space position of atom in cluster
    real (kind=dp), dimension(:,:,:), allocatable :: RROT
    complex (kind=dp), dimension(:), allocatable :: EZ
    complex (kind=dp), dimension(:), allocatable :: DEZ
@@ -290,17 +290,17 @@ module mod_main0
    !-------------------------------------------------------------------------
    !     Magnetisation angles -- description see RINPUT13
    !-------------------------------------------------------------------------
-   integer :: KMROT !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-   real (kind=dp), dimension(:), allocatable :: QMTET !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-   real (kind=dp), dimension(:), allocatable :: QMPHI !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+   integer :: KMROT ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+   real (kind=dp), dimension(:), allocatable :: QMTET ! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+   real (kind=dp), dimension(:), allocatable :: QMPHI ! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
    !-------------------------------------------------------------------------
    !     CPA variables
    !-------------------------------------------------------------------------
-   integer :: NCPA     !< NCPA = 0/1 CPA flag
-   integer :: ITCPAMAX !< Max. number of CPA iterations
-   integer, dimension(:), allocatable :: NOQ  !< Number of diff. atom types located
-   integer, dimension(:), allocatable :: IQAT !< The site on which an atom is located on a given site
-   integer, dimension(:), allocatable :: ICPA !< ICPA = 0/1 site-dependent CPA flag
+   integer :: NCPA     ! NCPA = 0/1 CPA flag
+   integer :: ITCPAMAX ! Max. number of CPA iterations
+   integer, dimension(:), allocatable :: NOQ  ! Number of diff. atom types located
+   integer, dimension(:), allocatable :: IQAT ! The site on which an atom is located on a given site
+   integer, dimension(:), allocatable :: ICPA ! ICPA = 0/1 site-dependent CPA flag
    !
    !-------------------------------------------------------------------------
    !> @note ITERMDIR running option introduced Apr 2003 -- Munich
@@ -316,28 +316,28 @@ module mod_main0
    !>                                          n.papanikolaou VINS()
    !-------------------------------------------------------------------------
    integer, dimension(:), allocatable :: HOSTIMP
-   real (kind=dp) :: CPATOL !< Convergency tolerance for CPA-cycle
-   real (kind=dp), dimension(:), allocatable :: CONC !< Concentration of a given atom
+   real (kind=dp) :: CPATOL ! Convergency tolerance for CPA-cycle
+   real (kind=dp), dimension(:), allocatable :: CONC ! Concentration of a given atom
    !-------------------------------------------------------------------------------
-   complex (kind=dp), dimension(:,:), allocatable :: RC !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-   complex (kind=dp), dimension(:,:), allocatable :: CREL !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-   complex (kind=dp), dimension(:,:), allocatable :: RREL !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+   complex (kind=dp), dimension(:,:), allocatable :: RC ! NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+   complex (kind=dp), dimension(:,:), allocatable :: CREL ! Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+   complex (kind=dp), dimension(:,:), allocatable :: RREL ! Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
    complex (kind=dp), dimension(:,:,:), allocatable :: SRREL
-   complex (kind=dp), dimension(:,:,:), allocatable :: DROTQ !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-   integer, dimension(:), allocatable :: ZREL    !< atomic number (cast integer)
-   integer, dimension(:), allocatable :: JWSREL  !< index of the WS radius
-   integer, dimension(:), allocatable :: IRSHIFT !< shift of the REL radial mesh with respect no NREL
+   complex (kind=dp), dimension(:,:,:), allocatable :: DROTQ ! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+   integer, dimension(:), allocatable :: ZREL    ! atomic number (cast integer)
+   integer, dimension(:), allocatable :: JWSREL  ! index of the WS radius
+   integer, dimension(:), allocatable :: IRSHIFT ! shift of the REL radial mesh with respect no NREL
    integer, dimension(:,:), allocatable :: NRREL
    integer, dimension(:,:,:), allocatable :: IRREL
    real (kind=dp), dimension(0:100) :: FACT
-   real (kind=dp), dimension(:,:), allocatable :: VTREL !< potential (spherical part)
-   real (kind=dp), dimension(:,:), allocatable :: BTREL !< magnetic field
-   real (kind=dp), dimension(:,:), allocatable :: RMREL !< radial mesh
-   real (kind=dp), dimension(:,:), allocatable :: DRDIREL !< derivative of radial mesh
-   real (kind=dp), dimension(:,:), allocatable :: R2DRDIREL !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+   real (kind=dp), dimension(:,:), allocatable :: VTREL ! potential (spherical part)
+   real (kind=dp), dimension(:,:), allocatable :: BTREL ! magnetic field
+   real (kind=dp), dimension(:,:), allocatable :: RMREL ! radial mesh
+   real (kind=dp), dimension(:,:), allocatable :: DRDIREL ! derivative of radial mesh
+   real (kind=dp), dimension(:,:), allocatable :: R2DRDIREL ! \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
    real (kind=dp), dimension(:,:,:), allocatable :: THESME
    logical :: PARA
-   logical, dimension(NSYMAXD) :: SYMUNITARY !< unitary/antiunitary symmetry flag
+   logical, dimension(NSYMAXD) :: SYMUNITARY ! unitary/antiunitary symmetry flag
    !
    !-------------------------------------------------------------------------
    ! LDA+U LDA+U LDA+U
@@ -361,27 +361,27 @@ module mod_main0
    !>                       their corresponding index in the unit cell
    !
    !-------------------------------------------------------------------------
-   integer :: NTLDAU    !< number of atoms on which LDA+U is applied
-   integer :: IDOLDAU   !< flag to perform LDA+U
-   integer :: ITRUNLDAU !< Iteration index for LDA+U
-   integer :: KREADLDAU !< LDA+U arrays available
-   integer, dimension(:), allocatable :: LOPT !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-   integer, dimension(:), allocatable :: ITLDAU !< integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
-   real (kind=dp), dimension(:), allocatable :: UEFF !< input U parameter for each atom
-   real (kind=dp), dimension(:), allocatable :: JEFF !< input J parameter for each atom
-   real (kind=dp), dimension(:), allocatable :: EREFLDAU !< the energies of the projector's wave functions (REAL)
+   integer :: NTLDAU    ! number of atoms on which LDA+U is applied
+   integer :: IDOLDAU   ! flag to perform LDA+U
+   integer :: ITRUNLDAU ! Iteration index for LDA+U
+   integer :: KREADLDAU ! LDA+U arrays available
+   integer, dimension(:), allocatable :: LOPT ! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+   integer, dimension(:), allocatable :: ITLDAU ! integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
+   real (kind=dp), dimension(:), allocatable :: UEFF ! input U parameter for each atom
+   real (kind=dp), dimension(:), allocatable :: JEFF ! input J parameter for each atom
+   real (kind=dp), dimension(:), allocatable :: EREFLDAU ! the energies of the projector's wave functions (REAL)
    !..
    !.. distinguish between spin-dependent and spin-independent
    !.. quantities
-   real (kind=dp), dimension(:,:,:,:), allocatable :: WLDAU !< potential matrix
-   real (kind=dp), dimension(:,:,:,:,:), allocatable :: ULDAU !< calculated Coulomb matrix elements (EREFLDAU)
+   real (kind=dp), dimension(:,:,:,:), allocatable :: WLDAU ! potential matrix
+   real (kind=dp), dimension(:,:,:,:,:), allocatable :: ULDAU ! calculated Coulomb matrix elements (EREFLDAU)
    complex (kind=dp), dimension(:,:), allocatable :: PHILDAU
    !-------------------------------------------------------------------------
    ! LDA+U LDA+U LDA+U
    !-------------------------------------------------------------------------
    ! Lloyds formula
-   integer :: LLY !< LLY <> 0 : apply Lloyds formula
-   complex (kind=dp) :: DELTAE  !< Energy difference for numerical derivative
+   integer :: LLY ! LLY <> 0 : apply Lloyds formula
+   complex (kind=dp) :: DELTAE  ! Energy difference for numerical derivative
 
    ! SUSC (BEGIN: modifications by Manuel and Benedikt)             ! susc
    ! LOGICAL THAT CHECKS WHETHER ENERGY MESH FILE EXISTS            ! susc
@@ -392,7 +392,7 @@ module mod_main0
    integer :: IVSHIFT
 
    !allocations:
-   real (kind=dp), dimension(:,:,:), allocatable :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+   real (kind=dp), dimension(:,:,:), allocatable :: THETAS ! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
    real (kind=dp), dimension(:,:,:), allocatable :: THETASNEW
 
    public :: main0, bshift_ns
@@ -530,9 +530,9 @@ contains
       LMPOTD       = (LPOT+1)**2
       LMMAXSO      = lmmaxd ! lmmaxd already doubled in size! (KREL+1)*LMMAXD
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! Allocation calls
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       !> @note Jonathan Chico: The main idea here is to allocate all the needed arrays so that the inc.p
       !> file becomes irrelevant. In principle the philosophy would be to modularize
       !> the code such that each module has its own global variables and allocation routine
@@ -578,13 +578,13 @@ contains
          IMAXSH,IQCALC,IOFGIJ,JOFGIJ,IJTABSH,IJTABSYM,IJTABCALC,IJTABCALC_I,ILM_MAP, &
          GSH)
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! End of allocation calls
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! Deal with the lattice
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
       call LATTIX99(LINTERFACE,ALAT,NATYP,NAEZ,CONC,RWS,BRAVAIS,RECBV,VOLUME0,RR,&
          NRD,NATYP)
@@ -703,7 +703,7 @@ contains
             stop
          end if
 
-         !! enforce MPIatom here
+         !  enforce MPIatom here
          !if (TEST('MPIenerg')) stop 'rhoqtest assumes MPIatom'
          !CALL ADDTEST('MPIatom')
          
@@ -897,9 +897,9 @@ contains
         write(*,'("main0: Runflag KKRSUSC is set ")')                  ! susc
         write(*,            '("but scfsteps = ",i0)') scfsteps         ! susc
         write(*,'("       Here we enforce scfsteps = 1")')             ! susc
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! susc
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !  susc
         scfsteps = 1                                                   ! susc
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! susc
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !  susc
       end if                                                           ! susc
       !                                                                ! susc
       ! SUSC (END:   modifications by Manuel and Benedikt)             ! susc
@@ -1287,32 +1287,32 @@ contains
       integer, intent(in) :: IPAND
       integer, intent(in) :: LMPOT
       integer, intent(in) :: NPOTD
-      integer, intent(in) :: NATYP !< Number of kinds of atoms in unit cell
-      integer, intent(in) :: NSPIN !< Counter for spin directions
+      integer, intent(in) :: NATYP ! Number of kinds of atoms in unit cell
+      integer, intent(in) :: NSPIN ! Counter for spin directions
       integer, intent(in) :: NGSHD
       integer, intent(in) :: NFUND
       integer, intent(in) :: NCELLD
       integer, intent(in) :: IRMIND
       integer, intent(in) :: LMXSPD
-      integer, intent(in) :: KSHAPE !< exact treatment of WS cell
-      integer, dimension(NATYP), intent(in) :: IRC !< r point for potential cutting
-      integer, dimension(NATYP), intent(in) :: IRMIN !< max r for spherical treatment
-      integer, dimension(NATYP), intent(in) :: INIPOL !< initial spin polarisation
-      integer, dimension(NATYP), intent(in) :: NTCELL !< index for WS cell
+      integer, intent(in) :: KSHAPE ! exact treatment of WS cell
+      integer, dimension(NATYP), intent(in) :: IRC ! r point for potential cutting
+      integer, dimension(NATYP), intent(in) :: IRMIN ! max r for spherical treatment
+      integer, dimension(NATYP), intent(in) :: INIPOL ! initial spin polarisation
+      integer, dimension(NATYP), intent(in) :: NTCELL ! index for WS cell
       integer, dimension(0:LMPOT), intent(in) :: IMAXSH
       integer, dimension(NGSHD,3), intent(in) :: ILM_MAP
-      integer, dimension(NATYP,LMXSPD), intent(in) :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+      integer, dimension(NATYP,LMXSPD), intent(in) :: LMSP ! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
       integer, dimension(NATYP,LMXSPD), intent(in) :: IFUNM
-      integer, dimension(0:IPAND,NATYP), intent(in) :: IRCUT !< r points of panel borders
-      real (kind=dp), intent(in) :: HFIELD !< External magnetic field, for initial potential shift in spin polarised case
+      integer, dimension(0:IPAND,NATYP), intent(in) :: IRCUT ! r points of panel borders
+      real (kind=dp), intent(in) :: HFIELD ! External magnetic field, for initial potential shift in spin polarised case
       real (kind=dp), dimension(NGSHD), intent(in) :: GSH
       real (kind=dp), dimension(IRM,NATYP), intent(in) :: RMESH
       real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in) :: THESME
-      real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in) :: THETAS !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+      real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in) :: THETAS ! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
 
       ! Input/Output:
-      real (kind=dp), dimension(IRM,NPOTD), intent(inout) :: VISP !< Spherical part of the potential
-      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS !< Non-spherical part of the potential
+      real (kind=dp), dimension(IRM,NPOTD), intent(inout) :: VISP ! Spherical part of the potential
+      real (kind=dp), dimension(IRMIND:IRM,LMPOT,NSPOTD), intent(inout) :: VINS ! Non-spherical part of the potential
 
       ! Inside
       integer :: ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1

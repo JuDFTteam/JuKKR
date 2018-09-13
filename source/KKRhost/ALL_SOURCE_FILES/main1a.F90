@@ -121,15 +121,15 @@ contains
          open (67,FILE='ldau.unformatted',FORM='unformatted')
          read (67) ITRUNLDAU,WLDAU,ULDAU,PHILDAU
          close(67)
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          ! Calculate Coulomb matrix ULDAU it calculates U matrix only once.
          ! Remove the next IF statement to have U calculated for each iteration anew.
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 
-         !!!!!!!! IF ( ITRUNLDAU.LE.0 ) THEN
+         ! ! ! !  IF ( ITRUNLDAU.LE.0 ) THEN
          call INITLDAU(NSRA,NTLDAU,ITLDAU,LOPT,UEFF,JEFF,EREFLDAU,VISP,NSPIN, &
             RMESH,DRDI,ZAT,IPAN,IRCUT,PHILDAU,ULDAU)
-         !!!!!!!! END IF
+         ! ! ! !  END IF
       end if
       !-------------------------------------------------------------------------
       ! End of LDA+U setup
@@ -237,10 +237,10 @@ contains
          end do
 
       else
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          ! For calculation of Jij-tensor: create array for additional t-matrices and
          ! set atom-dependent flags which indicate if t-matrix is needed
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          call init_t_dtmatJij(t_inc,t_dtmatJij)
          if(OPT('XCPL    '))then
             call set_Jijcalc_flags(t_dtmatJij,NATYP,NATOMIMPD,NATOMIMP,ATOMIMP,IQAT)

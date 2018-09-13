@@ -54,29 +54,29 @@ subroutine RHOVALNEW( &
 
    integer, intent(in) :: I1
    integer, intent(in) :: NSRA
-   integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
-   integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
+   integer, intent(in) :: LMAX      ! Maximum l component in wave function expansion
+   integer, intent(in) :: IEND      ! Number of nonzero gaunt coefficients
    integer, intent(in) :: IPOT
-   integer, intent(in) :: IRWS      !< R point at WS radius for a given atom
-   integer, intent(in) :: LOPT      !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-   integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
-   integer, intent(in) :: NSPIN     !< Counter for spin directions
-   integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
+   integer, intent(in) :: IRWS      ! R point at WS radius for a given atom
+   integer, intent(in) :: LOPT      ! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+   integer, intent(in) :: NATYP     ! Number of kinds of atoms in unit cell
+   integer, intent(in) :: NSPIN     ! Counter for spin directions
+   integer, intent(in) :: NCHEB     ! Number of Chebychev pannels for the new solver
    integer, intent(in) :: IELAST
-   integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
-   integer, intent(in) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
+   integer, intent(in) :: IDOLDAU   ! flag to perform LDA+U
+   integer, intent(in) :: NPAN_EQ   ! Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
    integer, intent(in) :: NPAN_TOT
-   integer, intent(in) :: NPAN_LOG  !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
-   real (kind=dp), intent(in) :: ZAT       !< Nuclear charge for a given atom
-   real (kind=dp), intent(in) :: SOCSCALE  !< Spin-orbit scaling for a given atom
+   integer, intent(in) :: NPAN_LOG  ! Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
+   real (kind=dp), intent(in) :: ZAT       ! Nuclear charge for a given atom
+   real (kind=dp), intent(in) :: SOCSCALE  ! Spin-orbit scaling for a given atom
    logical, intent(in) :: LDORHOEF
-   integer, dimension(LMXSPD), intent(in)    :: LMSP !< 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+   integer, dimension(LMXSPD), intent(in)    :: LMSP ! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
    integer, dimension(LMXSPD), intent(in)    :: IFUNM
    integer, dimension(0:NTOTD), intent(in)   :: IPAN_INTERVALL
    integer, dimension(NCLEB,4), intent(in)   :: ICLEB
-   real (kind=dp), dimension(*), intent(in)   :: CLEB !< GAUNT coefficients (GAUNT)
+   real (kind=dp), dimension(*), intent(in)   :: CLEB ! GAUNT coefficients (GAUNT)
    real (kind=dp), dimension(IRMD), intent(in) :: RMESH
-   real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix
+   real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU ! potential matrix
 
    ! .. In/Out variables
    real (kind=dp), intent(inout) :: PHI
@@ -85,7 +85,7 @@ subroutine RHOVALNEW( &
    real (kind=dp), dimension(0:NTOTD), intent(inout)      :: RPAN_INTERVALL
    real (kind=dp), dimension(0:LMAX+1,3), intent(inout)   :: MUORB
    real (kind=dp), dimension(NRMAXD,NFUND), intent(inout) :: THETASNEW
-   real (kind=dp), dimension(NRMAXD,lmpotd,NSPOTD), intent(inout) :: VINSNEW  !< Non-spherical part of the potential
+   real (kind=dp), dimension(NRMAXD,lmpotd,NSPOTD), intent(inout) :: VINSNEW  ! Non-spherical part of the potential
    complex (kind=dp), dimension(IEMXD), intent(inout) :: EZ
    complex (kind=dp), dimension(IEMXD), intent(inout) :: WEZ
    ! .. Output variables
@@ -212,7 +212,7 @@ subroutine RHOVALNEW( &
       enddo
    enddo
 
-   !! set up the non-spherical ll' matrix for potential VLL'
+   ! set up the non-spherical ll' matrix for potential VLL'
    if (NSRA.EQ.2) then
       USE_SRATRICK=1
       if (test('nosph   ')) use_sratrick=0
@@ -228,9 +228,9 @@ subroutine RHOVALNEW( &
    !
    call VLLMAT(1,NRMAXD,IRMDNEW,lmsize,LMMAXSO,VNSPLL0,VINS,lmpotd,CLEB,ICLEB,IEND,&
       NSPIN,ZAT,RNEW,USE_SRATRICK,NCLEB)
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! LDAU
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    if (IDOLDAU.EQ.1) then
       LMLO=LOPT**2+1
       LMHI=(LOPT+1)**2
@@ -243,9 +243,9 @@ subroutine RHOVALNEW( &
          VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+WLDAU(1:MMAXD,1:MMAXD,2)
       enddo
    endif
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! LDAU
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
    ! initial allocate
    if (NSRA.EQ.2) then
@@ -406,7 +406,7 @@ subroutine RHOVALNEW( &
    !$omp private(alphasph,alphall,ie_num)                                  &
    !$omp private(rll_was_read_in, sll_was_read_in)                         &
    !$omp private(rllleft_was_read_in, sllleft_was_read_in)                 &
-   !!$omp firstprivate(t_inc)                                              &
+   ! !$omp firstprivate(t_inc)                                              &
    !$omp shared(t_inc)                                                     &
    !$omp shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)      &
    !$omp shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)             &
@@ -488,7 +488,7 @@ subroutine RHOVALNEW( &
          call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,&
             LMMAXSO,1,JLK_INDEX,HLK(:,:,ith),                           &
             JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),                   &
-            GMATPREFACTOR)
+            GMATPREFACTOR,0)
 
          ! using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
@@ -503,9 +503,9 @@ subroutine RHOVALNEW( &
          RLL(:,:,:,ith)=CZERO
          SLL(:,:,:,ith)=CZERO
 
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
          ! Right solutions
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
          TMATLL=CZERO
          ! faster calculation of RLL.
          ! no irregular solutions SLL are needed in self-consistent iterations
@@ -532,9 +532,9 @@ subroutine RHOVALNEW( &
 
       end if ! read/recalc wavefunctions
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! Left solutions
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       if( (t_wavefunctions%Nwfsavemax>0 .and.                  &
          (.not. (rllleft_was_read_in.and.sllleft_was_read_in)) ) &
          .or. (t_wavefunctions%Nwfsavemax==0)) then
@@ -569,7 +569,7 @@ subroutine RHOVALNEW( &
          call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,&
             LMMAXSO,1,JLK_INDEX,HLK(:,:,ith),                           &
             JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),                   &
-            GMATPREFACTOR)
+            GMATPREFACTOR,0)
 
          ! using spherical potential as reference
          ! notice that exchange the order of left and right hankel/bessel functions
@@ -698,9 +698,9 @@ subroutine RHOVALNEW( &
          enddo
       end do   ! IQ = 1,NQDOS
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! Get charge at the Fermi energy (IELAST)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       if (IE.EQ.IELAST.AND.LDORHOEF) then
          call RHOOUTNEW(NSRA,LMAX,GMATLL(1,1,IE),EK,  &
             lmpotd,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,               &
@@ -712,9 +712,9 @@ subroutine RHOVALNEW( &
             GFLLE_PART(:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL)
       endif
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! Get orbital moment
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       do IORB=1,3
          call RHOOUTNEW(NSRA,LMAX,GMATLL(1,1,IE),EK,  &
             lmpotd,CONE,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,               &
@@ -926,9 +926,9 @@ subroutine RHOVALNEW( &
    if(t_mpi_c_grid%myrank_at==master) then
 #endif
 ! CPP_MPI
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! LDAU
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       if (IDOLDAU.EQ.1) then
          ! calculate WLDAU
          do IE=1,IELAST
@@ -953,9 +953,9 @@ subroutine RHOVALNEW( &
             enddo
          enddo
       endif ! LDAU
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! LDAU
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 
       if(.not.OPT('qdos    ')) then
          ! omp: moved write-out of dos files out of parallel energy loop
@@ -1099,9 +1099,9 @@ subroutine RHOVALNEW( &
       call DSCAL(IDIM,2.D0,RHO2NS(1,1,1),1)
       call DAXPY(IDIM,-0.5D0,RHO2NS(1,1,1),1,RHO2NS(1,1,2),1)
       call DAXPY(IDIM,1.0D0,RHO2NS(1,1,2),1,RHO2NS(1,1,1),1)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! Do the same at the Fermi energy
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       call DSCAL(IDIM,2.D0,R2NEF(1,1,1),1)
       call DAXPY(IDIM,-0.5D0,R2NEF(1,1,1),1,R2NEF(1,1,2),1)
       call DAXPY(IDIM,1.0D0,R2NEF(1,1,2),1,R2NEF(1,1,1),1)
@@ -1128,9 +1128,9 @@ subroutine RHOVALNEW( &
    if(ierr/=MPI_SUCCESS) stop 'error bcast angles_new in rhovalnew'
 #endif
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! Deallocate arrays
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    i_all=-product(shape(VINS))*kind(VINS)
    deallocate(VINS, stat=i_stat)
    call memocc(i_stat,i_all,'VINS','RHOVALNEW')

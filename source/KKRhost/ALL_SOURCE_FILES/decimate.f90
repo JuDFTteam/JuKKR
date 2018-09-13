@@ -4,9 +4,8 @@ contains
 
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: DECIMATE
-! > @brief Decimation method
-! > - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
-! Fortran90
+!> @brief Decimation method
+!> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
 ! -------------------------------------------------------------------------------
 subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, &
   nrbasis)
@@ -32,11 +31,9 @@ subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, &
   ! *                                                                   *
   ! *********************************************************************
 
-  integer, intent (in) :: naez     ! < Number of atoms in unit cell
-  integer, intent (in) :: nlbasis  ! < Number of basis layers of left host
-                                   ! (repeated units)
-  integer, intent (in) :: nrbasis  ! < Number of basis layers of right host
-                                   ! (repeated units)
+  integer, intent (in) :: naez     !! Number of atoms in unit cell
+  integer, intent (in) :: nlbasis  !! Number of basis layers of left host (repeated units)
+  integer, intent (in) :: nrbasis  !! Number of basis layers of right host (repeated units)
   logical, dimension (2), intent (in) :: vacflag
   complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: factl
   complex (kind=dp), dimension (lmmaxd, lmmaxd, *), intent (in) :: tinvbup
@@ -159,9 +156,9 @@ subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, &
         end do
       end do
     end if
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
     ! Added on 1.02.2000
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
     ! Adds to the matrix GLLKE the elements that couples the
     ! interface to the two half-spaces.
     do ip1 = 1, nprincd

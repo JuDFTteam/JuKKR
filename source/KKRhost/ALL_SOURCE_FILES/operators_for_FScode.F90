@@ -4,7 +4,7 @@ contains
 
 subroutine operators_for_FScode(KORBIT, operator_imp)
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
   !
   ! interface routine to normcoeff routines that prepare operators for
   ! use in FScode (compuation of spin expectation value etc.)
@@ -12,7 +12,7 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   ! first wavefuncitons are read in and converted to old mesh and then
   ! normcoeff_* routines are called
   !
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 
 #ifdef CPP_MPI
   use mod_types, only: t_inc, t_mpi_c_grid
@@ -71,9 +71,9 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
   if(t_inc%i_write>0) write(1337,*) 'start computing Operators'
   if(t_inc%i_write>0) write(*,*) 'start computing Operators'
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
   ! Part 1: operators for host wavefunctions
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 
   ! first fill scalar and array parameters that are used here
   !  call get_params_operators(lmmaxd, irmd, natyp, nsra, ncheb, ntot, irws, 
@@ -241,9 +241,9 @@ subroutine operators_for_FScode(KORBIT, operator_imp)
 
 
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
   ! Part 2: operators for imp. wavefunctions
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
   if(operator_imp) then
     
     if(t_inc%i_write>0) write(1337,*) 'Operators using impurity wavefunctions'

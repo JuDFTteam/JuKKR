@@ -4,16 +4,16 @@ contains
 
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: WMATLDAUSOC
-! > @brief Calculation of Coulomb interaction potential in LDA+U relativistic
+!> @brief Calculation of Coulomb interaction potential in LDA+U relativistic
 ! + SOC (new solver)
-! > @details The expression evaluated (array VLDAU) is:
-! > \f$V_{m1,s,m2,s'} =\delta_{ss'} \sum_{s'',m3,m4} U_{m1,m2,m3,m4}
+!> @details The expression evaluated (array VLDAU) is:
+!> \f$V_{m1,s,m2,s'} =\delta_{ss'} \sum_{s'',m3,m4} U_{m1,m2,m3,m4}
 ! n_{m3,s'',m4,s''}-\sum_{m3,m4} U_{m1,m4,m3,m2} n_{m3,s',m4,s} - \left[Ueff
 ! (dentot-1/2) - Jeff (n_s - 1/2)\right] \delta_{ss'} \delta_{m1,m2}\f$
-! >
-! > For details see H. Ebert at al., Sol. Stat. Comm. 127 (2003) 443
-! > @author N. long
-! > @date 04.2016
+!>
+!> For details see H. Ebert at al., Sol. Stat. Comm. 127 (2003) 443
+!> @author N. long
+!> @date 04.2016
 ! -------------------------------------------------------------------------------
 subroutine wmatldausoc(ntldau, itldau, nspin, denmatn, lopt, ueff, jeff, &
   uldau, wldau, eu, edc, mmaxd, natyp, nspind, lmax)
@@ -44,36 +44,36 @@ subroutine wmatldausoc(ntldau, itldau, nspin, denmatn, lopt, ueff, jeff, &
   implicit none
 
   ! .. Input variables
-  integer, intent (in) :: lmax     ! < Maximum l component in wave function
+  integer, intent (in) :: lmax     !! Maximum l component in wave function
                                    ! expansion
-  integer, intent (in) :: natyp    ! < Number of kinds of atoms in unit cell
-  integer, intent (in) :: nspin    ! < Counter for spin directions
-  integer, intent (in) :: mmaxd    ! < 2*LMAX+1
-  integer, intent (in) :: nspind   ! < KREL+(1-KREL)*(NSPIN+1)
-  integer, intent (in) :: ntldau   ! < number of atoms on which LDA+U is
+  integer, intent (in) :: natyp    !! Number of kinds of atoms in unit cell
+  integer, intent (in) :: nspin    !! Counter for spin directions
+  integer, intent (in) :: mmaxd    !! 2*LMAX+1
+  integer, intent (in) :: nspind   !! KREL+(1-KREL)*(NSPIN+1)
+  integer, intent (in) :: ntldau   !! number of atoms on which LDA+U is
                                    ! applied
-  integer, dimension (natyp), intent (in) :: lopt ! < angular momentum QNUM
+  integer, dimension (natyp), intent (in) :: lopt !! angular momentum QNUM
                                                   ! for the atoms on which
                                                   ! LDA+U should be applied
                                                   ! (-1 to switch it OFF)
-  integer, dimension (natyp), intent (in) :: itldau ! < integer pointer
+  integer, dimension (natyp), intent (in) :: itldau !! integer pointer
                                                     ! connecting the NTLDAU
                                                     ! atoms to heir
                                                     ! corresponding index in
                                                     ! the unit cell
-  real (kind=dp), dimension (natyp), intent (in) :: ueff ! < input U parameter
+  real (kind=dp), dimension (natyp), intent (in) :: ueff !! input U parameter
                                                          ! for each atom
-  real (kind=dp), dimension (natyp), intent (in) :: jeff ! < input J parameter
+  real (kind=dp), dimension (natyp), intent (in) :: jeff !! input J parameter
                                                          ! for each atom
   ! .. Input/Output variables
-  real (kind=dp), dimension (natyp), intent (inout) :: eu ! < Total energy
+  real (kind=dp), dimension (natyp), intent (inout) :: eu !! Total energy
                                                           ! corrections
-  real (kind=dp), dimension (natyp), intent (inout) :: edc ! < Double-counting
+  real (kind=dp), dimension (natyp), intent (inout) :: edc !! Double-counting
                                                            ! correction
   real (kind=dp), dimension (mmaxd, mmaxd, nspind, natyp), &
-    intent (inout) :: wldau        ! < potential matrix
+    intent (inout) :: wldau        !! potential matrix
   real (kind=dp), dimension (mmaxd, mmaxd, mmaxd, mmaxd, natyp), &
-    intent (in) :: uldau           ! < calculated Coulomb matrix elements
+    intent (in) :: uldau           !! calculated Coulomb matrix elements
                                    ! (EREFLDAU)
   complex (kind=dp), dimension (mmaxd, mmaxd, 2, 2, natyp), &
     intent (inout) :: denmatn
@@ -220,7 +220,7 @@ subroutine wmatldausoc(ntldau, itldau, nspin, denmatn, lopt, ueff, jeff, &
       ! 4. Calculate total-energy corrections EU and EDC (double-counting).
       ! Then the correction is EU - EDC.
       ! L[LDA+U]=E[LDA]+E[U]-E[DC]
-      ! > @note: EU,EDC initialised outside the routine
+      !> @note: EU,EDC initialised outside the routine
       ! ----------------------------------------------------------------------
       ! Calculate EDC
       do is = 1, nspin

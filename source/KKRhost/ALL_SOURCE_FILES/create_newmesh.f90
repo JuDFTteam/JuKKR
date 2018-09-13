@@ -1,6 +1,6 @@
 ! -------------------------------------------------------------------------------
 ! MODULE: mod_create_newmesh
-! > @brief Module for the creation of the integration grid for the new solver
+!> @brief Module for the creation of the integration grid for the new solver
 ! -------------------------------------------------------------------------------
 module mod_create_newmesh
 
@@ -16,46 +16,46 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: CREATE_NEWMESH
-  ! > @brief Creation of the integration grid for the new solver
-  ! > @note changed interface to get rid of inc.p and to be able to use i
-  ! > create_newmesh in tmatimp routine for GREENIMP option
-  ! > this is the list of  array dimensions previously importted from inc.p
+  !> @brief Creation of the integration grid for the new solver
+  !> @note changed interface to get rid of inc.p and to be able to use i
+  !> create_newmesh in tmatimp routine for GREENIMP option
+  !> this is the list of  array dimensions previously importted from inc.p
   ! ----------------------------------------------------------------------------
   subroutine create_newmesh(natyp, irm, ipand, irid, ntotd, &
     nfund, ncheb, irmdnew, nspin, r, irmin, ipan, ircut, r_log, npan_log, &
     npan_eq, npan_log_at, npan_eq_at, npan_tot, rnew, rpan_intervall, &
     ipan_intervall, ncelld, &
-    ntcell, thetas, thetasnew) ! < optional arguments
+    ntcell, thetas, thetasnew) !! optional arguments
 
     implicit none
 
     ! .. Input variables
-    integer, intent (in) :: irm    ! < Maximum number of radial points
-    integer, intent (in) :: irid   ! < Shape functions parameters in
+    integer, intent (in) :: irm    !! Maximum number of radial points
+    integer, intent (in) :: irid   !! Shape functions parameters in
                                    ! non-spherical part
-    integer, intent (in) :: nspin  ! < Counter for spin directions
-    integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
-    integer, intent (in) :: ipand  ! < Number of panels in non-spherical part
+    integer, intent (in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: ipand  !! Number of panels in non-spherical part
     integer, intent (in) :: ntotd
-    integer, intent (in) :: nfund  ! < Shape functions parameters in
+    integer, intent (in) :: nfund  !! Shape functions parameters in
                                    ! non-spherical part
-    integer, intent (in) :: ncheb  ! < Number of Chebychev pannels for the new
+    integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new
                                    ! solver
-    integer, intent (in) :: ncelld ! < Number of cells (shapes) in
+    integer, intent (in) :: ncelld !! Number of cells (shapes) in
                                    ! non-spherical part
     integer, intent (in) :: irmdnew
-    integer, intent (in) :: npan_eq ! < Variables for the pannels for the new
+    integer, intent (in) :: npan_eq !! Variables for the pannels for the new
                                     ! solver
-    integer, intent (in) :: npan_log ! < Variables for the pannels for the new
+    integer, intent (in) :: npan_log !! Variables for the pannels for the new
                                      ! solver
     real (kind=dp), intent (in) :: r_log
-    integer, dimension (natyp), intent (in) :: ipan ! < Number of panels in
+    integer, dimension (natyp), intent (in) :: ipan !! Number of panels in
                                                     ! non-MT-region
-    integer, dimension (natyp), intent (in) :: irmin ! < Max R for spherical
+    integer, dimension (natyp), intent (in) :: irmin !! Max R for spherical
                                                      ! treatment
-    integer, dimension (0:ipand, natyp), intent (in) :: ircut ! < R points of
+    integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of
                                                               ! panel borders
-    real (kind=dp), dimension (irm, natyp), intent (in) :: r ! < Radial mesh (
+    real (kind=dp), dimension (irm, natyp), intent (in) :: r !! Radial mesh (
                                                              ! in units a
                                                              ! Bohr)
     ! .. Input/Output variables
@@ -68,9 +68,9 @@ contains
       rpan_intervall
 
     ! .. Optional arguments, do interpolation when given
-    integer, dimension (natyp), intent (in), optional :: ntcell ! < Index for WS cell
+    integer, dimension (natyp), intent (in), optional :: ntcell !! Index for WS cell
     real (kind=dp), dimension (irid, nfund, ncelld), intent (in), &
-      optional :: thetas ! < shape function THETA=0 outer space, 
+      optional :: thetas !! shape function THETA=0 outer space, 
                          ! THETA=1 inside WS cell in spherical harmonics expansion
     real (kind=dp), dimension (ntotd*(ncheb+1), nfund, ncelld), &
       intent (inout), optional :: thetasnew
@@ -215,7 +215,7 @@ contains
     implicit none
 
     integer, intent (in) :: npan
-    integer, intent (in) :: ncheb  ! < Number of Chebychev pannels for the new
+    integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new
                                    ! solver
     real (kind=dp), dimension (0:npan), intent (in) :: ri
     real (kind=dp), dimension (npan*(ncheb+1)), intent (inout) :: ro

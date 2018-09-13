@@ -4,27 +4,27 @@ contains
 
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: VMADELBLK
-! > @brief Calculate the madelung potentials and add these to the potential
+!> @brief Calculate the madelung potentials and add these to the potential
 ! \f$V\f$
-! > (in he spin-polarized case for each spin-direction this is the same)
-! > @details It uses the structure dependent matrices AVMAD and BVMAD which
-! > are calculated once in the subroutine MADELUNG3D() and saved in
-! > the DA-file abvmad.unformatted (May 2004)
-! > The charge-moments are calculated in the subroutine vintras,
-! > therefore vintras has to be called first.
-! > The madelung-potential is expanded into spherical harmonics.
-! > The lm-term of the potential \f$V\f$ of the atom \f$i\f$ is given by
-! > \f$ V(r,lm,i) = \sum_{i2}^{N} \sum_{l'm'} (-r)^l *
+!> (in he spin-polarized case for each spin-direction this is the same)
+!> @details It uses the structure dependent matrices AVMAD and BVMAD which
+!> are calculated once in the subroutine MADELUNG3D() and saved in
+!> the DA-file abvmad.unformatted (May 2004)
+!> The charge-moments are calculated in the subroutine vintras,
+!> therefore vintras has to be called first.
+!> The madelung-potential is expanded into spherical harmonics.
+!> The lm-term of the potential \f$V\f$ of the atom \f$i\f$ is given by
+!> \f$ V(r,lm,i) = \sum_{i2}^{N} \sum_{l'm'} (-r)^l *
 ! \left\{avmad(i,i2,lm,l'm')*cmom(i2,l'm') +bvmad(i,i2,lm)*z(i2)\right\}\f$
-! > where \f$ N\f$ is the number of atoms
-! > @author B. Drittler
-! > @date Nov. 1989
-! > @note
-! > - V. Popescu Feb. 2002: Adopted for the case of more atoms on the same
+!> where \f$ N\f$ is the number of atoms
+!> @author B. Drittler
+!> @date Nov. 1989
+!> @note
+!> - V. Popescu Feb. 2002: Adopted for the case of more atoms on the same
 ! site, summation is done over the occupants of that site, the charge is
 ! weighted with the appropriate concentration of the occupant
-! > - Impurity-program adopted feb. 2004 (according to N. Papanikalou)
-! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
+!> - Impurity-program adopted feb. 2004 (according to N. Papanikalou)
+!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
 ! Fortran90
 ! -------------------------------------------------------------------------------
 subroutine vmadelblk(cmom, cminst, lmax, nspin, naez, v, zat, r, irws, ircut, &
@@ -38,41 +38,41 @@ subroutine vmadelblk(cmom, cminst, lmax, nspin, naez, v, zat, r, irws, ircut, &
   implicit none
 
   ! .. Input variables
-  integer, intent (in) :: icc      ! < Enables the calculation of off-diagonal
+  integer, intent (in) :: icc      !! Enables the calculation of off-diagonal
                                    ! elements of the GF.(0=SCF/DOS; 1=cluster;
                                    ! -1=custom)
-  integer, intent (in) :: naez     ! < Number of atoms in unit cell
-  integer, intent (in) :: lmax     ! < Maximum l component in wave function
+  integer, intent (in) :: naez     !! Number of atoms in unit cell
+  integer, intent (in) :: lmax     !! Maximum l component in wave function
                                    ! expansion
-  integer, intent (in) :: nemb     ! < Number of 'embedding' positions
-  integer, intent (in) :: natyp    ! < Number of kinds of atoms in unit cell
-  integer, intent (in) :: nspin    ! < Counter for spin directions
-  integer, intent (in) :: lmpot    ! < (LPOT+1)**2
-  integer, intent (in) :: kshape   ! < Exact treatment of WS cell
+  integer, intent (in) :: nemb     !! Number of 'embedding' positions
+  integer, intent (in) :: natyp    !! Number of kinds of atoms in unit cell
+  integer, intent (in) :: nspin    !! Counter for spin directions
+  integer, intent (in) :: lmpot    !! (LPOT+1)**2
+  integer, intent (in) :: kshape   !! Exact treatment of WS cell
   ! .. Array Arguments
-  integer, dimension (naez), intent (in) :: noq ! < Number of diff. atom types
+  integer, dimension (naez), intent (in) :: noq !! Number of diff. atom types
                                                 ! located
-  integer, dimension (natyp), intent (in) :: irws ! < Position of atoms in the
+  integer, dimension (natyp), intent (in) :: irws !! Position of atoms in the
                                                   ! unit cell in units of
                                                   ! bravais vectors
-  integer, dimension (natyp), intent (in) :: ipan ! < Number of panels in
+  integer, dimension (natyp), intent (in) :: ipan !! Number of panels in
                                                   ! non-MT-region
   integer, dimension (0:natyp), intent (in) :: hostimp
-  integer, dimension (0:ipand, natyp), intent (in) :: ircut ! < R points of
+  integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of
                                                             ! panel borders
-  integer, dimension (natyp, naez+nemb), intent (in) :: kaoez ! < Kind of atom
+  integer, dimension (natyp, naez+nemb), intent (in) :: kaoez !! Kind of atom
                                                               ! at site in
                                                               ! elem. cell
-  real (kind=dp), dimension (natyp), intent (in) :: zat ! < Nuclear charge
-  real (kind=dp), dimension (natyp), intent (in) :: conc ! < Concentration of
+  real (kind=dp), dimension (natyp), intent (in) :: zat !! Nuclear charge
+  real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of
                                                          ! a given atom
   real (kind=dp), dimension (natyp), intent (in) :: catom
-  real (kind=dp), dimension (irmd, natyp), intent (in) :: r ! < Radial mesh (
+  real (kind=dp), dimension (irmd, natyp), intent (in) :: r !! Radial mesh (
                                                             ! in units a Bohr)
-  real (kind=dp), dimension (lmpot, natyp), intent (in) :: cmom ! < LM moment
+  real (kind=dp), dimension (lmpot, natyp), intent (in) :: cmom !! LM moment
                                                                 ! of total
                                                                 ! charge
-  real (kind=dp), dimension (lmpot, natyp), intent (in) :: cminst ! < charge
+  real (kind=dp), dimension (lmpot, natyp), intent (in) :: cminst !! charge
                                                                   ! moment of
                                                                   ! interstitial
   ! .. Input/Ouput variables
@@ -85,8 +85,8 @@ subroutine vmadelblk(cmom, cminst, lmax, nspin, naez, v, zat, r, irws, ircut, &
   integer :: irs1, ispin, it1, it2, noqval
   real (kind=dp) :: ac
   ! .. Local Arrays
-  real (kind=dp), dimension (lmpot) :: bvmad ! < Structure dependent matrix
-  real (kind=dp), dimension (lmpot, lmpot) :: avmad ! < Structure dependent
+  real (kind=dp), dimension (lmpot) :: bvmad !! Structure dependent matrix
+  real (kind=dp), dimension (lmpot, lmpot) :: avmad !! Structure dependent
                                                     ! matrix
   logical :: opt
   ! .. Intrinsic Functions ..
@@ -241,9 +241,9 @@ subroutine vmadelblk(cmom, cminst, lmax, nspin, naez, v, zat, r, irws, ircut, &
   write (1337, '(79("="))')
 
   if ((icc==0) .and. (.not. opt('KKRFLEX '))) return
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
   ! Now Prepare output for Impurity calculation
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
   open (91, file='intercell_ref', status='unknown', form='formatted')
   write (1337, *)
   write (1337, *) '                     ', &

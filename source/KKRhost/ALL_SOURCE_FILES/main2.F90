@@ -6,7 +6,7 @@
 !> t_params and passes them to local variables
 !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
 !> and many others ...
-!< @note
+!> @note
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 !-------------------------------------------------------------------------------
 module MOD_MAIN2
@@ -73,10 +73,10 @@ contains
       parameter (NMVECMAX = 4)
       ! ..
       ! .. Local scalars
-      integer :: NK  !< ITERMDIR variables
+      integer :: NK  ! > ITERMDIR variables
       integer :: IRC1
       integer :: IPOT
-      integer :: NMVEC  !< ITERMDIR variables
+      integer :: NMVEC  ! > ITERMDIR variables
       integer :: ICONT
       integer :: ISPIN
       integer :: IRMIN1
@@ -101,24 +101,24 @@ contains
       real (kind=dp) :: RMSAV0
       real (kind=dp) :: CHRGNT
       real (kind=dp) :: CHRGOLD
-      real (kind=dp) :: EXCDIFF   !< Scale magn. part of xc-potential
+      real (kind=dp) :: EXCDIFF   ! > Scale magn. part of xc-potential
       real (kind=dp) :: E2SHIFT
-      real (kind=dp) :: ERRAVANG  !< ITERMDIR variables
+      real (kind=dp) :: ERRAVANG  ! > ITERMDIR variables
       real (kind=dp) :: CHRGSEMICORE
       ! .. Local Arrays
       integer, dimension(NATYPD)                    :: LCOREMAX
       integer, dimension(NATYPD,NAEZD)               :: ITOQ
       integer, dimension(20,NATYPD)                 :: NKCORE
       integer, dimension(20,NPOTD)                 :: KAPCORE
-      real (kind=dp), dimension(NATYPD)           :: EU  !< LDA+U
-      real (kind=dp), dimension(NATYPD)           :: EDC !< LDA+U
+      real (kind=dp), dimension(NATYPD)           :: EU  ! > LDA+U
+      real (kind=dp), dimension(NATYPD)           :: EDC ! > LDA+U
       real (kind=dp), dimension(LMPOTD)           :: C00
       real (kind=dp), dimension(LMPOTD)           :: BVMAD
       real (kind=dp), dimension(NATYPD)           :: DENEFAT
       real (kind=dp), dimension(2)               :: VMT_INIT
-      real (kind=dp), dimension(IRMD,NPOTD)       :: RHOC     !< core charge density
+      real (kind=dp), dimension(IRMD,NPOTD)       :: RHOC     ! > core charge density
       real (kind=dp), dimension(LMPOTD,LMPOTD)     :: AVMAD
-      real (kind=dp), dimension(0:LPOTD,NATYPD)    :: EXCNM    !< Scale magn. part of xc-potential
+      real (kind=dp), dimension(0:LPOTD,NATYPD)    :: EXCNM    ! > Scale magn. part of xc-potential
       real (kind=dp), dimension(LMPOTD,NAEZD)      :: VINTERS
       real (kind=dp), dimension(IRMD,NPOTD)       :: VSPSMDUM
       logical, dimension(NATYPD,LMPOT)              :: LPOTSYMM
@@ -138,11 +138,11 @@ contains
       !                           ! both changed for the relativistic case
       !   EXC(0:LPOT,NATYP),      ! E_xc
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(NATYPD)           :: EPOTIN   !< energy of input potential (EPOTINB
-      real (kind=dp), dimension(0:3,NPOTD)       :: ESPC     !< energy single particle core
-      real (kind=dp), dimension(0:LPOTD,NATYPD)    :: EXC      !< exchange correlation energy
-      real (kind=dp), dimension(0:LPOTD,NATYPD)    :: ECOU     !< Coulomb energy
-      real (kind=dp), dimension(0:LMAXD+1,NPOTD)  :: ESPV     !< energy single particle valence both changed for the relativistic case
+      real (kind=dp), dimension(NATYPD)           :: EPOTIN   ! > energy of input potential (EPOTINB
+      real (kind=dp), dimension(0:3,NPOTD)       :: ESPC     ! > energy single particle core
+      real (kind=dp), dimension(0:LPOTD,NATYPD)    :: EXC      ! > exchange correlation energy
+      real (kind=dp), dimension(0:LPOTD,NATYPD)    :: ECOU     ! > Coulomb energy
+      real (kind=dp), dimension(0:LMAXD+1,NPOTD)  :: ESPV     ! > energy single particle valence both changed for the relativistic case
       real (kind=dp), dimension(IRMD*KREL+(1-KREL),NATYPD)  :: RHOORB
       real (kind=dp), dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL
       !-------------------------------------------------------------------------
@@ -151,21 +151,21 @@ contains
       !  CHRGATOM(NATYP,
       !           2*KREL+(1-KREL)*NSPIND) ! total charge per atom
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(LMPOTD,NATYPD)                    :: CMOM        !< LM moment of total charge
-      real (kind=dp), dimension(LMPOTD,NATYPD)                    :: CMINST      !< charge moment of interstitial
-      real (kind=dp), dimension(NATYPD,2*KREL+(1-KREL)*NSPIND)   :: CHRGATOM    !< total charge per atom
+      real (kind=dp), dimension(LMPOTD,NATYPD)                    :: CMOM        ! > LM moment of total charge
+      real (kind=dp), dimension(LMPOTD,NATYPD)                    :: CMINST      ! > charge moment of interstitial
+      real (kind=dp), dimension(NATYPD,2*KREL+(1-KREL)*NSPIND)   :: CHRGATOM    ! > total charge per atom
       !-------------------------------------------------------------------------
       ! FORCES
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(-1:1,NATYPD) :: FLM  !< Forces
-      real (kind=dp), dimension(-1:1,NATYPD) :: FLMC !< Forces
+      real (kind=dp), dimension(-1:1,NATYPD) :: FLM  ! > Forces
+      real (kind=dp), dimension(-1:1,NATYPD) :: FLMC ! > Forces
       !-------------------------------------------------------------------------
       ! For SIMULASA
       !-------------------------------------------------------------------------
       integer :: IPOS,ILM_MAPP,IAS
 
       ! .. Allocatable arrays
-      real (kind=dp), dimension(:,:,:), allocatable :: VONS !< output potential (nonspherical VONS)
+      real (kind=dp), dimension(:,:,:), allocatable :: VONS ! > output potential (nonspherical VONS)
 
       !-------------------------------------------------------------------------
       !  R2NEF (IRMD,LMPOT,NATYP,2)  ! rho at FERMI energy
@@ -175,8 +175,8 @@ contains
       !                               (*,*,*,2) rho(2) - rho(1) -> mag. moment
       !  RHOC(IRMD,NPOTD)              ! core charge density
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(:,:,:,:), allocatable :: R2NEF  !< rho at FERMI energy
-      real (kind=dp), dimension(:,:,:,:), allocatable :: RHO2NS !< radial density
+      real (kind=dp), dimension(:,:,:,:), allocatable :: R2NEF  ! > rho at FERMI energy
+      real (kind=dp), dimension(:,:,:,:), allocatable :: RHO2NS ! > radial density
       !-------------------------------------------------------------------------
       ! Scale magn. part of xc-potential:
       real (kind=dp), dimension(:,:,:), allocatable    :: VXCM
@@ -245,9 +245,9 @@ contains
       FPI = 4.0D0*PI
       RFPI = SQRT(FPI)
       RMSAV0 = 1.0D10
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! Setting dummy argument LSMEAR to allow compatibility with IMPURITY
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       LSMEAR=0
       !
       ICONT = 1
@@ -255,9 +255,9 @@ contains
       NSPIN = 2*KREL + (1-KREL)*NSPIN
       IDOSEMICORE = 0
       if ( OPT('SEMICORE') ) IDOSEMICORE = 1
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!  ITERATION BEGIN  !!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! !  ITERATION BEGIN  ! ! ! ! ! ! ! ! ! ! ! ! ! !
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ITSCF = ITSCF + 1         ! initialised to 0 in main0
       t_inc%i_iteration = ITSCF
       !
@@ -413,9 +413,9 @@ contains
       ! End of ITERMDIR
       !-------------------------------------------------------------------------
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! POTENTIAL PART
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       if (LRHOSYM) then
          call RHOSYMM(LMPOT,NSPIN,1,NATYP,RHO2NS,IXIPOL,IRWS,IRCUT,IPAN,KSHAPE,&
             NATYP,IRMD)
@@ -475,12 +475,12 @@ contains
       !-------------------------------------------------------------------------
       ! Write the CMOMS to a file
       !-------------------------------------------------------------------------
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! In case of DECIMATION output, we store ONLY information connected
       ! with the effective CPA-medium (for the case of NO-CPA NAEZ=NATYP)
       ! hence the CMOMS are calculated site-dependent. In the same format
       ! are read in by <MAIN0> -- < CMOMSREAD >     v.popescu 01/02/2002
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       if (OPT('deci-out').and.(ITSCF.eq.1)) then
          open(37, file='decifile', form='formatted', position='append')
          write(37,1080) NAEZ,LMPOT
@@ -763,9 +763,9 @@ contains
       call MIXSTR(RMSAVQ,RMSAVM,INS,LPOT,LMPOT,0,NSHELL, &
          1,NATYP,CONC,NSPIN,ITSCF,RFPI,FPI,IPF,MIX,FCM,  &
          IRC,IRMIN,RMESH,DRDI,VONS,VISP,VINS,VSPSMDUM,VSPSMDUM,LSMEAR)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! End of  POTENTIAL PART
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       !
       !-------------------------------------------------------------------------
       if (ITSCF.NE.1) RMSAV0 = 1.0d2*MAX(RMSAVQ,RMSAVM)
@@ -879,9 +879,9 @@ contains
       end if
       !-------------------------------------------------------------------------
       260  continue                  ! jump mark
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!    ITERATION END    !!!!!!!!!!!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
+      ! ! ! ! ! ! ! ! ! ! ! ! ! !    ITERATION END    ! ! ! ! ! ! ! ! ! ! ! ! ! !
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       !
       !-------------------------------------------------------------------------
       ! Update energy contour
@@ -963,31 +963,31 @@ contains
       implicit none
       !
       ! .. Input variables
-      integer, intent(in) :: IRMD       !< Maximum number of radial points
-      integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-      integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
-      integer, intent(in) :: NSPIN     !< Counter for spin directions
-      integer, intent(in) :: NPOTD     !< (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-      integer, intent(in) :: LMXSPD    !< (2*LPOT+1)**2
-      integer, intent(in) :: IRMIND    !< IRMD-IRNSD
-      integer, intent(in) :: KSHAPE    !< Exact treatment of WS cell
+      integer, intent(in) :: IRMD       ! > Maximum number of radial points
+      integer, intent(in) :: LMPOT     ! > (LPOT+1)**2
+      integer, intent(in) :: NATYP     ! > Number of kinds of atoms in unit cell
+      integer, intent(in) :: NSPIN     ! > Counter for spin directions
+      integer, intent(in) :: NPOTD     ! > (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+      integer, intent(in) :: LMXSPD    ! > (2*LPOT+1)**2
+      integer, intent(in) :: IRMIND    ! > IRMD-IRNSD
+      integer, intent(in) :: KSHAPE    ! > Exact treatment of WS cell
       real (kind=dp), intent(in) :: RFPI
       real (kind=dp), intent(in) :: VSHIFT
-      integer, dimension(NATYP), intent(in)           :: IRC      !< R point for potential cutting
-      integer, dimension(NATYP), intent(in)           :: IRMIN    !< Max R for spherical treatment
-      integer, dimension(NATYP), intent(in)           :: NTCELL   !< Index for WS cell
+      integer, dimension(NATYP), intent(in)           :: IRC      ! > R point for potential cutting
+      integer, dimension(NATYP), intent(in)           :: IRMIN    ! > Max R for spherical treatment
+      integer, dimension(NATYP), intent(in)           :: NTCELL   ! > Index for WS cell
       integer, dimension(0:LMPOT), intent(in)         :: IMAXSH
       integer, dimension(NGSHD,3), intent(in)         :: ILM_MAP
       integer, dimension(NATYP,LMXSPD), intent(in)    :: LMSP
       integer, dimension(NATYP,LMXSPD), intent(in)    :: IFUNM
-      integer, dimension(0:IPAND,NATYP), intent(in)   :: IRCUT    !< R points of panel borders
+      integer, dimension(0:IPAND,NATYP), intent(in)   :: IRCUT    ! > R points of panel borders
       real (kind=dp), dimension(NGSHD), intent(in)              :: GSH
-      real (kind=dp), dimension(IRMD,NATYP), intent(in)          :: RMESH    !< Radial mesh ( in units a Bohr)
+      real (kind=dp), dimension(IRMD,NATYP), intent(in)          :: RMESH    ! > Radial mesh ( in units a Bohr)
       real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in)  :: THESME
-      real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in)  :: THETAS   !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+      real (kind=dp), dimension(IRID,NFUND,NCELLD), intent(in)  :: THETAS   ! > shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
       ! .. Input/Output:
-      real (kind=dp), dimension(IRMD,NPOTD), intent(inout) :: VISP  !< Spherical part of the potential
-      real (kind=dp), dimension(IRMIND:IRMD,LMPOT,NSPOTD), intent(inout) :: VINS   !< Non-spherical part of the potential
+      real (kind=dp), dimension(IRMD,NPOTD), intent(inout) :: VISP  ! > Spherical part of the potential
+      real (kind=dp), dimension(IRMIND:IRMD,LMPOT,NSPOTD), intent(inout) :: VINS   ! > Non-spherical part of the potential
       ! .. Local variables
       integer :: ISPIN,IH,IPOT,IR,LM,IMT1,IRC1,IRMIN1
       real (kind=dp), dimension(IRMD) :: PSHIFTR

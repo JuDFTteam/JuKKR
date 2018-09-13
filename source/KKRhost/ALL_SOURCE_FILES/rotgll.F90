@@ -47,9 +47,8 @@ complex (kind=dp) crel(lmmaxd,lmmaxd),rc(lmmaxd,lmmaxd), rrel(lmmaxd,lmmaxd)
 LOGICAL :: symunitary(*)
 !     ..
 !     .. Local arrays
-complex (kind=dp) :: gll(:,:,:,:),tpg(:,:)
-COMPLEX (kind=dp) :: gclust(:)
-allocatable gll,tpg,gclust
+complex (kind=dp), allocatable :: gll(:,:,:,:),tpg(:,:)
+COMPLEX (kind=dp), allocatable :: gclust(:)
 !     ..
 !     .. Local scalars
 INTEGER :: ilin,iq,icall,ish,isym,jq
@@ -156,9 +155,7 @@ IF ( igf /= 0 ) THEN
           IF ( nlin > ngclus*ngclus )  &
               STOP "<ROTGLL>: NLIN.GT.(NATOMIMP*LMMAXD)**2"
           gclust(nlin) = gll(lm1,lm2,iq,jq)
-!test
-!                    WRITE(214321,'(4i,2E)') LM1,LM2,IQ,JQ,GCLUST(NLIN)
-! writeout of green_host for WRTGREEN option
+          ! writeout of green_host for WRTGREEN option
           IF(opt('WRTGREEN') .AND. myrank==master) THEN
             ilm=(iq-1)*lmmaxd+lm1
             WRITE(58,'((2I5),(2e17.9))') jlm, ilm, gll(lm1,lm2,iq,jq)
@@ -167,9 +164,6 @@ IF ( igf /= 0 ) THEN
       END DO
     END DO
   END DO
-  
-  
-  
   
   IF ( ( opt('KKRFLEX ') ) ) THEN
 #ifdef CPP_MPI
@@ -195,6 +189,7 @@ endif
 
 deallocate (gclust)
 endif !IGF/=0
+
 !***********************************************************************
 deallocate (gll,tpg)
 RETURN

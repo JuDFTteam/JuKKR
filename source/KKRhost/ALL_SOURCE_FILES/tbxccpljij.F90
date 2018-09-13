@@ -79,15 +79,14 @@ CHARACTER (len=26) :: JFNAM2
 CHARACTER (len=80) :: STRBAR,STRTMP
 !.
 !. Local arrays
-INTEGER NIJCALC(:),KIJSH(:,:),JIJDONE(:,:,:)
-complex (kind=dp) JXCIJINT(:,:,:)
+INTEGER , ALLOCATABLE :: NIJCALC(:),KIJSH(:,:),JIJDONE(:,:,:)
+complex (kind=dp), ALLOCATABLE :: JXCIJINT(:,:,:)
 #ifndef CPP_MPI
 complex (kind=dp), ALLOCATABLE :: XINTEGD(:,:,:)
 #else
 complex (kind=dp), ALLOCATABLE :: csum_store(:,:,:,:), &
                                csum_store2(:,:,:,:)
 #endif
-ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT
 complex (kind=dp) DELTSST(LMMAXD,LMMAXD,NATYP), &
                DMATTS(LMMAXD,LMMAXD,NATYP,NSPIN), &
                DTILTS(LMMAXD,LMMAXD,NATYP,NSPIN), &
@@ -119,11 +118,9 @@ DATA PI /3.14159265358979312D0/
 ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 ! ==>                   -- initialisation step --                    <==
 ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-!          open(22,STATUS='unknown',FILE='integrand1.dat',
-!     &                         FORM='formatted')
-!           open(44,STATUS='unknown',FILE='integrand2.dat',
-!     &                         FORM='formatted')
-!      write(*,*) 'test brahim 2'
+! open(22,STATUS='unknown',FILE='integrand1.dat', FORM='formatted')
+! open(44,STATUS='unknown',FILE='integrand2.dat', FORM='formatted')
+! write(*,*) 'test brahim 2'
 
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 IF(iprint>0)  WRITE(1337,99000)
@@ -139,14 +136,11 @@ IF(t_mpi_c_grid%myrank_ie==0) THEN
 #endif
 ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-!         open(22,STATUS='unknown',FILE='integrand.dat',
-!     &                         FORM='formatted')
+! open(22,STATUS='unknown',FILE='integrand.dat', FORM='formatted')
 ifgmat = iftmat + 1
 ifmcpa = ifgmat + 1
 nsmax = MAX(naez,natyp)
 nshcalc = nshell(0) - nsmax
-!ccc         IF ( NSHLOC.LT.NSHELD) STOP ' NSHLOC'
-!ccc         IF ( NTLOC.LT.NATYP) STOP ' NTLOC'
 
 allocate (kijsh(nijmax,nshell(0)),stat=lm1)
 IF ( lm1 /= 0 ) THEN
@@ -159,8 +153,8 @@ IF ( lm1 /= 0 ) THEN
   STOP
 endif
 
-!        The array CSUM_STORE could become quite large -> store to MPI-IO-file in future????
-!        Only allocate it for MPI-usage. If MPI is not used, two smaller array XINTEGD arrays is needed.
+! The array CSUM_STORE could become quite large -> store to MPI-IO-file in future????
+! Only allocate it for MPI-usage. If MPI is not used, two smaller array XINTEGD arrays is needed.
 #ifdef CPP_MPI
 allocate (csum_store(natyp,natyp,nshell(0),ielast),stat=lm1)
 IF ( lm1 /= 0 ) THEN
@@ -196,7 +190,7 @@ DO ns = 1,nshell(0)
   DO jt = 1,natyp
     DO it = 1,natyp
       xintegd(it,jt,ns)= czero
-!                  XINTEGD1(IT,JT,IE)= CZERO
+! XINTEGD1(IT,JT,IE)= CZERO
     END DO
   END DO
 END DO
@@ -245,7 +239,7 @@ IF ( iprint > 0 ) THEN
         IF ( jijdone(it,jt,nseff) /= 0 ) jtaux(jt) = jtaux(jt) + 1
       END DO
     END DO
-!ccc               WRITE (6,99012) IT,(JTAUX(JT),JT=1,MIN(25,NATYP))
+! WRITE (6,99012) IT,(JTAUX(JT),JT=1,MIN(25,NATYP))
   END DO
   WRITE (1337,99013)
 endif
@@ -284,7 +278,6 @@ DO ie_num=1,ie_end
   DO ispin = 1,nspin
 ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT NATYP
     DO it = 1,natyp
-!            write(*,*) 'test brahim 3'
       IF (t_tgmat%tmat_to_file) THEN
         irec = ie + ielast*(ispin-1) + ielast*2*(it-1)
         READ (iftmat,REC=irec) w1
@@ -436,8 +429,7 @@ DO ie_num=1,ie_end
       
 ! ==> calculate the exchange coupling constant J_ij via Eq. (19)
 !     modified for G instead of tau:
-!          J_ij ~ Trace [ (t_i(D)-t_i(U)) * Gij(U)
-!                       * (t_j(D)-t_j(U)) * Gji(D)]
+!          J_ij ~ Trace [ (t_i(D)-t_i(U)) * Gij(U) * (t_j(D)-t_j(U)) * Gji(D)]
 !       in case of alloy system: perform projection on atom types
       
 ! ----------------------------------------------------------------------
@@ -477,11 +469,11 @@ DO ie_num=1,ie_end
           END DO
           
 #ifdef CPP_MPI
-!BZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!BZ! to ensure the correct order of energy points, the csum=values !!
-!BZ! are stored for the MPI version, and the evaluation of JXCIJINT!!
-!BZ! and XINTEGD is performed later                                !!
-!BZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!BZ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
+!BZ! to ensure the correct order of energy points, the csum=values ! 
+!BZ! are stored for the MPI version, and the evaluation of JXCIJINT! 
+!BZ! and XINTEGD is performed later                                ! 
+!BZ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
           csum_store(it,jt,nseff,ie)=csum
 #else
           
@@ -521,8 +513,8 @@ DO ie_num=1,ie_end
 ! ======================================================================
 END DO  !loop over shells
 ! **********************************************************************
-!       write(22,*)DIMAG(XINTEGD(1,1,1)),DIMAG(JXCIJINT(1,1,1))
-!       write(44,*)DIMAG(XINTEGD(2,2,1)),DIMAG(XINTEGD(2,3,1))
+! write(22,*)DIMAG(XINTEGD(1,1,1)),DIMAG(JXCIJINT(1,1,1))
+! write(44,*)DIMAG(XINTEGD(2,2,1)),DIMAG(XINTEGD(2,3,1))
 
 END DO!IE
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES

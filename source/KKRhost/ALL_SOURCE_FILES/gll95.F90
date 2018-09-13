@@ -42,16 +42,15 @@ use mod_types, only: t_inc
       INTEGER I,LM1,LM2,M,N,N1,N2,NDIM,NLM1,NLM2,INFO,NGD1
 !..
 !.. Local Arrays ..
-      INTEGER IPVT(:)
+      INTEGER, ALLOCATABLE ::  IPVT(:)
       real (kind=dp) RDIFF(3),ABSRDIFF
       complex (kind=dp) DTMATLL(LMGF0D,LMGF0D,nrefd) ! Derivative of ref.-sys t-matrix
-      complex (kind=dp) GREF(:,:),GLL(:,:),GTREF(:,:)
-      complex (kind=dp) DGTDE(:,:),DGTDE0(:,:) ! LLY (1-gt)^-1 * d(1-gt)/dE (after grefsy13)
-      complex (kind=dp) DGLLDE(:,:),DGDE(:,:), &
-                     DGDEOUT(NACLSMAX*LMGF0D,LMGF0D)
+      complex (kind=dp), ALLOCATABLE :: GREF(:,:),GLL(:,:),GTREF(:,:)
+      complex (kind=dp), ALLOCATABLE :: DGTDE(:,:),DGTDE0(:,:) ! LLY (1-gt)^-1 * d(1-gt)/dE (after grefsy13)
+      complex (kind=dp), ALLOCATABLE :: DGLLDE(:,:),DGDE(:,:)
+      complex (kind=dp) DGDEOUT(NACLSMAX*LMGF0D,LMGF0D)
       complex (kind=dp) LLY_G0TR   ! LLY Trace of  DTGLL for Lloyds formula
       INTEGER LLY     ! LLY =0 : no Lloyd's formula; <>0: use Lloyd's formula
-      ALLOCATABLE GREF,GLL,GTREF,DGLLDE,DGTDE,DGTDE0,DGDE,IPVT
 !..
 !.. External Functions ..
       LOGICAL TEST

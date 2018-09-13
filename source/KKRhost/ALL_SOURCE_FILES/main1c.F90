@@ -92,8 +92,8 @@ contains
       logical :: ITERMVDIR
       complex (kind=dp) :: CSUM                    ! LLY Lloyd
       complex (kind=dp) :: EREAD                   ! LLY
-      integer, dimension(20,NATYP) :: NKCORE    !< Number of KAPPA values for a given (n,l) core state
-      integer, dimension(20,NPOTD) :: KAPCORE   !< The (maximum 2) values of KAPPA
+      integer, dimension(20,NATYP) :: NKCORE    ! Number of KAPPA values for a given (n,l) core state
+      integer, dimension(20,NPOTD) :: KAPCORE   ! The (maximum 2) values of KAPPA
       real (kind=dp), dimension(NATYPD)                    :: EU
       real (kind=dp), dimension(NATYPD)                    :: EDC
       real (kind=dp), dimension(NATYPD)                    :: PHI
@@ -103,7 +103,7 @@ contains
       real (kind=dp), dimension(0:LMAXD+1,NPOTD)           :: ESPV
       real (kind=dp), dimension(0:LMAXD+1,2)               :: ESPV1
       real (kind=dp), dimension(0:LMAXD+1,2)               :: DOSTOT
-      real (kind=dp), dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL !< for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
+      real (kind=dp), dimension(KREL*20+(1-KREL),NPOTD)   :: ECOREREL ! for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
       real (kind=dp), dimension(2,NATYPD)                  :: angles_new
       real (kind=dp), dimension(0:LMAXD+1,NATYPD,2)         :: CHARGE
       real (kind=dp), dimension(MMAXD,MMAXD,NSPIND,NATYPD) :: WLDAUOLD
@@ -121,8 +121,8 @@ contains
       !-------------------------------------------------------------------------
       !> @note attention: muorb second index means both spins and total
       !-------------------------------------------------------------------------
-      real (kind=dp), dimension(IRMD*KREL + (1-KREL),NATYPD) :: RHOORB   !< orbital density
-      real (kind=dp), dimension(0:LMAXD+1+1,3,NATYPD) :: MUORB           !< orbital magnetic moment
+      real (kind=dp), dimension(IRMD*KREL + (1-KREL),NATYPD) :: RHOORB   ! orbital density
+      real (kind=dp), dimension(0:LMAXD+1+1,3,NATYPD) :: MUORB           ! orbital magnetic moment
       ! ----------------------------------------------------------------------
       !  R2NEF (IRMD,LMPOTD,NATYP,2)  ! rho at FERMI energy
       !  RHO2NS(IRMD,LMPOTD,NATYP,2)  ! radial density
@@ -131,7 +131,7 @@ contains
       !                               (*,*,*,2) rho(2) - rho(1) -> mag. moment
       !  RHOC(IRMD,NPOTD)              ! core charge density
       ! ----------------------------------------------------------------------
-      real (kind=dp), dimension(IRMD,NPOTD)    :: RHOC   !< core charge density
+      real (kind=dp), dimension(IRMD,NPOTD)    :: RHOC   ! core charge density
       real (kind=dp), dimension(IRMD,LMPOTD,4) :: RHO2M1
       real (kind=dp), dimension(IRMD,LMPOTD,4) :: RHO2M2
       real (kind=dp), dimension(NRMAXD,LMPOTD,NSPOTD) :: VINSNEW
@@ -141,8 +141,8 @@ contains
       real (kind=dp), dimension(:,:), allocatable      :: QVEC
       real (kind=dp), dimension(:,:,:), allocatable    :: RHO2N1
       real (kind=dp), dimension(:,:,:), allocatable    :: RHO2N2
-      real (kind=dp), dimension(:,:,:,:), allocatable  :: R2NEF     !< rho at FERMI energy
-      real (kind=dp), dimension(:,:,:,:), allocatable  :: RHO2NS    !< radial density
+      real (kind=dp), dimension(:,:,:,:), allocatable  :: R2NEF     ! rho at FERMI energy
+      real (kind=dp), dimension(:,:,:,:), allocatable  :: RHO2NS    ! radial density
       complex (kind=dp), dimension(:,:,:,:), allocatable    :: DEN   ! DEN(0:LMAXD1,IELAST,NPOTD,NQDOS)
       complex (kind=dp), dimension(:,:,:,:), allocatable    :: DENLM ! DENLM(LMMAXD1,IELAST,NPOTD,NQDOS)
       complex (kind=dp), dimension(:), allocatable ::  CDOS2          ! LLY Lloyd
@@ -263,10 +263,10 @@ contains
       ITERMVDIR = OPT('ITERMDIR')
       LMOMVEC = ( ITERMVDIR .or. ( KMROT.ne.0 ) )
       NSPINPOT = KREL*2 + (1-KREL)*NSPIN
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! no need to calculate charge correction if no host program, if decimation
       ! or if no energy contour
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       LDORHOEF = (IHOST.EQ.1) .AND. (.NOT.OPT('DECIMATE')).AND. (NPOL.NE.0)
       !-------------------------------------------------------------------------
       ! LDA+U
@@ -948,9 +948,9 @@ contains
          !----------------------------------------------------------------------
          CHRGSEMICORE = 0D0
          do I1 = 1,NATYP
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             ! l/m_s/atom-resolved charges
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             !
             do ISPIN = 1,NSPINPOT
                IPOT = (I1-1)*NSPINPOT + ISPIN
@@ -969,9 +969,9 @@ contains
             end do
             EU(I1) = 0D0
             EDC(I1) = 0D0
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             ! Orbital magnetic moments (array initialised to 0.0D0 in rhoval)
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             if (KREL.eq.1) then
                do ISPIN = 1,3
                   do L = 0,LMAX + 1
@@ -1047,9 +1047,9 @@ contains
          !----------------------------------------------------------------------
          ! CORE STATES
          !----------------------------------------------------------------------
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          ! RHO_core is calculated only if also RHO_valence was
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          if (NPOL.ne.0) then
             if(t_inc%i_write>0) then
                write (1337,*)

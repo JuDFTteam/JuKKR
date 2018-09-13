@@ -47,65 +47,65 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    ! .. Input variables
    integer, intent(in) :: I1
    integer, intent(in) :: INS
-   integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
-   integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
-   integer, intent(in) :: IPAN      !< Number of panels in non-MT-region
-   integer, intent(in) :: ICST      !< Number of Born approximation
+   integer, intent(in) :: LMAX      ! Maximum l component in wave function expansion
+   integer, intent(in) :: IEND      ! Number of nonzero gaunt coefficients
+   integer, intent(in) :: IPAN      ! Number of panels in non-MT-region
+   integer, intent(in) :: ICST      ! Number of Born approximation
    integer, intent(in) :: NSRA
-   integer, intent(in) :: ZREL      !< atomic number (cast integer)
-   integer, intent(in) :: LOPT      !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+   integer, intent(in) :: ZREL      ! atomic number (cast integer)
+   integer, intent(in) :: LOPT      ! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
    integer, intent(in) :: ISPIN
-   integer, intent(in) :: NSPIN     !< Counter for spin directions
-   integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
+   integer, intent(in) :: NSPIN     ! Counter for spin directions
+   integer, intent(in) :: NATYP     ! Number of kinds of atoms in unit cell
    integer, intent(in) :: IHOST
-   integer, intent(in) :: IRMIN     !< Max R for spherical treatment
+   integer, intent(in) :: IRMIN     ! Max R for spherical treatment
    integer, intent(in) :: IELAST
-   integer, intent(in) :: JWSREL    !< index of the WS radius
-   integer, intent(in) :: IRSHIFT   !< shift of the REL radial mesh with respect no NREL
-   integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
+   integer, intent(in) :: JWSREL    ! index of the WS radius
+   integer, intent(in) :: IRSHIFT   ! shift of the REL radial mesh with respect no NREL
+   integer, intent(in) :: IDOLDAU   ! flag to perform LDA+U
    integer, intent(in) :: NSPINPOT
    integer, intent(in) :: NMVECMAX
    integer, intent(inout) :: NQDOS
-   real (kind=dp), intent(in) :: ZAT !< Nuclear charge
+   real (kind=dp), intent(in) :: ZAT ! Nuclear charge
    logical, intent(in) :: LDORHOEF
    character(len=10), intent(in) :: SOLVER
    real (kind=dp), dimension(IRMD), intent(in)          :: R
    real (kind=dp), dimension(KREL*LMAX+1), intent(in)  :: CTL
-   real (kind=dp), dimension(IRMD), intent(in)          :: DRDI  !< Derivative dr/di
-   real (kind=dp), dimension(IRMD), intent(in)          :: VISP  !< Spherical part of the potential
-   real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(in) :: VTREL       !< potential (spherical part)
-   real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(in) :: BTREL       !< magnetic field
-   real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(in) :: RMREL       !< radial mesh
+   real (kind=dp), dimension(IRMD), intent(in)          :: DRDI  ! Derivative dr/di
+   real (kind=dp), dimension(IRMD), intent(in)          :: VISP  ! Spherical part of the potential
+   real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(in) :: VTREL       ! potential (spherical part)
+   real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(in) :: BTREL       ! magnetic field
+   real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(in) :: RMREL       ! radial mesh
    real (kind=dp), dimension(KREL*LMAX+1), intent(in)       :: SOCTL
-   real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(in) :: DRDIREL     !< derivative of radial mesh
-   real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(in) :: R2DRDIREL   !< \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-   real (kind=dp), dimension(IRMIND:IRMD,LMPOTD), intent(in) :: VINS        !< Non-spherical part of the potential
-   real (kind=dp), dimension(NCLEB,2), intent(in)           :: CLEB        !< GAUNT coefficients (GAUNT)
-   real (kind=dp), dimension(IRID,NFUND), intent(in)        :: THETAS      !< shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+   real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(in) :: DRDIREL     ! derivative of radial mesh
+   real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(in) :: R2DRDIREL   ! \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+   real (kind=dp), dimension(IRMIND:IRMD,LMPOTD), intent(in) :: VINS        ! Non-spherical part of the potential
+   real (kind=dp), dimension(NCLEB,2), intent(in)           :: CLEB        ! GAUNT coefficients (GAUNT)
+   real (kind=dp), dimension(IRID,NFUND), intent(in)        :: THETAS      ! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
    complex (kind=dp), dimension(IEMXD), intent(in) :: EZ
    complex (kind=dp), dimension(IEMXD), intent(in) :: WEZ
    complex (kind=dp), dimension(IRMD), intent(in)  :: PHILDAU
    complex (kind=dp), dimension(0:LMAX+1,IELAST*(1+KREL),NQDOS), intent(in) :: DEN
    complex (kind=dp), dimension(LMMAXD,IELAST*(1+KREL),NQDOS), intent(in)   :: DENLM
    ! .. In/Out variables
-   real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(inout) :: WLDAU !< potential matrix
+   real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(inout) :: WLDAU ! potential matrix
    !---------------------------------------------------------------------------
    !     IHOST = 1   < -- this routine is called by the HOST tbkkr-program
    !     IHOST <> 1  < --                 called by the IMPURITY program
    !---------------------------------------------------------------------------
    ! .. Output variables
    real (kind=dp), dimension(IRMD*KREL+(1-KREL)), intent(out) :: RHOORB
-   real (kind=dp), dimension(0:LMAX+1+1,3), intent(out)      :: MUORB    !< orbital magnetic moment
-   real (kind=dp), dimension(0:LMAX+1,2), intent(out)        :: ESPV     !< changed for REL case
-   real (kind=dp), dimension(IRMD,LMPOTD,2), intent(out)       :: R2NEF    !< rho at FERMI energy
-   real (kind=dp), dimension(IRMD,LMPOTD,2), intent(out)       :: RHO2NS   !< radial density
+   real (kind=dp), dimension(0:LMAX+1+1,3), intent(out)      :: MUORB    ! orbital magnetic moment
+   real (kind=dp), dimension(0:LMAX+1,2), intent(out)        :: ESPV     ! changed for REL case
+   real (kind=dp), dimension(IRMD,LMPOTD,2), intent(out)       :: R2NEF    ! rho at FERMI energy
+   real (kind=dp), dimension(IRMD,LMPOTD,2), intent(out)       :: RHO2NS   ! radial density
    complex (kind=dp), dimension(MMAXD,MMAXD), intent(out) :: DENMATC
    !----------------------------------------------------------------------------
    !      ITERMDIR variables
    !----------------------------------------------------------------------------
    logical, intent(in) :: ITERMVDIR
-   real (kind=dp), intent(in) :: QMTET  !< \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-   real (kind=dp), intent(in) :: QMPHI  !< \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+   real (kind=dp), intent(in) :: QMTET  ! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+   real (kind=dp), intent(in) :: QMPHI  ! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
    complex (kind=dp), dimension(0:LMAX,3,NMVECMAX), intent(out) :: MVEVIL ! OUTPUT
    complex (kind=dp), dimension(0:LMAX,3,NMVECMAX), intent(out) :: MVEVILEF ! OUTPUT
    !----------------------------------------------------------------------------
@@ -113,10 +113,10 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    !----------------------------------------------------------------------------
    integer, dimension(LMXSPD), intent(in)    :: LMSP
    integer, dimension(LMXSPD), intent(in)    :: IFUNM
-   integer, dimension(0:IPAND), intent(in)   :: IRCUT    !< R points of panel borders
-   integer, dimension(LM2D), intent(in)      :: LOFLM    !< l of lm=(l,m) (GAUNT)
-   integer, dimension(NCLEB,4), intent(in)   :: ICLEB    !< Pointer array
-   integer, dimension(LMPOTD,0:LMAX,0:LMAX), intent(in) :: JEND !< Pointer array for icleb()
+   integer, dimension(0:IPAND), intent(in)   :: IRCUT    ! R points of panel borders
+   integer, dimension(LM2D), intent(in)      :: LOFLM    ! l of lm=(l,m) (GAUNT)
+   integer, dimension(NCLEB,4), intent(in)   :: ICLEB    ! Pointer array
+   integer, dimension(LMPOTD,0:LMAX,0:LMAX), intent(in) :: JEND ! Pointer array for icleb()
    ! .. Local Scalars
    ! .. Parameters
    integer :: LMAXD1
@@ -157,7 +157,7 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
    !     .. the 3rd one should be the sum of them
    complex (kind=dp), dimension(0:KREL*LMAX+(1-KREL),3) :: DMUORB
    ! .. Local allocatable arrays
-   complex (kind=dp), dimension(:,:), allocatable :: QVEC   !< qdos, q-vectors for qdos
+   complex (kind=dp), dimension(:,:), allocatable :: QVEC   ! qdos, q-vectors for qdos
    complex (kind=dp), dimension(:,:), allocatable :: GLDAU
    complex (kind=dp), dimension(:,:), allocatable :: DUM_GFLLE ! lmlm-dos
    complex (kind=dp), dimension(:,:,:,:), allocatable :: GFLLE ! qdos
@@ -176,9 +176,9 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
 
    LMAXD1= LMAX+1
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! LDAU
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    if ( IDOLDAU.EQ.1 ) then
       WLDAUAV = 0.D0
       LMLO = LOPT*LOPT + 1
@@ -201,13 +201,13 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
          CUTOFF(M1) = 1.D0
       end do
    end if
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! LDAU
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    !
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! Initialise variables
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    if ( KREL.EQ.0 ) then
       do LM1 = 1,LMPOTD
          do IR = 1,IRMD
@@ -244,9 +244,9 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
             DMUORB(L,IR) = CZERO
          end do
       end do
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! ITERMDIR
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       if (ITERMVDIR) then
          do LM1 = 1,3
             do LM2 = 1, NMVECMAX
@@ -257,20 +257,20 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
             end do
          end do
       end if
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! ITERMDIR
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
    end if ! KREL = 0/1
    !----------------------------------------------------------------------------
    LASTEZ = IELAST
    !
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! End initialise variables
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    !
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 #ifndef CPP_MPI
    if (OPT('qdos    ')) then                                                     ! qdos
       if(NATYP.ge.100) then                                                      ! qdos
@@ -428,9 +428,9 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
                   NSRA,QNS,PNS,AR,CR,PZ,FZ,QZ,SZ,CLEB(1,1),ICLEB,       &
                   JEND,IEND,EKL,DENLM(1,IE,IQ),GFLLE(:,:,IE,IQ))
             end if
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
             ! LDA+U
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
             if (IDOLDAU.EQ.1) then
                do LM1=1,LMMAXD
                   do LM2=1,LMMAXD
@@ -438,9 +438,9 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
                   enddo
                enddo
             endif
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
             ! LDA+U
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 #ifndef CPP_MPI
             ! Write out qdos:
             if (OPT('qdos    ')) then                                            ! qdos
@@ -466,11 +466,11 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
          do L = 0,LMAXD1
             ESPV(L,ISPIN) = ESPV(L,ISPIN)+aimag(ERYD*DEN(L,IE,1)*DF)
          end do
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
          ! get the charge at the Fermi energy (IELAST)
          ! call RHOLM/RHONS with the energy weight CONE --> not overwrite DF
          !                  with the dummy DENDUM       --> not overwrite DEN
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
          if ( (IE.EQ.IELAST) .AND. LDORHOEF ) then
             if (INS.EQ.0) then
                call RHOLM(DENDUM,CONE,GMAT0,NSRA,              &
@@ -486,9 +486,9 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
          !----------------------------------------------------------------------
       else ! ( KREL.EQ.0 )
          !----------------------------------------------------------------------
-         IQ = 1 ! reset IQ to zero, problem with qdos!!!
+         IQ = 1 ! reset IQ to zero, problem with qdos! !
 
-         !              !!!! PROBLEM WITH ARRAY DIMENSIONS FOR VTREL ETC. !!!!
+         !              ! !  PROBLEM WITH ARRAY DIMENSIONS FOR VTREL ETC. ! ! 
          ! #ifdef CPP_MPI
          !              call MPI_FINALIZE(L)
          ! #endif
@@ -515,18 +515,18 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
       !-------------------------------------------------------------------------
       ! Non/scalar-relativistic OR relativistic
       !-------------------------------------------------------------------------
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! LDAU
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! LDA+U calculation
       !         IF ( ( IDOLDAU.EQ.1 ).AND.( LOPT.GE.0 ) )
       !     &        CALL DENSITYMAT(DF,PZ,QZ,PNS,QNS,AR,CR,DR,GMATLL(1,1,IE),
       !     &                        IPAN,IRCUT,DRDI,EK,
       !     &                        IRMIN,LOPT,MMAX,LMLO,LMHI,PHILDAU,DENMATC
       !     &        ,den,ie) ! test fivos 19.9.08
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! LDAU
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
    end do ! IE = 1,IELAST
 
    ! LDA+U
@@ -537,9 +537,9 @@ subroutine RHOVAL(IHOST,LDORHOEF,ICST,INS,IELAST,NSRA,ISPIN,NSPIN,NSPINPOT,I1,EZ
             (GLDAU(LMLO:LMHI,LM1)-CONJG(GLDAU(LM1,LMLO:LMHI)))
       enddo
    endif
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! Write out gflle
    if (OPT('lmlm-dos')) then                                                     ! lmlm-dos
       if (ISPIN.EQ.1) then                                                       ! lmlm-dos

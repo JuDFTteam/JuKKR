@@ -4,25 +4,31 @@ contains
 
 subroutine beshank(hl, jl, z, lmax)
   ! -----------------------------------------------------------------------
-  ! calculates spherical bessel, hankel and neumann functions
-  ! for the orders lmin .le. l .le. lmax.
-  ! For |z| .lt. l+1 the taylor expansions of jl and nl are used.
-  ! For |z| .ge. l+1 the explicit expressions for hl(+), hl(-) are used.
+  !< calculates spherical bessel, hankel and neumann functions
+  !< for the orders lmin .le. l .le. lmax.
+  !< For |z| .lt. l+1 the taylor expansions of jl and nl are used.
+  !< For |z| .ge. l+1 the explicit expressions for hl(+), hl(-) are used.
   ! -----------------------------------------------------------------------
   use :: mod_datatypes, only: dp
 
   implicit none
 
   ! inputs
-  complex (kind=dp), intent(in) :: z ! < complex energy E+i*eta = Re(z)+i*Im(z)
-  integer, intent(in) :: lmax        ! < energy cutoff
+  !> complex energy E+i*eta = Re(z)+i*Im(z)
+  complex (kind=dp), intent(in) :: z  
+  !> energy cutoff
+  integer, intent(in) :: lmax       
 
   ! outputs
-  complex (kind=dp), intent(out) :: hl(0:lmax), jl(0:lmax) ! < spherical Hankel and Bessel up to lmax 
+
+  !> spherical Hankel and Bessel up to lmax 
+  complex (kind=dp), intent(out) :: hl(0:lmax), jl(0:lmax) 
 
   ! locals
-  complex (kind=dp) :: nl(0:lmax) ! < Neumann function
-  complex (kind=dp), parameter :: ci=(0.0e0_dp,1.0e0_dp) ! < complex imaginary unit
+  !> Neumann function
+  complex (kind=dp) :: nl(0:lmax) 
+  !> complex imaginary unit
+  complex (kind=dp), parameter :: ci=(0.0e0_dp,1.0e0_dp) 
   complex (kind=dp) :: termj, termn, z2, zj, zn
   real (kind=dp) :: rl, rn, rnm
   integer :: l, m, n
@@ -81,10 +87,10 @@ subroutine beshank_smallcomp(hl, jl, zval, tau, eryd, lmax)
   use :: mod_datatypes, only: dp
   implicit none
   ! -----------------------------------------------------------------------
-  ! takes the spherical bessel etc functions stored in an array up to LMAX
-  ! array entries from LMAX+1 to 2*LMAX are assumed to be empty
-  ! these values are filled with the potential-free solution of the
-  ! SRA-equations
+  !< takes the spherical bessel etc functions stored in an array up to LMAX
+  !< array entries from LMAX+1 to 2*LMAX are assumed to be empty
+  !< these values are filled with the potential-free solution of the
+  !< SRA-equations
   ! -----------------------------------------------------------------------
   integer, intent(in) :: lmax
   complex (kind=dp), intent(in) :: zval

@@ -4,19 +4,19 @@ contains
 
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: RITES
-! > @brief this subroutine stores in 'ifile' the necessary results
-! > (potentials etc.) to start self-consistency iterations
+!> @brief this subroutine stores in 'ifile' the necessary results
+!> (potentials etc.) to start self-consistency iterations
 
-! > @ details Modified for the full potential case - if ins .gt. 0 there
-! > is written a different potential card
-! > if the sum of absolute values of an lm component of vins (non
-! > spher. potential) is less than the given rms error qbound this
-! > component will not be stored .
+!> @ details Modified for the full potential case - if ins .gt. 0 there
+!> is written a different potential card
+!> if the sum of absolute values of an lm component of vins (non
+!> spher. potential) is less than the given rms error qbound this
+!> component will not be stored .
 
-! > see to subroutine start , where most of the arrays are described)
+!> see to subroutine start , where most of the arrays are described)
 
-! > @note modified by B. Drittler  aug. 1988
-! > @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
+!> @note modified by B. Drittler  aug. 1988
+!> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
 ! Fortran90
 ! -------------------------------------------------------------------------------
 subroutine rites(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
@@ -28,41 +28,41 @@ subroutine rites(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
   use :: mod_datatypes, only: dp
 
   ! .. Scalar Arguments
-  integer, intent (in) :: ins      ! < 0 (MT), 1(ASA), 2(Full Potential)
-  integer, intent (in) :: kxc      ! < Type of xc-potential 0=vBH 1=MJW 2=VWN
+  integer, intent (in) :: ins      !! 0 (MT), 1(ASA), 2(Full Potential)
+  integer, intent (in) :: kxc      !! Type of xc-potential 0=vBH 1=MJW 2=VWN
                                    ! 3=PW91
-  integer, intent (in) :: lpot     ! < Maximum l component in potential
+  integer, intent (in) :: lpot     !! Maximum l component in potential
                                    ! expansion
-  integer, intent (in) :: lmpot    ! < (LPOT+1)**2
-  integer, intent (in) :: ifile    ! < Unit specifier for potential card
+  integer, intent (in) :: lmpot    !! (LPOT+1)**2
+  integer, intent (in) :: ifile    !! Unit specifier for potential card
   integer, intent (in) :: natps
-  integer, intent (in) :: natyp    ! < Number of kinds of atoms in unit cell
-  integer, intent (in) :: nspin    ! < Counter for spin directions
-  integer, intent (in) :: kshape   ! < Exact treatment of WS cell
-  real (kind=dp), intent (in) :: alat ! < Lattice constant in a.u.
-  real (kind=dp), intent (in) :: qbound ! < Convergence parameter for the
+  integer, intent (in) :: natyp    !! Number of kinds of atoms in unit cell
+  integer, intent (in) :: nspin    !! Counter for spin directions
+  integer, intent (in) :: kshape   !! Exact treatment of WS cell
+  real (kind=dp), intent (in) :: alat !! Lattice constant in a.u.
+  real (kind=dp), intent (in) :: qbound !! Convergence parameter for the
                                         ! potential
-  real (kind=dp), intent (in) :: efermi ! < Fermi energy
+  real (kind=dp), intent (in) :: efermi !! Fermi energy
   ! .. Array Arguments
-  real (kind=dp), dimension (*), intent (in) :: a ! < Constants for
+  real (kind=dp), dimension (*), intent (in) :: a !! Constants for
                                                   ! exponential R mesh
-  real (kind=dp), dimension (*), intent (in) :: b ! < Constants for
+  real (kind=dp), dimension (*), intent (in) :: b !! Constants for
                                                   ! exponential R mesh
   real (kind=dp), dimension (*), intent (in) :: z
-  real (kind=dp), dimension (*), intent (in) :: rws ! < Wigner Seitz radius
-  real (kind=dp), dimension (2), intent (in) :: vbc ! < Potential constants
-  real (kind=dp), dimension (*), intent (in) :: rmt ! < Muffin-tin radius of
+  real (kind=dp), dimension (*), intent (in) :: rws !! Wigner Seitz radius
+  real (kind=dp), dimension (2), intent (in) :: vbc !! Potential constants
+  real (kind=dp), dimension (*), intent (in) :: rmt !! Muffin-tin radius of
                                                     ! true system
-  real (kind=dp), dimension (*), intent (in) :: rmtnew ! < Adapted muffin-tin
+  real (kind=dp), dimension (*), intent (in) :: rmtnew !! Adapted muffin-tin
                                                        ! radius
-  real (kind=dp), dimension (irmd, *), intent (in) :: r ! < Radial mesh ( in
+  real (kind=dp), dimension (irmd, *), intent (in) :: r !! Radial mesh ( in
                                                         ! units a Bohr)
   real (kind=dp), dimension (irmd, *), intent (in) :: vm2z
-  real (kind=dp), dimension (irmd, *), intent (in) :: drdi ! < Derivative
+  real (kind=dp), dimension (irmd, *), intent (in) :: drdi !! Derivative
                                                            ! dr/di
-  real (kind=dp), dimension (20, *), intent (in) :: ecore ! < Core energies
+  real (kind=dp), dimension (20, *), intent (in) :: ecore !! Core energies
                                                           ! !(2), 22.5,2000
-  real (kind=dp), dimension (irmind:irmd, lmpot, *), intent (in) :: vins ! <
+  real (kind=dp), dimension (irmind:irmd, lmpot, *), intent (in) :: vins !!
                                                                          ! Non-spherical
                                                                          ! part
                                                                          ! of
@@ -74,14 +74,14 @@ subroutine rites(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
   real (kind=dp), dimension (krel*20+(1-krel), 2*natyp), &
     intent (in) :: ecorerel        ! relativistic core energies
   ! ----------------------------------------------------------------------------
-  integer, dimension (*), intent (in) :: irc ! < R point for potential cutting
-  integer, dimension (*), intent (in) :: irns ! < Position of atoms in the
+  integer, dimension (*), intent (in) :: irc !! R point for potential cutting
+  integer, dimension (*), intent (in) :: irns !! Position of atoms in the
                                               ! unit cell in units of bravais
                                               ! vectors
-  integer, dimension (*), intent (in) :: irws ! < R point at WS radius
-  integer, dimension (*), intent (in) :: ncore ! < Number of core states
+  integer, dimension (*), intent (in) :: irws !! R point at WS radius
+  integer, dimension (*), intent (in) :: ncore !! Number of core states
   integer, dimension (20, *), intent (in) :: ititle
-  integer, dimension (20, *), intent (in) :: lcore ! < Angular momentum of
+  integer, dimension (20, *), intent (in) :: lcore !! Angular momentum of
                                                    ! core states
   character (len=124), dimension (*), intent (in) :: txc
   ! .. Local Scalars

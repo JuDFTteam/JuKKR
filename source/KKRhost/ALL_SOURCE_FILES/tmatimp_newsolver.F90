@@ -46,46 +46,46 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    implicit none
 
    ! .. Input variables
-   integer, intent(in) :: IRM       !< Maximum number of radial points
+   integer, intent(in) :: IRM       ! Maximum number of radial points
    integer, intent(in) :: KSRA
-   integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
+   integer, intent(in) :: LMAX      ! Maximum l component in wave function expansion
    integer, intent(in) :: IEND
    integer, intent(in) :: IRID
-   integer, intent(in) :: LPOT      !< Maximum l component in potential expansion
-   integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
-   integer, intent(in) :: NCLEB     !< Number of Clebsch-Gordon coefficients
-   integer, intent(in) :: IPAND     !< Number of panels in non-spherical part
+   integer, intent(in) :: LPOT      ! Maximum l component in potential expansion
+   integer, intent(in) :: NATYP     ! Number of kinds of atoms in unit cell
+   integer, intent(in) :: NCLEB     ! Number of Clebsch-Gordon coefficients
+   integer, intent(in) :: IPAND     ! Number of panels in non-spherical part
    integer, intent(in) :: IRNSD
-   integer, intent(in) :: NFUND     !< Shape functions parameters in non-spherical part
+   integer, intent(in) :: NFUND     ! Shape functions parameters in non-spherical part
    integer, intent(in) :: NTOTD
    integer, intent(in) :: IHOST
-   integer, intent(in) :: NSPIN     !< Counter for spin directions
-   integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-   integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
-   integer, intent(in) :: KORBIT    !< Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
-   integer, intent(in) :: LMMAXD    !< (KREL+KORBIT+1)(LMAX+1)^2
+   integer, intent(in) :: NSPIN     ! Counter for spin directions
+   integer, intent(in) :: LMPOT     ! (LPOT+1)**2
+   integer, intent(in) :: NCHEB     ! Number of Chebychev pannels for the new solver
+   integer, intent(in) :: KORBIT    ! Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
+   integer, intent(in) :: LMMAXD    ! (KREL+KORBIT+1)(LMAX+1)^2
    integer, intent(in) :: LMMAXSO
-   integer, intent(in) :: NSPOTD    !< Number of potentials for storing non-sph. potentials
+   integer, intent(in) :: NSPOTD    ! Number of potentials for storing non-sph. potentials
    integer, intent(in) :: IELAST
-   integer, intent(in) :: IRMIND    !< IRM-IRNSD
-   integer, intent(in) :: NPAN_EQ   !< Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
-   integer, intent(in) :: NPAN_LOG  !< Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
-   integer, intent(in) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-   real (kind=dp), intent(in) :: R_LOG !< Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
-   integer, dimension(NATYP), intent(in)    :: IPAN  !< Number of panels in non-MT-region
-   integer, dimension(NATYP), intent(in)    :: IRMIN !< Max R for spherical treatment
+   integer, intent(in) :: IRMIND    ! IRM-IRNSD
+   integer, intent(in) :: NPAN_EQ   ! Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
+   integer, intent(in) :: NPAN_LOG  ! Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
+   integer, intent(in) :: NATOMIMP  ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+   real (kind=dp), intent(in) :: R_LOG ! Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
+   integer, dimension(NATYP), intent(in)    :: IPAN  ! Number of panels in non-MT-region
+   integer, dimension(NATYP), intent(in)    :: IRMIN ! Max R for spherical treatment
    integer, dimension(NATYP), intent(in)    :: HOSTIMP
    integer, dimension(NATOMIMP), intent(in) :: IPANIMP
    integer, dimension(NATOMIMP), intent(in) :: IRWSIMP
    integer, dimension(NATOMIMP), intent(in) :: ATOMIMP
    integer, dimension(NATOMIMP), intent(in) :: IRMINIMP
-   integer, dimension(NCLEB,4), intent(in)            :: ICLEB    !< Pointer array
-   integer, dimension(0:IPAND,NATYP), intent(in)      :: IRCUT    !< R points of panel borders
+   integer, dimension(NCLEB,4), intent(in)            :: ICLEB    ! Pointer array
+   integer, dimension(0:IPAND,NATYP), intent(in)      :: IRCUT    ! R points of panel borders
    integer, dimension(0:IPAND,NATOMIMP), intent(in)   :: IRCUTIMP
-   real (kind=dp), dimension(NATYP), intent(in)     :: ZAT      !< Nuclear charge
+   real (kind=dp), dimension(NATYP), intent(in)     :: ZAT      ! Nuclear charge
    real (kind=dp), dimension(NATOMIMP), intent(in)  :: ZIMP
-   real (kind=dp), dimension(IRM,NATYP), intent(in)    :: RMESH    !< Radial mesh ( in units a Bohr)
-   real (kind=dp), dimension(NCLEB,2), intent(in)      :: CLEB     !< GAUNT coefficients (GAUNT)
+   real (kind=dp), dimension(IRM,NATYP), intent(in)    :: RMESH    ! Radial mesh ( in units a Bohr)
+   real (kind=dp), dimension(NCLEB,2), intent(in)      :: CLEB     ! GAUNT coefficients (GAUNT)
    real (kind=dp), dimension(IRM,NATOMIMP), intent(in) :: RIMP
    real (kind=dp), dimension(3,NATOMIMP), intent(in)   :: RCLSIMP
    complex (kind=dp), intent(in) :: ERYD
@@ -218,9 +218,9 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
 
    if(OPT('GREENIMP')) then
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! START calculate tmat and radial wavefunctions of host atoms
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    
       ! create new mesh before loop starts
       ! data for the new mesh
@@ -336,7 +336,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
          call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW(1:IRMDNEW(I1),I1),  &
             IRMDNEW(I1),IRMDNEW(I1),                                 &
             LMAX,LMMAXSO,1,JLK_INDEX,HLK,JLK,HLK2,                   &
-            JLK2,GMATPREFACTOR)
+            JLK2,GMATPREFACTOR,0)
 
          ! using spherical potential as reference
          if (USE_SRATRICK.EQ.1) then
@@ -462,7 +462,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       deallocate(IPAN_INTERVALL,stat=i_stat)
       call memocc(i_stat,i_all,'IPAN_INTERVALL','tmatimp_newsolver')
    
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    
 #ifdef CPP_MPI
       ! collect results and write out only on master
@@ -525,9 +525,9 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       deallocate(irmdnew,stat=i_stat)
       call memocc(i_stat,i_all,'irmdnew','tmatimp_newsolver')
    
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! END  calculate tmat and radial wavefunctions of host atoms
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
    elseif(myrank==master) then
 
@@ -535,9 +535,9 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
 
    end if ! (OPT('GREENIMP'))
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! START calculate tmat and radial wavefunctions of impurity atoms
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
    ! create new mesh before loop starts
    ! data for the new mesh
@@ -661,7 +661,7 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
       call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW(1:IRMDNEW(I1),I1),  &
          IRMDNEW(I1),IRMDNEW(I1),                                 &
          LMAX,LMMAXSO,1,JLK_INDEX,                                &
-         HLK,JLK,HLK2,JLK2,GMATPREFACTOR)
+         HLK,JLK,HLK2,JLK2,GMATPREFACTOR,0)
       ! using spherical potential as reference
       if (USE_SRATRICK.EQ.1) then
          call CALCSPH(NSRA,IRMDNEW(I1),IRMDNEW(I1),LMAX,NSPIN,ZIMP(I1),  &
@@ -911,9 +911,9 @@ subroutine TMATIMP_NEWSOLVER(IRM,KSRA,LMAX,IEND,IRID,LPOT,NATYP,NCLEB,IPAND,IRNS
    deallocate(IPAN_INTERVALL,stat=i_stat)
    call memocc(i_stat,i_all,'IPAN_INTERVALL','tmatimp_newsolver')
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! END calculate tmat and radial wavefunctions of impurity atoms
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
    ! final writeout only on master
 #ifdef CPP_MPI

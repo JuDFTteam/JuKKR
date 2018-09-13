@@ -4,7 +4,7 @@ contains
 
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: RHOOUTNEW
-! > @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
+!> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
 ! Fortran90
 ! -------------------------------------------------------------------------------
 subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
@@ -22,38 +22,29 @@ subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, &
   implicit none
 
   integer, intent (in) :: nsra
-  integer, intent (in) :: lmax     ! < Maximum l component in wave function
+  integer, intent (in) :: lmax     !! Maximum l component in wave function
                                    ! expansion
-  integer, intent (in) :: iend     ! < Number of nonzero gaunt coefficients
+  integer, intent (in) :: iend     !! Number of nonzero gaunt coefficients
   integer, intent (in) :: imt1
-  integer, intent (in) :: ncheb    ! < Number of Chebychev pannels for the new
+  integer, intent (in) :: ncheb    !! Number of Chebychev pannels for the new
                                    ! solver
-  integer, intent (in) :: lmpot    ! < (LPOT+1)**2
+  integer, intent (in) :: lmpot    !! (LPOT+1)**2
   integer, intent (in) :: irmdnew
   integer, intent (in) :: corbital
   integer, intent (in) :: npan_tot
   complex (kind=dp), intent (in) :: ek
   complex (kind=dp), intent (in) :: df
-  integer, dimension (*), intent (in) :: lmsp ! < 0,1 : non/-vanishing
+  integer, dimension (*), intent (in) :: lmsp !! 0,1 : non/-vanishing
                                               ! lm=(l,m) component of
                                               ! non-spherical potential
   integer, dimension (*), intent (in) :: ifunm
   integer, dimension (0:ntotd), intent (in) :: ipan_intervall
-  integer, dimension (ncleb, 4), intent (in) :: icleb ! < Pointer array
-  real (kind=dp), dimension (*), intent (in) :: cleb ! < GAUNT coefficients
-                                                     ! (GAUNT)
+  integer, dimension (ncleb, 4), intent (in) :: icleb !! Pointer array
+  real (kind=dp), dimension (*), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
   real (kind=dp), dimension (0:ntotd), intent (in) :: rpan_intervall
   real (kind=dp), dimension (ntotd*(ncheb+1), nfund), intent (in) :: thetasnew
-  complex (kind=dp), dimension (lmmaxso, lmmaxso), intent (in) :: gmatll ! <
-                                                                         ! GMATLL
-                                                                         ! =
-                                                                         ! diagonal
-                                                                         ! elements
-                                                                         ! of
-                                                                         ! the
-                                                                         ! G
-                                                                         ! matrix
-                                                                         ! (system)
+  complex (kind=dp), dimension (lmmaxso, lmmaxso), intent (in) :: gmatll !! GMATLL = diagonal elements
+                                                                         ! of the G matrix (system)
   ! Note that SLL is not needed for calculation of density, only needed for
   ! calculation of Green function
   complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), &

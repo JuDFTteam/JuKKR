@@ -4,30 +4,30 @@ contains
 
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: STARTB1
-! > @brief Reads the input potentials
-! > @details   units :
-! > - Rydbergs - units for energy
-! > - The lattice constant and all other lengths given in bohr units
-! > - The planck constant \f$\frac{h}{2\pi}=1\f$
-! > - The electron charge \f$e=\sqrt{2}\f$
-! > - The electron mass \f$m=\frac{1}{2}\f$
-! > - The speed of light \f$c = \frac{2}{\alpha} = 274.0720442\f$ with the
+!> @brief Reads the input potentials
+!> @details   units :
+!> - Rydbergs - units for energy
+!> - The lattice constant and all other lengths given in bohr units
+!> - The planck constant \f$\frac{h}{2\pi}=1\f$
+!> - The electron charge \f$e=\sqrt{2}\f$
+!> - The electron mass \f$m=\frac{1}{2}\f$
+!> - The speed of light \f$c = \frac{2}{\alpha} = 274.0720442\f$ with the
 ! fine structure constant \f$\alpha\f$
-! >
-! > In case of shape corrections this routine reads from unit 19 a suitable
+!>
+!> In case of shape corrections this routine reads from unit 19 a suitable
 ! radial mesh 'xrn',its derivate 'drn' and the shape
-! > functions 'thetas'. Thus, the region from the muffin-tin to the
+!> functions 'thetas'. Thus, the region from the muffin-tin to the
 ! circumscribed sphere radii is divided  into 'npan'
-! > pannels, each one containing 'nm(ipan)' points in order to take care of
+!> pannels, each one containing 'nm(ipan)' points in order to take care of
 ! the  discontinuities of the shape-function  derivative.
 
-! > @note remember that the input potentials do not include the electro-static
+!> @note remember that the input potentials do not include the electro-static
 ! contribution of the nucleus of the cell itself
-! > this has to be added explicitly!
-! > @note Modified for bandstructure code
-! > - Jonathan Chico: Removed inc.p dependencies and rewrote to Fortran90
-! > @author B. Drittler
-! > @date Nov. 1989
+!> this has to be added explicitly!
+!> @note Modified for bandstructure code
+!> - Jonathan Chico: Removed inc.p dependencies and rewrote to Fortran90
+!> @author B. Drittler
+!> @date Nov. 1989
 ! -------------------------------------------------------------------------------
 subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
   rmtnew, rmt, ititle, imt, irc, vconst, ins, irns, fpradius, nspin, &
@@ -46,119 +46,119 @@ subroutine startb1(ifile, ipf, ipfe, ipe, krel, kws, lmax, nbeg, nend, alat, &
   real (kind=dp), parameter :: eps=1.0D-12
   ! ..
   ! .. Input variables
-  integer, intent (in) :: irm      ! < Maximum number of radial points
-  integer, intent (in) :: kws      ! < 0 (MT), 1(ASA)
-  integer, intent (in) :: ins      ! < 0 (MT), 1(ASA), 2(Full Potential)
-  integer, intent (in) :: ipe      ! < Not real used, IPFE should be 0
-  integer, intent (in) :: ipf      ! < Not real used, IPFE should be 0
-  integer, intent (in) :: ipfe     ! < Not real used, IPFE should be 0
-  integer, intent (in) :: irid     ! < Shape functions parameters in
+  integer, intent (in) :: irm      !! Maximum number of radial points
+  integer, intent (in) :: kws      !! 0 (MT), 1(ASA)
+  integer, intent (in) :: ins      !! 0 (MT), 1(ASA), 2(Full Potential)
+  integer, intent (in) :: ipe      !! Not real used, IPFE should be 0
+  integer, intent (in) :: ipf      !! Not real used, IPFE should be 0
+  integer, intent (in) :: ipfe     !! Not real used, IPFE should be 0
+  integer, intent (in) :: irid     !! Shape functions parameters in
                                    ! non-spherical part
-  integer, intent (in) :: lmax     ! < Maximum l component in wave function
+  integer, intent (in) :: lmax     !! Maximum l component in wave function
                                    ! expansion
-  integer, intent (in) :: nbeg     ! < Starting number for reading the
+  integer, intent (in) :: nbeg     !! Starting number for reading the
                                    ! potential
-  integer, intent (in) :: nend     ! < Final number for reading the potential
-  integer, intent (in) :: krel     ! < Switch for
+  integer, intent (in) :: nend     !! Final number for reading the potential
+  integer, intent (in) :: krel     !! Switch for
                                    ! non-relativistic/relativistic (0/1)
                                    ! program. Attention: several other
                                    ! parameters depend explicitly on KREL,
                                    ! they are set automatically Used for Dirac
                                    ! solver in ASA
-  integer, intent (in) :: npotd    ! <
+  integer, intent (in) :: npotd    !!
                                    ! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-  integer, intent (in) :: nspin    ! < Counter for spin directions
-  integer, intent (in) :: ipand    ! < Number of panels in non-spherical part
+  integer, intent (in) :: nspin    !! Counter for spin directions
+  integer, intent (in) :: ipand    !! Number of panels in non-spherical part
   integer, intent (in) :: irnsd
-  integer, intent (in) :: nfund    ! < Shape functions parameters in
+  integer, intent (in) :: nfund    !! Shape functions parameters in
                                    ! non-spherical part
-  integer, intent (in) :: ifile    ! < Unit specifier for potential card
+  integer, intent (in) :: ifile    !! Unit specifier for potential card
   integer, intent (in) :: iinfo
-  integer, intent (in) :: natyp    ! < Number of kinds of atoms in unit cell
-  integer, intent (in) :: lmpot    ! < (LPOT+1)**2
-  integer, intent (in) :: irmind   ! < IRM-IRNSD
-  integer, intent (in) :: lmxspd   ! < (2*LPOT+1)**2
-  integer, intent (in) :: ncelld   ! < Number of cells (shapes) in
+  integer, intent (in) :: natyp    !! Number of kinds of atoms in unit cell
+  integer, intent (in) :: lmpot    !! (LPOT+1)**2
+  integer, intent (in) :: irmind   !! IRM-IRNSD
+  integer, intent (in) :: lmxspd   !! (2*LPOT+1)**2
+  integer, intent (in) :: ncelld   !! Number of cells (shapes) in
                                    ! non-spherical part
-  integer, intent (in) :: nspotd   ! < Number of potentials for storing
+  integer, intent (in) :: nspotd   !! Number of potentials for storing
                                    ! non-sph. potentials
-  integer, intent (in) :: kshape   ! < Exact treatment of WS cell
+  integer, intent (in) :: kshape   !! Exact treatment of WS cell
   integer, intent (in) :: ivshift
-  real (kind=dp), intent (in) :: vconst ! < Potential shift
-  integer, dimension (natyp), intent (in) :: ntcell ! < Index for WS cell
-  real (kind=dp), dimension (natyp), intent (in) :: fpradius ! < R point at
+  real (kind=dp), intent (in) :: vconst !! Potential shift
+  integer, dimension (natyp), intent (in) :: ntcell !! Index for WS cell
+  real (kind=dp), dimension (natyp), intent (in) :: fpradius !! R point at
                                                              ! which
                                                              ! full-potential
                                                              ! treatment
                                                              ! starts
   ! .. In/Out variables
-  real (kind=dp), intent (inout) :: alat ! < Lattice constant in a.u.
-  real (kind=dp), intent (inout) :: efermi ! < Fermi energy
-  integer, dimension (natyp), intent (inout) :: nfu ! < number of shape
+  real (kind=dp), intent (inout) :: alat !! Lattice constant in a.u.
+  real (kind=dp), intent (inout) :: efermi !! Fermi energy
+  integer, dimension (natyp), intent (inout) :: nfu !! number of shape
                                                     ! function components in
                                                     ! cell 'icell'
-  integer, dimension (natyp), intent (inout) :: imt ! < R point at MT radius
-  integer, dimension (natyp), intent (inout) :: irc ! < R point for potential
+  integer, dimension (natyp), intent (inout) :: imt !! R point at MT radius
+  integer, dimension (natyp), intent (inout) :: irc !! R point for potential
                                                     ! cutting
-  integer, dimension (natyp), intent (inout) :: ipan ! < Number of panels in
+  integer, dimension (natyp), intent (inout) :: ipan !! Number of panels in
                                                      ! non-MT-region
-  integer, dimension (natyp), intent (inout) :: irns ! < Position of atoms in
+  integer, dimension (natyp), intent (inout) :: irns !! Position of atoms in
                                                      ! the unit cell in units
                                                      ! of bravais vectors
-  integer, dimension (natyp), intent (inout) :: irws ! < R point at WS radius
-  integer, dimension (natyp), intent (inout) :: irmin ! < Max R for spherical
+  integer, dimension (natyp), intent (inout) :: irws !! R point at WS radius
+  integer, dimension (natyp), intent (inout) :: irmin !! Max R for spherical
                                                       ! treatment
-  integer, dimension (npotd), intent (inout) :: ncore ! < Number of core
+  integer, dimension (npotd), intent (inout) :: ncore !! Number of core
                                                       ! states
-  integer, dimension (natyp, lmxspd), intent (inout) :: lmsp ! < 0,1 :
+  integer, dimension (natyp, lmxspd), intent (inout) :: lmsp !! 0,1 :
                                                              ! non/-vanishing
                                                              ! lm=(l,m)
                                                              ! component of
                                                              ! non-spherical
                                                              ! potential
-  integer, dimension (20, npotd), intent (inout) :: lcore ! < Angular momentum
+  integer, dimension (20, npotd), intent (inout) :: lcore !! Angular momentum
                                                           ! of core states
-  integer, dimension (natyp, nfund), intent (inout) :: llmsp ! < lm=(l,m) of
+  integer, dimension (natyp, nfund), intent (inout) :: llmsp !! lm=(l,m) of
                                                              ! 'nfund'th
                                                              ! nonvanishing
                                                              ! component of
                                                              ! non-spherical
                                                              ! pot.
-  integer, dimension (0:ipand, natyp), intent (inout) :: ircut ! < R points of
+  integer, dimension (0:ipand, natyp), intent (inout) :: ircut !! R points of
                                                                ! panel borders
   integer, dimension (natyp, lmxspd), intent (inout) :: ifunm
-  integer, dimension (20, npotd), intent (inout) :: ititle ! < Titles of the
+  integer, dimension (20, npotd), intent (inout) :: ititle !! Titles of the
                                                            ! potential card
-  real (kind=dp), dimension (natyp), intent (inout) :: a ! < Constants for
+  real (kind=dp), dimension (natyp), intent (inout) :: a !! Constants for
                                                          ! exponential R mesh
-  real (kind=dp), dimension (natyp), intent (inout) :: b ! < Constants for
+  real (kind=dp), dimension (natyp), intent (inout) :: b !! Constants for
                                                          ! exponential R mesh
-  real (kind=dp), dimension (natyp), intent (inout) :: zat ! < Nuclear charge
-  real (kind=dp), dimension (2), intent (inout) :: vbc ! < Potential constants
-  real (kind=dp), dimension (natyp), intent (inout) :: rmt ! < Muffin-tin
+  real (kind=dp), dimension (natyp), intent (inout) :: zat !! Nuclear charge
+  real (kind=dp), dimension (2), intent (inout) :: vbc !! Potential constants
+  real (kind=dp), dimension (natyp), intent (inout) :: rmt !! Muffin-tin
                                                            ! radius of true
                                                            ! system
-  real (kind=dp), dimension (natyp), intent (inout) :: rws ! < Wigner Seitz
+  real (kind=dp), dimension (natyp), intent (inout) :: rws !! Wigner Seitz
                                                            ! radius
-  real (kind=dp), dimension (natyp), intent (inout) :: rmtnew ! < Adapted
+  real (kind=dp), dimension (natyp), intent (inout) :: rmtnew !! Adapted
                                                               ! muffin-tin
                                                               ! radius
   real (kind=dp), dimension (0:lmax, natyp), intent (inout) :: s
-  real (kind=dp), dimension (irm, natyp), intent (inout) :: r ! < Radial mesh
+  real (kind=dp), dimension (irm, natyp), intent (inout) :: r !! Radial mesh
                                                               ! ( in units a
                                                               ! Bohr)
-  real (kind=dp), dimension (irm, natyp), intent (inout) :: drdi ! <
+  real (kind=dp), dimension (irm, natyp), intent (inout) :: drdi !!
                                                                  ! Derivative
                                                                  ! dr/di
   real (kind=dp), dimension (irm, natyp), intent (inout) :: dror
   real (kind=dp), dimension (irm, npotd), intent (inout) :: vm2z
-  real (kind=dp), dimension (20, npotd), intent (inout) :: ecore ! < Core
+  real (kind=dp), dimension (20, npotd), intent (inout) :: ecore !! Core
                                                                  ! energies
   real (kind=dp), dimension (irm, 0:lmax, natyp), intent (inout) :: rs
   real (kind=dp), dimension (irmind:irm, lmpot, nspotd), &
-    intent (inout) :: vins         ! < Non-spherical part of the potential
+    intent (inout) :: vins         !! Non-spherical part of the potential
   real (kind=dp), dimension (irid, nfund, ncelld), intent (inout) :: thetas
-  ! < shape function THETA=0 outer space THETA =1 inside WS cell in spherical
+  !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical
   ! harmonics expansion
   ! .. Local Scalars
   integer :: inslpd, lmshapemax

@@ -467,7 +467,7 @@ contains
     integer :: ierr
     integer(kind=MPI_ADDRESS_KIND) :: disp1(t_inc%Nparams), disp2(t_tgmat%Nelements), base
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
     !broadcast parameters from t_inc
     call MPI_Get_address(t_inc%Nparams,       disp1(1), ierr)
     call MPI_Get_address(t_inc%LMMAXD,        disp1(2), ierr)
@@ -516,9 +516,9 @@ contains
     call MPI_Bcast(t_inc%KMESH_ie, t_inc%ielast, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
     call MPI_Bcast(t_inc%KMESH, t_inc%nkmesh, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
     if(ierr/=MPI_SUCCESS) stop 'error brodcasting t_inc%kmesh'
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
     !brodcast allocatable arrays from t_tgmat
     !first broadcast logocal switches
     call MPI_Get_address(t_tgmat%Nelements,      disp2(1), ierr)

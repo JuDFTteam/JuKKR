@@ -4,13 +4,13 @@ contains
 
 ! -------------------------------------------------------------------------------
 ! SUBROUTINE: RHOSYMM
-! > @brief Symmetrize the charge densities and magnetic moments of
-! > atoms which are magnetic 'antisymmetric'
-! > (dependencies in IXIPOL(*))
+!> @brief Symmetrize the charge densities and magnetic moments of
+!> atoms which are magnetic 'antisymmetric'
+!> (dependencies in IXIPOL(*))
 
-! > @author P. Zahn
-! > @date Aug. 1996
-! > @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
+!> @author P. Zahn
+!> @date Aug. 1996
+!> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
 ! Fortran90
 ! -------------------------------------------------------------------------------
 subroutine rhosymm(lmpot, nspin, nstart, nend, rho2ns, ixipol, irws, ircut, &
@@ -22,22 +22,22 @@ subroutine rhosymm(lmpot, nspin, nstart, nend, rho2ns, ixipol, irws, ircut, &
   implicit none
   ! .. Input variables
 
-  integer, intent (in) :: irm      ! < Maximum number of radial points
+  integer, intent (in) :: irm      !! Maximum number of radial points
   integer, intent (in) :: nend
-  integer, intent (in) :: natyp    ! < Number of kinds of atoms in unit cell
-  integer, intent (in) :: lmpot    ! < (LPOT+1)**2
-  integer, intent (in) :: nspin    ! < Counter for spin directions
-  integer, intent (in) :: kshape   ! < Exact treatment of WS cell
+  integer, intent (in) :: natyp    !! Number of kinds of atoms in unit cell
+  integer, intent (in) :: lmpot    !! (LPOT+1)**2
+  integer, intent (in) :: nspin    !! Counter for spin directions
+  integer, intent (in) :: kshape   !! Exact treatment of WS cell
   integer, intent (in) :: nstart
-  integer, dimension (*), intent (in) :: ipan ! < Number of panels in
+  integer, dimension (*), intent (in) :: ipan !! Number of panels in
                                               ! non-MT-region
-  integer, dimension (*), intent (in) :: irws ! < R point at WS radius
-  integer, dimension (*), intent (in) :: ixipol ! < Constraint of spin pol.
-  integer, dimension (0:ipand, *), intent (in) :: ircut ! < R points of panel
+  integer, dimension (*), intent (in) :: irws !! R point at WS radius
+  integer, dimension (*), intent (in) :: ixipol !! Constraint of spin pol.
+  integer, dimension (0:ipand, *), intent (in) :: ircut !! R points of panel
                                                         ! borders
   ! .. In/Out variables
   real (kind=dp), dimension (irm, lmpot, natyp, *), intent (inout) :: rho2ns
-  ! < radial density
+  !! radial density
   ! .. Local variables
   integer :: i, iatyp, iatyp1, irc, irc1, lm
   real (kind=dp) :: fac

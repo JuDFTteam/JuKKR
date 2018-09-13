@@ -45,85 +45,85 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    real (kind=dp), parameter :: TOLMSSQ=1.0D-6
    ! .. Input variables
    integer, intent(in) :: IE
-   integer, intent(in) :: LLY       !< LLY <> 0 => use Lloyd formula
-   integer, intent(in) :: IGF       !< Do not print or print (0/1) the KKRFLEX_* files
-   integer, intent(in) :: INS       !< 0 (MT), 1(ASA), 2(Full Potential)
-   integer, intent(in) :: ICC       !< Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-   integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
-   integer, intent(in) :: NCPA      !< NCPA = 0/1 CPA flag
-   integer, intent(in) :: NCLS      !< Number of reference clusters
-   integer, intent(in) :: KMROT     !< 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-   integer, intent(in) :: NATYP     !< Number of kinds of atoms in unit cell
+   integer, intent(in) :: LLY       ! LLY <> 0 => use Lloyd formula
+   integer, intent(in) :: IGF       ! Do not print or print (0/1) the KKRFLEX_* files
+   integer, intent(in) :: INS       ! 0 (MT), 1(ASA), 2(Full Potential)
+   integer, intent(in) :: ICC       ! Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+   integer, intent(in) :: NAEZ      ! Number of atoms in unit cell
+   integer, intent(in) :: NCPA      ! NCPA = 0/1 CPA flag
+   integer, intent(in) :: NCLS      ! Number of reference clusters
+   integer, intent(in) :: KMROT     ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+   integer, intent(in) :: NATYP     ! Number of kinds of atoms in unit cell
    integer, intent(in) :: NOFKS
    integer, intent(in) :: IDECI
    integer, intent(in) :: ISPIN
-   integer, intent(in) :: NSPIN     !< Counter for spin directions
+   integer, intent(in) :: NSPIN     ! Counter for spin directions
    integer, intent(in) :: NSYMAT
-   integer, intent(in) :: INVMOD    !< Inversion scheme
+   integer, intent(in) :: INVMOD    ! Inversion scheme
    integer, intent(in) :: IPRINT
-   integer, intent(in) :: NLBASIS   !< Number of basis layers of left host (repeated units)
-   integer, intent(in) :: NRBASIS   !< Number of basis layers of right host (repeated units)
-   integer, intent(in) :: NATOMIMP  !< Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+   integer, intent(in) :: NLBASIS   ! Number of basis layers of left host (repeated units)
+   integer, intent(in) :: NRBASIS   ! Number of basis layers of right host (repeated units)
+   integer, intent(in) :: NATOMIMP  ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
    integer, intent(in) :: NACLSMAX
-   integer, intent(in) :: IQDOSRUN  !< qdos ruess: counts qdos run
-   real (kind=dp), intent(in) :: ALAT   !< Lattice constant in a.u.
+   integer, intent(in) :: IQDOSRUN  ! qdos ruess: counts qdos run
+   real (kind=dp), intent(in) :: ALAT   ! Lattice constant in a.u.
    real (kind=dp), intent(in) :: VOLBZ
-   real (kind=dp), intent(in) :: CPATOL !< Convergency tolerance for CPA-cycle
+   real (kind=dp), intent(in) :: CPATOL ! Convergency tolerance for CPA-cycle
    complex (kind=dp), intent(in) :: ERYD
    complex (kind=dp), intent(in) :: CFCTOR
    complex (kind=dp), intent(in) :: CFCTORINV
    ! .. Input arrays
-   integer, dimension(NEMBD2), intent(in)         :: CLS      !< Cluster around atomic sites
-   integer, dimension(NAEZ), intent(in)      :: NOQ      !< Number of diff. atom types located
-   integer, dimension(NSHELD), intent(in)         :: NSH1     !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-   integer, dimension(NSHELD), intent(in)         :: NSH2     !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-   integer, dimension(NAEZ), intent(in)      :: ICPA     !< ICPA = 0/1 site-dependent CPA flag
-   integer, dimension(NATYP), intent(in)     :: IQAT     !< The site on which an atom is located on a given site
-   integer, dimension(NCLSD), intent(in)         :: NACLS    !< Number of atoms in cluster
-   integer, dimension(0:NSHELD), intent(in)  :: NSHELL   !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
-   integer, dimension(NEMBD2), intent(in)         :: REFPOT   !< Ref. pot. card  at position
-   integer, dimension(NOFGIJ), intent(in)         :: IJTABSH  !< Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
-   integer, dimension(NOFGIJ), intent(in)         :: IJTABSYM !< Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
-   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: ATOM  !< Atom at site in cluster
-   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: EZOA  !< EZ of atom at site in cluster
+   integer, dimension(NEMBD2), intent(in)         :: CLS      ! Cluster around atomic sites
+   integer, dimension(NAEZ), intent(in)      :: NOQ      ! Number of diff. atom types located
+   integer, dimension(NSHELD), intent(in)         :: NSH1     ! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(NSHELD), intent(in)         :: NSH2     ! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(NAEZ), intent(in)      :: ICPA     ! ICPA = 0/1 site-dependent CPA flag
+   integer, dimension(NATYP), intent(in)     :: IQAT     ! The site on which an atom is located on a given site
+   integer, dimension(NCLSD), intent(in)         :: NACLS    ! Number of atoms in cluster
+   integer, dimension(0:NSHELD), intent(in)  :: NSHELL   ! Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+   integer, dimension(NEMBD2), intent(in)         :: REFPOT   ! Ref. pot. card  at position
+   integer, dimension(NOFGIJ), intent(in)         :: IJTABSH  ! Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
+   integer, dimension(NOFGIJ), intent(in)         :: IJTABSYM ! Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
+   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: ATOM  ! Atom at site in cluster
+   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: EZOA  ! EZ of atom at site in cluster
    integer, dimension(NATYP,NAEZ), intent(in)                  :: ITOQ
    integer, dimension(2,LMMAXD), intent(in)                    :: NRREL
    integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(in)   :: ICHECK
    integer, dimension(2,2,LMMAXD), intent(in) :: IRREL
-   real (kind=dp), dimension(NATYP), intent(in)  :: CONC        !< Concentration of a given atom
+   real (kind=dp), dimension(NATYP), intent(in)  :: CONC        ! Concentration of a given atom
    real (kind=dp), dimension(KPOIBZ), intent(in) :: VOLCUB
-   real (kind=dp), dimension(3,0:NRD), intent(in)    :: RR       !< Set of real space vectors (in a.u.)
+   real (kind=dp), dimension(3,0:NRD), intent(in)    :: RR       ! Set of real space vectors (in a.u.)
    real (kind=dp), dimension(3,KPOIBZ), intent(in)  :: BZKP
    real (kind=dp), dimension(3,NSHELD), intent(in)       :: RATOM
-   real (kind=dp), dimension(3,NEMBD2), intent(in)       :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
-   real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in)   :: RCLS  !< Real space position of atom in cluster
+   real (kind=dp), dimension(3,NEMBD2), intent(in)       :: RBASIS   ! Position of atoms in the unit cell in units of bravais vectors
+   real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in)   :: RCLS  ! Real space position of atom in cluster
    real (kind=dp), dimension(48,3,NSHELD), intent(in)       :: RROT
-   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: RC     !< NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: CREL   !< Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: RREL   !< Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: RC     ! NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: CREL   ! Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+   complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: RREL   ! Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
    complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in) :: FACTL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYP), intent(in)  :: TSST
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYP), intent(in)  :: MSST
    complex (kind=dp), dimension(2,2,LMMAXD), intent(in)           :: SRREL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: TQDOS  ! qdos : Read-in inverse t-matrix
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DROTQ   !< Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DROTQ   ! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD), intent(in)   :: TREFLL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NSYMAXD), intent(in)      :: DSYMLL
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD), intent(in)   :: DTREFLL !< LLY Lloyd dtref/dE
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD), intent(in)   :: DTREFLL ! LLY Lloyd dtref/dE
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)   :: DTMATLL  ! LLY  dt/dE (should be av.-tmatrix in CPA)
-   complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: GINP !< Cluster GF (ref syst.)
-   complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: DGINP !< LLY Lloyd Energy derivative of GINP
+   complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: GINP ! Cluster GF (ref syst.)
+   complex (kind=dp), dimension(LMGF0D*NACLSMAX,LMGF0D,NCLS), intent(in) :: DGINP ! LLY Lloyd Energy derivative of GINP
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPIN), intent(in) :: LEFTTINVLL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1,NSPIN), intent(in) :: RIGHTTINVLL
    logical, dimension(2), intent(in) :: VACFLAG
-   logical, dimension(NSYMAXD), intent(in) :: SYMUNITARY !< unitary/antiunitary symmetry flag
+   logical, dimension(NSYMAXD), intent(in) :: SYMUNITARY ! unitary/antiunitary symmetry flag
    ! .. Output variables
    integer, intent(out) :: ICPAFLAG
    ! .. In/Out variables
-   integer, intent(inout) :: ITCPAMAX  !< Max. number of CPA iterations
-   complex (kind=dp), intent(inout) :: TRACET   !< \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$
-   complex (kind=dp), intent(inout) :: LLY_GRTR !< Trace Eq.5.38 PhD Thiess (k-integrated)! LLY Lloyd
-   complex (kind=dp), dimension(LMMAXD,LMMAXD,NSHELD), intent(inout) :: GMATLL  !< GMATLL = diagonal elements of the G matrix (system)
+   integer, intent(inout) :: ITCPAMAX  ! Max. number of CPA iterations
+   complex (kind=dp), intent(inout) :: TRACET   ! \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$
+   complex (kind=dp), intent(inout) :: LLY_GRTR ! Trace Eq.5.38 PhD Thiess (k-integrated)! LLY Lloyd
+   complex (kind=dp), dimension(LMMAXD,LMMAXD,NSHELD), intent(inout) :: GMATLL  ! GMATLL = diagonal elements of the G matrix (system)
    ! .. Local Scalars
    integer :: i_stat,i_all
    integer :: IH,LM1,LM2,NS,NSDIA,ICALL,IREC
@@ -178,11 +178,11 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
       write(6801,'(A)') 'energy(ie):'                                            ! fswrt
       write(6801,'(2ES25.16)') ERYD                                              ! fswrt
    end if                                                                        ! fswrt
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! The arrays ISUM are used in the symmetrisation routine SYMETRMAT
    ! Symmetrising single-site : same matrix for each symmetry
    ! Symmetrising G matrix    : pick G(ISYM) for symmetry ISYM
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    !if ( ICALL.EQ.1 ) then
       CNSYMAT = CONE/DBLE(NSYMAT)
       do IU = 1,NSYMAXD
@@ -195,24 +195,24 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
          ISUMG(IU) = IU
       end do
    !end if
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! TSST in the LOCAL frame is used to set up
    ! MSST = (TSST-TREF)^(-1) in the LOCAL frame to be used in <CPAMILLSX> and < PROJTAU > below
    !
    ! MSSQ = the inverse of the effective (on-site) Delta_t matrix in the GLOBAL frame;
    !        the Average T-matrix Approximation (ATA) (ICPASTART=1) is used
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    !
    ICPASTART = 1
    call MSSINIT(NCPA,ICPASTART,TSST,MSST,MSSQ,TREFLL,DROTQ, &
       REFPOT,IQAT,ITOQ,NOQ,CONC,                            &
       KMROT,NATYP,NAEZ)  ! nref was taken out of calling list 1.2.2012
    !
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    !    VIRTUAL ATOMS:
    !    Be careful! in case of  OPT('VIRATOMS')==1 MSSQ is the Tmatrix
-   !    not the inverse T-matrix!!
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !    not the inverse T-matrix! 
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    !
    !----------------------------------------------------------------------------
    ! Output now:
@@ -238,9 +238,9 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
       end do                                                                     ! fswrt
    end if                                                                        ! fswrt
    !
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! BEGIN CPA - LOOP  (if required)
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    !----------------------------------------------------------------------------
    !  ikm1lin,ikm2lin,nlinq --> dummy settings for <PROJTAU>
    !----------------------------------------------------------------------------
@@ -342,10 +342,10 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    !----------------------------------------------------------------------------
    ! NS=1,NSMAX
    !----------------------------------------------------------------------------
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! For qdos calculation, do not symmetrize the GF matrix, but call routine
    ! symetrmat anyway because of factor tauvbz:
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    do NS = 1,NSMAX
       !-------------------------------------------------------------------------
       ! symmetrise GS, get GLL as sum over all symmetry wedges of GS
@@ -369,10 +369,10 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    call memocc(i_stat,i_all,'GS','kloopz1')
    !----------------------------------------------------------------------------
    if ( NCPA.GT.0 ) then
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! do one CPA iteration, the output is a new MSSQ = (Delta_t)^(-1)
       ! in the GLOBAL frame
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ICPAFLAG = 0
       if (OPT('readcpa ').OR.(OPT('qdos    ').AND.IQDOSRUN.GT.0)) then
          ! copy read-in cpa t-matrix in second run
@@ -428,9 +428,9 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
       call memocc(i_stat,i_all,'DMSSQ','kloopz1')
       !
    end if
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! END CPA - LOOP
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    !
    !----------------------------------------------------------------------------
    !  The inverse of the Delta_t(CPA)-matrix is calculated, now write
@@ -485,7 +485,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
          end do
       end do
    end if
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! calculate the component-projected site-diagonal
    !  TAU-matrices TAUDELT(IT).
    !     - there are NSMAX = NAEZ/NATYP (NCPA=0/1) site-diagonal
@@ -493,7 +493,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    !       reference
    !     - they are NSMAX site-diagonal elements projected on atomic types
    !       in the array TAUDELT(1..NSMAX) in the LOCAL frame of reference
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    allocate(TAUDELT(LMMAXD,LMMAXD,NSHELL(0)),stat=i_stat)
    call memocc(i_stat,product(shape(TAUDELT))*kind(TAUDELT),'TAUDELT','kloopz1')
    TAUDELT(:,:,:) = CZERO
@@ -514,14 +514,14 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
          end if
       end do
    end if
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! off-diagonal elements (if present) are in the same array
    ! TAUDELQ in the range (NSMAX+1,..,NSHELL(0)).
    ! The G_ij's are left UNPROJECTED and in the GLOBAL frame of
    ! reference (remember this for further use!), i.e. in case of CPA,
    ! G_ij(CPA) is stored. The component-projected G-elements can
    ! be obtained through the projection matrices (see below)
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    do NS = NSMAX+1, NSHELL(0)
       call ZCOPY(LMMAXD*LMMAXD,TAUDELQ(1,1,NS),1,TAUDELT(1,1,NS),1)
    end do
@@ -566,9 +566,9 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
             call ZCOPY(LMMAXD,MSSQ(1,J,JQ),1,W2(1,J),1)
          end do
       end if
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! NS.LT.NSMAX
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       if ( .not. OPT('VIRATOMS') ) then
          if ( .not. TEST('testgmat') ) then
             CALL ZGEMM('N','N',LMMAXD,LMMAXD,LMMAXD,CONE,W1,   &
@@ -590,9 +590,9 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
             end if
          end if !( .not. TEST('testgmat') ) THEN
       end if !( .not. OPT('VIRATOMS') ) THEN
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! LDIA
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       !-------------------------------------------------------------------------
       ! GMATLL = GLL/RFCTOR
       !-------------------------------------------------------------------------
@@ -621,7 +621,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    !         write(*,*) 'VIRTUAL ATOM OPTION : stop calculation '
    !         stop
    !       END IF
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! In the case of NCPA.NE.0 and NSHELL(0).GT.NATYP the projection
    ! matrices DMAT and DTIL which are used to get
    !                     ij            ij    _
@@ -631,7 +631,7 @@ subroutine KLOOPZ1_QDOS(ERYD,GMATLL,INS,ALAT,IE,IGF,  &
    !   and stored for later use.  the allocated work space for
    !   TSST (DMAT) and MSST (DTIL) is used.
    !   for an atom having occupancy 1, DMAT/DTIL = unit matrix
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    if (( NCPA.NE.0 ).AND. ( NSHELL(0).GT.NSMAX )) then
       do IT = 1,NATYP
          IQ = IQAT(IT)

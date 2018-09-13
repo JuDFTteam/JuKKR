@@ -168,8 +168,8 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
 
 
   ! Ph.Mavropoulos, Juelich, July 2007
-  use :: mod_datatypes
-   use mod_rinit
+  use mod_datatypes
+  use mod_rinit
   implicit none
   ! Parameters:
   integer :: lmaxd, l4maxd
@@ -180,8 +180,7 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
                                    ! necessarily normalized)
   ! Output:
   ! Y[l,m], dY/dth, dY/dfi, d(dY/dth)/dth, d(dY/dfi)/dfi, d(dY/dth)/dfi
-  real (kind=dp) :: ylm(*), dydth(*), dydfi(*), d2ydth2(*), d2ydfi2(*), &
-    d2ydthdfi(*)
+  real (kind=dp) :: ylm(*), dydth(*), dydfi(*), d2ydth2(*), d2ydfi2(*), d2ydthdfi(*)
   real (kind=dp) :: rabs           ! Norm of input vector (V1,V2,V3)
   ! Inside:
   real (kind=dp) :: cth, sth, cfi, sfi ! cos and sin of th and fi
@@ -193,8 +192,7 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
   real (kind=dp) :: cmfi(0:l4maxd), smfi(0:l4maxd) ! cos(m*fi) and sin(m*fi)
   real (kind=dp) :: xy, xyz, sgm, sgmm, fi
   real (kind=dp) :: aux
-  real (kind=dp) :: tiny
-  parameter (tiny=1.e-20_dp)       ! if th < tiny set th=0
+  real (kind=dp), parameter :: tiny=1.e-20_dp       ! if th < tiny set th=0
   real (kind=dp) :: tt, aa, cd     ! factors in calcul. of Ylm
   integer :: ll, mm, ii            ! l and m indexes
   integer :: lmmax                 ! (lmax+1)**2, total number of spher.
@@ -224,9 +222,7 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
     sth = xy/xyz
     cfi = v1/xy
     sfi = v2/xy
-
   else
-
     sth = 0.0e0_dp
     cth = 1.0e0_dp
     if (v3<0) cth = -1.0e0_dp
@@ -374,7 +370,6 @@ subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, &
 
     end do
   end do
-
 
 end subroutine derivylm
 

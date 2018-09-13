@@ -28,7 +28,7 @@ implicit none
 
 contains
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
    subroutine find_isave_wavefun(t_wavefunctions)
    ! find how many wavefunctions can be stored and set isave_wavefun array to determine which wavefunctions are stored
@@ -87,10 +87,10 @@ contains
 
         allocate(t_wavefunctions%isave_wavefun(nat, ne), stat=ierr)
         if(ierr/=0) stop '[find_isave_wavefun] Error allocating isave_wavefun'
-        !<<<<<<<  set some parameters  <<<<<<<!
+        !  <<<<<<<  set some parameters  <<<<<<<  !
 
 
-        !>>>>>>>  find numer of wavefunctions that can be stored and allocate store arrays  >>>>>>>!
+        !  >>>>>>>  find numer of wavefunctions that can be stored and allocate store arrays  >>>>>>>  !
         ! memory demand for one atom and one energy point in Mbyte
         delta_mem = real(t_inc%NSRA*t_inc%LMMAXSO * t_inc%LMMAXSO * t_inc%IRMDNEW * nth * 16, kind=dp) / (1024.0d0**2)
 
@@ -108,7 +108,7 @@ contains
         ! find numer of wavefunctions that can be stored
         t_wavefunctions%Nwfsavemax = t_wavefunctions%maxmem_number * 1024**(t_wavefunctions%maxmem_units-2) / int(delta_mem)
         if(Nsave==0) then
-           write(1337, '(A)') '[find_isave_wavefun] Warning: Nsave is zero!!!'
+           write(1337, '(A)') '[find_isave_wavefun] Warning: Nsave is zero! !'
            write(1337, '(A)') 'reset Nwfsavemax to 0'
            t_wavefunctions%Nwfsavemax=0
         end if
@@ -167,11 +167,11 @@ contains
              if(ierr/=0) stop '[find_isave_wavefun] Error allocating sllleft'
            end if
         end if
-        !<<<<<<<  find numer of wavefunctions that can be stored and allocate store arrays  <<<<<<<!
+        !  <<<<<<<  find numer of wavefunctions that can be stored and allocate store arrays  <<<<<<<  !
 
 
         if(t_wavefunctions%Nwfsavemax>0) then
-           !>>>>>>>  find priority of saving wavefunctions according to kmesh  >>>>>>>!
+           !  >>>>>>>  find priority of saving wavefunctions according to kmesh  >>>>>>>  !
            ! kmesh( 1 : ne )
            allocate(my_kmesh(ne_myrank), stat=ierr)
            if(ierr/=0) stop '[find_isave_wavefun] Error allocating my_kmesh'
@@ -200,10 +200,10 @@ contains
               write(1337,*) '[find_isave_wavefun] kmesh_priority not found correctly; kmesh_priority:', kmesh_priority, '; mask:', mask
               stop
            end if
-           !<<<<<<<  find priority of saving wavefunctions according to kmesh  <<<<<<<!
+           !  <<<<<<<  find priority of saving wavefunctions according to kmesh  <<<<<<<  !
 
 
-           !>>>>>>>  set isave_wavefun array  >>>>>>>!
+           !  >>>>>>>  set isave_wavefun array  >>>>>>>  ! 
            t_wavefunctions%isave_wavefun(:,:) = 0
            Nwfsave_count = t_wavefunctions%Nwfsavemax
            do iat=1,nat_myrank
@@ -215,7 +215,7 @@ contains
               end do
               Nwfsave_count = Nwfsave_count - ne_myrank
            end do
-           !<<<<<<<  set isave_wavefun array  <<<<<<<!
+           !  <<<<<<<  set isave_wavefun array  <<<<<<<  !
 
 
            ! deallocate work arrays
@@ -227,7 +227,7 @@ contains
 
    end subroutine find_isave_wavefun
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
    subroutine save_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, iat, ie, NSRA, LMMAXSO, IRMDNEW, ith)
       !saves wavefunction of atom iat and energypoint ie if enough memory is given
@@ -269,7 +269,7 @@ contains
 
    end subroutine save_wavefunc
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
    subroutine read_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, iat, ie, NSRA, LMMAXSO, IRMDNEW, ith, nth, read_in_rll, read_in_sll, read_in_rllleft, read_in_sllleft)
       !reads wavefunction of atom iat and energypoint ie if it was stored
@@ -320,7 +320,7 @@ contains
 
    end subroutine read_wavefunc
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
 #ifdef CPP_MPI
    subroutine bcast_params_savewf(t_wavefunctions)

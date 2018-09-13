@@ -3,14 +3,14 @@ module mod_rllsllsourceterms
 contains
 
 ! -------------------------------------------------------------------------------
-! > @brief Calculates the source terms J,H and the left solution J2, H2 for:
-! > - non-relativistic
-! > - scalar-relativistic
-! > - full-relativistic
-! > calculations
+!> @brief Calculates the source terms J,H and the left solution J2, H2 for:
+!> - non-relativistic
+!> - scalar-relativistic
+!> - full-relativistic
+!> calculations
 ! -------------------------------------------------------------------------------
 subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, &
-  lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
+  lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, KBdG)
 
   use :: constants
   use :: mod_datatypes, only: dp
@@ -19,7 +19,7 @@ subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, &
   implicit none
 
   ! inputs
-  integer, intent(in) :: nsra, lmax, nrmax, nrmaxd
+  integer, intent(in) :: nsra, lmax, nrmax, nrmaxd, KBdG
   integer, intent(in) :: lmsize
   complex (kind=dp), intent(in) :: eryd
   real (kind=dp), dimension (nrmaxd), intent(in) :: rmesh
@@ -27,9 +27,9 @@ subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, &
 
   ! outputs
   integer, intent(out) :: nvec
-  integer, dimension (2*lmsize), intent(out) :: jlk_index                        ! < index array mapping entries of hlk, jlk (bing/small components one after the other) to L=(l,m,s)
-  complex (kind=dp), dimension (1:4*(lmax+1), nrmax), intent(out) :: hlk, jlk    ! < right hankel and bessel source functions
-  complex (kind=dp), dimension (1:4*(lmax+1), nrmax), intent(out) :: hlk2, jlk2  ! < left hankel and bessel source functions
+  integer, dimension (2*lmsize), intent(out) :: jlk_index                        !! index array mapping entries of hlk, jlk (bing/small components one after the other) to L=(l,m,s)
+  complex (kind=dp), dimension (1:4*(lmax+1), nrmax), intent(out) :: hlk, jlk    !! right hankel and bessel source functions
+  complex (kind=dp), dimension (1:4*(lmax+1), nrmax), intent(out) :: hlk2, jlk2  !! left hankel and bessel source functions
   complex (kind=dp), intent(out) :: gmatprefactor ! prefactor of the Green function (2M_0\kappa in PhD Bauer, p. 63)
 
   ! locals
@@ -58,12 +58,22 @@ subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, &
   ! then benhank and beshank_smallcomp should work the same way
   ! add additional loop ofer e/h index and take care of nsra cases below
 
-  if (nsra==1) then
-    ek = sqrt(eryd)
-    ek2 = sqrt(eryd)
-  else if (nsra==2) then
-    ek = sqrt(eryd+(eryd/cvlight)**2)
-    ek2 = sqrt(eryd+(eryd/cvlight)**2)*(1.0e0_dp+eryd/cvlight**2)
+  if (KBdG>0) then
+    if (nsra==1) then
+      ek = -sqrt(eryd)
+      ek2 = ek
+    else if (nsra==2) then
+      ek = -sqrt(eryd+(eryd/cvlight)**2)
+      ek2 = -sqrt(eryd+(eryd/cvlight)**2)*(1.0e0_dp+eryd/cvlight**2)
+    end if
+  else
+    if (nsra==1) then
+      ek = sqrt(eryd)
+      ek2 = ek
+    else if (nsra==2) then
+      ek = sqrt(eryd+(eryd/cvlight)**2)
+      ek2 = sqrt(eryd+(eryd/cvlight)**2)*(1.0e0_dp+eryd/cvlight**2)
+    end if
   end if
 
   do ir = 1, nrmax

@@ -59,7 +59,7 @@ contains
 
       implicit none
       !
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! For KREL = 1 (relativistic mode)
       !
       !  NPOTD = 2 * NATYP
@@ -69,7 +69,7 @@ contains
       !          function, set up in the spin-independent non-relativstic
       !          (l,m_l)-representation
       !
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! .. Local variables
       integer :: L
       integer :: I
@@ -103,7 +103,7 @@ contains
       integer :: LRECGREEN
       real (kind=dp) :: PHI
       real (kind=dp) :: THETA
-      real (kind=dp) :: RFCTOR !< rfctor=a/(2*pi) conversion factor to p.u.
+      real (kind=dp) :: RFCTOR ! rfctor=a/(2*pi) conversion factor to p.u.
       complex (kind=dp) :: ERYD
       complex (kind=dp) :: TREAD ! qdos ruess
       complex (kind=dp) :: CFCTOR
@@ -132,31 +132,31 @@ contains
       complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: GMAT0
       complex (kind=dp), dimension(LMMAXD,LMMAXD)  :: FACTL
       complex (kind=dp), dimension(0:LMAXD,NREFD)    :: ALPHAREF
-      complex (kind=dp), dimension(0:LMAXD,NREFD)    :: DALPHAREF   !< LLY Lloyd Alpha matrix and deriv.
+      complex (kind=dp), dimension(0:LMAXD,NREFD)    :: DALPHAREF   ! LLY Lloyd Alpha matrix and deriv.
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYPD)  :: MSST
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NATYPD)  :: TSST
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZD)   :: TQDOS  ! qdos ruess
       complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD)   :: TREFLL
-      complex (kind=dp), dimension(LMMAXD,LMMAXD,NSHELD) :: GMATLL   !< GMATLL = diagonal elements of the G matrix (system)
-      complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD)   :: DTREFLL  !< LLY Lloyd dtref/dE
-      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZD)   :: DTMATLL  !< LLY Lloyd  dt/dE
-      complex (kind=dp), dimension(LMMAXD*LMMAXD) :: GIMP !<  Cluster GF (ref. syst.)
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NSHELD) :: GMATLL   ! GMATLL = diagonal elements of the G matrix (system)
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NREFD)   :: DTREFLL  ! LLY Lloyd dtref/dE
+      complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZD)   :: DTMATLL  ! LLY Lloyd  dt/dE
+      complex (kind=dp), dimension(LMMAXD*LMMAXD) :: GIMP !  Cluster GF (ref. syst.)
       character(len=35), dimension(0:2), parameter :: INVALG=(/'FULL MATRIX                        ',   &
                                                                'BANDED MATRIX (slab)               ',    &
                                                                'BANDED + CORNERS MATRIX (supercell)' /)
 
       ! .. Allocatable local arrays
-      real (kind=dp), dimension(:,:), allocatable   :: QVEC     !< qdos ruess, q-vectors for qdos
+      real (kind=dp), dimension(:,:), allocatable   :: QVEC     ! qdos ruess, q-vectors for qdos
       real (kind=dp), dimension(:,:,:), allocatable :: BZKP
-      complex (kind=dp), dimension(:,:), allocatable     :: DTMTRX   !< For GREENIMP
-      complex (kind=dp), dimension(:,:,:), allocatable   :: GINP     !< Cluster GF (ref syst.) GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
-      complex (kind=dp), dimension(:,:,:), allocatable   :: DGINP    !< LLY Lloyd Energy derivative of GINP DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
-      complex (kind=dp), dimension(:), allocatable :: LLY_G0TR             !< LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
+      complex (kind=dp), dimension(:,:), allocatable     :: DTMTRX   ! For GREENIMP
+      complex (kind=dp), dimension(:,:,:), allocatable   :: GINP     ! Cluster GF (ref syst.) GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
+      complex (kind=dp), dimension(:,:,:), allocatable   :: DGINP    ! LLY Lloyd Energy derivative of GINP DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
+      complex (kind=dp), dimension(:), allocatable :: LLY_G0TR             ! LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
       complex (kind=dp), dimension(:), allocatable :: TRALPHAREF           ! LLY Lloyd
       complex (kind=dp), dimension(:), allocatable :: CDOSREF_LLY          ! LLY Lloyd
-      complex (kind=dp), dimension(:,:), allocatable   :: TRACET      !< Tr[ (t-tref)^-1 d(t-tref)/dE ]  ! LLY Lloyd
+      complex (kind=dp), dimension(:,:), allocatable   :: TRACET      ! Tr[ (t-tref)^-1 d(t-tref)/dE ]  ! LLY Lloyd
       complex (kind=dp), dimension(:,:), allocatable   :: TRALPHA
-      complex (kind=dp), dimension(:,:), allocatable   :: LLY_GRTR    !< LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
+      complex (kind=dp), dimension(:,:), allocatable   :: LLY_GRTR    ! LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
       complex (kind=dp), dimension(:,:), allocatable   :: CDOS_LLY
 
 #ifdef CPP_MPI
@@ -252,13 +252,13 @@ contains
       if (OPT('WRTGREEN') .and. myrank==master) then
          open(58,FILE='green_host', FORM='formatted')
       endif
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! If qdos option is used set IQDOSRUN so that in a first run the
       ! (t(E)-t_ref(E))^-1 matrix (tmat.qdos) and the gref matrix can be
       ! written out for one k point, in a second run these matrices are
       ! read in to continue the calculation with the k points specified by
       ! the user in the qvec.dat file
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       if ( OPT('qdos    ') ) then                       ! qdos ruess
          IQDOSRUN=0                                     ! qdos ruess
       else                                              ! qdos ruess
@@ -363,7 +363,7 @@ contains
          end if
 
          if ( ( OPT('KKRFLEX ') ) ) then
-            !! Green functions has (lmmaxd*natomimp)**2 double complex (i.e. factor '4') values
+            !  Green functions has (lmmaxd*natomimp)**2 double complex (i.e. factor '4') values
             !RECLENGTH = WLENGTH*4*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD
             !at the moment kkrflex_green file is only written with single precision (factor'2')
             RECLENGTH = WLENGTH*2*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD
@@ -374,14 +374,14 @@ contains
             open (888,ACCESS='direct',RECL=RECLENGTH,FILE='kkrflex_green',FORM='unformatted')
          end if
 
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          ! the following write-out has been disabled, because it was assumed to be    !no-green
          !  obsolete with the implementation of the MPI-communicated arrays. If I am  !no-green
          !  wrong and the write-out is needed in subsequent parts, construct a        !no-green
          !  test-option around it so that it is only written out in this case.        !no-green
          !     OPEN (88,ACCESS='direct',RECL=LRECGREEN,                               !no-green
          !&             FILE='green',FORM='unformatted')                              !no-green
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          IREC=1
 
          if ( ( OPT('KKRFLEX ') ) ) then
@@ -421,12 +421,12 @@ contains
             read(67,*) (QVEC(IX,IQ),IX=1,3)             ! qdos ruess
          enddo                                          ! qdos ruess
          close(67)                                      ! qdos ruess
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          ! Prepare k-mesh information to be appropriate for qdos calculation.
          ! The idea is that subr. KLOOPZ1 is called for only one point at a time,
          ! with weight equal to the full BZ; in this way we avoid changing the
          ! calling list or the contents of kloopz1.
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          KMESH(1:IELAST) = 1                             ! qdos ruess
          NOFKS(1) = 1                                    ! qdos ruess
          VOLCUB(1,1) = VOLBZ(1)                          ! qdos ruess
@@ -447,9 +447,9 @@ contains
       ! Initialize trace for Lloyd formula                    ! LLY Lloyd
       LLY_GRTR(:,:) = CZERO ! 1:IELAST,1:NSPIND          ! LLY Lloyd
 
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! NO-SOC
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       if (.not.OPT('NEWSOSOL')) then
 #ifdef CPP_MPI
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
@@ -767,9 +767,9 @@ contains
                call timing_stop('main1b - kkrmat01 - writeout_rhoq')
             endif
 #endif
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             ! NO-SOC
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
             if( NCPAFAIL .NE. 0 ) then
                if(t_inc%i_write>0) then
@@ -800,9 +800,9 @@ contains
          ! nonco angles
          call read_angles(t_params,NATYP,THETA_AT,PHI_AT)
 
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          ! SOC
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 #ifdef CPP_MPI
          ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
          ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
@@ -939,9 +939,9 @@ contains
                if (LLY.NE.0) LLY_G0TR(IE) = t_lloyd%g0tr(ie_num)
             end if
 
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             ! QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS QDOS
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
             if (OPT('readcpa ').or.(OPT('qdos    ').and.(IQDOSRUN.eq.1))) then     ! qdos ruess: read in cpa t-matrix
                do ISITE = 1,NAEZ                              ! qdos ruess
                   TQDOS(:,:,ISITE) = CZERO                    ! qdos ruess
@@ -1101,9 +1101,9 @@ contains
             if(t_inc%i_time>0) call timing_stop('main1b - kloopz')
          endif
 #endif
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
          ! SOC
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 
          if( NCPAFAIL .NE. 0 ) then
             if(t_inc%i_write>0) then
@@ -1213,11 +1213,11 @@ contains
       if ( LCPAIJ .and. t_cpa%dmatproj_to_file ) close (71)
 
       close(37)                                    ! qdos ruess
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       ! Finished first qdos run. Now re-run the whole kkr1b program to
       ! calculate the GF for every energy (defined in inputcard) and
       ! kpoint (defined in qvec.dat)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       IQDOSRUN=IQDOSRUN+1                          ! qdos ruess
       if(t_lloyd%dgref_to_file)   close(681)
       if(t_lloyd%g0tr_to_file)    close(682)
@@ -1233,7 +1233,7 @@ contains
          close(9889) ! tau0_k file
          close(99992)
          call timing_stop('Time in Iteration')
-         if (myrank==master) call print_time_and_date('Done w. rhoq!!!')
+         if (myrank==master) call print_time_and_date('Done w. rhoq! !')
 #ifdef CPP_MPI
          call MPI_BARRIER(MPI_COMM_WORLD, ierr)
          call MPI_FINALIZE(ierr)

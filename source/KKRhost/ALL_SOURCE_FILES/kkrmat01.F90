@@ -56,34 +56,34 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
 
    implicit none
    ! .. Input variables
-   integer, intent(in) :: LLY       !< LLY <> 0 --> use Lloyds formula
-   integer, intent(in) :: NAEZ      !< Number of atoms in unit cell
+   integer, intent(in) :: LLY       ! LLY <> 0 --> use Lloyds formula
+   integer, intent(in) :: NAEZ      ! Number of atoms in unit cell
    integer, intent(in) :: NOFKS
    integer, intent(in) :: NSDIA
    integer, intent(in) :: IDECI
-   integer, intent(in) :: NSHELL    !< Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+   integer, intent(in) :: NSHELL    ! Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
    integer, intent(in) :: NSYMAT
-   integer, intent(in) :: INVMOD    !< Inversion scheme
-   integer, intent(in) :: NLBASIS   !< Number of basis layers of left host (repeated units)
-   integer, intent(in) :: NRBASIS   !< Number of basis layers of right host (repeated units)
+   integer, intent(in) :: INVMOD    ! Inversion scheme
+   integer, intent(in) :: NLBASIS   ! Number of basis layers of left host (repeated units)
+   integer, intent(in) :: NRBASIS   ! Number of basis layers of right host (repeated units)
    integer, intent(in) :: NACLSMAX
-   real (kind=dp), intent(in) :: ALAT         !< Lattice constant in a.u.
-   integer, dimension(NEMBD2), intent(in)                           :: CLS     !< Cluster around atomic sites
-   integer, dimension(NSHELD), intent(in)                           :: NSH1    !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-   integer, dimension(NSHELD), intent(in)                           :: NSH2    !< Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-   integer, dimension(NCLSD), intent(in)                           :: NACLS   !< Number of atoms in cluster
-   integer, dimension(NEMBD2), intent(in)                           :: REFPOT  !< Ref. pot. card  at position ! REFPOT(NAEZD+NEMBD)
-   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: ATOM   !< Atom at site in cluster
-   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: EZOA   !< EZ of atom at site in cluster
+   real (kind=dp), intent(in) :: ALAT         ! Lattice constant in a.u.
+   integer, dimension(NEMBD2), intent(in)                           :: CLS     ! Cluster around atomic sites
+   integer, dimension(NSHELD), intent(in)                           :: NSH1    ! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(NSHELD), intent(in)                           :: NSH2    ! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+   integer, dimension(NCLSD), intent(in)                           :: NACLS   ! Number of atoms in cluster
+   integer, dimension(NEMBD2), intent(in)                           :: REFPOT  ! Ref. pot. card  at position ! REFPOT(NAEZD+NEMBD)
+   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: ATOM   ! Atom at site in cluster
+   integer, dimension(NACLSD,NEMBD2), intent(in)                    :: EZOA   ! EZ of atom at site in cluster
    integer, dimension(2,LMMAXD), intent(in)                    :: NRREL
    integer, dimension(NAEZ/NPRINCD,NAEZ/NPRINCD), intent(in)   :: ICHECK
    integer, dimension(2,2,LMMAXD), intent(in)                  :: IRREL
    real (kind=dp), dimension(*), intent(in)            :: VOLCUB
-   real (kind=dp), dimension(3,0:NRD), intent(in)       :: RR       !< Set of real space vectors (in a.u.)
+   real (kind=dp), dimension(3,0:NRD), intent(in)       :: RR       ! Set of real space vectors (in a.u.)
    real (kind=dp), dimension(3,*), intent(in)          :: BZKP
-   real (kind=dp), dimension(3,NEMBD2), intent(in)          :: RBASIS   !< Position of atoms in the unit cell in units of bravais vectors
+   real (kind=dp), dimension(3,NEMBD2), intent(in)          :: RBASIS   ! Position of atoms in the unit cell in units of bravais vectors
    real (kind=dp), dimension(48,3,NSHELD), intent(in)       :: RROT
-   real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in)   :: RCLS  !< Real space position of atom in cluster
+   real (kind=dp), dimension(3,NACLSD,NCLSD), intent(in)   :: RCLS  ! Real space position of atom in cluster
    complex (kind=dp), dimension(LMMAXD,LMMAXD), intent(in)              :: FACTL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NAEZ), intent(in)         :: TINVLL
    complex (kind=dp), dimension(LMMAXD,LMMAXD,NEMBD1), intent(in)            :: TINVBUP
@@ -145,9 +145,9 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    logical, external :: test, opt
 
    !      NDIM=LMGF0D*NAEZ
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! Array sizes definitions
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
    if ( TEST('flow     ') .and. (t_inc%i_write>0)) write(1337,*) '>>> kkrmat1: loop over k-points'
    !
@@ -160,9 +160,9 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
    end do
 
    LLY_GRTR = CZERO ! LLY Lloyd
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! Array allocations
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    allocate(GLLKE(ALM,ALM),stat=i_stat)
    call memocc(i_stat,product(shape(GLLKE))*kind(GLLKE),'GLLKE','kkrmat01')
    ! LLY Lloyd
@@ -183,13 +183,13 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
       allocate(GLLKETV_new(LMMAXD,ALM),stat=i_stat)
       call memocc(i_stat,product(shape(GLLKETV_new))*kind(GLLKETV_new),'GLLKETV_new','kkrmat01')
    end if !( OPT('VIRATOMS') ) THEN
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! End of array allocations
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    !  K-points loop
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 
    if(test('rhoqtest')) then
          call rhoq_read_mu0_scoef(iatomimp, mu, nscoef, imin)
@@ -323,9 +323,9 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
 #endif
 
       RRM(1:3,1:NRD) = -RR(1:3,1:NRD)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       !  KREL .EQ. 0/1
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       if (KREL.EQ.0) then
 
          !$omp single
@@ -422,10 +422,10 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
             enddo
          enddo
          !$omp end single
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
          ! Double the GLLKE0 matrix and transform to the REL representation
          !    ==> GLLKE
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
 #ifdef CPP_HYBRID
          !$omp do
 #endif
@@ -471,10 +471,10 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
       if ( IDECI.EQ.1 ) then
          call DECIMATE(GLLKE,NAEZ,TINVBUP,TINVBDOWN,VACFLAG,FACTL,NLBASIS,NRBASIS)
       endif
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! Construct the matrix M=[-(t)^-1 + G^r] and store it
       ! in the same matrix GLLKE where G^r was stored.
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       if ( .not. OPT('VIRATOMS') ) then
          !$omp single
          do I1=1,NAEZ
@@ -491,11 +491,11 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
 #ifdef CPP_TIMING
          if(mythread==0 .and. t_inc%i_time>0) call timing_start('main1b - inversion')
 #endif
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
          ! Perform the inversion of matrix M
          ! the output is the scattering path operator TAU stored in GLLKE
          ! Actually -TAU, because TAU = (Deltat^-1 - Gref)^-1
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
          !$omp single
          if (LLY.NE.0) then ! If LLY, full inversion is needed
             call INVERSION(GLLKE,0,ICHECK) ! LLY
@@ -506,9 +506,9 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
 #ifdef CPP_TIMING
          if(mythread==0 .and. t_inc%i_time>0) call timing_pause('main1b - inversion')
 #endif
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
          ! LLY Lloyd
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
          if (LLY.NE.0) then
             !-------------------------------------------------------------------
             ! LLY  Prepare quantities for Lloyds formula.
@@ -585,9 +585,9 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
             enddo
             LLY_GRTR_K = TRACE
          endif ! (LLY.NE.0)
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
          ! LLY Lloyd
-         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
       else                   !  .not. OPT('VIRATOMS')
          ! LLY Lloyd formula not built in yet for viratoms
          GLLKE0V(1:ALM,1:ALM) = GLLKE(1:ALM,1:ALM)
@@ -636,9 +636,9 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
          ! ----------------------------------------------------------------------
       end do ! ns
       !$omp end single
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       ! LLY Lloyd Integration
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       IF (LLY.NE.0) then
          LLY_GRTR = LLY_GRTR + LLY_GRTR_K * VOLCUB(KPT) * NSYMAT
       endif
@@ -718,9 +718,9 @@ subroutine KKRMAT01(BZKP,NOFKS,GS,VOLCUB,TINVLL,RROT, &
          enddo
       enddo
    endif
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    ! deallocate arrays
-   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! 
    i_all=-product(shape(GLLKE))*kind(GLLKE)
    deallocate(GLLKE, stat=i_stat)
    call memocc(i_stat,i_all,'GLLKE','kkrmat01')
@@ -785,7 +785,7 @@ subroutine GTDYSON(GTMAT,GMAT,NDIM,LMGF0D,NGD)
    ! .. Input variables
    integer, intent(in) :: NGD
    integer, intent(in) :: NDIM
-   integer, intent(in) :: LMGF0D !< (LMAX+1)**2
+   integer, intent(in) :: LMGF0D ! (LMAX+1)**2
    ! .. In/Out variables
    complex (kind=dp), dimension(NGD,LMGF0D), intent(inout)  :: GMAT
    complex (kind=dp), dimension(NGD,NGD), intent(inout)     :: GTMAT

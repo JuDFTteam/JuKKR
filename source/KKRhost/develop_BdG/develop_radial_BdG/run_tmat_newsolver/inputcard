@@ -2,7 +2,7 @@ RUNOPT
 NEWSOSOL
 
 TESTOPT
-BdG_dev 
+NOSOC   BdG_dev 
 norllsllnosph
 
 
