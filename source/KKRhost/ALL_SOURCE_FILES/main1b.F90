@@ -164,7 +164,7 @@ contains
       integer :: ihelp
       complex (kind=dp), allocatable :: work(:,:)
 #endif
-      integer :: ie_start
+      integer :: ie_start, ntot2
       integer :: ie_num, ie_end, ierr, i_stat, i_all
 
       ! for OPERATOR option
@@ -349,7 +349,12 @@ contains
          if(t_cpa%dmatproj_to_file) then
             open (71,ACCESS='direct',RECL=2*LRECTMT,FILE='dmatproj.unformatted',FORM='unformatted')
          else
-           call init_t_cpa(t_inc, t_cpa, t_mpi_c_grid%ntot2)
+#ifdef CPP_MPI
+           ntot2 = t_mpi_c_grid%ntot2
+#else
+           ntot2 = ielast
+#endif
+           call init_t_cpa(t_inc, t_cpa, ntot2)
          end if !t_cpa%dmatproj_to_file
       end if !LCPAIJ
       !

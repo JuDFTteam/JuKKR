@@ -30,10 +30,10 @@ SUBROUTINE calctmat(icst,ins,ielast, nsra,ispin,nspin,i1,ez,  &
 ! *********************************************************************
 #ifdef CPP_MPI
 use mpi
-use mod_mympi, only: mpiadapt, distribute_work_energies
+use mod_mympi, only: mpiadapt
 use mod_timing
 #endif
-use mod_mympi, only: myrank, nranks, master
+use mod_mympi, only: myrank, nranks, master, distribute_work_energies
 use mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat, t_lloyd,init_tlloyd
 use mod_DataTypes
 use global_variables
