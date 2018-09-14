@@ -172,10 +172,11 @@ subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, &
       c = ctl(it, il)
       csqr = c*c
 
-      ! !        kap1 = -l - 1
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
+      kap1 = -l - 1
       kap2 = l
       if (l==0) kap2 = kap1
-      ! !  
+      ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
       isk1 = isign(1, kap1)
       isk2 = isign(1, kap2)
       sk1 = real(isk1, kind=dp)

@@ -86,10 +86,10 @@ program kkrcode
      call timing_start('main0')
 
      ! open output files
-     write(*,*) '! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! '
-     write(*,*) '! ! Most output written to output.myrank.txt files ! !'
-     write(*,*) '! ! please check these files as well               ! !'
-     write(*,*) '! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! '
+     write(*,*) '! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !'
+     write(*,*) '! ! Most output written to output.myrank.txt files  ! !'
+     write(*,*) '! ! please check these files as well                ! !'
+     write(*,*) '! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !'
      open(1337, file='output.'//trim(ctemp)//'.txt')
      call version_print_header(1337)
 
