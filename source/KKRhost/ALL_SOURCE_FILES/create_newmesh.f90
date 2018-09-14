@@ -1,7 +1,5 @@
-! -------------------------------------------------------------------------------
 ! MODULE: mod_create_newmesh
 !> @brief Module for the creation of the integration grid for the new solver
-! -------------------------------------------------------------------------------
 module mod_create_newmesh
 
   use :: constants
@@ -14,13 +12,11 @@ module mod_create_newmesh
 
 contains
 
-  ! ----------------------------------------------------------------------------
   ! SUBROUTINE: CREATE_NEWMESH
   !> @brief Creation of the integration grid for the new solver
   !> @note changed interface to get rid of inc.p and to be able to use i
   !> create_newmesh in tmatimp routine for GREENIMP option
   !> this is the list of  array dimensions previously importted from inc.p
-  ! ----------------------------------------------------------------------------
   subroutine create_newmesh(natyp, irm, ipand, irid, ntotd, &
     nfund, ncheb, irmdnew, nspin, r, irmin, ipan, ircut, r_log, npan_log, &
     npan_eq, npan_log_at, npan_eq_at, npan_tot, rnew, rpan_intervall, &

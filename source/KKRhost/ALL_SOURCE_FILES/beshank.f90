@@ -3,12 +3,11 @@ module mod_beshank
 contains
 
 subroutine beshank(hl, jl, z, lmax)
-  ! -----------------------------------------------------------------------
   !< calculates spherical bessel, hankel and neumann functions
   !< for the orders lmin .le. l .le. lmax.
   !< For |z| .lt. l+1 the taylor expansions of jl and nl are used.
   !< For |z| .ge. l+1 the explicit expressions for hl(+), hl(-) are used.
-  ! -----------------------------------------------------------------------
+
   use :: mod_datatypes, only: dp
 
   implicit none
@@ -84,13 +83,13 @@ end subroutine beshank
 
 
 subroutine beshank_smallcomp(hl, jl, zval, tau, eryd, lmax)
-  use :: mod_datatypes, only: dp
-  implicit none
-  ! -----------------------------------------------------------------------
   !< takes the spherical bessel etc functions stored in an array up to LMAX
   !< array entries from LMAX+1 to 2*LMAX are assumed to be empty
   !< these values are filled with the potential-free solution of the
   !< SRA-equations
+  use :: mod_datatypes, only: dp
+  implicit none
+  ! -----------------------------------------------------------------------
   ! -----------------------------------------------------------------------
   integer, intent(in) :: lmax
   complex (kind=dp), intent(in) :: zval
