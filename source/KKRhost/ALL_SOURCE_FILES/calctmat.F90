@@ -30,14 +30,11 @@ SUBROUTINE calctmat(icst,ins,ielast, nsra,ispin,nspin,i1,ez,  &
 ! *********************************************************************
 #ifdef CPP_MPI
 use mpi
-#endif
-use mod_mympi, only: myrank, nranks, master
-#ifdef CPP_MPI
-use mod_mympi, only: distribute_linear_on_tasks, mpiadapt
+use mod_mympi, only: mpiadapt
 use mod_timing
 #endif
-use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat,  &
-    t_lloyd,init_tlloyd
+use mod_mympi, only: myrank, nranks, master, distribute_work_energies
+use mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat, t_lloyd,init_tlloyd
 use mod_DataTypes
 use global_variables
 use mod_pnstmat
@@ -150,32 +147,20 @@ endif
 
 ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 IF(myrank==master .AND. t_inc%i_write>0) WRITE(1337,*) 'atom: ',i1
+
+call distribute_work_energies(ielast, distribute_rest=.false.)
 #ifdef CPP_MPI
-CALL distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,  &
-    t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), &! print this info only for first atom at master  &
-    master,ielast,ntot_pt,ioff_pt,.true.)
-
-ie_start = ioff_pt(t_mpi_c_grid%myrank_at)
-ie_end   = ntot_pt(t_mpi_c_grid%myrank_at)
-
-t_mpi_c_grid%ntot2=ie_end !t_mpi_c_grid%dims(1)
-if (.not. (allocated(t_mpi_c_grid%ntot_pt2) .or. allocated(t_mpi_c_grid%ioff_pt2)) ) then
-    allocate(t_mpi_c_grid%ntot_pt2(0:t_mpi_c_grid%nranks_at-1))
-    allocate(t_mpi_c_grid%ioff_pt2(0:t_mpi_c_grid%nranks_at-1))
-end if
-t_mpi_c_grid%ntot_pt2 = ntot_pt
-t_mpi_c_grid%ioff_pt2 = ioff_pt
-! now initialize arrays for tmat, gmat, and gref
-CALL init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
-IF(lly /= 0) CALL init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+ie_start = t_mpi_c_grid%ioff_pt2(t_mpi_c_grid%myrank_at)
+ie_end   = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
 #else
-! now initialize arrays for tmat, gmat, and gref
-CALL init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
-IF(lly /= 0) CALL init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
-
 ie_start = 0
 ie_end = ielast
 #endif
+
+! now initialize arrays for tmat, gmat, and gref
+CALL init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
+IF(lly /= 0) CALL init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+
 
 DO ie_num=1,ie_end
   

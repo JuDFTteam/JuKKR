@@ -100,6 +100,8 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
     write (1337, *) 'Spherical Clusters are created'
     ! LSPHER=.TRUE.
   end if
+
+  !open clusters file
   open (8, file='clusters', status='unknown')
   call version_print_header(8)
   write (8, 230) naez
@@ -405,12 +407,7 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
     end do
   end if
 
-  ! Write out clusters in file
-  open (8, file='clusters', status='UNKNOWN')
-  write (8, 230) naez
-  write (8, 260) alat
-  write (8, 240)(zat(kaoez(1,i1)), i1=1, naez)
-  write (8, 250)(kaoez(1,i1), i1=1, naez)
+  ! Write out clusters in file (already open)
   do jatom = 1, naez
     ic = cls(jatom)
     number = nacls(ic)
@@ -471,7 +468,8 @@ subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, &
       'CLSGEN_TB: Number of layers in a principal layer: NPRINC=', nprinc
   end if
 
-
+  ! close clusters file
+  close(8)
 
   ! ------------------------------------------------------------------------
   write (1337, *) ' Sub clsgen_tb  exiting <<<<<<<<<<<<<'

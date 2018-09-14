@@ -18,19 +18,17 @@ contains
 #endif
 #ifdef CPP_MPI
       use mpi
-#endif
-      use mod_mympi, only: myrank, master
-#ifdef CPP_MPI
-      use mod_mympi, only: distribute_linear_on_tasks, MPIadapt, nranks
+      use mod_mympi, only: MPIadapt, nranks
       use mod_timing
 #endif
+      use mod_mympi, only: myrank, master, distribute_work_energies
       use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat, &
                            t_lloyd,init_tlloyd, type_dtmatJijDij, &
                            init_t_dtmatJij_at
       use Constants
       use mod_profiling
       use mod_wunfiles, only: t_params
-      use mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun,save_wavefunc
+      use mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun, save_wavefunc
       use mod_jijhelp, only: calc_dtmatJij
       use global_variables
       use mod_DataTypes
@@ -216,53 +214,24 @@ contains
       ! start energy loop
       if(myrank==master.and.(t_inc%i_write>0)) WRITE(1337,*) 'atom: ',I1,' NSRA:',NSRA
 
+      call distribute_work_energies(ielast)
 #ifdef CPP_MPI
-      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,  &
-         t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at+(i1-1), & ! print this info only for first atom at master
-         master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
-
-      ie_start = ioff_pT(t_mpi_c_grid%myrank_at)
-      ie_end   = ntot_pT(t_mpi_c_grid%myrank_at)
-
-      t_mpi_c_grid%ntot2=ie_end   !t_mpi_c_grid%dims(1)
-      if (.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
-         allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),stat=i_stat)
-         call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT2))*kind(t_mpi_c_grid%ntot_pT2),'t_mpi_c_grid%ntot_pT2','tmat_newsolver')
-         t_mpi_c_grid%ntot_pT2=0
-         allocate(t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1),stat=i_stat)
-         call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT2))*kind(t_mpi_c_grid%ioff_pT2),'t_mpi_c_grid%ioff_pT2','tmat_newsolver')
-         t_mpi_c_grid%ioff_pT2=0
-      endif
-      t_mpi_c_grid%ntot_pT2 = ntot_pT
-      t_mpi_c_grid%ioff_pT2 = ioff_pT
+      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
+      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+      ie_start = 0
+      ie_end   = IELAST
+#endif
       ! Now initialize arrays for tmat, gmat, and gref
       call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
       if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
-          
+
+      ! consistency check
       if(test('rhoqtest')) then
          if(ielast/=3) stop 'Error: wrong energy contour for rhoqtest'
          ie_start=1
          ie_end=1
       end if
-#else
-      if(.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
-         allocate(t_mpi_c_grid%ntot_pT2(1),stat=i_stat)
-         call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT2))*kind(t_mpi_c_grid%ntot_pT2),'t_mpi_c_grid%ntot_pT2','tmat_newsolver')
-         t_mpi_c_grid%ntot_pT2=0
-         allocate(t_mpi_c_grid%ioff_pT2(1),stat=i_stat)
-         call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT2))*kind(t_mpi_c_grid%ioff_pT2),'t_mpi_c_grid%ioff_pT2','tmat_newsolver')
-         t_mpi_c_grid%ioff_pT2=0
-      endif
-      t_mpi_c_grid%ntot2      =IELAST
-      t_mpi_c_grid%ntot_pT2   = IELAST
-      t_mpi_c_grid%ioff_pT2   = 0
-      ! now initialize arrays for tmat, gmat, and gref
-      call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
-      if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
-
-      ie_start = 0
-      ie_end   = IELAST
-#endif
 
       ! For Jij-tensor calculation: allocate array to hold additional t-matrices
       call init_t_dtmatJij_at(t_inc, t_mpi_c_grid, t_dtmatJij_at)

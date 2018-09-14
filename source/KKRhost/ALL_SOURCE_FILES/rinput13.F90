@@ -4,16 +4,25 @@ module rinput
 
 contains
   ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: RINPUT13
-  !> @brief Routine to read the information from the input file
-  !> @author Bernd Zimmermann
-  !> @note Jonathan Chico: Added calls for the different parameters options,
-  !> that are being changed from the inc.p to now the reader. Of this way if
-  ! there
-  !> is a problem the user only has to add a line or change a value of the
-  ! inc.p
-  !> not recompile the code
-  ! -------------------------------------------------------------------------------
+  ! !>author:  The author of this part of the code
+  ! !> date:The date that this part of the code was written (or that the documentation was written; whichever makes more sense to you).
+  ! !> license: The license for this part of your code. If you want to provide a link then it will have to be in HTML, as it won’t be processed by Markdown.
+  ! !> version: The version number (or name) of this part of the code.
+  ! !> category:test
+ !
+  ! !> A category for this part of the code. Currently this is fairly useless, just being printed in the documentation. In future, FORD may provide lists of things in each category.
+  ! !> summary: A brief description of this part of the code. If not specified then FORD will use the first paragraph of the body of your documentation.
+  ! !> SUBROUTINE: RINPUT13
+  ! !> @brief Routine to read the information from the input file
+  ! !> @author Bernd Zimmermann
+  ! !> @note Jonathan Chico: Added calls for the different parameters options,
+  ! !> that are being changed from the inc.p to now the reader. Of this way if
+  ! !> there
+  ! !> is a problem the user only has to add a line or change a value of the
+  ! !> inc.p
+  ! !> not recompile the code
+  ! !> 
+  ! ! -------------------------------------------------------------------------------
   subroutine rinput13(kte, igf, kxc, lly, icc, ins, kws, ipe, ipf, ipfe, &
     icst, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, kefg, khyp, &
     kpre, kvmad, lmmax, lmpot, ncheb, nleft, ifile, kvrel, nspin, natyp, &
@@ -29,6 +38,24 @@ contains
     i12, i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, &
     icpa, kaoez, conc, kmrot, qmtet, qmphi, kreadldau, lopt, ueff, jeff, &
     erefldau)
+    !! author:  The author of this part of the code
+    !! date:The date that this part of the code was written (or that the documentation was written; whichever makes more sense to you).
+    !! license: The license for this part of your code. If you want to provide a link then it will have to be in HTML, as it won’t be processed by Markdown.
+    !! version: The version number (or name) of this part of the code.
+    !! category: test
+    !! summary: A brief description of this part of the code. If not specified then FORD will use the first paragraph of the body of your documentation.
+    !! deprecated: False
+    !!
+    !! SUBROUTINE: RINPUT13
+    !! @brief Routine to read the information from the input file
+    !! @author Bernd Zimmermann
+    !! @note Jonathan Chico: Added calls for the different parameters options,
+    !! that are being changed from the inc.p to now the reader. Of this way if
+    !! there
+    !! is a problem the user only has to add a line or change a value of the
+    !! inc.p
+    !! not recompile the code
+    !! 
 
     use :: mod_profiling
     use :: constants
@@ -52,15 +79,15 @@ contains
     ! ..
     ! .. Scalar Arguments ..
     integer, intent (inout) :: kte !! Calculation of the total energy On/Off
-                                   ! (1/0)
+                                   !! (1/0)
     integer, intent (inout) :: igf !! Do not print or print (0/1) the
-                                   ! KKRFLEX_* files
+                                   !! KKRFLEX_* files
     integer, intent (inout) :: kxc !! Type of xc-potential 0=vBH 1=MJW 2=VWN
-                                   ! 3=PW91
+                                   !! 3=PW91
     integer, intent (inout) :: lly !! LLY <> 0 : apply Lloyds formula
     integer, intent (inout) :: icc !! Enables the calculation of off-diagonal
-                                   ! elements of the GF.(0=SCF/DOS; 1=cluster;
-                                   ! -1=custom)
+                                   !! elements of the GF.(0=SCF/DOS; 1=cluster;
+                                   !! -1=custom)
     integer, intent (inout) :: ins !! 0 (MT), 1(ASA), 2(Full Potential)
     integer, intent (inout) :: kws !! 0 (MT), 1(ASA)
     integer, intent (inout) :: ipe !! Not real used, IPFE should be 0
@@ -68,16 +95,16 @@ contains
     integer, intent (inout) :: ipfe !! Not real used, IPFE should be 0
     integer, intent (inout) :: icst !! Number of Born approximation
     integer, intent (inout) :: imix !! Type of mixing scheme used
-                                    ! (0=straight, 4=Broyden 2nd, 5=Anderson)
+                                    !! (0=straight, 4=Broyden 2nd, 5=Anderson)
     integer, intent (inout) :: lpot !! Maximum l component in potential
-                                    ! expansion
+                                    !! expansion
     integer, intent (inout) :: naez !! Number of atoms in unit cell
     integer, intent (inout) :: nemb !! Number of 'embedding' positions
     integer, intent (inout) :: nref !! Number of diff. ref. potentials
     integer, intent (inout) :: ncls !! Number of reference clusters
     integer, intent (inout) :: npol !! Number of Matsubara Pols (EMESHT)
     integer, intent (inout) :: lmax !! Maximum l component in wave function
-                                    ! expansion
+                                    !! expansion
     integer, intent (inout) :: kcor
     integer, intent (inout) :: kefg
     integer, intent (inout) :: khyp
@@ -86,207 +113,150 @@ contains
     integer, intent (inout) :: lmmax
     integer, intent (inout) :: lmpot
     integer, intent (inout) :: ncheb !! Number of Chebychev pannels for the
-                                     ! new solver
+                                     !! new solver
     integer, intent (inout) :: nleft !! Number of repeated basis for left
-                                     ! host to get converged  electrostatic
-                                     ! potentials
+                                     !! host to get converged  electrostatic
+                                     !! potentials
     integer, intent (inout) :: ifile !! Unit specifier for potential card
     integer, intent (inout) :: kvrel !! 0,1 : non / scalar relat. calculation
     integer, intent (inout) :: nspin !! Counter for spin directions
     integer, intent (inout) :: natyp !! Number of kinds of atoms in unit cell
     integer, intent (inout) :: nineq !! Number of ineq. positions in unit
-                                     ! cell
+                                     !! cell
     integer, intent (inout) :: npnt1 !! number of E points (EMESHT) for the
-                                     ! contour integration
+                                     !! contour integration
     integer, intent (inout) :: npnt2 !! number of E points (EMESHT) for the
-                                     ! contour integration
+                                     !! contour integration
     integer, intent (inout) :: npnt3 !! number of E points (EMESHT) for the
-                                     ! contour integration
+                                     !! contour integration
     integer, intent (inout) :: kfrozn
     integer, intent (inout) :: ishift
     integer, intent (inout) :: n1semi !! Number of energy points for the
-                                      ! semicore contour
+                                      !! semicore contour
     integer, intent (inout) :: n2semi !! Number of energy points for the
-                                      ! semicore contour
+                                      !! semicore contour
     integer, intent (inout) :: n3semi !! Number of energy points for the
-                                      ! semicore contour
+                                      !! semicore contour
     integer, intent (inout) :: nsteps !! number of iterations
     integer, intent (inout) :: insref !! INS for reference pot. (usual 0)
     integer, intent (inout) :: kshape !! Exact treatment of WS cell
     integer, intent (inout) :: itdbry !! Number of SCF steps to remember for
-                                      ! the Broyden mixing
+                                      !! the Broyden mixing
     integer, intent (inout) :: nright !! Number of repeated basis for right
-                                      ! host to get converged  electrostatic
-                                      ! potentials
+                                      !! host to get converged  electrostatic
+                                      !! potentials
     integer, intent (inout) :: kforce !! Calculation of the forces
     integer, intent (inout) :: ivshift
     integer, intent (inout) :: khfield !! 0,1: no / yes external magnetic
-                                       ! field
+                                       !! field
     integer, intent (inout) :: nlbasis !! Number of basis layers of left host
-                                       ! (repeated units)
+                                       !! (repeated units)
     integer, intent (inout) :: nrbasis !! Number of basis layers of right
-                                       ! host (repeated units)
+                                       !! host (repeated units)
     integer, intent (inout) :: intervx !! Number of intervals in x-direction
-                                       ! for k-net in IB of the BZ
+                                       !! for k-net in IB of the BZ
     integer, intent (inout) :: intervy !! Number of intervals in y-direction
-                                       ! for k-net in IB of the BZ
+                                       !! for k-net in IB of the BZ
     integer, intent (inout) :: intervz !! Number of intervals in z-direction
-                                       ! for k-net in IB of the BZ
+                                       !! for k-net in IB of the BZ
     integer, intent (inout) :: npan_eq !! Number of intervals from [R_LOG] to
-                                       ! muffin-tin radius Used in conjunction
-                                       ! with runopt NEWSOSOL
+                                       !! muffin-tin radius Used in conjunction
+                                       !! with runopt NEWSOSOL
     integer, intent (inout) :: npan_log !! Number of intervals from nucleus
-                                        ! to [R_LOG] Used in conjunction with
-                                        ! runopt NEWSOSOL
+                                        !! to [R_LOG] Used in conjunction with
+                                        !! runopt NEWSOSOL
     integer, intent (inout) :: npolsemi !! Number of poles for the semicore
-                                        ! contour
+                                        !! contour
     real (kind=dp), intent (inout) :: tk !! Temperature
     real (kind=dp), intent (inout) :: fcm !! Factor for increased linear
-                                          ! mixing of magnetic part of
-                                          ! potential compared to non-magnetic
-                                          ! part.
+                                          !! mixing of magnetic part of
+                                          !! potential compared to non-magnetic
+                                          !! part.
     real (kind=dp), intent (inout) :: emin !! Lower value (in Ryd) for the
-                                           ! energy contour
+                                           !! energy contour
     real (kind=dp), intent (inout) :: emax !! Maximum value (in Ryd) for the
-                                           ! DOS calculation Controls also
-                                           ! [NPT2] in some cases
+                                           !! DOS calculation Controls also
+                                           !! [NPT2] in some cases
     real (kind=dp), intent (inout) :: rmax !! Ewald summation cutoff
-                                           ! parameter for real space
-                                           ! summation
+                                           !! parameter for real space
+                                           !! summation
     real (kind=dp), intent (inout) :: gmax !! Ewald summation cutoff
-                                           ! parameter for reciprocal space
-                                           ! summation
+                                           !! parameter for reciprocal space
+                                           !! summation
     real (kind=dp), intent (inout) :: alat !! Lattice constant (in a.u.)
     real (kind=dp), intent (inout) :: r_log !! Radius up to which log-rule is
-                                            ! used for interval width. Used in
-                                            ! conjunction with runopt NEWSOSOL
+                                            !! used for interval width. Used in
+                                            !! conjunction with runopt NEWSOSOL
     real (kind=dp), intent (inout) :: rcutz !! Parameter for the screening
-                                            ! cluster along the z-direction
+                                            !! cluster along the z-direction
     real (kind=dp), intent (inout) :: rcutxy !! Parameter for the screening
-                                             ! cluster along the x-y plane
+                                             !! cluster along the x-y plane
     real (kind=dp), intent (inout) :: eshift
     real (kind=dp), intent (inout) :: qbound !! Convergence parameter for the
-                                             ! potential
+                                             !! potential
     real (kind=dp), intent (inout) :: hfield !! External magnetic field, for
-                                             ! initial potential shift in spin
-                                             ! polarised case
+                                             !! initial potential shift in spin
+                                             !! polarised case
     real (kind=dp), intent (inout) :: mixing !! Magnitude of the mixing
-                                             ! parameter
+                                             !! parameter
     real (kind=dp), intent (inout) :: abasis !! Scaling factors for rbasis
     real (kind=dp), intent (inout) :: bbasis !! Scaling factors for rbasis
     real (kind=dp), intent (inout) :: cbasis !! Scaling factors for rbasis
     real (kind=dp), intent (inout) :: vconst !! Potential shift in the first
-                                             ! iteration
+                                             !! iteration
     real (kind=dp), intent (inout) :: tksemi !! Temperature for semi-core
-                                             ! contour
+                                             !! contour
     real (kind=dp), intent (inout) :: tolrdif !! For distance between
-                                              ! scattering-centers smaller
-                                              ! than [<TOLRDIF>], free GF is
-                                              ! set to zero. Units are Bohr
-                                              ! radii.
+                                              !! scattering-centers smaller
+                                              !! than [<TOLRDIF>], free GF is
+                                              !! set to zero. Units are Bohr
+                                              !! radii.
     real (kind=dp), intent (inout) :: emusemi !! Top of semicore contour in
-                                              ! Ryd.
+                                              !! Ryd.
     real (kind=dp), intent (inout) :: ebotsemi !! Bottom of semicore contour
-                                               ! in Ryd
+                                               !! in Ryd
     real (kind=dp), intent (inout) :: fsemicore !! Initial normalization
-                                                ! factor for semicore states
-                                                ! (approx. 1.)
+                                                !! factor for semicore states
+                                                !! (approx. 1.)
     real (kind=dp), intent (inout) :: lambda_xc !! Scale magnetic moment (0 <
-                                                ! Lambda_XC < 1,0=zero moment,
-                                                ! 1= full moment)
+                                                !! Lambda_XC < 1,0=zero moment,
+                                                !! 1= full moment)
     complex (kind=dp), intent (inout) :: deltae !! LLY Energy difference for
-                                                ! numerical derivative
+                                                !! numerical derivative
     logical, intent (inout) :: lrhosym
     logical, intent (inout) :: linipol !! True: Initial spin polarization;
-                                       ! false: no initial spin polarization
+                                       !! false: no initial spin polarization
     logical, intent (inout) :: lcartesian !! True: Basis in cartesian coords;
-                                          ! false: in internal coords
+                                          !! false: in internal coords
     ! .. Array Arguments ..
-    integer, dimension (:), allocatable, intent (out) :: imt !! R point at MT
-                                                             ! radius
-    integer, dimension (:), allocatable, intent (out) :: cls !! Cluster
-                                                             ! around atomic
-                                                             ! sites
+    integer, dimension (:), allocatable, intent (out) :: imt !! R point at MT radius
+    integer, dimension (:), allocatable, intent (out) :: cls !! Cluster around atomic sites
     integer, dimension (:), allocatable, intent (out) :: lmxc
-    integer, dimension (:), allocatable, intent (out) :: irns !! Position of
-                                                              ! atoms in the
-                                                              ! unit cell in
-                                                              ! units of
-                                                              ! bravais
-                                                              ! vectors
-    integer, dimension (:), allocatable, intent (out) :: irws !! R point at
-                                                              ! WS radius
-    integer, dimension (:), allocatable, intent (out) :: ntcell !! Index for
-                                                                ! WS cell
-    integer, dimension (:), allocatable, intent (out) :: refpot !! Ref. pot.
-                                                                ! card  at
-                                                                ! position
-    integer, dimension (:), allocatable, intent (out) :: inipol !! Initial
-                                                                ! spin
-                                                                ! polarisation
-    integer, dimension (:), allocatable, intent (out) :: ixipol !! Constraint
-                                                                ! of spin pol.
+    integer, dimension (:), allocatable, intent (out) :: irns !! Position of atoms in the unit cell in
+                                                              !! units of bravais vectors
+    integer, dimension (:), allocatable, intent (out) :: irws !! R point at WS radius
+    integer, dimension (:), allocatable, intent (out) :: ntcell !! Index for WS cell
+    integer, dimension (:), allocatable, intent (out) :: refpot !! Ref. pot. card  at position
+    integer, dimension (:), allocatable, intent (out) :: inipol !! Initial spin polarisation
+    integer, dimension (:), allocatable, intent (out) :: ixipol !! Constraint of spin pol.
     integer, dimension (:), allocatable, intent (out) :: hostimp
     integer, dimension (:, :), allocatable, intent (out) :: kfg
-    real (kind=dp), dimension (2), intent (inout) :: vbc !! Potential
-                                                         ! constants
-    real (kind=dp), dimension (3), intent (inout) :: zperleft !! Vector to
-                                                              ! define how to
-                                                              ! repeat the
-                                                              ! basis of the
-                                                              ! left host
-    real (kind=dp), dimension (3), intent (inout) :: zperight !! Vector to
-                                                              ! define how to
-                                                              ! repeat the
-                                                              ! basis of the
-                                                              ! right host
-    real (kind=dp), dimension (3, 3), intent (inout) :: bravais !! Bravais
-                                                                ! lattice
-                                                                ! vectors
-    real (kind=dp), dimension (:), allocatable, intent (out) :: rmt !!
-                                                                    ! Muffin-tin
-                                                                    ! radius
-                                                                    ! of true
-                                                                    ! system
-    real (kind=dp), dimension (:), allocatable, intent (out) :: zat !!
-                                                                    ! Nuclear
-                                                                    ! charge
-    real (kind=dp), dimension (:), allocatable, intent (out) :: rws !! Wigner
-                                                                    ! Seitz
-                                                                    ! radius
-    real (kind=dp), dimension (:), allocatable, intent (out) :: mtfac !!
-                                                                      ! Scaling
-                                                                      ! factor
-                                                                      ! for
-                                                                      ! radius
-                                                                      ! MT
-    real (kind=dp), dimension (:), allocatable, intent (out) :: rmtref !!
-                                                                       ! Muffin-tin
-                                                                       ! radius
-                                                                       ! of
-                                                                       ! reference
-                                                                       ! system
-    real (kind=dp), dimension (:), allocatable, intent (out) :: rmtnew !!
-                                                                       ! Adapted
-                                                                       ! muffin-tin
-                                                                       ! radius
+    real (kind=dp), dimension (2), intent (inout) :: vbc !! Potential constants
+    real (kind=dp), dimension (3), intent (inout) :: zperleft !! Vector to define how to
+                                                              !! repeat the basis of the left host
+    real (kind=dp), dimension (3), intent (inout) :: zperight !! Vector to define how to
+                                                              !! repeat the basis of the right host
+    real (kind=dp), dimension (3, 3), intent (inout) :: bravais !! Bravais lattice vectors
+    real (kind=dp), dimension (:), allocatable, intent (out) :: rmt !! Muffin-tin radius
+                                                                    !! of true system
+    real (kind=dp), dimension (:), allocatable, intent (out) :: zat !! Nuclear charge
+    real (kind=dp), dimension (:), allocatable, intent (out) :: rws !! Wigner Seitz radius
+    real (kind=dp), dimension (:), allocatable, intent (out) :: mtfac !! Scaling factor for radius MT
+    real (kind=dp), dimension (:), allocatable, intent (out) :: rmtref !! Muffin-tin radius of reference system
+    real (kind=dp), dimension (:), allocatable, intent (out) :: rmtnew !! Adapted muffin-tin radius
     real (kind=dp), dimension (:), allocatable, intent (out) :: rmtrefat
-    real (kind=dp), dimension (:), allocatable, intent (out) :: fpradius !! R
-                                                                         ! point
-                                                                         ! at
-                                                                         ! which
-                                                                         ! full-potential
-                                                                         ! treatment
-                                                                         ! starts
-    real (kind=dp), dimension (:, :), allocatable, intent (out) :: tleft !!
-                                                                         ! Vectors
-                                                                         ! of
-                                                                         ! the
-                                                                         ! basis
-                                                                         ! for
-                                                                         ! the
-                                                                         ! left
-                                                                         ! host
+    real (kind=dp), dimension (:), allocatable, intent (out) :: fpradius !! R point at which full-potential treatment starts
+    real (kind=dp), dimension (:, :), allocatable, intent (out) :: tleft !! Vectors of the basis for the left host
     real (kind=dp), dimension (:, :), allocatable, intent (out) :: tright !!
                                                                           ! vectors
                                                                           ! of
@@ -474,7 +444,7 @@ contains
     logical :: latominfo           !! Logical variable for old/new treatment
                                    ! of the ATOMINFO
     ! .. Local CPA variables
-    integer :: io, ia, iq, iprint
+    integer :: io, iq, iprint
     real (kind=dp) :: sum1
     character (len=3), dimension (0:1) :: cpaflag
 
@@ -1254,6 +1224,7 @@ contains
     else
       write (111, *) 'Default KREL= ', krel
     end if
+
     ! ----------------------------------------------------------------------------
     ! End of variables that used to be in the inc.
     ! ----------------------------------------------------------------------------
@@ -1629,18 +1600,21 @@ contains
       read (unit=uio, fmt=*) intervx, intervy, intervz
       write (111, fmt='(A9,3I5)') 'BZDIVIDE=', intervx, intervy, intervz
     else
-      write (111, fmt='(A17,3I5)') 'Default BZDIVIDE=', intervx, intervy, &
-        intervz
+      write (111, fmt='(A17,3I5)') 'Default BZDIVIDE=', intervx, intervy, intervz
     end if
+
+    if (linterface .and. intervz>1) then
+      write (1337, *) 'Found 2D mode: resetting BZDIVIDE(3) to 1'
+      intervz = 1
+    end if
+
     write (1337, 350)
     write (1337, 190) intervx, intervy, intervz
     write (1337, 330)
 
     if (opt('GREENIMP')) then
-      write (*, *) &
-        'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
-      write (1337, *) &
-        'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+      write (*, *) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
+      write (1337, *) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
       intervx = 1
       intervy = 1
       intervz = 1
@@ -1895,7 +1869,6 @@ contains
     write (1337, *) 'ATOMINFOC or ATOMINFO:'
     do i = 1, natyp
       call ioinput('ATOMINFOC       ', uio, i+1, 7, ier)
-      ia = 1
       if (ier==0) then
         latominfo = .true.
         read (unit=uio, fmt=*) zat(i), lmxc(i), (kfg(j,i), j=1, 4), j, ier, &

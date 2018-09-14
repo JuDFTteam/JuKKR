@@ -57,7 +57,7 @@ use mod_types, only: t_inc
       EXTERNAL TEST
 !..
 !.. Intrinsic Functions ..
-      INTRINSIC ABS,DBLE
+      INTRINSIC ABS
 #ifdef CPP_HYBRID
       INTEGER thread_id
 #endif

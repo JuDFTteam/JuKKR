@@ -6,7 +6,7 @@ module mod_mympi
 implicit none
 
   private
-  public :: myrank, nranks, master, mympi_init, MPIatom, MPIadapt
+  public :: myrank, nranks, master, mympi_init, MPIatom, MPIadapt, distribute_work_atoms, distribute_work_energies
 #ifdef CPP_MPI
   public :: distribute_linear_on_tasks, find_dims_2d, create_newcomms_group_ie, mympi_main1c_comm, mympi_main1c_comm_newsosol, mympi_main1c_comm_newsosol2, check_communication_pattern
 #endif
@@ -816,7 +816,6 @@ contains
 #ifdef CPP_MPI
   subroutine check_communication_pattern(MPIatom, MPIadapt, timings_1a, timings_1b, load_imbalance, nkmesh, kmesh_ie)
   
-!     use mod_types, only: t_mpi_c_grid
     use mpi
     
     implicit none
@@ -904,5 +903,124 @@ contains
     
   end subroutine check_communication_pattern
 #endif
+
+
+  !< wrapper for work distribution over energies, also saves parallelization
+  !< information for later use in t_mpi_c_grid
+  subroutine distribute_work_energies(n_work, distribute_rest)
+
+    use mod_types, only: t_mpi_c_grid
+    use mod_profiling, only: memocc
+
+    implicit none
+
+    !< number of energies to be distributed
+    integer, intent(in) :: n_work 
+    !< decide wether or not to distribute the rest rank or leave them idle
+    logical, optional, intent(in) :: distribute_rest 
+    ! locals
+    integer, dimension(0:nranks-1) :: ntot_pt, ioff_pt
+    integer :: i_stat
+
+#ifdef CPP_MPI
+    if (present(distribute_rest)) then
+      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,  &
+         t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master, &
+         n_work,ntot_pT,ioff_pT,.true.,distribute_rest)
+    else
+      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,  &
+         t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master, &
+         n_work,ntot_pT,ioff_pT,.true.,.true.)
+    end if
+
+    ! store in t_mpi_c_grid for later use
+    if (.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
+       allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1),stat=i_stat)
+       call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT2))*kind(t_mpi_c_grid%ntot_pT2),'t_mpi_c_grid%ntot_pT2','distribute_work_energies')
+       allocate(t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1),stat=i_stat)
+       call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT2))*kind(t_mpi_c_grid%ioff_pT2),'t_mpi_c_grid%ioff_pT2','distribute_work_energies')
+    endif
+    t_mpi_c_grid%ntot_pT2 = ntot_pT
+    t_mpi_c_grid%ioff_pT2 = ioff_pT
+    t_mpi_c_grid%ntot2    = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+#else
+    if(.not.(allocated(t_mpi_c_grid%ntot_pT2).or.allocated(t_mpi_c_grid%ioff_pT2))) then
+       allocate(t_mpi_c_grid%ntot_pT2(1),stat=i_stat)
+       call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT2))*kind(t_mpi_c_grid%ntot_pT2),'t_mpi_c_grid%ntot_pT2','distribute_work_energies')
+       allocate(t_mpi_c_grid%ioff_pT2(1),stat=i_stat)
+       call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT2))*kind(t_mpi_c_grid%ioff_pT2),'t_mpi_c_grid%ioff_pT2','distribute_work_energies')
+    endif
+    t_mpi_c_grid%ntot2      = n_work
+    t_mpi_c_grid%ntot_pT2   = n_work
+    t_mpi_c_grid%ioff_pT2   = 0
+#endif
+
+  end subroutine distribute_work_energies
+
+
+  !< wrapper for work distribution over atoms, also saves parallelization
+  !< information for later use in t_mpi_c_grid
+  subroutine distribute_work_atoms(n_work, i1_start, i1_end, distribute_rest)
+
+    use mod_types, only: t_mpi_c_grid
+    use mod_profiling, only: memocc
+
+    implicit none
+
+    !< number of energies to be distributed
+    integer, intent(in) :: n_work 
+    !< decide wether or not to distribute the rest rank or leave them idle
+    logical, optional, intent(in) :: distribute_rest 
+    !< number of energies to be distributed
+    integer, intent(out) :: i1_start 
+    !< number of energies to be distributed
+    integer, intent(out) :: i1_end 
+    ! locals
+    integer, dimension(0:nranks-1) :: ntot_pt, ioff_pt
+    integer :: i_stat
+
+#ifdef CPP_MPI
+    if (present(distribute_rest)) then
+      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie,  &
+         t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master, &
+         n_work,ntot_pT,ioff_pT,.true.,distribute_rest)
+    else
+      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie,  &
+         t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master, &
+         n_work,ntot_pT,ioff_pT,.true.,.true.)
+    end if
+
+    i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
+    i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+ntot_pT(t_mpi_c_grid%myrank_ie)
+
+    ! store in t_mpi_c_grid for later use
+    t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
+
+    if (.not. (allocated(t_mpi_c_grid%ntot_pT1) .and.  &
+       allocated(t_mpi_c_grid%ioff_pT1))) then
+       allocate(t_mpi_c_grid%ntot_pT1(0:t_mpi_c_grid%nranks_ie-1),stat=i_stat)
+       call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT1))*kind(t_mpi_c_grid%ntot_pT1), 't_mpi_c_grid%ntot_pT1','distribute_work_atoms')
+       allocate(t_mpi_c_grid%ioff_pT1(0:t_mpi_c_grid%nranks_ie-1),stat=i_stat)
+       call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT1))*kind(t_mpi_c_grid%ioff_pT1), 't_mpi_c_grid%ioff_pT1','distribute_work_atoms')
+    endif
+    t_mpi_c_grid%ntot_pT1 = ntot_pT
+    t_mpi_c_grid%ioff_pT1 = ioff_pT
+#else
+    if(.not.(allocated(t_mpi_c_grid%ntot_pT1).or.allocated(t_mpi_c_grid%ioff_pT1))) then
+       allocate(t_mpi_c_grid%ntot_pT1(1),stat=i_stat)
+       call memocc(i_stat,product(shape(t_mpi_c_grid%ntot_pT1))*kind(t_mpi_c_grid%ntot_pT1),'t_mpi_c_grid%ntot_pT1','distribute_work_atoms')
+       allocate(t_mpi_c_grid%ioff_pT1(1),stat=i_stat)
+       call memocc(i_stat,product(shape(t_mpi_c_grid%ioff_pT1))*kind(t_mpi_c_grid%ioff_pT1),'t_mpi_c_grid%ioff_pT1','distribute_work_atoms')
+    endif
+    t_mpi_c_grid%ntot1      = n_work
+    t_mpi_c_grid%ntot_pT1   = n_work
+    t_mpi_c_grid%ioff_pT1   = 0
+
+    i1_start = 1
+    i1_end   = n_work
+#endif
+
+  end subroutine distribute_work_atoms
+
 
 end module mod_mympi

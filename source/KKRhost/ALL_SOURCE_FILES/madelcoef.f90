@@ -30,7 +30,7 @@ subroutine madelcoef(linterface, lpot, a, b, smat, cleb, icleb, iend, lpotd, &
   ! integer, save :: icall_madelcoef=0
   ! ..
   ! .. Intrinsic functions
-  intrinsic :: abs, real
+  intrinsic :: real
   ! ..................................................................
 
   lmpot = (lpot+1)**2

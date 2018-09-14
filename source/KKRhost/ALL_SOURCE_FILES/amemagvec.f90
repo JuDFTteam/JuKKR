@@ -30,7 +30,6 @@ subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, &
   ! Local variables
 
   character (len=1) :: chpol(3)
-  real (kind=dp) :: dble
   integer :: i, ikm1, ikm2, imkm, imv, imvec, ipol, j1p05, j2p05, k, k1, k2, &
     kap1, kap2, l, l1, l2, lb1, lb2, m2, msm05, mue1m05, mue2m05, nk, nmvec
   integer :: iabs, nint
@@ -113,7 +112,7 @@ subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, &
             do msm05 = -1, 0
               m2 = mue2m05 - msm05
               if (abs(m2)<=l2) sum = sum + cgc(ikm1, msm05+2)*cgc(ikm2, msm05+ &
-                2)*sqrt(dble((l2-m2)*(l2+m2+1)))
+                2)*sqrt(real((l2-m2)*(l2+m2+1), kind=dp))
             end do
             amemvec(ikm1, ikm2, 1, 2) = sum
           end if
@@ -125,7 +124,7 @@ subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, &
             do msm05 = -1, 0
               m2 = mue2m05 - msm05
               if (abs(m2)<=l2) sum = sum + cgc(ikm1, msm05+2)*cgc(ikm2, msm05+ &
-                2)*sqrt(dble((l2+m2)*(l2-m2+1)))
+                2)*sqrt(real((l2+m2)*(l2-m2+1), kind=dp))
 
             end do
             amemvec(ikm1, ikm2, 2, 2) = sum

@@ -27,39 +27,70 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ../ )
 
 # we define some compiler flags
 if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
+
     message("Intel compiler found")
+    set(compver "intel")
+
+    # standard compiler flags
     set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -g -traceback")
+
+    # increase stacksize on mac
+    if(CMAKE_SYSTEM_NAME MATCHES Darwin)
+        set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -Wl,-stack_size,0x80000000,-stack_addr,0xf0000000")
+    endif()
+
+    # link serial or parallel mkl
     if(ENABLE_OMP)
         set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mkl=parallel")
     else()
         set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mkl=sequential")
     endif()
-    #set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -module $(OBJ) -g -sox")
-    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -module $(OBJ) -g -sox")
+
+    # debug flags
+    #set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g -sox")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -g -sox")
+
+    # release flags
+    set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -r8 -ip -xHOST")
+
+    # for coverage report
     if(ENABLE_COV)
         set(CMAKE_Fortran_FLAGS     "${CMAKE_Fortran_FLAGS} -prof-gen:srcpos")
     endif()
-    set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -r8 -ip -xHOST")
-    set(compver "intel")
+
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+
     message("GNU compiler found")
+    set(compver "gnu")
+
+    # standard compiler flags
     set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -lblas -llapack -ffree-line-length-none -fdefault-real-8 -fimplicit-none")
-    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g3 -fcheck=all -fbacktrace -Wall -Wextra")
+
+    # debug flags
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g3 -fcheck=all -fbacktrace -Wall -Wextra -mtune=native")
+
+    # release flags
     set(CMAKE_Fortran_FLAGS_RELEASE "-Ofast -march=native -fbacktrace")
+
+    # flags for code-coverage
     if(ENABLE_COV)
         set(CMAKE_Fortran_FLAGS     "${CMAKE_Fortran_FLAGS} -fprofile-arcs -ftest-coverage -fPIC")
     endif()
+
+    # disable MD5 sums for GNU compiler
+    add_definitions(-DCPP_NOMD5)
+
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES NAG)
+
+    message("NAG compiler found")
+    set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -Imodules -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -C=all")
+    set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
     # disable MD5 sums for gnu compiler
     add_definitions(-DCPP_NOMD5)
-    set(compver "gnu")
-endif()
+    set(compver "nag")
 
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    set(compver "${compver}-debug")
 endif()
-
-# common preprocessing options for all compilers
-add_definitions(-DCPP_TIMING)
 
 # default is Release build type (use '-DCMAKE_BUILD_TYPE=Debug' for Debug mode)
 if(NOT CMAKE_BUILD_TYPE)
@@ -67,6 +98,15 @@ if(NOT CMAKE_BUILD_TYPE)
     message("Release build")
 endif()
 
+# add '-debug' to compiler version identification
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(compver "${compver}-debug")
+endif()
+
+# common preprocessing options for all compilers
+add_definitions(-DCPP_TIMING)
+
+# compiler flags etc for parallelization
 # MPI option (enable with '-DENABLE_MPI=ON')
 # and OpenMP option (enable with '-DENABLE_OMP=ON')
 # hybrid version with -DENABLE_MPI=ON and -DENABLE_OMP=ON
@@ -101,15 +141,17 @@ else()
     message("both MPI and OpenMP are disabled")
 endif()
 
-# maybe for future librbary dependecies
+# maybe for future library dependecies
 set(complib "")
 
+# some static dimensions used in Dirac solver
+execute_process(COMMAND ln -s ../sprkkr_rmesh.dim .)
 
 # extract version info
 # generate a Git version string
 execute_process(COMMAND git describe OUTPUT_VARIABLE GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-# write compiler flags
+# write compiler flags for version info
 add_definitions(-DCOMPVER1="${GIT_VERSION}")
 add_definitions(-DCOMPVER2="${compver}")
 add_definitions(-DCOMPVER3="${compflag}")

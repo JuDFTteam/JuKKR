@@ -23,9 +23,8 @@ subroutine getbr3(nembd1, nlbasis, alat, tleft, nrbasis, tright, bravais, &
   real (kind=dp) :: bravais(3, 3), recbv(3, 3), volume0
   ! Smallest distance between left and right sites:
   integer :: i1, i2
-  real (kind=dp) :: zmax, z1, z2, diff, twopi
+  real (kind=dp) :: zmax, z1, z2, diff
 
-  twopi = 8.e0_dp*atan(1.e0_dp)
   ! Units of a
   zmax = 1.e100_dp
   do i1 = 1, nlbasis

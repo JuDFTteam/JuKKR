@@ -6,8 +6,8 @@ subroutine addviratoms14(linterface, nvirt, naez, naezd, natypd, nemb, nembd, &
   rbasis, lcartesian, bravais, ncls, nineq, refpot, kaoez, noq, nref, &
   rmtrefat, i25)
 
-  use :: mod_datatypes
-   use mod_getclusnxyz
+  use mod_datatypes
+  use mod_getclusnxyz
   implicit none
   ! interface variables
   logical :: linterface, lcartesian, labscord

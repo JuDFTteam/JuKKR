@@ -26,7 +26,7 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
     drxu3, drxx, drxx0, drxx1, drxx2, drxx3, drxxu, drxxu0, drxxu1, drxxu2, &
     drxxu3
   integer :: i, i1, i2, i3, i4, i5, i6, igd, &
-    ist, iwr, j, ndvpt, nred
+    ist, j, ndvpt, nred
   ! ..
   ! .. Statement Functions ..
   real (kind=dp) :: f131, f132, f133, f141, f142, f143, f144, f151, f152, &
@@ -38,15 +38,13 @@ subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, &
   intrinsic :: real
   ! ..
   ! .. Save statement ..
-  save :: ndvpt, igd, iwr
+  save :: ndvpt, igd
 
   data ndvpt/5/
   data igd/1/
-  data iwr/0/
   ! ..
 
   ! .....-----------------------------------------------------------------
-  iwr = 0
 
   ist = ist1
 

@@ -18,7 +18,6 @@ subroutine generalpot(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
   ! ***************************************************
   ! ..
   implicit none
-  real (kind=dp), parameter :: eps=1.0D-12
   ! ..
   ! .. Scalar Arguments ..
   integer :: lmpotd, irmd, irmind
@@ -39,7 +38,7 @@ subroutine generalpot(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
   ! ..
   ! .. Local Arrays ..
   real (kind=dp) :: dradi(irmd), ecore1(20), ra(irmd), vm2za(irmd), &
-    rr_u(irmd), drdi_u(irmd)
+    rr_u(irmd)
   real (kind=dp) :: vm2zb(irmd), vm2z_u(irmd), vins_u(irmind:irmd, lmpotd), &
     vinsa(irmind:irmd, lmpotd), vinsb(irmind:irmd, lmpotd)
   integer :: lcore1(20)
@@ -120,19 +119,16 @@ subroutine generalpot(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, &
       if (ins==0) then
         do i = 1, nr_u
           rr_u(i) = ra(i)
-          drdi_u(i) = dradi(i)
         end do
         imt1 = 0
       else
         imt1 = anint(log(rmtnw1/b1+1.0e0_dp)/a1) + 1
         do i = 1, imt1
           rr_u(i) = ra(i)
-          drdi_u(i) = dradi(i)
         end do
         rinter = rmax - rmtnw1
         dr = rinter/real(nr-imt1, kind=dp)
         do i = 1, nr - imt1
-          drdi_u(imt1+i) = dr
           rr_u(imt1+i) = rr_u(imt1) + dr*real(i, kind=dp)
         end do
         call doubleraus1(nr, irmin, lmpot, ra, dradi, vm2za, vinsa, irmd, &

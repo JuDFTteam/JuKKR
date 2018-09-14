@@ -9,12 +9,12 @@ contains
 subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM,  &
    CLS,ICLEB,LOFLM,NACLS,REFPOT,RMTREF,TOLRDIF,TMPDIR,ITMPDIR,ILTMP,NAEZ,LLY)
 
-   use mod_mympi, only: myrank, nranks, master
+   use mod_mympi, only: myrank, nranks, master, distribute_work_atoms
    use mod_types, only: t_tgmat, t_lloyd, t_inc
    use mod_types, only: t_mpi_c_grid, init_tgmat, init_tlloyd
 #ifdef CPP_MPI
    use mpi
-   use mod_mympi, only: myrank, nranks, master,find_dims_2d,distribute_linear_on_tasks
+   use mod_mympi, only: find_dims_2d
 #endif
    use Constants
    use mod_Profiling
@@ -128,39 +128,21 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
    endif
    !
    !----------------------------------------------------------------------------
-#ifdef CPP_MPI
    if(t_inc%i_write>0) write(1337,*) myrank, 'start tbref e-loop'
-
-    call distribute_linear_on_tasks(t_mpi_c_grid%nranks_at,   &
-               t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at, &
-               master,IELAST,ntot_pT,ioff_pT,.true.,.true.)
-     
+   ! get share of energy loop done by each rank
+#ifdef CPP_MPI
    ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
    ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
-
-   t_mpi_c_grid%ntot2=ie_end   !t_mpi_c_grid%dims(1)
-   if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. allocated(t_mpi_c_grid%ioff_pT2))) then 
-      allocate(t_mpi_c_grid%ntot_pT2(0:t_mpi_c_grid%nranks_at-1), t_mpi_c_grid%ioff_pT2(0:t_mpi_c_grid%nranks_at-1))
-   end if
-   t_mpi_c_grid%ntot_pT2 = ntot_pT
-   t_mpi_c_grid%ioff_pT2 = ioff_pT
 #else
    ie_start = 0
    ie_end = IELAST
-
-   if(.not. (allocated(t_mpi_c_grid%ntot_pT2) .or. allocated(t_mpi_c_grid%ioff_pT2))) then
-      allocate(t_mpi_c_grid%ntot_pT2(1),stat=i_stat)
-      allocate(t_mpi_c_grid%ioff_pT2(1),stat=i_stat)
-   endif
-   t_mpi_c_grid%ntot2      =IELAST
-   t_mpi_c_grid%ntot_pT2   = IELAST
-   t_mpi_c_grid%ioff_pT2   = 0
 #endif
 
    ! now initialize arrays for tmat, gmat, and gref
    call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
    if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
 
+   ! start energy loop
    do ie_num = 1,ie_end
       IE = ie_start+ie_num
       if(t_inc%i_write>0) write(1337,FMT='(A23,I5,2F14.8)')'TBREF: GREF for energy:',IE,EZ(IE)
@@ -174,7 +156,6 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
          lly_g0tr_dum = CZERO
       endif
 
-      !
       !skip this part with GREENIMP option
       if(opt('GREENIMP')) then
          if(myrank==master) write(*,*)'Skipping atom loop in tbref for energy point',ie,'of',ielast
@@ -184,7 +165,9 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
          i1_start = 1
          i1_end = NREF
       end if
+
       ERYD = EZ(IE)
+
       DO I1 = i1_start, i1_end!1,NREF
          CALL CALCTREF13(ERYD,VREF(I1),RMTREF(I1),LMAX,LM1,&              ! LLY Lloyd
             TREFLL(1,1,I1),DTREFLL(1,1,I1),                &   ! LLY Lloyd
@@ -192,29 +175,13 @@ subroutine TBREF(EZ,IELAST,ALATC,VREF,IEND,LMAX,NCLS,NINEQ,NREF,CLEB,RCLS,ATOM, 
 
          IF (TEST('flow    ').and.(t_inc%i_write>0))WRITE (1337,FMT=*) 'tll(ref),  i1 = ',I1
       END DO
-      !
+
       IF (TEST('flow    ') .and. (t_inc%i_write>0))WRITE (1337,FMT=*) 't-mat(Ref) o.k.', IE
       ! ----------------------------------------------------------------------
-#ifdef CPP_MPI
-      ntot1 = NCLS
+      ! distribute NCLS loop over atom ranks
+      call distribute_work_atoms(NCLS, i1_start, i1_end, distribute_rest=.false.)
 
-      if(myrank==master) write(1337,*) 'tbref NCLS loop:', NCLS,t_mpi_c_grid%nranks_ie
-      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie,  &
-         t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master, &
-         ntot1,ntot_pT,ioff_pT,.true.)
-      i1_start = ioff_pT(t_mpi_c_grid%myrank_ie)+1
-      i1_end   = ioff_pT(t_mpi_c_grid%myrank_ie)+ntot_pT(t_mpi_c_grid%myrank_ie)
-      t_mpi_c_grid%ntot1  = ntot_pT(t_mpi_c_grid%myrank_ie)
-
-      t_mpi_c_grid%ntot_pT1 = ntot_pT
-      t_mpi_c_grid%ioff_pT1 = ioff_pT
-
-#else
-      i1_start = 1
-      i1_end   = NCLS
-
-#endif
-      !skip this part with GREENIMP option
+      ! overwrite  to skip this part with GREENIMP option
       if(opt('GREENIMP')) then
          i1_start = 1
          i1_end = 0

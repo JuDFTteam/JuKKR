@@ -18,8 +18,8 @@ subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, &
 
   ! PARAMETER definitions
 
-  complex (kind=dp) :: c0, c1, ci
-  parameter (c0=(0.0d0,0.0d0), c1=(1.0d0,0.0d0), ci=(0.0d0,1.0d0))
+  complex (kind=dp) :: c0, c1
+  parameter (c0=(0.0d0,0.0d0), c1=(1.0d0,0.0d0))
   real (kind=dp) :: pi
   parameter (pi=3.141592653589793238462643d0)
   complex (kind=dp) :: cpre

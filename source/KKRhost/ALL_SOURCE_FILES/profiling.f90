@@ -40,7 +40,6 @@ contains
   ! Copyright (C) Luigi Genovese, CEA Grenoble, France, 2007
   ! > Memory profiling routine
   subroutine memocc(istat, isize, array, routine)
-    use mod_mympi, only: myrank
     use mod_types, only: t_inc
     implicit none
     character (len=*), intent (in) :: array
@@ -51,21 +50,21 @@ contains
     ! Local variables
     character (len=20) :: filename
     character (len=36) :: maxroutine, locroutine
-    character (len=36) :: maxarray, locarray
+    character (len=36) :: maxarray!, locarray
     integer :: nalloc, ndealloc, locpeak, locmemory, iproc
     integer :: dblsize, mfileno
     integer (kind=di) :: memory, maxmemory
     character (len=1) :: allocationflag
 
     save :: memory, nalloc, ndealloc, maxroutine, maxarray, maxmemory
-    save :: locroutine, locarray, locpeak, locmemory, iproc
+    save :: locroutine, locpeak, locmemory, iproc!, locarray
 
     mfileno = 77
     dblsize = 1
 
     if (t_inc%i_write>0) then
 
-      write(filename, '(A,I0.5)') 'meminfo', myrank
+      write(filename, '(A)') 'meminfo.txt'
 
       select case (array)
       case ('count')
@@ -75,7 +74,7 @@ contains
           nalloc = 0
           ndealloc = 0
           locroutine = 'routine'
-          locarray = 'array'
+          !locarray = 'array'
           locmemory = 0
           locpeak = 0
           iproc = isize
@@ -142,7 +141,7 @@ contains
               locpeak = locmemory
             end if
           end if
-          locarray = array
+          !locarray = array
           memory = memory + isize*dblsize
           if (memory>maxmemory) then
             maxmemory = memory

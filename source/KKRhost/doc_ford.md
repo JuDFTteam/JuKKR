@@ -19,7 +19,7 @@ extra_filetypes: 1 #
 		 inc !
 		 mk #
 source: true
-graph: true 
+graph: false 
 coloured_edges: true
 search: false
 warn: true
