@@ -1,5 +1,7 @@
 c ************************************************************************
       INTEGER FUNCTION LENGTH(S,MAX)
+c#@# KKRtags: VORONOI
+c#@# KKRmerge: can be replaced by Fortran intrinsic trim_len
 C ************************************************************************
       CHARACTER*1 S(*)
       INTEGER MAX

@@ -1,4 +1,5 @@
       subroutine cross(x1,x2,cr12)
+c#@# KKRmerge: same as crospr.f
 !- Cross product cr12 = X1 cross X2
 ! ----------------------------------------------------------------------
 !i Inputs:

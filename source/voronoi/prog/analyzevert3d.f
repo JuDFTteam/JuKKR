@@ -2,6 +2,7 @@
      >                          NVERTMAX,NFACED,TOLVDIST,TOLAREA,NPLANE,
      X                          NFACE,NVERT,XVERT,YVERT,ZVERT,
      X                          A3,B3,C3,D3)
+c#@# KKRtags: VORONOI geometry
 c Analyze the faces and vertices of the polyhedron.
 c Use criteria for rejecting faces that are too small 
 c or vertices that are too close to each other.

@@ -13,6 +13,7 @@
      &           TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE, &
      &           LMTREF,RMTREF,SIZEFAC,NFACELIM)   
       use mod_version_info
+!#@# KKRtags: VORONOI input-output
       implicit none
       include 'inc.geometry'
 !     .. Local Arrays ..

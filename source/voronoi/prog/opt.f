@@ -1,5 +1,6 @@
 C ***********************************************************************
       LOGICAL FUNCTION OPT(STRING)                                    
+c#@# KKRtags: VORONOI KKRhost
 C ***********************************************************************
 C                                                                      
 C     OPT = 'STRING  ' IS CONTAINED IN /OPTC/.                        

@@ -8,6 +8,7 @@ c ************************************************************************
      &                   ALAT)
       use mod_version_info
       implicit none
+c#@# KKRtags: VORONOI geometry
 c ************************************************************************
 c This subroutine is used to create the clusters around each atom 
 c where in order to prepare the shape functions and produce povray 

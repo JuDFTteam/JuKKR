@@ -1,6 +1,7 @@
       SUBROUTINE CROSSPOIPLANE(x1,y1,z1,x2,y2,z2,a3,b3,c3,d3,xcut,
      &     ycut,zcut,a)
       implicit none
+c#@# KKRtags: VORONOI geometry
 c       
 c      R = Ro + a V      (eq of line )
 c      -   -      -

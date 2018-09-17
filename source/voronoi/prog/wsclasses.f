@@ -11,6 +11,7 @@ c the cell CLASSREP(ICLASS).
 c
 c Uses logical function EQUIVWS.
       implicit none
+c#@# KKRtags: VORONOI geometry
 c Input:
       INTEGER NFACEMAX   ! Max. number of faces per cell (dimension)
       INTEGER NFACE(*)   ! Number of faces per cell (indexed ICELL)

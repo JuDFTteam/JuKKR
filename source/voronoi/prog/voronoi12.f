@@ -61,6 +61,7 @@ c
 c
 c Uses subroutines NORMALPLANE, POLYHEDRON, and function DISTPLANE.
       implicit none
+c#@# KKRtags: VORONOI geometry
 c Input:
       INTEGER  NVEC,NVERTMAX,NFACED
       REAL*8   RVEC(3,NFACED)

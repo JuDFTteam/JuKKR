@@ -11,6 +11,7 @@ c The total no. of faces found is returned as NFACE.
 c
 c Uses logical function HALFSPACE
       implicit none
+c#@# KKRtags: VORONOI geometry
 c Input:
       INTEGER NPLANE                ! Number of planes.
       INTEGER NVERTMAX              ! Max. number of vertices per plane.

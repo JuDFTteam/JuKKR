@@ -35,8 +35,10 @@ module mod_version_info
 contains
 
   subroutine construct_serialnr()
+!#@# KKRtags: VORONOI version-control
+
     ! take information from version file and create serial number with time stamp
-    use mod_version
+    use mod_version, only: version
     implicit none
     integer,dimension(8) :: values
     character(len=500)     :: tmpname

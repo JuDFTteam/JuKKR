@@ -33,7 +33,8 @@
 ! should be excluded in the impurity calculation. Such atoms are
 ! excluded from the atom clusters for the Voronoi cells.
 !
-      implicit none 
+      implicit none
+c#@# KKRtags: VORONOI input-output KKRimp
       INCLUDE 'inc.geometry'
 ! Input:
       INTEGER ALATC  ! Lattice parameter

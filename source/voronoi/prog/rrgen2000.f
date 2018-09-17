@@ -6,6 +6,7 @@ c     clusters representing the local surrounding of the atoms in
 c     routine CLSGEN
 c ------------------------------------------------------------------------
       implicit none
+c#@# KKRtags: VORONOI geometry
       include 'inc.geometry'
 c
       LOGICAL LSURF

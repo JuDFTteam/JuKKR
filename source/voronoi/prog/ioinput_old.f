@@ -34,6 +34,7 @@ c * The error handler is not working yet in all cases ....
 c * Only files NLINEMAX lines long can be read in
 c *******************************************************
       implicit none
+c#@# KKRtags: VORONOI input-output deprecated
       INTEGER NLINEMAX
       PARAMETER (NLINEMAX = 3000)
       CHARACTER CHARKEY*10

@@ -1,6 +1,8 @@
       SUBROUTINE FINDEDGES(npolypoi,poi2poi,polyedge1,polyedge2,
      &     nedge)
       implicit none
+c#@# KKRtags: VORONOI geometry
+c#@# KKRmerge: rewrite with logical AND and OR
       integer npoimax,nneimax,nplanemax
       parameter (npoimax=300,nneimax=100,nplanemax=100)
       integer polyedge1(1000),polyedge2(1000)

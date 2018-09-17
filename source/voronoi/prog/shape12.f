@@ -17,6 +17,7 @@ C=====================================================================
      &                 LMIFUN_S,   ! lm of the ifun shapefunction
      &                 THETAS_S)   ! Thetas(r,ifun)
       implicit none
+c#@# KKRtags: VORONOI radial-grid initialization shape-functions
 C----------------------------------------------------------------------
 C
 C                       S H A P E   P R O G R A M 
@@ -545,6 +546,7 @@ C     STOP
       END
       SUBROUTINE ROTATE(V,VZ,IFACE,NVERT)
       implicit none
+c#@# KKRtags: VORONOI geometry
 C-----------------------------------------------------------------------
 C     THIS ROUTINE PERFORMS THE ROTATION OF NVERT VECTORS THROUGH THE
 C     EULER ANGLES: ALPHA(IFACE),BETA(IFACE),GAMMA(IFACE).
@@ -616,6 +618,7 @@ C-----------------------------------------------------------------------
       END
       SUBROUTINE EULER(Z,XX,IFACE,TOLEULER)
       implicit none
+c#@# KKRtags: VORONOI geometry
 C-----------------------------------------------------------------------
 C     GIVEN TWO DISTINCT POINTS (Z(1),Z(2),Z(3)) AND (XX(1),XX(2),XX(3))
 C     THIS ROUTINE DEFINES  A LOCAL COORDINATE  SYSTEM WITH THE  Z- AXIS
@@ -722,6 +725,7 @@ C-----------------------------------------------------------------------
       END
       SUBROUTINE PERP(R0,R1,R2,RD,TOLVDIST,INSIDE)
       implicit none
+c#@# KKRtags: VORONOI geometry
 C-----------------------------------------------------------------------
 C     GIVEN  TWO  DISTINCT  POINTS   R1 , R2, THIS  ROUTINE CALCULATES
 C     THE COORDINATES  OF THE FOOT OF  THE  PERPENDICULAR FROM A POINT
@@ -774,6 +778,7 @@ C CRAY AMAX1
       END
       SUBROUTINE CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,TOLVDIST,CRT)
       implicit none
+c#@# KKRtags: VORONOI geometry radial-grid
 C-----------------------------------------------------------------------
 C     THIS ROUTINE CALCULATES THE CRITICAL POINTS 'CRT' OF THE SHAPE
 C     FUNCTIONS DUE TO THE FACE: Z(1)*X + Z(2)*Y + Z(3)*Z = 1
@@ -1019,6 +1024,7 @@ C CRAY AMAX1
       END
       SUBROUTINE MESH(CRT,NPAN,NM,XRN,DRN,MESHN,NPOI,KEYPAN,NMIN)
       implicit none
+c#@# KKRtags: VORONOI radial-grid
 C-----------------------------------------------------------------------
 C     THIS ROUTINE DEFINES A UNIQUE SUITABLE RADIAL MESH 'XRN,DRN' OF
 C     'MESHN' POINTS,DISTRIBUTED INTO 'NPAN' PANNELS  DEFINED  BY THE
@@ -1101,6 +1107,7 @@ c      WRITE(6,101)(K,DRN(K),XRN(K),K=1,MESHN)
       END
       SUBROUTINE PINTG(X1,X2,DLT,S,LMAX,ISI,ARG,FD,ITYPE)
       implicit none
+c#@# KKRtags: VORONOI solver radial-grid
 C-----------------------------------------------------------------------
 C     THIS ROUTINE  ACCOMPLISHES THE  FI-INTEGRATION  OF REAL  SPHERICAL
 C     HARMONICS BY THE REPEATED SIMPSON'S METHOD , OR ANALYTICALLY ACCOR
@@ -1173,6 +1180,7 @@ C                         E N D    I F
       END
       SUBROUTINE GAULEG(X1,X2,X,W,N)
       IMPLICIT NONE
+c#@# KKRtags: VORONOI special-functions
 C     ----------------------------------------------------------------
 C     GINEN THE LOWER AND UPPER LIMITS OF INTEGRATION  X1 AND X2, AND
 C     GIVEN N, THIS SUBROUTINE RETURNS THE  ARRAYS X(1:N) AND  W(1:N)
@@ -1222,6 +1230,7 @@ C     ----------------------------------------------------------------
       END
       SUBROUTINE RECUR(LMAX,X,THETA,FAC,S)
       implicit none
+c#@# KKRtags: VORONOI special-functions
 C-----------------------------------------------------------------------
 C     THIS ROUTINE IS USED TO PERFORM THE FI-INTEGRATION OF REAL SPHE-
 C     RICAL HARMONICS .THE THETA-INTEGRATION IS PERFORMED ANALYTICALLY
@@ -1344,6 +1353,7 @@ C-----------------------------------------------------------------------
       END
       SUBROUTINE RECUR0(LMAX,X,THETA,FAC,S)
       implicit none
+c#@# KKRtags: VORONOI special-functions
 C-----------------------------------------------------------------------
 C     THIS ROUTINE IS USED TO PERFORM  THE  FI - INTEGRATION  OF REAL SP
 C     RICAL HARMONICS ANALYTICALLY.  THE  THETA-INTEGRATION  IS   PERFOR
@@ -1458,6 +1468,8 @@ C-----------------------------------------------------------------------
       END
       SUBROUTINE REDUCE(NMBR,IFMX,IFI,IEXP)
       implicit none
+c#@# KKRtags: VORONOI
+c#@# KKRmerge: integer factorization is performed here
 C-----------------------------------------------------------------------
 C     THIS ROUTINE REDUCES A POSITIVE INTEGER   INPUT NUMBER 'NMBR'
 C     TO A PRODUCT  OF  FIRST  NUMBERS 'IFI' , AT POWERS  'IEXP'.
@@ -1503,6 +1515,7 @@ C-----------------------------------------------------------------------
       END
       SUBROUTINE CCOEF(LMAX,CL,COE)
       implicit none
+c#@# KKRtags: VORONOI special-functions
 C-----------------------------------------------------------------------
 C     THIS ROUTINE CALCULATES THE COEFFICIENTS OF A POLYNOMIAL EXPANSION
 C     OF RENORMALIZED LEGENDRE FUNCTIONS IN POWERS OF COSINES.
@@ -1668,6 +1681,7 @@ C
       END
       SUBROUTINE DREAL(LMAX,ALPHA,BETA,GAMMA,ITEMP)
       implicit none
+c#@# KKRtags: VORONOI special-functions
 C------------------------------------------------------------------
 C     THIS ROUTINE COMPUTES TRANSFORMATION MATRICES ASSOCIATED TO
 C     THE ROTATION THROUGH THE EULER ANGLES ALPHA,BETA,GAMMA  FOR
@@ -1777,6 +1791,7 @@ C
       END
       FUNCTION DROT(L,MP,M,BETA)
       implicit none
+c#@# KKRtags: VORONOI special-functions
 C-----------------------------------------------------------------------
 C     CALCULATION OF D COEFFICIENT ACCORDING TO ROSE, ELEMENTARY THEORY
 C     ANGULAR MOMENTUM,J.WILEY & SONS ,1957 , EQ. (4.13).
@@ -1936,6 +1951,7 @@ C-----------------------------------------------------------------------
       END
       SUBROUTINE MESH0(CRT,NM,NPAN,NAPROX,NMIN)
       IMPLICIT NONE
+c#@# KKRtags: VORONOI radial-grid initialization
 C ***********************************************************
 C *  THIS SUBROUTINE CALCULATES AN APPROPRIATE MESH FOR
 C *  THE SHAPE FUNCTIONS. MORE THAN NMIN POINTS BETWEEN TWO
@@ -1989,6 +2005,7 @@ c     DATA NMIN/3/  ! 7
 C=====================================================================
       SUBROUTINE POLCHK(NFACE,NVERTICES,XVERT,YVERT,ZVERT,TOLVDIST)
       IMPLICIT NONE
+c#@# KKRtags: VORONOI unit-test sanity-check
 C     ----------------------------------------------------------------
 C     THIS SUBROUTINE READS THE COORDINATES OF THE VERTICES OF EACH
 C     (POLYGON)  FACE OF  A CONVEX POLYHEDRON AND  CHECKS  IF THESE 

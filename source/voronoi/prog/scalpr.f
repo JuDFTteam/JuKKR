@@ -1,5 +1,6 @@
 C ************************************************************************
       Subroutine SCALPR(x,y,z)
+c#@# KKRtags: VORONOI
 C ************************************************************************
 C     SCALSP COMPUTES THE scalar PRODUCT OF X AND Y RETURNING
 C     IT INTO Z.

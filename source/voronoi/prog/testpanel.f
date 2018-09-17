@@ -2,6 +2,7 @@
      >     nface,a3,b3,c3,d3,nvert,xvert,yvert,zvert,
      <     npanel)
       implicit none
+c#@# KKRtags: VORONOI radial-grid
       include 'inc.geometry'
 c Find radial panels of polyhedron
 c

@@ -1,5 +1,6 @@
 C *********************************************************** 17.05.91 **
       LOGICAL FUNCTION TEST(STRING)                                    
+c#@# KKRtags: VORONOI KKRhost
 C ***********************************************************************
 C                                                                      
 C     TEST = 'STRING  ' IS CONTAINED IN /TESTC/.                      

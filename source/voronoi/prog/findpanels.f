@@ -2,6 +2,7 @@
      >     NFACE,A3,B3,C3,D3,NVERT,XVERT,YVERT,ZVERT,TOLEULER,TOLVDIST,
      <     NPAN,CRT)
       implicit none
+c#@# KKRtags: VORONOI geometry radial-grid
 c This subroutine finds the critical points and panels for a
 c suitable radial mesh for a Voronoi polyhedron. It calls the 
 c same subroutine CRIT that is called by subr. shape.

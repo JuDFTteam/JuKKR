@@ -1,5 +1,7 @@
 C ************************************************************************
       SUBROUTINE VEQ(a,b)
+c#@# KKRtags: VORONOI
+c#@# KKRmerge: remove this, only used in rrgen2000.f
 C ************************************************************************
       REAL*8          a(*),b(*)
       integer i

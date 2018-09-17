@@ -2,6 +2,7 @@
      >     BRAVAIS,RECBV,NBASIS,
      X     RBASIS)
       implicit none
+c#@# KKRtags: VORONOI geometry
 c     This subroutine rationalises the basis vectors
 c     by shifting them by appropriate lattice vectors
 c     so that they are closest to the origin.

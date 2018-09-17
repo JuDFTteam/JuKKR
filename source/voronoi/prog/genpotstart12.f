@@ -8,6 +8,7 @@ c * This subroutine reads a general potential format
 c * file. and interpolates to the new mesh 
 c ******************************************************
       implicit none
+c#@# KKRtags: VORONOI potential initialization input-output
       include 'inc.geometry'
       INTEGER NPOTD
       PARAMETER (NPOTD=NSPIND*NATYPD)

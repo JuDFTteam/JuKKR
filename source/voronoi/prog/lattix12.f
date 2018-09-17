@@ -1,5 +1,6 @@
 C ************************************************************************
       SUBROUTINE LATTIX12(LINTERFACE,ALATC,BRAVAIS,RECBV,RR,NR,VOLUC)
+c#@# KKRtags: VORONOI geometry
 C ************************************************************************
 C LATTIX99 GENERATES THE REAL SPACE AND RECIPROCAL LATTICES.
 C BRAVAIS(I,J) ARE BASIS VECTORS, WITH I=X,Y,Z AND J=A,B,C.
@@ -29,7 +30,7 @@ c                         ! altc.
      +     RR(3,0:NRD)
 c
 c
-      EXTERNAL CROSPR,SPATPR,VADD,VSUB,VEQ,DDET33
+      EXTERNAL CROSPR,SPATPR,DDET33
 c
 c
 c ------------------------------------------------------------------------

@@ -1,4 +1,6 @@
       REAL*8          function ddot(n,dx,incx,dy,incy)
+c#@# KKRtags: deprecated
+c#@# KKRmerge: remove this as it is only used in ddet33, so n=3   
 c
 c     forms the dot product of two vectors.
 c     uses unrolled loops for increments equal to one.

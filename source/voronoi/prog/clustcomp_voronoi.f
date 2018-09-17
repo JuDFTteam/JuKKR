@@ -1,5 +1,6 @@
       LOGICAL FUNCTION CLUSTCOMP_VORONOI(RCLS,IC1,N1,RCLS1,N2)
       implicit none
+c#@# KKRtags: VORONOI geometry
 c  This function returns true if cluster number ic1
 c  is equal to cluster ic2
 c  RCLS        clusters coordinates

@@ -2,6 +2,7 @@
      &     NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT, 
      &     TLEFT,TRIGHT,LINTERFACE,NAEZ,NEMB,BRAVAIS,KAOEZ)
       implicit none
+c#@# KKRtags: VORONOI geometry
       include 'inc.geometry'
       INTEGER  NRBASIS,NRIGHT,NLBASIS,NLEFT,NAEZ,NEMB
       REAL*8        ABASIS,BBASIS,CBASIS

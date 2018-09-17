@@ -2,6 +2,7 @@
      >     VOLUME,RMT,ALAT,NPOI,
      <     NPAN,MESHN,NM,NFUN,XRN,DRN,LMIFUN,THETAS)
       implicit none
+c#@# KKRtags: VORONOI atomic-sphere-approx shape-functions  
 ! Produces fake shape functions for usage in ASA-mode
 
 ! Input:

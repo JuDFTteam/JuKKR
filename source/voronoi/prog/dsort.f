@@ -1,6 +1,7 @@
 c ************************************************************************
       SUBROUTINE DSORT (W,IND,MAX,POS)
       implicit none
+c#@# KKRtags: VORONOI
 c ************************************************************************
 c     p.zahn, april 96
 c     W   is the original array returned unchanged

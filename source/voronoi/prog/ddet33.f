@@ -6,6 +6,7 @@
 !o Outputs:
 !o   ddet33:determinant
 ! ----------------------------------------------------------------------
+c#@# KKRtags: VORONOI
       implicit none
 ! Passed parameters:
       REAL*8         matrix(*)
