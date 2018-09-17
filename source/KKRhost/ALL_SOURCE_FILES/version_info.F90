@@ -66,10 +66,10 @@ contains
 
     if (.not. present(addition)) then
       ! write header:             code     version     compver   timestamp
-      ! "!# serial: kkrjm_v2.0-38-g6593f48_debug_20160907113604"
-      write (unit, '(2A)') '!# serial: ', serialnr
+      ! "# serial: kkrjm_v2.0-38-g6593f48_debug_20160907113604"
+      write (unit, '(2A)') '# serial: ', serialnr
     else
-      write (unit, '(2A)') '!# serial: ', serialnr // addition
+      write (unit, '(2A)') '# serial: ', serialnr // addition
     end if
 
   end subroutine version_print_header
@@ -107,7 +107,7 @@ contains
     character (len=10) :: first_characters
 
     read (unit, '(A)') first_characters
-    if (first_characters/='!# serial: ') then
+    if (first_characters/='# serial: ') then
       rewind (unit)
     end if
 
