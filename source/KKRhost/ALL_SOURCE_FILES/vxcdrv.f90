@@ -2,79 +2,63 @@ module mod_vxcdrv
 
 contains
 
-SUBROUTINE VXCDRV(EXC,KTE,KXC,LPOT,NSPIN,NSTART,NEND,RHO2NS,VONS, &
-                  R,DRDI,A,IRWS,IRCUT,IPAN,NTCELL,KSHAPE,GSH,ILM, &
-                  IMAXSH,IFUNM,THETAS,LMSP)
-use global_variables
+  subroutine vxcdrv(exc, kte, kxc, lpot, nspin, nstart, nend, rho2ns, vons, r, drdi, a, irws, ircut, ipan, ntcell, kshape, gsh, ilm, imaxsh, ifunm, thetas, lmsp)
+    use :: global_variables
 
-use mod_DataTypes, only: dp
-use mod_sphere_nogga
-use mod_sphere_gga
-use mod_vxcgga
-use mod_vxclm
-IMPLICIT NONE
-!INCLUDE 'inc.p'
-! Parameters ..
-integer IJD!,LMPOTD,LMXSPD
-!parameter (LMPOTD= (LPOTD+1)**2,LMXSPD= (2*LPOTD+1)**2)
-parameter (IJD = 434)
+    use :: mod_datatypes, only: dp
+    use :: mod_sphere_nogga
+    use :: mod_sphere_gga
+    use :: mod_vxcgga
+    use :: mod_vxclm
+    implicit none
+    ! INCLUDE 'inc.p'
+    ! Parameters ..
+    integer :: ijd                 ! ,LMPOTD,LMXSPD
+    ! parameter (LMPOTD= (LPOTD+1)**2,LMXSPD= (2*LPOTD+1)**2)
+    parameter (ijd=434)
 
-! Scalar Arguments ..
-integer KSHAPE,KTE,KXC,LPOT,NEND,NSPIN,NSTART
+    ! Scalar Arguments ..
+    integer :: kshape, kte, kxc, lpot, nend, nspin, nstart
 
-! Array Arguments ..
-real (kind=dp) A(NATYPD),DRDI(IRMD,*),EXC(0:LPOTD,*),GSH(*), &
-                 R(IRMD,*),RHO2NS(IRMD,LMPOTD,NATYPD,*), &
-                 THETAS(IRID,NFUND,*),VONS(IRMD,LMPOTD,*)
-integer IFUNM(NATYPD,*),ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*), &
-        IRCUT(0:IPAND,*),IRWS(*),LMSP(NATYPD,*),NTCELL(*)
+    ! Array Arguments ..
+    real (kind=dp) :: a(natypd), drdi(irmd, *), exc(0:lpotd, *), gsh(*), r(irmd, *), rho2ns(irmd, lmpotd, natypd, *), thetas(irid, nfund, *), vons(irmd, lmpotd, *)
+    integer :: ifunm(natypd, *), ilm(ngshd, 3), imaxsh(0:lmpotd), ipan(*), ircut(0:ipand, *), irws(*), lmsp(natypd, *), ntcell(*)
 
-! Local Arrays ..
-real (kind=dp) DYLMF1(IJD,LMPOTD),DYLMF2(IJD,LMPOTD), &
-                 DYLMT1(IJD,LMPOTD),DYLMT2(IJD,LMPOTD), &
-                 DYLMTF(IJD,LMPOTD),RHO2IAT(IRMD,LMPOTD,2), &
-                 RIJ(IJD,3),THET(IJD),WTYR(IJD,LMPOTD), &
-                 YLM(IJD,LMPOTD),YR(IJD,LMPOTD)
-integer IFUNMIAT(LMXSPD),LMSPIAT(LMXSPD)
+    ! Local Arrays ..
+    real (kind=dp) :: dylmf1(ijd, lmpotd), dylmf2(ijd, lmpotd), dylmt1(ijd, lmpotd), dylmt2(ijd, lmpotd), dylmtf(ijd, lmpotd), rho2iat(irmd, lmpotd, 2), rij(ijd, 3), thet(ijd), &
+      wtyr(ijd, lmpotd), ylm(ijd, lmpotd), yr(ijd, lmpotd)
+    integer :: ifunmiat(lmxspd), lmspiat(lmxspd)
 
-! Local Scalars ..
-integer IATYP,ICELL,IPOT,LMX1
+    ! Local Scalars ..
+    integer :: iatyp, icell, ipot, lmx1
 
-IF (KXC.LT.3) THEN
-  CALL SPHERE_NOGGA(LPOT,YR,WTYR,RIJ,IJD)
-ELSE
-  CALL SPHERE_GGA(LPOT,YR,WTYR,RIJ,IJD,LMPOTD,THET,YLM,DYLMT1, &
-                  DYLMT2,DYLMF1,DYLMF2,DYLMTF)
-END IF
-DO IATYP = NSTART,NEND
-  ICELL = NTCELL(IATYP)
-  IPOT = NSPIN* (IATYP-1) + 1
-  DO LMX1 = 1,LMXSPD
-    IFUNMIAT(LMX1) = IFUNM(ICELL,LMX1)
-    LMSPIAT(LMX1) = LMSP(ICELL,LMX1)
-  END DO
-  CALL DCOPY(IRMD*LMPOTD,RHO2NS(1,1,IATYP,1),1,RHO2IAT(1,1,1),1)
-  IF (NSPIN.EQ.2 .OR. KREL.EQ.1) THEN
-    CALL DCOPY(IRMD*LMPOTD,RHO2NS(1,1,IATYP,2),1,RHO2IAT(1,1,2),1)
-  END IF
-  IF (KXC.LT.3) THEN
-    CALL VXCLM(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2IAT, &
-               VONS(1,1,IPOT),R(1,IATYP),DRDI(1,IATYP), &
-               IRWS(IATYP),IRCUT(0,IATYP),IPAN(IATYP), &
-               KSHAPE,GSH,ILM,IMAXSH,IFUNMIAT,THETAS(1,1,ICELL), &
-               YR,WTYR,IJD,LMSPIAT)
-  ELSE
+    if (kxc<3) then
+      call sphere_nogga(lpot, yr, wtyr, rij, ijd)
+    else
+      call sphere_gga(lpot, yr, wtyr, rij, ijd, lmpotd, thet, ylm, dylmt1, dylmt2, dylmf1, dylmf2, dylmtf)
+    end if
+    do iatyp = nstart, nend
+      icell = ntcell(iatyp)
+      ipot = nspin*(iatyp-1) + 1
+      do lmx1 = 1, lmxspd
+        ifunmiat(lmx1) = ifunm(icell, lmx1)
+        lmspiat(lmx1) = lmsp(icell, lmx1)
+      end do
+      call dcopy(irmd*lmpotd, rho2ns(1,1,iatyp,1), 1, rho2iat(1,1,1), 1)
+      if (nspin==2 .or. krel==1) then
+        call dcopy(irmd*lmpotd, rho2ns(1,1,iatyp,2), 1, rho2iat(1,1,2), 1)
+      end if
+      if (kxc<3) then
+        call vxclm(exc, kte, kxc, lpot, nspin, iatyp, rho2iat, vons(1,1,ipot), r(1,iatyp), drdi(1,iatyp), irws(iatyp), ircut(0,iatyp), ipan(iatyp), kshape, gsh, ilm, imaxsh, &
+          ifunmiat, thetas(1,1,icell), yr, wtyr, ijd, lmspiat)
+      else
 
-    ! GGA EX-COR POTENTIAL
+        ! GGA EX-COR POTENTIAL
 
-    CALL VXCGGA(EXC,KTE,KXC,LPOT,NSPIN,IATYP,RHO2IAT, &
-                VONS(1,1,IPOT),R(1,IATYP),DRDI(1,IATYP),A(IATYP), &
-                IRWS(IATYP),IRCUT(0,IATYP),IPAN(IATYP), &
-                KSHAPE,GSH,ILM,IMAXSH,IFUNMIAT,THETAS(1,1,ICELL), &
-                WTYR,IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2, &
-                DYLMF1,DYLMF2,DYLMTF)
-  END IF
-END DO
-END SUBROUTINE VXCDRV
+        call vxcgga(exc, kte, kxc, lpot, nspin, iatyp, rho2iat, vons(1,1,ipot), r(1,iatyp), drdi(1,iatyp), a(iatyp), irws(iatyp), ircut(0,iatyp), ipan(iatyp), kshape, gsh, ilm, &
+          imaxsh, ifunmiat, thetas(1,1,icell), wtyr, ijd, lmspiat, thet, ylm, dylmt1, dylmt2, dylmf1, dylmf2, dylmtf)
+      end if
+    end do
+  end subroutine vxcdrv
 
 end module mod_vxcdrv

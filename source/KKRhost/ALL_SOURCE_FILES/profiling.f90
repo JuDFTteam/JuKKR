@@ -40,7 +40,7 @@ contains
   ! Copyright (C) Luigi Genovese, CEA Grenoble, France, 2007
   ! > Memory profiling routine
   subroutine memocc(istat, isize, array, routine)
-    use mod_types, only: t_inc
+    use :: mod_types, only: t_inc
     implicit none
     character (len=*), intent (in) :: array
     character (len=*), intent (in) :: routine
@@ -50,21 +50,22 @@ contains
     ! Local variables
     character (len=20) :: filename
     character (len=36) :: maxroutine, locroutine
-    character (len=36) :: maxarray!, locarray
+    character (len=36) :: maxarray                             ! , locarray
+
     integer :: nalloc, ndealloc, locpeak, locmemory, iproc
     integer :: dblsize, mfileno
     integer (kind=di) :: memory, maxmemory
     character (len=1) :: allocationflag
 
     save :: memory, nalloc, ndealloc, maxroutine, maxarray, maxmemory
-    save :: locroutine, locpeak, locmemory, iproc!, locarray
+    save :: locroutine, locpeak, locmemory, iproc ! , locarray
 
     mfileno = 77
     dblsize = 1
 
     if (t_inc%i_write>0) then
 
-      write(filename, '(A)') 'meminfo.txt'
+      write (filename, '(A)') 'meminfo.txt'
 
       select case (array)
       case ('count')
@@ -74,44 +75,35 @@ contains
           nalloc = 0
           ndealloc = 0
           locroutine = 'routine'
-          !locarray = 'array'
+          ! locarray = 'array'
           locmemory = 0
           locpeak = 0
           iproc = isize
           ! open the writing file for the root process
           if (iproc==0) then
             open (unit=mfileno, file=trim(filename), status='unknown')
-            write (mfileno, '(a32,1x,a20,3(1x,a12))') &
-              '(Data in kB)             Routine', '    Peak Array', &
-              'Routine Mem', 'Total Mem', 'Action'
+            write (mfileno, '(a32,1x,a20,3(1x,a12))') '(Data in kB)             Routine', '    Peak Array', 'Routine Mem', 'Total Mem', 'Action'
           end if
         else if (routine=='stop' .and. iproc==0) then
           ! write(mfileno,'(a32,a16,4(1x,i12))')&
           ! trim(locroutine),trim(locarray),locmemory/1024,locpeak/1024,memory/1024,&
           ! (memory+locpeak-locmemory)/1024
           ! close(mfileno)
-          write (*, '(1x,a)') '-------------------MEMORY CONSUMPTION &
-            &REPORT-----------------------'
-          write (*, '(1x,2(i0,a),i0)') nalloc, ' allocations and ', ndealloc, &
-            ' deallocations, remaining memory(B):', memory
-          write (*, '(1x,a,i0,a)') 'Memory occupation peak: ', maxmemory/1024, &
-            ' kB'
-          write (*, '(1x,5(a))') 'For the array: "', trim(maxarray), &
-            '" in routine "', trim(maxroutine), '"'
-          write (*, '(1x,a)') '-----------------END MEMORY CONSUMPTION &
-            &REPORT---------------------'
+          write (*, '(1x,a)') '-------------------MEMORY CONSUMPTION REPORT-----------------------'
+          write (*, '(1x,2(i0,a),i0)') nalloc, ' allocations and ', ndealloc, ' deallocations, remaining memory(B):', memory
+          write (*, '(1x,a,i0,a)') 'Memory occupation peak: ', maxmemory/1024, ' kB'
+          write (*, '(1x,5(a))') 'For the array: "', trim(maxarray), '" in routine "', trim(maxroutine), '"'
+          write (*, '(1x,a)') '-----------------END MEMORY CONSUMPTION REPORT---------------------'
         end if
 
       case default
         ! control of the allocation/deallocation status
         if (istat/=0) then
           if (isize>=0) then
-            write (*, *) ' subroutine ', routine, &
-              ': problem of allocation of array ', array
+            write (*, *) ' subroutine ', routine, ': problem of allocation of array ', array
             stop
           else if (isize<0) then
-            write (*, *) ' subroutine ', routine, &
-              ': problem of deallocation of array ', array
+            write (*, *) ' subroutine ', routine, ': problem of deallocation of array ', array
             stop
           end if
         end if
@@ -126,8 +118,7 @@ contains
             allocationflag = '?'
           end if
 
-          write (mfileno, '(a32,1x,a20,3(1x,i12),1x,a12)') trim(routine), &
-            trim(array), isize*dblsize, memory, maxmemory, allocationflag
+          write (mfileno, '(a32,1x,a20,3(1x,i12),1x,a12)') trim(routine), trim(array), isize*dblsize, memory, maxmemory, allocationflag
           if (trim(locroutine)/=routine) then
             ! write(mfileno,'(a32,a14,4(1x,i12))')&
             ! trim(locroutine),trim(locarray),locmemory/1024,locpeak/1024,memory/1024,&
@@ -141,7 +132,7 @@ contains
               locpeak = locmemory
             end if
           end if
-          !locarray = array
+          ! locarray = array
           memory = memory + isize*dblsize
           if (memory>maxmemory) then
             maxmemory = memory
@@ -159,7 +150,7 @@ contains
 
       end select
 
-    end if !(t_inc%i_write>0)
+    end if                         ! (t_inc%i_write>0)
 
 
   end subroutine memocc

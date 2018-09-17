@@ -2,24 +2,24 @@ module mod_length
 
 contains
 
-! ************************************************************************
-integer function length(s, max)
   ! ************************************************************************
+  integer function length(s, max)
+    ! ************************************************************************
 
-  character (len=1), intent (inout) :: s(*)
-  integer, intent (in) :: max
+    character (len=1), intent (inout) :: s(*)
+    integer, intent (in) :: max
 
-  integer :: i
-  ! ------------------------------------------------------------------------
-  i = max
+    integer :: i
+    ! ------------------------------------------------------------------------
+    i = max
 
-  do while (s(i)==' ')
-    i = i - 1
-  end do
+    do while (s(i)==' ')
+      i = i - 1
+    end do
 
-  length = i
+    length = i
 
-  return
-end function length
+    return
+  end function length
 
 end module mod_length
