@@ -35,11 +35,10 @@ module mod_version_info
 contains
 
   subroutine construct_serialnr()
-!#@# KKRtags: VORONOI version-control
-
     ! take information from version file and create serial number with time stamp
     use mod_version, only: version
     implicit none
+!#@# KKRtags: VORONOI version-control
     integer,dimension(8) :: values
     character(len=500)     :: tmpname
     integer :: slength, ierr
@@ -62,6 +61,7 @@ contains
     ! this is called after an open statement of a file that is written
     ! prints header line
     implicit none
+!#@# KKRtags: VORONOI version-control
     integer, intent(in) :: unit
     
     ! write header:             code     version     compver   timestamp
@@ -99,6 +99,7 @@ contains
     ! checks if a header with serial-number is in the first line
     ! if not rewinds the file back to start
     implicit none
+!#@# KKRtags: VORONOI version-control
     integer, intent(in) :: unit
     character(len=10) :: first_characters
     

@@ -6,7 +6,7 @@ c ************************************************************************
      &                   TLEFT,TRIGHT,LMTREF,RMTREF,IREFPOT,
      &                   RCLS,RCUT,RCUTXY,L2DIM,
      &                   ALAT)
-      use mod_version_info
+      use mod_version_info, only: version_print_header
       implicit none
 c#@# KKRtags: VORONOI geometry
 c ************************************************************************

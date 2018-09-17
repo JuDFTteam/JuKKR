@@ -1,6 +1,8 @@
       PROGRAM KKRGEOMETRY
-      use mod_version
-      use mod_version_info
+      use mod_version, only: version
+      use mod_version_info, only: serialnr
+      use mod_version_info, only: construct_serialnr
+      use mod_version_info, only: version_print_header
       implicit none
       include 'inc.geometry' 
       INTEGER IBMAXD

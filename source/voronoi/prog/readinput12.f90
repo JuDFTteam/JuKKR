@@ -12,7 +12,7 @@
      &           NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,   &  
      &           TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE, &
      &           LMTREF,RMTREF,SIZEFAC,NFACELIM)   
-      use mod_version_info
+      use mod_version_info, only: serialnr
 !#@# KKRtags: VORONOI input-output
       implicit none
       include 'inc.geometry'
