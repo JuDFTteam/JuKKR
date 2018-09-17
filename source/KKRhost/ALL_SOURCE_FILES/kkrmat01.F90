@@ -3,23 +3,23 @@ module mod_kkrmat01
 contains
 
   ! -------------------------------------------------------------------------------
-  ! > @brief Performs k-space integration, determines scattering path operator
-  ! > \f$\tau = \left(g\left(\mathbf{k},e\right)-t^{-1}\right)^{-1}\f$
-  ! >  and Greens function of the real system -> \f$GS\f$
+  !> @brief Performs k-space integration, determines scattering path operator
+  !> \f$\tau = \left(g\left(\mathbf{k},e\right)-t^{-1}\right)^{-1}\f$
+  !>  and Greens function of the real system -> \f$GS\f$
 
-  ! > @details Modifications according to H. Hoehler ( July 2002)
-  ! > define Fourier transformation as
-  ! >
-  ! > \f$ G\left(\mu,\mu'\right)_{L,L'}=\frac{1}{2}\left[\sum_n G^{n,0}\left(\mu,\mu'\right)_{L,L'}\exp\left(-iKR^n\right)+ \sum_n G^{n,0}\left(\mu,\mu'\right)_{L,L'}\exp\left(-iK\left(-R\right)^n\right)\right]  \f$
-  ! >
-  ! > this operation has to be done to satisfy the point symmetry;
-  ! > the application of the Fourier transformation is just an
-  ! > approximation for the tb system, since the translational invariance
-  ! > is not satisfied --> force it by R, -R
+  !> @details Modifications according to H. Hoehler ( July 2002)
+  !> define Fourier transformation as
+  !>
+  !> \f$ G\left(\mu,\mu'\right)_{L,L'}=\frac{1}{2}\left[\sum_n G^{n,0}\left(\mu,\mu'\right)_{L,L'}\exp\left(-iKR^n\right)+ \sum_n G^{n,0}\left(\mu,\mu'\right)_{L,L'}\exp\left(-iK\left(-R\right)^n\right)\right]  \f$
+  !>
+  !> this operation has to be done to satisfy the point symmetry;
+  !> the application of the Fourier transformation is just an
+  !> approximation for the tb system, since the translational invariance
+  !> is not satisfied --> force it by R, -R
 
-  ! > @note
-  ! > - New version 10.99: up -> left , down -> right, for decimation
-  ! > - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
+  !> @note
+  !> - New version 10.99: up -> left , down -> right, for decimation
+  !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
   ! -------------------------------------------------------------------------------
   subroutine kkrmat01(bzkp, nofks, gs, volcub, tinvll, rrot, nshell, nsdia, alat, nsymat, naez, cls, nacls, naclsmax, rr, ezoa, atom, nsh1, nsh2, ginp, rbasis, rcls, tinvbup, &
     tinvbdown, vacflag, nlbasis, nrbasis, factl, icheck, invmod, ideci, srrel, irrel, nrrel, dtrefll, dtmatll, dginp, refpot, lly_grtr, tracet, cfctor, lly) ! LLY
@@ -51,34 +51,34 @@ contains
 
     implicit none
     ! .. Input variables
-    integer, intent (in) :: lly    ! < LLY <> 0 --> use Lloyds formula
-    integer, intent (in) :: naez   ! < Number of atoms in unit cell
+    integer, intent (in) :: lly    !! LLY <> 0 --> use Lloyds formula
+    integer, intent (in) :: naez   !! Number of atoms in unit cell
     integer, intent (in) :: nofks
     integer, intent (in) :: nsdia
     integer, intent (in) :: ideci
-    integer, intent (in) :: nshell ! < Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+    integer, intent (in) :: nshell !! Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
     integer, intent (in) :: nsymat
-    integer, intent (in) :: invmod ! < Inversion scheme
-    integer, intent (in) :: nlbasis ! < Number of basis layers of left host (repeated units)
-    integer, intent (in) :: nrbasis ! < Number of basis layers of right host (repeated units)
+    integer, intent (in) :: invmod !! Inversion scheme
+    integer, intent (in) :: nlbasis !! Number of basis layers of left host (repeated units)
+    integer, intent (in) :: nrbasis !! Number of basis layers of right host (repeated units)
     integer, intent (in) :: naclsmax
-    real (kind=dp), intent (in) :: alat ! < Lattice constant in a.u.
-    integer, dimension (nembd2), intent (in) :: cls ! < Cluster around atomic sites
-    integer, dimension (nsheld), intent (in) :: nsh1 ! < Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-    integer, dimension (nsheld), intent (in) :: nsh2 ! < Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-    integer, dimension (nclsd), intent (in) :: nacls ! < Number of atoms in cluster
-    integer, dimension (nembd2), intent (in) :: refpot ! < Ref. pot. card  at position ! REFPOT(NAEZD+NEMBD)
-    integer, dimension (naclsd, nembd2), intent (in) :: atom ! < Atom at site in cluster
-    integer, dimension (naclsd, nembd2), intent (in) :: ezoa ! < EZ of atom at site in cluster
+    real (kind=dp), intent (in) :: alat !! Lattice constant in a.u.
+    integer, dimension (nembd2), intent (in) :: cls !! Cluster around atomic sites
+    integer, dimension (nsheld), intent (in) :: nsh1 !! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+    integer, dimension (nsheld), intent (in) :: nsh2 !! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+    integer, dimension (nclsd), intent (in) :: nacls !! Number of atoms in cluster
+    integer, dimension (nembd2), intent (in) :: refpot !! Ref. pot. card  at position ! REFPOT(NAEZD+NEMBD)
+    integer, dimension (naclsd, nembd2), intent (in) :: atom !! Atom at site in cluster
+    integer, dimension (naclsd, nembd2), intent (in) :: ezoa !! EZ of atom at site in cluster
     integer, dimension (2, lmmaxd), intent (in) :: nrrel
     integer, dimension (naez/nprincd, naez/nprincd), intent (in) :: icheck
     integer, dimension (2, 2, lmmaxd), intent (in) :: irrel
     real (kind=dp), dimension (*), intent (in) :: volcub
-    real (kind=dp), dimension (3, 0:nrd), intent (in) :: rr ! < Set of real space vectors (in a.u.)
+    real (kind=dp), dimension (3, 0:nrd), intent (in) :: rr !! Set of real space vectors (in a.u.)
     real (kind=dp), dimension (3, *), intent (in) :: bzkp
-    real (kind=dp), dimension (3, nembd2), intent (in) :: rbasis ! < Position of atoms in the unit cell in units of bravais vectors
+    real (kind=dp), dimension (3, nembd2), intent (in) :: rbasis !! Position of atoms in the unit cell in units of bravais vectors
     real (kind=dp), dimension (48, 3, nsheld), intent (in) :: rrot
-    real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls ! < Real space position of atom in cluster
+    real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls !! Real space position of atom in cluster
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: factl
     complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: tinvll
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nembd1), intent (in) :: tinvbup
@@ -751,9 +751,9 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: GTDYSON
-  ! > @brief Solve the Dyson equation \f$(1-g t)  G = g\f$
-  ! > @note
-  ! > - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
+  !> @brief Solve the Dyson equation \f$(1-g t)  G = g\f$
+  !> @note
+  !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
   ! -------------------------------------------------------------------------------
   subroutine gtdyson(gtmat, gmat, ndim, lmgf0d, ngd)
 
@@ -764,7 +764,7 @@ contains
     ! .. Input variables
     integer, intent (in) :: ngd
     integer, intent (in) :: ndim
-    integer, intent (in) :: lmgf0d ! < (LMAX+1)**2
+    integer, intent (in) :: lmgf0d !! (LMAX+1)**2
     ! .. In/Out variables
     complex (kind=dp), dimension (ngd, lmgf0d), intent (inout) :: gmat
     complex (kind=dp), dimension (ngd, ngd), intent (inout) :: gtmat

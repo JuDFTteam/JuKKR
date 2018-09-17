@@ -1,13 +1,13 @@
 ! -------------------------------------------------------------------------------
 ! MODULE: MOD_MAIN1C
-! > @brief Wrapper module for the calculation of the density for the JM-KKR package
-! > @details The code uses the information obtained in the main0 module, this is
-! > mostly done via the get_params_1c() call, that obtains parameters of the type
-! > t_params and passes them to local variables
-! > @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-! > and many others ...
-! > @note
-! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
+!> @brief Wrapper module for the calculation of the density for the JM-KKR package
+!> @details The code uses the information obtained in the main0 module, this is
+!> mostly done via the get_params_1c() call, that obtains parameters of the type
+!> t_params and passes them to local variables
+!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+!> and many others ...
+!> @note
+!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 ! -------------------------------------------------------------------------------
 module mod_main1c
 
@@ -37,9 +37,9 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: main1c
-  ! > @brief Main subroutine regarding the calculation of the electronic density
-  ! > @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-  ! > and many others ...
+  !> @brief Main subroutine regarding the calculation of the electronic density
+  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+  !> and many others ...
   ! ----------------------------------------------------------------------------
   subroutine main1c()
 
@@ -90,8 +90,8 @@ contains
     logical :: itermvdir
     complex (kind=dp) :: csum      ! LLY
     complex (kind=dp) :: eread     ! LLY
-    integer, dimension (20, natyp) :: nkcore ! < Number of KAPPA values for a given (n,l) core state
-    integer, dimension (20, npotd) :: kapcore ! < The (maximum 2) values of KAPPA
+    integer, dimension (20, natyp) :: nkcore !! Number of KAPPA values for a given (n,l) core state
+    integer, dimension (20, npotd) :: kapcore !! The (maximum 2) values of KAPPA
     real (kind=dp), dimension (natypd) :: eu
     real (kind=dp), dimension (natypd) :: edc
     real (kind=dp), dimension (natypd) :: phi
@@ -101,7 +101,7 @@ contains
     real (kind=dp), dimension (0:lmaxd+1, npotd) :: espv
     real (kind=dp), dimension (0:lmaxd+1, 2) :: espv1
     real (kind=dp), dimension (0:lmaxd+1, 2) :: dostot
-    real (kind=dp), dimension (krel*20+(1-krel), npotd) :: ecorerel ! < for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
+    real (kind=dp), dimension (krel*20+(1-krel), npotd) :: ecorerel !! for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
     real (kind=dp), dimension (2, natypd) :: angles_new
     real (kind=dp), dimension (0:lmaxd+1, natypd, 2) :: charge
     real (kind=dp), dimension (mmaxd, mmaxd, nspind, natypd) :: wldauold
@@ -117,10 +117,10 @@ contains
     character (len=7), dimension (3) :: texts
     character (len=4), dimension (0:6) :: textl
     ! -------------------------------------------------------------------------
-    ! > @note attention: muorb second index means both spins and total
+    !> @note attention: muorb second index means both spins and total
     ! -------------------------------------------------------------------------
-    real (kind=dp), dimension (irmd*krel+(1-krel), natypd) :: rhoorb ! < orbital density
-    real (kind=dp), dimension (0:lmaxd+1+1, 3, natypd) :: muorb ! < orbital magnetic moment
+    real (kind=dp), dimension (irmd*krel+(1-krel), natypd) :: rhoorb !! orbital density
+    real (kind=dp), dimension (0:lmaxd+1+1, 3, natypd) :: muorb !! orbital magnetic moment
     ! ----------------------------------------------------------------------
     ! R2NEF (IRMD,LMPOTD,NATYP,2)  ! rho at FERMI energy
     ! RHO2NS(IRMD,LMPOTD,NATYP,2)  ! radial density
@@ -129,7 +129,7 @@ contains
     ! (*,*,*,2) rho(2) - rho(1) -> mag. moment
     ! RHOC(IRMD,NPOTD)              ! core charge density
     ! ----------------------------------------------------------------------
-    real (kind=dp), dimension (irmd, npotd) :: rhoc ! < core charge density
+    real (kind=dp), dimension (irmd, npotd) :: rhoc !! core charge density
     real (kind=dp), dimension (irmd, lmpotd, 4) :: rho2m1
     real (kind=dp), dimension (irmd, lmpotd, 4) :: rho2m2
     real (kind=dp), dimension (nrmaxd, lmpotd, nspotd) :: vinsnew
@@ -139,8 +139,8 @@ contains
     real (kind=dp), dimension (:, :), allocatable :: qvec
     real (kind=dp), dimension (:, :, :), allocatable :: rho2n1
     real (kind=dp), dimension (:, :, :), allocatable :: rho2n2
-    real (kind=dp), dimension (:, :, :, :), allocatable :: r2nef ! < rho at FERMI energy
-    real (kind=dp), dimension (:, :, :, :), allocatable :: rho2ns ! < radial density
+    real (kind=dp), dimension (:, :, :, :), allocatable :: r2nef !! rho at FERMI energy
+    real (kind=dp), dimension (:, :, :, :), allocatable :: rho2ns !! radial density
     complex (kind=dp), dimension (:, :, :, :), allocatable :: den ! DEN(0:LMAXD1,IELAST,NPOTD,NQDOS)
     complex (kind=dp), dimension (:, :, :, :), allocatable :: denlm ! DENLM(LMMAXD1,IELAST,NPOTD,NQDOS)
     complex (kind=dp), dimension (:), allocatable :: cdos2 ! LLY

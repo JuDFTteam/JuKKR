@@ -15,15 +15,15 @@ contains
     implicit none
 
     ! inputs
-    complex (kind=dp), intent (in) :: z ! < complex energy E+i*eta = Re(z)+i*Im(z)
-    integer, intent (in) :: lmax   ! < energy cutoff
+    complex (kind=dp), intent (in) :: z !! complex energy E+i*eta = Re(z)+i*Im(z)
+    integer, intent (in) :: lmax   !! energy cutoff
 
     ! outputs
-    complex (kind=dp), intent (out) :: hl(0:lmax), jl(0:lmax) ! < spherical Hankel and Bessel up to lmax
+    complex (kind=dp), intent (out) :: hl(0:lmax), jl(0:lmax) !! spherical Hankel and Bessel up to lmax
 
     ! locals
-    complex (kind=dp) :: nl(0:lmax) ! < Neumann function
-    complex (kind=dp), parameter :: ci = (0.0e0_dp, 1.0e0_dp) ! < complex imaginary unit
+    complex (kind=dp) :: nl(0:lmax) !! Neumann function
+    complex (kind=dp), parameter :: ci = (0.0e0_dp, 1.0e0_dp) !! complex imaginary unit
     complex (kind=dp) :: termj, termn, z2, zj, zn
     real (kind=dp) :: rl, rn, rnm
     integer :: l, m, n

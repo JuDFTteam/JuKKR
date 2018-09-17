@@ -5,16 +5,16 @@ contains
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: RHOVAL
 
-  ! > @note - Average WLDAU for spherical wavefunctions:
-  ! > The spherical part of the d or f wavefunction is found by adding
-  ! > the average interaction potential WLDAUAV to the spherical
-  ! > potential. Then the non-spherical parts are found by using only
-  ! > the deviation of WLDAU from the average. This speeds up the
-  ! > convergence of the Born series. See also subroutines
-  ! > regsol, pnstmat and pnsqns
-  ! >
-  ! > @note -LDA+U implementation Mar. 2002-Dec.2004 Ph. Mavropoulos, H. Ebert, V. Popescu
-  ! > @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
+  !> @note - Average WLDAU for spherical wavefunctions:
+  !> The spherical part of the d or f wavefunction is found by adding
+  !> the average interaction potential WLDAUAV to the spherical
+  !> potential. Then the non-spherical parts are found by using only
+  !> the deviation of WLDAU from the average. This speeds up the
+  !> convergence of the Born series. See also subroutines
+  !> regsol, pnstmat and pnsqns
+  !>
+  !> @note -LDA+U implementation Mar. 2002-Dec.2004 Ph. Mavropoulos, H. Ebert, V. Popescu
+  !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
   ! -------------------------------------------------------------------------------
   subroutine rhoval(ihost, ldorhoef, icst, ins, ielast, nsra, ispin, nspin, nspinpot, i1, ez, wez, drdi, r, vins, visp, zat, ipan, ircut, irmin, thetas, ifunm, lmsp, rho2ns, r2nef, &
     rhoorb, den, denlm, muorb, espv, cleb, loflm, icleb, iend, jend, solver, soctl, ctl, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, itermvdir, qmtet, qmphi, &
@@ -45,65 +45,65 @@ contains
     ! .. Input variables
     integer, intent (in) :: i1
     integer, intent (in) :: ins
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function expansion
-    integer, intent (in) :: iend   ! < Number of nonzero gaunt coefficients
-    integer, intent (in) :: ipan   ! < Number of panels in non-MT-region
-    integer, intent (in) :: icst   ! < Number of Born approximation
+    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
+    integer, intent (in) :: iend   !! Number of nonzero gaunt coefficients
+    integer, intent (in) :: ipan   !! Number of panels in non-MT-region
+    integer, intent (in) :: icst   !! Number of Born approximation
     integer, intent (in) :: nsra
-    integer, intent (in) :: zrel   ! < atomic number (cast integer)
-    integer, intent (in) :: lopt   ! < angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+    integer, intent (in) :: zrel   !! atomic number (cast integer)
+    integer, intent (in) :: lopt   !! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
     integer, intent (in) :: ispin
-    integer, intent (in) :: nspin  ! < Counter for spin directions
-    integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
+    integer, intent (in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
     integer, intent (in) :: ihost
-    integer, intent (in) :: irmin  ! < Max R for spherical treatment
+    integer, intent (in) :: irmin  !! Max R for spherical treatment
     integer, intent (in) :: ielast
-    integer, intent (in) :: jwsrel ! < index of the WS radius
-    integer, intent (in) :: irshift ! < shift of the REL radial mesh with respect no NREL
-    integer, intent (in) :: idoldau ! < flag to perform LDA+U
+    integer, intent (in) :: jwsrel !! index of the WS radius
+    integer, intent (in) :: irshift !! shift of the REL radial mesh with respect no NREL
+    integer, intent (in) :: idoldau !! flag to perform LDA+U
     integer, intent (in) :: nspinpot
     integer, intent (in) :: nmvecmax
     integer, intent (inout) :: nqdos
-    real (kind=dp), intent (in) :: zat ! < Nuclear charge
+    real (kind=dp), intent (in) :: zat !! Nuclear charge
     logical, intent (in) :: ldorhoef
     character (len=10), intent (in) :: solver
     real (kind=dp), dimension (irmd), intent (in) :: r
     real (kind=dp), dimension (krel*lmax+1), intent (in) :: ctl
-    real (kind=dp), dimension (irmd), intent (in) :: drdi ! < Derivative dr/di
-    real (kind=dp), dimension (irmd), intent (in) :: visp ! < Spherical part of the potential
-    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: vtrel ! < potential (spherical part)
-    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: btrel ! < magnetic field
-    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: rmrel ! < radial mesh
+    real (kind=dp), dimension (irmd), intent (in) :: drdi !! Derivative dr/di
+    real (kind=dp), dimension (irmd), intent (in) :: visp !! Spherical part of the potential
+    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: vtrel !! potential (spherical part)
+    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: btrel !! magnetic field
+    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: rmrel !! radial mesh
     real (kind=dp), dimension (krel*lmax+1), intent (in) :: soctl
-    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: drdirel ! < derivative of radial mesh
-    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: r2drdirel ! < \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
-    real (kind=dp), dimension (irmind:irmd, lmpotd), intent (in) :: vins ! < Non-spherical part of the potential
-    real (kind=dp), dimension (ncleb, 2), intent (in) :: cleb ! < GAUNT coefficients (GAUNT)
-    real (kind=dp), dimension (irid, nfund), intent (in) :: thetas ! < shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: drdirel !! derivative of radial mesh
+    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: r2drdirel !! \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+    real (kind=dp), dimension (irmind:irmd, lmpotd), intent (in) :: vins !! Non-spherical part of the potential
+    real (kind=dp), dimension (ncleb, 2), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
+    real (kind=dp), dimension (irid, nfund), intent (in) :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
     complex (kind=dp), dimension (iemxd), intent (in) :: ez
     complex (kind=dp), dimension (iemxd), intent (in) :: wez
     complex (kind=dp), dimension (irmd), intent (in) :: phildau
     complex (kind=dp), dimension (0:lmax+1, ielast*(1+krel), nqdos), intent (in) :: den
     complex (kind=dp), dimension (lmmaxd, ielast*(1+krel), nqdos), intent (in) :: denlm
     ! .. In/Out variables
-    real (kind=dp), dimension (mmaxd, mmaxd, nspind), intent (inout) :: wldau ! < potential matrix
+    real (kind=dp), dimension (mmaxd, mmaxd, nspind), intent (inout) :: wldau !! potential matrix
     ! ---------------------------------------------------------------------------
     ! IHOST = 1   < -- this routine is called by the HOST tbkkr-program
     ! IHOST <> 1  < --                 called by the IMPURITY program
     ! ---------------------------------------------------------------------------
     ! .. Output variables
     real (kind=dp), dimension (irmd*krel+(1-krel)), intent (out) :: rhoorb
-    real (kind=dp), dimension (0:lmax+1+1, 3), intent (out) :: muorb ! < orbital magnetic moment
-    real (kind=dp), dimension (0:lmax+1, 2), intent (out) :: espv ! < changed for REL case
-    real (kind=dp), dimension (irmd, lmpotd, 2), intent (out) :: r2nef ! < rho at FERMI energy
-    real (kind=dp), dimension (irmd, lmpotd, 2), intent (out) :: rho2ns ! < radial density
+    real (kind=dp), dimension (0:lmax+1+1, 3), intent (out) :: muorb !! orbital magnetic moment
+    real (kind=dp), dimension (0:lmax+1, 2), intent (out) :: espv !! changed for REL case
+    real (kind=dp), dimension (irmd, lmpotd, 2), intent (out) :: r2nef !! rho at FERMI energy
+    real (kind=dp), dimension (irmd, lmpotd, 2), intent (out) :: rho2ns !! radial density
     complex (kind=dp), dimension (mmaxd, mmaxd), intent (out) :: denmatc
     ! ----------------------------------------------------------------------------
     ! ITERMDIR variables
     ! ----------------------------------------------------------------------------
     logical, intent (in) :: itermvdir
-    real (kind=dp), intent (in) :: qmtet ! < \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-    real (kind=dp), intent (in) :: qmphi ! < \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), intent (in) :: qmtet !! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), intent (in) :: qmphi !! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
     complex (kind=dp), dimension (0:lmax, 3, nmvecmax), intent (out) :: mvevil ! OUTPUT
     complex (kind=dp), dimension (0:lmax, 3, nmvecmax), intent (out) :: mvevilef ! OUTPUT
     ! ----------------------------------------------------------------------------
@@ -111,10 +111,10 @@ contains
     ! ----------------------------------------------------------------------------
     integer, dimension (lmxspd), intent (in) :: lmsp
     integer, dimension (lmxspd), intent (in) :: ifunm
-    integer, dimension (0:ipand), intent (in) :: ircut ! < R points of panel borders
-    integer, dimension (lm2d), intent (in) :: loflm ! < l of lm=(l,m) (GAUNT)
-    integer, dimension (ncleb, 4), intent (in) :: icleb ! < Pointer array
-    integer, dimension (lmpotd, 0:lmax, 0:lmax), intent (in) :: jend ! < Pointer array for icleb()
+    integer, dimension (0:ipand), intent (in) :: ircut !! R points of panel borders
+    integer, dimension (lm2d), intent (in) :: loflm !! l of lm=(l,m) (GAUNT)
+    integer, dimension (ncleb, 4), intent (in) :: icleb !! Pointer array
+    integer, dimension (lmpotd, 0:lmax, 0:lmax), intent (in) :: jend !! Pointer array for icleb()
     ! .. Local Scalars
     ! .. Parameters
     integer :: lmaxd1
@@ -155,7 +155,7 @@ contains
     ! .. the 3rd one should be the sum of them
     complex (kind=dp), dimension (0:krel*lmax+(1-krel), 3) :: dmuorb
     ! .. Local allocatable arrays
-    complex (kind=dp), dimension (:, :), allocatable :: qvec ! < qdos, q-vectors for qdos
+    complex (kind=dp), dimension (:, :), allocatable :: qvec !! qdos, q-vectors for qdos
     complex (kind=dp), dimension (:, :), allocatable :: gldau
     complex (kind=dp), dimension (:, :), allocatable :: dum_gflle ! lmlm-dos
     complex (kind=dp), dimension (:, :, :, :), allocatable :: gflle ! qdos

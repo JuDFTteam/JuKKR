@@ -3,7 +3,7 @@ module mod_forcxc
 contains
 
   subroutine forcxc(flm, flmc, lmax, nspin, nstart, nend, rhoc, v, r, alat, drdi, irws, natref)
-    ! >>>>>BEWARE!!! RM commented away!!! -->Dipole Tensor is useless
+    !>>>>>BEWARE!!! RM commented away!!! -->Dipole Tensor is useless
     ! SUBROUTINE FORCXC(FLM,FLMC,LMAX,NSPIN,NSTART,NEND,RHOC,V,R,ALAT,
     ! +                  RM,NSHELL,DRDI,IRWS,NATREF)
     ! -----------------------------------------------------------------------
@@ -156,7 +156,7 @@ contains
 170 format (7x, 'fhz=', e13.6, 2x, 'fcz=', e13.6, 2x, 'fxcz=', e13.6, 2x, 'fz=', e13.6, ' Ry/(a(Bohr))')
     ! +       ' by the bulk modulus of the host)')
 
-    ! >>>>>BEWARE!!! RM commented away!!! -->Dipole Tensor is useless
+    !>>>>>BEWARE!!! RM commented away!!! -->Dipole Tensor is useless
     ! SUBROUTINE FORCXC(FLM,FLMC,LMAX,NSPIN,NSTART,NEND,RHOC,V,R,ALAT,
     ! +                  RM,NSHELL,DRDI,IRWS,NATREF)
     ! -----------------------------------------------------------------------

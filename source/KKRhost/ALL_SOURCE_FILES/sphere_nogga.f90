@@ -5,12 +5,12 @@ module mod_sphere_nogga
 contains
 
   ! -------------------------------------------------------------------------------
-  ! > @brief Generate an angular mesh and spherical harmonics at those
-  ! > mesh points. For an angular integration the weights are generated .
+  !> @brief Generate an angular mesh and spherical harmonics at those
+  !> mesh points. For an angular integration the weights are generated .
 
-  ! > @author R. Zeller
-  ! > @date Feb. 1996
-  ! > @note - Jonathan Chico: Rewrote to Fortran90
+  !> @author R. Zeller
+  !> @date Feb. 1996
+  !> @note - Jonathan Chico: Rewrote to Fortran90
   ! -------------------------------------------------------------------------------
   subroutine sphere_nogga(lmax, yr, wtyr, rij, ijd)
 
@@ -20,7 +20,7 @@ contains
     ! ..
     ! .. Scalar Arguments
     integer, intent (in) :: ijd
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
+    integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
     ! .. Output variables
     real (kind=dp), dimension (ijd, *), intent (out) :: yr

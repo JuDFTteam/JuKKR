@@ -9,8 +9,8 @@ module mod_types
   public :: t_inc, t_tgmat, t_mpi_c_grid, t_lloyd, t_dtmatjij, t_cpa, t_imp
 
 
-  ! < type holding single site t-matrix, reference GF and structural GF (gmat)
-  ! < for distribution between 1a, 1b and 1c parts of the code
+  !> type holding single site t-matrix, reference GF and structural GF (gmat)
+  !> for distribution between 1a, 1b and 1c parts of the code
   type :: type_tgmatices
 
     ! logical switches to control if matrices are stored in memory or written to files
@@ -28,7 +28,7 @@ module mod_types
   end type type_tgmatices
 
 
-  ! < type holding CPA information
+  !> type holding CPA information
   type :: type_cpa
 
     ! logical switches to control if matrices are stored in memory or written to files
@@ -42,7 +42,7 @@ module mod_types
   end type type_cpa
 
 
-  ! < data type for the derivatives of the t-matrix with respect to changing the non-collinear angles in directions {x,y,z}
+  !> data type for the derivatives of the t-matrix with respect to changing the non-collinear angles in directions {x,y,z}
   type :: type_dtmatjijdij
 
     integer :: nelements = 3
@@ -52,7 +52,7 @@ module mod_types
   end type type_dtmatjijdij
 
 
-  ! < type holding some array dimensions needed independently of t_params
+  !> type holding some array dimensions needed independently of t_params
   type :: type_inc
 
     integer :: nparams = 22        ! number of parameters in type_inc, excluding allocatable array KMESH
@@ -84,7 +84,7 @@ module mod_types
   end type type_inc
 
 
-  ! < type holding information on the MPI parallelization scheme
+  !> type holding information on the MPI parallelization scheme
   type :: type_mpi_cartesian_grid_info
 
     integer :: nparams = 12
@@ -107,8 +107,8 @@ module mod_types
   end type type_mpi_cartesian_grid_info
 
 
-  ! < type holding information needed for lloyd such as derivatives of single
-  ! < site t-matrix, reference GF or the trace of alpha matrix and
+  !> type holding information needed for lloyd such as derivatives of single
+  !> site t-matrix, reference GF or the trace of alpha matrix and
   type :: type_lloyd
 
     ! logical switches to control if matrices are stored in memory or written to files
@@ -130,7 +130,7 @@ module mod_types
   end type type_lloyd
 
 
-  ! < type holding information for impurity potential, needed in GREENIMP mode
+  !> type holding information for impurity potential, needed in GREENIMP mode
   type :: type_imp
 
     integer :: n1 = 12             ! number of scalars for mpi bcast + 2 (for N1,N2)
@@ -169,7 +169,7 @@ module mod_types
 
 contains
 
-  ! < subroutine to allocate and initialize arrays of t_tgmat
+  !> subroutine to allocate and initialize arrays of t_tgmat
   subroutine init_tgmat(t_inc, t_tgmat, t_mpi_c_grid)
 
     ! use mod_mympi, only: nranks
@@ -251,7 +251,7 @@ contains
   end subroutine init_tgmat
 
 
-  ! < subroutine to allocate and initialize arrays of t_cpa
+  !> subroutine to allocate and initialize arrays of t_cpa
   subroutine init_t_cpa(t_inc, t_cpa, nenergy)
 
     ! use mod_mympi, only: nranks
@@ -295,7 +295,7 @@ contains
   end subroutine init_t_cpa
 
 
-  ! < subroutine to allocate and initialize arrays of t_dtmatJij
+  !> subroutine to allocate and initialize arrays of t_dtmatJij
   subroutine init_t_dtmatjij(t_inc, t_dtmatjij)
 
     implicit none
@@ -315,7 +315,7 @@ contains
   end subroutine init_t_dtmatjij
 
 
-  ! < subroutine to allocate and initialize arrays of t_dtmatJij_at
+  !> subroutine to allocate and initialize arrays of t_dtmatJij_at
   subroutine init_t_dtmatjij_at(t_inc, t_mpi_c_grid, t_dtmatjij_at)
 
     ! use mod_mympi, only: nranks
@@ -354,7 +354,7 @@ contains
   end subroutine init_t_dtmatjij_at
 
 
-  ! < store parameters needed in t_imp
+  !> store parameters needed in t_imp
   subroutine init_params_t_imp(t_imp, ipand, natypd, irmd, irid, nfund, nspin, irmind, lmpotd)
 
     implicit none
@@ -374,7 +374,7 @@ contains
   end subroutine init_params_t_imp
 
 
-  ! < subroutine to allocate and initialize arrays of t_imp
+  !> subroutine to allocate and initialize arrays of t_imp
   subroutine init_t_imp(t_inc, t_imp)
 
     implicit none
@@ -470,7 +470,7 @@ contains
 
 
 #ifdef CPP_MPI
-  ! < subroutine to broadcast t_inc and t_tgmat over mpi ranks
+  !> subroutine to broadcast t_inc and t_tgmat over mpi ranks
   subroutine bcast_t_inc_tgmat(t_inc, t_tgmat, t_cpa, master)
     ! ruess: after myBcast_impcls from Pkkr_sidebranch2D_2014_12_16 by Bernd Zimmermann
 
@@ -615,7 +615,7 @@ contains
 #endif
 
 
-  ! < subroutine to allocate and initialize t_lloyd
+  !> subroutine to allocate and initialize t_lloyd
   subroutine init_tlloyd(t_inc, t_lloyd, t_mpi_c_grid)
 
     ! use mod_mympi, only: nranks
@@ -732,7 +732,7 @@ contains
 
 
 #ifdef CPP_MPI
-  ! < subroutine to store MPI rank for of 2 level parallelization
+  !> subroutine to store MPI rank for of 2 level parallelization
   subroutine save_t_mpi_c_grid(t_mpi_c_grid, subarr_dim, mympi_comm_ie, mympi_comm_at, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
 
     use :: mpi
@@ -756,7 +756,7 @@ contains
 
 
 #ifdef CPP_MPI
-  ! < subroutine to extract number of elements and offsets from t_mpi_c_grid
+  !> subroutine to extract number of elements and offsets from t_mpi_c_grid
   subroutine get_ntot_pt_ioff_pt_2d(t_mpi_c_grid, ntot_all, ioff_all)
 
     use :: mpi
@@ -793,7 +793,7 @@ contains
 
 
 #ifdef CPP_MPI
-  ! < subroutine to communicate arrays in t_lloyd over ranks
+  !> subroutine to communicate arrays in t_lloyd over ranks
   subroutine gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, mympi_comm)
 
     use :: mpi
@@ -836,7 +836,7 @@ contains
 
 
 #ifdef CPP_MPI
-  ! < subroutine to communicate single site t-matrix over ranks
+  !> subroutine to communicate single site t-matrix over ranks
   subroutine gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_pt, ioff_pt, mytot, mympi_comm, nranks)
 
     use :: mpi
@@ -902,7 +902,7 @@ contains
 
 
 #ifdef CPP_MPI
-  ! < subroutine to communicate structural green function over ranks
+  !> subroutine to communicate structural green function over ranks
   subroutine gather_gmat(t_inc, t_tgmat, ntot_pt, ioff_pt, mytot, nranks)
 
     use :: mpi
@@ -930,7 +930,7 @@ contains
 
 
 #ifdef CPP_MPI
-  ! < subroutine to communicate scalars of t_imp over ranks
+  !> subroutine to communicate scalars of t_imp over ranks
   subroutine bcast_t_imp_scalars(t_imp, master)
 
     use :: mpi
@@ -975,7 +975,7 @@ contains
   end subroutine bcast_t_imp_scalars
 
 
-  ! < subroutine to communicate arrays of t_imp over ranks
+  !> subroutine to communicate arrays of t_imp over ranks
   subroutine bcast_t_imp_arrays(t_imp, t_inc, master)
 
     use :: mpi

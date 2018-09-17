@@ -50,8 +50,7 @@ contains
     ! .......................................................................
     integer :: nb3max
     integer :: njqcalc
-    integer :: iveci2j(:, :), nveci2j(:), iref(:, :), jqcalc(:)
-    allocatable :: iveci2j, nveci2j, iref, jqcalc
+    integer, allocatable :: iveci2j(:, :), nveci2j(:), iref(:, :), jqcalc(:)
     real (kind=dp) :: clurad, cluradsq, dq(3), dr(3), drsq, tol
     real (kind=dp) :: cluradxy, cluradxysq, drxysq
     logical :: lspher

@@ -2,16 +2,16 @@
 ! MODULE: memoryhandling
 
 ! DESCRIPTION:
-! > @brief Subroutine to handle allocation/deallocation of arrays
-! > @details Module to handle the allocation of arrays to be later distributed
-! > it aims to bring modularity to the memory management
+!> @brief Subroutine to handle allocation/deallocation of arrays
+!> @details Module to handle the allocation of arrays to be later distributed
+!> it aims to bring modularity to the memory management
 
-! > @author
-! > Jonathan Chico
-! > @date 14.11.2017
-! > @todo The number of arrays in the misc section should be reduced, and they
+!> @author
+!> Jonathan Chico
+!> @date 14.11.2017
+!> @todo The number of arrays in the misc section should be reduced, and they
 ! should
-! > be located in the appropriate routines
+!> be located in the appropriate routines
 ! -------------------------------------------------------------------------------
 module memoryhandling
 
@@ -27,29 +27,29 @@ contains
   ! SUBROUTINE: allocate_cell
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the unit cell.
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the unit cell.
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 14.11.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 14.11.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_cell(flag, naez, nemb, natyp, cls, imt, irws, irns, ntcell, refpot, kfg, kaoez, rmt, zat, rws, mtfac, rmtref, rmtrefat, rmtnew, rbasis, lmxc)
 
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: nemb   ! < number of 'embedding' positions
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
-    integer, dimension (:), allocatable, intent (inout) :: cls ! < Cluster
+    integer, intent (in) :: naez   !! number of atoms in unit cell
+    integer, intent (in) :: nemb   !! number of 'embedding' positions
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
+    integer, dimension (:), allocatable, intent (inout) :: cls !! Cluster
     ! around atomic
     ! sites
-    integer, dimension (:), allocatable, intent (inout) :: imt ! < R point at
+    integer, dimension (:), allocatable, intent (inout) :: imt !! R point at
     ! MT radius
-    integer, dimension (:), allocatable, intent (inout) :: irws ! < R point at
+    integer, dimension (:), allocatable, intent (inout) :: irws !! R point at
     ! WS radius
-    integer, dimension (:), allocatable, intent (inout) :: irns ! < Position
+    integer, dimension (:), allocatable, intent (inout) :: irns !! Position
     ! of atoms in
     ! the unit
     ! cell in
@@ -57,52 +57,52 @@ contains
     ! bravais
     ! vectors
     integer, dimension (:), allocatable, intent (inout) :: lmxc
-    integer, dimension (:), allocatable, intent (inout) :: ntcell ! < Index
+    integer, dimension (:), allocatable, intent (inout) :: ntcell !! Index
     ! for WS
     ! cell
-    integer, dimension (:), allocatable, intent (inout) :: refpot ! < Ref.
+    integer, dimension (:), allocatable, intent (inout) :: refpot !! Ref.
     ! pot. card
     ! at
     ! position
     integer, dimension (:, :), allocatable, intent (inout) :: kfg
-    integer, dimension (:, :), allocatable, intent (inout) :: kaoez ! < atom
+    integer, dimension (:, :), allocatable, intent (inout) :: kaoez !! atom
     ! types
     ! located
     ! at a
     ! given
     ! site
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmt ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmt !!
     ! Muffin-tin
     ! radius
     ! of
     ! true
     ! system
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: zat ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: zat !!
     ! Nuclear
     ! charge
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: rws ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: rws !!
     ! Wigner
     ! Seitz
     ! radius
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: mtfac ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: mtfac !!
     ! Scaling
     ! factor
     ! for
     ! radius
     ! MT
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtref ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtref !!
     ! Muffin-tin
     ! radius
     ! of
     ! reference
     ! system
     real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtrefat
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtnew ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtnew !!
     ! Adapted
     ! muffin-tin
     ! radius
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rbasis
-    ! < Position of atoms in the unit cell in units of bravais vectors
+    !! Position of atoms in the unit cell in units of bravais vectors
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -244,23 +244,23 @@ contains
   ! SUBROUTINE: allocate_semi_inf_host
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the left and right host for the calculation of slabs
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the left and right host for the calculation of slabs
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 20.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 20.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_semi_inf_host(flag, nemb, tleft, tright)
 
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: nemb   ! < number of 'embedding' positions
+    integer, intent (in) :: nemb   !! number of 'embedding' positions
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: tleft
-    ! < Vectors of the basis for the left host
+    !! Vectors of the basis for the left host
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: tright
-    ! < vectors of the basis for the right host
+    !! vectors of the basis for the right host
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -293,12 +293,12 @@ contains
   ! SUBROUTINE: allocate_potential
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the potential
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the potential
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 14.11.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 14.11.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_potential(flag, irm, natyp, npotd, ipand, nfund, lmxspd, lmpot, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, ircut, lcore, llmsp, ititle, fpradius, &
     visp, ecore, vins)
@@ -307,8 +307,8 @@ contains
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: irm
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
-    integer, intent (in) :: npotd  ! < 2*NATYP
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
+    integer, intent (in) :: npotd  !! 2*NATYP
     integer, intent (in) :: ipand
     integer, intent (in) :: nfund
     integer, intent (in) :: lmxspd
@@ -316,15 +316,15 @@ contains
     integer, intent (in) :: irmind
     integer, intent (in) :: nspotd
     integer, dimension (:), allocatable, intent (inout) :: nfu
-    integer, dimension (:), allocatable, intent (inout) :: irc ! < R point for
+    integer, dimension (:), allocatable, intent (inout) :: irc !! R point for
     ! potential
     ! cutting
-    integer, dimension (:), allocatable, intent (inout) :: ncore ! < Number of
+    integer, dimension (:), allocatable, intent (inout) :: ncore !! Number of
     ! core states
-    integer, dimension (:), allocatable, intent (inout) :: irmin ! < Max R for
+    integer, dimension (:), allocatable, intent (inout) :: irmin !! Max R for
     ! spherical
     ! treatment
-    integer, dimension (:, :), allocatable, intent (inout) :: lmsp ! < 0,1 :
+    integer, dimension (:, :), allocatable, intent (inout) :: lmsp !! 0,1 :
     ! non/-vanishing
     ! lm=(l,m)
     ! component
@@ -332,16 +332,16 @@ contains
     ! non-spherical
     ! potential
     integer, dimension (:, :), allocatable, intent (inout) :: lmsp1
-    integer, dimension (:, :), allocatable, intent (inout) :: ircut ! < R
+    integer, dimension (:, :), allocatable, intent (inout) :: ircut !! R
     ! points
     ! of panel
     ! borders
-    integer, dimension (:, :), allocatable, intent (inout) :: lcore ! <
+    integer, dimension (:, :), allocatable, intent (inout) :: lcore !!
     ! Angular
     ! momentum
     ! of core
     ! states
-    integer, dimension (:, :), allocatable, intent (inout) :: llmsp ! <
+    integer, dimension (:, :), allocatable, intent (inout) :: llmsp !!
     ! lm=(l,m)
     ! of
     ! 'nfund'th
@@ -352,17 +352,17 @@ contains
     ! pot.
     integer, dimension (:, :), allocatable, intent (inout) :: ititle
     real (kind=dp), dimension (:), allocatable, intent (inout) :: fpradius
-    ! < R point at which full-potential treatment starts
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: visp ! <
+    !! R point at which full-potential treatment starts
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: visp !!
     ! Spherical
     ! part
     ! of
     ! the
     ! potential
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: ecore
-    ! < Core energies
+    !! Core energies
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: vins
-    ! < Non-spherical part of the potential
+    !! Non-spherical part of the potential
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -483,34 +483,34 @@ contains
   ! SUBROUTINE: allocate_cpa
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the CPA treatment
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the CPA treatment
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_cpa(flag, naez, natyp, noq, icpa, iqat, hostimp, conc)
 
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
+    integer, intent (in) :: naez   !! number of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
 
-    integer, dimension (:), allocatable, intent (inout) :: noq ! < Number of
+    integer, dimension (:), allocatable, intent (inout) :: noq !! Number of
     ! diff. atom
     ! types located
-    integer, dimension (:), allocatable, intent (inout) :: icpa ! < ICPA = 0/1
+    integer, dimension (:), allocatable, intent (inout) :: icpa !! ICPA = 0/1
     ! site-dependent
     ! CPA flag
-    integer, dimension (:), allocatable, intent (inout) :: iqat ! < the site
+    integer, dimension (:), allocatable, intent (inout) :: iqat !! the site
     ! on which an
     ! atom is
     ! located on a
     ! given site
     integer, dimension (:), allocatable, intent (inout) :: hostimp
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: conc ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: conc !!
     ! concentration
     ! of a
     ! given
@@ -574,21 +574,21 @@ contains
   ! SUBROUTINE: allocate_ldau
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the LDA+U approach
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the LDA+U approach
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_ldau(flag, natyp, lopt, ueff, jeff, erefldau)
 
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
 
-    integer, dimension (:), allocatable, intent (inout) :: lopt ! < angular
+    integer, dimension (:), allocatable, intent (inout) :: lopt !! angular
     ! momentum
     ! QNUM for the
     ! atoms on
@@ -597,14 +597,14 @@ contains
     ! applied (-1
     ! to switch it
     ! OFF)
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: ueff ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: ueff !!
     ! input
     ! U
     ! parameter
     ! for
     ! each
     ! atom
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: jeff ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: jeff !!
     ! input
     ! J
     ! parameter
@@ -612,7 +612,7 @@ contains
     ! each
     ! atom
     real (kind=dp), dimension (:), allocatable, intent (inout) :: erefldau
-    ! < the energies of the projector's wave functions (REAL)
+    !! the energies of the projector's wave functions (REAL)
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -660,12 +660,12 @@ contains
   ! SUBROUTINE: allocate_ldau_potential
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the potentials for the LDA+U approach
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the potentials for the LDA+U approach
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_ldau_potential(flag, irm, natyp, mmaxd, nspind, itldau, wldau, uldau, phildau)
 
@@ -673,11 +673,11 @@ contains
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: irm
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
     integer, intent (in) :: mmaxd
-    integer, intent (in) :: nspind ! < Counter for spin directions
+    integer, intent (in) :: nspind !! Counter for spin directions
     ! (KREL+(1-KREL)*(KSP+1))
-    integer, dimension (:), allocatable, intent (inout) :: itldau ! < integer
+    integer, dimension (:), allocatable, intent (inout) :: itldau !! integer
     ! pointer
     ! connecting
     ! the NTLDAU
@@ -687,8 +687,8 @@ contains
     ! index in
     ! the unit
     ! cell
-    real (kind=dp), dimension (:, :, :, :), allocatable, intent (inout) :: wldau ! < potential matrix
-    real (kind=dp), dimension (:, :, :, :, :), allocatable, intent (inout) :: uldau ! < calculated Coulomb matrix elements
+    real (kind=dp), dimension (:, :, :, :), allocatable, intent (inout) :: wldau !! potential matrix
+    real (kind=dp), dimension (:, :, :, :, :), allocatable, intent (inout) :: uldau !! calculated Coulomb matrix elements
     ! (EREFLDAU)
     complex (kind=dp), dimension (:, :), allocatable, intent (inout) :: phildau
 
@@ -740,31 +740,31 @@ contains
   ! SUBROUTINE: allocate_magnetization
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the magnetisation
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the magnetisation
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_magnetization(flag, naez, natyp, lmmaxd, inipol, ixipol, qmtet, qmphi, drotq)
 
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
+    integer, intent (in) :: naez   !! number of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
     integer, intent (in) :: lmmaxd
-    integer, dimension (:), allocatable, intent (inout) :: inipol ! < Initial
+    integer, dimension (:), allocatable, intent (inout) :: inipol !! Initial
     ! spin
     ! polarisation
-    integer, dimension (:), allocatable, intent (inout) :: ixipol ! <
+    integer, dimension (:), allocatable, intent (inout) :: ixipol !!
     ! Constraint
     ! of spin
     ! pol.
     real (kind=dp), dimension (:), allocatable, intent (inout) :: qmtet
     real (kind=dp), dimension (:), allocatable, intent (inout) :: qmphi
-    complex (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: drotq ! < Rotation matrices to change between
+    complex (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: drotq !! Rotation matrices to change between
     ! LOCAL/GLOBAL frame of reference for
     ! magnetisation <> Oz or noncollinearity
 
@@ -822,12 +822,12 @@ contains
   ! SUBROUTINE: allocate_SOC
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the spin-orbit coupling (SOC)
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the spin-orbit coupling (SOC)
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_soc(flag, krel, natyp, lmax, socscale, cscl, socscl)
 
@@ -835,12 +835,12 @@ contains
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: krel
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
+    integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
     real (kind=dp), dimension (:), allocatable, intent (inout) :: socscale
-    ! < Spin-orbit scaling
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cscl ! <
+    !! Spin-orbit scaling
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cscl !!
     ! Speed
     ! of
     ! light
@@ -884,12 +884,12 @@ contains
   ! SUBROUTINE: allocate_energies
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe energies
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe energies
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_energies(flag, iemxd, ez, dez, wez)
 
@@ -940,12 +940,12 @@ contains
   ! SUBROUTINE: allocate_relativistic
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe relativistic corrections
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe relativistic corrections
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_relativistic(flag, krel, irm, naez, natyp, zrel, jwsrel, irshift, vtrel, btrel, rmrel, drdirel, r2drdirel, qmgam, qmgamtab, qmphitab, qmtettab)
 
@@ -954,15 +954,15 @@ contains
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: krel
     integer, intent (in) :: irm
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
-    integer, dimension (:), allocatable, intent (inout) :: zrel ! < atomic
+    integer, intent (in) :: naez   !! number of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
+    integer, dimension (:), allocatable, intent (inout) :: zrel !! atomic
     ! number (cast
     ! integer)
-    integer, dimension (:), allocatable, intent (inout) :: jwsrel ! < index of
+    integer, dimension (:), allocatable, intent (inout) :: jwsrel !! index of
     ! the WS
     ! radius
-    integer, dimension (:), allocatable, intent (inout) :: irshift ! < shift
+    integer, dimension (:), allocatable, intent (inout) :: irshift !! shift
     ! of the
     ! REL
     ! radial
@@ -971,15 +971,15 @@ contains
     ! no NREL
     real (kind=dp), dimension (:), allocatable, intent (inout) :: qmgam
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: vtrel
-    ! < potential (spherical part)
+    !! potential (spherical part)
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: btrel
-    ! < magnetic field
+    !! magnetic field
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rmrel
-    ! < radial mesh
+    !! radial mesh
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: drdirel
-    ! < derivative of radial mesh
+    !! derivative of radial mesh
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: r2drdirel
-    ! < r**2 * drdi
+    !! r**2 * drdi
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: qmgamtab
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: qmphitab
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: qmtettab
@@ -1095,12 +1095,12 @@ contains
   ! SUBROUTINE: allocate_rel_transformations
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe relativistic transformations
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe relativistic transformations
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_rel_transformations(flag, lmmaxd, nrrel, irrel, rc, crel, rrel, srrel)
 
@@ -1111,13 +1111,13 @@ contains
     integer, dimension (:, :), allocatable, intent (inout) :: nrrel
     integer, dimension (:, :, :), allocatable, intent (inout) :: irrel
     complex (kind=dp), dimension (:, :), allocatable, intent (inout) :: rc
-    ! < NREL REAL spher. harm. >  CMPLX. spher. harm. NREL CMPLX. spher. harm.
-    ! > REAL spher. harm.
+    !! NREL REAL spher. harm. >  CMPLX. spher. harm. NREL CMPLX. spher. harm.
+    !> REAL spher. harm.
     complex (kind=dp), dimension (:, :), allocatable, intent (inout) :: crel
-    ! < Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat.
+    !! Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat.
     ! CMPLX. spher. harm.
     complex (kind=dp), dimension (:, :), allocatable, intent (inout) :: rrel
-    ! < Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat.
+    !! Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat.
     ! REAL spher. harm.
     complex (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: srrel
 
@@ -1184,12 +1184,12 @@ contains
   ! SUBROUTINE: allocate_clusters
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe clusters
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe clusters
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_clusters(flag, naez, lmax, ncleb, nclsd, nembd1, nsheld, naclsd, lmpot, natomimpd, nsh1, nsh2, nacls, nshell, atomimp, atom, ezoa, icleb, jend, ratom, &
     rclsimp, cmomhost, rcls)
@@ -1197,8 +1197,8 @@ contains
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
+    integer, intent (in) :: naez   !! number of atoms in unit cell
+    integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
     integer, intent (in) :: ncleb
     integer, intent (in) :: nclsd
@@ -1207,7 +1207,7 @@ contains
     integer, intent (in) :: naclsd
     integer, intent (in) :: lmpot
     integer, intent (in) :: natomimpd
-    integer, dimension (:), allocatable, intent (inout) :: nsh1 ! <
+    integer, dimension (:), allocatable, intent (inout) :: nsh1 !!
     ! Corresponding
     ! index of the
     ! sites I/J in
@@ -1215,7 +1215,7 @@ contains
     ! the unit
     ! cell in a
     ! shell
-    integer, dimension (:), allocatable, intent (inout) :: nsh2 ! <
+    integer, dimension (:), allocatable, intent (inout) :: nsh2 !!
     ! Corresponding
     ! index of the
     ! sites I/J in
@@ -1223,10 +1223,10 @@ contains
     ! the unit
     ! cell in a
     ! shell
-    integer, dimension (:), allocatable, intent (inout) :: nacls ! < Number of
+    integer, dimension (:), allocatable, intent (inout) :: nacls !! Number of
     ! atoms in
     ! cluster
-    integer, dimension (:), allocatable, intent (inout) :: nshell ! < Index of
+    integer, dimension (:), allocatable, intent (inout) :: nshell !! Index of
     ! atoms/pairs
     ! per shell
     ! (ij-pairs);
@@ -1234,17 +1234,17 @@ contains
     ! = number
     ! of shells
     integer, dimension (:), allocatable, intent (inout) :: atomimp
-    integer, dimension (:, :), allocatable, intent (inout) :: atom ! < Atom at
+    integer, dimension (:, :), allocatable, intent (inout) :: atom !! Atom at
     ! site in
     ! cluster
-    integer, dimension (:, :), allocatable, intent (inout) :: ezoa ! < EZ of
+    integer, dimension (:, :), allocatable, intent (inout) :: ezoa !! EZ of
     ! atom at
     ! site in
     ! cluster
-    integer, dimension (:, :), allocatable, intent (inout) :: icleb ! <
+    integer, dimension (:, :), allocatable, intent (inout) :: icleb !!
     ! Pointer
     ! array
-    integer, dimension (:, :, :), allocatable, intent (inout) :: jend ! <
+    integer, dimension (:, :, :), allocatable, intent (inout) :: jend !!
     ! Pointer
     ! array
     ! for
@@ -1252,9 +1252,9 @@ contains
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: ratom
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rclsimp
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cmomhost
-    ! < Charge moments of each atom of the (left/right) host
+    !! Charge moments of each atom of the (left/right) host
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: rcls
-    ! < Real space position of atom in cluster
+    !! Real space position of atom in cluster
 
     integer :: i_stat, i_all
 
@@ -1375,12 +1375,12 @@ contains
   ! SUBROUTINE: allocate_expansion
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the functions for the expansion of the Green function
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the functions for the expansion of the Green function
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_expansion(flag, lm2d, irid, nfund, ntotd, ncleb, lassld, ncelld, nchebd, loflm, wg, cleb, yrg, thetas, thetasnew)
 
@@ -1395,23 +1395,23 @@ contains
     integer, intent (in) :: lassld
     integer, intent (in) :: ncelld
     integer, intent (in) :: nchebd
-    integer, dimension (:), allocatable, intent (inout) :: loflm ! < l of
+    integer, dimension (:), allocatable, intent (inout) :: loflm !! l of
     ! lm=(l,m)
     ! (GAUNT)
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: wg ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: wg !!
     ! Integr.
     ! weights
     ! for
     ! Legendre
     ! polynomials
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cleb ! <
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cleb !!
     ! GAUNT
     ! coefficients
     ! (GAUNT)
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: yrg
-    ! < Spherical harmonics (GAUNT2)
+    !! Spherical harmonics (GAUNT2)
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: thetas
-    ! < shape function THETA=0 outer space THETA =1 inside WS cell in
+    !! shape function THETA=0 outer space THETA =1 inside WS cell in
     ! spherical harmonics expansion
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: thetasnew
 
@@ -1479,12 +1479,12 @@ contains
   ! SUBROUTINE: allocate_mesh
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the integration mesh
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the integration mesh
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_mesh(flag, irm, natyp, a, b, rmesh, drdi)
 
@@ -1492,21 +1492,21 @@ contains
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: irm
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: a ! <
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: a !!
     ! Constants
     ! for
     ! exponential
     ! R mesh
     real (kind=dp), dimension (:), allocatable, intent (inout) :: b
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rmesh ! <
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rmesh !!
     ! Radial
     ! mesh
     ! ( in
     ! units
     ! a
     ! Bohr)
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: drdi ! <
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: drdi !!
     ! Derivative
     ! dr/di
 
@@ -1558,21 +1558,21 @@ contains
   ! SUBROUTINE: allocate_pannels
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays that
-  ! > describe the pannels
+  !> @brief subroutine handling the allocation/deallocation of arrays that
+  !> describe the pannels
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_pannels(flag, natyp, ntotd, ipan, npan_tot, npan_eq_at, npan_log_at, ipan_intervall, rpan_intervall)
 
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
     integer, intent (in) :: ntotd
-    integer, dimension (:), allocatable, intent (inout) :: ipan ! < Number of
+    integer, dimension (:), allocatable, intent (inout) :: ipan !! Number of
     ! panels in
     ! non-MT-region
     integer, dimension (:), allocatable, intent (inout) :: npan_tot
@@ -1644,11 +1644,11 @@ contains
   ! SUBROUTINE: allocate_misc
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of misc arrays
+  !> @brief subroutine handling the allocation/deallocation of misc arrays
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_misc(flag, nr, irm, irid, lmax, naez, natyp, nfund, nrefd, iemxd, ntotd, nsheld, lmmaxd, nembd1, nchebd, ncelld, lmxspd, nspindd, nsymaxd, nprincd, ifunm, &
     ifunm1, icheck, vref, s, rr, dror, rnew, rs, rrot, thesme, dsymll, dsymll1, lefttinvll, righttinvll)
@@ -1659,10 +1659,10 @@ contains
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: irm
     integer, intent (in) :: irid
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
+    integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
+    integer, intent (in) :: naez   !! number of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
     integer, intent (in) :: nfund
     integer, intent (in) :: nrefd
     integer, intent (in) :: iemxd
@@ -1681,7 +1681,7 @@ contains
     integer, dimension (:, :), allocatable, intent (inout) :: icheck
     real (kind=dp), dimension (:), allocatable, intent (inout) :: vref
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: s
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rr ! <
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rr !!
     ! Set
     ! of
     ! real
@@ -1834,13 +1834,13 @@ contains
   ! SUBROUTINE: allocate_green
 
   ! DESCRIPTION:
-  ! > @brief subroutine handling the allocation/deallocation of arrays
+  !> @brief subroutine handling the allocation/deallocation of arrays
   ! handling
-  ! > the Green functions
+  !> the Green functions
 
-  ! > @author
-  ! > Jonathan Chico
-  ! > @date 19.12.2017
+  !> @author
+  !> Jonathan Chico
+  !> @date 19.12.2017
   ! ----------------------------------------------------------------------------
   subroutine allocate_green(flag, naez, iemxd, ngshd, nsheld, lmpot, nofgijd, ish, jsh, kmesh, imaxsh, iqcalc, iofgij, jofgij, ijtabsh, ijtabsym, ijtabcalc, ijtabcalc_i, ilm_map, &
     gsh)
@@ -1848,7 +1848,7 @@ contains
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
+    integer, intent (in) :: naez   !! number of atoms in unit cell
     integer, intent (in) :: iemxd
     integer, intent (in) :: ngshd
     integer, intent (in) :: nsheld
@@ -1859,7 +1859,7 @@ contains
     integer, dimension (:), allocatable, intent (inout) :: kmesh
     integer, dimension (:), allocatable, intent (inout) :: imaxsh
     integer, dimension (:), allocatable, intent (inout) :: iqcalc
-    integer, dimension (:), allocatable, intent (inout) :: iofgij ! < Linear
+    integer, dimension (:), allocatable, intent (inout) :: iofgij !! Linear
     ! pointers,
     ! similar to
     ! NSH1/NSH2
@@ -1871,7 +1871,7 @@ contains
     ! 1,NATOMIMP
     ! in the
     ! cluster
-    integer, dimension (:), allocatable, intent (inout) :: jofgij ! < Linear
+    integer, dimension (:), allocatable, intent (inout) :: jofgij !! Linear
     ! pointers,
     ! similar to
     ! NSH1/NSH2
@@ -1883,7 +1883,7 @@ contains
     ! 1,NATOMIMP
     ! in the
     ! cluster
-    integer, dimension (:), allocatable, intent (inout) :: ijtabsh ! < Linear
+    integer, dimension (:), allocatable, intent (inout) :: ijtabsh !! Linear
     ! pointer,
     ! assigns
     ! pair
@@ -1892,7 +1892,7 @@ contains
     ! in the
     ! array
     ! GS(*,*,*,NSHELD)
-    integer, dimension (:), allocatable, intent (inout) :: ijtabsym ! < Linear
+    integer, dimension (:), allocatable, intent (inout) :: ijtabsym !! Linear
     ! pointer,
     ! assigns
     ! pair
@@ -1902,7 +1902,7 @@ contains
     ! bringing
     ! GS into
     ! Gij
-    integer, dimension (:), allocatable, intent (inout) :: ijtabcalc ! <
+    integer, dimension (:), allocatable, intent (inout) :: ijtabcalc !!
     ! Linear
     ! pointer,
     ! specifying

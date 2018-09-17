@@ -79,7 +79,6 @@ contains
 #else
     complex (kind=dp), allocatable :: csum_store(:, :, :, :), csum_store2(:, :, :, :)
 #endif
-    allocatable :: nijcalc, jijdone, kijsh, jxcijint
     complex (kind=dp) :: deltsst(lmmaxd, lmmaxd, natyp), dmatts(lmmaxd, lmmaxd, natyp, nspin), dtilts(lmmaxd, lmmaxd, natyp, nspin), gmij(lmmaxd, lmmaxd), gmji(lmmaxd, lmmaxd), &
       gs(lmmaxd, lmmaxd, nspin), tsst(lmmaxd, lmmaxd, natyp, 2), w1(lmmaxd, lmmaxd), w2(lmmaxd, lmmaxd), w3(lmmaxd, lmmaxd)
     real (kind=dp) :: rsh(nsheld), pi

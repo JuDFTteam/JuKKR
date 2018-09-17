@@ -6,21 +6,21 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: VLLNS
-  ! > @brief Transformation of the wavefunctions for non spherical potentials.
-  ! > @details To determine the non - spherical wavefunctions the potential
-  ! > has to be lm1 and lm2 dependent . the potential is stored
-  ! > only as lm dependent , therefore a transformation in the
-  ! > following way has to be done :
-  ! > \f$ vnsll(r,lm1,lm2)   =  \sum_{lm3} \left\{  c(lm1,lm2,lm3) *vins(r,lm3)
-  ! \right\}\f$
-  ! > where c(lm1,lm2,lm3) are the gaunt coeffients. (see notes by B. Drittler)
-  ! > @author B. Drittler
-  ! > @date July 1988
-  ! > @note attention : The gaunt coeffients are stored in an index array only
-  ! for lm1.gt.lm2
-  ! > (see subroutine gaunt)
-  ! > - R. Zeller Sep. 2000: modified
-  ! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
+  !> @brief Transformation of the wavefunctions for non spherical potentials.
+  !> @details To determine the non - spherical wavefunctions the potential
+  !> has to be lm1 and lm2 dependent . the potential is stored
+  !> only as lm dependent , therefore a transformation in the
+  !> following way has to be done :
+  !> \f$ vnsll(r,lm1,lm2)   =  \sum_{lm3} \left\{  c(lm1,lm2,lm3) *vins(r,lm3)
+  !\right\}\f$
+  !> where c(lm1,lm2,lm3) are the gaunt coeffients. (see notes by B. Drittler)
+  !> @author B. Drittler
+  !> @date July 1988
+  !> @note attention : The gaunt coeffients are stored in an index array only
+  !for lm1.gt.lm2
+  !> (see subroutine gaunt)
+  !> - R. Zeller Sep. 2000: modified
+  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
   subroutine vllns(vnspll, vins, cleb, icleb, iend, irm, ncleb, lmpot, irmind, lmmaxd)

@@ -6,22 +6,22 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: WMATLDAU
-  ! > @brief Calculation of Coulomb interaction potential in LDA+U
-  ! non-relativistic case
-  ! > otherwise matrices DENMAT and VLDAU must have double dimension
-  ! > @details Uses the Coulomb matrix U (array ULDAU), the density matrix
-  ! \f$n\f$
-  ! > (array DENMAT) and the occupation numbers dentot (total) and \f$n_s\f$
-  ! (array DENTOTS) (per spin).
-  ! > The expression evaluated (array VLDAU) is
-  ! >
-  ! > \f$V_{m1,s,m2,s'} = \delta_{ss'} \sum_{s^{''},m3,m4} U_{m1,m2,m3,m4}
-  ! n_{m3,s'',m4,s^{''}} - \sum_{m3,m4} U_{m1,m4,m3,m2}
-  ! n_{m3,s',m4,s}-\left[Ueff (dentot-1/2) - Jeff (n_s - 1/2)\right]\delta_{ss'}
-  ! \delta_{m1,m2} \f$
-  ! > @author Ph. Mavropoulos, H. Ebert (Munich)
-  ! > @date 2002-2004
-  ! > @note Modifications by N. Long Xmas Juelich 2015
+  !> @brief Calculation of Coulomb interaction potential in LDA+U
+  !non-relativistic case
+  !> otherwise matrices DENMAT and VLDAU must have double dimension
+  !> @details Uses the Coulomb matrix U (array ULDAU), the density matrix
+  !\f$n\f$
+  !> (array DENMAT) and the occupation numbers dentot (total) and \f$n_s\f$
+  !(array DENTOTS) (per spin).
+  !> The expression evaluated (array VLDAU) is
+  !>
+  !> \f$V_{m1,s,m2,s'} = \delta_{ss'} \sum_{s^{''},m3,m4} U_{m1,m2,m3,m4}
+  !n_{m3,s'',m4,s^{''}} - \sum_{m3,m4} U_{m1,m4,m3,m2}
+  !n_{m3,s',m4,s}-\left[Ueff (dentot-1/2) - Jeff (n_s - 1/2)\right]\delta_{ss'}
+  !\delta_{m1,m2} \f$
+  !> @author Ph. Mavropoulos, H. Ebert (Munich)
+  !> @date 2002-2004
+  !> @note Modifications by N. Long Xmas Juelich 2015
   ! -------------------------------------------------------------------------------
   subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, wldau, eu, edc, mmaxd, npotd, natyp, nspind, lmax)
 
@@ -205,7 +205,7 @@ contains
         ! 4. Calculate total-energy corrections EU and EDC (double-counting).
         ! Then the correction is EU - EDC.
         ! L[LDA+U]=E[LDA]+E[U]-E[DC]
-        ! > @note EU,EDC initialised outside the routine
+        !> @note EU,EDC initialised outside the routine
         ! ----------------------------------------------------------------------
 
         ! Here VLDAU is assumed spin-diagonal (contrary to the spin-orbit case).
@@ -316,7 +316,7 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: RWRITE
-  ! > @brief Auxiliary subroutine to write the entries of the different
+  !> @brief Auxiliary subroutine to write the entries of the different
   ! potentials
   ! -------------------------------------------------------------------------------
   subroutine rwrite(z, mmaxd, mmax, ifile)

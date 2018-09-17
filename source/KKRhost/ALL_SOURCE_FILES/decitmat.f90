@@ -50,12 +50,9 @@ contains
 
     ! Local arrays ..
     real (kind=dp) :: cutoff(irmd)
-    real (kind=dp) :: rs(:, :), s(:)
-    complex (kind=dp) :: bessjw(:), bessyw(:), hankws(:), dlogdp(:)
-    complex (kind=dp) :: tmat(:), mass(:), hamf(:, :), fz(:, :), pz(:, :)
-    allocatable :: rs, s
-    allocatable :: bessjw, bessyw, hankws, dlogdp
-    allocatable :: tmat, mass, hamf, fz, pz
+    real (kind=dp), allocatable :: rs(:, :), s(:)
+    complex (kind=dp), allocatable :: bessjw(:), bessyw(:), hankws(:), dlogdp(:)
+    complex (kind=dp), allocatable :: tmat(:), mass(:), hamf(:, :), fz(:, :), pz(:, :)
 
 
     call cinit(lmmaxd*lmmaxd, tmatll)

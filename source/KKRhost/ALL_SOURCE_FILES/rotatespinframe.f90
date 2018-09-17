@@ -6,8 +6,8 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: rotatematrix
-  ! > @brief Rotates a matrix in the local frame pointing in
-  ! > the direction of phi and theta to the global frame
+  !> @brief Rotates a matrix in the local frame pointing in
+  !> the direction of phi and theta to the global frame
   ! -------------------------------------------------------------------------------
   subroutine rotatematrix(mat, theta, phi, lmmax, mode)
     implicit none
@@ -54,11 +54,11 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: rotatevector
-  ! > @brief Does the rotation from the old local to the new local spin frame
+  !> @brief Does the rotation from the old local to the new local spin frame
   ! reference
-  ! > for densities and charges
-  ! > \f$\rho_{loc}(ir,lm)= W1 * \rho_{glob}(ir,lm) * W2\f$
-  ! > where \f$\rho\f$ and \f$W\f$ are matricies in spin space
+  !> for densities and charges
+  !> \f$\rho_{loc}(ir,lm)= W1 * \rho_{glob}(ir,lm) * W2\f$
+  !> where \f$\rho\f$ and \f$W\f$ are matricies in spin space
   ! -------------------------------------------------------------------------------
   subroutine rotatevector(rho2nsc, rho2ns, nrmax, lmpotd, theta, phi, theta_old, phi_old, nrmaxd)
 
@@ -108,21 +108,21 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: create_Wmatrix
-  ! > @brief Create the rotation matrix \f$W\f$:
-  ! >
-  ! >  \f$W1= U_{degga_{locnew}} * U_{locold}\f$
-  ! >
-  ! >  \f$W2= U_{degga_{locold}} * U_{locnew}\f$
+  !> @brief Create the rotation matrix \f$W\f$:
+  !>
+  !>  \f$W1= U_{degga_{locnew}} * U_{locold}\f$
+  !>
+  !>  \f$W2= U_{degga_{locold}} * U_{locnew}\f$
   ! !>
-  ! > @detail The rotation matrix is created such that it rotates an operator
-  ! >  which is in a local frame (locold) to another local frame (locnew)
-  ! >  This is done by first transforming the old local frame to the
-  ! >  global frame using the U matrix and then transforming the global
-  ! >  frame to the new local frame
-  ! >
-  ! >  \f$A_{locnew} = W1 * A_{locold} * W2\f$
-  ! >
-  ! >  \f$Udegga = transpose(complex conjug ( U ) )\f&
+  !> @detail The rotation matrix is created such that it rotates an operator
+  !>  which is in a local frame (locold) to another local frame (locnew)
+  !>  This is done by first transforming the old local frame to the
+  !>  global frame using the U matrix and then transforming the global
+  !>  frame to the new local frame
+  !>
+  !>  \f$A_{locnew} = W1 * A_{locold} * W2\f$
+  !>
+  !>  \f$Udegga = transpose(complex conjug ( U ) )\f&
   ! -------------------------------------------------------------------------------
   subroutine create_wmatrix(theta, phi, theta_old, phi_old, lmmax, wmat1, wmat2)
     implicit none
@@ -151,11 +151,11 @@ contains
   end subroutine create_wmatrix
 
   ! -------------------------------------------------------------------------------
-  ! > @brief create the rotation matrix:
-  ! >  \f$U= \left(\begin{array}{cc} cos(\theta/2) exp(-i/2 \phi) &
+  !> @brief create the rotation matrix:
+  !>  \f$U= \left(\begin{array}{cc} cos(\theta/2) exp(-i/2 \phi) &
   ! -sin(\theta/2) exp(-i/2 \phi) \\ sin(\theta/2) exp( i/2 \phi)  &
   ! cos(\theta/2) exp( i/2 \phi)\end{array}\right)\f$
-  ! >  \f$Udegga = transpose(complex conjug ( U ) )\f$
+  !>  \f$Udegga = transpose(complex conjug ( U ) )\f$
   ! -------------------------------------------------------------------------------
   subroutine create_umatrix(theta, phi, lmmax, umat, udeggamat)
 

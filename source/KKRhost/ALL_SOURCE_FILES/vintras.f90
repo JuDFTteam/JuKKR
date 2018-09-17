@@ -4,36 +4,36 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: VINTRAS
-  ! > @brief Calculate the electron-intracell-potentials and the charge-moments
-  ! > of given charge densities. ( For each spin-direction the potential is the
-  ! > same in the polarized case.)
-  ! > @details Initialize the potential \f$ V\f$ with the
-  ! electron-intracell-potentials
-  ! > the intracell-potential is expanded into spherical harmonics .
-  ! > the lm-term of the intracell-potential of the representive atom i is given
-  ! by
-  ! >
-  ! > \f$V\left(r,lm,i\right)=\frac{8\pi}{2l+1}
-  ! \left(\int_{0}^{r}dr'\frac{r'^{l}}{r^{l+1}} rho2ns(r',lm,i,1) +
-  ! \int_{r}^{r_{cut}}dr' \frac{r^l}{r'^{l+1}}rho2ns(r',lm,i,1) ) \right)\f$
-  ! >
-  ! > the lm contribution of the charge moment of the representive atom i is
-  ! given by
-  ! >
-  ! > \f$ cmom\left(lm,i\right)=\int_{0}^{r_{cut}} dr'
-  ! r'^{l}rho2ns(r',lm,i,1)\f$
-  ! >
-  ! >  (see notes by b.drittler and u.klemradt) \f$ r_{cut}\f$ is muffin tin or
-  ! > Wigner-Seitz sphere radius, depending on kshape turned on or off
+  !> @brief Calculate the electron-intracell-potentials and the charge-moments
+  !> of given charge densities. ( For each spin-direction the potential is the
+  !> same in the polarized case.)
+  !> @details Initialize the potential \f$ V\f$ with the
+  !electron-intracell-potentials
+  !> the intracell-potential is expanded into spherical harmonics .
+  !> the lm-term of the intracell-potential of the representive atom i is given
+  !by
+  !>
+  !> \f$V\left(r,lm,i\right)=\frac{8\pi}{2l+1}
+  !\left(\int_{0}^{r}dr'\frac{r'^{l}}{r^{l+1}} rho2ns(r',lm,i,1) +
+  !\int_{r}^{r_{cut}}dr' \frac{r^l}{r'^{l+1}}rho2ns(r',lm,i,1) ) \right)\f$
+  !>
+  !> the lm contribution of the charge moment of the representive atom i is
+  !given by
+  !>
+  !> \f$ cmom\left(lm,i\right)=\int_{0}^{r_{cut}} dr'
+  !r'^{l}rho2ns(r',lm,i,1)\f$
+  !>
+  !>  (see notes by b.drittler and u.klemradt) \f$ r_{cut}\f$ is muffin tin or
+  !> Wigner-Seitz sphere radius, depending on kshape turned on or off
 
-  ! > @note Attention : \f$ rho2ns(...,1)\f$ is the real charge density times
-  ! \f$r^2\f$
-  ! > developed into spherical harmonics . (see deck rholm)
-  ! >
-  ! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
-  ! Fortran90
-  ! > @author B. Drittler
-  ! > @date May 1987
+  !> @note Attention : \f$ rho2ns(...,1)\f$ is the real charge density times
+  !\f$r^2\f$
+  !> developed into spherical harmonics . (see deck rholm)
+  !>
+  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
+  !Fortran90
+  !> @author B. Drittler
+  !> @date May 1987
   ! -----------------------------------------------------------------------
 
   subroutine vintras(cmom, cminst, lmax, nspin, nstart, nend, rho2ns, v, r, drdi, irws, ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, thetas, lmsp, lmpot, natyp)
@@ -47,34 +47,34 @@ contains
     implicit none
 
     ! .. Input Variables
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
+    integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
     integer, intent (in) :: nend
-    integer, intent (in) :: nspin  ! < Counter for spin directions
-    integer, intent (in) :: lmpot  ! < (LPOT+1)**2
-    integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
+    integer, intent (in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: lmpot  !! (LPOT+1)**2
+    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
     integer, intent (in) :: nstart
-    integer, intent (in) :: kshape ! < Exact treatment of WS cell
-    integer, dimension (natyp), intent (in) :: irws ! < R point at WS radius
-    integer, dimension (natyp), intent (in) :: ipan ! < Number of panels in
+    integer, intent (in) :: kshape !! Exact treatment of WS cell
+    integer, dimension (natyp), intent (in) :: irws !! R point at WS radius
+    integer, dimension (natyp), intent (in) :: ipan !! Number of panels in
     ! non-MT-region
-    integer, dimension (natyp), intent (in) :: ntcell ! < Index for WS cell
+    integer, dimension (natyp), intent (in) :: ntcell !! Index for WS cell
     integer, dimension (0:lmpot), intent (in) :: imaxsh
     integer, dimension (ngshd, 3), intent (in) :: ilm_map
-    integer, dimension (natyp, lmxspd), intent (in) :: lmsp ! < 0,1 :
+    integer, dimension (natyp, lmxspd), intent (in) :: lmsp !! 0,1 :
     ! non/-vanishing
     ! lm=(l,m) component
     ! of non-spherical
     ! potential
     integer, dimension (natyp, lmxspd), intent (in) :: ifunm
-    integer, dimension (0:ipand, natyp), intent (in) :: ircut ! < R points of
+    integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of
     ! panel borders
     real (kind=dp), dimension (ngshd), intent (in) :: gsh
-    real (kind=dp), dimension (irmd, natyp), intent (in) :: r ! < Radial mesh (
+    real (kind=dp), dimension (irmd, natyp), intent (in) :: r !! Radial mesh (
     ! in units a Bohr)
-    real (kind=dp), dimension (irmd, natyp), intent (in) :: drdi ! < Derivative
+    real (kind=dp), dimension (irmd, natyp), intent (in) :: drdi !! Derivative
     ! dr/di
-    real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thetas ! <
+    real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thetas !!
     ! shape
     ! function
     ! THETA=0
@@ -90,9 +90,9 @@ contains
     ! harmonics
     ! expansion
     real (kind=dp), dimension (irmd, lmpot, natyp, 2), intent (in) :: rho2ns
-    ! < radial density
+    !! radial density
     ! .. Output variables
-    real (kind=dp), dimension (lmpot, natyp), intent (out) :: cmom ! < LM moment
+    real (kind=dp), dimension (lmpot, natyp), intent (out) :: cmom !! LM moment
     ! of total
     ! charge
     real (kind=dp), dimension (lmpot, natyp), intent (out) :: cminst

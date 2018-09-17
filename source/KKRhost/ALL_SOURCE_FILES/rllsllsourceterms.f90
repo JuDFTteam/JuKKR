@@ -5,11 +5,11 @@ module mod_rllsllsourceterms
 contains
 
   ! -------------------------------------------------------------------------------
-  ! > @brief Calculates the source terms J,H and the left solution J2, H2 for:
-  ! > - non-relativistic
-  ! > - scalar-relativistic
-  ! > - full-relativistic
-  ! > calculations
+  !> @brief Calculates the source terms J,H and the left solution J2, H2 for:
+  !> - non-relativistic
+  !> - scalar-relativistic
+  !> - full-relativistic
+  !> calculations
   ! -------------------------------------------------------------------------------
   subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
 
@@ -27,9 +27,9 @@ contains
 
     ! outputs
     integer, intent (out) :: nvec
-    integer, dimension (2*lmsize), intent (out) :: jlk_index ! < index array mapping entries of hlk, jlk (bing/small components one after the other) to L=(l,m,s)
-    complex (kind=dp), dimension (1:4*(lmax+1), nrmax), intent (out) :: hlk, jlk ! < right hankel and bessel source functions
-    complex (kind=dp), dimension (1:4*(lmax+1), nrmax), intent (out) :: hlk2, jlk2 ! < left hankel and bessel source functions
+    integer, dimension (2*lmsize), intent (out) :: jlk_index !! index array mapping entries of hlk, jlk (bing/small components one after the other) to L=(l,m,s)
+    complex (kind=dp), dimension (1:4*(lmax+1), nrmax), intent (out) :: hlk, jlk !! right hankel and bessel source functions
+    complex (kind=dp), dimension (1:4*(lmax+1), nrmax), intent (out) :: hlk2, jlk2 !! left hankel and bessel source functions
     complex (kind=dp), intent (out) :: gmatprefactor ! prefactor of the Green function (2M_0\kappa in PhD Bauer, p. 63)
 
     ! locals
