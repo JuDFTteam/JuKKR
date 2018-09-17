@@ -1,1052 +1,1048 @@
 module mod_types
 
-   use mod_DataTypes
+  use :: mod_datatypes
 
-   use constants, only: czero
+  use :: constants, only: czero
 
-   implicit none
+  implicit none
 
-   public :: t_inc, t_tgmat, t_mpi_c_grid, t_lloyd, t_dtmatJij, t_cpa, t_imp
-
-
-   !< type holding single site t-matrix, reference GF and structural GF (gmat)
-   !< for distribution between 1a, 1b and 1c parts of the code
-   type :: type_tgmatices
-
-       ! logical switches to control if matrices are stored in memory or written to files
-      logical :: tmat_to_file = .false.
-      logical :: gmat_to_file = .false.
-      logical :: gref_to_file = .false.
-      
-      integer :: Nelements = 4 ! 3 arrays in this type, for mpi bcast
-      
-      ! allocatable arrays for tmat, gmat and gref
-      complex (kind=dp), allocatable :: tmat(:,:,:)       ! dimensions=LMMAXD, LMMAXD, IREC; IREC= IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) ;IE=1,...,IELAST, ISPIN=1,...,NSPIN, I1=1,...,NATYP)
-      complex (kind=dp), allocatable :: gmat(:,:,:)       ! dimensions=LMMAXD, LMMAXD, IREC; IREC= IQDOS+NQDOS*(IE-1)+NQDOS*IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) ;IE=1,...,IELAST, ISPIN=1,...,NSPIN, I1=1,...,NATYP)
-      complex (kind=dp), allocatable :: gref(:,:,:,:)       !GINP(NACLSD*LMGF0D,LMGF0D,NCLSD) IREC=IE=1,...,IELAST
-
-   end type type_tgmatices
-   
-
-   !< type holding CPA information
-   type :: type_cpa
-
-       ! logical switches to control if matrices are stored in memory or written to files
-      logical :: dmatproj_to_file = .false.
-
-      integer :: Nelements = 3 ! 2 array in this type, for mpi bcast
-      
-      ! allocatable arrays for tmat, gmat and gref
-      complex (kind=dp), allocatable :: dmatts(:,:,:,:)       ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
-      complex (kind=dp), allocatable :: dtilts(:,:,:,:)       ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
-   end type type_cpa
+  public :: t_inc, t_tgmat, t_mpi_c_grid, t_lloyd, t_dtmatjij, t_cpa, t_imp
 
 
-   !< data type for the derivatives of the t-matrix with respect to changing the non-collinear angles in directions {x,y,z}
-   type :: type_dtmatJijDij
-     
-      integer :: Nelements = 3
-      logical :: calculate = .false.
-      complex (kind=dp), allocatable :: dtmat_xyz(:,:,:,:) !dimensions= LMMAXD, LMMAXD, 3, IELAST;  3={x,y,z}
+  ! < type holding single site t-matrix, reference GF and structural GF (gmat)
+  ! < for distribution between 1a, 1b and 1c parts of the code
+  type :: type_tgmatices
 
-   end type type_dtmatJijDij
+    ! logical switches to control if matrices are stored in memory or written to files
+    logical :: tmat_to_file = .false.
+    logical :: gmat_to_file = .false.
+    logical :: gref_to_file = .false.
 
+    integer :: nelements = 4       ! 3 arrays in this type, for mpi bcast
 
-   !< type holding some array dimensions needed independently of t_params
-   type :: type_inc
-   
-      integer :: Nparams = 22   ! number of parameters in type_inc, excluding allocatable array KMESH
-      integer :: LMMAXD  = -1
-      integer :: NSPIN   = -1
-      integer :: IELAST  = -1
-      integer :: NQDOS   = -1
-      integer :: NATYP   = -1
-      integer :: LMGF0D  = -1
-      integer :: NCLSD   = -1
-      integer :: NACLSMAX  = -1
-      integer :: i_iteration = -1 
-      integer :: N_iteration = -1
-      integer :: mit_bry = 1
-      integer :: NSHELL0 = -1
-      integer :: NKMESH = -1
-      logical :: NEWSOSOL = .false.  ! use new solver for SOC
-      logical :: deci_out = .false.  ! use deci_out case
-      integer :: i_write = 0 ! switch to control if things are written out or not (verbosity levels 0,1,2)
-      integer :: i_time  = 1 ! switch to control if timing files are written (verbosity levels 0,1,2)
-      ! parameters needed for wavefunctions
-      integer :: NSRA    = -1
-      integer :: LMMAXSO = -1
-      integer :: IRMDNEW = -1
-      integer :: KVREL   = -1
-      
-      integer, allocatable :: KMESH(:), KMESH_ie(:)
-         
-   end type type_inc
-   
-   
-   !< type holding information on the MPI parallelization scheme
-   type :: type_mpi_cartesian_grid_info
-   
-      integer :: Nparams = 12
-      integer :: dims(2) = (/ -1, -1 /)
-      integer :: myMPI_comm_ie  = -1
-      integer :: myMPI_comm_at  = -1
-      integer :: myrank_ie  = -1
-      integer :: myrank_at  = -1
-      integer :: myrank_atcomm  = -1
-      integer :: nranks_ie  = -1
-      integer :: nranks_at  = -1
-      integer :: nranks_atcomm  = -1
-      integer :: ntot1    = -1
-      integer, allocatable :: ntot_pT1(:)
-      integer, allocatable :: ioff_pT1(:)
-      integer :: ntot2    = -1
-      integer, allocatable :: ntot_pT2(:)
-      integer, allocatable :: ioff_pT2(:)
-   
-   end type type_mpi_cartesian_grid_info
+    ! allocatable arrays for tmat, gmat and gref
+    complex (kind=dp), allocatable :: tmat(:, :, :) ! dimensions=LMMAXD, LMMAXD, IREC; IREC= IE+IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) ;IE=1,...,IELAST, ISPIN=1,...,NSPIN, I1=1,...,NATYP)
+    complex (kind=dp), allocatable :: gmat(:, :, :) ! dimensions=LMMAXD, LMMAXD, IREC; IREC= IQDOS+NQDOS*(IE-1)+NQDOS*IELAST*(ISPIN-1)+IELAST*NSPIN*(I1-1) ;IE=1,...,IELAST, ISPIN=1,...,NSPIN, I1=1,...,NATYP)
+    complex (kind=dp), allocatable :: gref(:, :, :, :) ! GINP(NACLSD*LMGF0D,LMGF0D,NCLSD) IREC=IE=1,...,IELAST
+
+  end type type_tgmatices
 
 
-   !< type holding information needed for lloyd such as derivatives of single
-   !< site t-matrix, reference GF or the trace of alpha matrix and 
-   type :: type_lloyd
+  ! < type holding CPA information
+  type :: type_cpa
 
-      ! logical switches to control if matrices are stored in memory or written to files
-      logical :: dtmat_to_file = .false.          ! unit 691
-      logical :: tralpha_to_file = .false.        ! unit 692
-      logical :: cdos_diff_lly_to_file = .false.  ! unit 701
-      logical :: dgref_to_file = .false.          ! unit 681
-      logical :: g0tr_to_file = .false.           ! unit 682
-      
-      integer :: N1 = 6 ! 5 logicals and 5 arrays this type, for mpi bcast
-      
-      ! allocatable arrays
-      complex (kind=dp), allocatable :: dtmat(:,:,:)      ! complex (kind=dp) TMAT0(LMMAXD,LMMAXD), IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
-      complex (kind=dp), allocatable :: tralpha(:)        ! complex (kind=dp) TRALPHA, IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
-      complex (kind=dp), allocatable :: cdos(:,:)         ! complex (kind=dp) CDOS_LLY(IELAST,NSPIND), irec=IE, aalready in dim 1 of cdos!
-      complex (kind=dp), allocatable :: dgref(:,:,:,:)    ! complex (kind=dp); ALLOCATE ( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) ), IREC=IE 
-      complex (kind=dp), allocatable :: g0tr(:)           ! complex (kind=dp) LLY_G0TR_IE, irec=ie
+    ! logical switches to control if matrices are stored in memory or written to files
+    logical :: dmatproj_to_file = .false.
 
-   end type type_lloyd
+    integer :: nelements = 3       ! 2 array in this type, for mpi bcast
+
+    ! allocatable arrays for tmat, gmat and gref
+    complex (kind=dp), allocatable :: dmatts(:, :, :, :) ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
+    complex (kind=dp), allocatable :: dtilts(:, :, :, :) ! dimensions=LMMAXD, LMMAXD, NATYP, IREC; IREC= IE+IELAST*(ISPIN-1)+; IE=1,...,IELAST, ISPIN=1,...,NSPIN)
+  end type type_cpa
 
 
-   !< type holding information for impurity potential, needed in GREENIMP mode
-   type :: type_imp
+  ! < data type for the derivatives of the t-matrix with respect to changing the non-collinear angles in directions {x,y,z}
+  type :: type_dtmatjijdij
 
-      integer :: N1 = 12     ! number of scalars for mpi bcast + 2 (for N1,N2)
-      integer :: N2 = 16     ! number of arrays for mpi bcast + 1 (for N2)
-      integer :: NATOMIMP = -1 ! number of atoms in impurity cluster
-      integer :: IHOST    = -1 ! number of different host atoms (layer indices)
-      integer :: IPAND, NATYPD, IRMD, IRID, NFUND, NSPIN, IRMIND, LMPOTD ! array dimensions. can be read from t_params
-      
-      ! allocatable arrays
-      integer, allocatable :: IPANIMP(:)          ! radial mesh, Panel mesh for impurities,    IPANIMP(NATOMIMP)
-      integer, allocatable :: IRCUTIMP(:,:)       ! radial mesh, RCUT for imps,                IRCUTIMP(0:IPAND,NATOMIMP)
-      integer, allocatable :: IRMINIMP(:)         ! radial mesh, IRMIN for imps,               IRMINIMP(NATOMIMP))
-      integer, allocatable :: IRWSIMP(:)          ! radial mesh, IRWS for imps,                IRWSIMP(NATOMIMP)
-      integer, allocatable :: HOSTIMP(:)          ! layer index of host atoms,                 HOSTIMP(NATYPD)
-      integer, allocatable :: ATOMIMP(:)          ! layer index of imp atoms,                  ATOMIMP(NATOMIMP)
-      real (kind=dp), allocatable :: RIMP(:,:)        ! Rmesh of imps,                       RIMP(IRMD,NATOMIMP)
-      real (kind=dp), allocatable :: ZIMP(:)          ! atom charge of imps,                 ZIMP(NATOMIMP)
-      real (kind=dp), allocatable :: THETASIMP(:,:,:) ! shape functions of imps,             THETASIMP(IRID,NFUND,NATOMIMP)
-      real (kind=dp), allocatable :: VISPIMP(:,:)     ! impurity potential,                  VISPIMP(IRMD,NATOMIMP*NSPIN)
-      real (kind=dp), allocatable :: VINSIMP(:,:,:)   ! impurity potential,                  VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN)
-      real (kind=dp), allocatable :: RCLSIMP(:,:)     ! impurity positions(scoef file),      RCLSIMP(3,NATOMIMPD)
-      real (kind=dp), allocatable :: THETAIMP(:)      ! theta of nonco_angle of impurity     THETAIMP(NATOMIMP)
-      real (kind=dp), allocatable :: PHIIMP(:)        ! phi of nonco_angle of impurity       PHIIMP(NATOMIMP)
-      complex (kind=dp), allocatable :: RLLIMP(:,:,:,:)    ! impurity wavefunctions,              RLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEW(I1))
+    integer :: nelements = 3
+    logical :: calculate = .false.
+    complex (kind=dp), allocatable :: dtmat_xyz(:, :, :, :) ! dimensions= LMMAXD, LMMAXD, 3, IELAST;  3={x,y,z}
 
-   end type type_imp
+  end type type_dtmatjijdij
 
-   ! save types
-   type (type_inc), save :: t_inc
-   type (type_tgmatices), save :: t_tgmat
-   type (type_mpi_cartesian_grid_info), save :: t_mpi_c_grid
-   type (type_lloyd), save :: t_lloyd
-   type (type_dtmatJijDij), allocatable, save :: t_dtmatJij(:) !dimensions I1=1,...,NATYP 
-   type (type_cpa), save :: t_cpa
-   type (type_imp), save :: t_imp
+
+  ! < type holding some array dimensions needed independently of t_params
+  type :: type_inc
+
+    integer :: nparams = 22        ! number of parameters in type_inc, excluding allocatable array KMESH
+    integer :: lmmaxd = -1
+    integer :: nspin = -1
+    integer :: ielast = -1
+    integer :: nqdos = -1
+    integer :: natyp = -1
+    integer :: lmgf0d = -1
+    integer :: nclsd = -1
+    integer :: naclsmax = -1
+    integer :: i_iteration = -1
+    integer :: n_iteration = -1
+    integer :: mit_bry = 1
+    integer :: nshell0 = -1
+    integer :: nkmesh = -1
+    logical :: newsosol = .false.  ! use new solver for SOC
+    logical :: deci_out = .false.  ! use deci_out case
+    integer :: i_write = 0         ! switch to control if things are written out or not (verbosity levels 0,1,2)
+    integer :: i_time = 1          ! switch to control if timing files are written (verbosity levels 0,1,2)
+    ! parameters needed for wavefunctions
+    integer :: nsra = -1
+    integer :: lmmaxso = -1
+    integer :: irmdnew = -1
+    integer :: kvrel = -1
+
+    integer, allocatable :: kmesh(:), kmesh_ie(:)
+
+  end type type_inc
+
+
+  ! < type holding information on the MPI parallelization scheme
+  type :: type_mpi_cartesian_grid_info
+
+    integer :: nparams = 12
+    integer :: dims(2) = [ -1, -1 ]
+    integer :: mympi_comm_ie = -1
+    integer :: mympi_comm_at = -1
+    integer :: myrank_ie = -1
+    integer :: myrank_at = -1
+    integer :: myrank_atcomm = -1
+    integer :: nranks_ie = -1
+    integer :: nranks_at = -1
+    integer :: nranks_atcomm = -1
+    integer :: ntot1 = -1
+    integer, allocatable :: ntot_pt1(:)
+    integer, allocatable :: ioff_pt1(:)
+    integer :: ntot2 = -1
+    integer, allocatable :: ntot_pt2(:)
+    integer, allocatable :: ioff_pt2(:)
+
+  end type type_mpi_cartesian_grid_info
+
+
+  ! < type holding information needed for lloyd such as derivatives of single
+  ! < site t-matrix, reference GF or the trace of alpha matrix and
+  type :: type_lloyd
+
+    ! logical switches to control if matrices are stored in memory or written to files
+    logical :: dtmat_to_file = .false. ! unit 691
+    logical :: tralpha_to_file = .false. ! unit 692
+    logical :: cdos_diff_lly_to_file = .false. ! unit 701
+    logical :: dgref_to_file = .false. ! unit 681
+    logical :: g0tr_to_file = .false. ! unit 682
+
+    integer :: n1 = 6              ! 5 logicals and 5 arrays this type, for mpi bcast
+
+    ! allocatable arrays
+    complex (kind=dp), allocatable :: dtmat(:, :, :) ! complex (kind=dp) TMAT0(LMMAXD,LMMAXD), IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
+    complex (kind=dp), allocatable :: tralpha(:) ! complex (kind=dp) TRALPHA, IREC = ie_num + ie_end*(ISPIN-1) + ie_end*NSPIN* (I1-1)
+    complex (kind=dp), allocatable :: cdos(:, :) ! complex (kind=dp) CDOS_LLY(IELAST,NSPIND), irec=IE, aalready in dim 1 of cdos!
+    complex (kind=dp), allocatable :: dgref(:, :, :, :) ! complex (kind=dp); ALLOCATE ( DGINP(NACLSMAX*LMGF0D,LMGF0D,NCLS) ), IREC=IE
+    complex (kind=dp), allocatable :: g0tr(:) ! complex (kind=dp) LLY_G0TR_IE, irec=ie
+
+  end type type_lloyd
+
+
+  ! < type holding information for impurity potential, needed in GREENIMP mode
+  type :: type_imp
+
+    integer :: n1 = 12             ! number of scalars for mpi bcast + 2 (for N1,N2)
+    integer :: n2 = 16             ! number of arrays for mpi bcast + 1 (for N2)
+    integer :: natomimp = -1       ! number of atoms in impurity cluster
+    integer :: ihost = -1          ! number of different host atoms (layer indices)
+    integer :: ipand, natypd, irmd, irid, nfund, nspin, irmind, lmpotd ! array dimensions. can be read from t_params
+
+    ! allocatable arrays
+    integer, allocatable :: ipanimp(:) ! radial mesh, Panel mesh for impurities,    IPANIMP(NATOMIMP)
+    integer, allocatable :: ircutimp(:, :) ! radial mesh, RCUT for imps,                IRCUTIMP(0:IPAND,NATOMIMP)
+    integer, allocatable :: irminimp(:) ! radial mesh, IRMIN for imps,               IRMINIMP(NATOMIMP))
+    integer, allocatable :: irwsimp(:) ! radial mesh, IRWS for imps,                IRWSIMP(NATOMIMP)
+    integer, allocatable :: hostimp(:) ! layer index of host atoms,                 HOSTIMP(NATYPD)
+    integer, allocatable :: atomimp(:) ! layer index of imp atoms,                  ATOMIMP(NATOMIMP)
+    real (kind=dp), allocatable :: rimp(:, :) ! Rmesh of imps,                       RIMP(IRMD,NATOMIMP)
+    real (kind=dp), allocatable :: zimp(:) ! atom charge of imps,                 ZIMP(NATOMIMP)
+    real (kind=dp), allocatable :: thetasimp(:, :, :) ! shape functions of imps,             THETASIMP(IRID,NFUND,NATOMIMP)
+    real (kind=dp), allocatable :: vispimp(:, :) ! impurity potential,                  VISPIMP(IRMD,NATOMIMP*NSPIN)
+    real (kind=dp), allocatable :: vinsimp(:, :, :) ! impurity potential,                  VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN)
+    real (kind=dp), allocatable :: rclsimp(:, :) ! impurity positions(scoef file),      RCLSIMP(3,NATOMIMPD)
+    real (kind=dp), allocatable :: thetaimp(:) ! theta of nonco_angle of impurity     THETAIMP(NATOMIMP)
+    real (kind=dp), allocatable :: phiimp(:) ! phi of nonco_angle of impurity       PHIIMP(NATOMIMP)
+    complex (kind=dp), allocatable :: rllimp(:, :, :, :) ! impurity wavefunctions,              RLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEW(I1))
+
+  end type type_imp
+
+  ! save types
+  type (type_inc), save :: t_inc
+  type (type_tgmatices), save :: t_tgmat
+  type (type_mpi_cartesian_grid_info), save :: t_mpi_c_grid
+  type (type_lloyd), save :: t_lloyd
+  type (type_dtmatjijdij), allocatable, save :: t_dtmatjij(:) ! dimensions I1=1,...,NATYP
+  type (type_cpa), save :: t_cpa
+  type (type_imp), save :: t_imp
 
 contains
 
-   !< subroutine to allocate and initialize arrays of t_tgmat
-   subroutine init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
-   
-      !use mod_mympi, only: nranks
-   
-      implicit none
-   
-      type(type_inc), intent(in) :: t_inc
-      type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
-      type(type_tgmatices), intent(inout) :: t_tgmat
-      
-      integer :: ierr, nspin
-      
-      nspin = t_inc%NSPIN
-      if(t_inc%NEWSOSOL) nspin = 1
-    
-      if (.not. allocated(t_tgmat%tmat)) then
-         if (.not. t_tgmat%tmat_to_file) then
-            !if(nranks.eq.1) then
-            !   !allocate tmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
-            !   allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
-            !else
-            !   !allocate tmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
-            !   allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_tgmat%tmat for mpi'
-            !end if
-            !allocate tmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
-            allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
-         else
-            allocate(t_tgmat%tmat(1,1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
-         end if
-      
-         t_tgmat%tmat(:,:,:) = czero
-      endif
-      
-      if (.not. allocated(t_tgmat%gmat)) then
-         if (.not. t_tgmat%gmat_to_file) then
-            !if(nranks.eq.1) then
-            !   !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IELAST*NSPIN*NATYP
-            !   allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_inc%IELAST*nspin*t_inc%NSHELL0), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_tgmat%gmat'
-            !else
-            !   !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IEMAX_local*NSPIN*NATYP
-            !   allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_mpi_c_grid%ntot2*nspin*t_inc%NSHELL0), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_tgmat%gmat for mpi'
-            !end if
-            allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_mpi_c_grid%ntot2*nspin*t_inc%NSHELL0), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating t_tgmat%gmat'
-            
-         else
-            allocate(t_tgmat%gmat(1,1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_tgmat%gmat'
-         end if
-         t_tgmat%gmat(:,:,:) = czero
-      endif
-      
-      if (.not. allocated(t_tgmat%gref)) then
-         if (.not. t_tgmat%gref_to_file) then
-            !if(nranks.eq.1) then
-            !   !allocate gref(NACLSMAX*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IELAST
-            !   allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_tgmat%gref'
-            !else
-            !   !allocate gref(NACLSMAX*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
-            !   allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_tgmat%gref for mpi'
-            !end if
-            allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating t_tgmat%gref'
-         else
-            allocate(t_tgmat%gref(1,1,1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_tgmat%gref'
-         end if
-         t_tgmat%gref(:,:,:,:) = czero
-      endif
+  ! < subroutine to allocate and initialize arrays of t_tgmat
+  subroutine init_tgmat(t_inc, t_tgmat, t_mpi_c_grid)
 
-   end subroutine init_tgmat
-   
+    ! use mod_mympi, only: nranks
 
-   !< subroutine to allocate and initialize arrays of t_cpa
-   subroutine init_t_cpa(t_inc,t_cpa,nenergy)
-   
-      !use mod_mympi, only: nranks
-   
-      implicit none
-   
-      type(type_inc), intent(in) :: t_inc
-      integer, intent(in) :: nenergy
-      type(type_cpa), intent(inout) :: t_cpa
-      
-      integer :: ierr, nspin
-      
-      nspin = t_inc%NSPIN
-      if(t_inc%NEWSOSOL) nspin = 1
-
-    
-      if (.not. allocated(t_cpa%dmatts)) then
-         if (.not. t_cpa%dmatproj_to_file) then
-           !allocate tmat(lmmax,lmmax,NATYP,irec_max) for irec_max=nenergy*nspin
-           allocate(t_cpa%dmatts(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NATYP,nenergy*nspin), STAT=ierr)
-           if(ierr/=0) stop 'Problem allocating t_cpa%dmatts'
-         else
-            allocate(t_cpa%dtilts(1,1,1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_cpa%dmatts'
-         end if
-         t_cpa%dmatts(:,:,:,:) = czero
-      endif
-
-      if (.not. allocated(t_cpa%dtilts)) then
-         if (.not. t_cpa%dmatproj_to_file) then
-           !allocate tmat(lmmax,lmmax,NATYP,irec_max) for irec_max=nenergy*nspin
-           allocate(t_cpa%dtilts(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NATYP,nenergy*nspin), STAT=ierr)
-           if(ierr/=0) stop 'Problem allocating t_cpa%dtilts'
-         else
-            allocate(t_cpa%dtilts(1,1,1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_cpa%dtilts'
-         end if
-         t_cpa%dtilts(:,:,:,:) = czero
-      endif
-
-   end subroutine init_t_cpa 
-
-
-   !< subroutine to allocate and initialize arrays of t_dtmatJij
-   subroutine init_t_dtmatJij(t_inc,t_dtmatJij)
-
-      implicit none
-
-      type(type_inc), intent(in) :: t_inc
-      type(type_dtmatJijDij), intent(inout), allocatable :: t_dtmatJij(:)
-
-      integer :: ierr
-     
-      if(.not.t_inc%NEWSOSOL) stop 'in init_t_dtmatJij: should only be called with NEWSOSOL'
-
-      if (.not. allocated(t_dtmatJij)) then
-        allocate(t_dtmatJij(t_inc%NATYP),STAT=ierr)
-        if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat(NATYP)'
-      endif
-
-   end subroutine init_t_dtmatJij
-
-   
-   !< subroutine to allocate and initialize arrays of t_dtmatJij_at
-   subroutine init_t_dtmatJij_at(t_inc,t_mpi_c_grid,t_dtmatJij_at)
-
-      !use mod_mympi, only: nranks
-
-      implicit none
-
-      type(type_inc), intent(in) :: t_inc
-      type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
-      type(type_dtmatJijDij), intent(inout) :: t_dtmatJij_at
-
-      integer :: ierr
-
-      if(.not.t_inc%NEWSOSOL) stop 'in init_t_dtmatJij_single: should only be called with NEWSOSOL'
-
-      if (.not. allocated(t_dtmatJij_at%dtmat_xyz) .and. t_dtmatJij_at%calculate) then
-!        if (.not. t_dtmatJij%dtmat_to_file) then
-            !if(nranks.eq.1) then
-            !   !allocate dtmat_xyz(lmmax,lmmax,3,irec) for irec_max=ielast
-            !   allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_inc%IELAST), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
-            !else
-            !   !allocate dtmat_xyz(lmmax,lmmax,3,irec) for irec_max=iemax_local
-            !   allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_mpi_c_grid%ntot2), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat for mpi'
-            !end if
-            allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_mpi_c_grid%ntot2), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
-!        else
-!           allocate(t_tgmat%tmat(1,1,1), STAT=ierr)
-!           if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
-!        end if
-      
-         t_dtmatJij_at%dtmat_xyz(:,:,:,:) = czero
-      endif
-
-   end subroutine init_t_dtmatJij_at
-
-   
-   !< store parameters needed in t_imp
-   subroutine init_params_t_imp(t_imp,IPAND,NATYPD,IRMD,IRID,NFUND,NSPIN,IRMIND,LMPOTD)
-
-      implicit none
-
-      type(type_imp), intent(inout) :: t_imp
-      integer, intent(in) :: IPAND,NATYPD,IRMD,IRID,NFUND,NSPIN,IRMIND,LMPOTD
-
-      t_imp%IPAND    = IPAND
-      t_imp%NATYPD   = NATYPD
-      t_imp%IRMD     = IRMD
-      t_imp%IRID     = IRID
-      t_imp%NFUND    = NFUND
-      t_imp%NSPIN    = NSPIN
-      t_imp%IRMIND   = IRMIND
-      t_imp%LMPOTD   = LMPOTD
-
-   end subroutine init_params_t_imp
-
-   
-   !< subroutine to allocate and initialize arrays of t_imp
-   subroutine init_t_imp(t_inc,t_imp)
-
-      implicit none
-
-      type(type_inc), intent(in) :: t_inc
-      type(type_imp), intent(inout) :: t_imp
-      ! local
-      integer :: ierr, NATOMIMP,IPAND,NATYPD,IRMD,IRID,NFUND,NSPIN,IRMIND,LMPOTD
-
-      ! so far only with SOC implemented
-      if(.not.t_inc%NEWSOSOL) stop 'in init_t_imp: should only be called with NEWSOSOL'
-
-      ! for convenience define this parameter locally
-      NATOMIMP = t_imp%NATOMIMP
-      IPAND    = t_imp%IPAND
-      NATYPD   = t_imp%NATYPD
-      IRMD     = t_imp%IRMD
-      IRID     = t_imp%IRID
-      NFUND    = t_imp%NFUND
-      NSPIN    = t_imp%NSPIN
-      IRMIND   = t_imp%IRMIND
-      LMPOTD   = t_imp%LMPOTD
-
-      ! integer arrays
-      if (.not. allocated(t_imp%IPANIMP)) then
-         allocate(t_imp%IPANIMP(NATOMIMP), STAT=ierr)
-         if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
-         !initialize with zeros
-         t_imp%ipanimp = 0
-      endif
-      if (.not. allocated(t_imp%IRCUTIMP)) then
-         allocate(t_imp%IRCUTIMP(0:IPAND,NATOMIMP), STAT=ierr)
-         t_imp%ircutimp = 0
-      endif
-      if (.not. allocated(t_imp%IRMINIMP)) then
-         allocate(t_imp%IRMINIMP(NATOMIMP), STAT=ierr)
-         t_imp%irminimp = 0
-      endif
-      if (.not. allocated(t_imp%IRWSIMP)) then
-         allocate(t_imp%IRWSIMP(NATOMIMP), STAT=ierr)
-         t_imp%irwsimp = 0
-      endif
-      if (.not. allocated(t_imp%HOSTIMP)) then
-         allocate(t_imp%HOSTIMP(NATYPD), STAT=ierr)
-         t_imp%hostimp = 0
-      endif
-      if (.not. allocated(t_imp%ATOMIMP)) then
-         allocate(t_imp%ATOMIMP(NATOMIMP), STAT=ierr)
-         t_imp%atomimp = 0
-      endif
-
-      ! real (kind=dp) arrays
-      if (.not. allocated(t_imp%RIMP)) then
-         allocate(t_imp%RIMP(IRMD,NATOMIMP), STAT=ierr)
-         t_imp%rimp = 0.0_dp
-      endif
-      if (.not. allocated(t_imp%ZIMP)) then
-         allocate(t_imp%ZIMP(NATOMIMP), STAT=ierr)
-         t_imp%zimp = 0.0_dp
-      endif
-      if (.not. allocated(t_imp%THETASIMP)) then
-         allocate(t_imp%THETASIMP(IRID,NFUND,NATOMIMP), STAT=ierr)
-         t_imp%thetasimp = 0.0_dp
-      endif
-      if (.not. allocated(t_imp%VISPIMP)) then
-         allocate(t_imp%VISPIMP(IRMD,NATOMIMP*NSPIN), STAT=ierr)
-         t_imp%vispimp = 0.0_dp
-      endif
-      if (.not. allocated(t_imp%VINSIMP)) then
-         allocate(t_imp%VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN), STAT=ierr)
-         t_imp%vinsimp = 0.0_dp
-      endif
-      if (.not. allocated(t_imp%RCLSIMP)) then
-         allocate(t_imp%RCLSIMP(3,NATOMIMP), STAT=ierr)
-         t_imp%rclsimp = 0.0_dp
-      endif
-      if (.not. allocated(t_imp%THETAIMP)) then
-         allocate(t_imp%THETAIMP(NATOMIMP), STAT=ierr)
-         t_imp%thetaimp = 0.0_dp
-      endif
-      if (.not. allocated(t_imp%PHIIMP)) then
-         allocate(t_imp%PHIIMP(NATOMIMP), STAT=ierr)
-         t_imp%phiimp = 0.0_dp
-      endif
-
-      ! complex (kind=dp) arrays
-      if (.not. allocated(t_imp%RLLIMP)) then
-         allocate(t_imp%RLLIMP(t_inc%nsra*t_inc%lmmaxso, t_inc%lmmaxso, t_inc%irmdnew, NATOMIMP), STAT=ierr)
-         t_imp%rllimp = czero
-      endif
-
-   end subroutine init_t_imp
-   
-
-#ifdef CPP_MPI
-   !< subroutine to broadcast t_inc and t_tgmat over mpi ranks
-   subroutine bcast_t_inc_tgmat(t_inc,t_tgmat,t_cpa, master)
-    !ruess: after myBcast_impcls from Pkkr_sidebranch2D_2014_12_16 by Bernd Zimmermann
-
-    use mpi
     implicit none
 
-    type(type_inc), intent(inout) :: t_inc
-    type(type_tgmatices), intent(inout) :: t_tgmat
-    type(type_cpa), intent(inout) :: t_cpa
+    type (type_inc), intent (in) :: t_inc
+    type (type_mpi_cartesian_grid_info), intent (in) :: t_mpi_c_grid
+    type (type_tgmatices), intent (inout) :: t_tgmat
 
-    integer, intent(in) :: master
-    integer :: blocklen1(t_inc%Nparams), etype1(t_inc%Nparams), myMPItype1 ! for parameter from t_inc
-    integer :: blocklen2(t_tgmat%Nelements), etype2(t_tgmat%Nelements), myMPItype2 ! for logicals in t_tgmat
+    integer :: ierr, nspin
+
+    nspin = t_inc%nspin
+    if (t_inc%newsosol) nspin = 1
+
+    if (.not. allocated(t_tgmat%tmat)) then
+      if (.not. t_tgmat%tmat_to_file) then
+        ! if(nranks.eq.1) then
+        ! !allocate tmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
+        ! allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
+        ! else
+        ! !allocate tmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
+        ! allocate(t_tgmat%tmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_tgmat%tmat for mpi'
+        ! end if
+        ! allocate tmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
+        allocate (t_tgmat%tmat(t_inc%lmmaxd,t_inc%lmmaxd,t_mpi_c_grid%ntot2*nspin*t_inc%natyp), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating t_tgmat%tmat'
+      else
+        allocate (t_tgmat%tmat(1,1,1), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
+      end if
+
+      t_tgmat%tmat(:, :, :) = czero
+    end if
+
+    if (.not. allocated(t_tgmat%gmat)) then
+      if (.not. t_tgmat%gmat_to_file) then
+        ! if(nranks.eq.1) then
+        ! !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IELAST*NSPIN*NATYP
+        ! allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_inc%IELAST*nspin*t_inc%NSHELL0), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_tgmat%gmat'
+        ! else
+        ! !allocate gmat(lmmax,lmmax,irec_max) for irec_max=NQDOS*IEMAX_local*NSPIN*NATYP
+        ! allocate(t_tgmat%gmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%NQDOS*t_mpi_c_grid%ntot2*nspin*t_inc%NSHELL0), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_tgmat%gmat for mpi'
+        ! end if
+        allocate (t_tgmat%gmat(t_inc%lmmaxd,t_inc%lmmaxd,t_inc%nqdos*t_mpi_c_grid%ntot2*nspin*t_inc%nshell0), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating t_tgmat%gmat'
+
+      else
+        allocate (t_tgmat%gmat(1,1,1), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating dummy t_tgmat%gmat'
+      end if
+      t_tgmat%gmat(:, :, :) = czero
+    end if
+
+    if (.not. allocated(t_tgmat%gref)) then
+      if (.not. t_tgmat%gref_to_file) then
+        ! if(nranks.eq.1) then
+        ! !allocate gref(NACLSMAX*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IELAST
+        ! allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_tgmat%gref'
+        ! else
+        ! !allocate gref(NACLSMAX*LMGF0D,LMGF0D,NCLSD,irec_max) for irec_max=IEMAX_local (=ntot2)
+        ! allocate(t_tgmat%gref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_tgmat%gref for mpi'
+        ! end if
+        allocate (t_tgmat%gref(t_inc%naclsmax*t_inc%lmgf0d,t_inc%lmgf0d,t_inc%nclsd,t_mpi_c_grid%ntot2), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating t_tgmat%gref'
+      else
+        allocate (t_tgmat%gref(1,1,1,1), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating dummy t_tgmat%gref'
+      end if
+      t_tgmat%gref(:, :, :, :) = czero
+    end if
+
+  end subroutine init_tgmat
+
+
+  ! < subroutine to allocate and initialize arrays of t_cpa
+  subroutine init_t_cpa(t_inc, t_cpa, nenergy)
+
+    ! use mod_mympi, only: nranks
+
+    implicit none
+
+    type (type_inc), intent (in) :: t_inc
+    integer, intent (in) :: nenergy
+    type (type_cpa), intent (inout) :: t_cpa
+
+    integer :: ierr, nspin
+
+    nspin = t_inc%nspin
+    if (t_inc%newsosol) nspin = 1
+
+
+    if (.not. allocated(t_cpa%dmatts)) then
+      if (.not. t_cpa%dmatproj_to_file) then
+        ! allocate tmat(lmmax,lmmax,NATYP,irec_max) for irec_max=nenergy*nspin
+        allocate (t_cpa%dmatts(t_inc%lmmaxd,t_inc%lmmaxd,t_inc%natyp,nenergy*nspin), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating t_cpa%dmatts'
+      else
+        allocate (t_cpa%dtilts(1,1,1,1), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating dummy t_cpa%dmatts'
+      end if
+      t_cpa%dmatts(:, :, :, :) = czero
+    end if
+
+    if (.not. allocated(t_cpa%dtilts)) then
+      if (.not. t_cpa%dmatproj_to_file) then
+        ! allocate tmat(lmmax,lmmax,NATYP,irec_max) for irec_max=nenergy*nspin
+        allocate (t_cpa%dtilts(t_inc%lmmaxd,t_inc%lmmaxd,t_inc%natyp,nenergy*nspin), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating t_cpa%dtilts'
+      else
+        allocate (t_cpa%dtilts(1,1,1,1), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating dummy t_cpa%dtilts'
+      end if
+      t_cpa%dtilts(:, :, :, :) = czero
+    end if
+
+  end subroutine init_t_cpa
+
+
+  ! < subroutine to allocate and initialize arrays of t_dtmatJij
+  subroutine init_t_dtmatjij(t_inc, t_dtmatjij)
+
+    implicit none
+
+    type (type_inc), intent (in) :: t_inc
+    type (type_dtmatjijdij), intent (inout), allocatable :: t_dtmatjij(:)
+
     integer :: ierr
-    integer(kind=MPI_ADDRESS_KIND) :: disp1(t_inc%Nparams), disp2(t_tgmat%Nelements), base
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !broadcast parameters from t_inc
-    call MPI_Get_address(t_inc%Nparams,       disp1(1), ierr)
-    call MPI_Get_address(t_inc%LMMAXD,        disp1(2), ierr)
-    call MPI_Get_address(t_inc%NSPIN ,        disp1(3), ierr)
-    call MPI_Get_address(t_inc%IELAST,        disp1(4), ierr)
-    call MPI_Get_address(t_inc%NQDOS ,        disp1(5), ierr)
-    call MPI_Get_address(t_inc%NATYP ,        disp1(6), ierr)
-    call MPI_Get_address(t_inc%LMGF0D,        disp1(7), ierr)
-    call MPI_Get_address(t_inc%NCLSD ,        disp1(8), ierr)
-    call MPI_Get_address(t_inc%NACLSMAX,      disp1(9), ierr)
-    call MPI_Get_address(t_inc%i_iteration,  disp1(10), ierr)
-    call MPI_Get_address(t_inc%N_iteration,  disp1(11), ierr)
-    call MPI_Get_address(t_inc%mit_bry,      disp1(12), ierr)
-    call MPI_Get_address(t_inc%NSHELL0,      disp1(13), ierr)
-    call MPI_Get_address(t_inc%NKMESH,       disp1(14), ierr)
-    call MPI_Get_address(t_inc%NEWSOSOL,     disp1(15), ierr)
-    call MPI_Get_address(t_inc%deci_out,     disp1(16), ierr)
-    call MPI_Get_address(t_inc%i_write,      disp1(17), ierr)
-    call MPI_Get_address(t_inc%i_time,       disp1(18), ierr)
-    call MPI_Get_address(t_inc%NSRA,         disp1(19), ierr)
-    call MPI_Get_address(t_inc%LMMAXSO,      disp1(20), ierr)
-    call MPI_Get_address(t_inc%IRMDNEW,      disp1(21), ierr)
-    call MPI_Get_address(t_inc%KVREL,        disp1(22), ierr)
-    base  = disp1(1)
+    if (.not. t_inc%newsosol) stop 'in init_t_dtmatJij: should only be called with NEWSOSOL'
+
+    if (.not. allocated(t_dtmatjij)) then
+      allocate (t_dtmatjij(t_inc%natyp), stat=ierr)
+      if (ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat(NATYP)'
+    end if
+
+  end subroutine init_t_dtmatjij
+
+
+  ! < subroutine to allocate and initialize arrays of t_dtmatJij_at
+  subroutine init_t_dtmatjij_at(t_inc, t_mpi_c_grid, t_dtmatjij_at)
+
+    ! use mod_mympi, only: nranks
+
+    implicit none
+
+    type (type_inc), intent (in) :: t_inc
+    type (type_mpi_cartesian_grid_info), intent (in) :: t_mpi_c_grid
+    type (type_dtmatjijdij), intent (inout) :: t_dtmatjij_at
+
+    integer :: ierr
+
+    if (.not. t_inc%newsosol) stop 'in init_t_dtmatJij_single: should only be called with NEWSOSOL'
+
+    if (.not. allocated(t_dtmatjij_at%dtmat_xyz) .and. t_dtmatjij_at%calculate) then
+      ! if (.not. t_dtmatJij%dtmat_to_file) then
+      ! if(nranks.eq.1) then
+      ! !allocate dtmat_xyz(lmmax,lmmax,3,irec) for irec_max=ielast
+      ! allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_inc%IELAST), STAT=ierr)
+      ! if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
+      ! else
+      ! !allocate dtmat_xyz(lmmax,lmmax,3,irec) for irec_max=iemax_local
+      ! allocate(t_dtmatJij_at%dtmat_xyz(t_inc%LMMAXD,t_inc%LMMAXD,3,t_mpi_c_grid%ntot2), STAT=ierr)
+      ! if(ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat for mpi'
+      ! end if
+      allocate (t_dtmatjij_at%dtmat_xyz(t_inc%lmmaxd,t_inc%lmmaxd,3,t_mpi_c_grid%ntot2), stat=ierr)
+      if (ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
+      ! else
+      ! allocate(t_tgmat%tmat(1,1,1), STAT=ierr)
+      ! if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
+      ! end if
+
+      t_dtmatjij_at%dtmat_xyz(:, :, :, :) = czero
+    end if
+
+  end subroutine init_t_dtmatjij_at
+
+
+  ! < store parameters needed in t_imp
+  subroutine init_params_t_imp(t_imp, ipand, natypd, irmd, irid, nfund, nspin, irmind, lmpotd)
+
+    implicit none
+
+    type (type_imp), intent (inout) :: t_imp
+    integer, intent (in) :: ipand, natypd, irmd, irid, nfund, nspin, irmind, lmpotd
+
+    t_imp%ipand = ipand
+    t_imp%natypd = natypd
+    t_imp%irmd = irmd
+    t_imp%irid = irid
+    t_imp%nfund = nfund
+    t_imp%nspin = nspin
+    t_imp%irmind = irmind
+    t_imp%lmpotd = lmpotd
+
+  end subroutine init_params_t_imp
+
+
+  ! < subroutine to allocate and initialize arrays of t_imp
+  subroutine init_t_imp(t_inc, t_imp)
+
+    implicit none
+
+    type (type_inc), intent (in) :: t_inc
+    type (type_imp), intent (inout) :: t_imp
+    ! local
+    integer :: ierr, natomimp, ipand, natypd, irmd, irid, nfund, nspin, irmind, lmpotd
+
+    ! so far only with SOC implemented
+    if (.not. t_inc%newsosol) stop 'in init_t_imp: should only be called with NEWSOSOL'
+
+    ! for convenience define this parameter locally
+    natomimp = t_imp%natomimp
+    ipand = t_imp%ipand
+    natypd = t_imp%natypd
+    irmd = t_imp%irmd
+    irid = t_imp%irid
+    nfund = t_imp%nfund
+    nspin = t_imp%nspin
+    irmind = t_imp%irmind
+    lmpotd = t_imp%lmpotd
+
+    ! integer arrays
+    if (.not. allocated(t_imp%ipanimp)) then
+      allocate (t_imp%ipanimp(natomimp), stat=ierr)
+      if (ierr/=0) stop 'Problem allocating t_dtmatJij%dtmat'
+      ! initialize with zeros
+      t_imp%ipanimp = 0
+    end if
+    if (.not. allocated(t_imp%ircutimp)) then
+      allocate (t_imp%ircutimp(0:ipand,natomimp), stat=ierr)
+      t_imp%ircutimp = 0
+    end if
+    if (.not. allocated(t_imp%irminimp)) then
+      allocate (t_imp%irminimp(natomimp), stat=ierr)
+      t_imp%irminimp = 0
+    end if
+    if (.not. allocated(t_imp%irwsimp)) then
+      allocate (t_imp%irwsimp(natomimp), stat=ierr)
+      t_imp%irwsimp = 0
+    end if
+    if (.not. allocated(t_imp%hostimp)) then
+      allocate (t_imp%hostimp(natypd), stat=ierr)
+      t_imp%hostimp = 0
+    end if
+    if (.not. allocated(t_imp%atomimp)) then
+      allocate (t_imp%atomimp(natomimp), stat=ierr)
+      t_imp%atomimp = 0
+    end if
+
+    ! real (kind=dp) arrays
+    if (.not. allocated(t_imp%rimp)) then
+      allocate (t_imp%rimp(irmd,natomimp), stat=ierr)
+      t_imp%rimp = 0.0_dp
+    end if
+    if (.not. allocated(t_imp%zimp)) then
+      allocate (t_imp%zimp(natomimp), stat=ierr)
+      t_imp%zimp = 0.0_dp
+    end if
+    if (.not. allocated(t_imp%thetasimp)) then
+      allocate (t_imp%thetasimp(irid,nfund,natomimp), stat=ierr)
+      t_imp%thetasimp = 0.0_dp
+    end if
+    if (.not. allocated(t_imp%vispimp)) then
+      allocate (t_imp%vispimp(irmd,natomimp*nspin), stat=ierr)
+      t_imp%vispimp = 0.0_dp
+    end if
+    if (.not. allocated(t_imp%vinsimp)) then
+      allocate (t_imp%vinsimp(irmind:irmd,lmpotd,natomimp*nspin), stat=ierr)
+      t_imp%vinsimp = 0.0_dp
+    end if
+    if (.not. allocated(t_imp%rclsimp)) then
+      allocate (t_imp%rclsimp(3,natomimp), stat=ierr)
+      t_imp%rclsimp = 0.0_dp
+    end if
+    if (.not. allocated(t_imp%thetaimp)) then
+      allocate (t_imp%thetaimp(natomimp), stat=ierr)
+      t_imp%thetaimp = 0.0_dp
+    end if
+    if (.not. allocated(t_imp%phiimp)) then
+      allocate (t_imp%phiimp(natomimp), stat=ierr)
+      t_imp%phiimp = 0.0_dp
+    end if
+
+    ! complex (kind=dp) arrays
+    if (.not. allocated(t_imp%rllimp)) then
+      allocate (t_imp%rllimp(t_inc%nsra*t_inc%lmmaxso,t_inc%lmmaxso,t_inc%irmdnew,natomimp), stat=ierr)
+      t_imp%rllimp = czero
+    end if
+
+  end subroutine init_t_imp
+
+
+#ifdef CPP_MPI
+  ! < subroutine to broadcast t_inc and t_tgmat over mpi ranks
+  subroutine bcast_t_inc_tgmat(t_inc, t_tgmat, t_cpa, master)
+    ! ruess: after myBcast_impcls from Pkkr_sidebranch2D_2014_12_16 by Bernd Zimmermann
+
+    use :: mpi
+    implicit none
+
+    type (type_inc), intent (inout) :: t_inc
+    type (type_tgmatices), intent (inout) :: t_tgmat
+    type (type_cpa), intent (inout) :: t_cpa
+
+    integer, intent (in) :: master
+    integer :: blocklen1(t_inc%nparams), etype1(t_inc%nparams), mympitype1 ! for parameter from t_inc
+    integer :: blocklen2(t_tgmat%nelements), etype2(t_tgmat%nelements), mympitype2 ! for logicals in t_tgmat
+    integer :: ierr
+    integer (kind=mpi_address_kind) :: disp1(t_inc%nparams), disp2(t_tgmat%nelements), base
+
+    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! broadcast parameters from t_inc
+    call mpi_get_address(t_inc%nparams, disp1(1), ierr)
+    call mpi_get_address(t_inc%lmmaxd, disp1(2), ierr)
+    call mpi_get_address(t_inc%nspin, disp1(3), ierr)
+    call mpi_get_address(t_inc%ielast, disp1(4), ierr)
+    call mpi_get_address(t_inc%nqdos, disp1(5), ierr)
+    call mpi_get_address(t_inc%natyp, disp1(6), ierr)
+    call mpi_get_address(t_inc%lmgf0d, disp1(7), ierr)
+    call mpi_get_address(t_inc%nclsd, disp1(8), ierr)
+    call mpi_get_address(t_inc%naclsmax, disp1(9), ierr)
+    call mpi_get_address(t_inc%i_iteration, disp1(10), ierr)
+    call mpi_get_address(t_inc%n_iteration, disp1(11), ierr)
+    call mpi_get_address(t_inc%mit_bry, disp1(12), ierr)
+    call mpi_get_address(t_inc%nshell0, disp1(13), ierr)
+    call mpi_get_address(t_inc%nkmesh, disp1(14), ierr)
+    call mpi_get_address(t_inc%newsosol, disp1(15), ierr)
+    call mpi_get_address(t_inc%deci_out, disp1(16), ierr)
+    call mpi_get_address(t_inc%i_write, disp1(17), ierr)
+    call mpi_get_address(t_inc%i_time, disp1(18), ierr)
+    call mpi_get_address(t_inc%nsra, disp1(19), ierr)
+    call mpi_get_address(t_inc%lmmaxso, disp1(20), ierr)
+    call mpi_get_address(t_inc%irmdnew, disp1(21), ierr)
+    call mpi_get_address(t_inc%kvrel, disp1(22), ierr)
+    base = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:22)=1
+    blocklen1(1:22) = 1
 
-    etype1(1:22) = MPI_INTEGER
-    etype1(15:16) = MPI_LOGICAL
+    etype1(1:22) = mpi_integer
+    etype1(15:16) = mpi_logical
 
-    call MPI_Type_create_struct(t_inc%Nparams, blocklen1, disp1, etype1, myMPItype1, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_t_inc'
+    call mpi_type_create_struct(t_inc%nparams, blocklen1, disp1, etype1, mympitype1, ierr)
+    if (ierr/=mpi_success) stop 'Problem in create_mpimask_t_inc'
 
-    call MPI_Type_commit(myMPItype1, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_t_inc'
+    call mpi_type_commit(mympitype1, ierr)
+    if (ierr/=mpi_success) stop 'error commiting create_mpimask_t_inc'
 
-    call MPI_Bcast(t_inc%Nparams, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error brodcasting t_inc'
+    call mpi_bcast(t_inc%nparams, 1, mympitype1, master, mpi_comm_world, ierr)
+    if (ierr/=mpi_success) stop 'error brodcasting t_inc'
 
-    call MPI_Type_free(myMPItype1, ierr)
-    
-    !broadcast allocatable array kmesh(nkmesh)
-    if(.not. allocated(t_inc%kmesh_ie)) allocate(t_inc%kmesh_ie(t_inc%ielast))
-    if(.not. allocated(t_inc%kmesh)) allocate(t_inc%kmesh(t_inc%nkmesh))
-    call MPI_Bcast(t_inc%KMESH_ie, t_inc%ielast, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
-    call MPI_Bcast(t_inc%KMESH, t_inc%nkmesh, MPI_INTEGER, master, MPI_COMM_WORLD, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error brodcasting t_inc%kmesh'
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call mpi_type_free(mympitype1, ierr)
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !brodcast allocatable arrays from t_tgmat
-    !first broadcast logocal switches
-    call MPI_Get_address(t_tgmat%Nelements,      disp2(1), ierr)
-    call MPI_Get_address(t_tgmat%tmat_to_file,   disp2(2), ierr)
-    call MPI_Get_address(t_tgmat%gmat_to_file,   disp2(3), ierr)
-    call MPI_Get_address(t_tgmat%gref_to_file,   disp2(4), ierr)
-    
-    base  = disp2(1)
+    ! broadcast allocatable array kmesh(nkmesh)
+    if (.not. allocated(t_inc%kmesh_ie)) allocate (t_inc%kmesh_ie(t_inc%ielast))
+    if (.not. allocated(t_inc%kmesh)) allocate (t_inc%kmesh(t_inc%nkmesh))
+    call mpi_bcast(t_inc%kmesh_ie, t_inc%ielast, mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_inc%kmesh, t_inc%nkmesh, mpi_integer, master, mpi_comm_world, ierr)
+    if (ierr/=mpi_success) stop 'error brodcasting t_inc%kmesh'
+    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ! brodcast allocatable arrays from t_tgmat
+    ! first broadcast logocal switches
+    call mpi_get_address(t_tgmat%nelements, disp2(1), ierr)
+    call mpi_get_address(t_tgmat%tmat_to_file, disp2(2), ierr)
+    call mpi_get_address(t_tgmat%gmat_to_file, disp2(3), ierr)
+    call mpi_get_address(t_tgmat%gref_to_file, disp2(4), ierr)
+
+    base = disp2(1)
     disp2 = disp2 - base
 
-    blocklen2(1:4)=1
+    blocklen2(1:4) = 1
 
-    etype2(1) = MPI_INTEGER
-    etype2(2:4) = MPI_LOGICAL
+    etype2(1) = mpi_integer
+    etype2(2:4) = mpi_logical
 
-    call MPI_Type_create_struct(t_tgmat%Nelements, blocklen2, disp2, etype2, myMPItype2, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_tgmat_logicals'
+    call mpi_type_create_struct(t_tgmat%nelements, blocklen2, disp2, etype2, mympitype2, ierr)
+    if (ierr/=mpi_success) stop 'Problem in create_mpimask_tgmat_logicals'
 
-    call MPI_Type_commit(myMPItype2, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_tgmat_logicals'
-    
-    call MPI_Bcast(t_tgmat%Nelements, 1, myMPItype2, master, MPI_COMM_WORLD, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_tgmat'
+    call mpi_type_commit(mympitype2, ierr)
+    if (ierr/=mpi_success) stop 'error commiting create_mpimask_tgmat_logicals'
 
-    call MPI_Type_free(myMPItype2, ierr)
+    call mpi_bcast(t_tgmat%nelements, 1, mympitype2, master, mpi_comm_world, ierr)
+    if (ierr/=mpi_success) stop 'error brodcasting logicals from t_tgmat'
 
-    call MPI_Bcast(t_cpa%dmatproj_to_file,1,MPI_LOGICAL,master,MPI_COMM_WORLD,ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_cpa'
+    call mpi_type_free(mympitype2, ierr)
 
-   end subroutine bcast_t_inc_tgmat
+    call mpi_bcast(t_cpa%dmatproj_to_file, 1, mpi_logical, master, mpi_comm_world, ierr)
+    if (ierr/=mpi_success) stop 'error brodcasting logicals from t_cpa'
+
+  end subroutine bcast_t_inc_tgmat
 #endif
 
 
 #ifdef CPP_MPI
-   subroutine bcast_t_lly_1(t_lloyd, master)
+  subroutine bcast_t_lly_1(t_lloyd, master)
 
-    use mpi
+    use :: mpi
     implicit none
 
-    type(type_lloyd), intent(inout) :: t_lloyd
+    type (type_lloyd), intent (inout) :: t_lloyd
 
-    integer, intent(in) :: master
-    integer :: blocklen1(t_lloyd%N1), etype1(t_lloyd%N1), myMPItype1 ! for parameter from t_lloyd
+    integer, intent (in) :: master
+    integer :: blocklen1(t_lloyd%n1), etype1(t_lloyd%n1), mympitype1 ! for parameter from t_lloyd
     integer :: ierr
-    integer(kind=MPI_ADDRESS_KIND) :: disp1(t_lloyd%N1), base
+    integer (kind=mpi_address_kind) :: disp1(t_lloyd%n1), base
 
-    call MPI_Get_address(t_lloyd%N1,                     disp1(1), ierr)
-    call MPI_Get_address(t_lloyd%dtmat_to_file,          disp1(2), ierr)
-    call MPI_Get_address(t_lloyd%tralpha_to_file,        disp1(3), ierr)
-    call MPI_Get_address(t_lloyd%cdos_diff_lly_to_file,  disp1(4), ierr)
-    call MPI_Get_address(t_lloyd%dgref_to_file,          disp1(5), ierr)
-    call MPI_Get_address(t_lloyd%g0tr_to_file,           disp1(6), ierr)
-    
-    base  = disp1(1)
+    call mpi_get_address(t_lloyd%n1, disp1(1), ierr)
+    call mpi_get_address(t_lloyd%dtmat_to_file, disp1(2), ierr)
+    call mpi_get_address(t_lloyd%tralpha_to_file, disp1(3), ierr)
+    call mpi_get_address(t_lloyd%cdos_diff_lly_to_file, disp1(4), ierr)
+    call mpi_get_address(t_lloyd%dgref_to_file, disp1(5), ierr)
+    call mpi_get_address(t_lloyd%g0tr_to_file, disp1(6), ierr)
+
+    base = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:6)=1
+    blocklen1(1:6) = 1
 
-    etype1(1) = MPI_INTEGER
-    etype1(2:6) = MPI_LOGICAL
+    etype1(1) = mpi_integer
+    etype1(2:6) = mpi_logical
 
-    call MPI_Type_create_struct(t_lloyd%N1, blocklen1, disp1, etype1, myMPItype1, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_tgmat_logicals'
+    call mpi_type_create_struct(t_lloyd%n1, blocklen1, disp1, etype1, mympitype1, ierr)
+    if (ierr/=mpi_success) stop 'Problem in create_mpimask_tgmat_logicals'
 
-    call MPI_Type_commit(myMPItype1, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_tgmat_logicals'
-    
-    call MPI_Bcast(t_lloyd%N1, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_tgmat'
+    call mpi_type_commit(mympitype1, ierr)
+    if (ierr/=mpi_success) stop 'error commiting create_mpimask_tgmat_logicals'
 
-    call MPI_Type_free(myMPItype1, ierr)
+    call mpi_bcast(t_lloyd%n1, 1, mympitype1, master, mpi_comm_world, ierr)
+    if (ierr/=mpi_success) stop 'error brodcasting logicals from t_tgmat'
 
-   end subroutine bcast_t_lly_1
+    call mpi_type_free(mympitype1, ierr)
+
+  end subroutine bcast_t_lly_1
 #endif
 
 
-   !< subroutine to allocate and initialize t_lloyd
-   subroutine init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
-   
-      !use mod_mympi, only: nranks
-   
-      implicit none
-   
-      type(type_inc), intent(in) :: t_inc
-      type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
-      type(type_lloyd), intent(inout) :: t_lloyd
-      
-      integer :: ierr, nspin
-      
-      nspin = t_inc%NSPIN
-      if(t_inc%NEWSOSOL) nspin = 1 ! t_inc%NSPIN !1
-    
-    
-      if (.not. allocated(t_lloyd%dtmat)) then
-         if (.not. t_lloyd%dtmat_to_file) then
-            !if(nranks.eq.1) then
-            !   !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
-            !   allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
-            !else
-            !   !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
-            !   allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_tgmat%tmat for mpi'
-            !end if
-            !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
-            allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
-         else
-            allocate(t_lloyd%dtmat(1,1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
-         end if
-         t_lloyd%dtmat(:,:,:) = czero
-      endif
-      
-      if (.not. allocated(t_lloyd%tralpha)) then
-         if (.not. t_lloyd%tralpha_to_file) then
-            !if(nranks.eq.1) then
-            !   allocate(t_lloyd%tralpha(t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha'
-            !else
-            !   allocate(t_lloyd%tralpha(t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha for mpi'
-            !end if
-            allocate(t_lloyd%tralpha(t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha'
-         else
-            allocate(t_lloyd%tralpha(1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_lloyd%tralpha'
-         end if
-         t_lloyd%tralpha(:) = czero
-      endif
-      
-      if (.not. allocated(t_lloyd%cdos)) then
-         if (.not. t_lloyd%cdos_diff_lly_to_file) then
-            !if(nranks.eq.1) then
-            !   allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_lloyd%cdos'
-            !else
-            !   allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_lloyd%cdos for mpi'
-            !end if
-            allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating t_lloyd%cdos'
-         else
-            allocate(t_lloyd%cdos(1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_lloyd%cdos'
-         end if
-         t_lloyd%cdos(:,:) = czero
-      endif
+  ! < subroutine to allocate and initialize t_lloyd
+  subroutine init_tlloyd(t_inc, t_lloyd, t_mpi_c_grid)
 
-      if (.not. allocated(t_lloyd%dgref)) then
-         if (.not. t_lloyd%dgref_to_file) then
-            !if(nranks.eq.1) then
-            !   allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_lloyd%dgref'
-            !else
-            !   allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_lloyd%dgref for mpi'
-            !end if
-            allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating t_lloyd%dgref'
-         else
-            allocate(t_lloyd%dgref(1,1,1,1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_lloyd%dgref'
-         end if
-         t_lloyd%dgref(:,:,:,:) = czero
-      endif
-      
-      if (.not. allocated(t_lloyd%g0tr)) then
-         if (.not. t_lloyd%g0tr_to_file) then
-            !if(nranks.eq.1) then
-            !   allocate(t_lloyd%g0tr(t_inc%IELAST), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr'
-            !else
-            !   allocate(t_lloyd%g0tr(t_mpi_c_grid%ntot2), STAT=ierr)
-            !   if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr for mpi'
-            !end if
-            allocate(t_lloyd%g0tr(t_mpi_c_grid%ntot2), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr'
-         else
-            allocate(t_lloyd%g0tr(1), STAT=ierr)
-            if(ierr/=0) stop 'Problem allocating dummy t_lloyd%g0tr'
-         end if
-         t_lloyd%g0tr(:) = czero
-      endif
-      
+    ! use mod_mympi, only: nranks
 
-   end subroutine init_tlloyd
-
-
-
-
-#ifdef CPP_MPI
-   !< subroutine to store MPI rank for of 2 level parallelization
-   subroutine save_t_mpi_c_grid(t_mpi_c_grid,subarr_dim, myMPI_comm_ie, myMPI_comm_at, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
-   
-      use mpi
-      implicit none
-      type(type_mpi_cartesian_grid_info), intent(inout) :: t_mpi_c_grid
-      integer, intent(in) :: subarr_dim(2)
-      integer, intent(in) :: myMPI_comm_ie, myMPI_comm_at, myrank_ie, myrank_at, nranks_ie, nranks_at, nranks_atcomm, myrank_atcomm
-
-      t_mpi_c_grid%dims = subarr_dim
-      t_mpi_c_grid%myMPI_comm_ie  = myMPI_comm_ie
-      t_mpi_c_grid%myMPI_comm_at  = myMPI_comm_at
-      t_mpi_c_grid%myrank_ie  = myrank_ie
-      t_mpi_c_grid%myrank_at  = myrank_at
-      t_mpi_c_grid%myrank_atcomm  = myrank_atcomm
-      t_mpi_c_grid%nranks_ie  = nranks_ie
-      t_mpi_c_grid%nranks_at  = nranks_at
-      t_mpi_c_grid%nranks_atcomm  = nranks_atcomm
-   
-   end subroutine save_t_mpi_c_grid
-#endif
-
-
-#ifdef CPP_MPI
-   !< subroutine to extract number of elements and offsets from t_mpi_c_grid
-   subroutine get_ntot_pT_ioff_pT_2D(t_mpi_c_grid,ntot_all,ioff_all)
-   
-   use mpi
-   implicit none
-   type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
-   integer, intent(out) :: ntot_all(t_mpi_c_grid%nranks_ie*t_mpi_c_grid%nranks_at), ioff_all(t_mpi_c_grid%nranks_ie*t_mpi_c_grid%nranks_at)
-   
-   integer :: ntot_pT1(t_mpi_c_grid%nranks_ie), ioff_pT1(t_mpi_c_grid%nranks_ie)
-   integer :: ntot_pT2(t_mpi_c_grid%nranks_at), ioff_pT2(t_mpi_c_grid%nranks_at)
-   integer :: N1, N2, i1, i2, i3
-   
-   ntot_pT1 = t_mpi_c_grid%ntot_pT1
-   ioff_pT1 = t_mpi_c_grid%ioff_pT1
-   ntot_pT2 = t_mpi_c_grid%ntot_pT2
-   ioff_pT2 = t_mpi_c_grid%ioff_pT2
-   N1 = t_mpi_c_grid%nranks_ie
-   N2 = t_mpi_c_grid%nranks_at
-   
-   
-   do i1=1,N1
-      do i2=1,N2
-         i3 = i2+N2*(i1-1)
-         ntot_all(i3) = ntot_pT1(i1)*ntot_pT2(i2)
-         if (i3==1) then
-            ioff_all(i3) = 0
-         else
-            ioff_all(i3) = ioff_all(i3-1)+ntot_all(i3-1)
-         end if
-      end do
-   end do 
-      
-   end subroutine get_ntot_pT_ioff_pT_2D
-#endif
-
-
-#ifdef CPP_MPI
-   !< subroutine to communicate arrays in t_lloyd over ranks
-   subroutine gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, mympi_comm)
-
-    use mpi
     implicit none
 
-    type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
-    type(type_lloyd), intent(inout) :: t_lloyd
-    integer, intent(in) :: lmmaxd, mympi_comm
+    type (type_inc), intent (in) :: t_inc
+    type (type_mpi_cartesian_grid_info), intent (in) :: t_mpi_c_grid
+    type (type_lloyd), intent (inout) :: t_lloyd
 
-    complex (kind=dp), allocatable :: work_lly(:,:,:)
-    integer :: ierr, iwork, nspin
-    
+    integer :: ierr, nspin
+
     nspin = t_inc%nspin
-    if(t_inc%NEWSOSOL) nspin = 1
+    if (t_inc%newsosol) nspin = 1  ! t_inc%NSPIN !1
 
-    
-    !communicate dtmatll
-    iwork = lmmaxd*lmmaxd*t_mpi_c_grid%ntot2*nspin*t_inc%natyp
-    if(iwork/=product(shape(t_lloyd%dtmat))) stop '[gather_lly_dtmat]: Error shape mismatch in gather_dtmat_lly'
-    allocate(work_lly( lmmaxd, lmmaxd, t_mpi_c_grid%ntot2*nspin*t_inc%natyp ), stat=ierr)
-    if(ierr/=0) stop '[gather_lly_dtmat] error allocating work in calctmat for communication of dtmatll'
-    call MPI_Allreduce(t_lloyd%dtmat, work_lly, iwork, MPI_DOUBLE_COMPLEX, MPI_SUM, mympi_comm, ierr)
-    call zcopy(iwork, work_lly, 1, t_lloyd%dtmat, 1)
-    deallocate(work_lly, stat=ierr)
-    if(ierr/=0) stop '[gather_lly_dtmat] error deallocating work_lly'
-       
-          
-    !communicate tralpha
-    iwork = t_mpi_c_grid%ntot2*nspin*t_inc%natyp
-    if(iwork/=product(shape(t_lloyd%tralpha))) stop '[gather_lly_dtmat]: Error shape mismatch in gather_dtmat_lly'
-    allocate(work_lly(iwork,1,1),stat=ierr)
-    if(ierr/=0) stop '[gather_lly_dtmat] error allocating work in calctmat for communication of tralpha'
-    call MPI_Allreduce(t_lloyd%tralpha, work_lly(:,1,1), iwork, MPI_DOUBLE_COMPLEX, MPI_SUM, mympi_comm, ierr)
-    call zcopy(iwork, work_lly(:,1,1), 1, t_lloyd%tralpha, 1)
-    deallocate(work_lly, stat=ierr)
-    if(ierr/=0) stop '[gather_lly_dtmat] error deallocating work_lly'
-    
-   end subroutine gather_lly_dtmat
+
+    if (.not. allocated(t_lloyd%dtmat)) then
+      if (.not. t_lloyd%dtmat_to_file) then
+        ! if(nranks.eq.1) then
+        ! !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=ielast*nspin*natyp
+        ! allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_tgmat%tmat'
+        ! else
+        ! !allocate dtmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
+        ! allocate(t_lloyd%dtmat(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_tgmat%tmat for mpi'
+        ! end if
+        ! allocate dtmat(lmmax,lmmax,irec_max) for irec_max=iemax_local*nspin*natyp
+        allocate (t_lloyd%dtmat(t_inc%lmmaxd,t_inc%lmmaxd,t_mpi_c_grid%ntot2*nspin*t_inc%natyp), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating t_tgmat%tmat'
+      else
+        allocate (t_lloyd%dtmat(1,1,1), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating dummy t_tgmat%tmat'
+      end if
+      t_lloyd%dtmat(:, :, :) = czero
+    end if
+
+    if (.not. allocated(t_lloyd%tralpha)) then
+      if (.not. t_lloyd%tralpha_to_file) then
+        ! if(nranks.eq.1) then
+        ! allocate(t_lloyd%tralpha(t_inc%IELAST*nspin*t_inc%NATYP), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha'
+        ! else
+        ! allocate(t_lloyd%tralpha(t_mpi_c_grid%ntot2*nspin*t_inc%NATYP), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_lloyd%tralpha for mpi'
+        ! end if
+        allocate (t_lloyd%tralpha(t_mpi_c_grid%ntot2*nspin*t_inc%natyp), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating t_lloyd%tralpha'
+      else
+        allocate (t_lloyd%tralpha(1), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating dummy t_lloyd%tralpha'
+      end if
+      t_lloyd%tralpha(:) = czero
+    end if
+
+    if (.not. allocated(t_lloyd%cdos)) then
+      if (.not. t_lloyd%cdos_diff_lly_to_file) then
+        ! if(nranks.eq.1) then
+        ! allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_lloyd%cdos'
+        ! else
+        ! allocate(t_lloyd%cdos(t_inc%IELAST,t_inc%NSPIN), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_lloyd%cdos for mpi'
+        ! end if
+        allocate (t_lloyd%cdos(t_inc%ielast,t_inc%nspin), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating t_lloyd%cdos'
+      else
+        allocate (t_lloyd%cdos(1,1), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating dummy t_lloyd%cdos'
+      end if
+      t_lloyd%cdos(:, :) = czero
+    end if
+
+    if (.not. allocated(t_lloyd%dgref)) then
+      if (.not. t_lloyd%dgref_to_file) then
+        ! if(nranks.eq.1) then
+        ! allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_inc%IELAST), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_lloyd%dgref'
+        ! else
+        ! allocate(t_lloyd%dgref(t_inc%NACLSMAX*t_inc%LMGF0D,t_inc%LMGF0D,t_inc%NCLSD,t_mpi_c_grid%ntot2), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_lloyd%dgref for mpi'
+        ! end if
+        allocate (t_lloyd%dgref(t_inc%naclsmax*t_inc%lmgf0d,t_inc%lmgf0d,t_inc%nclsd,t_mpi_c_grid%ntot2), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating t_lloyd%dgref'
+      else
+        allocate (t_lloyd%dgref(1,1,1,1), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating dummy t_lloyd%dgref'
+      end if
+      t_lloyd%dgref(:, :, :, :) = czero
+    end if
+
+    if (.not. allocated(t_lloyd%g0tr)) then
+      if (.not. t_lloyd%g0tr_to_file) then
+        ! if(nranks.eq.1) then
+        ! allocate(t_lloyd%g0tr(t_inc%IELAST), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr'
+        ! else
+        ! allocate(t_lloyd%g0tr(t_mpi_c_grid%ntot2), STAT=ierr)
+        ! if(ierr/=0) stop 'Problem allocating t_lloyd%g0tr for mpi'
+        ! end if
+        allocate (t_lloyd%g0tr(t_mpi_c_grid%ntot2), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating t_lloyd%g0tr'
+      else
+        allocate (t_lloyd%g0tr(1), stat=ierr)
+        if (ierr/=0) stop 'Problem allocating dummy t_lloyd%g0tr'
+      end if
+      t_lloyd%g0tr(:) = czero
+    end if
+
+
+  end subroutine init_tlloyd
+
+
+
+
+#ifdef CPP_MPI
+  ! < subroutine to store MPI rank for of 2 level parallelization
+  subroutine save_t_mpi_c_grid(t_mpi_c_grid, subarr_dim, mympi_comm_ie, mympi_comm_at, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
+
+    use :: mpi
+    implicit none
+    type (type_mpi_cartesian_grid_info), intent (inout) :: t_mpi_c_grid
+    integer, intent (in) :: subarr_dim(2)
+    integer, intent (in) :: mympi_comm_ie, mympi_comm_at, myrank_ie, myrank_at, nranks_ie, nranks_at, nranks_atcomm, myrank_atcomm
+
+    t_mpi_c_grid%dims = subarr_dim
+    t_mpi_c_grid%mympi_comm_ie = mympi_comm_ie
+    t_mpi_c_grid%mympi_comm_at = mympi_comm_at
+    t_mpi_c_grid%myrank_ie = myrank_ie
+    t_mpi_c_grid%myrank_at = myrank_at
+    t_mpi_c_grid%myrank_atcomm = myrank_atcomm
+    t_mpi_c_grid%nranks_ie = nranks_ie
+    t_mpi_c_grid%nranks_at = nranks_at
+    t_mpi_c_grid%nranks_atcomm = nranks_atcomm
+
+  end subroutine save_t_mpi_c_grid
 #endif
 
 
 #ifdef CPP_MPI
-   !< subroutine to communicate single site t-matrix over ranks
-   subroutine gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_pT, ioff_pT, mytot, mympi_comm, nranks)
+  ! < subroutine to extract number of elements and offsets from t_mpi_c_grid
+  subroutine get_ntot_pt_ioff_pt_2d(t_mpi_c_grid, ntot_all, ioff_all)
 
-    use mpi
+    use :: mpi
+    implicit none
+    type (type_mpi_cartesian_grid_info), intent (in) :: t_mpi_c_grid
+    integer, intent (out) :: ntot_all(t_mpi_c_grid%nranks_ie*t_mpi_c_grid%nranks_at), ioff_all(t_mpi_c_grid%nranks_ie*t_mpi_c_grid%nranks_at)
+
+    integer :: ntot_pt1(t_mpi_c_grid%nranks_ie), ioff_pt1(t_mpi_c_grid%nranks_ie)
+    integer :: ntot_pt2(t_mpi_c_grid%nranks_at), ioff_pt2(t_mpi_c_grid%nranks_at)
+    integer :: n1, n2, i1, i2, i3
+
+    ntot_pt1 = t_mpi_c_grid%ntot_pt1
+    ioff_pt1 = t_mpi_c_grid%ioff_pt1
+    ntot_pt2 = t_mpi_c_grid%ntot_pt2
+    ioff_pt2 = t_mpi_c_grid%ioff_pt2
+    n1 = t_mpi_c_grid%nranks_ie
+    n2 = t_mpi_c_grid%nranks_at
+
+
+    do i1 = 1, n1
+      do i2 = 1, n2
+        i3 = i2 + n2*(i1-1)
+        ntot_all(i3) = ntot_pt1(i1)*ntot_pt2(i2)
+        if (i3==1) then
+          ioff_all(i3) = 0
+        else
+          ioff_all(i3) = ioff_all(i3-1) + ntot_all(i3-1)
+        end if
+      end do
+    end do
+
+  end subroutine get_ntot_pt_ioff_pt_2d
+#endif
+
+
+#ifdef CPP_MPI
+  ! < subroutine to communicate arrays in t_lloyd over ranks
+  subroutine gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, mympi_comm)
+
+    use :: mpi
     implicit none
 
-    type(type_inc), intent(in) :: t_inc
-    type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
-    type(type_tgmatices), intent(inout) :: t_tgmat
-    integer, intent(in) :: nranks
-    integer, intent(in) :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1), mytot, mympi_comm
+    type (type_mpi_cartesian_grid_info), intent (in) :: t_mpi_c_grid
+    type (type_lloyd), intent (inout) :: t_lloyd
+    integer, intent (in) :: lmmaxd, mympi_comm
+
+    complex (kind=dp), allocatable :: work_lly(:, :, :)
+    integer :: ierr, iwork, nspin
+
+    nspin = t_inc%nspin
+    if (t_inc%newsosol) nspin = 1
+
+
+    ! communicate dtmatll
+    iwork = lmmaxd*lmmaxd*t_mpi_c_grid%ntot2*nspin*t_inc%natyp
+    if (iwork/=product(shape(t_lloyd%dtmat))) stop '[gather_lly_dtmat]: Error shape mismatch in gather_dtmat_lly'
+    allocate (work_lly(lmmaxd,lmmaxd,t_mpi_c_grid%ntot2*nspin*t_inc%natyp), stat=ierr)
+    if (ierr/=0) stop '[gather_lly_dtmat] error allocating work in calctmat for communication of dtmatll'
+    call mpi_allreduce(t_lloyd%dtmat, work_lly, iwork, mpi_double_complex, mpi_sum, mympi_comm, ierr)
+    call zcopy(iwork, work_lly, 1, t_lloyd%dtmat, 1)
+    deallocate (work_lly, stat=ierr)
+    if (ierr/=0) stop '[gather_lly_dtmat] error deallocating work_lly'
+
+
+    ! communicate tralpha
+    iwork = t_mpi_c_grid%ntot2*nspin*t_inc%natyp
+    if (iwork/=product(shape(t_lloyd%tralpha))) stop '[gather_lly_dtmat]: Error shape mismatch in gather_dtmat_lly'
+    allocate (work_lly(iwork,1,1), stat=ierr)
+    if (ierr/=0) stop '[gather_lly_dtmat] error allocating work in calctmat for communication of tralpha'
+    call mpi_allreduce(t_lloyd%tralpha, work_lly(:,1,1), iwork, mpi_double_complex, mpi_sum, mympi_comm, ierr)
+    call zcopy(iwork, work_lly(:,1,1), 1, t_lloyd%tralpha, 1)
+    deallocate (work_lly, stat=ierr)
+    if (ierr/=0) stop '[gather_lly_dtmat] error deallocating work_lly'
+
+  end subroutine gather_lly_dtmat
+#endif
+
+
+#ifdef CPP_MPI
+  ! < subroutine to communicate single site t-matrix over ranks
+  subroutine gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_pt, ioff_pt, mytot, mympi_comm, nranks)
+
+    use :: mpi
+    implicit none
+
+    type (type_inc), intent (in) :: t_inc
+    type (type_mpi_cartesian_grid_info), intent (in) :: t_mpi_c_grid
+    type (type_tgmatices), intent (inout) :: t_tgmat
+    integer, intent (in) :: nranks
+    integer, intent (in) :: ntot_pt(0:nranks-1), ioff_pt(0:nranks-1), mytot, mympi_comm
 
     integer :: ihelp
     integer :: nspin, recvcounts(nranks), displs(nranks)
-    complex (kind=dp), allocatable :: work(:,:,:)
-    integer :: ierr,idim
-    
-    
-    !Gather tmat so that all processors the full matrix for their part of the energy contour
-    if(t_mpi_c_grid%nranks_ie>1) then
-       nspin = t_inc%NSPIN
-       if(t_inc%NEWSOSOL) nspin = 1
-      
-       ihelp      = t_inc%LMMAXD**2*t_mpi_c_grid%ntot2*nspin!*t_inc%NATYP/mytot
-       recvcounts = ntot_pT*ihelp
-       displs     = ioff_pT*ihelp
-       
-       allocate(work(t_inc%LMMAXD,t_inc%LMMAXD,t_mpi_c_grid%ntot2*nspin*t_inc%NATYP))
-       call MPI_Allgatherv( t_tgmat%tmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,  &
-                          & work, recvcounts, displs, MPI_DOUBLE_COMPLEX,   &
-                          & mympi_comm, ierr )
-       idim = t_inc%LMMAXD**2*t_mpi_c_grid%ntot2*nspin*t_inc%NATYP
-       call zcopy(idim,work,1,t_tgmat%tmat,1)
-       deallocate(work)
+    complex (kind=dp), allocatable :: work(:, :, :)
+    integer :: ierr, idim
+
+
+    ! Gather tmat so that all processors the full matrix for their part of the energy contour
+    if (t_mpi_c_grid%nranks_ie>1) then
+      nspin = t_inc%nspin
+      if (t_inc%newsosol) nspin = 1
+
+      ihelp = t_inc%lmmaxd**2*t_mpi_c_grid%ntot2*nspin ! *t_inc%NATYP/mytot
+      recvcounts = ntot_pt*ihelp
+      displs = ioff_pt*ihelp
+
+      allocate (work(t_inc%lmmaxd,t_inc%lmmaxd,t_mpi_c_grid%ntot2*nspin*t_inc%natyp))
+      call mpi_allgatherv(t_tgmat%tmat, mytot*ihelp, mpi_double_complex, work, recvcounts, displs, mpi_double_complex, mympi_comm, ierr)
+      idim = t_inc%lmmaxd**2*t_mpi_c_grid%ntot2*nspin*t_inc%natyp
+      call zcopy(idim, work, 1, t_tgmat%tmat, 1)
+      deallocate (work)
     end if
-                          
-   end subroutine gather_tmat
+
+  end subroutine gather_tmat
 #endif
 
 
-! #ifdef CPP_MPI
-!    subroutine gather_gref(t_inc, t_tgmat, t_mpi_c_grid, ntot_pT, ioff_pT, mytot, mympi_comm)
-! 
-!     use mpi
-!     use mod_mympi,   only: myrank, master
-!     implicit none
-! 
-!     type(type_inc), intent(in) :: t_inc
-!     type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
-!     type(type_tgmatices), intent(inout) :: t_tgmat
-!     integer, intent(in) :: ntot_pT(0:t_mpi_c_grid%nranks_ie-1), ioff_pT(0:t_mpi_c_grid%nranks_ie-1), mytot, mympi_comm
-! 
-!     integer :: ihelp
-!     integer :: ierr
-!         
-!     !Gather gref so that all processors have the full matrix for their part of the energy countour
-!     if(t_mpi_c_grid%dims(1)>1) then
-!        ihelp      = t_inc%NACLSD*t_inc%LMGF0D*t_inc%LMGF0D*t_inc%NCLSD
-!        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-!        call MPI_Bcast( t_tgmat%gref, mytot*ihelp, MPI_DOUBLE_COMPLEX, 0 , &
-!                      & mympi_comm, ierr )
-!     end if
-!     
-!    end subroutine gather_gref
-! #endif
+#ifdef CPP_MPI
+  ! subroutine gather_gref(t_inc, t_tgmat, t_mpi_c_grid, ntot_pT, ioff_pT, mytot, mympi_comm)
+
+  ! use mpi
+  ! use mod_mympi,   only: myrank, master
+  ! implicit none
+
+  ! type(type_inc), intent(in) :: t_inc
+  ! type(type_mpi_cartesian_grid_info), intent(in) :: t_mpi_c_grid
+  ! type(type_tgmatices), intent(inout) :: t_tgmat
+  ! integer, intent(in) :: ntot_pT(0:t_mpi_c_grid%nranks_ie-1), ioff_pT(0:t_mpi_c_grid%nranks_ie-1), mytot, mympi_comm
+
+  ! integer :: ihelp
+  ! integer :: ierr
+
+  ! !Gather gref so that all processors have the full matrix for their part of the energy countour
+  ! if(t_mpi_c_grid%dims(1)>1) then
+  ! ihelp      = t_inc%NACLSD*t_inc%LMGF0D*t_inc%LMGF0D*t_inc%NCLSD
+  ! call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+  ! call MPI_Bcast( t_tgmat%gref, mytot*ihelp, MPI_DOUBLE_COMPLEX, 0 , &
+  ! & mympi_comm, ierr )
+  ! end if
+
+  ! end subroutine gather_gref
+#endif
 
 
 #ifdef CPP_MPI
-   !< subroutine to communicate structural green function over ranks
-   subroutine gather_gmat(t_inc,t_tgmat,ntot_pT,ioff_pT,mytot,nranks)
+  ! < subroutine to communicate structural green function over ranks
+  subroutine gather_gmat(t_inc, t_tgmat, ntot_pt, ioff_pt, mytot, nranks)
 
-    use mpi
+    use :: mpi
     implicit none
 
-    type(type_inc), intent(in) :: t_inc
-    type(type_tgmatices), intent(inout) :: t_tgmat
-    integer, intent(in) :: nranks
-    integer, intent(in) :: ntot_pT(0:nranks-1), ioff_pT(0:nranks-1), mytot
+    type (type_inc), intent (in) :: t_inc
+    type (type_tgmatices), intent (inout) :: t_tgmat
+    integer, intent (in) :: nranks
+    integer, intent (in) :: ntot_pt(0:nranks-1), ioff_pt(0:nranks-1), mytot
 
     integer :: ihelp
     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
     integer :: ierr
 
-    !Gather gmat so that all processors have the full matrix
-    ihelp      = t_inc%LMMAXD*t_inc%LMMAXD*t_inc%NQDOS!*t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
-    if(t_mpi_c_grid%dims(1)>1) then
-       recvcounts = ntot_pT*ihelp
-       displs     = ioff_pT*ihelp
-       call MPI_Allgatherv( t_tgmat%gmat, mytot*ihelp, MPI_DOUBLE_COMPLEX,         &
-                          & t_tgmat%gmat, recvcounts, displs, MPI_DOUBLE_COMPLEX,  &
-                          & MPI_COMM_WORLD, ierr )
+    ! Gather gmat so that all processors have the full matrix
+    ihelp = t_inc%lmmaxd*t_inc%lmmaxd*t_inc%nqdos ! *t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
+    if (t_mpi_c_grid%dims(1)>1) then
+      recvcounts = ntot_pt*ihelp
+      displs = ioff_pt*ihelp
+      call mpi_allgatherv(t_tgmat%gmat, mytot*ihelp, mpi_double_complex, t_tgmat%gmat, recvcounts, displs, mpi_double_complex, mpi_comm_world, ierr)
     end if
 
-   end subroutine gather_gmat
+  end subroutine gather_gmat
 #endif
 
 
 #ifdef CPP_MPI
-   !< subroutine to communicate scalars of t_imp over ranks
-   subroutine bcast_t_imp_scalars(t_imp, master)
+  ! < subroutine to communicate scalars of t_imp over ranks
+  subroutine bcast_t_imp_scalars(t_imp, master)
 
-    use mpi
+    use :: mpi
     implicit none
 
-    type(type_imp), intent(inout) :: t_imp
+    type (type_imp), intent (inout) :: t_imp
 
-    integer, intent(in) :: master
-    integer :: blocklen1(t_imp%N1), etype1(t_imp%N1), myMPItype1 ! for scalars from t_imp
+    integer, intent (in) :: master
+    integer :: blocklen1(t_imp%n1), etype1(t_imp%n1), mympitype1 ! for scalars from t_imp
     integer :: ierr
-    integer(kind=MPI_ADDRESS_KIND) :: disp1(t_imp%N1), base
+    integer (kind=mpi_address_kind) :: disp1(t_imp%n1), base
 
     ! scalars
-    call MPI_Get_address(t_imp%N1,          disp1(1), ierr)
-    call MPI_Get_address(t_imp%N2,          disp1(2), ierr)
-    call MPI_Get_address(t_imp%NATOMIMP,    disp1(3), ierr)
-    call MPI_Get_address(t_imp%IHOST,       disp1(4), ierr)
-    call MPI_Get_address(t_imp%IPAND,       disp1(5), ierr)
-    call MPI_Get_address(t_imp%NATYPD,      disp1(6), ierr)
-    call MPI_Get_address(t_imp%IRMD,        disp1(7), ierr)
-    call MPI_Get_address(t_imp%IRID,        disp1(8), ierr)
-    call MPI_Get_address(t_imp%NFUND,       disp1(9), ierr)
-    call MPI_Get_address(t_imp%NSPIN,      disp1(10), ierr)
-    call MPI_Get_address(t_imp%IRMIND,     disp1(11), ierr)
-    call MPI_Get_address(t_imp%LMPOTD,     disp1(12), ierr)
-    
-    base  = disp1(1)
+    call mpi_get_address(t_imp%n1, disp1(1), ierr)
+    call mpi_get_address(t_imp%n2, disp1(2), ierr)
+    call mpi_get_address(t_imp%natomimp, disp1(3), ierr)
+    call mpi_get_address(t_imp%ihost, disp1(4), ierr)
+    call mpi_get_address(t_imp%ipand, disp1(5), ierr)
+    call mpi_get_address(t_imp%natypd, disp1(6), ierr)
+    call mpi_get_address(t_imp%irmd, disp1(7), ierr)
+    call mpi_get_address(t_imp%irid, disp1(8), ierr)
+    call mpi_get_address(t_imp%nfund, disp1(9), ierr)
+    call mpi_get_address(t_imp%nspin, disp1(10), ierr)
+    call mpi_get_address(t_imp%irmind, disp1(11), ierr)
+    call mpi_get_address(t_imp%lmpotd, disp1(12), ierr)
+
+    base = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(:)=1
-    
-    etype1(:) = MPI_INTEGER
+    blocklen1(:) = 1
 
-    call MPI_Type_create_struct(t_imp%N1, blocklen1, disp1, etype1, myMPItype1, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_tgmat_logicals'
-    call MPI_Type_commit(myMPItype1, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_tgmat_logicals'
-    call MPI_Bcast(t_imp%N1, 1, myMPItype1, master, MPI_COMM_WORLD, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_tgmat'
-    call MPI_Type_free(myMPItype1, ierr)
+    etype1(:) = mpi_integer
 
-   end subroutine bcast_T_imp_scalars
+    call mpi_type_create_struct(t_imp%n1, blocklen1, disp1, etype1, mympitype1, ierr)
+    if (ierr/=mpi_success) stop 'Problem in create_mpimask_tgmat_logicals'
+    call mpi_type_commit(mympitype1, ierr)
+    if (ierr/=mpi_success) stop 'error commiting create_mpimask_tgmat_logicals'
+    call mpi_bcast(t_imp%n1, 1, mympitype1, master, mpi_comm_world, ierr)
+    if (ierr/=mpi_success) stop 'error brodcasting logicals from t_tgmat'
+    call mpi_type_free(mympitype1, ierr)
+
+  end subroutine bcast_t_imp_scalars
 
 
-   !< subroutine to communicate arrays of t_imp over ranks
-   subroutine bcast_t_imp_arrays(t_imp, t_inc, master)
+  ! < subroutine to communicate arrays of t_imp over ranks
+  subroutine bcast_t_imp_arrays(t_imp, t_inc, master)
 
-    use mpi
+    use :: mpi
     implicit none
 
-    type(type_imp), intent(inout) :: t_imp
-    type(type_inc), intent(in) :: t_inc
+    type (type_imp), intent (inout) :: t_imp
+    type (type_inc), intent (in) :: t_inc
 
-    integer, intent(in) :: master
-    integer :: blocklen2(t_imp%N2), etype2(t_imp%N2), myMPItype2 ! for arrays from t_imp
+    integer, intent (in) :: master
+    integer :: blocklen2(t_imp%n2), etype2(t_imp%n2), mympitype2 ! for arrays from t_imp
     integer :: ierr
-    integer(kind=MPI_ADDRESS_KIND) :: disp2(t_imp%N2), base
+    integer (kind=mpi_address_kind) :: disp2(t_imp%n2), base
 
     ! arrays
-    call MPI_Get_address(t_imp%N2,          disp2(1), ierr)
-    call MPI_Get_address(t_imp%IPANIMP,     disp2(2), ierr)
-    call MPI_Get_address(t_imp%IRCUTIMP,    disp2(3), ierr)
-    call MPI_Get_address(t_imp%IRMINIMP,    disp2(4), ierr)
-    call MPI_Get_address(t_imp%IRWSIMP,     disp2(5), ierr)
-    call MPI_Get_address(t_imp%HOSTIMP,     disp2(6), ierr)
-    call MPI_Get_address(t_imp%RIMP,        disp2(7), ierr)
-    call MPI_Get_address(t_imp%ZIMP,        disp2(8), ierr)
-    call MPI_Get_address(t_imp%THETASIMP,   disp2(9), ierr)
-    call MPI_Get_address(t_imp%VISPIMP,    disp2(10), ierr)
-    call MPI_Get_address(t_imp%VINSIMP,    disp2(11), ierr)
-    call MPI_Get_address(t_imp%RCLSIMP,    disp2(12), ierr)
-    call MPI_Get_address(t_imp%RLLIMP,     disp2(13), ierr)
-    call MPI_Get_address(t_imp%ATOMIMP,    disp2(14), ierr)
-    call MPI_Get_address(t_imp%THETAIMP,   disp2(15), ierr)
-    call MPI_Get_address(t_imp%PHIIMP,     disp2(16), ierr)
+    call mpi_get_address(t_imp%n2, disp2(1), ierr)
+    call mpi_get_address(t_imp%ipanimp, disp2(2), ierr)
+    call mpi_get_address(t_imp%ircutimp, disp2(3), ierr)
+    call mpi_get_address(t_imp%irminimp, disp2(4), ierr)
+    call mpi_get_address(t_imp%irwsimp, disp2(5), ierr)
+    call mpi_get_address(t_imp%hostimp, disp2(6), ierr)
+    call mpi_get_address(t_imp%rimp, disp2(7), ierr)
+    call mpi_get_address(t_imp%zimp, disp2(8), ierr)
+    call mpi_get_address(t_imp%thetasimp, disp2(9), ierr)
+    call mpi_get_address(t_imp%vispimp, disp2(10), ierr)
+    call mpi_get_address(t_imp%vinsimp, disp2(11), ierr)
+    call mpi_get_address(t_imp%rclsimp, disp2(12), ierr)
+    call mpi_get_address(t_imp%rllimp, disp2(13), ierr)
+    call mpi_get_address(t_imp%atomimp, disp2(14), ierr)
+    call mpi_get_address(t_imp%thetaimp, disp2(15), ierr)
+    call mpi_get_address(t_imp%phiimp, disp2(16), ierr)
 
 
-    base  = disp2(1)
+    base = disp2(1)
     disp2 = disp2 - base
 
-    blocklen2(1)=1
-    blocklen2(2)=t_imp%NATOMIMP
-    blocklen2(3)=(1+t_imp%IPAND)*t_imp%NATOMIMP
-    blocklen2(4)=t_imp%NATOMIMP
-    blocklen2(5)=t_imp%NATOMIMP
-    blocklen2(6)=t_imp%NATYPD
-    blocklen2(7)=t_imp%IRMD*t_imp%NATOMIMP
-    blocklen2(8)=t_imp%NATOMIMP
-    blocklen2(9)=t_imp%IRID*t_imp%NFUND*t_imp%NATOMIMP
-    blocklen2(10)=t_imp%IRMD*t_imp%NATOMIMP*t_imp%NSPIN
-    blocklen2(11)=(t_imp%IRMD-t_imp%IRMIND+1)*t_imp%LMPOTD*t_imp%NATOMIMP*t_imp%NSPIN
-    blocklen2(12)=3*t_imp%NATOMIMP
-    blocklen2(13)=t_inc%nsra*t_inc%lmmaxso*t_inc%lmmaxso*t_inc%irmdnew*t_imp%NATOMIMP
-    blocklen2(14)=t_imp%NATOMIMP
-    blocklen2(15)=t_imp%NATOMIMP
-    blocklen2(16)=t_imp%NATOMIMP
+    blocklen2(1) = 1
+    blocklen2(2) = t_imp%natomimp
+    blocklen2(3) = (1+t_imp%ipand)*t_imp%natomimp
+    blocklen2(4) = t_imp%natomimp
+    blocklen2(5) = t_imp%natomimp
+    blocklen2(6) = t_imp%natypd
+    blocklen2(7) = t_imp%irmd*t_imp%natomimp
+    blocklen2(8) = t_imp%natomimp
+    blocklen2(9) = t_imp%irid*t_imp%nfund*t_imp%natomimp
+    blocklen2(10) = t_imp%irmd*t_imp%natomimp*t_imp%nspin
+    blocklen2(11) = (t_imp%irmd-t_imp%irmind+1)*t_imp%lmpotd*t_imp%natomimp*t_imp%nspin
+    blocklen2(12) = 3*t_imp%natomimp
+    blocklen2(13) = t_inc%nsra*t_inc%lmmaxso*t_inc%lmmaxso*t_inc%irmdnew*t_imp%natomimp
+    blocklen2(14) = t_imp%natomimp
+    blocklen2(15) = t_imp%natomimp
+    blocklen2(16) = t_imp%natomimp
 
-    etype2(1:6) = MPI_INTEGER
-    etype2(7:12) = MPI_DOUBLE_PRECISION
-    etype2(13) = MPI_DOUBLE_COMPLEX
-    etype2(14) = MPI_INTEGER
-    etype2(15:16) = MPI_DOUBLE_PRECISION
+    etype2(1:6) = mpi_integer
+    etype2(7:12) = mpi_double_precision
+    etype2(13) = mpi_double_complex
+    etype2(14) = mpi_integer
+    etype2(15:16) = mpi_double_precision
 
-    call MPI_Type_create_struct(t_imp%N2, blocklen2, disp2, etype2, myMPItype2, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'Problem in create_mpimask_tgmat_logicals'
-    call MPI_Type_commit(myMPItype2, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error commiting create_mpimask_tgmat_logicals'
-    call MPI_Bcast(t_imp%N2, 1, myMPItype2, master, MPI_COMM_WORLD, ierr)
-    if(ierr/=MPI_SUCCESS) stop 'error brodcasting logicals from t_tgmat'
-    call MPI_Type_free(myMPItype2, ierr)
+    call mpi_type_create_struct(t_imp%n2, blocklen2, disp2, etype2, mympitype2, ierr)
+    if (ierr/=mpi_success) stop 'Problem in create_mpimask_tgmat_logicals'
+    call mpi_type_commit(mympitype2, ierr)
+    if (ierr/=mpi_success) stop 'error commiting create_mpimask_tgmat_logicals'
+    call mpi_bcast(t_imp%n2, 1, mympitype2, master, mpi_comm_world, ierr)
+    if (ierr/=mpi_success) stop 'error brodcasting logicals from t_tgmat'
+    call mpi_type_free(mympitype2, ierr)
 
-   end subroutine bcast_t_imp_arrays
+  end subroutine bcast_t_imp_arrays
 #endif
 
 

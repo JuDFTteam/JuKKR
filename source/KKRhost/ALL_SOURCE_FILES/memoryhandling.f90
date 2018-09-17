@@ -34,9 +34,7 @@ contains
   ! > Jonathan Chico
   ! > @date 14.11.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_cell(flag, naez, nemb, natyp, cls, imt, irws, irns, &
-    ntcell, refpot, kfg, kaoez, rmt, zat, rws, mtfac, rmtref, rmtrefat, &
-    rmtnew, rbasis, lmxc)
+  subroutine allocate_cell(flag, naez, nemb, natyp, cls, imt, irws, irns, ntcell, refpot, kfg, kaoez, rmt, zat, rws, mtfac, rmtref, rmtrefat, rmtnew, rbasis, lmxc)
 
     implicit none
 
@@ -45,64 +43,64 @@ contains
     integer, intent (in) :: nemb   ! < number of 'embedding' positions
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
     integer, dimension (:), allocatable, intent (inout) :: cls ! < Cluster
-                                                               ! around atomic
-                                                               ! sites
+    ! around atomic
+    ! sites
     integer, dimension (:), allocatable, intent (inout) :: imt ! < R point at
-                                                               ! MT radius
+    ! MT radius
     integer, dimension (:), allocatable, intent (inout) :: irws ! < R point at
-                                                                ! WS radius
+    ! WS radius
     integer, dimension (:), allocatable, intent (inout) :: irns ! < Position
-                                                                ! of atoms in
-                                                                ! the unit
-                                                                ! cell in
-                                                                ! units of
-                                                                ! bravais
-                                                                ! vectors
+    ! of atoms in
+    ! the unit
+    ! cell in
+    ! units of
+    ! bravais
+    ! vectors
     integer, dimension (:), allocatable, intent (inout) :: lmxc
     integer, dimension (:), allocatable, intent (inout) :: ntcell ! < Index
-                                                                  ! for WS
-                                                                  ! cell
+    ! for WS
+    ! cell
     integer, dimension (:), allocatable, intent (inout) :: refpot ! < Ref.
-                                                                  ! pot. card
-                                                                  ! at
-                                                                  ! position
+    ! pot. card
+    ! at
+    ! position
     integer, dimension (:, :), allocatable, intent (inout) :: kfg
     integer, dimension (:, :), allocatable, intent (inout) :: kaoez ! < atom
-                                                                    ! types
-                                                                    ! located
-                                                                    ! at a
-                                                                    ! given
-                                                                    ! site
+    ! types
+    ! located
+    ! at a
+    ! given
+    ! site
     real (kind=dp), dimension (:), allocatable, intent (inout) :: rmt ! <
-                                                                      ! Muffin-tin
-                                                                      ! radius
-                                                                      ! of
-                                                                      ! true
-                                                                      ! system
+    ! Muffin-tin
+    ! radius
+    ! of
+    ! true
+    ! system
     real (kind=dp), dimension (:), allocatable, intent (inout) :: zat ! <
-                                                                      ! Nuclear
-                                                                      ! charge
+    ! Nuclear
+    ! charge
     real (kind=dp), dimension (:), allocatable, intent (inout) :: rws ! <
-                                                                      ! Wigner
-                                                                      ! Seitz
-                                                                      ! radius
+    ! Wigner
+    ! Seitz
+    ! radius
     real (kind=dp), dimension (:), allocatable, intent (inout) :: mtfac ! <
-                                                                        ! Scaling
-                                                                        ! factor
-                                                                        ! for
-                                                                        ! radius
-                                                                        ! MT
+    ! Scaling
+    ! factor
+    ! for
+    ! radius
+    ! MT
     real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtref ! <
-                                                                         ! Muffin-tin
-                                                                         ! radius
-                                                                         ! of
-                                                                         ! reference
-                                                                         ! system
+    ! Muffin-tin
+    ! radius
+    ! of
+    ! reference
+    ! system
     real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtrefat
     real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtnew ! <
-                                                                         ! Adapted
-                                                                         ! muffin-tin
-                                                                         ! radius
+    ! Adapted
+    ! muffin-tin
+    ! radius
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rbasis
     ! < Position of atoms in the unit cell in units of bravais vectors
 
@@ -111,73 +109,56 @@ contains
 
     if (flag>0) then
       allocate (refpot(naez+nemb), stat=i_stat)
-      call memocc(i_stat, product(shape(refpot))*kind(refpot), 'REFPOT', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(refpot))*kind(refpot), 'REFPOT', 'allocate_cell')
       refpot = 0
       allocate (rmtrefat(naez+nemb), stat=i_stat)
-      call memocc(i_stat, product(shape(rmtrefat))*kind(rmtrefat), 'RMTREFAT', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(rmtrefat))*kind(rmtrefat), 'RMTREFAT', 'allocate_cell')
       rmtrefat = -1.e0_dp          ! Signals the need for later calculation
       allocate (kaoez(natyp,naez+nemb), stat=i_stat)
-      call memocc(i_stat, product(shape(kaoez))*kind(kaoez), 'KAOEZ', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(kaoez))*kind(kaoez), 'KAOEZ', 'allocate_cell')
       kaoez = 0
       allocate (cls(naez+nemb), stat=i_stat)
-      call memocc(i_stat, product(shape(cls))*kind(cls), 'CLS', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(cls))*kind(cls), 'CLS', 'allocate_cell')
       cls = 1
       allocate (rbasis(3,naez+nemb), stat=i_stat)
-      call memocc(i_stat, product(shape(rbasis))*kind(rbasis), 'RBASIS', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(rbasis))*kind(rbasis), 'RBASIS', 'allocate_cell')
       rbasis = 0.e0_dp
       allocate (mtfac(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(mtfac))*kind(mtfac), 'MTFAC', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(mtfac))*kind(mtfac), 'MTFAC', 'allocate_cell')
       mtfac = 0.e0_dp
       allocate (zat(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(zat))*kind(zat), 'ZAT', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(zat))*kind(zat), 'ZAT', 'allocate_cell')
       zat = -1.e0_dp               ! Negative value signals read-in from
-                                   ! pot-file
+      ! pot-file
       allocate (ntcell(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(ntcell))*kind(ntcell), 'NTCELL', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(ntcell))*kind(ntcell), 'NTCELL', 'allocate_cell')
       ntcell = 0
       allocate (rmtref(naez), stat=i_stat)
-      call memocc(i_stat, product(shape(rmtref))*kind(rmtref), 'RMTREF', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(rmtref))*kind(rmtref), 'RMTREF', 'allocate_cell')
       rmtref = -1.e0_dp
       allocate (irns(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(irns))*kind(irns), 'IRNS', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(irns))*kind(irns), 'IRNS', 'allocate_cell')
       irns = -1                    ! Negative value signals to use FPRADIUS
       allocate (rws(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(rws))*kind(rws), 'RWS', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(rws))*kind(rws), 'RWS', 'allocate_cell')
       rws = 0.e0_dp
       allocate (irws(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(irws))*kind(irws), 'IRWS', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(irws))*kind(irws), 'IRWS', 'allocate_cell')
       irws = 0
       allocate (rmt(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(rmt))*kind(rmt), 'RMT', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(rmt))*kind(rmt), 'RMT', 'allocate_cell')
       rmt = 0.e0_dp
       allocate (rmtnew(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(rmtnew))*kind(rmtnew), 'RMTNEW', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(rmtnew))*kind(rmtnew), 'RMTNEW', 'allocate_cell')
       rmtnew = 0.e0_dp
       allocate (imt(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(imt))*kind(imt), 'IMT', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(imt))*kind(imt), 'IMT', 'allocate_cell')
       imt = 0
       allocate (kfg(4,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(kfg))*kind(kfg), 'KFG', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(kfg))*kind(kfg), 'KFG', 'allocate_cell')
       kfg = 0
       allocate (lmxc(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(lmxc))*kind(lmxc), 'LMXC', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(lmxc))*kind(lmxc), 'LMXC', 'allocate_cell')
       lmxc = 0
     else
       if (allocated(zat)) then
@@ -287,12 +268,10 @@ contains
     if (flag>0) then
 
       allocate (tleft(3,nemb+1), stat=i_stat)
-      call memocc(i_stat, product(shape(tleft))*kind(tleft), 'TLEFT', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(tleft))*kind(tleft), 'TLEFT', 'allocate_cell')
       tleft = 0.e0_dp
       allocate (tright(3,nemb+1), stat=i_stat)
-      call memocc(i_stat, product(shape(tright))*kind(tright), 'TRIGHT', &
-        'allocate_cell')
+      call memocc(i_stat, product(shape(tright))*kind(tright), 'TRIGHT', 'allocate_cell')
       tright = 0.e0_dp
     else
       if (allocated(tleft)) then
@@ -321,9 +300,8 @@ contains
   ! > Jonathan Chico
   ! > @date 14.11.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_potential(flag, irm, natyp, npotd, ipand, &
-    nfund, lmxspd, lmpot, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, &
-    ircut, lcore, llmsp, ititle, fpradius, visp, ecore, vins)
+  subroutine allocate_potential(flag, irm, natyp, npotd, ipand, nfund, lmxspd, lmpot, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, ircut, lcore, llmsp, ititle, fpradius, &
+    visp, ecore, vins)
 
     implicit none
 
@@ -339,48 +317,48 @@ contains
     integer, intent (in) :: nspotd
     integer, dimension (:), allocatable, intent (inout) :: nfu
     integer, dimension (:), allocatable, intent (inout) :: irc ! < R point for
-                                                               ! potential
-                                                               ! cutting
+    ! potential
+    ! cutting
     integer, dimension (:), allocatable, intent (inout) :: ncore ! < Number of
-                                                                 ! core states
+    ! core states
     integer, dimension (:), allocatable, intent (inout) :: irmin ! < Max R for
-                                                                 ! spherical
-                                                                 ! treatment
+    ! spherical
+    ! treatment
     integer, dimension (:, :), allocatable, intent (inout) :: lmsp ! < 0,1 :
-                                                                   ! non/-vanishing
-                                                                   ! lm=(l,m)
-                                                                   ! component
-                                                                   ! of
-                                                                   ! non-spherical
-                                                                   ! potential
+    ! non/-vanishing
+    ! lm=(l,m)
+    ! component
+    ! of
+    ! non-spherical
+    ! potential
     integer, dimension (:, :), allocatable, intent (inout) :: lmsp1
     integer, dimension (:, :), allocatable, intent (inout) :: ircut ! < R
-                                                                    ! points
-                                                                    ! of panel
-                                                                    ! borders
+    ! points
+    ! of panel
+    ! borders
     integer, dimension (:, :), allocatable, intent (inout) :: lcore ! <
-                                                                    ! Angular
-                                                                    ! momentum
-                                                                    ! of core
-                                                                    ! states
+    ! Angular
+    ! momentum
+    ! of core
+    ! states
     integer, dimension (:, :), allocatable, intent (inout) :: llmsp ! <
-                                                                    ! lm=(l,m)
-                                                                    ! of
-                                                                    ! 'nfund'th
-                                                                    ! nonvanishing
-                                                                    ! component
-                                                                    ! of
-                                                                    ! non-spherical
-                                                                    ! pot.
+    ! lm=(l,m)
+    ! of
+    ! 'nfund'th
+    ! nonvanishing
+    ! component
+    ! of
+    ! non-spherical
+    ! pot.
     integer, dimension (:, :), allocatable, intent (inout) :: ititle
     real (kind=dp), dimension (:), allocatable, intent (inout) :: fpradius
     ! < R point at which full-potential treatment starts
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: visp ! <
-                                                                          ! Spherical
-                                                                          ! part
-                                                                          ! of
-                                                                          ! the
-                                                                          ! potential
+    ! Spherical
+    ! part
+    ! of
+    ! the
+    ! potential
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: ecore
     ! < Core energies
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: vins
@@ -392,61 +370,47 @@ contains
     if (flag>0) then
 
       allocate (fpradius(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(fpradius))*kind(fpradius), 'FPRADIUS', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(fpradius))*kind(fpradius), 'FPRADIUS', 'allocate_potential')
       fpradius = -1.e0_dp          ! Negative value signals to use IRNS from
-                                   ! pot-file (sub. startb1)
+      ! pot-file (sub. startb1)
       allocate (irc(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(irc))*kind(irc), 'IRC', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(irc))*kind(irc), 'IRC', 'allocate_potential')
       irc = 0
       allocate (ircut(0:ipand,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(ircut))*kind(ircut), 'IRCUT', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(ircut))*kind(ircut), 'IRCUT', 'allocate_potential')
       ircut = 0
       allocate (irmin(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(irmin))*kind(irmin), 'IRMIN', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(irmin))*kind(irmin), 'IRMIN', 'allocate_potential')
       irmin = 0
       allocate (lcore(20,npotd), stat=i_stat)
-      call memocc(i_stat, product(shape(lcore))*kind(lcore), 'LCORE', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(lcore))*kind(lcore), 'LCORE', 'allocate_potential')
       lcore = 0
       allocate (ecore(20,npotd), stat=i_stat)
-      call memocc(i_stat, product(shape(ecore))*kind(ecore), 'ECORE', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(ecore))*kind(ecore), 'ECORE', 'allocate_potential')
       ecore = 0.e0_dp
       allocate (ncore(npotd), stat=i_stat)
-      call memocc(i_stat, product(shape(ncore))*kind(ncore), 'NCORE', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(ncore))*kind(ncore), 'NCORE', 'allocate_potential')
       ncore = 0
       allocate (lmsp1(lmxspd,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(lmsp1))*kind(lmsp1), 'LMSP1', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(lmsp1))*kind(lmsp1), 'LMSP1', 'allocate_potential')
       lmsp1 = 0
       allocate (llmsp(natyp,nfund), stat=i_stat)
-      call memocc(i_stat, product(shape(llmsp))*kind(llmsp), 'LLMSP', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(llmsp))*kind(llmsp), 'LLMSP', 'allocate_potential')
       llmsp = 0
       allocate (lmsp(natyp,lmxspd), stat=i_stat)
-      call memocc(i_stat, product(shape(lmsp))*kind(lmsp), 'LMSP', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(lmsp))*kind(lmsp), 'LMSP', 'allocate_potential')
       lmsp = 0
       allocate (ititle(20,npotd), stat=i_stat)
-      call memocc(i_stat, product(shape(ititle))*kind(ititle), 'ITITLE', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(ititle))*kind(ititle), 'ITITLE', 'allocate_potential')
       ititle = 0
       allocate (nfu(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(nfu))*kind(nfu), 'NFU', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(nfu))*kind(nfu), 'NFU', 'allocate_potential')
       nfu = 0
       allocate (vins(irmind:irm,lmpot,nspotd), stat=i_stat)
-      call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'allocate_potential')
       vins = 0.e0_dp
       allocate (visp(irm,npotd), stat=i_stat)
-      call memocc(i_stat, product(shape(visp))*kind(visp), 'VISP', &
-        'allocate_potential')
+      call memocc(i_stat, product(shape(visp))*kind(visp), 'VISP', 'allocate_potential')
       visp = 0.e0_dp
 
     else
@@ -526,8 +490,7 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_cpa(flag, naez, natyp, noq, icpa, iqat, hostimp, &
-    conc)
+  subroutine allocate_cpa(flag, naez, natyp, noq, icpa, iqat, hostimp, conc)
 
     implicit none
 
@@ -536,22 +499,22 @@ contains
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
 
     integer, dimension (:), allocatable, intent (inout) :: noq ! < Number of
-                                                               ! diff. atom
-                                                               ! types located
+    ! diff. atom
+    ! types located
     integer, dimension (:), allocatable, intent (inout) :: icpa ! < ICPA = 0/1
-                                                                ! site-dependent
-                                                                ! CPA flag
+    ! site-dependent
+    ! CPA flag
     integer, dimension (:), allocatable, intent (inout) :: iqat ! < the site
-                                                                ! on which an
-                                                                ! atom is
-                                                                ! located on a
-                                                                ! given site
+    ! on which an
+    ! atom is
+    ! located on a
+    ! given site
     integer, dimension (:), allocatable, intent (inout) :: hostimp
     real (kind=dp), dimension (:), allocatable, intent (inout) :: conc ! <
-                                                                       ! concentration
-                                                                       ! of a
-                                                                       ! given
-                                                                       ! atom
+    ! concentration
+    ! of a
+    ! given
+    ! atom
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -560,24 +523,19 @@ contains
     if (flag>0) then
 
       allocate (noq(naez), stat=i_stat)
-      call memocc(i_stat, product(shape(noq))*kind(noq), 'NOQ', &
-        'allocate_cpa')
+      call memocc(i_stat, product(shape(noq))*kind(noq), 'NOQ', 'allocate_cpa')
       noq = 1
       allocate (icpa(naez), stat=i_stat)
-      call memocc(i_stat, product(shape(icpa))*kind(icpa), 'ICPA', &
-        'allocate_cpa')
+      call memocc(i_stat, product(shape(icpa))*kind(icpa), 'ICPA', 'allocate_cpa')
       icpa = 0
       allocate (iqat(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(iqat))*kind(iqat), 'IQAT', &
-        'allocate_cpa')
+      call memocc(i_stat, product(shape(iqat))*kind(iqat), 'IQAT', 'allocate_cpa')
       iqat = 0
       allocate (conc(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(conc))*kind(conc), 'CONC', &
-        'allocate_cpa')
+      call memocc(i_stat, product(shape(conc))*kind(conc), 'CONC', 'allocate_cpa')
       conc = 1.e0_dp
       allocate (hostimp(0:natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(hostimp))*kind(hostimp), 'HOSTIMP', &
-        'allocate_cpa')
+      call memocc(i_stat, product(shape(hostimp))*kind(hostimp), 'HOSTIMP', 'allocate_cpa')
       hostimp = 0
 
     else
@@ -631,28 +589,28 @@ contains
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
 
     integer, dimension (:), allocatable, intent (inout) :: lopt ! < angular
-                                                                ! momentum
-                                                                ! QNUM for the
-                                                                ! atoms on
-                                                                ! which LDA+U
-                                                                ! should be
-                                                                ! applied (-1
-                                                                ! to switch it
-                                                                ! OFF)
+    ! momentum
+    ! QNUM for the
+    ! atoms on
+    ! which LDA+U
+    ! should be
+    ! applied (-1
+    ! to switch it
+    ! OFF)
     real (kind=dp), dimension (:), allocatable, intent (inout) :: ueff ! <
-                                                                       ! input
-                                                                       ! U
-                                                                       ! parameter
-                                                                       ! for
-                                                                       ! each
-                                                                       ! atom
+    ! input
+    ! U
+    ! parameter
+    ! for
+    ! each
+    ! atom
     real (kind=dp), dimension (:), allocatable, intent (inout) :: jeff ! <
-                                                                       ! input
-                                                                       ! J
-                                                                       ! parameter
-                                                                       ! for
-                                                                       ! each
-                                                                       ! atom
+    ! input
+    ! J
+    ! parameter
+    ! for
+    ! each
+    ! atom
     real (kind=dp), dimension (:), allocatable, intent (inout) :: erefldau
     ! < the energies of the projector's wave functions (REAL)
 
@@ -661,20 +619,16 @@ contains
 
     if (flag>0) then
       allocate (lopt(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(lopt))*kind(lopt), 'LOPT', &
-        'allocate_ldau')
+      call memocc(i_stat, product(shape(lopt))*kind(lopt), 'LOPT', 'allocate_ldau')
       lopt = -1                    ! not perform lda+u (default)
       allocate (ueff(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(ueff))*kind(ueff), 'UEFF', &
-        'allocate_ldau')
+      call memocc(i_stat, product(shape(ueff))*kind(ueff), 'UEFF', 'allocate_ldau')
       ueff = 0.e0_dp
       allocate (jeff(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(jeff))*kind(jeff), 'JEFF', &
-        'allocate_ldau')
+      call memocc(i_stat, product(shape(jeff))*kind(jeff), 'JEFF', 'allocate_ldau')
       jeff = 0.e0_dp
       allocate (erefldau(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(erefldau))*kind(erefldau), 'EREFLDAU', &
-        'allocate_ldau')
+      call memocc(i_stat, product(shape(erefldau))*kind(erefldau), 'EREFLDAU', 'allocate_ldau')
       erefldau = 0.5e0_dp
     else
       if (allocated(lopt)) then
@@ -713,8 +667,7 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_ldau_potential(flag, irm, natyp, mmaxd, nspind, itldau, &
-    wldau, uldau, phildau)
+  subroutine allocate_ldau_potential(flag, irm, natyp, mmaxd, nspind, itldau, wldau, uldau, phildau)
 
     implicit none
 
@@ -723,24 +676,21 @@ contains
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
     integer, intent (in) :: mmaxd
     integer, intent (in) :: nspind ! < Counter for spin directions
-                                   ! (KREL+(1-KREL)*(KSP+1))
+    ! (KREL+(1-KREL)*(KSP+1))
     integer, dimension (:), allocatable, intent (inout) :: itldau ! < integer
-                                                                  ! pointer
-                                                                  ! connecting
-                                                                  ! the NTLDAU
-                                                                  ! atoms to
-                                                                  ! heir
-                                                                  ! corresponding
-                                                                  ! index in
-                                                                  ! the unit
-                                                                  ! cell
-    real (kind=dp), dimension (:, :, :, :), allocatable, &
-      intent (inout) :: wldau      ! < potential matrix
-    real (kind=dp), dimension (:, :, :, :, :), allocatable, &
-      intent (inout) :: uldau      ! < calculated Coulomb matrix elements
-                                   ! (EREFLDAU)
-    complex (kind=dp), dimension (:, :), allocatable, &
-      intent (inout) :: phildau
+    ! pointer
+    ! connecting
+    ! the NTLDAU
+    ! atoms to
+    ! heir
+    ! corresponding
+    ! index in
+    ! the unit
+    ! cell
+    real (kind=dp), dimension (:, :, :, :), allocatable, intent (inout) :: wldau ! < potential matrix
+    real (kind=dp), dimension (:, :, :, :, :), allocatable, intent (inout) :: uldau ! < calculated Coulomb matrix elements
+    ! (EREFLDAU)
+    complex (kind=dp), dimension (:, :), allocatable, intent (inout) :: phildau
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -748,20 +698,16 @@ contains
     if (flag>0) then
 
       allocate (itldau(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(itldau))*kind(itldau), 'ITLDAU', &
-        'allocate_ldau_potential')
+      call memocc(i_stat, product(shape(itldau))*kind(itldau), 'ITLDAU', 'allocate_ldau_potential')
       itldau = 0
       allocate (uldau(mmaxd,mmaxd,mmaxd,mmaxd,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(uldau))*kind(uldau), 'ULDAU', &
-        'allocate_ldau_potential')
+      call memocc(i_stat, product(shape(uldau))*kind(uldau), 'ULDAU', 'allocate_ldau_potential')
       uldau = 0.e0_dp
       allocate (wldau(mmaxd,mmaxd,nspind,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(wldau))*kind(wldau), 'WLDAU', &
-        'allocate_ldau_potential')
+      call memocc(i_stat, product(shape(wldau))*kind(wldau), 'WLDAU', 'allocate_ldau_potential')
       wldau = 0.e0_dp
       allocate (phildau(irm,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(phildau))*kind(phildau), 'PHILDAU', &
-        'allocate_ldau_potential')
+      call memocc(i_stat, product(shape(phildau))*kind(phildau), 'PHILDAU', 'allocate_ldau_potential')
       phildau = (0.e0_dp, 0.e0_dp)
 
     else
@@ -801,8 +747,7 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_magnetization(flag, naez, natyp, lmmaxd, inipol, ixipol, &
-    qmtet, qmphi, drotq)
+  subroutine allocate_magnetization(flag, naez, natyp, lmmaxd, inipol, ixipol, qmtet, qmphi, drotq)
 
     implicit none
 
@@ -811,42 +756,36 @@ contains
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
     integer, intent (in) :: lmmaxd
     integer, dimension (:), allocatable, intent (inout) :: inipol ! < Initial
-                                                                  ! spin
-                                                                  ! polarisation
+    ! spin
+    ! polarisation
     integer, dimension (:), allocatable, intent (inout) :: ixipol ! <
-                                                                  ! Constraint
-                                                                  ! of spin
-                                                                  ! pol.
+    ! Constraint
+    ! of spin
+    ! pol.
     real (kind=dp), dimension (:), allocatable, intent (inout) :: qmtet
     real (kind=dp), dimension (:), allocatable, intent (inout) :: qmphi
-    complex (kind=dp), dimension (:, :, :), allocatable, &
-      intent (inout) :: drotq      ! < Rotation matrices to change between
-                                   ! LOCAL/GLOBAL frame of reference for
-                                   ! magnetisation <> Oz or noncollinearity
+    complex (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: drotq ! < Rotation matrices to change between
+    ! LOCAL/GLOBAL frame of reference for
+    ! magnetisation <> Oz or noncollinearity
 
     ! .. Local variables
     integer :: i_stat, i_all
 
     if (flag>0) then
       allocate (qmtet(naez), stat=i_stat)
-      call memocc(i_stat, product(shape(qmtet))*kind(qmtet), 'QMTET', &
-        'allocate_magnetization')
+      call memocc(i_stat, product(shape(qmtet))*kind(qmtet), 'QMTET', 'allocate_magnetization')
       qmtet = 0.e0_dp
       allocate (qmphi(naez), stat=i_stat)
-      call memocc(i_stat, product(shape(qmphi))*kind(qmphi), 'QMPHI', &
-        'allocate_magnetization')
+      call memocc(i_stat, product(shape(qmphi))*kind(qmphi), 'QMPHI', 'allocate_magnetization')
       qmphi = 0.e0_dp
       allocate (inipol(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(inipol))*kind(inipol), 'INIPOL', &
-        'allocate_magnetization')
+      call memocc(i_stat, product(shape(inipol))*kind(inipol), 'INIPOL', 'allocate_magnetization')
       inipol = 0
       allocate (ixipol(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(ixipol))*kind(ixipol), 'IXIPOL', &
-        'allocate_magnetization')
+      call memocc(i_stat, product(shape(ixipol))*kind(ixipol), 'IXIPOL', 'allocate_magnetization')
       ixipol = 0
       allocate (drotq(lmmaxd,lmmaxd,naez), stat=i_stat)
-      call memocc(i_stat, product(shape(drotq))*kind(drotq), 'DROTQ', &
-        'allocate_magnetization')
+      call memocc(i_stat, product(shape(drotq))*kind(drotq), 'DROTQ', 'allocate_magnetization')
       drotq = (0.e0_dp, 0.e0_dp)
     else
       if (allocated(qmtet)) then
@@ -897,15 +836,15 @@ contains
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: krel
     integer, intent (in) :: lmax   ! < Maximum l component in wave function
-                                   ! expansion
+    ! expansion
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
     real (kind=dp), dimension (:), allocatable, intent (inout) :: socscale
     ! < Spin-orbit scaling
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cscl ! <
-                                                                          ! Speed
-                                                                          ! of
-                                                                          ! light
-                                                                          ! scaling
+    ! Speed
+    ! of
+    ! light
+    ! scaling
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: socscl
 
     ! .. Local variables
@@ -913,16 +852,13 @@ contains
 
     if (flag>0) then
       allocate (socscl(krel*lmax+1,krel*natyp+(1-krel)), stat=i_stat)
-      call memocc(i_stat, product(shape(socscl))*kind(socscl), 'SOCSCL', &
-        'allocate_SOC')
+      call memocc(i_stat, product(shape(socscl))*kind(socscl), 'SOCSCL', 'allocate_SOC')
       socscl = 1.e0_dp
       allocate (cscl(krel*lmax+1,krel*natyp+(1-krel)), stat=i_stat)
-      call memocc(i_stat, product(shape(cscl))*kind(cscl), 'CSCL', &
-        'allocate_SOC')
+      call memocc(i_stat, product(shape(cscl))*kind(cscl), 'CSCL', 'allocate_SOC')
       cscl = 0.e0_dp
       allocate (socscale(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(socscale))*kind(socscale), 'SOCSCALE', &
-        'allocate_SOC')
+      call memocc(i_stat, product(shape(socscale))*kind(socscale), 'SOCSCALE', 'allocate_SOC')
       socscale = 1.e0_dp           ! Spin-orbit scaling
     else
       if (allocated(socscl)) then
@@ -971,16 +907,13 @@ contains
 
     if (flag>0) then
       allocate (ez(iemxd), stat=i_stat)
-      call memocc(i_stat, product(shape(ez))*kind(ez), 'EZ', &
-        'allocate_energies')
+      call memocc(i_stat, product(shape(ez))*kind(ez), 'EZ', 'allocate_energies')
       ez = (0.e0_dp, 0.e0_dp)
       allocate (dez(iemxd), stat=i_stat)
-      call memocc(i_stat, product(shape(dez))*kind(dez), 'DEZ', &
-        'allocate_energies')
+      call memocc(i_stat, product(shape(dez))*kind(dez), 'DEZ', 'allocate_energies')
       dez = (0.e0_dp, 0.e0_dp)
       allocate (wez(iemxd), stat=i_stat)
-      call memocc(i_stat, product(shape(wez))*kind(wez), 'WEZ', &
-        'allocate_energies')
+      call memocc(i_stat, product(shape(wez))*kind(wez), 'WEZ', 'allocate_energies')
       wez = (0.e0_dp, 0.e0_dp)
     else
       if (allocated(ez)) then
@@ -1014,9 +947,7 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_relativistic(flag, krel, irm, naez, natyp, zrel, jwsrel, &
-    irshift, vtrel, btrel, rmrel, drdirel, r2drdirel, qmgam, qmgamtab, &
-    qmphitab, qmtettab)
+  subroutine allocate_relativistic(flag, krel, irm, naez, natyp, zrel, jwsrel, irshift, vtrel, btrel, rmrel, drdirel, r2drdirel, qmgam, qmgamtab, qmphitab, qmtettab)
 
     implicit none
 
@@ -1026,18 +957,18 @@ contains
     integer, intent (in) :: naez   ! < number of atoms in unit cell
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
     integer, dimension (:), allocatable, intent (inout) :: zrel ! < atomic
-                                                                ! number (cast
-                                                                ! integer)
+    ! number (cast
+    ! integer)
     integer, dimension (:), allocatable, intent (inout) :: jwsrel ! < index of
-                                                                  ! the WS
-                                                                  ! radius
+    ! the WS
+    ! radius
     integer, dimension (:), allocatable, intent (inout) :: irshift ! < shift
-                                                                   ! of the
-                                                                   ! REL
-                                                                   ! radial
-                                                                   ! mesh with
-                                                                   ! respect
-                                                                   ! no NREL
+    ! of the
+    ! REL
+    ! radial
+    ! mesh with
+    ! respect
+    ! no NREL
     real (kind=dp), dimension (:), allocatable, intent (inout) :: qmgam
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: vtrel
     ! < potential (spherical part)
@@ -1058,52 +989,40 @@ contains
 
     if (flag>0) then
       allocate (vtrel(irm*krel+(1-krel),natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(vtrel))*kind(vtrel), 'VTREL', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(vtrel))*kind(vtrel), 'VTREL', 'allocate_relativistic')
       vtrel = 0.e0_dp
       allocate (btrel(irm*krel+(1-krel),natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(btrel))*kind(btrel), 'BTREL', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(btrel))*kind(btrel), 'BTREL', 'allocate_relativistic')
       btrel = 0.e0_dp
       allocate (drdirel(irm*krel+(1-krel),natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(drdirel))*kind(drdirel), 'DRDIREL', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(drdirel))*kind(drdirel), 'DRDIREL', 'allocate_relativistic')
       drdirel = 0.e0_dp
       allocate (r2drdirel(irm*krel+(1-krel),natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(r2drdirel))*kind(r2drdirel), &
-        'R2DRDIREL', 'allocate_relativistic')
+      call memocc(i_stat, product(shape(r2drdirel))*kind(r2drdirel), 'R2DRDIREL', 'allocate_relativistic')
       r2drdirel = 0.e0_dp
       allocate (rmrel(irm*krel+(1-krel),natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(rmrel))*kind(rmrel), 'RMREL', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(rmrel))*kind(rmrel), 'RMREL', 'allocate_relativistic')
       rmrel = 0.e0_dp
       allocate (irshift(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(irshift))*kind(irshift), 'IRSHIFT', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(irshift))*kind(irshift), 'IRSHIFT', 'allocate_relativistic')
       irshift = 0
       allocate (jwsrel(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(jwsrel))*kind(jwsrel), 'JWSREL', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(jwsrel))*kind(jwsrel), 'JWSREL', 'allocate_relativistic')
       jwsrel = 0
       allocate (zrel(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(zrel))*kind(zrel), 'ZREL', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(zrel))*kind(zrel), 'ZREL', 'allocate_relativistic')
       zrel = 0
       allocate (qmgam(naez), stat=i_stat)
-      call memocc(i_stat, product(shape(qmgam))*kind(qmgam), 'QMGAM', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(qmgam))*kind(qmgam), 'QMGAM', 'allocate_relativistic')
       qmgam = 0.e0_dp
       allocate (qmgamtab(naez,3), stat=i_stat)
-      call memocc(i_stat, product(shape(qmgamtab))*kind(qmgamtab), 'QMGAMTAB', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(qmgamtab))*kind(qmgamtab), 'QMGAMTAB', 'allocate_relativistic')
       qmgamtab = 0.e0_dp
       allocate (qmphitab(naez,3), stat=i_stat)
-      call memocc(i_stat, product(shape(qmphitab))*kind(qmphitab), 'QMPHITAB', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(qmphitab))*kind(qmphitab), 'QMPHITAB', 'allocate_relativistic')
       qmphitab = 0.e0_dp
       allocate (qmtettab(naez,3), stat=i_stat)
-      call memocc(i_stat, product(shape(qmtettab))*kind(qmtettab), 'QMTETTAB', &
-        'allocate_relativistic')
+      call memocc(i_stat, product(shape(qmtettab))*kind(qmtettab), 'QMTETTAB', 'allocate_relativistic')
       qmtettab = 0.e0_dp
 
     else
@@ -1183,8 +1102,7 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_rel_transformations(flag, lmmaxd, nrrel, irrel, rc, &
-    crel, rrel, srrel)
+  subroutine allocate_rel_transformations(flag, lmmaxd, nrrel, irrel, rc, crel, rrel, srrel)
 
     implicit none
 
@@ -1201,8 +1119,7 @@ contains
     complex (kind=dp), dimension (:, :), allocatable, intent (inout) :: rrel
     ! < Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat.
     ! REAL spher. harm.
-    complex (kind=dp), dimension (:, :, :), allocatable, &
-      intent (inout) :: srrel
+    complex (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: srrel
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -1210,28 +1127,22 @@ contains
     if (flag>0) then
 
       allocate (rrel(lmmaxd,lmmaxd), stat=i_stat)
-      call memocc(i_stat, product(shape(rrel))*kind(rrel), 'RREL', &
-        'allocate_rel_transformations')
+      call memocc(i_stat, product(shape(rrel))*kind(rrel), 'RREL', 'allocate_rel_transformations')
       rrel = (0.e0_dp, 0.e0_dp)
       allocate (srrel(2,2,lmmaxd), stat=i_stat)
-      call memocc(i_stat, product(shape(srrel))*kind(srrel), 'SRREL', &
-        'allocate_rel_transformations')
+      call memocc(i_stat, product(shape(srrel))*kind(srrel), 'SRREL', 'allocate_rel_transformations')
       srrel = (0.e0_dp, 0.e0_dp)
       allocate (irrel(2,2,lmmaxd), stat=i_stat)
-      call memocc(i_stat, product(shape(irrel))*kind(irrel), 'IRREL', &
-        'allocate_rel_transformations')
+      call memocc(i_stat, product(shape(irrel))*kind(irrel), 'IRREL', 'allocate_rel_transformations')
       irrel = 0
       allocate (nrrel(2,lmmaxd), stat=i_stat)
-      call memocc(i_stat, product(shape(nrrel))*kind(nrrel), 'NRREL', &
-        'allocate_rel_transformations')
+      call memocc(i_stat, product(shape(nrrel))*kind(nrrel), 'NRREL', 'allocate_rel_transformations')
       nrrel = 0
       allocate (crel(lmmaxd,lmmaxd), stat=i_stat)
-      call memocc(i_stat, product(shape(crel))*kind(crel), 'CREL', &
-        'allocate_rel_transformations')
+      call memocc(i_stat, product(shape(crel))*kind(crel), 'CREL', 'allocate_rel_transformations')
       crel = (0.e0_dp, 0.e0_dp)
       allocate (rc(lmmaxd,lmmaxd), stat=i_stat)
-      call memocc(i_stat, product(shape(rc))*kind(rc), 'RC', &
-        'allocate_rel_transformations')
+      call memocc(i_stat, product(shape(rc))*kind(rc), 'RC', 'allocate_rel_transformations')
       rc = (0.e0_dp, 0.e0_dp)
     else
       if (allocated(rrel)) then
@@ -1280,16 +1191,15 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_clusters(flag, naez, lmax, ncleb, nclsd, nembd1, nsheld, &
-    naclsd, lmpot, natomimpd, nsh1, nsh2, nacls, nshell, atomimp, atom, ezoa, &
-    icleb, jend, ratom, rclsimp, cmomhost, rcls)
+  subroutine allocate_clusters(flag, naez, lmax, ncleb, nclsd, nembd1, nsheld, naclsd, lmpot, natomimpd, nsh1, nsh2, nacls, nshell, atomimp, atom, ezoa, icleb, jend, ratom, &
+    rclsimp, cmomhost, rcls)
 
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: naez   ! < number of atoms in unit cell
     integer, intent (in) :: lmax   ! < Maximum l component in wave function
-                                   ! expansion
+    ! expansion
     integer, intent (in) :: ncleb
     integer, intent (in) :: nclsd
     integer, intent (in) :: nembd1
@@ -1298,47 +1208,47 @@ contains
     integer, intent (in) :: lmpot
     integer, intent (in) :: natomimpd
     integer, dimension (:), allocatable, intent (inout) :: nsh1 ! <
-                                                                ! Corresponding
-                                                                ! index of the
-                                                                ! sites I/J in
-                                                                ! (NSH1/2) in
-                                                                ! the unit
-                                                                ! cell in a
-                                                                ! shell
+    ! Corresponding
+    ! index of the
+    ! sites I/J in
+    ! (NSH1/2) in
+    ! the unit
+    ! cell in a
+    ! shell
     integer, dimension (:), allocatable, intent (inout) :: nsh2 ! <
-                                                                ! Corresponding
-                                                                ! index of the
-                                                                ! sites I/J in
-                                                                ! (NSH1/2) in
-                                                                ! the unit
-                                                                ! cell in a
-                                                                ! shell
+    ! Corresponding
+    ! index of the
+    ! sites I/J in
+    ! (NSH1/2) in
+    ! the unit
+    ! cell in a
+    ! shell
     integer, dimension (:), allocatable, intent (inout) :: nacls ! < Number of
-                                                                 ! atoms in
-                                                                 ! cluster
+    ! atoms in
+    ! cluster
     integer, dimension (:), allocatable, intent (inout) :: nshell ! < Index of
-                                                                  ! atoms/pairs
-                                                                  ! per shell
-                                                                  ! (ij-pairs);
-                                                                  ! nshell(0)
-                                                                  ! = number
-                                                                  ! of shells
+    ! atoms/pairs
+    ! per shell
+    ! (ij-pairs);
+    ! nshell(0)
+    ! = number
+    ! of shells
     integer, dimension (:), allocatable, intent (inout) :: atomimp
     integer, dimension (:, :), allocatable, intent (inout) :: atom ! < Atom at
-                                                                   ! site in
-                                                                   ! cluster
+    ! site in
+    ! cluster
     integer, dimension (:, :), allocatable, intent (inout) :: ezoa ! < EZ of
-                                                                   ! atom at
-                                                                   ! site in
-                                                                   ! cluster
+    ! atom at
+    ! site in
+    ! cluster
     integer, dimension (:, :), allocatable, intent (inout) :: icleb ! <
-                                                                    ! Pointer
-                                                                    ! array
+    ! Pointer
+    ! array
     integer, dimension (:, :, :), allocatable, intent (inout) :: jend ! <
-                                                                      ! Pointer
-                                                                      ! array
-                                                                      ! for
-                                                                      ! icleb()
+    ! Pointer
+    ! array
+    ! for
+    ! icleb()
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: ratom
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rclsimp
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cmomhost
@@ -1351,56 +1261,43 @@ contains
     if (flag>0) then
 
       allocate (atom(naclsd,naez+(nembd1-1)), stat=i_stat)
-      call memocc(i_stat, product(shape(atom))*kind(atom), 'ATOM', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(atom))*kind(atom), 'ATOM', 'allocate_clusters')
       atom = 0
       allocate (ratom(3,nsheld), stat=i_stat)
-      call memocc(i_stat, product(shape(ratom))*kind(ratom), 'RATOM', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(ratom))*kind(ratom), 'RATOM', 'allocate_clusters')
       ratom = 0.e0_dp
       allocate (rcls(3,naclsd,nclsd), stat=i_stat)
-      call memocc(i_stat, product(shape(rcls))*kind(rcls), 'RCLS', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(rcls))*kind(rcls), 'RCLS', 'allocate_clusters')
       rcls = 0.e0_dp
       allocate (rclsimp(3,natomimpd), stat=i_stat)
-      call memocc(i_stat, product(shape(rclsimp))*kind(rclsimp), 'RCLSIMP', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(rclsimp))*kind(rclsimp), 'RCLSIMP', 'allocate_clusters')
       rclsimp = 0.e0_dp
       allocate (nacls(nclsd), stat=i_stat)
-      call memocc(i_stat, product(shape(nacls))*kind(nacls), 'NACLS', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(nacls))*kind(nacls), 'NACLS', 'allocate_clusters')
       nacls = 0
       allocate (ezoa(naclsd,naez+(nembd1-1)), stat=i_stat)
-      call memocc(i_stat, product(shape(ezoa))*kind(ezoa), 'EZOA', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(ezoa))*kind(ezoa), 'EZOA', 'allocate_clusters')
       ezoa = 0
       allocate (atomimp(natomimpd), stat=i_stat)
-      call memocc(i_stat, product(shape(atomimp))*kind(atomimp), 'ATOMIMP', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(atomimp))*kind(atomimp), 'ATOMIMP', 'allocate_clusters')
       atomimp = 0
       allocate (icleb(ncleb,4), stat=i_stat)
-      call memocc(i_stat, product(shape(icleb))*kind(icleb), 'ICLEB', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(icleb))*kind(icleb), 'ICLEB', 'allocate_clusters')
       icleb = 0
       allocate (nsh1(nsheld), stat=i_stat)
-      call memocc(i_stat, product(shape(nsh1))*kind(nsh1), 'NSH1', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(nsh1))*kind(nsh1), 'NSH1', 'allocate_clusters')
       nsh1 = 0
       allocate (nsh2(nsheld), stat=i_stat)
-      call memocc(i_stat, product(shape(nsh2))*kind(nsh2), 'NSH2', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(nsh2))*kind(nsh2), 'NSH2', 'allocate_clusters')
       nsh2 = 0
       allocate (nshell(0:nsheld), stat=i_stat)
-      call memocc(i_stat, product(shape(nshell))*kind(nshell), 'NSHELL', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(nshell))*kind(nshell), 'NSHELL', 'allocate_clusters')
       nshell = 0
       allocate (cmomhost(lmpot,nembd1), stat=i_stat)
-      call memocc(i_stat, product(shape(cmomhost))*kind(cmomhost), 'CMOMHOST', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(cmomhost))*kind(cmomhost), 'CMOMHOST', 'allocate_clusters')
       cmomhost = 0.e0_dp
       allocate (jend(lmpot,0:lmax,0:lmax), stat=i_stat)
-      call memocc(i_stat, product(shape(jend))*kind(jend), 'JEND', &
-        'allocate_clusters')
+      call memocc(i_stat, product(shape(jend))*kind(jend), 'JEND', 'allocate_clusters')
       jend = 0
 
     else
@@ -1485,8 +1382,7 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_expansion(flag, lm2d, irid, nfund, ntotd, ncleb, lassld, &
-    ncelld, nchebd, loflm, wg, cleb, yrg, thetas, thetasnew)
+  subroutine allocate_expansion(flag, lm2d, irid, nfund, ntotd, ncleb, lassld, ncelld, nchebd, loflm, wg, cleb, yrg, thetas, thetasnew)
 
     implicit none
 
@@ -1500,25 +1396,24 @@ contains
     integer, intent (in) :: ncelld
     integer, intent (in) :: nchebd
     integer, dimension (:), allocatable, intent (inout) :: loflm ! < l of
-                                                                 ! lm=(l,m)
-                                                                 ! (GAUNT)
+    ! lm=(l,m)
+    ! (GAUNT)
     real (kind=dp), dimension (:), allocatable, intent (inout) :: wg ! <
-                                                                     ! Integr.
-                                                                     ! weights
-                                                                     ! for
-                                                                     ! Legendre
-                                                                     ! polynomials
+    ! Integr.
+    ! weights
+    ! for
+    ! Legendre
+    ! polynomials
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cleb ! <
-                                                                          ! GAUNT
-                                                                          ! coefficients
-                                                                          ! (GAUNT)
+    ! GAUNT
+    ! coefficients
+    ! (GAUNT)
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: yrg
     ! < Spherical harmonics (GAUNT2)
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: thetas
     ! < shape function THETA=0 outer space THETA =1 inside WS cell in
     ! spherical harmonics expansion
-    real (kind=dp), dimension (:, :, :), allocatable, &
-      intent (inout) :: thetasnew
+    real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: thetasnew
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -1526,28 +1421,22 @@ contains
     if (flag>0) then
 
       allocate (wg(lassld), stat=i_stat)
-      call memocc(i_stat, product(shape(wg))*kind(wg), 'WG', &
-        'allocate_expansion')
+      call memocc(i_stat, product(shape(wg))*kind(wg), 'WG', 'allocate_expansion')
       wg = 0.e0_dp
       allocate (yrg(lassld,0:lassld,0:lassld), stat=i_stat)
-      call memocc(i_stat, product(shape(yrg))*kind(yrg), 'YRG', &
-        'allocate_expansion')
+      call memocc(i_stat, product(shape(yrg))*kind(yrg), 'YRG', 'allocate_expansion')
       yrg = 0.e0_dp
       allocate (thetas(irid,nfund,ncelld), stat=i_stat)
-      call memocc(i_stat, product(shape(thetas))*kind(thetas), 'THETAS', &
-        'allocate_expansion')
+      call memocc(i_stat, product(shape(thetas))*kind(thetas), 'THETAS', 'allocate_expansion')
       thetas = 0.e0_dp
       allocate (thetasnew(ntotd*(nchebd+1),nfund,ncelld), stat=i_stat)
-      call memocc(i_stat, product(shape(thetasnew))*kind(thetasnew), &
-        'THETASNEW', 'allocate_expansion')
+      call memocc(i_stat, product(shape(thetasnew))*kind(thetasnew), 'THETASNEW', 'allocate_expansion')
       thetasnew = 0.e0_dp
       allocate (cleb(ncleb,2), stat=i_stat)
-      call memocc(i_stat, product(shape(cleb))*kind(cleb), 'CLEB', &
-        'allocate_expansion')
+      call memocc(i_stat, product(shape(cleb))*kind(cleb), 'CLEB', 'allocate_expansion')
       cleb = 0.e0_dp
       allocate (loflm(lm2d), stat=i_stat)
-      call memocc(i_stat, product(shape(loflm))*kind(loflm), 'LOFLM', &
-        'allocate_expansion')
+      call memocc(i_stat, product(shape(loflm))*kind(loflm), 'LOFLM', 'allocate_expansion')
       loflm = 0
 
     else
@@ -1605,21 +1494,21 @@ contains
     integer, intent (in) :: irm
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
     real (kind=dp), dimension (:), allocatable, intent (inout) :: a ! <
-                                                                    ! Constants
-                                                                    ! for
-                                                                    ! exponential
-                                                                    ! R mesh
+    ! Constants
+    ! for
+    ! exponential
+    ! R mesh
     real (kind=dp), dimension (:), allocatable, intent (inout) :: b
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rmesh ! <
-                                                                       ! Radial
-                                                                       ! mesh
-                                                                       ! ( in
-                                                                       ! units
-                                                                       ! a
-                                                                       ! Bohr)
+    ! Radial
+    ! mesh
+    ! ( in
+    ! units
+    ! a
+    ! Bohr)
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: drdi ! <
-                                                                          ! Derivative
-                                                                          ! dr/di
+    ! Derivative
+    ! dr/di
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -1627,8 +1516,7 @@ contains
     if (flag>0) then
 
       allocate (drdi(irm,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(drdi))*kind(drdi), 'DRDI', &
-        'allocate_mesh')
+      call memocc(i_stat, product(shape(drdi))*kind(drdi), 'DRDI', 'allocate_mesh')
       drdi = 0.e0_dp
       allocate (rmesh(irm,natyp), stat=i_stat)
       call memocc(i_stat, product(shape(rmesh))*kind(rmesh), 'RMESH', 'allocate_mesh')
@@ -1677,8 +1565,7 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_pannels(flag, natyp, ntotd, ipan, npan_tot, npan_eq_at, &
-    npan_log_at, ipan_intervall, rpan_intervall)
+  subroutine allocate_pannels(flag, natyp, ntotd, ipan, npan_tot, npan_eq_at, npan_log_at, ipan_intervall, rpan_intervall)
 
     implicit none
 
@@ -1686,42 +1573,35 @@ contains
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
     integer, intent (in) :: ntotd
     integer, dimension (:), allocatable, intent (inout) :: ipan ! < Number of
-                                                                ! panels in
-                                                                ! non-MT-region
+    ! panels in
+    ! non-MT-region
     integer, dimension (:), allocatable, intent (inout) :: npan_tot
     integer, dimension (:), allocatable, intent (inout) :: npan_eq_at
     integer, dimension (:), allocatable, intent (inout) :: npan_log_at
     integer, dimension (:, :), allocatable, intent (inout) :: ipan_intervall
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: &
-      rpan_intervall
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rpan_intervall
 
     ! .. Local variables
     integer :: i_stat, i_all
 
     if (flag>0) then
       allocate (ipan(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(ipan))*kind(ipan), 'IPAN', &
-        'allocate_pannels')
+      call memocc(i_stat, product(shape(ipan))*kind(ipan), 'IPAN', 'allocate_pannels')
       ipan = 0
       allocate (npan_tot(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(npan_tot))*kind(npan_tot), 'NPAN_TOT', &
-        'allocate_pannels')
+      call memocc(i_stat, product(shape(npan_tot))*kind(npan_tot), 'NPAN_TOT', 'allocate_pannels')
       npan_tot = 0
       allocate (npan_eq_at(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(npan_eq_at))*kind(npan_eq_at), &
-        'NPAN_EQ_AT', 'allocate_pannels')
+      call memocc(i_stat, product(shape(npan_eq_at))*kind(npan_eq_at), 'NPAN_EQ_AT', 'allocate_pannels')
       npan_eq_at = 0
       allocate (npan_log_at(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(npan_log_at))*kind(npan_log_at), &
-        'NPAN_LOG_AT', 'allocate_pannels')
+      call memocc(i_stat, product(shape(npan_log_at))*kind(npan_log_at), 'NPAN_LOG_AT', 'allocate_pannels')
       npan_log_at = 0
       allocate (rpan_intervall(0:ntotd,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(rpan_intervall))*kind(rpan_intervall), &
-        'RPAN_INTERVALL', 'allocate_pannels')
+      call memocc(i_stat, product(shape(rpan_intervall))*kind(rpan_intervall), 'RPAN_INTERVALL', 'allocate_pannels')
       rpan_intervall = 0.e0_dp
       allocate (ipan_intervall(0:ntotd,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(ipan_intervall))*kind(ipan_intervall), &
-        'IPAN_INTERVALL', 'allocate_pannels')
+      call memocc(i_stat, product(shape(ipan_intervall))*kind(ipan_intervall), 'IPAN_INTERVALL', 'allocate_pannels')
       ipan_intervall = 0
 
     else
@@ -1770,10 +1650,8 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_misc(flag, nr, irm, irid, lmax, naez, natyp, nfund, &
-    nrefd, iemxd, ntotd, nsheld, lmmaxd, nembd1, nchebd, ncelld, lmxspd, &
-    nspindd, nsymaxd, nprincd, ifunm, ifunm1, icheck, vref, s, rr, dror, rnew, &
-    rs, rrot, thesme, dsymll, dsymll1, lefttinvll, righttinvll)
+  subroutine allocate_misc(flag, nr, irm, irid, lmax, naez, natyp, nfund, nrefd, iemxd, ntotd, nsheld, lmmaxd, nembd1, nchebd, ncelld, lmxspd, nspindd, nsymaxd, nprincd, ifunm, &
+    ifunm1, icheck, vref, s, rr, dror, rnew, rs, rrot, thesme, dsymll, dsymll1, lefttinvll, righttinvll)
 
     implicit none
 
@@ -1782,7 +1660,7 @@ contains
     integer, intent (in) :: irm
     integer, intent (in) :: irid
     integer, intent (in) :: lmax   ! < Maximum l component in wave function
-                                   ! expansion
+    ! expansion
     integer, intent (in) :: naez   ! < number of atoms in unit cell
     integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
     integer, intent (in) :: nfund
@@ -1804,26 +1682,22 @@ contains
     real (kind=dp), dimension (:), allocatable, intent (inout) :: vref
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: s
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rr ! <
-                                                                        ! Set
-                                                                        ! of
-                                                                        ! real
-                                                                        ! space
-                                                                        ! vectors
-                                                                        ! (in
-                                                                        ! a.u.)
+    ! Set
+    ! of
+    ! real
+    ! space
+    ! vectors
+    ! (in
+    ! a.u.)
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: dror
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rnew
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: rs
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: rrot
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: thesme
-    complex (kind=dp), dimension (:, :, :), allocatable, &
-      intent (inout) :: dsymll
-    complex (kind=dp), dimension (:, :, :), allocatable, &
-      intent (inout) :: dsymll1
-    complex (kind=dp), dimension (:, :, :, :, :), allocatable, &
-      intent (inout) :: lefttinvll
-    complex (kind=dp), dimension (:, :, :, :, :), allocatable, &
-      intent (inout) :: righttinvll
+    complex (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: dsymll
+    complex (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: dsymll1
+    complex (kind=dp), dimension (:, :, :, :, :), allocatable, intent (inout) :: lefttinvll
+    complex (kind=dp), dimension (:, :, :, :, :), allocatable, intent (inout) :: righttinvll
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -1833,58 +1707,46 @@ contains
       call memocc(i_stat, product(shape(rr))*kind(rr), 'RR', 'allocate_misc')
       rr = 0.e0_dp
       allocate (vref(nrefd), stat=i_stat)
-      call memocc(i_stat, product(shape(vref))*kind(vref), 'VREF', &
-        'allocate_misc')
+      call memocc(i_stat, product(shape(vref))*kind(vref), 'VREF', 'allocate_misc')
       vref = 0.e0_dp
       allocate (dror(irm,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(dror))*kind(dror), 'DROR', &
-        'allocate_misc')
+      call memocc(i_stat, product(shape(dror))*kind(dror), 'DROR', 'allocate_misc')
       dror = 0.e0_dp
       allocate (s(0:lmax,natyp), stat=i_stat)
       call memocc(i_stat, product(shape(s))*kind(s), 'S', 'allocate_misc')
       s = 0.e0_dp
       allocate (rrot(48,3,nsheld), stat=i_stat)
-      call memocc(i_stat, product(shape(rrot))*kind(rrot), 'RROT', &
-        'allocate_misc')
+      call memocc(i_stat, product(shape(rrot))*kind(rrot), 'RROT', 'allocate_misc')
       rrot = 0.e0_dp
       allocate (ifunm(natyp,lmxspd), stat=i_stat)
-      call memocc(i_stat, product(shape(ifunm))*kind(ifunm), 'IFUNM', &
-        'allocate_misc')
+      call memocc(i_stat, product(shape(ifunm))*kind(ifunm), 'IFUNM', 'allocate_misc')
       ifunm = 0
       allocate (ifunm1(lmxspd,natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(ifunm1))*kind(ifunm1), 'IFUNM1', &
-        'allocate_misc')
+      call memocc(i_stat, product(shape(ifunm1))*kind(ifunm1), 'IFUNM1', 'allocate_misc')
       ifunm1 = 0
       allocate (rs(irm,0:lmax,natyp), stat=i_stat)
       call memocc(i_stat, product(shape(rs))*kind(rs), 'RS', 'allocate_misc')
       rs = 0.e0_dp
       allocate (thesme(irid,nfund,ncelld), stat=i_stat)
-      call memocc(i_stat, product(shape(thesme))*kind(thesme), 'THESME', &
-        'allocate_misc')
+      call memocc(i_stat, product(shape(thesme))*kind(thesme), 'THESME', 'allocate_misc')
       thesme = 0.e0_dp
       allocate (rnew(ntotd*(nchebd+1),natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(rnew))*kind(rnew), 'RNEW', &
-        'allocate_misc')
+      call memocc(i_stat, product(shape(rnew))*kind(rnew), 'RNEW', 'allocate_misc')
       rnew = 0.e0_dp
       allocate (dsymll(lmmaxd,lmmaxd,nsymaxd), stat=i_stat)
-      call memocc(i_stat, product(shape(dsymll))*kind(dsymll), 'DSYMLL', &
-        'allocate_misc')
+      call memocc(i_stat, product(shape(dsymll))*kind(dsymll), 'DSYMLL', 'allocate_misc')
       dsymll = (0.e0_dp, 0.e0_dp)
       allocate (dsymll1(lmmaxd,lmmaxd,nsymaxd), stat=i_stat)
-      call memocc(i_stat, product(shape(dsymll1))*kind(dsymll1), 'DSYMLL1', &
-        'allocate_misc')
+      call memocc(i_stat, product(shape(dsymll1))*kind(dsymll1), 'DSYMLL1', 'allocate_misc')
       dsymll1 = (0.e0_dp, 0.e0_dp)
       allocate (icheck(naez/nprincd,naez/nprincd), stat=i_stat)
-      call memocc(i_stat, product(shape(icheck))*kind(icheck), 'ICHECK', &
-        'allocate_misc')
+      call memocc(i_stat, product(shape(icheck))*kind(icheck), 'ICHECK', 'allocate_misc')
       icheck = 0
       allocate (lefttinvll(lmmaxd,lmmaxd,nembd1,nspindd,iemxd), stat=i_stat)
-      call memocc(i_stat, product(shape(lefttinvll))*kind(lefttinvll), &
-        'LEFTTINVLL', 'allocate_misc')
+      call memocc(i_stat, product(shape(lefttinvll))*kind(lefttinvll), 'LEFTTINVLL', 'allocate_misc')
       lefttinvll = (0.e0_dp, 0.e0_dp)
       allocate (righttinvll(lmmaxd,lmmaxd,nembd1,nspindd,iemxd), stat=i_stat)
-      call memocc(i_stat, product(shape(righttinvll))*kind(righttinvll), &
-        'RIGHTTINVLL', 'allocate_misc')
+      call memocc(i_stat, product(shape(righttinvll))*kind(righttinvll), 'RIGHTTINVLL', 'allocate_misc')
       righttinvll = (0.e0_dp, 0.e0_dp)
 
     else
@@ -1980,9 +1842,8 @@ contains
   ! > Jonathan Chico
   ! > @date 19.12.2017
   ! ----------------------------------------------------------------------------
-  subroutine allocate_green(flag, naez, iemxd, ngshd, nsheld, lmpot, nofgijd, &
-    ish, jsh, kmesh, imaxsh, iqcalc, iofgij, jofgij, ijtabsh, ijtabsym, &
-    ijtabcalc, ijtabcalc_i, ilm_map, gsh)
+  subroutine allocate_green(flag, naez, iemxd, ngshd, nsheld, lmpot, nofgijd, ish, jsh, kmesh, imaxsh, iqcalc, iofgij, jofgij, ijtabsh, ijtabsym, ijtabcalc, ijtabcalc_i, ilm_map, &
+    gsh)
 
     implicit none
 
@@ -1999,67 +1860,67 @@ contains
     integer, dimension (:), allocatable, intent (inout) :: imaxsh
     integer, dimension (:), allocatable, intent (inout) :: iqcalc
     integer, dimension (:), allocatable, intent (inout) :: iofgij ! < Linear
-                                                                  ! pointers,
-                                                                  ! similar to
-                                                                  ! NSH1/NSH2
-                                                                  ! but giving
-                                                                  ! the actual
-                                                                  ! index of
-                                                                  ! sites I,J
-                                                                  ! =
-                                                                  ! 1,NATOMIMP
-                                                                  ! in the
-                                                                  ! cluster
+    ! pointers,
+    ! similar to
+    ! NSH1/NSH2
+    ! but giving
+    ! the actual
+    ! index of
+    ! sites I,J
+    ! =
+    ! 1,NATOMIMP
+    ! in the
+    ! cluster
     integer, dimension (:), allocatable, intent (inout) :: jofgij ! < Linear
-                                                                  ! pointers,
-                                                                  ! similar to
-                                                                  ! NSH1/NSH2
-                                                                  ! but giving
-                                                                  ! the actual
-                                                                  ! index of
-                                                                  ! sites I,J
-                                                                  ! =
-                                                                  ! 1,NATOMIMP
-                                                                  ! in the
-                                                                  ! cluster
+    ! pointers,
+    ! similar to
+    ! NSH1/NSH2
+    ! but giving
+    ! the actual
+    ! index of
+    ! sites I,J
+    ! =
+    ! 1,NATOMIMP
+    ! in the
+    ! cluster
     integer, dimension (:), allocatable, intent (inout) :: ijtabsh ! < Linear
-                                                                   ! pointer,
-                                                                   ! assigns
-                                                                   ! pair
-                                                                   ! (i,j) to
-                                                                   ! a shell
-                                                                   ! in the
-                                                                   ! array
-                                                                   ! GS(*,*,*,NSHELD)
+    ! pointer,
+    ! assigns
+    ! pair
+    ! (i,j) to
+    ! a shell
+    ! in the
+    ! array
+    ! GS(*,*,*,NSHELD)
     integer, dimension (:), allocatable, intent (inout) :: ijtabsym ! < Linear
-                                                                    ! pointer,
-                                                                    ! assigns
-                                                                    ! pair
-                                                                    ! (i,j) to
-                                                                    ! the
-                                                                    ! rotation
-                                                                    ! bringing
-                                                                    ! GS into
-                                                                    ! Gij
+    ! pointer,
+    ! assigns
+    ! pair
+    ! (i,j) to
+    ! the
+    ! rotation
+    ! bringing
+    ! GS into
+    ! Gij
     integer, dimension (:), allocatable, intent (inout) :: ijtabcalc ! <
-                                                                     ! Linear
-                                                                     ! pointer,
-                                                                     ! specifying
-                                                                     ! whether
-                                                                     ! the
-                                                                     ! block
-                                                                     ! (i,j)
-                                                                     ! has to
-                                                                     ! be
-                                                                     ! calculated
-                                                                     ! needs
-                                                                     ! set up
-                                                                     ! for
-                                                                     ! ICC=-1,
-                                                                     ! not
-                                                                     ! used
-                                                                     ! for
-                                                                     ! ICC=1
+    ! Linear
+    ! pointer,
+    ! specifying
+    ! whether
+    ! the
+    ! block
+    ! (i,j)
+    ! has to
+    ! be
+    ! calculated
+    ! needs
+    ! set up
+    ! for
+    ! ICC=-1,
+    ! not
+    ! used
+    ! for
+    ! ICC=1
     integer, dimension (:), allocatable, intent (inout) :: ijtabcalc_i
     integer, dimension (:, :), allocatable, intent (inout) :: ilm_map
     real (kind=dp), dimension (:), allocatable, intent (inout) :: gsh
@@ -2069,56 +1930,43 @@ contains
     if (flag>0) then
 
       allocate (gsh(ngshd), stat=i_stat)
-      call memocc(i_stat, product(shape(gsh))*kind(gsh), 'GSH', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(gsh))*kind(gsh), 'GSH', 'allocate_green')
       gsh = 0.e0_dp
       allocate (kmesh(iemxd), stat=i_stat)
-      call memocc(i_stat, product(shape(kmesh))*kind(kmesh), 'KMESH', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(kmesh))*kind(kmesh), 'KMESH', 'allocate_green')
       kmesh = 0
       allocate (ilm_map(ngshd,3), stat=i_stat)
-      call memocc(i_stat, product(shape(ilm_map))*kind(ilm_map), 'ILM_MAP', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(ilm_map))*kind(ilm_map), 'ILM_MAP', 'allocate_green')
       ilm_map = 0
       allocate (iqcalc(naez), stat=i_stat)
-      call memocc(i_stat, product(shape(iqcalc))*kind(iqcalc), 'IQCALC', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(iqcalc))*kind(iqcalc), 'IQCALC', 'allocate_green')
       iqcalc = 0
       allocate (jofgij(nofgijd), stat=i_stat)
-      call memocc(i_stat, product(shape(jofgij))*kind(jofgij), 'JOFGIJ', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(jofgij))*kind(jofgij), 'JOFGIJ', 'allocate_green')
       jofgij = 0
       allocate (iofgij(nofgijd), stat=i_stat)
-      call memocc(i_stat, product(shape(iofgij))*kind(iofgij), 'IOFGIJ', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(iofgij))*kind(iofgij), 'IOFGIJ', 'allocate_green')
       iofgij = 0
       allocate (imaxsh(0:lmpot), stat=i_stat)
-      call memocc(i_stat, product(shape(imaxsh))*kind(imaxsh), 'IMAXSH', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(imaxsh))*kind(imaxsh), 'IMAXSH', 'allocate_green')
       imaxsh = 0
       allocate (ijtabsh(nofgijd), stat=i_stat)
-      call memocc(i_stat, product(shape(ijtabsh))*kind(ijtabsh), 'IJTABSH', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(ijtabsh))*kind(ijtabsh), 'IJTABSH', 'allocate_green')
       ijtabsh = 0
       allocate (ijtabsym(nofgijd), stat=i_stat)
-      call memocc(i_stat, product(shape(ijtabsym))*kind(ijtabsym), 'IJTABSYM', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(ijtabsym))*kind(ijtabsym), 'IJTABSYM', 'allocate_green')
       ijtabsym = 0
       allocate (ijtabcalc(nofgijd), stat=i_stat)
-      call memocc(i_stat, product(shape(ijtabcalc))*kind(ijtabcalc), &
-        'IJTABCALC', 'allocate_green')
+      call memocc(i_stat, product(shape(ijtabcalc))*kind(ijtabcalc), 'IJTABCALC', 'allocate_green')
       ijtabcalc = 0
       allocate (ish(nsheld,nofgijd), stat=i_stat)
-      call memocc(i_stat, product(shape(ish))*kind(ish), 'ISH', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(ish))*kind(ish), 'ISH', 'allocate_green')
       ish = 0
       allocate (jsh(nsheld,nofgijd), stat=i_stat)
-      call memocc(i_stat, product(shape(jsh))*kind(jsh), 'JSH', &
-        'allocate_green')
+      call memocc(i_stat, product(shape(jsh))*kind(jsh), 'JSH', 'allocate_green')
       jsh = 0
       allocate (ijtabcalc_i(nofgijd), stat=i_stat)
-      call memocc(i_stat, product(shape(ijtabcalc_i))*kind(ijtabcalc_i), &
-        'IJTABCALC_I', 'allocate_green')
+      call memocc(i_stat, product(shape(ijtabcalc_i))*kind(ijtabcalc_i), 'IJTABCALC_I', 'allocate_green')
       ijtabcalc_i = 0
 
     else

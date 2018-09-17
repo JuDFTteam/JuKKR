@@ -1,799 +1,764 @@
 module mod_tbxccpljij
 
-use mod_DataTypes
+  use :: mod_datatypes
 
-IMPLICIT NONE
+  implicit none
 
-private
-public tbxccpljij
+  private
+  public :: tbxccpljij
 
 contains
 
 
-SUBROUTINE tbxccpljij(iftmat,ielast,ez,wez,nspin,ncpa,naez, natyp,  &
-    noq,itoq,iqat,nshell,natomimp,atomimp,ratom,  &
-    nofgij,nqcalc,iqcalc,ijtabcalc, ijtabsym,ijtabsh,ish,jsh,dsymll,iprint,  &
-    natypd,nsheld,lmmaxd,npol)
-!   ********************************************************************
-!   *                                                                  *
-!   *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
-!   *  according to  Lichtenstein et al. JMMM 67, 65 (1987)            *
-!   *                                                                  *
-!   *  adopted for TB-KKR code from Munich SPR-KKR package Sep 2004    *
-!   *                                                                  *
-!   *  for mpi-parallel version: moved energy loop from main1b into    *
-!   *   here.                                B. Zimmermann, Dez 2015   *
-!   *                                                                  *
-!   ********************************************************************
+  subroutine tbxccpljij(iftmat, ielast, ez, wez, nspin, ncpa, naez, natyp, noq, itoq, iqat, nshell, natomimp, atomimp, ratom, nofgij, nqcalc, iqcalc, ijtabcalc, ijtabsym, ijtabsh, &
+    ish, jsh, dsymll, iprint, natypd, nsheld, lmmaxd, npol)
+    ! ********************************************************************
+    ! *                                                                  *
+    ! *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
+    ! *  according to  Lichtenstein et al. JMMM 67, 65 (1987)            *
+    ! *                                                                  *
+    ! *  adopted for TB-KKR code from Munich SPR-KKR package Sep 2004    *
+    ! *                                                                  *
+    ! *  for mpi-parallel version: moved energy loop from main1b into    *
+    ! *   here.                                B. Zimmermann, Dez 2015   *
+    ! *                                                                  *
+    ! ********************************************************************
 
 #ifdef CPP_MPI
-use mpi
+    use :: mpi
 #endif
-use mod_types, only: t_tgmat, t_mpi_c_grid, t_cpa
-use mod_mympi, only: myrank, master
-use mod_version_info
-use mod_md5sums
-use mod_cinit
-use mod_cmatmul
-use mod_initabjij
-use mod_cmatstr
-use mod_rotatespinframe, only: rotatematrix
+    use :: mod_types, only: t_tgmat, t_mpi_c_grid, t_cpa
+    use :: mod_mympi, only: myrank, master
+    use :: mod_version_info
+    use :: mod_md5sums
+    use :: mod_cinit
+    use :: mod_cmatmul
+    use :: mod_initabjij
+    use :: mod_cmatstr
+    use :: mod_rotatespinframe, only: rotatematrix
 
-IMPLICIT NONE
-!.
-!. Parameters
-complex (kind=dp) CONE,CZERO
-PARAMETER ( CONE  = (1D0,0D0) )
-PARAMETER ( CZERO = (0D0,0D0) )
-INTEGER NIJMAX
-PARAMETER ( NIJMAX = 200 )
-!.
-!. Scalar arguments
-INTEGER IELAST,NSPIN,IFTMAT,IPRINT,LMMAXD,NAEZ,NATOMIMP, &
-        NATYP,NATYPD,NCPA,NOFGIJ,NQCALC,NSHELD,NPOL
-complex (kind=dp) EZ(*), WEZ(*)
-!.
-!. Array arguments
-INTEGER ATOMIMP(*),IJTABCALC(*),IJTABSH(*),IJTABSYM(*), &
-        IQAT(*),IQCALC(*),ISH(NSHELD,*),ITOQ(NATYPD,*), &
-        JSH(NSHELD,*),NOQ(*),NSHELL(0:NSHELD)
-complex (kind=dp) DSYMLL(LMMAXD,LMMAXD,*)
-real (kind=dp) RATOM(3,*)
-!.
-!. Local scalars
-INTEGER I1,IA,IFGMAT,IFMCPA,IQ,IREC,ISPIN,ISYM,IT,J1,JA, &
-        JQ,JT,L1,LM1,LM2,LSTR,NS,NSEFF,NSHCALC,NSMAX,NTCALC, &
-        IE, ie_end, ie_num
+    implicit none
+    ! .
+    ! . Parameters
+    complex (kind=dp) :: cone, czero
+    parameter (cone=(1d0,0d0))
+    parameter (czero=(0d0,0d0))
+    integer :: nijmax
+    parameter (nijmax=200)
+    ! .
+    ! . Scalar arguments
+    integer :: ielast, nspin, iftmat, iprint, lmmaxd, naez, natomimp, natyp, natypd, ncpa, nofgij, nqcalc, nsheld, npol
+    complex (kind=dp) :: ez(*), wez(*)
+    ! .
+    ! . Array arguments
+    integer :: atomimp(*), ijtabcalc(*), ijtabsh(*), ijtabsym(*), iqat(*), iqcalc(*), ish(nsheld, *), itoq(natypd, *), jsh(nsheld, *), noq(*), nshell(0:nsheld)
+    complex (kind=dp) :: dsymll(lmmaxd, lmmaxd, *)
+    real (kind=dp) :: ratom(3, *)
+    ! .
+    ! . Local scalars
+    integer :: i1, ia, ifgmat, ifmcpa, iq, irec, ispin, isym, it, j1, ja, jq, jt, l1, lm1, lm2, lstr, ns, nseff, nshcalc, nsmax, ntcalc, ie, ie_end, ie_num
 #ifdef CPP_MPI
-INTEGER ie_start, IERR
+    integer :: ie_start, ierr
 #endif
-complex (kind=dp) CSUM, WGTEMP
+    complex (kind=dp) :: csum, wgtemp
 #ifdef CPP_MPI
-complex (kind=dp) XINTEGDTMP
+    complex (kind=dp) :: xintegdtmp
 #endif
-CHARACTER (len=8) :: FMT1
-CHARACTER (len=22) :: FMT2
-CHARACTER (len=8) :: JFBAS
-CHARACTER (len=13) :: JFNAM
-CHARACTER (len=26) :: JFNAM2
-CHARACTER (len=80) :: STRBAR,STRTMP
-!.
-!. Local arrays
-INTEGER NIJCALC(:),KIJSH(:,:),JIJDONE(:,:,:)
-complex (kind=dp) JXCIJINT(:,:,:)
+    character (len=8) :: fmt1
+    character (len=22) :: fmt2
+    character (len=8) :: jfbas
+    character (len=13) :: jfnam
+    character (len=26) :: jfnam2
+    character (len=80) :: strbar, strtmp
+    ! .
+    ! . Local arrays
+    integer :: nijcalc(:), kijsh(:, :), jijdone(:, :, :)
+    complex (kind=dp) :: jxcijint(:, :, :)
 #ifndef CPP_MPI
-complex (kind=dp), ALLOCATABLE :: XINTEGD(:,:,:)
+    complex (kind=dp), allocatable :: xintegd(:, :, :)
 #else
-complex (kind=dp), ALLOCATABLE :: csum_store(:,:,:,:), &
-                               csum_store2(:,:,:,:)
+    complex (kind=dp), allocatable :: csum_store(:, :, :, :), csum_store2(:, :, :, :)
 #endif
-ALLOCATABLE NIJCALC,JIJDONE,KIJSH,JXCIJINT
-complex (kind=dp) DELTSST(LMMAXD,LMMAXD,NATYP), &
-               DMATTS(LMMAXD,LMMAXD,NATYP,NSPIN), &
-               DTILTS(LMMAXD,LMMAXD,NATYP,NSPIN), &
-               GMIJ(LMMAXD,LMMAXD), &
-               GMJI(LMMAXD,LMMAXD),GS(LMMAXD,LMMAXD,NSPIN), &
-               TSST(LMMAXD,LMMAXD,NATYP,2),W1(LMMAXD,LMMAXD), &
-               W2(LMMAXD,LMMAXD),W3(LMMAXD,LMMAXD)
-real (kind=dp) RSH(NSHELD),PI
-INTEGER JTAUX(NATYP)
-!..
-!.. Intrinsic Functions ..
-INTRINSIC MAX,SQRT
-!..
-!.. External Subroutines ..
-LOGICAL TEST
-EXTERNAL TEST
-!..
-!.. Save statement
-SAVE IFGMAT,IFMCPA,JIJDONE,JXCIJINT,KIJSH,NIJCALC
+    allocatable :: nijcalc, jijdone, kijsh, jxcijint
+    complex (kind=dp) :: deltsst(lmmaxd, lmmaxd, natyp), dmatts(lmmaxd, lmmaxd, natyp, nspin), dtilts(lmmaxd, lmmaxd, natyp, nspin), gmij(lmmaxd, lmmaxd), gmji(lmmaxd, lmmaxd), &
+      gs(lmmaxd, lmmaxd, nspin), tsst(lmmaxd, lmmaxd, natyp, 2), w1(lmmaxd, lmmaxd), w2(lmmaxd, lmmaxd), w3(lmmaxd, lmmaxd)
+    real (kind=dp) :: rsh(nsheld), pi
+    integer :: jtaux(natyp)
+    ! ..
+    ! .. Intrinsic Functions ..
+    intrinsic :: max, sqrt
+    ! ..
+    ! .. External Subroutines ..
+    logical :: test
+    external :: test
+    ! ..
+    ! .. Save statement
+    save :: ifgmat, ifmcpa, jijdone, jxcijint, kijsh, nijcalc
 #ifndef CPP_MPI
-SAVE XINTEGD
+    save :: xintegd
 #endif
-SAVE NSHCALC,NSMAX
-!..
-!.. Data statement
-DATA JFBAS/'Jij.atom'/
-DATA PI /3.14159265358979312D0/
-!     ..
-! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-! ==>                   -- initialisation step --                    <==
-! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-!          open(22,STATUS='unknown',FILE='integrand1.dat',
-!     &                         FORM='formatted')
-!           open(44,STATUS='unknown',FILE='integrand2.dat',
-!     &                         FORM='formatted')
-!      write(*,*) 'test brahim 2'
+    save :: nshcalc, nsmax
+    ! ..
+    ! .. Data statement
+    data jfbas/'Jij.atom'/
+    data pi/3.14159265358979312d0/
+    ! ..
+    ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+    ! ==>                   -- initialisation step --                    <==
+    ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+    ! open(22,STATUS='unknown',FILE='integrand1.dat',
+    ! &                         FORM='formatted')
+    ! open(44,STATUS='unknown',FILE='integrand2.dat',
+    ! &                         FORM='formatted')
+    ! write(*,*) 'test brahim 2'
 
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-IF(iprint>0)  WRITE(1337,99000)
+    ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+    if (iprint>0) write (1337, 100)
 #ifdef CPP_MPI
-! this part of the code does not take much time, thus only the energy
-! loop is parallel and not the second level over atoms, only the master
-! in every energy loop does the calculation of the Jijs
-IF(t_mpi_c_grid%myrank_ie==0) THEN
-  
-  ie_end = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
+    ! this part of the code does not take much time, thus only the energy
+    ! loop is parallel and not the second level over atoms, only the master
+    ! in every energy loop does the calculation of the Jijs
+    if (t_mpi_c_grid%myrank_ie==0) then
+
+      ie_end = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
 #else
-  ie_end = ielast
+      ie_end = ielast
 #endif
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
+      ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-!         open(22,STATUS='unknown',FILE='integrand.dat',
-!     &                         FORM='formatted')
-ifgmat = iftmat + 1
-ifmcpa = ifgmat + 1
-nsmax = MAX(naez,natyp)
-nshcalc = nshell(0) - nsmax
-!ccc         IF ( NSHLOC.LT.NSHELD) STOP ' NSHLOC'
-!ccc         IF ( NTLOC.LT.NATYP) STOP ' NTLOC'
+      ! open(22,STATUS='unknown',FILE='integrand.dat',
+      ! &                         FORM='formatted')
+      ifgmat = iftmat + 1
+      ifmcpa = ifgmat + 1
+      nsmax = max(naez, natyp)
+      nshcalc = nshell(0) - nsmax
+      ! ccc         IF ( NSHLOC.LT.NSHELD) STOP ' NSHLOC'
+      ! ccc         IF ( NTLOC.LT.NATYP) STOP ' NTLOC'
 
-allocate (kijsh(nijmax,nshell(0)),stat=lm1)
-IF ( lm1 /= 0 ) THEN
-  WRITE(6,99001) 'KIJSH'
-  STOP
-endif
-allocate (nijcalc(nshell(0)),jijdone(natyp,natyp,nshell(0)), stat=lm1)
-IF ( lm1 /= 0 ) THEN
-  WRITE(6,99001) 'JIJDONE/NIJCALC'
-  STOP
-endif
+      allocate (kijsh(nijmax,nshell(0)), stat=lm1)
+      if (lm1/=0) then
+        write (6, 110) 'KIJSH'
+        stop
+      end if
+      allocate (nijcalc(nshell(0)), jijdone(natyp,natyp,nshell(0)), stat=lm1)
+      if (lm1/=0) then
+        write (6, 110) 'JIJDONE/NIJCALC'
+        stop
+      end if
 
-!        The array CSUM_STORE could become quite large -> store to MPI-IO-file in future????
-!        Only allocate it for MPI-usage. If MPI is not used, two smaller array XINTEGD arrays is needed.
+      ! The array CSUM_STORE could become quite large -> store to MPI-IO-file in future????
+      ! Only allocate it for MPI-usage. If MPI is not used, two smaller array XINTEGD arrays is needed.
 #ifdef CPP_MPI
-allocate (csum_store(natyp,natyp,nshell(0),ielast),stat=lm1)
-IF ( lm1 /= 0 ) THEN
-  WRITE(6,99001) 'csum_store'
-  STOP
-endif
+      allocate (csum_store(natyp,natyp,nshell(0),ielast), stat=lm1)
+      if (lm1/=0) then
+        write (6, 110) 'csum_store'
+        stop
+      end if
 #else
-!        ALLOCATE (XINTEGD1(NATYP,NATYP,IELAST),STAT=LM1)
-allocate (xintegd(natyp,natyp,nshell(0)),stat=lm1)
-IF ( lm1 /= 0 ) THEN
-  WRITE(6,99001) 'XINTEGD'
-  STOP
-endif
+      ! ALLOCATE (XINTEGD1(NATYP,NATYP,IELAST),STAT=LM1)
+      allocate (xintegd(natyp,natyp,nshell(0)), stat=lm1)
+      if (lm1/=0) then
+        write (6, 110) 'XINTEGD'
+        stop
+      end if
 #endif
-allocate (jxcijint(natyp,natyp,nshell(0)),stat=lm1)
-IF ( lm1 /= 0 ) THEN
-  WRITE(6,99001) 'JXCIJINT'
-  STOP
-endif
-!..................
+      allocate (jxcijint(natyp,natyp,nshell(0)), stat=lm1)
+      if (lm1/=0) then
+        write (6, 110) 'JXCIJINT'
+        stop
+      end if
+      ! ..................
 #ifdef CPP_MPI
-DO ie=1,ielast
-  DO ns = 1,nshell(0)
-    DO jt = 1,natyp
-      DO it = 1,natyp
-        csum_store(it,jt,ns,ie)= czero
-      END DO
-    END DO
-  END DO
-END DO!IE
+      do ie = 1, ielast
+        do ns = 1, nshell(0)
+          do jt = 1, natyp
+            do it = 1, natyp
+              csum_store(it, jt, ns, ie) = czero
+            end do
+          end do
+        end do
+      end do                       ! IE
 #else
-DO ns = 1,nshell(0)
-  DO jt = 1,natyp
-    DO it = 1,natyp
-      xintegd(it,jt,ns)= czero
-!                  XINTEGD1(IT,JT,IE)= CZERO
-    END DO
-  END DO
-END DO
+      do ns = 1, nshell(0)
+        do jt = 1, natyp
+          do it = 1, natyp
+            xintegd(it, jt, ns) = czero
+            ! XINTEGD1(IT,JT,IE)= CZERO
+          end do
+        end do
+      end do
 #endif
-DO ns = 1,nshell(0)
-  nijcalc(ns) = 0
-  DO jt = 1,natyp
-    DO it = 1,natyp
-      jijdone(it,jt,ns) = 0
-      jxcijint(it,jt,ns) = czero
-    END DO
-  END DO
-END DO
+      do ns = 1, nshell(0)
+        nijcalc(ns) = 0
+        do jt = 1, natyp
+          do it = 1, natyp
+            jijdone(it, jt, ns) = 0
+            jxcijint(it, jt, ns) = czero
+          end do
+        end do
+      end do
 
-CALL initabjij(iprint,naez,natyp,natomimp,nofgij,nqcalc,  &
-    nsmax,nshell,iqcalc,atomimp,ish,jsh,ijtabcalc,  &
-    ijtabsh,ijtabsym,nijcalc(1),kijsh(1,1), nijmax,nshell(0),nsheld)
-! --------------------------------------------------------------------
-DO ns = nsmax + 1,nshell(0)
-  nseff = ns - nsmax
-  DO i1 = 1,nijcalc(ns)
-    ia = ish(ns,kijsh(i1,ns))
-    ja = jsh(ns,kijsh(i1,ns))
-    lm1 = (ia-1)*natomimp + ja
-    iq = atomimp(ia)
-    jq = atomimp(ja)
-    
-    DO l1 = 1,noq(jq)
-      jt = itoq(l1,jq)
-      DO j1 = 1,noq(iq)
-        it = itoq(j1,iq)
-        jijdone(it,jt,nseff) = 1
-      END DO
-    END DO
-  END DO
-END DO
-! ----------------------------------------------------------------------
-
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-IF ( iprint > 0 ) THEN
-  DO it = 1,natyp
-    DO jt = 1,natyp
-      jtaux(jt) = 0
-      DO ns = nsmax + 1,nshell(0)
+      call initabjij(iprint, naez, natyp, natomimp, nofgij, nqcalc, nsmax, nshell, iqcalc, atomimp, ish, jsh, ijtabcalc, ijtabsh, ijtabsym, nijcalc(1), kijsh(1,1), nijmax, &
+        nshell(0), nsheld)
+      ! --------------------------------------------------------------------
+      do ns = nsmax + 1, nshell(0)
         nseff = ns - nsmax
-        IF ( jijdone(it,jt,nseff) /= 0 ) jtaux(jt) = jtaux(jt) + 1
-      END DO
-    END DO
-!ccc               WRITE (6,99012) IT,(JTAUX(JT),JT=1,MIN(25,NATYP))
-  END DO
-  WRITE (1337,99013)
-endif
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+        do i1 = 1, nijcalc(ns)
+          ia = ish(ns, kijsh(i1,ns))
+          ja = jsh(ns, kijsh(i1,ns))
+          lm1 = (ia-1)*natomimp + ja
+          iq = atomimp(ia)
+          jq = atomimp(ja)
 
-! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-! ==>                   INITIALISATION END                           <==
-! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+          do l1 = 1, noq(jq)
+            jt = itoq(l1, jq)
+            do j1 = 1, noq(iq)
+              it = itoq(j1, iq)
+              jijdone(it, jt, nseff) = 1
+            end do
+          end do
+        end do
+      end do
+      ! ----------------------------------------------------------------------
+
+      ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+      if (iprint>0) then
+        do it = 1, natyp
+          do jt = 1, natyp
+            jtaux(jt) = 0
+            do ns = nsmax + 1, nshell(0)
+              nseff = ns - nsmax
+              if (jijdone(it,jt,nseff)/=0) jtaux(jt) = jtaux(jt) + 1
+            end do
+          end do
+          ! ccc               WRITE (6,99012) IT,(JTAUX(JT),JT=1,MIN(25,NATYP))
+        end do
+        write (1337, 230)
+      end if
+      ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
+      ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+      ! ==>                   INITIALISATION END                           <==
+      ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 
 
-! ==>  read in the single site matrices (TSST) in the LOCAL frame
+      ! ==>  read in the single site matrices (TSST) in the LOCAL frame
 
-! ==>  set up the Delta t_i matrices DELTSST = TSST(UP) - TSST(DOWN)
+      ! ==>  set up the Delta t_i matrices DELTSST = TSST(UP) - TSST(DOWN)
 
-! ==>  read in projection matrices DMAT and DTIL used to get
-!                     ij            ij    _
-!                    G     =  D  * G    * D
-!                     ab       a    CPA    b
-!     with a/b the atom of type a/b sitting on site i/j
-!     for an atom having occupancy 1, DMAT/DTIL = unit matrix
+      ! ==>  read in projection matrices DMAT and DTIL used to get
+      ! ij            ij    _
+      ! G     =  D  * G    * D
+      ! ab       a    CPA    b
+      ! with a/b the atom of type a/b sitting on site i/j
+      ! for an atom having occupancy 1, DMAT/DTIL = unit matrix
 
 
-! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
+      ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 #ifdef CPP_MPI
-ie_start = t_mpi_c_grid%ioff_pt2(t_mpi_c_grid%myrank_at)
-ie_end   = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
+      ie_start = t_mpi_c_grid%ioff_pt2(t_mpi_c_grid%myrank_at)
+      ie_end = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
 
-DO ie_num=1,ie_end
-  ie = ie_start+ie_num
+      do ie_num = 1, ie_end
+        ie = ie_start + ie_num
 #else
-  DO ie = 1,ielast
-    ie_num = ie
-    ie_end = ielast
+        do ie = 1, ielast
+          ie_num = ie
+          ie_end = ielast
 #endif
-! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS SPIN
-  DO ispin = 1,nspin
-! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT NATYP
-    DO it = 1,natyp
-!            write(*,*) 'test brahim 3'
-      IF (t_tgmat%tmat_to_file) THEN
-        irec = ie + ielast*(ispin-1) + ielast*2*(it-1)
-        READ (iftmat,REC=irec) w1
-      ELSE
-        ie_end = t_mpi_c_grid%ntot2
-        irec = ie_num + ie_end*(ispin-1) + ie_end*2*(it-1)
-        w1(:,:) = t_tgmat%tmat(:,:,irec)
-      endif
-      DO j1 = 1,lmmaxd
-        CALL zcopy(lmmaxd,w1(1,j1),1,tsst(1,j1,it,ispin),1)
-      END DO
-! ----------------------------------------------------------------------
-      IF ( ispin == 2 ) THEN
-        DO j1 = 1,lmmaxd
-          DO i1 = 1,lmmaxd
-            deltsst(i1,j1,it) = tsst(i1,j1,it,2) - tsst(i1,j1,it,1)
-          END DO
-        END DO
-      endif
-! ----------------------------------------------------------------------
-      IF ( ncpa == 0 ) THEN
-        CALL cinit(lmmaxd*lmmaxd,dmatts(1,1,it,ispin))
-        DO i1 = 1,lmmaxd
-          dmatts(i1,i1,it,ispin) = cone
-        END DO
-        CALL zcopy(lmmaxd*lmmaxd,dmatts(1,1,it,ispin),1,  &
-            dtilts(1,1,it,ispin),1)
-      ELSE!NCPA.EQ.0
-        IF(t_cpa%dmatproj_to_file)THEN
-          WRITE(*,*) 'test read proj'
-          irec = ie + ielast*(ispin-1) + ielast*2*(it-1)
-          READ (ifmcpa,REC=irec) w1,w2
-          DO j1 = 1,lmmaxd
-            DO i1 = 1,lmmaxd
-              dmatts(i1,j1,it,ispin) = w1(i1,j1)
-              dtilts(i1,j1,it,ispin) = w2(i1,j1)
-            END DO
-          END DO
-        ELSE!t_cpa%dmatproj_to_file
-          irec = ie_num + ie_end*(ispin-1)
-          dmatts(:,:,it,ispin) = t_cpa%dmatts(:,:,it,irec)
-          dtilts(:,:,it,ispin) = t_cpa%dtilts(:,:,it,irec)
-          
-        endif!t_cpa%dmatproj_to_file
-      endif!NCPA.EQ.0
-! ----------------------------------------------------------------------
-    END DO
-! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-  END DO
-! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-  
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-  IF ( iprint > 1 ) THEN
-    WRITE(1337,'(8X,60("-"),/,10X,  &
-        "Single-site and projection matrices read in", " for IT=1,",I3,/)') natyp
-    DO ispin = 1,nspin
-      WRITE(1337,'(8X,60("+"),/,30X, " ISPIN = ",I1,/,8X,60("+"),/)') ispin
-      DO it = 1,natyp
-        WRITE(1337,'(12X," IE = ",I2," IT =",I3)') ie,it
-        CALL cmatstr(' T MAT ',7,tsst(1,1,it,ispin),  &
-            lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
-        CALL cmatstr(' D MAT ',7,dmatts(1,1,it,ispin),  &
-            lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
-        CALL cmatstr(' D~ MAT',7,dtilts(1,1,it,ispin),  &
-            lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
-        IF ( it /= natyp) WRITE(1337,'(8X,60("-"),/)')
-      END DO
-      WRITE(1337,'(8X,60("+"),/)')
-    END DO
-    WRITE(1337,'(8X,60("-"),/,10X,  &
-        "Delta_t = t(it,DN) - t(it,UP) matrices for IT=1,", I3,/)') natyp
-    DO it = 1,natyp
-      WRITE(1337,'(12X," IE = ",I2," IT =",I3)') ie,it
-      CALL cmatstr(' DEL T ',7,deltsst(1,1,it), lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
-      IF ( it /= natyp) WRITE(1337,'(8X,60("-"),/)')
-    END DO
-    WRITE(1337,'(8X,60("-"),/)')
-  endif
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-  
-! ***************************************************** loop over shells
-  DO ns = nsmax + 1,nshell(0)
-    
-! ======================================================================
-    
-! ==>  get the off-diagonal Green function matrix Gij(UP) and Gji(DOWN)
-!      using the appropiate rotation (similar to ROTGLL routine)
-!      step one: read in GS for the representative shell
-! ======================================================================
-    DO ispin = 1,nspin
-      IF (t_tgmat%gmat_to_file) THEN
-        irec = ie + ielast*(ispin-1) + ielast*nspin*(ns-1)
-        READ (ifgmat,REC=irec) w1
-      ELSE
-        ie_end = t_mpi_c_grid%ntot2
-        irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(ns-1)
-        w1(:,:) = t_tgmat%gmat(:,:,irec)
-      endif
-      CALL zcopy(lmmaxd*lmmaxd,w1,1,gs(1,1,ispin),1)
-    END DO
-! ======================================================================
-!      step two: scan all I,J pairs needed out of this shell
-!                transform with the appropriate symmetry to get Gij
-    
-! ====================================================== loop over pairs
-    nseff = ns - nsmax
-    DO l1 = 1,nijcalc(ns)
-      
-      ia = ish(ns,kijsh(l1,ns))
-      ja = jsh(ns,kijsh(l1,ns))
-      
-      lm1 = (ia-1)*natomimp + ja
-      isym = ijtabsym(lm1)
-! ----------------------------------------------------------------------
-      DO ispin = 1,nspin
-        CALL zgemm('C','N',lmmaxd,lmmaxd,lmmaxd,  &
-            cone,dsymll(1,1,isym),lmmaxd, gs(1,1,ispin),lmmaxd,czero,w2,lmmaxd)
-        
-        CALL zgemm('N','N',lmmaxd,lmmaxd,lmmaxd,  &
-            cone,w2,lmmaxd,dsymll(1,1,isym),lmmaxd, czero,w1,lmmaxd)
-        
-        IF ( ispin == 1 ) THEN
-          CALL zcopy(lmmaxd*lmmaxd,w1,1,gmij,1)
-        ELSE
-          DO lm2 = 1,lmmaxd
-            DO lm1 = 1,lmmaxd
-              
-! -> use Gji = Gij^T
-              
-              gmji(lm1,lm2) = w1(lm2,lm1)
-            END DO
-          END DO
-        endif
-      END DO
-! ----------------------------------------------------------------------
-      
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-      IF ( iprint > 2 ) THEN
-        WRITE(1337,'(8X,60("-"),/,10X,  &
-            " G_ij(DN) and G_ji(UP) matrices I =",I3," J =",I3,  &
-            " IE =",I3,/,8X,60("-"))') ia,ja,ie
-        CALL cmatstr(' Gij DN',7,gmij,lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
-        CALL cmatstr(' Gji UP',7,gmji,lmmaxd,lmmaxd,0,0,0,1.0e-8_dp,6)
-      endif
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-      
-      
-! ----------------------------------------------------------------------
-      
-! ==> calculate the exchange coupling constant J_ij via Eq. (19)
-!     modified for G instead of tau:
-!          J_ij ~ Trace [ (t_i(D)-t_i(U)) * Gij(U)
-!                       * (t_j(D)-t_j(U)) * Gji(D)]
-!       in case of alloy system: perform projection on atom types
-      
-! ----------------------------------------------------------------------
-      iq = atomimp(ia)
-      jq = atomimp(ja)
-! -------------------------------------------------- loop over occupants
-      DO j1 = 1,noq(jq)
-        jt = itoq(j1,jq)
-        DO i1 = 1,noq(iq)
-          it = itoq(i1,iq)
-          
-! --> Gjq,iq is projected on jt,it ==> Gjt,it
-          
-          CALL cmatmul(lmmaxd,lmmaxd,gmji,dtilts(1,1,it,2),w2)
-          CALL cmatmul(lmmaxd,lmmaxd,dmatts(1,1,jt,2),w2,w1)
-          
-! --> Delta_j * Gjt,it
-          
-          CALL cmatmul(lmmaxd,lmmaxd,deltsst(1,1,jt),w1,w2)
-          
-! --> Giq,jq is projected on it,jt ==> Git,jt * Delta_j * Gjt,it
-          
-          CALL cmatmul(lmmaxd,lmmaxd,gmij,dtilts(1,1,jt,1),w3)
-          CALL cmatmul(lmmaxd,lmmaxd,dmatts(1,1,it,1),w3,w1)
-          
-! --> Delta_i * Git,jt
-          
-          CALL cmatmul(lmmaxd,lmmaxd,deltsst(1,1,it),w1,w3)
-          
-! --> Delta_i * Git,jt * Delta_j * Gjt,it
-          
-          CALL cmatmul(lmmaxd,lmmaxd,w3,w2,w1)
-          
-          csum = czero
-          DO lm1 = 1,lmmaxd
-            csum = csum + w1(lm1,lm1)
-          END DO
-          
+          ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS SPIN
+          do ispin = 1, nspin
+            ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT NATYP
+            do it = 1, natyp
+              ! write(*,*) 'test brahim 3'
+              if (t_tgmat%tmat_to_file) then
+                irec = ie + ielast*(ispin-1) + ielast*2*(it-1)
+                read (iftmat, rec=irec) w1
+              else
+                ie_end = t_mpi_c_grid%ntot2
+                irec = ie_num + ie_end*(ispin-1) + ie_end*2*(it-1)
+                w1(:, :) = t_tgmat%tmat(:, :, irec)
+              end if
+              do j1 = 1, lmmaxd
+                call zcopy(lmmaxd, w1(1,j1), 1, tsst(1,j1,it,ispin), 1)
+              end do
+              ! ----------------------------------------------------------------------
+              if (ispin==2) then
+                do j1 = 1, lmmaxd
+                  do i1 = 1, lmmaxd
+                    deltsst(i1, j1, it) = tsst(i1, j1, it, 2) - tsst(i1, j1, it, 1)
+                  end do
+                end do
+              end if
+              ! ----------------------------------------------------------------------
+              if (ncpa==0) then
+                call cinit(lmmaxd*lmmaxd, dmatts(1,1,it,ispin))
+                do i1 = 1, lmmaxd
+                  dmatts(i1, i1, it, ispin) = cone
+                end do
+                call zcopy(lmmaxd*lmmaxd, dmatts(1,1,it,ispin), 1, dtilts(1,1,it,ispin), 1)
+              else                 ! NCPA.EQ.0
+                if (t_cpa%dmatproj_to_file) then
+                  write (*, *) 'test read proj'
+                  irec = ie + ielast*(ispin-1) + ielast*2*(it-1)
+                  read (ifmcpa, rec=irec) w1, w2
+                  do j1 = 1, lmmaxd
+                    do i1 = 1, lmmaxd
+                      dmatts(i1, j1, it, ispin) = w1(i1, j1)
+                      dtilts(i1, j1, it, ispin) = w2(i1, j1)
+                    end do
+                  end do
+                else               ! t_cpa%dmatproj_to_file
+                  irec = ie_num + ie_end*(ispin-1)
+                  dmatts(:, :, it, ispin) = t_cpa%dmatts(:, :, it, irec)
+                  dtilts(:, :, it, ispin) = t_cpa%dtilts(:, :, it, irec)
+
+                end if             ! t_cpa%dmatproj_to_file
+              end if               ! NCPA.EQ.0
+              ! ----------------------------------------------------------------------
+            end do
+            ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+          end do
+          ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+
+          ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+          if (iprint>1) then
+            write (1337,'(8X,60("-"),/,10X,  &
+                "Single-site and projection matrices read in", " for IT=1,",I3,/)') natyp
+            do ispin = 1, nspin
+              write (1337, '(8X,60("+"),/,30X, " ISPIN = ",I1,/,8X,60("+"),/)') ispin
+              do it = 1, natyp
+                write (1337, '(12X," IE = ",I2," IT =",I3)') ie, it
+                call cmatstr(' T MAT ', 7, tsst(1,1,it,ispin), lmmaxd, lmmaxd, 0, 0, 0, 1.0e-8_dp, 6)
+                call cmatstr(' D MAT ', 7, dmatts(1,1,it,ispin), lmmaxd, lmmaxd, 0, 0, 0, 1.0e-8_dp, 6)
+                call cmatstr(' D~ MAT', 7, dtilts(1,1,it,ispin), lmmaxd, lmmaxd, 0, 0, 0, 1.0e-8_dp, 6)
+                if (it/=natyp) write (1337, '(8X,60("-"),/)')
+              end do
+              write (1337, '(8X,60("+"),/)')
+            end do
+            write (1337,'(8X,60("-"),/,10X,  &
+                "Delta_t = t(it,DN) - t(it,UP) matrices for IT=1,", I3,/)') natyp
+            do it = 1, natyp
+              write (1337, '(12X," IE = ",I2," IT =",I3)') ie, it
+              call cmatstr(' DEL T ', 7, deltsst(1,1,it), lmmaxd, lmmaxd, 0, 0, 0, 1.0e-8_dp, 6)
+              if (it/=natyp) write (1337, '(8X,60("-"),/)')
+            end do
+            write (1337, '(8X,60("-"),/)')
+          end if
+          ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
+          ! ***************************************************** loop over shells
+          do ns = nsmax + 1, nshell(0)
+
+            ! ======================================================================
+
+            ! ==>  get the off-diagonal Green function matrix Gij(UP) and Gji(DOWN)
+            ! using the appropiate rotation (similar to ROTGLL routine)
+            ! step one: read in GS for the representative shell
+            ! ======================================================================
+            do ispin = 1, nspin
+              if (t_tgmat%gmat_to_file) then
+                irec = ie + ielast*(ispin-1) + ielast*nspin*(ns-1)
+                read (ifgmat, rec=irec) w1
+              else
+                ie_end = t_mpi_c_grid%ntot2
+                irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(ns-1)
+                w1(:, :) = t_tgmat%gmat(:, :, irec)
+              end if
+              call zcopy(lmmaxd*lmmaxd, w1, 1, gs(1,1,ispin), 1)
+            end do
+            ! ======================================================================
+            ! step two: scan all I,J pairs needed out of this shell
+            ! transform with the appropriate symmetry to get Gij
+
+            ! ====================================================== loop over pairs
+            nseff = ns - nsmax
+            do l1 = 1, nijcalc(ns)
+
+              ia = ish(ns, kijsh(l1,ns))
+              ja = jsh(ns, kijsh(l1,ns))
+
+              lm1 = (ia-1)*natomimp + ja
+              isym = ijtabsym(lm1)
+              ! ----------------------------------------------------------------------
+              do ispin = 1, nspin
+                call zgemm('C', 'N', lmmaxd, lmmaxd, lmmaxd, cone, dsymll(1,1,isym), lmmaxd, gs(1,1,ispin), lmmaxd, czero, w2, lmmaxd)
+
+                call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, w2, lmmaxd, dsymll(1,1,isym), lmmaxd, czero, w1, lmmaxd)
+
+                if (ispin==1) then
+                  call zcopy(lmmaxd*lmmaxd, w1, 1, gmij, 1)
+                else
+                  do lm2 = 1, lmmaxd
+                    do lm1 = 1, lmmaxd
+
+                      ! -> use Gji = Gij^T
+
+                      gmji(lm1, lm2) = w1(lm2, lm1)
+                    end do
+                  end do
+                end if
+              end do
+              ! ----------------------------------------------------------------------
+
+              ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+              if (iprint>2) then
+                write (1337,'(8X,60("-"),/,10X,  &
+                    " G_ij(DN) and G_ji(UP) matrices I =",I3," J =",I3,  &
+                    " IE =",I3,/,8X,60("-"))') ia,ja,ie
+                call cmatstr(' Gij DN', 7, gmij, lmmaxd, lmmaxd, 0, 0, 0, 1.0e-8_dp, 6)
+                call cmatstr(' Gji UP', 7, gmji, lmmaxd, lmmaxd, 0, 0, 0, 1.0e-8_dp, 6)
+              end if
+              ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
+
+              ! ----------------------------------------------------------------------
+
+              ! ==> calculate the exchange coupling constant J_ij via Eq. (19)
+              ! modified for G instead of tau:
+              ! J_ij ~ Trace [ (t_i(D)-t_i(U)) * Gij(U)
+              ! * (t_j(D)-t_j(U)) * Gji(D)]
+              ! in case of alloy system: perform projection on atom types
+
+              ! ----------------------------------------------------------------------
+              iq = atomimp(ia)
+              jq = atomimp(ja)
+              ! -------------------------------------------------- loop over occupants
+              do j1 = 1, noq(jq)
+                jt = itoq(j1, jq)
+                do i1 = 1, noq(iq)
+                  it = itoq(i1, iq)
+
+                  ! --> Gjq,iq is projected on jt,it ==> Gjt,it
+
+                  call cmatmul(lmmaxd, lmmaxd, gmji, dtilts(1,1,it,2), w2)
+                  call cmatmul(lmmaxd, lmmaxd, dmatts(1,1,jt,2), w2, w1)
+
+                  ! --> Delta_j * Gjt,it
+
+                  call cmatmul(lmmaxd, lmmaxd, deltsst(1,1,jt), w1, w2)
+
+                  ! --> Giq,jq is projected on it,jt ==> Git,jt * Delta_j * Gjt,it
+
+                  call cmatmul(lmmaxd, lmmaxd, gmij, dtilts(1,1,jt,1), w3)
+                  call cmatmul(lmmaxd, lmmaxd, dmatts(1,1,it,1), w3, w1)
+
+                  ! --> Delta_i * Git,jt
+
+                  call cmatmul(lmmaxd, lmmaxd, deltsst(1,1,it), w1, w3)
+
+                  ! --> Delta_i * Git,jt * Delta_j * Gjt,it
+
+                  call cmatmul(lmmaxd, lmmaxd, w3, w2, w1)
+
+                  csum = czero
+                  do lm1 = 1, lmmaxd
+                    csum = csum + w1(lm1, lm1)
+                  end do
+
 #ifdef CPP_MPI
-!BZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!BZ! to ensure the correct order of energy points, the csum=values !!
-!BZ! are stored for the MPI version, and the evaluation of JXCIJINT!!
-!BZ! and XINTEGD is performed later                                !!
-!BZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          csum_store(it,jt,nseff,ie)=csum
+                  ! BZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                  ! BZ! to ensure the correct order of energy points, the csum=values !!
+                  ! BZ! are stored for the MPI version, and the evaluation of JXCIJINT!!
+                  ! BZ! and XINTEGD is performed later                                !!
+                  ! BZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                  csum_store(it, jt, nseff, ie) = csum
 #else
-          
-          jxcijint(it,jt,nseff) = jxcijint(it,jt,nseff)  &
-              - wez(ie)*csum/real(nspin, kind=dp)
-          
-          xintegd(it,jt,nseff)= csum/(pi*4.d0)
-          
-!                  -------> perform substraction instead of addition
-!                           because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
-! Write out energy-resorved integrand and integral
-! Phivos Mavropoulos 24.10.2012
-          IF(npol==0 .OR. test('Jijenerg'))THEN
-            fmt2 = '(A,I5.5,A,I5.5,A,I5.5)'
-            WRITE (jfnam2,fmt2) 'Jij_enrg.',it,'.',jt,'.',ns
-            IF (ie == 1) THEN
-              OPEN (499,FILE=jfnam2,STATUS='UNKNOWN')
-              CALL version_print_header(499,  &
-                  '; '//md5sum_potential//'; '//md5sum_shapefun)
-              WRITE(499,FMT='(A)') '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
-              WRITE(499,FMT='(3(A,I5))') '# IT=',it,' JT=',jt,' SHELL=',ns
-              WRITE(499,FMT='(A,I6)') '#ENERGIES: ',ielast
-            ELSE
-              OPEN (499,FILE=jfnam2,STATUS='OLD', POSITION='APPEND')
-            endif
-            WRITE (499,FMT='(6E12.4)') ez(ie),xintegd(it,jt,nseff),  &
-                jxcijint(it,jt,nseff)/4.d0
-            CLOSE(499)
-          endif!(npol==0 .or. test('Jijenerg'))
+
+                  jxcijint(it, jt, nseff) = jxcijint(it, jt, nseff) - wez(ie)*csum/real(nspin, kind=dp)
+
+                  xintegd(it, jt, nseff) = csum/(pi*4.d0)
+
+                  ! -------> perform substraction instead of addition
+                  ! because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
+                  ! Write out energy-resorved integrand and integral
+                  ! Phivos Mavropoulos 24.10.2012
+                  if (npol==0 .or. test('Jijenerg')) then
+                    fmt2 = '(A,I5.5,A,I5.5,A,I5.5)'
+                    write (jfnam2, fmt2) 'Jij_enrg.', it, '.', jt, '.', ns
+                    if (ie==1) then
+                      open (499, file=jfnam2, status='UNKNOWN')
+                      call version_print_header(499, '; '//md5sum_potential//'; '//md5sum_shapefun)
+                      write (499, fmt='(A)') '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
+                      write (499, fmt='(3(A,I5))') '# IT=', it, ' JT=', jt, ' SHELL=', ns
+                      write (499, fmt='(A,I6)') '#ENERGIES: ', ielast
+                    else
+                      open (499, file=jfnam2, status='OLD', position='APPEND')
+                    end if
+                    write (499, fmt='(6E12.4)') ez(ie), xintegd(it, jt, nseff), jxcijint(it, jt, nseff)/4.d0
+                    close (499)
+                  end if           ! (npol==0 .or. test('Jijenerg'))
 #endif
-        
-      END DO !I1
-    END DO   !J1, loop over occupants
-! ----------------------------------------------------------------------
-  END DO   !L1 = 1,NIJCALC(NS)
-  
-! ======================================================================
-END DO  !loop over shells
-! **********************************************************************
-!       write(22,*)DIMAG(XINTEGD(1,1,1)),DIMAG(JXCIJINT(1,1,1))
-!       write(44,*)DIMAG(XINTEGD(2,2,1)),DIMAG(XINTEGD(2,3,1))
 
-END DO!IE
-! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
+                end do             ! I1
+              end do               ! J1, loop over occupants
+              ! ----------------------------------------------------------------------
+            end do                 ! L1 = 1,NIJCALC(NS)
+
+            ! ======================================================================
+          end do                   ! loop over shells
+          ! **********************************************************************
+          ! write(22,*)DIMAG(XINTEGD(1,1,1)),DIMAG(JXCIJINT(1,1,1))
+          ! write(44,*)DIMAG(XINTEGD(2,2,1)),DIMAG(XINTEGD(2,3,1))
+
+        end do                     ! IE
+        ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE ENERGIES
 
 
-! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC MPI Communication
+        ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC MPI Communication
 #ifdef CPP_MPI
-!allocate
-allocate(csum_store2(natyp,natyp,nshell(0),ielast),stat=lm1)
-IF ( lm1 /= 0 ) THEN
-  WRITE(6,99001) 'csum_store2'
-  STOP
-endif
+        ! allocate
+        allocate (csum_store2(natyp,natyp,nshell(0),ielast), stat=lm1)
+        if (lm1/=0) then
+          write (6, 110) 'csum_store2'
+          stop
+        end if
 
-!initialize with zero
-DO ie=1,ielast
-  DO ns = 1,nshell(0)
-    DO jt = 1,natyp
-      DO it = 1,natyp
-        csum_store2(it,jt,ns,ie)= czero
-      END DO
-    END DO
-  END DO
-END DO!IE
+        ! initialize with zero
+        do ie = 1, ielast
+          do ns = 1, nshell(0)
+            do jt = 1, natyp
+              do it = 1, natyp
+                csum_store2(it, jt, ns, ie) = czero
+              end do
+            end do
+          end do
+        end do                     ! IE
 
-!perform communication and collect resutls in csum_store2
-lm1 = natyp*natyp*nshell(0)*ielast
-CALL mpi_reduce(csum_store,csum_store2,lm1,mpi_double_complex,  &
-    mpi_sum,master,t_mpi_c_grid%mympi_comm_at,ierr)
-IF(ierr/=mpi_success)THEN
-  WRITE(*,*) 'Problem in MPI_REDUCE(csum_store)'
-  STOP 'TBXCCPLJIJ'
-endif ! IERR/=MPI_SUCCESS
+        ! perform communication and collect resutls in csum_store2
+        lm1 = natyp*natyp*nshell(0)*ielast
+        call mpi_reduce(csum_store, csum_store2, lm1, mpi_double_complex, mpi_sum, master, t_mpi_c_grid%mympi_comm_at, ierr)
+        if (ierr/=mpi_success) then
+          write (*, *) 'Problem in MPI_REDUCE(csum_store)'
+          stop 'TBXCCPLJIJ'
+        end if                     ! IERR/=MPI_SUCCESS
 
-!copy array back to original one
-IF(myrank==master)THEN
-  DO ie=1,ielast
-    DO ns = 1,nshell(0)
-      DO jt = 1,natyp
-        DO it = 1,natyp
-          csum_store(it,jt,ns,ie)= csum_store2(it,jt,ns,ie)
-        END DO
-      END DO
-    END DO
-  END DO!IE
-  
-  deallocate(csum_store2)
-endif!myrank==master
+        ! copy array back to original one
+        if (myrank==master) then
+          do ie = 1, ielast
+            do ns = 1, nshell(0)
+              do jt = 1, natyp
+                do it = 1, natyp
+                  csum_store(it, jt, ns, ie) = csum_store2(it, jt, ns, ie)
+                end do
+              end do
+            end do
+          end do                   ! IE
 
+          deallocate (csum_store2)
+        end if                     ! myrank==master
 
 
-!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-!~~~~~~~ NEW WRITEOUT: integrand and energy-resolved integral ~~~~~~~~~~
-!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-IF(myrank==master)THEN
-  DO ns = nsmax + 1,nshell(0)
-    nseff = ns - nsmax
-    DO l1 = 1,nijcalc(ns)
-      ia = ish(ns,kijsh(l1,ns))
-      ja = jsh(ns,kijsh(l1,ns))
-      iq = atomimp(ia)
-      jq = atomimp(ja)
-      DO j1 = 1,noq(jq)
-        jt = itoq(j1,jq)
-        DO i1 = 1,noq(iq)
-          it = itoq(i1,iq)
-!                  -------> perform substraction instead of addition
-!                           because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
-! Write out energy-resorved integrand and integral
-! Phivos Mavropoulos 24.10.2012
-          IF(npol==0 .OR. test('Jijenerg'))THEN
-            fmt2 = '(A,I5.5,A,I5.5,A,I5.5)'
-            WRITE (jfnam2,fmt2) 'Jij_enrg.',it,'.',jt,'.',ns
-            OPEN (499,FILE=jfnam2,STATUS='UNKNOWN')
-            CALL version_print_header(499,  &
-                '; '//md5sum_potential//'; '//md5sum_shapefun)
-            WRITE(499,FMT='(A)') '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
-            WRITE(499,FMT='(3(A,I5))') '# IT=',it,' JT=',jt,' SHELL=',ns
-            WRITE(499,FMT='(A,I6)') '#ENERGIES: ',ielast
-          endif!(NPOL==0 .OR. TEST('Jijenerg'))then
-          
-          DO ie=1,ielast
-            jxcijint(it,jt,nseff) = jxcijint(it,jt,nseff)  &
-                - wez(ie)*csum_store(it,jt,nseff,ie)/real(nspin, kind=dp)
-            xintegdtmp= csum_store(it,jt,nseff,ie)/(pi*4.d0)
-            IF(npol==0 .OR. test('Jijenerg'))THEN
-              WRITE (499,FMT='(6E12.4)')  &
-                  ez(ie),xintegdtmp,jxcijint(it,jt,nseff)/4.d0
-            endif!(NPOL==0 .OR. TEST('Jijenerg'))then
-            
-          END DO!IE
-          
-          IF(npol==0 .OR. test('Jijenerg')) CLOSE(499)
-          
-        END DO !I1
-      END DO   !J1, loop over occupants
-    END DO   !L1 = 1,NIJCALC(NS)
-  END DO  !NS, loop over shells
-endif!myrank==master
+
+        ! vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        ! ~~~~~~~ NEW WRITEOUT: integrand and energy-resolved integral ~~~~~~~~~~
+        ! ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if (myrank==master) then
+          do ns = nsmax + 1, nshell(0)
+            nseff = ns - nsmax
+            do l1 = 1, nijcalc(ns)
+              ia = ish(ns, kijsh(l1,ns))
+              ja = jsh(ns, kijsh(l1,ns))
+              iq = atomimp(ia)
+              jq = atomimp(ja)
+              do j1 = 1, noq(jq)
+                jt = itoq(j1, jq)
+                do i1 = 1, noq(iq)
+                  it = itoq(i1, iq)
+                  ! -------> perform substraction instead of addition
+                  ! because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
+                  ! Write out energy-resorved integrand and integral
+                  ! Phivos Mavropoulos 24.10.2012
+                  if (npol==0 .or. test('Jijenerg')) then
+                    fmt2 = '(A,I5.5,A,I5.5,A,I5.5)'
+                    write (jfnam2, fmt2) 'Jij_enrg.', it, '.', jt, '.', ns
+                    open (499, file=jfnam2, status='UNKNOWN')
+                    call version_print_header(499, '; '//md5sum_potential//'; '//md5sum_shapefun)
+                    write (499, fmt='(A)') '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
+                    write (499, fmt='(3(A,I5))') '# IT=', it, ' JT=', jt, ' SHELL=', ns
+                    write (499, fmt='(A,I6)') '#ENERGIES: ', ielast
+                  end if           ! (NPOL==0 .OR. TEST('Jijenerg'))then
+
+                  do ie = 1, ielast
+                    jxcijint(it, jt, nseff) = jxcijint(it, jt, nseff) - wez(ie)*csum_store(it, jt, nseff, ie)/real(nspin, kind=dp)
+                    xintegdtmp = csum_store(it, jt, nseff, ie)/(pi*4.d0)
+                    if (npol==0 .or. test('Jijenerg')) then
+                      write (499, fmt='(6E12.4)') ez(ie), xintegdtmp, jxcijint(it, jt, nseff)/4.d0
+                    end if         ! (NPOL==0 .OR. TEST('Jijenerg'))then
+
+                  end do           ! IE
+
+                  if (npol==0 .or. test('Jijenerg')) close (499)
+
+                end do             ! I1
+              end do               ! J1, loop over occupants
+            end do                 ! L1 = 1,NIJCALC(NS)
+          end do                   ! NS, loop over shells
+        end if                     ! myrank==master
 #endif
 
-IF(myrank==master)THEN
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-  wgtemp = cone/4D0
-!     -------> here factor 1/pi omitted since it is included in WGTE
-  DO ns = 1,nshcalc
-    DO jt = 1,natyp
-      DO it = 1,natyp
-        jxcijint(it,jt,ns) = wgtemp*jxcijint(it,jt,ns)
-      END DO
-    END DO
-    nseff = ns + nsmax
-    rsh(ns) = 0D0
-    DO i1 = 1,3
-      rsh(ns) = rsh(ns) + ratom(i1,nseff)*ratom(i1,nseff)
-    END DO
-    rsh(ns) = SQRT(rsh(ns))
-  END DO
-  
-  lm2 = 0
-  ntcalc = 0
-  DO it = 1,natyp
-    l1 = 0
-    DO ns = 1,nshcalc
-      lm1 = 0
-      DO jt = 1,natyp
-        IF ( jijdone(it,jt,ns) /= 0 ) lm1 = lm1 + 1
-      END DO
-      lm2 = MAX(lm1,lm2)
-      l1 = MAX(l1,lm1)
-    END DO
-    IF ( l1 > 0 ) THEN
-      ntcalc = ntcalc + 1
-      jtaux(ntcalc) = it
-    endif
-  END DO
-  WRITE (strbar,'(19("-"))')
-  lstr = 19
-  DO i1 = 1,lm2
-    WRITE(strtmp,'(A,15("-"))') strbar(1:lstr)
-    lstr = lstr+15
-    strbar(1:lstr)=strtmp(1:lstr)
-  END DO
-  
-  WRITE(1337,99002) strbar(1:lstr),strbar(1:lstr)
-  DO i1 = 1,ntcalc
-    it = jtaux(i1)
-    WRITE (1337,99003, advance='no') it,iqat(it)
-    l1 = 0
-    DO ns = 1,nshcalc
-      lm1 = 0
-      DO jt = 1,natyp
-        IF ( jijdone(it,jt,ns) /= 0 ) lm1 = lm1 + 1
-      END DO
-      IF ( lm1 /= 0 ) THEN
-        lm2 = 0
-        IF ( l1 == 0 ) THEN
-          WRITE(1337,99005, advance='no') rsh(ns)
-          l1 = 1
-        ELSE
-          WRITE (1337,99006, advance='no') rsh(ns)
-        endif
-        DO jt = 1,natyp
-          IF ( jijdone(it,jt,ns) /= 0 ) THEN
-            lm2 = lm2 + 1
-            IF ( lm2 == 1 ) THEN
-              WRITE (1337,99007, advance='no') iqat(jt), aimag(jxcijint(it,jt,ns))*1D3,jt
-              WRITE(1337,*) ns+nsmax,' shell'
-            ELSE
-              WRITE (1337,99008, advance='no') aimag(jxcijint(it,jt,ns))*1D3,jt
-              WRITE(1337,*) ns+nsmax,' shell'
-            endif
-            IF ( lm2 == lm1 ) WRITE (1337,*)
-          endif
-        END DO
-      endif
-    END DO
-    WRITE (1337,99004) strbar(1:lstr)
-  END DO !I1 = 1,NTCALC
-  WRITE (1337,*)
-! ----------------------------------------------------------------------
-! --> prepare output files
-  
-  DO i1 = 1,ntcalc
-    it = jtaux(i1)
-    DO ns = 1,nshcalc
-      l1 = 1
-      DO jt = 1,natyp
-        IF ( jijdone(it,jt,ns) /= 0 ) THEN
-          jijdone(it,l1,ns) = jt
-          jxcijint(it,l1,ns) = jxcijint(it,jt,ns)
-          l1 = l1 + 1
-        endif
-      END DO
-      DO jt = l1,natyp
-        jijdone(it,jt,ns) = 0
-      END DO
-    END DO
-  END DO
-  
-  DO i1 = 1,ntcalc
-    it = jtaux(i1)
-!         FMT1 = '(A,I1)'
-!         IF ( IT.GE.10 ) THEN
-!            FMT1 = '(A,I2)'
-!            IF ( IT.GE.100 ) FMT1 = '(A,I3)'
-!         endif
-    fmt1 = '(A,I5.5)'
-    WRITE (jfnam,fmt1) jfbas,it
-    
-!         write(JFNAME,FMT1)JFINTEG, IT
-    OPEN (49,FILE=jfnam)
-    CALL version_print_header(49,  &
-        '; '//md5sum_potential//'; '//md5sum_shapefun)
-    WRITE (49,99009) it,iqat(it)
-!         open(22,FILE=JFNAME)
-!          write(22,99014)IT,IQAT(IT)
-    DO l1 = 1,natyp
-      lm1 = 0
-      DO ns = 1,nshcalc
-        IF ( jijdone(it,l1,ns) /= 0 ) THEN
-          lm1 = lm1 + 1
-          WRITE (49,99010) rsh(ns), aimag(jxcijint(it,l1,ns)),  &
-              jijdone(it,l1,ns),ns+nsmax ! fivos added NS+NSMAX
-!              do IE=1,IELAST
-!                XINTEGD(IT,JT,IE)= XINTEGD(IT,JT,IE)*(1.D0/(PI*4.D0))
-          
-!                write(22,99015)XINTEGD(IT,JT,IE),JIJDONE(IT,L1,NS)
-!             end do
-        endif
-      END DO
-!            end do
-      IF ( (lm1 /= 0) .AND. (l1 /= natyp) ) WRITE (49,*) '&'
-!           IF ( (LM1.NE.0) .AND. (L1.NE.NATYP) ) WRITE (22,*) '&'
-    END DO !l1=1,natyp
-    CLOSE (49)
-!         Close(22)
-  END DO !i1=1,ntcalc
-  WRITE (1337,99011)
-! ----------------------------------------------------------------------
-! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-endif!myrank==master
+        if (myrank==master) then
+          ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+          wgtemp = cone/4d0
+          ! -------> here factor 1/pi omitted since it is included in WGTE
+          do ns = 1, nshcalc
+            do jt = 1, natyp
+              do it = 1, natyp
+                jxcijint(it, jt, ns) = wgtemp*jxcijint(it, jt, ns)
+              end do
+            end do
+            nseff = ns + nsmax
+            rsh(ns) = 0d0
+            do i1 = 1, 3
+              rsh(ns) = rsh(ns) + ratom(i1, nseff)*ratom(i1, nseff)
+            end do
+            rsh(ns) = sqrt(rsh(ns))
+          end do
+
+          lm2 = 0
+          ntcalc = 0
+          do it = 1, natyp
+            l1 = 0
+            do ns = 1, nshcalc
+              lm1 = 0
+              do jt = 1, natyp
+                if (jijdone(it,jt,ns)/=0) lm1 = lm1 + 1
+              end do
+              lm2 = max(lm1, lm2)
+              l1 = max(l1, lm1)
+            end do
+            if (l1>0) then
+              ntcalc = ntcalc + 1
+              jtaux(ntcalc) = it
+            end if
+          end do
+          write (strbar, '(19("-"))')
+          lstr = 19
+          do i1 = 1, lm2
+            write (strtmp, '(A,15("-"))') strbar(1:lstr)
+            lstr = lstr + 15
+            strbar(1:lstr) = strtmp(1:lstr)
+          end do
+
+          write (1337, 120) strbar(1:lstr), strbar(1:lstr)
+          do i1 = 1, ntcalc
+            it = jtaux(i1)
+            write (1337, 130, advance='no') it, iqat(it)
+            l1 = 0
+            do ns = 1, nshcalc
+              lm1 = 0
+              do jt = 1, natyp
+                if (jijdone(it,jt,ns)/=0) lm1 = lm1 + 1
+              end do
+              if (lm1/=0) then
+                lm2 = 0
+                if (l1==0) then
+                  write (1337, 150, advance='no') rsh(ns)
+                  l1 = 1
+                else
+                  write (1337, 160, advance='no') rsh(ns)
+                end if
+                do jt = 1, natyp
+                  if (jijdone(it,jt,ns)/=0) then
+                    lm2 = lm2 + 1
+                    if (lm2==1) then
+                      write (1337, 170, advance='no') iqat(jt), aimag(jxcijint(it,jt,ns))*1d3, jt
+                      write (1337, *) ns + nsmax, ' shell'
+                    else
+                      write (1337, 180, advance='no') aimag(jxcijint(it,jt,ns))*1d3, jt
+                      write (1337, *) ns + nsmax, ' shell'
+                    end if
+                    if (lm2==lm1) write (1337, *)
+                  end if
+                end do
+              end if
+            end do
+            write (1337, 140) strbar(1:lstr)
+          end do                   ! I1 = 1,NTCALC
+          write (1337, *)
+          ! ----------------------------------------------------------------------
+          ! --> prepare output files
+
+          do i1 = 1, ntcalc
+            it = jtaux(i1)
+            do ns = 1, nshcalc
+              l1 = 1
+              do jt = 1, natyp
+                if (jijdone(it,jt,ns)/=0) then
+                  jijdone(it, l1, ns) = jt
+                  jxcijint(it, l1, ns) = jxcijint(it, jt, ns)
+                  l1 = l1 + 1
+                end if
+              end do
+              do jt = l1, natyp
+                jijdone(it, jt, ns) = 0
+              end do
+            end do
+          end do
+
+          do i1 = 1, ntcalc
+            it = jtaux(i1)
+            ! FMT1 = '(A,I1)'
+            ! IF ( IT.GE.10 ) THEN
+            ! FMT1 = '(A,I2)'
+            ! IF ( IT.GE.100 ) FMT1 = '(A,I3)'
+            ! endif
+            fmt1 = '(A,I5.5)'
+            write (jfnam, fmt1) jfbas, it
+
+            ! write(JFNAME,FMT1)JFINTEG, IT
+            open (49, file=jfnam)
+            call version_print_header(49, '; '//md5sum_potential//'; '//md5sum_shapefun)
+            write (49, 190) it, iqat(it)
+            ! open(22,FILE=JFNAME)
+            ! write(22,99014)IT,IQAT(IT)
+            do l1 = 1, natyp
+              lm1 = 0
+              do ns = 1, nshcalc
+                if (jijdone(it,l1,ns)/=0) then
+                  lm1 = lm1 + 1
+                  write (49, 200) rsh(ns), aimag(jxcijint(it,l1,ns)), jijdone(it, l1, ns), ns + nsmax ! fivos added NS+NSMAX
+                  ! do IE=1,IELAST
+                  ! XINTEGD(IT,JT,IE)= XINTEGD(IT,JT,IE)*(1.D0/(PI*4.D0))
+
+                  ! write(22,99015)XINTEGD(IT,JT,IE),JIJDONE(IT,L1,NS)
+                  ! end do
+                end if
+              end do
+              ! end do
+              if ((lm1/=0) .and. (l1/=natyp)) write (49, *) '&'
+              ! IF ( (LM1.NE.0) .AND. (L1.NE.NATYP) ) WRITE (22,*) '&'
+            end do                 ! l1=1,natyp
+            close (49)
+            ! Close(22)
+          end do                   ! i1=1,ntcalc
+          write (1337, 210)
+          ! ----------------------------------------------------------------------
+          ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+        end if                     ! myrank==master
 #ifdef CPP_MPI
-endif ! t_mpi_c_grid%myrank_ie==0
+      end if                       ! t_mpi_c_grid%myrank_ie==0
 #endif
 
-deallocate (kijsh,nijcalc,jijdone,jxcijint,stat=lm1)
-99000 FORMAT(79("="),/,10X, "TBXCCPLJIJ : Off-diagonal exchange coupling",  &
-    " constants J_ij",/,79("="),/)
-99001 FORMAT(6X,"ERROR: Cannot allocate array(s) :",a,/)
-99002 FORMAT(4X,a,4("-"),/,5X," IT/IQ ",3X,"R_IQ,JQ",2X,"JQ ",  &
-    " (J_IT,JT  JT)",/,15X," [ ALAT ] ",4X,"[ mRy ]",/, 4X,a,4("-"))
-99003 FORMAT(5X,i3,1X,i3)
-99004 FORMAT(4X,a,4("-"))
-99005 FORMAT(f10.6)
-99006 FORMAT(12X,f10.6)
-99007 FORMAT(i4,f12.8,i3)
-99008 FORMAT(f12.8,i3)
-99009 FORMAT("# off-diagonal exchange coupling constants ",/,  &
-    "# for atom IT = ",i3," on site IQ = ",i3,/,  &
-    "# R_IQ,JQ      J_IT,JT       JT",/, "# ( ALAT )       ( Ry )",/,"#      ")
-99010 FORMAT(f12.8,2X,e15.8,2X,i3,i5)
-99011 FORMAT(6X,"Output written into the files Jij.atomX",/,  &
-    6X,"  X = atom index in the input file")
-99012       FORMAT (10X,i3,3X,25(i3))
-99013       FORMAT (/,8X,60('-'),/)
+      deallocate (kijsh, nijcalc, jijdone, jxcijint, stat=lm1)
+100   format (79('='), /, 10x, 'TBXCCPLJIJ : Off-diagonal exchange coupling', ' constants J_ij', /, 79('='), /)
+110   format (6x, 'ERROR: Cannot allocate array(s) :', a, /)
+120   format (4x, a, 4('-'), /, 5x, ' IT/IQ ', 3x, 'R_IQ,JQ', 2x, 'JQ ', ' (J_IT,JT  JT)', /, 15x, ' [ ALAT ] ', 4x, '[ mRy ]', /, 4x, a, 4('-'))
+130   format (5x, i3, 1x, i3)
+140   format (4x, a, 4('-'))
+150   format (f10.6)
+160   format (12x, f10.6)
+170   format (i4, f12.8, i3)
+180   format (f12.8, i3)
+190   format ('# off-diagonal exchange coupling constants ', /, '# for atom IT = ', i3, ' on site IQ = ', i3, /, '# R_IQ,JQ      J_IT,JT       JT', /, &
+        '# ( ALAT )       ( Ry )', /, '#      ')
+200   format (f12.8, 2x, e15.8, 2x, i3, i5)
+210   format (6x, 'Output written into the files Jij.atomX', /, 6x, '  X = atom index in the input file')
+220   format (10x, i3, 3x, 25(i3))
+230   format (/, 8x, 60('-'), /)
 
-99014       FORMAT("# Integrand  ",/,  &
-    "# for atom IT = ",i3," on site IQ = ",i3,/, "#      J_IT,JT       JT",/,  &
-    "#        ( Ry )",/,"#      ")
-99015 FORMAT(f12.8)
-END SUBROUTINE tbxccpljij
+240   format ('# Integrand  ', /, '# for atom IT = ', i3, ' on site IQ = ', i3, /, '#      J_IT,JT       JT', /, '#        ( Ry )', /, '#      ')
+250   format (f12.8)
+    end subroutine tbxccpljij
 
-END module mod_tbxccpljij
+  end module mod_tbxccpljij

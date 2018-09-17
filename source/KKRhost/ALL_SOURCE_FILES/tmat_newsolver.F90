@@ -1,948 +1,919 @@
 module mod_tmatnewsolver
 
-   implicit none
+  implicit none
 
 contains
 
-   !-------------------------------------------------------------------------------
-   ! SUBROUTINE: TMAT_NEWSOLVER
-   !> @brief Calculation of the T-Matrix
-   !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
-   !-------------------------------------------------------------------------------
-   subroutine TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT,SOCSCALE,EZ,NSRA,CLEB,ICLEB,  &
-      IEND,NCHEB,NPAN_TOT,RPAN_INTERVALL,IPAN_INTERVALL,RNEW,VINSNEW,THETA,PHI,  &
-      I1,IPOT,LMPOT,LLY,DELTAE,IDOLDAU,LOPT,WLDAU,t_dtmatJij_at)
+  ! -------------------------------------------------------------------------------
+  ! SUBROUTINE: TMAT_NEWSOLVER
+  ! > @brief Calculation of the T-Matrix
+  ! > @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
+  ! -------------------------------------------------------------------------------
+  subroutine tmat_newsolver(ielast, nspin, lmax, zat, socscale, ez, nsra, cleb, icleb, iend, ncheb, npan_tot, rpan_intervall, ipan_intervall, rnew, vinsnew, theta, phi, i1, ipot, &
+    lmpot, lly, deltae, idoldau, lopt, wldau, t_dtmatjij_at)
 
 #ifdef CPP_OMP
-      use omp_lib        ! necessary for omp functions
+    use :: omp_lib                 ! necessary for omp functions
 #endif
 #ifdef CPP_MPI
-      use mpi
-      use mod_mympi, only: MPIadapt, nranks
-      use mod_timing
+    use :: mpi
+    use :: mod_mympi, only: mpiadapt, nranks
+    use :: mod_timing
 #endif
-      use mod_mympi, only: myrank, master, distribute_work_energies
-      use mod_types, only: t_tgmat,t_inc,t_mpi_c_grid,init_tgmat, &
-                           t_lloyd,init_tlloyd, type_dtmatJijDij, &
-                           init_t_dtmatJij_at
-      use Constants
-      use mod_profiling
-      use mod_wunfiles, only: t_params
-      use mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun, save_wavefunc
-      use mod_jijhelp, only: calc_dtmatJij
-      use global_variables
-      use mod_DataTypes
-      use mod_ioinput
-      use mod_calcsph
-      use mod_rll_global_solutions
-      use mod_rllsllsourceterms
-      use mod_rllsll
-      use mod_spinorbit_ham
-      use mod_vllmat
-      use mod_vllmatsra
-      use mod_regns, only: zgeinv1
+    use :: mod_mympi, only: myrank, master, distribute_work_energies
+    use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat, t_lloyd, init_tlloyd, type_dtmatjijdij, init_t_dtmatjij_at
+    use :: constants
+    use :: mod_profiling
+    use :: mod_wunfiles, only: t_params
+    use :: mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun, save_wavefunc
+    use :: mod_jijhelp, only: calc_dtmatjij
+    use :: global_variables
+    use :: mod_datatypes
+    use :: mod_ioinput
+    use :: mod_calcsph
+    use :: mod_rll_global_solutions
+    use :: mod_rllsllsourceterms
+    use :: mod_rllsll
+    use :: mod_spinorbit_ham
+    use :: mod_vllmat
+    use :: mod_vllmatsra
+    use :: mod_regns, only: zgeinv1
 
-      implicit none
+    implicit none
 
-      integer, intent(in) :: I1
-      integer, intent(in) :: LLY       !< LLY <> 0: apply Lloyds formula
-      integer, intent(in) :: LOPT      !< angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-      integer, intent(in) :: LMAX      !< Maximum l component in wave function expansion
-      integer, intent(in) :: NSRA
-      integer, intent(in) :: IEND      !< Number of nonzero gaunt coefficients
-      integer, intent(in) :: IPOT
-      integer, intent(in) :: NCHEB     !< Number of Chebychev pannels for the new solver
-      integer, intent(in) :: NSPIN     !< Counter for spin directions
-      integer, intent(in) :: LMPOT     !< (LPOT+1)**2
-      integer, intent(in) :: IELAST
-      integer, intent(in) :: NPAN_TOT
-      integer, intent(in) :: IDOLDAU   !< flag to perform LDA+U
-      real (kind=dp), intent(in) :: ZAT       !< Nuclear charge for a given atom
-      real (kind=dp), intent(in) :: PHI
-      real (kind=dp), intent(in) :: THETA
-      real (kind=dp), intent(in) :: SOCSCALE  !< Spin-orbit scaling for a given atom
-      complex (kind=dp), intent(in) :: DELTAE      !< Energy difference for numerical derivative
-      integer, dimension(0:NTOTD), intent(in) :: IPAN_INTERVALL
-      integer, dimension(NCLEB,4), intent(in) :: ICLEB
-      real (kind=dp), dimension(NCLEB), intent(in) :: CLEB !< GAUNT coefficients (GAUNT)
-      real (kind=dp), dimension(NRMAXD), intent(in) :: RNEW
-      real (kind=dp), dimension(0:NTOTD), intent(in) :: RPAN_INTERVALL
-      real (kind=dp), dimension(MMAXD,MMAXD,NSPIND), intent(in) :: WLDAU !< potential matrix
-      real (kind=dp), dimension(NRMAXD,LMPOT,NSPOTD), intent(in) :: VINSNEW
-      complex (kind=dp), dimension(IEMXD), intent(in) :: EZ
-      ! .. In/Out variables
-      type(type_dtmatJijDij), intent(inout) :: t_dtmatJij_at
+    integer, intent (in) :: i1
+    integer, intent (in) :: lly    ! < LLY <> 0: apply Lloyds formula
+    integer, intent (in) :: lopt   ! < angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+    integer, intent (in) :: lmax   ! < Maximum l component in wave function expansion
+    integer, intent (in) :: nsra
+    integer, intent (in) :: iend   ! < Number of nonzero gaunt coefficients
+    integer, intent (in) :: ipot
+    integer, intent (in) :: ncheb  ! < Number of Chebychev pannels for the new solver
+    integer, intent (in) :: nspin  ! < Counter for spin directions
+    integer, intent (in) :: lmpot  ! < (LPOT+1)**2
+    integer, intent (in) :: ielast
+    integer, intent (in) :: npan_tot
+    integer, intent (in) :: idoldau ! < flag to perform LDA+U
+    real (kind=dp), intent (in) :: zat ! < Nuclear charge for a given atom
+    real (kind=dp), intent (in) :: phi
+    real (kind=dp), intent (in) :: theta
+    real (kind=dp), intent (in) :: socscale ! < Spin-orbit scaling for a given atom
+    complex (kind=dp), intent (in) :: deltae ! < Energy difference for numerical derivative
+    integer, dimension (0:ntotd), intent (in) :: ipan_intervall
+    integer, dimension (ncleb, 4), intent (in) :: icleb
+    real (kind=dp), dimension (ncleb), intent (in) :: cleb ! < GAUNT coefficients (GAUNT)
+    real (kind=dp), dimension (nrmaxd), intent (in) :: rnew
+    real (kind=dp), dimension (0:ntotd), intent (in) :: rpan_intervall
+    real (kind=dp), dimension (mmaxd, mmaxd, nspind), intent (in) :: wldau ! < potential matrix
+    real (kind=dp), dimension (nrmaxd, lmpot, nspotd), intent (in) :: vinsnew
+    complex (kind=dp), dimension (iemxd), intent (in) :: ez
+    ! .. In/Out variables
+    type (type_dtmatjijdij), intent (inout) :: t_dtmatjij_at
 
-      ! .. Local variables
-      integer :: IR,IREC,USE_SRATRICK,NVEC,LM1,LM2,IE,IRMDNEW
-      integer :: i_stat, lmsize
-      complex (kind=dp) :: ERYD
-      complex (kind=dp), dimension(2*(LMAX+1)) :: ALPHASPH
-      ! .. Local allocatable arrays
-      integer, dimension(:), allocatable :: JLK_INDEX
-      real (kind=dp), dimension(:,:,:), allocatable :: VINS  !< Non-spherical part of the potential
-      complex (kind=dp), dimension(:,:), allocatable     :: AUX      ! LLY
-      complex (kind=dp), dimension(:,:), allocatable     :: TMAT0
-      complex (kind=dp), dimension(:,:), allocatable     :: ALPHA0   ! LLY
-      complex (kind=dp), dimension(:,:), allocatable     :: TMATLL
-      complex (kind=dp), dimension(:,:), allocatable     :: DTMATLL
-      complex (kind=dp), dimension(:,:), allocatable     :: TMATSPH
-      complex (kind=dp), dimension(:,:), allocatable     :: ALPHALL  ! LLY
-      complex (kind=dp), dimension(:,:), allocatable     :: DALPHALL ! LLY
-      complex (kind=dp), dimension(:,:,:), allocatable   :: HLK
-      complex (kind=dp), dimension(:,:,:), allocatable   :: JLK
-      complex (kind=dp), dimension(:,:,:), allocatable   :: HLK2
-      complex (kind=dp), dimension(:,:,:), allocatable   :: JLK2
-      complex (kind=dp), dimension(:,:,:), allocatable   :: VNSPLL0
-      complex (kind=dp), dimension(:,:,:,:), allocatable :: RLL
-      complex (kind=dp), dimension(:,:,:,:), allocatable :: SLL
-      complex (kind=dp), dimension(:,:,:,:), allocatable :: VNSPLL
-      complex (kind=dp), dimension(:,:,:,:), allocatable :: VNSPLL1
-      complex (kind=dp), dimension(:,:,:,:), allocatable :: RLLLEFT
-      complex (kind=dp), dimension(:,:,:,:), allocatable :: SLLLEFT
+    ! .. Local variables
+    integer :: ir, irec, use_sratrick, nvec, lm1, lm2, ie, irmdnew
+    integer :: i_stat, lmsize
+    complex (kind=dp) :: eryd
+    complex (kind=dp), dimension (2*(lmax+1)) :: alphasph
+    ! .. Local allocatable arrays
+    integer, dimension (:), allocatable :: jlk_index
+    real (kind=dp), dimension (:, :, :), allocatable :: vins ! < Non-spherical part of the potential
+    complex (kind=dp), dimension (:, :), allocatable :: aux ! LLY
+    complex (kind=dp), dimension (:, :), allocatable :: tmat0
+    complex (kind=dp), dimension (:, :), allocatable :: alpha0 ! LLY
+    complex (kind=dp), dimension (:, :), allocatable :: tmatll
+    complex (kind=dp), dimension (:, :), allocatable :: dtmatll
+    complex (kind=dp), dimension (:, :), allocatable :: tmatsph
+    complex (kind=dp), dimension (:, :), allocatable :: alphall ! LLY
+    complex (kind=dp), dimension (:, :), allocatable :: dalphall ! LLY
+    complex (kind=dp), dimension (:, :, :), allocatable :: hlk
+    complex (kind=dp), dimension (:, :, :), allocatable :: jlk
+    complex (kind=dp), dimension (:, :, :), allocatable :: hlk2
+    complex (kind=dp), dimension (:, :, :), allocatable :: jlk2
+    complex (kind=dp), dimension (:, :, :), allocatable :: vnspll0
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: rll
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: sll
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll1
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: rllleft
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: sllleft
 
-      ! .. LDAU local variables
-      integer :: LMLO,LMHI
-      ! .. LLoyd local variables
-      integer :: IDERIV,SIGNDE
-      complex (kind=dp) :: TRALPHA
-      complex (kind=dp) :: GMATPREFACTOR
-      integer, dimension(:), allocatable :: IPIV    ! LLY
-      ! .. OMP local variables
-      integer :: nth,ith ! total number of threads and thread id
+    ! .. LDAU local variables
+    integer :: lmlo, lmhi
+    ! .. LLoyd local variables
+    integer :: ideriv, signde
+    complex (kind=dp) :: tralpha
+    complex (kind=dp) :: gmatprefactor
+    integer, dimension (:), allocatable :: ipiv ! LLY
+    ! .. OMP local variables
+    integer :: nth, ith            ! total number of threads and thread id
 
 #ifdef CPP_MPI
-      integer, dimension(0:nranks-1) :: ntot_pT, ioff_pT
+    integer, dimension (0:nranks-1) :: ntot_pt, ioff_pt
 #endif
-      integer :: ie_end, ie_num, ie_start
-         
-      !rhoqtest
-      logical, external :: test, opt
-      integer :: mu0, nscoef
+    integer :: ie_end, ie_num, ie_start
 
-      ! BdG
-      character(len=100) :: filename
-      complex (kind=dp) :: e_shift
-      integer :: ier
-      character (len=256) :: uio
+    ! rhoqtest
+    logical, external :: test, opt
+    integer :: mu0, nscoef
+
+    ! BdG
+    character (len=100) :: filename
+    complex (kind=dp) :: e_shift
+    integer :: ier
+    character (len=256) :: uio
 
 #ifdef CPP_OMP
-      ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
-      !$omp parallel shared(nth,ith)
-      !$omp single
-      nth = omp_get_num_threads()
-      if(t_inc%i_write>0) write(1337,*) 'nth =',nth
-      !$omp end single
-      !$omp end parallel
+    ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
+    ! $omp parallel shared(nth,ith)
+    ! $omp single
+    nth = omp_get_num_threads()
+    if (t_inc%i_write>0) write (1337, *) 'nth =', nth
+    ! $omp end single
+    ! $omp end parallel
 #else
-      nth = 1
-      ith = 0
+    nth = 1
+    ith = 0
 #endif
 
-      lmsize = lmmaxd/2
-      IRMDNEW= NPAN_TOT*(NCHEB+1)
+    lmsize = lmmaxd/2
+    irmdnew = npan_tot*(ncheb+1)
 
-      if (NSRA.EQ.2) then
-         USE_SRATRICK=1
-         if (test('nosph   ')) then
-            if (myrank==master .and. ith==0 .and. i1==1) then
-               write(*,*) 'Found test option "nosph   ", deactivate SRATRICK'
-            end if
-            use_sratrick=0
-         end if
-      elseif (NSRA.EQ.1) then
-         USE_SRATRICK=0
-      endif
+    if (nsra==2) then
+      use_sratrick = 1
+      if (test('nosph   ')) then
+        if (myrank==master .and. ith==0 .and. i1==1) then
+          write (*, *) 'Found test option "nosph   ", deactivate SRATRICK'
+        end if
+        use_sratrick = 0
+      end if
+    else if (nsra==1) then
+      use_sratrick = 0
+    end if
 
 
-      ! .. allocate and initialize arrays
-      call allocate_locals_tmat_newsolver(1, IRMDNEW, LMPOT, NSPIN, VINS, AUX, IPIV, TMAT0, TMATLL, &
-         ALPHA0, DTMATLL, ALPHALL, DALPHALL, JLK_INDEX, nsra, lmmaxso, nth, lmax, vnspll, vnspll0, vnspll1,  &
-         hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+    ! .. allocate and initialize arrays
+    call allocate_locals_tmat_newsolver(1, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, lmax, vnspll, &
+      vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
-      do LM1=1,LMPOT
-         do IR=1,IRMDNEW
-            VINS(IR,LM1,1)=VINSNEW(IR,LM1,IPOT)
-            VINS(IR,LM1,NSPIN)=VINSNEW(IR,LM1,IPOT+NSPIN-1)
-         enddo
-      enddo
+    do lm1 = 1, lmpot
+      do ir = 1, irmdnew
+        vins(ir, lm1, 1) = vinsnew(ir, lm1, ipot)
+        vins(ir, lm1, nspin) = vinsnew(ir, lm1, ipot+nspin-1)
+      end do
+    end do
 
 #ifdef CPP_BdG
-      ! shift potential by EF to change referece point of energy to Fermi level
-      ! should later be done automatically in main0
-      if (test('BdG_dev ')) then
-        !e_shift = complex(0.723775735132693_dp, 0.0_dp)
-        !e_shift = complex(0.724775735132693_dp, 0.0_dp)
+    ! shift potential by EF to change referece point of energy to Fermi level
+    ! should later be done automatically in main0
+    if (test('BdG_dev ')) then
+      ! e_shift = complex(0.723775735132693_dp, 0.0_dp)
+      ! e_shift = complex(0.724775735132693_dp, 0.0_dp)
 
-       call ioinput('eshift          ', uio, 1, 7, ier)
-       if (ier==0) then
-         read (unit=uio, fmt=*) e_shift
-         write(*,*) 'e_shift=', e_shift
-       else
-         e_shift = (0.0_dp, 0.0_dp)
-       end if
+      call ioinput('eshift          ', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) e_shift
+        write (*, *) 'e_shift=', e_shift
       else
         e_shift = (0.0_dp, 0.0_dp)
       end if
+    else
+      e_shift = (0.0_dp, 0.0_dp)
+    end if
 #endif
 
-      ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
-      call VLLMAT(1,NRMAXD,IRMDNEW,lmsize,LMMAXSO,VNSPLL0,VINS,LMPOT,CLEB,ICLEB,&
-         IEND,NSPIN,ZAT,RNEW,USE_SRATRICK,NCLEB)
-      ! LDAU
-      if (IDOLDAU.EQ.1) then
-         LMLO=LOPT**2+1
-         LMHI=(LOPT+1)**2
-         do IR=1,IRMDNEW
-            VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+  &
-               WLDAU(1:MMAXD,1:MMAXD,1)
-         enddo
-         LMLO=LMLO+lmsize
-         LMHI=LMHI+lmsize
-         do IR=1,IRMDNEW
-            VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)=VNSPLL0(LMLO:LMHI,LMLO:LMHI,IR)+  &
-               WLDAU(1:MMAXD,1:MMAXD,2)
-         enddo
-      endif
-      ! LDAU
+    ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
+    call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
+    ! LDAU
+    if (idoldau==1) then
+      lmlo = lopt**2 + 1
+      lmhi = (lopt+1)**2
+      do ir = 1, irmdnew
+        vnspll0(lmlo:lmhi, lmlo:lmhi, ir) = vnspll0(lmlo:lmhi, lmlo:lmhi, ir) + wldau(1:mmaxd, 1:mmaxd, 1)
+      end do
+      lmlo = lmlo + lmsize
+      lmhi = lmhi + lmsize
+      do ir = 1, irmdnew
+        vnspll0(lmlo:lmhi, lmlo:lmhi, ir) = vnspll0(lmlo:lmhi, lmlo:lmhi, ir) + wldau(1:mmaxd, 1:mmaxd, 2)
+      end do
+    end if
+    ! LDAU
 
-      ! start energy loop
-      if(myrank==master.and.(t_inc%i_write>0)) WRITE(1337,*) 'atom: ',I1,' NSRA:',NSRA
+    ! start energy loop
+    if (myrank==master .and. (t_inc%i_write>0)) write (1337, *) 'atom: ', i1, ' NSRA:', nsra
 
-      call distribute_work_energies(ielast)
+    call distribute_work_energies(ielast)
 #ifdef CPP_MPI
-      ie_start = t_mpi_c_grid%ioff_pT2(t_mpi_c_grid%myrank_at)
-      ie_end   = t_mpi_c_grid%ntot_pT2(t_mpi_c_grid%myrank_at)
+    ie_start = t_mpi_c_grid%ioff_pt2(t_mpi_c_grid%myrank_at)
+    ie_end = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
 #else
-      ie_start = 0
-      ie_end   = IELAST
+    ie_start = 0
+    ie_end = ielast
 #endif
-      ! Now initialize arrays for tmat, gmat, and gref
-      call init_tgmat(t_inc,t_tgmat,t_mpi_c_grid)
-      if(lly.ne.0) call init_tlloyd(t_inc,t_lloyd,t_mpi_c_grid)
+    ! Now initialize arrays for tmat, gmat, and gref
+    call init_tgmat(t_inc, t_tgmat, t_mpi_c_grid)
+    if (lly/=0) call init_tlloyd(t_inc, t_lloyd, t_mpi_c_grid)
 
-      ! consistency check
-      if(test('rhoqtest')) then
-         if(ielast/=3) stop 'Error: wrong energy contour for rhoqtest'
-         ie_start=1
-         ie_end=1
+    ! consistency check
+    if (test('rhoqtest')) then
+      if (ielast/=3) stop 'Error: wrong energy contour for rhoqtest'
+      ie_start = 1
+      ie_end = 1
+    end if
+
+    ! For Jij-tensor calculation: allocate array to hold additional t-matrices
+    call init_t_dtmatjij_at(t_inc, t_mpi_c_grid, t_dtmatjij_at)
+
+    ! Initialize wfsave
+    if (t_inc%i_iteration==0) then
+      call find_isave_wavefun(t_wavefunctions)
+      ! Reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
+      ! to prevent unnessesary storing of wavefunctions
+      if (test('STOP1B  ') .and. .not. opt('OPERATOR')) then
+        t_wavefunctions%nwfsavemax = 0
+      end if
+    end if
+
+#ifdef CPP_OMP
+    ! $omp parallel do default(none)                                            &
+    ! $omp private(eryd,ie,ir,nvec,lm1,lm2,gmatprefactor)                       &
+    ! $omp private(jlk_index,tmatll,ith,irec, ie_num)                           &
+    ! $omp private(tralpha, aux, ideriv, ipiv)                                  &
+    ! $omp private(alpha0)                                                      &
+    ! $omp private(alphall)                                                     &
+    ! $omp private(tmat0)                                                       &
+    ! $omp private(alphasph)                                                    &
+    ! $omp private(dtmatll)                                                     &
+    ! $omp private(dalphall)                                                    &
+    ! $omp shared(t_inc)                                                        &
+    ! $omp shared(nspin,nsra,lmax,lmsize,iend,ipot,ielast,npan_tot,ncheb)       &
+    ! $omp shared(zat,socscale,ez,cleb,rnew,nth,LMPOT,NRMAXD,LMMAXSO,NTOTD)     &
+    ! $omp shared(rpan_intervall,vinsnew,ipan_intervall,NCLEB)                  &
+    ! $omp shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)                  &
+    ! $omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)     &
+    ! $omp shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)     &
+    ! $omp shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)           &
+    ! $omp shared(mu0, nscoef, e_shift, filename)
+#endif
+
+    do ie_num = 1, ie_end
+
+      ie = ie_start + ie_num
+
+#ifdef CPP_MPI
+      ! start timing measurement for this pair of ie and i1, needed for MPIadapt
+      call timing_start('time_1a_ieiatom')
+#endif
+
+      ! get current thread
+      if (nth>=1) then
+#ifdef CPP_OMP
+        ith = omp_get_thread_num()
+#endif
+      else
+        ith = 0
       end if
 
-      ! For Jij-tensor calculation: allocate array to hold additional t-matrices
-      call init_t_dtmatJij_at(t_inc, t_mpi_c_grid, t_dtmatJij_at)
-
-      ! Initialize wfsave
-      if(t_inc%i_iteration==0) then
-         call find_isave_wavefun(t_wavefunctions)
-         ! Reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
-         ! to prevent unnessesary storing of wavefunctions
-         if(test('STOP1B  ') .and. .not. opt('OPERATOR')) then
-            t_wavefunctions%Nwfsavemax = 0
-         endif
-      endif
+      ! In case of Lloyds formula the derivative of t is needed.
+      ! Then calculate t at E+dE, E-dE and average for t, subtract for dt/dE
+      tmatll = czero
+      alphall = czero              ! LLY
+      dtmatll = czero              ! LLY
+      dalphall = czero             ! LLY
+      ideriv = 0
+      if (lly/=0) ideriv = 1
+      do signde = -ideriv, ideriv, 2
+        eryd = ez(ie) + real(signde, kind=dp)*deltae/2.d0 ! LLY
 
 #ifdef CPP_OMP
-      !$omp parallel do default(none)                                            &
-      !$omp private(eryd,ie,ir,nvec,lm1,lm2,gmatprefactor)                       &
-      !$omp private(jlk_index,tmatll,ith,irec, ie_num)                           &
-      !$omp private(tralpha, aux, ideriv, ipiv)                                  &
-      !$omp private(alpha0)                                                      &
-      !$omp private(alphall)                                                     &
-      !$omp private(tmat0)                                                       &
-      !$omp private(alphasph)                                                    &
-      !$omp private(dtmatll)                                                     &
-      !$omp private(dalphall)                                                    &
-      !$omp shared(t_inc)                                                        &
-      !$omp shared(nspin,nsra,lmax,lmsize,iend,ipot,ielast,npan_tot,ncheb)       &
-      !$omp shared(zat,socscale,ez,cleb,rnew,nth,LMPOT,NRMAXD,LMMAXSO,NTOTD)     &
-      !$omp shared(rpan_intervall,vinsnew,ipan_intervall,NCLEB)                  &
-      !$omp shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)                  &
-      !$omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)     &
-      !$omp shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)     &
-      !$omp shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)           &
-      !$omp shared(mu0, nscoef, e_shift, filename)
-#endif
-
-      do ie_num=1,ie_end
-
-         IE = ie_start+ie_num
-
-#ifdef CPP_MPI
-         !start timing measurement for this pair of ie and i1, needed for MPIadapt
-         call timing_start('time_1a_ieiatom')
-#endif
-
-         ! get current thread
-         if (nth>=1) then
-#ifdef CPP_OMP
-            ith = omp_get_thread_num()
-#endif
-         else
-            ith = 0
-         endif
-
-         ! In case of Lloyds formula the derivative of t is needed.
-         ! Then calculate t at E+dE, E-dE and average for t, subtract for dt/dE
-         TMATLL=CZERO
-         ALPHALL=CZERO ! LLY
-         DTMATLL=CZERO ! LLY
-         DALPHALL=CZERO ! LLY
-         IDERIV=0
-         if (LLY.NE.0) IDERIV=1
-         do SIGNDE=-IDERIV,IDERIV,2
-            ERYD = EZ(IE)+real(SIGNDE, kind=dp)*DELTAE/2.D0 ! LLY
-
-#ifdef CPP_OMP
-            !$omp critical
+        ! $omp critical
 #endif
 #ifdef CPP_BdG
-            if (test('BdG_dev ')) then
-               write(*,'(A,4ES21.7)') 'shifting energy by e_fermi:', eryd, e_shift
-               ERYD = ERYD + e_shift
-            end if
+        if (test('BdG_dev ')) then
+          write (*, '(A,4ES21.7)') 'shifting energy by e_fermi:', eryd, e_shift
+          eryd = eryd + e_shift
+        end if
 #endif
 
-            if(t_inc%i_write>0) WRITE(1337,*) 'energy:',IE,'',ERYD
+        if (t_inc%i_write>0) write (1337, *) 'energy:', ie, '', eryd
 #ifdef CPP_OMP
-            if(ie==1.and.(t_inc%i_write>0)) write(1337,*) 'nested omp?',omp_get_nested()
-            !$omp end critical
+        if (ie==1 .and. (t_inc%i_write>0)) write (1337, *) 'nested omp?', omp_get_nested()
+        ! $omp end critical
 #endif
 
-            ! Contruct the spin-orbit coupling hamiltonian and add to potential
-            call SPINORBIT_HAM(LMAX,lmsize,VINS,RNEW,ERYD,ZAT,CVLIGHT,SOCSCALE,  &
-               NSPIN,LMPOT,THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,    &
-               NCHEB,IRMDNEW,NRMAXD,VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),'1')
+        ! Contruct the spin-orbit coupling hamiltonian and add to potential
+        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
+          vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
 
 #ifdef CPP_OMP
-            !$omp critical
+        ! $omp critical
 #endif
 #ifdef CPP_BdG
-            ! test writeout of VNSPLL1
-            if (test('BdG_dev ')) then
-              open(7352834, file='vnspll_SOC.txt', form='formatted')
-              write(7352834, '(A,3I9)') '# LMMAXSO,LMMAXSO,IRMDNEW=', lmmaxso, lmmaxso, irmdnew
-              write(7352834, '(2F25.14)') VNSPLL1(:,:,:,ith)
-              close(7352834)
-            end if
+        ! test writeout of VNSPLL1
+        if (test('BdG_dev ')) then
+          open (7352834, file='vnspll_SOC.txt', form='formatted')
+          write (7352834, '(A,3I9)') '# LMMAXSO,LMMAXSO,IRMDNEW=', lmmaxso, lmmaxso, irmdnew
+          write (7352834, '(2F25.14)') vnspll1(:, :, :, ith)
+          close (7352834)
+        end if
 #endif
 #ifdef CPP_OMP
-            !$omp end critical
+        ! $omp end critical
 #endif
 
-            ! now extend matrix for the SRA treatment
-            VNSPLL(:,:,:,ith)=CZERO
+        ! now extend matrix for the SRA treatment
+        vnspll(:, :, :, ith) = czero
 
-            if (NSRA.EQ.2) then
-               if (USE_SRATRICK.EQ.0) then
-                  call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0')
-               elseif (USE_SRATRICK.EQ.1) then
-                  call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph')
-               endif
-            else
-               VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
-            endif
+        if (nsra==2) then
+          if (use_sratrick==0) then
+            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=0')
+          else if (use_sratrick==1) then
+            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=Vsph')
+          end if
+        else
+          vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
+        end if
 
 #ifdef CPP_OMP
-            !$omp critical
+        ! $omp critical
 #endif
 #ifdef CPP_BdG
-            ! test writeout of VNPSLL
-            if (test('BdG_dev ')) then
-              open(7352834, file='vnspll_sra.txt', form='formatted')
-              if (NSRA.EQ.2) then
-                write(7352834, '(A,3I9)') '# 2*LMMAXSO,2*LMMAXSO,IRMDNEW=', 2*lmmaxso, 2*lmmaxso, irmdnew
-              else
-                write(7352834, '(A,3I9)') '# LMMAXSO,LMMAXSO,IRMDNEW=', lmmaxso, lmmaxso, irmdnew
-              end if
-              write(7352834, '(2F25.14)') VNSPLL(:,:,:,ith)
-              close(7352834)
-            end if
+        ! test writeout of VNPSLL
+        if (test('BdG_dev ')) then
+          open (7352834, file='vnspll_sra.txt', form='formatted')
+          if (nsra==2) then
+            write (7352834, '(A,3I9)') '# 2*LMMAXSO,2*LMMAXSO,IRMDNEW=', 2*lmmaxso, 2*lmmaxso, irmdnew
+          else
+            write (7352834, '(A,3I9)') '# LMMAXSO,LMMAXSO,IRMDNEW=', lmmaxso, lmmaxso, irmdnew
+          end if
+          write (7352834, '(2F25.14)') vnspll(:, :, :, ith)
+          close (7352834)
+        end if
 #endif
 #ifdef CPP_OMP
-            !$omp end critical
+        ! $omp end critical
 #endif
 
-            ! Calculate the source terms in the Lippmann-Schwinger equation
-            ! these are spherical hankel and bessel functions
-            HLK(:,:,ith)=CZERO
-            JLK(:,:,ith)=CZERO
-            HLK2(:,:,ith)=CZERO
-            JLK2(:,:,ith)=CZERO
-            GMATPREFACTOR=CZERO
-            call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,LMMAXSO, &
-               1,JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),   &
-               GMATPREFACTOR)
+        ! Calculate the source terms in the Lippmann-Schwinger equation
+        ! these are spherical hankel and bessel functions
+        hlk(:, :, ith) = czero
+        jlk(:, :, ith) = czero
+        hlk2(:, :, ith) = czero
+        jlk2(:, :, ith) = czero
+        gmatprefactor = czero
+        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
 #ifdef CPP_OMP
-            !$omp critical
+        ! $omp critical
 #endif
 #ifdef CPP_BdG
-            if (test('BdG_dev ')) then
-              write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk_atom_',i1,'_energ_',ie,'.dat'
-              open(888888, file=trim(filename), form='formatted')
-              write(888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=',4*(LMAX+1),' IRMDNEW=', IRMDNEW, ' ; ERYD=', ERYD
-              write(888888, '(2ES21.9)') jlk(:,:,ith)
-              close(888888)
-              write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_hlk_atom_',i1,'_energ_',ie,'.dat'
-              open(888888, file=trim(filename), form='formatted')
-              write(888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=',4*(LMAX+1),' IRMDNEW=', IRMDNEW, ' ; ERYD=', ERYD
-              write(888888, '(2ES21.9)') hlk(:,:,ith)
-              close(888888)
-              write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk2_atom_',i1,'_energ_',ie,'.dat'
-              open(888888, file=trim(filename), form='formatted')
-              write(888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=',4*(LMAX+1),' IRMDNEW=', IRMDNEW, ' ; ERYD=', ERYD
-              write(888888, '(2ES21.9)') jlk2(:,:,ith)
-              close(888888)
-              write(filename, '(A,I0.3,A,I0.3,A)') 'rll_source_hlk2_atom_',i1,'_energ_',ie,'.dat'
-              open(888888, file=trim(filename), form='formatted')
-              write(888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=',4*(LMAX+1),' IRMDNEW=', IRMDNEW, ' ; ERYD=', ERYD
-              write(888888, '(2ES21.9)') hlk2(:,:,ith)
-              close(888888)
-            end if
+        if (test('BdG_dev ')) then
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
+          write (888888, '(2ES21.9)') jlk(:, :, ith)
+          close (888888)
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_source_hlk_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
+          write (888888, '(2ES21.9)') hlk(:, :, ith)
+          close (888888)
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk2_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
+          write (888888, '(2ES21.9)') jlk2(:, :, ith)
+          close (888888)
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_source_hlk2_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
+          write (888888, '(2ES21.9)') hlk2(:, :, ith)
+          close (888888)
+        end if
 #endif
 #ifdef CPP_OMP
-            !$omp end critical
+        ! $omp end critical
 #endif
 
-            ! Using spherical potential as reference
-            if (USE_SRATRICK.EQ.1) then
-               TMATSPH(:,ith)=CZERO
-               call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,ERYD,LMPOT, &
-                  LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,JLK_INDEX,        &
-                  HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),            &
-                  GMATPREFACTOR,TMATSPH(:,ith),ALPHASPH,USE_SRATRICK)
-            endif
-            ! Calculate the tmat and wavefunctions
-            RLL(:,:,:,ith)=CZERO
-            SLL(:,:,:,ith)=CZERO
+        ! Using spherical potential as reference
+        if (use_sratrick==1) then
+          tmatsph(:, ith) = czero
+          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
+            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
+        end if
+        ! Calculate the tmat and wavefunctions
+        rll(:, :, :, ith) = czero
+        sll(:, :, :, ith) = czero
 
-            ! Right solutions
-            TMAT0=CZERO
-            ALPHA0=CZERO ! LLY
-            ! faster calculation of RLL.
-            ! no irregular solutions are needed in self-consistent iterations
-            ! because the t-matrix depends only on RLL
-            if( OPT('RLL-SLL ') .and. .not.(OPT('XCPL    ').or.OPT('OPERATOR')) ) then
-               call rll_global_solutions(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),  &
-                  RLL(:,:,:,ith),TMAT0(:,:),NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO, &
-                  4*(LMAX+1),IRMDNEW,NSRA,JLK_INDEX,HLK(:,:,ith),         &
-                  JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,'1',    &
-                  USE_SRATRICK,ALPHA0(:,:))
-            else
-               call RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),RLL(:,:,:,ith), &
-                  SLL(:,:,:,ith),TMAT0(:,:),NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO, &
-                  4*(LMAX+1),IRMDNEW,NSRA,JLK_INDEX,HLK(:,:,ith),         &
-                  JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR,'1','1',&
-                  '0',USE_SRATRICK,ALPHA0(:,:))
-            end if
+        ! Right solutions
+        tmat0 = czero
+        alpha0 = czero             ! LLY
+        ! faster calculation of RLL.
+        ! no irregular solutions are needed in self-consistent iterations
+        ! because the t-matrix depends only on RLL
+        if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
+            jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
+        else
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
+            jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0(:,:))
+        end if
 
-            if (NSRA.EQ.2) then
-               RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=RLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-               SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=SLL(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-            endif
+        if (nsra==2) then
+          rll(lmmaxso+1:nvec*lmmaxso, :, :, ith) = rll(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
+          sll(lmmaxso+1:nvec*lmmaxso, :, :, ith) = sll(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
+        end if
 #ifdef CPP_OMP
-            !$omp critical
+        ! $omp critical
 #endif
 #ifdef CPP_BdG
-            if (test('BdG_dev ')) then
-              write(filename, '(A,I0.3,A,I0.3,A)') 'rll_atom_',i1,'_energ_',ie,'.dat'
-              open(888888, file=trim(filename), form='formatted')
-              write(888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso*nvec=',nvec*lmmaxso,' lmmaxso=',lmmaxso,' irmdnew=', irmdnew 
-              write(888888, '(2ES21.9)') rll(:,:,:,ith)
-              close(888888)
-              write(filename, '(A,I0.3,A,I0.3,A)') 'sll_atom_',i1,'_energ_',ie,'.dat'
-              open(888888, file=trim(filename), form='formatted')
-              write(888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso*nvec=',nvec*lmmaxso,' lmmaxso=',lmmaxso,' irmdnew=', irmdnew 
-              write(888888, '(2ES21.9)') sll(:,:,:,ith)
-              close(888888)
-            end if
+        if (test('BdG_dev ')) then
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso*nvec=', nvec*lmmaxso, ' lmmaxso=', lmmaxso, ' irmdnew=', irmdnew
+          write (888888, '(2ES21.9)') rll(:, :, :, ith)
+          close (888888)
+          write (filename, '(A,I0.3,A,I0.3,A)') 'sll_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso*nvec=', nvec*lmmaxso, ' lmmaxso=', lmmaxso, ' irmdnew=', irmdnew
+          write (888888, '(2ES21.9)') sll(:, :, :, ith)
+          close (888888)
+        end if
 #endif
 #ifdef CPP_OMP
-            !$omp end critical
+        ! $omp end critical
 #endif
 
-            ! add spherical contribution of tmatrix
-            if (USE_SRATRICK.EQ.1) then
-               do LM1=1,LMMAXSO
-                  TMAT0(LM1,LM1)=TMAT0(LM1,LM1)+TMATSPH(JLK_INDEX(LM1),ith)
-               enddo
-               if (LLY.NE.0) then
-                 do LM2=1,LMMAXSO
-                    do LM1=1,LMMAXSO
-                       ! alphasph is multiplied not added 
-                       ALPHA0(LM1,LM2)=ALPHASPH(JLK_INDEX(LM1)) * ALPHA0(LM1,LM2) ! LLY
-                    enddo
-                 enddo
-               end if ! LLY
-            endif
-            TMATLL(:,:)=TMATLL(:,:)+TMAT0(:,:)
-            if (LLY.NE.0) then
-              ALPHALL(:,:)=ALPHALL(:,:)+ALPHA0(:,:)
-              DTMATLL(:,:)=DTMATLL(:,:)+real(SIGNDE, kind=dp)*TMAT0(:,:) ! LLY
-              DALPHALL(:,:)=DALPHALL(:,:)+real(SIGNDE, kind=dp)*ALPHA0(:,:) ! LLY
-            endif
+        ! add spherical contribution of tmatrix
+        if (use_sratrick==1) then
+          do lm1 = 1, lmmaxso
+            tmat0(lm1, lm1) = tmat0(lm1, lm1) + tmatsph(jlk_index(lm1), ith)
+          end do
+          if (lly/=0) then
+            do lm2 = 1, lmmaxso
+              do lm1 = 1, lmmaxso
+                ! alphasph is multiplied not added
+                alpha0(lm1, lm2) = alphasph(jlk_index(lm1))*alpha0(lm1, lm2) ! LLY
+              end do
+            end do
+          end if                   ! LLY
+        end if
+        tmatll(:, :) = tmatll(:, :) + tmat0(:, :)
+        if (lly/=0) then
+          alphall(:, :) = alphall(:, :) + alpha0(:, :)
+          dtmatll(:, :) = dtmatll(:, :) + real(signde, kind=dp)*tmat0(:, :) ! LLY
+          dalphall(:, :) = dalphall(:, :) + real(signde, kind=dp)*alpha0(:, :) ! LLY
+        end if
 
 #ifdef CPP_OMP
-            !$omp critical
+        ! $omp critical
 #endif
 #ifdef CPP_BdG
-            if (test('BdG_dev ')) then
-              write(filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_',i1,'_energ_',ie,'.dat'
-              open(888888, file=trim(filename), form='formatted')
-              write(888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso=',lmmaxso,' lmmaxso=',lmmaxso
-              write(888888, '(2ES21.9)') TMATLL(:,:)
-              close(888888)
-            end if
+        if (test('BdG_dev ')) then
+          write (filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso=', lmmaxso, ' lmmaxso=', lmmaxso
+          write (888888, '(2ES21.9)') tmatll(:, :)
+          close (888888)
+        end if
 #endif
 #ifdef CPP_OMP
-            !$omp end critical
+        ! $omp end critical
 #endif
 
-         enddo ! signde=-ideriv,ideriv,2 ! lly
+      end do                       ! signde=-ideriv,ideriv,2 ! lly
 
-         ! Average values of t-matrix and alpha at e+de and e-de
-         TMATLL(:,:)=TMATLL(:,:)/real(1+IDERIV, kind=dp) ! LLY
-         if (LLY.NE.0) then
-           ALPHALL(:,:)=ALPHALL(:,:)/real(1+IDERIV, kind=dp) ! LLY
-           ! Contruct derivative of t-matrix and alpha
-           DTMATLL(:,:)=DTMATLL(:,:)/DELTAE ! LLY
-           DALPHALL(:,:)=DALPHALL(:,:)/DELTAE ! LLY
-         endif
-         if (LLY.NE.0) then
-            ! calculate Tr[alpha^-1*dalpha/de] for LLoyd's formula
-            ALPHA0=CZERO ! LLY
-            AUX=CZERO ! LLY
-            call ZGEINV1(ALPHALL,ALPHA0,AUX,IPIV,LMMAXSO)
-            call ZGEMM('N','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,ALPHA0,LMMAXSO,DALPHALL,&
-               LMMAXSO,CZERO,AUX,LMMAXSO) ! LLY
-            ! Trace of AUX
-            TRALPHA=CZERO ! LLY
-            do LM1=1,LMMAXSO
-               TRALPHA=TRALPHA+AUX(LM1,LM1) ! LLY
-            enddo
-         endif ! LLY
+      ! Average values of t-matrix and alpha at e+de and e-de
+      tmatll(:, :) = tmatll(:, :)/real(1+ideriv, kind=dp) ! LLY
+      if (lly/=0) then
+        alphall(:, :) = alphall(:, :)/real(1+ideriv, kind=dp) ! LLY
+        ! Contruct derivative of t-matrix and alpha
+        dtmatll(:, :) = dtmatll(:, :)/deltae ! LLY
+        dalphall(:, :) = dalphall(:, :)/deltae ! LLY
+      end if
+      if (lly/=0) then
+        ! calculate Tr[alpha^-1*dalpha/de] for LLoyd's formula
+        alpha0 = czero             ! LLY
+        aux = czero                ! LLY
+        call zgeinv1(alphall, alpha0, aux, ipiv, lmmaxso)
+        call zgemm('N', 'N', lmmaxso, lmmaxso, lmmaxso, cone, alpha0, lmmaxso, dalphall, lmmaxso, czero, aux, lmmaxso) ! LLY
+        ! Trace of AUX
+        tralpha = czero            ! LLY
+        do lm1 = 1, lmmaxso
+          tralpha = tralpha + aux(lm1, lm1) ! LLY
+        end do
+      end if                       ! LLY
 
-         if(test('rhoqtest') .and. ie==2) then
-            ! read in mu0 atom index
-            open(9999,file='mu0')
-            read(9999,*) mu0, nscoef
-            close(9999)
-         end if
+      if (test('rhoqtest') .and. ie==2) then
+        ! read in mu0 atom index
+        open (9999, file='mu0')
+        read (9999, *) mu0, nscoef
+        close (9999)
+      end if
 
-         ! Calculate additional t-matrices for Jij-tensor calculation
-         if (t_dtmatJij_at%calculate .or.( t_wavefunctions%isave_wavefun(i1, ie)>0 .and.   &
-             (t_wavefunctions%save_rllleft .or.t_wavefunctions%save_sllleft) )             &
-            .or. ((test('rhoqtest') .and. ie==2).and.(i1==mu0)) ) then                     !rhoqtest
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            ! Calculate the left-hand side solution this needs to be done for the
-            ! calculation of t-matrices for Jij tensor or if wavefunctions should be saved
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            !
-            ! Contruct the spin-orbit coupling hamiltonian and add to potential
-            call SPINORBIT_HAM(LMAX,lmsize,VINS,RNEW,ERYD,ZAT,CVLIGHT,SOCSCALE,NSPIN,  &
-               LMPOT,THETA,PHI,IPAN_INTERVALL,RPAN_INTERVALL,NPAN_TOT,NCHEB,IRMDNEW,  &
-               NRMAXD,VNSPLL0(:,:,:),VNSPLL1(:,:,:,ith),'transpose')
+      ! Calculate additional t-matrices for Jij-tensor calculation
+      if (t_dtmatjij_at%calculate .or. (t_wavefunctions%isave_wavefun(i1,ie)>0 .and. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft)) .or. ((test('rhoqtest') .and. &
+        ie==2) .and. (i1==mu0))) then ! rhoqtest
+        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        ! Calculate the left-hand side solution this needs to be done for the
+        ! calculation of t-matrices for Jij tensor or if wavefunctions should be saved
+        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-            ! Extend matrix for the SRA treatment
-            VNSPLL(:,:,:,ith)=CZERO
-            if (NSRA.EQ.2) then
-               if (USE_SRATRICK.EQ.0) then
-                  call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=0')
-               elseif (USE_SRATRICK.EQ.1) then
-                  call VLLMATSRA(VNSPLL1(:,:,:,ith),VNSPLL(:,:,:,ith),RNEW,LMMAXSO,&
-                     IRMDNEW,NRMAXD,ERYD,LMAX,0,'Ref=Vsph')
-               endif
-            else
-               VNSPLL(:,:,:,ith)=VNSPLL1(:,:,:,ith)
-            endif
+        ! Contruct the spin-orbit coupling hamiltonian and add to potential
+        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
+          vnspll0(:,:,:), vnspll1(:,:,:,ith), 'transpose')
 
-            ! Calculate the source terms in the Lippmann-Schwinger equation
-            ! these are spherical hankel and bessel functions
-            HLK(:,:,ith)=CZERO
-            JLK(:,:,ith)=CZERO
-            HLK2(:,:,ith)=CZERO
-            JLK2(:,:,ith)=CZERO
-            GMATPREFACTOR=CZERO
-            jlk_index = 0
-            call RLLSLLSOURCETERMS(NSRA,NVEC,ERYD,RNEW,IRMDNEW,NRMAXD,LMAX,LMMAXSO,1,  &
-               JLK_INDEX,HLK(:,:,ith),JLK(:,:,ith),HLK2(:,:,ith),JLK2(:,:,ith),GMATPREFACTOR)
+        ! Extend matrix for the SRA treatment
+        vnspll(:, :, :, ith) = czero
+        if (nsra==2) then
+          if (use_sratrick==0) then
+            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=0')
+          else if (use_sratrick==1) then
+            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=Vsph')
+          end if
+        else
+          vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
+        end if
 
-            ! Using spherical potential as reference
-            ! notice that exchange the order of left and right hankel/bessel functions
-            if (USE_SRATRICK.EQ.1) then
-               TMATSPH(:,ith)=CZERO
-               call CALCSPH(NSRA,IRMDNEW,NRMAXD,LMAX,NSPIN,ZAT,ERYD,LMPOT, &
-                  LMMAXSO,RNEW,VINS,NCHEB,NPAN_TOT,RPAN_INTERVALL,JLK_INDEX,        &
-                  HLK2(:,:,ith),JLK2(:,:,ith),HLK(:,:,ith),JLK(:,:,ith),            &
-                  GMATPREFACTOR,ALPHASPH,TMATSPH(:,ith),USE_SRATRICK)
-            endif
+        ! Calculate the source terms in the Lippmann-Schwinger equation
+        ! these are spherical hankel and bessel functions
+        hlk(:, :, ith) = czero
+        jlk(:, :, ith) = czero
+        hlk2(:, :, ith) = czero
+        jlk2(:, :, ith) = czero
+        gmatprefactor = czero
+        jlk_index = 0
+        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
-            ! Calculate the tmat and wavefunctions
-            RLLLEFT(:,:,:,ith)=CZERO
-            SLLLEFT(:,:,:,ith)=CZERO
+        ! Using spherical potential as reference
+        ! notice that exchange the order of left and right hankel/bessel functions
+        if (use_sratrick==1) then
+          tmatsph(:, ith) = czero
+          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
+            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick)
+        end if
 
-            ! Left solutions
-            ! notice that exchange the order of left and right hankel/bessel functions
-            TMAT0=CZERO
-            ALPHA0=CZERO ! LLY
-            ! faster calculation of RLL.
-            ! no left solutions are needed in self-consistent iterations
-            ! because the t-matrix depends only on RLL
-            if( OPT('RLL-SLL ') .and. .not.(OPT('XCPL    ').or.OPT('OPERATOR')) ) then
-               ! do nothing
-            else
-               call RLLSLL(RPAN_INTERVALL,RNEW,VNSPLL(:,:,:,ith),RLLLEFT(:,:,:,ith),      &
-                  SLLLEFT(:,:,:,ith),TMAT0,NCHEB,NPAN_TOT,LMMAXSO,NVEC*LMMAXSO,4*(LMAX+1),&
-                  IRMDNEW,NSRA,JLK_INDEX,HLK2(:,:,ith),JLK2(:,:,ith),HLK(:,:,ith), &
-                  JLK(:,:,ith),GMATPREFACTOR,'1','1','0',USE_SRATRICK,ALPHA0)
-            end if
-            if (NSRA.EQ.2) then
-               RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=RLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-               SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)=SLLLEFT(LMMAXSO+1:NVEC*LMMAXSO,:,:,ith)/CVLIGHT
-            endif
+        ! Calculate the tmat and wavefunctions
+        rllleft(:, :, :, ith) = czero
+        sllleft(:, :, :, ith) = czero
 
-            if(test('rhoqtest')) then
+        ! Left solutions
+        ! notice that exchange the order of left and right hankel/bessel functions
+        tmat0 = czero
+        alpha0 = czero             ! LLY
+        ! faster calculation of RLL.
+        ! no left solutions are needed in self-consistent iterations
+        ! because the t-matrix depends only on RLL
+        if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
+          ! do nothing
+        else
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
+            jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0)
+        end if
+        if (nsra==2) then
+          rllleft(lmmaxso+1:nvec*lmmaxso, :, :, ith) = rllleft(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
+          sllleft(lmmaxso+1:nvec*lmmaxso, :, :, ith) = sllleft(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
+        end if
+
+        if (test('rhoqtest')) then
 #ifdef CPP_OMP
-             write(*,*) 'rhoqtest does not work in OMP version!!'
-             write(*,*) 'please use hybrid compilation mode'
-             stop
+          write (*, *) 'rhoqtest does not work in OMP version!!'
+          write (*, *) 'please use hybrid compilation mode'
+          stop
 #else
-             open(9999, file='params.txt')
-             write(9999,*) lmmaxso, t_params%natyp
-             write(9999,*) t_params%naez, t_params%nclsd, t_params%nr, t_params%nembd1-1, t_params%lmax
-             write(9999,*) t_params%alat
-             close(9999)
+          open (9999, file='params.txt')
+          write (9999, *) lmmaxso, t_params%natyp
+          write (9999, *) t_params%naez, t_params%nclsd, t_params%nr, t_params%nembd1 - 1, t_params%lmax
+          write (9999, *) t_params%alat
+          close (9999)
 
-             open(9999, file='host.txt')
-             write(9999,*) t_params%rbasis(1:3,1:t_params%natyp)
-             write(9999,*) t_params%rcls(1:3,1:t_params%nclsd,1:t_params%nclsd), t_params%rr(1:3,0:t_params%nr), t_params%atom(1:t_params%nclsd,1:t_params%naez+t_params%nembd1-1)
-             write(9999,*) t_params%cls(1:t_params%naez+t_params%nembd1-1),t_params%ezoa(1:t_params%nclsd,1:t_params%naez+t_params%nembd1-1), t_params%nacls(1:t_params%nclsd)
-             close(9999)
+          open (9999, file='host.txt')
+          write (9999, *) t_params%rbasis(1:3, 1:t_params%natyp)
+          write (9999, *) t_params%rcls(1:3, 1:t_params%nclsd, 1:t_params%nclsd), t_params%rr(1:3, 0:t_params%nr), t_params%atom(1:t_params%nclsd, 1:t_params%naez+t_params%nembd1-1 &
+            )
+          write (9999, *) t_params%cls(1:t_params%naez+t_params%nembd1-1), t_params%ezoa(1:t_params%nclsd, 1:t_params%naez+t_params%nembd1-1), t_params%nacls(1:t_params%nclsd)
+          close (9999)
 
-             open(9999, file='wavefunctions.txt')
-             write(9999,'(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
-             write(9999,'(1000E26.17)') rnew(1:irmdnew)
-             do ir=1,irmdnew
-               do lm1=1,nsra*lmmaxso
-                 do lm2=1,lmmaxso
-                    write(9999,'(20000E16.7)') Rll(lm1, lm2, ir, ith),Rllleft(lm1, lm2, ir, ith)
-                 end do
-               end do
-             enddo
-             do lm1=0,npan_tot
-               write(9999,'(E16.7,I9)') rpan_intervall(lm1), ipan_intervall(lm1)
-             enddo
-             close(9999)
+          open (9999, file='wavefunctions.txt')
+          write (9999, '(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
+          write (9999, '(1000E26.17)') rnew(1:irmdnew)
+          do ir = 1, irmdnew
+            do lm1 = 1, nsra*lmmaxso
+              do lm2 = 1, lmmaxso
+                write (9999, '(20000E16.7)') rll(lm1, lm2, ir, ith), rllleft(lm1, lm2, ir, ith)
+              end do
+            end do
+          end do
+          do lm1 = 0, npan_tot
+            write (9999, '(E16.7,I9)') rpan_intervall(lm1), ipan_intervall(lm1)
+          end do
+          close (9999)
 #endif
-            end if ! test('rhoqtest')
+        end if                     ! test('rhoqtest')
 
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            ! Calculate the left-hand side solution
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        ! Calculate the left-hand side solution
+        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-         end if !t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
+      end if                       ! t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
 
-         ! save_wavefuncions
-         if(t_wavefunctions%Nwfsavemax>0) then
-            ! here all four (left, right, regular and irregular) are stored, the memory demand cound be reduced by a factor 2 if only the right solution would be computed here and saved and the left solution would be calculated later in main1c
-            call save_wavefunc(t_wavefunctions, rll, rllleft,sll, sllleft, i1, ie, &
-               NSRA, LMMAXSO, IRMDNEW, ith)
-         end if
+      ! save_wavefuncions
+      if (t_wavefunctions%nwfsavemax>0) then
+        ! here all four (left, right, regular and irregular) are stored, the memory demand cound be reduced by a factor 2 if only the right solution would be computed here and saved and the left solution would be calculated later in main1c
+        call save_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, i1, ie, nsra, lmmaxso, irmdnew, ith)
+      end if
 
-         if(t_dtmatJij_at%calculate) then
-            call calc_dtmatJij(lmsize,LMMAXSO,LMPOT,NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,  &
-               VINS,RLLLEFT(:,:,:,ith),RLL(:,:,:,ith),RPAN_INTERVALL,IPAN_INTERVALL,   &
-               NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,t_dtmatJij_at%dtmat_xyz(:,:,:,ie_num))
+      if (t_dtmatjij_at%calculate) then
+        call calc_dtmatjij(lmsize, lmmaxso, lmpot, ntotd, nrmaxd, nsra, irmdnew, nspin, vins, rllleft(:,:,:,ith), rll(:,:,:,ith), rpan_intervall, ipan_intervall, npan_tot, ncheb, &
+          cleb, icleb, iend, ncleb, rnew, t_dtmatjij_at%dtmat_xyz(:,:,:,ie_num))
 
-         end if!t_dtmatJij_at%calculate
+      end if                       ! t_dtmatJij_at%calculate
 
-         ! writeout
+      ! writeout
 #ifdef CPP_OMP
-         !$omp critical
+      ! $omp critical
 #endif
-         if (t_tgmat%tmat_to_file) then
-            IREC = IE + IELAST*(I1-1)
-#ifndef CPP_OMP        
-            if(test('rhoqtest')) then
-              
-              if(ie_num==1.and.i1==1) then
-                write(*,*)                      ! status bar
-                write(*,*) 'rhoq: write-out t-mat', ie_end, t_params%natyp
-                write(*, '("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
-                write(*,FMT=190, advance='no') !beginning of statusbar
-              endif
-              
-              if(myrank==master) then
-                if(t_params%NATYP*ie_end>=50) then
-                  if(mod( I1+t_params%natyp*(ie_num-1), (t_params%NATYP*ie_end/50))==0 ) write(6,FMT=200, advance='no')
-                else
-                  write(6,FMT=200, advance='no')
-                end if
-              end if
+      if (t_tgmat%tmat_to_file) then
+        irec = ie + ielast*(i1-1)
+#ifndef CPP_OMP
+        if (test('rhoqtest')) then
 
-   !          write(*,*) 'rotating with', theta, phi
-   !          lmGF0D= (LMAXD+1)**2
-   !          caLL ROTATEMATRIX(TMATLL,THETA,PHI,LMGF0D,0)
+          if (ie_num==1 .and. i1==1) then
+            write (*, *)           ! status bar
+            write (*, *) 'rhoq: write-out t-mat', ie_end, t_params%natyp
+            write (*, '("Loop over points:|",5(1X,I2,"%",5X,"|"),1X,I3,"%")') 0, 20, 40, 60, 80, 100
+            write (*, fmt=100, advance='no') ! beginning of statusbar
+          end if
 
-            end if    ! test('rhoqtest') 
-#endif
-            write(69,REC=IREC) TMATLL(:,:)
-            ! human readable writeout if test option is hit
-            if(test('fileverb')) then
-               write(696969,'(i9,20000F15.7)') irec, TMATLL(:,:)
+          if (myrank==master) then
+            if (t_params%natyp*ie_end>=50) then
+              if (mod(i1+t_params%natyp*(ie_num-1),(t_params%natyp*ie_end/50))==0) write (6, fmt=110, advance='no')
+            else
+              write (6, fmt=110, advance='no')
             end if
-         else
+          end if
+
+          ! write(*,*) 'rotating with', theta, phi
+          ! lmGF0D= (LMAXD+1)**2
+          ! caLL ROTATEMATRIX(TMATLL,THETA,PHI,LMGF0D,0)
+
+        end if                     ! test('rhoqtest')
+#endif
+        write (69, rec=irec) tmatll(:, :)
+        ! human readable writeout if test option is hit
+        if (test('fileverb')) then
+          write (696969, '(i9,20000F15.7)') irec, tmatll(:, :)
+        end if
+      else
 #ifdef CPP_MPI
-            irec = ie_num +ie_end*(I1-t_mpi_c_grid%ioff_pT1(t_mpi_c_grid%myrank_ie)-1)
+        irec = ie_num + ie_end*(i1-t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie)-1)
 #else
-            irec = ie_num + ie_end * (i1-1)
+        irec = ie_num + ie_end*(i1-1)
 #endif
-            t_tgmat%tmat(:,:,irec) = TMATLL(:,:)
-         end if
-         if (LLY.NE.0) then
-            if(t_lloyd%dtmat_to_file) then
-               IREC = IE + IELAST*(I1-1)
-               write(691,REC=IREC) DTMATLL(:,:)    ! LLY
-               if(test('fileverb')) then
-                  write(691691691,'(i9,20000F15.7)') irec, DTMATLL(:,:)
-               end if
-            else
-               irec = ie_num + ie_end*(i1-1)
-               t_lloyd%dtmat(:,:,irec) = DTMATLL(:,:)
-            end if
-            if(t_lloyd%tralpha_to_file) then
-               IREC = IE + IELAST*(I1-1)
-               write(692,REC=IREC) TRALPHA                              ! LLY
-               if(test('fileverb')) then
-                  write(692692692,'(i9,20000F15.7)') irec, TRALPHA
-               end if
-            else
-               irec = ie_num + ie_end*(i1-1)
-               t_lloyd%tralpha(irec) = TRALPHA
-            end if
-         endif
+        t_tgmat%tmat(:, :, irec) = tmatll(:, :)
+      end if
+      if (lly/=0) then
+        if (t_lloyd%dtmat_to_file) then
+          irec = ie + ielast*(i1-1)
+          write (691, rec=irec) dtmatll(:, :) ! LLY
+          if (test('fileverb')) then
+            write (691691691, '(i9,20000F15.7)') irec, dtmatll(:, :)
+          end if
+        else
+          irec = ie_num + ie_end*(i1-1)
+          t_lloyd%dtmat(:, :, irec) = dtmatll(:, :)
+        end if
+        if (t_lloyd%tralpha_to_file) then
+          irec = ie + ielast*(i1-1)
+          write (692, rec=irec) tralpha ! LLY
+          if (test('fileverb')) then
+            write (692692692, '(i9,20000F15.7)') irec, tralpha
+          end if
+        else
+          irec = ie_num + ie_end*(i1-1)
+          t_lloyd%tralpha(irec) = tralpha
+        end if
+      end if
 #ifdef CPP_OMP
-      !$omp end critical
+      ! $omp end critical
 #endif
 
 #ifdef CPP_MPI
-         !stop timing measurement for this pair of ie and i1, needed for MPIadapt
-         if(MPIadapt>0) call timing_stop('time_1a_ieiatom',save_out=timings_1a(ie, i1))
+      ! stop timing measurement for this pair of ie and i1, needed for MPIadapt
+      if (mpiadapt>0) call timing_stop('time_1a_ieiatom', save_out=timings_1a(ie,i1))
 #endif
 
-      enddo ! IE loop
+    end do                         ! IE loop
 #ifdef CPP_OMP
-         !$omp end parallel do
+    ! $omp end parallel do
 #endif
 
-   190     FORMAT('                 |')   ! status bar
-   200     FORMAT('|')                    ! status bar
-           if(test('rhoqtest').and.i1==t_params%natyp.and.myrank==master) write(6,*) ! status bar
-           ! finished kpts status bar
+100 format ('                 |')  ! status bar
+110 format ('|')                   ! status bar
+    if (test('rhoqtest') .and. i1==t_params%natyp .and. myrank==master) write (6, *) ! status bar
+    ! finished kpts status bar
 
-      ! deallocate arrays
-      call allocate_locals_tmat_newsolver(-1, IRMDNEW, LMPOT, NSPIN, VINS, AUX, IPIV, TMAT0, TMATLL, ALPHA0, DTMATLL, ALPHALL, DALPHALL, JLK_INDEX, nsra, lmmaxso, nth, lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+    ! deallocate arrays
+    call allocate_locals_tmat_newsolver(-1, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, lmax, vnspll, &
+      vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
-   end subroutine TMAT_NEWSOLVER
+  end subroutine tmat_newsolver
 
 
-   subroutine allocate_locals_tmat_newsolver(allocmode, IRMDNEW, LMPOT, NSPIN, VINS, AUX, IPIV, TMAT0, TMATLL, ALPHA0, DTMATLL, ALPHALL, DALPHALL, JLK_INDEX, nsra, lmmaxso, nth, lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
-      use mod_DataTypes, only: dp
-      use Constants, only: czero
-      use mod_Profiling, only: memocc
-      use mod_save_wavefun, only: t_wavefunctions
-      implicit none
+  subroutine allocate_locals_tmat_newsolver(allocmode, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, &
+    lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+    use :: mod_datatypes, only: dp
+    use :: constants, only: czero
+    use :: mod_profiling, only: memocc
+    use :: mod_save_wavefun, only: t_wavefunctions
+    implicit none
 
-      integer, intent(in) :: allocmode
-      integer, intent(in) :: IRMDNEW, LMPOT, NSPIN
-      integer, intent(in) :: nsra
-      integer, intent(in) :: lmmaxso
-      integer, intent(in) :: nth
-      integer, intent(in) :: lmax
+    integer, intent (in) :: allocmode
+    integer, intent (in) :: irmdnew, lmpot, nspin
+    integer, intent (in) :: nsra
+    integer, intent (in) :: lmmaxso
+    integer, intent (in) :: nth
+    integer, intent (in) :: lmax
 
-      real (kind=dp), allocatable, intent(inout) :: VINS(:,:,:)
-      complex (kind=dp), allocatable, intent(inout) :: AUX(:,:), TMAT0(:,:), TMATLL(:,:), ALPHA0(:,:), DTMATLL(:,:), ALPHALL(:,:), DALPHALL(:,:)
-      integer, allocatable, intent(inout) :: IPIV(:), JLK_INDEX(:)
-      complex (kind=dp), allocatable, dimension(:,:,:,:), intent(inout) :: vnspll
-      complex (kind=dp), allocatable, dimension(:,:,:), intent(inout) :: vnspll0
-      complex (kind=dp), allocatable, dimension(:,:,:,:), intent(inout) :: vnspll1
-      complex (kind=dp), allocatable, dimension(:,:,:), intent(inout) :: jlk
-      complex (kind=dp), allocatable, dimension(:,:,:), intent(inout) :: hlk
-      complex (kind=dp), allocatable, dimension(:,:,:), intent(inout) :: jlk2
-      complex (kind=dp), allocatable, dimension(:,:,:), intent(inout) :: hlk2
-      complex (kind=dp), allocatable, dimension(:,:), intent(inout) :: tmatsph
-      complex (kind=dp), allocatable, dimension(:,:,:,:), intent(inout) :: rll
-      complex (kind=dp), allocatable, dimension(:,:,:,:), intent(inout) :: sll
-      complex (kind=dp), allocatable, dimension(:,:,:,:), intent(inout) :: rllleft
-      complex (kind=dp), allocatable, dimension(:,:,:,:), intent(inout) :: sllleft
+    real (kind=dp), allocatable, intent (inout) :: vins(:, :, :)
+    complex (kind=dp), allocatable, intent (inout) :: aux(:, :), tmat0(:, :), tmatll(:, :), alpha0(:, :), dtmatll(:, :), alphall(:, :), dalphall(:, :)
+    integer, allocatable, intent (inout) :: ipiv(:), jlk_index(:)
+    complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: vnspll
+    complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: vnspll0
+    complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: vnspll1
+    complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: jlk
+    complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: hlk
+    complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: jlk2
+    complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: hlk2
+    complex (kind=dp), allocatable, dimension (:, :), intent (inout) :: tmatsph
+    complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: rll
+    complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: sll
+    complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: rllleft
+    complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: sllleft
 
-      integer :: i_stat
+    integer :: i_stat
 
-      logical, external :: test, opt
+    logical, external :: test, opt
 
-      if (allocmode==1) then
+    if (allocmode==1) then
 
-         ! potential arrays
-         if (NSRA.EQ.2) THEN
-            allocate(VNSPLL(2*LMMAXSO,2*LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-            call memocc(i_stat,product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','allocate_locals_tmat_newsolver')
-            VNSPLL=CZERO
-         else
-            allocate(VNSPLL(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-            call memocc(i_stat,product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','allocate_locals_tmat_newsolver')
-            VNSPLL=CZERO
-         endif
-         allocate(VNSPLL0(LMMAXSO,LMMAXSO,IRMDNEW),stat=i_stat)
-         call memocc(i_stat,product(shape(VNSPLL0))*kind(VNSPLL0),'VNSPLL0','allocate_locals_tmat_newsolver')
-         VNSPLL0=CZERO
-         allocate(VNSPLL1(LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(VNSPLL1))*kind(VNSPLL1),'VNSPLL1','allocate_locals_tmat_newsolver')
-         VNSPLL1=CZERO
+      ! potential arrays
+      if (nsra==2) then
+        allocate (vnspll(2*lmmaxso,2*lmmaxso,irmdnew,0:nth-1), stat=i_stat)
+        call memocc(i_stat, product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'allocate_locals_tmat_newsolver')
+        vnspll = czero
+      else
+        allocate (vnspll(lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
+        call memocc(i_stat, product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'allocate_locals_tmat_newsolver')
+        vnspll = czero
+      end if
+      allocate (vnspll0(lmmaxso,lmmaxso,irmdnew), stat=i_stat)
+      call memocc(i_stat, product(shape(vnspll0))*kind(vnspll0), 'VNSPLL0', 'allocate_locals_tmat_newsolver')
+      vnspll0 = czero
+      allocate (vnspll1(lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
+      call memocc(i_stat, product(shape(vnspll1))*kind(vnspll1), 'VNSPLL1', 'allocate_locals_tmat_newsolver')
+      vnspll1 = czero
 
-         ! source terms (bessel and hankel functions)
-         allocate(HLK(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(HLK))*kind(HLK),'HLK','allocate_locals_tmat_newsolver')
-         HLK=CZERO
-         allocate(JLK(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(JLK))*kind(JLK),'JLK','allocate_locals_tmat_newsolver')
-         JLK=CZERO
-         allocate(HLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(HLK2))*kind(HLK2),'HLK2','allocate_locals_tmat_newsolver')
-         HLK2=CZERO
-         allocate(JLK2(1:4*(LMAX+1),IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(JLK2))*kind(JLK2),'JLK2','allocate_locals_tmat_newsolver')
-         JLK2=CZERO
+      ! source terms (bessel and hankel functions)
+      allocate (hlk(1:4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+      call memocc(i_stat, product(shape(hlk))*kind(hlk), 'HLK', 'allocate_locals_tmat_newsolver')
+      hlk = czero
+      allocate (jlk(1:4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+      call memocc(i_stat, product(shape(jlk))*kind(jlk), 'JLK', 'allocate_locals_tmat_newsolver')
+      jlk = czero
+      allocate (hlk2(1:4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+      call memocc(i_stat, product(shape(hlk2))*kind(hlk2), 'HLK2', 'allocate_locals_tmat_newsolver')
+      hlk2 = czero
+      allocate (jlk2(1:4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+      call memocc(i_stat, product(shape(jlk2))*kind(jlk2), 'JLK2', 'allocate_locals_tmat_newsolver')
+      jlk2 = czero
 
-         ! Spherical part of tmatrix (used with SRATRICK)
-         allocate(TMATSPH(2*(LMAX+1),0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(TMATSPH))*kind(TMATSPH),'TMATSPH','allocate_locals_tmat_newsolver')
-         TMATSPH=CZERO
+      ! Spherical part of tmatrix (used with SRATRICK)
+      allocate (tmatsph(2*(lmax+1),0:nth-1), stat=i_stat)
+      call memocc(i_stat, product(shape(tmatsph))*kind(tmatsph), 'TMATSPH', 'allocate_locals_tmat_newsolver')
+      tmatsph = czero
 
-         ! Regular and irregular wavefunctions
-         allocate(RLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(RLL))*kind(RLL),'RLL','allocate_locals_tmat_newsolver')
-         RLL=CZERO
-         allocate(SLL(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-         call memocc(i_stat,product(shape(SLL))*kind(SLL),'SLL','allocate_locals_tmat_newsolver')
-         SLL=CZERO
+      ! Regular and irregular wavefunctions
+      allocate (rll(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
+      call memocc(i_stat, product(shape(rll))*kind(rll), 'RLL', 'allocate_locals_tmat_newsolver')
+      rll = czero
+      allocate (sll(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
+      call memocc(i_stat, product(shape(sll))*kind(sll), 'SLL', 'allocate_locals_tmat_newsolver')
+      sll = czero
 
-         ! Left regular and irregular wavefunctions (used here only in case of XCPL or saving of left wavefunctions)
-         if( opt('XCPL    ') .or. (t_wavefunctions%save_rllleft .or.t_wavefunctions%save_sllleft .or. test('rhoqtest')) ) then
-            allocate(RLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-            call memocc(i_stat,product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','allocate_locals_tmat_newsolver')
-            RLLLEFT=CZERO
-            allocate(SLLLEFT(NSRA*LMMAXSO,LMMAXSO,IRMDNEW,0:nth-1),stat=i_stat)
-            call memocc(i_stat,product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','allocate_locals_tmat_newsolver')
-            SLLLEFT=CZERO
-         else
-            allocate(RLLLEFT(1,1,1,0:nth-1),stat=i_stat)
-            call memocc(i_stat,product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','allocate_locals_tmat_newsolver')
-            RLLLEFT=CZERO
-            allocate(SLLLEFT(1,1,1,0:nth-1),stat=i_stat)
-            call memocc(i_stat,product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','allocate_locals_tmat_newsolver')
-            SLLLEFT=CZERO
-         end if ! ( opt('XCPL    ') .or. ... )
+      ! Left regular and irregular wavefunctions (used here only in case of XCPL or saving of left wavefunctions)
+      if (opt('XCPL    ') .or. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft .or. test('rhoqtest'))) then
+        allocate (rllleft(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
+        call memocc(i_stat, product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
+        rllleft = czero
+        allocate (sllleft(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
+        call memocc(i_stat, product(shape(sllleft))*kind(sllleft), 'SLLLEFT', 'allocate_locals_tmat_newsolver')
+        sllleft = czero
+      else
+        allocate (rllleft(1,1,1,0:nth-1), stat=i_stat)
+        call memocc(i_stat, product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
+        rllleft = czero
+        allocate (sllleft(1,1,1,0:nth-1), stat=i_stat)
+        call memocc(i_stat, product(shape(sllleft))*kind(sllleft), 'SLLLEFT', 'allocate_locals_tmat_newsolver')
+        sllleft = czero
+      end if                       ! ( opt('XCPL    ') .or. ... )
 
-         allocate(VINS(IRMDNEW,LMPOT,NSPIN),stat=i_stat)
-         call memocc(i_stat,product(shape(VINS))*kind(VINS),'VINS','allocate_locals_tmat_newsolver')
-         VINS=0.0d0
-         allocate(AUX(LMMAXSO,LMMAXSO),stat=i_stat)
-         call memocc(i_stat,product(shape(AUX))*kind(AUX),'AUX','allocate_locals_tmat_newsolver')
-         AUX=CZERO
-         allocate(IPIV(LMMAXSO),stat=i_stat)
-         call memocc(i_stat,product(shape(IPIV))*kind(IPIV),'IPIV','allocate_locals_tmat_newsolver')
-         IPIV=0
-         allocate(TMAT0(LMMAXSO,LMMAXSO),stat=i_stat)
-         call memocc(i_stat,product(shape(TMAT0))*kind(TMAT0),'TMAT0','allocate_locals_tmat_newsolver')
-         TMAT0=CZERO
-         allocate(TMATLL(LMMAXSO,LMMAXSO),stat=i_stat)
-         call memocc(i_stat,product(shape(TMATLL))*kind(TMATLL),'TMATLL','allocate_locals_tmat_newsolver')
-         TMATLL=CZERO
-         allocate(ALPHA0(LMMAXSO,LMMAXSO),stat=i_stat)
-         call memocc(i_stat,product(shape(ALPHA0))*kind(ALPHA0),'ALPHA0','allocate_locals_tmat_newsolver')
-         ALPHA0=CZERO
-         allocate(DTMATLL(LMMAXSO,LMMAXSO),stat=i_stat)
-         call memocc(i_stat,product(shape(DTMATLL))*kind(DTMATLL),'DTMATLL','allocate_locals_tmat_newsolver')
-         DTMATLL=CZERO
-         allocate(ALPHALL(LMMAXSO,LMMAXSO),stat=i_stat)
-         call memocc(i_stat,product(shape(ALPHALL))*kind(ALPHALL),'ALPHALL','allocate_locals_tmat_newsolver')
-         ALPHALL=CZERO
-         allocate(DALPHALL(LMMAXSO,LMMAXSO),stat=i_stat)
-         call memocc(i_stat,product(shape(DALPHALL))*kind(DALPHALL),'DALPHALL','allocate_locals_tmat_newsolver')
-         DALPHALL=CZERO
-         allocate(JLK_INDEX(2*LMMAXSO),stat=i_stat)
-         call memocc(i_stat,product(shape(JLK_INDEX))*kind(JLK_INDEX),'JLK_INDEX','allocate_locals_tmat_newsolver')
-         JLK_INDEX=0
+      allocate (vins(irmdnew,lmpot,nspin), stat=i_stat)
+      call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'allocate_locals_tmat_newsolver')
+      vins = 0.0d0
+      allocate (aux(lmmaxso,lmmaxso), stat=i_stat)
+      call memocc(i_stat, product(shape(aux))*kind(aux), 'AUX', 'allocate_locals_tmat_newsolver')
+      aux = czero
+      allocate (ipiv(lmmaxso), stat=i_stat)
+      call memocc(i_stat, product(shape(ipiv))*kind(ipiv), 'IPIV', 'allocate_locals_tmat_newsolver')
+      ipiv = 0
+      allocate (tmat0(lmmaxso,lmmaxso), stat=i_stat)
+      call memocc(i_stat, product(shape(tmat0))*kind(tmat0), 'TMAT0', 'allocate_locals_tmat_newsolver')
+      tmat0 = czero
+      allocate (tmatll(lmmaxso,lmmaxso), stat=i_stat)
+      call memocc(i_stat, product(shape(tmatll))*kind(tmatll), 'TMATLL', 'allocate_locals_tmat_newsolver')
+      tmatll = czero
+      allocate (alpha0(lmmaxso,lmmaxso), stat=i_stat)
+      call memocc(i_stat, product(shape(alpha0))*kind(alpha0), 'ALPHA0', 'allocate_locals_tmat_newsolver')
+      alpha0 = czero
+      allocate (dtmatll(lmmaxso,lmmaxso), stat=i_stat)
+      call memocc(i_stat, product(shape(dtmatll))*kind(dtmatll), 'DTMATLL', 'allocate_locals_tmat_newsolver')
+      dtmatll = czero
+      allocate (alphall(lmmaxso,lmmaxso), stat=i_stat)
+      call memocc(i_stat, product(shape(alphall))*kind(alphall), 'ALPHALL', 'allocate_locals_tmat_newsolver')
+      alphall = czero
+      allocate (dalphall(lmmaxso,lmmaxso), stat=i_stat)
+      call memocc(i_stat, product(shape(dalphall))*kind(dalphall), 'DALPHALL', 'allocate_locals_tmat_newsolver')
+      dalphall = czero
+      allocate (jlk_index(2*lmmaxso), stat=i_stat)
+      call memocc(i_stat, product(shape(jlk_index))*kind(jlk_index), 'JLK_INDEX', 'allocate_locals_tmat_newsolver')
+      jlk_index = 0
 
-      else ! allocmode
+    else                           ! allocmode
 
-         if (NSRA.EQ.2) THEN
-            deallocate(VNSPLL,stat=i_stat)
-            call memocc(i_stat,-product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','allocate_locals_tmat_newsolver')
-         else
-            deallocate(VNSPLL,stat=i_stat)
-            call memocc(i_stat,-product(shape(VNSPLL))*kind(VNSPLL),'VNSPLL','allocate_locals_tmat_newsolver')
-         endif
-         deallocate(VNSPLL0,stat=i_stat)
-         call memocc(i_stat,-product(shape(VNSPLL0))*kind(VNSPLL0),'VNSPLL0','allocate_locals_tmat_newsolver')
-         deallocate(VNSPLL1,stat=i_stat)
-         call memocc(i_stat,-product(shape(VNSPLL1))*kind(VNSPLL1),'VNSPLL1','allocate_locals_tmat_newsolver')
+      if (nsra==2) then
+        deallocate (vnspll, stat=i_stat)
+        call memocc(i_stat, -product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'allocate_locals_tmat_newsolver')
+      else
+        deallocate (vnspll, stat=i_stat)
+        call memocc(i_stat, -product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'allocate_locals_tmat_newsolver')
+      end if
+      deallocate (vnspll0, stat=i_stat)
+      call memocc(i_stat, -product(shape(vnspll0))*kind(vnspll0), 'VNSPLL0', 'allocate_locals_tmat_newsolver')
+      deallocate (vnspll1, stat=i_stat)
+      call memocc(i_stat, -product(shape(vnspll1))*kind(vnspll1), 'VNSPLL1', 'allocate_locals_tmat_newsolver')
 
-         deallocate(HLK,stat=i_stat)
-         call memocc(i_stat,-product(shape(HLK))*kind(HLK),'HLK','allocate_locals_tmat_newsolver')
-         deallocate(JLK,stat=i_stat)
-         call memocc(i_stat,-product(shape(JLK))*kind(JLK),'JLK','allocate_locals_tmat_newsolver')
-         deallocate(HLK2,stat=i_stat)
-         call memocc(i_stat,-product(shape(HLK2))*kind(HLK2),'HLK2','allocate_locals_tmat_newsolver')
-         deallocate(JLK2,stat=i_stat)
-         call memocc(i_stat,-product(shape(JLK2))*kind(JLK2),'JLK2','allocate_locals_tmat_newsolver')
+      deallocate (hlk, stat=i_stat)
+      call memocc(i_stat, -product(shape(hlk))*kind(hlk), 'HLK', 'allocate_locals_tmat_newsolver')
+      deallocate (jlk, stat=i_stat)
+      call memocc(i_stat, -product(shape(jlk))*kind(jlk), 'JLK', 'allocate_locals_tmat_newsolver')
+      deallocate (hlk2, stat=i_stat)
+      call memocc(i_stat, -product(shape(hlk2))*kind(hlk2), 'HLK2', 'allocate_locals_tmat_newsolver')
+      deallocate (jlk2, stat=i_stat)
+      call memocc(i_stat, -product(shape(jlk2))*kind(jlk2), 'JLK2', 'allocate_locals_tmat_newsolver')
 
-         deallocate(TMATSPH,stat=i_stat)
-         call memocc(i_stat,-product(shape(TMATSPH))*kind(TMATSPH),'TMATSPH','allocate_locals_tmat_newsolver')
+      deallocate (tmatsph, stat=i_stat)
+      call memocc(i_stat, -product(shape(tmatsph))*kind(tmatsph), 'TMATSPH', 'allocate_locals_tmat_newsolver')
 
-         deallocate(RLL,stat=i_stat)
-         call memocc(i_stat,-product(shape(RLL))*kind(RLL),'RLL','allocate_locals_tmat_newsolver')
-         deallocate(SLL,stat=i_stat)
-         call memocc(i_stat,-product(shape(SLL))*kind(SLL),'SLL','allocate_locals_tmat_newsolver')
+      deallocate (rll, stat=i_stat)
+      call memocc(i_stat, -product(shape(rll))*kind(rll), 'RLL', 'allocate_locals_tmat_newsolver')
+      deallocate (sll, stat=i_stat)
+      call memocc(i_stat, -product(shape(sll))*kind(sll), 'SLL', 'allocate_locals_tmat_newsolver')
 
-         if( opt('XCPL    ') .or. (t_wavefunctions%save_rllleft .or.t_wavefunctions%save_sllleft .or. test('rhoqtest')) ) then
-            deallocate(RLLLEFT,stat=i_stat)
-            call memocc(i_stat,-product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','allocate_locals_tmat_newsolver')
-            deallocate(SLLLEFT,stat=i_stat)
-            call memocc(i_stat,-product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','allocate_locals_tmat_newsolver')
-         else
-            deallocate(RLLLEFT,stat=i_stat)
-            call memocc(i_stat,-product(shape(RLLLEFT))*kind(RLLLEFT),'RLLLEFT','allocate_locals_tmat_newsolver')
-            deallocate(SLLLEFT,stat=i_stat)
-            call memocc(i_stat,-product(shape(SLLLEFT))*kind(SLLLEFT),'SLLLEFT','allocate_locals_tmat_newsolver')
-         end if ! ( opt('XCPL    ') .or. ... )
+      if (opt('XCPL    ') .or. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft .or. test('rhoqtest'))) then
+        deallocate (rllleft, stat=i_stat)
+        call memocc(i_stat, -product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
+        deallocate (sllleft, stat=i_stat)
+        call memocc(i_stat, -product(shape(sllleft))*kind(sllleft), 'SLLLEFT', 'allocate_locals_tmat_newsolver')
+      else
+        deallocate (rllleft, stat=i_stat)
+        call memocc(i_stat, -product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
+        deallocate (sllleft, stat=i_stat)
+        call memocc(i_stat, -product(shape(sllleft))*kind(sllleft), 'SLLLEFT', 'allocate_locals_tmat_newsolver')
+      end if                       ! ( opt('XCPL    ') .or. ... )
 
-         deallocate(VINS,stat=i_stat)
-         call memocc(i_stat,-product(shape(VINS))*kind(VINS),'VINS','allocate_locals_tmat_newsolver')
-         deallocate(AUX,stat=i_stat)
-         call memocc(i_stat,-product(shape(AUX))*kind(AUX),'AUX','allocate_locals_tmat_newsolver')
-         deallocate(IPIV,stat=i_stat)
-         call memocc(i_stat,-product(shape(IPIV))*kind(IPIV),'IPIV','allocate_locals_tmat_newsolver')
-         deallocate(TMAT0,stat=i_stat)
-         call memocc(i_stat,-product(shape(TMAT0))*kind(TMAT0),'TMAT0','allocate_locals_tmat_newsolver')
-         deallocate(TMATLL,stat=i_stat)
-         call memocc(i_stat,-product(shape(TMATLL))*kind(TMATLL),'TMATLL','allocate_locals_tmat_newsolver')
-         deallocate(ALPHA0,stat=i_stat)
-         call memocc(i_stat,-product(shape(ALPHA0))*kind(ALPHA0),'ALPHA0','allocate_locals_tmat_newsolver')
-         deallocate(DTMATLL,stat=i_stat)
-         call memocc(i_stat,-product(shape(DTMATLL))*kind(DTMATLL),'DTMATLL','allocate_locals_tmat_newsolver')
-         deallocate(ALPHALL,stat=i_stat)
-         call memocc(i_stat,-product(shape(ALPHALL))*kind(ALPHALL),'ALPHALL','allocate_locals_tmat_newsolver')
-         deallocate(DALPHALL,stat=i_stat)
-         call memocc(i_stat,-product(shape(DALPHALL))*kind(DALPHALL),'DALPHALL','allocate_locals_tmat_newsolver')
-         deallocate(JLK_INDEX,stat=i_stat)
-         call memocc(i_stat,-product(shape(JLK_INDEX))*kind(JLK_INDEX),'JLK_INDEX','allocate_locals_tmat_newsolver')
+      deallocate (vins, stat=i_stat)
+      call memocc(i_stat, -product(shape(vins))*kind(vins), 'VINS', 'allocate_locals_tmat_newsolver')
+      deallocate (aux, stat=i_stat)
+      call memocc(i_stat, -product(shape(aux))*kind(aux), 'AUX', 'allocate_locals_tmat_newsolver')
+      deallocate (ipiv, stat=i_stat)
+      call memocc(i_stat, -product(shape(ipiv))*kind(ipiv), 'IPIV', 'allocate_locals_tmat_newsolver')
+      deallocate (tmat0, stat=i_stat)
+      call memocc(i_stat, -product(shape(tmat0))*kind(tmat0), 'TMAT0', 'allocate_locals_tmat_newsolver')
+      deallocate (tmatll, stat=i_stat)
+      call memocc(i_stat, -product(shape(tmatll))*kind(tmatll), 'TMATLL', 'allocate_locals_tmat_newsolver')
+      deallocate (alpha0, stat=i_stat)
+      call memocc(i_stat, -product(shape(alpha0))*kind(alpha0), 'ALPHA0', 'allocate_locals_tmat_newsolver')
+      deallocate (dtmatll, stat=i_stat)
+      call memocc(i_stat, -product(shape(dtmatll))*kind(dtmatll), 'DTMATLL', 'allocate_locals_tmat_newsolver')
+      deallocate (alphall, stat=i_stat)
+      call memocc(i_stat, -product(shape(alphall))*kind(alphall), 'ALPHALL', 'allocate_locals_tmat_newsolver')
+      deallocate (dalphall, stat=i_stat)
+      call memocc(i_stat, -product(shape(dalphall))*kind(dalphall), 'DALPHALL', 'allocate_locals_tmat_newsolver')
+      deallocate (jlk_index, stat=i_stat)
+      call memocc(i_stat, -product(shape(jlk_index))*kind(jlk_index), 'JLK_INDEX', 'allocate_locals_tmat_newsolver')
 
-      end if ! allocmode
+    end if                         ! allocmode
 
-   end subroutine allocate_locals_tmat_newsolver
+  end subroutine allocate_locals_tmat_newsolver
 
 end module mod_tmatnewsolver

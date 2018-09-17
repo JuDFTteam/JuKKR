@@ -7,7 +7,7 @@ module mod_create_newmesh
   use :: constants
   use :: mod_profiling
   use :: mod_datatypes, only: dp
-  use mod_interpolspline
+  use :: mod_interpolspline
 
   implicit none
   private :: dp
@@ -21,59 +21,53 @@ contains
   ! > create_newmesh in tmatimp routine for GREENIMP option
   ! > this is the list of  array dimensions previously importted from inc.p
   ! ----------------------------------------------------------------------------
-  subroutine create_newmesh(natyp, irm, ipand, irid, ntotd, &
-    nfund, ncheb, irmdnew, nspin, r, irmin, ipan, ircut, r_log, npan_log, &
-    npan_eq, npan_log_at, npan_eq_at, npan_tot, rnew, rpan_intervall, &
-    ipan_intervall, ncelld, &
-    ntcell, thetas, thetasnew) ! < optional arguments
+  subroutine create_newmesh(natyp, irm, ipand, irid, ntotd, nfund, ncheb, irmdnew, nspin, r, irmin, ipan, ircut, r_log, npan_log, npan_eq, npan_log_at, npan_eq_at, npan_tot, rnew, &
+    rpan_intervall, ipan_intervall, ncelld, ntcell, thetas, thetasnew) ! < optional arguments
 
     implicit none
 
     ! .. Input variables
     integer, intent (in) :: irm    ! < Maximum number of radial points
     integer, intent (in) :: irid   ! < Shape functions parameters in
-                                   ! non-spherical part
+    ! non-spherical part
     integer, intent (in) :: nspin  ! < Counter for spin directions
     integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
     integer, intent (in) :: ipand  ! < Number of panels in non-spherical part
     integer, intent (in) :: ntotd
     integer, intent (in) :: nfund  ! < Shape functions parameters in
-                                   ! non-spherical part
+    ! non-spherical part
     integer, intent (in) :: ncheb  ! < Number of Chebychev pannels for the new
-                                   ! solver
+    ! solver
     integer, intent (in) :: ncelld ! < Number of cells (shapes) in
-                                   ! non-spherical part
+    ! non-spherical part
     integer, intent (in) :: irmdnew
     integer, intent (in) :: npan_eq ! < Variables for the pannels for the new
-                                    ! solver
+    ! solver
     integer, intent (in) :: npan_log ! < Variables for the pannels for the new
-                                     ! solver
+    ! solver
     real (kind=dp), intent (in) :: r_log
     integer, dimension (natyp), intent (in) :: ipan ! < Number of panels in
-                                                    ! non-MT-region
+    ! non-MT-region
     integer, dimension (natyp), intent (in) :: irmin ! < Max R for spherical
-                                                     ! treatment
+    ! treatment
     integer, dimension (0:ipand, natyp), intent (in) :: ircut ! < R points of
-                                                              ! panel borders
+    ! panel borders
     real (kind=dp), dimension (irm, natyp), intent (in) :: r ! < Radial mesh (
-                                                             ! in units a
-                                                             ! Bohr)
+    ! in units a
+    ! Bohr)
     ! .. Input/Output variables
     integer, dimension (natyp), intent (inout) :: npan_tot
     integer, dimension (natyp), intent (inout) :: npan_eq_at
     integer, dimension (natyp), intent (inout) :: npan_log_at
     integer, dimension (0:ntotd, natyp), intent (inout) :: ipan_intervall
     real (kind=dp), dimension (irmdnew, natyp), intent (inout) :: rnew
-    real (kind=dp), dimension (0:ntotd, natyp), intent (inout) :: &
-      rpan_intervall
+    real (kind=dp), dimension (0:ntotd, natyp), intent (inout) :: rpan_intervall
 
     ! .. Optional arguments, do interpolation when given
     integer, dimension (natyp), intent (in), optional :: ntcell ! < Index for WS cell
-    real (kind=dp), dimension (irid, nfund, ncelld), intent (in), &
-      optional :: thetas ! < shape function THETA=0 outer space, 
-                         ! THETA=1 inside WS cell in spherical harmonics expansion
-    real (kind=dp), dimension (ntotd*(ncheb+1), nfund, ncelld), &
-      intent (inout), optional :: thetasnew
+    real (kind=dp), dimension (irid, nfund, ncelld), intent (in), optional :: thetas ! < shape function THETA=0 outer space,
+    ! THETA=1 inside WS cell in spherical harmonics expansion
+    real (kind=dp), dimension (ntotd*(ncheb+1), nfund, ncelld), intent (inout), optional :: thetasnew
 
     ! .. Local variables
     integer :: npan_inst, i_stat, i_all
@@ -89,8 +83,7 @@ contains
 
 
     ! checks for optional arguments
-    if (present(ntcell) .and. .not. present(thetas) .and. &
-      .not. present(thetasnew)) then
+    if (present(ntcell) .and. .not. present(thetas) .and. .not. present(thetasnew)) then
       write (*, *) 'Error in create_newmesh:'
       write (*, *) 'List of optional arguments not complete'
       stop
@@ -99,8 +92,7 @@ contains
     ! allocations
     if (present(ntcell)) then
       allocate (thetasin(irid,nfund,ncelld), stat=i_stat)
-      call memocc(i_stat, product(shape(thetasin))*kind(thetasin), 'THETASIN', &
-        'CREATE_NEWMESH')
+      call memocc(i_stat, product(shape(thetasin))*kind(thetasin), 'THETASIN', 'CREATE_NEWMESH')
       thetasin = 0.0e0_dp
     end if
     if (present(ntcell)) thetasnew = 0.0e0_dp
@@ -124,16 +116,16 @@ contains
       end if
 
       if (ilinpanshift==1) then
-         write(*,*)
-         write(*,*) 'ERORR: non-spherical part of the potential needs'
-         write(*,*) 'to be inside the log panel (i.e. R_LOG too small)'
-         write(*,*)
-         write(*,*) 'atom (I1):', i1
-         write(*,*) 'R_LOG', r_log
-         write(*,*) 'Rmesh(IRMIN(I1), I1)', r(irmin(i1),i1)
-         write(*,*) 'IRMIN(I1)', irmin(i1)
-         write(*,*)
-         stop 'Error creating newmesh!' 
+        write (*, *)
+        write (*, *) 'ERORR: non-spherical part of the potential needs'
+        write (*, *) 'to be inside the log panel (i.e. R_LOG too small)'
+        write (*, *)
+        write (*, *) 'atom (I1):', i1
+        write (*, *) 'R_LOG', r_log
+        write (*, *) 'Rmesh(IRMIN(I1), I1)', r(irmin(i1), i1)
+        write (*, *) 'IRMIN(I1)', irmin(i1)
+        write (*, *)
+        stop 'Error creating newmesh!'
       end if
 
       do ip = 0, npan_log - ilogpanshift
@@ -155,17 +147,14 @@ contains
       rmin = r_log
       rmax = r(ircut(1,i1), i1)
       do ip = 0, npan_eq - ilinpanshift
-        rpan_intervall(ip+ishift+npan_log, i1) = rmin + &
-          ip*(rmax-rmin)/(npan_eq-ilinpanshift)
-        ipan_intervall(ip+ishift+npan_log, i1) = (npan_log+ip+ishift)* &
-          (ncheb+1)
+        rpan_intervall(ip+ishift+npan_log, i1) = rmin + ip*(rmax-rmin)/(npan_eq-ilinpanshift)
+        ipan_intervall(ip+ishift+npan_log, i1) = (npan_log+ip+ishift)*(ncheb+1)
       end do                       ! NPAN_EQ
 
       ! intersection zone
       do ip = 1, npan_inst
         rpan_intervall(npan_log+npan_eq+ip, i1) = r(ircut(ip+1,i1), i1)
-        ipan_intervall(npan_log+npan_eq+ip, i1) = (npan_log+npan_eq+ip)* &
-          (ncheb+1)
+        ipan_intervall(npan_log+npan_eq+ip, i1) = (npan_log+npan_eq+ip)*(ncheb+1)
       end do                       ! NPAN_INST
 
       npan_eq_at(i1) = npan_eq + npan_log - npan_logtemp
@@ -187,10 +176,8 @@ contains
             imax = ircut(ir2+1, i1)
             iminnew = ipan_intervall(ip-1, i1) + 1
             imaxnew = ipan_intervall(ip, i1)
-            call interpolspline(r(imin:imax,i1), rnew(iminnew:imaxnew,i1), &
-              thetasin(imin-ircut(1,i1):imax-ircut(1, &
-              i1),lm1,icell), thetasnew(iminnew:imaxnew,lm1,icell), &
-              imax-imin+1, imaxnew-iminnew+1)
+            call interpolspline(r(imin:imax,i1), rnew(iminnew:imaxnew,i1), thetasin(imin-ircut(1,i1):imax-ircut(1,i1),lm1,icell), thetasnew(iminnew:imaxnew,lm1,icell), imax-imin+1, &
+              imaxnew-iminnew+1)
           end do
         end do
       end if                       ! present(ntcell)
@@ -213,7 +200,7 @@ contains
 
     integer, intent (in) :: npan
     integer, intent (in) :: ncheb  ! < Number of Chebychev pannels for the new
-                                   ! solver
+    ! solver
     real (kind=dp), dimension (0:npan), intent (in) :: ri
     real (kind=dp), dimension (npan*(ncheb+1)), intent (inout) :: ro
     integer :: i, k, ik

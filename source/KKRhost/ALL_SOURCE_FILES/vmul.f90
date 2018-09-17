@@ -1,22 +1,23 @@
 module mod_vmul
+  use :: mod_datatypes, only: dp
+  private :: dp
 
 contains
 
-! ************************************************************************
-subroutine vmul(a, b, c)
-  use :: mod_datatypes, only: dp
   ! ************************************************************************
+  subroutine vmul(a, b, c)
+    ! ************************************************************************
 
-  real (kind=dp), intent (in) :: a(*)
-  real (kind=dp), intent (in) :: b
-  real (kind=dp), intent (out) :: c(*)
+    real (kind=dp), intent (in) :: a(*)
+    real (kind=dp), intent (in) :: b
+    real (kind=dp), intent (out) :: c(*)
 
-  integer :: i
+    integer :: i
 
-  do i = 1, 3
-    c(i) = b*a(i)
-  end do
-  return
-end subroutine vmul
+    do i = 1, 3
+      c(i) = b*a(i)
+    end do
+    return
+  end subroutine vmul
 
 end module mod_vmul

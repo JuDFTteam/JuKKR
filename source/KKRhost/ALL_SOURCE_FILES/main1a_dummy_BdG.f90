@@ -1,152 +1,150 @@
-!> this is dummy version of main1a
+! > this is dummy version of main1a
 subroutine main1a_dummy
-  use mod_Profiling
-  use Constants
-  use global_variables
-  Use mod_datatypes, Only: dp
+  use :: mod_profiling
+  use :: constants
+  use :: global_variables
+  use :: mod_datatypes, only: dp
 
-  use mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatJij,init_t_dtmatJij, init_t_dtmatJij_at
-  use mod_mympi, only: nranks, master, myrank
-  use mod_timing
-  use mod_wunfiles
-  use mod_jijhelp, only: set_Jijcalc_flags
+  use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatjij, init_t_dtmatjij, init_t_dtmatjij_at
+  use :: mod_mympi, only: nranks, master, myrank
+  use :: mod_timing
+  use :: mod_wunfiles
+  use :: mod_jijhelp, only: set_jijcalc_flags
 
-  use mod_tmatnewsolver, only: tmat_newsolver
-  use mod_main0
-  use mod_ioinput
+  use :: mod_tmatnewsolver, only: tmat_newsolver
+  use :: mod_main0
+  use :: mod_ioinput
 
 
   implicit none
 
   ! .. Local variables
-  integer :: I1
-  integer :: IPOT
-  integer :: ILTMP
-  integer :: ISPIN
-  integer :: ITMPDIR
-  character(len=80) :: TMPDIR
-  logical :: OPT
-  logical :: TEST
-  logical :: LREFSYS
-  integer :: LRECTMT
-  integer :: LRECTRA
+  integer :: i1
+  integer :: ipot
+  integer :: iltmp
+  integer :: ispin
+  integer :: itmpdir
+  character (len=80) :: tmpdir
+  logical :: opt
+  logical :: test
+  logical :: lrefsys
+  integer :: lrectmt
+  integer :: lrectra
   ! .. Local arrays
-  real (kind=dp), dimension(NATYPD) :: PHI
-  real (kind=dp), dimension(NATYPD) :: THETA
-  real (kind=dp), dimension(:,:,:), allocatable :: VINSNEW
+  real (kind=dp), dimension (natypd) :: phi
+  real (kind=dp), dimension (natypd) :: theta
+  real (kind=dp), dimension (:, :, :), allocatable :: vinsnew
 
-  integer :: i1_run, i1_start, i1_end, ierr,i_stat,i_all
+  integer :: i1_run, i1_start, i1_end, ierr, i_stat, i_all
 
   ! for data import:
-  character(len=25) dummy
+  character (len=25) :: dummy
   integer :: ier
-  character (len=256) :: uio                             ! NCOLIO=256
+  character (len=256) :: uio                               ! NCOLIO=256
+
 
   ! BdG specific:
-  logical :: use_BdG
-  complex (kind=dp) :: delta_BdG
+  logical :: use_bdg
+  complex (kind=dp) :: delta_bdg
 
 
-  !================
+  ! ================
   ! start read-in
 
-  write(*,*) 'start reading BdG-inputs from inputcard ...'
+  write (*, *) 'start reading BdG-inputs from inputcard ...'
 
-  call ioinput('use_BdG         ',uio,1,7,ier)
-  if (ier.eq.0) then
-    read (unit=uio,fmt=*) use_BdG
-    write(*,*) 'use_BdG= ', use_BdG
+  call ioinput('use_BdG         ', uio, 1, 7, ier)
+  if (ier==0) then
+    read (unit=uio, fmt=*) use_bdg
+    write (*, *) 'use_BdG= ', use_bdg
   else
     stop '[main1a_dummy] error "use_BdG" not found in inputcard'
-  endif
+  end if
 
-  call ioinput('delta_BdG       ',uio,1,7,ier)
-  if (ier.eq.0) then
-    read (unit=uio,fmt=*) delta_BdG
-    write(*,*) 'delta_BdG= ', delta_BdG
+  call ioinput('delta_BdG       ', uio, 1, 7, ier)
+  if (ier==0) then
+    read (unit=uio, fmt=*) delta_bdg
+    write (*, *) 'delta_BdG= ', delta_bdg
   else
     stop '[main1a_dummy] error "delta_BdG" not found in inputcard'
-  endif
+  end if
 
   ! end read-in
-  !================
+  ! ================
 
 
-  write(*,*) 'now read atom-specific input for tmat_newsolver'
+  write (*, *) 'now read atom-specific input for tmat_newsolver'
 
-  allocate(VINSNEW(NRMAXD,LMPOTD,NSPOTD),stat=i_stat)
-  call memocc(i_stat,product(shape(VINSNEW))*kind(VINSNEW),'VINSNEW','main1a')
-  VINSNEW=0.0D0
+  allocate (vinsnew(nrmaxd,lmpotd,nspotd), stat=i_stat)
+  call memocc(i_stat, product(shape(vinsnew))*kind(vinsnew), 'VINSNEW', 'main1a')
+  vinsnew = 0.0d0
 
   i1_start = 1
-  i1_end = NATYP
+  i1_end = natyp
 
-  do I1_run=i1_start,i1_end
+  do i1_run = i1_start, i1_end
 
-    if (TEST('BdG_dev ')) then
-      ! read out inputs for tmat_newsolver to extract first BdG 
+    if (test('BdG_dev ')) then
+      ! read out inputs for tmat_newsolver to extract first BdG
       if (nranks>1) stop 'test option BdG_dev can only be used in serial!'
-      if (i1_run==1) open(887766, file='BdG_tmat_inputs.txt', form='formatted')
-      if (i1_run==1) then 
-        read(887766, *) dummy
-        read(887766, *)  
-        read(887766, *) dummy, IELAST
-        read(887766, *) dummy, NSPIN
-        read(887766, *) dummy, LMAX
-        read(887766, *) dummy, NSRA
-        read(887766, *) dummy, IEND
-        read(887766, *) dummy, LMPOTD
-        read(887766, *) dummy, LLY
-        read(887766, '(A,2ES21.9)') dummy, DELTAE
-        read(887766, *) dummy, IDOLDAU
-        read(887766, *) dummy, NCLEB
-        read(887766, *) dummy, NCHEB
-        read(887766, *) dummy, NTOTD
-        read(887766, *) dummy, MMAXD
-        read(887766, *) dummy, NSPIND
-        read(887766, *) dummy, IEMXD
-        read(887766, *) dummy, NRMAXD
-        read(887766, *) dummy, NSPOTD
-        read(887766, *) dummy
-        read(887766, *) CLEB(:,1)
-        read(887766, *) dummy
-        read(887766, *) ICLEB(:,:)
-        read(887766, *) dummy
-        read(887766, '(2ES21.9)') EZ
-        read(887766, *)
-        read(887766, *) dummy
-        read(887766, *)
-      end if 
-      read(887766, *) dummy, I1
-      read(887766, *) dummy, IPOT
-      read(887766, *) dummy, NPAN_TOT(I1)
-      read(887766, *) dummy, LOPT(I1)
-      read(887766, *) dummy, IPAN_INTERVALL(:,I1)
-      read(887766, *) dummy, ZAT(I1)
-      read(887766, *) dummy, PHI(I1)
-      read(887766, *) dummy, THETA(I1)
-      read(887766, *) dummy, SOCSCALE(I1)
-      read(887766, *) dummy, RNEW(:,I1)
-      read(887766, *) dummy, RPAN_INTERVALL(:,I1)
-      read(887766, *) dummy, WLDAU(:,:,:,I1)
-      read(887766, *) dummy, VINSNEW
-      read(887766, *) 
+      if (i1_run==1) open (887766, file='BdG_tmat_inputs.txt', form='formatted')
+      if (i1_run==1) then
+        read (887766, *) dummy
+        read (887766, *)
+        read (887766, *) dummy, ielast
+        read (887766, *) dummy, nspin
+        read (887766, *) dummy, lmax
+        read (887766, *) dummy, nsra
+        read (887766, *) dummy, iend
+        read (887766, *) dummy, lmpotd
+        read (887766, *) dummy, lly
+        read (887766, '(A,2ES21.9)') dummy, deltae
+        read (887766, *) dummy, idoldau
+        read (887766, *) dummy, ncleb
+        read (887766, *) dummy, ncheb
+        read (887766, *) dummy, ntotd
+        read (887766, *) dummy, mmaxd
+        read (887766, *) dummy, nspind
+        read (887766, *) dummy, iemxd
+        read (887766, *) dummy, nrmaxd
+        read (887766, *) dummy, nspotd
+        read (887766, *) dummy
+        read (887766, *) cleb(:, 1)
+        read (887766, *) dummy
+        read (887766, *) icleb(:, :)
+        read (887766, *) dummy
+        read (887766, '(2ES21.9)') ez
+        read (887766, *)
+        read (887766, *) dummy
+        read (887766, *)
+      end if
+      read (887766, *) dummy, i1
+      read (887766, *) dummy, ipot
+      read (887766, *) dummy, npan_tot(i1)
+      read (887766, *) dummy, lopt(i1)
+      read (887766, *) dummy, ipan_intervall(:, i1)
+      read (887766, *) dummy, zat(i1)
+      read (887766, *) dummy, phi(i1)
+      read (887766, *) dummy, theta(i1)
+      read (887766, *) dummy, socscale(i1)
+      read (887766, *) dummy, rnew(:, i1)
+      read (887766, *) dummy, rpan_intervall(:, i1)
+      read (887766, *) dummy, wldau(:, :, :, i1)
+      read (887766, *) dummy, vinsnew
+      read (887766, *)
       if (i1==i1_end) then
-        close(887766)
-        write(*,*) 'done reading tmat_newsolver input of test option BdG_dev'
+        close (887766)
+        write (*, *) 'done reading tmat_newsolver input of test option BdG_dev'
       end if
     end if
 
-    write(*,*) 'start tmat_newsolver ...'
+    write (*, *) 'start tmat_newsolver ...'
 
-    call init_t_dtmatJij(t_inc,t_dtmatJij)
+    call init_t_dtmatjij(t_inc, t_dtmatjij)
 
-    call TMAT_NEWSOLVER(IELAST,NSPIN,LMAX,ZAT(I1),SOCSCALE(I1),EZ,  &
-       NSRA,CLEB(:,1),ICLEB,IEND,NCHEB,NPAN_TOT(I1),                &
-       RPAN_INTERVALL(:,I1),IPAN_INTERVALL(:,I1),RNEW(:,I1),        &
-       VINSNEW,THETA(I1),PHI(I1),I1,IPOT,LMPOTD,LLY,DELTAE,IDOLDAU, &
-       LOPT(I1),WLDAU(:,:,:,I1),t_dtmatJij(I1))
+    call tmat_newsolver(ielast, nspin, lmax, zat(i1), socscale(i1), ez, nsra, cleb(:,1), icleb, iend, ncheb, npan_tot(i1), rpan_intervall(:,i1), ipan_intervall(:,i1), rnew(:,i1), &
+      vinsnew, theta(i1), phi(i1), i1, ipot, lmpotd, lly, deltae, idoldau, lopt(i1), wldau(:,:,:,i1), t_dtmatjij(i1))
 
-  enddo !I1, atom loop
+  end do                           ! I1, atom loop
 
 end subroutine main1a_dummy
