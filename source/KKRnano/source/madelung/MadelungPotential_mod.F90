@@ -1,3 +1,4 @@
+#define OUTPUT_CHARGE_AND_POTENTIAL_MOMENTS
 
 !> Adds the Madelung Potential to all atoms.
 module MadelungPotential_mod
@@ -13,15 +14,15 @@ module MadelungPotential_mod
   !> Needs SMAT (Lattice sums from calculateMadelungLatticeSum)
   !> principal input: CMOM, CMINST, SMAT, VONS --> VONS (changed)
   !> Wrapper for VMADELBLK
-  subroutine addMadelungPotentialnew_com(calc_data, zat, communicator)
+  subroutine addMadelungPotentialnew_com(calc_data, zat, rbasis, communicator)
     use CalculationData_mod, only: CalculationData
     
     type(CalculationData), intent(inout) :: calc_data
-    double precision, intent(in) :: zat(:)
+    double precision, intent(in) :: zat(:), rbasis(:,:)
     integer, intent(in) :: communicator
 
 #define mc calc_data%madelung_calc
-    call VMADELBLK_new2_com(calc_data, mc%LPOT, size(zat), zat, mc%lmpotd, &
+    call VMADELBLK_new2_com(calc_data, mc%LPOT, size(zat), zat, rbasis, mc%lmpotd, &
          mc%clebsch%CLEB, mc%clebsch%ICLEB, mc%clebsch%IEND, &
          mc%LMXSPD,mc%clebsch%NCLEBD, mc%clebsch%LOFLM, mc%DFAC, communicator)
 #undef mc
@@ -56,7 +57,7 @@ module MadelungPotential_mod
   !>    impurity-program adopted feb. 2004 (according to n.papanikalou)
   !>
   ! **********************************************************************
-  subroutine VMADELBLK_new2_com(calc_data, lpot, naez, zat, &
+  subroutine VMADELBLK_new2_com(calc_data, lpot, naez, zat, rbasis, &
     lmpot, cleb, icleb, iend, lmxspd, nclebd, loflm, dfac, communicator)
 
     use CalculationData_mod, only: CalculationData, getEnergies, getDensities, getEnergies, getAtomData
@@ -70,6 +71,7 @@ module MadelungPotential_mod
     type(CalculationData), intent(in) :: calc_data
     integer, intent(in) :: iend, lpot, lmxspd, nclebd, lmpot, naez
     double precision, intent(in) :: zat(:)
+    double precision, intent(in) :: rbasis(:,:)
     double precision, intent(in) :: cleb(nclebd)
     double precision, intent(in) :: dfac(0:lpot,0:lpot)
     integer, intent(in) :: icleb(nclebd,3)
@@ -100,6 +102,9 @@ module MadelungPotential_mod
 
     !===== begin loop over all atoms =========================================
     ! O(N**2) in calculation and communication !!!
+#ifdef  OUTPUT_CHARGE_AND_POTENTIAL_MOMENTS
+    if (0 == myrank) write(300, '(/,a,i0)') "# new iteration: charge moments"
+#endif      
 
     do i2 = 1, naez
 
@@ -132,6 +137,9 @@ module MadelungPotential_mod
 
       !-------- bcast information of cmom and cminst end----------------------
 
+#ifdef  OUTPUT_CHARGE_AND_POTENTIAL_MOMENTS
+      if (0 == myrank) write(300, '(f8.3,3f16.9,999es24.16)') zat(i2), rbasis(1:3,i2), cmom_save(:) + cminst_save(:)
+#endif      
 
       ! --> calculate avmad(lm1,lm2)
 
@@ -149,11 +157,24 @@ module MadelungPotential_mod
 
     !     contributions are accumulated in AC !!!
 
+#ifdef  OUTPUT_CHARGE_AND_POTENTIAL_MOMENTS
+    call MPI_Barrier(communicator, ierr)
+    if (0 == myrank) write(400, '(/,a,i0)') "# new iteration: potential moments"
+#endif      
 
     do ila = 1, num_local_atoms
       atomdata => getAtomData(calc_data, ila)
       energies => getEnergies(calc_data, ila)
       mesh => atomdata%mesh_ptr
+      
+#ifdef  OUTPUT_CHARGE_AND_POTENTIAL_MOMENTS
+      i2 = calc_data%atom_ids(ila)
+      if (nranks > 1) then
+        write(4000+myrank, '(i8.8,f8.3,3f16.9,999es24.16)') i2, zat(i2), rbasis(1:3,i2), energies%AC_madelung(:)
+      else
+        write(400, '(f8.3,3f16.9,999es24.16)') zat(i2), rbasis(1:3,i2), energies%AC_madelung(:)
+      endif
+#endif      
 
       call addPot(atomdata%potential%VONS, energies%VMAD, &
                   energies%AC_madelung, atomdata%potential%LPOT, &
