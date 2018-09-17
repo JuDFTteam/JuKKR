@@ -72,8 +72,8 @@ contains
     character (len=80) :: strbar, strtmp
     ! .
     ! . Local arrays
-    integer :: nijcalc(:), kijsh(:, :), jijdone(:, :, :)
-    complex (kind=dp) :: jxcijint(:, :, :)
+    integer, allocatable :: nijcalc(:), kijsh(:, :), jijdone(:, :, :)
+    complex (kind=dp), allocatable :: jxcijint(:, :, :)
 #ifndef CPP_MPI
     complex (kind=dp), allocatable :: xintegd(:, :, :)
 #else
