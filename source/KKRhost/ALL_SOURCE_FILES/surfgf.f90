@@ -4,14 +4,14 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: SURFGF
-  ! > @brief Solve surface green's function: \f$
+  !> @brief Solve surface green's function: \f$
   ! f(x)=ml\left(m0-x\right)^{\left(-1\right)*mr} \f$
-  ! > @details method: decimation technique
-  ! > input:  ml,m0,mr - complex rectangular matrices
-  ! > output: x        - result, matrix of same type as before
-  ! > @note NEW VERSION (speeded up) by V.Bellini (march,1999)
-  ! >
-  ! > @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
+  !> @details method: decimation technique
+  !> input:  ml,m0,mr - complex rectangular matrices
+  !> output: x        - result, matrix of same type as before
+  !> @note NEW VERSION (speeded up) by V.Bellini (march,1999)
+  !>
+  !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
   subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck)

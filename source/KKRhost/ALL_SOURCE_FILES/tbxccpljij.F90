@@ -72,14 +72,13 @@ contains
     character (len=80) :: strbar, strtmp
     ! .
     ! . Local arrays
-    integer :: nijcalc(:), kijsh(:, :), jijdone(:, :, :)
-    complex (kind=dp) :: jxcijint(:, :, :)
+    integer, allocatable :: nijcalc(:), kijsh(:, :), jijdone(:, :, :)
+    complex (kind=dp), allocatable :: jxcijint(:, :, :)
 #ifndef CPP_MPI
     complex (kind=dp), allocatable :: xintegd(:, :, :)
 #else
     complex (kind=dp), allocatable :: csum_store(:, :, :, :), csum_store2(:, :, :, :)
 #endif
-    allocatable :: nijcalc, jijdone, kijsh, jxcijint
     complex (kind=dp) :: deltsst(lmmaxd, lmmaxd, natyp), dmatts(lmmaxd, lmmaxd, natyp, nspin), dtilts(lmmaxd, lmmaxd, natyp, nspin), gmij(lmmaxd, lmmaxd), gmji(lmmaxd, lmmaxd), &
       gs(lmmaxd, lmmaxd, nspin), tsst(lmmaxd, lmmaxd, natyp, 2), w1(lmmaxd, lmmaxd), w2(lmmaxd, lmmaxd), w3(lmmaxd, lmmaxd)
     real (kind=dp) :: rsh(nsheld), pi

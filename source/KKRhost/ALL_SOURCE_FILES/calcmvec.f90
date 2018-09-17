@@ -40,8 +40,7 @@ contains
     ! ccc     &           ZF(NRMAX,2,NKMMAX),ZG(NRMAX,2,NKMMAX),
     ! F77--------------------------------------------------------------------
     ! F90--------------------------------------------------------------------
-    complex (kind=dp) :: jf(:, :, :), jg(:, :, :), zf(:, :, :), zg(:, :, :)
-    allocatable :: jf, jg, zf, zg
+    complex (kind=dp), allocatable :: jf(:, :, :), jg(:, :, :), zf(:, :, :), zg(:, :, :)
     ! F90--------------------------------------------------------------------
     complex (kind=dp) :: bmvevd(ntmax, 3, nmvecmax), bmvevdl(nlmax, 3, nmvecmax), bmvevdm(nlmax, nmuemax, 3, nmvecmax), bmvevi(ntmax, 3, nmvecmax), cwgt, &
       meirr(nkmmax, nkmmax, 3, nmvecmax), mereg(nkmmax, nkmmax, 3, nmvecmax), mvevd(ntmax, 3, nmvecmax), mvevdl(nlmax, 3, nmvecmax), mvevdm(nlmax, nmuemax, 3, nmvecmax), &
@@ -328,7 +327,7 @@ contains
     if ((igrid>=6) .or. (iecurr/=netab) .or. (iepath/=nepath)) return
 
     ! this part of the original Munich subroutine has been moved to
-    ! < mvecglobal >
+    !! mvecglobal >
     ! main2 --> tbkkr2 --> mvecglobal -- see makefile2
 
   end subroutine calcmvec

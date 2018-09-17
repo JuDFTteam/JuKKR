@@ -4,41 +4,41 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: TESTDIM
-  ! > @brief Testing the dimension of several arrays
-  ! > @note Jonathan Chico: Some of these tests seem unnecessary with the
+  !> @brief Testing the dimension of several arrays
+  !> @note Jonathan Chico: Some of these tests seem unnecessary with the
   ! changes done to the
-  ! > inc.p
+  !> inc.p
   ! -------------------------------------------------------------------------------
   subroutine testdim(nspin, naez, nemb, natyp, ins, insref, nref, irns, nlayer, krel, nspind, nprincd, knosph, irnsd, korbit)
 
     implicit none
 
-    integer, intent (in) :: ins    ! < 0 (MT), 1(ASA), 2(Full Potential)
-    integer, intent (in) :: naez   ! < Number of atoms in unit cell
-    integer, intent (in) :: nref   ! < Number of diff. ref. potentials
-    integer, intent (in) :: krel   ! < Switch for
+    integer, intent (in) :: ins    !! 0 (MT), 1(ASA), 2(Full Potential)
+    integer, intent (in) :: naez   !! Number of atoms in unit cell
+    integer, intent (in) :: nref   !! Number of diff. ref. potentials
+    integer, intent (in) :: krel   !! Switch for
     ! non-relativistic/relativistic (0/1)
     ! program. Attention: several other
     ! parameters depend explicitly on KREL,
     ! they are set automatically Used for Dirac
     ! solver in ASA
-    integer, intent (in) :: nspin  ! < Counter for spin directions
-    integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
+    integer, intent (in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
     integer, intent (in) :: irnsd
-    integer, intent (in) :: insref ! < INS for reference pot. (usual 0)
-    integer, intent (in) :: knosph ! < switch for spherical/non-spherical
+    integer, intent (in) :: insref !! INS for reference pot. (usual 0)
+    integer, intent (in) :: knosph !! switch for spherical/non-spherical
     ! (0/1) program.
-    integer, intent (in) :: korbit ! < Spin-orbit/non-spin-orbit (1/0) added
+    integer, intent (in) :: korbit !! Spin-orbit/non-spin-orbit (1/0) added
     ! to the Schroedinger or SRA equations.
     ! Works with FP. KREL and KORBIT cannot be
     ! both non-zero.
-    integer, intent (in) :: nspind ! < KREL+(1-KREL)*(NSPIN+1)
-    integer, intent (in) :: nprincd ! < Number of principle layers, set to a
+    integer, intent (in) :: nspind !! KREL+(1-KREL)*(NSPIN+1)
+    integer, intent (in) :: nprincd !! Number of principle layers, set to a
     ! number >= NRPINC in output of main0
     ! .. In/Out variables
-    integer, intent (inout) :: nemb ! < Number of 'embedding' positions
-    integer, intent (inout) :: nlayer ! < Number of principal layer
-    integer, dimension (natyp), intent (inout) :: irns ! < Position of atoms in
+    integer, intent (inout) :: nemb !! Number of 'embedding' positions
+    integer, intent (inout) :: nlayer !! Number of principal layer
+    integer, dimension (natyp), intent (inout) :: irns !! Position of atoms in
     ! the unit cell in units
     ! of bravais vectors
 

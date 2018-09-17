@@ -63,9 +63,8 @@ contains
     ! ..
     ! .. Local arrays
     real (kind=dp) :: ri(3), rj(3)
-    integer :: nsh1i(:), nsh2i(:), nshelli(:)
-    real (kind=dp) :: ratomi(:, :)
-    allocatable :: nsh1i, nsh2i, nshelli, ratomi
+    integer, allocatable :: nsh1i(:), nsh2i(:), nshelli(:)
+    real (kind=dp), allocatable :: ratomi(:, :)
     ! ..
     ! .. Data statements
     data small/1.0e-10_dp/

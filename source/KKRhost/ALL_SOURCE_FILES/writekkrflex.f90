@@ -4,14 +4,14 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: writekkrflex
-  ! > @brief Subroutine dealing with the printing of the needed kkrflex files
-  ! for the
-  ! > realization of an impurity calculation with the KKRFLEX software package.
-  ! > @details It specifically prints the following files:
-  ! > - kkrflex_tmat
-  ! > - kkrflex_intercell_ref
-  ! > - kkrflex_intercell_cmoms
-  ! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
+  ! @brief Subroutine dealing with the printing of the needed kkrflex files
+  !for the
+  !> realization of an impurity calculation with the KKRFLEX software package.
+  !> @details It specifically prints the following files:
+  !> - kkrflex_tmat
+  !> - kkrflex_intercell_ref
+  !> - kkrflex_intercell_cmoms
+  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
   subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, kshape, vbc, atomimp, hostimp, noq, zat, kaoez, conc, cmom, cminst, vinters, nemb, naez)

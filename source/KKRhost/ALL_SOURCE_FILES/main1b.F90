@@ -1,10 +1,10 @@
 ! -------------------------------------------------------------------------------
 ! MODULE: MOD_MAIN1B
-! > @brief Module concerning gmat
-! > @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-! > and many others ...
-! > @note
-! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
+!> @brief Module concerning gmat
+!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+!> and many others ...
+!> @note
+!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 ! -------------------------------------------------------------------------------
 module mod_main1b
 
@@ -30,9 +30,9 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: main1b
-  ! > @brief Main subroutine regarding the claculation of the gmat
-  ! > @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-  ! > and many others ...
+  !> @brief Main subroutine regarding the claculation of the gmat
+  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+  !> and many others ...
   ! ----------------------------------------------------------------------------
   subroutine main1b()
 
@@ -102,7 +102,7 @@ contains
     integer :: lrecgreen
     real (kind=dp) :: phi
     real (kind=dp) :: theta
-    real (kind=dp) :: rfctor       ! < rfctor=a/(2*pi) conversion factor to p.u.
+    real (kind=dp) :: rfctor       !! rfctor=a/(2*pi) conversion factor to p.u.
     complex (kind=dp) :: eryd
     complex (kind=dp) :: tread     ! qdos ruess
     complex (kind=dp) :: cfctor
@@ -132,30 +132,30 @@ contains
     complex (kind=dp), dimension (lmmaxd, lmmaxd) :: gmat0
     complex (kind=dp), dimension (lmmaxd, lmmaxd) :: factl
     complex (kind=dp), dimension (0:lmaxd, nrefd) :: alpharef
-    complex (kind=dp), dimension (0:lmaxd, nrefd) :: dalpharef ! < LLY Lloyd Alpha matrix and deriv.
+    complex (kind=dp), dimension (0:lmaxd, nrefd) :: dalpharef !! LLY Lloyd Alpha matrix and deriv.
     complex (kind=dp), dimension (lmmaxd, lmmaxd, natypd) :: msst
     complex (kind=dp), dimension (lmmaxd, lmmaxd, natypd) :: tsst
     complex (kind=dp), dimension (lmmaxd, lmmaxd, naezd) :: tqdos ! qdos ruess
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd) :: trefll
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, nsheld) :: gmatll ! < GMATLL = diagonal elements of the G matrix (system)
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd) :: dtrefll ! < LLY Lloyd dtref/dE
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, naezd) :: dtmatll ! < LLY Lloyd  dt/dE
-    complex (kind=dp), dimension (lmmaxd*lmmaxd) :: gimp ! <  Cluster GF (ref. syst.)
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, nsheld) :: gmatll !! GMATLL = diagonal elements of the G matrix (system)
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd) :: dtrefll !! LLY Lloyd dtref/dE
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, naezd) :: dtmatll !! LLY Lloyd  dt/dE
+    complex (kind=dp), dimension (lmmaxd*lmmaxd) :: gimp !!  Cluster GF (ref. syst.)
     character (len=35), dimension (0:2), parameter :: invalg = [ 'FULL MATRIX                        ', 'BANDED MATRIX (slab)               ', 'BANDED + CORNERS MATRIX (supercell)' &
       ]
 
     ! .. Allocatable local arrays
-    real (kind=dp), dimension (:, :), allocatable :: qvec ! < qdos ruess, q-vectors for qdos
+    real (kind=dp), dimension (:, :), allocatable :: qvec !! qdos ruess, q-vectors for qdos
     real (kind=dp), dimension (:, :, :), allocatable :: bzkp
-    complex (kind=dp), dimension (:, :), allocatable :: dtmtrx ! < For GREENIMP
-    complex (kind=dp), dimension (:, :, :), allocatable :: ginp ! < Cluster GF (ref syst.) GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
-    complex (kind=dp), dimension (:, :, :), allocatable :: dginp ! < LLY Lloyd Energy derivative of GINP DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
-    complex (kind=dp), dimension (:), allocatable :: lly_g0tr ! < LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
+    complex (kind=dp), dimension (:, :), allocatable :: dtmtrx !! For GREENIMP
+    complex (kind=dp), dimension (:, :, :), allocatable :: ginp !! Cluster GF (ref syst.) GINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
+    complex (kind=dp), dimension (:, :, :), allocatable :: dginp !! LLY Lloyd Energy derivative of GINP DGINP(NACLSD*LMGF0D,LMGF0D,NCLSD)
+    complex (kind=dp), dimension (:), allocatable :: lly_g0tr !! LLY Lloyd  Trace[ X ], Eq.5.27 PhD Thiess
     complex (kind=dp), dimension (:), allocatable :: tralpharef ! LLY Lloyd
     complex (kind=dp), dimension (:), allocatable :: cdosref_lly ! LLY Lloyd
-    complex (kind=dp), dimension (:, :), allocatable :: tracet ! < Tr[ (t-tref)^-1 d(t-tref)/dE ]  ! LLY Lloyd
+    complex (kind=dp), dimension (:, :), allocatable :: tracet !! Tr[ (t-tref)^-1 d(t-tref)/dE ]  ! LLY Lloyd
     complex (kind=dp), dimension (:, :), allocatable :: tralpha
-    complex (kind=dp), dimension (:, :), allocatable :: lly_grtr ! < LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
+    complex (kind=dp), dimension (:, :), allocatable :: lly_grtr !! LLY Lloyd  Trace[ M^-1 dM/dE ], Eq.5.38 PhD Thiess
     complex (kind=dp), dimension (:, :), allocatable :: cdos_lly
 
 #ifdef CPP_MPI

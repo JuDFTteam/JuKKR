@@ -1,17 +1,16 @@
 ! -------------------------------------------------------------------------------
 ! MODULE: mod_wunfiles
-! > @brief Module responsible for storing the input variables and primary arrays
-! > so that they are distributed via MPI processes.
-! > @details Previously this routine wrote unformatted files to disk, so that they
-! > would be used by the different executables. Since the advent of the single
-! > executable mode, this routine creates a copy of most of the variables in the program
-! > as special `type` parameters. This are then used in the MPI communication, and
-! > in the rest of the variables used in the code.
-! > @author Philipp Rüssmann and many others ...
-! > @note Jonatan Chico: 02.01.2018 Modifications to ensure compatibility for the removal of
-! > the inc.p file. Also added the memory profiling calls to the allocation/deallocation
-! > of the arrays.
-! -------------------------------------------------------------------------------
+!> @brief Module responsible for storing the input variables and primary arrays
+!> so that they are distributed via MPI processes.
+!> @details Previously this routine wrote unformatted files to disk, so that they
+!> would be used by the different executables. Since the advent of the single
+!> executable mode, this routine creates a copy of most of the variables in the program
+!> as special `type` parameters. This are then used in the MPI communication, and
+!> in the rest of the variables used in the code.
+!> @author Philipp Rüssmann and many others ...
+!> @note Jonatan Chico: 02.01.2018 Modifications to ensure compatibility for the removal of
+!> the inc.p file. Also added the memory profiling calls to the allocation/deallocation
+!> of the arrays.
 module mod_wunfiles
 
   use :: mod_profiling
@@ -310,13 +309,12 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: WUNFILES
-  ! > @brief This routine takes the read parameters from the inputcard and stores
-  ! > them in the t_params type to be distributed via MPI
-  ! > @details This routine was oiginally meant to write unformated files to then
-  ! > be read by other executables, now it does the same job via storing types instead
-  ! > reducing I/O and allowing for MPI communication.
-  ! > @author Philipp Rüssmann and many others ...
-  ! ----------------------------------------------------------------------------
+  !> @brief This routine takes the read parameters from the inputcard and stores
+  !> them in the t_params type to be distributed via MPI
+  !> @details This routine was oiginally meant to write unformated files to then
+  !> be read by other executables, now it does the same job via storing types instead
+  !> reducing I/O and allowing for MPI communication.
+  !> @author Philipp Rüssmann and many others ...
   subroutine wunfiles(npol, npnt1, npnt2, npnt3, ielast, tk, emin, emax, ez, wez, efermi, npolsemi, n1semi, n2semi, n3semi, iesemicore, tksemi, ebotsemi, emusemi, fsemicore, vins, &
     visp, vbc, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, itscf, scfsteps, cmomhost, ecore, lcore, ncore, qmtet, qmphi, qmphitab, qmtettab, qmgamtab, drotq, &
     nsra, ins, natyp, naez, nineq, nref, nspin, ncls, icst, ipan, ircut, alat, zat, r, drdi, refpot, rmtref, vref, iend, jend, cleb, icleb, atom, cls, rcls, nacls, loflm, solver, &
@@ -810,9 +808,8 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: init_t_params
-  ! > @brief Allocate initial parameters to be broadcasted via mpi
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Allocate initial parameters to be broadcasted via mpi
+  !> @author Philipp Rüssmann
   subroutine init_t_params(t_params)
     ! allocate arrays, has to be done after bcast t_params_scalars for myrank<>master
     ! otherwise are the parameters not set
@@ -1152,9 +1149,8 @@ contains
 #ifdef CPP_MPI
   ! ----------------------------------------------------------------------------
   ! subroutine: bcast_t_params_scalars
-  ! > @brief Broadcast scalar parameters via MPI
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Broadcast scalar parameters via MPI
+  !> @author Philipp Rüssmann
   subroutine bcast_t_params_scalars(t_params)
     ! broadcast scalar parameters, deal with arrays later
     use :: mpi
@@ -1489,9 +1485,8 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: bcast_t_params_scalars
-  ! > @brief Broadcast arrays via MPI
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Broadcast arrays via MPI
+  !> @author Philipp Rüssmann
   subroutine bcast_t_params_arrays(t_params)
     ! broadcast arrays from t_params
     use :: mpi
@@ -1672,9 +1667,8 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: fill_t_params_scalars
-  ! > @brief Set the values of the t_params scalars with the input values
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Set the values of the t_params scalars with the input values
+  !> @author Philipp Rüssmann
   subroutine fill_t_params_scalars(iemxd, irmind, irm, lmpot, nspotd, npotd, natyp, nembd1, lmmaxd, naez, ipand, nembd2, nref, lmax, ncleb, naclsd, nclsd, lm2d, lmaxd1, nr, nsheld, &
     nsymaxd, naezdpd, natomimpd, nofgij, nspind, nspindd, irid, nfund, ncelld, lmxspd, ngshd, krel, mmaxd, ielast, npol, npnt1, npnt2, npnt3, itscf, scfsteps, lly, nsra, ins, &
     nineq, nspin, ncls, icst, iend, icc, igf, nlbasis, nrbasis, ncpa, itcpamax, kmrot, maxmesh, nsymat, natomimp, invmod, nqcalc, intervx, intervy, intervz, lpot, nright, nleft, &
@@ -1921,9 +1915,8 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: fill_t_params_arrays
-  ! > @brief Set the values of the t_params arrays with the input values of the arrays
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Set the values of the t_params arrays with the input values of the arrays
+  !> @author Philipp Rüssmann
   subroutine fill_t_params_arrays(t_params, iemxd, lmmaxd, naez, nsymaxd, nembd1, nspindd, irmind, irm, lmpot, nspotd, npotd, natyp, nr, nembd2, nref, ncleb, nclsd, naclsd, nsheld, &
     ngshd, nfund, irid, ncelld, mmaxd, lm2d, lmxspd, lmaxd1, nspind, ntotd, ncheb, ipand, lmax, nofgij, naezdpd, natomimpd, ez, wez, drotq, dsymll, lefttinvll, righttinvll, crel, &
     rc, rrel, srrel, phildau, vins, visp, vbc, vtrel, btrel, socscale, drdirel, r2drdirel, rmrel, cmomhost, ecore, qmtet, qmphi, qmphitab, qmtettab, qmgamtab, zat, r, drdi, rmtref, &
@@ -2234,12 +2227,11 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: get_params_1a
-  ! > @brief Set the values of the local variables according to the stored t_params
-  ! > so that they can be passed between different control modules, specifically for main1a
-  ! > @author Philipp Rüssmann
-  ! > @note JC: NPAN_EQ seems to have been passed here as an array, while in the
-  ! > rest of the routines it is an scalar. Why?
-  ! ----------------------------------------------------------------------------
+  !> @brief Set the values of the local variables according to the stored t_params
+  !> so that they can be passed between different control modules, specifically for main1a
+  !> @author Philipp Rüssmann
+  !> @note JC: NPAN_EQ seems to have been passed here as an array, while in the
+  !> rest of the routines it is an scalar. Why?
   subroutine get_params_1a(t_params, ipand, natypd, irmd, naclsd, ielast, nclsd, nrefd, ncleb, nembd, naezd, lm2d, nsra, ins, nspin, icst, ipan, ircut, lmax, ncls, nineq, idoldau, &
     lly, krel, atom, cls, icleb, loflm, nacls, refpot, irws, iend, ez, vins, irmin, itmpdir, iltmp, alat, drdi, rmesh, zat, rcls, iemxd, visp, rmtref, vref, cleb, cscl, socscale, &
     socscl, erefldau, ueff, jeff, solver, tmpdir, deltae, tolrdif, npan_log, npan_eq, ncheb, npan_tot, ipan_intervall, rpan_intervall, rnew, ntotd, nrmaxd, r_log, ntldau, itldau, &
@@ -2453,10 +2445,9 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: get_params_1b
-  ! > @brief Set the values of the local variables according to the stored t_params
-  ! > so that they can be passed between different control modules, specifically for main1b
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Set the values of the local variables according to the stored t_params
+  !> so that they can be passed between different control modules, specifically for main1b
+  !> @author Philipp Rüssmann
   subroutine get_params_1b(t_params, natypd, naezd, natyp, naclsd, ielast, npol, nclsd, nrefd, nref, nembd, naez, nsra, ins, nspin, lmax, ncls, lly, krel, atom, cls, nacls, refpot, &
     ez, itmpdir, iltmp, alat, rcls, iemxd, rmtref, vref, tmpdir, nsheld, nprincd, kpoibz, atomimp, natomimpd, icc, igf, nlbasis, nrbasis, ncpa, icpa, itcpamax, cpatol, nrd, ideci, &
     rbasis, rr, ezoa, nshell, kmrot, kaoez, ish, jsh, nsh1, nsh2, noq, iqat, nofgij, natomimp, conc, kmesh, maxmesh, nsymat, nqcalc, ratom, rrot, drotq, ijtabcalc, ijtabcalc_i, &
@@ -2718,10 +2709,9 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: get_params_1c
-  ! > @brief Set the values of the local variables according to the stored t_params
-  ! > so that they can be passed between different control modules, specifically for main1c
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Set the values of the local variables according to the stored t_params
+  !> so that they can be passed between different control modules, specifically for main1c
+  !> @author Philipp Rüssmann
   subroutine get_params_1c(t_params, krel, naezd, natypd, ncleb, lm2d, ncheb, ipand, lmpotd, lmaxd, lmxspd, nfund, npotd, ntotd, mmaxd, iemxd, irmd, nsra, ins, nspin, nacls1, icst, &
     kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, lmsp1, nfu, llmsp, lcore, ncore, ntcell, irmin, ititle, intervx, intervy, intervz, lly, itmpdir, &
     iltmp, npan_eq, ipan_intervall, npan_log, npan_tot, ntldau, lopt, itldau, ielast, iesemicore, npol, irshift, jwsrel, zrel, itrunldau, qmtet, qmphi, conc, alat, zat, drdi, &
@@ -2988,10 +2978,9 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: get_params_2
-  ! > @brief Set the values of the local variables according to the stored t_params
-  ! > so that they can be passed between different control modules, specifically for main2
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Set the values of the local variables according to the stored t_params
+  !> so that they can be passed between different control modules, specifically for main2
+  !> @author Philipp Rüssmann
   subroutine get_params_2(t_params, krel, natyp, ipand, npotd, natomimpd, lmxspd, nfund, lmpot, ncelld, irmd, nembd1, nembd, irmind, nsra, ins, nspin, ipan, ircut, lcore, ncore, &
     lmax, ntcell, lpot, nlbasis, nrbasis, nright, nleft, natomimp, atomimp, imix, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, icc, ishift, ixipol, kforce, ifunm, &
     lmsp, imt, irc, irmin, irws, llmsp, ititle, nfu, hostimp, ilm_map, imaxsh, ielast, npol, npnt1, npnt2, npnt3, itscf, scfsteps, iesemicore, kaoez, iqat, noq, lly, npolsemi, &
@@ -3249,10 +3238,9 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: save_emesh
-  ! > @brief Store the values of the local variables related to the energy mesh,
-  ! > in the t_params data types
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Store the values of the local variables related to the energy mesh,
+  !> in the t_params data types
+  !> @author Philipp Rüssmann
   subroutine save_emesh(ielast, ez, wez, emin, emax, iesemicore, fsemicore, npol, tk, npnt1, npnt2, npnt3, ebotsemi, emusemi, tksemi, npolsemi, n1semi, n2semi, n3semi, iemxd, &
     t_params)
     ! save information of energy mesh in t_params
@@ -3305,10 +3293,9 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: save_scfinfo
-  ! > @brief Store the values of the local variables related to the SCF parameters
-  ! > in the t_params data types
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Store the values of the local variables related to the SCF parameters
+  !> in the t_params data types
+  !> @author Philipp Rüssmann
   subroutine save_scfinfo(t_params, vins, visp, ecore, vbc, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, vtrel, btrel, itscf, scfsteps, efold, chrgold, cmomhost, krel, irmind, &
     irm, lmpot, nspotd, natyp, npotd, nembd1)
     ! save information that is needed in next iteration and that is changeing, i.e. potential etc.
@@ -3365,10 +3352,9 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: save_density
-  ! > @brief Store the values of the local variables related to the electronic density
-  ! > in the t_params data types
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Store the values of the local variables related to the electronic density
+  !> in the t_params data types
+  !> @author Philipp Rüssmann
   subroutine save_density(t_params, rho2ns, r2nef, rhoc, denef, denefat, espv, ecore, idoldau, lopt, eu, edc, chrgsemicore, rhoorb, ecorerel, nkcore, kapcore, krel, natyp, npotd, &
     irm, lmpot, lmaxd1)
     ! save density after it has been calculated in main1c, is further processed in main2
@@ -3422,10 +3408,9 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: read_density
-  ! > @brief Store the values of the t_params data types related to the electronic
-  ! > density in local variables
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Store the values of the t_params data types related to the electronic
+  !> density in local variables
+  !> @author Philipp Rüssmann
   subroutine read_density(t_params, rho2ns, r2nef, rhoc, denef, denefat, espv, ecore, idoldau, lopt, eu, edc, chrgsemicore, rhoorb, ecorerel, nkcore, kapcore, krel, natyp, npotd, &
     irm, lmpot, lmaxd1)
     ! read density in main2
@@ -3480,10 +3465,9 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: read_angles
-  ! > @brief Read the angles variables associated with the angles of magnetic
-  ! > moments in a non-collinear calcula
-  ! > @author Philipp Rüssmann
-  ! ----------------------------------------------------------------------------
+  !> @brief Read the angles variables associated with the angles of magnetic
+  !> moments in a non-collinear calcula
+  !> @author Philipp Rüssmann
   subroutine read_angles(t_params, natyp, theta, phi)
     ! read nonco_angles
     use :: mod_types, only: t_inc

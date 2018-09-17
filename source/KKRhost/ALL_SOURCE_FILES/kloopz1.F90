@@ -4,8 +4,8 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: KLOOPZ1_QDOS
-  ! > @note
-  ! > - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
+  !> @note
+  !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
   ! -------------------------------------------------------------------------------
   subroutine kloopz1_qdos(eryd, gmatll, ins, alat, ie, igf, nshell, naez, nofks, volbz, bzkp, volcub, cls, nacls, naclsmax, ncls, rr, rbasis, ezoa, atom, rcls, icc, ginp, ideci, &
     lefttinvll, righttinvll, vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, &
@@ -37,85 +37,85 @@ contains
     real (kind=dp), parameter :: tolmssq = 1.0d-6
     ! .. Input variables
     integer, intent (in) :: ie
-    integer, intent (in) :: lly    ! < LLY <> 0 => use Lloyd formula
-    integer, intent (in) :: igf    ! < Do not print or print (0/1) the KKRFLEX_* files
-    integer, intent (in) :: ins    ! < 0 (MT), 1(ASA), 2(Full Potential)
-    integer, intent (in) :: icc    ! < Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-    integer, intent (in) :: naez   ! < Number of atoms in unit cell
-    integer, intent (in) :: ncpa   ! < NCPA = 0/1 CPA flag
-    integer, intent (in) :: ncls   ! < Number of reference clusters
-    integer, intent (in) :: kmrot  ! < 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-    integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
+    integer, intent (in) :: lly    !! LLY <> 0 => use Lloyd formula
+    integer, intent (in) :: igf    !! Do not print or print (0/1) the KKRFLEX_* files
+    integer, intent (in) :: ins    !! 0 (MT), 1(ASA), 2(Full Potential)
+    integer, intent (in) :: icc    !! Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+    integer, intent (in) :: naez   !! Number of atoms in unit cell
+    integer, intent (in) :: ncpa   !! NCPA = 0/1 CPA flag
+    integer, intent (in) :: ncls   !! Number of reference clusters
+    integer, intent (in) :: kmrot  !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
     integer, intent (in) :: nofks
     integer, intent (in) :: ideci
     integer, intent (in) :: ispin
-    integer, intent (in) :: nspin  ! < Counter for spin directions
+    integer, intent (in) :: nspin  !! Counter for spin directions
     integer, intent (in) :: nsymat
-    integer, intent (in) :: invmod ! < Inversion scheme
+    integer, intent (in) :: invmod !! Inversion scheme
     integer, intent (in) :: iprint
-    integer, intent (in) :: nlbasis ! < Number of basis layers of left host (repeated units)
-    integer, intent (in) :: nrbasis ! < Number of basis layers of right host (repeated units)
-    integer, intent (in) :: natomimp ! < Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    integer, intent (in) :: nlbasis !! Number of basis layers of left host (repeated units)
+    integer, intent (in) :: nrbasis !! Number of basis layers of right host (repeated units)
+    integer, intent (in) :: natomimp !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
     integer, intent (in) :: naclsmax
-    integer, intent (in) :: iqdosrun ! < qdos ruess: counts qdos run
-    real (kind=dp), intent (in) :: alat ! < Lattice constant in a.u.
+    integer, intent (in) :: iqdosrun !! qdos ruess: counts qdos run
+    real (kind=dp), intent (in) :: alat !! Lattice constant in a.u.
     real (kind=dp), intent (in) :: volbz
-    real (kind=dp), intent (in) :: cpatol ! < Convergency tolerance for CPA-cycle
+    real (kind=dp), intent (in) :: cpatol !! Convergency tolerance for CPA-cycle
     complex (kind=dp), intent (in) :: eryd
     complex (kind=dp), intent (in) :: cfctor
     complex (kind=dp), intent (in) :: cfctorinv
     ! .. Input arrays
-    integer, dimension (nembd2), intent (in) :: cls ! < Cluster around atomic sites
-    integer, dimension (naez), intent (in) :: noq ! < Number of diff. atom types located
-    integer, dimension (nsheld), intent (in) :: nsh1 ! < Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-    integer, dimension (nsheld), intent (in) :: nsh2 ! < Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
-    integer, dimension (naez), intent (in) :: icpa ! < ICPA = 0/1 site-dependent CPA flag
-    integer, dimension (natyp), intent (in) :: iqat ! < The site on which an atom is located on a given site
-    integer, dimension (nclsd), intent (in) :: nacls ! < Number of atoms in cluster
-    integer, dimension (0:nsheld), intent (in) :: nshell ! < Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
-    integer, dimension (nembd2), intent (in) :: refpot ! < Ref. pot. card  at position
-    integer, dimension (nofgij), intent (in) :: ijtabsh ! < Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
-    integer, dimension (nofgij), intent (in) :: ijtabsym ! < Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
-    integer, dimension (naclsd, nembd2), intent (in) :: atom ! < Atom at site in cluster
-    integer, dimension (naclsd, nembd2), intent (in) :: ezoa ! < EZ of atom at site in cluster
+    integer, dimension (nembd2), intent (in) :: cls !! Cluster around atomic sites
+    integer, dimension (naez), intent (in) :: noq !! Number of diff. atom types located
+    integer, dimension (nsheld), intent (in) :: nsh1 !! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+    integer, dimension (nsheld), intent (in) :: nsh2 !! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
+    integer, dimension (naez), intent (in) :: icpa !! ICPA = 0/1 site-dependent CPA flag
+    integer, dimension (natyp), intent (in) :: iqat !! The site on which an atom is located on a given site
+    integer, dimension (nclsd), intent (in) :: nacls !! Number of atoms in cluster
+    integer, dimension (0:nsheld), intent (in) :: nshell !! Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+    integer, dimension (nembd2), intent (in) :: refpot !! Ref. pot. card  at position
+    integer, dimension (nofgij), intent (in) :: ijtabsh !! Linear pointer, assigns pair (i,j) to a shell in the array GS(*,*,*,NSHELD)
+    integer, dimension (nofgij), intent (in) :: ijtabsym !! Linear pointer, assigns pair (i,j) to the rotation bringing GS into Gij
+    integer, dimension (naclsd, nembd2), intent (in) :: atom !! Atom at site in cluster
+    integer, dimension (naclsd, nembd2), intent (in) :: ezoa !! EZ of atom at site in cluster
     integer, dimension (natyp, naez), intent (in) :: itoq
     integer, dimension (2, lmmaxd), intent (in) :: nrrel
     integer, dimension (naez/nprincd, naez/nprincd), intent (in) :: icheck
     integer, dimension (2, 2, lmmaxd), intent (in) :: irrel
-    real (kind=dp), dimension (natyp), intent (in) :: conc ! < Concentration of a given atom
+    real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of a given atom
     real (kind=dp), dimension (kpoibz), intent (in) :: volcub
-    real (kind=dp), dimension (3, 0:nrd), intent (in) :: rr ! < Set of real space vectors (in a.u.)
+    real (kind=dp), dimension (3, 0:nrd), intent (in) :: rr !! Set of real space vectors (in a.u.)
     real (kind=dp), dimension (3, kpoibz), intent (in) :: bzkp
     real (kind=dp), dimension (3, nsheld), intent (in) :: ratom
-    real (kind=dp), dimension (3, nembd2), intent (in) :: rbasis ! < Position of atoms in the unit cell in units of bravais vectors
-    real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls ! < Real space position of atom in cluster
+    real (kind=dp), dimension (3, nembd2), intent (in) :: rbasis !! Position of atoms in the unit cell in units of bravais vectors
+    real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls !! Real space position of atom in cluster
     real (kind=dp), dimension (48, 3, nsheld), intent (in) :: rrot
-    complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: rc ! < NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-    complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: crel ! < Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-    complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: rrel ! < Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+    complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: rc !! NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+    complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: crel !! Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+    complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: rrel !! Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: factl
     complex (kind=dp), dimension (lmmaxd, lmmaxd, natyp), intent (in) :: tsst
     complex (kind=dp), dimension (lmmaxd, lmmaxd, natyp), intent (in) :: msst
     complex (kind=dp), dimension (2, 2, lmmaxd), intent (in) :: srrel
     complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: tqdos ! qdos : Read-in inverse t-matrix
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: drotq ! < Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: drotq !! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: trefll
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nsymaxd), intent (in) :: dsymll
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: dtrefll ! < LLY Lloyd dtref/dE
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: dtrefll !! LLY Lloyd dtref/dE
     complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: dtmatll ! LLY  dt/dE (should be av.-tmatrix in CPA)
-    complex (kind=dp), dimension (lmgf0d*naclsmax, lmgf0d, ncls), intent (in) :: ginp ! < Cluster GF (ref syst.)
-    complex (kind=dp), dimension (lmgf0d*naclsmax, lmgf0d, ncls), intent (in) :: dginp ! < LLY Lloyd Energy derivative of GINP
+    complex (kind=dp), dimension (lmgf0d*naclsmax, lmgf0d, ncls), intent (in) :: ginp !! Cluster GF (ref syst.)
+    complex (kind=dp), dimension (lmgf0d*naclsmax, lmgf0d, ncls), intent (in) :: dginp !! LLY Lloyd Energy derivative of GINP
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nembd1, nspin), intent (in) :: lefttinvll
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nembd1, nspin), intent (in) :: righttinvll
     logical, dimension (2), intent (in) :: vacflag
-    logical, dimension (nsymaxd), intent (in) :: symunitary ! < unitary/antiunitary symmetry flag
+    logical, dimension (nsymaxd), intent (in) :: symunitary !! unitary/antiunitary symmetry flag
     ! .. Output variables
     integer, intent (out) :: icpaflag
     ! .. In/Out variables
-    integer, intent (inout) :: itcpamax ! < Max. number of CPA iterations
-    complex (kind=dp), intent (inout) :: tracet ! < \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$
-    complex (kind=dp), intent (inout) :: lly_grtr ! < Trace Eq.5.38 PhD Thiess (k-integrated)! LLY Lloyd
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, nsheld), intent (inout) :: gmatll ! < GMATLL = diagonal elements of the G matrix (system)
+    integer, intent (inout) :: itcpamax !! Max. number of CPA iterations
+    complex (kind=dp), intent (inout) :: tracet !! \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$
+    complex (kind=dp), intent (inout) :: lly_grtr !! Trace Eq.5.38 PhD Thiess (k-integrated)! LLY Lloyd
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, nsheld), intent (inout) :: gmatll !! GMATLL = diagonal elements of the G matrix (system)
     ! .. Local Scalars
     integer :: i_stat, i_all
     integer :: ih, lm1, lm2, ns, nsdia, icall, irec
@@ -252,7 +252,7 @@ contains
       call cinit(lmmaxd*lmmaxd*naez, dmssq)
     end if
     ! ----------------------------------------------------------------------------
-    ! < GLL2K >  incorporated now
+    !! GLL2K >  incorporated now
     ! ----------------------------------------------------------------------------
     tauvbz = 1.d0/volbz
     ! ----------------------------------------------------------------------------

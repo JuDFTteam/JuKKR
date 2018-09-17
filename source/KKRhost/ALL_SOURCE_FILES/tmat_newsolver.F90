@@ -6,9 +6,8 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: TMAT_NEWSOLVER
-  ! > @brief Calculation of the T-Matrix
-  ! > @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
-  ! -------------------------------------------------------------------------------
+  !> @brief Calculation of the T-Matrix
+  !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
   subroutine tmat_newsolver(ielast, nspin, lmax, zat, socscale, ez, nsra, cleb, icleb, iend, ncheb, npan_tot, rpan_intervall, ipan_intervall, rnew, vinsnew, theta, phi, i1, ipot, &
     lmpot, lly, deltae, idoldau, lopt, wldau, t_dtmatjij_at)
 
@@ -42,29 +41,29 @@ contains
     implicit none
 
     integer, intent (in) :: i1
-    integer, intent (in) :: lly    ! < LLY <> 0: apply Lloyds formula
-    integer, intent (in) :: lopt   ! < angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function expansion
+    integer, intent (in) :: lly    !! LLY <> 0: apply Lloyds formula
+    integer, intent (in) :: lopt   !! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
     integer, intent (in) :: nsra
-    integer, intent (in) :: iend   ! < Number of nonzero gaunt coefficients
+    integer, intent (in) :: iend   !! Number of nonzero gaunt coefficients
     integer, intent (in) :: ipot
-    integer, intent (in) :: ncheb  ! < Number of Chebychev pannels for the new solver
-    integer, intent (in) :: nspin  ! < Counter for spin directions
-    integer, intent (in) :: lmpot  ! < (LPOT+1)**2
+    integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new solver
+    integer, intent (in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: lmpot  !! (LPOT+1)**2
     integer, intent (in) :: ielast
     integer, intent (in) :: npan_tot
-    integer, intent (in) :: idoldau ! < flag to perform LDA+U
-    real (kind=dp), intent (in) :: zat ! < Nuclear charge for a given atom
+    integer, intent (in) :: idoldau !! flag to perform LDA+U
+    real (kind=dp), intent (in) :: zat !! Nuclear charge for a given atom
     real (kind=dp), intent (in) :: phi
     real (kind=dp), intent (in) :: theta
-    real (kind=dp), intent (in) :: socscale ! < Spin-orbit scaling for a given atom
-    complex (kind=dp), intent (in) :: deltae ! < Energy difference for numerical derivative
+    real (kind=dp), intent (in) :: socscale !! Spin-orbit scaling for a given atom
+    complex (kind=dp), intent (in) :: deltae !! Energy difference for numerical derivative
     integer, dimension (0:ntotd), intent (in) :: ipan_intervall
     integer, dimension (ncleb, 4), intent (in) :: icleb
-    real (kind=dp), dimension (ncleb), intent (in) :: cleb ! < GAUNT coefficients (GAUNT)
+    real (kind=dp), dimension (ncleb), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
     real (kind=dp), dimension (nrmaxd), intent (in) :: rnew
     real (kind=dp), dimension (0:ntotd), intent (in) :: rpan_intervall
-    real (kind=dp), dimension (mmaxd, mmaxd, nspind), intent (in) :: wldau ! < potential matrix
+    real (kind=dp), dimension (mmaxd, mmaxd, nspind), intent (in) :: wldau !! potential matrix
     real (kind=dp), dimension (nrmaxd, lmpot, nspotd), intent (in) :: vinsnew
     complex (kind=dp), dimension (iemxd), intent (in) :: ez
     ! .. In/Out variables
@@ -77,7 +76,7 @@ contains
     complex (kind=dp), dimension (2*(lmax+1)) :: alphasph
     ! .. Local allocatable arrays
     integer, dimension (:), allocatable :: jlk_index
-    real (kind=dp), dimension (:, :, :), allocatable :: vins ! < Non-spherical part of the potential
+    real (kind=dp), dimension (:, :, :), allocatable :: vins !! Non-spherical part of the potential
     complex (kind=dp), dimension (:, :), allocatable :: aux ! LLY
     complex (kind=dp), dimension (:, :), allocatable :: tmat0
     complex (kind=dp), dimension (:, :), allocatable :: alpha0 ! LLY

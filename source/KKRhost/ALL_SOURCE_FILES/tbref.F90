@@ -4,7 +4,7 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: TBREF
-  ! > @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
+  !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
   ! -------------------------------------------------------------------------------
   subroutine tbref(ez, ielast, alatc, vref, iend, lmax, ncls, nineq, nref, cleb, rcls, atom, cls, icleb, loflm, nacls, refpot, rmtref, tolrdif, tmpdir, itmpdir, iltmp, naez, lly)
 
@@ -31,26 +31,26 @@ contains
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! ..
     ! .. Input variables
-    integer, intent (in) :: lly    ! < LLY <> 0 : alpply Lloyds formula
+    integer, intent (in) :: lly    !! LLY <> 0 : alpply Lloyds formula
     integer, intent (in) :: iend
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function expansion
-    integer, intent (in) :: ncls   ! < Number of reference clusters
-    integer, intent (in) :: nref   ! < Number of diff. ref. potentials
-    integer, intent (in) :: naez   ! < Number of atoms in unit cell
-    integer, intent (in) :: nineq  ! < Number of ineq. positions in unit cell
+    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
+    integer, intent (in) :: ncls   !! Number of reference clusters
+    integer, intent (in) :: nref   !! Number of diff. ref. potentials
+    integer, intent (in) :: naez   !! Number of atoms in unit cell
+    integer, intent (in) :: nineq  !! Number of ineq. positions in unit cell
     integer, intent (in) :: ielast
     real (kind=dp), intent (in) :: alatc
-    real (kind=dp), intent (in) :: tolrdif ! < For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
-    integer, dimension (naezd+nembd), intent (in) :: cls ! < Cluster around atomic sites
-    integer, dimension (lm2d), intent (in) :: loflm ! < l of lm=(l,m) (GAUNT)
-    integer, dimension (nclsd), intent (in) :: nacls ! < Number of atoms in cluster
-    integer, dimension (naezd+nembd), intent (in) :: refpot ! < Ref. pot. card  at position
-    integer, dimension (naclsd, naezd+nembd), intent (in) :: atom ! < Atom at site in cluster
-    integer, dimension (ncleb, 4), intent (in) :: icleb ! < Pointer array
+    real (kind=dp), intent (in) :: tolrdif !! For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
+    integer, dimension (naezd+nembd), intent (in) :: cls !! Cluster around atomic sites
+    integer, dimension (lm2d), intent (in) :: loflm !! l of lm=(l,m) (GAUNT)
+    integer, dimension (nclsd), intent (in) :: nacls !! Number of atoms in cluster
+    integer, dimension (naezd+nembd), intent (in) :: refpot !! Ref. pot. card  at position
+    integer, dimension (naclsd, naezd+nembd), intent (in) :: atom !! Atom at site in cluster
+    integer, dimension (ncleb, 4), intent (in) :: icleb !! Pointer array
     real (kind=dp), dimension (nref), intent (in) :: vref
-    real (kind=dp), dimension (nref), intent (in) :: rmtref ! < Muffin-tin radius of reference system
-    real (kind=dp), dimension (ncleb, 2), intent (in) :: cleb ! < GAUNT coefficients (GAUNT)
-    real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls ! < Real space position of atom in cluster
+    real (kind=dp), dimension (nref), intent (in) :: rmtref !! Muffin-tin radius of reference system
+    real (kind=dp), dimension (ncleb, 2), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
+    real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls !! Real space position of atom in cluster
     ! .. In/Out variables
     integer, intent (inout) :: iltmp
     integer, intent (inout) :: itmpdir

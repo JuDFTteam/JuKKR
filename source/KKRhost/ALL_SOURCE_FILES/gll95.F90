@@ -40,15 +40,15 @@ contains
     integer :: i, lm1, lm2, m, n, n1, n2, ndim, nlm1, nlm2, info, ngd1
     ! ..
     ! .. Local Arrays ..
-    integer :: ipvt(:)
+    integer, allocatable :: ipvt(:)
     real (kind=dp) :: rdiff(3), absrdiff
     complex (kind=dp) :: dtmatll(lmgf0d, lmgf0d, nrefd) ! Derivative of ref.-sys t-matrix
-    complex (kind=dp) :: gref(:, :), gll(:, :), gtref(:, :)
-    complex (kind=dp) :: dgtde(:, :), dgtde0(:, :) ! LLY (1-gt)^-1 * d(1-gt)/dE (after grefsy13)
-    complex (kind=dp) :: dgllde(:, :), dgde(:, :), dgdeout(naclsmax*lmgf0d, lmgf0d)
+    complex (kind=dp) :: dgdeout(naclsmax*lmgf0d, lmgf0d)
+    complex (kind=dp), allocatable :: gref(:, :), gll(:, :), gtref(:, :)
+    complex (kind=dp), allocatable :: dgtde(:, :), dgtde0(:, :) ! LLY (1-gt)^-1 * d(1-gt)/dE (after grefsy13)
+    complex (kind=dp), allocatable :: dgllde(:, :), dgde(:, :)
     complex (kind=dp) :: lly_g0tr  ! LLY Trace of  DTGLL for Lloyds formula
     integer :: lly                 ! LLY =0 : no Lloyd's formula; <>0: use Lloyd's formula
-    allocatable :: gref, gll, gtref, dgllde, dgtde, dgtde0, dgde, ipvt
     ! ..
     ! .. External Functions ..
     logical :: test

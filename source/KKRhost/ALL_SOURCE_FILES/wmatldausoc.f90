@@ -6,16 +6,16 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: WMATLDAUSOC
-  ! > @brief Calculation of Coulomb interaction potential in LDA+U relativistic
-  ! + SOC (new solver)
-  ! > @details The expression evaluated (array VLDAU) is:
-  ! > \f$V_{m1,s,m2,s'} =\delta_{ss'} \sum_{s'',m3,m4} U_{m1,m2,m3,m4}
-  ! n_{m3,s'',m4,s''}-\sum_{m3,m4} U_{m1,m4,m3,m2} n_{m3,s',m4,s} - \left[Ueff
-  ! (dentot-1/2) - Jeff (n_s - 1/2)\right] \delta_{ss'} \delta_{m1,m2}\f$
-  ! >
-  ! > For details see H. Ebert at al., Sol. Stat. Comm. 127 (2003) 443
-  ! > @author N. long
-  ! > @date 04.2016
+  !> @brief Calculation of Coulomb interaction potential in LDA+U relativistic
+  !+ SOC (new solver)
+  !> @details The expression evaluated (array VLDAU) is:
+  !> \f$V_{m1,s,m2,s'} =\delta_{ss'} \sum_{s'',m3,m4} U_{m1,m2,m3,m4}
+  !n_{m3,s'',m4,s''}-\sum_{m3,m4} U_{m1,m4,m3,m2} n_{m3,s',m4,s} - \left[Ueff
+  !(dentot-1/2) - Jeff (n_s - 1/2)\right] \delta_{ss'} \delta_{m1,m2}\f$
+  !>
+  !> For details see H. Ebert at al., Sol. Stat. Comm. 127 (2003) 443
+  !> @author N. long
+  !> @date 04.2016
   ! -------------------------------------------------------------------------------
   subroutine wmatldausoc(ntldau, itldau, nspin, denmatn, lopt, ueff, jeff, uldau, wldau, eu, edc, mmaxd, natyp, nspind, lmax)
     ! **********************************************************************
@@ -212,7 +212,7 @@ contains
         ! 4. Calculate total-energy corrections EU and EDC (double-counting).
         ! Then the correction is EU - EDC.
         ! L[LDA+U]=E[LDA]+E[U]-E[DC]
-        ! > @note: EU,EDC initialised outside the routine
+        !> @note: EU,EDC initialised outside the routine
         ! ----------------------------------------------------------------------
         ! Calculate EDC
         do is = 1, nspin

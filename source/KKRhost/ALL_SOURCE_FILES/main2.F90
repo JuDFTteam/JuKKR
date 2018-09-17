@@ -1,13 +1,13 @@
 ! -------------------------------------------------------------------------------
 ! MODULE: MOD_MAIN2
-! > @brief Wrapper module for the calculation of the DFT quantities for the JM-KKR package
-! > @details The code uses the information obtained in the main0 module, this is
-! > mostly done via the get_params_2() call, that obtains parameters of the type
-! > t_params and passes them to local variables
-! > @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-! > and many others ...
-! < @note
-! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
+!> @brief Wrapper module for the calculation of the DFT quantities for the JM-KKR package
+!> @details The code uses the information obtained in the main0 module, this is
+!> mostly done via the get_params_2() call, that obtains parameters of the type
+!> t_params and passes them to local variables
+!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+!> and many others ...
+!! @note
+!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
 ! -------------------------------------------------------------------------------
 module mod_main2
 
@@ -47,10 +47,10 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: main2
-  ! > @brief Main wrapper routine dealing with the calculation of the DFT quantities
-  ! > @details Calculates the potential from density, exc-potential, calculate total energy, ...
-  ! > @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-  ! > and many others ...
+  !> @brief Main wrapper routine dealing with the calculation of the DFT quantities
+  !> @details Calculates the potential from density, exc-potential, calculate total energy, ...
+  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+  !> and many others ...
   ! ----------------------------------------------------------------------------
   subroutine main2()
 
@@ -73,10 +73,10 @@ contains
     parameter (nmvecmax=4)
     ! ..
     ! .. Local scalars
-    integer :: nk                  ! < ITERMDIR variables
+    integer :: nk                  !! ITERMDIR variables
     integer :: irc1
     integer :: ipot
-    integer :: nmvec               ! < ITERMDIR variables
+    integer :: nmvec               !! ITERMDIR variables
     integer :: icont
     integer :: ispin
     integer :: irmin1
@@ -101,24 +101,24 @@ contains
     real (kind=dp) :: rmsav0
     real (kind=dp) :: chrgnt
     real (kind=dp) :: chrgold
-    real (kind=dp) :: excdiff      ! < Scale magn. part of xc-potential
+    real (kind=dp) :: excdiff      !! Scale magn. part of xc-potential
     real (kind=dp) :: e2shift
-    real (kind=dp) :: erravang     ! < ITERMDIR variables
+    real (kind=dp) :: erravang     !! ITERMDIR variables
     real (kind=dp) :: chrgsemicore
     ! .. Local Arrays
     integer, dimension (natypd) :: lcoremax
     integer, dimension (natypd, naezd) :: itoq
     integer, dimension (20, natypd) :: nkcore
     integer, dimension (20, npotd) :: kapcore
-    real (kind=dp), dimension (natypd) :: eu ! < LDA+U
-    real (kind=dp), dimension (natypd) :: edc ! < LDA+U
+    real (kind=dp), dimension (natypd) :: eu !! LDA+U
+    real (kind=dp), dimension (natypd) :: edc !! LDA+U
     real (kind=dp), dimension (lmpotd) :: c00
     real (kind=dp), dimension (lmpotd) :: bvmad
     real (kind=dp), dimension (natypd) :: denefat
     real (kind=dp), dimension (2) :: vmt_init
-    real (kind=dp), dimension (irmd, npotd) :: rhoc ! < core charge density
+    real (kind=dp), dimension (irmd, npotd) :: rhoc !! core charge density
     real (kind=dp), dimension (lmpotd, lmpotd) :: avmad
-    real (kind=dp), dimension (0:lpotd, natypd) :: excnm ! < Scale magn. part of xc-potential
+    real (kind=dp), dimension (0:lpotd, natypd) :: excnm !! Scale magn. part of xc-potential
     real (kind=dp), dimension (lmpotd, naezd) :: vinters
     real (kind=dp), dimension (irmd, npotd) :: vspsmdum
     logical, dimension (natypd, lmpot) :: lpotsymm
@@ -138,11 +138,11 @@ contains
     ! ! both changed for the relativistic case
     ! EXC(0:LPOT,NATYP),      ! E_xc
     ! -------------------------------------------------------------------------
-    real (kind=dp), dimension (natypd) :: epotin ! < energy of input potential (EPOTINB
-    real (kind=dp), dimension (0:3, npotd) :: espc ! < energy single particle core
-    real (kind=dp), dimension (0:lpotd, natypd) :: exc ! < exchange correlation energy
-    real (kind=dp), dimension (0:lpotd, natypd) :: ecou ! < Coulomb energy
-    real (kind=dp), dimension (0:lmaxd+1, npotd) :: espv ! < energy single particle valence both changed for the relativistic case
+    real (kind=dp), dimension (natypd) :: epotin !! energy of input potential (EPOTINB
+    real (kind=dp), dimension (0:3, npotd) :: espc !! energy single particle core
+    real (kind=dp), dimension (0:lpotd, natypd) :: exc !! exchange correlation energy
+    real (kind=dp), dimension (0:lpotd, natypd) :: ecou !! Coulomb energy
+    real (kind=dp), dimension (0:lmaxd+1, npotd) :: espv !! energy single particle valence both changed for the relativistic case
     real (kind=dp), dimension (irmd*krel+(1-krel), natypd) :: rhoorb
     real (kind=dp), dimension (krel*20+(1-krel), npotd) :: ecorerel
     ! -------------------------------------------------------------------------
@@ -151,21 +151,21 @@ contains
     ! CHRGATOM(NATYP,
     ! 2*KREL+(1-KREL)*NSPIND) ! total charge per atom
     ! -------------------------------------------------------------------------
-    real (kind=dp), dimension (lmpotd, natypd) :: cmom ! < LM moment of total charge
-    real (kind=dp), dimension (lmpotd, natypd) :: cminst ! < charge moment of interstitial
-    real (kind=dp), dimension (natypd, 2*krel+(1-krel)*nspind) :: chrgatom ! < total charge per atom
+    real (kind=dp), dimension (lmpotd, natypd) :: cmom !! LM moment of total charge
+    real (kind=dp), dimension (lmpotd, natypd) :: cminst !! charge moment of interstitial
+    real (kind=dp), dimension (natypd, 2*krel+(1-krel)*nspind) :: chrgatom !! total charge per atom
     ! -------------------------------------------------------------------------
     ! FORCES
     ! -------------------------------------------------------------------------
-    real (kind=dp), dimension (-1:1, natypd) :: flm ! < Forces
-    real (kind=dp), dimension (-1:1, natypd) :: flmc ! < Forces
+    real (kind=dp), dimension (-1:1, natypd) :: flm !! Forces
+    real (kind=dp), dimension (-1:1, natypd) :: flmc !! Forces
     ! -------------------------------------------------------------------------
     ! For SIMULASA
     ! -------------------------------------------------------------------------
     integer :: ipos, ilm_mapp, ias
 
     ! .. Allocatable arrays
-    real (kind=dp), dimension (:, :, :), allocatable :: vons ! < output potential (nonspherical VONS)
+    real (kind=dp), dimension (:, :, :), allocatable :: vons !! output potential (nonspherical VONS)
 
     ! -------------------------------------------------------------------------
     ! R2NEF (IRMD,LMPOT,NATYP,2)  ! rho at FERMI energy
@@ -175,8 +175,8 @@ contains
     ! (*,*,*,2) rho(2) - rho(1) -> mag. moment
     ! RHOC(IRMD,NPOTD)              ! core charge density
     ! -------------------------------------------------------------------------
-    real (kind=dp), dimension (:, :, :, :), allocatable :: r2nef ! < rho at FERMI energy
-    real (kind=dp), dimension (:, :, :, :), allocatable :: rho2ns ! < radial density
+    real (kind=dp), dimension (:, :, :, :), allocatable :: r2nef !! rho at FERMI energy
+    real (kind=dp), dimension (:, :, :, :), allocatable :: rho2ns !! radial density
     ! -------------------------------------------------------------------------
     ! Scale magn. part of xc-potential:
     real (kind=dp), dimension (:, :, :), allocatable :: vxcm
@@ -908,7 +908,7 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: POTENSHIFT
-  ! > @brief Adds a constant (=VSHIFT) to the potentials of atoms
+  !> @brief Adds a constant (=VSHIFT) to the potentials of atoms
   ! ----------------------------------------------------------------------------
   subroutine potenshift(visp, vins, natyp, nspin, ircut, irc, irmin, ntcell, imaxsh, ilm_map, ifunm, lmsp, lmpot, gsh, thetas, thesme, rfpi, rmesh, kshape, vshift, irmd, npotd, &
     irmind, lmxspd)
@@ -916,31 +916,31 @@ contains
     implicit none
 
     ! .. Input variables
-    integer, intent (in) :: irmd   ! < Maximum number of radial points
-    integer, intent (in) :: lmpot  ! < (LPOT+1)**2
-    integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
-    integer, intent (in) :: nspin  ! < Counter for spin directions
-    integer, intent (in) :: npotd  ! < (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-    integer, intent (in) :: lmxspd ! < (2*LPOT+1)**2
-    integer, intent (in) :: irmind ! < IRMD-IRNSD
-    integer, intent (in) :: kshape ! < Exact treatment of WS cell
+    integer, intent (in) :: irmd   !! Maximum number of radial points
+    integer, intent (in) :: lmpot  !! (LPOT+1)**2
+    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: npotd  !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+    integer, intent (in) :: lmxspd !! (2*LPOT+1)**2
+    integer, intent (in) :: irmind !! IRMD-IRNSD
+    integer, intent (in) :: kshape !! Exact treatment of WS cell
     real (kind=dp), intent (in) :: rfpi
     real (kind=dp), intent (in) :: vshift
-    integer, dimension (natyp), intent (in) :: irc ! < R point for potential cutting
-    integer, dimension (natyp), intent (in) :: irmin ! < Max R for spherical treatment
-    integer, dimension (natyp), intent (in) :: ntcell ! < Index for WS cell
+    integer, dimension (natyp), intent (in) :: irc !! R point for potential cutting
+    integer, dimension (natyp), intent (in) :: irmin !! Max R for spherical treatment
+    integer, dimension (natyp), intent (in) :: ntcell !! Index for WS cell
     integer, dimension (0:lmpot), intent (in) :: imaxsh
     integer, dimension (ngshd, 3), intent (in) :: ilm_map
     integer, dimension (natyp, lmxspd), intent (in) :: lmsp
     integer, dimension (natyp, lmxspd), intent (in) :: ifunm
-    integer, dimension (0:ipand, natyp), intent (in) :: ircut ! < R points of panel borders
+    integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of panel borders
     real (kind=dp), dimension (ngshd), intent (in) :: gsh
-    real (kind=dp), dimension (irmd, natyp), intent (in) :: rmesh ! < Radial mesh ( in units a Bohr)
+    real (kind=dp), dimension (irmd, natyp), intent (in) :: rmesh !! Radial mesh ( in units a Bohr)
     real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thesme
-    real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thetas ! < shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+    real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
     ! .. Input/Output:
-    real (kind=dp), dimension (irmd, npotd), intent (inout) :: visp ! < Spherical part of the potential
-    real (kind=dp), dimension (irmind:irmd, lmpot, nspotd), intent (inout) :: vins ! < Non-spherical part of the potential
+    real (kind=dp), dimension (irmd, npotd), intent (inout) :: visp !! Spherical part of the potential
+    real (kind=dp), dimension (irmind:irmd, lmpot, nspotd), intent (inout) :: vins !! Non-spherical part of the potential
     ! .. Local variables
     integer :: ispin, ih, ipot, ir, lm, imt1, irc1, irmin1
     real (kind=dp), dimension (irmd) :: pshiftr

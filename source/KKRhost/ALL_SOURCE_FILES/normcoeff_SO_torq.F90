@@ -34,7 +34,7 @@ contains
     ! ..
     ! .. Scalar Arguments ..
     integer :: natom, mode, iend, ksra, irws(*), nspin, irmin(*), i2
-    ! < lmsize without spin degree of freedom (in contrast to lmmaxd)
+    !! lmsize without spin degree of freedom (in contrast to lmmaxd)
     integer, intent (in) :: lmmax
     ! ..
     ! .. Array Arguments ..

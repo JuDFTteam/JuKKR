@@ -4,8 +4,8 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: DECIMATE
-  ! > @brief Decimation method
-  ! > - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
+  !> @brief Decimation method
+  !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
   subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, nrbasis)
@@ -31,10 +31,10 @@ contains
     ! *                                                                   *
     ! *********************************************************************
 
-    integer, intent (in) :: naez   ! < Number of atoms in unit cell
-    integer, intent (in) :: nlbasis ! < Number of basis layers of left host
+    integer, intent (in) :: naez   !! Number of atoms in unit cell
+    integer, intent (in) :: nlbasis !! Number of basis layers of left host
     ! (repeated units)
-    integer, intent (in) :: nrbasis ! < Number of basis layers of right host
+    integer, intent (in) :: nrbasis !! Number of basis layers of right host
     ! (repeated units)
     logical, dimension (2), intent (in) :: vacflag
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: factl

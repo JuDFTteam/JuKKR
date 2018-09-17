@@ -1,4 +1,4 @@
-! > this is dummy version of main_all, used to execute first main0 and then main1a_dummy in which tmat_newsolver is called
+!> this is dummy version of main_all, used to execute first main0 and then main1a_dummy in which tmat_newsolver is called
 program tmat_runner
 
   use :: constants

@@ -6,16 +6,16 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: lattice2d
-  ! > @brief Generates the lattice vectors of direct and reciprocal space from
-  ! > basic translation vectors for a 2D system
-  ! > @note - V. Popescu May 2004: The routine has been brought to a form which
+  !> @brief Generates the lattice vectors of direct and reciprocal space from
+  !> basic translation vectors for a 2D system
+  !> @note - V. Popescu May 2004: The routine has been brought to a form which
   ! is very similar to
-  ! > LATTICE2D -- from which it has been originally derived. Dimension of
+  !> LATTICE2D -- from which it has been originally derived. Dimension of
   ! arrays GN,RM
-  ! > changed from (4,*) to (2,*), the 4th one it is used only locally (GNR/RMR)
+  !> changed from (4,*) to (2,*), the 4th one it is used only locally (GNR/RMR)
   ! -- only GN/RM(2,*) are
-  ! > actually needed in EWALD2D
-  ! > @note - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote
+  !> actually needed in EWALD2D
+  !> @note - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote
   ! to Fortran90
   ! -------------------------------------------------------------------------------
   subroutine lattice2d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, gn, rm, rmax, gmax, iprint, nmaxd, ishld)
@@ -47,33 +47,33 @@ contains
     implicit none
     ! ..
     ! .. Input variables
-    integer, intent (in) :: nmaxd  ! < Paremeters for the Ewald summations
-    integer, intent (in) :: ishld  ! < Paremeters for the Ewald summations
+    integer, intent (in) :: nmaxd  !! Paremeters for the Ewald summations
+    integer, intent (in) :: ishld  !! Paremeters for the Ewald summations
     integer, intent (in) :: iprint
-    real (kind=dp), intent (in) :: alat ! < Lattice constant in a.u.
-    real (kind=dp), dimension (3, 3), intent (in) :: recbv ! < Reciprocal basis
+    real (kind=dp), intent (in) :: alat !! Lattice constant in a.u.
+    real (kind=dp), dimension (3, 3), intent (in) :: recbv !! Reciprocal basis
     ! vectors
-    real (kind=dp), dimension (3, 3), intent (in) :: bravais ! < Bravais lattice
+    real (kind=dp), dimension (3, 3), intent (in) :: bravais !! Bravais lattice
     ! vectors
     ! ..
     ! .. Input/Output variables
-    real (kind=dp), intent (inout) :: gmax ! < Ewald summation cutoff parameter
+    real (kind=dp), intent (inout) :: gmax !! Ewald summation cutoff parameter
     ! for reciprocal space summation
-    real (kind=dp), intent (inout) :: rmax ! < Ewald summation cutoff parameter
+    real (kind=dp), intent (inout) :: rmax !! Ewald summation cutoff parameter
     ! for real space summation
     integer, dimension (ishld), intent (inout) :: nsg
     integer, dimension (ishld), intent (inout) :: nsr
-    real (kind=dp), dimension (2, nmaxd), intent (inout) :: gn ! < x,y,z   of
+    real (kind=dp), dimension (2, nmaxd), intent (inout) :: gn !! x,y,z   of
     ! reciprocal
     ! lattice vectors
-    real (kind=dp), dimension (2, nmaxd), intent (inout) :: rm ! < x,y,z  of
+    real (kind=dp), dimension (2, nmaxd), intent (inout) :: rm !! x,y,z  of
     ! real space
     ! vectors
     ! .. Output variables
-    integer, intent (out) :: nshlr ! < Shells in real space
-    integer, intent (out) :: nshlg ! < Shells in reciprocal space
-    integer, intent (out) :: nrmax ! < Number of real space vectors rr
-    integer, intent (out) :: ngmax ! < Number of reciprocal space vectors
+    integer, intent (out) :: nshlr !! Shells in real space
+    integer, intent (out) :: nshlg !! Shells in reciprocal space
+    integer, intent (out) :: nrmax !! Number of real space vectors rr
+    integer, intent (out) :: ngmax !! Number of reciprocal space vectors
     ! ..
     ! .. Local scalars ..
     integer :: i, k, l, m, n, n1, ng, nr, nsh, nshl, numg, numgh, numr, numrh

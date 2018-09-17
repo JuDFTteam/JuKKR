@@ -45,9 +45,8 @@ contains
     logical :: symunitary(*)
     ! ..
     ! .. Local arrays
-    complex (kind=dp) :: gll(:, :, :, :), tpg(:, :)
-    complex (kind=dp) :: gclust(:)
-    allocatable :: gll, tpg, gclust
+    complex (kind=dp), allocatable :: gll(:, :, :, :), tpg(:, :)
+    complex (kind=dp), allocatable :: gclust(:)
     ! ..
     ! .. Local scalars
     integer :: ilin, iq, icall, ish, isym, jq

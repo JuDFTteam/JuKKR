@@ -39,17 +39,17 @@ contains
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: nemb   ! < number of 'embedding' positions
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
-    integer, dimension (:), allocatable, intent (inout) :: cls ! < Cluster
+    integer, intent (in) :: naez   !! number of atoms in unit cell
+    integer, intent (in) :: nemb   !! number of 'embedding' positions
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
+    integer, dimension (:), allocatable, intent (inout) :: cls !! Cluster
     ! around atomic
     ! sites
-    integer, dimension (:), allocatable, intent (inout) :: imt ! < R point at
+    integer, dimension (:), allocatable, intent (inout) :: imt !! R point at
     ! MT radius
-    integer, dimension (:), allocatable, intent (inout) :: irws ! < R point at
+    integer, dimension (:), allocatable, intent (inout) :: irws !! R point at
     ! WS radius
-    integer, dimension (:), allocatable, intent (inout) :: irns ! < Position
+    integer, dimension (:), allocatable, intent (inout) :: irns !! Position
     ! of atoms in
     ! the unit
     ! cell in
@@ -57,47 +57,47 @@ contains
     ! bravais
     ! vectors
     integer, dimension (:), allocatable, intent (inout) :: lmxc
-    integer, dimension (:), allocatable, intent (inout) :: ntcell ! < Index
+    integer, dimension (:), allocatable, intent (inout) :: ntcell !! Index
     ! for WS
     ! cell
-    integer, dimension (:), allocatable, intent (inout) :: refpot ! < Ref.
+    integer, dimension (:), allocatable, intent (inout) :: refpot !! Ref.
     ! pot. card
     ! at
     ! position
     integer, dimension (:, :), allocatable, intent (inout) :: kfg
-    integer, dimension (:, :), allocatable, intent (inout) :: kaoez ! < atom
+    integer, dimension (:, :), allocatable, intent (inout) :: kaoez !! atom
     ! types
     ! located
     ! at a
     ! given
     ! site
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmt ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmt !!
     ! Muffin-tin
     ! radius
     ! of
     ! true
     ! system
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: zat ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: zat !!
     ! Nuclear
     ! charge
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: rws ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: rws !!
     ! Wigner
     ! Seitz
     ! radius
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: mtfac ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: mtfac !!
     ! Scaling
     ! factor
     ! for
     ! radius
     ! MT
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtref ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtref !!
     ! Muffin-tin
     ! radius
     ! of
     ! reference
     ! system
     real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtrefat
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtnew ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtnew !!
     ! Adapted
     ! muffin-tin
     ! radius
@@ -316,15 +316,15 @@ contains
     integer, intent (in) :: irmind
     integer, intent (in) :: nspotd
     integer, dimension (:), allocatable, intent (inout) :: nfu
-    integer, dimension (:), allocatable, intent (inout) :: irc ! < R point for
+    integer, dimension (:), allocatable, intent (inout) :: irc !! R point for
     ! potential
     ! cutting
-    integer, dimension (:), allocatable, intent (inout) :: ncore ! < Number of
+    integer, dimension (:), allocatable, intent (inout) :: ncore !! Number of
     ! core states
-    integer, dimension (:), allocatable, intent (inout) :: irmin ! < Max R for
+    integer, dimension (:), allocatable, intent (inout) :: irmin !! Max R for
     ! spherical
     ! treatment
-    integer, dimension (:, :), allocatable, intent (inout) :: lmsp ! < 0,1 :
+    integer, dimension (:, :), allocatable, intent (inout) :: lmsp !! 0,1 :
     ! non/-vanishing
     ! lm=(l,m)
     ! component
@@ -332,16 +332,16 @@ contains
     ! non-spherical
     ! potential
     integer, dimension (:, :), allocatable, intent (inout) :: lmsp1
-    integer, dimension (:, :), allocatable, intent (inout) :: ircut ! < R
+    integer, dimension (:, :), allocatable, intent (inout) :: ircut !! R
     ! points
     ! of panel
     ! borders
-    integer, dimension (:, :), allocatable, intent (inout) :: lcore ! <
+    integer, dimension (:, :), allocatable, intent (inout) :: lcore !!
     ! Angular
     ! momentum
     ! of core
     ! states
-    integer, dimension (:, :), allocatable, intent (inout) :: llmsp ! <
+    integer, dimension (:, :), allocatable, intent (inout) :: llmsp !!
     ! lm=(l,m)
     ! of
     ! 'nfund'th
@@ -352,8 +352,8 @@ contains
     ! pot.
     integer, dimension (:, :), allocatable, intent (inout) :: ititle
     real (kind=dp), dimension (:), allocatable, intent (inout) :: fpradius
-    ! < R point at which full-potential treatment starts
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: visp ! <
+    !! R point at which full-potential treatment starts
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: visp !!
     ! Spherical
     ! part
     ! of
@@ -498,19 +498,19 @@ contains
     integer, intent (in) :: naez   !! number of atoms in unit cell
     integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
 
-    integer, dimension (:), allocatable, intent (inout) :: noq ! < Number of
+    integer, dimension (:), allocatable, intent (inout) :: noq !! Number of
     ! diff. atom
     ! types located
-    integer, dimension (:), allocatable, intent (inout) :: icpa ! < ICPA = 0/1
+    integer, dimension (:), allocatable, intent (inout) :: icpa !! ICPA = 0/1
     ! site-dependent
     ! CPA flag
-    integer, dimension (:), allocatable, intent (inout) :: iqat ! < the site
+    integer, dimension (:), allocatable, intent (inout) :: iqat !! the site
     ! on which an
     ! atom is
     ! located on a
     ! given site
     integer, dimension (:), allocatable, intent (inout) :: hostimp
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: conc ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: conc !!
     ! concentration
     ! of a
     ! given
@@ -588,7 +588,7 @@ contains
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
 
-    integer, dimension (:), allocatable, intent (inout) :: lopt ! < angular
+    integer, dimension (:), allocatable, intent (inout) :: lopt !! angular
     ! momentum
     ! QNUM for the
     ! atoms on
@@ -597,14 +597,14 @@ contains
     ! applied (-1
     ! to switch it
     ! OFF)
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: ueff ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: ueff !!
     ! input
     ! U
     ! parameter
     ! for
     ! each
     ! atom
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: jeff ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: jeff !!
     ! input
     ! J
     ! parameter
@@ -675,9 +675,9 @@ contains
     integer, intent (in) :: irm
     integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
     integer, intent (in) :: mmaxd
-    integer, intent (in) :: nspind ! < Counter for spin directions
+    integer, intent (in) :: nspind !! Counter for spin directions
     ! (KREL+(1-KREL)*(KSP+1))
-    integer, dimension (:), allocatable, intent (inout) :: itldau ! < integer
+    integer, dimension (:), allocatable, intent (inout) :: itldau !! integer
     ! pointer
     ! connecting
     ! the NTLDAU
@@ -687,8 +687,8 @@ contains
     ! index in
     ! the unit
     ! cell
-    real (kind=dp), dimension (:, :, :, :), allocatable, intent (inout) :: wldau ! < potential matrix
-    real (kind=dp), dimension (:, :, :, :, :), allocatable, intent (inout) :: uldau ! < calculated Coulomb matrix elements
+    real (kind=dp), dimension (:, :, :, :), allocatable, intent (inout) :: wldau !! potential matrix
+    real (kind=dp), dimension (:, :, :, :, :), allocatable, intent (inout) :: uldau !! calculated Coulomb matrix elements
     ! (EREFLDAU)
     complex (kind=dp), dimension (:, :), allocatable, intent (inout) :: phildau
 
@@ -755,16 +755,16 @@ contains
     integer, intent (in) :: naez   !! number of atoms in unit cell
     integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
     integer, intent (in) :: lmmaxd
-    integer, dimension (:), allocatable, intent (inout) :: inipol ! < Initial
+    integer, dimension (:), allocatable, intent (inout) :: inipol !! Initial
     ! spin
     ! polarisation
-    integer, dimension (:), allocatable, intent (inout) :: ixipol ! <
+    integer, dimension (:), allocatable, intent (inout) :: ixipol !!
     ! Constraint
     ! of spin
     ! pol.
     real (kind=dp), dimension (:), allocatable, intent (inout) :: qmtet
     real (kind=dp), dimension (:), allocatable, intent (inout) :: qmphi
-    complex (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: drotq ! < Rotation matrices to change between
+    complex (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: drotq !! Rotation matrices to change between
     ! LOCAL/GLOBAL frame of reference for
     ! magnetisation <> Oz or noncollinearity
 
@@ -835,12 +835,12 @@ contains
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: krel
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
+    integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
     real (kind=dp), dimension (:), allocatable, intent (inout) :: socscale
-    ! < Spin-orbit scaling
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cscl ! <
+    !! Spin-orbit scaling
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cscl !!
     ! Speed
     ! of
     ! light
@@ -954,15 +954,15 @@ contains
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: krel
     integer, intent (in) :: irm
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
-    integer, dimension (:), allocatable, intent (inout) :: zrel ! < atomic
+    integer, intent (in) :: naez   !! number of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
+    integer, dimension (:), allocatable, intent (inout) :: zrel !! atomic
     ! number (cast
     ! integer)
-    integer, dimension (:), allocatable, intent (inout) :: jwsrel ! < index of
+    integer, dimension (:), allocatable, intent (inout) :: jwsrel !! index of
     ! the WS
     ! radius
-    integer, dimension (:), allocatable, intent (inout) :: irshift ! < shift
+    integer, dimension (:), allocatable, intent (inout) :: irshift !! shift
     ! of the
     ! REL
     ! radial
@@ -1197,8 +1197,8 @@ contains
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
+    integer, intent (in) :: naez   !! number of atoms in unit cell
+    integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
     integer, intent (in) :: ncleb
     integer, intent (in) :: nclsd
@@ -1207,7 +1207,7 @@ contains
     integer, intent (in) :: naclsd
     integer, intent (in) :: lmpot
     integer, intent (in) :: natomimpd
-    integer, dimension (:), allocatable, intent (inout) :: nsh1 ! <
+    integer, dimension (:), allocatable, intent (inout) :: nsh1 !!
     ! Corresponding
     ! index of the
     ! sites I/J in
@@ -1215,7 +1215,7 @@ contains
     ! the unit
     ! cell in a
     ! shell
-    integer, dimension (:), allocatable, intent (inout) :: nsh2 ! <
+    integer, dimension (:), allocatable, intent (inout) :: nsh2 !!
     ! Corresponding
     ! index of the
     ! sites I/J in
@@ -1223,10 +1223,10 @@ contains
     ! the unit
     ! cell in a
     ! shell
-    integer, dimension (:), allocatable, intent (inout) :: nacls ! < Number of
+    integer, dimension (:), allocatable, intent (inout) :: nacls !! Number of
     ! atoms in
     ! cluster
-    integer, dimension (:), allocatable, intent (inout) :: nshell ! < Index of
+    integer, dimension (:), allocatable, intent (inout) :: nshell !! Index of
     ! atoms/pairs
     ! per shell
     ! (ij-pairs);
@@ -1234,17 +1234,17 @@ contains
     ! = number
     ! of shells
     integer, dimension (:), allocatable, intent (inout) :: atomimp
-    integer, dimension (:, :), allocatable, intent (inout) :: atom ! < Atom at
+    integer, dimension (:, :), allocatable, intent (inout) :: atom !! Atom at
     ! site in
     ! cluster
-    integer, dimension (:, :), allocatable, intent (inout) :: ezoa ! < EZ of
+    integer, dimension (:, :), allocatable, intent (inout) :: ezoa !! EZ of
     ! atom at
     ! site in
     ! cluster
-    integer, dimension (:, :), allocatable, intent (inout) :: icleb ! <
+    integer, dimension (:, :), allocatable, intent (inout) :: icleb !!
     ! Pointer
     ! array
-    integer, dimension (:, :, :), allocatable, intent (inout) :: jend ! <
+    integer, dimension (:, :, :), allocatable, intent (inout) :: jend !!
     ! Pointer
     ! array
     ! for
@@ -1395,16 +1395,16 @@ contains
     integer, intent (in) :: lassld
     integer, intent (in) :: ncelld
     integer, intent (in) :: nchebd
-    integer, dimension (:), allocatable, intent (inout) :: loflm ! < l of
+    integer, dimension (:), allocatable, intent (inout) :: loflm !! l of
     ! lm=(l,m)
     ! (GAUNT)
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: wg ! <
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: wg !!
     ! Integr.
     ! weights
     ! for
     ! Legendre
     ! polynomials
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cleb ! <
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: cleb !!
     ! GAUNT
     ! coefficients
     ! (GAUNT)
@@ -1492,21 +1492,21 @@ contains
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: irm
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: a ! <
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: a !!
     ! Constants
     ! for
     ! exponential
     ! R mesh
     real (kind=dp), dimension (:), allocatable, intent (inout) :: b
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rmesh ! <
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rmesh !!
     ! Radial
     ! mesh
     ! ( in
     ! units
     ! a
     ! Bohr)
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: drdi ! <
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: drdi !!
     ! Derivative
     ! dr/di
 
@@ -1572,7 +1572,7 @@ contains
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
     integer, intent (in) :: ntotd
-    integer, dimension (:), allocatable, intent (inout) :: ipan ! < Number of
+    integer, dimension (:), allocatable, intent (inout) :: ipan !! Number of
     ! panels in
     ! non-MT-region
     integer, dimension (:), allocatable, intent (inout) :: npan_tot
@@ -1659,10 +1659,10 @@ contains
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
     integer, intent (in) :: irm
     integer, intent (in) :: irid
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
+    integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
-    integer, intent (in) :: naez   ! < number of atoms in unit cell
-    integer, intent (in) :: natyp  ! < number of kinds of atoms in unit cell
+    integer, intent (in) :: naez   !! number of atoms in unit cell
+    integer, intent (in) :: natyp  !! number of kinds of atoms in unit cell
     integer, intent (in) :: nfund
     integer, intent (in) :: nrefd
     integer, intent (in) :: iemxd
@@ -1681,7 +1681,7 @@ contains
     integer, dimension (:, :), allocatable, intent (inout) :: icheck
     real (kind=dp), dimension (:), allocatable, intent (inout) :: vref
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: s
-    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rr ! <
+    real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rr !!
     ! Set
     ! of
     ! real
@@ -1859,7 +1859,7 @@ contains
     integer, dimension (:), allocatable, intent (inout) :: kmesh
     integer, dimension (:), allocatable, intent (inout) :: imaxsh
     integer, dimension (:), allocatable, intent (inout) :: iqcalc
-    integer, dimension (:), allocatable, intent (inout) :: iofgij ! < Linear
+    integer, dimension (:), allocatable, intent (inout) :: iofgij !! Linear
     ! pointers,
     ! similar to
     ! NSH1/NSH2
@@ -1871,7 +1871,7 @@ contains
     ! 1,NATOMIMP
     ! in the
     ! cluster
-    integer, dimension (:), allocatable, intent (inout) :: jofgij ! < Linear
+    integer, dimension (:), allocatable, intent (inout) :: jofgij !! Linear
     ! pointers,
     ! similar to
     ! NSH1/NSH2
@@ -1883,7 +1883,7 @@ contains
     ! 1,NATOMIMP
     ! in the
     ! cluster
-    integer, dimension (:), allocatable, intent (inout) :: ijtabsh ! < Linear
+    integer, dimension (:), allocatable, intent (inout) :: ijtabsh !! Linear
     ! pointer,
     ! assigns
     ! pair
@@ -1892,7 +1892,7 @@ contains
     ! in the
     ! array
     ! GS(*,*,*,NSHELD)
-    integer, dimension (:), allocatable, intent (inout) :: ijtabsym ! < Linear
+    integer, dimension (:), allocatable, intent (inout) :: ijtabsym !! Linear
     ! pointer,
     ! assigns
     ! pair
@@ -1902,7 +1902,7 @@ contains
     ! bringing
     ! GS into
     ! Gij
-    integer, dimension (:), allocatable, intent (inout) :: ijtabcalc ! <
+    integer, dimension (:), allocatable, intent (inout) :: ijtabcalc !!
     ! Linear
     ! pointer,
     ! specifying

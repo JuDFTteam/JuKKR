@@ -6,7 +6,7 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: READIMPPOT
-  ! > @brief Reads the potential and shapefun of inpurity
+  !> @brief Reads the potential and shapefun of inpurity
   ! -------------------------------------------------------------------------------
   subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, ipanimp, thetasimp, ircutimp, irwsimp, khfeld, hfield, vinsimp, vm2zimp, irminimp, rimp, zimp, irmd, irnsd, &
     irid, nfund, ipand)

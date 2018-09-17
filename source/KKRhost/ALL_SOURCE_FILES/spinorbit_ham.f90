@@ -4,7 +4,7 @@ module mod_spinorbit_ham
 
 contains
 
-  ! < subroutine that constructs SOC potential from radial derivative of vins and adds this to vnspll (output is vnspll1=vnspll+V_SOC)
+  !! subroutine that constructs SOC potential from radial derivative of vins and adds this to vnspll (output is vnspll1=vnspll+V_SOC)
   subroutine spinorbit_ham(lmax, lmmaxd, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
     vnspll, vnspll1, mode)
     use :: mod_cheb, only: getclambdacinv
@@ -13,28 +13,28 @@ contains
     implicit none
 
     ! inputs
-    integer, intent (in) :: lmax   ! < l_max cutoff
-    integer, intent (in) :: lmmaxd ! < (l_max+1)^2  maximal number in combined L=(l,m) index (L_max)
-    integer, intent (in) :: nspin  ! < number of spin channels
-    integer, intent (in) :: lmpotd ! < L_max cutoff of potential (from Gaunt coefficients <= 4 l_max)
-    integer, intent (in) :: npan_tot ! < total number of Chebychev panels of radial mesh
-    integer, intent (in) :: ncheb  ! < number of Chebychev polynomials (radial points per panel)
-    integer, intent (in) :: irmdnew ! <
-    integer, intent (in) :: nrmaxd ! < maximal number of radial points (NPAN_TOT*NCHEB)
-    real (kind=dp), intent (in) :: cvlight ! < speed of light
-    real (kind=dp), intent (in) :: zat ! < atom charge
-    complex (kind=dp), intent (in) :: eryd ! < complex energy
-    real (kind=dp), intent (in) :: socscale ! < scaling factor for SOC strength
-    real (kind=dp), intent (in) :: vins(irmdnew, lmpotd, nspin) ! < non-sperical input potential in (l,m) basis, separately spin-polarized
-    real (kind=dp), intent (in) :: rnew(nrmaxd) ! < radial points of Chebychev mesh
-    real (kind=dp), intent (in) :: rpan_intervall(0:npan_tot) ! <
-    integer, intent (in) :: ipan_intervall(0:npan_tot) ! <
-    complex (kind=dp), intent (in) :: vnspll(2*lmmaxd, 2*lmmaxd, irmdnew) ! < input potential in (l,m,s) basis
-    character (len=*), intent (in) :: mode                           ! < either '1' or 'transpose', depending whether SOC potential is constructed for right or left solution
+    integer, intent (in) :: lmax   !! l_max cutoff
+    integer, intent (in) :: lmmaxd !! (l_max+1)^2  maximal number in combined L=(l,m) index (L_max)
+    integer, intent (in) :: nspin  !! number of spin channels
+    integer, intent (in) :: lmpotd !! L_max cutoff of potential (from Gaunt coefficients <= 4 l_max)
+    integer, intent (in) :: npan_tot !! total number of Chebychev panels of radial mesh
+    integer, intent (in) :: ncheb  !! number of Chebychev polynomials (radial points per panel)
+    integer, intent (in) :: irmdnew !!
+    integer, intent (in) :: nrmaxd !! maximal number of radial points (NPAN_TOT*NCHEB)
+    real (kind=dp), intent (in) :: cvlight !! speed of light
+    real (kind=dp), intent (in) :: zat !! atom charge
+    complex (kind=dp), intent (in) :: eryd !! complex energy
+    real (kind=dp), intent (in) :: socscale !! scaling factor for SOC strength
+    real (kind=dp), intent (in) :: vins(irmdnew, lmpotd, nspin) !! non-sperical input potential in (l,m) basis, separately spin-polarized
+    real (kind=dp), intent (in) :: rnew(nrmaxd) !! radial points of Chebychev mesh
+    real (kind=dp), intent (in) :: rpan_intervall(0:npan_tot) !!
+    integer, intent (in) :: ipan_intervall(0:npan_tot) !!
+    complex (kind=dp), intent (in) :: vnspll(2*lmmaxd, 2*lmmaxd, irmdnew) !! input potential in (l,m,s) basis
+    character (len=*), intent (in) :: mode                           !! either '1' or 'transpose', depending whether SOC potential is constructed for right or left solution
 
 
     ! outputs
-    complex (kind=dp), intent (out) :: vnspll1(2*lmmaxd, 2*lmmaxd, irmdnew) ! < output potential (sum of input + V_SOC) in (l,m,s) basis
+    complex (kind=dp), intent (out) :: vnspll1(2*lmmaxd, 2*lmmaxd, irmdnew) !! output potential (sum of input + V_SOC) in (l,m,s) basis
 
     ! locals
     real (kind=dp) :: vr(irmdnew)

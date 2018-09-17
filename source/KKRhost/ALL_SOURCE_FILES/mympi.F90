@@ -187,7 +187,7 @@ contains
         ! brute force look for optimal division of rest ranks after N_E*N_at are already
         ! assigned to rectangular part of processor matrix:
         ! N_E=8
-        ! <--------------->
+        !!--------------->
         ! ^ ( | | | | | | | )    example for 49 processors,
         ! | ( | | | | | | | )    devided according to:
         ! N_at=5  | ( | | | | | | | )         N_E = 8, N_at = 5
@@ -900,8 +900,8 @@ contains
 #endif
 
 
-  ! < wrapper for work distribution over energies, also saves parallelization
-  ! < information for later use in t_mpi_c_grid
+  !! wrapper for work distribution over energies, also saves parallelization
+  !! information for later use in t_mpi_c_grid
   subroutine distribute_work_energies(n_work, distribute_rest)
 
     use :: mod_types, only: t_mpi_c_grid
@@ -909,9 +909,9 @@ contains
 
     implicit none
 
-    ! < number of energies to be distributed
+    !! number of energies to be distributed
     integer, intent (in) :: n_work
-    ! < decide wether or not to distribute the rest rank or leave them idle
+    !! decide wether or not to distribute the rest rank or leave them idle
     logical, optional, intent (in) :: distribute_rest
     ! locals
     integer, dimension (0:nranks-1) :: ntot_pt, ioff_pt
@@ -949,8 +949,8 @@ contains
   end subroutine distribute_work_energies
 
 
-  ! < wrapper for work distribution over atoms, also saves parallelization
-  ! < information for later use in t_mpi_c_grid
+  !! wrapper for work distribution over atoms, also saves parallelization
+  !! information for later use in t_mpi_c_grid
   subroutine distribute_work_atoms(n_work, i1_start, i1_end, distribute_rest)
 
     use :: mod_types, only: t_mpi_c_grid
@@ -958,13 +958,13 @@ contains
 
     implicit none
 
-    ! < number of energies to be distributed
+    !! number of energies to be distributed
     integer, intent (in) :: n_work
-    ! < decide wether or not to distribute the rest rank or leave them idle
+    !! decide wether or not to distribute the rest rank or leave them idle
     logical, optional, intent (in) :: distribute_rest
-    ! < number of energies to be distributed
+    !! number of energies to be distributed
     integer, intent (out) :: i1_start
-    ! < number of energies to be distributed
+    !! number of energies to be distributed
     integer, intent (out) :: i1_end
     ! locals
     integer, dimension (0:nranks-1) :: ntot_pt, ioff_pt

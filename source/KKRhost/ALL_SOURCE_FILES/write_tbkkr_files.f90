@@ -6,13 +6,12 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: WRITE_TBKKR_FILES
-  ! > @brief Printing to file the TBKKR files, containing key information of the
-  ! parameters
-  ! > and structure of the system.
-  ! > @note
-  ! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
+  !> @brief Printing to file the TBKKR files, containing key information of the
+  !parameters
+  !> and structure of the system.
+  !> @note
+  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
-  ! -------------------------------------------------------------------------------
   subroutine write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, bravais, recbv, rbasis, cls, nacls, rcls, ezoa, atom, rr, nspin, nr, korbit, nclsd, naclsd)
 
     use :: mod_version_info, only: serialnr

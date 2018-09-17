@@ -1,6 +1,6 @@
 ! -------------------------------------------------------------------------------
 ! MODULE: mod_tbxccpljijdij
-! > @author Bernd Zimmermann
+!> @author Bernd Zimmermann
 ! -------------------------------------------------------------------------------
 module mod_tbxccpljijdij
   use :: mod_datatypes, only: dp
@@ -13,7 +13,7 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: tbxccpljijdij
-  ! > @author Bernd Zimmermann
+  !> @author Bernd Zimmermann
   ! ----------------------------------------------------------------------------
   subroutine tbxccpljijdij(naezd, natypd, lmmaxd, lmgf0d, natomimpd, iemxd, & ! dimensions
     thetas, phis, natomimp, atomimp, nofgijd, iqat, rclsimp, & ! imp-cluser

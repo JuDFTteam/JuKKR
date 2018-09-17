@@ -2,14 +2,14 @@
 ! MODULE: Profiling
 
 ! DESCRIPTION:
-! > @brief Subroutine to handle memory profiling
-! > @details Allows one to track the memory consumption by making use of the
+!> @brief Subroutine to handle memory profiling
+!> @details Allows one to track the memory consumption by making use of the
 ! memocc()
-! > subroutine
+!> subroutine
 
-! > @author
-! > Jonathan Chico
-! > @date 10.12.2017
+!> @author
+!> Jonathan Chico
+!> @date 10.12.2017
 ! -------------------------------------------------------------------------------
 module mod_profiling
 
@@ -38,7 +38,7 @@ contains
   ! This file is distributed under the terms of the
   ! GNU General Public License, see http://www.gnu.org/copyleft/gpl.txt .
   ! Copyright (C) Luigi Genovese, CEA Grenoble, France, 2007
-  ! > Memory profiling routine
+  !> Memory profiling routine
   subroutine memocc(istat, isize, array, routine)
     use :: mod_types, only: t_inc
     implicit none

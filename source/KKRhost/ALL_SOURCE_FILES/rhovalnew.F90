@@ -4,7 +4,7 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: RHOVALNEW
-  ! > @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
+  !> @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
   ! -------------------------------------------------------------------------------
   subroutine rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat, socscale, cleb, icleb, iend, ifunm, lmsp, ncheb, npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, &
     ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, i1, ipot, den_out, espv, rho2ns, r2nef, muorb, angles_new, idoldau, lopt, wldau, denmatn, natyp)
@@ -50,29 +50,29 @@ contains
 
     integer, intent (in) :: i1
     integer, intent (in) :: nsra
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function expansion
-    integer, intent (in) :: iend   ! < Number of nonzero gaunt coefficients
+    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
+    integer, intent (in) :: iend   !! Number of nonzero gaunt coefficients
     integer, intent (in) :: ipot
-    integer, intent (in) :: irws   ! < R point at WS radius for a given atom
-    integer, intent (in) :: lopt   ! < angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-    integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
-    integer, intent (in) :: nspin  ! < Counter for spin directions
-    integer, intent (in) :: ncheb  ! < Number of Chebychev pannels for the new solver
+    integer, intent (in) :: irws   !! R point at WS radius for a given atom
+    integer, intent (in) :: lopt   !! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new solver
     integer, intent (in) :: ielast
-    integer, intent (in) :: idoldau ! < flag to perform LDA+U
-    integer, intent (in) :: npan_eq ! < Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
+    integer, intent (in) :: idoldau !! flag to perform LDA+U
+    integer, intent (in) :: npan_eq !! Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
     integer, intent (in) :: npan_tot
-    integer, intent (in) :: npan_log ! < Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
-    real (kind=dp), intent (in) :: zat ! < Nuclear charge for a given atom
-    real (kind=dp), intent (in) :: socscale ! < Spin-orbit scaling for a given atom
+    integer, intent (in) :: npan_log !! Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
+    real (kind=dp), intent (in) :: zat !! Nuclear charge for a given atom
+    real (kind=dp), intent (in) :: socscale !! Spin-orbit scaling for a given atom
     logical, intent (in) :: ldorhoef
-    integer, dimension (lmxspd), intent (in) :: lmsp ! < 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+    integer, dimension (lmxspd), intent (in) :: lmsp !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
     integer, dimension (lmxspd), intent (in) :: ifunm
     integer, dimension (0:ntotd), intent (in) :: ipan_intervall
     integer, dimension (ncleb, 4), intent (in) :: icleb
-    real (kind=dp), dimension (*), intent (in) :: cleb ! < GAUNT coefficients (GAUNT)
+    real (kind=dp), dimension (*), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
     real (kind=dp), dimension (irmd), intent (in) :: rmesh
-    real (kind=dp), dimension (mmaxd, mmaxd, nspind), intent (in) :: wldau ! < potential matrix
+    real (kind=dp), dimension (mmaxd, mmaxd, nspind), intent (in) :: wldau !! potential matrix
 
     ! .. In/Out variables
     real (kind=dp), intent (inout) :: phi
@@ -81,7 +81,7 @@ contains
     real (kind=dp), dimension (0:ntotd), intent (inout) :: rpan_intervall
     real (kind=dp), dimension (0:lmax+1, 3), intent (inout) :: muorb
     real (kind=dp), dimension (nrmaxd, nfund), intent (inout) :: thetasnew
-    real (kind=dp), dimension (nrmaxd, lmpotd, nspotd), intent (inout) :: vinsnew ! < Non-spherical part of the potential
+    real (kind=dp), dimension (nrmaxd, lmpotd, nspotd), intent (inout) :: vinsnew !! Non-spherical part of the potential
     complex (kind=dp), dimension (iemxd), intent (inout) :: ez
     complex (kind=dp), dimension (iemxd), intent (inout) :: wez
     ! .. Output variables

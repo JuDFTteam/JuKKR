@@ -4,14 +4,14 @@ contains
 
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: TMATIMP_NEWSOLVER
-  ! > @brief Calculate and write down impurity tmatrix and delta matrix
-  ! > first calculate t-matrix for the host corresponding to imp. cluster
-  ! > @author N. H. Long
-  ! > @date 05.2013, Juelich
-  ! > @note
-  ! > - Adapted to new routines (mainly changed interfaces) to work in KKRcode
-  ! > also added MPI parallelization. Philipp Rüssmann, Juelich, 09.2017
-  ! > - Jonathan Chico Feb. 2018: Removed inc.p dependencies and rewrote to Fortran90
+  !> @brief Calculate and write down impurity tmatrix and delta matrix
+  !> first calculate t-matrix for the host corresponding to imp. cluster
+  !> @author N. H. Long
+  !> @date 05.2013, Juelich
+  !> @note
+  !> - Adapted to new routines (mainly changed interfaces) to work in KKRcode
+  !> also added MPI parallelization. Philipp Rüssmann, Juelich, 09.2017
+  !> - Jonathan Chico Feb. 2018: Removed inc.p dependencies and rewrote to Fortran90
   ! ----------------------------------------------------------------------------
   subroutine tmatimp_newsolver(irm, ksra, lmax, iend, irid, lpot, natyp, ncleb, ipand, irnsd, nfund, ihost, ntotd, nspin, lmpot, ncheb, lmmaxd, korbit, nspotd, ielast, irmind, &
     npan_eq, npan_log, natomimp, r_log, vins, vm2z, ipan, irmin, hostimp, ipanimp, irwsimp, atomimp, irminimp, icleb, ircut, ircutimp, zat, zimp, rmesh, cleb, rimp, rclsimp, eryd, &
@@ -44,46 +44,46 @@ contains
     implicit none
 
     ! .. Input variables
-    integer, intent (in) :: irm    ! < Maximum number of radial points
+    integer, intent (in) :: irm    !! Maximum number of radial points
     integer, intent (in) :: ksra
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function expansion
+    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
     integer, intent (in) :: iend
     integer, intent (in) :: irid
-    integer, intent (in) :: lpot   ! < Maximum l component in potential expansion
-    integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
-    integer, intent (in) :: ncleb  ! < Number of Clebsch-Gordon coefficients
-    integer, intent (in) :: ipand  ! < Number of panels in non-spherical part
+    integer, intent (in) :: lpot   !! Maximum l component in potential expansion
+    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: ncleb  !! Number of Clebsch-Gordon coefficients
+    integer, intent (in) :: ipand  !! Number of panels in non-spherical part
     integer, intent (in) :: irnsd
-    integer, intent (in) :: nfund  ! < Shape functions parameters in non-spherical part
+    integer, intent (in) :: nfund  !! Shape functions parameters in non-spherical part
     integer, intent (in) :: ntotd
     integer, intent (in) :: ihost
-    integer, intent (in) :: nspin  ! < Counter for spin directions
-    integer, intent (in) :: lmpot  ! < (LPOT+1)**2
-    integer, intent (in) :: ncheb  ! < Number of Chebychev pannels for the new solver
-    integer, intent (in) :: korbit ! < Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
-    integer, intent (in) :: lmmaxd ! < (KREL+KORBIT+1)(LMAX+1)^2
+    integer, intent (in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: lmpot  !! (LPOT+1)**2
+    integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new solver
+    integer, intent (in) :: korbit !! Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
+    integer, intent (in) :: lmmaxd !! (KREL+KORBIT+1)(LMAX+1)^2
     integer, intent (in) :: lmmaxso
-    integer, intent (in) :: nspotd ! < Number of potentials for storing non-sph. potentials
+    integer, intent (in) :: nspotd !! Number of potentials for storing non-sph. potentials
     integer, intent (in) :: ielast
-    integer, intent (in) :: irmind ! < IRM-IRNSD
-    integer, intent (in) :: npan_eq ! < Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
-    integer, intent (in) :: npan_log ! < Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
-    integer, intent (in) :: natomimp ! < Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-    real (kind=dp), intent (in) :: r_log ! < Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
-    integer, dimension (natyp), intent (in) :: ipan ! < Number of panels in non-MT-region
-    integer, dimension (natyp), intent (in) :: irmin ! < Max R for spherical treatment
+    integer, intent (in) :: irmind !! IRM-IRNSD
+    integer, intent (in) :: npan_eq !! Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
+    integer, intent (in) :: npan_log !! Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
+    integer, intent (in) :: natomimp !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    real (kind=dp), intent (in) :: r_log !! Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
+    integer, dimension (natyp), intent (in) :: ipan !! Number of panels in non-MT-region
+    integer, dimension (natyp), intent (in) :: irmin !! Max R for spherical treatment
     integer, dimension (natyp), intent (in) :: hostimp
     integer, dimension (natomimp), intent (in) :: ipanimp
     integer, dimension (natomimp), intent (in) :: irwsimp
     integer, dimension (natomimp), intent (in) :: atomimp
     integer, dimension (natomimp), intent (in) :: irminimp
-    integer, dimension (ncleb, 4), intent (in) :: icleb ! < Pointer array
-    integer, dimension (0:ipand, natyp), intent (in) :: ircut ! < R points of panel borders
+    integer, dimension (ncleb, 4), intent (in) :: icleb !! Pointer array
+    integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of panel borders
     integer, dimension (0:ipand, natomimp), intent (in) :: ircutimp
-    real (kind=dp), dimension (natyp), intent (in) :: zat ! < Nuclear charge
+    real (kind=dp), dimension (natyp), intent (in) :: zat !! Nuclear charge
     real (kind=dp), dimension (natomimp), intent (in) :: zimp
-    real (kind=dp), dimension (irm, natyp), intent (in) :: rmesh ! < Radial mesh ( in units a Bohr)
-    real (kind=dp), dimension (ncleb, 2), intent (in) :: cleb ! < GAUNT coefficients (GAUNT)
+    real (kind=dp), dimension (irm, natyp), intent (in) :: rmesh !! Radial mesh ( in units a Bohr)
+    real (kind=dp), dimension (ncleb, 2), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
     real (kind=dp), dimension (irm, natomimp), intent (in) :: rimp
     real (kind=dp), dimension (3, natomimp), intent (in) :: rclsimp
     complex (kind=dp), intent (in) :: eryd

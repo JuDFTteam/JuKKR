@@ -4,49 +4,49 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: EMESHT
-  ! > @brief This subroutine provides the energy mesh in array EZ and the
-  ! > appropriate integration weights in array DF.
-  ! > @details Poles of the Fermi function C (Matsubara frequencies) and a
+  !> @brief This subroutine provides the energy mesh in array EZ and the
+  !> appropriate integration weights in array DF.
+  !> @details Poles of the Fermi function C (Matsubara frequencies) and a
   ! contour in
-  ! > the complex energy are used as described in (????).
-  ! > The contour consists of three straight lines with NPNT1, NPNT2, and NPNT3
-  ! > integration points and is determined by the input arguments: EBOT, EMU,
+  !> the complex energy are used as described in (????).
+  !> The contour consists of three straight lines with NPNT1, NPNT2, and NPNT3
+  !> integration points and is determined by the input arguments: EBOT, EMU,
   ! TK, and NPOL.
-  ! > The three lines are defined by:
-  ! > 1. The line from EBOT to \f$ EBOT+2*NPOL*\pi*i*k*TK \f$ with NPNT1
+  !> The three lines are defined by:
+  !> 1. The line from EBOT to \f$ EBOT+2*NPOL*\pi*i*k*TK \f$ with NPNT1
   ! integration points (Gauss-Legendre rule)
-  ! > 2. The line from \f$ EBOT+2*NPOL*\pi*i*k*TK\f$ to \f$
+  !> 2. The line from \f$ EBOT+2*NPOL*\pi*i*k*TK\f$ to \f$
   ! EMU+(2*NPOL*\pi*i-30)*k*TK\f$ with NPNT2 integration points (Gauss-Legendre
   ! rule)
-  ! > 3. The line from \f$ EMU+(2*NPOL*\pi*i-30)*k*TK\f$ to \f$ \infty \f$
-  ! >
-  ! > The total number of integration points is given by: \f$
+  !> 3. The line from \f$ EMU+(2*NPOL*\pi*i-30)*k*TK\f$ to \f$ \infty \f$
+  !>
+  !> The total number of integration points is given by: \f$
   ! NPNT=NPNT1+NPNT2+NPNT3+NPOL\f$
-  ! > The integration points and weights on three lines are chosen according to
+  !> The integration points and weights on three lines are chosen according to
   ! Gauss integration rules. Only in third interval
-  ! > the Fermi function matters since \f$ e^x < 10^{-10} \f$ for \f$ x <
+  !> the Fermi function matters since \f$ e^x < 10^{-10} \f$ for \f$ x <
   ! -25\f$.
-  ! > There are two special cases determined by NPOL = 0 and NPOL < 0.
-  ! > - NPOL = 0 leads to density-of-states calculations with constant
+  !> There are two special cases determined by NPOL = 0 and NPOL < 0.
+  !> - NPOL = 0 leads to density-of-states calculations with constant
   ! integration weights and equally distributed points
-  ! > between \f$ EBOT - \pi*i*k*TK\f$ and \f$ EMU - \pi*i*k*TK\f$.
-  ! > The total number of integration points is given by: NPNT=NPNT2
-  ! > - NPOL < 0 is meant for calculations where the Fermi-Dirac function is
+  !> between \f$ EBOT - \pi*i*k*TK\f$ and \f$ EMU - \pi*i*k*TK\f$.
+  !> The total number of integration points is given by: NPNT=NPNT2
+  !> - NPOL < 0 is meant for calculations where the Fermi-Dirac function is
   ! replaced by a step function with step at EMU. When
-  ! > this option is used no poles of the Fermi-Dirac function are used and the
+  !> this option is used no poles of the Fermi-Dirac function are used and the
   ! contour consists of the three straight lines:
-  ! > 1. The line from \f$EBOT\f$ to \f$ EBOT-2*NPOL*\pi*i*k*TK\f$ with NPNT1
+  !> 1. The line from \f$EBOT\f$ to \f$ EBOT-2*NPOL*\pi*i*k*TK\f$ with NPNT1
   ! integration points (Gauss-Legendre rule)
-  ! > 2. The line from \f$EBOT-2*NPOL*\pi*i*k*TK\f$ to
+  !> 2. The line from \f$EBOT-2*NPOL*\pi*i*k*TK\f$ to
   ! \f$EMU-2*NPOL*\pi*i*k*TK\f$ with NPNT2 integration points (Gauss-Legendre
   ! rule)
-  ! > 3. The line from \f$ EMU-2*NPOL*\pi*i*k*TK\f$ to \f$EMU\f$ with NPNT3
+  !> 3. The line from \f$ EMU-2*NPOL*\pi*i*k*TK\f$ to \f$EMU\f$ with NPNT3
   ! integration points (Gauss-Legendre rule)
-  ! >
-  ! > The total number of integration points is given by:
+  !>
+  !> The total number of integration points is given by:
   ! \f$NPNT=NPNT1+NPNT2+NPNT3\f$
-  ! > @note
-  ! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
+  !> @note
+  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
   subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, npnt3, iemxd)
@@ -60,18 +60,18 @@ contains
     implicit none
     ! ..
     ! .. Input variables
-    integer, intent (in) :: npol   ! < Number of Matsubara Poles (EMESHT)
-    integer, intent (in) :: npnt1  ! < number of E points (EMESHT) for the
+    integer, intent (in) :: npol   !! Number of Matsubara Poles (EMESHT)
+    integer, intent (in) :: npnt1  !! number of E points (EMESHT) for the
     ! contour integration
-    integer, intent (in) :: npnt2  ! < number of E points (EMESHT) for the
+    integer, intent (in) :: npnt2  !! number of E points (EMESHT) for the
     ! contour integration
-    integer, intent (in) :: npnt3  ! < number of E points (EMESHT) for the
+    integer, intent (in) :: npnt3  !! number of E points (EMESHT) for the
     ! contour integration
-    integer, intent (in) :: iemxd  ! < Dimension for energy-dependent arrays
-    real (kind=dp), intent (in) :: tk ! < Temperature
-    real (kind=dp), intent (in) :: emu ! < Top of the contour
-    real (kind=dp), intent (in) :: ebot ! < Bottom of the contour
-    real (kind=dp), intent (in) :: efermi ! < Fermi energy
+    integer, intent (in) :: iemxd  !! Dimension for energy-dependent arrays
+    real (kind=dp), intent (in) :: tk !! Temperature
+    real (kind=dp), intent (in) :: emu !! Top of the contour
+    real (kind=dp), intent (in) :: ebot !! Bottom of the contour
+    real (kind=dp), intent (in) :: efermi !! Fermi energy
     ! .. Input/Output variables
     integer, intent (inout) :: npnt
     complex (kind=dp), dimension (iemxd), intent (inout) :: df

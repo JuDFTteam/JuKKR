@@ -4,7 +4,7 @@ module mod_idreals
 
 contains
 
-  ! < check iif entries of darry are fractions or roots of common numbers and
+  !! check iif entries of darry are fractions or roots of common numbers and
   ! replace accordingly for hogher accuracy
   subroutine idreals(darry, narry, iprint)
     implicit none

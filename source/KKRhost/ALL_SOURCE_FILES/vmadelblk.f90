@@ -4,27 +4,27 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: VMADELBLK
-  ! > @brief Calculate the madelung potentials and add these to the potential
-  ! \f$V\f$
-  ! > (in he spin-polarized case for each spin-direction this is the same)
-  ! > @details It uses the structure dependent matrices AVMAD and BVMAD which
-  ! > are calculated once in the subroutine MADELUNG3D() and saved in
-  ! > the DA-file abvmad.unformatted (May 2004)
-  ! > The charge-moments are calculated in the subroutine vintras,
-  ! > therefore vintras has to be called first.
-  ! > The madelung-potential is expanded into spherical harmonics.
-  ! > The lm-term of the potential \f$V\f$ of the atom \f$i\f$ is given by
-  ! > \f$ V(r,lm,i) = \sum_{i2}^{N} \sum_{l'm'} (-r)^l *
-  ! \left\{avmad(i,i2,lm,l'm')*cmom(i2,l'm') +bvmad(i,i2,lm)*z(i2)\right\}\f$
-  ! > where \f$ N\f$ is the number of atoms
-  ! > @author B. Drittler
-  ! > @date Nov. 1989
-  ! > @note
-  ! > - V. Popescu Feb. 2002: Adopted for the case of more atoms on the same
-  ! site, summation is done over the occupants of that site, the charge is
-  ! weighted with the appropriate concentration of the occupant
-  ! > - Impurity-program adopted feb. 2004 (according to N. Papanikalou)
-  ! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
+  !@brief Calculate the madelung potentials and add these to the potential
+  !\f$V\f$
+  !> (in he spin-polarized case for each spin-direction this is the same)
+  !> @details It uses the structure dependent matrices AVMAD and BVMAD which
+  !> are calculated once in the subroutine MADELUNG3D() and saved in
+  !> the DA-file abvmad.unformatted (May 2004)
+  !> The charge-moments are calculated in the subroutine vintras,
+  !> therefore vintras has to be called first.
+  !> The madelung-potential is expanded into spherical harmonics.
+  !> The lm-term of the potential \f$V\f$ of the atom \f$i\f$ is given by
+  !> \f$ V(r,lm,i) = \sum_{i2}^{N} \sum_{l'm'} (-r)^l *
+  !\left\{avmad(i,i2,lm,l'm')*cmom(i2,l'm') +bvmad(i,i2,lm)*z(i2)\right\}\f$
+  !> where \f$ N\f$ is the number of atoms
+  !> @author B. Drittler
+  !> @date Nov. 1989
+  !> @note
+  !> - V. Popescu Feb. 2002: Adopted for the case of more atoms on the same
+  !site, summation is done over the occupants of that site, the charge is
+  !weighted with the appropriate concentration of the occupant
+  !> - Impurity-program adopted feb. 2004 (according to N. Papanikalou)
+  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
   subroutine vmadelblk(cmom, cminst, lmax, nspin, naez, v, zat, r, irws, ircut, ipan, kshape, noq, kaoez, conc, catom, icc, hostimp, vinters, nemb, lmpot, natyp)

@@ -4,7 +4,7 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: RHOVAL0
-  ! > @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
+  !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
   subroutine rhoval0(ez, drdi, rmesh, ipan, ircut, irws, thetas, dos0, dos1, irm, lmax)
@@ -18,17 +18,17 @@ contains
     implicit none
 
     ! .. Input variables
-    integer, intent (in) :: irm    ! < Maximum number of radial points
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
+    integer, intent (in) :: irm    !! Maximum number of radial points
+    integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
-    integer, intent (in) :: ipan   ! < Number of panels in non-MT-region
-    integer, intent (in) :: irws   ! < R point at WS radius
+    integer, intent (in) :: ipan   !! Number of panels in non-MT-region
+    integer, intent (in) :: irws   !! R point at WS radius
     complex (kind=dp), intent (in) :: ez
-    integer, dimension (0:ipand), intent (in) :: ircut ! < R points of panel
+    integer, dimension (0:ipand), intent (in) :: ircut !! R points of panel
     ! borders
-    real (kind=dp), dimension (irm), intent (in) :: drdi ! < Derivative dr/di
+    real (kind=dp), dimension (irm), intent (in) :: drdi !! Derivative dr/di
     real (kind=dp), dimension (irm), intent (in) :: rmesh
-    real (kind=dp), dimension (irid, nfund), intent (in) :: thetas ! < shape
+    real (kind=dp), dimension (irid, nfund), intent (in) :: thetas !! shape
     ! function
     ! THETA=0
     ! outer space

@@ -4,8 +4,8 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: PNSQNS
-  ! > @note
-  ! > - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
+  !> @note
+  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
   ! Added IRMIN 1.7.2014
@@ -22,38 +22,38 @@ contains
     implicit none
 
     ! .. Input variables
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
+    integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
-    integer, intent (in) :: icst   ! < Number of Born approximation
-    integer, intent (in) :: iend   ! < Number of nonzero gaunt coefficients
-    integer, intent (in) :: ipan   ! < Number of panels in non-MT-region
+    integer, intent (in) :: icst   !! Number of Born approximation
+    integer, intent (in) :: iend   !! Number of nonzero gaunt coefficients
+    integer, intent (in) :: ipan   !! Number of panels in non-MT-region
     integer, intent (in) :: lmlo
     integer, intent (in) :: lmhi
-    integer, intent (in) :: lopt   ! < angular momentum QNUM for the atoms on
+    integer, intent (in) :: lopt   !! angular momentum QNUM for the atoms on
     ! which LDA+U should be applied (-1 to
     ! switch it OFF)
     integer, intent (in) :: nsra
     integer, intent (in) :: lkonv
-    integer, intent (in) :: irmin  ! < Max R for spherical treatment
-    integer, intent (in) :: idoldau ! < flag to perform LDA+U
+    integer, intent (in) :: irmin  !! Max R for spherical treatment
+    integer, intent (in) :: idoldau !! flag to perform LDA+U
     real (kind=dp), intent (in) :: wldauav
     complex (kind=dp), intent (in) :: ek
-    integer, dimension (0:ipand), intent (in) :: ircut ! < R points of panel
+    integer, dimension (0:ipand), intent (in) :: ircut !! R points of panel
     ! borders
-    integer, dimension (*), intent (in) :: loflm ! < l of lm=(l,m) (GAUNT)
-    integer, dimension (ncleb, 4), intent (in) :: icleb ! < Pointer array
-    real (kind=dp), dimension (irmd), intent (in) :: drdi ! < Derivative dr/di
+    integer, dimension (*), intent (in) :: loflm !! l of lm=(l,m) (GAUNT)
+    integer, dimension (ncleb, 4), intent (in) :: icleb !! Pointer array
+    real (kind=dp), dimension (irmd), intent (in) :: drdi !! Derivative dr/di
     real (kind=dp), dimension (irmd), intent (in) :: cutoff
-    real (kind=dp), dimension (ncleb, 2), intent (in) :: cleb ! < GAUNT
+    real (kind=dp), dimension (ncleb, 2), intent (in) :: cleb !! GAUNT
     ! coefficients
     ! (GAUNT)
-    real (kind=dp), dimension (irmind:irmd, lmpotd), intent (in) :: vins ! <
+    real (kind=dp), dimension (irmind:irmd, lmpotd), intent (in) :: vins !!
     ! Non-spherical
     ! part
     ! of
     ! the
     ! potential
-    real (kind=dp), dimension (mmaxd, mmaxd), intent (in) :: wldau ! < potential
+    real (kind=dp), dimension (mmaxd, mmaxd), intent (in) :: wldau !! potential
     ! matrix
     complex (kind=dp), dimension (irmd, 0:lmax), intent (in) :: fz
     complex (kind=dp), dimension (irmd, 0:lmax), intent (in) :: qz

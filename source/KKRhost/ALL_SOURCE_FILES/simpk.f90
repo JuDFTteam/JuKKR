@@ -4,14 +4,14 @@ contains
 
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: SINWK
-  ! > @brief This subroutine does an integration up to \f$ r_{cut}\f$ of an real
+  !> @brief This subroutine does an integration up to \f$ r_{cut}\f$ of an real
   ! function
-  ! > \f$f\f$ with an extended 3-point-simpson
-  ! > @details The integration of the function
-  ! > \f$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'\f$ has been modified
-  ! > for functions with kinks - at each kink the integration is restarted.
-  ! > @note Attention : Input \f$f\f$ is destroyed !
-  ! > @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
+  !> \f$f\f$ with an extended 3-point-simpson
+  !> @details The integration of the function
+  !> \f$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'\f$ has been modified
+  !> for functions with kinks - at each kink the integration is restarted.
+  !> @note Attention : Input \f$f\f$ is destroyed !
+  !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
   subroutine simpk(f, fint, ipan, ircut, drdi)
