@@ -120,7 +120,7 @@ with the number of atoms, so that we can realize system sizes of up to
 half a million atoms in a unit cell if necessary.
 Recently, we implemented a relativistic generalization of our algorithm 
 enabling us to calculate complex non-collinear magnetic structures, such as skyrmions,
-in real space. Skyrmions are two-dimensional magnetization solitons, i.e. two-dimensional
+in real space. Skyrmions are two-dimensional magnetization solitons, i.e., two-dimensional
 magnetic structures localized in space, topologically protected by a non-trivial
 magnetization texture, which has particle-like properties. 
 The focus of our work is on the germanide \ce{MnGe} that is particularly
@@ -204,7 +204,7 @@ The singularity at the center of the texture exists only in the micromagnetic de
 atomic magnetic moment of the atom, which is located at the center,
 remains finite \cite{feldtkeller_continuous_2017}.
 \begin{figure}[htb]
-	\subfloat[]{\includegraphics[width=.50\textwidth]{Figures/antihedgehog.png}\label{fig:mnge_3q}}
+	\subfloat[]{\includegraphics[width=.50\textwidth]{Figures/antihedgehog.eps}\label{fig:mnge_3q}}
 	\hfill
 	\subfloat[]{\includegraphics[width=.50\textwidth]{Figures/helicalspiral.eps}\label{fig:mnge_spiral}}
 	\hfill
@@ -214,7 +214,7 @@ remains finite \cite{feldtkeller_continuous_2017}.
 	spin spiral that propagates in (001) direction. Reprinted from \cite{rybakov_new_2016} and
 	licensed under CC BY 3.0.}
 \end{figure}
-Findings by Kanazawa et al. suggest that the lattice is set up by a superposition of three orthogonal
+Findings by Kanazawa \textit{et al.} suggest that the lattice is set up by a superposition of three orthogonal
 helical structures, also referred to as 3Q state \cite{kanazawa_noncentrosymmetric_2017}. 
 Here, the local magnetization is determined by the provision
 \beq
@@ -266,7 +266,7 @@ In the following, we refer to this as the 1Q state.
 
 We commence our investigations by considering a 6x6x6 B20-\ce{MnGe} supercell (1728 atoms), where we use PBEsol 
 as exchange-correlation functional
-and include only a single k-point, i.e. the $\Gamma$-point.
+and include only a single k-point, i.e., the $\Gamma$-point.
 In this initial comparison of ferromagnetic (FM), 1Q and 3Q state the respective states are imposed on
 the system by forcing the atomic exchange-correlation B-fields
 to point into specific directions. 
@@ -359,7 +359,7 @@ and
 \eeq
 The BP texture does not depend on $r$ and we can therefore neglect it in the following.
 Usually, the atomic positions are given in the Cartesian coordinates $x,y$ and $z$.
-In the definition above, we define the origin of the coordinate system, i.e. the tuple $(x=0, \, y=0, \, z=0)$,
+In the definition above, we define the origin of the coordinate system, i.e., the tuple $(x=0, \, y=0, \, z=0)$,
 to be at the center of the unit cell.
 In this frame of reference, all atoms that lay in an x-y-plane that intersects with the center
 are described by $\theta=\pi/2$.
@@ -373,13 +373,13 @@ and the azimuthal angle
 \Theta = 2 \arctan{\left(\cot{\frac{\theta}{2}} \right)},
 \eeq
 where the angles designating the atomic position enter as arguments. $\phi_{1}$ is a phase factor.
-An illustration of a BP is given in \Cref{fig:mnge_blochpoint}. Note, that in contrast to
+An illustration of a BP is given in \cref{fig:mnge_blochpoint}. Note, that in contrast to
 that illustration we conduct our investigation for a BP with $\phi_{1}=\pi$, where magnetic moments
-are inverted, i.e. all moments point into instead of out of the center.
+are inverted, i.e., all moments point into instead of out of the center.
 \\
 For our calculations we
 again use a 6x6x6 supercell but this time with a 2x2x2 k-point-mesh and LDA as
-exchange-correlation functional. Here, LDA is used because it has been used extensively in all KKR codes
+exchange-correlation functional. Here, we choose LDA because it has been used extensively in all KKR codes
 in the past and 
 we want to eliminate the possibility of numerical problems that could occur when SOC is artificially enhanced.
 The magnetic moments are allowed to relax during the convergence process.
@@ -412,10 +412,10 @@ range it decreases by 0.07 $\mu_{B}$ for each of the two states
 (see again \cref{fig:MnGe_kkrnano_comparison_bp}).
 It would be interesting to check whether a global minimum of $E_{\text{BP}}-E_{\text{FM}}$ can
 be found for $f_{\text{SOC}} > 4.0$. This would hint to an optimal
-scaling at which also other non-collinear magnetic textures, e.g. 1Q spin spiral or
+scaling at which also other non-collinear magnetic textures, e.g., 1Q spin spiral or
 3Q hedgehog lattice, can possibly be stabilized.
 However, this is not possible as our method becomes increasingly numerically unstable for 
-such strong scaling factors, i.e. the total energy does not converge anymore.
+such strong scaling factors, i.e., the total energy does not converge anymore.
 The reason for this is currently under investigation.
 
 %\begin{figure}
@@ -540,7 +540,7 @@ The most crucial MPI level in KKRnano is the one for atoms since application sce
 involve the treatment of a few thousand atoms and the KKR formalism allows us to solve the
 multiple-scattering problem locally for each atom, if the Green functions of the reference system and
 the $\Delta t$-matrices of the other scattering centers are provided (see \cref{eq:dyson_eq}).
-In practice one MPI task handles 1-16 atoms.
+In practice, one MPI task handles 1-16 atoms.
 The reference Green functions are calculated by each task
 for the atoms it is responsible for and are then sent to other tasks that require them. 
 The reference t-matrices for the atoms inside the respective reference cluster are not communicated 
@@ -551,7 +551,7 @@ The calculation of the local charge density can also be conducted locally since 
 $nn$-elements are needed for this.
 In order to subsequently obtain the potential from the local charge moments via the Poisson equation,
 the moments must be shared with all other atom tasks by means of all-to-all communication.
-The communcation pattern prevents a good scaling behaviour in this part of the code and we currently work on
+The communcation pattern prevents a good scaling behaviour in this part of the code and we currently develop
 an implementation which works without all-to-all communication.
 
 \subsubsection*{MPI parallelization over spin channels}
@@ -566,7 +566,7 @@ It should be noted that in the non-collinear KKR formalism such a
 separation of spin channels is no longer possible because 
 there is intermixing and all operations involving the
 $\Delta t$-matrices and Green functions
-need to be performed in full spin space, i.e. $\{\uparrow \uparrow, \uparrow \downarrow,
+need to be performed in full spin space, i.e., $\{\uparrow \uparrow, \uparrow \downarrow,
 \downarrow \uparrow, \downarrow \downarrow \}$.
 Thus, the spin parallelization level can only be used in connection with
 a collinear calculation.
@@ -583,7 +583,7 @@ Assigning one MPI task to each energy point is not a promising concept because
 of the significantly different runtimes per energy point. Especially the points closest to the
 Fermi level 
 need more TFQMR iterations.
-Therefore the energy points are split into three different groups and each group is taken care of by
+Therefore, the energy points are split into three different groups and each group is taken care of by
 one MPI task.
 In the first iteration of the self-consistency cycle the points are equally distributed to all
 groups. At the end of the first iteration the points are regrouped depending on how much time the iteration took
@@ -591,7 +591,7 @@ for each point. The aim is to find a grouping for which all groups of energy poi
 a similar time so that idling is avoided. This is also referred to as \textit{dynamical load-balancing}.
 A correct load-balancing is of outmost importance to the effectiveness of this MPI level since
 all tasks need to have finished before the program can move on to the solution of the electrostatic problem,
-i.e. the Poisson equation.
+i.e., the Poisson equation.
 Due to the challenge that load-balancing can pose, parallelization over energy points should only be used, 
 if plenty of processor cores
 ought to be utilized and the Poisson solver is well-scaling.
@@ -604,7 +604,7 @@ loops primarily in the TFQMR solver but also in the routines that calculate the 
 solutions are executed using parallel threads. 
 This is particularly useful on architectures that support simultaneous multithreading (SMT).
 However, we try to use BLAS (Basic Linear Algebra Subprograms) library routines for arithmetic
-operations, e.g. matrix-matrix multiplications, throughout our code. BLAS libraries usually
+operations, e.g., matrix-matrix multiplications, throughout our code. BLAS libraries usually
 have their own built-in SMT support.
 Therefore, the available SMT threads must be partitioned between the explicit OpenMP 
 parallel regions in the code and the implicit parallelization of the BLAS library.
@@ -622,7 +622,7 @@ We rewrite the Dyson equation (see \cref{eq:dyson_eq} and \cref{eq:axb}) with in
 \sum_{\mu} \sum_{L'} A^{\nu \mu}_{LL'} X^{\mu}_{L'L''} = b_{L'L''},
 \label{eq:dyson2}
 \eeq
-where $\nu$ and $\mu$ indicate atomic indices and $L$,$L'$ and $L''$ denote
+where $\nu$ and $\mu$ indicate atomic indices and $L$, $L'$ and $L''$ denote
 the appropriate expansion in angular momentum components.
 In order to describe the dimensions of the constituents of the equation above, we
 declare the following parameters:
@@ -656,7 +656,7 @@ where an additional index $\gamma$ is introduced that runs over $N_{\text{loc}}$
 In this section we present performance results of KKRnano that were obtained on Hazel Hen.
 A runtime analysis of the parts that are related to the specific physical problems is given
 which is followed by an overview of how much time is spent in distinct
-classes of routines, e.g. library calls and MPI communication.
+classes of routines, e.g., library calls and MPI communication.
 The weak-scaling benchmarks on Hazel Hen are performed for B20-\ce{MnGe} 
 with the magnetic moments being treated as
 non-collinear.
@@ -697,11 +697,11 @@ can be mainly attributed to Fortran direct-access I/O which does not scale well 
 The observation of an increase in total runtime for larger systems is a strong hint to this as the amount of
 file accesses is proportional to the number of MPI processes.
 The implementation of a more suitable I/O library (e.g., MPI I/O or SIONlib) is likely to solve this issue.
-The multiple-scattering solver, i.e. the TFQMR solver, 
+The multiple-scattering solver, i.e., the TFQMR solver, 
 and the solution of the relativistic single-cell problem are
 expected to account for most of the computational work in KKRnano which 
 is why linear scaling is of particular importance in these parts of the code.
-Our results show that both parts scale indeed linearly, i.e. the runtime stays constant as long as
+Our results show that both parts scale indeed linearly, i.e., the runtime stays constant as long as
 the ratio of CPU cores to atoms remains constant.
 Furthermore, it should be noted that the walltime that is needed for a single self-consistency step of a system
 that includes 1728 atoms
@@ -718,7 +718,7 @@ This is planned for the near future.
 Next, we conduct a performance analysis on the level of individual routines.
 The Cray Performance Tools package provides a helpful collection of tools to gather data for this purpose.
 It allows to sample the time that is spent within each routine and can therefore give a good
-picture of which routines are performance-critical and should be considered for further optimization.
+impression of which routines are performance-critical and should be considered for further optimization.
 \begin{figure}[htb]
 \begin{center}
  \includegraphics[width=0.8\textwidth]{Figures/MnGe_6x6x6_crayreport.eps}
@@ -741,7 +741,7 @@ All external routines for which no source file was given at compile time are sub
 in \textit{ETC}. Such routines are e.g. Fortran I/O routines and MKL helper routines
 that are indispensable for BLAS but are not directly related
 to the MKL kernel.
-The \textit{USER} group accounts for all routines from the KKRnano source code, i.e. our self-written routines.
+The \textit{USER} group accounts for all routines from the KKRnano source code, i.e., our self-written routines.
 Finally, \textit{MPI} contains all the routines that are needed for communication and synchronization
 between the MPI tasks. 
 Performing linear algebra operations accounts for almost 40 \% of the total runtime. Prior tests have shown that
@@ -789,14 +789,17 @@ MKL-BLAS and MPI communication.
 
 %
 \begin{acknowledgement}
-The computing time that was provided for this project on Hazel Hen in Stuttgart (project ID 44129) and
-QPACE3 in J\"ulich is gratefully acknowledged.
+The authors gratefully acknowledge the Gauss Centre for Supercomputing e.V. (www.gauss-centre.eu)
+for funding this project by providing computing time through the project GCS-KKRN on the GCS Supercomputer
+Hazel Hen at Höchstleistungsrechenzentrum Stuttgart (HLRS).
+%The computing time that was provided for this project on Hazel Hen in Stuttgart (project ID 44129) and
+%QPACE3 in J\"ulich is gratefully acknowledged.
 %If you want to include acknowledgments of assistance and the like at the end of an individual chapter please use the \verb|acknowledgement| environment -- it will automatically render Springer's preferred layout.
 \end{acknowledgement}
 
 % Bibliography %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{spphys}
-\bibliography{mylit}
+\bibliography{references}
 
 
 \end{document}
