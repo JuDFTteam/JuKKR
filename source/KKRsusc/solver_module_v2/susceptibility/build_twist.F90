@@ -45,10 +45,12 @@
           twistij(mu,nu) = fac
         end do
       end do
-      write(*,'("ia2,ja2=",2i4)') ia2, ja2
-      do mu=1,4
-        write(*,'(12f8.4)') twistij(mu,:)
-      end do
+      if(loutsusc) then 
+        write(*,'("ia2,ja2=",2i4)') ia2, ja2
+        do mu=1,4
+          write(*,'(12f8.4)') twistij(mu,:)
+        end do
+      end if
 !     ------------------------------------------------------------------
 !                   convert from cartesian to spin basis
 !     ------------------------------------------------------------------
@@ -63,10 +65,12 @@
         end do
       end do
       end do
-      write(*,'("ia2,ja2=",2i4)') ia2, ja2
-      do mu=1,4
-        write(*,'(12f8.4)') twist(mu,:,ia2,ja2)
-      end do
+      if(loutsusc) then
+        write(*,'("ia2,ja2=",2i4)') ia2, ja2
+        do mu=1,4
+          write(*,'(12f8.4)') twist(mu,:,ia2,ja2)
+        end do
+      end if 
 !   ************
     end do atomi
 !   ************

@@ -53,6 +53,8 @@
   call set_fit_options(itc,my_rank)
 ! Scan input file for susceptibility options
   call set_susc_options(itc,my_rank)
+! Scan input file for output options
+  call set_output_options(itc,my_rank)
 ! -----------------------------------------------------------------
 ! allocate global arrays according to input
   call init_arrays(my_rank)

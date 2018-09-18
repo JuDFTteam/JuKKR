@@ -281,6 +281,9 @@
       open(file=filename,unit=iofile2,status='replace')
       write(filename,'("ia",i4.4,"ja",i4.4,".chid")') ia2, ja2
       open(file=filename,unit=iofile3,status='replace')
+      write(iofile,'("# real(energy) ((susc0(i,j),j=1,4),i=1,4)")')
+      write(iofile2,'("# real(energy) ((suscylm(i,j),j=1,4),i=1,4)")')
+      write(iofile3,'("# real(energy) (suscylm(i,i),i=1,4)")')
       do iw=1,nomega
         write(iofile,'(1000es16.8)') real(zw(iw)), ((susc0ylm(i,j,ia2,ja2,iw),j=1,4),i=1,4)!, ((susc0inv(i,j,ia2,ja2,iw),j=1,2),i=1,2)
         write(iofile2,'(1000es16.8)') real(zw(iw)), ((suscylm(i,j,ia2,ja2,iw),j=1,4),i=1,4)!, ((suscinv(i,j,ia2,ja2,iw),j=1,2),i=1,2)

@@ -89,6 +89,14 @@
   logical           :: lserial = .true.
 
 !-----------------------------------------------------------------------
+!                         Output options    
+!-----------------------------------------------------------------------
+! --> Full output for basis
+  logical           :: loutbasis = .false.
+! --> Full output for susceptibility
+  logical           :: loutsusc = .false.
+
+!-----------------------------------------------------------------------
 !                         Basis construction
 !-----------------------------------------------------------------------
 ! --> basis type (see subroutine new_basis)

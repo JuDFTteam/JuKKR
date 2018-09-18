@@ -28,11 +28,11 @@
       end do
     end do
     nlmsba(ia) = i
-    if (my_rank == 0) then
+    if (my_rank == 0 .and. loutbasis) then
       write(*,'("nlmsb for ia=",i4," is ",i4)') ia, i
     end if ! my_rank
   end do
-  if (my_rank == 0) then
+  if (my_rank == 0 .and. loutbasis) then
     write(*,'("nalmsb should be ",i8)') sum(nlmsba(1:nasusc))
   end if ! my_rank
 ! -----------------------------------------------------------------------

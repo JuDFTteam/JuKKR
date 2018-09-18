@@ -45,7 +45,7 @@
     iqs(is) = iqs(is) + 1
     iq2qs(iq) = iqs(is)
   end do
-  write(*,'("kxc_sumrule2: iqs(1:nsmax2)=",4i8)') iqs(:)
+  if(loutsusc) write(*,'("kxc_sumrule2: iqs(1:nsmax2)=",4i8)') iqs(:)
   if (any(iqs(:) - iqs(1) /= 0)) stop 'kxcsumrule2: inconsistency in iqs!'
   nqmax = iqs(1)
   allocate(bxcden(nqmax),mxcden(nqmax),mtotden(nqmax),kxcden(nqmax))
@@ -88,12 +88,14 @@
       mtotlm(ilm,ia2) = mtotlm(ilm,ia2) + suscnorm(iq)*mtotden(i)
     end if
   end do
-  write(*,'("mssusc in density basis: tot and xc")')
-  do ia2=1,nasusc2
-    do ilm=1,lmmax0
-      write(*,'(3i4,4es16.8)') ia2, i2lm(:,ilm), mtotlm(ilm,ia2), mxclm(ilm,ia2)
+  if(loutsusc) then 
+    write(*,'("mssusc in density basis: tot and xc")')
+    do ia2=1,nasusc2
+      do ilm=1,lmmax0
+        write(*,'(3i4,4es16.8)') ia2, i2lm(:,ilm), mtotlm(ilm,ia2), mxclm(ilm,ia2)
+      end do
     end do
-  end do
+  end if
 ! ----------------------------------------------------------------------
 ! twist the static susceptibility
   call build_twist(twist)
@@ -107,9 +109,6 @@
 !      write(*,'("iq,jq,ia2,ja2,is,js,q1,q2=",8i4)') iq, jq, ia2, ja2, is, js, q1, q2
       kernel(q1,q2) = kernel(q1,q2) + 0.5d0*twist(is,js,ia2,ja2)*kssusc0(iq,jq)
     end do
-  end do
-  do q1=1,nqmax
-    write(*,'(10000es10.2)') kernel(q1,1:nqmax)
   end do
 ! ----------------------------------------------------------------------
 ! Local frame: m_z = (twisted \chi_0)_zz B_z
@@ -131,12 +130,14 @@
       mxclm(ilm,ia2) = mxclm(ilm,ia2) + suscnorm(iq)*bxcden(q1)
     end if
   end do
-  write(*,'("bxc in density basis:")')
-  do ia2=1,nasusc2
-    do ilm=1,lmmax0
-      write(*,'(3i4,2es16.8)') ia2, i2lm(:,ilm), mxclm(ilm,ia2)
+  if(loutsusc) then 
+    write(*,'("bxc in density basis:")')
+    do ia2=1,nasusc2
+      do ilm=1,lmmax0
+        write(*,'(3i4,2es16.8)') ia2, i2lm(:,ilm), mxclm(ilm,ia2)
+      end do
     end do
-  end do
+  end if 
 ! ----------------------------------------------------------------------
 ! copy results to the kernel and output
   write(*,'("kernel written to file")')
