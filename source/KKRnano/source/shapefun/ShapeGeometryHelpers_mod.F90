@@ -18,7 +18,7 @@ module ShapeGeometryHelpers_mod
   endinterface
   
   interface dist2
-    module procedure distance_square_v3
+    module procedure difference_length_squared_v3
   endinterface
 
   contains
@@ -179,7 +179,9 @@ cTeX1c("Furthermore, the angular sum of the polygons is checked to be $(n-2)*\pi
 !>    dicular lies within the segment or not.
 !-----------------------------------------------------------------------
   subroutine perp(r0, r1, r2, tolvdist, rd, inside)
-    double precision, intent(in) :: r0(3), r1(3), r2(3)
+    double precision, intent(in) :: r0(3)
+    double precision, intent(in) :: r1(3)
+    double precision, intent(in) :: r2(3)
     double precision, intent(in) :: tolvdist
     double precision, intent(out) :: rd(3)
     logical,          intent(out) :: inside
@@ -204,17 +206,17 @@ cTeX1c("Furthermore, the angular sum of the polygons is checked to be $(n-2)*\pi
     double precision, intent(in) :: v(:), w(:) ! size of both vectors must be 3
     vxw = v(1)*w(1) + v(2)*w(2) + v(3)*w(3)
   endfunction ! .dot.
-  
+
   double precision function norm2_squared_v3(v) result(vxv)
     double precision, intent(in) :: v(:) ! size of the vector must be 3
     vxv = v(1)*v(1) + v(2)*v(2) + v(3)*v(3)
   endfunction ! nrm2
 
-  double precision function distance_square_v3(v, w) result(vmw2)
+  double precision function difference_length_squared_v3(v, w) result(vmw2)
     double precision, intent(in) :: v(:), w(:) ! size of both vectors must be 3
     vmw2 = (v(1) - w(1))*(v(1) - w(1)) &
          + (v(2) - w(2))*(v(2) - w(2)) &
          + (v(3) - w(3))*(v(3) - w(3))
   endfunction ! dist2
-  
+
 endmodule ! ShapeGeometryHelpers_mod

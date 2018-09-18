@@ -13,12 +13,16 @@ module ShapeIntegrationHelpers_mod
 !>    ding to the value of itype. the obtained results have to be multi-
 !>    plied by the appropriate expansion coefficients.
 !-----------------------------------------------------------------------
-  subroutine pintg(x1, x2, dlt, s, lmax, isi, arg, fd, itype)
-    double precision, intent(in) :: x1, x2, dlt, arg, fd
+  subroutine pintg(s, x1, x2, dlt, lmax, isi, arg, fd, itype)
+    double precision, intent(out) :: s(-lmax:lmax,0:lmax) ! uses more memory than needed, about 55% used
+    double precision, intent(in) :: x1
+    double precision, intent(in) :: x2
+    double precision, intent(in) :: dlt
     integer, intent(in) :: lmax
     integer(kind=1), intent(in) :: isi ! sign
+    double precision, intent(in) :: arg
+    double precision, intent(in) :: fd
     integer, intent(in) :: itype ! itype in [0, 1]
-    double precision, intent(out) :: s(-lmax:lmax,0:lmax) ! uses more memory than needed, about 55% used
 
     ! locals
     integer :: n, k
@@ -56,7 +60,9 @@ module ShapeIntegrationHelpers_mod
 !-----------------------------------------------------------------------
   subroutine recur(lmax, x, theta, fac, s)
     integer, intent(in) :: lmax
-    double precision, intent(in) :: x, theta, fac
+    double precision, intent(in) :: x
+    double precision, intent(in) :: theta
+    double precision, intent(in) :: fac
     double precision, intent(inout) :: s(-lmax:lmax,0:lmax)
 
     integer :: m, i
@@ -183,7 +189,9 @@ module ShapeIntegrationHelpers_mod
 !-----------------------------------------------------------------------
   subroutine recur0(lmax, x, theta, fac, s)
     integer, intent(in) :: lmax
-    double precision, intent(in) :: x, theta, fac
+    double precision, intent(in) :: x
+    double precision, intent(in) :: theta
+    double precision, intent(in) :: fac
     double precision, intent(inout) :: s(-lmax:lmax,0:lmax)
 
     integer :: m, i
@@ -311,8 +319,10 @@ module ShapeIntegrationHelpers_mod
   subroutine gauleg(x1, x2, x, w, n)
     use Constants_mod, only: pi
     integer, intent(in) :: n
-    double precision, intent(in) :: x1, x2
-    double precision, intent(out) :: x(1:), w(1:) ! (1:n)
+    double precision, intent(in) :: x1
+    double precision, intent(in) :: x2
+    double precision, intent(out) :: x(1:) ! (1:n)
+    double precision, intent(out) :: w(1:) ! (1:n)
 
     ! locals
     integer :: i, j, m
@@ -533,7 +543,7 @@ module ShapeIntegrationHelpers_mod
 !------------------------------------------------------------------
   subroutine d_real(lmax, euler, dmatl)
     integer, intent(in) :: lmax
-    double precision, intent(in) :: euler(1:3) ! alpha, beta, gamma
+    double precision, intent(in) :: euler(1:3) !! Euler angles [alpha, beta, gamma]
     double precision, intent(out) :: dmatl(:)
     
 !-----------------------------------------------------------------------
@@ -603,7 +613,7 @@ module ShapeIntegrationHelpers_mod
         imax = 1
       enddo ! m
     enddo ! l
-!     isum = isu ! unused: export the minimal value for isumd
+
   endsubroutine ! d_real
 
 !-----------------------------------------------------------------------
@@ -614,7 +624,9 @@ module ShapeIntegrationHelpers_mod
 !>    angular momentum,j.wiley & sons ,1957 , eq. (4.13).
 !-----------------------------------------------------------------------
   double precision function drot(l, mp, m, beta)
-    integer, intent(in) :: l, m ,mp
+    integer, intent(in) :: l
+    integer, intent(in) :: mp
+    integer, intent(in) :: m
     double precision, intent(in) :: beta
     ! locals
     integer :: i, kmin, kmax, ltrm, n, k, nf(4)

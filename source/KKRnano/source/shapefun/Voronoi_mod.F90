@@ -87,9 +87,9 @@ module Voronoi_mod
     
     ! locals
 #ifdef DEBUGSHAPEFUNCTIONS
-    logical, parameter :: output = .true. !> activates logging for debug
+    integer, parameter :: o = 6 !> activates logging for debug
 #else
-    logical, parameter :: output = .false. !> deactivates logging for debug
+    integer, parameter :: o = 0 !> deactivates logging for debug
 #endif
     integer :: ivec, iface, ivert, i, nplane, isort(nfaced)
     double precision :: tetrvol, rsq, tau, rout2, dist, trianglearea
@@ -111,9 +111,9 @@ module Voronoi_mod
 
     ! Find the Voronoi polyhedron.
     nplane = nvec
-    if (output) write(*,'(a,i0)') ' Entering POLYHEDRON08 for atom #',atom_id
-    call polyhedron08(nplane, nvertmax, nfaced, tolvdist, tolarea, planes, nface, nvert, vert, output)
-    if (output) write(*,'(a,i0)') ' Exited POLYHEDRON08 for atom #',atom_id
+    if (o>0) write(o,'(a,i0)') ' Entering POLYHEDRON08 for atom #',atom_id
+    call polyhedron08(nplane, nvertmax, nfaced, tolvdist, tolarea, planes, nface, nvert, vert, o)
+    if (o>0) write(o,'(a,i0)') ' Exited POLYHEDRON08 for atom #',atom_id
 
 
     ! Calculate the volume as sum of the volumes of all tetrahedra 
@@ -129,7 +129,9 @@ module Voronoi_mod
       do ivert = 2, nvert(iface)-1
           v2(1:3) = vert(1:3,ivert  ,iface)
           v3(1:3) = vert(1:3,ivert+1,iface)
-          tetrvol = v1(1)*(v2(2)*v3(3) - v3(2)*v2(3)) + v2(1)*(v3(2)*v1(3) - v1(2)*v3(3)) + v3(1)*(v1(2)*v2(3) - v2(2)*v1(3))
+          tetrvol = v1(1)*(v2(2)*v3(3) - v3(2)*v2(3)) &
+                  + v2(1)*(v3(2)*v1(3) - v1(2)*v3(3)) &
+                  + v3(1)*(v1(2)*v2(3) - v2(2)*v1(3))
           volume = volume + abs(tetrvol)
           trianglearea = 0.5d0 * sqrt( &
                 ( v1(1)*v2(2) + v2(1)*v3(2) + v3(1)*v1(2) - v2(2)*v3(1) - v3(2)*v1(1) - v1(2)*v2(1) )**2 &
@@ -140,17 +142,17 @@ module Voronoi_mod
     enddo ! iface
     volume = volume/6.d0
 
-    if (output) then
-      write(*,*) ' Polyhedron properties '
-      write(*,*) ' Number of faces : ',nface
+    if (o>0) then
+      write(o,*) ' Polyhedron properties '
+      write(o,*) ' Number of faces : ',nface
       do iface = 1, nface
-        write(*,fmt="(' Face ',i4,'   has ',i4,' vertices ','; Area= ',e12.4)") iface, nvert(iface), facearea(iface)
+        write(o,fmt="(' Face',i5,'   has',i5,' vertices ','; Area=',e13.4)") iface, nvert(iface), facearea(iface)
         do ivert = 1, nvert(iface)
-          write(*,fmt="(i5,4e16.8)") ivert, vert(1:3,ivert,iface)
+          write(o,fmt="(i5,4e16.8)") ivert, vert(1:3,ivert,iface)
         enddo ! ivert
-        write(*,fmt="(' Face coefficients:',4e16.8)") planes(1:3,iface), planes(0,iface)
+        write(o,fmt="(' Face coefficients:',4e16.8)") planes(1:3,iface), planes(0,iface)
       enddo ! iface
-      write(*,*) 'The Volume is : ',volume
+      write(o,*) 'The Volume is : ',volume
     endif ! output
     
     ! Fint rout, the largest radius of all vertices
@@ -170,7 +172,7 @@ module Voronoi_mod
       rmt = min(rmt, dist)
     enddo ! iface
 
-    if (output) write(*, fmt="('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8,'; RATIO=',f12.2,' %, atom #',i0)") rmt,rout,rmt*100/rout,atom_id
+    if (o>0) write(o, fmt="('Voronoi subroutine: RMT=',e16.8,'; ROUT=',e16.8,'; RATIO=',f12.2,' %, atom #',i0)") rmt,rout,rmt*100/rout,atom_id
     
     call dsort(rsort, isort, nface)
     ! Rearrange using a temporary arrays ptmp, vtmp, ntmp
@@ -189,7 +191,7 @@ module Voronoi_mod
   endsubroutine ! Voronoi_construction
   
 
-  subroutine polyhedron08(nplane, nvertmax, nfaced, tolvdist,tolarea, planes, nface, nvert, vert, output)
+  subroutine polyhedron08(nplane, nvertmax, nfaced, tolvdist, tolarea, planes, nface, nvert, vert, o)
     ! given a set of planes, defined by a3*x+b3*y+c3*z=d3 and defining
     ! a convex part of space (the minimal one containing the origin, 
     ! usually a ws-polyhedron), this subroutine returns the actual faces of
@@ -198,7 +200,6 @@ module Voronoi_mod
     ! number nvert per face are returned. the coefficients of the actual
     ! faces are returned in the same arrays a3,b3,c3, and d3.
 
-    logical, intent(in) :: output
     integer, intent(in) :: nplane                ! initial number of planes.
     integer, intent(in) :: nvertmax              ! max. number of vertices per plane.
     integer, intent(in) :: nfaced                ! max. number of faces.
@@ -208,24 +209,25 @@ module Voronoi_mod
     double precision, intent(inout) :: vert(:,:,:) ! (3,nvertmax,nfaced) ! cartesian coords. of vertices for each plane (2nd index is for planes).
     integer, intent(out) :: nvert(:)  ! number of vertices found for each face
     integer, intent(out) :: nface     ! number of faces found (with nvert>0).
+    integer, intent(in) :: o !! output unit, write to unit=o only if o>0
 
     !---------------------------------------------------------------
     ! find all faces and vertices of the polyhedron. on output, the vertices of each face are sorted (clockwise or anticlockwise).
-    if (output) write(*,*) 'entering vertex3d'
-    call vertex3d(nplane, planes, nvertmax, tolvdist, nface, nvert, vert, output)
-    if (output) write(*,*) 'vertex3d found',nface,' faces with >3 vertices.'
+    if (o>0) write(o,*) 'entering vertex3d'
+    call vertex3d(nplane, planes, nvertmax, tolvdist, nface, nvert, vert, o)
+    if (o>0) write(o,*) 'vertex3d found',nface,' faces with >3 vertices.'
     !---------------------------------------------------------------
     ! analyze the faces and vertices of the polyhedron.
     ! use criteria for rejecting faces that are too small or vertices that are too close to each other.
     ! on output, number of faces and vertices may be reduced after some rejections have taken place.
-    if (output) write(*,*) 'entering analyzevert3d'
-    call analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, vert, planes, output)
-    if (output) write(*,*) 'analyzevert3d accepted',nface,' faces.'
+    if (o>0) write(o,*) 'entering analyzevert3d'
+    call analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, vert, planes, o)
+    if (o>0) write(o,*) 'analyzevert3d accepted',nface,' faces.'
 
   endsubroutine ! polyhedron08
 
 
-  subroutine vertex3d(nplane, planes, nvertmax, tolvdist, nface, nvert, vert, output)
+  subroutine vertex3d(nplane, planes, nvertmax, tolvdist, nface, nvert, vert, o)
     ! given a set of planes, defined by a3*x+b3*y+c3*z=d3 and defining
     ! a convex part of space (the minimal one containing the origin, 
     ! usually a ws-polyhedron), this subroutine returns the vertices
@@ -240,7 +242,7 @@ module Voronoi_mod
     integer, intent(out) :: nvert(:)  ! number of vertices found for each face
     integer, intent(out) :: nface     ! number of faces found (with nvert>0).
     double precision, intent(inout) :: vert(:,:,: ) ! (3,nvertmax,*) ! cartesian coords. of vertices for each plane ! (2nd index is for planes).
-    logical, intent(in) :: output
+    integer, intent(in) :: o !! output unit
 
     integer :: p1, p2, p3, ip ! plane indices
     integer :: ivert          ! vertex index
@@ -338,7 +340,7 @@ module Voronoi_mod
     ! face of the polyhedron, or none at all. check this:
     do ip = 1, nplane
       if (nvert(ip) == 1 .or. nvert(ip) == 2) then
-        if (output) then ! todo: this should happen in the very verbose case
+        if (o>0) then ! todo: this should happen in the very verbose case
           warn(6, "there is a problem with the vertices for plane #"-ip-', only'+nvert(ip)+'vertices were found!')
         else
           nwarn = nwarn+1
@@ -393,16 +395,15 @@ module Voronoi_mod
       endif ! (nvert(ip) >= 3)
     enddo ! ip = 1, nplane
 
-    if (output .and. nwarn > 0) & !  ! todo: this should happen in the medium verbose case
+    if (o>0 .and. nwarn > 0) & ! todo: this should happen in the medium verbose case
       warn(6, "there is a problem with the vertices for"+nwarn+"planes: only 1 or 2 vertices were found!")
-    
+
     endsubroutine ! vertex3d
 
-    subroutine analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, vert, planes, output)
+    subroutine analyzevert3d(nvertmax, nfaced, tolvdist, tolarea, nplane, nface, nvert, vert, planes, o)
     ! analyze the faces and vertices of the polyhedron.
     ! use criteria for rejecting faces that are too small or vertices that are too close to each other.
     ! on output, number of faces and vertices may be reduced after some rejections have taken place.
-    logical, intent(in) :: output
     integer, intent(in) :: nvertmax, nfaced
     integer, intent(in) :: nplane ! number of planes
     integer, intent(inout) :: nface ! number of faces (usually much less than nplane)
@@ -410,10 +411,11 @@ module Voronoi_mod
     double precision, intent(inout) :: vert(:,:,:) ! (3,nvertmax,nfaced)
     double precision, intent(inout) :: planes(0:,:) ! coefs. defining the planes, to be reordered at end
     double precision, intent(in) :: tolvdist, tolarea  ! max. tolerance for distance of two vertices and area of face.
+    integer, intent(in) :: o !! output unit
 
     double precision :: vdist2, tolvdist2 ! distance between consecutive vertices
-    logical :: lacceptvert(nvertmax),lacctot,lfoundnext,lthisisthelast
-    logical :: lacceptface(nfaced)
+    logical(kind=1) :: lacceptvert(nvertmax), lacceptface(nfaced)
+    logical :: lacctot, lfoundnext, lthisisthelast
     integer :: iface, ivert, ivert2, inext, iplane, ifacenewcount, ivertnewcount
     double precision :: dv(3), v1(3), v2(3), v3(3), v4(3), trianglearea
     double precision :: facearea(nfaced)
@@ -502,18 +504,18 @@ module Voronoi_mod
           facearea(iplane) = facearea(iplane)+ trianglearea
         enddo ! ivert
 
-        if (output) write(*,fmt="('analyzevert3d: face',i5,' has area',e12.4)") iplane,facearea(iplane)
+        if (o>0) write(o,fmt="('analyzevert3d: face',i5,' has area',e12.4)") iplane,facearea(iplane)
 
         if (facearea(iplane) >= tolarea) then
           lacceptface(iplane) = .true.
         else
           lacceptface(iplane) = .false.  ! reject faces with small area
-          if (output) write(*,fmt="('face will be rejected ; max. area tolerance=',e12.4)") tolarea 
+          if (o>0) write(o,fmt="('face will be rejected ; max. area tolerance=',e12.4)") tolarea 
         endif
           
       else
         lacceptface(iplane) = .false.  ! reject planes with less than 3 vertices
-        if (output) write(*,fmt="('plane',i5,' has only',i3,' vertices and is rejected')") iplane,nvert(iplane)
+        if (o>0) write(o,fmt="('plane',i5,' has only',i3,' vertices and is rejected')") iplane,nvert(iplane)
       endif
 
     enddo ! iplane
@@ -544,9 +546,9 @@ module Voronoi_mod
         v4(1:3) = vert(1,ivert,iface) - vert(1:3,1,iface) ! yesss, the left argument is a scalar here
         det = v2(1)*(v3(2)*v4(3) - v4(2)*v3(3)) + v2(2)*(v3(3)*v4(1) - v4(3)*v3(1)) + v2(3)*(v3(1)*v4(2) - v4(1)*v3(2))
         detsum = detsum + abs(det)
-        if (abs(det) > 1.d-16 .and. output) write(*, fmt="('error from analyzevert3d: vertices not on single plane. iface=',i5,' ivert=',i5,' determinant=',e12.4)") iface,ivert,det
+        if (abs(det) > 1.d-16 .and. o>0) write(o, fmt="('error from analyzevert3d: vertices not on single plane. iface=',i5,' ivert=',i5,' determinant=',e12.4)") iface,ivert,det
       enddo ! ivert
-      if (output) write(*,fmt="('analyzevert3d: checking that vertices lie on plane. iface=',i5,' ; determinants sum to be zero=',e12.4)") iface,detsum
+      if (o>0) write(o,fmt="('analyzevert3d: checking that vertices lie on plane. iface=',i5,' ; determinants sum to be zero=',e12.4)") iface,detsum
     enddo ! iface
 
   endsubroutine ! analyzevert3d
