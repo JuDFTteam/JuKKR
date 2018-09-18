@@ -187,7 +187,7 @@ contains
         ! brute force look for optimal division of rest ranks after N_E*N_at are already
         ! assigned to rectangular part of processor matrix:
         ! N_E=8
-        !!--------------->
+        ! --------------->
         ! ^ ( | | | | | | | )    example for 49 processors,
         ! | ( | | | | | | | )    devided according to:
         ! N_at=5  | ( | | | | | | | )         N_E = 8, N_at = 5

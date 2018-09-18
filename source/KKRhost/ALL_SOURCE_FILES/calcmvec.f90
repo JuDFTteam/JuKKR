@@ -327,8 +327,7 @@ contains
     if ((igrid>=6) .or. (iecurr/=netab) .or. (iepath/=nepath)) return
 
     ! this part of the original Munich subroutine has been moved to
-    !! mvecglobal >
-    ! main2 --> tbkkr2 --> mvecglobal -- see makefile2
+    ! mvecglobal > main2 --> tbkkr2 --> mvecglobal -- see makefile2
 
   end subroutine calcmvec
 

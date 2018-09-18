@@ -932,7 +932,7 @@ contains
     ! to indicate a non- or spin-polarised potential
     ! that has to be read in. NSPIN is set to 1 before
     ! being passed to the subsequent programs.
-    !! TESTDIM > has been accordingly modified
+    ! TESTDIM > has been accordingly modified
     call ioinput('NSPIN           ', uio, 1, 7, ier)
     if (ier/=0) then
       write (111, *) 'NSPIN not found'
