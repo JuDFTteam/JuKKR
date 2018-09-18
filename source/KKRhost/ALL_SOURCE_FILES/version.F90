@@ -7,7 +7,7 @@ public version1, version2, version3, version4
 #if defined(compver1)
 character(len=*), parameter :: version1=compver1
 #else
-character(len=*), parameter :: version1='xxx-version-unknown-xxxv2.3-168-g168b19b '
+character(len=*), parameter :: version1='xxx-version-unknown-xxx'
 #endif
 #if defined(compver2)
 character(len=*), parameter :: version2=compver2

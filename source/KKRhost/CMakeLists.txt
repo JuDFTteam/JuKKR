@@ -58,6 +58,13 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
         set(CMAKE_Fortran_FLAGS     "${CMAKE_Fortran_FLAGS} -prof-gen:srcpos")
     endif()
 
+    # the old compiler (e.g. v12.1.3 on iff003) does not recognize
+    # the 'execute_command_line' call, here we have to use the 'system' call
+    # instead which is triggered with the preprocessor flag below
+    if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS "15.0.1")
+        add_definitions(-DCPP_OLDCOMP)
+    endif()
+
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
     message("GNU compiler found")
