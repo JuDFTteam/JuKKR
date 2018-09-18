@@ -150,32 +150,33 @@ module ShapeFunctions_mod
     use ShapeStandardMesh_mod, only: mesh
     use ShapeIntegration_mod, only: shapeintegration
     use PolygonFaces_mod, only: PolygonFace, destroy
-    integer :: ist
-
-    integer, intent(in) :: npoi
-    double precision, intent(in) :: tolvdist, toleuler
-    integer, intent(in) :: nmin, nface, lmax
-    double precision, intent(in) :: dlt
-
-    integer, intent(in) :: ibmaxd
-    integer, intent(in) :: meshnd
-    integer, intent(in) :: npand
-
-    integer, intent(in) :: nvertices(:) ! (nfaced)
+    integer, intent(in) :: npoi !!
     double precision, intent(in) :: planes(0:,:) ! (0:3,nfaced)
+    double precision, intent(in) :: tolvdist !!
+    double precision, intent(in) :: toleuler !!
+    integer, intent(in) :: nmin !!
+    integer, intent(in) :: nvertices(:) ! (nfaced)
     double precision, intent(in) :: vert(:,:,:) ! (3,nvertd,nfaced)
-    ! output radial grid
-    double precision, intent(out) :: xrn(meshnd), drn(meshnd)
-    integer, intent(out) :: npan, meshn, nm(npand)
-    ! output shape functions
-    double precision, intent(out) :: thetas_s(meshnd,ibmaxd)
-    integer, intent(out) :: lmifun_s(ibmaxd)
-    integer, intent(out) :: nfun
-    integer, intent(in) :: atom_id
+    integer, intent(in) :: nface !!
+    integer, intent(in) :: lmax !!
+    double precision, intent(in) :: dlt
+    integer, intent(out) :: npan !!
+    integer, intent(out) :: nm(npand) !!
+    double precision, intent(out) :: xrn(meshnd) !!
+    double precision, intent(out) :: drn(meshnd) !!
+    integer, intent(out) :: meshn !!
+    double precision, intent(out) :: thetas_s(meshnd,ibmaxd) !!
+    integer, intent(out) :: lmifun_s(ibmaxd) !!
+    integer, intent(out) :: nfun !!
+    integer, intent(in) :: ibmaxd !!
+    integer, intent(in) :: meshnd !!
+    integer, intent(in) :: npand !!
+    integer, intent(in) :: atom_id !! global atom identifier
 
-    double precision :: crt(npand) ! critical points
+    integer :: ist
+    double precision :: crt(npand) !! critical points
     type(PolygonFace), allocatable :: faces(:)
-    
+
     nm = 0
     xrn = 0.d0
     drn = 0.d0
@@ -199,7 +200,7 @@ module ShapeFunctions_mod
     npan = npan - 1 ! in old code 1 is substracted from npan - why?
 
     call destroy(faces)
-    
+
   endsubroutine ! shapef
 
 endmodule ! ShapeFunctions_mod

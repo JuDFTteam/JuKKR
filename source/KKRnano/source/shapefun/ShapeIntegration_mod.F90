@@ -26,46 +26,40 @@ module ShapeIntegration_mod
 !> @param[in]  ibmaxd
 
   subroutine shapeIntegration(lmax, face, meshn, xrn, dlt, thetas_s, lmifun_s, nfun, meshnd, ibmaxd)
-
     use Constants_mod, only: pi
     use PolygonFaces_mod, only: PolygonFace, TetrahedronAngles
     use ShapeIntegrationHelpers_mod, only: pintg, ccoef, d_real
 
-    integer, intent(in) :: lmax, meshn
+    integer, intent(in) :: lmax
+    type(PolygonFace), intent(in) :: face(:)
+    integer, intent(in) :: meshn
     double precision, intent(in) :: xrn(meshnd)
     double precision, intent(in) :: dlt
+    double precision, intent(out) :: thetas_s(meshnd,ibmaxd)
+    integer, intent(out) :: lmifun_s(ibmaxd)
+    integer, intent(out) :: nfun
     integer, intent(in) :: meshnd
     integer, intent(in) :: ibmaxd
-    type(PolygonFace), intent(in) :: face(:)
-    integer, intent(out) :: lmifun_s(ibmaxd)
-    double precision, intent(out) :: thetas_s(meshnd,ibmaxd)
-    integer, intent(out) :: nfun
-    
 
-    double precision :: cl_table(0:lmax,0:lmax,0:lmax) !, cl(icd) 
-    double precision :: c_table(0:lmax,0:lmax) !, c(iced) 
-
+    double precision :: cl_table(0:lmax,0:lmax,0:lmax)
+    double precision :: c_table(0:lmax,0:lmax)
     double precision :: rap, rdown, arg1, arg2, fk, fl, fpisq, rupsq
-
     integer :: iface, itet, m, isu, isu0, l, mp, k, lp, ilm, mlm, ir, ist, isumd, nface 
-  !   integer :: ib, ic0, ice0, i, ic, ice, imax, mo, ip, ipmax
-    
     double precision, allocatable :: dmatl(:,:) ! (isumd,nface)
     type(TetrahedronAngles) :: t1
-    
     double precision :: s(-lmax:lmax,0:lmax), s1(-lmax:lmax,0:lmax) ! this storage format uses only (lmax+1)**2 of (lmax+1)*(2*lmax+1) elements so roughly 55%
     double precision :: smm(-lmax:lmax)
-
     integer :: imo(-lmax:lmax) ! index translation from m=-l,-l+1,...,l-1,l to 0,1,-1,...,l,-l since the dmatl make use of this ordering
     
     ! local automatic arrays
     logical(kind=1) :: nontrivial(ibmaxd) ! the trivial shape function is zero from ilm>1 and sqrt(4*pi) for ilm==1
     double precision :: b(ibmaxd)
-    integer, parameter :: idmatl_RECOMPUTE = 0 ! recompute every time, calls d_real meshn*nface times
-    integer, parameter :: idmatl_MEMORIZE  = 1 ! needs some memory but calls d_real only nface times
+    integer, parameter :: idmatl_RECOMPUTE = 0, idmatl_MEMORIZE  = 1 
+                       !! recompute every time, calls d_real meshn*nface times 
+                       !! or memorize them, needs some memory but calls d_real only nface times
     integer, parameter :: idmatl = idmatl_MEMORIZE ! must be in {0, 1}
     
-    CHECKASSERT(idmatl == idmatl**2) ! check that idmatl is in {0, 1}
+    CHECKASSERT(idmatl**2 == idmatl) ! check that idmatl is in {0, 1}
     
     fpisq = sqrt(4.d0*pi)
 
@@ -126,7 +120,7 @@ module ShapeIntegration_mod
 
           if (xrn(ir) <= t1%rd) then
           
-            call pintg(t1%fa, t1%fb, dlt, s1, lmax, t1%isignu, arg1, t1%fd, 0)
+            call pintg(s1, t1%fa, t1%fb, dlt, lmax, t1%isignu, arg1, t1%fd, 0)
             s = s + s1
             
           else  ! xrn(ir) <= t1%rd
@@ -140,11 +134,11 @@ module ShapeIntegration_mod
             fk = min(max(t1%fa, t1%fd - acos(rap)), t1%fb)
             fl = min(max(t1%fa, t1%fd + acos(rap)), t1%fb)
 
-            call pintg(t1%fa, fk, dlt, s1, lmax, t1%isignu, arg1, t1%fd, 0)
+            call pintg(s1, t1%fa, fk, dlt, lmax, t1%isignu, arg1, t1%fd, 0)
             s = s + s1
-            call pintg(fk,    fl, dlt, s1, lmax, t1%isignu, arg2, t1%fd, 1)
+            call pintg(s1, fk,    fl, dlt, lmax, t1%isignu, arg2, t1%fd, 1)
             s = s + s1
-            call pintg(fl, t1%fb, dlt, s1, lmax, t1%isignu, arg1, t1%fd, 0)
+            call pintg(s1, fl, t1%fb, dlt, lmax, t1%isignu, arg1, t1%fd, 0)
             s = s + s1
             
           endif ! xrn(ir) <= t1%rd

@@ -19,24 +19,19 @@ module ShapeStandardMesh_mod
   !>     'meshn' points,distributed into 'npan' pannels  defined  by the
   !>     critical points 'crt'
   !-----------------------------------------------------------------------
-  !> @param[in,out] crt    array of critical points, dimension npand, unsorted on input, sorted on output
-  !> @param         npan   number of critical points
-  !> @param[in,out] nm     number of points in panels/critical intervals
-  !> @param         xrn    radial mesh points
-  !> @param         drn    weights for radial mesh
-  !> @param[out]    meshn  number of mesh points generated
-  !> @param         npoi   [in]? number of mesh points requested ???
-  !> @param[in]     keypan set to 0 to generate mesh
-  !> @param[in]     nmin   minimal number of points for panels/critical intervals
-  !> @param[in]     meshnd dimension of crt, xrn and drn arrays
-  !> @param[in]     npand  dimension of nm array
-  !> @param[in]     verbosity  0=no screen output, 1=output info about radial mesh
-  subroutine mesh(crt, npan, nm, xrn, drn, meshn, npoi, keypan, nmin, meshnd, npand, verbosity)
-    integer, intent(in) :: meshnd, npand, npan, npoi, keypan, nmin, verbosity
-    integer, intent(out) :: meshn
-    integer, intent(inout) :: nm(npand) ! if keypan /= 0, there could be an intent(in) here
+  subroutine mesh(crt, npan, nm, xrn, drn, meshn, npoi, keypan, nmin, meshnd, npand, o)
     double precision, intent(inout) :: crt(npand) ! reordered on exit
-    double precision, intent(out) :: xrn(meshnd), drn(meshnd)
+    integer, intent(in) :: npan !! number of critical points
+    integer, intent(inout) :: nm(npand) ! number of points in panels/critical intervals, if keypan /= 0, there could be an intent(in) here
+    double precision, intent(out) :: xrn(meshnd) !! radial mesh points
+    double precision, intent(out) :: drn(meshnd) !! weights for the radial mesh points
+    integer, intent(out) :: meshn !! number of mesh points generated
+    integer, intent(in) :: npoi !! number of mesh points requested
+    integer, intent(in) :: keypan !! set to 0 to generate mesh
+    integer, intent(in) :: nmin !! minimal number of points for panels/critical intervals
+    integer, intent(in) :: meshnd !! dimension of crt, xrn and drn arrays
+    integer, intent(in) :: npand !! dimension of nm array
+    integer, intent(in) :: o !! output unit
 
     integer :: iord, ipan, ir_start, ir, ir_end, ir_off
     double precision :: crt_temp, off, step
@@ -57,12 +52,12 @@ module ShapeStandardMesh_mod
 
     if (keypan == 0) call mesh0(crt, npan, npoi, nmin, nm)
 
-    if (verbosity > 0) write(6, fmt="(/50('-')/'i',13x,'suitable radial mesh',15x,'i'/'i',13x,20('*'),15x,'i'/'i',3x,'ipan',7x,'from',7x,'to',13x,'points  i'/'i',48x,'i')")
+    if (o>0) write(o, fmt="(/50('-')/'i',13x,'suitable radial mesh',15x,'i'/'i',13x,20('*'),15x,'i'/'i',3x,'ipan',7x,'from',7x,'to',13x,'points  i'/'i',48x,'i')")
 
     ir_off = 0
     do ipan = 1, npan-1
 
-      if (verbosity > 0) write(6, fmt="('i',2x,i5,2e14.7,i10,'   i')") ipan, crt(ipan:ipan+1), nm(ipan)
+      if (o>0) write(o, fmt="('i',2x,i5,2e14.7,i10,'   i')") ipan, crt(ipan:ipan+1), nm(ipan)
 
       ir_start = ir_off + 1 ! ir start index
       ir_end   = ir_off + nm(ipan) ! prelim. end index
@@ -78,7 +73,7 @@ module ShapeStandardMesh_mod
     enddo ! ipan
     meshn = ir_off
 
-    if (verbosity > 0) write(6,fmt="(50('-'))")
+    if (o>0) write(o,fmt="(50('-'))")
 
   endsubroutine ! mesh
 
@@ -90,7 +85,9 @@ module ShapeStandardMesh_mod
     ! *  in case of more dense mesh increase nmin
     ! ***********************************************************
     double precision, intent(in) :: crt(:)
-    integer, intent(in) :: naprox, npan, nmin
+    integer, intent(in) :: npan
+    integer, intent(in) :: naprox
+    integer, intent(in) :: nmin
     integer, intent(out) :: nm(:)
     
     double precision :: dist, d1

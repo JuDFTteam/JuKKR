@@ -1,23 +1,23 @@
 !------------------------------------------------------------------------------
-!> Module that provides a simple interface for doing shape-function construction
-!> from positions only.
-!>
-!> This effectively hides the Voronoi construction.
-!> Reuses code from RefCluster_mod.f90
-!>
-!> @author Elias Rabel
-!>
+!! Module that provides a simple interface for doing shape-function construction
+!! from positions only.
+!!
+!! This effectively hides the Voronoi construction.
+!! Reuses code from RefCluster_mod.f90
+!!
+!! @author Elias Rabel
+!!
 module ConstructShapes_mod
   implicit none
   private
   public :: InterstitialMesh, destroy, create, store
   
-  !> A datastructure containing the corresponding interstitial mesh.
+  !! A datastructure containing the corresponding interstitial mesh.
   type InterstitialMesh
-    integer :: npan !< number of panels
-    integer, allocatable :: nm(:) !< positions of panels
-    double precision, allocatable :: xrn(:) !< radial mesh points r(i)
-    double precision, allocatable :: drn(:) !< integration weights dr/di (i)
+    integer :: npan !! number of panels
+    integer, allocatable :: nm(:) !! positions of panels
+    double precision, allocatable :: xrn(:) !! radial mesh points r(i)
+    double precision, allocatable :: drn(:) !! integration weights dr/di (i)
   endtype
   
   interface destroy
@@ -35,12 +35,12 @@ module ConstructShapes_mod
   contains
 
   !------------------------------------------------------------------------------
-  !> Reads Voronoi weights from file 'voro_weights'
-  !> this is kind of a hack and does not scale well.
+  !! Reads Voronoi weights from file 'voro_weights'
+  !! this is kind of a hack and does not scale well.
   integer function read_voro_weights(weights, atom_indicies, num_atoms) result(warning)
-    double precision, intent(inout) :: weights(:)
-    integer, intent(in) :: atom_indicies(:) ! index table
-    integer, intent(in) :: num_atoms
+    double precision, intent(inout) :: weights(:) !!
+    integer, intent(in) :: atom_indicies(:) !! index table
+    integer, intent(in) :: num_atoms !!
 
     integer :: ii, ios
     double precision, allocatable, save :: weight_table(:) ! dim(num_atoms) ! will be created from file 'voro_weights' at first invocation
@@ -71,29 +71,25 @@ module ConstructShapes_mod
   endfunction ! read_voro_weights
 
   !------------------------------------------------------------------------------
-  !> Construct shape functions and interstitial mesh.
-  !>
-  !> Creates ShapefunData datastructure -> user has to deal with deallocation!
-  !> Creates InterstitialMesh datastructure -> user has to deal with deallocation!
-  !> (use destroyInterstitialMesh)
-  !>
-  !> MT_scale > 0.0 overrides new_MT_radius!!!
+  !! Construct shape functions and interstitial mesh.
+  !!
+  !! Creates ShapefunData datastructure -> user has to deal with deallocation!
+  !! Creates InterstitialMesh datastructure -> user has to deal with deallocation!
+  !! (use destroyInterstitialMesh)
+  !!
+  !! MT_scale > 0.0 overrides new_MT_radius!!!
   subroutine createShape(self, inter_mesh, rbasis, bravais, center_ind, &
                       rcluster, lmax_shape, npoints_min, nmin_panel, &
                       num_MT_points, new_MT_radius, MT_scale, atom_id, nwarnings)
     use LatticeVectors_mod, only: LatticeVectors, create, destroy
     use RefCluster_mod, only: RefCluster, create, destroy
     use ShapefunData_mod, only: ShapefunData
-
-    ! Output (shape-functions and interstitial mesh):
     type(ShapefunData), intent(inout) :: self
     type(InterstitialMesh), intent(inout) :: inter_mesh
-
-    ! Input:
-    double precision, intent(in) :: rbasis(:,:) ! dim(3,naez_all)
+    double precision, intent(in) :: rbasis(:,:) !! dim(3,naez_all)
     double precision, intent(in) :: bravais(3,3)
     integer, intent(in)          :: center_ind
-    double precision, intent(in) :: rcluster !> radius to create the cluster
+    double precision, intent(in) :: rcluster !! radius to create the cluster
     integer, intent(in) :: lmax_shape
     integer, intent(in) :: npoints_min
     integer, intent(in) :: nmin_panel
@@ -103,6 +99,7 @@ module ConstructShapes_mod
     integer, intent(in) :: atom_id
     integer, intent(inout) :: nwarnings
 
+    ! local vars
     type(LatticeVectors) :: lattice_vectors
     type(RefCluster) :: cluster
     double precision, allocatable :: weights(:)
@@ -141,12 +138,12 @@ module ConstructShapes_mod
 
 
   !------------------------------------------------------------------------------
-  !> @param num_MT_mesh add 'num_MT_mesh' radial points of MT-region to
-  !>        shape-function mesh -> non-touching MT-spheres
-  !>        = 0 to not use this feature
+  !! @param num_MT_mesh add 'num_MT_mesh' radial points of MT-region to
+  !!        shape-function mesh -> non-touching MT-spheres
+  !!        = 0 to not use this feature
   ! TODO: return 'NM' -> panel info!!!
   !
-  !> @param weights weights for weighted Voronoi diagram (power diagram)
+  !! @param weights weights for weighted Voronoi diagram (power diagram)
   subroutine constructFromCluster(self, inter_mesh, rvec, weights, &
                                   lmax_shape, npoints_min, nmin, &
                                   num_MT_points, new_MT_radius, MT_scale, atom_id)
@@ -156,12 +153,11 @@ module ConstructShapes_mod
 
     type(ShapefunData), intent(out) :: self
     type(InterstitialMesh), intent(out) :: inter_mesh
-
     double precision, intent(in) :: rvec(:,:)
     double precision, intent(in) :: weights(:)
     integer, intent(in) :: lmax_shape
     integer, intent(in) :: npoints_min
-    integer, intent(in) :: nmin !< minimum number of points in panel
+    integer, intent(in) :: nmin !! minimum number of points in panel
     integer, intent(in) :: num_MT_points
     double precision, intent(in) :: new_MT_radius
     double precision, intent(in) :: MT_scale
@@ -217,7 +213,7 @@ module ConstructShapes_mod
     ! muffin-tinization
     radius = new_MT_radius; if (MT_scale > tolvdist) radius = min(rmt*MT_scale, rmt) ! MT_scale > 0.0 overrides new_MT_radius
 
-    if (num_MT_points > 0) call mtmesh(num_MT_points, npan, meshn, nm, xrn, drn, nfun, thetas_s, radius, atom_id)
+    if (num_MT_points > 0) call mtmesh(num_MT_points, npan, meshn, nm, xrn, drn, nfun, thetas_s, radius, atom_id, 6)
 
     ! Construct shape-fun datastructure
     call create(self, meshn, ibmaxd, nfun)
@@ -254,24 +250,27 @@ module ConstructShapes_mod
   elemental subroutine destroyInterstitialMesh(inter_mesh)
     type(InterstitialMesh), intent(inout) :: inter_mesh
     integer :: ist
-    
     deallocate(inter_mesh%xrn, inter_mesh%drn, inter_mesh%nm, stat=ist)
     inter_mesh%npan = 0
   endsubroutine ! destroy
 
   !------------------------------------------------------------------------------
-  subroutine mtmesh(nrad, npan, meshn, nm, xrn, drn, nfu, thetas, mtradius, atom_id)
+  subroutine mtmesh(nrad, npan, meshn, nm, xrn, drn, nfu, thetas, mtradius, atom_id, o)
     use Constants_mod, only: pi
     ! program  mtmesh.f adds one extra pannel inside the muffin-tin sphere to allow lattice relaxations.
     ! stores the mt-nized shapes in unit 15 as shapefun
     !     nrad : number of points added inside the mt radius
-    integer, intent(in) :: nrad, nfu
-    integer, intent(inout) :: npan, meshn
+    integer, intent(in) :: nrad
+    integer, intent(inout) :: npan
+    integer, intent(inout) :: meshn
     integer, intent(inout) :: nm(:)
-    double precision, intent(inout) :: xrn(:), drn(:)
+    double precision, intent(inout) :: xrn(:)
+    double precision, intent(inout) :: drn(:)
+    integer, intent(in) :: nfu
     double precision, intent(inout) :: thetas(:,:)
     double precision, intent(in) :: mtradius
     integer, intent(in) :: atom_id
+    integer, intent(in) :: o !! output unit
 
     double precision :: drn1(meshn+nrad), thetas1(meshn+nrad,size(thetas,2)), xrn1(meshn+nrad)
     integer :: ibmaxd, irid, npand, meshn1, npan1, nm1(npan+1), ir
@@ -288,24 +287,23 @@ module ConstructShapes_mod
     nm1(2:npan1) = nm(1:npan1-1)
 
     if (npan1 > npand) then
-      write (6,fmt=*) ' npan , npand ',npan1,npand
+      write(o, fmt=*) ' npan , npand ',npan1,npand
       stop
     endif
 
     if (meshn1 > irid) then
-      write (6,fmt=*) ' meshn , irid ',meshn1,irid
+      write(o ,fmt=*) ' meshn , irid ',meshn1,irid
       stop
     endif
 
     dist = xrn(1) - mtradius
 
     if (dist < 1.d-5) then
-      write(6,*) 'error from mtmesh for atom #',atom_id
-      write(6,*) 'your mt-radius is bigger than the minimum shape radius ' 
-      write(6,*) 'your mt-radius .....',mtradius
-      write(6,*) 'shape radius .......',xrn(1)    
-!       stop
-      write(6,*) 'WARNING! stop statement deactivated:',__FILE__,":",__LINE__
+      write(o,*) 'error from mtmesh for atom #',atom_id
+      write(o,*) 'your mt-radius is bigger than the minimum shape radius ' 
+      write(o,*) 'your mt-radius .....',mtradius
+      write(o,*) 'shape radius .......',xrn(1)    
+      write(o,*) 'WARNING! stop statement deactivated:',__FILE__,":",__LINE__
     endif
 
     dn1 = dist/(nrad-1)
@@ -339,10 +337,10 @@ module ConstructShapes_mod
   endsubroutine ! mtmesh
 
   !------------------------------------------------------------------------------
-  !> Write shape function, interstitial mesh + panels in a format compatible
-  !> to what the Juelich KKR programs expect.
-  !>
-  !> The name of the file written is shape.<shape_index>
+  !! Write shape function, interstitial mesh + panels in a format compatible
+  !! to what the Juelich KKR programs expect.
+  !!
+  !! The name of the file written is shape.<shape_index>
   subroutine write_shapefun_file(self, inter_mesh, shape_index)
     use ShapefunData_mod, only: ShapefunData
 
@@ -373,10 +371,10 @@ module ConstructShapes_mod
   endsubroutine ! write_shapefun_file
 
   !------------------------------------------------------------------------------
-  !> Replace actual shape function with shape function of the atom sphere.
-  !>
-  !> Only the LM=1 component is nonzero
-  !> Atomic sphere has same volume as Voronoi cell
+  !! Replace actual shape function with shape function of the atom sphere.
+  !!
+  !! Only the LM=1 component is nonzero
+  !! Atomic sphere has same volume as Voronoi cell
   subroutine replace_with_PseudoASA(self, inter_mesh, volume)
     use ShapefunData_mod, only: ShapefunData
     use Constants_mod, only: pi
