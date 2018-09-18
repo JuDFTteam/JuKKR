@@ -1,29 +1,32 @@
 module mod_calcgf
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: calcgf
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: G and F coefficients of kappa-mue representation
+  !> Author: 
+  !> Category: KKRhost, dirac
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> G- AND F-COEFFICIENTS                                    
+  !>                                                          
+  !> G(K,K',MUE) = CGC(K,MUE,2)*CGC(K',MUE,2) - CGC(K,MUE,1)*CGC(K',MUE,1)
+  !>                                                          
+  !> GM = G(-K,-K',MUE)                                       
+  !>                                                          
+  !> F(K,K',MUE) = (MUE-1/2) * CGC(K,MUE,2)*CGC(K',MUE,2) + (MUE+1/2) * CGC(K,MUE,1)*CGC(K',MUE,1)  
+  !>                                                          
+  !> FM = F(-K,-K',MUE)                                       
+  !>                                                          
+  !> ..DIA/..OFF ARE THE ELEMENTS FOR  K=K'/K=-K'-1           
+  !> IG NUMBERS THE G'S   COLUMN-WISE STARTING WITH COLUMN  1
+  !-------------------------------------------------------------------------------
   subroutine calcgf(nk, cgc, gdia, gmdia, goff, gmoff, fdia, fmdia, foff, fmoff, ltab, lbtab, kaptab, nmuetab, nmuemax, nkmmax, nkmpmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   G- AND F-COEFFICIENTS                                          *
-    ! *                                                                  *
-    ! *   G(K,K',MUE) =                                                  *
-    ! *     CGC(K,MUE,2)*CGC(K',MUE,2) - CGC(K,MUE,1)*CGC(K',MUE,1)      *
-    ! *                                                                  *
-    ! *   GM = G(-K,-K',MUE)                                             *
-    ! *                                                                  *
-    ! *   F(K,K',MUE) =    (MUE-1/2) * CGC(K,MUE,2)*CGC(K',MUE,2)        *
-    ! *                  + (MUE+1/2) * CGC(K,MUE,1)*CGC(K',MUE,1)        *
-    ! *                                                                  *
-    ! *   FM = F(-K,-K',MUE)                                             *
-    ! *                                                                  *
-    ! *   ..DIA/..OFF ARE THE ELEMENTS FOR  K=K'/K=-K'-1                 *
-    ! *   IG NUMBERS THE G'S   COLUMN-WISE STARTING WITH COLUMN  1       *
-    ! *                                                                  *
-    ! ********************************************************************
-
+  
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! Dummy arguments
@@ -89,14 +92,19 @@ contains
                   gmoff(ig) = cgc(imkm1, 2)*cgc(imkm2, 2) - cgc(imkm1, 1)*cgc(imkm2, 1)
                   foff(ig) = mlup*cgc(ikm1, 2)*cgc(ikm2, 2) + mldn*cgc(ikm1, 1)*cgc(ikm2, 1)
                   fmoff(ig) = mlup*cgc(imkm1, 2)*cgc(imkm2, 2) + mldn*cgc(imkm1, 1)*cgc(imkm2, 1)
+
                 end if
+
               end if
             end if
-          end do
-        end do
-      end do
-    end do
 
+          end do ! m1
+
+        end do ! k1
+
+      end do ! m2
+
+    end do ! k2
 
   end subroutine calcgf
 

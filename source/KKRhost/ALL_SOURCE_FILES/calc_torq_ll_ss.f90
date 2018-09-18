@@ -2,12 +2,20 @@ module mod_calc_torq_ll_ss
 
 contains
 
-  ! This subroutine computes a matrix that is the basis for constructing
-  ! the KKR representation of the torque operator. It is adapted from the
-  ! CALC_RHO_LL_SS subroutine, but the spin dependent part, i.e., the exhange
-  ! field, replaces the shape function in the integration.
-
-  ! Guillaume Geranton, September 2014
+  !-------------------------------------------------------------------------------
+  !> Summary: Torque matrix for PKKprime code
+  !> Author: G. Geranton
+  !> Date: September 2014
+  !> Category: KKRhost, physical-observables
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> 
+  !> This subroutine computes a matrix that is the basis for constructing
+  !> the KKR representation of the torque operator. It is adapted from the
+  !> CALC_RHO_LL_SS subroutine, but the spin dependent part, i.e., the exhange
+  !> field, replaces the shape function in the integration.
+  !>
+  !> Guillaume Geranton, September 2014
+  !-------------------------------------------------------------------------------
   subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens, visp, nspin, iatom, vins, irmin)
 
     use :: global_variables

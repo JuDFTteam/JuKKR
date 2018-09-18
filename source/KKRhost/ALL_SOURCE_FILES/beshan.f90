@@ -1,18 +1,24 @@
 module mod_beshan
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: beshan
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: spherical Bessel, Hanke and Neumann functions
+  !> Author: R. Zeller
+  !> date: 01/90
+  !> Category: KKRhost, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates spherical Bessel, Hankel and Neumann functions
+  !> for the orders l <= lmax.
+  !> For |z| < 1 the Taylor expansions of jl and nl are used.
+  !> For |z| >= 1 the explicit expressions for hl(+), hl(-) are used.
+  !-------------------------------------------------------------------------------
   subroutine beshan(hl, jl, nl, z, lmax)
-    ! -----------------------------------------------------------------------
-    ! calculates spherical bessel, hankel and neumann functions
-    ! for the orders l .le. lmax.
-    ! For |z| .lt. 1 the taylor expansions of jl and nl are used.
-    ! For |z| .ge. 1 the explicit expressions for hl(+), hl(-) are used.
-
-    ! R. Zeller   Jan. 1990
-    ! -----------------------------------------------------------------------
+    use :: mod_datatypes, only: dp
     implicit none
     ! .. Parameters ..
     complex (kind=dp) :: ci

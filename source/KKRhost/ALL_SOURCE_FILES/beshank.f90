@@ -1,17 +1,30 @@
+!-------------------------------------------------------------------------------
+!> Summary: Spherical Bessel and Hanke functions for large and small components
+!>
+!> @note
+!> Can probably be merged with beshan module
+!> @endnote
+!-------------------------------------------------------------------------------
 module mod_beshank
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: beshank
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Spherical Bessel and Hanke functions
+  !> Author: 
+  !> Category: KKRhost, special-functions, single-site, solver
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates spherical Bessel, Hankel and Neumann (not returned) functions
+  !> for the orders lmin .le. l .le. lmax.
+  !> For |z| < l+1 the Taylor expansions of jl and nl are used.
+  !> For |z| >= l+1 the explicit expressions for hl(+), hl(-) are used.
+  !-------------------------------------------------------------------------------
   subroutine beshank(hl, jl, z, lmax)
-    ! -----------------------------------------------------------------------
-    ! calculates spherical bessel, hankel and neumann functions
-    ! for the orders lmin .le. l .le. lmax.
-    ! For |z| .lt. l+1 the taylor expansions of jl and nl are used.
-    ! For |z| .ge. l+1 the explicit expressions for hl(+), hl(-) are used.
-    ! -----------------------------------------------------------------------
-
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! inputs
@@ -78,14 +91,20 @@ contains
   end subroutine beshank
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Spherical Bessel and Hanke functions for small component
+  !> Author: 
+  !> Category: KKRhost, special-functions, single-site, solver
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Takes the spherical bessel etc functions stored in an array up to LMAX
+  !> array entries from LMAX+1 to 2*LMAX are assumed to be empty
+  !> these values are filled with the potential-free solution of the
+  !> SRA-equations
+  !-------------------------------------------------------------------------------
   subroutine beshank_smallcomp(hl, jl, zval, tau, eryd, lmax)
+    use :: mod_datatypes, only: dp
     implicit none
-    ! -----------------------------------------------------------------------
-    ! takes the spherical bessel etc functions stored in an array up to LMAX
-    ! array entries from LMAX+1 to 2*LMAX are assumed to be empty
-    ! these values are filled with the potential-free solution of the
-    ! SRA-equations
-    ! -----------------------------------------------------------------------
     integer, intent (in) :: lmax
     complex (kind=dp), intent (in) :: zval
     complex (kind=dp), intent (in) :: eryd

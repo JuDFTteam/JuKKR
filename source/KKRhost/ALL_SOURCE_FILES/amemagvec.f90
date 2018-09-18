@@ -1,24 +1,31 @@
 module mod_amemagvec
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: amemagvec
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates the angular matrix elements
+  !> Author: 
+  !> Category: KKRhost, dirac, physical-observable
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>                                                    
+  !> Calculate the angular matrix elements connected with       
+  !>                                                            
+  !> 1:       < LAM | sigma(ipol) | LAM' >    spin moment       
+  !> 2:       < LAM |     l(ipol) | LAM' >    orbital moment    
+  !> 3:       < LAM |     T(ipol) | LAM' >    spin dipole moment
+  !> 4:       < LAM |  B_hf(ipol) | LAM' >    hyperfine field   
+  !>                                                            
+  !> ipol= 1,2,3  ==  (+),(-),(z)                          
+  !-------------------------------------------------------------------------------
   subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, cgc, nlmax, nkmmax, nkmpmax, nmvecmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   calculate the angular matrix elements connected with           *
-    ! *                                                                  *
-    ! *   1:       < LAM | sigma(ipol) | LAM' >    spin moment           *
-    ! *   2:       < LAM |     l(ipol) | LAM' >    orbital moment        *
-    ! *   3:       < LAM |     T(ipol) | LAM' >    spin dipole moment    *
-    ! *   4:       < LAM |  B_hf(ipol) | LAM' >    hyperfine field       *
-    ! *                                                                  *
-    ! *   ipol= 1,2,3  ==  (+),(-),(z):                                  *
-    ! *                                                                  *
-    ! ********************************************************************
+
     use :: mod_rmatstr
     use :: mod_rinit
+    use :: mod_datatypes, only: dp
+
     implicit none
 
     ! Dummy arguments

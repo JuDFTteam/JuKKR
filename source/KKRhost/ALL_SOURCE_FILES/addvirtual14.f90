@@ -1,22 +1,38 @@
+!------------------------------------------------------------------------------------
+!> Summary: Provides functionality to add virtual sites to the lattice
+!> Author: 
+!------------------------------------------------------------------------------------
 module mod_addvirtual14
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  ! by default everything is private
+  private
+
+  public :: addviratoms14
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Adds virtual atom sites to basis
+  !> Author: 
+  !> Category: KKRhost, geometry, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> 
+  !> Reads position of virtual atoms (used by impurity code to place atoms there) from scoef file 
+  !> and adds virtual positions to basis. Automatically sets corresponding refpot etc. values
+  !-------------------------------------------------------------------------------
   subroutine addviratoms14(linterface, nvirt, naez, naezd, natypd, nemb, nembd, rbasis, lcartesian, bravais, ncls, nineq, refpot, kaoez, noq, nref, rmtrefat, i25)
 
-    use :: mod_datatypes
-    use :: mod_getclusnxyz
+    use :: mod_datatypes, only: dp
+    use :: mod_getclusnxyz, only: getclusnxyz
     implicit none
     ! interface variables
     logical :: linterface, lcartesian, labscord
     integer :: naez, ncls, nineq
     integer :: naezd, nembd
     integer :: natypd, nref, nvirt
-    integer :: nemb, naclsd
+    integer :: nemb
     integer :: ivir(1000)
-    parameter (naclsd=1000)
+    integer, parameter :: naclsd=1000
 
     integer :: i, i1, j
     real (kind=dp) :: rbasis(3, *), rbasisold(3, nemb+naezd), rbasissave(3, nemb+naezd)
@@ -60,12 +76,9 @@ contains
       rbasissave(:, ibasis) = rbasis(:, ibasis)
     end do
 
-
-
     ! -----------------------------------------------------------------
     ! read the scoef file
     ! -----------------------------------------------------------------
-
     open (unit=32452345, file=i25, iostat=ierr)
     write (1337, *) '*', i25, '*'
     write (1337, *) '*', ierr, '*'
@@ -89,9 +102,7 @@ contains
       ndim = 3
       write (1337, '(23X,A)') 'ADDVIRTUAL : bulk geometry mode'
     end if
-    ! -----------------------------------------------------------------
-    ! read bravais vectors
-    ! -----------------------------------------------------------------
+
 
     ! invert bravais vectors
     allocate (bravaisinv(ndim,ndim))
@@ -190,8 +201,7 @@ contains
     do i = 1, natomimp
       do i1 = 1, iq
         diff = sqrt((rclsnew(1,i)-vec2(1,i1))**2+(rclsnew(2,i)-vec2(2,i1))**2+(rclsnew(3,i)-vec2(3,i1))**2)
-        if (diff<=(tol)) go to 100 ! Position is on lattice, do not set as
-        ! virtual atom
+        if (diff<=(tol)) go to 100 ! Position is on lattice, do not set as virtual atom
       end do
       call rtobasis(bravais, rclsnew(:,i), rbasisnew, ndim)
       if (linterface) then
@@ -212,6 +222,7 @@ contains
       ibasis = ibasis + 1
       ivir(ibasis) = i
 100 end do
+
     ! IBASIS is the number of virtual atoms
     write (1337, *) 'ibasis', ibasis, (ivir(j), j=1, ibasis)
 
@@ -288,11 +299,15 @@ contains
     deallocate (rbasisnew1)
   end subroutine addviratoms14
 
+  !-------------------------------------------------------------------------------
+  !> Summary: check if vec is alreadu in veclist
+  !> Author: 
+  !> Category: KKRhost, geometry
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Checks if the vector vec is in the vector list veclist in the range of (1,bound)
+  !-------------------------------------------------------------------------------
   logical function vec_in_list(vec, veclist, bound)
-    ! --------------------------
-    ! checks if the vector vec is in the vector list veclist
-    ! in the range of (1,bound)
-    ! --------------------------
     use :: mod_datatypes
     integer :: bound
     real (kind=dp) :: vec(3)
@@ -309,12 +324,16 @@ contains
   end function vec_in_list
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Converts spacial vector to basis vector
+  !> Author: 
+  !> Category: KKRhost, geometry
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Converts a spacial vector rpos to a basis vector rbasis such that rbasis = bravais * n with n in [0,1]^ndim
+  !-------------------------------------------------------------------------------
   subroutine rtobasis(bravais, rpos, rbasis, ndim)
-    ! --------------------------
-    ! converts a spacial vector rpos to a basis vector rbasis
-    ! such that rbasis = bravais * n with n in [0,1]^ndim
-    ! --------------------------
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp), intent (in) :: bravais(3, 3)
     real (kind=dp), intent (in) :: rpos(3)
@@ -342,9 +361,9 @@ contains
     ! ------old method ---------
     ! take the smaller integer value of n => ncoeffint
     ! --------------------------
-    do idim = 1, ndim
-      ! ncoeffint(idim) = floor(ncoeffreal(idim))
-    end do
+    !do idim = 1, ndim
+    !   ncoeffint(idim) = floor(ncoeffreal(idim))
+    !end do
 
     ! ------new method---------
     ! take the smaller integer value of n + 0.5 => ncoeffint
@@ -362,8 +381,16 @@ contains
     rbasis = rpos - rbasis
   end subroutine rtobasis
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Invert matrix
+  !> Author: 
+  !> Category: KKRhost, undefined
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Computes inverse of a double precision matrix of size n x n using LAPACK calls dgetrf, dgetri 
+  !-------------------------------------------------------------------------------
   subroutine inverse_d1(mat, n)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: n
     real (kind=dp), dimension (n, n), intent (inout) :: mat

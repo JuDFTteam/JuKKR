@@ -2,15 +2,20 @@ module mod_brysh3
 
 contains
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Broyden mixing tool
+  !> Author: S. Bluegel
+  !> Date: 1987
+  !> Category: KKRhost, mixing
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Shifts the density or potential of all mt-cell into one single
+  !> vector and projects out the coulomb part only.
+  !>
+  !> S. Bluegel , KFA , 1987
+  !-------------------------------------------------------------------------------
   subroutine brysh3(y, x, z, xsme, ins, irmin, irc, natps, natyp, nspin, imap, lmpot, lsmear)
-    ! *********************************************************************
-    ! shifts the density or potential of all mt-cell into one single
-    ! vector and projects out the coulomb part only.
 
-    ! s. bluegel , kfa , 1987
-
-    ! ------------------------------------------------------------------------
     use :: mod_datatypes, only: dp
     use :: global_variables
     implicit none
@@ -21,13 +26,13 @@ contains
 
     real (kind=dp) :: x(irmd, *), y(*), z(irmind:irmd, lmpotd, *), xsme(irmd, *)
     integer :: irc(*), irmin(*)
-    ! SMEARed spherical potential
 
     integer :: ia, ip, ir, irc1, irmin1, is, lm
 
     imap = 0
     do is = 1, nspin
       do ia = natps, natyp
+
         ip = nspin*(ia-1) + is
         irc1 = irc(ia)
         do ir = 1, irc1
@@ -36,6 +41,7 @@ contains
         end do
 
         ! ************************************************************************
+        ! SMEARed spherical potential
         if (lsmear>0) then
           do ir = 1, irc1
             imap = imap + 1
@@ -43,6 +49,7 @@ contains
           end do
         end if
         ! *********************************************************************
+
         if (ins>0 .and. lmpot>1) then
           irmin1 = irmin(ia)
           do lm = 2, lmpot
@@ -52,10 +59,10 @@ contains
             end do
           end do
         end if
-        ! shifts the density or potential of all mt-cell into one single
+
       end do
     end do
-    ! vector and projects out the coulomb part only.
+
   end subroutine brysh3
 
 end module mod_brysh3

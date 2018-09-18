@@ -1,7 +1,17 @@
 module mod_bzkmesh
 
+  private
+  public :: bzkmesh
+
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Find different k-meshes
+  !> Author: 
+  !> Category: KKRhost, k-points
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, symunitary, ielast, ez, kmesh, iprint, krel, kpoibz, maxmshd)
     use :: mod_types, only: t_inc
     use :: mod_wunfiles, only: t_params
@@ -74,8 +84,6 @@ contains
     nbz = nbzin
 
     if (test('kptsfile')) open (52, file='kpoints', form='formatted')
-    ! OPEN (52,FILE='kpoints',FORM='formatted')
-
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, 110)
@@ -116,8 +124,7 @@ contains
       if (test('rhoqtest') .and. (l==1)) then
         call rhoq_write_kmesh(nofks, nxyz, volbz, bzkp, volcub, recbv, bravais)
       end if
-      ! WRITE(52,FMT='(I8,F15.10,/,(3F12.8,D20.10))')
-      ! +        NOFKS,VOLBZ,((BZKP(ID,I),ID=1,3),VOLCUB(I),I=1,NOFKS)
+
       t_params%nofks(l) = nofks
       t_params%volbz(l) = volbz
       do i = 1, nofks

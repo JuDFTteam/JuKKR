@@ -1,19 +1,27 @@
 module mod_bofm
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: bofm
 
 contains
 
-  ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Take block out of bigger matrix
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Assumes double complex matrices
+  !-------------------------------------------------------------------------------
   subroutine bofm(pl1, pl2, block, nsize, gin, almd)
-    ! **********************************************************************
-
+    use :: mod_datatypes, only: dp
     implicit none
     ! .. Scalar Arguments ..
-    integer :: almd, nsize, pl1, pl2
+    integer, intent(in) :: almd, nsize, pl1, pl2
     ! ..
     ! .. Array Arguments ..
-    complex (kind=dp) :: block(nsize, nsize), gin(almd, almd)
+    complex (kind=dp), intent(in) :: gin(almd, almd)
+    complex (kind=dp), intent(out) :: block(nsize, nsize)
     ! ..
     ! .. Local Scalars ..
     integer :: i1, i1s, i2, i2s

@@ -1,25 +1,31 @@
 module mod_calcrotmat
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: calcrotmat
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate rotation matrices for Euler angles
+  !> Author: Hubert Ebert
+  !> Category: KKRhost, dirac, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> SETS UP THE ROTATION-MATRICES FOR THE EULER ANGLES        
+  !>         ( ALFDEG, BETDEG, GAMDEG )                        
+  !>                                                           
+  !> SEE:     E.M. ROSE  ELEMENTARY THEORY OF ANGULAR MOMENTUM 
+  !>          EQS. (4.8), (4.12) AND (4.13)                    
+  !>                                                           
+  !> for IREL=0,1   NK == NL           non-relativistic (l,m_l)
+  !>     IREL=3     NK == odd          relativistic (kappa,mue)
+  !>                                                           
+  !> 12/11/96  HE  deal with beta = 0    
+  !-------------------------------------------------------------------------------
   subroutine calcrotmat(nk, irel, alfdeg, betdeg, gamdeg, rot, fact, nkmmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   SETS UP THE ROTATION-MATRICES FOR THE EULER ANGLES             *
-    ! *           ( ALFDEG, BETDEG, GAMDEG )                             *
-    ! *                                                                  *
-    ! *   SEE:     E.M. ROSE  ELEMENTARY THEORY OF ANGULAR MOMENTUM      *
-    ! *            EQS. (4.8), (4.12) AND (4.13)                         *
-    ! *                                                                  *
-    ! *   for IREL=0,1   NK == NL           non-relativistic (l,m_l)     *
-    ! *       IREL=3     NK == odd          relativistic (kappa,mue)     *
-    ! *                                                                  *
-    ! *   12/11/96  HE  deal with beta = 0                               *
-    ! ********************************************************************
 
     use :: mod_errortrap
+    use :: mod_datatypes, only: dp
     implicit none
 
     complex (kind=dp) :: ci, c0

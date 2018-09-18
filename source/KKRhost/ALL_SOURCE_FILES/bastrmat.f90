@@ -1,21 +1,26 @@
 module mod_bastrmat
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: bastrmat
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: transformation kappa, mu - l,m
+  !> Author: Hubert Ebert
+  !> date: 13/01/98
+  !> Category: KKRhost, dirac, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> INITIALIZE TRANSFORMATION MATRIX THAT TAKES MATRICES FROM
+  !> RELATIVISTIC  TO  REAL SPERICAL HARM.  REPRESENTATION    
+  !>                                                          
+  !> this is a special version of <STRSMAT> passing the       
+  !> full BASis TRansformation MATrices  RC, CREL and RREL    
+  !-------------------------------------------------------------------------------
   subroutine bastrmat(lmax, cgc, rc, crel, rrel, nkmmax, nkmpmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *    INITIALIZE TRANSFORMATION MATRIX THAT TAKES MATRICES FROM     *
-    ! *    RELATIVISTIC  TO  REAL SPERICAL HARM.  REPRESENTATION         *
-    ! *                                                                  *
-    ! *    this is a special version of <STRSMAT> passing the            *
-    ! *    full BASis TRansformation MATrices  RC, CREL and RREL         *
-    ! *                                                                  *
-    ! * 13/01/98  HE                                                     *
-    ! ********************************************************************
     use :: mod_cinit
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! PARAMETER definitions
