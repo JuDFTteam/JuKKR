@@ -17,13 +17,13 @@ before_script:
 
 stages:
   - test
-  - deploy:doc
   - build
   - run_serial
   - run_parallel
   - run_features
   - run_features_SOC
   - verify
+  - deploy:doc
 
 ###############################################################################
 
@@ -38,24 +38,6 @@ test:intel:
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
     - which profmerge
     - which codecov || which Codecov
-
-###############################################################################
-# for Gitlab pages (online code documentation build with ford)
-
-pages:
-  stage: deploy:doc
-  image: ubuntu:latest
-  allow_failure: true
-  script:
-    - apt-get update && apt-get upgrade -y  && apt-get install -y python-pip && apt-get install -y graphviz
-    - pip install ford
-    - ford doc_ford.md
-    - mv doc/ public/
-  artifacts:
-    paths:
-      - public
-  #only:
-  #  - 
 
 ###############################################################################
 
@@ -600,3 +582,22 @@ verify:intel:aiida:
     - triggers
     - web
     
+###############################################################################
+# for Gitlab pages (online code documentation build with ford)
+
+pages:
+  stage: deploy:doc
+  image: ubuntu:latest
+  allow_failure: true
+  script:
+    - apt-get update && apt-get upgrade -y  && apt-get install -y python-pip && apt-get install -y graphviz
+    - pip install ford
+    - ford doc_ford.md
+    - mv doc/ public/
+  artifacts:
+    paths:
+      - public
+  only: 
+    - schedules
+    - triggers
+    - web
