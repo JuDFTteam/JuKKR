@@ -13,7 +13,7 @@ display: public
          protected
          private
 source: true
-graph: true 
+graph: true
 extra_filetypes: 1 #
 		 inc !
 		 mk #

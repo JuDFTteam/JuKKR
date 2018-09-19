@@ -23,6 +23,7 @@ stages:
   - run_features
   - run_features_SOC
   - verify
+  - deploy:doc
 
 ###############################################################################
 
@@ -582,3 +583,21 @@ verify:intel:aiida:
     - web
     
 ###############################################################################
+# for Gitlab pages (online code documentation build with ford)
+
+pages:
+  stage: deploy:doc
+  image: ubuntu:latest
+  allow_failure: true
+  script:
+    - apt-get update && apt-get upgrade -y  && apt-get install -y python-pip && apt-get install -y graphviz
+    - pip install ford
+    - ford doc_ford.md
+    - mv doc/ public/
+  artifacts:
+    paths:
+      - public
+  only: 
+    - schedules
+    - triggers
+    - web
