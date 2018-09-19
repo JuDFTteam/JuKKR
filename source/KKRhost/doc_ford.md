@@ -13,12 +13,12 @@ display: public
          protected
          private
 source: true
-graph: false
+graph: true
 extra_filetypes: 1 #
 		 inc !
 		 mk #
 coloured_edges: true
-search: false
+search: true 
 warn: true 
 license: by-nc
 version: 1.1.1
