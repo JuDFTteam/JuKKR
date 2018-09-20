@@ -1,4 +1,9 @@
 module PositionReader_mod
+!-------------------------------------------------------------------------------
+!> Summary: Reads .xyz files containg atomic coordinates that can also be viewed by e.g. jmol
+!> Author: Paul F Baumeister
+!> Category: KKRnano, input-output, communication
+!-------------------------------------------------------------------------------
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
@@ -67,6 +72,7 @@ character(len=*), parameter :: MODIFY_STRING(0:5) = ['initialized', 'automatic  
     character(len=16)  :: element_keyword
     character(len=256) :: configuration_line, elem_file
     integer(kind=1), parameter :: mdst(2) = [MODIFIED_ELEM_DEFAULT, MODIFIED_CONF_DEFAULT]
+
 
     z_defaults(:,:) = 0.d0 ; z_modified(:,:) = MODIFIED_INITIALIZED
     

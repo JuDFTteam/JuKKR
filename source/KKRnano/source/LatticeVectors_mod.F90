@@ -1,9 +1,11 @@
-!> LatticeVectors: linear combinations of Bravais vectors with integer coefficients
-!> Note: if N (=number of atoms) reference clusters are created, then this algorithm scales as O(N**2)
-
-! #define DEBUG
-
 module LatticeVectors_mod
+!-------------------------------------------------------------------------------
+!> Summary: Linear combinations of Bravais vectors with integer coefficients
+!> Author: Paul F Baumeister, Elias Rabel
+!> Category: KKRnano, geometry, memory-management, initialization
+!>
+!> Note: if N (=number of atoms) reference clusters are created, then this algorithm scales as O(N**2)
+!-------------------------------------------------------------------------------
   implicit none
   private
   

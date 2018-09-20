@@ -1,20 +1,18 @@
-!------------------------------------------------------------------------------
-!> Module to calculate the Gaunt coefficients.
-
-!> Declares a data structure GauntCoefficients that contains
-!> Gaunt related data needed for a KKR calculation
-!> It wraps the previously used routines gaunt and gaunt2
-!> @author Elias Rabel and authors of gaunt and gaunt2
-
-! Some macros for checked allocation/deallocation
-! they need an integer variable named ist declared in each routine
-! they are used.
-
+module GauntCoefficients_mod
+!-------------------------------------------------------------------------------
+!> Summary: Calculates the Gaunt coefficients.
+!>          Declares a data structure GauntCoefficients that contains
+!>          Gaunt related data needed for a KKR calculation
+!>          It wraps the previously used routines gaunt and gaunt2
+!> Author: Paul F Baumeister, Elias Rabel
+!> Category: KKRnano, special-functions, memory-management
+!>
+!> Some macros for checked allocation/deallocation they need an integer 
+!> variable named ist declared in each routines they are used.
+!-------------------------------------------------------------------------------
+  implicit none
 #define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=ist); CHECKALLOC(ist)
-
-module GauntCoefficients_mod
-  implicit none
   private
   public :: GauntCoefficients, create, destroy
 

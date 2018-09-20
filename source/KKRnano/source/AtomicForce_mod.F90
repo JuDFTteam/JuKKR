@@ -1,3 +1,8 @@
+!-------------------------------------------------------------------------------
+!> Summary: Forces onto the atomic positions
+!> Author: Rudolf Zeller, Paul F Baumeister, et al.
+!> Category: KKRnano, forces, physical-observables, potential
+!-------------------------------------------------------------------------------
 module AtomicForce_mod
 implicit none
   private

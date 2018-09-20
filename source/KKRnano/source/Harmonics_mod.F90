@@ -1,4 +1,10 @@
 module Harmonics_mod
+!-------------------------------------------------------------------------------
+!> Summary: Spherical harmonic functions and Wigner 3j symbols (aka Gaunt coefficents)
+!> Author: Bernhard H Drittler, Marc Weinert, Elias Rabel, Paul F Baumeister
+!> Category: KKRnano, special-functions
+!> ToDo: Check the simlarity of gaunt and gaunt2 with those in GauntCoefficients_mod
+!-------------------------------------------------------------------------------
   implicit none
   private
   

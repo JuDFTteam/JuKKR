@@ -1,3 +1,11 @@
+module EBalanceHandler_mod
+!-------------------------------------------------------------------------------
+!> Summary: Load balancer for the energy contour integration points
+!> Author: Elias Rabel, Paul F Baumeister
+!> Category: KKRnano, communication
+!-------------------------------------------------------------------------------
+#include "macros.h"
+
 #define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
 #define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
@@ -5,9 +13,6 @@
 
 #define COMMCHECK(IERR) if((IERR) /= 0) then; write(*,*) "ERROR: Communication failure: ", __FILE__, __LINE__; STOP; endif
 
-
-module EBalanceHandler_mod
-#include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private

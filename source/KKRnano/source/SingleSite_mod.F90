@@ -1,4 +1,9 @@
 module SingleSite_mod
+!-------------------------------------------------------------------------------
+!> Summary: Construction of the single site Greensfunction and t-Matrix
+!> Author: Rudolf Zeller, Elias Rabel, Alexander R Thiess, Paul F Baumeister, Marcel Bornemann, Ogura Masako, Bernhard H Drittler
+!> Category: KKRnano, single-site, solver
+!-------------------------------------------------------------------------------
   implicit none
   
   private

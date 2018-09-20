@@ -1,7 +1,11 @@
+module Warnings_mod
+!-------------------------------------------------------------------------------
+!> Summary: Automatically logged warning that are repeated at the end of the calculation
+!> Author: Paul F Baumeister
+!> Category: KKRnano
+!-------------------------------------------------------------------------------
 #define iounit_t integer
 #define status_t integer
-
-module Warnings_mod
 implicit none
   private ! default visibility
 

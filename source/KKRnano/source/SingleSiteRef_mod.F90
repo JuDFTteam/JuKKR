@@ -1,4 +1,9 @@
 module SingleSiteRef_mod
+!-------------------------------------------------------------------------------
+!> Summary: Construction of the single site reference system
+!> Author: Rudolf Zeller, Elias Rabel, Alexander R Thiess, Paul F Baumeister, Marcel Bornemann
+!> Category: KKRnano, single-site, solver, reference-system
+!-------------------------------------------------------------------------------
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none

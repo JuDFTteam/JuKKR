@@ -1,11 +1,16 @@
 module EnergyMeshHelpers_mod
+!-------------------------------------------------------------------------------
+!> Summary: Point mesh helpers for the energy contour integration
+!> Author: Phivos Mavropoulos, Voicu Popescu, Elias Rabel, Marcel Bornemann, Paul F Baumeister
+!> Category: KKRnano, input-output, initialization
+!-------------------------------------------------------------------------------
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
   private
   
   public :: load, store, update, broadcast
-  public :: epathtb!, emesht 
+  public :: epathtb
 
   interface load
     module procedure readEnergyMesh

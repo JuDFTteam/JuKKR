@@ -1,4 +1,9 @@
 module Statistics_mod
+!-------------------------------------------------------------------------------
+!> Summary: Reconstruction of a continous distribution function without prior knowledge of the range of data
+!> Author: Paul F Baumeister
+!> Category: KKRnano
+!-------------------------------------------------------------------------------
   implicit none
   private
   

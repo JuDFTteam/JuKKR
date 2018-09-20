@@ -1,5 +1,9 @@
-
 module GaussWeights_mod
+!-------------------------------------------------------------------------------
+!> Summary: Hard-coded weights for the Gauss quadrature
+!> Author: Elias Rabel, Marcel Bornemann, Paul F Baumeister
+!> Category: KKRnano, special-functions
+!-------------------------------------------------------------------------------
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none

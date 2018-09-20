@@ -1,7 +1,8 @@
-!> @author Elias Rabel
-
-! #include "DebugHelpers/test_macros.h"
-
+!-------------------------------------------------------------------------------
+!> Summary: general module managing most of the data flow
+!> Author: Elias Rabel, Marcel Bornemann, Paul F Baumeister
+!> Category: KKRnano, memory-management
+!-------------------------------------------------------------------------------
 module CalculationData_mod
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)

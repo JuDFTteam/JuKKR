@@ -1,6 +1,9 @@
-!> @author Elias Rabel
-
 module ConfigReader_mod
+!-------------------------------------------------------------------------------
+!> Summary: Reader for the configuration file
+!> Author: Elias Rabel, Paul F Baumeister
+!> Category: KKRnano, input-output, initialization
+!-------------------------------------------------------------------------------
   use ConfigReaderDictionary_mod, only: Dictionary
   implicit none
   private

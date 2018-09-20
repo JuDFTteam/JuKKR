@@ -1,22 +1,18 @@
-!------------------------------------------------------------------------------
-!> Module to calculate the Gaunt coefficients for Shape functions.
-
+module ShapeGauntCoefficients_mod
+!-------------------------------------------------------------------------------
+!> Summary: Calculates the Gaunt coefficients for shape functions
+!> Author: Elias Rabel, Paul F Baumeister
+!> Category: KKRnano, shape-functions, special-functions
+!>
 !> This separated datastructure was necessary since it seems that a different
-!> convention for the Gaunt coefficients was used in shape function related
-!> code.
-!> It wraps the previously used routines gaunt and shape
-!> @author Elias Rabel
-
-! Some macros for checked allocation/deallocation
-! they need an integer variable named memory_stat declared in each routine
-! they are used.
-
+!> convention for the Gaunt coefficients was used in shape function related code.
+!> Some macros for checked allocation/deallocation they need an integer variable 
+!> named memory_stat declared in each routine they are used.
+!-------------------------------------------------------------------------------
 #define CHECKALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
 #define CHECKDEALLOC(STAT) if( (STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
 #define DEALLOCATECHECK(X) deallocate(X, stat=memory_stat); CHECKDEALLOC(memory_stat)
-
-module ShapeGauntCoefficients_mod
   implicit none
   private
   public :: ShapeGauntCoefficients, create, destroy

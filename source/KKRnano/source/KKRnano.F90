@@ -1,10 +1,14 @@
-! KKRnano
-! massive parallel KKR for nanoscaled systems
-
-! #include "DebugHelpers/test_macros.h"
-#include "DebugHelpers/logging_macros.h"
-
+!!! main program KKRnano
+!-------------------------------------------------------------------------------
+!> Summary: massively parallel density functional theory code
+!>          for nanoscaled systems based on KKR where
+!>          KKR = Korringa-Kohn-Rostoker multiple scattering theory
+!> Author: Marcel Bornemann, Paul F Baumeister, Elias Rabel, Alexander Thiess, 
+!>         Rudolf Zeller, Roman Kovacik, et al.
+!> Category: KKRnano
+!-------------------------------------------------------------------------------
 program KKRnano
+#include "DebugHelpers/logging_macros.h"
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   use Warnings_mod, only: show_warning_lines

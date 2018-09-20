@@ -1,9 +1,9 @@
-
-!-------------------------------------------------------------------------------
-!> A wrapper for the subroutine STARTB1
-!> Returns: EFERMI (from first entry in potential file)
-
 module Startb1_mod
+!-------------------------------------------------------------------------------
+!> Summary: A wrapper for the subroutine STARTB1
+!> Author: Elias Rabel, Alexander R Thiess, Rudolf Zeller, Paul F Baumeister, Marcel Bornemann
+!> Category: KKRnano, initialization, input-output, radial-grid, shape-functions
+!-------------------------------------------------------------------------------
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
