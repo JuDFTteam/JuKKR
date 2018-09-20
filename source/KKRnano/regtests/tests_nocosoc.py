@@ -89,7 +89,7 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
 class Test_nocosocmaterials(unittest.TestCase):
     def test_MnGeB20(self):
         """Test chiral magnet MnGe B20 structure (8 atoms in unit cell)"""
-        Etot = -26017.26596888
+        Etot = -26017.15044536
         self.assertAlmostEqual(KKRnano("MnGeB20", solver=direct, nranks=8), Etot, DECIMALS) # takes longer than other tests 
         self.assertAlmostEqual(KKRnano("MnGeB20", solver=iterative, nranks=4), Etot, DECIMALS) # takes longer than other tests 
 
