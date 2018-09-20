@@ -29,11 +29,9 @@ contains
   !-------------------------------------------------------------------------------
   subroutine cmatstr(str, lstr, a, n, m, mlin, mcol, ijq, tolp, k_fmt_fil)
 
+    use :: mod_constants, only: cone
+    use :: mod_datatypes, only: dp
     implicit none
-
-    ! PARAMETER definitions
-    complex (kind=dp) :: ci
-    parameter (ci=(0.0e0_dp,1.0e0_dp))
 
     ! Dummy arguments
     integer :: ijq, k_fmt_fil, lstr, m, mcol, mlin, n
@@ -259,10 +257,10 @@ contains
             dtab(nd) = +1.0e0_dp
             ctab(nd) = '1'
             iw(j) = -nd
-          else if (abs(dtab(nd)-ci)*tol<1.0e0_dp) then
+          else if (abs(dtab(nd)-cone)*tol<1.0e0_dp) then
             ctab(nd) = 'i'
-          else if (abs(dtab(nd)+ci)*tol<1.0e0_dp) then
-            dtab(nd) = +ci
+          else if (abs(dtab(nd)+cone)*tol<1.0e0_dp) then
+            dtab(nd) = +cone
             ctab(nd) = 'i'
             iw(j) = -nd
           else

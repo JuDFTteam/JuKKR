@@ -16,7 +16,8 @@ contains
   !> analytically
   !-------------------------------------------------------------------------------
   function cdjlzdz(l, z, mode)
-    use :: mod_cjlz
+    use :: mod_datatypes, only: dp
+    use :: mod_cjlz, only: cjlz
     implicit none
 
     ! Dummy arguments

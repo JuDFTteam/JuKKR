@@ -28,9 +28,6 @@ contains
     ! ..
     ! .. Locals
     integer :: i, m, mp1
-    complex (kind=dp) :: czero
-    ! ..
-    data czero/(0.0e0_dp, 0.0e0_dp)/
     ! ..
     m = mod(n, 5)
     if (m/=0) then

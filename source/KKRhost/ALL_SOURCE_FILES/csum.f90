@@ -1,5 +1,6 @@
 module mod_csum
   
+  use :: mod_datatypes, only: dp
   private
   public :: csum
 
@@ -15,8 +16,7 @@ contains
   !> Sum up the first N elements of the complex
   !> array V(*) with a stepwidth of IV
   !-------------------------------------------------------------------------------
-  complex (kind=dp) function csum(n, v, iv) returns(csum)
-    use :: mod_datatypes, only: dp
+  complex (kind=dp) function csum(n, v, iv)
     use :: mod_constants, only: czero
     implicit none
     ! .. Scalar Arguments ..

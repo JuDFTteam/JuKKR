@@ -18,9 +18,9 @@ contains
 
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: mod_cintabr
-    use :: mod_cinit
-    use :: mod_constants, only: czero, zone, pi
+    use :: mod_cintabr, only: cintabr
+    use :: mod_cinit, only: cinit
+    use :: mod_constants, only: czero, cone, pi
     implicit none
 
     ! PARAMETER definitions
