@@ -14,7 +14,7 @@ contains
   ! -------------------------------------------------------------------------------
   subroutine sphere_nogga(lmax, yr, wtyr, rij, ijd)
 
-    use :: constants
+    use :: mod_constants
     use :: mod_lebedev
     use :: mod_ymy
     ! ..

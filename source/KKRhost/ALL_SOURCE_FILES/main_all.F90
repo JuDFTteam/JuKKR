@@ -14,7 +14,7 @@
 ! -------------------------------------------------------------------------------
 program kkrcode
 
-  use :: constants
+  use :: mod_constants
   use :: mod_profiling
   use :: mod_main0
   use :: mod_main1a

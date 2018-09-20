@@ -30,7 +30,7 @@ contains
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_version_info
     use :: global_variables
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: mod_datatypes, only: dp
     use :: mod_rhooutnew

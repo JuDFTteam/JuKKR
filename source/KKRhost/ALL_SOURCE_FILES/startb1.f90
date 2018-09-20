@@ -35,7 +35,7 @@ contains
     ircut, ipan, thetas, ifunm, nfu, llmsp, lmsp, efermi, vbc, dror, rs, s, vm2z, rws, ecore, lcore, ncore, drdi, r, zat, a, b, irws, iinfo, lmpot, irmind, irm, lmxspd, ipand, &
     irid, irnsd, natyp, ncelld, nfund, nspotd, ivshift, npotd)
 
-    use :: constants
+    use :: mod_constants
     use :: mod_potcut
     use :: mod_calrmt
     use :: mod_rinit

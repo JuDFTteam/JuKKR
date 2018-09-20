@@ -16,7 +16,7 @@ contains
     use :: mod_types, only: t_inc
     use :: mod_mympi, only: myrank, master
     use :: global_variables
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: mod_datatypes, only: dp
     use :: mod_rotgll

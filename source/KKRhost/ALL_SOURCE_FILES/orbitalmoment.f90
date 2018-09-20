@@ -4,7 +4,7 @@ contains
 
   subroutine calc_orbitalmoment(lmax, lmsize, loperator)
 
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: mod_datatypes, only: dp
 
@@ -60,7 +60,7 @@ contains
 
   subroutine calc_orbit_onel(lval, lorbit_onel)
 
-    use :: constants
+    use :: mod_constants
     use :: mod_datatypes, only: dp
 
     implicit none

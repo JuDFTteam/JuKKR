@@ -22,7 +22,7 @@ contains
     i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau)
 
     use :: mod_profiling
-    use :: constants
+    use :: mod_constants
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling
     use :: global_variables

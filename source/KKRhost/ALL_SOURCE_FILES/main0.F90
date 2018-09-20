@@ -28,7 +28,7 @@ module mod_main0
 #ifdef CPP_TIMING
   use :: mod_timing
 #endif
-  use :: constants
+  use :: mod_constants
   use :: memoryhandling
   use :: global_variables
   use :: mod_create_newmesh

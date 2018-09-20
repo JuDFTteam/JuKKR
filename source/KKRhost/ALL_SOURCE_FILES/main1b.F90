@@ -9,7 +9,7 @@
 module mod_main1b
 
   use :: mod_profiling
-  use :: constants
+  use :: mod_constants
   use :: global_variables
   use :: mod_datatypes, only: dp
 

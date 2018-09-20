@@ -28,7 +28,7 @@ contains
     use :: mod_mympi, only: distribute_linear_on_tasks
 #endif
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: mod_version_info
     use :: global_variables

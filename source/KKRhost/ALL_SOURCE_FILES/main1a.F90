@@ -12,7 +12,7 @@
 module mod_main1a
 
   use :: mod_profiling
-  use :: constants
+  use :: mod_constants
   use :: global_variables
   use :: mod_datatypes, only: dp
   use :: mod_tmatnewsolver, only: tmat_newsolver

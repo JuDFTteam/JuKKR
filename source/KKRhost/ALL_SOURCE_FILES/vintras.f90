@@ -38,7 +38,7 @@ contains
 
   subroutine vintras(cmom, cminst, lmax, nspin, nstart, nend, rho2ns, v, r, drdi, irws, ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, thetas, lmsp, lmpot, natyp)
 
-    use :: constants
+    use :: mod_constants
     use :: global_variables
     use :: mod_datatypes, only: dp
     use :: mod_sinwk

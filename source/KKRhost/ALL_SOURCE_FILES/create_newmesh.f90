@@ -201,7 +201,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine chebmesh(npan, ncheb, ri, ro)
     
-    use :: constants, only: pi
+    use :: mod_constants, only: pi
     use :: mod_datatypes, only: dp
     implicit none
 

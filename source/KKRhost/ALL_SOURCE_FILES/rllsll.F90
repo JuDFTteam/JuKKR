@@ -110,7 +110,7 @@ contains
       use :: omp_lib               ! omp functions
 #endif
 
-      use :: constants
+      use :: mod_constants
       use :: mod_datatypes, only: dp
 
       implicit none
@@ -840,7 +840,7 @@ end module mod_rllsll
 program test_rllsll
 
   use :: mod_timing
-  use :: constants
+  use :: mod_constants
   use :: mod_datatypes, only :: dp
 
   implicit none

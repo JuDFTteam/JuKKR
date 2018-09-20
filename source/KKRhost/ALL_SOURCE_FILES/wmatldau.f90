@@ -25,7 +25,7 @@ contains
   ! -------------------------------------------------------------------------------
   subroutine wmatldau(ntldau, itldau, nspin, denmatc, lopt, ueff, jeff, uldau, wldau, eu, edc, mmaxd, npotd, natyp, nspind, lmax)
 
-    use :: constants
+    use :: mod_constants
     use :: mod_datatypes
     use :: mod_rclm
     use :: mod_cmatstr

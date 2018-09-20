@@ -10,7 +10,7 @@ contains
   subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll, rllleft, sllleft, cden, cdenlm, cdenns, &
     rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall)
 
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: global_variables
     use :: mod_datatypes, only: dp

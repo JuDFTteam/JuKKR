@@ -7,7 +7,7 @@
 !>
 !> Definition of physical and mathematical constants
 !-------------------------------------------------------------------------------
-module constants
+module mod_constants
   use :: mod_datatypes, only: dp
 
   implicit none
@@ -35,4 +35,4 @@ module constants
   !> maximal number of lattice symmetries
   integer, parameter :: nsymaxd = 48
 
-end module constants
+end module mod_constants

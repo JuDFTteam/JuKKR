@@ -41,7 +41,7 @@ contains
     use :: mod_rhoqtools, only: rhoq_find_kmask, rhoq_saveg, rhoq_write_tau0, rhoq_read_mu0_scoef
 
     use :: global_variables
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: mod_datatypes, only: dp
     use :: mod_decimate
@@ -757,7 +757,7 @@ contains
   ! -------------------------------------------------------------------------------
   subroutine gtdyson(gtmat, gmat, ndim, lmgf0d, ngd)
 
-    use :: constants
+    use :: mod_constants
     use :: mod_datatypes, only: dp
 
     implicit none

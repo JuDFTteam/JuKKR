@@ -29,7 +29,7 @@ contains
   ! -------------------------------------------------------------------------------
   subroutine vmadelblk(cmom, cminst, lmax, nspin, naez, v, zat, r, irws, ircut, ipan, kshape, noq, kaoez, conc, catom, icc, hostimp, vinters, nemb, lmpot, natyp)
 
-    use :: constants
+    use :: mod_constants
     use :: global_variables
     use :: mod_datatypes, only: dp
 

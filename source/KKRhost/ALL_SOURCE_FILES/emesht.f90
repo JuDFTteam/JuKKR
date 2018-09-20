@@ -53,7 +53,7 @@ contains
 
     use :: mod_datatypes
     use :: mod_types, only: t_inc
-    use :: constants
+    use :: mod_constants
     use :: mod_gaufd
     use :: mod_gauleg
 

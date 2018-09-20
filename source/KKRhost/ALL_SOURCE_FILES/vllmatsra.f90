@@ -7,7 +7,7 @@ contains
   !> constructs potential including big/small components and with relativistic mass terms etc included
   subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, lval_in, cmode)
 
-    use :: constants
+    use :: mod_constants
     ! ************************************************************************************
     ! The perturbation matrix for the SRA-equations are set up
     ! ************************************************************************************

@@ -21,7 +21,7 @@ contains
 #endif
     use :: mod_mympi, only: myrank, master, distribute_work_energies
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat, t_lloyd, init_tlloyd, type_dtmatjijdij, init_t_dtmatjij_at
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: mod_wunfiles, only: t_params
     use :: mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun, save_wavefunc
@@ -721,7 +721,7 @@ contains
   subroutine allocate_locals_tmat_newsolver(allocmode, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, &
     lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
     use :: mod_datatypes, only: dp
-    use :: constants, only: czero
+    use :: mod_constants, only: czero
     use :: mod_profiling, only: memocc
     use :: mod_save_wavefun, only: t_wavefunctions
     implicit none
